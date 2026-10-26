@@ -208,6 +208,7 @@ bunx t3d list  recipes/*.ts --json  # the assets each module exports
 | `--no-shot` | `build` without rendering the contact sheet |
 | `--sheet external\|embed\|none` | Trim-sheet textures. `external` (default): `out/trim_sheet_{albedo,normal,orm}.png` written once, every GLB references `../trim_sheet_*.png`. `embed`: inside each GLB. `none`: vertex colour only |
 | `--sheet-size 512\|1024\|2048` | Sheet resolution (default 1024) |
+| `--lods 0,1,2` | Which detail levels to build (default all three). `--lods 0` = hero mesh only, `--lods 0,2` = near + far. QA and the manifest cover exactly what was built |
 | `--no-animations` | Skip the baked `run` clip. `t3d build` bakes it by default so viewers (e.g. VS Code glTF Tools) show play controls |
 | `--json` | Machine-readable `{ ok, data }` / `{ ok: false, error: { code, message, fix } }` |
 

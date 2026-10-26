@@ -14,8 +14,6 @@ import { type Args, HELP, parseArgs } from './args.ts';
 import { loadAssets } from './load.ts';
 import { type AssetManifest, manifestOf } from './manifest.ts';
 
-const LODS: readonly Lod[] = [0, 1, 2];
-
 async function buildOne(
   asset: Asset,
   args: Args,
@@ -23,7 +21,8 @@ async function buildOne(
 ): Promise<AssetManifest> {
   const dir = join(args.out, asset.name);
   await mkdir(dir, { recursive: true });
-  const lods = LODS.map((lod) => compile(asset, { lod }));
+  // Only the LODs the user asked for: QA, GLBs and the manifest cover exactly those.
+  const lods = args.lods.map((lod: Lod) => compile(asset, { lod }));
   const findings: Finding[] = lods.flatMap((a) =>
     runQa(a).map((f) => ({ ...f, message: `LOD${a.lod}: ${f.message}` })),
   );
@@ -43,7 +42,7 @@ async function buildOne(
     sheet = join(dir, 'sheet.png');
     await Bun.write(
       sheet,
-      contactSheet(lods[0] ?? compile(asset), { far: lods[2] ?? compile(asset, { lod: 2 }) }),
+      contactSheet(lods[0] ?? compile(asset), { far: lods.at(-1) ?? compile(asset, { lod: 2 }) }),
     );
   }
   const manifest = manifestOf(asset, lods, { lods: glbs, ...(sheet ? { sheet } : {}) }, findings);
