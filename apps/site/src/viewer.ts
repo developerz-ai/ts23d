@@ -14,7 +14,7 @@ import {
 } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import type { AssetInfo as Asset, Lod } from './compile.ts';
-import { loadBuilt, type PartInfo, recipe, trimSheet } from './compile.ts';
+import { loadBuilt, recipe, trimSheet } from './compile.ts';
 import { renderDownloads } from './downloads.ts';
 import { Particles } from './particles.ts';
 import { readHooks } from './scenarios/hooks.ts';
@@ -23,6 +23,7 @@ import type { Scenario } from './scenarios/types.ts';
 import { disposeTree, Stage } from './stage.ts';
 import { applySheet } from './textures.ts';
 import { reducedMotion } from './theme.ts';
+import { renderParts, renderStats } from './viewer-panels.ts';
 
 const q = <T extends Element>(root: ParentNode, sel: string): T => {
   const node = root.querySelector<T>(sel);
@@ -160,14 +161,15 @@ export class Viewer {
     this.ui.name.textContent = asset.name;
     this.ui.desc.textContent = asset.description ?? '';
     this.renderer.domElement.setAttribute('aria-label', `3D view of ${asset.name}, LOD ${lod}`);
-    this.renderStats(
+    renderStats(
+      this.ui.stats,
       built.triangles,
       asset.budget.triangles[lod],
       built.glb.byteLength,
       built.ms,
       emitters.length,
     );
-    this.renderParts(built.parts);
+    renderParts(this.ui.parts, built.parts);
     for (const r of this.root.querySelectorAll<HTMLInputElement>('input[name="lod"]'))
       r.checked = Number(r.value) === lod;
     this.ui.status.textContent = `Showing ${asset.name} at LOD ${lod}.`;
@@ -254,53 +256,6 @@ export class Viewer {
       if (!(o instanceof Mesh)) return;
       for (const m of [o.material].flat()) if ('wireframe' in m) m.wireframe = this.wireframe;
     });
-  }
-
-  private renderStats(
-    tris: number,
-    budget: number,
-    bytes: number,
-    ms: number,
-    emitters: number,
-  ): void {
-    const rows: [string, string][] = [
-      ['triangles', `${tris.toLocaleString('en')} / ${budget.toLocaleString('en')}`],
-      ['glb', `${(bytes / 1024).toFixed(1)} KiB`],
-      ['compile', `${ms.toFixed(1)} ms`],
-      ...(emitters ? [['emitters', String(emitters)] as [string, string]] : []),
-    ];
-    this.ui.stats.replaceChildren(
-      ...rows.flatMap(([k, v]) => {
-        const dt = document.createElement('dt');
-        const dd = document.createElement('dd');
-        dt.textContent = k;
-        dd.textContent = v;
-        return [dt, dd];
-      }),
-    );
-  }
-
-  private renderParts(parts: readonly PartInfo[]): void {
-    const depth = new Map<string, number>();
-    const items = parts.map((p) => {
-      const d = p.parent === null ? 0 : (depth.get(p.parent) ?? 0) + 1;
-      depth.set(p.name, d);
-      const li = document.createElement('li');
-      li.style.setProperty('--depth', String(d));
-      const name = document.createElement('code');
-      name.textContent = p.name;
-      const meta = document.createElement('span');
-      meta.className = 'part-meta';
-      const bits = [p.triangles ? `${p.triangles} tris` : 'pivot'];
-      if (p.motion) bits.push(p.motion);
-      if (p.emitter) bits.push(`emitter: ${p.emitter}`);
-      meta.textContent = bits.join(' · ');
-      li.append(name, meta);
-      if (p.motion) li.classList.add('moves');
-      return li;
-    });
-    this.ui.parts.replaceChildren(...items);
-    this.ui.parts.setAttribute('aria-label', `${parts.length} parts`);
   }
 
   private resize(): void {
