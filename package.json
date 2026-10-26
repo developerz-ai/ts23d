@@ -1,0 +1,85 @@
+{
+  "name": "@developerz-ai/ts23d",
+  "version": "0.0.0",
+  "description": "Free, deterministic 3D asset generation in TypeScript — a DSL your coding agent writes, compiled to game-ready glTF.",
+  "type": "module",
+  "license": "MIT",
+  "author": "developerz.ai",
+  "homepage": "https://developerz-ai.github.io/ts23d/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/developerz-ai/ts23d.git"
+  },
+  "bugs": "https://github.com/developerz-ai/ts23d/issues",
+  "keywords": [
+    "3d",
+    "procedural",
+    "gltf",
+    "glb",
+    "dsl",
+    "game-assets",
+    "ai-agents",
+    "claude-code",
+    "codex",
+    "three"
+  ],
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "bun": "./src/index.ts",
+      "default": "./dist/index.js"
+    },
+    "./*": {
+      "types": "./dist/*/index.d.ts",
+      "bun": "./src/*/index.ts",
+      "default": "./dist/*/index.js"
+    }
+  },
+  "bin": {
+    "t3d": "./dist/cli/bin.js"
+  },
+  "files": [
+    "dist",
+    "src",
+    "!src/**/*.test.ts",
+    "AGENTS.md",
+    "llms.txt"
+  ],
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "setup": "bun run scripts/setup.ts",
+    "verify": "bun run scripts/verify.ts",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "bun test src scripts",
+    "build": "bun run scripts/build.ts",
+    "boundaries": "bun run scripts/boundaries.ts",
+    "determinism": "bun run scripts/determinism.ts",
+    "filesize": "bun run scripts/filesize.ts",
+    "recipes": "bun run scripts/recipes.ts",
+    "shots": "bun run src/cli/bin.ts shot recipes/*.ts --out renders",
+    "release": "bun run scripts/release.ts",
+    "t3d": "bun run src/cli/bin.ts",
+    "site:dev": "bun run --filter @ts23d/site dev",
+    "site:build": "bun run --filter @ts23d/site build"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.6.3",
+    "@types/bun": "1.4.4",
+    "lefthook": "2.2.2",
+    "typescript": "7.0.2"
+  },
+  "trustedDependencies": [],
+  "engines": {
+    "bun": ">=1.4.3",
+    "node": ">=22"
+  }
+}

@@ -1,0 +1,12 @@
+node_modules/
+dist/
+out/
+coverage/
+*.tsbuildinfo
+.env
+.env.*
+!.env.example
+/tmp/
+# compiled assets: regenerated from recipes, never committed
+apps/site/public/gallery/
+renders/
