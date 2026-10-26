@@ -107,7 +107,7 @@ Also exported: `glob(pattern) → RegExp`, `insideSolid`. Once you know the inte
 
 ## Output an agent reads
 
-`out/<asset>/manifest.json` answers most questions without opening a GLB: triangles and draw calls per LOD, pivots (the names game code binds to), emitters, sockets, surfaces, `real` and each measure with its **measured** value, sources, QA findings. `out/index.json` lists every asset in the run with its verdict.
+`out/<asset>/manifest.json` answers most questions without opening a GLB: triangles and draw calls per LOD, pivots (the names engine code binds to), emitters, sockets, surfaces, `real` and each measure with its **measured** value, sources, QA findings. `out/index.json` lists every asset in the run with its verdict.
 
 ## Machine-readable output
 

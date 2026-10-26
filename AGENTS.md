@@ -3,6 +3,9 @@
 For any coding agent (Codex, Claude Code, Cursor, …) working **in this repo** or **using this
 library** in another one.
 
+## Scope
+ts23d generates assets (GLB, textures, manifest) for whatever engine or framework you use. It ships no engine or runtime code: named nodes, sockets, emitter extras and the `run` clip are hooks for *your* engine.
+
 ## Using the library in your project
 ```sh
 bun add @developerz-ai/ts23d

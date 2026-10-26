@@ -4,22 +4,33 @@
 import type { AnimationClip, Object3D } from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import type {
+  Answer,
+  Ask,
   BuildRequest,
   BuildResult,
   CatalogEntry,
   Lod,
+  Manifest,
+  Sheet,
   WorkerIn,
   WorkerOut,
 } from './compile-protocol.ts';
 
-export type { AssetInfo, BuildResult, Lod, PartInfo, Target } from './compile-protocol.ts';
+export type {
+  AssetInfo,
+  BuildResult,
+  Lod,
+  Manifest,
+  PartInfo,
+  Sheet,
+  Target,
+} from './compile-protocol.ts';
 
 export const LODS: readonly Lod[] = [0, 1, 2];
 
 let worker: Worker | null = null;
 let nextId = 1;
-type Reply = BuildResult | readonly CatalogEntry[];
-const pending = new Map<number, { resolve(r: Reply): void; reject(e: Error): void }>();
+const pending = new Map<number, { resolve(r: Answer): void; reject(e: Error): void }>();
 const cache = new Map<string, Promise<BuildResult>>();
 
 function connect(): Worker {
@@ -29,8 +40,8 @@ function connect(): Worker {
     const job = pending.get(e.data.id);
     if (!job) return;
     pending.delete(e.data.id);
-    if (!e.data.ok) job.reject(new Error(e.data.error));
-    else job.resolve('list' in e.data ? e.data.list : e.data.result);
+    if (e.data.ok) job.resolve(e.data.answer);
+    else job.reject(new Error(e.data.error));
   });
   return worker;
 }
@@ -38,8 +49,8 @@ function connect(): Worker {
 const keyOf = (r: BuildRequest): string =>
   `${JSON.stringify(r.target)}@${r.lod}${r.keepParts ? '+parts' : ''}${r.animations === false ? '-anim' : ''}`;
 
-function ask(body: { request: BuildRequest } | { list: true }): Promise<Reply> {
-  return new Promise<Reply>((resolve, reject) => {
+function ask(body: Ask): Promise<Answer> {
+  return new Promise<Answer>((resolve, reject) => {
     const id = nextId++;
     pending.set(id, { resolve, reject });
     const msg: WorkerIn = { id, ...body };
@@ -50,6 +61,26 @@ function ask(body: { request: BuildRequest } | { list: true }): Promise<Reply> {
 /** Every exported asset, as plain metadata. Recipes are imported in the worker only. */
 export const catalog = (): Promise<readonly CatalogEntry[]> =>
   ask({ list: true }) as Promise<readonly CatalogEntry[]>;
+
+const manifests = new Map<string, Promise<Manifest>>();
+
+/** The CLI's manifest for one asset (all three LODs compiled in the worker; no QA). */
+export function manifest(name: string): Promise<Manifest> {
+  let m = manifests.get(name);
+  if (!m) {
+    m = ask({ manifest: name }) as Promise<Manifest>;
+    manifests.set(name, m);
+  }
+  return m;
+}
+
+let sheet: Promise<Sheet> | null = null;
+
+/** The painted trim sheet (about a second to paint, once, in the worker). */
+export const trimSheet = (): Promise<Sheet> => {
+  sheet ??= ask({ sheet: true }) as Promise<Sheet>;
+  return sheet;
+};
 
 /** Compile in the worker. Results are cached per request, so asking twice costs nothing. */
 export function build(request: BuildRequest): Promise<BuildResult> {

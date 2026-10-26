@@ -11,7 +11,11 @@ export interface AssetManifest {
   readonly kind: string;
   readonly description?: string;
   readonly tags: readonly string[];
-  readonly files: { readonly lods: readonly string[]; readonly sheet?: string };
+  readonly files: {
+    readonly lods: readonly string[];
+    readonly sheet?: string;
+    readonly thumb?: string;
+  };
   readonly triangles: readonly number[];
   readonly drawCalls: readonly number[];
   readonly pivots: readonly { name: string; parent: string | null; motion?: string }[];

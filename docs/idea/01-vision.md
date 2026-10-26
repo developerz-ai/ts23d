@@ -1,18 +1,23 @@
 # 01 — Vision
 
-**Plug ts23d into Claude Code (or Codex) and build game-ready 3D assets, then the game, from TypeScript.** Use the LLM you already pay for to write every asset your game needs (vehicles, buildings, props, whole streets), optimised by construction. The agent writes each asset as a TypeScript module; ts23d compiles it, deterministically, to game-ready glTF and renders a contact sheet so the agent can check its own work.
+**Free 3D asset generator for coding agents. The agent writes TypeScript; ts23d compiles it, deterministically, to game-ready glTF for Unity, Unreal, Godot, three.js, Babylon or anything that reads glTF.** Use the LLM you already pay for to write the assets your project needs (vehicles, buildings, props, whole streets), optimised by construction, with a contact sheet so the agent checks its own work.
 
-Proof it reaches a game: the [drivable demo](https://developerz-ai.github.io/ts23d/#play), a tank composed from the gallery recipes, its wheels and turret driven through the recipe's named parts.
+## Scope: ts23d ends at the GLB
 
-## From prompt to game
+| In scope | Out of scope |
+|---|---|
+| Recipes → GLB × 3 LODs, the trim-sheet textures, `manifest.json`, contact sheets | Engines, game frameworks, runtime code |
+| Hooks an engine can use: named pivots, sockets, emitter extras, the `run` clip | Driving those hooks: that's your engine code |
+| Engine *import adapters* as data (import settings, collision naming): planned, M3 | Engine plugins or runtimes |
+| An asset gallery that shows every recipe ([site](https://developerz-ai.github.io/ts23d/)) | A playable demo or game |
+
+## From prompt to asset
 
 | Step | You do | ts23d gives you |
 |---|---|---|
 | 1. Install | `bun add @developerz-ai/ts23d`; copy `node_modules/@developerz-ai/ts23d/.claude/skills/author-recipe` into `.claude/skills/` (Claude Code), or point your `AGENTS.md` at `node_modules/@developerz-ai/ts23d/AGENTS.md` (Codex) | The agent knows the loop |
-| 2. Ask | `/new-recipe Tiger I, mid-production 1943, fully stowed` · "add a 4-4-0 steam loco with tender and make it run on a loop" · "compose a 1940s city street with townhouses and gas lamps" (townhouse, lamp, street recipes: landing) | A recipe that passes QA, three LODs, a contact sheet |
-| 3. Bind | Load the GLB, find `turret`, `gun`, `road_wheel_*` by name, play the baked `run` clip | Engine-agnostic node names; three.js, Godot and Unity read the same file |
-
-The three.js snippet: [README](../../README.md#3-bind-the-parts-in-your-engine).
+| 2. Ask | `/new-recipe Tiger I, mid-production 1943, fully stowed` · `/new-recipe 4-4-0 steam loco with tender` · `/new-recipe 1940s city street with townhouses and gas lamps` (townhouse, lamp, street recipes: landing) | A recipe that passes QA, three LODs, textures, a manifest, a contact sheet |
+| 3. Import | Load `out/<asset>/lod0.glb` in your engine | Named nodes (`turret`, `gun`, `wheel_*`), sockets, emitter extras, the `run` clip as hooks ([README](../../README.md#3-use-the-glb-in-your-engine)) |
 
 ## The pitch
 
@@ -21,7 +26,7 @@ The three.js snippet: [README](../../README.md#3-bind-the-parts-in-your-engine).
 | A coding agent (Claude Code, Codex, any model that writes TS) | A DSL that agent already knows: TypeScript |
 | A description, a reference photo, real dimensions | GLB × 3 LODs, named + pivoted parts, baked loop animations |
 | A machine with Bun | No GPU, no credits, no account, no service |
-| A target engine | One texture set, batched draw calls, LODs, compact core-glTF buffers: high detail, cheap to draw |
+| A target engine (yours) | GLBs it imports: one texture set, batched draw calls, LODs, compact core-glTF buffers |
 | Git | Assets as diffable source; same seed → same bytes |
 
 ## The promise, both halves
@@ -31,9 +36,9 @@ The three.js snippet: [README](../../README.md#3-bind-the-parts-in-your-engine).
 | **High definition up close** | Hero detail: rivets, rods, window sashes, real proportions | Code places detail N times for free; `real` dimensions + the `proportions` gate; painted trim sheet |
 | **Cheap to draw** | Games pay per draw call, per vertex fetch, per byte | One shared material, static geometry batched into its pivot, so draw calls = the parts your engine moves (a static building: 1); 3 LODs from one source; u16 indices and colours today; welded, vertex-cache-ordered buffers via `optimize`, an opt-in web profile (quantisation + meshopt) and LOD switch hints planned (M2) |
 
-## No Blender for most of the work
+## No Blender for most hard-surface asset production
 
-**The DSL does the modelling.** For hard-surface assets (vehicles, buildings, props, whole scenes) the LLM writes TypeScript, and ts23d does the rest:
+**The DSL does the modelling.** Scoped to asset production; the engine stays yours. For hard-surface assets (vehicles, buildings, props, whole scenes) the LLM writes TypeScript, and ts23d does the rest:
 
 | Blender-era step | In ts23d |
 |---|---|
@@ -46,9 +51,9 @@ The three.js snippet: [README](../../README.md#3-bind-the-parts-in-your-engine).
 
 Blender stays useful for organic sculpting: people, animals, hero rocks. Those come in through the planned [`/neural` adapter or `importGlb`](08-neural-adapters.md).
 
-## One pipeline, no other libraries
+## One asset pipeline, no other libraries
 
-**A game developer should need nothing else between "describe the asset" and "drop it in the engine".**
+**Asset production needs nothing else between "describe the asset" and "a GLB your engine imports".**
 
 | Stage | Module | Status (2026-10) | Replaces |
 |---|---|---|---|
@@ -59,7 +64,7 @@ Blender stays useful for organic sculpting: people, animals, hero rocks. Those c
 | QA | `qa` | Shipped: budget, surface-contact floating parts, motion clashes, names, proportions, spec measures. Silhouette IoU and ACMR planned | Manual review |
 | Renders and photo match | `render` | Contact sheet shipped. Photo match planned, M2 | — |
 | GLB export | `export` | Shipped: core glTF only, faces +Z, seamless loops, trim-sheet textures, 0 glTF-Validator errors (tested) | — |
-| Engine adapters | `threeMaterialSource` (TSL), `godotShaderSource` | Shipped: shader sources. Planned: Unity import settings | — |
+| Engine import adapters | `threeMaterialSource` (TSL), `godotShaderSource` | Shipped: shader sources. Planned, M3: import settings and collision naming per engine, as hooks, not runtime | — |
 
 Every stage has zero runtime dependencies ([ADR 005](../decisions/005-zero-runtime-deps.md)).
 
@@ -106,6 +111,7 @@ ts23d keeps that pipeline's ideas and goes one step further: recipes are **TypeS
 ## Non-goals
 
 - Beating image-to-3D models at organic, sculpted forms. Use them, or the planned [neural adapter](08-neural-adapters.md).
+- Engines, game frameworks, gameplay or demo code. ts23d ends at the GLB, textures and manifest.
 - A modelling GUI. The editor is your agent; the viewer is the [gallery](https://developerz-ai.github.io/ts23d/).
 - Photoreal hero assets. Target: game-ready, stylised-to-realistic props at consistent texel density.
 - A hosted service. Everything runs on your machine.

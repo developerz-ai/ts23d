@@ -16,7 +16,12 @@ export const VIEWS: readonly View[] = [
   { label: 'FAR LOD2', dir: [-1, 0.8, -0.6], up: [0, 0, 1] },
 ];
 
-function bounds(asset: CompiledAsset): { centre: Vec3; extent: number; min: Vec3; max: Vec3 } {
+export function bounds(asset: CompiledAsset): {
+  centre: Vec3;
+  extent: number;
+  min: Vec3;
+  max: Vec3;
+} {
   const min = [Infinity, Infinity, Infinity];
   const max = [-Infinity, -Infinity, -Infinity];
   for (const m of worldParts(asset)) {

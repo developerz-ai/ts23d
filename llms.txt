@@ -1,6 +1,6 @@
 # ts23d
 
-> @developerz-ai/ts23d — a free, deterministic 3D asset generator driven by coding agents. Assets are TypeScript modules (never JSON) built with a DSL: `defineAsset({ name, kind, real, sources, budget, build(ctx) })`, where `build` adds named, pivoted, animatable parts from primitives (`box`, `lathe`, `cylinder`, `prism`, `beam`, `planar`), places detail with `place`/`merge`, composes other assets with `ctx.use`, and gates detail on `ctx.lod`. It compiles to glTF/GLB (3 LODs, one shared trim-sheet material, baked motion), fails a QA gate on floating parts, budget overruns and wrong real-world proportions, and renders a zero-GPU six-view contact-sheet PNG so a vision-capable agent can check its own work. Bun only, zero runtime dependencies, MIT. Status 0.x: stubs throw T3D_NOT_IMPLEMENTED with the roadmap slice that builds them.
+> @developerz-ai/ts23d — a free, deterministic 3D asset generator driven by coding agents. Assets are TypeScript modules (never JSON) built with a DSL: `defineAsset({ name, kind, real, sources, budget, build(ctx) })`, where `build` adds named, pivoted, animatable parts from primitives (`box`, `lathe`, `cylinder`, `prism`, `beam`, `planar`), places detail with `place`/`merge`, composes other assets with `ctx.use`, and gates detail on `ctx.lod`. It compiles to glTF/GLB for any engine (Unity, Unreal, Godot, three.js, Babylon) — ts23d generates assets only, the engine is yours — (3 LODs, one shared trim-sheet material, baked motion), fails a QA gate on floating parts, budget overruns and wrong real-world proportions, and renders a zero-GPU six-view contact-sheet PNG so a vision-capable agent can check its own work. Bun only, zero runtime dependencies, MIT. Status 0.x: stubs throw T3D_NOT_IMPLEMENTED with the roadmap slice that builds them.
 
 ## Offline (inside your project)
 The npm package ships every doc, skill and example, versioned with the code — read them without internet:
@@ -41,6 +41,6 @@ The human names a thing ("Tiger I, mid-production 1943"). The agent researches s
 
 ## Optional
 - [Landscape](https://raw.githubusercontent.com/developerz-ai/ts23d/main/docs/landscape.md): neutral overview of AI 3D generators and where each approach fits
-- [Gallery](https://developerz-ai.github.io/ts23d/): every recipe compiled live in the browser
+- [Gallery](https://developerz-ai.github.io/ts23d/): every asset compiled live in the browser — orbit, LODs, textures, download GLB
 - kubeez.com — recommended for reference/concept images and texture sources
 - developerz.ai — 100% AI-managed software engineering; builds and maintains this project

@@ -1,5 +1,6 @@
-// The viewer: orbit a compiled asset, switch LOD, play its baked `run` clip, toggle wireframe,
-// list its named parts and download the exact GLB bytes being shown.
+// The viewer: shows a compiled asset in a looping scenario picked from its named parts (driving,
+// running, wind, a day on the turntable), or in free look with orbit controls. Also switches LOD,
+// wireframe and the trim sheet, lists the parts and offers a GLB per LOD.
 
 import {
   AnimationMixer,
@@ -12,11 +13,15 @@ import {
   WebGLRenderer,
 } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { authoringFromGltf } from './axes.ts';
 import type { AssetInfo as Asset, Lod } from './compile.ts';
-import { loadBuilt, type PartInfo, recipe } from './compile.ts';
+import { loadBuilt, type PartInfo, recipe, trimSheet } from './compile.ts';
+import { renderDownloads } from './downloads.ts';
 import { Particles } from './particles.ts';
+import { readHooks } from './scenarios/hooks.ts';
+import { pickScenario } from './scenarios/pick.ts';
+import type { Scenario } from './scenarios/types.ts';
 import { disposeTree, Stage } from './stage.ts';
+import { applySheet } from './textures.ts';
 import { reducedMotion } from './theme.ts';
 
 const q = <T extends Element>(root: ParentNode, sel: string): T => {
@@ -32,9 +37,12 @@ const bindUi = (root: ParentNode) => ({
   stats: q<HTMLElement>(root, '[data-viewer-stats]'),
   parts: q<HTMLOListElement>(root, '[data-parts]'),
   play: q<HTMLButtonElement>(root, '[data-play]'),
+  replay: q<HTMLButtonElement>(root, '[data-replay]'),
+  freeLook: q<HTMLInputElement>(root, '[data-freelook]'),
+  scenario: q<HTMLElement>(root, '[data-scenario]'),
   wire: q<HTMLInputElement>(root, '[data-wireframe]'),
-  reset: q<HTMLButtonElement>(root, '[data-reset]'),
-  download: q<HTMLButtonElement>(root, '[data-download]'),
+  textures: q<HTMLInputElement>(root, '[data-textures]'),
+  downloads: q<HTMLElement>(root, '[data-downloads]'),
   status: q<HTMLElement>(root, '[data-viewer-status]'),
 });
 
@@ -43,20 +51,19 @@ export class Viewer {
   private readonly renderer: WebGLRenderer;
   private readonly controls: OrbitControls;
   private readonly timer = new Timer();
-  private mixer: AnimationMixer | null = null;
   private model: Object3D | null = null;
   private display: Object3D | null = null;
   private readonly particles = new Particles(7, 2000);
-  private hasClip = false;
-  /** The exact GLB bytes on screen, for the download button. */
-  private shown: Uint8Array | null = null;
+  private textured = false;
   private asset: Asset | null = null;
   private lod: Lod = 0;
-  // Paused by default; the visible Play run button starts the baked clip.
-  private playing = false;
+  private scenario: Scenario | null = null;
+  private time = 0;
+  // Scenarios autoplay unless the user asked for reduced motion; then they wait for Play.
+  private playing = !reducedMotion();
+  private freeLook = false;
   private wireframe = false;
   private token = 0;
-  private home = new Vector3();
 
   private readonly ui: ReturnType<typeof bindUi>;
 
@@ -72,6 +79,7 @@ export class Viewer {
     this.controls = new OrbitControls(this.stage.camera, canvas);
     this.controls.enableDamping = !reducedMotion();
     this.controls.listenToKeyEvents(canvas);
+    this.controls.enabled = false;
 
     new ResizeObserver(() => this.resize()).observe(this.ui.viewport);
     this.wire();
@@ -90,15 +98,12 @@ export class Viewer {
     this.root.setAttribute('aria-busy', 'true');
     const loaded = await loadBuilt(recipe(asset.name, lod));
     const built = loaded.built;
-    // A diorama base sized to the model, so it sits on ground instead of floating on the grid.
-    const box = new Box3().setFromObject(loaded.scene);
-    const c = box.getCenter(new Vector3());
-    const size = box.getSize(new Vector3());
-    const [cx, cy] = authoringFromGltf(c.x, c.y, c.z);
-    const [hx, hy] = authoringFromGltf(size.x / 2, size.y / 2, size.z / 2);
-    const footprint = { cx, cy, hx, hy };
+    // The scenario comes from the asset's kind and named parts; it also sizes the diorama.
+    const clip = loaded.animations.find((c) => c.name === 'run') ?? null;
+    const hooks = readHooks(loaded.scene, asset.kind, clip);
+    const def = pickScenario(hooks);
     const base = await loadBuilt({
-      target: { kind: 'diorama', name: asset.name, footprint },
+      target: { kind: 'diorama', name: `${asset.name}_${def.id}`, footprint: def.ground(hooks) },
       lod: 0,
       animations: false,
     });
@@ -109,36 +114,48 @@ export class Viewer {
       return;
     }
 
+    this.scenario?.dispose();
     if (this.model) this.particles.detach(this.model);
     if (this.display) disposeTree(this.display);
+    this.stage.relight();
     this.model = loaded.scene;
-    this.shown = built.glb;
     base.scene.traverse((n) => {
       if (n instanceof Mesh) n.receiveShadow = true;
     });
-    this.display = new Group().add(base.scene, loaded.scene);
+    const carrier = new Group().add(loaded.scene);
+    this.display = new Group().add(base.scene, carrier);
     this.applyWireframe();
-    const center = this.stage.show(this.display, reframe);
-    if (reframe) {
-      this.home = center.clone();
-      this.controls.target.copy(center);
-      this.controls.saveState();
-    }
-    this.controls.update();
+    void this.applyTextures();
+    this.stage.show(this.display, reframe);
 
-    this.mixer?.stopAllAction();
-    // Find the clip by name: `rest` comes first so external viewers open paused.
-    const clip = loaded.animations.find((c) => c.name === 'run');
-    this.mixer = clip ? new AnimationMixer(loaded.scene) : null;
-    this.hasClip = Boolean(clip);
-    // Recipe emitters: 'moving' ones (track dust) run while the run clip plays.
+    const mixer = clip ? new AnimationMixer(loaded.scene) : null;
+    const scenario = def.create({
+      hooks,
+      carrier,
+      scene: this.stage.scene,
+      camera: this.stage.camera,
+      stage: this.stage,
+      particles: this.particles,
+      mixer,
+      clip,
+      reducedMotion: reducedMotion(),
+    });
+    this.scenario = scenario;
+    this.time = 0;
+    // 'moving' emitters (track dust, steam) follow how hard the scenario works the asset.
     const emitters = this.particles.attach(loaded.scene, (e) =>
-      (e.when ?? 'always') === 'moving' ? (this.playing && this.hasClip ? 1 : 0) : 1,
+      (e.when ?? 'always') === 'moving' ? scenario.moving() : 1,
     );
-    if (clip && this.mixer) this.mixer.clipAction(clip).play();
-    this.ui.play.disabled = !clip;
-    this.ui.play.textContent = clip ? (this.playing ? 'Pause run' : 'Play run') : 'No motion';
-    this.ui.play.setAttribute('aria-pressed', String(Boolean(clip) && this.playing));
+    this.ui.scenario.replaceChildren(
+      Object.assign(document.createElement('strong'), { textContent: def.title }),
+      document.createTextNode(` · ${def.describe(hooks)}`),
+    );
+    if (reframe) {
+      renderDownloads(this.ui.downloads, asset);
+      this.setFreeLook(false);
+    }
+    this.seekFromUrl();
+    this.syncPlay();
 
     this.ui.name.textContent = asset.name;
     this.ui.desc.textContent = asset.description ?? '';
@@ -167,27 +184,69 @@ export class Viewer {
       this.applyWireframe();
     });
     this.ui.play.addEventListener('click', () => {
-      this.playing = !this.playing;
-      this.ui.play.textContent = this.playing ? 'Pause run' : 'Play run';
-      this.ui.play.setAttribute('aria-pressed', String(this.playing));
+      // From free look, Play always resumes the scenario; otherwise it toggles.
+      this.playing = this.freeLook ? true : !this.playing;
+      this.setFreeLook(false);
     });
-    this.ui.reset.addEventListener('click', () => {
-      this.controls.reset();
-      this.controls.target.copy(this.home);
+    this.ui.replay.addEventListener('click', () => {
+      this.time = 0;
+      this.playing = true;
+      this.setFreeLook(false);
+      this.syncPlay();
     });
-    this.ui.download.addEventListener('click', () => this.download());
+    this.ui.freeLook.addEventListener('change', () => this.setFreeLook(this.ui.freeLook.checked));
+    this.ui.textures.addEventListener('change', () => {
+      this.textured = this.ui.textures.checked;
+      void this.applyTextures();
+    });
   }
 
-  private download(): void {
-    if (!this.asset) return;
-    const bytes = this.shown;
-    if (!bytes) return;
-    const url = URL.createObjectURL(new Blob([bytes.slice()], { type: 'model/gltf-binary' }));
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${this.asset.name}_lod${this.lod}.glb`;
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  /**
+   * `?t=7.5` deep-links to a moment: the scenario runs forward from 0 in fixed steps (wheels,
+   * smoke and the fire event included) and pauses there. Handy for sharing and screenshots.
+   */
+  private seekFromUrl(): void {
+    const at = Number(new URLSearchParams(location.search).get('t'));
+    const scenario = this.scenario;
+    if (!scenario || !Number.isFinite(at) || at <= 0) return;
+    const step = 1 / 30;
+    const end = at % scenario.duration;
+    for (let t = 0; t < end; t += step) {
+      scenario.update(t, step);
+      this.particles.update(step);
+    }
+    this.time = end;
+    this.playing = false;
+  }
+
+  private syncPlay(): void {
+    this.ui.play.textContent = this.playing && !this.freeLook ? 'Pause' : 'Play';
+    this.ui.play.setAttribute('aria-pressed', String(this.playing && !this.freeLook));
+  }
+
+  /** Free look stops the scenario where it is and hands the camera to orbit controls. */
+  private setFreeLook(on: boolean): void {
+    this.freeLook = on;
+    this.ui.freeLook.checked = on;
+    this.controls.enabled = on;
+    if (on && this.model) {
+      this.controls.target.copy(new Box3().setFromObject(this.model).getCenter(new Vector3()));
+      this.controls.update();
+    }
+    this.root.classList.toggle('free-look', on);
+    this.syncPlay();
+  }
+
+  /** Trim sheet on or off. The sheet paints once in the worker (about a second) on first use. */
+  private async applyTextures(): Promise<void> {
+    const model = this.model;
+    if (!model) return;
+    if (!this.textured) return applySheet(model, null);
+    this.ui.status.textContent = 'Painting the trim sheet…';
+    const sheet = await trimSheet();
+    // The user may have switched it off or opened another asset meanwhile.
+    if (this.textured && this.model === model) applySheet(model, sheet);
+    this.ui.status.textContent = this.textured ? 'Trim sheet bound.' : '';
   }
 
   private applyWireframe(): void {
@@ -254,9 +313,16 @@ export class Viewer {
     this.timer.update(time);
     // Clamped: the loop pauses offscreen, and the first frame back must not jump.
     const dt = Math.min(this.timer.getDelta(), 0.1);
-    if (this.playing) this.mixer?.update(dt);
-    this.particles.update(dt);
-    this.controls.update();
+    const scenario = this.scenario;
+    if (scenario && !this.freeLook) {
+      const step = this.playing ? dt : 0;
+      this.time = (this.time + step) % scenario.duration;
+      scenario.update(this.time, step);
+      this.particles.update(step);
+    } else {
+      this.controls.update();
+      this.particles.update(dt);
+    }
     this.renderer.render(this.stage.scene, this.stage.camera);
   }
 }

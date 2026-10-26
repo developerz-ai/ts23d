@@ -197,7 +197,7 @@ export const t34_85_1944 = t34_85.variant({ name: 't34_85_1944', tags: ['ww2'] }
 | `size` | `[start, end]` metres |
 | `color` | Linear RGB start colour; engines fade to transparent |
 | `speed`, `spreadDeg` | Initial speed along `dir`; cone spread |
-| `when` | `'always'` (chimney) · `'moving'` (track dust) · `'event'` (muzzle flash, fired by game code) |
+| `when` | `'always'` (chimney) · `'moving'` (track dust) · `'event'` (muzzle flash, fired by engine code) |
 
 ```ts
 ctx.emitter('exhaust_l', { kind: 'smoke', at: [-3.2, 0.6, 1.2], dir: [-1, 0, 0.5],
@@ -208,7 +208,7 @@ ctx.emitter('muzzle', { kind: 'muzzle', parent: 'gun', at: [2.6, 0, 0], dir: [1,
 
 ## Sockets
 
-`ctx.socket(name, { kind, at?, parent?, dir?, data? })`: an empty named node with `extras.ts23d.socket`, for game code to attach to.
+`ctx.socket(name, { kind, at?, parent?, dir?, data? })`: an empty named node with `extras.ts23d.socket`, for engine code to attach to.
 
 | `kind` | Example |
 |---|---|

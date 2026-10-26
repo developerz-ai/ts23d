@@ -1,4 +1,4 @@
-// Gallery thumbnails: one offscreen renderer draws each asset once, lazily as its card scrolls in.
+// Gallery card images: the published thumbnail PNG, or a lazy LOD2 render as a fallback.
 
 import { WebGLRenderer } from 'three';
 import type { AssetInfo as Asset } from './compile.ts';
@@ -24,8 +24,19 @@ async function draw(asset: Asset): Promise<string> {
 
 let queue: Promise<void> = Promise.resolve();
 
+/**
+ * Card image: the library's `thumbnail()` PNG that the Pages build publishes at /thumbs/<name>.png.
+ * When it isn't there (site:dev, or a recipe newer than the deploy), render LOD2 here instead.
+ */
+export function cardImage(img: HTMLImageElement, asset: Asset): void {
+  img.loading = 'lazy';
+  img.decoding = 'async';
+  img.addEventListener('error', () => renderFallback(img, asset), { once: true });
+  img.src = `${import.meta.env.BASE_URL}thumbs/${asset.name}.png`;
+}
+
 /** Render `asset` into `img` once the image is near the viewport. Draws are serialised. */
-export function lazyThumbnail(img: HTMLImageElement, asset: Asset): void {
+function renderFallback(img: HTMLImageElement, asset: Asset): void {
   const io = new IntersectionObserver(
     (entries) => {
       if (!entries.some((e) => e.isIntersecting)) return;

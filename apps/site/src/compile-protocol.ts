@@ -1,13 +1,13 @@
 // Messages between the page and the compile worker. Types only.
 
+import type { AssetManifest } from '@developerz-ai/ts23d';
 import type { Footprint } from './diorama.ts';
 
 export type Lod = 0 | 1 | 2;
 
-/** What to compile: a recipe by asset name, the play terrain, or a diorama base. */
+/** What to compile: a recipe by asset name, or a diorama base for the viewer. */
 export type Target =
   | { readonly kind: 'recipe'; readonly name: string }
-  | { readonly kind: 'terrain' }
   | { readonly kind: 'diorama'; readonly name: string; readonly footprint: Footprint };
 
 export interface BuildRequest {
@@ -48,10 +48,26 @@ export interface CatalogEntry {
   readonly family: string | null;
 }
 
-export type WorkerIn =
-  | { readonly id: number; readonly request: BuildRequest }
-  | { readonly id: number; readonly list: true };
+/** The CLI's manifest.json, minus QA (never run in the browser) and file paths. */
+export type Manifest = Omit<AssetManifest, 'qa' | 'files'>;
+
+/** The painted trim sheet: RGBA bytes per map, size × size. */
+export interface Sheet {
+  readonly size: number;
+  readonly albedo: Uint8Array;
+  readonly normal: Uint8Array;
+  readonly orm: Uint8Array;
+}
+
+export type Ask =
+  | { readonly request: BuildRequest }
+  | { readonly list: true }
+  | { readonly manifest: string }
+  | { readonly sheet: true };
+
+export type Answer = BuildResult | readonly CatalogEntry[] | Manifest | Sheet;
+
+export type WorkerIn = { readonly id: number } & Ask;
 export type WorkerOut =
-  | { readonly id: number; readonly ok: true; readonly result: BuildResult }
-  | { readonly id: number; readonly ok: true; readonly list: readonly CatalogEntry[] }
+  | { readonly id: number; readonly ok: true; readonly answer: Answer }
   | { readonly id: number; readonly ok: false; readonly error: string };

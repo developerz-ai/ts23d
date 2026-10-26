@@ -23,7 +23,7 @@ All notable changes to `@developerz-ai/ts23d`. Format: [Keep a Changelog](https:
 - CLI: `--sheet external|embed|none` (default external: `out/trim_sheet_{albedo,normal,orm}.png` once, GLBs reference `../trim_sheet_*.png`), `--sheet-size 512|1024|2048`.
 - Primitives: `sweep` (parallel-transport frames, taper, twist), `loft` over `rings` + `ringXY` with wobble; `beam` gains `up` and `caps`.
 - Vegetation: Weber–Penn `tree` kind, presets oak / pine / palm / birch / willow, `trees` family, `treeReal`.
-- Recipes: `tiger_1`, `t34` + `t34_1941`, `loco_440` (4-4-0 Jupiter), `eiffel_tower`, `oak`, `pine`, `palm`, `material_swatches`. Gallery with a drivable `#play` demo.
+- Recipes: `tiger_1`, `t34` + `t34_1941`, `loco_440` (4-4-0 Jupiter), `eiffel_tower`, `oak`, `pine`, `palm`, `material_swatches`. Asset gallery site.
 - README benchmarks block filled by `bun run bench --write`.
 - Declared, not built (throw `T3D_NOT_IMPLEMENTED`): `tiled`, `cell`, `sdf`, `roof`, `hull`, `creature`, `optimize`, `photoMatch`, `silhouetteIoU`, `localGenerator`, `importGlb`, `kubeezImages`.
 - `defineFamily`: one typed build, many variants (`variant`), derived families (`extend`).
@@ -37,6 +37,7 @@ All notable changes to `@developerz-ai/ts23d`. Format: [Keep a Changelog](https:
 - Surfaces: `surface: 'opaque' | 'cutout' | 'glass' | 'translucent'` per part; at most 4 shared materials (glass and translucent via `KHR_materials_transmission`, `_volume`, `_ior`); batching splits per pivot and surface.
 
 ### Changed
+- The site is an asset gallery only; the play mode was removed. ts23d produces assets for your engine and ships no engine or game code.
 - `merge` preallocates its buffers. `symmetric` matches side tokens as whole name segments. `touches` skips LODs where either part is absent. The boundaries guard skips tests and `src/types`.
 - **Breaking:** exported GLBs now face glTF +Z. Root rotation is `[-0.5, -0.5, -0.5, 0.5]` (authoring +X front → glTF +Z, +Z up → +Y). GLBs placed by hand before this face 90° off; rotate them −90° about Y ([ADR 009](docs/decisions/009-gltf-front-axis.md)).
 - Seamless loops: the `run` clip is 4 s, every motion rounded to whole cycles, spins ≥ 12 keys per turn. A static `rest` clip comes first so viewers open paused.

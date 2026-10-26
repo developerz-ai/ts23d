@@ -2,3 +2,4 @@
 
 export { type PhotoCamera, type PhotoMatchOptions, photoMatch } from './photo-match.ts';
 export { contactSheet, type SheetOptions, VIEWS } from './sheet.ts';
+export { type ThumbnailOptions, thumbnail } from './thumbnail.ts';

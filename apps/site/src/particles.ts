@@ -113,26 +113,6 @@ export class Particles {
     return n;
   }
 
-  /** One-off burst from a node with an ad-hoc spec (used when a recipe declares none). */
-  puff(node: Object3D, spec: Emitter, velocity?: Vector3): void {
-    node.updateWorldMatrix(true, false);
-    const s: Source = {
-      id: 0,
-      node,
-      spec,
-      style: KINDS[spec.kind],
-      cap: capFor(spec),
-      intensity: () => 1,
-      owner: node,
-      prev: node.getWorldPosition(new Vector3()),
-      vel: velocity?.clone() ?? new Vector3(),
-      primed: true,
-      carry: 0,
-      live: 0,
-    };
-    this.burst(s);
-  }
-
   update(dt: number): void {
     if (dt <= 0) return;
     for (const s of this.sources.values()) this.emit(s, dt);

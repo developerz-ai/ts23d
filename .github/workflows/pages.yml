@@ -1,6 +1,6 @@
 name: pages
 
-# The demo gallery at https://developerz-ai.github.io/ts23d/ — the site compiles every recipe in
+# The asset gallery at https://developerz-ai.github.io/ts23d/ — the site compiles every recipe in
 # the browser; the contact sheets ship beside it under /renders/. Deploys from main only.
 
 on:
@@ -25,14 +25,15 @@ jobs:
           persist-credentials: false
       - uses: ./.github/actions/setup
       - run: bun run site:build
-      - name: contact sheets → /renders/<asset>.png
+      - name: thumbnails → /thumbs/<asset>.png · contact sheets → /renders/<asset>.png
         run: |
           set -euo pipefail
           bun run src/cli/bin.ts shot recipes/*.ts --out "$RUNNER_TEMP/shots" || true
-          mkdir -p apps/site/dist/renders
+          mkdir -p apps/site/dist/renders apps/site/dist/thumbs
           for d in "$RUNNER_TEMP"/shots/*/; do
             n="$(basename "$d")"
             [ -f "$d/sheet.png" ] && cp "$d/sheet.png" "apps/site/dist/renders/$n.png"
+            [ -f "$d/thumb.png" ] && cp "$d/thumb.png" "apps/site/dist/thumbs/$n.png"
           done
       - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0

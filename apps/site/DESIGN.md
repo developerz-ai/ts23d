@@ -32,26 +32,28 @@ The scheme follows `prefers-color-scheme`. `theme.ts` reads the tokens into thre
 - Every control is native (`a`, `button`, radio, checkbox), with a visible 2px `--focus`
   outline. A skip link goes to the viewer. The canvas and the scrolling source listing can take
   focus, and the orbit controls respond to the arrow keys.
-- `prefers-reduced-motion`: no smooth scrolling, no hover transitions, no orbit damping, and the
-  baked animation starts paused.
+- `prefers-reduced-motion`: no smooth scrolling, no hover transitions, no orbit damping, no camera
+  easing or shake, and scenarios wait for Play instead of autoplaying.
 - Viewer changes are announced through a `role="status"` region.
 
 ## Structure
 
-Plain TS and DOM. Each module has one job.
+Plain TS and DOM, one job per module. The site is an asset gallery; ts23d makes assets for other
+engines, so there is no game code here.
 
-- Pipeline: `recipes.ts` (discovery, family stems), `compile.worker.ts` (recipe → GLB off the main
-  thread), `compile-protocol.ts`, `compile.ts` (worker client, GLB → three.js), `axes.ts` (glTF
-  front +Z → play frame front +X).
-- Page: `main.ts` (wiring, `#play` / `#asset` routing), `hero.ts`, `gallery.ts`, `thumbnails.ts`,
-  `viewer.ts`, `source.ts`, `stage.ts`, `theme.ts`.
-- Ground: `noise.ts` (seeded PRNG, value noise), `ground-color.ts`, `diorama.ts` (viewer base).
-- Particles: `particle-kinds.ts` (per-kind look and physics), `particle-layer.ts` (instanced
-  billboards, one draw call per blend mode), `particles.ts` (emitters from `userData.ts23d`).
-- Play: `play/input.ts`, `play/rig.ts` (binds part names), `play/vehicle.ts`, `play/weapon.ts`,
-  `play/camera.ts`, `play/ground.ts` (pure height function + terrain asset), `play/terrain.ts`
-  (chunk LODs, ground fitting), `play/world.ts` (scene composition), `play/hud.ts`,
-  `play/index.ts`.
-
-The play scene keeps the blueprint palette for the sky and fog only. The ground and models carry
-their own colours, so the scene reads as a diorama on a drawing sheet.
+- Pipeline: `compile.worker.ts` (recipes → GLB, manifest and trim sheet, off the main thread),
+  `recipe-modules.ts` (worker-side discovery, family stems), `compile-protocol.ts`, `compile.ts`
+  (worker client, GLB → three.js), `recipes.ts` (page-side catalog and lazy recipe source).
+- Page: `main.ts` (wiring, `#asset` routing), `hero.ts`, `gallery.ts`, `thumbnails.ts`,
+  `viewer.ts`, `downloads.ts` (GLB per LOD), `details.ts` (manifest and contact sheet),
+  `source.ts`, `stage.ts`, `theme.ts`. Cards show the published `/thumbs/<name>.png`, with a
+  LOD2 render as the fallback.
+- Scenarios (`scenarios/`): `types.ts` (contract), `hooks.ts` (kind, named nodes, clip, emitters,
+  size), `pick.ts` (most specific match wins), and one module per show: `tracked.ts` (drive,
+  stop, traverse, fire), `locomotive.ts` (tiled own track, trackside pan), `tree.ts` (gust on the
+  crown sway, falling leaves), `landmark.ts` (turntable through a day, rising camera for tall
+  things), `turntable.ts` (fallback), plus `cinema.ts` (eased camera). Scenarios read part names
+  and kind, never the asset's name. `?t=<seconds>` deep-links to a paused moment.
+- Presentation: `textures.ts` (trim sheet on/off), `diorama.ts` + `ground-color.ts` + `noise.ts`
+  (terrain base under the model), `particle-kinds.ts` + `particle-layer.ts` + `particles.ts`
+  (preview of the emitters a recipe declares).
