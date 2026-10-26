@@ -61,3 +61,26 @@ describe('use (composition)', () => {
     expect(compile(street).parts.find((p) => p.name === 'lamp_1_pole')?.parent).toBe('lamp_1');
   });
 });
+
+describe('sockets and emitters', () => {
+  it('are named empty nodes carrying their data, prefixed through ctx.use', () => {
+    const seat = defineAsset({
+      name: 'jeep',
+      kind: 'vehicle',
+      budget,
+      build(ctx) {
+        ctx.socket('seat_driver', { kind: 'seat', at: [0.3, 0.4, 0.8] });
+        ctx.emitter('exhaust', { kind: 'smoke', rate: 5, life: 2, size: [0.1, 0.6] });
+      },
+    });
+    const convoy = defineAsset({
+      name: 'convoy',
+      kind: 'scene',
+      budget,
+      build: (ctx) => ctx.use(seat, { prefix: 'jeep_1' }),
+    });
+    const parts = compile(convoy).parts;
+    expect(parts.find((p) => p.name === 'jeep_1_seat_driver')?.socket?.kind).toBe('seat');
+    expect(parts.find((p) => p.name === 'jeep_1_exhaust')?.emitter?.kind).toBe('smoke');
+  });
+});

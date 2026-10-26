@@ -1,0 +1,15 @@
+name: Asset / kind request
+description: An asset type or domain builder the DSL should make easy.
+labels: [feature]
+body:
+  - type: input
+    id: what
+    attributes: { label: What (e.g. "steam crane", "gothic cathedral", "B-17") }
+    validations: { required: true }
+  - type: textarea
+    id: refs
+    attributes: { label: References — dimensions, spec sheets, photos (links) }
+    validations: { required: true }
+  - type: textarea
+    id: parts
+    attributes: { label: Named / animated parts the engine needs }

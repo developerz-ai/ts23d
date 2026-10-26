@@ -1,7 +1,7 @@
 // Vehicle helpers: wheels that spin, tracks, propellers. Named parts follow the engine contract:
 // `axle_*` and `wheel_*` spin about local Y, `prop_*`/`rotor_*` spin about their own axis.
 
-import type { BuildContext, Vec3 } from '../core/index.ts';
+import { type BuildContext, place, type Vec3 } from '../core/index.ts';
 import { parseWhyte } from '../grammar/index.ts';
 import { box, cylinder } from '../primitives/index.ts';
 
@@ -134,13 +134,11 @@ export function propeller(
     }),
     { parent: o.name },
   );
+  // One blade built pointing up (+Z) from the hub, then rolled about the spin axis per blade.
+  const blade = box({ size: [0.03, o.radius * 0.12, o.radius], color: o.color });
   for (let i = 0; i < o.blades; i++) {
-    const a = (i / o.blades) * Math.PI * 2;
-    const r = o.radius / 2;
-    ctx.part(
-      `${o.name}_blade_${i}`,
-      box({ size: [0.03, o.radius * 0.12, o.radius], at: [0, 0, -o.radius / 2], color: o.color }),
-      { parent: o.name, at: [0, Math.sin(a) * r * 0.01, Math.cos(a) * r * 0.01] },
-    );
+    ctx.part(`${o.name}_blade_${i}`, place(blade, { roll: (i / o.blades) * Math.PI * 2 }), {
+      parent: o.name,
+    });
   }
 }

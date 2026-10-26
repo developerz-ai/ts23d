@@ -1,0 +1,5 @@
+# Pipeline and agent-read surfaces get an owner review: they are executable configuration.
+/.github/      @sebyx07
+/.claude/      @sebyx07
+/.dz/          @sebyx07
+/scripts/release.ts @sebyx07

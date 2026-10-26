@@ -1,0 +1,20 @@
+name: Bug
+description: Something compiles wrong, crashes, or breaks determinism.
+labels: [bug]
+body:
+  - type: textarea
+    id: recipe
+    attributes: { label: Minimal recipe (TypeScript), render: ts }
+    validations: { required: true }
+  - type: textarea
+    id: expected
+    attributes: { label: Expected }
+    validations: { required: true }
+  - type: textarea
+    id: actual
+    attributes: { label: Actual (error code + fix line, or contact sheet) }
+    validations: { required: true }
+  - type: input
+    id: version
+    attributes: { label: '@developerz-ai/ts23d version + bun --version' }
+    validations: { required: true }

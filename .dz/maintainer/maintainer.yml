@@ -1,0 +1,23 @@
+# yaml-language-server: $schema=https://developerz.ai/schemas/maintainer.v1.json
+# developerz.ai maintainer policy for developerz-ai/ts23d.
+#
+# As of 2026-10 the bot does ONE thing here: review every pull request. Triage, merging and
+# releases stay with members until the project leaves 0.x — widen this file, not the bot's habits.
+# Docs: https://developerz.ai/docs/maintainer-yml
+version: 1
+
+tone:
+  voice: friendly
+  language: en
+
+review:
+  force: true
+
+pr:
+  required_checks: [verify]
+  require_review: true
+  auto_merge: false
+
+release:
+  manager: none
+  channels: []

@@ -1,0 +1,19 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+language: 'en-US'
+tone_instructions: >-
+  Terse and concrete. Cite the rule's file. Skip what Biome catches. Recipes are TypeScript, never
+  JSON. Block ambient randomness, bare Error, missing fix:, and docs that call a stub shipped.
+reviews:
+  profile: 'assertive'
+  request_changes_workflow: true
+  high_level_summary: true
+  poem: false
+  path_instructions:
+    - path: 'recipes/**'
+      instructions: >-
+        Check `real` + `sources` exist, LOD gating via ctx.lod, ctx.rng only, named animatable parts,
+        budgets that match the triangle counts in the shots artifact.
+    - path: 'src/**'
+      instructions: >-
+        Imports only go down the tier table (scripts/lib/tiers.ts). One file one job, < 200 LOC.
+        Ts23dError with code + fix. Tests next to source, failure case first.

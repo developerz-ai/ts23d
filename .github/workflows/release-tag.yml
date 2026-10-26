@@ -1,0 +1,62 @@
+name: release-tag
+
+# Merging a `chore: release X.Y.Z` PR IS the release. When ci passes on such a commit on main and
+# vX.Y.Z is not tagged yet: annotated tag → GitHub Release (notes = that CHANGELOG section) →
+# dispatch release.yml on the tag (a tag pushed with GITHUB_TOKEN triggers no workflow by itself).
+# Stamp with `bun run release X.Y.Z`; PUBLISHING.md has the full flow and the recoveries.
+
+on:
+  workflow_run:
+    workflows: [ci]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-tag
+  cancel-in-progress: false
+
+jobs:
+  cut:
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_repository.full_name == github.repository &&
+      startsWith(github.event.workflow_run.head_commit.message, 'chore: release ')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      actions: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          persist-credentials: true
+      - uses: ./.github/actions/setup
+      - name: resolve the stamped version
+        id: v
+        run: |
+          set -euo pipefail
+          version="$(jq -r .version package.json)"
+          bun run scripts/release.ts --check "$version"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+      - name: tag, release, dispatch publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.v.outputs.version }}
+          SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          set -euo pipefail
+          if git ls-remote --exit-code --tags origin "refs/tags/v${VERSION}" >/dev/null; then
+            echo "v${VERSION} already tagged — nothing to cut."; exit 0
+          fi
+          bun run scripts/release.ts --notes "$VERSION" > "$RUNNER_TEMP/notes.md"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "v${VERSION}" -m "v${VERSION}" "$SHA"
+          git push origin "v${VERSION}"
+          gh release create "v${VERSION}" --verify-tag --title "v${VERSION}" --notes-file "$RUNNER_TEMP/notes.md"
+          gh workflow run release.yml --ref "v${VERSION}" -f version="$VERSION"

@@ -1,0 +1,45 @@
+name: ci
+
+# The gate. `verify` runs exactly `bun run verify` — the command a contributor (human or agent)
+# runs locally; scripts/ci-parity.test.ts fails if this file stops calling it. `shots` renders a
+# contact sheet per recipe so reviewers (and review agents) can SEE what a PR changed.
+# Free GitHub-hosted runners only. Target: push → green in under 5 minutes.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+      - run: bun run verify
+
+  shots:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+      - run: bun run shots
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: contact-sheets
+          path: renders/*/sheet.png
+          retention-days: 14

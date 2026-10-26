@@ -8,6 +8,8 @@ export interface Rng {
   pick<T>(items: readonly T[]): T;
   /** An independent stream keyed by name, so adding a draw in one part never shifts another. */
   fork(name: string): Rng;
+  /** A colour varied by ±amount per channel (relative): ten bales, ten slightly different straws. */
+  jitter(color: readonly [number, number, number], amount: number): [number, number, number];
 }
 
 function hash(seed: number, name: string): number {
@@ -35,5 +37,13 @@ export function createRng(seed: number): Rng {
       return item;
     },
     fork: (name) => createRng(hash(seed, name)),
+    jitter: (c, amount) => {
+      const k = 1 + (next() * 2 - 1) * amount;
+      return [
+        c[0] * k * (1 + (next() - 0.5) * amount * 0.4),
+        c[1] * k,
+        c[2] * k * (1 + (next() - 0.5) * amount * 0.4),
+      ];
+    },
   };
 }

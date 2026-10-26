@@ -10,15 +10,11 @@ import {
   triangleCount,
   worldTransforms,
 } from '../core/index.ts';
-
-export interface Finding {
-  readonly gate: string;
-  readonly part?: string;
-  readonly message: string;
-  readonly fix: string;
-}
-
-export type Gate = (asset: CompiledAsset) => Finding[];
+import { runChecks } from './checks.ts';
+import { clashes } from './clash.ts';
+import { floatingParts } from './floating.ts';
+import { measures } from './measures.ts';
+import type { Finding, Gate } from './types.ts';
 
 const worldBounds = (asset: CompiledAsset): Map<string, Bounds> => {
   const xf = worldTransforms(asset.parts);
@@ -58,37 +54,6 @@ export const triangleBudget: Gate = (asset) => {
     : [];
 };
 
-/** A part whose box touches no other part and not the ground is floating (bad pivot, typo'd z). */
-export const floatingParts: Gate = (asset) => {
-  const eps = 0.02;
-  const boxes = [...worldBounds(asset)];
-  const touches = (a: Bounds, b: Bounds): boolean =>
-    [0, 1, 2].every(
-      (k) => (a.min[k] ?? 0) <= (b.max[k] ?? 0) + eps && (b.min[k] ?? 0) <= (a.max[k] ?? 0) + eps,
-    );
-  // Connected to the ground through any chain of touching parts.
-  const grounded = new Set(boxes.filter(([, b]) => b.min[2] <= eps).map(([n]) => n));
-  let grew = true;
-  while (grew) {
-    grew = false;
-    for (const [n, b] of boxes) {
-      if (grounded.has(n)) continue;
-      if (boxes.some(([m, o]) => grounded.has(m) && touches(b, o))) {
-        grounded.add(n);
-        grew = true;
-      }
-    }
-  }
-  return boxes
-    .filter(([n]) => !grounded.has(n))
-    .map(([n]) => ({
-      gate: 'floating-parts',
-      part: n,
-      message: `'${n}' touches nothing connected to the ground`,
-      fix: 'check its `at` pivot and parent; set `extras: { floating: true }` only for things that truly fly',
-    }));
-};
-
 export const partNames: Gate = (asset) =>
   asset.parts
     .filter((p) => !/^[a-z][a-z0-9_]*$/.test(p.name))
@@ -99,13 +64,56 @@ export const partNames: Gate = (asset) =>
       fix: 'rename it — engines bind to node names like axle_0, door_l',
     }));
 
+/** Overall bounding box vs the recipe's `real` dimensions: catches a 6 m tank modelled at 7.4 m. */
+export const proportions: Gate = (asset) => {
+  const real = asset.real;
+  if (!real || asset.lod !== 0) return [];
+  const boxes = [...worldBounds(asset).values()];
+  const span = (k: 0 | 1 | 2): number =>
+    Math.max(...boxes.map((b) => b.max[k])) - Math.min(...boxes.map((b) => b.min[k]));
+  const tol = real.tolerance ?? 0.05;
+  return (
+    [
+      ['length', 0, real.length],
+      ['width', 1, real.width],
+      ['height', 2, real.height],
+    ] as const
+  ).flatMap(([axis, k, want]) => {
+    const got = span(k);
+    return Math.abs(got - want) / want > tol
+      ? [
+          {
+            gate: 'proportions',
+            message: `${axis} ${got.toFixed(2)} m vs real ${want} m (±${tol * 100}%)`,
+            fix: `rescale along ${'XYZ'[k]} — re-derive the lengths from the sources, don't fudge the tolerance`,
+          },
+        ]
+      : [];
+  });
+};
+
 /** Planned gates, signatures fixed: docs/idea/06-qa.md. */
-export const interpenetration: Gate = () =>
-  notImplemented('interpenetration gate (swept over the animation)');
 export const silhouetteIoU = (_asset: CompiledAsset, _referencePng: Uint8Array): number =>
   notImplemented('silhouette IoU gate');
 
-export const DEFAULT_GATES: readonly Gate[] = [triangleBudget, floatingParts, partNames];
+/** The recipe's own `checks`, each finding reported under the gate name `check`. */
+export const recipeChecks: Gate = (asset) =>
+  runChecks(asset).map((f) => ({
+    gate: 'check',
+    ...(f.part ? { part: f.part } : {}),
+    message: f.message,
+    fix: f.fix,
+  }));
+
+export const DEFAULT_GATES: readonly Gate[] = [
+  triangleBudget,
+  floatingParts,
+  clashes,
+  partNames,
+  proportions,
+  measures,
+  recipeChecks,
+];
 
 export function runQa(asset: CompiledAsset, gates: readonly Gate[] = DEFAULT_GATES): Finding[] {
   return gates.flatMap((g) => g(asset));

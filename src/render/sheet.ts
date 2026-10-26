@@ -3,9 +3,8 @@
 //   row 1: 3/4 FRONT · FRONT (+X) · SIDE (-Y)
 //   row 2: TOP · 3/4 REAR · FAR LOD (LOD2, 3/4 front)
 
-import type { CompiledAsset, Vec3 } from '../core/index.ts';
+import { type CompiledAsset, encodePng, type Vec3 } from '../core/index.ts';
 import { drawText } from './font.ts';
-import { encodePng } from './png.ts';
 import { drawAsset, line, orthoCamera, type Target, type View, worldParts } from './raster.ts';
 
 export const VIEWS: readonly View[] = [

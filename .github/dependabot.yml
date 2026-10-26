@@ -1,0 +1,29 @@
+version: 2
+
+# Weekly, grouped, with a 14-day cooldown: most yanked versions and supply-chain incidents surface
+# inside that window. Bun itself is pinned by .bun-version and moved by a person, measured.
+
+updates:
+  - package-ecosystem: bun
+    directory: /
+    schedule: { interval: weekly, day: monday }
+    cooldown: { default-days: 14 }
+    open-pull-requests-limit: 5
+    labels: [dependencies]
+    commit-message: { prefix: 'chore(deps)' }
+    groups:
+      tooling:
+        patterns: ['@biomejs/*', 'typescript', 'lefthook', '@types/*', 'vite']
+      runtime:
+        patterns: ['*']
+        exclude-patterns: ['@biomejs/*', 'typescript', 'lefthook', '@types/*', 'vite']
+
+  - package-ecosystem: github-actions
+    directories: ['/', '/.github/actions/*']
+    schedule: { interval: weekly, day: monday }
+    cooldown: { default-days: 14 }
+    labels: [dependencies, ci]
+    commit-message: { prefix: 'chore(ci)' }
+    groups:
+      actions:
+        patterns: ['*']

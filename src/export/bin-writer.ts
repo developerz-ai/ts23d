@@ -4,6 +4,7 @@ export const ARRAY_BUFFER = 34962;
 export const ELEMENT_ARRAY_BUFFER = 34963;
 const FLOAT = 5126;
 const UINT32 = 5125;
+const UINT16 = 5123;
 
 export interface Json {
   [key: string]: unknown;
@@ -33,18 +34,22 @@ export class BinWriter {
   }
 
   accessor(
-    data: Float32Array | Uint32Array,
+    data: Float32Array | Uint32Array | Uint16Array,
     type: 'SCALAR' | 'VEC2' | 'VEC3' | 'VEC4',
     target?: number,
     bounds = false,
+    /** Integer data read as 0..1 (vertex colour as normalised unsigned short). */
+    normalized = false,
   ): number {
     const view = this.push(new Uint8Array(data.buffer, data.byteOffset, data.byteLength), target);
     const width = { SCALAR: 1, VEC2: 2, VEC3: 3, VEC4: 4 }[type];
     const acc: Json = {
       bufferView: view,
-      componentType: data instanceof Uint32Array ? UINT32 : FLOAT,
+      componentType:
+        data instanceof Uint32Array ? UINT32 : data instanceof Uint16Array ? UINT16 : FLOAT,
       count: data.length / width,
       type,
+      ...(normalized ? { normalized: true } : {}),
     };
     if (bounds) {
       const min = Array<number>(width).fill(Infinity);

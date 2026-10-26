@@ -1,0 +1,21 @@
+name: setup
+description: Bun at the repo's pinned version, the install cache, a frozen install.
+
+# Every action in this repo is pinned by commit SHA (version in the trailing comment); Dependabot's
+# github-actions ecosystem moves the pins. Bun is pinned by .bun-version — one source for dev
+# boxes and CI, so a green local `bun run verify` is evidence of a green CI.
+# release.yml's publish job does NOT use this composite: no cache reaches the job holding id-token.
+
+runs:
+  using: composite
+  steps:
+    - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+      with:
+        bun-version-file: .bun-version
+    - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ~/.bun/install/cache
+        key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+        restore-keys: bun-${{ runner.os }}-
+    - run: bun install --frozen-lockfile
+      shell: bash

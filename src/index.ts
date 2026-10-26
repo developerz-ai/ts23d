@@ -7,6 +7,7 @@ export * from './grammar/index.ts';
 export * from './kinds/index.ts';
 export * from './material/index.ts';
 export * from './neural/index.ts';
+export * from './passes/index.ts';
 export * from './primitives/index.ts';
 export * from './qa/index.ts';
 export * from './render/index.ts';

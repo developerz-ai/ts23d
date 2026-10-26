@@ -1,0 +1,69 @@
+name: release
+
+# npm publish via OIDC trusted publishing — no NPM_TOKEN exists. Runs only from a vX.Y.Z tag,
+# only after ci passed on that commit, only with the tree stamped at that version. The publish
+# job restores no cache (a PR job could have written it) and is the only holder of id-token.
+# One-time bootstrap + trusted-publisher setup: PUBLISHING.md.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish (must equal package.json at the selected tag)'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: refuse anything but a release tag
+        env:
+          REF: ${{ github.ref }}
+          INPUT: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          case "$REF" in
+            "refs/tags/v${INPUT#v}") echo "ok: $REF" ;;
+            *) echo "::error::publish runs from tag v${INPUT#v} only (got $REF). fix: gh workflow run release.yml --ref v${INPUT#v} -f version=${INPUT#v}"; exit 1 ;;
+          esac
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+      - run: bun run scripts/release.ts --check "${{ inputs.version }}"
+      - run: bun run verify
+
+  publish:
+    needs: check
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      id-token: write # OIDC: npm mints a short-lived publish token from this run + provenance
+    environment:
+      name: npm-publish
+      url: https://www.npmjs.com/package/@developerz-ai/ts23d
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version-file: .bun-version
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+      - run: npm install -g npm@11.5.2 # trusted publishing needs npm >= 11.5.1
+      - run: bun install --frozen-lockfile --ignore-scripts
+      - run: bun run build
+      - run: npm publish --access public --provenance

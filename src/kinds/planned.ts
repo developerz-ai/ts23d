@@ -11,14 +11,6 @@ export function hull(
   notImplemented('hull (vessel kind)');
 }
 
-/** Weber–Penn botanical skeleton: recursive branch levels, leaf cards, wind weights, impostor LOD2. M3. */
-export function tree(
-  _ctx: BuildContext,
-  _o: { species: string; height: number; seed?: number },
-): void {
-  notImplemented('tree (vegetation kind)');
-}
-
 /** Pitched roofs over a footprint: hip, gable, pyramid, mansard. M1. */
 export function roof(
   _ctx: BuildContext,

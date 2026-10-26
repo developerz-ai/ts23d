@@ -89,22 +89,26 @@ export function translate(m: Mesh, by: Vec3): Mesh {
 }
 
 export function merge(meshes: readonly Mesh[]): Mesh {
-  let base = 0;
-  const out = { p: [] as number[], n: [] as number[], uv: [] as number[], c: [] as number[] };
-  const idx: number[] = [];
+  // Preallocated from summed lengths: no intermediate arrays, no spread (which overflows the
+  // call stack on very large inputs).
+  const sum = (f: (m: Mesh) => number): number => meshes.reduce((t, m) => t + f(m), 0);
+  const positions = new Float32Array(sum((m) => m.positions.length));
+  const normals = new Float32Array(sum((m) => m.normals.length));
+  const uvs = new Float32Array(sum((m) => m.uvs.length));
+  const colors = new Float32Array(sum((m) => m.colors.length));
+  const indices = new Uint32Array(sum((m) => m.indices.length));
+  let v = 0;
+  let uv = 0;
+  let ix = 0;
   for (const m of meshes) {
-    out.p.push(...m.positions);
-    out.n.push(...m.normals);
-    out.uv.push(...m.uvs);
-    out.c.push(...m.colors);
-    for (const i of m.indices) idx.push(i + base);
-    base += m.positions.length / 3;
+    positions.set(m.positions, v * 3);
+    normals.set(m.normals, v * 3);
+    colors.set(m.colors, v * 3);
+    uvs.set(m.uvs, uv);
+    for (let i = 0; i < m.indices.length; i++) indices[ix + i] = (m.indices[i] ?? 0) + v;
+    v += m.positions.length / 3;
+    uv += m.uvs.length;
+    ix += m.indices.length;
   }
-  return {
-    positions: new Float32Array(out.p),
-    normals: new Float32Array(out.n),
-    uvs: new Float32Array(out.uv),
-    colors: new Float32Array(out.c),
-    indices: new Uint32Array(idx),
-  };
+  return { positions, normals, uvs, colors, indices };
 }

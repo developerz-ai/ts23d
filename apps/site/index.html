@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark light" />
+    <title>ts23d · 3D assets as TypeScript</title>
+    <meta
+      name="description"
+      content="ts23d is a free, deterministic 3D asset generator: a coding agent writes TypeScript recipes that compile to game-ready GLB."
+    />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M8 1 15 5v6l-7 4-7-4V5z' fill='none' stroke='%235b8fc7' stroke-width='1.5'/%3E%3C/svg%3E" />
+  </head>
+  <body>
+    <a class="skip" href="#viewer">Skip to viewer</a>
+
+    <header class="hero">
+      <div class="titleblock" aria-hidden="true">
+        <span>DWG TS23D-001</span><span>SCALE 1:1 m</span><span>Z-UP</span>
+      </div>
+      <h1>ts23d</h1>
+      <p class="tagline">Plug it into Claude Code and build games.</p>
+      <p class="lede">
+        A free 3D asset generator written in TypeScript. Your coding agent (Claude Code, Codex, or
+        any model that writes TypeScript) authors each asset as a recipe module. Recipes compile to
+        game-ready GLB with named, animatable parts. There's no GPU, no credits and no network, and
+        the same recipe always produces the same bytes.
+      </p>
+      <p class="cta">
+        <a class="button primary" href="#play">Play the demo</a>
+        <a class="button" href="#gallery-h">Browse the recipes</a>
+        <a class="button" href="https://github.com/developerz-ai/ts23d">GitHub</a>
+      </p>
+
+      <ol class="steps">
+        <li class="step">
+          <h2><span class="step-no">01</span> Ask your agent</h2>
+          <pre class="terminal"><code><span class="prompt">&gt;</span> /new-recipe Tiger I, mid-production 1943, fully stowed
+
+<span class="prompt">&gt;</span> Add a T-34 and make it drivable</code></pre>
+          <p class="step-note">
+            Real prompts for Claude Code in this repo. <code>/new-recipe</code> ships with the
+            project.
+          </p>
+        </li>
+        <li class="step">
+          <h2><span class="step-no">02</span> It writes TypeScript, renders, looks, fixes</h2>
+          <figure class="sheet-figure">
+            <img data-sheet width="1200" height="840" alt="" />
+            <figcaption data-sheet-caption></figcaption>
+          </figure>
+          <p class="step-note">
+            <code>t3d shot</code> renders orthographic views plus the far LOD. The agent reads the
+            image, edits the recipe and renders again. <code>t3d build</code> runs the QA gates.
+          </p>
+        </li>
+        <li class="step">
+          <h2><span class="step-no">03</span> Drop the GLB in your game</h2>
+          <pre class="binding" data-binding><code></code></pre>
+          <p class="step-note">
+            Part names are the contract. The play demo below binds to them the same way.
+          </p>
+        </li>
+      </ol>
+
+      <dl class="facts">
+        <div><dt>Compute</dt><dd>No GPU, no credits, no network</dd></div>
+        <div><dt>Output</dt><dd>Deterministic: same recipe, same bytes</dd></div>
+        <div><dt>Parts</dt><dd>Named, animatable nodes</dd></div>
+        <div><dt>Material</dt><dd>One shared material per asset</dd></div>
+        <div><dt>Install</dt><dd><code>bun add @developerz-ai/ts23d</code></dd></div>
+      </dl>
+    </header>
+
+    <main>
+      <section id="play" class="play" data-play-root aria-labelledby="play-h">
+        <div class="play-head">
+          <h2 id="play-h">Play</h2>
+          <p class="section-note">
+            One scene, built entirely from <code>recipes/*.ts</code> compiled in this tab. The tank
+            code only knows part names.
+          </p>
+        </div>
+        <div class="play-viewport" data-play-viewport>
+          <div class="hud" data-hud aria-live="off"></div>
+          <div class="toast" data-toast role="status" hidden></div>
+          <a class="play-start button primary" href="#play">Start driving</a>
+        </div>
+        <p class="play-status" data-play-status role="status"></p>
+        <ul class="keys" aria-label="Controls">
+          <li><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> / arrows: drive and steer</li>
+          <li>Click, then mouse: aim (<kbd>Q</kbd><kbd>E</kbd> traverse, <kbd>R</kbd><kbd>F</kbd> elevate)</li>
+          <li><kbd>Space</kbd>: fire</li>
+          <li><kbd>Esc</kbd>: release the mouse</li>
+        </ul>
+      </section>
+      <section class="gallery" aria-labelledby="gallery-h">
+        <h2 id="gallery-h">Sheets <span class="count" data-count></span></h2>
+        <p class="section-note">Every <code>recipes/*.ts</code> export. Pick one to open it.</p>
+        <ul class="grid" data-gallery></ul>
+      </section>
+
+      <section id="viewer" class="workbench" aria-labelledby="viewer-h" tabindex="-1">
+        <div class="viewer" data-viewer>
+          <div class="viewer-head">
+            <h2 id="viewer-h"><span class="visually-hidden">Viewer: </span><span data-viewer-name></span></h2>
+            <p data-viewer-desc></p>
+            <dl class="stats" data-viewer-stats></dl>
+          </div>
+          <div class="viewport" data-viewport>
+            <p class="viewport-hint" aria-hidden="true">drag orbit · right-drag pan · wheel zoom</p>
+          </div>
+          <div class="toolbar">
+            <fieldset class="segmented">
+              <legend class="visually-hidden">Level of detail</legend>
+              <label><input type="radio" name="lod" value="0" checked /><span>LOD0</span></label>
+              <label><input type="radio" name="lod" value="1" /><span>LOD1</span></label>
+              <label><input type="radio" name="lod" value="2" /><span>LOD2</span></label>
+            </fieldset>
+            <label class="check"><input type="checkbox" data-wireframe /> Wireframe</label>
+            <button type="button" data-play aria-pressed="false">Play run</button>
+            <button type="button" data-reset>Reset view</button>
+            <button type="button" class="primary" data-download>Download .glb</button>
+          </div>
+          <p class="visually-hidden" role="status" data-viewer-status></p>
+          <h3 class="parts-h">Parts <span class="section-note">node names in the GLB</span></h3>
+          <ol class="parts" data-parts></ol>
+        </div>
+
+        <aside class="source" data-source aria-labelledby="source-h">
+          <h2 id="source-h" class="source-head">
+            <span class="visually-hidden">Source: </span><span data-source-file></span>
+          </h2>
+          <p class="section-note">This file is the asset. The model on the left was compiled from it.</p>
+          <pre><code></code></pre>
+        </aside>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <h2>Pairs well with</h2>
+      <ul>
+        <li>
+          <a href="https://kubeez.com">kubeez.com</a>: generate reference and concept images and
+          textures to hand your agent.
+        </li>
+        <li>
+          <a href="https://www.developerz.ai">developerz.ai</a>: 100% AI-managed software
+          engineering. It builds and maintains this project.
+        </li>
+      </ul>
+      <p class="links">
+        <a href="https://github.com/developerz-ai/ts23d">GitHub</a> ·
+        <a href="https://www.npmjs.com/package/@developerz-ai/ts23d">npm: @developerz-ai/ts23d</a> ·
+        MIT
+      </p>
+    </footer>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

@@ -1,97 +1,14 @@
 // The DSL's root: an asset is a TypeScript function that builds named parts into a scene.
-// Code, not JSON — loops, helpers and composition are the point (docs/decisions/005).
+// Code, not JSON — loops, helpers and composition are the point (docs/decisions/002).
 
+import type { Asset, AssetDefinition, CompiledAsset } from './definition.ts';
 import { Ts23dError } from './errors.ts';
 import type { Mesh } from './mesh.ts';
-import { createRng, type Rng } from './rng.ts';
-import type { Vec3 } from './vec.ts';
+import type { Lod, Part, PartOptions, UseOptions } from './part.ts';
+import { createRng } from './rng.ts';
 
-/** 0 = hero detail, 1 = mid, 2 = far. A recipe reads it and drops detail; it never decimates. */
-export type Lod = 0 | 1 | 2;
-
-export interface Spin {
-  readonly kind: 'spin';
-  /** Rotation axis in the part's local space. */
-  readonly axis: Vec3;
-  /** Revolutions per second of the baked loop. */
-  readonly rps: number;
-}
-
-export interface Slide {
-  readonly kind: 'slide';
-  /** Peak offset of a sinusoidal back-and-forth (piston rods, sliders). */
-  readonly offset: Vec3;
-  readonly hz: number;
-}
-
-export type Motion = Spin | Slide;
-
-export interface PartOptions {
-  /** Pivot in the parent's space; the mesh is authored relative to it. */
-  readonly at?: Vec3;
-  readonly parent?: string;
-  /** Rotation about local Z, radians. A part that also moves goes inside a yawed group. */
-  readonly yaw?: number;
-  readonly motion?: Motion;
-}
-
-export interface UseOptions {
-  /** Prefix for every instanced part: `house_3` → `house_3_roof`, `house_3_door_0`. */
-  readonly prefix: string;
-  readonly at?: Vec3;
-  readonly yaw?: number;
-  readonly parent?: string;
-  /** Per-instance seed, so ten copies of one recipe are ten variants. */
-  readonly seed?: number;
-}
-
-export interface Part {
-  readonly name: string;
-  readonly mesh: Mesh | null;
-  readonly at: Vec3;
-  readonly parent: string | null;
-  readonly yaw: number;
-  readonly motion: Motion | null;
-}
-
-export interface BuildContext {
-  readonly lod: Lod;
-  readonly seed: number;
-  readonly rng: Rng;
-  /** Add a named part. Names are the contract with the engine: `axle_*`, `door_*`, `rotor_*`. */
-  part(name: string, mesh: Mesh | null, options?: PartOptions): void;
-  /** An empty pivot that other parts parent to. */
-  group(name: string, options?: PartOptions): void;
-  /** Instance another asset inside this one, compiled at this LOD — the composition primitive. */
-  use(asset: Asset, options: UseOptions): void;
-}
-
-export interface Budget {
-  /** Triangle ceiling per LOD; QA fails the build above it. */
-  readonly triangles: readonly [number, number, number];
-}
-
-export interface AssetDefinition {
-  readonly name: string;
-  readonly kind: string;
-  readonly description?: string;
-  readonly tags?: readonly string[];
-  readonly budget: Budget;
-  readonly seed?: number;
-  build(ctx: BuildContext): void;
-}
-
-export interface Asset extends AssetDefinition {
-  readonly __ts23d: 'asset';
-}
-
-export interface CompiledAsset {
-  readonly name: string;
-  readonly kind: string;
-  readonly lod: Lod;
-  readonly budget: Budget;
-  readonly parts: readonly Part[];
-}
+export * from './definition.ts';
+export * from './part.ts';
 
 export function defineAsset(def: AssetDefinition): Asset {
   if (!/^[a-z][a-z0-9_]*$/.test(def.name)) {
@@ -138,6 +55,8 @@ export function compile(asset: Asset, options: { lod?: Lod; seed?: number } = {}
       parent: o.parent ?? null,
       yaw: o.yaw ?? 0,
       motion: o.motion ?? null,
+      ...(o.clearOf ? { clearOf: o.clearOf } : {}),
+      ...(o.surface && o.surface !== 'opaque' ? { surface: o.surface } : {}),
     });
   };
   const use = (child: Asset, o: UseOptions): void => {
@@ -153,15 +72,35 @@ export function compile(asset: Asset, options: { lod?: Lod; seed?: number } = {}
         yaw: p.yaw,
         parent: p.parent ? `${o.prefix}_${p.parent}` : o.prefix,
         ...(p.motion ? { motion: p.motion } : {}),
+        ...(p.surface ? { surface: p.surface } : {}),
       });
+      const named = parts.get(`${o.prefix}_${p.name}`);
+      if (named && (p.emitter || p.socket)) {
+        parts.set(named.name, {
+          ...named,
+          ...(p.emitter ? { emitter: p.emitter } : {}),
+          ...(p.socket ? { socket: p.socket } : {}),
+        });
+      }
     }
   };
   asset.build({
     lod,
     seed,
     rng: createRng(seed),
+    pick: (perLod) => perLod[lod],
     part: add,
     group: (name, o) => add(name, null, o),
+    emitter: (name, { at, parent, ...emitter }) => {
+      add(name, null, { ...(at ? { at } : {}), ...(parent ? { parent } : {}) });
+      const p = parts.get(name);
+      if (p) parts.set(name, { ...p, emitter });
+    },
+    socket: (name, { at, parent, ...socket }) => {
+      add(name, null, { ...(at ? { at } : {}), ...(parent ? { parent } : {}) });
+      const p = parts.get(name);
+      if (p) parts.set(name, { ...p, socket });
+    },
     use,
   });
   return {
@@ -169,6 +108,8 @@ export function compile(asset: Asset, options: { lod?: Lod; seed?: number } = {}
     kind: asset.kind,
     lod,
     budget: asset.budget,
+    real: asset.real ?? null,
+    checks: asset.checks ?? [],
     parts: [...parts.values()],
   };
 }

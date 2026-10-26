@@ -1,0 +1,43 @@
+# ts23d
+
+> @developerz-ai/ts23d — a free, deterministic 3D asset generator driven by coding agents. Assets are TypeScript modules (never JSON) built with a DSL: `defineAsset({ name, kind, real, sources, budget, build(ctx) })`, where `build` adds named, pivoted, animatable parts from primitives (`box`, `lathe`, `cylinder`, `prism`, `beam`, `planar`), places detail with `place`/`merge`, composes other assets with `ctx.use`, and gates detail on `ctx.lod`. It compiles to glTF/GLB (3 LODs, one shared trim-sheet material, baked motion), fails a QA gate on floating parts, budget overruns and wrong real-world proportions, and renders a zero-GPU six-view contact-sheet PNG so a vision-capable agent can check its own work. Bun only, zero runtime dependencies, MIT. Status 0.x: stubs throw T3D_NOT_IMPLEMENTED with the roadmap slice that builds them.
+
+## Offline (inside your project)
+The npm package ships every doc, skill and example, versioned with the code — read them without internet:
+- `node_modules/@developerz-ai/ts23d/AGENTS.md` — rules and the loop
+- `node_modules/@developerz-ai/ts23d/docs/` — DSL, IR, materials, agent loop, QA, kinds, decisions, roadmap
+- `node_modules/@developerz-ai/ts23d/recipes/` + `refs/` — idiomatic recipes and their research dossiers
+- `node_modules/@developerz-ai/ts23d/.claude/skills/author-recipe/SKILL.md` — copy into your `.claude/skills/`
+
+## The workflow
+The human names a thing ("Tiger I, mid-production 1943"). The agent researches specs and real photos into `refs/<name>.md` (every number sourced), writes `recipes/<name>.ts` with `sources` + `real.measures` from that dossier, compiles until QA PASS (budget, surface contact, clashes, proportions ±5%, measures ±2%), renders the six-view contact sheet, looks at it, adds LOD-gated detail, and iterates.
+
+## Start
+- [README](https://raw.githubusercontent.com/developerz-ai/ts23d/main/README.md): what it is, quickstart, the agent loop
+- [AGENTS.md](https://raw.githubusercontent.com/developerz-ai/ts23d/main/AGENTS.md): rules for agents using or changing the library
+- [CLAUDE.md](https://raw.githubusercontent.com/developerz-ai/ts23d/main/CLAUDE.md): commands, axioms, module tiers, CI
+- [Author-recipe skill](https://raw.githubusercontent.com/developerz-ai/ts23d/main/.claude/skills/author-recipe/SKILL.md): the closed loop, step by step, with a skeleton
+
+## DSL and concepts
+- [The DSL](https://raw.githubusercontent.com/developerz-ai/ts23d/main/docs/idea/02-dsl.md): defineAsset, ctx API, composition, determinism
+- [IR, units, axes](https://raw.githubusercontent.com/developerz-ai/ts23d/main/docs/idea/03-ir.md)
+- [Materials](https://raw.githubusercontent.com/developerz-ai/ts23d/main/docs/idea/04-materials.md): trim sheet, palettes, generator, image sources (kubeez.com)
+- [Agent loop](https://raw.githubusercontent.com/developerz-ai/ts23d/main/docs/idea/05-agent-loop.md): contact sheet layout, iteration
+- [QA gates](https://raw.githubusercontent.com/developerz-ai/ts23d/main/docs/idea/06-qa.md)
+- [What fits](https://raw.githubusercontent.com/developerz-ai/ts23d/main/docs/idea/07-what-fits.md): hard-surface vs organic; creatures via SDF kind or local-GPU adapters
+- [Kinds](https://raw.githubusercontent.com/developerz-ai/ts23d/main/docs/idea/09-kinds.md): buildings, vehicles, vessels, vegetation, scenes
+
+## Reference
+- [Public API barrel](https://raw.githubusercontent.com/developerz-ai/ts23d/main/src/index.ts)
+- [Error codes](https://raw.githubusercontent.com/developerz-ai/ts23d/main/docs/architecture/errors.md): every T3D_* with cause and fix
+- [Module tiers](https://raw.githubusercontent.com/developerz-ai/ts23d/main/docs/architecture/README.md)
+- [Roadmap](https://raw.githubusercontent.com/developerz-ai/ts23d/main/docs/plans/roadmap.md): shipped vs planned
+- [Decisions](https://raw.githubusercontent.com/developerz-ai/ts23d/main/docs/decisions/): why TS not JSON, why one material, why CPU renders
+- [Example recipe: Tiger I](https://raw.githubusercontent.com/developerz-ai/ts23d/main/recipes/tiger_1.ts)
+- [Reference dossier template](https://raw.githubusercontent.com/developerz-ai/ts23d/main/refs/README.md)
+
+## Optional
+- [Landscape](https://raw.githubusercontent.com/developerz-ai/ts23d/main/docs/landscape.md): neutral overview of AI 3D generators and where each approach fits
+- [Gallery](https://developerz-ai.github.io/ts23d/): every recipe compiled live in the browser
+- kubeez.com — recommended for reference/concept images and texture sources
+- developerz.ai — 100% AI-managed software engineering; builds and maintains this project

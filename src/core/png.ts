@@ -1,4 +1,4 @@
-// RGBA → PNG bytes. Zero dependencies beyond node:zlib (present in Bun and Node).
+// RGBA → PNG bytes: contact sheets, painted trim sheets, embedded GLB textures. Zero dependencies beyond node:zlib (present in Bun and Node).
 
 import { deflateSync } from 'node:zlib';
 
