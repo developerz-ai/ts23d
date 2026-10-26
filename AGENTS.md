@@ -12,6 +12,8 @@ Write `assets/<name>.ts` exporting `defineAsset({...})`, then loop:
 bunx t3d build assets/<name>.ts --out out      # GLB × 3 LODs + QA; exit 1 on a finding
 bunx t3d shot  assets/<name>.ts --out renders  # ONE PNG, six labelled views — open and look at it
 ```
+No CLI needed: the same steps are functions (`compile`, `runQa`, `toGlb`, `contactSheet`) — see `examples/build-with-bun.ts`.
+
 Fix what QA prints (every finding has a `fix:`) and what you see in the PNG. Repeat. TypeScript only:
 loops, helpers and `ctx.use(other, { prefix, at, yaw, seed })` composition are the point.
 

@@ -228,6 +228,42 @@ Library calls differ on one default: `toGlb(asset)` exports no animation unless 
 
 Every exported asset in a module is built (`defineAsset` or `family.variant`). Every error prints a stable `T3D_*` code and its fix ([errors](docs/architecture/errors.md)).
 
+## Programmatic: no CLI, just Bun
+
+`t3d` is a convenience. Everything it does is a function call: compile, QA, export, render.
+A plain script builds exactly what you want, and the same code runs in Node ≥ 22 (against the
+built `dist/`), in a browser, or in a Web Worker (the [demo site](https://developerz-ai.github.io/ts23d/)
+compiles every recipe in a worker).
+
+```ts
+// build.ts → bun build.ts
+import { compile, contactSheet, DEFAULT_SHEET, paintTrimSheet, runQa, toGlb } from '@developerz-ai/ts23d';
+import { tiger_1 } from './recipes/tiger_1.ts';
+
+const sheet = paintTrimSheet({ ...DEFAULT_SHEET, size: 512 }); // textures are optional
+
+for (const lod of [0, 2] as const) {                // only the detail levels you need
+  const asset = compile(tiger_1, { lod });
+  const findings = runQa(asset);                    // gate it your way, or skip it
+  if (findings.length) throw new Error(findings.map((f) => `${f.message} — fix: ${f.fix}`).join('\n'));
+  await Bun.write(`out/tiger_1.lod${lod}.glb`, toGlb(asset, { sheet, animations: true }));
+}
+await Bun.write('out/tiger_1.png', contactSheet(compile(tiger_1, { lod: 0 }))); // for your agent's eyes
+```
+
+Runnable copy: [`examples/build-with-bun.ts`](examples/build-with-bun.ts) — executed in CI, so this path can't rot.
+
+| Building block | What it gives you |
+|---|---|
+| `compile(asset, { lod, seed })` | the compiled parts for one LOD (deterministic) |
+| `runQa(compiled)` / single gates / `inspect(compiled)` | findings with fixes; geometry queries for your own checks |
+| `toGlb(compiled, { sheet, animations, keepParts })` | GLB bytes (`Uint8Array`) — write them anywhere |
+| `mergeToPivots(compiled)` | the batched part list the GLB uses (draw calls = movable parts) |
+| `contactSheet(compiled, { far, cell })` | six-view PNG bytes |
+| `paintTrimSheet(recipe)` + `sheetPngs(sheet)` | the texture set (albedo / normal / ORM) as RGBA or PNG |
+| `threeMaterialSource(hints)` / `godotShaderSource(hints)` | shader source strings for your engine |
+| `manifest` data | build it from `compiled.parts` (pivots, emitters, sockets) — see `src/cli/manifest.ts` |
+
 ## Use it with any agent
 
 **The docs ship inside the package, versioned with the code, readable offline.** After `bun add`, everything an agent needs is at `node_modules/@developerz-ai/ts23d/`: `AGENTS.md`, `CLAUDE.md`, `llms.txt`, `docs/`, `recipes/` (worked examples), `CHANGELOG.md` and `.claude/{skills,agents,commands}`.

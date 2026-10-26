@@ -5,6 +5,7 @@ All notable changes to `@developerz-ai/ts23d`. Format: [Keep a Changelog](https:
 ## [Unreleased]
 
 ### Added
+- Programmatic builds without the CLI documented in the README, with a runnable `examples/build-with-bun.ts` that CI executes.
 - CLI `--lods <list>`: build only the detail levels you need (`--lods 0` for the hero mesh alone); QA, GLBs and `manifest.json` cover exactly those. Every output is opt-in or opt-out: `--sheet none|external|embed`, `--no-animations`, `--no-shot`.
 - Asset DSL: `defineAsset` (with `real` dimensions + `sources`), `compile`, `ctx.part` / `ctx.group` / `ctx.use`, LODs by re-running the recipe.
 - Core: Mesh IR, `MeshBuilder`, seeded forkable RNG, vector math, mesh transforms (`place`, `affine`, `frame`, `applyAffine`), `Ts23dError` with code + cause + fix.

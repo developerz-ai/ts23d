@@ -12,6 +12,9 @@ The npm package ships every doc, skill and example, versioned with the code — 
 ## The workflow
 The human names a thing ("Tiger I, mid-production 1943"). The agent researches specs and real photos into `refs/<name>.md` (every number sourced), writes `recipes/<name>.ts` with `sources` + `real.measures` from that dossier, compiles until QA PASS (budget, surface contact, clashes, proportions ±5%, measures ±2%), renders the six-view contact sheet, looks at it, adds LOD-gated detail, and iterates.
 
+## Programmatic (no CLI)
+`t3d` is optional: `compile` → `runQa` → `toGlb` / `contactSheet` / `paintTrimSheet` are plain functions returning bytes. Runnable script: `examples/build-with-bun.ts` (also in the npm package).
+
 ## Start
 - [README](https://raw.githubusercontent.com/developerz-ai/ts23d/main/README.md): what it is, quickstart, the agent loop
 - [AGENTS.md](https://raw.githubusercontent.com/developerz-ai/ts23d/main/AGENTS.md): rules for agents using or changing the library

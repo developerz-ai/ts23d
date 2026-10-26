@@ -23,6 +23,6 @@
     "allowImportingTsExtensions": true,
     "rewriteRelativeImportExtensions": true
   },
-  "include": ["src", "apps", "recipes", "scripts"],
+  "include": ["src", "apps", "recipes", "scripts", "examples"],
   "exclude": ["**/node_modules", "**/dist"]
 }
