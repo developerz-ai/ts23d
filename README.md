@@ -185,7 +185,7 @@ Row 2: top, 3/4 rear, LOD2 at distance. Layout: [docs/idea/05-agent-loop.md](doc
 
 ## Quickstart
 
-Needs Bun ≥ 1.4.3 (Node ≥ 22 for the compiled `dist/`).
+Needs Bun ≥ 1.4.4 (Node ≥ 22 for the compiled `dist/`).
 
 ```sh
 bun add @developerz-ai/ts23d
