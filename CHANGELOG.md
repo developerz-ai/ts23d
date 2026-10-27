@@ -37,6 +37,7 @@ All notable changes to `@developerz-ai/ts23d`. Format: [Keep a Changelog](https:
 - Surfaces: `surface: 'opaque' | 'cutout' | 'glass' | 'translucent'` per part; at most 4 shared materials (glass and translucent via `KHR_materials_transmission`, `_volume`, `_ior`); batching splits per pivot and surface.
 
 ### Changed
+- Bun 1.4.4 is the floor (`.bun-version`, `engines.bun`).
 - The site is an asset gallery only; the play mode was removed. ts23d produces assets for your engine and ships no engine or game code.
 - `merge` preallocates its buffers. `symmetric` matches side tokens as whole name segments. `touches` skips LODs where either part is absent. The boundaries guard skips tests and `src/types`.
 - **Breaking:** exported GLBs now face glTF +Z. Root rotation is `[-0.5, -0.5, -0.5, 0.5]` (authoring +X front → glTF +Z, +Z up → +Y). GLBs placed by hand before this face 90° off; rotate them −90° about Y ([ADR 009](docs/decisions/009-gltf-front-axis.md)).
