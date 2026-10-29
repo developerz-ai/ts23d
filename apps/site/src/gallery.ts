@@ -2,7 +2,7 @@
 
 import { build, LODS, recipe } from './compile.ts';
 import type { Recipe } from './recipes.ts';
-import { lazyThumbnail } from './thumbnails.ts';
+import { cardImage } from './thumbnails.ts';
 
 const el = <K extends keyof HTMLElementTagNameMap>(
   tag: K,
@@ -36,23 +36,23 @@ function card(entry: Recipe): HTMLElement {
 
   const figure = el('figure', 'card-thumb');
   const img = el('img');
-  img.alt = `${asset.name}, rendered at LOD 2`;
+  img.alt = `${asset.name}: ${asset.description || asset.kind}`;
   img.width = 480;
   img.height = 360;
   figure.append(img);
-  lazyThumbnail(img, asset);
+  cardImage(img, asset);
 
   const head = el('div', 'card-head');
   head.append(el('h3', 'card-name', asset.name), el('span', 'card-kind', asset.kind));
-  if (entry.family) {
-    const badge = el('span', 'family', `family ${entry.family}`);
-    badge.title = `One of several variants exported by recipes/${entry.file}`;
-    head.append(badge);
-  }
 
   const desc = el('p', 'card-desc', asset.description ?? '');
   const tags = el('ul', 'tags');
   tags.setAttribute('aria-label', 'Tags');
+  if (entry.family) {
+    const badge = el('li', 'tag family', `family ${entry.family}`);
+    badge.title = `One of several variants exported by recipes/${entry.file}`;
+    tags.append(badge);
+  }
   for (const t of asset.tags ?? []) tags.append(el('li', 'tag', t));
 
   const table = el('table', 'tris');

@@ -31,27 +31,3 @@ export const PER_EMITTER_CAP = 160;
 
 export const capFor = (e: Emitter): number =>
   Math.max(4, Math.min(PER_EMITTER_CAP, Math.ceil(e.rate * e.life * 1.2)));
-
-/** The built-in puff fired with the main gun, used when a recipe declares no smoke of its own. */
-export const GUN_SMOKE: Emitter = {
-  kind: 'smoke',
-  rate: 220,
-  life: 2.6,
-  size: [0.6, 3.2],
-  color: [0.42, 0.4, 0.37],
-  speed: 7,
-  spreadDeg: 18,
-  dir: [1, 0, 0],
-  when: 'event',
-};
-
-export const GUN_FLASH: Emitter = {
-  kind: 'muzzle',
-  rate: 260,
-  life: 0.12,
-  size: [0.9, 0.2],
-  speed: 14,
-  spreadDeg: 10,
-  dir: [1, 0, 0],
-  when: 'event',
-};

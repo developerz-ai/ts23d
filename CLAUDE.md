@@ -9,6 +9,10 @@ that fails the build, and a zero-GPU six-view **contact sheet** the agent reads 
 Bun only. Zero runtime dependencies. Status: 0.x scaffold — `planned.ts` files throw
 `T3D_NOT_IMPLEMENTED` on purpose; `docs/plans/roadmap.md` owns what lands when.
 
+**Scope: we generate assets; the engine is the user's.** Output ends at GLB + textures +
+manifest, for Unity, Unreal, Godot, three.js, Babylon or anything that reads glTF. No game,
+engine or runtime code in this repo; the site is an asset gallery, never a game.
+
 ## Axioms (override any instinct that conflicts)
 1. **Code, not data.** The DSL is TypeScript: loops, functions, `ctx.use` composition. No JSON recipes.
 2. **Deterministic or broken.** Same source + seed = same bytes. `ctx.rng` only; `bun run determinism` refuses the rest.
@@ -28,7 +32,7 @@ Bun only. Zero runtime dependencies. Status: 0.x scaffold — `planned.ts` files
 | all contact sheets | `bun run shots` |
 | one test file | `bun test src/primitives/prism.test.ts` |
 | lint fix | `bun run lint:fix` |
-| demo site | `bun run site:dev` · `bun run site:build` |
+| gallery site | `bun run site:dev` · `bun run site:build` |
 | release | `bun run release <x.y.z>` → PR `chore: release x.y.z` → merge (see `PUBLISHING.md`) |
 
 Gate steps, in order: lint · typecheck · boundaries · determinism · filesize · test · recipes · build

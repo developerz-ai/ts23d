@@ -1,6 +1,6 @@
 # Roadmap
 
-**Each milestone ships something an agent can use end to end, gated by `bun run verify`.** Ticked = on `main` with a test and, where it makes geometry, a recipe. Order within a milestone is a suggestion; order between milestones is a dependency. No dates promised.
+**Each milestone ships something an agent can use end to end, gated by `bun run verify`. Scope ends at the GLB, textures and manifest; engines and game code are out of scope.** Ticked = on `main` with a test and, where it makes geometry, a recipe. Order within a milestone is a suggestion; order between milestones is a dependency. No dates promised.
 
 Status as of 2026-10-25: **M0 done, M1 under way.** Every exported entry point that isn't ticked throws `T3D_NOT_IMPLEMENTED` with a pointer here.
 
@@ -31,9 +31,8 @@ Status as of 2026-10-25: **M0 done, M1 under way.** Every exported entry point t
 - [x] CLI: `t3d build | shot | list`, `--out`, `--json`
 - [x] Repo gates: lint, typecheck, boundaries, determinism, filesize, tests, recipes (QA + double-build hash), build
 - [x] Release flow: stamp → PR → tag → OIDC publish
-- [x] Gallery site (browser compile + three.js viewer)
 - [x] Recipes: `tiger_1`, `t34` + `t34_1941` (family), `loco_440` (family; the Jupiter, drivers 1.626 m sourced), `material_swatches`
-- [x] Gallery `#play`: a drivable tank
+- [x] Asset gallery site (every recipe, compiled in the browser)
 - [ ] First npm publish (bootstrap, [PUBLISHING.md](../../PUBLISHING.md))
 
 ## M1: Architecture primitives
@@ -93,7 +92,7 @@ Checking:
 
 Exit bar: a 4-4-0 with tender matching [`docs/reference/loco-photo-match.png`](https://raw.githubusercontent.com/developerz-ai/ts23d/main/docs/reference/loco-photo-match.png) (predecessor output: ~16k triangles, 17 named nodes, one embedded trim-sheet material, baked `run`). Recipes: that loco, a harbour tug, a biplane.
 
-## M3: Vegetation and engine adapters
+## M3: Vegetation and engine import adapters
 
 - [x] `tree`: Weber–Penn skeleton, leaf cards; presets oak / pine / palm / birch / willow; `trees` family; `treeReal`
 - [x] Recipes: `oak`, `pine`, `palm`
@@ -101,7 +100,7 @@ Exit bar: a 4-4-0 with tender matching [`docs/reference/loco-photo-match.png`](h
 - [ ] LOD2 impostors as crossed billboards from the foliage cells
 - [ ] Species presets as data
 - [x] `threeMaterialSource` (TSL) and `godotShaderSource`: wind, window glow, wear
-- [ ] Unity import settings; engine adapters beyond shader sources: Three.js, Godot, Unity (map extras + hints onto each engine's material)
+- [ ] Engine import adapters as data, not runtime: import settings for Unity (glTFast), Godot, Unreal; mapping extras + shader hints onto each engine's material
 - [ ] Engine collision naming: `ctx.collider` → Godot `-convcolonly`, Unreal `UCX_`, generic extras (G12)
 - [ ] Motion baked into vertex attributes (pivot + spin axis per vertex): a shader animates every wheel in one draw call
 - [ ] Recipes: a park, an orchard

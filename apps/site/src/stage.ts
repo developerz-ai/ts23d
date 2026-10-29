@@ -17,17 +17,37 @@ import { onSchemeChange, token } from './theme.ts';
 export class Stage {
   readonly scene = new Scene();
   readonly camera = new PerspectiveCamera(35, 1, 0.05, 2000);
+  /** Lights are public so scenarios can sweep the time of day; `relight()` restores them. */
+  readonly hemi = new HemisphereLight(0xffffff, 0x404850, 1.6);
+  readonly sun = new DirectionalLight(0xffffff, 2.2);
+  readonly fill = new DirectionalLight(0xffffff, 0.6);
   private grid: GridHelper | null = null;
   private content: Object3D | null = null;
 
   constructor(private readonly withGrid: boolean) {
-    const hemi = new HemisphereLight(0xffffff, 0x404850, 1.6);
-    const sun = new DirectionalLight(0xffffff, 2.2);
-    sun.position.set(6, 10, 8);
-    const fill = new DirectionalLight(0xffffff, 0.6);
-    fill.position.set(-8, 4, -6);
-    this.scene.add(hemi, sun, fill);
+    this.relight();
+    this.scene.add(this.hemi, this.sun, this.fill, this.sun.target);
     onSchemeChange(() => this.content && this.layGrid(this.bounds(this.content)));
+  }
+
+  /** The neutral studio lighting every scenario starts from. */
+  relight(): void {
+    this.hemi.intensity = 1.6;
+    this.hemi.color.set(0xffffff);
+    this.sun.intensity = 2.2;
+    this.sun.color.set(0xffffff);
+    this.sun.position.set(6, 10, 8);
+    this.sun.target.position.set(0, 0, 0);
+    this.fill.intensity = 0.6;
+    this.fill.position.set(-8, 4, -6);
+  }
+
+  /** Grow the far plane for scenes larger than the framed content (long tracks, tall towers). */
+  reach(far: number): void {
+    if (far > this.camera.far) {
+      this.camera.far = far;
+      this.camera.updateProjectionMatrix();
+    }
   }
 
   /** Swap the displayed object. `reframe` moves the camera; keep it false across LOD switches. */

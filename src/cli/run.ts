@@ -1,6 +1,6 @@
 // Command dispatch for `t3d`. Pure function of argv → exit code, so it is testable in-process.
 // Output layout, one folder per asset (stable paths agents and pipelines can rely on):
-//   <out>/<asset>/lod0.glb lod1.glb lod2.glb sheet.png manifest.json
+//   <out>/<asset>/lod0.glb lod1.glb lod2.glb thumb.png sheet.png manifest.json
 //   <out>/index.json — every asset built in this run, with its QA verdict
 
 import { mkdir } from 'node:fs/promises';
@@ -9,12 +9,10 @@ import { type Asset, compile, type Lod, Ts23dError } from '../core/index.ts';
 import { SHEET_MAPS, type SheetBinding, sheetFileName, sheetPngs, toGlb } from '../export/index.ts';
 import { DEFAULT_SHEET, paintTrimSheet } from '../material/index.ts';
 import { type Finding, runQa } from '../qa/index.ts';
-import { contactSheet } from '../render/index.ts';
+import { contactSheet, thumbnail } from '../render/index.ts';
 import { type Args, HELP, parseArgs } from './args.ts';
 import { loadAssets } from './load.ts';
 import { type AssetManifest, manifestOf } from './manifest.ts';
-
-const LODS: readonly Lod[] = [0, 1, 2];
 
 async function buildOne(
   asset: Asset,
@@ -23,7 +21,8 @@ async function buildOne(
 ): Promise<AssetManifest> {
   const dir = join(args.out, asset.name);
   await mkdir(dir, { recursive: true });
-  const lods = LODS.map((lod) => compile(asset, { lod }));
+  // Only the LODs the user asked for: QA, GLBs and the manifest cover exactly those.
+  const lods = args.lods.map((lod: Lod) => compile(asset, { lod }));
   const findings: Finding[] = lods.flatMap((a) =>
     runQa(a).map((f) => ({ ...f, message: `LOD${a.lod}: ${f.message}` })),
   );
@@ -39,14 +38,22 @@ async function buildOne(
     }
   }
   let sheet: string | undefined;
+  let thumb: string | undefined;
   if (args.cmd === 'shot' || args.shot) {
+    thumb = join(dir, 'thumb.png');
+    await Bun.write(thumb, thumbnail(lods[0] ?? compile(asset)));
     sheet = join(dir, 'sheet.png');
     await Bun.write(
       sheet,
-      contactSheet(lods[0] ?? compile(asset), { far: lods[2] ?? compile(asset, { lod: 2 }) }),
+      contactSheet(lods[0] ?? compile(asset), { far: lods.at(-1) ?? compile(asset, { lod: 2 }) }),
     );
   }
-  const manifest = manifestOf(asset, lods, { lods: glbs, ...(sheet ? { sheet } : {}) }, findings);
+  const manifest = manifestOf(
+    asset,
+    lods,
+    { lods: glbs, ...(sheet ? { sheet } : {}), ...(thumb ? { thumb } : {}) },
+    findings,
+  );
   await Bun.write(join(dir, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`);
   return manifest;
 }

@@ -1,22 +1,20 @@
 # ts23d
 
-**Plug ts23d into Claude Code (or Codex) and build game-ready 3D assets, then the game, from TypeScript.**
-
-**[▶ Play the demo](https://developerz-ai.github.io/ts23d/#play)**: a drivable tank composed from the gallery recipes. Its wheels and turret are driven through the recipe's named parts.
+**Free 3D asset generator for coding agents. Your agent writes TypeScript; ts23d compiles it to game-ready glTF — for Unity, Unreal, Godot, three.js, Babylon, or anything that reads glTF.**
 
 [![npm](https://img.shields.io/npm/v/@developerz-ai/ts23d)](https://www.npmjs.com/package/@developerz-ai/ts23d)
 [![license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
-**Use the LLM you already pay for to write every asset your game needs (vehicles, buildings, props, whole streets), optimised by construction.**
+**Use the LLM you already pay for to write the assets your project needs (vehicles, buildings, props, whole streets), optimised by construction.** ts23d ends at the GLB, its textures and a manifest. The engine is yours.
 
-Your agent writes each asset as a TypeScript module. `t3d build` compiles it, deterministically, to GLB. Free: no GPU, no credits, no service.
+Each asset is a TypeScript module. `t3d build` compiles it, deterministically, to GLB. Free: no GPU, no credits, no service. **[Browse the asset gallery](https://developerz-ai.github.io/ts23d/)**: every recipe, compiled in your browser, with its source.
 
-- **Named, pivoted, animatable parts.** `turret`, `gun`, `road_wheel_l_0`: your game binds to node names.
+- **Named, pivoted, animatable parts.** `turret`, `gun`, `road_wheel_l_0`: your engine code binds to node names.
 - **Families.** One typed build, many assets: `family.variant({ name, params })` turns T-34 1941 into 1943 with one key; `extend` derives new families. Plain functions all the way down, no plugin API.
 - **Sockets and surfaces.** `ctx.socket` exports seats, mounts, cameras and spawn points as named nodes. A part can be `opaque`, `cutout`, `glass` or `translucent`; a GLB holds at most 4 materials over one texture set (a shampoo bottle is 2 draw calls).
 - **Emitters and motion.** `ctx.emitter` exports smoke, steam, dust, muzzle and fire sources as named nodes your engine's particles bind to; parts `spin`, `slide` or `sway`.
 - **3 LODs from one source.** The recipe reads `ctx.lod` and drops detail. Nothing is decimated.
-- **One shared material, batched geometry.** Every asset maps into one trim sheet, and the exporter merges static geometry into its nearest pivot. Draw calls = the parts your engine moves: a static prop or building is 1; a tank with independently spinning road wheels is one per wheel plus turret, gun and hull.
+- **One shared material, batched geometry.** Every asset maps into one trim sheet, and the exporter merges static geometry into its nearest pivot. Draw calls = the parts an engine moves: a static prop or building is 1; a tank with independently spinning road wheels is one per wheel plus turret, gun and hull.
 - **A QA gate.** Exit 1 on: a part not in surface contact with anything grounded (2 cm), a moving part that cuts through another anywhere in its motion, a blown triangle budget.
 - **Code-level checks.** The recipe states its physical intent and QA enforces it at every LOD: `checks: [clear('track_*', 'hull_*'), noOverlap('road_wheel_l_*'), touches('turret_body', 'hull_top'), symmetric('_l', '_r', 'y')]`. "The track hits the frame" becomes a failing build.
 - **Textures from code.** A procedural albedo / normal / ORM trim sheet (bricks, planks, plates, slate, foliage), written once and shared by every GLB, plus three.js TSL and Godot shader sources.
@@ -25,9 +23,9 @@ Your agent writes each asset as a TypeScript module. `t3d build` compiles it, de
 
 **The goal: high-definition detail up close, cheap to draw everywhere.** One texture set, batched static geometry, LODs, compact core-glTF buffers (u16 indices and colours), and (planned) welded, cache-optimised meshes.
 
-**You no longer need Blender for most of the work.** For hard-surface assets (vehicles, buildings, props, whole scenes) the LLM writes TypeScript that does the modelling, LODs, UVs onto the trim sheet, batching, QA and export. Blender stays useful for organic sculpting, which comes in through the planned [`/neural` adapter or `importGlb`](docs/idea/08-neural-adapters.md).
+**No Blender for most hard-surface asset production.** For vehicles, buildings, props and whole scenes, the LLM writes TypeScript that does the modelling, LODs, UVs onto the trim sheet, batching, QA and export. Blender stays useful for organic sculpting, which comes in through the planned [`/neural` adapter or `importGlb`](docs/idea/08-neural-adapters.md).
 
-## Build a game with your agent
+## Generate assets with your agent
 
 ### 1. Install
 
@@ -48,43 +46,37 @@ Then give your agent the loop:
 /new-recipe Tiger I, mid-production 1943, fully stowed
 ```
 ```text
-add a 4-4-0 steam loco with tender and make it run on a loop
+/new-recipe 4-4-0 steam loco with tender, wheels and rods animated on a loop
 ```
 ```text
-compose a 1940s city street with townhouses and gas lamps    (townhouse, lamp, street recipes: landing)
+/new-recipe 1940s city street with townhouses and gas lamps    (townhouse, lamp, street recipes: landing)
 ```
 
 The agent looks up real dimensions, writes `recipes/<name>.ts`, builds until `QA PASS`, reads the contact sheet, and fixes the worst thing until two shots in a row find nothing ([the loop](docs/idea/05-agent-loop.md)).
 
-### 3. Bind the parts in your engine
+### 3. Use the GLB in your engine
 
-Part names are the contract. three.js, driving the `t34` recipe:
+`out/<asset>/lod0.glb` (and `lod1`, `lod2`) are plain glTF 2.0, core extensions only. The hooks your engine code can use:
+
+| Hook | In the GLB |
+|---|---|
+| Movable parts | Named nodes with pivots at the hinge: `turret`, `gun`, `wheel_*`, `door_*` |
+| Attachment points | Socket nodes with `extras.ts23d.socket` (seat, mount, camera, …) |
+| Particle sources | Emitter nodes with `extras.ts23d.emitter` (smoke, steam, dust, muzzle, …) |
+| Baked loop | Clip `run` (after a static `rest` clip) when built with `t3d build` |
+| Everything else | `out/<asset>/manifest.json`: pivots, sockets, emitters, triangles, draw calls |
+
+three.js, as an example:
 
 ```ts
-import * as THREE from 'three';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-
-const gltf = await new GLTFLoader().loadAsync('out/t34/lod0.glb'); // `t3d build` bakes the run clip
-scene.add(gltf.scene);
-const turret = gltf.scene.getObjectByName('turret');
-const gun = gltf.scene.getObjectByName('gun');
-const wheels: THREE.Object3D[] = [];
-gltf.scene.traverse((o) => o.name.startsWith('road_wheel_') && wheels.push(o));
-
-const mixer = new THREE.AnimationMixer(gltf.scene);
-mixer.clipAction(THREE.AnimationClip.findByName(gltf.animations, 'run')).play(); // spins road_wheel_*
-const clock = new THREE.Clock();
-renderer.setAnimationLoop(() => {
-  const dt = clock.getDelta();
-  if (turret) turret.rotation.z += input.traverse * dt; // parts keep Z-up inside the asset root
-  if (gun) gun.rotation.y = -input.elevation;           // pivot sits on the trunnion
-  mixer.timeScale = input.speed;                        // wheel spin follows the throttle
-  mixer.update(dt);
-  renderer.render(scene, camera);
-});
+const gltf = await new GLTFLoader().loadAsync('out/t34/lod0.glb');
+const turret = gltf.scene.getObjectByName('turret');      // rotate about its local Z
+const run = THREE.AnimationClip.findByName(gltf.animations, 'run');
+const emitters = [];
+gltf.scene.traverse((o) => o.userData.ts23d?.emitter && emitters.push(o));
 ```
 
-`wheels` holds every road wheel if you'd rather spin them yourself (`wheel.rotation.y += speed / 0.41 * dt`) instead of playing the clip. Godot and Unity import the same GLB with the same node names and the `run` clip; bind them the same way.
+Godot: node names import unchanged, and `extras` are available as node metadata when that import option is on. Unity (glTFast), Unreal and Babylon read the same names. ts23d ships no engine code; per-engine notes are in [glb-production.md](docs/architecture/glb-production.md#c-per-engine-import-table).
 
 ## What you get that a generated mesh doesn't
 
@@ -126,9 +118,9 @@ _Measured by `bun run bench` on 1.4.3 (Bun)._
 
 Draw calls column: static assets (the Eiffel Tower) are 1; vehicles are one per movable part. Trim-sheet painting: 512² ≈ 0.22 s, 1024² ≈ 0.8 s, 2048² ≈ 2.95 s. The predecessor's reference loco (below) is about 16k triangles at LOD0.
 
-## One pipeline, no other libraries
+## One asset pipeline, no other libraries
 
-**A game developer should need nothing else between "describe the asset" and "drop it in the engine".** Honest status per stage:
+**Asset production needs nothing else between "describe the asset" and "a GLB your engine imports".** Honest status per stage:
 
 | Stage | Module | Status (2026-10) | Replaces |
 |---|---|---|---|
@@ -139,7 +131,7 @@ Draw calls column: static assets (the Eiffel Tower) are 1; vehicles are one per 
 | QA | `qa` | Shipped: budget, surface-contact floating parts, motion clashes, names, proportions, spec measures. Silhouette IoU and ACMR planned | Manual review |
 | Renders and photo match | `render` | Contact sheet shipped. Photo match planned, M2 | — |
 | GLB export | `export` | Shipped: core glTF only, faces +Z, seamless loops, trim-sheet textures, 0 glTF-Validator errors (tested) | — |
-| Engine adapters | `threeMaterialSource` (TSL), `godotShaderSource` | Shipped: shader sources with wind, window glow, wear. Planned: Unity import settings | — |
+| Engine import adapters | `threeMaterialSource` (TSL), `godotShaderSource` | Shipped: shader sources with wind, window glow, wear. Planned, M3: import settings and collision naming per engine, as hooks, not runtime | — |
 
 Every stage has zero runtime dependencies ([ADR 005](docs/decisions/005-zero-runtime-deps.md)).
 
@@ -193,7 +185,7 @@ Row 2: top, 3/4 rear, LOD2 at distance. Layout: [docs/idea/05-agent-loop.md](doc
 
 ## Quickstart
 
-Needs Bun ≥ 1.4.3 (Node ≥ 22 for the compiled `dist/`).
+Needs Bun ≥ 1.4.4 (Node ≥ 22 for the compiled `dist/`).
 
 ```sh
 bun add @developerz-ai/ts23d
@@ -208,6 +200,7 @@ bunx t3d list  recipes/*.ts --json  # the assets each module exports
 | `--no-shot` | `build` without rendering the contact sheet |
 | `--sheet external\|embed\|none` | Trim-sheet textures. `external` (default): `out/trim_sheet_{albedo,normal,orm}.png` written once, every GLB references `../trim_sheet_*.png`. `embed`: inside each GLB. `none`: vertex colour only |
 | `--sheet-size 512\|1024\|2048` | Sheet resolution (default 1024) |
+| `--lods 0,1,2` | Which detail levels to build (default all three). `--lods 0` = hero mesh only, `--lods 0,2` = near + far. QA and the manifest cover exactly what was built |
 | `--no-animations` | Skip the baked `run` clip. `t3d build` bakes it by default so viewers (e.g. VS Code glTF Tools) show play controls |
 | `--json` | Machine-readable `{ ok, data }` / `{ ok: false, error: { code, message, fix } }` |
 
@@ -226,6 +219,42 @@ out/
 Library calls differ on one default: `toGlb(asset)` exports no animation unless `{ animations: true }`.
 
 Every exported asset in a module is built (`defineAsset` or `family.variant`). Every error prints a stable `T3D_*` code and its fix ([errors](docs/architecture/errors.md)).
+
+## Programmatic: no CLI, just Bun
+
+`t3d` is a convenience. Everything it does is a function call: compile, QA, export, render.
+A plain script builds exactly what you want, and the same code runs in Node ≥ 22 (against the
+built `dist/`), in a browser, or in a Web Worker (the [asset gallery](https://developerz-ai.github.io/ts23d/)
+compiles every recipe in a worker).
+
+```ts
+// build.ts → bun build.ts
+import { compile, contactSheet, DEFAULT_SHEET, paintTrimSheet, runQa, toGlb } from '@developerz-ai/ts23d';
+import { tiger_1 } from './recipes/tiger_1.ts';
+
+const sheet = paintTrimSheet({ ...DEFAULT_SHEET, size: 512 }); // textures are optional
+
+for (const lod of [0, 2] as const) {                // only the detail levels you need
+  const asset = compile(tiger_1, { lod });
+  const findings = runQa(asset);                    // gate it your way, or skip it
+  if (findings.length) throw new Error(findings.map((f) => `${f.message} — fix: ${f.fix}`).join('\n'));
+  await Bun.write(`out/tiger_1.lod${lod}.glb`, toGlb(asset, { sheet, animations: true }));
+}
+await Bun.write('out/tiger_1.png', contactSheet(compile(tiger_1, { lod: 0 }))); // for your agent's eyes
+```
+
+Runnable copy: [`examples/build-with-bun.ts`](examples/build-with-bun.ts) — executed in CI, so this path can't rot.
+
+| Building block | What it gives you |
+|---|---|
+| `compile(asset, { lod, seed })` | the compiled parts for one LOD (deterministic) |
+| `runQa(compiled)` / single gates / `inspect(compiled)` | findings with fixes; geometry queries for your own checks |
+| `toGlb(compiled, { sheet, animations, keepParts })` | GLB bytes (`Uint8Array`) — write them anywhere |
+| `mergeToPivots(compiled)` | the batched part list the GLB uses (draw calls = movable parts) |
+| `contactSheet(compiled, { far, cell })` | six-view PNG bytes |
+| `paintTrimSheet(recipe)` + `sheetPngs(sheet)` | the texture set (albedo / normal / ORM) as RGBA or PNG |
+| `threeMaterialSource(hints)` / `godotShaderSource(hints)` | shader source strings for your engine |
+| `manifest` data | build it from `compiled.parts` (pivots, emitters, sockets) — see `src/cli/manifest.ts` |
 
 ## Use it with any agent
 
@@ -276,7 +305,7 @@ Not a replacement for AI mesh generators: a different approach with different st
 
 ## Gallery
 
-Every recipe in `recipes/`, compiled in the browser, with source and LOD switcher: **https://developerz-ai.github.io/ts23d/**. The drivable demo: **[#play](https://developerz-ai.github.io/ts23d/#play)**. Recipes today: `tiger_1`, `t34` + `t34_1941` (a family), `loco_440` (a 4-4-0, the Jupiter, family), `eiffel_tower`, `oak`, `pine`, `palm`, `material_swatches`.
+Every recipe in `recipes/`, compiled in the browser, with source and LOD switcher: **https://developerz-ai.github.io/ts23d/**. Recipes today: `tiger_1`, `t34` + `t34_1941` (a family), `loco_440` (a 4-4-0, the Jupiter, family), `eiffel_tower`, `oak`, `pine`, `palm`, `material_swatches`.
 
 ## Docs
 

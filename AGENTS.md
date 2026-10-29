@@ -3,6 +3,9 @@
 For any coding agent (Codex, Claude Code, Cursor, …) working **in this repo** or **using this
 library** in another one.
 
+## Scope
+ts23d generates assets (GLB, textures, manifest) for whatever engine or framework you use. It ships no engine or runtime code: named nodes, sockets, emitter extras and the `run` clip are hooks for *your* engine.
+
 ## Using the library in your project
 ```sh
 bun add @developerz-ai/ts23d
@@ -12,6 +15,8 @@ Write `assets/<name>.ts` exporting `defineAsset({...})`, then loop:
 bunx t3d build assets/<name>.ts --out out      # GLB × 3 LODs + QA; exit 1 on a finding
 bunx t3d shot  assets/<name>.ts --out renders  # ONE PNG, six labelled views — open and look at it
 ```
+No CLI needed: the same steps are functions (`compile`, `runQa`, `toGlb`, `contactSheet`) — see `examples/build-with-bun.ts`.
+
 Fix what QA prints (every finding has a `fix:`) and what you see in the PNG. Repeat. TypeScript only:
 loops, helpers and `ctx.use(other, { prefix, at, yaw, seed })` composition are the point.
 

@@ -9,7 +9,7 @@ export const STEPS = [
   { name: 'boundaries', cmd: ['bun', 'run', 'scripts/boundaries.ts'] },
   { name: 'determinism', cmd: ['bun', 'run', 'scripts/determinism.ts'] },
   { name: 'filesize', cmd: ['bun', 'run', 'scripts/filesize.ts'] },
-  { name: 'test', cmd: ['bun', 'test', 'src', 'scripts'] },
+  { name: 'test', cmd: ['bun', 'test', 'src', 'scripts', 'examples'] },
   { name: 'recipes', cmd: ['bun', 'run', 'scripts/recipes.ts'] },
   { name: 'build', cmd: ['bun', 'run', 'scripts/build.ts'] },
 ] as const;
