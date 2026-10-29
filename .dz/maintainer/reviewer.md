@@ -7,7 +7,7 @@
 
 ## Stack
 
-Bun 1.4.3 (mise-pinned) + TypeScript + Biome. The gate is `bin/check` (`mise exec bun@$(cat .bun-version) -- bun run verify`): a change that does not pass it is not proven, whatever its description says.
+Bun (mise-pinned; the version lives in `.bun-version`) + TypeScript + Biome. The gate is `bin/check` (`mise exec bun@$(cat .bun-version) -- bun run verify`): a change that does not pass it is not proven, whatever its description says.
 
 ## Review conventions
 - Hold every PR to a green `bun run verify` — the exact command CI runs; a red, skipped or subset-only run is not proven.
@@ -29,7 +29,7 @@ Bun 1.4.3 (mise-pinned) + TypeScript + Biome. The gate is `bin/check` (`mise exe
 - `recipes` step: every gallery recipe compiles at LOD 0/1/2, passes QA, and builds byte-identically twice — no recipe PR is proven without it.
 - CI's `shots` job uploads per-recipe contact sheets; visual claims are judged from the PNG, not the diff.
 - Site (`pages.yml`) and publish (`release-tag.yml` → `release.yml`) run only on main/tags; a PR proves itself with verify alone.
-- Run under the pinned bun (`.bun-version` = 1.4.3, e.g. `mise exec bun@$(cat .bun-version)`) so local green matches CI.
+- Run under the pinned bun (`.bun-version`, e.g. `mise exec bun@$(cat .bun-version)`) so local green matches CI.
 
 ## Never flag
 - Generated output: `dist/`, `apps/site/dist/`, `out/`, `renders/`, and the README bench block between `<!-- bench:start/end -->`.
