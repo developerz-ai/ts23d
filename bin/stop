@@ -61,7 +61,7 @@ stop_session() {
   [[ -f $state/owner ]] || return 0
   current=$(< "$state/owner")
   if [[ $current == "$owner $owner_start $group $group_start $saved_boot" ]]; then
-    rm -f "$state/owner" "$state/result" "$state/pending"
+    rm -f "$state/owner" "$state/result" "$state/result.tmp" "$state/pending"
     rmdir "$state" 2>/dev/null || true
   fi
 }

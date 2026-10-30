@@ -4,9 +4,13 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 source bin/stop --library
 mkdir -p tmp
+# Keep one stable lock inode: reclaim, publish and cleanup are one ownership lease.
+# Only the owner holds the descriptor; descendants must not prolong the lease.
+exec 9>tmp/dev-session.lock
+flock -n 9 || { echo 'Managed dev session already exists; run bin/stop.' >&2; exit 1; }
 if ! mkdir "$state" 2>/dev/null; then
   if load_owner && ! matches "$owner" "$owner_start" && ! matches "$group" "$group_start"; then
-    rm -f "$state/owner" "$state/result" "$state/pending"
+    rm -f "$state/owner" "$state/result" "$state/result.tmp" "$state/pending"
     rmdir "$state" 2>/dev/null || true
   fi
   mkdir "$state" 2>/dev/null || { echo 'Managed dev session already exists; run bin/stop.' >&2; exit 1; }
@@ -31,7 +35,7 @@ cleanup() {
     fi
     wait "$group" 2>/dev/null || true
   fi
-  rm -f "$state/owner" "$state/pending" "$state/result"
+  rm -f "$state/owner" "$state/pending" "$state/result" "$state/result.tmp"
   rmdir "$state" 2>/dev/null || true
 }
 trap cleanup EXIT
@@ -46,10 +50,11 @@ bash -c '
   server=$!
   wait "$server"
   status=$?
-  printf "%s\n" "$status" > tmp/dev-session/result
+  printf "%s\n" "$status" > tmp/dev-session/result.tmp
+  mv tmp/dev-session/result.tmp tmp/dev-session/result
   # Remain the group anchor until the owner has cleaned all descendants.
   while :; do sleep 1; done
-' &
+' 9>&- &
 group=$!
 group_start=$(identity "$group")
 publish

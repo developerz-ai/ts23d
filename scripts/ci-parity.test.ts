@@ -2,9 +2,10 @@
 
 import { expect, it } from 'bun:test';
 import { chmodSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { chmod, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
+import { alive, eventually, finished, fixture, ready } from './lib/wrapper-fixture.ts';
 import { STEPS } from './verify.ts';
 
 it('ci.yml runs the full local gate', async () => {
@@ -73,98 +74,6 @@ esac
     rmSync(fixture, { recursive: true, force: true });
   }
 });
-
-// No installation, real gate, network port or shared checkout state in these fixtures.
-async function fixture() {
-  const root = await mkdtemp(join(tmpdir(), 'ts23d-wrappers-'));
-  await mkdir(join(root, 'bin'));
-  await mkdir(join(root, 'tools'));
-  for (const name of ['setup', 'check', 'dev', 'stop']) {
-    await writeFile(join(root, 'bin', name), await Bun.file(`bin/${name}`).text());
-  }
-  await writeFile(join(root, '.bun-version'), '9.8.7\n');
-  const fake = join(root, 'tools', 'mise');
-  await writeFile(
-    fake,
-    `#!${process.execPath}
-const fs = require('node:fs');
-const args = process.argv.slice(2);
-fs.appendFileSync('calls', JSON.stringify(args) + '\\n');
-if (args[0] === 'install') process.exit(Number(process.env.INSTALL_EXIT || 0));
-if (args.at(-1) !== 'site:dev') process.exit(Number(process.env.RUN_EXIT || 0));
-if (process.env.FAIL_START) process.exit(23);
-const child = Bun.spawn([process.execPath, '-e',
-  "process.on('SIGTERM', () => {}); setInterval(() => {}, 1000)"],
-  { stdout: 'ignore', stderr: 'ignore' });
-fs.writeFileSync('server-pids', process.pid + ' ' + child.pid);
-setInterval(() => {}, 1000);
-`,
-  );
-  await chmod(fake, 0o755);
-  const processes: ReturnType<typeof Bun.spawn>[] = [];
-  const run = (name: string, env: Record<string, string> = {}) => {
-    const child = Bun.spawn(['bash', `bin/${name}`], {
-      cwd: root,
-      env: { ...process.env, PATH: `${join(root, 'tools')}:${process.env['PATH'] ?? ''}`, ...env },
-      stdout: 'ignore',
-      stderr: 'pipe',
-    });
-    processes.push(child);
-    return child;
-  };
-  const pids = async () =>
-    (await readFile(join(root, 'server-pids'), 'utf8')).split(' ').map(Number);
-  return {
-    root,
-    run,
-    pids,
-    async dispose() {
-      await finished(run('stop'));
-      for (const child of processes) {
-        if (child.exitCode === null) child.kill('SIGTERM');
-        await finished(child);
-      }
-      await rm(root, { recursive: true, force: true });
-    },
-  };
-}
-
-async function eventually(check: () => Promise<boolean>) {
-  const deadline = Date.now() + 4000;
-  while (Date.now() < deadline) {
-    if (await check()) return;
-    await Bun.sleep(20);
-  }
-  throw new Error('wrapper fixture timed out');
-}
-
-async function finished(child: ReturnType<typeof Bun.spawn>) {
-  let timer: ReturnType<typeof setTimeout> | undefined;
-  try {
-    return await Promise.race([
-      child.exited,
-      new Promise<never>((_, reject) => {
-        timer = setTimeout(() => reject(new Error('wrapper did not exit')), 4500);
-      }),
-    ]);
-  } finally {
-    clearTimeout(timer);
-  }
-}
-
-async function alive(pid: number) {
-  try {
-    const stat = await readFile(`/proc/${pid}/stat`, 'utf8');
-    return stat.slice(stat.lastIndexOf(')') + 2).split(' ')[0] !== 'Z';
-  } catch {
-    return false;
-  }
-}
-
-async function ready(f: Awaited<ReturnType<typeof fixture>>) {
-  await eventually(async () => Bun.file(join(f.root, 'server-pids')).exists());
-  return f.pids();
-}
 
 it('setup and check forward the Bun pin and propagate failures without running real gates', async () => {
   const f = await fixture();
@@ -236,6 +145,54 @@ it('signals clean up descendants and state', async () => {
     await f.dispose();
   }
 });
+
+it('concurrent stale starts publish exactly one owner and launch one server', async () => {
+  const f = await fixture();
+  try {
+    const boot = (await readFile('/proc/sys/kernel/random/boot_id', 'utf8')).trim();
+    await mkdir(join(f.root, 'tmp/dev-session'), { recursive: true });
+    await writeFile(join(f.root, 'tmp/dev-session/owner'), `999999 0 0 0 ${boot}\n`);
+    // Delay each reclaimer differently after validation, exposing the old unlink race.
+    await writeFile(
+      join(f.root, 'tools/rm'),
+      '#!/usr/bin/env bash\nif mkdir reclaim-first 2>/dev/null; then sleep 0.1; else sleep 0.3; fi\nexec /bin/rm "$@"\n',
+      { mode: 0o755 },
+    );
+    const starts = [f.run('dev'), f.run('dev')];
+    await ready(f);
+    await eventually(async () => starts.some((child) => child.exitCode !== null));
+    expect(starts.filter((child) => child.exitCode === 1)).toHaveLength(1);
+    expect((await readFile(join(f.root, 'calls'), 'utf8')).trim().split('\n')).toHaveLength(1);
+    const owner = (await readFile(join(f.root, 'tmp/dev-session/owner'), 'utf8')).split(' ')[0];
+    expect(starts.find((child) => child.exitCode === null)?.pid).toBe(Number(owner));
+  } finally {
+    await f.dispose();
+  }
+});
+
+it('status publication stays atomic even when printf is delayed after opening its file', async () => {
+  const f = await fixture();
+  try {
+    const env = join(f.root, 'slow-printf');
+    await writeFile(
+      env,
+      'printf() { case "$(readlink /proc/$$/fd/1)" in *dev-session/result*) sleep 0.2 ;; esac; builtin printf "$@"; }\n',
+    );
+    expect(await finished(f.run('dev', { FAIL_START: '1', BASH_ENV: env }))).toBe(23);
+  } finally {
+    await f.dispose();
+  }
+});
+
+it('forced disposal kills the group even when stop hangs', async () => {
+  const f = await fixture();
+  const dev = f.run('dev');
+  const pids = await ready(f);
+  await writeFile(join(f.root, 'bin/stop'), 'while :; do :; done\n');
+  await expect(f.dispose()).rejects.toThrow('wrapper did not exit');
+  expect(await finished(dev)).not.toBeNull();
+  await eventually(async () => (await Promise.all(pids.map(alive))).every((x) => !x));
+}, 10000);
 
 it('stale identities never signal unrelated live PIDs, and allow a new start', async () => {
   const f = await fixture();
