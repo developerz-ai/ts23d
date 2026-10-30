@@ -1,7 +1,71 @@
 #!/usr/bin/env bash
-# one-command stop, run by developerz.ai when a session ends — established by dz-runner setup mode. One command; adjust as the repo grows.
+# Stop only the verified, private process group owned by bin/dev (Linux /proc).
 set -euo pipefail
-cd "$(dirname "$0")/.."
-# Nothing detected to stop (no compose file at the repo root). Replace with the command
-# that stops what bin/dev starts: idempotent, exit 0 when nothing runs, never remove data.
-true
+cd "$(dirname "${BASH_SOURCE[0]}")/.."
+state=tmp/dev-session
+boot=$(< /proc/sys/kernel/random/boot_id)
+
+identity() {
+  local stat
+  [[ $1 =~ ^[1-9][0-9]*$ && -r /proc/$1/stat ]] || return 1
+  stat=$(< "/proc/$1/stat") || return 1
+  stat=${stat##*) }
+  local fields
+  read -ra fields <<< "$stat"
+  [[ ${fields[0]} != Z ]] || return 1
+  printf '%s' "${fields[19]}"
+}
+
+matches() {
+  local actual
+  actual=$(identity "$1") || return 1
+  [[ $actual == "$2" ]]
+}
+
+load_owner() {
+  [[ -f $state/owner ]] || return 1
+  read -r owner owner_start group group_start saved_boot < "$state/owner" || return 1
+  [[ $saved_boot == "$boot" && $owner =~ ^[1-9][0-9]*$ && $group =~ ^[0-9]+$ ]]
+}
+
+stop_session() {
+  local owner owner_start group group_start saved_boot i current
+  # Publication is atomic; allow an in-progress start to publish its identity.
+  for ((i=0; i<20; i++)); do
+    [[ -d $state && ! -f $state/owner ]] || break
+    sleep 0.05
+  done
+  load_owner || return 0
+  if matches "$owner" "$owner_start"; then
+    kill -TERM "$owner" 2>/dev/null || true
+    for ((i=0; i<100; i++)); do
+      matches "$owner" "$owner_start" || break
+      sleep 0.05
+    done
+  fi
+  # The group anchor outlives the server, including when the launcher crashes.
+  if matches "$group" "$group_start"; then
+    kill -TERM -- "-$group" 2>/dev/null || true
+    for ((i=0; i<20; i++)); do
+      matches "$group" "$group_start" || break
+      sleep 0.05
+    done
+    if matches "$group" "$group_start"; then
+      kill -KILL -- "-$group" 2>/dev/null || true
+    fi
+  fi
+  if matches "$owner" "$owner_start"; then
+    kill -KILL "$owner" 2>/dev/null || true
+  fi
+  # Do not erase a replacement session that won a concurrent start.
+  [[ -f $state/owner ]] || return 0
+  current=$(< "$state/owner")
+  if [[ $current == "$owner $owner_start $group $group_start $saved_boot" ]]; then
+    rm -f "$state/owner" "$state/result" "$state/result.tmp" "$state/pending"
+    rmdir "$state" 2>/dev/null || true
+  fi
+}
+
+if [[ ${1:-} != --library ]]; then
+  stop_session
+fi
