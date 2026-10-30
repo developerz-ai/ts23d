@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
-# one-command check (typecheck + lint + test) — established by dz-runner setup mode. One command; adjust as the repo grows.
+# Run the full verify gate, then render the CI contact sheets.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 mise exec bun@$(cat .bun-version) -- bun run verify
+
+mise exec bun@$(cat .bun-version) -- bun run shots
