@@ -1,5 +1,63 @@
 #!/usr/bin/env bash
-# one-command dev — established by dz-runner setup mode. One command; adjust as the repo grows.
+# Run the pinned gallery command in an owned process group; clean up on every exit.
 set -euo pipefail
 cd "$(dirname "$0")/.."
-mise exec bun@$(cat .bun-version) -- bun run site:dev
+source bin/stop --library
+mkdir -p tmp
+if ! mkdir "$state" 2>/dev/null; then
+  if load_owner && ! matches "$owner" "$owner_start" && ! matches "$group" "$group_start"; then
+    rm -f "$state/owner" "$state/result" "$state/pending"
+    rmdir "$state" 2>/dev/null || true
+  fi
+  mkdir "$state" 2>/dev/null || { echo 'Managed dev session already exists; run bin/stop.' >&2; exit 1; }
+fi
+owner=$$
+owner_start=$(identity "$$")
+group=0
+group_start=0
+stopping=0
+publish() {
+  printf '%s %s %s %s %s\n' "$owner" "$owner_start" "$group" "$group_start" "$boot" > "$state/pending"
+  mv "$state/pending" "$state/owner"
+}
+cleanup() {
+  trap '' TERM INT HUP
+  if matches "$group" "$group_start"; then
+    kill -TERM -- "-$group" 2>/dev/null || true
+    # Keep the anchor alive until escalation, so a reused PGID is never targeted.
+    sleep 0.2
+    if matches "$group" "$group_start"; then
+      kill -KILL -- "-$group" 2>/dev/null || true
+    fi
+    wait "$group" 2>/dev/null || true
+  fi
+  rm -f "$state/owner" "$state/pending" "$state/result"
+  rmdir "$state" 2>/dev/null || true
+}
+trap cleanup EXIT
+trap 'stopping=143' TERM HUP
+trap 'stopping=130' INT
+publish
+# Job control gives the anchor a private process group without an external launcher.
+set -m
+bash -c '
+  trap ":" TERM INT HUP
+  mise exec bun@$(cat .bun-version) -- bun run site:dev &
+  server=$!
+  wait "$server"
+  status=$?
+  printf "%s\n" "$status" > tmp/dev-session/result
+  # Remain the group anchor until the owner has cleaned all descendants.
+  while :; do sleep 1; done
+' &
+group=$!
+group_start=$(identity "$group")
+publish
+while [[ ! -f $state/result ]]; do
+  (( stopping == 0 )) || exit "$stopping"
+  matches "$group" "$group_start" || exit 1
+  sleep 0.05
+done
+(( stopping == 0 )) || exit "$stopping"
+read -r status < "$state/result"
+exit "$status"
