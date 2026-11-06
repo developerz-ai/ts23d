@@ -1,3 +1,0 @@
-[test]
-# Sealed Math.random: a recipe that reads ambient entropy fails its test, not its user.
-preload = ["./scripts/test-setup.ts"]
