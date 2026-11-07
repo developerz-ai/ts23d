@@ -10,8 +10,8 @@ and `src/index.ts` first. Your file set is the one recipe the brief names; never
 primitive is a finding for your report, not a reason to patch the library.
 
 ## The loop — do not skip a step
-1. **Research → dossier.** Spec tables + real photos per view into `refs/<name>.md` (template in
-   `refs/README.md`; you own that file too). Copy the numbers into `sources`, `real` and 4–8 `measures`.
+1. **Research → dossier.** Spec tables + real photos per view into `recipes/<name>/README.md` (template in
+   `recipes/README.md`; you own that file too). Copy the numbers into `sources`, `real` and 4–8 `measures`.
 2. **Masses first.** Hull/body/tiers with `prism` from real profiles, at true scale. `bun run t3d build
    recipes/<name>.ts --out out` until QA PASS — `proportions` holds you to `real` ±5%.
 3. **Shoot and LOOK.** `bun run t3d shot recipes/<name>.ts --out renders`, then Read the PNG. Six labelled

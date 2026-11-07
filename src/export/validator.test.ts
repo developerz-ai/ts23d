@@ -29,6 +29,14 @@ const sample = defineAsset({
     });
     ctx.emitter('exhaust', { kind: 'smoke', at: [-1, 0, 0.7], rate: 5, life: 2, size: [0.1, 0.8] });
     ctx.socket('seat_driver', { kind: 'seat', at: [0.5, 0.2, 0.6] });
+    ctx.part('lamp', box({ size: [0.05, 0.2, 0.2], at: [1.02, 0.3, 0.45], color: [1, 1, 0.9] }));
+    ctx.socket('headlamp', {
+      kind: 'light',
+      at: [1.06, 0.3, 0.55],
+      dir: [1, 0, -0.1],
+      data: { light: 'spot', color: '#ffe8c0', intensity: 200, range: 30, cone: 25 },
+    });
+    ctx.socket('cabin_light', { kind: 'light', at: [0, 0, 0.8], data: { light: 'point' } });
   },
 });
 
@@ -48,14 +56,42 @@ async function validate(glb: Uint8Array) {
   }
 }
 
+type Message = { severity: number; code: string; pointer?: string };
+const worst = (report: { issues: { messages: Message[] } }, severity: number): Message[] =>
+  report.issues.messages.filter((m) => m.severity <= severity);
+const full = {
+  glow: [{ parts: ['lamp'], color: [1, 0.9, 0.7] as const, strength: 6 }],
+  meta: {
+    creators: ['ts23d test'],
+    copyright: '© 2026 developerz.ai',
+    license: 'MIT',
+    sources: ['https://example.org/spec'],
+    description: 'validator fixture',
+  },
+};
+
 describe('glTF-Validator', () => {
   for (const animations of [false, true]) {
-    it(`reports 0 errors (animations: ${animations})`, async () => {
+    it(`reports 0 errors and 0 warnings (animations: ${animations})`, async () => {
       const report = await validate(toGlb(compile(sample), { animations }));
-      const errors = report.issues.messages.filter((m: { severity: number }) => m.severity === 0);
-      expect(errors).toEqual([]);
+      expect(worst(report, 1)).toEqual([]);
     });
   }
+
+  it('reports 0 errors and 0 warnings with lights, glow and XMP metadata, unoptimised too', async () => {
+    for (const optimize of [true, false]) {
+      const report = await validate(
+        toGlb(compile(sample), { ...full, optimize, animations: true }),
+      );
+      expect(worst(report, 1)).toEqual([]);
+      // Lights and emissive strength are validated; validator 2.0.0-dev.3.10 predates
+      // KHR_xmp_json_ld (info only), so glb.test.ts checks the packet's shape itself.
+      const unsupported = report.issues.messages
+        .filter((m: Message) => m.code === 'UNSUPPORTED_EXTENSION')
+        .map((m: Message & { message?: string }) => m.message ?? '');
+      expect(unsupported.every((m: string) => m.includes('KHR_xmp_json_ld'))).toBe(true);
+    }
+  });
 
   it('reports 0 errors and 0 warnings with the trim sheet embedded', async () => {
     const sheet = paintTrimSheet({ ...DEFAULT_SHEET, size: 512 });

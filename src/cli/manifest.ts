@@ -13,6 +13,7 @@ export interface AssetManifest {
   readonly tags: readonly string[];
   readonly files: {
     readonly lods: readonly string[];
+    readonly hero?: string;
     readonly sheet?: string;
     readonly thumb?: string;
   };
@@ -51,7 +52,14 @@ export function manifestOf(
     tags: asset.tags ?? [],
     files,
     triangles: lods.map(tris),
-    drawCalls: lods.map((l) => mergeToPivots(l).parts.filter((p) => p.mesh).length),
+    // One draw per merged mesh, glowing parts in their own emissive layer (as the GLB writes them).
+    drawCalls: lods.map(
+      (l) =>
+        mergeToPivots(
+          l,
+          (l.glow ?? []).map((g) => g.parts),
+        ).parts.filter((p) => p.mesh).length,
+    ),
     pivots: (merged?.parts ?? [])
       .filter((p) => !p.emitter && !p.socket)
       .map((p) => ({

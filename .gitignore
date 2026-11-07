@@ -1,6 +1,6 @@
 node_modules/
 dist/
-out/
+/out/
 coverage/
 *.tsbuildinfo
 .env
@@ -9,4 +9,4 @@ coverage/
 /tmp/
 # compiled assets: regenerated from recipes, never committed
 apps/site/public/gallery/
-renders/
+/renders/

@@ -6,8 +6,8 @@
 
 | Step | Rule |
 |---|---|
-| 1. Signature | If it's in `src/kinds/planned.ts` (`hull`, `roof`, `creature`), keep that signature. Move it to `vessel.ts`, `building.ts`, … |
-| 2. Duplicate check | Read the shipped kinds first — `building.ts` (`facade`, `setbacks`), `vehicle.ts` (`axle`, `whyteAxles`, `trackRun`, `propeller`), `vegetation.ts` (`tree`, `trees`, `treeReal`). Extend one of them; don't re-add what already ships |
+| 1. Signature | If it's in `src/kinds/planned.ts` (today only `creature`), keep that signature and move it to its own file |
+| 2. Duplicate check | Read the shipped kinds first — `building.ts` (`facade`, `setbacks`), `vehicle.ts` (`axle`, `whyteAxles`, `trackRun`, `propeller`), `vegetation.ts` (`tree`, `trees`, `treeReal`), `roof.ts` (`roof`, `roofMesh`), `openings.ts` (`opening`), `mass.ts`, `hull.ts`, `head.ts` (`head`, `HEADS`). Extend one of them; don't re-add what already ships |
 | 3. Domain params | Take the parameters the domain uses: Whyte `2-6-2`, length/beam/draft, species + height, roof pitch in degrees. Not raw coordinates |
 | 4. Names | Every part prefixed by a caller-supplied `prefix`/`name`. Follow the engine contract: `axle_*` / `wheel_*` spin about Y, `prop_*` / `rotor_*` about their own axis, `door_*` hinge at the pivot |
 | 5. Pivots | Movable pieces get a `ctx.group` at the hinge, the mesh inside it. Yaw on the group, motion on the child |
@@ -16,7 +16,7 @@
 | 8. Real units | Defaults from real references, cited in a comment (e.g. standard gauge 1.435 m) |
 | 9. Export | Named export from `src/kinds/index.ts` |
 | 10. Test | Next to it: part names, part count per LOD, QA passes on a minimal asset using it |
-| 11. Recipe | At least one `recipes/*.ts` using it. Its contact sheet is the review artefact |
+| 11. Recipe | At least one `recipes/*/*.ts` using it. Its contact sheet is the review artefact |
 | 12. Docs | [09-kinds](../idea/09-kinds.md), [07-what-fits](../idea/07-what-fits.md), [roadmap](../plans/roadmap.md), `CHANGELOG.md` |
 
 ## Shape

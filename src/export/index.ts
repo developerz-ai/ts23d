@@ -1,7 +1,13 @@
 // Public API of /export: back ends that turn a CompiledAsset into a file.
 
-export { type GlbOptions, toGlb } from './glb.ts';
+export { exportGlb, type GlbOptions, type GlbResult, toGlb } from './glb.ts';
 export { mergeToPivots } from './merge-pivots.ts';
+export {
+  type ExportReport,
+  optimizeParts,
+  type PartOptimizeReport,
+  summarize,
+} from './optimize-parts.ts';
 export {
   type ExternalSheet,
   SHEET_MAPS,

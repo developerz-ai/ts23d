@@ -31,6 +31,8 @@ if (mode === '--check') {
     fail(`package.json is ${pkg.version}, not ${version}`, `bun run release ${version}`);
   if (!section(version))
     fail(`CHANGELOG.md has no [${version}] section`, `bun run release ${version}`);
+  if (!(await Bun.file('src/export/version.ts').text()).includes(`VERSION = '${version}'`))
+    fail(`src/export/version.ts is not ${version}`, `bun run release ${version}`);
   console.log(`✔ stamped at ${version}`);
 } else if (mode === '--notes') {
   const notes = section(version);
@@ -45,6 +47,10 @@ if (mode === '--check') {
     changelog.replace(/^## \[Unreleased\]/m, `## [Unreleased]\n\n## [${version}] - ${date}`),
   );
   await Bun.write(pkgFile, `${JSON.stringify({ ...pkg, version }, null, 2)}\n`);
+  // The generator string every GLB carries (src/export/version.ts; version.test.ts pins the pair).
+  const versionFile = 'src/export/version.ts';
+  const src = await Bun.file(versionFile).text();
+  await Bun.write(versionFile, src.replace(/VERSION = '[^']*'/, `VERSION = '${version}'`));
   console.log(
     `✔ stamped ${version}. Next: git switch -c release/${version} && git commit -am 'chore: release ${version}' && gh pr create --fill`,
   );

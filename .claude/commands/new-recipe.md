@@ -9,7 +9,7 @@ The human names it; you research it; the library builds it; the gates prove it.
 
 1. **Research first — no code yet.** WebSearch for spec tables (manufacturer data, museum pages,
    rosters, drawings) and real photos per view (side elevation, front, top, 3/4, details). Pick ONE
-   variant and stay consistent. Write `refs/<snake_name>.md` from the template in `refs/README.md`:
+   variant and stay consistent. Write `recipes/<snake_name>/README.md` from the template in `recipes/README.md` (the recipe goes next to it as `recipes/<snake_name>/<snake_name>.ts`):
    every number with a URL, every photo by view, signature features, engine parts, open questions.
 2. **Recipe.** `recipes/<snake_name>.ts`: copy `sources` and `real` (overall box + 4–8 `measures`)
    from the dossier. Then follow `.claude/skills/author-recipe/SKILL.md`: masses → QA PASS → shoot →

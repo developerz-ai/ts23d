@@ -1,0 +1,133 @@
+{
+  "name": "station_halt",
+  "kind": "building",
+  "description": "GWR standard country station (Toddington, 1904): red brick building with slate roof and stacks, chocolate-and-cream canopy with fretted valance on cast-iron columns, brick-faced platform, benches, lamps, running-in board.",
+  "tags": [
+    "railroad",
+    "station",
+    "gwr",
+    "edwardian",
+    "uk",
+    "brick"
+  ],
+  "files": {
+    "lods": [],
+    "sheet": "recipes/station_halt/out/station_halt/sheet.png",
+    "thumb": "recipes/station_halt/out/station_halt/thumb.png"
+  },
+  "triangles": [
+    8770,
+    4850,
+    460
+  ],
+  "drawCalls": [
+    2,
+    2,
+    2
+  ],
+  "pivots": [
+    {
+      "name": "body",
+      "parent": null
+    },
+    {
+      "name": "body_glass",
+      "parent": null
+    }
+  ],
+  "emitters": [
+    {
+      "name": "chimney_0",
+      "kind": "smoke",
+      "when": "always"
+    },
+    {
+      "name": "chimney_1",
+      "kind": "smoke",
+      "when": "always"
+    }
+  ],
+  "sockets": [
+    {
+      "name": "door_1_use",
+      "kind": "interact",
+      "parent": null
+    },
+    {
+      "name": "door_4_use",
+      "kind": "interact",
+      "parent": null
+    },
+    {
+      "name": "door_7_use",
+      "kind": "interact",
+      "parent": null
+    },
+    {
+      "name": "bench_0",
+      "kind": "seat",
+      "parent": null
+    },
+    {
+      "name": "bench_1",
+      "kind": "seat",
+      "parent": null
+    },
+    {
+      "name": "bench_2",
+      "kind": "seat",
+      "parent": null
+    },
+    {
+      "name": "lamp_0_light",
+      "kind": "light",
+      "parent": null
+    },
+    {
+      "name": "lamp_1_light",
+      "kind": "light",
+      "parent": null
+    }
+  ],
+  "surfaces": [
+    "glass",
+    "opaque"
+  ],
+  "real": {
+    "length": 11.85,
+    "width": 30,
+    "height": 8.557729690942503
+  },
+  "measures": [
+    {
+      "label": "platform height over rail (3 ft)",
+      "spec": 0.915,
+      "measured": 0.9190000295639038,
+      "source": "Railway platform height (UK 915 mm)"
+    },
+    {
+      "label": "building length (photo-scaled)",
+      "spec": 20,
+      "measured": 20.079999923706055,
+      "source": "Toddington photos"
+    },
+    {
+      "label": "building depth (photo-scaled)",
+      "spec": 6.4,
+      "measured": 6.480000019073486,
+      "source": "Toddington photos"
+    }
+  ],
+  "sources": [
+    "https://commons.wikimedia.org/wiki/File:Toddington_Railway_Station_GWSR_001.jpg",
+    "https://commons.wikimedia.org/wiki/File:Toddington_railway_station_1.jpg",
+    "https://commons.wikimedia.org/wiki/File:Toddington_railway_station9.4.05.jpg",
+    "https://en.wikipedia.org/wiki/Toddington_railway_station",
+    "https://en.wikipedia.org/wiki/Railway_platform_height",
+    "https://www.bachmann.co.uk/product/gwr-standard-station---chocolate-and-cream/44-1019"
+  ],
+  "qa": {
+    "pass": true,
+    "findings": []
+  }
+}

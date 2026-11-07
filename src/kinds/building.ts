@@ -1,9 +1,12 @@
 // Building helpers: masses, then details. A facade is a split-grammar line per floor and side;
-// `win`/`door`/`arch` slots become inset glass/door panels, everything else stays wall.
+// `win`/`door`/`arch`/`shop` slots become openings, everything else stays wall. Plain mode: inset
+// glass/door panels. With `kit`: real openings (reveal, sill, lintel, sash, panelled door).
 
 import type { BuildContext, Vec3 } from '../core/index.ts';
 import { split } from '../grammar/index.ts';
+import type { StripId } from '../material/index.ts';
 import { box } from '../primitives/index.ts';
+import { opening } from './openings.ts';
 
 export type Side = 'front' | 'back' | 'left' | 'right';
 
@@ -23,6 +26,15 @@ export interface FacadeOptions {
   readonly frame?: Vec3;
   /** Window height as a fraction of the floor. */
   readonly windowRatio?: number;
+  /** Detailed openings (see `opening`): reveal in the wall colour, stone sill/lintel, sash bars. */
+  readonly kit?: {
+    readonly wall: Vec3;
+    readonly trim?: Vec3;
+    readonly depth?: number;
+    readonly panes?: readonly [number, number];
+    /** The wall's strip, so reveals continue its courses. Default 'plain'. */
+    readonly strip?: StripId;
+  };
 }
 
 const OPENINGS = new Set(['win', 'door', 'arch', 'shop']);
@@ -51,10 +63,35 @@ export function facade(ctx: BuildContext, o: FacadeOptions): void {
               : side === 'left'
                 ? [o.at[0] - c, o.at[1] + d / 2, z + sill]
                 : [o.at[0] + c, o.at[1] - d / 2, z + sill];
+        const name = `${o.prefix}_${side}_${f}_${i}`;
+        if (o.kit) {
+          const k = o.kit;
+          ctx.part(
+            name,
+            opening(
+              {
+                kind: isDoor ? 'door' : 'window',
+                width: Math.max(0.3, inset - 0.2),
+                height: h - (isDoor ? 0.25 : 0.2),
+                at: pos,
+                facing: side,
+                glass: o.glass,
+                frame: o.frame ?? [0.92, 0.9, 0.85],
+                wall: k.wall,
+                ...(k.trim ? { trim: k.trim } : {}),
+                ...(k.depth !== undefined ? { depth: k.depth } : {}),
+                ...(k.panes ? { panes: k.panes } : {}),
+                ...(k.strip ? { wallStrip: k.strip } : {}),
+              },
+              ctx.lod,
+            ),
+          );
+          return;
+        }
         const size: Vec3 =
           side === 'front' || side === 'back' ? [depth, inset, h] : [inset, depth, h];
         ctx.part(
-          `${o.prefix}_${side}_${f}_${i}`,
+          name,
           box({
             size,
             at: pos,

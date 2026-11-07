@@ -1,0 +1,117 @@
+{
+  "name": "signal_gantry",
+  "kind": "prop",
+  "description": "US lattice semaphore signal bridge over two tracks (c. 1910): lattice posts and girder, walkway, a mast per track with lower-quadrant home and distant arms, spectacles and lamps.",
+  "tags": [
+    "railroad",
+    "signal",
+    "semaphore",
+    "lineside",
+    "usa",
+    "1910s"
+  ],
+  "files": {
+    "lods": [],
+    "sheet": "recipes/signal_gantry/out/signal_gantry/sheet.png",
+    "thumb": "recipes/signal_gantry/out/signal_gantry/thumb.png"
+  },
+  "triangles": [
+    8376,
+    3684,
+    800
+  ],
+  "drawCalls": [
+    6,
+    6,
+    6
+  ],
+  "pivots": [
+    {
+      "name": "body",
+      "parent": null
+    },
+    {
+      "name": "arm_0_home",
+      "parent": null,
+      "motion": "sway"
+    },
+    {
+      "name": "arm_0_distant",
+      "parent": null,
+      "motion": "sway"
+    },
+    {
+      "name": "arm_1_home",
+      "parent": null,
+      "motion": "sway"
+    },
+    {
+      "name": "arm_1_distant",
+      "parent": null,
+      "motion": "sway"
+    }
+  ],
+  "emitters": [],
+  "sockets": [
+    {
+      "name": "lamp_0_home_light",
+      "kind": "light",
+      "parent": null
+    },
+    {
+      "name": "lamp_0_distant_light",
+      "kind": "light",
+      "parent": null
+    },
+    {
+      "name": "lamp_1_home_light",
+      "kind": "light",
+      "parent": null
+    },
+    {
+      "name": "lamp_1_distant_light",
+      "kind": "light",
+      "parent": null
+    }
+  ],
+  "surfaces": [
+    "opaque"
+  ],
+  "real": {
+    "length": 1.12,
+    "width": 10.044,
+    "height": 13.125599999999999
+  },
+  "measures": [
+    {
+      "label": "track centres (13 ft)",
+      "spec": 3.9624,
+      "measured": 3.9624000787734985,
+      "source": "Track spacing"
+    },
+    {
+      "label": "post to track centre (8 ft 6 in)",
+      "spec": 2.5908,
+      "measured": 2.5907999873161316,
+      "source": "Illinois 92 §1500"
+    },
+    {
+      "label": "blade length (5 ft)",
+      "spec": 1.524,
+      "measured": 1.5240000188350677,
+      "source": "railroadsignals.us"
+    }
+  ],
+  "sources": [
+    "https://commons.wikimedia.org/wiki/File:Signal_bridge_-_Discs_%26_semaphores_1909.jpg",
+    "https://regulations.justia.com/states/pennsylvania/title-52/part-i/subpart-b/chapter-33/subchapter-b/safety-bridges-tunnels-trestles-and-switches/section-33-41",
+    "https://en.wikipedia.org/wiki/Track_spacing",
+    "https://www.railroadsignals.us/signals/sem/",
+    "https://en.wikipedia.org/wiki/Railway_semaphore_signal",
+    "https://www.irm.org/?p=19319"
+  ],
+  "qa": {
+    "pass": true,
+    "findings": []
+  }
+}

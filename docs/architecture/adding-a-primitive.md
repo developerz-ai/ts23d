@@ -6,21 +6,21 @@
 
 | Step | Rule |
 |---|---|
-| 1. Signature | If it's in `src/primitives/planned.ts`, keep that exact signature: recipes are already written against it. Move it to its own file, e.g. `tiled.ts` |
+| 1. Signature | One file per primitive (`tiled.ts`, `lattice.ts`). Every planned primitive has shipped; a new one is a new file |
 | 2. Options | Readonly interface `XOptions`, exported. Sizes in metres. `color: Vec3` (linear), `strip?: StripId` (default `'plain'`), `at?: Vec3` |
 | 3. Placement | Base at `at` (z = 0 = ground) unless the shape has a natural centre (axles, `lathe` with `axis`). Say which in the doc comment |
 | 4. Geometry | `MeshBuilder`: `vertex({ p, n, uv, color })`, `quad(a, b, c, d)` counter-clockwise from outside |
-| 5. UVs | Map into `stripRect(strip)` by world metres, so texel density matches `box` |
+| 5. UVs | Map into `stripRect(strip)` by world metres, so texel density matches across assets. V cannot wrap: cut faces into bands of the strip's V metres (see `strip-uv.ts`), or mirror V for organic surfaces. `box` still stretches V over the face; use `tiled` or kinds' `mass` for true-scale walls |
 | 6. LOD | Take a resolution option (`segments`, `resolution`). The recipe picks it from `ctx.lod`; the primitive never reads LOD |
 | 7. Contact | If the shape rests on something, put a vertex at the contact point (see the `lathe` ring offset; the floating-parts gate caught a coarse wheel missing its rail) |
-| 8. Export | Named export from `src/primitives/index.ts`; remove it from `planned.ts`' export |
+| 8. Export | Named export from `src/primitives/index.ts` |
 | 9. Test | `x.test.ts` next to it (see `prism.test.ts`): triangle count, bounds, normals point out, deterministic output |
 | 10. Use it | Add or update a recipe in `recipes/` that uses it, so `scripts/recipes.ts` gates it |
 | 11. Docs | Tick it in [roadmap](../plans/roadmap.md); update [07-what-fits](../idea/07-what-fits.md) if fit changed; add to `CHANGELOG.md` under `[Unreleased]` |
 
 ## Skeleton
 
-`tiled` is still in `planned.ts` (M1); this is how it lands. Real shipped references: `prism.ts`, `beam.ts`, `planar.ts`.
+Real shipped references: `prism.ts`, `beam.ts`, `planar.ts`, `tiled.ts`, `lattice.ts`.
 
 ```ts
 // A quad tiling one trim strip at true scale: walls, roofs, decks.

@@ -1,6 +1,6 @@
 // Species presets: plain `TreeParams` objects — spread one and override what you need
 // (`{ ...oak, leaves: { ...oak.leaves, color: hex('#7a8a2a') } }` is an autumn oak).
-// `typical` sizes are mature open-grown trees; sources in each comment and in refs/<name>.md.
+// `typical` sizes are mature open-grown trees; sources in each comment and in recipes/<name>/README.md.
 
 import { hex } from '../material/index.ts';
 import type { TreeParams } from './vegetation-params.ts';

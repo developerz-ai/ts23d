@@ -1,5 +1,5 @@
 // Viewer side panels: the stats list (triangles vs budget, GLB size, compile time) and the parts
-// tree (pivots, motion, emitters) — DOM only, no three.js.
+// tree (pivots, motion, emitters; hovering or focusing a row outlines that node) — DOM only.
 
 import type { PartInfo } from './compile.ts';
 
@@ -28,7 +28,11 @@ export function renderStats(
   );
 }
 
-export function renderParts(target: HTMLOListElement, parts: readonly PartInfo[]): void {
+export function renderParts(
+  target: HTMLOListElement,
+  parts: readonly PartInfo[],
+  highlight: (name: string | null) => void,
+): void {
   const depth = new Map<string, number>();
   const items = parts.map((p) => {
     const d = p.parent === null ? 0 : (depth.get(p.parent) ?? 0) + 1;
@@ -44,7 +48,13 @@ export function renderParts(target: HTMLOListElement, parts: readonly PartInfo[]
     if (p.emitter) bits.push(`emitter: ${p.emitter}`);
     meta.textContent = bits.join(' · ');
     li.append(name, meta);
+    li.tabIndex = 0;
+    li.addEventListener('pointerenter', () => highlight(p.name));
+    li.addEventListener('focus', () => highlight(p.name));
+    li.addEventListener('pointerleave', () => highlight(null));
+    li.addEventListener('blur', () => highlight(null));
     if (p.motion) li.classList.add('moves');
+    if (p.emitter) li.classList.add('emits');
     return li;
   });
   target.replaceChildren(...items);

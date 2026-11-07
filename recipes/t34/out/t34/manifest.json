@@ -1,0 +1,186 @@
+{
+  "name": "t34",
+  "kind": "vehicle",
+  "description": "T-34/76 Model 1943 — hexagonal turret with cupola, Christie double wheels, waffle track link by link, «LIDICE»",
+  "tags": [
+    "military",
+    "tracked",
+    "ww2"
+  ],
+  "files": {
+    "lods": [],
+    "sheet": "recipes/t34/out/t34/sheet.png",
+    "thumb": "recipes/t34/out/t34/thumb.png"
+  },
+  "triangles": [
+    36452,
+    9960,
+    556
+  ],
+  "drawCalls": [
+    17,
+    17,
+    3
+  ],
+  "pivots": [
+    {
+      "name": "body",
+      "parent": null
+    },
+    {
+      "name": "wheel_l_0",
+      "parent": null,
+      "motion": "spin"
+    },
+    {
+      "name": "wheel_l_1",
+      "parent": null,
+      "motion": "spin"
+    },
+    {
+      "name": "wheel_l_2",
+      "parent": null,
+      "motion": "spin"
+    },
+    {
+      "name": "wheel_l_3",
+      "parent": null,
+      "motion": "spin"
+    },
+    {
+      "name": "wheel_l_4",
+      "parent": null,
+      "motion": "spin"
+    },
+    {
+      "name": "idler_l",
+      "parent": null,
+      "motion": "spin"
+    },
+    {
+      "name": "sprocket_l",
+      "parent": null,
+      "motion": "spin"
+    },
+    {
+      "name": "wheel_r_0",
+      "parent": null,
+      "motion": "spin"
+    },
+    {
+      "name": "wheel_r_1",
+      "parent": null,
+      "motion": "spin"
+    },
+    {
+      "name": "wheel_r_2",
+      "parent": null,
+      "motion": "spin"
+    },
+    {
+      "name": "wheel_r_3",
+      "parent": null,
+      "motion": "spin"
+    },
+    {
+      "name": "wheel_r_4",
+      "parent": null,
+      "motion": "spin"
+    },
+    {
+      "name": "idler_r",
+      "parent": null,
+      "motion": "spin"
+    },
+    {
+      "name": "sprocket_r",
+      "parent": null,
+      "motion": "spin"
+    },
+    {
+      "name": "turret",
+      "parent": null,
+      "motion": "sway"
+    },
+    {
+      "name": "gun",
+      "parent": "turret",
+      "motion": "sway"
+    }
+  ],
+  "emitters": [
+    {
+      "name": "track_dust_l",
+      "kind": "dust",
+      "when": "moving"
+    },
+    {
+      "name": "track_dust_r",
+      "kind": "dust",
+      "when": "moving"
+    },
+    {
+      "name": "exhaust_smoke_l",
+      "kind": "smoke",
+      "when": "always"
+    },
+    {
+      "name": "exhaust_smoke_r",
+      "kind": "smoke",
+      "when": "always"
+    },
+    {
+      "name": "muzzle",
+      "kind": "muzzle",
+      "when": "event"
+    }
+  ],
+  "sockets": [],
+  "surfaces": [
+    "opaque"
+  ],
+  "real": {
+    "length": 6.68,
+    "width": 3,
+    "height": 2.45
+  },
+  "measures": [
+    {
+      "label": "road wheel diameter",
+      "spec": 0.83,
+      "measured": 0.8299999758601189
+    },
+    {
+      "label": "track width",
+      "spec": 0.55,
+      "measured": 0.550000011920929
+    },
+    {
+      "label": "track centres",
+      "spec": 2.45,
+      "measured": 2.449999988079071,
+      "source": "3.00 m overall − 0.55 m track"
+    },
+    {
+      "label": "hull length",
+      "spec": 5.92,
+      "measured": 5.920000076293945
+    },
+    {
+      "label": "F-34 barrel length (L/41.5)",
+      "spec": 3.162,
+      "measured": 3.1619998812675476,
+      "source": "https://en.wikipedia.org/wiki/76_mm_tank_gun_M1940_F-34"
+    }
+  ],
+  "sources": [
+    "https://en.wikipedia.org/wiki/T-34 (T-34/76 specifications: 6.68 × 3.00 × 2.45 m, hull 5.92 m)",
+    "https://en.wikipedia.org/wiki/76_mm_tank_gun_M1940_F-34 (L/41.5 → 3.162 m barrel)",
+    "Zaloga & Grandsen, T-34 in Action (Squadron/Signal 1981): 830 mm road wheels, 550 mm track, plate angles",
+    "https://commons.wikimedia.org/wiki/File:Tank_Lidice,_čs._armáda_v_SSSR.png («LIDICE» slogan, Model 1943 with cupola and side drums)"
+  ],
+  "qa": {
+    "pass": true,
+    "findings": []
+  }
+}

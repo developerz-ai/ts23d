@@ -1,0 +1,48 @@
+{
+  "name": "material_swatches",
+  "kind": "prop",
+  "description": "Every trim-sheet strip and cell on labelled panels: the material generator test card.",
+  "tags": [],
+  "files": {
+    "lods": [],
+    "sheet": "recipes/material_swatches/out/material_swatches/sheet.png",
+    "thumb": "recipes/material_swatches/out/material_swatches/thumb.png"
+  },
+  "triangles": [
+    10926,
+    226,
+    226
+  ],
+  "drawCalls": [
+    3,
+    3,
+    3
+  ],
+  "pivots": [
+    {
+      "name": "body",
+      "parent": null
+    },
+    {
+      "name": "body_cutout",
+      "parent": null
+    },
+    {
+      "name": "body_glass",
+      "parent": null
+    }
+  ],
+  "emitters": [],
+  "sockets": [],
+  "surfaces": [
+    "cutout",
+    "glass",
+    "opaque"
+  ],
+  "measures": [],
+  "sources": [],
+  "qa": {
+    "pass": true,
+    "findings": []
+  }
+}

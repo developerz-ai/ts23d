@@ -10,6 +10,7 @@ export type ErrorCode =
   | 'T3D_RECIPE_INVALID'
   | 'T3D_NO_ASSET_EXPORT'
   | 'T3D_QA_FAILED'
+  | 'T3D_RENDER_OPTIONS'
   | 'T3D_AMBIENT_RANDOM'
   | 'T3D_RELEASE'
   | 'T3D_BENCH';

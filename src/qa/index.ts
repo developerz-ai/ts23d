@@ -14,5 +14,15 @@ export {
 export { pointTriangleDistance, surfaceSamples, TriangleGrid } from './geometry.ts';
 export { insideSolid } from './inside.ts';
 export { glob, type Inspector, inspect, type Penetration } from './inspect.ts';
+export {
+  DEFAULT_LOD_GATES,
+  type LodGate,
+  lodPivots,
+  lodSilhouette,
+  lodTriangles,
+  runLodQa,
+} from './lods.ts';
 export { measure, measures } from './measures.ts';
+export { hiddenParts, zFighting } from './occlusion.ts';
+export { degenerateTriangles, nonFinite, normalsMatchWinding, vertexColors } from './sanity.ts';
 export { CLASH_EPS, CONTACT_EPS, type Finding, type Gate } from './types.ts';

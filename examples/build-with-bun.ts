@@ -11,7 +11,7 @@ import {
   runQa,
   toGlb,
 } from '@developerz-ai/ts23d';
-import { tiger_1 } from '../recipes/tiger_1.ts';
+import { tiger_1 } from '../recipes/tiger_1/tiger_1.ts';
 
 const out = process.argv[2] ?? 'out/example';
 const asset = tiger_1;

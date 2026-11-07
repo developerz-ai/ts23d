@@ -67,7 +67,7 @@ Status legend: **done** · **partial** · **missing** · **n/a (not yet)**. *Ver
 
 **Verdict: VALID. 0 errors, 0 warnings, 0 hints on all six files. The only infos are `UNUSED_OBJECT` on `TEXCOORD_0` (one per primitive), because no texture is bound.** The real problems (sideways front, u32 indices, fat colours, loop seam, LOD2 losing pivots) are outside the validator's scope and were found by the inspection script.
 
-The build was `bun run t3d build recipes/tiger_1.ts --out …/glbcheck`, then again with `--animations`. Both print `QA FAIL` (clashes and floating parts in the recipe, not the exporter) and both still write all three GLBs. The validator was npm `gltf-validator@2.0.0-dev.3.10` (`validateBytes`, `maxIssues: 0`), run from the scratchpad.
+The build was `bun run t3d build recipes/tiger_1/tiger_1.ts --out …/glbcheck`, then again with `--animations`. Both print `QA FAIL` (clashes and floating parts in the recipe, not the exporter) and both still write all three GLBs. The validator was npm `gltf-validator@2.0.0-dev.3.10` (`validateBytes`, `maxIssues: 0`), run from the scratchpad.
 
 | File | Bytes | Err | Warn | Info | Hint | Draw calls | Verts | Tris | Anim |
 |---|---|---|---|---|---|---|---|---|---|

@@ -2,7 +2,8 @@
 // so draw calls = pivots with geometry, not parts. A pivot is anything the engine may move: a
 // group (`ctx.group`, a named handle like `turret`, `gun`, `door_l`) or a part with `motion`.
 // Static top-level geometry merges into one `body` part. Names the engine binds to survive.
-// Non-opaque surfaces split into `<pivot>_<surface>` children (one draw call per surface).
+// Non-opaque surfaces split into `<pivot>_<surface>` children (one draw call per surface), and
+// glowing parts (GlbOptions.glow) into `<pivot>_glow_<i>` children with their emissive material.
 
 import {
   type CompiledAsset,
@@ -17,6 +18,18 @@ import {
 } from '../core/index.ts';
 
 const isPivot = (p: Part): boolean => p.mesh === null || p.motion !== null;
+
+/** Merged layer parts that glow → index of the glow rule (read by the GLB writer). */
+export const glowLayer = new WeakMap<Part, number>();
+
+/** `*`/`?` glob → anchored RegExp (export cannot import /qa: same tier). */
+export const globRe = (pattern: string): RegExp =>
+  new RegExp(
+    `^${pattern
+      .replace(/[.+^${}()|[\]\\]/g, '\\$&')
+      .replaceAll('*', '.*')
+      .replaceAll('?', '.')}$`,
+  );
 const SURFACES: readonly Surface[] = ['cutout', 'glass', 'translucent'];
 
 /** Re-express a part's mesh in its pivot's local space. */
@@ -47,7 +60,12 @@ function intoPivot(mesh: Mesh, part: WorldTransform, pivot: WorldTransform): Mes
   return { ...mesh, positions, normals };
 }
 
-export function mergeToPivots(asset: CompiledAsset): CompiledAsset {
+export function mergeToPivots(
+  asset: CompiledAsset,
+  glow: readonly (readonly string[])[] = [],
+): CompiledAsset {
+  const glowRes = glow.map((globs) => globs.map(globRe));
+  const glowOf = (name: string): number => glowRes.findIndex((rs) => rs.some((r) => r.test(name)));
   const byName = new Map(asset.parts.map((p) => [p.name, p]));
   const xf = worldTransforms(asset.parts);
   const ROOT = 'body';
@@ -60,20 +78,21 @@ export function mergeToPivots(asset: CompiledAsset): CompiledAsset {
   // Buckets keyed by pivot + surface: opaque merges into the pivot's own mesh; each other
   // surface in use becomes one child `<pivot>_<surface>` so materials never mix in a primitive.
   const extra = new Map<string, Mesh[]>();
-  const bucket = (pivot: string, surface: Surface | undefined, mesh: Mesh): void => {
-    const k = `${pivot}|${surface ?? 'opaque'}`;
+  const bucket = (pivot: string, surface: Surface | undefined, mesh: Mesh, g = -1): void => {
+    const k = `${pivot}|${g >= 0 ? `glow_${g}` : (surface ?? 'opaque')}`;
     extra.set(k, [...(extra.get(k) ?? []), mesh]);
   };
   for (const p of asset.parts) {
     if (!p.mesh) continue;
+    const g = glowOf(p.name);
     if (isPivot(p)) {
-      bucket(p.name, p.surface, p.mesh);
+      bucket(p.name, p.surface, p.mesh, g);
       continue;
     }
     const pivot = pivotOf(p);
     const t = xf.get(p.name) ?? identity;
     const pt = pivot === ROOT ? identity : (xf.get(pivot) ?? identity);
-    bucket(pivot, p.surface, intoPivot(p.mesh, t, pt));
+    bucket(pivot, p.surface, intoPivot(p.mesh, t, pt), g);
   }
   const parts: Part[] = [];
   const layers = (pivot: string, parent: string | null): void => {
@@ -90,6 +109,20 @@ export function mergeToPivots(asset: CompiledAsset): CompiledAsset {
         surface,
       });
     }
+    glow.forEach((_, g) => {
+      const meshes = extra.get(`${pivot}|glow_${g}`);
+      if (!meshes) return;
+      const part: Part = {
+        name: `${pivot}_glow_${g}`,
+        mesh: merge(meshes),
+        at: [0, 0, 0],
+        parent,
+        yaw: 0,
+        motion: null,
+      };
+      glowLayer.set(part, g);
+      parts.push(part);
+    });
   };
   const body = extra.get(`${ROOT}|opaque`);
   if (body)

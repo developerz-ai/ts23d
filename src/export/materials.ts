@@ -95,3 +95,32 @@ export function materialsFor(
   const materials = present.map((s) => (withSheet ? textured(MATERIALS[s], s) : MATERIALS[s]));
   return { materials, index, extensionsUsed: [...ext].sort() };
 }
+
+export const EMISSIVE_STRENGTH = 'KHR_materials_emissive_strength';
+
+/** A lit surface: lamp lenses, windows at night, panel glow. */
+export interface GlowRule {
+  /** Part names or globs: 'headlamp_*', 'window_*'. */
+  readonly parts: readonly string[];
+  /** Linear RGB 0..1 (use `hex('#ffd9a0')` from /material). Default warm white. */
+  readonly color?: readonly [number, number, number];
+  /** Brightness multiplier (KHR_materials_emissive_strength, Ratified); 1 = plain glTF. */
+  readonly strength?: number;
+}
+
+/**
+ * The opaque trim material plus emission. emissiveFactor caps at 1 in core glTF; anything
+ * brighter rides KHR_materials_emissive_strength (engines without it see the clamped glow).
+ */
+export function glowMaterial(rule: GlowRule, i: number, withSheet: boolean): Json {
+  const base = withSheet ? textured(MATERIALS.opaque, 'opaque') : MATERIALS.opaque;
+  const strength = rule.strength ?? 4;
+  return {
+    ...base,
+    name: `ts23d_glow_${i}`,
+    emissiveFactor: [...(rule.color ?? [1, 0.85, 0.6])],
+    ...(strength !== 1
+      ? { extensions: { [EMISSIVE_STRENGTH]: { emissiveStrength: strength } } }
+      : {}),
+  };
+}

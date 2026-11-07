@@ -5,6 +5,40 @@
 [![npm](https://img.shields.io/npm/v/@developerz-ai/ts23d)](https://www.npmjs.com/package/@developerz-ai/ts23d)
 [![license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
+<table>
+  <tr>
+    <td align="center" width="25%"><a href="recipes/tiger_1/"><img src="recipes/tiger_1/out/tiger_1/hero.png" alt="Tiger I, rendered by ts23d"></a><br><sub><a href="recipes/tiger_1/"><code>tiger_1</code></a> · Tiger I</sub></td>
+    <td align="center" width="25%"><a href="recipes/loco_440/"><img src="recipes/loco_440/out/loco_440/hero.png" alt="4-4-0 “Jupiter”, rendered by ts23d"></a><br><sub><a href="recipes/loco_440/"><code>loco_440</code></a> · 4-4-0 “Jupiter”</sub></td>
+    <td align="center" width="25%"><a href="recipes/station_halt/"><img src="recipes/station_halt/out/station_halt/hero.png" alt="Station halt, rendered by ts23d"></a><br><sub><a href="recipes/station_halt/"><code>station_halt</code></a> · Station halt</sub></td>
+    <td align="center" width="25%"><a href="recipes/eiffel_tower/"><img src="recipes/eiffel_tower/out/eiffel_tower/hero.png" alt="Eiffel Tower, rendered by ts23d"></a><br><sub><a href="recipes/eiffel_tower/"><code>eiffel_tower</code></a> · Eiffel Tower</sub></td>
+  </tr>
+  <tr>
+    <td align="center" width="25%"><a href="recipes/orc_head/"><img src="recipes/orc_head/out/orc_head/hero.png" alt="Orc bust (sculpt), rendered by ts23d"></a><br><sub><a href="recipes/orc_head/"><code>orc_head</code></a> · Orc bust (sculpt)</sub></td>
+    <td align="center" width="25%"><a href="recipes/goblin_head/"><img src="recipes/goblin_head/out/goblin_head/hero.png" alt="Goblin bust (sculpt), rendered by ts23d"></a><br><sub><a href="recipes/goblin_head/"><code>goblin_head</code></a> · Goblin bust (sculpt)</sub></td>
+    <td align="center" width="25%"><a href="recipes/mountain_range/"><img src="recipes/mountain_range/out/mountain_range/hero.png" alt="Eroded mountains, rendered by ts23d"></a><br><sub><a href="recipes/mountain_range/"><code>mountain_range</code></a> · Eroded mountains</sub></td>
+    <td align="center" width="25%"><a href="recipes/oak/"><img src="recipes/oak/out/oak/hero.png" alt="Oak, rendered by ts23d"></a><br><sub><a href="recipes/oak/"><code>oak</code></a> · Oak</sub></td>
+  </tr>
+  <tr>
+    <td align="center" width="25%"><a href="recipes/water_tower/"><img src="recipes/water_tower/out/water_tower/hero.png" alt="Water tower, rendered by ts23d"></a><br><sub><a href="recipes/water_tower/"><code>water_tower</code></a> · Water tower</sub></td>
+    <td align="center" width="25%"><a href="recipes/boxcar/"><img src="recipes/boxcar/out/boxcar/hero.png" alt="USRA boxcar, rendered by ts23d"></a><br><sub><a href="recipes/boxcar/"><code>boxcar</code></a> · USRA boxcar</sub></td>
+    <td align="center" width="25%"><a href="recipes/signal_gantry/"><img src="recipes/signal_gantry/out/signal_gantry_4/hero.png" alt="Signal gantry, rendered by ts23d"></a><br><sub><a href="recipes/signal_gantry/"><code>signal_gantry_4</code></a> · Signal gantry</sub></td>
+    <td align="center" width="25%"><a href="recipes/t34/"><img src="recipes/t34/out/t34/hero.png" alt="T-34/76 1943, rendered by ts23d"></a><br><sub><a href="recipes/t34/"><code>t34</code></a> · T-34/76 1943</sub></td>
+  </tr>
+  <tr>
+    <td align="center" width="25%"><a href="recipes/asteroid/"><img src="recipes/asteroid/out/asteroid/hero.png" alt="Asteroid, rendered by ts23d"></a><br><sub><a href="recipes/asteroid/"><code>asteroid</code></a> · Asteroid</sub></td>
+    <td align="center" width="25%"><a href="recipes/cargo_container_scifi/"><img src="recipes/cargo_container_scifi/out/cargo_container_scifi/hero.png" alt="Sci-fi cargo pod, rendered by ts23d"></a><br><sub><a href="recipes/cargo_container_scifi/"><code>cargo_container_scifi</code></a> · Sci-fi cargo pod</sub></td>
+    <td align="center" width="25%"><a href="recipes/boulders/"><img src="recipes/boulders/out/boulders/hero.png" alt="Boulders (SDF), rendered by ts23d"></a><br><sub><a href="recipes/boulders/"><code>boulders</code></a> · Boulders (SDF)</sub></td>
+    <td align="center" width="25%"><a href="recipes/dropship/"><img src="recipes/dropship/out/dropship/hero.png" alt="VTOL dropship, rendered by ts23d"></a><br><sub><a href="recipes/dropship/"><code>dropship</code></a> · VTOL dropship</sub></td>
+  </tr>
+</table>
+
+<sub>Every image above is a real render: the committed <code>hero.png</code> next to each recipe, made on the CPU by <code>t3d hero</code> (regenerate with <code>bun run shots &lt;name&gt;</code>). Click one for its recipe, reference dossier and contact sheet.</sub>
+
+[![The ts23d gallery site: a live, orbiting Tiger I compiled in the browser](docs/media/site.png)](https://developerz-ai.github.io/ts23d/)
+
+**[Open the gallery →](https://developerz-ai.github.io/ts23d/)** Every asset compiles live in your browser: orbit it, switch LOD0/1/2, toggle wireframe, play its motion or stage it in a scene, check its measures against the real thing, and download the GLB.
+
+
 **Use the LLM you already pay for to write the assets your project needs (vehicles, buildings, props, whole streets), optimised by construction.** ts23d ends at the GLB, its textures and a manifest. The engine is yours.
 
 Each asset is a TypeScript module. `t3d build` compiles it, deterministically, to GLB. Free: no GPU, no credits, no service. **[Browse the asset gallery](https://developerz-ai.github.io/ts23d/)**: every recipe, compiled in your browser, with its source.
@@ -15,15 +49,22 @@ Each asset is a TypeScript module. `t3d build` compiles it, deterministically, t
 - **Emitters and motion.** `ctx.emitter` exports smoke, steam, dust, muzzle and fire sources as named nodes your engine's particles bind to; parts `spin`, `slide` or `sway`.
 - **3 LODs from one source.** The recipe reads `ctx.lod` and drops detail. Nothing is decimated.
 - **One shared material, batched geometry.** Every asset maps into one trim sheet, and the exporter merges static geometry into its nearest pivot. Draw calls = the parts an engine moves: a static prop or building is 1; a tank with independently spinning road wheels is one per wheel plus turret, gun and hull.
-- **A QA gate.** Exit 1 on: a part not in surface contact with anything grounded (2 cm), a moving part that cuts through another anywhere in its motion, a blown triangle budget.
+- **A QA gate.** Exit 1 on: a part not in surface contact with anything grounded (2 cm), a moving part that cuts through another anywhere in its motion, a blown triangle budget, non-finite or inside-out geometry, hidden parts, an LOD that grows instead of shrinks.
 - **Code-level checks.** The recipe states its physical intent and QA enforces it at every LOD: `checks: [clear('track_*', 'hull_*'), noOverlap('road_wheel_l_*'), touches('turret_body', 'hull_top'), symmetric('_l', '_r', 'y')]`. "The track hits the frame" becomes a failing build.
 - **Textures from code.** A procedural albedo / normal / ORM trim sheet (bricks, planks, plates, slate, foliage), written once and shared by every GLB, plus three.js TSL and Godot shader sources.
 - **Spec-sheet fidelity.** Declare `real: { length, width, height, measures }` with `sources`. QA holds the overall size to ±5% and each named dimension (driver diameter, gauge, wheelbase) to ±2%. Fix the model, never the spec.
 - **A contact sheet.** One PNG, six labelled orthographic views on a metre grid, rendered on the CPU. A vision-capable agent reads it once, sees what's wrong and fixes it.
+- **A beauty render and an AI review pack.** `t3d hero` renders a textured, lit, soft-shadowed 3/4 product shot on the CPU (the images above). `t3d review` writes hero, sheet, close-ups, an LOD strip, a checklist prompt for a vision agent and image metrics: QA with pictures, no GPU.
+- **Organic modelling.** `sdf` (surface nets / marching cubes) with `sd.*` combinators and `sculpt`, an ordered add / subtract / paint edit list with smooth blends: busts, rocks, asteroids.
+- **Terrain.** Seeded noise (`fbm`, `ridged`, domain `warp`, `terrace`), droplet `hydraulicErosion` and `thermalErosion`, and `terrainColor` by altitude, slope and flow.
+- **Architecture and hulls.** `roof` (gable, hip, mansard, gambrel, …), `opening` window/door kits for `facade`, true-scale masonry `mass`, lofted vessel `hull`; `tiled`, `cell` and `lattice` (Warren / Pratt / Howe trusses) primitives, `box({ bevel })`, and `text` lettering as geometry.
+- **An optimiser on by default.** Weld, degenerate removal, vertex-cache and vertex-fetch order (tiger_1 LOD0: 15.4 → 6.3 MB, ACMR 2.88 → 1.16), weighted normals, baked per-vertex AO.
+- **Lights, glow and provenance in the GLB.** `KHR_lights_punctual` from light sockets, emissive glow materials, licence / creators / sources as `KHR_xmp_json_ld`. Zero glTF-Validator warnings.
+- **Test helpers.** `@developerz-ai/ts23d/testing`: `assertQaPass`, `assertBudget`, `assertParts`, `assertMeasure`, `assertMotionClear`, `assertDeterministic`, `snapshotHash` for your own recipe tests.
 
-**The goal: high-definition detail up close, cheap to draw everywhere.** One texture set, batched static geometry, LODs, compact core-glTF buffers (u16 indices and colours), and (planned) welded, cache-optimised meshes.
+**The goal: high-definition detail up close, cheap to draw everywhere.** One texture set, batched static geometry, LODs, compact core-glTF buffers (u16 indices and colours), welded, cache-optimised meshes.
 
-**No Blender for most hard-surface asset production.** For vehicles, buildings, props and whole scenes, the LLM writes TypeScript that does the modelling, LODs, UVs onto the trim sheet, batching, QA and export. Blender stays useful for organic sculpting, which comes in through the planned [`/neural` adapter or `importGlb`](docs/idea/08-neural-adapters.md).
+**No Blender for most hard-surface asset production.** For vehicles, buildings, props and whole scenes, the LLM writes TypeScript that does the modelling, LODs, UVs onto the trim sheet, batching, QA and export. Stylised organic shapes (busts, rocks, terrain) are code too, through `sculpt` and `sdf`; realistic sculpting stays a job for Blender or the planned [`/neural` adapter or `importGlb`](docs/idea/08-neural-adapters.md).
 
 ## Generate assets with your agent
 
@@ -38,7 +79,7 @@ Then give your agent the loop:
 | Agent | Copy into your project |
 |---|---|
 | Claude Code | `cp -r node_modules/@developerz-ai/ts23d/.claude/skills/author-recipe .claude/skills/` (the loop) and `.claude/commands/new-recipe.md` (the `/new-recipe` command), both shipped in the package |
-| Codex, others | Point your `AGENTS.md` at `node_modules/@developerz-ai/ts23d/AGENTS.md` and `…/docs/` ([details](#use-it-with-any-agent)) |
+| Codex, others | Point your `AGENTS.md` at `node_modules/@developerz-ai/ts23d/CLAUDE.md` and `…/docs/` ([details](#use-it-with-any-agent)) |
 
 ### 2. Ask
 
@@ -52,7 +93,7 @@ Then give your agent the loop:
 /new-recipe 1940s city street with townhouses and gas lamps    (townhouse, lamp, street recipes: landing)
 ```
 
-The agent looks up real dimensions, writes `recipes/<name>.ts`, builds until `QA PASS`, reads the contact sheet, and fixes the worst thing until two shots in a row find nothing ([the loop](docs/idea/05-agent-loop.md)).
+The agent looks up real dimensions and photos into `recipes/<name>/README.md`, writes `recipes/<name>/<name>.ts`, builds until `QA PASS`, reads the contact sheet, and fixes the worst thing until two shots in a row find nothing ([the loop](docs/idea/05-agent-loop.md)).
 
 ### 3. Use the GLB in your engine
 
@@ -124,20 +165,20 @@ Draw calls column: static assets (the Eiffel Tower) are 1; vehicles are one per 
 
 | Stage | Module | Status (2026-10) | Replaces |
 |---|---|---|---|
-| Geometry | `primitives`, `kinds` | Shipped: `box`, `lathe`, `prism`, `beam`, `planar`, `sweep`, `loft`, `heightfield`, facades, vehicles, Weber–Penn trees. Planned: `sdf`, roofs, hulls, creatures | Blender modelling |
+| Geometry | `primitives`, `kinds` | Shipped: `box` (bevel), `lathe`, `prism`, `beam`, `planar`, `sweep`, `loft`, `tiled`, `cell`, `lattice`, `text`, `heightfield`, `sdf` + `sculpt`, terrain + erosion, facades with openings, roofs, hulls, vehicles, Weber–Penn trees. Planned: creatures | Blender modelling |
 | Materials and textures | `material` (generator) | Shipped: procedural albedo / normal / ORM trim sheet, embedded or shared PNGs, palettes, `grime`. No KTX2 yet | Substance / texture tools |
-| Optimisation | `passes/optimize`, `export` | Shipped: u16 indices, u16 colours, batching. Planned, M2: weld, vertex-cache reorder, ACMR; opt-in `web` profile (quantisation + meshopt) | meshoptimizer / gltfpack |
+| Optimisation | `passes/optimize`, `export` | Shipped: weld, degenerate removal, Forsyth vertex-cache + vertex-fetch order (ACMR reported), weighted normals, baked AO, u16 indices and colours, batching. Planned: opt-in `web` profile (quantisation + meshopt) | meshoptimizer / gltfpack |
 | LODs | `ctx.lod` | Shipped | Decimators |
-| QA | `qa` | Shipped: budget, surface-contact floating parts, motion clashes, names, proportions, spec measures. Silhouette IoU and ACMR planned | Manual review |
-| Renders and photo match | `render` | Contact sheet shipped. Photo match planned, M2 | — |
-| GLB export | `export` | Shipped: core glTF only, faces +Z, seamless loops, trim-sheet textures, 0 glTF-Validator errors (tested) | — |
+| QA | `qa` | Shipped: budget, surface-contact floating parts, motion clashes, names, proportions, spec measures, non-finite, winding, hidden parts, degenerate triangles, cross-LOD triangles; opt-in z-fighting, LOD silhouette and pivots. `/testing` helpers | Manual review |
+| Renders and photo match | `render` | Shipped: contact sheet, beauty `hero` render, `review` pack for a vision agent. Photo match planned | — |
+| GLB export | `export` | Shipped: faces +Z, seamless loops, trim-sheet textures, punctual lights, emissive glow, XMP provenance, 0 glTF-Validator errors and warnings (tested) | — |
 | Engine import adapters | `threeMaterialSource` (TSL), `godotShaderSource` | Shipped: shader sources with wind, window glow, wear. Planned, M3: import settings and collision naming per engine, as hooks, not runtime | — |
 
 Every stage has zero runtime dependencies ([ADR 005](docs/decisions/005-zero-runtime-deps.md)).
 
-> **Status: early (0.x).** The core loop works: write, build, QA, shot, with textures, trees and
-> nine passing recipes. Still declared and throwing `T3D_NOT_IMPLEMENTED`: `tiled`, `cell`, `sdf`,
-> roofs, hulls, creatures, photo match, mesh `optimize`, neural adapters. See the [roadmap](docs/plans/roadmap.md). Expect breaking changes.
+> **Status: early (0.x).** The core loop works: write, build, QA, shot, hero, review, with
+> textures, trees, sculpt, terrain and the gallery's passing recipes. Still declared and throwing
+> `T3D_NOT_IMPLEMENTED`: creatures, photo match, neural adapters. See the [roadmap](docs/plans/roadmap.md). Expect breaking changes.
 
 ## A recipe
 
@@ -170,18 +211,20 @@ Metres, Z up, +X is the front. Loops, functions and types, because a recipe is c
 
 ## What the agent sees
 
-`t3d shot recipes/tiger_1.ts` → `out/tiger_1/sheet.png`, from [`recipes/tiger_1.ts`](recipes/tiger_1.ts). CI publishes every recipe's sheet to the gallery under `/renders/`:
+`t3d shot recipes/tiger_1/tiger_1.ts` → `out/tiger_1/sheet.png`, from [`recipes/tiger_1/tiger_1.ts`](recipes/tiger_1/tiger_1.ts). Every recipe folder commits its sheet, hero render and manifest under `out/`:
 
-![Tiger I contact sheet: six orthographic views on a metre grid](https://developerz-ai.github.io/ts23d/renders/tiger_1.png)
+![Tiger I contact sheet: six orthographic views on a metre grid](recipes/tiger_1/out/tiger_1/sheet.png)
 
 Header: name, bounding box in metres, grid step, LOD. Row 1: 3/4 front, front (+X), side (−Y).
 Row 2: top, 3/4 rear, LOD2 at distance. Layout: [docs/idea/05-agent-loop.md](docs/idea/05-agent-loop.md).
+`t3d hero` adds the beauty shot, and `t3d review` packs hero, sheet, close-ups, an LOD strip and a
+checklist prompt into `out/<asset>/review/` for a second, fresh-eyes vision pass.
 
 ## The quality bar
 
 ![4-4-0 locomotive: reference photo, procedural model, overlay](https://raw.githubusercontent.com/developerz-ai/ts23d/main/docs/reference/loco-photo-match.png)
 
-**Not output of this library yet.** This is from the in-house predecessor (a JSON recipe compiler for railroads): a 4-4-0 with tender. Top: reference photo. Middle: the procedural model. Bottom: overlay. That GLB is ~16k triangles, 17 named nodes (axles, side and main rods, crossheads, tender axles, track), one `trim_sheet` material with embedded albedo / normal / ORM textures, and a baked `run` animation. ts23d now has its own [`loco_440`](recipes/loco_440.ts) (the Jupiter, drivers 1.626 m sourced) and the trim-sheet painter; photo match is next (M2, [roadmap](docs/plans/roadmap.md)).
+**Not output of this library yet.** This is from the in-house predecessor (a JSON recipe compiler for railroads): a 4-4-0 with tender. Top: reference photo. Middle: the procedural model. Bottom: overlay. That GLB is ~16k triangles, 17 named nodes (axles, side and main rods, crossheads, tender axles, track), one `trim_sheet` material with embedded albedo / normal / ORM textures, and a baked `run` animation. ts23d now has its own [`loco_440`](recipes/loco_440/loco_440.ts) (the Jupiter, drivers 1.626 m sourced) and the trim-sheet painter; photo match is next (M2, [roadmap](docs/plans/roadmap.md)).
 
 ## Quickstart
 
@@ -189,9 +232,11 @@ Needs Bun ≥ 1.4.4 (Node ≥ 22 for the compiled `dist/`).
 
 ```sh
 bun add @developerz-ai/ts23d
-bunx t3d build recipes/*.ts         # GLB × 3 LODs + sheet + manifest per asset; exit 1 on a QA finding
-bunx t3d shot  recipes/*.ts         # sheet + manifest only: the fast look
-bunx t3d list  recipes/*.ts --json  # the assets each module exports
+bunx t3d build recipes/*/*.ts         # GLB × 3 LODs + sheet + manifest per asset; exit 1 on a QA finding
+bunx t3d shot  recipes/*/*.ts         # sheet + manifest only: the fast look
+bunx t3d hero  recipes/*/*.ts         # beauty render: textured, lit, soft shadows (1600×900)
+bunx t3d review recipes/*/*.ts        # AI review pack: hero, sheet, close-ups, LOD strip, review.md
+bunx t3d list  recipes/*/*.ts --json  # the assets each module exports
 ```
 
 | Flag | Effect |
@@ -211,6 +256,7 @@ out/
 ├── index.json              every asset built in this run, with its QA verdict
 └── <asset>/
     ├── lod0.glb lod1.glb lod2.glb
+    ├── hero.png            the beauty render
     ├── sheet.png           the contact sheet
     └── manifest.json       files; triangles + draw calls per LOD; pivots, emitters, sockets,
                             surfaces; real + measures with measured values; sources; QA
@@ -230,7 +276,7 @@ compiles every recipe in a worker).
 ```ts
 // build.ts → bun build.ts
 import { compile, contactSheet, DEFAULT_SHEET, paintTrimSheet, runQa, toGlb } from '@developerz-ai/ts23d';
-import { tiger_1 } from './recipes/tiger_1.ts';
+import { tiger_1 } from './recipes/tiger_1/tiger_1.ts';
 
 const sheet = paintTrimSheet({ ...DEFAULT_SHEET, size: 512 }); // textures are optional
 
@@ -258,12 +304,12 @@ Runnable copy: [`examples/build-with-bun.ts`](examples/build-with-bun.ts) — ex
 
 ## Use it with any agent
 
-**The docs ship inside the package, versioned with the code, readable offline.** After `bun add`, everything an agent needs is at `node_modules/@developerz-ai/ts23d/`: `AGENTS.md`, `CLAUDE.md`, `llms.txt`, `docs/`, `recipes/` (worked examples), `CHANGELOG.md` and `.claude/{skills,agents,commands}`.
+**The docs ship inside the package, versioned with the code, readable offline.** After `bun add`, everything an agent needs is at `node_modules/@developerz-ai/ts23d/`: `CLAUDE.md` (the agent brain; `AGENTS.md` in the repo is a link to it), `llms.txt`, `docs/`, `recipes/` (worked examples), `CHANGELOG.md` and `.claude/{skills,agents,commands}`.
 
 Point your agent at them. Add to your project's `CLAUDE.md` or `AGENTS.md`:
 
 ```md
-3D assets: @developerz-ai/ts23d. Read node_modules/@developerz-ai/ts23d/AGENTS.md first;
+3D assets: @developerz-ai/ts23d. Read node_modules/@developerz-ai/ts23d/CLAUDE.md first;
 docs in node_modules/@developerz-ai/ts23d/docs/, example recipes in …/recipes/.
 ```
 
@@ -279,11 +325,11 @@ cp node_modules/@developerz-ai/ts23d/.claude/commands/new-recipe.md .claude/comm
 Works with any agent that writes TypeScript and can run a shell: Claude Code, Codex, Cursor, Aider, a local model. If it can read images, it closes the loop on its own. No skill files? Paste this:
 
 ```text
-Using @developerz-ai/ts23d, write recipes/<name>.ts: a <thing>, real dimensions in metres,
+Using @developerz-ai/ts23d, write recipes/<name>/<name>.ts: a <thing>, real dimensions in metres,
 Z up, +X front. Put the sources in `sources` and the key dimensions in `real.measures`.
 Block out the masses, then details. Name every part that moves (axle_*, door_*, rotor_*)
 and pivot it where it hinges. Loop until done:
-  1. bunx t3d build recipes/<name>.ts   (fix every finding until it prints QA PASS;
+  1. bunx t3d build recipes/<name>/<name>.ts   (fix every finding until it prints QA PASS;
      a measures finding means rebuild the part, never edit the spec)
   2. Read out/<name>/sheet.png (build writes it).
   3. Name the single biggest error, fix it, go to 1.
@@ -298,14 +344,19 @@ As of 2026-10. Full matrix: [docs/idea/07-what-fits.md](docs/idea/07-what-fits.m
 |---|---|
 | **Strong** | Hard-surface props, architecture (facades, towers), vehicles (tracked, wheeled, rail), modular kits, anything with real dimensions or repeated parts |
 | **Shipped, early** | Vegetation: Weber–Penn trees (oak, pine, palm, birch, willow); LOD2 impostors are crude |
-| **Planned** | Boats (lofted hulls, M2), stylised creatures (SDF over a skeleton, M4) |
-| **Weak** | Realistic people and animals, sculpted organic forms, cloth. Use an image-to-3D tool, or the planned [`/neural` adapter](docs/idea/08-neural-adapters.md) that runs open-weight models on your own GPU and caches the result |
+| **Shipped, early** | Stylised organic: `sculpt` busts, SDF rocks and asteroids, eroded terrain. Boats: lofted `hull` |
+| **Planned** | Stylised creatures (SDF over a skeleton, M4) |
+| **Weak** | Realistic people and animals, realistic sculpted organic forms, cloth. Use an image-to-3D tool, or the planned [`/neural` adapter](docs/idea/08-neural-adapters.md) that runs open-weight models on your own GPU and caches the result |
 
 Not a replacement for AI mesh generators: a different approach with different strengths. Neutral comparison: [docs/landscape.md](docs/landscape.md).
 
 ## Gallery
 
-Every recipe in `recipes/`, compiled in the browser, with source and LOD switcher: **https://developerz-ai.github.io/ts23d/**. Recipes today: `tiger_1`, `t34` + `t34_1941` (a family), `loco_440` (a 4-4-0, the Jupiter, family), `eiffel_tower`, `oak`, `pine`, `palm`, `material_swatches`.
+**https://developerz-ai.github.io/ts23d/**: every recipe in `recipes/`, filterable by category (vehicles, railway, architecture, nature and terrain, characters, sci-fi). The grid shows the committed renders; opening an asset compiles it in your browser with an orbit viewer, LOD switch, wireframe, its motion, a scene, named parts, measures against the real spec, the recipe source and GLB downloads.
+
+Each recipe is a folder: `recipes/<name>/<name>.ts` (the asset), `README.md` (the reference dossier: sources, specs, photo links) and `out/<asset>/` (committed `hero.png`, `sheet.png`, `manifest.json`).
+
+[![An asset page: the Jupiter 4-4-0 running in a scene, with its stats and measures](docs/media/site-scene.png)](https://developerz-ai.github.io/ts23d/#loco_440)
 
 ## Docs
 

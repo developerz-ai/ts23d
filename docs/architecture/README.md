@@ -16,7 +16,8 @@
 | 3 | `qa` | Gates over a `CompiledAsset` |
 | 3 | `export` | `CompiledAsset` → GLB |
 | 3 | `render` | CPU rasteriser, PNG encoder, contact sheet; planned `photoMatch` |
-| 4 | `cli` | `t3d build / shot / list` |
+| 4 | `cli` | `t3d build / shot / hero / review / list` |
+| 4 | `testing` | assertions for users' recipe tests (subpath `/testing`) |
 | 5 | `src/index.ts` | Re-exports every public module |
 
 ```

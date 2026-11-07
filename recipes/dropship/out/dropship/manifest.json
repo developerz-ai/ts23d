@@ -1,0 +1,199 @@
+{
+  "name": "dropship",
+  "kind": "vehicle",
+  "description": "Original VTOL troop dropship: chamfered hard-surface fuselage, tilting ducted-fan nacelles, rear ramp, skid gear",
+  "tags": [
+    "sci-fi",
+    "vehicle",
+    "aircraft",
+    "vtol",
+    "hard-surface"
+  ],
+  "files": {
+    "lods": [],
+    "sheet": "recipes/dropship/out/dropship/sheet.png",
+    "thumb": "recipes/dropship/out/dropship/thumb.png"
+  },
+  "triangles": [
+    12558,
+    4872,
+    1792
+  ],
+  "drawCalls": [
+    15,
+    15,
+    13
+  ],
+  "pivots": [
+    {
+      "name": "body",
+      "parent": null
+    },
+    {
+      "name": "body_glass",
+      "parent": null
+    },
+    {
+      "name": "nacelle_l",
+      "parent": null,
+      "motion": "sway"
+    },
+    {
+      "name": "fan_l",
+      "parent": "nacelle_l",
+      "motion": "spin"
+    },
+    {
+      "name": "nacelle_r",
+      "parent": null,
+      "motion": "sway"
+    },
+    {
+      "name": "fan_r",
+      "parent": "nacelle_r",
+      "motion": "spin"
+    },
+    {
+      "name": "ramp",
+      "parent": null,
+      "motion": "sway"
+    },
+    {
+      "name": "turret",
+      "parent": null,
+      "motion": "sway"
+    },
+    {
+      "name": "gun",
+      "parent": "turret",
+      "motion": "sway"
+    }
+  ],
+  "emitters": [
+    {
+      "name": "thrust_tail_l",
+      "kind": "fire",
+      "when": "moving"
+    },
+    {
+      "name": "thrust_tail_r",
+      "kind": "fire",
+      "when": "moving"
+    },
+    {
+      "name": "thrust_l",
+      "kind": "fire",
+      "when": "always"
+    },
+    {
+      "name": "downwash_l",
+      "kind": "dust",
+      "when": "moving"
+    },
+    {
+      "name": "thrust_r",
+      "kind": "fire",
+      "when": "always"
+    },
+    {
+      "name": "downwash_r",
+      "kind": "dust",
+      "when": "moving"
+    },
+    {
+      "name": "muzzle",
+      "kind": "muzzle",
+      "when": "event"
+    }
+  ],
+  "sockets": [
+    {
+      "name": "cabin_light",
+      "kind": "light",
+      "parent": null
+    },
+    {
+      "name": "nav_l",
+      "kind": "light",
+      "parent": null
+    },
+    {
+      "name": "nav_r",
+      "kind": "light",
+      "parent": null
+    },
+    {
+      "name": "nav_tail",
+      "kind": "light",
+      "parent": null
+    },
+    {
+      "name": "landing_light",
+      "kind": "light",
+      "parent": null
+    },
+    {
+      "name": "muzzle_gun",
+      "kind": "mount",
+      "parent": "gun"
+    }
+  ],
+  "surfaces": [
+    "glass",
+    "opaque"
+  ],
+  "real": {
+    "length": 20.2,
+    "width": 13.4,
+    "height": 6
+  },
+  "measures": [
+    {
+      "label": "fuselage width",
+      "spec": 3.7,
+      "measured": 3.700000047683716,
+      "source": "design spec (CH-47 fuselage 3.78 m)"
+    },
+    {
+      "label": "fuselage depth",
+      "spec": 3,
+      "measured": 3.000000238418579,
+      "source": "design spec (CH-47 cabin 1.98 m + floor and roof structure)"
+    },
+    {
+      "label": "nacelle centres",
+      "spec": 11.1,
+      "measured": 11.099999904632568,
+      "source": "design spec (V-22 rotor centres ≈ 14.2 m, ducted fans sit closer)"
+    },
+    {
+      "label": "main gear track",
+      "spec": 4.1,
+      "measured": 4.099999904632568,
+      "source": "design spec"
+    },
+    {
+      "label": "nacelle length",
+      "spec": 4.2,
+      "measured": 4.199999809265137,
+      "source": "design spec"
+    },
+    {
+      "label": "ramp width",
+      "spec": 2.8,
+      "measured": 2.799999952316284,
+      "source": "design spec"
+    }
+  ],
+  "sources": [
+    "https://www.boeing.com/defense/military-rotorcraft/v-22-osprey",
+    "https://thedefensepost.com/2026/08/03/v-22-osprey-guide/",
+    "https://www.boeing.com/defense/military-rotorcraft/h-47-chinook",
+    "https://www.inetres.com/gp/military/ar/rotor/CH-47.html",
+    "recipes/dropship/README.md (design spec)"
+  ],
+  "qa": {
+    "pass": true,
+    "findings": []
+  }
+}

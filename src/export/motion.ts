@@ -38,10 +38,15 @@ export function motionChannel(
   const keys = Math.max(24, Math.abs(cycles) * (motion.kind === 'spin' ? 12 : 16));
   const { input, t } = times(bin, keys);
   const phase = (time: number): number => (time / LOOP_SECONDS) * cycles * Math.PI * 2;
+  // Two-sided: −1..1 around rest. One-way: 0..1, starting and ending at rest (seamless loop).
+  const wave = (time: number): number =>
+    motion.kind !== 'spin' && motion.oneWay
+      ? (1 - Math.cos(phase(time))) / 2
+      : Math.sin(phase(time));
   if (motion.kind === 'slide') {
     const values = new Float32Array((keys + 1) * 3);
     t.forEach((time, i) => {
-      const s = Math.sin(phase(time));
+      const s = wave(time);
       values.set(
         [0, 1, 2].map((k) => (rest[k] ?? 0) + (motion.offset[k] ?? 0) * s),
         i * 3,
@@ -55,7 +60,7 @@ export function motionChannel(
   const values = new Float32Array((keys + 1) * 4);
   const peak = motion.kind === 'sway' ? (motion.degrees * Math.PI) / 180 : 0;
   t.forEach((time, i) => {
-    const angle = motion.kind === 'spin' ? phase(time) : peak * Math.sin(phase(time));
+    const angle = motion.kind === 'spin' ? phase(time) : peak * wave(time);
     values.set(quatFromAxisAngle(motion.axis, angle), i * 4);
   });
   return {

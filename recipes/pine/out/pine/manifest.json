@@ -1,0 +1,67 @@
+{
+  "name": "pine",
+  "kind": "vegetation",
+  "description": "Scots pine (Pinus sylvestris), mature: tall bare bole, orange upper bark, high flat-topped crown",
+  "tags": [
+    "vegetation",
+    "tree"
+  ],
+  "files": {
+    "lods": [],
+    "sheet": "recipes/pine/out/pine/sheet.png",
+    "thumb": "recipes/pine/out/pine/thumb.png"
+  },
+  "triangles": [
+    6496,
+    1212,
+    180
+  ],
+  "drawCalls": [
+    2,
+    2,
+    2
+  ],
+  "pivots": [
+    {
+      "name": "body",
+      "parent": null
+    },
+    {
+      "name": "crown",
+      "parent": null,
+      "motion": "sway"
+    }
+  ],
+  "emitters": [],
+  "sockets": [],
+  "surfaces": [
+    "opaque"
+  ],
+  "real": {
+    "length": 9,
+    "width": 9,
+    "height": 25
+  },
+  "measures": [
+    {
+      "label": "trunk diameter at breast height",
+      "spec": 0.6,
+      "measured": 0.6000000238418579,
+      "source": "recipes/pine/README.md"
+    },
+    {
+      "label": "total height",
+      "spec": 25,
+      "measured": 24.99999989569187,
+      "source": "recipes/pine/README.md"
+    }
+  ],
+  "sources": [
+    "https://en.wikipedia.org/wiki/Pinus_sylvestris (up to 35 m tall, trunk up to 1 m diameter; orange upper bark)",
+    "https://www.woodlandtrust.org.uk/trees-woods-and-wildlife/british-trees/a-z-of-british-trees/scots-pine/ (mature 35 m; flat-topped crown in age)"
+  ],
+  "qa": {
+    "pass": true,
+    "findings": []
+  }
+}

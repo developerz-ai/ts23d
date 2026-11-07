@@ -1,0 +1,44 @@
+{
+  "name": "mountain_range_b",
+  "kind": "terrain",
+  "description": "2 × 2 km alpine map tile: eroded ridges, a glacial valley, forest, meadow, rock and snow bands.",
+  "tags": [
+    "terrain",
+    "landscape",
+    "alpine",
+    "erosion",
+    "map"
+  ],
+  "files": {
+    "lods": [],
+    "sheet": "recipes/mountain_range/out/mountain_range_b/sheet.png",
+    "thumb": "recipes/mountain_range/out/mountain_range_b/thumb.png"
+  },
+  "triangles": [
+    133120,
+    33792,
+    8704
+  ],
+  "drawCalls": [
+    1,
+    1,
+    1
+  ],
+  "pivots": [
+    {
+      "name": "body",
+      "parent": null
+    }
+  ],
+  "emitters": [],
+  "sockets": [],
+  "surfaces": [
+    "opaque"
+  ],
+  "measures": [],
+  "sources": [],
+  "qa": {
+    "pass": true,
+    "findings": []
+  }
+}

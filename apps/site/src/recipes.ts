@@ -6,7 +6,7 @@ import type { AssetInfo } from './compile-protocol.ts';
 
 export interface Recipe {
   readonly asset: AssetInfo;
-  /** File name under recipes/, e.g. `t34.ts`. */
+  /** Path under recipes/, e.g. `t34/t34.ts`. */
   readonly file: string;
   /** The module's TypeScript, fetched on demand (each file is its own small chunk). */
   readonly source: () => Promise<string>;
@@ -14,7 +14,7 @@ export interface Recipe {
   readonly family: string | null;
 }
 
-const sources = import.meta.glob<string>('../../../recipes/*.ts', {
+const sources = import.meta.glob<string>('../../../recipes/*/*.ts', {
   query: '?raw',
   import: 'default',
 });

@@ -1,0 +1,127 @@
+{
+  "name": "cargo_container_scifi",
+  "kind": "prop",
+  "description": "Original sci-fi 20 ft cargo container on the real ISO 668 envelope with ISO 1161 corner castings; hinged doors",
+  "tags": [
+    "sci-fi",
+    "prop",
+    "container",
+    "cargo",
+    "hard-surface"
+  ],
+  "files": {
+    "lods": [],
+    "sheet": "recipes/cargo_container_scifi/out/cargo_container_scifi/sheet.png",
+    "thumb": "recipes/cargo_container_scifi/out/cargo_container_scifi/thumb.png"
+  },
+  "triangles": [
+    8210,
+    4434,
+    520
+  ],
+  "drawCalls": [
+    5,
+    5,
+    4
+  ],
+  "pivots": [
+    {
+      "name": "container",
+      "parent": null
+    },
+    {
+      "name": "door_r",
+      "parent": "container",
+      "motion": "sway"
+    },
+    {
+      "name": "door_l",
+      "parent": "container",
+      "motion": "sway"
+    }
+  ],
+  "emitters": [],
+  "sockets": [
+    {
+      "name": "twistlock_0",
+      "kind": "attach",
+      "parent": "container"
+    },
+    {
+      "name": "twistlock_1",
+      "kind": "attach",
+      "parent": "container"
+    },
+    {
+      "name": "twistlock_2",
+      "kind": "attach",
+      "parent": "container"
+    },
+    {
+      "name": "twistlock_3",
+      "kind": "attach",
+      "parent": "container"
+    },
+    {
+      "name": "status_lamp",
+      "kind": "light",
+      "parent": "container"
+    }
+  ],
+  "surfaces": [
+    "opaque"
+  ],
+  "real": {
+    "length": 6.058,
+    "width": 2.438,
+    "height": 2.591
+  },
+  "measures": [
+    {
+      "label": "body length",
+      "spec": 6.058,
+      "measured": 6.058000087738037,
+      "source": "ISO 668 1CC"
+    },
+    {
+      "label": "body width",
+      "spec": 2.438,
+      "measured": 2.4619998931884766,
+      "source": "ISO 668 1CC"
+    },
+    {
+      "label": "body height",
+      "spec": 2.591,
+      "measured": 2.5690000895410776,
+      "source": "ISO 668 8 ft 6 in"
+    },
+    {
+      "label": "corner casting length",
+      "spec": 0.178,
+      "measured": 0.1809999942779541,
+      "source": "ISO 1161 (178 mm)"
+    },
+    {
+      "label": "corner casting height",
+      "spec": 0.118,
+      "measured": 0.11800000071525574,
+      "source": "ISO 1161 (118 mm)"
+    },
+    {
+      "label": "casting centres, width",
+      "spec": 2.2760000000000002,
+      "measured": 2.2790000438690186,
+      "source": "ISO 1161 (2259 mm)"
+    }
+  ],
+  "sources": [
+    "https://en.wikipedia.org/wiki/ISO_668",
+    "https://www.kscranegroup.com/posts/shipping-container-dimensions-types-and-corner-casting-guide/",
+    "https://marine.albertjagger.co.uk/our-products/cargo-control/corner-castings/iso-corner-casting-top-left-fitment",
+    "https://hz-containers.com/en/technical-information/corner-castings-technical-documentation/"
+  ],
+  "qa": {
+    "pass": true,
+    "findings": []
+  }
+}

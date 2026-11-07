@@ -16,8 +16,8 @@ research refs ─► write recipe ─► t3d build ──QA FAIL──► fix fi
 |---|---|---|
 | 1. Research | Find real dimensions, a side elevation, photos. Put the URLs in `sources`, overall L × W × H in `real`, and every key size (driver diameter, gauge, wheelbase, turret width) in `real.measures` | The spec is in the recipe, in metres, each number with a source |
 | 2. Masses | Write the big volumes only: hull, body, tiers. Real dimensions | Silhouette roughly right |
-| 3. Build | `bunx t3d build recipes/x.ts` | Prints `QA PASS`, exit 0. Fix every finding first; each prints a `fix:`. A `measures` or `proportions` finding means rebuild the part, never edit the spec |
-| 4. Shot | `bunx t3d build` already wrote `out/x/sheet.png`; `bunx t3d shot recipes/x.ts` for a sheet without GLBs | `out/x/sheet.png` + `manifest.json` written |
+| 3. Build | `bunx t3d build recipes/x/x.ts` | Prints `QA PASS`, exit 0. Fix every finding first; each prints a `fix:`. A `measures` or `proportions` finding means rebuild the part, never edit the spec |
+| 4. Shot | `bunx t3d build` already wrote `out/x/sheet.png`; `bunx t3d shot recipes/x/x.ts` for a sheet without GLBs | `out/x/sheet.png` + `manifest.json` written |
 | 5. Read | Open the PNG (vision). Compare against the reference | One concrete error named, e.g. "turret 30% too tall in SIDE -Y" |
 | 6. Fix | Edit the recipe for that one error | → step 3 |
 | 6b. Photo match *(planned, M2)* | `photoMatch(asset, { photo, camera })` → one PNG: photo · model · overlay, plus silhouette IoU | IoU stops rising; the overlay shows no misplaced mass |
@@ -86,7 +86,7 @@ When a finding is unclear, write a scratch script instead of guessing. `inspect(
 
 ```ts
 import { compile, inspect } from '@developerz-ai/ts23d';
-import { t34 } from './recipes/t34.ts';
+import { t34 } from './recipes/t34/t34.ts';
 
 const q = inspect(compile(t34, { lod: 0 }));
 q.parts('road_wheel_l_*');                  // names
@@ -133,7 +133,7 @@ fix the single biggest error → repeat. Stop when two shots in a row show nothi
 Never use Math.random; use ctx.rng.
 ```
 
-The package ships `AGENTS.md` and `llms.txt` for agents that read them.
+The package ships `CLAUDE.md` (the repo's `AGENTS.md` links to it) and `llms.txt` for agents that read them.
 
 ## Planned (as of 2026-10)
 

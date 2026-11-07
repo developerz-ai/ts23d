@@ -13,7 +13,7 @@ for (const cmd of [
   if (p.exitCode !== 0) process.exit(p.exitCode ?? 1);
 }
 console.log(
-  '✔ setup done. The gate: bun run verify · try: bun run t3d shot recipes/t34.ts --out renders',
+  '✔ setup done. The gate: bun run verify · try: bun run t3d shot recipes/t34/t34.ts --out renders',
 );
 
 export {};

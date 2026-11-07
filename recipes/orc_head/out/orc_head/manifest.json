@@ -1,0 +1,58 @@
+{
+  "name": "orc_head",
+  "kind": "character",
+  "description": "Stylised orc warrior bust: underbite and lower tusks, heavy brow, ember eyes, top-knot, spiked pauldrons, fur mantle",
+  "tags": [
+    "character",
+    "fantasy",
+    "orc",
+    "bust",
+    "sculpt"
+  ],
+  "files": {
+    "lods": [],
+    "sheet": "recipes/orc_head/out/orc_head/sheet.png",
+    "thumb": "recipes/orc_head/out/orc_head/thumb.png"
+  },
+  "triangles": [
+    64228,
+    12832,
+    1684
+  ],
+  "drawCalls": [
+    2,
+    2,
+    2
+  ],
+  "pivots": [
+    {
+      "name": "body",
+      "parent": null
+    }
+  ],
+  "emitters": [],
+  "sockets": [],
+  "surfaces": [
+    "opaque"
+  ],
+  "real": {
+    "length": 0.338,
+    "width": 0.742,
+    "height": 0.583
+  },
+  "measures": [
+    {
+      "label": "eye spacing (pupil to pupil)",
+      "spec": 0.093,
+      "measured": 0.09299999848008156,
+      "source": "0.155 × 2 head units × 0.30 m"
+    }
+  ],
+  "sources": [
+    "recipes/orc_head/README.md (design dossier: proportions, palette, references)"
+  ],
+  "qa": {
+    "pass": true,
+    "findings": []
+  }
+}

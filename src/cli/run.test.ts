@@ -16,10 +16,10 @@ export const crate = defineAsset({ name: 'crate', kind: 'prop', budget: { triang
   );
   const log = console.log;
   console.log = () => {};
-  const code = await run(['build', fixture, '--out', out]);
+  const code = await run(['build', fixture, '--out', out, '--size', '160x90']);
   console.log = log;
   expect(code).toBe(0);
-  for (const f of ['lod0.glb', 'lod1.glb', 'lod2.glb', 'sheet.png', 'manifest.json']) {
+  for (const f of ['lod0.glb', 'lod1.glb', 'lod2.glb', 'hero.png', 'sheet.png', 'manifest.json']) {
     expect(await Bun.file(join(out, 'crate', f)).exists()).toBe(true);
   }
   const manifest = await Bun.file(join(out, 'crate', 'manifest.json')).json();
@@ -40,6 +40,8 @@ it('builds only the LODs asked for', async () => {
     '0',
     '--sheet',
     'none',
+    '--size',
+    '160x90',
   ]);
   console.log = log;
   expect(code).toBe(0);
@@ -47,4 +49,56 @@ it('builds only the LODs asked for', async () => {
   expect(await Bun.file(join(out, 'hero', 'crate', 'lod1.glb')).exists()).toBe(false);
   const manifest = await Bun.file(join(out, 'hero', 'crate', 'manifest.json')).json();
   expect(manifest.triangles).toHaveLength(1);
+});
+
+it('fails a bad --size with a coded error, before writing anything', async () => {
+  const err = console.error;
+  let printed = '';
+  console.error = (m: string) => {
+    printed += m;
+  };
+  const code = await run([
+    'hero',
+    join(out, 'crate.ts'),
+    '--out',
+    join(out, 'bad'),
+    '--size',
+    '9x9',
+    '--json',
+  ]);
+  console.error = err;
+  expect(code).toBe(1);
+  expect(JSON.parse(printed).error.code).toBe('T3D_RENDER_OPTIONS');
+  expect(await Bun.file(join(out, 'bad', 'crate', 'hero.png')).exists()).toBe(false);
+});
+
+it('renders a hero and a review pack', async () => {
+  const fixture = join(out, 'crate.ts');
+  const log = console.log;
+  console.log = () => {};
+  const hero = await run([
+    'hero',
+    fixture,
+    '--out',
+    join(out, 'r'),
+    '--size',
+    '64x48',
+    '--sheet-size',
+    '512',
+  ]);
+  const review = await run([
+    'review',
+    fixture,
+    '--out',
+    join(out, 'r'),
+    '--size',
+    '64x48',
+    '--sheet-size',
+    '512',
+  ]);
+  console.log = log;
+  expect([hero, review]).toEqual([0, 0]);
+  expect(await Bun.file(join(out, 'r', 'crate', 'hero.png')).exists()).toBe(true);
+  for (const f of ['hero.png', 'lods.png', 'review.md', 'review.json'])
+    expect(await Bun.file(join(out, 'r', 'crate', 'review', f)).exists()).toBe(true);
 });

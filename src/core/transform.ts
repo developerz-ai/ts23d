@@ -71,7 +71,20 @@ export function applyAffine(mesh: Mesh, a: Affine): Mesh {
     normals[i + 1] = ry / l;
     normals[i + 2] = rz / l;
   }
-  return { ...mesh, positions, normals };
+  // A mirror (det < 0) turns counter-clockwise triangles clockwise: flip each one back, or
+  // engines cull the outside and draw the inside.
+  const det =
+    m[0] * (m[4] * m[8] - m[5] * m[7]) -
+    m[1] * (m[3] * m[8] - m[5] * m[6]) +
+    m[2] * (m[3] * m[7] - m[4] * m[6]);
+  if (det >= 0) return { ...mesh, positions, normals };
+  const indices = mesh.indices.slice();
+  for (let t = 0; t + 2 < indices.length; t += 3) {
+    const b = indices[t + 1] ?? 0;
+    indices[t + 1] = indices[t + 2] ?? 0;
+    indices[t + 2] = b;
+  }
+  return { ...mesh, positions, normals, indices };
 }
 
 export const place = (mesh: Mesh, p: Placement): Mesh => applyAffine(mesh, affine(p));

@@ -20,6 +20,8 @@ export interface Slide {
   /** Peak offset of a sinusoidal back-and-forth (piston rods, sliders). */
   readonly offset: Vec3;
   readonly hz: number;
+  /** Move only from rest to rest + offset and back (a sliding door), not to both sides. */
+  readonly oneWay?: boolean;
 }
 
 export interface Sway {
@@ -29,6 +31,8 @@ export interface Sway {
   /** Peak angle either side of rest: turret scan, gun elevation, wind in a crown, a door ajar. */
   readonly degrees: number;
   readonly hz: number;
+  /** Swing only from rest to +degrees and back (a signal arm dropping, a hatch opening). */
+  readonly oneWay?: boolean;
 }
 
 export type Motion = Spin | Slide | Sway;

@@ -1,0 +1,74 @@
+{
+  "name": "asteroid_c",
+  "kind": "prop",
+  "description": "Elongated asteroid shard variant (seed 3) with craters, ore veins and crystal clusters",
+  "tags": [
+    "sci-fi",
+    "asteroid",
+    "rock",
+    "mining",
+    "sdf"
+  ],
+  "files": {
+    "lods": [],
+    "sheet": "recipes/asteroid/out/asteroid_c/sheet.png",
+    "thumb": "recipes/asteroid/out/asteroid_c/thumb.png"
+  },
+  "triangles": [
+    20656,
+    4444,
+    632
+  ],
+  "drawCalls": [
+    2,
+    2,
+    2
+  ],
+  "pivots": [
+    {
+      "name": "body",
+      "parent": null
+    }
+  ],
+  "emitters": [
+    {
+      "name": "dust",
+      "kind": "dust",
+      "when": "event"
+    }
+  ],
+  "sockets": [
+    {
+      "name": "mine_point_0",
+      "kind": "interact",
+      "parent": null
+    },
+    {
+      "name": "mine_point_1",
+      "kind": "interact",
+      "parent": null
+    },
+    {
+      "name": "mine_point_2",
+      "kind": "interact",
+      "parent": null
+    },
+    {
+      "name": "mine_point_3",
+      "kind": "interact",
+      "parent": null
+    }
+  ],
+  "surfaces": [
+    "opaque"
+  ],
+  "measures": [],
+  "sources": [
+    "https://www.esa.int/Science_Exploration/Space_Science/Rosetta/Debris_of_the_Solar_System_Asteroids",
+    "https://starlust.org/what-are-the-different-types-of-asteroids"
+  ],
+  "qa": {
+    "pass": true,
+    "findings": []
+  }
+}

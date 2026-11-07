@@ -33,7 +33,7 @@ export function highlight(source: string): string {
 export function renderSource(root: HTMLElement, file: string, source: string): void {
   const title = root.querySelector<HTMLElement>('[data-source-file]');
   const pre = root.querySelector<HTMLElement>('pre');
-  const code = root.querySelector<HTMLElement>('code');
+  const code = root.querySelector<HTMLElement>('pre code');
   // The listing scrolls, so keyboard users need to be able to focus it.
   if (pre) pre.tabIndex = 0;
   if (title) title.textContent = `recipes/${file}`;

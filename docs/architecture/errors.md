@@ -13,14 +13,15 @@ T3D_PART_UNKNOWN: part 'gun_barrel' parents to 'gun', which does not exist yet
 
 | Code | Thrown by | Cause | Fix |
 |---|---|---|---|
-| `T3D_NOT_IMPLEMENTED` | Anything in a `planned.ts` (`tiled`, `cell`, `sdf`, `roof`, `hull`, `creature`), `optimize`, `photoMatch`, `/neural`, `silhouetteIoU` | Declared API, not built yet. The message names the doc tracking it | Use a shipped alternative ([roadmap](../plans/roadmap.md)), or implement it ([adding a primitive](adding-a-primitive.md), [adding a kind](adding-a-kind.md)) |
+| `T3D_NOT_IMPLEMENTED` | Anything still in a `planned.ts` (`creature`), `/neural`, and whatever the roadmap lists as unbuilt | Declared API, not built yet. The message names the doc tracking it | Use a shipped alternative ([roadmap](../plans/roadmap.md)), or implement it ([adding a primitive](adding-a-primitive.md), [adding a kind](adding-a-kind.md)) |
 | `T3D_GRAMMAR_SYNTAX` | `parseSplit`, `split`, `parseWhyte` | Bad split term, empty split, a repeat with stretch terms, more than one repeat; or a Whyte string that isn't three even numbers | Split: `sym:<metres>`, `sym:~`, `sym:~<weight>`, `{a:1 \| b:2}*`, joined by `\|`. Whyte: `'4-4-0'`, `'2-8-2'` |
 | `T3D_GRAMMAR_OVERFLOW` | `layoutSplit`, `split`, `facade` | Fixed terms sum to more than the strip length | Shrink a fixed term or make one a stretch (`sym:~`) |
 | `T3D_PART_DUPLICATE` | `ctx.part`, `ctx.group`, `ctx.use` | A part name added twice in one asset | Suffix the loop index: `wheel_0`, `wheel_1`; give each `ctx.use` a unique `prefix` |
 | `T3D_PART_UNKNOWN` | `ctx.part`, `ctx.group` | `parent` names a part not added yet | Add the parent first |
-| `T3D_RECIPE_INVALID` | `defineAsset`, `ctx.part` | Asset name not `[a-z][a-z0-9_]*`; or a part with both `yaw` and `motion` | Rename to snake_case; put yaw on a parent `ctx.group`, motion on the child |
+| `T3D_RECIPE_INVALID` | `defineAsset`, `ctx.part`, every primitive and kind | Asset name not `[a-z][a-z0-9_]*`; a part with both `yaw` and `motion`; or a primitive/kind given impossible input (zero-length edge, bevel ≥ half a side, roof pitch out of range, SDF grid over the cell cap) | Rename to snake_case; put yaw on a parent `ctx.group`, motion on the child; otherwise the printed `fix:` names the bad option and its valid range |
 | `T3D_NO_ASSET_EXPORT` | CLI loader | The module exports no `defineAsset` result | `export const my_thing = defineAsset({ … })`. Named export, no default |
-| `T3D_QA_FAILED` | Reserved | Declared for a QA failure surfaced as an exception. As of 2026-10 nothing throws it: the CLI reports findings and exits 1 | Fix each finding's `fix:` line |
+| `T3D_QA_FAILED` | `/testing` assertions (`assertQaPass`, `assertBudget`, `assertMeasure`, …) | A recipe test found QA findings; the message lists every one. The CLI itself reports findings and exits 1 instead | Fix each finding's `fix:` line |
+| `T3D_RENDER_OPTIONS` | `beauty`, `t3d hero` / `review` flags, render metrics | Bad image size, camera angle or render option | The printed `fix:` names the valid range |
 
 ## Repo tooling codes
 

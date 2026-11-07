@@ -1,0 +1,157 @@
+{
+  "name": "signal_gantry_4",
+  "kind": "prop",
+  "description": "The same signal bridge over four tracks, as in the 1909 photograph.",
+  "tags": [
+    "railroad",
+    "signal",
+    "semaphore",
+    "lineside",
+    "usa",
+    "1910s"
+  ],
+  "files": {
+    "lods": [],
+    "sheet": "recipes/signal_gantry/out/signal_gantry_4/sheet.png",
+    "thumb": "recipes/signal_gantry/out/signal_gantry_4/thumb.png"
+  },
+  "triangles": [
+    10876,
+    4944,
+    1404
+  ],
+  "drawCalls": [
+    10,
+    10,
+    10
+  ],
+  "pivots": [
+    {
+      "name": "body",
+      "parent": null
+    },
+    {
+      "name": "arm_0_home",
+      "parent": null,
+      "motion": "sway"
+    },
+    {
+      "name": "arm_0_distant",
+      "parent": null,
+      "motion": "sway"
+    },
+    {
+      "name": "arm_1_home",
+      "parent": null,
+      "motion": "sway"
+    },
+    {
+      "name": "arm_1_distant",
+      "parent": null,
+      "motion": "sway"
+    },
+    {
+      "name": "arm_2_home",
+      "parent": null,
+      "motion": "sway"
+    },
+    {
+      "name": "arm_2_distant",
+      "parent": null,
+      "motion": "sway"
+    },
+    {
+      "name": "arm_3_home",
+      "parent": null,
+      "motion": "sway"
+    },
+    {
+      "name": "arm_3_distant",
+      "parent": null,
+      "motion": "sway"
+    }
+  ],
+  "emitters": [],
+  "sockets": [
+    {
+      "name": "lamp_0_home_light",
+      "kind": "light",
+      "parent": null
+    },
+    {
+      "name": "lamp_0_distant_light",
+      "kind": "light",
+      "parent": null
+    },
+    {
+      "name": "lamp_1_home_light",
+      "kind": "light",
+      "parent": null
+    },
+    {
+      "name": "lamp_1_distant_light",
+      "kind": "light",
+      "parent": null
+    },
+    {
+      "name": "lamp_2_home_light",
+      "kind": "light",
+      "parent": null
+    },
+    {
+      "name": "lamp_2_distant_light",
+      "kind": "light",
+      "parent": null
+    },
+    {
+      "name": "lamp_3_home_light",
+      "kind": "light",
+      "parent": null
+    },
+    {
+      "name": "lamp_3_distant_light",
+      "kind": "light",
+      "parent": null
+    }
+  ],
+  "surfaces": [
+    "opaque"
+  ],
+  "real": {
+    "length": 1.12,
+    "width": 17.968799999999998,
+    "height": 13.125599999999999
+  },
+  "measures": [
+    {
+      "label": "track centres (13 ft)",
+      "spec": 3.9624,
+      "measured": 3.962399899959564,
+      "source": "Track spacing"
+    },
+    {
+      "label": "post to track centre (8 ft 6 in)",
+      "spec": 2.5908,
+      "measured": 2.5908000469207764,
+      "source": "Illinois 92 §1500"
+    },
+    {
+      "label": "blade length (5 ft)",
+      "spec": 1.524,
+      "measured": 1.5240001678466797,
+      "source": "railroadsignals.us"
+    }
+  ],
+  "sources": [
+    "https://commons.wikimedia.org/wiki/File:Signal_bridge_-_Discs_%26_semaphores_1909.jpg",
+    "https://regulations.justia.com/states/pennsylvania/title-52/part-i/subpart-b/chapter-33/subchapter-b/safety-bridges-tunnels-trestles-and-switches/section-33-41",
+    "https://en.wikipedia.org/wiki/Track_spacing",
+    "https://www.railroadsignals.us/signals/sem/",
+    "https://en.wikipedia.org/wiki/Railway_semaphore_signal",
+    "https://www.irm.org/?p=19319"
+  ],
+  "qa": {
+    "pass": true,
+    "findings": []
+  }
+}

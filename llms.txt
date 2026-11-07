@@ -6,11 +6,11 @@
 The npm package ships every doc, skill and example, versioned with the code — read them without internet:
 - `node_modules/@developerz-ai/ts23d/AGENTS.md` — rules and the loop
 - `node_modules/@developerz-ai/ts23d/docs/` — DSL, IR, materials, agent loop, QA, kinds, decisions, roadmap
-- `node_modules/@developerz-ai/ts23d/recipes/` + `refs/` — idiomatic recipes and their research dossiers
+- `node_modules/@developerz-ai/ts23d/recipes/<name>/` — idiomatic recipes, each with its research dossier (`README.md`) and committed hero + contact sheet (`out/`)
 - `node_modules/@developerz-ai/ts23d/.claude/skills/author-recipe/SKILL.md` — copy into your `.claude/skills/`
 
 ## The workflow
-The human names a thing ("Tiger I, mid-production 1943"). The agent researches specs and real photos into `refs/<name>.md` (every number sourced), writes `recipes/<name>.ts` with `sources` + `real.measures` from that dossier, compiles until QA PASS (budget, surface contact, clashes, proportions ±5%, measures ±2%), renders the six-view contact sheet, looks at it, adds LOD-gated detail, and iterates.
+The human names a thing ("Tiger I, mid-production 1943"). The agent researches specs and real photos into `recipes/<name>/README.md` (every number sourced), writes `recipes/<name>.ts` with `sources` + `real.measures` from that dossier, compiles until QA PASS (budget, surface contact, clashes, proportions ±5%, measures ±2%), renders the six-view contact sheet, looks at it, adds LOD-gated detail, and iterates.
 
 ## Programmatic (no CLI)
 `t3d` is optional: `compile` → `runQa` → `toGlb` / `contactSheet` / `paintTrimSheet` are plain functions returning bytes. Runnable script: `examples/build-with-bun.ts` (also in the npm package).
@@ -27,17 +27,18 @@ The human names a thing ("Tiger I, mid-production 1943"). The agent researches s
 - [Materials](https://raw.githubusercontent.com/developerz-ai/ts23d/main/docs/idea/04-materials.md): trim sheet, palettes, generator, image sources (kubeez.com)
 - [Agent loop](https://raw.githubusercontent.com/developerz-ai/ts23d/main/docs/idea/05-agent-loop.md): contact sheet layout, iteration
 - [QA gates](https://raw.githubusercontent.com/developerz-ai/ts23d/main/docs/idea/06-qa.md)
-- [What fits](https://raw.githubusercontent.com/developerz-ai/ts23d/main/docs/idea/07-what-fits.md): hard-surface vs organic; creatures via SDF kind or local-GPU adapters
+- [What fits](https://raw.githubusercontent.com/developerz-ai/ts23d/main/docs/idea/07-what-fits.md): hard-surface vs organic; sculpted stylised characters and terrain today; realistic creatures via local-GPU adapters
 - [Kinds](https://raw.githubusercontent.com/developerz-ai/ts23d/main/docs/idea/09-kinds.md): buildings, vehicles, vessels, vegetation, scenes
 
 ## Reference
 - [Public API barrel](https://raw.githubusercontent.com/developerz-ai/ts23d/main/src/index.ts)
 - [Error codes](https://raw.githubusercontent.com/developerz-ai/ts23d/main/docs/architecture/errors.md): every T3D_* with cause and fix
 - [Module tiers](https://raw.githubusercontent.com/developerz-ai/ts23d/main/docs/architecture/README.md)
+- [glTF capabilities](https://raw.githubusercontent.com/developerz-ai/ts23d/main/docs/architecture/gltf-capabilities.md): every extension, skins, physics drafts; what ts23d writes
 - [Roadmap](https://raw.githubusercontent.com/developerz-ai/ts23d/main/docs/plans/roadmap.md): shipped vs planned
 - [Decisions](https://raw.githubusercontent.com/developerz-ai/ts23d/main/docs/decisions/): why TS not JSON, why one material, why CPU renders
-- [Example recipe: Tiger I](https://raw.githubusercontent.com/developerz-ai/ts23d/main/recipes/tiger_1.ts)
-- [Reference dossier template](https://raw.githubusercontent.com/developerz-ai/ts23d/main/refs/README.md)
+- [Example recipe: Tiger I](https://raw.githubusercontent.com/developerz-ai/ts23d/main/recipes/tiger_1/tiger_1.ts)
+- [Reference dossier template](https://raw.githubusercontent.com/developerz-ai/ts23d/main/recipes/README.md)
 
 ## Optional
 - [Landscape](https://raw.githubusercontent.com/developerz-ai/ts23d/main/docs/landscape.md): neutral overview of AI 3D generators and where each approach fits

@@ -1,4 +1,8 @@
 // argv → Args for `t3d`. No dependency, no magic: flags are few and documented in HELP.
+// Bad render flags (--size/--az/--el/--fov) throw T3D_RENDER_OPTIONS with the fix.
+
+import { Ts23dError } from '../core/index.ts';
+import { checkBeautyOptions, parseSize } from '../render/index.ts';
 
 export interface Args {
   readonly cmd: string;
@@ -13,16 +17,29 @@ export interface Args {
   readonly sheetSize: 512 | 1024 | 2048;
   /** Which detail levels to build: all three by default, or e.g. only the hero mesh. */
   readonly lods: readonly (0 | 1 | 2)[];
+  /** Beauty-render camera and size (hero, review, and build's hero.png); unset = defaults. */
+  readonly render: {
+    readonly width?: number;
+    readonly height?: number;
+    readonly azDeg?: number;
+    readonly elDeg?: number;
+    readonly fovDeg?: number;
+  };
 }
 
 export const HELP = `usage: t3d <command> <recipe.ts…> [flags]
-  build   GLB × 3 LODs + contact sheet + manifest.json per asset; exit 1 on any QA finding
+  build   GLB × 3 LODs + hero + contact sheet + manifest.json per asset; exit 1 on any QA finding
   shot    contact sheet + manifest.json only (fast look)
+  hero    beauty render only → <out>/<asset>/hero.png (3/4 product shot, textured, shadowed)
+  review  AI review pack → <out>/<asset>/review/: hero, sheet, close-ups, LOD strip, review.md
+          (checklist prompt for a vision agent) and review.json (image metrics + warnings)
   list    the assets each module exports
 flags:
-  --out <dir>     output root (default: out) → <dir>/<asset>/{lod0,lod1,lod2}.glb sheet.png manifest.json
+  --out <dir>     output root (default: out) → <dir>/<asset>/{lod0,lod1,lod2}.glb hero.png sheet.png manifest.json
   --no-animations skip the baked 'run' clip (default: baked, so viewers can play it)
-  --no-shot       build without rendering the contact sheet
+  --no-shot       build without rendering hero.png and the contact sheet
+  --size WxH      beauty render size (default 1600x900) · --az <deg> camera azimuth from the
+                  front, default -35 (front-left 3/4) · --el <deg> elevation, default 18 · --fov <deg> 30
   --sheet <mode>  external (default): one shared trim_sheet_{albedo,normal,orm}.png in <out>/,
                   referenced by every GLB · embed: self-contained GLBs · none: vertex colour only
   --sheet-size n  512 | 1024 (default) | 2048
@@ -38,6 +55,22 @@ export function parseArgs(argv: readonly string[]): Args {
   let sheet: Args['sheet'] = 'external';
   let sheetSize: Args['sheetSize'] = 1024;
   let lods: Args['lods'] = [0, 1, 2];
+  const render: {
+    width?: number;
+    height?: number;
+    azDeg?: number;
+    elDeg?: number;
+    fovDeg?: number;
+  } = {};
+  const num = (flag: string, v: string | undefined): number => {
+    const n = Number(v);
+    if (v === undefined || v.trim() === '' || !Number.isFinite(n))
+      throw new Ts23dError('T3D_RENDER_OPTIONS', {
+        cause: `${flag} needs a number of degrees, got ${v === undefined ? 'nothing' : `"${v}"`}`,
+        fix: `pass e.g. ${flag} ${flag === '--fov' ? 30 : flag === '--el' ? 18 : -35}`,
+      });
+    return n;
+  };
   for (let i = 1; i < argv.length; i++) {
     const a = argv[i] ?? '';
     if (a === '--json') json = true;
@@ -57,7 +90,23 @@ export function parseArgs(argv: readonly string[]): Args {
     } else if (a === '--sheet-size') {
       const n = Number(argv[++i]);
       sheetSize = n === 512 || n === 2048 ? n : 1024;
-    } else files.push(a);
+    } else if (a === '--size') Object.assign(render, parseSize(argv[++i] ?? ''));
+    else if (a === '--az') render.azDeg = num(a, argv[++i]);
+    else if (a === '--el') render.elDeg = num(a, argv[++i]);
+    else if (a === '--fov') render.fovDeg = num(a, argv[++i]);
+    else files.push(a);
   }
-  return { cmd: argv[0] ?? 'help', files, out, json, animations, shot, sheet, sheetSize, lods };
+  checkBeautyOptions(render);
+  return {
+    cmd: argv[0] ?? 'help',
+    files,
+    out,
+    json,
+    animations,
+    shot,
+    sheet,
+    sheetSize,
+    lods,
+    render,
+  };
 }
