@@ -51,7 +51,7 @@ Full reasoning and rejected options: [ADR 002](../decisions/002-typescript-not-j
 ## Anatomy
 
 ```ts
-import { box, cylinder, defineAsset, hex } from '@developerz-ai/ts23d';
+import { box, cylinder, defineAsset, hex } from '@developerz.ai/ts23d';
 
 export const lamp_post = defineAsset({
   name: 'lamp_post',            // snake_case; becomes the GLB name and root node
@@ -149,7 +149,7 @@ A failing measure means the model is wrong. **Rebuild the part from the number; 
 `place(mesh, { at, yaw, pitch, roll, scale })` rigidly transforms a mesh; `merge` joins meshes into one part. Author a rivet, hatch or bracket once in local space, then place it along a seam:
 
 ```ts
-import { cylinder, merge, place } from '@developerz-ai/ts23d';
+import { cylinder, merge, place } from '@developerz.ai/ts23d';
 
 const rivet = cylinder({ radius: 0.012, length: 0.01, segments: 6, axis: 'x', color: iron });
 const rivets = merge(Array.from({ length: 24 }, (_, i) => place(rivet, { at: [3.0, -1.2 + i * 0.1, 1.1] })));
@@ -163,7 +163,7 @@ Lower level: `affine(placement)`, `frame(u, v, w, at)` (an explicit basis), `app
 **A variant is a name plus the parameters that differ.** T-34 1941 vs 1943, a 4-4-0 vs a 2-6-0, oak vs birch: one key change, not a copied file.
 
 ```ts
-import { defineFamily } from '@developerz-ai/ts23d';
+import { defineFamily } from '@developerz.ai/ts23d';
 
 const t34 = defineFamily({
   kind: 'vehicle',
@@ -244,7 +244,7 @@ Batching splits by pivot and surface, so a shampoo bottle (opaque cap, transluce
 **Static intersections need declared intent.** Modellers sink bolts into plates on purpose, so QA can't fail every overlap. The recipe says what must hold, and the `check` gate enforces it at every LOD.
 
 ```ts
-import { clear, noOverlap, symmetric, touches } from '@developerz-ai/ts23d';
+import { clear, noOverlap, symmetric, touches } from '@developerz.ai/ts23d';
 
 checks: [
   clear('track_*', 'hull_*', 0.02),        // the track never hits the frame; 2 cm running gap
@@ -268,7 +268,7 @@ Selectors are globs (`*`, `?`) over part names. A custom check is any `(asset: C
 A scene is an asset that uses other assets. Each instance is compiled at the parent's LOD, with its own seed, under a prefixed group:
 
 ```ts
-import { box, defineAsset, facade, palettes } from '@developerz-ai/ts23d';
+import { box, defineAsset, facade, palettes } from '@developerz.ai/ts23d';
 
 const { limestone, glass } = palettes.artDeco;
 
@@ -327,15 +327,15 @@ Result: six different houses (2–4 floors each) as `house_0` … `house_5`, wit
 One import gives everything; subpaths load one layer ([ADR 006](../decisions/006-single-package-subpath-exports.md)):
 
 ```ts
-import { defineAsset, box } from '@developerz-ai/ts23d';
-import { split } from '@developerz-ai/ts23d/grammar';
-import { contactSheet } from '@developerz-ai/ts23d/render';
+import { defineAsset, box } from '@developerz.ai/ts23d';
+import { split } from '@developerz.ai/ts23d/grammar';
+import { contactSheet } from '@developerz.ai/ts23d/render';
 ```
 
 Programmatic build, without the CLI:
 
 ```ts
-import { compile, contactSheet, runQa, toGlb } from '@developerz-ai/ts23d';
+import { compile, contactSheet, runQa, toGlb } from '@developerz.ai/ts23d';
 const lod0 = compile(lamp_post, { lod: 0 });
 const findings = runQa(lod0);                      // [] = PASS
 const glb = toGlb(lod0);                           // Uint8Array

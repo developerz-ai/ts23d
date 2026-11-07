@@ -1,13 +1,13 @@
 # ts23d
 
-> @developerz-ai/ts23d — a free, deterministic 3D asset generator driven by coding agents. Assets are TypeScript modules (never JSON) built with a DSL: `defineAsset({ name, kind, real, sources, budget, build(ctx) })`, where `build` adds named, pivoted, animatable parts from primitives (`box`, `lathe`, `cylinder`, `prism`, `beam`, `planar`), places detail with `place`/`merge`, composes other assets with `ctx.use`, and gates detail on `ctx.lod`. It compiles to glTF/GLB for any engine (Unity, Unreal, Godot, three.js, Babylon) — ts23d generates assets only, the engine is yours — (3 LODs, one shared trim-sheet material, baked motion), fails a QA gate on floating parts, budget overruns and wrong real-world proportions, and renders a zero-GPU six-view contact-sheet PNG so a vision-capable agent can check its own work. Bun only, zero runtime dependencies, MIT. Status 0.x: stubs throw T3D_NOT_IMPLEMENTED with the roadmap slice that builds them.
+> @developerz.ai/ts23d — a free, deterministic 3D asset generator driven by coding agents. Assets are TypeScript modules (never JSON) built with a DSL: `defineAsset({ name, kind, real, sources, budget, build(ctx) })`, where `build` adds named, pivoted, animatable parts from primitives (`box`, `lathe`, `cylinder`, `prism`, `beam`, `planar`), places detail with `place`/`merge`, composes other assets with `ctx.use`, and gates detail on `ctx.lod`. It compiles to glTF/GLB for any engine (Unity, Unreal, Godot, three.js, Babylon) — ts23d generates assets only, the engine is yours — (3 LODs, one shared trim-sheet material, baked motion), fails a QA gate on floating parts, budget overruns and wrong real-world proportions, and renders a zero-GPU six-view contact-sheet PNG so a vision-capable agent can check its own work. Bun only, zero runtime dependencies, MIT. Status 0.x: stubs throw T3D_NOT_IMPLEMENTED with the roadmap slice that builds them.
 
 ## Offline (inside your project)
 The npm package ships every doc, skill and example, versioned with the code — read them without internet:
-- `node_modules/@developerz-ai/ts23d/AGENTS.md` — rules and the loop
-- `node_modules/@developerz-ai/ts23d/docs/` — DSL, IR, materials, agent loop, QA, kinds, decisions, roadmap
-- `node_modules/@developerz-ai/ts23d/recipes/<name>/` — idiomatic recipes, each with its research dossier (`README.md`) and committed hero + contact sheet (`out/`)
-- `node_modules/@developerz-ai/ts23d/.claude/skills/author-recipe/SKILL.md` — copy into your `.claude/skills/`
+- `node_modules/@developerz.ai/ts23d/AGENTS.md` — rules and the loop
+- `node_modules/@developerz.ai/ts23d/docs/` — DSL, IR, materials, agent loop, QA, kinds, decisions, roadmap
+- `node_modules/@developerz.ai/ts23d/recipes/<name>/` — idiomatic recipes, each with its research dossier (`README.md`) and committed hero + contact sheet (`out/`)
+- `node_modules/@developerz.ai/ts23d/.claude/skills/author-recipe/SKILL.md` — copy into your `.claude/skills/`
 
 ## The workflow
 The human names a thing ("Tiger I, mid-production 1943"). The agent researches specs and real photos into `recipes/<name>/README.md` (every number sourced), writes `recipes/<name>.ts` with `sources` + `real.measures` from that dossier, compiles until QA PASS (budget, surface contact, clashes, proportions ±5%, measures ±2%), renders the six-view contact sheet, looks at it, adds LOD-gated detail, and iterates.

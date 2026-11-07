@@ -29,7 +29,7 @@ import {
   translate,
   type Vec2,
   type Vec3,
-} from '@developerz-ai/ts23d';
+} from '@developerz.ai/ts23d';
 
 const dunkelgelb = hex('#b89d63');
 const rotbraun = hex('#6e3b2a');

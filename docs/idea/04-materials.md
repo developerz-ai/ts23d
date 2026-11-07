@@ -33,7 +33,7 @@ A primitive takes `strip?: StripId` (default `plain`). Cells are used by the pla
 The sheet is greyscale detail (mortar lines, grain, rivets); hue comes from `COLOR_0`, multiplied over it.
 
 ```ts
-import { definePalette, palettes } from '@developerz-ai/ts23d';
+import { definePalette, palettes } from '@developerz.ai/ts23d';
 
 const livery = { ...palettes.victorianRail, paint: palettes.victorianRail.red };   // repaint = spread
 const custom = definePalette({ hull: '#203040', deck: '#8a6f4e' });            // sRGB hex in, linear out

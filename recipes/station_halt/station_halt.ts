@@ -27,7 +27,7 @@ import {
   tiled,
   type Vec2,
   type Vec3,
-} from '@developerz-ai/ts23d';
+} from '@developerz.ai/ts23d';
 
 // ---------------------------------------------------------------- layout (metres)
 const PLAT_Z = 0.915; // 3 ft over rail

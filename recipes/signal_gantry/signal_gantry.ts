@@ -22,7 +22,7 @@ import {
   prism,
   type Vec2,
   worldMeshes,
-} from '@developerz-ai/ts23d';
+} from '@developerz.ai/ts23d';
 
 const FT = 0.3048;
 const TRACK_CENTRES = 13 * FT; // 3.962

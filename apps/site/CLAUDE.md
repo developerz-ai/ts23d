@@ -3,7 +3,7 @@
 > Workspace brain — established by dz-runner setup mode from this workspace, then owned by
 > its maintainers. Correct it in place; setup never overwrites a brain that exists.
 
-@ts23d/site — the Vite + three.js asset gallery (GitHub Pages, `/ts23d/`) that presents every asset like a product page (committed beauty renders in the grid, a live orbiting showcase above the fold, an orbitable studio viewer or a scripted non-interactive scene per asset); depends on the library via the `@developerz-ai/ts23d` specifier (aliased to ../../src).
+@ts23d/site — the Vite + three.js asset gallery (GitHub Pages, `/ts23d/`) that presents every asset like a product page (committed beauty renders in the grid, a live orbiting showcase above the fold, an orbitable studio viewer or a scripted non-interactive scene per asset); depends on the library via the `@developerz.ai/ts23d` specifier (aliased to ../../src).
 
 The gate is the repo root’s: `bin/check` (see the root `CLAUDE.md`).
 
@@ -20,13 +20,13 @@ The gate is the repo root’s: `bin/check` (see the root `CLAUDE.md`).
 - Particles: `src/particles.ts` (recipe-emitter preview), `particle-kinds.ts` (per-kind presets), `particle-layer.ts` (instanced GPU layer).
 - `src/shims/zlib.ts` — stub that keeps the library's `node:zlib` import resolvable; the site never uses that path, tree-shaking drops it.
 - `src/style.css` + `src/styles/*.css` + `src/env.d.ts` (vite client types); `DESIGN.md` — the accurate design-identity doc.
-- `vite.config.ts` — base `/ts23d/`; aliases `@developerz-ai/ts23d` and subpaths to `../../src/*/index.ts` and `node:zlib` to the stub; `server.fs.allow` reaches the repo root.
+- `vite.config.ts` — base `/ts23d/`; aliases `@developerz.ai/ts23d` and subpaths to `../../src/*/index.ts` and `node:zlib` to the stub; `server.fs.allow` reaches the repo root.
 - Deps: three 0.186.1 + vite 8.3.5 (the only place three/vite may appear, workspace-private per ADR 005).
 
 ## Conventions
 
 - Run from the repo root: `bun run site:dev` (vite, http://localhost:5173/ts23d/), `bun run site:build`, and `bun run site:shots` (headless Chrome screenshots → `docs/media/`).
-- Imports of the library go through the `@developerz-ai/ts23d` specifier — resolved by the vite aliases, never by relative paths into ../../src.
+- Imports of the library go through the `@developerz.ai/ts23d` specifier — resolved by the vite aliases, never by relative paths into ../../src.
 - Keep node imports browser-safe; add stubs under src/shims/ when needed.
 - `vite.config.ts` is the repo's only sanctioned default export (biome override in biome.json).
 - Deploys from main via pages.yml; site code is still typechecked (tsconfig includes apps/) and linted (biome checks apps/) by the root gate.

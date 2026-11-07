@@ -3,4 +3,4 @@
 // fails the gate when the two disagree, and `bun run release` stamps both.
 
 export const VERSION = '0.1.0';
-export const GENERATOR = `@developerz-ai/ts23d ${VERSION}`;
+export const GENERATOR = `@developerz.ai/ts23d ${VERSION}`;

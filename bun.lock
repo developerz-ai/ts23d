@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "@developerz-ai/ts23d",
+      "name": "@developerz.ai/ts23d",
       "devDependencies": {
         "@biomejs/biome": "2.6.3",
         "@types/bun": "1.4.4",

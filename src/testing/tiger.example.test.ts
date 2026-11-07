@@ -1,4 +1,4 @@
-// Worked example: how a user tests their own recipe with @developerz-ai/ts23d/testing. Copy this
+// Worked example: how a user tests their own recipe with @developerz.ai/ts23d/testing. Copy this
 // shape next to your recipe: QA, budget, the names engine code binds to, spec numbers, motion.
 
 import { describe, expect, it } from 'bun:test';

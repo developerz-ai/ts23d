@@ -5,6 +5,6 @@ import { GENERATOR, VERSION } from './version.ts';
 describe('VERSION', () => {
   it('matches package.json (release stamps both)', () => {
     expect(VERSION).toBe(pkg.version);
-    expect(GENERATOR).toBe(`@developerz-ai/ts23d ${pkg.version}`);
+    expect(GENERATOR).toBe(`@developerz.ai/ts23d ${pkg.version}`);
   });
 });

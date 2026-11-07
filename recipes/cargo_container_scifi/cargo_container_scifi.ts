@@ -24,7 +24,7 @@ import {
   symmetric,
   text,
   type Vec3,
-} from '@developerz-ai/ts23d';
+} from '@developerz.ai/ts23d';
 
 // ── palette: deep teal shell, off-white frame, orange accent ────────────────────────────────────
 const SHELL = hex('#2f5c63');

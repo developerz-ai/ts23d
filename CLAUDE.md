@@ -14,7 +14,7 @@ project that installed the package.
 - **Enforce rules.** A rule without a script in `bun run verify` is a suggestion.
 
 ## Project and stack
-`@developerz-ai/ts23d`: free, coding-agent-driven 3D asset generator. Deterministic game-ready GLB: named pivoted parts, baked motion, 3 LODs from one source, shared trim-sheet material, build-failing QA and zero-GPU six-view contact sheets the agent reads.
+`@developerz.ai/ts23d`: free, coding-agent-driven 3D asset generator. Deterministic game-ready GLB: named pivoted parts, baked motion, 3 LODs from one source, shared trim-sheet material, build-failing QA and zero-GPU six-view contact sheets the agent reads.
 
 | Area | Stack / constraint |
 |---|---|
@@ -51,7 +51,7 @@ Gate order (`STEPS` in `scripts/verify.ts`): lint · typecheck · boundaries · 
 | Path | Responsibility |
 |---|---|
 | `src/<module>/` | Library; one responsibility per module, tiered below |
-| `src/index.ts` | Public barrel; subpaths `@developerz-ai/ts23d/<module>` |
+| `src/index.ts` | Public barrel; subpaths `@developerz.ai/ts23d/<module>` |
 | `recipes/<name>/` | One folder per asset: `<name>.ts` · `README.md` (sourced specs + photo links, written first) · `out/<asset>/` (committed hero.png, sheet.png, manifest.json); CI-gated |
 | `apps/site/` | GitHub Pages asset gallery |
 | `scripts/` | Gate/guards, release/build/setup; tested Bun TypeScript |
@@ -78,8 +78,8 @@ Human names a thing → research specs + real photos into `recipes/<name>/README
 - **CI:** free GitHub runners, < 5 min. `ci.yml`: `verify` (= `bun run verify`) + `shots` (contact-sheet artifact per PR). `pages.yml`: gallery to developerz-ai.github.io/ts23d. `release-tag.yml` + `release.yml`: release PR merge → tag → npm via OIDC (no tokens). Every action SHA-pinned; Dependabot moves pins.
 
 ## Using the library in another project
-`bun add @developerz-ai/ts23d`, write `assets/<name>.ts` exporting `defineAsset({...})`, then
+`bun add @developerz.ai/ts23d`, write `assets/<name>.ts` exporting `defineAsset({...})`, then
 `bunx t3d build assets/<name>.ts --out out` (GLB × 3 LODs + QA, exit 1 on a finding) and
 `bunx t3d shot` / `hero` / `review` to look. Fix what QA prints (every finding has a `fix:`) and what
 you see. No CLI needed: the same steps are functions (`compile`, `runQa`, `toGlb`, `contactSheet`,
-`beauty`), see `examples/build-with-bun.ts`; test helpers in `@developerz-ai/ts23d/testing`.
+`beauty`), see `examples/build-with-bun.ts`; test helpers in `@developerz.ai/ts23d/testing`.

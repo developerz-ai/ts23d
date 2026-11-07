@@ -33,7 +33,7 @@ import {
   sub,
   type Vec2,
   type Vec3,
-} from '@developerz-ai/ts23d';
+} from '@developerz.ai/ts23d';
 
 // ── Colour: three graduated shades of Eiffel Tower Brown, darkest at the bottom ──────────────────
 const SHADES = [hex('#5e4834'), hex('#715a40'), hex('#87704f')] as const;

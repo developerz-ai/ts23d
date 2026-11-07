@@ -124,7 +124,7 @@ describe('toGlb viewer extras', () => {
 
   it('writes core-only by default: versioned generator, named scene, no extensions', () => {
     const j = jsonOf(toGlb(compile(crate)));
-    expect(j.asset.generator).toMatch(/^@developerz-ai\/ts23d \d+\.\d+\.\d+/);
+    expect(j.asset.generator).toMatch(/^@developerz\.ai\/ts23d \d+\.\d+\.\d+/);
     expect(j.scenes).toEqual([{ name: 'crate', nodes: [0] }]);
     expect(j.extensionsUsed).toBeUndefined();
   });

@@ -2,14 +2,14 @@
 
 **Merging a `chore: release x.y.z` PR is the release.** Nobody runs `npm publish` after the one-time bootstrap. CI tags, writes the GitHub Release and publishes to npm through OIDC trusted publishing with provenance. No `NPM_TOKEN` exists anywhere.
 
-One package, `@developerz-ai/ts23d`, so one version, one tag, one trusted publisher ([ADR 006](docs/decisions/006-single-package-subpath-exports.md)).
+One package, `@developerz.ai/ts23d`, so one version, one tag, one trusted publisher ([ADR 006](docs/decisions/006-single-package-subpath-exports.md)).
 
 **This page states no current version, on purpose.** Ask the registry:
 
 | Fact | Command |
 |---|---|
-| What npm serves | `npm view @developerz-ai/ts23d version` |
-| Provenance on a release | `npm view @developerz-ai/ts23d@<version> dist.attestations _npmUser` |
+| What npm serves | `npm view @developerz.ai/ts23d version` |
+| Provenance on a release | `npm view @developerz.ai/ts23d@<version> dist.attestations _npmUser` |
 | The tree is stamped at a version | `bun run release --check <version>` |
 | The tag is annotated and on the remote | `git ls-remote --tags origin 'refs/tags/v<version>*'` (a `^{}` line means annotated) |
 | The GitHub Release exists | `gh release view v<version> --json tagName,isDraft,publishedAt` |
@@ -62,7 +62,7 @@ Repository → Settings → Environments → **New environment** `npm-publish`. 
 
 ### 3. Trusted publisher on npmjs.com
 
-`npmjs.com/package/@developerz-ai/ts23d` → **Settings** → **Trusted Publisher** → **GitHub Actions**:
+`npmjs.com/package/@developerz.ai/ts23d` → **Settings** → **Trusted Publisher** → **GitHub Actions**:
 
 | Field | Value |
 |---|---|
@@ -80,7 +80,7 @@ Optionally, under **Publishing access**, require 2FA and disallow tokens, so the
 Cut the next patch through the normal flow, then:
 
 ```sh
-npm view @developerz-ai/ts23d@<version> dist.attestations _npmUser
+npm view @developerz.ai/ts23d@<version> dist.attestations _npmUser
 ```
 
 `_npmUser` should be GitHub Actions with an attestation present. A person's name means it was a hand publish.
@@ -93,4 +93,4 @@ npm view @developerz-ai/ts23d@<version> dist.attestations _npmUser
 | Tag + Release exist, npm doesn't have it | `release.yml` failed or wasn't dispatched | `gh workflow run release.yml --ref vX.Y.Z -f version=X.Y.Z` |
 | `publish` fails at OIDC exchange (`E404` / `ENEEDAUTH`) | No trusted publisher, or workflow / environment mismatch | Bootstrap step 3; field values must match exactly |
 | `check` says not stamped | `package.json` or `CHANGELOG.md` at the tag isn't at that version | You can't republish a tag. Stamp the next patch and release that |
-| Published a bad version | — | `npm deprecate @developerz-ai/ts23d@X.Y.Z "<why, what to use>"`, then release a fix. Never unpublish |
+| Published a bad version | — | `npm deprecate @developerz.ai/ts23d@X.Y.Z "<why, what to use>"`, then release a fix. Never unpublish |

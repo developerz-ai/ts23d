@@ -31,7 +31,7 @@ import {
   translate,
   type Vec2,
   type Vec3,
-} from '@developerz-ai/ts23d';
+} from '@developerz.ai/ts23d';
 
 const green = hex('#4e5a2c');
 const greenDark = hex('#3a4422');

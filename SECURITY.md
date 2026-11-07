@@ -29,7 +29,7 @@ Use GitHub's private vulnerability reporting: **[Report a vulnerability](https:/
 ## Verifying a release
 
 ```sh
-npm view @developerz-ai/ts23d@<version> dist.attestations _npmUser
+npm view @developerz.ai/ts23d@<version> dist.attestations _npmUser
 npm audit signatures
 ```
 

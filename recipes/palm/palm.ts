@@ -2,7 +2,7 @@
 // long forming a 9 m crown, a hand of coconuts under the frond bases. The `tree` kind does the
 // botany; this file is the spec. recipes/palm/README.md.
 
-import { treeReal, trees } from '@developerz-ai/ts23d';
+import { treeReal, trees } from '@developerz.ai/ts23d';
 
 const size = { height: 20, spread: 9, dbh: 0.35 };
 

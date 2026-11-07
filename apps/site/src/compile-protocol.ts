@@ -1,6 +1,6 @@
 // Messages between the page and the compile worker. Types only.
 
-import type { AssetManifest } from '@developerz-ai/ts23d';
+import type { AssetManifest } from '@developerz.ai/ts23d';
 import type { Footprint } from './diorama.ts';
 
 export type Lod = 0 | 1 | 2;

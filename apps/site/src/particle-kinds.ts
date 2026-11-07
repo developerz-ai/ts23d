@@ -1,7 +1,7 @@
 // Per-kind look and physics for recipe emitters. A recipe says *what* (smoke, steam, dust…) and
 // how much; these presets say how it moves and blends.
 
-import type { Emitter } from '@developerz-ai/ts23d';
+import type { Emitter } from '@developerz.ai/ts23d';
 
 export type Kind = Emitter['kind'];
 

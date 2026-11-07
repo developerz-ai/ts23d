@@ -85,7 +85,7 @@ The bar: [`loco-photo-match.png`](https://raw.githubusercontent.com/developerz-a
 When a finding is unclear, write a scratch script instead of guessing. `inspect(compiled)` answers geometric questions by part glob:
 
 ```ts
-import { compile, inspect } from '@developerz-ai/ts23d';
+import { compile, inspect } from '@developerz.ai/ts23d';
 import { t34 } from './recipes/t34/t34.ts';
 
 const q = inspect(compile(t34, { lod: 0 }));
@@ -125,7 +125,7 @@ Exit codes: `0` pass · `1` QA finding or `T3D_*` error · `2` usage.
 ## Prompt snippet
 
 ```text
-Using @developerz-ai/ts23d, write recipes/<name>.ts: a <thing>, real dimensions in metres,
+Using @developerz.ai/ts23d, write recipes/<name>.ts: a <thing>, real dimensions in metres,
 Z up, +X front. Look up reference dimensions first. Block out the masses, then details.
 Name every part that moves (axle_*, door_*, rotor_*) and pivot it where it hinges.
 Loop: bunx t3d build → fix until QA PASS → read out/<name>/sheet.png →

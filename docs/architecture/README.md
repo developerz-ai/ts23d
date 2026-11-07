@@ -56,7 +56,7 @@ recipe.ts ─► defineAsset ─► compile(asset, { lod }) ─► CompiledAsset
 
 - `index.ts` per module, one header comment stating the module's job, named re-exports only.
 - Declared-but-unbuilt API lives in a `planned.ts` with its final signature, throwing `notImplemented(what, plan?)`. Recipes and docs can target it; it fails loudly until built.
-- Public subpath per module: `@developerz-ai/ts23d/<module>` ([ADR 006](../decisions/006-single-package-subpath-exports.md)).
+- Public subpath per module: `@developerz.ai/ts23d/<module>` ([ADR 006](../decisions/006-single-package-subpath-exports.md)).
 
 ## Guides
 

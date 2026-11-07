@@ -24,7 +24,7 @@ import {
   terrainGrid,
   thermalErosion,
   warp,
-} from '@developerz-ai/ts23d';
+} from '@developerz.ai/ts23d';
 
 /** Altitude (m above sea level) of z = 0. */
 const DATUM = 1650;

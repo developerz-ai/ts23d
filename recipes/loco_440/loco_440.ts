@@ -29,7 +29,7 @@ import {
   type Vec2,
   type Vec3,
   whyteAxles,
-} from '@developerz-ai/ts23d';
+} from '@developerz.ai/ts23d';
 
 const blue = hex('#2446a8');
 const blueDark = hex('#182f73');
