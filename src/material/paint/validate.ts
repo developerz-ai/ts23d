@@ -1,7 +1,7 @@
 // Recipe validation: every bad input throws T3D_RECIPE_INVALID with the fix, before any painting.
 
 import { Ts23dError } from '../../core/index.ts';
-import { CELLS, STRIPS } from '../trim-sheet.ts';
+import { CELLS, STRIPS, stripRow } from '../trim-sheet.ts';
 import type { CellImage, SheetRecipe, StripKind, StripRecipe } from './types.ts';
 
 const KINDS: readonly StripKind[] = [
@@ -13,6 +13,9 @@ const KINDS: readonly StripKind[] = [
   'slate',
   'concrete',
   'glass',
+  'metal',
+  'weave',
+  'leather',
 ];
 const SIZES = [512, 1024, 2048];
 
@@ -33,6 +36,16 @@ export function validateStrip(where: string, r: StripRecipe): void {
   if (!unit(r.roughness)) fail(`${where}.roughness is ${r.roughness}`, 'roughness is 0..1');
   if (r.metalness !== undefined && !unit(r.metalness))
     fail(`${where}.metalness is ${r.metalness}`, 'metalness is 0..1');
+  for (const key of ['albedo', 'albedo2'] as const) {
+    const a = r[key];
+    if (a !== undefined && !(a.length === 3 && a.every(unit)))
+      fail(
+        `${where}.${key} is [${a}]`,
+        `${key} is linear RGB, three numbers 0..1 (use hex('#rrggbb'))`,
+      );
+  }
+  if (r.paint !== undefined && typeof r.paint !== 'function')
+    fail(`${where}.paint is not a function`, 'paint is (surface, kit) => void');
   for (const [k, v] of Object.entries(r.params ?? {}))
     if (!Number.isFinite(v)) fail(`${where}.params.${k} is ${v}`, 'params are finite numbers');
 }
@@ -42,8 +55,11 @@ export function validateSheet(recipe: SheetRecipe): void {
   if (recipe.size !== undefined && !SIZES.includes(recipe.size))
     fail(`size ${recipe.size}`, 'size is 512, 1024 or 2048');
   for (const [id, r] of Object.entries(recipe.strips)) {
-    if (!(STRIPS as readonly string[]).includes(id))
-      fail(`strip '${id}' is not in the layout`, `strips are ${STRIPS.join(', ')}`);
+    if (stripRow(id) < 0)
+      fail(
+        `strip '${id}' is not in the layout`,
+        `strips are ${STRIPS.join(', ')} or a defineMaterial() id`,
+      );
     if (r) validateStrip(`strips.${id}`, r);
   }
   for (const [id, e] of Object.entries(recipe.cells ?? {})) {

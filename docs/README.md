@@ -30,6 +30,10 @@
 | [07-what-fits.md](idea/07-what-fits.md) | Fit matrix by asset category |
 | [08-neural-adapters.md](idea/08-neural-adapters.md) | Optional local-GPU models for organic shapes, image sources |
 | [09-kinds.md](idea/09-kinds.md) | Domain builders: building, vehicle, vessel, vegetation, creature, scene |
+| [10-sculpting.md](idea/10-sculpting.md) | How artists sculpt, mapped onto SDF edit lists; brushes, skin, FFD, forms |
+| [11-materials-authoring.md](idea/11-materials-authoring.md) | Node-graph material authoring vs the trim-sheet painter; curvature and edge wear |
+| [12-blender-bridge.md](idea/12-blender-bridge.md) | Optional headless Blender adapter: design, determinism, feasibility (planned) |
+| [13-asset-pipeline-research.md](idea/13-asset-pipeline-research.md) | Pro asset pipeline, trim sheets, texel density, CC0 libraries and licences |
 
 ## Decisions
 

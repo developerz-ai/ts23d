@@ -1,5 +1,5 @@
-// Minimal PNG decoder for stamping supplied images into cells: 8-bit grey, grey+alpha, RGB, RGBA
-// and palette (with tRNS), non-interlaced. Zero dependencies beyond node:zlib. Anything else
+// Minimal PNG decoder for stamping supplied images into cells and image strips: 8- or 16-bit grey,
+// grey+alpha, RGB, RGBA (16-bit keeps the high byte) and 8-bit palette (with tRNS), non-interlaced. Zero dependencies beyond node:zlib. Anything else
 // throws T3D_RECIPE_INVALID with the conversion to make.
 
 import { inflateSync } from 'node:zlib';
@@ -17,7 +17,7 @@ const CHANNELS: Readonly<Record<number, number>> = { 0: 1, 2: 3, 3: 1, 4: 2, 6: 
 function bad(cause: string): never {
   throw new Ts23dError('T3D_RECIPE_INVALID', {
     cause: `cell image: ${cause}`,
-    fix: 'pass PNG bytes, 8 bits per channel, non-interlaced (e.g. re-save as RGBA8 PNG)',
+    fix: 'pass PNG bytes, 8 or 16 bits per channel, non-interlaced (e.g. re-save as RGBA8 PNG)',
   });
 }
 
@@ -35,6 +35,7 @@ export function decodePng(bytes: Uint8Array): Rgba {
   let width = 0;
   let height = 0;
   let type = -1;
+  let depth = 8;
   let palette: Uint8Array = new Uint8Array();
   let trns: Uint8Array = new Uint8Array();
   const idat: Uint8Array[] = [];
@@ -46,7 +47,9 @@ export function decodePng(bytes: Uint8Array): Rgba {
       width = dv.getUint32(o + 8);
       height = dv.getUint32(o + 12);
       type = body[9] ?? -1;
-      if (body[8] !== 8) bad(`bit depth ${body[8]} (only 8 is supported)`);
+      depth = body[8] ?? 0;
+      if (depth !== 8 && !(depth === 16 && type !== 3))
+        bad(`bit depth ${depth} (8, or 16 for non-palette images, is supported)`);
       if (body[12] !== 0) bad('interlaced');
     } else if (name === 'PLTE') palette = body;
     else if (name === 'tRNS') trns = body;
@@ -57,7 +60,9 @@ export function decodePng(bytes: Uint8Array): Rgba {
   const ch = CHANNELS[type];
   if (!ch || width === 0 || height === 0) bad(`colour type ${type} or empty image`);
   const raw = new Uint8Array(inflateSync(Buffer.concat(idat)));
-  const stride = width * ch;
+  const B = depth / 8;
+  const bpp = ch * B;
+  const stride = width * bpp;
   if (raw.length < height * (stride + 1)) bad('truncated image data');
   const px = new Uint8Array(height * stride);
   for (let y = 0; y < height; y++) {
@@ -65,9 +70,9 @@ export function decodePng(bytes: Uint8Array): Rgba {
     const src = y * (stride + 1) + 1;
     const row = y * stride;
     for (let x = 0; x < stride; x++) {
-      const a = x >= ch ? (px[row + x - ch] ?? 0) : 0;
+      const a = x >= bpp ? (px[row + x - bpp] ?? 0) : 0;
       const b = y > 0 ? (px[row - stride + x] ?? 0) : 0;
-      const c = x >= ch && y > 0 ? (px[row - stride + x - ch] ?? 0) : 0;
+      const c = x >= bpp && y > 0 ? (px[row - stride + x - bpp] ?? 0) : 0;
       const v = raw[src + x] ?? 0;
       const pred =
         f === 1 ? a : f === 2 ? b : f === 3 ? (a + b) >> 1 : f === 4 ? paeth(a, b, c) : 0;
@@ -76,8 +81,9 @@ export function decodePng(bytes: Uint8Array): Rgba {
   }
   const data = new Uint8Array(width * height * 4);
   for (let i = 0; i < width * height; i++) {
-    const s = i * ch;
-    const g = px[s] ?? 0;
+    const s = i * bpp;
+    const at = (k: number): number => px[s + k * B] ?? 0;
+    const g = at(0);
     const o = i * 4;
     if (type === 3) {
       data[o] = palette[g * 3] ?? 0;
@@ -86,14 +92,14 @@ export function decodePng(bytes: Uint8Array): Rgba {
       data[o + 3] = trns[g] ?? 255;
     } else if (ch >= 3) {
       data[o] = g;
-      data[o + 1] = px[s + 1] ?? 0;
-      data[o + 2] = px[s + 2] ?? 0;
-      data[o + 3] = ch === 4 ? (px[s + 3] ?? 255) : 255;
+      data[o + 1] = at(1);
+      data[o + 2] = at(2);
+      data[o + 3] = ch === 4 ? at(3) : 255;
     } else {
       data[o] = g;
       data[o + 1] = g;
       data[o + 2] = g;
-      data[o + 3] = ch === 2 ? (px[s + 1] ?? 255) : 255;
+      data[o + 3] = ch === 2 ? at(1) : 255;
     }
   }
   return { width, height, data };

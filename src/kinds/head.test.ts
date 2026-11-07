@@ -56,6 +56,10 @@ describe('head', () => {
     expect(fails(() => headParams({ params: { jaw: { width: Number.NaN } } })).code).toBe(
       'T3D_RECIPE_INVALID',
     );
+    expect(fails(() => headParams({ params: { bust: { mass: -0.5 } } })).fix).toContain(
+      'bust.mass',
+    );
+    expect(fails(() => headParams({ params: { wrinkles: -1 } })).fix).toContain('wrinkles');
   });
 
   it('merges overrides one level deep and keeps the preset untouched', () => {
@@ -100,6 +104,22 @@ describe('head', () => {
       expect(b.max[1]).toBeGreaterThan(cell * 3);
     }
   });
+
+  // LOD0 runs in the recipes gate (QA floating-parts); here the coarse LODs, where a thin plinth
+  // would vanish first.
+  it('stands every bust on its plinth at the coarse LODs, the head seated on it', () => {
+    for (const race of ['orc', 'goblin', 'human'] as const)
+      for (const lod of [1, 2] as const) {
+        const parts = worldMeshes(build({ race }, lod).parts);
+        const bust = parts.get('bust');
+        const head = parts.get('head');
+        if (!bust || !head) throw new Error(`${race} LOD${lod}: missing part`);
+        const b = boundsOf(bust);
+        expect([race, lod, Math.abs(b.min[2] ?? 1) < 0.002]).toEqual([race, lod, true]);
+        // The neck sinks into the bust: the head starts below the bust's top.
+        expect(boundsOf(head).min[2] ?? 1).toBeLessThan(b.max[2] ?? 0);
+      }
+  }, 30000);
 
   it('is deterministic: same params + seed → same vertices', () => {
     const a = build({ race: 'orc' });

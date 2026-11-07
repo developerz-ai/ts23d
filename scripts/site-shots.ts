@@ -4,9 +4,11 @@
 //
 //   bun run site:shots [--base http://localhost:4173/ts23d/] [--out docs/media] [--only site,site-asset]
 //                      [--height 3000]   (taller viewport, to review a whole page)
+//                      [--assets tiger_1,dropship]   (ad-hoc asset-page shots, named asset-<name>)
 
 import { mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
+import { Cdp, chrome, type Json } from './site-shots-cdp.ts';
 
 export interface Shot {
   readonly name: string;
@@ -78,7 +80,19 @@ export interface Options {
   readonly only: readonly string[] | null;
   /** Override every shot's viewport height (px). */
   readonly height: number | null;
+  /** Ad-hoc asset pages to shoot instead of the named shots (lighting reviews). */
+  readonly assets: readonly string[] | null;
 }
+
+/** A studio-viewer shot of any asset page, for reviewing the presentation across categories. */
+export const assetShot = (name: string): Shot => ({
+  name: `asset-${name}`,
+  path: `#${name}`,
+  width: 1600,
+  height: 1000,
+  ready: '[data-viewer-poster][hidden]',
+  settle: 3000,
+});
 
 export function parseArgs(argv: readonly string[]): Options {
   const value = (flag: string): string | null => {
@@ -96,96 +110,22 @@ export function parseArgs(argv: readonly string[]): Options {
   const height = value('--height');
   if (height !== null && !(Number(height) > 0))
     throw new Error(`--height must be a positive number`);
+  const assets = value('--assets');
+  const named = assets ? assets.split(',').map((s) => s.trim()) : null;
+  for (const a of named ?? [])
+    if (!/^[a-z0-9_]+$/.test(a)) throw new Error(`--assets: '${a}' is not an asset name`);
   return {
     base: value('--base'),
     out: value('--out') ?? 'docs/media',
     only: picked,
     height: height === null ? null : Number(height),
+    assets: named,
   };
 }
 
 /** The site URL for a shot: base always ends in `/`, the path is appended as is. */
 export const urlOf = (base: string, shot: Shot): string =>
   `${base.endsWith('/') ? base : `${base}/`}${shot.path}`;
-
-// ---------------------------------------------------------------- DevTools protocol client
-
-type Json = Record<string, unknown>;
-
-class Cdp {
-  private id = 0;
-  private readonly waiting = new Map<number, (r: Json) => void>();
-  constructor(
-    private readonly ws: WebSocket,
-    readonly logs: string[],
-  ) {
-    ws.addEventListener('message', (e) => {
-      const msg = JSON.parse(String(e.data)) as Json;
-      const done = typeof msg['id'] === 'number' ? this.waiting.get(msg['id']) : undefined;
-      if (done) done(msg);
-      if (msg['method'] === 'Runtime.consoleAPICalled') {
-        const p = msg['params'] as {
-          type: string;
-          args: { value?: unknown; description?: string }[];
-        };
-        logs.push(`${p.type}: ${p.args.map((a) => a.value ?? a.description).join(' ')}`);
-      }
-    });
-  }
-
-  static async open(url: string, logs: string[]): Promise<Cdp> {
-    const ws = new WebSocket(url);
-    await new Promise((ok, fail) => {
-      ws.addEventListener('open', ok, { once: true });
-      ws.addEventListener('error', fail, { once: true });
-    });
-    return new Cdp(ws, logs);
-  }
-
-  send(method: string, params: Json = {}, sessionId?: string): Promise<Json> {
-    const id = ++this.id;
-    this.ws.send(JSON.stringify({ id, method, params, ...(sessionId ? { sessionId } : {}) }));
-    return new Promise((resolve, reject) =>
-      this.waiting.set(id, (r) => {
-        this.waiting.delete(id);
-        if (r['error']) reject(new Error(`${method}: ${JSON.stringify(r['error'])}`));
-        else resolve((r['result'] as Json) ?? {});
-      }),
-    );
-  }
-
-  close(): void {
-    this.ws.close();
-  }
-}
-
-async function chrome(): Promise<{ proc: ReturnType<typeof Bun.spawn>; ws: string }> {
-  const bin = ['google-chrome', 'chromium', 'chromium-browser'].find((b) => Bun.which(b));
-  if (!bin) throw new Error('no Chrome/Chromium on PATH');
-  const proc = Bun.spawn(
-    [
-      bin,
-      '--headless=new',
-      '--no-sandbox',
-      '--use-angle=swiftshader',
-      '--enable-unsafe-swiftshader',
-      '--hide-scrollbars',
-      '--remote-debugging-port=0',
-      `--user-data-dir=${join(process.env['TMPDIR'] ?? '/tmp', `ts23d-shots-${process.pid}`)}`,
-      'about:blank',
-    ],
-    { stderr: 'pipe', stdout: 'ignore' },
-  );
-  const reader = (proc.stderr as ReadableStream<Uint8Array>).getReader();
-  let text = '';
-  while (true) {
-    const { value, done } = await reader.read();
-    if (done) throw new Error(`chrome exited before DevTools came up:\n${text}`);
-    text += new TextDecoder().decode(value);
-    const ws = /DevTools listening on (ws:\/\/\S+)/.exec(text)?.[1];
-    if (ws) return { proc, ws };
-  }
-}
 
 async function serve(): Promise<{ base: string; stop(): void }> {
   const port = 4179;
@@ -268,7 +208,10 @@ if (import.meta.main) {
   await mkdir(opts.out, { recursive: true });
   let failed = 0;
   try {
-    for (const pick of SHOTS.filter((s) => !opts.only || opts.only.includes(s.name))) {
+    const picks = opts.assets
+      ? opts.assets.map(assetShot)
+      : SHOTS.filter((s) => !opts.only || opts.only.includes(s.name));
+    for (const pick of picks) {
       const shot = opts.height ? { ...pick, height: opts.height } : pick;
       try {
         console.log(`✔ ${await take(cdp, base, shot, opts.out)}`);

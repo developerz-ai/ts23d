@@ -9,6 +9,7 @@ import { quatFromAxisAngle, Ts23dError } from '../core/index.ts';
 import type { OptimizeOptions } from '../passes/index.ts';
 import { BinWriter, type Json } from './bin-writer.ts';
 import { concat, packGlb } from './container.ts';
+import { withCredits } from './credits.ts';
 import { LIGHTS, lightOf } from './lights.ts';
 import { EMISSIVE_STRENGTH, type GlowRule, glowMaterial, materialsFor } from './materials.ts';
 import { globRe, glowLayer, mergeToPivots } from './merge-pivots.ts';
@@ -162,7 +163,7 @@ export function exportGlb(input: CompiledAsset, o: GlbOptions = {}): GlbResult {
   const geometry = bin.bytes();
   const tex = o.sheet ? sheetGltf(o.sheet, bin.views, geometry.byteLength) : null;
   const body = tex?.tail.byteLength ? concat(geometry, tex.tail) : geometry;
-  const meta = metadata(asset.name, o.meta ?? input.meta);
+  const meta = metadata(asset.name, withCredits(asset, o.meta ?? input.meta));
   const used = [
     ...mats.extensionsUsed,
     ...(glow.some((g) => (g.strength ?? 4) !== 1) ? [EMISSIVE_STRENGTH] : []),

@@ -7,13 +7,19 @@ import { mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { type Asset, compile, type Lod, Ts23dError } from '../core/index.ts';
 import { SHEET_MAPS, type SheetBinding, sheetFileName, sheetPngs, toGlb } from '../export/index.ts';
-import { DEFAULT_SHEET, type PaintedSheet, paintTrimSheet } from '../material/index.ts';
+import {
+  DEFAULT_SHEET,
+  type PaintedSheet,
+  paintTrimSheet,
+  provideTextures,
+} from '../material/index.ts';
 import { type Finding, runQa } from '../qa/index.ts';
 import { beauty, contactSheet, thumbnail } from '../render/index.ts';
 import { type Args, HELP, parseArgs } from './args.ts';
 import { loadAssets } from './load.ts';
 import { type AssetManifest, manifestOf } from './manifest.ts';
 import { heroOne, printRendered, type RenderResult, reviewOne } from './render-cmds.ts';
+import { loadTextureCache } from './texture-cache.ts';
 
 async function buildOne(
   asset: Asset,
@@ -108,11 +114,12 @@ export async function run(argv: readonly string[]): Promise<number> {
   }
   const built: AssetManifest[] = [];
   const rendered: RenderResult[] = [];
-  // Paint the trim sheet once per run (~1 s at 1024²). External mode writes it once into <out>/
+  // Paint the trim sheet once per run (~4 s at 2048²). External mode writes it once into <out>/
   // and every GLB in <out>/<asset>/ references ../trim_sheet_*.png — one texture set for all.
   // The beauty renders sample the same painted sheet.
   const renders = args.cmd === 'hero' || args.cmd === 'review';
   const wantsSheet = (args.cmd === 'build' && args.sheet !== 'none') || renders;
+  if (wantsSheet) provideTextures(await loadTextureCache());
   const painted = wantsSheet
     ? paintTrimSheet({ ...DEFAULT_SHEET, size: args.sheetSize })
     : undefined;

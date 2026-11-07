@@ -32,7 +32,7 @@ export function composeRegion(
   const ao = cavityOcclusion(c);
   const maps = [
     [sheet.albedo, packAlbedo(c, ao)],
-    [sheet.normal, sobelNormals(c)],
+    [sheet.normal, c.normalRgba ?? sobelNormals(c)],
     [sheet.orm, packOrm(c, ao)],
   ] as const;
   const padX = c.wrapU ? 0 : pad;

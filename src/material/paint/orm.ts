@@ -79,10 +79,23 @@ export function packOrm(c: Canvas, ao: Float32Array): Uint8Array {
   return out;
 }
 
-/** RGBA8 sRGB albedo: the stamped image if any, else grey tone × mild cavity. */
+const enc = (t: number): number => SRGB[t <= 0 ? 0 : t >= 1 ? 4095 : Math.round(t * 4095)] ?? 255;
+
+/** RGBA8 sRGB albedo: the stamped image if any, else (colour pair by mix or grey) × tone × cavity. */
 export function packAlbedo(c: Canvas, ao: Float32Array): Uint8Array {
   if (c.rgba) return c.rgba;
   const out = new Uint8Array(c.w * c.h * 4);
+  const pair = c.colours;
+  if (pair) {
+    const [a, b] = pair;
+    for (let i = 0, o = 0; i < ao.length; i++, o += 4) {
+      const t = (c.tone[i] ?? 1) * (0.8 + 0.2 * (ao[i] ?? 1));
+      const m = Math.min(1, Math.max(0, c.mix[i] ?? 0));
+      for (let k = 0; k < 3; k++) out[o + k] = enc(((a[k] ?? 1) * (1 - m) + (b[k] ?? 1) * m) * t);
+      out[o + 3] = 255;
+    }
+    return out;
+  }
   for (let i = 0, o = 0; i < ao.length; i++, o += 4) {
     const t = (c.tone[i] ?? 1) * (0.8 + 0.2 * (ao[i] ?? 1));
     const g = SRGB[t <= 0 ? 0 : t >= 1 ? 4095 : Math.round(t * 4095)] ?? 255;

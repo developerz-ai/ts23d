@@ -3,9 +3,11 @@
 **Direction: blueprint chrome around a photo studio.** The page itself is the drawing set the CLI's
 contact sheets belong to: drafting-grid paper, hairline frames with an inset border, title-block
 labels in monospace, one "redline" accent for what is selected or moving. The 3D, though, is
-presented like a product shot: a light-grey studio sweep, filmic tone mapping, environment light,
-soft shadows and a contact shadow on an invisible floor — the same look as the CLI's `hero.png`
-beauty renders, so the poster image and the live model match.
+presented like a product shot: a studio sweep, PBR Neutral tone mapping (base colours stay true),
+procedural image-based light per category (product studio for hard surface, warm portrait key +
+cool rim for characters, sky + low sun outdoors), soft key shadows, a baked contact shadow, and on
+the high quality tier ambient occlusion + MSAA — close to the CLI's `hero.png` beauty renders, so
+the poster image and the live model match.
 
 That is a deliberate change from the earlier "no gradients, no shadows" rule: the site's job is to
 present assets well, and a model with no shadow floats and reads as a diagram. Gradients and
@@ -75,7 +77,9 @@ engines, so there is no game code here.
 - Page: `main.ts` (routing), `items.ts`, `media-types.ts`, `showcase.ts`, `gallery.ts`,
   `thumbnails.ts`, `how.ts`, `details.ts`, `viewer.ts` + `viewer-ui.ts` + `viewer-panels.ts`,
   `downloads.ts`, `source.ts`, `stage.ts` (lights, shadow-casting sun, grid, contact-shadow floor),
-  `studio.ts` (renderer, environment, shadow catcher), `theme.ts`.
+  `studio.ts` (renderer, shadow catcher), `look.ts` + `lightbox.ts` + `backdrop.ts` (per-category
+  light, procedural environment, backdrop), `contact-shadow.ts`, `post.ts` (lazy AO chunk),
+  `quality.ts` (tiers), `theme.ts`.
 - Scenarios (`scenarios/`): unchanged contract; they read part names and kind, never the name.
 - Presentation: `textures.ts`, `diorama.ts` + `ground-color.ts` + `noise.ts`, `particle-*.ts`.
 - Styles: `style.css` imports `styles/{base,home,gallery,asset}.css`.

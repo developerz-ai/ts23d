@@ -75,6 +75,7 @@
     "filesize": "bun run scripts/filesize.ts",
     "recipes": "bun run scripts/recipes.ts",
     "shots": "bun run scripts/shots.ts",
+    "textures": "bun run scripts/textures.ts",
     "release": "bun run scripts/release.ts",
     "t3d": "bun run src/cli/bin.ts",
     "site:dev": "bun run --filter @ts23d/site dev",

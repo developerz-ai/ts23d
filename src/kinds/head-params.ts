@@ -7,7 +7,7 @@ import { Ts23dError, type Vec3 } from '../core/index.ts';
 export type EarShape = 'round' | 'pointed';
 export type HairStyle = 'none' | 'topknot' | 'mohawk' | 'swept' | 'tufts' | 'braids';
 export type BeardStyle = 'none' | 'short' | 'braided' | 'goatee';
-export type BustStyle = 'pauldrons' | 'hood' | 'tunic';
+export type BustStyle = 'pauldrons' | 'hood' | 'tunic' | 'vest';
 
 export interface HeadColors {
   readonly skin: Vec3;
@@ -29,6 +29,10 @@ export interface HeadColors {
   readonly fur?: Vec3;
   /** War paint / tattoo stripes (orc), or none. */
   readonly paint?: Vec3;
+  /** The bust's plinth (stone/wood socle); default a dark slate. */
+  readonly plinth?: Vec3;
+  /** Scarf / sash cloth (vest style); default `cloth`. */
+  readonly scarf?: Vec3;
 }
 
 export interface HeadParams {
@@ -88,11 +92,14 @@ export interface HeadParams {
     readonly flare: number;
   } | null;
   readonly neck: { readonly radius: number };
-  readonly bust: { readonly shoulders: number; readonly style: BustStyle };
+  /** Shoulder half-span, gear style, muscle mass (0 = bony and narrow … 1 = brute; default 0.5). */
+  readonly bust: { readonly shoulders: number; readonly style: BustStyle; readonly mass?: number };
   readonly hair: HairStyle;
   readonly beard: BeardStyle;
   /** Wart / bump count scattered on the skin (seeded). */
   readonly warts: number;
+  /** Forehead creases (0 = smooth; a goblin's worried brow has 3). */
+  readonly wrinkles?: number;
   readonly colors: HeadColors;
 }
 
@@ -122,6 +129,8 @@ const ZERO_OK = new Set([
   'jaw.muzzle',
   'brow.overhang',
   'brow.hair',
+  'bust.mass',
+  'wrinkles',
 ]);
 
 /** Throws T3D_RECIPE_INVALID (with a fix) when `p` cannot make a head. */

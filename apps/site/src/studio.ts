@@ -1,47 +1,38 @@
-// Studio look shared by the hero showcase and the viewer: a filmic renderer (ACES, sRGB, soft
-// shadows), a room environment for image-based light, and a ground that only shows shadows.
+// Renderer setup shared by the hero showcase, the viewer and the thumbnails: Khronos PBR Neutral
+// tone mapping (keeps the trim sheet's base colours true, unlike ACES's hue shifts), sRGB output,
+// soft PCF shadows, and a ground that only shows shadows. Light comes from `lightbox.ts`/`look.ts`.
 
 import {
-  ACESFilmicToneMapping,
   Mesh,
+  NeutralToneMapping,
   type Object3D,
-  PCFSoftShadowMap,
+  PCFShadowMap,
   PlaneGeometry,
-  PMREMGenerator,
   ShadowMaterial,
   SRGBColorSpace,
-  type Texture,
   WebGLRenderer,
 } from 'three';
-import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
+import { pixelRatioFor, type Tier } from './quality.ts';
 
-export function studioRenderer(): WebGLRenderer {
+export function studioRenderer(tier: Tier = 'high'): WebGLRenderer {
   const r = new WebGLRenderer({
     antialias: true,
     alpha: true,
     powerPreference: 'high-performance',
   });
-  r.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  r.setPixelRatio(pixelRatioFor(tier));
   r.outputColorSpace = SRGBColorSpace;
-  r.toneMapping = ACESFilmicToneMapping;
+  r.toneMapping = NeutralToneMapping;
   r.toneMappingExposure = 1;
   r.shadowMap.enabled = true;
-  r.shadowMap.type = PCFSoftShadowMap;
+  // PCF with a shadow radius is the soft filter since r180 (PCFSoftShadowMap was removed).
+  r.shadowMap.type = PCFShadowMap;
   return r;
 }
 
-const envs = new WeakMap<WebGLRenderer, Texture>();
-
-/** A prefiltered studio room for `scene.environment`, built once per renderer. */
-export function studioEnvironment(renderer: WebGLRenderer): Texture {
-  const hit = envs.get(renderer);
-  if (hit) return hit;
-  const pmrem = new PMREMGenerator(renderer);
-  const tex = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
-  pmrem.dispose();
-  envs.set(renderer, tex);
-  return tex;
-}
+/** Anisotropic filtering for textures seen at grazing angles (the trim sheet on long hulls). */
+export const anisotropyOf = (r: WebGLRenderer): number =>
+  Math.min(8, r.capabilities.getMaxAnisotropy());
 
 /** Every mesh under `root` casts and receives shadows (self-shadowing reads as depth). */
 export function castShadows(root: Object3D): void {

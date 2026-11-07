@@ -15,9 +15,11 @@ import {
   lathe,
   type Mesh,
   merge,
+  NATURAL,
   noOverlap,
   place,
   prism,
+  type StripId,
   symmetric,
   text,
   tiled,
@@ -46,10 +48,10 @@ const DOOR_Z0 = 1.15;
 const DOOR_Z1 = 3.64;
 const JOURNAL_Y = 0.925; // axle end = journal box inner face
 
-const steel = hex('#34302b');
-const iron = hex('#1d1c1b');
-const wheelC = hex('#2a2826');
-const walk = hex('#5d4c3b');
+const steel = hex('#a59f97'); // tints iron_cast: dark, sand-cast trucks and gear
+const iron = hex('#a8a29c'); // tints iron_rust: weathered hardware
+const wheelC = hex('#948f8a');
+const walk = NATURAL; // wood_weathered carries its own silver-grey
 
 interface Params {
   /** Large road name left of the door. */
@@ -71,7 +73,7 @@ function bx(
   z0: number,
   z1: number,
   color: Vec3,
-  strip: 'plain' | 'iron' | 'wood' = 'iron',
+  strip: StripId = 'iron_cast',
   bevel = 0,
 ): Mesh {
   const [a, b] = [Math.min(x0, x1), Math.max(x0, x1)];
@@ -88,7 +90,7 @@ function bx(
 }
 
 const rod = (from: Vec3, to: Vec3, w: number, color: Vec3 = iron, segments = 0): Mesh =>
-  beam({ from, to, width: w, color, strip: 'iron', ...(segments ? { segments } : {}) });
+  beam({ from, to, width: w, color, strip: 'iron_rust', ...(segments ? { segments } : {}) });
 
 // ---------------------------------------------------------------- running gear
 /** One wheel's tread disc (exactly 33 in) at lateral y, outer face toward ±y. */
@@ -101,6 +103,7 @@ function tread(lod: Lod, y: number): Mesh {
       axis: 'y',
       at: [0, y, 0],
       color: wheelC,
+      strip: 'iron_cast',
     });
   const s = Math.sign(y);
   const segs = [24, 14, 8][lod] ?? 8;
@@ -114,7 +117,7 @@ function tread(lod: Lod, y: number): Mesh {
     segments: segs,
     axis: 'y',
     color: wheelC,
-    strip: 'iron',
+    strip: 'iron_cast',
   });
 }
 
@@ -130,6 +133,7 @@ function wheelset(lod: Lod): Mesh {
         axis: 'y',
         at: [0, s * (WHEEL_Y + TREAD_W / 2 + 0.025), 0],
         color: wheelC,
+        strip: 'iron_cast',
       });
     const shaft = cylinder({
       radius: 0.075,
@@ -137,6 +141,7 @@ function wheelset(lod: Lod): Mesh {
       segments: 4,
       axis: 'y',
       color: wheelC,
+      strip: 'iron_cast',
     });
     return merge([shaft, hub(1), hub(-1)]);
   }
@@ -148,6 +153,7 @@ function wheelset(lod: Lod): Mesh {
       segments: Math.max(6, segs / 2),
       axis: 'y',
       color: wheelC,
+      strip: 'iron_cast',
     }),
   ];
   for (const s of [1, -1]) {
@@ -163,6 +169,7 @@ function wheelset(lod: Lod): Mesh {
         segments: segs,
         axis: 'y',
         color: wheelC,
+        strip: 'iron_cast',
         caps: false,
       }),
     );
@@ -177,6 +184,7 @@ function wheelset(lod: Lod): Mesh {
           axis: 'y',
           at: [0, yo + s * 0.02, 0],
           color: wheelC,
+          strip: 'iron_cast',
         }),
       );
       for (let k = 0; k < 6; k++) {
@@ -232,7 +240,7 @@ function truckFrame(lod: Lod, bevel: number): Mesh {
           r - 0.09,
           r + 0.12,
           steel,
-          'iron',
+          'iron_cast',
           bevel,
         ),
       );
@@ -250,7 +258,17 @@ function truckFrame(lod: Lod, bevel: number): Mesh {
         ); // lid
     }
     out.push(
-      bx(ax[0] - 0.16, ax[1] + 0.16, y - 0.06, y + 0.06, r + 0.12, zt + 0.07, steel, 'iron', bevel),
+      bx(
+        ax[0] - 0.16,
+        ax[1] + 0.16,
+        y - 0.06,
+        y + 0.06,
+        r + 0.12,
+        zt + 0.07,
+        steel,
+        'iron_cast',
+        bevel,
+      ),
     ); // top member
     if (lod < 2) {
       const p: [number, number][] = [
@@ -275,6 +293,7 @@ function truckFrame(lod: Lod, bevel: number): Mesh {
             segments: coilSegs,
             at: [d, y, zb + 0.125],
             color: iron,
+            strip: 'iron_rust',
           }),
         );
         if (lod === 0)
@@ -286,6 +305,7 @@ function truckFrame(lod: Lod, bevel: number): Mesh {
                 segments: coilSegs,
                 at: [d, y, zb + 0.06 + k * 0.042],
                 color: iron,
+                strip: 'iron_rust',
               }),
             );
       }
@@ -298,7 +318,17 @@ function truckFrame(lod: Lod, bevel: number): Mesh {
   }
   // Bolster on the spring nests, centre plate up to the car's body bolster.
   out.push(
-    bx(-0.15, 0.15, -(JOURNAL_Y + 0.12), JOURNAL_Y + 0.12, zb + 0.21, 0.6, steel, 'iron', bevel),
+    bx(
+      -0.15,
+      0.15,
+      -(JOURNAL_Y + 0.12),
+      JOURNAL_Y + 0.12,
+      zb + 0.21,
+      0.6,
+      steel,
+      'iron_cast',
+      bevel,
+    ),
   );
   out.push(
     cylinder({
@@ -307,6 +337,7 @@ function truckFrame(lod: Lod, bevel: number): Mesh {
       segments: [12, 8, 6][lod] ?? 6,
       at: [0, 0, 0.62],
       color: steel,
+      strip: 'iron_cast',
     }),
   );
   if (lod < 2)
@@ -454,15 +485,29 @@ const usra = defineFamily({
 
     // Underframe: straight centre sill, side sills, end sills, body bolsters, crossbearers, floor.
     const uf: Mesh[] = [
-      bx(-XB - 0.04, XB + 0.04, -0.2, 0.2, 0.72, 1.1, steel, 'iron', bevel),
-      bx(-XB, XB, -SHEATH_Y + 0.02, SHEATH_Y - 0.02, 1.1, FLOOR_Z, walk, 'wood'),
+      bx(-XB - 0.04, XB + 0.04, -0.2, 0.2, 0.72, 1.1, steel, 'iron_cast', bevel),
+      bx(-XB, XB, -SHEATH_Y + 0.02, SHEATH_Y - 0.02, 1.1, FLOOR_Z, walk, 'wood_weathered'),
     ];
     for (const s of [-1, 1])
-      uf.push(bx(-XB, XB, s * SHEATH_Y, s * (FRAME_Y - 0.01), 0.95, 1.18, steel, 'iron', bevel));
-    for (const d of [-1, 1]) {
-      uf.push(bx(d * XB, d * (XB + 0.05), -FRAME_Y, FRAME_Y, 0.74, 1.18, steel, 'iron', bevel)); // end sill / striker
       uf.push(
-        bx(d * (TC / 2) - 0.2, d * (TC / 2) + 0.2, -1.25, 1.25, 0.64, 1.1, steel, 'iron', bevel),
+        bx(-XB, XB, s * SHEATH_Y, s * (FRAME_Y - 0.01), 0.95, 1.18, steel, 'iron_cast', bevel),
+      );
+    for (const d of [-1, 1]) {
+      uf.push(
+        bx(d * XB, d * (XB + 0.05), -FRAME_Y, FRAME_Y, 0.74, 1.18, steel, 'iron_cast', bevel),
+      ); // end sill / striker
+      uf.push(
+        bx(
+          d * (TC / 2) - 0.2,
+          d * (TC / 2) + 0.2,
+          -1.25,
+          1.25,
+          0.64,
+          1.1,
+          steel,
+          'iron_cast',
+          bevel,
+        ),
       ); // body bolster
       if (lod < 2)
         for (const x of [1.6, 3.0])
@@ -482,7 +527,7 @@ const usra = defineFamily({
           u: [0, 0, EAVE_Z - boardsZ0],
           v,
           color: paint,
-          strip: lod === 2 ? 'plain' : 'wood',
+          strip: lod === 2 ? 'plain' : 'wood_painted',
           vMetres: lod === 2 ? BODY_L : 0.6,
         }),
       );
@@ -501,7 +546,9 @@ const usra = defineFamily({
       );
     }
     for (const d of [-1, 1])
-      bodyM.push(bx(d * (XB - 0.05), d * XB, -SHEATH_Y, SHEATH_Y, 1.0, EAVE_Z, paint, 'iron'));
+      bodyM.push(
+        bx(d * (XB - 0.05), d * XB, -SHEATH_Y, SHEATH_Y, 1.0, EAVE_Z, paint, 'steel_painted'),
+      );
     ctx.part('body', merge(bodyM));
 
     // Outside steel framing: posts, diagonal braces leaning toward the door, top plate, end ribs.
@@ -515,11 +562,20 @@ const usra = defineFamily({
       for (const d of [-1, 1]) {
         for (const px of lod === 2 ? [] : posts) {
           const x = d * px;
-          fr.push(bx(x - postW / 2, x + postW / 2, y0, y1, 1.0, EAVE_Z, paint, 'iron'));
+          fr.push(bx(x - postW / 2, x + postW / 2, y0, y1, 1.0, EAVE_Z, paint, 'steel_painted'));
         }
         // Door posts.
         fr.push(
-          bx(d * (DOOR_W / 2 + 0.01), d * (DOOR_W / 2 + 0.1), y0, y1, 1.0, EAVE_Z, paint, 'iron'),
+          bx(
+            d * (DOOR_W / 2 + 0.01),
+            d * (DOOR_W / 2 + 0.1),
+            y0,
+            y1,
+            1.0,
+            EAVE_Z,
+            paint,
+            'steel_painted',
+          ),
         );
         if (lod < 2)
           for (let i = 0; i < 4; i++) {
@@ -533,13 +589,15 @@ const usra = defineFamily({
                 width: 0.075,
                 height: 0.06,
                 color: paint,
-                strip: 'iron',
+                strip: 'steel_painted',
                 up: [0, s, 0],
               }),
             );
           }
       }
-      fr.push(bx(-XB, XB, y0, s * (FRAME_Y + 0.01), EAVE_Z - 0.16, EAVE_Z, paint, 'iron', bevel)); // side plate
+      fr.push(
+        bx(-XB, XB, y0, s * (FRAME_Y + 0.01), EAVE_Z - 0.16, EAVE_Z, paint, 'steel_painted', bevel),
+      ); // side plate
       if (lod === 0) {
         // Rivet heads where braces meet posts and sills.
         const rivet = cylinder({
@@ -569,7 +627,7 @@ const usra = defineFamily({
             1.0,
             EAVE_Z,
             paint,
-            'iron',
+            'steel_painted',
           ),
         );
       if (lod < 2)
@@ -584,7 +642,7 @@ const usra = defineFamily({
               z - 0.05,
               z + 0.05,
               paint,
-              'iron',
+              'steel_painted',
             ),
           );
         }
@@ -606,7 +664,7 @@ const usra = defineFamily({
         depth: BODY_L + 0.1,
         plane: 'yz',
         color: paintDark,
-        strip: 'iron',
+        strip: 'steel_painted',
       }),
     ];
     if (lod === 0) {
@@ -627,12 +685,14 @@ const usra = defineFamily({
     ctx.part('roof', merge(roofM));
 
     const walkM: Mesh[] = [
-      bx(-XB - 0.12, XB + 0.12, -0.255, 0.255, WALK_TOP - 0.045, WALK_TOP, walk, 'wood'),
+      bx(-XB - 0.12, XB + 0.12, -0.255, 0.255, WALK_TOP - 0.045, WALK_TOP, walk, 'wood_weathered'),
     ];
     const saddles = lod === 2 ? 3 : 11;
     for (let i = 0; i < saddles; i++) {
       const x = -XB + 0.3 + ((BODY_L - 0.6) * i) / (saddles - 1);
-      walkM.push(bx(x - 0.05, x + 0.05, -0.2, 0.2, RIDGE_Z - 0.03, WALK_TOP - 0.045, walk, 'wood'));
+      walkM.push(
+        bx(x - 0.05, x + 0.05, -0.2, 0.2, RIDGE_Z - 0.03, WALK_TOP - 0.045, walk, 'wood_weathered'),
+      );
     }
     if (lod < 2)
       for (const d of [-1, 1]) {
@@ -647,7 +707,7 @@ const usra = defineFamily({
             WALK_TOP - 0.045,
             WALK_TOP,
             walk,
-            'wood',
+            'wood_weathered',
           ),
         );
         walkM.push(
@@ -659,7 +719,7 @@ const usra = defineFamily({
             EAVE_Z,
             WALK_TOP - 0.045,
             walk,
-            'wood',
+            'wood_weathered',
           ),
         );
       }
@@ -679,15 +739,26 @@ const usra = defineFamily({
           u: [0, 0, DOOR_Z1 - DOOR_Z0],
           v: [s > 0 ? -DOOR_W : DOOR_W, 0, 0],
           color: paint,
-          strip: lod === 2 ? 'plain' : 'wood',
+          strip: lod === 2 ? 'plain' : 'wood_painted',
         }),
-        bx(-DOOR_W / 2, DOOR_W / 2, y0, y1 - s * 0.003, DOOR_Z0, DOOR_Z1, paintDark, 'plain'),
+        bx(
+          -DOOR_W / 2,
+          DOOR_W / 2,
+          y0,
+          y1 - s * 0.003,
+          DOOR_Z0,
+          DOOR_Z1,
+          paintDark,
+          'wood_painted',
+        ),
       ];
       if (lod < 2) {
         for (const z of [DOOR_Z0, (DOOR_Z0 + DOOR_Z1) / 2 - 0.05, DOOR_Z1 - 0.1])
-          dm.push(bx(-DOOR_W / 2, DOOR_W / 2, y1, y1 + s * 0.015, z, z + 0.1, paint, 'iron')); // steel straps
+          dm.push(
+            bx(-DOOR_W / 2, DOOR_W / 2, y1, y1 + s * 0.015, z, z + 0.1, paint, 'steel_painted'),
+          ); // steel straps
         for (const x of [-DOOR_W / 2, DOOR_W / 2 - 0.08])
-          dm.push(bx(x, x + 0.08, y1, y1 + s * 0.015, DOOR_Z0, DOOR_Z1, paint, 'iron'));
+          dm.push(bx(x, x + 0.08, y1, y1 + s * 0.015, DOOR_Z0, DOOR_Z1, paint, 'steel_painted'));
       }
       if (lod === 0) dm.push(bx(-0.75, -0.65, y1 + s * 0.015, y1 + s * 0.06, 2.0, 2.2, iron)); // handle / latch
       ctx.part(`door_${side}`, dirt(merge(dm)), {
@@ -733,10 +804,20 @@ const usra = defineFamily({
           COUPLER_Z - 0.07,
           COUPLER_Z + 0.07,
           iron,
-          'iron',
+          'iron_rust',
           bevel,
         ),
-        bx(d * 6.5, d * 6.7, -0.17, 0.12, COUPLER_Z - 0.13, COUPLER_Z + 0.13, iron, 'iron', bevel),
+        bx(
+          d * 6.5,
+          d * 6.7,
+          -0.17,
+          0.12,
+          COUPLER_Z - 0.13,
+          COUPLER_Z + 0.13,
+          iron,
+          'iron_rust',
+          bevel,
+        ),
       ];
       if (lod < 2) cm.push(bx(d * 6.6, d * 6.7, 0.12, 0.2, COUPLER_Z - 0.1, COUPLER_Z + 0.1, iron)); // knuckle
       if (lod === 0) {
@@ -810,6 +891,7 @@ const usra = defineFamily({
         ],
         segments: wheelSegs,
         color: iron,
+        strip: 'iron_rust',
         at: [-(XB + 0.13), -0.85, 0],
       }),
     );
@@ -836,6 +918,7 @@ const usra = defineFamily({
           axis: 'x',
           at: [-0.9, 0.55, 0.9],
           color: iron,
+          strip: 'iron_rust',
         }),
         cylinder({
           radius: 0.16,
@@ -844,6 +927,7 @@ const usra = defineFamily({
           axis: 'x',
           at: [0.4, -0.5, 0.92],
           color: iron,
+          strip: 'iron_rust',
         }),
         bx(-0.25, -0.05, 0.2, 0.42, 0.85, 1.1, iron),
         rod([-0.35, 0.55, 1.08], [-0.35, 0.2, 1.08], 0.05, iron),

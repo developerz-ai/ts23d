@@ -29,7 +29,7 @@ export interface BeautyOptions {
   readonly fovDeg?: number;
   /** Samples per pixel edge (1–4). Default 2 (4 samples per pixel). */
   readonly supersample?: number;
-  /** The painted trim sheet; default paints `DEFAULT_SHEET` at 512² once per process. */
+  /** The painted trim sheet; default paints `DEFAULT_SHEET` at 1024² once per process. */
   readonly sheet?: PaintedSheet;
   /** Zoom into the default framing: window centre (0–1, 0–1) of the full shot and a zoom ≥ 1. */
   readonly window?: { readonly x: number; readonly y: number; readonly zoom: number };
@@ -51,7 +51,7 @@ export interface BeautyRender {
 let defaultSheet: PaintedSheet | undefined;
 const sheetOf = (o: BeautyOptions): PaintedSheet => {
   if (o.sheet) return o.sheet;
-  defaultSheet ??= paintTrimSheet({ ...DEFAULT_SHEET, size: 512 });
+  defaultSheet ??= paintTrimSheet({ ...DEFAULT_SHEET, size: 1024 });
   return defaultSheet;
 };
 

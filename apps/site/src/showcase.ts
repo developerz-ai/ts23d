@@ -4,15 +4,17 @@
 import { type Object3D, Vector3 } from 'three';
 import { loadBuilt, recipe } from './compile.ts';
 import type { Item } from './items.ts';
+import { lookFor } from './look.ts';
+import { qualityTier } from './quality.ts';
 import { disposeTree, Stage } from './stage.ts';
-import { studioEnvironment, studioRenderer } from './studio.ts';
+import { studioRenderer } from './studio.ts';
 import { reducedMotion } from './theme.ts';
 
 const HOLD = 11; // seconds per featured asset
 
 export class Showcase {
   private readonly stage = new Stage(false);
-  private readonly renderer = studioRenderer();
+  private readonly renderer = studioRenderer(qualityTier());
   private readonly center = new Vector3();
   private distance = 10;
   private angle = 0.75;
@@ -31,9 +33,6 @@ export class Showcase {
     canvas.className = 'showcase-canvas';
     canvas.setAttribute('aria-hidden', 'true');
     root.append(canvas);
-    this.stage.scene.environment = studioEnvironment(this.renderer);
-    this.stage.scene.environmentIntensity = 0.25;
-    this.stage.catcher.material.opacity = 0.28;
     new ResizeObserver(() => this.resize()).observe(root);
     this.resize();
     const first = featured[0];
@@ -70,10 +69,12 @@ export class Showcase {
       await new Promise((r) => setTimeout(r, this.model ? 450 : 0));
       if (this.model) disposeTree(this.model);
       this.model = scene;
+      this.stage.setLook(lookFor(item.category), this.renderer);
       const sphereCenter = this.stage.show(scene, true);
       this.center.copy(sphereCenter);
       this.distance = this.stage.camera.position.distanceTo(sphereCenter) * 0.78;
       this.stage.syncShadow();
+      this.stage.bakeContact(this.renderer);
       this.index = index;
       this.shown = -1;
       this.setLabel(item);

@@ -1,38 +1,22 @@
-// The bust under the head: chest, trapezius and deltoid caps, cut flat at the base and at the arms
-// (the classic sculpted bust), plus the gear that sells the race at a glance — layered spiked
-// pauldrons and a fur mantle (orc), a draped hood (goblin), a tunic with cloak and clasp (human).
-// Head units, mirrored across Y; the neck itself belongs to the head.
+// The bust under the head: the anatomy, bust cut and plinth (head-torso.ts) plus the gear that
+// sells the race at a glance — spiked plate pauldrons and a fur mantle (orc, head-armour.ts), a
+// leather vest, scarf and cowl (goblin, head-garb.ts), a draped hood, or a tunic with mantle and
+// brooch (human). Head units, mirrored across Y; the neck itself belongs to the head.
 
 import type { Vec3 } from '../core/index.ts';
-import type { SculptEdit } from '../primitives/index.ts';
-import { armour, chestOf } from './head-armour.ts';
+import { type SculptEdit, sculptField } from '../primitives/index.ts';
+import { armour } from './head-armour.ts';
+import { vest } from './head-garb.ts';
 import type { HeadLayout } from './head-layout.ts';
 import type { HeadParams } from './head-params.ts';
-
-/** Bare-chested torso forms under the armour: pectorals with a sternal groove, deltoid caps. */
-function torso(p: HeadParams, cx: number, b: number): SculptEdit[] {
-  const c = p.colors;
-  return [
-    {
-      shape: 'ellipsoid',
-      at: [cx + 0.17, 0.16, b + 0.32],
-      size: [0.16, 0.19, 0.12],
-      rotate: [0, 0, 12],
-      color: c.skin,
-      blend: 0.07,
-    },
-    {
-      shape: 'capsule',
-      at: [cx + 0.33, 0, b + 0.42],
-      to: [cx + 0.34, 0, b + 0.1],
-      size: 0.012,
-      op: 'subtract',
-      blend: 0.04,
-      color: c.shade,
-      mirror: false,
-    },
-  ];
-}
+import {
+  type BustFrame,
+  bodyEdits,
+  bustCut,
+  frameOf,
+  plinthEdits,
+  torsoForms,
+} from './head-torso.ts';
 
 function hood(p: HeadParams, cx: number, nz: number): SculptEdit[] {
   const c = p.colors;
@@ -80,14 +64,16 @@ function hood(p: HeadParams, cx: number, nz: number): SculptEdit[] {
   ];
 }
 
-function tunic(p: HeadParams, cx: number, s: number, b: number, nz: number): SculptEdit[] {
+function tunic(p: HeadParams, f: BustFrame): SculptEdit[] {
   const c = p.colors;
-  const chest = chestOf(cx, s, b);
-  const shell = (g: number): SculptEdit => ({
-    shape: 'ellipsoid',
-    at: chest.at,
-    size: [chest.r[0] + g, chest.r[1] + g, chest.r[2] + g],
-  });
+  const { cx, s, b, nz } = f;
+  const shell = (g: number): SculptEdit => ({ group: torsoForms(f, g) });
+  const torso = sculptField(torsoForms(f), { color: c.cloth, mirror: 'y' }).field;
+  const front = (z: number): number => {
+    let x = cx + 0.7;
+    for (let i = 0; i < 300 && torso([x, 0, z]) > 0; i++) x -= 0.004;
+    return x;
+  };
   const n = p.neck.radius;
   const axis = (z: number): Vec3 => [cx - 0.08, 0, z];
   const mantle = (g: number): SculptEdit => ({
@@ -117,6 +103,7 @@ function tunic(p: HeadParams, cx: number, s: number, b: number, nz: number): Scu
         mantle(0),
         { shape: 'roundBox', at: [0, 0, b + 0.3 + 1], size: [4, 4, 2], op: 'intersect' },
         opening,
+        bustCut(f),
       ],
       color: c.cape ?? c.leather,
       blend: 0.01,
@@ -154,68 +141,44 @@ function tunic(p: HeadParams, cx: number, s: number, b: number, nz: number): Scu
       blend: 0.004,
       mirror: false,
     },
-    ...[0.42, 0.3, 0.18].map(
+    // Brass buttons seated on the chest surface (probed along −X at the midline).
+    ...[0.5, 0.38, 0.26].map(
       (z): SculptEdit => ({
-        group: [
-          shell(0.03),
-          { shape: 'sphere', at: [cx + 0.3, 0, b + z], size: 0.03, op: 'intersect' },
-        ],
+        shape: 'sphere',
+        at: [front(b + z) + 0.014, 0, b + z],
+        size: 0.028,
         color: c.metal,
-        blend: 0.003,
+        blend: 0.004,
         mirror: false,
       }),
     ),
   ];
 }
 
-export function bustEdits(p: HeadParams, l: HeadLayout): SculptEdit[] {
+/** `cell`: the bust's sculpt cell (head units), floors the plinth disc so far LODs keep it. */
+export function bustEdits(p: HeadParams, l: HeadLayout, cell = 0): SculptEdit[] {
   const c = p.colors;
-  const cx = l.cranium.at[0] + p.jaw.muzzle * 0.3;
-  const s = p.bust.shoulders;
-  const b = l.base;
-  const nz = b + 0.6; // neck root
-  const body = p.bust.style === 'pauldrons' ? c.skin : c.cloth;
+  const f = frameOf(p, l);
+  const style = p.bust.style;
+  const bare = style === 'pauldrons' || style === 'vest';
   const e: SculptEdit[] = [
-    { shape: 'ellipsoid', at: chestOf(cx, s, b).at, size: chestOf(cx, s, b).r, color: body },
+    ...bodyEdits(p, f, bare ? c.skin : c.cloth),
+    // Neck root in skin, so the head's neck seats into the bust without a cloth ring (flattened,
+    // so it never pokes through the chest below the collar).
     {
-      shape: 'capsule',
-      at: [cx - 0.16, 0.1, nz + 0.16],
-      to: [cx - 0.1, s * 0.78, b + 0.44],
-      size: 0.15,
-      color: body,
-      blend: 0.15,
-    },
-    { shape: 'sphere', at: [cx - 0.04, s * 0.84, b + 0.3], size: 0.2, color: body, blend: 0.1 },
-    // Trapezius: from high behind the neck down to the shoulder.
-    {
-      shape: 'capsule',
-      at: [cx - 0.2, 0.08, nz + 0.3],
-      to: [cx - 0.1, s * 0.62, b + 0.5],
-      size: 0.1 + p.neck.radius * 0.2,
-      color: body,
-      blend: 0.12,
-    },
-    {
-      shape: 'capsule',
-      at: [cx - 0.08, 0, nz - 0.05],
-      to: [cx - 0.1, 0, nz + 0.12],
-      size: p.neck.radius * 1.05,
+      shape: 'ellipsoid',
+      at: [f.cx - 0.09, 0, f.nz + 0.06],
+      size: [f.n * 1.02, f.n * 1.02, 0.12],
       color: c.skin,
-      blend: 0.03,
+      blend: 0.04,
     },
   ];
-  // Arms cut flat at the shoulders (before the gear, so pauldrons overhang the cut).
-  e.push({
-    shape: 'roundBox',
-    at: [0, s + 1.02, b + 0.5],
-    size: [4, 2, 4],
-    op: 'subtract',
-    color: body,
-  });
-  if (p.bust.style === 'pauldrons') e.push(...torso(p, cx, b), ...armour(p, cx, s, b, nz));
-  else if (p.bust.style === 'hood') e.push(...hood(p, cx, nz));
-  else e.push(...tunic(p, cx, s, b, nz));
+  if (style === 'pauldrons') e.push(...armour(p, f, cell));
+  else if (style === 'hood') e.push(...hood(p, f.cx, f.nz));
+  else if (style === 'vest') e.push(...vest(p, f));
+  else e.push(...tunic(p, f));
+  e.push(...plinthEdits(p, f, cell * 1.5));
   // Base cut flat at z = base.
-  e.push({ shape: 'roundBox', at: [0, 0, b - 1], size: [4, 4, 2], op: 'subtract' });
+  e.push({ shape: 'roundBox', at: [0, 0, f.floor - 1], size: [4, 4, 2], op: 'subtract' });
   return e;
 }

@@ -1,7 +1,8 @@
 // The painting surface for one sheet region (a strip or a cell): float layers in real metres.
 // Painters write height (metres of relief, + is out of the surface), linear grey tone,
-// roughness and metalness; `finish` turns them into normal + ORM; `compose` copies into the sheet.
+// roughness, metalness and a two-colour `mix`; `compose` turns them into albedo + normal + ORM.
 
+import type { Vec3 } from '../../core/index.ts';
 import { fbm } from './noise.ts';
 
 export interface Canvas {
@@ -18,8 +19,14 @@ export interface Canvas {
   readonly metal: Float32Array;
   /** Extra occlusion multiplied into the cavity AO (foliage darkens toward the twig). */
   readonly occl: Float32Array;
+  /** 0 = `colours[0]`, 1 = `colours[1]` (latewood, rust, bare wood under chipped paint…). */
+  readonly mix: Float32Array;
+  /** Linear albedo pair for material strips; null = greyscale (vertex colour carries hue). */
+  colours: readonly [Vec3, Vec3] | null;
   /** sRGB RGBA override (stamped images, coloured foliage); null when painted greyscale. */
   rgba: Uint8Array | null;
+  /** Tangent-space normal override (image strips); null = derived from `height`. */
+  normalRgba: Uint8Array | null;
 }
 
 export function createCanvas(
@@ -41,7 +48,10 @@ export function createCanvas(
     rough: new Float32Array(n).fill(0.8),
     metal: new Float32Array(n),
     occl: new Float32Array(n).fill(1),
+    mix: new Float32Array(n),
+    colours: null,
     rgba: null,
+    normalRgba: null,
   };
 }
 

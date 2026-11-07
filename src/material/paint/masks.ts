@@ -1,6 +1,7 @@
 // Weathering masks applied over a painted canvas: rust streaks (vertical runs from a patchy
 // source, darker and rougher, killing metalness) and grime (dirt pooling toward the bottom of the
-// region — world-down is low V — plus soft vertical rain streaks).
+// region — world-down is low V — plus soft vertical rain streaks). Rust also pushes `mix` toward
+// albedo2, which only shows on material strips that carry a colour pair.
 
 import { type Canvas, noiseAt, smooth } from './canvas.ts';
 
@@ -20,6 +21,7 @@ export function rustStreaks(c: Canvas, amount: number, seed: number): void {
       c.tone[i] = (c.tone[i] ?? 1) * (1 - 0.4 * m);
       c.rough[i] = Math.min(1, (c.rough[i] ?? 0.8) + 0.2 * m);
       c.metal[i] = (c.metal[i] ?? 0) * (1 - m);
+      c.mix[i] = Math.min(1, (c.mix[i] ?? 0) + m);
     }
   }
 }

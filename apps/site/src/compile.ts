@@ -12,6 +12,7 @@ import type {
   Lod,
   Manifest,
   Sheet,
+  SheetSize,
   WorkerIn,
   WorkerOut,
 } from './compile-protocol.ts';
@@ -74,12 +75,19 @@ export function manifest(name: string): Promise<Manifest> {
   return m;
 }
 
-let sheet: Promise<Sheet> | null = null;
+const sheets = new Map<SheetSize, Promise<Sheet>>();
 
-/** The painted trim sheet (about a second to paint, once, in the worker). */
-export const trimSheet = (): Promise<Sheet> => {
-  sheet ??= ask({ sheet: true }) as Promise<Sheet>;
-  return sheet;
+/**
+ * The painted trim sheet at `size` px (painted once per size, in the worker: about a second at
+ * 1024², about four at 2048²).
+ */
+export const trimSheet = (size: SheetSize): Promise<Sheet> => {
+  let s = sheets.get(size);
+  if (!s) {
+    s = ask({ sheet: true, size }) as Promise<Sheet>;
+    sheets.set(size, s);
+  }
+  return s;
 };
 
 /** Compile in the worker. Results are cached per request, so asking twice costs nothing. */

@@ -13,7 +13,12 @@ export type ErrorCode =
   | 'T3D_RENDER_OPTIONS'
   | 'T3D_AMBIENT_RANDOM'
   | 'T3D_RELEASE'
-  | 'T3D_BENCH';
+  | 'T3D_BENCH'
+  | 'T3D_MATERIAL_INVALID'
+  | 'T3D_MATERIAL_UNKNOWN'
+  | 'T3D_MATERIAL_CONFLICT'
+  | 'T3D_SHEET_FULL'
+  | 'T3D_TEXTURE_MISSING';
 
 export interface ErrorDetails {
   readonly cause: string;

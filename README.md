@@ -220,11 +220,16 @@ Row 2: top, 3/4 rear, LOD2 at distance. Layout: [docs/idea/05-agent-loop.md](doc
 `t3d hero` adds the beauty shot, and `t3d review` packs hero, sheet, close-ups, an LOD strip and a
 checklist prompt into `out/<asset>/review/` for a second, fresh-eyes vision pass.
 
-## The quality bar
+## Materials
 
-![4-4-0 locomotive: reference photo, procedural model, overlay](https://raw.githubusercontent.com/developerz-ai/ts23d/main/docs/reference/loco-photo-match.png)
+![The material library: woods, metals, rubber, canvas, leather on one trim sheet](docs/media/materials.png)
 
-**Not output of this library yet.** This is from the in-house predecessor (a JSON recipe compiler for railroads): a 4-4-0 with tender. Top: reference photo. Middle: the procedural model. Bottom: overlay. That GLB is ~16k triangles, 17 named nodes (axles, side and main rods, crossheads, tender axles, track), one `trim_sheet` material with embedded albedo / normal / ORM textures, and a baked `run` animation. ts23d now has its own [`loco_440`](recipes/loco_440/loco_440.ts) (the Jupiter, drivers 1.626 m sourced) and the trim-sheet painter; photo match is next (M2, [roadmap](docs/plans/roadmap.md)).
+One shared 2048² trim sheet holds 24 physically based materials: oak, pine, weathered and painted
+wood; rusty, cast, painted and galvanised iron and steel; brass, copper, aluminium, chrome; rubber,
+canvas, leather, plastic; plus brick, stone, slate, concrete and glass. Each has its own roughness and
+metalness, so chrome mirrors and wood stays matte. Projects add their own with `defineMaterial`, or
+pull a CC0 photo set from Poly Haven with `bun run textures` (hash-pinned, credited in the GLB). See
+[materials.md](docs/architecture/materials.md).
 
 ## Quickstart
 

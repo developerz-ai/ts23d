@@ -8,6 +8,12 @@ import { type Field, type SculptEdit, sculptField, sd, sdf } from '../primitives
 import type { HeadLayout } from './head-layout.ts';
 import type { HeadParams } from './head-params.ts';
 import { creaseNormals, sharpenRim } from './head-rim.ts';
+import { toned } from './head-tone.ts';
+
+/** Cavity probe of the painted tone, head units: about one fold. */
+const REACH = 0.05;
+/** Default plinth colour (dark slate). */
+export const PLINTH: Vec3 = [0.16, 0.15, 0.15];
 
 /** The jaw region (head units): an ellipsoid around chin and lower lip, cut flat at the mouth
  *  line. Its skin seam runs along the lips, down the marionette lines and under the chin — creases
@@ -17,7 +23,7 @@ export function jawRegion(
   l: HeadLayout,
 ): { field: Field; centre: Vec3; radii: Vec3 } {
   const chin = l.chin;
-  const reach = Math.max(p.mouth.width * 1.25, (p.tusks?.spread ?? 0) + p.mouth.width * 0.5);
+  const reach = Math.max(p.mouth.width * 1.08, (p.tusks?.spread ?? 0) + p.mouth.width * 0.5);
   const centre: Vec3 = [l.mouthX - 0.15, 0, l.mouthZ];
   const radii: Vec3 = [Math.max(0.27, l.mouthX - chin[0] + 0.2), reach, l.mouthZ - chin[2] + 0.1];
   const e = sd.ellipsoid(centre, radii);
@@ -56,6 +62,8 @@ export interface HeadEditSet {
   readonly ears: readonly SculptEdit[];
   readonly tusks: readonly SculptEdit[];
   readonly bust: readonly SculptEdit[];
+  /** The bust-cut region (≈ 0 on the cut faces), painted as bare plinth material. */
+  readonly bustCut?: Field;
 }
 
 /** `head` and `jaw` meshes in head units at cell size `res` (units). Each is ONE sculpt (skull +
@@ -72,7 +80,7 @@ export function headAndJaw(
   // The jaw reaches a little past the cut and sits a hair proud of the skin, so it laps over the
   // head like a lip: no gap opens along the seam where meshing leaves the two rims a cell apart.
   const lap = res * 0.75;
-  const proud = res * 0.15;
+  const proud = res * 0.03;
   const ears: SculptEdit[] = set.ears.length > 0 ? [{ group: set.ears, blend: 0.02 }] : [];
   const tusks: SculptEdit[] = set.tusks.length > 0 ? [{ group: set.tusks, blend: 0.01 }] : [];
   const h = sculptField(
@@ -87,6 +95,18 @@ export function headAndJaw(
   const mouth = p.colors.mouth;
   // Only the skin-only skull is needed near the cut (paint + rim snapping): evaluated lazily.
   const skull = sculptField(set.skull, opts).field;
+  // The painted tone reads the uncut surface (skin + ears, skin + tusks): the cut faces' normals
+  // would light the jaw rim up as a pale outline.
+  const extra = (e: readonly SculptEdit[]): Field =>
+    e.length > 0
+      ? (
+          (f: Field): Field =>
+          (q) =>
+            Math.min(skull(q), f(q))
+        )(sculptField(e, opts).field)
+      : skull;
+  const headTone = extra(set.ears);
+  const jawTone = extra(set.tusks);
   const deep = -Math.max(res * 4, 0.03);
   const paint =
     (colorAt: (q: Vec3) => Vec3) =>
@@ -102,14 +122,14 @@ export function headAndJaw(
     field: h.field,
     bounds: h.bounds,
     resolution: res,
-    color: paint(h.colorAt),
+    color: toned(headTone, paint(h.colorAt), { reach: REACH }),
     symmetry: 'y',
   });
   const jaw = sdf({
     field: jField,
     bounds: unionBounds(jb, tb),
     resolution: res,
-    color: paint(jRaw.colorAt),
+    color: toned(jawTone, paint(jRaw.colorAt), { reach: REACH }),
     symmetry: 'y',
   });
   // Coarse cells: snapping folds triangles over, and nobody sees a seam at that distance.
@@ -122,13 +142,31 @@ export function headAndJaw(
   };
 }
 
+/** A surface point lies on a cut face: on the cut boundary, facing out of the cut region. */
+function onCut(cut: Field, q: Vec3, n: Vec3, res: number): boolean {
+  if (Math.abs(cut(q)) > res * 0.8) return false;
+  const e = res * 0.5;
+  const g: Vec3 = [
+    cut([q[0] + e, q[1], q[2]]) - cut([q[0] - e, q[1], q[2]]),
+    cut([q[0], q[1] + e, q[2]]) - cut([q[0], q[1] - e, q[2]]),
+    cut([q[0], q[1], q[2] + e]) - cut([q[0], q[1], q[2] - e]),
+  ];
+  const l = Math.hypot(g[0], g[1], g[2]) || 1;
+  return (g[0] * n[0] + g[1] * n[1] + g[2] * n[2]) / l > 0.85;
+}
+
 export function bustMesh(p: HeadParams, set: HeadEditSet, res: number): Mesh {
   const s = sculptField(set.bust, { color: p.colors.skin, mirror: 'y' });
+  const tone = toned(s.field, s.colorAt, { reach: REACH * 1.4 });
+  const cut = set.bustCut;
+  const base = p.colors.plinth ?? PLINTH;
+  const face: Vec3 = [base[0] * 1.3, base[1] * 1.3, base[2] * 1.3];
   return sdf({
     field: s.field,
     bounds: s.bounds,
     resolution: res,
-    color: (q) => s.colorAt(q),
+    // Cut faces read as the bare material of a sculpted bust, not as sliced layers.
+    color: cut ? (q, n) => (onCut(cut, q, n, res) ? face : tone(q)) : tone,
     symmetry: 'y',
   });
 }

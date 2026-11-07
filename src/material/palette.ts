@@ -15,6 +15,9 @@ export function hex(value: string): Vec3 {
   return [lin((n >> 16) & 255), lin((n >> 8) & 255), lin(n & 255)];
 }
 
+/** Vertex colour for material strips that carry their own colour (oak, brass, rubber…). */
+export const NATURAL: Vec3 = [1, 1, 1];
+
 export function definePalette(entries: Readonly<Record<string, string>>): Palette {
   return Object.fromEntries(Object.entries(entries).map(([k, v]) => [k, hex(v)]));
 }

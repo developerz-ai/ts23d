@@ -16,7 +16,16 @@ export const crate = defineAsset({ name: 'crate', kind: 'prop', budget: { triang
   );
   const log = console.log;
   console.log = () => {};
-  const code = await run(['build', fixture, '--out', out, '--size', '160x90']);
+  const code = await run([
+    'build',
+    fixture,
+    '--out',
+    out,
+    '--size',
+    '160x90',
+    '--sheet-size',
+    '512',
+  ]);
   console.log = log;
   expect(code).toBe(0);
   for (const f of ['lod0.glb', 'lod1.glb', 'lod2.glb', 'hero.png', 'sheet.png', 'manifest.json']) {

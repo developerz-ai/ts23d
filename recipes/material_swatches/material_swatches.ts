@@ -19,6 +19,7 @@ import {
   type Mesh,
   MeshBuilder,
   merge,
+  NATURAL,
   STRIPS,
   type StripId,
   type Vec3,
@@ -26,7 +27,7 @@ import {
 
 const STONE = hex('#9c968c');
 const INK = hex('#1c1c1c');
-const TINT: Readonly<Record<StripId, Vec3>> = {
+const TINT: Readonly<Partial<Record<StripId, Vec3>>> = {
   plain: hex('#e8e4dc'),
   brick: hex('#9a4a32'),
   stone: hex('#c8bba0'),
@@ -128,7 +129,8 @@ export const material_swatches = defineAsset({
   kind: 'prop',
   description:
     'Every trim-sheet strip and cell on labelled panels: the material generator test card.',
-  budget: { triangles: [16000, 1200, 800] },
+  // 24 strip panels (library v2) + decal and foliage cells.
+  budget: { triangles: [24000, 1200, 800] },
   build(ctx) {
     const stripSpan = STRIPS.length * 2 + (STRIPS.length - 1) * FRONT.gap;
     const cells: readonly CellId[] = [...DECAL_CELLS, ...FOLIAGE_CELLS];
@@ -151,7 +153,7 @@ export const material_swatches = defineAsset({
       const panel = box({
         size: [0.06, 2, h],
         at: [FRONT.x, y, FRONT.height],
-        color: TINT[id],
+        color: TINT[id] ?? NATURAL,
         strip: id,
       });
       ctx.part(`strip_${id}`, panel, id === 'glass' ? { surface: 'glass' } : {});
@@ -167,10 +169,14 @@ export const material_swatches = defineAsset({
           surface: 'cutout',
         });
       } else {
-        const back = box({ size: [0.06, 1, 1], at: [REAR.x, y, REAR.height], color: TINT.plain });
+        const back = box({
+          size: [0.06, 1, 1],
+          at: [REAR.x, y, REAR.height],
+          color: TINT.plain ?? NATURAL,
+        });
         ctx.part(
           `cell_${id}`,
-          merge([back, cellQuad(id, REAR.x + 0.032, y, REAR.height, 1, TINT.plain)]),
+          merge([back, cellQuad(id, REAR.x + 0.032, y, REAR.height, 1, TINT.plain ?? NATURAL)]),
         );
       }
       if (ctx.lod === 0)

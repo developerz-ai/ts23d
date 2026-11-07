@@ -24,23 +24,24 @@ interface Maps {
 let maps: Maps | null = null;
 
 /** glTF sampler of the sheet: repeat along U (strips tile), clamp along V (rows never wrap). */
-function texture(sheet: Sheet, data: Uint8Array, srgb: boolean): Texture {
+function texture(sheet: Sheet, data: Uint8Array, srgb: boolean, anisotropy: number): Texture {
   const t = new DataTexture(data, sheet.size, sheet.size);
   t.wrapS = RepeatWrapping;
   t.wrapT = ClampToEdgeWrapping;
   t.minFilter = LinearMipmapLinearFilter;
   t.generateMipmaps = true;
+  t.anisotropy = anisotropy;
   t.flipY = false;
   t.colorSpace = srgb ? SRGBColorSpace : NoColorSpace;
   t.needsUpdate = true;
   return t;
 }
 
-function mapsFor(sheet: Sheet): Maps {
+function mapsFor(sheet: Sheet, anisotropy: number): Maps {
   maps ??= {
-    albedo: texture(sheet, sheet.albedo, true),
-    normal: texture(sheet, sheet.normal, false),
-    orm: texture(sheet, sheet.orm, false),
+    albedo: texture(sheet, sheet.albedo, true, anisotropy),
+    normal: texture(sheet, sheet.normal, false, anisotropy),
+    orm: texture(sheet, sheet.orm, false, anisotropy),
   };
   return maps;
 }
@@ -50,9 +51,12 @@ interface Saved {
   readonly metalness: number;
 }
 
-/** Bind (sheet given) or unbind (null) the trim sheet on every standard material under `root`. */
-export function applySheet(root: Object3D, sheet: Sheet | null): void {
-  const m = sheet ? mapsFor(sheet) : null;
+/**
+ * Bind (sheet given) or unbind (null) the trim sheet on every standard material under `root`.
+ * `anisotropy` sharpens the sheet at grazing angles (long hull sides, ground planes).
+ */
+export function applySheet(root: Object3D, sheet: Sheet | null, anisotropy = 1): void {
+  const m = sheet ? mapsFor(sheet, anisotropy) : null;
   root.traverse((node) => {
     if (!(node instanceof Mesh)) return;
     for (const mat of [node.material].flat()) {

@@ -82,8 +82,9 @@ describe('paintTrimSheet: output', () => {
     expect(Bun.hash(other.albedo)).not.toBe(Bun.hash(sheet.albedo));
   });
 
-  it('keeps strip albedo greyscale and opaque, so vertex colour tints it', () => {
-    for (let y = 0; y < SIZE / 2; y += 3)
+  it('keeps classic strip albedo greyscale and opaque, so vertex colour tints it', () => {
+    const r = stripRect('concrete');
+    for (let y = 0; y < r.v1 * SIZE; y += 3)
       for (let x = 0; x < SIZE; x += 7) {
         expect(px(sheet.albedo, x, y, 0)).toBe(px(sheet.albedo, x, y, 1));
         expect(px(sheet.albedo, x, y, 3)).toBe(255);

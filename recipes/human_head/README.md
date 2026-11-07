@@ -5,13 +5,14 @@ A young adventurer, read from the 3/4 view by: **classical proportions pushed sl
 (square jaw, strong brow, thick neck), **defined arched eyebrows**, **swept-back hair** in chunky
 tapered two-tone locks over a rounded hairline, a **clipped beard with chin volume and a drooping
 moustache**, clear blue eyes, a **blue tunic** with a standing leather collar, placket and brass
-buttons, and a **red mantle** over the shoulders pinned with a brass brooch.
+buttons, and a **red mantle** over the shoulders pinned with a brass brooch — cut as a collectible
+bust (U-cut under the chest) on a turned plinth.
 
 ## Design spec (head units: 1 = chin to crown = 0.23 m, adult human)
 | Feature | Value (units) | Metres | Note |
 |---|---|---|---|
 | chin → crown | 1.00 | 0.230 | adult menton–vertex ≈ 0.22–0.24 m |
-| overall bust L × W × H | — | 0.247 × 0.464 × 0.439 | `real`, ±5 % |
+| overall bust L × W × H | — | 0.247 × 0.428 × 0.439 | `real`, ±5 % |
 | cranium width / depth | 0.66 / 0.86 | 0.152 / 0.198 | adult head breadth ≈ 0.15 m, length ≈ 0.19–0.20 m |
 | eye line | 0.50 | — | Loomis: half height |
 | eyeball radius / spacing | 0.052 / 0.135 | 0.012 / pupils 0.062 apart | human eyeball ≈ 24 mm; IPD ≈ 62 mm |
@@ -19,6 +20,7 @@ buttons, and a **red mantle** over the shoulders pinned with a brass brooch.
 | jaw half-width | 0.22 | 0.051 | bigonial ≈ 0.10 m |
 | ears | round, 0.27 long | 0.062 | between brow and nose base |
 | neck radius | 0.27 | 0.062 | heroic: thicker than average |
+| shoulders / mass | 0.95 / 0.5 (default) | 0.219 | pectorals, deltoids, trapezius under the tunic |
 
 ## Palette (sRGB)
 | Role | Hex |
@@ -27,6 +29,7 @@ buttons, and a **red mantle** over the shoulders pinned with a brass brooch.
 | eyes: sclera / iris | `#ece6dc` / `#3d6e9e` |
 | hair + beard (two-tone locks ×1.5) | `#5a3a22` |
 | tunic / mantle / collar, placket / brooch, buttons | `#2e4f8a` / `#7a2420` / `#6b4428` / `#c9a24a` |
+| plinth / cut faces | `#6f6c6c` (linear 0.16, 0.15, 0.15) / ×1.3 |
 
 ## Parts the engine needs
 | Part | Pivot | Motion |
@@ -41,8 +44,9 @@ along the lips, the marionette lines and under the chin. Its cut faces are paint
 when it opens; it laps 0.75 cells over the head so no gap shows.
 
 ## LODs
-Sculpt cell = 2 % / 4.5 % / 14 % of head height. LOD0/1 bake vertex AO across all parts (16/10 rays); LOD2 drops
-warts, wiry tufts and the AO bake, and floors ear thickness at 0.7 cells so ears stay attached.
+Sculpt cell = 2 % / 4.5 % / 14 % of head height (bust 1.6 ×). LOD0/1 bake vertex AO across all
+parts (16/10 rays); every LOD carries the painted tone (cavity, warm top, cool under). LOD2 drops
+the AO bake, floors ear thickness at 0.7 cells and makes the plinth one drum.
 
 ## References (stylised anatomy, not likeness)
 | Topic | Link | Used for |
