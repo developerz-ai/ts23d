@@ -16,31 +16,42 @@ export function hairEdits(p: HeadParams, l: HeadLayout): SculptEdit[] {
   const [rx, ry, rz] = l.cranium.r;
   const top = l.crown;
   switch (p.hair) {
-    case 'topknot':
+    case 'topknot': {
+      // A warrior's knot: hair gathered at the back of the crown, bound by two iron rings, rising
+      // and then falling back in a thick tapering tail to the nape.
+      const root: Vec3 = [cx - 0.14, 0, top - 0.03];
+      const rise: Vec3 = [cx - 0.2, 0, top + 0.13];
+      const fall: Vec3 = [cx - 0.38, 0, top + 0.02];
+      const tip: Vec3 = [cx - rx - 0.08, 0, cz - 0.12];
+      const seg = (a: Vec3, b: Vec3, r0: number, r1: number): SculptEdit => ({
+        shape: 'cone',
+        at: a,
+        size: [r0, r1, Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2])],
+        rotate: alongZ([b[0] - a[0], b[1] - a[1], b[2] - a[2]]),
+        blend: 0.03,
+      });
+      const ring = (at: Vec3, deg: number): SculptEdit => ({
+        shape: 'torus',
+        at,
+        size: [0.07, 0.018],
+        rotate: [0, deg, 0],
+        color: p.colors.metal,
+        blend: 0.004,
+      });
       return [
-        { shape: 'ellipsoid', at: [cx - 0.12, 0, top - 0.02], size: [0.11, 0.08, 0.07], color: h },
         {
-          shape: 'sphere',
-          at: [cx - 0.16, 0, top + 0.07],
-          size: 0.075,
+          group: [
+            seg(root, rise, 0.085, 0.075),
+            seg(rise, fall, 0.08, 0.07),
+            seg(fall, tip, 0.07, 0.015),
+          ],
           color: h,
-          blend: 0.03,
+          blend: 0.02,
         },
-        {
-          shape: 'capsule',
-          at: [cx - 0.2, 0, top + 0.08],
-          to: [cx - 0.42, 0, top - 0.25],
-          size: 0.04,
-          color: h,
-          blend: 0.04,
-        },
-        {
-          shape: 'torus',
-          at: [cx - 0.17, 0, top + 0.02],
-          size: [0.06, 0.018],
-          color: p.colors.metal,
-        },
+        ring([root[0] - 0.02, 0, root[2] + 0.06], -15),
+        ring([root[0] - 0.04, 0, root[2] + 0.11], -25),
       ];
+    }
     case 'mohawk':
       return Array.from({ length: 6 }, (_, i): SculptEdit => {
         const a = (-20 + i * 26) * RAD;
@@ -112,20 +123,50 @@ export function hairEdits(p: HeadParams, l: HeadLayout): SculptEdit[] {
         lock(120, 30, 30, 0.05, 0),
       ];
     }
-    case 'tufts':
-      return Array.from({ length: 5 }, (_, i): SculptEdit => {
-        const a = (i / 4 - 0.5) * 1.6;
-        const base: Vec3 = [cx - 0.1 + Math.cos(a) * 0.05, Math.sin(a) * 0.12, top - 0.04];
-        return {
-          shape: 'cone',
-          at: base,
-          size: [0.025, 0.004, 0.12 + (i % 2) * 0.05],
-          rotate: alongZ([-0.6, Math.sin(a) * 0.8, 1]),
+    case 'tufts': {
+      // Wispy strands: a few thin, curling wisps on the crown and over the ears, each a root cone
+      // and a finer tip cone bent back — straggly, not a brush.
+      const out: SculptEdit[] = [];
+      const spots: ReadonlyArray<readonly [number, number, number]> = [
+        [10, 78, 0.26],
+        [-25, 70, 0.22],
+        [40, 62, 0.22],
+        [150, 55, 0.2],
+        [115, 30, 0.2],
+        [100, 16, 0.18],
+        [-120, 40, 0.18],
+      ];
+      for (const [az, el, len] of spots) {
+        const a = az * RAD;
+        const e = el * RAD;
+        const n: Vec3 = [Math.cos(e) * Math.cos(a), Math.cos(e) * Math.sin(a), Math.sin(e)];
+        const root: Vec3 = [cx - 0.04 + rx * 0.97 * n[0], ry * 0.97 * n[1], cz + rz * 0.97 * n[2]];
+        const d1: Vec3 = [n[0] - 0.6, n[1] * 1.3, n[2] * 0.6 + 0.25];
+        const l1 = Math.hypot(...d1);
+        const mid: Vec3 = [
+          root[0] + (d1[0] / l1) * len * 0.55,
+          root[1] + (d1[1] / l1) * len * 0.55,
+          root[2] + (d1[2] / l1) * len * 0.55,
+        ];
+        const d2: Vec3 = [d1[0] - 0.5, d1[1] * 1.6, -0.9];
+        out.push({
+          group: [
+            { shape: 'cone', at: root, size: [0.026, 0.014, len * 0.58], rotate: alongZ(d1) },
+            {
+              shape: 'cone',
+              at: mid,
+              size: [0.015, 0.004, len * 0.6],
+              rotate: alongZ(d2),
+              blend: 0.008,
+            },
+          ],
           color: h,
-          blend: 0.01,
-          mirror: false,
-        };
-      });
+          blend: 0.012,
+          mirror: az !== 10 && az !== -25 && az !== -120,
+        });
+      }
+      return out;
+    }
     case 'braids':
       return [
         { ...capOf(l, h) },

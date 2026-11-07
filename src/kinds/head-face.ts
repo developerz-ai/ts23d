@@ -7,6 +7,7 @@ import type { Vec3 } from '../core/index.ts';
 import type { SculptEdit } from '../primitives/index.ts';
 import { alongX, alongZ, unit } from './head-geom.ts';
 import type { HeadLayout } from './head-layout.ts';
+import { mouthEdits } from './head-mouth.ts';
 import type { HeadParams } from './head-params.ts';
 
 /** Brain case + face plate: the forms the eyes are seated against (head.ts probes them). */
@@ -24,27 +25,40 @@ export function primaryEdits(l: HeadLayout): SculptEdit[] {
   ];
 }
 
-export function skullEdits(p: HeadParams, l: HeadLayout): SculptEdit[] {
+/** `cell`: the sculpt cell (head units). Far LODs drop the teeth and floor the nose's radii at
+ *  about 0.6 cells so a long nose survives. */
+export function skullEdits(p: HeadParams, l: HeadLayout, cell = 0): SculptEdit[] {
+  const fine = cell < 0.03;
+  const tipR = Math.max(p.nose.tip, cell * 0.6);
   const c = p.colors;
   const cx = l.cranium.at[0];
   const [ex, ey, ez] = l.eye;
   const r = l.eyeR;
-  const lipT = p.mouth.lips;
   const mw = p.mouth.width;
   const [ax, ay, az] = l.angle;
   const [hx, hz] = l.hinge;
   const chin = l.chin;
   const tipX = l.faceX + 0.06 + p.nose.length * 0.25 + p.nose.bridge + p.jaw.muzzle * 0.5;
   const tipZ = l.noseZ + 0.035 - p.nose.hook;
+  const bIn: Vec3 = [ex + r * 0.75, 0.03, l.browZ - p.brow.scowl];
+  const bOut: Vec3 = [ex + r * 0.05, ey + r * 1.3, l.browZ + p.brow.scowl * 0.5];
   const e: SculptEdit[] = [
     // Primary: brain case, face plate, cheek bones, muzzle, mandible, chin, neck.
     ...primaryEdits(l),
     {
       shape: 'ellipsoid',
       at: [ex - 0.03, (ey + 0.06) * p.cheeks.width, ez - r - 0.065 * p.cheeks.size],
-      size: [0.09 * p.cheeks.size, 0.08 * p.cheeks.size, 0.065 * p.cheeks.size],
+      size: [0.075 * p.cheeks.size, 0.07 * p.cheeks.size, 0.055 * p.cheeks.size],
       rotate: [0, 0, 25],
-      blend: 0.09,
+      blend: 0.08,
+    },
+    // Zygomatic arch: the cheekbone ridge running back from under the eye towards the ear.
+    {
+      shape: 'capsule',
+      at: [ex - r * 0.2, (ey + 0.05) * p.cheeks.width, ez - r - 0.03],
+      to: [cx + 0.06, l.cranium.r[1] * 0.92, ez - 0.07],
+      size: 0.028 * p.cheeks.size,
+      blend: 0.05,
     },
     // Maxilla: fills the midface between cheekbones, nose and muzzle.
     {
@@ -77,9 +91,10 @@ export function skullEdits(p: HeadParams, l: HeadLayout): SculptEdit[] {
     },
     { shape: 'sphere', at: [ax + 0.02, ay * 0.95, az], size: 0.065, blend: 0.07 },
     {
-      shape: 'ellipsoid',
+      shape: 'roundBox',
       at: chin,
-      size: [0.065 * p.jaw.chin, 0.09 * p.jaw.chin, 0.07 * p.jaw.chin],
+      size: [0.13 * p.jaw.chin, 0.18 * p.jaw.chin, 0.14 * p.jaw.chin],
+      round: 0.06 * p.jaw.chin,
       blend: 0.06,
     },
     {
@@ -89,13 +104,32 @@ export function skullEdits(p: HeadParams, l: HeadLayout): SculptEdit[] {
       size: p.neck.radius,
       blend: 0.1,
     },
-    // Secondary: sockets, brow, lids.
+    // Sternocleidomastoid: the cords from behind the ear to the throat.
     {
       shape: 'capsule',
-      at: [ex + r * 0.75, 0.025, l.browZ - p.brow.scowl],
-      to: [ex + r * 0.1, ey + r * 1.25, l.browZ + p.brow.scowl * 0.5],
-      size: p.brow.ridge,
-      blend: 0.06,
+      at: [cx - 0.03, l.cranium.r[1] * 0.68, ez - 0.28],
+      to: [cx + p.neck.radius * 0.6, 0.05, l.base + 0.74],
+      size: p.neck.radius * 0.26,
+      blend: 0.05,
+    },
+    // Secondary: brow shelf (a flattened bar along the brow line, lowered inside by the scowl)
+    // with the glabella knot between the eyes, then the sockets and lids.
+    {
+      shape: 'ellipsoid',
+      at: [(bIn[0] + bOut[0]) / 2, (bIn[1] + bOut[1]) / 2, (bIn[2] + bOut[2]) / 2],
+      size: [
+        Math.hypot(bOut[0] - bIn[0], bOut[1] - bIn[1], bOut[2] - bIn[2]) / 2 + p.brow.ridge * 0.6,
+        p.brow.ridge * 1.25,
+        p.brow.ridge * 0.85,
+      ],
+      rotate: alongX([bOut[0] - bIn[0], bOut[1] - bIn[1], bOut[2] - bIn[2]]),
+      blend: 0.05,
+    },
+    {
+      shape: 'sphere',
+      at: [bIn[0] - 0.01, 0, bIn[2] - p.brow.ridge * 0.15],
+      size: p.brow.ridge * 1.05,
+      blend: 0.05,
     },
     { shape: 'sphere', at: l.eye, size: r * 1.12, op: 'subtract', blend: r * 0.5, color: c.shade },
   ];
@@ -121,66 +155,61 @@ export function skullEdits(p: HeadParams, l: HeadLayout): SculptEdit[] {
   };
   e.push(lid(p.eyes.lid, true), lid(p.eyes.lowerLid, false));
   // Nose: bridge (humped by `hook`), tip, wings, nostrils.
+  const long = p.nose.bridge > 0.06 ? 0.65 : 1;
+  const wing = Math.min(1.4, Math.max(0.55, p.nose.width / 0.065)) * long;
+  const rootR = Math.max(0.02 + p.nose.width * 0.6, cell * 0.65);
+  // Nostril wings sit at the nose base, however far a long nose reaches past them.
+  const wingX = Math.min(tipX - p.nose.tip * 1.2, l.faceX + 0.1 + p.jaw.muzzle * 0.5);
   const noseRoot: Vec3 = [ex + r * 0.4, 0, ez - r * 0.4];
   const noseDir: Vec3 = [tipX - noseRoot[0], 0, tipZ + 0.01 - noseRoot[2]];
   const midNose: Vec3 = [
     (ex + r * 0.6 + tipX) / 2,
     0,
-    (ez - 0.02 + tipZ) / 2 + p.nose.hook * 0.6 + 0.01,
+    (ez - 0.02 + tipZ) / 2 + p.nose.hook * 0.3 + 0.01,
   ];
   e.push(
     {
       shape: 'cone',
       at: noseRoot,
-      size: [0.02 + p.nose.width * 0.6, p.nose.tip * 0.8, Math.hypot(...noseDir)],
+      size: [rootR, tipR * 0.85, Math.hypot(...noseDir)],
       rotate: alongZ(noseDir),
-      blend: 0.04,
+      blend: 0.045,
     },
-    { shape: 'sphere', at: midNose, size: 0.02 + p.nose.width * 0.2, blend: 0.04 },
-    { shape: 'sphere', at: [tipX, 0, tipZ], size: p.nose.tip, blend: 0.03 },
+    {
+      shape: 'sphere',
+      at: midNose,
+      size: ((rootR + tipR) / 2) * 0.85 + Math.max(0, p.nose.hook) * 0.12,
+      blend: 0.05,
+    },
+    { shape: 'sphere', at: [tipX, 0, tipZ], size: tipR, blend: 0.035 },
+    // A strong hook draws the tip out into a drooping point (one form, not a ball on a stick).
+    ...(p.nose.hook > 0.04
+      ? [
+          {
+            shape: 'cone',
+            at: [tipX, 0, tipZ],
+            size: [tipR * 0.9, 0.01, p.nose.tip + p.nose.hook * 1.2],
+            rotate: alongZ([0.6, 0, -1]),
+            blend: 0.03,
+          } satisfies SculptEdit,
+        ]
+      : []),
     {
       shape: 'ellipsoid',
-      at: [tipX - p.nose.tip * 1.2, p.nose.width, l.noseZ + 0.02],
-      size: [0.045, 0.035, 0.032],
+      at: [wingX, p.nose.width, l.noseZ + 0.02],
+      size: [0.045 * wing, 0.035 * wing, 0.032 * wing],
       blend: 0.025,
     },
     {
       shape: 'ellipsoid',
-      at: [tipX - p.nose.tip * 0.6, p.nose.width * 0.55, l.noseZ + 0.005],
-      size: [0.022, 0.014, 0.012],
+      at: [Math.min(tipX - p.nose.tip * 0.6, wingX + 0.035), p.nose.width * 0.55, l.noseZ + 0.005],
+      size: [0.022 * wing, 0.014 * wing, 0.012 * wing],
       op: 'subtract',
       blend: 0.008,
       color: c.mouth,
     },
   );
-  // Lips and the mouth line (a grin opens it and lifts the corners).
-  const g = p.mouth.grin;
-  e.push(
-    {
-      shape: 'ellipsoid',
-      at: [l.mouthX - 0.01, 0, l.mouthZ + lipT * 0.7],
-      size: [0.032, mw, lipT],
-      color: c.lips,
-      blend: 0.03,
-    },
-    {
-      shape: 'ellipsoid',
-      at: [l.mouthX - 0.015 + p.jaw.underbite * 0.7, 0, l.mouthZ - lipT * 0.8],
-      size: [0.034, mw * 0.85, lipT * 1.1],
-      color: c.lips,
-      blend: 0.03,
-    },
-    {
-      shape: 'capsule',
-      at: [l.mouthX + 0.05, 0, l.mouthZ],
-      to: [l.mouthX - 0.03 - 0.02 * g, mw * 0.98, l.mouthZ + 0.012 + g * 0.05],
-      size: 0.006 + g * 0.022,
-      op: 'subtract',
-      blend: 0.012,
-      color: c.mouth,
-    },
-  );
-  if (g > 0.15) e.push(...teethRows(p, l));
+  e.push(...mouthEdits(p, l, fine));
   // Nasolabial fold from the nose wing towards the mouth corner.
   const fold = unit([-0.02, mw - p.nose.width, l.mouthZ - l.noseZ]);
   e.push({
@@ -192,31 +221,22 @@ export function skullEdits(p: HeadParams, l: HeadLayout): SculptEdit[] {
     blend: 0.03,
     color: c.shade,
   });
-  return e;
-}
-
-/** Upper and lower teeth, visible in a grin: rounded blocks along the dental arch. */
-function teethRows(p: HeadParams, l: HeadLayout): SculptEdit[] {
-  const out: SculptEdit[] = [];
-  const mw = p.mouth.width * 0.8;
-  for (let i = 0; i < 4; i++) {
-    const a = ((i + 0.5) / 4) * 0.9;
-    const y = Math.sin(a) * mw;
-    const x = l.mouthX - 0.025 - (1 - Math.cos(a)) * mw * 0.9;
-    const z = l.mouthZ + 0.004 + p.mouth.grin * 0.03 * (i / 4);
-    for (const [dz, h] of [
-      [0.016, 0.02],
-      [-0.016, 0.018],
-    ] as const)
-      out.push({
-        shape: 'roundBox',
-        at: [x, y, z + dz * (1 + p.mouth.grin)],
-        size: [0.02, 0.028, h * (1 + p.mouth.grin * 0.6)],
-        round: 0.006,
-        rotate: [0, 0, (a * 180) / Math.PI],
-        color: p.colors.teeth,
-        blend: 0.003,
-      });
+  // Forehead creases, painted (a groove that thin is below the sculpt cell): thin discs through
+  // the brow, fading where the forehead turns away.
+  const [, , cz] = l.cranium.at;
+  const [crx, , crz] = l.cranium.r;
+  for (let i = 0; i < (p.wrinkles ?? 0); i++) {
+    const z = l.browZ + 0.07 + i * 0.05;
+    const x = cx + crx * Math.sqrt(Math.max(0, 1 - ((z - cz) / crz) ** 2)) + 0.005;
+    e.push({
+      shape: 'ellipsoid',
+      at: [x, 0.06, z - 0.008],
+      size: [0.05, 0.08 - i * 0.012, 0.005],
+      rotate: [-14, -12, 0],
+      op: 'paint',
+      blend: 0.01,
+      color: c.shade,
+    });
   }
-  return out;
+  return e;
 }

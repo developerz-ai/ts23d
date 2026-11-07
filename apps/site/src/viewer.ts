@@ -1,20 +1,26 @@
-// The viewer: a compiled asset in one of two modes. Studio (default) is a product shot: studio
-// light, contact shadow, orbit controls with a slow turntable, and Play runs the baked `run` clip.
+// The viewer: a compiled asset in one of two modes. Studio (default) is a product shot: the
+// category's look (image-based light, key shadow, contact shadow, backdrop; AO + MSAA on the high
+// tier), orbit controls with a slow turntable, and Play runs the baked `run` clip.
 // Scene stages the asset on a diorama in a looping scenario picked from its named parts (driving,
 // wind, a day on the turntable). Also switches LOD, wireframe and the trim sheet, lists the parts
 // (hover one to outline it) and offers a GLB per LOD.
 
 import { AnimationMixer, Box3, BoxHelper, Group, Mesh, type Object3D, Timer, Vector3 } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { backdrop } from './backdrop.ts';
 import type { AssetInfo as Asset, Lod } from './compile.ts';
 import { loadBuilt, recipe, trimSheet } from './compile.ts';
 import { renderDownloads } from './downloads.ts';
+import { categoryOf } from './items.ts';
+import { LOOKS, type Look, lookFor } from './look.ts';
 import { Particles } from './particles.ts';
+import type { Post } from './post.ts';
+import { FrameBudget, qualityTier, tierPinned } from './quality.ts';
 import { readHooks } from './scenarios/hooks.ts';
 import { pickScenario } from './scenarios/pick.ts';
 import type { Scenario } from './scenarios/types.ts';
 import { disposeTree, Stage } from './stage.ts';
-import { studioEnvironment, studioRenderer } from './studio.ts';
+import { anisotropyOf, studioRenderer } from './studio.ts';
 import { applySheet } from './textures.ts';
 import { reducedMotion, token } from './theme.ts';
 import { renderParts, renderStats } from './viewer-panels.ts';
@@ -22,7 +28,11 @@ import { bindUi, type Mode, syncUi, wireUi } from './viewer-ui.ts';
 
 export class Viewer {
   private readonly stage = new Stage(true);
-  private readonly renderer = studioRenderer();
+  private readonly tier = qualityTier();
+  private readonly renderer = studioRenderer(this.tier);
+  private readonly budget = new FrameBudget(() => this.degrade());
+  private post: Post | null = null;
+  private look: Look = LOOKS.studio;
   private readonly controls: OrbitControls;
   private readonly timer = new Timer();
   private readonly particles = new Particles(7, 2000);
@@ -46,8 +56,16 @@ export class Viewer {
   constructor(private readonly root: HTMLElement) {
     this.ui = bindUi(root);
     this.stage.scene.add(this.particles.object);
-    this.stage.scene.environment = studioEnvironment(this.renderer);
-    this.stage.scene.environmentIntensity = 0.25;
+    this.stage.setLook(this.look, this.renderer);
+    // The high tier shows the painted trim sheet by default, as a textured GLB would look.
+    this.textured = this.tier === 'high';
+    this.ui.textures.checked = this.textured;
+    if (this.tier === 'high')
+      void import('./post.ts').then(({ Post }) => {
+        this.post = new Post(this.renderer, this.stage.scene, this.stage.camera);
+        this.post.fit(this.stage.contentBox());
+        this.resize();
+      });
     const canvas = this.renderer.domElement;
     canvas.tabIndex = 0;
     canvas.setAttribute('role', 'img');
@@ -126,14 +144,19 @@ export class Viewer {
     this.ui.loading.hidden = true;
 
     this.teardown();
+    this.look = lookFor(categoryOf(asset.kind, asset.tags));
+    this.stage.setLook(this.look, this.renderer);
+    this.stage.scene.background = backdrop(this.look);
     this.model = loaded.scene;
     const carrier = new Group().add(loaded.scene);
     this.display = base ? new Group().add(base.scene, carrier) : carrier;
-    this.stage.catcher.visible = !base;
+    this.stage.setFloor(!base);
     this.stage.showGrid(Boolean(base));
     this.applyWireframe();
     void this.applyTextures();
     const center = this.stage.show(this.display, reframe || Boolean(base));
+    if (!base) this.stage.bakeContact(this.renderer, [this.particles.object]);
+    this.post?.fit(this.stage.contentBox());
     this.mixer = clip ? new AnimationMixer(loaded.scene) : null;
     if (base) {
       this.scenario = def.create({
@@ -214,8 +237,9 @@ export class Viewer {
     if (!model) return;
     if (!this.textured) return applySheet(model, null);
     this.ui.status.textContent = 'Painting the trim sheet…';
-    const sheet = await trimSheet();
-    if (this.textured && this.model === model) applySheet(model, sheet);
+    const sheet = await trimSheet(this.tier === 'high' ? 2048 : 1024);
+    if (this.textured && this.model === model)
+      applySheet(model, sheet, anisotropyOf(this.renderer));
     this.ui.status.textContent = this.textured ? 'Trim sheet bound.' : '';
   }
 
@@ -229,7 +253,17 @@ export class Viewer {
   private resize(): void {
     const { clientWidth: w, clientHeight: h } = this.ui.viewport;
     this.renderer.setSize(w, h, false);
+    this.post?.setSize(w, h, this.renderer.getPixelRatio());
     this.stage.resize(w, h);
+  }
+
+  /** Too slow for the high tier: drop the post chain and render at a lower pixel ratio. */
+  private degrade(): void {
+    if (tierPinned()) return;
+    this.post?.dispose();
+    this.post = null;
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.25));
+    this.resize();
   }
 
   private tick(time: number): void {
@@ -247,6 +281,10 @@ export class Viewer {
     this.particles.update(step);
     this.outline?.update();
     this.stage.syncShadow(this.model);
-    this.renderer.render(this.stage.scene, this.stage.camera);
+    // Scenarios may clear the sky they painted; fall back to the look's backdrop.
+    this.stage.scene.background ??= backdrop(this.look);
+    this.budget.tick(dt);
+    if (this.post) this.post.render();
+    else this.renderer.render(this.stage.scene, this.stage.camera);
   }
 }

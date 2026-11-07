@@ -1,11 +1,12 @@
 // Per-pixel shading of the visibility buffer: reconstruct position, normal, UV and vertex colour
 // from (triangle, barycentrics), perturb by the trim sheet's normal map, then light it — key sun
 // with a PCF shadow, sky/bounce hemisphere × multi-direction AO × the sheet's baked occlusion,
-// and a roughness-driven specular (normalised Blinn–Phong + Schlick Fresnel).
+// a roughness-driven sun specular (normalised Blinn–Phong + Schlick Fresnel) and a studio
+// environment reflection (envRadiance) per texel from the sheet's ORM, so metal reads as metal.
 
 import type { PerspectiveCamera } from './camera.ts';
 import { type DepthMap, openness, visibility } from './depth-map.ts';
-import type { Rig } from './lighting.ts';
+import { envRadiance, type Rig } from './lighting.ts';
 import type { Scene } from './scene.ts';
 import { type SheetTextures, sample } from './texture.ts';
 
@@ -184,7 +185,10 @@ export function shadeSample(
   const shin = Math.min(2048, 2 / (rough * rough * rough * rough) - 2);
   const lobe = ((shin + 8) / 25.13) * ndh ** shin;
   const fr = (1 - vdh) ** 5;
-  const fe = (1 - ndv) ** 5 * (1 - rough) * (1 - rough);
+  const fv = (1 - ndv) ** 5;
+  // Image-based term: the studio seen along the reflection, occluded like the sky (+ cavity AO).
+  const rz = 2 * ndv * n2 - vz;
+  const specOcc = open * (0.4 + 0.6 * occ);
   const ch = [ar, ag, ab];
   for (let k = 0; k < 3; k++) {
     const al = ch[k] ?? 0;
@@ -192,8 +196,9 @@ export function shadeSample(
     const sky = (r.bounce[k] ?? 0) * (1 - hemi) + (r.sky[k] ?? 0) * hemi;
     const diffuse = al * dk * ((r.sunColor[k] ?? 0) * lit + sky * amb);
     const spec = (f0 + (1 - f0) * fr) * lobe * lit * (r.sunColor[k] ?? 0) * 0.8;
-    const env =
-      (f0 + (1 - f0) * fe) * (r.sky[k] ?? 0) * open * (glass ? 2.5 : 0.3 + 0.7 * (1 - rough));
+    const env = glass
+      ? (f0 + (1 - f0) * fv * (1 - rough) * (1 - rough)) * (r.sky[k] ?? 0) * open * 2.5
+      : (f0 + (Math.max(1 - rough, f0) - f0) * fv) * envRadiance(rz, rough, k) * specOcc;
     out[k] = (diffuse + spec + env) * r.exposure;
   }
 }

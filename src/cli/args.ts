@@ -42,7 +42,7 @@ flags:
                   front, default -35 (front-left 3/4) · --el <deg> elevation, default 18 · --fov <deg> 30
   --sheet <mode>  external (default): one shared trim_sheet_{albedo,normal,orm}.png in <out>/,
                   referenced by every GLB · embed: self-contained GLBs · none: vertex colour only
-  --sheet-size n  512 | 1024 (default) | 2048
+  --sheet-size n  512 | 1024 | 2048 (default)
   --lods <list>   which detail levels to build: 0,1,2 (default) · 0 = hero only · 0,2 = near + far
   --json          machine-readable output`;
 
@@ -53,7 +53,7 @@ export function parseArgs(argv: readonly string[]): Args {
   let animations = true;
   let shot = true;
   let sheet: Args['sheet'] = 'external';
-  let sheetSize: Args['sheetSize'] = 1024;
+  let sheetSize: Args['sheetSize'] = 2048;
   let lods: Args['lods'] = [0, 1, 2];
   const render: {
     width?: number;
@@ -89,7 +89,7 @@ export function parseArgs(argv: readonly string[]): Args {
       lods = picked.length ? [...new Set(picked)].sort() : lods;
     } else if (a === '--sheet-size') {
       const n = Number(argv[++i]);
-      sheetSize = n === 512 || n === 2048 ? n : 1024;
+      sheetSize = n === 512 || n === 1024 ? n : 2048;
     } else if (a === '--size') Object.assign(render, parseSize(argv[++i] ?? ''));
     else if (a === '--az') render.azDeg = num(a, argv[++i]);
     else if (a === '--el') render.elDeg = num(a, argv[++i]);

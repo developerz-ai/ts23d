@@ -6,6 +6,7 @@ import {
   type Asset,
   type CompiledAsset,
   compile,
+  DEFAULT_SHEET,
   type Lod,
   manifestOf,
   paintTrimSheet,
@@ -18,6 +19,7 @@ import type {
   BuildResult,
   Manifest,
   Sheet,
+  SheetSize,
   Target,
   WorkerIn,
   WorkerOut,
@@ -77,11 +79,15 @@ function manifest(name: string): Manifest {
   return rest;
 }
 
-let sheet: Sheet | null = null;
-function painted(): Sheet {
-  if (sheet) return sheet;
-  const s = paintTrimSheet();
-  sheet = { size: s.size, albedo: s.albedo, normal: s.normal, orm: s.orm };
+const sheets = new Map<number, Sheet>();
+/** Paint once per size: UVs are sheet fractions, so any power-of-two size maps the same strips. */
+function painted(size: SheetSize | undefined): Sheet {
+  const key = size ?? 0;
+  const hit = sheets.get(key);
+  if (hit) return hit;
+  const s = paintTrimSheet(size ? { ...DEFAULT_SHEET, size } : DEFAULT_SHEET);
+  const sheet = { size: s.size, albedo: s.albedo, normal: s.normal, orm: s.orm };
+  sheets.set(key, sheet);
   return sheet;
 }
 
@@ -102,7 +108,7 @@ self.addEventListener('message', async (e: MessageEvent<WorkerIn>) => {
     else if ('manifest' in e.data) answer = manifest(e.data.manifest);
     else if ('sheet' in e.data) {
       // Copies, so the cached sheet survives the transfer.
-      const s = painted();
+      const s = painted(e.data.size);
       const copy = {
         size: s.size,
         albedo: s.albedo.slice(),

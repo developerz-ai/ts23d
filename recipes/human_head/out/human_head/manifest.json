@@ -15,9 +15,9 @@
     "thumb": "recipes/human_head/out/human_head/thumb.png"
   },
   "triangles": [
-    53452,
-    10556,
-    1440
+    52560,
+    10320,
+    1412
   ],
   "drawCalls": [
     1,
@@ -37,7 +37,7 @@
   ],
   "real": {
     "length": 0.247,
-    "width": 0.464,
+    "width": 0.428,
     "height": 0.439
   },
   "measures": [

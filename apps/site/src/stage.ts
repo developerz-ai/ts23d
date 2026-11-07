@@ -1,5 +1,5 @@
-// The shared three.js stage: lights (a shadow-casting sun), a metre grid and a shadow-catching floor
-// under the asset, and camera framing for it.
+// The shared three.js stage: the look's lights (a shadow-casting key, image-based ambient), a metre
+// grid, a shadow-catching floor plus a baked soft contact shadow under the asset, and camera framing.
 
 import {
   Box3,
@@ -12,7 +12,11 @@ import {
   Scene,
   Sphere,
   Vector3,
+  type WebGLRenderer,
 } from 'three';
+import { ContactShadow } from './contact-shadow.ts';
+import { environmentFor } from './lightbox.ts';
+import { LOOKS, type Look } from './look.ts';
 import { castShadows, shadowCatcher } from './studio.ts';
 import { onSchemeChange, token } from './theme.ts';
 
@@ -25,10 +29,18 @@ export class Stage {
   readonly fill = new DirectionalLight(0xffffff, 0.6);
   /** Contact-shadow floor for studio mode; hidden when a diorama base carries the shadows. */
   readonly catcher = shadowCatcher();
+  /** Soft baked shadow right under the asset (studio mode, with the catcher). */
+  readonly contact = new ContactShadow();
+  private look: Look = LOOKS.studio;
   private grid: GridHelper | null = null;
   private gridOn = true;
   private content: Object3D | null = null;
   private radius = 1;
+
+  /** World bounds of the shown content, or null before anything is shown. */
+  contentBox(): Box3 | null {
+    return this.content ? this.bounds(this.content) : null;
+  }
 
   constructor(private readonly withGrid: boolean) {
     this.relight();
@@ -36,24 +48,54 @@ export class Stage {
     this.sun.shadow.mapSize.set(2048, 2048);
     this.sun.shadow.bias = -0.0004;
     this.sun.shadow.normalBias = 0.02;
-    this.sun.shadow.radius = 4;
+    this.sun.shadow.radius = 6;
     this.scene.add(this.hemi, this.sun, this.fill, this.sun.target, this.catcher);
+    this.scene.add(this.contact.plane);
     onSchemeChange(() => this.content && this.layGrid(this.bounds(this.content)));
   }
 
-  /** The neutral studio lighting every scenario starts from. */
+  /** Switch to `look`: its prefiltered environment, exposure and lights. */
+  setLook(look: Look, renderer: WebGLRenderer): void {
+    this.look = look;
+    this.scene.environment = environmentFor(renderer, look.env);
+    renderer.toneMappingExposure = look.exposure;
+    this.relight();
+  }
+
+  /** The look's lighting, which every scenario starts from: image-based ambient plus one key. */
   relight(): void {
-    // Matches the CLI beauty rig (src/render/lighting.ts): a warm key that lands the albedo on
-    // sun-facing surfaces, a cool sky fill with a warm ground bounce, from the camera's left.
-    this.hemi.intensity = 1.1;
+    const { key } = this.look;
+    this.scene.environmentIntensity = this.look.envIntensity;
+    this.hemi.intensity = this.look.hemi;
     this.hemi.color.setRGB(0.78, 0.84, 1);
     this.hemi.groundColor.setRGB(0.55, 0.5, 0.44);
-    this.sun.intensity = 3;
-    this.sun.color.setRGB(0.95, 0.91, 0.84);
-    this.sun.position.set(-4, 10, 8);
+    this.sun.intensity = key.intensity;
+    this.sun.color.setRGB(key.rgb[0], key.rgb[1], key.rgb[2]);
+    this.sun.position.set(key.dir[0], key.dir[1], key.dir[2]).multiplyScalar(10);
     this.sun.target.position.set(0, 0, 0);
-    this.fill.intensity = 0.2;
+    this.fill.intensity = 0;
     this.fill.position.set(8, 3, -6);
+    this.catcher.material.opacity = this.look.shadow;
+  }
+
+  /** Studio floor (catcher + contact shadow) on, or off when a diorama carries the shadows. */
+  setFloor(on: boolean): void {
+    this.catcher.visible = on;
+    this.contact.plane.visible = on;
+  }
+
+  /** Bake the contact shadow for the shown content; `hide` lists extra non-asset scene objects. */
+  bakeContact(renderer: WebGLRenderer, hide: readonly Object3D[] = []): void {
+    if (!this.content) return;
+    const box = this.bounds(this.content);
+    const extra = this.grid ? [this.grid] : [];
+    this.contact.bake(
+      renderer,
+      this.scene,
+      box,
+      [this.catcher, ...extra, ...hide],
+      this.look.contact,
+    );
   }
 
   /** Grow the far plane for scenes larger than the framed content (long tracks, tall towers). */
@@ -81,7 +123,8 @@ export class Stage {
     cam.far = sphere.radius * 8;
     cam.updateProjectionMatrix();
     this.catcher.position.set(sphere.center.x, box.min.y - 0.005, sphere.center.z);
-    this.catcher.scale.setScalar(sphere.radius * 8);
+    // Wide enough that its edge stays off-screen at any orbit distance.
+    this.catcher.scale.setScalar(sphere.radius * 40);
     if (reframe) {
       const dist = (sphere.radius / Math.sin(((this.camera.fov / 2) * Math.PI) / 180)) * 0.85;
       // Three-quarter view from the front-left, slightly above: the contact-sheet "iso" angle.

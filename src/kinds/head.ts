@@ -26,6 +26,7 @@ import { type HeadLayout, headLayout } from './head-layout.ts';
 import { bustMesh, eyeMesh, type HeadEditSet, headAndJaw } from './head-mesh.ts';
 import { checkHead, type HeadParams } from './head-params.ts';
 import { HEADS, type HeadPreset } from './head-presets.ts';
+import { cutField, frameOf } from './head-torso.ts';
 
 /** Overrides: top-level keys replace, nested objects merge one level (`{ jaw: { underbite: 0.1 } }`). */
 export type HeadOverrides = { readonly [K in keyof HeadParams]?: Partial<HeadParams[K]> };
@@ -78,6 +79,9 @@ function seatEyes(p: HeadParams, l: HeadLayout): HeadLayout {
   return { ...l, eye: [x - r * 0.7 - p.brow.overhang * 0.3, ey, ez] };
 }
 
+/** The bust's cell as a multiple of the head's (the bust carries less detail). */
+const BUST_CELL = 1.6;
+
 /** Sculpt cell edge per LOD, in head units (× height = metres). */
 export const HEAD_RES = [0.02, 0.045, 0.14] as const;
 
@@ -94,7 +98,7 @@ export function headEdits(
   return {
     layout: l,
     skull: [
-      ...skullEdits(p, l),
+      ...skullEdits(p, l, res),
       ...hair,
       ...browEdits(p, l),
       ...beardEdits(p, l),
@@ -103,7 +107,8 @@ export function headEdits(
     ],
     ears: earEdits(p, l, res * 0.7),
     tusks: tuskEdits(p, l, res * 0.45),
-    bust: bustEdits(p, l),
+    bust: bustEdits(p, l, res * BUST_CELL),
+    bustCut: cutField(frameOf(p, l)),
   };
 }
 
@@ -114,7 +119,7 @@ export function head(ctx: BuildContext, o: HeadOptions = {}): HeadInfo {
   const H = p.height;
   const res = HEAD_RES[ctx.lod];
   const { head: hm, jaw: jm } = headAndJaw(p, l, set, res);
-  const bm = bustMesh(p, set, res * 1.6);
+  const bm = bustMesh(p, set, res * BUST_CELL);
   const eye = eyeMesh(p, l.eyeR, l.eyeR / ctx.pick([7, 3.5, 2.2]));
   const [ox, oy, oz] = o.at ?? [0, 0, 0];
   const toWorld = (m: Mesh, at: Vec3 = [0, 0, 0]): Mesh =>

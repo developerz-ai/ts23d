@@ -17,6 +17,8 @@ export interface GlbMeta {
   readonly license?: string;
   /** Where the numbers came from (the recipe's `sources`) → `dc:relation`. */
   readonly sources?: readonly string[];
+  /** Third-party inputs (e.g. CC0 texture sets) → `dc:contributor`. Filled by export. */
+  readonly credits?: readonly string[];
 }
 
 const XMP = 'KHR_xmp_json_ld';
@@ -49,6 +51,7 @@ export function metadata(
     ...(meta.copyright ? { 'dc:rights': alt(meta.copyright) } : {}),
     ...(meta.license ? { 'xmpRights:UsageTerms': alt(meta.license) } : {}),
     ...(meta.sources?.length ? { 'dc:relation': { '@set': [...meta.sources] } } : {}),
+    ...(meta.credits?.length ? { 'dc:contributor': { '@set': [...meta.credits] } } : {}),
     'xmp:CreatorTool': GENERATOR,
   };
   return {

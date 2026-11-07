@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { parseArgs, SHOTS, urlOf } from './site-shots.ts';
+import { assetShot, parseArgs, SHOTS, urlOf } from './site-shots.ts';
 
 describe('site-shots args', () => {
   test('rejects an unknown shot name', () => {
@@ -11,8 +11,23 @@ describe('site-shots args', () => {
     expect(() => parseArgs(['--height', '-3'])).toThrow(/positive/);
   });
 
+  test('rejects an asset name that is not a recipe identifier', () => {
+    expect(() => parseArgs(['--assets', 'tiger_1,../x'])).toThrow(/not an asset name/);
+  });
+
   test('defaults: own server, docs/media, every shot', () => {
-    expect(parseArgs([])).toEqual({ base: null, out: 'docs/media', only: null, height: null });
+    expect(parseArgs([])).toEqual({
+      base: null,
+      out: 'docs/media',
+      only: null,
+      height: null,
+      assets: null,
+    });
+  });
+
+  test('ad-hoc asset shots point at the asset route', () => {
+    expect(parseArgs(['--assets', 'tiger_1, dropship']).assets).toEqual(['tiger_1', 'dropship']);
+    expect(urlOf('http://x/ts23d', assetShot('dropship'))).toBe('http://x/ts23d/#dropship');
   });
 
   test('picks shots and overrides', () => {
@@ -29,6 +44,7 @@ describe('site-shots args', () => {
       out: 'docs/media',
       only: ['site', 'site-asset'],
       height: 3000,
+      assets: null,
     });
   });
 });

@@ -44,3 +44,10 @@ children `*_wheel_l/_r`) · `door_l`, `door_r` (slide one way toward −X, `oneW
 - Truck centres are not published in the sources found: 9.37 m is scaled from the photo.
 - Lettering is painted on the boards and post faces; the diagonal braces cross over it (a stroke
   painted on a brace face jumps sideways in parallax and garbles the word at 3/4 views).
+
+## Materials
+Painted plank sheathing and door (`wood_painted`: car colour over grey wood, worn at board edges and
+ends), silver-grey running board and saddles (`wood_weathered`), painted steel frame, sills and roof
+(`steel_painted`), sand-cast trucks, wheels and bolsters (`iron_cast`), and rusty hardware: grab
+irons, couplers, brake gear (`iron_rust`). The numbers and sources are in
+`docs/architecture/materials.md`.

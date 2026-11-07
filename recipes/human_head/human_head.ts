@@ -1,8 +1,9 @@
 // Stylised human hero bust — an original design in the chunky hand-painted fantasy idiom:
 // classical proportions (eye line at half height, brow/nose/chin thirds) pushed slightly heroic —
 // square jaw, strong brow — with short swept hair, a short beard and moustache, a blue tunic,
-// leather collar and cloak roll. The `head` kind sculpts it (race preset `human`, chin to crown
-// 0.23 m); this file is the spec. Design dossier: recipes/human_head/README.md.
+// leather collar and mantle, cut as a collectible bust on a turned plinth. The `head` kind sculpts
+// it (race preset `human`, chin to crown 0.23 m); this file is the spec. Design dossier:
+// recipes/human_head/README.md.
 
 import { defineAsset, head } from '@developerz.ai/ts23d';
 
@@ -17,7 +18,7 @@ export const human_head = defineAsset({
   // Design spec, not a real-world one: overall bust size and eye spacing from the dossier.
   real: {
     length: 0.247,
-    width: 0.464,
+    width: 0.428,
     height: 0.439,
     measures: [
       {

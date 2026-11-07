@@ -48,6 +48,32 @@ export function studioRig(cameraAzDeg: number): Rig {
   };
 }
 
+const HORIZON: V3 = [0.82, 0.8, 0.76];
+const ZENITH: V3 = [0.3, 0.34, 0.44];
+const FLOOR: V3 = [0.3, 0.28, 0.26];
+const BAND = 0.12;
+
+/**
+ * The studio environment a reflection sees, channel `k`, along a reflection vector with up
+ * component `rz`: a bright cyclorama horizon fading to a cooler zenith, a dark band where the
+ * floor meets the wall, the lit floor below. Roughness pre-blurs it toward its mean, so polished
+ * metal shows the horizon line and rough metal a soft gradient — what makes metal read as metal.
+ */
+export function envRadiance(rz: number, rough: number, k: number): number {
+  const h = HORIZON[k] ?? 0;
+  const sharp =
+    rz >= 0
+      ? h + ((ZENITH[k] ?? 0) - h) * Math.sqrt(rz)
+      : rz > -0.3
+        ? h * BAND + ((FLOOR[k] ?? 0) - h * BAND) * Math.min(1, -rz / 0.3) ** 0.5
+        : (FLOOR[k] ?? 0);
+  const blurred = 0.5 * h + 0.25 * (ZENITH[k] ?? 0) + 0.25 * (FLOOR[k] ?? 0);
+  // Above the horizon the blur keeps a little of the up/down split so rough metal still shades.
+  const tilt = 1 + 0.25 * Math.max(-1, Math.min(1, rz * 2));
+  const t = Math.min(1, rough * 1.6);
+  return sharp + (blurred * tilt - sharp) * t;
+}
+
 /** Poisson-ish disc of 12 taps (texel offsets), radius ~1.6, rotated four ways for dithering. */
 const DISC: readonly (readonly [number, number])[] = [
   [-0.94, -0.4],

@@ -66,6 +66,10 @@ Materials:
 - [x] Sheet in the GLB: embedded or shared external PNGs (`--sheet`, `--sheet-size`)
 - [ ] KTX2 profile; fix mip bleed between strips; per-face V mapping on `box`
 - [ ] Image-stamped cells (decals from any `ImageSource`)
+- [ ] Painter curvature + `edgeWear` mask (`params.edgeWear`, `PaintKit.curvature`) ([11](../idea/11-materials-authoring.md))
+- [ ] `edgeWear(mesh)` pass (dihedral / SDF-Laplacian convexity → vertex colour; `_WEAR` attribute for shader sources)
+- [ ] `roughnessVariation` on `MaterialDef` + flat-roughness test
+- [ ] `worn_edge` strip mapped by `box({ bevel })` chamfers; `decal()` offset-quad primitive
 
 Optimisation and GLB production (gap ids from [glb-production.md](../architecture/glb-production.md)):
 - [x] `optimize(mesh)`: vertex weld + vertex-cache reorder, reports ACMR (default in export)
@@ -110,6 +114,12 @@ Exit bar: a 4-4-0 with tender matching [`docs/reference/loco-photo-match.png`](h
 - [x] `sdf`: surface nets or marching cubes over a signed-distance field; `sculpt` edit lists (Dreams-style)
 - [ ] `creature`: SDF flesh over biped / quadruped / bird skeletons, bones as named parts
 - [ ] Recipes: stylised critters, rocks
+- [ ] `roundCone` sculpt shape + `skin()` (draw-skin capsule chains) ([10](../idea/10-sculpting.md))
+- [ ] Sculpt `form` tags (primary/secondary/tertiary) as an LOD filter + primary-only review view
+- [ ] Group `pose` (pivot + rotate) and `warp` (twist/bend/taper) with declared Lipschitz factors
+- [ ] `ffd()` cage deform pass (Sederberg–Parry)
+- [ ] Sculpt strokes along a path: `crease`, `clay`, `inflate` (then `pinch`, `flatten`); `revolve` SDF shape
+- [ ] `t3d shot --ref front=… side=…` overlays + per-view silhouette IoU
 
 ## M5: Neural adapters and import
 
@@ -118,6 +128,8 @@ Exit bar: a 4-4-0 with tender matching [`docs/reference/loco-photo-match.png`](h
 - [ ] `importGlb`: any GLB as a part, fitted and recoloured onto the trim sheet
 - [ ] `kubeezImages`: kubeez.com image source for references, decals, texture sources
 - [ ] Recipe: a code-built cart drawn by a generated horse
+- [ ] Optional Blender bridge, never in the gate ([12](../idea/12-blender-bridge.md)): ADR, shared content-hash cache with /neural, `t3d blender doctor | render | remesh | convert`
+- [ ] Vendored-input convention (sha256 + URL + licence) and a `licence` check in `bun run verify`; CC0 HDRI loader for `beauty()` IBL
 
 ## M6: Reverse direction and reach
 

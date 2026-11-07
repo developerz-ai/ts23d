@@ -3,8 +3,9 @@
 
 import { loadBuilt, recipe } from './compile.ts';
 import type { Item } from './items.ts';
+import { lookFor } from './look.ts';
 import { disposeTree, Stage } from './stage.ts';
-import { studioEnvironment, studioRenderer } from './studio.ts';
+import { studioRenderer } from './studio.ts';
 
 const W = 800;
 const H = 450;
@@ -12,17 +13,17 @@ let renderer: ReturnType<typeof studioRenderer> | null = null;
 const stage = new Stage(false);
 stage.resize(W, H);
 
-async function draw(name: string): Promise<string> {
+async function draw(item: Item): Promise<string> {
   if (!renderer) {
     renderer = studioRenderer();
     renderer.setPixelRatio(1);
     renderer.setSize(W, H, false);
-    stage.scene.environment = studioEnvironment(renderer);
-    stage.scene.environmentIntensity = 0.25;
   }
-  const { scene } = await loadBuilt(recipe(name, 2));
+  const { scene } = await loadBuilt(recipe(item.name, 2));
+  stage.setLook(lookFor(item.category), renderer);
   stage.show(scene, true);
   stage.syncShadow();
+  stage.bakeContact(renderer);
   renderer.render(stage.scene, stage.camera);
   const url = renderer.domElement.toDataURL('image/png');
   disposeTree(scene);
@@ -40,17 +41,17 @@ export function cardImage(img: HTMLImageElement, item: Item): void {
     return;
   }
   img.closest('figure')?.classList.add('live');
-  if (item.recipe) renderFallback(img, item.name);
+  if (item.recipe) renderFallback(img, item);
 }
 
-/** Render `name` into `img` once the image is near the viewport. Draws are serialised. */
-function renderFallback(img: HTMLImageElement, name: string): void {
+/** Render `item` into `img` once the image is near the viewport. Draws are serialised. */
+function renderFallback(img: HTMLImageElement, item: Item): void {
   const io = new IntersectionObserver(
     (entries) => {
       if (!entries.some((e) => e.isIntersecting)) return;
       io.disconnect();
       queue = queue
-        .then(() => draw(name))
+        .then(() => draw(item))
         .then((src) => {
           img.src = src;
         })

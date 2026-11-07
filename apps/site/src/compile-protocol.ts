@@ -52,6 +52,9 @@ export interface CatalogEntry {
 /** The CLI's manifest.json, minus QA (never run in the browser) and file paths. */
 export type Manifest = Omit<AssetManifest, 'qa' | 'files'>;
 
+/** Sheet resolutions the library paints. */
+export type SheetSize = 512 | 1024 | 2048;
+
 /** The painted trim sheet: RGBA bytes per map, size × size. */
 export interface Sheet {
   readonly size: number;
@@ -64,7 +67,8 @@ export type Ask =
   | { readonly request: BuildRequest }
   | { readonly list: true }
   | { readonly manifest: string }
-  | { readonly sheet: true };
+  /** The painted trim sheet at `size` px square (the library default when omitted). */
+  | { readonly sheet: true; readonly size?: SheetSize };
 
 export type Answer = BuildResult | readonly CatalogEntry[] | Manifest | Sheet;
 
