@@ -16,9 +16,9 @@ export default defineConfig({
   plugins: [mediaPlugin(root)],
   resolve: {
     alias: [
-      { find: /^@developerz-ai\/ts23d$/, replacement: `${lib}/index.ts` },
+      { find: /^@developerz\.ai\/ts23d$/, replacement: `${lib}/index.ts` },
       { find: /^node:zlib$/, replacement: zlibStub },
-      { find: /^@developerz-ai\/ts23d\/(.+)$/, replacement: `${lib}/$1/index.ts` },
+      { find: /^@developerz\.ai\/ts23d\/(.+)$/, replacement: `${lib}/$1/index.ts` },
     ],
   },
   server: { fs: { allow: ['../..'] } },
