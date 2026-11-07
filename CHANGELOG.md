@@ -4,6 +4,8 @@ All notable changes to `@developerz-ai/ts23d`. Format: [Keep a Changelog](https:
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-11-07
+
 ### Added
 - Primitives: `tiled` (true-scale strip tiling, V banded to the strip's real height), `cell` (decal quad with `inset` reveals or raised plaques), `lattice` (Warren / Pratt / Howe / X trusses, square or angle-iron members, planar or box, tapered), `box({ bevel })` (one-segment chamfer for the mid-poly hard-surface look; `bevel: 0` is byte-identical to before).
 - Lettering: `text` sets name boards, wagon lettering, hull markings and signs as geometry from a built-in 5×7 font (Latin, digits, punctuation, Cyrillic; `block` weight), flush or raised, aligned, fitted to `maxWidth`, and kept on top of stepped surfaces with `surface(u, v)`; `measureText` gives the width. `lathe({ uv: 'metres' })` maps the strip at true scale; `lathe({ faceted: true })` makes flat-shaded n-sided solids.
