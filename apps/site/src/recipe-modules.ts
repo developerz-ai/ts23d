@@ -2,7 +2,7 @@
 // library), and lists its Asset exports. A module that fails to import is skipped and logged, so one
 // broken recipe never empties the gallery. The page never imports this; it asks the worker.
 
-import { type Asset, isAsset } from '@developerz-ai/ts23d';
+import { type Asset, isAsset } from '@developerz.ai/ts23d';
 import type { CatalogEntry } from './compile-protocol.ts';
 
 const modules = import.meta.glob<Record<string, unknown>>('../../../recipes/*/*.ts');

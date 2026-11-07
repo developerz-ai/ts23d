@@ -11,7 +11,7 @@ import {
   paintTrimSheet,
   toGlb,
   triangleCount,
-} from '@developerz-ai/ts23d';
+} from '@developerz.ai/ts23d';
 import type {
   Answer,
   BuildRequest,

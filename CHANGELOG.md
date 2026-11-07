@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to `@developerz-ai/ts23d`. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [SemVer](https://semver.org/); in 0.x a minor bump may break. `bun run release <x.y.z>` turns `[Unreleased]` into the dated version section ([PUBLISHING.md](PUBLISHING.md)).
+All notable changes to `@developerz.ai/ts23d`. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [SemVer](https://semver.org/); in 0.x a minor bump may break. `bun run release <x.y.z>` turns `[Unreleased]` into the dated version section ([PUBLISHING.md](PUBLISHING.md)).
 
 ## [Unreleased]
 
@@ -24,7 +24,7 @@ All notable changes to `@developerz-ai/ts23d`. Format: [Keep a Changelog](https:
 - Site: presentation-first gallery — a live orbiting showcase above the fold, category filters, cards from the committed hero renders (WebP), asset pages with a Studio / Scene viewer, LOD switch, wireframe, part outlines on hover, measures with Δ%, dossier links and GLB downloads; `bun run site:shots` regenerates `docs/media/*.png` with headless Chrome.
 - Recipes are folders: `recipes/<name>/<name>.ts` + `README.md` (the sourced dossier) + committed `out/<asset>/{hero.png, sheet.png, manifest.json}`, refreshed by `bun run shots`; the recipes gate fails on a missing dossier, a stray file or stale outputs.
 - Gallery: `station_halt` (GWR Toddington), `water_tower` (Frisco Beaumont tank), `boxcar` + `boxcar_nw` (USRA single-sheathed), `signal_gantry` + `signal_gantry_4`, `dropship`, `cargo_container_scifi` (ISO 668), `asteroid` ×3, `mountain_range` ×3 (eroded alpine tiles), `boulders`, `orc_head`, `goblin_head`, `human_head`.
-- `@developerz-ai/ts23d/testing`: `assertQaPass`, `assertBudget`, `assertParts`, `assertMeasure`, `assertMotionClear`, `assertDeterministic`, `snapshotHash` — framework-agnostic helpers for your own recipe tests.
+- `@developerz.ai/ts23d/testing`: `assertQaPass`, `assertBudget`, `assertParts`, `assertMeasure`, `assertMotionClear`, `assertDeterministic`, `snapshotHash` — framework-agnostic helpers for your own recipe tests.
 - Docs: [glTF capability map](docs/architecture/gltf-capabilities.md) — every ratified extension, skins and morph targets, physics drafts, what ts23d writes and what is next.
 - `AGENTS.md` is now a link to `CLAUDE.md`: one brain for every coding agent; `CLAUDE.md` gained the "using the library" loop.
 

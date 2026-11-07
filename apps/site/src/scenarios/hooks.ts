@@ -1,7 +1,7 @@
 // What a scenario may rely on: the asset's kind, its named GLB nodes, its baked clip, its emitters
 // and its size. Read once from the loaded, unmoved model.
 
-import type { Emitter } from '@developerz-ai/ts23d';
+import type { Emitter } from '@developerz.ai/ts23d';
 import { type AnimationClip, Box3, type Object3D, Vector3 } from 'three';
 import { emitterOf } from '../particles.ts';
 

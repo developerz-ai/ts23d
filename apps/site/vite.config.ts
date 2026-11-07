@@ -1,4 +1,4 @@
-// GitHub Pages build of the demo. Recipes and the site import `@developerz-ai/ts23d` straight from
+// GitHub Pages build of the demo. Recipes and the site import `@developerz.ai/ts23d` straight from
 // ../../src, so the library compiles client-side as-is. Only `/render` touches node:zlib; a stub
 // keeps that import resolvable and tree-shaking drops it. `mediaPlugin` publishes the committed
 // renders (recipes/<folder>/out/<asset>/) so the gallery grid needs no compile.

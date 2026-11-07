@@ -22,7 +22,7 @@ import {
   sdf,
   type Vec3,
   valueNoise,
-} from '@developerz-ai/ts23d';
+} from '@developerz.ai/ts23d';
 
 const ROCK = hex('#3b3632');
 const ROCK_LIGHT = hex('#4f4841');

@@ -2,7 +2,7 @@
 
 **Free 3D asset generator for coding agents. Your agent writes TypeScript; ts23d compiles it to game-ready glTF — for Unity, Unreal, Godot, three.js, Babylon, or anything that reads glTF.**
 
-[![npm](https://img.shields.io/npm/v/@developerz-ai/ts23d)](https://www.npmjs.com/package/@developerz-ai/ts23d)
+[![npm](https://img.shields.io/npm/v/@developerz.ai/ts23d)](https://www.npmjs.com/package/@developerz.ai/ts23d)
 [![license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
 <table>
@@ -60,7 +60,7 @@ Each asset is a TypeScript module. `t3d build` compiles it, deterministically, t
 - **Architecture and hulls.** `roof` (gable, hip, mansard, gambrel, …), `opening` window/door kits for `facade`, true-scale masonry `mass`, lofted vessel `hull`; `tiled`, `cell` and `lattice` (Warren / Pratt / Howe trusses) primitives, `box({ bevel })`, and `text` lettering as geometry.
 - **An optimiser on by default.** Weld, degenerate removal, vertex-cache and vertex-fetch order (tiger_1 LOD0: 15.4 → 6.3 MB, ACMR 2.88 → 1.16), weighted normals, baked per-vertex AO.
 - **Lights, glow and provenance in the GLB.** `KHR_lights_punctual` from light sockets, emissive glow materials, licence / creators / sources as `KHR_xmp_json_ld`. Zero glTF-Validator warnings.
-- **Test helpers.** `@developerz-ai/ts23d/testing`: `assertQaPass`, `assertBudget`, `assertParts`, `assertMeasure`, `assertMotionClear`, `assertDeterministic`, `snapshotHash` for your own recipe tests.
+- **Test helpers.** `@developerz.ai/ts23d/testing`: `assertQaPass`, `assertBudget`, `assertParts`, `assertMeasure`, `assertMotionClear`, `assertDeterministic`, `snapshotHash` for your own recipe tests.
 
 **The goal: high-definition detail up close, cheap to draw everywhere.** One texture set, batched static geometry, LODs, compact core-glTF buffers (u16 indices and colours), welded, cache-optimised meshes.
 
@@ -71,15 +71,15 @@ Each asset is a TypeScript module. `t3d build` compiles it, deterministically, t
 ### 1. Install
 
 ```sh
-bun add @developerz-ai/ts23d
+bun add @developerz.ai/ts23d
 ```
 
 Then give your agent the loop:
 
 | Agent | Copy into your project |
 |---|---|
-| Claude Code | `cp -r node_modules/@developerz-ai/ts23d/.claude/skills/author-recipe .claude/skills/` (the loop) and `.claude/commands/new-recipe.md` (the `/new-recipe` command), both shipped in the package |
-| Codex, others | Point your `AGENTS.md` at `node_modules/@developerz-ai/ts23d/CLAUDE.md` and `…/docs/` ([details](#use-it-with-any-agent)) |
+| Claude Code | `cp -r node_modules/@developerz.ai/ts23d/.claude/skills/author-recipe .claude/skills/` (the loop) and `.claude/commands/new-recipe.md` (the `/new-recipe` command), both shipped in the package |
+| Codex, others | Point your `AGENTS.md` at `node_modules/@developerz.ai/ts23d/CLAUDE.md` and `…/docs/` ([details](#use-it-with-any-agent)) |
 
 ### 2. Ask
 
@@ -183,7 +183,7 @@ Every stage has zero runtime dependencies ([ADR 005](docs/decisions/005-zero-run
 ## A recipe
 
 ```ts
-import { axle, box, defineAsset, palettes } from '@developerz-ai/ts23d';
+import { axle, box, defineAsset, palettes } from '@developerz.ai/ts23d';
 
 const { paint, iron, trim } = palettes.victorianRail;
 
@@ -231,7 +231,7 @@ checklist prompt into `out/<asset>/review/` for a second, fresh-eyes vision pass
 Needs Bun ≥ 1.4.4 (Node ≥ 22 for the compiled `dist/`).
 
 ```sh
-bun add @developerz-ai/ts23d
+bun add @developerz.ai/ts23d
 bunx t3d build recipes/*/*.ts         # GLB × 3 LODs + sheet + manifest per asset; exit 1 on a QA finding
 bunx t3d shot  recipes/*/*.ts         # sheet + manifest only: the fast look
 bunx t3d hero  recipes/*/*.ts         # beauty render: textured, lit, soft shadows (1600×900)
@@ -275,7 +275,7 @@ compiles every recipe in a worker).
 
 ```ts
 // build.ts → bun build.ts
-import { compile, contactSheet, DEFAULT_SHEET, paintTrimSheet, runQa, toGlb } from '@developerz-ai/ts23d';
+import { compile, contactSheet, DEFAULT_SHEET, paintTrimSheet, runQa, toGlb } from '@developerz.ai/ts23d';
 import { tiger_1 } from './recipes/tiger_1/tiger_1.ts';
 
 const sheet = paintTrimSheet({ ...DEFAULT_SHEET, size: 512 }); // textures are optional
@@ -304,28 +304,28 @@ Runnable copy: [`examples/build-with-bun.ts`](examples/build-with-bun.ts) — ex
 
 ## Use it with any agent
 
-**The docs ship inside the package, versioned with the code, readable offline.** After `bun add`, everything an agent needs is at `node_modules/@developerz-ai/ts23d/`: `CLAUDE.md` (the agent brain; `AGENTS.md` in the repo is a link to it), `llms.txt`, `docs/`, `recipes/` (worked examples), `CHANGELOG.md` and `.claude/{skills,agents,commands}`.
+**The docs ship inside the package, versioned with the code, readable offline.** After `bun add`, everything an agent needs is at `node_modules/@developerz.ai/ts23d/`: `CLAUDE.md` (the agent brain; `AGENTS.md` in the repo is a link to it), `llms.txt`, `docs/`, `recipes/` (worked examples), `CHANGELOG.md` and `.claude/{skills,agents,commands}`.
 
 Point your agent at them. Add to your project's `CLAUDE.md` or `AGENTS.md`:
 
 ```md
-3D assets: @developerz-ai/ts23d. Read node_modules/@developerz-ai/ts23d/CLAUDE.md first;
-docs in node_modules/@developerz-ai/ts23d/docs/, example recipes in …/recipes/.
+3D assets: @developerz.ai/ts23d. Read node_modules/@developerz.ai/ts23d/CLAUDE.md first;
+docs in node_modules/@developerz.ai/ts23d/docs/, example recipes in …/recipes/.
 ```
 
 Claude Code skill (and the `/new-recipe` command):
 
 ```sh
 mkdir -p .claude/skills .claude/commands
-cp -r node_modules/@developerz-ai/ts23d/.claude/skills/author-recipe .claude/skills/
-cp node_modules/@developerz-ai/ts23d/.claude/commands/new-recipe.md .claude/commands/
+cp -r node_modules/@developerz.ai/ts23d/.claude/skills/author-recipe .claude/skills/
+cp node_modules/@developerz.ai/ts23d/.claude/commands/new-recipe.md .claude/commands/
 ```
 
 
 Works with any agent that writes TypeScript and can run a shell: Claude Code, Codex, Cursor, Aider, a local model. If it can read images, it closes the loop on its own. No skill files? Paste this:
 
 ```text
-Using @developerz-ai/ts23d, write recipes/<name>/<name>.ts: a <thing>, real dimensions in metres,
+Using @developerz.ai/ts23d, write recipes/<name>/<name>.ts: a <thing>, real dimensions in metres,
 Z up, +X front. Put the sources in `sources` and the key dimensions in `real.measures`.
 Block out the masses, then details. Name every part that moves (axle_*, door_*, rotor_*)
 and pivot it where it hinges. Loop until done:

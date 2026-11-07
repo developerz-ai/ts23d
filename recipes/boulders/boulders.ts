@@ -12,7 +12,7 @@ import {
   sdf,
   type Vec3,
   valueNoise,
-} from '@developerz-ai/ts23d';
+} from '@developerz.ai/ts23d';
 
 const STONE = hex('#8d8a84');
 const DARK = hex('#5f5c58');

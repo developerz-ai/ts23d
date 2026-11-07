@@ -17,8 +17,8 @@
     "skipLibCheck": true,
     "noEmit": true,
     "paths": {
-      "@developerz-ai/ts23d": ["./src/index.ts"],
-      "@developerz-ai/ts23d/*": ["./src/*/index.ts"]
+      "@developerz.ai/ts23d": ["./src/index.ts"],
+      "@developerz.ai/ts23d/*": ["./src/*/index.ts"]
     },
     "allowImportingTsExtensions": true,
     "rewriteRelativeImportExtensions": true

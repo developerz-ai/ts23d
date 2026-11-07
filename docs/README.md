@@ -1,6 +1,6 @@
 # ts23d docs
 
-**These docs are versioned with the package:** the copy in `node_modules/@developerz-ai/ts23d/docs/` always matches the installed code, and works offline.
+**These docs are versioned with the package:** the copy in `node_modules/@developerz.ai/ts23d/docs/` always matches the installed code, and works offline.
 
 **One owning doc per fact.** The idea docs say what and why; ADRs record decisions and the options they rejected; the architecture docs say where things go. The code wins on any conflict. Open an issue when you find one.
 

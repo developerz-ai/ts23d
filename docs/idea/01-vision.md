@@ -15,7 +15,7 @@
 
 | Step | You do | ts23d gives you |
 |---|---|---|
-| 1. Install | `bun add @developerz-ai/ts23d`; copy `node_modules/@developerz-ai/ts23d/.claude/skills/author-recipe` into `.claude/skills/` (Claude Code), or point your `AGENTS.md` at `node_modules/@developerz-ai/ts23d/AGENTS.md` (Codex) | The agent knows the loop |
+| 1. Install | `bun add @developerz.ai/ts23d`; copy `node_modules/@developerz.ai/ts23d/.claude/skills/author-recipe` into `.claude/skills/` (Claude Code), or point your `AGENTS.md` at `node_modules/@developerz.ai/ts23d/AGENTS.md` (Codex) | The agent knows the loop |
 | 2. Ask | `/new-recipe Tiger I, mid-production 1943, fully stowed` · `/new-recipe 4-4-0 steam loco with tender` · `/new-recipe 1940s city street with townhouses and gas lamps` (townhouse, lamp, street recipes: landing) | A recipe that passes QA, three LODs, textures, a manifest, a contact sheet |
 | 3. Import | Load `out/<asset>/lod0.glb` in your engine | Named nodes (`turret`, `gun`, `wheel_*`), sockets, emitter extras, the `run` clip as hooks ([README](../../README.md#3-use-the-glb-in-your-engine)) |
 

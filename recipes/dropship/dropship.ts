@@ -34,7 +34,7 @@ import {
   type Vec3,
   weightedNormals,
   worldMeshes,
-} from '@developerz-ai/ts23d';
+} from '@developerz.ai/ts23d';
 
 // ── palette: gunmetal two-tone, dark belly, orange accent, yellow/black hazard ──────────────────
 const HULL = hex('#636b71');

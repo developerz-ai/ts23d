@@ -1,6 +1,6 @@
 // Ground colouring for the viewer's diorama base: grass, drier grass up high, bare earth on steep slopes, darker dirt where vehicles run.
 
-import { hex, type Vec3 } from '@developerz-ai/ts23d';
+import { hex, type Vec3 } from '@developerz.ai/ts23d';
 import { mix3, smoothstep, valueNoise } from './noise.ts';
 
 const GRASS = hex('#566f33');

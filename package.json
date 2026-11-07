@@ -1,5 +1,5 @@
 {
-  "name": "@developerz-ai/ts23d",
+  "name": "@developerz.ai/ts23d",
   "version": "0.1.0",
   "description": "Free, deterministic 3D asset generation in TypeScript — a DSL your coding agent writes, compiled to game-ready glTF.",
   "type": "module",

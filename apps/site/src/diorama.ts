@@ -1,7 +1,7 @@
 // The viewer's diorama base: a small heightfield mound under the model that falls away at its rim,
 // so the asset reads as a presentation piece rather than a floating model.
 
-import { type Asset, defineAsset, heightfield } from '@developerz-ai/ts23d';
+import { type Asset, defineAsset, heightfield } from '@developerz.ai/ts23d';
 import { groundColor, type Height } from './ground-color.ts';
 import { fbm, smoothstep } from './noise.ts';
 

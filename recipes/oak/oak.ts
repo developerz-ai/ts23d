@@ -2,7 +2,7 @@
 // 1.3 m trunk at breast height (≈ 4.1 m girth). Spreading crooked limbs, lobed leaf clusters,
 // buttressed root flare. The `tree` kind does the botany; this file is the spec. recipes/oak/README.md.
 
-import { treeReal, trees } from '@developerz-ai/ts23d';
+import { treeReal, trees } from '@developerz.ai/ts23d';
 
 const size = { height: 22, spread: 22, dbh: 1.3 };
 

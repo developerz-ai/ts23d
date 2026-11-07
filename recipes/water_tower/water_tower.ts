@@ -18,7 +18,7 @@ import {
   planar,
   tiled,
   type Vec3,
-} from '@developerz-ai/ts23d';
+} from '@developerz.ai/ts23d';
 
 const FT = 0.3048;
 const TANK_R = (22 * FT) / 2; // 3.353

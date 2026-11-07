@@ -2,7 +2,7 @@
 // as empty GLB nodes with `userData.ts23d.emitter`. This finds them, follows each node's world
 // transform and velocity, and simulates pooled billboard particles with seeded randomness.
 
-import type { Emitter } from '@developerz-ai/ts23d';
+import type { Emitter } from '@developerz.ai/ts23d';
 import { Group, MathUtils, type Object3D, Vector3 } from 'three';
 import { prng } from './noise.ts';
 import { capFor, KINDS, type KindStyle } from './particle-kinds.ts';

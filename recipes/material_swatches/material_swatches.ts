@@ -22,7 +22,7 @@ import {
   STRIPS,
   type StripId,
   type Vec3,
-} from '@developerz-ai/ts23d';
+} from '@developerz.ai/ts23d';
 
 const STONE = hex('#9c968c');
 const INK = hex('#1c1c1c');

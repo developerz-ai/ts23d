@@ -33,7 +33,7 @@ describe('threeMaterialSource', () => {
     expect(src).toContain('export function createTrimMaterial');
     expect(src).toContain('export function upgradeTrimMaterials');
     expect(src).toContain('MeshStandardNodeMaterial');
-    expect(src).not.toContain("@developerz-ai/ts23d'");
+    expect(src).not.toContain("@developerz.ai/ts23d'");
   });
   it('tints by vertex colour and binds the ORM channels', () => {
     expect(src).toContain('vertexColor()');

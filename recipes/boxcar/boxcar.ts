@@ -22,7 +22,7 @@ import {
   text,
   tiled,
   type Vec3,
-} from '@developerz-ai/ts23d';
+} from '@developerz.ai/ts23d';
 
 // ---------------------------------------------------------------- dimensions (metres)
 const GAUGE = 1.435;

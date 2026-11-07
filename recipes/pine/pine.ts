@@ -2,7 +2,7 @@
 // clean bole turning orange-red up high, flat-topped crown, dark blue-green needle tufts on
 // upturned branch tips. The `tree` kind does the botany; this file is the spec. recipes/pine/README.md.
 
-import { treeReal, trees } from '@developerz-ai/ts23d';
+import { treeReal, trees } from '@developerz.ai/ts23d';
 
 const size = { height: 25, spread: 9, dbh: 0.6 };
 

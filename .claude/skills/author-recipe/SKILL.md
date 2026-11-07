@@ -15,7 +15,7 @@ A recipe is a TypeScript module exporting one `defineAsset(...)`. It is code: lo
 
 ```ts
 // <Name> — <one line>. Real: L × W × H m. Sources below.
-import { beam, box, defineAsset, grime, hex, lathe, merge, place, prism } from '@developerz-ai/ts23d';
+import { beam, box, defineAsset, grime, hex, lathe, merge, place, prism } from '@developerz.ai/ts23d';
 
 const paint = hex('#4b5320');
 
