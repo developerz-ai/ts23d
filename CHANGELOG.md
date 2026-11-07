@@ -4,7 +4,15 @@ All notable changes to `@developerz.ai/ts23d`. Format: [Keep a Changelog](https:
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-07
+
 ### Added
+- Package published as `@developerz.ai/ts23d` (the npm organisation's scope).
+- Material library v2: 16 new PBR strips on a 2048² trim sheet (oak, pine, weathered and painted wood; rusty, cast, painted and galvanised iron/steel; brass, copper, aluminium, chrome; rubber, canvas, leather, plastic) with their own roughness and metalness. `defineMaterial()` registers project materials; opt-in CC0 photo strips (Poly Haven) via `bun run textures` — sha256-pinned, offline compile, credited in the GLB. The beauty renderer reflects metals. `t3d` paints the sheet at 2048² by default.
+- Orc and goblin busts re-sculpted (anatomy, faces, mouths, gear, collectible plinth, painted tone pass); `head` gains `bust.mass`, `wrinkles`, `'vest'` bust style.
+- Boxcar reads as painted planks, weathered roof walk, cast and rusty iron.
+- Gallery: per-category studio lighting, PBR Neutral tone mapping, contact shadows, GTAO + MSAA on a high-quality tier with a phone fallback.
+- Research docs: sculpting, material authoring, Blender bridge design, pro asset pipeline and CC0 libraries.
 - One GLB with all three LODs: `t3d build` also writes `<out>/<asset>/<asset>.glb` — LOD0 in the scene, LOD1/LOD2 as `MSFT_lod` alternates outside it (listed in `extensionsUsed`, never required, so viewers without the extension show LOD0 only), `MSFT_screencoverage` view-distance hints, one shared material/texture set, motion channels on every LOD. `--lods split|single|both` (default `both`); the manifest records `files.single` and `lodCoverage`. API: `toLodGlb` / `exportLodGlb`; recipes may set `lodCoverage: [lod0→1, lod1→2, cull]`, otherwise it is derived from triangle density and size. tiger_1: one 7.07 MB file vs 7.09 MB for three split files (shared sheet); with `--sheet embed`, 10.7 MB vs 17.9 MB.
 
 ## [0.1.0] - 2026-11-07
