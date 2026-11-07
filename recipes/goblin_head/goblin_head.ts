@@ -3,7 +3,7 @@
 // draped hood on narrow shoulders. The `head` kind sculpts it (race preset `goblin`, chin to crown
 // 0.19 m); this file is the spec. Design dossier: recipes/goblin_head/README.md.
 
-import { defineAsset, head } from '@developerz-ai/ts23d';
+import { defineAsset, head } from '@developerz.ai/ts23d';
 
 export const goblin_head = defineAsset({
   name: 'goblin_head',

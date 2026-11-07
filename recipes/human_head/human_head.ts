@@ -4,7 +4,7 @@
 // leather collar and cloak roll. The `head` kind sculpts it (race preset `human`, chin to crown
 // 0.23 m); this file is the spec. Design dossier: recipes/human_head/README.md.
 
-import { defineAsset, head } from '@developerz-ai/ts23d';
+import { defineAsset, head } from '@developerz.ai/ts23d';
 
 export const human_head = defineAsset({
   name: 'human_head',

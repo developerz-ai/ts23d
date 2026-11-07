@@ -4,7 +4,7 @@
 // `head` kind sculpts it (race preset `orc`, chin to crown 0.30 m); this file is the spec.
 // Design dossier: recipes/orc_head/README.md.
 
-import { defineAsset, head, hex } from '@developerz-ai/ts23d';
+import { defineAsset, head, hex } from '@developerz.ai/ts23d';
 
 export const orc_head = defineAsset({
   name: 'orc_head',
