@@ -17,6 +17,12 @@ export interface Args {
   readonly sheetSize: 512 | 1024 | 2048;
   /** Which detail levels to build: all three by default, or e.g. only the hero mesh. */
   readonly lods: readonly (0 | 1 | 2)[];
+  /**
+   * How LODs land on disk: `split` lodN.glb per level · `single` one <asset>.glb with MSFT_lod
+   * alternates · `both` (default): split files import everywhere, the single file is for
+   * MSFT_lod-aware loaders and one-file pipelines.
+   */
+  readonly lodFiles: 'split' | 'single' | 'both';
   /** Beauty-render camera and size (hero, review, and build's hero.png); unset = defaults. */
   readonly render: {
     readonly width?: number;
@@ -44,6 +50,9 @@ flags:
                   referenced by every GLB · embed: self-contained GLBs · none: vertex colour only
   --sheet-size n  512 | 1024 | 2048 (default)
   --lods <list>   which detail levels to build: 0,1,2 (default) · 0 = hero only · 0,2 = near + far
+  --lods <mode>   how they are written: both (default) = lod0/1/2.glb + <asset>.glb · split = lodN.glb
+                  only · single = <asset>.glb only (LOD0 in the scene, LOD1/2 as MSFT_lod alternates
+                  with screen-coverage switch hints; viewers without MSFT_lod show LOD0 only)
   --json          machine-readable output`;
 
 export function parseArgs(argv: readonly string[]): Args {
@@ -55,6 +64,7 @@ export function parseArgs(argv: readonly string[]): Args {
   let sheet: Args['sheet'] = 'external';
   let sheetSize: Args['sheetSize'] = 2048;
   let lods: Args['lods'] = [0, 1, 2];
+  let lodFiles: Args['lodFiles'] = 'both';
   const render: {
     width?: number;
     height?: number;
@@ -81,6 +91,8 @@ export function parseArgs(argv: readonly string[]): Args {
     else if (a === '--sheet') {
       const m = argv[++i];
       sheet = m === 'embed' || m === 'none' ? m : 'external';
+    } else if (a === '--lods' && /^(split|single|both)$/.test(argv[i + 1] ?? '')) {
+      lodFiles = argv[++i] as Args['lodFiles'];
     } else if (a === '--lods') {
       const picked = (argv[++i] ?? '')
         .split(',')
@@ -107,6 +119,7 @@ export function parseArgs(argv: readonly string[]): Args {
     sheet,
     sheetSize,
     lods,
+    lodFiles,
     render,
   };
 }

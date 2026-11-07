@@ -4,6 +4,9 @@ All notable changes to `@developerz.ai/ts23d`. Format: [Keep a Changelog](https:
 
 ## [Unreleased]
 
+### Added
+- One GLB with all three LODs: `t3d build` also writes `<out>/<asset>/<asset>.glb` — LOD0 in the scene, LOD1/LOD2 as `MSFT_lod` alternates outside it (listed in `extensionsUsed`, never required, so viewers without the extension show LOD0 only), `MSFT_screencoverage` view-distance hints, one shared material/texture set, motion channels on every LOD. `--lods split|single|both` (default `both`); the manifest records `files.single` and `lodCoverage`. API: `toLodGlb` / `exportLodGlb`; recipes may set `lodCoverage: [lod0→1, lod1→2, cull]`, otherwise it is derived from triangle density and size. tiger_1: one 7.07 MB file vs 7.09 MB for three split files (shared sheet); with `--sheet embed`, 10.7 MB vs 17.9 MB.
+
 ## [0.1.0] - 2026-11-07
 
 ### Added

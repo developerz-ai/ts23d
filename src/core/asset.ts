@@ -113,6 +113,7 @@ export function compile(asset: Asset, options: { lod?: Lod; seed?: number } = {}
     parts: [...parts.values()],
     ...metaOf(asset),
     ...(asset.glow?.length ? { glow: asset.glow } : {}),
+    ...(asset.lodCoverage ? { lodCoverage: asset.lodCoverage } : {}),
   };
 }
 

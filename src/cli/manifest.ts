@@ -13,11 +13,15 @@ export interface AssetManifest {
   readonly tags: readonly string[];
   readonly files: {
     readonly lods: readonly string[];
+    /** All built LODs in one GLB (MSFT_lod), when `--lods single|both`. */
+    readonly single?: string;
     readonly hero?: string;
     readonly sheet?: string;
     readonly thumb?: string;
   };
   readonly triangles: readonly number[];
+  /** MSFT_screencoverage written into `files.single`: where each LOD hands over (last = cull). */
+  readonly lodCoverage?: readonly number[];
   readonly drawCalls: readonly number[];
   readonly pivots: readonly { name: string; parent: string | null; motion?: string }[];
   readonly emitters: readonly { name: string; kind: string; when: string }[];
@@ -42,6 +46,7 @@ export function manifestOf(
   lods: readonly CompiledAsset[],
   files: AssetManifest['files'],
   findings: readonly Finding[],
+  lodCoverage?: readonly number[],
 ): AssetManifest {
   const top = lods[0];
   const merged = top ? mergeToPivots(top) : null;
@@ -52,6 +57,7 @@ export function manifestOf(
     tags: asset.tags ?? [],
     files,
     triangles: lods.map(tris),
+    ...(lodCoverage?.length ? { lodCoverage } : {}),
     // One draw per merged mesh, glowing parts in their own emissive layer (as the GLB writes them).
     drawCalls: lods.map(
       (l) =>

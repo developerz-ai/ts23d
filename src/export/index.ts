@@ -1,6 +1,22 @@
 // Public API of /export: back ends that turn a CompiledAsset into a file.
 
-export { exportGlb, type GlbOptions, type GlbResult, toGlb } from './glb.ts';
+export {
+  exportGlb,
+  exportLodGlb,
+  type GlbOptions,
+  type GlbResult,
+  type LodGlbResult,
+  toGlb,
+  toLodGlb,
+} from './glb.ts';
+export {
+  checkCoverage,
+  coverageFor,
+  defaultCoverage,
+  type LodCoverage,
+  MSFT_LOD,
+  SCREEN_COVERAGE,
+} from './lod-coverage.ts';
 export { mergeToPivots } from './merge-pivots.ts';
 export {
   type ExportReport,

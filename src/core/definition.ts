@@ -128,6 +128,12 @@ export interface AssetDefinition {
   readonly creators?: readonly string[];
   /** Emissive part sets; `t3d build` writes them as glowing materials. */
   readonly glow?: readonly Glow[];
+  /**
+   * View-distance hints for the single-file GLB (MSFT_lod `MSFT_screencoverage`): the screen-height
+   * fraction below which LOD0 → LOD1, LOD1 → LOD2, and LOD2 is culled (0 = never). Strictly
+   * descending, 1 > a > b > c >= 0. Omitted: derived from the triangle counts and size.
+   */
+  readonly lodCoverage?: readonly [number, number, number];
   build(ctx: BuildContext): void;
 }
 
@@ -146,4 +152,5 @@ export interface CompiledAsset {
   /** Provenance carried from the definition (absent when the recipe declares none). */
   readonly meta?: AssetMeta;
   readonly glow?: readonly Glow[];
+  readonly lodCoverage?: readonly [number, number, number];
 }
