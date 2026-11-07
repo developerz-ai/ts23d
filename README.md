@@ -228,7 +228,7 @@ checklist prompt into `out/<asset>/review/` for a second, fresh-eyes vision pass
 
 ## Quickstart
 
-Needs Bun ≥ 1.4.3 (Node ≥ 22 for the compiled `dist/`).
+Needs Bun ≥ 1.4.4 (Node ≥ 22 for the compiled `dist/`).
 
 ```sh
 bun add @developerz-ai/ts23d

@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# Run the full verify gate, then render the CI contact sheets.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+mise exec bun@$(cat .bun-version) -- bun run verify
+
+mise exec bun@$(cat .bun-version) -- bun run shots
