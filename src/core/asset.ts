@@ -1,7 +1,7 @@
 // The DSL's root: an asset is a TypeScript function that builds named parts into a scene.
 // Code, not JSON — loops, helpers and composition are the point (docs/decisions/002).
 
-import type { Asset, AssetDefinition, CompiledAsset } from './definition.ts';
+import type { Asset, AssetDefinition, AssetMeta, CompiledAsset } from './definition.ts';
 import { Ts23dError } from './errors.ts';
 import type { Mesh } from './mesh.ts';
 import type { Lod, Part, PartOptions, UseOptions } from './part.ts';
@@ -111,5 +111,18 @@ export function compile(asset: Asset, options: { lod?: Lod; seed?: number } = {}
     real: asset.real ?? null,
     checks: asset.checks ?? [],
     parts: [...parts.values()],
+    ...metaOf(asset),
+    ...(asset.glow?.length ? { glow: asset.glow } : {}),
   };
+}
+
+function metaOf(a: Asset): { meta?: AssetMeta } {
+  const meta: AssetMeta = {
+    ...(a.description ? { description: a.description } : {}),
+    ...(a.sources?.length ? { sources: a.sources } : {}),
+    ...(a.license ? { license: a.license } : {}),
+    ...(a.copyright ? { copyright: a.copyright } : {}),
+    ...(a.creators?.length ? { creators: a.creators } : {}),
+  };
+  return Object.keys(meta).length ? { meta } : {};
 }

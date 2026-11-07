@@ -25,8 +25,13 @@ import type {
 import { dioramaFor } from './diorama.ts';
 import { discover } from './recipe-modules.ts';
 
-const found = discover();
-const recipes = new Map(found.map((d) => [d.asset.name, d.recipe]));
+const ready = discover();
+let found: Awaited<typeof ready> = [];
+const recipes = new Map<string, Asset>();
+const loaded = ready.then((list) => {
+  found = list;
+  for (const d of list) recipes.set(d.asset.name, d.recipe);
+});
 const compiled = new Map<string, CompiledAsset>();
 
 function resolve(t: Target): Asset {
@@ -86,9 +91,10 @@ const post = (msg: WorkerOut, transfer: Transferable[] = []): void =>
     transfer,
   );
 
-self.addEventListener('message', (e: MessageEvent<WorkerIn>) => {
+self.addEventListener('message', async (e: MessageEvent<WorkerIn>) => {
   const { id } = e.data;
   try {
+    await loaded;
     let answer: Answer;
     let transfer: Transferable[] = [];
     if ('list' in e.data)

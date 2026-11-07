@@ -1,0 +1,125 @@
+{
+  "name": "boxcar_nw",
+  "kind": "vehicle",
+  "description": "USRA single-sheathed boxcar in Norfolk & Western lettering, oxide red.",
+  "tags": [
+    "railroad",
+    "freight",
+    "usra",
+    "1918",
+    "rolling-stock"
+  ],
+  "files": {
+    "lods": [],
+    "sheet": "recipes/boxcar/out/boxcar_nw/sheet.png",
+    "thumb": "recipes/boxcar/out/boxcar_nw/thumb.png"
+  },
+  "triangles": [
+    14576,
+    5972,
+    980
+  ],
+  "drawCalls": [
+    9,
+    9,
+    9
+  ],
+  "pivots": [
+    {
+      "name": "body",
+      "parent": null
+    },
+    {
+      "name": "truck_a",
+      "parent": null
+    },
+    {
+      "name": "axle_a_0",
+      "parent": "truck_a",
+      "motion": "spin"
+    },
+    {
+      "name": "axle_a_1",
+      "parent": "truck_a",
+      "motion": "spin"
+    },
+    {
+      "name": "truck_b",
+      "parent": null
+    },
+    {
+      "name": "axle_b_0",
+      "parent": "truck_b",
+      "motion": "spin"
+    },
+    {
+      "name": "axle_b_1",
+      "parent": "truck_b",
+      "motion": "spin"
+    },
+    {
+      "name": "door_l",
+      "parent": null,
+      "motion": "slide"
+    },
+    {
+      "name": "door_r",
+      "parent": null,
+      "motion": "slide"
+    }
+  ],
+  "emitters": [],
+  "sockets": [],
+  "surfaces": [
+    "opaque"
+  ],
+  "real": {
+    "length": 13.4,
+    "width": 2.896,
+    "height": 4.039
+  },
+  "measures": [
+    {
+      "label": "body length (41 ft 3 in)",
+      "spec": 12.573,
+      "measured": 12.663000106811523,
+      "source": "B&M ORER table"
+    },
+    {
+      "label": "wheel diameter (33 in)",
+      "spec": 0.838,
+      "measured": 0.8379999992847442,
+      "source": "Kadee Andrews 33 in"
+    },
+    {
+      "label": "truck wheelbase (5 ft 6 in)",
+      "spec": 1.676,
+      "measured": 1.6760001182556152,
+      "source": "NASG Andrews"
+    },
+    {
+      "label": "door width (≈ 6 ft)",
+      "spec": 1.83,
+      "measured": 1.8300000429153442,
+      "source": "NARA photo, scaled"
+    },
+    {
+      "label": "gauge-side wheel spacing",
+      "spec": 1.5070000000000001,
+      "measured": 1.5069999694824219,
+      "source": "standard gauge 1.435 m + rail head"
+    }
+  ],
+  "sources": [
+    "https://bostonmaine.squarespace.com/box_71000_series",
+    "https://commons.wikimedia.org/wiki/File:Military_Administration_-_Transportation_-_Rail_-_Construction_-_50_TON_SINGLE_SHEATHED_BOX_CAR_being_constructed_for_U.S._Railroad_Administration_by_the_Bettendorff_Co.,_Bettendorff,_Iowa_-_NARA_-_45502055.jpg",
+    "https://en.wikipedia.org/wiki/USRA_standard",
+    "https://www.nasg.org/Gallery/reports/scale/cars/modeltype/StrucksAndrews.php",
+    "https://kadee.com/553-ho-scale-andrews-1898-self-centering-trucks-with-33-ribbed-back-wheels-metal-fully-sprung",
+    "https://rapidotrains.com/ho-scale/freight-car/usra-ss-boxcar.html"
+  ],
+  "qa": {
+    "pass": true,
+    "findings": []
+  }
+}

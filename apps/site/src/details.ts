@@ -1,8 +1,10 @@
-// Asset details: the manifest the CLI writes (draw calls, surfaces, emitters, sockets, real
-// dimensions, measures with sources) and the asset's contact sheet, if the Pages build has one.
+// The asset page's facts: title block, QA verdict, triangles and draw calls per LOD, real size
+// against the model, measures (spec vs measured, with sources), dossier links and the contact
+// sheet. Reads the committed manifest; assets without one get the worker's manifest (no QA).
 
-import { type AssetInfo, type Manifest, manifest } from './compile.ts';
-import { contactSheetUrl } from './hero.ts';
+import { manifest } from './compile.ts';
+import { dossierUrl, folderUrl, type Item, recipeUrl } from './items.ts';
+import type { MediaEntry } from './media-types.ts';
 
 const el = <K extends keyof HTMLElementTagNameMap>(
   tag: K,
@@ -15,55 +17,54 @@ const el = <K extends keyof HTMLElementTagNameMap>(
   return n;
 };
 
-const link = (href: string): HTMLElement => {
-  if (!/^https?:\/\//.test(href)) return el('span', href);
-  const a = el('a', new URL(href).hostname.replace(/^www\./, ''));
+const ext = (href: string, text: string): HTMLAnchorElement => {
+  const a = el('a', text);
   a.href = href;
   a.rel = 'noopener';
   return a;
 };
 
-function facts(m: Manifest): HTMLElement {
-  const dl = el('dl', undefined, 'facts-list');
-  const row = (k: string, v: string | HTMLElement): void => {
-    const dd = el('dd');
-    dd.append(v);
-    dl.append(el('dt', k), dd);
-  };
-  row('Draw calls', m.drawCalls.map((n, i) => `LOD${i} ${n}`).join(' · '));
-  row('Triangles', m.triangles.map((n, i) => `LOD${i} ${n.toLocaleString('en')}`).join(' · '));
-  row('Surfaces', m.surfaces.join(', ') || 'opaque');
-  if (m.real)
-    row('Real size', `${m.real.length} × ${m.real.width} × ${m.real.height} m (L × W × H)`);
-  row('Pivots', String(m.pivots.length));
-  row(
-    'Emitters',
-    m.emitters.length
-      ? m.emitters.map((e) => `${e.name} (${e.kind}, ${e.when})`).join(', ')
-      : 'none',
-  );
-  row(
-    'Sockets',
-    m.sockets.length ? m.sockets.map((s) => `${s.name} (${s.kind})`).join(', ') : 'none',
-  );
-  return dl;
+const host = (href: string): string => new URL(href).hostname.replace(/^www\./, '');
+const m = (n: number): string => `${n < 10 ? n.toFixed(2) : n.toFixed(1)} m`;
+
+type Facts = Pick<
+  MediaEntry,
+  'triangles' | 'drawCalls' | 'real' | 'measures' | 'sources' | 'qa' | 'emitters' | 'sockets'
+>;
+
+function lodTable(f: Facts): HTMLTableElement {
+  const t = el('table', undefined, 'lod-table');
+  t.append(el('caption', 'Per level of detail', 'visually-hidden'));
+  const head = el('tr');
+  head.append(el('th'), ...f.triangles.map((_, i) => el('th', `LOD${i}`, 'lod-head')));
+  const tris = el('tr');
+  tris.append(el('th', 'triangles'), ...f.triangles.map((n) => el('td', n.toLocaleString('en'))));
+  const draws = el('tr');
+  draws.append(el('th', 'draw calls'), ...f.drawCalls.map((n) => el('td', String(n))));
+  t.append(head, tris, draws);
+  return t;
 }
 
-function measures(m: Manifest): HTMLElement | null {
-  if (!m.measures.length) return null;
+function measures(f: Facts): HTMLElement | null {
+  if (!f.measures.length) return null;
   const table = el('table', undefined, 'measures');
-  table.append(el('caption', 'Measures: spec against the compiled model'));
+  table.append(el('caption', 'Measures: the published spec against the compiled model'));
   const head = el('tr');
-  for (const h of ['Measure', 'Spec', 'Model', 'Source']) head.append(el('th', h));
+  for (const h of ['Measure', 'Spec', 'Model', 'Δ', 'Source']) head.append(el('th', h));
   table.append(head);
-  for (const x of m.measures) {
+  for (const x of f.measures) {
     const tr = el('tr');
     const src = el('td');
-    if (x.source) src.append(link(x.source));
+    if (x.source && /^https?:\/\//.test(x.source)) src.append(ext(x.source, host(x.source)));
+    else if (x.source) src.textContent = x.source;
+    const delta = x.measured === null ? null : ((x.measured - x.spec) / x.spec) * 100;
+    const d = el('td', delta === null ? '–' : `${delta >= 0 ? '+' : ''}${delta.toFixed(1)}%`);
+    if (delta !== null && Math.abs(delta) <= 2) d.className = 'ok';
     tr.append(
       el('td', x.label),
-      el('td', `${x.spec} m`),
-      el('td', x.measured === null ? '–' : `${x.measured.toFixed(2)} m`),
+      el('td', m(x.spec)),
+      el('td', x.measured === null ? '–' : m(x.measured)),
+      d,
       src,
     );
     table.append(tr);
@@ -71,49 +72,93 @@ function measures(m: Manifest): HTMLElement | null {
   return table;
 }
 
-function sources(m: Manifest): HTMLElement | null {
-  if (!m.sources.length) return null;
+function sources(f: Facts): HTMLElement | null {
+  if (!f.sources.length) return null;
   const ul = el('ul', undefined, 'sources');
-  for (const s of m.sources) {
+  for (const s of f.sources) {
     const li = el('li');
-    const url = s.match(/https?:\/\/\S+/)?.[0];
-    if (url) {
-      li.append(link(url), el('span', ` ${s.replace(url, '').trim()}`));
-    } else li.textContent = s;
+    const url = s.match(/https?:\/\/[^\s)]+/)?.[0];
+    if (url) li.append(ext(url, host(url)), el('span', ` ${s.replace(url, '').trim()}`));
+    else li.textContent = s;
     ul.append(li);
   }
-  const wrap = el('div');
-  wrap.append(el('h3', 'Sources'), ul);
-  return wrap;
+  return ul;
+}
+
+export interface DetailRoots {
+  readonly info: HTMLElement;
+  readonly measures: HTMLElement;
+  readonly sheet: HTMLElement;
 }
 
 let token = 0;
 
-export function renderDetails(root: HTMLElement, asset: AssetInfo): void {
-  const body = root.querySelector<HTMLElement>('[data-details-body]');
-  const figure = root.querySelector<HTMLElement>('[data-details-sheet]');
+export function renderDetails(roots: DetailRoots, item: Item): void {
   const ticket = ++token;
-  if (body)
-    body.replaceChildren(el('p', 'Compiling all three LODs for the manifest…', 'section-note'));
-  manifest(asset.name).then(
-    (m) => {
-      if (ticket !== token || !body) return;
-      body.replaceChildren(...[facts(m), measures(m), sources(m)].filter((n) => n !== null));
-    },
-    (error: unknown) => {
-      if (ticket === token && body)
-        body.replaceChildren(el('p', `Manifest unavailable: ${String(error)}`));
-    },
+  const q = <T extends HTMLElement>(root: HTMLElement, sel: string): T | null =>
+    root.querySelector<T>(sel);
+  const kind = item.category.toLowerCase().startsWith(item.kind) ? '' : ` · ${item.kind}`;
+  q(roots.info, '[data-eyebrow]')?.replaceChildren(`${item.category}${kind}`);
+  q(roots.info, '[data-title]')?.replaceChildren(item.title);
+  q(roots.info, '[data-name]')?.replaceChildren(item.name);
+  q(roots.info, '[data-desc]')?.replaceChildren(item.description);
+  const links = q(roots.info, '[data-links]');
+  links?.replaceChildren(
+    ext(dossierUrl(item), 'Dossier & references'),
+    ext(recipeUrl(item), 'Recipe on GitHub'),
+    ext(folderUrl(item), 'Folder'),
   );
-  const img = figure?.querySelector('img');
-  const caption = figure?.querySelector('figcaption');
-  if (figure && img && caption) {
-    figure.hidden = false;
-    img.onerror = () => {
-      figure.hidden = true;
-    };
-    img.src = contactSheetUrl(asset.name);
-    img.alt = `Contact sheet for ${asset.name}: orthographic views and the far LOD`;
-    caption.textContent = `renders/${asset.name}.png, from t3d shot`;
+
+  const fill = (f: Facts): void => {
+    if (ticket !== token) return;
+    const badges = q(roots.info, '[data-badges]');
+    badges?.replaceChildren(
+      ...(f.qa
+        ? [
+            el(
+              'span',
+              f.qa.pass ? 'QA pass' : `QA ${f.qa.findings} findings`,
+              `badge qa ${f.qa.pass ? 'pass' : 'fail'}`,
+            ),
+          ]
+        : []),
+      el('span', 'one material', 'badge'),
+      el('span', `${f.drawCalls[2] ?? '?'} draw calls at LOD2`, 'badge'),
+      ...(f.emitters.length ? [el('span', `${f.emitters.length} emitters`, 'badge')] : []),
+      ...(f.sockets.length ? [el('span', `${f.sockets.length} sockets`, 'badge')] : []),
+    );
+    q(roots.info, '[data-lods]')?.replaceChildren(lodTable(f));
+    const real = q(roots.info, '[data-real]');
+    if (real)
+      real.textContent = f.real
+        ? `${m(f.real.length)} × ${m(f.real.width)} × ${m(f.real.height)}`
+        : 'not declared';
+    const body = q(roots.measures, '[data-measures]');
+    const list = [measures(f), sources(f)].filter((n) => n !== null);
+    roots.measures.hidden = list.length === 0;
+    body?.replaceChildren(...list);
+  };
+  if (item.media) fill(item.media);
+  else
+    manifest(item.name).then(
+      (w) => fill({ ...w, real: w.real ?? null, qa: null }),
+      () => undefined,
+    );
+
+  const img = q<HTMLImageElement>(roots.sheet, 'img');
+  roots.sheet.hidden = !item.media?.sheet;
+  if (img && item.media?.sheet) {
+    img.src = item.media.sheet;
+    img.alt = `Contact sheet for ${item.name}: orthographic views and the far LOD`;
   }
+}
+
+/** Show the measured model size (from the viewer) next to the declared real size. */
+export function renderModelSize(
+  info: HTMLElement,
+  size: { x: number; y: number; z: number },
+): void {
+  // glTF frame: z = length (front), x = width, y = height.
+  const out = info.querySelector('[data-model-size]');
+  if (out) out.textContent = `${m(size.z)} × ${m(size.x)} × ${m(size.y)}`;
 }

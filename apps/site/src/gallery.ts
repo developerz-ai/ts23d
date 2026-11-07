@@ -1,8 +1,10 @@
-// The gallery grid: one drawing-sheet card per discovered asset, linking to the viewer via #name.
+// The gallery: category filter chips and a grid of cards showing each asset's committed beauty
+// render. No compile is needed to draw the grid; assets without renders get a live LOD2 render.
 
-import { build, LODS, recipe } from './compile.ts';
-import type { Recipe } from './recipes.ts';
+import { CATEGORIES, type Category, type Item } from './items.ts';
 import { cardImage } from './thumbnails.ts';
+
+type Filter = Category | 'All';
 
 const el = <K extends keyof HTMLElementTagNameMap>(
   tag: K,
@@ -15,92 +17,97 @@ const el = <K extends keyof HTMLElementTagNameMap>(
   return node;
 };
 
-function whenVisible(node: Element, fn: () => void): void {
-  const io = new IntersectionObserver(
-    (entries) => {
-      if (!entries.some((e) => e.isIntersecting)) return;
-      io.disconnect();
-      fn();
-    },
-    { rootMargin: '200px' },
-  );
-  io.observe(node);
-}
+const tris = (n: number | undefined): string =>
+  n === undefined
+    ? ''
+    : n >= 10_000
+      ? `${(n / 1000).toFixed(1)}k tris`
+      : `${n.toLocaleString('en')} tris`;
 
-function card(entry: Recipe): HTMLElement {
-  const { asset } = entry;
+function card(item: Item): HTMLLIElement {
   const li = el('li');
+  li.dataset['category'] = item.category;
   const a = el('a', 'card');
-  a.href = `#${asset.name}`;
-  a.dataset['asset'] = asset.name;
+  a.href = `#${item.name}`;
+  a.dataset['asset'] = item.name;
 
-  const figure = el('figure', 'card-thumb');
+  const figure = el('figure', 'card-media');
   const img = el('img');
-  img.alt = `${asset.name}: ${asset.description || asset.kind}`;
-  img.width = 480;
-  img.height = 360;
+  img.alt = `${item.title}, rendered by ts23d`;
+  img.width = 800;
+  img.height = 450;
   figure.append(img);
-  cardImage(img, asset);
+  cardImage(img, item);
+  if (item.media?.qa)
+    figure.append(
+      el(
+        'span',
+        `card-qa ${item.media.qa.pass ? 'pass' : 'fail'}`,
+        item.media.qa.pass ? 'QA pass' : 'QA fail',
+      ),
+    );
 
-  const head = el('div', 'card-head');
-  head.append(el('h3', 'card-name', asset.name), el('span', 'card-kind', asset.kind));
-
-  const desc = el('p', 'card-desc', asset.description ?? '');
-  const tags = el('ul', 'tags');
-  tags.setAttribute('aria-label', 'Tags');
-  if (entry.family) {
-    const badge = el('li', 'tag family', `family ${entry.family}`);
-    badge.title = `One of several variants exported by recipes/${entry.file}`;
-    tags.append(badge);
-  }
-  for (const t of asset.tags ?? []) tags.append(el('li', 'tag', t));
-
-  const table = el('table', 'tris');
-  const caption = el('caption', 'visually-hidden', 'Triangles per LOD against budget');
-  const row = el('tr');
-  const counts = el('tr');
-  const cells = LODS.map((lod) => {
-    row.append(el('th', undefined, `LOD${lod}`));
-    const td = el('td', undefined, '…');
-    td.title = `budget ${asset.budget.triangles[lod]} triangles`;
-    counts.append(td);
-    return td;
-  });
-  // Counts compile in the worker once the card is on screen, cheapest LOD first.
-  whenVisible(a, () => {
-    for (const lod of [2, 1, 0] as const) {
-      build(recipe(asset.name, lod)).then(
-        ({ triangles }) => {
-          const td = cells[lod];
-          if (!td) return;
-          td.textContent = triangles.toLocaleString('en');
-          td.title = `${triangles} of ${asset.budget.triangles[lod]} triangle budget`;
-        },
-        () => {
-          const td = cells[lod];
-          if (td) td.textContent = 'error';
-        },
-      );
-    }
-  });
-  const thead = el('thead');
-  thead.append(row);
-  const tbody = el('tbody');
-  tbody.append(counts);
-  table.append(caption, thead, tbody);
-
-  a.append(figure, head, desc, tags, table);
+  const body = el('div', 'card-body');
+  body.append(el('h3', 'card-title', item.title));
+  const meta = el('p', 'card-meta');
+  meta.append(el('code', undefined, item.name));
+  const t = tris(item.media?.triangles[0]);
+  if (t) meta.append(el('span', undefined, t));
+  const kind = item.category.toLowerCase().startsWith(item.kind) ? '' : ` · ${item.kind}`;
+  body.append(meta, el('p', 'card-cat', `${item.category}${kind}`));
+  a.append(figure, body);
   li.append(a);
   return li;
 }
 
-export function renderGallery(list: HTMLElement, recipes: readonly Recipe[]): void {
-  list.replaceChildren(...recipes.map(card));
-}
+export class Gallery {
+  private filter: Filter = 'All';
+  private items: readonly Item[] = [];
 
-export function markCurrent(list: HTMLElement, name: string): void {
-  for (const a of list.querySelectorAll<HTMLAnchorElement>('a.card')) {
-    if (a.dataset['asset'] === name) a.setAttribute('aria-current', 'true');
-    else a.removeAttribute('aria-current');
+  constructor(
+    private readonly list: HTMLElement,
+    private readonly chips: HTMLElement,
+    private readonly count: HTMLElement | null,
+  ) {}
+
+  render(items: readonly Item[]): void {
+    this.items = items;
+    this.list.replaceChildren(...items.map(card));
+    this.renderChips();
+    this.apply();
+  }
+
+  private renderChips(): void {
+    const counts = new Map<Filter, number>([['All', this.items.length]]);
+    for (const i of this.items) counts.set(i.category, (counts.get(i.category) ?? 0) + 1);
+    const filters: Filter[] = ['All', ...CATEGORIES.filter((c) => counts.has(c))];
+    if (!filters.includes(this.filter)) this.filter = 'All';
+    const legend = this.chips.querySelector('legend');
+    this.chips.replaceChildren(
+      ...(legend ? [legend] : []),
+      ...filters.map((f) => {
+        const b = el('button', 'chip');
+        b.type = 'button';
+        b.append(document.createTextNode(f), el('span', 'chip-n', String(counts.get(f) ?? 0)));
+        b.setAttribute('aria-pressed', String(f === this.filter));
+        b.addEventListener('click', () => {
+          this.filter = f;
+          for (const x of this.chips.querySelectorAll('button'))
+            x.setAttribute('aria-pressed', String(x === b));
+          this.apply();
+        });
+        return b;
+      }),
+    );
+  }
+
+  private apply(): void {
+    let shown = 0;
+    for (const li of this.list.querySelectorAll<HTMLLIElement>(':scope > li')) {
+      const on = this.filter === 'All' || li.dataset['category'] === this.filter;
+      li.hidden = !on;
+      if (on) shown++;
+    }
+    if (this.count) this.count.textContent = String(shown);
   }
 }

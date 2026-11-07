@@ -1,7 +1,10 @@
 // Axis-aligned box, base at z=0 (things stand on the ground). UVs tile a trim strip by metres.
+// Flat normals. `bevel` > 0 chamfers every edge once (bevel-box.ts); 0 keeps these exact bytes.
 
 import { type Mesh, MeshBuilder, type Vec3 } from '../core/index.ts';
 import { type StripId, stripRect } from '../material/index.ts';
+import { bevelBox } from './bevel-box.ts';
+import { invalid } from './check.ts';
 
 export interface BoxOptions {
   /** Width (X), depth (Y), height (Z) in metres. */
@@ -12,6 +15,9 @@ export interface BoxOptions {
   readonly at?: Vec3;
   /** Skip faces nobody sees (e.g. the bottom on the ground). */
   readonly omit?: readonly ('top' | 'bottom' | 'front' | 'back' | 'left' | 'right')[];
+  /** Chamfer width in metres on every edge (12 + 8 extra faces, 44 triangles). LOD it:
+   *  `bevel: ctx.pick([0.02, 0.01, 0])`. Must stay under half the smallest size. Default 0. */
+  readonly bevel?: number;
 }
 
 type Face = { name: NonNullable<BoxOptions['omit']>[number]; n: Vec3; u: Vec3; v: Vec3 };
@@ -29,6 +35,23 @@ export function box(o: BoxOptions): Mesh {
   const [cx, cy, cz] = o.at ?? [0, 0, 0];
   const half: Vec3 = [w / 2, d / 2, h / 2];
   const centre: Vec3 = [cx, cy, cz + h / 2];
+  const bevel = o.bevel ?? 0;
+  if (bevel !== 0) {
+    const limit = Math.min(w, d, h) / 2;
+    if (!(bevel > 0 && bevel < limit))
+      invalid(
+        `box bevel ${bevel} m does not fit a ${w} × ${d} × ${h} m box`,
+        `use 0 < bevel < ${limit} m (half the smallest size), e.g. ${Math.min(0.02, limit / 4)}`,
+      );
+    return bevelBox({
+      half,
+      centre,
+      bevel,
+      color: o.color,
+      strip: o.strip ?? 'plain',
+      omit: o.omit ?? [],
+    });
+  }
   const rect = stripRect(o.strip ?? 'plain');
   const b = new MeshBuilder();
   for (const f of FACES) {

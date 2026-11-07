@@ -44,6 +44,7 @@ export interface AssetInfo {
 
 export interface CatalogEntry {
   readonly asset: AssetInfo;
+  /** Path under recipes/, e.g. `t34/t34.ts`. */
   readonly file: string;
   readonly family: string | null;
 }

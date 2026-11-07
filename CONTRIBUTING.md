@@ -52,7 +52,7 @@ Hooks: pre-commit runs Biome on staged files; pre-push runs `bun run verify`.
 
 ## Recipes
 
-New or changed recipe → attach its contact sheet (`bun run t3d shot recipes/x.ts` → `out/x/sheet.png`) to the PR. CI's `shots` job uploads sheets for every recipe as an artefact. Real dimensions with `sources`, so the `proportions` gate can hold them.
+New or changed recipe → attach its contact sheet (`bun run t3d shot recipes/x/x.ts` → `out/x/sheet.png`) to the PR. CI's `shots` job uploads sheets for every recipe as an artefact. Real dimensions with `sources`, so the `proportions` gate can hold them.
 
 ## Pull requests
 

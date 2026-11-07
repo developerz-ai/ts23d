@@ -3,156 +3,209 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="color-scheme" content="dark light" />
-    <title>ts23d · 3D assets as TypeScript</title>
+    <meta name="color-scheme" content="light dark" />
+    <title>ts23d · free 3D asset generator</title>
     <meta
       name="description"
-      content="ts23d is a free, deterministic 3D asset generator: a coding agent writes TypeScript recipes that compile to game-ready GLB."
+      content="ts23d is a free, deterministic 3D asset generator: a coding agent writes TypeScript recipes that compile to game-ready GLB. Browse the gallery and open any asset live."
     />
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M8 1 15 5v6l-7 4-7-4V5z' fill='none' stroke='%235b8fc7' stroke-width='1.5'/%3E%3C/svg%3E" />
   </head>
   <body>
-    <a class="skip" href="#gallery-h">Skip to the gallery</a>
+    <a class="skip" href="#main">Skip to content</a>
 
-    <header class="hero">
-      <div class="titleblock" aria-hidden="true">
-        <span>DWG TS23D-001</span><span>SCALE 1:1 m</span><span>Z-UP</span>
-      </div>
-      <h1>ts23d</h1>
-      <p class="tagline">Free 3D asset generator.</p>
-      <p class="lede">
-        Your coding agent writes TypeScript; ts23d compiles it to game-ready glTF for any engine.
-        It runs with no GPU, no credits and no network, and the same recipe always produces the
-        same bytes. Open an asset to see it compiled in this browser tab and put through a short
-        scene driven only by its named parts.
-      </p>
-      <p class="cta">
-        <a class="button primary" href="#gallery-h">Browse the assets</a>
-        <a class="button" href="https://github.com/developerz-ai/ts23d">GitHub</a>
-        <a class="button" href="https://www.npmjs.com/package/@developerz-ai/ts23d">npm</a>
-      </p>
-
-      <ol class="steps">
-        <li class="step">
-          <h2><span class="step-no">01</span> Ask your agent</h2>
-          <pre class="terminal"><code><span class="prompt">&gt;</span> /new-recipe Tiger I, mid-production 1943, fully stowed</code></pre>
-          <p class="step-note">
-            In Claude Code, Codex or any agent that writes TypeScript. <code>/new-recipe</code>
-            ships with the project; the agent researches real dimensions and writes
-            <code>recipes/tiger_1.ts</code>.
-          </p>
-        </li>
-        <li class="step">
-          <h2><span class="step-no">02</span> It renders, looks, fixes</h2>
-          <figure class="sheet-figure">
-            <img data-sheet width="1200" height="840" alt="" />
-            <figcaption data-sheet-caption></figcaption>
-          </figure>
-          <p class="step-note">
-            <code>t3d shot</code> renders orthographic views plus the far LOD. The agent reads the
-            image, edits the recipe and renders again; <code>t3d build</code> runs the QA gates.
-          </p>
-        </li>
-        <li class="step">
-          <h2><span class="step-no">03</span> Drop the GLB into your engine</h2>
-          <p class="step-text">
-            Unity, Unreal, Godot, three.js, Babylon: it is standard glTF 2.0, one GLB per LOD.
-            Named nodes such as <code>turret</code>, <code>gun</code> and <code>wheel_*</code> are
-            pivots for your engine's code to rotate or attach to.
-          </p>
-          <div class="engines">
-            <p class="engine-label">three.js</p>
-            <pre class="binding" data-binding="three"><code></code></pre>
-            <p class="engine-label">Godot (GDScript)</p>
-            <pre class="binding" data-binding="godot"><code></code></pre>
-          </div>
-        </li>
-      </ol>
-
-      <dl class="facts">
-        <div><dt>Compute</dt><dd>No GPU, no credits, no network</dd></div>
-        <div><dt>Output</dt><dd>glTF 2.0, one GLB per LOD</dd></div>
-        <div><dt>Parts</dt><dd>Named, animatable pivots</dd></div>
-        <div><dt>Material</dt><dd>One shared trim sheet</dd></div>
-        <div><dt>Install</dt><dd><code>bun add @developerz-ai/ts23d</code></dd></div>
-      </dl>
+    <header class="topbar">
+      <a class="brand" href="#top">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1 15 5v6l-7 4-7-4V5zM1 5l7 4 7-4M8 9v6" /></svg>
+        ts23d
+      </a>
+      <nav aria-label="Site">
+        <a href="#gallery">Gallery</a>
+        <a href="#how">How it works</a>
+        <a href="https://github.com/developerz-ai/ts23d">GitHub</a>
+        <a href="https://www.npmjs.com/package/@developerz-ai/ts23d">npm</a>
+      </nav>
     </header>
 
-    <main>
-      <section class="gallery" aria-labelledby="gallery-h">
-        <h2 id="gallery-h" tabindex="-1">Assets <span class="count" data-count></span></h2>
-        <p class="section-note">Every <code>recipes/*.ts</code> export. Pick one to open it.</p>
-        <ul class="grid" data-gallery></ul>
-      </section>
+    <main id="main">
+      <div data-view="home">
+        <section class="showcase" id="top" aria-labelledby="hero-h">
+          <div class="showcase-stage" data-showcase>
+            <img class="showcase-poster" data-poster alt="" fetchpriority="high" />
+          </div>
+          <div class="showcase-copy">
+            <p class="eyebrow">Free · open source · glTF 2.0</p>
+            <h1 id="hero-h">3D assets your coding agent writes in TypeScript.</h1>
+            <p class="lede">
+              ts23d compiles a recipe into game-ready GLB: named, pivoted parts, baked motion, three
+              LODs and one shared material. No GPU, no credits, and the same recipe always gives
+              the same bytes.
+            </p>
+            <p class="cta">
+              <a class="button primary" href="#gallery">Browse the gallery</a>
+              <a class="button" href="https://github.com/developerz-ai/ts23d">GitHub</a>
+            </p>
+            <p class="install"><code>bun add @developerz-ai/ts23d</code></p>
+          </div>
+          <a class="showcase-label" data-showcase-label href="#gallery">
+            <span class="label-k">Now showing · live in your browser</span>
+            <strong data-label-title></strong>
+            <span class="label-meta" data-label-meta></span>
+            <span class="label-go" aria-hidden="true">Open →</span>
+          </a>
+        </section>
 
-      <section id="viewer" class="workbench" aria-labelledby="viewer-h" tabindex="-1">
-        <div class="viewer" data-viewer>
-          <div class="viewer-head">
-            <h2 id="viewer-h"><span class="visually-hidden">Viewer: </span><span data-viewer-name></span></h2>
-            <p data-viewer-desc></p>
-            <dl class="stats" data-viewer-stats></dl>
+        <section class="gallery" id="gallery" aria-labelledby="gallery-h" tabindex="-1">
+          <div class="section-head">
+            <h2 id="gallery-h">Gallery <span class="count" data-count></span></h2>
+            <p class="section-note">
+              Every image is a real render of a recipe in <code>recipes/</code>. Open one to compile
+              it here, orbit it, switch LODs and download the GLB.
+            </p>
           </div>
-          <div class="viewport" data-viewport>
-            <p class="scenario-tag" data-scenario></p>
-            <p class="viewport-hint" aria-hidden="true">drag orbit · right-drag pan · wheel zoom</p>
+          <fieldset class="filters" data-filters><legend class="visually-hidden">Filter by category</legend></fieldset>
+          <ul class="grid" data-gallery></ul>
+        </section>
+
+        <section class="how" id="how" aria-labelledby="how-h" tabindex="-1">
+          <div class="section-head">
+            <h2 id="how-h">How it works</h2>
+            <p class="section-note">The agent writes code, looks at its own renders and fixes what it sees.</p>
           </div>
-          <div class="toolbar">
-            <button type="button" class="primary-toggle" data-play aria-pressed="false">Play</button>
-            <button type="button" data-replay>Replay</button>
-            <label class="check"><input type="checkbox" data-freelook /> Free look</label>
-            <fieldset class="segmented">
-              <legend class="visually-hidden">Level of detail</legend>
-              <label><input type="radio" name="lod" value="0" checked /><span>LOD0</span></label>
-              <label><input type="radio" name="lod" value="1" /><span>LOD1</span></label>
-              <label><input type="radio" name="lod" value="2" /><span>LOD2</span></label>
+          <ol class="steps">
+            <li class="step">
+              <h3><span class="step-no">01</span> Ask your agent</h3>
+              <pre class="terminal"><code><span class="prompt">&gt;</span> /new-recipe Tiger I, mid-production 1943, fully stowed</code></pre>
+              <p class="step-note">
+                In Claude Code, Codex or any agent that writes TypeScript. The agent researches real
+                dimensions and photos into <code>recipes/tiger_1/README.md</code>, then writes
+                <code>recipes/tiger_1/tiger_1.ts</code>.
+              </p>
+            </li>
+            <li class="step">
+              <h3><span class="step-no">02</span> It renders, looks, fixes</h3>
+              <figure class="sheet-figure">
+                <img data-sheet width="1200" height="840" alt="" loading="lazy" />
+                <figcaption data-sheet-caption></figcaption>
+              </figure>
+              <p class="step-note">
+                <code>t3d shot</code> renders orthographic views plus the far LOD with no GPU. The
+                agent reads the image and edits the recipe; <code>t3d build</code> runs the QA gates.
+              </p>
+            </li>
+            <li class="step">
+              <h3><span class="step-no">03</span> Drop the GLB into your engine</h3>
+              <p class="step-note">
+                Unity, Unreal, Godot, three.js, Babylon: standard glTF 2.0, one GLB per LOD. Named
+                nodes such as <code>turret</code> and <code>wheel_*</code> are pivots your code
+                rotates or attaches to.
+              </p>
+              <p class="engine-label">three.js</p>
+              <pre class="binding" data-binding="three"><code></code></pre>
+              <p class="engine-label">Godot (GDScript)</p>
+              <pre class="binding" data-binding="godot"><code></code></pre>
+            </li>
+          </ol>
+          <dl class="facts">
+            <div><dt>Compute</dt><dd>No GPU, no credits, no network</dd></div>
+            <div><dt>Output</dt><dd>glTF 2.0, one GLB per LOD</dd></div>
+            <div><dt>Parts</dt><dd>Named, animatable pivots</dd></div>
+            <div><dt>Material</dt><dd>One shared trim sheet</dd></div>
+            <div><dt>Checks</dt><dd>QA gates fail the build</dd></div>
+          </dl>
+        </section>
+      </div>
+
+      <article class="asset" data-view="asset" hidden aria-labelledby="asset-h">
+        <nav class="crumbs" aria-label="Breadcrumb">
+          <a href="#gallery">Gallery</a><span aria-hidden="true">/</span><span data-crumb-cat></span
+          ><span aria-hidden="true">/</span><code data-crumb-name></code>
+          <span class="pager">
+            <a data-prev href="#gallery" rel="prev">← <span></span></a>
+            <a data-next href="#gallery" rel="next"><span></span> →</a>
+          </span>
+        </nav>
+
+        <div class="asset-top">
+          <div class="viewer" data-viewer>
+            <div class="viewport" data-viewport>
+              <img class="viewer-poster" data-viewer-poster alt="" />
+              <p class="loading" data-loading>Compiling in your browser…</p>
+              <p class="scenario-tag" data-scenario hidden></p>
+              <p class="viewport-hint" aria-hidden="true">drag to orbit · right-drag pan · wheel zoom</p>
+            </div>
+            <div class="toolbar">
+              <fieldset class="segmented">
+                <legend class="visually-hidden">Presentation</legend>
+                <label><input type="radio" name="mode" value="studio" checked /><span>Studio</span></label>
+                <label><input type="radio" name="mode" value="scene" /><span>Scene</span></label>
+              </fieldset>
+              <button type="button" class="play" data-play aria-pressed="false">Play motion</button>
+              <fieldset class="segmented">
+                <legend class="visually-hidden">Level of detail</legend>
+                <label><input type="radio" name="lod" value="0" checked /><span>LOD0</span></label>
+                <label><input type="radio" name="lod" value="1" /><span>LOD1</span></label>
+                <label><input type="radio" name="lod" value="2" /><span>LOD2</span></label>
+              </fieldset>
+              <label class="check"><input type="checkbox" data-wireframe /> Wireframe</label>
+              <label class="check"><input type="checkbox" data-textures /> Trim sheet</label>
+            </div>
+            <dl class="live-stats" data-viewer-stats></dl>
+            <p class="visually-hidden" role="status" data-viewer-status></p>
+
+            <details class="parts-box">
+              <summary>Parts, pivots and emitters <span class="section-note">GLB node names · hover to outline</span></summary>
+              <ol class="parts" data-parts></ol>
+            </details>
+            <fieldset class="downloads">
+              <legend>Download GLB</legend>
+              <div class="download-row" data-downloads></div>
             </fieldset>
-            <label class="check"><input type="checkbox" data-wireframe /> Wireframe</label>
-            <label class="check"><input type="checkbox" data-textures /> Textures</label>
           </div>
-          <fieldset class="downloads">
-            <legend class="downloads-label">Download GLB</legend>
-            <div class="download-row" data-downloads></div>
-          </fieldset>
-          <p class="visually-hidden" role="status" data-viewer-status></p>
-          <h3 class="parts-h">Parts <span class="section-note">node names in the GLB</span></h3>
-          <ol class="parts" data-parts></ol>
+
+          <aside class="info" data-info>
+            <p class="eyebrow" data-eyebrow></p>
+            <h1 id="asset-h" data-title>Asset</h1>
+            <p class="info-name"><code data-name></code></p>
+            <p class="info-desc" data-desc></p>
+            <p class="badges" data-badges></p>
+            <div data-lods></div>
+            <dl class="dims">
+              <div><dt>Real size (L × W × H)</dt><dd data-real>–</dd></div>
+              <div><dt>Model size</dt><dd data-model-size>–</dd></div>
+            </dl>
+            <p class="links" data-links></p>
+          </aside>
         </div>
 
-        <aside class="source" data-source aria-labelledby="source-h">
-          <h2 id="source-h" class="source-head">
-            <span class="visually-hidden">Source: </span><span data-source-file></span>
-          </h2>
-          <p class="section-note">This file is the asset. The model on the left was compiled from it.</p>
-          <pre><code></code></pre>
-        </aside>
-
-        <section class="details" data-details aria-labelledby="details-h">
-          <h2 id="details-h">Manifest</h2>
-          <div class="details-body" data-details-body></div>
-          <figure class="details-sheet" data-details-sheet>
-            <img alt="" width="1200" height="840" loading="lazy" />
-            <figcaption></figcaption>
-          </figure>
+        <section class="panel" data-measures-section aria-labelledby="measures-h">
+          <h2 id="measures-h">Measured against the real thing</h2>
+          <div data-measures></div>
         </section>
-      </section>
+
+        <section class="panel" data-sheet-section aria-labelledby="sheet-h">
+          <h2 id="sheet-h">Contact sheet <span class="section-note">what the agent reads after every edit</span></h2>
+          <figure class="sheet"><img alt="" width="1200" height="840" loading="lazy" /></figure>
+        </section>
+
+        <section class="panel source" data-source aria-labelledby="source-h">
+          <h2 id="source-h">Recipe <code class="source-file" data-source-file></code></h2>
+          <p class="section-note">This file is the asset. The model above was compiled from it.</p>
+          <pre><code></code></pre>
+        </section>
+      </article>
     </main>
 
     <footer class="footer">
-      <h2>Pairs well with</h2>
-      <ul>
-        <li>
-          <a href="https://kubeez.com">kubeez.com</a>: generate reference and concept images and
-          textures to hand your agent.
-        </li>
-        <li>
-          <a href="https://www.developerz.ai">developerz.ai</a>: 100% AI-managed software
-          engineering. It builds and maintains this project.
-        </li>
-      </ul>
-      <p class="links">
+      <p>
+        <strong>ts23d</strong> is a free, code-based option for game-ready 3D assets. MIT ·
         <a href="https://github.com/developerz-ai/ts23d">GitHub</a> ·
-        <a href="https://www.npmjs.com/package/@developerz-ai/ts23d">npm: @developerz-ai/ts23d</a> ·
-        MIT
+        <a href="https://www.npmjs.com/package/@developerz-ai/ts23d">npm</a>
+      </p>
+      <p>
+        Pairs well with <a href="https://kubeez.com">kubeez.com</a> (reference images and textures to
+        hand your agent) and <a href="https://www.developerz.ai">developerz.ai</a>, the AI-managed
+        engineering team that builds and maintains this project.
       </p>
     </footer>
 

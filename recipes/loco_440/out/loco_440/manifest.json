@@ -1,0 +1,179 @@
+{
+  "name": "loco_440",
+  "kind": "vehicle",
+  "description": "American 4-4-0 \"Jupiter\" — funnel stack, brass domes, bell, box headlamp, slatted pilot, red spoked drivers with rods, tender, track",
+  "tags": [
+    "rail",
+    "steam",
+    "19th-century"
+  ],
+  "files": {
+    "lods": [],
+    "sheet": "recipes/loco_440/out/loco_440/sheet.png",
+    "thumb": "recipes/loco_440/out/loco_440/thumb.png"
+  },
+  "triangles": [
+    23868,
+    13552,
+    1400
+  ],
+  "drawCalls": [
+    17,
+    17,
+    11
+  ],
+  "pivots": [
+    {
+      "name": "track",
+      "parent": null
+    },
+    {
+      "name": "locomotive",
+      "parent": null
+    },
+    {
+      "name": "axle_lead_0",
+      "parent": "locomotive",
+      "motion": "spin"
+    },
+    {
+      "name": "axle_lead_1",
+      "parent": "locomotive",
+      "motion": "spin"
+    },
+    {
+      "name": "axle_driver_0",
+      "parent": "locomotive",
+      "motion": "spin"
+    },
+    {
+      "name": "axle_driver_1",
+      "parent": "locomotive",
+      "motion": "spin"
+    },
+    {
+      "name": "rod_side_l",
+      "parent": "locomotive",
+      "motion": "slide"
+    },
+    {
+      "name": "crosshead_l",
+      "parent": "locomotive",
+      "motion": "slide"
+    },
+    {
+      "name": "rod_main_l",
+      "parent": "locomotive",
+      "motion": "slide"
+    },
+    {
+      "name": "rod_side_r",
+      "parent": "locomotive",
+      "motion": "slide"
+    },
+    {
+      "name": "crosshead_r",
+      "parent": "locomotive",
+      "motion": "slide"
+    },
+    {
+      "name": "rod_main_r",
+      "parent": "locomotive",
+      "motion": "slide"
+    },
+    {
+      "name": "tender",
+      "parent": null
+    },
+    {
+      "name": "axle_tender_0_0",
+      "parent": "tender",
+      "motion": "spin"
+    },
+    {
+      "name": "axle_tender_0_1",
+      "parent": "tender",
+      "motion": "spin"
+    },
+    {
+      "name": "axle_tender_1_0",
+      "parent": "tender",
+      "motion": "spin"
+    },
+    {
+      "name": "axle_tender_1_1",
+      "parent": "tender",
+      "motion": "spin"
+    }
+  ],
+  "emitters": [
+    {
+      "name": "cylinder_steam_l",
+      "kind": "steam",
+      "when": "moving"
+    },
+    {
+      "name": "cylinder_steam_r",
+      "kind": "steam",
+      "when": "moving"
+    },
+    {
+      "name": "stack_smoke",
+      "kind": "smoke",
+      "when": "always"
+    }
+  ],
+  "sockets": [],
+  "surfaces": [
+    "opaque"
+  ],
+  "real": {
+    "length": 17.4,
+    "width": 2.8,
+    "height": 4.6
+  },
+  "measures": [
+    {
+      "label": "driver diameter (5 ft 4 in)",
+      "spec": 1.626,
+      "measured": 1.6260000467300415,
+      "source": "https://en.wikipedia.org/wiki/Jupiter_(locomotive)"
+    },
+    {
+      "label": "lead truck wheel diameter (30 in, typical; not in the Jupiter infobox)",
+      "spec": 0.762,
+      "measured": 0.7599999606609344
+    },
+    {
+      "label": "rail centres (1435 mm gauge + 72 mm head)",
+      "spec": 1.5070000000000001,
+      "measured": 1.5069999694824219,
+      "source": "https://en.wikipedia.org/wiki/Standard-gauge_railway"
+    },
+    {
+      "label": "driver wheelbase (8 ft, estimated from the reference photo)",
+      "spec": 2.44,
+      "measured": 2.439999997615814
+    },
+    {
+      "label": "boiler barrel diameter (49 in, typical)",
+      "spec": 1.24,
+      "measured": 1.2400000095367432
+    },
+    {
+      "label": "funnel stack height (estimated from the reference photo)",
+      "spec": 1.6,
+      "measured": 1.5999999046325684
+    }
+  ],
+  "sources": [
+    "https://en.wikipedia.org/wiki/Jupiter_(locomotive) (Schenectady 1868, 4-4-0, 5 ft 4 in drivers, 16 × 24 in cylinders, standard gauge)",
+    "https://en.wikipedia.org/wiki/4-4-0 (American type: 2-axle lead truck, 2 coupled axles)",
+    "https://en.wikipedia.org/wiki/Standard-gauge_railway (1435 mm)",
+    "docs/reference/loco-photo-match.png (owner reference: Jupiter photo + procedural match)"
+  ],
+  "qa": {
+    "pass": true,
+    "findings": []
+  }
+}

@@ -2,18 +2,19 @@
 
 **A kind is a library of builders a recipe calls, not a class the recipe fills in.** `facade(ctx, {...})` adds parts to the caller's `ctx`; the recipe stays in charge of layout, naming and LOD. `kind: '…'` on `defineAsset` is a free string for metadata. Source: `src/kinds/`.
 
-Status as of 2026-10:
+Status as of 2026-11:
 
 | Kind | Builders | Status |
 |---|---|---|
 | Building / tower | `facade`, `setbacks` | Shipped |
-| | `roof` (hip, gable, pyramid, mansard) | Planned, M1 |
+| | `roof` / `roofMesh` (gable, hip, pyramid, mansard, gambrel, shed; chimneys), `opening` (window/door kit), `facade({ kit })`, `mass` (true-scale masonry) | Shipped |
 | Vehicle | `axle`, `trackRun`, `whyteAxles`, `propeller` | Shipped |
 | | lofted bodies, fuselages, wings | Possible now with `loft`, `sweep`; no dedicated builder yet |
-| Vessel | `hull` | Planned, M2 |
+| Vessel | `hull` / `hullMesh` / `hullLines` | Shipped |
 | Vegetation | `tree`, `trees` family, `treeReal`; presets `oak`, `pine`, `palm`, `birch`, `willow` | Shipped |
-| Creature | `creature` | Planned, M4 |
-| Scene | `ctx.use` (core), `heightfield` terrain | Shipped |
+| Character | `head` (orc, goblin, human, dwarf, elf via `HEADS`), `headParams`, `headEdits`, `checkHead` | Shipped (stylised busts) |
+| Creature | `creature` (whole bodies, skinned) | Planned, M4 |
+| Scene | `ctx.use` (core), `heightfield` terrain with erosion and `terrainColor` | Shipped |
 | Families | `defineFamily` (core): variants of any kind | Shipped |
 
 ## Building / tower
@@ -62,9 +63,13 @@ Named parts follow the engine contract: `axle_*` and `wheel_*` spin about local 
 
 Domain-native params are the point: a loco recipe says `'2-6-2'`, not twelve wheel coordinates.
 
-## Vessel (planned, M2)
+## Vessel
 
-`hull(ctx, { length, beam, draft, freeboard, color })`: lofted sections from naval-architecture params plus sheer and keel curves. Needs `loft` and `sweep`.
+`hull(ctx, o)` adds `hull` + `hull_deck`; `hullMesh(o, lod)` returns the mesh for `place`/`merge`; `hullLines(o)` exposes the shape functions. Required: `length`, `beam`, `draft`, `freeboard`, `colors: { topsides, bottom, boot?, deck, bulwark? }`. Optional: `sheer: [bow, stern]`, `stern: 'round' | 'transom'`, `transomWidth`, `fullness`, `entrance`, `flare`, `deadriseDeg`, `bulwark`, `camber`, `bootTop`, `fender`, `at` (the waterline). Bow toward +X. Watertight at every LOD; waterline and boot-top bands are crisp.
+
+## Roofs and openings
+
+Every builder has a pure mesh form (`roofMesh(o, lod)`, `opening(o, lod)`, `mass(o, lod)`) and recipes compose them with `place`/`merge`; `roof(ctx, o)` is the thin ctx wrapper and returns `{ ridge, eave, heightAt(x, y) }`. A roof is the lower envelope of its slope planes, so ridges and hips fall out exactly; the underside sits on the walls' top outer edge, gable and shed ends get infill walls, LOD0/1 add slab thickness, soffit, fascia, ridge/hip caps and chimneys (pots at LOD0), LOD2 is bare slopes (≤ 40 triangles). `opening` is a window or door with a true-scale reveal, sill, lintel, sash and glazing bars; `facade(…, { kit })` places one in every opening slot. `mass` is a wall block whose masonry courses start at the ground line, unlike `box`, which stretches its strip over the face.
 
 ## Vegetation
 
@@ -78,6 +83,10 @@ Domain-native params are the point: a loco recipe says `'2-6-2'`, not twelve whe
 | `SPECIES`: `oak`, `pine`, `palm`, `birch`, `willow` | Presets as data (`TreeParams`) |
 
 The `oak`, `pine` and `palm` recipes are about 18 lines each. Wind is a crown `sway` for now. Planned: per-vertex wind weights; LOD2 impostors as crossed billboards from the foliage cells (today's are crude).
+
+## Character
+
+`head(ctx, { race: 'orc' | 'goblin' | 'human' | 'dwarf' | 'elf' | HeadParams, params?, prefix?, at?, jawSway? })` sculpts a stylised head and bust from SDF edits (`sculpt`) and adds `bust` (on z = 0), `head`, `jaw` (pivot at the hinge, optional sway) and `eye_l` / `eye_r` (pivots at the eyeball centres, looking along +X). Races are data (`HEADS`); `params` overrides one level deep; `checkHead` rejects impossible proportions with a fix. Vertex AO is baked at LOD0/1. Recipes: `orc_head`, `goblin_head`, `human_head`.
 
 ## Creature (planned, M4)
 

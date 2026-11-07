@@ -1,0 +1,96 @@
+{
+  "name": "water_tower",
+  "kind": "building",
+  "description": "Frisco 50,000-gallon cypress-stave railroad water tank (Beaumont, Kansas, c. 1886): hooped tub on an eight-post timber trestle with a central core, six-sided shingle roof, goose-neck spout.",
+  "tags": [
+    "railroad",
+    "water-tank",
+    "lineside",
+    "1880s",
+    "usa"
+  ],
+  "files": {
+    "lods": [],
+    "sheet": "recipes/water_tower/out/water_tower/sheet.png",
+    "thumb": "recipes/water_tower/out/water_tower/thumb.png"
+  },
+  "triangles": [
+    6616,
+    2816,
+    496
+  ],
+  "drawCalls": [
+    2,
+    2,
+    2
+  ],
+  "pivots": [
+    {
+      "name": "body",
+      "parent": null
+    },
+    {
+      "name": "spout",
+      "parent": null,
+      "motion": "sway"
+    }
+  ],
+  "emitters": [],
+  "sockets": [
+    {
+      "name": "water_fill",
+      "kind": "interact",
+      "parent": "spout"
+    }
+  ],
+  "surfaces": [
+    "opaque"
+  ],
+  "real": {
+    "length": 11.12424647592461,
+    "width": 7.405600000000001,
+    "height": 10.634400000000001
+  },
+  "measures": [
+    {
+      "label": "tank diameter (22 ft)",
+      "spec": 6.7056000000000004,
+      "measured": 6.807331323623657,
+      "source": "NRHP 93000843 §7"
+    },
+    {
+      "label": "tank height (14 ft)",
+      "spec": 4.2672,
+      "measured": 4.267199993133545,
+      "source": "NRHP 93000843 §7"
+    },
+    {
+      "label": "superstructure height (14 ft)",
+      "spec": 4.2672,
+      "measured": 4.267199993133545,
+      "source": "NRHP 93000843 §7"
+    },
+    {
+      "label": "core diameter (10 ft)",
+      "spec": 3.048,
+      "measured": 3.0480000972747803,
+      "source": "NRHP 93000843 §7"
+    },
+    {
+      "label": "core height (14 ft)",
+      "spec": 4.2672,
+      "measured": 4.267199993133545,
+      "source": "NRHP 93000843 §7"
+    }
+  ],
+  "sources": [
+    "https://npgallery.nps.gov/GetAsset/f632b7b3-36b4-4a36-be22-47bb617fad0d",
+    "https://commons.wikimedia.org/wiki/File:Beaumont_Kansas_Water_Tower.jpg",
+    "https://en.wikipedia.org/wiki/Beaumont_St._Louis_and_San_Francisco_Railroad_Water_Tank",
+    "https://davesriogrande.net/Structures/WaterTanks/watertanks.htm"
+  ],
+  "qa": {
+    "pass": true,
+    "findings": []
+  }
+}

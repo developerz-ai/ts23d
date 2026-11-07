@@ -2,7 +2,7 @@
 
 **Each milestone ships something an agent can use end to end, gated by `bun run verify`. Scope ends at the GLB, textures and manifest; engines and game code are out of scope.** Ticked = on `main` with a test and, where it makes geometry, a recipe. Order within a milestone is a suggestion; order between milestones is a dependency. No dates promised.
 
-Status as of 2026-10-25: **M0 done, M1 under way.** Every exported entry point that isn't ticked throws `T3D_NOT_IMPLEMENTED` with a pointer here.
+Status as of 2026-11-07: **M0 done, M1 done but for recipes, M2 under way.** Every exported entry point that isn't ticked throws `T3D_NOT_IMPLEMENTED` with a pointer here.
 
 ## M0: Scaffold (0.x)
 
@@ -41,19 +41,19 @@ Status as of 2026-10-25: **M0 done, M1 under way.** Every exported entry point t
 - [x] `beam`: member between two points, square or round
 - [x] `planar`: flat polygon in 3D
 - [x] `triangulate`: ear clipping
-- [ ] `tiled`: quad tiling a strip at true scale
-- [ ] `cell`: quad mapped to a decal cell
-- [ ] `roof`: hip, gable, pyramid, mansard
+- [x] `tiled`: quad tiling a strip at true scale
+- [x] `cell`: quad mapped to a decal cell (with `inset` reveals)
+- [x] `roof`: hip, gable, pyramid, mansard, gambrel, shed; `opening` window/door kit, `mass` true-scale masonry
 - [ ] Opt-out for genuinely floating parts (aircraft in flight, hanging signs)
 - [ ] Cross-machine determinism check; a `t3d build` flag for users' recipes
 - [x] Recipe: `eiffel_tower` (188,016 / 21,860 / 1,062 triangles, 1 draw call; profile from Weidman & Pinelis 2004 and Eiffel's 1887 drawing)
-- [ ] `lattice` truss primitive
+- [x] `lattice` truss primitive (Warren / Pratt / Howe / X)
 - [ ] Recipes: a terrace street, a station, an Art Deco tower, townhouse, gas lamp (landing)
 
 ## Recipe-agent backlog (unscheduled)
 
 - [ ] `orbit` motion + `phase` for side rods and quartering
-- [ ] Sector sweep for `sway` clashes (today: full revolution)
+- [x] Sector sweep for `sway` clashes; `oneWay` slide / sway
 - [ ] `recipes/_lib/` shared helpers: `trackLoop`, `roadWheel`, decal font with Cyrillic
 - [ ] `subdivide(mesh, maxEdge)` pass for vertex-colour camo
 - [ ] Exact-match option for measure `parts` (today: prefix match)
@@ -68,21 +68,21 @@ Materials:
 - [ ] Image-stamped cells (decals from any `ImageSource`)
 
 Optimisation and GLB production (gap ids from [glb-production.md](../architecture/glb-production.md)):
-- [ ] `optimize(mesh)`: vertex weld + vertex-cache reorder, reports ACMR
+- [x] `optimize(mesh)`: vertex weld + vertex-cache reorder, reports ACMR (default in export)
 - [ ] Gate: ACMR ceiling
 - [ ] Opt-in `web` profile: `KHR_mesh_quantization` + `EXT_meshopt_compression` (G14). Default stays core glTF: Godot refuses required extensions
 - [ ] `MSFT_lod` single-file LOD set + screen-coverage switch hints (G11)
 - [ ] Placeholder pivots at LOD2 so engine-bound names exist in every LOD (G3)
 - [ ] `engine-names` gate against Godot suffix hints like `_wheel`, `-col` (G6)
 - [ ] Clip naming Godot loops (`*_loop`) (G7)
-- [ ] Asset metadata: generator version, copyright, `asset.extras.ts23d` provenance (G8)
+- [x] Asset metadata: generator version, copyright, XMP provenance (G8)
 - [ ] Mesh dedupe: identical geometry shares one mesh (G9)
-- [ ] Emissive surface (`KHR_materials_emissive_strength`) for lit windows (G13 remainder)
+- [x] Emissive surface (`KHR_materials_emissive_strength`) for lit windows (G13 remainder)
 
 Shape:
 - [x] `sweep`: parallel-transport frames, taper, twist
 - [x] `loft` over `rings`, `ringXY` with wobble
-- [ ] `hull` (vessel kind) from length / beam / draft / freeboard
+- [x] `hull` (vessel kind) from length / beam / draft / freeboard
 - [ ] Lofted vehicle bodies, fuselages, wings
 
 Checking:
@@ -107,7 +107,7 @@ Exit bar: a 4-4-0 with tender matching [`docs/reference/loco-photo-match.png`](h
 
 ## M4: Creatures
 
-- [ ] `sdf`: marching-cubes meshing of a signed-distance field
+- [x] `sdf`: surface nets or marching cubes over a signed-distance field; `sculpt` edit lists (Dreams-style)
 - [ ] `creature`: SDF flesh over biped / quadruped / bird skeletons, bones as named parts
 - [ ] Recipes: stylised critters, rocks
 

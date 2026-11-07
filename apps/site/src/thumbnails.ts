@@ -1,21 +1,28 @@
-// Gallery card images: the published thumbnail PNG, or a lazy LOD2 render as a fallback.
+// Gallery card images: the committed beauty render (`recipes/<x>/out/<x>/hero.png`, card-sized by
+// the media plugin), or a lazy live LOD2 render for assets that have no committed renders yet.
 
-import { WebGLRenderer } from 'three';
-import type { AssetInfo as Asset } from './compile.ts';
 import { loadBuilt, recipe } from './compile.ts';
+import type { Item } from './items.ts';
 import { disposeTree, Stage } from './stage.ts';
+import { studioEnvironment, studioRenderer } from './studio.ts';
 
-const SIZE = 480;
-let renderer: WebGLRenderer | null = null;
+const W = 800;
+const H = 450;
+let renderer: ReturnType<typeof studioRenderer> | null = null;
 const stage = new Stage(false);
-stage.resize(SIZE, SIZE * 0.75);
+stage.resize(W, H);
 
-async function draw(asset: Asset): Promise<string> {
-  renderer ??= new WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
-  renderer.setPixelRatio(1);
-  renderer.setSize(SIZE, SIZE * 0.75, false);
-  const { scene } = await loadBuilt(recipe(asset.name, 2));
+async function draw(name: string): Promise<string> {
+  if (!renderer) {
+    renderer = studioRenderer();
+    renderer.setPixelRatio(1);
+    renderer.setSize(W, H, false);
+    stage.scene.environment = studioEnvironment(renderer);
+    stage.scene.environmentIntensity = 0.25;
+  }
+  const { scene } = await loadBuilt(recipe(name, 2));
   stage.show(scene, true);
+  stage.syncShadow();
   renderer.render(stage.scene, stage.camera);
   const url = renderer.domElement.toDataURL('image/png');
   disposeTree(scene);
@@ -24,25 +31,26 @@ async function draw(asset: Asset): Promise<string> {
 
 let queue: Promise<void> = Promise.resolve();
 
-/**
- * Card image: the library's `thumbnail()` PNG that the Pages build publishes at /thumbs/<name>.png.
- * When it isn't there (site:dev, or a recipe newer than the deploy), render LOD2 here instead.
- */
-export function cardImage(img: HTMLImageElement, asset: Asset): void {
+export function cardImage(img: HTMLImageElement, item: Item): void {
   img.loading = 'lazy';
   img.decoding = 'async';
-  img.addEventListener('error', () => renderFallback(img, asset), { once: true });
-  img.src = `${import.meta.env.BASE_URL}thumbs/${asset.name}.png`;
+  const src = item.media?.card;
+  if (src) {
+    img.src = src;
+    return;
+  }
+  img.closest('figure')?.classList.add('live');
+  if (item.recipe) renderFallback(img, item.name);
 }
 
-/** Render `asset` into `img` once the image is near the viewport. Draws are serialised. */
-function renderFallback(img: HTMLImageElement, asset: Asset): void {
+/** Render `name` into `img` once the image is near the viewport. Draws are serialised. */
+function renderFallback(img: HTMLImageElement, name: string): void {
   const io = new IntersectionObserver(
     (entries) => {
       if (!entries.some((e) => e.isIntersecting)) return;
       io.disconnect();
       queue = queue
-        .then(() => draw(asset))
+        .then(() => draw(name))
         .then((src) => {
           img.src = src;
         })

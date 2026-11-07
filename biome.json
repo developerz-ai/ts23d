@@ -13,6 +13,7 @@
       "!**/dist",
       "!**/coverage",
       "!apps/site/public/gallery",
+      "!recipes/*/out",
       "!**/*.md",
       "!**/*.yml",
       "!**/*.yaml"

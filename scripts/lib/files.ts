@@ -10,6 +10,25 @@ export async function tsFiles(root: string, cwd = process.cwd()): Promise<string
   return out.sort();
 }
 
+/**
+ * The asset folders: recipes/<name>/<name>.ts. Folders starting with `_` hold shared helpers,
+ * not assets. `stray` lists every other .ts under recipes/; the recipes gate rejects them.
+ */
+export async function recipeFolders(
+  cwd = process.cwd(),
+): Promise<{ folders: { dir: string; file: string }[]; stray: string[] }> {
+  const folders: { dir: string; file: string }[] = [];
+  const stray: string[] = [];
+  for (const f of await tsFiles('recipes', cwd)) {
+    const [, dir, name, ...rest] = f.split('/');
+    if (dir?.startsWith('_')) continue;
+    if (rest.length === 0 && dir && name === `${dir}.ts`)
+      folders.push({ dir: `recipes/${dir}`, file: f });
+    else if (!f.endsWith('.test.ts')) stray.push(f);
+  }
+  return { folders, stray };
+}
+
 export interface Violation {
   readonly file: string;
   readonly line: number;

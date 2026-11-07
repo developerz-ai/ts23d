@@ -14,6 +14,8 @@ import { runChecks } from './checks.ts';
 import { clashes } from './clash.ts';
 import { floatingParts } from './floating.ts';
 import { measures } from './measures.ts';
+import { hiddenParts } from './occlusion.ts';
+import { nonFinite, normalsMatchWinding, vertexColors } from './sanity.ts';
 import type { Finding, Gate } from './types.ts';
 
 const worldBounds = (asset: CompiledAsset): Map<string, Bounds> => {
@@ -113,6 +115,10 @@ export const DEFAULT_GATES: readonly Gate[] = [
   proportions,
   measures,
   recipeChecks,
+  nonFinite,
+  vertexColors,
+  hiddenParts,
+  normalsMatchWinding,
 ];
 
 export function runQa(asset: CompiledAsset, gates: readonly Gate[] = DEFAULT_GATES): Finding[] {

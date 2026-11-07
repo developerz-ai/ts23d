@@ -1,0 +1,58 @@
+{
+  "name": "human_head",
+  "kind": "character",
+  "description": "Stylised human hero bust: square jaw, swept hair, short beard, blue tunic and leather cloak roll",
+  "tags": [
+    "character",
+    "fantasy",
+    "human",
+    "bust",
+    "sculpt"
+  ],
+  "files": {
+    "lods": [],
+    "sheet": "recipes/human_head/out/human_head/sheet.png",
+    "thumb": "recipes/human_head/out/human_head/thumb.png"
+  },
+  "triangles": [
+    53452,
+    10556,
+    1440
+  ],
+  "drawCalls": [
+    1,
+    1,
+    1
+  ],
+  "pivots": [
+    {
+      "name": "body",
+      "parent": null
+    }
+  ],
+  "emitters": [],
+  "sockets": [],
+  "surfaces": [
+    "opaque"
+  ],
+  "real": {
+    "length": 0.247,
+    "width": 0.464,
+    "height": 0.439
+  },
+  "measures": [
+    {
+      "label": "eye spacing (pupil to pupil)",
+      "spec": 0.0621,
+      "measured": 0.062099999748170376,
+      "source": "0.135 × 2 × 0.23 m — adult interpupillary ≈ 62 mm"
+    }
+  ],
+  "sources": [
+    "recipes/human_head/README.md (design dossier: proportions, palette, references)"
+  ],
+  "qa": {
+    "pass": true,
+    "findings": []
+  }
+}

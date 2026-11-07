@@ -5,7 +5,7 @@ description: The closed agent loop for writing a ts23d asset recipe in TypeScrip
 
 # Authoring a recipe
 
-The human names a thing; you research it (specs + real photos) into `refs/<name>.md`; then you build
+The human names a thing; you research it (specs + real photos) into `recipes/<name>/README.md`; then you build
 it here; the gates prove the model matches the research.
 
 A recipe is a TypeScript module exporting one `defineAsset(...)`. It is code: loops, helpers,
@@ -47,12 +47,14 @@ export const my_asset = defineAsset({
 ## Loop
 | Step | Command | Exit criterion |
 |---|---|---|
-| 1 research | WebSearch spec tables + photos per view → `refs/<name>.md` (template: `refs/README.md`) | dossier: every number sourced, one variant chosen |
-| 2 masses | `bun run t3d build recipes/x.ts --out out` | QA PASS: proportions ±5%, measures ±2%, every part's surface touches what holds it, no moving part clashes |
-| 3 look | `bun run t3d shot recipes/x.ts --out renders` → Read `renders/x.png` | silhouette right in all six views |
-| 4 detail | LOD0 dense, LOD1 lean, LOD2 silhouette | budgets met, QA PASS |
-| 5 grime | `grime(mesh, { ground: 1, zones })` | darker near ground / exhausts |
-| 6 iterate | repeat 3–5 | a stranger names it from the 3/4 view |
+| 1 research | WebSearch + WebFetch: the spec table (manufacturer sheet, museum page, roster, drawing) and real photos per view (side elevation, front, 3/4, top, close-ups of signature details) → `recipes/<name>/README.md` (template: `recipes/README.md`). Link photos, never commit them (licences); Wikimedia Commons is the best first stop. Invented assets (sci-fi, fantasy) get a design dossier instead: scale references from real things, shape language, palette | dossier: every number sourced, one variant chosen, photos linked per view |
+| 2 masses | `bun run t3d build recipes/x/x.ts --out out` | QA PASS: proportions ±5%, measures ±2%, every part's surface touches what holds it, no moving part clashes |
+| 3 look | `bun run t3d shot recipes/x/x.ts --out renders` → Read the sheet PNG; `bun run t3d hero recipes/x/x.ts --out renders` → Read the beauty render | silhouette right in all six views; reads as the real thing in the 3/4 beauty shot |
+| 4 detail | LOD0 dense, LOD1 lean, LOD2 silhouette. Hard surface: `box({ bevel: ctx.pick([0.02, 0.01, 0]) })` + `weightedNormals` (the mid-poly trick); walls: `tiled` / `mass` / `opening` (true-scale masonry, recessed windows); trusses: `lattice`; organic: `sculpt` | budgets met, QA PASS |
+| 5 grime | `grime(mesh, { ground: 1, zones })`; `bakeAo` for crevices | darker near ground / exhausts / creases |
+| 6 review | `bun run t3d review recipes/x/x.ts --out review` → Read `review/*.png`, follow `review/review.md`, clear `review.json` warnings (LOD popping, exposure, tiny-in-frame) | no warnings you can't explain |
+| 7 iterate | repeat 3–6 | a stranger names it from the 3/4 view |
+| 8 publish | `bun run shots <name>` → commit `recipes/<name>/out/` | the recipes gate checks the committed outputs match the recipe |
 
 ## Contact sheet layout
 Row 1: 3/4 FRONT · FRONT +X · SIDE -Y. Row 2: TOP · 3/4 REAR · FAR LOD2. Header: name, overall
@@ -86,5 +88,6 @@ Debug with `inspect(compile(asset))` in a scratch script: `distance(a, b)`, `pen
 `bounds(glob)`, `parts(glob)` — find the exact offender, fix the cause, never loosen the selector.
 
 ## Conventions
-Metres, Z up, +X = front. Named parts are the engine contract. `ctx.rng` only. One asset per file.
+Metres, Z up, +X = front. Named parts are the engine contract. `ctx.rng` only. One asset per
+folder: `recipes/<name>/<name>.ts` + `README.md` + committed `out/`.
 Detail is built once in local space and `place`d N times — never hand-copied coordinates.

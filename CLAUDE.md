@@ -3,15 +3,26 @@
 ## ts23d
 
 `@developerz-ai/ts23d`: a **free 3D asset generator you drive with a coding agent**. Assets are
-TypeScript modules (`recipes/*.ts`, never JSON) that compile deterministically to game-ready GLB:
+TypeScript modules (`recipes/*/*.ts`, never JSON) that compile deterministically to game-ready GLB:
 named pivoted parts, baked motion, 3 LODs from one source, one shared trim-sheet material, a QA gate
 that fails the build, and a zero-GPU six-view **contact sheet** the agent reads to check its own work.
-Bun only. Zero runtime dependencies. Status: 0.x scaffold — `planned.ts` files throw
-`T3D_NOT_IMPLEMENTED` on purpose; `docs/plans/roadmap.md` owns what lands when.
+Bun only. Zero runtime dependencies. Status: 0.x — anything unbuilt throws `T3D_NOT_IMPLEMENTED`
+on purpose; `docs/plans/roadmap.md` owns what lands when.
 
 **Scope: we generate assets; the engine is the user's.** Output ends at GLB + textures +
 manifest, for Unity, Unreal, Godot, three.js, Babylon or anything that reads glTF. No game,
 engine or runtime code in this repo; the site is an asset gallery, never a game.
+
+`AGENTS.md` is a symlink to this file: one brain for Claude Code, Codex, Cursor and the rest, in
+this repo or in a project that installed the package.
+
+## Using the library in your project
+`bun add @developerz-ai/ts23d`, write `assets/<name>.ts` exporting `defineAsset({...})`, then loop:
+`bunx t3d build assets/<name>.ts --out out` (GLB × 3 LODs + QA, exit 1 on a finding) →
+`bunx t3d shot assets/<name>.ts --out renders` (one PNG, six views — open it and look). Fix what QA
+prints (every finding has a `fix:`) and what you see. No CLI needed: the same steps are functions
+(`compile`, `runQa`, `toGlb`, `contactSheet`), see `examples/build-with-bun.ts`. Link map: `llms.txt`;
+every error code: `docs/architecture/errors.md`.
 
 ## Axioms (override any instinct that conflicts)
 1. **Code, not data.** The DSL is TypeScript: loops, functions, `ctx.use` composition. No JSON recipes.
@@ -27,9 +38,11 @@ engine or runtime code in this repo; the site is an asset gallery, never a game.
 |---|---|
 | fresh clone → ready | `bun run setup` |
 | **the gate** (≡ CI) | `bun run verify` · one step: `bun run verify --only <step>` · `--json` |
-| compile + QA a recipe | `bun run t3d build recipes/t34.ts --out out` |
-| contact sheet (READ the PNG) | `bun run t3d shot recipes/t34.ts --out renders` |
-| all contact sheets | `bun run shots` |
+| compile + QA a recipe | `bun run t3d build recipes/t34/t34.ts --out out` |
+| contact sheet (READ the PNG) | `bun run t3d shot recipes/t34/t34.ts --out renders` |
+| beauty render (3/4, textured, shadowed) | `bun run t3d hero recipes/t34/t34.ts --out renders` |
+| AI review pack (READ `review/*.png`, follow `review.md`) | `bun run t3d review recipes/t34/t34.ts --out review` |
+| refresh every asset's committed `out/` | `bun run shots` (the recipes gate fails on stale outputs) |
 | one test file | `bun test src/primitives/prism.test.ts` |
 | lint fix | `bun run lint:fix` |
 | gallery site | `bun run site:dev` · `bun run site:build` |
@@ -42,8 +55,8 @@ Gate steps, in order: lint · typecheck · boundaries · determinism · filesize
 ```
 src/<module>/     the library — one module per responsibility, tiered (below)
 src/index.ts      the public barrel; subpaths @developerz-ai/ts23d/<module>
-recipes/          gallery assets — TypeScript, one asset per file, CI-gated
-refs/             reference dossiers — sourced specs + photo links, written before each recipe
+recipes/<name>/   one folder per asset: <name>.ts (the recipe) · README.md (sourced specs, photo
+                  links, written first) · out/<asset>/ (committed hero.png, sheet.png, manifest.json)
 apps/site/        GitHub Pages gallery (Vite + three.js), compiles recipes in the browser
 scripts/          the gate and its guards; release/build/setup (Bun TS, tested)
 docs/             idea/ (what+why) · decisions/ (ADRs) · architecture/ · plans/roadmap.md
@@ -71,9 +84,9 @@ Cross-module imports go through `../<module>/index.ts` only. Enforced by `bun ru
 - **Neutral positioning.** Never claim to beat Meshy/Tripo/etc. We're the free, code-based option.
 
 ## Recipes — the agent loop
-The human names a thing → the agent researches specs + real photos into `refs/<name>.md` →
-`real` + `sources` + `measures` → masses → `t3d build` until QA PASS → `t3d shot` → **Read
-the PNG** → LOD-gated detail (build once, `place` N times, `merge`) → `grime` → iterate. Full skill:
+The human names a thing → the agent researches specs + real photos into `recipes/<name>/README.md` →
+`real` + `sources` + `measures` → masses → `t3d build` until QA PASS → `t3d shot` + `t3d hero` →
+**Read the PNGs** → `t3d review` → LOD-gated detail (build once, `place` N times, `merge`) → `grime` → iterate. Full skill:
 `.claude/skills/author-recipe/SKILL.md`. Quality bar: competes with real game assets up close, a few
 hundred triangles at LOD2.
 

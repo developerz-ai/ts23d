@@ -1,0 +1,58 @@
+{
+  "name": "goblin_head",
+  "kind": "character",
+  "description": "Stylised goblin bust: huge pointed ears, long humped nose, toothy grin, amber eyes, hood",
+  "tags": [
+    "character",
+    "fantasy",
+    "goblin",
+    "bust",
+    "sculpt"
+  ],
+  "files": {
+    "lods": [],
+    "sheet": "recipes/goblin_head/out/goblin_head/sheet.png",
+    "thumb": "recipes/goblin_head/out/goblin_head/thumb.png"
+  },
+  "triangles": [
+    46536,
+    9080,
+    1300
+  ],
+  "drawCalls": [
+    1,
+    1,
+    1
+  ],
+  "pivots": [
+    {
+      "name": "body",
+      "parent": null
+    }
+  ],
+  "emitters": [],
+  "sockets": [],
+  "surfaces": [
+    "opaque"
+  ],
+  "real": {
+    "length": 0.236,
+    "width": 0.322,
+    "height": 0.366
+  },
+  "measures": [
+    {
+      "label": "eye spacing (pupil to pupil)",
+      "spec": 0.057,
+      "measured": 0.056999999564141035,
+      "source": "0.15 × 2 × 0.19 m"
+    }
+  ],
+  "sources": [
+    "recipes/goblin_head/README.md (design dossier: proportions, palette, references)"
+  ],
+  "qa": {
+    "pass": true,
+    "findings": []
+  }
+}

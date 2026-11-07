@@ -1,0 +1,340 @@
+/* Home: the live showcase stage, section heads and "how it works". */
+
+.showcase {
+  --ink: var(--studio-ink);
+  --ink-muted: var(--studio-ink-muted);
+  position: relative;
+  min-height: clamp(30rem, 78vh, 50rem);
+  display: grid;
+  align-items: end;
+  overflow: hidden;
+  color: var(--ink);
+  background: radial-gradient(ellipse 80% 90% at 62% 38%, var(--studio-hi), var(--studio-lo));
+  border-bottom: 1px solid var(--rule-strong);
+}
+
+.showcase-stage {
+  position: absolute;
+  inset: 0;
+}
+
+.showcase-poster,
+.showcase-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: opacity 0.6s ease;
+}
+
+.showcase-poster {
+  /* The beauty render's subject sits centre; on wide screens push it right of the copy. */
+  object-position: 30% 50%;
+}
+
+@media (min-width: 900px) {
+  .showcase-poster {
+    left: 18%;
+    width: 82%;
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 22%);
+    mask-image: linear-gradient(90deg, transparent, #000 22%);
+  }
+}
+
+.showcase-canvas {
+  opacity: 0;
+}
+
+.showcase-stage.live .showcase-canvas {
+  opacity: 1;
+}
+
+.showcase-stage.live .showcase-poster,
+.showcase-stage.swapping .showcase-canvas {
+  opacity: 0;
+}
+
+.showcase-copy {
+  position: relative;
+  z-index: 1;
+  max-width: 38rem;
+  padding: 6rem var(--gutter) 3rem;
+  pointer-events: none;
+}
+
+.showcase-copy > * {
+  pointer-events: auto;
+}
+
+.showcase h1 {
+  font-size: clamp(1.9rem, 3.4vw, 2.9rem);
+  max-width: 30rem;
+  margin: 0 0 1rem;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+
+.showcase .lede {
+  font-size: clamp(1rem, 1.4vw, 1.15rem);
+  max-width: 34rem;
+  margin: 0 0 1.5rem;
+  color: var(--ink-muted);
+}
+
+.showcase .cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin: 0 0 1rem;
+}
+
+.showcase .button:not(.primary) {
+  background: rgb(255 255 255 / 0.65);
+  color: var(--ink);
+  --paper-raised: #fff;
+}
+
+.showcase .button.primary {
+  background: var(--studio-ink);
+  border-color: var(--studio-ink);
+  color: #fff;
+}
+
+.showcase .button.primary:hover {
+  background: #b5380b;
+  border-color: #b5380b;
+}
+
+.install {
+  margin: 0;
+}
+
+.install code {
+  display: inline-block;
+  padding: 0.35rem 0.6rem;
+  border: 1px dashed var(--rule-strong);
+  background: rgb(255 255 255 / 0.55);
+  font-size: 0.8125rem;
+}
+
+.showcase-label {
+  position: absolute;
+  z-index: 1;
+  right: var(--gutter);
+  bottom: 1.5rem;
+  display: grid;
+  gap: 0.1rem;
+  min-width: 15rem;
+  padding: 0.6rem 0.85rem;
+  text-decoration: none;
+  color: var(--studio-ink);
+  background: rgb(255 255 255 / 0.72);
+  backdrop-filter: blur(6px);
+  border: 1px solid #5f7ea3;
+  outline: 1px solid #9fb3cc;
+  outline-offset: -5px;
+  font-family: var(--font-mono);
+}
+
+.showcase-label:hover {
+  border-color: #b5380b;
+}
+
+.label-k {
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: #b5380b;
+}
+
+.showcase-label strong {
+  font-size: 1rem;
+}
+
+.label-meta {
+  font-size: 0.75rem;
+  color: var(--studio-ink-muted);
+}
+
+.label-go {
+  justify-self: end;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+@media (max-width: 899px) {
+  .showcase {
+    min-height: 0;
+    grid-template-rows: 18rem auto auto;
+  }
+
+  .showcase-copy {
+    grid-row: 3;
+    padding-top: 1rem;
+  }
+
+  .showcase-stage {
+    bottom: auto;
+    height: 18rem;
+  }
+
+  .showcase-label {
+    position: relative;
+    grid-row: 2;
+    right: auto;
+    bottom: auto;
+    justify-self: stretch;
+    margin: -1.5rem var(--gutter) 0;
+    min-width: 0;
+  }
+}
+
+/* ---------------------------------------------------------------- sections */
+
+.gallery,
+.how {
+  max-width: var(--page);
+  margin: 0 auto;
+  padding: 3rem var(--gutter) 0;
+}
+
+.section-head {
+  display: grid;
+  gap: 0.4rem;
+  margin-bottom: 1.25rem;
+}
+
+.section-head .section-note {
+  max-width: 44rem;
+}
+
+.count {
+  color: var(--redline);
+  margin-left: 0.25rem;
+}
+
+/* ---------------------------------------------------------------- how it works */
+
+.steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+  border: 1px solid var(--rule-strong);
+  background: var(--paper-raised);
+}
+
+.step {
+  padding: 1.25rem;
+  border-right: 1px solid var(--rule);
+  min-width: 0;
+}
+
+.step:last-child {
+  border-right: 0;
+}
+
+.step h3 {
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin: 0 0 1rem;
+}
+
+.step-no {
+  color: var(--redline);
+  margin-right: 0.5rem;
+}
+
+.step-note {
+  color: var(--ink-muted);
+  font-size: 0.9rem;
+}
+
+.terminal,
+.binding {
+  margin: 0 0 0.75rem;
+  padding: 0.75rem 0.9rem;
+  background: var(--code-bg);
+  border: 1px solid var(--rule-strong);
+  overflow-x: auto;
+  white-space: pre;
+}
+
+.terminal {
+  white-space: pre-wrap;
+}
+
+.prompt {
+  color: var(--redline);
+}
+
+.sheet-figure {
+  margin: 0;
+}
+
+.sheet-figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--rule);
+  background: #fff;
+}
+
+.sheet-figure figcaption {
+  font: 0.75rem var(--font-mono);
+  color: var(--ink-muted);
+  margin-top: 0.35rem;
+}
+
+.engine-label {
+  margin: 0.5rem 0 0.35rem;
+  font: 600 0.6875rem var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--ink-muted);
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+  margin: 1rem 0 0;
+  border: 1px solid var(--rule-strong);
+  background: var(--paper-raised);
+}
+
+.facts > div {
+  padding: 0.75rem 1rem;
+  border-right: 1px solid var(--rule);
+}
+
+.facts dt {
+  font: 600 0.6875rem var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--ink-muted);
+}
+
+.facts dd {
+  margin: 0.2rem 0 0;
+  font-weight: 500;
+}
+
+.tok-comment {
+  color: var(--tok-comment);
+  font-style: italic;
+}
+
+.tok-string {
+  color: var(--tok-string);
+}
+
+.tok-number {
+  color: var(--tok-number);
+}
+
+.tok-keyword {
+  color: var(--tok-keyword);
+}

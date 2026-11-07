@@ -1,8 +1,9 @@
 // Gate: moving parts never cut through anything. Each motion root (a spinning wheel/axle group, a
 // rotor, a sliding crosshead) is swept through its whole motion; any other part whose surface goes
 // deeper than CLASH_EPS into that swept volume fails — wheel vs fender, prop vs cowling, rod vs frame.
-// Spin sweeps are exact solids of revolution (sway uses the same, conservatively) (radius profile per axial slice); slides use the
-// moving mesh's bounds extended along the stroke.
+// Spins sweep a solid of revolution (radius profile per axial slice); sways sweep only their
+// sector (the same profile, kept per 5° angular bin and widened by the swing); slides use the
+// moving mesh's bounds extended along the stroke (one side only for `oneWay`).
 
 import {
   boundsOf,
@@ -34,44 +35,82 @@ interface Volume {
   readonly max: Vec3;
 }
 
-function spinVolume(mesh: Mesh, pivot: Vec3, axis: Vec3): Volume {
+const BINS = 72;
+const TAU = Math.PI * 2;
+
+/**
+ * Swept volume of `mesh` rotating about `axis` through `pivot`. `range` (radians, rest = 0)
+ * limits it to a sector; omitted = a full revolution.
+ */
+function spinVolume(
+  mesh: Mesh,
+  pivot: Vec3,
+  axis: Vec3,
+  range?: readonly [number, number],
+): Volume {
   const len = Math.hypot(...axis) || 1;
   const u: Vec3 = [axis[0] / len, axis[1] / len, axis[2] / len];
-  const coords = (p: Vec3): [number, number] => {
+  // A frame around the axis, for the angle of each point.
+  const ref: Vec3 = Math.abs(u[0]) < 0.9 ? [1, 0, 0] : [0, 1, 0];
+  const dotRef = ref[0] * u[0] + ref[1] * u[1] + ref[2] * u[2];
+  const e1raw: Vec3 = [ref[0] - dotRef * u[0], ref[1] - dotRef * u[1], ref[2] - dotRef * u[2]];
+  const e1l = Math.hypot(...e1raw) || 1;
+  const e1: Vec3 = [e1raw[0] / e1l, e1raw[1] / e1l, e1raw[2] / e1l];
+  const e2: Vec3 = [
+    u[1] * e1[2] - u[2] * e1[1],
+    u[2] * e1[0] - u[0] * e1[2],
+    u[0] * e1[1] - u[1] * e1[0],
+  ];
+  const coords = (p: Vec3): [number, number, number] => {
     const d: Vec3 = [p[0] - pivot[0], p[1] - pivot[1], p[2] - pivot[2]];
     const a = d[0] * u[0] + d[1] * u[1] + d[2] * u[2];
-    return [a, Math.hypot(d[0] - a * u[0], d[1] - a * u[1], d[2] - a * u[2])];
+    const x = d[0] * e1[0] + d[1] * e1[1] + d[2] * e1[2];
+    const y = d[0] * e2[0] + d[1] * e2[1] + d[2] * e2[2];
+    return [a, Math.hypot(x, y), Math.atan2(y, x)];
   };
+  const bin = (phi: number): number =>
+    Math.floor((((phi % TAU) + TAU) % TAU) / (TAU / BINS)) % BINS;
   const pts = surfaceSamples(mesh, 0.05, 8).map(coords);
   const lo = Math.min(...pts.map((p) => p[0]));
   const hi = Math.max(...pts.map((p) => p[0]));
   const span = Math.max(hi - lo, 1e-6);
-  const radius = new Float64Array(SLICES).fill(-1);
-  for (const [a, r] of pts) {
-    const s = Math.min(SLICES - 1, Math.floor(((a - lo) / span) * SLICES));
-    radius[s] = Math.max(radius[s] ?? -1, r);
+  const slice = (a: number): number => Math.min(SLICES - 1, Math.floor(((a - lo) / span) * SLICES));
+  // radius[slice * BINS + bin]: farthest body sample in that slice and angular bin (rest pose).
+  const radius = new Float64Array(SLICES * BINS).fill(-1);
+  for (const [a, r, phi] of pts) {
+    const k = slice(a) * BINS + bin(phi);
+    radius[k] = Math.max(radius[k] ?? -1, r);
   }
+  // Bins a rest-pose bin sweeps into: the swing plus one bin of slack either side.
+  const [from, to] = range ?? [0, TAU];
+  const steps = range ? Math.ceil((to - from) / (TAU / BINS)) + 2 : BINS;
   const reach = Math.max(...radius) + Math.max(Math.abs(lo), Math.abs(hi));
   return {
     min: [pivot[0] - reach, pivot[1] - reach, pivot[2] - reach],
     max: [pivot[0] + reach, pivot[1] + reach, pivot[2] + reach],
     inside: (p) => {
-      const [a, r] = coords(p);
+      const [a, r, phi] = coords(p);
       if (a < lo + CLASH_EPS || a > hi - CLASH_EPS) return false;
-      const s = Math.min(SLICES - 1, Math.floor(((a - lo) / span) * SLICES));
-      return r < (radius[s] ?? -1) - CLASH_EPS;
+      const base = slice(a) * BINS;
+      // p is swept if some rest-pose bin, rotated by θ ∈ [from, to], lands on p's angle.
+      for (let i = 0; i < Math.min(steps, BINS); i++) {
+        const theta = range ? from - TAU / BINS + i * (TAU / BINS) : i * (TAU / BINS);
+        if (r < (radius[base + bin(phi - theta)] ?? -1) - CLASH_EPS) return true;
+      }
+      return false;
     },
   };
 }
 
-function slideVolume(mesh: Mesh, offset: Vec3): Volume {
+function slideVolume(mesh: Mesh, offset: Vec3, oneWay = false): Volume {
   const b = boundsOf(mesh);
-  const lo = [0, 1, 2].map(
-    (k) => Math.min(b.min[k] ?? 0, (b.min[k] ?? 0) - Math.abs(offset[k] ?? 0)) + CLASH_EPS,
-  );
-  const hi = [0, 1, 2].map(
-    (k) => Math.max(b.max[k] ?? 0, (b.max[k] ?? 0) + Math.abs(offset[k] ?? 0)) - CLASH_EPS,
-  );
+  // Two-sided strokes reach ±offset; one-way strokes reach rest..rest + offset.
+  const neg = (k: number): number =>
+    oneWay ? Math.min(0, offset[k] ?? 0) : -Math.abs(offset[k] ?? 0);
+  const pos = (k: number): number =>
+    oneWay ? Math.max(0, offset[k] ?? 0) : Math.abs(offset[k] ?? 0);
+  const lo = [0, 1, 2].map((k) => (b.min[k] ?? 0) + neg(k) + CLASH_EPS);
+  const hi = [0, 1, 2].map((k) => (b.max[k] ?? 0) + pos(k) - CLASH_EPS);
   return {
     min: [lo[0] ?? 0, lo[1] ?? 0, lo[2] ?? 0],
     max: [hi[0] ?? 0, hi[1] ?? 0, hi[2] ?? 0],
@@ -99,11 +138,14 @@ export const clashes: Gate = (asset: CompiledAsset): Finding[] => {
     const c = Math.cos(t.yaw);
     const s = Math.sin(t.yaw);
     const rot = (v: Vec3): Vec3 => [v[0] * c - v[1] * s, v[0] * s + v[1] * c, v[2]];
-    // A sway sweeps a sector of a full turn; the whole revolution is a safe superset.
+    const m = root.motion;
+    const peak = m.kind === 'sway' ? (m.degrees * Math.PI) / 180 : 0;
     const vol =
-      root.motion.kind === 'slide'
-        ? slideVolume(body, rot(root.motion.offset))
-        : spinVolume(body, t.origin, rot(root.motion.axis));
+      m.kind === 'slide'
+        ? slideVolume(body, rot(m.offset), m.oneWay)
+        : m.kind === 'sway'
+          ? spinVolume(body, t.origin, rot(m.axis), m.oneWay ? [0, peak] : [-peak, peak])
+          : spinVolume(body, t.origin, rot(m.axis));
     for (const [name, mesh] of meshes) {
       if (moving.has(name) || root.clearOf?.includes(name)) continue;
       const b = boundsOf(mesh);

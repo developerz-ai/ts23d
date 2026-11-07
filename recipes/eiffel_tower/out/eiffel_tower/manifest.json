@@ -1,0 +1,95 @@
+{
+  "name": "eiffel_tower",
+  "kind": "building",
+  "description": "Eiffel Tower, Paris (1889; 330 m since the 2022 DAB antenna): four curved wrought-iron lattice legs on the SNTE 29-panel profile, the 1st-floor arches and belt, three platforms, campanile and antenna; three graded shades of Eiffel Tower Brown.",
+  "tags": [
+    "landmark",
+    "paris",
+    "lattice",
+    "wrought-iron",
+    "1889"
+  ],
+  "files": {
+    "lods": [],
+    "sheet": "recipes/eiffel_tower/out/eiffel_tower/sheet.png",
+    "thumb": "recipes/eiffel_tower/out/eiffel_tower/thumb.png"
+  },
+  "triangles": [
+    188016,
+    21860,
+    1062
+  ],
+  "drawCalls": [
+    1,
+    1,
+    1
+  ],
+  "pivots": [
+    {
+      "name": "body",
+      "parent": null
+    }
+  ],
+  "emitters": [],
+  "sockets": [],
+  "surfaces": [
+    "opaque"
+  ],
+  "real": {
+    "length": 124.9,
+    "width": 124.9,
+    "height": 330
+  },
+  "measures": [
+    {
+      "label": "1st floor deck height",
+      "spec": 57.63,
+      "measured": 57.630001068115234,
+      "source": "structurae / plate PL. I"
+    },
+    {
+      "label": "2nd floor deck height",
+      "spec": 115.73,
+      "measured": 115.7300033569336,
+      "source": "structurae / plate PL. I"
+    },
+    {
+      "label": "3rd floor deck height",
+      "spec": 276.13,
+      "measured": 276.1300048828125,
+      "source": "structurae"
+    },
+    {
+      "label": "base square, outside of the legs",
+      "spec": 124.9,
+      "measured": 124.79923248291016,
+      "source": "fr.wikipedia (124,90 m)"
+    },
+    {
+      "label": "leg centres at the ground",
+      "spec": 99.57,
+      "measured": 99.56500244140625,
+      "source": "plate PL. I: (124.90 + 74.24) / 2"
+    },
+    {
+      "label": "1st floor outer side",
+      "spec": 70.69,
+      "measured": 70.69000244140625,
+      "source": "fr.wikipedia"
+    }
+  ],
+  "sources": [
+    "https://comptes-rendus.academie-sciences.fr/mecanique/item/10.1016/j.crme.2004.02.021.pdf",
+    "https://commons.wikimedia.org/wiki/File:Eiffel_Tower_plans_01.jpg",
+    "https://fr.wikipedia.org/wiki/Tour_Eiffel",
+    "https://en.wikipedia.org/wiki/Eiffel_Tower",
+    "https://structurae.net/en/structures/20000021",
+    "https://www.skyscrapercenter.com/building/wd/9410",
+    "https://www.nationalgeographic.com/travel/article/behind-the-scenes-eiffel-tower-paris",
+    "https://www.toureiffel.paris/en/the-monument/painting-eiffel-tower"
+  ],
+  "qa": {
+    "pass": true,
+    "findings": []
+  }
+}

@@ -89,6 +89,27 @@ export const BUDGETS = {
   scene: { triangles: [500000, 120000, 15000] },
 } as const satisfies Record<string, Budget>;
 
+/** A part set that emits light (lamp lenses, lit windows): an emissive material in the GLB. */
+export interface Glow {
+  /** Part names or globs: 'headlamp_*', 'window_*'. */
+  readonly parts: readonly string[];
+  /** Linear RGB 0..1 (`hex('#ffd9a0')`). Default warm white. */
+  readonly color?: readonly [number, number, number];
+  /** Brightness multiplier (KHR_materials_emissive_strength); 1 = plain glTF. Default 4. */
+  readonly strength?: number;
+}
+
+/** Provenance written into every GLB: `asset.copyright` + an XMP packet. */
+export interface AssetMeta {
+  readonly description?: string;
+  readonly sources?: readonly string[];
+  /** SPDX id or licence URL, e.g. 'CC0-1.0', 'MIT'. */
+  readonly license?: string;
+  /** e.g. '© 2026 Jane Doe'. */
+  readonly copyright?: string;
+  readonly creators?: readonly string[];
+}
+
 export interface AssetDefinition {
   readonly name: string;
   readonly kind: string;
@@ -101,6 +122,12 @@ export interface AssetDefinition {
   readonly seed?: number;
   /** The recipe's own physical intent, enforced by QA (see Check). */
   readonly checks?: readonly Check[];
+  /** SPDX id or licence URL for the generated asset, e.g. 'CC0-1.0'. Written into the GLB. */
+  readonly license?: string;
+  readonly copyright?: string;
+  readonly creators?: readonly string[];
+  /** Emissive part sets; `t3d build` writes them as glowing materials. */
+  readonly glow?: readonly Glow[];
   build(ctx: BuildContext): void;
 }
 
@@ -116,4 +143,7 @@ export interface CompiledAsset {
   readonly real: RealDimensions | null;
   readonly checks: readonly Check[];
   readonly parts: readonly Part[];
+  /** Provenance carried from the definition (absent when the recipe declares none). */
+  readonly meta?: AssetMeta;
+  readonly glow?: readonly Glow[];
 }

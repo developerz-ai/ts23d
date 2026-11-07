@@ -1,0 +1,227 @@
+{
+  "name": "tiger_1",
+  "kind": "vehicle",
+  "description": "Tiger I mid production (late 1943) — Zimmerit, three-tone camo, interleaved wheels, link-by-link track, full stowage",
+  "tags": [
+    "military",
+    "tracked",
+    "ww2",
+    "hero"
+  ],
+  "files": {
+    "lods": [],
+    "sheet": "recipes/tiger_1/out/tiger_1/sheet.png",
+    "thumb": "recipes/tiger_1/out/tiger_1/thumb.png"
+  },
+  "triangles": [
+    88176,
+    16304,
+    648
+  ],
+  "drawCalls": [
+    23,
+    23,
+    3
+  ],
+  "pivots": [
+    {
+      "name": "body",
+      "parent": null
+    },
+    {
+      "name": "wheel_l_0",
+      "parent": null,
+      "motion": "spin"
+    },
+    {
+      "name": "wheel_l_1",
+      "parent": null,
+      "motion": "spin"
+    },
+    {
+      "name": "wheel_l_2",
+      "parent": null,
+      "motion": "spin"
+    },
+    {
+      "name": "wheel_l_3",
+      "parent": null,
+      "motion": "spin"
+    },
+    {
+      "name": "wheel_l_4",
+      "parent": null,
+      "motion": "spin"
+    },
+    {
+      "name": "wheel_l_5",
+      "parent": null,
+      "motion": "spin"
+    },
+    {
+      "name": "wheel_l_6",
+      "parent": null,
+      "motion": "spin"
+    },
+    {
+      "name": "wheel_l_7",
+      "parent": null,
+      "motion": "spin"
+    },
+    {
+      "name": "sprocket_l",
+      "parent": null,
+      "motion": "spin"
+    },
+    {
+      "name": "idler_l",
+      "parent": null,
+      "motion": "spin"
+    },
+    {
+      "name": "wheel_r_0",
+      "parent": null,
+      "motion": "spin"
+    },
+    {
+      "name": "wheel_r_1",
+      "parent": null,
+      "motion": "spin"
+    },
+    {
+      "name": "wheel_r_2",
+      "parent": null,
+      "motion": "spin"
+    },
+    {
+      "name": "wheel_r_3",
+      "parent": null,
+      "motion": "spin"
+    },
+    {
+      "name": "wheel_r_4",
+      "parent": null,
+      "motion": "spin"
+    },
+    {
+      "name": "wheel_r_5",
+      "parent": null,
+      "motion": "spin"
+    },
+    {
+      "name": "wheel_r_6",
+      "parent": null,
+      "motion": "spin"
+    },
+    {
+      "name": "wheel_r_7",
+      "parent": null,
+      "motion": "spin"
+    },
+    {
+      "name": "sprocket_r",
+      "parent": null,
+      "motion": "spin"
+    },
+    {
+      "name": "idler_r",
+      "parent": null,
+      "motion": "spin"
+    },
+    {
+      "name": "turret",
+      "parent": null,
+      "motion": "sway"
+    },
+    {
+      "name": "gun",
+      "parent": "turret",
+      "motion": "sway"
+    }
+  ],
+  "emitters": [
+    {
+      "name": "exhaust_smoke_l",
+      "kind": "smoke",
+      "when": "always"
+    },
+    {
+      "name": "track_dust_l",
+      "kind": "dust",
+      "when": "moving"
+    },
+    {
+      "name": "exhaust_smoke_r",
+      "kind": "smoke",
+      "when": "always"
+    },
+    {
+      "name": "track_dust_r",
+      "kind": "dust",
+      "when": "moving"
+    },
+    {
+      "name": "muzzle",
+      "kind": "muzzle",
+      "when": "event"
+    }
+  ],
+  "sockets": [],
+  "surfaces": [
+    "opaque"
+  ],
+  "real": {
+    "length": 8.45,
+    "width": 3.56,
+    "height": 3
+  },
+  "measures": [
+    {
+      "label": "hull length",
+      "spec": 6.316,
+      "measured": 6.315999984741211,
+      "source": "https://en.wikipedia.org/wiki/Tiger_I"
+    },
+    {
+      "label": "road wheel diameter",
+      "spec": 0.8,
+      "measured": 0.8000000193715096,
+      "source": "https://tankmuseum.org/tiger-wheels/"
+    },
+    {
+      "label": "track width",
+      "spec": 0.725,
+      "measured": 0.7250000238418579,
+      "source": "https://tiger1.info/EN/RoadWheelSpacing.html"
+    },
+    {
+      "label": "track centres",
+      "spec": 2.835,
+      "measured": 2.834999918937683,
+      "source": "3.56 m overall − 0.725 m track"
+    },
+    {
+      "label": "8.8 cm KwK 36 L/56 barrel length",
+      "spec": 4.928,
+      "measured": 4.927999943494797,
+      "source": "56 calibres × 88 mm"
+    },
+    {
+      "label": "wheel station pitch × 7",
+      "spec": 3.605,
+      "measured": 3.605000138282776,
+      "source": "https://tiger1.info/EN/RoadWheelSpacing.html"
+    }
+  ],
+  "sources": [
+    "https://en.wikipedia.org/wiki/Tiger_I (specifications: 6.316 m hull, 8.45 m with gun, 3.56 m, 3.0 m)",
+    "https://tiger1.info/EN/RoadWheelSpacing.html (800 mm wheels, 515 mm station pitch, 725 mm track)",
+    "https://tankmuseum.org/tiger-wheels/ (800 mm steel wheels with solid rubber tyres, 24 per side)",
+    "https://tamiyausa.com/shop/135-military-miniature/german-tiger-i-mid-production (mid production Jul 1943–Jan 1944: new cupola, single headlight, Zimmerit from Sep 1943)",
+    "Jentz & Doyle, Germany’s Tiger Tanks: D.W. to Tiger I (Schiffer 2000), stowage and tool layout"
+  ],
+  "qa": {
+    "pass": true,
+    "findings": []
+  }
+}

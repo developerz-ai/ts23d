@@ -4,9 +4,17 @@
 // Majority of the three rays (short-circuited), so grazing an edge cannot flip the answer.
 // Open sheets (planar decals) are never "solid"; penetration only means something vs closed parts.
 
-import type { Mesh, Vec3 } from '../core/index.ts';
+import { boundsOf, type Mesh, type Vec3 } from '../core/index.ts';
 
-const CELL = 0.2;
+/** Column size: 20 cm for props and vehicles, growing with the mesh so a 330 m tower's long
+ *  members don't land in thousands of columns each (answers never depend on the cell size). */
+const cellFor = (m: Mesh): number => {
+  const b = boundsOf(m);
+  return Math.max(
+    0.2,
+    Math.hypot(b.max[0] - b.min[0], b.max[1] - b.min[1], b.max[2] - b.min[2]) / 256,
+  );
+};
 // A tiny fixed offset keeps the query point off shared edges/vertices of axis-aligned geometry.
 const NUDGE: Vec3 = [1.37e-5, 2.91e-5, 3.73e-5];
 const OTHER = [
@@ -18,8 +26,11 @@ const OTHER = [
 export class SolidIndex {
   private readonly tri: Float64Array;
   private readonly columns: Map<number, number[]>[] = [new Map(), new Map(), new Map()];
+  private readonly cell: number;
 
   constructor(mesh: Mesh) {
+    this.cell = cellFor(mesh);
+    const CELL = this.cell;
     const n = mesh.indices.length / 3;
     this.tri = new Float64Array(n * 9);
     for (let t = 0; t < n; t++) {
@@ -31,12 +42,16 @@ export class SolidIndex {
         const [i, j] = OTHER[axis];
         const T = this.tri;
         const o = t * 9;
-        const ui = [T[o + i] ?? 0, T[o + 3 + i] ?? 0, T[o + 6 + i] ?? 0];
-        const uj = [T[o + j] ?? 0, T[o + 3 + j] ?? 0, T[o + 6 + j] ?? 0];
-        const u0 = Math.floor(Math.min(...ui) / CELL);
-        const u1 = Math.floor(Math.max(...ui) / CELL);
-        const v0 = Math.floor(Math.min(...uj) / CELL);
-        const v1 = Math.floor(Math.max(...uj) / CELL);
+        const a = T[o + i] ?? 0;
+        const b = T[o + 3 + i] ?? 0;
+        const c = T[o + 6 + i] ?? 0;
+        const d = T[o + j] ?? 0;
+        const e = T[o + 3 + j] ?? 0;
+        const f = T[o + 6 + j] ?? 0;
+        const u0 = Math.floor(Math.min(a, b, c) / CELL);
+        const u1 = Math.floor(Math.max(a, b, c) / CELL);
+        const v0 = Math.floor(Math.min(d, e, f) / CELL);
+        const v1 = Math.floor(Math.max(d, e, f) / CELL);
         const map = this.columns[axis];
         if (!map) continue;
         for (let u = u0; u <= u1; u++)
@@ -57,6 +72,7 @@ export class SolidIndex {
     const pi = p[i] ?? 0;
     const pj = p[j] ?? 0;
     const pk = p[axis] ?? 0;
+    const CELL = this.cell;
     const list = this.columns[axis]?.get(
       (Math.floor(pi / CELL) * 92837111) ^ (Math.floor(pj / CELL) * 689287499),
     );

@@ -19,16 +19,22 @@
 
 | Primitive | Key options | For |
 |---|---|---|
-| `box` | `size`, `at`, `strip`, `omit` | Hulls, walls, crates |
-| `lathe` / `cylinder` | `profile` or `radius`+`length`, `segments`, `axis` | Wheels, boilers, domes |
+| `box` | `size`, `at`, `strip`, `omit`, `bevel?` | Hulls, walls, crates; `bevel` = the mid-poly chamfer |
+| `lathe` / `cylinder` | `profile` or `radius`+`length`, `segments`, `axis`, `creaseDeg?`, `uv?: 'metres'`, `faceted?` | Wheels, boilers, domes, n-sided tanks |
 | `prism` | `profile`, `depth`, `plane: 'xy'\|'xz'\|'yz'` | Sloped armour, gables, fins |
 | `beam` | `from`, `to`, `width`, `segments?`, `up?`, `caps?` | Girders, rods, rails |
 | `planar` | `points`, `doubleSided?` | Plates, decks, signs |
 | `sweep` | `section` (polygon or `{ radius, segments }`), `path`, `scale?` (taper), `twist?`, `caps?` | Branches, pipes, handrails, cables. Parallel-transport frames; triangles = 2·S·(P−1) + S per cap |
 | `loft` | `rings` (Vec3 rings), `capStart?`, `capEnd?`, `uv?` | Trunks, fuselages, bottles. `ringXY(centre, rx, ry, …)` builds a ring, with wobble |
-| `heightfield` | `rect`, `cells`, `height(x, y)`, `color` | Terrain, dioramas |
+| `heightfield` | `rect`, `cells`, `height(x, y)`, `color`, `skirt?` | Terrain, dioramas; with `terrainGrid` + `hydraulicErosion` / `thermalErosion` + `terrainColor` for real-looking mountains |
+| `tiled` | `origin`, `u`, `v`, `strip`, `segments?` | Walls, roofs, decks at true texture scale |
+| `cell` | `origin`, `u`, `v`, `cell`, `inset?` | Windows, doors, clocks, signs; `inset` adds reveals |
+| `lattice` | `from`, `to`, `depth`, `pattern: warren\|pratt\|howe\|x`, `bays`, `chord`, `web`, `section` | Bridges, towers, cranes, gantries |
+| `text` | `str`, `origin`, `along`, `up`, `height`, `font`, `depth?`, `align?`, `maxWidth?`, `surface?` | Name boards, wagon lettering, hull markings (5×7 font, Latin + Cyrillic) |
+| `sdf` | `field(p)`, `bounds`, `resolution`, `mesher?`, `symmetry?` | Any signed-distance shape; `sd.*` combinators, `valueNoise` |
+| `sculpt` | `edits` (shape, op, blend, color, groups), `resolution`, `mirror?` | Busts, rocks, asteroids: Dreams-style edit lists |
 
-Planned: `tiled`, `cell`, `sdf`, a `lattice` truss.
+Noise for any primitive: `gradientNoise2`, `valueNoise2`, `fbm`, `billow`, `ridged`, `warp`, `terrace` — all seeded from an `Rng`.
 
 ## Why TypeScript, not JSON
 

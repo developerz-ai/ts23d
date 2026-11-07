@@ -13,6 +13,7 @@ export const TIERS: Readonly<Record<string, number>> = {
   export: 3,
   render: 3,
   cli: 4,
+  testing: 4,
 };
 
 /** `src/index.ts` re-exports the public modules; it sits above all of them. */
