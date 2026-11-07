@@ -97,7 +97,7 @@ The agent looks up real dimensions and photos into `recipes/<name>/README.md`, w
 
 ### 3. Use the GLB in your engine
 
-`out/<asset>/lod0.glb` (and `lod1`, `lod2`) are plain glTF 2.0, core extensions only. The hooks your engine code can use:
+`out/<asset>/lod0.glb` (and `lod1`, `lod2`) are plain glTF 2.0; `out/<asset>/<asset>.glb` holds all three in one file (LOD0 in the scene, LOD1/2 as `MSFT_lod` alternates with screen-coverage switch hints; viewers without the extension show LOD0 only; `--lods split|single|both`, default both). The hooks your engine code can use:
 
 | Hook | In the GLB |
 |---|---|
@@ -126,7 +126,7 @@ Each ts23d row names how it's verified. The image-to-3D column cites only what v
 | Property | ts23d | How it's verified | Typical image-to-3D output (per vendor docs) |
 |---|---|---|---|
 | Draw calls per asset | Static assets: 1. Vehicles: one per movable part (one shared material; static geometry batched into its pivot) | `toGlb` merges static parts by default (`mergeToPivots`); counts measured by `bun run bench` | One PBR material per generated model (e.g. Meshy: albedo / normal / metal / rough) |
-| LODs | 3 from the same source | `t3d build` writes `lod0/1/2`, each under its own triangle budget | One mesh per generation; polycount presets or a low-poly mode (Rodin, Meshy) |
+| LODs | 3 from the same source | `t3d build` writes `lod0/1/2` plus one `MSFT_lod` file holding all three, each under its own triangle budget | One mesh per generation; polycount presets or a low-poly mode (Rodin, Meshy) |
 | Named, pivoted, animatable parts | Yes | `part-names` gate; `clashes` gate sweeps every moving part | Usually one mesh; part-based output reported for CSM (3rd-party source) |
 | Deterministic rebuild | Byte-identical | `scripts/recipes.ts` builds every recipe twice and compares hashes, in CI | Not stated |
 | Real-world dimensions | Gated: ±5% overall, ±2% per measure | `proportions` and `measures` gates | Not stated |

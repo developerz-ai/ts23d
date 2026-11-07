@@ -47,12 +47,49 @@ a test pins it. Rigid parts (`ctx.part`) stay node-animated: a tank has no skin.
 | `KHR_texture_transform` | strip offset / scale without re-baking UVs | later |
 | `EXT_mesh_gpu_instancing` | rivets, bolts, scatter trees: one mesh, N transforms | later |
 | `KHR_mesh_quantization` + `EXT_meshopt_compression` | `web` profile (smaller files) | later (opt-in: Godot rejects *required* extensions) |
-| `MSFT_lod` | three LODs in one file with screen-coverage hints | later |
+| `MSFT_lod` (vendor, complete) | three LODs in one file with screen-coverage hints: `<asset>.glb`, `toLodGlb` | shipped (below) |
 | `KHR_animation_pointer` | animate material / light values (blinking lamp, heat glow) | later |
 | `KHR_texture_basisu` | KTX2 GPU-compressed trim sheet | later |
 | `KHR_draco_mesh_compression` | — | no: meshopt is faster to decode and preferred |
 | `KHR_gaussian_splatting` | — | no: we generate meshes, not captures |
 | `KHR_interactivity` | — | no: behaviour is engine code, out of scope |
+
+## LODs in one file: `MSFT_lod`
+
+`t3d build` writes `lod0/1/2.glb` **and** `<asset>.glb` holding all three (`--lods split|single|both`,
+default `both`). Default is `both` because separate files import into every engine's LOD tooling
+today, while the single file serves MSFT_lod-aware loaders and one-file pipelines; disk is the only cost.
+
+Layout (per the [spec](https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Vendor/MSFT_lod)):
+- LOD0's root node is the only scene root. It carries `extensions.MSFT_lod.ids` = the LOD1, LOD2 root
+  nodes (lower quality in order) and `extras.MSFT_screencoverage` = one value per LOD: the screen-height
+  fraction where that LOD hands over to the next, the last one being the cull (`[0.43, 0.086, 0.01]`
+  for tiger_1: LOD0 above 43 %, LOD1 to 8.6 %, LOD2 to 1 %, then nothing). Same convention as Unity
+  LODGroup's screen-relative transition height.
+- LOD1/LOD2 roots (`<asset>_LOD1`, `<asset>_LOD2`) are parentless and **not** in `scenes[0].nodes`: the
+  spec says a client without the extension loads the highest LOD and ignores the rest, which only
+  holds if the alternates are outside the scene graph. Part names inside each LOD are unchanged
+  (`turret`, `wheel_l_0`), so game code binds the same names at any LOD.
+- `MSFT_lod` is in `extensionsUsed`, never `extensionsRequired` (Godot refuses unknown required
+  extensions). Materials, the trim sheet, lights and identical motion samplers are written once; the
+  `rest` and `run` clips hold one channel per LOD node.
+- Thresholds: `lodCoverage: [a, b, cull]` on `defineAsset`, else derived: a LOD with r × the
+  triangles reads equally dense at √r × the screen size (a ∈ [0.1, 0.6], b ∈ [0.02, a/2]); cull 1 %
+  for props, 0.2 % for anything ≥ 10 m so landmarks stay on the skyline.
+
+| Loader | Reads MSFT_lod? | What a single file shows | Verified how |
+|---|---|---|---|
+| Babylon.js | yes, node + material level (progressive: loads low LODs first, ends on LOD0) | all LODs, switching | Babylon docs / spec "Known Implementations" |
+| three.js `GLTFLoader` | no (community plugin `three-gltf-extensions`, in progress) | LOD0 only; the mixer warns "No target node found" for the alternates' tracks (harmless) | loaded tiger_1.glb with three 0.186: 23 meshes, same bounds as lod0.glb |
+| Godot 4.5+ | no (not in `GLTFDocument` supported list) | LOD0 only (scene roots only, `gltf/naming_version` 2 default) | Godot master `gltf_document.cpp` |
+| Godot 4.0–4.4 (or naming_version < 2) | no | **all three overlapping**: treats every parentless node as a root. Use `lod0.glb` there | same source, `_compute_node_heights` |
+| Unity glTFast | "not investigated yet" in its docs | expected LOD0 only (instantiates the scene) — unverified | glTFast 6.0 features page |
+| Unreal Interchange | not documented | unverified; use `lod0/1/2.glb` and Unreal's LOD import | — |
+| Khronos glTF-Validator | info `UNSUPPORTED_EXTENSION` | 0 errors, 0 warnings (test `src/export/lod-glb.test.ts`) | test |
+| ArcGIS Pro | yes, node level on the scene's first node | all LODs | Esri docs |
+
+Engines that build LOD groups from names (Unity's FBX `_LOD0/_LOD1` convention) don't apply it to glTF
+imports, so the split files plus each engine's own LOD importer remain the portable path.
 
 ## Physics (drafts: write behind a flag, plus engine conventions)
 

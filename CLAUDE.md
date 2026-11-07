@@ -35,7 +35,7 @@ project that installed the package.
 |---|---|
 | Fresh clone → ready | `bun run setup` |
 | Gate (≡ CI) | `bun run verify` · one step: `bun run verify --only <step>` · `--json` |
-| Compile + QA recipe | `bun run t3d build recipes/t34/t34.ts --out out` |
+| Compile + QA recipe | `bun run t3d build recipes/t34/t34.ts --out out` (lod0/1/2.glb + one `<asset>.glb` with all LODs via MSFT_lod; `--lods split\|single\|both`) |
 | Contact sheet (READ the PNG) | `bun run t3d shot recipes/t34/t34.ts --out renders` |
 | Beauty render (3/4, textured, shadowed) | `bun run t3d hero recipes/t34/t34.ts --out renders` |
 | AI review pack (READ `review/*.png`, follow `review.md`) | `bun run t3d review recipes/t34/t34.ts --out review` |

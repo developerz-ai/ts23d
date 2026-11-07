@@ -28,10 +28,12 @@ export const crate = defineAsset({ name: 'crate', kind: 'prop', budget: { triang
   ]);
   console.log = log;
   expect(code).toBe(0);
-  for (const f of ['lod0.glb', 'lod1.glb', 'lod2.glb', 'hero.png', 'sheet.png', 'manifest.json']) {
+  for (const f of ['lod0.glb', 'lod1.glb', 'lod2.glb', 'crate.glb', 'hero.png', 'sheet.png']) {
     expect(await Bun.file(join(out, 'crate', f)).exists()).toBe(true);
   }
   const manifest = await Bun.file(join(out, 'crate', 'manifest.json')).json();
+  expect(manifest.files.single).toBe(join(out, 'crate', 'crate.glb'));
+  expect(manifest.lodCoverage).toHaveLength(3);
   expect(manifest.pivots.map((p: { name: string }) => p.name)).toEqual(['body']);
   expect((await Bun.file(join(out, 'index.json')).json()).ok).toBe(true);
 });
@@ -58,6 +60,30 @@ it('builds only the LODs asked for', async () => {
   expect(await Bun.file(join(out, 'hero', 'crate', 'lod1.glb')).exists()).toBe(false);
   const manifest = await Bun.file(join(out, 'hero', 'crate', 'manifest.json')).json();
   expect(manifest.triangles).toHaveLength(1);
+  expect(manifest.lodCoverage).toBeUndefined();
+});
+
+it('writes only the single MSFT_lod file with --lods single, only split files with split', async () => {
+  const fixture = join(out, 'crate.ts');
+  const log = console.log;
+  console.log = () => {};
+  const flags = ['--sheet', 'none', '--no-shot'];
+  const single = await run([
+    'build',
+    fixture,
+    '--out',
+    join(out, 's'),
+    '--lods',
+    'single',
+    ...flags,
+  ]);
+  const split = await run(['build', fixture, '--out', join(out, 'p'), '--lods', 'split', ...flags]);
+  console.log = log;
+  expect([single, split]).toEqual([0, 0]);
+  expect(await Bun.file(join(out, 's', 'crate', 'lod0.glb')).exists()).toBe(false);
+  expect(await Bun.file(join(out, 's', 'crate', 'crate.glb')).exists()).toBe(true);
+  expect(await Bun.file(join(out, 'p', 'crate', 'crate.glb')).exists()).toBe(false);
+  expect(await Bun.file(join(out, 'p', 'crate', 'lod2.glb')).exists()).toBe(true);
 });
 
 it('fails a bad --size with a coded error, before writing anything', async () => {

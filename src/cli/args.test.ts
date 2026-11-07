@@ -37,3 +37,14 @@ it('parses the render camera and size', () => {
   expect(a.render).toEqual({ width: 800, height: 450, azDeg: -120, elDeg: 30, fovDeg: 40 });
   expect(parseArgs(['build', 'a.ts']).render).toEqual({});
 });
+
+it('reads --lods as a level list OR a file mode, never mixing them up', () => {
+  const mode = parseArgs(['build', 'a.ts', '--lods', 'single']);
+  expect(mode.lods).toEqual([0, 1, 2]);
+  expect(mode.lodFiles).toBe('single');
+  expect(mode.files).toEqual(['a.ts']);
+  const both = parseArgs(['build', 'a.ts', '--lods', '0,2', '--lods', 'split']);
+  expect(both.lods).toEqual([0, 2]);
+  expect(both.lodFiles).toBe('split');
+  expect(parseArgs(['build', 'a.ts']).lodFiles).toBe('both');
+});

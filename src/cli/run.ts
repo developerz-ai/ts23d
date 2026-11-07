@@ -1,12 +1,20 @@
 // Command dispatch for `t3d`. Pure function of argv → exit code, so it is testable in-process.
 // Output layout, one folder per asset (stable paths agents and pipelines can rely on):
-//   <out>/<asset>/lod0.glb lod1.glb lod2.glb hero.png thumb.png sheet.png manifest.json
+//   <out>/<asset>/lod0.glb lod1.glb lod2.glb <asset>.glb (all LODs, MSFT_lod) hero.png thumb.png
+//   sheet.png manifest.json
 //   <out>/<asset>/review/… (t3d review) · <out>/index.json — every asset built, with its QA verdict
 
 import { mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { type Asset, compile, type Lod, Ts23dError } from '../core/index.ts';
-import { SHEET_MAPS, type SheetBinding, sheetFileName, sheetPngs, toGlb } from '../export/index.ts';
+import {
+  exportLodGlb,
+  SHEET_MAPS,
+  type SheetBinding,
+  sheetFileName,
+  sheetPngs,
+  toGlb,
+} from '../export/index.ts';
 import {
   DEFAULT_SHEET,
   type PaintedSheet,
@@ -35,15 +43,21 @@ async function buildOne(
     runQa(a).map((f) => ({ ...f, message: `LOD${a.lod}: ${f.message}` })),
   );
   const glbs: string[] = [];
-  if (args.cmd === 'build') {
+  const glbOptions = { animations: args.animations, ...(texture ? { sheet: texture } : {}) };
+  let single: string | undefined;
+  let coverage: readonly number[] = [];
+  if (args.cmd === 'build' && args.lodFiles !== 'single') {
     for (const a of lods) {
       const path = join(dir, `lod${a.lod}.glb`);
-      await Bun.write(
-        path,
-        toGlb(a, { animations: args.animations, ...(texture ? { sheet: texture } : {}) }),
-      );
+      await Bun.write(path, toGlb(a, glbOptions));
       glbs.push(path);
     }
+  }
+  if (args.cmd === 'build' && args.lodFiles !== 'split') {
+    single = join(dir, `${asset.name}.glb`);
+    const packed = exportLodGlb(lods, glbOptions);
+    coverage = packed.coverage;
+    await Bun.write(single, packed.glb);
   }
   let sheet: string | undefined;
   let thumb: string | undefined;
@@ -67,11 +81,13 @@ async function buildOne(
     lods,
     {
       lods: glbs,
+      ...(single ? { single } : {}),
       ...(hero ? { hero } : {}),
       ...(sheet ? { sheet } : {}),
       ...(thumb ? { thumb } : {}),
     },
     findings,
+    coverage,
   );
   await Bun.write(join(dir, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`);
   return manifest;
@@ -83,6 +99,7 @@ function print(m: AssetManifest): void {
   );
   for (const f of [
     ...m.files.lods,
+    ...(m.files.single ? [m.files.single] : []),
     ...(m.files.hero ? [m.files.hero] : []),
     ...(m.files.sheet ? [m.files.sheet] : []),
   ])
