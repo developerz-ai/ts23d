@@ -5,14 +5,14 @@
 
 import {
   type Bounds,
-  boundsOf,
   type CompiledAsset,
   type Mesh,
   type Vec3,
   worldMeshes,
 } from '../core/index.ts';
-import { TriangleGrid } from './geometry.ts';
-import { SolidIndex } from './inside.ts';
+import type { TriangleGrid } from './geometry.ts';
+import { meshBounds, solidIndex, triangleGrid } from './geometry-cache.ts';
+import type { SolidIndex } from './inside.ts';
 import type { Finding, Gate } from './types.ts';
 
 const overlaps = (a: Bounds, b: Bounds, eps: number): boolean =>
@@ -62,7 +62,7 @@ interface Scene {
 
 function scene(asset: CompiledAsset): Scene {
   const mesh = worldMeshes(asset.parts);
-  const bounds = new Map([...mesh].map(([n, m]) => [n, boundsOf(m)]));
+  const bounds = new Map([...mesh].map(([n, m]) => [n, meshBounds(m)]));
   const grids = new Map<string, TriangleGrid>();
   const solids = new Map<string, SolidIndex>();
   const lazy =
@@ -86,8 +86,8 @@ function scene(asset: CompiledAsset): Scene {
     names: [...mesh.keys()],
     mesh,
     bounds,
-    grid: lazy(grids, (m) => new TriangleGrid(m)),
-    solid: lazy(solids, (m) => new SolidIndex(m)),
+    grid: lazy(grids, triangleGrid),
+    solid: lazy(solids, solidIndex),
   };
 }
 

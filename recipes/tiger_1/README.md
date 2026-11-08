@@ -73,3 +73,25 @@ Dunkelgelb / Rotbraun / Olivgrün patches seeded from `ctx.rng`.
   unit is unidentified (PK caption only).
 - Zimmerit on the glacis and roof: photos show it on vertical faces only; horizontal plates are left
   smooth.
+
+## Rear (rebuilt Nov 2026)
+Variant: mid production Oct–Nov 1943, so **no Feifel air filters** (phased out during mid
+production) and **armoured exhaust covers** over the two tall vertical exhausts.
+- Rear plate 80 mm at 9° (armour table above); the hull side plates stand ~7 cm proud of it
+  (interlocked construction), upper and lower.
+- Exhausts: a stub out of the plate at ~1.3 m, then a vertical pipe to ~0.3 m above the engine
+  deck, each in a three-sided armoured cover with a heat slit, open on top. Pipes are bolted to
+  studs on the rear plate. Heights and spacing are estimated from photos (no sourced number, so no
+  `measures` entry).
+- Rear plate furniture: starter-crank access cover (centre), jack on two brackets, convoy light
+  (left) and tail light (right), tow pintle below, tow shackles at the lower corners.
+- Engine deck: central engine hatch, mesh radiator grilles left and right, four round fan grilles
+  at the rear (two per side). Hinged rear mudguards over the track ends.
+
+| What | Link | Notes |
+|---|---|---|
+| Feifel phased out in mid production | https://archive.armorama.com/forums/11921/index.htm | forum; dates approximate (Jentz, *Tiger I Design, Production and Modifications*, not accessed) |
+| Exhaust covers across Initial–Late | https://www.bnamodelworld.com/military-vehicles-tanks-elefant-corporation-ele-e35291-2-1-35-tiger-i-initial-early-mid-late-(with-casting)-armoured-exhaust-cover-for-rfm-kits | kit listing |
+| Exhaust pipes bolted to rear-plate studs | https://forum.armortek.co.uk/viewtopic.php?p=88464 | builder's notes |
+| Kursk photos: with/without Feifel and shields | https://www.rctankwarfare.co.uk/forums/viewtopic.php?p=98068 | cites Healy, *Zitadelle* |
+| Tiger 131 rear (early production, has Feifel: for layout of deck/plate only) | https://commons.wikimedia.org/wiki/Category:Tiger_131 | Bovington walkaround photos |

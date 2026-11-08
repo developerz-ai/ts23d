@@ -2,16 +2,9 @@
 // agents ("how far is the track from the hull?", "does the wheel sink into the fender?").
 // Part selectors are names or globs: 'track_l_*', 'road_wheel_*_3', '*_hatch'.
 
-import {
-  type Bounds,
-  boundsOf,
-  type CompiledAsset,
-  type Mesh,
-  merge,
-  worldMeshes,
-} from '../core/index.ts';
-import { surfaceSamples, TriangleGrid } from './geometry.ts';
-import { SolidIndex } from './inside.ts';
+import { type Bounds, type CompiledAsset, type Mesh, merge, worldMeshes } from '../core/index.ts';
+import { surfaceSamples } from './geometry.ts';
+import { meshBounds, solidIndex, triangleGrid } from './geometry-cache.ts';
 
 export const glob = (pattern: string): RegExp =>
   new RegExp(
@@ -43,8 +36,6 @@ export function inspect(asset: CompiledAsset): Inspector {
   const parts = (sel: string): string[] => [...world.keys()].filter((n) => glob(sel).test(n));
   // Checks ask about the same parts over and over: build each merged mesh and index once.
   const meshes = new Map<string, Mesh | null>();
-  const grids = new Map<string, TriangleGrid>();
-  const solids = new Map<string, SolidIndex>();
   const samples = new Map<string, ReturnType<typeof surfaceSamples>>();
   const mesh = (sel: string): Mesh | null => {
     if (!meshes.has(sel)) {
@@ -70,13 +61,13 @@ export function inspect(asset: CompiledAsset): Inspector {
     mesh,
     bounds: (sel) => {
       const m = mesh(sel);
-      return m ? boundsOf(m) : null;
+      return m ? meshBounds(m) : null;
     },
     distance(a, b, max = 1) {
       const ma = mesh(a);
       const mb = mesh(b);
-      if (!ma || !mb || !near(boundsOf(ma), boundsOf(mb), max)) return max;
-      const grid = cached(grids, b, () => new TriangleGrid(mb));
+      if (!ma || !mb || !near(meshBounds(ma), meshBounds(mb), max)) return max;
+      const grid = triangleGrid(mb);
       const pts = cached(samples, a, () => surfaceSamples(ma, 0.05, 8));
       // Grow the search radius: "do they touch?" is answered at 2 cm without scanning metres.
       for (const r of [0.02, 0.1, 0.5, max].filter((x) => x <= max)) {
@@ -90,10 +81,10 @@ export function inspect(asset: CompiledAsset): Inspector {
       const ma = mesh(a);
       const mb = mesh(b);
       if (!ma || !mb) return { depth: 0, samples: 0 };
-      const bb = boundsOf(mb);
-      if (!near(boundsOf(ma), bb, 0)) return { depth: 0, samples: 0 };
-      const grid = cached(grids, b, () => new TriangleGrid(mb));
-      const solid = cached(solids, b, () => new SolidIndex(mb));
+      const bb = meshBounds(mb);
+      if (!near(meshBounds(ma), bb, 0)) return { depth: 0, samples: 0 };
+      const grid = triangleGrid(mb);
+      const solid = solidIndex(mb);
       let depth = 0;
       let count = 0;
       for (const p of cached(samples, `${a}#pen`, () => surfaceSamples(ma, 0.1, 3))) {

@@ -9,7 +9,6 @@ import {
   clear,
   cylinder,
   defineAsset,
-  grime,
   hex,
   lathe,
   type Mesh,
@@ -19,6 +18,7 @@ import {
   tiled,
   type Vec3,
 } from '@developerz.ai/ts23d';
+import { restrip, type StripRule, weatherer } from '../_lib/finish/finish.ts';
 
 const FT = 0.3048;
 const TANK_R = (22 * FT) / 2; // 3.353
@@ -43,6 +43,15 @@ const timberDark = hex('#6b5d4d');
 const steel = hex('#2b2826');
 const concrete = hex('#b9b3a6');
 const shingle = hex('#4e463e');
+
+/** Authoring colour → material: oiled cypress staves (pine grain, darkened), weathered fir trestle,
+ *  rusted iron hoops and fittings; concrete and slate shingles keep their classic strips. */
+const RULES: readonly StripRule[] = [
+  { from: cypress, strip: 'pine', color: hex('#a88a74') },
+  { from: timber, strip: 'wood_weathered', color: hex('#d8cfc2') },
+  { from: timberDark, strip: 'wood_weathered', color: hex('#a89c8c') },
+  { from: steel, strip: 'iron_rust', color: hex('#6e625a') },
+];
 
 /** Ring of `n` flat vertical facets (outward), boards running up: staves, the core's planking. */
 function staveRing(
@@ -157,7 +166,11 @@ export const water_tower = defineAsset({
     const lod = ctx.lod;
     const bevel = ctx.pick([0.02, 0.01, 0]);
     const facets = ctx.pick([32, 20, 8]);
-    const dirt = (m: Mesh): Mesh => grime(m, { ground: 1.4, groundStrength: 0.4 });
+    const weather = weatherer(ctx.rng.fork('weather'));
+    /** Materials, then splash-back mud on the footings and posts, light dust on top faces. */
+    const dirt = (m: Mesh): Mesh => m;
+    const part = (name: string, m: Mesh, o?: Parameters<typeof ctx.part>[2]): void =>
+      ctx.part(name, weather(restrip(m, RULES), { dust: 0.25, mud: 0.7, mudStrength: 0.6 }), o);
 
     // ---- trestle: footings, eight posts, cap ring, X bracing, joists under the tank floor.
     const tr: Mesh[] = [];
@@ -253,12 +266,16 @@ export const water_tower = defineAsset({
       }
     });
     // Joists along X across the tank floor, ends showing past the staves.
+    // The outermost pair sits over the flat ±Y cap beams (not beyond them on nothing).
     const joistStep = ctx.pick([0.55, 0.9, 1.6]);
-    for (let y = -TANK_R + 0.35; y <= TANK_R - 0.3; y += joistStep) {
+    const yMax = POST_R * Math.sin((3 * Math.PI) / 8);
+    const joists = Math.round((2 * yMax) / joistStep) + 1;
+    for (let j = 0; j < joists; j++) {
+      const y = -yMax + (2 * yMax * j) / (joists - 1);
       const half = Math.sqrt(Math.max(0, TANK_R * TANK_R - y * y)) + 0.15;
       tr.push(bx(-half, half, y - 0.1, y + 0.1, CAP_Z1, FLOOR_Z, timberDark, 'wood'));
     }
-    ctx.part('trestle', dirt(merge(tr)));
+    part('trestle', dirt(merge(tr)));
 
     // ---- central core: vertical planking round a 10 ft cylinder, with its access door.
     const coreN = ctx.pick([12, 12, 8]);
@@ -286,47 +303,53 @@ export const water_tower = defineAsset({
           core.push(bx(dx - 0.08, dx - 0.06, 0.05, 0.38, z, z + 0.05, steel, 'iron')); // strap hinges
       }
     }
-    ctx.part('core', dirt(merge(core)));
+    part('core', dirt(merge(core)));
 
     // ---- tank: stave tub, hoops (closer near the bottom), lugs, chime overhang.
-    ctx.part(
-      'tank',
-      staveRing(TANK_R, FLOOR_Z, TANK_H, facets, cypress, lod === 2 ? 'plain' : 'wood'),
-    );
+    part('tank', staveRing(TANK_R, FLOOR_Z, TANK_H, facets, cypress, lod === 2 ? 'plain' : 'wood'));
     if (lod < 2) {
       const hoops: Mesh[] = [];
       const n = lod === 0 ? 14 : 7;
-      const hoopSegs = ctx.pick([32, 20, 8]);
+      // Hoops are drawn tight onto the staves: the same facets and phase as the stave ring, a
+      // closed band whose inner face sits 1 mm into the staves (a face contact, not a ring of air).
+      const rr = TANK_R + 0.002;
+      /** Radius of the stave polygon's outer face at angle a. */
+      const faceR = (a: number): number => {
+        const step = (Math.PI * 2) / facets;
+        const off = (((a % step) + step) % step) - step / 2;
+        return (TANK_R * Math.cos(Math.PI / facets)) / Math.cos(off);
+      };
       for (let i = 0; i < n; i++) {
         // Spacing grows with height: pressure falls off toward the top.
         const t = (i + 0.5) / n;
         const z = FLOOR_Z + 0.12 + (TANK_H - 0.3) * t ** 1.35;
-        const rr = TANK_R / Math.cos(Math.PI / facets) + 0.004;
         hoops.push(
           lathe({
             profile: [
-              [rr, z],
+              [rr - 0.004, z],
               [rr + 0.012, z + 0.004],
               [rr + 0.012, z + 0.03],
-              [rr, z + 0.034],
+              [rr - 0.004, z + 0.034],
+              [rr - 0.004, z],
             ],
-            segments: hoopSegs,
+            segments: facets,
             color: steel,
             strip: 'iron',
           }),
         );
         if (lod === 0) {
-          // Lug (the hoop's tightening nut), staggered round the tank.
+          // Lug (the hoop's tightening nut), staggered round the tank, bedded on its hoop.
           const a = (i * 2.399) % (Math.PI * 2);
+          const lr = faceR(a) + 0.012;
           hoops.push(
             place(
               box({ size: [0.05, 0.16, 0.07], at: [0, 0, -0.02], color: steel, strip: 'iron' }),
-              { at: [Math.cos(a) * (rr + 0.03), Math.sin(a) * (rr + 0.03), z], yaw: a },
+              { at: [Math.cos(a) * lr, Math.sin(a) * lr, z], yaw: a },
             ),
           );
         }
       }
-      ctx.part('tank_hoops', merge(hoops));
+      part('tank_hoops', merge(hoops));
     }
 
     // ---- roof: low six-sided pyramid of shingles, fascia, finial and lightning rod, hatch.
@@ -408,7 +431,7 @@ export const water_tower = defineAsset({
         ),
       );
     }
-    ctx.part('roof', merge(roofM));
+    part('roof', merge(roofM));
 
     // ---- outlet + hinge on the track side; the spout swings on it.
     const outlet: Mesh[] = [
@@ -432,7 +455,7 @@ export const water_tower = defineAsset({
           color: steel,
         }),
       ); // flange
-    ctx.part('outlet', merge(outlet));
+    part('outlet', merge(outlet));
 
     ctx.group('spout', {
       at: PIVOT,
@@ -492,7 +515,7 @@ export const water_tower = defineAsset({
           }),
         );
     }
-    ctx.part('spout_body', merge(sp), { parent: 'spout' });
+    part('spout_body', merge(sp), { parent: 'spout' });
     ctx.socket('water_fill', {
       kind: 'interact',
       parent: 'spout',
@@ -536,7 +559,7 @@ export const water_tower = defineAsset({
             }),
           );
         }
-      ctx.part('ladder', dirt(merge(lad)));
+      part('ladder', dirt(merge(lad)));
     }
   },
 });

@@ -1,0 +1,117 @@
+{
+  "asset": "water_tower",
+  "reviewer": "agent",
+  "overall": 7.0,
+  "scores": {
+    "silhouette": {
+      "score": 8,
+      "reason": "Classic railroad water tank: octagonal hipped roof with finial, round stave tank, eight-post trestle with X bracing on concrete footings, swinging spout with chain, outlet core. Reads from every view.",
+      "fixes": [
+        "add the float-gauge board and its pulley on the tank side"
+      ]
+    },
+    "proportions": {
+      "score": 8,
+      "reason": "Overall box and the NRHP-sourced measures pass; tank-to-trestle ratio matches the dossier photos.",
+      "fixes": []
+    },
+    "materials": {
+      "score": 6,
+      "reason": "Staves now pine grain darkened to oiled cypress, trestle weathered fir, rusted iron hoops and spout fittings, concrete footings, slate shingles. But the tank's tiled UVs run the planks around the circumference, so the staves read as a tile grid rather than vertical boards, and the hoops lose contrast.",
+      "fixes": [
+        "map the tank with U up the staves (vertical grain) and one board per stave",
+        "hoops as galvanised or black iron_cast so they read against the wood"
+      ]
+    },
+    "detail": {
+      "score": 7,
+      "reason": "Staves, hoops with lugs, joists, cap ring, ladder, spout with counterweight and chain, finial. Missing tie-rod turnbuckles on the bracing and the float gauge.",
+      "fixes": [
+        "turnbuckles on the X rods",
+        "float-gauge board"
+      ]
+    },
+    "wear": {
+      "score": 6,
+      "reason": "Splash-back mud on the footings and lower posts, dust on top faces, weathered (checked, silvered) trestle timber. No water stains under the tank or around the spout, no moss on the footings.",
+      "fixes": [
+        "dark wet streaks below the tank floor and the spout",
+        "moss on the shaded side of the footings"
+      ]
+    },
+    "lod": {
+      "score": 6,
+      "reason": "LOD2 (496) keeps tank, roof, posts and spout, but drops the X bracing and its tank turns lighter and stripier than LOD0 (different U mapping on the 8-sided lathe).",
+      "fixes": [
+        "match LOD2 tank UV span to LOD0",
+        "keep two X braces as flat quads at LOD2"
+      ]
+    },
+    "technical": {
+      "score": 8,
+      "reason": "QA PASS, 6 616 / 2 816 / 496, two draws (glass-free), lean for a scene prop. Now 7 488 / 3 096 / 496. Connections gate clean (was 14 findings): hoops are closed bands with the tank's own facets and phase, inner face 1 mm into the staves (were round rings 2 cm off the flat staves), lugs bedded on their hoop; the joist grid now ends over the flat cap beams instead of two outer joists hanging past them.",
+      "fixes": []
+    }
+  },
+  "renders": {
+    "hero.png": "b8af0bc6bad7f0a85d07e1add753b2d36d86f51f78cde4056f31353a867e0e63",
+    "sheet.png": "63f3d002601d749e701282a4cd038600050c4c216555b2dd3b0d182b92d0e189",
+    "raking.png": "5ad0087b27a0a2389d67af5db1e19518332e98864b8ac030547a7b78d5ece6b5",
+    "raking_detail.png": "2e6f20451ea65c8f88788deaf547e299251647f8f79814d3700d5ebaacb58381",
+    "lods.png": "15af2345843322b361568e732840ab5500f66e591304a9e33a27b6dd771658ef",
+    "silhouette.png": "73260f2f6859efe9c8749f34e57c8e9825321c26f2a08076536a92164e2f8781",
+    "value.png": "5ab54800f70eee63d1326d3fc1a989a0b4cd065bbc3caca907d6e348e676aac7",
+    "detail.png": "aa4ef1badd6d4cfc59820735c78ef467877b79d660230b2c85a5426dc709f817"
+  },
+  "metrics": {
+    "silhouette": [
+      {
+        "view": "front",
+        "iou": 0.909
+      },
+      {
+        "view": "side",
+        "iou": 0.904
+      },
+      {
+        "view": "3/4",
+        "iou": 0.949
+      }
+    ],
+    "focal": {
+      "peakPart": "trestle",
+      "peak": [
+        410,
+        370
+      ],
+      "focalShare": 0,
+      "focalArea": 0,
+      "top": [
+        {
+          "part": "trestle",
+          "share": 0.659
+        },
+        {
+          "part": "core",
+          "share": 0.18
+        },
+        {
+          "part": "roof",
+          "share": 0.16
+        }
+      ],
+      "declared": []
+    },
+    "rest": {
+      "share": 0.644,
+      "spread": 0.66,
+      "min": 0.25
+    },
+    "shape": {
+      "acuteShare": 0.161,
+      "straightShare": 0.705,
+      "taper": -0.051,
+      "shape": "stable"
+    }
+  }
+}

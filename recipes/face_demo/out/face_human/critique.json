@@ -1,0 +1,135 @@
+{
+  "asset": "face_human",
+  "reviewer": "agent",
+  "overall": 5,
+  "scores": {
+    "silhouette": {
+      "score": 6,
+      "reason": "Reads as a human bust from front and side (IoU LOD2 ≥ 0.9); the outline is a calm classical bust. The helmet-like swept hair with a hard front edge is the weakest shape; nothing in the silhouette is characterful.",
+      "fixes": [
+        "give the hair volume over the crown and break the outline with a few lifted locks",
+        "a softer, lower front hairline"
+      ]
+    },
+    "proportions": {
+      "score": 7,
+      "reason": "The base is a measured human (MakeHuman hm08, CC0): eye spacing 61.2 mm vs 61.6 spec (QA measures ±2 %), natural thirds; the face reads young and androgynous because the base is gender-neutral.",
+      "fixes": [
+        "add a masculine/feminine axis from MakeHuman's CC0 targets as a preset knob"
+      ]
+    },
+    "materials": {
+      "score": 4,
+      "reason": "Vertex colour on the plain strip: skin zones (flush, lips, cool sockets, curvature cavity, mottle) separate by hue but not by roughness or SSS; hair is the same material as skin, so it reads as sculpted clay; eyes are the only glossy part (cornea clearcoat).",
+      "fixes": [
+        "a skin strip with subsurface-like roughness/sheen and a hair strip with anisotropic sheen (material-artist)",
+        "darker hair roots and per-lock value variation along the lock (root → tip colour is set but too subtle)"
+      ]
+    },
+    "detail": {
+      "score": 5,
+      "reason": "Primary and secondary forms come from a real anatomical base (eyelids, nasolabial area, lips, ear helix/antihelix/concha, clavicles, sternocleidomastoid) and read cleanly under the raking light, but there is no tertiary detail: no pores, wrinkles, lid creases or brow hairs (brows are painted bands), and the SDF hair locks are uniform grooves.",
+      "fixes": [
+        "LOD0 normal-scale wrinkle/pore displacement on the subdivided base driven by age",
+        "hair: varied lock widths and a parting instead of evenly spaced grooves; hair cards (planned)"
+      ]
+    },
+    "wear": {
+      "score": 3,
+      "reason": "Pristine: seeded asymmetry and age/weight knobs are the only story; no scars, stubble, blemishes, sun-darkened skin or dirt.",
+      "fixes": [
+        "seeded scars/blemish decals in vertex colour (orc, dwarf)",
+        "stubble shadow on the human/dwarf jaw",
+        "age-driven darkening under the eyes"
+      ]
+    },
+    "lod": {
+      "score": 6,
+      "reason": "LOD2 (1.4 cm re-mesh) keeps the outline and colour blocks; the face goes soft and the ears thin out.",
+      "fixes": [
+        "LOD2 from a coarser authored topology (MakeHuman proxy, CC0) instead of a distance-field re-mesh"
+      ]
+    },
+    "technical": {
+      "score": 7,
+      "reason": "QA PASS at every LOD, connections clean (anatomical folds declared from landmarks); 96k/37k/8.5k tris; 2 draws; but LOD0 spends ~45 % on SDF hair and each LOD0 build takes ~20 s.",
+      "fixes": [
+        "cheaper hair (cards or a coarser sculpt cell)",
+        "cache the scalp field between LODs"
+      ]
+    }
+  },
+  "renders": {
+    "hero.png": "b73b9db25abaa67210a84bc6837ad5d7dc6041aaba0f84fd7435ae11e98e8ab2",
+    "sheet.png": "0796fa4ac82bdbb9b79eb4ac81b9c8368334bd459036409514fb1e5a358312a3",
+    "raking.png": "d2ea31e6a065e897fa3802d69b3b6aa062a3c85874483b939203221272c1835b",
+    "raking_detail.png": "6803d11d1978c4d62ddad84f59c608487474ba00f2e9199e2277f9d21ceb0819",
+    "lods.png": "235780bd377dc7d3ec08ab5aba5aa260eb5b8431310e9f2fb5c92a2d7972be85",
+    "silhouette.png": "dfe19918b0659c9cca76cc2843d3dcde2a3c6323a2f9955bf465e498dde7e220",
+    "value.png": "e7254a1191708750e28608d9efe605e0cf3aa1392c2ddc5ae732cc6484dbfa00",
+    "detail.png": "55d1ca293f0200a8bbfedfee535d6a6bb8a373fdbf5dcb7f5bc771f5a30e7982"
+  },
+  "metrics": {
+    "silhouette": [
+      {
+        "view": "front",
+        "iou": 0.978
+      },
+      {
+        "view": "side",
+        "iou": 0.965
+      },
+      {
+        "view": "3/4",
+        "iou": 0.958
+      }
+    ],
+    "focal": {
+      "peakPart": "skin",
+      "peak": [
+        391,
+        138
+      ],
+      "focalShare": 0.692,
+      "focalArea": 0.698,
+      "top": [
+        {
+          "part": "skin",
+          "share": 0.692
+        },
+        {
+          "part": "plinth",
+          "share": 0.206
+        },
+        {
+          "part": "hair",
+          "share": 0.102
+        }
+      ],
+      "declared": [
+        "skin"
+      ]
+    },
+    "rest": {
+      "share": 0.661,
+      "spread": 0.631,
+      "min": 0.25
+    },
+    "grounded": {
+      "rise": -0.003,
+      "bands": [
+        0.349,
+        0.594,
+        0.607,
+        0.516,
+        0.385
+      ]
+    },
+    "shape": {
+      "acuteShare": 0.042,
+      "straightShare": 0.502,
+      "taper": 0.239,
+      "shape": "stable"
+    }
+  }
+}

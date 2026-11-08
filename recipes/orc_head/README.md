@@ -1,78 +1,104 @@
-# Orc warrior bust — original stylised design
+# Orc warrior bust — original stylised design (v3)
 
 ## Identity
-A brutish orc warlord, read from the 3/4 view by: a **hunched brute silhouette** (trapezius sloping
-from behind the ears to the shoulders, the neck nearly as wide as the head), a **massive
-underbitten jaw** with **lower tusks rising outside the upper lip**, a **heavy brow shelf** (a
-flattened bar with a glabella knot, scowling down at the centre) shadowing **small deep-set ember
-eyes**, a **flat broad nose**, **cheekbone ridges** running back to swept **pointed ears**, a **bound
-warrior's knot** falling to the nape, war paint, **pectorals and deltoids** on the bare chest, and
-**spiked plate pauldrons** (a domed cap and a shingled lame, hollow shells with worn bright rims)
-over a **fur mantle** — cut as a collectible bust on a turned plinth.
+A brutish orc warlord in the chunky fantasy-MMO idiom (inspiration only: no character, logo or
+likeness copied), read from the 3/4 view by: a **head carried low and forward between trapezius that
+rise to the ears**, a **small sloped cranium over a massive face**, a **brow shelf** rolling out of
+the forehead plane, **small ember eyes deep in their sockets under heavy scowling lids**, a **broad
+flat nose**, a **boat-sail jaw wider than the temples with an underbite**, **lower tusks rooted in
+the jaw**, **pointed ears with real cartilage structure**, a **warrior's knot** of sculpted locks;
+**forged plate pauldrons** (a domed cap, three flaring lames, rolled beads, rivets, bone spikes in
+flared collars), a **leather baldric** with a stitched edge and iron buckle, a **fur mantle** over
+the back and a **bead necklace** at the throat — and a battle story (scars, a broken tusk, a torn
+ear, worn war paint, dented plates).
 
-## Design spec (head units: 1 = chin to crown = 0.30 m, ≈ 1.3 × human)
-| Feature | Value (units) | Metres | Note |
+## How it is sculpted (stages, like a pro bust)
+| Stage | What | Where |
+|---|---|---|
+| 1 block-out | separate masses: egg cranium + occiput, mid-face block, boat-sail jaw, muzzle, chin; neck leaning forward into the trapezius; rib cage, pecs, deltoids | `skull.ts` `headBlock`, `torso.ts` |
+| 2 planes | side planes narrowing to the crown, jaw-side planes, under-jaw plane, sloped forehead, cheek corners, flat muzzle front, flatter back of skull; the brow folded INTO the forehead plane; eye sockets; temple hollows | `skull.ts`, `face.ts` |
+| 3 features | lids wrapping separate eyeballs (shared `eye.ts`), broad nose + nostrils, lips round a teeth cylinder, lower teeth, tusks, chin cleft, ears (helix, concha, tragus, lobe) | `face.ts`, `jaw.ts`, `ears.ts` |
+| 4 secondary / tertiary | forehead furrows, scowl lines, crow's feet, nasolabial and marionette folds, veins, scars, war paint, flush | `skull.ts`, `face.ts`, `torso.ts`, `defects.ts`, `paint.ts` |
+| tone | per-vertex curvature + cavity "bake": warm tops, cool undersides, crevices darker and more saturated, a low mottle, light skin bumps (LOD0); vertex AO across all parts | `../_lib/bust/skin.ts` |
+
+Every stroke from stage 3 on is laid ON the stage-2 surface (projected, `creaseOn`/`clayOn` in
+`../_lib/bust/kit.ts`), so creases follow the skin instead of floating or cutting holes.
+
+## Proportions (anchor: the measured human, docs/research/head-analysis.md)
+| Feature | Orc | Human anchor | Exaggeration |
 |---|---|---|---|
-| chin → crown | 1.00 | 0.300 | the `height` param |
-| overall bust L × W × H | — | 0.405 × 0.660 × 0.587 | `real`, ±5 %; length includes the knot's tail |
-| cranium width / depth / above eye line | 0.70 / 0.74 / 0.31 | 0.21 / 0.22 / 0.09 | low, sloped dome: the face is the mass |
-| eye line | 0.56 | — | higher than human: the jaw is the mass |
-| eyeball radius / spacing | 0.054 / 0.155 | 0.016 / pupils 0.093 apart | `measures` gate, ±2 % |
-| brow ridge / overhang / scowl | 0.075 / 0.06 / 0.04 | | a shelf, not two bumps |
-| jaw half-width at angle / chin | 0.40 / 1.3 | 0.120 | human 0.22; square rounded-box chin |
-| muzzle (prognathism) / underbite / chin drop | 0.10 / 0.10 / 0.10 | | lower lip thickens with the underbite |
-| tusks length / base radius | 0.22 / 0.055 | 0.066 / 0.017 | 3 cone segments from the lower lip, flared |
-| neck radius | 0.38 | 0.114 | |
-| shoulders (half-span) / mass | 1.00 / 1 | 0.300 | `bust.mass` 1 = brute: torso lifted (hunch), thick traps |
-| plinth | 0.17 + hunch | ≈ 0.08 | disc + socle; cut faces painted plinth stone |
+| head (menton → crown) | 0.30 m | 0.23 m | ×1.3 |
+| eye line | 0.557 H | 0.540 H | eyes a touch high, the jaw is the mass |
+| interpupil | 0.31 H (0.093 m, the `measures` gate) | 0.265 H | ×1.17 |
+| cranium width | ≈ 0.60 H | 0.683 H | ×0.88 (small brain case) |
+| jaw (bigonial) | ≈ 0.79 H | 0.449 H | **×1.75** |
+| nose tip past nasion | 0.127 H | 0.101 H | ×1.25, broad and flat |
+| lower lip / chin past the upper lip | +0.063 / +0.027 H | −0.013 H | underbite |
+| eyeball | 0.016 m, iris 0.49 of the ball | 0.012 m | ×1.3 (human iris ratio kept) |
+| lids | upper over 32 % of the iris, lower 14 %, 12° scowl | 25 % / 12 % | heavier |
+| ears | blade ≈ 0.12 m root → tip, × 1.2 the first sculpt (`EAR_SCALE`) | 0.263 H | pointed, bigger against the ×1.75 jaw |
+
+## Defects (deliberate, measured)
+| Defect | Where | Amount |
+|---|---|---|
+| scars (raised pale tissue, central crease) | crown → left brow; across the nose bridge; down the right cheek; through the left upper lip | ≈ 3–4 % of the face's ≈ 0.03 m² |
+| brow asymmetry | right brow, outer end | 2 mm lower |
+| torn ear | right ear rim, 60 % to the tip | 9 mm V notch |
+| teeth | right inner lower tooth missing; right outer crooked | 10° lean |
+| broken tusk | right tusk | 30 % short, flat fracture + chip; tusks yellow toward the root |
+| worn war paint | claw stripes, crest stripe | ~20 % of dabs gone, faded up to 30 % (seeded) |
+| plate dents | 3 per cap, 1 on each of the two upper lames (LOD0) | 2–3.5 mm deep, 12–20 mm wide (seeded) |
+| plate wear | every rolled lip | paint chipped to bare iron on ~15 % of its vertices; rust runs 25 mm below each rivet |
+| strap | baldric | stitched both edges (LOD0) |
 
 ## Palette (sRGB)
 | Role | Hex |
 |---|---|
-| skin / shade / lips | `#5c8034` / `#33501e` / `#4f6f30` (painted tone: crevices darker, tops warmer) |
-| eyes: sclera / iris (+ emissive glow `#ff7a1a` × 2.5) | `#8a5a1a` / `#ffb030` |
-| tusks + bone spikes | `#e2d6b0` |
-| hair (warrior's knot) / fur mantle (strands alternate ×0.72) | `#231a14` / `#5e4a34` |
-| war paint (cheek claw marks, crest stripe, chin stripes) | `#8a1c12` |
-| pauldron iron (cap ×1, lame ×0.85, worn rims ×1.3, rivets ×1.35, crest ×0.75) / leather baldric | `#55524d` / `#5a3a22` |
-| plinth / cut faces | `#6f6c6c` (linear 0.16, 0.15, 0.15) / ×1.3 |
+| skin / warm / cool / crevice | `#62803a` / `#80913f` / `#3f5c3a` / `#24341a` |
+| flush / ear cartilage / lips | `#7a7038` / `#8c8c40` / `#5a5a30` |
+| eyes: sclera / iris / pupil (+ glow `#ff7a1a` × 2.5, cornea clearcoat) | `#6a3a12` / `#ffb428` / `#1a0c04` |
+| bone (tusks, teeth, spikes) / root | `#e4d8b4` / `#b8a06a` |
+| scars / war paint | `#a08a64` / `#7d1a12` |
+| plates on `steel_painted` (gunmetal) / lips / rivets / bare / rust | `#4a4842` / `#6a665e` / `#b0a898` / `#d8d4cc` / `#7a4422` |
+| strap tint on `leather` / thread / necklace cord / fur | `#e6d2b8` / `#c8b48a` / `#3a2618` / `#5c4632` → `#8c7556` |
+| hair root → tip / wraps | `#2a2018` → `#6e5842` / `#5b3a22` |
 
 ## Parts the engine needs
-| Part | Pivot | Motion |
+| Part | Pivot | Note |
 |---|---|---|
-| `bust` | origin, base on z = 0 | static |
-| `head` | origin | static (skull, neck, ears, hair) |
-| `jaw` | jaw hinge (in front of the ear), opens about +Y | static by default; `head(ctx, { jawSway: 4 })` bakes a sway with `clearOf: ['head']` |
-| `eye_l`, `eye_r` | eyeball centres, gaze +X | static; rotate them to aim |
+| `head` | origin | skin above the neck seam (fine cell) |
+| `bust` | origin | torso below the seam (coarser cell); LOD2 has no split (all in `head`) |
+| `eye_l`, `eye_r` | eyeball centres, yawed to converge 1.5 m ahead | finish `cornea` (clearcoat) + glow |
+| `pauldrons`, `spikes`, `harness`, `mantle`, `necklace`, `hair`, `plinth` | origin | static |
 
-The jaw region is the chin + lower lip (an ellipsoid cut flat at the mouth line), so its seam runs
-along the lips, the marionette lines and under the chin. Its cut faces are painted mouth-dark for
-when it opens; it laps 0.75 cells over the head so no gap shows.
+The jaw is no longer a separate hinged part: v2's jaw split drew a seam round the mouth; this bust
+is a static collectible. Eye `socket` joints are not declared yet: the joints gate now measures a
+local section (the ball against its orbit), but this orbit has no bore behind the ball — the lids
+fill it — so the human, elf and goblin busts carry the joints and the orc does not (planned).
 
-## LODs
-Sculpt cell = 2 % / 4.5 % / 14 % of head height (bust 1.6 ×). LOD0/1 bake vertex AO across all
-parts (16/10 rays); every LOD carries the painted tone (cavity, warm top, cool under). LOD1/2 drop
-the teeth and tongue; LOD2 drops warts, wiry tufts and the AO bake, floors ear/tusk/nose radii at
-about a cell, makes the pauldron plates solid and the plinth one drum so nothing opens or floats.
+Intended creases (`creases.ts`): one small region (≤ 3 cm) per sculpted fold, from the landmarks
+and geometry that sculpt it — lids, brow shelf, nose, nasolabial folds, mouth line and underbite,
+tusk roots, cheekbone arch, jawline, skull base, nuchal furrow, ears and rings; pectoral and
+deltoid borders; spike collars; baldric and buckle frame; each fur clump; scalp lock, bun, wraps,
+tail locks. The warrior's knot is a bun of three wound turns with two leather wraps over the
+tail's root and five tail locks lying down the skull (LOD0; LOD1 three, LOD2 one).
+
+## LODs and budget
+Cells: head 5.7 / 11.5 / 40 mm, bust 9.5 / 18 / 32 mm, plates are lofted profiles (36 / 22 / 8
+steps). LOD0 ≈ 128k triangles (a hero bust: face, plates, fur and hair all carry detail), LOD1 ≈ 42k,
+LOD2 ≈ 3.7k keeping the silhouette (art check: LOD2 IoU vs LOD0 0.87–0.90 front/side/3/4).
 
 ## References (stylised anatomy, not likeness)
 | Topic | Link | Used for |
 |---|---|---|
-| Loomis head: eye line at half height, brow/nose/chin thirds | https://finearttutorials.com/guide/loomis-method/ | human eye line 0.5, nose base 0.32, mouth 0.22 |
-| Proportions of the head (ears between brow and nose base, head ≈ 5 eyes wide) | https://artyfactory.com/portraits/pencil-portraits/proportions-of-a-head.html | ear placement, eye size vs head width |
-| Primary → secondary → tertiary forms (block brow/cheek/jaw first, then cut lids and folds) | https://www.creativebloq.com/how-to/how-to-sculpt-and-pose-a-cartoon-head-in-zbrush | the edit order in `head-face.ts` |
-| Orc: widen head and jawline to break human proportion; sculpt bony forms (cheekbones) early | https://www.creativebloq.com/3d/how-create-orc-zbrush-61411834 | orc jaw width 0.40 vs human 0.22, zygomatic ridge |
-| Stylised bust method: primary → secondary → tertiary shapes | https://cgzen.gumroad.com/l/stylized-bust | torso masses before gear |
-| Stylised orc head study (silhouette, form language) | https://blenderartists.org/t/orc-head-study-stylized-characters/1655542 | massing check |
-| Stylised hair: large clumps first, hairline → crown, one primary flow direction | https://gamesartist.co.uk/curly-hair-ls/ · https://www.cgchannel.com/2023/03/tutorial-creating-stylized-hairstyles-using-zbrush | `swept` locks in head-hair.ts |
-| Dreams (Media Molecule, Evans, SIGGRAPH 2015): sculptures as ordered SDF edits + smooth-min | https://www.mediamolecule.com/blog/article/siggraph_2015 · slides https://advances.realtimerendering.com/s2015/AlexEvans_SIGGRAPH-2015-sml.pdf | the whole approach |
-
-Design is original: no character, logo, name or likeness from any game is copied. "Chunky
-hand-painted stylised fantasy" is the idiom (exaggerated primary forms, generous fillets, flat
-vertex colour with baked AO), not a specific source.
+| Measured human head (ratios) | docs/research/head-analysis.md (Lee Perry-Smith scan, CC BY 3.0) | the anchor every exaggeration is stated against |
+| Brute proportions, fat vs muscle, gear scaled to the frame | docs/research/stylised-creatures.md §7 | trapezius, low forward head, oversized plates |
+| Orc: widen head and jawline, bony forms early | https://www.creativebloq.com/3d/how-create-orc-zbrush-61411834 | jaw ×1.75, cheekbones |
+| Stylised orc head study | https://blenderartists.org/t/orc-head-study-stylized-characters/1655542 | massing check |
+| Stylised orc busts (method, not likeness) | https://www.zbrushcentral.com/t/orc-bust/371776 · https://80.lv/articles/sculpting-texturing-a-broken-orc-bust-in-zbrush-3ds-max-substance-3d-painter/ | primary → secondary → tertiary, hand-painted tone |
+| Dreams SDF sculpting (Evans, SIGGRAPH 2015) | https://advances.realtimerendering.com/s2015/AlexEvans_SIGGRAPH-2015-sml.pdf | ordered smooth-min edits |
 
 ## Known gaps
-Pauldron plates are smooth shells (no hammered dents or scratches); fur strands are cones, not
-noise-broken clumps; no skin pores or wrinkle noise; the jaw part's seam still shows as a faint
-line round the chin up close; the bust's U-cut leaves the belly reading slightly pear-shaped from
-dead front.
+Ears alias at the LOD0 cell along the thin rim; the fur mantle reads as a hide with a ragged edge
+more than individual fur clumps; skin pores are a light displacement, not alpha stamps; the plates'
+hard edges come from lofted profiles but the dents are smooth radial pushes (no hammer facets).

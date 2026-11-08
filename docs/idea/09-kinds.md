@@ -13,7 +13,7 @@ Status as of 2026-11:
 | Vessel | `hull` / `hullMesh` / `hullLines` | Shipped |
 | Vegetation | `tree`, `trees` family, `treeReal`; presets `oak`, `pine`, `palm`, `birch`, `willow` | Shipped |
 | Character | `head` (orc, goblin, human, dwarf, elf via `HEADS`), `headParams`, `headEdits`, `checkHead` | Shipped (stylised busts) |
-| Creature | `creature` (whole bodies, skinned) | Planned, M4 |
+| Creature | `creature`, `defineCreature`, `creaturePlan`, `checkCreature`, `creatureCreases`, `biology` | Shipped (quadruped, winged, biped, bird, fish, serpent); hybrids, exoskeletons, ethereals planned (M4) |
 | Scene | `ctx.use` (core), `heightfield` terrain with erosion and `terrainColor` | Shipped |
 | Families | `defineFamily` (core): variants of any kind | Shipped |
 
@@ -88,9 +88,42 @@ The `oak`, `pine` and `palm` recipes are about 18 lines each. Wind is a crown `s
 
 `head(ctx, { race: 'orc' | 'goblin' | 'human' | 'dwarf' | 'elf' | HeadParams, params?, prefix?, at?, jawSway? })` sculpts a stylised head and bust from SDF edits (`sculpt`) and adds `bust` (on z = 0), `head`, `jaw` (pivot at the hinge, optional sway) and `eye_l` / `eye_r` (pivots at the eyeball centres, looking along +X). Races are data (`HEADS`); `params` overrides one level deep; `checkHead` rejects impossible proportions with a fix. Vertex AO is baked at LOD0/1. Recipes: `orc_head`, `goblin_head`, `human_head`.
 
-## Creature (planned, M4)
+## Creature
 
-`creature(ctx, { skeleton: 'biped' | 'quadruped' | 'bird', height })`: SDF flesh over a skeleton, meshed with marching cubes (`sdf` primitive). **Stylised, not realistic.** Bones become named parts for posing. Realistic animals and people go through [`/neural`](08-neural-adapters.md).
+`creature(ctx, spec, { prefix?, strip? })` sculpts a whole animal from a `CreatureSpec`: `skeleton`
+(`quadruped`, `winged` = quadruped + bat/dragon wings, `biped`, `bird`, `fish`, `serpent`), `stance`
+(`digitigrade`, `plantigrade`, `unguligrade`), and a few sourced numbers — `mass` (kg), `length`
+(nose → tail root), `height` (withers, or body depth/diameter), optional `head`, `neck`, `tail`
+lengths, `build` ratios (chest depth/width, limb and tail girth, ruff), `face` (muzzle share, ears
+`erect`/`round`/`none`, eye forwardness, pupil, fangs), `surface` (`fur`, `scales`, `feathers`,
+`skin`), `coat` depth, zone `colours`, a seeded `pattern` (`stripes`, `spots`, `rosettes`,
+`patches`) and `pose`. Recipe: `recipes/wolf` (the whole wolf in one spec).
+
+- **Landmarks from proportions.** The trunk length is solved so nose → tail root equals `length`;
+  joints follow the stance (digitigrade hock at ~0.28 × height, plantigrade heel on the ground,
+  unguligrade fetlock on a long cannon); anatomy defaults per type (head, neck, tail, muzzle, ears).
+- **Staged sculpt** (one blended body sculpt + a head sculpt): block-out masses → planes (none by
+  default: mammal backs are round) → features (scapulae, brisket, gluteals, croup, ruff, spine,
+  legs with muscle masses and joint knobs, paws/toes, hooves, bird toes, wings, fins) → head
+  (braincase, cheeks, muzzle, jaw, nose leather or beak, eye sockets with lids round a seated
+  eyeball, ears grown from the crown, fangs rooted above the lip) → coat zones and tone
+  (countershading, saddle, legs, muzzle mask, tail tip, cavity/ground/top light; the head holds
+  the most contrast).
+- **Parts:** `body`, `head` (pivot at the atlas), `eye_l` / `eye_r` (pivots at the ball centres;
+  LOD2 paints them), `claws` (grown from the toes). Prefix with `prefix`.
+- **LOD:** body cell ≈ 13 % of the upper-limb radius at LOD0, ×2.2 at LOD1, ×6.5 at LOD2 where the
+  legs become 6-sided tubes; relief (fur clumps, domed scales, feather scallops) at LOD0 only;
+  coarse-LOD carves (ear cups, mouth groove) become paint.
+- **Biology built in:** allometry (Campione & Evans 2012: limb-implied mass must be ×0.5–×2.5 of
+  `mass`, else `T3D_RECIPE_INVALID` with the thickness fix), effective density of the furred
+  volume for QA `mass` (flesh under a hair shell), eye size ∝ mass^0.2, wing loading ≤ 250 N/m²
+  when `flies`, and the `balance` check (centre of mass inside the support polygon at every LOD).
+- `defineCreature({ name, spec, options?, real?, … })` = `defineAsset` with kind `creature`, the
+  kind's `creases` (mouth, eyelids, ears, armpits, groin, flexion folds, toes, mane, tail root),
+  the `balance` check, part densities and `art: { focal: 'head' }` filled in.
+
+Stylised-to-plausible, not photoreal: no fur cards/shells, no jaw part or tail sway yet. Realistic
+animals can still go through [`/neural`](08-neural-adapters.md).
 
 ## Scene
 

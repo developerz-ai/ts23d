@@ -27,6 +27,8 @@ export function rasteriseVis(
   cam: PerspectiveCamera,
   texSize: number,
   alpha?: AlphaTest,
+  /** Triangles to leave out (non-zero): the see-through ones, for the "behind" buffer. */
+  skip?: Uint8Array,
 ): VisBuffer {
   const W = cam.width;
   const H = cam.height;
@@ -55,6 +57,7 @@ export function rasteriseVis(
   const I = s.indices;
   const UV = s.uvs;
   for (let t = 0; t < s.triangles; t++) {
+    if (skip?.[t]) continue;
     const a = I[t * 3] ?? 0;
     const b = I[t * 3 + 1] ?? 0;
     const c = I[t * 3 + 2] ?? 0;

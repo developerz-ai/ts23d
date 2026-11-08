@@ -1,10 +1,11 @@
 {
   "name": "pine",
   "kind": "vegetation",
-  "description": "Scots pine (Pinus sylvestris), mature: tall bare bole, orange upper bark, high flat-topped crown",
+  "description": "Scots pine (Pinus sylvestris), mature: tall bare bole, orange upper bark, high layered crown of clumped needle pads",
   "tags": [
     "vegetation",
-    "tree"
+    "tree",
+    "pine"
   ],
   "files": {
     "lods": [],
@@ -12,9 +13,9 @@
     "thumb": "recipes/pine/out/pine/thumb.png"
   },
   "triangles": [
-    6496,
-    1212,
-    180
+    23652,
+    5740,
+    311
   ],
   "drawCalls": [
     2,
@@ -46,19 +47,20 @@
     {
       "label": "trunk diameter at breast height",
       "spec": 0.6,
-      "measured": 0.6000000238418579,
+      "measured": 0.5999999642372131,
       "source": "recipes/pine/README.md"
     },
     {
       "label": "total height",
       "spec": 25,
-      "measured": 24.99999989569187,
+      "measured": 24.999999456107616,
       "source": "recipes/pine/README.md"
     }
   ],
   "sources": [
     "https://en.wikipedia.org/wiki/Pinus_sylvestris (up to 35 m tall, trunk up to 1 m diameter; orange upper bark)",
-    "https://www.woodlandtrust.org.uk/trees-woods-and-wildlife/british-trees/a-z-of-british-trees/scots-pine/ (mature 35 m; flat-topped crown in age)"
+    "https://www.woodlandtrust.org.uk/trees-woods-and-wildlife/british-trees/a-z-of-british-trees/scots-pine/ (mature 35 m; flat-topped crown in age)",
+    "https://bbr.nefu.edu.cn/EN/Y2006/V26/I4/490 (P. sylvestris var. mongolica crown: branch angle ≈ 45–50°, smaller in the upper crown; ~3.8 primary branches per whorl)"
   ],
   "qa": {
     "pass": true,

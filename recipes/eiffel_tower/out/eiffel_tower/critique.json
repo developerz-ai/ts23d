@@ -1,0 +1,110 @@
+{
+  "asset": "eiffel_tower",
+  "reviewer": "agent",
+  "overall": 7.6,
+  "scores": {
+    "silhouette": {
+      "score": 9,
+      "reason": "Unmistakable: four lattice legs on masonry piers, the first-floor arches, three decks, the tapering upper shaft, campanile lantern and antenna. Reads in pure black.",
+      "fixes": []
+    },
+    "proportions": {
+      "score": 8,
+      "reason": "Height to the antenna, base span and deck heights pass the sourced measures (fr.wikipedia, Eiffel's plates).",
+      "fixes": []
+    },
+    "materials": {
+      "score": 7,
+      "reason": "Lattice now painted wrought iron (steel_painted under the three-tone Eiffel Tower Brown gradient by height, chips showing rusty iron), stone piers, glazed pavilions. The paint film reads uniform at hero distance.",
+      "fixes": [
+        "slightly glossier, fresher paint on the upper shaft (repainted most often)"
+      ]
+    },
+    "detail": {
+      "score": 8,
+      "reason": "188k LOD0 triangles: lattice girders with zig-zag webs, arches, decks with railings, pavilions, lift housings, campanile ribs and side arches (base ring now wide enough to carry the rib feet).",
+      "fixes": [
+        "mid rails on the deck railings with square posts (dropped: diamond posts only met them along an edge)"
+      ]
+    },
+    "wear": {
+      "score": 6,
+      "reason": "Grime at the feet, paint chips from the strip; no rust bleeding at rivet lines or pigeon streaks on the decks.",
+      "fixes": [
+        "weather() rust streaks below the lattice nodes on the lower legs",
+        "dirt on the deck tops"
+      ]
+    },
+    "lod": {
+      "score": 7,
+      "reason": "LOD2 (1 062) keeps the silhouette shell and decks; the lattice becomes solid frustums.",
+      "fixes": []
+    },
+    "technical": {
+      "score": 8,
+      "reason": "QA PASS incl. the new connections gate (campanile ribs now stand on their ring; railing mid rails removed): 187 872 / 21 860 / 1 062, one draw.",
+      "fixes": []
+    }
+  },
+  "renders": {
+    "hero.png": "1f8175fae00248e1e5807e26abab217872847627def92317efd86d39ba7e8593",
+    "sheet.png": "90526542b5dfd0f5543632478f5844b2a1455f0d481ac021385ef11223c5a642",
+    "raking.png": "4adf7a39d497759c939295a1d5a92c2e98ff96c48066fc1d6fe21abfb8afa5df",
+    "raking_detail.png": "7b41ec742ef223d59b12370ed3cbca854ab077f9e51a4f36a1138b46909ef341",
+    "lods.png": "5ceb1b6088b89b3e6f37a0840b2dbbe3e80dc1067816a12675d35a6236f1674f",
+    "silhouette.png": "835054d2d96de0c194eac8501fda8e02417cebf1dd06b429edb5b6086441414c",
+    "value.png": "6257d7458d87e8abf8bd3adc280370fd3f9e3f36ce4b10a7d153a4e0dce312ef",
+    "detail.png": "dfaeadf7e429e772cef3756a80d4c4d9225086ba76b73667903de31921a37a92"
+  },
+  "metrics": {
+    "silhouette": [
+      {
+        "view": "front",
+        "iou": 0.44
+      },
+      {
+        "view": "side",
+        "iou": 0.379
+      },
+      {
+        "view": "3/4",
+        "iou": 0.845
+      }
+    ],
+    "focal": {
+      "peakPart": "campanile",
+      "peak": [
+        398,
+        94
+      ],
+      "focalShare": 0,
+      "focalArea": 0,
+      "top": [
+        {
+          "part": "leg_2",
+          "share": 0.195
+        },
+        {
+          "part": "pavilion_1",
+          "share": 0.182
+        },
+        {
+          "part": "leg_3",
+          "share": 0.139
+        }
+      ],
+      "declared": []
+    },
+    "rest": {
+      "share": 0,
+      "spread": 0.041,
+      "min": 0.25
+    },
+    "shape": {
+      "acuteShare": 1,
+      "straightShare": 1,
+      "taper": 0.851,
+      "shape": "aggressive"
+    }
+  }
+}

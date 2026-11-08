@@ -46,7 +46,19 @@ const GLYPHS: Readonly<Record<string, string>> = {
   '+': '000010111010000',
   _: '000000000000111',
   '=': '000111000111000',
+  '%': '101001010100101',
+  '(': '010100100100010',
+  ')': '010001001001010',
+  ',': '000000000010100',
+  '<': '001010100010001',
+  '>': '100010001010100',
+  '!': '010010010000010',
+  "'": '010010000000000',
+  '#': '101111101111101',
 };
+
+/** Pixel width of `text` at `scale` (4 columns per glyph, the last one blank). */
+export const textWidth = (text: string, scale: number): number => text.length * 4 * scale - scale;
 
 export function drawText(
   px: Uint8Array,

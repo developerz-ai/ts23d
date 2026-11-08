@@ -40,7 +40,9 @@ jobs:
           persist-credentials: false
       - uses: ./.github/actions/setup
       - run: bun run scripts/release.ts --check "${{ inputs.version }}"
-      - run: bun run verify
+      # ci (all 12 shards, recipes included) already passed on this commit: release-tag.yml only
+      # tags after it. Re-run the fast steps here; the recipes step alone needs the sharded matrix.
+      - run: bun run verify --only lint,typecheck,boundaries,determinism,filesize,test,build
 
   publish:
     needs: check

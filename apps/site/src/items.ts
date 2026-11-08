@@ -1,21 +1,15 @@
-// The gallery's item list: committed renders and manifests first (instant, no compile), then any
-// recipe the compile worker finds that has no committed renders yet. Also derives each item's
-// category from its kind and tags, and a human title from its description.
+// The gallery's item list: committed renders and manifests first (instant, no compile, and each
+// already knows its recipe entry file, so the live viewer can start at once), then any recipe the
+// compile worker finds that has no committed renders yet. Also derives a human title from the
+// description; the category rule lives in `categories.ts`.
 
 import { MEDIA } from 'virtual:ts23d-media';
+import { CATEGORIES, type Category, categoryOf } from './categories.ts';
+import type { AssetInfo } from './compile-protocol.ts';
 import type { MediaEntry } from './media-types.ts';
-import type { Recipe } from './recipes.ts';
+import { entryFor, type Recipe } from './recipes.ts';
 
-export const CATEGORIES = [
-  'Vehicles',
-  'Railway',
-  'Architecture',
-  'Nature & Terrain',
-  'Characters',
-  'Sci-fi',
-  'Props & Materials',
-] as const;
-export type Category = (typeof CATEGORIES)[number];
+export { CATEGORIES, type Category, categoryOf } from './categories.ts';
 
 export interface Item {
   readonly name: string;
@@ -27,28 +21,14 @@ export interface Item {
   readonly category: Category;
   readonly title: string;
   readonly media: MediaEntry | null;
-  /** Set once the compile worker has imported the recipe (needed for the live viewer). */
+  /** The recipe files (null if the folder's entry module is missing). */
   recipe: Recipe | null;
-}
-
-const RAIL = new Set(['rail', 'railroad', 'railway', 'rolling-stock', 'locomotive', 'lineside']);
-const NATURE = new Set(['nature', 'terrain', 'tree', 'rock', 'landscape', 'vegetation']);
-
-export function categoryOf(kind: string, tags: readonly string[]): Category {
-  const has = (set: ReadonlySet<string>): boolean => tags.some((t) => set.has(t));
-  if (tags.includes('sci-fi') || kind === 'scifi') return 'Sci-fi';
-  if (kind === 'character' || tags.includes('character')) return 'Characters';
-  if (has(RAIL) || kind === 'track') return 'Railway';
-  if (kind === 'vehicle') return 'Vehicles';
-  if (kind === 'building' || kind === 'structure' || kind === 'bridge') return 'Architecture';
-  if (kind === 'terrain' || kind === 'vegetation' || kind === 'tree' || has(NATURE))
-    return 'Nature & Terrain';
-  return 'Props & Materials';
 }
 
 /** "Tiger I mid production (late 1943) — Zimmerit, …" → "Tiger I mid production". */
 export function titleOf(name: string, description: string): string {
-  const head = description.split(/\s[—–-]\s|[:;,(.]/)[0]?.trim() ?? '';
+  // A full stop ends the title only before a new sentence ("No. 60" stays whole).
+  const head = description.split(/\s[—–-]\s|[:;,(]|\.(?=\s+[A-Z]|$)/)[0]?.trim() ?? '';
   if (head.length >= 3 && head.length <= 48) return head;
   return name.replace(/_/g, ' ').replace(/^\w/, (c) => c.toUpperCase());
 }
@@ -57,7 +37,7 @@ const make = (
   m: Pick<Item, 'name' | 'folder' | 'kind' | 'description' | 'tags' | 'media' | 'recipe'>,
 ): Item => ({
   ...m,
-  category: categoryOf(m.kind, m.tags),
+  category: categoryOf(m.kind, m.tags, m.name),
   title: titleOf(m.name, m.description),
 });
 
@@ -71,28 +51,31 @@ export function mediaItems(): Item[] {
       description: m.description,
       tags: m.tags,
       media: m,
-      recipe: null,
+      recipe: entryFor(m.folder),
     }),
   );
 }
 
-/** Attach recipes to items and add the ones with no renders yet. Returns the merged list. */
-export function mergeRecipes(items: readonly Item[], recipes: readonly Recipe[]): Item[] {
+/** Add the worker's assets that have no committed renders. Returns the merged list. */
+export function mergeRecipes(
+  items: readonly Item[],
+  found: readonly { readonly asset: AssetInfo; readonly recipe: Recipe }[],
+): Item[] {
   const byName = new Map(items.map((i) => [i.name, i]));
-  for (const r of recipes) {
-    const hit = byName.get(r.asset.name);
-    if (hit) hit.recipe = r;
+  for (const { asset, recipe } of found) {
+    const hit = byName.get(asset.name);
+    if (hit) hit.recipe = recipe;
     else
       byName.set(
-        r.asset.name,
+        asset.name,
         make({
-          name: r.asset.name,
-          folder: r.file.split('/')[0] ?? r.asset.name,
-          kind: r.asset.kind,
-          description: r.asset.description,
-          tags: r.asset.tags,
+          name: asset.name,
+          folder: recipe.file.split('/')[0] ?? asset.name,
+          kind: asset.kind,
+          description: asset.description,
+          tags: asset.tags,
           media: null,
-          recipe: r,
+          recipe,
         }),
       );
   }
@@ -108,5 +91,5 @@ export function order(items: readonly Item[]): Item[] {
 export const REPO = 'https://github.com/developerz-ai/ts23d';
 export const folderUrl = (i: Item): string => `${REPO}/tree/main/recipes/${i.folder}`;
 export const dossierUrl = (i: Item): string => `${REPO}/blob/main/recipes/${i.folder}/README.md`;
-export const recipeUrl = (i: Item): string =>
-  `${REPO}/blob/main/recipes/${i.recipe?.file ?? `${i.folder}/${i.folder}.ts`}`;
+export const recipeUrl = (i: Item, file = i.recipe?.file ?? `${i.folder}/${i.folder}.ts`): string =>
+  `${REPO}/blob/main/recipes/${file}`;

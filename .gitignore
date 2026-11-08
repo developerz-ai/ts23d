@@ -10,3 +10,5 @@ coverage/
 # compiled assets: regenerated from recipes, never committed
 apps/site/public/gallery/
 /renders/
+recipes/*/.out-tmp/
+/.ts23d/finish/

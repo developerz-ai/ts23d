@@ -1,0 +1,130 @@
+{
+  "asset": "elf_head",
+  "reviewer": "agent",
+  "overall": 5.9,
+  "scores": {
+    "silhouette": {
+      "score": 7,
+      "reason": "Pointed ears and long locks name an elf from any side; LOD2 IoU high.",
+      "fixes": [
+        "more hair volume at the back of the head (the cap reads as a helmet)"
+      ]
+    },
+    "proportions": {
+      "score": 6,
+      "reason": "Jaw no longer double-narrowed, full cheeks, lips back in a straight profile, ribbons clear of the face; the face is still long and the brow/orbit area reads older than intended.",
+      "fixes": [
+        "shorten the mid-face 3 %",
+        "raise the lid crease and thin the upper lid"
+      ]
+    },
+    "materials": {
+      "score": 5,
+      "reason": "Hair, skin, tunic, cloak and trim separate by hue; no roughness split.",
+      "fixes": [
+        "silk/wool strips for tunic and cloak",
+        "metal finish on the clasp"
+      ]
+    },
+    "detail": {
+      "score": 6,
+      "reason": "Ear structure, lids, ribbon locks with strand grooves, tall blended collar, hemmed cloak; hair cap lacks strand detail.",
+      "fixes": [
+        "strand grooves over the crown",
+        "embroidery on the trim"
+      ]
+    },
+    "wear": {
+      "score": 3,
+      "reason": "Pristine.",
+      "fixes": [
+        "dust on the cloak shoulders",
+        "fray at the hems"
+      ]
+    },
+    "lod": {
+      "score": 7,
+      "reason": "Outline and blocks hold at LOD2.",
+      "fixes": [
+        "keep the ribbons at LOD2 as a flat strip"
+      ]
+    },
+    "technical": {
+      "score": 7,
+      "reason": "QA PASS honestly with 987 small crease regions (≤ 2.5 cm, from the geometry); socket joints pass; 79k / 24k / 3.8k tris.",
+      "fixes": [
+        "merge duplicate head/bust crease spheres"
+      ]
+    }
+  },
+  "renders": {
+    "hero.png": "95eb8e90c2adcc9a81e30f2f574ea0584d6267520d33a0444098cca2849cfd32",
+    "sheet.png": "5111bbacda8598350a63ed57fb44d2019d9a4db426a8e3aa095143785b6c29fb",
+    "raking.png": "521ecbae8f3d9e4f6f79915c094ee03bd7944b754476899b516f4d50d91301ca",
+    "raking_detail.png": "1f82a6e63e660c179f84bd0e6f6073e49d5fd855ccd8706f2595d39833aa58a2",
+    "lods.png": "943af0590ad689e4cf4ae736c5cf0f4786c9ae98a5e2587ddc92a18640f29172",
+    "silhouette.png": "0fedab9f8aedc86670b9a73b9b4186dd77d3e03ea4dc7de1aec9947aeac1404b",
+    "value.png": "3a50082dc881ac7369eb6f082310ee57c7a2d790f398fe8493abec388c7997de",
+    "detail.png": "295fec6b59167a254eff9dff4f5e052de64ddc2793c032eca2899cf7059b70cc"
+  },
+  "metrics": {
+    "silhouette": [
+      {
+        "view": "front",
+        "iou": 0.93
+      },
+      {
+        "view": "side",
+        "iou": 0.946
+      },
+      {
+        "view": "3/4",
+        "iou": 0.92
+      }
+    ],
+    "focal": {
+      "peakPart": "head",
+      "peak": [
+        424,
+        126
+      ],
+      "focalShare": 0.987,
+      "focalArea": 0.529,
+      "top": [
+        {
+          "part": "head",
+          "share": 0.987
+        },
+        {
+          "part": "eye_r",
+          "share": 0.013
+        }
+      ],
+      "declared": [
+        "head"
+      ]
+    },
+    "rest": {
+      "share": 0.434,
+      "spread": 0.608,
+      "min": 0.25
+    },
+    "grounded": {
+      "rise": 0.39,
+      "bands": [
+        0.154,
+        0.274,
+        0.38,
+        0.453,
+        0.455
+      ]
+    },
+    "shape": {
+      "acuteShare": 0.126,
+      "straightShare": 0.459,
+      "taper": 0.151,
+      "shape": "friendly",
+      "declared": "friendly"
+    }
+  }
+}

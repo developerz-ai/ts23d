@@ -1,0 +1,107 @@
+{
+  "asset": "rts_resource",
+  "reviewer": "agent",
+  "overall": 7.1,
+  "scores": {
+    "silhouette": {
+      "score": 8,
+      "reason": "Dark outcrop with tall amber crystal clusters and a team claim stake: a resource at any distance.",
+      "fixes": []
+    },
+    "proportions": {
+      "score": 7,
+      "reason": "4.9 x 4.4 x 3.6 m: one crew's mining site beside 1.8 m workers.",
+      "fixes": []
+    },
+    "materials": {
+      "score": 6,
+      "reason": "SDF basalt on the concrete strip (jointed strips show contour lines on marching-cubes UVs), bedding bands on steep faces, salt crust on up-faces, crystals ramped deep amber -> pale gold.",
+      "fixes": [
+        "texture-space rock strip that survives SDF UVs"
+      ]
+    },
+    "detail": {
+      "score": 7,
+      "reason": "Three fracture planes, four crystal clusters, claim stake with finial, sleeved pennant and plaque.",
+      "fixes": []
+    },
+    "wear": {
+      "score": 6,
+      "reason": "weather(): salt dust on 30% of up-faces, brine mud on 50% of the ground band; no mining scars on the full node.",
+      "fixes": [
+        "pick marks near the mine points"
+      ]
+    },
+    "lod": {
+      "score": 8,
+      "reason": "LOD2 486 tris keeps the outcrop and crystals; team share 12.9%.",
+      "fixes": []
+    },
+    "technical": {
+      "score": 8,
+      "reason": "QA PASS on every gate incl. connections and weather (exact coverage). Deterministic, one trim material + team slot, 8 liveries; `bun test recipes/rts_faction` 18/18. Pennant flies from a hem sleeve round the pole (face contact).",
+      "fixes": []
+    }
+  },
+  "renders": {
+    "hero.png": "c73fc3d7daddbe08a5e0db8bf6ad3add6733f83ec4ded88f9e572ac03654e377",
+    "sheet.png": "5bd03450c0876133b7efba0253a40ce2a241a15d357abd5fa414ae639e807a88",
+    "raking.png": "d94442b7c89d1aa28d98a999ab09fa17f622fcd1f417957aa9211ea80503ad1c",
+    "raking_detail.png": "1381aed13053a7cccf608b74701d7e78db860eb8e29ac34e615770cbb3ea3725",
+    "lods.png": "2f230e12d9c49c9acc9e05f0f1c110487b11df058c1dc4cddcf15237431b4afb",
+    "silhouette.png": "8c96d2d87bed6e9b6ff7b81bff05e2342aa0be9ccd330a44604e57477bb140ef",
+    "value.png": "2cfa4b37b51365e9b5dc9cbf9b85f2f03084738eeec358aadb695d2ead949240",
+    "detail.png": "e569b46614ba831db3d36f6346c9cfe329ec3147ab38577f806baf29b857cb33"
+  },
+  "metrics": {
+    "silhouette": [
+      {
+        "view": "front",
+        "iou": 0.807
+      },
+      {
+        "view": "side",
+        "iou": 0.862
+      },
+      {
+        "view": "3/4",
+        "iou": 0.796
+      }
+    ],
+    "focal": {
+      "peakPart": "rock",
+      "peak": [
+        362,
+        164
+      ],
+      "focalShare": 0,
+      "focalArea": 0,
+      "top": [
+        {
+          "part": "crystals",
+          "share": 0.477
+        },
+        {
+          "part": "rock",
+          "share": 0.305
+        },
+        {
+          "part": "claim_pennant",
+          "share": 0.173
+        }
+      ],
+      "declared": []
+    },
+    "rest": {
+      "share": 0.386,
+      "spread": 0.557,
+      "min": 0.25
+    },
+    "shape": {
+      "acuteShare": 0.581,
+      "straightShare": 0.476,
+      "taper": 0.742,
+      "shape": "aggressive"
+    }
+  }
+}

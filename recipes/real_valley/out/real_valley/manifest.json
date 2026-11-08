@@ -1,0 +1,61 @@
+{
+  "name": "real_valley",
+  "kind": "terrain",
+  "description": "Yosemite Valley east end, 4 × 4 km at true scale from USGS 3DEP elevation: Half Dome, Glacier Point, Tenaya Canyon and the Merced canyon.",
+  "tags": [
+    "terrain",
+    "landscape",
+    "real-data",
+    "dem",
+    "yosemite",
+    "map"
+  ],
+  "files": {
+    "lods": [],
+    "sheet": "recipes/real_valley/out/real_valley/sheet.png",
+    "thumb": "recipes/real_valley/out/real_valley/thumb.png"
+  },
+  "triangles": [
+    133120,
+    33792,
+    8704
+  ],
+  "drawCalls": [
+    1,
+    1,
+    1
+  ],
+  "pivots": [
+    {
+      "name": "body",
+      "parent": null
+    }
+  ],
+  "emitters": [],
+  "sockets": [],
+  "surfaces": [
+    "opaque"
+  ],
+  "real": {
+    "length": 4000,
+    "width": 4000,
+    "height": 1525
+  },
+  "measures": [
+    {
+      "label": "Half Dome summit above the datum (Wikidata elevation)",
+      "spec": 1525,
+      "measured": 1524.8499755859375,
+      "source": "Wikidata Q925252 \"Half Dome\" (CC0-1.0, fetched 2026-11-07) https://www.wikidata.org/wiki/Special:EntityData/Q925252.json?revision=2503502462"
+    }
+  ],
+  "sources": [
+    "AWS Terrain Tiles (terrarium) https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png (z13, fetched 2026-11-07); Public domain (USGS 3DEP elevation, served as AWS Terrain Tiles; https://github.com/tilezen/joerd/blob/master/docs/attribution.md)",
+    "United States 3DEP (formerly NED) terrain data courtesy of the U.S. Geological Survey; tiles: AWS Terrain Tiles (Mapzen/tilezen joerd).",
+    "Wikidata Q925252 \"Half Dome\" (CC0-1.0, fetched 2026-11-07) https://www.wikidata.org/wiki/Special:EntityData/Q925252.json?revision=2503502462"
+  ],
+  "qa": {
+    "pass": true,
+    "findings": []
+  }
+}

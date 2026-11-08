@@ -37,6 +37,8 @@ export const newDoc = (bin: BinWriter): GltfDoc => ({
 export interface HierarchyOptions {
   /** Material index for a part (trim sheet by surface, or its glow layer). */
   readonly materialOf: (part: Part, i: number) => number;
+  /** Extra primitive `extensions` (KHR_materials_variants mappings of painted parts). */
+  readonly primitiveExtensions?: (part: Part, i: number) => Json | undefined;
   readonly withSheet: boolean;
   readonly animations: boolean;
 }
@@ -97,9 +99,11 @@ export function writeHierarchy(
       };
     }
     if (part.mesh && part.mesh.indices.length > 0) {
+      const prim = writePrimitive(doc.bin, part.mesh, o.materialOf(part, i), o.withSheet);
+      const extensions = o.primitiveExtensions?.(part, i);
       doc.meshes.push({
         name: part.name,
-        primitives: [writePrimitive(doc.bin, part.mesh, o.materialOf(part, i), o.withSheet)],
+        primitives: [extensions ? { ...prim, extensions } : prim],
       });
       node['mesh'] = doc.meshes.length - 1;
     }

@@ -41,36 +41,48 @@ export const oak: TreeParams = {
 };
 
 /** Pinus sylvestris (Scots pine): 25–35 m, DBH up to 1 m; long clean bole, orange upper bark,
- * flat-topped crown in the top third, dark blue-green needle tufts on upturned tips. */
+ * flat-topped crown in the top ~45%. Whorls of near-level branches (≈ 80° low, ≈ 50° high: branch
+ * angle shrinks up the crown) turning up at the tips, each ending in clumped pads of dark
+ * blue-green needle tufts with sky between the layers. Branch lengths are tuned so the natural
+ * crown is ~9 m across at 25 m (the fit scales XY by ≈ 1, so tufts are not squashed). */
 export const pine: TreeParams = {
   shape: 'cylindrical',
-  baseSize: 0.6,
+  baseSize: 0.64,
   ratioPower: 1.2,
   taper: 0.12,
   levels: [
-    { branches: 0, length: 0.94, downAngle: 0, curveVar: 3, segments: 10 },
+    { branches: 0, length: 0.95, downAngle: 0, curveVar: 3, segments: 10 },
     {
-      branches: 13,
-      length: 0.34,
-      downAngle: 94,
-      downAngleV: -14,
-      curve: 16,
-      curveVar: 14,
+      branches: 18,
+      length: 0.14,
+      lengthVar: 0.35,
+      downAngle: 84,
+      downAngleV: -34,
+      curve: 24,
+      curveVar: 12,
       segments: 5,
     },
-    { branches: 5, length: 0.42, downAngle: 60, curve: 18, curveVar: 14, start: 0.3, segments: 3 },
+    {
+      branches: 6,
+      length: 0.5,
+      downAngle: 50,
+      curve: 20,
+      curveVar: 16,
+      start: 0.45,
+      segments: 2,
+    },
   ],
   bark: hex('#4a3a30'),
   barkTop: hex('#c0652c'),
   leaves: {
-    shape: 'tuft',
-    size: 2.1,
+    shape: 'needles',
+    size: 1.6,
     width: 0.95,
-    perStem: 5,
-    from: 0.5,
+    perStem: 4,
+    from: 0.3,
     flat: 0.8,
     color: hex('#24422e'),
-    colorVar: 0.1,
+    colorVar: 0.12,
   },
   roots: 4,
   impostor: 'blob',

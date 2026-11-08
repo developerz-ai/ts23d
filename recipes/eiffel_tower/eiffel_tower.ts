@@ -30,6 +30,8 @@ import {
   normalize,
   place,
   scale,
+  stripAtV,
+  stripRect,
   sub,
   type Vec2,
   type Vec3,
@@ -217,14 +219,24 @@ function shade(z: number): Vec3 {
     return lo + ((c[k] ?? 0) - lo) * t2;
   }) as unknown as Vec3;
 }
+/** Puddled wrought iron under "Eiffel Tower Brown": members move from the classic plain/iron rows
+ *  onto steel_painted (the shade is the paint colour; chips show rusty iron underneath). */
+const PAINTED = stripRect('steel_painted');
 function iron(meshes: readonly Mesh[], dirt = false): Mesh {
   const m = merge(meshes);
   const colors = new Float32Array(m.colors);
+  const uvs = new Float32Array(m.uvs);
   for (let i = 0; i < m.positions.length / 3; i++) {
     const s = shade(m.positions[i * 3 + 2] ?? 0);
     for (let k = 0; k < 3; k++) colors[i * 3 + k] = (colors[i * 3 + k] ?? 1) * (s[k] ?? 0);
+    const v = m.uvs[i * 2 + 1] ?? 0;
+    const row = stripAtV(v);
+    if (row === 'plain' || row === 'iron') {
+      const from = stripRect(row);
+      uvs[i * 2 + 1] = PAINTED.v0 + (v - from.v0);
+    }
   }
-  const painted = { ...m, colors };
+  const painted = { ...m, colors, uvs };
   return dirt ? grime(painted, { ground: 9, groundStrength: 0.35 }) : painted;
 }
 const ring4 = (m: Mesh): Mesh[] => [0, 1, 2, 3].map((q) => place(m, { yaw: (q * Math.PI) / 2 }));
@@ -392,7 +404,8 @@ function railing(half: number, z: number, h: number, pitch: number, lod: Lod): M
     out.push(beam({ from: [s, y, z], to: [s, y, z + h], width: 0.08, color: IRON }));
   }
   rod(out, [s, -s, z + h], [s, s, z + h], 0.08);
-  if (lod === 0) rod(out, [s, -s, z + h * 0.5], [s, s, z + h * 0.5], 0.05);
+  // No mid rail: a thin bar through the diamond-section posts only meets them along an edge
+  // (QA `connections`); the top rail and posts carry the read.
   return iron(ring4(merge(out)));
 }
 
@@ -467,9 +480,10 @@ function campanile(lod: Lod): Mesh {
   const z0 = TERRACE;
   out.push(
     lathe({
+      // Base ring wide enough for the four ribs' feet (r 8.8 m) to stand on it.
       profile: [
-        [6.4, 0],
-        [6.4, 0.5],
+        [8.85, 0],
+        [8.85, 0.5],
       ],
       segments: seg,
       caps: true,

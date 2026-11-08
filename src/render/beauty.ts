@@ -1,7 +1,9 @@
 // Beauty render: the zero-GPU product shot for READMEs, gallery cards and the review pack.
 // Perspective 3/4 hero camera, trim-sheet textures × vertex colour with normal + ORM maps, a key
 // sun with soft PCF shadows, sky fill with multi-direction ambient occlusion, a seamless studio
-// floor that only shows the shadows, 2× supersampling. Deterministic: same asset → same bytes.
+// floor that only shows the shadows, 2× supersampling. glTF reference BRDF (GGX) with clearcoat,
+// sheen, anisotropy, iridescence and screen-space refraction for see-through surfaces.
+// Deterministic: same asset → same bytes.
 
 import { type CompiledAsset, encodePng } from '../core/index.ts';
 import type { PaintedSheet } from '../material/index.ts';
@@ -51,7 +53,7 @@ export interface BeautyRender {
 let defaultSheet: PaintedSheet | undefined;
 const sheetOf = (o: BeautyOptions): PaintedSheet => {
   if (o.sheet) return o.sheet;
-  defaultSheet ??= paintTrimSheet({ ...DEFAULT_SHEET, size: 1024 });
+  defaultSheet ??= paintTrimSheet({ ...DEFAULT_SHEET, size: 2048 });
   return defaultSheet;
 };
 
@@ -105,6 +107,18 @@ export function renderBeauty(asset: CompiledAsset, o: BeautyOptions = {}): Beaut
     reach: 0.12 * extent,
   };
   const floor = floorGrid(ctx, res(96, 512, 0.25));
+  if (scene.transmissive) {
+    // What see-through surfaces show: the same view without them (one more rasterisation).
+    const skip = scene.look.map((l) => ((scene.looks[l]?.transmission ?? 0) > 0 ? 1 : 0));
+    return resolve(
+      { ...ctx, behind: rasteriseVis(scene, cam, tex.size, alpha, skip) },
+      vis,
+      floor,
+      v.width,
+      v.height,
+      ss,
+    );
+  }
   return resolve(ctx, vis, floor, v.width, v.height, ss);
 }
 

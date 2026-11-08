@@ -23,7 +23,7 @@ interface MeshGenerator {
 }
 
 localGenerator({ model, endpoint }): MeshGenerator   // talks to a local HTTP server
-importGlb(bytes, { fit, recolor? }): Mesh            // any GLB as a part
+importGlb(source, opts): ImportedMesh                 // shipped, see 21-import.md
 kubeezImages({ apiKey, model? }): ImageSource        // images for references and materials
 ```
 

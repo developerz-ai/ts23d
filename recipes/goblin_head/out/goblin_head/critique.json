@@ -1,0 +1,133 @@
+{
+  "asset": "goblin_head",
+  "reviewer": "agent",
+  "overall": 6.0,
+  "scores": {
+    "silhouette": {
+      "score": 7,
+      "reason": "Huge notched ears, hooked nose and dome read as a goblin; ear lobe balls removed; neck is a neck, not a pole.",
+      "fixes": [
+        "a stronger hunch in the side view"
+      ]
+    },
+    "proportions": {
+      "score": 6,
+      "reason": "Neck 0.51 × head width (declared skinny range), SCM and windpipe read; mouth area still pursed and the grin reads weakly.",
+      "fixes": [
+        "widen the grin and show the teeth row",
+        "shorten the vault 5 %"
+      ]
+    },
+    "materials": {
+      "score": 5,
+      "reason": "Skin, shirt, vest, hood, scarf separate by hue; leather and linen share roughness.",
+      "fixes": [
+        "leather strip on the vest",
+        "wool on the scarf"
+      ]
+    },
+    "detail": {
+      "score": 6,
+      "reason": "Warts, brow creases, lids, wisps, hemmed vest, soft hood roll; ears alias along the rim.",
+      "fixes": [
+        "thicker ear rim at LOD0"
+      ]
+    },
+    "wear": {
+      "score": 4,
+      "reason": "Some skin mottling; clothes clean.",
+      "fixes": [
+        "patches and grime on the vest",
+        "torn scarf ends"
+      ]
+    },
+    "lod": {
+      "score": 7,
+      "reason": "LOD2 keeps ears and nose.",
+      "fixes": [
+        "keep the wisps out at LOD2"
+      ]
+    },
+    "technical": {
+      "score": 7,
+      "reason": "QA PASS honestly with 491 small crease regions (≤ 3 cm); socket joints pass; 80k / 22k / 4.2k tris.",
+      "fixes": [
+        "declare the warts from their seeded sizes instead of a 2× bound"
+      ]
+    }
+  },
+  "renders": {
+    "hero.png": "65b94a562042ae0a46180599ca3e9e734922a1040c810a573185cc626eef9b76",
+    "sheet.png": "4b5b2dc86a4bc9f693c206ca9d56bbe012cd2a24d81877b26d5ec1a448dd4663",
+    "raking.png": "70303ba3f6f33ccc66ce125c457675a454fe26cfbd08d58631ab14286ebab412",
+    "raking_detail.png": "3093d840e5141d0c9aee4af2672d2ed1e294e3c1d43f19223d7159e051e3d641",
+    "lods.png": "9b0242b7d05c5126fe6fe4c109684a151563f193413e3e090b8217bdcaa72f06",
+    "silhouette.png": "26a7381d38df07a4210521264450557edcd154be8429bba2307a9a849d11048b",
+    "value.png": "afb393cd847cd1a6b61958f95eecc6f694a63d8d004d06bfb512c32a1f84a1f8",
+    "detail.png": "b449faf34245e2d4fe06e660ffdc0eaa73449330a395bd094d2ed9b919e9956f"
+  },
+  "metrics": {
+    "silhouette": [
+      {
+        "view": "front",
+        "iou": 0.949
+      },
+      {
+        "view": "side",
+        "iou": 0.936
+      },
+      {
+        "view": "3/4",
+        "iou": 0.937
+      }
+    ],
+    "focal": {
+      "peakPart": "head",
+      "peak": [
+        473,
+        160
+      ],
+      "focalShare": 0.893,
+      "focalArea": 0.608,
+      "top": [
+        {
+          "part": "head",
+          "share": 0.893
+        },
+        {
+          "part": "bust",
+          "share": 0.101
+        },
+        {
+          "part": "eye_r",
+          "share": 0.006
+        }
+      ],
+      "declared": [
+        "head"
+      ]
+    },
+    "rest": {
+      "share": 0.393,
+      "spread": 0.587,
+      "min": 0.25
+    },
+    "grounded": {
+      "rise": 0.524,
+      "bands": [
+        0.171,
+        0.368,
+        0.38,
+        0.498,
+        0.63
+      ]
+    },
+    "shape": {
+      "acuteShare": 0.307,
+      "straightShare": 0.428,
+      "taper": 0.329,
+      "shape": "aggressive",
+      "declared": "aggressive"
+    }
+  }
+}

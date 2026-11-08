@@ -1,0 +1,122 @@
+{
+  "asset": "boxcar",
+  "reviewer": "agent",
+  "overall": 7.6,
+  "scores": {
+    "silhouette": {
+      "score": 8,
+      "reason": "Single-sheathed USRA boxcar from every side: Howe-truss bracing, running board with laterals, sliding door on its track, Andrews-style trucks, brake staff and wheel at the B end. The underside now has brake gear: brake beams and shoes on every truck, the cylinder and floating levers with pull rods to the trucks, reservoir, triple valve, train line (LOD0 and LOD1).",
+      "fixes": [
+        "thicker brake staff and a spoked wheel so the B end reads in the FRONT view"
+      ]
+    },
+    "proportions": {
+      "score": 8,
+      "reason": "13.4 \u00d7 2.9 \u00d7 4.04 m; 41 ft 3 in body, 33 in wheels, 5 ft 6 in wheelbase, door width and wheel spacing pass the \u00b12% measures; panel count each side of the door matches the Bettendorf photo.",
+      "fixes": [
+        "check truck side-frame spacing against the FRONT view of the builder photo"
+      ]
+    },
+    "materials": {
+      "score": 7,
+      "reason": "wood_painted siding (a different variant per side, same strip at every LOD so the red no longer shifts), steel_painted framing and ends, weathered-wood running board, cast-iron trucks and wheels, rusted hardware. Lettering now continues onto the diagonal braces, but at 3/4 the 6.5 cm brace offset still breaks 'CLINCHFIELD' by parallax. Wheel faces show radial lathe streaks.",
+      "fixes": [
+        "planar-map the wheel faces instead of lathe UVs (cast-iron reads as brushed)",
+        "taper the brace face toward the letters or flush-mount stencil pieces"
+      ]
+    },
+    "detail": {
+      "score": 7,
+      "reason": "Board-level siding, bolted bracing with rivets, door straps and handle, door track and guide, couplers with uncoupling lever and air hose, ladders and stirrups, brake beams and rigging. Still missing journal-box lids, door hasp/seal pin, roof seam caps.",
+      "fixes": [
+        "journal boxes with hinged lids",
+        "door hasp, seal pin and door stops",
+        "end-roof fascia"
+      ]
+    },
+    "wear": {
+      "score": 7,
+      "reason": "Road grime rises from the rails (darkest at the sill, fading by mid-height) with blotchy fade, roof darkened by locomotive smoke, rust streaks below the upper rivet rows and the door guide, rusted couplers. Streaks are small at hero distance; no replaced boards or chalk marks.",
+      "fixes": [
+        "a few replaced boards in fresher paint (board-aligned vertex colour)",
+        "chalk car-card marks by the door",
+        "longer, wider rust streaks under the door track"
+      ]
+    },
+    "lod": {
+      "score": 8,
+      "reason": "LOD2 (1.2k) keeps the box, roof walk, trucks and the big white road name; same wood_painted strip at every LOD so the body red matches LOD0; bracing drops to texture.",
+      "fixes": [
+        "bake the brace pattern into LOD2 vertex colour"
+      ]
+    },
+    "technical": {
+      "score": 8,
+      "reason": "QA PASS both liveries: 25 628 / 9 272 / 1 192 (boxcar), 25 816 / 9 460 / 1 336 (boxcar_nw); the truck\u2194underframe slit is now declared on the family, so boxcar_nw passes too. One material; paint slots keep switchable liveries. Now 25 676 / 9 272 / 1 192. Connections gate clean (was 16 findings per livery): grab-iron legs bolt through the side boards / end wall (1 cm into them) instead of stopping 7\u20139 cm short at the post line; a train-line pipe carries the air hose out of the centre sill.",
+      "fixes": [
+        "trim LOD0 by sharing one tessellated board panel per side"
+      ]
+    }
+  },
+  "renders": {
+    "hero.png": "e525d4f8b51bd6b8fbfca66caed44fc54db33194e82df0b9ecdea4139713643e",
+    "sheet.png": "050c187e90f3900d953a0b4d457f5c646dfae8dff980ac3a1cb07fbb01f831c1",
+    "raking.png": "e105255e9d79e8b9a9459687fb32a8cb3185aa44c454c91a317a99a767f7718a",
+    "raking_detail.png": "8543a1551bc19a41558a6a960adffc64283b896e71fc841c9f40c4c3672b9c7f",
+    "lods.png": "0904a72e8c5b97724e91e04282a6017a1d7622853924cfb3131e0a6ab5b587d7",
+    "silhouette.png": "2b74b0d3e5268524dc10a9ffa8b9d079ed0bc0e7ab7249684918470d7f2f9514",
+    "value.png": "78d30a509a65265148ddbe2d5f030b12fb4bcc44adce69994757e6f9ea6b7cad",
+    "detail.png": "7fa40af4d47a8e369db89d681a433f9a6c2f6ff8fcc4632d04fe3701027e8cee"
+  },
+  "metrics": {
+    "silhouette": [
+      {
+        "view": "front",
+        "iou": 0.907
+      },
+      {
+        "view": "side",
+        "iou": 0.972
+      },
+      {
+        "view": "3/4",
+        "iou": 0.983
+      }
+    ],
+    "focal": {
+      "peakPart": "body",
+      "peak": [
+        210,
+        117
+      ],
+      "focalShare": 0,
+      "focalArea": 0,
+      "top": [
+        {
+          "part": "roof",
+          "share": 0.26
+        },
+        {
+          "part": "body",
+          "share": 0.245
+        },
+        {
+          "part": "body_framing",
+          "share": 0.18
+        }
+      ],
+      "declared": []
+    },
+    "rest": {
+      "share": 0.412,
+      "spread": 0.781,
+      "min": 0.25
+    },
+    "shape": {
+      "acuteShare": 0.213,
+      "straightShare": 0.77,
+      "taper": -0.314,
+      "shape": "stable"
+    }
+  }
+}

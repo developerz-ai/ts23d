@@ -1,0 +1,120 @@
+{
+  "asset": "cargo_container_scifi",
+  "reviewer": "agent",
+  "overall": 7.3,
+  "scores": {
+    "silhouette": {
+      "score": 7,
+      "reason": "ISO 20 ft box with corner castings, armoured side bays, door end with four cam lock bars and status strip: reads as a container at once. The top line stays straight on purpose: anything above the top castings would stop it stacking and twist-locking (the asset's engine contract), so the critique's antenna/light bar is not added.",
+      "fixes": [
+        "deeper bay relief (8\u201310 cm) or a trapezoidal rib between bays so the long-side outline is not a flat plane at grazing angles"
+      ]
+    },
+    "proportions": {
+      "score": 8,
+      "reason": "Frame 6.058 \u00d7 2.438 \u00d7 2.591 m on ISO 668; castings 178 \u00d7 162 \u00d7 118 mm and 2 259 mm centres pass the measures; doors fill the opening between the posts.",
+      "fixes": []
+    },
+    "materials": {
+      "score": 7,
+      "reason": "Painted steel shell and frame (teal and off-white as paint colour, chipped to steel at the strip's chips), cast-iron corner castings, galvanised lock bars, hinges and bolts that read as metal, rubber pockets; glow on the strip and keypad. UVs now box-projected per triangle at true scale (the stretched streaks on posts are gone). Paint roughness is uniform.",
+      "fixes": [
+        "roughness variation where hands touch (door handles, keypad)",
+        "darker emissive housing behind the status strip"
+      ]
+    },
+    "detail": {
+      "score": 7,
+      "reason": "Bays with seams, vents, bolts, stencilled owner code on side and door, hazard bands, cam keepers and handles, hinge knuckles and pins, forklift pockets, cargo inside. Roof is ribs over a plate; no gasket line or customs seal.",
+      "fixes": [
+        "door gasket line and customs seal on the right leaf",
+        "forklift pockets as real recesses with a lip",
+        "roof plate fasteners"
+      ]
+    },
+    "wear": {
+      "score": 8,
+      "reason": "weather() (measured, in the manifest): chipped convex edges 15 %, rust streaking down from side edges 8 %, two to four dents in the side bays, bleached roof, dust on top, dirt at the sill; plus rust decals under vents and bolts and the strip's paint chips. It looks like it has crossed oceans. Doors are not weathered yet.",
+      "fixes": [
+        "run the door leaves through weather() too (hinge-space, separate call)",
+        "faded/scraped owner code"
+      ]
+    },
+    "lod": {
+      "score": 7,
+      "reason": "LOD2 (736) keeps the orange band, the four lock bars and the status strip, and the bay grid as flush quads; colours match LOD0. The roof reads lighter at LOD2 without its ribs.",
+      "fixes": [
+        "keep the roof ribs as quads at LOD2 so the roof value matches"
+      ]
+    },
+    "technical": {
+      "score": 7,
+      "reason": "QA PASS incl. the weather gate; 23 022 / 8 342 / 736, one material, glow + light socket, doorArc check. LOD0 is now heavy for a prop: weather() refinement at 0.6 m splits every long bevel. Now 22 914 / 8 342 / 736. Connections gate clean (was 9 findings): rust streaks start at the panel bolts on the bay panel face, 2 mm into it, and end on that panel (they used to hover 1.5\u20135 cm off the plates and over the recesses).",
+      "fixes": [
+        "weather only the side/roof plates (not the bevelled frame) to halve the refinement cost",
+        "split only faces taller than one strip band in the UV pass"
+      ]
+    }
+  },
+  "renders": {
+    "hero.png": "72c8f547d8a6719fec9804b355d0a7d245844ea502e12d86168dd8514c574238",
+    "sheet.png": "56de5ce5be8b6db63fe4fefd3b396920552a934e6344ab7ea7ff50c87af58e7d",
+    "raking.png": "df65b9c9a0b97f6c20822796b8464b0c8f1886183fe17cc9e74799d957103dc7",
+    "raking_detail.png": "b9b57c147f62594717ec8eb587aef15267c6134d67be995d3cdc7bc0a3ac3e81",
+    "lods.png": "0fae5692a8500258f8bc5703092f34edcc3235888a7d8f021fb0601c879262d3",
+    "silhouette.png": "c7ead1ff15b9b5984e77370749dc35c30510362cc7d1a489d99ba15f7a394d8a",
+    "value.png": "e36ea167258c8e5ff68c09f992fa3abacffa5c441613a5a0b73876afbdd71e9c",
+    "detail.png": "6829f58ef75b601dddcfaae00d44e12e18f19633e542823a6b258cf3960d4d5a"
+  },
+  "metrics": {
+    "silhouette": [
+      {
+        "view": "front",
+        "iou": 1
+      },
+      {
+        "view": "side",
+        "iou": 1
+      },
+      {
+        "view": "3/4",
+        "iou": 0.997
+      }
+    ],
+    "focal": {
+      "peakPart": "body",
+      "peak": [
+        327,
+        93
+      ],
+      "focalShare": 0,
+      "focalArea": 0,
+      "top": [
+        {
+          "part": "frame",
+          "share": 0.5
+        },
+        {
+          "part": "body",
+          "share": 0.449
+        },
+        {
+          "part": "casting_6",
+          "share": 0.037
+        }
+      ],
+      "declared": []
+    },
+    "rest": {
+      "share": 0.431,
+      "spread": 0.816,
+      "min": 0.25
+    },
+    "shape": {
+      "acuteShare": 0,
+      "straightShare": 0.94,
+      "taper": -0.001,
+      "shape": "stable"
+    }
+  }
+}

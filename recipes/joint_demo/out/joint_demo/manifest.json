@@ -1,0 +1,109 @@
+{
+  "name": "joint_demo",
+  "kind": "prop",
+  "description": "Teaching asset: an arm, a hand and a sword from separate modules, connected by checked joints",
+  "tags": [
+    "demo",
+    "joints"
+  ],
+  "files": {
+    "lods": [],
+    "sheet": "recipes/joint_demo/out/joint_demo/sheet.png",
+    "thumb": "recipes/joint_demo/out/joint_demo/thumb.png"
+  },
+  "triangles": [
+    1672,
+    816,
+    300
+  ],
+  "drawCalls": [
+    1,
+    1,
+    1
+  ],
+  "pivots": [
+    {
+      "name": "body",
+      "parent": null
+    }
+  ],
+  "emitters": [],
+  "sockets": [],
+  "joints": [
+    {
+      "name": "elbow",
+      "from": "upper_arm",
+      "to": "forearm",
+      "kind": "flush",
+      "at": [
+        0.3,
+        0,
+        1
+      ]
+    },
+    {
+      "name": "wrist",
+      "from": "forearm",
+      "to": "hand",
+      "kind": "flush",
+      "at": [
+        0.56,
+        0,
+        1
+      ]
+    },
+    {
+      "name": "grip",
+      "from": "hand",
+      "to": "sword",
+      "kind": "grip",
+      "at": [
+        0.655,
+        0,
+        1
+      ]
+    }
+  ],
+  "surfaces": [
+    "opaque"
+  ],
+  "real": {
+    "length": 0.88,
+    "width": 0.36,
+    "height": 1.85
+  },
+  "measures": [
+    {
+      "label": "forearm length",
+      "spec": 0.26,
+      "measured": 0.25999999046325684,
+      "source": "NASA MSIS"
+    },
+    {
+      "label": "grip length",
+      "spec": 0.14,
+      "measured": 0.14000004529953003,
+      "source": "arming sword"
+    },
+    {
+      "label": "blade length",
+      "spec": 0.76,
+      "measured": 0.7594999074935913,
+      "source": "arming sword"
+    },
+    {
+      "label": "guard span",
+      "spec": 0.18,
+      "measured": 0.18000000715255737,
+      "source": "arming sword"
+    }
+  ],
+  "sources": [
+    "https://msis.jsc.nasa.gov/sections/section03.htm",
+    "https://en.wikipedia.org/wiki/Arming_sword"
+  ],
+  "qa": {
+    "pass": true,
+    "findings": []
+  }
+}

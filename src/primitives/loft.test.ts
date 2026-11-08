@@ -107,8 +107,8 @@ describe('loft', () => {
   it("uv 'length' tiles U in metres along the loft; 'row' tiles U around", () => {
     const rings = [ringXY([0, 0, 0], 1, 1, 8), ringXY([0, 0, 4], 1, 1, 8)];
     const len = loft({ rings, color: C });
-    expect(len.uvs[len.uvs.length - 2]).toBeCloseTo(2, 5); // 4 m over a 2 m strip
+    expect(len.uvs[len.uvs.length - 2]).toBeCloseTo(1, 5); // 4 m over a 4 m strip (trim sheet v3 span)
     const row = loft({ rings, color: C, uv: 'row' });
-    expect(row.uvs[8 * 2]).toBeGreaterThan(2.9); // ~6.12 m of perimeter / 2 m
+    expect(row.uvs[8 * 2]).toBeGreaterThan(1.45); // ~6.12 m of perimeter / 4 m (trim sheet v3 span)
   });
 });

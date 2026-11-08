@@ -18,7 +18,7 @@ import { paintStrip } from './paint/strip.ts';
 import type { PaintedSheet, SheetRecipe } from './paint/types.ts';
 import { validateSheet, validateStrip } from './paint/validate.ts';
 import { customIds } from './slots.ts';
-import { CELLS, cellRect, STRIPS, type StripId, stripRect } from './trim-sheet.ts';
+import { CELLS, cellRect, STRIP_H, STRIPS, type StripId, stripRect } from './trim-sheet.ts';
 
 export { DEFAULT_SHEET } from './paint/default-sheet.ts';
 export type {
@@ -36,11 +36,12 @@ const FALLBACK = { kind: 'noise', scaleMetres: 1, roughness: 0.6 } as const;
 
 export function paintTrimSheet(recipe: SheetRecipe = DEFAULT_SHEET): PaintedSheet {
   validateSheet(recipe);
-  const size = recipe.size ?? 2048;
+  const size = recipe.size ?? 4096;
   const sheet = blankSheet(size);
   const rng = createRng(recipe.seed);
   const seedOf = (name: string): number => rng.fork(name).int(0, 0x7fffffff);
-  const pad = Math.max(2, size / 256);
+  // Replicate edge texels 1/8 of a strip row deep (8 px at 4096²): the first three mips stay clean.
+  const pad = Math.max(2, Math.round((size * STRIP_H) / 8));
   const all = [...STRIPS, ...(customIds() as readonly StripId[])];
   for (const id of all) {
     const r = recipe.strips[id] ?? DEFAULT_SHEET.strips[id] ?? FALLBACK;

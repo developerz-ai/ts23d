@@ -1,7 +1,7 @@
 {
   "name": "goblin_head",
   "kind": "character",
-  "description": "Stylised goblin bust on a plinth: huge pointed ears, long hooked nose, toothy grin, heavy-lidded amber eyes, wispy hair, leather vest and scarf",
+  "description": "Stylised goblin bust: huge notched leaf ears, long hooked nose, toothy grin, big amber eyes under heavy lids, worried brow, warts, wispy hair, linen shirt, leather vest, hood and knotted scarf",
   "tags": [
     "character",
     "fantasy",
@@ -15,41 +15,70 @@
     "thumb": "recipes/goblin_head/out/goblin_head/thumb.png"
   },
   "triangles": [
-    43784,
-    8426,
-    1196
+    80408,
+    22304,
+    4236
   ],
   "drawCalls": [
-    1,
-    1,
-    1
+    2,
+    2,
+    2
   ],
   "pivots": [
     {
       "name": "body",
       "parent": null
+    },
+    {
+      "name": "body_finish_cornea",
+      "parent": null
     }
   ],
   "emitters": [],
   "sockets": [],
+  "joints": [
+    {
+      "name": "eye_l_orbit",
+      "from": "eye_l",
+      "to": "head",
+      "kind": "socket",
+      "at": [
+        0.074,
+        0.0316,
+        0.3532
+      ]
+    },
+    {
+      "name": "eye_r_orbit",
+      "from": "eye_r",
+      "to": "head",
+      "kind": "socket",
+      "at": [
+        0.074,
+        -0.0316,
+        0.3532
+      ]
+    }
+  ],
   "surfaces": [
     "opaque"
   ],
   "real": {
-    "length": 0.227,
-    "width": 0.342,
-    "height": 0.372
+    "length": 0.242,
+    "width": 0.456,
+    "height": 0.482
   },
   "measures": [
     {
       "label": "eye spacing (pupil to pupil)",
-      "spec": 0.0589,
-      "measured": 0.058899999130517244,
-      "source": "0.155 × 2 × 0.19 m"
+      "spec": 0.063,
+      "measured": 0.06294274516403675,
+      "source": "interpupil 0.331 H (human 0.265 × 1.25) × 0.19 m"
     }
   ],
   "sources": [
-    "recipes/goblin_head/README.md (design dossier: proportions, palette, references)"
+    "recipes/goblin_head/README.md (design dossier: proportions, exaggerations, palette)",
+    "docs/research/head-analysis.md (human anchor ratios, Lee Perry-Smith scan, CC BY 3.0)"
   ],
   "qa": {
     "pass": true,

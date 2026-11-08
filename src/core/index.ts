@@ -9,27 +9,65 @@ export {
   type Check,
   type CheckFinding,
   type CompiledAsset,
+  type CompileOptions,
+  type Connect,
+  type ConnectAs,
+  checkFinishedParts,
   compile,
   defineAsset,
   type Emitter,
   type EmitterOptions,
+  type Finish,
+  type Finishes,
+  finishesOf,
+  type IntendedCrease,
+  type IntendedGap,
   isAsset,
+  type Joint,
+  type JointKind,
+  type JointOptions,
   type Lod,
+  linearToHex,
   type Measure,
   type Motion,
+  OPTICS,
+  type Optics,
+  opticsOf,
+  type PaintColor,
+  type PaintFinish,
+  type PaintSet,
+  type PaintSlots,
+  type PaintVariants,
   type Part,
+  type ParticleEmitterOptions,
   type PartOptions,
+  type PartSound,
   type RealDimensions,
+  type ResolvedFinish,
+  type ResolvedOptics,
+  type ResolvedSurfaceOptics,
+  resolveFinish,
   type Slide,
   type Socket,
   type SocketOptions,
+  type SoundClip,
+  type SoundEmitter,
+  type SoundEmitterOptions,
   type Spin,
   type Surface,
+  type SurfaceOptics,
   type Sway,
+  srgbToLinear,
+  TRANSMISSIVE,
+  type TransmissiveSurface,
+  tone,
   type UseOptions,
+  type WeatherCoverage,
 } from './asset.ts';
+export * from './define-part.ts';
 export { type ErrorCode, type ErrorDetails, notImplemented, Ts23dError } from './errors.ts';
 export { defineFamily, type Family, type FamilyDefinition, type Variant } from './family.ts';
+export { type JointFit, type JointIssue, jointFit } from './joint-fit.ts';
 export {
   type Bounds,
   boundsOf,
@@ -40,9 +78,30 @@ export {
   triangleCount,
   type Vertex,
 } from './mesh.ts';
+export type { AssetPhysics, BodyKind, ColliderKind, PartPhysics, RealMass } from './physics.ts';
 export { encodePng } from './png.ts';
+export { orient2d, orient3d } from './predicates.ts';
 export { createRng, type Rng } from './rng.ts';
+export {
+  innerRadius,
+  type Plane,
+  picks,
+  planeAxes,
+  type Section,
+  section,
+  wrap,
+} from './section.ts';
 export { type Affine, affine, applyAffine, frame, type Placement, place } from './transform.ts';
+export {
+  checkTune,
+  savedValues,
+  type TunedValues,
+  type TuneObjective,
+  type TuneParam,
+  type TuneSpec,
+  type TuneView,
+  tunedReader,
+} from './tune.ts';
 export {
   add,
   cross,

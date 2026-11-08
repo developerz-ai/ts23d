@@ -1,21 +1,21 @@
-// Viewer side panels: the stats list (triangles vs budget, GLB size, compile time) and the parts
+// Viewer side panels: the stats list (triangles vs budget, GLB size, compile time, physics mass
+// when the recipe declares it) and the parts
 // tree (pivots, motion, emitters; hovering or focusing a row outlines that node) — DOM only.
 
-import type { PartInfo } from './compile.ts';
+import type { BuildResult, PartInfo } from './compile.ts';
 
-export function renderStats(
-  target: HTMLElement,
-  tris: number,
-  budget: number,
-  bytes: number,
-  ms: number,
-  emitters: number,
-): void {
+const kib = (n: number): string =>
+  n >= 1024 * 1024 ? `${(n / 1024 / 1024).toFixed(1)} MiB` : `${(n / 1024).toFixed(1)} KiB`;
+const kg = (n: number): string =>
+  n >= 1000 ? `${(n / 1000).toFixed(n >= 10_000 ? 1 : 2)} t` : `${n.toFixed(n >= 10 ? 0 : 2)} kg`;
+
+export function renderStats(target: HTMLElement, b: BuildResult, emitters: number): void {
   const rows: [string, string][] = [
-    ['triangles', `${tris.toLocaleString('en')} / ${budget.toLocaleString('en')}`],
-    ['glb', `${(bytes / 1024).toFixed(1)} KiB`],
-    ['compile', `${ms.toFixed(1)} ms`],
+    ['triangles', `${b.triangles.toLocaleString('en')} / ${b.budget.toLocaleString('en')}`],
+    ['glb', kib(b.glb.byteLength)],
+    ['compile', b.ms >= 1000 ? `${(b.ms / 1000).toFixed(1)} s` : `${b.ms.toFixed(0)} ms`],
     ...(emitters ? [['emitters', String(emitters)] as [string, string]] : []),
+    ...(b.mass ? [['mass', kg(b.mass.kg)] as [string, string]] : []),
   ];
   target.replaceChildren(
     ...rows.flatMap(([k, v]) => {

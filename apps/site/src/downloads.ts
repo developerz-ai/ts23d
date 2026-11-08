@@ -1,7 +1,10 @@
-// Download buttons: one GLB per LOD, each labelled with its size once the worker has built it.
-// The bytes are exactly what `toGlb` writes (pivots merged, `rest` + `run` clips baked).
+// Download buttons: one GLB per LOD. Nothing compiles until a button is pressed (LOD0 of a heavy
+// asset is a 20-second compile and a 30 MB file); labels show the committed triangle counts, then
+// the real size once built. The bytes are exactly what `toGlb` writes (pivots merged, `rest` +
+// `run` clips baked).
 
-import { type AssetInfo, build, LODS, recipe } from './compile.ts';
+import { build, LODS, recipe } from './compile.ts';
+import type { Subject } from './viewer-load.ts';
 
 const kib = (n: number): string =>
   n >= 1024 * 1024 ? `${(n / 1024 / 1024).toFixed(1)} MB` : `${Math.round(n / 1024)} KB`;
@@ -15,26 +18,36 @@ function save(name: string, bytes: Uint8Array): void {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-export function renderDownloads(root: HTMLElement, asset: AssetInfo): void {
+export function renderDownloads(root: HTMLElement, asset: Subject): void {
   const buttons = LODS.map((lod) => {
     const b = document.createElement('button');
     b.type = 'button';
     b.className = 'download';
     const file = `${asset.name}_lod${lod}.glb`;
-    b.innerHTML = `<span class="download-lod">LOD${lod}</span><span class="download-size">…</span>`;
+    const lodSpan = Object.assign(document.createElement('span'), {
+      className: 'download-lod',
+      textContent: `LOD${lod}`,
+    });
+    const size = Object.assign(document.createElement('span'), { className: 'download-size' });
+    const tris = asset.triangles[lod];
+    size.textContent = tris ? `${tris.toLocaleString('en')} tris` : 'compile & save';
+    b.append(lodSpan, size);
     b.setAttribute('aria-label', `Download ${file}`);
-    const job = build(recipe(asset.name, lod));
-    job.then(
-      ({ glb, triangles }) => {
-        const size = b.querySelector('.download-size');
-        if (size)
+    b.addEventListener('click', () => {
+      b.setAttribute('aria-busy', 'true');
+      size.textContent = 'compiling…';
+      build(recipe(asset.name, lod, asset.file)).then(
+        ({ glb, triangles }) => {
+          b.removeAttribute('aria-busy');
           size.textContent = `${kib(glb.byteLength)} · ${triangles.toLocaleString('en')} tris`;
-      },
-      () => {
-        b.disabled = true;
-      },
-    );
-    b.addEventListener('click', () => void job.then(({ glb }) => save(file, glb)));
+          save(file, glb);
+        },
+        () => {
+          b.removeAttribute('aria-busy');
+          size.textContent = 'failed: try again';
+        },
+      );
+    });
     return b;
   });
   root.replaceChildren(...buttons);

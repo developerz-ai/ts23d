@@ -1,0 +1,111 @@
+{
+  "asset": "real_valley",
+  "reviewer": "agent",
+  "overall": 7.4,
+  "scores": {
+    "silhouette": {
+      "score": 8,
+      "reason": "Measured USGS 3DEP relief: Half Dome central and highest, sheer north-rim walls over a flat glacial floor; reads as Yosemite's east end from the Glacier Point direction.",
+      "fixes": [
+        "z14 tiles to sharpen Half Dome's NW face lip (stepped at 15.6 m spacing)"
+      ]
+    },
+    "proportions": {
+      "score": 9,
+      "reason": "True scale 4 \u00d7 4 km; Half Dome summit 1 524.8 m above datum vs 1 525 m from Wikidata (\u22120.01 %); Glacier Point within 0.9 % of Wikidata.",
+      "fixes": [
+        "a true-relief view from Glacier Point's own position (an interior camera) to compare the photo silhouette 1:1"
+      ]
+    },
+    "materials": {
+      "score": 6,
+      "reason": "Strips per triangle by slope and altitude (cliff, gravel, moss); granite domes' 30\u201345\u00b0 bare backs read partly as forest; LOD2 shows diagonal banding in the moss/grass strips.",
+      "fixes": [
+        "land cover from an open dataset instead of slope-only colouring",
+        "blend strips across triangle borders"
+      ]
+    },
+    "detail": {
+      "score": 7,
+      "reason": "Survey detail only (talus cones, gullies, benches at 15.6 m); no trees, boulders or river.",
+      "fixes": [
+        "scatter tree impostors on the forest floor",
+        "carve the Merced from an OSM centreline"
+      ]
+    },
+    "wear": {
+      "score": 6,
+      "reason": "No weathering beyond what the terrain shape carries; no water streaks on the granite.",
+      "fixes": [
+        "dark water streaks down the cliff strip below drainage lines"
+      ]
+    },
+    "lod": {
+      "score": 8,
+      "reason": "256/128/64 cells from one grid; LOD2 silhouette IoU \u2265 0.99; small dark slivers on LOD2 ridgelines.",
+      "fixes": [
+        "drop or seat the dark slivers on LOD2 ridgelines (strip seams at coarse cells)"
+      ]
+    },
+    "technical": {
+      "score": 8,
+      "reason": "One part, one draw call, 133k/34k/8.7k triangles, byte-deterministic, DEM hash verified on decode, credit in the GLB copyright.",
+      "fixes": [
+        "a 512-cell z14 variant for hero use with the 256 grid kept for games"
+      ]
+    }
+  },
+  "renders": {
+    "hero.png": "74f40bd66620ea3c1aeff371c43b31ee3e7bffb2f17453826a1c6270b9a6d5b0",
+    "sheet.png": "9eea544b1abe4f5492886fb061aa45aa22172507ac82609496438d6c61f32ac2",
+    "raking.png": "e7419868a9d7797416f99d918f1c49729a1d358048aceaf8a369449efe7eec7b",
+    "raking_detail.png": "4f0c96d41d524b078a6e6541077f8d1b0e7e030022631c6a8d5cf9c1a13f3581",
+    "lods.png": "5be3c978798eb4a764e90b6d3291e8d8e33e259e4959a855a595c47db3806b00",
+    "silhouette.png": "2bb2962172afd580d1e574ad6ae0bd7f2349b797978736b480455e5994d28c1c",
+    "value.png": "18aff109d39bf43170f300c2099f3d89b10f82ba1d5fcd796f42fc0b4e360653",
+    "detail.png": "4ad4a4c38264c65128b3ae3d21ad069727dfaab84070c88aa389fe687e733cd6"
+  },
+  "metrics": {
+    "silhouette": [
+      {
+        "view": "front",
+        "iou": 0.998
+      },
+      {
+        "view": "side",
+        "iou": 0.997
+      },
+      {
+        "view": "3/4",
+        "iou": 0.999
+      }
+    ],
+    "focal": {
+      "peakPart": "terrain",
+      "peak": [
+        309,
+        241
+      ],
+      "focalShare": 0,
+      "focalArea": 0,
+      "top": [
+        {
+          "part": "terrain",
+          "share": 1
+        }
+      ],
+      "declared": []
+    },
+    "rest": {
+      "share": 0.746,
+      "spread": 0.616,
+      "min": 0.25
+    },
+    "shape": {
+      "acuteShare": 0.067,
+      "straightShare": 0.719,
+      "taper": 0.647,
+      "shape": "stable"
+    }
+  }
+}

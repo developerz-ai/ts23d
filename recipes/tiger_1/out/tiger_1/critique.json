@@ -1,0 +1,126 @@
+{
+  "asset": "tiger_1",
+  "reviewer": "agent",
+  "overall": 7.1,
+  "scores": {
+    "silhouette": {
+      "score": 8,
+      "reason": "Reads as a mid-production Tiger I from every view: slab hull with panniers, interleaved 8-station running gear, horseshoe turret with low cupola, broad 1.9 m mantlet plate with curled ends and gun collar, long 88 with muzzle brake. Rear now has the two tall vertical exhausts in armoured covers, side plates proud of the rear plate, hinged rear mudguards; top view shows the engine deck (centre hatch, mesh radiator grilles, four fan grilles).",
+      "fixes": [
+        "round the mantlet's top/bottom edges (cast radius) instead of a straight-extruded plate",
+        "turret rear bin: rounded rear corners"
+      ]
+    },
+    "proportions": {
+      "score": 7,
+      "reason": "Sheet 8.7 \u00d7 3.6 \u00d7 3.0 m vs dossier 8.45 \u00d7 3.56 \u00d7 3.00: height now right (cupola lowered); length +3% because exhaust covers, pintle and rear mudguards hang behind the 6.316 m hull while the dossier length is hull + gun overhang. All six measures (hull, wheel, track, centres, barrel, station pitch) pass at \u00b12%.",
+      "fixes": [
+        "verify whether the 8.45 m figure includes the exhaust covers; if not, document the 0.25 m difference rather than shortening the gun",
+        "check the turret overhang beside the Bundesarchiv side photo"
+      ]
+    },
+    "materials": {
+      "score": 7,
+      "reason": "Paint is now steel_painted (Dunkelgelb as vertex colour, chips expose steel), tyres rubber, track rusted manganese steel, tool heads cast iron, handles oak, exhausts rusted iron; UVs box-projected per triangle at true scale. Camo is soft-edged overspray. Weak: chip decals read as uniform dark dots everywhere instead of on edges; Zimmerit ridges have the same paint response as the plate.",
+      "fixes": [
+        "a project material for Zimmerit (rough, matte paste) instead of steel_painted",
+        "fewer, edge-biased chips: a weathered() steel_painted variant with lower chip density for large plates"
+      ]
+    },
+    "detail": {
+      "score": 7,
+      "reason": "Zimmerit as 16 mm relief ridges with chipped patches, tow cables with eyes, tools, spare links, cupola periscopes, mantlet bolts and sight apertures, hatch hinges/handles/periscope hoods, engine deck mesh and fan grilles, exhaust shrouds with heat slits and clamp bands, jack, crank cover, lights, pintle. Missing: weld beads at plate interlocks, track-guard brackets, sprocket teeth hidden in SIDE view.",
+      "fixes": [
+        "weld beads along the interlocked hull corners",
+        "fender support brackets every ~1 m",
+        "spare-link hangers and tool clamps"
+      ]
+    },
+    "wear": {
+      "score": 7,
+      "reason": "Ragged-edged mud on tracks, wheels, lower hull and fenders (heavier at the rear), soot plumes from the exhaust mouths onto the deck, heat-stained muzzle brake, chipped Zimmerit, dust lift on upward plates, chipped paint from the strip. Still too uniform on the upper hull; no polished climbing steps or scratches around hatches.",
+      "fixes": [
+        "polished bare metal on hatch rims and climbing steps (aluminium-strip patches)",
+        "rust streaks under tow-cable clamps and exhausts",
+        "stronger dust on the deck and turret roof"
+      ]
+    },
+    "lod": {
+      "score": 7,
+      "reason": "LOD2 (3.4k) keeps the horseshoe turret, interleaved wheels as discs inside an open belt, crosses, '332' and the camo colour blocks; colours match LOD0. Zimmerit and deck furniture drop out so the hull reads smoother; LOD1\u2192LOD2 still drops the mantlet bolts and exhaust covers.",
+      "fixes": [
+        "keep the two exhaust covers as boxes at LOD2",
+        "bake Zimmerit banding into vertex colour at LOD1/LOD2"
+      ]
+    },
+    "technical": {
+      "score": 7,
+      "reason": "QA PASS incl. mass (62.6 t vs 57 t \u00b110%: hull/turret area-weighted 45 mm walls from the armour table, Zimmerit at paste density, dished wheels as 15 mm walls). 72 360 / 18 096 / 3 410 triangles, one material. LOD0 above the 60k a hero tank usually gets; mass sits near the top of its tolerance. Now 73 712 / 18 096 / 3 410. Connections gate clean (was 46 findings): interleaved inner road-wheel discs now ride on a hub/axle stub per station, Zimmerit ridges sink 4 mm into the plate, nose tenons stand on the nose plate, mantlet bolts follow the curved plate ends, AA ring carried on six brackets off the cupola lip.",
+      "fixes": [
+        "drop LOD0 below 60k: instance the track link as 2 boxes, merge Zimmerit bands",
+        "close the open radiator/fan shells so mass is not counted as convex hulls (1 800 open shells)"
+      ]
+    }
+  },
+  "renders": {
+    "hero.png": "a940675c9d41646ceaaa399c0378e04f8110df07bef341e63e9c8f1a3d33847f",
+    "sheet.png": "ebe6e2cf891b862baa0164574cc47c00b18ab968783058517da7f1fbff0a8219",
+    "raking.png": "b89772e154fd71f901379d2214ef9cd33f07a07c526b0a878909dda0ea15078f",
+    "raking_detail.png": "bec67ad38e368c6cccb3799d799fdfe71f012dd431a45a4275e81b427fbc0981",
+    "lods.png": "1c09882aa7b4d592d96cf30411ab107f16f506b25dfd63f4d3e4b66d1ae0dc8d",
+    "silhouette.png": "ab969a231e59d567df478cabe2a2bc8dc72891e8efd527823a178155b52d5ad4",
+    "value.png": "afc0eb4087f5fac1938868555f1f04e6ef62c5fd440e6c088118e2ab25ffb859",
+    "detail.png": "c5e32d85d27644107154097d105faabba4261dd8ff9abfb66916e8fc32e385ce"
+  },
+  "metrics": {
+    "silhouette": [
+      {
+        "view": "front",
+        "iou": 0.962
+      },
+      {
+        "view": "side",
+        "iou": 0.901
+      },
+      {
+        "view": "3/4",
+        "iou": 0.976
+      }
+    ],
+    "focal": {
+      "peakPart": "turret_zimmerit",
+      "peak": [
+        208,
+        122
+      ],
+      "focalShare": 0,
+      "focalArea": 0,
+      "top": [
+        {
+          "part": "turret_body",
+          "share": 0.281
+        },
+        {
+          "part": "hull",
+          "share": 0.159
+        },
+        {
+          "part": "hull_detail",
+          "share": 0.152
+        }
+      ],
+      "declared": []
+    },
+    "rest": {
+      "share": 0.312,
+      "spread": 0.73,
+      "min": 0.25
+    },
+    "shape": {
+      "acuteShare": 0.172,
+      "straightShare": 0.644,
+      "taper": 0.178,
+      "shape": "stable"
+    }
+  }
+}

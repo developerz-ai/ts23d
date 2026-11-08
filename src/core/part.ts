@@ -2,6 +2,7 @@
 // what a recipe can say about one named node.
 
 import type { Mesh } from './mesh.ts';
+import type { PartPhysics } from './physics.ts';
 import type { Vec3 } from './vec.ts';
 
 /** 0 = hero detail, 1 = mid, 2 = far. A recipe reads it and drops detail; it never decimates. */
@@ -78,9 +79,55 @@ export interface SocketOptions extends Socket {
   readonly parent?: string;
 }
 
-export interface EmitterOptions extends Emitter {
+export interface ParticleEmitterOptions extends Emitter {
   readonly at?: Vec3;
   readonly parent?: string;
+}
+
+/**
+ * A rendered sound (the /audio module makes them: `sound.impact`, `sound.engine`, …). Plain data
+ * so it survives structured clone; `name` becomes `<name>.wav` beside the GLB.
+ */
+export interface SoundClip {
+  readonly name: string;
+  readonly sampleRate: number;
+  readonly channels: 1 | 2;
+  /** Interleaved samples in −1..1. */
+  readonly samples: Float32Array;
+  /** Rendered to loop seamlessly (last sample flows into the first). */
+  readonly loop: boolean;
+}
+
+/**
+ * A positional sound source (KHR_audio_emitter): an engine idle on its block, a bell on its yoke.
+ * Exported as an empty named node that moves with its parent.
+ */
+export interface SoundEmitter {
+  readonly kind: 'sound';
+  readonly clip: SoundClip;
+  /** Default: the clip's own `loop`. */
+  readonly loop?: boolean;
+  /** Linear gain, default 1. */
+  readonly gain?: number;
+  /** 'always' (autoplay: engine idle), 'moving', 'event' (default: game code plays it). */
+  readonly when?: 'always' | 'moving' | 'event';
+  /** Distance (m) at full volume (default 1) and beyond which it is silent (0 = none). */
+  readonly refDistance?: number;
+  readonly maxDistance?: number;
+}
+
+export interface SoundEmitterOptions extends SoundEmitter {
+  readonly at?: Vec3;
+  readonly parent?: string;
+}
+
+/** `ctx.emitter` options: a particle source, or `kind: 'sound'` for a positional sound. */
+export type EmitterOptions = ParticleEmitterOptions | SoundEmitterOptions;
+
+/** A moving part's sound: plays while its motion clip plays (a door creak on its sway). */
+export interface PartSound {
+  readonly onMotion: SoundClip;
+  readonly gain?: number;
 }
 
 /**
@@ -89,12 +136,39 @@ export interface EmitterOptions extends Emitter {
  *   opaque — the default trim-sheet material
  *   cutout — alpha-tested, double-sided: leaves, fences, grilles, ash
  *   glass — clear: transmission + IOR 1.5 + thin volume (windows, bottles, lamp lenses)
- *   translucent — tinted, partly see-through: plastic bottles, liquids, paper, smoke-stained glass
+ *   translucent — tinted, partly see-through: plastic bottles, paper, smoke-stained glass
+ *   ice — IOR 1.31, frosted, blue absorption · liquid — water: IOR 1.33, clear, faint cyan depth
+ *   jelly — soft, IOR 1.35, rough-ish transmission (gummies, slime, gel)
+ * See-through surfaces take `defineAsset({ optics })` overrides (ior, thickness, attenuation).
  * Tint comes from vertex colour, as everywhere else.
  */
-export type Surface = 'opaque' | 'cutout' | 'glass' | 'translucent';
+export type Surface = 'opaque' | 'cutout' | 'glass' | 'translucent' | 'ice' | 'liquid' | 'jelly';
 
-export interface PartOptions {
+/**
+ * How a part is meant to join what holds it — QA `connections` judges each kind differently:
+ *   grown  — grows out of its parent (horn, claw, tooth, ear, wing root): root buried, seam blended
+ *   welded — fused over a face (default): a real contact patch, not a point or an edge
+ *   bolted — fastened over a face (as welded; read by people and engines)
+ *   rest   — sits on it (wheel on rail, ball on floor): a point or line contact is fine
+ *   hinge  — pinned along an axis: a line contact is fine
+ *   socket — seated in a hollow (eyeball in its orbit, ball joint): mostly enclosed by `to`
+ *   free   — meant to be loose (debris, a dropped tool): skipped; `why` required
+ * Defaults: `grown` for appendage names (horn, spine, spike, claw, tooth or teeth, tusk, fang,
+ * ear, wing, tail, finger — as a name segment) and `socket` for eye / eyeball on `character` and
+ * `creature` kinds; `rest` for running gear (wheel, track, roller, axle…) and cutout cards;
+ * `welded` everywhere else.
+ */
+export type ConnectAs = 'grown' | 'welded' | 'bolted' | 'rest' | 'hinge' | 'socket' | 'free';
+
+export interface Connect {
+  readonly as: ConnectAs;
+  /** Part it joins (name; `ctx.use` prefixes it). Default: the part it touches most. */
+  readonly to?: string;
+  /** Why — required for `free`. */
+  readonly why?: string;
+}
+
+export interface PartOptions extends PartPhysics {
   /** Pivot in the parent's space; the mesh is authored relative to it. */
   readonly at?: Vec3;
   readonly parent?: string;
@@ -104,7 +178,51 @@ export interface PartOptions {
   /** Parts this moving part may legitimately pass through (an axle in its bearing). QA `clashes`. */
   readonly clearOf?: readonly string[];
   readonly surface?: Surface;
+  /**
+   * Paint slot this part's colour belongs to (`paint: 'body'`): a slot declared in
+   * `defineAsset({ paint })` that `variants` can repaint. Opaque parts only.
+   */
+  readonly paint?: string;
+  /**
+   * A named `defineAsset({ finishes })` entry: sheen, anisotropy, iridescence, clearcoat,
+   * specular (KHR_materials_*). Opaque, unpainted parts only; one material per finish.
+   */
+  readonly finish?: string;
+  /** How this part joins its neighbour (QA `connections`); default from kind and name. */
+  readonly connect?: Connect;
+  /** Sound played with this part's `motion` (KHR_audio_emitter on its node). */
+  readonly sound?: PartSound;
 }
+
+/**
+ * How a joint is judged by QA `joints`:
+ *   flush  — two segments meet end to end (forearm → wrist → hand, neck → head): the sections
+ *            either side of the plane match in size and centre
+ *   socket — `from` plugs into `to` (a peg in its hole, a blade in its scabbard): `from` fits
+ *            inside `to`'s section and fills it to within tolerance
+ *   grip   — `from` (a hand) closes around `to` (a handle): the handle's diameter matches the
+ *            fist's opening
+ */
+export type JointKind = 'flush' | 'socket' | 'grip';
+
+/**
+ * A declared connection between two parts: where `from` meets `to`. `at` and `axis` are in the
+ * asset's frame (the root's space); `axis` points from `from` towards `to` (for a grip: along the
+ * handle). Part selectors are names or prefixes, as in `real.measures` ('hand' covers 'hand_palm').
+ */
+export interface Joint {
+  readonly name: string;
+  readonly from: string;
+  readonly to: string;
+  readonly at: Vec3;
+  readonly axis: Vec3;
+  /** Allowed relative size difference across the joint; default 0.2. */
+  readonly tolerance?: number;
+  /** Default 'flush'. */
+  readonly kind?: JointKind;
+}
+
+export type JointOptions = Omit<Joint, 'name'>;
 
 export interface UseOptions {
   /** Prefix for every instanced part: `house_3` → `house_3_roof`, `house_3_door_0`. */
@@ -116,7 +234,7 @@ export interface UseOptions {
   readonly seed?: number;
 }
 
-export interface Part {
+export interface Part extends PartPhysics {
   readonly name: string;
   readonly mesh: Mesh | null;
   readonly at: Vec3;
@@ -125,6 +243,12 @@ export interface Part {
   readonly motion: Motion | null;
   readonly clearOf?: readonly string[];
   readonly emitter?: Emitter;
+  /** A `ctx.emitter(…, { kind: 'sound' })` node. */
+  readonly audio?: SoundEmitter;
+  readonly sound?: PartSound;
   readonly socket?: Socket;
   readonly surface?: Surface;
+  readonly paint?: string;
+  readonly finish?: string;
+  readonly connect?: Connect;
 }

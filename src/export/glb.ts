@@ -3,10 +3,12 @@
 // Extras a stock viewer understands: light sockets → KHR_lights_punctual, glowing parts →
 // emissive (+ KHR_materials_emissive_strength), provenance → asset.copyright + KHR_xmp_json_ld.
 // `exportLodGlb` packs several LODs into ONE file (MSFT_lod alternates sharing materials,
-// textures and motion samplers). Zero dependencies and byte-deterministic.
+// textures and motion samplers). Paint slots get their own materials and liveries ride
+// KHR_materials_variants (variants.ts). Zero dependencies and byte-deterministic.
 
 import type { CompiledAsset, Part } from '../core/index.ts';
 import { Ts23dError } from '../core/index.ts';
+import { AUDIO_EMITTER, writeAudio } from './audio.ts';
 import { BinWriter, type Json } from './bin-writer.ts';
 import { concat, packGlb } from './container.ts';
 import { withCredits } from './credits.ts';
@@ -20,11 +22,16 @@ import {
   MSFT_LOD,
   SCREEN_COVERAGE,
 } from './lod-coverage.ts';
-import { EMISSIVE_STRENGTH, type GlowRule, glowMaterial, materialsFor } from './materials.ts';
+import { type GlowRule, glowMaterial, materialsFor } from './materials.ts';
 import { globRe, glowLayer, mergeToPivots } from './merge-pivots.ts';
 import { metadata } from './metadata.ts';
 import { optimizeParts, summarize } from './optimize-parts.ts';
+import { materialExtensions } from './pbr.ts';
+import { finishPlan } from './pbr-plan.ts';
+import { writePhysics } from './physics.ts';
+import { profiled } from './profile.ts';
 import { sheetGltf } from './textures.ts';
+import { MATERIALS_VARIANTS, paintPlan, unpaintParts } from './variants.ts';
 
 // Viewers auto-play the FIRST clip and glTF has no "paused" flag, so the first clip is `rest`: two
 // keys holding the root's rest rotation. The file opens still; pick `run` to play it.
@@ -48,8 +55,8 @@ export function toGlb(input: CompiledAsset, o: GlbOptions = {}): Uint8Array {
 }
 
 export function exportGlb(input: CompiledAsset, o: GlbOptions = {}): GlbResult {
-  const { glb, reports } = exportLodGlb([input], o);
-  return { glb, report: reports[0] ?? summarize([], false) };
+  const { glb, reports, physics } = exportLodGlb([input], o);
+  return { glb, report: reports[0] ?? summarize([], false), ...(physics ? { physics } : {}) };
 }
 
 /** All LODs in one GLB: LOD0 in the scene, the rest as MSFT_lod alternates outside it. */
@@ -78,10 +85,32 @@ function checkLods(lods: readonly CompiledAsset[]): void {
       cause: `exportLodGlb got LODs [${levels.join(', ')}] of [${[...names].join(', ')}]`,
       fix: 'pass compile(asset, { lod }) results of ONE asset, highest detail first: LOD0, LOD1, LOD2',
     });
+  const preview = lods.find((l) => l.variant !== undefined);
+  if (preview)
+    throw new Ts23dError('T3D_RECIPE_INVALID', {
+      cause: `exportLodGlb got '${preview.name}' compiled as variant '${preview.variant}'`,
+      fix: 'export compile(asset, { lod }) without `variant`: the GLB carries every variant',
+    });
 }
 
-/** One LOD prepared for writing: merged + optimised parts and its glow-layer lookup. */
-function prepare(input: CompiledAsset, o: GlbOptions, glow: readonly GlowRule[]) {
+type Prepared = ReturnType<typeof prepareUncached>;
+// `t3d build` writes each LOD alone AND all LODs in one file: merge + optimise each compiled LOD
+// once. Keyed by the (immutable) compiled asset, then by the inputs `prepare` reads from options.
+const prepared = new WeakMap<CompiledAsset, Map<string, Prepared>>();
+
+/** One LOD prepared for writing: merged + optimised parts and its glow-layer lookup (memoised). */
+function prepare(input: CompiledAsset, o: GlbOptions, glow: readonly GlowRule[]): Prepared {
+  const key = JSON.stringify([o.optimize ?? null, o.keepParts === true, glow.map((g) => g.parts)]);
+  const byKey = prepared.get(input) ?? new Map<string, Prepared>();
+  prepared.set(input, byKey);
+  const hit = byKey.get(key);
+  if (hit) return hit;
+  const made = prepareUncached(input, o, glow);
+  byKey.set(key, made);
+  return made;
+}
+
+function prepareUncached(input: CompiledAsset, o: GlbOptions, glow: readonly GlowRule[]) {
   const opt = o.optimize === false ? false : o.optimize === true ? {} : (o.optimize ?? {});
   const merged = o.keepParts
     ? input
@@ -89,13 +118,15 @@ function prepare(input: CompiledAsset, o: GlbOptions, glow: readonly GlowRule[])
         input,
         glow.map((g) => g.parts),
       );
-  const { asset, report } = optimizeParts(merged, opt);
+  const optimized = optimizeParts(merged, opt);
   // optimizeParts copies parts: carry the glow tag across by position.
   const glowRes = glow.map((g) => g.parts.map(globRe));
   const glowOf = (p: Part, i: number): number =>
     glowLayer.get(merged.parts[i] ?? p) ??
     (o.keepParts ? glowRes.findIndex((rs) => rs.some((r) => r.test(p.name))) : -1);
-  return { asset, report, glowOf };
+  // Painted parts store colour ÷ slot colour; the slot's material restores it (glow keeps its own).
+  const asset = unpaintParts(optimized.asset, (p, i) => glowOf(p, i) >= 0);
+  return { asset, report: optimized.report, glowOf };
 }
 
 export function exportLodGlb(lods: readonly CompiledAsset[], o: GlbOptions = {}): LodGlbResult {
@@ -108,9 +139,23 @@ export function exportLodGlb(lods: readonly CompiledAsset[], o: GlbOptions = {})
   const mats = materialsFor(
     new Set(preps.flatMap((p) => p.asset.parts.flatMap((q) => (q.surface ? [q.surface] : [])))),
     withSheet,
+    top.optics,
   );
   const glowAt = mats.materials.length;
-  const materials = [...mats.materials, ...glow.map((g, i) => glowMaterial(g, i, withSheet))];
+  const paint = paintPlan(top.paintSet, glowAt + glow.length, withSheet);
+  const finish = finishPlan(
+    preps.map((p) => p.asset),
+    glowAt + glow.length + paint.materials.length,
+    withSheet,
+  );
+  // A profile (unreal|unity|godot|rt|web) only changes defaults: AO binding, collider naming.
+  const { strip, physics: physOpts, extras: profileExtras } = profiled(o.profile, o.physics);
+  const materials = strip([
+    ...mats.materials,
+    ...glow.map((g, i) => glowMaterial(g, i, withSheet)),
+    ...paint.materials,
+    ...finish.materials,
+  ]);
   const doc = newDoc(new BinWriter());
   const roots = preps.map(({ asset, glowOf }, k) =>
     writeHierarchy(doc, asset, k === 0 ? asset.name : `${asset.name}_LOD${asset.lod}`, {
@@ -118,8 +163,15 @@ export function exportLodGlb(lods: readonly CompiledAsset[], o: GlbOptions = {})
       animations: o.animations === true,
       materialOf: (part, i) => {
         const g = glowOf(part, i);
-        return g >= 0 ? glowAt + g : (mats.index.get(part.surface ?? 'opaque') ?? 0);
+        if (g >= 0) return glowAt + g;
+        const slot = part.paint === undefined ? undefined : paint.slotMaterial.get(part.paint);
+        const fin = part.finish === undefined ? undefined : finish.index.get(part.finish);
+        return slot ?? fin ?? mats.index.get(part.surface ?? 'opaque') ?? 0;
       },
+      primitiveExtensions: (part, i) =>
+        part.paint === undefined || glowOf(part, i) >= 0
+          ? undefined
+          : paint.primitiveExtensions(part.paint),
     }),
   );
   for (const r of roots) {
@@ -142,6 +194,15 @@ export function exportLodGlb(lods: readonly CompiledAsset[], o: GlbOptions = {})
     rootNode['extras'] = { [SCREEN_COVERAGE]: coverage };
   }
 
+  // Sound emitters (KHR_audio_emitter) on the LOD0 tree's nodes, clips as <name>.wav beside it.
+  const audio =
+    o.sounds === false
+      ? null
+      : writeAudio(doc.nodes, top, roots[0] ?? 0, roots[1] ?? doc.nodes.length);
+  // Physics reads the unmerged LOD0 parts; its hull/trimesh accessors precede the seal too.
+  const phys = physOpts
+    ? writePhysics(doc, top, roots[0] ?? 0, roots[1] ?? doc.nodes.length, physOpts)
+    : null;
   // Every accessor — the rest clip's included — must be written BEFORE the buffer is sealed.
   const { bin, lights, samplers, channels } = doc;
   const animations = channels.length
@@ -152,15 +213,22 @@ export function exportLodGlb(lods: readonly CompiledAsset[], o: GlbOptions = {})
   const body = tex?.tail.byteLength ? concat(geometry, tex.tail) : geometry;
   const meta = metadata(top.name, withCredits(top, o.meta ?? top.meta));
   const used = [
-    ...mats.extensionsUsed,
-    ...(glow.some((g) => (g.strength ?? 4) !== 1) ? [EMISSIVE_STRENGTH] : []),
+    ...materialExtensions(materials),
     ...(lights.length ? [LIGHTS] : []),
+    ...(audio ? [AUDIO_EMITTER] : []),
     ...(coverage.length ? [MSFT_LOD] : []),
+    ...(paint.root ? [MATERIALS_VARIANTS] : []),
+    ...(phys?.used ?? []),
     ...meta.used,
-  ].sort();
+  ]
+    .filter((e, i, all) => all.indexOf(e) === i)
+    .sort();
   const extensions: Json = {
     ...(lights.length ? { [LIGHTS]: { lights } } : {}),
+    ...(audio ? { [AUDIO_EMITTER]: audio } : {}),
+    ...(paint.root ? { [MATERIALS_VARIANTS]: paint.root } : {}),
     ...(meta.extensions ?? {}),
+    ...(phys?.extensions ?? {}),
   };
   const gltf: Json = {
     asset: meta.asset,
@@ -169,6 +237,7 @@ export function exportLodGlb(lods: readonly CompiledAsset[], o: GlbOptions = {})
       lod: coverage.length ? lods.map((l) => l.lod) : top.lod,
       units: 'metres',
       up: 'Z (rotated to glTF Y-up at the root)',
+      ...profileExtras,
     },
     ...(used.length ? { extensionsUsed: used } : {}),
     ...(Object.keys(extensions).length ? { extensions } : {}),
@@ -183,5 +252,6 @@ export function exportLodGlb(lods: readonly CompiledAsset[], o: GlbOptions = {})
     accessors: bin.accessors,
     ...(animations.length ? { animations } : {}),
   };
-  return { glb: packGlb(gltf, body), reports: preps.map((p) => p.report), coverage };
+  const physics = phys ? { physics: phys.report } : {};
+  return { glb: packGlb(gltf, body), reports: preps.map((p) => p.report), coverage, ...physics };
 }

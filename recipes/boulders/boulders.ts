@@ -8,15 +8,19 @@ import {
   defineAsset,
   type Field,
   hex,
+  materialVariant,
   sd,
   sdf,
   type Vec3,
   valueNoise,
 } from '@developerz.ai/ts23d';
 
-const STONE = hex('#8d8a84');
-const DARK = hex('#5f5c58');
-const LICHEN = hex('#7d8a4e');
+// Tints over the `cliff` strip (granite blocks, joints, lichen in the texture): darker, damp feet,
+// sun-lit tops near white; moss green on north (+Y) faces and in hollows; pale crusty lichen.
+const STONE = hex('#ffffff');
+const DARK = hex('#8a8680');
+const MOSS = hex('#4f6a22');
+const LICHEN = hex('#c9c79a');
 
 /** Length (X), width (Y), height (Z) in metres; `cuts` fracture planes. */
 const ROCKS: readonly { size: Vec3; cuts: number }[] = [
@@ -67,6 +71,7 @@ function rock(ctx: BuildContext, i: number, size: Vec3, cuts: number, y: number)
   const rough = sd.displace(f, pits, 0.08 * h);
   // Bearing face: cut flat at the ground.
   const field: Field = (p) => Math.max(rough(p), -p[2]);
+  const lichen = valueNoise(rng.fork('lichen'), { scale: 0.12, octaves: 2 });
   const pad = 0.15 * l;
   ctx.part(
     `boulder_${i}`,
@@ -78,22 +83,27 @@ function rock(ctx: BuildContext, i: number, size: Vec3, cuts: number, y: number)
       ],
       resolution: ctx.pick([0.035, 0.08, 0.2]) * Math.max(0.6, l / 1.6),
       // 'concrete' is the sheet's fractal-noise strip; 'stone' is coursed masonry (walls, not rock).
-      strip: 'concrete',
+      // Each rock reads a different stretch of the granite strip.
+      strip: materialVariant('cliff', i + 1),
       lipschitz: 1.6,
       color: (p, nrm) => {
         const up = Math.max(0, nrm[2]);
+        const north = Math.max(0, nrm[1]);
         const t = Math.min(1, p[2] / h);
-        const base: Vec3 = [
-          DARK[0] + (STONE[0] - DARK[0]) * t,
-          DARK[1] + (STONE[1] - DARK[1]) * t,
-          DARK[2] + (STONE[2] - DARK[2]) * t,
+        const n = lichen(p);
+        const mix = (a: Vec3, b: Vec3, k: number): Vec3 => [
+          a[0] + (b[0] - a[0]) * k,
+          a[1] + (b[1] - a[1]) * k,
+          a[2] + (b[2] - a[2]) * k,
         ];
-        const moss = up > 0.75 ? Math.min(1, (up - 0.75) * 4) * 0.8 : 0;
-        return [
-          base[0] + (LICHEN[0] - base[0]) * moss,
-          base[1] + (LICHEN[1] - base[1]) * moss,
-          base[2] + (LICHEN[2] - base[2]) * moss,
-        ];
+        let col = mix(DARK, STONE, t);
+        // Moss: shaded north faces and damp feet, thickest low down; never on overhangs.
+        const moss =
+          Math.min(1, north * 1.4 * (1 - 0.6 * t) + (t < 0.25 ? 0.4 : 0)) * (nrm[2] > -0.3 ? 1 : 0);
+        col = mix(col, MOSS, 0.75 * moss * (0.5 + 0.5 * n));
+        // Lichen rosettes on sunny tops.
+        if (n > 0.35) col = mix(col, LICHEN, Math.min(0.7, (n - 0.35) * 3) * up);
+        return col;
       },
     }),
   );
@@ -103,7 +113,7 @@ export const boulders = defineAsset({
   name: 'boulders',
   kind: 'prop',
   description:
-    'Four weathered boulders (0.6–2.4 m): SDF masses, fracture cuts, noise pitting, lichen.',
+    'Four weathered granite boulders (0.6–2.4 m): SDF masses, fracture cuts, pitting, north-side moss, lichen.',
   tags: ['rock', 'boulder', 'nature', 'sdf', 'scatter'],
   seed: 7,
   budget: { triangles: [40000, 9000, 2000] },

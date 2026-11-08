@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { compile, defineAsset } from '../core/index.ts';
+import { compile, defineAsset, merge } from '../core/index.ts';
 import { box, cylinder } from '../primitives/index.ts';
 import { clashes } from './clash.ts';
 import { floatingParts } from './floating.ts';
@@ -82,5 +82,76 @@ describe('clashes gate: sway sweeps its sector, not a full turn', () => {
     expect(clashes(compile(arm({ degrees: 60 }, [0.5, 0, 1.3]))).map((f) => f.part)).toEqual([
       'post',
     ]);
+  });
+});
+
+// A door leaf hung in its opening: hinge axis just outside the post face, leaf 3 mm off the post.
+const leaf = (axisZ: 1 | -1) =>
+  defineAsset({
+    name: 'leaf',
+    kind: 'prop',
+    budget: { triangles: [9999, 9999, 9999] },
+    build(ctx) {
+      ctx.part('door', box({ size: [0.06, 1, 1], at: [0.065, -0.503, 0], color: c }), {
+        motion: { kind: 'sway', axis: [0, 0, axisZ], degrees: 90, hz: 1, oneWay: true },
+      });
+      ctx.part('post', box({ size: [0.16, 0.16, 1], at: [0.115, 0.08, 0], color: c }));
+    },
+  });
+
+describe('clashes gate: a leaf hung flush beside its post', () => {
+  it('fails when the leaf swings into the post', () => {
+    expect(clashes(compile(leaf(1))).map((f) => f.part)).toEqual(['post']);
+  });
+
+  it('passes when it swings away (no slack bin sweeps it backwards into the post)', () => {
+    expect(clashes(compile(leaf(-1)))).toEqual([]);
+  });
+});
+
+// D23: a 1.4 m hood hinged at its front edge (pivot at mid-thickness), lifting its tail end,
+// meshed in 14 cm × 10 cm tiles like a real panel. The old 5° bins paired the near-hinge skin's
+// steep angles with the tip's radius, so anything a few cm under the closed panel read as swept.
+const panel = merge(
+  Array.from({ length: 100 }, (_, i) =>
+    box({
+      size: [0.14, 0.1, 0.02],
+      at: [0.07 + 0.14 * (i % 10), -0.45 + 0.1 * Math.floor(i / 10), -0.01],
+      color: c,
+    }),
+  ),
+);
+const hood = (obstacle: { size: [number, number, number]; at: [number, number, number] }) =>
+  defineAsset({
+    name: 'hood',
+    kind: 'prop',
+    budget: { triangles: [9999, 9999, 9999] },
+    build(ctx) {
+      ctx.part('hood', panel, {
+        at: [0, 0, 1],
+        motion: { kind: 'sway', axis: [0, -1, 0], degrees: 60, hz: 1, oneWay: true },
+      });
+      ctx.part('bay', box({ ...obstacle, color: c }));
+    },
+  });
+
+describe('clashes gate: long hinged panel resolves to millimetres, not 5° bins (D23)', () => {
+  it('passes a bay 3 cm below the closed panel', () => {
+    // Panel underside at z 0.99; the bay (box `at` = base centre) tops out at 0.96 under it all.
+    expect(clashes(compile(hood({ size: [1.2, 0.8, 0.1], at: [0.75, 0, 0.86] })))).toEqual([]);
+  });
+
+  it('fails a block inside the swept arc above the panel', () => {
+    // 60° up: the panel sweeps x·sin θ above the hinge; a block at x 1.0, z 1.3 is inside it.
+    expect(
+      clashes(compile(hood({ size: [0.2, 0.4, 0.2], at: [1.0, 0, 1.3] }))).map((f) => f.part),
+    ).toEqual(['bay']);
+  });
+
+  it('passes a bay 5 mm under the panel, fails one pushed up through it', () => {
+    expect(clashes(compile(hood({ size: [1.2, 0.8, 0.1], at: [0.75, 0, 0.885] })))).toEqual([]);
+    expect(
+      clashes(compile(hood({ size: [1.2, 0.8, 0.1], at: [0.75, 0, 0.92] }))).map((f) => f.part),
+    ).toEqual(['bay']);
   });
 });

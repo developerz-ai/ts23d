@@ -1,6 +1,6 @@
 # ts23d
 
-> @developerz.ai/ts23d — a free, deterministic 3D asset generator driven by coding agents. Assets are TypeScript modules (never JSON) built with a DSL: `defineAsset({ name, kind, real, sources, budget, build(ctx) })`, where `build` adds named, pivoted, animatable parts from primitives (`box`, `lathe`, `cylinder`, `prism`, `beam`, `planar`), places detail with `place`/`merge`, composes other assets with `ctx.use`, and gates detail on `ctx.lod`. It compiles to glTF/GLB for any engine (Unity, Unreal, Godot, three.js, Babylon) — ts23d generates assets only, the engine is yours — (3 LODs, one shared trim-sheet material, baked motion), fails a QA gate on floating parts, budget overruns and wrong real-world proportions, and renders a zero-GPU six-view contact-sheet PNG so a vision-capable agent can check its own work. Bun only, zero runtime dependencies, MIT. Status 0.x: stubs throw T3D_NOT_IMPLEMENTED with the roadmap slice that builds them.
+> @developerz.ai/ts23d — a free, deterministic 3D asset generator driven by coding agents. Assets are TypeScript modules (never JSON) built with a DSL: `defineAsset({ name, kind, real, sources, budget, build(ctx) })`, where `build` adds named, pivoted, animatable parts from primitives (`box`, `lathe`, `cylinder`, `prism`, `beam`, `planar`) or from SVG drawings written as text (`extrudeSvg`, `latheSvg`, `visualHull` front/side silhouettes), places detail with `place`/`merge`, composes other assets with `ctx.use`, and gates detail on `ctx.lod`. It compiles to glTF/GLB for any engine (Unity, Unreal, Godot, three.js, Babylon) — ts23d generates assets only, the engine is yours — (3 LODs, one shared trim-sheet material, baked motion), fails a QA gate on floating parts, budget overruns and wrong real-world proportions, and renders a zero-GPU six-view contact-sheet PNG so a vision-capable agent can check its own work. Bun only, zero runtime dependencies, MIT. Status 0.x: stubs throw T3D_NOT_IMPLEMENTED with the roadmap slice that builds them.
 
 ## Offline (inside your project)
 The npm package ships every doc, skill and example, versioned with the code — read them without internet:
@@ -14,6 +14,11 @@ The human names a thing ("Tiger I, mid-production 1943"). The agent researches s
 
 ## Programmatic (no CLI)
 `t3d` is optional: `compile` → `runQa` → `toGlb` / `contactSheet` / `paintTrimSheet` are plain functions returning bytes. Runnable script: `examples/build-with-bun.ts` (also in the npm package).
+- [Tuning](docs/idea/20-tuning.md): `t3d tune <recipe> [--evals N] [--seed s]` fits `tune.params` (read with `ctx.tuned`) to silhouette/measures/art/budget objectives by CMA-ES offline and writes `tune.json`, `tune-report.md`, `tune-strip.png`; builds read the committed numbers.
+- Faces: `recipes/_lib/face` warps a committed CC0 base head (MakeHuman hm08, pinned) to ~40 code-set landmarks with `warpTPS` / `tpsWarp` (thin-plate spline, `@developerz.ai/ts23d/primitives`); race presets (human, orc, elf, dwarf, goblin) are numbers. Demo `recipes/face_demo`: the code is the brain, the base mesh is the face.
+- [Import](docs/idea/21-import.md): `importGlb(source, opts)` brings a licence-pinned GLB (scan, CC0 base mesh) in as a part: cleaned, axis-fixed, `simplify` per LOD (ADR 011), `bakeNormals`, one trim-sheet material by default. Demo `recipes/import_demo`.
+- [AI finish](docs/idea/22-ai-finish.md): `t3d finish <recipe> --endpoint URL --prompt "…"` projects model-painted views onto LOD0 as one texture layer, masked per part; geometry, names and motion unchanged; QA for palette drift and mask leaks. Demo `recipes/finish_demo`.
+- [Real data](docs/idea/23-real-data.md): `@developerz.ai/ts23d/data` — `bun run data wikidata <QID>` → `realFrom`, `bun run data dem --centre lat,lon --size m` → `terrainFromDEM`; offline builds, sha256-pinned. Demo `recipes/real_valley`.
 
 ## Start
 - [README](https://raw.githubusercontent.com/developerz-ai/ts23d/main/README.md): what it is, quickstart, the agent loop
@@ -39,6 +44,17 @@ The human names a thing ("Tiger I, mid-production 1943"). The agent researches s
 - [Decisions](https://raw.githubusercontent.com/developerz-ai/ts23d/main/docs/decisions/): why TS not JSON, why one material, why CPU renders
 - [Example recipe: Tiger I](https://raw.githubusercontent.com/developerz-ai/ts23d/main/recipes/tiger_1/tiger_1.ts)
 - [Reference dossier template](https://raw.githubusercontent.com/developerz-ai/ts23d/main/recipes/README.md)
+
+- Parts kit: search recipes/_parts/README.md before writing geometry; definePart (docs/idea/14-parts.md).
+
+- Playbooks: docs/playbooks/README.md — class-by-class guidance (vehicles, buildings, props, nature, characters) from a name to sourced specs, part tree, motion, QA.
+- Art as text: docs/idea/16-art-as-text.md — art principles as measurable definitions, DSL words and checks.
+
+- Finishes and optics: lacquered paint (clearcoat), glass/ice/liquid/jelly (transmission, ior, volume), sheen, anisotropy, iridescence; `--profile unreal|unity|godot|rt|web` (docs/idea/02-dsl.md).
+
+- Sound: `sound.impact|engine|mechanism|ui` (`@developerz.ai/ts23d/audio`) — deterministic WAVs from material, size, cylinders/RPM, part motion; positional `KHR_audio_emitter` (docs/idea/17-sound.md).
+
+- Weathering: `weather()` — seeded, geometry-driven rust streaks, chips, dust, moss, mud, bleach, dents, sag with `where` selectors and `amount` coverage measured into the manifest; QA `weather` (docs/idea/18-weathering.md).
 
 ## Optional
 - [Landscape](https://raw.githubusercontent.com/developerz-ai/ts23d/main/docs/landscape.md): neutral overview of AI 3D generators and where each approach fits

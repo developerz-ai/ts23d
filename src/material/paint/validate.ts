@@ -17,7 +17,7 @@ const KINDS: readonly StripKind[] = [
   'weave',
   'leather',
 ];
-const SIZES = [512, 1024, 2048];
+const SIZES = [512, 1024, 2048, 4096];
 
 function fail(cause: string, fix: string): never {
   throw new Ts23dError('T3D_RECIPE_INVALID', { cause: `sheet recipe: ${cause}`, fix });
@@ -53,7 +53,7 @@ export function validateStrip(where: string, r: StripRecipe): void {
 export function validateSheet(recipe: SheetRecipe): void {
   if (!Number.isInteger(recipe.seed)) fail(`seed ${recipe.seed}`, 'seed is an integer');
   if (recipe.size !== undefined && !SIZES.includes(recipe.size))
-    fail(`size ${recipe.size}`, 'size is 512, 1024 or 2048');
+    fail(`size ${recipe.size}`, 'size is 512, 1024, 2048 or 4096');
   for (const [id, r] of Object.entries(recipe.strips)) {
     if (stripRow(id) < 0)
       fail(

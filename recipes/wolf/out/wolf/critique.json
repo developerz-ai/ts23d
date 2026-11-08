@@ -1,0 +1,135 @@
+{
+  "asset": "wolf",
+  "reviewer": "agent",
+  "overall": 6,
+  "scores": {
+    "silhouette": {
+      "score": 7,
+      "reason": "Side, front and 3/4 views name a grey wolf: deep chest over long legs with the elbow at the chest floor, tucked waist, a visible neck carrying the head forward of and above the shoulders with a throat line from jaw to brisket, broad-based ears, bushy brush tail hanging to the hocks (LOD2 IoU 0.947/0.916/0.921). Against the Commons standing-in-snow side view the mane/ruff barely changes the outline and the winter coat does not break the outline anywhere (no guard-hair tufts at the elbows, throat, thighs). Shape metric reads 'stable' vs declared 'friendly' (MISS) — the trunk box dominates.",
+      "fixes": [
+        "fur cards or shells along the mane, throat, elbows and breeches so the outline breaks like a winter coat"
+      ]
+    },
+    "proportions": {
+      "score": 7,
+      "reason": "Sourced numbers hold: head+body 1.15 m (+-2% test), tail 0.42 m, withers 0.80-0.86 m test, mass 30-60 kg test and QA mass +-25%, skull width 0.55 x length, box 1.30 x 0.277 x 0.894 m vs real 1.31 x 0.27 x 0.90. By eye the chest still reads slightly barrel-like in the 3/4 hero and the hind cannon is long; the neck (0.28 m at 40°) is an estimate, not sourced.",
+      "fixes": [
+        "source the cervical length and chest width from a wolf skeleton reference and pin them in the README table",
+        "narrow the brisket keel ~10% so the front view reads more wedge than barrel"
+      ]
+    },
+    "materials": {
+      "score": 5,
+      "reason": "Vertex colour on the fur_neutral strip: saddle darker than the buff flanks with no hard edge at the shoulder, cream belly and throat, black tail tip, grey eye mask and pale brows, foreline on the forearms, grey-buff furred toes over dark pads all read. But it is velvet, not fur: the agouti grizzle is soft ~1 cm streaks, no hair clumps, sheen or strand breakup; claws and nose read as plastic; toes go slightly lilac under the cool key.",
+      "fixes": [
+        "fur shells or cards with a strand alpha (planned in M4)",
+        "a dedicated wolf coat strip with directional strand normals"
+      ]
+    },
+    "detail": {
+      "score": 5,
+      "reason": "LOD0 has the anatomy landmarks (triceps, forearm, elbow point, carpal pad, quads/hamstrings, calf and Achilles, stifle, hock, knuckled toes with claws and dark pads, stop, flews, cheek fur, lidded eyes, fangs); the fold across the withers is gone (loin runs under the ribcage, tapered mane). At third-person distance the coat surface is still smooth and the mane a soft swell.",
+      "fixes": [
+        "guard-hair relief strokes following the hair flow",
+        "separate the mane into a few overlapping locks"
+      ]
+    },
+    "wear": {
+      "score": 4,
+      "reason": "No story: clean coat, no matted or wet fur, no scars, no mud on the paws or belly, symmetric apart from the seeded grizzle.",
+      "fixes": [
+        "grime({ ground }) on paws and lower legs",
+        "a few darker matted streaks on the flank and a nick in one ear"
+      ]
+    },
+    "lod": {
+      "score": 7,
+      "reason": "lods.png: LOD2 keeps the outline (IoU 0.93-0.95) and the big colour blocks; legs become 6-sided tubes and the paws rounded spindles (no longer boxes, darkened to match). The grizzle and eye detail drop, and the ears thin to dark-edged blades at LOD2.",
+      "fixes": [
+        "8-sided leg tubes at LOD2 within the 4000 budget",
+        "paint the agouti saddle as a darker block at LOD2 so the value pattern holds"
+      ]
+    },
+    "technical": {
+      "score": 8,
+      "reason": "QA PASS at every LOD (connections incl. claws rooted in the toes, mass, balance, proportions, normals); triangles 139k / 29k / 3.0k inside the 150k / 35k / 4k budget; one draw call; deterministic. Most LOD0 triangles go to smooth fur areas that do not need them.",
+      "fixes": [
+        "adaptive cell size: finer on the head and paws, coarser on the flanks"
+      ]
+    }
+  },
+  "renders": {
+    "hero.png": "bbd210744390d7681d6d96bfde915e9669a1deef5a777f5a4ef76bd636311b55",
+    "sheet.png": "c8edcb9dd7813d8a2e5884c3dbfbae5f7d4ca59a1bc113de232412ae2e474336",
+    "raking.png": "1702ddcf2f9ddf5d03bdb5720a5d43759a21e184258c657f4e16bc449fd244c8",
+    "raking_detail.png": "3ead09072d112ed02e3744d961aa005cef1db0342e000aff45cb42b029f07b0d",
+    "lods.png": "b72d1e3347eaad33935e94515ea11870d8e35a04615d9db376278869b84c2850",
+    "silhouette.png": "ba8a3d430ca1a9c7b83b58226b258462c00ce72e2c3ce0b6dafeb098f646fe8d",
+    "value.png": "44c7d6a775a86560c1835221061a2d1a377fb4288977ec813016fb377004553d",
+    "detail.png": "6880583723fc70669e711867d8bb52bc50f05cd1058900925c59b7998a75ca57"
+  },
+  "metrics": {
+    "silhouette": [
+      {
+        "view": "front",
+        "iou": 0.947
+      },
+      {
+        "view": "side",
+        "iou": 0.916
+      },
+      {
+        "view": "3/4",
+        "iou": 0.921
+      }
+    ],
+    "focal": {
+      "peakPart": "body",
+      "peak": [
+        362,
+        291
+      ],
+      "focalShare": 0.392,
+      "focalArea": 0.135,
+      "top": [
+        {
+          "part": "body",
+          "share": 0.568
+        },
+        {
+          "part": "head",
+          "share": 0.392
+        },
+        {
+          "part": "eye_r",
+          "share": 0.019
+        }
+      ],
+      "declared": [
+        "head"
+      ]
+    },
+    "rest": {
+      "share": 0.55,
+      "spread": 0.549,
+      "min": 0.25
+    },
+    "grounded": {
+      "rise": 0.059,
+      "bands": [
+        0.359,
+        0.377,
+        0.441,
+        0.386,
+        0.413
+      ]
+    },
+    "shape": {
+      "acuteShare": 0.357,
+      "straightShare": 0.555,
+      "taper": -0.55,
+      "shape": "stable",
+      "declared": "friendly"
+    }
+  }
+}

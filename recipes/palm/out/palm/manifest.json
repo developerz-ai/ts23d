@@ -4,7 +4,8 @@
   "description": "Coconut palm (Cocos nucifera): slender bowed ringed stem, crown of drooping pinnate fronds",
   "tags": [
     "vegetation",
-    "tree"
+    "tree",
+    "palm"
   ],
   "files": {
     "lods": [],
@@ -12,9 +13,9 @@
     "thumb": "recipes/palm/out/palm/thumb.png"
   },
   "triangles": [
-    5032,
-    1986,
-    211
+    5572,
+    2332,
+    215
   ],
   "drawCalls": [
     2,
@@ -52,7 +53,7 @@
     {
       "label": "total height",
       "spec": 20,
-      "measured": 19.999999277293682,
+      "measured": 20.000000923871994,
       "source": "recipes/palm/README.md"
     }
   ],

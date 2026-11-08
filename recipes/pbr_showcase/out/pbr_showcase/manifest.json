@@ -1,0 +1,91 @@
+{
+  "name": "pbr_showcase",
+  "kind": "prop",
+  "description": "Test board for glTF PBR extensions: clearcoat car paint, glass, ice, water, jelly, velvet sheen, brushed anisotropy, iridescent heat tint.",
+  "tags": [
+    "material",
+    "test",
+    "pbr"
+  ],
+  "files": {
+    "lods": [],
+    "sheet": "recipes/pbr_showcase/out/pbr_showcase/sheet.png",
+    "thumb": "recipes/pbr_showcase/out/pbr_showcase/thumb.png"
+  },
+  "triangles": [
+    16776,
+    4932,
+    1692
+  ],
+  "drawCalls": [
+    11,
+    11,
+    11
+  ],
+  "pivots": [
+    {
+      "name": "body",
+      "parent": null
+    },
+    {
+      "name": "body_glass",
+      "parent": null
+    },
+    {
+      "name": "body_ice",
+      "parent": null
+    },
+    {
+      "name": "body_liquid",
+      "parent": null
+    },
+    {
+      "name": "body_jelly",
+      "parent": null
+    },
+    {
+      "name": "body_paint_blue",
+      "parent": null
+    },
+    {
+      "name": "body_paint_red",
+      "parent": null
+    },
+    {
+      "name": "body_paint_white",
+      "parent": null
+    },
+    {
+      "name": "body_finish_brushed",
+      "parent": null
+    },
+    {
+      "name": "body_finish_heat_tint",
+      "parent": null
+    },
+    {
+      "name": "body_finish_velvet",
+      "parent": null
+    }
+  ],
+  "emitters": [],
+  "sockets": [],
+  "surfaces": [
+    "glass",
+    "ice",
+    "jelly",
+    "liquid",
+    "opaque"
+  ],
+  "paint": {
+    "red": "#a5121a",
+    "blue": "#123a8c",
+    "white": "#e8e6e0"
+  },
+  "measures": [],
+  "sources": [],
+  "qa": {
+    "pass": true,
+    "findings": []
+  }
+}

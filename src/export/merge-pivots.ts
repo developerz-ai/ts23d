@@ -3,7 +3,9 @@
 // group (`ctx.group`, a named handle like `turret`, `gun`, `door_l`) or a part with `motion`.
 // Static top-level geometry merges into one `body` part. Names the engine binds to survive.
 // Non-opaque surfaces split into `<pivot>_<surface>` children (one draw call per surface), and
-// glowing parts (GlbOptions.glow) into `<pivot>_glow_<i>` children with their emissive material.
+// glowing parts (GlbOptions.glow) into `<pivot>_glow_<i>` children with their emissive material,
+// and painted parts (`paint: slot`) into `<pivot>_paint_<slot>` children with the slot's material,
+// and finished parts (`finish: name`) into `<pivot>_finish_<name>` children with the finish's.
 
 import {
   type CompiledAsset,
@@ -30,7 +32,7 @@ export const globRe = (pattern: string): RegExp =>
       .replaceAll('*', '.*')
       .replaceAll('?', '.')}$`,
   );
-const SURFACES: readonly Surface[] = ['cutout', 'glass', 'translucent'];
+const SURFACES: readonly Surface[] = ['cutout', 'glass', 'translucent', 'ice', 'liquid', 'jelly'];
 
 /** Re-express a part's mesh in its pivot's local space. */
 function intoPivot(mesh: Mesh, part: WorldTransform, pivot: WorldTransform): Mesh {
@@ -78,22 +80,37 @@ export function mergeToPivots(
   // Buckets keyed by pivot + surface: opaque merges into the pivot's own mesh; each other
   // surface in use becomes one child `<pivot>_<surface>` so materials never mix in a primitive.
   const extra = new Map<string, Mesh[]>();
-  const bucket = (pivot: string, surface: Surface | undefined, mesh: Mesh, g = -1): void => {
-    const k = `${pivot}|${g >= 0 ? `glow_${g}` : (surface ?? 'opaque')}`;
+  // Glow wins over paint (a lit lens keeps its emissive material); paint is opaque-only (core).
+  const layerOf = (p: Part, g: number): string =>
+    g >= 0
+      ? `glow_${g}`
+      : (p.surface ??
+        (p.paint !== undefined
+          ? `paint_${p.paint}`
+          : p.finish !== undefined
+            ? `finish_${p.finish}`
+            : 'opaque'));
+  const bucket = (pivot: string, layer: string, mesh: Mesh): void => {
+    const k = `${pivot}|${layer}`;
     extra.set(k, [...(extra.get(k) ?? []), mesh]);
   };
   for (const p of asset.parts) {
     if (!p.mesh) continue;
-    const g = glowOf(p.name);
+    const layer = layerOf(p, glowOf(p.name));
     if (isPivot(p)) {
-      bucket(p.name, p.surface, p.mesh, g);
+      bucket(p.name, layer, p.mesh);
       continue;
     }
     const pivot = pivotOf(p);
     const t = xf.get(p.name) ?? identity;
     const pt = pivot === ROOT ? identity : (xf.get(pivot) ?? identity);
-    bucket(pivot, p.surface, intoPivot(p.mesh, t, pt), g);
+    bucket(pivot, layer, intoPivot(p.mesh, t, pt));
   }
+  const slots = [...new Set(asset.parts.flatMap((p) => (p.paint === undefined ? [] : [p.paint])))];
+  slots.sort();
+  const finishes = [
+    ...new Set(asset.parts.flatMap((p) => (p.finish === undefined ? [] : [p.finish]))),
+  ].sort();
   const parts: Part[] = [];
   const layers = (pivot: string, parent: string | null): void => {
     for (const surface of SURFACES) {
@@ -123,6 +140,32 @@ export function mergeToPivots(
       glowLayer.set(part, g);
       parts.push(part);
     });
+    for (const slot of slots) {
+      const meshes = extra.get(`${pivot}|paint_${slot}`);
+      if (!meshes) continue;
+      parts.push({
+        name: `${pivot}_paint_${slot}`,
+        mesh: merge(meshes),
+        at: [0, 0, 0],
+        parent,
+        yaw: 0,
+        motion: null,
+        paint: slot,
+      });
+    }
+    for (const finish of finishes) {
+      const meshes = extra.get(`${pivot}|finish_${finish}`);
+      if (!meshes) continue;
+      parts.push({
+        name: `${pivot}_finish_${finish}`,
+        mesh: merge(meshes),
+        at: [0, 0, 0],
+        parent,
+        yaw: 0,
+        motion: null,
+        finish,
+      });
+    }
   };
   const body = extra.get(`${ROOT}|opaque`);
   if (body)
@@ -138,7 +181,7 @@ export function mergeToPivots(
   for (const p of asset.parts) {
     if (!isPivot(p)) continue;
     const own = extra.get(`${p.name}|opaque`);
-    const { surface: _drop, ...rest } = p;
+    const { surface: _drop, paint: _slot, finish: _finish, ...rest } = p;
     parts.push({ ...rest, mesh: own ? merge(own) : null });
     layers(p.name, p.name);
   }

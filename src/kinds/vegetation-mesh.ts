@@ -52,6 +52,8 @@ export function stemsMesh(
         scale: radii,
         color,
         strip: 'wood',
+        // Closed stems: the child's buried root reads as embedded in its parent's solid.
+        caps: true,
       }),
     );
   }
@@ -93,7 +95,7 @@ export function trunkMesh(
     scale: radii.map((r) => r * radiusScale),
     color: p.bark,
     strip: 'wood',
-    caps: p.impostor === 'cards' ? 'end' : false,
+    caps: true,
   });
   return barkTint(m, p, pts[pts.length - 1]?.[2] ?? 1, rng);
 }

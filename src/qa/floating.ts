@@ -1,14 +1,9 @@
 // Gate: everything is attached. A part is grounded if it reaches z≈0 or its SURFACE comes within
 // CONTACT_EPS of a grounded part's surface — transitively. Bounding boxes are only the prefilter.
 
-import {
-  type Bounds,
-  boundsOf,
-  type CompiledAsset,
-  type Mesh,
-  worldMeshes,
-} from '../core/index.ts';
-import { surfaceSamples, TriangleGrid } from './geometry.ts';
+import { type Bounds, type CompiledAsset, type Mesh, worldMeshes } from '../core/index.ts';
+import { surfaceSamples, type TriangleGrid } from './geometry.ts';
+import { meshBounds, triangleGrid } from './geometry-cache.ts';
 import { CONTACT_EPS, type Finding, type Gate } from './types.ts';
 
 const near = (a: Bounds, b: Bounds, eps: number): boolean =>
@@ -17,7 +12,7 @@ const near = (a: Bounds, b: Bounds, eps: number): boolean =>
   );
 
 export function touching(a: Mesh, b: Mesh, grid: TriangleGrid, eps = CONTACT_EPS): boolean {
-  const bb = boundsOf(b);
+  const bb = meshBounds(b);
   for (const p of surfaceSamples(a, 0.1, 4)) {
     if (!near({ min: p, max: p }, bb, eps)) continue;
     if (grid.nearest(p, eps) <= eps) return true;
@@ -27,13 +22,7 @@ export function touching(a: Mesh, b: Mesh, grid: TriangleGrid, eps = CONTACT_EPS
 
 export const floatingParts: Gate = (asset: CompiledAsset): Finding[] => {
   const meshes = [...worldMeshes(asset.parts)];
-  const bounds = new Map(meshes.map(([n, m]) => [n, boundsOf(m)]));
-  const grids = new Map<string, TriangleGrid>();
-  const grid = (n: string, m: Mesh): TriangleGrid => {
-    const g = grids.get(n) ?? new TriangleGrid(m);
-    grids.set(n, g);
-    return g;
-  };
+  const bounds = new Map(meshes.map(([n, m]) => [n, meshBounds(m)]));
   const grounded = new Set(
     meshes.filter(([n]) => (bounds.get(n)?.min[2] ?? 1) <= CONTACT_EPS).map(([n]) => n),
   );
@@ -46,7 +35,7 @@ export const floatingParts: Gate = (asset: CompiledAsset): Finding[] => {
     for (const [n, m] of meshes) {
       const b = bounds.get(n);
       if (grounded.has(n) || !b || !near(b, gb, CONTACT_EPS)) continue;
-      if (touching(m, gm, grid(g, gm)) || touching(gm, m, grid(n, m))) {
+      if (touching(m, gm, triangleGrid(gm)) || touching(gm, m, triangleGrid(m))) {
         grounded.add(n);
         frontier.push(n);
       }

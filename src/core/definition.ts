@@ -1,9 +1,25 @@
 // The asset contract: what defineAsset takes (AssetDefinition), what build() receives
 // (BuildContext), budgets, real-world dimensions, measures, checks, and the compiled result.
 
+import type { Finishes, ResolvedFinish } from './finish.ts';
 import type { Mesh } from './mesh.ts';
-import type { EmitterOptions, Lod, Part, PartOptions, SocketOptions, UseOptions } from './part.ts';
+import type { ResolvedSurfaceOptics, SurfaceOptics } from './optics.ts';
+import type { PaintSet, PaintSlots, PaintVariants } from './paint.ts';
+import type {
+  EmitterOptions,
+  Joint,
+  JointOptions,
+  Lod,
+  Part,
+  PartOptions,
+  SocketOptions,
+  UseOptions,
+} from './part.ts';
+import type { AssetPhysics, RealMass } from './physics.ts';
 import type { Rng } from './rng.ts';
+import type { TuneSpec } from './tune.ts';
+import type { Vec3 } from './vec.ts';
+import type { WeatherCoverage } from './weather-coverage.ts';
 
 export interface BuildContext {
   readonly lod: Lod;
@@ -21,6 +37,12 @@ export interface BuildContext {
   socket(name: string, options: SocketOptions): void;
   /** Instance another asset inside this one, compiled at this LOD — the composition primitive. */
   use(asset: Asset, options: UseOptions): void;
+  /** Declare where two parts connect (wrist, grip, peg); QA `joints` checks that they fit. */
+  joint(name: string, options: JointOptions): void;
+  /** Record measured weathering coverage (passes/weather calls it): manifest + QA `weather`. */
+  weathered(coverage: readonly WeatherCoverage[]): void;
+  /** A `tune.params` value: the optimiser's trial, else the committed tune.json, else the default. */
+  tuned(name: string): number;
 }
 
 export interface Budget {
@@ -29,7 +51,7 @@ export interface Budget {
 }
 
 /** Real-world overall dimensions (metres) the QA `proportions` gate holds the model to. */
-export interface RealDimensions {
+export interface RealDimensions extends RealMass {
   /** Along X (front-back). */
   readonly length: number;
   /** Along Y. */
@@ -110,6 +132,29 @@ export interface AssetMeta {
   readonly creators?: readonly string[];
 }
 
+/**
+ * An opening the `gaps` QA gate must not flag: a vent, a door seam, running clearance. Declared
+ * with a reason, so a reviewer can tell a designed slot from a modelling miss.
+ */
+export interface IntendedGap {
+  /** One or two part names/globs on the slot's rims; one selector = any slot it borders. */
+  readonly parts: readonly [string] | readonly [string, string];
+  readonly why: string;
+}
+
+/**
+ * A crease the `connections` seam check must not flag (organic kinds): an eyelid fold, the
+ * nasolabial fold, the mouth line — a sphere region in the asset's frame on matching parts.
+ */
+export interface IntendedCrease {
+  readonly name: string;
+  /** Part name or glob the crease is on ('head', 'head_*'). */
+  readonly part: string;
+  readonly at: Vec3;
+  readonly radius: number;
+  readonly why?: string;
+}
+
 export interface AssetDefinition {
   readonly name: string;
   readonly kind: string;
@@ -134,6 +179,47 @@ export interface AssetDefinition {
    * descending, 1 > a > b > c >= 0. Omitted: derived from the triangle counts and size.
    */
   readonly lodCoverage?: readonly [number, number, number];
+  /**
+   * Paint slots with their default colours: `{ body: '#84402d' }`. Parts join one with
+   * `{ paint: 'body' }`; the GLB gives each slot its own material (baseColorFactor = the colour,
+   * COLOR_0 = the part's colour ÷ it, so grime and wear survive). One extra draw per slot per pivot.
+   */
+  readonly paint?: PaintSlots;
+  /**
+   * Switchable liveries (KHR_materials_variants): name → the slots it repaints,
+   * `{ oxide_red: { body: '#74382a' } }`. No variant selected = `paint`.
+   */
+  readonly variants?: PaintVariants;
+  /**
+   * Named finishes for opaque parts (`{ finish: 'velvet' }`): sheen, anisotropy, iridescence,
+   * clearcoat, specular → KHR_materials_* (extensionsUsed, never required). One material each.
+   */
+  readonly finishes?: Finishes;
+  /** See-through surface overrides: `{ glass: { ior: 1.52, thickness: 0.004 } }`. */
+  readonly optics?: SurfaceOptics;
+  /** Openings that are meant to be there, so QA `gaps` skips them: vents, seams, clearance. */
+  readonly gaps?: readonly IntendedGap[];
+  /** Intended creases inside sculpted meshes, so QA `connections` skips them (organic kinds). */
+  readonly creases?: readonly IntendedCrease[];
+  /** Rigid body, mass and collider defaults (`t3d build --physics`, docs/architecture/gltf-capabilities.md). */
+  readonly physics?: AssetPhysics;
+  /**
+   * Art intent the readability checks measure (`assertArt`, `t3d critique` metrics,
+   * docs/idea/16-art-as-text.md): `focal` part name(s) that must hold the highest value contrast;
+   * `shape` language of the silhouette; `grounded` (luminance rises base → top; default on for
+   * `character`/`creature`); `restShare` minimum calm surface share (default 0.25).
+   */
+  readonly art?: {
+    readonly focal?: string | readonly string[];
+    readonly shape?: 'aggressive' | 'friendly' | 'stable';
+    readonly grounded?: boolean;
+    readonly restShare?: number;
+  };
+  /**
+   * Knobs `t3d tune` may turn and what it minimises (docs/idea/20-tuning.md). Read them with
+   * `ctx.tuned('name')`; pass the committed file as `saved` so every build sees the same numbers.
+   */
+  readonly tune?: TuneSpec;
   build(ctx: BuildContext): void;
 }
 
@@ -153,4 +239,22 @@ export interface CompiledAsset {
   readonly meta?: AssetMeta;
   readonly glow?: readonly Glow[];
   readonly lodCoverage?: readonly [number, number, number];
+  /** Paint slots + variants in linear RGB (absent when the recipe declares no paint). */
+  readonly paintSet?: PaintSet;
+  /** Declared finishes, linear RGB (absent when none). */
+  readonly finishes?: Readonly<Record<string, ResolvedFinish>>;
+  /** See-through surface overrides merged over the presets (absent when none). */
+  readonly optics?: ResolvedSurfaceOptics;
+  /** Set when compiled with `{ variant }`: vertex colours already show that livery (previews). */
+  readonly variant?: string;
+  /** Declared openings carried from the definition (QA `gaps`). */
+  readonly gaps?: readonly IntendedGap[];
+  /** Declared intended creases carried from the definition (QA `connections`). */
+  readonly creases?: readonly IntendedCrease[];
+  /** Declared connections (`ctx.joint`), in the asset's frame; QA `joints` checks the fit. */
+  readonly joints?: readonly Joint[];
+  /** Physics intent carried from the definition (absent when the recipe declares none). */
+  readonly physics?: AssetPhysics;
+  /** Measured weathering per target and effect (`weather(ctx, …)`); absent when none. */
+  readonly weather?: readonly WeatherCoverage[];
 }

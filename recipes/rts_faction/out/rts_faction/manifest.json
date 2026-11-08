@@ -1,0 +1,669 @@
+{
+  "name": "rts_faction",
+  "kind": "scene",
+  "description": "Saltmarch Accord sample RTS faction lineup: barracks, three soldiers, two workers, a light tank and a claimed sunstone deposit, all on one team slot (8 liveries).",
+  "tags": [
+    "rts",
+    "saltmarch",
+    "faction",
+    "scene",
+    "team-colour"
+  ],
+  "files": {
+    "lods": [],
+    "sheet": "recipes/rts_faction/out/rts_faction/sheet.png",
+    "thumb": "recipes/rts_faction/out/rts_faction/thumb.png"
+  },
+  "triangles": [
+    145226,
+    31970,
+    3596
+  ],
+  "drawCalls": [
+    34,
+    34,
+    20
+  ],
+  "pivots": [
+    {
+      "name": "body",
+      "parent": null
+    },
+    {
+      "name": "hall",
+      "parent": null
+    },
+    {
+      "name": "hall_paint_team",
+      "parent": "hall"
+    },
+    {
+      "name": "tank",
+      "parent": null
+    },
+    {
+      "name": "tank_paint_team",
+      "parent": "tank"
+    },
+    {
+      "name": "tank_turret",
+      "parent": "tank",
+      "motion": "spin"
+    },
+    {
+      "name": "tank_turret_paint_team",
+      "parent": "tank_turret"
+    },
+    {
+      "name": "tank_gun",
+      "parent": "tank_turret",
+      "motion": "sway"
+    },
+    {
+      "name": "tank_wheel_l_0",
+      "parent": "tank",
+      "motion": "spin"
+    },
+    {
+      "name": "tank_wheel_l_1",
+      "parent": "tank",
+      "motion": "spin"
+    },
+    {
+      "name": "tank_wheel_l_2",
+      "parent": "tank",
+      "motion": "spin"
+    },
+    {
+      "name": "tank_wheel_l_3",
+      "parent": "tank",
+      "motion": "spin"
+    },
+    {
+      "name": "tank_wheel_l_4",
+      "parent": "tank",
+      "motion": "spin"
+    },
+    {
+      "name": "tank_idler_l",
+      "parent": "tank",
+      "motion": "spin"
+    },
+    {
+      "name": "tank_sprocket_l",
+      "parent": "tank",
+      "motion": "spin"
+    },
+    {
+      "name": "tank_wheel_r_0",
+      "parent": "tank",
+      "motion": "spin"
+    },
+    {
+      "name": "tank_wheel_r_1",
+      "parent": "tank",
+      "motion": "spin"
+    },
+    {
+      "name": "tank_wheel_r_2",
+      "parent": "tank",
+      "motion": "spin"
+    },
+    {
+      "name": "tank_wheel_r_3",
+      "parent": "tank",
+      "motion": "spin"
+    },
+    {
+      "name": "tank_wheel_r_4",
+      "parent": "tank",
+      "motion": "spin"
+    },
+    {
+      "name": "tank_idler_r",
+      "parent": "tank",
+      "motion": "spin"
+    },
+    {
+      "name": "tank_sprocket_r",
+      "parent": "tank",
+      "motion": "spin"
+    },
+    {
+      "name": "warden_0",
+      "parent": null
+    },
+    {
+      "name": "warden_0_paint_team",
+      "parent": "warden_0"
+    },
+    {
+      "name": "warden_1",
+      "parent": null
+    },
+    {
+      "name": "warden_1_paint_team",
+      "parent": "warden_1"
+    },
+    {
+      "name": "warden_2",
+      "parent": null
+    },
+    {
+      "name": "warden_2_paint_team",
+      "parent": "warden_2"
+    },
+    {
+      "name": "delver_0",
+      "parent": null
+    },
+    {
+      "name": "delver_0_paint_team",
+      "parent": "delver_0"
+    },
+    {
+      "name": "delver_1",
+      "parent": null
+    },
+    {
+      "name": "delver_1_paint_team",
+      "parent": "delver_1"
+    },
+    {
+      "name": "deposit",
+      "parent": null
+    },
+    {
+      "name": "deposit_paint_team",
+      "parent": "deposit"
+    }
+  ],
+  "emitters": [
+    {
+      "name": "tank_muzzle",
+      "kind": "muzzle",
+      "when": "event"
+    },
+    {
+      "name": "tank_exhaust_l",
+      "kind": "smoke",
+      "when": "moving"
+    },
+    {
+      "name": "tank_dust_l",
+      "kind": "dust",
+      "when": "moving"
+    },
+    {
+      "name": "tank_exhaust_r",
+      "kind": "smoke",
+      "when": "moving"
+    },
+    {
+      "name": "tank_dust_r",
+      "kind": "dust",
+      "when": "moving"
+    },
+    {
+      "name": "warden_0_muzzle",
+      "kind": "muzzle",
+      "when": "event"
+    },
+    {
+      "name": "warden_1_muzzle",
+      "kind": "muzzle",
+      "when": "event"
+    },
+    {
+      "name": "warden_2_muzzle",
+      "kind": "muzzle",
+      "when": "event"
+    },
+    {
+      "name": "delver_0_work_dust",
+      "kind": "dust",
+      "when": "event"
+    },
+    {
+      "name": "delver_1_work_dust",
+      "kind": "dust",
+      "when": "event"
+    },
+    {
+      "name": "deposit_glint",
+      "kind": "sparks",
+      "when": "always"
+    }
+  ],
+  "sockets": [
+    {
+      "name": "hall_rally",
+      "kind": "spawn",
+      "parent": "hall"
+    },
+    {
+      "name": "hall_door",
+      "kind": "interact",
+      "parent": "hall"
+    },
+    {
+      "name": "tank_commander",
+      "kind": "seat",
+      "parent": "tank_turret"
+    },
+    {
+      "name": "warden_0_hand_r_socket",
+      "kind": "mount",
+      "parent": "warden_0"
+    },
+    {
+      "name": "warden_1_hand_r_socket",
+      "kind": "mount",
+      "parent": "warden_1"
+    },
+    {
+      "name": "warden_2_hand_r_socket",
+      "kind": "mount",
+      "parent": "warden_2"
+    },
+    {
+      "name": "delver_0_hand_r_socket",
+      "kind": "mount",
+      "parent": "delver_0"
+    },
+    {
+      "name": "delver_1_hand_r_socket",
+      "kind": "mount",
+      "parent": "delver_1"
+    },
+    {
+      "name": "deposit_mine_point_0",
+      "kind": "interact",
+      "parent": "deposit"
+    },
+    {
+      "name": "deposit_mine_point_1",
+      "kind": "interact",
+      "parent": "deposit"
+    },
+    {
+      "name": "deposit_mine_point_2",
+      "kind": "interact",
+      "parent": "deposit"
+    },
+    {
+      "name": "deposit_mine_point_3",
+      "kind": "interact",
+      "parent": "deposit"
+    }
+  ],
+  "joints": [
+    {
+      "name": "warden_0_grip_r",
+      "from": "warden_0_hand_r",
+      "to": "warden_0_rifle_grip",
+      "kind": "grip",
+      "at": [
+        5.5,
+        -1.865,
+        1.06
+      ]
+    },
+    {
+      "name": "warden_1_grip_r",
+      "from": "warden_1_hand_r",
+      "to": "warden_1_rifle_grip",
+      "kind": "grip",
+      "at": [
+        5.5,
+        -0.565,
+        1.06
+      ]
+    },
+    {
+      "name": "warden_2_grip_r",
+      "from": "warden_2_hand_r",
+      "to": "warden_2_rifle_grip",
+      "kind": "grip",
+      "at": [
+        5.5,
+        0.735,
+        1.06
+      ]
+    },
+    {
+      "name": "delver_0_grip_r",
+      "from": "delver_0_hand_r",
+      "to": "delver_0_tool_handle",
+      "kind": "grip",
+      "at": [
+        3.9972,
+        3.5507,
+        1.06
+      ]
+    },
+    {
+      "name": "delver_1_grip_r",
+      "from": "delver_1_hand_r",
+      "to": "delver_1_tool_handle",
+      "kind": "grip",
+      "at": [
+        3.9972,
+        4.8507,
+        1.06
+      ]
+    }
+  ],
+  "surfaces": [
+    "opaque"
+  ],
+  "paint": {
+    "team": "#b3261e"
+  },
+  "variants": {
+    "red": {
+      "team": "#b3261e"
+    },
+    "blue": {
+      "team": "#1f4fb8"
+    },
+    "green": {
+      "team": "#2f8f3a"
+    },
+    "yellow": {
+      "team": "#e2b521"
+    },
+    "purple": {
+      "team": "#6d2fa6"
+    },
+    "orange": {
+      "team": "#e0661a"
+    },
+    "teal": {
+      "team": "#139a92"
+    },
+    "white": {
+      "team": "#e8e8e2"
+    }
+  },
+  "measures": [],
+  "sources": [
+    "recipes/rts_faction/README.md (the style guide this lineup checks)"
+  ],
+  "weather": {
+    "chips": {
+      "target": 0.1019,
+      "actual": 0.1019,
+      "eligible": "convex-edges",
+      "area": 1793.2645,
+      "by": {
+        "hall_hall_masonry": {
+          "target": 0.1,
+          "actual": 0.1,
+          "area": 1396.6367
+        },
+        "hall_hall_render": {
+          "target": 0.1,
+          "actual": 0.1,
+          "area": 285.414
+        },
+        "tank_brinehound_hull": {
+          "target": 0.13,
+          "actual": 0.13,
+          "area": 20.3044
+        },
+        "tank_brinehound_kit": {
+          "target": 0.13,
+          "actual": 0.13,
+          "area": 59.3223
+        },
+        "tank_brinehound_turret": {
+          "target": 0.13,
+          "actual": 0.13,
+          "area": 17.6463
+        },
+        "warden_0_warden": {
+          "target": 0.14,
+          "actual": 0.14,
+          "area": 3.1636
+        },
+        "warden_1_warden": {
+          "target": 0.14,
+          "actual": 0.14,
+          "area": 3.1636
+        },
+        "warden_2_warden": {
+          "target": 0.14,
+          "actual": 0.14,
+          "area": 3.1636
+        },
+        "delver_0_delver": {
+          "target": 0.14,
+          "actual": 0.14,
+          "area": 2.225
+        },
+        "delver_1_delver": {
+          "target": 0.14,
+          "actual": 0.14,
+          "area": 2.225
+        }
+      }
+    },
+    "rust": {
+      "target": 0.5494,
+      "actual": 0.5494,
+      "eligible": "fasteners | below-fasteners",
+      "area": 23.2142,
+      "by": {
+        "hall_hall_masonry": {
+          "target": 0.55,
+          "actual": 0.55,
+          "area": 22.9524
+        },
+        "tank_brinehound_hull": {
+          "target": 0.5,
+          "actual": 0.5,
+          "area": 0.2618
+        }
+      }
+    },
+    "moss": {
+      "target": 0.35,
+      "actual": 0.35,
+      "eligible": "ground-near & !down-facing",
+      "area": 324.7555,
+      "by": {
+        "hall_hall_masonry": {
+          "target": 0.35,
+          "actual": 0.35,
+          "area": 305.1389
+        },
+        "hall_hall_render": {
+          "target": 0.35,
+          "actual": 0.35,
+          "area": 19.6166
+        }
+      }
+    },
+    "dust": {
+      "target": 0.2571,
+      "actual": 0.2571,
+      "eligible": "up-facing",
+      "area": 540.7717,
+      "by": {
+        "hall_hall_masonry": {
+          "target": 0.25,
+          "actual": 0.25,
+          "area": 403.1147
+        },
+        "hall_hall_render": {
+          "target": 0.25,
+          "actual": 0.25,
+          "area": 60.72
+        },
+        "hall_hall_timber": {
+          "target": 0.3,
+          "actual": 0.3,
+          "area": 7.9121
+        },
+        "tank_brinehound_hull": {
+          "target": 0.3,
+          "actual": 0.3,
+          "area": 26.9951
+        },
+        "tank_brinehound_kit": {
+          "target": 0.3,
+          "actual": 0.3,
+          "area": 17.6305
+        },
+        "tank_brinehound_turret": {
+          "target": 0.3,
+          "actual": 0.3,
+          "area": 5.8746
+        },
+        "warden_0_warden": {
+          "target": 0.3,
+          "actual": 0.3,
+          "area": 0.8381
+        },
+        "warden_0_warden_kit": {
+          "target": 0.3,
+          "actual": 0.3,
+          "area": 0.4892
+        },
+        "warden_1_warden": {
+          "target": 0.3,
+          "actual": 0.3,
+          "area": 0.8381
+        },
+        "warden_1_warden_kit": {
+          "target": 0.3,
+          "actual": 0.3,
+          "area": 0.4892
+        },
+        "warden_2_warden": {
+          "target": 0.3,
+          "actual": 0.3,
+          "area": 0.8381
+        },
+        "warden_2_warden_kit": {
+          "target": 0.3,
+          "actual": 0.3,
+          "area": 0.4892
+        },
+        "delver_0_delver": {
+          "target": 0.3,
+          "actual": 0.3,
+          "area": 0.5157
+        },
+        "delver_0_delver_kit": {
+          "target": 0.3,
+          "actual": 0.3,
+          "area": 0.6972
+        },
+        "delver_1_delver": {
+          "target": 0.3,
+          "actual": 0.3,
+          "area": 0.5157
+        },
+        "delver_1_delver_kit": {
+          "target": 0.3,
+          "actual": 0.3,
+          "area": 0.6972
+        },
+        "deposit_outcrop": {
+          "target": 0.3,
+          "actual": 0.3,
+          "area": 12.117
+        }
+      }
+    },
+    "mud": {
+      "target": 0.49,
+      "actual": 0.49,
+      "eligible": "ground-near",
+      "area": 71.8381,
+      "by": {
+        "hall_hall_timber": {
+          "target": 0.55,
+          "actual": 0.55,
+          "area": 2.6104
+        },
+        "tank_brinehound_hull": {
+          "target": 0.5,
+          "actual": 0.5,
+          "area": 14.8239
+        },
+        "tank_brinehound_kit": {
+          "target": 0.5,
+          "actual": 0.5,
+          "area": 25.239
+        },
+        "tank_brinehound_wheels": {
+          "target": 0.4,
+          "actual": 0.4,
+          "area": 9.5434
+        },
+        "warden_0_warden": {
+          "target": 0.5,
+          "actual": 0.5,
+          "area": 0.9241
+        },
+        "warden_0_warden_kit": {
+          "target": 0.55,
+          "actual": 0.55,
+          "area": 0.4298
+        },
+        "warden_1_warden": {
+          "target": 0.5,
+          "actual": 0.5,
+          "area": 0.9241
+        },
+        "warden_1_warden_kit": {
+          "target": 0.55,
+          "actual": 0.55,
+          "area": 0.4298
+        },
+        "warden_2_warden": {
+          "target": 0.5,
+          "actual": 0.5,
+          "area": 0.9241
+        },
+        "warden_2_warden_kit": {
+          "target": 0.55,
+          "actual": 0.55,
+          "area": 0.4298
+        },
+        "delver_0_delver": {
+          "target": 0.5,
+          "actual": 0.5,
+          "area": 0.8824
+        },
+        "delver_0_delver_kit": {
+          "target": 0.55,
+          "actual": 0.55,
+          "area": 0.4298
+        },
+        "delver_1_delver": {
+          "target": 0.5,
+          "actual": 0.5,
+          "area": 0.8824
+        },
+        "delver_1_delver_kit": {
+          "target": 0.55,
+          "actual": 0.55,
+          "area": 0.4298
+        },
+        "deposit_outcrop": {
+          "target": 0.5,
+          "actual": 0.5,
+          "area": 12.9353
+        }
+      }
+    }
+  },
+  "qa": {
+    "pass": true,
+    "findings": []
+  }
+}

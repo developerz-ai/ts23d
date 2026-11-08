@@ -75,6 +75,8 @@
     "filesize": "bun run scripts/filesize.ts",
     "recipes": "bun run scripts/recipes.ts",
     "shots": "bun run scripts/shots.ts",
+    "parts": "bun run scripts/parts-catalogue.ts",
+    "data": "bun run scripts/data.ts",
     "textures": "bun run scripts/textures.ts",
     "release": "bun run scripts/release.ts",
     "t3d": "bun run src/cli/bin.ts",

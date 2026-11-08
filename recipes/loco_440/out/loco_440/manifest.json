@@ -1,7 +1,7 @@
 {
   "name": "loco_440",
   "kind": "vehicle",
-  "description": "American 4-4-0 \"Jupiter\" — funnel stack, brass domes, bell, box headlamp, slatted pilot, red spoked drivers with rods, tender, track",
+  "description": "Central Pacific No. 60 \"Jupiter\" 4-4-0 (1979 Golden Spike replica): balloon stack, brass steam dome and cylinders, Russia-iron boiler, box headlamp, blue slatted pilot, red spoked drivers with polished rods, lettered tender, track",
   "tags": [
     "rail",
     "steam",
@@ -13,13 +13,13 @@
     "thumb": "recipes/loco_440/out/loco_440/thumb.png"
   },
   "triangles": [
-    23868,
-    13552,
-    1400
+    47856,
+    18688,
+    1424
   ],
   "drawCalls": [
-    17,
-    17,
+    18,
+    18,
     11
   ],
   "pivots": [
@@ -30,6 +30,10 @@
     {
       "name": "locomotive",
       "parent": null
+    },
+    {
+      "name": "locomotive_glass",
+      "parent": "locomotive"
     },
     {
       "name": "axle_lead_0",
@@ -125,6 +129,7 @@
   ],
   "sockets": [],
   "surfaces": [
+    "glass",
     "opaque"
   ],
   "real": {
@@ -167,10 +172,14 @@
     }
   ],
   "sources": [
-    "https://en.wikipedia.org/wiki/Jupiter_(locomotive) (Schenectady 1868, 4-4-0, 5 ft 4 in drivers, 16 × 24 in cylinders, standard gauge)",
+    "https://en.wikipedia.org/wiki/Jupiter_(locomotive) (Schenectady 1868, 4-4-0, 5 ft 4 in drivers, 16 × 24 in cylinders, standard gauge; replica O'Connor 1979)",
+    "https://utahrails.net/utahrails/promontory-locomotives.php (1994 repaint from 1868-69 newspaper descriptions; \"Pepsi\" blue refined to Caledonian blue)",
+    "https://home.nps.gov/gosp/learn/historyculture/horse-of-a-different-color.htm (1869: \"gleaming in blue and crimson with gold\")",
+    "https://commons.wikimedia.org/wiki/File:Replica_of_Central_Pacific_Railroad_-_60_steam_locomotive_(4-4-0)_(Golden_Spike_National_Historic_Site,_Utah,_USA)_1_(22825879887).jpg (side 3/4)",
+    "https://commons.wikimedia.org/wiki/File:Central_Pacific_Jupiter_01.jpg (front)",
+    "https://commons.wikimedia.org/wiki/File:Replica_of_Central_Pacific_Railroad_-_60_steam_locomotive%27s_tender_(Golden_Spike_National_Historic_Site,_Utah,_USA)_(23219999275).jpg (tender side)",
     "https://en.wikipedia.org/wiki/4-4-0 (American type: 2-axle lead truck, 2 coupled axles)",
-    "https://en.wikipedia.org/wiki/Standard-gauge_railway (1435 mm)",
-    "docs/reference/loco-photo-match.png (owner reference: Jupiter photo + procedural match)"
+    "https://en.wikipedia.org/wiki/Standard-gauge_railway (1435 mm)"
   ],
   "qa": {
     "pass": true,

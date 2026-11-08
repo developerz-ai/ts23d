@@ -28,6 +28,7 @@ import {
   type Vec2,
   type Vec3,
 } from '@developerz.ai/ts23d';
+import { restrip, type StripRule, weatherer } from '../_lib/finish/finish.ts';
 
 // ---------------------------------------------------------------- layout (metres)
 const PLAT_Z = 0.915; // 3 ft over rail
@@ -58,6 +59,14 @@ const iron = hex('#2b2522');
 const glass = hex('#2c3a42');
 const signBlack = hex('#151515');
 const white = hex('#f2efe6');
+
+/** Authoring colour → material: GWR chocolate-and-cream painted timber, cast-iron columns and
+ *  brackets (painted), dark iron fittings; brick, slate, stone keep their classic strips. */
+const RULES: readonly StripRule[] = [
+  { from: chocolate, strip: 'wood_painted' },
+  { from: cream, strip: 'wood_painted' },
+  { from: iron, strip: 'iron_cast', color: hex('#8a8480') },
+];
 
 const ROOF: RoofMeshOptions = {
   type: 'gable',
@@ -253,6 +262,14 @@ export const station_halt = defineAsset({
     const lod = ctx.lod;
     const bevel = ctx.pick([0.015, 0.008, 0]);
     const dirt = (m: Mesh): Mesh => grime(m, { ground: PLAT_Z + 0.7, groundStrength: 0.3 });
+    const weather = weatherer(ctx.rng.fork('weather'));
+    /** Every part through the material library, then dust on top faces and ground splash. */
+    const part = (name: string, m: Mesh | null, o?: Parameters<typeof ctx.part>[2]): void =>
+      ctx.part(
+        name,
+        m && weather(restrip(m, RULES), { dust: 0.2, mud: 0.5, mudStrength: 0.45 }),
+        o,
+      );
 
     // ---- platform: blue-brick faced fill, paving, pale stone coping over the track.
     const pf: Mesh[] = [
@@ -294,7 +311,7 @@ export const station_halt = defineAsset({
       pf.push(
         box({ size: [0.12, 2 * PLAT_Y, 0.004], at: [PLAT_EDGE - 0.12, 0, PLAT_Z], color: white }),
       ); // white edge line
-    ctx.part('platform', grime(merge(pf), { ground: 0.5, groundStrength: 0.35 }));
+    part('platform', grime(merge(pf), { ground: 0.5, groundStrength: 0.35 }));
 
     // ---- building: brick walls in true-scale courses, blue plinth, eaves band.
     const bw: Mesh[] = [
@@ -324,21 +341,28 @@ export const station_halt = defineAsset({
           lod,
         ),
       );
-      bw.push(
-        mass(
-          {
-            size: [B_X1 - B_X0 + 0.06, 2 * B_Y + 0.06, 0.15],
-            at: [(B_X0 + B_X1) / 2, 0, EAVE_Z - 0.32],
+      // Eaves band: four closed brick courses laid against the walls (inner face 2 mm off the
+      // brick, 3 cm proud), so the band bears on the wall over a face instead of hovering 3 cm out.
+      const bz = EAVE_Z - 0.32;
+      const bandX = B_X1 - B_X0 + 0.06;
+      const bandY = 2 * B_Y + 0.06;
+      for (const s of [-1, 1])
+        bw.push(
+          box({
+            size: [bandX, 0.028, 0.15],
+            at: [(B_X0 + B_X1) / 2, s * (B_Y + 0.016), bz],
             color: blueBrick,
             strip: 'brick',
-            omit: ['bottom', 'top'],
-            courseOrigin: PLAT_Z,
-          },
-          lod,
-        ),
-      );
+          }),
+          box({
+            size: [0.028, bandY, 0.15],
+            at: [s > 0 ? B_X1 + 0.016 : B_X0 - 0.016, 0, bz],
+            color: blueBrick,
+            strip: 'brick',
+          }),
+        );
     }
-    ctx.part('building', dirt(merge(bw)));
+    part('building', dirt(merge(bw)));
 
     // ---- openings: sashes and panelled doors (chocolate doors, cream frames, stone sills/heads).
     type Op = { kind: 'window' | 'door'; side: OpeningSide; at: Vec3 };
@@ -358,7 +382,7 @@ export const station_halt = defineAsset({
       ops.push({ kind: 'window', side, at: [-0.4, y, PLAT_Z + 0.85] });
     ops.forEach((o, i) => {
       const isDoor = o.kind === 'door';
-      ctx.part(
+      part(
         `${isDoor ? 'door' : 'window'}_${o.side}_${i}`,
         opening(
           {
@@ -480,7 +504,7 @@ export const station_halt = defineAsset({
             up: [0, 1, 0],
           }),
         );
-    ctx.part('canopy', merge(cn));
+    part('canopy', merge(cn));
 
     const colTop = canZ(COL_X) - 0.24;
     const colSegs = ctx.pick([12, 8, 5]);
@@ -521,16 +545,13 @@ export const station_halt = defineAsset({
             }),
           );
     }
-    ctx.part('canopy_columns', dirt(merge(cols)));
+    part('canopy_columns', dirt(merge(cols)));
 
     // ---- furniture: benches against the wall, lamps beyond the canopy, the name board, clock.
     const benchM = bench(lod);
     const benchYs = [-5.9, -0.5, 3.1];
     if (lod < 2)
-      ctx.part(
-        'benches',
-        merge(benchYs.map((y) => place(benchM, { at: [B_X1 + 0.38, y, PLAT_Z] }))),
-      );
+      part('benches', merge(benchYs.map((y) => place(benchM, { at: [B_X1 + 0.38, y, PLAT_Z] }))));
     benchYs.forEach((y, i) => {
       ctx.socket(`bench_${i}`, {
         kind: 'seat',
@@ -541,14 +562,14 @@ export const station_halt = defineAsset({
 
     const lamp = lampPost(lod);
     [-12.2, 9.8].forEach((y, i) => {
-      ctx.part(`lamp_${i}`, place(lamp.post, { at: [6.1, y, PLAT_Z] }));
-      ctx.part(`lamp_${i}_glass`, place(lamp.glass, { at: [6.1, y, PLAT_Z] }), {
+      part(`lamp_${i}`, place(lamp.post, { at: [6.1, y, PLAT_Z] }));
+      part(`lamp_${i}_glass`, place(lamp.glass, { at: [6.1, y, PLAT_Z] }), {
         surface: 'glass',
       });
       ctx.socket(`lamp_${i}_light`, { kind: 'light', at: [6.1, y, PLAT_Z + 2.94] });
     });
 
-    ctx.part('name_board', place(nameBoard('TODDINGTON', lod), { at: [5.6, 12.55, PLAT_Z] }));
+    part('name_board', place(nameBoard('TODDINGTON', lod), { at: [5.6, 12.55, PLAT_Z] }));
 
     // ---- rainwater goods: half-round gutters on both eaves, downpipes clear of the canopy.
     if (lod < 2) {
@@ -598,7 +619,7 @@ export const station_halt = defineAsset({
               ); // holdfasts
         }
       }
-      ctx.part('rainwater', rw.length ? merge(rw) : null);
+      part('rainwater', rw.length ? merge(rw) : null);
     }
     // Gable finials (LOD0/1): turned timber spikes on the bargeboard apex.
     if (lod < 2) {
@@ -614,7 +635,7 @@ export const station_halt = defineAsset({
         segments: 6,
         color: cream,
       });
-      ctx.part(
+      part(
         'finials',
         merge(
           [-1, 1].map((sy) => place(fin, { at: [(B_X0 + B_X1) / 2, sy * (B_Y + 0.33), RIDGE_Z] })),
@@ -639,7 +660,7 @@ export const station_halt = defineAsset({
         color: hex('#b9bab6'),
         strip: 'iron',
       });
-      ctx.part(
+      part(
         'churns',
         merge(
           [
@@ -681,7 +702,7 @@ export const station_halt = defineAsset({
         beam({ from: [-0.65, 0.27, 0.34], to: [-1.0, 0.27, 0.5], width: 0.04, color: chocolate }),
         beam({ from: [-0.65, -0.27, 0.34], to: [-1.0, -0.27, 0.5], width: 0.04, color: chocolate }),
       ];
-      ctx.part('barrow', place(merge(barrow), { at: [4.4, -13.0, PLAT_Z], yaw: 0.5 }));
+      part('barrow', place(merge(barrow), { at: [4.4, -13.0, PLAT_Z], yaw: 0.5 }));
       // Platform clock on a wall bracket, both faces along the platform.
       const ck: Mesh[] = [
         box({ size: [0.6, 0.1, 0.6], at: [B_X1 + 0.9, 1.2, 3.0], color: chocolate }),
@@ -701,7 +722,7 @@ export const station_halt = defineAsset({
         }),
         beam({ from: [B_X1, 1.2, 3.3], to: [B_X1 + 0.6, 1.2, 3.3], width: 0.05, color: iron }),
       ];
-      ctx.part('clock', merge(ck));
+      part('clock', merge(ck));
       // Room boards over the front doors.
       const boards: Mesh[] = [];
       for (const o of ops)
@@ -716,7 +737,7 @@ export const station_halt = defineAsset({
               inset: -0.03,
             }),
           );
-      ctx.part('room_boards', merge(boards));
+      part('room_boards', merge(boards));
     }
   },
 });

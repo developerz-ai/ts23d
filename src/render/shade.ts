@@ -1,14 +1,16 @@
 // Per-pixel shading of the visibility buffer: reconstruct position, normal, UV and vertex colour
-// from (triangle, barycentrics), perturb by the trim sheet's normal map, then light it — key sun
-// with a PCF shadow, sky/bounce hemisphere × multi-direction AO × the sheet's baked occlusion,
-// a roughness-driven sun specular (normalised Blinn–Phong + Schlick Fresnel) and a studio
-// environment reflection (envRadiance) per texel from the sheet's ORM, so metal reads as metal.
+// from (triangle, barycentrics), perturb by the trim sheet's normal map, read the sheet's ORM and
+// the part's look (finish / optics), find sun visibility (PCF shadow) and sky openness (multi-
+// direction AO), then hand the sample to shade-light.ts (glTF reference BRDF + KHR layers).
 
 import type { PerspectiveCamera } from './camera.ts';
 import { type DepthMap, openness, visibility } from './depth-map.ts';
-import { envRadiance, type Rig } from './lighting.ts';
+import type { Rig } from './lighting.ts';
+import { OPAQUE } from './looks.ts';
 import type { Scene } from './scene.ts';
+import { lightSurf, type Surf } from './shade-light.ts';
 import { type SheetTextures, sample } from './texture.ts';
+import type { VisBuffer } from './vis-buffer.ts';
 
 export interface ShadeContext {
   readonly scene: Scene;
@@ -20,6 +22,8 @@ export interface ShadeContext {
   readonly pcf: readonly Float32Array[];
   /** AO falloff distance, metres: occluders farther than this along a sky direction don't count. */
   readonly reach: number;
+  /** Opaque-only visibility buffer: what see-through surfaces show (absent: nothing transmits). */
+  readonly behind?: VisBuffer;
 }
 
 const ONE_TAP = new Float32Array([0, 0]);
@@ -74,8 +78,28 @@ export function sunVisible(
 const pos = [0, 0, 0];
 const nrm = [0, 0, 0];
 const geo = [0, 0, 0];
+const view = [0, 0, 0];
+const tan = [0, 0, 0];
+const bit = [0, 0, 0];
+const S: Surf = {
+  pos,
+  n: nrm,
+  geo,
+  v: view,
+  t: tan,
+  b: bit,
+  albedo: [0, 0, 0],
+  occ: 1,
+  rough: 0.8,
+  metal: 0,
+  lit: 0,
+  open: 1,
+};
 
-/** Linear radiance of triangle `t` at barycentrics (b1, b2) into out[0..2]. */
+/**
+ * Linear radiance of triangle `t` at barycentrics (b1, b2) into out[0..2]; `through` (see
+ * lightSurf) receives what a see-through surface transmits and its refraction offset.
+ */
 export function shadeSample(
   c: ShadeContext,
   t: number,
@@ -84,6 +108,7 @@ export function shadeSample(
   mip: number,
   set: number,
   out: Float32Array,
+  through?: Float32Array,
 ): void {
   const s = c.scene;
   const ia = (s.indices[t * 3] ?? 0) * 3;
@@ -144,61 +169,26 @@ export function shadeSample(
     nrm[2] = pz / pl;
   }
   sample(c.tex.albedo, mip, u, v, texel);
-  const surf = s.surface[t] ?? 0;
-  const glass = surf === 2;
-  let ar = (texel[0] ?? 1) * ((C[ia] ?? 1) * b0 + (C[ib] ?? 1) * b1 + (C[ic] ?? 1) * b2);
-  let ag =
-    (texel[1] ?? 1) * ((C[ia + 1] ?? 1) * b0 + (C[ib + 1] ?? 1) * b1 + (C[ic + 1] ?? 1) * b2);
-  let ab =
-    (texel[2] ?? 1) * ((C[ia + 2] ?? 1) * b0 + (C[ib + 2] ?? 1) * b1 + (C[ic + 2] ?? 1) * b2);
+  const al = S.albedo;
+  al[0] = (texel[0] ?? 1) * ((C[ia] ?? 1) * b0 + (C[ib] ?? 1) * b1 + (C[ic] ?? 1) * b2);
+  al[1] = (texel[1] ?? 1) * ((C[ia + 1] ?? 1) * b0 + (C[ib + 1] ?? 1) * b1 + (C[ic + 1] ?? 1) * b2);
+  al[2] = (texel[2] ?? 1) * ((C[ia + 2] ?? 1) * b0 + (C[ib + 2] ?? 1) * b1 + (C[ic + 2] ?? 1) * b2);
   sample(c.tex.orm, mip, u, v, texel);
-  const occ = texel[0] ?? 1;
-  const rough = glass ? 0.06 : Math.max(0.08, texel[1] ?? 0.8);
-  const metal = glass ? 0 : (texel[2] ?? 0);
-  if (glass) {
-    ar *= 0.12;
-    ag *= 0.14;
-    ab *= 0.16;
-  }
+  const look = s.looks[s.look[t] ?? 0] ?? OPAQUE;
+  S.occ = texel[0] ?? 1;
+  S.rough = Math.max(0.05, look.roughness >= 0 ? look.roughness : (texel[1] ?? 0.8));
+  S.metal = look.metallic >= 0 ? look.metallic : (texel[2] ?? 0);
   const r = c.rig;
-  const n0 = nrm[0] ?? 0;
-  const n1 = nrm[1] ?? 0;
-  const n2 = nrm[2] ?? 1;
-  const ndl = n0 * r.sun[0] + n1 * r.sun[1] + n2 * r.sun[2];
+  const ndl = (nrm[0] ?? 0) * r.sun[0] + (nrm[1] ?? 0) * r.sun[1] + (nrm[2] ?? 0) * r.sun[2];
   const gdl = (geo[0] ?? 0) * r.sun[0] + (geo[1] ?? 0) * r.sun[1] + (geo[2] ?? 0) * r.sun[2];
-  const lit = ndl > 0 && gdl > -0.05 ? sunVisible(c, pos, geo, set) * ndl : 0;
-  const open = skyOpen(c, pos, geo);
-  const hemi = 0.5 + 0.5 * n2;
-  const amb = open * (0.35 + 0.65 * occ);
-  const dk = 1 - metal;
-  // Specular: half vector, normalised Blinn–Phong lobe, Schlick Fresnel against F0.
-  let hx = r.sun[0] + vx;
-  let hy = r.sun[1] + vy;
-  let hz = r.sun[2] + vz;
-  const hl = hyp(hx, hy, hz) || 1;
-  hx /= hl;
-  hy /= hl;
-  hz /= hl;
-  const ndh = Math.max(0, n0 * hx + n1 * hy + n2 * hz);
-  const vdh = Math.max(0, vx * hx + vy * hy + vz * hz);
-  const ndv = Math.max(0, n0 * vx + n1 * vy + n2 * vz);
-  const shin = Math.min(2048, 2 / (rough * rough * rough * rough) - 2);
-  const lobe = ((shin + 8) / 25.13) * ndh ** shin;
-  const fr = (1 - vdh) ** 5;
-  const fv = (1 - ndv) ** 5;
-  // Image-based term: the studio seen along the reflection, occluded like the sky (+ cavity AO).
-  const rz = 2 * ndv * n2 - vz;
-  const specOcc = open * (0.4 + 0.6 * occ);
-  const ch = [ar, ag, ab];
+  S.lit = ndl > 0 && gdl > -0.05 ? sunVisible(c, pos, geo, set) * ndl : 0;
+  S.open = skyOpen(c, pos, geo);
   for (let k = 0; k < 3; k++) {
-    const al = ch[k] ?? 0;
-    const f0 = 0.04 * dk + al * metal;
-    const sky = (r.bounce[k] ?? 0) * (1 - hemi) + (r.sky[k] ?? 0) * hemi;
-    const diffuse = al * dk * ((r.sunColor[k] ?? 0) * lit + sky * amb);
-    const spec = (f0 + (1 - f0) * fr) * lobe * lit * (r.sunColor[k] ?? 0) * 0.8;
-    const env = glass
-      ? (f0 + (1 - f0) * fv * (1 - rough) * (1 - rough)) * (r.sky[k] ?? 0) * open * 2.5
-      : (f0 + (Math.max(1 - rough, f0) - f0) * fv) * envRadiance(rz, rough, k) * specOcc;
-    out[k] = (diffuse + spec + env) * r.exposure;
+    tan[k] = T[to + k] ?? 0;
+    bit[k] = T[to + 3 + k] ?? 0;
   }
+  view[0] = vx;
+  view[1] = vy;
+  view[2] = vz;
+  lightSurf(S, look, r, c.cam, out, through);
 }

@@ -1,0 +1,105 @@
+{
+  "asset": "rts_barracks",
+  "reviewer": "agent",
+  "overall": 7.3,
+  "scores": {
+    "silhouette": {
+      "score": 7,
+      "reason": "Gable + two coursed drum towers + porch read as one family across all nine states.",
+      "fixes": []
+    },
+    "proportions": {
+      "score": 7,
+      "reason": "10 x 14 m hall, 5.1 m eaves, 3.5 m gate (measures gate) = 1.8 x a Warden; storey and door scale per the house playbook.",
+      "fixes": []
+    },
+    "materials": {
+      "score": 7,
+      "reason": "Dressed-stone blocks (concrete grain at LOD0, the stone strip's coursing at LOD1/2), coursed drum towers (chamfered bed joints in the profile), lime-plaster gables in an oak frame, oak porch posts and rafters, tarred oak gate, team slate roof lapped like real sheets, iron fittings, brass.",
+      "fixes": [
+        "window reveals / sills as their own stone"
+      ]
+    },
+    "detail": {
+      "score": 7,
+      "reason": "Running-bond blocks, pilasters, timber-framed gables, oculus, beacons, gate with straps, banners with sleeves and sewn chevrons.",
+      "fixes": []
+    },
+    "wear": {
+      "score": 7,
+      "reason": "weather(): chipped arrises 10%, moss + damp on 35% of the 1.1 m wall foot, salt dust on ledges, grime streaks running 1.6 m down from eaves drips and window sills (gravity-traced); timber dusty/muddy.",
+      "fixes": []
+    },
+    "lod": {
+      "score": 8,
+      "reason": "LOD2 one box per bay from the same cell plan, so stages and damage agree at every LOD; <= 900 tris.",
+      "fixes": []
+    },
+    "technical": {
+      "score": 8,
+      "reason": "QA PASS on every gate incl. connections and weather (exact coverage). Deterministic, one trim material + team slot, 8 liveries; `bun test recipes/rts_faction` 18/18. Banners hang from a sewn sleeve on a bracketed crossbar; rubble stacks block-on-block.",
+      "fixes": []
+    }
+  },
+  "renders": {
+    "hero.png": "5ff55e0548ffe406de41ec7f89c4bb1fc0166c9dce26503032c7eb757845fb40",
+    "sheet.png": "fb378c53a5e9b8039e3eff48faa337b12e080bade63ddbac77f0cf4d0cbcaa42",
+    "raking.png": "63e12a7b7c23481c6081ee781ec9c510966dd6d80ea0d11f9ad53a8d41687708",
+    "raking_detail.png": "89a68f8857c1fb74230b421e178deb2d73405319df3bbbff60f0f545c65f7f6d",
+    "lods.png": "58d723388197721f84de9869c23ad38852d801107cc70adea0048869447af725",
+    "silhouette.png": "08bfb20a567c8e91452498eb4d8b9955709e5a4187e5e4e48c264f5afd303350",
+    "value.png": "701b94f138187673d07ee642635b4c7ddf9357b1097eb375efc67851325d309c",
+    "detail.png": "4767090d2d5e5ea23539c52290d56c2c96aed6eea06c6d674e7c520b43750fa3"
+  },
+  "metrics": {
+    "silhouette": [
+      {
+        "view": "front",
+        "iou": 0.983
+      },
+      {
+        "view": "side",
+        "iou": 0.986
+      },
+      {
+        "view": "3/4",
+        "iou": 0.982
+      }
+    ],
+    "focal": {
+      "peakPart": "walls",
+      "peak": [
+        264,
+        278
+      ],
+      "focalShare": 0,
+      "focalArea": 0,
+      "top": [
+        {
+          "part": "walls",
+          "share": 0.425
+        },
+        {
+          "part": "pilasters",
+          "share": 0.407
+        },
+        {
+          "part": "porch",
+          "share": 0.089
+        }
+      ],
+      "declared": []
+    },
+    "rest": {
+      "share": 0.377,
+      "spread": 0.743,
+      "min": 0.25
+    },
+    "shape": {
+      "acuteShare": 0.29,
+      "straightShare": 0.708,
+      "taper": 0.847,
+      "shape": "stable"
+    }
+  }
+}

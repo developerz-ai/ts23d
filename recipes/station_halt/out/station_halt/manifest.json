@@ -16,8 +16,8 @@
     "thumb": "recipes/station_halt/out/station_halt/thumb.png"
   },
   "triangles": [
-    8770,
-    4850,
+    8802,
+    4882,
     460
   ],
   "drawCalls": [

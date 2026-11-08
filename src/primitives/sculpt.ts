@@ -14,7 +14,13 @@ import { compile, fold } from './sculpt-tree.ts';
 import { sdf } from './sdf.ts';
 import type { Field } from './sdf-ops.ts';
 
-export type { SculptEdit, SculptGroup, SculptShape, SculptShapeEdit } from './sculpt-edit.ts';
+export type {
+  SculptEdit,
+  SculptFieldEdit,
+  SculptGroup,
+  SculptShape,
+  SculptShapeEdit,
+} from './sculpt-edit.ts';
 
 export interface SculptField {
   readonly field: Field;

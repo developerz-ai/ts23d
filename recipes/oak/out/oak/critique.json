@@ -1,0 +1,118 @@
+{
+  "asset": "oak",
+  "reviewer": "agent",
+  "overall": 6.6,
+  "scores": {
+    "silhouette": {
+      "score": 6,
+      "reason": "Reads as a broad deciduous tree, but the `tree` kind's crown is lumpy and one-sided with large flat leaf cards; not yet the wide domed crown of an open-grown oak.",
+      "fixes": [
+        "crown density and symmetry in src/kinds/vegetation (not owned by this recipe)",
+        "more, smaller leaf clusters per twig"
+      ]
+    },
+    "proportions": {
+      "score": 7,
+      "reason": "22 m height, 22 m spread, 1.3 m DBH pass the measures; the bole looks too slender for an open-grown oak beside reference photos.",
+      "fixes": [
+        "shorter, thicker bole and heavier first limbs (species preset)"
+      ]
+    },
+    "materials": {
+      "score": 6,
+      "reason": "Bark now on the bark_oak strip (ridged furrows) with the kind's height gradient as a tint, moss on the north lower trunk, leaf-litter floor. Leaf cards are flat colour with no leaf texture (foliage cells unused).",
+      "fixes": [
+        "leaf cards sampling the foliage cells",
+        "floor blended into the crown shadow"
+      ]
+    },
+    "detail": {
+      "score": 6,
+      "reason": "Branch hierarchy, root flare, leaf clusters at LOD0. Leaf cards are large polygons that read as paper cut-outs up close.",
+      "fixes": [
+        "finer leaf cards with alpha foliage textures"
+      ]
+    },
+    "wear": {
+      "score": 6,
+      "reason": "North-side moss on the lower trunk, leaf litter underfoot. No lichen, deadwood or bark damage.",
+      "fixes": [
+        "a dead limb and a few bark scars",
+        "lichen patches on the limbs"
+      ]
+    },
+    "lod": {
+      "score": 7,
+      "reason": "LOD2 impostor keeps crown mass and trunk; floor drops to 6-gon.",
+      "fixes": [
+        "impostor colour closer to the LOD0 crown mean"
+      ]
+    },
+    "technical": {
+      "score": 8,
+      "reason": "QA PASS; kind budget plus \u2264 400 floor triangles; trunk DBH and total height pass the measures; one material. Now 13 950 / 3 004 / 184. Connections gate clean (was 247 findings): branches are closed tubes rooted on their parent's axis (buried in the wood), the trunk is capped, and the geometric leaf cards declare connect rest (a card meets its twig at one point by design).",
+      "fixes": []
+    }
+  },
+  "renders": {
+    "hero.png": "04bb4054ed03278e154ed3a9c5df0c6c04d99feeedfb08e30276c794107d9690",
+    "sheet.png": "b20458fec2d86c61e7efbfa720e31d73ac7184e3ef86cd3f23c2b3e6d23bf229",
+    "raking.png": "ec2dfd3acaa65e08f9e752f5edd9e1b40291c3e59a684f1e1b4465375b010708",
+    "raking_detail.png": "502eb129e2409965d64fc2e75dfc7b9bf283118737b930d8fd6c3761bbe0a705",
+    "lods.png": "622a185f2883c614ecde7a6be278eab23f8b1f991914ceaa12555bd0bbae2911",
+    "silhouette.png": "cb73b56ebf0d716fd16a5465b5c5f7b7d0e74ddf98b364eb0b1dee61ee52b185",
+    "value.png": "ecd84ca8af2c2b345d132bdfd1b322a5f0476c79e089d96201e014e3f23d422a",
+    "detail.png": "e20a9cd94eef9017f6598013b64e4bd4537f0e766bf3366e0aaa37193ec92561"
+  },
+  "metrics": {
+    "silhouette": [
+      {
+        "view": "front",
+        "iou": 0.638
+      },
+      {
+        "view": "side",
+        "iou": 0.564
+      },
+      {
+        "view": "3/4",
+        "iou": 0.668
+      }
+    ],
+    "focal": {
+      "peakPart": "leaves",
+      "peak": [
+        479,
+        178
+      ],
+      "focalShare": 0,
+      "focalArea": 0,
+      "top": [
+        {
+          "part": "leaves",
+          "share": 0.895
+        },
+        {
+          "part": "branches",
+          "share": 0.103
+        },
+        {
+          "part": "ground",
+          "share": 0.001
+        }
+      ],
+      "declared": []
+    },
+    "rest": {
+      "share": 0.195,
+      "spread": 0.753,
+      "min": 0.25
+    },
+    "shape": {
+      "acuteShare": 0.166,
+      "straightShare": 0.37,
+      "taper": -0.233,
+      "shape": "friendly"
+    }
+  }
+}

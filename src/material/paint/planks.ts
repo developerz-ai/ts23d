@@ -2,13 +2,17 @@
 // stretched grain with growth-ring streaks, occasional knots, per-board tone. Species and finish
 // come from params on top: `rings` blends latewood to albedo2, `rays` adds oak's ray flecks,
 // `checks` weathers (eroded soft grain, splits along it, silvering), `paint` lays a film over the
-// grain whose `chips` reveal bare wood (albedo2), mostly along board edges.
+// grain whose `chips` reveal bare wood (albedo2), mostly along board edges, as a `film`-thick step.
+// `grain` turns the figure into relief: proud latewood, one-texel pore grooves along the grain,
+// fibre ripple, rounded board arrises (pores also darken the albedo, so colour and height agree).
 // params: width 0.15 · length 1.0 · gap 0.004 · depth 0.004 · knots 1.5 (per board-metre)
-//         rings 0 · rays 0 · checks 0 · paint 0 · paintRough 0.5 · chips 0.3
+//         rings 0 · rays 0 · checks 0 · paint 0 · paintRough 0.5 · chips 0.3 · film 0.0002 (m)
+//         grain 0 (relief, 0..1)
 
 import { type Canvas, noiseAt, param, smooth } from './canvas.ts';
 import { Courses } from './courses.ts';
 import { hash2 } from './noise.ts';
+import { rowNoise } from './relief.ts';
 import type { StripRecipe } from './types.ts';
 
 export function paintPlanks(c: Canvas, r: StripRecipe, seed: number): void {
@@ -24,6 +28,8 @@ export function paintPlanks(c: Canvas, r: StripRecipe, seed: number): void {
   const paint = param(p, 'paint', 0);
   const paintRough = param(p, 'paintRough', 0.5);
   const chips = param(p, 'chips', 0.3);
+  const filmM = param(p, 'film', 0.0002);
+  const grain = param(p, 'grain', 0);
   const boards = new Courses(c, { course: width, length, irregular: 0.6, stagger: 0, seed });
   const pu = c.metresU / c.w;
   const pv = c.metresV / c.h;
@@ -66,6 +72,12 @@ export function paintPlanks(c: Canvas, r: StripRecipe, seed: number): void {
       const ring2 = Math.sin((vy * ringsN + warp * 2.5 + h * 6) * Math.PI * 2);
       const late = smooth(0.1, 0.8, ring2) * (0.75 + 0.25 * fibre);
       let mix = rings * Math.max(late, knot);
+      if (grain > 0) {
+        const pore = smooth(0.2, 0.55, rowNoise(c, xm, y, 0.03, seed + 53));
+        const arris = (1 - smooth(gap, gap + 0.012, d)) * edge;
+        height += grain * (0.0012 * (late - 0.5) + 0.0005 * fibre - 0.0008 * pore - 0.0012 * arris);
+        tone *= 1 - 0.12 * grain * pore;
+      }
       if (rays > 0) {
         const fleck = smooth(0.55, 0.8, noiseAt(c, xm, ym, 0.03, 0.004, seed + 23, 2));
         tone *= 1 + 0.25 * rays * fleck;
@@ -85,7 +97,7 @@ export function paintPlanks(c: Canvas, r: StripRecipe, seed: number): void {
         const nearEdge = 1 - smooth(gap, gap * 6, d);
         const chip = smooth(0.5, 0.56, n + chips * 0.5 + nearEdge * 0.15 - 0.45);
         const film = paint * (1 - chip);
-        height = height * (1 - 0.4 * film) - chip * paint * 0.0002;
+        height = height * (1 - 0.4 * film) - chip * paint * filmM;
         // The film follows the grain: board tone and rings still read through it, faintly.
         const under = (0.9 + 0.06 * h) * (1 + 0.05 * ring + 0.04 * fibre) * (0.55 + 0.45 * edge);
         tone = tone * (1 - film) + under * film;

@@ -20,6 +20,7 @@ export const bindUi = (root: ParentNode) => ({
   downloads: q<HTMLElement>(root, '[data-downloads]'),
   status: q<HTMLElement>(root, '[data-viewer-status]'),
   loading: q<HTMLElement>(root, '[data-loading]'),
+  lod0: q<HTMLButtonElement>(root, '[data-load-lod0]'),
   lods: [...root.querySelectorAll<HTMLInputElement>('input[name="lod"]')],
   modes: [...root.querySelectorAll<HTMLInputElement>('input[name="mode"]')],
 });

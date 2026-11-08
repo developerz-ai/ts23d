@@ -1,27 +1,30 @@
 // Material swatches: every trim-sheet strip and cell on a labelled panel — the visual test of the
-// procedural material generator. Front plinth: the 8 strips, each a 2 m wide panel as tall as the
-// strip's design height (`DEFAULT_SHEET` scaleMetres), so one panel face = one strip rect at true
-// scale, tinted by a representative vertex colour. Rear, raised plinth: the 6 decal cells and the
-// 11 foliage cells (cutout leaf cards standing on their anchor), 1 m each. Labels are block
-// letters (3×5 font, merged pixel runs) on the plinth faces, LOD0 only.
+// procedural material generator. Stepped plinths, rows of ≤ 34 m in sheet order: every one of the 42 strips is a panel exactly one repeat wide (`stripRect(id).metres`:
+// 4 m classic/library/bark, 16 m ground, 32 m rock) and as tall as its design height
+// (`DEFAULT_SHEET` scaleMetres), so one panel face = one strip rect at true scale; classic strips
+// tinted by a representative colour, the rest NATURAL. Back row: the decal and foliage cells, 1 m
+// each. Labels are block letters (3×5 font, merged pixel runs) on the plinth faces, LOD0 only.
 // Export with `--sheet` (or `toGlb(a, { sheet: paintTrimSheet() })`) to see the textures; the
 // contact sheet is vertex colour only.
 
 import {
   box,
   type CellId,
+  CLASSIC_STRIPS,
   cellRect,
   DECAL_CELLS,
   DEFAULT_SHEET,
   defineAsset,
   FOLIAGE_CELLS,
   hex,
+  MATERIAL_STRIPS,
   type Mesh,
   MeshBuilder,
   merge,
   NATURAL,
-  STRIPS,
+  NATURE_STRIPS,
   type StripId,
+  stripRect,
   type Vec3,
 } from '@developerz.ai/ts23d';
 
@@ -121,68 +124,96 @@ function cellQuad(id: CellId, x: number, y: number, z: number, size: number, col
   return b.build();
 }
 
-const FRONT = { x: 0, depth: 1.2, height: 0.2, gap: 0.4 };
-const REAR = { x: -1.6, depth: 1.2, height: 1.4, gap: 0.15 };
+const GAP = 0.4;
+/** Row k of strip panels: x of the panel face line, plinth top. Rows step back and up. */
+const row = (k: number) => ({ x: -k * 2.2, top: 0.2 + k * 0.7 });
+const REAR = { depth: 1.2, gap: 0.15 };
+
+const widthOf = (id: StripId): number => stripRect(id).metres;
+/** Rows ≤ 34 m: strips in sheet order (classic, library, nature) packed greedily, so a 32 m rock
+ *  repeat gets its own row and four 4 m panels share one; the stand stays roughly square. */
+const ROWS: readonly (readonly StripId[])[] = (() => {
+  const out: StripId[][] = [];
+  let cur: StripId[] = [];
+  let len = 0;
+  for (const id of [...CLASSIC_STRIPS, ...MATERIAL_STRIPS, ...NATURE_STRIPS] as StripId[]) {
+    const w = widthOf(id) + (cur.length ? GAP : 0);
+    if (cur.length && len + w > 34) {
+      out.push(cur);
+      cur = [];
+      len = 0;
+    }
+    len += widthOf(id) + (cur.length ? GAP : 0);
+    cur.push(id);
+  }
+  if (cur.length) out.push(cur);
+  return out;
+})();
+
+const rowSpan = (ids: readonly StripId[]): number =>
+  ids.reduce((s, id) => s + widthOf(id), 0) + (ids.length - 1) * GAP;
 
 export const material_swatches = defineAsset({
   name: 'material_swatches',
   kind: 'prop',
+  tags: ['material', 'test-card'],
   description:
-    'Every trim-sheet strip and cell on labelled panels: the material generator test card.',
-  // 24 strip panels (library v2) + decal and foliage cells.
-  budget: { triangles: [24000, 1200, 800] },
+    'All 42 trim-sheet strips (one true-scale repeat each) and every cell on labelled panels: the material library test card.',
+  // 42 strip panels + labels + cells at LOD0; boxes only beyond.
+  budget: { triangles: [30000, 1500, 1000] },
   build(ctx) {
-    const stripSpan = STRIPS.length * 2 + (STRIPS.length - 1) * FRONT.gap;
     const cells: readonly CellId[] = [...DECAL_CELLS, ...FOLIAGE_CELLS];
     const cellSpan = cells.length + (cells.length - 1) * REAR.gap;
-    const span = Math.max(stripSpan, cellSpan) + 0.4;
-    ctx.part(
-      'plinth_front',
-      box({ size: [FRONT.depth, span, FRONT.height], at: [FRONT.x, 0, 0], color: STONE }),
-    );
-    ctx.part(
-      'plinth_rear',
-      box({ size: [REAR.depth, span, REAR.height], at: [REAR.x, 0, 0], color: STONE }),
-    );
-    const frontFace = FRONT.x + FRONT.depth / 2;
-    const rearFace = REAR.x + REAR.depth / 2;
-
-    STRIPS.forEach((id, i) => {
-      const y = -stripSpan / 2 + 1 + i * (2 + FRONT.gap);
-      const h = DEFAULT_SHEET.strips[id]?.scaleMetres ?? 1;
-      const panel = box({
-        size: [0.06, 2, h],
-        at: [FRONT.x, y, FRONT.height],
-        color: TINT[id] ?? NATURAL,
-        strip: id,
-      });
-      ctx.part(`strip_${id}`, panel, id === 'glass' ? { surface: 'glass' } : {});
-      if (ctx.lod === 0) ctx.part(`label_${id}`, label(id, frontFace, y, 0.04, 0.024));
+    ROWS.forEach((ids, k) => {
+      const r = row(k);
+      const span = rowSpan(ids) + 0.4;
+      ctx.part(`plinth_${k}`, box({ size: [1.2, span, r.top], at: [r.x, 0, 0], color: STONE }));
+      let y = -rowSpan(ids) / 2;
+      for (const id of ids) {
+        const w = widthOf(id);
+        const h = DEFAULT_SHEET.strips[id]?.scaleMetres ?? 1;
+        const c = y + w / 2;
+        const panel = box({
+          size: [0.06, w, h],
+          at: [r.x, c, r.top],
+          color: TINT[id] ?? NATURAL,
+          strip: id,
+        });
+        ctx.part(`strip_${id}`, panel, id === 'glass' ? { surface: 'glass' } : {});
+        if (ctx.lod === 0) ctx.part(`label_${id}`, label(id, r.x + 0.6, c, r.top - 0.16, 0.024));
+        y += w + GAP;
+      }
     });
+    const back = row(ROWS.length);
+    ctx.part(
+      'plinth_cells',
+      box({ size: [REAR.depth, cellSpan + 0.4, back.top], at: [back.x, 0, 0], color: STONE }),
+    );
+    const rearFace = back.x + REAR.depth / 2;
 
     cells.forEach((id, i) => {
       const y = -cellSpan / 2 + 0.5 + i * (1 + REAR.gap);
       const foliage = id.startsWith('foliage_');
       if (foliage) {
         // A leaf card standing on its anchor edge, white so the painted colour reads true.
-        ctx.part(`cell_${id}`, cellQuad(id, REAR.x, y, REAR.height, 1, [1, 1, 1]), {
+        ctx.part(`cell_${id}`, cellQuad(id, back.x, y, back.top, 1, [1, 1, 1]), {
           surface: 'cutout',
         });
       } else {
-        const back = box({
+        const plate = box({
           size: [0.06, 1, 1],
-          at: [REAR.x, y, REAR.height],
+          at: [back.x, y, back.top],
           color: TINT.plain ?? NATURAL,
         });
         ctx.part(
           `cell_${id}`,
-          merge([back, cellQuad(id, REAR.x + 0.032, y, REAR.height, 1, TINT.plain ?? NATURAL)]),
+          merge([plate, cellQuad(id, back.x + 0.032, y, back.top, 1, TINT.plain ?? NATURAL)]),
         );
       }
       if (ctx.lod === 0)
         ctx.part(
           `label_${id}`,
-          label(id.replace('foliage_', ''), rearFace, y, REAR.height - 0.12, 0.016),
+          label(id.replace('foliage_', ''), rearFace, y, back.top - 0.12, 0.016),
         );
     });
   },

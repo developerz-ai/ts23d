@@ -1,68 +1,51 @@
 # Human hero bust — original stylised design
 
 ## Identity
-A young adventurer, read from the 3/4 view by: **classical proportions pushed slightly heroic**
-(square jaw, strong brow, thick neck), **defined arched eyebrows**, **swept-back hair** in chunky
-tapered two-tone locks over a rounded hairline, a **clipped beard with chin volume and a drooping
-moustache**, clear blue eyes, a **blue tunic** with a standing leather collar, placket and brass
-buttons, and a **red mantle** over the shoulders pinned with a brass brooch — cut as a collectible
-bust (U-cut under the chest) on a turned plinth.
+A young adventurer: **measured human proportions** (ratios from a head scan, not textbook guesses)
+pushed slightly heroic — square jaw, a stronger chin — with **swept-back hair** and a
+**clipped beard and moustache** sculpted as locks, clear blue **socketed eyes**, **anatomical ears**,
+a **blue tunic** with folds, a **standing leather collar**, a **red mantle** over the shoulders and a
+**brass brooch** — cut as a collectible bust on a turned plinth.
 
-## Design spec (head units: 1 = chin to crown = 0.23 m, adult human)
-| Feature | Value (units) | Metres | Note |
-|---|---|---|---|
-| chin → crown | 1.00 | 0.230 | adult menton–vertex ≈ 0.22–0.24 m |
-| overall bust L × W × H | — | 0.247 × 0.428 × 0.439 | `real`, ±5 % |
-| cranium width / depth | 0.66 / 0.86 | 0.152 / 0.198 | adult head breadth ≈ 0.15 m, length ≈ 0.19–0.20 m |
-| eye line | 0.50 | — | Loomis: half height |
-| eyeball radius / spacing | 0.052 / 0.135 | 0.012 / pupils 0.062 apart | human eyeball ≈ 24 mm; IPD ≈ 62 mm |
-| eye line → nose base | 0.18 | 0.041 | thirds: brow / nose / chin |
-| jaw half-width | 0.22 | 0.051 | bigonial ≈ 0.10 m |
-| ears | round, 0.27 long | 0.062 | between brow and nose base |
-| neck radius | 0.27 | 0.062 | heroic: thicker than average |
-| shoulders / mass | 0.95 / 0.5 (default) | 0.219 | pectorals, deltoids, trapezius under the tunic |
+## Proportions (all from docs/research/head-analysis.md unless marked)
+| Feature | Ratio of H (0.23 m) | Note |
+|---|---|---|
+| eye line / brow / nose tip / subnasale / mouth / chin | 0.540 / 0.625 / 0.392 / 0.339 / 0.248 / 0.127 | measured |
+| interpupil | 0.265 (0.061 m, the `measures` gate) | measured; adult IPD ≈ 62 mm |
+| cranium width / skull depth / jaw | 0.683 / 0.888 / 0.449 | measured |
+| ears | top 0.555, bottom 0.292, width 0.55 × length | measured; helix, antihelix, concha, tragus, antitragus, lobe |
+| eyeball / iris | 12 mm ball, 11.7 mm iris; lids over 25 % / 12 % of the iris | anatomy |
+| neck | column 0.76 × head width, chin 0.28 H above the collar; sternocleidomastoid V, larynx, trapezius slope | human 0.7–0.8 × head width (`checkNeck`, `NECK_HUMAN`) |
+| face planes | cheekbone a low ridge blended into the cheek plane, buccal fill, malar pad, lateral orbital rims; mouth at the measured projection | no knobs, no gauntness |
+| **heroic exaggerations** | jaw ×1.06, chin ×1.1, brow ×0.9 (a ridge, not a ledge) | declared in `spec.ts` |
+Silhouette vs the scan: IoU 0.84 front, 0.83 side (with hair and collar).
+
+## How it is built
+`spec.ts` (the table above as code) → the shared bust library `../_lib/bust/`: `head.ts` (ratios,
+landmarks, head block and planes), `face.ts` (orbit, cheekbone, nose, lips, lines), `eye.ts`,
+`ear.ts`, `torso.ts`, `hair.ts`, `skin.ts` (painted tone), `bust.ts` (one sculpt split under the
+collar into `head` and `bust`). This folder adds `hair.ts` (hairline, swept locks, beard,
+moustache — the beard stops short of the neck), `clothes.ts` (tunic paint and folds, a hemmed
+mantle, collar, brooch) and `creases.ts`: the intended folds (lids, alae, lip line, nasolabial,
+ears, each lock, hairline and beard edge, collar, folds, mantle edge, brooch) as small regions
+(≤ 3 cm) declared from the same geometry — QA `connections` excuses nothing else.
+
+Each eye has a `socket` joint (`eye_l_orbit`, `eye_r_orbit`, LOD0): the ball against the orbit's
+bore behind its equator (QA `joints`, measured locally).
 
 ## Palette (sRGB)
 | Role | Hex |
 |---|---|
-| skin / shade / lips | `#d9a07a` / `#a8644a` / `#b86b5c` |
-| eyes: sclera / iris | `#ece6dc` / `#3d6e9e` |
-| hair + beard (two-tone locks ×1.5) | `#5a3a22` |
-| tunic / mantle / collar, placket / brooch, buttons | `#2e4f8a` / `#7a2420` / `#6b4428` / `#c9a24a` |
-| plinth / cut faces | `#6f6c6c` (linear 0.16, 0.15, 0.15) / ×1.3 |
+| skin / warm / cool / crevice / lips | `#d4986f` / `#e0aa80` / `#a87868` / `#6a3428` / `#b86b5c` |
+| eyes: sclera / iris / wet line / caruncle | `#ece6dc` / `#3d6e9e` / `#f0c0b0` / `#d07a74` |
+| hair + beard root → tip | `#3a2416` → `#8a6038` |
+| tunic / folds / collar / mantle / brooch (`brass`) | `#2e4f8a` / `#1e3560` / `#6b4428` / `#7a2420` / `#c9a24a` |
 
-## Parts the engine needs
-| Part | Pivot | Motion |
-|---|---|---|
-| `bust` | origin, base on z = 0 | static |
-| `head` | origin | static (skull, neck, ears, hair) |
-| `jaw` | jaw hinge (in front of the ear), opens about +Y | static by default; `head(ctx, { jawSway: 4 })` bakes a sway with `clearOf: ['head']` |
-| `eye_l`, `eye_r` | eyeball centres, gaze +X | static; rotate them to aim |
-
-The jaw region is the chin + lower lip (an ellipsoid cut flat at the mouth line), so its seam runs
-along the lips, the marionette lines and under the chin. Its cut faces are painted mouth-dark for
-when it opens; it laps 0.75 cells over the head so no gap shows.
-
-## LODs
-Sculpt cell = 2 % / 4.5 % / 14 % of head height (bust 1.6 ×). LOD0/1 bake vertex AO across all
-parts (16/10 rays); every LOD carries the painted tone (cavity, warm top, cool under). LOD2 drops
-the AO bake, floors ear thickness at 0.7 cells and makes the plinth one drum.
-
-## References (stylised anatomy, not likeness)
-| Topic | Link | Used for |
-|---|---|---|
-| Loomis head: eye line at half height, brow/nose/chin thirds | https://finearttutorials.com/guide/loomis-method/ | human eye line 0.5, nose base 0.32, mouth 0.22 |
-| Proportions of the head (ears between brow and nose base, head ≈ 5 eyes wide) | https://artyfactory.com/portraits/pencil-portraits/proportions-of-a-head.html | ear placement, eye size vs head width |
-| Primary → secondary → tertiary forms (block brow/cheek/jaw first, then cut lids and folds) | https://www.creativebloq.com/how-to/how-to-sculpt-and-pose-a-cartoon-head-in-zbrush | the edit order in `head-face.ts` |
-| Orc: widen head and jawline to break human proportion | https://www.creativebloq.com/3d/how-create-orc-zbrush-61411834 | orc jaw width 0.37 vs human 0.22 |
-| Stylised orc head study (silhouette, form language) | https://blenderartists.org/t/orc-head-study-stylized-characters/1655542 | massing check |
-| Stylised hair: large clumps first, hairline → crown, one primary flow direction | https://gamesartist.co.uk/curly-hair-ls/ · https://www.cgchannel.com/2023/03/tutorial-creating-stylized-hairstyles-using-zbrush | `swept` locks in head-hair.ts |
-| Dreams (Media Molecule, Evans, SIGGRAPH 2015): sculptures as ordered SDF edits + smooth-min | https://www.mediamolecule.com/blog/article/siggraph_2015 · slides https://advances.realtimerendering.com/s2015/AlexEvans_SIGGRAPH-2015-sml.pdf | the whole approach |
-
-Design is original: no character, logo, name or likeness from any game is copied. "Chunky
-hand-painted stylised fantasy" is the idiom (exaggerated primary forms, generous fillets, flat
-vertex colour with baked AO), not a specific source.
+## Parts
+`head`, `bust` (split at the neck seam under the collar; LOD2 unsplit), `eye_l` / `eye_r` (yawed
+to converge 1.5 m ahead, `cornea` clearcoat finish), `brooch`, `plinth`.
 
 ## Known gaps
-Hair locks are tapered cone pairs (no strand grooves inside a lock); the beard's clump grooves are
-two shallow cuts; mantle colour edges are soft (vertex colour at 5 mm cells); no ear detail.
+The tunic is the torso painted blue with sculpted folds (no separate cloth thickness at the neck
+opening); hair locks are clumps on a mass, not strands; the face's planes are softer than a
+pro bust's.

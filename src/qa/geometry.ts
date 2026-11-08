@@ -2,14 +2,15 @@
 // samples. Bounding boxes lie (a diagonal strut's box touches everything); surfaces don't.
 
 import { boundsOf, type Mesh, type Vec3 } from '../core/index.ts';
+import { pointTriDist } from './point-triangle.ts';
+
+export { pointTriangleDistance, pointTriDist } from './point-triangle.ts';
 
 const at = (m: Mesh, i: number): Vec3 => [
   m.positions[i * 3] ?? 0,
   m.positions[i * 3 + 1] ?? 0,
   m.positions[i * 3 + 2] ?? 0,
 ];
-const sub = (a: Vec3, b: Vec3): Vec3 => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
-const dot = (a: Vec3, b: Vec3): number => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
 const lerp = (a: Vec3, b: Vec3, t: number): Vec3 => [
   a[0] + (b[0] - a[0]) * t,
   a[1] + (b[1] - a[1]) * t,
@@ -22,41 +23,6 @@ export function triangle(m: Mesh, t: number): [Vec3, Vec3, Vec3] {
     at(m, m.indices[t * 3 + 1] ?? 0),
     at(m, m.indices[t * 3 + 2] ?? 0),
   ];
-}
-
-/** Distance from p to triangle abc (Ericson, Real-Time Collision Detection §5.1.5). */
-export function pointTriangleDistance(p: Vec3, a: Vec3, b: Vec3, c: Vec3): number {
-  const ab = sub(b, a);
-  const ac = sub(c, a);
-  const ap = sub(p, a);
-  const d1 = dot(ab, ap);
-  const d2 = dot(ac, ap);
-  if (d1 <= 0 && d2 <= 0) return Math.hypot(...ap);
-  const bp = sub(p, b);
-  const d3 = dot(ab, bp);
-  const d4 = dot(ac, bp);
-  if (d3 >= 0 && d4 <= d3) return Math.hypot(...bp);
-  const vc = d1 * d4 - d3 * d2;
-  if (vc <= 0 && d1 >= 0 && d3 <= 0) return Math.hypot(...sub(p, lerp(a, b, d1 / (d1 - d3))));
-  const cp = sub(p, c);
-  const d5 = dot(ab, cp);
-  const d6 = dot(ac, cp);
-  if (d6 >= 0 && d5 <= d6) return Math.hypot(...cp);
-  const vb = d5 * d2 - d1 * d6;
-  if (vb <= 0 && d2 >= 0 && d6 <= 0) return Math.hypot(...sub(p, lerp(a, c, d2 / (d2 - d6))));
-  const va = d3 * d6 - d5 * d4;
-  if (va <= 0 && d4 - d3 >= 0 && d5 - d6 >= 0)
-    return Math.hypot(...sub(p, lerp(b, c, (d4 - d3) / (d4 - d3 + (d5 - d6)))));
-  const den = 1 / (va + vb + vc);
-  const v = vb * den;
-  const w = vc * den;
-  return Math.hypot(
-    ...sub(p, [
-      a[0] + ab[0] * v + ac[0] * w,
-      a[1] + ab[1] * v + ac[1] * w,
-      a[2] + ab[2] * v + ac[2] * w,
-    ]),
-  );
 }
 
 // Numeric cell keys (no string building per query) — collisions only add candidates, never drop.
@@ -84,15 +50,26 @@ export class TriangleGrid {
     const diag = Math.hypot(b.max[0] - b.min[0], b.max[1] - b.min[1], b.max[2] - b.min[2]);
     this.cell = Math.max(0.25, diag / 256);
     const CELL = this.cell;
+    const P = mesh.positions;
+    const I = mesh.indices;
+    const lo = [0, 0, 0];
+    const hi = [0, 0, 0];
     for (let t = 0; t < n; t++) {
-      const [a, b, c] = triangle(mesh, t);
-      this.tris.set([...a, ...b, ...c], t * 9);
-      for (let k = 0; k < 3; k++) {
-        this.boxes[t * 6 + k] = Math.min(a[k] ?? 0, b[k] ?? 0, c[k] ?? 0);
-        this.boxes[t * 6 + 3 + k] = Math.max(a[k] ?? 0, b[k] ?? 0, c[k] ?? 0);
+      for (let v = 0; v < 3; v++) {
+        const i = (I[t * 3 + v] ?? 0) * 3;
+        for (let k = 0; k < 3; k++) this.tris[t * 9 + v * 3 + k] = P[i + k] ?? 0;
       }
-      const lo = [0, 1, 2].map((k) => Math.floor(Math.min(a[k] ?? 0, b[k] ?? 0, c[k] ?? 0) / CELL));
-      const hi = [0, 1, 2].map((k) => Math.floor(Math.max(a[k] ?? 0, b[k] ?? 0, c[k] ?? 0) / CELL));
+      for (let k = 0; k < 3; k++) {
+        const a = this.tris[t * 9 + k] ?? 0;
+        const b = this.tris[t * 9 + 3 + k] ?? 0;
+        const c = this.tris[t * 9 + 6 + k] ?? 0;
+        const mn = Math.min(a, b, c);
+        const mx = Math.max(a, b, c);
+        this.boxes[t * 6 + k] = mn;
+        this.boxes[t * 6 + 3 + k] = mx;
+        lo[k] = Math.floor(mn / CELL);
+        hi[k] = Math.floor(mx / CELL);
+      }
       for (let x = lo[0] ?? 0; x <= (hi[0] ?? 0); x++)
         for (let y = lo[1] ?? 0; y <= (hi[1] ?? 0); y++)
           for (let z = lo[2] ?? 0; z <= (hi[2] ?? 0); z++) {
@@ -142,11 +119,19 @@ export class TriangleGrid {
             )
               continue;
             const o = t * 9;
-            const d = pointTriangleDistance(
-              p,
-              [T[o] ?? 0, T[o + 1] ?? 0, T[o + 2] ?? 0],
-              [T[o + 3] ?? 0, T[o + 4] ?? 0, T[o + 5] ?? 0],
-              [T[o + 6] ?? 0, T[o + 7] ?? 0, T[o + 8] ?? 0],
+            const d = pointTriDist(
+              p[0],
+              p[1],
+              p[2],
+              T[o] ?? 0,
+              T[o + 1] ?? 0,
+              T[o + 2] ?? 0,
+              T[o + 3] ?? 0,
+              T[o + 4] ?? 0,
+              T[o + 5] ?? 0,
+              T[o + 6] ?? 0,
+              T[o + 7] ?? 0,
+              T[o + 8] ?? 0,
             );
             if (d < best) best = d;
           }
@@ -178,7 +163,10 @@ function sampleMesh(m: Mesh, step: number, maxPerEdge: number): Vec3[] {
     for (let e = 0; e < 3; e++) {
       const a = tri[e] ?? tri[0];
       const b = tri[(e + 1) % 3] ?? tri[0];
-      const n = Math.min(maxPerEdge, Math.floor(Math.hypot(...sub(b, a)) / step));
+      const dx = b[0] - a[0];
+      const dy = b[1] - a[1];
+      const dz = b[2] - a[2];
+      const n = Math.min(maxPerEdge, Math.floor(Math.sqrt(dx * dx + dy * dy + dz * dz) / step));
       for (let s = 1; s < n; s++) out.push(lerp(a, b, s / n));
     }
     out.push(lerp(lerp(tri[0], tri[1], 0.5), tri[2], 1 / 3));

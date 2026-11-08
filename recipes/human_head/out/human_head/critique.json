@@ -1,0 +1,134 @@
+{
+  "asset": "human_head",
+  "reviewer": "agent",
+  "overall": 6.0,
+  "scores": {
+    "silhouette": {
+      "score": 7,
+      "reason": "Reads as a bearded hero bust from front and side; swept hair and beard give a clear profile; LOD2 IoU ≥ 0.95 all views.",
+      "fixes": [
+        "a stronger hair silhouette at the crown (lift the front lock)"
+      ]
+    },
+    "proportions": {
+      "score": 6,
+      "reason": "Neck now 0.76 × head width with an SCM V, larynx and trapezius slope (checkNeck), mouth at the measured projection; but the brow/orbit area still reads heavy and the cheek-to-ear beard edge is a hard horizontal line.",
+      "fixes": [
+        "soften the beard top edge into the cheek (fade wider than 1.5 cm)",
+        "lift the brow ridge 2 mm and open the upper orbit"
+      ]
+    },
+    "materials": {
+      "score": 5,
+      "reason": "Skin, hair, tunic, mantle and brass separate by hue only; cloth and skin share one roughness.",
+      "fixes": [
+        "leather/linen strips for collar and tunic",
+        "brass finish on the brooch"
+      ]
+    },
+    "detail": {
+      "score": 6,
+      "reason": "Lids, ears, beard and hair locks, tunic folds and a hemmed mantle hold up at third-person distance; face planes are smoother than a pro bust.",
+      "fixes": [
+        "nasolabial and lid folds at LOD0",
+        "stitching on the mantle hem"
+      ]
+    },
+    "wear": {
+      "score": 4,
+      "reason": "Clean garments, no story beyond the painted tone.",
+      "fixes": [
+        "grime at the mantle hem and collar",
+        "a scar or weathering on the face"
+      ]
+    },
+    "lod": {
+      "score": 7,
+      "reason": "LOD2 keeps outline and colour blocks; the face flattens to a mask at LOD2.",
+      "fixes": [
+        "keep the brow/nose mass at LOD2"
+      ]
+    },
+    "technical": {
+      "score": 7,
+      "reason": "QA PASS honestly: 578 crease regions, each ≤ 2.5 cm on a declared fold (no area regions); eye socket joints pass at LOD0; 71k / 25k / 3.8k tris.",
+      "fixes": [
+        "eye socket joints at LOD1 need a coarser bore"
+      ]
+    }
+  },
+  "renders": {
+    "hero.png": "3b69185c16f915ec9b422c2e9dc5e6c80c53a2ab0f3ef36f163fbb979dde12be",
+    "sheet.png": "b4666ad6acd3ea08f4081c7b032cd1fb3e09d3a9d00693433e2fa62c6339d5ec",
+    "raking.png": "8d9cabe2bc90bcb2b7da55304d757df6dd4007ced89bc6f1a48a9334807fb672",
+    "raking_detail.png": "b66a598d622fbd47513cf1af245a71840d46420cb1161ceb94a1912cdbb9e000",
+    "lods.png": "63848de129cd8b92542671f92041d16cc5736403b6eb46a4cc8c2e6017747ff1",
+    "silhouette.png": "d408b0f14866b336910a6ae4dc80780a1820c8650699cef1daa11c6b5d7eb932",
+    "value.png": "ef9241e41ee3980c0a639fa82ff295820507e77b1598720beb1d2200bfac12d8",
+    "detail.png": "63b936add0be0661f455a63927906561df36f1f93857e82c5e579a3b177f78cf"
+  },
+  "metrics": {
+    "silhouette": [
+      {
+        "view": "front",
+        "iou": 0.971
+      },
+      {
+        "view": "side",
+        "iou": 0.952
+      },
+      {
+        "view": "3/4",
+        "iou": 0.965
+      }
+    ],
+    "focal": {
+      "peakPart": "head",
+      "peak": [
+        435,
+        137
+      ],
+      "focalShare": 0.967,
+      "focalArea": 0.499,
+      "top": [
+        {
+          "part": "head",
+          "share": 0.967
+        },
+        {
+          "part": "brooch",
+          "share": 0.019
+        },
+        {
+          "part": "eye_r",
+          "share": 0.011
+        }
+      ],
+      "declared": [
+        "head"
+      ]
+    },
+    "rest": {
+      "share": 0.476,
+      "spread": 0.609,
+      "min": 0.25
+    },
+    "grounded": {
+      "rise": 0.282,
+      "bands": [
+        0.153,
+        0.244,
+        0.34,
+        0.367,
+        0.373
+      ]
+    },
+    "shape": {
+      "acuteShare": 0.03,
+      "straightShare": 0.535,
+      "taper": 0.237,
+      "shape": "stable",
+      "declared": "stable"
+    }
+  }
+}

@@ -68,9 +68,11 @@ export function sampleGrid(
     const qx = Math.abs(p[0] - cx) - bx;
     const qy = Math.abs(p[1] - cy) - by;
     const qz = Math.abs(p[2] - cz) - bz;
-    const box =
-      Math.hypot(Math.max(qx, 0), Math.max(qy, 0), Math.max(qz, 0)) +
-      Math.min(Math.max(qx, qy, qz), 0);
+    // sqrt, not Math.hypot: this runs per field evaluation (hypot is ~8× slower).
+    const mx = Math.max(qx, 0);
+    const my = Math.max(qy, 0);
+    const mz = Math.max(qz, 0);
+    const box = Math.sqrt(mx * mx + my * my + mz * mz) + Math.min(Math.max(qx, qy, qz), 0);
     const f = raw(p);
     if (Number.isNaN(f))
       invalid(

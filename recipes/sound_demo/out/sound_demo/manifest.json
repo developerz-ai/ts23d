@@ -1,0 +1,118 @@
+{
+  "name": "sound_demo",
+  "kind": "prop",
+  "description": "Teaching asset for /audio: a creaking door, a ringing steel bell, a knocking crate and a V10 idle loop, as KHR_audio_emitter + WAV",
+  "tags": [
+    "demo",
+    "sound"
+  ],
+  "files": {
+    "lods": [],
+    "sheet": "recipes/sound_demo/out/sound_demo/sheet.png",
+    "thumb": "recipes/sound_demo/out/sound_demo/thumb.png",
+    "sounds": [
+      "recipes/sound_demo/out/sound_demo/bell_strike.wav",
+      "recipes/sound_demo/out/sound_demo/crate_knock.wav",
+      "recipes/sound_demo/out/sound_demo/door_creak.wav",
+      "recipes/sound_demo/out/sound_demo/engine_v10_idle.wav"
+    ]
+  },
+  "triangles": [
+    5256,
+    2852,
+    1092
+  ],
+  "drawCalls": [
+    5,
+    5,
+    5
+  ],
+  "pivots": [
+    {
+      "name": "body",
+      "parent": null
+    },
+    {
+      "name": "door",
+      "parent": null
+    },
+    {
+      "name": "door_leaf",
+      "parent": "door",
+      "motion": "sway"
+    },
+    {
+      "name": "bell",
+      "parent": null,
+      "motion": "sway"
+    },
+    {
+      "name": "engine",
+      "parent": null
+    }
+  ],
+  "emitters": [],
+  "sockets": [],
+  "sounds": [
+    {
+      "node": "door_leaf",
+      "clip": "door_creak",
+      "trigger": "motion",
+      "loop": false,
+      "seconds": 2
+    },
+    {
+      "node": "bell",
+      "clip": "bell_strike",
+      "trigger": "motion",
+      "loop": false,
+      "seconds": 2.897
+    },
+    {
+      "node": "crate_knock",
+      "clip": "crate_knock",
+      "trigger": "event",
+      "loop": false,
+      "seconds": 0.878
+    },
+    {
+      "node": "engine_idle",
+      "clip": "engine_v10_idle",
+      "trigger": "always",
+      "loop": true,
+      "seconds": 1.95
+    }
+  ],
+  "surfaces": [
+    "opaque"
+  ],
+  "real": {
+    "length": 1.2,
+    "width": 3.4,
+    "height": 1.77
+  },
+  "measures": [
+    {
+      "label": "bell mouth diameter",
+      "spec": 0.3,
+      "measured": 0.30000001192092896,
+      "source": "README"
+    },
+    {
+      "label": "crate length",
+      "spec": 0.8,
+      "measured": 0.8080000281333923,
+      "source": "kit crate"
+    }
+  ],
+  "sources": [
+    "https://en.wikipedia.org/wiki/Strike_tone",
+    "https://www.engineeringtoolbox.com/young-modulus-d_417.html",
+    "https://en.wikipedia.org/wiki/Chrysler_LA_engine#Viper_V10",
+    "https://en.wikipedia.org/wiki/Firing_order"
+  ],
+  "qa": {
+    "pass": true,
+    "findings": []
+  }
+}

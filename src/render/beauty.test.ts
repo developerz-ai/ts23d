@@ -1,8 +1,11 @@
-import { expect, it } from 'bun:test';
+import { expect, it, setDefaultTimeout } from 'bun:test';
 import { compile, defineAsset, Ts23dError } from '../core/index.ts';
 import { box } from '../primitives/index.ts';
 import { beauty, cameraFor, renderBeauty } from './beauty.ts';
 import { project } from './camera.ts';
+
+// The first render paints the default 2048² trim sheet once (~5 s on a loaded machine).
+setDefaultTimeout(30_000);
 
 const crate = compile(
   defineAsset({

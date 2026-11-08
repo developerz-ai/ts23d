@@ -1,0 +1,112 @@
+{
+  "asset": "signal_gantry",
+  "reviewer": "agent",
+  "overall": 7.3,
+  "scores": {
+    "silhouette": {
+      "score": 8,
+      "reason": "Lattice signal gantry with timber walkway and handrail, latticed posts on concrete footings, knee braces, two (or four) dolls with lower-quadrant semaphore arms, spectacles and lamps. Reads instantly.",
+      "fixes": []
+    },
+    "proportions": {
+      "score": 8,
+      "reason": "Span, post height and arm sizes pass the dossier measures; walkway at a believable working height.",
+      "fixes": []
+    },
+    "materials": {
+      "score": 7,
+      "reason": "Painted steel lattice (chips show steel), rusted dark fittings, weathered timber walkway, painted red/white arms on wood_painted, glowing lenses, concrete footings. Black paint reads near-uniform at distance.",
+      "fixes": [
+        "slightly lighter, sun-faded top surfaces on the lattice"
+      ]
+    },
+    "detail": {
+      "score": 7,
+      "reason": "Lattice webs, battens, knee braces, ladder, handrails, finials, spectacle glasses, lamp cases, balance weights.",
+      "fixes": [
+        "operating rods/wires down the posts to the ground"
+      ]
+    },
+    "wear": {
+      "score": 6,
+      "reason": "Ground splash on the footings and post feet, dust on the walkway, chipped paint from the strip. No rust streaks below rivets, no soot above the tracks.",
+      "fixes": [
+        "soot on the girder underside above each track",
+        "rust streaks below the lattice nodes"
+      ]
+    },
+    "lod": {
+      "score": 7,
+      "reason": "LOD2 keeps the frame, walkway, dolls and arms; the latticed posts become solid black boxes (noticeably heavier at distance).",
+      "fixes": [
+        "LOD2 posts as open frames (four angles + three battens) instead of solid boxes"
+      ]
+    },
+    "technical": {
+      "score": 8,
+      "reason": "QA PASS both variants: 8 376 / 3 684 / 800 and 10 876 / 4 944 / 1 404; arms pivot as moving parts. Now 8 456 / 3 748 / 800. Connections gate clean (was 2 findings): the ball finial sits on a collar sleeved over the mast's open top (LOD0/1; LOD2 keeps the plain ball inside its budget).",
+      "fixes": []
+    }
+  },
+  "renders": {
+    "hero.png": "fb267a32cfd436fc6281a05c3b8c401a219f304d7f1c8cbf4019dec1f53344c2",
+    "sheet.png": "68af4af7f52d04ce0ce5a43641709acb9830b22e3fe60069dd2855693626a208",
+    "raking.png": "b659d04d644b6f6c24763f260d922ea696d932e991ad01d3568e49549a5205af",
+    "raking_detail.png": "86f68ab73c56844b8739bc7f4e1a38de795fb7feb9cffdb4e1835e4ae36a7ca3",
+    "lods.png": "7c76ea4440bb7f20a3df8ef3a8099ec6c8a91174cd3023803e3ef2cff976fc4d",
+    "silhouette.png": "d79868a1934c4bf40f5a6502ac48a0bb2bec04398ab8d88bf0c1bb5236cf7667",
+    "value.png": "2438c69120409eb2b1528523e5ae8fe74e3192ad23f30bc6bffc5b12bee55d41",
+    "detail.png": "c0120f7be6a61298e2d80ae6a746fdb95f6f7b32916b2d01f8c9602444686978"
+  },
+  "metrics": {
+    "silhouette": [
+      {
+        "view": "front",
+        "iou": 0.944
+      },
+      {
+        "view": "side",
+        "iou": 0.903
+      },
+      {
+        "view": "3/4",
+        "iou": 0.871
+      }
+    ],
+    "focal": {
+      "peakPart": "walkway",
+      "peak": [
+        318,
+        191
+      ],
+      "focalShare": 0,
+      "focalArea": 0,
+      "top": [
+        {
+          "part": "walkway",
+          "share": 0.341
+        },
+        {
+          "part": "girder",
+          "share": 0.283
+        },
+        {
+          "part": "post_r",
+          "share": 0.165
+        }
+      ],
+      "declared": []
+    },
+    "rest": {
+      "share": 0.137,
+      "spread": 0.605,
+      "min": 0.25
+    },
+    "shape": {
+      "acuteShare": 0.263,
+      "straightShare": 0.856,
+      "taper": 0.42,
+      "shape": "stable"
+    }
+  }
+}

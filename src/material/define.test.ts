@@ -9,6 +9,7 @@ import {
 } from './define.ts';
 import { DEFAULT_SHEET, paintTrimSheet } from './generator.ts';
 import type { MaterialDef } from './material-def.ts';
+import { customIds } from './slots.ts';
 import { provideTextures } from './texture-source.ts';
 import { CUSTOM_STRIP_SLOTS, type StripId, stripRect } from './trim-sheet.ts';
 
@@ -102,9 +103,10 @@ describe('defineMaterial: bad input', () => {
 
   it('runs out of custom rows with T3D_SHEET_FULL', () => {
     defineMaterial(imageDef);
-    defineMaterial({ id: 'test_fill', roughness: 0.5 });
-    defineMaterial({ id: 'test_fill2', roughness: 0.5 });
-    expect(CUSTOM_STRIP_SLOTS).toBe(4);
+    // v3 layout: 14 custom rows (56 strip rows − 42 built-ins).
+    expect(CUSTOM_STRIP_SLOTS).toBe(14);
+    for (let k = customIds().length; k < CUSTOM_STRIP_SLOTS; k++)
+      defineMaterial({ id: `test_fill${k}`, roughness: 0.5 });
     expect(code(() => defineMaterial({ id: 'test_over', roughness: 0.5 }))).toBe('T3D_SHEET_FULL');
   });
 });

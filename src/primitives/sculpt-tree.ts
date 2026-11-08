@@ -7,6 +7,7 @@
 import type { Vec3 } from '../core/index.ts';
 import { invalid } from './check.ts';
 import { type SculptEdit, sculptShape, shapeSphere } from './sculpt-edit.ts';
+import { fieldShape } from './sculpt-field.ts';
 import type { Field } from './sdf-ops.ts';
 
 const ADD = 0;
@@ -65,6 +66,10 @@ export function compile(
         false,
         b.under,
       );
+    }
+    if ('field' in e) {
+      const f = fieldShape(e.field, e.bounds, m, `${path} edit ${i} (field)`);
+      return node(op, k, e.color ?? null, f.shape, null, base, 0, f.c, f.r, 1, true, m, 0);
     }
     const s = shapeSphere(e);
     return node(

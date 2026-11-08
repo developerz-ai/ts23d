@@ -1,7 +1,9 @@
 // Resolve the supersampled visibility buffer to output pixels, MSAA-style: samples in a pixel
 // that hit the same triangle are shaded ONCE at their mean barycentrics and weighted by count, so
 // edges get ss² coverage samples while interiors cost one shade. Background samples show the
-// studio backdrop × the floor's shadow light. Also yields the coverage mask and a detail grid.
+// studio backdrop × the floor's shadow light. See-through samples add what lies behind them (the
+// opaque-only buffer, refraction-offset) × their transmitted tint. Also yields the coverage mask
+// and a detail grid.
 
 import type { FloorGrid } from './ground.ts';
 import { floorLight } from './ground.ts';
@@ -27,6 +29,33 @@ function backdrop(nx: number, ny: number, out: Float32Array): void {
   out[2] = fromSrgb(0.94 - 0.12 * fall);
 }
 
+/** Linear radiance behind supersampled pixel (X, Y): the opaque buffer, else backdrop × floor. */
+function behindAt(
+  ctx: ShadeContext,
+  floor: FloorGrid,
+  X: number,
+  Y: number,
+  out: Float32Array,
+  bg: Float32Array,
+): void {
+  const b = ctx.behind;
+  const W = ctx.cam.width;
+  const H = ctx.cam.height;
+  const x = Math.max(0, Math.min(W - 1, Math.round(X)));
+  const y = Math.max(0, Math.min(H - 1, Math.round(Y)));
+  const i = y * W + x;
+  const t = b?.tri[i] ?? -1;
+  if (b && t >= 0) {
+    shadeSample(ctx, t, b.b1[i] ?? 0, b.b2[i] ?? 0, b.mip[t] ?? 0, x + y * 2, out);
+    return;
+  }
+  backdrop(x / W, y / H, bg);
+  const l = floorLight(floor, ctx.cam, x + 0.5, y + 0.5);
+  out[0] = (bg[0] ?? 0) * l;
+  out[1] = (bg[1] ?? 0) * l;
+  out[2] = (bg[2] ?? 0) * l;
+}
+
 export function resolve(
   ctx: ShadeContext,
   vis: VisBuffer,
@@ -42,6 +71,9 @@ export function resolve(
   const detail = new Uint32Array(16 * 9);
   const lin = new Float32Array(3);
   const bg = new Float32Array(3);
+  const thru = new Float32Array(5);
+  const back = new Float32Array(3);
+  const bg2 = new Float32Array(3);
   const n = ss * ss;
   const ids = new Int32Array(n);
   const cnt = new Int32Array(n);
@@ -92,7 +124,30 @@ export function resolve(
           counted[t] = cell;
           detail[cell] = (detail[cell] ?? 0) + 1;
         }
-        shadeSample(ctx, t, (sb1[k] ?? 0) / c, (sb2[k] ?? 0) / c, vis.mip[t] ?? 0, x + y * 2, lin);
+        const see =
+          ctx.behind !== undefined &&
+          (ctx.scene.looks[ctx.scene.look[t] ?? 0]?.transmission ?? 0) > 0;
+        shadeSample(
+          ctx,
+          t,
+          (sb1[k] ?? 0) / c,
+          (sb2[k] ?? 0) / c,
+          vis.mip[t] ?? 0,
+          x + y * 2,
+          lin,
+          see ? thru : undefined,
+        );
+        if (see) {
+          behindAt(
+            ctx,
+            floor,
+            (x + 0.5) * ss + (thru[3] ?? 0),
+            (y + 0.5) * ss + (thru[4] ?? 0),
+            back,
+            bg2,
+          );
+          for (let q = 0; q < 3; q++) lin[q] = (lin[q] ?? 0) + (thru[q] ?? 0) * (back[q] ?? 0);
+        }
         r += tone(lin[0] ?? 0) * c;
         g += tone(lin[1] ?? 0) * c;
         b += tone(lin[2] ?? 0) * c;

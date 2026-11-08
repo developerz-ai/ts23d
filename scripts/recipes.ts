@@ -1,24 +1,32 @@
 // Gate: every recipe compiles at LOD 0/1/2, passes QA, and is byte-deterministic (two builds,
 // one hash); every asset lives in recipes/<name>/<name>.ts with a README.md dossier, and its
-// committed out/<asset>/manifest.json matches a fresh compile. This is "the gallery is green".
+// committed out/<asset>/manifest.json matches a fresh compile, and carries a fresh critique.json
+// scored ≥ CRITIQUE_MIN_SCORE (warn-only while CRITIQUE_MODE = 'warn'). "The gallery is green".
 
 import { loadAssets } from '../src/cli/load.ts';
 import { type CompiledAsset, compile, type Lod } from '../src/core/index.ts';
 import { toGlb } from '../src/export/index.ts';
 import { runLodQa, runQa } from '../src/qa/index.ts';
-import { recipeFolders, report, type Violation } from './lib/files.ts';
+import { CRITIQUE_MODE, critiqueViolations, warnCritiques } from './lib/critique.ts';
+import { recipeFolders, report, tsFiles, type Violation } from './lib/files.ts';
+import { crossRecipeImports } from './lib/recipe-imports.ts';
+import { CURRENT_SHARD, inShard } from './lib/shard.ts';
 
 const violations: Violation[] = [];
+const critiques: Violation[] = [];
 const rows: { asset: string; triangles: number[] }[] = [];
 const { folders, stray } = await recipeFolders();
 for (const file of stray)
   violations.push({
     file,
     line: 1,
-    message: 'not an asset folder: recipes hold recipes/<name>/<name>.ts',
+    message:
+      "not an asset folder: recipes hold recipes/<name>/<name>.ts plus that folder's modules",
     fix: `move it to recipes/<name>/<name>.ts, or into recipes/_lib/ if it is a shared helper`,
   });
-for (const { dir, file } of folders) {
+for (const f of await tsFiles('recipes'))
+  violations.push(...crossRecipeImports(f, await Bun.file(f).text()));
+for (const { dir, file } of inShard(folders, CURRENT_SHARD)) {
   if (!(await Bun.file(`${dir}/README.md`).exists()))
     violations.push({
       file,
@@ -58,10 +66,13 @@ for (const { dir, file } of folders) {
         fix: f.fix,
       });
     violations.push(...(await staleOutputs(dir, file, asset.name, triangles)));
+    critiques.push(...(await critiqueViolations(dir, file, asset.name)));
     rows.push({ asset: asset.name, triangles });
   }
 }
 const json = process.argv.includes('--json');
+if (CRITIQUE_MODE === 'enforce') violations.push(...critiques);
+else warnCritiques(critiques);
 if (!json)
   for (const r of rows) console.log(`  ${r.asset.padEnd(20)} tris ${r.triangles.join('/')}`);
 process.exitCode = report(`recipes (${rows.length})`, violations, json);

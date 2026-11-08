@@ -15,9 +15,9 @@
     "thumb": "recipes/cargo_container_scifi/out/cargo_container_scifi/thumb.png"
   },
   "triangles": [
-    8210,
-    4434,
-    520
+    22914,
+    8342,
+    736
   ],
   "drawCalls": [
     5,
@@ -120,6 +120,45 @@
     "https://marine.albertjagger.co.uk/our-products/cargo-control/corner-castings/iso-corner-casting-top-left-fitment",
     "https://hz-containers.com/en/technical-information/corner-castings-technical-documentation/"
   ],
+  "weather": {
+    "dents": {
+      "target": 0.012,
+      "actual": 0.0022,
+      "eligible": "exposed-panels",
+      "area": 149.1776,
+      "count": 4
+    },
+    "bleach": {
+      "target": 0.2,
+      "actual": 0.2,
+      "eligible": "up-facing",
+      "area": 33.4464
+    },
+    "chips": {
+      "target": 0.15,
+      "actual": 0.15,
+      "eligible": "convex-edges",
+      "area": 141.2919
+    },
+    "rust": {
+      "target": 0.08,
+      "actual": 0.08,
+      "eligible": "convex-edges & side-facing",
+      "area": 97.998
+    },
+    "mud": {
+      "target": 0.25,
+      "actual": 0.25,
+      "eligible": "ground-near",
+      "area": 41.5315
+    },
+    "dust": {
+      "target": 0.3,
+      "actual": 0.3,
+      "eligible": "up-facing",
+      "area": 33.4464
+    }
+  },
   "qa": {
     "pass": true,
     "findings": []

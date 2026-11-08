@@ -204,6 +204,9 @@ export function hull(ctx: BuildContext, o: HullOptions & { readonly name?: strin
   const name = o.name ?? 'hull';
   const m = hullMesh(o, ctx.lod);
   ctx.part(name, m.shell);
-  ctx.part(`${name}_deck`, m.deck);
+  // The deck plate meets the shell along its sheer edge (a line weld), not over a face.
+  ctx.part(`${name}_deck`, m.deck, {
+    connect: { as: 'rest', to: name, why: 'deck plate welded along the sheer line' },
+  });
   return m.lines;
 }

@@ -13,14 +13,14 @@
     "thumb": "recipes/t34/out/t34/thumb.png"
   },
   "triangles": [
-    36452,
-    9960,
-    556
+    49502,
+    11092,
+    1596
   ],
   "drawCalls": [
     17,
     17,
-    3
+    17
   ],
   "pivots": [
     {

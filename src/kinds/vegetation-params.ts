@@ -40,7 +40,8 @@ export interface BranchLevel {
   readonly segments: number;
 }
 
-export type LeafShape = 'oval' | 'lobed' | 'tuft' | 'strand' | 'frond';
+/** `needles`: conifer brushes — two crossed spiky cards per tuft, laid along the twig. */
+export type LeafShape = 'oval' | 'lobed' | 'tuft' | 'needles' | 'strand' | 'frond';
 
 /** Card outlines: u along the card (0 = stem end), v across (±0.5). */
 export const OUTLINES: Record<Exclude<LeafShape, 'frond'>, readonly Vec2[]> = {
@@ -71,6 +72,23 @@ export const OUTLINES: Record<Exclude<LeafShape, 'frond'>, readonly Vec2[]> = {
     [0.75, 0.4],
     [0.45, 0.15],
     [0.35, 0.5],
+  ],
+  // A bottle-brush: spikes raking forward along both edges, like needles off a shoot.
+  needles: [
+    [0, 0],
+    [0.3, -0.5],
+    [0.2, -0.06],
+    [0.56, -0.5],
+    [0.46, -0.06],
+    [0.84, -0.4],
+    [0.72, -0.05],
+    [1, 0],
+    [0.72, 0.05],
+    [0.84, 0.4],
+    [0.46, 0.06],
+    [0.56, 0.5],
+    [0.2, 0.06],
+    [0.3, 0.5],
   ],
   strand: [
     [0, 0],

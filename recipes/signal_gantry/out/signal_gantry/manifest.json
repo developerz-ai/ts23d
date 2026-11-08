@@ -16,8 +16,8 @@
     "thumb": "recipes/signal_gantry/out/signal_gantry/thumb.png"
   },
   "triangles": [
-    8376,
-    3684,
+    8456,
+    3748,
     800
   ],
   "drawCalls": [

@@ -2,6 +2,7 @@
 // and what the painter returns.
 
 import type { Vec3 } from '../../core/index.ts';
+import type { MaterialGraph } from '../tex/graph.ts';
 import type { TextureSource } from '../texture-source.ts';
 import type { CellId, StripId } from '../trim-sheet.ts';
 import type { Canvas } from './canvas.ts';
@@ -77,6 +78,8 @@ export interface StripRecipe {
   readonly paint?: MaterialPainter;
   /** Paint from a cached CC0 texture set instead of `kind` (see texture-source.ts). */
   readonly texture?: TextureSource;
+  /** Paint from a texture graph (`tex.material`) instead of `kind`. */
+  readonly graph?: MaterialGraph;
 }
 
 /** A cell stamped from PNG bytes (8-bit grey/RGB/RGBA, non-interlaced), e.g. a kubeez.com decal. */
@@ -86,7 +89,8 @@ export interface CellImage {
 
 export interface SheetRecipe {
   readonly seed: number;
-  readonly size?: 512 | 1024 | 2048;
+  /** Pixels per side. The layout is designed for 4096 (64 px strip rows); 2048 previews at half. */
+  readonly size?: 512 | 1024 | 2048 | 4096;
   /** Missing strips fall back to `DEFAULT_SHEET`'s recipe for that strip. */
   readonly strips: Readonly<Partial<Record<StripId, StripRecipe>>>;
   /** Cells painted from code, or stamped from a supplied image (e.g. a kubeez.com decal). */

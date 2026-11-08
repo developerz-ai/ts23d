@@ -1,0 +1,135 @@
+{
+  "asset": "face_orc",
+  "reviewer": "agent",
+  "overall": 5,
+  "scores": {
+    "silhouette": {
+      "score": 6,
+      "reason": "Heavy jaw (×1.4), brow shelf, thick neck and trapezius, crest and tusks read as an orc from the front and 3/4; from behind it is a bald green human with a crest.",
+      "fixes": [
+        "push the trapezius higher and the head forward (hunched stance)",
+        "bigger, wider-set tusks and a heavier crest"
+      ]
+    },
+    "proportions": {
+      "score": 6,
+      "reason": "Declared ratios hold (jaw ×1.4 lands on its landmark exactly, eye spacing 72.0 mm vs 73.1 spec); the face still reads too human between the cheekbones — nose ×1.8 wide but the mid-face is not flattened enough.",
+      "fixes": [
+        "flatten the nose bridge further (bridge −0.035 H) and widen the nostril flare",
+        "lower the eyes deeper under the brow shelf"
+      ]
+    },
+    "materials": {
+      "score": 4,
+      "reason": "Vertex colour on the plain strip: skin zones (flush, lips, cool sockets, curvature cavity, mottle) separate by hue but not by roughness or SSS; hair is the same material as skin, so it reads as sculpted clay; eyes are the only glossy part (cornea clearcoat).",
+      "fixes": [
+        "a skin strip with subsurface-like roughness/sheen and a hair strip with anisotropic sheen (material-artist)",
+        "darker hair roots and per-lock value variation along the lock (root → tip colour is set but too subtle)"
+      ]
+    },
+    "detail": {
+      "score": 5,
+      "reason": "Primary and secondary forms come from a real anatomical base (eyelids, nasolabial area, lips, ear helix/antihelix/concha, clavicles, sternocleidomastoid) and read cleanly under the raking light, but there is no tertiary detail: no pores, wrinkles, lid creases or brow hairs (brows are painted bands), and the SDF hair locks are uniform grooves.",
+      "fixes": [
+        "LOD0 normal-scale wrinkle/pore displacement on the subdivided base driven by age",
+        "hair: varied lock widths and a parting instead of evenly spaced grooves; hair cards (planned)"
+      ]
+    },
+    "wear": {
+      "score": 3,
+      "reason": "Pristine: seeded asymmetry and age/weight knobs are the only story; no scars, stubble, blemishes, sun-darkened skin or dirt.",
+      "fixes": [
+        "seeded scars/blemish decals in vertex colour (orc, dwarf)",
+        "stubble shadow on the human/dwarf jaw",
+        "age-driven darkening under the eyes"
+      ]
+    },
+    "lod": {
+      "score": 7,
+      "reason": "LOD2 keeps the crest, jaw and tusks (IoU front 0.98); face softens.",
+      "fixes": [
+        "authored low-poly topology for LOD2"
+      ]
+    },
+    "technical": {
+      "score": 7,
+      "reason": "QA PASS at every LOD; 84k/30k/8.3k tris; teeth declared `rest` (gums not modelled), tusks rooted in the jaw.",
+      "fixes": [
+        "model a gum strip so the teeth can grow (`grown`) instead of rest"
+      ]
+    }
+  },
+  "renders": {
+    "hero.png": "3ce1bd706e71b126fc99563f2cf51b76066a9840a6291b2fc5e3193e66cc9ce0",
+    "sheet.png": "76d2fc4c9129e4a97147d046635ce1f346902560d9d6d76d377977e642f6045c",
+    "raking.png": "99fdae6e8243c93cf35f366088fe0c797e0138a157d964662a6acc565b8eb354",
+    "raking_detail.png": "04ca74d156da5bca589a1961c0f71c18776a87051d71acc38a22a7c573f952e6",
+    "lods.png": "ee3b2030d6e39d40ff1dadc0546066d7f63a52d5b33323cdf050ae1a2d12aba9",
+    "silhouette.png": "64335e56a1f32ad78742fa0f80ca13072ca0b5e2339fd74ee93d6a87bdfb25fe",
+    "value.png": "8b28bd10967ae988d082db8c689eb96ed882508fc2fff328b2605e753f9083f1",
+    "detail.png": "4a7063baf4fa2808cb428b876731fb6251cd81a879a5201af0a2fddd104ef8a8"
+  },
+  "metrics": {
+    "silhouette": [
+      {
+        "view": "front",
+        "iou": 0.978
+      },
+      {
+        "view": "side",
+        "iou": 0.945
+      },
+      {
+        "view": "3/4",
+        "iou": 0.955
+      }
+    ],
+    "focal": {
+      "peakPart": "skin",
+      "peak": [
+        427,
+        92
+      ],
+      "focalShare": 0.688,
+      "focalArea": 0.822,
+      "top": [
+        {
+          "part": "skin",
+          "share": 0.688
+        },
+        {
+          "part": "hair",
+          "share": 0.218
+        },
+        {
+          "part": "plinth",
+          "share": 0.053
+        }
+      ],
+      "declared": [
+        "skin"
+      ]
+    },
+    "rest": {
+      "share": 0.719,
+      "spread": 0.606,
+      "min": 0.25
+    },
+    "grounded": {
+      "rise": 0.142,
+      "bands": [
+        0.354,
+        0.494,
+        0.546,
+        0.471,
+        0.507
+      ]
+    },
+    "shape": {
+      "acuteShare": 0.1,
+      "straightShare": 0.507,
+      "taper": 0.307,
+      "shape": "stable"
+    }
+  }
+}

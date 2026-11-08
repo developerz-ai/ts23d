@@ -1,0 +1,105 @@
+{
+  "asset": "rts_barracks_scaffold_rubble",
+  "reviewer": "agent",
+  "overall": 6.9,
+  "scores": {
+    "silhouette": {
+      "score": 6,
+      "reason": "Low stubs and heaps; reads as a ruin.",
+      "fixes": []
+    },
+    "proportions": {
+      "score": 7,
+      "reason": "10 x 14 m hall, 5.1 m eaves, 3.5 m gate (measures gate) = 1.8 x a Warden; storey and door scale per the house playbook.",
+      "fixes": []
+    },
+    "materials": {
+      "score": 7,
+      "reason": "Dressed-stone blocks (concrete grain at LOD0, the stone strip's coursing at LOD1/2), coursed drum towers (chamfered bed joints in the profile), lime-plaster gables in an oak frame, oak porch posts and rafters, tarred oak gate, team slate roof lapped like real sheets, iron fittings, brass.",
+      "fixes": [
+        "window reveals / sills as their own stone"
+      ]
+    },
+    "detail": {
+      "score": 6,
+      "reason": "Stacked rubble, charred beams, fallen slabs.",
+      "fixes": []
+    },
+    "wear": {
+      "score": 6,
+      "reason": "weather(): chipped arrises 10%, moss + damp on 35% of the 1.1 m wall foot, salt dust on ledges, grime streaks running 1.6 m down from eaves drips and window sills (gravity-traced); timber dusty/muddy. Rubble dust.",
+      "fixes": []
+    },
+    "lod": {
+      "score": 8,
+      "reason": "LOD2 one box per bay from the same cell plan, so stages and damage agree at every LOD; <= 900 tris.",
+      "fixes": []
+    },
+    "technical": {
+      "score": 8,
+      "reason": "QA PASS on every gate incl. connections and weather (exact coverage). Deterministic, one trim material + team slot, 8 liveries; `bun test recipes/rts_faction` 18/18. Banners hang from a sewn sleeve on a bracketed crossbar; rubble stacks block-on-block.",
+      "fixes": []
+    }
+  },
+  "renders": {
+    "hero.png": "3e0d52b680c2eed2f0b197ac6ba75a3bd4dc4608eaee02ed925ce8a22ead8506",
+    "sheet.png": "74411f0b47ec12e970e7779a20d1c103b766f432867c5f3ef1832756882b345e",
+    "raking.png": "581a7792d158e87f1a929d694151e36c01aec3e832995f324b0763de7220d2e8",
+    "raking_detail.png": "d4ff5ebde4f2bccdffd0f0f5a590648f6dfcd175fcc0451f62d65a429716a91b",
+    "lods.png": "44a3ed1567aeed4d35b80791c110e8a760e88070b6ca3aabbee75df1e4382c30",
+    "silhouette.png": "1b73369eb7d0e4bd88a293aba168acbbe8fc84403d10166b8d536ae1982bff9b",
+    "value.png": "4ffeced28694ae339cccf06368a03d5bc1cd60c32bfd1a77119dfc24576367bb",
+    "detail.png": "af39044803c730081420a79610cc6dcf53f7b3d75b6ac6a39a87cf5719c350df"
+  },
+  "metrics": {
+    "silhouette": [
+      {
+        "view": "front",
+        "iou": 0.907
+      },
+      {
+        "view": "side",
+        "iou": 0.956
+      },
+      {
+        "view": "3/4",
+        "iou": 0.969
+      }
+    ],
+    "focal": {
+      "peakPart": "walls",
+      "peak": [
+        213,
+        204
+      ],
+      "focalShare": 0,
+      "focalArea": 0,
+      "top": [
+        {
+          "part": "walls",
+          "share": 0.553
+        },
+        {
+          "part": "plinth",
+          "share": 0.199
+        },
+        {
+          "part": "rubble",
+          "share": 0.099
+        }
+      ],
+      "declared": []
+    },
+    "rest": {
+      "share": 0.457,
+      "spread": 0.76,
+      "min": 0.25
+    },
+    "shape": {
+      "acuteShare": 0.048,
+      "straightShare": 0.79,
+      "taper": 0.489,
+      "shape": "stable"
+    }
+  }
+}

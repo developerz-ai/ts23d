@@ -34,6 +34,14 @@
 | [11-materials-authoring.md](idea/11-materials-authoring.md) | Node-graph material authoring vs the trim-sheet painter; curvature and edge wear |
 | [12-blender-bridge.md](idea/12-blender-bridge.md) | Optional headless Blender adapter: design, determinism, feasibility (planned) |
 | [13-asset-pipeline-research.md](idea/13-asset-pipeline-research.md) | Pro asset pipeline, trim sheets, texel density, CC0 libraries and licences |
+| [16-art-as-text.md](idea/16-art-as-text.md) | Art principles as measurable definitions, DSL words and checks |
+| [20-tuning.md](idea/20-tuning.md) | `t3d tune`: offline CMA-ES fitting of recipe params to measurable objectives |
+| [21-import.md](idea/21-import.md) | `importGlb`: scans and CC0 meshes in, cleaned, simplified, baked, licence-pinned |
+| [22-ai-finish.md](idea/22-ai-finish.md) | `t3d finish`: optional AI texture layer over the code's structure |
+| [23-real-data.md](idea/23-real-data.md) | Real data: Wikidata facts and DEM terrain, pinned by sha256 |
+| [playbooks/](playbooks/README.md) | Class-by-class guidance for modelling real-world objects |
+| [research/skills-matrix.md](research/skills-matrix.md) | What 3D artists, architects and designers know, mapped onto ts23d tools and gaps; backs `.claude/skills/` |
+| [research/](research/reading-list.md) | Free reading list and research notes (hair, surfaces, creatures, heads) |
 
 ## Decisions
 

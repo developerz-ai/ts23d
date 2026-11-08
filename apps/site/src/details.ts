@@ -1,10 +1,12 @@
 // The asset page's facts: title block, QA verdict, triangles and draw calls per LOD, real size
-// against the model, measures (spec vs measured, with sources), dossier links and the contact
-// sheet. Reads the committed manifest; assets without one get the worker's manifest (no QA).
+// against the model, measures (spec vs measured, with sources) and dossier links. Reads the
+// committed manifest (light part bundled, measures fetched with the facts); assets without one get
+// the worker's manifest (no QA). Renders, quality and sounds have their own panels.
 
 import { manifest } from './compile.ts';
+import { loadFacts } from './facts.ts';
 import { dossierUrl, folderUrl, type Item, recipeUrl } from './items.ts';
-import type { MediaEntry } from './media-types.ts';
+import type { MediaEntry, MediaFacts } from './media-types.ts';
 
 const el = <K extends keyof HTMLElementTagNameMap>(
   tag: K,
@@ -27,10 +29,8 @@ const ext = (href: string, text: string): HTMLAnchorElement => {
 const host = (href: string): string => new URL(href).hostname.replace(/^www\./, '');
 const m = (n: number): string => `${n < 10 ? n.toFixed(2) : n.toFixed(1)} m`;
 
-type Facts = Pick<
-  MediaEntry,
-  'triangles' | 'drawCalls' | 'real' | 'measures' | 'sources' | 'qa' | 'emitters' | 'sockets'
->;
+type Facts = Pick<MediaEntry, 'triangles' | 'drawCalls' | 'real' | 'qa' | 'emitters' | 'sockets'> &
+  Pick<MediaFacts, 'measures' | 'sources'> & { readonly score?: number | null; liveries?: number };
 
 function lodTable(f: Facts): HTMLTableElement {
   const t = el('table', undefined, 'lod-table');
@@ -88,8 +88,10 @@ function sources(f: Facts): HTMLElement | null {
 export interface DetailRoots {
   readonly info: HTMLElement;
   readonly measures: HTMLElement;
-  readonly sheet: HTMLElement;
 }
+
+const count = (n: number, one: string, many = `${one}s`): HTMLElement =>
+  el('span', `${n} ${n === 1 ? one : many}`, 'badge');
 
 let token = 0;
 
@@ -122,10 +124,11 @@ export function renderDetails(roots: DetailRoots, item: Item): void {
             ),
           ]
         : []),
-      el('span', 'one material', 'badge'),
+      ...(f.score ? [el('span', `critique ${f.score.toFixed(1)} / 10`, 'badge')] : []),
       el('span', `${f.drawCalls[2] ?? '?'} draw calls at LOD2`, 'badge'),
-      ...(f.emitters.length ? [el('span', `${f.emitters.length} emitters`, 'badge')] : []),
-      ...(f.sockets.length ? [el('span', `${f.sockets.length} sockets`, 'badge')] : []),
+      ...(f.emitters ? [count(f.emitters, 'emitter')] : []),
+      ...(f.sockets ? [count(f.sockets, 'socket')] : []),
+      ...(f.liveries ? [count(f.liveries, 'livery', 'liveries')] : []),
     );
     q(roots.info, '[data-lods]')?.replaceChildren(lodTable(f));
     const real = q(roots.info, '[data-real]');
@@ -138,19 +141,22 @@ export function renderDetails(roots: DetailRoots, item: Item): void {
     roots.measures.hidden = list.length === 0;
     body?.replaceChildren(...list);
   };
-  if (item.media) fill(item.media);
-  else
-    manifest(item.name).then(
-      (w) => fill({ ...w, real: w.real ?? null, qa: null }),
+  const media = item.media;
+  if (media) {
+    fill({ ...media, measures: [], sources: [] });
+    void loadFacts(item).then((x) => x && fill({ ...media, ...x }));
+  } else
+    manifest(item.name, item.recipe?.file).then(
+      (w) =>
+        fill({
+          ...w,
+          real: w.real ?? null,
+          qa: null,
+          emitters: w.emitters.length,
+          sockets: w.sockets.length,
+        }),
       () => undefined,
     );
-
-  const img = q<HTMLImageElement>(roots.sheet, 'img');
-  roots.sheet.hidden = !item.media?.sheet;
-  if (img && item.media?.sheet) {
-    img.src = item.media.sheet;
-    img.alt = `Contact sheet for ${item.name}: orthographic views and the far LOD`;
-  }
 }
 
 /** Show the measured model size (from the viewer) next to the declared real size. */

@@ -5,6 +5,7 @@
 //   bun run site:shots [--base http://localhost:4173/ts23d/] [--out docs/media] [--only site,site-asset]
 //                      [--height 3000]   (taller viewport, to review a whole page)
 //                      [--assets tiger_1,dropship]   (ad-hoc asset-page shots, named asset-<name>)
+//                      [--measure]   (asset shots with grid, dimensions, 1.8 m figure and the last livery on)
 
 import { mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -24,7 +25,13 @@ export interface Shot {
   readonly scrollTo?: string;
   /** Click this element once ready, then wait for `after` (e.g. switch the viewer to Scene). */
   readonly click?: { readonly selector: string; readonly after: string };
+  /** Page script run once ready (before `click`), e.g. switching the measure toggles on. */
+  readonly script?: string;
 }
+
+/** Turns on the viewer's measure overlays (not the ruler) and picks the last livery, if any. */
+export const MEASURE_SCRIPT = `for (const k of ['grid','dims','human']) { const i = document.querySelector('[data-measure="' + k + '"]'); if (i && !i.checked) i.click(); }
+let tries = 0; const pick = () => { const v = document.querySelector('[data-variant]'); if (v && v.options.length > 1) { v.selectedIndex = v.options.length - 1; v.dispatchEvent(new Event('change')); } else if (tries++ < 25) setTimeout(pick, 300); }; pick();`;
 
 export const SHOTS: readonly Shot[] = [
   {
@@ -65,6 +72,19 @@ export const SHOTS: readonly Shot[] = [
     },
   },
   {
+    // A heavy asset: opens at LOD1, then the "Load full detail" button compiles the 900k-tri LOD0.
+    name: 'site-heavy',
+    path: '#roadster_v10',
+    width: 1600,
+    height: 1000,
+    ready: '[data-viewer-poster][hidden]',
+    settle: 3000,
+    click: {
+      selector: '[data-load-lod0]',
+      after: '[data-viewer]:not([aria-busy]) input[name="lod"][value="0"]:checked',
+    },
+  },
+  {
     name: 'site-mobile',
     path: '',
     width: 390,
@@ -82,16 +102,19 @@ export interface Options {
   readonly height: number | null;
   /** Ad-hoc asset pages to shoot instead of the named shots (lighting reviews). */
   readonly assets: readonly string[] | null;
+  /** Asset shots with the measure overlays on (`--measure`). */
+  readonly measure: boolean;
 }
 
 /** A studio-viewer shot of any asset page, for reviewing the presentation across categories. */
-export const assetShot = (name: string): Shot => ({
-  name: `asset-${name}`,
+export const assetShot = (name: string, measure = false): Shot => ({
+  name: measure ? `asset-${name}-measure` : `asset-${name}`,
   path: `#${name}`,
   width: 1600,
   height: 1000,
   ready: '[data-viewer-poster][hidden]',
-  settle: 3000,
+  settle: measure ? 6000 : 3000,
+  ...(measure ? { script: MEASURE_SCRIPT } : {}),
 });
 
 export function parseArgs(argv: readonly string[]): Options {
@@ -120,6 +143,7 @@ export function parseArgs(argv: readonly string[]): Options {
     only: picked,
     height: height === null ? null : Number(height),
     assets: named,
+    measure: argv.includes('--measure'),
   };
 }
 
@@ -179,6 +203,7 @@ async function take(cdp: Cdp, base: string, shot: Shot, out: string): Promise<st
     }
   };
   await waitFor(shot.ready);
+  if (shot.script) await s('Runtime.evaluate', { expression: shot.script });
   if (shot.click) {
     const sel = JSON.stringify(shot.click.selector);
     await s('Runtime.evaluate', { expression: `document.querySelector(${sel})?.click()` });
@@ -209,7 +234,7 @@ if (import.meta.main) {
   let failed = 0;
   try {
     const picks = opts.assets
-      ? opts.assets.map(assetShot)
+      ? opts.assets.map((a) => assetShot(a, opts.measure))
       : SHOTS.filter((s) => !opts.only || opts.only.includes(s.name));
     for (const pick of picks) {
       const shot = opts.height ? { ...pick, height: opts.height } : pick;

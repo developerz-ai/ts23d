@@ -30,8 +30,3 @@ export function localGenerator(_o: { model: string; endpoint: string }): MeshGen
     'docs/idea/08-neural-adapters.md',
   );
 }
-
-/** Import an existing GLB (a CC0 base mesh, a sculpt, a generator's output) as a part. Planned: M5. */
-export function importGlb(_bytes: Uint8Array, _o: { fit: Vec3; recolor?: Vec3 }): Mesh {
-  return notImplemented('importGlb', 'docs/idea/08-neural-adapters.md');
-}

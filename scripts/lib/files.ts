@@ -11,22 +11,28 @@ export async function tsFiles(root: string, cwd = process.cwd()): Promise<string
 }
 
 /**
- * The asset folders: recipes/<name>/<name>.ts. Folders starting with `_` hold shared helpers,
- * not assets. `stray` lists every other .ts under recipes/; the recipes gate rejects them.
+ * The asset folders: recipes/<name>/<name>.ts is the entry; any other .ts inside that folder (outside
+ * out/) is one of its modules, so a big asset splits into head.ts, wings.ts… Folders starting with
+ * `_` hold shared helpers, not assets. `stray` lists every other .ts under recipes/; the recipes
+ * gate rejects them.
  */
 export async function recipeFolders(
   cwd = process.cwd(),
 ): Promise<{ folders: { dir: string; file: string }[]; stray: string[] }> {
   const folders: { dir: string; file: string }[] = [];
-  const stray: string[] = [];
+  const others: string[] = [];
   for (const f of await tsFiles('recipes', cwd)) {
     const [, dir, name, ...rest] = f.split('/');
     if (dir?.startsWith('_')) continue;
     if (rest.length === 0 && dir && name === `${dir}.ts`)
       folders.push({ dir: `recipes/${dir}`, file: f });
-    else if (!f.endsWith('.test.ts')) stray.push(f);
+    else if (!f.endsWith('.test.ts')) others.push(f);
   }
-  return { folders, stray };
+  const isModule = (f: string): boolean => {
+    const [, dir, sub] = f.split('/');
+    return sub !== 'out' && folders.some((d) => d.dir === `recipes/${dir}`);
+  };
+  return { folders, stray: others.filter((f) => !isModule(f)) };
 }
 
 export interface Violation {

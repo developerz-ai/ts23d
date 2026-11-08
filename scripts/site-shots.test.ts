@@ -22,7 +22,15 @@ describe('site-shots args', () => {
       only: null,
       height: null,
       assets: null,
+      measure: false,
     });
+  });
+
+  test('--measure shoots asset pages with the measure overlays on', () => {
+    expect(parseArgs(['--assets', 'boxcar']).measure).toBe(false);
+    const shot = assetShot('boxcar', parseArgs(['--assets', 'boxcar', '--measure']).measure);
+    expect(shot.name).toBe('asset-boxcar-measure');
+    expect(shot.script).toContain('data-measure');
   });
 
   test('ad-hoc asset shots point at the asset route', () => {
@@ -45,7 +53,15 @@ describe('site-shots args', () => {
       only: ['site', 'site-asset'],
       height: 3000,
       assets: null,
+      measure: false,
     });
+  });
+
+  test('--measure shoots asset pages with the measure overlays on', () => {
+    expect(parseArgs(['--assets', 'boxcar']).measure).toBe(false);
+    const shot = assetShot('boxcar', parseArgs(['--assets', 'boxcar', '--measure']).measure);
+    expect(shot.name).toBe('asset-boxcar-measure');
+    expect(shot.script).toContain('data-measure');
   });
 });
 

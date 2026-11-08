@@ -13,3 +13,5 @@
 | [007](007-cpu-contact-sheets.md) | Agent feedback is a CPU-rendered contact sheet | accepted | 2026-10-25 |
 | [008](008-surface-materials.md) | One trim sheet, up to four surface materials | accepted | 2026-10-25 |
 | [009](009-gltf-front-axis.md) | Exported GLBs face glTF +Z (root `[-0.5,-0.5,-0.5,0.5]`) | accepted | 2026-10-25 |
+| [010](010-ai-finish-layer.md) | AI finish is a projected texture layer on LOD0, never geometry | accepted | 2026-11-07 |
+| [011](011-imported-meshes-may-be-decimated.md) | Imported meshes may be decimated; code-built assets stay LOD-gated | accepted | 2026-11-07 |

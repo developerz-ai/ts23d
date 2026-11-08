@@ -1,9 +1,10 @@
-// The home page's hero: featured assets compiled live, slowly orbiting in the studio light, one
-// after another. The committed beauty render shows as a poster until the first compile lands.
+// The home page's hero: featured assets compiled live (heavy ones at LOD1), slowly orbiting in
+// the studio light, one after another. The committed beauty render shows as a poster until the first compile lands.
 
 import { type Object3D, Vector3 } from 'three';
 import { loadBuilt, recipe } from './compile.ts';
 import type { Item } from './items.ts';
+import { startLod } from './lod-policy.ts';
 import { lookFor } from './look.ts';
 import { qualityTier } from './quality.ts';
 import { disposeTree, Stage } from './stage.ts';
@@ -48,12 +49,13 @@ export class Showcase {
   private setLabel(item: Item | undefined): void {
     if (!this.label || !item) return;
     this.label.href = `#${item.name}`;
-    const tris = item.media?.triangles[0];
+    const lod = startLod({ ...item, triangles: item.media?.triangles ?? [] });
+    const tris = item.media?.triangles[lod];
     this.label.querySelector('[data-label-title]')?.replaceChildren(item.title);
     this.label
       .querySelector('[data-label-meta]')
       ?.replaceChildren(
-        `${item.name} · ${item.category}${tris ? ` · LOD0 ${tris.toLocaleString('en')} tris` : ''}`,
+        `${item.name} · ${item.category}${tris ? ` · ${tris.toLocaleString('en')} tris at LOD${lod}` : ''}`,
       );
   }
 
@@ -64,7 +66,9 @@ export class Showcase {
     const item = this.featured[index];
     try {
       if (!item) return;
-      const { scene } = await loadBuilt(recipe(item.name, 0));
+      // Heavy assets (sculpts, near-million-triangle cars) orbit at LOD1.
+      const lod = startLod({ ...item, triangles: item.media?.triangles ?? [] });
+      const { scene } = await loadBuilt(recipe(item.name, lod, item.recipe?.file));
       this.root.classList.add('swapping');
       await new Promise((r) => setTimeout(r, this.model ? 450 : 0));
       if (this.model) disposeTree(this.model);

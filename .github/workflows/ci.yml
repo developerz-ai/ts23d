@@ -3,7 +3,9 @@ name: ci
 # The gate. `verify` runs exactly `bun run verify` — the command a contributor (human or agent)
 # runs locally; scripts/ci-parity.test.ts fails if this file stops calling it. `shots` renders a
 # contact sheet per recipe so reviewers (and review agents) can SEE what a PR changed.
-# Free GitHub-hosted runners only. Target: push → green in under 5 minutes.
+# Free GitHub-hosted runners only. Target: push → green in under 5 minutes, so both jobs run as 12
+# parallel shards (T3D_SHARD=k/12, scripts/lib/shard.ts): shard 1 also runs lint, types, tests and
+# build; every shard compiles, QA-checks and renders its slice of the recipe folders.
 
 on:
   push:
@@ -21,7 +23,13 @@ concurrency:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+    env:
+      T3D_SHARD: ${{ matrix.shard }}/12
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -31,7 +39,13 @@ jobs:
 
   shots:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+    env:
+      T3D_SHARD: ${{ matrix.shard }}/12
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -40,7 +54,7 @@ jobs:
       - run: bun run shots
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: contact-sheets
+          name: contact-sheets-${{ matrix.shard }}
           path: |
             recipes/*/out/*/sheet.png
             recipes/*/out/*/hero.png

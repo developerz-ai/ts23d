@@ -1,0 +1,134 @@
+{
+  "asset": "face_dwarf",
+  "reviewer": "agent",
+  "overall": 5,
+  "scores": {
+    "silhouette": {
+      "score": 6,
+      "reason": "Spade beard, broad nose, wide jaw and thick neck read as a dwarf; the beard body is a good mass but its sides are slab-like and the locks are tube-like.",
+      "fixes": [
+        "shape the beard sides with a taper and let locks overlap the mass edge",
+        "braid two front locks"
+      ]
+    },
+    "proportions": {
+      "score": 6,
+      "reason": "Short face (×0.88), broad nose (×1.4), wide jaw (×1.25) hold; eye spacing 64.5 vs 65.3 mm. Older age (0.6) shows only in nose and lobes.",
+      "fixes": [
+        "stronger age: deeper nasolabial folds and lid sag as displacement"
+      ]
+    },
+    "materials": {
+      "score": 4,
+      "reason": "Vertex colour on the plain strip: skin zones (flush, lips, cool sockets, curvature cavity, mottle) separate by hue but not by roughness or SSS; hair is the same material as skin, so it reads as sculpted clay; eyes are the only glossy part (cornea clearcoat).",
+      "fixes": [
+        "a skin strip with subsurface-like roughness/sheen and a hair strip with anisotropic sheen (material-artist)",
+        "darker hair roots and per-lock value variation along the lock (root → tip colour is set but too subtle)"
+      ]
+    },
+    "detail": {
+      "score": 5,
+      "reason": "Primary and secondary forms come from a real anatomical base (eyelids, nasolabial area, lips, ear helix/antihelix/concha, clavicles, sternocleidomastoid) and read cleanly under the raking light, but there is no tertiary detail: no pores, wrinkles, lid creases or brow hairs (brows are painted bands), and the SDF hair locks are uniform grooves.",
+      "fixes": [
+        "LOD0 normal-scale wrinkle/pore displacement on the subdivided base driven by age",
+        "hair: varied lock widths and a parting instead of evenly spaced grooves; hair cards (planned)"
+      ]
+    },
+    "wear": {
+      "score": 3,
+      "reason": "Pristine: seeded asymmetry and age/weight knobs are the only story; no scars, stubble, blemishes, sun-darkened skin or dirt.",
+      "fixes": [
+        "seeded scars/blemish decals in vertex colour (orc, dwarf)",
+        "stubble shadow on the human/dwarf jaw",
+        "age-driven darkening under the eyes"
+      ]
+    },
+    "lod": {
+      "score": 6,
+      "reason": "LOD2 keeps the beard and hair blocks; face soft.",
+      "fixes": [
+        "authored LOD2 topology"
+      ]
+    },
+    "technical": {
+      "score": 7,
+      "reason": "QA PASS at every LOD; 145k/61k/11.5k tris (beard + hair are ~65 %); 2 draws.",
+      "fixes": [
+        "coarser beard sculpt cell at LOD1"
+      ]
+    }
+  },
+  "renders": {
+    "hero.png": "8f793b82f1a433a84fc57b784b92bceac1b7d18fb52d970868688bca02435467",
+    "sheet.png": "1e43fd7370fdefb44f342b5ed61cbb2e3c69e96a61446af1d5266e68275fbdd1",
+    "raking.png": "cc3e9c281b512b200e918d01d513eb8e826f0249edfa382214e665b32746ed0f",
+    "raking_detail.png": "1950231f462c47ac3ce0685cc550367d44f20652a53f61f7f171ce941d79fce6",
+    "lods.png": "919fce659d7a07b59fef5a55a4d3d456741b9e41ff9b8a9c2b23316c75f7a7ce",
+    "silhouette.png": "85e1410292593bb43f3036bdc80692bef84a9d61cc5ee5af2cac6e0a765d2d5d",
+    "value.png": "dace1917d3e9e86fd3f05088a27a5a823f198a6550f16859b37088ce493199dd",
+    "detail.png": "a19ac01b6a5e3994054df6404469d90de0154e3b9245fe3aed6eccb2bd2dcd09"
+  },
+  "metrics": {
+    "silhouette": [
+      {
+        "view": "front",
+        "iou": 0.979
+      },
+      {
+        "view": "side",
+        "iou": 0.954
+      },
+      {
+        "view": "3/4",
+        "iou": 0.961
+      }
+    ],
+    "focal": {
+      "peakPart": "skin",
+      "peak": [
+        466,
+        181
+      ],
+      "focalShare": 0.687,
+      "focalArea": 0.569,
+      "top": [
+        {
+          "part": "skin",
+          "share": 0.687
+        },
+        {
+          "part": "plinth",
+          "share": 0.162
+        },
+        {
+          "part": "hair",
+          "share": 0.15
+        }
+      ],
+      "declared": [
+        "skin"
+      ]
+    },
+    "rest": {
+      "share": 0.589,
+      "spread": 0.655,
+      "min": 0.25
+    },
+    "grounded": {
+      "rise": 0.093,
+      "bands": [
+        0.343,
+        0.54,
+        0.513,
+        0.478,
+        0.467
+      ]
+    },
+    "shape": {
+      "acuteShare": 0.1,
+      "straightShare": 0.473,
+      "taper": 0.23,
+      "shape": "friendly"
+    }
+  }
+}

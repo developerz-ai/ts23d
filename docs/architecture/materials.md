@@ -5,26 +5,51 @@ Every asset is still **one material, one draw call**: a shared atlas with albedo
 its **strip** holds. Vertex colour multiplies the albedo: it tints a classic strip and sets the paint
 colour of a painted strip.
 
-## Layout (v2): 2048² atlas
+## Layout (v3): 4096² atlas, 56 strip rows
 
 | V range | Contents |
 |---|---|
-| 0 – 0.25 | 8 **classic** strips: `plain brick stone slate iron wood glass concrete`. Greyscale, tinted by vertex colour, unchanged from v1. |
-| 0.25 – 0.75 | 16 **library** strips with their own colour (`MATERIAL_LIBRARY`, below) |
-| 0.75 – 0.875 | 4 **custom** rows for project materials (`defineMaterial`) |
-| 0.875 – 1 | 128 px cells: decals (row 0), foliage cards (from slot 8) |
+| 0 – 0.125 | 8 **classic** strips: `plain brick stone slate iron wood glass concrete`. Greyscale, tinted by vertex colour. |
+| 0.125 – 0.375 | 16 **library** strips with their own colour (`MATERIAL_LIBRARY`, below) |
+| 0.375 – 0.656 | 18 **nature** strips painted from texture graphs (`NATURE_LIBRARY`, below) |
+| 0.656 – 0.875 | 14 **custom** rows for project materials (`defineMaterial`) |
+| 0.875 – 1 | 1/16 cells (256 px at 4096²): decals (row 0), foliage cards (from slot 8) |
 
-Each strip row is 1/32 of the sheet: 64 px at 2048², the same V resolution v1 strips had at 1024².
-The U density doubles, and cells keep their 128 px. That is why the house sheet moved to 2048².
+Each strip row is 1/64 of the sheet: 64 px at the 4096² house size. Each strip also spans its own
+world metres along U (`spanOf(id)`, carried in `stripRect().metres`, so every primitive remaps
+automatically): 4 m for classic, library and custom strips; 16 m for the isotropic ground strips;
+32 m for `rock_strata` and `cliff`; 4 m for bark.
 
-**Cost.** Painting takes about 4 s at 2048² (about 1 s at 1024²). The three PNGs total about 3.6 MB at 2048² (v1 at 1024² was about 1 MB).
-GPU memory is 16 MB per map plus mips. The site's trim-sheet set is shared by every gallery asset.
-`--sheet-size 1024` still works (32 px strip rows). The CLI default is 1024 until `src/cli/args.ts`
-moves it to 2048.
+**Why this layout (the decision, with numbers).** Strips tile along U through the REPEAT sampler,
+so a strip must span the full sheet width: per-strip texels = sheet width × row height, and a
+2-column layout or U-blocks are impossible without cutting geometry. v2 (2048², 28 rows of 64 px,
+2 m span) gave 0.98 mm along U against `scaleMetres/64` along V (7.8–9.4 mm): 8–10 : 1, and it
+was full (28 rows, 4 custom). Adding 18 nature strips plus room for projects needs ≥ 52 rows, which
+at 2048² means 32 px rows, a 2× loss for everything. So:
 
-**Compatibility.** UVs come from `stripRect()`/`cellRect()` at compile time, so geometry and triangle
-counts are unchanged and every recipe recompiles onto the new layout. Classic strips paint byte for
-byte as before; only their atlas position moved.
+| Option | Rows | Texel U × V at scaleMetres 0.5 | Memory (RGBA8 ×3, +mips) | Paint (Bun, this machine) |
+|---|---|---|---|---|
+| v2: 2048², 1/32 rows, 2 m | 28 (full) | 0.98 × 7.8 mm (8 : 1) | 48 MB → 64 MB | 4.5 s |
+| 2048², 1/64 rows | 56 | 0.98–1.95 × 15.6 mm | same | ≈ 4.6 s |
+| **v3: 4096², 1/64 rows, span per strip** | **56** | **library 0.98 × 7.8 mm (= v2); nature 3.9 × 7.8 mm (2 : 1)** | 192 MB → 256 MB (BC7 in engines: 64 MB) | **17–18 s** |
+| 4096², 1/32 rows | 28 (full) | 0.98 × 3.9 mm (4 : 1) | 256 MB | ≈ 18 s |
+
+v3 keeps every v2 strip at exactly its v2 texel size at the house size, doubles capacity
+(42 built-ins + 14 custom), halves visible tiling (4 m repeat instead of 2 m), and fixes the
+anisotropy where it hurt: the isotropic nature strips (sand, gravel, cobbles, snow…) get square-ish
+texels (≤ 2 : 1, pinned by `variant.test.ts`) by spanning more metres along U. Grain-along-U
+materials (wood, brushed metal, canvas, bark furrows) keep fine U on purpose. The UVs are sheet
+fractions, so a 2048² paint is a valid half-resolution preview of the same layout (4.6 s, 32 px
+rows); `--sheet-size 2048` and the site can keep using it.
+
+**Cost.** One shared sheet set per output folder (`--sheet external`), so GLBs do not grow. The 4096²
+PNGs are about 4× the 2048² ones (≈ 14 MB vs 3.6 MB). Edge rows are replicated 1/8 of a row deep
+(8 px at 4096²), so the first three mip levels stay inside their strip.
+
+**Compatibility.** Every strip's V rect and the U scale moved (1/32 → 1/64 rows, 2 m → 4 m), so
+every asset's UVs change once; geometry and triangle counts do not. Recompile; committed outputs
+need `bun run shots`. `stripAtV(v)` is the layout's own V → strip lookup (physics, QA): use it
+instead of hard-coding row heights.
 
 ## The library and its numbers
 
@@ -76,6 +101,51 @@ cavity AO, and packs the result. These painters are new or extended in v2:
 
 All painters are seeded and tileable along U, so the output is deterministic.
 
+### Height first: relief on the library strips
+
+The library strips build a **height field first** and derive the rest from it, the way Substance
+Designer works: normal (Sobel of height in metres), fine cavity AO (into `occl`, so ORM.r and the
+baked albedo darkening agree) and roughness variation (pits and pores rougher, raised wear
+smoother). All of it is behind params that default to off, so the eight classic strips and the
+cells paint byte for byte as before.
+
+**Texel density decides what can exist.** A strip row is 2048 × 64 px over 2 m × `scaleMetres`:
+about 1 mm per texel along U but 8–9 mm along V (16 mm on `canvas`, `scaleMetres` 1). Round
+features must clear the coarse V texel or they turn into vertical dashes, and a period-2 pattern
+along V cancels out in the Sobel kernel. So `relief.ts` clamps each axis on its own:
+
+| Helper (`paint/relief.ts`) | Use |
+|---|---|
+| `fineNoise(c, xm, ym, sizeU, sizeV, seed)` | features long along U (brushing); each axis clamped so its top octave spans ≥ 1.5 texels |
+| `isoNoise(c, xm, ym, size, seed)` | round features (sand, stipple, pits, orange peel), clamped to the coarser texel |
+| `rowNoise(c, xm, y, sizeU, seed)` | a line one texel tall along U (wood pores, brushed metal) |
+| `worley(c, xm, ym, size, seed, out)` | cells (leather pebbles, rust flakes, cast blow-holes), ≥ 2.5 texels, tileable |
+| `curvature(c, radius)` | height minus its local mean, in metres (+ convex, − concave) |
+| `finishRelief(c, params)` | `cavity` (AO 0..1), `cavityDepth` (0.0004 m), `cavityRadius` (0.006 m), `cavityRough` |
+
+| Strip | Relief (param) | Mean normal tilt, before → after |
+|---|---|---|
+| `oak` `pine` | `grain`: proud latewood, pore grooves along the grain (also darker in albedo), fibre ripple, rounded board arrises | 2.3° → 3.9°, 2.4° → 4.0° |
+| `wood_weathered` | `grain` 1.4 on top of `checks` | 2.3° → 5.4° |
+| `wood_painted` | `grain` under a `film` (0.6 mm) paint step at the chips | 1.8° → 2.7° |
+| `iron_rust` | `relief`: oxide crust with a hard flaking edge, cellular flakes with dark gaps, pits | 0.9° → 2.9° |
+| `iron_cast` | `relief`: sand grain plus sparse blow-holes (dark, rough) | 1.6° → 3.1° |
+| `steel_painted` | `relief`: paint `film` step at chips, faint orange peel | ≈0 → 0.5° |
+| `steel_galvanised` | `relief`: each spangle crystal a slightly different plateau | ≈0 → 0.9° |
+| `aluminium` `brass` | `relief`: one-texel brushing lines along U, stock waviness | ≈0 → 1.1°, 0.8° |
+| `copper` `chrome` | `relief`: stock waviness only (chrome at half, to keep the mirror) | ≈0 → 0.7°, 0.4° |
+| `rubber` `plastic` | `grain`/`grainSize`: moulded stipple / orange peel | ≈0 → 1.1°, 0.4° |
+| `canvas` | `relief`: thread ribs along U, shifted a quarter pitch per row (a twill the Sobel keeps) | 0.7° → 3.2° |
+| `leather` | `relief`: cellular pebbles with crevices, rubbed tops flatter | 0.7° → 3.1° |
+
+"Before" is the v2 sheet measured on the shipped normal map; ≈0 means at the 8-bit floor. Polished
+metals (`brass`, `copper`, `chrome`, `aluminium`, galvanised) get no cavity AO, since a waviness
+cavity is not dirt. `paint/library-relief.test.ts` pins a floor per strip, checks that switching the
+params off flattens each one, and checks that cavities are darker and rougher than raised spots.
+
+`edgeWear` now ships twice: as the `wear` dial on every strip and as `tex.edgeWear` in graphs.
+Planned, not shipped: a `PaintKit` entry for the relief helpers (graphs cover the same ground).
+
 ## Project materials: `defineMaterial`
 
 ```ts
@@ -100,8 +170,9 @@ box({ size: [4, 2, 0.05], strip: teak, color: NATURAL });
 ```
 
 - It validates first: bad input throws `T3D_MATERIAL_INVALID`, an unknown id `T3D_MATERIAL_UNKNOWN`, a
-  built-in or differently redefined id `T3D_MATERIAL_CONFLICT`, and a fifth custom row
-  `T3D_SHEET_FULL`. A painter that writes NaN or ∞ fails the paint with `T3D_MATERIAL_INVALID`.
+  built-in or differently redefined id `T3D_MATERIAL_CONFLICT`, and a fifteenth custom row
+  `T3D_SHEET_FULL`. Also: `graph` (a `tex` graph, see below), `spanMetres` (U repeat, default 4)
+  and the weathering dials `wet`, `wear`, `age`. A painter that writes NaN or ∞ fails the paint with `T3D_MATERIAL_INVALID`.
 - Rows are given out in registration order. Define materials in one shared module that every recipe
   imports, so the same program always produces the same bytes. Redefining an id with the identical
   definition is a no-op.
@@ -109,6 +180,116 @@ box({ size: [4, 2, 0.05], strip: teak, color: NATURAL });
   override its recipe: `paintTrimSheet({ ...DEFAULT_SHEET, strips: { ...DEFAULT_SHEET.strips, oak: {...} } })`.
 - `materialOf(id)` returns the recipe, origin (classic/library/defined), description and sources.
   `resetMaterials()` is for tests and long-lived workers.
+
+## Nature: ground, rock, vegetation, bark, liquids
+
+Painted from texture graphs (`src/material/nature-*.ts`), height first: each strip's colour and
+roughness are ramps over the same fields as its height, so relief, tone and gloss agree. Tint
+with `NATURAL`. Sources: [physicallybased.info](https://physicallybased.info) (Sand, Snow, Ice,
+Water, Charcoal) and the broadband surface-albedo table on
+[Wikipedia: Albedo](https://en.wikipedia.org/wiki/Albedo) (fresh asphalt 0.04, worn 0.12, bare
+soil ≈ 0.17, green grass ≈ 0.25, desert sand ≈ 0.4, fresh snow 0.8–0.9). Broadband albedo includes
+near-infrared, so it is a range check, not a colour: hues are chosen by eye against photographs
+(unverified beyond that).
+
+| Strip | Graph | Albedo (sRGB) | Rough | Basis |
+|---|---|---|---|---|
+| `sand` | ridged wind ripples (~7 cm) + fine grain | `#958a68`–`#cbc2a0` | 0.86–0.94 | PB Sand (0.44, 0.386, 0.231) linear = `#b0a684`, rough 0.9 |
+| `soil` | inverted cells (clods) + crumb | `#3a2b1f`–`#7f6a54` | 0.86–0.96 | bare soil ≈ 0.17 |
+| `gravel` | rotated overlapping pebbles 2–4 cm in dark fines | greys/browns by pebble id | 0.72 stones / 0.95 fines | Wikipedia ranges |
+| `mud` | soft undulation + cracks, **wet 0.75**, porosity 0.9 | `#3a2c20`–`#6a553d`, darkened | 0.6–0.78 → wet | Lagarde wet surfaces |
+| `rock_strata` | `strata` beds (11 cm), warped, cross fractures | sandstone `#6f5a48`–`#b59c7c` per bed | 0.8–0.92 | USGS sedimentary layers |
+| `cliff` | jointed blocks (cells edge) + ridged fractures + lichen | `#4a4743`–`#a19c93` | 0.78–0.9 | granite by eye |
+| `moss` | cushions (inverted cells²) + fibres | `#2a3b16`–`#8aa23a` | 0.86–0.98 | by eye |
+| `grass` | ridged blades along V, dry patches | `#253a16`–`#7d9a3c`, dry `#a8995a` | 0.78–0.92 | green grass ≈ 0.25 |
+| `snow` | drifts + crust | `#d5dde6`–`#f3f4f5` | 0.5–0.68 | PB Snow 0.85 linear, rough 0.5 |
+| `ice` | white fracture lines + bubbles | `#9fc0d4`–`#e8f1f5` | 0.1–0.3 | PB Ice rough 0.5 is frosted; clear ice chosen smoother |
+| `bark_oak` | ridged furrows along V, broken ridges | `#2a221b`–`#8f8576` | 0.85–0.95 | by eye |
+| `bark_pine` | cell plates with dark fissures | `#6a3b22`–`#a8683f` | 0.84–0.95 | by eye |
+| `bark_birch` | white, dark horizontal lenticels, scars | `#cfc8bb`–`#ebe7de` | 0.62–0.9 | by eye |
+| `leaf_litter` | two layers of rotated flat leaves on humus | browns/ochres by leaf id | 0.75–0.92 | by eye |
+| `cobblestone` | domed cobbles (13 cm), polished crowns (`edgeWear`) | greys by stone id, joints `#4a4134` | 0.52–0.95 | by eye |
+| `asphalt` | cone aggregate + hairline cracks | `#3a3a3a`–`#4c4b48`, stones `#7e7a72` | 0.8–0.92 | asphalt 0.04–0.12 |
+| `water` | swell + ridged ripples, opaque stylised | `#163d4b`–`#3f7d8a` | 0.03–0.08 | PB Water rough 0 |
+| `lava` | crust plates (charcoal) over orange cracks | `#161413`–`#2d2826`, cracks `#c2410c`–`#ffb43a` | 0.45 cracks / 0.9 crust | PB Charcoal 0.02 linear |
+
+**Lava glows only with a glow rule.** glTF emission is a per-material slot, not part of ORM, so a
+strip cannot emit. The bright crack albedo reads hot under light; add an export `glow` rule on the
+lava part for real emission (`src/export/materials.ts`, `glowMaterial`).
+
+`nature.test.ts` fails a nature strip that is flat (mean normal tilt < 1°), whose albedo leaves
+sRGB 25–245, or whose roughness map is constant.
+
+## Creature materials (opt-in)
+
+`CREATURE_MATERIALS` (`creature.ts`) are not on the default sheet; register what a project uses:
+`defineMaterial(CREATURE_MATERIALS.dragon_scales)`. `dragon_scales` (pointed imbricated plates,
+10 × 6 cm, bronze-worn crowns), `reptile_scales` (2.5 cm round), `hair` (strands in locks), `fur`
+(short strands). Built on `tex.scales` and `tex.strands`; vertex colour tints them.
+
+## Variations and weathering
+
+**`materialVariant(id, n)`** (n 1..15) returns `id~n`: the same row, read from a golden-ratio
+shifted place along U (`stripRect('oak~3').u0 ≈ 0.85`). Ten crates or rocks stop showing the same
+boards or cracks, and it costs no row. It decorrelates; it is not a new material.
+
+**Weathering dials** on any material (`defineMaterial({ wet, wear, age })`, or `params`), all 0..1,
+painted after the base painter (`paint/weather.ts`):
+
+- `wear`: convex curvature of the height (radius 6 mm) chewed by noise. Those texels get +18 % tone,
+  −0.2 roughness, and `mix` toward albedo2 (bare metal, raw wood).
+- `age`: grime (0.7 × age), −12 % tone, +0.08 roughness.
+- `wet`, after [Lagarde, *Water drop 3b: physically based wet surfaces*](https://seblagarde.wordpress.com/2013/04/14/water-drop-3b-physically-based-wet-surfaces/): albedo × (1 − wet·(0.15 + 0.45·porosity)) (porous surfaces darken more, `porosity` default 0.6), roughness → 0.12 by 85 % of wet. Past wet 0.5, water fills the lowest 45 % of the relief: flat, roughness 0.03 (puddles). The coefficients are approximations of Lagarde's curves, not measurements.
+
+**`weathered(from, { id, wet, wear, age })`** derives a `MaterialDef` from any strip (built-in or
+defined) for `defineMaterial`; it takes a custom row because it paints differently.
+
+## Texture graphs: the `tex` DSL
+
+A Substance-Designer-style node graph as typed, chainable functions. Every node is a lazily
+evaluated, memoised layer over the strip's texel grid. Every size is in metres and snaps to whole
+periods per tile along U, so graphs are **tileable by construction**. Filters (warp, blur) wrap
+along U. Same graph + seed = same bytes.
+
+```ts
+import { defineMaterial, tex } from '@developerz.ai/ts23d';
+
+const stones = tex.pebbles({ size: 0.12, radius: 0.48, jitter: 0.5, aspect: 1.2 });
+const height = stones.height.pow(0.6).add(tex.noise({ size: 0.02 }).mul(0.1));
+const polish = tex.edgeWear(height, { width: 0.02, amount: 0.6 });
+
+export const setts = defineMaterial({
+  id: 'granite_setts',
+  scaleMetres: 0.5,
+  spanMetres: 16,               // repeat every 16 m along U, near-square texels
+  roughness: 0.8,
+  graph: tex.material({
+    height,                     // 0..1
+    depth: 0.03,                // metres at height 1
+    albedo: stones.id.ramp([[0, '#5d5852'], [1, '#8a847a']])
+      .mix('#4a4134', stones.mask.invert())
+      .mul(polish.remap(1, 1.15)),
+    roughness: stones.mask.lerp(0.95, 0.7).sub(polish.mul(0.2)).clamp(),
+  }),
+  wet: 0.3,
+});
+```
+
+| Kind | Nodes |
+|---|---|
+| Generators (0..1) | `noise({ size, sizeV, octaves, gain })` · `ridged` · `cells({ size, jitter, out: 'f1' \| 'edge' \| 'id' })` · `gradientV()` · `constant(v)` · `fn((xm, ym, ctx) => …)` |
+| Stamps → `{ height, id, mask }` | `bricks({ width, height, gap, bevel, offset })` · `tiles` · `planks({ width, length })` · `scatter({ size, density, radius, shape, aspect, rotate })` · `pebbles` · `strata({ thickness, jitter, ledge })` · `scales({ width, height, overlap, point })` · `strands({ width, length, clump, wave })` |
+| Math / filters (methods) | `add sub mul min max lerp invert pow clamp levels remap smoothstep threshold warp(by, metres) blur(metres) curvature(metres) ramp(stops)` |
+| Masks | `edgeWear(height, { width, amount, chip })` · `cavity(height)` · `heightBlend(base, top, contrast)` · `blend(a, b, mask)` |
+| Colour | `ramp(field, [[t, '#hex'], …])` · `colour('#hex')` · `.mix(other, mask)` · `.mul(tone)` |
+| Output | `tex.material({ height, depth, albedo, roughness, metalness, occlusion })` → `defineMaterial({ graph })` |
+
+**Checked at definition.** `defineMaterial` probe-paints the graph on a two-tile grid and throws
+`T3D_MATERIAL_INVALID` when the second tile differs from the first (not tileable: a `tex.fn` must
+repeat every `ctx.tileU`), when an output is NaN, or when albedo, roughness, metalness or occlusion
+leaves 0..1. The message names the output and the fix. A slope mask needs the mesh normal, so it
+belongs on the terrain side. It is planned, not shipped.
+
 
 ## CC0 image strips (opt-in)
 
@@ -136,9 +317,17 @@ defineMaterial({ id: 'ph_wood_planks_grey', roughness: 0.85, texture: {
 - **Credits.** Only CC0 licences are accepted. When an asset samples an image strip, the GLB's XMP
   packet gets a `dc:contributor` line with the set, author, licence and page. Assets without image
   strips are byte-identical to before.
-- **Next (planned).** ambientCG ships its sets as zips, and zip extraction is not built yet, so
-  ambientCG sets work only when pointed at a PNG URL or a local file (`source: 'file'`). The CLI
-  does not load the cache yet (see the roadmap request).
+- **Find and pin sets.** `bun run textures search <words…> [--source polyhaven|ambientcg]` lists
+  CC0 sets (id, real size, page) from `api.polyhaven.com` or ambientCG's v2 API.
+  `bun run textures add <id> [--source …] [--res 1k]` downloads the maps once, writes them into the
+  cache, and prints a ready `defineMaterial` with every map pinned by sha256. Poly Haven gives PNG
+  albedo, `nor_gl` and `arm`. ambientCG ships zips, so its maps are `<zip url>#<entry>.png`
+  (Color, NormalGL, Roughness, AmbientOcclusion from the `_1K-PNG.zip`), and the sha256 is the
+  extracted entry's. `scripts/textures-zip.ts` is a small stored/deflate zip reader on
+  `node:zlib`, used by scripts only. ambientCG `dimensionX/Y` are read as centimetres (unverified;
+  280 for a 2.8 m set matches the site's listing format).
+- **JPEG.** Not decoded. Both sources offer PNG, which the commands always pick.
+- `roughness` and `occlusion` greyscale maps fill the ORM when there is no packed `arm`.
 
 ## Seeing it: the beauty renderer
 

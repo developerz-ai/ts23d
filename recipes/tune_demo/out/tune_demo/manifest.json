@@ -1,0 +1,44 @@
+{
+  "name": "tune_demo",
+  "kind": "prop",
+  "description": "Two-handled storage amphora whose proportions were fitted to a drawn front silhouette by `t3d tune`",
+  "tags": [
+    "tune",
+    "demo",
+    "amphora",
+    "pottery",
+    "lathe"
+  ],
+  "files": {
+    "lods": [],
+    "sheet": "recipes/tune_demo/out/tune_demo/sheet.png",
+    "thumb": "recipes/tune_demo/out/tune_demo/thumb.png"
+  },
+  "triangles": [
+    4136,
+    1216,
+    288
+  ],
+  "drawCalls": [
+    1,
+    1,
+    1
+  ],
+  "pivots": [
+    {
+      "name": "body",
+      "parent": null
+    }
+  ],
+  "emitters": [],
+  "sockets": [],
+  "surfaces": [
+    "opaque"
+  ],
+  "measures": [],
+  "sources": [],
+  "qa": {
+    "pass": true,
+    "findings": []
+  }
+}

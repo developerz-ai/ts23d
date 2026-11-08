@@ -12,11 +12,16 @@ import {
 } from '../core/index.ts';
 import { runChecks } from './checks.ts';
 import { clashes } from './clash.ts';
+import { connections } from './connections.ts';
 import { floatingParts } from './floating.ts';
+import { gaps } from './gaps.ts';
+import { joints } from './joints.ts';
+import { mass } from './mass.ts';
 import { measures } from './measures.ts';
 import { hiddenParts } from './occlusion.ts';
 import { nonFinite, normalsMatchWinding, vertexColors } from './sanity.ts';
 import type { Finding, Gate } from './types.ts';
+import { weatherGate } from './weather.ts';
 
 const worldBounds = (asset: CompiledAsset): Map<string, Bounds> => {
   const xf = worldTransforms(asset.parts);
@@ -110,15 +115,20 @@ export const recipeChecks: Gate = (asset) =>
 export const DEFAULT_GATES: readonly Gate[] = [
   triangleBudget,
   floatingParts,
+  connections,
+  gaps,
   clashes,
   partNames,
   proportions,
   measures,
+  joints,
+  mass,
   recipeChecks,
   nonFinite,
   vertexColors,
   hiddenParts,
   normalsMatchWinding,
+  weatherGate,
 ];
 
 export function runQa(asset: CompiledAsset, gates: readonly Gate[] = DEFAULT_GATES): Finding[] {

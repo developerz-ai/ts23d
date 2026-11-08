@@ -12,7 +12,7 @@ const AO_STRENGTH = 0.75;
 const AO_RADIUS = 0.02;
 
 /** Separable sliding-window box blur: O(1) per texel. Wraps along x when `wrap`, else clamps. */
-function boxBlur(
+export function boxBlur(
   src: Float32Array,
   w: number,
   h: number,
@@ -85,6 +85,15 @@ const enc = (t: number): number => SRGB[t <= 0 ? 0 : t >= 1 ? 4095 : Math.round(
 export function packAlbedo(c: Canvas, ao: Float32Array): Uint8Array {
   if (c.rgba) return c.rgba;
   const out = new Uint8Array(c.w * c.h * 4);
+  const lin = c.linear;
+  if (lin) {
+    for (let i = 0, o = 0; i < ao.length; i++, o += 4) {
+      const t = (c.tone[i] ?? 1) * (0.8 + 0.2 * (ao[i] ?? 1));
+      for (let k = 0; k < 3; k++) out[o + k] = enc((lin[i * 3 + k] ?? 1) * t);
+      out[o + 3] = 255;
+    }
+    return out;
+  }
   const pair = c.colours;
   if (pair) {
     const [a, b] = pair;
