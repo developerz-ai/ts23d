@@ -1,7 +1,7 @@
 {
   "name": "@developerz.ai/ts23d",
   "version": "0.3.0",
-  "description": "Free, deterministic 3D asset generation in TypeScript — a DSL your coding agent writes, compiled to game-ready glTF.",
+  "description": "TypeScript to 3D (ts23d): free, deterministic 3D asset generation in TypeScript — a DSL your coding agent writes, compiled to game-ready glTF.",
   "type": "module",
   "license": "MIT",
   "author": "developerz.ai",
@@ -68,7 +68,7 @@
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "bun test src scripts examples",
+    "test": "bun test src scripts examples apps/site/src",
     "build": "bun run scripts/build.ts",
     "boundaries": "bun run scripts/boundaries.ts",
     "determinism": "bun run scripts/determinism.ts",

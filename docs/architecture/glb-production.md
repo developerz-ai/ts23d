@@ -176,6 +176,7 @@ A collider mesh in a generic GLB renders as visible geometry in Unity, three and
 |---|---|---|
 | `asset.generator` | `"@developerz.ai/ts23d <version>"` | [spec §asset](https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/Specification.adoc#asset) |
 | `asset.copyright` | From the recipe (`license`/`author`), else `"ts23d recipe <name>, MIT"` per repo license | same |
+| `extras.ts23d.tread` on a track belt node | `{ path: [[x,y,z]…] (closed belt centre line, node-local, Z up), pitch }`: slide each vertex along the loop by the distance driven (the gallery does, `apps/site/src/scenarios/tread-belt.ts`) | the `extras` property (any JSON) |
 | `asset.extras.ts23d` | `{ recipe, version, seed, lod, lodCount, units:"m", up:"+Y", front:"+Z", sourceUp:"+Z", sourceFront:"+X", contentHash }` | [spec §specifying-extensions](https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/Specification.adoc#specifying-extensions) and the `extras` property (any JSON) |
 | LOD switch distances | `extras.MSFT_screencoverage` on the MSFT_lod node, plus `extras.ts23d.lodScreenCoverage` in each per-LOD file | [MSFT_lod](https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Vendor/MSFT_lod) |
 | Rights | `KHR_xmp_json_ld` packet with `dc:creator`, `dc:rights`, `xmpRights:UsageTerms` (in `extensionsUsed` only) | [KHR_xmp_json_ld](https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_xmp_json_ld) |

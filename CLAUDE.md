@@ -16,7 +16,7 @@ project that installed the package.
 - **Enforce rules.** A rule without a script in `bun run verify` is a suggestion. Every defect found once gets a row in `docs/architecture/defect-catalogue.md` and a check that fails on it before the fix.
 
 ## Project and stack
-`@developerz.ai/ts23d`: free, coding-agent-driven 3D asset generator. Deterministic game-ready GLB: named pivoted parts, baked motion, 3 LODs from one source, shared trim-sheet material, build-failing QA and zero-GPU six-view contact sheets the agent reads.
+`@developerz.ai/ts23d`, **TypeScript to 3D** (ts23d): free, coding-agent-driven 3D asset generator. Deterministic game-ready GLB: named pivoted parts, baked motion, 3 LODs from one source, shared trim-sheet material, build-failing QA and zero-GPU six-view contact sheets the agent reads.
 
 | Area | Stack / constraint |
 |---|---|

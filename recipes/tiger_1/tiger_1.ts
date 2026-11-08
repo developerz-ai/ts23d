@@ -24,6 +24,7 @@ import {
   type Rng,
   symmetric,
   touches,
+  tread,
   type Vec2,
   type Vec3,
   valueNoise,
@@ -203,13 +204,14 @@ function trackLink(pitch: number): Mesh {
   ]);
 }
 
-function trackMesh(lod: Lod, line: readonly Vec2[], y: number): Mesh {
+/** Belt stations per LOD: LOD2 keeps an open belt of 24 slabs so the wheels show through it. */
+function stationsOf(lod: Lod, line: readonly Vec2[]): Station[] {
   const perimeter = resample(line, 1)[0]?.len ?? 1;
-  // LOD2 keeps an open belt of 24 slabs (not a solid prism) so the wheels show through it.
-  const stations = resample(
-    line,
-    lod === 2 ? 24 : Math.round(perimeter / (lod === 0 ? 0.13 : 0.32)),
-  );
+  return resample(line, lod === 2 ? 24 : Math.round(perimeter / (lod === 0 ? 0.13 : 0.32)));
+}
+
+function trackMesh(lod: Lod, line: readonly Vec2[], y: number): Mesh {
+  const stations = stationsOf(lod, line);
   const len = stations[0]?.len ?? 0.13;
   const unit =
     lod === 0
@@ -692,6 +694,7 @@ export const tiger_1 = defineAsset({
       ctx.part(
         track,
         finish(onGround(trackMesh(lod, line, ty)), [0, 0, 0], { mud: 1.4, mudStrength: 0.85 }),
+        { motion: tread(line, ty, stationsOf(lod, line)[0]?.len ?? 0.13) },
       );
       // Final-drive housing and idler axle stub: what holds sprocket and idler to the hull.
       stubs.push(

@@ -60,6 +60,7 @@ export {
   srgbToLinear,
   TRANSMISSIVE,
   type TransmissiveSurface,
+  type Tread,
   tone,
   type UseOptions,
   type WeatherCoverage,

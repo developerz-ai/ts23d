@@ -18,14 +18,19 @@
     1550
   ],
   "drawCalls": [
-    17,
-    17,
-    17
+    19,
+    19,
+    19
   ],
   "pivots": [
     {
       "name": "body",
       "parent": null
+    },
+    {
+      "name": "track_l",
+      "parent": null,
+      "motion": "tread"
     },
     {
       "name": "wheel_l_0",
@@ -61,6 +66,11 @@
       "name": "sprocket_l",
       "parent": null,
       "motion": "spin"
+    },
+    {
+      "name": "track_r",
+      "parent": null,
+      "motion": "tread"
     },
     {
       "name": "wheel_r_0",

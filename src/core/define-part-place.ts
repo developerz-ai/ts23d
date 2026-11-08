@@ -30,6 +30,7 @@ export const placedMesh = (m: Mesh, place: Parameters<typeof affine>[0]): Mesh =
 
 function rotateMotion(m: Motion, a: Affine): Motion {
   if (m.kind === 'slide') return { ...m, offset: linear(a, m.offset) };
+  if (m.kind === 'tread') return { ...m, path: m.path.map((p) => linear(a, p)) };
   return { ...m, axis: linear(a, m.axis) };
 }
 

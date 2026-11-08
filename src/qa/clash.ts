@@ -54,11 +54,12 @@ export const clashes: Gate = (asset: CompiledAsset): Finding[] => {
   const meshes = worldMeshes(asset.parts);
   const xf = worldTransforms(asset.parts);
   const findings: Finding[] = [];
-  for (const root of asset.parts.filter((p) => p.motion)) {
+  // A tread runs round inside its own outline: nothing to sweep.
+  for (const root of asset.parts.filter((p) => p.motion && p.motion.kind !== 'tread')) {
     const moving = subtree(asset.parts, root.name);
     const body = merge([...moving].flatMap((n) => meshes.get(n) ?? []));
     const t = xf.get(root.name);
-    if (!t || body.indices.length === 0 || !root.motion) continue;
+    if (!t || body.indices.length === 0 || !root.motion || root.motion.kind === 'tread') continue;
     const c = Math.cos(t.yaw);
     const s = Math.sin(t.yaw);
     const rot = (v: Vec3): Vec3 => [v[0] * c - v[1] * s, v[0] * s + v[1] * c, v[2]];

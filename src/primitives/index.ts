@@ -57,9 +57,12 @@ export {
 export {
   type MeasureOptions,
   measureText,
+  TEXT_FONTS,
   type TextFont,
   type TextOptions,
   text,
+  VECTOR_FONTS,
+  type VectorFont,
 } from './text.ts';
 export { type TiledOptions, tiled } from './tiled.ts';
 export { arcLengths, type SweepFrame, transportFrames } from './transport.ts';

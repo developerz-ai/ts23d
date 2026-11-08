@@ -28,6 +28,7 @@ import {
   symmetric,
   touches,
   translate,
+  tread,
   type Vec2,
   type Vec3,
 } from '@developerz.ai/ts23d';
@@ -177,13 +178,19 @@ function trackLink(pitch: number, horn: boolean): Mesh {
   return merge(parts);
 }
 
-function trackMesh(lod: Lod, line: readonly Vec2[], y: number): Mesh {
+/** Belt stations per LOD: LOD2 keeps an open belt of 32 slabs so the wheels show through it. */
+function stationsOf(lod: Lod, line: readonly Vec2[]): Station[] {
   const perimeter = resample(line, 1)[0]?.len ?? 1;
-  // LOD2 keeps an open belt of 32 slabs (not a solid prism) so the wheels show through it.
-  const stations = resample(
-    line,
-    lod === 2 ? 32 : Math.round(perimeter / (lod === 0 ? 0.172 : 0.25)),
-  );
+  return resample(line, lod === 2 ? 32 : Math.round(perimeter / (lod === 0 ? 0.172 : 0.25)));
+}
+
+/** Belt length after which the track repeats: horned and plain links alternate at LOD0. */
+function treadPitch(lod: Lod, line: readonly Vec2[]): number {
+  return (stationsOf(lod, line)[0]?.len ?? 0.172) * (lod === 0 ? 2 : 1);
+}
+
+function trackMesh(lod: Lod, line: readonly Vec2[], y: number): Mesh {
+  const stations = stationsOf(lod, line);
   const len = stations[0]?.len ?? 0.172;
   const band = box({
     size: [len * 1.04, TRACK_W, LINK_T],
@@ -585,6 +592,7 @@ const t34Family = defineFamily<Params>({
       ctx.part(
         track,
         weather(restrip(trackMesh(lod, line, y), rules), { mud: 1.2, mudStrength: 0.8 }),
+        { motion: tread(line, y, treadPitch(lod, line)) },
       );
       // Idler crank and final-drive housing: what holds idler and sprocket to the hull side.
       stubs.push(

@@ -1,11 +1,13 @@
 // Tracked vehicle: rolls along a gentle S-curve, stops, traverses the turret toward a target,
 // elevates the gun, fires (the `muzzle` event emitter, a recoil slide, a little camera shake),
 // returns the turret and drives on. Hooks: `turret`, `gun`, optional `gun_barrel`, running gear
-// (`wheel_*`, `road_wheel_*`, `sprocket_*`, `idler_*`), emitters.
+// (`wheel_*`, `road_wheel_*`, `sprocket_*`, `idler_*`), track belts (nodes carrying
+// `extras.ts23d.tread`: the links run round the loop at the same speed), emitters.
 
-import { Box3, MathUtils, type Object3D, Vector3 } from 'three';
+import { Box3, type BufferAttribute, MathUtils, Mesh, type Object3D, Vector3 } from 'three';
 import { around, Dolly, ease, phase } from './cinema.ts';
 import { emitterSummary, footprint, type Hooks } from './hooks.ts';
+import { TreadBelt } from './tread-belt.ts';
 import type { Scenario, ScenarioContext, ScenarioDef } from './types.ts';
 
 const GEAR = /^(road_)?wheel_|^sprocket|^idler|^return_roller/;
@@ -19,10 +21,52 @@ interface Wheel {
   readonly radius: number;
 }
 
+interface Belt {
+  readonly belt: TreadBelt;
+  readonly position: BufferAttribute;
+  readonly normal: BufferAttribute;
+  readonly rest: { readonly position: Float32Array; readonly normal: Float32Array };
+}
+
+const treadOf = (n: Object3D): { path: number[][] } | null => {
+  const t = (n.userData['ts23d'] as { tread?: { path?: number[][] } } | undefined)?.tread;
+  return t?.path && t.path.length >= 3 ? { path: t.path } : null;
+};
+
+/** Every mesh of every tread node, bound to its belt (meshes sit in the node's own space). */
+function belts(root: Object3D): Belt[] {
+  const out: Belt[] = [];
+  root.traverse((node) => {
+    const tread = treadOf(node);
+    if (!tread) return;
+    node.traverse((m) => {
+      if (!(m instanceof Mesh)) return;
+      // Own the buffers: the compiled geometry may be cached and shown again elsewhere.
+      m.geometry = m.geometry.clone();
+      const position = m.geometry.getAttribute('position') as BufferAttribute;
+      const normal = m.geometry.getAttribute('normal') as BufferAttribute;
+      if (!position || !normal) return;
+      const rest = {
+        position: Float32Array.from(position.array),
+        normal: Float32Array.from(normal.array),
+      };
+      out.push({
+        belt: new TreadBelt(tread.path, rest.position, rest.normal),
+        position,
+        normal,
+        rest,
+      });
+    });
+  });
+  return out;
+}
+
 class TrackedRun implements Scenario {
   readonly duration = DURATION;
   private readonly dolly: Dolly;
   private readonly wheels: Wheel[];
+  private readonly belts: Belt[];
+  private travel = 0;
   private readonly turret: Object3D | null;
   private readonly gun: Object3D | null;
   private readonly barrel: Object3D | null;
@@ -39,6 +83,7 @@ class TrackedRun implements Scenario {
       node,
       radius: Math.max(0.1, new Box3().setFromObject(node).getSize(new Vector3()).y / 2),
     }));
+    this.belts = belts(h.root);
     this.turret = h.node('turret');
     this.gun = h.node('gun');
     this.barrel = h.node('gun_barrel') ?? this.gun;
@@ -71,6 +116,15 @@ class TrackedRun implements Scenario {
 
     // Every wheel turns at track speed over its own radius.
     for (const w of this.wheels) w.node.rotation.y += (this.speed / w.radius) * dt;
+    // …and the track belts run round them at the same speed: the ground run stays put.
+    if (dt > 0 && this.speed !== 0) {
+      this.travel += this.speed * dt;
+      for (const b of this.belts) {
+        b.belt.pose(this.travel % b.belt.length, b.position.array, b.normal.array);
+        b.position.needsUpdate = true;
+        b.normal.needsUpdate = true;
+      }
+    }
 
     // Turret out to the target, gun up, fire, then everything home.
     const yaw = 0.9 * (ease(phase(t, 5.3, 6.8)) - ease(phase(t, 8.6, 9.8)));
@@ -105,6 +159,12 @@ class TrackedRun implements Scenario {
     if (this.turret) this.turret.rotation.z = 0;
     if (this.gun) this.gun.rotation.y = 0;
     this.barrel?.position.copy(this.rest);
+    for (const b of this.belts) {
+      b.position.array.set(b.rest.position);
+      b.normal.array.set(b.rest.normal);
+      b.position.needsUpdate = true;
+      b.normal.needsUpdate = true;
+    }
   }
 }
 
@@ -115,6 +175,6 @@ export const tracked: ScenarioDef = {
     h.kind === 'vehicle' && h.node('turret') !== null && h.node('gun') !== null,
   ground: (h) => footprint(h, h.size.z * 2.6, Math.max(h.size.x * 1.6, h.size.z * 0.9)),
   describe: (h) =>
-    `driving: ${[h.families(GEAR), 'turret', 'gun'].filter(Boolean).join(', ')}${emitterSummary(h)}`,
+    `driving: ${[h.families(GEAR), h.families(/^track_[lr]$/), 'turret', 'gun'].filter(Boolean).join(', ')}${emitterSummary(h)}`,
   create: (ctx) => new TrackedRun(ctx),
 };

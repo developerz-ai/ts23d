@@ -99,5 +99,6 @@ export { measure, measures } from './measures.ts';
 export { hiddenParts, zFighting } from './occlusion.ts';
 export { degenerateTriangles, nonFinite, normalsMatchWinding, vertexColors } from './sanity.ts';
 export { findSlits, type Slit, type SlitOptions } from './slits.ts';
+export { treads } from './treads.ts';
 export { CLASH_EPS, CONTACT_EPS, type Finding, type Gate } from './types.ts';
 export { weatherGate } from './weather.ts';

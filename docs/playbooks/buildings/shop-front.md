@@ -81,7 +81,7 @@ checks: [touches('fascia', 'frontage'), touches('awning', 'frontage')],
 - Modern frameless glazing on a Victorian front (period mismatch).
 
 ## Reuse
-`text` (fascia lettering, 5 × 7 font) or `extrudeSvg` (custom letterforms), `opening`, `sweep`
+`text` (fascia lettering: `font: 'serif'`, `'script'` or `'gothic'` for period sign-writing, raised with `depth`; `'5x7'` / `'block'` for stencils) or `extrudeSvg` (custom letterforms), `opening`, `sweep`
 (cornice mouldings), parts `panel_door`, `door_handle`, `hinge`, `lamp`; furniture and props from
 [furniture](../props/furniture.md). Compose into a building with `ctx.use`.
 
