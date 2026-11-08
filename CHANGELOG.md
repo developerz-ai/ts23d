@@ -4,6 +4,8 @@ All notable changes to `@developerz.ai/ts23d`. Format: [Keep a Changelog](https:
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-08
+
 ### Fixed
 - Gallery demo tanks (t34, tiger_1, rts_tank) drove with spinning wheels and frozen tracks: the belt had no motion, so the export merged it into the static body.
 
