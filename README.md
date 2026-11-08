@@ -61,11 +61,16 @@ Each asset is a TypeScript module. `t3d build` compiles it, deterministically, t
 - **Architecture and hulls.** `roof` (gable, hip, mansard, gambrel, …), `opening` window/door kits for `facade`, true-scale masonry `mass`, lofted vessel `hull`; `tiled`, `cell` and `lattice` (Warren / Pratt / Howe trusses) primitives, `box({ bevel })`, and `text` lettering as geometry.
 - **An optimiser on by default.** Weld, degenerate removal, vertex-cache and vertex-fetch order (tiger_1 LOD0: 15.4 → 6.3 MB, ACMR 2.88 → 1.16), weighted normals, baked per-vertex AO.
 - **Lights, glow and provenance in the GLB.** `KHR_lights_punctual` from light sockets, emissive glow materials, licence / creators / sources as `KHR_xmp_json_ld`. Zero glTF-Validator warnings.
+- **Physics and sound.** Per-part colliders (box, sphere, capsule, cylinder, capped convex hull), mass, centre of mass and inertia from volume × density, friction and restitution per material, exported as `KHR_physics_rigid_bodies` (`toGlb(asset, { physics: true })`); a `mass` check against `real.mass`. `@developerz.ai/ts23d/audio` synthesises deterministic impact, engine, mechanism and UI WAVs from material, size and motion, placed with `KHR_audio_emitter` ([`sound_demo`](recipes/sound_demo/)).
+- **Import and faces.** `importGlb` brings in scans and CC0 base meshes (`simplify` and `bakeNormals` for those only; code-built geometry is never decimated); `warpTPS` warps a CC0 base head onto landmarks so faces come from code ([`import_demo`](recipes/import_demo/)).
+- **Tuning.** `t3d tune` fits a recipe's declared `tune.params` to objectives (silhouette IoU against an SVG or PNG mask, spec measures, art metrics, triangle budget, custom) and writes `tune.json` the recipe reads back ([`tune_demo`](recipes/tune_demo/)).
+- **AI finish (optional).** `t3d finish` projects model-painted views onto LOD0 as one extra texture layer, masked per part; geometry, names and motion stay the recipe's; QA flags palette drift and mask leaks. Mock or local HTTP endpoint, cached by hash ([`finish_demo`](recipes/finish_demo/)).
+- **Real data.** `@developerz.ai/ts23d/data`: `bun run data wikidata <QID>` → `realFrom` dimensions, `bun run data dem --centre lat,lon --size m` → `terrainFromDEM`; fetched once, sha256-pinned, offline builds ([`real_valley`](recipes/real_valley/)).
 - **Test helpers.** `@developerz.ai/ts23d/testing`: `assertQaPass`, `assertBudget`, `assertParts`, `assertMeasure`, `assertMotionClear`, `assertDeterministic`, `snapshotHash` for your own recipe tests.
 
 **The goal: high-definition detail up close, cheap to draw everywhere.** One texture set, batched static geometry, LODs, compact core-glTF buffers (u16 indices and colours), welded, cache-optimised meshes.
 
-**No Blender for most hard-surface asset production.** For vehicles, buildings, props and whole scenes, the LLM writes TypeScript that does the modelling, LODs, UVs onto the trim sheet, batching, QA and export. Stylised organic shapes (busts, rocks, terrain) are code too, through `sculpt` and `sdf`; realistic sculpting stays a job for Blender or the planned [`/neural` adapter or `importGlb`](docs/idea/08-neural-adapters.md).
+**No Blender for most hard-surface asset production.** For vehicles, buildings, props and whole scenes, the LLM writes TypeScript that does the modelling, LODs, UVs onto the trim sheet, batching, QA and export. Stylised organic shapes (busts, rocks, terrain) are code too, through `sculpt` and `sdf`; realistic sculpts come in through [`importGlb`](docs/idea/08-neural-adapters.md) (scans, CC0 base meshes) or the planned `/neural` adapters.
 
 ## Generate assets with your agent
 
@@ -243,6 +248,7 @@ bunx t3d shot  recipes/*/*.ts         # sheet + manifest only: the fast look
 bunx t3d hero  recipes/*/*.ts         # beauty render: textured, lit, soft shadows (1600×900)
 bunx t3d review recipes/*/*.ts        # AI review pack: hero, sheet, close-ups, LOD strip, review.md
 bunx t3d tune recipes/<name>/<name>.ts --evals 400   # fit tune.params to objectives → tune.json, tune-report.md, tune-strip.png
+bunx t3d finish recipes/<name>/<name>.ts --endpoint URL --prompt "…"   # optional AI texture layer on LOD0
 bunx t3d list  recipes/*/*.ts --json  # the assets each module exports
 ```
 
