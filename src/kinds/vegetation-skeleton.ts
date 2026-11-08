@@ -1,7 +1,7 @@
 // The botanical skeleton: Weber–Penn recursive stems as plain polylines + radii. Always grown at
 // full depth and LOD0 resolution from one seeded stream, so every LOD is the same tree; meshing
-// decides what to emit. Children start inside their parent (centre offset r_parent − r_child along
-// the attachment normal), so each one physically grows out of the bark.
+// decides what to emit. Children start on their parent's axis, so each one's root sits buried in the
+// parent's wood and it physically grows out of the bark (QA `connections`: a face, not a kiss).
 
 import type { Rng, Vec3 } from '../core/index.ts';
 import { arcLengths, transportFrames } from '../primitives/index.ts';
@@ -147,12 +147,7 @@ export function grow(p: TreeParams, size: { height: number; dbh: number }, rng: 
       const len = Math.max(0.15, base * vary);
       const r0c = par.radii[0] ?? rp;
       const rc = Math.max(0.006, Math.min(0.8 * rp, r0c * (len / par.length) ** p.ratioPower));
-      const start: Vec3 = [
-        c[0] + np[0] * (rp - rc),
-        c[1] + np[1] * (rp - rc),
-        c[2] + np[2] * (rp - rc),
-      ];
-      const pts = path(start, dir, len, lv, false, rng);
+      const pts = path(c, dir, len, lv, false, rng);
       stems.push({
         level: par.level + 1,
         pts,

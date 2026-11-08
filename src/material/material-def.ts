@@ -1,10 +1,12 @@
 // The material definition contract: what a project (or the house library) says about a strip —
 // PBR numbers, intrinsic colour, a base painter kind and an optional painter layer — and its
-// translation to the sheet's StripRecipe. Validation throws T3D_MATERIAL_INVALID with the fix.
+// translation to the sheet's StripRecipe. Validation throws T3D_MATERIAL_INVALID with the fix
+// (a texture graph is probe-painted here, so a non-tileable or out-of-range graph fails at define).
 
 import { Ts23dError, type Vec3 } from '../core/index.ts';
 import type { MaterialPainter, StripKind, StripRecipe } from './paint/types.ts';
 import { hex } from './palette.ts';
+import { type MaterialGraph, probeGraph } from './tex/graph.ts';
 import { type TextureSource, validateTexture } from './texture-source.ts';
 
 export interface MaterialDef {
@@ -28,6 +30,16 @@ export interface MaterialDef {
   readonly paint?: MaterialPainter;
   /** Paint from a CC0 texture set (opt-in, needs `bun run textures`) instead of `kind`. */
   readonly texture?: TextureSource;
+  /** Paint from a texture graph (`tex.material({...})`) instead of `kind`. */
+  readonly graph?: MaterialGraph;
+  /** World metres the strip spans along U before it repeats (custom strips; default 4). */
+  readonly spanMetres?: number;
+  /** 0..1 rubbed convex edges (lighter, smoother, albedo2 shows through). Same as params.wear. */
+  readonly wear?: number;
+  /** 0..1 grime, darkening and roughening with age. Same as params.age. */
+  readonly age?: number;
+  /** 0..1 wetness: darker porous albedo, glossier, puddles in low spots past 0.5. Same as params.wet. */
+  readonly wet?: number;
   readonly description?: string;
   /** Where the numbers come from (URLs). */
   readonly sources?: readonly string[];
@@ -68,17 +80,40 @@ export function toStripRecipe(d: MaterialDef): StripRecipe {
   for (const [k, v] of Object.entries(d.params ?? {}))
     if (!Number.isFinite(v)) fail(id, `params.${k} is ${v}`, 'params are finite numbers');
   if (d.texture) validateTexture(id, d.texture);
+  for (const k of ['wear', 'age', 'wet'] as const)
+    if (d[k] !== undefined && !unit(d[k] ?? 0)) fail(id, `${k} ${d[k]}`, `${k} is 0..1`);
+  const span = d.spanMetres ?? 4;
+  if (!(Number.isFinite(span) && span >= 0.5 && span <= 64))
+    fail(
+      id,
+      `spanMetres ${span}`,
+      'spanMetres is 0.5..64 m (how far the strip runs along U before repeating)',
+    );
+  if (d.graph && d.texture)
+    fail(
+      id,
+      'both graph and texture are set',
+      'paint from one source: a tex graph or a CC0 texture',
+    );
+  if (d.graph) probeGraph(d.graph, span, scale, `material '${id}'`);
+  const weather = {
+    ...(d.wear !== undefined ? { wear: d.wear } : {}),
+    ...(d.age !== undefined ? { age: d.age } : {}),
+    ...(d.wet !== undefined ? { wet: d.wet } : {}),
+  };
+  const params = d.params || Object.keys(weather).length ? { ...d.params, ...weather } : undefined;
   const albedo = colour(id, 'albedo', d.albedo);
   const albedo2 = colour(id, 'albedo2', d.albedo2);
   return {
-    kind: d.kind ?? 'noise',
+    kind: d.kind ?? (d.graph ? 'flat' : 'noise'),
     scaleMetres: scale,
     roughness: d.roughness,
     ...(d.metalness !== undefined ? { metalness: d.metalness } : {}),
-    ...(d.params ? { params: d.params } : {}),
+    ...(params ? { params } : {}),
     ...(albedo ? { albedo } : {}),
     ...(albedo2 ? { albedo2 } : {}),
     ...(d.paint ? { paint: d.paint } : {}),
     ...(d.texture ? { texture: d.texture } : {}),
+    ...(d.graph ? { graph: d.graph } : {}),
   };
 }

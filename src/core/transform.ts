@@ -1,4 +1,4 @@
-// Rigid transforms on meshes: place a sub-mesh anywhere at any orientation, then merge. This is
+// Affine transforms on meshes (normals by the inverse transpose): place a sub-mesh anywhere at any orientation, then merge. This is
 // how detail is authored — build a rivet/hatch/bracket once in local space, place it N times.
 
 import type { Mesh } from './mesh.ts';
@@ -48,8 +48,48 @@ export const frame = (u: Vec3, v: Vec3, w: Vec3, at: Vec3 = [0, 0, 0]): Affine =
   t: at,
 });
 
+/**
+ * The matrix that carries normals: M itself when M is a rotation times a uniform scale (exact,
+ * and the historical bytes), else sign(det)·cof(M) = |det|·M⁻ᵀ (the inverse transpose without an
+ * inversion, still pointing outward through a mirror). Normalised per vertex either way.
+ */
+export function normalMatrix(m: Affine['m']): Affine['m'] {
+  const c0 = m[0] * m[0] + m[3] * m[3] + m[6] * m[6];
+  const c1 = m[1] * m[1] + m[4] * m[4] + m[7] * m[7];
+  const c2 = m[2] * m[2] + m[5] * m[5] + m[8] * m[8];
+  const d01 = m[0] * m[1] + m[3] * m[4] + m[6] * m[7];
+  const d02 = m[0] * m[2] + m[3] * m[5] + m[6] * m[8];
+  const d12 = m[1] * m[2] + m[4] * m[5] + m[7] * m[8];
+  const tol = 1e-9 * Math.max(c0, c1, c2);
+  const similar =
+    Math.abs(c0 - c1) <= tol &&
+    Math.abs(c0 - c2) <= tol &&
+    Math.abs(d01) <= tol &&
+    Math.abs(d02) <= tol &&
+    Math.abs(d12) <= tol;
+  if (similar) return m;
+  const s = determinant(m) < 0 ? -1 : 1;
+  return [
+    s * (m[4] * m[8] - m[5] * m[7]),
+    s * (m[5] * m[6] - m[3] * m[8]),
+    s * (m[3] * m[7] - m[4] * m[6]),
+    s * (m[2] * m[7] - m[1] * m[8]),
+    s * (m[0] * m[8] - m[2] * m[6]),
+    s * (m[1] * m[6] - m[0] * m[7]),
+    s * (m[1] * m[5] - m[2] * m[4]),
+    s * (m[2] * m[3] - m[0] * m[5]),
+    s * (m[0] * m[4] - m[1] * m[3]),
+  ];
+}
+
+const determinant = (m: Affine['m']): number =>
+  m[0] * (m[4] * m[8] - m[5] * m[7]) -
+  m[1] * (m[3] * m[8] - m[5] * m[6]) +
+  m[2] * (m[3] * m[7] - m[4] * m[6]);
+
 export function applyAffine(mesh: Mesh, a: Affine): Mesh {
   const { m, t } = a;
+  const k = normalMatrix(m);
   const positions = new Float32Array(mesh.positions.length);
   const normals = new Float32Array(mesh.normals.length);
   for (let i = 0; i < positions.length; i += 3) {
@@ -62,22 +102,17 @@ export function applyAffine(mesh: Mesh, a: Affine): Mesh {
     const nx = mesh.normals[i] ?? 0;
     const ny = mesh.normals[i + 1] ?? 0;
     const nz = mesh.normals[i + 2] ?? 0;
-    // Rigid + uniform scale: rotating the normal and renormalising is exact.
-    const rx = m[0] * nx + m[1] * ny + m[2] * nz;
-    const ry = m[3] * nx + m[4] * ny + m[5] * nz;
-    const rz = m[6] * nx + m[7] * ny + m[8] * nz;
-    const l = Math.hypot(rx, ry, rz) || 1;
+    const rx = k[0] * nx + k[1] * ny + k[2] * nz;
+    const ry = k[3] * nx + k[4] * ny + k[5] * nz;
+    const rz = k[6] * nx + k[7] * ny + k[8] * nz;
+    const l = Math.sqrt(rx * rx + ry * ry + rz * rz) || 1;
     normals[i] = rx / l;
     normals[i + 1] = ry / l;
     normals[i + 2] = rz / l;
   }
   // A mirror (det < 0) turns counter-clockwise triangles clockwise: flip each one back, or
   // engines cull the outside and draw the inside.
-  const det =
-    m[0] * (m[4] * m[8] - m[5] * m[7]) -
-    m[1] * (m[3] * m[8] - m[5] * m[6]) +
-    m[2] * (m[3] * m[7] - m[4] * m[6]);
-  if (det >= 0) return { ...mesh, positions, normals };
+  if (determinant(m) >= 0) return { ...mesh, positions, normals };
   const indices = mesh.indices.slice();
   for (let t = 0; t + 2 < indices.length; t += 3) {
     const b = indices[t + 1] ?? 0;

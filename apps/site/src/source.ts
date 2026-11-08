@@ -1,4 +1,7 @@
 // The source panel: the recipe's TypeScript, lightly highlighted. This text *is* the asset.
+// Multi-file recipes get a file picker (entry first, then siblings and nested modules).
+
+import type { Recipe } from './recipes.ts';
 
 const KEYWORDS =
   /\b(import|from|export|const|let|for|of|if|else|return|function|as|type|interface|new|true|false|null|undefined)\b/;
@@ -38,4 +41,27 @@ export function renderSource(root: HTMLElement, file: string, source: string): v
   if (pre) pre.tabIndex = 0;
   if (title) title.textContent = `recipes/${file}`;
   if (code) code.innerHTML = highlight(source);
+}
+
+let token = 0;
+
+/** Show `recipe`'s entry file, with a picker over all of its files when there are several. */
+export function renderRecipe(root: HTMLElement, recipe: Recipe): void {
+  const ticket = ++token;
+  const picker = root.querySelector<HTMLSelectElement>('[data-source-pick]');
+  const show = (file: string): void =>
+    void recipe.source(file).then((text) => {
+      if (ticket === token) renderSource(root, file, text);
+    });
+  if (picker) {
+    picker.hidden = recipe.files.length < 2;
+    picker.replaceChildren(
+      ...recipe.files.map((f) =>
+        Object.assign(document.createElement('option'), { value: f, textContent: f }),
+      ),
+    );
+    picker.onchange = () => show(picker.value);
+    picker.setAttribute('aria-label', `Recipe file (${recipe.files.length} files)`);
+  }
+  show(recipe.file);
 }

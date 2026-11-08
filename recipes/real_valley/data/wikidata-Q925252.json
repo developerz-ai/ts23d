@@ -1,0 +1,24 @@
+{
+  "format": "ts23d-wikidata/1",
+  "qid": "Q925252",
+  "label": "Half Dome",
+  "url": "https://www.wikidata.org/wiki/Special:EntityData/Q925252.json?revision=2503502462",
+  "page": "https://www.wikidata.org/wiki/Q925252",
+  "license": "CC0-1.0",
+  "fetched": "2026-11-07",
+  "sha256": "1754bda76a236138206c6c09e958748cfa7e51f10d0da2db64e25f21a89a00c5",
+  "quantities": {
+    "elevation": {
+      "value": 2693,
+      "unit": "m",
+      "property": "P2044",
+      "amount": "+2693",
+      "sourceUnit": "Q11573"
+    }
+  },
+  "coordinates": {
+    "lat": 37.746,
+    "lon": -119.53316666667
+  },
+  "items": {}
+}

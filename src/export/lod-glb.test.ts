@@ -163,3 +163,21 @@ it('glTF-Validator: 0 errors, 0 warnings with alternates and animations', async 
     Math.random = sealed;
   }
 });
+
+describe('prepared-LOD memo (split + single export share one optimise)', () => {
+  it('a different optimize option on the same compiled LOD is not served from the memo', () => {
+    const a = compile(cart, { lod: 0 });
+    const raw = toGlb(a, { optimize: false });
+    const optimised = toGlb(a);
+    expect(Bun.hash(optimised)).not.toBe(Bun.hash(raw));
+    expect(Bun.hash(raw)).toBe(Bun.hash(toGlb(compile(cart, { lod: 0 }), { optimize: false })));
+  });
+  it('split then single export gives the bytes of a fresh single export', () => {
+    const fresh = ([0, 1, 2] as Lod[]).map((lod) => compile(cart, { lod }));
+    const used = ([0, 1, 2] as Lod[]).map((lod) => compile(cart, { lod }));
+    for (const l of used) toGlb(l, { animations: true });
+    expect(Bun.hash(toLodGlb(used, { animations: true }))).toBe(
+      Bun.hash(toLodGlb(fresh, { animations: true })),
+    );
+  });
+});

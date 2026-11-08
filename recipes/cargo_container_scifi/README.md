@@ -15,7 +15,7 @@ strip over the doors; a keypad; lock bars with cams; ISO corner castings at all 
 | external height | 2.591 (8 ft 6 in) | same |
 | corner casting L × W × H | 0.178 × 0.162 × 0.118 | https://marine.albertjagger.co.uk/our-products/cargo-control/corner-castings/iso-corner-casting-top-left-fitment |
 | casting centres across | 2.276 (= 2.438 − 0.162) | derived from the two rows above |
-| door opening (ISO, typical) | ≈ 2.34 × 2.28 | modelled 2.12 × 2.28 between the posts |
+| door opening (ISO, typical) | ≈ 2.34 × 2.28 | modelled 2.11 × 2.26 between the posts (sill 0.182 → header 2.441 m) |
 
 ## Shape language
 - **Big:** frame (four posts plus side and end rails) and the thin shell plates inside it. The
@@ -47,6 +47,9 @@ the lock bars of the right-hand leaf. Built with `text`.
 ## Open questions
 - `clearOf` lists only the hinge pins (a real interlock); the clashes gate sweeps the real 0–90°
   sector and the recipe's `doorArc` check keeps the swing outward.
-- Closed leaves hang 6.6 cm proud of the rear frame face (hinge outside the posts, as on real
-  boxes): overall length 6.12 m vs ISO 6.058 m; the `frame` measures hold the ISO numbers.
+- Closed leaves fill the rear opening as on a real ISO box: sill (bottom end rail) to header (top
+  end rail), between the corner posts (3 mm hinge-side clearance, 4 mm centre seam), outer face
+  flush with the frame's rear face. The hinge axis sits 3.5 cm behind that face, so the leaves
+  swing out clear of the posts; lock bars and hinge strips stand proud (overall length 6.13 m vs
+  ISO 6.058 m; the `frame` measures hold the ISO numbers). The `gaps` QA gate keeps it closed.
 - The crates inside are visible only with the doors open.

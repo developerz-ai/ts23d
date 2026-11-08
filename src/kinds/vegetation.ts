@@ -28,6 +28,7 @@ import {
   stemsMesh,
   trunkMesh,
 } from './vegetation-mesh.ts';
+import { needleTufts } from './vegetation-needles.ts';
 import type { TreeParams } from './vegetation-params.ts';
 import { SPECIES } from './vegetation-presets.ts';
 import { grow } from './vegetation-skeleton.ts';
@@ -124,9 +125,11 @@ export function tree(ctx: BuildContext, o: TreeOptions): TreeInfo {
             shade,
             lr,
           )
-        : hi === deepest
-          ? leafCards(stems, deepest, radialSegments(deepest, lod), p.leaves, shade, lr)
-          : clusterCards(stems, deepest, p.leaves, shade, lr);
+        : hi !== deepest
+          ? clusterCards(stems, deepest, p.leaves, shade, lr)
+          : p.leaves.shape === 'needles'
+            ? needleTufts(stems, deepest, p.leaves, shade, lr)
+            : leafCards(stems, deepest, radialSegments(deepest, lod), p.leaves, shade, lr);
   }
   // Fit onto the real envelope; the trunk is rebuilt thinner by 1/sy so DBH (across Y) is exact.
   const s = fitFactors(
@@ -148,7 +151,11 @@ export function tree(ctx: BuildContext, o: TreeOptions): TreeInfo {
   });
   if (branches && triangleCount(branches) > 0)
     ctx.part(parts.branches, translate(fit(branches), back), { parent: parts.crown });
-  ctx.part(parts.leaves, translate(fit(leaves), back), { parent: parts.crown });
+  ctx.part(parts.leaves, translate(fit(leaves), back), {
+    parent: parts.crown,
+    // Geometric leaf cards (not alpha cards), each rooted on one twig vertex: a point is the design.
+    connect: { as: 'rest', why: 'leaf cards attach at a twig/petiole point' },
+  });
   return { parts, height: o.height, spread, dbh };
 }
 

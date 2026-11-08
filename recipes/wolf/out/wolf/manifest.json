@@ -1,0 +1,54 @@
+{
+  "name": "wolf",
+  "kind": "creature",
+  "description": "Adult grey wolf (Canis lupus lupus) standing relaxed in winter coat: 1.15 m head and body, 0.42 m tail, 0.80 m at the shoulder, 40 kg; built with the creature kind from sourced numbers",
+  "tags": [
+    "creature",
+    "animal",
+    "mammal",
+    "canid",
+    "wolf",
+    "sculpt"
+  ],
+  "files": {
+    "lods": [],
+    "sheet": "recipes/wolf/out/wolf/sheet.png",
+    "thumb": "recipes/wolf/out/wolf/thumb.png"
+  },
+  "triangles": [
+    143848,
+    29812,
+    3112
+  ],
+  "drawCalls": [
+    1,
+    1,
+    1
+  ],
+  "pivots": [
+    {
+      "name": "body",
+      "parent": null
+    }
+  ],
+  "emitters": [],
+  "sockets": [],
+  "surfaces": [
+    "opaque"
+  ],
+  "real": {
+    "length": 1.31,
+    "width": 0.27,
+    "height": 0.9
+  },
+  "measures": [],
+  "sources": [
+    "https://en.wikipedia.org/wiki/Wolf (length, shoulder height, tail, mass, skull, ears, fur, colour; after Heptner & Naumov 1998, Mech 1970)",
+    "Campione & Evans 2012, BMC Biology 10:60 (limb allometry, via the creature kind)",
+    "recipes/wolf/README.md (dossier, photos per view)"
+  ],
+  "qa": {
+    "pass": true,
+    "findings": []
+  }
+}

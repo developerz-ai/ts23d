@@ -1,0 +1,212 @@
+{
+  "name": "rts_barracks_damaged",
+  "kind": "building",
+  "description": "Saltmarch Warden Hall: original RTS barracks, one family in 3 build stages × 3 damage states.",
+  "tags": [
+    "rts",
+    "saltmarch",
+    "building",
+    "barracks",
+    "team-colour"
+  ],
+  "files": {
+    "lods": [],
+    "sheet": "recipes/rts_barracks/out/rts_barracks_damaged/sheet.png",
+    "thumb": "recipes/rts_barracks/out/rts_barracks_damaged/thumb.png"
+  },
+  "triangles": [
+    38392,
+    8156,
+    866
+  ],
+  "drawCalls": [
+    3,
+    3,
+    2
+  ],
+  "pivots": [
+    {
+      "name": "body",
+      "parent": null
+    },
+    {
+      "name": "body_paint_team",
+      "parent": null
+    }
+  ],
+  "emitters": [
+    {
+      "name": "tower_r_smoke",
+      "kind": "smoke",
+      "when": "always"
+    },
+    {
+      "name": "smoke_0",
+      "kind": "smoke",
+      "when": "always"
+    },
+    {
+      "name": "smoke_1",
+      "kind": "smoke",
+      "when": "always"
+    },
+    {
+      "name": "smoke_2",
+      "kind": "smoke",
+      "when": "always"
+    },
+    {
+      "name": "fire_0",
+      "kind": "fire",
+      "when": "always"
+    }
+  ],
+  "sockets": [
+    {
+      "name": "rally",
+      "kind": "spawn",
+      "parent": null
+    },
+    {
+      "name": "door",
+      "kind": "interact",
+      "parent": null
+    }
+  ],
+  "surfaces": [
+    "opaque"
+  ],
+  "paint": {
+    "team": "#b3261e"
+  },
+  "variants": {
+    "red": {
+      "team": "#b3261e"
+    },
+    "blue": {
+      "team": "#1f4fb8"
+    },
+    "green": {
+      "team": "#2f8f3a"
+    },
+    "yellow": {
+      "team": "#e2b521"
+    },
+    "purple": {
+      "team": "#6d2fa6"
+    },
+    "orange": {
+      "team": "#e0661a"
+    },
+    "teal": {
+      "team": "#139a92"
+    },
+    "white": {
+      "team": "#e8e8e2"
+    }
+  },
+  "real": {
+    "length": 15.78,
+    "width": 18.25,
+    "height": 11.05
+  },
+  "measures": [
+    {
+      "label": "gate height",
+      "spec": 3.5,
+      "measured": 3.4999998807907104,
+      "source": "recipes/rts_faction/README.md"
+    }
+  ],
+  "sources": [
+    "recipes/rts_faction/README.md (original design brief)",
+    "docs/playbooks/buildings/house.md (storey and door scale)"
+  ],
+  "weather": {
+    "chips": {
+      "target": 0.1006,
+      "actual": 0.1006,
+      "eligible": "convex-edges",
+      "area": 1572.3504,
+      "by": {
+        "hall_masonry": {
+          "target": 0.1,
+          "actual": 0.1,
+          "area": 1265.6209
+        },
+        "hall_render": {
+          "target": 0.1,
+          "actual": 0.1,
+          "area": 261.9232
+        },
+        "hall_rubble": {
+          "target": 0.12,
+          "actual": 0.12,
+          "area": 44.8063
+        }
+      }
+    },
+    "rust": {
+      "target": 0.55,
+      "actual": 0.55,
+      "eligible": "fasteners | below-fasteners",
+      "area": 14.7671
+    },
+    "moss": {
+      "target": 0.35,
+      "actual": 0.35,
+      "eligible": "ground-near & !down-facing",
+      "area": 318.0133,
+      "by": {
+        "hall_masonry": {
+          "target": 0.35,
+          "actual": 0.35,
+          "area": 298.3967
+        },
+        "hall_render": {
+          "target": 0.35,
+          "actual": 0.35,
+          "area": 19.6166
+        }
+      }
+    },
+    "dust": {
+      "target": 0.4876,
+      "actual": 0.4876,
+      "eligible": "up-facing",
+      "area": 480.6775,
+      "by": {
+        "hall_masonry": {
+          "target": 0.5,
+          "actual": 0.5,
+          "area": 376.7589
+        },
+        "hall_render": {
+          "target": 0.5,
+          "actual": 0.5,
+          "area": 59.8489
+        },
+        "hall_rubble": {
+          "target": 0.55,
+          "actual": 0.55,
+          "area": 11.3532
+        },
+        "hall_timber": {
+          "target": 0.3,
+          "actual": 0.3,
+          "area": 32.7165
+        }
+      }
+    },
+    "mud": {
+      "target": 0.55,
+      "actual": 0.55,
+      "eligible": "ground-near",
+      "area": 2.6104
+    }
+  },
+  "qa": {
+    "pass": true,
+    "findings": []
+  }
+}

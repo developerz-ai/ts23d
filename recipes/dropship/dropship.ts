@@ -35,6 +35,13 @@ import {
   weightedNormals,
   worldMeshes,
 } from '@developerz.ai/ts23d';
+import {
+  reproject,
+  restrip,
+  type StripRule,
+  tessellate,
+  weatherer,
+} from '../_lib/finish/finish.ts';
 
 // ── palette: gunmetal two-tone, dark belly, orange accent, yellow/black hazard ──────────────────
 const HULL = hex('#636b71');
@@ -51,6 +58,18 @@ const GLASS = hex('#3f7598');
 const GLOW = hex('#6fd2ff');
 const INTERIOR = hex('#4a5157');
 const STENCIL = hex('#d6d3c8');
+
+/** Authoring colour → material: painted hull plates (chips to bare metal), machined aluminium
+ *  mechanisms, cast dark fittings; accent/hazard/stencil/glass/glow stay on their own strips. */
+const RULES: readonly StripRule[] = [
+  { from: HULL, strip: 'steel_painted' },
+  { from: HULL_LIGHT, strip: 'steel_painted' },
+  { from: PANEL, strip: 'steel_painted' },
+  { from: BELLY, strip: 'steel_painted' },
+  { from: METAL, strip: 'aluminium', color: hex('#a8adb2') },
+  { from: DARK, strip: 'iron_cast', color: hex('#8a8a8a') },
+  { from: INTERIOR, strip: 'steel_painted' },
+];
 /** Hull number, stencilled on the sponsons and both faces of the fins. */
 const HULL_NO = '07';
 
@@ -296,7 +315,8 @@ export const dropship = defineAsset({
     ],
   },
   // Measured 12558 / 4872 / 1792; headroom ≤ 17%.
-  budget: { triangles: [14400, 5500, 2100] },
+  // LOD0/1 include the per-triangle UV split that keeps hull textures at true scale.
+  budget: { triangles: [19500, 6800, 2100] },
   checks: [symmetric('_l', '_r', 'y'), noOverlap('nacelle_*'), rampArc],
   glow: [
     { parts: ['thruster_*'], color: GLOW, strength: 8 },
@@ -314,6 +334,16 @@ export const dropship = defineAsset({
     const solid = (name: string, mesh: Mesh): void => {
       statics.push([name, mesh]);
     };
+    const weather = weatherer(ctx.rng.fork('weather'));
+    /** Materials at true scale, landing-pad dirt on the belly and gear, dust on top. */
+    const finish = (m: Mesh): Mesh =>
+      weather(reproject(restrip(tessellate(m, ctx.pick([1.5, 2.5, 6])), RULES)), {
+        dust: 0.25,
+        mud: 1.2,
+        mudStrength: 0.4,
+      });
+    const part = (name: string, m: Mesh | null, o?: Parameters<typeof ctx.part>[2]): void =>
+      ctx.part(name, m && (o?.surface === 'glass' ? m : finish(m)), o);
 
     // ── fuselage: lofted nose + thick-walled cabin plates (a real hollow behind the ramp) ────
     const fus: Mesh[] = [shell(NOSE.map(ringOf), hullColor)];
@@ -559,7 +589,7 @@ export const dropship = defineAsset({
       }
     solid('tail_boom', merge(tail));
     for (const [s, side] of SIDES) {
-      ctx.part(
+      part(
         `thruster_tail_${side}`,
         cylinder({
           radius: 0.24,
@@ -605,7 +635,7 @@ export const dropship = defineAsset({
             detail.push(beam({ from: p, to: q, width: 0.07, color: DARK }));
       }
     }
-    ctx.part('canopy', merge(glass), { surface: 'glass' });
+    part('canopy', merge(glass), { surface: 'glass' });
     if (lod === 0) {
       // Panel seams (small): dark 3 cm lines around the skin at frame stations.
       const seam = (x: number, faces: readonly number[]): void => {
@@ -719,7 +749,8 @@ export const dropship = defineAsset({
       if (lod === 0) {
         const seat = merge([
           bevelled([0.5, 0.45, 0.08], DARK, 0.01, [0, 0, 0.45]),
-          bevelled([0.45, 0.06, 0.6], DARK, 0.01, [0, 0.2, 0.55]),
+          // Backrest: its foot sunk 3 cm into the pan, its back 1 cm into the wall panel.
+          bevelled([0.45, 0.09, 0.6], DARK, 0.01, [0, 0.245, 0.5]),
           beam({ from: [0, 0, 0], to: [0, 0, 0.45], width: 0.04, color: METAL }),
         ]);
         for (let i = 0; i < 12; i++)
@@ -729,7 +760,7 @@ export const dropship = defineAsset({
             );
         for (const y of [-0.6, 0.6])
           inside.push(bevelled([9.2, 0.08, 0.03], METAL, 0, [0.4, y, 1.42]));
-        ctx.part('cabin_lamp', bevelled([6, 0.12, 0.04], hex('#fff4e0'), 0, [0.5, 0, 4.18]));
+        part('cabin_lamp', bevelled([6, 0.12, 0.04], hex('#fff4e0'), 0, [0.5, 0, 4.18]));
       }
       solid('cabin', merge(inside));
       ctx.socket('cabin_light', {
@@ -754,6 +785,8 @@ export const dropship = defineAsset({
           [0.94, 2.1],
           [0.85, 1.98],
           [0.83, 1.3],
+          // The bore runs on past the fan's stator disc (z 1.26), which is keyed into it.
+          [0.83, 1.22],
         ],
         segments: ctx.pick([24, 14, 8]),
         color: HULL,
@@ -861,11 +894,15 @@ export const dropship = defineAsset({
               ),
             );
           }
-          for (let i = 0; i < 4; i++)
-            pod.push(bevelled([0.05, 1.3, 0.22], DARK, 0, [-0.45 + i * 0.3, 0, -2.0]));
+          // Each vane spans the nozzle bore (r ≈ 0.76 m there) chord to chord, ends sunk 3 cm.
+          for (let i = 0; i < 4; i++) {
+            const x = -0.45 + i * 0.3;
+            const span = 2 * Math.sqrt(0.76 ** 2 - x * x) + 0.06;
+            pod.push(bevelled([0.05, span, 0.22], DARK, 0, [x, 0, -2.0]));
+          }
         }
       }
-      ctx.part(
+      part(
         `nacelle_${side}`,
         grime(merge(pod), { zones: [{ at: [0, 0, -2.1], radius: 1.0, strength: 0.45 }] }),
         {
@@ -880,7 +917,7 @@ export const dropship = defineAsset({
           at: [0.43, 0, 0],
           roll: 0.5,
         });
-        ctx.part(
+        part(
           `fan_${side}`,
           merge([
             lathe({
@@ -904,7 +941,7 @@ export const dropship = defineAsset({
           },
         );
       }
-      ctx.part(
+      part(
         `thruster_${side}`,
         cylinder({ radius: 0.7, length: 0.04, segments: seg, color: GLOW, at: [0, 0, -1.62] }),
         { parent: `nacelle_${side}` },
@@ -933,7 +970,7 @@ export const dropship = defineAsset({
         when: 'moving',
       });
       // Wingtip nav light: lens on the wing top, light socket just above it.
-      ctx.part(
+      part(
         `navlight_${side}`,
         lathe({
           profile: [
@@ -952,7 +989,7 @@ export const dropship = defineAsset({
         data: { light: 'point', color: s > 0 ? '#ff2020' : '#20ff50', intensity: 8, range: 12 },
       });
     }
-    ctx.part(
+    part(
       'navlight_tail',
       lathe({
         profile: [
@@ -1022,7 +1059,7 @@ export const dropship = defineAsset({
       cylinder({ radius: 0.05, length: 3.6, segments: 8, axis: 'y', color: METAL, at: HINGE }),
     );
     // Rests CLOSED; a one-way swing about −Y lowers it to the ground and back.
-    ctx.part('ramp', place(merge(rampPlate), { pitch: RAMP_CLOSED * DEG }), {
+    part('ramp', place(merge(rampPlate), { pitch: RAMP_CLOSED * DEG }), {
       at: HINGE,
       motion: { kind: 'sway', axis: [0, -1, 0], degrees: RAMP_SWING, hz: 0.1, oneWay: true },
       clearOf: ['hinge_ramp'], // knuckles ride on the hinge rod: a real interlock
@@ -1074,7 +1111,7 @@ export const dropship = defineAsset({
       'turret_ring',
       cylinder({ radius: 0.36, length: 0.08, segments: tSeg, color: DARK, at: [8.55, 0, 1.64] }),
     );
-    ctx.part(
+    part(
       'turret',
       lathe({
         profile: [
@@ -1093,7 +1130,7 @@ export const dropship = defineAsset({
         clearOf: ['turret_ring'], // the turret turns in its ring: a real interlock
       },
     );
-    ctx.part(
+    part(
       'gun',
       merge([
         bevelled([0.34, 0.3, 0.16], DARK, ctx.pick([0.02, 0.01, 0]), [0.12, 0, -0.08]),
@@ -1134,7 +1171,7 @@ export const dropship = defineAsset({
     // ── baked AO across every static part (sponson tops, wing roots, gear bays darken) ───────
     const occluder = merge(statics.map(([, m]) => m));
     for (const [name, mesh] of statics)
-      ctx.part(
+      part(
         name,
         lod < 2
           ? bakeAo(mesh, { samples: ctx.pick([20, 10, 0]), radius: 1.2, strength: 0.5 }, occluder)

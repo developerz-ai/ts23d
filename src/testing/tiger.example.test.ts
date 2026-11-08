@@ -19,13 +19,13 @@ describe('tiger_1 (example recipe test)', () => {
     expect(() =>
       assertMeasure(tiger_1, { label: 'hull length', axis: 'x', value: 7, parts: ['hull'] }),
     ).toThrow(Ts23dError);
-    // An opt-in gate it does not pass yet: LOD2 drops the wheel pivots (game code breaks there).
-    expect(() => assertQaPass(tiger_1, { lodGates: [lodPivots], gates: [] })).toThrow(
-      /LOD2 drops pivot/,
-    );
   });
 
-  it('passes the build QA at every LOD', () => assertQaPass(tiger_1));
+  it('keeps every pivot at every LOD (opt-in lodPivots gate: game code binds to them)', () =>
+    assertQaPass(tiger_1, { lodGates: [lodPivots], gates: [] }));
+
+  // Every gate at three LODs (mm clash sweep, connections) on a 15k-triangle tank: seconds, not ms.
+  it('passes the build QA at every LOD', () => assertQaPass(tiger_1), 30_000);
 
   it('stays in budget', () => assertBudget(tiger_1));
 

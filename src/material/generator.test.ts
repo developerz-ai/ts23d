@@ -24,10 +24,10 @@ function invalid(fn: () => unknown): Ts23dError {
 }
 
 describe('paintTrimSheet: bad input', () => {
-  it('rejects a size that is not 512/1024/2048, with a fix', () => {
+  it('rejects a size that is not 512/1024/2048/4096, with a fix', () => {
     const e = invalid(() => paintTrimSheet({ ...DEFAULT_SHEET, size: 300 as 512 }));
     expect(e.code).toBe('T3D_RECIPE_INVALID');
-    expect(e.fix).toContain('512, 1024 or 2048');
+    expect(e.fix).toContain('512, 1024, 2048 or 4096');
   });
   it('rejects a non-positive scaleMetres and an out-of-range roughness', () => {
     const flat = { kind: 'flat', roughness: 0.5 } as const;
@@ -121,7 +121,8 @@ describe('paintTrimSheet: output', () => {
         expect(px(sheet.normal, x, y, 2)).toBeGreaterThanOrEqual(128);
         if (Math.abs(px(sheet.normal, x, y, 0) - 128) > 20) tilted++;
       }
-    expect(tilted).toBeGreaterThan(500);
+    // v3: an 8 px row at 512² (1/64 of the sheet); ≥ 8 % of its texels tilt by > 20/128.
+    expect(tilted).toBeGreaterThan(0.08 * SIZE * (r.v1 - r.v0) * SIZE);
   });
 
   it('packs ORM: iron is rougher than glass, occlusion dips in mortar', () => {

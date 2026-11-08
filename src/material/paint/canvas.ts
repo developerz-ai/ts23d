@@ -5,7 +5,8 @@
 import type { Vec3 } from '../../core/index.ts';
 import { fbm } from './noise.ts';
 
-export interface Canvas {
+/** The texel grid of a region: what samplers need to snap features to whole tiles. */
+export interface Grid {
   readonly w: number;
   readonly h: number;
   /** World metres the canvas spans along U (x) and V (y). Row y grows with world up (+V). */
@@ -13,6 +14,9 @@ export interface Canvas {
   readonly metresV: number;
   /** Strips wrap along U (tile seamlessly); cells clamp. */
   readonly wrapU: boolean;
+}
+
+export interface Canvas extends Grid {
   readonly height: Float32Array;
   readonly tone: Float32Array;
   readonly rough: Float32Array;
@@ -25,6 +29,8 @@ export interface Canvas {
   colours: readonly [Vec3, Vec3] | null;
   /** sRGB RGBA override (stamped images, coloured foliage); null when painted greyscale. */
   rgba: Uint8Array | null;
+  /** Linear RGB per texel (3 floats each; texture graphs with ramps), × tone; else `colours`. */
+  linear: Float32Array | null;
   /** Tangent-space normal override (image strips); null = derived from `height`. */
   normalRgba: Uint8Array | null;
 }
@@ -51,6 +57,7 @@ export function createCanvas(
     mix: new Float32Array(n),
     colours: null,
     rgba: null,
+    linear: null,
     normalRgba: null,
   };
 }
@@ -60,7 +67,7 @@ export const pxU = (c: Canvas): number => c.metresU / c.w;
 export const pxV = (c: Canvas): number => c.metresV / c.h;
 
 /** Noise period (lattice cells across the canvas width) for a feature size in metres. */
-export function periodFor(c: Canvas, featureMetres: number): number {
+export function periodFor(c: Grid, featureMetres: number): number {
   return c.wrapU ? Math.max(1, Math.round(c.metresU / featureMetres)) : 1 << 20;
 }
 
@@ -69,7 +76,7 @@ export function periodFor(c: Canvas, featureMetres: number): number {
  * snapped so it tiles along U. Returns [-1, 1].
  */
 export function noiseAt(
-  c: Canvas,
+  c: Grid,
   xm: number,
   ym: number,
   sizeU: number,

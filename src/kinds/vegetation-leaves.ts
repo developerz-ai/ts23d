@@ -38,7 +38,7 @@ export function crownShade(stems: readonly Stem[], level: number): CrownShade {
   return { centre: c, radius: r, zMin: z0, zMax: Math.max(z1, z0 + 0.1) };
 }
 
-function card(
+export function card(
   leaf: LeafParams,
   base: Vec3,
   dir: Vec3,

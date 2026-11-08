@@ -9,6 +9,17 @@ import type { Json } from './bin-writer.ts';
 
 export const LIGHTS = 'KHR_lights_punctual';
 
+/**
+ * Defaults in the extension's physical units, so engines with physical light units (Unreal,
+ * Godot, Babylon, three.js ≥ r155) light a scene plausibly without per-engine tuning:
+ * directional = lux (clear-sky sun ≈ 100 000 lx); point/spot = candela from a ~1000 lm lamp
+ * (a 75 W incandescent / 10 W LED bulb) spread over 4π sr, or concentrated into the spot's cone.
+ */
+export const DEFAULT_SUN_LUX = 100_000;
+export const DEFAULT_LAMP_LUMENS = 1000;
+/** Solid angle of a cone with half-angle `outer` (radians), steradians. */
+const coneSr = (outer: number): number => 2 * Math.PI * (1 - Math.cos(outer));
+
 /** Shortest rotation taking unit `a` onto unit `b`. */
 function between(a: Vec3, b: Vec3): Quat {
   const d = a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
@@ -39,8 +50,13 @@ export function lightOf(part: Part): { light: Json; rotation: Quat } | null {
       name: part.name,
       type,
       color,
-      // Spot/point: candela; directional: lux. Defaults suit a vehicle lamp / a sun.
-      intensity: num(d['intensity'], type === 'directional' ? 3 : type === 'point' ? 20 : 100),
+      // Spot/point: candela; directional: lux (DEFAULT_* above).
+      intensity: num(
+        d['intensity'],
+        type === 'directional'
+          ? DEFAULT_SUN_LUX
+          : DEFAULT_LAMP_LUMENS / (type === 'point' ? 4 * Math.PI : coneSr(outer)),
+      ),
       ...(range > 0 && type !== 'directional' ? { range } : {}),
       ...(type === 'spot' ? { spot: { innerConeAngle: inner, outerConeAngle: outer } } : {}),
     },

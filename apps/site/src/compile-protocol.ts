@@ -5,9 +5,12 @@ import type { Footprint } from './diorama.ts';
 
 export type Lod = 0 | 1 | 2;
 
-/** What to compile: a recipe by asset name, or a diorama base for the viewer. */
+/**
+ * What to compile: a recipe by asset name (with its entry file under recipes/ when known, so the
+ * worker imports just that module), or a diorama base for the viewer.
+ */
 export type Target =
-  | { readonly kind: 'recipe'; readonly name: string }
+  | { readonly kind: 'recipe'; readonly name: string; readonly file?: string }
   | { readonly kind: 'diorama'; readonly name: string; readonly footprint: Footprint };
 
 export interface BuildRequest {
@@ -29,8 +32,12 @@ export interface PartInfo {
 export interface BuildResult {
   readonly glb: Uint8Array;
   readonly triangles: number;
+  /** The recipe's triangle budget at this LOD (0 for a diorama). */
+  readonly budget: number;
   readonly ms: number;
   readonly parts: readonly PartInfo[];
+  /** Mass from volume × density, for recipes that declare `physics` (kg, centre of mass). */
+  readonly mass?: { readonly kg: number; readonly centre: readonly number[] };
 }
 
 /** Plain-data asset metadata: what the page shows without importing a recipe. */
@@ -66,7 +73,7 @@ export interface Sheet {
 export type Ask =
   | { readonly request: BuildRequest }
   | { readonly list: true }
-  | { readonly manifest: string }
+  | { readonly manifest: string; readonly file?: string }
   /** The painted trim sheet at `size` px square (the library default when omitted). */
   | { readonly sheet: true; readonly size?: SheetSize };
 

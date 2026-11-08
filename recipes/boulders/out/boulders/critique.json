@@ -1,0 +1,109 @@
+{
+  "asset": "boulders",
+  "reviewer": "agent",
+  "overall": 7.6,
+  "scores": {
+    "silhouette": {
+      "score": 8,
+      "reason": "Four boulders 0.6\u20132.4 m with fracture-cut faces and rounded weathered masses; each reads as a different rock.",
+      "fixes": []
+    },
+    "proportions": {
+      "score": 8,
+      "reason": "Sizes as declared; flattened, ground-seated bases.",
+      "fixes": []
+    },
+    "materials": {
+      "score": 7,
+      "reason": "Granite cliff strip (joints, crystalline grain, normal relief) with a different variant per rock, darker damp feet and lighter tops. Thin dark contour outlines appear where the strip's lichen layer meets the projection seams.",
+      "fixes": [
+        "blend the triplanar seams on SDF meshes (or a dedicated boulder material without the lichen layer)"
+      ]
+    },
+    "detail": {
+      "score": 7,
+      "reason": "Fracture planes, pitting, smooth unions; 36k LOD0 triangles from surface nets.",
+      "fixes": [
+        "sharper fracture edges (less smoothing on the cuts)"
+      ]
+    },
+    "wear": {
+      "score": 8,
+      "reason": "Moss on the shaded north faces and the damp feet, pale lichen rosettes on sunny tops, darker bases: tells which side faces north and where water sits.",
+      "fixes": [
+        "a few half-buried pebbles and soil at the base"
+      ]
+    },
+    "lod": {
+      "score": 7,
+      "reason": "LOD2 (956) keeps all four masses; small fracture faces round off.",
+      "fixes": []
+    },
+    "technical": {
+      "score": 8,
+      "reason": "QA PASS, 36 260 / 6 684 / 956, one draw.",
+      "fixes": []
+    }
+  },
+  "renders": {
+    "hero.png": "3174ec719250365cc0a1e304b5b35249f975fdfd528598685ee64c88332638c5",
+    "sheet.png": "26a0c318ce1a2885b73402c43efda82fa56af9c9164df695bdbf7fd72b66ac62",
+    "raking.png": "ee286b0ef63829748d7c11be9e86c2b6c739dc9c44d7f57b6c36fc29cf643359",
+    "raking_detail.png": "6207dd5571e072761c4aaef01f7fdf8a16300f2d04866a94d165fe3649b88148",
+    "lods.png": "603e089b1c47494b94d39555565636efed675ef0f3df85de919b7390359179b8",
+    "silhouette.png": "93946db76dbe454174671ba16017976f71f8c15213b5b6d486f77ce98891ef19",
+    "value.png": "2f97b3b1855342e8315d58fd56bee4e2c0695f707c035637e4dee4726396aef7",
+    "detail.png": "bdd3b66f5065ffc77d487a179bae1b60a05095974a1c8584fdf3847623834bed"
+  },
+  "metrics": {
+    "silhouette": [
+      {
+        "view": "front",
+        "iou": 0.842
+      },
+      {
+        "view": "side",
+        "iou": 0.857
+      },
+      {
+        "view": "3/4",
+        "iou": 0.82
+      }
+    ],
+    "focal": {
+      "peakPart": "boulder_3",
+      "peak": [
+        600,
+        106
+      ],
+      "focalShare": 0,
+      "focalArea": 0,
+      "top": [
+        {
+          "part": "boulder_3",
+          "share": 0.423
+        },
+        {
+          "part": "boulder_2",
+          "share": 0.232
+        },
+        {
+          "part": "boulder_0",
+          "share": 0.193
+        }
+      ],
+      "declared": []
+    },
+    "rest": {
+      "share": 0.323,
+      "spread": 0.544,
+      "min": 0.25
+    },
+    "shape": {
+      "acuteShare": 0,
+      "straightShare": 0.552,
+      "taper": 0.425,
+      "shape": "stable"
+    }
+  }
+}

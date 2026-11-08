@@ -32,9 +32,33 @@
 | `lattice` | `from`, `to`, `depth`, `pattern: warren\|pratt\|howe\|x`, `bays`, `chord`, `web`, `section` | Bridges, towers, cranes, gantries |
 | `text` | `str`, `origin`, `along`, `up`, `height`, `font`, `depth?`, `align?`, `maxWidth?`, `surface?` | Name boards, wagon lettering, hull markings (5×7 font, Latin + Cyrillic) |
 | `sdf` | `field(p)`, `bounds`, `resolution`, `mesher?`, `symmetry?` | Any signed-distance shape; `sd.*` combinators, `valueNoise` |
-| `sculpt` | `edits` (shape, op, blend, color, groups), `resolution`, `mirror?` | Busts, rocks, asteroids: Dreams-style edit lists |
+| `sculpt` | `edits` (shape, op, blend, color, groups, `{ field, bounds }`), `resolution`, `mirror?` | Busts, rocks, asteroids: Dreams-style edit lists |
+| `extrudeSvg` / `latheSvg` | SVG string, `scale` or `size`, `depth`, `bevel?`, `view`, `tolerance?`, `lod?` | Emblems, gears, brackets, vases from a drawing ([Drawing with SVG](#drawing-with-svg)) |
+| `visualHull` / `sd.silhouette` | `front`, `side`, `top?` SVGs, `scale`, `round?` | Block out a head, creature or vehicle from two drawings, then sculpt |
 
 Noise for any primitive: `gradientNoise2`, `valueNoise2`, `fbm`, `billow`, `ridged`, `warp`, `terrace` — all seeded from an `Rng`.
+
+## Drawing with SVG
+
+**A coding agent cannot emit pixels, but SVG is drawing as text.** Artists start a model from front
+and side drawings; in ts23d the drawing is an inline SVG string in the recipe, and these primitives
+turn it into closed, game-ready geometry (`src/primitives/svg-*.ts`, `sdf-silhouette.ts`):
+
+| Call | Does |
+|---|---|
+| `svgShape(svg, { scale \| size, origin?, tolerance?, lod? })` | Path `d` (M L H V C S Q T A Z, any case) or a small `<svg>` with `<path>`, `<polygon>`, `<polyline>`, `<rect>`, `<circle>`, `<ellipse>` → flattened contours in metres, **Y up**, origin at the viewBox bottom centre. `size` = viewBox width in metres. Curves flatten within `tolerance` (default 2 mm), ×4 at LOD1, ×12 at LOD2 |
+| `extrudeSvg(svg, { depth, bevel?, view, at, color, strip })` | Even-odd fill (nested contours are holes, islands inside holes fill again), ear-clipped caps with hole bridges, smooth walls split at sharp corners, optional 45° chamfer. `view: 'front'` (YZ, along X) · `'side'` (XZ, along Y, the default) · `'top'` (XY, up from z = 0). Closed and outward-wound |
+| `latheSvg(svg, { segments, axis?, at, color })` | Half profile with the axis on the paper's left edge; a closed shape drops its on-axis edges |
+| `visualHull({ front, side, top?, scale, round?, at })` | The solid whose views match the drawings: exact 2D polygon distances extruded and intersected (`round` smooths view-against-view creases). Returns `{ field, bounds }`: spread it into a `sculpt` edit, then refine with normal edits |
+
+```ts
+const hull = visualHull({ front: HEAD_FRONT, side: HEAD_SIDE, top: HEAD_TOP, scale: 0.004, round: 0.02, lod: ctx.lod });
+sculpt({ edits: [{ ...hull, color: SKIN }, { shape: 'ellipsoid', op: 'intersect', blend: 0.03, … }, …], resolution, mirror: 'y', color: SKIN });
+```
+
+Malformed drawings throw `T3D_SVG_INVALID` with the fix (transforms are refused: bake them into the
+coordinates). The worked example is [`recipes/svg_showcase`](../../recipes/svg_showcase/): a bevelled
+gear, a turned amphora, a silhouette-sculpted creature head and a star emblem, all from inline SVG.
 
 ## Why TypeScript, not JSON
 
@@ -100,6 +124,7 @@ One module may export several assets; `t3d` builds every one. No default exports
 | `ctx.use(asset, opts)` | Instance another asset at this LOD: the composition primitive |
 | `ctx.emitter(name, opts)` | A particle source as a named node ([below](#emitters)) |
 | `ctx.socket(name, opts)` | An attachment point as a named node ([below](#sockets)) |
+| `ctx.joint(name, opts)` | Where two parts connect; QA `joints` proves they fit ([below](#joints-parts-that-fit)) |
 
 `PartOptions`:
 
@@ -157,6 +182,38 @@ if (ctx.lod === 0) ctx.part('glacis_rivets', rivets);
 ```
 
 Lower level: `affine(placement)`, `frame(u, v, w, at)` (an explicit basis), `applyAffine(mesh, affine)`.
+
+## Big assets: many files
+Code is cheap for an agent, so a hero asset can run to thousands of lines. Split it like any program:
+the folder's `<name>.ts` is the entry, sibling modules hold the parts, and `recipes/_lib/` holds parts
+many assets share.
+
+```
+recipes/dragon/dragon.ts    defineAsset: wires the parts, budgets, real, LOD policy
+recipes/dragon/head.ts      export function head(ctx: Ctx, o: HeadOpts): void
+recipes/dragon/wings.ts     export function wings(ctx: Ctx, o: WingOpts): void
+recipes/dragon/body.ts · legs.ts · tail.ts · scales.ts
+recipes/_lib/weapons/greataxe.ts   shared by orc, dwarf, troll
+```
+
+```ts
+// recipes/dragon/dragon.ts
+import { defineAsset } from '@developerz.ai/ts23d';
+import { body } from './body.ts';
+import { head } from './head.ts';
+import { wings } from './wings.ts';
+
+export const dragon = defineAsset({
+  name: 'dragon', kind: 'character', budget: { triangles: [150000, 30000, 4000] },
+  build(ctx) {
+    const torso = body(ctx, { length: 9 });
+    head(ctx, { at: torso.neckEnd, horns: 6 });
+    wings(ctx, { root: torso.shoulders, span: 14 });
+  },
+});
+```
+The recipes gate accepts any `.ts` inside an asset folder (outside `out/`) as that asset's module.
+Whole finished assets compose with `ctx.use(other)` (a weapon into a hand socket).
 
 ## Families: one build, many assets
 
@@ -263,6 +320,55 @@ checks: [
 
 Selectors are globs (`*`, `?`) over part names. A custom check is any `(asset: CompiledAsset) => CheckFinding[]`, where `CheckFinding = { message, fix, part? }`.
 
+## Joints: parts that fit
+
+**A hand built in `hand.ts` must fit the forearm built in `arm.ts`.** `ctx.joint` says where two
+parts meet; the default QA gate `joints` cuts both at that plane and compares the sections.
+
+```ts
+ctx.joint('wrist', { from: 'forearm', to: 'hand', at: wrist, axis: [1, 0, 0] });          // flush
+ctx.joint('grip', { from: 'hand', to: 'sword', at: fist, axis: [0, 0, 1], kind: 'grip' });
+```
+
+| Option | Meaning |
+|---|---|
+| `from`, `to` | Part selectors: a name, a prefix (`'hand'` covers `hand_palm`, `hand_thumb`) or a glob |
+| `at`, `axis` | Joint centre and direction in the asset's frame; `axis` points from `from` to `to` (a grip: along the handle) |
+| `kind` | `flush` (default): sections either side match in width, depth and centre · `socket`: `from` fits inside `to` and fills it · `grip`: the handle's diameter matches the fist's opening, and the fingers wrap at least half of it |
+| `tolerance` | Relative size difference allowed, default 0.2 |
+
+| Code | Fails when | Example fix printed |
+|---|---|---|
+| `T3D_JOINT_MISMATCH` | Sizes differ beyond tolerance | `scale hand ×0.51 at the joint, or flare forearm to 9.1 cm (×1.95)` |
+| `T3D_JOINT_GAP` | A side never crosses the plane, or the parts stop short | `extend forearm or move hand 2.0 cm back along the axis` |
+| `T3D_JOINT_OFFSET` | Section centres miss by over 25% of the section | `slide hand by 5.0 cm in the joint plane` |
+| `T3D_JOINT_BURIED` | `from` runs through `to` far past the joint (flush) | `shorten forearm to end at the joint` |
+
+Joints carry through `ctx.use` (prefixed, moved with the instance) and are listed in the manifest.
+`jointFit(compiled, joint)` returns both sections and the findings. Worked example:
+`recipes/joint_demo/` (arm.ts, hand.ts, sword.ts; its test builds a hand ×2 and gets the mismatch).
+
+## Measuring: the ruler and the blueprint
+
+```ts
+import { compile, ruler } from '@developerz.ai/ts23d';
+const r = ruler(compile(knight));
+r.size();                                      // { length, width, height } in metres
+r.bounds('shield');                            // world box of every shield_* part
+r.between('hand_r', 'sword', 'closest');       // surface to surface; 0 = touching
+r.between('wheel_l', 'wheel_r');               // centre to centre
+r.gap('door', 'frame', 0.1);                   // clearance, capped at 0.1 m
+r.section('forearm', { at: [0.5, 0, 1], normal: [1, 0, 0] }); // { width, depth, area, centroid }
+```
+
+In tests (`@developerz.ai/ts23d/testing`): `assertSize(asset, { height: [1.7, 1.9] })`,
+`assertBetween(asset, 'hand_r', 'sword', [0, 0.005], { mode: 'closest' })`, `assertJointsFit(asset)`.
+
+`t3d blueprint recipe.ts --out renders` draws it: side, front and top on a metre grid (major 1 m /
+minor 0.1 m, adapting to the size), L × W × H dimension lines, every `real.measures` entry between
+its parts as model/spec (green within tolerance, red outside), joints green or red by fit, and a
+1.8 m figure beside the asset for scale. Read it after `t3d shot`.
+
 ## Composition: `ctx.use`
 
 A scene is an asset that uses other assets. Each instance is compiled at the parent's LOD, with its own seed, under a prefixed group:
@@ -341,3 +447,62 @@ const findings = runQa(lod0);                      // [] = PASS
 const glb = toGlb(lod0);                           // Uint8Array
 const png = contactSheet(lod0, { far: compile(lamp_post, { lod: 2 }) });
 ```
+
+## Physics: body, colliders, mass
+
+**Collision and mass come from the same geometry, opt-in at export.** `toGlb(lod0, { physics: true })` writes `KHR_physics_rigid_bodies` + `KHR_implicit_shapes` (Khronos drafts; [gltf-capabilities](../architecture/gltf-capabilities.md#physics-rigid-body-colliders-mass-physics-true-opt-in)). Nothing in the recipe is required: every pivot gets a fitted collider, every shell a mass from its strip's density.
+
+```ts
+export const tiger_1 = defineAsset({
+  name: 'tiger_1', kind: 'vehicle',
+  real: { length: 8.45, width: 3.7, height: 3.0, mass: 57000, massTolerance: 0.1 },
+  physics: {
+    body: 'dynamic',                 // 'static' | 'dynamic' | 'kinematic'; default by kind
+    shell: 0.06,                     // hollow hull: wall metres (omit = solid)
+    density: { plain: 7850 },        // kg/m³ per strip: `plain` is armour steel here
+    // mass: 57000,                  // override the total (keeps CoM + inertia shape); never to pass QA
+  },
+  build(ctx) {
+    ctx.part('antenna', whip, { collider: 'none' });          // no collider, still has mass
+    ctx.part('gun_barrel', barrel, { parent: 'gun', collider: 'cylinder' });
+    ctx.part('spare_track', links, { density: 7200, shell: 0.02 });
+  },
+});
+```
+
+| Option | Where | Effect |
+|---|---|---|
+| `collider` | part (read on pivots) | `auto` (default): tightest box / sphere / capsule / cylinder, else ≤ 64-vertex hull, compound if one hull swallows the parts; `mesh` = exact trimesh; `none` |
+| `density`, `shell` | part, or `physics.density` (per strip) / `physics.shell` | kg/m³; wall thickness for closed shells (area × wall, capped at solid) |
+| `real.mass` | asset | QA `mass`: computed vs real (±15 % default) → `T3D_MASS_MISMATCH` |
+
+Library: `massProperties(compiled)` (mass, centre of mass, inertia tensor and principal axes), `fitCollider(mesh, kind)`, `convexHull`, `cappedHull`, `DENSITY`, `physicsMaterialOf(strip)` from `@developerz.ai/ts23d/physics`.
+
+## Parts: define once, reuse everywhere
+
+**A bolt, a hinge or a wheel is written once, as a `definePart`, and called anywhere.** Typed params
+from real-scale defaults, validated (`T3D_PART_PARAMS` + fix), cached per (params, LOD), LOD-gated,
+and composable. The shared kit lives in [`recipes/_parts/`](../../recipes/_parts/README.md): search
+it before writing geometry. Full guide: [14-parts](14-parts.md).
+
+```ts
+import { flange, hex_bolt } from '../_parts/index.ts';
+
+hex_bolt(ctx, 'bolt_0', { size: 'M16', length: 0.06 }, { at: [1, 0, 0.5] });   // one named part
+const head = hex_bolt.mesh({ size: 'M10' }, ctx);                              // cached mesh
+ctx.part('bolts', merge(seam.map((at) => place(head, { at }))));               // place N times
+flange(ctx, 'flange_in', { pipe: 0.114 }, { at, place: { pitch: Math.PI / 2 } });
+```
+
+| API | Does |
+|---|---|
+| `definePart({ name, description, tags?, params, schema?, validate?, lod?, build(b, p) })` | `build` returns a `Mesh` or named pieces `{ name, mesh, at?, surface?, motion?, clearOf? }`; `b` has `lod`, `pick`, a params-seeded `rng`, `b.mesh(part, o)` / `b.pieces(part, o)` |
+| `part(ctx, name, overrides?, call?)` | One mesh → part `name`; pieces → group `name` + `name_<piece>`. `call`: `PartOptions` + `place` (bake rotation/scale) + `upTo` |
+| `part.mesh(o?, lod \| ctx, upTo?)` / `part.pieces(…)` / `part.params(o?)` | Merged mesh (empty when the LOD drops it), the pieces, resolved params |
+| `part.info` / `catalogueOf(parts)` | Name, description, tags, params (type, default, unit, range, choices, doc), LOD policy |
+
+## Finishes and optics
+Paint slots take a finish: `paint: { body: { colour: '#9b1b1b', clearcoat: 1, clearcoatRoughness: 0.03, metallicFlake: 0.5 } }` (car lacquer, kept by every livery). Transmissive surfaces (`glass`, `ice`, `liquid`, `jelly`, `translucent`) take `optics: { glass: { ior: 1.52, thickness: 0.005, attenuationColour, attenuationDistance } }`. Named `finishes` (sheen for cloth, anisotropy for brushed metal, iridescence for heat tint, specular) apply per part with `{ finish: 'brushed' }`. All write ratified `KHR_materials_*` extensions (used, never required); see [gltf-capabilities](../architecture/gltf-capabilities.md) and `recipes/pbr_showcase`.
+
+## Art intent
+`art: { focal: 'head', shape: 'aggressive', grounded: true, restShare: 0.3 }` states what the eye should read, in words the checks measure ([16-art-as-text](16-art-as-text.md)): `focal` part name(s) (prefix or `*` glob) must hold the strongest value contrast; `shape` (`aggressive` · `friendly` · `stable`) must match the silhouette's measured class; `grounded` (default on for `character`/`creature`) wants luminance rising base → top; `restShare` is the minimum calm surface (default 0.25). `assertArt(asset)` in `/testing` and `t3d critique` measure all of it.

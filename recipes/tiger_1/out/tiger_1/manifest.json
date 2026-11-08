@@ -14,14 +14,14 @@
     "thumb": "recipes/tiger_1/out/tiger_1/thumb.png"
   },
   "triangles": [
-    88176,
-    16304,
-    648
+    73712,
+    18096,
+    3410
   ],
   "drawCalls": [
     23,
     23,
-    3
+    23
   ],
   "pivots": [
     {
@@ -179,7 +179,7 @@
     {
       "label": "hull length",
       "spec": 6.316,
-      "measured": 6.315999984741211,
+      "measured": 6.382832288742065,
       "source": "https://en.wikipedia.org/wiki/Tiger_I"
     },
     {

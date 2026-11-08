@@ -25,6 +25,7 @@ export { type PrismOptions, prism } from './prism.ts';
 export {
   type SculptEdit,
   type SculptField,
+  type SculptFieldEdit,
   type SculptOptions,
   type SculptShape,
   sculpt,
@@ -32,6 +33,16 @@ export {
 } from './sculpt.ts';
 export { type SdfColor, type SdfOptions, sdf } from './sdf.ts';
 export { type Field, sd } from './sdf-ops.ts';
+export {
+  type FieldSolid,
+  polygonSdf,
+  type SilhouetteOptions,
+  visualHull,
+} from './sdf-silhouette.ts';
+export { type SvgOptions, type SvgShape, svgShape } from './svg-doc.ts';
+export { type ExtrudeSvgOptions, extrudeSvg, type SvgView } from './svg-extrude.ts';
+export { type LatheSvgOptions, latheSvg } from './svg-lathe.ts';
+export { parsePath, type SvgContour } from './svg-path.ts';
 export { type SweepOptions, sweep } from './sweep.ts';
 export { type TerrainColorOptions, type TerrainPalette, terrainColor } from './terrain-color.ts';
 export {
@@ -54,3 +65,5 @@ export { type TiledOptions, tiled } from './tiled.ts';
 export { arcLengths, type SweepFrame, transportFrames } from './transport.ts';
 export { triangulate } from './triangulate.ts';
 export { valueNoise } from './value-noise.ts';
+export { applyWarp, type WarpOptions, warpTPS } from './warp.ts';
+export { type Tps, type TpsOptions, tpsWarp } from './warp-solve.ts';

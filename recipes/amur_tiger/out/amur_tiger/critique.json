@@ -1,0 +1,141 @@
+{
+  "asset": "amur_tiger",
+  "reviewer": "agent",
+  "overall": 6,
+  "scores": {
+    "silhouette": {
+      "score": 7,
+      "reason": "Reads as a big cat / tiger from the side and 3/4: level back, low head, deep chest, digitigrade legs, J-hanging tail with a black tip (silhouette IoU LOD2 0.93-0.95). Against the Schönbrunn side photos the trunk is a little long and tubular, the neck long, the hind thigh shallow, and the ears read small and slightly 'mouse-cup' from the front; the winter ruff barely changes the outline.",
+      "fixes": [
+        "shorten the trunk masses ~5% and deepen the chest at the brisket so the waist tuck reads",
+        "grow the cheek ruff lobes outward/down (ruff.ts) so the front silhouette widens below the ears like an Amur in winter",
+        "raise and enlarge the hamstring/quadriceps masses so the haunch reads as a powerful thigh in side view"
+      ]
+    },
+    "proportions": {
+      "score": 7,
+      "reason": "Sourced numbers hold in code: head+body 1.957 m (1.95), tail 0.987 m (0.99), withers 1.013 m (0.8-1.1), mass 237 kg (Mazák 180-306), limb allometry 264 kg. By eye beside the photos the head is still slightly small and low, the muzzle a touch long and the forearms a little thin for an Amur male.",
+      "fixes": [
+        "thicken the forearm ellipsoids ~10% (legs.ts)",
+        "shorten the muzzle 1 cm and widen the whisker pads (face.ts)"
+      ]
+    },
+    "materials": {
+      "score": 5,
+      "reason": "Everything is vertex colour on the plain strip: the coat reads as painted velvet, not fur; stripes are crisp but their edges stair-step at the 1.2 cm body cell; nose leather, eyes and claws separate by hue only. No fur cards/shells (planned M4), no whiskers.",
+      "fixes": [
+        "fur cards or shells along the hair flow (planned M4 creature kind)",
+        "a fur material strip that does not darken the vertex colour (the library `fur` strip's brown albedo mutes orange, so plain was used)",
+        "per-vertex stripe colour on a finer head/body cell at LOD0 or a stripe texture lane"
+      ]
+    },
+    "detail": {
+      "score": 6,
+      "reason": "Primary and secondary forms are there (scapula, triceps, haunch, hock point, toe beans split by fur partings, sheathed claw tips, lidded eyes with round pupils, whisker-pad dots, ear ocelli, canines rooted in the gum, belly fringe, ruff tufts) and a strand relief at LOD0, but in a close-up there are no whiskers, no fur locks breaking the silhouette, and the face planes are soft.",
+      "fixes": [
+        "whisker strands as thin tubes from the pads",
+        "fur locks on the ruff/elbows/belly as cards",
+        "sharper cheekbone and brow planes in face.ts"
+      ]
+    },
+    "wear": {
+      "score": 4,
+      "reason": "A clean zoo animal: no mud on the paws, no scars, no matted or wet fur, no dust; only a ground-occlusion grade and a value gradient feet to head.",
+      "fixes": [
+        "grime the paws and lower legs with soil colour (grime({ ground }))",
+        "a few scars on the face/shoulders and a torn ear notch, seeded",
+        "damp darker fur on the lower legs"
+      ]
+    },
+    "lod": {
+      "score": 7,
+      "reason": "LOD2 (2,900 tris) keeps the outline (IoU 0.93-0.95) and the orange/white blocks, but its legs are visibly tubes, the stripes become a blotchy pattern at the 7.8 cm cell, and the eyes are dropped (painted socket only).",
+      "fixes": [
+        "paint LOD2 stripes as 6-8 broad bands instead of sampling the LOD0 pattern",
+        "use the sculpt for LOD2 lower legs with a gentle inflate instead of tubes"
+      ]
+    },
+    "technical": {
+      "score": 8,
+      "reason": "QA PASS at every LOD including the new connections gate (anatomical folds declared as creases, each with a reason); 136.9k / 27.2k / 2.9k triangles under the 150k / 30k / 3k budgets; 3 draws; one material; compile 7.9 s / 1.6 s / 0.2 s; deterministic hash-seeded stripes; mass gate on a stated furred density.",
+      "fixes": [
+        "spend the claws' and ears' LOD0 triangles on the face instead (ears 5.5k each is more than they show)",
+        "merge eyes into one part per side with the lids for one fewer node pair"
+      ]
+    }
+  },
+  "renders": {
+    "hero.png": "1bc5dbcfafeac2f42fb94acb9ed91284103e0fef24a93da6c930c450e4b5619d",
+    "sheet.png": "0f35bea1ae933e5f16e17e831fa8ccebc2a9c36adaf0bfd26e8a009d5a491728",
+    "raking.png": "3def99ab6a44bed0ea33e66aaaef657596e6eeb914489940023e0b218c069767",
+    "raking_detail.png": "76fc04d2372ce7fc7f5a4275ef0292ddcb135a48069492061b7cb3449746ba8b",
+    "lods.png": "dbc433deaba4a8477e1ba36f6828d0c686ce1a83e0b4292793238d1467fc1c4b",
+    "silhouette.png": "95fd971163c9863ff2edb8b1d905df100226d6fc0335c45a93fd0c8c1ac60270",
+    "value.png": "415270e0748761c67298d01f0ba502db36a036218b7abab564efb398708a3558",
+    "detail.png": "6db9db51e9869dd066517a620852cee73c089d87c0dda3a4a90e060c2923e1a3"
+  },
+  "metrics": {
+    "silhouette": [
+      {
+        "view": "front",
+        "iou": 0.946
+      },
+      {
+        "view": "side",
+        "iou": 0.908
+      },
+      {
+        "view": "3/4",
+        "iou": 0.949
+      }
+    ],
+    "focal": {
+      "peakPart": "head",
+      "peak": [
+        480,
+        206
+      ],
+      "focalShare": 0.779,
+      "focalArea": 0.231,
+      "top": [
+        {
+          "part": "head",
+          "share": 0.779
+        },
+        {
+          "part": "body",
+          "share": 0.158
+        },
+        {
+          "part": "jaw",
+          "share": 0.029
+        }
+      ],
+      "declared": [
+        "head"
+      ]
+    },
+    "rest": {
+      "share": 0.566,
+      "spread": 0.541,
+      "min": 0.25
+    },
+    "grounded": {
+      "rise": 0.118,
+      "bands": [
+        0.415,
+        0.337,
+        0.357,
+        0.446,
+        0.479
+      ]
+    },
+    "shape": {
+      "acuteShare": 0.076,
+      "straightShare": 0.496,
+      "taper": -0.503,
+      "shape": "friendly",
+      "declared": "friendly"
+    }
+  }
+}

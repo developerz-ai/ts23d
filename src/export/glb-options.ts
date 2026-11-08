@@ -5,6 +5,8 @@ import type { LodCoverage } from './lod-coverage.ts';
 import type { GlowRule } from './materials.ts';
 import type { GlbMeta } from './metadata.ts';
 import type { ExportReport } from './optimize-parts.ts';
+import type { PhysicsOptions, PhysicsReport } from './physics.ts';
+import type { ExportProfile } from './profile.ts';
 import type { SheetBinding } from './textures.ts';
 
 export interface GlbOptions {
@@ -36,12 +38,29 @@ export interface GlbOptions {
    * `MSFT_screencoverage`. Default: the asset's `lodCoverage`, else derived (lod-coverage.ts).
    */
   readonly lodCoverage?: LodCoverage;
+  /**
+   * Rigid body + colliders (KHR_physics_rigid_bodies, KHR_implicit_shapes) on the LOD0 tree, from
+   * the asset's `physics` and parts' `collider` options. Off by default (Khronos drafts).
+   */
+  readonly physics?: boolean | PhysicsOptions;
+  /**
+   * Engine defaults (profile.ts): `rt` drops the baked occlusion texture, `unreal`/`godot` add
+   * their collider naming when `physics` is on. Recorded in `extras.profile`. Default none.
+   */
+  readonly profile?: ExportProfile;
+  /**
+   * Sound emitters (KHR_audio_emitter, Khronos draft) for the asset's sound sources, referencing
+   * `<clip>.wav` beside the GLB (write them with `soundFiles`). On when the asset has sounds.
+   */
+  readonly sounds?: boolean;
 }
 
 /** The GLB bytes plus what the optimiser did (vertex counts, ACMR before/after, per part). */
 export interface GlbResult {
   readonly glb: Uint8Array;
   readonly report: ExportReport;
+  /** Mass, body and colliders written (only with `physics`). */
+  readonly physics?: PhysicsReport;
 }
 
 /** One GLB holding several LODs, plus one optimiser report per LOD (same order as the input). */
@@ -50,4 +69,5 @@ export interface LodGlbResult {
   readonly reports: readonly ExportReport[];
   /** The `MSFT_screencoverage` written (empty for a single LOD). */
   readonly coverage: readonly number[];
+  readonly physics?: PhysicsReport;
 }

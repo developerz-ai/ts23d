@@ -19,7 +19,7 @@ async function draw(item: Item): Promise<string> {
     renderer.setPixelRatio(1);
     renderer.setSize(W, H, false);
   }
-  const { scene } = await loadBuilt(recipe(item.name, 2));
+  const { scene } = await loadBuilt(recipe(item.name, 2, item.recipe?.file));
   stage.setLook(lookFor(item.category), renderer);
   stage.show(scene, true);
   stage.syncShadow();

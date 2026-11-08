@@ -51,3 +51,28 @@ ends), silver-grey running board and saddles (`wood_weathered`), painted steel f
 (`steel_painted`), sand-cast trucks, wheels and bolsters (`iron_cast`), and rusty hardware: grab
 irons, couplers, brake gear (`iron_rust`). The numbers and sources are in
 `docs/architecture/materials.md`.
+
+## Liveries (paint slots + `KHR_materials_variants`)
+Two paint slots: `body` (sheathing, steel framing, ends, roof, doors) and `letter` (road name, marks,
+number). Bare-iron door handles are their own `door_*_handle` parts so they stay out of the slot.
+`boxcar.glb` / `lod*.glb` carry three switchable looks; viewers without the extension show the default.
+
+| Variant | body | letter | Basis |
+|---|---|---|---|
+| (default) mineral red, as built 1918 | `#84402d` | `#e8e2d2` | NARA Bettendorf photo of C.C.& O. 8024 (above): red-oxide body, white lettering |
+| `oxide_red` | `#74382a` | — | darker oxide repaint; colour from the Rapido N&W 42574 reference already used for `boxcar_nw` (above). Freight-car red varied by road and paint batch; this is the darker end of that range |
+| `faded` | `#a0644f` | `#cfc6b4` | sun-chalked iron-oxide paint and yellowed lettering after decades in service. ARTISTIC: no single sourced chip; many USRA cars ran into the 1950s–60s (Pennsylvania listed a dozen in interchange in 1968, https://www.trains.com/?p=148767) |
+
+Variants repaint the SAME C.C.& O. car: a different road needs different lettering geometry, which a
+material swap cannot change, so `boxcar_nw` stays a separate asset (it declares the same slots, no
+variants). Yellow (reefer) or other non-boxcar schemes are deliberately absent: not plausible for
+this car type. Render one: `bun run t3d hero recipes/boxcar/boxcar.ts --variant faded --out renders`.
+
+## Mass
+`real.mass` = 21 t ±15 % (empty light weight). **Unverified:** no stencilled light weight for a USRA
+1001-B car was found in the sources searched ([USRA standard](https://en.wikipedia.org/wiki/USRA_standard),
+model-maker spec pages); 20–22 t is the usual range quoted for 40 ft single-sheathed 50-ton cars
+and should be checked against the *Railroad Prototype Cyclopedia* vol. 17 or an ORER entry.
+The model weighs 23.5 t: roof (3 mm sheet), underframe (12 mm channel/plate), framing (8 mm),
+truck castings (25 mm), wheels (30 mm web), reservoir/cylinder (6 mm) are hollow `shell`s; the
+sheathing is timber at 600 kg/m³.

@@ -1,9 +1,14 @@
 // manifest.json per asset: what an engine pipeline or an agent needs without opening a GLB —
-// files, triangles per LOD, pivots (the names game code binds to), emitters, surfaces, QA,
-// measures with their measured values, sources.
+// files, triangles per LOD, pivots (the names game code binds to), emitters, joints, surfaces, QA,
+// measures with their measured values, sources, paint slots and switchable variants.
 
-import type { Asset, CompiledAsset } from '../core/index.ts';
-import { mergeToPivots } from '../export/index.ts';
+import {
+  type Asset,
+  type CompiledAsset,
+  linearToHex,
+  type WeatherCoverage,
+} from '../core/index.ts';
+import { mergeToPivots, soundUses } from '../export/index.ts';
 import { type Finding, measure } from '../qa/index.ts';
 
 export interface AssetManifest {
@@ -18,6 +23,8 @@ export interface AssetManifest {
     readonly hero?: string;
     readonly sheet?: string;
     readonly thumb?: string;
+    /** `<clip>.wav` files the GLBs' KHR_audio_emitter entries reference. */
+    readonly sounds?: readonly string[];
   };
   readonly triangles: readonly number[];
   /** MSFT_screencoverage written into `files.single`: where each LOD hands over (last = cull). */
@@ -26,7 +33,27 @@ export interface AssetManifest {
   readonly pivots: readonly { name: string; parent: string | null; motion?: string }[];
   readonly emitters: readonly { name: string; kind: string; when: string }[];
   readonly sockets: readonly { name: string; kind: string; parent: string | null }[];
+  /** Sound sources (KHR_audio_emitter): node, clip, what starts it; absent when none. */
+  readonly sounds?: readonly {
+    node: string;
+    clip: string;
+    trigger: string;
+    loop: boolean;
+    seconds: number;
+  }[];
+  /** Declared connections (`ctx.joint`), checked by QA `joints`; absent when none. */
+  readonly joints?: readonly {
+    name: string;
+    from: string;
+    to: string;
+    kind: string;
+    at: readonly number[];
+  }[];
   readonly surfaces: readonly string[];
+  /** Paint slots → default colour (sRGB hex); each is one material, one draw per pivot using it. */
+  readonly paint?: Readonly<Record<string, string>>;
+  /** KHR_materials_variants liveries in the GLBs: name → the slots it repaints (sRGB hex). */
+  readonly variants?: Readonly<Record<string, Readonly<Record<string, string>>>>;
   readonly real?: { length: number; width: number; height: number };
   readonly measures: readonly {
     label: string;
@@ -35,6 +62,12 @@ export interface AssetManifest {
     source?: string;
   }[];
   readonly sources: readonly string[];
+  /**
+   * Measured weathering at LOD0 per effect (`weather(ctx, …)`): declared `target` (coverage
+   * fraction; dents depth, sag/warp max in m), `actual`, the `eligible` selector, its `area` (m²);
+   * `by` splits it per weathered target when there are several.
+   */
+  readonly weather?: Readonly<Record<string, WeatherSummary>>;
   readonly qa: { readonly pass: boolean; readonly findings: readonly Finding[] };
 }
 
@@ -67,7 +100,7 @@ export function manifestOf(
         ).parts.filter((p) => p.mesh).length,
     ),
     pivots: (merged?.parts ?? [])
-      .filter((p) => !p.emitter && !p.socket)
+      .filter((p) => !p.emitter && !p.socket && !p.audio)
       .map((p) => ({
         name: p.name,
         parent: p.parent,
@@ -79,7 +112,20 @@ export function manifestOf(
     sockets: (top?.parts ?? []).flatMap((p) =>
       p.socket ? [{ name: p.name, kind: p.socket.kind, parent: p.parent }] : [],
     ),
+    ...soundsOf(top),
+    ...(top?.joints?.length
+      ? {
+          joints: top.joints.map((j) => ({
+            name: j.name,
+            from: j.from,
+            to: j.to,
+            kind: j.kind ?? 'flush',
+            at: j.at.map((v) => Math.round(v * 1e4) / 1e4),
+          })),
+        }
+      : {}),
     surfaces: [...new Set((top?.parts ?? []).map((p) => p.surface ?? 'opaque'))].sort(),
+    ...paintOf(top),
     ...(asset.real
       ? { real: { length: asset.real.length, width: asset.real.width, height: asset.real.height } }
       : {}),
@@ -90,6 +136,81 @@ export function manifestOf(
       ...(m.source ? { source: m.source } : {}),
     })),
     sources: asset.sources ?? [],
+    ...weatherOf(top),
     qa: { pass: findings.length === 0, findings },
   };
+}
+
+function soundsOf(top: CompiledAsset | undefined): Pick<AssetManifest, 'sounds'> {
+  const uses = top ? soundUses(top) : [];
+  if (!uses.length) return {};
+  return {
+    sounds: uses.map((u) => ({
+      node: u.node,
+      clip: u.clip.name,
+      trigger: u.trigger,
+      loop: u.loop,
+      seconds:
+        Math.round((u.clip.samples.length / u.clip.channels / u.clip.sampleRate) * 1e3) / 1e3,
+    })),
+  };
+}
+
+const hexes = (slots: Readonly<Record<string, readonly [number, number, number]>>) =>
+  Object.fromEntries(Object.entries(slots).map(([k, c]) => [k, linearToHex(c)]));
+
+function paintOf(top: CompiledAsset | undefined): Pick<AssetManifest, 'paint' | 'variants'> {
+  const set = top?.paintSet;
+  if (!set) return {};
+  const variants = Object.entries(set.variants);
+  return {
+    paint: hexes(set.paint),
+    ...(variants.length
+      ? { variants: Object.fromEntries(variants.map(([v, slots]) => [v, hexes(slots)])) }
+      : {}),
+  };
+}
+
+export interface WeatherSummary {
+  readonly target: number;
+  readonly actual: number;
+  readonly eligible: string;
+  readonly area: number;
+  readonly count?: number;
+  readonly by?: Readonly<Record<string, { target: number; actual: number; area: number }>>;
+}
+
+const r4 = (x: number): number => Math.round(x * 1e4) / 1e4;
+
+/** Coverage effects aggregate area-weighted; shape effects (dents, sag, warp) take the max. */
+function weatherOf(top: CompiledAsset | undefined): { weather?: Record<string, WeatherSummary> } {
+  const all = top?.weather ?? [];
+  if (!all.length) return {};
+  const byEffect = new Map<string, WeatherCoverage[]>();
+  for (const w of all) byEffect.set(w.effect, [...(byEffect.get(w.effect) ?? []), w]);
+  const out: Record<string, WeatherSummary> = {};
+  for (const [effect, ws] of byEffect) {
+    const area = ws.reduce((t, w) => t + w.area, 0);
+    const shape = effect === 'dents' || effect === 'sag' || effect === 'warp';
+    const mean = (k: 'amount' | 'actual'): number =>
+      area > 0 ? ws.reduce((t, w) => t + w[k] * w.area, 0) / area : 0;
+    out[effect] = {
+      target: r4(shape ? Math.max(...ws.map((w) => w.amount)) : mean('amount')),
+      actual: r4(shape ? Math.max(...ws.map((w) => w.actual)) : mean('actual')),
+      eligible: [...new Set(ws.map((w) => w.where))].join(' ; '),
+      area: r4(area),
+      ...(effect === 'dents' ? { count: ws.reduce((t, w) => t + (w.count ?? 0), 0) } : {}),
+      ...(ws.length > 1
+        ? {
+            by: Object.fromEntries(
+              ws.map((w) => [
+                w.target,
+                { target: w.amount, actual: r4(w.actual), area: r4(w.area) },
+              ]),
+            ),
+          }
+        : {}),
+    };
+  }
+  return { weather: out };
 }

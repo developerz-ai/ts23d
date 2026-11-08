@@ -1,10 +1,10 @@
-// Page-side compile client: asks the worker for GLB bytes (cached per request), then turns bytes
-// into a three.js scene. The main thread never runs the recipe compiler.
+// Page-side compile client: asks the worker pool for GLB bytes (cached per request), then turns
+// bytes into a three.js scene. The main thread never runs the recipe compiler. A build nobody
+// needs any more (the visitor left a 20-second sculpt) can be cancelled.
 
 import type { AnimationClip, Object3D } from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import type {
-  Answer,
   Ask,
   BuildRequest,
   BuildResult,
@@ -13,12 +13,13 @@ import type {
   Manifest,
   Sheet,
   SheetSize,
-  WorkerIn,
-  WorkerOut,
+  Target,
 } from './compile-protocol.ts';
+import { WorkerPool } from './worker-pool.ts';
 
 export type {
   AssetInfo,
+  BuildRequest,
   BuildResult,
   Lod,
   Manifest,
@@ -29,35 +30,17 @@ export type {
 
 export const LODS: readonly Lod[] = [0, 1, 2];
 
-let worker: Worker | null = null;
-let nextId = 1;
-const pending = new Map<number, { resolve(r: Answer): void; reject(e: Error): void }>();
-const cache = new Map<string, Promise<BuildResult>>();
+const pool = new WorkerPool();
+const cache = new Map<string, { readonly id: number; readonly job: Promise<BuildResult> }>();
 
-function connect(): Worker {
-  if (worker) return worker;
-  worker = new Worker(new URL('./compile.worker.ts', import.meta.url), { type: 'module' });
-  worker.addEventListener('message', (e: MessageEvent<WorkerOut>) => {
-    const job = pending.get(e.data.id);
-    if (!job) return;
-    pending.delete(e.data.id);
-    if (e.data.ok) job.resolve(e.data.answer);
-    else job.reject(new Error(e.data.error));
-  });
-  return worker;
-}
+/** Cache key: the entry file is only a hint for the worker, never part of the identity. */
+const targetKey = (t: Target): string =>
+  t.kind === 'recipe' ? `recipe:${t.name}` : JSON.stringify(t);
 
 const keyOf = (r: BuildRequest): string =>
-  `${JSON.stringify(r.target)}@${r.lod}${r.keepParts ? '+parts' : ''}${r.animations === false ? '-anim' : ''}`;
+  `${targetKey(r.target)}@${r.lod}${r.keepParts ? '+parts' : ''}${r.animations === false ? '-anim' : ''}`;
 
-function ask(body: Ask): Promise<Answer> {
-  return new Promise<Answer>((resolve, reject) => {
-    const id = nextId++;
-    pending.set(id, { resolve, reject });
-    const msg: WorkerIn = { id, ...body };
-    connect().postMessage(msg);
-  });
-}
+const ask = (body: Ask) => pool.ask(body).answer;
 
 /** Every exported asset, as plain metadata. Recipes are imported in the worker only. */
 export const catalog = (): Promise<readonly CatalogEntry[]> =>
@@ -66,11 +49,12 @@ export const catalog = (): Promise<readonly CatalogEntry[]> =>
 const manifests = new Map<string, Promise<Manifest>>();
 
 /** The CLI's manifest for one asset (all three LODs compiled in the worker; no QA). */
-export function manifest(name: string): Promise<Manifest> {
+export function manifest(name: string, file?: string): Promise<Manifest> {
   let m = manifests.get(name);
   if (!m) {
-    m = ask({ manifest: name }) as Promise<Manifest>;
+    m = ask({ manifest: name, ...(file ? { file } : {}) }) as Promise<Manifest>;
     manifests.set(name, m);
+    m.catch(() => manifests.delete(name));
   }
   return m;
 }
@@ -86,6 +70,7 @@ export const trimSheet = (size: SheetSize): Promise<Sheet> => {
   if (!s) {
     s = ask({ sheet: true, size }) as Promise<Sheet>;
     sheets.set(size, s);
+    s.catch(() => sheets.delete(size));
   }
   return s;
 };
@@ -94,15 +79,23 @@ export const trimSheet = (size: SheetSize): Promise<Sheet> => {
 export function build(request: BuildRequest): Promise<BuildResult> {
   const key = keyOf(request);
   const hit = cache.get(key);
-  if (hit) return hit;
-  const job = ask({ request }) as Promise<BuildResult>;
-  cache.set(key, job);
+  if (hit) return hit.job;
+  const { id, answer } = pool.ask({ request });
+  const job = answer as Promise<BuildResult>;
+  cache.set(key, { id, job });
   job.catch(() => cache.delete(key));
   return job;
 }
 
-export const recipe = (name: string, lod: Lod): BuildRequest => ({
-  target: { kind: 'recipe', name },
+/** Stop a build still running in the pool (its promise rejects with `CancelledError`). */
+export function cancelBuild(request: BuildRequest): void {
+  const hit = cache.get(keyOf(request));
+  if (hit) pool.cancel(hit.id);
+}
+
+/** A recipe build request; `file` (e.g. `dragon/dragon.ts`) lets the worker import just that. */
+export const recipe = (name: string, lod: Lod, file?: string): BuildRequest => ({
+  target: { kind: 'recipe', name, ...(file ? { file } : {}) },
   lod,
 });
 

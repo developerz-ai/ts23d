@@ -1,9 +1,9 @@
 // Lighting looks per gallery category: which procedural environment, how strong, the key light
 // (the one that casts shadows), and the backdrop the viewer paints behind the asset. Vehicles and
-// hard-surface things get a product studio, characters a warm portrait key with a cool rim, terrain
-// and vegetation an outdoor sky with a low sun.
+// hard-surface things get a product studio, characters and creatures a warm portrait key with a
+// cool rim, terrain and vegetation an outdoor sky with a low sun.
 
-import type { Category } from './items.ts';
+import type { Category } from './categories.ts';
 import type { EnvPreset } from './lightbox.ts';
 
 type Rgb = readonly [number, number, number];
@@ -60,7 +60,7 @@ export const LOOKS: Record<'studio' | 'portrait' | 'outdoor', Look> = {
 
 /** The look a gallery category is shown in. */
 export function lookFor(category: Category): Look {
-  if (category === 'Characters') return LOOKS.portrait;
+  if (category === 'Characters' || category === 'Creatures') return LOOKS.portrait;
   if (category === 'Nature & Terrain') return LOOKS.outdoor;
   return LOOKS.studio;
 }

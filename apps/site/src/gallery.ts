@@ -1,7 +1,8 @@
 // The gallery: category filter chips and a grid of cards showing each asset's committed beauty
 // render. No compile is needed to draw the grid; assets without renders get a live LOD2 render.
 
-import { CATEGORIES, type Category, type Item } from './items.ts';
+import { BLURB, CATEGORIES, type Category } from './categories.ts';
+import type { Item } from './items.ts';
 import { cardImage } from './thumbnails.ts';
 
 type Filter = Category | 'All';
@@ -53,6 +54,8 @@ function card(item: Item): HTMLLIElement {
   meta.append(el('code', undefined, item.name));
   const t = tris(item.media?.triangles[0]);
   if (t) meta.append(el('span', undefined, t));
+  const score = item.media?.score;
+  if (score) meta.append(el('span', 'card-score', `critique ${score.toFixed(1)}`));
   const kind = item.category.toLowerCase().startsWith(item.kind) ? '' : ` · ${item.kind}`;
   body.append(meta, el('p', 'card-cat', `${item.category}${kind}`));
   a.append(figure, body);
@@ -90,6 +93,7 @@ export class Gallery {
         b.type = 'button';
         b.append(document.createTextNode(f), el('span', 'chip-n', String(counts.get(f) ?? 0)));
         b.setAttribute('aria-pressed', String(f === this.filter));
+        if (f !== 'All') b.title = BLURB[f];
         b.addEventListener('click', () => {
           this.filter = f;
           for (const x of this.chips.querySelectorAll('button'))

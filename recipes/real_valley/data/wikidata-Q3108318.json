@@ -1,0 +1,24 @@
+{
+  "format": "ts23d-wikidata/1",
+  "qid": "Q3108318",
+  "label": "Glacier Point",
+  "url": "https://www.wikidata.org/wiki/Special:EntityData/Q3108318.json?revision=2432950658",
+  "page": "https://www.wikidata.org/wiki/Q3108318",
+  "license": "CC0-1.0",
+  "fetched": "2026-11-07",
+  "sha256": "f477627cc02a25e1352e5019ea426114cb0207076a531e74e9164b94f0c7befc",
+  "quantities": {
+    "elevation": {
+      "value": 2220,
+      "unit": "m",
+      "property": "P2044",
+      "amount": "+2220",
+      "sourceUnit": "Q11573"
+    }
+  },
+  "coordinates": {
+    "lat": 37.7308,
+    "lon": -119.573
+  },
+  "items": {}
+}

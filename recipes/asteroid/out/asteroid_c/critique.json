@@ -1,0 +1,105 @@
+{
+  "asset": "asteroid_c",
+  "reviewer": "agent",
+  "overall": 7.4,
+  "scores": {
+    "silhouette": {
+      "score": 8,
+      "reason": "Lumpy carbonaceous asteroid with two big craters, smaller pits and a cluster of glowing crystals at mining sites; distinct per seed.",
+      "fixes": []
+    },
+    "proportions": {
+      "score": 8,
+      "reason": "Declared envelope per variant; crater sizes in proportion to the body.",
+      "fixes": []
+    },
+    "materials": {
+      "score": 7,
+      "reason": "Regolith on the asphalt strip (dark aggregate, hairline cracks, rough) tinted to carbonaceous values, ochre ore veins, cyan crystal veins near the mining sites, glowing crystals. The aggregate is fine-grained for a 10 m body; no metallic flecks.",
+      "fixes": [
+        "a project regolith material with larger clasts and metallic (iron-nickel) flecks"
+      ]
+    },
+    "detail": {
+      "score": 7,
+      "reason": "Craters with rims, pits, veins, crystal clusters; SDF surface at 0.17 m.",
+      "fixes": [
+        "boulders resting in the crater floors"
+      ]
+    },
+    "wear": {
+      "score": 7,
+      "reason": "Dust settled in up-facing hollows, darkened crater floors; space weathering otherwise uniform.",
+      "fixes": [
+        "bright fresh ejecta rays around the youngest crater"
+      ]
+    },
+    "lod": {
+      "score": 7,
+      "reason": "LOD2 (\u2248 600) keeps the outline, craters as colour, and the crystals.",
+      "fixes": []
+    },
+    "technical": {
+      "score": 8,
+      "reason": "QA PASS all variants: \u2248 20k / 4.4k / 0.6k, glow on the crystals, two draws.",
+      "fixes": []
+    }
+  },
+  "renders": {
+    "hero.png": "66812367225d9b0c7ddc17efb5a5e775c211d20cb35856db8c803af559e9bc9a",
+    "sheet.png": "c02ab89d27b01449a56aa2de174c764960793c0ca6b82101cff07f0e7ede6546",
+    "raking.png": "d34683a607a29031259459331e28aa3de54ddc0b1639e028a0c1c9e02df88705",
+    "raking_detail.png": "0bc6eb206f4f4cc7cbb9d0c85204d7fbee7a0fc0cf78e543c551b96e6104bf31",
+    "lods.png": "d594e6e8e00a18baf64043cf953a46a70ec29b9a9eb3a5399f2e0b6e5db28fb6",
+    "silhouette.png": "f98db5404cc38ecdc070a325daa375c555dc4edcb7b9816044789fd37539cd28",
+    "value.png": "b100cb893fda2635efb37cc556f7617c9cc1f57feee14a56a76434f3f70c0128",
+    "detail.png": "a18f97d21786ac95e2eda5394e08a80f3e6602a01803412fc7676151000f96ad"
+  },
+  "metrics": {
+    "silhouette": [
+      {
+        "view": "front",
+        "iou": 0.889
+      },
+      {
+        "view": "side",
+        "iou": 0.911
+      },
+      {
+        "view": "3/4",
+        "iou": 0.907
+      }
+    ],
+    "focal": {
+      "peakPart": "ore_crystals",
+      "peak": [
+        257,
+        163
+      ],
+      "focalShare": 0,
+      "focalArea": 0,
+      "top": [
+        {
+          "part": "ore_crystals",
+          "share": 0.705
+        },
+        {
+          "part": "rock",
+          "share": 0.295
+        }
+      ],
+      "declared": []
+    },
+    "rest": {
+      "share": 0.669,
+      "spread": 0.62,
+      "min": 0.25
+    },
+    "shape": {
+      "acuteShare": 0.325,
+      "straightShare": 0.433,
+      "taper": 0.59,
+      "shape": "aggressive"
+    }
+  }
+}

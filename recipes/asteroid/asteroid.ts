@@ -228,7 +228,9 @@ function asteroidVariant(
           const d = len(p[0] - cr.centre[0], p[1] - cr.centre[1], p[2] - cr.centre[2]);
           c = mix(c, CRATER, (1 - step(cr.r * 0.8, cr.r * 1.2, d)) * 0.85);
         }
-        return c;
+        // Tints over the asphalt strip's own dark grey: lift by ~2.4 so albedo × tint lands on the
+        // same dark carbonaceous values as the old plain strip.
+        return [Math.min(1, c[0] * 2.4), Math.min(1, c[1] * 2.4), Math.min(1, c[2] * 2.4)];
       };
       const ext = Math.max(...size) + 3.2;
       const rock = sdf({
@@ -240,7 +242,8 @@ function asteroidVariant(
         resolution: ctx.pick([0.17, 0.38, 0.95]),
         color,
         lipschitz: 2,
-        strip: 'plain',
+        // Regolith: the asphalt strip's aggregate and hairline cracks read as dark gravelly rock.
+        strip: 'asphalt',
       });
       ctx.part(
         'rock',

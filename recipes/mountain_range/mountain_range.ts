@@ -12,19 +12,24 @@
 
 import {
   type BuildContext,
+  DEFAULT_SHEET,
   defineFamily,
   fbm,
   gradientNoise2,
   heightfield,
   hex,
   hydraulicErosion,
+  type Mesh,
   ridged,
+  type StripId,
   sampler,
+  stripRect,
   terrainColor,
   terrainGrid,
   thermalErosion,
   warp,
 } from '@developerz.ai/ts23d';
+import { tessellate } from '../_lib/finish/finish.ts';
 
 /** Altitude (m above sea level) of z = 0. */
 const DATUM = 1650;
@@ -50,6 +55,56 @@ interface Params {
   readonly snowline: number;
   /** Hydraulic droplets on the 257² grid (~2 per point carves strongly). */
   readonly droplets: number;
+}
+
+/**
+ * Ground materials by slope and altitude, per triangle (the heightfield is unwelded first so each
+ * triangle owns its UVs): snow above the snowline on gentle slopes, granite cliff on steep faces,
+ * gravel scree below them, grass on meadows, moss on the
+ * forest floor. UVs are a top-down true-scale projection (V squeezed to one band per triangle);
+ * the terrain colour stays as a half-strength tint so the bands keep their hue. The tile's cut
+ * sides show layered rock_strata.
+ */
+function groundStrips(m: Mesh, p: Readonly<Params>): Mesh {
+  const u = tessellate(m, Number.POSITIVE_INFINITY);
+  const uvs = new Float32Array(u.uvs);
+  const colors = new Float32Array(u.colors);
+  const P = u.positions;
+  const half = 0.5 / 4096;
+  for (let t = 0; t < u.indices.length; t += 3) {
+    const ids = [u.indices[t] ?? 0, u.indices[t + 1] ?? 0, u.indices[t + 2] ?? 0];
+    const z = ids.reduce((s, i) => s + (P[i * 3 + 2] ?? 0), 0) / 3 + DATUM;
+    const nz = ids.reduce((s, i) => s + (u.normals[i * 3 + 2] ?? 1), 0) / 3;
+    const steep = Math.sqrt(Math.max(0, 1 - nz * nz)) / Math.max(nz, 1e-3);
+    const id: StripId =
+      nz < 0.05
+        ? 'rock_strata' // the tile's cut sides: a geological cross-section
+        : z > p.snowline && steep < 1.1
+          ? 'snow'
+          : steep > 0.85
+            ? 'cliff'
+            : steep > 0.55 || z > p.treeline + 250
+              ? 'gravel'
+              : z > p.treeline
+                ? 'grass'
+                : 'moss';
+    const r = stripRect(id);
+    const vm = DEFAULT_SHEET.strips[id]?.scaleMetres ?? 1;
+    // Strata and cliff run their beds horizontally: project those onto the vertical plane.
+    const side = id === 'rock_strata' || id === 'cliff';
+    const vs = ids.map((i) => (side ? (P[i * 3 + 2] ?? 0) : (P[i * 3 + 1] ?? 0)));
+    const lo = Math.min(...vs);
+    const base = Math.floor(lo / vm) * vm;
+    const k = Math.min(1, vm / Math.max(1e-6, Math.max(...vs) - base));
+    for (const i of ids) {
+      const along = side ? (P[i * 3] ?? 0) + (P[i * 3 + 1] ?? 0) : (P[i * 3] ?? 0);
+      uvs[i * 2] = r.u0 + (along / r.metres) * (r.u1 - r.u0);
+      const f = (((side ? (P[i * 3 + 2] ?? 0) : (P[i * 3 + 1] ?? 0)) - base) / vm) * k;
+      uvs[i * 2 + 1] = r.v0 + half + Math.min(1, f) * (r.v1 - r.v0 - 2 * half);
+      for (let c = 0; c < 3; c++) colors[i * 3 + c] = 0.55 + 0.45 * (colors[i * 3 + c] ?? 0);
+    }
+  }
+  return { ...u, uvs, colors };
 }
 
 function build(ctx: BuildContext, p: Readonly<Params>): void {
@@ -87,14 +142,17 @@ function build(ctx: BuildContext, p: Readonly<Params>): void {
   const cells = ctx.pick([256, 128, 64]);
   ctx.part(
     'terrain',
-    heightfield({
-      rect: RECT,
-      cells: [cells, cells],
-      height: sampler(grid),
-      color,
-      skirt: 0,
-      skirtColor: hex('#5a4a3a'),
-    }),
+    groundStrips(
+      heightfield({
+        rect: RECT,
+        cells: [cells, cells],
+        height: sampler(grid),
+        color,
+        skirt: 0,
+        skirtColor: hex('#5a4a3a'),
+      }),
+      p,
+    ),
   );
 }
 

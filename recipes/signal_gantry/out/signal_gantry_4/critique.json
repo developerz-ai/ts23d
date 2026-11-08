@@ -1,0 +1,112 @@
+{
+  "asset": "signal_gantry_4",
+  "reviewer": "agent",
+  "overall": 7.3,
+  "scores": {
+    "silhouette": {
+      "score": 8,
+      "reason": "Lattice signal gantry with timber walkway and handrail, latticed posts on concrete footings, knee braces, two (or four) dolls with lower-quadrant semaphore arms, spectacles and lamps. Reads instantly.",
+      "fixes": []
+    },
+    "proportions": {
+      "score": 8,
+      "reason": "Span, post height and arm sizes pass the dossier measures; walkway at a believable working height.",
+      "fixes": []
+    },
+    "materials": {
+      "score": 7,
+      "reason": "Painted steel lattice (chips show steel), rusted dark fittings, weathered timber walkway, painted red/white arms on wood_painted, glowing lenses, concrete footings. Black paint reads near-uniform at distance.",
+      "fixes": [
+        "slightly lighter, sun-faded top surfaces on the lattice"
+      ]
+    },
+    "detail": {
+      "score": 7,
+      "reason": "Lattice webs, battens, knee braces, ladder, handrails, finials, spectacle glasses, lamp cases, balance weights.",
+      "fixes": [
+        "operating rods/wires down the posts to the ground"
+      ]
+    },
+    "wear": {
+      "score": 6,
+      "reason": "Ground splash on the footings and post feet, dust on the walkway, chipped paint from the strip. No rust streaks below rivets, no soot above the tracks.",
+      "fixes": [
+        "soot on the girder underside above each track",
+        "rust streaks below the lattice nodes"
+      ]
+    },
+    "lod": {
+      "score": 7,
+      "reason": "LOD2 keeps the frame, walkway, dolls and arms; the latticed posts become solid black boxes (noticeably heavier at distance).",
+      "fixes": [
+        "LOD2 posts as open frames (four angles + three battens) instead of solid boxes"
+      ]
+    },
+    "technical": {
+      "score": 8,
+      "reason": "QA PASS both variants: 8 376 / 3 684 / 800 and 10 876 / 4 944 / 1 404; arms pivot as moving parts. Now 11 036 / 5 072 / 1 404. Connections gate clean (was 4 findings): finial collars sleeved over each mast top (LOD0/1).",
+      "fixes": []
+    }
+  },
+  "renders": {
+    "hero.png": "dfe0cb439627a5c085e949508630735624be37bb9bebfe492cb79914ad161b2e",
+    "sheet.png": "650764db407ca5461eadf58a8d29593f38cf79e0fb358cf3e72182251f409a34",
+    "raking.png": "88cd84dbfd32c205a0d8e4a05cb5b212fb46252ba1f7756e63d0145b63c7cf89",
+    "raking_detail.png": "a53003462467af317e8effcc50f8db4d8134905fcf01b40cd230558a469557a9",
+    "lods.png": "52238c1b3063ed44ffb085e4a67432b7a1a439c35239eb919c4bbbad4aabc470",
+    "silhouette.png": "8a8929e794ac7c255a7042f0fa7c01649defd09acdf52a3cb0f8b51eaa06eb7b",
+    "value.png": "c6f0ac03b5c10eaee3bb854bb91e5bb41ba7334d03d5ee4c25b12759e0b5c042",
+    "detail.png": "3ab9e0833df241d29bc20d55281da79b36631cd19b1435f8354e082a2b0b9f4a"
+  },
+  "metrics": {
+    "silhouette": [
+      {
+        "view": "front",
+        "iou": 0.727
+      },
+      {
+        "view": "side",
+        "iou": 0.903
+      },
+      {
+        "view": "3/4",
+        "iou": 0.85
+      }
+    ],
+    "focal": {
+      "peakPart": "walkway",
+      "peak": [
+        252,
+        196
+      ],
+      "focalShare": 0,
+      "focalArea": 0,
+      "top": [
+        {
+          "part": "walkway",
+          "share": 0.403
+        },
+        {
+          "part": "girder",
+          "share": 0.318
+        },
+        {
+          "part": "post_r",
+          "share": 0.118
+        }
+      ],
+      "declared": []
+    },
+    "rest": {
+      "share": 0.173,
+      "spread": 0.617,
+      "min": 0.25
+    },
+    "shape": {
+      "acuteShare": 0.376,
+      "straightShare": 0.823,
+      "taper": 0.018,
+      "shape": "stable"
+    }
+  }
+}

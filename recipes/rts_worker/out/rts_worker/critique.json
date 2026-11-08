@@ -1,0 +1,127 @@
+{
+  "asset": "rts_worker",
+  "reviewer": "agent",
+  "overall": 7.1,
+  "scores": {
+    "silhouette": {
+      "score": 7,
+      "reason": "Pack + upright pick (head enlarged 30%) + round cap read 'builder' at 64 px; IoU LOD2 0.95/0.93/0.92.",
+      "fixes": [
+        "one asymmetric shape on the pack (antenna, rolled tarp)"
+      ]
+    },
+    "proportions": {
+      "score": 7,
+      "reason": "Chunky 6-head figure; tool handle fits the fist (grip joint); real length now 1.06 m with the longer pick.",
+      "fixes": [
+        "slightly bigger hands for the 64 px read"
+      ]
+    },
+    "materials": {
+      "score": 7,
+      "reason": "Real strips per role: canvas suit (weave relief), leather gloves/boots/belt, ceramic hard hat and pack lid, painted-steel pack, cast-iron pick head, oak handle, brass canister, rubber cable. Reads as cloth vs leather vs metal under raking light; face still plain skin.",
+      "fixes": [
+        "face planes beyond nose/jaw; stitched seams on the suit"
+      ]
+    },
+    "detail": {
+      "score": 7,
+      "reason": "Tool belt with pouch and mallet, cable coil, canister, pockets, spare pick head, goggles, nose/jaw planes on the head.",
+      "fixes": [
+        "knee pads, chest pocket flaps"
+      ]
+    },
+    "wear": {
+      "score": 6,
+      "reason": "weather(): chips on 14% of hard convex edges, salt dust on 30% of up-faces, brine mud on 50% of the ground band (boots, shins); cloth/straps dust+mud only. Measured and gated. Subtle at hero distance; LOD2 colour still carries the read.",
+      "fixes": [
+        "stronger knee dirt; worn cap peak"
+      ]
+    },
+    "lod": {
+      "score": 8,
+      "reason": "LOD2 328 tris keeps the cap, pack lid and pick; team share 30.6% at 64 px.",
+      "fixes": []
+    },
+    "technical": {
+      "score": 8,
+      "reason": "QA PASS on every gate incl. connections and weather (exact coverage). Deterministic, one trim material + team slot, 8 liveries; `bun test recipes/rts_faction` 18/18.",
+      "fixes": []
+    }
+  },
+  "renders": {
+    "hero.png": "b1d432c470bb58d04ef648aba721ad4724ee0e19a8313c63279a8a36daaf762f",
+    "sheet.png": "c6782269aebdf8299c73f2b20a20c691fcf4ec3bf5773a1ada4ead66e7698675",
+    "raking.png": "24f568466fb35a2361663eddd2236cc663d0f592b979dec44c775881c5cb7314",
+    "raking_detail.png": "3b1093f673b43d191910736afcc8f276e1fd159231dd4f892ffdfed848798428",
+    "lods.png": "e37d755d65d9ba648117c5e1b08ad1ad2519fc646777b065a49a53ee05fbfc08",
+    "silhouette.png": "d1d9a08497203242446fe10c53674b5fb92a185fbde1a90a2cf13acc6cba9275",
+    "value.png": "16e2e23009ed9a6a5332576f785e01e85ab526ed6a33a46aa417d9d1e1c32307",
+    "detail.png": "3d41efa8e2da48b778de64c47e1f4aab4646f7a83ee0ca5f970e793b49c9626e"
+  },
+  "metrics": {
+    "silhouette": [
+      {
+        "view": "front",
+        "iou": 0.948
+      },
+      {
+        "view": "side",
+        "iou": 0.928
+      },
+      {
+        "view": "3/4",
+        "iou": 0.916
+      }
+    ],
+    "focal": {
+      "peakPart": "cap",
+      "peak": [
+        417,
+        71
+      ],
+      "focalShare": 0.368,
+      "focalArea": 0.04,
+      "top": [
+        {
+          "part": "cap",
+          "share": 0.236
+        },
+        {
+          "part": "pack_lid",
+          "share": 0.17
+        },
+        {
+          "part": "tool_head",
+          "share": 0.165
+        }
+      ],
+      "declared": [
+        "cap",
+        "goggles"
+      ]
+    },
+    "rest": {
+      "share": 0.206,
+      "spread": 0.539,
+      "min": 0.2
+    },
+    "grounded": {
+      "rise": 0.118,
+      "bands": [
+        0.199,
+        0.24,
+        0.227,
+        0.257,
+        0.309
+      ]
+    },
+    "shape": {
+      "acuteShare": 0.067,
+      "straightShare": 0.646,
+      "taper": -0.131,
+      "shape": "stable",
+      "declared": "stable"
+    }
+  }
+}

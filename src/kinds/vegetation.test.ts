@@ -84,7 +84,8 @@ describe('tree', () => {
         },
       });
       for (const lod of [0, 1, 2] as Lod[]) expect(runQa(compile(a, { lod }))).toEqual([]);
-    });
+      // The full QA (clashes' sway volume over thousands of leaf cards) takes seconds per LOD.
+    }, 30_000);
   }
 
   it('fits the real envelope and keeps DBH exact across Y', () => {
@@ -116,14 +117,14 @@ describe('tree', () => {
 });
 
 describe('grow (skeleton)', () => {
-  it('starts every child inside its parent and follows the phyllotaxis', () => {
+  it('roots every child on its parent axis (buried in the wood) and follows the phyllotaxis', () => {
     const stems = grow(oak, { height: 22, dbh: 1.3 }, createRng(7));
     expect(stems.filter((s) => s.level === 1)).toHaveLength(8);
     for (const s of stems.slice(1)) {
       const parent = stems[s.parent];
       const p0 = s.pts[0];
       if (!parent || !p0) throw new Error('orphan stem');
-      // Distance from the child's first point to the parent's polyline < parent radius there.
+      // Distance from the child's first point to the parent's polyline.
       let best = Infinity;
       for (let i = 0; i + 1 < parent.pts.length; i++) {
         const a = parent.pts[i] ?? p0;
@@ -146,7 +147,8 @@ describe('grow (skeleton)', () => {
         );
         best = Math.min(best, d);
       }
-      expect(best).toBeLessThan(parent.radii[0] ?? 0);
+      // On the axis, not just inside the bark: the root is buried, so QA sees a face, not a kiss.
+      expect(best).toBeLessThan(1e-6);
     }
   });
 });

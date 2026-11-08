@@ -1,0 +1,74 @@
+{
+  "name": "amur_tiger",
+  "kind": "creature",
+  "description": "Adult male Amur (Siberian) tiger standing relaxed: 1.95 m head and body, 0.99 m tail, 1.0 m at the shoulder; winter coat with cheek ruff, seeded asymmetric stripes, sculpted from code on a real skeleton",
+  "tags": [
+    "creature",
+    "animal",
+    "mammal",
+    "big-cat",
+    "tiger",
+    "sculpt",
+    "hero"
+  ],
+  "files": {
+    "lods": [],
+    "sheet": "recipes/amur_tiger/out/amur_tiger/sheet.png",
+    "thumb": "recipes/amur_tiger/out/amur_tiger/thumb.png"
+  },
+  "triangles": [
+    136924,
+    27224,
+    2900
+  ],
+  "drawCalls": [
+    3,
+    3,
+    3
+  ],
+  "pivots": [
+    {
+      "name": "body",
+      "parent": null
+    },
+    {
+      "name": "tail",
+      "parent": null,
+      "motion": "sway"
+    },
+    {
+      "name": "jaw",
+      "parent": null,
+      "motion": "sway"
+    }
+  ],
+  "emitters": [],
+  "sockets": [],
+  "surfaces": [
+    "opaque"
+  ],
+  "real": {
+    "length": 2.22,
+    "width": 0.47,
+    "height": 1.01
+  },
+  "measures": [
+    {
+      "label": "shoulder height (withers, coat included)",
+      "spec": 1,
+      "measured": 1.0121913973416667,
+      "source": "Wikipedia: Tiger — 0.8–1.1 m at the shoulder"
+    }
+  ],
+  "sources": [
+    "https://en.wikipedia.org/wiki/Siberian_tiger (Kerley et al. 2005 lengths; Slaght et al. 2005, Mazák 1981 masses; Geptner & Sludskij 1972 fur)",
+    "https://en.wikipedia.org/wiki/Tiger (shoulder height, skull, canines, claws, coat)",
+    "Gu et al. 2014, Amur tiger footprints in snow (front pad width, after Miquelle et al. 2006)",
+    "George Stubbs, Comparative Anatomical Exposition … Tiger (1795–1806), PD plates on Wikimedia Commons",
+    "recipes/amur_tiger/README.md (dossier, photos per view)"
+  ],
+  "qa": {
+    "pass": true,
+    "findings": []
+  }
+}

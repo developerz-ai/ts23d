@@ -1,0 +1,87 @@
+{
+  "name": "elf_head",
+  "kind": "character",
+  "description": "Stylised elf bust: slender face, high cheekbones, almond eyes, long swept pointed ears with real ear structure, long hair as sculpted locks, gold-trimmed tunic, teal cloak, silver clasp",
+  "tags": [
+    "character",
+    "fantasy",
+    "elf",
+    "bust",
+    "sculpt"
+  ],
+  "files": {
+    "lods": [],
+    "sheet": "recipes/elf_head/out/elf_head/sheet.png",
+    "thumb": "recipes/elf_head/out/elf_head/thumb.png"
+  },
+  "triangles": [
+    79056,
+    24020,
+    3792
+  ],
+  "drawCalls": [
+    2,
+    2,
+    2
+  ],
+  "pivots": [
+    {
+      "name": "body",
+      "parent": null
+    },
+    {
+      "name": "body_finish_cornea",
+      "parent": null
+    }
+  ],
+  "emitters": [],
+  "sockets": [],
+  "joints": [
+    {
+      "name": "eye_l_orbit",
+      "from": "eye_l",
+      "to": "head",
+      "kind": "socket",
+      "at": [
+        0.0766,
+        0.0321,
+        0.439
+      ]
+    },
+    {
+      "name": "eye_r_orbit",
+      "from": "eye_r",
+      "to": "head",
+      "kind": "socket",
+      "at": [
+        0.0766,
+        -0.0321,
+        0.439
+      ]
+    }
+  ],
+  "surfaces": [
+    "opaque"
+  ],
+  "real": {
+    "length": 0.247,
+    "width": 0.491,
+    "height": 0.559
+  },
+  "measures": [
+    {
+      "label": "eye spacing (pupil to pupil)",
+      "spec": 0.064,
+      "measured": 0.06399511080235243,
+      "source": "interpupil 0.278 H (human 0.265 × 1.05) × 0.23 m"
+    }
+  ],
+  "sources": [
+    "recipes/elf_head/README.md (design dossier: proportions, exaggerations, palette)",
+    "docs/research/head-analysis.md (human anchor ratios, Lee Perry-Smith scan, CC BY 3.0)"
+  ],
+  "qa": {
+    "pass": true,
+    "findings": []
+  }
+}

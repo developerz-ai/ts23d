@@ -1,0 +1,153 @@
+{
+  "name": "rts_worker",
+  "kind": "character",
+  "description": "Saltmarch Delver: original RTS worker. Padded work suit, team-colour cap and pack lid, amber goggles, tool backpack and a sunstone pick on a grip joint; 8 team liveries.",
+  "tags": [
+    "rts",
+    "saltmarch",
+    "worker",
+    "character",
+    "team-colour"
+  ],
+  "files": {
+    "lods": [],
+    "sheet": "recipes/rts_worker/out/rts_worker/sheet.png",
+    "thumb": "recipes/rts_worker/out/rts_worker/thumb.png"
+  },
+  "triangles": [
+    10456,
+    1868,
+    328
+  ],
+  "drawCalls": [
+    3,
+    3,
+    2
+  ],
+  "pivots": [
+    {
+      "name": "body",
+      "parent": null
+    },
+    {
+      "name": "body_paint_team",
+      "parent": null
+    }
+  ],
+  "emitters": [
+    {
+      "name": "work_dust",
+      "kind": "dust",
+      "when": "event"
+    }
+  ],
+  "sockets": [
+    {
+      "name": "hand_r_socket",
+      "kind": "mount",
+      "parent": null
+    }
+  ],
+  "joints": [
+    {
+      "name": "grip_r",
+      "from": "hand_r",
+      "to": "tool_handle",
+      "kind": "grip",
+      "at": [
+        0.3,
+        -0.265,
+        1.06
+      ]
+    }
+  ],
+  "surfaces": [
+    "opaque"
+  ],
+  "paint": {
+    "team": "#b3261e"
+  },
+  "variants": {
+    "red": {
+      "team": "#b3261e"
+    },
+    "blue": {
+      "team": "#1f4fb8"
+    },
+    "green": {
+      "team": "#2f8f3a"
+    },
+    "yellow": {
+      "team": "#e2b521"
+    },
+    "purple": {
+      "team": "#6d2fa6"
+    },
+    "orange": {
+      "team": "#e0661a"
+    },
+    "teal": {
+      "team": "#139a92"
+    },
+    "white": {
+      "team": "#e8e8e2"
+    }
+  },
+  "real": {
+    "length": 1.06,
+    "width": 0.75,
+    "height": 1.83
+  },
+  "measures": [],
+  "sources": [
+    "recipes/rts_faction/README.md (original design brief: proportions, shape language, palette)"
+  ],
+  "weather": {
+    "chips": {
+      "target": 0.14,
+      "actual": 0.14,
+      "eligible": "convex-edges",
+      "area": 2.225
+    },
+    "mud": {
+      "target": 0.5164,
+      "actual": 0.5164,
+      "eligible": "ground-near",
+      "area": 1.3122,
+      "by": {
+        "delver": {
+          "target": 0.5,
+          "actual": 0.5,
+          "area": 0.8824
+        },
+        "delver_kit": {
+          "target": 0.55,
+          "actual": 0.55,
+          "area": 0.4298
+        }
+      }
+    },
+    "dust": {
+      "target": 0.3,
+      "actual": 0.3,
+      "eligible": "up-facing",
+      "area": 1.2129,
+      "by": {
+        "delver": {
+          "target": 0.3,
+          "actual": 0.3,
+          "area": 0.5157
+        },
+        "delver_kit": {
+          "target": 0.3,
+          "actual": 0.3,
+          "area": 0.6972
+        }
+      }
+    }
+  },
+  "qa": {
+    "pass": true,
+    "findings": []
+  }
+}

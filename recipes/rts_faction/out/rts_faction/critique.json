@@ -1,0 +1,105 @@
+{
+  "asset": "rts_faction",
+  "reviewer": "agent",
+  "overall": 7.6,
+  "scores": {
+    "silhouette": {
+      "score": 8,
+      "reason": "The roster reads as one faction: bone/team/amber palette and chevron language across hall, units, tank and deposit.",
+      "fixes": []
+    },
+    "proportions": {
+      "score": 8,
+      "reason": "All assets at true scale via ctx.use: Wardens fit the 3.5 m gate, the tank is ~3 units long.",
+      "fixes": []
+    },
+    "materials": {
+      "score": 7,
+      "reason": "Inherits every asset's strips; salt-flat sand ground with gravel paths to the gate and the tank park.",
+      "fixes": []
+    },
+    "detail": {
+      "score": 7,
+      "reason": "Lineup on a ground plate with two trodden paths.",
+      "fixes": [
+        "props between assets (crates, a fuel drum)"
+      ]
+    },
+    "wear": {
+      "score": 7,
+      "reason": "Inherits every asset's measured wear (prefixed through ctx.use).",
+      "fixes": []
+    },
+    "lod": {
+      "score": 8,
+      "reason": "LOD2 3.6k tris for the whole roster.",
+      "fixes": []
+    },
+    "technical": {
+      "score": 8,
+      "reason": "QA PASS on every gate incl. connections and weather (exact coverage). Deterministic, one trim material + team slot, 8 liveries; `bun test recipes/rts_faction` 18/18.",
+      "fixes": []
+    }
+  },
+  "renders": {
+    "hero.png": "4831ea284891fccfe6bd8efbbc3903b545b4de061d58bf3b4f68eab7ad8316aa",
+    "sheet.png": "560bcfc9210718367154b969c03681f19adfa62675266b1f2a6c8d71ecb53197",
+    "raking.png": "0dde5215d50effbf9fd771e2611fe370ed67c47abce4477b0628792c7002d0ec",
+    "raking_detail.png": "7ba7733a242fa1eac6abfcfb866cc65ddadd279b05ad3be31df1e2a31fc76995",
+    "lods.png": "9b3136137ef5ff78fff86c37e4e7711685d0e17b63e55db1bd89d1cbeac56d64",
+    "silhouette.png": "188f6f0f189d5178cb1a2c5723d3d9d4f2a1a2848651906f8da27e73b00c9377",
+    "value.png": "1354949fb6ca2f3dc00e5d883f3c879d699073e2823df085c2738c8fff7f5805",
+    "detail.png": "6473c03ccd80a21fbbd7baa0555f3840e7d5a0f6285af82c6174b6b4c5b9fe4d"
+  },
+  "metrics": {
+    "silhouette": [
+      {
+        "view": "front",
+        "iou": 0.985
+      },
+      {
+        "view": "side",
+        "iou": 0.969
+      },
+      {
+        "view": "3/4",
+        "iou": 0.991
+      }
+    ],
+    "focal": {
+      "peakPart": "tank_hull",
+      "peak": [
+        280,
+        299
+      ],
+      "focalShare": 0,
+      "focalArea": 0,
+      "top": [
+        {
+          "part": "ground",
+          "share": 0.376
+        },
+        {
+          "part": "tank_hull",
+          "share": 0.127
+        },
+        {
+          "part": "hall_plinth",
+          "share": 0.101
+        }
+      ],
+      "declared": []
+    },
+    "rest": {
+      "share": 0.556,
+      "spread": 0.861,
+      "min": 0.25
+    },
+    "shape": {
+      "acuteShare": 0.458,
+      "straightShare": 0.58,
+      "taper": 0.777,
+      "shape": "aggressive"
+    }
+  }
+}

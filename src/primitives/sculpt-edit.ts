@@ -7,8 +7,21 @@ import { type Field, shapes } from './sdf-ops.ts';
 
 export type SculptShape = 'sphere' | 'ellipsoid' | 'capsule' | 'roundBox' | 'cone' | 'torus';
 
-/** An edit: one shape, or a group of edits folded on their own first (local trims). */
-export type SculptEdit = SculptShapeEdit | SculptGroup;
+/** An edit: one shape, a ready-made field, or a group folded on its own first (local trims). */
+export type SculptEdit = SculptShapeEdit | SculptGroup | SculptFieldEdit;
+
+/**
+ * A ready-made 1-Lipschitz field inside `bounds` as one edit, e.g. a visual hull from drawings:
+ * `{ ...visualHull({ front, side, scale }), blend: 0.01 }` (sculpt-field.ts clamps it to bounds).
+ */
+export interface SculptFieldEdit {
+  readonly field: Field;
+  readonly bounds: readonly [Vec3, Vec3];
+  readonly op?: 'add' | 'subtract' | 'intersect' | 'paint';
+  readonly blend?: number;
+  readonly color?: Vec3;
+  readonly mirror?: boolean;
+}
 
 /**
  * Edits folded on their own (from nothing), then applied to the sculpt as ONE edit with this
@@ -140,10 +153,11 @@ export function sculptShape(e: SculptShapeEdit, i: number, mirrorAll: boolean): 
     const dz0 = p[2] - sc[2];
     const near = Math.sqrt(dx0 * dx0 + (p[1] - sc[1]) ** 2 + dz0 * dz0);
     const far = Math.sqrt(dx0 * dx0 + (p[1] + sc[1]) ** 2 + dz0 * dz0);
-    const [first, second, lb] =
-      near <= far ? [p[1], -p[1], bound(far)] : [-p[1], p[1], bound(near)];
+    // Scalar branches (no [first, second, bound] tuple per evaluation).
+    const nearer = near <= far;
+    const first = nearer ? p[1] : -p[1];
     const v = one(p[0], first, p[2]);
-    return lb >= v ? v : Math.min(v, one(p[0], second, p[2]));
+    return bound(nearer ? far : near) >= v ? v : Math.min(v, one(p[0], -first, p[2]));
   };
 }
 
@@ -184,10 +198,18 @@ export function shapeSphere(e: SculptShapeEdit): {
 /** Conservative world bounds of an add edit (bounding sphere), grown by its blend radius. */
 export function editBounds(e: SculptEdit, mirrorAll: boolean): [Vec3, Vec3] {
   if ('group' in e) return groupBounds(e, mirrorAll);
-  const { c: centre, r } = shapeSphere(e);
-  const g = r + (e.blend ?? 0);
-  const lo: [number, number, number] = [centre[0] - g, centre[1] - g, centre[2] - g];
-  const hi: [number, number, number] = [centre[0] + g, centre[1] + g, centre[2] + g];
+  let k = e.blend ?? 0;
+  let [b0, b1]: readonly [Vec3, Vec3] = 'field' in e ? e.bounds : [e.at, e.at];
+  // A field's surface can lie ON its bounds (a visual hull's flat faces): pad so the meshing
+  // grid's border never coincides with it.
+  if ('field' in e) k += 0.03 * Math.max(b1[0] - b0[0], b1[1] - b0[1], b1[2] - b0[2]);
+  if (!('field' in e)) {
+    const { c, r } = shapeSphere(e);
+    b0 = [c[0] - r, c[1] - r, c[2] - r];
+    b1 = [c[0] + r, c[1] + r, c[2] + r];
+  }
+  const lo: [number, number, number] = [b0[0] - k, b0[1] - k, b0[2] - k];
+  const hi: [number, number, number] = [b1[0] + k, b1[1] + k, b1[2] + k];
   if (e.mirror ?? mirrorAll) {
     const [l, h] = [lo[1], hi[1]];
     lo[1] = Math.min(l, -h);

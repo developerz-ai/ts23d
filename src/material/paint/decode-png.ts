@@ -14,7 +14,10 @@ export interface Rgba {
 const SIG = [137, 80, 78, 71, 13, 10, 26, 10];
 const CHANNELS: Readonly<Record<number, number>> = { 0: 1, 2: 3, 3: 1, 4: 2, 6: 4 };
 
-function bad(cause: string): never {
+/** How a decode failure is reported: the caller's code and fix (default: a cell image). */
+export type PngFailure = (cause: string) => never;
+
+function cellImage(cause: string): never {
   throw new Ts23dError('T3D_RECIPE_INVALID', {
     cause: `cell image: ${cause}`,
     fix: 'pass PNG bytes, 8 or 16 bits per channel, non-interlaced (e.g. re-save as RGBA8 PNG)',
@@ -29,7 +32,8 @@ function paeth(a: number, b: number, c: number): number {
   return pa <= pb && pa <= pc ? a : pb <= pc ? b : c;
 }
 
-export function decodePng(bytes: Uint8Array): Rgba {
+/** PNG bytes → RGBA8 (row-major, top row first); unsupported input calls `bad`. */
+export function decodePng(bytes: Uint8Array, bad: PngFailure = cellImage): Rgba {
   if (bytes.length < 33 || SIG.some((s, i) => bytes[i] !== s)) bad('not a PNG (bad signature)');
   const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   let width = 0;

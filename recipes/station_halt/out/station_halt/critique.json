@@ -1,0 +1,117 @@
+{
+  "asset": "station_halt",
+  "reviewer": "agent",
+  "overall": 7.3,
+  "scores": {
+    "silhouette": {
+      "score": 8,
+      "reason": "GWR country station (Toddington): brick building with slate roof and chimneys, long valanced platform canopy on cast-iron columns, lamps, name board, barrow and churns on the platform. Reads from every view.",
+      "fixes": [
+        "fretted canopy valance profile at LOD1"
+      ]
+    },
+    "proportions": {
+      "score": 8,
+      "reason": "Overall box and the dossier measures pass; door, window and canopy heights read at human scale against the 1.8 m figure.",
+      "fixes": []
+    },
+    "materials": {
+      "score": 7,
+      "reason": "Chocolate-and-cream timber now wood_painted (grain and chips through the paint), cast-iron columns/brackets as iron_cast, brick, slate, stone, glass from the classic strips. Brick and slate are still the greyscale classic strips tinted, flatter than the library strips.",
+      "fixes": [
+        "blue-brick plinth and red brick as distinct project materials (brick colour variation per course)",
+        "slate with materialVariant per roof slope"
+      ]
+    },
+    "detail": {
+      "score": 7,
+      "reason": "Recessed sash windows, doors, chimney pots, ridge/coping, canopy valance, columns with brackets, lamps with glass, name board, room boards, clock, rainwater goods, benches, barrow, churns.",
+      "fixes": [
+        "platform edge coping slabs with joints",
+        "gutter brackets"
+      ]
+    },
+    "wear": {
+      "score": 6,
+      "reason": "Ground splash along the platform and building base, dust on top faces, AO. No soot on the canopy underside, no moss on the slates or green algae on the north wall, paint not faded.",
+      "fixes": [
+        "soot streaks on the canopy underside from locomotives",
+        "moss/lichen on north-facing slates and the platform edge"
+      ]
+    },
+    "lod": {
+      "score": 7,
+      "reason": "LOD2 (460) keeps building, roof, chimneys, canopy, columns, lamps and the board shape; the paved platform turns flat light grey and the name board loses its text.",
+      "fixes": [
+        "keep the platform strip at LOD2 so its value matches",
+        "keep the name-board lettering as one quad strip"
+      ]
+    },
+    "technical": {
+      "score": 8,
+      "reason": "QA PASS, 8 770 / 4 850 / 460, two draws (opaque + glass). Now 8 802 / 4 882 / 460. Connections gate clean (was 1 finding): the eaves band is four closed brick courses bearing on the walls (inner face 2 mm off, 3 cm proud) instead of an open ring hovering 3 cm out.",
+      "fixes": []
+    }
+  },
+  "renders": {
+    "hero.png": "aff0e5d3d5554a8fe1f0678731c946bf7b4db9187107236ad490ed0f0fdce82b",
+    "sheet.png": "9aa6273894cc9cf331356b625acc2282027e4b11397d3c221ce97e729b559cf8",
+    "raking.png": "35b400b2dbde20d9d3ab5889148f34bc3fb41e6821d24aef95eef966a3119085",
+    "raking_detail.png": "3ff0486a04445022513874b2f77fa1047228a648804339652f8a9f97886b43be",
+    "lods.png": "5bd1616e4cb1c2164c520454cf90712364ba76435246127f69fd74d0ebf4b581",
+    "silhouette.png": "a7cd756bdac9e58254293dc3cdcbc844d74dfba7c8314d8e20e224cda804e7cc",
+    "value.png": "6d09a2b01d6459c50c1ffd6b131a86775b078ed9fb12671edb70756ba379e0e6",
+    "detail.png": "1891f6dad10b99c8a01444d2e1b98ee71bf1f1f0ab81d46a64c2a6feb6d633a8"
+  },
+  "metrics": {
+    "silhouette": [
+      {
+        "view": "front",
+        "iou": 0.949
+      },
+      {
+        "view": "side",
+        "iou": 0.96
+      },
+      {
+        "view": "3/4",
+        "iou": 0.97
+      }
+    ],
+    "focal": {
+      "peakPart": "platform",
+      "peak": [
+        483,
+        272
+      ],
+      "focalShare": 0,
+      "focalArea": 0,
+      "top": [
+        {
+          "part": "platform",
+          "share": 0.968
+        },
+        {
+          "part": "roof",
+          "share": 0.015
+        },
+        {
+          "part": "lamp_1_glass",
+          "share": 0.007
+        }
+      ],
+      "declared": []
+    },
+    "rest": {
+      "share": 0.753,
+      "spread": 0.739,
+      "min": 0.25
+    },
+    "shape": {
+      "acuteShare": 0.3,
+      "straightShare": 0.759,
+      "taper": 0.643,
+      "shape": "stable"
+    }
+  }
+}

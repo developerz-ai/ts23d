@@ -1,0 +1,176 @@
+{
+  "name": "rts_barracks",
+  "kind": "building",
+  "description": "Saltmarch Warden Hall: original RTS barracks, one family in 3 build stages × 3 damage states.",
+  "tags": [
+    "rts",
+    "saltmarch",
+    "building",
+    "barracks",
+    "team-colour"
+  ],
+  "files": {
+    "lods": [],
+    "sheet": "recipes/rts_barracks/out/rts_barracks/sheet.png",
+    "thumb": "recipes/rts_barracks/out/rts_barracks/thumb.png"
+  },
+  "triangles": [
+    41590,
+    8248,
+    896
+  ],
+  "drawCalls": [
+    3,
+    3,
+    2
+  ],
+  "pivots": [
+    {
+      "name": "body",
+      "parent": null
+    },
+    {
+      "name": "body_paint_team",
+      "parent": null
+    }
+  ],
+  "emitters": [],
+  "sockets": [
+    {
+      "name": "rally",
+      "kind": "spawn",
+      "parent": null
+    },
+    {
+      "name": "door",
+      "kind": "interact",
+      "parent": null
+    }
+  ],
+  "surfaces": [
+    "opaque"
+  ],
+  "paint": {
+    "team": "#b3261e"
+  },
+  "variants": {
+    "red": {
+      "team": "#b3261e"
+    },
+    "blue": {
+      "team": "#1f4fb8"
+    },
+    "green": {
+      "team": "#2f8f3a"
+    },
+    "yellow": {
+      "team": "#e2b521"
+    },
+    "purple": {
+      "team": "#6d2fa6"
+    },
+    "orange": {
+      "team": "#e0661a"
+    },
+    "teal": {
+      "team": "#139a92"
+    },
+    "white": {
+      "team": "#e8e8e2"
+    }
+  },
+  "real": {
+    "length": 15.78,
+    "width": 18.5,
+    "height": 11.05
+  },
+  "measures": [
+    {
+      "label": "gate height",
+      "spec": 3.5,
+      "measured": 3.4999998807907104,
+      "source": "recipes/rts_faction/README.md"
+    }
+  ],
+  "sources": [
+    "recipes/rts_faction/README.md (original design brief)",
+    "docs/playbooks/buildings/house.md (storey and door scale)"
+  ],
+  "weather": {
+    "chips": {
+      "target": 0.1,
+      "actual": 0.1,
+      "eligible": "convex-edges",
+      "area": 1682.0507,
+      "by": {
+        "hall_masonry": {
+          "target": 0.1,
+          "actual": 0.1,
+          "area": 1396.6367
+        },
+        "hall_render": {
+          "target": 0.1,
+          "actual": 0.1,
+          "area": 285.414
+        }
+      }
+    },
+    "rust": {
+      "target": 0.55,
+      "actual": 0.55,
+      "eligible": "fasteners | below-fasteners",
+      "area": 22.9524
+    },
+    "moss": {
+      "target": 0.35,
+      "actual": 0.35,
+      "eligible": "ground-near & !down-facing",
+      "area": 324.7555,
+      "by": {
+        "hall_masonry": {
+          "target": 0.35,
+          "actual": 0.35,
+          "area": 305.1389
+        },
+        "hall_render": {
+          "target": 0.35,
+          "actual": 0.35,
+          "area": 19.6166
+        }
+      }
+    },
+    "dust": {
+      "target": 0.2508,
+      "actual": 0.2508,
+      "eligible": "up-facing",
+      "area": 471.7468,
+      "by": {
+        "hall_masonry": {
+          "target": 0.25,
+          "actual": 0.25,
+          "area": 403.1147
+        },
+        "hall_render": {
+          "target": 0.25,
+          "actual": 0.25,
+          "area": 60.72
+        },
+        "hall_timber": {
+          "target": 0.3,
+          "actual": 0.3,
+          "area": 7.9121
+        }
+      }
+    },
+    "mud": {
+      "target": 0.55,
+      "actual": 0.55,
+      "eligible": "ground-near",
+      "area": 2.6104
+    }
+  },
+  "qa": {
+    "pass": true,
+    "findings": []
+  }
+}

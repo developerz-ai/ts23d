@@ -1,11 +1,14 @@
 // The simple kinds: 'noise' (a quiet painted/plain surface: soft tone and roughness mottling,
 // faint relief), 'flat' (constant) and 'glass' (near-white, very smooth, faint ripples, smudges,
 // grime toward the bottom edge).
-// params (noise): tone 0.93 · mottle 0.03 · relief 0.0002 · size 0.3
+// `grain` adds a fine isotropic texture of that many metres (moulded stipple on rubber, orange peel
+// on plastic) at `grainSize`, clamped to what the texels hold.
+// params (noise): tone 0.93 · mottle 0.03 · relief 0.0002 · size 0.3 · grain 0 · grainSize 0.004
 // params (glass): ripple 0.0002 · smudge 0.08 · grime 0.4
 
 import { type Canvas, noiseAt, param } from './canvas.ts';
 import { grime } from './masks.ts';
+import { isoNoise } from './relief.ts';
 import type { StripRecipe } from './types.ts';
 
 export function paintFlat(c: Canvas, r: StripRecipe): void {
@@ -20,6 +23,8 @@ export function paintNoise(c: Canvas, r: StripRecipe, seed: number): void {
   const mottle = param(r.params, 'mottle', 0.03);
   const relief = param(r.params, 'relief', 0.0002);
   const size = param(r.params, 'size', 0.3);
+  const grain = param(r.params, 'grain', 0);
+  const grainSize = param(r.params, 'grainSize', 0.004);
   const pu = c.metresU / c.w;
   const pv = c.metresV / c.h;
   const metal = r.metalness ?? 0;
@@ -33,7 +38,8 @@ export function paintNoise(c: Canvas, r: StripRecipe, seed: number): void {
       c.tone[i] = tone + mottle * big;
       c.rough[i] = r.roughness + 0.06 * big + 0.03 * fine;
       c.metal[i] = metal;
-      c.height[i] = relief * (big + 0.3 * fine);
+      const g = grain > 0 ? isoNoise(c, xm, ym, grainSize, seed + 2) : 0;
+      c.height[i] = relief * (big + 0.3 * fine) + grain * g;
     }
   }
 }

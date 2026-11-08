@@ -1,0 +1,116 @@
+{
+  "asset": "dropship",
+  "reviewer": "agent",
+  "overall": 7.3,
+  "scores": {
+    "silhouette": {
+      "score": 8,
+      "reason": "Original VTOL dropship: lofted nose with framed canopy, slab cabin with rear ramp, two tilting ducted nacelles on sponsons, swept tail and fin, landing gear, chin gun. Distinct and readable from every view and at LOD2.",
+      "fixes": []
+    },
+    "proportions": {
+      "score": 8,
+      "reason": "Design dossier scale (cabin fits troops at 1.8 m, ramp at walking slope) and envelope pass; nacelles in proportion to the hull.",
+      "fixes": []
+    },
+    "materials": {
+      "score": 7,
+      "reason": "Hull plates now steel_painted (chips to bare metal), aluminium mechanisms, cast fittings, glass canopy, glowing thrusters and navigation lights, hazard and accent paint. The chip pattern is uniform and too dense on the large plates; the nose loft shows triangle faceting in the shading.",
+      "fixes": [
+        "lower chip density on big plates (a defined steel_painted variant)",
+        "weighted normals on the nose loft"
+      ]
+    },
+    "detail": {
+      "score": 7,
+      "reason": "Plate seams, vents and louvres, greebles, antennae, hatches, stencils and tail number, gear with pads, nacelle hazard rings and louvres, cabin interior and lamp behind the ramp.",
+      "fixes": [
+        "rivet/fastener rows along the plate seams",
+        "hydraulic lines on the gear legs"
+      ]
+    },
+    "wear": {
+      "score": 6,
+      "reason": "Chipped paint everywhere, landing-pad dirt on gear and belly, dust on top. No exhaust scorch around the nacelles, no oil streaks, no faded stencils.",
+      "fixes": [
+        "heat scorch inside and below the nacelle mouths (soot zones)",
+        "oil streaks from the gear bays"
+      ]
+    },
+    "lod": {
+      "score": 7,
+      "reason": "LOD2 (2 000) keeps hull, canopy, nacelles, wings, tail and gear; the nacelle hazard rings, tail number and window row drop, so the strongest colour accents vanish at distance.",
+      "fixes": [
+        "keep the nacelle hazard rings and the 07 as flat quads at LOD2"
+      ]
+    },
+    "technical": {
+      "score": 8,
+      "reason": "QA PASS, 18 810 / 6 460 / 2 000, glow rules, ramp arc check, moving nacelles and ramp clear. The UV split for true-scale textures cost ~4k LOD0 triangles. Now 18 970 / 6 516 / 2 032. Connections gate clean (was 30 findings): troop-seat backrests sit in their pans and against the wall panels; the nacelle bore runs on to key the fan's stator disc; exhaust vanes span the nozzle bore chord to chord.",
+      "fixes": [
+        "split only faces taller than one strip band"
+      ]
+    }
+  },
+  "renders": {
+    "hero.png": "3bb66d286761cefd38ad4efb1a5b2539c7b1977d37e174c6291e26c57efec0d2",
+    "sheet.png": "54fcf281d1c4cc15afb2c0822a43396155d06a041d6a231ddf3b67e17d803f54",
+    "raking.png": "18aaf7373ef2bd85de23a7566ff61eabd0b1b4032e55aa6fc76c21e889f76532",
+    "raking_detail.png": "bbba2f69e244aad48a5e7b2ebcae67b650f330bf01902a87406f2142657e56c5",
+    "lods.png": "c48e939f228d876a5fc3a6e782c2bc92cb50f66f24f2290b71d0d2f12ca9362e",
+    "silhouette.png": "92605fe555be2802ea6c330e6e85199d48a0a7e7649a4b3ae2f36798bd5b2f14",
+    "value.png": "ded60cbfb28dce6e1060fabdb2a2ac5c1d296eae038d1a9d0b55eaeef4721556",
+    "detail.png": "44103d5c4d444df75c440d697add34ed8fbad32c40de29ccacab940476545b8b"
+  },
+  "metrics": {
+    "silhouette": [
+      {
+        "view": "front",
+        "iou": 0.985
+      },
+      {
+        "view": "side",
+        "iou": 0.984
+      },
+      {
+        "view": "3/4",
+        "iou": 0.987
+      }
+    ],
+    "focal": {
+      "peakPart": "canopy",
+      "peak": [
+        537,
+        261
+      ],
+      "focalShare": 0,
+      "focalArea": 0,
+      "top": [
+        {
+          "part": "canopy",
+          "share": 0.406
+        },
+        {
+          "part": "dorsal",
+          "share": 0.195
+        },
+        {
+          "part": "hull_detail",
+          "share": 0.167
+        }
+      ],
+      "declared": []
+    },
+    "rest": {
+      "share": 0.624,
+      "spread": 0.704,
+      "min": 0.25
+    },
+    "shape": {
+      "acuteShare": 0.475,
+      "straightShare": 0.572,
+      "taper": -0.195,
+      "shape": "aggressive"
+    }
+  }
+}

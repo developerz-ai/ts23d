@@ -15,18 +15,26 @@
     "thumb": "recipes/boxcar/out/boxcar_nw/thumb.png"
   },
   "triangles": [
-    14576,
-    5972,
-    980
+    25864,
+    9460,
+    1336
   ],
   "drawCalls": [
-    9,
-    9,
-    9
+    13,
+    11,
+    11
   ],
   "pivots": [
     {
       "name": "body",
+      "parent": null
+    },
+    {
+      "name": "body_paint_body",
+      "parent": null
+    },
+    {
+      "name": "body_paint_letter",
       "parent": null
     },
     {
@@ -63,9 +71,17 @@
       "motion": "slide"
     },
     {
+      "name": "door_l_paint_body",
+      "parent": "door_l"
+    },
+    {
       "name": "door_r",
       "parent": null,
       "motion": "slide"
+    },
+    {
+      "name": "door_r_paint_body",
+      "parent": "door_r"
     }
   ],
   "emitters": [],
@@ -73,6 +89,10 @@
   "surfaces": [
     "opaque"
   ],
+  "paint": {
+    "body": "#74382a",
+    "letter": "#e8e2d2"
+  },
   "real": {
     "length": 13.4,
     "width": 2.896,

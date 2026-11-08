@@ -23,6 +23,7 @@ import {
   type Vec2,
   worldMeshes,
 } from '@developerz.ai/ts23d';
+import { restrip, type StripRule, weatherer } from '../_lib/finish/finish.ts';
 
 const FT = 0.3048;
 const TRACK_CENTRES = 13 * FT; // 3.962
@@ -48,6 +49,16 @@ const plank = hex('#6d5a45');
 const red = hex('#b0261c');
 const white = hex('#ece9e0');
 const lens = hex('#ffcf7a');
+
+/** Authoring colour → material: painted steel lattice (chips show rust), weathered timber
+ *  walkway, red/white painted signal arms; concrete keeps its classic strip. */
+const RULES: readonly StripRule[] = [
+  { from: steel, strip: 'steel_painted' },
+  { from: steelDark, strip: 'iron_rust', color: hex('#7a6e66') },
+  { from: plank, strip: 'wood_weathered', color: hex('#c8bba8') },
+  { from: red, strip: 'wood_painted' },
+  { from: white, strip: 'wood_painted' },
+];
 
 const halfSpan = (tracks: number): number => ((tracks - 1) / 2) * TRACK_CENTRES + POST_CLEAR;
 const trackYs = (tracks: number): number[] =>
@@ -219,6 +230,10 @@ const bridge = defineFamily({
     const lod = ctx.lod;
     const hs = halfSpan(p.tracks);
     const dirt = (m: Mesh): Mesh => grime(m, { ground: 1.2, groundStrength: 0.35 });
+    const weather = weatherer(ctx.rng.fork('weather'));
+    /** Every part through the material library, then dust on top faces and ground splash. */
+    const part = (name: string, m: Mesh | null, o?: Parameters<typeof ctx.part>[2]): void =>
+      ctx.part(name, m && weather(restrip(m, RULES), { dust: 0.2, mud: 0.6, mudStrength: 0.5 }), o);
     const section = lod === 0 ? 'angle' : 'square';
 
     // ---- posts on footings: box lattice (LOD0/1), plain columns far away.
@@ -227,7 +242,7 @@ const bridge = defineFamily({
       ['r', -1],
     ] as const) {
       const y = s * hs;
-      ctx.part(
+      part(
         `footing_${side}`,
         box({
           size: [0.95, 0.8, FOOT_H],
@@ -261,7 +276,7 @@ const bridge = defineFamily({
               strip: 'iron',
             });
       const plate = box({ size: [0.75, 0.6, 0.04], at: [0, y, FOOT_H], color: steelDark });
-      ctx.part(`post_${side}`, dirt(merge([post, plate])));
+      part(`post_${side}`, dirt(merge([post, plate])));
       // Knee braces from the post into the girder soffit, front and back faces.
       const knees = (lod === 2 ? [0] : [-GIRDER_W / 2 + 0.05, GIRDER_W / 2 - 0.05]).map((x) =>
         beam({
@@ -273,7 +288,7 @@ const bridge = defineFamily({
           strip: 'iron',
         }),
       );
-      ctx.part(`knee_${side}`, merge(knees));
+      part(`knee_${side}`, merge(knees));
     }
 
     // ---- girder: box lattice (warren), plank walkway on top, hand rail on the back edge.
@@ -303,7 +318,7 @@ const bridge = defineFamily({
             color: steel,
             strip: 'iron',
           });
-    ctx.part('girder', girder);
+    part('girder', girder);
     const deck: Mesh[] = [
       box({
         size: [GIRDER_W + 0.1, 2 * hs + 0.45, 0.05],
@@ -350,7 +365,7 @@ const bridge = defineFamily({
         deck.push(box({ size: [0.05, 0.05, 1.02], at: [railX, y, DECK_Z], color: steel }));
       }
     }
-    ctx.part('walkway', merge(deck));
+    part('walkway', merge(deck));
 
     // ---- ladder up the right post to the walkway.
     if (lod < 2) {
@@ -372,7 +387,7 @@ const bridge = defineFamily({
       for (const z of [FOOT_H + 1.5, ZB - 1, ZB + 0.6])
         for (const x of [-0.2, 0.2])
           lad.push(box({ size: [0.04, 0.12, 0.04], at: [x, ly + 0.08, z], color: steel })); // stand-off brackets
-      ctx.part('ladder', merge(lad));
+      part('ladder', merge(lad));
     }
 
     // ---- masts, arms, spectacles and lamps: one mast per track.
@@ -391,8 +406,16 @@ const bridge = defineFamily({
           at: [0, y, 0],
         }),
         lathe({
+          // A cap collar over the pipe's open top (sleeved 3 cm down it), then the ball; LOD2
+          // keeps the plain ball (its triangle budget is tight and nothing up close to see).
           profile: [
-            [0, DECK_Z + MAST_H - 0.02],
+            ...(lod < 2
+              ? ([
+                  [0, DECK_Z + MAST_H - 0.03],
+                  [0.072, DECK_Z + MAST_H - 0.03],
+                  [0.072, DECK_Z + MAST_H + 0.02],
+                ] as const)
+              : ([[0, DECK_Z + MAST_H - 0.02]] as const)),
             [0.08, DECK_Z + MAST_H + 0.06],
             [0.06, DECK_Z + MAST_H + 0.15],
             [0, DECK_Z + MAST_H + 0.18],
@@ -423,7 +446,7 @@ const bridge = defineFamily({
         // Lamp behind the red roundel's stop position, on a bracket from the mast.
         const ly = y - 0.25;
         const lz = pz - 0.25;
-        ctx.part(
+        part(
           `lamp_${t}_${kind}`,
           merge([
             box({ size: [0.2, 0.24, 0.3], at: [-0.02, ly, lz - 0.15], color: steelDark }),
@@ -440,7 +463,7 @@ const bridge = defineFamily({
             box({ size: [0.05, 0.12, 0.05], at: [-0.02, y - 0.09, lz - 0.05], color: steelDark }), // bracket to the mast
           ]),
         );
-        ctx.part(
+        part(
           `lamp_${t}_${kind}_lens`,
           cylinder({
             radius: 0.06,
@@ -470,10 +493,10 @@ const bridge = defineFamily({
             oneWay: true,
           },
         });
-        ctx.part(`${name}_spectacle`, a.spectacle, { parent: name });
-        ctx.part(`${name}_blade`, a.blade, { parent: name });
+        part(`${name}_spectacle`, a.spectacle, { parent: name });
+        part(`${name}_blade`, a.blade, { parent: name });
       }
-      ctx.part(`mast_${t}`, merge(mast));
+      part(`mast_${t}`, merge(mast));
     });
   },
 });

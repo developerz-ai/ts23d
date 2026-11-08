@@ -20,7 +20,8 @@ export function rustStreaks(c: Canvas, amount: number, seed: number): void {
       const i = y * c.w + x;
       c.tone[i] = (c.tone[i] ?? 1) * (1 - 0.4 * m);
       c.rough[i] = Math.min(1, (c.rough[i] ?? 0.8) + 0.2 * m);
-      c.metal[i] = (c.metal[i] ?? 0) * (1 - m);
+      // Rust is dielectric: a texel is under the streak or not (metalness stays 0 or 1).
+      if (m >= 0.5) c.metal[i] = 0;
       c.mix[i] = Math.min(1, (c.mix[i] ?? 0) + m);
     }
   }

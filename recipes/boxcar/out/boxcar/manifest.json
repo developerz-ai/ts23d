@@ -15,18 +15,26 @@
     "thumb": "recipes/boxcar/out/boxcar/thumb.png"
   },
   "triangles": [
-    14412,
-    5808,
-    980
+    25676,
+    9272,
+    1192
   ],
   "drawCalls": [
-    9,
-    9,
-    9
+    13,
+    11,
+    11
   ],
   "pivots": [
     {
       "name": "body",
+      "parent": null
+    },
+    {
+      "name": "body_paint_body",
+      "parent": null
+    },
+    {
+      "name": "body_paint_letter",
       "parent": null
     },
     {
@@ -63,9 +71,17 @@
       "motion": "slide"
     },
     {
+      "name": "door_l_paint_body",
+      "parent": "door_l"
+    },
+    {
       "name": "door_r",
       "parent": null,
       "motion": "slide"
+    },
+    {
+      "name": "door_r_paint_body",
+      "parent": "door_r"
     }
   ],
   "emitters": [],
@@ -73,6 +89,19 @@
   "surfaces": [
     "opaque"
   ],
+  "paint": {
+    "body": "#84402d",
+    "letter": "#e8e2d2"
+  },
+  "variants": {
+    "oxide_red": {
+      "body": "#74382a"
+    },
+    "faded": {
+      "body": "#a0644f",
+      "letter": "#cfc6b4"
+    }
+  },
   "real": {
     "length": 13.4,
     "width": 2.896,

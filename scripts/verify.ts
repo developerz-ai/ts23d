@@ -2,6 +2,10 @@
 // means green there (scripts/ci-parity.test.ts holds the two together).
 //   bun run verify                 every step, stops on the first red
 //   bun run verify --only a,b      a subset (the inner loop); --json for agents
+//   T3D_SHARD=k/n bun run verify   CI's parallel split: shard 1 runs every step on its slice of the
+//                                  recipes; shards 2..n run only `recipes` on theirs
+
+import { parseShard } from './lib/shard.ts';
 
 export const STEPS = [
   { name: 'lint', cmd: ['bunx', 'biome', 'check', '.'] },
@@ -19,9 +23,10 @@ export type StepName = (typeof STEPS)[number]['name'];
 if (import.meta.main) {
   const json = process.argv.includes('--json');
   const only = process.argv[process.argv.indexOf('--only') + 1]?.split(',');
-  const steps = process.argv.includes('--only')
-    ? STEPS.filter((s) => only?.includes(s.name))
-    : STEPS;
+  const shard = parseShard(process.env['T3D_SHARD']);
+  const steps = (
+    process.argv.includes('--only') ? STEPS.filter((s) => only?.includes(s.name)) : STEPS
+  ).filter((s) => !shard || shard.k === 1 || s.name === 'recipes');
   const results: { step: string; ok: boolean; ms: number }[] = [];
   for (const step of steps) {
     const t0 = Bun.nanoseconds();

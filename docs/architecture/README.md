@@ -12,13 +12,18 @@
 | 2 | `primitives` | Geometry builders → `Mesh`: `box`, `lathe`, `cylinder`, `prism`, `beam`, `planar`, `sweep`, `loft`, `heightfield`, `triangulate`; planned `tiled`, `cell`, `sdf` |
 | 2 | `neural` | Optional AI adapters: local-GPU mesh generators, `importGlb`, image sources (all planned) |
 | 2 | `passes` | Whole-mesh post-processing: `grime`; planned `optimize` (weld, vertex-cache reorder, ACMR) |
+| 2 | `audio` | Deterministic sound synthesis: modal impacts from material and size, engine loops, mechanism sounds, UI effects; WAV |
+| 2 | `physics` | Collision shapes fitted per part, mass and centre of mass from volume × density, friction/restitution per surface |
 | 3 | `kinds` | Domain builders: building, vehicle, vegetation (`tree`, `trees`); planned vessel, creature |
 | 3 | `qa` | Gates over a `CompiledAsset` |
 | 3 | `export` | `CompiledAsset` → GLB |
 | 3 | `render` | CPU rasteriser, PNG encoder, contact sheet; planned `photoMatch` |
-| 4 | `cli` | `t3d build / shot / hero / review / list` |
+| 3 | `data` | Real-world inputs, pinned and offline: Wikidata facts (CC0) → `real`/`measures`, DEM tiles → `terrainFromDEM`; sha256-verified, licence-tracked |
 | 4 | `testing` | assertions for users' recipe tests (subpath `/testing`) |
-| 5 | `src/index.ts` | Re-exports every public module |
+| 4 | `tune` | offline parameter fitting (CMA-ES, coordinate search) → committed `tune.json` |
+| 4 | `finish` | optional AI texture finish layer over the code's structure |
+| 5 | `cli` | `t3d build / shot / hero / review / critique / tune / list` |
+| 6 | `src/index.ts` | Re-exports every public module |
 
 ```
             src/index.ts (5)        cli (4)
@@ -66,3 +71,5 @@ recipe.ts ─► defineAsset ─► compile(asset, { lod }) ─► CompiledAsset
 | [adding-a-kind.md](adding-a-kind.md) | New domain builder |
 | [errors.md](errors.md) | Every `T3D_*` code |
 | [glb-production.md](glb-production.md) | Production GLB rules, validator results, per-engine import table, gap list |
+| [performance-audit.md](performance-audit.md) | Measured hot spots and the prioritised optimisation backlog |
+| [defect-catalogue.md](defect-catalogue.md) | Every defect found once, the check that now catches it (zero-defect rule) |

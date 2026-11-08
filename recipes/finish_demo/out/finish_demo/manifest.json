@@ -1,0 +1,69 @@
+{
+  "name": "finish_demo",
+  "kind": "prop",
+  "description": "A EUR pallet with a wooden crate and an oak cask: plain code-built props for the AI finish layer (t3d finish) to weather",
+  "tags": [
+    "demo",
+    "finish",
+    "prop"
+  ],
+  "files": {
+    "lods": [],
+    "sheet": "recipes/finish_demo/out/finish_demo/sheet.png",
+    "thumb": "recipes/finish_demo/out/finish_demo/thumb.png"
+  },
+  "triangles": [
+    3172,
+    1132,
+    284
+  ],
+  "drawCalls": [
+    1,
+    1,
+    1
+  ],
+  "pivots": [
+    {
+      "name": "body",
+      "parent": null
+    }
+  ],
+  "emitters": [],
+  "sockets": [],
+  "surfaces": [
+    "opaque"
+  ],
+  "real": {
+    "length": 1.2,
+    "width": 0.8,
+    "height": 0.9440000000000001
+  },
+  "measures": [
+    {
+      "label": "pallet length",
+      "spec": 1.2,
+      "measured": 1.2000000476837158,
+      "source": "EN 13698-1"
+    },
+    {
+      "label": "pallet width",
+      "spec": 0.8,
+      "measured": 0.800000011920929,
+      "source": "EN 13698-1"
+    },
+    {
+      "label": "pallet height",
+      "spec": 0.144,
+      "measured": 0.14399999380111694,
+      "source": "EN 13698-1"
+    }
+  ],
+  "sources": [
+    "https://en.wikipedia.org/wiki/EUR-pallet",
+    "https://en.wikipedia.org/wiki/Barrel#Wine_barrels"
+  ],
+  "qa": {
+    "pass": true,
+    "findings": []
+  }
+}

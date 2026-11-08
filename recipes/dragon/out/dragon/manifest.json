@@ -1,0 +1,147 @@
+{
+  "name": "dragon",
+  "kind": "creature",
+  "description": "Cinderhorn, an original stylised fantasy drake: crimson scales, cream belly plates, ringed swept-back horns, raised bat wings, spade tail; sculpted from code in ten modules",
+  "tags": [
+    "character",
+    "creature",
+    "fantasy",
+    "dragon",
+    "sculpt",
+    "hero"
+  ],
+  "files": {
+    "lods": [],
+    "sheet": "recipes/dragon/out/dragon/sheet.png",
+    "thumb": "recipes/dragon/out/dragon/thumb.png"
+  },
+  "triangles": [
+    197828,
+    44220,
+    4064
+  ],
+  "drawCalls": [
+    6,
+    6,
+    6
+  ],
+  "pivots": [
+    {
+      "name": "body",
+      "parent": null
+    },
+    {
+      "name": "jaw",
+      "parent": null,
+      "motion": "sway"
+    },
+    {
+      "name": "wing_l",
+      "parent": null,
+      "motion": "sway"
+    },
+    {
+      "name": "wing_r",
+      "parent": null,
+      "motion": "sway"
+    },
+    {
+      "name": "tail",
+      "parent": null,
+      "motion": "sway"
+    }
+  ],
+  "emitters": [],
+  "sockets": [],
+  "joints": [
+    {
+      "name": "horn_l_root",
+      "from": "horn_l",
+      "to": "horn_boss_l",
+      "kind": "socket",
+      "at": [
+        2.44,
+        0.15,
+        3.55
+      ]
+    },
+    {
+      "name": "horn_r_root",
+      "from": "horn_r",
+      "to": "horn_boss_r",
+      "kind": "socket",
+      "at": [
+        2.44,
+        -0.15,
+        3.55
+      ]
+    },
+    {
+      "name": "eye_l_orbit",
+      "from": "eye_l",
+      "to": "eye_socket_l",
+      "kind": "socket",
+      "at": [
+        2.74,
+        0.205,
+        3.47
+      ]
+    },
+    {
+      "name": "eye_r_orbit",
+      "from": "eye_r",
+      "to": "eye_socket_r",
+      "kind": "socket",
+      "at": [
+        2.74,
+        -0.205,
+        3.47
+      ]
+    },
+    {
+      "name": "wing_l_shoulder",
+      "from": "wing_l_arm",
+      "to": "shoulder_l",
+      "kind": "flush",
+      "at": [
+        0.3134,
+        0.459,
+        2.2677
+      ]
+    },
+    {
+      "name": "wing_r_shoulder",
+      "from": "wing_r_arm",
+      "to": "shoulder_r",
+      "kind": "flush",
+      "at": [
+        0.3134,
+        -0.459,
+        2.2677
+      ]
+    }
+  ],
+  "surfaces": [
+    "opaque"
+  ],
+  "real": {
+    "length": 8.7,
+    "width": 7.9,
+    "height": 4.7
+  },
+  "measures": [
+    {
+      "label": "eye spacing (centre to centre)",
+      "spec": 0.41,
+      "measured": 0.4099942073225975,
+      "source": "README.md design spec"
+    }
+  ],
+  "sources": [
+    "recipes/dragon/README.md (design dossier: scale, shape language, palette, animal references)"
+  ],
+  "qa": {
+    "pass": true,
+    "findings": []
+  }
+}

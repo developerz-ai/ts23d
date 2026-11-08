@@ -1,0 +1,232 @@
+{
+  "name": "weather_demo",
+  "kind": "prop",
+  "description": "Weathering demo: steel door, wooden crate, concrete block and steel drum, each pristine beside weathered by weather() — rust streaks, chips, dust, moss, mud, bleach, dents, sag.",
+  "tags": [
+    "material",
+    "weather",
+    "demo"
+  ],
+  "files": {
+    "lods": [],
+    "sheet": "recipes/weather_demo/out/weather_demo/sheet.png",
+    "thumb": "recipes/weather_demo/out/weather_demo/thumb.png"
+  },
+  "triangles": [
+    95428,
+    21760,
+    3808
+  ],
+  "drawCalls": [
+    1,
+    1,
+    1
+  ],
+  "pivots": [
+    {
+      "name": "body",
+      "parent": null
+    }
+  ],
+  "emitters": [],
+  "sockets": [],
+  "surfaces": [
+    "opaque"
+  ],
+  "measures": [],
+  "sources": [
+    "https://en.wikipedia.org/wiki/Drum_(container)",
+    "https://www.wbdg.org/guides-specifications/building-envelope-design-guide/fenestration-systems/doors"
+  ],
+  "weather": {
+    "dents": {
+      "target": 0.01,
+      "actual": 0.0093,
+      "eligible": "exposed-panels ; exposed-panels & side-facing",
+      "area": 6.7421,
+      "count": 5,
+      "by": {
+        "door_old": {
+          "target": 0.008,
+          "actual": 0.0055,
+          "area": 5.9442
+        },
+        "drum_old": {
+          "target": 0.01,
+          "actual": 0.0093,
+          "area": 0.7978
+        }
+      }
+    },
+    "bleach": {
+      "target": 0.466,
+      "actual": 0.466,
+      "eligible": "side-facing | up-facing ; up-facing | sunlit ; sunlit",
+      "area": 7.7784,
+      "by": {
+        "door_old": {
+          "target": 0.45,
+          "actual": 0.45,
+          "area": 6.0635
+        },
+        "crate_old": {
+          "target": 0.6,
+          "actual": 0.6,
+          "area": 1.272
+        },
+        "drum_old": {
+          "target": 0.3,
+          "actual": 0.3,
+          "area": 0.4429
+        }
+      }
+    },
+    "chips": {
+      "target": 0.3108,
+      "actual": 0.3108,
+      "eligible": "convex-edges",
+      "area": 6.6839,
+      "by": {
+        "door_old": {
+          "target": 0.35,
+          "actual": 0.35,
+          "area": 1.4469
+        },
+        "crate_old": {
+          "target": 0.3,
+          "actual": 0.3,
+          "area": 3.7808
+        },
+        "block_old": {
+          "target": 0.3,
+          "actual": 0.3,
+          "area": 0.8868
+        },
+        "drum_old": {
+          "target": 0.3,
+          "actual": 0.3,
+          "area": 0.5694
+        }
+      }
+    },
+    "scratches": {
+      "target": 0.5,
+      "actual": 0.5,
+      "eligible": "touched",
+      "area": 0.0834
+    },
+    "rust": {
+      "target": 0.2082,
+      "actual": 0.2082,
+      "eligible": "below-fasteners | fasteners | (convex-edges & up-facing) ; below-fasteners | fasteners ; convex-edges | fasteners",
+      "area": 0.7478,
+      "by": {
+        "door_old": {
+          "target": 0.35,
+          "actual": 0.35,
+          "area": 0.1383
+        },
+        "block_old": {
+          "target": 0.6,
+          "actual": 0.6,
+          "area": 0.0352
+        },
+        "drum_old": {
+          "target": 0.15,
+          "actual": 0.15,
+          "area": 0.5743
+        }
+      }
+    },
+    "mud": {
+      "target": 0.375,
+      "actual": 0.375,
+      "eligible": "ground-near & side-facing",
+      "area": 4.4317,
+      "by": {
+        "door_old": {
+          "target": 0.45,
+          "actual": 0.45,
+          "area": 0.7482
+        },
+        "crate_old": {
+          "target": 0.35,
+          "actual": 0.35,
+          "area": 2.465
+        },
+        "block_old": {
+          "target": 0.4,
+          "actual": 0.4,
+          "area": 0.7228
+        },
+        "drum_old": {
+          "target": 0.35,
+          "actual": 0.35,
+          "area": 0.4957
+        }
+      }
+    },
+    "dust": {
+      "target": 0.4416,
+      "actual": 0.4416,
+      "eligible": "up-facing",
+      "area": 2.2623,
+      "by": {
+        "door_old": {
+          "target": 0.6,
+          "actual": 0.6,
+          "area": 0.1998
+        },
+        "crate_old": {
+          "target": 0.4,
+          "actual": 0.4,
+          "area": 1.272
+        },
+        "block_old": {
+          "target": 0.45,
+          "actual": 0.45,
+          "area": 0.4979
+        },
+        "drum_old": {
+          "target": 0.5,
+          "actual": 0.5,
+          "area": 0.2926
+        }
+      }
+    },
+    "sag": {
+      "target": 0.006,
+      "actual": 0.0027,
+      "eligible": "long-spans",
+      "area": 3.5581
+    },
+    "warp": {
+      "target": 0.004,
+      "actual": 0.0026,
+      "eligible": "long-spans",
+      "area": 3.5581
+    },
+    "moss": {
+      "target": 0.2934,
+      "actual": 0.2934,
+      "eligible": "shaded & wet & !down-facing",
+      "area": 4.2781,
+      "by": {
+        "crate_old": {
+          "target": 0.3,
+          "actual": 0.3,
+          "area": 3.7096
+        },
+        "block_old": {
+          "target": 0.25,
+          "actual": 0.25,
+          "area": 0.5685
+        }
+      }
+    }
+  },
+  "qa": {
+    "pass": true,
+    "findings": []
+  }
+}

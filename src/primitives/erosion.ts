@@ -7,6 +7,7 @@
 
 import type { Rng } from '../core/index.ts';
 import { count } from './check.ts';
+import { arrayMemo } from './erosion-memo.ts';
 import type { TerrainGrid } from './terrain-grid.ts';
 
 export interface ErosionOptions {
@@ -151,6 +152,9 @@ function bilinear(h: Float64Array, nx: number, x: number, y: number): number {
   return a * (1 - u) * (1 - v) + b * u * (1 - v) + c * (1 - u) * v + d * u * v;
 }
 
+// LOD0/1/2 erode the same grid with the same droplets: simulate once per process.
+const memo = arrayMemo();
+
 export function hydraulicErosion(g: TerrainGrid, rng: Rng, o: ErosionOptions = {}): TerrainGrid {
   const drops = count('erosion droplets', o.droplets ?? 70000, 0, 10_000_000);
   const life = count('erosion lifetime', o.lifetime ?? 30, 1, 1000);
@@ -163,16 +167,37 @@ export function hydraulicErosion(g: TerrainGrid, rng: Rng, o: ErosionOptions = {
     hi = Math.max(hi, v);
   }
   const relief = hi - lo || 1;
-  const h = Float64Array.from(g.z, (v) => (v - lo) / relief);
-  const flow = new Float64Array(h.length);
-  const dep = new Float64Array(h.length);
-  const sim: Sim = {
-    ...{ h, flow, dep, nx, ny, life, inertia: o.inertia ?? 0.05, capK: o.capacity ?? 4 },
-    ...{ minCap: o.minCapacity ?? 0.01, erodeK: o.erode ?? 0.3, depositK: o.deposit ?? 0.3 },
-    ...{ evap: o.evaporate ?? 0.01, gravity: o.gravity ?? 4 },
-  };
-  const brush = makeBrush(radius);
-  for (let n = 0; n < drops; n++) droplet(sim, brush, rng.next() * (nx - 2), rng.next() * (ny - 2));
+  const inertia = o.inertia ?? 0.05;
+  const capK = o.capacity ?? 4;
+  const minCap = o.minCapacity ?? 0.01;
+  const erodeK = o.erode ?? 0.3;
+  const depositK = o.deposit ?? 0.3;
+  const evap = o.evaporate ?? 0.01;
+  const gravity = o.gravity ?? 4;
+  // Draw every start first (same order as one droplet at a time), so a memo hit leaves the Rng
+  // exactly where a full run would.
+  const starts = new Float64Array(drops * 2);
+  for (let n = 0; n < drops; n++) {
+    starts[n * 2] = rng.next() * (nx - 2);
+    starts[n * 2 + 1] = rng.next() * (ny - 2);
+  }
+  const scalars = [nx, ny, ...g.rect, life, radius, inertia, capK, minCap, erodeK, depositK];
+  const [h, flow, dep] = memo(
+    { scalars: [...scalars, evap, gravity], arrays: [g.z, starts] },
+    () => {
+      const h = Float64Array.from(g.z, (v) => (v - lo) / relief);
+      const flow = new Float64Array(h.length);
+      const dep = new Float64Array(h.length);
+      const sim: Sim = {
+        ...{ h, flow, dep, nx, ny, life, inertia, capK, minCap, erodeK, depositK, evap, gravity },
+      };
+      const brush = makeBrush(radius);
+      for (let n = 0; n < drops; n++)
+        droplet(sim, brush, starts[n * 2] ?? 0, starts[n * 2 + 1] ?? 0);
+      return [h, flow, dep];
+    },
+  );
+  if (!h || !flow || !dep) return g;
   const norm = (m: Float64Array): Float64Array => {
     let top = 0;
     for (const v of m) top = Math.max(top, v);

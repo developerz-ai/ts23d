@@ -1,0 +1,110 @@
+{
+  "asset": "palm",
+  "reviewer": "agent",
+  "overall": 7.3,
+  "scores": {
+    "silhouette": {
+      "score": 8,
+      "reason": "Coconut palm reads immediately: slender bowed ringed stem, crown of drooping pinnate fronds, coconuts under the frond bases.",
+      "fixes": []
+    },
+    "proportions": {
+      "score": 8,
+      "reason": "20 m height, 9 m crown, 0.35 m stem pass the measures; frond length looks right.",
+      "fixes": []
+    },
+    "materials": {
+      "score": 7,
+      "reason": "Stem on bark_oak tinted grey-brown (rings from the kind), fronds green, sand floor. Fronds lack midrib/leaflet colour variation.",
+      "fixes": [
+        "dry brown lower fronds",
+        "a ringed-stem project material (palm scars)"
+      ]
+    },
+    "detail": {
+      "score": 7,
+      "reason": "Pinnate leaflets, fruit, ringed stem.",
+      "fixes": [
+        "frond boots and fibres at the crown"
+      ]
+    },
+    "wear": {
+      "score": 6,
+      "reason": "Sand underfoot; no dead hanging fronds or weathered lower stem.",
+      "fixes": [
+        "two dead fronds hanging under the crown"
+      ]
+    },
+    "lod": {
+      "score": 7,
+      "reason": "LOD2 frond cards keep the star crown.",
+      "fixes": []
+    },
+    "technical": {
+      "score": 8,
+      "reason": "QA PASS; kind budget plus \u2264 400 floor triangles; trunk DBH and total height pass the measures; one material. Now 5 572 / 2 332 / 215. Connections gate clean (tree kind: closed stems rooted on the parent axis, leaf cards declared connect rest).",
+      "fixes": []
+    }
+  },
+  "renders": {
+    "hero.png": "f2cd79c7f18184fc7f78c5d25fa1dc475a68e9b0d0b46a30ba25c67b7f4c141c",
+    "sheet.png": "1d9c4d4d0bce2850db780f9426ca26fd2478be5b58d36fbd16bd1ecb55fd37d2",
+    "raking.png": "cbc60dda875cb8dc273d258739f8019c8f2c4e0e439c0efa1911a94b6e0ab224",
+    "raking_detail.png": "1ed39a132d86e0a67c0bab84e90fdfd6e56802fe98c775d259706a2f4644b06a",
+    "lods.png": "424e8ddf7996753b6b90b26c538e9141ba8ad6d8f8b13f9e3331d942c0151438",
+    "silhouette.png": "2b491f0cf49b39b7738b84e5bb97b293afe2f5147522cad75f867cea7a34d47f",
+    "value.png": "1cee7bbaa4fd6296fa78e99dffb0ca9afe0cbd769a932cdc40ae23e07a254f57",
+    "detail.png": "af25665b27fd3a3b86fecdb3aca9ea05b7fa51716e6a2173eaab43f0d03fe144"
+  },
+  "metrics": {
+    "silhouette": [
+      {
+        "view": "front",
+        "iou": 0.665
+      },
+      {
+        "view": "side",
+        "iou": 0.58
+      },
+      {
+        "view": "3/4",
+        "iou": 0.65
+      }
+    ],
+    "focal": {
+      "peakPart": "ground",
+      "peak": [
+        385,
+        353
+      ],
+      "focalShare": 0,
+      "focalArea": 0,
+      "top": [
+        {
+          "part": "ground",
+          "share": 0.563
+        },
+        {
+          "part": "trunk",
+          "share": 0.347
+        },
+        {
+          "part": "roots",
+          "share": 0.089
+        }
+      ],
+      "declared": []
+    },
+    "rest": {
+      "share": 0.474,
+      "spread": 0.906,
+      "min": 0.25
+    },
+    "shape": {
+      "acuteShare": 0.696,
+      "straightShare": 0.488,
+      "taper": -0.694,
+      "shape": "aggressive"
+    }
+  }
+}

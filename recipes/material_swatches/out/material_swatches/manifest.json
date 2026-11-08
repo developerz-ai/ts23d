@@ -1,17 +1,20 @@
 {
   "name": "material_swatches",
   "kind": "prop",
-  "description": "Every trim-sheet strip and cell on labelled panels: the material generator test card.",
-  "tags": [],
+  "description": "All 42 trim-sheet strips (one true-scale repeat each) and every cell on labelled panels: the material library test card.",
+  "tags": [
+    "material",
+    "test-card"
+  ],
   "files": {
     "lods": [],
     "sheet": "recipes/material_swatches/out/material_swatches/sheet.png",
     "thumb": "recipes/material_swatches/out/material_swatches/thumb.png"
   },
   "triangles": [
-    19598,
-    418,
-    418
+    27288,
+    778,
+    778
   ],
   "drawCalls": [
     3,

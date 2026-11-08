@@ -6,7 +6,10 @@
 import { Ts23dError } from '../core/index.ts';
 
 export interface TextureFile {
-  /** Download URL (https) or, for `source: 'file'`, a path relative to the working directory. */
+  /**
+   * Download URL (https) or, for `source: 'file'`, a path relative to the working directory. A
+   * map inside a zip (ambientCG) is `<zip url>#<entry name>.png`; sha256 is of the entry's bytes.
+   */
   readonly url: string;
   /** Lower-case hex sha256 of the file's bytes: the cache key and the integrity check. */
   readonly sha256: string;
@@ -30,6 +33,10 @@ export interface TextureSource {
     readonly normal?: TextureFile;
     /** Packed AO / roughness / metalness (Poly Haven `arm`, glTF ORM order). */
     readonly arm?: TextureFile;
+    /** Greyscale roughness (ambientCG `_Roughness`), used when there is no `arm`. */
+    readonly roughness?: TextureFile;
+    /** Greyscale ambient occlusion (ambientCG `_AmbientOcclusion`), used when there is no `arm`. */
+    readonly occlusion?: TextureFile;
   };
 }
 

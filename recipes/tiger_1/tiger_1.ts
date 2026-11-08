@@ -12,12 +12,10 @@ import {
   cylinder,
   defineAsset,
   frame,
-  grime,
   hex,
   type Lod,
   lathe,
   type Mesh,
-  MeshBuilder,
   merge,
   noOverlap,
   place,
@@ -26,10 +24,29 @@ import {
   type Rng,
   symmetric,
   touches,
-  translate,
   type Vec2,
   type Vec3,
+  valueNoise,
 } from '@developerz.ai/ts23d';
+import {
+  type Blob,
+  camo,
+  onGround,
+  reproject,
+  restrip,
+  type StripRule,
+  tessellate,
+  type WeatheringOptions,
+  weatherer,
+} from '../_lib/finish/finish.ts';
+import {
+  engineDeck,
+  exhaustAt,
+  type RearSpec,
+  rearMudguards,
+  rearPlate,
+  sideExtensions,
+} from './rear.ts';
 
 const dunkelgelb = hex('#b89d63');
 const rotbraun = hex('#6e3b2a');
@@ -42,6 +59,20 @@ const black = hex('#161616');
 const white = hex('#e8e6dc');
 const wood = hex('#7a5a3a');
 const rust = hex('#5a3a2a');
+const bare = hex('#7d766c');
+
+/** Authoring colour → material: painted steel takes the paint as vertex colour (chips show the
+ *  steel), rubber tyres, rusted manganese-steel track, cast/forged tool heads, ash handles. */
+const STRIP_RULES: readonly StripRule[] = [
+  { from: dunkelgelb, strip: 'steel_painted' },
+  { from: paintDark, strip: 'steel_painted' },
+  { from: rubber, strip: 'rubber', color: hex('#d8d8d8') },
+  { from: trackSteel, strip: 'iron_rust', color: hex('#b8aea4') },
+  { from: rust, strip: 'iron_rust', color: hex('#c09a80') },
+  { from: steel, strip: 'iron_cast', color: hex('#c8c4be') },
+  { from: bare, strip: 'aluminium', color: hex('#9a948a') },
+  { from: wood, strip: 'oak', color: hex('#e0d0bc') },
+];
 
 // Running gear (metres; hull frame +X front, Z up). Station pitch 515 mm (tiger1.info).
 const TRACK_Y = 1.4175;
@@ -173,35 +204,31 @@ function trackLink(pitch: number): Mesh {
 }
 
 function trackMesh(lod: Lod, line: readonly Vec2[], y: number): Mesh {
-  if (lod === 2) {
-    // Outer skin of the belt: push the centre line out by half a link along its normal.
-    const ring = resample(line, 22).map(
-      (s): Vec2 => [
-        s.p[0] + (Math.sin(s.pitch) * LINK_T) / 2,
-        s.p[1] + (Math.cos(s.pitch) * LINK_T) / 2,
-      ],
-    );
-    return translate(prism({ profile: ring, depth: TRACK_W, plane: 'xz', color: trackSteel }), [
-      0,
-      y,
-      0,
-    ]);
-  }
   const perimeter = resample(line, 1)[0]?.len ?? 1;
-  const stations = resample(line, Math.round(perimeter / (lod === 0 ? 0.13 : 0.32)));
+  // LOD2 keeps an open belt of 24 slabs (not a solid prism) so the wheels show through it.
+  const stations = resample(
+    line,
+    lod === 2 ? 24 : Math.round(perimeter / (lod === 0 ? 0.13 : 0.32)),
+  );
   const len = stations[0]?.len ?? 0.13;
   const unit =
     lod === 0
       ? trackLink(len)
-      : box({ size: [len * 1.04, TRACK_W, LINK_T], at: [0, 0, -LINK_T / 2], color: trackSteel });
+      : box({
+          size: [len * 1.04, TRACK_W, LINK_T],
+          at: [0, 0, -LINK_T / 2],
+          color: trackSteel,
+          ...(lod === 2 ? { omit: ['left', 'right'] as const } : {}),
+        });
   return merge(stations.map((s) => place(unit, { at: [s.p[0], y, s.p[1]], pitch: s.pitch })));
 }
 
 // ---------------------------------------------------------------- wheels
 
 /** One steel disc with a solid rubber tyre, centred on `y` (axis Y), dished toward ±Y faces. */
-function disc(lod: Lod, r: number, w: number, y: number, bolts: boolean): Mesh {
-  const segs = [20, 12, 8][lod] ?? 8;
+function disc(lod: Lod, r: number, w: number, y: number, bolts: boolean, inner = false): Mesh {
+  // Inner discs hide behind the outer row: fewer sides there.
+  const segs = (inner ? [12, 10, 8] : [16, 12, 8])[lod] ?? 8;
   const h = w / 2;
   const tyre = lathe({
     profile: [
@@ -211,6 +238,7 @@ function disc(lod: Lod, r: number, w: number, y: number, bolts: boolean): Mesh {
       [r, y + h - 0.012],
       [r - 0.008, y + h],
       [r - 0.05, y + h],
+      [r - 0.05, y - h],
     ],
     segments: segs,
     axis: 'y',
@@ -252,17 +280,31 @@ function disc(lod: Lod, r: number, w: number, y: number, bolts: boolean): Mesh {
  * axially, so neighbouring stations' wheels interleave without touching.
  */
 function station(lod: Lod, typeA: boolean): Mesh {
+  // The wheel hub/axle stub every disc of a station is keyed onto: from the innermost disc's
+  // centre plane to the outer one's, so the interleaved discs hang on a shaft, not on air.
+  const hub = (y0: number, y1: number): Mesh =>
+    cylinder({
+      radius: 0.07,
+      length: y1 - y0,
+      segments: 10,
+      axis: 'y',
+      at: [0, (y0 + y1) / 2, 0],
+      color: paintDark,
+    });
   if (typeA) {
     const outer = disc(lod, WHEEL_R, 0.09, 0.27, lod === 0);
     if (lod > 0) return outer;
     return merge([
       outer,
-      disc(lod, WHEEL_R, 0.08, HORN_Y - 0.083, false),
-      disc(lod, WHEEL_R, 0.08, HORN_Y + 0.083, false),
+      disc(lod, WHEEL_R, 0.08, HORN_Y - 0.083, false, true),
+      disc(lod, WHEEL_R, 0.08, HORN_Y + 0.083, false, true),
+      hub(HORN_Y - 0.083, 0.27),
     ]);
   }
   const outer = disc(lod, WHEEL_R, 0.09, 0.12, lod === 0);
-  return lod > 0 ? outer : merge([outer, disc(lod, WHEEL_R, 0.08, -0.3, false)]);
+  return lod > 0
+    ? outer
+    : merge([outer, disc(lod, WHEEL_R, 0.08, -0.3, false, true), hub(-0.3, 0.12)]);
 }
 
 /** Front drive sprocket: two 18-tooth rings straddling the horns, on a dished hub. */
@@ -276,6 +318,7 @@ function sprocket(lod: Lod, r: number): Mesh {
         [r - 0.06, y],
         [r - 0.07, y + 0.03],
         [0.12, y + 0.03],
+        [0.12, y - 0.03],
       ],
       segments: segs,
       axis: 'y',
@@ -283,6 +326,7 @@ function sprocket(lod: Lod, r: number): Mesh {
     });
   const hub = lathe({
     profile: [
+      [0, -0.32],
       [0.2, -0.32],
       [0.22, -0.28],
       [0.22, 0.08],
@@ -313,6 +357,24 @@ function sprocket(lod: Lod, r: number): Mesh {
   return merge(parts);
 }
 
+/** LOD2 wheel: an 8-sided disc (32 triangles); `hub` reaches inboard to the axle stub. */
+const farDisc = (r: number, y: number, hub = 0): Mesh =>
+  merge([
+    cylinder({ radius: r, length: 0.1, segments: 8, axis: 'y', at: [0, y, 0], color: dunkelgelb }),
+    ...(hub > 0
+      ? [
+          cylinder({
+            radius: 0.16,
+            length: hub,
+            segments: 6,
+            axis: 'y',
+            at: [0, y - hub / 2, 0],
+            color: dunkelgelb,
+          }),
+        ]
+      : []),
+  ]);
+
 /** Rear idler: a dished double disc straddling the horns. */
 const idler = (lod: Lod): Mesh =>
   merge([
@@ -322,100 +384,17 @@ const idler = (lod: Lod): Mesh =>
 
 // ---------------------------------------------------------------- finish passes
 
-/** Mud in world space for a part authored around its own pivot. */
-const muddy = (m: Mesh, at: Vec3 = [0, 0, 0], strength = 0.5): Mesh =>
-  translate(grime(translate(m, at), { ground: 1.3, groundStrength: strength }), [
-    -at[0],
-    -at[1],
-    -at[2],
-  ]);
-
-interface Blob {
-  readonly c: Vec3;
-  readonly r: Vec3;
-  readonly color: Vec3;
-}
-
-/** Three-tone camouflage: soft ellipsoids seeded from the rng, sprayed over the paint only. */
+/** Three-tone camouflage: soft ellipsoid blobs seeded from the rng, sprayed over the paint only. */
 function camoBlobs(rng: Rng): Blob[] {
   const out: Blob[] = [];
-  for (let i = 0; i < 22; i++) {
+  for (let i = 0; i < 30; i++) {
     out.push({
       c: [rng.range(-3.4, 5.2), rng.range(-1.9, 1.9), rng.range(0.4, 3.0)],
-      r: [rng.range(0.25, 0.7), rng.range(0.35, 1.2), rng.range(0.2, 0.45)],
+      r: [rng.range(0.4, 0.9), rng.range(0.45, 1.3), rng.range(0.25, 0.55)],
       color: i % 2 === 0 ? olivgruen : rotbraun,
     });
   }
   return out;
-}
-
-/** Split long edges until every triangle is under `max` metres, so vertex-colour camo has room. */
-function tessellate(m: Mesh, max: number): Mesh {
-  const b = new MeshBuilder();
-  type V = { p: Vec3; n: Vec3; uv: Vec2; color: Vec3 };
-  const read = (i: number): V => ({
-    p: [m.positions[i * 3] ?? 0, m.positions[i * 3 + 1] ?? 0, m.positions[i * 3 + 2] ?? 0],
-    n: [m.normals[i * 3] ?? 0, m.normals[i * 3 + 1] ?? 0, m.normals[i * 3 + 2] ?? 1],
-    uv: [m.uvs[i * 2] ?? 0, m.uvs[i * 2 + 1] ?? 0],
-    color: [m.colors[i * 3] ?? 0, m.colors[i * 3 + 1] ?? 0, m.colors[i * 3 + 2] ?? 0],
-  });
-  const mid = (x: V, y: V): V => ({
-    p: [(x.p[0] + y.p[0]) / 2, (x.p[1] + y.p[1]) / 2, (x.p[2] + y.p[2]) / 2],
-    n: x.n,
-    uv: [(x.uv[0] + y.uv[0]) / 2, (x.uv[1] + y.uv[1]) / 2],
-    color: x.color,
-  });
-  const d = (x: V, y: V): number => Math.hypot(x.p[0] - y.p[0], x.p[1] - y.p[1], x.p[2] - y.p[2]);
-  const split = (x: V, y: V, z: V): void => {
-    const [e0, e1, e2] = [d(x, y), d(y, z), d(z, x)];
-    const top = Math.max(e0, e1, e2);
-    if (top <= max) {
-      b.tri(b.vertex(x), b.vertex(y), b.vertex(z));
-      return;
-    }
-    if (top === e0) {
-      const q = mid(x, y);
-      split(x, q, z);
-      split(q, y, z);
-    } else if (top === e1) {
-      const q = mid(y, z);
-      split(x, y, q);
-      split(x, q, z);
-    } else {
-      const q = mid(z, x);
-      split(x, y, q);
-      split(q, y, z);
-    }
-  };
-  for (let t = 0; t < m.indices.length; t += 3)
-    split(read(m.indices[t] ?? 0), read(m.indices[t + 1] ?? 0), read(m.indices[t + 2] ?? 0));
-  return b.build();
-}
-
-function camo(m: Mesh, blobs: readonly Blob[], at: Vec3 = [0, 0, 0]): Mesh {
-  const colors = new Float32Array(m.colors);
-  const isPaint = (i: number): boolean =>
-    [0, 1, 2].every((k) => Math.abs((m.colors[i * 3 + k] ?? 0) - (dunkelgelb[k] ?? 0)) < 1e-4);
-  for (let i = 0; i < m.positions.length / 3; i++) {
-    if (!isPaint(i)) continue;
-    const p: Vec3 = [
-      (m.positions[i * 3] ?? 0) + at[0],
-      (m.positions[i * 3 + 1] ?? 0) + at[1],
-      (m.positions[i * 3 + 2] ?? 0) + at[2],
-    ];
-    for (const b of blobs) {
-      const d = Math.hypot(
-        (p[0] - b.c[0]) / b.r[0],
-        (p[1] - b.c[1]) / b.r[1],
-        (p[2] - b.c[2]) / b.r[2],
-      );
-      if (d >= 1) continue;
-      const w = d < 0.75 ? 1 : 1 - (d - 0.75) / 0.25;
-      for (let k = 0; k < 3; k++)
-        colors[i * 3 + k] = (colors[i * 3 + k] ?? 0) * (1 - w) + (b.color[k] ?? 0) * w;
-    }
-  }
-  return { ...m, colors };
 }
 
 type WallPoint = { readonly p: Vec2; readonly n: Vec2 };
@@ -429,14 +408,16 @@ function zimmerit(
   z0: number,
   z1: number,
   lean = 0,
+  chipped: (p: Vec3) => boolean = () => false,
   pitch = 0.045,
 ): Mesh {
   const band = 0.16;
   const ridges: Mesh[] = [];
   const bands = Math.max(1, Math.floor((z1 - z0) / band));
   const bh = (z1 - z0) / bands;
+  // Troweled on, not stood off: each ridge sinks 4 mm into the plate it coats (16 mm proud).
   const ridge = box({
-    size: [0.012, 0.016, bh - 0.025],
+    size: [0.02, 0.016, bh - 0.025],
     at: [0.006, 0, 0],
     color: dunkelgelb,
     omit: ['back', 'bottom'],
@@ -455,6 +436,8 @@ function zimmerit(
         // Sloped plates lean inward by `lean` m per m of height; ridges tilt with them.
         const zb = z0 + j * bh + 0.0125;
         const inward = lean * (zb - z0);
+        // Chipped Zimmerit: knocked-off patches where crew climb and branches scrape.
+        if (chipped([x, y, zb])) continue;
         ridges.push(
           place(ridge, {
             at: [x - Math.cos(yaw) * inward, y - Math.sin(yaw) * inward, zb],
@@ -577,6 +560,9 @@ export const tiger_1 = defineAsset({
     length: 8.45,
     width: 3.56,
     height: 3.0,
+    // Combat weight 57 t (README sources). The mass gate fills the hull at real steel density.
+    mass: 57000,
+    massTolerance: 0.1,
     measures: [
       {
         label: 'hull length',
@@ -622,7 +608,17 @@ export const tiger_1 = defineAsset({
       },
     ],
   },
-  budget: { triangles: [110000, 18000, 800] },
+  // LOD2 keeps the interleaved wheels, open belt, camo and markings (critique: no popping).
+  budget: { triangles: [76000, 19000, 3500] },
+  // Armour 25–120 mm (top 25, sides 60–80, front 100–120): a 60 mm mean wall approximates the
+  // hollow hull and turret for mass; an approximation, not a per-plate model.
+  physics: { shell: 0.06 },
+  gaps: [
+    {
+      parts: ['track_*'],
+      why: 'the track belt runs under the fenders and beside the hull with running clearance',
+    },
+  ],
   checks: [
     clear('track_*', 'hull'),
     clear('track_*', 'fenders'),
@@ -639,8 +635,50 @@ export const tiger_1 = defineAsset({
     const lod = ctx.lod;
     const segs = [20, 14, 8][lod] ?? 8;
     const blobs = camoBlobs(ctx.rng.fork('camo'));
-    const paintJob = (m: Mesh, at: Vec3 = [0, 0, 0]): Mesh =>
-      lod === 2 ? m : camo(tessellate(m, lod === 0 ? 0.3 : 0.6), blobs, at);
+    const rearSpec: RearSpec = {
+      lod,
+      deck: DECK,
+      pannierZ: PANNIER_Z,
+      rearLow: REAR_LOW,
+      sideY: SIDE_Y,
+      rearX,
+      paint: dunkelgelb,
+      dark: paintDark,
+      steel,
+      rust,
+      black,
+      red: hex('#7a1a12'),
+    };
+    const wobble = valueNoise(ctx.rng.fork('overspray'), { scale: 0.45, octaves: 2 });
+    const weather = weatherer(ctx.rng.fork('weather'));
+    const chipNoise = valueNoise(ctx.rng.fork('zimmerit'), { scale: 0.18, octaves: 2 });
+    const chipped = (p: Vec3): boolean => chipNoise(p) > 0.5;
+    // Exhaust soot plumes on the rear plate and deck behind the engine.
+    const soot = [1, -1].map((s) => ({
+      at: [exhaustAt(rearSpec, s).x, s * 0.55, exhaustAt(rearSpec, s).top] as Vec3,
+      radius: 0.75,
+      strength: 0.85,
+    }));
+    /** Materials + dust + ragged mud, for parts that are not camouflaged (tracks, tools). */
+    const finish = (m: Mesh, at: Vec3 = [0, 0, 0], w: WeatheringOptions = {}): Mesh =>
+      weather(restrip(m, STRIP_RULES), { at, dust: 0.35, mud: 0.95, mudStrength: 0.9, ...w });
+    /** The paint job: room for the spray, three-tone camo, materials at true scale, weathering. */
+    const paintJob = (m: Mesh, at: Vec3 = [0, 0, 0], w: WeatheringOptions = {}): Mesh => {
+      const sprayed = camo(
+        tessellate(m, [0.4, 0.6, 1.1][lod] ?? 1.1),
+        dunkelgelb,
+        blobs,
+        wobble,
+        at,
+      );
+      return weather(reproject(restrip(sprayed, STRIP_RULES)), {
+        at,
+        dust: 0.35,
+        mud: 0.95,
+        mudStrength: 0.9,
+        ...w,
+      });
+    };
     const wheels: Circle[] = STATIONS.map((x) => ({ x, z: WHEEL_Z, r: WHEEL_R }));
     const line = beltLine(wheels, [SPROCKET, IDLER], 0.1);
 
@@ -651,7 +689,10 @@ export const tiger_1 = defineAsset({
       const ty = s * TRACK_Y;
       const flip = (m: Mesh): Mesh => (s > 0 ? m : place(m, { yaw: Math.PI }));
       const track = `track_${side}`;
-      ctx.part(track, muddy(trackMesh(lod, line, ty), [0, 0, 0], 0.35));
+      ctx.part(
+        track,
+        finish(onGround(trackMesh(lod, line, ty)), [0, 0, 0], { mud: 1.4, mudStrength: 0.85 }),
+      );
       // Final-drive housing and idler axle stub: what holds sprocket and idler to the hull.
       stubs.push(
         cylinder({
@@ -671,27 +712,31 @@ export const tiger_1 = defineAsset({
           color: dunkelgelb,
         }),
       );
-      if (lod === 2) continue;
+      const spin = (rps: number) => ({
+        motion: { kind: 'spin', axis: [0, 1, 0], rps } as const,
+        clearOf: [track],
+      });
+      const gear = (m: Mesh, at: Vec3): Mesh => paintJob(m, at, { mud: 1.0, mudStrength: 0.9 });
+      // Pressed/dished steel discs and cast sprocket rings: weighed as ~15 mm walls, not solids.
+      const wall = { shell: 0.015 };
       STATIONS.forEach((x, i) => {
         const at: Vec3 = [x, ty, WHEEL_Z];
-        ctx.part(`wheel_${side}_${i}`, muddy(paintJob(flip(station(lod, i % 2 === 0)), at), at), {
-          at,
-          motion: { kind: 'spin', axis: [0, 1, 0], rps: 0.8 },
-          clearOf: [track],
-        });
+        // LOD2 keeps the interleave as one low-poly disc per station, so the side never goes flat.
+        const m =
+          lod === 2
+            ? flip(farDisc(WHEEL_R, i % 2 === 0 ? 0.27 : 0.12))
+            : flip(station(lod, i % 2 === 0));
+        ctx.part(`wheel_${side}_${i}`, gear(m, at), { at, ...spin(0.8), ...wall });
       });
       const sAt: Vec3 = [SPROCKET.x, ty, SPROCKET.z];
-      ctx.part(`sprocket_${side}`, muddy(paintJob(flip(sprocket(lod, SPROCKET.r)), sAt), sAt), {
-        at: sAt,
-        motion: { kind: 'spin', axis: [0, 1, 0], rps: 0.8 },
-        clearOf: [track],
-      });
+      const sm =
+        lod === 2
+          ? flip(farDisc(SPROCKET.r - 0.05, HORN_Y, 0.25))
+          : flip(sprocket(lod, SPROCKET.r));
+      ctx.part(`sprocket_${side}`, gear(sm, sAt), { at: sAt, ...spin(0.8), ...wall });
       const iAt: Vec3 = [IDLER.x, ty, IDLER.z];
-      ctx.part(`idler_${side}`, muddy(paintJob(flip(idler(lod)), iAt), iAt), {
-        at: iAt,
-        motion: { kind: 'spin', axis: [0, 1, 0], rps: 0.9 },
-        clearOf: [track],
-      });
+      const im = lod === 2 ? flip(farDisc(IDLER.r, HORN_Y, 0.18)) : flip(idler(lod));
+      ctx.part(`idler_${side}`, gear(im, iAt), { at: iAt, ...spin(0.9), ...wall });
     }
 
     // ---- Hull: tub between the tracks + panniers over them (side-profile prisms) ----
@@ -716,6 +761,7 @@ export const tiger_1 = defineAsset({
       [frontX(DECK), DECK],
       [rearX(DECK), DECK],
     ];
+    const zim: Mesh[] = [];
     const hull: Mesh[] = [
       prism({ profile: tub, depth: 2.0, plane: 'xz', color: dunkelgelb, strip: 'iron' }),
       prism({ profile: upper, depth: SIDE_Y * 2, plane: 'xz', color: dunkelgelb, strip: 'iron' }),
@@ -724,14 +770,6 @@ export const tiger_1 = defineAsset({
     if (lod < 2) {
       for (const s of [1, -1])
         hull.push(
-          box({ size: [0.75, 0.62, 0.04], at: [-2.1, s * 0.62, DECK], color: paintDark }),
-          cylinder({
-            radius: 0.28,
-            length: 0.05,
-            segments: segs,
-            at: [-2.72, s * 0.6, DECK + 0.025],
-            color: paintDark,
-          }),
           // Driver's and radio operator's hatches.
           cylinder({
             radius: 0.3,
@@ -742,7 +780,8 @@ export const tiger_1 = defineAsset({
           }),
         );
       hull.push(
-        box({ size: [1.0, 0.7, 0.05], at: [-2.05, 0, DECK], color: paintDark }),
+        ...engineDeck(rearSpec),
+        ...sideExtensions(rearSpec),
         // Driver's visor (left) and bow MG ball mount (right) on the front plate.
         box({ size: [0.1, 0.55, 0.2], at: [2.5, 0.72, 1.48], color: dunkelgelb }),
         box({ size: [0.03, 0.4, 0.035], at: [2.555, 0.72, 1.56], color: black }),
@@ -783,17 +822,13 @@ export const tiger_1 = defineAsset({
       for (const s of [1, -1]) {
         hull.push(
           box({
+            // Side-plate tenon standing on the nose: its foot sinks 3 cm into the nose plate.
             size: [0.1, 0.08, 0.3],
-            at: [HULL_FRONT - 0.05, s * 1.57, 1.25],
-            color: dunkelgelb,
-          }),
-          box({
-            size: [0.1, 0.08, 0.3],
-            at: [rearX(1.3) + 0.05, s * 1.57, 1.3],
+            at: [HULL_FRONT - 0.05, s * 1.57, 1.17],
             color: dunkelgelb,
           }),
           box({ size: [0.16, 0.07, 0.14], at: [HULL_FRONT - 0.08, s * 0.85, 0.72], color: steel }),
-          box({ size: [0.16, 0.07, 0.14], at: [HULL_REAR + 0.08, s * 0.85, 0.78], color: steel }),
+          box({ size: [0.16, 0.07, 0.14], at: [HULL_REAR + 0.04, s * 0.85, 0.82], color: steel }),
           lathe({
             profile: [
               [0.05, 0],
@@ -807,29 +842,69 @@ export const tiger_1 = defineAsset({
           }),
         );
         for (const x of [1.0, -0.4, -1.6]) hull.push(handle(x, s * 1.52));
-      }
-      // Zimmerit on the pannier sides, front plate, nose and rear plate.
-      hull.push(
-        zimmerit(straight([2.35, SIDE_Y], [-2.95, SIDE_Y], [0, 1]), PANNIER_Z, DECK),
-        zimmerit(straight([-2.95, -SIDE_Y], [2.35, -SIDE_Y], [0, -1]), PANNIER_Z, DECK),
-        zimmerit(straight([frontX(1.32), -1.55], [frontX(1.32), 1.55], [1, 0]), 1.32, 1.78, TAN9),
-        zimmerit(straight([noseAt(0.92), -0.98], [noseAt(0.92), 0.98], [1, 0]), 0.92, 1.18, -TAN25),
-        zimmerit(straight([rearX(1.2), 1.55], [rearX(1.2), -1.55], [-1, 0]), 1.2, 1.78, TAN9),
-      );
-      // Balkenkreuz on both pannier sides (white edges, black cross).
-      for (const s of [1, -1]) {
+        // Driver's / radio operator's hatch: hinge block, lift handle, periscope hood.
         hull.push(
-          sideDecal(cross(0.26, 0.1), s, -0.9, s * (SIDE_Y + 0.016), 1.48, white),
-          sideDecal(cross(0.23, 0.06), s, -0.9, s * (SIDE_Y + 0.02), 1.48, black),
+          box({ size: [0.12, 0.34, 0.06], at: [1.62, s * 0.72, DECK], color: paintDark }),
+          cable(
+            [
+              [2.1, s * 0.66, DECK + 0.06],
+              [2.1, s * 0.66, DECK + 0.1],
+              [2.1, s * 0.78, DECK + 0.1],
+              [2.1, s * 0.78, DECK + 0.06],
+            ],
+            0.018,
+            steel,
+          ),
+          box({ size: [0.1, 0.16, 0.07], at: [2.28, s * 0.72, DECK], color: black }),
         );
       }
+      // Zimmerit on the pannier sides, front plate, nose and rear plate.
+      zim.push(
+        zimmerit(straight([2.35, SIDE_Y], [-2.95, SIDE_Y], [0, 1]), PANNIER_Z, DECK, 0, chipped),
+        zimmerit(straight([-2.95, -SIDE_Y], [2.35, -SIDE_Y], [0, -1]), PANNIER_Z, DECK, 0, chipped),
+        zimmerit(
+          straight([frontX(1.32), -1.55], [frontX(1.32), 1.55], [1, 0]),
+          1.32,
+          1.78,
+          TAN9,
+          chipped,
+        ),
+        zimmerit(
+          straight([noseAt(0.92), -0.98], [noseAt(0.92), 0.98], [1, 0]),
+          0.92,
+          1.18,
+          -TAN25,
+          chipped,
+        ),
+        zimmerit(
+          straight([rearX(1.2), 1.55], [rearX(1.2), -1.55], [-1, 0]),
+          1.2,
+          1.78,
+          TAN9,
+          chipped,
+        ),
+      );
+    }
+    // Balkenkreuz on both pannier sides (white edges, black cross), kept to LOD2.
+    for (const s of [1, -1]) {
+      hull.push(
+        sideDecal(cross(0.26, 0.1), s, -0.9, s * (SIDE_Y + 0.016), 1.48, white),
+        sideDecal(cross(0.23, 0.06), s, -0.9, s * (SIDE_Y + 0.02), 1.48, black),
+      );
     }
     // Structure (closed plates + drive housings) vs dressing (Zimmerit, decals, fittings): the
     // structural solid is what clearance checks test against, so it stays lean and watertight.
     const structure = 2 + stubs.length;
-    ctx.part('hull', muddy(paintJob(merge(hull.slice(0, structure))), [0, 0, 0], 0.45));
+    // Hull wall: 45 mm is the area-weighted mean of the armour table in README.md (25 mm deck,
+    // belly and pannier floors; 60–80 mm sides; 80–100 mm front and rear).
+    ctx.part('hull', paintJob(merge(hull.slice(0, structure)), [0, 0, 0], { soot }), {
+      shell: 0.045,
+    });
+    // Zimmerit is a 5–6 mm cement-like paste, not armour: weighed as paste (unverified, ~1600 kg/m³).
+    if (zim.length > 0)
+      ctx.part('zimmerit', paintJob(merge(zim), [0, 0, 0], { soot }), { density: 1600 });
     if (hull.length > structure)
-      ctx.part('hull_detail', muddy(paintJob(merge(hull.slice(structure))), [0, 0, 0], 0.45));
+      ctx.part('hull_detail', paintJob(merge(hull.slice(structure)), [0, 0, 0], { soot }));
 
     // ---- Fenders: side sections out to the track edge, hinged front mudguards ----
     const fenders: Mesh[] = [];
@@ -861,7 +936,8 @@ export const tiger_1 = defineAsset({
             }),
           );
     }
-    ctx.part('fenders', muddy(paintJob(merge(fenders)), [0, 0, 0], 0.4));
+    fenders.push(...rearMudguards(rearSpec, -3.1));
+    ctx.part('fenders', paintJob(merge(fenders), [0, 0, 0], { mud: 1.3 }));
 
     // ---- Particle sources: exhaust smoke, track dust ----
     for (const [side, s] of [
@@ -870,7 +946,7 @@ export const tiger_1 = defineAsset({
     ] as const) {
       ctx.emitter(`exhaust_smoke_${side}`, {
         kind: 'smoke',
-        at: [rearX(1.08) - 0.095, s * 0.55, 1.8],
+        at: [exhaustAt(rearSpec, s).x, s * 0.55, exhaustAt(rearSpec, s).top],
         dir: [-0.3, 0, 1],
         rate: 14,
         life: 2.5,
@@ -894,64 +970,13 @@ export const tiger_1 = defineAsset({
       });
     }
 
-    // ---- Exhausts with sheet guards (soot), jack on the rear plate ----
-    if (lod < 2) {
-      const rear: Mesh[] = [];
-      for (const s of [1, -1]) {
-        rear.push(
-          lathe({
-            profile: [
-              [0.09, 0],
-              [0.09, 0.62],
-              [0.11, 0.66],
-              [0.07, 0.7],
-            ],
-            segments: segs,
-            at: [rearX(1.08) - 0.095, s * 0.55, 1.08],
-            color: rust,
-          }),
-          box({
-            size: [0.03, 0.34, 0.5],
-            at: [rearX(1.08) - 0.215, s * 0.55, 1.18],
-            color: paintDark,
-          }),
-          box({
-            size: [0.2, 0.025, 0.5],
-            at: [rearX(1.08) - 0.1, s * 0.73, 1.18],
-            color: paintDark,
-          }),
-          box({
-            size: [0.2, 0.025, 0.5],
-            at: [rearX(1.08) - 0.1, s * 0.37, 1.18],
-            color: paintDark,
-          }),
-        );
-      }
-      if (lod === 0)
-        rear.push(
-          cylinder({
-            radius: 0.08,
-            length: 0.55,
-            segments: 10,
-            axis: 'y',
-            at: [rearX(1.55) - 0.08, 0, 1.55],
-            color: steel,
-          }),
-          box({ size: [0.04, 0.06, 0.06], at: [rearX(1.52) - 0.02, 0.22, 1.52], color: steel }),
-          box({ size: [0.04, 0.06, 0.06], at: [rearX(1.52) - 0.02, -0.22, 1.52], color: steel }),
-        );
-      ctx.part(
-        'exhausts',
-        grime(merge(rear), {
-          ground: 1.3,
-          groundStrength: 0.4,
-          zones: [
-            { at: [HULL_REAR - 0.1, 0.55, 1.8], radius: 0.7, strength: 0.7 },
-            { at: [HULL_REAR - 0.1, -0.55, 1.8], radius: 0.7, strength: 0.7 },
-          ],
-        }),
-      );
-    }
+    // ---- Rear plate: exhausts in armoured covers, crank cover, jack, lights, pintle ----
+    ctx.part(
+      'exhausts',
+      finish(merge(rearPlate(rearSpec)), [0, 0, 0], {
+        soot: soot.map((z) => ({ ...z, strength: 1 })),
+      }),
+    );
 
     // ---- Stowage and tools on the deck ----
     const tools: Mesh[] = [];
@@ -1074,14 +1099,14 @@ export const tiger_1 = defineAsset({
         );
       }
     }
-    if (tools.length > 0) ctx.part('stowage', paintJob(merge(tools)));
+    if (tools.length > 0) ctx.part('stowage', paintJob(merge(tools), [0, 0, 0], { soot }));
 
     // ---- Turret: horseshoe plan prism, cupola, hatches, bin; traverses as one group ----
     ctx.group('turret', {
       at: TURRET_AT,
       motion: { kind: 'sway', axis: [0, 0, 1], degrees: 20, hz: 0.1 },
     });
-    const arc = lod === 0 ? 18 : lod === 1 ? 10 : 6;
+    const arc = lod === 0 ? 18 : lod === 1 ? 10 : 8;
     const plan: Vec2[] = [
       [1.0, -1.15],
       [1.0, 1.15],
@@ -1090,6 +1115,7 @@ export const tiger_1 = defineAsset({
       const a = ((70 + (220 * i) / arc) * Math.PI) / 180;
       plan.push([-0.2 + 1.33 * Math.cos(a), 1.33 * Math.sin(a)]);
     }
+    const turretZim: Mesh[] = [];
     const turret: Mesh[] = [
       // Turret ring collar (1.79 m ring) standing on the deck.
       lathe({
@@ -1125,9 +1151,9 @@ export const tiger_1 = defineAsset({
       lathe({
         profile: [
           [0.38, 0.84],
-          [0.38, 1.04],
-          [0.33, 1.08],
-          [0.3, 1.1],
+          [0.38, 0.98],
+          [0.33, 1.01],
+          [0.3, 1.03],
         ],
         segments: segs,
         at: [-0.55, 0.62, 0],
@@ -1139,10 +1165,10 @@ export const tiger_1 = defineAsset({
       turret.push(
         lathe({
           profile: [
-            [0.3, 1.1],
-            [0.31, 1.15],
-            [0.24, 1.19],
-            [0, 1.19],
+            [0.3, 1.03],
+            [0.31, 1.07],
+            [0.24, 1.1],
+            [0, 1.1],
           ],
           segments: segs,
           at: [-0.55, 0.62, 0],
@@ -1163,7 +1189,7 @@ export const tiger_1 = defineAsset({
         const a = (i / 7) * Math.PI * 2 + 0.3;
         turret.push(
           place(box({ size: [0.06, 0.13, 0.09], color: black }), {
-            at: [-0.55 + Math.cos(a) * 0.37, 0.62 + Math.sin(a) * 0.37, 0.93],
+            at: [-0.55 + Math.cos(a) * 0.37, 0.62 + Math.sin(a) * 0.37, 0.9],
             yaw: a,
           }),
         );
@@ -1172,12 +1198,23 @@ export const tiger_1 = defineAsset({
         lathe({
           profile: Array.from({ length: 7 }, (_, i): Vec2 => {
             const a = (i / 6) * Math.PI * 2;
-            return [0.36 + 0.015 * Math.cos(a), 1.12 + 0.015 * Math.sin(a)];
+            return [0.36 + 0.015 * Math.cos(a), 1.045 + 0.015 * Math.sin(a)];
           }),
           segments: segs,
           at: [-0.55, 0.62, 0],
           color: steel,
         }),
+        // Six brackets carry the AA ring off the cupola lip (each sunk into lip and ring).
+        ...Array.from({ length: 6 }, (_, i) =>
+          place(box({ size: [0.09, 0.025, 0.025], color: steel }), {
+            at: [
+              -0.55 + Math.cos((i / 6) * Math.PI * 2 + 0.25) * 0.33,
+              0.62 + Math.sin((i / 6) * Math.PI * 2 + 0.25) * 0.33,
+              1.0325,
+            ],
+            yaw: (i / 6) * Math.PI * 2 + 0.25,
+          }),
+        ),
         box({ size: [0.15, 0.1, 0.1], at: [0.1, -0.6, 0.85], color: paintDark }),
         lathe({
           profile: [
@@ -1258,28 +1295,36 @@ export const tiger_1 = defineAsset({
         const l = Math.hypot(tx, ty) || 1;
         return { p, n: [ty / l, -tx / l] };
       });
-      turret.push(zimmerit([...wall.slice(1), wall[0] as WallPoint], 0.05, 0.82));
-      // Turret number "332", outlined digits (Bundesarchiv Bild 101I-277-0846-08), both sides,
-      // reading front-to-back on the left and back-to-front on the right.
-      for (const s of [1, -1])
-        [3, 3, 2].forEach((d, i) => {
-          const x = s > 0 ? 0.05 - i * 0.22 : -0.39 + i * 0.22;
-          const y = s * (Math.sqrt(1.33 ** 2 - (x + 0.2) ** 2) + 0.022);
-          for (const rect of digitRects(d, 0.3)) {
-            const grow = rect.map(
-              ([u, v], k): Vec2 => [
-                u + (k === 0 || k === 3 ? -0.012 : 0.012),
-                v + (k < 2 ? -0.012 : 0.012),
-              ],
-            );
-            turret.push(sideDecal(grow, s, x, y - s * 0.004, 0.3, black));
-            turret.push(sideDecal(rect, s, x, y, 0.3, white));
-          }
-        });
+      turretZim.push(zimmerit([...wall.slice(1), wall[0] as WallPoint], 0.05, 0.82, 0, chipped));
     }
-    ctx.part('turret_body', muddy(paintJob(merge(turret), TURRET_AT), TURRET_AT, 0.3), {
+    // Turret number "332", outlined digits (Bundesarchiv Bild 101I-277-0846-08), both sides,
+    // reading front-to-back on the left and back-to-front on the right.
+    for (const s of [1, -1])
+      [3, 3, 2].forEach((d, i) => {
+        const x = s > 0 ? 0.05 - i * 0.22 : -0.39 + i * 0.22;
+        const y = s * (Math.sqrt(1.33 ** 2 - (x + 0.2) ** 2) + 0.022);
+        for (const rect of digitRects(d, 0.3)) {
+          const grow = rect.map(
+            ([u, v], k): Vec2 => [
+              u + (k === 0 || k === 3 ? -0.012 : 0.012),
+              v + (k < 2 ? -0.012 : 0.012),
+            ],
+          );
+          turret.push(sideDecal(grow, s, x, y - s * 0.004, 0.3, black));
+          turret.push(sideDecal(rect, s, x, y, 0.3, white));
+        }
+      });
+    // Turret wall: 80 mm sides, 25 mm roof and an open bottom (the closed prism's floor is not
+    // real armour): ~45 mm area-weighted over the closed solid.
+    ctx.part('turret_body', paintJob(merge(turret), TURRET_AT, { dust: 0.4 }), {
       parent: 'turret',
+      shell: 0.045,
     });
+    if (turretZim.length > 0)
+      ctx.part('turret_zimmerit', paintJob(merge(turretZim), TURRET_AT), {
+        parent: 'turret',
+        density: 1600,
+      });
 
     // ---- Gun: curved mantlet with coax and sight ports; KwK 36 L/56 with muzzle brake ----
     // The elevation sweep is checked as a full turn about the trunnion, so it necessarily passes
@@ -1302,19 +1347,66 @@ export const tiger_1 = defineAsset({
       spreadDeg: 25,
       when: 'event',
     });
-    const mantletArc = lod === 0 ? 8 : 4;
-    const mantlet: Vec2[] = [];
-    for (let i = 0; i <= mantletArc; i++) {
-      const a = -Math.PI / 2 + (Math.PI * i) / mantletArc;
-      mantlet.push([0.24 * Math.cos(a), 0.4 * Math.sin(a)]);
+    // Mantlet: the broad cast plate (1.9 m wide, 0.72 m tall) whose ends curl back into the
+    // turret front, with the gun collar, binocular sight apertures (left) and coax MG port (right).
+    const endArc = lod === 0 ? 6 : lod === 1 ? 3 : 2;
+    const plate: Vec2[] = [];
+    for (const s of [-1, 1]) {
+      const arc: Vec2[] = [];
+      for (let i = 0; i <= endArc; i++) {
+        const a = (Math.PI / 2) * (i / endArc);
+        arc.push([-0.03 + 0.25 * Math.cos(a), s * (0.7 + 0.25 * Math.sin(a))]);
+      }
+      plate.push(...(s < 0 ? arc.reverse() : arc));
     }
-    const mParts = [prism({ profile: mantlet, depth: 1.95, plane: 'xz', color: dunkelgelb })];
-    if (lod === 0)
+    // Front edge first (y −0.95 → +0.95 via the rounded ends), then the straight back edge.
+    const mParts = [
+      prism({ profile: plate, depth: 0.72, plane: 'xy', color: dunkelgelb }),
+      lathe({
+        profile: [
+          [0.24, 0.2],
+          [0.24, 0.32],
+          [0.2, 0.42],
+          [0.17, 0.46],
+        ],
+        segments: segs,
+        axis: 'x',
+        color: dunkelgelb,
+      }),
+    ];
+    if (lod < 2)
       mParts.push(
-        box({ size: [0.04, 0.09, 0.09], at: [0.22, 0.42, 0.0], color: black }),
-        box({ size: [0.04, 0.09, 0.07], at: [0.23, -0.2, 0.12], color: black }),
-        box({ size: [0.04, 0.07, 0.07], at: [0.23, -0.34, 0.12], color: black }),
+        box({ size: [0.03, 0.08, 0.1], at: [0.215, 0.36, 0.06], color: black }),
+        box({ size: [0.03, 0.08, 0.1], at: [0.215, 0.5, 0.06], color: black }),
+        lathe({
+          profile: [
+            [0.07, 0.2],
+            [0.06, 0.25],
+            [0.03, 0.26],
+          ],
+          segments: 8,
+          axis: 'x',
+          at: [0, -0.45, 0.02],
+          color: paintDark,
+        }),
       );
+    if (lod === 0) {
+      // Bolt heads round the plate face and the collar.
+      const bolt = box({ size: [0.02, 0.035, 0.035], color: steel });
+      // Seated on the face they hold: the rounded ends curve back, so outer bolts follow the
+      // curve (turned to its normal) and every head sinks 5 mm.
+      for (const y of [-0.85, -0.6, 0.6, 0.85]) {
+        const u = Math.max(0, Math.abs(y) - 0.7) / 0.25;
+        const a = Math.asin(u) * Math.sign(y);
+        const x = -0.03 + 0.25 * Math.sqrt(1 - u * u);
+        const at = (z: number): Vec3 => [x + 0.005 * Math.cos(a), y + 0.005 * Math.sin(a), z];
+        for (const z of [-0.28, 0.24]) mParts.push(place(bolt, { at: at(z), yaw: a }));
+      }
+      for (let i = 0; i < 8; i++) {
+        const a = (i / 8) * Math.PI * 2;
+        mParts.push(place(bolt, { at: [0.43, Math.cos(a) * 0.19, Math.sin(a) * 0.19 - 0.0175] }));
+      }
+    }
     const gunAt: Vec3 = [TURRET_AT[0] + 1.0, 0, TURRET_AT[2] + 0.42];
     ctx.part('gun_mantlet', paintJob(merge(mParts), gunAt), { parent: 'gun' });
     const breech = 4.14 - 4.928;
@@ -1363,6 +1455,8 @@ export const tiger_1 = defineAsset({
           caps: true,
         }),
         gunAt,
+        // Muzzle brake blued and soot-stained by firing.
+        { soot: [{ at: [gunAt[0] + 3.95, 0, gunAt[2]], radius: 0.7, strength: 0.75 }], dust: 0.2 },
       ),
       { parent: 'gun' },
     );

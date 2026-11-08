@@ -1,0 +1,129 @@
+{
+  "asset": "orc_head",
+  "reviewer": "agent",
+  "overall": 6.9,
+  "scores": {
+    "silhouette": {
+      "score": 8,
+      "reason": "Brute shape, spiked pauldrons, tusks and the knot read at a glance; LOD2 holds.",
+      "fixes": [
+        "a clearer neck line under the jaw in the side view"
+      ]
+    },
+    "proportions": {
+      "score": 7,
+      "reason": "Ears ×1.2 now read against the jaw; the knot is a tidy bun with two wraps and tail locks, though the tail still arcs high behind the bun.",
+      "fixes": [
+        "drop the tail arc 1 cm"
+      ]
+    },
+    "materials": {
+      "score": 6,
+      "reason": "Painted steel with chipped lips and rust, leather strap, fur, bone spikes separate.",
+      "fixes": [
+        "roughness variation on the skin"
+      ]
+    },
+    "detail": {
+      "score": 7,
+      "reason": "Scars, war paint, rivets, stitched baldric with a true rectangular buckle, fur clumps, wound bun.",
+      "fixes": [
+        "finer hair strands on the tail locks"
+      ]
+    },
+    "wear": {
+      "score": 6,
+      "reason": "Dents, chipped paint, rust drips, scars.",
+      "fixes": [
+        "dirt on the fur and strap"
+      ]
+    },
+    "lod": {
+      "score": 7,
+      "reason": "LOD2 keeps the mass and armour; the bun simplifies per LOD (no thin turns that fold).",
+      "fixes": [
+        "keep the tail locks as two strands at LOD2"
+      ]
+    },
+    "technical": {
+      "score": 7,
+      "reason": "QA PASS honestly: 24 broad regions (up to 0.32 m) replaced by 574 regions ≤ 3 cm; buckle frame shear and two real seams fixed; no eye socket joints yet (lids fill the orbit).",
+      "fixes": [
+        "orbit bore + socket joints like the other busts"
+      ]
+    }
+  },
+  "renders": {
+    "hero.png": "70b4acdbf07a3e943aedd6bcff2d9cc1ceae1fd562cba50a7fa33fb658a9c25a",
+    "sheet.png": "0fa6541f9b175e14e706101b0f7456096624c2236104c13196db5ff05bb8882a",
+    "raking.png": "978cd2fd63bb0e5edc28f7a8d8f5a26782b7fbf7f191efa703b4ed95ba70a438",
+    "raking_detail.png": "184fe9f12883c8aef5af697f8bf9b0baf301f01a04bc6769e7f38765bc218917",
+    "lods.png": "90084a257bee4630c553e45a570d9f0881de5ab65ba81688afb0e4618558caf3",
+    "silhouette.png": "424449bd979653668aaf1a26f9ddc1db7099fff8de4ed40b381be9087aff96c1",
+    "value.png": "2aa8849b0cb270c6ac146806d65533fc1a020b889b8e6069cc120fe6c283ca5c",
+    "detail.png": "8e8e998f31ef9fa5185737ba52cb4a0bbcda75898ef2f8e1bf4b201b6e9fe5a4"
+  },
+  "metrics": {
+    "silhouette": [
+      {
+        "view": "front",
+        "iou": 0.893
+      },
+      {
+        "view": "side",
+        "iou": 0.898
+      },
+      {
+        "view": "3/4",
+        "iou": 0.872
+      }
+    ],
+    "focal": {
+      "peakPart": "head",
+      "peak": [
+        479,
+        206
+      ],
+      "focalShare": 0.567,
+      "focalArea": 0.301,
+      "top": [
+        {
+          "part": "head",
+          "share": 0.567
+        },
+        {
+          "part": "hair",
+          "share": 0.101
+        },
+        {
+          "part": "pauldrons",
+          "share": 0.096
+        }
+      ],
+      "declared": [
+        "head"
+      ]
+    },
+    "rest": {
+      "share": 0.443,
+      "spread": 0.664,
+      "min": 0.25
+    },
+    "grounded": {
+      "rise": 0.246,
+      "bands": [
+        0.178,
+        0.258,
+        0.336,
+        0.358,
+        0.375
+      ]
+    },
+    "shape": {
+      "acuteShare": 0.256,
+      "straightShare": 0.39,
+      "taper": 0.642,
+      "shape": "friendly"
+    }
+  }
+}

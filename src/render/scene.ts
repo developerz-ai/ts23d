@@ -1,14 +1,18 @@
 // Flatten a compiled asset into one packed, world-space triangle soup for the beauty renderer:
-// positions, normals, UVs, colours per vertex; surface code + tangent frame per triangle.
+// positions, normals, UVs, colours per vertex; surface code, look index + tangent frame per triangle.
 // Packed typed arrays keep the per-pixel loops monomorphic and allocation-free.
 
 import { type CompiledAsset, type Surface, worldMeshes } from '../core/index.ts';
+import { type Look, lookTable } from './looks.ts';
 
 export const SURFACE_CODE: Readonly<Record<Surface, number>> = {
   opaque: 0,
   cutout: 1,
   glass: 2,
   translucent: 3,
+  ice: 4,
+  liquid: 5,
+  jelly: 6,
 };
 
 export interface Scene {
@@ -20,6 +24,11 @@ export interface Scene {
   readonly indices: Uint32Array;
   /** SURFACE_CODE per triangle. */
   readonly surface: Uint8Array;
+  /** Index into `looks` per triangle (0 = plain opaque). */
+  readonly look: Uint8Array;
+  readonly looks: readonly Look[];
+  /** Any triangle lets light through (the beauty render then rasterises what is behind). */
+  readonly transmissive: boolean;
   /** Per-triangle tangent frame for the normal map, 6 floats: T = dP/dU, B = −dP/dV (glTF +Y). */
   readonly tangents: Float32Array;
   readonly min: readonly [number, number, number];
@@ -30,6 +39,7 @@ export interface Scene {
 export function sceneOf(asset: CompiledAsset): Scene {
   const meshes = worldMeshes(asset.parts);
   const surfOf = new Map(asset.parts.map((p) => [p.name, SURFACE_CODE[p.surface ?? 'opaque']]));
+  const { looks, byPart } = lookTable(asset);
   let nv = 0;
   let nt = 0;
   for (const m of meshes.values()) {
@@ -42,6 +52,7 @@ export function sceneOf(asset: CompiledAsset): Scene {
   const colors = new Float32Array(nv * 3);
   const indices = new Uint32Array(nt * 3);
   const surface = new Uint8Array(nt);
+  const look = new Uint8Array(nt);
   let vo = 0;
   let to = 0;
   for (const [name, m] of meshes) {
@@ -51,6 +62,7 @@ export function sceneOf(asset: CompiledAsset): Scene {
     colors.set(m.colors, vo * 3);
     for (let i = 0; i < m.indices.length; i++) indices[to * 3 + i] = (m.indices[i] ?? 0) + vo;
     surface.fill(surfOf.get(name) ?? 0, to, to + m.indices.length / 3);
+    look.fill(Math.min(255, byPart.get(name) ?? 0), to, to + m.indices.length / 3);
     vo += m.positions.length / 3;
     to += m.indices.length / 3;
   }
@@ -73,6 +85,9 @@ export function sceneOf(asset: CompiledAsset): Scene {
     colors,
     indices,
     surface,
+    look,
+    looks,
+    transmissive: looks.some((l, i) => l.transmission > 0 && look.includes(i)),
     tangents: tangentsOf(positions, uvs, indices),
     min,
     max,

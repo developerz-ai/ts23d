@@ -1,7 +1,7 @@
 {
   "name": "human_head",
   "kind": "character",
-  "description": "Stylised human hero bust: square jaw, swept hair, short beard, blue tunic and leather cloak roll",
+  "description": "Stylised human hero bust: measured human proportions pushed heroic, swept-back hair and clipped beard as sculpted locks, socketed eyes, blue tunic with leather collar, red mantle and brass brooch",
   "tags": [
     "character",
     "fantasy",
@@ -15,41 +15,70 @@
     "thumb": "recipes/human_head/out/human_head/thumb.png"
   },
   "triangles": [
-    52560,
-    10320,
-    1412
+    71268,
+    25164,
+    3824
   ],
   "drawCalls": [
-    1,
-    1,
-    1
+    2,
+    2,
+    2
   ],
   "pivots": [
     {
       "name": "body",
       "parent": null
+    },
+    {
+      "name": "body_finish_cornea",
+      "parent": null
     }
   ],
   "emitters": [],
   "sockets": [],
+  "joints": [
+    {
+      "name": "eye_l_orbit",
+      "from": "eye_l",
+      "to": "head",
+      "kind": "socket",
+      "at": [
+        0.0769,
+        0.0305,
+        0.4467
+      ]
+    },
+    {
+      "name": "eye_r_orbit",
+      "from": "eye_r",
+      "to": "head",
+      "kind": "socket",
+      "at": [
+        0.0769,
+        -0.0305,
+        0.4467
+      ]
+    }
+  ],
   "surfaces": [
     "opaque"
   ],
   "real": {
-    "length": 0.247,
-    "width": 0.428,
-    "height": 0.439
+    "length": 0.268,
+    "width": 0.558,
+    "height": 0.566
   },
   "measures": [
     {
       "label": "eye spacing (pupil to pupil)",
-      "spec": 0.0621,
-      "measured": 0.062099999748170376,
-      "source": "0.135 × 2 × 0.23 m — adult interpupillary ≈ 62 mm"
+      "spec": 0.061,
+      "measured": 0.06096413638442755,
+      "source": "interpupil 0.265 H (head scan) × 0.23 m; adult IPD ≈ 62 mm"
     }
   ],
   "sources": [
-    "recipes/human_head/README.md (design dossier: proportions, palette, references)"
+    "recipes/human_head/README.md (design dossier: proportions, palette, references)",
+    "docs/research/head-analysis.md (human ratios measured on the Lee Perry-Smith scan, CC BY 3.0)"
   ],
   "qa": {
     "pass": true,

@@ -1,0 +1,116 @@
+{
+  "asset": "rts_tank",
+  "reviewer": "agent",
+  "overall": 7.3,
+  "scores": {
+    "silhouette": {
+      "score": 7,
+      "reason": "Low pebble hull, chevron prow, chevron-nosed turret with the team roof; side stowage (tools, jerry cans) breaks the hull line.",
+      "fixes": [
+        "turret 5% bigger for RTS exaggeration"
+      ]
+    },
+    "proportions": {
+      "score": 7,
+      "reason": "6.1 x 3.05 x 3.2 m, 0.6 m road wheels: inside the AFV-playbook light-tank ranges.",
+      "fixes": []
+    },
+    "materials": {
+      "score": 7,
+      "reason": "steel_painted bone/slate/team (paint film, chips show steel), iron_cast fittings and wheel discs, brass hubs/brake, rubber tyres, iron_rust links, oak tool shafts. Painted chips are texture-space dashes, elongated along U.",
+      "fixes": [
+        "rounder chip shapes need finer V texels (sheet limit)"
+      ]
+    },
+    "detail": {
+      "score": 7,
+      "reason": "Glacis applique plates with a centre shut-line, weld beads on the seams, spare links on the glacis, deck hatches with bolt rows, shovel/crowbar in clamps, jerry-can rack, grille, lamps, sensor, hatch, antenna.",
+      "fixes": [
+        "tow cable on the rear plate"
+      ]
+    },
+    "wear": {
+      "score": 7,
+      "reason": "weather() per space: hull chips 13% / dust 30% / mud 50% of the 0.9 m ground band, exhaust soot streaking down the rear plate; wheels muddied in their pivots; turret and gun chipped and dusty. Measured, gated.",
+      "fixes": [
+        "mud heavier on the lower hull sides"
+      ]
+    },
+    "lod": {
+      "score": 8,
+      "reason": "LOD2 382 tris: belt slab + empty wheel pivots, team roof and deck hold (21.4% share).",
+      "fixes": []
+    },
+    "technical": {
+      "score": 8,
+      "reason": "QA PASS on every gate incl. connections and weather (exact coverage). Deterministic, one trim material + team slot, 8 liveries; `bun test recipes/rts_faction` 18/18. Gun declared `connect: hinge` on its trunnion; wheel hubs `clearOf: ['hull']` (stub axles).",
+      "fixes": []
+    }
+  },
+  "renders": {
+    "hero.png": "d38553706df659c6a6a374ef9b85308409f54f38533168be7fad1308b4709d9f",
+    "sheet.png": "24420c294e076d3149b751ea8338ad2a5f15cbb281d480ab335313f7078d79f8",
+    "raking.png": "3dd9e8d65ed8662e5d13acde3b9d43e1552b10e337284c0cf068768679a7a3fe",
+    "raking_detail.png": "af4ecf905cb3aeeeb82d1f070cf7da1dd07e496f43b5144191fdd5c7c081ac2b",
+    "lods.png": "d403906300397041e550d333c5e9d4f451acbc20143f82be1276edbbded30a00",
+    "silhouette.png": "b26919ff40113ad3e943cea4b0e190fb17e2afbd7438cd8fa4225e1c12bac65d",
+    "value.png": "93dc0987b491679b3ae789b7faa246ee7e96748779e577943b790d7b5c1ac491",
+    "detail.png": "3865ac6cc2c404777b9c2c4fbb329037c0b8d3fc226c6bf8e563ba971744650a"
+  },
+  "metrics": {
+    "silhouette": [
+      {
+        "view": "front",
+        "iou": 0.951
+      },
+      {
+        "view": "side",
+        "iou": 0.93
+      },
+      {
+        "view": "3/4",
+        "iou": 0.989
+      }
+    ],
+    "focal": {
+      "peakPart": "gun_barrel",
+      "peak": [
+        500,
+        219
+      ],
+      "focalShare": 0.87,
+      "focalArea": 0.696,
+      "top": [
+        {
+          "part": "hull",
+          "share": 0.325
+        },
+        {
+          "part": "hull_dress",
+          "share": 0.291
+        },
+        {
+          "part": "gun_barrel",
+          "share": 0.124
+        }
+      ],
+      "declared": [
+        "hull",
+        "gun_barrel",
+        "turret"
+      ]
+    },
+    "rest": {
+      "share": 0.566,
+      "spread": 0.778,
+      "min": 0.25
+    },
+    "shape": {
+      "acuteShare": 0.063,
+      "straightShare": 0.427,
+      "taper": 0.872,
+      "shape": "friendly",
+      "declared": "friendly"
+    }
+  }
+}

@@ -3,31 +3,36 @@
 // tier), orbit controls with a slow turntable, and Play runs the baked `run` clip.
 // Scene stages the asset on a diorama in a looping scenario picked from its named parts (driving,
 // wind, a day on the turntable). Also switches LOD, wireframe and the trim sheet, lists the parts
-// (hover one to outline it) and offers a GLB per LOD.
+// (hover one to outline it) and offers a GLB per LOD. Heavy assets open at LOD1 with a button for
+// LOD0; a progress bar runs while the worker compiles, and leaving cancels the compile.
 
-import { AnimationMixer, Box3, BoxHelper, Group, Mesh, type Object3D, Timer, Vector3 } from 'three';
+import { AnimationMixer, Box3, BoxHelper, Group, type Object3D, Timer, Vector3 } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { backdrop } from './backdrop.ts';
-import type { AssetInfo as Asset, Lod } from './compile.ts';
-import { loadBuilt, recipe, trimSheet } from './compile.ts';
+import { categoryOf } from './categories.ts';
+import { type BuildRequest, cancelBuild, type Lod, recipe, trimSheet } from './compile.ts';
 import { renderDownloads } from './downloads.ts';
-import { categoryOf } from './items.ts';
+import { estimateSeconds } from './lod-policy.ts';
 import { LOOKS, type Look, lookFor } from './look.ts';
+import { MeasureTools } from './measure-tools.ts';
 import { Particles } from './particles.ts';
 import type { Post } from './post.ts';
 import { FrameBudget, qualityTier, tierPinned } from './quality.ts';
-import { readHooks } from './scenarios/hooks.ts';
-import { pickScenario } from './scenarios/pick.ts';
 import type { Scenario } from './scenarios/types.ts';
 import { disposeTree, Stage } from './stage.ts';
 import { anisotropyOf, studioRenderer } from './studio.ts';
-import { applySheet } from './textures.ts';
+import { applySheet, setWireframe } from './textures.ts';
 import { reducedMotion, token } from './theme.ts';
+import { disposeStaged, loadStaged, type Staged, type Subject } from './viewer-load.ts';
 import { renderParts, renderStats } from './viewer-panels.ts';
+import { Progress, syncLod0 } from './viewer-progress.ts';
 import { bindUi, type Mode, syncUi, wireUi } from './viewer-ui.ts';
+import { CancelledError } from './worker-pool.ts';
+
+export type { Subject } from './viewer-load.ts';
 
 export class Viewer {
-  private readonly stage = new Stage(true);
+  readonly stage = new Stage(true);
   private readonly tier = qualityTier();
   private readonly renderer = studioRenderer(this.tier);
   private readonly budget = new FrameBudget(() => this.degrade());
@@ -37,7 +42,10 @@ export class Viewer {
   private readonly timer = new Timer();
   private readonly particles = new Particles(7, 2000);
   private readonly ui: ReturnType<typeof bindUi>;
-  private asset: Asset | null = null;
+  readonly tools: MeasureTools;
+  private readonly progress: Progress;
+  private asset: Subject | null = null;
+  private pending: BuildRequest | null = null;
   private lod: Lod = 0;
   private mode: Mode = 'studio';
   private model: Object3D | null = null;
@@ -52,9 +60,15 @@ export class Viewer {
   private token = 0;
   /** Told the model's measured size (glTF frame, metres) whenever an asset loads. */
   onSize: ((size: Vector3) => void) | null = null;
+  /** Told the shown model (null while compiling), e.g. to anchor positional sounds on its nodes. */
+  onModel: ((model: Object3D | null) => void) | null = null;
 
-  constructor(private readonly root: HTMLElement) {
+  constructor(root: HTMLElement) {
     this.ui = bindUi(root);
+    this.progress = new Progress(this.ui.loading, root);
+    this.ui.lod0.addEventListener('click', () => {
+      if (this.asset) void this.show(this.asset, 0, false);
+    });
     this.stage.scene.add(this.particles.object);
     this.stage.setLook(this.look, this.renderer);
     // The high tier shows the painted trim sheet by default, as a textured GLB would look.
@@ -71,6 +85,7 @@ export class Viewer {
     canvas.setAttribute('role', 'img');
     this.ui.viewport.prepend(canvas);
     this.controls = new OrbitControls(this.stage.camera, canvas);
+    this.tools = new MeasureTools(root, this.stage, canvas, this.stage.camera);
     this.controls.enableDamping = !reducedMotion();
     this.controls.autoRotateSpeed = 0.6;
     this.controls.listenToKeyEvents(canvas);
@@ -94,7 +109,7 @@ export class Viewer {
       },
       wireframe: (on) => {
         this.wireframe = on;
-        this.applyWireframe();
+        if (this.model) setWireframe(this.model, this.wireframe);
       },
       textures: (on) => {
         this.textured = on;
@@ -106,8 +121,15 @@ export class Viewer {
     }).observe(this.ui.viewport);
   }
 
+  /** Stop a compile nobody is waiting for any more (the visitor left the asset page). */
+  abandon(): void {
+    if (this.pending) cancelBuild(this.pending);
+    [this.pending, this.token] = [null, this.token + 1];
+    this.progress.stop();
+  }
+
   async show(
-    asset: Asset,
+    asset: Subject,
     lod: Lod = this.lod,
     reframe = asset.name !== this.asset?.name,
   ): Promise<void> {
@@ -116,35 +138,29 @@ export class Viewer {
     this.asset = asset;
     this.lod = lod;
     const ticket = ++this.token;
-    this.ui.status.textContent = `Compiling ${asset.name} at LOD ${lod}…`;
-    this.root.setAttribute('aria-busy', 'true');
-    this.ui.loading.hidden = false;
-    const loaded = await loadBuilt(recipe(asset.name, lod));
-    const clip = loaded.animations.find((c) => c.name === 'run') ?? null;
-    const hooks = readHooks(loaded.scene, asset.kind, clip);
-    const def = pickScenario(hooks);
-    const base =
-      this.mode === 'scene'
-        ? await loadBuilt({
-            target: {
-              kind: 'diorama',
-              name: `${asset.name}_${def.id}`,
-              footprint: def.ground(hooks),
-            },
-            lod: 0,
-            animations: false,
-          })
-        : null;
-    if (ticket !== this.token) {
-      disposeTree(loaded.scene);
-      if (base) disposeTree(base.scene);
-      return;
+    const request = recipe(asset.name, lod, asset.file);
+    if (this.pending && fresh) cancelBuild(this.pending);
+    this.pending = request;
+    const label = `Compiling ${asset.name} at LOD ${lod}…`;
+    this.ui.status.textContent = label;
+    syncLod0(this.ui.lod0, asset, lod, true);
+    syncUi(this.ui, lod, this.mode, this.playing);
+    this.progress.start(label, estimateSeconds(asset, lod));
+    let staged: Staged;
+    try {
+      staged = await loadStaged(asset, request, this.mode === 'scene');
+    } catch (error) {
+      if (ticket !== this.token || error instanceof CancelledError) return;
+      this.progress.stop();
+      this.ui.status.textContent = `${asset.name} failed to compile: ${String(error)}`;
+      throw error;
     }
-    this.root.removeAttribute('aria-busy');
-    this.ui.loading.hidden = true;
-
+    if (ticket !== this.token) return disposeStaged(staged);
+    this.pending = null;
+    const { loaded, clip, hooks, def, base } = staged;
+    this.progress.stop();
     this.teardown();
-    this.look = lookFor(categoryOf(asset.kind, asset.tags));
+    this.look = lookFor(categoryOf(asset.kind, asset.tags, asset.name));
     this.stage.setLook(this.look, this.renderer);
     this.stage.scene.background = backdrop(this.look);
     this.model = loaded.scene;
@@ -152,10 +168,11 @@ export class Viewer {
     this.display = base ? new Group().add(base.scene, carrier) : carrier;
     this.stage.setFloor(!base);
     this.stage.showGrid(Boolean(base));
-    this.applyWireframe();
+    if (this.model) setWireframe(this.model, this.wireframe);
     void this.applyTextures();
     const center = this.stage.show(this.display, reframe || Boolean(base));
     if (!base) this.stage.bakeContact(this.renderer, [this.particles.object]);
+    this.tools.attach(base ? null : loaded.scene, asset.name);
     this.post?.fit(this.stage.contentBox());
     this.mixer = clip ? new AnimationMixer(loaded.scene) : null;
     if (base) {
@@ -192,33 +209,24 @@ export class Viewer {
       this.playing = false;
       this.onSize?.(new Box3().setFromObject(loaded.scene).getSize(new Vector3()));
     }
+    this.onModel?.(base ? null : loaded.scene);
     syncUi(this.ui, lod, this.mode, this.playing);
+    syncLod0(this.ui.lod0, asset, lod, false);
     this.ui.play.disabled = this.mode === 'studio' && !clip;
     this.renderer.domElement.setAttribute('aria-label', `3D view of ${asset.name}, LOD ${lod}`);
     const b = loaded.built;
-    renderStats(
-      this.ui.stats,
-      b.triangles,
-      asset.budget.triangles[lod],
-      b.glb.byteLength,
-      b.ms,
-      emitters.length,
-    );
+    renderStats(this.ui.stats, b, emitters.length);
     renderParts(this.ui.parts, b.parts, (name) => this.highlight(name));
     this.ui.status.textContent = `Showing ${asset.name} at LOD ${lod}.`;
   }
 
   /** Outline one named node in the redline colour, or clear the outline (null). */
   private highlight(name: string | null): void {
-    if (this.outline) {
-      this.stage.scene.remove(this.outline);
-      this.outline.dispose();
-      this.outline = null;
-    }
+    this.outline?.removeFromParent();
+    this.outline?.dispose();
     const node = name ? this.model?.getObjectByName(name) : null;
-    if (!node) return;
-    this.outline = new BoxHelper(node, token('--redline'));
-    this.stage.scene.add(this.outline);
+    this.outline = node ? new BoxHelper(node, token('--redline')) : null;
+    if (this.outline) this.stage.scene.add(this.outline);
   }
 
   private teardown(): void {
@@ -241,13 +249,6 @@ export class Viewer {
     if (this.textured && this.model === model)
       applySheet(model, sheet, anisotropyOf(this.renderer));
     this.ui.status.textContent = this.textured ? 'Trim sheet bound.' : '';
-  }
-
-  private applyWireframe(): void {
-    this.model?.traverse((o) => {
-      if (!(o instanceof Mesh)) return;
-      for (const m of [o.material].flat()) if ('wireframe' in m) m.wireframe = this.wireframe;
-    });
   }
 
   private resize(): void {
@@ -280,6 +281,7 @@ export class Viewer {
     // Paused means still: no smoke drifting over a product shot until Play.
     this.particles.update(step);
     this.outline?.update();
+    this.tools.update();
     this.stage.syncShadow(this.model);
     // Scenarios may clear the sky they painted; fall back to the look's backdrop.
     this.stage.scene.background ??= backdrop(this.look);

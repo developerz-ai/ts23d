@@ -8,6 +8,7 @@
 import { Ts23dError } from '../core/index.ts';
 import { MATERIAL_LIBRARY } from './library.ts';
 import { type MaterialDef, toStripRecipe } from './material-def.ts';
+import { NATURE_LIBRARY } from './nature.ts';
 import { HOUSE_STRIPS } from './paint/default-sheet.ts';
 import type { StripRecipe } from './paint/types.ts';
 import { clearCustom, customIds, customIndex, pushCustom } from './slots.ts';
@@ -19,6 +20,8 @@ import {
   STRIPS,
   type StripId,
   stripRect,
+  stripRow,
+  variantOf,
 } from './trim-sheet.ts';
 
 const defined = new Map<string, MaterialDef>();
@@ -26,7 +29,9 @@ const defined = new Map<string, MaterialDef>();
 /** The same definition, field by field (painters by identity, colours and params by value). */
 function same(a: MaterialDef, b: MaterialDef): boolean {
   return (
-    JSON.stringify({ ...a, paint: 0 }) === JSON.stringify({ ...b, paint: 0 }) && a.paint === b.paint
+    JSON.stringify({ ...a, paint: 0, graph: 0 }) === JSON.stringify({ ...b, paint: 0, graph: 0 }) &&
+    a.paint === b.paint &&
+    a.graph === b.graph
   );
 }
 
@@ -59,7 +64,7 @@ export function defineMaterial(def: MaterialDef): CustomStripId {
       fix: 'reuse a built-in strip with a vertex colour, or restyle an unused built-in strip in your SheetRecipe',
     });
   defined.set(id, def);
-  pushCustom(id);
+  pushCustom(id, def.spanMetres ?? 4);
   (HOUSE_STRIPS as Record<string, StripRecipe>)[id] = recipe;
   return id as CustomStripId;
 }
@@ -69,7 +74,12 @@ export function defineMaterial(def: MaterialDef): CustomStripId {
  * Meshes compiled before the reset keep UVs into rows that may be reassigned.
  */
 export function resetMaterials(): void {
-  for (const id of defined.keys()) delete (HOUSE_STRIPS as Record<string, StripRecipe>)[id];
+  const house = HOUSE_STRIPS as Record<string, StripRecipe>;
+  for (const id of Object.keys(house)) {
+    const base = variantOf(id).base;
+    if (defined.has(base) || (base !== id && !(STRIPS as readonly string[]).includes(base)))
+      delete house[id];
+  }
   defined.clear();
   clearCustom();
 }
@@ -77,7 +87,7 @@ export function resetMaterials(): void {
 export interface MaterialInfo {
   readonly id: StripId;
   /** classic = greyscale strip tinted by vertex colour; library/defined carry their own colour. */
-  readonly origin: 'classic' | 'library' | 'defined';
+  readonly origin: 'classic' | 'library' | 'nature' | 'defined';
   readonly recipe: StripRecipe;
   readonly description: string;
   readonly sources: readonly string[];
@@ -85,18 +95,24 @@ export interface MaterialInfo {
 
 /** What a strip is: its recipe, origin, description and sources. Unknown ids throw. */
 export function materialOf(id: StripId): MaterialInfo {
-  const recipe = HOUSE_STRIPS[id];
-  const lib = (MATERIAL_LIBRARY as Readonly<Record<string, MaterialDef>>)[id];
-  const def = lib ?? defined.get(id);
-  if (!recipe || (customIndex(id) < 0 && !(STRIPS as readonly string[]).includes(id)))
+  const base = variantOf(id).base;
+  const recipe = HOUSE_STRIPS[base as StripId];
+  const nat = (NATURE_LIBRARY as Readonly<Record<string, MaterialDef>>)[base];
+  const lib = (MATERIAL_LIBRARY as Readonly<Record<string, MaterialDef>>)[base] ?? nat;
+  const def = lib ?? defined.get(base);
+  if (
+    !recipe ||
+    stripRow(id) < 0 ||
+    (customIndex(base) < 0 && !(STRIPS as readonly string[]).includes(base))
+  )
     throw new Ts23dError('T3D_MATERIAL_UNKNOWN', {
       cause: `strip '${id}' is neither built in nor defined`,
       fix: `use one of ${STRIPS.join(', ')}, or defineMaterial({ id: '${id}', ... }) first`,
     });
-  const classic = (CLASSIC_STRIPS as readonly string[]).includes(id);
+  const classic = (CLASSIC_STRIPS as readonly string[]).includes(base);
   return {
     id,
-    origin: classic ? 'classic' : lib ? 'library' : 'defined',
+    origin: classic ? 'classic' : nat ? 'nature' : lib ? 'library' : 'defined',
     recipe,
     description:
       def?.description ?? `classic ${recipe.kind} strip (greyscale, vertex colour tints)`,

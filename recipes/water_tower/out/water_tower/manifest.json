@@ -15,8 +15,8 @@
     "thumb": "recipes/water_tower/out/water_tower/thumb.png"
   },
   "triangles": [
-    6616,
-    2816,
+    7488,
+    3096,
     496
   ],
   "drawCalls": [
@@ -55,7 +55,7 @@
     {
       "label": "tank diameter (22 ft)",
       "spec": 6.7056000000000004,
-      "measured": 6.807331323623657,
+      "measured": 6.735202789306641,
       "source": "NRHP 93000843 §7"
     },
     {

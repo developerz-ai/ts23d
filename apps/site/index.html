@@ -38,7 +38,7 @@
             <h1 id="hero-h">3D assets your coding agent writes in TypeScript.</h1>
             <p class="lede">
               ts23d compiles a recipe into game-ready GLB: named, pivoted parts, baked motion, three
-              LODs and one shared material. No GPU, no credits, and the same recipe always gives
+              LODs and one shared trim sheet (paint finishes and glass add a few materials). No GPU, no credits, and the same recipe always gives
               the same bytes.
             </p>
             <p class="cta">
@@ -130,7 +130,12 @@
           <div class="viewer" data-viewer>
             <div class="viewport" data-viewport>
               <img class="viewer-poster" data-viewer-poster alt="" />
-              <p class="loading" data-loading>Compiling in your browser…</p>
+              <div class="loading" data-loading role="presentation">
+                <p class="loading-text" data-loading-text>Compiling in your browser…</p>
+                <div class="progress" aria-hidden="true"><span data-progress-bar></span></div>
+                <p class="loading-time" data-loading-time></p>
+              </div>
+              <button type="button" class="lod0-cta" data-load-lod0 hidden>Load full detail (LOD0)</button>
               <p class="scenario-tag" data-scenario hidden></p>
               <p class="viewport-hint" aria-hidden="true">drag to orbit · right-drag pan · wheel zoom</p>
             </div>
@@ -150,6 +155,15 @@
               <label class="check"><input type="checkbox" data-wireframe /> Wireframe</label>
               <label class="check"><input type="checkbox" data-textures /> Trim sheet</label>
             </div>
+            <div class="toolbar measure-bar">
+              <span class="toolbar-label">Measure</span>
+              <label class="check"><input type="checkbox" data-measure="grid" /> Metre grid</label>
+              <label class="check"><input type="checkbox" data-measure="dims" /> Dimensions</label>
+              <label class="check"><input type="checkbox" data-measure="human" /> 1.8 m figure</label>
+              <label class="check"><input type="checkbox" data-measure="ruler" /> Ruler</label>
+              <label class="livery" data-livery hidden><span data-livery-label>Livery</span> <select data-variant></select></label>
+            </div>
+            <p class="ruler-readout" role="status" data-ruler-readout hidden></p>
             <dl class="live-stats" data-viewer-stats></dl>
             <p class="visually-hidden" role="status" data-viewer-status></p>
 
@@ -178,18 +192,30 @@
           </aside>
         </div>
 
+        <section class="panel" data-sound-section aria-labelledby="sound-h" hidden>
+          <h2 id="sound-h">Sounds <span class="section-note">KHR_audio_emitter nodes with their WAV clips</span></h2>
+          <label class="check"><input type="checkbox" data-positional /> Positional: play from the node in the viewer (orbit to move it)</label>
+          <ul class="sounds" data-sounds></ul>
+        </section>
+
         <section class="panel" data-measures-section aria-labelledby="measures-h">
           <h2 id="measures-h">Measured against the real thing</h2>
           <div data-measures></div>
         </section>
 
-        <section class="panel" data-sheet-section aria-labelledby="sheet-h">
-          <h2 id="sheet-h">Contact sheet <span class="section-note">what the agent reads after every edit</span></h2>
-          <figure class="sheet"><img alt="" width="1200" height="840" loading="lazy" /></figure>
+        <section class="panel" data-quality-section aria-labelledby="quality-h" hidden>
+          <h2 id="quality-h">Quality <span class="section-note">the agent's critique and the art metrics it measured</span></h2>
+          <div class="quality" data-quality></div>
+        </section>
+
+        <section class="panel" data-renders-section aria-labelledby="renders-h">
+          <h2 id="renders-h">Renders <span class="section-note">what the agent reads after every edit</span></h2>
+          <div class="renders" data-renders></div>
         </section>
 
         <section class="panel source" data-source aria-labelledby="source-h">
           <h2 id="source-h">Recipe <code class="source-file" data-source-file></code></h2>
+          <select class="source-pick" data-source-pick hidden></select>
           <p class="section-note">This file is the asset. The model above was compiled from it.</p>
           <pre><code></code></pre>
         </section>

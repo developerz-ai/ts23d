@@ -1,13 +1,21 @@
-// The (at most) four shared materials, one per Surface in use. All sample the same trim sheet and
+// The shared materials, one per Surface in use. All sample the same trim sheet and
 // take tint from COLOR_0, so batching holds; only the shading model differs. Glass/translucent use
 // KHR_materials_transmission + _volume + _ior (three, Babylon, glTFast); engines without them fall
 // back to alpha BLEND via baseColorFactor.a. With a painted sheet bound (textures.ts), every
 // material samples it: baseColor (sRGB, alpha = cutout mask), normal, and ORM in both the
 // occlusion and metallicRoughness slots. Opaque/cutout factors go to 1 so the ORM texture rules;
 // glass/translucent keep theirs as multipliers (clear stays clear whatever strip it maps).
+// ice/liquid/jelly and `optics` overrides come from pbr.ts; paint slots and finishes add
+// clearcoat/sheen/anisotropy/iridescence/specular there too.
 
-import type { Surface } from '../core/index.ts';
+import {
+  OPTICS,
+  type ResolvedFinish,
+  type ResolvedSurfaceOptics,
+  type Surface,
+} from '../core/index.ts';
 import type { Json } from './bin-writer.ts';
+import { materialExtensions, opticsMaterial, withFinish } from './pbr.ts';
 
 const MATERIALS: Readonly<Record<Surface, Json>> = {
   opaque: {
@@ -57,9 +65,20 @@ const MATERIALS: Readonly<Record<Surface, Json>> = {
       KHR_materials_ior: { ior: 1.45 },
     },
   },
+  ice: opticsMaterial('ice', OPTICS.ice),
+  liquid: opticsMaterial('liquid', OPTICS.liquid),
+  jelly: opticsMaterial('jelly', OPTICS.jelly),
 };
 
-const ORDER: readonly Surface[] = ['opaque', 'cutout', 'glass', 'translucent'];
+const ORDER: readonly Surface[] = [
+  'opaque',
+  'cutout',
+  'glass',
+  'translucent',
+  'ice',
+  'liquid',
+  'jelly',
+];
 
 /** The same material sampling the sheet (texture indices fixed by textures.ts). */
 function textured(m: Json, surface: Surface): Json {
@@ -78,10 +97,18 @@ function textured(m: Json, surface: Surface): Json {
   };
 }
 
+/** A surface's material: the preset, or the asset's `optics` override built from it. */
+function surfaceMaterial(s: Surface, optics: ResolvedSurfaceOptics | undefined): Json {
+  if (s === 'opaque' || s === 'cutout') return MATERIALS[s];
+  const o = optics?.[s];
+  return o ? opticsMaterial(s, o) : MATERIALS[s];
+}
+
 /** Materials for the surfaces present, plus each surface's index and the extensions used. */
 export function materialsFor(
   used: ReadonlySet<Surface>,
   withSheet = false,
+  optics?: ResolvedSurfaceOptics,
 ): {
   materials: Json[];
   index: Map<Surface, number>;
@@ -89,11 +116,11 @@ export function materialsFor(
 } {
   const present = ORDER.filter((s) => s === 'opaque' || used.has(s));
   const index = new Map(present.map((s, i) => [s, i] as const));
-  const ext = new Set<string>();
-  for (const s of present)
-    for (const e of Object.keys((MATERIALS[s]['extensions'] as Json | undefined) ?? {})) ext.add(e);
-  const materials = present.map((s) => (withSheet ? textured(MATERIALS[s], s) : MATERIALS[s]));
-  return { materials, index, extensionsUsed: [...ext].sort() };
+  const materials = present.map((s) => {
+    const m = surfaceMaterial(s, optics);
+    return withSheet ? textured(m, s) : m;
+  });
+  return { materials, index, extensionsUsed: materialExtensions(materials) };
 }
 
 export const EMISSIVE_STRENGTH = 'KHR_materials_emissive_strength';
@@ -123,4 +150,31 @@ export function glowMaterial(rule: GlowRule, i: number, withSheet: boolean): Jso
       ? { extensions: { [EMISSIVE_STRENGTH]: { emissiveStrength: strength } } }
       : {}),
   };
+}
+
+/**
+ * A paint slot's material: the opaque trim material with baseColorFactor = the slot colour
+ * (linear). Its primitive's COLOR_0 holds colour ÷ slot (core `tone`), so the product is unchanged
+ * and KHR_materials_variants can swap the factor.
+ */
+export function paintMaterial(
+  name: string,
+  color: readonly [number, number, number],
+  withSheet: boolean,
+  finish?: ResolvedFinish,
+): Json {
+  const base = withSheet ? textured(MATERIALS.opaque, 'opaque') : MATERIALS.opaque;
+  const pbr = base['pbrMetallicRoughness'] as Json;
+  const painted = {
+    ...base,
+    name,
+    pbrMetallicRoughness: { ...pbr, baseColorFactor: [...color, 1] },
+  };
+  return finish ? withFinish(painted, finish) : painted;
+}
+
+/** A named finish's material: the opaque trim material + its KHR_materials_* blocks. */
+export function finishMaterial(name: string, f: ResolvedFinish, withSheet: boolean): Json {
+  const base = withSheet ? textured(MATERIALS.opaque, 'opaque') : MATERIALS.opaque;
+  return withFinish({ ...base, name: `ts23d_finish_${name}` }, f);
 }

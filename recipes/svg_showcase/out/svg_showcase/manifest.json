@@ -1,0 +1,47 @@
+{
+  "name": "svg_showcase",
+  "kind": "prop",
+  "description": "Draw → 3D test card: a bevelled gear, a turned amphora, a silhouette-sculpted creature head and a star emblem, each from an inline SVG drawing",
+  "tags": [
+    "svg",
+    "showcase",
+    "extrude",
+    "lathe",
+    "sculpt",
+    "silhouette"
+  ],
+  "files": {
+    "lods": [],
+    "sheet": "recipes/svg_showcase/out/svg_showcase/sheet.png",
+    "thumb": "recipes/svg_showcase/out/svg_showcase/thumb.png"
+  },
+  "triangles": [
+    38824,
+    10264,
+    1936
+  ],
+  "drawCalls": [
+    1,
+    1,
+    1
+  ],
+  "pivots": [
+    {
+      "name": "body",
+      "parent": null
+    }
+  ],
+  "emitters": [],
+  "sockets": [],
+  "surfaces": [
+    "opaque"
+  ],
+  "measures": [],
+  "sources": [
+    "recipes/svg_showcase/README.md (design spec; the SVG drawings are inline in this file)"
+  ],
+  "qa": {
+    "pass": true,
+    "findings": []
+  }
+}

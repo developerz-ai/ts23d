@@ -3,12 +3,24 @@
 
 import type { Asset, AssetDefinition, AssetMeta, CompiledAsset } from './definition.ts';
 import { Ts23dError } from './errors.ts';
+import { checkFinishedParts, finishesOf } from './finish.ts';
+import { jointOf, useJoint } from './joint.ts';
 import type { Mesh } from './mesh.ts';
-import type { Lod, Part, PartOptions, UseOptions } from './part.ts';
+import { opticsOf } from './optics.ts';
+import { checkPaintedParts, paintSetOf, repaint } from './paint.ts';
+import type { Connect, Joint, Lod, Part, PartOptions, UseOptions } from './part.ts';
 import { createRng } from './rng.ts';
+import { checkTune, type TunedValues, tunedReader } from './tune.ts';
+import type { WeatherCoverage } from './weather-coverage.ts';
+import { worldTransforms } from './world.ts';
 
 export * from './definition.ts';
+export * from './finish.ts';
+export * from './optics.ts';
+export * from './paint.ts';
 export * from './part.ts';
+export * from './tune.ts';
+export type { WeatherCoverage } from './weather-coverage.ts';
 
 export function defineAsset(def: AssetDefinition): Asset {
   if (!/^[a-z][a-z0-9_]*$/.test(def.name)) {
@@ -17,6 +29,7 @@ export function defineAsset(def: AssetDefinition): Asset {
       fix: 'rename it to [a-z][a-z0-9_]* — it becomes the GLB file name and the root node',
     });
   }
+  if (def.tune) checkTune(def.name, def.tune);
   return { ...def, __ts23d: 'asset' };
 }
 
@@ -25,10 +38,32 @@ export const isAsset = (value: unknown): value is Asset =>
   value !== null &&
   (value as { __ts23d?: unknown }).__ts23d === 'asset';
 
-export function compile(asset: Asset, options: { lod?: Lod; seed?: number } = {}): CompiledAsset {
+export interface CompileOptions {
+  readonly lod?: Lod;
+  readonly seed?: number;
+  /** Preview one livery: painted vertex colours show variant `name` (renders, not GLB export). */
+  readonly variant?: string;
+  /** Trial values for `tune.params` (the optimiser); beat the committed tune.json. */
+  readonly tuned?: TunedValues;
+}
+
+export function compile(asset: Asset, options: CompileOptions = {}): CompiledAsset {
   const lod = options.lod ?? 0;
   const seed = options.seed ?? asset.seed ?? 1;
+  const paintSet = paintSetOf(asset.name, asset.paint, asset.variants);
+  const finishes = finishesOf(asset.name, asset.finishes);
+  const optics = opticsOf(asset.name, asset.optics);
   const parts = new Map<string, Part>();
+  const joints = new Map<string, Joint>();
+  const weather: WeatherCoverage[] = [];
+  const joint = (j: Joint): void => {
+    if (joints.has(j.name))
+      throw new Ts23dError('T3D_PART_DUPLICATE', {
+        cause: `joint '${j.name}' was declared twice in '${asset.name}'`,
+        fix: 'give each joint a unique name — wrist_l, wrist_r, grip',
+      });
+    joints.set(j.name, j);
+  };
   const add = (name: string, mesh: Mesh | null, o: PartOptions = {}): void => {
     if (parts.has(name)) {
       throw new Ts23dError('T3D_PART_DUPLICATE', {
@@ -57,6 +92,13 @@ export function compile(asset: Asset, options: { lod?: Lod; seed?: number } = {}
       motion: o.motion ?? null,
       ...(o.clearOf ? { clearOf: o.clearOf } : {}),
       ...(o.surface && o.surface !== 'opaque' ? { surface: o.surface } : {}),
+      ...(o.paint !== undefined ? { paint: o.paint } : {}),
+      ...(o.finish !== undefined ? { finish: o.finish } : {}),
+      ...(o.collider !== undefined ? { collider: o.collider } : {}),
+      ...(o.density !== undefined ? { density: o.density } : {}),
+      ...(o.shell !== undefined ? { shell: o.shell } : {}),
+      ...(o.connect ? { connect: connectOf(asset.name, name, o.connect) } : {}),
+      ...(o.sound ? { sound: o.sound } : {}),
     });
   };
   const use = (child: Asset, o: UseOptions): void => {
@@ -73,28 +115,52 @@ export function compile(asset: Asset, options: { lod?: Lod; seed?: number } = {}
         parent: p.parent ? `${o.prefix}_${p.parent}` : o.prefix,
         ...(p.motion ? { motion: p.motion } : {}),
         ...(p.surface ? { surface: p.surface } : {}),
+        ...(p.clearOf ? { clearOf: p.clearOf.map((c) => `${o.prefix}_${c}`) } : {}),
+        // A child's slot carries over only if this asset declares it too (else: plain colour).
+        ...(p.paint && paintSet?.paint[p.paint] ? { paint: p.paint } : {}),
+        ...(p.finish && finishes?.[p.finish] ? { finish: p.finish } : {}),
+        ...(p.collider ? { collider: p.collider } : {}),
+        ...(p.density !== undefined ? { density: p.density } : {}),
+        ...(p.shell !== undefined ? { shell: p.shell } : {}),
+        ...(p.connect
+          ? {
+              connect: p.connect.to
+                ? { ...p.connect, to: `${o.prefix}_${p.connect.to}` }
+                : p.connect,
+            }
+          : {}),
+        ...(p.sound ? { sound: p.sound } : {}),
       });
       const named = parts.get(`${o.prefix}_${p.name}`);
-      if (named && (p.emitter || p.socket)) {
+      if (named && (p.emitter || p.socket || p.audio)) {
         parts.set(named.name, {
           ...named,
           ...(p.emitter ? { emitter: p.emitter } : {}),
+          ...(p.audio ? { audio: p.audio } : {}),
           ...(p.socket ? { socket: p.socket } : {}),
         });
       }
+    }
+    for (const w of sub.weather ?? []) weather.push({ ...w, target: `${o.prefix}_${w.target}` });
+    if (sub.joints?.length) {
+      const xf = worldTransforms([...parts.values()]).get(o.prefix);
+      for (const j of sub.joints) if (xf) joint(useJoint(j, o.prefix, xf));
     }
   };
   asset.build({
     lod,
     seed,
     rng: createRng(seed),
+    tuned: tunedReader(asset.name, asset.tune, options.tuned),
     pick: (perLod) => perLod[lod],
     part: add,
     group: (name, o) => add(name, null, o),
     emitter: (name, { at, parent, ...emitter }) => {
       add(name, null, { ...(at ? { at } : {}), ...(parent ? { parent } : {}) });
       const p = parts.get(name);
-      if (p) parts.set(name, { ...p, emitter });
+      // A sound source rides `audio` so particle readers (extras, the gallery) never see it.
+      if (p)
+        parts.set(name, emitter.kind === 'sound' ? { ...p, audio: emitter } : { ...p, emitter });
     },
     socket: (name, { at, parent, ...socket }) => {
       add(name, null, { ...(at ? { at } : {}), ...(parent ? { parent } : {}) });
@@ -102,7 +168,15 @@ export function compile(asset: Asset, options: { lod?: Lod; seed?: number } = {}
       if (p) parts.set(name, { ...p, socket });
     },
     use,
+    joint: (name, o) => joint(jointOf(asset.name, name, o)),
+    weathered: (coverage) => {
+      weather.push(...coverage);
+    },
   });
+  const built = [...parts.values()];
+  checkPaintedParts(asset.name, built, paintSet);
+  checkFinishedParts(asset.name, built, finishes);
+  const variant = options.variant;
   return {
     name: asset.name,
     kind: asset.kind,
@@ -110,11 +184,29 @@ export function compile(asset: Asset, options: { lod?: Lod; seed?: number } = {}
     budget: asset.budget,
     real: asset.real ?? null,
     checks: asset.checks ?? [],
-    parts: [...parts.values()],
+    parts: variant === undefined ? built : repaint(asset.name, built, paintSet, variant),
     ...metaOf(asset),
     ...(asset.glow?.length ? { glow: asset.glow } : {}),
     ...(asset.lodCoverage ? { lodCoverage: asset.lodCoverage } : {}),
+    ...(paintSet ? { paintSet } : {}),
+    ...(finishes ? { finishes } : {}),
+    ...(optics ? { optics } : {}),
+    ...(variant !== undefined ? { variant } : {}),
+    ...(asset.gaps?.length ? { gaps: asset.gaps } : {}),
+    ...(asset.creases?.length ? { creases: asset.creases } : {}),
+    ...(joints.size ? { joints: [...joints.values()] } : {}),
+    ...(asset.physics ? { physics: asset.physics } : {}),
+    ...(weather.length ? { weather } : {}),
   };
+}
+
+function connectOf(asset: string, part: string, c: Connect): Connect {
+  if (c.as === 'free' && !c.why?.trim())
+    throw new Ts23dError('T3D_CONNECT_INVALID', {
+      cause: `part '${part}' in '${asset}' is connect: free without a why`,
+      fix: "say why it is meant to be loose: connect: { as: 'free', why: 'debris on the deck' }",
+    });
+  return c;
 }
 
 function metaOf(a: Asset): { meta?: AssetMeta } {

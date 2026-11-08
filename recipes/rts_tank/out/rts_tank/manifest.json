@@ -1,0 +1,285 @@
+{
+  "name": "rts_tank",
+  "kind": "vehicle",
+  "description": "Saltmarch Brinehound: original RTS light tank. Pebble hull with a chevron prow, team-colour turret roof and deck, spinning turret, wheels and sprocket, link-by-link tracks; 8 team liveries.",
+  "tags": [
+    "rts",
+    "saltmarch",
+    "vehicle",
+    "tank",
+    "team-colour"
+  ],
+  "files": {
+    "lods": [],
+    "sheet": "recipes/rts_tank/out/rts_tank/sheet.png",
+    "thumb": "recipes/rts_tank/out/rts_tank/thumb.png"
+  },
+  "triangles": [
+    32198,
+    8540,
+    382
+  ],
+  "drawCalls": [
+    21,
+    21,
+    5
+  ],
+  "pivots": [
+    {
+      "name": "body",
+      "parent": null
+    },
+    {
+      "name": "body_paint_team",
+      "parent": null
+    },
+    {
+      "name": "turret",
+      "parent": null,
+      "motion": "spin"
+    },
+    {
+      "name": "turret_paint_team",
+      "parent": "turret"
+    },
+    {
+      "name": "gun",
+      "parent": "turret",
+      "motion": "sway"
+    },
+    {
+      "name": "wheel_l_0",
+      "parent": null,
+      "motion": "spin"
+    },
+    {
+      "name": "wheel_l_1",
+      "parent": null,
+      "motion": "spin"
+    },
+    {
+      "name": "wheel_l_2",
+      "parent": null,
+      "motion": "spin"
+    },
+    {
+      "name": "wheel_l_3",
+      "parent": null,
+      "motion": "spin"
+    },
+    {
+      "name": "wheel_l_4",
+      "parent": null,
+      "motion": "spin"
+    },
+    {
+      "name": "idler_l",
+      "parent": null,
+      "motion": "spin"
+    },
+    {
+      "name": "sprocket_l",
+      "parent": null,
+      "motion": "spin"
+    },
+    {
+      "name": "wheel_r_0",
+      "parent": null,
+      "motion": "spin"
+    },
+    {
+      "name": "wheel_r_1",
+      "parent": null,
+      "motion": "spin"
+    },
+    {
+      "name": "wheel_r_2",
+      "parent": null,
+      "motion": "spin"
+    },
+    {
+      "name": "wheel_r_3",
+      "parent": null,
+      "motion": "spin"
+    },
+    {
+      "name": "wheel_r_4",
+      "parent": null,
+      "motion": "spin"
+    },
+    {
+      "name": "idler_r",
+      "parent": null,
+      "motion": "spin"
+    },
+    {
+      "name": "sprocket_r",
+      "parent": null,
+      "motion": "spin"
+    }
+  ],
+  "emitters": [
+    {
+      "name": "muzzle",
+      "kind": "muzzle",
+      "when": "event"
+    },
+    {
+      "name": "exhaust_l",
+      "kind": "smoke",
+      "when": "moving"
+    },
+    {
+      "name": "dust_l",
+      "kind": "dust",
+      "when": "moving"
+    },
+    {
+      "name": "exhaust_r",
+      "kind": "smoke",
+      "when": "moving"
+    },
+    {
+      "name": "dust_r",
+      "kind": "dust",
+      "when": "moving"
+    }
+  ],
+  "sockets": [
+    {
+      "name": "commander",
+      "kind": "seat",
+      "parent": "turret"
+    }
+  ],
+  "surfaces": [
+    "opaque"
+  ],
+  "paint": {
+    "team": "#b3261e"
+  },
+  "variants": {
+    "red": {
+      "team": "#b3261e"
+    },
+    "blue": {
+      "team": "#1f4fb8"
+    },
+    "green": {
+      "team": "#2f8f3a"
+    },
+    "yellow": {
+      "team": "#e2b521"
+    },
+    "purple": {
+      "team": "#6d2fa6"
+    },
+    "orange": {
+      "team": "#e0661a"
+    },
+    "teal": {
+      "team": "#139a92"
+    },
+    "white": {
+      "team": "#e8e8e2"
+    }
+  },
+  "real": {
+    "length": 6.13,
+    "width": 3.05,
+    "height": 3.2
+  },
+  "measures": [
+    {
+      "label": "road wheel diameter",
+      "spec": 0.6,
+      "measured": 0.6000000163912773,
+      "source": "recipes/rts_faction/README.md"
+    }
+  ],
+  "sources": [
+    "recipes/rts_faction/README.md (original design brief)",
+    "docs/playbooks/vehicles/afv.md (light-tank ranges)"
+  ],
+  "weather": {
+    "chips": {
+      "target": 0.13,
+      "actual": 0.13,
+      "eligible": "convex-edges",
+      "area": 97.273,
+      "by": {
+        "brinehound_hull": {
+          "target": 0.13,
+          "actual": 0.13,
+          "area": 20.3044
+        },
+        "brinehound_kit": {
+          "target": 0.13,
+          "actual": 0.13,
+          "area": 59.3223
+        },
+        "brinehound_turret": {
+          "target": 0.13,
+          "actual": 0.13,
+          "area": 17.6463
+        }
+      }
+    },
+    "rust": {
+      "target": 0.5,
+      "actual": 0.5,
+      "eligible": "fasteners | below-fasteners",
+      "area": 0.2618
+    },
+    "mud": {
+      "target": 0.4808,
+      "actual": 0.4808,
+      "eligible": "ground-near",
+      "area": 49.6063,
+      "by": {
+        "brinehound_hull": {
+          "target": 0.5,
+          "actual": 0.5,
+          "area": 14.8239
+        },
+        "brinehound_kit": {
+          "target": 0.5,
+          "actual": 0.5,
+          "area": 25.239
+        },
+        "brinehound_wheels": {
+          "target": 0.4,
+          "actual": 0.4,
+          "area": 9.5434
+        }
+      }
+    },
+    "dust": {
+      "target": 0.3,
+      "actual": 0.3,
+      "eligible": "up-facing",
+      "area": 50.5002,
+      "by": {
+        "brinehound_hull": {
+          "target": 0.3,
+          "actual": 0.3,
+          "area": 26.9951
+        },
+        "brinehound_kit": {
+          "target": 0.3,
+          "actual": 0.3,
+          "area": 17.6305
+        },
+        "brinehound_turret": {
+          "target": 0.3,
+          "actual": 0.3,
+          "area": 5.8746
+        }
+      }
+    }
+  },
+  "qa": {
+    "pass": true,
+    "findings": []
+  }
+}

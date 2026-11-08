@@ -1,85 +1,21 @@
-// Vite plugin: publishes the committed renders under `recipes/<folder>/out/<asset>/` (hero.png,
-// sheet.png, manifest.json) as `virtual:ts23d-media`, so the gallery grid shows real renders without
-// compiling a single recipe. The build copies them to `media/<asset>/`, re-encoding each hero as
-// WebP (full size and card size) when an image tool (cwebp, ImageMagick) is installed; without
-// one, the hero PNG serves both roles.
+// Vite plugin: publishes the committed outputs under `recipes/<folder>/out/<asset>/` as
+// `virtual:ts23d-media` (the light card data, so the gallery grid shows real renders without
+// compiling a single recipe) plus `media/<asset>/facts.json` (measures, critique, liveries,
+// sounds; fetched by the asset page). The build copies renders, blueprints, RTS icons and WAVs to
+// `media/<asset>/`, re-encoding each hero as WebP (full size and card size) when an image tool
+// (cwebp, ImageMagick) is installed; without one, the hero PNG serves both roles.
 
 import { spawnSync } from 'node:child_process';
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { Plugin } from 'vite';
-import type { MediaEntry } from './src/media-types.ts';
+import { type Found, scan } from './media-scan.ts';
+import type { MediaEntry, MediaFacts } from './src/media-types.ts';
 
 const ID = 'virtual:ts23d-media';
 const RESOLVED = `\0${ID}`;
 const SIZES = { hero: { w: 1600, h: 900 }, card: { w: 800, h: 450 } } as const;
 type Size = keyof typeof SIZES;
-
-interface Found {
-  readonly entry: Omit<MediaEntry, 'hero' | 'card' | 'sheet'>;
-  readonly dir: string;
-  readonly hero: boolean;
-  readonly sheet: boolean;
-}
-
-type Json = Record<string, unknown>;
-const arr = <T>(v: unknown): T[] => (Array.isArray(v) ? (v as T[]) : []);
-const str = (v: unknown): string => (typeof v === 'string' ? v : '');
-
-function read(dir: string, folder: string): Found | null {
-  const file = join(dir, 'manifest.json');
-  if (!existsSync(file)) return null;
-  let m: Json;
-  try {
-    m = JSON.parse(readFileSync(file, 'utf8')) as Json;
-  } catch {
-    return null;
-  }
-  const qa = m['qa'] as { pass?: boolean; findings?: unknown[] } | undefined;
-  const real = m['real'] as MediaEntry['real'] | undefined;
-  const pivots = arr<{ motion?: string }>(m['pivots']);
-  return {
-    dir,
-    hero: existsSync(join(dir, 'hero.png')),
-    sheet: existsSync(join(dir, 'sheet.png')),
-    entry: {
-      name: str(m['name']),
-      folder,
-      kind: str(m['kind']),
-      description: str(m['description']),
-      tags: arr<string>(m['tags']),
-      triangles: arr<number>(m['triangles']),
-      drawCalls: arr<number>(m['drawCalls']),
-      pivots: pivots.length,
-      moving: pivots.filter((p) => p.motion).length,
-      emitters: arr(m['emitters']),
-      sockets: arr(m['sockets']),
-      surfaces: arr<string>(m['surfaces']),
-      real: real ?? null,
-      measures: arr(m['measures']),
-      sources: arr<string>(m['sources']),
-      qa: qa ? { pass: qa.pass === true, findings: arr(qa.findings).length } : null,
-    },
-  };
-}
-
-function scan(recipes: string): Found[] {
-  const out: Found[] = [];
-  const dirs = (p: string): string[] =>
-    existsSync(p)
-      ? readdirSync(p, { withFileTypes: true })
-          .filter((d) => d.isDirectory())
-          .map((d) => d.name)
-          .sort()
-      : [];
-  for (const folder of dirs(recipes)) {
-    for (const asset of dirs(join(recipes, folder, 'out'))) {
-      const found = read(join(recipes, folder, 'out', asset), folder);
-      if (found?.entry.name) out.push(found);
-    }
-  }
-  return out;
-}
 
 /** A file's bytes, or null if it vanished since the scan (`bun run shots` rewrites out/ dirs). */
 function tryRead(file: string): Uint8Array | null {
@@ -130,8 +66,19 @@ export function mediaPlugin(repoRoot: string): Plugin {
         hero,
         card: encode(f, 'card') ? at('card.webp') : hero,
         sheet: f.sheet ? at('sheet.png') : null,
+        facts: at('facts.json'),
       };
     });
+
+  const factsOf = (f: Found): MediaFacts => {
+    const at = (file: string): string => `${base}media/${f.entry.name}/${file}`;
+    return {
+      ...f.facts,
+      sounds: f.facts.sounds.map(({ file, ...s }) => ({ ...s, url: file ? at(file) : null })),
+      images: Object.fromEntries(f.facts.images.map((i) => [i, at(`${i}.png`)])),
+    };
+  };
+  const json = (f: Found): Uint8Array => new TextEncoder().encode(JSON.stringify(factsOf(f)));
 
   return {
     name: 'ts23d-media',
@@ -149,12 +96,19 @@ export function mediaPlugin(repoRoot: string): Plugin {
     configureServer(server) {
       found = scan(recipes);
       server.middlewares.use((req, res, next) => {
-        const m = /\/media\/([\w-]+)\/(hero|sheet)\.png$/.exec(req.url ?? '');
+        const m = /\/media\/([\w-]+)\/([\w-]+\.(png|wav|json))$/.exec(req.url ?? '');
         const f = m && found.find((x) => x.entry.name === m[1]);
         if (!m || !f) return next();
-        res.setHeader('content-type', 'image/png');
-        const bytes = tryRead(join(f.dir, `${m[2]}.png`));
-        if (!bytes) return next();
+        const file = m[2] ?? '';
+        const type = { png: 'image/png', wav: 'audio/wav', json: 'application/json' }[m[3] ?? ''];
+        const bytes =
+          file === 'facts.json'
+            ? json(f)
+            : f.files.includes(file)
+              ? tryRead(join(f.dir, file))
+              : null;
+        if (!bytes || !type) return next();
+        res.setHeader('content-type', type);
         res.end(bytes);
       });
     },
@@ -169,7 +123,10 @@ export function mediaPlugin(repoRoot: string): Plugin {
         else if (f.hero) emit('hero.png', tryRead(join(f.dir, 'hero.png')));
         const card = encode(f, 'card');
         if (card) emit('card.webp', card);
-        if (f.sheet) emit('sheet.png', tryRead(join(f.dir, 'sheet.png')));
+        emit('facts.json', json(f));
+        // Contact sheet, blueprint, RTS icon/portrait/shot, sound clips: published as they are.
+        for (const file of f.files)
+          if (file !== 'hero.png' && file !== 'thumb.png') emit(file, tryRead(join(f.dir, file)));
       }
     },
   };

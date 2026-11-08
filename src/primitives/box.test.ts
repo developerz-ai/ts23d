@@ -48,8 +48,8 @@ describe('box bevel', () => {
   });
 
   it('bevel 0 is byte-identical to the unbevelled box (pinned before bevel landed)', () => {
-    // Re-pinned when the trim sheet moved to 2048² (strip rows shifted the UVs; geometry unchanged).
-    const before = 'd23c46e6431f313c69855ff3c47d7270c595eb0e218d39e1c39ee4023284d4e4';
+    // Re-pinned for trim sheet v3 (1/64 rows, 4 m U span: UVs moved; geometry unchanged).
+    const before = '3938de405854b18bc473d85c9f473a70542bdafd8d92bdd652e973494276063d';
     expect(sha(box({ ...brick, omit: ['bottom'] }))).toBe(before);
     expect(sha(box({ ...brick, omit: ['bottom'], bevel: 0 }))).toBe(before);
   });

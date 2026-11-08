@@ -1,0 +1,109 @@
+{
+  "asset": "material_swatches",
+  "reviewer": "agent",
+  "overall": 7.9,
+  "scores": {
+    "silhouette": {
+      "score": 8,
+      "reason": "A stepped test-card stand: twelve rows of strip panels rising toward the back, the decal and foliage cells on the top row. Every panel is visible from the 3/4 view.",
+      "fixes": []
+    },
+    "proportions": {
+      "score": 9,
+      "reason": "Each of the 42 strips is one true-scale repeat wide (stripRect(id).metres: 4 / 16 / 32 m) and its design height tall, so texel density can be judged directly against the 1.8 m figure.",
+      "fixes": []
+    },
+    "materials": {
+      "score": 8,
+      "reason": "All 42 strips (classic, library, nature) render with their own albedo/normal/ORM: metals reflect, wood shows grain, cobbles and cliff show relief, glass is transparent, foliage cells cut out.",
+      "fixes": [
+        "add a sphere per strip at LOD0 for curvature/roughness reading (docs/media/materials.png does this)"
+      ]
+    },
+    "detail": {
+      "score": 7,
+      "reason": "Labels in block letters on every plinth face; at hero distance the labels are too small to read for the long nature rows.",
+      "fixes": [
+        "scale label pixel size with the row's panel width"
+      ]
+    },
+    "wear": {
+      "score": 8,
+      "reason": "A test card is deliberately clean: weathering would contaminate the strip read. Weathering variants are shown by weather_demo.",
+      "fixes": []
+    },
+    "lod": {
+      "score": 7,
+      "reason": "LOD1/LOD2 keep every panel (778 triangles) but drop labels.",
+      "fixes": []
+    },
+    "technical": {
+      "score": 8,
+      "reason": "QA PASS, 27 288 / 778 / 778 (labels are the LOD0 cost), three draws (opaque, glass, cutout).",
+      "fixes": [
+        "merge label pixel runs per word to cut LOD0 triangles"
+      ]
+    }
+  },
+  "renders": {
+    "hero.png": "992f29b4b5983e14ab6f342d42138c17feff159a4146b5d09dc34a633a0bea98",
+    "sheet.png": "4cef5f87119c9a8e366340b8906db1dd9d5582ad9ee321e01fc6174f303fba49",
+    "raking.png": "b0ad06407e6698dd7d8e2b2bad8d90f6ee218d684514a74ca7f5c58454505def",
+    "raking_detail.png": "02eed6bf66e3e566e2b3cf1148484f730a1718b6864c2c19b1bf8ac568c53ee2",
+    "lods.png": "da7c27f1caf6c404ac3d3ba30cc2a27a1bd8881eb51d8a04d27c7d6222e772c3",
+    "silhouette.png": "e9ab1738e712b10663a6fb4c96dbcd0bcbee2666bd04f5fb0bfaa2a24a257263",
+    "value.png": "3d0f63c6d81fa00ff0039f701844643741ae8a1dcc17f2c45a6aebc236155fe0",
+    "detail.png": "23c4b3c851ff8ab5d028b31e1d94babc174ab6e3261eb01550aa1e6951d3fee6"
+  },
+  "metrics": {
+    "silhouette": [
+      {
+        "view": "front",
+        "iou": 1
+      },
+      {
+        "view": "side",
+        "iou": 0.999
+      },
+      {
+        "view": "3/4",
+        "iou": 1
+      }
+    ],
+    "focal": {
+      "peakPart": "plinth_cells",
+      "peak": [
+        282,
+        67
+      ],
+      "focalShare": 0,
+      "focalArea": 0,
+      "top": [
+        {
+          "part": "plinth_0",
+          "share": 0.24
+        },
+        {
+          "part": "plinth_cells",
+          "share": 0.155
+        },
+        {
+          "part": "strip_soil",
+          "share": 0.091
+        }
+      ],
+      "declared": []
+    },
+    "rest": {
+      "share": 0.624,
+      "spread": 0.607,
+      "min": 0.25
+    },
+    "shape": {
+      "acuteShare": 0.051,
+      "straightShare": 0.805,
+      "taper": 0.372,
+      "shape": "stable"
+    }
+  }
+}

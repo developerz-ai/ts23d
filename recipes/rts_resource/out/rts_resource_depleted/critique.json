@@ -1,0 +1,105 @@
+{
+  "asset": "rts_resource_depleted",
+  "reviewer": "agent",
+  "overall": 7.0,
+  "scores": {
+    "silhouette": {
+      "score": 7,
+      "reason": "Scooped quarry and sheared stubs: reads harvested; team stake keeps ownership (14.5%).",
+      "fixes": []
+    },
+    "proportions": {
+      "score": 7,
+      "reason": "4.9 x 4.4 x 3.6 m: one crew's mining site beside 1.8 m workers.",
+      "fixes": []
+    },
+    "materials": {
+      "score": 6,
+      "reason": "SDF basalt on the concrete strip (jointed strips show contour lines on marching-cubes UVs), bedding bands on steep faces, salt crust on up-faces, crystals ramped deep amber -> pale gold.",
+      "fixes": [
+        "texture-space rock strip that survives SDF UVs"
+      ]
+    },
+    "detail": {
+      "score": 7,
+      "reason": "Quarry scoop, sheared crystal stubs, spoil dust emitter.",
+      "fixes": []
+    },
+    "wear": {
+      "score": 6,
+      "reason": "Same measured salt dust and mud as the full node; the scoop is the mining scar.",
+      "fixes": []
+    },
+    "lod": {
+      "score": 8,
+      "reason": "LOD2 486 tris keeps the outcrop and crystals; team share 12.9%.",
+      "fixes": []
+    },
+    "technical": {
+      "score": 8,
+      "reason": "QA PASS on every gate incl. connections and weather (exact coverage). Deterministic, one trim material + team slot, 8 liveries; `bun test recipes/rts_faction` 18/18. Pennant flies from a hem sleeve round the pole (face contact).",
+      "fixes": []
+    }
+  },
+  "renders": {
+    "hero.png": "80dabd0af2c1184b3c5abf9e38e319ffcdaf767ada36177d7f74f9aa3ff316eb",
+    "sheet.png": "ea1fbfd329b87b16e35c8da378819ae8ccec728e57bcd1b80d08a4362eedd625",
+    "raking.png": "ee58ea4dd73fc65dc0900b96777d9d0b9c9a1b49c674a6583590a904e23089ad",
+    "raking_detail.png": "b2254bd9a9f5cda924acf183889d4524aafcd22c44a65dbd9ab31953056b3c3b",
+    "lods.png": "2dbbdbd0a566c794f04cf641b6659accc79a3a16abddd594fbe3239b2da2d2d3",
+    "silhouette.png": "5bcfd526b009880348386018f3e976ed3ed4a84e3b0267293d9dbf2614978b42",
+    "value.png": "000fdc25186e148ab809658cbe4996d9d2340c76413afa79d3c2498cf39e4ee2",
+    "detail.png": "eab5ba17829e910eef43498e8304f6dcaed1ca6177d5f6eb13c52be9af8f3631"
+  },
+  "metrics": {
+    "silhouette": [
+      {
+        "view": "front",
+        "iou": 0.844
+      },
+      {
+        "view": "side",
+        "iou": 0.857
+      },
+      {
+        "view": "3/4",
+        "iou": 0.832
+      }
+    ],
+    "focal": {
+      "peakPart": "rock",
+      "peak": [
+        370,
+        200
+      ],
+      "focalShare": 0,
+      "focalArea": 0,
+      "top": [
+        {
+          "part": "rock",
+          "share": 0.871
+        },
+        {
+          "part": "claim_pole",
+          "share": 0.102
+        },
+        {
+          "part": "claim_pennant",
+          "share": 0.027
+        }
+      ],
+      "declared": []
+    },
+    "rest": {
+      "share": 0.514,
+      "spread": 0.628,
+      "min": 0.25
+    },
+    "shape": {
+      "acuteShare": 0.464,
+      "straightShare": 0.602,
+      "taper": 0.499,
+      "shape": "aggressive"
+    }
+  }
+}

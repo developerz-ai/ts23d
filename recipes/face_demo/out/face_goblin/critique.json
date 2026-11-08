@@ -1,0 +1,130 @@
+{
+  "asset": "face_goblin",
+  "reviewer": "agent",
+  "overall": 6,
+  "scores": {
+    "silhouette": {
+      "score": 7,
+      "reason": "Big vault, long nose, receding chin and 40°-swung pointed ears read as a goblin from front and side; the cleanest silhouette of the five.",
+      "fixes": [
+        "hook the nose tip more (hook 0.08 H)",
+        "notches on the ear rims"
+      ]
+    },
+    "proportions": {
+      "score": 7,
+      "reason": "Head ×0.84, vault ×1.16, nose ×2.6 projection hold; eye spacing 57.9 vs 59.0 mm. The eyes are human-sized; goblins usually read better with larger eyes.",
+      "fixes": [
+        "eyeball ×1.3 with a matching socket landmark scale"
+      ]
+    },
+    "materials": {
+      "score": 4,
+      "reason": "Vertex colour on the plain strip: skin zones (flush, lips, cool sockets, curvature cavity, mottle) separate by hue but not by roughness or SSS; hair is the same material as skin, so it reads as sculpted clay; eyes are the only glossy part (cornea clearcoat).",
+      "fixes": [
+        "a skin strip with subsurface-like roughness/sheen and a hair strip with anisotropic sheen (material-artist)",
+        "darker hair roots and per-lock value variation along the lock (root → tip colour is set but too subtle)"
+      ]
+    },
+    "detail": {
+      "score": 5,
+      "reason": "Primary and secondary forms come from a real anatomical base (eyelids, nasolabial area, lips, ear helix/antihelix/concha, clavicles, sternocleidomastoid) and read cleanly under the raking light, but there is no tertiary detail: no pores, wrinkles, lid creases or brow hairs (brows are painted bands), and the SDF hair locks are uniform grooves.",
+      "fixes": [
+        "LOD0 normal-scale wrinkle/pore displacement on the subdivided base driven by age",
+        "hair: varied lock widths and a parting instead of evenly spaced grooves; hair cards (planned)"
+      ]
+    },
+    "wear": {
+      "score": 3,
+      "reason": "Pristine: seeded asymmetry and age/weight knobs are the only story; no scars, stubble, blemishes, sun-darkened skin or dirt.",
+      "fixes": [
+        "seeded scars/blemish decals in vertex colour (orc, dwarf)",
+        "stubble shadow on the human/dwarf jaw",
+        "age-driven darkening under the eyes"
+      ]
+    },
+    "lod": {
+      "score": 5,
+      "reason": "LOD2 loses most of each ear (thin sheets under the 1.4 cm cell) and the nose softens: the silhouette changes at distance.",
+      "fixes": [
+        "authored LOD2 topology, or keep the ear shells from LOD1"
+      ]
+    },
+    "technical": {
+      "score": 8,
+      "reason": "QA PASS at every LOD; 49k/13k/5.9k tris (no hair) — triangles go to the face; 2 draws.",
+      "fixes": [
+        "drop the teeth at LOD1 (barely visible)"
+      ]
+    }
+  },
+  "renders": {
+    "hero.png": "d18db0d865a84bd4ed01450e1059ad15001694192c422a1580c7fa0f7e9f155b",
+    "sheet.png": "cc270753ce8f7cb5548a5352c8e6e9e48852cc31ec9dbf783c0827449a0a9aa5",
+    "raking.png": "5e492fdc136dbcb49257f31f6cc85152dca6cabd49d4e1b9b36d538d83a13162",
+    "raking_detail.png": "d0b19e27d18f5d139101843fa8c672372fa3f32bfcef94c6958b1b2b1e622cf1",
+    "lods.png": "e3500fca249073ac09e71138da132a6ecd9264bae4d8bc39a13f3ffd46827842",
+    "silhouette.png": "b9ef177ea01c182583607d5765c0896af8a3c75b5bf44bc2e66cbe1ab58d4074",
+    "value.png": "5d1c31ff2a69dfaa418d5dcc0250ca174f6771d340b86c65be8221f5046fe7cb",
+    "detail.png": "7a3a6ce0965ca33d53c19bfbfb317e4cf043ad6c3b1a7a128bba953a9a81d382"
+  },
+  "metrics": {
+    "silhouette": [
+      {
+        "view": "front",
+        "iou": 0.972
+      },
+      {
+        "view": "side",
+        "iou": 0.969
+      },
+      {
+        "view": "3/4",
+        "iou": 0.962
+      }
+    ],
+    "focal": {
+      "peakPart": "plinth",
+      "peak": [
+        396,
+        360
+      ],
+      "focalShare": 0.668,
+      "focalArea": 0.867,
+      "top": [
+        {
+          "part": "skin",
+          "share": 0.668
+        },
+        {
+          "part": "plinth",
+          "share": 0.332
+        }
+      ],
+      "declared": [
+        "skin"
+      ]
+    },
+    "rest": {
+      "share": 0.74,
+      "spread": 0.533,
+      "min": 0.25
+    },
+    "grounded": {
+      "rise": 0.328,
+      "bands": [
+        0.307,
+        0.556,
+        0.583,
+        0.505,
+        0.661
+      ]
+    },
+    "shape": {
+      "acuteShare": 0.217,
+      "straightShare": 0.456,
+      "taper": 0.138,
+      "shape": "friendly"
+    }
+  }
+}

@@ -1,0 +1,131 @@
+{
+  "name": "rts_resource_depleted",
+  "kind": "prop",
+  "description": "Sunstone deposit, harvested: crystals sheared to stubs, the main cluster quarried out, spoil dust.",
+  "tags": [
+    "rts",
+    "saltmarch",
+    "resource",
+    "crystal",
+    "team-colour"
+  ],
+  "files": {
+    "lods": [],
+    "sheet": "recipes/rts_resource/out/rts_resource_depleted/sheet.png",
+    "thumb": "recipes/rts_resource/out/rts_resource_depleted/thumb.png"
+  },
+  "triangles": [
+    12594,
+    2982,
+    474
+  ],
+  "drawCalls": [
+    2,
+    2,
+    2
+  ],
+  "pivots": [
+    {
+      "name": "body",
+      "parent": null
+    },
+    {
+      "name": "body_paint_team",
+      "parent": null
+    }
+  ],
+  "emitters": [
+    {
+      "name": "glint",
+      "kind": "sparks",
+      "when": "always"
+    },
+    {
+      "name": "dust",
+      "kind": "dust",
+      "when": "always"
+    }
+  ],
+  "sockets": [
+    {
+      "name": "mine_point_0",
+      "kind": "interact",
+      "parent": null
+    },
+    {
+      "name": "mine_point_1",
+      "kind": "interact",
+      "parent": null
+    },
+    {
+      "name": "mine_point_2",
+      "kind": "interact",
+      "parent": null
+    },
+    {
+      "name": "mine_point_3",
+      "kind": "interact",
+      "parent": null
+    }
+  ],
+  "surfaces": [
+    "opaque"
+  ],
+  "paint": {
+    "team": "#b3261e"
+  },
+  "variants": {
+    "red": {
+      "team": "#b3261e"
+    },
+    "blue": {
+      "team": "#1f4fb8"
+    },
+    "green": {
+      "team": "#2f8f3a"
+    },
+    "yellow": {
+      "team": "#e2b521"
+    },
+    "purple": {
+      "team": "#6d2fa6"
+    },
+    "orange": {
+      "team": "#e0661a"
+    },
+    "teal": {
+      "team": "#139a92"
+    },
+    "white": {
+      "team": "#e8e8e2"
+    }
+  },
+  "real": {
+    "length": 4.93,
+    "width": 3.78,
+    "height": 2.8
+  },
+  "measures": [],
+  "sources": [
+    "recipes/rts_faction/README.md (original design brief)",
+    "docs/playbooks/nature/rocks.md"
+  ],
+  "weather": {
+    "mud": {
+      "target": 0.5,
+      "actual": 0.5,
+      "eligible": "ground-near",
+      "area": 12.9353
+    },
+    "dust": {
+      "target": 0.3,
+      "actual": 0.3,
+      "eligible": "up-facing",
+      "area": 12.2806
+    }
+  },
+  "qa": {
+    "pass": true,
+    "findings": []
+  }
+}

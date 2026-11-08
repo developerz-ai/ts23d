@@ -1,18 +1,35 @@
-// `t3d hero` and `t3d review`: beauty renders and the AI review pack, one folder per asset.
-//   <out>/<asset>/hero.png
+// `t3d hero`, `t3d review` and `t3d blueprint`: beauty renders, the AI review pack and the
+// measured blueprint, one folder per asset.
+//   <out>/<asset>/hero.png · blueprint.png
 //   <out>/<asset>/review/{hero,sheet,detail_1,detail_2,lods}.png review.md review.json
 
 import { mkdir } from 'node:fs/promises';
 import { dirname, join, relative, resolve } from 'node:path';
-import { type Asset, compile } from '../core/index.ts';
+import { type Asset, compile, Ts23dError } from '../core/index.ts';
 import type { PaintedSheet } from '../material/index.ts';
-import { beauty, type ReviewWarning, reviewPack } from '../render/index.ts';
+import { beauty, blueprint, type ReviewWarning, reviewPack } from '../render/index.ts';
 import type { Args } from './args.ts';
 
 export interface RenderResult {
   readonly name: string;
   readonly files: readonly string[];
   readonly warnings: readonly ReviewWarning[];
+}
+
+/** `--variant` applies to the assets that declare it; the others render their default paint. */
+export const variantOf = (asset: Asset, args: Args): string | undefined =>
+  args.variant !== undefined && asset.variants?.[args.variant] ? args.variant : undefined;
+
+/** A `--variant` no asset in the file declares is a typo: fail with the names that exist. */
+export function wantVariant(assets: readonly Asset[], args: Args, file: string): void {
+  if (args.variant === undefined || assets.some((a) => variantOf(a, args))) return;
+  const known = assets.flatMap((a) => Object.keys(a.variants ?? {}).map((v) => `${a.name}:${v}`));
+  throw new Ts23dError('T3D_RECIPE_INVALID', {
+    cause: `no asset in ${file} declares variant '${args.variant}'`,
+    fix: known.length
+      ? `pick one of: ${known.join(', ')}`
+      : 'declare it: defineAsset({ paint: { body: "#rrggbb" }, variants: { name: { body: "#rrggbb" } } })',
+  });
 }
 
 export async function heroOne(
@@ -22,8 +39,23 @@ export async function heroOne(
 ): Promise<RenderResult> {
   const dir = join(args.out, asset.name);
   await mkdir(dir, { recursive: true });
-  const path = join(dir, 'hero.png');
-  await Bun.write(path, beauty(compile(asset, { lod: 0 }), { ...args.render, sheet }));
+  const variant = variantOf(asset, args);
+  const path = join(dir, variant ? `hero_${variant}.png` : 'hero.png');
+  await Bun.write(
+    path,
+    beauty(compile(asset, { lod: 0, ...(variant ? { variant } : {}) }), { ...args.render, sheet }),
+  );
+  return { name: asset.name, files: [path], warnings: [] };
+}
+
+/** `t3d blueprint`: measured orthographic views, joints coloured by their QA verdict. */
+export async function blueprintOne(asset: Asset, args: Args): Promise<RenderResult> {
+  const dir = join(args.out, asset.name);
+  await mkdir(dir, { recursive: true });
+  const variant = variantOf(asset, args);
+  const lod0 = compile(asset, { lod: 0, ...(variant ? { variant } : {}) });
+  const path = join(dir, variant ? `blueprint_${variant}.png` : 'blueprint.png');
+  await Bun.write(path, blueprint(lod0));
   return { name: asset.name, files: [path], warnings: [] };
 }
 

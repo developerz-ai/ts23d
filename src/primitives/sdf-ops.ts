@@ -4,6 +4,7 @@
 // fields must not keep the `p` they are given (the mesher reuses it).
 
 import type { Vec3 } from '../core/index.ts';
+import { type SilhouetteOptions, visualHull } from './sdf-silhouette.ts';
 
 export type Field = (p: Vec3) => number;
 
@@ -137,6 +138,8 @@ export const sd = {
       const h = smoothWeight(-da, -db, k);
       return da + (db - da) * (1 - h) + k * h * (1 - h);
     },
+  /** Visual hull of SVG front/side/top drawings (sdf-silhouette.ts); `visualHull()` adds bounds. */
+  silhouette: (o: SilhouetteOptions): Field => visualHull(o).field,
   /** Push the surface out/in by `amount` metres × noise (∈ [−1, 1]). */
   displace:
     (f: Field, noise: Field, amount: number): Field =>

@@ -2,7 +2,8 @@
 // texel grid at true scale (the set's `metres`, snapped so a whole number of repeats spans the
 // strip's U length — it still tiles), V flipped so the image's top is world up. Albedo stays sRGB
 // colour (tint with NATURAL); the OpenGL normal's green is flipped to the sheet's +Y = −V; `arm`
-// fills occlusion / roughness / metalness, else the recipe's constants.
+// fills occlusion / roughness / metalness, else greyscale `roughness` / `occlusion` maps (ambientCG)
+// over the recipe's constants.
 
 import type { TextureFile, TextureSource } from '../texture-source.ts';
 import { textureBytes } from '../texture-source.ts';
@@ -84,5 +85,14 @@ export function paintImageStrip(c: Canvas, r: StripRecipe, t: TextureSource, whe
   } else {
     c.rough.fill(r.roughness);
     c.metal.fill(r.metalness ?? 0);
+    const { roughness, occlusion } = t.maps;
+    if (roughness)
+      resample(c, t, image(roughness, where), (i, p) => {
+        c.rough[i] = (p[0] ?? 204) / 255;
+      });
+    if (occlusion)
+      resample(c, t, image(occlusion, where), (i, p) => {
+        c.occl[i] = (p[0] ?? 255) / 255;
+      });
   }
 }

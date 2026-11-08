@@ -1,0 +1,105 @@
+{
+  "asset": "rts_barracks_scaffold_damaged",
+  "reviewer": "agent",
+  "overall": 7.1,
+  "scores": {
+    "silhouette": {
+      "score": 7,
+      "reason": "Scaffolded walls with knocked holes.",
+      "fixes": []
+    },
+    "proportions": {
+      "score": 7,
+      "reason": "10 x 14 m hall, 5.1 m eaves, 3.5 m gate (measures gate) = 1.8 x a Warden; storey and door scale per the house playbook.",
+      "fixes": []
+    },
+    "materials": {
+      "score": 7,
+      "reason": "Dressed-stone blocks (concrete grain at LOD0, the stone strip's coursing at LOD1/2), coursed drum towers (chamfered bed joints in the profile), lime-plaster gables in an oak frame, oak porch posts and rafters, tarred oak gate, team slate roof lapped like real sheets, iron fittings, brass.",
+      "fixes": [
+        "window reveals / sills as their own stone"
+      ]
+    },
+    "detail": {
+      "score": 7,
+      "reason": "As scaffold plus holes, debris heap, scorch, smoke and fire.",
+      "fixes": []
+    },
+    "wear": {
+      "score": 6,
+      "reason": "weather(): chipped arrises 10%, moss + damp on 35% of the 1.1 m wall foot, salt dust on ledges, grime streaks running 1.6 m down from eaves drips and window sills (gravity-traced); timber dusty/muddy. Scorch zones and rubble dust.",
+      "fixes": []
+    },
+    "lod": {
+      "score": 8,
+      "reason": "LOD2 one box per bay from the same cell plan, so stages and damage agree at every LOD; <= 900 tris.",
+      "fixes": []
+    },
+    "technical": {
+      "score": 8,
+      "reason": "QA PASS on every gate incl. connections and weather (exact coverage). Deterministic, one trim material + team slot, 8 liveries; `bun test recipes/rts_faction` 18/18. Banners hang from a sewn sleeve on a bracketed crossbar; rubble stacks block-on-block.",
+      "fixes": []
+    }
+  },
+  "renders": {
+    "hero.png": "7b5f3460e05ddf59c824679d04fff5a7744684d1c8a51a4d763b28b93ad7702c",
+    "sheet.png": "0d78a88c8a0e1df63c194add50bdb3bb203ed81166e16ef172744099d8c0dd9a",
+    "raking.png": "61cd9a4f1095119cfb28fb6a4b8afd9783338f971a2ace64c1ea7dacdc75f904",
+    "raking_detail.png": "bb5c1d992f38339ede44185843d7abe54a3a5c9e426cc9ee1c73a82848bc9f96",
+    "lods.png": "d82ff1ef72682a4e53dcebe3da411955e7312b21c04f1e1e8a111e1b3a668928",
+    "silhouette.png": "bd06a79ff3e76d03d02e94f50dd30ab555627b1129bc6624b0557978e379bafe",
+    "value.png": "d5840e42a9c6ff9a8bcb085c2895650c40cd665e234afcd8501d0e84d1717fed",
+    "detail.png": "315951652c25fa74c922006e6313c88624c7594e440612e67a131b3f5cd5d871"
+  },
+  "metrics": {
+    "silhouette": [
+      {
+        "view": "front",
+        "iou": 0.798
+      },
+      {
+        "view": "side",
+        "iou": 0.895
+      },
+      {
+        "view": "3/4",
+        "iou": 0.965
+      }
+    ],
+    "focal": {
+      "peakPart": "tower_r",
+      "peak": [
+        175,
+        133
+      ],
+      "focalShare": 0,
+      "focalArea": 0,
+      "top": [
+        {
+          "part": "scaffold",
+          "share": 0.273
+        },
+        {
+          "part": "banner_r",
+          "share": 0.146
+        },
+        {
+          "part": "tower_r",
+          "share": 0.114
+        }
+      ],
+      "declared": []
+    },
+    "rest": {
+      "share": 0.406,
+      "spread": 0.786,
+      "min": 0.25
+    },
+    "shape": {
+      "acuteShare": 0.494,
+      "straightShare": 0.775,
+      "taper": 0.701,
+      "shape": "aggressive"
+    }
+  }
+}

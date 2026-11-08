@@ -125,7 +125,7 @@ describe('sweep', () => {
     const top = boundsOf(a);
     expect(top.max[0]).toBeCloseTo(1, 5);
     const lastU = a.uvs[(a.uvs.length / 2 - 1) * 2] ?? 0;
-    expect(lastU).toBeCloseTo(1, 5); // 2 m of length over a 2 m strip
+    expect(lastU).toBeCloseTo(0.5, 5); // 2 m of length over a 4 m strip (trim sheet v3 span)
     expect(Bun.hash(a.positions)).toBe(Bun.hash(sweep(o).positions));
   });
 

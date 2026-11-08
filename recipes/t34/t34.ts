@@ -13,7 +13,6 @@ import {
   cylinder,
   defineFamily,
   frame,
-  grime,
   hex,
   type Lod,
   lathe,
@@ -32,6 +31,15 @@ import {
   type Vec2,
   type Vec3,
 } from '@developerz.ai/ts23d';
+import {
+  onGround,
+  reproject,
+  restrip,
+  type StripRule,
+  tessellate,
+  type WeatheringOptions,
+  weatherer,
+} from '../_lib/finish/finish.ts';
 
 const green = hex('#4e5a2c');
 const greenDark = hex('#3a4422');
@@ -154,38 +162,44 @@ function trackLink(pitch: number, horn: boolean): Mesh {
     parts.push(
       box({ size: [pitch * 0.5, 0.06, 0.13], at: [0, 0, -LINK_T * 0.3 - 0.13], color: steel }),
     );
+  // The hinge pin at the leading edge, reaching into the next link: links are a chain, not a
+  // row of loose plates (each pin sits ~8 mm into both links on a straight run).
+  parts.push(
+    cylinder({
+      radius: 0.018,
+      length: TRACK_W,
+      segments: 6,
+      axis: 'y',
+      at: [pitch / 2, 0, -LINK_T * 0.3],
+      color: steel,
+    }),
+  );
   return merge(parts);
 }
 
 function trackMesh(lod: Lod, line: readonly Vec2[], y: number): Mesh {
-  if (lod === 2) {
-    const ring = resample(line, 22).map(
-      (s): Vec2 => [
-        s.p[0] + (Math.sin(s.pitch) * LINK_T) / 2,
-        s.p[1] + (Math.cos(s.pitch) * LINK_T) / 2,
-      ],
-    );
-    return translate(prism({ profile: ring, depth: TRACK_W, plane: 'xz', color: trackSteel }), [
-      0,
-      y,
-      0,
-    ]);
-  }
   const perimeter = resample(line, 1)[0]?.len ?? 1;
-  const stations = resample(line, Math.round(perimeter / (lod === 0 ? 0.172 : 0.25)));
+  // LOD2 keeps an open belt of 32 slabs (not a solid prism) so the wheels show through it.
+  const stations = resample(
+    line,
+    lod === 2 ? 32 : Math.round(perimeter / (lod === 0 ? 0.172 : 0.25)),
+  );
   const len = stations[0]?.len ?? 0.172;
   const band = box({
     size: [len * 1.04, TRACK_W, LINK_T],
     at: [0, 0, -LINK_T / 2],
     color: trackSteel,
+    ...(lod === 2 ? { omit: ['left', 'right'] as const } : {}),
   });
   const links = [trackLink(len, true), trackLink(len, false)];
-  return merge(
-    stations.map((s, i) =>
-      place(lod === 0 ? (links[i % 2] as Mesh) : band, {
-        at: [s.p[0], y, s.p[1]],
-        pitch: s.pitch,
-      }),
+  return onGround(
+    merge(
+      stations.map((s, i) =>
+        place(lod === 0 ? (links[i % 2] as Mesh) : band, {
+          at: [s.p[0], y, s.p[1]],
+          pitch: s.pitch,
+        }),
+      ),
     ),
   );
 }
@@ -327,14 +341,6 @@ function cable(points: readonly Vec3[], d: number, color: Vec3): Mesh {
       .map((to, i) => beam({ from: points[i] as Vec3, to, width: d, segments: 5, color })),
   );
 }
-
-/** Grime in world space for a part authored around its own pivot. */
-const muddy = (m: Mesh, at: Vec3 = [0, 0, 0]): Mesh =>
-  translate(grime(translate(m, at), { ground: 1.0, groundStrength: 0.5 }), [
-    -at[0],
-    -at[1],
-    -at[2],
-  ]);
 
 /** Place a detail flat on the glacis at height z (local Z → plate normal, local X → downslope). */
 const onGlacis = (m: Mesh, y: number, z: number): Mesh =>
@@ -518,7 +524,14 @@ const t34Family = defineFamily<Params>({
       },
     ],
   },
-  budget: { triangles: [60000, 14000, 800] },
+  // LOD2 keeps the five Christie wheels per side inside an open belt (no solid slab).
+  budget: { triangles: [60000, 16000, 2000] },
+  gaps: [
+    {
+      parts: ['track_*'],
+      why: 'the track belt runs outboard of the hull and under the fittings with running clearance',
+    },
+  ],
   checks: [
     clear('track_*', 'hull'),
     clear('wheel_*', 'hull'),
@@ -535,6 +548,31 @@ const t34Family = defineFamily<Params>({
     const segs = ctx.pick([20, 14, 8]);
     // Factory paint varies a little from tank to tank.
     const paint = ctx.rng.fork('paint').jitter(green, 0.04);
+    // 4BO green as painted steel (vertex colour = paint, chips show steel), rubber tyres, rusted
+    // manganese track, cast/forged steel fittings, rusted exhausts.
+    const rules: readonly StripRule[] = [
+      { from: paint, strip: 'steel_painted' },
+      { from: greenDark, strip: 'steel_painted' },
+      { from: rubber, strip: 'rubber', color: hex('#d8d8d8') },
+      { from: trackSteel, strip: 'iron_rust', color: hex('#b8aea4') },
+      { from: rust, strip: 'iron_rust', color: hex('#c09a80') },
+      { from: steel, strip: 'iron_cast', color: hex('#c8c4be') },
+    ];
+    const weather = weatherer(ctx.rng.fork('weather'));
+    const soot = [1, -1].map((s) => ({
+      at: [-3.05, s * 0.55, 1.05] as Vec3,
+      radius: 0.6,
+      strength: 0.85,
+    }));
+    /** Materials at true scale, then dust on top plates, ragged mud from the ground, soot. */
+    const finish = (m: Mesh, at: Vec3 = [0, 0, 0], w: WeatheringOptions = {}): Mesh =>
+      weather(reproject(restrip(tessellate(m, ctx.pick([0.45, 0.8, 1.6])), rules)), {
+        at,
+        dust: 0.4,
+        mud: 0.85,
+        mudStrength: 0.85,
+        ...w,
+      });
     const wheels: Circle[] = WHEELS_X.map((x) => ({ x, z: WHEEL_Z, r: WHEEL_R }));
     const line = beltLine(wheels, [IDLER, SPROCKET], 0.06);
 
@@ -544,7 +582,10 @@ const t34Family = defineFamily<Params>({
       const s = side === 'l' ? 1 : -1;
       const y = s * TRACK_Y;
       const track = `track_${side}`;
-      ctx.part(track, muddy(trackMesh(lod, line, y)));
+      ctx.part(
+        track,
+        weather(restrip(trackMesh(lod, line, y), rules), { mud: 1.2, mudStrength: 0.8 }),
+      );
       // Idler crank and final-drive housing: what holds idler and sprocket to the hull side.
       stubs.push(
         cylinder({
@@ -564,34 +605,39 @@ const t34Family = defineFamily<Params>({
           color: paint,
         }),
       );
-      if (lod === 2) continue;
       const flip = (m: Mesh): Mesh => (s > 0 ? m : place(m, { yaw: Math.PI }));
-      const wheel = christie(lod, WHEEL_R, 8, paint);
+      /** LOD2: an 8-sided disc per wheel (32 triangles) instead of nothing. */
+      const far = (r: number): Mesh =>
+        cylinder({
+          radius: r,
+          length: 0.45,
+          segments: 8,
+          axis: 'y',
+          at: [0, -0.055, 0],
+          color: paint,
+        });
+      const gear = (m: Mesh, at: Vec3): Mesh => finish(m, at, { mud: 0.95 });
+      const spin = (rps: number) => ({
+        motion: { kind: 'spin', axis: [0, 1, 0], rps } as const,
+        clearOf: [track],
+      });
+      const wheel = lod === 2 ? far(WHEEL_R) : christie(lod, WHEEL_R, 8, paint);
       WHEELS_X.forEach((x, i) => {
-        ctx.part(`wheel_${side}_${i}`, muddy(flip(wheel), [x, y, WHEEL_Z]), {
+        ctx.part(`wheel_${side}_${i}`, gear(flip(wheel), [x, y, WHEEL_Z]), {
           at: [x, y, WHEEL_Z],
-          motion: { kind: 'spin', axis: [0, 1, 0], rps: 0.75 },
-          clearOf: [track],
+          ...spin(0.75),
         });
       });
-      ctx.part(
-        `idler_${side}`,
-        muddy(flip(christie(lod, IDLER.r, 6, paint)), [IDLER.x, y, IDLER.z]),
-        {
-          at: [IDLER.x, y, IDLER.z],
-          motion: { kind: 'spin', axis: [0, 1, 0], rps: 1.0 },
-          clearOf: [track],
-        },
-      );
-      ctx.part(
-        `sprocket_${side}`,
-        muddy(flip(sprocket(lod, SPROCKET.r, paint)), [SPROCKET.x, y, SPROCKET.z]),
-        {
-          at: [SPROCKET.x, y, SPROCKET.z],
-          motion: { kind: 'spin', axis: [0, 1, 0], rps: 1.0 },
-          clearOf: [track],
-        },
-      );
+      const idler = lod === 2 ? far(IDLER.r) : christie(lod, IDLER.r, 6, paint);
+      ctx.part(`idler_${side}`, gear(flip(idler), [IDLER.x, y, IDLER.z]), {
+        at: [IDLER.x, y, IDLER.z],
+        ...spin(1.0),
+      });
+      const drive = lod === 2 ? far(SPROCKET.r) : sprocket(lod, SPROCKET.r, paint);
+      ctx.part(`sprocket_${side}`, gear(flip(drive), [SPROCKET.x, y, SPROCKET.z]), {
+        at: [SPROCKET.x, y, SPROCKET.z],
+        ...spin(1.0),
+      });
       ctx.emitter(`track_dust_${side}`, {
         kind: 'dust',
         at: [SPROCKET.x - 0.4, y, 0.15],
@@ -619,7 +665,7 @@ const t34Family = defineFamily<Params>({
     const topX = glacisX(DECK);
     ctx.part(
       'hull',
-      muddy(
+      finish(
         merge([
           prism({ profile: tub, depth: 1.84, plane: 'xz', color: paint, strip: 'iron' }),
           taper(
@@ -639,19 +685,33 @@ const t34Family = defineFamily<Params>({
           ),
           ...stubs,
         ]),
+        [0, 0, 0],
+        { soot },
       ),
     );
 
     // ---- Hull dressing ----
     const detail: Mesh[] = [];
+    // Front mudguards: the inner edge tucks under the hull side (no slit to see through), and a
+    // 15 cm tab runs on under the pannier floor where it is bolted (a face, not a hinge line).
     for (const s of [1, -1])
       detail.push(
         planar({
           points: [
-            [lowX, s * 0.95, PANNIER_Z],
-            [lowX, s * 1.5, PANNIER_Z],
+            [lowX - 0.15, s * 0.9, PANNIER_Z - 0.002],
+            [lowX - 0.15, s * 1.5, PANNIER_Z - 0.002],
+            [lowX, s * 1.5, PANNIER_Z - 0.002],
+            [lowX, s * 0.9, PANNIER_Z - 0.002],
+          ],
+          color: paint,
+          doubleSided: true,
+        }),
+        planar({
+          points: [
+            [lowX, s * 0.9, PANNIER_Z - 0.002],
+            [lowX, s * 1.5, PANNIER_Z - 0.002],
             [3.0, s * 1.5, 0.93],
-            [3.0, s * 0.95, 0.93],
+            [3.0, s * 0.9, 0.93],
           ],
           color: paint,
           doubleSided: true,
@@ -701,7 +761,8 @@ const t34Family = defineFamily<Params>({
           ],
           segments: 10,
           axis: 'x',
-          at: [lowX - 0.05, 1.1, PANNIER_Z + 0.12],
+          // Headlight on the glacis: its back sunk 3 cm into the sloped plate.
+          at: [glacisX(PANNIER_Z + 0.12) - 0.03, 1.1, PANNIER_Z + 0.12],
           color: greenDark,
         }),
         // Engine deck: access hatch, rear-plate transmission hatch.
@@ -834,17 +895,7 @@ const t34Family = defineFamily<Params>({
               );
         }
     }
-    ctx.part(
-      'fittings',
-      grime(merge(detail), {
-        ground: 1.0,
-        groundStrength: 0.5,
-        zones: [
-          { at: [-3.0, 0.55, 1.05], radius: 0.5, strength: 0.7 },
-          { at: [-3.0, -0.55, 1.05], radius: 0.5, strength: 0.7 },
-        ],
-      }),
-    );
+    ctx.part('fittings', finish(merge(detail), [0, 0, 0], { soot }));
     for (const [side, s] of [
       ['l', 1],
       ['r', -1],
@@ -926,11 +977,14 @@ const t34Family = defineFamily<Params>({
       for (const s of [1, -1])
         turret.push(
           cable(
+            // Feet run 1.5 cm into the sloped side plate they are welded to.
             [
+              [0.3, s * 0.92, 0.17],
               [0.3, s * 0.97, 0.18],
               [0.3, s * 1.0, 0.24],
               [-0.6, s * 0.85, 0.24],
               [-0.6, s * 0.82, 0.18],
+              [-0.6, s * 0.77, 0.17],
             ],
             0.025,
             steel,
@@ -955,7 +1009,7 @@ const t34Family = defineFamily<Params>({
         turret.push(plateDecal(text, a, c, up, [(len - width) / 2, 0.24], white));
       }
     }
-    ctx.part('turret_body', muddy(merge(turret), TURRET_AT), { parent: 'turret' });
+    ctx.part('turret_body', finish(merge(turret), TURRET_AT, { dust: 0.5 }), { parent: 'turret' });
 
     // ---- Gun: cast mantlet + cradle + F-34 barrel; elevation sways ----
     const gunZ = 0.32;
@@ -997,45 +1051,50 @@ const t34Family = defineFamily<Params>({
         box({ size: [0.04, 0.07, 0.07], at: [0.26, 0.2, -0.03], color: black }),
         box({ size: [0.04, 0.06, 0.06], at: [0.25, -0.17, 0.1], color: black }),
       );
-    ctx.part('gun_mantlet', merge(mParts), { parent: 'gun' });
+    const gunAt: Vec3 = [TURRET_AT[0] + front, TURRET_AT[1], TURRET_AT[2] + gunZ];
+    ctx.part('gun_mantlet', finish(merge(mParts), gunAt), { parent: 'gun' });
     const tip = 2.37;
     const breech = tip - 3.162;
     ctx.part(
       'gun_barrel',
-      lathe({
-        profile:
-          lod === 0
-            ? [
-                [0.1, breech],
-                [0.14, 0.2],
-                [0.2, 0.26],
-                [0.2, 0.29],
-                [0.14, 0.3],
-                [0.14, 0.62],
-                [0.11, 0.66],
-                [0.075, 0.7],
-                [0.068, 1.3],
-                [0.058, 2.28],
-                [0.064, 2.3],
-                [0.064, tip],
-                [0.04, tip],
-                [0.04, 2.3],
-              ]
-            : [
-                [0.1, breech],
-                [0.14, 0.2],
-                [0.2, 0.26],
-                [0.2, 0.29],
-                [0.14, 0.3],
-                [0.14, 0.62],
-                [0.075, 0.7],
-                [0.06, tip],
-              ],
-        segments: ctx.pick([14, 10, 6]),
-        axis: 'x',
-        color: paint,
-        caps: true,
-      }),
+      finish(
+        lathe({
+          profile:
+            lod === 0
+              ? [
+                  [0.1, breech],
+                  [0.14, 0.2],
+                  [0.2, 0.26],
+                  [0.2, 0.29],
+                  [0.14, 0.3],
+                  [0.14, 0.62],
+                  [0.11, 0.66],
+                  [0.075, 0.7],
+                  [0.068, 1.3],
+                  [0.058, 2.28],
+                  [0.064, 2.3],
+                  [0.064, tip],
+                  [0.04, tip],
+                  [0.04, 2.3],
+                ]
+              : [
+                  [0.1, breech],
+                  [0.14, 0.2],
+                  [0.2, 0.26],
+                  [0.2, 0.29],
+                  [0.14, 0.3],
+                  [0.14, 0.62],
+                  [0.075, 0.7],
+                  [0.06, tip],
+                ],
+          segments: ctx.pick([14, 10, 6]),
+          axis: 'x',
+          color: paint,
+          caps: true,
+        }),
+        gunAt,
+        { soot: [{ at: [gunAt[0] + tip, 0, gunAt[2]], radius: 0.45, strength: 0.7 }] },
+      ),
       { parent: 'gun' },
     );
   },

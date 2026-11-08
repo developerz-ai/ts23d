@@ -137,3 +137,39 @@ it('renders a hero and a review pack', async () => {
   for (const f of ['hero.png', 'lods.png', 'review.md', 'review.json'])
     expect(await Bun.file(join(out, 'r', 'crate', 'review', f)).exists()).toBe(true);
 });
+
+it('--variant: refuses a name no asset declares; renders a declared one beside the default', async () => {
+  const fixture = join(out, 'van.ts');
+  await Bun.write(
+    fixture,
+    `import { box, defineAsset } from '${join(import.meta.dir, '../index.ts')}';
+export const van = defineAsset({ name: 'van', kind: 'prop', budget: { triangles: [12, 12, 12] },
+  paint: { body: '#84402d' }, variants: { blue: { body: '#20407a' } },
+  build: (ctx) => ctx.part('shell', box({ size: [1, 1, 1], color: [0.2, 0.05, 0.02] }), { paint: 'body' }) });`,
+  );
+  const log = console.log;
+  const err = console.error;
+  console.log = () => {};
+  console.error = () => {};
+  const bad = await run(['shot', fixture, '--out', join(out, 'v'), '--variant', 'green']);
+  const good = await run(['shot', fixture, '--out', join(out, 'v'), '--variant', 'blue']);
+  console.log = log;
+  console.error = err;
+  expect(bad).toBe(1);
+  expect(good).toBe(0);
+  expect(await Bun.file(join(out, 'v', 'van', 'sheet_blue.png')).exists()).toBe(true);
+  const manifest = await Bun.file(join(out, 'v', 'van', 'manifest.json')).json();
+  expect(manifest.paint).toEqual({ body: '#84402d' });
+  expect(manifest.variants).toEqual({ blue: { body: '#20407a' } });
+});
+
+it('t3d blueprint writes <out>/<asset>/blueprint.png only', async () => {
+  const fixture = join(out, 'crate.ts');
+  const log = console.log;
+  console.log = () => {};
+  const code = await run(['blueprint', fixture, '--out', join(out, 'bp')]);
+  console.log = log;
+  expect(code).toBe(0);
+  expect(await Bun.file(join(out, 'bp', 'crate', 'blueprint.png')).exists()).toBe(true);
+  expect(await Bun.file(join(out, 'bp', 'crate', 'lod0.glb')).exists()).toBe(false);
+});

@@ -41,16 +41,22 @@ live canvas fades in over them. Text on a stage uses `--studio-ink`.
 - **Home** (`#` or any non-asset hash): the showcase (featured assets compiled live at LOD0,
   orbiting, one after another; the first asset's `hero` render is the poster until the compile
   lands), the gallery (category chips, render cards), how it works.
-- **Asset** (`#<asset_name>`): breadcrumb + prev/next, the viewer (Studio: orbit, turntable, Play
+- **Asset** (`#<asset_name>`): breadcrumb + prev/next, the viewer (heavy assets open at LOD1 with a
+  redline "Load full detail" button; a time-based bar shows elapsed vs estimated compile time;
+  Studio: orbit, turntable, Play
   runs the baked `run` clip; Scene: the asset on a diorama in a scenario picked from its named
   parts), LOD / wireframe / trim sheet, live stats, parts list (hover outlines the node), GLB per
   LOD; the info panel (category, QA verdict, triangles and draw calls per LOD, real vs model size,
-  dossier and recipe links); measures (spec vs model, Δ%, source), sources, contact sheet, recipe.
+  dossier and recipe links); sounds (play buttons, optional positional audio); measures (spec vs
+  model, Δ%, source), sources; quality (critique scores, art metrics, weathering coverage); renders
+  (contact sheet, blueprint, RTS icon/portrait/shot); recipe (file picker for multi-file recipes).
+- **Categories** (`src/categories.ts`): Creatures, Characters, Vehicles, Strategy kit, Architecture,
+  Nature & Terrain, Sci-fi, Materials & finishes, Parts, Sound, Tech demos, Props.
 
 ## Data
 
-- `media-plugin.ts` (Vite) reads `recipes/<folder>/out/<asset>/{manifest.json, hero.png,
-  sheet.png}` and exposes them as `virtual:ts23d-media`. The build copies them to
+- `media-plugin.ts` (Vite) reads `recipes/<folder>/out/<asset>/` (`media-scan.ts`) and exposes the
+  card data as `virtual:ts23d-media`; the per-asset rest is `media/<asset>/facts.json`. The build copies them to
   `media/<asset>/`, re-encoding heroes as WebP (1600×900 and an 800×450 card) when `cwebp` or
   ImageMagick is installed. The grid needs no compile at all.
 - `items.ts` merges that with the worker's catalog (recipes without renders get a live LOD2 card),
@@ -70,8 +76,9 @@ live canvas fades in over them. Text on a stage uses `--studio-ink`.
 Plain TS and DOM, one job per module. The site is an asset gallery; ts23d makes assets for other
 engines, so there is no game code here.
 
-- Pipeline: `compile.worker.ts` (recipes → GLB, manifest, trim sheet, off the main thread),
-  `recipe-modules.ts` (worker-side discovery; a recipe that fails to import is skipped),
+- Pipeline: `worker-pool.ts` (2–3 compile workers, cancellable), `compile.worker.ts` (recipes →
+  GLB, manifest, trim sheet, off the main thread), `recipe-modules.ts` (entry modules only; one
+  imported per build; a recipe that fails to import is skipped), `lod-policy.ts`,
   `compile-protocol.ts`, `compile.ts` (worker client, GLB → three.js), `recipes.ts` (page-side
   catalog, lazy recipe source).
 - Page: `main.ts` (routing), `items.ts`, `media-types.ts`, `showcase.ts`, `gallery.ts`,

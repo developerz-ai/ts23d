@@ -1,0 +1,316 @@
+{
+  "name": "roadster_v10_open",
+  "kind": "vehicle",
+  "description": "The V10 roadster with hood, doors and trunk lid open: engine bay and cockpit on show.",
+  "tags": [
+    "car",
+    "roadster",
+    "v10",
+    "sports-car",
+    "hero",
+    "original-design"
+  ],
+  "files": {
+    "lods": [],
+    "sheet": "recipes/roadster_v10/out/roadster_v10_open/sheet.png",
+    "thumb": "recipes/roadster_v10/out/roadster_v10_open/thumb.png"
+  },
+  "triangles": [
+    904846,
+    78258,
+    6336
+  ],
+  "drawCalls": [
+    30,
+    30,
+    25
+  ],
+  "pivots": [
+    {
+      "name": "body",
+      "parent": null
+    },
+    {
+      "name": "body_glass",
+      "parent": null
+    },
+    {
+      "name": "body_paint_body",
+      "parent": null
+    },
+    {
+      "name": "body_paint_stripe",
+      "parent": null
+    },
+    {
+      "name": "body_finish_brushed",
+      "parent": null
+    },
+    {
+      "name": "body_finish_carpet",
+      "parent": null
+    },
+    {
+      "name": "hood",
+      "parent": null,
+      "motion": "sway"
+    },
+    {
+      "name": "hood_paint_body",
+      "parent": "hood"
+    },
+    {
+      "name": "hood_paint_stripe",
+      "parent": "hood"
+    },
+    {
+      "name": "trunk_lid",
+      "parent": null,
+      "motion": "sway"
+    },
+    {
+      "name": "trunk_lid_paint_body",
+      "parent": "trunk_lid"
+    },
+    {
+      "name": "trunk_lid_paint_stripe",
+      "parent": "trunk_lid"
+    },
+    {
+      "name": "door_l",
+      "parent": null,
+      "motion": "sway"
+    },
+    {
+      "name": "door_l_paint_body",
+      "parent": "door_l"
+    },
+    {
+      "name": "door_r",
+      "parent": null,
+      "motion": "sway"
+    },
+    {
+      "name": "door_r_paint_body",
+      "parent": "door_r"
+    },
+    {
+      "name": "fuel_door",
+      "parent": null,
+      "motion": "sway"
+    },
+    {
+      "name": "fuel_door_paint_body",
+      "parent": "fuel_door"
+    },
+    {
+      "name": "steer_fl",
+      "parent": null,
+      "motion": "sway"
+    },
+    {
+      "name": "wheel_fl",
+      "parent": "steer_fl",
+      "motion": "spin"
+    },
+    {
+      "name": "wheel_fl_finish_brushed",
+      "parent": "wheel_fl"
+    },
+    {
+      "name": "steer_fr",
+      "parent": null,
+      "motion": "sway"
+    },
+    {
+      "name": "wheel_fr",
+      "parent": "steer_fr",
+      "motion": "spin"
+    },
+    {
+      "name": "wheel_fr_finish_brushed",
+      "parent": "wheel_fr"
+    },
+    {
+      "name": "wheel_rl",
+      "parent": null,
+      "motion": "spin"
+    },
+    {
+      "name": "wheel_rl_finish_brushed",
+      "parent": "wheel_rl"
+    },
+    {
+      "name": "wheel_rr",
+      "parent": null,
+      "motion": "spin"
+    },
+    {
+      "name": "wheel_rr_finish_brushed",
+      "parent": "wheel_rr"
+    }
+  ],
+  "emitters": [
+    {
+      "name": "exhaust_smoke_l",
+      "kind": "smoke",
+      "when": "always"
+    },
+    {
+      "name": "exhaust_smoke_r",
+      "kind": "smoke",
+      "when": "always"
+    }
+  ],
+  "sockets": [
+    {
+      "name": "headlamp_l",
+      "kind": "light",
+      "parent": null
+    },
+    {
+      "name": "taillight_l",
+      "kind": "light",
+      "parent": null
+    },
+    {
+      "name": "headlamp_r",
+      "kind": "light",
+      "parent": null
+    },
+    {
+      "name": "taillight_r",
+      "kind": "light",
+      "parent": null
+    },
+    {
+      "name": "engine_audio",
+      "kind": "audio",
+      "parent": null
+    },
+    {
+      "name": "exhaust_audio_l",
+      "kind": "audio",
+      "parent": null
+    },
+    {
+      "name": "exhaust_audio_r",
+      "kind": "audio",
+      "parent": null
+    },
+    {
+      "name": "seat_driver",
+      "kind": "seat",
+      "parent": null
+    },
+    {
+      "name": "seat_passenger",
+      "kind": "seat",
+      "parent": null
+    },
+    {
+      "name": "camera_cockpit",
+      "kind": "camera",
+      "parent": null
+    },
+    {
+      "name": "camera_chase",
+      "kind": "camera",
+      "parent": null
+    },
+    {
+      "name": "tow_front",
+      "kind": "attach",
+      "parent": null
+    },
+    {
+      "name": "tow_rear",
+      "kind": "attach",
+      "parent": null
+    }
+  ],
+  "surfaces": [
+    "glass",
+    "opaque"
+  ],
+  "paint": {
+    "body": "#a5110f",
+    "stripe": "#a5110f"
+  },
+  "variants": {
+    "cobalt_stripes": {
+      "body": "#1d3f8f",
+      "stripe": "#eef0f0"
+    },
+    "sun_yellow": {
+      "body": "#e8b40c",
+      "stripe": "#e8b40c"
+    },
+    "gloss_black": {
+      "body": "#0d0e10",
+      "stripe": "#0d0e10"
+    }
+  },
+  "real": {
+    "length": 4.46,
+    "width": 3.8,
+    "height": 1.93
+  },
+  "measures": [
+    {
+      "label": "wheelbase",
+      "spec": 2.51,
+      "measured": 2.5100000500679016,
+      "source": "README: class envelope 2.44–2.69 m"
+    },
+    {
+      "label": "front track",
+      "spec": 1.55,
+      "measured": 1.5507477521896362,
+      "source": "README"
+    },
+    {
+      "label": "rear track",
+      "spec": 1.56,
+      "measured": 1.5605947375297546,
+      "source": "README"
+    },
+    {
+      "label": "front tyre 295/30 ZR18 diameter",
+      "spec": 0.6342,
+      "measured": 0.634199955035001,
+      "source": "https://en.wikipedia.org/wiki/Tire_code"
+    },
+    {
+      "label": "rear tyre 355/30 ZR19 diameter",
+      "spec": 0.6956,
+      "measured": 0.6955999438650906,
+      "source": "https://en.wikipedia.org/wiki/Tire_code"
+    },
+    {
+      "label": "body width (no mirrors)",
+      "spec": 1.94,
+      "measured": 1.9434372186660767,
+      "source": "README: class envelope 1.85–1.95 m"
+    },
+    {
+      "label": "overall length",
+      "spec": 4.46,
+      "measured": 4.451879978179932,
+      "source": "README"
+    }
+  ],
+  "sources": [
+    "https://en.wikipedia.org/wiki/Tire_code",
+    "https://en.wikipedia.org/wiki/V10_engine",
+    "https://en.wikipedia.org/wiki/Double_wishbone_suspension",
+    "https://en.wikipedia.org/wiki/Disc_brake",
+    "https://en.wikipedia.org/wiki/Roll_bar",
+    "https://en.wikipedia.org/wiki/Front-engine,_rear-wheel-drive_layout",
+    "https://www.sae.org/standards/content/j1100_202311/"
+  ],
+  "qa": {
+    "pass": true,
+    "findings": []
+  }
+}

@@ -1,0 +1,126 @@
+{
+  "name": "rts_resource",
+  "kind": "prop",
+  "description": "Sunstone deposit: original RTS resource node, a salt-crusted basalt outcrop with glowing amber crystals and a team claim stake.",
+  "tags": [
+    "rts",
+    "saltmarch",
+    "resource",
+    "crystal",
+    "team-colour"
+  ],
+  "files": {
+    "lods": [],
+    "sheet": "recipes/rts_resource/out/rts_resource/sheet.png",
+    "thumb": "recipes/rts_resource/out/rts_resource/thumb.png"
+  },
+  "triangles": [
+    12330,
+    2962,
+    486
+  ],
+  "drawCalls": [
+    3,
+    3,
+    3
+  ],
+  "pivots": [
+    {
+      "name": "body",
+      "parent": null
+    },
+    {
+      "name": "body_paint_team",
+      "parent": null
+    }
+  ],
+  "emitters": [
+    {
+      "name": "glint",
+      "kind": "sparks",
+      "when": "always"
+    }
+  ],
+  "sockets": [
+    {
+      "name": "mine_point_0",
+      "kind": "interact",
+      "parent": null
+    },
+    {
+      "name": "mine_point_1",
+      "kind": "interact",
+      "parent": null
+    },
+    {
+      "name": "mine_point_2",
+      "kind": "interact",
+      "parent": null
+    },
+    {
+      "name": "mine_point_3",
+      "kind": "interact",
+      "parent": null
+    }
+  ],
+  "surfaces": [
+    "opaque"
+  ],
+  "paint": {
+    "team": "#b3261e"
+  },
+  "variants": {
+    "red": {
+      "team": "#b3261e"
+    },
+    "blue": {
+      "team": "#1f4fb8"
+    },
+    "green": {
+      "team": "#2f8f3a"
+    },
+    "yellow": {
+      "team": "#e2b521"
+    },
+    "purple": {
+      "team": "#6d2fa6"
+    },
+    "orange": {
+      "team": "#e0661a"
+    },
+    "teal": {
+      "team": "#139a92"
+    },
+    "white": {
+      "team": "#e8e8e2"
+    }
+  },
+  "real": {
+    "length": 4.93,
+    "width": 4.36,
+    "height": 3.56
+  },
+  "measures": [],
+  "sources": [
+    "recipes/rts_faction/README.md (original design brief)",
+    "docs/playbooks/nature/rocks.md"
+  ],
+  "weather": {
+    "mud": {
+      "target": 0.5,
+      "actual": 0.5,
+      "eligible": "ground-near",
+      "area": 12.9353
+    },
+    "dust": {
+      "target": 0.3,
+      "actual": 0.3,
+      "eligible": "up-facing",
+      "area": 12.117
+    }
+  },
+  "qa": {
+    "pass": true,
+    "findings": []
+  }
+}

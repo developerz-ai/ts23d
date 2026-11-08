@@ -56,6 +56,7 @@ Each asset is a TypeScript module. `t3d build` compiles it, deterministically, t
 - **A contact sheet.** One PNG, six labelled orthographic views on a metre grid, rendered on the CPU. A vision-capable agent reads it once, sees what's wrong and fixes it.
 - **A beauty render and an AI review pack.** `t3d hero` renders a textured, lit, soft-shadowed 3/4 product shot on the CPU (the images above). `t3d review` writes hero, sheet, close-ups, an LOD strip, a checklist prompt for a vision agent and image metrics: QA with pictures, no GPU.
 - **Organic modelling.** `sdf` (surface nets / marching cubes) with `sd.*` combinators and `sculpt`, an ordered add / subtract / paint edit list with smooth blends: busts, rocks, asteroids.
+- **Draw → 3D.** An agent writes SVG (drawing as text) and ts23d builds from it: `extrudeSvg` (holes, chamfered edges), `latheSvg` (half profile), and `visualHull`, a front + side (+ top) silhouette block-out you refine with sculpt edits ([`svg_showcase`](recipes/svg_showcase/)).
 - **Terrain.** Seeded noise (`fbm`, `ridged`, domain `warp`, `terrace`), droplet `hydraulicErosion` and `thermalErosion`, and `terrainColor` by altitude, slope and flow.
 - **Architecture and hulls.** `roof` (gable, hip, mansard, gambrel, …), `opening` window/door kits for `facade`, true-scale masonry `mass`, lofted vessel `hull`; `tiled`, `cell` and `lattice` (Warren / Pratt / Howe trusses) primitives, `box({ bevel })`, and `text` lettering as geometry.
 - **An optimiser on by default.** Weld, degenerate removal, vertex-cache and vertex-fetch order (tiger_1 LOD0: 15.4 → 6.3 MB, ACMR 2.88 → 1.16), weighted normals, baked per-vertex AO.
@@ -165,7 +166,7 @@ Draw calls column: static assets (the Eiffel Tower) are 1; vehicles are one per 
 
 | Stage | Module | Status (2026-10) | Replaces |
 |---|---|---|---|
-| Geometry | `primitives`, `kinds` | Shipped: `box` (bevel), `lathe`, `prism`, `beam`, `planar`, `sweep`, `loft`, `tiled`, `cell`, `lattice`, `text`, `heightfield`, `sdf` + `sculpt`, terrain + erosion, facades with openings, roofs, hulls, vehicles, Weber–Penn trees. Planned: creatures | Blender modelling |
+| Geometry | `primitives`, `kinds` | Shipped: `box` (bevel), `lathe`, `prism`, `beam`, `planar`, `sweep`, `loft`, `tiled`, `cell`, `lattice`, `text`, `heightfield`, `sdf` + `sculpt`, `warpTPS` (landmark warp of a CC0 base head), `importGlb` + `simplify` + `bakeNormals`, `terrainFromDEM`, terrain + erosion, facades with openings, roofs, hulls, vehicles, Weber–Penn trees. `creature()` (six skeletons). Planned: fur shells, morph targets | Blender modelling |
 | Materials and textures | `material` (generator) | Shipped: procedural albedo / normal / ORM trim sheet, embedded or shared PNGs, palettes, `grime`. No KTX2 yet | Substance / texture tools |
 | Optimisation | `passes/optimize`, `export` | Shipped: weld, degenerate removal, Forsyth vertex-cache + vertex-fetch order (ACMR reported), weighted normals, baked AO, u16 indices and colours, batching. Planned: opt-in `web` profile (quantisation + meshopt) | meshoptimizer / gltfpack |
 | LODs | `ctx.lod` | Shipped | Decimators |
@@ -241,6 +242,7 @@ bunx t3d build recipes/*/*.ts         # GLB × 3 LODs + sheet + manifest per ass
 bunx t3d shot  recipes/*/*.ts         # sheet + manifest only: the fast look
 bunx t3d hero  recipes/*/*.ts         # beauty render: textured, lit, soft shadows (1600×900)
 bunx t3d review recipes/*/*.ts        # AI review pack: hero, sheet, close-ups, LOD strip, review.md
+bunx t3d tune recipes/<name>/<name>.ts --evals 400   # fit tune.params to objectives → tune.json, tune-report.md, tune-strip.png
 bunx t3d list  recipes/*/*.ts --json  # the assets each module exports
 ```
 

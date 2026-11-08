@@ -1,5 +1,6 @@
 // Public API of /render: zero-GPU images an agent (and a README) can use — contact sheets,
-// thumbnails, beauty product shots, LOD strips, and the AI review pack with image metrics.
+// thumbnails, beauty product shots, measured blueprints, LOD strips, and the AI review pack with
+// image metrics.
 
 export {
   type BeautyOptions,
@@ -8,7 +9,27 @@ export {
   cameraFor,
   renderBeauty,
 } from './beauty.ts';
+export { BLUEPRINT_VIEWS, type BlueprintOptions, blueprint } from './blueprint.ts';
+export { type MeasureResult, measureResults } from './blueprint-measures.ts';
 export type { PerspectiveCamera } from './camera.ts';
+export { drawText, textWidth } from './font.ts';
+export {
+  ICON_CAMERA,
+  type IconImage,
+  type IconOptions,
+  icon,
+  type PortraitOptions,
+  portrait,
+  renderIcon,
+  renderPortrait,
+} from './icon.ts';
+export {
+  RTS_CAMERA,
+  type RtsViewOptions,
+  rtsView,
+  type TeamCoverage,
+  teamCoverage,
+} from './icon-rts.ts';
 export { type LodStripOptions, lodStrip } from './lod-strip.ts';
 export {
   type ExposureStats,

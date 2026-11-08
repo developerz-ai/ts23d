@@ -1,0 +1,65 @@
+{
+  "name": "face_dwarf",
+  "kind": "character",
+  "description": "dwarf bust warped from the CC0 MakeHuman base head by landmarks: natural forms, clean edge loops, code eyes, sculpted hair",
+  "tags": [
+    "character",
+    "fantasy",
+    "dwarf",
+    "bust",
+    "warp",
+    "face"
+  ],
+  "files": {
+    "lods": [],
+    "sheet": "recipes/face_demo/out/face_dwarf/sheet.png",
+    "thumb": "recipes/face_demo/out/face_dwarf/thumb.png"
+  },
+  "triangles": [
+    144540,
+    60992,
+    11380
+  ],
+  "drawCalls": [
+    2,
+    2,
+    2
+  ],
+  "pivots": [
+    {
+      "name": "body",
+      "parent": null
+    },
+    {
+      "name": "body_finish_cornea",
+      "parent": null
+    }
+  ],
+  "emitters": [],
+  "sockets": [],
+  "surfaces": [
+    "opaque"
+  ],
+  "real": {
+    "length": 0.297,
+    "width": 0.519,
+    "height": 0.522
+  },
+  "measures": [
+    {
+      "label": "eye spacing (pupil to pupil)",
+      "spec": 0.06534528,
+      "measured": 0.06452526897192001,
+      "source": "base IPD 61.6 mm (MakeHuman hm08) × race eye spacing × head scale"
+    }
+  ],
+  "sources": [
+    "recipes/face_demo/README.md (design dossier)",
+    "docs/research/face-base.md (base mesh licence, landmarks, race ratios)",
+    "MakeHuman hm08 base mesh, CC0 1.0 (makehumancommunity/makehuman @3c701a8, sha256 8e761e66…)"
+  ],
+  "qa": {
+    "pass": true,
+    "findings": []
+  }
+}

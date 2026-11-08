@@ -1,0 +1,127 @@
+{
+  "asset": "rts_soldier",
+  "reviewer": "agent",
+  "overall": 7.0,
+  "scores": {
+    "silhouette": {
+      "score": 7,
+      "reason": "Chevron crest, big team pauldrons and the carbine read 'infantry' at 64 px; IoU 0.94/0.91/0.90.",
+      "fixes": [
+        "longer crest tail for the back view"
+      ]
+    },
+    "proportions": {
+      "score": 7,
+      "reason": "Same 6-head figure as the Delver; carbine sized to the fist (grip joint).",
+      "fixes": []
+    },
+    "materials": {
+      "score": 7,
+      "reason": "Ceramic plastic armour and team plates, canvas undersuit, leather gloves/boots/belt, painted gunmetal carbine with leather grip, aged brass collar and muzzle.",
+      "fixes": [
+        "armour panel lines on the torso shell"
+      ]
+    },
+    "detail": {
+      "score": 6,
+      "reason": "Visor housing, brow ridge, ear guards, chest plates, abdomen bands, belt pouches, knee/shin guards, cooling rings, power pack vents and whip antenna.",
+      "fixes": [
+        "webbing straps over the chest",
+        "magazine pouches"
+      ]
+    },
+    "wear": {
+      "score": 6,
+      "reason": "weather(): chips on 14% of hard convex edges, salt dust on 30% of up-faces, brine mud on 50% of the ground band (boots, shins); cloth/straps dust+mud only. Measured and gated. Subtle at hero distance; LOD2 colour still carries the read.",
+      "fixes": [
+        "scuffs on knee guards visible at hero distance"
+      ]
+    },
+    "lod": {
+      "score": 8,
+      "reason": "LOD2 380 tris at the crowd budget; team share 27.1%.",
+      "fixes": []
+    },
+    "technical": {
+      "score": 8,
+      "reason": "QA PASS on every gate incl. connections and weather (exact coverage). Deterministic, one trim material + team slot, 8 liveries; `bun test recipes/rts_faction` 18/18.",
+      "fixes": []
+    }
+  },
+  "renders": {
+    "hero.png": "d917e12d9fec1dafe5675c108bc44fa63a8412dd8622eda09a3209ee564329fc",
+    "sheet.png": "16c5e46e4ace7877c15464e0a5a830156de2ffa19588973100382aafde07c5b7",
+    "raking.png": "c1a8921df65b5682b9155aaf08dfc1bc5a67dbb31d8d319bce7136127f0e35e0",
+    "raking_detail.png": "18c4333326bf833e7427246d342e685e95f308d94dcfdd8c1ae37dffd6696b09",
+    "lods.png": "d84c9b63984375c873a77b0bc50d0b6f7d7660513a78877a8b9a30a496713c9c",
+    "silhouette.png": "21d6f26e67f1b3d209c730a4a880456df3189640794d32b8507bd5453d87b026",
+    "value.png": "3ac9b7f9c1f053e669eb22e2dcf9a4a523486d468c80bfcbe605236fc8a0aa2b",
+    "detail.png": "6bed7e1cbb87a861ef53fda14f6c3ac23c5fddb542610b662a667adce990d9bb"
+  },
+  "metrics": {
+    "silhouette": [
+      {
+        "view": "front",
+        "iou": 0.939
+      },
+      {
+        "view": "side",
+        "iou": 0.906
+      },
+      {
+        "view": "3/4",
+        "iou": 0.903
+      }
+    ],
+    "focal": {
+      "peakPart": "helmet",
+      "peak": [
+        378,
+        77
+      ],
+      "focalShare": 0.406,
+      "focalArea": 0.089,
+      "top": [
+        {
+          "part": "helmet",
+          "share": 0.214
+        },
+        {
+          "part": "torso",
+          "share": 0.181
+        },
+        {
+          "part": "crest",
+          "share": 0.116
+        }
+      ],
+      "declared": [
+        "helmet",
+        "visor",
+        "crest"
+      ]
+    },
+    "rest": {
+      "share": 0.211,
+      "spread": 0.564,
+      "min": 0.2
+    },
+    "grounded": {
+      "rise": 0.244,
+      "bands": [
+        0.225,
+        0.282,
+        0.254,
+        0.37,
+        0.425
+      ]
+    },
+    "shape": {
+      "acuteShare": 0.425,
+      "straightShare": 0.722,
+      "taper": 0.326,
+      "shape": "stable",
+      "declared": "stable"
+    }
+  }
+}

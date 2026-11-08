@@ -1,0 +1,78 @@
+{
+  "name": "parts_catalogue",
+  "kind": "scene",
+  "description": "every part of the recipes/_parts kit at real scale, labelled, on a plinth and bench",
+  "tags": [
+    "catalogue",
+    "parts",
+    "showcase"
+  ],
+  "files": {
+    "lods": [],
+    "sheet": "recipes/parts_catalogue/out/parts_catalogue/sheet.png",
+    "thumb": "recipes/parts_catalogue/out/parts_catalogue/thumb.png"
+  },
+  "triangles": [
+    30934,
+    16714,
+    10810
+  ],
+  "drawCalls": [
+    10,
+    10,
+    10
+  ],
+  "pivots": [
+    {
+      "name": "body",
+      "parent": null
+    },
+    {
+      "name": "door",
+      "parent": null
+    },
+    {
+      "name": "door_leaf",
+      "parent": "door",
+      "motion": "sway"
+    },
+    {
+      "name": "window",
+      "parent": null
+    },
+    {
+      "name": "window_glass",
+      "parent": "window"
+    },
+    {
+      "name": "lamp",
+      "parent": null
+    },
+    {
+      "name": "hinge",
+      "parent": null
+    },
+    {
+      "name": "hinge_leaf",
+      "parent": "hinge",
+      "motion": "sway"
+    },
+    {
+      "name": "wheel",
+      "parent": null,
+      "motion": "spin"
+    }
+  ],
+  "emitters": [],
+  "sockets": [],
+  "surfaces": [
+    "glass",
+    "opaque"
+  ],
+  "measures": [],
+  "sources": [],
+  "qa": {
+    "pass": true,
+    "findings": []
+  }
+}

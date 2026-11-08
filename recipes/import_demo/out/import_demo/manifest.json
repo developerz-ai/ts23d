@@ -1,0 +1,64 @@
+{
+  "name": "import_demo",
+  "kind": "prop",
+  "description": "Hybrid bust: an imported, cleaned and QEM-simplified head scan (CC0 stand-in) on a code-built torso with tunic, mantle, collar and brooch, joined by a checked neck joint",
+  "tags": [
+    "import",
+    "scan",
+    "bust",
+    "hybrid",
+    "lod"
+  ],
+  "files": {
+    "lods": [],
+    "sheet": "recipes/import_demo/out/import_demo/sheet.png",
+    "thumb": "recipes/import_demo/out/import_demo/thumb.png"
+  },
+  "triangles": [
+    45164,
+    16639,
+    3271
+  ],
+  "drawCalls": [
+    2,
+    2,
+    2
+  ],
+  "pivots": [
+    {
+      "name": "body",
+      "parent": null
+    },
+    {
+      "name": "body_finish_cornea",
+      "parent": null
+    }
+  ],
+  "emitters": [],
+  "sockets": [],
+  "joints": [
+    {
+      "name": "neck",
+      "from": "head",
+      "to": "collar",
+      "kind": "socket",
+      "at": [
+        -0.013,
+        0,
+        0.2839
+      ]
+    }
+  ],
+  "surfaces": [
+    "opaque"
+  ],
+  "measures": [],
+  "sources": [
+    "recipes/import_demo/README.md (pipeline, licence, how to swap in a real CC0 scan)",
+    "import: ts23d contributors (procedural stand-in scan, recipes/import_demo/scan.ts) — CC0-1.0 — https://github.com/developerz-ai/ts23d/tree/main/recipes/import_demo"
+  ],
+  "qa": {
+    "pass": true,
+    "findings": []
+  }
+}

@@ -1,0 +1,121 @@
+{
+  "asset": "pine",
+  "reviewer": "agent",
+  "overall": 6.6,
+  "scores": {
+    "silhouette": {
+      "score": 7,
+      "reason": "Tall clean, slightly sinuous bole with a high crown of clumped, layered needle masses and sky gaps between them (sheet FRONT/SIDE/3-4 REAR) — reads as a pine, no longer a bare frame. The crown is still taller than wide (9 m × ~11 m) and its top is rounded-irregular rather than the flat umbrella top of an old Scots pine.",
+      "fixes": [
+        "flatter, wider crown top for the old-tree umbrella (needs a crown shape whose branch length peaks near the top; the kind's ShapeRatio has none)"
+      ]
+    },
+    "proportions": {
+      "score": 7,
+      "reason": "25 m height, 9 m spread, 0.6 m DBH pass the measures; natural crown is now grown ~9 m across so the fit no longer squashes it ×0.52 horizontally. Crown base at ~55% of height, branch angles 80° low → 50° high per the README sources.",
+      "fixes": [
+        "crown depth ~45% of height is at the deep end for a mature open-grown tree"
+      ]
+    },
+    "materials": {
+      "score": 6,
+      "reason": "Bark on bark_pine with the grey-brown → orange gradient and north moss; the grey seam streak down the trunk is gone. Needles are flat-shaded crossed brush cards on the plain strip: dark blue-green, with sheen, but no needle texture.",
+      "fixes": [
+        "needle foliage texture / alpha cards for the tufts"
+      ]
+    },
+    "detail": {
+      "score": 6,
+      "reason": "404 needle tufts (two crossed brushes each) in clumps at the ends of 100 side shoots on 18 whorl branches; branches visible through the gaps (raking_detail). Up close the tufts read as spiky starbursts, not fine needles. No cones, no dead lower stubs, no bark plates in geometry.",
+      "fixes": [
+        "cones on outer shoots",
+        "dead branch stubs along the clear bole"
+      ]
+    },
+    "wear": {
+      "score": 5,
+      "reason": "Moss on the north side of the foot and a needle-litter floor; otherwise clean.",
+      "fixes": [
+        "dead stubs and resin scars on the bole",
+        "a broken/dead branch in the crown"
+      ]
+    },
+    "lod": {
+      "score": 7,
+      "reason": "LOD2 is 20 needle pads clustered from LOD0's own tufts and silhouette-fitted from eight views: IoU front 0.879, side 0.865, 3/4 0.891 (was 0.36/0.40/0.42 with the lathe blob), and the measured crown colour matches LOD0 (rgb 0.154/0.182/0.160 vs 0.154/0.178/0.160). Close up (lods.png) the pads read as pointed cones, a pagoda more than pads, and one fitted pad is a wide flat sheet. LOD1 now keeps LOD0's tufts (one per shoot, grown) instead of sparse light cluster cards (crown luminance 0.173 vs 0.171).",
+      "fixes": [
+        "blunter pad tops (a two-ring lens) if the 316-triangle LOD2 budget allows",
+        "clamp the plan/height aspect a pad may be fitted to"
+      ]
+    },
+    "technical": {
+      "score": 8,
+      "reason": "QA PASS; 23 652 / 5 740 / 311 triangles against 25 400 / 6 200 / 316 (≤ 8% headroom); one material, two draws; deterministic (LOD2 fit is pure arithmetic). LOD2 compile takes ~1.5 s for the silhouette fit.",
+      "fixes": [
+        "cache or simplify the LOD2 silhouette fit (~1.5 s per compile)",
+        "spend the LOD0 headroom on cones and dead stubs rather than more tufts"
+      ]
+    }
+  },
+  "renders": {
+    "hero.png": "c0f4546dcc9ff1834028311f882255bf194d2b9d88758201bef6a9bfb54f369a",
+    "sheet.png": "965ee7e61238c3b366722c7b85cb071a613cd1bbc30cc83c78afe6a5e0ff29be",
+    "raking.png": "4cf0d9d95d8c29979adce53671842683129b8c5ab8ceed7997149b7bfd4c445e",
+    "raking_detail.png": "958c93f564adc16cce18929621aba81b99f74a5e87390f0a8213c04c6b3dd381",
+    "lods.png": "7db828e39dfc2f0c62d2f095e26d9b305f53fa9bcbae5a83715742774196b9ff",
+    "silhouette.png": "a3654c1d5d2583baa4dab839ad20847c8595d00b49df980c5550f091d6034e2a",
+    "value.png": "9c295bb93f7b79976a735f444ea0240d3fcc6a3f0de975f7f6366676ae64e784",
+    "detail.png": "a8aaff136fb8cf63c495c27e1c226b07a1ab81e784ac1c11db896a2c4f313df4"
+  },
+  "metrics": {
+    "silhouette": [
+      {
+        "view": "front",
+        "iou": 0.879
+      },
+      {
+        "view": "side",
+        "iou": 0.865
+      },
+      {
+        "view": "3/4",
+        "iou": 0.891
+      }
+    ],
+    "focal": {
+      "peakPart": "leaves",
+      "peak": [
+        399,
+        95
+      ],
+      "focalShare": 0,
+      "focalArea": 0,
+      "top": [
+        {
+          "part": "leaves",
+          "share": 0.664
+        },
+        {
+          "part": "ground",
+          "share": 0.125
+        },
+        {
+          "part": "roots",
+          "share": 0.114
+        }
+      ],
+      "declared": []
+    },
+    "rest": {
+      "share": 0.139,
+      "spread": 0.612,
+      "min": 0.25
+    },
+    "shape": {
+      "acuteShare": 0.072,
+      "straightShare": 0.572,
+      "taper": -0.824,
+      "shape": "stable"
+    }
+  }
+}

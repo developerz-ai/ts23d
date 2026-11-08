@@ -1,0 +1,102 @@
+{
+  "asset": "mountain_range",
+  "reviewer": "agent",
+  "overall": 7.6,
+  "scores": {
+    "silhouette": {
+      "score": 8,
+      "reason": "2 \u00d7 2 km alpine tile with eroded ridges, a glacial U-valley, peaks above the snowline; reads as mountains from any angle.",
+      "fixes": []
+    },
+    "proportions": {
+      "score": 8,
+      "reason": "Relief 950 m over a 1 720 m floor, tree line 2 000 m, snow line 2 480 m, plausible for the Alps.",
+      "fixes": []
+    },
+    "materials": {
+      "score": 7,
+      "reason": "Ground strips chosen per triangle by slope and altitude: snow on gentle high ground, granite cliff on steep faces, gravel scree, grass meadows, moss on the forest floor; the cut sides show rock_strata beds. On 7.8 m cells the strips' V is squeezed per triangle, which draws fine banding on long slopes.",
+      "fixes": [
+        "blend strips across triangle borders (vertex weights) instead of hard per-triangle switches",
+        "finer UV scale on the skirt sides"
+      ]
+    },
+    "detail": {
+      "score": 7,
+      "reason": "Hydraulic and thermal erosion channels, talus, ridges at 256\u00b2 cells; no trees or rocks scattered on the surface.",
+      "fixes": [
+        "scatter tree impostors below the tree line and boulders on the scree"
+      ]
+    },
+    "wear": {
+      "score": 7,
+      "reason": "Erosion gullies, scree fans and snow only on gentle slopes tell the weather; no avalanche paths or streams.",
+      "fixes": [
+        "a stream along the valley floor (water strip)"
+      ]
+    },
+    "lod": {
+      "score": 8,
+      "reason": "Same grid at 256/128/64 cells; strips classified the same way at each LOD, so colour bands hold.",
+      "fixes": []
+    },
+    "technical": {
+      "score": 8,
+      "reason": "QA PASS all three seeds: 133 120 / 33 792 / 8 704, one draw.",
+      "fixes": []
+    }
+  },
+  "renders": {
+    "hero.png": "3cf0c5d356f03cd0f572ac7783da6ffd5971c8a36637508ea36e7aa27e970708",
+    "sheet.png": "07460bf69943e60f4229dbff902bd38b229a7d046e1de58675f0a321c85d39d8",
+    "raking.png": "5bea3e9737767048634058e2f9939f0c57540882c10285d5e6e77a5522dafd90",
+    "raking_detail.png": "7de5ecf321ca67064a23be6687096178be973266e85c5dde09de73cef932f85f",
+    "lods.png": "8ab7d9db2e30f848ba559b7190bdff9cb1105d12023757319a433ac9e204bf71",
+    "silhouette.png": "97f8ec9a7ff94f15d1df3a3a96aee3e083ad4e1126f08dfefef96a677a9af256",
+    "value.png": "1c27582cda5533cd74c8c9318015fbacf00538b7039731bd718e034a1b28e0af",
+    "detail.png": "77aaa70176e4c07c99da6963f3a57f51f79d4b6339fab7dfae1940249712c626"
+  },
+  "metrics": {
+    "silhouette": [
+      {
+        "view": "front",
+        "iou": 0.996
+      },
+      {
+        "view": "side",
+        "iou": 0.995
+      },
+      {
+        "view": "3/4",
+        "iou": 0.999
+      }
+    ],
+    "focal": {
+      "peakPart": "terrain",
+      "peak": [
+        375,
+        119
+      ],
+      "focalShare": 0,
+      "focalArea": 0,
+      "top": [
+        {
+          "part": "terrain",
+          "share": 1
+        }
+      ],
+      "declared": []
+    },
+    "rest": {
+      "share": 0.732,
+      "spread": 0.669,
+      "min": 0.25
+    },
+    "shape": {
+      "acuteShare": 0.12,
+      "straightShare": 0.726,
+      "taper": 0.451,
+      "shape": "stable"
+    }
+  }
+}
