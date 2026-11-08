@@ -23,7 +23,7 @@ export type StepName = (typeof STEPS)[number]['name'];
 if (import.meta.main) {
   const json = process.argv.includes('--json');
   const only = process.argv[process.argv.indexOf('--only') + 1]?.split(',');
-  const shard = parseShard(process.env.T3D_SHARD);
+  const shard = parseShard(process.env['T3D_SHARD']);
   const steps = (
     process.argv.includes('--only') ? STEPS.filter((s) => only?.includes(s.name)) : STEPS
   ).filter((s) => !shard || shard.k === 1 || s.name === 'recipes');

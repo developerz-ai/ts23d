@@ -22,4 +22,4 @@ export function inShard<T>(items: readonly T[], shard: Shard | undefined): T[] {
   return shard ? items.filter((_, i) => i % shard.n === shard.k - 1) : [...items];
 }
 
-export const CURRENT_SHARD = parseShard(process.env.T3D_SHARD);
+export const CURRENT_SHARD = parseShard(process.env['T3D_SHARD']);
