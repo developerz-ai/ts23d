@@ -4,6 +4,8 @@ All notable changes to `@developerz.ai/ts23d`. Format: [Keep a Changelog](https:
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-08
+
 ### Added
 - Switchable liveries in one GLB (`KHR_materials_variants`, opt-in): `defineAsset({ paint: { body: '#84402d' }, variants: { oxide_red: { body: '#74382a' } } })` plus `ctx.part(name, mesh, { paint: 'body' })`. Each paint slot becomes a material (`baseColorFactor` = slot colour, `COLOR_0` = colour ÷ slot so grime and wear survive any repaint); variants map per primitive, shared across LODs, used never required. Cost: one extra draw per slot per painted pivot. `compile(asset, { variant })` and `t3d hero|shot|build --variant <name>` render a livery (`hero_<name>.png`); the manifest lists `paint` and `variants`. Painted parts brighter than their slot are refused (they would clamp). Assets without `paint` export byte-identical GLBs. `boxcar` carries three liveries (mineral red, oxide red, faded).
 - Draw → 3D from SVG: `svgShape` parses path data (M L H V C S Q T A Z, relative, implicit repeats, compact arc flags) or a small `<svg>` (`path`, `polygon`, `polyline`, `rect`, `circle`, `ellipse`, viewBox → metres via `scale`/`size`) into flattened contours (proven chord-error bounds; coarser at LOD1/2); `extrudeSvg` (even-odd holes, ear clipping with hole bridges, smooth walls split at corners, optional chamfer bevel, front/side/top views, closed and outward); `latheSvg` (half profile → `lathe`); `visualHull` / `sd.silhouette` (front/side/top silhouettes intersected as exact 2D polygon distances, optional `round`), usable as a `sculpt` edit through the new `{ field, bounds }` field edit; `polygonSdf`. New error code `T3D_SVG_INVALID`. Recipe: `svg_showcase` (gear, amphora, silhouette-sculpted creature head, star emblem).
@@ -49,6 +51,12 @@ All notable changes to `@developerz.ai/ts23d`. Format: [Keep a Changelog](https:
 - `clashes` sweeps a hinged part (sway) to millimetres, not 5° bins (D23): the rest-pose surface (triangle interiors too) is rasterised into an occupancy grid of axial slice (≤ 2 cm) × radial ring (1 cm) × angular bin (≤ 5 mm of arc at the part's reach); a point is swept only if its own ring, and the rings 1 cm either side, held body at a rest angle the travel carries onto it, with the travel ends shrunk by 1 cm of arc (a tolerance in metres, not degrees). The old per-bin max radius filled the whole fan from the hinge out to the tip, so anything a few cm under a long closed panel read as swept. New `src/qa/clash-sector.ts`; spins keep their solid of revolution (`clash-sweep.ts`). roadster_v10: 26 of the hood/trunk/door/fuel-flap `clearOf` entries no longer suppress anything; gate time unchanged (≈ 1.4 s roadster_v10, 45 ms boxcar, 130 ms cargo_container_scifi).
 - Light sockets without an `intensity` export physical defaults (KHR_lights_punctual units): directional 100 000 lx (sun), point / spot ≈ 1000 lm (point 79.6 cd; spot = 1000 lm over its cone). Was 3 lx / 20 cd / 100 cd, near-black in engines with physical light units.
 - Faster, same bytes: `t3d build` merges + optimises each LOD once for the split and single-file GLBs (tiger_1 export 1.50 → 0.69 s); QA gates share per-mesh bounds / triangle grids / solid indices and an allocation-free point–triangle distance; silhouette views memoise the exact 2D polygon distance per lattice coordinate (svg_showcase LOD0 1.65 → 0.95 s); hydraulic erosion is simulated once per (grid, droplets, options) across LODs (mountain_range LOD1 605 → 231 ms, LOD2 528 → 235 ms).
+
+### Changed
+- CI: `verify` and `shots` run as 12 parallel shards (`T3D_SHARD=k/n`, `scripts/lib/shard.ts`); shard 1 runs every step, each shard compiles and checks its slice of the recipes. Locally `bun run verify` is still the whole gate. `release.yml` re-runs the fast steps (ci already proved the recipes on the tagged commit).
+- Recipes gate rejects imports into another asset folder's modules or data (`scripts/lib/recipe-imports.ts`); shared code moved to `recipes/_lib/rts`, `recipes/_lib/bust/human`.
+- QA `connections` seams: size-aware fold scale (capped at 2.5 cm, or a single edge ≥ 40°) and declared creases count when they hold the seam's centre or ≥ 80 % of its trace, so regions sit on the fold.
+- Module tiers: `data` 3, `tune` and `finish` 4, `cli` 5.
 
 ## [0.2.0] - 2026-11-07
 
