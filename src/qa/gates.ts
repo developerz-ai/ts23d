@@ -20,6 +20,7 @@ import { mass } from './mass.ts';
 import { measures } from './measures.ts';
 import { hiddenParts } from './occlusion.ts';
 import { nonFinite, normalsMatchWinding, vertexColors } from './sanity.ts';
+import { treads } from './treads.ts';
 import type { Finding, Gate } from './types.ts';
 import { weatherGate } from './weather.ts';
 
@@ -118,6 +119,7 @@ export const DEFAULT_GATES: readonly Gate[] = [
   connections,
   gaps,
   clashes,
+  treads,
   partNames,
   proportions,
   measures,

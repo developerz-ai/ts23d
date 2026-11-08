@@ -214,7 +214,7 @@ Shipped: 18 helpers in `src/testing` ([15-testing](../idea/15-testing.md)). Rema
 
 - [ ] `motion: { kind: 'orbit', axis, radius, rps, phase }` — parts that translate on a circle without rotating (locomotive side rods, pedals, pistons via crank)
 - [ ] `ornament({ svgPath, on: face, strip })` — flat raised decals/scrollwork from SVG on a surface
-- [ ] `text({ font: 'serif' })` — Clarendon-style glyph set for period lettering (5×7 block font today)
+- [x] `text({ font: 'serif' })` — smooth vector faces for period lettering: Hershey `sans`, `serif`, `script`, `gothic` stroke fonts beside the 5×7 pixel font; `weight`, `segments` (LOD), `cap`, optical kerning (`recipes/type_specimen`). A true Clarendon (bracketed slab serif with stroke contrast) still needs outline glyphs
 
 ## Sound: what the asset sounds like
 

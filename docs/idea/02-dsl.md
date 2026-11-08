@@ -30,7 +30,7 @@
 | `tiled` | `origin`, `u`, `v`, `strip`, `segments?` | Walls, roofs, decks at true texture scale |
 | `cell` | `origin`, `u`, `v`, `cell`, `inset?` | Windows, doors, clocks, signs; `inset` adds reveals |
 | `lattice` | `from`, `to`, `depth`, `pattern: warren\|pratt\|howe\|x`, `bays`, `chord`, `web`, `section` | Bridges, towers, cranes, gantries |
-| `text` | `str`, `origin`, `along`, `up`, `height`, `font`, `depth?`, `align?`, `maxWidth?`, `surface?` | Name boards, wagon lettering, hull markings (5×7 font, Latin + Cyrillic) |
+| `text` | `str`, `origin`, `along`, `up`, `height`, `font`, `depth?`, `align?`, `maxWidth?`, `surface?`; vector fonts also `weight?`, `segments?` (LOD), `cap?`, `kerning?` | Name boards, wagon lettering, hull markings, plaques. Fonts: `'5x7'` / `'block'` pixel (Latin + Cyrillic) or smooth Hershey strokes `'sans'`, `'serif'`, `'script'`, `'gothic'` (ASCII); see `recipes/type_specimen` |
 | `sdf` | `field(p)`, `bounds`, `resolution`, `mesher?`, `symmetry?` | Any signed-distance shape; `sd.*` combinators, `valueNoise` |
 | `sculpt` | `edits` (shape, op, blend, color, groups, `{ field, bounds }`), `resolution`, `mirror?` | Busts, rocks, asteroids: Dreams-style edit lists |
 | `extrudeSvg` / `latheSvg` | SVG string, `scale` or `size`, `depth`, `bevel?`, `view`, `tolerance?`, `lod?` | Emblems, gears, brackets, vases from a drawing ([Drawing with SVG](#drawing-with-svg)) |
@@ -133,7 +133,7 @@ One module may export several assets; `t3d` builds every one. No default exports
 | `at` | Pivot in the parent's space. The mesh is authored relative to it |
 | `parent` | Name of an existing part/group. Parents first, else `T3D_PART_UNKNOWN` |
 | `yaw` | Rotation about local Z, radians |
-| `motion` | `{ kind: 'spin', axis, rps }` · `{ kind: 'slide', offset, hz }` · `{ kind: 'sway', axis, degrees, hz }` (turret scan, gun elevation, tree wind, a door). Baked to a 2 s `run` clip only when exporting with animations ([03](03-ir.md#glb-layout)) |
+| `motion` | `{ kind: 'spin', axis, rps }` · `{ kind: 'slide', offset, hz }` · `{ kind: 'sway', axis, degrees, hz }` (turret scan, gun elevation, tree wind, a door) · `{ kind: 'tread', path, pitch }` (a track belt: `tread(beltLine, y, linkPitch)`; no clip channel, the loop rides `extras.ts23d.tread` for engines). Baked to a 2 s `run` clip only when exporting with animations ([03](03-ir.md#glb-layout)) |
 | `surface` | `'opaque'` (default) · `'cutout'` · `'glass'` · `'translucent'` ([below](#surfaces)) |
 | `clearOf` | Part names this moving part may pass through by design (an axle in its bearing, a crosshead in its guide). Exempts them from the `clashes` gate |
 

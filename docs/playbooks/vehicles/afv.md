@@ -45,6 +45,7 @@ hull (static: plates as prisms at their sourced angles) · fenders · stowage_*
 | gun | sway | Y at trunnion | −5…−10° depression, +15…+20° elevation |
 | road wheels, sprockets, idlers | spin | Y | sprocket rps = track speed / (teeth × pitch) |
 | hatches | sway `oneWay` | hinge | 90–110° |
+| track_l / track_r | tread | belt plane | `motion: tread(beltLine, y, linkPitch)` (× 2 pitch for alternating links); the `treads` gate fails a belt without it |
 | suspension arms | sway | Y | ±10° |
 
 ## Signature details

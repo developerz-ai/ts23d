@@ -4,6 +4,16 @@ All notable changes to `@developerz.ai/ts23d`. Format: [Keep a Changelog](https:
 
 ## [Unreleased]
 
+### Fixed
+- Gallery demo tanks (t34, tiger_1, rts_tank) drove with spinning wheels and frozen tracks: the belt had no motion, so the export merged it into the static body.
+
+### Changed
+- The project's name is spelled out as TypeScript to 3D (ts23d) in the README, llms.txt, package description and gallery.
+
+### Added
+- Track belts that run: a fourth motion kind, `{ kind: 'tread', path, pitch }` (helper `tread(beltLine, y, linkPitch)` in /kinds), makes a tank's `track_l` / `track_r` its own pivot node and writes the closed belt centre line to `extras.ts23d.tread` (`{ path, pitch }`, node-local, Z up) so an engine can run the links round the loop. glTF has no way to slide vertices round a curve, so treads add no `run` channel, and `clashes` skips them. The gallery's Driving scene runs every belt round its wheels at the wheels' speed while the ground run stays put. t34, tiger_1 and rts_tank use it. New default QA gate `treads`: a `track_l` / `track_r` with geometry but no tread fails (defect D25). Gallery tests (`apps/site/src`) now run in the gate's `test` step.
+- Smooth lettering in four vector typefaces: `text(str, { font: 'sans' | 'serif' | 'script' | 'gothic' })` sets printable ASCII (upper and lower case) from the public Hershey stroke fonts (Simplex Roman, Complex Roman, Complex Script, Gothic English; embedded as TypeScript by `scripts/fonts-hershey.ts`, no file reads at runtime; acknowledgements in each `src/primitives/font-hershey-*.ts`). Strokes are inked by a pen of `weight` (fraction of cap height; defaults sans 0.12, serif 0.07, script 0.06, gothic 0.055) with `cap: 'round'` (default) or `'square'` ends and joins; curved runs are Catmull-Rom subdivided by `segments` (1–8, the LOD knob, e.g. `[3, 2, 1][ctx.lod]`; corners and stems stay exact). Proportional advances, optical kerning measured from the glyph shapes (`kerning`, off for joined script), a narrower word space than Hershey's. Flush (2 mm lift) or raised (`depth`), `align`, `maxWidth`, `tracking` and `surface(u, v)` work as for the pixel font; `measureText` measures ink edge to ink edge. `TEXT_FONTS` and `VECTOR_FONTS` list the faces. The 5 × 7 pixel font (`'5x7'`, `'block'`, still the default and the only one with Cyrillic) is byte-identical to before. Recipe `type_specimen`: a notice board with every face, flat and raised.
+
 ## [0.3.0] - 2026-11-08
 
 ### Added

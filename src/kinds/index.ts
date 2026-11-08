@@ -67,6 +67,7 @@ export {
   ridgeHeight,
   roofHeightAt,
 } from './roof-shape.ts';
+export { tread } from './tread.ts';
 export {
   type TreeFamilyParams,
   type TreeInfo,

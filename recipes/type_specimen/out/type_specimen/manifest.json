@@ -1,0 +1,44 @@
+{
+  "name": "type_specimen",
+  "kind": "prop",
+  "description": "Type specimen notice board: every text() face (5x7 pixel, block, Hershey sans, serif, script, gothic) as flush painted decals and raised brass letters.",
+  "tags": [
+    "text",
+    "typography",
+    "sign",
+    "demo",
+    "showcase"
+  ],
+  "files": {
+    "lods": [],
+    "sheet": "recipes/type_specimen/out/type_specimen/sheet.png",
+    "thumb": "recipes/type_specimen/out/type_specimen/thumb.png"
+  },
+  "triangles": [
+    38476,
+    27806,
+    4138
+  ],
+  "drawCalls": [
+    1,
+    1,
+    1
+  ],
+  "pivots": [
+    {
+      "name": "body",
+      "parent": null
+    }
+  ],
+  "emitters": [],
+  "sockets": [],
+  "surfaces": [
+    "opaque"
+  ],
+  "measures": [],
+  "sources": [],
+  "qa": {
+    "pass": true,
+    "findings": []
+  }
+}

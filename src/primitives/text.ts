@@ -1,18 +1,24 @@
-// Lettering as geometry: name boards, wagon and locomotive lettering, hull markings, signs. Each
-// glyph of the built-in 5 × 7 font (font-5x7.ts; Latin, digits, punctuation, Cyrillic) becomes a
-// few merged rectangles: flush decals lifted 2 mm off the surface (depth 0, 2 triangles each) or
-// raised letters (depth > 0: face + 4 sides, 10 each). Flat normals. `surface(u, v)` gives the
-// face's offset under each letter piece, so lettering stays readable across stepped sheathing,
-// posts and battens (pieces split where the offset changes). Reads along `along`, upright along
-// `up`, facing along × up; `origin` is the baseline point at the `align` anchor.
+// Lettering as geometry: name boards, wagon and locomotive lettering, hull markings, signs,
+// plaques. Two families of TextFont: the built-in 5 × 7 pixel font ('5x7', 'block'; Latin,
+// digits, punctuation, Cyrillic; text-pixel.ts) and smooth Hershey stroke fonts ('sans', 'serif',
+// 'script', 'gothic'; printable ASCII; text-vector.ts) inked with a pen of `weight`, curves
+// resolved by `segments` (the LOD knob), round or square `cap`s, optical kerning. Flush decals
+// lift 2 mm off the surface (depth 0) or letters stand `depth` proud. Flat normals. `surface(u, v)`
+// gives the face's offset under the letters, so lettering stays readable across stepped sheathing.
+// Reads along `along`, upright along `up`, facing along × up; `origin` is the baseline point at the
+// `align` anchor. This file validates options, builds the frame and dispatches.
 
-import { type Mesh, MeshBuilder, normalize, type Vec3 } from '../core/index.ts';
+import { type Mesh, normalize, type Vec3 } from '../core/index.ts';
 import { type StripId, stripRect } from '../material/index.ts';
-import { invalid } from './check.ts';
-import { stripU, stripV } from './strip-uv.ts';
-import { layout, measureText, type PixelRect, type TextFont } from './text-layout.ts';
+import { count, invalid } from './check.ts';
+import { isVectorFont } from './glyph-hershey.ts';
+import { measureText, type TextFont } from './text-layout.ts';
+import { pixelText } from './text-pixel.ts';
+import { vectorText } from './text-vector.ts';
+import { DEFAULT_WEIGHT } from './text-vector-layout.ts';
 
-export { type MeasureOptions, measureText, type TextFont } from './text-layout.ts';
+export { VECTOR_FONTS, type VectorFont } from './glyph-hershey.ts';
+export { type MeasureOptions, measureText, TEXT_FONTS, type TextFont } from './text-layout.ts';
 
 export interface TextOptions {
   readonly origin: Vec3;
@@ -23,10 +29,12 @@ export interface TextOptions {
   /** Cap height in metres. */
   readonly height: number;
   readonly color: Vec3;
+  /** Default '5x7'. Vector faces: 'sans', 'serif', 'script', 'gothic' (printable ASCII). */
   readonly font?: TextFont;
   /** Raised thickness in metres; 0 = flush decal lifted 2 mm. Default 0. */
   readonly depth?: number;
-  /** Gap between glyphs in pixels (height / 7). Default 1. */
+  /** Extra gap between glyphs in pixels (height / 7). Default 1 for pixel fonts, 0 for vector
+   *  fonts (their proportional advances already carry side bearings). */
   readonly tracking?: number;
   readonly align?: 'left' | 'centre' | 'right';
   /** Shrink the cap height so the line fits this width, metres. */
@@ -35,9 +43,19 @@ export interface TextOptions {
    *  `along` from `origin` (negative left of a centre/right anchor), `v` = metres up from it. */
   readonly surface?: (u: number, v: number) => number;
   readonly strip?: StripId;
+  /** Vector fonts: stroke width as a fraction of the cap height, (0, 0.4]. Default per face:
+   *  sans 0.12, serif 0.07, script 0.06, gothic 0.055. */
+  readonly weight?: number;
+  /** Vector fonts, the LOD knob: curve subdivisions per source segment (1 = raw Hershey
+   *  polyline, 1–8) and round-cap arc steps (segments + 1; round joins twice that). Default 2. Pick from ctx.lod, e.g.
+   *  `segments: [3, 2, 1][ctx.lod]`. Ignored by pixel fonts. */
+  readonly segments?: number;
+  /** Vector fonts: 'round' pen ends and joins (default) or 'square' caps with bevelled joins. */
+  readonly cap?: 'round' | 'square';
+  /** Vector fonts: optical kerning measured from the glyphs. Default true; 'script' never kerns
+   *  (its letters join). */
+  readonly kerning?: boolean;
 }
-
-const LIFT = 0.002;
 
 export function text(str: string, o: TextOptions): Mesh {
   if (!(Number.isFinite(o.height) && o.height > 0 && o.height < 1000))
@@ -49,12 +67,25 @@ export function text(str: string, o: TextOptions): Mesh {
   if (!(Number.isFinite(depth) && depth >= 0))
     invalid(`text depth is ${depth}`, 'use 0 (flush) or a raised thickness > 0 m');
   const font = o.font ?? '5x7';
-  const tracking = o.tracking ?? 1;
+  const vector = isVectorFont(font);
+  if (!vector && font !== '5x7' && font !== 'block')
+    invalid(
+      `text font is ${JSON.stringify(font)}`,
+      "use '5x7', 'block', 'sans', 'serif', 'script' or 'gothic'",
+    );
+  const tracking = o.tracking ?? (vector ? 0 : 1);
+  const weight = o.weight ?? (vector ? DEFAULT_WEIGHT[font] : 0);
+  if (vector && !(Number.isFinite(weight) && weight > 0 && weight <= 0.4))
+    invalid(
+      `text weight is ${weight}`,
+      'give the stroke width as a fraction of the cap height, > 0 and ≤ 0.4 (0.12 = regular sans)',
+    );
+  const kerning = o.kerning ?? true;
   let height = o.height;
   if (o.maxWidth !== undefined) {
     if (!(o.maxWidth > 0))
       invalid(`text maxWidth is ${o.maxWidth}`, 'give the panel width in metres, > 0');
-    const w = measureText(str, { height, font, tracking });
+    const w = measureText(str, { height, font, tracking, weight, kerning });
     if (w > o.maxWidth) height *= o.maxWidth / w;
   }
   const along = normalize(o.along ?? [0, 1, 0]);
@@ -69,129 +100,30 @@ export function text(str: string, o: TextOptions): Mesh {
     along[2] * up[0] - along[0] * up[2],
     along[0] * up[1] - along[1] * up[0],
   ];
-  const px = height / 7;
-  const { rects, width } = layout(str, font, tracking);
-  const start = o.align === 'centre' ? (-width * px) / 2 : o.align === 'right' ? -width * px : 0;
-  const rect = stripRect(o.strip ?? 'plain');
-  const b = new MeshBuilder();
-  const at = (u: number, v: number, w: number): Vec3 => [
-    o.origin[0] + along[0] * u + up[0] * v + n[0] * w,
-    o.origin[1] + along[1] * u + up[1] * v + n[1] * w,
-    o.origin[2] + along[2] * u + up[2] * v + n[2] * w,
-  ];
-  /** Quad u0..u1 × v0..v1 at offsets w (per corner), facing `nrm`, CCW from that side. */
-  const quad = (
-    c: readonly Vec3[],
-    nrm: Vec3,
-    us: readonly number[],
-    vs: readonly number[],
-  ): void => {
-    const ids = c.map((p, i) =>
-      b.vertex({
-        p,
-        n: nrm,
-        uv: [
-          stripU(rect, us[i] ?? 0),
-          stripV(rect, Math.min(1, Math.max(0, (vs[i] ?? 0) / height))),
-        ],
-        color: o.color,
-      }),
-    );
-    const [a = n, e = n, f = n] = c;
-    const g = [0, 1, 2].map((j) => {
-      const [x, y] = [(j + 1) % 3, (j + 2) % 3];
-      return (
-        ((e[x] ?? 0) - (a[x] ?? 0)) * ((f[y] ?? 0) - (a[y] ?? 0)) -
-        ((e[y] ?? 0) - (a[y] ?? 0)) * ((f[x] ?? 0) - (a[x] ?? 0))
-      );
+  const frame = { origin: o.origin, along, up, n, height, depth, color: o.color };
+  if (!vector) {
+    return pixelText(str, {
+      ...frame,
+      font: font === 'block' ? 'block' : '5x7',
+      tracking,
+      align: o.align,
+      surface: o.surface,
+      strip: o.strip,
     });
-    const [i0 = 0, i1 = 0, i2 = 0, i3 = 0] = ids;
-    if ((g[0] ?? 0) * nrm[0] + (g[1] ?? 0) * nrm[1] + (g[2] ?? 0) * nrm[2] >= 0)
-      b.quad(i0, i1, i2, i3);
-    else b.quad(i0, i3, i2, i1);
-  };
-  const neg = (v: Vec3): Vec3 => [-v[0], -v[1], -v[2]];
-  for (const piece of pieces(rects, px, start, o.surface)) {
-    const { u0, u1, v0, v1, s } = piece;
-    const lo = depth > 0 ? s : s + LIFT;
-    const hi = depth > 0 ? s + depth : lo;
-    quad(
-      [at(u0, v0, hi), at(u1, v0, hi), at(u1, v1, hi), at(u0, v1, hi)],
-      n,
-      [u0, u1, u1, u0],
-      [v0, v0, v1, v1],
-    );
-    if (depth <= 0) continue;
-    // Sides: bottom, right, top, left.
-    quad(
-      [at(u0, v0, lo), at(u1, v0, lo), at(u1, v0, hi), at(u0, v0, hi)],
-      neg(up),
-      [u0, u1, u1, u0],
-      [0, 0, depth, depth],
-    );
-    quad(
-      [at(u1, v0, lo), at(u1, v1, lo), at(u1, v1, hi), at(u1, v0, hi)],
-      along,
-      [v0, v1, v1, v0],
-      [0, 0, depth, depth],
-    );
-    quad(
-      [at(u1, v1, lo), at(u0, v1, lo), at(u0, v1, hi), at(u1, v1, hi)],
-      up,
-      [u1, u0, u0, u1],
-      [0, 0, depth, depth],
-    );
-    quad(
-      [at(u0, v1, lo), at(u0, v0, lo), at(u0, v0, hi), at(u0, v1, hi)],
-      neg(along),
-      [v1, v0, v0, v1],
-      [0, 0, depth, depth],
-    );
   }
-  return b.build();
-}
-
-interface Piece {
-  readonly u0: number;
-  readonly u1: number;
-  readonly v0: number;
-  readonly v1: number;
-  /** Surface offset under this piece. */
-  readonly s: number;
-}
-
-/** Rects in metres, split into column groups wherever the surface offset changes. */
-function pieces(
-  rects: readonly PixelRect[],
-  px: number,
-  start: number,
-  surface?: (u: number, v: number) => number,
-): Piece[] {
-  const out: Piece[] = [];
-  for (const r of rects) {
-    const v0 = (7 - r.r1) * px;
-    const v1 = (7 - r.r0) * px;
-    if (!surface) {
-      out.push({ u0: start + r.c0 * px, u1: start + r.c1 * px, v0, v1, s: 0 });
-      continue;
-    }
-    // Each column sits on the highest surface anywhere under it (edges and centre, both ways),
-    // so a pixel half over a post is lifted onto the post, not buried in it.
-    const lift = (c: number): number => {
-      let top = Number.NEGATIVE_INFINITY;
-      for (const fu of [0.02, 0.5, 0.98])
-        for (const v of [v0 + 0.02 * px, (v0 + v1) / 2, v1 - 0.02 * px])
-          top = Math.max(top, surface(start + (c + fu) * px, v));
-      return top;
-    };
-    let c = r.c0;
-    while (c < r.c1) {
-      const s = lift(c);
-      let e = c + 1;
-      while (e < r.c1 && Math.abs(lift(e) - s) < 1e-6) e++;
-      out.push({ u0: start + c * px, u1: start + e * px, v0, v1, s });
-      c = e;
-    }
-  }
-  return out;
+  const cap = o.cap ?? 'round';
+  if (cap !== 'round' && cap !== 'square')
+    invalid(`text cap is ${JSON.stringify(cap)}`, "use 'round' or 'square'");
+  return vectorText(str, {
+    ...frame,
+    rect: stripRect(o.strip ?? 'plain'),
+    font,
+    tracking,
+    kerning,
+    weight,
+    segments: count('text segments', o.segments ?? 2, 1, 8),
+    cap,
+    align: o.align,
+    surface: o.surface,
+  });
 }

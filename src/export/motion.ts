@@ -2,9 +2,10 @@
 // Seamless by construction: every motion is rounded to a WHOLE number of cycles over the clip,
 // so the last key equals the first (a 0.8 rps wheel over 4 s = 3 turns, not 3.2 — no jump at
 // the loop point). Spins get ≥ 12 keys per turn so LINEAR quaternion interpolation never takes
-// the short way round. Time arrays are shared between channels of equal key count.
+// the short way round. Time arrays are shared between channels of equal key count. A tread has
+// no channel (glTF cannot slide vertices round a loop): `treadExtras` hands its belt to engines.
 
-import type { Motion } from '../core/index.ts';
+import type { Motion, Tread } from '../core/index.ts';
 import { quatFromAxisAngle } from '../core/index.ts';
 import type { BinWriter, Json } from './bin-writer.ts';
 
@@ -27,9 +28,15 @@ function times(bin: BinWriter, keys: number): { input: number; t: Float32Array }
   return { input, t };
 }
 
+/** `extras.ts23d.tread` of a tread part: the belt loop (0.1 mm grid) and its repeat length. */
+export const treadExtras = (t: Tread): Json => ({
+  path: t.path.map((p) => p.map((v) => Math.round(v * 1e4) / 1e4)),
+  pitch: t.pitch,
+});
+
 export function motionChannel(
   bin: BinWriter,
-  motion: Motion,
+  motion: Exclude<Motion, Tread>,
   node: number,
   rest: readonly number[],
 ): { sampler: Json; channel: Json } {

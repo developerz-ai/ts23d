@@ -1,4 +1,4 @@
-# ts23d
+# ts23d — TypeScript to 3D
 
 **Free 3D asset generator for coding agents. Your agent writes TypeScript; ts23d compiles it to game-ready glTF — for Unity, Unreal, Godot, three.js, Babylon, or anything that reads glTF.**
 
@@ -58,7 +58,7 @@ Each asset is a TypeScript module. `t3d build` compiles it, deterministically, t
 - **Organic modelling.** `sdf` (surface nets / marching cubes) with `sd.*` combinators and `sculpt`, an ordered add / subtract / paint edit list with smooth blends: busts, rocks, asteroids.
 - **Draw → 3D.** An agent writes SVG (drawing as text) and ts23d builds from it: `extrudeSvg` (holes, chamfered edges), `latheSvg` (half profile), and `visualHull`, a front + side (+ top) silhouette block-out you refine with sculpt edits ([`svg_showcase`](recipes/svg_showcase/)).
 - **Terrain.** Seeded noise (`fbm`, `ridged`, domain `warp`, `terrace`), droplet `hydraulicErosion` and `thermalErosion`, and `terrainColor` by altitude, slope and flow.
-- **Architecture and hulls.** `roof` (gable, hip, mansard, gambrel, …), `opening` window/door kits for `facade`, true-scale masonry `mass`, lofted vessel `hull`; `tiled`, `cell` and `lattice` (Warren / Pratt / Howe trusses) primitives, `box({ bevel })`, and `text` lettering as geometry.
+- **Architecture and hulls.** `roof` (gable, hip, mansard, gambrel, …), `opening` window/door kits for `facade`, true-scale masonry `mass`, lofted vessel `hull`; `tiled`, `cell` and `lattice` (Warren / Pratt / Howe trusses) primitives, `box({ bevel })`, and `text` lettering as geometry (5 × 7 pixel font, or smooth Hershey `sans`, `serif`, `script` and `gothic` stroke faces, flat or raised).
 - **An optimiser on by default.** Weld, degenerate removal, vertex-cache and vertex-fetch order (tiger_1 LOD0: 15.4 → 6.3 MB, ACMR 2.88 → 1.16), weighted normals, baked per-vertex AO.
 - **Lights, glow and provenance in the GLB.** `KHR_lights_punctual` from light sockets, emissive glow materials, licence / creators / sources as `KHR_xmp_json_ld`. Zero glTF-Validator warnings.
 - **Physics and sound.** Per-part colliders (box, sphere, capsule, cylinder, capped convex hull), mass, centre of mass and inertia from volume × density, friction and restitution per material, exported as `KHR_physics_rigid_bodies` (`toGlb(asset, { physics: true })`); a `mass` check against `real.mass`. `@developerz.ai/ts23d/audio` synthesises deterministic impact, engine, mechanism and UI WAVs from material, size and motion, placed with `KHR_audio_emitter` ([`sound_demo`](recipes/sound_demo/)).
@@ -392,3 +392,5 @@ Each recipe is a folder: `recipes/<name>/<name>.ts` (the asset), `README.md` (th
 ## License
 
 [MIT](LICENSE). Outputs are yours: no attribution, no licence conditions on generated assets.
+
+Third-party data in the library: the vector lettering faces (`text({ font: 'sans' | 'serif' | 'script' | 'gothic' })`) embed the Hershey fonts. The Hershey Fonts were originally created by Dr. A. V. Hershey while working at the U. S. National Bureau of Standards; the format of the font data was originally created by James Hurt, Cognition, Inc. The acknowledgements travel with the data in `src/primitives/font-hershey-*.ts`, as their licence asks.

@@ -36,7 +36,20 @@ export interface Sway {
   readonly oneWay?: boolean;
 }
 
-export type Motion = Spin | Slide | Sway;
+/**
+ * A track belt that runs round its wheels: the mesh stays where it is in the baked clip (glTF
+ * cannot move vertices along a curve), and `path` + `pitch` ride the node's `extras.ts23d.tread`
+ * so an engine (or the gallery) slides the links along the loop at the vehicle's speed.
+ */
+export interface Tread {
+  readonly kind: 'tread';
+  /** Closed centre line of the belt in the part's local space (metres), either winding. */
+  readonly path: readonly Vec3[];
+  /** Metres of belt after which it looks the same again: the link pitch (× 2 for alternating links). */
+  readonly pitch: number;
+}
+
+export type Motion = Spin | Slide | Sway | Tread;
 
 /**
  * A particle source the engine spawns at runtime: exhaust smoke, loco steam, track dust, muzzle

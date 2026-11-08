@@ -1,6 +1,6 @@
-# ts23d
+# ts23d — TypeScript to 3D
 
-> @developerz.ai/ts23d — a free, deterministic 3D asset generator driven by coding agents. Assets are TypeScript modules (never JSON) built with a DSL: `defineAsset({ name, kind, real, sources, budget, build(ctx) })`, where `build` adds named, pivoted, animatable parts from primitives (`box`, `lathe`, `cylinder`, `prism`, `beam`, `planar`) or from SVG drawings written as text (`extrudeSvg`, `latheSvg`, `visualHull` front/side silhouettes), places detail with `place`/`merge`, composes other assets with `ctx.use`, and gates detail on `ctx.lod`. It compiles to glTF/GLB for any engine (Unity, Unreal, Godot, three.js, Babylon) — ts23d generates assets only, the engine is yours — (3 LODs, one shared trim-sheet material, baked motion), fails a QA gate on floating parts, budget overruns and wrong real-world proportions, and renders a zero-GPU six-view contact-sheet PNG so a vision-capable agent can check its own work. Bun only, zero runtime dependencies, MIT. Status 0.x: stubs throw T3D_NOT_IMPLEMENTED with the roadmap slice that builds them.
+> @developerz.ai/ts23d (TypeScript to 3D) — a free, deterministic 3D asset generator driven by coding agents. Assets are TypeScript modules (never JSON) built with a DSL: `defineAsset({ name, kind, real, sources, budget, build(ctx) })`, where `build` adds named, pivoted, animatable parts from primitives (`box`, `lathe`, `cylinder`, `prism`, `beam`, `planar`) or from SVG drawings written as text (`extrudeSvg`, `latheSvg`, `visualHull` front/side silhouettes), places detail with `place`/`merge`, composes other assets with `ctx.use`, and gates detail on `ctx.lod`. It compiles to glTF/GLB for any engine (Unity, Unreal, Godot, three.js, Babylon) — ts23d generates assets only, the engine is yours — (3 LODs, one shared trim-sheet material, baked motion), fails a QA gate on floating parts, budget overruns and wrong real-world proportions, and renders a zero-GPU six-view contact-sheet PNG so a vision-capable agent can check its own work. Bun only, zero runtime dependencies, MIT. Status 0.x: stubs throw T3D_NOT_IMPLEMENTED with the roadmap slice that builds them.
 
 ## Offline (inside your project)
 The npm package ships every doc, skill and example, versioned with the code — read them without internet:
@@ -49,6 +49,8 @@ The human names a thing ("Tiger I, mid-production 1943"). The agent researches s
 
 - Playbooks: docs/playbooks/README.md — class-by-class guidance (vehicles, buildings, props, nature, characters) from a name to sourced specs, part tree, motion, QA.
 - Art as text: docs/idea/16-art-as-text.md — art principles as measurable definitions, DSL words and checks.
+
+- Lettering: `text(str, { font })` — 5 × 7 pixel (`'5x7'`, `'block'`, Latin + Cyrillic) or smooth Hershey stroke faces `'sans'`, `'serif'`, `'script'`, `'gothic'` (ASCII) with `weight`, `segments` (pick from `ctx.lod`), `cap`, kerning; flush or raised `depth`; `measureText`. Specimen: `recipes/type_specimen`.
 
 - Finishes and optics: lacquered paint (clearcoat), glass/ice/liquid/jelly (transmission, ior, volume), sheen, anisotropy, iridescence; `--profile unreal|unity|godot|rt|web` (docs/idea/02-dsl.md).
 

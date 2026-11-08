@@ -2,7 +2,8 @@
 // sprocket per side (all spinning about Y), and a track belt laid round them: the belt is the
 // convex hull of the wheel circles offset by half a link, so it hugs every wheel at every LOD.
 // LOD0 places individual links with guide horns; LOD1 coarse links; LOD2 a solid side slab and
-// keeps the wheel pivots (empty) so engine code driving them never breaks.
+// keeps the wheel pivots (empty) so engine code driving them never breaks. Each belt is a `tread`
+// motion part, so engines run the links round the loop.
 
 import {
   box,
@@ -14,6 +15,7 @@ import {
   type PartOptions,
   place,
   prism,
+  tread,
   type Vec2,
   type Vec3,
 } from '@developerz.ai/ts23d';
@@ -247,6 +249,8 @@ export function runningGear(add: Add, lod: Lod): void {
           }),
           { at: [0, y, 0] },
         ),
+        // The slab's outline is the belt grown outward: sliding it round keeps the same block.
+        { motion: tread(belt, y, 0.1) },
       );
       continue;
     }
@@ -265,6 +269,6 @@ export function runningGear(add: Add, lod: Lod): void {
     const links = pts.map(({ p, angle }) =>
       place(one, { at: [p[0], y, p[1]], pitch: -angle, roll: Math.PI }),
     );
-    add(`track_${side}`, merge(links));
+    add(`track_${side}`, merge(links), { motion: tread(belt, y, len) });
   }
 }

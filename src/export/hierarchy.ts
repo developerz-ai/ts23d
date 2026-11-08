@@ -7,7 +7,7 @@ import type { CompiledAsset, Part } from '../core/index.ts';
 import { quatFromAxisAngle } from '../core/index.ts';
 import type { BinWriter, Json } from './bin-writer.ts';
 import { LIGHTS, lightOf } from './lights.ts';
-import { motionChannel } from './motion.ts';
+import { motionChannel, treadExtras } from './motion.ts';
 import { writePrimitive } from './primitive.ts';
 
 /** The growing glTF arrays every LOD appends to. */
@@ -59,7 +59,7 @@ function lightIndexOf(doc: GltfDoc, light: Json): number {
 }
 
 function addMotion(doc: GltfDoc, part: Part, id: number): void {
-  if (!part.motion) return;
+  if (!part.motion || part.motion.kind === 'tread') return;
   const key = JSON.stringify([part.motion, part.at]);
   let sampler = doc.motionSamplers.get(key);
   let channel: Json;
@@ -90,11 +90,13 @@ export function writeHierarchy(
   asset.parts.forEach((part: Part, i) => {
     const node: Json = { name: part.name, translation: [...part.at] };
     if (part.yaw) node['rotation'] = [...quatFromAxisAngle([0, 0, 1], part.yaw)];
-    if (part.emitter || part.socket) {
+    const tread = part.motion?.kind === 'tread' ? part.motion : null;
+    if (part.emitter || part.socket || tread) {
       node['extras'] = {
         ts23d: {
           ...(part.emitter ? { emitter: part.emitter } : {}),
           ...(part.socket ? { socket: part.socket } : {}),
+          ...(tread ? { tread: treadExtras(tread) } : {}),
         },
       };
     }
