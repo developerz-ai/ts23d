@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'bun:test';
+import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import { Ts23dError } from '../core/index.ts';
 import { godotShaderSource, threeMaterialSource } from './shader.ts';
 import { cellRect } from './trim-sheet.ts';
@@ -8,6 +10,26 @@ const hints = {
   windowGlow: { color: '#ffcc88', ratio: 0.4 },
   wear: { amount: 0.3 },
 } as const;
+
+function typecheck(file: string): ReturnType<typeof Bun.spawnSync> {
+  return Bun.spawnSync(
+    [
+      'node_modules/.bin/tsc',
+      '--ignoreConfig',
+      '--noEmit',
+      '--strict',
+      '--module',
+      'esnext',
+      '--moduleResolution',
+      'bundler',
+      '--target',
+      'es2023',
+      '--skipLibCheck',
+      file,
+    ],
+    { stdout: 'pipe', stderr: 'pipe' },
+  );
+}
 
 describe('shader hints: bad input', () => {
   it('rejects a glow ratio outside 0..1 and a non-hex colour, with a fix', () => {
@@ -34,6 +56,24 @@ describe('threeMaterialSource', () => {
     expect(src).toContain('export function upgradeTrimMaterials');
     expect(src).toContain('MeshStandardNodeMaterial');
     expect(src).not.toContain("@developerz.ai/ts23d'");
+  });
+  it('typechecks the emitted module against the site-pinned three package', async () => {
+    const dir = await mkdtemp(join('apps/site', '.ts23d-shader-'));
+    const file = join(dir, 'trim-material.ts');
+    try {
+      await writeFile(file, src);
+      const valid = typecheck(file);
+      expect(valid.exitCode, valid.stdout.toString() + valid.stderr.toString()).toBe(0);
+
+      await writeFile(file, src.replace("from 'three/webgpu'", "from 'three/not-a-real-import'"));
+      const invalid = typecheck(file);
+      expect(invalid.exitCode).not.toBe(0);
+      expect(invalid.stdout.toString() + invalid.stderr.toString()).toContain(
+        'three/not-a-real-import',
+      );
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
   });
   it('tints by vertex colour and binds the ORM channels', () => {
     expect(src).toContain('vertexColor()');
