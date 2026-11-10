@@ -119,7 +119,7 @@ describe('head', () => {
         // The neck sinks into the bust: the head starts below the bust's top.
         expect(boundsOf(head).min[2] ?? 1).toBeLessThan(b.max[2] ?? 0);
       }
-  }, 30000);
+  });
 
   it('is deterministic: same params + seed → same vertices', () => {
     const a = build({ race: 'orc' });

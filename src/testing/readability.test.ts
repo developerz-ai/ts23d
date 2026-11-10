@@ -58,7 +58,7 @@ describe('silhouetteReads — failure case first', () => {
     const r = code(() => silhouetteReads(tower(true)));
     expect(r).toContain('T3D_ART_SILHOUETTE');
     expect(r).toMatch(/from front matches LOD0 at IoU 0\.\d+ < 0\.85/);
-  }, 30_000); // first beauty render paints the default trim sheet
+  });
   it('passes when LOD2 keeps every mass', () => {
     for (const v of silhouetteReads(tower(false))) expect(v.iou).toBeGreaterThan(0.99);
   });
@@ -87,7 +87,7 @@ describe('restAreas — failure case first', () => {
     const r = code(() => restAreas(noisyBlob));
     expect(r).toContain('T3D_ART_REST');
     expect(r).toMatch(/calm surface covers \d+% of the visible asset < 25%/);
-  }, 30_000); // meshing the noisy SDF
+  });
   it('passes calm planes with detail clustered', () => {
     const m = restAreas(clustered);
     expect(m.share).toBeGreaterThan(0.5);

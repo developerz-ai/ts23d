@@ -16,4 +16,4 @@ it('builds GLBs and a contact sheet with nothing but bun and the library', async
   expect(p.exitCode).toBe(0);
   for (const f of ['tiger_1.lod0.glb', 'tiger_1.lod2.glb', 'tiger_1.png'])
     expect(await Bun.file(join(out, f)).exists()).toBe(true);
-}, 60_000);
+});

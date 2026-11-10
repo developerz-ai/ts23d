@@ -85,7 +85,7 @@ describe('tree', () => {
       });
       for (const lod of [0, 1, 2] as Lod[]) expect(runQa(compile(a, { lod }))).toEqual([]);
       // The full QA (clashes' sway volume over thousands of leaf cards) takes seconds per LOD.
-    }, 30_000);
+    });
   }
 
   it('fits the real envelope and keeps DBH exact across Y', () => {

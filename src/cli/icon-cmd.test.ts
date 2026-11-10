@@ -36,7 +36,7 @@ async function icons(
 it('warns with a code and a fix when the team colour is buried', async () => {
   const r = await icons(await fixture('buried', true));
   expect(r.data[0]?.warnings.map((w) => w.code)).toEqual(['T3D_TEAM_COLOUR_HIDDEN']);
-}, 30000);
+});
 
 it('writes icon.png (256²), portrait.png (512²) and rts.png (64²) per asset', async () => {
   const r = await icons(await fixture('scout', false));
@@ -51,4 +51,4 @@ it('writes icon.png (256²), portrait.png (512²) and rts.png (64²) per asset',
     const dv = new DataView(png.buffer);
     expect([dv.getUint32(16), dv.getUint32(20)]).toEqual([size, size]);
   }
-}, 30000);
+});

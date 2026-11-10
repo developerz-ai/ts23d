@@ -192,7 +192,7 @@ it('forced disposal kills the group even when stop hangs', async () => {
   await expect(f.dispose()).rejects.toThrow('wrapper did not exit');
   expect(await finished(dev)).not.toBeNull();
   await eventually(async () => (await Promise.all(pids.map(alive))).every((x) => !x));
-}, 10000);
+});
 
 it('stale identities never signal unrelated live PIDs, and allow a new start', async () => {
   const f = await fixture();

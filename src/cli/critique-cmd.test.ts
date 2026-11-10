@@ -40,4 +40,4 @@ it('renders the pack; sheet.png is byte-identical to the committed contact sheet
   expect(sha256(images.get('raking.png') ?? new Uint8Array())).not.toBe(
     sha256(images.get('hero.png') ?? new Uint8Array()),
   );
-}, 30_000); // paints the default trim sheet and the 800×450 metrics render
+});
