@@ -13,7 +13,8 @@ export const STEPS = [
   { name: 'boundaries', cmd: ['bun', 'run', 'scripts/boundaries.ts'] },
   { name: 'determinism', cmd: ['bun', 'run', 'scripts/determinism.ts'] },
   { name: 'filesize', cmd: ['bun', 'run', 'scripts/filesize.ts'] },
-  { name: 'test', cmd: ['bun', 'test', 'src', 'scripts', 'examples', 'apps/site/src'] },
+  // The args, and the one per-test timeout, live in package.json's `test` script.
+  { name: 'test', cmd: ['bun', 'run', 'test'] },
   { name: 'recipes', cmd: ['bun', 'run', 'scripts/recipes.ts'] },
   { name: 'build', cmd: ['bun', 'run', 'scripts/build.ts'] },
 ] as const;

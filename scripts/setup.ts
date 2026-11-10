@@ -1,4 +1,6 @@
-// Fresh clone → working tree, idempotent: check Bun, install, hooks, first gate run.
+// Fresh clone → working tree, idempotent: check Bun, install, hooks. It does not run the gate:
+// setup runs before every agent task, so a red gate here would hold the very task that fixes it.
+// The gate is `bun run verify`, run on its own.
 
 const want = (await Bun.file('.bun-version').text()).trim();
 if (Bun.version !== want)
@@ -6,7 +8,6 @@ if (Bun.version !== want)
 for (const cmd of [
   ['bun', 'install'],
   ['bunx', 'lefthook', 'install'],
-  ['bun', 'run', 'verify', '--only', 'lint,typecheck,test'],
 ]) {
   console.log(`▸ ${cmd.join(' ')}`);
   const p = Bun.spawnSync(cmd, { stdout: 'inherit', stderr: 'inherit' });

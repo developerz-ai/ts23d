@@ -62,5 +62,5 @@ describe('t3d tune', () => {
     expect(Math.abs(width - 2)).toBeLessThan(0.2);
     expect(existsSync(join(dir, 'tune-report.md'))).toBe(true);
     expect(existsSync(join(dir, 'tune-strip.png'))).toBe(true);
-  }, 60000);
+  });
 });
