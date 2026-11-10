@@ -20,9 +20,9 @@
     3596
   ],
   "drawCalls": [
-    34,
-    34,
-    20
+    36,
+    36,
+    22
   ],
   "pivots": [
     {
@@ -95,6 +95,11 @@
       "motion": "spin"
     },
     {
+      "name": "tank_track_l",
+      "parent": "tank",
+      "motion": "tread"
+    },
+    {
       "name": "tank_wheel_r_0",
       "parent": "tank",
       "motion": "spin"
@@ -128,6 +133,11 @@
       "name": "tank_sprocket_r",
       "parent": "tank",
       "motion": "spin"
+    },
+    {
+      "name": "tank_track_r",
+      "parent": "tank",
+      "motion": "tread"
     },
     {
       "name": "warden_0",
