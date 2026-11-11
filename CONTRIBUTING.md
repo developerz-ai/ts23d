@@ -28,11 +28,13 @@ bun run verify --json                # for agents: { ok, failed, results, output
 | `boundaries` | Imports only go down a tier, only through `index.ts` ([architecture](docs/architecture/README.md)) | `bun run boundaries` |
 | `determinism` | No `Math.random`, wall clock, `performance.now`, locale formatting in `src/` / `recipes/` | `bun run determinism` |
 | `filesize` | No source file over 300 lines | `bun run filesize` |
-| `test` | `bun test src scripts` | `bun run test` |
+| `test` | Bun tests in `src/`, `scripts/`, `examples/`, `apps/site/src/`, and `recipes/` | `bun run test` |
 | `recipes` | Every recipe compiles at 3 LODs, passes QA, builds byte-identically twice | `bun run recipes` |
 | `build` | `dist/` JS + `.d.ts` | `bun run build` |
 
 Hooks: pre-commit runs Biome on staged files; pre-push runs `bun run verify`.
+
+CI keeps its existing 12 `verify` shards. Recipe tests in the `test` step are partitioned across those shards, rather than all running on shard 1.
 
 ## Conventions
 

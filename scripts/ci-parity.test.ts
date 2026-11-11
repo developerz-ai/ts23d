@@ -5,8 +5,10 @@ import { chmodSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
+import { parseShard } from './lib/shard.ts';
 import { alive, eventually, finished, fixture, ready } from './lib/wrapper-fixture.ts';
-import { STEPS } from './verify.ts';
+import { recipeTestFiles, STANDARD_TEST_ROOTS, testTargets } from './test.ts';
+import { STEPS, stepsFor } from './verify.ts';
 
 it('ci.yml runs the full local gate', async () => {
   const ci = await Bun.file('.github/workflows/ci.yml').text();
@@ -28,6 +30,25 @@ it('every package.json gate script is a verify step', async () => {
   ]) {
     expect(pkg.scripts[s]).toBeDefined();
     expect(STEPS.map((x) => x.name)).toContain(s as (typeof STEPS)[number]['name']);
+  }
+});
+
+it('the package test launcher covers recipe tests locally and partitions them in CI', async () => {
+  const pkg = (await Bun.file('package.json').json()) as { scripts: Record<string, string> };
+  expect(pkg.scripts.test).toBe('bun run scripts/test.ts');
+  const recipeTests = await recipeTestFiles();
+  expect(testTargets(recipeTests, undefined)).toEqual([...STANDARD_TEST_ROOTS, ...recipeTests]);
+  const ciRecipeTests = Array.from({ length: 12 }, (_, index) =>
+    testTargets(recipeTests, parseShard(`${index + 1}/12`)).filter((file) => recipeTests.includes(file)),
+  );
+  expect(ciRecipeTests.flat().sort()).toEqual(recipeTests);
+});
+
+it('every CI shard runs its test and recipe steps', () => {
+  for (let index = 1; index <= 12; index++) {
+    const names = stepsFor(parseShard(`${index}/12`)).map((step) => step.name);
+    expect(names).toContain('test');
+    expect(names).toContain('recipes');
   }
 });
 

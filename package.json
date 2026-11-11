@@ -68,7 +68,7 @@
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "bun test --timeout 120000 src scripts examples apps/site/src",
+    "test": "bun run scripts/test.ts",
     "build": "bun run scripts/build.ts",
     "boundaries": "bun run scripts/boundaries.ts",
     "determinism": "bun run scripts/determinism.ts",
