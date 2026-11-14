@@ -1,5 +1,5 @@
 {
-  "_note": "This file is tracked, so it is public: it must never hold a credential and must never name an internal service endpoint. Add internal servers locally instead (`claude mcp add --scope local ...`), which keeps them out of the repository. scripts/public-tree.test.ts guards it.",
+  "_note": "This file is tracked, so it is public: it must never hold a credential and must never name an internal service endpoint. Add internal servers locally instead (`claude mcp add --scope local ...`), which keeps them out of the repository. scripts/public-tree.test.ts fails on an internal host here; keeping credentials out is on the author.",
   "mcpServers": {
     "sentry-mcp": {
       "type": "stdio",
