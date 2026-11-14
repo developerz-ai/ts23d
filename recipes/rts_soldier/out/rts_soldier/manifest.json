@@ -9,15 +9,20 @@
     "character",
     "team-colour"
   ],
+  "lods": [
+    0,
+    1,
+    2
+  ],
   "files": {
     "lods": [],
-    "sheet": "recipes/rts_soldier/out/rts_soldier/sheet.png",
-    "thumb": "recipes/rts_soldier/out/rts_soldier/thumb.png"
+    "sheet": "sheet.png",
+    "thumb": "thumb.png"
   },
   "triangles": [
-    12720,
-    2816,
-    380
+    12120,
+    2596,
+    348
   ],
   "drawCalls": [
     3,

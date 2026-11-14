@@ -1,15 +1,17 @@
 // The viewer's compile progress: what is compiling, a bar and the elapsed seconds against the
 // estimate. A compile in the worker is one synchronous call, so the bar is time-based (eases
 // towards 95 % of the estimate, never claims done), and says "est." when it shows a guess. Also
-// the "Load LOD0" button heavy assets get.
+// the "Load LOD0" button heavy assets get. A failed compile ends the bar in a visible message.
 
 import { estimateSeconds, isHeavy } from './lod-policy.ts';
+import { clearMessage, endInMessage, type LoadingParts, loadingParts } from './viewer-fallback.ts';
 import type { Subject } from './viewer-load.ts';
 
 const q = <T extends Element>(root: ParentNode, sel: string): T | null =>
   root.querySelector<T>(sel);
 
 export class Progress {
+  private readonly parts: LoadingParts;
   private readonly text: HTMLElement | null;
   private readonly bar: HTMLElement | null;
   private readonly time: HTMLElement | null;
@@ -20,6 +22,7 @@ export class Progress {
     private readonly root: HTMLElement,
     private readonly busy: HTMLElement,
   ) {
+    this.parts = loadingParts(root);
     this.text = q(root, '[data-loading-text]');
     this.bar = q(root, '[data-progress-bar]');
     this.time = q(root, '[data-loading-time]');
@@ -28,6 +31,7 @@ export class Progress {
   /** Show progress for a compile expected to take `estimate` seconds (null: unknown). */
   start(label: string, estimate: number | null): void {
     this.stop();
+    clearMessage(this.parts);
     this.root.hidden = false;
     this.busy.setAttribute('aria-busy', 'true');
     if (this.text) this.text.textContent = label;
@@ -54,6 +58,16 @@ export class Progress {
     window.clearInterval(this.timer);
     this.root.hidden = true;
     this.busy.removeAttribute('aria-busy');
+  }
+
+  /** Stop the bar and leave why `name` failed on screen in its place (no retry loop). */
+  fail(name: string, error: unknown): string {
+    const why = error instanceof Error ? error.message : String(error);
+    const message = `${name} failed to compile: ${why}`;
+    console.error(`ts23d: ${message}`, error);
+    this.stop();
+    endInMessage(this.parts, message);
+    return message;
   }
 }
 

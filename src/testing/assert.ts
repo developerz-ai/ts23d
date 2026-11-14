@@ -3,7 +3,7 @@
 //   it('passes QA', () => assertQaPass(tiger_1));
 //   it('has its pivots', () => assertParts(tiger_1, ['turret', 'gun', 'wheel_l_*']));
 
-import type { Asset, Lod, Measure } from '../core/index.ts';
+import { type Asset, type Lod, type Measure, TOLERANCE } from '../core/index.ts';
 import {
   clashes,
   DEFAULT_GATES,
@@ -51,6 +51,7 @@ export function assertBudget(
               lod: a.lod,
               finding: {
                 gate: 'budget',
+                code: 'T3D_QA_BUDGET',
                 message: `${tris} triangles > ${cap}`,
                 fix: 'drop detail at this LOD (ctx.lod / ctx.pick) — never raise a cap to make a test pass',
               },
@@ -72,6 +73,7 @@ export function assertParts(asset: Asset, selectors: readonly string[], o: LodOp
           lod: a.lod,
           finding: {
             gate: 'parts',
+            code: 'T3D_QA_PARTS',
             message: `no part matches '${s}'`,
             fix: 'engines bind to these names: add the part/group at this LOD (gate its geometry, not its pivot)',
           },
@@ -84,8 +86,8 @@ export function assertParts(asset: Asset, selectors: readonly string[], o: LodOp
 export function assertMeasure(asset: Asset, m: Measure, o: { lod?: Lod } = {}): number {
   const [a] = compileLods(asset, { lods: [o.lod ?? 0] });
   const got = a ? measure(a, m) : null;
-  const tol = m.tolerance ?? 0.02;
-  const bad = got === null || Math.abs(got - m.value) / m.value > tol;
+  const tol = m.tolerance ?? TOLERANCE.measure;
+  const bad = got === null || !(Math.abs(got - m.value) / m.value <= tol);
   failOn(
     `${asset.name} measure`,
     bad
@@ -93,6 +95,7 @@ export function assertMeasure(asset: Asset, m: Measure, o: { lod?: Lod } = {}): 
           {
             finding: {
               gate: 'measure',
+              code: 'T3D_QA_MEASURE',
               message:
                 got === null
                   ? `'${m.label}': no part matches ${JSON.stringify(m.parts ?? m.between)}`

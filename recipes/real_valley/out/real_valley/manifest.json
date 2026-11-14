@@ -10,10 +10,15 @@
     "yosemite",
     "map"
   ],
+  "lods": [
+    0,
+    1,
+    2
+  ],
   "files": {
     "lods": [],
-    "sheet": "recipes/real_valley/out/real_valley/sheet.png",
-    "thumb": "recipes/real_valley/out/real_valley/thumb.png"
+    "sheet": "sheet.png",
+    "thumb": "thumb.png"
   },
   "triangles": [
     133120,

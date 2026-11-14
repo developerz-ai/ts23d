@@ -734,7 +734,8 @@ export const tiger_1 = defineAsset({
       const sAt: Vec3 = [SPROCKET.x, ty, SPROCKET.z];
       const sm =
         lod === 2
-          ? flip(farDisc(SPROCKET.r - 0.05, HORN_Y, 0.25))
+          ? // Hub ends where the LOD0 hub does (y = −0.32), on the final-drive housing's face.
+            flip(farDisc(SPROCKET.r - 0.05, HORN_Y, 0.32 + HORN_Y))
           : flip(sprocket(lod, SPROCKET.r));
       ctx.part(`sprocket_${side}`, gear(sm, sAt), { at: sAt, ...spin(0.8), ...wall });
       const iAt: Vec3 = [IDLER.x, ty, IDLER.z];

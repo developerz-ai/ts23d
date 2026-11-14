@@ -61,6 +61,7 @@ export function assertNotEmpty(
           {
             finding: {
               gate: 'not-empty',
+              code: 'T3D_QA_NOT_EMPTY',
               message: `${where} is ${(c * 100).toFixed(2)}% drawn, want ≥ ${(min * 100).toFixed(2)}%`,
               fix: 'the asset is missing from the frame: check it compiled with geometry, sits near the origin, and the camera/region frames it',
             },
@@ -124,6 +125,7 @@ export function expectImageClose(
       {
         finding: {
           gate: 'image-close',
+          code: 'T3D_QA_IMAGE_CLOSE',
           message: `${(frac * 100).toFixed(2)}% of pixels differ from ${goldenPath} by > ${tol} (worst ${worst}); diff written to ${diffPath}`,
           fix: `Read ${diffPath} (red = changed). Fix the regression, or if the change is intended re-run with T3D_UPDATE_GOLDEN=1`,
         },

@@ -7,6 +7,7 @@ import {
   boundsOf,
   type CompiledAsset,
   type Measure,
+  TOLERANCE,
   worldMeshes,
 } from '../core/index.ts';
 import type { Finding, Gate } from './types.ts';
@@ -44,20 +45,23 @@ export const measures: Gate = (asset): Finding[] => {
   if (asset.lod !== 0 || !asset.real?.measures) return [];
   return asset.real.measures.flatMap((m): Finding[] => {
     const got = measure(asset, m);
-    const tol = m.tolerance ?? 0.02;
+    const tol = m.tolerance ?? TOLERANCE.measure;
     if (got === null) {
       return [
         {
           gate: 'measures',
+          code: 'T3D_QA_MEASURES',
           message: `'${m.label}': no part matches ${JSON.stringify(m.parts ?? m.between)}`,
           fix: 'name the parts the measure refers to, or fix the names in the measure',
         },
       ];
     }
-    return Math.abs(got - m.value) / m.value > tol
+    // `!(err <= tol)`: a NaN error fails instead of passing.
+    return !(Math.abs(got - m.value) / m.value <= tol)
       ? [
           {
             gate: 'measures',
+            code: 'T3D_QA_MEASURES',
             message: `${m.label}: ${got.toFixed(3)} m on ${m.axis.toUpperCase()}, spec ${m.value} m (±${tol * 100}%)${m.source ? ` — ${m.source}` : ''}`,
             fix: 'rebuild the part from the spec number; never edit the spec to match the model',
           },

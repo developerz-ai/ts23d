@@ -3,7 +3,7 @@ import { mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { CRITERIA } from '../../src/qa/critique.ts';
-import { critiqueViolations, keepCritiques } from './critique.ts';
+import { critiqueMode, critiqueViolations, ENFORCE_FROM, keepCritiques } from './critique.ts';
 
 const sha = (s: string): string => new Bun.CryptoHasher('sha256').update(s).digest('hex');
 
@@ -24,6 +24,15 @@ const scored = (score: number, renders: Record<string, string>) => ({
   overall: score,
   scores: Object.fromEntries(CRITERIA.map((c) => [c, { score, reason: 'r', fixes: ['f'] }])),
   renders,
+});
+
+describe('critiqueMode', () => {
+  it('warns before ENFORCE_FROM and enforces from that day on', () => {
+    expect(ENFORCE_FROM).toBe('2027-01-15');
+    expect(critiqueMode(new Date('2027-01-14T23:59:59Z'))).toBe('warn');
+    expect(critiqueMode(new Date('2027-01-15T00:00:00Z'))).toBe('enforce');
+    expect(critiqueMode(new Date('2030-06-01T00:00:00Z'))).toBe('enforce');
+  });
 });
 
 describe('critiqueViolations', () => {

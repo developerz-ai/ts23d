@@ -1,7 +1,8 @@
 // Closed-surface checks for primitives that claim watertight output (bevelled box, sdf). Weld by
 // position (flat faces own their vertices); a surface is closed and consistently wound when every
 // edge is walked as often a→b as b→a. Non-manifold edges (surface nets on sub-cell features) are
-// counted separately. Internal; tests use them.
+// counted separately. Zero-area triangles (the `degenerate-triangles` gate, recomputed here because
+// qa sits above primitives) are counted too. Internal; tests use them.
 
 import type { Mesh } from '../core/index.ts';
 
@@ -71,4 +72,23 @@ export function windingFlips(m: Mesh): number {
     if (gl > 0 && nn > 0 && s / (gl * Math.sqrt(nn)) < -0.1) bad++;
   }
   return bad;
+}
+
+/** Triangles whose cross product is below the `degenerate-triangles` gate's 1e-12. */
+export function zeroArea(m: Mesh): number {
+  let n = 0;
+  const P = m.positions;
+  for (let t = 0; t < m.indices.length; t += 3) {
+    const a = (m.indices[t] ?? 0) * 3;
+    const b = (m.indices[t + 1] ?? 0) * 3;
+    const c = (m.indices[t + 2] ?? 0) * 3;
+    const ux = (P[b] ?? 0) - (P[a] ?? 0);
+    const uy = (P[b + 1] ?? 0) - (P[a + 1] ?? 0);
+    const uz = (P[b + 2] ?? 0) - (P[a + 2] ?? 0);
+    const vx = (P[c] ?? 0) - (P[a] ?? 0);
+    const vy = (P[c + 1] ?? 0) - (P[a + 1] ?? 0);
+    const vz = (P[c + 2] ?? 0) - (P[a + 2] ?? 0);
+    if (Math.hypot(uy * vz - uz * vy, uz * vx - ux * vz, ux * vy - uy * vx) < 1e-12) n++;
+  }
+  return n;
 }

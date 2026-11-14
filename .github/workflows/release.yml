@@ -1,9 +1,10 @@
 name: release
 
-# npm publish via OIDC trusted publishing — no NPM_TOKEN exists. Runs only from a vX.Y.Z tag,
-# only after ci passed on that commit, only with the tree stamped at that version. The publish
-# job restores no cache (a PR job could have written it) and is the only holder of id-token.
-# One-time bootstrap + trusted-publisher setup: PUBLISHING.md.
+# npm publish via OIDC trusted publishing — no NPM_TOKEN exists. Runs only from a vX.Y.Z tag
+# whose commit is on main and has a successful ci push run, only with the tree stamped at that
+# version, and only after the whole gate (`bun run verify`, every step, unsharded) passes again
+# here. The publish job restores no cache (a PR job could have written it) and is the only holder
+# of id-token. One-time bootstrap + trusted-publisher setup: PUBLISHING.md.
 
 on:
   workflow_dispatch:
@@ -23,7 +24,10 @@ concurrency:
 jobs:
   check:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 45 # the unsharded recipes step alone is ~9 minutes
+    permissions:
+      contents: read
+      actions: read # gh run list: the tag commit's ci runs
     steps:
       - name: refuse anything but a release tag
         env:
@@ -37,12 +41,31 @@ jobs:
           esac
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          fetch-depth: 0 # origin/main, for the ancestry check
           persist-credentials: false
+      - name: refuse a tag that is not on a green main commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          if ! git merge-base --is-ancestor "$SHA" origin/main; then
+            echo "::error::$SHA is not on main. fix: release only through a merged 'chore: release x.y.z' PR (PUBLISHING.md)"
+            exit 1
+          fi
+          green="$(gh run list --workflow ci.yml --commit "$SHA" --branch main --event push --status success --json databaseId --jq length)"
+          if [ "$green" -eq 0 ]; then
+            echo "::error::no successful ci push run on $SHA. fix: wait for (or re-run) ci on main for that commit, then gh workflow run release.yml --ref <tag> -f version=<x.y.z>"
+            exit 1
+          fi
+          echo "ok: $SHA is on main with $green green ci run(s)"
       - uses: ./.github/actions/setup
-      - run: bun run scripts/release.ts --check "${{ inputs.version }}"
-      # ci (all 12 shards, recipes included) already passed on this commit: release-tag.yml only
-      # tags after it. Re-run the fast steps here; the recipes step alone needs the sharded matrix.
-      - run: bun run verify --only lint,typecheck,boundaries,determinism,filesize,test,build
+      - name: tree is stamped at the version
+        env:
+          VERSION: ${{ inputs.version }}
+        run: bun run scripts/release.ts --check "$VERSION"
+      - run: bun run verify
 
   publish:
     needs: check
@@ -67,5 +90,5 @@ jobs:
           registry-url: https://registry.npmjs.org
       - run: npm install -g npm@11.5.2 # trusted publishing needs npm >= 11.5.1
       - run: bun install --frozen-lockfile --ignore-scripts
-      - run: bun run build
+      # npm publish runs `prepack` (= bun run build), so dist/ is built from this checkout.
       - run: npm publish --access public --provenance

@@ -33,6 +33,19 @@ const flaky = defineAsset({
     ctx.part('body', box({ size: [1, 1, 1 + calls * 0.01], color: c }));
   },
 });
+// Same geometry every build; only the clip differs (an rps from ambient state, like Math.random).
+let spins = 0;
+const restless = defineAsset({
+  name: 'restless',
+  kind: 'prop',
+  budget: { triangles: [99, 99, 99] },
+  build: (ctx) => {
+    spins++;
+    ctx.part('turntable', box({ size: [1, 1, 1], color: c }), {
+      motion: { kind: 'spin', axis: [0, 0, 1], rps: spins },
+    });
+  },
+});
 const floating = defineAsset({
   name: 'floating',
   kind: 'prop',
@@ -81,6 +94,9 @@ describe('testing assertions', () => {
       'not byte-deterministic',
     );
     expect(code(() => assertMotionClear(spinner, { lods: [0] }))).toContain('T3D_QA_FAILED');
+    expect(code(() => assertDeterministic(restless, { lods: [0] }))).toContain(
+      'not byte-deterministic',
+    );
   });
 
   it('return quietly when the asset is right', () => {

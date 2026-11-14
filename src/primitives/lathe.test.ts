@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test';
 import { type Mesh, triangleCount, type Vec2 } from '../core/index.ts';
 import { stripRect } from '../material/index.ts';
-import { openEdges, windingFlips } from './closed.ts';
+import { openEdges, windingFlips, zeroArea } from './closed.ts';
 import { lathe } from './lathe.ts';
 import { stripVMetres } from './strip-uv.ts';
 
@@ -59,5 +59,110 @@ describe('lathe options', () => {
     expect(4 / stripVMetres(strip)).toBeGreaterThan(2);
     const stretch: Mesh = lathe({ profile: TANK, segments: 16, color: C, strip });
     expect(Math.max(...stretch.uvs.filter((_, i) => i % 2 === 0))).toBeCloseTo(1, 6);
+  });
+});
+
+describe('lathe input', () => {
+  it('rejects segment counts that build NaN, empty or malformed rings', () => {
+    for (const segments of [0, -3, 2.5, 2, 1025, Number.NaN])
+      expect(() => lathe({ profile: TANK, segments, color: C })).toThrow('T3D_RECIPE_INVALID');
+  });
+
+  it('rejects a profile with a NaN point, a negative radius, no radius or one point', () => {
+    const bad: Vec2[][] = [
+      [
+        [1, 0],
+        [Number.NaN, 1],
+      ],
+      [
+        [1, 0],
+        [-0.5, 1],
+      ],
+      [
+        [0, 0],
+        [0, 1],
+      ],
+      [[1, 0]],
+    ];
+    for (const profile of bad)
+      expect(() => lathe({ profile, segments: 8, color: C })).toThrow('T3D_RECIPE_INVALID');
+  });
+
+  it('accepts a profile that closes onto the axis (a dome)', () => {
+    const dome: Vec2[] = [
+      [1, 0],
+      [0.7, 0.7],
+      [0, 1],
+    ];
+    // 6 on the lower band, 3 on the tip band: the pole emits no zero-area slivers.
+    expect(triangleCount(lathe({ profile: dome, segments: 3, color: C }))).toBe(9);
+  });
+});
+
+describe('lathe poles', () => {
+  const cone: Vec2[] = [
+    [0, 0],
+    [0.5, 0],
+    [0.3, 1],
+    [0, 1.2],
+  ];
+  it('a profile that starts and ends on the axis emits no zero-area triangles', () => {
+    const m = lathe({ profile: cone, segments: 12, color: [1, 1, 1] });
+    expect(zeroArea(m)).toBe(0);
+    // Each pole band keeps one triangle per segment: 12 + 2 × 12 + 12.
+    expect(triangleCount(m)).toBe(48);
+  });
+
+  it('caps on a zero radius are skipped, not a fan of slivers', () => {
+    const m = lathe({ profile: cone, segments: 8, color: [1, 1, 1], caps: true });
+    expect(zeroArea(m)).toBe(0);
+  });
+
+  it('a pole lathe is still closed and consistently wound', () => {
+    const m = lathe({ profile: cone, segments: 12, color: [1, 1, 1] });
+    expect(windingFlips(m)).toBe(0);
+  });
+});
+
+describe('lathe degenerate profiles', () => {
+  it('a repeated profile point (a zero-length segment) emits no band of slivers', () => {
+    // The flange at LOD1/2: its chamfer collapses to two equal points.
+    const ring: Vec2[] = [
+      [0.05, 0],
+      [0.1, 0],
+      [0.1, 0],
+      [0.1, 0.02],
+      [0.05, 0.02],
+      [0.05, 0],
+    ];
+    for (const faceted of [false, true]) {
+      const m = lathe({ profile: ring, segments: 10, color: [1, 1, 1], faceted });
+      expect(zeroArea(m)).toBe(0);
+      expect(triangleCount(m)).toBe(4 * 2 * 10);
+    }
+  });
+
+  it('a radius that is 0 up to rounding (sin π) is a pole, not a ring of slivers', () => {
+    const pouf: Vec2[] = Array.from({ length: 7 }, (_, i) => {
+      const a = (Math.PI * i) / 6;
+      return [0.19 * Math.sin(a) ** 0.6, 0.075 - 0.075 * Math.cos(a)] as Vec2;
+    });
+    for (const faceted of [false, true]) {
+      const m = lathe({ profile: pouf, segments: 12, color: [1, 1, 1], faceted });
+      expect(zeroArea(m)).toBe(0);
+    }
+  });
+
+  it('a profile of one repeated point still throws', () => {
+    expect(() =>
+      lathe({
+        profile: [
+          [0.1, 0],
+          [0.1, 0],
+        ],
+        segments: 8,
+        color: [1, 1, 1],
+      }),
+    ).toThrow('T3D_');
   });
 });

@@ -106,12 +106,14 @@ export function critiqueFindings(
   minimum: number = CRITIQUE_MINIMUM,
 ): Finding[] {
   const gate = 'critique';
+  const code = 'T3D_QA_CRITIQUE';
   const redo = `bun run t3d critique <recipe> --out tmp/critique, READ every image, then write critique.json`;
-  if (raw === undefined) return [{ gate, message: `${asset}: no critique.json`, fix: redo }];
+  if (raw === undefined) return [{ gate, code, message: `${asset}: no critique.json`, fix: redo }];
   const { critique, errors } = parseCritique(raw);
   if (!critique)
     return errors.map((e) => ({
       gate,
+      code,
       message: `${asset}: critique.json ${e}`,
       fix: 'fill critique.json from the critique.template.json the pack wrote',
     }));
@@ -119,6 +121,7 @@ export function critiqueFindings(
   if (critique.asset !== asset)
     out.push({
       gate,
+      code,
       message: `critique.json is for '${critique.asset}', not '${asset}'`,
       fix: `move it to out/${critique.asset}/ or re-critique ${asset}`,
     });
@@ -128,6 +131,7 @@ export function critiqueFindings(
     if (judged === undefined || now === undefined || judged !== now)
       out.push({
         gate,
+        code,
         message: `${asset}: critique is stale — ${f} ${
           judged === undefined
             ? 'was not judged'
@@ -143,6 +147,7 @@ export function critiqueFindings(
     if (s.score < minimum)
       out.push({
         gate,
+        code,
         part: c,
         message: `${asset}: ${c} scored ${s.score} < ${minimum} — ${firstSentence(s.reason)}`,
         fix: s.fixes.join(' · '),

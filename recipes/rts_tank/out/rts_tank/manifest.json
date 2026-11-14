@@ -9,15 +9,20 @@
     "tank",
     "team-colour"
   ],
+  "lods": [
+    0,
+    1,
+    2
+  ],
   "files": {
     "lods": [],
-    "sheet": "recipes/rts_tank/out/rts_tank/sheet.png",
-    "thumb": "recipes/rts_tank/out/rts_tank/thumb.png"
+    "sheet": "sheet.png",
+    "thumb": "thumb.png"
   },
   "triangles": [
-    32198,
-    8540,
-    382
+    32158,
+    8520,
+    374
   ],
   "drawCalls": [
     23,

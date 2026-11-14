@@ -8,11 +8,11 @@ export interface WheelGroup {
 }
 
 export function parseWhyte(arrangement: string): WheelGroup[] {
-  const parts = arrangement.split('-').map(Number);
-  if (parts.length !== 3 || parts.some((n) => !Number.isInteger(n) || n < 0 || n % 2 !== 0)) {
+  const parts = /^\d+-\d+-\d+$/.test(arrangement) ? arrangement.split('-').map(Number) : [];
+  if (parts.length !== 3 || parts.some((n) => n % 2 !== 0) || (parts[1] ?? 0) === 0) {
     throw new Ts23dError('T3D_GRAMMAR_SYNTAX', {
       cause: `'${arrangement}' is not a rigid-frame Whyte arrangement`,
-      fix: "use three even numbers: leading-driving-trailing, e.g. '4-4-0' or '2-8-2'",
+      fix: "use three even numbers, leading-driving-trailing with at least two drivers, e.g. '4-4-0' or '2-8-2'",
     });
   }
   const roles = ['leading', 'driving', 'trailing'] as const;

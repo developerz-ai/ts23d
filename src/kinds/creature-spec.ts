@@ -3,6 +3,7 @@
 // validation that refuses impossible specs with T3D_RECIPE_INVALID before any sculpting happens.
 
 import { Ts23dError, type Vec3 } from '../core/index.ts';
+import { FAMILIES, FAMILY_NAMES, type Family, type Hoof } from './creature-family.ts';
 
 export type Skeleton = 'quadruped' | 'biped' | 'bird' | 'fish' | 'serpent' | 'winged';
 export type Stance = 'digitigrade' | 'plantigrade' | 'unguligrade';
@@ -58,6 +59,9 @@ export interface CreaturePattern {
 
 export interface CreatureSpec {
   readonly skeleton: Skeleton;
+  /** Animal family: sourced defaults for orbit angle, digits, hoof, tail and fore share
+   *  (creature-family.ts). A head preset naming a family (`canid`, `felid`, `ursid`) implies it. */
+  readonly family?: Family;
   /** Legged types only; default per skeleton (quadruped digitigrade, biped plantigrade…). */
   readonly stance?: Stance;
   /** Live mass, kg (the mass gate and allometry read it). */
@@ -69,7 +73,17 @@ export interface CreatureSpec {
   /** Head length, nose → occiput (default per type × length). */
   readonly head?: number;
   readonly neck?: number;
+  /** Tail length, metres (default: the family's tail ÷ head-body, else 0.37 × length). */
   readonly tail?: number;
+  /** Digits per paw, dewclaws included (default per family; else digitigrade 5 fore / 4 hind,
+   *  plantigrade 5 / 5). Digitigrade digits past four are dewclaws, high on the inside. */
+  readonly digits?: { readonly fore?: number; readonly hind?: number };
+  /** Unguligrade feet: one hoof (horse) or cloven, two hoofed digits + two dewclaws (cattle,
+   *  deer, pig). Default per family, else single. */
+  readonly hoof?: Hoof;
+  /** Allowed share of standing weight on the forelegs (quadrupeds; QA `fore share`). Default per
+   *  family, else 0.55–0.66 (dog 0.604, horse 0.57–0.60). */
+  readonly foreShare?: readonly [number, number];
   readonly build?: {
     /** Chest depth ÷ shoulder height (default 0.45). */
     readonly depth?: number;
@@ -85,7 +99,7 @@ export interface CreatureSpec {
     readonly tuck?: number;
   };
   readonly face?: {
-    /** Head family; its numbers are defaults the fields below override. */
+    /** Head family; its numbers are defaults the fields below override (default: `family`'s). */
     readonly preset?: HeadPreset;
     /** Muzzle share of the head length (cat ≈ 0.3, dog/wolf ≈ 0.48, horse ≈ 0.6). */
     readonly muzzle?: number;
@@ -94,7 +108,10 @@ export interface CreatureSpec {
     readonly ears?: EarShape;
     /** Ear height ÷ head length (default 0.38 erect, 0.2 round). */
     readonly earLength?: number;
-    /** Eyes turned forward (predator ≈ 0.75) or to the side (prey ≈ 0.25). */
+    /** Orbit convergence, degrees from the midline (cat 65.4, dog 50.4, horse 24.4: Heesy 2004).
+     *  The lid aperture and the resting gaze face 90° − this off +X. Default per family. */
+    readonly orbit?: number;
+    /** How far the eyes sit toward the front of the skull, 0..1 (default orbit ÷ 90). */
     readonly forward?: number;
     readonly pupil?: 'round' | 'slit';
     /** Upper canines showing below the lip. */
@@ -125,11 +142,12 @@ export const ANATOMY: Readonly<
     { stance: Stance; head: number; neck: number; tail: number; muzzle: number; ears: EarShape }
   >
 > = {
+  // Quadruped tail: the grey wolf's 0.37 of head-body (animal-species-sheets); a family wins.
   quadruped: {
     stance: 'digitigrade',
     head: 0.22,
     neck: 0.2,
-    tail: 0.4,
+    tail: 0.37,
     muzzle: 0.45,
     ears: 'erect',
   },
@@ -143,7 +161,9 @@ export const ANATOMY: Readonly<
 /** Head family numbers (furred heads, ratios of head length L unless named):
  *  muzzle share of L, width ÷ L, nose-tip radius ÷ L, stop (forehead rise over the bridge) ÷ head
  *  height, cheek fur flaring past the cheekbones ÷ width. Canid: grey wolf skull 230–280 × 130–150
- *  mm (Wikipedia: Wolf), nose pad ≈ 4 cm; felid: short round muzzle, broad zygomata. */
+ *  mm (Wikipedia: Wolf), nose pad ≈ 4 cm; felid: short round muzzle, broad zygomata; ungulate:
+ *  the long equid/bovid face (orbit → muzzle ≈ 0.6–0.7 of the skull). Feet, eyes and tail come
+ *  from `family` (creature-family.ts), not from these head numbers. */
 export const HEAD_PRESETS: Readonly<
   Record<
     HeadPreset,
@@ -195,6 +215,23 @@ export function checkCreature(s: CreatureSpec): CreatureSpec {
   ratio(s.face?.width, 0.25, 1.2, 'face.width');
   ratio(s.face?.earLength, 0.05, 1, 'face.earLength');
   ratio(s.face?.forward, 0, 1, 'face.forward');
+  ratio(s.face?.orbit, 0, 90, 'face.orbit');
+  if (s.family !== undefined && !FAMILY_NAMES.includes(s.family))
+    bad(`unknown family '${String(s.family)}'`, `use one of ${FAMILY_NAMES.join(', ')}`);
+  for (const leg of ['fore', 'hind'] as const) {
+    const n = s.digits?.[leg];
+    if (n !== undefined && !(Number.isInteger(n) && n >= 1 && n <= 5))
+      bad(`digits.${leg} is ${n}`, `give whole digits per paw, 1..5 (dog 5 fore / 4 hind, bear 5)`);
+  }
+  if (s.hoof !== undefined && s.hoof !== 'single' && s.hoof !== 'cloven')
+    bad(`unknown hoof '${String(s.hoof)}'`, "use 'single' (horse) or 'cloven' (cattle, deer, pig)");
+  if (s.hoof !== undefined && (s.stance ?? ANATOMY[s.skeleton].stance) !== 'unguligrade')
+    bad('a hoof needs an unguligrade stance', "set stance: 'unguligrade', or drop `hoof`");
+  if (s.foreShare && !(s.foreShare[0] > 0 && s.foreShare[0] < s.foreShare[1] && s.foreShare[1] < 1))
+    bad(
+      `foreShare is [${s.foreShare.join(', ')}]`,
+      'give [low, high] with 0 < low < high < 1 (quadruped mammals ≈ [0.55, 0.66])',
+    );
   ratio(s.build?.depth, 0.2, 0.8, 'build.depth');
   ratio(s.build?.width, 0.3, 1.5, 'build.width');
   ratio(s.build?.limbs, 0.2, 4, 'build.limbs');
@@ -222,7 +259,8 @@ export function checkCreature(s: CreatureSpec): CreatureSpec {
 
 /** The face numbers after preset and skeleton defaults: explicit fields win, then the preset. */
 export function faceOf(s: CreatureSpec) {
-  const p = s.face?.preset ? HEAD_PRESETS[s.face.preset] : null;
+  const name = s.face?.preset ?? (s.family ? FAMILIES[s.family]?.head : undefined);
+  const p = name ? HEAD_PRESETS[name] : null;
   const a = ANATOMY[s.skeleton];
   const muzzle = s.face?.muzzle ?? p?.muzzle ?? a.muzzle;
   return {

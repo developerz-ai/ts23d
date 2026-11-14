@@ -67,7 +67,13 @@ export type ErrorCode =
   | 'T3D_FINISH_MODEL'
   | 'T3D_FINISH_PALETTE_DRIFT'
   | 'T3D_FINISH_MASK_LEAK'
-  | 'T3D_WARP_INVALID';
+  | 'T3D_WARP_INVALID'
+  | 'T3D_RECIPE_NOT_FOUND'
+  | 'T3D_RECIPE_THREW'
+  | 'T3D_CLI_USAGE'
+  | 'T3D_ASSET_DUPLICATE'
+  | 'T3D_GRAMMAR_UNDERFILL'
+  | 'T3D_TEAM_COLOUR_HIDDEN';
 
 export interface ErrorDetails {
   readonly cause: string;

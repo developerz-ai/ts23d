@@ -1,7 +1,8 @@
 // Wikidata entity JSON (CC0) → a pinned, normalised record: quantities in metres / kilograms,
 // coordinates, and item-valued facts (track gauge, wheel arrangement) by id + label. Pure parsing;
 // the network lives in scripts/data-wikidata.ts, which commits the record beside the recipe so a
-// compile reads only that file. Ranks: preferred beats normal, deprecated statements are skipped.
+// compile reads only that file. Ranks: preferred beats normal, deprecated statements and value-less
+// (`somevalue` / `novalue`) snaks are skipped, and a unitless amount loses to one with a unit.
 
 import { Ts23dError } from '../core/index.ts';
 import { type Dimension, toSi, unitId } from './units.ts';
@@ -75,13 +76,29 @@ export function checkQid(qid: string): string {
 type Json = Record<string, unknown>;
 const obj = (v: unknown): Json => (v && typeof v === 'object' ? (v as Json) : {});
 
-/** Best statement value of a property: preferred rank first, never deprecated. */
-function best(claims: Json, pid: string): Json | undefined {
+/** Statement values of a property in rank order (preferred, then normal; never deprecated).
+ * Only snaks with a value count: `somevalue` / `novalue` statements carry no datavalue. */
+function ranked(claims: Json, pid: string): Json[] {
   const all = Array.isArray(claims[pid]) ? (claims[pid] as unknown[]).map(obj) : [];
   const live = all.filter((c) => c['rank'] !== 'deprecated');
-  const pick = live.find((c) => c['rank'] === 'preferred') ?? live[0];
-  const value = obj(obj(obj(pick)['mainsnak'])['datavalue'])['value'];
-  return value && typeof value === 'object' ? (value as Json) : undefined;
+  const order = [
+    ...live.filter((c) => c['rank'] === 'preferred'),
+    ...live.filter((c) => c['rank'] !== 'preferred'),
+  ];
+  return order.flatMap((c) => {
+    const value = obj(obj(c['mainsnak'])['datavalue'])['value'];
+    return value && typeof value === 'object' ? [value as Json] : [];
+  });
+}
+
+const best = (claims: Json, pid: string): Json | undefined => ranked(claims, pid)[0];
+
+const unitOf = (v: Json): string => (typeof v['unit'] === 'string' ? v['unit'] : '1');
+
+/** Best quantity: a unitless ('1') amount is skipped while a statement with a unit exists. */
+function bestQuantity(claims: Json, pid: string): Json | undefined {
+  const amounts = ranked(claims, pid).filter((v) => typeof v['amount'] === 'string');
+  return amounts.find((v) => unitId(unitOf(v)) !== '1') ?? amounts[0];
 }
 
 /** Parse a Special:EntityData response for `qid`. */
@@ -98,9 +115,9 @@ export function parseWikidata(raw: unknown, qid: string, pin: WikidataPin): Wiki
   const claims = obj(e['claims']);
   const quantities: Record<string, Quantity> = {};
   for (const [name, p] of Object.entries(WIKIDATA_QUANTITIES)) {
-    const v = best(claims, p.id);
+    const v = bestQuantity(claims, p.id);
     if (!v || typeof v['amount'] !== 'string') continue;
-    const unit = typeof v['unit'] === 'string' ? v['unit'] : '1';
+    const unit = unitOf(v);
     quantities[name] = {
       value: toSi(Number(v['amount']), unit, p.dimension, `${qid} ${p.id} (${name})`),
       unit: p.dimension === 'mass' ? 'kg' : 'm',

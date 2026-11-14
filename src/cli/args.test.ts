@@ -90,3 +90,46 @@ it('--no-sounds turns sound files off and is not taken for a file', () => {
   expect(off.sounds).toBe(false);
   expect(off.files).toEqual(['a.ts']);
 });
+
+it('is strict: unknown flags, values outside their set and a valueless --out are T3D_CLI_USAGE', () => {
+  expect(code(['build', 'a.ts', '--nope'])).toBe('T3D_CLI_USAGE');
+  expect(code(['build', 'a.ts', '--lods', '7'])).toBe('T3D_CLI_USAGE');
+  expect(code(['build', 'a.ts', '--lods', '0,3'])).toBe('T3D_CLI_USAGE');
+  expect(code(['build', 'a.ts', '--lods'])).toBe('T3D_CLI_USAGE');
+  expect(code(['build', 'a.ts', '--sheet', 'png'])).toBe('T3D_CLI_USAGE');
+  expect(code(['build', 'a.ts', '--sheet-size', '3000'])).toBe('T3D_CLI_USAGE');
+  expect(code(['build', 'a.ts', '--out'])).toBe('T3D_CLI_USAGE');
+  expect(code(['build', 'a.ts', '--out', '--json'])).toBe('T3D_CLI_USAGE');
+  expect(code(['build'])).toBe('T3D_CLI_USAGE');
+  expect(parseArgs(['build', 'a.ts', '--sheet', 'embed', '--sheet-size', '512']).sheetSize).toBe(
+    512,
+  );
+});
+
+it('names the closest command and flag in a usage error', () => {
+  const fixOf = (argv: string[]): string => {
+    try {
+      parseArgs(argv);
+    } catch (e) {
+      if (e instanceof Ts23dError) return e.fix;
+    }
+    return '';
+  };
+  expect(fixOf(['biuld', 'a.ts'])).toContain('t3d build');
+  expect(fixOf(['build', 'a.ts', '--sheet-szie', '512'])).toContain('--sheet-size');
+});
+
+it('reads --help / -h / help <cmd> and --version before anything else', () => {
+  expect(parseArgs([]).cmd).toBe('help');
+  expect(parseArgs(['--help']).cmd).toBe('help');
+  expect(parseArgs(['build', '--help'])).toMatchObject({ cmd: 'help', topic: 'build' });
+  expect(parseArgs(['help', 'icon'])).toMatchObject({ cmd: 'help', topic: 'icon' });
+  expect(parseArgs(['build', 'a.ts', '-h']).topic).toBe('build');
+  expect(parseArgs(['--version']).cmd).toBe('version');
+});
+
+it('--timeout gives the http finish model seconds → ms, refuses ≤ 0', () => {
+  expect(parseArgs(['finish', 'a.ts', '--timeout', '600']).finish?.timeoutMs).toBe(600_000);
+  expect(code(['finish', 'a.ts', '--timeout', '0'])).toBe('T3D_FINISH_INVALID');
+  expect(code(['finish', 'a.ts', '--timeout'])).toBe('T3D_FINISH_INVALID');
+});

@@ -6,6 +6,7 @@
 
 import { type Mesh, MeshBuilder, normalize, type Vec3 } from '../core/index.ts';
 import { type StripId, stripRect } from '../material/index.ts';
+import { count, invalid } from './check.ts';
 import { mirroredV, stripVMetres } from './strip-uv.ts';
 
 export interface HeightfieldOptions {
@@ -24,7 +25,13 @@ export interface HeightfieldOptions {
 
 export function heightfield(o: HeightfieldOptions): Mesh {
   const [x0, y0, x1, y1] = o.rect;
-  const [nx, ny] = o.cells;
+  if (!o.rect.every(Number.isFinite) || !(x1 > x0 && y1 > y0))
+    invalid(
+      `heightfield rect [${o.rect.join(', ')}] is not [minX, minY, maxX, maxY] with max > min`,
+      'pass finite corners, min first: rect: [-10, -10, 10, 10]',
+    );
+  const nx = count('heightfield cells[0]', o.cells[0], 1, 4096);
+  const ny = count('heightfield cells[1]', o.cells[1], 1, 4096);
   const dx = (x1 - x0) / nx;
   const dy = (y1 - y0) / ny;
   const rect = stripRect(o.strip ?? 'plain');

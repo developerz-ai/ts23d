@@ -32,6 +32,7 @@ export const nonFinite: Gate = (asset) =>
       ? [
           {
             gate: 'non-finite',
+            code: 'T3D_QA_NON_FINITE',
             part: p.name,
             message: `'${p.name}' has NaN/Infinity or out-of-range data in ${bad.join(', ')}`,
             fix: 'look for a zero-length normalize, a divide by a zero count or segment, or an index past the vertex count',
@@ -52,6 +53,7 @@ export const vertexColors: Gate = (asset) =>
       ? [
           {
             gate: 'vertex-colors',
+            code: 'T3D_QA_VERTEX_COLORS',
             part: p.name,
             message: `'${p.name}' vertex colour spans ${lo.toFixed(3)}…${hi.toFixed(3)}, outside linear [0,1]`,
             fix: 'colours are linear 0–1 (use the palette / material helpers); clamp after grime or livery maths',
@@ -111,6 +113,7 @@ export const normalsMatchWinding: Gate = (asset) =>
       ? [
           {
             gate: 'normals-winding',
+            code: 'T3D_QA_NORMALS_WINDING',
             part: p.name,
             message: `'${p.name}': ${s.flipped} triangle(s) (${((100 * s.flippedArea) / s.area).toFixed(1)}% of its area) have vertex normals opposing their face — inverted winding, or normals smoothed across a hard crease`,
             fix: 'split normals at creases (lathe crease angle / weightedNormals hardAngle), or fix the mirrored piece: a negative-scale place() flips winding but not normals',
@@ -128,6 +131,7 @@ export const degenerateTriangles: Gate = (asset) =>
       ? [
           {
             gate: 'degenerate-triangles',
+            code: 'T3D_QA_DEGENERATE_TRIANGLES',
             part: p.name,
             message: `'${p.name}': ${zero} of ${tris} triangles have zero area`,
             fix: 'a ring/lathe with a zero radius emits fans of slivers: cap it with a point instead, or skip the segment',

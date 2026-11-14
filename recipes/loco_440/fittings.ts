@@ -24,6 +24,7 @@ import {
   lath,
   pipe,
   RAIL_TOP,
+  ROD_Y,
   SMOKEBOX_R,
 } from './shared.ts';
 
@@ -186,7 +187,17 @@ export function buildBoards(ctx: BuildContext, L: Layout): void {
   for (const s of [1, -1]) {
     m.push(
       bx(barrelFront, cabFront, s * 0.74, s * 1.16, BOARD_Z, BOARD_Z + 0.04, F.black),
-      bx(frontDriver + 0.94, frontDriver + 1.06, s * 0.74, s * 1.16, 1.04, BOARD_Z, F.black),
+      // Drop plate ahead of the drivers: inboard of the main rod's plane (ROD_Y ± 0.03), which
+      // it used to fill — the rod drove straight through it.
+      bx(
+        frontDriver + 0.94,
+        frontDriver + 1.06,
+        s * 0.74,
+        s * (ROD_Y - 0.06),
+        1.04,
+        BOARD_Z,
+        F.black,
+      ),
     );
     if (lod < 2)
       m.push(

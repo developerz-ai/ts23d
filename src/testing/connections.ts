@@ -41,6 +41,7 @@ export function assertGrown(asset: Asset, part: string, o: Pick<LodOptions, 'see
       found.push({
         finding: {
           gate: 'grown',
+          code: 'T3D_QA_GROWN',
           message: `no part with geometry matches '${part}'`,
           fix: 'check the part name (globs allowed: horn_*)',
         },
@@ -48,7 +49,13 @@ export function assertGrown(asset: Asset, part: string, o: Pick<LodOptions, 'see
     for (const i of connectionReport(grown).issues)
       if (match.test(i.part) && i.severity === 'error' && GROWN_CODES.includes(i.code))
         found.push({
-          finding: { gate: 'grown', part: i.part, message: `${i.code}: ${i.message}`, fix: i.fix },
+          finding: {
+            gate: 'grown',
+            code: i.code,
+            part: i.part,
+            message: `${i.code}: ${i.message}`,
+            fix: i.fix,
+          },
         });
   }
   failOn(`${asset.name} grown '${part}'`, found);

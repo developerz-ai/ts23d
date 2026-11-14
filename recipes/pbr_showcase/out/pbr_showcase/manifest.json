@@ -7,15 +7,20 @@
     "test",
     "pbr"
   ],
+  "lods": [
+    0,
+    1,
+    2
+  ],
   "files": {
     "lods": [],
-    "sheet": "recipes/pbr_showcase/out/pbr_showcase/sheet.png",
-    "thumb": "recipes/pbr_showcase/out/pbr_showcase/thumb.png"
+    "sheet": "sheet.png",
+    "thumb": "thumb.png"
   },
   "triangles": [
-    16776,
-    4932,
-    1692
+    16056,
+    4572,
+    1512
   ],
   "drawCalls": [
     11,

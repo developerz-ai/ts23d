@@ -133,6 +133,21 @@ export function skin(
     return rect.v0 + vband * (0.02 + 0.96 * (f <= 1 ? f : 2 - f));
   };
   const b = new MeshBuilder();
+  // Collapsed rows/columns (a panel tapering to a point, a cut meeting the edge) make quads with
+  // a zero-length side: keep only the half that has area, never a zero-area sliver.
+  const pos: Vec3[] = [];
+  const vertex = (v: Parameters<MeshBuilder['vertex']>[0]): number => {
+    pos.push(v.p);
+    return b.vertex(v);
+  };
+  const tri = (q0: number, q1: number, q2: number): void => {
+    const a = pos[q0] ?? [0, 0, 0];
+    if (len(cross(sub(pos[q1] ?? a, a), sub(pos[q2] ?? a, a))) > 1e-12) b.tri(q0, q1, q2);
+  };
+  const quad = (q0: number, q1: number, q2: number, q3: number): void => {
+    tri(q0, q1, q2);
+    tri(q0, q2, q3);
+  };
   const outer: number[][] = [];
   for (let i = 0; i <= ns; i++) {
     const row: number[] = [];
@@ -140,7 +155,7 @@ export function skin(
       const p = get(P, i, j);
       const n = get(N, i, j);
       row.push(
-        b.vertex({
+        vertex({
           p,
           n,
           uv: [rect.u0 + (along[i]?.[j] ?? 0) * du, vOf(across[i]?.[j] ?? 0)],
@@ -154,7 +169,7 @@ export function skin(
   for (let i = 0; i < ns; i++)
     for (let j = 0; j < nu; j++)
       if (!skip.has(j))
-        b.quad(
+        quad(
           idx(outer, i, j),
           idx(outer, i + 1, j),
           idx(outer, i + 1, j + 1),
@@ -180,7 +195,7 @@ export function skin(
       }
       prow.push(p);
       row.push(
-        b.vertex({
+        vertex({
           p,
           n: mul(n, -1),
           uv: [rect.u0 + (along[i]?.[j] ?? 0) * du, vOf(across[i]?.[j] ?? 0)],
@@ -194,7 +209,7 @@ export function skin(
   for (let i = 0; i < ns; i++)
     for (let j = 0; j < nu; j++)
       if (!skip.has(j))
-        b.quad(
+        quad(
           idx(inner, i, j),
           idx(inner, i, j + 1),
           idx(inner, i + 1, j + 1),
@@ -217,14 +232,14 @@ export function skin(
         const nrm = unit(len(across) > len(across2) ? across : across2);
         const col = mul(colour(a, get(N, i, jj)), 0.35);
         const uv0: [number, number] = [rect.u0, rect.v0 + vband * 0.1];
-        const va = b.vertex({ p: a, n: nrm, uv: uv0, color: col });
-        const vc = b.vertex({ p: c, n: nrm, uv: uv0, color: col });
-        const vd = b.vertex({ p: d, n: nrm, uv: uv0, color: col });
-        const ve = b.vertex({ p: e, n: nrm, uv: uv0, color: col });
+        const va = vertex({ p: a, n: nrm, uv: uv0, color: col });
+        const vc = vertex({ p: c, n: nrm, uv: uv0, color: col });
+        const vd = vertex({ p: d, n: nrm, uv: uv0, color: col });
+        const ve = vertex({ p: e, n: nrm, uv: uv0, color: col });
         const f = cross(sub(c, a), sub(d, a));
         if (len(f) < 1e-12) continue;
-        if (dot(f, nrm) >= 0) b.quad(va, vc, vd, ve);
-        else b.quad(va, ve, vd, vc);
+        if (dot(f, nrm) >= 0) quad(va, vc, vd, ve);
+        else quad(va, ve, vd, vc);
       }
   }
   // Flanges: quads from the outer edge to the inner edge, normal pointing away from the panel.
@@ -242,14 +257,14 @@ export function skin(
       const nrm = unit(add(away, mul(unit(cross(sub(c, a), sub(e, a))), 0)));
       const col = mul(colour(a, get(N, i0, j0)), 0.7);
       const uv0: [number, number] = [rect.u0, rect.v0 + vband * 0.1];
-      const va = b.vertex({ p: a, n: nrm, uv: uv0, color: col });
-      const vc = b.vertex({ p: c, n: nrm, uv: uv0, color: col });
-      const vd = b.vertex({ p: d, n: nrm, uv: uv0, color: col });
-      const ve = b.vertex({ p: e, n: nrm, uv: uv0, color: col });
+      const va = vertex({ p: a, n: nrm, uv: uv0, color: col });
+      const vc = vertex({ p: c, n: nrm, uv: uv0, color: col });
+      const vd = vertex({ p: d, n: nrm, uv: uv0, color: col });
+      const ve = vertex({ p: e, n: nrm, uv: uv0, color: col });
       // Wind so the face normal agrees with `nrm`.
       const fn3 = cross(sub(c, a), sub(d, a));
-      if (dot(fn3, nrm) >= 0) b.quad(va, vc, vd, ve);
-      else b.quad(va, ve, vd, vc);
+      if (dot(fn3, nrm) >= 0) quad(va, vc, vd, ve);
+      else quad(va, ve, vd, vc);
     }
   };
   const range = (n: number): number[] => Array.from({ length: n + 1 }, (_, k) => k);

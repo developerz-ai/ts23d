@@ -11,10 +11,15 @@
     "sculpt",
     "hero"
   ],
+  "lods": [
+    0,
+    1,
+    2
+  ],
   "files": {
     "lods": [],
-    "sheet": "recipes/amur_tiger/out/amur_tiger/sheet.png",
-    "thumb": "recipes/amur_tiger/out/amur_tiger/thumb.png"
+    "sheet": "sheet.png",
+    "thumb": "thumb.png"
   },
   "triangles": [
     136924,

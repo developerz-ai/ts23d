@@ -30,20 +30,38 @@ function parseTerm(raw: string, src: string): SplitTerm {
   return { kind: 'fixed', symbol, size: Number(size) };
 }
 
+/** Cut `src` on the `|` outside braces; a brace that does not open or close a group is an error. */
+function tokens(src: string): string[] {
+  const out: string[] = [];
+  let depth = 0;
+  let cur = '';
+  for (const ch of src) {
+    if (ch === '{' && depth++ > 0) throw syntax(src, 'groups do not nest');
+    if (ch === '}' && --depth < 0) throw syntax(src, "stray '}'");
+    if (ch === '|' && depth === 0) {
+      out.push(cur);
+      cur = '';
+    } else cur += ch;
+  }
+  if (depth > 0) throw syntax(src, "'{' is never closed");
+  out.push(cur);
+  return out;
+}
+
 export function parseSplit(src: string): SplitTerm[] {
   const out: SplitTerm[] = [];
-  const re = /\{([^}]*)\}\*|([^|{}]+)/g;
-  for (const m of src.matchAll(re)) {
-    if (m[1] !== undefined) {
-      const body = m[1].split('|').map((s) => parseTerm(s, src));
-      if (body.some((b) => b.kind !== 'fixed'))
-        throw syntax(src, 'a repeat body takes fixed sizes');
-      out.push({ kind: 'repeat', body });
-    } else if (m[2] !== undefined && m[2].trim() !== '') {
-      out.push(parseTerm(m[2], src));
+  for (const raw of tokens(src)) {
+    const t = raw.trim();
+    if (!t.includes('{') && !t.includes('}')) {
+      out.push(parseTerm(t, src));
+      continue;
     }
+    const m = /^\{([^{}]*)\}\*$/.exec(t);
+    if (!m) throw syntax(src, `'${t}' is a group without a trailing '*' or with text around it`);
+    const body = (m[1] ?? '').split('|').map((s) => parseTerm(s, src));
+    if (body.some((b) => b.kind !== 'fixed')) throw syntax(src, 'a repeat body takes fixed sizes');
+    out.push({ kind: 'repeat', body });
   }
-  if (out.length === 0) throw syntax(src, 'empty');
   if (out.filter((t) => t.kind === 'repeat').length > 1) throw syntax(src, 'at most one repeat');
   return out;
 }
@@ -51,8 +69,16 @@ export function parseSplit(src: string): SplitTerm[] {
 const sizeOf = (terms: readonly SplitTerm[]): number =>
   terms.reduce((s, t) => s + (t.kind === 'fixed' ? t.size : 0), 0);
 
-/** Lay a parsed split across `length` metres. Repeats take whole copies; stretches share the rest. */
+/**
+ * Lay a parsed split across `length` metres. Repeats take whole copies; stretches share the rest.
+ * The strip is always filled exactly: metres nothing can absorb are an error, never a silent gap.
+ */
 export function layoutSplit(terms: readonly SplitTerm[], length: number): Slot[] {
+  if (!Number.isFinite(length) || length < 0)
+    throw new Ts23dError('T3D_GRAMMAR_SYNTAX', {
+      cause: `split length ${length} is not a finite number of metres >= 0`,
+      fix: 'pass the strip length in metres, e.g. split(src, facadeWidth)',
+    });
   const fixed = sizeOf(terms);
   const repeat = terms.find((t) => t.kind === 'repeat');
   const unit = repeat?.kind === 'repeat' ? sizeOf(repeat.body) : 0;
@@ -65,6 +91,11 @@ export function layoutSplit(terms: readonly SplitTerm[], length: number): Slot[]
   const copies = unit > 0 ? Math.floor((length - fixed) / unit) : 0;
   const weights = terms.reduce((s, t) => s + (t.kind === 'stretch' ? t.weight : 0), 0);
   const leftover = length - fixed - copies * unit;
+  if (weights === 0 && copies === 0 && leftover > 1e-9)
+    throw new Ts23dError('T3D_GRAMMAR_UNDERFILL', {
+      cause: `the terms fill ${fixed} m of a ${length} m strip and nothing absorbs the other ${leftover} m${unit > 0 ? ` (one repeat copy needs ${unit} m)` : ''}`,
+      fix: 'add a stretch term (`sym:~`) or a repeat (`{a:1}*`) that fits, or size the fixed terms to the strip',
+    });
   // No stretch term: the repeat absorbs the leftover by widening each copy evenly.
   const grow = weights === 0 && copies > 0 ? (copies * unit + leftover) / (copies * unit) : 1;
   const slots: Slot[] = [];

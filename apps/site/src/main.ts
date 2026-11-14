@@ -2,11 +2,13 @@
 // `#<asset_name>` opens an asset; anything else is home. Committed renders draw the gallery at
 // once and already name each recipe's entry file, so viewers start compiling immediately; the
 // worker's full catalog (recipes with no renders yet) loads when the page is idle. The viewer and
-// its panels are a lazy chunk, fetched on the first asset page.
+// its panels are a lazy chunk, fetched on the first asset page. Without WebGL neither the showcase
+// nor the viewer starts: the committed renders stay, with one line saying why (GLBs still download).
 
 import './style.css';
 import { manifest } from './compile.ts';
 import { renderDetails, renderModelSize } from './details.ts';
+import { renderDownloads } from './downloads.ts';
 import { loadFacts } from './facts.ts';
 import { Gallery } from './gallery.ts';
 import { renderHow } from './how.ts';
@@ -19,6 +21,7 @@ import { Showcase } from './showcase.ts';
 import type { SoundPanel } from './sound-panel.ts';
 import { renderRecipe } from './source.ts';
 import type { Subject, Viewer } from './viewer.ts';
+import { endInMessage, hasWebGl, loadingParts, noWebGlLine } from './viewer-fallback.ts';
 
 const $ = <T extends HTMLElement>(sel: string): T => {
   const node = document.querySelector<T>(sel);
@@ -58,6 +61,8 @@ const roots = { info: $('[data-info]'), measures: $('[data-measures-section]') }
 let viewer: Promise<{ viewer: Viewer; sounds: SoundPanel }> | null = null;
 let current: Item | null = null;
 let showcaseOn = false;
+const webgl = hasWebGl(() => document.createElement('canvas'));
+const loading = loadingParts($('[data-loading]'));
 
 /** What the viewer needs to know about an item. */
 const subjectOf = (item: Item): Subject => ({
@@ -130,15 +135,28 @@ function openAsset(item: Item): void {
   const recipe = item.recipe;
   if (!recipe) return;
   renderRecipe($('[data-source]'), recipe);
-  void viewerChunk().then(({ viewer: v, sounds }) => {
-    if (current !== item) return;
-    sounds.render(item);
-    if (same) return;
-    const subject = subjectOf(item);
-    void v.show(subject, startLod(subject)).then(() => {
-      if (current === item) poster.hidden = true;
-    });
-  });
+  if (!webgl) {
+    $('[data-viewer]').classList.add('no-webgl');
+    endInMessage(loading, noWebGlLine(item.name, Boolean(item.media?.hero)));
+    // Compiling needs no WebGL: the GLBs still download.
+    renderDownloads($('[data-downloads]'), subjectOf(item));
+    return;
+  }
+  viewerChunk().then(
+    ({ viewer: v, sounds }) => {
+      if (current !== item) return;
+      sounds.render(item);
+      if (same) return;
+      const subject = subjectOf(item);
+      void v.show(subject, startLod(subject)).then((shown) => {
+        if (shown && current === item) poster.hidden = true;
+      });
+    },
+    (error: unknown) => {
+      console.error('ts23d: the viewer failed to start', error);
+      endInMessage(loading, `The 3D viewer failed to start, so ${item.name} cannot be shown live.`);
+    },
+  );
 }
 
 function route(): void {
@@ -158,7 +176,7 @@ function route(): void {
   page.hidden = true;
   home.hidden = false;
   // The showcase compiles only once home is actually seen (not behind a deep link).
-  if (!showcaseOn)
+  if (!showcaseOn && webgl)
     new Showcase($('[data-showcase]'), $<HTMLAnchorElement>('[data-showcase-label]'), featured());
   showcaseOn = true;
   if (name) document.getElementById(name)?.scrollIntoView();

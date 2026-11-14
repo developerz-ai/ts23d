@@ -5,8 +5,9 @@ pre-commit:
       stage_fixed: true
       skip: [merge, rebase]
 
+# Fast checks only (seconds); the full gate (tests, recipes, build, pack) runs in CI.
 pre-push:
   commands:
     verify:
-      run: bun run verify
+      run: bun run verify --only lint,typecheck,boundaries,determinism,filesize,placeholders,conventions
       skip: [merge, rebase]

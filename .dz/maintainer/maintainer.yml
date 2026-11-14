@@ -1,9 +1,17 @@
 # yaml-language-server: $schema=https://developerz.ai/schemas/maintainer.v1.json
 # developerz.ai maintainer policy for developerz-ai/ts23d.
 #
-# As of 2026-11 the bot reviews every pull request and runs the checkups in `schedules:`, which
-# only file issues and small upkeep PRs. Triage, merging and releases stay with members until the
-# project leaves 0.x — widen this file, not the bot's habits.
+# FULLY AI-MAINTAINED (owner ruling 2026-11-14: "AI maintained project 100%"). For everyone,
+# members included, and for the dependency bots, the agent handles issues, pull requests,
+# releases and upkeep end to end: it triages, answers or stays silent, reviews, declines with a
+# reason, merges on green, cuts releases when the weekly judgement says one is due, and closes what
+# has stalled on its reporter or author. The platform's hardcoded asks (security, license, CLA)
+# still reach a human; nothing in this file can remove them.
+#
+# What gates a merge is MACHINES: the `verify` check (the aggregate job in ci.yml that needs every
+# verify shard, `shots` and `site`). Whether the repo enforces it is the `main` ruleset, not this
+# file: read `gh api repos/developerz-ai/ts23d/rulesets` before trusting any sentence here about
+# protection. Requiring `verify` there is an owner action (plan 101 slice 09).
 # Docs: https://developerz.ai/docs/maintainer-yml
 version: 1
 
@@ -11,29 +19,94 @@ tone:
   voice: friendly
   language: en
 
-review:
-  force: true
+triage:
+  stale_after_days: 30
+  stale_action: comment_then_close
+  ask_for_repro: true
+  required_fields: [steps, expected, actual, version]
+  qualify_into: [bug, feature, dupe, question]
+  close_unanswered_repro_after_days: 14
+  # From CLAUDE.md's rules: changes someone could propose that this project will not take. A pull
+  # request matching one is closed with it quoted; an issue is answered with it.
+  non_goals:
+    - "Game, engine or runtime code: output ends at GLB + textures + manifest; the site is an asset gallery, never a game"
+    - "Recipes as JSON or any data format: recipes are TypeScript"
+    - "A runtime dependency in the library: three/vite live only in apps/site"
+    - "Decimating code-built geometry: recipes LOD-gate with ctx.lod (ADR 011); simplify is for imported meshes only"
+    - "Non-deterministic output: Math.random, Date or locale formatting in src/ or recipes/"
+    - "Claims that ts23d beats Meshy, Tripo or any other generator: positioning stays neutral"
+    - "A recreation of a specific existing game's characters, art or levels"
+    - "Outside contributors' changes to CI, release or publish automation (.github/, scripts/release*.ts, PUBLISHING.md): the npm OIDC pipeline is members' and the agent's"
+
+handoff:
+  # Ready tasks are coded by the developerz.ai fleet; reporters are not asked first.
+  mode: fleet
+  ask_reporter_first: false
 
 pr:
+  # Every author's pull requests (the agent's, Dependabot's, members', outside contributors'):
+  # reviewed, babysat and merged when `verify` is green. An outside PR touching CI or release
+  # automation is declined by the last non_goal above.
+  auto_merge: true
+  auto_merge_scope: any
   required_checks: [verify]
-  require_review: true
-  auto_merge: false
+  # A PR waiting on its author (red check, unresolved thread, conflict) is pinged at 7 and 14 days
+  # and closed at 21 with the reason and how to reopen. One waiting on us or on CI is never timed.
+  close_awaiting_author_after_days: 21
+
+review:
+  enabled: true
+  force: true
+  depth: inline
+  request_changes: true
+  approval: false
+  high_level_summary: true
+  auto_review:
+    enabled: true
+    incremental: true
+    drafts: false
+    base_branches: [main]
+    ignore_title_keywords: [WIP, "DO NOT MERGE"]
+  anti_noise:
+    severity_floor: minor
+    max_comments: 10
+    dedupe: true
 
 release:
+  # No release manager and no publish channel for the agent: a merged `chore: release x.y.z` PR is
+  # the release (release-tag.yml tags it, release.yml publishes to npm through OIDC after the full
+  # gate). The `release-due` checkup decides when, and opens and merges that PR itself.
   manager: none
   channels: []
 
+escalate:
+  # Empty on the owner's ruling: in 0.x a minor may break, and the agent judges it like any other
+  # change. The one human decision left is 1.0.0, which release-due files instead of cutting.
+  ask_before_acting: []
+
+# The checkups nothing else triggers. Each brief says what it may change.
 schedules:
-  # Judge and file only: a release still needs a member to merge `chore: release x.y.z`.
+  # Weekly and judged: a merge never cuts a release by itself.
   - name: release-due
     days: [wed]
     hours_utc: [3]
     brief_file: .dz/briefs/release-due.md
+  # The one exception to the weekly slot: a confirmed security fix ships the same day.
+  - name: security-release
+    days: [mon, tue, thu, fri, sat, sun]
+    hours_utc: [5]
+    brief_file: .dz/briefs/security-release.md
   - name: health
     days: [mon, tue, wed, thu, fri, sat, sun]
     hours_utc: [7]
     brief_file: .dz/briefs/health.md
+  # Monthly: the schema has weekdays, not days of the month, so these fire weekly and each brief
+  # acts only in the first week of the month (UTC day 1-7).
   - name: improve
     days: [mon]
     hours_utc: [8]
     brief_file: .dz/briefs/improve.md
+  - name: cleanup
+    days: [tue]
+    hours_utc: [8]
+    brief_file: .dz/briefs/cleanup.md

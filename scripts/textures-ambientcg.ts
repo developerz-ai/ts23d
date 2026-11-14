@@ -4,6 +4,7 @@
 // NormalGL, Roughness and AmbientOcclusion maps.
 
 import type { TextureFile, TextureSource } from '../src/material/index.ts';
+import { withTimeout } from './fetch-timeout.ts';
 import { type Fetch, getBytes, getJson, type Hit, sha256 } from './textures-snippet.ts';
 import { unzipEntry, zipEntries } from './textures-zip.ts';
 
@@ -28,7 +29,10 @@ const query = (q: string, extra = ''): string =>
   `${API}?type=Material&include=dimensionsData${extra}&q=${encodeURIComponent(q)}`;
 
 export async function searchAmbientcg(q: string, fetch: Fetch, limit = 30): Promise<Hit[]> {
-  const res = await getJson<{ foundAssets?: Asset[] }>(fetch, `${query(q)}&limit=${limit}`);
+  const res = await getJson<{ foundAssets?: Asset[] }>(
+    withTimeout(fetch),
+    `${query(q)}&limit=${limit}`,
+  );
   return (res.foundAssets ?? []).map((a) => ({
     source: 'ambientcg' as const,
     id: a.assetId,
@@ -53,7 +57,7 @@ export async function ambientcgSource(
   res = '1K',
 ): Promise<{ source: TextureSource; bytes: Map<string, Uint8Array> }> {
   const found = await getJson<{ foundAssets?: Asset[] }>(
-    fetch,
+    withTimeout(fetch),
     `${API}?type=Material&include=dimensionsData&id=${encodeURIComponent(id)}`,
   );
   const asset = found.foundAssets?.find((a) => a.assetId === id);
@@ -63,8 +67,8 @@ export async function ambientcgSource(
     );
   const zipName = `${id}_${res}-PNG.zip`;
   const zipUrl = `https://ambientcg.com/get?file=${zipName}`;
-  const zip = await getBytes(fetch, zipUrl);
-  const names = new Set(zipEntries(zip).map((e) => e.name));
+  const zip = await getBytes(withTimeout(fetch), zipUrl);
+  const names = new Set(zipEntries(zip, zipName).map((e) => e.name));
   const bytes = new Map<string, Uint8Array>();
   const maps: Record<string, TextureFile> = {};
   for (const [key, suffix] of Object.entries(MAPS)) {
@@ -73,7 +77,7 @@ export async function ambientcgSource(
       if (key === 'albedo') throw new Error(`textures: ${zipName} has no ${entry}`);
       continue;
     }
-    const b = unzipEntry(zip, entry);
+    const b = unzipEntry(zip, entry, zipName);
     const h = sha256(b);
     bytes.set(h, b);
     maps[key] = { url: `${zipUrl}#${entry}`, sha256: h };

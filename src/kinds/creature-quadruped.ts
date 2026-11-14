@@ -10,6 +10,7 @@
 import type { Vec3 } from '../core/index.ts';
 import { type Bones, feet, type HeadFrame, headToWorld, type Wing } from './creature-bones.ts';
 import { v3 } from './creature-curve.ts';
+import { footPlan } from './creature-family.ts';
 import { polygonArea, sizes, tailChain } from './creature-layout.ts';
 import { foreLeg, hindLeg, type LegFrame } from './creature-quadruped-legs.ts';
 import { tube } from './creature-skin.ts';
@@ -49,7 +50,10 @@ export function quadrupedBones(s: CreatureSpec): Bones {
   const r = z.limbR;
   const coat = s.coat ?? ((s.surface ?? 'fur') === 'fur' ? 0.02 : 0);
   const frame: LegFrame = { xw, xh, T, H, D, y: W * 0.34, r, fur: coat };
-  const legs = [foreLeg(z.stance, frame), hindLeg(z.stance, frame)];
+  const legs = [
+    foreLeg(z.stance, frame, footPlan(s, z.stance, 'fore')),
+    hindLeg(z.stance, frame, footPlan(s, z.stance, 'hind')),
+  ];
   // Topline heights: withers, the dip behind them, the croup.
   const dip = H - 0.04 * H;
   const croup = H - 0.03 * H;

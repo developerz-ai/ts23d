@@ -8,14 +8,19 @@
     "ww2",
     "hero"
   ],
+  "lods": [
+    0,
+    1,
+    2
+  ],
   "files": {
     "lods": [],
-    "sheet": "recipes/tiger_1/out/tiger_1/sheet.png",
-    "thumb": "recipes/tiger_1/out/tiger_1/thumb.png"
+    "sheet": "sheet.png",
+    "thumb": "thumb.png"
   },
   "triangles": [
-    73712,
-    18096,
+    72150,
+    17440,
     3410
   ],
   "drawCalls": [

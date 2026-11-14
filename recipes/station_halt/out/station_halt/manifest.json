@@ -10,14 +10,19 @@
     "uk",
     "brick"
   ],
+  "lods": [
+    0,
+    1,
+    2
+  ],
   "files": {
     "lods": [],
-    "sheet": "recipes/station_halt/out/station_halt/sheet.png",
-    "thumb": "recipes/station_halt/out/station_halt/thumb.png"
+    "sheet": "sheet.png",
+    "thumb": "thumb.png"
   },
   "triangles": [
-    8802,
-    4882,
+    8538,
+    4738,
     460
   ],
   "drawCalls": [

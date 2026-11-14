@@ -10,10 +10,15 @@
     "sculpt",
     "hero"
   ],
+  "lods": [
+    0,
+    1,
+    2
+  ],
   "files": {
     "lods": [],
-    "sheet": "recipes/dragon/out/dragon/sheet.png",
-    "thumb": "recipes/dragon/out/dragon/thumb.png"
+    "sheet": "sheet.png",
+    "thumb": "thumb.png"
   },
   "triangles": [
     197828,

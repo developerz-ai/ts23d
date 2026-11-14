@@ -61,7 +61,12 @@ export class MeshBuilder {
 
 export const triangleCount = (m: Mesh): number => m.indices.length / 3;
 
+/**
+ * Axis-aligned bounds of a mesh. An empty mesh (no positions) has zero-size bounds at the origin
+ * (min = max = [0, 0, 0]), never ±Infinity; callers that union boxes should skip empty meshes.
+ */
 export function boundsOf(m: Mesh): Bounds {
+  if (m.positions.length < 3) return { min: [0, 0, 0], max: [0, 0, 0] };
   const min = [Infinity, Infinity, Infinity];
   const max = [-Infinity, -Infinity, -Infinity];
   for (let i = 0; i < m.positions.length; i += 3) {

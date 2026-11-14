@@ -9,15 +9,20 @@
     "1880s",
     "usa"
   ],
+  "lods": [
+    0,
+    1,
+    2
+  ],
   "files": {
     "lods": [],
-    "sheet": "recipes/water_tower/out/water_tower/sheet.png",
-    "thumb": "recipes/water_tower/out/water_tower/thumb.png"
+    "sheet": "sheet.png",
+    "thumb": "thumb.png"
   },
   "triangles": [
-    7488,
-    3096,
-    496
+    7468,
+    3076,
+    488
   ],
   "drawCalls": [
     2,

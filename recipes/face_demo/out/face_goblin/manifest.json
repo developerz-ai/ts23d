@@ -10,15 +10,20 @@
     "warp",
     "face"
   ],
+  "lods": [
+    0,
+    1,
+    2
+  ],
   "files": {
     "lods": [],
-    "sheet": "recipes/face_demo/out/face_goblin/sheet.png",
-    "thumb": "recipes/face_demo/out/face_goblin/thumb.png"
+    "sheet": "sheet.png",
+    "thumb": "thumb.png"
   },
   "triangles": [
-    49076,
-    13054,
-    5736
+    48948,
+    12990,
+    5716
   ],
   "drawCalls": [
     2,

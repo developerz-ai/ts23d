@@ -31,12 +31,33 @@ describe('sound.mechanism', () => {
   });
 
   it('looping kinds loop seamlessly; one-shots do not claim to', () => {
+    // Measured seam jump (whine 1.102, hiss 0.266, rattle 0.0009) + 10 %.
+    const bound = { whine: 1.21, hiss: 0.29, rattle: 0.001 } as const;
     for (const kind of ['whine', 'rattle', 'hiss'] as const) {
       const c = mechanism({ kind, material: 'steel' });
       expect(c.loop).toBe(true);
-      expect(seamJump(c)).toBeLessThan(1.5);
+      expect(seamJump(c)).toBeLessThan(bound[kind]);
     }
     expect(mechanism({ kind: 'creak', material: 'oak' }).loop).toBe(false);
+  });
+});
+
+describe('sound.mechanism names', () => {
+  it('default name is unique per parameter set; defaults keep the short name', () => {
+    expect(mechanism({ kind: 'creak', material: 'oak', speed: 0.5, seed: 1 }).name).toBe(
+      'creak_oak',
+    );
+    const w = { kind: 'whine', material: 'steel' } as const;
+    const names = [
+      mechanism(w),
+      mechanism({ ...w, seed: 2 }),
+      mechanism({ ...w, speed: 0.9 }),
+      mechanism({ ...w, duration: 1 }),
+      mechanism({ ...w, rpm: 1500 }),
+      mechanism({ ...w, teeth: 30 }),
+      mechanism({ ...w, loop: false }),
+    ].map((c) => c.name);
+    expect(new Set(names).size).toBe(names.length);
   });
 });
 

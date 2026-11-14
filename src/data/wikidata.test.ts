@@ -83,6 +83,28 @@ describe('wikidata', () => {
     expect(r.quantities['length']?.value).toBe(125);
   });
 
+  test('a somevalue statement first does not hide the next usable one', () => {
+    const somevalue = { rank: 'preferred', mainsnak: { snaktype: 'somevalue' } };
+    const r = parseWikidata(entity({ P2048: [somevalue, claim('+4.5', 'Q11573')] }), 'Q42', PIN);
+    expect(r.quantities['height']?.value).toBe(4.5);
+  });
+
+  test('a unitless length is skipped for one with a unit, and refuses only when alone', () => {
+    const unitless = (amount: string, rank = 'normal'): unknown => ({
+      rank,
+      mainsnak: { datavalue: { value: { amount, unit: '1' } } },
+    });
+    const r = parseWikidata(
+      entity({ P2043: [unitless('+12', 'preferred'), claim('+7', 'Q11573')] }),
+      'Q42',
+      PIN,
+    );
+    expect(r.quantities['length']?.value).toBe(7);
+    expect(code(() => parseWikidata(entity({ P2043: [unitless('+12')] }), 'Q42', PIN))).toBe(
+      'T3D_DATA_UNIT',
+    );
+  });
+
   test('coordinates and item facts with labels from the pin', () => {
     const r = parseWikidata(
       entity({

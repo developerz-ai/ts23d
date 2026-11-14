@@ -32,7 +32,8 @@ export const crate = defineAsset({ name: 'crate', kind: 'prop', budget: { triang
     expect(await Bun.file(join(out, 'crate', f)).exists()).toBe(true);
   }
   const manifest = await Bun.file(join(out, 'crate', 'manifest.json')).json();
-  expect(manifest.files.single).toBe(join(out, 'crate', 'crate.glb'));
+  expect(manifest.files.single).toBe('crate.glb');
+  expect(manifest.lods).toEqual([0, 1, 2]);
   expect(manifest.lodCoverage).toHaveLength(3);
   expect(manifest.pivots.map((p: { name: string }) => p.name)).toEqual(['body']);
   expect((await Bun.file(join(out, 'index.json')).json()).ok).toBe(true);
@@ -87,9 +88,9 @@ it('writes only the single MSFT_lod file with --lods single, only split files wi
 });
 
 it('fails a bad --size with a coded error, before writing anything', async () => {
-  const err = console.error;
+  const log = console.log;
   let printed = '';
-  console.error = (m: string) => {
+  console.log = (m: string) => {
     printed += m;
   };
   const code = await run([
@@ -101,7 +102,7 @@ it('fails a bad --size with a coded error, before writing anything', async () =>
     '9x9',
     '--json',
   ]);
-  console.error = err;
+  console.log = log;
   expect(code).toBe(1);
   expect(JSON.parse(printed).error.code).toBe('T3D_RENDER_OPTIONS');
   expect(await Bun.file(join(out, 'bad', 'crate', 'hero.png')).exists()).toBe(false);

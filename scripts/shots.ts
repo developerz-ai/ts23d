@@ -35,11 +35,6 @@ export async function refresh(dir: string, file: string, run: Runner = t3d): Pro
     }
   }
   await rm(join(tmp, 'index.json'), { force: true });
-  // Manifests record their file paths: point them at out/, where the files will live.
-  for (const asset of await readdir(tmp)) {
-    const m = Bun.file(join(tmp, asset, 'manifest.json'));
-    if (await m.exists()) await Bun.write(m, (await m.text()).replaceAll(`${tmp}/`, `${out}/`));
-  }
   for (const f of await readdir(tmp)) if (f.startsWith('trim_sheet_')) await rm(join(tmp, f));
   // Committed critiques survive a refresh (the gate then judges whether they're stale).
   await keepCritiques(out, tmp);

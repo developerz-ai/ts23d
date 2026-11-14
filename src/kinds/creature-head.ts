@@ -2,7 +2,9 @@
 //   blockOut  braincase, occiput, cheekbones, the muzzle as a tapering skin, the lower jaw + chin;
 //             with a head preset (`face.preset`): the stop, flews and flaring cheek fur
 //   features  nose leather and nostrils (or a beak/snout), the brow ridge, the eye socket with lids
-//             that wrap the eyeball (seated by probing the block-out), ears (creature-head-parts.ts),
+//             that wrap the eyeball (seated by probing the block-out), opening toward the family's
+//             orbit angle (Heesy 2004: cat 65°, dog 50°, horse 24° convergence), ears
+//             (creature-head-parts.ts),
 //             the mouth line as a declared crease
 //   teeth     upper canines rooted above the lip, crowns outside the lower lip (`face.fangs`)
 // Sizes are ratios of head length/width/height, so one recipe line moves a wolf to a big cat.
@@ -12,8 +14,9 @@ import { type SculptEdit, sculptField } from '../primitives/index.ts';
 import type { Bones } from './creature-bones.ts';
 import { eyeRadius } from './creature-bones.ts';
 import { palette } from './creature-coat.ts';
-import { mixRgb } from './creature-curve.ts';
+import { mixRgb, v3 } from './creature-curve.ts';
 import { type EyeSpec, lidEdits } from './creature-eye.ts';
+import { orbitOf } from './creature-family.ts';
 import { earEdits, earHeight, fangs } from './creature-head-parts.ts';
 import { blob, skin } from './creature-skin.ts';
 import { type CreatureSpec, faceOf } from './creature-spec.ts';
@@ -98,12 +101,21 @@ function blockOut(l: Block, coarse = false): SculptEdit[] {
   ];
 }
 
-/** Seats the eye on the block-out: probe along −X at the eye's (y, z), sink 0.62 r behind it. */
-function seatEye(l: Block, guess: Vec3, r: number): Vec3 {
+/** Seats the eye on the block-out: probe along −X at the eye's (y, z) to the skin, then along
+ *  the aperture normal `n` back onto it, and sink 0.62 r behind the surface along `n`. */
+function seatEye(l: Block, guess: Vec3, r: number, n: Vec3): Vec3 {
   const f = sculptField(blockOut(l), { color: [1, 1, 1] }).field;
   let x = l.L + 0.1;
   for (let i = 0; i < 2000 && f([x, guess[1], guess[2]]) > 0; i++) x -= l.L / 1000;
-  return [x - r * 0.62, guess[1], guess[2]];
+  let p = v3.add([x, guess[1], guess[2]], v3.mul(n, r * 3));
+  for (let i = 0; i < 2000 && f(p) > 0; i++) p = v3.sub(p, v3.mul(n, l.L / 1000));
+  return v3.sub(p, v3.mul(n, r * 0.62));
+}
+
+/** Unit normal of the left lid opening: (90° − orbit convergence) off +X toward +Y (Heesy 2004). */
+export function apertureNormal(s: CreatureSpec): Vec3 {
+  const a = ((90 - orbitOf(s)) * Math.PI) / 180;
+  return [Math.cos(a), Math.sin(a), 0];
 }
 
 export function headLayout(b: Bones, s: CreatureSpec): HeadLayout {
@@ -118,7 +130,9 @@ export function headLayout(b: Bones, s: CreatureSpec): HeadLayout {
       : H * Math.max(0.08, 0.32 - 0.38 * m);
   const zt = -0.1 * H;
   const zm = zt - rt * 0.55;
-  const fwd = s.face?.forward ?? 0.65;
+  const conv = orbitOf(s);
+  const n = apertureNormal(s);
+  const fwd = s.face?.forward ?? conv / 90;
   const r = Math.min(eyeRadius(s.mass), 0.16 * W);
   const c = palette(s.colours);
   const base = {
@@ -136,7 +150,7 @@ export function headLayout(b: Bones, s: CreatureSpec): HeadLayout {
     ear: faceOf(s).ears === 'none' ? null : ([0.32 * lc, 0.3 * W, 0.34 * H] as Vec3),
     earHeight: earHeight(s) * L,
   };
-  const centre = seatEye(base, [0, W * (0.4 - 0.14 * fwd), 0.14 * H], r);
+  const centre = seatEye(base, [0, W * (0.4 - 0.14 * fwd), 0.14 * H], r, n);
   const eye: EyeSpec = {
     centre,
     r,
@@ -146,7 +160,9 @@ export function headLayout(b: Bones, s: CreatureSpec): HeadLayout {
     lid: Math.max(0.0015, r * 0.16),
     tilt: 10,
     scowl: 4,
-    gaze: [centre[0] + 2, 0, centre[2]],
+    // Rest gaze along the orbit: the iris centred in the lid opening.
+    gaze: v3.add(centre, v3.mul(n, 2)),
+    aperture: 90 - conv,
     pupil: s.face?.pupil ?? 'round',
     colours: {
       sclera: mixRgb(c.iris, [0.08, 0.06, 0.05], 0.75),
@@ -230,7 +246,7 @@ function features(
     ),
     {
       shape: 'sphere',
-      at: [e[0] + l.eye.r * 0.25, e[1], e[2]],
+      at: v3.add(e, v3.mul(apertureNormal(s), l.eye.r * 0.25)),
       size: l.eye.r * 1.15,
       op: 'subtract',
       blend: l.eye.r * 0.35,

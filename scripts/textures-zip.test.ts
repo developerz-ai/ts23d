@@ -58,6 +58,29 @@ describe('zip reader: bad input', () => {
   });
 });
 
+describe('zip reader: hostile archives', () => {
+  it('a declared size smaller than the inflated data fails, without a big buffer', () => {
+    const big = new Uint8Array(4 * 1024 * 1024); // 4 MB of zeros deflates to ~4 KB
+    const zip = makeZip([{ name: 'bomb.png', data: big, deflate: true }]);
+    const cen = zip.length - 22 - 46 - 'bomb.png'.length;
+    new DataView(zip.buffer).setUint32(cen + 24, 16, true); // central directory: size = 16
+    expect(() => unzipEntry(zip, 'bomb.png', 'Bomb_1K-PNG.zip')).toThrow('Bomb_1K-PNG.zip');
+    expect(() => unzipEntry(zip, 'bomb.png')).toThrow('declared 16 bytes');
+  });
+  it('a local header offset past the end fails with the archive name', () => {
+    const zip = makeZip([{ name: 'a.png', data: a }]);
+    const cen = zip.length - 22 - 46 - 'a.png'.length;
+    new DataView(zip.buffer).setUint32(cen + 42, 0x7fffffff, true);
+    expect(() => unzipEntry(zip, 'a.png', 'x.zip')).toThrow('zip x.zip: local header');
+  });
+  it('compressed data running past the end fails, not a short read', () => {
+    const zip = makeZip([{ name: 'a.png', data: a }]);
+    const cen = zip.length - 22 - 46 - 'a.png'.length;
+    new DataView(zip.buffer).setUint32(cen + 20, 0x7fffff, true);
+    expect(() => unzipEntry(zip, 'a.png')).toThrow('runs past the end');
+  });
+});
+
 describe('zip reader: output', () => {
   it('extracts stored and deflated entries byte for byte', () => {
     const zip = makeZip([

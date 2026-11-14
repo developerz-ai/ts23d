@@ -1,29 +1,28 @@
 # ts23d — TypeScript to 3D
 
-> @developerz.ai/ts23d (TypeScript to 3D) — a free, deterministic 3D asset generator driven by coding agents. Assets are TypeScript modules (never JSON) built with a DSL: `defineAsset({ name, kind, real, sources, budget, build(ctx) })`, where `build` adds named, pivoted, animatable parts from primitives (`box`, `lathe`, `cylinder`, `prism`, `beam`, `planar`) or from SVG drawings written as text (`extrudeSvg`, `latheSvg`, `visualHull` front/side silhouettes), places detail with `place`/`merge`, composes other assets with `ctx.use`, and gates detail on `ctx.lod`. It compiles to glTF/GLB for any engine (Unity, Unreal, Godot, three.js, Babylon) — ts23d generates assets only, the engine is yours — (3 LODs, one shared trim-sheet material, baked motion), fails a QA gate on floating parts, budget overruns and wrong real-world proportions, and renders a zero-GPU six-view contact-sheet PNG so a vision-capable agent can check its own work. Bun only, zero runtime dependencies, MIT. Status 0.x: stubs throw T3D_NOT_IMPLEMENTED with the roadmap slice that builds them.
+> @developerz.ai/ts23d (TypeScript to 3D) — a free, deterministic 3D asset generator driven by coding agents. Assets are TypeScript modules (never JSON) built with a DSL: `defineAsset({ name, kind, real, sources, budget, build(ctx) })`, where `build` adds named, pivoted, animatable parts from primitives (`box`, `lathe`, `cylinder`, `prism`, `beam`, `planar`) or from SVG drawings written as text (`extrudeSvg`, `latheSvg`, `visualHull` front/side silhouettes), places detail with `place`/`merge`, composes other assets with `ctx.use`, and gates detail on `ctx.lod`. It compiles to glTF/GLB for any engine (Unity, Unreal, Godot, three.js, Babylon) — ts23d generates assets only, the engine is yours — (3 LODs, one shared trim-sheet material, baked motion), fails a QA gate on floating parts, budget overruns and wrong real-world proportions, and renders a zero-GPU six-view contact-sheet PNG so a vision-capable agent can check its own work. The CLI needs Bun; the library imports under Node ≥ 22. Zero runtime dependencies, MIT. Status 0.x: stubs (`photoMatch`, `silhouetteIoU`, `localGenerator`, `kubeezImages`) throw T3D_NOT_IMPLEMENTED with the roadmap slice that builds them.
 
 ## Offline (inside your project)
-The npm package ships every doc, skill and example, versioned with the code — read them without internet:
-- `node_modules/@developerz.ai/ts23d/AGENTS.md` — rules and the loop
+The npm package ships the docs, skills, recipe sources and examples, versioned with the code — read them without internet (As of 2026-11: recipe `out/` renders, PNGs, tests and source maps are not in the tarball; read those on GitHub):
+- `node_modules/@developerz.ai/ts23d/CLAUDE.md` — rules and the loop (the repo's `AGENTS.md` is a symlink to it and is not shipped)
 - `node_modules/@developerz.ai/ts23d/docs/` — DSL, IR, materials, agent loop, QA, kinds, decisions, roadmap
-- `node_modules/@developerz.ai/ts23d/recipes/<name>/` — idiomatic recipes, each with its research dossier (`README.md`) and committed hero + contact sheet (`out/`)
+- `node_modules/@developerz.ai/ts23d/recipes/<name>/` — idiomatic recipes, each with its research dossier (`README.md`); committed hero + contact sheet live in the GitHub repo under `recipes/<name>/out/`
 - `node_modules/@developerz.ai/ts23d/.claude/skills/author-recipe/SKILL.md` — copy into your `.claude/skills/`
 
 ## The workflow
-The human names a thing ("Tiger I, mid-production 1943"). The agent researches specs and real photos into `recipes/<name>/README.md` (every number sourced), writes `recipes/<name>.ts` with `sources` + `real.measures` from that dossier, compiles until QA PASS (budget, surface contact, clashes, proportions ±5%, measures ±2%), renders the six-view contact sheet, looks at it, adds LOD-gated detail, and iterates.
+The human names a thing ("Tiger I, mid-production 1943"). The agent researches specs and real photos into `recipes/<name>/README.md` (every number sourced), writes `recipes/<name>/<name>.ts` (in your project: `assets/<name>.ts`) with `sources` + `real.measures` from that dossier, compiles until QA PASS (budget, surface contact, clashes, proportions ±5%, measures ±2%), renders the six-view contact sheet, looks at it, adds LOD-gated detail, and iterates.
 
 ## Programmatic (no CLI)
 `t3d` is optional: `compile` → `runQa` → `toGlb` / `contactSheet` / `paintTrimSheet` are plain functions returning bytes. Runnable script: `examples/build-with-bun.ts` (also in the npm package).
 - [Tuning](docs/idea/20-tuning.md): `t3d tune <recipe> [--evals N] [--seed s]` fits `tune.params` (read with `ctx.tuned`) to silhouette/measures/art/budget objectives by CMA-ES offline and writes `tune.json`, `tune-report.md`, `tune-strip.png`; builds read the committed numbers.
 - Faces: `recipes/_lib/face` warps a committed CC0 base head (MakeHuman hm08, pinned) to ~40 code-set landmarks with `warpTPS` / `tpsWarp` (thin-plate spline, `@developerz.ai/ts23d/primitives`); race presets (human, orc, elf, dwarf, goblin) are numbers. Demo `recipes/face_demo`: the code is the brain, the base mesh is the face.
-- [Import](docs/idea/21-import.md): `importGlb(source, opts)` brings a licence-pinned GLB (scan, CC0 base mesh) in as a part: cleaned, axis-fixed, `simplify` per LOD (ADR 011), `bakeNormals`, one trim-sheet material by default. Demo `recipes/import_demo`.
+- [Import](docs/idea/21-import.md): `importGlb(source, opts)` (reader bounds and caps; shipped) brings a licence-pinned GLB (scan, CC0 base mesh) in as a part: cleaned, axis-fixed, `simplify` per LOD (ADR 011), `bakeNormals`, one trim-sheet material by default. Demo `recipes/import_demo`.
 - [AI finish](docs/idea/22-ai-finish.md): `t3d finish <recipe> --endpoint URL --prompt "…"` projects model-painted views onto LOD0 as one texture layer, masked per part; geometry, names and motion unchanged; QA for palette drift and mask leaks. Demo `recipes/finish_demo`.
 - [Real data](docs/idea/23-real-data.md): `@developerz.ai/ts23d/data` — `bun run data wikidata <QID>` → `realFrom`, `bun run data dem --centre lat,lon --size m` → `terrainFromDEM`; offline builds, sha256-pinned. Demo `recipes/real_valley`.
 
 ## Start
 - [README](https://raw.githubusercontent.com/developerz-ai/ts23d/main/README.md): what it is, quickstart, the agent loop
-- [AGENTS.md](https://raw.githubusercontent.com/developerz-ai/ts23d/main/AGENTS.md): rules for agents using or changing the library
-- [CLAUDE.md](https://raw.githubusercontent.com/developerz-ai/ts23d/main/CLAUDE.md): commands, axioms, module tiers, CI
+- [CLAUDE.md](https://raw.githubusercontent.com/developerz-ai/ts23d/main/CLAUDE.md): rules for agents using or changing the library; commands, axioms, module tiers, CI (`AGENTS.md` in the repo is a symlink to it)
 - [Author-recipe skill](https://raw.githubusercontent.com/developerz-ai/ts23d/main/.claude/skills/author-recipe/SKILL.md): the closed loop, step by step, with a skeleton
 
 ## DSL and concepts

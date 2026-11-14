@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'bun:test';
 import { boundsOf, Ts23dError, triangleCount, type Vec3 } from '../core/index.ts';
+import { zeroArea } from './closed.ts';
 import { cylinder } from './lathe.ts';
 import { sweep } from './sweep.ts';
 import { transportFrames } from './transport.ts';
@@ -140,5 +141,22 @@ describe('sweep', () => {
     const cw = sweep({ section: [...sq].reverse(), path: straight, color: C });
     expect(triangleCount(ccw)).toBe(16);
     expect(Array.from(ccw.normals.slice(0, 3))).toEqual(Array.from(cw.normals.slice(0, 3)));
+  });
+});
+
+describe('sweep poles', () => {
+  it('a ring scaled to 0 (a tapered tip) is a pole: no zero-area slivers, end cap skipped', () => {
+    for (const caps of [false, true] as const) {
+      const m = sweep({
+        section: { radius: 1, segments: 5 },
+        path: straight,
+        scale: [0, 0.2, 0],
+        color: C,
+        caps,
+      });
+      expect(zeroArea(m)).toBe(0);
+      // One triangle per segment in each pole band, no caps on the poles.
+      expect(triangleCount(m)).toBe(2 * 5);
+    }
   });
 });

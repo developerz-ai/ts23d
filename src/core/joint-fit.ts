@@ -16,6 +16,7 @@ import type { CompiledAsset } from './definition.ts';
 import { type Mesh, merge } from './mesh.ts';
 import type { Joint } from './part.ts';
 import { innerRadius, opening, picks, planeAxes, type Section, section, wrap } from './section.ts';
+import { TOLERANCE } from './validate-asset.ts';
 import type { Vec3 } from './vec.ts';
 import { worldMeshes } from './world.ts';
 
@@ -93,7 +94,7 @@ export function jointFit(asset: CompiledAsset, j: Joint): JointFit {
     const ms = [...world].filter(([n]) => picks(sel, n)).map(([, m]) => m);
     return ms.length ? merge(ms) : null;
   };
-  const tol = j.tolerance ?? 0.2;
+  const tol = j.tolerance ?? TOLERANCE.joint;
   const kind = j.kind ?? 'flush';
   const finding = (code: string, message: string, fix: string): JointIssue => ({
     gate: 'joints',

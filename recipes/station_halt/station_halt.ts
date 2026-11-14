@@ -244,6 +244,7 @@ export const station_halt = defineAsset({
         axis: 'y',
         parts: ['building'],
         tolerance: 0.05,
+        why: 'scaled from photos, no drawing: ±5% is the scaling error',
         source: 'Toddington photos',
       },
       {
@@ -252,6 +253,7 @@ export const station_halt = defineAsset({
         axis: 'x',
         parts: ['building'],
         tolerance: 0.05,
+        why: 'scaled from photos, no drawing: ±5% is the scaling error',
         source: 'Toddington photos',
       },
     ],

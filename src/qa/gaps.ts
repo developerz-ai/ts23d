@@ -164,6 +164,7 @@ export const describeGap = (g: Gap): string => {
 
 export const gapFinding = (g: Gap): Finding => ({
   gate: 'gaps',
+  code: 'T3D_QA_GAPS',
   part: g.parts[0],
   message: describeGap(g),
   fix: `close it: extend/move '${g.parts[0]}' or '${g.parts[1]}' until they meet (or overlap ≥ 2 mm) — a door reaches its header, a panel its frame. If the opening is real (vent, running clearance, door seam), declare it: gaps: [{ parts: ['${g.parts[0]}', '${g.parts[1]}'], why: '…' }]. See it: t3d gaps <recipe>`,

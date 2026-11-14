@@ -8,7 +8,7 @@
 |---|---|
 | Trim-sheet layout: 8 strips, 6 decal cells, 11 foliage cells | Shipped |
 | UVs authored against the layout by every primitive | Shipped |
-| Palettes + `hex()` sRGB → linear | Shipped |
+| Palettes + `hex()` sRGB → linear (strict: `#rgb` or `#rrggbb` only, else `T3D_MATERIAL_INVALID`) | Shipped |
 | `grime` pass (vertex-colour wear) | Shipped |
 | ≤ 4 shared materials per GLB (opaque, cutout, glass, translucent) over one sheet | Shipped |
 | `paintTrimSheet`: procedural albedo / normal / ORM | Shipped |

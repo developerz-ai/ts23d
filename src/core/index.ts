@@ -13,6 +13,7 @@ export {
   type Connect,
   type ConnectAs,
   checkFinishedParts,
+  checkTolerance,
   compile,
   defineAsset,
   type Emitter,
@@ -46,6 +47,7 @@ export {
   type ResolvedFinish,
   type ResolvedOptics,
   type ResolvedSurfaceOptics,
+  ROOT_PART,
   resolveFinish,
   type Slide,
   type Socket,
@@ -58,6 +60,7 @@ export {
   type SurfaceOptics,
   type Sway,
   srgbToLinear,
+  TOLERANCE,
   TRANSMISSIVE,
   type TransmissiveSurface,
   type Tread,
@@ -82,7 +85,7 @@ export {
 export type { AssetPhysics, BodyKind, ColliderKind, PartPhysics, RealMass } from './physics.ts';
 export { encodePng } from './png.ts';
 export { orient2d, orient3d } from './predicates.ts';
-export { createRng, type Rng } from './rng.ts';
+export { checkSeed, createRng, forkSeed, type Rng } from './rng.ts';
 export {
   innerRadius,
   type Plane,

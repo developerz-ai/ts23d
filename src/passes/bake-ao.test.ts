@@ -5,6 +5,35 @@ import { bakeAo, bakeAoAsset } from './bake-ao.ts';
 
 const white: [number, number, number] = [1, 1, 1];
 
+describe('bakeAo input', () => {
+  const crate = box({ size: [1, 1, 1], color: white });
+  it('rejects samples 0 (NaN colour), fractional samples, strength 5 (negative colour), radius 0', () => {
+    for (const o of [
+      { samples: 0 },
+      { samples: 2.5 },
+      { strength: 5 },
+      { strength: -0.1 },
+      { radius: 0 },
+    ])
+      expect(() => bakeAo(crate, o)).toThrow('T3D_BAKE_INVALID');
+    const a = defineAsset({
+      name: 'ao_bad',
+      kind: 'prop',
+      budget: { triangles: [99, 99, 99] },
+      build: (ctx) => {
+        ctx.part('crate', crate);
+      },
+    });
+    expect(() => bakeAoAsset(compile(a), { samples: 0 })).toThrow('T3D_BAKE_INVALID');
+  });
+
+  it('accepts samples 1 and strength 0..1, colours stay in [0, 1]', () => {
+    const baked = bakeAo(crate, { samples: 1, strength: 1 });
+    expect(Math.min(...baked.colors)).toBeGreaterThanOrEqual(0);
+    expect(Math.max(...baked.colors)).toBeLessThanOrEqual(1);
+  });
+});
+
 describe('bakeAo', () => {
   it('leaves surfaces farther than radius and a lone convex box untouched', () => {
     const floor = box({ size: [4, 4, 0.1], color: white });

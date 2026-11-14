@@ -451,6 +451,7 @@ const usra = defineFamily({
         axis: 'x',
         parts: ['door_l'],
         tolerance: 0.05,
+        why: 'scaled from a photo, not a drawing: ±5% is the scaling error',
         source: 'NARA photo, scaled',
       },
       {

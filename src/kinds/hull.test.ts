@@ -110,4 +110,36 @@ describe('hull', () => {
       expect(runQa(c)).toEqual([]);
     }
   });
+
+  it('collapsed stations (stem head, keel above the waterline) emit no zero-area triangles', () => {
+    for (const lod of [0, 1, 2] as Lod[]) {
+      const boat = defineAsset({
+        name: 'tug',
+        kind: 'vessel',
+        budget: { triangles: [60000, 15000, 1000] },
+        build: (ctx) => {
+          const m = hullMesh({ ...tug, bulwark: 1, stern: 'transom' }, ctx.lod);
+          ctx.part('shell', m.shell);
+          ctx.part('deck', m.deck);
+        },
+      });
+      const c = compile(boat, { lod });
+      for (const p of c.parts) expect(p.mesh && zeroArea(p.mesh)).toBe(0);
+    }
+  });
 });
+
+/** Triangles with a zero cross product (any, not just the gate's 5% share). */
+function zeroArea(m: Mesh): number {
+  let n = 0;
+  const p = (i: number): number[] => [0, 1, 2].map((k) => m.positions[i * 3 + k] ?? 0);
+  for (let t = 0; t < m.indices.length; t += 3) {
+    const [a = [], b = [], c = []] = [0, 1, 2].map((k) => p(m.indices[t + k] ?? 0));
+    const u = [0, 1, 2].map((k) => (b[k] ?? 0) - (a[k] ?? 0));
+    const v = [0, 1, 2].map((k) => (c[k] ?? 0) - (a[k] ?? 0));
+    const [ux = 0, uy = 0, uz = 0] = u;
+    const [vx = 0, vy = 0, vz = 0] = v;
+    if (Math.hypot(uy * vz - uz * vy, uz * vx - ux * vz, ux * vy - uy * vx) < 1e-12) n++;
+  }
+  return n;
+}

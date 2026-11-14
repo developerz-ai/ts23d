@@ -9,15 +9,20 @@
     "mining",
     "sdf"
   ],
+  "lods": [
+    0,
+    1,
+    2
+  ],
   "files": {
     "lods": [],
-    "sheet": "recipes/asteroid/out/asteroid_c/sheet.png",
-    "thumb": "recipes/asteroid/out/asteroid_c/thumb.png"
+    "sheet": "sheet.png",
+    "thumb": "thumb.png"
   },
   "triangles": [
-    20656,
-    4444,
-    632
+    20392,
+    4324,
+    616
   ],
   "drawCalls": [
     2,

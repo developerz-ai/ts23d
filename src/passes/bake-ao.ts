@@ -3,7 +3,14 @@
 // vertex fires a fixed cosine-weighted hemisphere of rays (Fibonacci spiral, no randomness) at the
 // asset's own triangles (and optionally the ground plane); the hit fraction darkens its colour.
 
-import { type CompiledAsset, type Mesh, merge, type Vec3, worldMeshes } from '../core/index.ts';
+import {
+  type CompiledAsset,
+  type Mesh,
+  merge,
+  Ts23dError,
+  type Vec3,
+  worldMeshes,
+} from '../core/index.ts';
 import { RayGrid } from './ray-grid.ts';
 
 export interface AoOptions {
@@ -18,6 +25,22 @@ export interface AoOptions {
 }
 
 const GOLDEN = Math.PI * (3 - Math.sqrt(5));
+
+/** Throws T3D_BAKE_INVALID on options that would bake NaN or out-of-range colours. */
+function checkAo(o: AoOptions): void {
+  const bad = (cause: string, fix: string): never => {
+    throw new Ts23dError('T3D_BAKE_INVALID', { cause, fix });
+  };
+  const samples = o.samples ?? 24;
+  if (!Number.isInteger(samples) || samples < 1 || samples > 1024)
+    bad(`bakeAo samples is ${samples}`, 'use a whole number of rays from 1 to 1024, e.g. 24');
+  const strength = o.strength ?? 0.6;
+  if (!(strength >= 0 && strength <= 1))
+    bad(`bakeAo strength is ${strength}`, 'use 0 (no change) to 1 (occluded = black), e.g. 0.6');
+  const radius = o.radius ?? 1;
+  if (!(Number.isFinite(radius) && radius > 0))
+    bad(`bakeAo radius is ${radius} m`, 'use a finite reach > 0 m, e.g. radius: 1');
+}
 
 /** Fixed cosine-weighted directions around +Z. */
 function hemisphere(n: number): Vec3[] {
@@ -161,6 +184,7 @@ const gridOf = (m: Mesh): RayGrid => {
 };
 
 export function bakeAo(mesh: Mesh, o: AoOptions = {}, occluder: Mesh = mesh): Mesh {
+  checkAo(o);
   return darken(mesh, visibility(mesh, gridOf(occluder), o), o.strength ?? 0.6);
 }
 
@@ -169,6 +193,7 @@ export function bakeAo(mesh: Mesh, o: AoOptions = {}, occluder: Mesh = mesh): Me
  * the hull behind it). Colours only change, so parts keep their local meshes and pivots.
  */
 export function bakeAoAsset(asset: CompiledAsset, o: AoOptions = {}): CompiledAsset {
+  checkAo(o);
   const world = worldMeshes(asset.parts);
   if (world.size === 0) return asset;
   const grid = new RayGrid(merge([...world.values()]));

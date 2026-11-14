@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'bun:test';
 import { compile, defineAsset } from '../core/index.ts';
 import { cylinder } from '../primitives/index.ts';
+import { proportions } from './gates.ts';
 import { measures } from './measures.ts';
 
 const wheels = (d: number) =>
@@ -39,5 +40,28 @@ describe('measures gate', () => {
     const f = measures(compile(wheels(1.1)));
     expect(f).toHaveLength(1);
     expect(f[0]?.message).toContain('wheel diameter');
+  });
+
+  it('fails a measure whose error is NaN (second lock behind input validation)', () => {
+    const a = compile(wheels(1.0), { lod: 0 });
+    const real = a.real;
+    expect(real).toBeDefined();
+    if (!real) return;
+    const nan = {
+      ...a,
+      real: {
+        ...real,
+        measures: [
+          {
+            ...(real.measures?.[0] ?? { label: 'x', axis: 'z' as const, value: 1 }),
+            value: Number.NaN,
+          },
+        ],
+      },
+    };
+    expect(measures(nan).map((f) => f.code)).toEqual(['T3D_QA_MEASURES']);
+    expect(proportions({ ...a, real: { ...real, length: Number.NaN } }).map((f) => f.code)).toEqual(
+      ['T3D_QA_PROPORTIONS'],
+    );
   });
 });

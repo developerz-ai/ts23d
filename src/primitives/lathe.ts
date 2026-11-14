@@ -9,6 +9,7 @@
 
 import { type Mesh, MeshBuilder, type Vec2, type Vec3 } from '../core/index.ts';
 import { type StripId, stripRect } from '../material/index.ts';
+import { count, invalid, positive, profileOf } from './check.ts';
 import { facets } from './lathe-facets.ts';
 import { mirroredV, stripU, stripVMetres } from './strip-uv.ts';
 
@@ -36,7 +37,35 @@ export interface LatheOptions {
 const orient = (p: Vec3, axis: 'x' | 'y' | 'z'): Vec3 =>
   axis === 'z' ? p : axis === 'y' ? [p[0], p[2], p[1]] : [p[2], p[1], p[0]];
 
-export function lathe(o: LatheOptions): Mesh {
+/** Radii below this (a nanometre) are on the axis: sin(π) and friends round to ~1e-17, not 0. */
+export const POLE_RADIUS = 1e-9;
+
+/** Consecutive repeats dropped: a zero-length profile segment is a band of zero-area slivers. */
+function distinct(profile: readonly Vec2[]): Vec2[] {
+  return profile.filter((p, i) => {
+    const q = profile[i - 1];
+    return !q || Math.hypot(p[0] - q[0], p[1] - q[1]) > POLE_RADIUS;
+  });
+}
+
+/** Rejects inputs that would emit NaN, empty or inside-out rings. */
+function checkLathe(o: LatheOptions): void {
+  count('lathe segments', o.segments, 3, 1024);
+  profileOf('lathe profile', o.profile, 2);
+  if (distinct(o.profile).length < 2)
+    invalid(
+      'lathe profile repeats one point, so it has no length',
+      'give at least two distinct (radius, z) points',
+    );
+  if (o.profile.some(([r]) => r < 0))
+    invalid('lathe profile has a negative radius', 'radii are distances from the axis: use r ≥ 0');
+  if (!o.profile.some(([r]) => r > 0))
+    invalid('lathe profile has every radius 0, so it has no surface', 'give some points r > 0');
+}
+
+export function lathe(opts: LatheOptions): Mesh {
+  checkLathe(opts);
+  const o: LatheOptions = { ...opts, profile: distinct(opts.profile) };
   const axis = o.axis ?? 'z';
   const [ox, oy, oz] = o.at ?? [0, 0, 0];
   const rect = stripRect(o.strip ?? 'plain');
@@ -99,7 +128,7 @@ export function lathe(o: LatheOptions): Mesh {
   // Each profile point gives the ring that ends the band below (`top`) and the one that starts
   // the band above (`ring`); they are the same ring unless the profile creases there.
   const top: number[][] = [];
-  if (o.faceted) facets(o, put, tri, sideUv);
+  if (o.faceted) facets(o, put, tri, sideUv, POLE_RADIUS);
   else
     o.profile.forEach(([r, z], i) => {
       const prev = o.profile[i - 1] ?? o.profile[i] ?? [r, z];
@@ -120,14 +149,20 @@ export function lathe(o: LatheOptions): Mesh {
       top.push(row);
       ring.push(row);
     });
+  // A ring on the axis (r = 0) is a pole: its band keeps only the triangle that reaches the other
+  // ring, so a cone or dome tip emits no zero-area slivers (the `degenerate-triangles` gate).
+  const onAxis = (i: number): boolean => (o.profile[i]?.[0] ?? 0) <= POLE_RADIUS;
   for (let i = 0; i + 1 < ring.length; i++) {
+    const pole0 = onAxis(i);
+    const pole1 = onAxis(i + 1);
+    if (pole0 && pole1) continue;
     for (let s = 0; s < o.segments; s++) {
       const a = ring[i]?.[s] ?? 0;
       const bb = ring[i]?.[s + 1] ?? 0;
       const c = top[i + 1]?.[s + 1] ?? 0;
       const d = top[i + 1]?.[s] ?? 0;
-      tri(a, bb, c);
-      tri(a, c, d);
+      if (!pole0) tri(a, bb, c);
+      if (!pole1) tri(a, c, d);
     }
   }
   if (o.caps) {
@@ -136,7 +171,7 @@ export function lathe(o: LatheOptions): Mesh {
       { pt: o.profile[o.profile.length - 1], n: 1 },
     ];
     for (const { pt, n } of ends) {
-      if (!pt) continue;
+      if (!pt || pt[0] <= POLE_RADIUS) continue; // an end on the axis is already closed
       const centre = put([0, 0, pt[1]], [0, 0, n], capUv(0, 0, pt[0]));
       const rim: number[] = [];
       for (let s = 0; s <= o.segments; s++) {
@@ -163,8 +198,10 @@ export function lathe(o: LatheOptions): Mesh {
 /** Convenience: a capped cylinder, the most common lathe. */
 export const cylinder = (
   o: Omit<LatheOptions, 'profile' | 'caps'> & { radius: number; length: number },
-): Mesh =>
-  lathe({
+): Mesh => {
+  positive('cylinder radius', o.radius, 'radius: 0.3');
+  positive('cylinder length', o.length, 'length: 1');
+  return lathe({
     ...o,
     profile: [
       [o.radius, -o.length / 2],
@@ -172,3 +209,4 @@ export const cylinder = (
     ],
     caps: true,
   });
+};

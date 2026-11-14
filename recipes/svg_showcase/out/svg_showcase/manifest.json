@@ -10,15 +10,20 @@
     "sculpt",
     "silhouette"
   ],
+  "lods": [
+    0,
+    1,
+    2
+  ],
   "files": {
     "lods": [],
-    "sheet": "recipes/svg_showcase/out/svg_showcase/sheet.png",
-    "thumb": "recipes/svg_showcase/out/svg_showcase/thumb.png"
+    "sheet": "sheet.png",
+    "thumb": "thumb.png"
   },
   "triangles": [
-    38824,
-    10264,
-    1936
+    38744,
+    10224,
+    1916
   ],
   "drawCalls": [
     1,

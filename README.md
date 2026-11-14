@@ -3,7 +3,18 @@
 **Free 3D asset generator for coding agents. Your agent writes TypeScript; ts23d compiles it to game-ready glTF — for Unity, Unreal, Godot, three.js, Babylon, or anything that reads glTF.**
 
 [![npm](https://img.shields.io/npm/v/@developerz.ai/ts23d)](https://www.npmjs.com/package/@developerz.ai/ts23d)
-[![license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+[![downloads](https://img.shields.io/npm/dm/@developerz.ai/ts23d)](https://www.npmjs.com/package/@developerz.ai/ts23d)
+[![CI](https://img.shields.io/github/actions/workflow/status/developerz-ai/ts23d/ci.yml?branch=main&label=CI)](https://github.com/developerz-ai/ts23d/actions/workflows/ci.yml)
+[![gallery](https://img.shields.io/github/actions/workflow/status/developerz-ai/ts23d/pages.yml?branch=main&label=gallery)](https://developerz-ai.github.io/ts23d/)
+[![license](https://img.shields.io/npm/l/@developerz.ai/ts23d)](LICENSE)
+[![Bun](https://img.shields.io/badge/bun-%E2%89%A51.4.4-f9f1e1?logo=bun&logoColor=black)](https://bun.sh)
+[![Node](https://img.shields.io/badge/node-%E2%89%A522-339933?logo=nodedotjs&logoColor=white)](https://nodejs.org)
+[![runtime dependencies](https://img.shields.io/badge/runtime%20dependencies-0-brightgreen)](docs/decisions/005-zero-runtime-deps.md)
+[![maintained by developerz.ai](https://img.shields.io/badge/maintained%20by-developerz.ai-6f42c1)](https://www.developerz.ai)
+
+[Gallery](https://developerz-ai.github.io/ts23d/) · [npm](https://www.npmjs.com/package/@developerz.ai/ts23d) · [Docs](docs/README.md) · [Changelog](CHANGELOG.md) · [llms.txt](llms.txt) · [Roadmap](docs/plans/roadmap.md) · [Security](SECURITY.md) · [Issues](https://github.com/developerz-ai/ts23d/issues)
+
+<sub>Bun runs the CLI (`t3d`); the library imports under Node ≥ 22. Published from CI with npm provenance. Built and maintained by AI agents under [developerz.ai](https://www.developerz.ai) (As of 2026-11).</sub>
 
 <table>
   <tr>
@@ -48,8 +59,8 @@ Each asset is a TypeScript module. `t3d build` compiles it, deterministically, t
 - **Sockets and surfaces.** `ctx.socket` exports seats, mounts, cameras and spawn points as named nodes. A part can be `opaque`, `cutout`, `glass` or `translucent`; a GLB holds at most 4 materials over one texture set (a shampoo bottle is 2 draw calls).
 - **Emitters and motion.** `ctx.emitter` exports smoke, steam, dust, muzzle and fire sources as named nodes your engine's particles bind to; parts `spin`, `slide` or `sway`.
 - **3 LODs from one source.** The recipe reads `ctx.lod` and drops detail. Nothing is decimated.
-- **One shared material, batched geometry.** Every asset maps into one trim sheet, and the exporter merges static geometry into its nearest pivot. Draw calls = the parts an engine moves: a static prop or building is 1; a tank with independently spinning road wheels is one per wheel plus turret, gun and hull.
-- **A QA gate.** Exit 1 on: a part not in surface contact with anything grounded (2 cm), a moving part that cuts through another anywhere in its motion, a blown triangle budget, non-finite or inside-out geometry, hidden parts, an LOD that grows instead of shrinks.
+- **One shared material, batched geometry.** Every asset maps into one trim sheet, and the exporter merges static geometry into its nearest pivot. Draw calls = one per moving pivot (plus one for the merged static body): a static prop or building is 1; a tank with independently spinning road wheels is one per wheel plus turret, gun and hull. Cap it with `budget.draws`; `t3d build` fails on `T3D_QA_DRAW_CALLS`.
+- **A QA gate.** Exit 1 on: a part not in surface contact with anything grounded (2 cm), a moving part that cuts through another anywhere in its motion, a blown triangle budget (and `budget.draws` when declared), non-finite or inside-out geometry, degenerate (zero-area) triangles, hidden parts, an LOD that grows instead of shrinks. Every finding carries a stable `T3D_QA_*` code, a `fix:` line and, where it applies, the gap and nearest part ([gate list](docs/idea/06-qa.md)).
 - **Code-level checks.** The recipe states its physical intent and QA enforces it at every LOD: `checks: [clear('track_*', 'hull_*'), noOverlap('road_wheel_l_*'), touches('turret_body', 'hull_top'), symmetric('_l', '_r', 'y')]`. "The track hits the frame" becomes a failing build.
 - **Textures from code.** A procedural albedo / normal / ORM trim sheet (bricks, planks, plates, slate, foliage), written once and shared by every GLB, plus three.js TSL and Godot shader sources.
 - **Spec-sheet fidelity.** Declare `real: { length, width, height, measures }` with `sources`. QA holds the overall size to ±5% and each named dimension (driver diameter, gauge, wheelbase) to ±2%. Fix the model, never the spec.
@@ -184,7 +195,7 @@ Every stage has zero runtime dependencies ([ADR 005](docs/decisions/005-zero-run
 
 > **Status: early (0.x).** The core loop works: write, build, QA, shot, hero, review, with
 > textures, trees, sculpt, terrain and the gallery's passing recipes. Still declared and throwing
-> `T3D_NOT_IMPLEMENTED`: creatures, photo match, neural adapters. See the [roadmap](docs/plans/roadmap.md). Expect breaking changes.
+> `T3D_NOT_IMPLEMENTED` (As of 2026-11): `photoMatch`, `silhouetteIoU`, `localGenerator`, `kubeezImages`. Shipped neural-module pieces: `importGlb`, `refine`, and `t3d finish --model http`. See the [roadmap](docs/plans/roadmap.md). Expect breaking changes.
 
 ## A recipe
 
@@ -239,17 +250,18 @@ pull a CC0 photo set from Poly Haven with `bun run textures` (hash-pinned, credi
 
 ## Quickstart
 
-Needs Bun ≥ 1.4.4 (Node ≥ 22 for the compiled `dist/`).
+Needs Bun ≥ 1.4.4: the CLI (`t3d`) runs on Bun. The library (`compile`, `runQa`, `toGlb`, …) also imports under Node ≥ 22 (As of 2026-11; the pack smoke test proves both). Write assets in your project, e.g. `assets/<name>.ts`.
 
 ```sh
 bun add @developerz.ai/ts23d
-bunx t3d build recipes/*/*.ts         # GLB × 3 LODs + sheet + manifest per asset; exit 1 on a QA finding
-bunx t3d shot  recipes/*/*.ts         # sheet + manifest only: the fast look
-bunx t3d hero  recipes/*/*.ts         # beauty render: textured, lit, soft shadows (1600×900)
-bunx t3d review recipes/*/*.ts        # AI review pack: hero, sheet, close-ups, LOD strip, review.md
-bunx t3d tune recipes/<name>/<name>.ts --evals 400   # fit tune.params to objectives → tune.json, tune-report.md, tune-strip.png
-bunx t3d finish recipes/<name>/<name>.ts --endpoint URL --prompt "…"   # optional AI texture layer on LOD0
-bunx t3d list  recipes/*/*.ts --json  # the assets each module exports
+bunx t3d build assets/<name>.ts       # GLB × 3 LODs + sheet + manifest per asset; exit 1 on a QA finding
+bunx t3d shot  assets/<name>.ts       # sheet + manifest only: the fast look
+bunx t3d hero  assets/<name>.ts       # beauty render: textured, lit, soft shadows (1600×900)
+bunx t3d review assets/<name>.ts      # AI review pack: hero, sheet, close-ups, LOD strip, review.md
+bunx t3d tune assets/<name>.ts --evals 400   # fit tune.params to objectives → tune.json, tune-report.md, tune-strip.png
+bunx t3d finish assets/<name>.ts --endpoint URL --prompt "…"   # optional AI texture layer on LOD0
+bunx t3d list  assets/*.ts --json     # the assets each module exports (one JSON envelope)
+bunx t3d --version                    # also: t3d <command> --help
 ```
 
 | Flag | Effect |
@@ -260,7 +272,8 @@ bunx t3d list  recipes/*/*.ts --json  # the assets each module exports
 | `--sheet-size 512\|1024\|2048` | Sheet resolution (default 1024) |
 | `--lods 0,1,2` | Which detail levels to build (default all three). `--lods 0` = hero mesh only, `--lods 0,2` = near + far. QA and the manifest cover exactly what was built |
 | `--no-animations` | Skip the baked `run` clip. `t3d build` bakes it by default so viewers (e.g. VS Code glTF Tools) show play controls |
-| `--json` | Machine-readable `{ ok, data }` / `{ ok: false, error: { code, message, fix } }` |
+| `--json` | One envelope on stdout: `{ ok: true, data }` or `{ ok: false, error: { code, message, fix } }` (a multi-recipe run with failures also carries `data`). Errors go to stdout in this mode |
+| `--timeout <s>` | `finish` only: seconds to wait for the model endpoint (default 300) |
 
 Output, one folder per asset (stable paths for agents and pipelines):
 
@@ -271,13 +284,14 @@ out/
     ├── lod0.glb lod1.glb lod2.glb
     ├── hero.png            the beauty render
     ├── sheet.png           the contact sheet
-    └── manifest.json       files; triangles + draw calls per LOD; pivots, emitters, sockets,
-                            surfaces; real + measures with measured values; sources; QA
+    └── manifest.json       files (paths relative to the manifest) and `lods`; triangles + draw
+                            calls per LOD; pivots, emitters, sockets, surfaces; real + measures
+                            with measured values; sources; QA
 ```
 
 Library calls differ on one default: `toGlb(asset)` exports no animation unless `{ animations: true }`.
 
-Every exported asset in a module is built (`defineAsset` or `family.variant`). Every error prints a stable `T3D_*` code and its fix ([errors](docs/architecture/errors.md)).
+Every exported asset in a module is built (`defineAsset` or `family.variant`). Every CLI error (missing file, throwing recipe, unknown flag, duplicate asset name) prints a stable `T3D_*` code and its `fix:`; exit 0 = ok, 1 = QA finding or build error, 2 = usage error ([errors](docs/architecture/errors.md)).
 
 ## Programmatic: no CLI, just Bun
 
@@ -317,7 +331,7 @@ Runnable copy: [`examples/build-with-bun.ts`](examples/build-with-bun.ts) — ex
 
 ## Use it with any agent
 
-**The docs ship inside the package, versioned with the code, readable offline.** After `bun add`, everything an agent needs is at `node_modules/@developerz.ai/ts23d/`: `CLAUDE.md` (the agent brain; `AGENTS.md` in the repo is a link to it), `llms.txt`, `docs/`, `recipes/` (worked examples), `CHANGELOG.md` and `.claude/{skills,agents,commands}`.
+**The docs ship inside the package, versioned with the code, readable offline.** After `bun add`, everything an agent needs is at `node_modules/@developerz.ai/ts23d/`: `CLAUDE.md` (the agent brain; the repo's `AGENTS.md` is a symlink to it and is not in the tarball), `llms.txt`, `docs/`, `recipes/` (worked examples), `CHANGELOG.md` and `.claude/{skills,agents,commands}`.
 
 Point your agent at them. Add to your project's `CLAUDE.md` or `AGENTS.md`:
 
@@ -359,7 +373,7 @@ As of 2026-10. Full matrix: [docs/idea/07-what-fits.md](docs/idea/07-what-fits.m
 | **Shipped, early** | Vegetation: Weber–Penn trees (oak, pine, palm, birch, willow); LOD2 impostors are crude |
 | **Shipped, early** | Stylised organic: `sculpt` busts, SDF rocks and asteroids, eroded terrain. Boats: lofted `hull` |
 | **Planned** | Stylised creatures (SDF over a skeleton, M4) |
-| **Weak** | Realistic people and animals, realistic sculpted organic forms, cloth. Use an image-to-3D tool, or the planned [`/neural` adapter](docs/idea/08-neural-adapters.md) that runs open-weight models on your own GPU and caches the result |
+| **Weak** | Realistic people and animals, realistic sculpted organic forms, cloth. Use an image-to-3D tool, or the planned `localGenerator` ([`/neural`](docs/idea/08-neural-adapters.md)) that runs open-weight models on your own GPU and caches the result |
 
 Not a replacement for AI mesh generators: a different approach with different strengths. Neutral comparison: [docs/landscape.md](docs/landscape.md).
 
@@ -393,4 +407,4 @@ Each recipe is a folder: `recipes/<name>/<name>.ts` (the asset), `README.md` (th
 
 [MIT](LICENSE). Outputs are yours: no attribution, no licence conditions on generated assets.
 
-Third-party data in the library: the vector lettering faces (`text({ font: 'sans' | 'serif' | 'script' | 'gothic' })`) embed the Hershey fonts. The Hershey Fonts were originally created by Dr. A. V. Hershey while working at the U. S. National Bureau of Standards; the format of the font data was originally created by James Hurt, Cognition, Inc. The acknowledgements travel with the data in `src/primitives/font-hershey-*.ts`, as their licence asks.
+Third-party data in the library: the vector lettering faces (`text({ font: 'sans' | 'serif' | 'script' | 'gothic' })`) embed the Hershey fonts. The Hershey Fonts were originally created by Dr. A. V. Hershey while working at the U. S. National Bureau of Standards; the format of the font data was originally created by James Hurt, Cognition, Inc. The acknowledgements travel with the data in `src/primitives/font-hershey-*.ts`, as their licence asks; the CC0 MakeHuman hm08 head mesh behind `recipes/_lib/face` is credited the same way. Both are listed in [NOTICE](NOTICE).

@@ -18,6 +18,7 @@ export const lodTriangles: LodGate = (lods) =>
     return [
       {
         gate: 'lod-triangles',
+        code: 'T3D_QA_LOD_TRIANGLES',
         message: `LOD${a.lod} has ${tris(a)} triangles, more than LOD${prev.lod} (${tris(prev)})`,
         fix: 'each LOD must be cheaper than the one before: read ctx.lod / ctx.pick([...]) and drop segments or detail parts',
       },
@@ -54,6 +55,7 @@ export const lodSilhouette =
         ? [
             {
               gate: 'lod-silhouette',
+              code: 'T3D_QA_LOD_SILHOUETTE',
               message: `LOD${a.lod} outline differs from LOD0 on ${off.join(', ')} — it will pop on LOD switch`,
               fix: 'keep the big masses at every LOD (drop detail, not extent): a far LOD is the same shape with fewer segments',
             },
@@ -77,6 +79,7 @@ export const lodPivots: LodGate = (lods) => {
       ? [
           {
             gate: 'lod-pivots',
+            code: 'T3D_QA_LOD_PIVOTS',
             message: `LOD${a.lod} drops pivot(s) ${missing.slice(0, 6).join(', ')}${missing.length > 6 ? ` (+${missing.length - 6})` : ''} that LOD0 has — game code driving them breaks at that LOD`,
             fix: 'keep the group/moving part at every LOD and gate only its geometry: ctx.group(name) always, detail meshes behind ctx.lod',
           },

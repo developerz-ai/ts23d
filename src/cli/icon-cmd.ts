@@ -5,7 +5,7 @@
 
 import { mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
-import { type Asset, compile, type Lod } from '../core/index.ts';
+import { type Asset, compile, type ErrorCode, type Lod } from '../core/index.ts';
 import type { PaintedSheet } from '../material/index.ts';
 import { icon, portrait, type ReviewWarning, rtsView, teamCoverage } from '../render/index.ts';
 import type { Args } from './args.ts';
@@ -59,7 +59,7 @@ export async function iconOne(
     );
     if (c.share < MIN_TEAM_SHARE)
       warnings.push({
-        code: 'T3D_TEAM_COLOUR_HIDDEN',
+        code: 'T3D_TEAM_COLOUR_HIDDEN' satisfies ErrorCode,
         message: `team colour covers ${(c.share * 100).toFixed(1)}% of the LOD2 silhouette from the RTS camera (58°, 64 px), under ${MIN_TEAM_SHARE * 100}%`,
         fix: "put paint: 'team' on large top-facing parts (roof, shoulder plates, turret top, banners) and keep them at LOD2",
       });

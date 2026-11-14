@@ -42,6 +42,19 @@ export function count(what: string, n: number, min: number, max: number): number
   return n;
 }
 
+/** A 2D profile of finite points, at least `min` of them. */
+export function profileOf<P extends readonly number[]>(
+  what: string,
+  profile: readonly P[],
+  min: number,
+): readonly P[] {
+  if (profile.length < min)
+    invalid(`${what} has ${profile.length} point(s)`, `give at least ${min} points`);
+  const bad = profile.findIndex((p) => !p.every(Number.isFinite));
+  if (bad >= 0) invalid(`${what} point ${bad} has a NaN or Infinity`, 'pass finite metre values');
+  return profile;
+}
+
 /** A finite number > 0. */
 export function positive(what: string, n: number, example: string): number {
   if (!Number.isFinite(n) || n <= 0) invalid(`${what} is ${n}`, `use a length > 0 m (${example})`);

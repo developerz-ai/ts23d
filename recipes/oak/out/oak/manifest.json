@@ -7,15 +7,20 @@
     "tree",
     "oak"
   ],
+  "lods": [
+    0,
+    1,
+    2
+  ],
   "files": {
     "lods": [],
-    "sheet": "recipes/oak/out/oak/sheet.png",
-    "thumb": "recipes/oak/out/oak/thumb.png"
+    "sheet": "sheet.png",
+    "thumb": "thumb.png"
   },
   "triangles": [
     13950,
     3004,
-    184
+    159
   ],
   "drawCalls": [
     2,

@@ -9,15 +9,20 @@
     "bust",
     "sculpt"
   ],
+  "lods": [
+    0,
+    1,
+    2
+  ],
   "files": {
     "lods": [],
-    "sheet": "recipes/human_head/out/human_head/sheet.png",
-    "thumb": "recipes/human_head/out/human_head/thumb.png"
+    "sheet": "sheet.png",
+    "thumb": "thumb.png"
   },
   "triangles": [
-    71268,
-    25164,
-    3824
+    71140,
+    25100,
+    3804
   ],
   "drawCalls": [
     2,

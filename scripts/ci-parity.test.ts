@@ -14,6 +14,44 @@ it('ci.yml runs the full local gate', async () => {
   expect(ci).not.toMatch(/bun run verify --only/);
 });
 
+it('STEPS is the documented gate order', () => {
+  expect(STEPS.map((s) => s.name)).toEqual([
+    'lint',
+    'typecheck',
+    'boundaries',
+    'determinism',
+    'filesize',
+    'placeholders',
+    'conventions',
+    'test',
+    'recipes',
+    'build',
+    'pack',
+  ]);
+});
+
+it('ci.yml: 12 gate shards run verify; the verify job aggregates gate, shots and site', async () => {
+  type Job = {
+    needs?: string[];
+    if?: string;
+    env?: Record<string, string>;
+    strategy?: { matrix?: { shard?: number[] } };
+    steps?: { run?: string }[];
+  };
+  const ci = Bun.YAML.parse(await Bun.file('.github/workflows/ci.yml').text()) as {
+    jobs: Record<string, Job>;
+  };
+  expect(Object.keys(ci.jobs).sort()).toEqual(['gate', 'shots', 'site', 'verify']);
+  const shards = Array.from({ length: 12 }, (_, i) => i + 1);
+  for (const name of ['gate', 'shots']) {
+    expect(ci.jobs[name]?.strategy?.matrix?.shard).toEqual(shards);
+    expect(ci.jobs[name]?.env?.['T3D_SHARD']).toBe(`\${{ matrix.shard }}/12`);
+  }
+  expect(ci.jobs['gate']?.steps?.map((s) => s.run).filter(Boolean)).toEqual(['bun run verify']);
+  expect(ci.jobs['verify']?.needs).toEqual(['gate', 'shots', 'site']);
+  expect(ci.jobs['verify']?.if).toBe('always()');
+});
+
 it('every package.json gate script is a verify step', async () => {
   const pkg = (await Bun.file('package.json').json()) as { scripts: Record<string, string> };
   for (const s of [

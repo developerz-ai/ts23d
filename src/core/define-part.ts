@@ -118,6 +118,7 @@ export function definePart<P extends object>(def: PartDefinition<P>): DefinedPar
       fix: 'rename it to [a-z][a-z0-9_]* — it keys the catalogue and the cache',
     });
   checkDefaults(def.name, def.params);
+  if (def.lod) checkLodPolicy(def.name, def.lod);
   const cache = new Map<string, { pieces: readonly PartPiece[]; merged: Mesh }>();
   let builds = 0;
   let hits = 0;
@@ -198,6 +199,25 @@ function builder(lod: Lod, key: string): PartBuilder {
     mesh: (part, o) => part.mesh(o, lod),
     pieces: (part, o) => part.pieces(o, lod),
   };
+}
+
+const isLod = (v: unknown): v is Lod => v === 0 || v === 1 || v === 2;
+
+/** `upTo` is a LOD; `map` is three LODs that never get finer as the requested LOD rises. */
+function checkLodPolicy(part: string, lod: PartLodPolicy): void {
+  if (lod.upTo !== undefined && !isLod(lod.upTo))
+    throw new Ts23dError('T3D_RECIPE_INVALID', {
+      cause: `part '${part}' lod.upTo ${lod.upTo} is not 0, 1 or 2`,
+      fix: 'set upTo to the highest LOD that emits the part: 0, 1 or 2',
+    });
+  const map = lod.map;
+  if (map === undefined) return;
+  const ok = map.length === 3 && map.every(isLod) && map[0] <= map[1] && map[1] <= map[2];
+  if (!ok)
+    throw new Ts23dError('T3D_RECIPE_INVALID', {
+      cause: `part '${part}' lod.map [${map.join(', ')}] is not three non-decreasing LODs`,
+      fix: 'give the build LOD for each of LOD0/1/2, coarsening only: e.g. map: [0, 0, 1]',
+    });
 }
 
 const isPieces = (out: Mesh | readonly PartPiece[]): out is readonly PartPiece[] =>

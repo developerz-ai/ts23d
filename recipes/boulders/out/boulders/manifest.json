@@ -9,10 +9,15 @@
     "sdf",
     "scatter"
   ],
+  "lods": [
+    0,
+    1,
+    2
+  ],
   "files": {
     "lods": [],
-    "sheet": "recipes/boulders/out/boulders/sheet.png",
-    "thumb": "recipes/boulders/out/boulders/thumb.png"
+    "sheet": "sheet.png",
+    "thumb": "thumb.png"
   },
   "triangles": [
     36260,

@@ -6,6 +6,7 @@
 import { createHash } from 'node:crypto';
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { Ts23dError } from '../core/index.ts';
 import type { FinishModel, FinishRequest, FinishStore } from './types.ts';
 
 export function cacheKey(req: FinishRequest, model: string): string {
@@ -72,6 +73,12 @@ export async function runCached(
   const hit = await store.get(key);
   if (hit && hit.length === req.views.views.length) return { images: hit, key, cache: 'hit' };
   const images = await model.run(req);
+  const want = req.views.views.length;
+  if (images.length !== want)
+    throw new Ts23dError('T3D_FINISH_MODEL', {
+      cause: `${model.id} returned ${images.length} images for ${want} views; nothing cached`,
+      fix: 'the model must answer one image per view, in view order',
+    });
   await store.set(key, images);
   return { images, key, cache: 'miss' };
 }

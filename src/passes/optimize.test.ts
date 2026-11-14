@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'bun:test';
-import { type Mesh, MeshBuilder } from '../core/index.ts';
+import { type Mesh, MeshBuilder, merge, triangleCount } from '../core/index.ts';
+import { box } from '../primitives/index.ts';
 import { optimize } from './optimize.ts';
 import { cacheStats, forsyth } from './optimize-cache.ts';
 
@@ -78,5 +79,20 @@ describe('optimize', () => {
     const re = forsyth(m.indices, m.positions.length / 3);
     const n = m.positions.length / 3;
     expect(cacheStats(re, n).acmr).toBeLessThan(cacheStats(m.indices, n).acmr);
+  });
+});
+
+describe('optimize weldEpsilon', () => {
+  const two = merge([
+    box({ size: [1, 1, 1], color: [1, 1, 1] }),
+    box({ size: [1, 1, 1], at: [5, 0, 0], color: [1, 1, 1] }),
+  ]);
+  it('rejects 0, negative, NaN and huge tolerances (1e9 welds boxes 5 m apart)', () => {
+    for (const weldEpsilon of [0, -1e-5, Number.NaN, 0.02, 1e9])
+      expect(() => optimize(two, { weldEpsilon })).toThrow('T3D_RECIPE_INVALID');
+  });
+
+  it('accepts up to 1 cm and keeps both boxes', () => {
+    expect(triangleCount(optimize(two, { weldEpsilon: 0.01 }).mesh)).toBe(24);
   });
 });

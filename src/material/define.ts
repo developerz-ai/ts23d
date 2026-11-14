@@ -1,7 +1,6 @@
 // Project materials: `defineMaterial` validates a MaterialDef, gives it one of the sheet's custom
-// strip rows (in registration order: define materials in one shared module so every recipe sees
-// the same order) and adds it to the house sheet, so `DEFAULT_SHEET` paints it and primitives map
-// onto it. Redefining an id with the same definition is a no-op; a different one is a conflict.
+// strip rows (picked from its id, not from registration order: slots.ts) and adds it to the house
+// sheet, so `DEFAULT_SHEET` paints it and primitives map onto it. Redefining an id with the same definition is a no-op; a different one is a conflict.
 // `materialOf` answers what any strip is (built-in or defined) for docs, review and tests;
 // `textureSources` / `stripCredits` serve the CC0 image strips (fetch list, GLB credits).
 
@@ -64,7 +63,7 @@ export function defineMaterial(def: MaterialDef): CustomStripId {
       fix: 'reuse a built-in strip with a vertex colour, or restyle an unused built-in strip in your SheetRecipe',
     });
   defined.set(id, def);
-  pushCustom(id, def.spanMetres ?? 4);
+  pushCustom(id, def.spanMetres ?? 4, CUSTOM_STRIP_SLOTS);
   (HOUSE_STRIPS as Record<string, StripRecipe>)[id] = recipe;
   return id as CustomStripId;
 }

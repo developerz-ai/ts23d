@@ -6,6 +6,7 @@
 
 import type { Vec3 } from '../core/index.ts';
 import { type Bones, feet, type HeadFrame, headToWorld, type Limb } from './creature-bones.ts';
+import { footPlan } from './creature-family.ts';
 import { sizes, tailChain } from './creature-layout.ts';
 import { quadrupedBones } from './creature-quadruped.ts';
 import { birdBones, fishBones, serpentBones } from './creature-skeleton-other.ts';
@@ -43,7 +44,7 @@ function biped(s: CreatureSpec): Bones {
     radii: [r * 1.35, r * 0.95, r * 0.7, r * 0.55],
     foot: [0.04 * H, y * 0.95, 0],
     footSize: [0.075 * H, r * 0.55, 0.04 * H],
-    toes: 4,
+    ...footPlan(s, z.stance, 'hind'),
     muscles: [{ at: [0.01 * H, y * 1.05, hipZ - 0.08 * H], r: [r * 1.2, r * 1.1, r * 2.2] }],
   };
   const arm = tube(

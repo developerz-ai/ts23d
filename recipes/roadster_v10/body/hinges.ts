@@ -86,7 +86,7 @@ export function hingeParts(S: Surface, lod: Lod, h: Hinges): HingeMeshes {
     // Trunk: gooseneck from the lid's front underside to a pin on the deck bulkhead.
     const sT = X_TRUNK_FRONT - 0.04;
     const tt = inward(S, sT, uAtY(S, sT, TRUNK_Y), 0);
-    const tp: Vec3 = [h.trunk[0], s * TRUNK_Y, h.trunk[2] - 0.06];
+    const tp: Vec3 = [h.trunk[0], s * TRUNK_Y, h.trunk[2]]; // on the lid's motion axis
     trunk.push(
       tube(
         [[tt[0], s * TRUNK_Y, tt[2]], [tt[0] + 0.03, s * TRUNK_Y, tt[2] - 0.04], tp],

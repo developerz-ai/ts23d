@@ -383,15 +383,14 @@ function belt1(lod: Lod): Mesh {
 /** A square deck ring (outer half `so`, hole half `si`) with its top at `top`. */
 function deckRing(so: number, si: number, top: number): Mesh {
   const z = top - SLAB;
+  if (si <= 0) return box({ size: [2 * so, 2 * so, SLAB], at: [0, 0, z], color: IRON_DARK });
   const parts = [
     box({ size: [so - si, 2 * so, SLAB], at: [(so + si) / 2, 0, z], color: IRON_DARK }),
     box({ size: [so - si, 2 * so, SLAB], at: [-(so + si) / 2, 0, z], color: IRON_DARK }),
     box({ size: [2 * si, so - si, SLAB], at: [0, (so + si) / 2, z], color: IRON_DARK }),
     box({ size: [2 * si, so - si, SLAB], at: [0, -(so + si) / 2, z], color: IRON_DARK }),
   ];
-  return si > 0
-    ? merge(parts)
-    : box({ size: [2 * so, 2 * so, SLAB], at: [0, 0, z], color: IRON_DARK });
+  return merge(parts);
 }
 
 /** Railing round a square: posts every `pitch` m, top and mid rail. */

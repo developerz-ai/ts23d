@@ -1,0 +1,88 @@
+<!doctype html>
+<!-- GitHub Pages serves this for any missing path under /ts23d/. The gallery routes assets by hash
+     (/ts23d/#tiger_1), so a path like /ts23d/tiger_1 lands here; the link below offers the hash
+     route for it. Static and self-contained: Vite copies public/ as is, so no bundle, no base
+     rewriting; every URL here is absolute under /ts23d/. -->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="robots" content="noindex" />
+    <title>Not found · ts23d</title>
+    <link rel="canonical" href="https://developerz-ai.github.io/ts23d/" />
+    <style>
+      :root {
+        --paper: #f4f1e8;
+        --ink: #12305a;
+        --muted: #3f5878;
+        --rule: #9fb3cc;
+        --redline: #b5380b;
+        color-scheme: light;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --paper: #0b2545;
+          --ink: #e6f0ff;
+          --muted: #a9bfdc;
+          --rule: #33598a;
+          --redline: #ff9a76;
+          color-scheme: dark;
+        }
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 1rem;
+        box-sizing: border-box;
+        background: var(--paper);
+        color: var(--ink);
+        font: 1rem/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      }
+      main {
+        max-width: 34rem;
+        border: 1px solid var(--rule);
+        padding: 1.5rem;
+      }
+      h1 {
+        margin: 0 0 0.5rem;
+        font-size: 1.5rem;
+      }
+      p {
+        margin: 0.5rem 0;
+        color: var(--muted);
+      }
+      code {
+        font-family: ui-monospace, Menlo, Consolas, monospace;
+        color: var(--ink);
+      }
+      a {
+        color: var(--redline);
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>404 · nothing at this path</h1>
+      <p>This page is not part of the ts23d asset gallery.</p>
+      <p id="asset" hidden>
+        Looking for an asset? Try <a id="asset-link" href="/ts23d/">its asset page <code id="asset-name"></code></a>.
+      </p>
+      <p>
+        <a href="/ts23d/#gallery">Open the gallery</a> ·
+        <a href="https://github.com/developerz-ai/ts23d/tree/main/recipes">recipes on GitHub</a>
+      </p>
+    </main>
+    <script>
+      // /ts23d/<name> → offer /ts23d/#<name>, the gallery's own route for an asset page.
+      const name = location.pathname.replace(/^\/ts23d\/?/, '').split('/')[0];
+      if (name && /^[a-z0-9_]+$/.test(name)) {
+        document.getElementById('asset-link').href = `/ts23d/#${name}`;
+        document.getElementById('asset-name').textContent = name;
+        document.getElementById('asset').hidden = false;
+      }
+    </script>
+  </body>
+</html>

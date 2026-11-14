@@ -31,6 +31,9 @@ export const REAL = {
 
 export const WOLF: CreatureSpec = {
   skeleton: 'quadruped',
+  // Canid defaults: orbit convergence 50.4° (Heesy 2004, Canis), 5 digits fore (the dewclaw) and
+  // 4 hind, fore share 55–66 % (dogs 60.4 %): docs/research/animal-anatomy.md.
+  family: 'canid',
   stance: 'digitigrade',
   mass: REAL.mass,
   length: REAL.headBody,
@@ -49,7 +52,6 @@ export const WOLF: CreatureSpec = {
     width: 0.55,
     ears: 'erect',
     earLength: REAL.ear / REAL.head,
-    forward: 0.6,
     pupil: 'round',
     fangs: true,
   },

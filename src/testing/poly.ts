@@ -66,6 +66,7 @@ export function polygonFindings(
     if (c.length < 3 || Math.abs(a) < minArea)
       out.push({
         gate: 'polygon',
+        code: 'T3D_QA_POLYGON',
         message: `contour ${ci} has ${c.length} point(s) and area ${a.toExponential(2)} m²`,
         fix: 'drop degenerate contours (fewer than 3 points or zero area) before extruding',
       });
@@ -82,6 +83,7 @@ export function polygonFindings(
       if (!e || !f || !crosses(e.a, e.b, f.a, f.b)) continue;
       out.push({
         gate: 'polygon',
+        code: 'T3D_QA_POLYGON',
         message:
           e.c === f.c
             ? `contour ${e.c} crosses itself: edge ${e.i} ${pt(e.a)} and edge ${f.i} ${pt(f.a)}`
@@ -100,6 +102,7 @@ export function polygonFindings(
     if (ccw === (hole ? !ccwOuter : ccwOuter)) return;
     out.push({
       gate: 'polygon',
+      code: 'T3D_QA_POLYGON',
       message: `contour ${ci} is ${hole ? 'a hole' : 'an outer contour'} wound ${ccw ? 'counter-clockwise' : 'clockwise'}`,
       fix: `reverse contour ${ci}: outer contours wind ${ccwOuter ? 'counter-clockwise' : 'clockwise'}, holes the other way`,
     });

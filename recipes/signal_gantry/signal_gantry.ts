@@ -6,6 +6,7 @@
 
 import {
   beam,
+  boundsOf,
   box,
   type Check,
   type CheckFinding,
@@ -21,6 +22,7 @@ import {
   place,
   prism,
   type Vec2,
+  type Vec3,
   worldMeshes,
 } from '@developerz.ai/ts23d';
 import { restrip, type StripRule, weatherer } from '../_lib/finish/finish.ts';
@@ -41,6 +43,8 @@ const ARM_X = 0.1; // front face of the mast + clearance: arms live in x ∈ [0.
 const LOW_ARM = 1.75; // pivot over the deck: the swept blade (r ≈ 1.67) clears the walkway
 const ARM_GAP = 2.35; // the upper spectacle clears the lower blade's sweep
 const MAST_H = LOW_ARM + ARM_GAP + 0.45;
+const POST_D = 0.6; // post depth along X (the girder is GIRDER_W deep)
+const KNEE_FOOT_X = POST_D / 2 - 0.045; // knee foot on the post's corner chord, not beside the post
 
 const steel = hex('#2d3033');
 const steelDark = hex('#1f2123');
@@ -84,6 +88,51 @@ const clearanceEnvelope =
             part: name,
           });
           break;
+        }
+      }
+    }
+    return out;
+  };
+
+/** Knee-brace centreline ends on one side (`s` = +1 left, −1 right): foot on the post's inner
+ *  face, head in the girder's bottom chord. LOD2 keeps one brace on the centre plane. */
+function kneeEnds(y: number, s: number, lod: Lod): readonly (readonly [Vec3, Vec3])[] {
+  return (lod === 2 ? [0] : [-1, 1]).map((side) => [
+    [side * KNEE_FOOT_X, y - s * 0.22, ZB - 0.9],
+    [side * (GIRDER_W / 2 - 0.05), y - s * 1.0, ZB],
+  ]);
+}
+
+/** Both ends of every knee brace land on what they brace: the foot on its post, the head on the
+ *  girder. `floating-parts` passes a brace that touches at one end only (defect D41). */
+const kneesLand =
+  (tracks: number): Check =>
+  (asset) => {
+    const out: CheckFinding[] = [];
+    const world = worldMeshes(asset.parts);
+    const gap = (p: Vec3, support: string): number => {
+      const m = world.get(support);
+      if (!m) return Infinity;
+      const { min, max } = boundsOf(m);
+      const out = (k: 0 | 1 | 2): number => Math.max(min[k] - p[k], 0, p[k] - max[k]);
+      return Math.hypot(out(0), out(1), out(2));
+    };
+    for (const [side, s] of [
+      ['l', 1],
+      ['r', -1],
+    ] as const) {
+      for (const [foot, head] of kneeEnds(s * halfSpan(tracks), s, asset.lod)) {
+        for (const [end, support] of [
+          [foot, `post_${side}`],
+          [head, 'girder'],
+        ] as const) {
+          const d = gap(end, support);
+          if (d > 0.02)
+            out.push({
+              message: `'knee_${side}' end [${end.map((v) => v.toFixed(2)).join(', ')}] is ${d.toFixed(3)} m clear of '${support}'`,
+              fix: `move the brace end onto '${support}' (inside its section), not beside it`,
+              part: `knee_${side}`,
+            });
         }
       }
     }
@@ -256,7 +305,7 @@ const bridge = defineFamily({
       const post =
         lod === 2
           ? box({
-              size: [0.6, 0.45, top - FOOT_H],
+              size: [POST_D, 0.45, top - FOOT_H],
               at: [0, y, FOOT_H],
               color: steel,
               strip: 'iron',
@@ -264,7 +313,7 @@ const bridge = defineFamily({
           : lattice({
               from: [0, y, FOOT_H],
               to: [0, y, top],
-              depth: 0.6,
+              depth: POST_D,
               width: 0.45,
               centred: true,
               chord: 0.09,
@@ -278,10 +327,10 @@ const bridge = defineFamily({
       const plate = box({ size: [0.75, 0.6, 0.04], at: [0, y, FOOT_H], color: steelDark });
       part(`post_${side}`, dirt(merge([post, plate])));
       // Knee braces from the post into the girder soffit, front and back faces.
-      const knees = (lod === 2 ? [0] : [-GIRDER_W / 2 + 0.05, GIRDER_W / 2 - 0.05]).map((x) =>
+      const knees = kneeEnds(y, s, lod).map(([from, to]) =>
         beam({
-          from: [x, y - s * 0.22, ZB - 0.9],
-          to: [x, y - s * 1.0, ZB],
+          from,
+          to,
           width: 0.1,
           height: 0.1,
           color: steel,
@@ -505,7 +554,7 @@ export const signal_gantry = bridge.variant({
   name: 'signal_gantry',
   description:
     'US lattice semaphore signal bridge over two tracks (c. 1910): lattice posts and girder, walkway, a mast per track with lower-quadrant home and distant arms, spectacles and lamps.',
-  checks: [clearanceEnvelope(2)],
+  checks: [clearanceEnvelope(2), kneesLand(2)],
 });
 
 export const signal_gantry_4 = bridge.variant({
@@ -541,5 +590,5 @@ export const signal_gantry_4 = bridge.variant({
     ],
   },
   budget: { triangles: [13000, 5900, 1460] },
-  checks: [clearanceEnvelope(4)],
+  checks: [clearanceEnvelope(4), kneesLand(4)],
 });

@@ -53,4 +53,19 @@ describe('sound.impact', () => {
     expect(steel.name).toBe('impact_steel_plate_0_3');
     expect(impact({ material: 'iron_cast', size: 0.3 }).name).toBe('impact_cast_iron_plate_0_3');
   });
+
+  it('default name is unique per parameter set; defaults keep the short name', () => {
+    const o = { material: 'steel', size: 0.3 } as const;
+    expect(impact({ ...o, seed: 1, force: 0.7, mass: 0.5 }).name).toBe('impact_steel_plate_0_3');
+    const names = [
+      impact(o),
+      impact({ ...o, seed: 2 }),
+      impact({ ...o, force: 0.2 }),
+      impact({ ...o, mass: 2 }),
+      impact({ ...o, thickness: 0.004 }),
+      impact({ ...o, duration: 1 }),
+      impact({ ...o, size: 0.301 }),
+    ].map((c) => c.name);
+    expect(new Set(names).size).toBe(names.length);
+  });
 });

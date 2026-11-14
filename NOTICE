@@ -1,0 +1,23 @@
+@developerz.ai/ts23d (TypeScript to 3D)
+Copyright (c) developerz.ai. Released under the MIT licence (see LICENSE).
+
+Third-party material embedded in this package (As of 2026-11):
+
+1. Hershey vector fonts (lettering faces 'sans', 'serif', 'script', 'gothic')
+   Files: src/primitives/font-hershey-sans.ts, -serif.ts, -script.ts, -gothic.ts
+   Source: https://github.com/kamalmostafa/hershey-fonts (futural, timesr, scriptc, gothiceng)
+   The Hershey Fonts were originally created by Dr. A. V. Hershey while working at the
+   U. S. National Bureau of Standards.
+   The format of the font data in this distribution was originally created by
+   James Hurt, Cognition, Inc., 900 Technology Park Drive, Billerica, MA 01821.
+   Free for any purpose, commercial or otherwise, provided this notice is kept.
+
+2. MakeHuman hm08 base mesh (head, neck and shoulders only)
+   File: recipes/_lib/face/base/hm08-bust.ts, with recipes/_lib/face/base/LICENSE.md
+   Source: https://github.com/makehumancommunity/makehuman (makehuman/data/3dobjs/base.obj)
+   Licence: CC0 1.0 Universal (public domain dedication).
+   Credited out of courtesy, not required: Data Collection AB, Joel Palmius, Jonas Hauquier.
+   Only mesh data is used; none of the MakeHuman code (AGPL) is included.
+
+Models, textures and renders you generate with ts23d are yours: no attribution and no licence
+conditions come from this package.

@@ -22,8 +22,10 @@ Use GitHub's private vulnerability reporting: **[Report a vulnerability](https:/
 |---|---|
 | **Recipes are code** | `t3d build`, `t3d shot` and `t3d list` `import()` the recipe module and run it with your user's permissions. Treat a recipe from a stranger like any script from a stranger: read it, or run it in a sandbox / container. There is no recipe sandbox ([ADR 002](docs/decisions/002-typescript-not-json.md)) |
 | Generated outputs (GLB, PNG) | Written by our own zero-dependency writers. A malformed output that crashes a consumer is a bug worth reporting |
-| `importGlb` (planned) | Will parse untrusted GLB. Must bound sizes and counts; parser bugs are in scope |
-| `/neural` adapters (planned) | Talk HTTP to an endpoint you configure. Cached outputs are content-hashed. Secrets (e.g. a kubeez.com API key) are passed by the caller, never read from ambient env |
+| `importGlb` (shipped) | Parses untrusted GLB. The reader bounds accessor sizes and counts (empty accessors capped at 2^24 elements), the PNG/zip inflate is capped, and import scale is checked. Parser bugs are in scope |
+| `refine`, `t3d finish --model http` (shipped) | Talk HTTP to an endpoint you configure, with a timeout (`timeoutMs`: 600 s refine, 300 s finish). Replies are read through the bounded GLB reader. Cached outputs are content-hashed. Secrets are passed by the caller, never read from ambient env |
+| `localGenerator`, `kubeezImages` (planned) | Not built: they throw `T3D_NOT_IMPLEMENTED`. Same rules when they land: caller-passed secrets, content-hashed cache |
+| Network scripts (`bun run textures`, `bun run data`) | Fetch with a 60 s timeout and a capped zip inflate; downloads are sha256-pinned. As of 2026-11 |
 | Supply chain | Zero runtime dependencies ([ADR 005](docs/decisions/005-zero-runtime-deps.md)). Releases publish from GitHub Actions via npm OIDC trusted publishing with provenance; no long-lived npm token exists ([PUBLISHING.md](PUBLISHING.md)) |
 
 ## Verifying a release

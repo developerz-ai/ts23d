@@ -22,7 +22,7 @@ Status legend: **done** · **partial** · **missing** · **n/a (not yet)**. *Ver
 | M4 | Vertex attribute offsets are 4-byte aligned; buffer views ≥ accessor extent; no `byteStride` on non-vertex views | [spec §data-alignment](https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/Specification.adoc#data-alignment) | **done**: `BinWriter.push` pads every view to 4 bytes and views are tightly packed | code, val |
 | M5 | GLB: JSON chunk padded with `0x20`, BIN chunk padded with `0x00`, lengths multiple of 4, header length equals file size | [spec §glb-file-format-specification](https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/Specification.adoc#glb-file-format-specification) | **done**: `toGlb` tail and `BinWriter.bytes` | code, val |
 | M6 | `bufferView.target` set for vertex (34962) and index (34963) data; unset for animation data | [ISSUES.md `BUFFER_VIEW_TARGET_MISSING`](https://github.com/KhronosGroup/glTF-Validator/blob/main/ISSUES.md) | **done** | code, val (no hint) |
-| M7 | Node hierarchy is disjoint strict trees: one parent at most, no cycles | [spec §nodes-and-hierarchy](https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/Specification.adoc#nodes-and-hierarchy) | **done**: single root, parents resolved by name; `T3D_PART_UNKNOWN` rejects forward references at authoring | code, val |
+| M7 | Node hierarchy is disjoint strict trees: one parent at most, no cycles | [spec §nodes-and-hierarchy](https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/Specification.adoc#nodes-and-hierarchy) | **done**: single root, parents resolved by name; `T3D_PART_UNKNOWN` rejects forward references at authoring and, at export, a parent with no node (no silent root fallback). See [Hierarchy](#hierarchy) | code, val |
 | M8 | Normals unit length; rotation quaternions normalised (`ACCESSOR_VECTOR3_NON_UNIT`, `ROTATION_NON_UNIT`) | [ISSUES.md](https://github.com/KhronosGroup/glTF-Validator/blob/main/ISSUES.md) | **done**: 0 non-unit normals out of 37,749 | val, insp |
 | M9 | Indices use u8/u16/u32 and never contain the type's max value (primitive restart) | [spec §meshes-topology](https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/Specification.adoc#meshes-topology) | **done**: u16 when ≤ 65,535 vertices, else u32 (G4) | code, val |
 | M10 | Y-up, metres, **front faces +Z, left faces +X** | [spec §coordinate-system-and-units](https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/Specification.adoc#coordinate-system-and-units): "the front side of a glTF asset faces +Z, the left side of a glTF asset faces +X" | **done** (G1): root quaternion `[-0.5,-0.5,-0.5,0.5]` maps authoring +X front → glTF +Z, +Z up → +Y, +Y left → +X, checked numerically. Was `[-√½,0,0,√½]` (assets faced glTF +X, the left side). [ADR 009](../decisions/009-gltf-front-axis.md) | code, insp |
@@ -125,6 +125,18 @@ Re-run: write the two `.mjs` scripts below into a scratch directory with `npm i 
 ---
 
 ## Topics 3–7: rules
+
+### Hierarchy
+
+The GLB node of a part sits where QA and the renderer measured it (`worldTransforms` of the compiled asset).
+
+| Rule | Where |
+|---|---|
+| Pivots (groups, moving parts, emitters, sockets) become nodes; static meshed parts merge into their nearest pivot ancestor, or into the root mesh `body` (`ROOT_PART`) | `merge-pivots.ts` |
+| A pivot whose parent is a static part that merged away is re-parented to its nearest surviving pivot ancestor (or the root), with `at` / `yaw` re-expressed from world transforms. Example: `wheel` at `[1,0,0]` under a static `hull` at `[0,0,1]` yawed 90° exports at `[0,1,1]` with yaw 90° under the root | `merge-pivots.ts` |
+| The rest yaw of a moving node survives its clip: rotation keys are yaw ∘ motion and slide offsets turn by the yaw, because `axis` and `offset` are in the part's own frame (as QA's `clashes` reads them) | `motion.ts` |
+| A `parent` name with no node is `T3D_PART_UNKNOWN` (an internal merge bug), never a node hung off the root | `hierarchy.ts` |
+| Every exported pivot of `sound_demo`, `joint_demo`, `t34` matches `worldTransforms` | `pivots-glb.test.ts` |
 
 ### 3. Optimisation extensions: when to use
 

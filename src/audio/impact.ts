@@ -6,7 +6,7 @@
 
 import { createRng, type Rng, type SoundClip } from '../core/index.ts';
 import { type Acoustic, acousticOf, waveSpeed } from './acoustics.ts';
-import { checkRange, makeClip, normalize, SAMPLE_RATE, token } from './clip.ts';
+import { checkRange, makeClip, normalize, SAMPLE_RATE, token, variant } from './clip.ts';
 import { addModes, biquad, type Mode, mixInto, noise } from './dsp.ts';
 
 export type ImpactShape = 'bar' | 'plate' | 'hollow' | 'block';
@@ -95,9 +95,10 @@ export function impact(o: ImpactOptions): SoundClip {
   const a = acousticOf(o.material);
   const shape = o.shape ?? 'plate';
   const size = checkRange('impact size (m)', o.size, 0.005, 20, 'size: 0.3');
+  const typical = size * SHAPES[shape].h;
   const thickness = checkRange(
     'impact thickness (m)',
-    o.thickness ?? size * SHAPES[shape].h,
+    o.thickness ?? typical,
     0.0005,
     size,
     'thickness: 0.01',
@@ -117,5 +118,15 @@ export function impact(o: ImpactOptions): SoundClip {
     out[k] = (out[k] ?? 0) * (1 - i / fade);
   }
   normalize(out, 0.3 + 0.6 * force);
-  return makeClip(o.name ?? `impact_${a.id}_${shape}_${token(size)}`, out);
+  const name =
+    `impact_${a.id}_${shape}_${token(size)}` +
+    variant([
+      ['size', size, Math.round(size * 100) / 100],
+      ['thick', thickness, typical],
+      ['mass', mass, 0.5],
+      ['force', force, 0.7],
+      ['dur', max, 4],
+      ['seed', seed, 1],
+    ]);
+  return makeClip(o.name ?? name, out);
 }

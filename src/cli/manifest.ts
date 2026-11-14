@@ -1,10 +1,14 @@
 // manifest.json per asset: what an engine pipeline or an agent needs without opening a GLB —
 // files, triangles per LOD, pivots (the names game code binds to), emitters, joints, surfaces, QA,
 // measures with their measured values, sources, paint slots and switchable variants.
+// Location-independent: every path in `files` is relative to the manifest's own folder
+// (<out>/<asset>/), so two builds into two --out dirs write the same bytes. Per-LOD arrays
+// (triangles, drawCalls, lodCoverage) are indexed like `lods`, the levels actually built.
 
 import {
   type Asset,
   type CompiledAsset,
+  type Lod,
   linearToHex,
   type WeatherCoverage,
 } from '../core/index.ts';
@@ -16,6 +20,9 @@ export interface AssetManifest {
   readonly kind: string;
   readonly description?: string;
   readonly tags: readonly string[];
+  /** The levels built (`--lods`): entry i of every per-LOD array is LOD `lods[i]`. */
+  readonly lods: readonly Lod[];
+  /** Paths relative to this manifest's folder. */
   readonly files: {
     readonly lods: readonly string[];
     /** All built LODs in one GLB (MSFT_lod), when `--lods single|both`. */
@@ -74,6 +81,13 @@ export interface AssetManifest {
 const tris = (a: CompiledAsset): number =>
   a.parts.reduce((s, p) => s + (p.mesh ? p.mesh.indices.length / 3 : 0), 0);
 
+/** One draw per merged mesh, glowing parts in their own emissive layer (as the GLB writes them). */
+export const drawCallsOf = (l: CompiledAsset): number =>
+  mergeToPivots(
+    l,
+    (l.glow ?? []).map((g) => g.parts),
+  ).parts.filter((p) => p.mesh).length;
+
 export function manifestOf(
   asset: Asset,
   lods: readonly CompiledAsset[],
@@ -88,17 +102,11 @@ export function manifestOf(
     kind: asset.kind,
     ...(asset.description ? { description: asset.description } : {}),
     tags: asset.tags ?? [],
+    lods: lods.map((l) => l.lod),
     files,
     triangles: lods.map(tris),
     ...(lodCoverage?.length ? { lodCoverage } : {}),
-    // One draw per merged mesh, glowing parts in their own emissive layer (as the GLB writes them).
-    drawCalls: lods.map(
-      (l) =>
-        mergeToPivots(
-          l,
-          (l.glow ?? []).map((g) => g.parts),
-        ).parts.filter((p) => p.mesh).length,
-    ),
+    drawCalls: lods.map(drawCallsOf),
     pivots: (merged?.parts ?? [])
       .filter((p) => !p.emitter && !p.socket && !p.audio)
       .map((p) => ({
@@ -109,7 +117,8 @@ export function manifestOf(
     emitters: (top?.parts ?? []).flatMap((p) =>
       p.emitter ? [{ name: p.name, kind: p.emitter.kind, when: p.emitter.when ?? 'always' }] : [],
     ),
-    sockets: (top?.parts ?? []).flatMap((p) =>
+    // From the merged parts: `parent` must name a node the GLB has.
+    sockets: (merged?.parts ?? []).flatMap((p) =>
       p.socket ? [{ name: p.name, kind: p.socket.kind, parent: p.parent }] : [],
     ),
     ...soundsOf(top),

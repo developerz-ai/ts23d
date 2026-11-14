@@ -73,6 +73,30 @@ describe('real numbers (Wikipedia: Wolf)', () => {
   );
 });
 
+describe('canid biology (docs/research/animal-anatomy.md)', () => {
+  const { bones } = creaturePlan(WOLF);
+  const fore = bones.legs.find((l) => l.name === 'fore');
+  const hind = bones.legs.find((l) => l.name === 'hind');
+
+  it('5 digits on the fore paw (4 toes + the dewclaw), 4 on the hind', () => {
+    expect([fore?.toes, fore?.dewclaws]).toEqual([4, 1]);
+    expect([hind?.toes, hind?.dewclaws]).toEqual([4, 0]);
+  });
+
+  it(
+    'the forelegs carry 55–66 % of the standing weight (dogs 60.4 %, PubMed 32363786)',
+    () => {
+      const com = massProperties(compile(wolf, { lod: 2 })).centerOfMass;
+      const xf = fore?.foot[0] ?? 0;
+      const xh = hind?.foot[0] ?? 0;
+      const share = (com[0] - xh) / (xf - xh);
+      expect(share).toBeGreaterThan(0.55);
+      expect(share).toBeLessThan(0.66);
+    },
+    SLOW,
+  );
+});
+
 describe('stance and outline', () => {
   it('stands on the ground at every LOD', () => void assertUprightOnGround(wolf), SLOW);
   it(

@@ -6,10 +6,15 @@
     "material",
     "test-card"
   ],
+  "lods": [
+    0,
+    1,
+    2
+  ],
   "files": {
     "lods": [],
-    "sheet": "recipes/material_swatches/out/material_swatches/sheet.png",
-    "thumb": "recipes/material_swatches/out/material_swatches/thumb.png"
+    "sheet": "sheet.png",
+    "thumb": "thumb.png"
   },
   "triangles": [
     27288,

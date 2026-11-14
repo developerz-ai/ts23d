@@ -33,6 +33,8 @@ export { checkLicence, type ImportCredit, type LicenceVerdict } from './import-l
 export {
   type RefineCache,
   type Refined,
+  type RefineHttpInit,
+  type RefineHttpReply,
   type RefineOptions,
   type RefineRequest,
   refine,

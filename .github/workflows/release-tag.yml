@@ -1,8 +1,10 @@
 name: release-tag
 
-# Merging a `chore: release X.Y.Z` PR IS the release. When ci passes on such a commit on main and
-# vX.Y.Z is not tagged yet: annotated tag → GitHub Release (notes = that CHANGELOG section) →
-# dispatch release.yml on the tag (a tag pushed with GITHUB_TOKEN triggers no workflow by itself).
+# Merging a `chore: release X.Y.Z` PR IS the release. When ci passes on such a commit on main:
+# annotated tag → GitHub Release (notes = that CHANGELOG section) → dispatch release.yml on the
+# tag (a tag pushed with GITHUB_TOKEN triggers no workflow by itself). Each step is idempotent, so a
+# re-run finishes a half-done release: an existing tag (on this commit) or Release is kept, and
+# the dispatch is skipped only once npm already serves X.Y.Z.
 # Stamp with `bun run release X.Y.Z`; PUBLISHING.md has the full flow and the recoveries.
 
 on:
@@ -50,13 +52,30 @@ jobs:
           SHA: ${{ github.event.workflow_run.head_sha }}
         run: |
           set -euo pipefail
-          if git ls-remote --exit-code --tags origin "refs/tags/v${VERSION}" >/dev/null; then
-            echo "v${VERSION} already tagged — nothing to cut."; exit 0
+          tag="v${VERSION}"
+          # The commit the tag points at: the peeled `^{}` line for an annotated tag, else the ref.
+          refs="$(git ls-remote --tags origin "refs/tags/${tag}*")"
+          tagged="$(printf '%s\n' "$refs" | awk -v r="refs/tags/${tag}^{}" '$2 == r { print $1 }')"
+          [ -n "$tagged" ] || tagged="$(printf '%s\n' "$refs" | awk -v r="refs/tags/${tag}" '$2 == r { print $1 }')"
+          if [ -z "$tagged" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git tag -a "$tag" -m "$tag" "$SHA"
+            git push origin "$tag"
+          elif [ "$tagged" != "$SHA" ]; then
+            echo "::error::$tag exists on $tagged, not $SHA. fix: stamp the next patch and release that (PUBLISHING.md, Recovery)"
+            exit 1
+          else
+            echo "$tag already tagged on $SHA"
           fi
-          bun run scripts/release.ts --notes "$VERSION" > "$RUNNER_TEMP/notes.md"
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git tag -a "v${VERSION}" -m "v${VERSION}" "$SHA"
-          git push origin "v${VERSION}"
-          gh release create "v${VERSION}" --verify-tag --title "v${VERSION}" --notes-file "$RUNNER_TEMP/notes.md"
-          gh workflow run release.yml --ref "v${VERSION}" -f version="$VERSION"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "Release $tag exists"
+          else
+            bun run scripts/release.ts --notes "$VERSION" > "$RUNNER_TEMP/notes.md"
+            gh release create "$tag" --verify-tag --title "$tag" --notes-file "$RUNNER_TEMP/notes.md"
+          fi
+          if [ "$(npm view "@developerz.ai/ts23d@${VERSION}" version 2>/dev/null || true)" = "$VERSION" ]; then
+            echo "npm already serves $VERSION; nothing to publish"
+          else
+            gh workflow run release.yml --ref "$tag" -f version="$VERSION"
+          fi

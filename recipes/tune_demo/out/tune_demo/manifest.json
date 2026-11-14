@@ -9,15 +9,20 @@
     "pottery",
     "lathe"
   ],
+  "lods": [
+    0,
+    1,
+    2
+  ],
   "files": {
     "lods": [],
-    "sheet": "recipes/tune_demo/out/tune_demo/sheet.png",
-    "thumb": "recipes/tune_demo/out/tune_demo/thumb.png"
+    "sheet": "sheet.png",
+    "thumb": "thumb.png"
   },
   "triangles": [
-    4136,
-    1216,
-    288
+    4064,
+    1180,
+    272
   ],
   "drawCalls": [
     1,

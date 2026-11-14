@@ -1,11 +1,14 @@
 name: ci
 
-# The gate. `verify` runs exactly `bun run verify` — the command a contributor (human or agent)
+# The gate. `gate` runs exactly `bun run verify` — the command a contributor (human or agent)
 # runs locally; scripts/ci-parity.test.ts fails if this file stops calling it. `shots` renders a
-# contact sheet per recipe so reviewers (and review agents) can SEE what a PR changed.
-# Free GitHub-hosted runners only. Target: push → green in under 5 minutes, so both jobs run as 12
-# parallel shards (T3D_SHARD=k/12, scripts/lib/shard.ts): shard 1 also runs lint, types, tests and
-# build; every shard compiles, QA-checks and renders its slice of the recipe folders.
+# contact sheet per recipe so reviewers (and review agents) can SEE what a PR changed, and fails
+# when the committed recipes/*/out differ from a fresh render (run `bun run shots <name>`).
+# `site` builds the gallery. `verify` is the one required status check: it passes only when every
+# other job succeeded, so branch protection names one check instead of 25 shard checks.
+# Free GitHub-hosted runners only. Target: push → green in under 5 minutes, so gate and shots run
+# as 12 parallel shards (T3D_SHARD=k/12, scripts/lib/shard.ts): shard 1 also runs lint, types,
+# tests and build; every shard compiles, QA-checks and renders its slice of the recipe folders.
 
 on:
   push:
@@ -21,7 +24,7 @@ concurrency:
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
-  verify:
+  gate:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     strategy:
@@ -52,6 +55,14 @@ jobs:
           persist-credentials: false
       - uses: ./.github/actions/setup
       - run: bun run shots
+      - name: committed renders match a fresh render
+        run: |
+          set -euo pipefail
+          if [ -n "$(git status --porcelain -- 'recipes/*/out')" ]; then
+            git status --short -- 'recipes/*/out'
+            echo "::error::recipes/*/out is stale. fix: bun run shots <name> for the folders listed, commit recipes/<name>/out"
+            exit 1
+          fi
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: contact-sheets-${{ matrix.shard }}
@@ -59,3 +70,32 @@ jobs:
             recipes/*/out/*/sheet.png
             recipes/*/out/*/hero.png
           retention-days: 14
+
+  site:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+      - run: bun run site:build
+
+  verify:
+    needs: [gate, shots, site]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: every job succeeded
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          set -euo pipefail
+          for r in $RESULTS; do
+            if [ "$r" != success ]; then
+              echo "::error::a required job ended '$r' (results: $RESULTS). fix: open the failed gate / shots / site job and fix what it printed"
+              exit 1
+            fi
+          done
+          echo "ok: $RESULTS"

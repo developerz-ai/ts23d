@@ -9,6 +9,7 @@ import {
   type Mesh,
   merge,
   type Part,
+  ROOT_PART,
   rotateZ,
   toWorld,
   type WorldTransform,
@@ -16,7 +17,7 @@ import {
 } from '../core/index.ts';
 
 /** Name of the static root pivot (matches mergeToPivots). */
-export const BODY = 'body';
+export const BODY = ROOT_PART;
 
 type ColliderKind = NonNullable<Part['collider']>;
 

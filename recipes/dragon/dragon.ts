@@ -81,6 +81,7 @@ export const dragon = defineAsset({
         ...mainHornSocket(side),
         kind: 'socket',
         tolerance: 0.5,
+        why: 'the 17 cm horn roots on a broader 27 cm bony boss (a raised base, not a peg in a hole)',
       });
       ctx.part(`eye_socket_${s}`, head.sockets[i]);
     }
@@ -102,7 +103,6 @@ export const dragon = defineAsset({
         at: side === 1 ? eye : flip(eye),
         axis: [-SOCKET_AXIS[0], -SOCKET_AXIS[1] * side, -SOCKET_AXIS[2]],
         kind: 'socket',
-        tolerance: 0.5,
       });
     // Wings: a flapping group per side at the shoulder joint, bones and membrane inside it.
     const wing = wingMeshes(lod);
@@ -132,7 +132,6 @@ export const dragon = defineAsset({
         at,
         axis: [-HUMERUS[0], -HUMERUS[1] * side, -HUMERUS[2]],
         kind: 'flush',
-        tolerance: 0.3,
       });
     }
     ctx.part('tail', tailMesh(lod), {

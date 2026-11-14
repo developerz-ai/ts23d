@@ -50,6 +50,7 @@ export function assertMinThickness(
       .map((w) => ({
         finding: {
           gate: 'thickness',
+          code: 'T3D_QA_THICKNESS',
           part: w.name,
           message: `'${w.name}' is ${mm(w.min)} thick at ${fmtPoint(w.at)}, minimum ${mm(metres)}`,
           fix: `thicken that wall to ≥ ${mm(metres)} (or make it a flat card with surface: 'cutout' if it is meant to be paper-thin)`,

@@ -98,8 +98,9 @@ function trunkTub(lod: Lod): Mesh {
     // Drip channel under the lid's front shut line.
     bx([-1.345, -0.64, 0.86], [-1.3, 0.64, 0.9], C.liner, 'plastic'),
   ];
+  // Side liners run out to the quarters' inner flange (0.607 m): no slit beside the open lid.
   for (const s of [1, -1])
-    parts.push(bx([-2.0, s * 0.58, 0.46], [-1.36, s * 0.6, 0.88], C.liner, 'plastic'));
+    parts.push(bx([-2.0, s * 0.58, 0.46], [-1.36, s * 0.607, 0.88], C.liner, 'plastic'));
   if (lod === 0) parts.push(bx([-1.9, -0.25, 0.48], [-1.75, 0.25, 0.5], C.black, 'rubber'));
   return merge(parts);
 }

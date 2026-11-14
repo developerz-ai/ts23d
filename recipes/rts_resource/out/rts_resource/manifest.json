@@ -9,10 +9,15 @@
     "crystal",
     "team-colour"
   ],
+  "lods": [
+    0,
+    1,
+    2
+  ],
   "files": {
     "lods": [],
-    "sheet": "recipes/rts_resource/out/rts_resource/sheet.png",
-    "thumb": "recipes/rts_resource/out/rts_resource/thumb.png"
+    "sheet": "sheet.png",
+    "thumb": "thumb.png"
   },
   "triangles": [
     12330,

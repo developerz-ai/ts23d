@@ -9,10 +9,15 @@
     "erosion",
     "map"
   ],
+  "lods": [
+    0,
+    1,
+    2
+  ],
   "files": {
     "lods": [],
-    "sheet": "recipes/mountain_range/out/mountain_range_b/sheet.png",
-    "thumb": "recipes/mountain_range/out/mountain_range_b/thumb.png"
+    "sheet": "sheet.png",
+    "thumb": "thumb.png"
   },
   "triangles": [
     133120,

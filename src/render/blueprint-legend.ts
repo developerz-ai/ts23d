@@ -2,6 +2,7 @@
 // then every declared joint with its QA verdict — the numbers in one readable list, whatever the
 // dimension lines in the views overlap.
 
+import { TOLERANCE } from '../core/index.ts';
 import { type Canvas, fillRect } from './blueprint-draw.ts';
 import { BAD, fmtM, type MeasureResult, OK, shortLabel } from './blueprint-measures.ts';
 import { INK, type JointMark } from './blueprint-panel.ts';
@@ -42,7 +43,7 @@ export function legend(
   ms.forEach((r, i) => {
     const x = 12 + (i % cols) * COL;
     const yy = y + Math.floor(i / cols) * ROW;
-    const tol = (r.measure.tolerance ?? 0.02) * 100;
+    const tol = (r.measure.tolerance ?? TOLERANCE.measure) * 100;
     const rgb = r.ok ? OK : BAD;
     const delta = r.value === null ? 'NO PARTS' : `${pctOf(r.value, r.measure.value)}%`;
     fillRect(c, x, yy, x + 10, yy + 10, rgb);

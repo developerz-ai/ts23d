@@ -4,6 +4,7 @@
 
 import { type Mesh, MeshBuilder, normalize, type Vec2, type Vec3 } from '../core/index.ts';
 import { type StripId, stripRect } from '../material/index.ts';
+import { positive, profileOf } from './check.ts';
 import { triangulate } from './triangulate.ts';
 
 export interface PrismOptions {
@@ -21,6 +22,8 @@ const lift = (plane: 'xz' | 'xy' | 'yz', p: Vec2, d: number): Vec3 =>
   plane === 'xz' ? [p[0], d, p[1]] : plane === 'xy' ? [p[0], p[1], d] : [d, p[0], p[1]];
 
 export function prism(o: PrismOptions): Mesh {
+  positive('prism depth', o.depth, 'depth: 0.5');
+  profileOf('prism profile', o.profile, 3);
   const plane = o.plane ?? 'xy';
   const d0 = o.centred === false ? 0 : -o.depth / 2;
   const d1 = d0 + o.depth;

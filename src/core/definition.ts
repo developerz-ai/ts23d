@@ -48,6 +48,8 @@ export interface BuildContext {
 export interface Budget {
   /** Triangle ceiling per LOD; QA fails the build above it. */
   readonly triangles: readonly [number, number, number];
+  /** Draw-call ceiling per LOD (integer ≥ 1); `t3d build` fails above it. Omitted: unchecked. */
+  readonly draws?: number;
 }
 
 /** Real-world overall dimensions (metres) the QA `proportions` gate holds the model to. */
@@ -58,8 +60,10 @@ export interface RealDimensions extends RealMass {
   readonly width: number;
   /** Along Z. */
   readonly height: number;
-  /** Allowed relative error per axis; default 0.05. */
+  /** Allowed relative error per axis; default 0.05, at most 0.5. */
   readonly tolerance?: number;
+  /** Required when `tolerance` is above the 0.05 default: why the box may be that loose. */
+  readonly why?: string;
   /** Named spec-sheet dimensions checked against the model (QA `measures`). */
   readonly measures?: readonly Measure[];
 }
@@ -78,7 +82,10 @@ export interface Measure {
   readonly parts?: readonly string[];
   /** Or: distance between the centres of exactly two parts along `axis`. */
   readonly between?: readonly [string, string];
+  /** Allowed relative error; default 0.02, at most 0.5. */
   readonly tolerance?: number;
+  /** Required when `tolerance` is above the 0.02 default: why this number may be that loose. */
+  readonly why?: string;
   /** Where this number comes from (one of `sources`, or a page reference). */
   readonly source?: string;
 }

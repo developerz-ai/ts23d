@@ -45,7 +45,42 @@ describe('floating gate (surface contact)', () => {
         ctx.part('lid', box({ size: [1, 1, 0.1], color: c }), { at: [0, 0, 1.05] });
       },
     });
-    expect(floatingParts(compile(a)).map((f) => f.part)).toEqual(['lid']);
+    const [f] = floatingParts(compile(a));
+    expect(f).toMatchObject({ part: 'lid', code: 'T3D_QA_FLOATING_PARTS', nearest: 'base' });
+    expect(f?.gap ?? 0).toBeCloseTo(0.05, 2);
+    expect(f?.fix).toContain('`at.z` is the bottom');
+  });
+
+  const ground = (at: [number, number, number], size: [number, number, number] = [0.3, 0.3, 0.3]) =>
+    compile(
+      defineAsset({
+        name: 'ground',
+        kind: 'prop',
+        budget: { triangles: [99, 99, 99] },
+        build(ctx) {
+          ctx.part('base', box({ size: [1, 1, 1], color: c }));
+          ctx.part('post', box({ size, color: c }), { at });
+        },
+      }),
+    );
+
+  it('fails a part wholly below ground (D36), with how far to raise it', () => {
+    const found = floatingParts(ground([5, 5, -3]));
+    expect(found).toHaveLength(1);
+    expect(found[0]).toMatchObject({ part: 'post', code: 'T3D_QA_FLOATING_PARTS' });
+    expect(found[0]?.gap ?? 0).toBeCloseTo(3, 1);
+    expect(found[0]?.message).toContain('below ground');
+  });
+
+  it('passes a box resting on z = 0 and a post sunk 0.1 m into the ground', () => {
+    expect(floatingParts(ground([5, 5, 0]))).toEqual([]);
+    expect(floatingParts(ground([5, 5, -0.1], [0.1, 0.1, 1]))).toEqual([]);
+  });
+
+  it('reports the ground as the nearest support of a part hanging in the open', () => {
+    const [f] = floatingParts(ground([5, 5, 0.4]));
+    expect(f?.nearest).toBeUndefined();
+    expect(f?.gap ?? 0).toBeCloseTo(0.4, 2);
   });
 });
 
@@ -153,5 +188,38 @@ describe('clashes gate: long hinged panel resolves to millimetres, not 5° bins 
     expect(
       clashes(compile(hood({ size: [1.2, 0.8, 0.1], at: [0.75, 0, 0.92] }))).map((f) => f.part),
     ).toEqual(['bay']);
+  });
+});
+
+// A 1.4 m × 10 cm rotor spinning about Z through a 0.2 × 3 × 2 m slab (D35): no slab vertex or
+// edge lies in its thin swept disc, only the slab's face interiors do.
+const rotorThrough = (z: number) =>
+  defineAsset({
+    name: 'rotor',
+    kind: 'prop',
+    budget: { triangles: [999, 999, 999] },
+    build(ctx) {
+      ctx.part('slab', box({ size: [0.2, 3, 2], color: c }));
+      ctx.part('rotor', box({ size: [1.4, 0.1, 0.1], at: [0, 0, -0.05], color: c }), {
+        at: [0.03, 0.07, z],
+        motion: { kind: 'spin', axis: [0, 0, 1], rps: 1 },
+      });
+    },
+  });
+
+describe('clashes gate: thin rotor through a big panel (D35)', () => {
+  it('fails at every height through the slab, centre and off-centre', () => {
+    const missed = [0.35, 0.6, 1, 1.3, 1.587, 1.6, 1.74].filter(
+      (z) => clashes(compile(rotorThrough(z))).length !== 1,
+    );
+    expect(missed).toEqual([]);
+    expect(clashes(compile(rotorThrough(1)))[0]).toMatchObject({
+      part: 'slab',
+      code: 'T3D_QA_CLASHES',
+    });
+  });
+
+  it('passes the same rotor spinning above the slab', () => {
+    expect(clashes(compile(rotorThrough(2.1)))).toEqual([]);
   });
 });

@@ -27,7 +27,8 @@ export function hinges(S: Surface): Hinges {
   return {
     hood: [X_HOOD_FRONT + 0.13, 0, 0.52],
     door: [X_DOOR_FRONT - 0.004, doorSkin[1] + 0.006, 0.5],
-    trunk: [X_TRUNK_FRONT - 0.02, 0, 0.9],
+    // The goosenecks' pins on the deck bulkhead: the lid turns about them, not about its skin.
+    trunk: [X_TRUNK_FRONT - 0.02, 0, 0.84],
   };
 }
 

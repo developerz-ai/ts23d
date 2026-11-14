@@ -12,6 +12,7 @@ export const treads: Gate = (asset) =>
     .map(
       (p): Finding => ({
         gate: 'treads',
+        code: 'T3D_QA_TREADS',
         part: p.name,
         message: `track belt '${p.name}' has no tread motion: it merges into the body and stands still while the wheels turn`,
         fix: `give it the belt centre line: ctx.part('${p.name}', mesh, { motion: tread(beltLine, y, linkPitch) })`,

@@ -3,7 +3,7 @@ import { Ts23dError } from '../core/index.ts';
 import { cube } from './fixtures.ts';
 import { readGlb } from './glb-read.ts';
 import { writeMeshGlb } from './glb-write.ts';
-import { type RefineCache, refine } from './refine.ts';
+import { type RefineCache, type RefineHttpInit, refine } from './refine.ts';
 
 const store = (): RefineCache & { size: () => number } => {
   const m = new Map<string, Uint8Array>();
@@ -26,10 +26,37 @@ describe('refine (mock local server)', () => {
     ).catch((x: unknown) => x);
     expect(e instanceof Ts23dError && e.code).toBe('T3D_REFINE_FAILED');
   });
+  test('a server that never answers + timeoutMs → T3D_REFINE_FAILED within 1 s', async () => {
+    const server = Bun.serve({ port: 0, fetch: () => new Promise<Response>(() => {}) });
+    try {
+      const t0 = performance.now();
+      const e = await refine(
+        { mesh: cube(), prompt: 'p' },
+        { endpoint: server.url.href, model: 'm', cache: store(), timeoutMs: 50 },
+      ).catch((x: unknown) => x);
+      expect(e instanceof Ts23dError && e.code).toBe('T3D_REFINE_FAILED');
+      expect(e instanceof Ts23dError && e.fix).toContain('timeoutMs');
+      expect(performance.now() - t0).toBeLessThan(1000);
+    } finally {
+      server.stop(true);
+    }
+  });
+  test('a body that fails to read → T3D_REFINE_FAILED, not a raw throw', async () => {
+    const fetch = async () => ({
+      ok: true,
+      status: 200,
+      arrayBuffer: () => Promise.reject(new TypeError('connection reset')),
+    });
+    const e = await refine(
+      { mesh: cube(), prompt: 'p' },
+      { endpoint: 'http://x', model: 'm', cache: store(), fetch },
+    ).catch((x: unknown) => x);
+    expect(e instanceof Ts23dError && e.code).toBe('T3D_REFINE_FAILED');
+  });
   test('posts a Y-up GLB once, then serves the cache', async () => {
     const calls: string[] = [];
     const answer = writeMeshGlb([{ name: 'refined', mesh: cube([2, 2, 2]) }]);
-    const fetch = async (url: string, init: RequestInit): Promise<Response> => {
+    const fetch = async (url: string, init: RefineHttpInit): Promise<Response> => {
       calls.push(url);
       const body = JSON.parse(String(init.body)) as { model: string; prompt: string; mesh: string };
       expect(body.model).toBe('trellis-2');

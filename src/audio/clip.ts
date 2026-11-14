@@ -32,6 +32,20 @@ export const token = (v: number): string =>
     .replace('.', '_')
     .replace('-', 'm');
 
+/** An option value spelled exactly, name-safe: 0.301 → '0_301', -2 → 'm2'. */
+const exact = (v: number): string => String(v).replace('.', '_').replace('-', 'm').replace('+', '');
+
+/**
+ * Name suffix `_<key><value>` for every option that differs from its default, in the order given:
+ * two variants of one generator never share a default name, and all-default options add nothing
+ * (so existing default names stay put).
+ */
+export function variant(
+  options: readonly (readonly [key: string, value: number, def: number])[],
+): string {
+  return options.map(([k, v, d]) => (v === d ? '' : `_${k}${exact(v)}`)).join('');
+}
+
 /** Scale so the loudest sample sits at `peak` (silence stays silence). In place; returns `x`. */
 export function normalize(x: Float32Array, peak = 0.89): Float32Array {
   let m = 0;
