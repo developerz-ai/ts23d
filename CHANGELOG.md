@@ -4,6 +4,10 @@ All notable changes to `@developerz.ai/ts23d`. Format: [Keep a Changelog](https:
 
 ## [Unreleased]
 
+### Added
+- `bun run verify` has a `placeholders` step: elided or stubbed code (a bare `// ...` or `/* … */`, "rest of the code", "same as above", `TODO: implement`, "for brevity") fails the gate; planned work still throws `notImplemented()`.
+- Repo tooling: a `/planx` command writes path-disjoint execution plans under `docs/plans/<YYYY>/<MM>/<DD>/<1NN>-<slug>/` for `/feature` to run; the developerz.ai maintainer bot gets daily `health`, weekly `release-due` and monthly `improve` checkups (`.dz/briefs/`), which only file issues and small upkeep PRs.
+
 ## [0.4.0] - 2026-11-08
 
 ### Fixed
