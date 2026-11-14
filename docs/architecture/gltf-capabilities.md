@@ -18,7 +18,7 @@ Status legend: **shipped** = on `main` with a test · **next** = the current roa
 | Vertex colour albedo | `COLOR_0` (u16 normalised) | every primitive's `color` | shipped |
 | PBR metal/rough + normal + ORM | `pbrMetallicRoughness`, `normalTexture`, `occlusionTexture` | procedural trim sheet | shipped |
 | Alpha modes | `OPAQUE` / `MASK` / `BLEND` | surfaces opaque / cutout / glass / translucent | shipped |
-| Node animation (TRS) | `animations` | `spin`, `slide`, `sway` → `rest` + `run` clips | shipped |
+| Node animation (TRS) | `animations` | `spin`, `slide`, `sway`, `orbit`, `crank`, `piston` → `rest` + `run` clips | shipped |
 | Sockets, emitters | `extras` on empty nodes | `ctx.socket`, `ctx.emitter` | shipped |
 | Skins (bones) | `skins`, `JOINTS_0` / `WEIGHTS_0`, `inverseBindMatrices` | `ctx.bone` + skinned sculpt (below) | later |
 | Morph targets | `targets` + `weights` | face shapes: blink, jaw open, snarl | later |

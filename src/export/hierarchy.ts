@@ -4,10 +4,10 @@
 // so a single-file GLB stores each identical motion and light only once.
 
 import type { CompiledAsset, Part } from '../core/index.ts';
-import { quatFromAxisAngle, Ts23dError } from '../core/index.ts';
+import { motionPaths, quatFromAxisAngle, Ts23dError } from '../core/index.ts';
 import type { BinWriter, Json } from './bin-writer.ts';
 import { LIGHTS, lightOf } from './lights.ts';
-import { motionChannel, treadExtras } from './motion.ts';
+import { motionChannels, treadExtras } from './motion.ts';
 import { writePrimitive } from './primitive.ts';
 
 /** The growing glTF arrays every LOD appends to. */
@@ -19,7 +19,7 @@ export interface GltfDoc {
   readonly samplers: Json[];
   readonly channels: Json[];
   /** motion + rest pose → sampler index: the same wheel spin at LOD0 and LOD1 is one sampler. */
-  readonly motionSamplers: Map<string, number>;
+  readonly motionSamplers: Map<string, number[]>;
   readonly lightIndex: Map<string, number>;
 }
 
@@ -61,20 +61,19 @@ function lightIndexOf(doc: GltfDoc, light: Json): number {
 function addMotion(doc: GltfDoc, part: Part, id: number): void {
   if (!part.motion || part.motion.kind === 'tread') return;
   const key = JSON.stringify([part.motion, part.at, part.yaw]);
-  let sampler = doc.motionSamplers.get(key);
-  let channel: Json;
-  if (sampler === undefined) {
-    const written = motionChannel(doc.bin, part.motion, id, part.at, part.yaw);
-    doc.samplers.push(written.sampler);
-    sampler = doc.samplers.length - 1;
-    doc.motionSamplers.set(key, sampler);
-    channel = written.channel;
-  } else {
-    channel = {
-      target: { node: id, path: part.motion.kind === 'slide' ? 'translation' : 'rotation' },
-    };
+  let samplers = doc.motionSamplers.get(key);
+  if (samplers === undefined) {
+    const written = motionChannels(doc.bin, part.motion, id, part.at, part.yaw);
+    samplers = written.map((w) => {
+      doc.samplers.push(w.sampler);
+      return doc.samplers.length - 1;
+    });
+    doc.motionSamplers.set(key, samplers);
   }
-  doc.channels.push({ ...channel, sampler });
+  const paths = motionPaths(part.motion);
+  samplers.forEach((sampler, i) => {
+    doc.channels.push({ target: { node: id, path: paths[i] }, sampler });
+  });
 }
 
 /** The node of `part`'s parent; a name with no node is a merge bug, never a silent root. */

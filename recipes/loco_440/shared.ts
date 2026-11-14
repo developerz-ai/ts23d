@@ -42,7 +42,6 @@ export const BOILER_R = 0.62;
 export const SMOKEBOX_R = 0.68;
 export const DECK_Z = 1.75;
 export const BOARD_Z = RAIL_TOP + 2 * DRIVER_R + 0.06;
-export const DRIVER_RPS = SPEED / (2 * Math.PI * DRIVER_R);
 
 // ---------------------------------------------------------------- livery → material strips
 /** Caledonian blue (1994 repaint, refined from "Pepsi" blue): cab, tender, pilot, sand dome. */

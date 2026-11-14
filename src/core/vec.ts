@@ -24,3 +24,17 @@ export function quatFromAxisAngle(axis: Vec3, radians: number): Quat {
   const s = Math.sin(radians / 2);
   return [x * s, y * s, z * s, Math.cos(radians / 2)];
 }
+
+/** `v` turned by unit quaternion `q` [x, y, z, w]; by its inverse (conjugate) when `inverse`. */
+export function quatRotate(q: Quat, v: Vec3, inverse = false): Vec3 {
+  const [x, y, z] = inverse ? [-q[0], -q[1], -q[2]] : [q[0], q[1], q[2]];
+  const w = q[3];
+  const tx = 2 * (y * v[2] - z * v[1]);
+  const ty = 2 * (z * v[0] - x * v[2]);
+  const tz = 2 * (x * v[1] - y * v[0]);
+  return [
+    v[0] + w * tx + (y * tz - z * ty),
+    v[1] + w * ty + (z * tx - x * tz),
+    v[2] + w * tz + (x * ty - y * tx),
+  ];
+}

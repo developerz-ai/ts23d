@@ -3,7 +3,8 @@
 // deeper than CLASH_EPS into that swept volume fails — wheel vs fender, prop vs cowling, rod vs frame.
 // Spins sweep a solid of revolution (clash-sweep.ts); sways sweep only the sector they travel,
 // resolved to millimetres (clash-sector.ts); slides use the moving mesh's bounds extended along the stroke (one
-// side only for `oneWay`).
+// side only for `oneWay`); orbits, cranks and pistons carry the body's box along their real path
+// (clash-path.ts).
 
 import {
   type CompiledAsset,
@@ -14,6 +15,7 @@ import {
   worldMeshes,
   worldTransforms,
 } from '../core/index.ts';
+import { pathVolume } from './clash-path.ts';
 import { sectorVolume } from './clash-sector.ts';
 import { spinVolume, type Volume } from './clash-sweep.ts';
 import { surfaceSamples } from './geometry.ts';
@@ -72,11 +74,13 @@ export const clashes: Gate = (asset: CompiledAsset): Finding[] => {
     const m = root.motion;
     const peak = m.kind === 'sway' ? (m.degrees * Math.PI) / 180 : 0;
     const vol =
-      m.kind === 'slide'
-        ? slideVolume(body, rot(m.offset), m.oneWay)
-        : m.kind === 'sway' && (m.oneWay ? peak : 2 * peak) < Math.PI * 2
-          ? sectorVolume(body, t.origin, rot(m.axis), m.oneWay ? [0, peak] : [-peak, peak])
-          : spinVolume(body, t.origin, rot(m.axis));
+      m.kind === 'orbit' || m.kind === 'crank' || m.kind === 'piston'
+        ? pathVolume(body, t.origin, t.yaw, m)
+        : m.kind === 'slide'
+          ? slideVolume(body, rot(m.offset), m.oneWay)
+          : m.kind === 'sway' && (m.oneWay ? peak : 2 * peak) < Math.PI * 2
+            ? sectorVolume(body, t.origin, rot(m.axis), m.oneWay ? [0, peak] : [-peak, peak])
+            : spinVolume(body, t.origin, rot(m.axis));
     for (const [name, mesh] of meshes) {
       if (moving.has(name) || root.clearOf?.includes(name)) continue;
       const b = meshBounds(mesh);

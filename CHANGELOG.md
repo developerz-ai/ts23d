@@ -4,11 +4,16 @@ All notable changes to `@developerz.ai/ts23d`. Format: [Keep a Changelog](https:
 
 ## [Unreleased]
 
-Tooling for a repo that runs itself: per-release changelog pages and a written ten-year maintenance contract.
+Tooling for a repo that runs itself (per-release changelog pages and a written ten-year maintenance contract), plus crank-linkage motions that keep the Jupiter locomotive's rods on their crank pins.
 
 ### Added
 - `docs/changelog/`: one generated page per release plus an index, and a compare-link index at the foot of `CHANGELOG.md`; `bun run changelog` writes them and the `conventions` gate fails on drift. `bun run release` now refuses a release without a summary sentence under `[Unreleased]` and keeps both current.
 - `docs/maintenance.md`: what wears out over a decade and which AI-maintenance lane catches it; the monthly `cleanup` checkup moves the Bun pin and runs a January yearly review; Dependabot bumps Actions monthly.
+- Motion kinds for linkages: `orbit` (parallel circular translation: a coupling rod follows its crank pins), `crank` (a connecting rod on the exact slider-crank: rotates and translates) and `piston` (the crosshead / piston on the same linkage, x = r·cosθ + √(L² − r²sin²θ), not a sinusoid). All three read throw, phase and rod length from the rest pose, validate with `T3D_RECIPE_INVALID`, survive mirrored `place`, bake as glTF translation (+ rotation) channels at 48 keys per cycle and sweep their real path in `clashes`.
+- `assertFollows(asset, { part, follows, point })` in `/testing`: a point shared by two parts at rest stays on both through the baked clip; `motionPose`, `cyclesOf` and `LOOP_SECONDS` in core.
+
+### Fixed
+- `loco_440`: the side rods moved straight up and down and the main rods and crossheads slid sinusoidally, so the rods left the crank pins by up to 76 cm; they now run as `orbit` / `crank` / `piston` driven by the wheelsets' own crank pins (D42).
 
 ## [0.5.0] - 2026-11-14
 

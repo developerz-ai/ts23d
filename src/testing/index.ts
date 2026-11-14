@@ -11,6 +11,7 @@ export {
 } from './assert.ts';
 export { ALL_LODS, compileLods, describeFinding, type LodOptions } from './compiled.ts';
 export { assertConnected, assertGrown } from './connections.ts';
+export { assertFollows, type FollowOptions, followError, pointAt } from './follows.ts';
 export {
   assertFlush,
   assertNoGaps,

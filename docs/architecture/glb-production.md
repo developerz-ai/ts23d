@@ -134,7 +134,8 @@ The GLB node of a part sits where QA and the renderer measured it (`worldTransfo
 |---|---|
 | Pivots (groups, moving parts, emitters, sockets) become nodes; static meshed parts merge into their nearest pivot ancestor, or into the root mesh `body` (`ROOT_PART`) | `merge-pivots.ts` |
 | A pivot whose parent is a static part that merged away is re-parented to its nearest surviving pivot ancestor (or the root), with `at` / `yaw` re-expressed from world transforms. Example: `wheel` at `[1,0,0]` under a static `hull` at `[0,0,1]` yawed 90° exports at `[0,1,1]` with yaw 90° under the root | `merge-pivots.ts` |
-| The rest yaw of a moving node survives its clip: rotation keys are yaw ∘ motion and slide offsets turn by the yaw, because `axis` and `offset` are in the part's own frame (as QA's `clashes` reads them) | `motion.ts` |
+| The rest yaw of a moving node survives its clip: rotation keys are yaw ∘ motion and translation offsets turn by the yaw, because `axis` and `offset` are in the part's own frame (as QA's `clashes` reads them) | `motion.ts` |
+| Every channel samples core `motionPose`, the function QA and `assertFollows` read: a crank writes translation + rotation channels, orbit / piston translation; 48 LINEAR keys per cycle keep a 0.3 m crank circle within 0.7 mm between keys, and rates round to whole cycles so a rod and its wheel stay locked | `motion.ts`, `core/motion-pose.ts` |
 | A `parent` name with no node is `T3D_PART_UNKNOWN` (an internal merge bug), never a node hung off the root | `hierarchy.ts` |
 | Every exported pivot of `sound_demo`, `joint_demo`, `t34` matches `worldTransforms` | `pivots-glb.test.ts` |
 
