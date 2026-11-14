@@ -73,18 +73,27 @@ it('bakes an orbit densely enough that LINEAR keys stay within 1 mm of the circl
   expect(r - off).toBeGreaterThan(0);
 });
 
-it('bakes every linkage (orbit, crank, piston) at 48 keys per cycle or more', () => {
+it('writes every linkage (orbit, crank, piston) at 48 keys per cycle or more', () => {
   const at = {
     axis: [0, 1, 0],
     centre: [-2, 0, -0.3],
     pin: [-1.7, 0, -0.3],
     line: [1, 0, 0],
   } as const;
-  expect(
-    keysPerCycle({ kind: 'orbit', axis: [0, 1, 0], arm: [0, 0, 0.3], hz: 1 }),
-  ).toBeGreaterThanOrEqual(48);
-  expect(keysPerCycle({ kind: 'crank', ...at, hz: 1 })).toBeGreaterThanOrEqual(48);
-  expect(keysPerCycle({ kind: 'piston', ...at, hz: 1 })).toBeGreaterThanOrEqual(48);
+  const linkages = [
+    { kind: 'orbit', axis: [0, 1, 0], arm: [0, 0, 0.3], hz: 1 },
+    { kind: 'crank', ...at, hz: 1 },
+    { kind: 'piston', ...at, hz: 1 },
+  ] as const;
+  for (const m of linkages) {
+    expect(keysPerCycle(m)).toBeGreaterThanOrEqual(48);
+    const bin = new BinWriter();
+    // hz 1 over the LOOP_SECONDS clip: every channel's keys are what the GLB will interpolate.
+    for (const { sampler } of motionChannels(bin, m, 0, [0, 0, 0])) {
+      const count = bin.accessors[sampler['input'] as number]?.['count'] as number;
+      expect(count).toBeGreaterThanOrEqual(48 * LOOP_SECONDS);
+    }
+  }
 });
 
 it('bakes a crank as translation + rotation, a piston as translation only', () => {
