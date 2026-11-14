@@ -7,7 +7,7 @@ T3D_PART_UNKNOWN: part 'gun_barrel' parents to 'gun', which does not exist yet
   fix: add the parent (ctx.group or ctx.part) before its children
 ```
 
-`--json`: `{"ok":false,"error":{"code":"…","message":"…","fix":"…"}}` on **stdout**, exit 1.
+`--json`: `{"ok":false,"error":{"code":"…","message":"…","fix":"…"}}` on **stdout**; exit 2 for `T3D_CLI_USAGE`, exit 1 otherwise.
 
 ## Library codes
 
@@ -67,7 +67,7 @@ T3D_PART_UNKNOWN: part 'gun_barrel' parents to 'gun', which does not exist yet
 
 ## CLI codes
 
-Thrown by `t3d` itself. Like every code they print as `T3D_…: cause` + `fix:`; with `--json` the envelope goes to **stdout** (never stderr), one JSON object, exit 1.
+Thrown by `t3d` itself. Like every code they print as `T3D_…: cause` + `fix:`; with `--json` the envelope goes to **stdout** (never stderr), one JSON object; exit 2 for `T3D_CLI_USAGE`, exit 1 otherwise.
 
 | Code | Where | Cause | Fix |
 |---|---|---|---|

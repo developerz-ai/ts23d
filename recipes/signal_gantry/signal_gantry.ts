@@ -5,6 +5,7 @@
 // A family over the number of tracks. Dossier: ./README.md.
 
 import {
+  type Bounds,
   beam,
   boundsOf,
   box,
@@ -44,6 +45,7 @@ const LOW_ARM = 1.75; // pivot over the deck: the swept blade (r ≈ 1.67) clear
 const ARM_GAP = 2.35; // the upper spectacle clears the lower blade's sweep
 const MAST_H = LOW_ARM + ARM_GAP + 0.45;
 const POST_D = 0.6; // post depth along X (the girder is GIRDER_W deep)
+const POST_W = 0.45; // post width along Y
 const KNEE_FOOT_X = POST_D / 2 - 0.045; // knee foot on the post's corner chord, not beside the post
 
 const steel = hex('#2d3033');
@@ -110,23 +112,29 @@ const kneesLand =
   (asset) => {
     const out: CheckFinding[] = [];
     const world = worldMeshes(asset.parts);
-    const gap = (p: Vec3, support: string): number => {
-      const m = world.get(support);
-      if (!m) return Infinity;
-      const { min, max } = boundsOf(m);
-      const out = (k: 0 | 1 | 2): number => Math.max(min[k] - p[k], 0, p[k] - max[k]);
+    const girder = world.get('girder');
+    const gap = (p: Vec3, b: Bounds | undefined): number => {
+      if (!b) return Infinity;
+      const out = (k: 0 | 1 | 2): number => Math.max(b.min[k] - p[k], 0, p[k] - b.max[k]);
       return Math.hypot(out(0), out(1), out(2));
     };
+    /** The post lattice's own section, not the part's box: the base plate is wider than the
+     *  lattice, and a foot over the plate's overhang would still be standing in the air. */
+    const postSection = (y: number): Bounds => ({
+      min: [-POST_D / 2, y - POST_W / 2, FOOT_H],
+      max: [POST_D / 2, y + POST_W / 2, ZB + GIRDER_D],
+    });
     for (const [side, s] of [
       ['l', 1],
       ['r', -1],
     ] as const) {
-      for (const [foot, head] of kneeEnds(s * halfSpan(tracks), s, asset.lod)) {
-        for (const [end, support] of [
-          [foot, `post_${side}`],
-          [head, 'girder'],
+      const y = s * halfSpan(tracks);
+      for (const [foot, head] of kneeEnds(y, s, asset.lod)) {
+        for (const [end, support, b] of [
+          [foot, `post_${side}`, postSection(y)],
+          [head, 'girder', girder && boundsOf(girder)],
         ] as const) {
-          const d = gap(end, support);
+          const d = gap(end, b);
           if (d > 0.02)
             out.push({
               message: `'knee_${side}' end [${end.map((v) => v.toFixed(2)).join(', ')}] is ${d.toFixed(3)} m clear of '${support}'`,
@@ -305,7 +313,7 @@ const bridge = defineFamily({
       const post =
         lod === 2
           ? box({
-              size: [POST_D, 0.45, top - FOOT_H],
+              size: [POST_D, POST_W, top - FOOT_H],
               at: [0, y, FOOT_H],
               color: steel,
               strip: 'iron',
@@ -314,7 +322,7 @@ const bridge = defineFamily({
               from: [0, y, FOOT_H],
               to: [0, y, top],
               depth: POST_D,
-              width: 0.45,
+              width: POST_W,
               centred: true,
               chord: 0.09,
               web: 0.05,

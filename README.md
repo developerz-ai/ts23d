@@ -372,7 +372,7 @@ As of 2026-10. Full matrix: [docs/idea/07-what-fits.md](docs/idea/07-what-fits.m
 | **Strong** | Hard-surface props, architecture (facades, towers), vehicles (tracked, wheeled, rail), modular kits, anything with real dimensions or repeated parts |
 | **Shipped, early** | Vegetation: Weber–Penn trees (oak, pine, palm, birch, willow); LOD2 impostors are crude |
 | **Shipped, early** | Stylised organic: `sculpt` busts, SDF rocks and asteroids, eroded terrain. Boats: lofted `hull` |
-| **Planned** | Stylised creatures (SDF over a skeleton, M4) |
+| **Shipped, early** | Stylised creatures: `creature()` over a skeleton with per-family biology (`recipes/wolf`); [animal research](docs/research/animal-anatomy.md) |
 | **Weak** | Realistic people and animals, realistic sculpted organic forms, cloth. Use an image-to-3D tool, or the planned `localGenerator` ([`/neural`](docs/idea/08-neural-adapters.md)) that runs open-weight models on your own GPU and caches the result |
 
 Not a replacement for AI mesh generators: a different approach with different strengths. Neutral comparison: [docs/landscape.md](docs/landscape.md).

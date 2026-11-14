@@ -106,8 +106,8 @@ export function httpFinish(o: HttpFinishOptions): FinishModel {
       if (!res.ok) fail(`HTTP ${res.status}`, o.endpoint);
       const reply = (await Promise.race([res.json(), timedOut]).catch(() =>
         signal.aborted ? late() : fail('reply is not JSON', o.endpoint),
-      )) as { images?: unknown };
-      const images = reply.images;
+      )) as { images?: unknown } | null;
+      const images = reply?.images;
       if (!Array.isArray(images) || !images.every((s) => typeof s === 'string'))
         fail('reply has no "images" array of base64 strings', o.endpoint);
       if (images.length !== req.views.views.length)

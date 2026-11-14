@@ -48,7 +48,7 @@ All notable changes to `@developerz.ai/ts23d`. Format: [Keep a Changelog](https:
 - Research docs for animals: `docs/research/animal-anatomy.md` and `docs/research/animal-species-sheets.md`.
 - Release guards: the release runs the full gate and refuses a tag not on a green `main` commit; `release-tag.yml` is idempotent; CI has an aggregate `verify` check, a `site` job and a `shots` job that fails on any change under `recipes/*/out`.
 - `bun run verify` has a `placeholders` step: elided or stubbed code (a bare `// ...` or `/* … */`, "rest of the code", "same as above", `TODO: implement`, "for brevity") fails the gate; planned work still throws `notImplemented()`.
-- Repo tooling: a `/planx` command writes path-disjoint execution plans under `docs/plans/<YYYY>/<MM>/<DD>/<1NN>-<slug>/` for `/feature` to run; the developerz.ai maintainer bot gets daily `health`, weekly `release-due` and monthly `improve` checkups (`.dz/briefs/`), which only file issues and small upkeep PRs.
+- Repo tooling: a `/planx` command writes path-disjoint execution plans under `docs/plans/<YYYY>/<MM>/<DD>/<1NN>-<slug>/` for `/feature` to run; the developerz.ai maintainer bot gets daily `health`, weekly `release-due` and monthly `improve` checkups (`.dz/briefs/`); with the AI-maintained policy below, `release-due` also cuts and merges releases.
 
 ## [0.4.0] - 2026-11-08
 

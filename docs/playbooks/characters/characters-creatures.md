@@ -105,9 +105,10 @@ checks: [touches('head', 'bust'), symmetric('_l', '_r', 'y'), /* checkHead via k
 ```
 Creatures: declare shoulder height, head length and wing span from the design dossier as `measures`
 so later sculpt edits cannot drift. Shipped for animals: the `creature` kind's allometry and
-wing-loading refusals, QA `balance` and `mass`. Checklist from
+wing-loading refusals, QA `balance`, `fore share` and `mass`, and per-`family` defaults (eye
+orbit, cloven hooves, digit counts with dewclaws, tail length). Checklist from
 [animal-anatomy](../../research/animal-anatomy.md) (judge on `t3d shot` / `blueprint` or write a
-recipe test; the checks are **planned**, §9 there):
+recipe test; the items without a check above are **planned**, §9 there):
 - [ ] stance matches the family; hock and carpus heights inside its band (§2);
 - [ ] elbow at the brisket ± 5 % H; stifle forward, hock back (§1);
 - [ ] cloven hooves (two digits + dewclaws) on cattle, deer and pigs; one hoof on horses (§2);
@@ -122,7 +123,7 @@ recipe test; the checks are **planned**, §9 there):
 - Mirror-perfect faces; single flat skin colour.
 - Fantasy creatures that borrow from a famous IP design.
 - Prey animals with forward-facing eyes; one hoof on a cow or deer; a bear with four toes.
-- The quadruped default tail (0.4 L) left on a bear, deer or boar (real ≈ 0.05–0.1 L).
+- The generic quadruped tail (0.37 L) left on a bear, deer or boar (real ≈ 0.05–0.1 L): set `family`.
 - Realistic people: out of scope for SDF stylised sculpting; route to the planned `/neural`
   adapters ([08](../../idea/08-neural-adapters.md)).
 

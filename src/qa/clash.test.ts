@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test';
 import { compile, defineAsset, merge } from '../core/index.ts';
-import { box, cylinder } from '../primitives/index.ts';
+import { beam, box, cylinder } from '../primitives/index.ts';
 import { clashes } from './clash.ts';
 import { floatingParts } from './floating.ts';
 
@@ -75,6 +75,29 @@ describe('floating gate (surface contact)', () => {
   it('passes a box resting on z = 0 and a post sunk 0.1 m into the ground', () => {
     expect(floatingParts(ground([5, 5, 0]))).toEqual([]);
     expect(floatingParts(ground([5, 5, -0.1], [0.1, 0.1, 1]))).toEqual([]);
+  });
+
+  it('a diagonal strut whose box nearly touches reports its real gap, not the 30 cm search cap', () => {
+    const a = defineAsset({
+      name: 'strut',
+      kind: 'prop',
+      budget: { triangles: [99, 99, 99] },
+      build(ctx) {
+        ctx.part('base', box({ size: [1, 1, 1], color: c }));
+        // Box 5 cm from the cube's side; the strut itself runs ~0.7 m clear of it.
+        const strut = beam({
+          from: [0.6, 0, 2],
+          to: [1.6, 0, 1.1],
+          width: 0.1,
+          height: 0.1,
+          color: c,
+        });
+        ctx.part('strut', strut);
+      },
+    });
+    const [f] = floatingParts(compile(a));
+    expect(f).toMatchObject({ part: 'strut', nearest: 'base' });
+    expect(f?.gap ?? 0).toBeGreaterThan(0.5);
   });
 
   it('reports the ground as the nearest support of a part hanging in the open', () => {

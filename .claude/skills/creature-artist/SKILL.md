@@ -38,8 +38,8 @@ Original designs only; never a named creature from any IP.
 | Plantigrade | heel on the ground (bear, human); short foot, stable | foot sole touches ground: `touches('foot_*', …)` / floating-parts |
 | Digitigrade | walks on toes, heel raised (cat, dog, bird); hock visible above ground | hock ≈ 0.25–0.3 H, carpus ≈ 0.13 H (kind defaults; [animal-anatomy §2](../../../docs/research/animal-anatomy.md#2-stance-and-limb-segments)) |
 | Unguligrade | on hoof tips (horse, deer); long metapodials | hoof is the only contact; artiodactyls stand on **two** hoofed digits + dewclaws |
-| Orbit convergence | angle of the orbit rim plane to the midline: cat 65°, dog 50°, horse 24° (Heesy 2004) | lid aperture faces 90° − convergence off +X; **planned** check |
-| Fore share | fraction of standing weight on the forelimbs: dog 0.60, horse 0.57–0.60 | from CoM and feet x; **planned**, compute in a test |
+| Orbit convergence | angle of the orbit rim plane to the midline: cat 65°, dog 50°, horse 24° (Heesy 2004) | lid aperture faces 90° − convergence off +X; shipped in the `creature` kind (`family` / `face.orbit`); no QA check yet |
+| Fore share | fraction of standing weight on the forelimbs: dog 0.60, horse 0.57–0.60 | from CoM and feet x; shipped: `foreShareCheck` runs on every `defineCreature` quadruped (finding prefix `fore share:`) |
 | Duty factor | fraction of a stride a foot is down; > 0.5 walk, < 0.5 run (Hildebrand) | baked clips **planned**; walk order LH → LF → RH → RF |
 | Support polygon | convex hull of ground contacts; the CoM must project inside it | `assertCentreOfMassInside`, `assertUprightOnGround` |
 | Allometry | limb cross-section grows faster than length as mass grows; a giant needs columnar legs | `T3D_ALLOMETRY` **planned**; size limbs by hand, record in dossier |
@@ -68,8 +68,8 @@ Original designs only; never a named creature from any IP.
 ## Common mistakes
 - Bolting parts of many animals together with no functional reason: reads as a collage.
 - Knees bending the wrong way on a digitigrade hind leg (the hock is the ankle, not a knee).
-- Prey animals with forward-facing eyes; a single hoof on a cow or deer; kind defaults (tail
-  0.4 L) left on a short-tailed species.
+- Prey animals with forward-facing eyes; a single hoof on a cow or deer; the generic default tail
+  (0.37 L) left on a short-tailed species: set `family` or `tail`.
 - Wings too small to lift the body; necks too thin to hold the head.
 - Uniform scale size everywhere; no gradient, no rest area.
 - Floating claws/teeth: they must sink into gum or toe (`touches`).

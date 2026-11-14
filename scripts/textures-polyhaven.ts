@@ -3,7 +3,7 @@
 // each downloaded once to compute its sha256 (and handed back so the caller can cache it).
 
 import type { TextureFile, TextureSource } from '../src/material/index.ts';
-import { withTimeout } from './fetch-timeout.ts';
+import { DOWNLOAD_TIMEOUT_MS, withTimeout } from './fetch-timeout.ts';
 import { type Fetch, getBytes, getJson, type Hit, matches, sha256 } from './textures-snippet.ts';
 
 const API = 'https://api.polyhaven.com';
@@ -57,7 +57,7 @@ export async function polyhavenSource(
       if (required) throw new Error(`textures: polyhaven '${id}' has no ${key} PNG at ${res}`);
       return undefined;
     }
-    const b = await getBytes(withTimeout(fetch), url);
+    const b = await getBytes(withTimeout(fetch, DOWNLOAD_TIMEOUT_MS), url);
     const h = sha256(b);
     bytes.set(h, b);
     return { url, sha256: h };

@@ -4,7 +4,7 @@
 // NormalGL, Roughness and AmbientOcclusion maps.
 
 import type { TextureFile, TextureSource } from '../src/material/index.ts';
-import { withTimeout } from './fetch-timeout.ts';
+import { DOWNLOAD_TIMEOUT_MS, withTimeout } from './fetch-timeout.ts';
 import { type Fetch, getBytes, getJson, type Hit, sha256 } from './textures-snippet.ts';
 import { unzipEntry, zipEntries } from './textures-zip.ts';
 
@@ -67,7 +67,7 @@ export async function ambientcgSource(
     );
   const zipName = `${id}_${res}-PNG.zip`;
   const zipUrl = `https://ambientcg.com/get?file=${zipName}`;
-  const zip = await getBytes(withTimeout(fetch), zipUrl);
+  const zip = await getBytes(withTimeout(fetch, DOWNLOAD_TIMEOUT_MS), zipUrl);
   const names = new Set(zipEntries(zip, zipName).map((e) => e.name));
   const bytes = new Map<string, Uint8Array>();
   const maps: Record<string, TextureFile> = {};

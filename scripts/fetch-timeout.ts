@@ -5,6 +5,8 @@
 // Wikidata keeps the identifying User-Agent its API policy requires.
 
 export const FETCH_TIMEOUT_MS = 60_000;
+/** Whole-file downloads (a 4K texture zip runs to ~200 MB): ten minutes, not one. */
+export const DOWNLOAD_TIMEOUT_MS = 600_000;
 
 export type TimedFetch = (url: string, init?: RequestInit) => Promise<Response>;
 

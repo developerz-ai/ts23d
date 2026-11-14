@@ -5,6 +5,7 @@
 
 import { describe, expect, it } from 'bun:test';
 import { compile, Ts23dError } from '../core/index.ts';
+import { runQa } from '../qa/index.ts';
 import { defineCreature } from './creature.ts';
 import { foreShareCheck } from './creature-biology.ts';
 import type { Limb } from './creature-bones.ts';
@@ -150,8 +151,9 @@ describe('digits per family', () => {
   it('a cloven-hoofed deer compiles closed and standing at every LOD', () => {
     const a = defineCreature({ name: 'test_deer', spec: DEER });
     for (const lod of [0, 1, 2] as const) {
-      const parts = compile(a, { lod }).parts;
-      expect(parts.map((p) => p.name)).toContain('body');
+      const c = compile(a, { lod });
+      expect(c.parts.map((p) => p.name)).toContain('body');
+      expect(runQa(c).map((f) => `${f.gate}: ${f.message}`)).toEqual([]);
     }
   });
 });

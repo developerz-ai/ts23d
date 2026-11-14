@@ -15,7 +15,7 @@ change. Feature work and bugs belong to `improve`; a red `main` belongs to `heal
 | Row | Look | Act |
 |---|---|---|
 | `branches` | `git fetch --prune origin`, then `git branch -r --merged origin/main` and `gh pr list --state open --json headRefName` | delete remote branches merged into `main` with no open PR. An unmerged branch older than 60 days with no open PR: list it in the PR body, never delete it |
-| `plans` | `grep -l 'status: \(not_started\|in_progress\)' docs/plans/**/status.yml` with `last_updated` older than 60 days | resume it as an `improve` item, or mark `superseded` with the reason in `notes`; never leave a plan claiming work nobody does |
+| `plans` | `grep -rl --include=status.yml 'status: \(not_started\|in_progress\)' docs/plans` with `last_updated` older than 60 days | resume it as an `improve` item, or mark `superseded` with the reason in `notes`; never leave a plan claiming work nobody does |
 | `generated` | `git ls-files -ci --exclude-standard`; `ls recipes/*/out` against `ls recipes/*/*.ts`; `bun run shots` on fresh `main` then `git status --porcelain` | untrack ignored files; delete `out/` folders whose recipe is gone; commit refreshed outputs only when the `recipes` gate says they are stale |
 | `ignore` | `git status --porcelain --ignored` after `bun run verify` | every path the gate or the CLI writes (`out/`, `renders/`, `review/`, `critique/`) is in `.gitignore` |
 | `weight` | `bun pm pack --dry-run` (size, file count), `git ls-files -z \| xargs -0 du -b \| sort -n \| tail -20` | a tarball growing past last month's PR body by more than 10 %, or a tracked file over 5 MB, gets the cause fixed (`files` in `package.json`, a smaller PNG) |

@@ -1,6 +1,8 @@
 // argv → Args for `t3d`. No dependency, no magic: flags are few and documented in help.ts.
-// Strict: an unknown command or flag, a value outside its set or a missing value is
-// T3D_CLI_USAGE (exit 2); bad render flags (--size/--az/--el/--fov) throw T3D_RENDER_OPTIONS.
+// Strict: an unknown command or flag, a `--sheet` / `--sheet-size` / `--lods` value outside its
+// set, a missing `--out` value or no files is T3D_CLI_USAGE (exit 2). Flags owned by a module
+// keep that module's code (exit 1): render flags (--size/--az/--el/--fov) T3D_RENDER_OPTIONS,
+// `--variant` / `--profile` T3D_RECIPE_INVALID, tune and finish flags their own codes.
 // `--help` / `-h` / `help [cmd]` → cmd 'help' (topic = the command); `--version` → 'version'.
 
 import { Ts23dError } from '../core/index.ts';

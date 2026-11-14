@@ -41,6 +41,17 @@ function gapBetween(a: Mesh, b: Mesh): number {
   let best = EXACT_GAP;
   const grid = triangleGrid(b);
   for (const p of surfaceSamples(a, 0.1, 4)) best = Math.min(best, grid.nearest(p, best));
+  if (best < EXACT_GAP) return Math.max(box, best);
+  // Every sample is past the search radius: the boxes nearly touch but the surfaces don't (a
+  // diagonal strut's box against a post). Measure again out to the span of both boxes, which
+  // always holds the true nearest surface (the grid walks every cell inside its radius, so it
+  // must be finite), rather than report EXACT_GAP.
+  const ab = meshBounds(a);
+  const bb = meshBounds(b);
+  const span = (k: 0 | 1 | 2): number =>
+    Math.max(ab.max[k], bb.max[k]) - Math.min(ab.min[k], bb.min[k]);
+  best = Math.hypot(span(0), span(1), span(2));
+  for (const p of surfaceSamples(a, 0.1, 4)) best = Math.min(best, grid.nearest(p, best));
   return Math.max(box, best);
 }
 

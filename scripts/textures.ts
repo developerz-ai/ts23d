@@ -16,7 +16,7 @@ import {
   type TextureSource,
   textureSources,
 } from '../src/material/index.ts';
-import { withTimeout } from './fetch-timeout.ts';
+import { DOWNLOAD_TIMEOUT_MS, withTimeout } from './fetch-timeout.ts';
 import { ambientcgSource, searchAmbientcg } from './textures-ambientcg.ts';
 import { polyhavenSource, searchPolyhaven } from './textures-polyhaven.ts';
 import { type Fetch, materialSnippet } from './textures-snippet.ts';
@@ -28,7 +28,7 @@ const sha256 = (b: Uint8Array): string => new Bun.CryptoHasher('sha256').update(
 
 const zips = new Map<string, Uint8Array>();
 async function download(url: string, get: Fetch): Promise<Uint8Array> {
-  const res = await withTimeout(get)(url);
+  const res = await withTimeout(get, DOWNLOAD_TIMEOUT_MS)(url);
   if (!res.ok) throw new Error(`textures: GET ${url} → HTTP ${res.status}`);
   return new Uint8Array(await res.arrayBuffer());
 }

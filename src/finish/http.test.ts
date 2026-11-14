@@ -37,6 +37,16 @@ describe('httpFinish: failures', () => {
     expect(store.size()).toBe(0);
   });
 
+  it('a JSON null reply → T3D_FINISH_MODEL, not a raw TypeError', async () => {
+    const model = httpFinish({
+      endpoint: 'http://127.0.0.1:9/finish',
+      fetch: async () => ({ ok: true, status: 200, json: async () => null }),
+    });
+    await expect(finishAsset(lod0, { ...SMALL, prompt: 'x', model })).rejects.toThrow(
+      'T3D_FINISH_MODEL',
+    );
+  });
+
   it('runCached refuses any model whose image count is wrong, before storing', async () => {
     const model = { id: 'short', licence: 'test', run: async () => [new Uint8Array(4)] };
     const store = memoryStore();
