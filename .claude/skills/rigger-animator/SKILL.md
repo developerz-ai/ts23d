@@ -21,7 +21,7 @@ rotors, propellers, pistons, cranes, jaws, wings, tails, lids, drawers.
 | 1 | Motion list: what moves, about which axis, how far (from the playbook Motion table + real specs) | dossier table: part, motion, axis, limits | every moving part listed |
 | 2 | Pivot placement at the real hinge / axle / bearing, never the mesh centre | `ctx.group('door_l', { at: hingeLine })`, children authored relative to it; `parent` | pivot on the hinge line in `blueprint.png` |
 | 3 | Hierarchy: parent chains match the mechanism (hull → turret → gun mantlet → gun) | `parent` option; one `yaw` or `motion` per node, not both (`T3D_RECIPE_INVALID`) | engine can drive each node alone |
-| 4 | Motion | `motion: { kind: 'spin', axis, rps }` (wheels about local Y), `{ kind: 'slide', offset, hz }` (pistons, drawers), `{ kind: 'sway', axis, degrees, hz }` (doors, turrets, tails), `tread(beltLine, y, pitch)` (track belts: loop in `extras.ts23d.tread`) | baked `run` clip plays |
+| 4 | Motion | `motion: { kind: 'spin', axis, rps }` (wheels about local Y), `{ kind: 'slide', offset, hz }` (drawers, gates), `{ kind: 'orbit', axis, arm, hz }` (coupling rods), `{ kind: 'crank', axis, centre, pin, line, hz }` / `'piston'` (connecting rod / crosshead or piston on the exact slider-crank; check with `assertFollows`), `{ kind: 'sway', axis, degrees, hz }` (doors, turrets, tails), `tread(beltLine, y, pitch)` (track belts: loop in `extras.ts23d.tread`) | baked `run` clip plays |
 | 5 | Clearance through the full range | `clashes` gate (swept volume), `clearOf: ['bearing']` only for real interlocks, `checks: [clear(a, b, gap)]` | QA PASS at every LOD |
 | 6 | Joints between separately built parts | `ctx.joint(name, { from, to, at, axis, kind: 'flush' \| 'socket' \| 'grip' })` | `joints` gate PASS |
 | 7 | Deformation zones (characters/creatures, for later skinning) | keep extra sculpt resolution and clean volume at shoulders, elbows, hips, knees, neck, jaw; separate rigid gear from flesh | listed in dossier |
@@ -82,8 +82,8 @@ bun run shots <name>                      # refresh committed out/
 - [product-designer](../product-designer/SKILL.md): lids, triggers, buttons.
 
 ## Tool status
-Shipped: `ctx.group`, `parent`, `motion` (spin/slide/sway/tread), `clearOf`, `clashes`, `ctx.joint`,
+Shipped: `ctx.group`, `parent`, `motion` (spin/slide/sway/orbit/crank/piston/tread), `clearOf`, `clashes`, `ctx.joint`,
 `ctx.socket`, `ctx.emitter`, baked `run` clip (`--no-animations` to skip).
-Planned: `motion: 'orbit'` (side rods, pedals), skins with ≤ 4 influences, morph targets (faces,
+Planned: skins with ≤ 4 influences, morph targets (faces,
 melting), `pose`/`warp` for sculpts, steering + suspension travel clips.
 Neutral positioning: the free code-based option, no claims against other tools.

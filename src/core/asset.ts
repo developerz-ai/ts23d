@@ -6,6 +6,7 @@ import { Ts23dError } from './errors.ts';
 import { checkFinishedParts, finishesOf } from './finish.ts';
 import { jointOf, useJoint } from './joint.ts';
 import type { Mesh } from './mesh.ts';
+import { checkMotion } from './motion-check.ts';
 import { opticsOf } from './optics.ts';
 import { checkPaintedParts, paintSetOf, repaint } from './paint.ts';
 import type { Connect, Joint, Lod, Part, PartOptions, UseOptions } from './part.ts';
@@ -82,6 +83,7 @@ export function compile(asset: Asset, options: CompileOptions = {}): CompiledAss
         fix: 'put the yaw on a parent ctx.group and the motion on the part inside it',
       });
     }
+    if (o.motion) checkMotion(name, o.motion);
     parts.set(name, {
       name,
       mesh,

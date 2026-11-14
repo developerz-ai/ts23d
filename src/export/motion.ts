@@ -1,21 +1,18 @@
-// Bakes a part's Motion into one glTF sampler + channel of the looping `run` clip.
+// Bakes a part's Motion into glTF samplers + channels of the looping `run` clip, sampling
+// core's motionPose (the same poses QA sweeps and assertFollows checks).
 // Seamless by construction: every motion is rounded to a WHOLE number of cycles over the clip,
 // so the last key equals the first (a 0.8 rps wheel over 4 s = 3 turns, not 3.2 — no jump at
 // the loop point). Spins get ≥ 12 keys per turn so LINEAR quaternion interpolation never takes
 // the short way round. Time arrays are shared between channels of equal key count. A tread has
 // no channel (glTF cannot slide vertices round a loop): `treadExtras` hands its belt to engines.
 // A rest yaw (a moving pivot re-parented past a merged, yawed parent) is kept: rotation keys are
-// yaw ∘ motion, slide offsets turn by yaw, because axis and offset are in the part's own frame.
+// yaw ∘ motion, translation offsets turn by yaw, because axes and vectors are in the part's own frame.
 
-import type { Motion, Quat, Tread } from '../core/index.ts';
-import { quatFromAxisAngle, rotateZ } from '../core/index.ts';
+import type { BakedMotion, Quat, Tread } from '../core/index.ts';
+import { cyclesOf, LOOP_SECONDS, motionPaths, motionPose, rateOf, rotateZ } from '../core/index.ts';
 import type { BinWriter, Json } from './bin-writer.ts';
 
-export const LOOP_SECONDS = 4;
-
-/** Whole cycles of `rate` (Hz or rev/s) over the clip, at least one. */
-export const cyclesOf = (rate: number): number =>
-  Math.max(1, Math.round(Math.abs(rate) * LOOP_SECONDS)) * Math.sign(rate || 1);
+export { cyclesOf, LOOP_SECONDS };
 
 const timeAccessors = new WeakMap<BinWriter, Map<number, number>>();
 function times(bin: BinWriter, keys: number): { input: number; t: Float32Array } {
@@ -45,46 +42,45 @@ function withYaw(q: Quat, yaw: number): Quat {
   return [c * x - s * y, c * y + s * x, c * z + s * w, c * w - s * z];
 }
 
-export function motionChannel(
+/** Keys per cycle: slerped spins need 12; circles and linkages 48 (≤ 0.7 mm chord on a 0.3 m
+ *  crank between LINEAR keys); slides and sways 16. */
+/** Keys per motion cycle: a linkage needs 48 so LINEAR keys stay within ~1 mm of a 0.3 m crank. */
+export const keysPerCycle = (m: BakedMotion): number =>
+  m.kind === 'spin' ? 12 : m.kind === 'slide' || m.kind === 'sway' ? 16 : 48;
+
+/** One sampler + channel per animated path: rotation for spin / sway, translation for slide /
+ *  orbit / piston, both for a crank (the rod turns about its small end while that slides). */
+export function motionChannels(
   bin: BinWriter,
-  motion: Exclude<Motion, Tread>,
+  motion: BakedMotion,
   node: number,
   rest: readonly number[],
   yaw = 0,
-): { sampler: Json; channel: Json } {
-  const rate = motion.kind === 'spin' ? motion.rps : motion.hz;
-  const cycles = cyclesOf(rate);
-  const keys = Math.max(24, Math.abs(cycles) * (motion.kind === 'spin' ? 12 : 16));
+): { sampler: Json; channel: Json }[] {
+  const cycles = cyclesOf(rateOf(motion));
+  const keys = Math.max(24, Math.abs(cycles) * keysPerCycle(motion));
   const { input, t } = times(bin, keys);
-  const phase = (time: number): number => (time / LOOP_SECONDS) * cycles * Math.PI * 2;
-  // Two-sided: −1..1 around rest. One-way: 0..1, starting and ending at rest (seamless loop).
-  const wave = (time: number): number =>
-    motion.kind !== 'spin' && motion.oneWay
-      ? (1 - Math.cos(phase(time))) / 2
-      : Math.sin(phase(time));
-  if (motion.kind === 'slide') {
-    const offset = yaw === 0 ? motion.offset : rotateZ(motion.offset, yaw);
-    const values = new Float32Array((keys + 1) * 3);
-    t.forEach((time, i) => {
-      const s = wave(time);
-      values.set(
-        [0, 1, 2].map((k) => (rest[k] ?? 0) + (offset[k] ?? 0) * s),
-        i * 3,
-      );
+  const poses = [...t].map((time) => motionPose(motion, time));
+  return motionPaths(motion).map((path) => {
+    const width = path === 'translation' ? 3 : 4;
+    const values = new Float32Array((keys + 1) * width);
+    poses.forEach((pose, i) => {
+      if (path === 'rotation') values.set(withYaw(pose.rotation, yaw), i * 4);
+      else {
+        const offset = yaw === 0 ? pose.offset : rotateZ(pose.offset, yaw);
+        values.set(
+          [0, 1, 2].map((k) => (rest[k] ?? 0) + (offset[k] ?? 0)),
+          i * 3,
+        );
+      }
     });
     return {
-      sampler: { input, output: bin.accessor(values, 'VEC3'), interpolation: 'LINEAR' },
-      channel: { target: { node, path: 'translation' } },
+      sampler: {
+        input,
+        output: bin.accessor(values, width === 3 ? 'VEC3' : 'VEC4'),
+        interpolation: 'LINEAR',
+      },
+      channel: { target: { node, path } },
     };
-  }
-  const values = new Float32Array((keys + 1) * 4);
-  const peak = motion.kind === 'sway' ? (motion.degrees * Math.PI) / 180 : 0;
-  t.forEach((time, i) => {
-    const angle = motion.kind === 'spin' ? phase(time) : peak * wave(time);
-    values.set(withYaw(quatFromAxisAngle(motion.axis, angle), yaw), i * 4);
   });
-  return {
-    sampler: { input, output: bin.accessor(values, 'VEC4'), interpolation: 'LINEAR' },
-    channel: { target: { node, path: 'rotation' } },
-  };
 }

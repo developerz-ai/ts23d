@@ -34,17 +34,38 @@ const det = (a: Affine): number =>
   a.m[2] * (a.m[3] * a.m[7] - a.m[4] * a.m[6]);
 
 /**
- * Offsets and paths are vectors: they map through the linear part. A rotation axis is a pseudo-
- * vector: a mirror (det < 0) flips the turning sense, so the axis is negated to keep the swing the
- * mirror image of the original. Normalised, so a scaled placement keeps `degrees` meaningful.
+ * Offsets, paths, arms, crank points and slide lines are vectors: they map through the linear
+ * part. A rotation axis is a pseudo-vector: a mirror (det < 0) flips the turning sense, so the axis
+ * is negated to keep the motion the mirror image of the original (a mirrored orbit still rides its
+ * mirrored pins). Normalised, so a scaled placement keeps `degrees` meaningful.
  */
 function rotateMotion(m: Motion, a: Affine): Motion {
-  if (m.kind === 'slide') return { ...m, offset: linear(a, m.offset) };
-  if (m.kind === 'tread') return { ...m, path: m.path.map((p) => linear(a, p)) };
-  const v = linear(a, m.axis);
-  const k = Math.sign(det(a)) / (Math.hypot(...v) || 1);
-  // + 0 turns -0 into 0, so a mirrored [0, 0, 1] reads [0, 0, -1] in manifests.
-  return { ...m, axis: [v[0] * k + 0, v[1] * k + 0, v[2] * k + 0] };
+  const v = (p: Vec3): Vec3 => linear(a, p);
+  const axis = (p: Vec3): Vec3 => {
+    const w = v(p);
+    const k = Math.sign(det(a)) / (Math.hypot(...w) || 1);
+    // + 0 turns -0 into 0, so a mirrored [0, 0, 1] reads [0, 0, -1] in manifests.
+    return [w[0] * k + 0, w[1] * k + 0, w[2] * k + 0];
+  };
+  switch (m.kind) {
+    case 'slide':
+      return { ...m, offset: v(m.offset) };
+    case 'tread':
+      return { ...m, path: m.path.map(v) };
+    case 'orbit':
+      return { ...m, axis: axis(m.axis), arm: v(m.arm) };
+    case 'crank':
+    case 'piston':
+      return {
+        ...m,
+        axis: axis(m.axis),
+        centre: v(m.centre),
+        pin: v(m.pin),
+        line: v(m.line),
+      };
+    default:
+      return { ...m, axis: axis(m.axis) };
+  }
 }
 
 /**

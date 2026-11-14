@@ -63,32 +63,32 @@
     {
       "name": "rod_side_l",
       "parent": "locomotive",
-      "motion": "slide"
+      "motion": "orbit"
     },
     {
       "name": "crosshead_l",
       "parent": "locomotive",
-      "motion": "slide"
+      "motion": "piston"
     },
     {
       "name": "rod_main_l",
       "parent": "locomotive",
-      "motion": "slide"
+      "motion": "crank"
     },
     {
       "name": "rod_side_r",
       "parent": "locomotive",
-      "motion": "slide"
+      "motion": "orbit"
     },
     {
       "name": "crosshead_r",
       "parent": "locomotive",
-      "motion": "slide"
+      "motion": "piston"
     },
     {
       "name": "rod_main_r",
       "parent": "locomotive",
-      "motion": "slide"
+      "motion": "crank"
     },
     {
       "name": "tender",

@@ -1,6 +1,7 @@
 // Jupiter running gear: bar frames, brass-lagged cylinders with steam chests and cocks, guides,
-// the four-wheel lead truck, every wheelset (spin), polished side and main rods and crossheads
-// (slide), driver splashers. Rods are bright steel; frames and truck black enamel.
+// the four-wheel lead truck, every wheelset (spin), polished side rods (orbit), main rods (crank)
+// and crossheads (piston) driven by the wheelsets' own crank pins, driver splashers. Rods are
+// bright steel; frames and truck black enamel.
 
 import {
   type BuildContext,
@@ -14,6 +15,7 @@ import {
   prism,
   translate,
   type Vec2,
+  type Vec3,
 } from '@developerz.ai/ts23d';
 import {
   bx,
@@ -21,7 +23,6 @@ import {
   CYL_Z,
   DECK_Z,
   DRIVER_R,
-  DRIVER_RPS,
   F,
   FRAME_Y,
   GAUGE,
@@ -40,10 +41,22 @@ import { flangeMesh, wheelMesh } from './wheels.ts';
 
 const RAILS = ['track_rail_l', 'track_rail_r'];
 
+/** A wheelset's crank on one side, in the locomotive frame at rest: what a rod is pinned to. */
+export interface CrankPin {
+  readonly wheelset: string;
+  /** Axle centre and crank-pin centre (x, z matter; y is the wheelset's centre line). */
+  readonly centre: Vec3;
+  readonly pin: Vec3;
+  /** The wheelset's spin rate, so every rod on it turns with it. */
+  readonly rps: number;
+}
+
 /** Registers wheelsets; returns the names it made so rods can clear them. */
 export interface Gear {
   readonly wheelsets: string[];
   readonly cranks: string[];
+  /** Crank pins per side ('l' / 'r'), front wheelset first, in registration order. */
+  readonly pins: ReadonlyMap<string, CrankPin[]>;
   wheelset(
     name: string,
     x: number,
@@ -59,14 +72,18 @@ export function gearOf(ctx: BuildContext): Gear {
   const lod = ctx.lod;
   const wheelsets: string[] = [];
   const cranks: string[] = [];
+  const pins = new Map<string, CrankPin[]>(SIDES.map(([side]) => [side, []]));
   return {
     wheelsets,
     cranks,
+    pins,
     wheelset(name, x, r, parent, crankAngle, spokes, clearOf) {
+      const rps = SPEED / (2 * Math.PI * r);
+      const z = RAIL_TOP + r;
       ctx.group(name, {
-        at: [x, 0, RAIL_TOP + r],
+        at: [x, 0, z],
         parent,
-        motion: { kind: 'spin', axis: [0, 1, 0], rps: SPEED / (2 * Math.PI * r) },
+        motion: { kind: 'spin', axis: [0, 1, 0], rps },
         clearOf: [...RAILS, ...clearOf],
       });
       wheelsets.push(name);
@@ -74,6 +91,13 @@ export function gearOf(ctx: BuildContext): Gear {
       for (const [side, s] of SIDES) {
         // Right-hand cranks lead the left by 90° (quartering).
         const ca = crankAngle === null ? null : crankAngle + (s > 0 ? 0 : Math.PI / 2);
+        if (ca !== null)
+          pins.get(side)?.push({
+            wheelset: name,
+            centre: [x, 0, z],
+            pin: [x + Math.cos(ca) * CRANK, 0, z + Math.sin(ca) * CRANK],
+            rps,
+          });
         const w = wheelMesh(lod, r, 0, spokes, lod < 2 ? ca : null);
         ctx.part(
           `${name}_wheel_${side}`,
@@ -358,16 +382,19 @@ export function buildSplashers(ctx: BuildContext, L: Layout): void {
   ctx.part('splashers', merge(m), { parent: 'locomotive' });
 }
 
-/** Side rods, main rods, crossheads (slide approximations of the crank orbit) and cylinder steam. */
+/**
+ * Side rods (orbit: every point follows the crank pins), main rods (crank: big end on the front
+ * pin, small end on the crosshead) and crossheads (piston, the exact slider-crank law), all read
+ * from the wheelsets' own crank pins and rate so they cannot fall out of phase; cylinder steam.
+ */
 export function buildRods(ctx: BuildContext, L: Layout, gear: Gear): void {
   if (L.lod === 2) return;
-  const zA = RAIL_TOP + DRIVER_R;
   for (const [side, s] of SIDES) {
-    const ca = s > 0 ? 0 : Math.PI / 2;
-    const cx = Math.cos(ca) * CRANK;
-    const cz = Math.sin(ca) * CRANK;
+    const pins = gear.pins.get(side) ?? [];
+    const front = pins[0];
+    if (!front) continue;
     const yS = s * (GAUGE / 2 + TREAD_W + 0.1);
-    const xs = L.drivers.map((d) => d.x + cx);
+    const xs = pins.map((p) => p.pin[0]);
     const boss = (x: number, r: number, z = 0): Mesh =>
       cylinder({
         radius: r,
@@ -393,10 +420,11 @@ export function buildRods(ctx: BuildContext, L: Layout, gear: Gear): void {
           )
         : []),
     ]);
+    const arm: Vec3 = [front.pin[0] - front.centre[0], 0, front.pin[2] - front.centre[2]];
     ctx.part(`rod_side_${side}`, sideRod, {
       parent: 'locomotive',
-      at: [0, yS, zA + cz],
-      motion: { kind: 'slide', offset: [0, 0, CRANK], hz: DRIVER_RPS },
+      at: [0, yS, front.pin[2]],
+      motion: { kind: 'orbit', axis: [0, 1, 0], arm, hz: front.rps },
       clearOf: [
         ...gear.cranks,
         `rod_main_${side}`,
@@ -404,6 +432,16 @@ export function buildRods(ctx: BuildContext, L: Layout, gear: Gear): void {
       ],
     });
     const crossX = (L.guideFront + L.guideRear) / 2;
+    const small: Vec3 = [crossX, s * ROD_Y, CYL_Z];
+    // The linkage seen from the small end (crosshead pin): big end on the front crank pin.
+    const rel = (p: Vec3): Vec3 => [p[0] - small[0], 0, p[2] - small[2]];
+    const linkage = {
+      axis: [0, 1, 0] as Vec3,
+      centre: rel(front.centre),
+      pin: rel(front.pin),
+      line: [1, 0, 0] as Vec3,
+      hz: front.rps,
+    };
     ctx.part(
       `crosshead_${side}`,
       merge([
@@ -419,29 +457,23 @@ export function buildRods(ctx: BuildContext, L: Layout, gear: Gear): void {
       ]),
       {
         parent: 'locomotive',
-        at: [crossX, s * ROD_Y, CYL_Z],
-        motion: { kind: 'slide', offset: [CRANK, 0, 0], hz: DRIVER_RPS },
+        at: small,
+        motion: { kind: 'piston', ...linkage },
         clearOf: ['guides', 'frame', `rod_main_${side}`],
       },
     );
-    const fx = (L.drivers[0]?.x ?? L.frontDriver) + cx;
+    const big = linkage.pin;
     ctx.part(
       `rod_main_${side}`,
       merge([
-        beam({
-          from: [0, 0, 0],
-          to: [fx - crossX, 0, zA + cz - CYL_Z],
-          width: 0.05,
-          height: 0.13,
-          ...F.steel,
-        }),
-        boss(fx - crossX, 0.1, zA + cz - CYL_Z),
+        beam({ from: [0, 0, 0], to: big, width: 0.05, height: 0.13, ...F.steel }),
+        boss(big[0], 0.1, big[2]),
         boss(0, 0.075),
       ]),
       {
         parent: 'locomotive',
-        at: [crossX, s * ROD_Y, CYL_Z],
-        motion: { kind: 'slide', offset: [CRANK, 0, 0], hz: DRIVER_RPS },
+        at: small,
+        motion: { kind: 'crank', ...linkage },
         clearOf: [
           ...gear.cranks,
           `crosshead_${side}`,

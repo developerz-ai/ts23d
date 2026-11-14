@@ -2,54 +2,23 @@
 // what a recipe can say about one named node.
 
 import type { Mesh } from './mesh.ts';
+import type { Motion } from './motion.ts';
 import type { PartPhysics } from './physics.ts';
 import type { Vec3 } from './vec.ts';
 
 /** 0 = hero detail, 1 = mid, 2 = far. A recipe reads it and drops detail; it never decimates. */
 export type Lod = 0 | 1 | 2;
 
-export interface Spin {
-  readonly kind: 'spin';
-  /** Rotation axis in the part's local space. */
-  readonly axis: Vec3;
-  /** Revolutions per second of the baked loop. */
-  readonly rps: number;
-}
-
-export interface Slide {
-  readonly kind: 'slide';
-  /** Peak offset of a sinusoidal back-and-forth (piston rods, sliders). */
-  readonly offset: Vec3;
-  readonly hz: number;
-  /** Move only from rest to rest + offset and back (a sliding door), not to both sides. */
-  readonly oneWay?: boolean;
-}
-
-export interface Sway {
-  readonly kind: 'sway';
-  /** Rotation axis in the part's local space. */
-  readonly axis: Vec3;
-  /** Peak angle either side of rest: turret scan, gun elevation, wind in a crown, a door ajar. */
-  readonly degrees: number;
-  readonly hz: number;
-  /** Swing only from rest to +degrees and back (a signal arm dropping, a hatch opening). */
-  readonly oneWay?: boolean;
-}
-
-/**
- * A track belt that runs round its wheels: the mesh stays where it is in the baked clip (glTF
- * cannot move vertices along a curve), and `path` + `pitch` ride the node's `extras.ts23d.tread`
- * so an engine (or the gallery) slides the links along the loop at the vehicle's speed.
- */
-export interface Tread {
-  readonly kind: 'tread';
-  /** Closed centre line of the belt in the part's local space (metres), either winding. */
-  readonly path: readonly Vec3[];
-  /** Metres of belt after which it looks the same again: the link pitch (× 2 for alternating links). */
-  readonly pitch: number;
-}
-
-export type Motion = Spin | Slide | Sway | Tread;
+export type {
+  Crank,
+  Motion,
+  Orbit,
+  Piston,
+  Slide,
+  Spin,
+  Sway,
+  Tread,
+} from './motion.ts';
 
 /**
  * A particle source the engine spawns at runtime: exhaust smoke, loco steam, track dust, muzzle

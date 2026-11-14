@@ -12,6 +12,7 @@ export {
   type CompileOptions,
   type Connect,
   type ConnectAs,
+  type Crank,
   checkFinishedParts,
   checkTolerance,
   compile,
@@ -33,6 +34,7 @@ export {
   type Motion,
   OPTICS,
   type Optics,
+  type Orbit,
   opticsOf,
   type PaintColor,
   type PaintFinish,
@@ -43,6 +45,7 @@ export {
   type ParticleEmitterOptions,
   type PartOptions,
   type PartSound,
+  type Piston,
   type RealDimensions,
   type ResolvedFinish,
   type ResolvedOptics,
@@ -82,6 +85,15 @@ export {
   triangleCount,
   type Vertex,
 } from './mesh.ts';
+export {
+  type BakedMotion,
+  cyclesOf,
+  LOOP_SECONDS,
+  motionPaths,
+  motionPose,
+  type Pose,
+  rateOf,
+} from './motion-pose.ts';
 export type { AssetPhysics, BodyKind, ColliderKind, PartPhysics, RealMass } from './physics.ts';
 export { encodePng } from './png.ts';
 export { orient2d, orient3d } from './predicates.ts';
@@ -114,6 +126,7 @@ export {
   normalize,
   type Quat,
   quatFromAxisAngle,
+  quatRotate,
   scale,
   sub,
   type Vec2,
