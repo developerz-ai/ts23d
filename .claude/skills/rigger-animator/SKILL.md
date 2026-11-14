@@ -84,6 +84,6 @@ bun run shots <name>                      # refresh committed out/
 ## Tool status
 Shipped: `ctx.group`, `parent`, `motion` (spin/slide/sway/orbit/crank/piston/tread), `clearOf`, `clashes`, `ctx.joint`,
 `ctx.socket`, `ctx.emitter`, baked `run` clip (`--no-animations` to skip).
-Planned: `motion: 'orbit'` (side rods, pedals), skins with ≤ 4 influences, morph targets (faces,
+Planned: skins with ≤ 4 influences, morph targets (faces,
 melting), `pose`/`warp` for sculpts, steering + suspension travel clips.
 Neutral positioning: the free code-based option, no claims against other tools.

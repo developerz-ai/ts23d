@@ -74,7 +74,7 @@ describe('motion validation', () => {
 
   it('rejects a rod too short to reach round its crank', () => {
     expect(() => compile(build({ ...rod, pin: [-0.2, 0, -0.3], centre: [-0.5, 0, -0.3] }))).toThrow(
-      /T3D_RECIPE_INVALID|cannot reach/,
+      /cannot reach/,
     );
   });
 
@@ -93,6 +93,17 @@ describe('motion validation', () => {
 });
 
 describe('mirrored linkages', () => {
+  it('a mirrored orbit still rides its mirrored pins', () => {
+    const orbit = { kind: 'orbit', axis: [0, 1, 0], arm: [0.12, 0, 0.3], hz: 1 } as const;
+    const m = placePiece({ name: 'rod', mesh: null, motion: orbit }, { scale: [-1, 1, 1] }).motion;
+    expect(m?.kind).toBe('orbit');
+    if (m?.kind !== 'orbit') return;
+    for (const t of [0.1, 0.37, 0.8]) {
+      const o = motionPose(orbit, t).offset;
+      near(motionPose(m, t).offset, [-o[0], o[1], o[2]], 1e-9);
+    }
+  });
+
   it('a mirrored crank still rides its mirrored pin', () => {
     const m = placePiece({ name: 'rod', mesh: null, motion: rod }, { scale: [-1, 1, 1] }).motion;
     expect(m?.kind).toBe('crank');

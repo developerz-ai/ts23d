@@ -64,7 +64,7 @@ part at a time; narrow the check with `parts: 'hull' | ['wheel_*']`.
 |---|---|
 | `assertUprightOnGround(asset)` | The lowest point floats more than 5 mm above z = 0, or any part reaches below it |
 | `assertCentreOfMassInside(asset)` | The centre of mass (volume × strip density, `/physics` `massProperties`) is outside the convex hull of ground contacts, or closer to its edge than `margin` |
-| `assertFollows(asset, { part, follows, point })` | A world point on two parts at rest (a rod eye on its crank pin, a small end on its crosshead) drifts more than 2 mm between them anywhere in the baked clip; returns the worst drift |
+| `assertFollows(asset, { part, follows, point })` | A world point on two parts at rest (a rod eye on its crank pin, a small end on its crosshead) drifts more than 2 mm between them anywhere in the clip (exact poses; the export test holds the baked keys to them); returns the worst drift |
 | `assertPartMotionClear(asset, part)` | That moving part's baked spin, sway or slide sweeps into another part. This is the QA `clashes` sweep with only that part moving. `assertMotionClear` checks every moving part |
 | `assertLodSilhouette(asset, minIoU)` | From any of the six axis views, the LOD2 silhouette (in LOD0's frame, 2× max-pooled) overlaps LOD0's below `minIoU`, i.e. the LOD pops |
 | `assertTexelDensity(asset, [lo, hi])` | A part's area-weighted texels per metre on the 4096² sheet falls outside the range. Parts with only vertex colour are skipped |

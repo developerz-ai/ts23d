@@ -1,7 +1,7 @@
 import { expect, it } from 'bun:test';
 import { quatFromAxisAngle } from '../core/index.ts';
 import { BinWriter, type Json } from './bin-writer.ts';
-import { cyclesOf, LOOP_SECONDS, motionChannels } from './motion.ts';
+import { cyclesOf, keysPerCycle, LOOP_SECONDS, motionChannels } from './motion.ts';
 
 it('rounds every motion to whole cycles so the loop has no seam', () => {
   expect(cyclesOf(0.8)).toBe(3); // 0.8 rps × 4 s = 3.2 → 3 whole turns
@@ -71,6 +71,20 @@ it('bakes an orbit densely enough that LINEAR keys stay within 1 mm of the circl
   const off = Math.hypot(mid[0] ?? 0, (mid[2] ?? 0) + r);
   expect(r - off).toBeLessThan(0.001);
   expect(r - off).toBeGreaterThan(0);
+});
+
+it('bakes every linkage (orbit, crank, piston) at 48 keys per cycle or more', () => {
+  const at = {
+    axis: [0, 1, 0],
+    centre: [-2, 0, -0.3],
+    pin: [-1.7, 0, -0.3],
+    line: [1, 0, 0],
+  } as const;
+  expect(
+    keysPerCycle({ kind: 'orbit', axis: [0, 1, 0], arm: [0, 0, 0.3], hz: 1 }),
+  ).toBeGreaterThanOrEqual(48);
+  expect(keysPerCycle({ kind: 'crank', ...at, hz: 1 })).toBeGreaterThanOrEqual(48);
+  expect(keysPerCycle({ kind: 'piston', ...at, hz: 1 })).toBeGreaterThanOrEqual(48);
 });
 
 it('bakes a crank as translation + rotation, a piston as translation only', () => {

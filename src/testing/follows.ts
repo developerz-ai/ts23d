@@ -1,7 +1,8 @@
-// assertFollows: a linkage holds through the whole baked clip. A world point that lies on two
+// assertFollows: a linkage holds through the whole clip, sampled from the exact poses. A world point that lies on two
 // parts at rest (a side-rod eye on its crank pin, a main rod's small end on the crosshead pin)
 // must stay on both at every sampled time; each part's pose is its parents' poses composed with
-// its own motion (motionPose, the same function the GLB baker samples).
+// its own motion (motionPose, the exact pose the GLB baker samples; the baked LINEAR keys between
+// samples are held to the circle by the export's own key-density test, src/export/motion.test.ts).
 //   it('side rod rides its pin', () => assertFollows(loco, { part: 'rod_side_l',
 //     follows: 'axle_driver_0', point: [2.74, 0.9475, 1.103] }));
 
@@ -26,7 +27,7 @@ export interface FollowOptions extends LodOptions {
   readonly point: Vec3;
   /** Largest allowed separation (m). Default 2 mm. */
   readonly tolerance?: number;
-  /** Times sampled over the clip. Default 160 (an odd step, so it lands between baked keys). */
+  /** Times sampled over the clip (exact motionPose, not the baked keys). Default 160. */
   readonly samples?: number;
 }
 

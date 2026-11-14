@@ -44,7 +44,8 @@ function withYaw(q: Quat, yaw: number): Quat {
 
 /** Keys per cycle: slerped spins need 12; circles and linkages 48 (≤ 0.7 mm chord on a 0.3 m
  *  crank between LINEAR keys); slides and sways 16. */
-const keysPerCycle = (m: BakedMotion): number =>
+/** Keys per motion cycle: a linkage needs 48 so LINEAR keys stay within ~1 mm of a 0.3 m crank. */
+export const keysPerCycle = (m: BakedMotion): number =>
   m.kind === 'spin' ? 12 : m.kind === 'slide' || m.kind === 'sway' ? 16 : 48;
 
 /** One sampler + channel per animated path: rotation for spin / sway, translation for slide /
