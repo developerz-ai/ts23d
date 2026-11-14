@@ -120,10 +120,24 @@ const kneesLand =
     };
     /** The post lattice's own section, not the part's box: the base plate is wider than the
      *  lattice, and a foot over the plate's overhang would still be standing in the air. */
-    const postSection = (y: number): Bounds => ({
-      min: [-POST_D / 2, y - POST_W / 2, FOOT_H],
-      max: [POST_D / 2, y + POST_W / 2, ZB + GIRDER_D],
-    });
+    /** The lattice section intersected with the built post, so a post that moves away from
+     *  where its knees are drawn fails too (no overlap → no support). */
+    const postSection = (y: number, side: string): Bounds | undefined => {
+      const m = world.get(`post_${side}`);
+      if (!m) return undefined;
+      const built = boundsOf(m);
+      const min: Vec3 = [
+        Math.max(-POST_D / 2, built.min[0]),
+        Math.max(y - POST_W / 2, built.min[1]),
+        Math.max(FOOT_H, built.min[2]),
+      ];
+      const max: Vec3 = [
+        Math.min(POST_D / 2, built.max[0]),
+        Math.min(y + POST_W / 2, built.max[1]),
+        Math.min(ZB + GIRDER_D, built.max[2]),
+      ];
+      return min.every((v, k) => v <= (max[k] ?? -Infinity)) ? { min, max } : undefined;
+    };
     for (const [side, s] of [
       ['l', 1],
       ['r', -1],
@@ -131,7 +145,7 @@ const kneesLand =
       const y = s * halfSpan(tracks);
       for (const [foot, head] of kneeEnds(y, s, asset.lod)) {
         for (const [end, support, b] of [
-          [foot, `post_${side}`, postSection(y)],
+          [foot, `post_${side}`, postSection(y, side)],
           [head, 'girder', girder && boundsOf(girder)],
         ] as const) {
           const d = gap(end, b);
