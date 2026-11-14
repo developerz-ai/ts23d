@@ -1,7 +1,7 @@
 # developerz-ai/ts23d — apps/site
 
-> Workspace brain — established by dz-runner setup mode from this workspace, then owned by
-> its maintainers. Correct it in place; setup never overwrites a brain that exists.
+> Workspace brain, owned by this repository's maintainers. Correct it in place; setup never
+> overwrites a brain that exists.
 
 @ts23d/site — the Vite + three.js asset gallery (GitHub Pages, `/ts23d/`) that presents every asset like a product page (committed beauty renders in the grid, a live orbiting showcase above the fold, an orbitable studio viewer or a scripted non-interactive scene per asset); depends on the library via the `@developerz.ai/ts23d` specifier (aliased to ../../src).
 
