@@ -1,7 +1,7 @@
 // CHANGELOG bookkeeping: summaries, the link index, stamping links and docs/changelog/ drift.
 
 import { expect, it } from 'bun:test';
-import { mkdtemp, writeFile } from 'node:fs/promises';
+import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { Ts23dError } from '../src/core/index.ts';
@@ -148,9 +148,13 @@ it('stampLinks advances [Unreleased] and adds the version link; the result has n
 
 it('writePages writes every page and removes stray ones', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'ts23d-changelog-'));
-  expect((await readPages(dir)).size).toBe(0);
-  await writePages(LOG, dir);
-  await writeFile(join(dir, 'docs/changelog/0.0.1.md'), 'stray');
-  await writePages(LOG, dir);
-  expect(await readPages(dir)).toEqual(pages(LOG));
+  try {
+    expect((await readPages(dir)).size).toBe(0);
+    await writePages(LOG, dir);
+    await writeFile(join(dir, 'docs/changelog/0.0.1.md'), 'stray');
+    await writePages(LOG, dir);
+    expect(await readPages(dir)).toEqual(pages(LOG));
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
 });

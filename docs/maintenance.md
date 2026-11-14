@@ -30,7 +30,7 @@ gate; a red gate is fixed at the root cause.
 |---|---|---|---|
 | npm and devDependencies | security advisories, majors with breaking APIs | Dependabot weekly; `cleanup` row `dependencies` lands the majors Dependabot can't | bump, full gate, merge |
 | GitHub Actions pins | deprecated runtimes (an action's `node20` → `node24`), warnings turning into failures | Dependabot monthly (SHA pins); `health` on a red `main` | bump the pin; never unpin |
-| Bun (`.bun-version`) | new releases Dependabot does not track; old versions drop from setup-bun | `cleanup` row `toolchain` monthly | move to the latest stable older than 14 days; `bun run verify` + `bun run shots`; a byte change in renders is reviewed, not hidden |
+| Bun (`.bun-version`) | new releases Dependabot does not track; old versions drop from setup-bun | `cleanup` row `toolchain` monthly | move `.bun-version`, `engines.bun` and the README badge to the latest stable older than 14 days; `bun run verify` + `bun run shots`; a byte change in renders is reviewed, not hidden |
 | Node (library consumers) | an LTS line reaches end of life | `cleanup` yearly row `runtimes` | raise `engines.node` to the oldest maintained LTS; the `pack` step proves imports |
 | Runner images | `ubuntu-latest` moves; packages (`webp`) change names | `health` (red `ci` / `pages`) | adapt the workflow step; keep the job's check name |
 | Determinism across toolchains | same source, different bytes after a Bun or OS change | `recipes` gate (stale outputs) and the `shots` job's byte diff | refresh with `bun run shots`, explain the cause in the PR; roadmap line on cross-machine determinism |

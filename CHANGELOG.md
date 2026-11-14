@@ -4,6 +4,12 @@ All notable changes to `@developerz.ai/ts23d`. Format: [Keep a Changelog](https:
 
 ## [Unreleased]
 
+Tooling for a repo that runs itself: per-release changelog pages and a written ten-year maintenance contract.
+
+### Added
+- `docs/changelog/`: one generated page per release plus an index, and a compare-link index at the foot of `CHANGELOG.md`; `bun run changelog` writes them and the `conventions` gate fails on drift. `bun run release` now refuses a release without a summary sentence under `[Unreleased]` and keeps both current.
+- `docs/maintenance.md`: what wears out over a decade and which AI-maintenance lane catches it; the monthly `cleanup` checkup moves the Bun pin and runs a January yearly review; Dependabot bumps Actions monthly.
+
 ## [0.5.0] - 2026-11-14
 
 A production-readiness release: bad recipe input, hostile GLBs and dead servers now fail with coded errors and a `fix:` instead of wrong output, the package exports an explicit list of subpaths, and the creature kind follows sourced animal biology.

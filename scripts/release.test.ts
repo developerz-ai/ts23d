@@ -1,8 +1,8 @@
 // Release stamp guards: a stamp that would publish nothing, lacks a summary, goes backwards, stamps
 // twice or starts from a stale link index is refused; a good stamp also writes docs/changelog/.
 
-import { expect, it } from 'bun:test';
-import { mkdir, mkdtemp, writeFile } from 'node:fs/promises';
+import { afterAll, expect, it } from 'bun:test';
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { Ts23dError } from '../src/core/index.ts';
@@ -104,9 +104,14 @@ it('orders versions by semver precedence', () => {
 
 const REPO = 'https://github.com/developerz-ai/ts23d';
 
+/** Temp trees made by stampIn, removed after the file's tests pass or fail. */
+const temps: string[] = [];
+afterAll(() => Promise.all(temps.map((d) => rm(d, { recursive: true, force: true }))));
+
 /** A minimal stamped-at-0.4.0 tree in a temp dir, then `bun run scripts/release.ts 0.5.0` in it. */
 async function stampIn(changelog: string): Promise<{ dir: string; code: number; err: string }> {
   const dir = await mkdtemp(join(tmpdir(), 'ts23d-release-'));
+  temps.push(dir);
   await mkdir(join(dir, 'src/export'), { recursive: true });
   await writeFile(join(dir, 'package.json'), '{\n  "version": "0.4.0"\n}\n');
   await writeFile(join(dir, 'src/export/version.ts'), "export const VERSION = '0.4.0';\n");
