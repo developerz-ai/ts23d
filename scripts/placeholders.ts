@@ -6,7 +6,8 @@ import { report, tsFiles, type Violation } from './lib/files.ts';
 const FIX = 'write the real code, or throw notImplemented() and name the gap in the PR body';
 
 const BANNED: readonly { re: RegExp; what: string }[] = [
-  { re: /(\/\/|\/\*)\s*(\.\.\.|…)/, what: 'elided code comment' },
+  // A bare ellipsis comment stands in for code; `// …and then` continuing prose does not.
+  { re: /^\s*\/\/\s*(\.\.\.|…)\s*$|\/\*\s*(\.\.\.|…)\s*\*\//, what: 'elided code comment' },
   { re: /rest of (the )?(code|file|implementation)/i, what: '"rest of the code" placeholder' },
   { re: /\b(implement|add) (this|logic|here|me)\b/i, what: '"implement here" placeholder' },
   {

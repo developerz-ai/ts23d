@@ -4,7 +4,8 @@ import { checkSource } from './placeholders.ts';
 it('refuses elided and stubbed code', () => {
   for (const line of [
     '  // ...',
-    '/* … */',
+    'function f() { /* … */ }',
+    '// ... rest of code',
     '// rest of the code unchanged',
     '// implement this',
     '// same as above for the other wheels',
@@ -31,6 +32,8 @@ it('allows spreads, rest params and planned stubs', () => {
     'const parts = [...a, ...b];',
     'function f(...args: number[]) {}',
     "throw notImplemented('sweep', 'M1');",
+    '// …and the track belts run round them at the same speed',
+    '// ...then take exactly the faces it sees',
     '// TODO(#12): tune the boiler taper once refs land',
   ])
     expect(checkSource('a.ts', line)).toEqual([]);
