@@ -173,7 +173,7 @@
     "provenance": true
   },
   "devDependencies": {
-    "@biomejs/biome": "2.6.3",
+    "@biomejs/biome": "2.6.4",
     "@types/bun": "1.4.4",
     "gltf-validator": "2.0.0-dev.3.10",
     "lefthook": "2.2.2",
