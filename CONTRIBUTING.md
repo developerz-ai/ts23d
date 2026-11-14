@@ -28,6 +28,7 @@ bun run verify --json                # for agents: { ok, failed, results, output
 | `boundaries` | Imports only go down a tier, only through `index.ts` ([architecture](docs/architecture/README.md)) | `bun run boundaries` |
 | `determinism` | No `Math.random`, wall clock, `performance.now`, locale formatting in `src/` / `recipes/` | `bun run determinism` |
 | `filesize` | No source file over 300 lines | `bun run filesize` |
+| `placeholders` | No elided or stubbed code (`// ...`, "rest of the code", "same as above", `TODO: implement`); planned work uses `notImplemented()` | `bun run placeholders` |
 | `test` | `bun test src scripts` | `bun run test` |
 | `recipes` | Every recipe compiles at 3 LODs, passes QA, builds byte-identically twice | `bun run recipes` |
 | `build` | `dist/` JS + `.d.ts` | `bun run build` |

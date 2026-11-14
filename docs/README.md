@@ -61,4 +61,5 @@ Index with status: [decisions/README.md](decisions/README.md).
 | Doc | Covers |
 |---|---|
 | [plans/roadmap.md](plans/roadmap.md) | M0–M6 milestones |
+| `plans/<YYYY>/<MM>/<DD>/<1NN>-<slug>/` | Execution plans written by `/planx` (overview, path-disjoint slices, `status.yml`); the roadmap still owns what ships |
 | [landscape.md](landscape.md) | Neutral survey of AI 3D generators (as of 2026-10) |
