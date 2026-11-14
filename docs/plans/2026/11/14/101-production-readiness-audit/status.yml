@@ -1,0 +1,49 @@
+plan: 101-production-readiness-audit
+title: Production-readiness audit — fix what a full scan found
+roadmap: "M0: hardening sweep (cross-cutting; ticks line 37 first npm publish)"
+status: not_started        # not_started | in_progress | blocked | complete | superseded
+owner: sebi
+worked_by: ""
+percent: 0
+current_focus: ""
+slices:
+  - file: 01-core-contracts.md
+    status: not_started
+    percent: 0
+  - file: 02-material-grammar.md
+    status: not_started
+    percent: 0
+  - file: 03-primitives-passes-audio.md
+    status: not_started
+    percent: 0
+  - file: 04-untrusted-input-network.md
+    status: not_started
+    percent: 0
+  - file: 05-qa-gates.md
+    status: not_started
+    percent: 0
+  - file: 06-export-pivots.md
+    status: not_started
+    percent: 0
+  - file: 07-cli.md
+    status: not_started
+    percent: 0
+  - file: 08-gate-guards.md
+    status: not_started
+    percent: 0
+  - file: 09-packaging-release-ci.md
+    status: not_started
+    percent: 0
+  - file: 10-site.md
+    status: not_started
+    percent: 0
+  - file: 11-docs.md
+    status: not_started
+    percent: 0
+evidence:                  # PR links, verify --json summaries, contact-sheet paths
+  - "baseline 2026-11-14 main@5e1180f: bun run verify --json ok; test 71471 ms, recipes 493912 ms unsharded"
+notes: >-
+  Follow-ups outside this plan: weighted recipe sharding (shots shard 10 took 5m16s vs 46s for
+  shard 11), repo weight (100 MB tracked, 482 PNGs, no LFS), site bundle split (index chunk
+  738 kB) and media weight (41 MB), roadmap line 49 cross-machine determinism.
+last_updated: 2026-11-14
