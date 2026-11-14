@@ -3,8 +3,10 @@ import { existsSync } from 'node:fs';
 import { mkdir, mkdtemp, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { pages } from './changelog.ts';
 import {
   bareErrors,
+  changelogDocs,
   decimatesCode,
   defectRows,
   errorsDoc,
@@ -141,5 +143,27 @@ describe('defectRows', () => {
     expect(defectRows(src('cat.md', c.text), exists, { D3: 'legacy' })).toEqual([]);
     const stale = defectRows(src('cat.md', c.text), exists, { D1: 'legacy', D3: 'legacy' });
     expect(stale.map((x) => x.message)).toEqual(['stale LEGACY_DEFECT_ROWS entry D1']);
+  });
+});
+
+describe('changelogDocs', () => {
+  const REPO = 'https://github.com/developerz-ai/ts23d';
+  const log = `## [Unreleased]\n\n## [0.1.0] - 2026-11-07\n\nFirst.\n\n### Added\n- x\n\n[Unreleased]: ${REPO}/compare/v0.1.0...HEAD\n[0.1.0]: ${REPO}/releases/tag/v0.1.0\n`;
+
+  it('fails a missing summary, a stale link and a missing page, each with the fix', () => {
+    const bad = log.replace('First.\n\n', '').replace('v0.1.0...HEAD', 'v0.0.9...HEAD');
+    const v = changelogDocs(src('CHANGELOG.md', bad), new Map());
+    expect(v.map((x) => `${x.file} ${x.message.split(': ').slice(1).join(': ')}`)).toEqual([
+      'CHANGELOG.md [0.1.0] has no summary sentence',
+      `CHANGELOG.md [Unreleased] link is ${REPO}/compare/v0.0.9...HEAD, expected ${REPO}/compare/v0.1.0...HEAD`,
+      'docs/changelog/0.1.0.md missing',
+      'docs/changelog/README.md missing',
+    ]);
+    expect(v[0]?.fix).toContain('first paragraph');
+    expect(v[1]?.fix).toBe('bun run scripts/changelog.ts');
+  });
+
+  it('passes a changelog whose index and pages are current', () => {
+    expect(changelogDocs(src('CHANGELOG.md', log), pages(log))).toEqual([]);
   });
 });

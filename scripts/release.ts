@@ -1,12 +1,22 @@
-// Stamp a release: `bun run release <x.y.z>` sets package.json's version and turns CHANGELOG's
-// `## [Unreleased]` into `## [x.y.z] - <date>`. Then open a PR titled `chore: release x.y.z`;
+// Stamp a release: `bun run release <x.y.z>` sets package.json's version, turns CHANGELOG's
+// `## [Unreleased]` into `## [x.y.z] - <date>`, advances the link index at the bottom and
+// regenerates docs/changelog/ (scripts/changelog.ts). Then open a PR titled `chore: release x.y.z`;
 // merging it is the release (.github/workflows/release-tag.yml → release.yml → npm via OIDC).
 //   bun run release --check <x.y.z>   exit 1 unless the tree is stamped at that version
 //   bun run release --notes <x.y.z>   print that version's CHANGELOG section (release notes)
 // A stamp is refused (T3D_RELEASE) when the version is not above package.json's, when
-// `[Unreleased]` has no entries, or when CHANGELOG already has that version's section.
+// `[Unreleased]` has no entries or no summary sentence, when CHANGELOG already has that version's
+// section, or when the `[Unreleased]` link does not compare from the latest version.
 
 import { Ts23dError } from '../src/core/index.ts';
+import {
+  changelogSection,
+  releases,
+  SUMMARY_RULE,
+  stampLinks,
+  summaryOf,
+  writePages,
+} from './changelog.ts';
 
 const SEMVER = /^(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z.-]+))?$/;
 const VERSION_FILE = 'src/export/version.ts';
@@ -44,15 +54,6 @@ export function compareSemver(a: string, b: string): number {
   return 0;
 }
 
-/** The body of `## [<v>]` (trimmed), or null when CHANGELOG has no such section. */
-export function changelogSection(changelog: string, v: string): string | null {
-  const m = new RegExp(
-    `^## \\[${v.replaceAll('.', '\\.')}\\][^\\n]*\\n([\\s\\S]*?)(?=^## \\[|$(?![\\s\\S]))`,
-    'm',
-  ).exec(changelog);
-  return m?.[1]?.trim() ?? null;
-}
-
 /** CHANGELOG with `[Unreleased]` turned into `[version] - date`, after every stamp guard. */
 export function stampChangelog(
   changelog: string,
@@ -76,11 +77,15 @@ export function stampChangelog(
       cause: 'CHANGELOG.md has no ## [Unreleased] section',
       fix: 'add one at the top',
     });
-  const entries = unreleased.split('\n').filter((l) => l.trim() !== '' && !l.startsWith('#'));
-  if (entries.length === 0)
+  if (!/^[-*] \S/m.test(unreleased))
     throw new Ts23dError('T3D_RELEASE', {
       cause: 'CHANGELOG.md ## [Unreleased] has no entries: nothing to release',
       fix: 'add the changes under ## [Unreleased] (### Added / ### Changed / ### Fixed) first',
+    });
+  if (summaryOf(unreleased) === null)
+    throw new Ts23dError('T3D_RELEASE', {
+      cause: 'CHANGELOG.md ## [Unreleased] has no summary sentence',
+      fix: `under ## [Unreleased] write ${SUMMARY_RULE}`,
     });
   return changelog.replace(/^## \[Unreleased\]/m, `## [Unreleased]\n\n## [${version}] - ${date}`);
 }
@@ -112,14 +117,20 @@ async function main(args: readonly string[]): Promise<void> {
     console.log(notes);
   } else {
     const date = process.env['RELEASE_DATE'] ?? new Date().toISOString().slice(0, 10);
-    const stamped = stampChangelog(changelog, pkg.version, version, date);
+    const prev = releases(changelog)[0]?.version ?? null;
+    const stamped = stampLinks(
+      stampChangelog(changelog, pkg.version, version, date),
+      version,
+      prev,
+    );
     await Bun.write('CHANGELOG.md', stamped);
+    await writePages(stamped);
     await Bun.write(pkgFile, `${JSON.stringify({ ...pkg, version }, null, 2)}\n`);
     // The generator string every GLB carries (version.test.ts pins the pair).
     const src = await Bun.file(VERSION_FILE).text();
     await Bun.write(VERSION_FILE, src.replace(/VERSION = '[^']*'/, `VERSION = '${version}'`));
     console.log(
-      `✔ stamped ${version}. Next: git switch -c release/${version} && git commit -am 'chore: release ${version}' && gh pr create --fill`,
+      `✔ stamped ${version}. Next: git switch -c release/${version} && git add -A CHANGELOG.md docs/changelog && git commit -am 'chore: release ${version}' && gh pr create --fill`,
     );
   }
 }

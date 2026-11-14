@@ -1,7 +1,11 @@
 version: 2
 
-# Weekly, grouped, with a 14-day cooldown: most yanked versions and supply-chain incidents surface
-# inside that window. Bun itself is pinned by .bun-version and moved by a person, measured.
+# Grouped, with a 14-day cooldown: most yanked versions and supply-chain incidents surface inside
+# that window. Cadence follows developerz-ai/wurk: the shipped and build dependencies move weekly;
+# the CI actions move monthly (a weekly cadence there is mostly one PR per patch for no change in
+# what ships). Bun itself is pinned by .bun-version and moved by the monthly `cleanup` checkup
+# (`toolchain` row), measured with the full gate and `bun run shots`. Every PR here is merged by the
+# AI maintainer on a green `verify`.
 
 updates:
   - package-ecosystem: bun
@@ -20,7 +24,7 @@ updates:
 
   - package-ecosystem: github-actions
     directories: ['/', '/.github/actions/*']
-    schedule: { interval: weekly, day: monday }
+    schedule: { interval: monthly }
     cooldown: { default-days: 14 }
     labels: [dependencies, ci]
     commit-message: { prefix: 'chore(ci)' }
