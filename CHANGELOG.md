@@ -4,6 +4,8 @@ All notable changes to `@developerz.ai/ts23d`. Format: [Keep a Changelog](https:
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-11-14
+
 ### Fixed
 - `defineAsset` accepted a missing budget, a fractional seed and any tolerance; bad input now throws `T3D_RECIPE_INVALID` with a `fix:` (D26).
 - Mirrored `place` flipped a door's mesh but not its spin / sway axis, so the hinge swung the wrong way; mirrored axes are now flipped (D27).
@@ -43,12 +45,12 @@ All notable changes to `@developerz.ai/ts23d`. Format: [Keep a Changelog](https:
 - AI-maintained policy: the repo is fully AI-maintained: `.dz/maintainer/maintainer.yml` adds a monthly `cleanup` lane, a `security-release` lane, and `release-due` cuts releases.
 - `bun run verify` has `conventions` (CLAUDE.md rules a script can check; every shipped defect row names an existing test) and `pack` (installs the packed tarball in an empty project, imports every `exports` subpath under Bun and Node, runs `t3d build`) steps; an unknown `--only` name exits 2.
 - CLI: `--version`, per-command `--help`, strict flags with did-you-mean, `--timeout <s>` for `finish`; coded errors `T3D_RECIPE_NOT_FOUND`, `T3D_RECIPE_THREW`, `T3D_CLI_USAGE`, `T3D_ASSET_DUPLICATE`.
-- `timeoutMs` on `refine` (default 600 s) and the finish HTTP model (default 300 s); script fetches time out after 60 s.
+- `timeoutMs` on `refine` (default 600 s) and the finish HTTP model (default 300 s); script fetches time out after 60 s (whole-file texture downloads after 10 min) and send browser-like headers (Wikidata keeps its identifying User-Agent).
 - `budget.draws` (optional draw-call ceiling) is enforced by `t3d build` as `T3D_QA_DRAW_CALLS`.
 - Research docs for animals: `docs/research/animal-anatomy.md` and `docs/research/animal-species-sheets.md`.
 - Release guards: the release runs the full gate and refuses a tag not on a green `main` commit; `release-tag.yml` is idempotent; CI has an aggregate `verify` check, a `site` job and a `shots` job that fails on any change under `recipes/*/out`.
 - `bun run verify` has a `placeholders` step: elided or stubbed code (a bare `// ...` or `/* … */`, "rest of the code", "same as above", `TODO: implement`, "for brevity") fails the gate; planned work still throws `notImplemented()`.
-- Repo tooling: a `/planx` command writes path-disjoint execution plans under `docs/plans/<YYYY>/<MM>/<DD>/<1NN>-<slug>/` for `/feature` to run; the developerz.ai maintainer bot gets daily `health`, weekly `release-due` and monthly `improve` checkups (`.dz/briefs/`); with the AI-maintained policy below, `release-due` also cuts and merges releases.
+- Repo tooling: a `/planx` command writes path-disjoint execution plans under `docs/plans/<YYYY>/<MM>/<DD>/<1NN>-<slug>/` for `/feature` to run; the developerz.ai maintainer bot gets daily `health`, weekly `release-due` and monthly `improve` checkups (`.dz/briefs/`); with the AI-maintained policy above, `release-due` also cuts and merges releases.
 
 ## [0.4.0] - 2026-11-08
 
