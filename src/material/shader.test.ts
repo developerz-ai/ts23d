@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'bun:test';
+import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import { Ts23dError } from '../core/index.ts';
 import { godotShaderSource, threeMaterialSource } from './shader.ts';
 import { cellRect } from './trim-sheet.ts';
@@ -8,6 +10,28 @@ const hints = {
   windowGlow: { color: '#ffcc88', ratio: 0.4 },
   wear: { amount: 0.3 },
 } as const;
+
+/** Typecheck one emitted module, strict, against the three (and @types/three) the gallery pins. */
+function typecheck(file: string): { code: number; out: string } {
+  const proc = Bun.spawnSync(
+    [
+      'node_modules/.bin/tsc',
+      '--ignoreConfig',
+      '--noEmit',
+      '--strict',
+      '--module',
+      'esnext',
+      '--moduleResolution',
+      'bundler',
+      '--target',
+      'es2023',
+      '--skipLibCheck',
+      file,
+    ],
+    { stdout: 'pipe', stderr: 'pipe' },
+  );
+  return { code: proc.exitCode, out: proc.stdout.toString() + proc.stderr.toString() };
+}
 
 describe('shader hints: bad input', () => {
   it('rejects a glow ratio outside 0..1 and a non-hex colour, with a fix', () => {
@@ -34,6 +58,23 @@ describe('threeMaterialSource', () => {
     expect(src).toContain('export function upgradeTrimMaterials');
     expect(src).toContain('MeshStandardNodeMaterial');
     expect(src).not.toContain("@developerz.ai/ts23d'");
+  });
+  it('typechecks against the site-pinned three, and the check can fail', async () => {
+    // Under apps/site/ so `three` resolves to the gallery's pinned copy and its types.
+    const dir = await mkdtemp(join('apps/site', '.ts23d-shader-'));
+    const file = join(dir, 'trim-material.ts');
+    try {
+      await writeFile(file, src.replace("from 'three/webgpu'", "from 'three/not-a-real-import'"));
+      const broken = typecheck(file);
+      expect(broken.code).not.toBe(0);
+      expect(broken.out).toContain('three/not-a-real-import');
+
+      await writeFile(file, src);
+      const emitted = typecheck(file);
+      expect(emitted.code, emitted.out).toBe(0);
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
   });
   it('tints by vertex colour and binds the ORM channels', () => {
     expect(src).toContain('vertexColor()');

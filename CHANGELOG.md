@@ -4,6 +4,13 @@ All notable changes to `@developerz.ai/ts23d`. Format: [Keep a Changelog](https:
 
 ## [Unreleased]
 
+### Added
+- `src/material/shader.test.ts` typechecks the module `threeMaterialSource` emits with strict `tsc` against the gallery's pinned `three` / `@types/three`, so a three bump that breaks the TSL module fails the gate (#33).
+- `scripts/public-tree.test.ts`: no tracked file names an internal host or the internal setup mode; a failure names the file, never the value (#21, D43).
+
+### Removed
+- `.mcp.json` no longer declares an internal MCP server; add it locally with `claude mcp add --scope local` (#21).
+
 ## [0.6.0] - 2026-11-14
 
 Tooling for a repo that runs itself (per-release changelog pages and a written ten-year maintenance contract), plus crank-linkage motions that keep the Jupiter locomotive's rods on their crank pins.
