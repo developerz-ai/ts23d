@@ -9,7 +9,8 @@ Request: $ARGUMENTS
 You are the **coordinator**. Read `CLAUDE.md`. Done = `bun run verify` green → PR → merged → CI green
 on main (→ released, if asked).
 
-1. **Understand + falsify.** Read the code the request touches. Docs and plans can be stale; check
+1. **Understand + falsify.** Request names a `/planx` plan → execute its slices in order and keep its
+   `status.yml` current. Read the code the request touches. Docs and plans can be stale; check
    claims against the code before planning on them.
 2. **Hive only if it pays** (gold-standards hive-mind): broad search or path-separable scale. A change
    you understand in one or two files — do it yourself.

@@ -22,6 +22,7 @@ it('every package.json gate script is a verify step', async () => {
     'boundaries',
     'determinism',
     'filesize',
+    'placeholders',
     'test',
     'recipes',
     'build',

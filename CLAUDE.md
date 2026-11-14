@@ -30,6 +30,7 @@ project that installed the package.
 - **SRP.** One file, one job; target < 200 LOC, ceiling 300 (`bun run filesize`); header comment states the job.
 - **Tests beside source, failure case first.** A test that can't fail isn't one.
 - **Planned ≠ shipped.** Label stubs as planned; `notImplemented()` names the plan.
+- **No placeholder output.** Full file asked → full file; never `// ...`, "rest of the code", "same as above", `TODO: implement` (`bun run placeholders`). Blocked → `notImplemented()` + name the gap in the PR.
 - **Neutral positioning.** Never claim to beat Meshy/Tripo/etc.; we're the free, code-based option.
 
 ## Commands (repo root)
@@ -46,9 +47,10 @@ project that installed the package.
 | One test file | `bun test src/primitives/prism.test.ts` |
 | Lint fix | `bun run lint:fix` |
 | Gallery | `bun run site:dev` · `bun run site:build` |
+| Plan a big change | `/planx <goal>` → `docs/plans/<YYYY>/<MM>/<DD>/<1NN>-<slug>/` → `/feature <overview.md>` |
 | Release | `bun run release <x.y.z>` → PR `chore: release x.y.z` → merge; see `PUBLISHING.md` |
 
-Gate order (`STEPS` in `scripts/verify.ts`): lint · typecheck · boundaries · determinism · filesize · test · recipes · build.
+Gate order (`STEPS` in `scripts/verify.ts`): lint · typecheck · boundaries · determinism · filesize · placeholders · test · recipes · build.
 
 ## Layout
 | Path | Responsibility |

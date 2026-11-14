@@ -73,6 +73,7 @@
     "boundaries": "bun run scripts/boundaries.ts",
     "determinism": "bun run scripts/determinism.ts",
     "filesize": "bun run scripts/filesize.ts",
+    "placeholders": "bun run scripts/placeholders.ts",
     "recipes": "bun run scripts/recipes.ts",
     "shots": "bun run scripts/shots.ts",
     "parts": "bun run scripts/parts-catalogue.ts",
