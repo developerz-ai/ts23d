@@ -10,11 +10,12 @@
 [![Bun](https://img.shields.io/badge/bun-%E2%89%A51.4.4-f9f1e1?logo=bun&logoColor=black)](https://bun.sh)
 [![Node](https://img.shields.io/badge/node-%E2%89%A522-339933?logo=nodedotjs&logoColor=white)](https://nodejs.org)
 [![runtime dependencies](https://img.shields.io/badge/runtime%20dependencies-0-brightgreen)](docs/decisions/005-zero-runtime-deps.md)
-[![maintained by developerz.ai](https://img.shields.io/badge/maintained%20by-developerz.ai-6f42c1)](https://www.developerz.ai)
+[![maintained by developerz.ai](https://img.shields.io/badge/maintained%20by-developerz.ai-6f42c1)](#ai-maintained)
+[![GitHub stars](https://img.shields.io/github/stars/developerz-ai/ts23d?style=flat&logo=github)](https://github.com/developerz-ai/ts23d/stargazers)
 
-[Gallery](https://developerz-ai.github.io/ts23d/) · [npm](https://www.npmjs.com/package/@developerz.ai/ts23d) · [Docs](docs/README.md) · [Changelog](CHANGELOG.md) · [llms.txt](llms.txt) · [Roadmap](docs/plans/roadmap.md) · [Security](SECURITY.md) · [Issues](https://github.com/developerz-ai/ts23d/issues)
+[Gallery](https://developerz-ai.github.io/ts23d/) · [npm](https://www.npmjs.com/package/@developerz.ai/ts23d) · [Docs](docs/README.md) · [Changelog](CHANGELOG.md) ([per release](docs/changelog/README.md)) · [Maintenance](docs/maintenance.md) · [llms.txt](llms.txt) · [Roadmap](docs/plans/roadmap.md) · [Security](SECURITY.md) · [Issues](https://github.com/developerz-ai/ts23d/issues)
 
-<sub>Bun runs the CLI (`t3d`); the library imports under Node ≥ 22. Published from CI with npm provenance. Built and maintained by AI agents under [developerz.ai](https://www.developerz.ai) (As of 2026-11).</sub>
+<sub>Bun runs the CLI (`t3d`); the library imports under Node ≥ 22. Published from CI with npm provenance. Built and [maintained by AI agents](#ai-maintained) under [developerz.ai](https://www.developerz.ai).</sub>
 
 <table>
   <tr>
@@ -402,6 +403,40 @@ Each recipe is a folder: `recipes/<name>/<name>.ts` (the asset), `README.md` (th
 |---|---|
 | **[kubeez.com](https://kubeez.com)** | Partner. Generate reference and concept images, decals and texture source images. The sheet painter's image-stamped cells will consume them (planned) ([materials](docs/idea/04-materials.md)) |
 | **[developerz.ai](https://www.developerz.ai)** | 100% AI-managed software engineering. ts23d is built and maintained by AI agents |
+
+## AI-maintained
+
+ts23d is maintained by AI: by [developerz.ai](https://www.developerz.ai), the way a human maintainer
+looks after an open-source project, and built to run that way for years with no human in the loop.
+The agent works publicly as `developerz-ai[bot]` and marks everything it posts as bot-made. Its
+policy is committed in [`.dz/maintainer/maintainer.yml`](.dz/maintainer/maintainer.yml), and
+[`CLAUDE.md`](CLAUDE.md) binds it: no policy line relaxes a rule there.
+
+| What arrives | What happens |
+|---|---|
+| an issue | triaged; asked for a reproduction when one is missing; a real bug is fixed from a failing test and released |
+| a pull request | reviewed, driven to a green `verify` (lint, types, boundaries, determinism, tests, every recipe's QA, pack smoke), merged |
+| a recipe change | merged only with its refreshed contact sheet and hero; QA failures are fixed in the geometry, never by loosening a gate |
+| Dependabot | driven to green and merged; every bump waits 14 days after upstream publishes it (security updates excepted) |
+| an outside change to CI, release or publish automation | declined: the npm OIDC pipeline is the maintainers' |
+| a change that breaks a rule in `CLAUDE.md` (game code, runtime deps, decimation, non-determinism) | declined with the rule quoted |
+
+Scheduled checkups, briefs in [`.dz/briefs/`](.dz/briefs/): daily `health` catches what nothing
+announces (red `main`, a gallery that did not deploy, a release npm does not serve); daily
+`security-release` ships a confirmed advisory fix the same day; weekly `release-due` judges whether
+users get something and cuts the release; monthly `improve` lands up to three evidenced
+improvements; monthly `cleanup` sweeps branches, stale plans, weight, links, dead code, moves the
+Bun pin and, each January, reviews what a year wears out. [`docs/maintenance.md`](docs/maintenance.md)
+lists what decays over a decade and which lane catches each.
+
+## Star history
+
+<a href="https://star-history.com/#developerz-ai/ts23d&Date">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=developerz-ai/ts23d&type=Date&theme=dark">
+    <img alt="Star history of developerz-ai/ts23d" src="https://api.star-history.com/svg?repos=developerz-ai/ts23d&type=Date" width="600">
+  </picture>
+</a>
 
 ## License
 

@@ -161,6 +161,7 @@
     "data": "bun run scripts/data.ts",
     "textures": "bun run scripts/textures.ts",
     "release": "bun run scripts/release.ts",
+    "changelog": "bun run scripts/changelog.ts",
     "t3d": "bun run src/cli/bin.ts",
     "site:dev": "bun run --filter @ts23d/site dev",
     "site:build": "bun run --filter @ts23d/site build",

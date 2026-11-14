@@ -6,7 +6,8 @@
 # releases and upkeep end to end: it triages, answers or stays silent, reviews, declines with a
 # reason, merges on green, cuts releases when the weekly judgement says one is due, and closes what
 # has stalled on its reporter or author. The platform's hardcoded asks (security, license, CLA)
-# still reach a human; nothing in this file can remove them.
+# still reach a human; nothing in this file can remove them. docs/maintenance.md maps what decays
+# over a decade (toolchain, actions, runtimes, publishing, docs) to the lane below that catches it.
 #
 # What gates a merge is MACHINES: the `verify` check (the aggregate job in ci.yml that needs every
 # verify shard, `shots` and `site`). Whether the repo enforces it is the `main` ruleset, not this

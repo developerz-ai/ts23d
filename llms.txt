@@ -40,6 +40,7 @@ The human names a thing ("Tiger I, mid-production 1943"). The agent researches s
 - [Module tiers](https://raw.githubusercontent.com/developerz-ai/ts23d/main/docs/architecture/README.md)
 - [glTF capabilities](https://raw.githubusercontent.com/developerz-ai/ts23d/main/docs/architecture/gltf-capabilities.md): every extension, skins, physics drafts; what ts23d writes
 - [Roadmap](https://raw.githubusercontent.com/developerz-ai/ts23d/main/docs/plans/roadmap.md): shipped vs planned
+- [Releases](https://raw.githubusercontent.com/developerz-ai/ts23d/main/docs/changelog/README.md): every version with its one-sentence summary, a page each (changes, diff, npm link); full log in CHANGELOG.md
 - [Decisions](https://raw.githubusercontent.com/developerz-ai/ts23d/main/docs/decisions/): why TS not JSON, why one material, why CPU renders
 - [Example recipe: Tiger I](https://raw.githubusercontent.com/developerz-ai/ts23d/main/recipes/tiger_1/tiger_1.ts)
 - [Reference dossier template](https://raw.githubusercontent.com/developerz-ai/ts23d/main/recipes/README.md)

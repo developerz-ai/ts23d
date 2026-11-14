@@ -28,6 +28,9 @@ or a new recipe. Docs, CI, repo tooling and test-only changes do not earn one. A
 In 0.x: patch for fixes only, minor for anything added or changed (a minor may break).
 
 1. Every user-visible change in the window has an `[Unreleased]` line; add the missing ones first.
+   Then write the release's summary: one sentence of what users get, as the first paragraph under
+   `## [Unreleased]`, before any `###` (the stamp refuses without it). Never edit the link index or
+   `docs/changelog/` by hand; the stamp regenerates both.
 2. `git checkout -b chore/release-<next> origin/main && bun run release <next>`.
 3. `bun run verify` green, then PR titled exactly `chore: release <next>`, body: the commits since
    `$last` and why this is a patch or a minor.

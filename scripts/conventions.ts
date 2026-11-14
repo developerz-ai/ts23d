@@ -4,6 +4,7 @@
 // silently, and a stale entry (nothing left to excuse) is itself a violation.
 
 import { existsSync } from 'node:fs';
+import { drift, readPages } from './changelog.ts';
 import { report, tsFiles, type Violation } from './lib/files.ts';
 
 export interface Source {
@@ -198,6 +199,21 @@ export function defectRows(
   return out;
 }
 
+/** "Changelog index and docs/changelog are current": what `bun run changelog --check` reports. */
+export function changelogDocs(
+  changelog: Source,
+  existing: ReadonlyMap<string, string>,
+): Violation[] {
+  return drift(changelog.text, existing).map((d) => ({
+    file: d.file,
+    line: 1,
+    message: `changelog index and docs/changelog are not current: ${d.message}`,
+    fix: d.message.includes('summary')
+      ? 'write one sentence of what users get as the first paragraph under that heading, then bun run scripts/changelog.ts'
+      : 'bun run scripts/changelog.ts',
+  }));
+}
+
 const read = async (file: string): Promise<Source> => ({ file, text: await Bun.file(file).text() });
 
 if (import.meta.main) {
@@ -218,6 +234,7 @@ if (import.meta.main) {
     ...kindsDrift(await read('src/kinds/index.ts')),
     ...[...folders.values()].flatMap(realSources),
     ...defectRows(await read('docs/architecture/defect-catalogue.md')),
+    ...changelogDocs(await read('CHANGELOG.md'), await readPages()),
   ];
   process.exitCode = report('conventions', violations, process.argv.includes('--json'));
 }

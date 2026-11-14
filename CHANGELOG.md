@@ -1,10 +1,12 @@
 # Changelog
 
-All notable changes to `@developerz.ai/ts23d`. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [SemVer](https://semver.org/); in 0.x a minor bump may break. `bun run release <x.y.z>` turns `[Unreleased]` into the dated version section ([PUBLISHING.md](PUBLISHING.md)).
+All notable changes to `@developerz.ai/ts23d`. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [SemVer](https://semver.org/); in 0.x a minor bump may break. Each version opens with a one-sentence summary for users: the first paragraph under its heading, before any `###`; write it under `[Unreleased]` before a release. `bun run release <x.y.z>` turns `[Unreleased]` into the dated version section, advances the link index at the bottom and regenerates [docs/changelog/](docs/changelog/README.md) ([PUBLISHING.md](PUBLISHING.md)); `bun run changelog` rebuilds both.
 
 ## [Unreleased]
 
 ## [0.5.0] - 2026-11-14
+
+A production-readiness release: bad recipe input, hostile GLBs and dead servers now fail with coded errors and a `fix:` instead of wrong output, the package exports an explicit list of subpaths, and the creature kind follows sourced animal biology.
 
 ### Fixed
 - `defineAsset` accepted a missing budget, a fractional seed and any tolerance; bad input now throws `T3D_RECIPE_INVALID` with a `fix:` (D26).
@@ -54,6 +56,8 @@ All notable changes to `@developerz.ai/ts23d`. Format: [Keep a Changelog](https:
 
 ## [0.4.0] - 2026-11-08
 
+Tank tracks now run round their wheels through a new `tread` motion, and `text` sets smooth lettering in four vector typefaces.
+
 ### Fixed
 - Gallery demo tanks (t34, tiger_1, rts_tank) drove with spinning wheels and frozen tracks: the belt had no motion, so the export merged it into the static body.
 
@@ -65,6 +69,8 @@ All notable changes to `@developerz.ai/ts23d`. Format: [Keep a Changelog](https:
 - Smooth lettering in four vector typefaces: `text(str, { font: 'sans' | 'serif' | 'script' | 'gothic' })` sets printable ASCII (upper and lower case) from the public Hershey stroke fonts (Simplex Roman, Complex Roman, Complex Script, Gothic English; embedded as TypeScript by `scripts/fonts-hershey.ts`, no file reads at runtime; acknowledgements in each `src/primitives/font-hershey-*.ts`). Strokes are inked by a pen of `weight` (fraction of cap height; defaults sans 0.12, serif 0.07, script 0.06, gothic 0.055) with `cap: 'round'` (default) or `'square'` ends and joins; curved runs are Catmull-Rom subdivided by `segments` (1–8, the LOD knob, e.g. `[3, 2, 1][ctx.lod]`; corners and stems stay exact). Proportional advances, optical kerning measured from the glyph shapes (`kerning`, off for joined script), a narrower word space than Hershey's. Flush (2 mm lift) or raised (`depth`), `align`, `maxWidth`, `tracking` and `surface(u, v)` work as for the pixel font; `measureText` measures ink edge to ink edge. `TEXT_FONTS` and `VECTOR_FONTS` list the faces. The 5 × 7 pixel font (`'5x7'`, `'block'`, still the default and the only one with Cyrillic) is byte-identical to before. Recipe `type_specimen`: a notice board with every face, flat and raised.
 
 ## [0.3.0] - 2026-11-08
+
+The big feature release: switchable liveries, SVG drawings to 3D, physics colliders and mass, checked joints and blueprints, reusable parts, test helpers, weathering, creatures, mesh import, the AI finish layer, pinned real-world data, offline tuning, sound and PBR finishes, with new QA gates and the first animal, car and strategy-game assets.
 
 ### Added
 - Switchable liveries in one GLB (`KHR_materials_variants`, opt-in): `defineAsset({ paint: { body: '#84402d' }, variants: { oxide_red: { body: '#74382a' } } })` plus `ctx.part(name, mesh, { paint: 'body' })`. Each paint slot becomes a material (`baseColorFactor` = slot colour, `COLOR_0` = colour ÷ slot so grime and wear survive any repaint); variants map per primitive, shared across LODs, used never required. Cost: one extra draw per slot per painted pivot. `compile(asset, { variant })` and `t3d hero|shot|build --variant <name>` render a livery (`hero_<name>.png`); the manifest lists `paint` and `variants`. Painted parts brighter than their slot are refused (they would clamp). Assets without `paint` export byte-identical GLBs. `boxcar` carries three liveries (mineral red, oxide red, faded).
@@ -120,6 +126,8 @@ All notable changes to `@developerz.ai/ts23d`. Format: [Keep a Changelog](https:
 
 ## [0.2.0] - 2026-11-07
 
+The first release under the `@developerz.ai/ts23d` name adds a 16-strip PBR material library, re-sculpted busts, a better-lit gallery and one GLB that carries all three LODs through `MSFT_lod`.
+
 ### Added
 - Package published as `@developerz.ai/ts23d` (the npm organisation's scope).
 - Material library v2: 16 new PBR strips on a 2048² trim sheet (oak, pine, weathered and painted wood; rusty, cast, painted and galvanised iron/steel; brass, copper, aluminium, chrome; rubber, canvas, leather, plastic) with their own roughness and metalness. `defineMaterial()` registers project materials; opt-in CC0 photo strips (Poly Haven) via `bun run textures` — sha256-pinned, offline compile, credited in the GLB. The beauty renderer reflects metals. `t3d` paints the sheet at 2048² by default.
@@ -132,6 +140,8 @@ All notable changes to `@developerz.ai/ts23d`. Format: [Keep a Changelog](https:
 ### Fixed
 
 ## [0.1.0] - 2026-11-07
+
+The first published version: the asset DSL with primitives, organic sculpting, terrain, building and vessel kinds, glTF export with lights and provenance, build-failing QA gates, zero-GPU contact sheets and beauty renders, and a starter gallery of recipes.
 
 ### Added
 - Primitives: `tiled` (true-scale strip tiling, V banded to the strip's real height), `cell` (decal quad with `inset` reveals or raised plaques), `lattice` (Warren / Pratt / Howe / X trusses, square or angle-iron members, planar or box, tapered), `box({ bevel })` (one-segment chamfer for the mid-poly hard-surface look; `bevel: 0` is byte-identical to before).
@@ -204,3 +214,10 @@ All notable changes to `@developerz.ai/ts23d`. Format: [Keep a Changelog](https:
 - QA is much faster: indexed point-in-solid with short-circuited majority rays, cached world meshes and samples, a numeric triangle grid with per-triangle AABB rejection, incremental distance radius. tiger_1 LOD0 QA: minutes → 1.35 s.
 - Animations: `toGlb()` exports none unless `{ animations: true }` (glTF has no autoplay flag; engines drive named pivots from code). `t3d build` bakes the `run` clip by default so viewers show play controls; `--no-animations` skips it.
 - CLI output is one folder per asset: `out/<asset>/{lod0,lod1,lod2}.glb`, `sheet.png`, `manifest.json`, plus `out/index.json`. `t3d build` renders the sheet too (`--no-shot` to skip); `t3d shot` writes sheet + manifest only.
+
+[Unreleased]: https://github.com/developerz-ai/ts23d/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/developerz-ai/ts23d/compare/v0.4.0...v0.5.0
+[0.4.0]: https://github.com/developerz-ai/ts23d/compare/v0.3.0...v0.4.0
+[0.3.0]: https://github.com/developerz-ai/ts23d/compare/v0.2.0...v0.3.0
+[0.2.0]: https://github.com/developerz-ai/ts23d/compare/v0.1.0...v0.2.0
+[0.1.0]: https://github.com/developerz-ai/ts23d/releases/tag/v0.1.0
