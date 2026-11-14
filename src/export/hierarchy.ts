@@ -4,7 +4,7 @@
 // so a single-file GLB stores each identical motion and light only once.
 
 import type { CompiledAsset, Part } from '../core/index.ts';
-import { quatFromAxisAngle } from '../core/index.ts';
+import { quatFromAxisAngle, Ts23dError } from '../core/index.ts';
 import type { BinWriter, Json } from './bin-writer.ts';
 import { LIGHTS, lightOf } from './lights.ts';
 import { motionChannel, treadExtras } from './motion.ts';
@@ -60,11 +60,11 @@ function lightIndexOf(doc: GltfDoc, light: Json): number {
 
 function addMotion(doc: GltfDoc, part: Part, id: number): void {
   if (!part.motion || part.motion.kind === 'tread') return;
-  const key = JSON.stringify([part.motion, part.at]);
+  const key = JSON.stringify([part.motion, part.at, part.yaw]);
   let sampler = doc.motionSamplers.get(key);
   let channel: Json;
   if (sampler === undefined) {
-    const written = motionChannel(doc.bin, part.motion, id, part.at);
+    const written = motionChannel(doc.bin, part.motion, id, part.at, part.yaw);
     doc.samplers.push(written.sampler);
     sampler = doc.samplers.length - 1;
     doc.motionSamplers.set(key, sampler);
@@ -75,6 +75,17 @@ function addMotion(doc: GltfDoc, part: Part, id: number): void {
     };
   }
   doc.channels.push({ ...channel, sampler });
+}
+
+/** The node of `part`'s parent; a name with no node is a merge bug, never a silent root. */
+function parentNode(index: ReadonlyMap<string, number>, part: Part): number {
+  const id = part.parent === null ? undefined : index.get(part.parent);
+  if (id === undefined)
+    throw new Ts23dError('T3D_PART_UNKNOWN', {
+      cause: `part '${part.name}' parents to '${part.parent}', which has no node in the GLB`,
+      fix: 'internal: pivot kept a merged parent; report with the recipe',
+    });
+  return id;
 }
 
 /** Appends `asset`'s tree under a new root named `rootName`; returns the root node index. */
@@ -112,7 +123,7 @@ export function writeHierarchy(
     doc.nodes.push(node);
     const id = doc.nodes.length - 1;
     index.set(part.name, id);
-    attach(doc, part.parent === null ? root : (index.get(part.parent) ?? root), id);
+    attach(doc, part.parent === null ? root : parentNode(index, part), id);
     const lit = lightOf(part);
     if (lit) {
       doc.nodes.push({

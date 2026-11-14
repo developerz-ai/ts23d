@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'bun:test';
 import { boundsOf, type Mesh, Ts23dError, triangleCount, type Vec3 } from '../core/index.ts';
+import { zeroArea } from './closed.ts';
 import { loft, ringXY } from './loft.ts';
 
 const C: Vec3 = [0.6, 0.5, 0.2];
@@ -110,5 +111,28 @@ describe('loft', () => {
     expect(len.uvs[len.uvs.length - 2]).toBeCloseTo(1, 5); // 4 m over a 4 m strip (trim sheet v3 span)
     const row = loft({ rings, color: C, uv: 'row' });
     expect(row.uvs[8 * 2]).toBeGreaterThan(1.45); // ~6.12 m of perimeter / 4 m (trim sheet v3 span)
+  });
+});
+
+describe('loft repeated ring vertices', () => {
+  it('a ring with a repeated vertex (a rounded rect whose straight side is 0) emits no slivers', () => {
+    // A 0.06 × 0.06 square with 0.03 corners: each corner's last point is the next one's first.
+    const ring = (z: number): Vec3[] => [
+      [0.03, 0, z],
+      [0, 0.03, z],
+      [0, 0.03, z],
+      [-0.03, 0, z],
+      [0, -0.03, z],
+    ];
+    for (const caps of [false, true]) {
+      const m = loft({
+        rings: [ring(0), ring(0.1)],
+        color: [1, 1, 1],
+        capStart: caps,
+        capEnd: caps,
+      });
+      expect(zeroArea(m)).toBe(0);
+      expect(triangleCount(m)).toBe(2 * 4 + (caps ? 2 * 4 : 0));
+    }
   });
 });

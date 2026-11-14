@@ -4,9 +4,11 @@
 // the loop point). Spins get ≥ 12 keys per turn so LINEAR quaternion interpolation never takes
 // the short way round. Time arrays are shared between channels of equal key count. A tread has
 // no channel (glTF cannot slide vertices round a loop): `treadExtras` hands its belt to engines.
+// A rest yaw (a moving pivot re-parented past a merged, yawed parent) is kept: rotation keys are
+// yaw ∘ motion, slide offsets turn by yaw, because axis and offset are in the part's own frame.
 
-import type { Motion, Tread } from '../core/index.ts';
-import { quatFromAxisAngle } from '../core/index.ts';
+import type { Motion, Quat, Tread } from '../core/index.ts';
+import { quatFromAxisAngle, rotateZ } from '../core/index.ts';
 import type { BinWriter, Json } from './bin-writer.ts';
 
 export const LOOP_SECONDS = 4;
@@ -34,11 +36,21 @@ export const treadExtras = (t: Tread): Json => ({
   pitch: t.pitch,
 });
 
+/** Rest yaw (about Z) applied after `q`: the Hamilton product yaw ⊗ q. */
+function withYaw(q: Quat, yaw: number): Quat {
+  if (yaw === 0) return q;
+  const s = Math.sin(yaw / 2);
+  const c = Math.cos(yaw / 2);
+  const [x, y, z, w] = q;
+  return [c * x - s * y, c * y + s * x, c * z + s * w, c * w - s * z];
+}
+
 export function motionChannel(
   bin: BinWriter,
   motion: Exclude<Motion, Tread>,
   node: number,
   rest: readonly number[],
+  yaw = 0,
 ): { sampler: Json; channel: Json } {
   const rate = motion.kind === 'spin' ? motion.rps : motion.hz;
   const cycles = cyclesOf(rate);
@@ -51,11 +63,12 @@ export function motionChannel(
       ? (1 - Math.cos(phase(time))) / 2
       : Math.sin(phase(time));
   if (motion.kind === 'slide') {
+    const offset = yaw === 0 ? motion.offset : rotateZ(motion.offset, yaw);
     const values = new Float32Array((keys + 1) * 3);
     t.forEach((time, i) => {
       const s = wave(time);
       values.set(
-        [0, 1, 2].map((k) => (rest[k] ?? 0) + (motion.offset[k] ?? 0) * s),
+        [0, 1, 2].map((k) => (rest[k] ?? 0) + (offset[k] ?? 0) * s),
         i * 3,
       );
     });
@@ -68,7 +81,7 @@ export function motionChannel(
   const peak = motion.kind === 'sway' ? (motion.degrees * Math.PI) / 180 : 0;
   t.forEach((time, i) => {
     const angle = motion.kind === 'spin' ? phase(time) : peak * wave(time);
-    values.set(quatFromAxisAngle(motion.axis, angle), i * 4);
+    values.set(withYaw(quatFromAxisAngle(motion.axis, angle), yaw), i * 4);
   });
   return {
     sampler: { input, output: bin.accessor(values, 'VEC4'), interpolation: 'LINEAR' },

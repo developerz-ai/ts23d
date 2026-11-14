@@ -6,10 +6,15 @@
     "demo",
     "joints"
   ],
+  "lods": [
+    0,
+    1,
+    2
+  ],
   "files": {
     "lods": [],
-    "sheet": "recipes/joint_demo/out/joint_demo/sheet.png",
-    "thumb": "recipes/joint_demo/out/joint_demo/thumb.png"
+    "sheet": "sheet.png",
+    "thumb": "thumb.png"
   },
   "triangles": [
     1672,

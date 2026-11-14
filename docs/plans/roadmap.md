@@ -2,7 +2,7 @@
 
 **Each milestone ships something an agent can use end to end, gated by `bun run verify`. Scope ends at the GLB, textures and manifest; engines and game code are out of scope.** Ticked = on `main` with a test and, where it makes geometry, a recipe. Order within a milestone is a suggestion; order between milestones is a dependency. No dates promised.
 
-Status as of 2026-11-07: **M0 done, M1 done but for recipes, M2 under way.** Every exported entry point that isn't ticked throws `T3D_NOT_IMPLEMENTED` with a pointer here.
+Status as of 2026-11-14: **M0 done, M1 done but for recipes, M2 under way.** Every exported entry point that isn't ticked throws `T3D_NOT_IMPLEMENTED` with a pointer here.
 
 ## M0: Scaffold (0.x)
 
@@ -30,11 +30,12 @@ Status as of 2026-11-07: **M0 done, M1 done but for recipes, M2 under way.** Eve
 - [x] `mergeToPivots`: static geometry batched into its nearest pivot (default in `toGlb`; `keepParts` opts out)
 - [x] CPU contact sheet: six views, metre grid, header dims
 - [x] CLI: `t3d build | shot | list`, `--out`, `--json`
-- [x] Repo gates: lint, typecheck, boundaries, determinism, filesize, tests, recipes (QA + double-build hash), build
+- [x] Repo gates (11 steps): lint, typecheck, boundaries, determinism, filesize, placeholders, conventions, tests, recipes (QA + double-build hash + recipe tests), build, pack
 - [x] Release flow: stamp → PR → tag → OIDC publish
 - [x] Recipes: `tiger_1`, `t34` + `t34_1941` (family), `loco_440` (family; the Jupiter, drivers 1.626 m sourced), `material_swatches`
 - [x] Asset gallery site (every recipe, compiled in the browser)
-- [ ] First npm publish (bootstrap, [PUBLISHING.md](../../PUBLISHING.md))
+- [x] First npm publish (bootstrap, [PUBLISHING.md](../../PUBLISHING.md)); releases since publish from CI via OIDC with provenance (0.4.0 as of 2026-11-08)
+- [x] Hardening sweep ([plan 101](2026/11/14/101-production-readiness-audit/overview.md)): coded errors and strict flags in the CLI, validated inputs (assets, colours, `split`, primitives, GLB reader), QA findings with codes and distances, explicit `exports`, pack smoke test, release guards, `conventions` and `pack` gate steps, defect rows D26–D41
 
 ## M1: Architecture primitives
 
@@ -153,7 +154,7 @@ Exit bar: a 4-4-0 with tender matching [`docs/reference/loco-photo-match.png`](h
 ## Autonomy: no human polish step
 
 - [x] `t3d critique`: renders beside reference photos (+ raking-light close-up, zebra for smooth surfaces) and a fixed rubric (silhouette, proportions, materials, detail density, wear/story, LOD consistency)
-- [x] (warn mode; enforce once every asset is critiqued) `recipes/<name>/out/critique.json` scored 0–10 per criterion, bound to the render hashes; the recipes gate fails when missing, stale or any score < 8
+- [x] (warn mode until 2027-01-15, then enforced: `ENFORCE_FROM` in `scripts/lib/critique.ts`) `recipes/<name>/out/critique.json` scored 0–10 per criterion, bound to the render hashes; the recipes gate fails when missing, stale or any score < 8
 - [ ] Optional CI fresh-eyes reviewer re-scores on each PR
 - [x] Readability checks from artists' rules ([reading list](../research/reading-list.md)): thumbnail silhouette test, greyscale value-contrast focus, detail-density rest areas
 - [x] Offline tuning ([20-tuning](../idea/20-tuning.md)): `tune: { params, objectives }` + `ctx.tuned`; `t3d tune` runs deterministic CMA-ES (or coordinate search) against silhouette masks, measures, art metrics, budget or a custom function and commits `tune.json` + a before/after report; `tune_demo` fits an amphora to a drawn outline (front IoU 0.643 → 0.940)

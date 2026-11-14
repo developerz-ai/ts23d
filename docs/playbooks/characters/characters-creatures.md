@@ -1,8 +1,9 @@
 # Characters and creatures playbook
 
 Humanoid busts and (planned) full bodies — human, orc, goblin, dwarf, elf — animals and fantasy
-creatures. Status: busts ship today via the `head` kind builder; whole-body `creature` skeletons
-are **planned for M4** ([roadmap](../../plans/roadmap.md#m4-creatures)). Reference recipes:
+creatures. Status: busts ship today via the `head` kind builder; whole-body animals ship via the
+`creature` kind ([`wolf`](../../../recipes/wolf/README.md)); bones as named parts, poses and fur
+cards are **planned for M4** ([roadmap](../../plans/roadmap.md#m4-creatures)). Reference recipes:
 [`human_head`](../../../recipes/human_head/README.md), [`orc_head`](../../../recipes/orc_head/README.md),
 [`goblin_head`](../../../recipes/goblin_head/README.md), and the flagship design dossier
 [`dragon`](../../../recipes/dragon/README.md). Original designs only — no characters, names or
@@ -16,6 +17,12 @@ for animals (shoulder height, body length, mass), and for fantasy creatures a **
 built from real animals: which real animal each body part borrows from and why (see the dragon
 dossier's reasoning column). Photos / drawings: front, side, 3/4 and top of the head; for
 creatures, side and front skeletal diagrams.
+
+Animals have their own research layer, the counterpart of [head-analysis](../../research/head-analysis.md):
+[animal-anatomy](../../research/animal-anatomy.md) (landmarks, stance and limb segments, head and
+eye rules, weight support, muscle masses, joint ranges, gaits, fur / feather / scale facts, each a
+number with a source) and [animal-species-sheets](../../research/animal-species-sheets.md) (wolf,
+dog, tiger, lion, cat, horse, cow, deer, bear, boar, eagle, crocodile).
 
 | Proportion (adult human, typical) | Value | Notes |
 |---|---|---|
@@ -33,11 +40,13 @@ creatures, side and front skeletal diagrams.
 
 | Animal (typical adult) | Shoulder height | Body length (nose–rump) | Mass |
 |---|---|---|---|
-| grey wolf | 0.6–0.85 m | 1.0–1.3 m (+ tail 0.4–0.5) | 30–55 kg |
+| grey wolf | 0.80–0.85 m | 1.05–1.60 m (+ tail 0.29–0.50) | mean 36–38.5 kg |
 | domestic dog (Labrador-size) | 0.55–0.62 | 0.9–1.0 | 25–36 kg |
-| horse | 1.5–1.7 | 2.4 | 450–600 kg |
+| horse (light riding) | 1.42–1.63 | ≈ 2.4 | 380–550 kg |
 | chicken | 0.25–0.35 (back) | 0.4 | 2–3 kg |
-| golden eagle | wingspan 1.8–2.3 m | 0.66–1.0 | 3–6.5 kg |
+| golden eagle | wingspan 1.80–2.34 m | 0.66–1.02 | ♂ 3.6 / ♀ 5.1 mean |
+
+More species, with sources and derived ratios: [animal-species-sheets](../../research/animal-species-sheets.md).
 
 Fantasy races in this repo are stylised from human anatomy: orc (heavy brow, wide jaw, tusks,
 neck as wide as the head), goblin (big head ratio, long ears and nose, small jaw), dwarf (≈ 4
@@ -95,13 +104,26 @@ real: { length: 0.3, width: 0.45, height: 0.55, measures: [
 checks: [touches('head', 'bust'), symmetric('_l', '_r', 'y'), /* checkHead via kind */],
 ```
 Creatures: declare shoulder height, head length and wing span from the design dossier as `measures`
-so later sculpt edits cannot drift.
+so later sculpt edits cannot drift. Shipped for animals: the `creature` kind's allometry and
+wing-loading refusals, QA `balance`, `fore share` and `mass`, and per-`family` defaults (eye
+orbit, cloven hooves, digit counts with dewclaws, tail length). Checklist from
+[animal-anatomy](../../research/animal-anatomy.md) (judge on `t3d shot` / `blueprint` or write a
+recipe test; the items without a check above are **planned**, §9 there):
+- [ ] stance matches the family; hock and carpus heights inside its band (§2);
+- [ ] elbow at the brisket ± 5 % H; stifle forward, hock back (§1);
+- [ ] cloven hooves (two digits + dewclaws) on cattle, deer and pigs; one hoof on horses (§2);
+- [ ] eye apertures face the family's orbit angle: cat ≈ 25°, dog ≈ 40°, horse ≈ 65° off +X (§3);
+- [ ] pupil shape fits the ecology: slit for small ambush predators, horizontal for grazers (§3);
+- [ ] centre of mass gives the fore-limb share: dog ≈ 0.60, horse ≈ 0.58 (§4);
+- [ ] baked walk follows LH → LF → RH → RF with duty factor > 0.5; joints inside their range (§6–7).
 
 ## Common mistakes
 - Eyes too high (in the upper third) — the commonest beginner error.
 - Neck a cylinder from under the chin; ears at the top of the head.
 - Mirror-perfect faces; single flat skin colour.
 - Fantasy creatures that borrow from a famous IP design.
+- Prey animals with forward-facing eyes; one hoof on a cow or deer; a bear with four toes.
+- The generic quadruped tail (0.37 L) left on a bear, deer or boar (real ≈ 0.05–0.1 L): set `family`.
 - Realistic people: out of scope for SDF stylised sculpting; route to the planned `/neural`
   adapters ([08](../../idea/08-neural-adapters.md)).
 
@@ -115,4 +137,5 @@ Methodology: [10-sculpting](../../idea/10-sculpting.md).
 - ISO 7250-1 (basic human body measurements for technological design)
 - ANSUR II anthropometric survey: https://www.openlab.psu.edu/ansur2/
 - Facial proportions for artists: https://en.wikipedia.org/wiki/Body_proportions
-- Animal data: https://en.wikipedia.org/wiki/Wolf · https://en.wikipedia.org/wiki/Horse
+- Animal data: https://en.wikipedia.org/wiki/Wolf · https://en.wikipedia.org/wiki/Horse; full list
+  in [animal-anatomy](../../research/animal-anatomy.md#0-sources-cited-below-by-tag)

@@ -9,15 +9,20 @@
     "wrought-iron",
     "1889"
   ],
+  "lods": [
+    0,
+    1,
+    2
+  ],
   "files": {
     "lods": [],
-    "sheet": "recipes/eiffel_tower/out/eiffel_tower/sheet.png",
-    "thumb": "recipes/eiffel_tower/out/eiffel_tower/thumb.png"
+    "sheet": "sheet.png",
+    "thumb": "thumb.png"
   },
   "triangles": [
-    187872,
-    21860,
-    1062
+    187848,
+    21844,
+    1052
   ],
   "drawCalls": [
     1,

@@ -14,6 +14,7 @@ const SHAPES = new Set(['dents', 'sag', 'warp']);
 
 const f = (w: WeatherCoverage, code: string, message: string, fix: string): Finding => ({
   gate: 'weather',
+  code,
   message: `${code}: ${w.target} ${w.effect} (${w.where}) ${message}`,
   fix,
 });

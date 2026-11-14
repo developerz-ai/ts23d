@@ -2,7 +2,13 @@
 // `measures` gate reads it (extent of the parts' union, or centre-to-centre of two parts), and
 // the per-view dimension list — overall L × W × H plus the measures that read in that view.
 
-import { type CompiledAsset, type Measure, type Vec3, worldMeshes } from '../core/index.ts';
+import {
+  type CompiledAsset,
+  type Measure,
+  TOLERANCE,
+  type Vec3,
+  worldMeshes,
+} from '../core/index.ts';
 import type { Rgb } from './blueprint-draw.ts';
 import { type Box3, type DimSpec, INK, type OrthoView } from './blueprint-panel.ts';
 
@@ -67,7 +73,8 @@ export function measureResults(asset: CompiledAsset): MeasureResult[] {
     return {
       measure: m,
       value,
-      ok: value !== null && Math.abs(value - m.value) / m.value <= (m.tolerance ?? 0.02),
+      ok:
+        value !== null && Math.abs(value - m.value) / m.value <= (m.tolerance ?? TOLERANCE.measure),
       a: end(Math.min(a0, a1)),
       b: end(Math.max(a0, a1)),
       box: box ?? { min: [0, 0, 0], max: [0, 0, 0] },

@@ -39,4 +39,22 @@ describe('sound.engine', () => {
     const b = encodeWav(engine({ cylinders: 6, rpm: 2000, seed: 4 }));
     expect(Bun.hash(a)).toBe(Bun.hash(b));
   });
+
+  it('default name is unique per parameter set; defaults keep the short name', () => {
+    expect(engine({ cylinders: 8, rpm: 900 }).name).toBe('engine_8cyl_900rpm');
+    expect(engine({ cylinders: 8, rpm: 900, seed: 1, roughness: 0.3 }).name).toBe(
+      'engine_8cyl_900rpm',
+    );
+    const names = [
+      engine({ cylinders: 8, rpm: 900, seed: 1 }),
+      engine({ cylinders: 8, rpm: 900, seed: 2 }),
+      engine({ cylinders: 8, rpm: 900, roughness: 0.5 }),
+      engine({ cylinders: 8, rpm: 900, duration: 1 }),
+      engine({ cylinders: 8, rpm: 900, exhaust: { length: 2 } }),
+      engine({ cylinders: 8, rpm: 900, exhaust: { muffler: 0.2 } }),
+      engine({ cylinders: 8, rpm: 900, firingOrder: [1, 8, 4, 3, 6, 5, 7, 2] }),
+    ].map((c) => c.name);
+    expect(new Set(names).size).toBe(names.length);
+    expect(engine({ cylinders: 8, rpm: 900, name: 'idle' }).name).toBe('idle');
+  });
 });

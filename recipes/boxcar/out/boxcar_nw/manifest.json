@@ -9,14 +9,19 @@
     "1918",
     "rolling-stock"
   ],
+  "lods": [
+    0,
+    1,
+    2
+  ],
   "files": {
     "lods": [],
-    "sheet": "recipes/boxcar/out/boxcar_nw/sheet.png",
-    "thumb": "recipes/boxcar/out/boxcar_nw/thumb.png"
+    "sheet": "sheet.png",
+    "thumb": "thumb.png"
   },
   "triangles": [
-    25864,
-    9460,
+    25480,
+    9236,
     1336
   ],
   "drawCalls": [

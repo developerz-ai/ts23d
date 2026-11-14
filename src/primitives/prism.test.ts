@@ -85,3 +85,25 @@ describe('planar + triangulate', () => {
     ).toBe(4);
   });
 });
+
+describe('prism input', () => {
+  const SQ: [number, number][] = [
+    [0, 0],
+    [1, 0],
+    [1, 1],
+    [0, 1],
+  ];
+  it('rejects a negative, zero or NaN depth (signed volume < 0)', () => {
+    for (const depth of [-1, 0, Number.NaN])
+      expect(() => prism({ profile: SQ, depth, color: [1, 1, 1] })).toThrow('T3D_RECIPE_INVALID');
+  });
+
+  it('rejects a profile with fewer than 3 points or a NaN point', () => {
+    expect(() => prism({ profile: SQ.slice(0, 2), depth: 1, color: [1, 1, 1] })).toThrow(
+      'T3D_RECIPE_INVALID',
+    );
+    expect(() =>
+      prism({ profile: [...SQ.slice(0, 3), [Number.NaN, 1]], depth: 1, color: [1, 1, 1] }),
+    ).toThrow('T3D_RECIPE_INVALID');
+  });
+});

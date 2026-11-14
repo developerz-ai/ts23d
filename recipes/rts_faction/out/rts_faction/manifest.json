@@ -9,20 +9,25 @@
     "scene",
     "team-colour"
   ],
+  "lods": [
+    0,
+    1,
+    2
+  ],
   "files": {
     "lods": [],
-    "sheet": "recipes/rts_faction/out/rts_faction/sheet.png",
-    "thumb": "recipes/rts_faction/out/rts_faction/thumb.png"
+    "sheet": "sheet.png",
+    "thumb": "thumb.png"
   },
   "triangles": [
-    145226,
-    31970,
-    3596
+    142834,
+    31162,
+    3460
   ],
   "drawCalls": [
-    34,
-    34,
-    20
+    36,
+    36,
+    22
   ],
   "pivots": [
     {
@@ -95,6 +100,11 @@
       "motion": "spin"
     },
     {
+      "name": "tank_track_l",
+      "parent": "tank",
+      "motion": "tread"
+    },
+    {
       "name": "tank_wheel_r_0",
       "parent": "tank",
       "motion": "spin"
@@ -128,6 +138,11 @@
       "name": "tank_sprocket_r",
       "parent": "tank",
       "motion": "spin"
+    },
+    {
+      "name": "tank_track_r",
+      "parent": "tank",
+      "motion": "tread"
     },
     {
       "name": "warden_0",
@@ -489,7 +504,7 @@
       "target": 0.2571,
       "actual": 0.2571,
       "eligible": "up-facing",
-      "area": 540.7717,
+      "area": 540.6931,
       "by": {
         "hall_hall_masonry": {
           "target": 0.25,
@@ -574,15 +589,15 @@
         "deposit_outcrop": {
           "target": 0.3,
           "actual": 0.3,
-          "area": 12.117
+          "area": 12.0384
         }
       }
     },
     "mud": {
-      "target": 0.49,
-      "actual": 0.49,
+      "target": 0.4901,
+      "actual": 0.4901,
       "eligible": "ground-near",
-      "area": 71.8381,
+      "area": 72.0371,
       "by": {
         "hall_hall_timber": {
           "target": 0.55,
@@ -657,7 +672,7 @@
         "deposit_outcrop": {
           "target": 0.5,
           "actual": 0.5,
-          "area": 12.9353
+          "area": 13.1343
         }
       }
     }

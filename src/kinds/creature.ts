@@ -2,7 +2,7 @@
 // few sourced proportions, and emits the engine contract: `body` (trunk, neck, legs, tail, wings,
 // fins: one blended sculpt), `head` (pivot at the atlas), `eye_l` / `eye_r` (pivots at the ball
 // centres, in lidded sockets), `claws` (grown from the toes). `defineCreature` wraps defineAsset
-// with the creases, biology checks and densities the gates need. LOD policy: sculpt cell ≈ 13% of
+// with the creases, biology checks (balance, quadruped fore share) and densities the gates need. LOD policy: sculpt cell ≈ 13% of
 // the upper-limb radius at LOD0, ×2.2 at LOD1, ×6.5 at LOD2 where the legs become tubes, relief
 // drops and the eyes become painted spots (the coarse orbit would swallow a ball).
 
@@ -19,15 +19,16 @@ import {
   type Vec3,
 } from '../core/index.ts';
 import type { StripId } from '../material/index.ts';
-import { type Biology, balanced, biology } from './creature-biology.ts';
+import { type Biology, balanced, biology, foreShareCheck } from './creature-biology.ts';
 import { bodyEdits } from './creature-body.ts';
 import { type Bones, headToWorld } from './creature-bones.ts';
 import { bodyPaint, headPaint, palette } from './creature-coat.ts';
 import { creatureCreases } from './creature-creases.ts';
 import { mixRgb, smoothstep, v3 } from './creature-curve.ts';
 import { eyeball } from './creature-eye.ts';
+import { clawMesh } from './creature-feet.ts';
 import { type HeadLayout, headEdits } from './creature-head.ts';
-import { clawMesh, legTubes } from './creature-limbs.ts';
+import { legTubes } from './creature-limbs.ts';
 import { sculptPiece } from './creature-mesh.ts';
 import { bonesOf } from './creature-skeleton.ts';
 import { type CreatureSpec, checkCreature } from './creature-spec.ts';
@@ -147,7 +148,9 @@ export function creature(
       [names.eyeR, -1],
     ] as const) {
       const at: Vec3 = [eyeC[0], eyeC[1] * side, eyeC[2]];
-      const gaze = l.eye.gaze ?? [at[0] + 2, 0, at[2]];
+      // The layout's gaze is the left eye's; the right eye looks at its mirror image.
+      const g = l.eye.gaze ?? [eyeC[0] + 2, 0, eyeC[2]];
+      const gaze: Vec3 = [g[0], g[1] * side, g[2]];
       const yaw = Math.atan2(gaze[1] - at[1], gaze[0] - at[0]);
       ctx.part(name, place(place(ball, { yaw }), { pitch: h.pitch }), {
         at: headToWorld(h, at),
@@ -177,13 +180,13 @@ export interface CreatureDefinition extends Omit<AssetDefinition, 'kind' | 'buil
 
 export function defineCreature(d: CreatureDefinition): Asset {
   const { spec, options, extra, ...rest } = d;
-  creaturePlan(spec);
+  const { bones } = creaturePlan(spec);
   return defineAsset({
     ...rest,
     kind: 'creature',
     budget: d.budget ?? { triangles: [150000, 40000, 4000] },
     creases: [...creatureCreases(spec, options?.prefix), ...(d.creases ?? [])],
-    checks: [balanced, ...(d.checks ?? [])],
+    checks: [balanced, ...foreShareCheck(spec, bones), ...(d.checks ?? [])],
     art: d.art ?? { focal: `${options?.prefix ?? ''}head`, grounded: true },
     build(ctx) {
       const info = creature(ctx, spec, options);

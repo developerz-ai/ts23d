@@ -1,5 +1,7 @@
 // Seeded, forkable PRNG (mulberry32). The only entropy a recipe may read: same seed, same bytes.
 
+import { Ts23dError } from './errors.ts';
+
 export interface Rng {
   /** Uniform in [0, 1). */
   next(): number;
@@ -12,13 +14,24 @@ export interface Rng {
   jitter(color: readonly [number, number, number], amount: number): [number, number, number];
 }
 
-function hash(seed: number, name: string): number {
+/** Throws T3D_RECIPE_INVALID unless `seed` is a finite integer (`where` names the option). */
+export function checkSeed(seed: number, where: string): void {
+  if (!Number.isInteger(seed))
+    throw new Ts23dError('T3D_RECIPE_INVALID', {
+      cause: `${where} ${seed} is not a finite integer`,
+      fix: 'use an integer seed, e.g. seed: 7 — fractions all collapse to the same stream',
+    });
+}
+
+/** A child seed derived from `seed` and a name: what `fork(name)` seeds its stream with. */
+export function forkSeed(seed: number, name: string): number {
   let h = seed ^ 0x9e3779b9;
   for (let i = 0; i < name.length; i++) h = Math.imul(h ^ name.charCodeAt(i), 0x85ebca6b);
   return (h ^ (h >>> 13)) >>> 0;
 }
 
 export function createRng(seed: number): Rng {
+  checkSeed(seed, 'rng seed');
   let state = seed >>> 0;
   const next = (): number => {
     state = (state + 0x6d2b79f5) >>> 0;
@@ -33,10 +46,14 @@ export function createRng(seed: number): Rng {
     int: (min, max) => min + Math.floor(next() * (max - min + 1)),
     pick: <T>(items: readonly T[]): T => {
       const item = items[Math.floor(next() * items.length)];
-      if (item === undefined) throw new RangeError('pick() from an empty list');
+      if (item === undefined)
+        throw new Ts23dError('T3D_RECIPE_INVALID', {
+          cause: 'rng.pick() from an empty list',
+          fix: 'pass at least one item, or guard the call when the list can be empty',
+        });
       return item;
     },
-    fork: (name) => createRng(hash(seed, name)),
+    fork: (name) => createRng(forkSeed(seed, name)),
     jitter: (c, amount) => {
       const k = 1 + (next() * 2 - 1) * amount;
       return [

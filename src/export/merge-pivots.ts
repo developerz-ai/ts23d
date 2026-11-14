@@ -6,15 +6,19 @@
 // glowing parts (GlbOptions.glow) into `<pivot>_glow_<i>` children with their emissive material,
 // and painted parts (`paint: slot`) into `<pivot>_paint_<slot>` children with the slot's material,
 // and finished parts (`finish: name`) into `<pivot>_finish_<name>` children with the finish's.
+// A pivot whose static parent merged away is re-parented to its nearest surviving pivot ancestor
+// (or the root), with `at` / `yaw` re-expressed so its world transform is exactly what QA measured.
 
 import {
   type CompiledAsset,
   type Mesh,
   merge,
   type Part,
+  ROOT_PART,
   rotateZ,
   type Surface,
   toWorld,
+  type Vec3,
   type WorldTransform,
   worldTransforms,
 } from '../core/index.ts';
@@ -70,7 +74,7 @@ export function mergeToPivots(
   const glowOf = (name: string): number => glowRes.findIndex((rs) => rs.some((r) => r.test(name)));
   const byName = new Map(asset.parts.map((p) => [p.name, p]));
   const xf = worldTransforms(asset.parts);
-  const ROOT = 'body';
+  const ROOT = ROOT_PART;
   const identity: WorldTransform = { origin: [0, 0, 0], yaw: 0 };
   const pivotOf = (p: Part): string => {
     let cur = p.parent ? byName.get(p.parent) : undefined;
@@ -178,11 +182,25 @@ export function mergeToPivots(
       motion: null,
     });
   layers(ROOT, null);
+  // A pivot under a static (merged) parent keeps its world transform under the nearest pivot.
+  const reparented = (p: Part): Pick<Part, 'parent' | 'at' | 'yaw'> => {
+    const parent = p.parent ? byName.get(p.parent) : undefined;
+    if (!parent || isPivot(parent)) return p;
+    const anchor = pivotOf(p);
+    const w = xf.get(p.name) ?? identity;
+    const a = anchor === ROOT ? identity : (xf.get(anchor) ?? identity);
+    const d: Vec3 = [
+      w.origin[0] - a.origin[0],
+      w.origin[1] - a.origin[1],
+      w.origin[2] - a.origin[2],
+    ];
+    return { parent: anchor === ROOT ? null : anchor, at: rotateZ(d, -a.yaw), yaw: w.yaw - a.yaw };
+  };
   for (const p of asset.parts) {
     if (!isPivot(p)) continue;
     const own = extra.get(`${p.name}|opaque`);
     const { surface: _drop, paint: _slot, finish: _finish, ...rest } = p;
-    parts.push({ ...rest, mesh: own ? merge(own) : null });
+    parts.push({ ...rest, ...reparented(p), mesh: own ? merge(own) : null });
     layers(p.name, p.name);
   }
   return { ...asset, parts };

@@ -10,15 +10,20 @@
     "usa",
     "1910s"
   ],
+  "lods": [
+    0,
+    1,
+    2
+  ],
   "files": {
     "lods": [],
-    "sheet": "recipes/signal_gantry/out/signal_gantry_4/sheet.png",
-    "thumb": "recipes/signal_gantry/out/signal_gantry_4/thumb.png"
+    "sheet": "sheet.png",
+    "thumb": "thumb.png"
   },
   "triangles": [
-    11036,
-    5072,
-    1404
+    10908,
+    4960,
+    1340
   ],
   "drawCalls": [
     10,

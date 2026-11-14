@@ -1,6 +1,8 @@
 // Skinning for hull-like surfaces: a station × column grid of points becomes quads with smooth
 // normals (central differences; collapsed rows such as a stem head borrow their neighbour's), and
 // any column range can be emitted as its own colour band, mirrored to port for a symmetric hull.
+// Collapsed rows and columns (the stem head, bottom columns where the keel rises above the
+// waterline) keep only the half of each quad that has area: no zero-area slivers.
 
 import type { MeshBuilder, Vec3 } from '../core/index.ts';
 import { stripRect } from '../material/index.ts';
@@ -12,6 +14,19 @@ const cross3 = (a: Vec3, b: Vec3): Vec3 => [
   a[2] * b[0] - a[0] * b[2],
   a[0] * b[1] - a[1] * b[0],
 ];
+
+/** Twice the area of triangle a-b-c. */
+const area2 = (a: Vec3, b: Vec3, c: Vec3): number => Math.hypot(...cross3(sub3(b, a), sub3(c, a)));
+
+/** Quad a-b-c-d (ids and positions) as its two triangles, each only if it has area. */
+export function skinQuad(
+  b: MeshBuilder,
+  ids: readonly [number, number, number, number],
+  p: readonly [Vec3, Vec3, Vec3, Vec3],
+): void {
+  if (area2(p[0], p[1], p[2]) > 1e-12) b.tri(ids[0], ids[1], ids[2]);
+  if (area2(p[0], p[2], p[3]) > 1e-12) b.tri(ids[0], ids[2], ids[3]);
+}
 
 /** Smooth normals over a station × column grid (outward = tj × ti for the starboard side). */
 export function normalsOf(g: Grid): Grid {
@@ -69,14 +84,19 @@ export function emitBand(
         });
       }),
     );
+    const at = (i: number, k: number): Vec3 => {
+      const p = g[i]?.[j0 + k] ?? [0, 0, 0];
+      return [p[0], p[1] * side, p[2]];
+    };
     for (let i = 0; i + 1 < ids.length; i++) {
       for (let k = 0; k < j1 - j0; k++) {
         const a = ids[i]?.[k] ?? 0;
         const c = ids[i]?.[k + 1] ?? 0;
         const e = ids[i + 1]?.[k + 1] ?? 0;
         const d = ids[i + 1]?.[k] ?? 0;
-        if (side > 0) b.quad(a, c, e, d);
-        else b.quad(a, d, e, c);
+        const [pa, pc, pe, pd] = [at(i, k), at(i, k + 1), at(i + 1, k + 1), at(i + 1, k)];
+        if (side > 0) skinQuad(b, [a, c, e, d], [pa, pc, pe, pd]);
+        else skinQuad(b, [a, d, e, c], [pa, pd, pe, pc]);
       }
     }
   }

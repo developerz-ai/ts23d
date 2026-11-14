@@ -6,15 +6,20 @@
     "demo",
     "sound"
   ],
+  "lods": [
+    0,
+    1,
+    2
+  ],
   "files": {
     "lods": [],
-    "sheet": "recipes/sound_demo/out/sound_demo/sheet.png",
-    "thumb": "recipes/sound_demo/out/sound_demo/thumb.png",
+    "sheet": "sheet.png",
+    "thumb": "thumb.png",
     "sounds": [
-      "recipes/sound_demo/out/sound_demo/bell_strike.wav",
-      "recipes/sound_demo/out/sound_demo/crate_knock.wav",
-      "recipes/sound_demo/out/sound_demo/door_creak.wav",
-      "recipes/sound_demo/out/sound_demo/engine_v10_idle.wav"
+      "bell_strike.wav",
+      "crate_knock.wav",
+      "door_creak.wav",
+      "engine_v10_idle.wav"
     ]
   },
   "triangles": [

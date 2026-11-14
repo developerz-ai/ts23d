@@ -64,6 +64,7 @@ export function assertSymmetric(
           {
             finding: {
               gate: 'symmetric',
+              code: 'T3D_QA_SYMMETRIC',
               message: `surface at ${fmtPoint(r.at)} has no mirror across ${axis} = ${o.about ?? 0}: nearest is ${r.worst >= 1 ? '≥ 1 m' : `${(r.worst * 100).toFixed(1)} cm`} away (tolerance ${(tol * 100).toFixed(1)} cm)`,
               fix: `build one side and mirror it (loop over side = ±1), or centre the asset on ${axis} = 0; pass { parts } to check only the parts meant to be symmetric`,
             },

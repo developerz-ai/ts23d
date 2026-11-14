@@ -5,7 +5,7 @@
 
 import { Ts23dError, type Vec3 } from '../core/index.ts';
 import type { MaterialPainter, StripKind, StripRecipe } from './paint/types.ts';
-import { hex } from './palette.ts';
+import { hex, isHex } from './palette.ts';
 import { type MaterialGraph, probeGraph } from './tex/graph.ts';
 import { type TextureSource, validateTexture } from './texture-source.ts';
 
@@ -55,8 +55,7 @@ function fail(id: string, cause: string, fix: string): never {
 function colour(id: string, key: string, v: string | Vec3 | undefined): Vec3 | undefined {
   if (v === undefined) return undefined;
   if (typeof v === 'string') {
-    if (!/^#?[0-9a-fA-F]{6}$/.test(v))
-      fail(id, `${key} '${v}' is not a hex colour`, "use '#rrggbb'");
+    if (!isHex(v)) fail(id, `${key} '${v}' is not a hex colour`, "use '#rrggbb' (or '#rgb')");
     return hex(v);
   }
   if (!(v.length === 3 && v.every(unit)))

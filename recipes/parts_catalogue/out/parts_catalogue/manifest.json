@@ -7,15 +7,20 @@
     "parts",
     "showcase"
   ],
+  "lods": [
+    0,
+    1,
+    2
+  ],
   "files": {
     "lods": [],
-    "sheet": "recipes/parts_catalogue/out/parts_catalogue/sheet.png",
-    "thumb": "recipes/parts_catalogue/out/parts_catalogue/thumb.png"
+    "sheet": "sheet.png",
+    "thumb": "thumb.png"
   },
   "triangles": [
-    30934,
-    16714,
-    10810
+    41606,
+    19638,
+    11066
   ],
   "drawCalls": [
     10,

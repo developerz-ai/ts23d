@@ -56,6 +56,7 @@ export function assertLodSilhouette(
         lod: o.lod ?? 2,
         finding: {
           gate: 'lod-silhouette',
+          code: 'T3D_QA_LOD_SILHOUETTE',
           message: `seen from ${v.view} the outline matches LOD0 at IoU ${v.iou.toFixed(3)} < ${minIoU}`,
           fix: 'keep the big masses at every LOD (drop segments and small detail, not extent): read ctx.lod and gate detail, never whole bodies',
         },

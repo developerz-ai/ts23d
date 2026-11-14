@@ -7,15 +7,20 @@
     "tree",
     "pine"
   ],
+  "lods": [
+    0,
+    1,
+    2
+  ],
   "files": {
     "lods": [],
-    "sheet": "recipes/pine/out/pine/sheet.png",
-    "thumb": "recipes/pine/out/pine/thumb.png"
+    "sheet": "sheet.png",
+    "thumb": "thumb.png"
   },
   "triangles": [
     23652,
     5740,
-    311
+    306
   ],
   "drawCalls": [
     2,

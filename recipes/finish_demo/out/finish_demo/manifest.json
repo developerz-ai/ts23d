@@ -7,10 +7,15 @@
     "finish",
     "prop"
   ],
+  "lods": [
+    0,
+    1,
+    2
+  ],
   "files": {
     "lods": [],
-    "sheet": "recipes/finish_demo/out/finish_demo/sheet.png",
-    "thumb": "recipes/finish_demo/out/finish_demo/thumb.png"
+    "sheet": "sheet.png",
+    "thumb": "thumb.png"
   },
   "triangles": [
     3172,

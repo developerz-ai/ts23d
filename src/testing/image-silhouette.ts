@@ -70,6 +70,7 @@ export function assertSilhouetteMatches(
           {
             finding: {
               gate: 'silhouette',
+              code: 'T3D_QA_SILHOUETTE',
               message: `outline from ${name} matches the reference mask at IoU ${iou.toFixed(3)} < ${minIoU}`,
               fix: 'compare the two outlines (t3d shot / review): fix proportions first (length, height, where masses sit), then shape',
             },
@@ -134,6 +135,7 @@ export function assertNoHoles(asset: Asset, o: HoleOptions = {}): number {
                 lod: c.lod,
                 finding: {
                   gate: 'holes',
+                  code: 'T3D_QA_HOLES',
                   message: `seen from ${v}, ${(frac * 100).toFixed(2)}% of the outline is see-through (enclosed background)`,
                   fix: 'close the surface there (a missing face, a panel short of its frame); if it is a real opening (a window, a lattice) narrow `views` or raise `maxFraction`',
                 },

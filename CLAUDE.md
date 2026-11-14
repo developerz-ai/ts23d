@@ -1,7 +1,7 @@
 # CLAUDE.md
 
-`AGENTS.md` links here: one brain for Claude Code, Codex, Cursor and the rest, in this repo or in a
-project that installed the package.
+`AGENTS.md` is a symlink to this file: one brain for Claude Code, Codex, Cursor and the rest. In a
+project that installed the package, read `node_modules/@developerz.ai/ts23d/CLAUDE.md` (npm does not ship the symlink).
 
 ## Rules first
 **North star: humans bring ideas, agents ship assets good enough to use as-is.** Every judgement an artist makes (references, proportions, build quality, "does it look right") must be a check the agent can run; no human polish step. **Art is text here:** every art principle has a measurable definition, a DSL word and a check ([16-art-as-text](docs/idea/16-art-as-text.md)).
@@ -11,8 +11,8 @@ project that installed the package.
 - **Deterministic or broken.** Same source + seed = same bytes. `ctx.rng` only; `bun run determinism` refuses the rest.
 - **Real units and references.** Metres, Z up, +X front. Vehicles/buildings declare `real` + `sources` + spec `measures`; gates: `proportions` ±5%, `measures` ±2%. Parts touch their supports (`floating-parts`); moving parts clear everything (`clashes`); no slit you can see light through (`gaps`; real openings declared with a `why`).
 - **LOD-gate, never decimate.** Recipes read `ctx.lod` and choose what to emit. Imported meshes (scans, CC0 base meshes) are the one exception: they have no recipe to gate, so `simplify` may decimate them, never code-built geometry (ADR 011).
-- **One material.** Shared trim sheet, vertex colour, one draw call per asset.
-- **See the result.** Every asset has a contact sheet and a beauty render (`hero.png`); every error has a code and `fix:`.
+- **One material.** Shared trim sheet, vertex colour; one draw per moving pivot (plus one merged static body), capped by `budget.draws`.
+- **See the result.** Every asset has a contact sheet (`sheet.png`) and a beauty render (`hero.png`); every error and QA finding has a `T3D_*` code and a `fix:`.
 - **Enforce rules.** A rule without a script in `bun run verify` is a suggestion. Every defect found once gets a row in `docs/architecture/defect-catalogue.md` and a check that fails on it before the fix.
 
 ## Project and stack
@@ -20,7 +20,7 @@ project that installed the package.
 
 | Area | Stack / constraint |
 |---|---|
-| Library | TypeScript; Bun only (pin: `.bun-version`); zero runtime dependencies |
+| Library | TypeScript; Bun only (pin: `.bun-version`); zero runtime dependencies. The CLI needs Bun; the library imports under Node ≥ 22 (`pack` step proves both) |
 | Gallery | Vite + three.js; site may depend on three/vite; compiles recipes in-browser |
 | Status | 0.x; anything unbuilt throws `T3D_NOT_IMPLEMENTED` on purpose; `docs/plans/roadmap.md` owns delivery |
 
@@ -50,7 +50,7 @@ project that installed the package.
 | Plan a big change | `/planx <goal>` → `docs/plans/<YYYY>/<MM>/<DD>/<1NN>-<slug>/` → `/feature <overview.md>` |
 | Release | `bun run release <x.y.z>` → PR `chore: release x.y.z` → merge; see `PUBLISHING.md` |
 
-Gate order (`STEPS` in `scripts/verify.ts`): lint · typecheck · boundaries · determinism · filesize · placeholders · test · recipes · build.
+Gate order (`STEPS` in `scripts/verify.ts`, 11 steps): lint · typecheck · boundaries · determinism · filesize · placeholders · conventions · test · recipes · build · pack. `--only` with an unknown step exits 2. Shards 2..n run only `recipes`; `recipes` also runs each recipe's `*.test.ts`. Pre-push runs only the fast steps.
 
 ## Layout
 | Path | Responsibility |
@@ -84,7 +84,8 @@ Human names a thing → research specs + real photos into `recipes/<name>/README
 ## Coordination and CI
 - **Finish the job:** fix, test, document, run the gate. Decide and state decisions rather than asking what code/docs answer. Ask only before irreversible/outward-facing acts.
 - **Hive** (big tasks: `/feature`): one checkout, never git worktrees; only the top-level agent spawns; exclusive file sets, no git for agents; max 4 parallel; coordinator runs the full gate once at the end.
-- **CI:** free GitHub runners, < 5 min. `ci.yml`: `verify` (= `bun run verify`) + `shots` (contact-sheet artifacts), each as 12 parallel shards (`T3D_SHARD=k/12`: shard 1 runs every step, all shards check their slice of the recipes). `pages.yml`: gallery to developerz-ai.github.io/ts23d. `release-tag.yml` + `release.yml`: release PR merge → tag → npm via OIDC (no tokens). Every action SHA-pinned; Dependabot moves pins.
+- **CI:** free GitHub runners, < 5 min. `ci.yml`: `gate` (12 shards, `T3D_SHARD=k/12`: shard 1 runs every step, shards 2..n only `recipes` on their slice), `shots` (12 shards; fails on any change under `recipes/*/out`; uploads contact sheets), `site`, and the aggregate `verify`, the one required check. `pages.yml`: gallery to developerz-ai.github.io/ts23d. `release-tag.yml` (idempotent) + `release.yml` (runs the full gate; refuses a tag not on a green `main` commit): release PR merge → tag → npm via OIDC (no tokens). Every action SHA-pinned; Dependabot moves pins.
+- **AI-maintained:** `.dz/maintainer/maintainer.yml` sets the developerz.ai bot lanes (health, release-due, improve, monthly cleanup, security-release); it files issues and small upkeep PRs, and release-due cuts releases. Owner-only settings stay human.
 
 ## Using the library in another project
 `bun add @developerz.ai/ts23d`, write `assets/<name>.ts` exporting `defineAsset({...})`, then

@@ -4,7 +4,8 @@
 // Scene stages the asset on a diorama in a looping scenario picked from its named parts (driving,
 // wind, a day on the turntable). Also switches LOD, wireframe and the trim sheet, lists the parts
 // (hover one to outline it) and offers a GLB per LOD. Heavy assets open at LOD1 with a button for
-// LOD0; a progress bar runs while the worker compiles, and leaving cancels the compile.
+// LOD0; a progress bar runs while the worker compiles (a failure ends it in a visible message), and
+// leaving cancels the compile.
 
 import { AnimationMixer, Box3, BoxHelper, Group, type Object3D, Timer, Vector3 } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
@@ -128,11 +129,12 @@ export class Viewer {
     this.progress.stop();
   }
 
+  /** Compile and show `asset`; true once it is on screen, false if superseded, cancelled or failed. */
   async show(
     asset: Subject,
     lod: Lod = this.lod,
     reframe = asset.name !== this.asset?.name,
-  ): Promise<void> {
+  ): Promise<boolean> {
     const fresh = asset.name !== this.asset?.name;
     if (fresh) this.mode = 'studio';
     this.asset = asset;
@@ -150,12 +152,15 @@ export class Viewer {
     try {
       staged = await loadStaged(asset, request, this.mode === 'scene');
     } catch (error) {
-      if (ticket !== this.token || error instanceof CancelledError) return;
-      this.progress.stop();
-      this.ui.status.textContent = `${asset.name} failed to compile: ${String(error)}`;
-      throw error;
+      if (ticket !== this.token || error instanceof CancelledError) return false;
+      // A visible message, not a rethrow: every caller fires and forgets.
+      this.ui.status.textContent = this.progress.fail(asset.name, error);
+      return false;
     }
-    if (ticket !== this.token) return disposeStaged(staged);
+    if (ticket !== this.token) {
+      disposeStaged(staged);
+      return false;
+    }
     this.pending = null;
     const { loaded, clip, hooks, def, base } = staged;
     this.progress.stop();
@@ -218,6 +223,7 @@ export class Viewer {
     renderStats(this.ui.stats, b, emitters.length);
     renderParts(this.ui.parts, b.parts, (name) => this.highlight(name));
     this.ui.status.textContent = `Showing ${asset.name} at LOD ${lod}.`;
+    return true;
   }
 
   /** Outline one named node in the redline colour, or clear the outline (null). */

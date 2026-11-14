@@ -9,15 +9,20 @@
     "hybrid",
     "lod"
   ],
+  "lods": [
+    0,
+    1,
+    2
+  ],
   "files": {
     "lods": [],
-    "sheet": "recipes/import_demo/out/import_demo/sheet.png",
-    "thumb": "recipes/import_demo/out/import_demo/thumb.png"
+    "sheet": "sheet.png",
+    "thumb": "thumb.png"
   },
   "triangles": [
-    45164,
-    16639,
-    3271
+    45036,
+    16575,
+    3251
   ],
   "drawCalls": [
     2,

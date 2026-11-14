@@ -4,9 +4,51 @@ All notable changes to `@developerz.ai/ts23d`. Format: [Keep a Changelog](https:
 
 ## [Unreleased]
 
+### Fixed
+- `defineAsset` accepted a missing budget, a fractional seed and any tolerance; bad input now throws `T3D_RECIPE_INVALID` with a `fix:` (D26).
+- Mirrored `place` flipped a door's mesh but not its spin / sway axis, so the hinge swung the wrong way; mirrored axes are now flipped (D27).
+- `ctx.use` children and unseeded instances shared the parent's random stream; children now get forked seeds (D28).
+- A mistyped colour (`#12345`, `red`) turned into NaN in a palette; `hex` is strict (D29).
+- Custom `defineMaterial` strips took rows in registration order, so sheets and UVs changed with unrelated code; rows now come from a stable hash of the id (D30).
+- `split` left a silent gap when fixed terms underfilled the strip, and parsed stray braces; both now throw coded errors (D31).
+- Primitives accepted NaN, zero-segment and inside-out input; `lathe` poles (radius 0) emitted zero-area slivers. Options are validated and poles are clean (D32).
+- The GLB reader trusted hostile accessor counts and offsets; it is bounded and capped, and import scale is checked (D33).
+- `refine`, `t3d finish --model http` and the data / texture scripts could hang forever on a dead server; all fetches have a timeout (D34).
+- `clashes` missed a thin spinning rotor through a panel: face interiors are sampled and thin spin volumes filled (D35).
+- A part wholly below ground counted as grounded; `floating-parts` reports it as its own finding (D36).
+- A pivot under a static part that merged away exported at the wrong place (`sound_demo`'s `crate_knock`, wheels under a yawed hull); it re-parents to the nearest surviving pivot (D37).
+- `t3d build` printed raw stacks for a missing file, a throwing recipe or an unknown flag, and never ran the LOD-chain gates; it now prints coded errors with `fix:` and runs them (D38, D39).
+- `bun run verify --only <typo>` went green having run nothing; recipe `*.test.ts` never ran in the gate; a recipe without `sheet.png` passed (D40).
+- `signal_gantry` knee braces landed beside the posts; a recipe check now holds both ends (D41).
+- Gallery: a crashed compile worker no longer hangs the page; WebGL-off browsers see the committed hero; 404 page, canonical and social meta added.
+
+### Changed
+- Creature kind holds animals to sourced biology (docs/research/animal-anatomy.md): a `family` (`canid`, `felid`, `ursid`, `equid`, `bovid`, `cervid`, `suid`) sets the orbit angle the eyelids and rest gaze face (Heesy 2004: cat 65°, dog 50°, horse 24° convergence; `face.orbit`), digits per paw with the fore dewclaw (`digits`; bears 5 / 5), cloven hooves with two dewclaws on artiodactyls (`hoof`), tail ÷ head-body defaults (bear 0.07, deer 0.075, tiger 0.51), and a new QA check `fore share:` (`T3D_QA_CHECK`) that fails a quadruped whose forelegs carry outside 55–66 % of its weight (dog 60.4 %, horse 57–60 %). The generic quadruped tail default is now the wolf's 0.37 (was 0.4); the wolf gains its fore dewclaws.
+- Breaking in 0.x: `hex()` accepts only `#rgb` / `#rrggbb` (else `T3D_MATERIAL_INVALID`).
+- Breaking in 0.x: `split` throws `T3D_GRAMMAR_UNDERFILL` when fixed terms leave metres nothing can absorb; add a stretch (`~`) or repeat term. `parseWhyte` is strict.
+- Breaking in 0.x: `package.json` has explicit `exports`: the 16 module subpaths, `.` and `./package.json`. Deep imports into `dist/` or `src/` no longer resolve. The tarball drops source maps, recipe tests and PNGs (4.6 MB to 2.35 MB packed). `AGENTS.md` is a symlink and is not shipped; `CLAUDE.md` is.
+- Breaking in 0.x: with `--json`, errors are one `{ ok: false, error: { code, message, fix } }` envelope on stdout; `list --json` is one envelope; a multi-recipe run with failures adds `data`. Exit codes are 0 ok, 1 QA or build failure, 2 usage.
+- Breaking in 0.x: `Finding.code` is required (`T3D_QA_<GATE>` or the lifted `T3D_*`); findings may carry `gap` and `nearest`; `t3d build` folds identical findings across `LOD0-2`.
+- Breaking in 0.x: a `tolerance` above its default (measures 0.02, real proportions 0.05, joints 0.2) needs a `why`; hard cap 0.5 (the joint cap was (0, 1)).
+- Breaking in 0.x: a pivot named `body` is reserved for the merged root (a static part named `body` is fine). Seeds must be integers.
+- Breaking in 0.x: `manifest.json` paths are relative to the manifest, and it gains a `lods` key; `index.json` merges across runs.
+- Breaking in 0.x: `degenerate-triangles` is now a default QA gate (it was exported but never run).
+- Breaking in 0.x: custom `defineMaterial` rows move once, to their hashed home rows; refresh committed renders with `bun run shots`.
+- Breaking in 0.x: the `_parts` wheel is redesigned from a 225/45 R17 reference, with the spoked face on -Y.
+- One-material rule reworded to what the exporter does: one draw per moving pivot plus one merged static body, capped by the optional `budget.draws` (`T3D_QA_DRAW_CALLS`); `t3d build` now runs the LOD-chain gates and the draw budget.
+- The CLI needs Bun; the library imports under Node >= 22 (proved by the pack smoke test).
+- Docs: README, CLAUDE.md, llms.txt, SECURITY.md, CONTRIBUTING.md and the QA, neural-adapter and roadmap pages now match the code (shipped vs planned). README gains badges and a links line; new `NOTICE` for the Hershey fonts and the MakeHuman CC0 base mesh.
+
 ### Added
+- AI-maintained policy: the repo is fully AI-maintained: `.dz/maintainer/maintainer.yml` adds a monthly `cleanup` lane, a `security-release` lane, and `release-due` cuts releases.
+- `bun run verify` has `conventions` (CLAUDE.md rules a script can check; every shipped defect row names an existing test) and `pack` (installs the packed tarball in an empty project, imports every `exports` subpath under Bun and Node, runs `t3d build`) steps; an unknown `--only` name exits 2.
+- CLI: `--version`, per-command `--help`, strict flags with did-you-mean, `--timeout <s>` for `finish`; coded errors `T3D_RECIPE_NOT_FOUND`, `T3D_RECIPE_THREW`, `T3D_CLI_USAGE`, `T3D_ASSET_DUPLICATE`.
+- `timeoutMs` on `refine` (default 600 s) and the finish HTTP model (default 300 s); script fetches time out after 60 s.
+- `budget.draws` (optional draw-call ceiling) is enforced by `t3d build` as `T3D_QA_DRAW_CALLS`.
+- Research docs for animals: `docs/research/animal-anatomy.md` and `docs/research/animal-species-sheets.md`.
+- Release guards: the release runs the full gate and refuses a tag not on a green `main` commit; `release-tag.yml` is idempotent; CI has an aggregate `verify` check, a `site` job and a `shots` job that fails on any change under `recipes/*/out`.
 - `bun run verify` has a `placeholders` step: elided or stubbed code (a bare `// ...` or `/* … */`, "rest of the code", "same as above", `TODO: implement`, "for brevity") fails the gate; planned work still throws `notImplemented()`.
-- Repo tooling: a `/planx` command writes path-disjoint execution plans under `docs/plans/<YYYY>/<MM>/<DD>/<1NN>-<slug>/` for `/feature` to run; the developerz.ai maintainer bot gets daily `health`, weekly `release-due` and monthly `improve` checkups (`.dz/briefs/`), which only file issues and small upkeep PRs.
+- Repo tooling: a `/planx` command writes path-disjoint execution plans under `docs/plans/<YYYY>/<MM>/<DD>/<1NN>-<slug>/` for `/feature` to run; the developerz.ai maintainer bot gets daily `health`, weekly `release-due` and monthly `improve` checkups (`.dz/briefs/`); with the AI-maintained policy below, `release-due` also cuts and merges releases.
 
 ## [0.4.0] - 2026-11-08
 

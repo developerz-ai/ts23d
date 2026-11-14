@@ -4,6 +4,7 @@
 // (Campione & Evans 2012) and eye size from mass, and the head-local → world transform.
 
 import type { Vec3 } from '../core/index.ts';
+import type { Hoof } from './creature-family.ts';
 import type { SkinNode } from './creature-skin.ts';
 import type { Skeleton, Stance } from './creature-spec.ts';
 
@@ -23,8 +24,12 @@ export interface Limb {
   /** Foot centre on the ground (z = 0) and its half-sizes (x along, y across, z up). */
   readonly foot: Vec3;
   readonly footSize: Vec3;
-  /** Toes with claws/talons, or 0 for a hoof. */
+  /** Clawed toes on the ground (claws/talons), or 0 for a hoof. */
   readonly toes: number;
+  /** Digits carried off the ground: a paw's dewclaw (digit I), a cloven hoof's II + V. */
+  readonly dewclaws: number;
+  /** Hoof of an unguligrade foot: one (equid) or two hoofed digits (artiodactyl); null for paws. */
+  readonly hoof: Hoof | null;
   /** Muscle masses and joint landmarks (triceps, forearm, thigh, calf, elbow point, hock…). */
   readonly muscles: readonly Muscle[];
 }
@@ -84,7 +89,8 @@ export interface Bones {
   readonly tailRoot: Vec3;
 }
 
-/** Bone diameter ÷ furred limb width at mid-humerus / mid-femur (tiger dossier assumption). */
+/** Bone diameter ÷ furred limb width at mid-humerus / mid-femur (tiger dossier assumption;
+ *  unsourced). */
 export const BONE_FRACTION = 0.2;
 
 /** Campione & Evans 2012: humerus + femur circumference (mm) that carries `mass` kg. */
@@ -100,7 +106,8 @@ export function allometricLimbR(mass: number): number {
   return boneDiameter / BONE_FRACTION / 2;
 }
 
-/** Eyeball radius from mass (vertebrate eye ∝ M^0.2: wolf 40 kg → 11.5 mm, tiger → 16.5 mm). */
+/** Eyeball radius from mass (wolf 40 kg → 11.5 mm, tiger → 16.5 mm). Howland et al. 2004 give
+ *  log-linear scaling with mass; this 0.2 exponent and the 0.0055 factor are unsourced fits. */
 export const eyeRadius = (mass: number): number => 0.0055 * mass ** 0.2;
 
 /** Head-local point → world (pitch about Y, then move to the atlas). */

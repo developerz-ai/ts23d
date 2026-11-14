@@ -7,15 +7,20 @@
     "steam",
     "19th-century"
   ],
+  "lods": [
+    0,
+    1,
+    2
+  ],
   "files": {
     "lods": [],
-    "sheet": "recipes/loco_440/out/loco_440/sheet.png",
-    "thumb": "recipes/loco_440/out/loco_440/thumb.png"
+    "sheet": "sheet.png",
+    "thumb": "thumb.png"
   },
   "triangles": [
-    47856,
-    18688,
-    1424
+    45340,
+    18076,
+    1400
   ],
   "drawCalls": [
     18,

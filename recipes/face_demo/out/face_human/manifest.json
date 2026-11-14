@@ -10,15 +10,20 @@
     "warp",
     "face"
   ],
+  "lods": [
+    0,
+    1,
+    2
+  ],
   "files": {
     "lods": [],
-    "sheet": "recipes/face_demo/out/face_human/sheet.png",
-    "thumb": "recipes/face_demo/out/face_human/thumb.png"
+    "sheet": "sheet.png",
+    "thumb": "thumb.png"
   },
   "triangles": [
-    96322,
-    36782,
-    8236
+    96194,
+    36718,
+    8216
   ],
   "drawCalls": [
     2,

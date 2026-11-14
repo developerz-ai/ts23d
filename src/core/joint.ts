@@ -3,6 +3,7 @@
 
 import { Ts23dError } from './errors.ts';
 import type { Joint, JointOptions } from './part.ts';
+import { checkTolerance, TOLERANCE } from './validate-asset.ts';
 import { toWorld, type WorldTransform } from './world.ts';
 
 const finite = (v: readonly number[]): boolean => v.length === 3 && v.every(Number.isFinite);
@@ -28,9 +29,7 @@ export function jointOf(asset: string, name: string, o: JointOptions): Joint {
       '`axis` is zero or not finite',
       'pass the direction from `from` to `to`, e.g. axis: [1, 0, 0]',
     );
-  const tol = o.tolerance ?? 0.2;
-  if (!(tol > 0 && tol < 1))
-    bad(`tolerance ${tol} is outside (0, 1)`, 'use a fraction: 0.2 = ±20%');
+  checkTolerance(o.tolerance, TOLERANCE.joint, o.why, `joint '${name}' in '${asset}'`);
   return {
     name,
     from: o.from,

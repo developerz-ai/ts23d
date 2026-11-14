@@ -143,19 +143,47 @@ export class TriangleGrid {
 // Gates and checks ask for the same mesh's samples many times; compute each (mesh, density) once.
 const sampleCache = new WeakMap<Mesh, Map<string, Vec3[]>>();
 
-/** Vertices plus points along every edge every `step` metres (catches crossing members). */
-export function surfaceSamples(m: Mesh, step = 0.05, maxPerEdge = 16): Vec3[] {
-  const key = `${step}:${maxPerEdge}`;
+/**
+ * Vertices, points along every edge every `step` metres (catches crossing members) and each
+ * triangle's centroid. With `maxInterior > 0`, triangles whose longest edge exceeds `step` also
+ * get a barycentric lattice at spacing `step`, at most `maxInterior` points each: a rotor through
+ * the middle of a big panel touches no edge. Cost: up to `maxInterior` extra points per big
+ * triangle, so only gates that need face interiors (clashes) ask for them.
+ */
+export function surfaceSamples(m: Mesh, step = 0.05, maxPerEdge = 16, maxInterior = 0): Vec3[] {
+  const key = `${step}:${maxPerEdge}:${maxInterior}`;
   const byMesh = sampleCache.get(m) ?? new Map<string, Vec3[]>();
   sampleCache.set(m, byMesh);
   const hit = byMesh.get(key);
   if (hit) return hit;
-  const out = sampleMesh(m, step, maxPerEdge);
+  const out = sampleMesh(m, step, maxPerEdge, maxInterior);
   byMesh.set(key, out);
   return out;
 }
 
-function sampleMesh(m: Mesh, step: number, maxPerEdge: number): Vec3[] {
+const dist = (a: Vec3, b: Vec3): number => Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]);
+
+/** Lattice divisions n with (n-1)(n-2)/2 interior points ≤ cap. */
+const latticeCap = (cap: number): number => Math.floor((3 + Math.sqrt(1 + 8 * cap)) / 2);
+
+function interior(tri: readonly [Vec3, Vec3, Vec3], step: number, cap: number, out: Vec3[]): void {
+  const [a, b, c] = tri;
+  const longest = Math.max(dist(a, b), dist(b, c), dist(c, a));
+  if (longest <= step) return;
+  const n = Math.min(Math.ceil(longest / step), latticeCap(cap));
+  for (let i = 1; i < n - 1; i++)
+    for (let j = 1; i + j < n; j++) {
+      const u = i / n;
+      const v = j / n;
+      out.push([
+        a[0] + (b[0] - a[0]) * u + (c[0] - a[0]) * v,
+        a[1] + (b[1] - a[1]) * u + (c[1] - a[1]) * v,
+        a[2] + (b[2] - a[2]) * u + (c[2] - a[2]) * v,
+      ]);
+    }
+}
+
+function sampleMesh(m: Mesh, step: number, maxPerEdge: number, maxInterior: number): Vec3[] {
   const out: Vec3[] = [];
   for (let i = 0; i < m.positions.length / 3; i++) out.push(at(m, i));
   for (let t = 0; t < m.indices.length / 3; t++) {
@@ -163,13 +191,11 @@ function sampleMesh(m: Mesh, step: number, maxPerEdge: number): Vec3[] {
     for (let e = 0; e < 3; e++) {
       const a = tri[e] ?? tri[0];
       const b = tri[(e + 1) % 3] ?? tri[0];
-      const dx = b[0] - a[0];
-      const dy = b[1] - a[1];
-      const dz = b[2] - a[2];
-      const n = Math.min(maxPerEdge, Math.floor(Math.sqrt(dx * dx + dy * dy + dz * dz) / step));
+      const n = Math.min(maxPerEdge, Math.floor(dist(a, b) / step));
       for (let s = 1; s < n; s++) out.push(lerp(a, b, s / n));
     }
     out.push(lerp(lerp(tri[0], tri[1], 0.5), tri[2], 1 / 3));
+    if (maxInterior > 0) interior(tri, step, maxInterior, out);
   }
   return out;
 }

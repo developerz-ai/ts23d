@@ -9,10 +9,15 @@
     "cargo",
     "hard-surface"
   ],
+  "lods": [
+    0,
+    1,
+    2
+  ],
   "files": {
     "lods": [],
-    "sheet": "recipes/cargo_container_scifi/out/cargo_container_scifi/sheet.png",
-    "thumb": "recipes/cargo_container_scifi/out/cargo_container_scifi/thumb.png"
+    "sheet": "sheet.png",
+    "thumb": "thumb.png"
   },
   "triangles": [
     22914,

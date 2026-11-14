@@ -117,31 +117,32 @@ function invalid(asset: CompiledAsset, declared: ReadonlyMap<string, Declared>):
 
 /** Errors as gate findings, a few per (code, part) and a count for the rest. */
 export function connectionFindings(report: ConnectionReport): Finding[] {
-  const seen = new Map<string, number>();
+  const seen = new Map<string, { code: string; part: string; n: number }>();
   const out: Finding[] = [];
   for (const i of report.issues) {
     if (i.severity !== 'error') continue;
     const key = `${i.code}:${i.part}`;
-    const n = (seen.get(key) ?? 0) + 1;
-    seen.set(key, n);
-    if (n <= PER_PART)
+    const s = seen.get(key) ?? { code: i.code, part: i.part, n: 0 };
+    s.n++;
+    seen.set(key, s);
+    if (s.n <= PER_PART)
       out.push({
         gate: 'connections',
+        code: i.code,
         part: i.part,
         message: `${i.code}: ${i.message}`,
         fix: i.fix,
       });
   }
-  for (const [key, n] of seen)
-    if (n > PER_PART) {
-      const [code, part] = key.split(':');
+  for (const { code, part, n } of seen.values())
+    if (n > PER_PART)
       out.push({
         gate: 'connections',
+        code,
         ...(part ? { part } : {}),
         message: `${code}: …and ${n - PER_PART} more like it on '${part}'`,
         fix: 'see `connectionsOverlay` (t3d connections) for every location',
       });
-    }
   return out;
 }
 

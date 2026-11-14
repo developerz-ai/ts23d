@@ -84,3 +84,58 @@ describe('sockets and emitters', () => {
     expect(parts.find((p) => p.name === 'jeep_1_exhaust')?.emitter?.kind).toBe('smoke');
   });
 });
+
+describe('ctx.use seeds', () => {
+  const firstDraw = (seen: number[]) =>
+    defineAsset({
+      name: 'drawer',
+      kind: 'prop',
+      budget,
+      build(ctx) {
+        seen.push(ctx.rng.next());
+      },
+    });
+
+  it("keeps a child's own seed: same first draw as compiling the child alone", () => {
+    const seen: number[] = [];
+    const child = defineAsset({ ...firstDraw(seen), seed: 42 });
+    compile(child);
+    const host = defineAsset({
+      name: 'host',
+      kind: 'prop',
+      budget,
+      seed: 7,
+      build: (ctx) => ctx.use(child, { prefix: 'kid' }),
+    });
+    compile(host);
+    expect(seen).toHaveLength(2);
+    expect(seen[1]).toBe(seen[0] as number);
+  });
+
+  it('gives unseeded instances their own streams, apart from each other and the parent', () => {
+    const seen: number[] = [];
+    const child = firstDraw(seen);
+    const host = defineAsset({
+      name: 'host',
+      kind: 'prop',
+      budget,
+      build(ctx) {
+        seen.push(ctx.rng.next());
+        ctx.use(child, { prefix: 'a' });
+        ctx.use(child, { prefix: 'b' });
+      },
+    });
+    compile(host);
+    expect(new Set(seen).size).toBe(3);
+  });
+
+  it('refuses a fractional per-instance seed', () => {
+    const host = defineAsset({
+      name: 'host',
+      kind: 'prop',
+      budget,
+      build: (ctx) => ctx.use(firstDraw([]), { prefix: 'a', seed: 0.5 }),
+    });
+    expect(() => compile(host)).toThrow(/T3D_RECIPE_INVALID/);
+  });
+});

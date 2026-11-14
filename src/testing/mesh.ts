@@ -25,6 +25,7 @@ export function assertClosed(input: MeshInput, o: MeshScope = {}): void {
             {
               finding: {
                 gate: 'closed',
+                code: 'T3D_QA_CLOSED',
                 part: name,
                 message: `'${name}' has ${t.boundary} open edge(s), first at ${fmtPoint(t.where.boundary)}`,
                 fix: 'close the surface: add the missing cap/face (box omit, lathe caps, loft ends) or weld the seam so both sides share its vertices',
@@ -45,6 +46,7 @@ export function assertManifold(input: MeshInput, o: MeshScope = {}): void {
       if (t.nonManifold > 0)
         out.push({
           gate: 'manifold',
+          code: 'T3D_QA_MANIFOLD',
           part: name,
           message: `'${name}' has ${t.nonManifold} edge(s) shared by 3+ triangles, first at ${fmtPoint(t.where.nonManifold)}`,
           fix: 'split the touching solids into separate parts, or remove the internal wall/fin',
@@ -52,6 +54,7 @@ export function assertManifold(input: MeshInput, o: MeshScope = {}): void {
       if (t.misoriented > 0)
         out.push({
           gate: 'manifold',
+          code: 'T3D_QA_MANIFOLD',
           part: name,
           message: `'${name}' has ${t.misoriented} edge(s) whose two triangles wind the same way, first at ${fmtPoint(t.where.misoriented)}`,
           fix: 'a neighbour is flipped: wind every triangle counter-clockwise seen from outside (swap two indices of the odd one)',
@@ -105,6 +108,7 @@ export function assertOutward(input: MeshInput, o: OutwardOptions = {}): number 
             {
               finding: {
                 gate: 'outward',
+                code: 'T3D_QA_OUTWARD',
                 part: name,
                 message: `'${name}' has ${inward} inward-facing triangle(s), first at ${fmtPoint(first)}`,
                 fix: 'wind those triangles counter-clockwise seen from outside (swap two indices); a mirrored transform needs its winding reversed',

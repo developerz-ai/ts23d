@@ -71,6 +71,13 @@ describe('importGlb: failures first', () => {
       ),
     ).toBe('T3D_IMPORT_MISSING');
   });
+  test('non-positive or non-finite sizes → T3D_IMPORT_UNSUPPORTED', () => {
+    const glb = writeMeshGlb([{ name: 'box', mesh: cube() }]);
+    expect(code(() => importGlb(src(glb), { height: -2 }))).toBe('T3D_IMPORT_UNSUPPORTED');
+    expect(code(() => importGlb(src(glb), { scale: 0 }))).toBe('T3D_IMPORT_UNSUPPORTED');
+    expect(code(() => importGlb(src(glb), { scale: Number.NaN }))).toBe('T3D_IMPORT_UNSUPPORTED');
+    expect(code(() => importGlb(src(glb), { fit: [1, -1, 1] }))).toBe('T3D_IMPORT_UNSUPPORTED');
+  });
   test('licences: unknown and non-commercial refused, NC opt-in warns', () => {
     const glb = writeMeshGlb([{ name: 'box', mesh: cube() }]);
     expect(code(() => importGlb(src(glb, { license: 'free for all' })))).toBe('T3D_IMPORT_LICENSE');

@@ -6,7 +6,7 @@
 // sample flows into the first (filters already in steady state).
 
 import { createRng, type SoundClip, Ts23dError } from '../core/index.ts';
-import { checkRange, makeClip, normalize, SAMPLE_RATE, token } from './clip.ts';
+import { checkRange, makeClip, normalize, SAMPLE_RATE, token, variant } from './clip.ts';
 import { biquad, noise } from './dsp.ts';
 
 export interface EngineOptions {
@@ -54,7 +54,8 @@ export function engine(o: EngineOptions): SoundClip {
   const muffler = checkRange('exhaust muffler', o.exhaust?.muffler ?? 0.5, 0, 1, 'muffler: 0.5');
   const rough = checkRange('engine roughness', o.roughness ?? 0.3, 0, 1, 'roughness: 0.3');
   const seconds = checkRange('engine duration (s)', o.duration ?? 2, 0.1, 20, 'duration: 2');
-  const rng = createRng(o.seed ?? 1);
+  const seed = o.seed ?? 1;
+  const rng = createRng(seed);
 
   // Whole cycles, and an integer sample count for the loop; each cycle gets exactly P/N samples.
   const cycles = Math.max(1, Math.round((seconds * rpm) / 120));
@@ -79,7 +80,7 @@ export function engine(o: EngineOptions): SoundClip {
       }
     }
   // Mechanical clatter: noise gated by the firing pulses (periodic noise: two copies of one).
-  const half = noise(period, (o.seed ?? 1) + 7);
+  const half = noise(period, seed + 7);
   const clatter = new Float32Array(period * 2);
   for (let i = 0; i < clatter.length; i++)
     clatter[i] = (half[i % period] ?? 0) * (0.2 + (pulses[i] ?? 0));
@@ -99,5 +100,17 @@ export function engine(o: EngineOptions): SoundClip {
   // No DC (pulses are one-sided), and nothing below a third of the firing rate.
   const out = biquad(mix, 'highpass', Math.max(15, f0 / 3), 0.7).slice(period);
   normalize(out, 0.85);
-  return makeClip(o.name ?? `engine_${cyl}cyl_${token(rpm)}rpm`, out, true);
+  const custom = o.firingOrder && order.some((c, i) => c !== i + 1);
+  const name =
+    `engine_${cyl}cyl_${token(rpm)}rpm` +
+    (custom ? `_order${order.join('_')}` : '') +
+    variant([
+      ['rpm', rpm, Math.round(rpm * 100) / 100],
+      ['pipe', pipe, 1.6],
+      ['muffler', muffler, 0.5],
+      ['rough', rough, 0.3],
+      ['dur', seconds, 2],
+      ['seed', seed, 1],
+    ]);
+  return makeClip(o.name ?? name, out, true);
 }

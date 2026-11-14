@@ -28,10 +28,23 @@ export function pieceMesh(pc: PartPiece): Mesh[] {
 export const placedMesh = (m: Mesh, place: Parameters<typeof affine>[0]): Mesh =>
   applyAffine(m, affine(place));
 
+const det = (a: Affine): number =>
+  a.m[0] * (a.m[4] * a.m[8] - a.m[5] * a.m[7]) -
+  a.m[1] * (a.m[3] * a.m[8] - a.m[5] * a.m[6]) +
+  a.m[2] * (a.m[3] * a.m[7] - a.m[4] * a.m[6]);
+
+/**
+ * Offsets and paths are vectors: they map through the linear part. A rotation axis is a pseudo-
+ * vector: a mirror (det < 0) flips the turning sense, so the axis is negated to keep the swing the
+ * mirror image of the original. Normalised, so a scaled placement keeps `degrees` meaningful.
+ */
 function rotateMotion(m: Motion, a: Affine): Motion {
   if (m.kind === 'slide') return { ...m, offset: linear(a, m.offset) };
   if (m.kind === 'tread') return { ...m, path: m.path.map((p) => linear(a, p)) };
-  return { ...m, axis: linear(a, m.axis) };
+  const v = linear(a, m.axis);
+  const k = Math.sign(det(a)) / (Math.hypot(...v) || 1);
+  // + 0 turns -0 into 0, so a mirrored [0, 0, 1] reads [0, 0, -1] in manifests.
+  return { ...m, axis: [v[0] * k + 0, v[1] * k + 0, v[2] * k + 0] };
 }
 
 /**

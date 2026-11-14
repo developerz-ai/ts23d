@@ -77,6 +77,7 @@ export function assertTileable(img: Image, o: TileOptions = {}): number {
       : [
           {
             gate: 'tileable',
+            code: 'T3D_QA_TILEABLE',
             message: `wrapping ${axis === 'x' ? 'left↔right' : 'top↔bottom'}${o.rows ? ` (rows ${o.rows[0]}–${o.rows[1]})` : ''} jumps ${s.seam.toFixed(1)} vs ${s.inner.toFixed(1)} inside (×${r.toFixed(1)} > ×${lim})`,
             fix: 'paint with periodic noise/patterns whose period divides the strip (tex fields wrap when sized to the span), or cross-fade the edges',
           },
@@ -124,6 +125,7 @@ export function assertNoBleed(
           if (d <= tol) continue;
           found.push({
             gate: 'bleed',
+            code: 'T3D_QA_BLEED',
             message: `${name} strip row ${s}: pixel row ${y} differs from its edge row ${edge} by ${d} — mips will mix in the neighbouring strip`,
             fix: 'compose strips with their edge texels replicated into the gutter (paintTrimSheet does; a hand-made sheet must too)',
           });

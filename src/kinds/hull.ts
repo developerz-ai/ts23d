@@ -16,7 +16,7 @@ import { stripRect } from '../material/index.ts';
 import { sweep, triangulate } from '../primitives/index.ts';
 import { dedupe, stripScale } from './faces.ts';
 import { type HullLines, type HullOptions, hullLines, thetaAt } from './hull-lines.ts';
-import { emitBand, type Grid, normalsOf } from './hull-skin.ts';
+import { emitBand, type Grid, normalsOf, skinQuad } from './hull-skin.ts';
 
 export type { HullColors, HullLines, HullOptions } from './hull-lines.ts';
 
@@ -39,7 +39,7 @@ function deckMesh(o: HullOptions, ln: HullLines, xs: readonly number[], inset: n
     for (let i = 0; i + 1 < xs.length; i++) {
       const x0 = xs[i] ?? 0;
       const x1 = xs[i + 1] ?? 0;
-      const q = [at(x0, y0), at(x0, y0 + w), at(x1, y0 + w), at(x1, y0)];
+      const q: [Vec3, Vec3, Vec3, Vec3] = [at(x0, y0), at(x0, y0 + w), at(x1, y0 + w), at(x1, y0)];
       if (
         Math.abs((q[1]?.[1] ?? 0) - (q[0]?.[1] ?? 0)) +
           Math.abs((q[2]?.[1] ?? 0) - (q[3]?.[1] ?? 0)) <
@@ -54,7 +54,7 @@ function deckMesh(o: HullOptions, ln: HullLines, xs: readonly number[], inset: n
           color: o.colors.deck,
         }),
       );
-      b.quad(ids[0] ?? 0, ids[3] ?? 0, ids[2] ?? 0, ids[1] ?? 0);
+      skinQuad(b, [ids[0] ?? 0, ids[3] ?? 0, ids[2] ?? 0, ids[1] ?? 0], [q[0], q[3], q[2], q[1]]);
     }
   }
   return b.build();

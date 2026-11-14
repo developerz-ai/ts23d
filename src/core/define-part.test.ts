@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'bun:test';
 import { compile, defineAsset } from './asset.ts';
 import { catalogueOf, definePart } from './define-part.ts';
+import { placePiece } from './define-part-place.ts';
 import { Ts23dError } from './errors.ts';
 import { boundsOf, type Mesh, MeshBuilder, triangleCount } from './mesh.ts';
 
@@ -141,6 +142,47 @@ describe('definePart build', () => {
     expect(boundsOf(other.mesh({ s: 1 })).max[0]).toBe(x);
     // Different params, a different stream: the draw (max − s) differs.
     expect(boundsOf(noisy.mesh({ s: 2 })).max[0] - 2).not.toBeCloseTo(x - 1, 6);
+  });
+});
+
+describe('placePiece motion', () => {
+  const leaf = {
+    name: 'leaf',
+    mesh: null,
+    motion: { kind: 'sway', axis: [0, 0, 1], degrees: 90, hz: 0.2, oneWay: true },
+  } as const;
+  const axisOf = (place: Parameters<typeof placePiece>[1]) => {
+    const m = placePiece(leaf, place).motion;
+    return m?.kind === 'sway' ? m.axis : null;
+  };
+
+  it('negates a sway axis under a mirror, so the hinge swings as the mirror image', () => {
+    expect(axisOf({ scale: [-1, 1, 1] })).toEqual([0, 0, -1]);
+  });
+
+  it('keeps the axis without a mirror, normalised under scale', () => {
+    expect(axisOf({})).toEqual([0, 0, 1]);
+    expect(axisOf({ scale: [1, 1, 3] })).toEqual([0, 0, 1]);
+  });
+});
+
+describe('definePart lod policy', () => {
+  it('refuses a map that is not three non-decreasing LODs, or a bad upTo', () => {
+    const bad = (lod: object) =>
+      code(() =>
+        definePart({
+          name: 'bad_lod',
+          description: '',
+          params: {},
+          lod: lod as never,
+          build: () => tri(1),
+        }),
+      );
+    expect(bad({ map: [2, 0, 0] })).toMatch(/^T3D_RECIPE_INVALID\|/);
+    expect(bad({ map: [0, 3, 3] })).toMatch(/^T3D_RECIPE_INVALID\|/);
+    expect(bad({ map: [0, 1] })).toMatch(/^T3D_RECIPE_INVALID\|/);
+    expect(bad({ upTo: 5 })).toMatch(/^T3D_RECIPE_INVALID\|/);
+    expect(bad({ map: [0, 0, 1], upTo: 1 })).toBe('none');
   });
 });
 

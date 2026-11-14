@@ -34,7 +34,7 @@
 | Half | Means | How |
 |---|---|---|
 | **High definition up close** | Hero detail: rivets, rods, window sashes, real proportions | Code places detail N times for free; `real` dimensions + the `proportions` gate; painted trim sheet |
-| **Cheap to draw** | Games pay per draw call, per vertex fetch, per byte | One shared material, static geometry batched into its pivot, so draw calls = the parts your engine moves (a static building: 1); 3 LODs from one source; u16 indices and colours today; welded, vertex-cache-ordered buffers via `optimize`, an opt-in web profile (quantisation + meshopt) and LOD switch hints planned (M2) |
+| **Cheap to draw** | Games pay per draw call, per vertex fetch, per byte | One shared material, static geometry batched into its pivot, so draw calls = one per moving pivot plus one merged static body (a static building: 1), capped by `budget.draws`; 3 LODs from one source; u16 indices and colours today; welded, vertex-cache-ordered buffers via `optimize`, an opt-in web profile (quantisation + meshopt) and LOD switch hints planned (M2) |
 
 ## No Blender for most hard-surface asset production
 

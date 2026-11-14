@@ -1,6 +1,16 @@
 # 08 — Neural adapters
 
-**Optional. Never a core dependency. Runs on the user's own GPU. The output becomes an ordinary part, cached by content hash, so CI rebuilds without a GPU.** Source: `src/neural/`. Status as of 2026-10: **all planned (M5)**. Every entry point throws `T3D_NOT_IMPLEMENTED`.
+**Optional. Never a core dependency. Runs on the user's own GPU. The output becomes an ordinary part, cached by content hash, so CI rebuilds without a GPU.** Source: `src/neural/`. Status as of 2026-11: **partly shipped**, per adapter below.
+
+## Status per adapter (as of 2026-11)
+
+| Entry point | Status | Notes |
+|---|---|---|
+| `importGlb` | Shipped | Reader bounds and caps (accessor size, empty-accessor cap, inflate cap), import scale checks; [21-import](21-import.md) |
+| `refine` | Shipped (adapter + cache, no bundled model) | HTTP to an endpoint you run; `timeoutMs` default 600 s; every failure is `T3D_REFINE_FAILED` |
+| `t3d finish --model http` | Shipped | `timeoutMs` default 300 s (`--timeout <s>`); [22-ai-finish](22-ai-finish.md) |
+| `localGenerator` | Planned (M5) | Throws `T3D_NOT_IMPLEMENTED` |
+| `kubeezImages` | Planned (M5) | Throws `T3D_NOT_IMPLEMENTED` |
 
 ## Why
 
@@ -22,9 +32,9 @@ interface MeshGenerator {
   generate(r: GenerateRequest): Promise<Mesh>;
 }
 
-localGenerator({ model, endpoint }): MeshGenerator   // talks to a local HTTP server
+localGenerator({ model, endpoint }): MeshGenerator   // planned: talks to a local HTTP server
 importGlb(source, opts): ImportedMesh                 // shipped, see 21-import.md
-kubeezImages({ apiKey, model? }): ImageSource        // images for references and materials
+kubeezImages({ apiKey, model? }): ImageSource        // planned: images for references and materials
 ```
 
 ## Models worth wrapping

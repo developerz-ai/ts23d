@@ -43,6 +43,7 @@ export function assertValueRange(sheet: SheetMaps, o: ValueRangeOptions = {}): n
     if (lum < lo || lum > hi)
       found.push({
         gate: 'values',
+        code: 'T3D_QA_VALUES',
         message: `'${id}' (row ${s}): mean albedo ${lum.toFixed(0)} outside ${lo}–${hi} sRGB`,
         fix:
           lum < lo
@@ -55,12 +56,14 @@ export function assertValueRange(sheet: SheetMaps, o: ValueRangeOptions = {}): n
       if (rough < 0.05)
         found.push({
           gate: 'values',
+          code: 'T3D_QA_VALUES',
           message: `'${id}' (row ${s}): mean roughness ${rough.toFixed(3)} — a mirror`,
           fix: 'roughness ≥ 0.05 even for polished metal/glass',
         });
       if (midMetal > 0.2)
         found.push({
           gate: 'values',
+          code: 'T3D_QA_VALUES',
           message: `'${id}' (row ${s}): ${(midMetal * 100).toFixed(0)}% of texels are half-metal (0.2–0.8)`,
           fix: 'metalness is 0 or 1; blend only at edges (rust over steel)',
         });
@@ -70,6 +73,7 @@ export function assertValueRange(sheet: SheetMaps, o: ValueRangeOptions = {}): n
       if (back > 0.01)
         found.push({
           gate: 'values',
+          code: 'T3D_QA_VALUES',
           message: `'${id}' (row ${s}): ${(back * 100).toFixed(1)}% of normal texels point into the surface (B < 128)`,
           fix: 'tangent-space normals need z > 0: renormalise, or the height→normal strength is too high',
         });

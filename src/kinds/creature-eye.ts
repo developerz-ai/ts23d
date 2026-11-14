@@ -2,7 +2,8 @@
 // darker limbal ring, an iris of declared size, round or slit pupil, a cornea bulge) gazing +X, and
 // the skin around it as sculpt edits — upper and lower lids with real thickness that wrap the ball
 // and cover a declared share of the iris, a wet line on the lower lid, the caruncle at the inner
-// corner. QA `connections` holds the result: the ball enclosed, the upper lid on the iris.
+// corner — turned as one about Z to the orbit's `aperture` angle (a horse's eye opens sideways, a
+// cat's forward). QA `connections` holds the result: the ball enclosed, the upper lid on the iris.
 
 import type { Mesh, Vec3 } from '../core/index.ts';
 import { type SculptEdit, sdf } from '../primitives/index.ts';
@@ -41,13 +42,35 @@ export interface EyeSpec {
   readonly tilt?: number;
   /** Upper lid lowered toward the nose, degrees (a scowl). */
   readonly scowl?: number;
-  /** Where both eyes look; default 1.5 m straight ahead of the face. */
+  /** Where the left eye looks (the right mirrors); default 1.5 m straight ahead of the face. */
   readonly gaze?: V;
+  /** Yaw of the lid opening off +X toward the eye's own side, degrees (90° − orbit convergence:
+   *  cat ≈ 25, dog ≈ 40, horse ≈ 65; default 0). */
+  readonly aperture?: number;
   readonly pupil?: 'round' | 'slit';
   readonly colours: EyeColours;
 }
 
 const deg = Math.PI / 180;
+
+/** World → eye-local: undo the aperture yaw about the eye centre (lids are built facing +X). */
+function toLocal(e: EyeSpec): (p: V) => V {
+  const a = -(e.aperture ?? 0) * deg;
+  const c = Math.cos(a);
+  const s = Math.sin(a);
+  const [ex, ey] = e.centre;
+  return (p) => {
+    const x = p[0] - ex;
+    const y = p[1] - ey;
+    return [ex + c * x - s * y, ey + s * x + c * y, p[2]];
+  };
+}
+
+/** Eye-local direction → world (apply the aperture yaw). */
+function toWorldDir(e: EyeSpec, d: V): V {
+  const a = (e.aperture ?? 0) * deg;
+  return [Math.cos(a) * d[0] - Math.sin(a) * d[1], Math.sin(a) * d[0] + Math.cos(a) * d[1], d[2]];
+}
 
 /** Half-height of the iris on the ball's front, and its angular radius. */
 function irisOf(e: EyeSpec): { h: number; a: number } {
@@ -69,8 +92,13 @@ function lidShell(e: EyeSpec, upper: boolean): SculptEdit {
   const n: V = upper ? [0, ny, -nz] : [0, -ny, nz];
   const at: V = [ex, ey, ez + edge];
   const r = e.r + e.lid;
-  const plane = (p: V): number =>
-    ((p[0] - at[0]) * n[0] + (p[1] - at[1]) * n[1] + (p[2] - at[2]) * n[2]) / Math.hypot(...n);
+  const local = toLocal(e);
+  const plane = (q: V): number => {
+    const p = local(q);
+    return (
+      ((p[0] - at[0]) * n[0] + (p[1] - at[1]) * n[1] + (p[2] - at[2]) * n[2]) / Math.hypot(...n)
+    );
+  };
   const pad = r + 0.01;
   return {
     group: [
@@ -85,7 +113,7 @@ function lidShell(e: EyeSpec, upper: boolean): SculptEdit {
         blend: e.lid * 0.6,
       },
       {
-        field: (p) => ex - e.r * 0.8 - p[0],
+        field: (q) => ex - e.r * 0.8 - local(q)[0],
         bounds: [
           [ex - pad, ey - pad, ez - pad],
           [ex + pad, ey + pad, ez + pad],
@@ -110,8 +138,10 @@ export function lidEdits(e: EyeSpec): SculptEdit[] {
   const z = ez - h * (1 - 2 * e.lower) + e.lid * 0.3;
   const R = e.r + e.lid * 0.6;
   const pad = R + 0.004;
+  const local = toLocal(e);
   out.push({
-    field: (p) => {
+    field: (q) => {
+      const p = local(q);
       const d = Math.hypot(p[0] - ex, p[1] - ey, p[2] - ez) - R;
       const front = Math.max(0, ex + e.r * 0.2 - p[0]);
       return Math.hypot(d, p[2] - z) - e.lid * 0.45 + front;
@@ -125,11 +155,12 @@ export function lidEdits(e: EyeSpec): SculptEdit[] {
     color: e.colours.wet,
   });
   // Caruncle: the pink knot at the inner corner, tucked against the ball.
-  const inner = norm([Math.cos(58 * deg), -Math.sin(58 * deg), -0.08]);
+  const inner = toWorldDir(e, norm([Math.cos(58 * deg), -Math.sin(58 * deg), -0.08]));
   out.push({
     shape: 'ellipsoid',
     at: add(e.centre, mul(inner, e.r * 0.93)),
     size: [e.r * 0.16, e.r * 0.13, e.r * 0.2],
+    rotate: [0, 0, e.aperture ?? 0],
     blend: e.lid * 0.5,
     color: e.colours.caruncle,
   });

@@ -3,12 +3,14 @@
 // → near-vertical metatarsus) and the muscle masses an animal is read from — deltoid, triceps,
 // forearm extensors/flexors, quadriceps, hamstrings ("breeches" in a winter coat), gastrocnemius
 // into the Achilles tendon — plus the bony landmarks (elbow point, accessory carpal pad, stifle,
-// calcaneus). Sizes are multiples of the allometric limb radius `r`; `fur` thickens the masses
-// that carry long hair (back of the forearm, the thigh).
+// calcaneus). Digits per foot come from the family (creature-family.ts). Sizes are multiples of
+// the allometric limb radius `r`; `fur` thickens the masses that carry long hair (back of the
+// forearm, the thigh).
 
 import type { Vec3 } from '../core/index.ts';
 import type { Limb, Muscle } from './creature-bones.ts';
 import { v3 } from './creature-curve.ts';
+import type { FootPlan } from './creature-family.ts';
 import type { Stance } from './creature-spec.ts';
 
 const DEG = 180 / Math.PI;
@@ -54,7 +56,7 @@ export interface LegFrame {
   readonly fur: number;
 }
 
-export function foreLeg(stance: Stance, f: LegFrame): Limb {
+export function foreLeg(stance: Stance, f: LegFrame, digits: FootPlan): Limb {
   const { xw, T, H, D, y, r, fur } = f;
   const [carpZ, , topK] = heights(stance);
   const top = topK * H;
@@ -70,7 +72,7 @@ export function foreLeg(stance: Stance, f: LegFrame): Limb {
     radii: [r * 1.05, r * 0.85, r * 0.55, r * 0.55],
     foot,
     footSize: [sx, sy, top],
-    toes: stance === 'unguligrade' ? 0 : 4,
+    ...digits,
     muscles: [
       // Deltoid over the point of the shoulder; triceps filling the back of the upper arm.
       along(S, E, 0.15, [r * 0.15, 0, 0], [r * 0.8, r * 0.7, r * 1.1]),
@@ -91,7 +93,7 @@ export function foreLeg(stance: Stance, f: LegFrame): Limb {
   };
 }
 
-export function hindLeg(stance: Stance, f: LegFrame): Limb {
+export function hindLeg(stance: Stance, f: LegFrame, digits: FootPlan): Limb {
   const { xh, T, H, D, y, r, fur } = f;
   const [, hockK, topK] = heights(stance);
   const top = topK * H;
@@ -112,7 +114,7 @@ export function hindLeg(stance: Stance, f: LegFrame): Limb {
     radii: [r * 1.2, r * 0.8, r * 0.5, r * 0.55],
     foot,
     footSize: [sx, sy, top],
-    toes: stance === 'unguligrade' ? 0 : 4,
+    ...digits,
     muscles: [
       // Quadriceps in front of the femur; hamstrings (the winter "breeches") behind it.
       along(Hp, K, 0.5, [r * 0.55, r * 0.1, 0], [r * 1.45, r * 0.75, r * 2.1]),

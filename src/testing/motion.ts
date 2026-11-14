@@ -20,6 +20,7 @@ export function assertPartMotionClear(asset: Asset, part: string, o: LodOptions 
             lod: c.lod,
             finding: {
               gate: 'motion',
+              code: 'T3D_QA_MOTION',
               part,
               message: c.parts.some((p) => re.test(p.name))
                 ? `'${part}' has no motion to sweep`

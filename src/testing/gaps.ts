@@ -48,6 +48,7 @@ export function assertTouches(asset: Asset, a: string, b: string, o: TouchOption
             lod: c.lod,
             finding: {
               gate: 'touches',
+              code: 'T3D_QA_TOUCHES',
               message: `no part matches '${q.parts(a).length ? b : a}'`,
               fix: 'check the part names (globs allowed: door_*)',
             },
@@ -62,6 +63,7 @@ export function assertTouches(asset: Asset, a: string, b: string, o: TouchOption
               lod: c.lod,
               finding: {
                 gate: 'touches',
+                code: 'T3D_QA_TOUCHES',
                 part: a,
                 message: `'${a}' is ${cm(d)} from '${b}', must be within ${cm(eps)}`,
                 fix: `move or extend '${a}' onto '${b}' — a visible slot reads as a modelling error`,
@@ -98,6 +100,7 @@ export function assertFlush(
             lod: c.lod,
             finding: {
               gate: 'flush',
+              code: 'T3D_QA_FLUSH',
               part: a,
               message: `'${a}' and '${b}' never meet${o.view ? ` seen from ${o.view}` : ''}`,
               fix: 'check the names and the side (view: "+X" …); flush needs a shared edge',
@@ -111,6 +114,7 @@ export function assertFlush(
               lod: c.lod,
               finding: {
                 gate: 'flush',
+                code: 'T3D_QA_FLUSH',
                 part: a,
                 message: `'${a}' stands ${cm(Math.abs(f.proud))} ${f.proud >= 0 ? 'proud of' : 'behind'} '${b}' seen from ${f.view} (tolerance ${cm(tol)})`,
                 fix: `move '${a}' along ${f.view.slice(1)} until its face is level with '${b}'`,

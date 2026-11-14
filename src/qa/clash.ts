@@ -20,6 +20,12 @@ import { surfaceSamples } from './geometry.ts';
 import { meshBounds } from './geometry-cache.ts';
 import { CLASH_EPS, type Finding, type Gate } from './types.ts';
 
+/** Sample spacing on the static parts (m), and the face-interior lattice cap per triangle: 400
+ *  points keep a 3.6 m panel triangle at ≤ 7 cm spacing, so a 10 cm rotor blade through its
+ *  middle lands samples (a big triangle costs up to 400 inside-tests; most are below 10 cm). */
+const STEP = 0.1;
+const INTERIOR = 400;
+
 function subtree(parts: readonly Part[], root: string): Set<string> {
   const out = new Set([root]);
   for (const p of parts) if (p.parent && out.has(p.parent)) out.add(p.name);
@@ -85,12 +91,13 @@ export const clashes: Gate = (asset: CompiledAsset): Finding[] => {
         })
       )
         continue;
-      const hits = surfaceSamples(mesh, 0.1, 4).filter(
+      const hits = surfaceSamples(mesh, STEP, 4, INTERIOR).filter(
         (p) => inBox(p, vol) && vol.inside(p),
       ).length;
       if (hits > 0) {
         findings.push({
           gate: 'clashes',
+          code: 'T3D_QA_CLASHES',
           part: name,
           message: `'${name}' cuts into the swept ${root.motion.kind} of '${root.name}' (${hits} sample${hits === 1 ? '' : 's'} deeper than ${CLASH_EPS * 100} cm)`,
           fix: `move/trim '${name}' or '${root.name}' for running clearance; if they are meant to interlock (an axle through its bearing), list it: clearOf: ['${name}'] on '${root.name}'`,

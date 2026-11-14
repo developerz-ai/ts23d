@@ -120,6 +120,7 @@ export const zFighting: Gate = (asset) => {
       if (hits >= 2)
         out.push({
           gate: 'z-fighting',
+          code: 'T3D_QA_Z_FIGHTING',
           part: a,
           message: `'${a}' has ${hits} face sample(s) lying in '${b}''s surface, facing the same way — it flickers`,
           fix: `stand '${a}' proud of '${b}' by ≥ 2 mm, or inset it, or cut it from '${b}'; coplanar faces never render cleanly`,
@@ -156,6 +157,7 @@ export const hiddenParts: Gate = (asset) => {
       ? [
           {
             gate: 'hidden-parts',
+            code: 'T3D_QA_HIDDEN_PARTS',
             part: a,
             message: `'${a}' (${ma.indices.length / 3} tris) is entirely inside '${host}' — nobody can see it`,
             fix: `delete it, gate it behind ctx.lod, or move it out of '${host}'; hidden triangles are wasted budget`,

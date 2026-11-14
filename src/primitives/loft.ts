@@ -53,6 +53,17 @@ const centroid = (r: readonly Vec3[]): Vec3 => {
   return [x / r.length, y / r.length, z / r.length];
 };
 
+/** Twice the area of triangle a-b-c. */
+const area2 = (a: Vec3, b: Vec3, c: Vec3): number => {
+  const u = [b[0] - a[0], b[1] - a[1], b[2] - a[2]] as const;
+  const v = [c[0] - a[0], c[1] - a[1], c[2] - a[2]] as const;
+  return Math.hypot(
+    u[1] * v[2] - u[2] * v[1],
+    u[2] * v[0] - u[0] * v[2],
+    u[0] * v[1] - u[1] * v[0],
+  );
+};
+
 export function loft(o: LoftOptions): Mesh {
   const R = o.rings.length;
   if (R < 2) throw invalid(`loft has ${R} ring(s)`, 'pass at least 2 rings (bottom → top)');
@@ -130,12 +141,23 @@ export function loft(o: LoftOptions): Mesh {
       b.vertex({ p, n: [n[0] / l, n[1] / l, n[2] / l], uv, color: color(i, p) });
     }
   }
+  // A repeated ring vertex (a rounded rect whose straight side is 0) leaves quads with a
+  // zero-length side: each triangle is kept only if it has area, never a zero-area sliver.
+  const tri = (ids: readonly [number, number, number], p: readonly [Vec3, Vec3, Vec3]): void => {
+    if (area2(p[0], p[1], p[2]) > 1e-12) b.tri(ids[0], ids[1], ids[2]);
+  };
   for (let i = 0; i + 1 < R; i++) {
     const r0 = i * (N + 1);
     const r1 = r0 + N + 1;
     for (let k = 0; k < N; k++) {
-      if (flip > 0) b.quad(r0 + k, r0 + k + 1, r1 + k + 1, r1 + k);
-      else b.quad(r0 + k, r1 + k, r1 + k + 1, r0 + k + 1);
+      const [a, c, e, d] = [at(i, k), at(i, k + 1), at(i + 1, k + 1), at(i + 1, k)];
+      if (flip > 0) {
+        tri([r0 + k, r0 + k + 1, r1 + k + 1], [a, c, e]);
+        tri([r0 + k, r1 + k + 1, r1 + k], [a, e, d]);
+      } else {
+        tri([r0 + k, r1 + k, r1 + k + 1], [a, d, e]);
+        tri([r0 + k, r1 + k + 1, r0 + k + 1], [a, e, c]);
+      }
     }
   }
   const ends: [number, boolean][] = [
@@ -166,8 +188,9 @@ export function loft(o: LoftOptions): Mesh {
     for (let k = 0; k < N; k++) {
       const a = mid + 1 + k;
       const z = mid + 1 + ((k + 1) % N);
-      if (ccw) b.tri(mid, a, z);
-      else b.tri(mid, z, a);
+      const [pa, pz] = [at(i, k), at(i, k + 1)];
+      if (ccw) tri([mid, a, z], [c, pa, pz]);
+      else tri([mid, z, a], [c, pz, pa]);
     }
   }
   return b.build();

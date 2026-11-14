@@ -14,6 +14,8 @@ import {
   type WikidataRecord,
 } from '../src/data/index.ts';
 
+import { withTimeout } from './fetch-timeout.ts';
+
 export type Fetch = (url: string, init?: RequestInit) => Promise<Response>;
 
 export const DATA_CACHE = 'node_modules/.cache/ts23d/data';
@@ -21,7 +23,7 @@ const HEADERS = { 'User-Agent': 'ts23d-data (https://github.com/developerz-ai/ts
 const ENTITY = 'https://www.wikidata.org/wiki/Special:EntityData';
 
 async function bytes(url: string, get: Fetch, what: string): Promise<Uint8Array> {
-  const res = await get(url, { headers: HEADERS });
+  const res = await withTimeout(get)(url, { headers: HEADERS });
   if (res.status === 404)
     throw new Ts23dError('T3D_DATA_QID', {
       cause: `${what}: ${url} → 404`,

@@ -614,14 +614,15 @@ const t34Family = defineFamily<Params>({
         }),
       );
       const flip = (m: Mesh): Mesh => (s > 0 ? m : place(m, { yaw: Math.PI }));
-      /** LOD2: an 8-sided disc per wheel (32 triangles) instead of nothing. */
-      const far = (r: number): Mesh =>
+      /** LOD2: an 8-sided disc per wheel (32 triangles) instead of nothing, from `inner` m
+       *  inboard to 0.17 m outboard. */
+      const far = (r: number, inner = 0.28): Mesh =>
         cylinder({
           radius: r,
-          length: 0.45,
+          length: inner + 0.17,
           segments: 8,
           axis: 'y',
-          at: [0, -0.055, 0],
+          at: [0, (0.17 - inner) / 2, 0],
           color: paint,
         });
       const gear = (m: Mesh, at: Vec3): Mesh => finish(m, at, { mud: 0.95 });
@@ -641,7 +642,8 @@ const t34Family = defineFamily<Params>({
         at: [IDLER.x, y, IDLER.z],
         ...spin(1.0),
       });
-      const drive = lod === 2 ? far(SPROCKET.r) : sprocket(lod, SPROCKET.r, paint);
+      // The sprocket's disc stops where its LOD0 hub does, on the final-drive housing's face.
+      const drive = lod === 2 ? far(SPROCKET.r, 0.25) : sprocket(lod, SPROCKET.r, paint);
       ctx.part(`sprocket_${side}`, gear(flip(drive), [SPROCKET.x, y, SPROCKET.z]), {
         at: [SPROCKET.x, y, SPROCKET.z],
         ...spin(1.0),

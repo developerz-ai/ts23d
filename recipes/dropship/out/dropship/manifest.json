@@ -9,15 +9,20 @@
     "vtol",
     "hard-surface"
   ],
+  "lods": [
+    0,
+    1,
+    2
+  ],
   "files": {
     "lods": [],
-    "sheet": "recipes/dropship/out/dropship/sheet.png",
-    "thumb": "recipes/dropship/out/dropship/thumb.png"
+    "sheet": "sheet.png",
+    "thumb": "thumb.png"
   },
   "triangles": [
-    18970,
-    6516,
-    2032
+    18880,
+    6458,
+    2002
   ],
   "drawCalls": [
     15,

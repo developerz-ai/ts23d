@@ -18,6 +18,7 @@ import {
 } from '../src/data/index.ts';
 import { decodePng } from '../src/material/index.ts';
 import { DATA_CACHE, type Fetch, writeJson } from './data-wikidata.ts';
+import { withTimeout } from './fetch-timeout.ts';
 
 export const TERRARIUM = 'https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png';
 export const JOERD_ATTRIBUTION = 'https://github.com/tilezen/joerd/blob/master/docs/attribution.md';
@@ -38,7 +39,7 @@ export interface DemRequest extends DemBox {
 }
 
 async function tileBytes(url: string, get: Fetch, cache: string): Promise<Uint8Array> {
-  const res = await get(url);
+  const res = await withTimeout(get)(url);
   if (!res.ok)
     throw new Ts23dError('T3D_DATA_DEM', {
       cause: `GET ${url} → HTTP ${res.status}`,

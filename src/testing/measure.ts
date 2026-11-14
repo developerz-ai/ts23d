@@ -2,8 +2,8 @@
 // tall", "the sword is in the hand", "every joint fits". Each compiles the asset, measures with
 // the QA ruler and throws T3D_QA_FAILED with the numbers and a fix — or returns the measurement.
 
-import { type Asset, jointFit, type Lod } from '../core/index.ts';
-import { type Finding, ruler, type Size } from '../qa/index.ts';
+import { type Asset, jointFit, type Lod, Ts23dError } from '../core/index.ts';
+import { codeOf, type Finding, ruler, type Size } from '../qa/index.ts';
 import { compileLods, failOn, type LodOptions } from './compiled.ts';
 
 export type Range = readonly [min: number, max: number];
@@ -12,7 +12,11 @@ const fmt = (r: Range): string => `[${r[0]}, ${r[1]}] m`;
 const out = (v: number, r: Range): boolean => v < r[0] || v > r[1];
 const top = (asset: Asset, lod: Lod = 0) => {
   const [a] = compileLods(asset, { lods: [lod] });
-  if (!a) throw new RangeError('compileLods returned nothing');
+  if (!a)
+    throw new Ts23dError('T3D_ASSERT_INPUT', {
+      cause: `${asset.name}: LOD${lod} compiled to nothing`,
+      fix: 'pass a lod of 0, 1 or 2',
+    });
   return a;
 };
 
@@ -28,6 +32,7 @@ export function assertSize(
     if (!r || !out(size[k], r)) return [];
     const finding: Finding = {
       gate: 'size',
+      code: 'T3D_QA_SIZE',
       message: `${k} ${size[k].toFixed(3)} m, want ${fmt(r)}`,
       fix: `rescale along ${k === 'length' ? 'X' : k === 'width' ? 'Y' : 'Z'} from the source numbers`,
     };
@@ -55,6 +60,7 @@ export function assertBetween(
           {
             finding: {
               gate: 'between',
+              code: 'T3D_QA_BETWEEN',
               message:
                 d === null
                   ? `no part matches '${a}' or '${b}'`
@@ -77,7 +83,10 @@ export function assertJointsFit(asset: Asset, o: LodOptions = {}): void {
     `${asset.name} joints`,
     compileLods(asset, o).flatMap((a) =>
       (a.joints ?? []).flatMap((j) =>
-        jointFit(a, j).findings.map((finding) => ({ finding, lod: a.lod })),
+        jointFit(a, j).findings.map((f) => ({
+          finding: { ...f, code: codeOf(f.gate, f.message) },
+          lod: a.lod,
+        })),
       ),
     ),
   );

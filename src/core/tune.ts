@@ -109,12 +109,16 @@ export function checkTune(asset: string, spec: TuneSpec): void {
       invalid(`'${asset}' ${o.kind} objective weight ${o.weight}`, 'use a finite weight ≥ 0');
 }
 
+/** Own-property lookup: `constructor`, `toString`… on the prototype are never a param or value. */
+const own = <T>(rec: Readonly<Record<string, T>> | undefined, key: string): T | undefined =>
+  rec !== undefined && Object.hasOwn(rec, key) ? rec[key] : undefined;
+
 const isRecord = (v: unknown): v is Record<string, unknown> =>
   typeof v === 'object' && v !== null && !Array.isArray(v);
 
 function checkValues(asset: string, spec: TuneSpec, values: TunedValues, from: string): void {
   for (const [name, v] of Object.entries(values)) {
-    const p = spec.params[name];
+    const p = own(spec.params, name);
     if (!p)
       invalid(
         `${from} sets '${name}', which '${asset}' does not declare in tune.params`,
@@ -163,12 +167,12 @@ export function tunedReader(
   if (override) checkValues(asset, spec, override, 'compile({ tuned })');
   const saved = savedValues(asset, spec);
   return (name) => {
-    const p = spec.params[name];
+    const p = own(spec.params, name);
     if (!p)
       invalid(
         `ctx.tuned('${name}') but '${asset}' declares no such tune param`,
         `declare it: tune.params.${name} = { min, max, default }`,
       );
-    return override?.[name] ?? saved[name] ?? p.default;
+    return own(override, name) ?? own(saved, name) ?? p.default;
   };
 }

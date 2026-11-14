@@ -94,6 +94,13 @@ export function num(o: GltfJson, key: string, fallback?: number): number {
   return bad(`"${key}" is ${JSON.stringify(v)}, expected a number`);
 }
 
+/** `json[key]` as a count/offset/length: an integer ≥ 0 (malformed otherwise). */
+export function uint(o: GltfJson, key: string, fallback?: number): number {
+  const v = num(o, key, fallback);
+  if (!Number.isSafeInteger(v) || v < 0) bad(`"${key}" is ${v}, expected an integer ≥ 0`);
+  return v;
+}
+
 /** Record `i` of `json[key]`, or T3D_IMPORT_GLB naming the dangling reference. */
 export function at(doc: GlbDoc, key: string, i: number): GltfJson {
   const r = list(doc.json, key)[i];
@@ -104,11 +111,11 @@ export function at(doc: GlbDoc, key: string, i: number): GltfJson {
 /** The bytes of bufferView `i` (buffer 0 = the BIN chunk; data: URIs decoded). */
 export function viewBytes(doc: GlbDoc, i: number): { bytes: Uint8Array; stride: number } {
   const view = at(doc, 'bufferViews', i);
-  const buffer = bufferBytes(doc, num(view, 'buffer'));
-  const off = num(view, 'byteOffset', 0);
-  const len = num(view, 'byteLength');
+  const buffer = bufferBytes(doc, uint(view, 'buffer'));
+  const off = uint(view, 'byteOffset', 0);
+  const len = uint(view, 'byteLength');
   if (off + len > buffer.byteLength) bad(`bufferViews[${i}] runs past its buffer`);
-  return { bytes: buffer.subarray(off, off + len), stride: num(view, 'byteStride', 0) };
+  return { bytes: buffer.subarray(off, off + len), stride: uint(view, 'byteStride', 0) };
 }
 
 function bufferBytes(doc: GlbDoc, i: number): Uint8Array {
@@ -117,11 +124,25 @@ function bufferBytes(doc: GlbDoc, i: number): Uint8Array {
   if (typeof uri === 'string') {
     const m = /^data:[^;]*;base64,(.*)$/.exec(uri);
     if (!m) unsupported(`buffers[${i}] points to an external file '${uri}'`, 'pack it as a .glb');
-    return Uint8Array.from(atob(m?.[1] ?? ''), (c) => c.charCodeAt(0));
+    return base64(m?.[1] ?? '', `buffers[${i}]`);
   }
   if (i !== 0 || !doc.bin) bad(`buffers[${i}] has no data`);
   return doc.bin;
 }
+
+/** Decode a data: URI payload; malformed base64 is a malformed file, not a DOMException. */
+function base64(text: string, what: string): Uint8Array {
+  let raw: string;
+  try {
+    raw = atob(text);
+  } catch (e) {
+    return bad(`${what} has a data: URI that is not valid base64 (${String(e)})`);
+  }
+  return Uint8Array.from(raw, (c) => c.charCodeAt(0));
+}
+
+/** Elements an accessor without a bufferView may declare (all zeros): 2^24, ~200 MB of VEC3. */
+export const MAX_EMPTY_ACCESSOR = 2 ** 24;
 
 const WIDTH: Record<string, number> = { SCALAR: 1, VEC2: 2, VEC3: 3, VEC4: 4, MAT4: 16 };
 const SIZE: Record<number, number> = { 5120: 1, 5121: 1, 5122: 2, 5123: 2, 5125: 4, 5126: 4 };
@@ -141,14 +162,20 @@ export function readAccessor(doc: GlbDoc, i: number): AccessorData {
   const ct = num(acc, 'componentType');
   const size = SIZE[ct];
   if (!width || !size) bad(`accessors[${i}] has type ${acc['type']} / componentType ${ct}`);
-  const count = num(acc, 'count');
-  const data = new Float32Array(count * width);
-  if (acc['bufferView'] === undefined) return { data, count, width };
-  const { bytes, stride } = viewBytes(doc, num(acc, 'bufferView'));
-  const off = num(acc, 'byteOffset', 0);
+  const count = uint(acc, 'count');
+  if (acc['bufferView'] === undefined) {
+    if (count > MAX_EMPTY_ACCESSOR)
+      bad(
+        `accessors[${i}] declares ${count} elements with no bufferView (cap ${MAX_EMPTY_ACCESSOR})`,
+      );
+    return { data: new Float32Array(count * width), count, width };
+  }
+  const { bytes, stride } = viewBytes(doc, uint(acc, 'bufferView'));
+  const off = uint(acc, 'byteOffset', 0);
   const step = stride || width * size;
   if (count > 0 && off + (count - 1) * step + width * size > bytes.byteLength)
     bad(`accessors[${i}] reads past its bufferView`);
+  const data = new Float32Array(count * width);
   const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   const norm = acc['normalized'] === true;
   for (let e = 0; e < count; e++)
@@ -183,11 +210,8 @@ export function readImage(doc: GlbDoc, i: number): { bytes: Uint8Array; mime: st
   if (typeof uri === 'string') {
     const m = /^data:([^;]*);base64,(.*)$/.exec(uri);
     if (!m) unsupported(`images[${i}] points to an external file '${uri}'`, 'pack it as a .glb');
-    return {
-      bytes: Uint8Array.from(atob(m?.[2] ?? ''), (c) => c.charCodeAt(0)),
-      mime: m?.[1] ?? '',
-    };
+    return { bytes: base64(m?.[2] ?? '', `images[${i}]`), mime: m?.[1] ?? '' };
   }
-  const { bytes } = viewBytes(doc, num(img, 'bufferView'));
+  const { bytes } = viewBytes(doc, uint(img, 'bufferView'));
   return { bytes, mime: String(img['mimeType'] ?? '') };
 }

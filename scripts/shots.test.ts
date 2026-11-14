@@ -13,10 +13,7 @@ const fake =
   async ([cmd, , , out]) => {
     if (cmd === fail) return false;
     await Bun.write(join(out ?? '', 'a', `${cmd}.png`), 'x');
-    await Bun.write(
-      join(out ?? '', 'a', 'manifest.json'),
-      `{"sheet":"${join(out ?? '', 'a', 'sheet.png')}"}`,
-    );
+    await Bun.write(join(out ?? '', 'a', 'manifest.json'), '{"sheet":"sheet.png"}');
     return true;
   };
 
@@ -37,8 +34,9 @@ describe('shots refresh', () => {
     for (const f of ['shot', 'hero', 'blueprint'])
       expect(await Bun.file(join(dir, 'out', 'a', `${f}.png`)).exists()).toBe(true);
     expect(existsSync(join(dir, 'out', 'gone'))).toBe(false);
+    // Manifest paths are relative to the asset folder, so the swap moves them untouched.
     expect(await Bun.file(join(dir, 'out', 'a', 'manifest.json')).text()).toBe(
-      `{"sheet":"${join(dir, 'out', 'a', 'sheet.png')}"}`,
+      '{"sheet":"sheet.png"}',
     );
     expect(existsSync(join(dir, '.out-tmp'))).toBe(false);
   });

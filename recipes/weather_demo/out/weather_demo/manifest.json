@@ -7,10 +7,15 @@
     "weather",
     "demo"
   ],
+  "lods": [
+    0,
+    1,
+    2
+  ],
   "files": {
     "lods": [],
-    "sheet": "recipes/weather_demo/out/weather_demo/sheet.png",
-    "thumb": "recipes/weather_demo/out/weather_demo/thumb.png"
+    "sheet": "sheet.png",
+    "thumb": "thumb.png"
   },
   "triangles": [
     95428,

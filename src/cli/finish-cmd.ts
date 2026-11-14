@@ -33,7 +33,10 @@ function modelOf(args: Args): FinishModel {
       cause: '--model http without --endpoint',
       fix: 'pass --endpoint http://127.0.0.1:8188/ts23d-finish (your ComfyUI / diffusers wrapper), or --model mock',
     });
-  return httpFinish({ endpoint: f.endpoint });
+  return httpFinish({
+    endpoint: f.endpoint,
+    ...(f.timeoutMs !== undefined ? { timeoutMs: f.timeoutMs } : {}),
+  });
 }
 
 export async function finishOne(

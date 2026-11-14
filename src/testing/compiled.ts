@@ -18,7 +18,7 @@ export const compileLods = (asset: Asset, o: LodOptions = {}): CompiledAsset[] =
   );
 
 export const describeFinding = (f: Finding, lod?: Lod): string =>
-  `${lod !== undefined ? `LOD${lod} ` : ''}${f.gate}${f.part ? ` [${f.part}]` : ''}: ${f.message}`;
+  `${lod !== undefined ? `LOD${lod} ` : ''}${f.code} ${f.gate}${f.part ? ` [${f.part}]` : ''}: ${f.message}`;
 
 /** Throw T3D_QA_FAILED listing every finding; no-op when there are none. */
 export function failOn(what: string, found: ReadonlyArray<{ finding: Finding; lod?: Lod }>): void {

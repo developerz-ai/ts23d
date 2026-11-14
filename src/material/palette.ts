@@ -1,13 +1,25 @@
 // Colour lives in vertex colour (linear RGB), multiplied over the greyscale trim sheet: a palette
 // swap is a recipe edit, never a new texture.
 
-import type { Vec3 } from '../core/index.ts';
+import { Ts23dError, type Vec3 } from '../core/index.ts';
 
 export type Palette = Readonly<Record<string, Vec3>>;
 
-/** sRGB hex → linear RGB, the space glTF vertex colours are in. */
+const HEX = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
+
+/** True for the colours `hex` accepts: `#rgb` or `#rrggbb`, either case. */
+export const isHex = (value: string): boolean => HEX.test(value);
+
+/** sRGB hex (`#rgb` or `#rrggbb`) → linear RGB, the space glTF vertex colours are in. */
 export function hex(value: string): Vec3 {
-  const n = Number.parseInt(value.replace('#', ''), 16);
+  const m = HEX.exec(value);
+  if (!m?.[1])
+    throw new Ts23dError('T3D_MATERIAL_INVALID', {
+      cause: `'${value}' is not a hex colour`,
+      fix: 'use #rrggbb (or #rgb); alpha is not supported on palette colours',
+    });
+  const digits = m[1].length === 3 ? m[1].replace(/./g, '$&$&') : m[1];
+  const n = Number.parseInt(digits, 16);
   const lin = (c: number): number => {
     const s = c / 255;
     return s <= 0.04045 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;

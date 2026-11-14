@@ -292,3 +292,11 @@ button:disabled {
     animation: none !important;
   }
 }
+
+/* Shown only without JavaScript: where the static renders live. */
+.noscript {
+  margin: 0;
+  padding: 0.75rem var(--gutter);
+  background: var(--paper-raised);
+  border-bottom: 1px solid var(--redline);
+}

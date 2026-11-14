@@ -3,6 +3,7 @@
 // each downloaded once to compute its sha256 (and handed back so the caller can cache it).
 
 import type { TextureFile, TextureSource } from '../src/material/index.ts';
+import { DOWNLOAD_TIMEOUT_MS, withTimeout } from './fetch-timeout.ts';
 import { type Fetch, getBytes, getJson, type Hit, matches, sha256 } from './textures-snippet.ts';
 
 const API = 'https://api.polyhaven.com';
@@ -24,7 +25,10 @@ const metresOf = (a: Asset): readonly [number, number] => {
 };
 
 export async function searchPolyhaven(query: string, fetch: Fetch): Promise<Hit[]> {
-  const all = await getJson<Readonly<Record<string, Asset>>>(fetch, `${API}/assets?t=textures`);
+  const all = await getJson<Readonly<Record<string, Asset>>>(
+    withTimeout(fetch),
+    `${API}/assets?t=textures`,
+  );
   return Object.entries(all)
     .filter(([id, a]) => matches(query, [id, a.name, ...(a.tags ?? []), ...(a.categories ?? [])]))
     .sort(([a], [b]) => (a < b ? -1 : 1))
@@ -44,8 +48,8 @@ export async function polyhavenSource(
   fetch: Fetch,
   res = '1k',
 ): Promise<{ source: TextureSource; bytes: Map<string, Uint8Array> }> {
-  const info = await getJson<Asset>(fetch, `${API}/info/${id}`);
-  const files = await getJson<Files>(fetch, `${API}/files/${id}`);
+  const info = await getJson<Asset>(withTimeout(fetch), `${API}/info/${id}`);
+  const files = await getJson<Files>(withTimeout(fetch), `${API}/files/${id}`);
   const bytes = new Map<string, Uint8Array>();
   const pin = async (key: string, required: boolean): Promise<TextureFile | undefined> => {
     const url = files[key]?.[res]?.png?.url;
@@ -53,7 +57,7 @@ export async function polyhavenSource(
       if (required) throw new Error(`textures: polyhaven '${id}' has no ${key} PNG at ${res}`);
       return undefined;
     }
-    const b = await getBytes(fetch, url);
+    const b = await getBytes(withTimeout(fetch, DOWNLOAD_TIMEOUT_MS), url);
     const h = sha256(b);
     bytes.set(h, b);
     return { url, sha256: h };

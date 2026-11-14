@@ -1,10 +1,11 @@
 // Shared layout maths for the skeleton builders: the sizes every type derives from the spec
-// (head, neck, tail lengths, allometric limb radius, head pitch), the posed tail chain, and the
-// area of a wing membrane outline.
+// (head, neck, tail lengths — the tail from the family's sourced ratio —, allometric limb radius,
+// head pitch), the posed tail chain, and the area of a wing membrane outline.
 
 import type { Vec3 } from '../core/index.ts';
 import { allometricLimbR, type Bones } from './creature-bones.ts';
 import { v3 } from './creature-curve.ts';
+import { familyOf } from './creature-family.ts';
 import { tube } from './creature-skin.ts';
 import { ANATOMY, type CreatureSpec, faceOf } from './creature-spec.ts';
 
@@ -23,7 +24,7 @@ export function sizes(s: CreatureSpec) {
     headLen,
     headWidth: headLen * face.width,
     neckLen: s.neck ?? a.neck * L,
-    tailLen: s.tail ?? a.tail * L,
+    tailLen: s.tail ?? (familyOf(s)?.tail ?? a.tail) * L,
     limbR: allometricLimbR(s.mass) * (s.build?.limbs ?? 1),
     pitch: (s.pose?.head ?? 15) * deg,
   };

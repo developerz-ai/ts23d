@@ -229,8 +229,10 @@ export interface Joint {
   readonly to: string;
   readonly at: Vec3;
   readonly axis: Vec3;
-  /** Allowed relative size difference across the joint; default 0.2. */
+  /** Allowed relative size difference across the joint; default 0.2, at most 0.5. */
   readonly tolerance?: number;
+  /** Required when `tolerance` is above the 0.2 default: why the fit may be that loose. */
+  readonly why?: string;
   /** Default 'flush'. */
   readonly kind?: JointKind;
 }

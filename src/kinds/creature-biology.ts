@@ -8,13 +8,18 @@
 //   wing loading  weight ÷ wing area; a creature that declares `flies` must stay ≤ 250 N/m²
 //   balance       a QA check: the centre of mass (volume × density) projects inside the support
 //                 polygon of the ground contacts, at every LOD
+//   fore share    a QA check (quadrupeds): the forelegs carry the family's share of the standing
+//                 weight, (x_com − x_hind) ÷ (x_fore − x_hind) from the feet (dog 0.604, horse
+//                 0.57–0.60)
 // Sources: Campione & Evans, BMC Biology 10:60 (2012); Meunier 1951 / Alexander, Animal Mechanics
-// (wing loading of large flyers ≈ 100–250 N/m²).
+// (wing loading of large flyers ≈ 100–250 N/m²); PubMed 32363786 (552 dogs, 60.4 % fore);
+// Clayton & Hobbs via docs/research/animal-anatomy.md §4 (horse 57–60 % fore).
 
 import type { Check, CheckFinding, CompiledAsset, Vec3 } from '../core/index.ts';
 import { worldMeshes } from '../core/index.ts';
 import { massProperties } from '../physics/index.ts';
 import { BONE_FRACTION, type Bones, massFromBones } from './creature-bones.ts';
+import { familyOf, MAMMAL_FORE_SHARE } from './creature-family.ts';
 import type { CreatureSpec } from './creature-spec.ts';
 
 /** Allowed band of limb-implied mass ÷ declared mass (C&E's 95% band is about ×0.5–×2). */
@@ -134,3 +139,38 @@ export const balanced: Check = (a) => {
     },
   ];
 };
+
+/** Share of standing weight on the forelegs: where the centre of mass sits between the hind and
+ *  fore feet along X (statics; animal-anatomy §4). */
+export function foreShareOf(comX: number, b: Bones): number | null {
+  const fore = b.legs.find((l) => l.name === 'fore')?.foot[0];
+  const hind = b.legs.find((l) => l.name === 'hind')?.foot[0];
+  if (fore === undefined || hind === undefined || fore <= hind) return null;
+  return (comX - hind) / (fore - hind);
+}
+
+/** QA check (quadrupeds only, else none): the fore share inside the spec's / family's band. */
+export function foreShareCheck(s: CreatureSpec, b: Bones): Check[] {
+  if (s.skeleton !== 'quadruped') return [];
+  const [lo, hi] = s.foreShare ?? familyOf(s)?.foreShare ?? MAMMAL_FORE_SHARE;
+  const pct = (v: number): string => `${(v * 100).toFixed(0)} %`;
+  return [
+    (a) => {
+      const comX = massProperties(a).centerOfMass[0];
+      const share = foreShareOf(comX, b);
+      if (share === null || (share >= lo && share <= hi)) return [];
+      const fore = b.legs.find((l) => l.name === 'fore')?.foot[0] ?? 0;
+      const hind = b.legs.find((l) => l.name === 'hind')?.foot[0] ?? 0;
+      const want = hind + ((lo + hi) / 2) * (fore - hind);
+      const rear = share < lo;
+      return [
+        {
+          message: `fore share: the forelegs carry ${pct(share)} of the standing weight, outside ${pct(lo)}–${pct(hi)} (dog 60 %, horse 57–60 %); the centre of mass is at x = ${comX.toFixed(3)} m between the hind feet (${hind.toFixed(3)}) and the fore feet (${fore.toFixed(3)})`,
+          fix: rear
+            ? `move the centre of mass forward to x ≈ ${want.toFixed(3)} m: a deeper chest and heavier neck/head, a lighter or shorter tail and hindquarters (tail, build.tailGirth), or set the hind feet further back`
+            : `move the centre of mass back to x ≈ ${want.toFixed(3)} m: a lighter head/neck or fuller hindquarters, or set the fore feet further forward under the withers`,
+        },
+      ];
+    },
+  ];
+}

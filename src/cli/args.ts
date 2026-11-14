@@ -1,12 +1,33 @@
-// argv → Args for `t3d`. No dependency, no magic: flags are few and documented in HELP.
-// Bad render flags (--size/--az/--el/--fov) throw T3D_RENDER_OPTIONS with the fix.
+// argv → Args for `t3d`. No dependency, no magic: flags are few and documented in help.ts.
+// Strict: an unknown command or flag, a `--sheet` / `--sheet-size` / `--lods` value outside its
+// set, a missing `--out` value or no files is T3D_CLI_USAGE (exit 2). Flags owned by a module
+// keep that module's code (exit 1): render flags (--size/--az/--el/--fov) T3D_RENDER_OPTIONS,
+// `--variant` / `--profile` T3D_RECIPE_INVALID, tune and finish flags their own codes.
+// `--help` / `-h` / `help [cmd]` → cmd 'help' (topic = the command); `--version` → 'version'.
 
 import { Ts23dError } from '../core/index.ts';
 import { type ExportProfile, profileSettings } from '../export/index.ts';
 import { checkBeautyOptions, parseSize } from '../render/index.ts';
+import {
+  FINISH_FLAGS,
+  type FinishArgs,
+  finishFlag,
+  lodList,
+  type MutableFinish,
+  oneOf,
+  SWITCHES,
+  usage,
+  VALUED,
+} from './flags.ts';
+import { COMMANDS, closest } from './help.ts';
+
+export type { FinishArgs } from './flags.ts';
 
 export interface Args {
+  /** A command from COMMANDS, or 'help' / 'version'. */
   readonly cmd: string;
+  /** `help`: the command whose help to print; unset = all of it. */
+  readonly topic?: string;
   readonly files: string[];
   readonly out: string;
   readonly json: boolean;
@@ -51,63 +72,43 @@ export interface Args {
   };
 }
 
-export interface FinishArgs {
-  readonly model: 'mock' | 'http';
-  readonly endpoint?: string;
-  readonly prompt?: string;
-  readonly negative?: string;
-  readonly views?: number;
-  readonly atlas?: number;
-  /** Write the finished GLB even when finish QA rejects it (provenance records why). */
-  readonly force: boolean;
+/** `help`, `--help`, `-h`, no argv → help; `--version` → version; else null. */
+function meta(argv: readonly string[]): { cmd: string; topic?: string } | null {
+  if (argv.includes('--version')) return { cmd: 'version' };
+  const first = argv[0];
+  const topic = first === 'help' ? argv[1] : first;
+  const wantsHelp =
+    first === undefined || first === 'help' || argv.some((a) => a === '--help' || a === '-h');
+  if (!wantsHelp) return null;
+  return topic !== undefined && COMMANDS.includes(topic) ? { cmd: 'help', topic } : { cmd: 'help' };
 }
 
-export const HELP = `usage: t3d <command> <recipe.ts…> [flags]
-  build   GLB × 3 LODs + hero + contact sheet + manifest.json per asset; exit 1 on any QA finding
-  shot    contact sheet + manifest.json only (fast look)
-  hero    beauty render only → <out>/<asset>/hero.png (3/4 product shot, textured, shadowed)
-  review  AI review pack → <out>/<asset>/review/: hero, sheet, close-ups, LOD strip, review.md
-  critique  scored-review pack → <out>/<asset>/critique/: hero + sheet (= committed out/), raking light, LOD0|LOD2, refs.md, rubric.md, critique.template.json → commit out/<asset>/critique.json
-          (checklist prompt for a vision agent) and review.json (image metrics + warnings)
-  blueprint  measured drawing → <out>/<asset>/blueprint.png: side/front/top on a metre grid at one
-          scale, L×W×H dimensions, every real.measures entry (green in tolerance, red out), joints
-          (green fit, red not) and a 1.8 m figure for scale
-  gaps    slit QA made visible → <out>/<asset>/gaps/{overlay.png, zoom_<i>.png, gaps.json}: undeclared slits red, declared blue
-  icon    UI art → <out>/<asset>/icon.png (256², unit icon) · portrait.png (512², close-up on art.focal
-          or the top) · rts.png (64², 58° strategy camera); one fixed 3/4 high camera and studio
-          light for every asset; warns when a 'team' paint slot covers < 8% of the RTS view
-  tune    fit the asset's tune.params to its objectives (docs/idea/20-tuning.md) → tune.json,
-          tune-report.md, tune-strip.png beside the recipe; --evals N (120) --seed s (1)
-          --method cmaes|coordinate; same seed + evals = same tune.json
-  finish  AI finish layer → <out>/<asset>/finish/: control maps (depth, normals, part ids, UVs,
-          albedo, beauty per view), the model's images, the atlas textures, compare.png (before |
-          after), <asset>_finish.glb (LOD0 on its own finish material, LOD1/2 on the trim sheet),
-          finish.json (provenance + QA). --model mock|http --endpoint URL --prompt "…"
-          --negative "…" --views 8 --atlas 1024 --seed s --force; results cached in .ts23d/finish/
-  list    the assets each module exports
-flags:
-  --out <dir>     output root (default: out) → <dir>/<asset>/{lod0,lod1,lod2}.glb hero.png sheet.png manifest.json
-  --no-animations skip the baked 'run' clip (default: baked, so viewers can play it)
-  --no-shot       build without rendering hero.png and the contact sheet
-  --size WxH      beauty render size (default 1600x900) · --az <deg> camera azimuth from the
-                  front, default -35 (front-left 3/4) · --el <deg> elevation, default 18 · --fov <deg> 30
-  --sheet <mode>  external (default): one shared trim_sheet_{albedo,normal,orm}.png in <out>/,
-                  referenced by every GLB · embed: self-contained GLBs · none: vertex colour only
-  --sheet-size n  512 | 1024 | 2048 (default, ~5 s) | 4096 (final exports, ~18 s)
-  --lods <list>   which detail levels to build: 0,1,2 (default) · 0 = hero only · 0,2 = near + far
-  --lods <mode>   how they are written: both (default) = lod0/1/2.glb + <asset>.glb · split = lodN.glb
-                  only · single = <asset>.glb only (LOD0 in the scene, LOD1/2 as MSFT_lod alternates
-                  with screen-coverage switch hints; viewers without MSFT_lod show LOD0 only)
-  --variant <name> render that livery (an asset's \`variants\`) → hero_<name>.png, sheet_<name>.png;
-                  GLBs are unchanged (they carry every variant). Assets without it render as usual
-  --profile <p>   engine defaults: unreal | unity | godot (split LODs, 4096 sheet; unreal/godot
-                  name colliders UCX_ / -convcolonly with --physics) · rt (no baked AO texture) ·
-                  web (one MSFT_lod file, 2048 sheet). Explicit --lods/--sheet-size win
-  --physics      rigid body + fitted colliders + mass (KHR_physics_rigid_bodies / KHR_implicit_shapes, Khronos drafts)
-  --no-sounds    skip <clip>.wav files and KHR_audio_emitter for assets with sounds (default: written beside the GLB)
-  --json          machine-readable output`;
+/** Help/version Args: defaults everywhere else. */
+const metaArgs = (m: { cmd: string; topic?: string }, json: boolean): Args => ({
+  ...m,
+  files: [],
+  out: 'out',
+  json,
+  animations: true,
+  shot: true,
+  sheet: 'external',
+  sheetSize: 2048,
+  lods: [0, 1, 2],
+  lodFiles: 'both',
+  physics: false,
+  sounds: true,
+  render: {},
+});
 
 export function parseArgs(argv: readonly string[]): Args {
+  const m = meta(argv);
+  if (m) return metaArgs(m, argv.includes('--json'));
+  const cmd = argv[0] ?? '';
+  if (!COMMANDS.includes(cmd))
+    throw usage(
+      `unknown command "${cmd}"`,
+      `did you mean \`t3d ${closest(cmd, COMMANDS)}\`? (t3d --help lists: ${COMMANDS.join(', ')})`,
+    );
   const files: string[] = [];
   let out = 'out';
   let json = false;
@@ -152,6 +153,11 @@ export function parseArgs(argv: readonly string[]): Args {
   };
   for (let i = 1; i < argv.length; i++) {
     const a = argv[i] ?? '';
+    if (a.startsWith('-') && !SWITCHES.includes(a) && !VALUED.includes(a))
+      throw usage(
+        `unknown flag ${a}`,
+        `did you mean ${closest(a, [...SWITCHES, ...VALUED])}? (t3d ${cmd} --help lists the flags)`,
+      );
     if (a === '--json') json = true;
     else if (a === '--no-animations') animations = false;
     else if (a === '--animations') animations = true;
@@ -159,8 +165,15 @@ export function parseArgs(argv: readonly string[]): Args {
     else if (a === '--physics') physics = true;
     else if (a === '--no-sounds') sounds = false;
     else if (a === '--profile') profile = profileSettings(argv[++i] ?? '').name;
-    else if (a === '--out') out = argv[++i] ?? out;
-    else if (a === '--evals') tuning.evals = whole(a, argv[++i], 1);
+    else if (a === '--out') {
+      const v = argv[++i];
+      if (v === undefined || v.startsWith('-'))
+        throw usage(
+          `--out needs a directory, got ${v === undefined ? 'nothing' : `"${v}"`}`,
+          'pass --out <dir>, e.g. --out out',
+        );
+      out = v;
+    } else if (a === '--evals') tuning.evals = whole(a, argv[++i], 1);
     else if (a === '--seed') tuning.seed = whole(a, argv[++i], 0);
     else if (a === '--method') {
       const m = argv[++i];
@@ -178,21 +191,15 @@ export function parseArgs(argv: readonly string[]): Args {
           fix: "pass one of the asset's `variants` keys, e.g. --variant oxide_red",
         });
       variant = v;
-    } else if (a === '--sheet') {
-      const m = argv[++i];
-      sheet = m === 'embed' || m === 'none' ? m : 'external';
-    } else if (a === '--lods' && /^(split|single|both)$/.test(argv[i + 1] ?? '')) {
+    } else if (a === '--sheet') sheet = oneOf(a, argv[++i], ['external', 'embed', 'none'] as const);
+    else if (a === '--lods' && /^(split|single|both)$/.test(argv[i + 1] ?? '')) {
       lodFiles = argv[++i] as Args['lodFiles'];
       lodFilesSet = true;
-    } else if (a === '--lods') {
-      const picked = (argv[++i] ?? '')
-        .split(',')
-        .map(Number)
-        .filter((n): n is 0 | 1 | 2 => n === 0 || n === 1 || n === 2);
-      lods = picked.length ? [...new Set(picked)].sort() : lods;
-    } else if (a === '--sheet-size') {
-      const n = Number(argv[++i]);
-      sheetSize = n === 512 || n === 1024 || n === 4096 ? n : 2048;
+    } else if (a === '--lods') lods = lodList(argv[++i]);
+    else if (a === '--sheet-size') {
+      sheetSize = Number(
+        oneOf(a, argv[++i], ['512', '1024', '2048', '4096'] as const),
+      ) as Args['sheetSize'];
       sheetSizeSet = true;
     } else if (a === '--size') Object.assign(render, parseSize(argv[++i] ?? ''));
     else if (a === '--az') render.azDeg = num(a, argv[++i]);
@@ -202,12 +209,17 @@ export function parseArgs(argv: readonly string[]): Args {
     else if (a === '--force') finish.force = true;
     else files.push(a);
   }
+  if (files.length === 0)
+    throw usage(
+      `t3d ${cmd} needs at least one recipe file`,
+      `pass one: t3d ${cmd} recipes/t34/t34.ts`,
+    );
   checkBeautyOptions(render);
   const p = profile ? profileSettings(profile) : undefined;
   if (p && !lodFilesSet) lodFiles = p.lodFiles;
   if (p && !sheetSizeSet) sheetSize = p.sheetSize;
   return {
-    cmd: argv[0] ?? 'help',
+    cmd,
     files,
     out,
     json,
@@ -222,36 +234,7 @@ export function parseArgs(argv: readonly string[]): Args {
     ...(profile ? { profile } : {}),
     ...(variant ? { variant } : {}),
     ...tuning,
-    ...(argv[0] === 'finish' ? { finish } : {}),
+    ...(cmd === 'finish' ? { finish } : {}),
     render,
   };
-}
-
-type MutableFinish = { -readonly [K in keyof FinishArgs]: FinishArgs[K] };
-const FINISH_FLAGS = ['--model', '--endpoint', '--prompt', '--negative', '--views', '--atlas'];
-
-function finishFlag(f: MutableFinish, flag: string, v: string | undefined): void {
-  const bad = (fix: string): never => {
-    throw new Ts23dError('T3D_FINISH_INVALID', {
-      cause: `${flag} got ${v === undefined ? 'nothing' : `"${v}"`}`,
-      fix,
-    });
-  };
-  if (v === undefined) bad(`pass a value after ${flag}`);
-  const text = v ?? '';
-  if (flag === '--model') {
-    if (text !== 'mock' && text !== 'http')
-      bad('--model mock (procedural, offline) or http (--endpoint)');
-    f.model = text === 'http' ? 'http' : 'mock';
-  } else if (flag === '--endpoint') f.endpoint = text;
-  else if (flag === '--prompt') f.prompt = text;
-  else if (flag === '--negative') f.negative = text;
-  else {
-    const n = Number(text);
-    const [lo, hi] = flag === '--views' ? [1, 24] : [256, 4096];
-    if (!Number.isInteger(n) || n < lo || n > hi)
-      bad(`${flag} takes a whole number in ${lo}…${hi}`);
-    if (flag === '--views') f.views = n;
-    else f.atlas = n;
-  }
 }

@@ -10,6 +10,8 @@ Use with the [author-recipe loop](../author-recipe/SKILL.md), the
 flagship dossier [`recipes/dragon`](../../../recipes/dragon/README.md). Definitions:
 [16-art-as-text](../../../docs/idea/16-art-as-text.md). Surfaces:
 [surfaces-volumes](../../../docs/research/surfaces-volumes.md), [hair](../../../docs/research/hair.md).
+Biology: [animal-anatomy](../../../docs/research/animal-anatomy.md) (measurable rules with sources)
+and [animal-species-sheets](../../../docs/research/animal-species-sheets.md) (12 species' numbers).
 Original designs only; never a named creature from any IP.
 
 ## When
@@ -21,7 +23,7 @@ Original designs only; never a named creature from any IP.
 | # | Creature-design stage | ts23d | Exit |
 |---|---|---|---|
 | 1 | Purpose first: what it eats, how it moves, where it lives, how it fights (Whitlatch: purpose before form) | dossier "design intent" section | one sentence of function per body part |
-| 2 | Borrowed anatomy: each part maps to a real animal (wing from bat, neck from heron, hind leg from big cat) with measurements | dossier "reasoning" table, zoological sources (shoulder height, body length, mass) | every borrowed part sourced |
+| 2 | Borrowed anatomy: each part maps to a real animal (wing from bat, neck from heron, hind leg from big cat) with measurements | dossier "reasoning" table; start from [animal-species-sheets](../../../docs/research/animal-species-sheets.md) (shoulder height, body length, mass) | every borrowed part sourced |
 | 3 | Skeleton and stance | joint positions as `Vec3` constants; `ctx.group` per bone pivot; stance chosen | side view skeleton drawn as SVG |
 | 4 | Silhouette from drawings | `visualHull({ front, side, top })` spread into a `sculpt` edit | side silhouette names the creature |
 | 5 | Masses on the skeleton: ribcage, pelvis, limb segments, neck, tail | `sculpt` edits (`capsule`, `ellipsoid`), `loft` with `ringXY` for tails/necks, `sweep` for horns | `assertCentreOfMassInside`, `assertUprightOnGround` PASS |
@@ -34,8 +36,11 @@ Original designs only; never a named creature from any IP.
 | Word | Meaning here | Check |
 |---|---|---|
 | Plantigrade | heel on the ground (bear, human); short foot, stable | foot sole touches ground: `touches('foot_*', …)` / floating-parts |
-| Digitigrade | walks on toes, heel raised (cat, dog, bird); hock visible above ground | heel bone `z` > 0 by ~⅓ leg length *typical, verify* |
-| Unguligrade | on hoof tips (horse, deer); long metapodials | hoof is the only contact |
+| Digitigrade | walks on toes, heel raised (cat, dog, bird); hock visible above ground | hock ≈ 0.25–0.3 H, carpus ≈ 0.13 H (kind defaults; [animal-anatomy §2](../../../docs/research/animal-anatomy.md#2-stance-and-limb-segments)) |
+| Unguligrade | on hoof tips (horse, deer); long metapodials | hoof is the only contact; artiodactyls stand on **two** hoofed digits + dewclaws |
+| Orbit convergence | angle of the orbit rim plane to the midline: cat 65°, dog 50°, horse 24° (Heesy 2004) | lid aperture faces 90° − convergence off +X; shipped in the `creature` kind (`family` / `face.orbit`); no QA check yet |
+| Fore share | fraction of standing weight on the forelimbs: dog 0.60, horse 0.57–0.60 | from CoM and feet x; shipped: `foreShareCheck` runs on every `defineCreature` quadruped (finding prefix `fore share:`) |
+| Duty factor | fraction of a stride a foot is down; > 0.5 walk, < 0.5 run (Hildebrand) | baked clips **planned**; walk order LH → LF → RH → RF |
 | Support polygon | convex hull of ground contacts; the CoM must project inside it | `assertCentreOfMassInside`, `assertUprightOnGround` |
 | Allometry | limb cross-section grows faster than length as mass grows; a giant needs columnar legs | `T3D_ALLOMETRY` **planned**; size limbs by hand, record in dossier |
 | Mass | volume × density ≈ real animal mass | `real.mass` + `physics` → QA `mass` (±15 %) |
@@ -47,7 +52,13 @@ Original designs only; never a named creature from any IP.
 ## Quality bar
 - [ ] Dossier names the real animal behind every part, with measurements.
 - [ ] Stands: CoM inside the support polygon; every foot touches the ground at LOD0–2.
-- [ ] Joints sit at real pivots (knee forward, hock backward on digitigrade hind legs).
+- [ ] Joints sit at real pivots (knee forward, hock backward on digitigrade hind legs); elbow at the
+      brisket ± 5 % H.
+- [ ] Dimensions match the species sheet or the dossier's own sources; disagreements written down.
+- [ ] Eyes face the family's orbit angle; pupil shape fits the ecology (slit: small ambush
+      predator; horizontal: grazer; round: pursuit predator).
+- [ ] Feet fit the family: digit count, cloven hoof + dewclaws on artiodactyls, 5 toes on bears.
+- [ ] Centre of mass gives a plausible fore share (quadruped mammals ≈ 0.55–0.65).
 - [ ] Limb thickness scales with mass; a 4 t creature has no deer legs.
 - [ ] Head, horns, wings attach with `ctx.joint` (`flush` or `socket`), `joints` PASS.
 - [ ] Surface detail sized to the body: scales grade, fur parts by flow, rest areas on the flank.
@@ -57,6 +68,8 @@ Original designs only; never a named creature from any IP.
 ## Common mistakes
 - Bolting parts of many animals together with no functional reason: reads as a collage.
 - Knees bending the wrong way on a digitigrade hind leg (the hock is the ankle, not a knee).
+- Prey animals with forward-facing eyes; a single hoof on a cow or deer; the generic default tail
+  (0.37 L) left on a short-tailed species: set `family` or `tail`.
 - Wings too small to lift the body; necks too thin to hold the head.
 - Uniform scale size everywhere; no gradient, no rest area.
 - Floating claws/teeth: they must sink into gum or toe (`touches`).

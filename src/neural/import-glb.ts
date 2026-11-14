@@ -75,6 +75,7 @@ export function importGlb(source: ImportSource, o: ImportOptions = {}): Imported
   const key = JSON.stringify([source.sha256, o, licence.credit]);
   const hit = memo.get(key);
   if (hit) return hit;
+  checkSizes(o);
   const U = VEC[o.up ?? '+y'];
   const F = VEC[o.front ?? '+z'];
   if (!U || !F || Math.abs(U[0] * F[0] + U[1] * F[1] + U[2] * F[2]) > 0)
@@ -155,4 +156,20 @@ function reframe(m: Mesh, F: Vec3, L: Vec3, U: Vec3, s: number): Mesh {
     return out;
   };
   return { ...m, positions: map(m.positions, s), normals: map(m.normals, 1) };
+}
+
+/** `scale`, `height` and every `fit` extent must be finite and > 0: a negative or zero size
+ * turns the mesh inside out or empties it. */
+function checkSizes(o: ImportOptions): void {
+  const sizes: [string, number | undefined][] = [
+    ['scale', o.scale],
+    ['height', o.height],
+    ...(o.fit ?? []).map((v, k): [string, number] => [`fit[${k}]`, v]),
+  ];
+  for (const [name, v] of sizes)
+    if (v !== undefined && !(Number.isFinite(v) && v > 0))
+      throw new Ts23dError('T3D_IMPORT_UNSUPPORTED', {
+        cause: `${name} is ${v}; import sizes must be finite and > 0`,
+        fix: 'pass a positive size; to mirror, import as-is and place with `place({ scale: [-1, 1, 1] })`, which flips winding',
+      });
 }

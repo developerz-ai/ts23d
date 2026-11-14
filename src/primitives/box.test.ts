@@ -47,6 +47,15 @@ describe('box bevel', () => {
     }
   });
 
+  it('throws on a bevel that equals half a size up to rounding (a face collapsed to a line)', () => {
+    // The roadster's heel pad, 0.135 + 0.026 down to 0.135 + 0.022: a hair over 0.004 m in floats,
+    // so a 0.002 bevel passed `bevel < half` and the top face shrank to zero width.
+    const size = [0.08, 0.1, 0.135 + 0.026 - (0.135 + 0.022)] as const;
+    expect(size[2] / 2).toBeGreaterThan(0.002);
+    expect(() => box({ ...brick, size, bevel: 0.002 })).toThrow('T3D_RECIPE_INVALID');
+    expect(() => box({ ...brick, size, bevel: 0.0019 })).not.toThrow();
+  });
+
   it('bevel 0 is byte-identical to the unbevelled box (pinned before bevel landed)', () => {
     // Re-pinned for trim sheet v3 (1/64 rows, 4 m U span: UVs moved; geometry unchanged).
     const before = '3938de405854b18bc473d85c9f473a70542bdafd8d92bdd652e973494276063d';
@@ -93,5 +102,26 @@ describe('cylinder', () => {
     const lo = cylinder({ radius: 1, length: 1, segments: 8, color: [1, 1, 1] });
     const hi = cylinder({ radius: 1, length: 1, segments: 32, color: [1, 1, 1] });
     expect(triangleCount(hi)).toBe(4 * triangleCount(lo));
+  });
+});
+
+describe('box and cylinder input', () => {
+  it('rejects a negative, zero or NaN size (inside-out or NaN geometry)', () => {
+    for (const size of [
+      [-1, 2, 3],
+      [1, 0, 1],
+      [1, 1, Number.NaN],
+      [Number.POSITIVE_INFINITY, 1, 1],
+    ] as const)
+      expect(() => box({ size, color: [1, 1, 1] })).toThrow('T3D_RECIPE_INVALID');
+  });
+
+  it('rejects a cylinder with zero radius or length (degenerate triangles)', () => {
+    expect(() => cylinder({ radius: 0, length: 1, segments: 16, color: [1, 1, 1] })).toThrow(
+      'T3D_RECIPE_INVALID',
+    );
+    expect(() => cylinder({ radius: 1, length: 0, segments: 16, color: [1, 1, 1] })).toThrow(
+      'T3D_RECIPE_INVALID',
+    );
   });
 });

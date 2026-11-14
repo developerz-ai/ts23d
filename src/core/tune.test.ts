@@ -87,4 +87,21 @@ describe('tune declaration', () => {
     });
     expect(code(() => compile(plain))).toBe('T3D_TUNE_INVALID');
   });
+
+  it('rejects prototype names: ctx.tuned("constructor") and a tune.json "toString"', () => {
+    const params = { w: { min: 0, max: 1, default: 0.5 } };
+    const proto = defineAsset({
+      name: 'proto',
+      kind: 'prop',
+      budget,
+      tune: { params, objectives },
+      build: (ctx) => void ctx.tuned('constructor'),
+    });
+    expect(code(() => compile(proto))).toBe('T3D_TUNE_INVALID');
+    expect(
+      code(() =>
+        compile(define({ params, objectives, saved: { knob: { values: { toString: 0.5 } } } })),
+      ),
+    ).toBe('T3D_TUNE_INVALID');
+  });
 });

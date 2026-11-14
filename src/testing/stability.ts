@@ -36,6 +36,7 @@ export function assertUprightOnGround(asset: Asset, o: GroundOptions = {}): numb
         .filter((l) => l.z < -eps)
         .map((l) => ({
           gate: 'ground',
+          code: 'T3D_QA_GROUND',
           part: l.name,
           message: `'${l.name}' reaches ${cm(-l.z)} below the ground (z = ${l.z.toFixed(3)})`,
           fix: `lift '${l.name}' (or the whole asset) by ${cm(-l.z)}: assets stand on z = 0`,
@@ -43,6 +44,7 @@ export function assertUprightOnGround(asset: Asset, o: GroundOptions = {}): numb
       if (min > eps)
         out.push({
           gate: 'ground',
+          code: 'T3D_QA_GROUND',
           message: `lowest point is ${cm(min)} above the ground — the asset floats`,
           fix: `lower everything by ${cm(min)} so the feet/wheels/base touch z = 0`,
         });
@@ -87,6 +89,7 @@ export function assertCentreOfMassInside(
           {
             finding: {
               gate: 'balance',
+              code: 'T3D_QA_BALANCE',
               message: `centre of mass (${com[0].toFixed(3)}, ${com[1].toFixed(3)}) is ${cm(outside)} outside the ${hull.length}-point ground contact polygon${o.margin ? ` (margin ${cm(o.margin)})` : ''} — it tips over`,
               fix: 'widen the base/stance toward the centre of mass, or move heavy parts over the base (lighter overhangs, hollow `shell` walls)',
             },

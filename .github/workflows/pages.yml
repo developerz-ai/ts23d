@@ -25,8 +25,12 @@ jobs:
         with:
           persist-credentials: false
       - uses: ./.github/actions/setup
-      - name: cwebp (the media plugin re-encodes hero PNGs; without it they ship as PNG)
-        run: sudo apt-get install -y --no-install-recommends webp
+      - name: cwebp (the media plugin re-encodes hero PNGs; the gallery must not ship PNGs)
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends webp
+          command -v cwebp >/dev/null || { echo "::error::cwebp missing after installing webp. fix: check the runner image's webp package"; exit 1; }
       - run: bun run site:build
       - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0

@@ -42,7 +42,10 @@ export function birdBones(s: CreatureSpec): Bones {
     radii: [r * 1.3, r * 0.75, r * 0.32, r * 0.3],
     foot: [0.02 * L, y, 0],
     footSize: [0.14 * H, 0.1 * H, 0.02 * H],
+    // Anisodactyl bird foot: three toes forward, the hallux back (animal-anatomy §2).
     toes: 4,
+    dewclaws: 0,
+    hoof: null,
     muscles: [{ at: [0.0, y * 1.1, zc - rz * 0.6], r: [r * 1.4, r * 1.1, r * 2] }],
   };
   // Folded wing: from the shoulder along the flank to the primaries' tips past the tail root.

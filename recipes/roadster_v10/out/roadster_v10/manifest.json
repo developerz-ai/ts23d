@@ -10,15 +10,20 @@
     "hero",
     "original-design"
   ],
+  "lods": [
+    0,
+    1,
+    2
+  ],
   "files": {
     "lods": [],
-    "sheet": "recipes/roadster_v10/out/roadster_v10/sheet.png",
-    "thumb": "recipes/roadster_v10/out/roadster_v10/thumb.png"
+    "sheet": "sheet.png",
+    "thumb": "thumb.png"
   },
   "triangles": [
-    904846,
-    78258,
-    5616
+    902138,
+    77234,
+    5508
   ],
   "drawCalls": [
     30,

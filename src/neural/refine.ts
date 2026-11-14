@@ -25,6 +25,20 @@ export interface RefineCache {
   set(key: string, glb: Uint8Array): void;
 }
 
+/** The POST the adapter sends: a structural subset of fetch's init (no DOM lib needed). */
+export interface RefineHttpInit {
+  readonly method: 'POST';
+  readonly headers: Readonly<Record<string, string>>;
+  readonly body: string;
+}
+
+/** What the adapter reads from the reply: a structural subset of fetch's Response. */
+export interface RefineHttpReply {
+  readonly ok: boolean;
+  readonly status: number;
+  arrayBuffer(): Promise<ArrayBuffer>;
+}
+
 export interface RefineOptions {
   /** e.g. 'http://127.0.0.1:8190/refine'. */
   readonly endpoint: string;
@@ -34,9 +48,13 @@ export interface RefineOptions {
   readonly cache?: RefineCache;
   /** Never call the server: a cache miss is an error (CI). */
   readonly offline?: boolean;
-  /** Injected for tests and custom transports; default the global fetch. */
-  readonly fetch?: (url: string, init: RequestInit) => Promise<Response>;
+  /** Give up after this many ms (request + body). Default 600 000 (10 min). */
+  readonly timeoutMs?: number;
+  /** Injected for tests and custom transports; default the global fetch (aborted on timeout). */
+  readonly fetch?: (url: string, init: RefineHttpInit) => Promise<RefineHttpReply>;
 }
+
+const TIMEOUT_MS = 600_000;
 
 export interface Refined {
   readonly glb: Uint8Array;
@@ -97,32 +115,53 @@ export async function refine(req: RefineRequest, o: RefineOptions): Promise<Refi
       cause: `refine cache miss for key ${key.slice(0, 12)}… (model ${o.model}) while offline`,
       fix: `run the build once on a machine with the ${o.model} server at ${o.endpoint}, then commit .ts23d/neural/${key}.glb`,
     });
-  const call = o.fetch ?? ((url: string, init: RequestInit) => fetch(url, init));
-  let res: Response;
-  try {
-    res = await call(o.endpoint, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        model: o.model,
-        prompt: req.prompt,
-        seed,
-        mesh: b64(input),
-        ...(req.image ? { image: b64(req.image) } : {}),
-      }),
+  const glb = await post(o, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      model: o.model,
+      prompt: req.prompt,
+      seed,
+      mesh: b64(input),
+      ...(req.image ? { image: b64(req.image) } : {}),
+    }),
+  });
+  cache.set(key, glb);
+  return { glb, key, sha256: sha256Hex(glb), cached: false };
+}
+
+/** POST and read the GLB body within `timeoutMs`; every failure is T3D_REFINE_FAILED. */
+async function post(o: RefineOptions, init: RefineHttpInit): Promise<Uint8Array> {
+  const ms = o.timeoutMs ?? TIMEOUT_MS;
+  if (!(Number.isFinite(ms) && ms > 0))
+    throw new Ts23dError('T3D_REFINE_FAILED', {
+      cause: `timeoutMs is ${ms}`,
+      fix: 'pass timeoutMs as a positive number of milliseconds (default 600000)',
     });
+  const signal = AbortSignal.timeout(ms);
+  const call = o.fetch ?? ((url: string, i: RefineHttpInit) => fetch(url, { ...i, signal }));
+  const timedOut = new Promise<never>((_, reject) =>
+    signal.addEventListener('abort', () => reject(signal.reason), { once: true }),
+  );
+  let res: RefineHttpReply;
+  let glb: Uint8Array;
+  try {
+    [res, glb] = await Promise.race([
+      call(o.endpoint, init).then(async (r) => [r, new Uint8Array(await r.arrayBuffer())] as const),
+      timedOut,
+    ]);
   } catch (e) {
     throw new Ts23dError('T3D_REFINE_FAILED', {
-      cause: `no answer from ${o.endpoint} (${String(e)})`,
-      fix: 'start your local model server (see docs/idea/21-import.md › Refine) or pass offline: true',
+      cause: signal.aborted
+        ? `${o.endpoint} did not answer within ${ms} ms`
+        : `no answer from ${o.endpoint} (${String(e)})`,
+      fix: `start your local model server at ${o.endpoint} (see docs/idea/21-import.md › Refine), raise the timeoutMs option (now ${ms}), or pass offline: true`,
     });
   }
-  const glb = new Uint8Array(await res.arrayBuffer());
   if (!res.ok || glb.byteLength < 12 || new DataView(glb.buffer).getUint32(0, true) !== 0x46546c67)
     throw new Ts23dError('T3D_REFINE_FAILED', {
       cause: `${o.endpoint} answered ${res.status} with ${glb.byteLength} bytes that are not a GLB`,
       fix: 'the server must return the refined mesh as model/gltf-binary; check its log',
     });
-  cache.set(key, glb);
-  return { glb, key, sha256: sha256Hex(glb), cached: false };
+  return glb;
 }

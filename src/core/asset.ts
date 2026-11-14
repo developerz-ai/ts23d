@@ -9,8 +9,9 @@ import type { Mesh } from './mesh.ts';
 import { opticsOf } from './optics.ts';
 import { checkPaintedParts, paintSetOf, repaint } from './paint.ts';
 import type { Connect, Joint, Lod, Part, PartOptions, UseOptions } from './part.ts';
-import { createRng } from './rng.ts';
+import { checkSeed, createRng, forkSeed } from './rng.ts';
 import { checkTune, type TunedValues, tunedReader } from './tune.ts';
+import { checkAsset, checkCompileOptions, checkPivotName } from './validate-asset.ts';
 import type { WeatherCoverage } from './weather-coverage.ts';
 import { worldTransforms } from './world.ts';
 
@@ -20,15 +21,11 @@ export * from './optics.ts';
 export * from './paint.ts';
 export * from './part.ts';
 export * from './tune.ts';
+export { checkTolerance, ROOT_PART, TOLERANCE } from './validate-asset.ts';
 export type { WeatherCoverage } from './weather-coverage.ts';
 
 export function defineAsset(def: AssetDefinition): Asset {
-  if (!/^[a-z][a-z0-9_]*$/.test(def.name)) {
-    throw new Ts23dError('T3D_RECIPE_INVALID', {
-      cause: `asset name '${def.name}' is not snake_case`,
-      fix: 'rename it to [a-z][a-z0-9_]* — it becomes the GLB file name and the root node',
-    });
-  }
+  checkAsset(def);
   if (def.tune) checkTune(def.name, def.tune);
   return { ...def, __ts23d: 'asset' };
 }
@@ -50,6 +47,7 @@ export interface CompileOptions {
 export function compile(asset: Asset, options: CompileOptions = {}): CompiledAsset {
   const lod = options.lod ?? 0;
   const seed = options.seed ?? asset.seed ?? 1;
+  checkCompileOptions(asset.name, lod, seed);
   const paintSet = paintSetOf(asset.name, asset.paint, asset.variants);
   const finishes = finishesOf(asset.name, asset.finishes);
   const optics = opticsOf(asset.name, asset.optics);
@@ -77,6 +75,7 @@ export function compile(asset: Asset, options: CompileOptions = {}): CompiledAss
         fix: 'add the parent (ctx.group or ctx.part) before its children',
       });
     }
+    checkPivotName(asset.name, name, mesh, o);
     if (o.motion && o.yaw) {
       throw new Ts23dError('T3D_RECIPE_INVALID', {
         cause: `part '${name}' sets both yaw and motion`,
@@ -102,7 +101,9 @@ export function compile(asset: Asset, options: CompileOptions = {}): CompiledAss
     });
   };
   const use = (child: Asset, o: UseOptions): void => {
-    const sub = compile(child, { lod, seed: o.seed ?? seed });
+    if (o.seed !== undefined) checkSeed(o.seed, `ctx.use('${o.prefix}') seed`);
+    // Own seed, else the child's, else a stream forked by prefix: siblings and parent never share.
+    const sub = compile(child, { lod, seed: o.seed ?? child.seed ?? forkSeed(seed, o.prefix) });
     add(o.prefix, null, {
       at: o.at ?? [0, 0, 0],
       yaw: o.yaw ?? 0,

@@ -51,6 +51,7 @@ export function assertTexelDensity(asset: Asset, range: Range, o: TexelOptions =
             lod: c.lod,
             finding: {
               gate: 'texel-density',
+              code: 'T3D_QA_TEXEL_DENSITY',
               part: name,
               message: `'${name}' gets ${d.toFixed(0)} px/m, want ${range[0]}–${range[1]} px/m`,
               fix:

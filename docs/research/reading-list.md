@@ -39,3 +39,9 @@ learn methods, never copy designs. Verify each edition's licence before quoting 
 - Thumbnail silhouette test: LOD2 32×32 black shape vs LOD0 (IoU), from front, side, 3/4.
 - Greyscale value check: highest local contrast on head / upper body (characters) or focal part (props).
 - Detail-density map: rest areas exist; no uniform noise.
+
+## In this repo: animal biology
+| Doc | Teaches |
+|---|---|
+| [animal-anatomy](animal-anatomy.md) | comparative vertebrate anatomy as measurable rules with sources: landmarks, stance, eyes, weight support, joint ranges, gaits, surfaces |
+| [animal-species-sheets](animal-species-sheets.md) | sourced dimensions for wolf, dog, tiger, lion, cat, horse, cow, deer, bear, boar, eagle, crocodile |

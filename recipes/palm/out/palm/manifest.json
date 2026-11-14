@@ -7,15 +7,20 @@
     "tree",
     "palm"
   ],
+  "lods": [
+    0,
+    1,
+    2
+  ],
   "files": {
     "lods": [],
-    "sheet": "recipes/palm/out/palm/sheet.png",
-    "thumb": "recipes/palm/out/palm/thumb.png"
+    "sheet": "sheet.png",
+    "thumb": "thumb.png"
   },
   "triangles": [
     5572,
     2332,
-    215
+    205
   ],
   "drawCalls": [
     2,

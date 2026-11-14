@@ -48,7 +48,7 @@ After CGA shape grammar (Müller et al. 2006). One string lays out one strip.
 | `sym:~` / `sym:~2` | Stretch: shares the leftover, by weight (default 1) |
 | `{a:1.4 \| b:0.6}*` | Repeat: as many whole copies as fit. Fixed sizes only; one repeat per line |
 
-With no stretch term, repeat copies widen evenly to fill. Fixed terms longer than the strip → `T3D_GRAMMAR_OVERFLOW`. `split(src, length)` returns `{ symbol, start, size }[]`.
+With no stretch term, repeat copies widen evenly to fill. Fixed terms longer than the strip → `T3D_GRAMMAR_OVERFLOW`. Fixed terms that sum to less than the strip, with no stretch or repeat term to absorb the rest (beyond 1e-9 m) → `T3D_GRAMMAR_UNDERFILL`: add a stretch (`~`) or a repeat, never rely on a silent gap. A stray brace, a `{…}` without `*` or a non-finite length → `T3D_GRAMMAR_SYNTAX`. `split(src, length)` returns `{ symbol, start, size }[]`.
 
 ## Vehicle
 

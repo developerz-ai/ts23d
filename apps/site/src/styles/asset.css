@@ -125,6 +125,15 @@
   }
 }
 
+/* A compile that failed, or no WebGL: the overlay is a message, not a spinner. */
+.loading.failed .loading-text::before {
+  display: none;
+}
+
+.loading.failed {
+  border-color: #b5380b;
+}
+
 .scenario-tag,
 .viewport-hint {
   position: absolute;
@@ -607,4 +616,11 @@ button.download:hover:not(:disabled) {
   max-height: min(80vh, 60rem);
   line-height: 1.5;
   tab-size: 2;
+}
+
+/* No WebGL: the committed render stands alone; the live-model controls would do nothing. */
+.viewer.no-webgl .toolbar,
+.viewer.no-webgl .parts-box,
+.viewer.no-webgl .viewport-hint {
+  display: none;
 }

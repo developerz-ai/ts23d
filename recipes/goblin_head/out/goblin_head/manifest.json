@@ -9,15 +9,20 @@
     "bust",
     "sculpt"
   ],
+  "lods": [
+    0,
+    1,
+    2
+  ],
   "files": {
     "lods": [],
-    "sheet": "recipes/goblin_head/out/goblin_head/sheet.png",
-    "thumb": "recipes/goblin_head/out/goblin_head/thumb.png"
+    "sheet": "sheet.png",
+    "thumb": "thumb.png"
   },
   "triangles": [
-    80408,
-    22304,
-    4236
+    80280,
+    22240,
+    4216
   ],
   "drawCalls": [
     2,

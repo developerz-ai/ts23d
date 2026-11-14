@@ -1,5 +1,6 @@
 // Build assets without the CLI: the library is plain TypeScript, so a script is all you need.
-// Run: bun examples/build-with-bun.ts [out-dir]   (Node ≥ 22 works too, against the built dist/)
+// Run: bun examples/build-with-bun.ts [out-dir]. This file and the `t3d` CLI need Bun; the library
+// itself also imports under Node ≥ 22 (the published dist/, proven by scripts/pack-smoke.ts).
 // Pick exactly what you want — which LODs, textures or not, QA or not, sheets or not.
 
 import {

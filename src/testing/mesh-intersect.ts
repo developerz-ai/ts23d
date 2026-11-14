@@ -112,6 +112,7 @@ export function assertNoSelfIntersection(input: MeshInput, o: MeshScope = {}): n
             {
               finding: {
                 gate: 'self-intersection',
+                code: 'T3D_QA_SELF_INTERSECTION',
                 part: name,
                 message: `'${name}' folds through itself: ${r.pairs} crossing triangle pair(s), first at ${fmtPoint(r.at)}`,
                 fix: 'split the overlapping solids into separate parts (ctx.part per solid), or rebuild the fold (a sweep radius smaller than its bend, a loft that twists)',

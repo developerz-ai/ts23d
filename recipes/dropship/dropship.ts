@@ -1107,9 +1107,18 @@ export const dropship = defineAsset({
 
     // ── chin turret: yaws ±50°, twin guns pitch ±12° ──────────────────────────────────────────
     const tSeg = ctx.pick([16, 10, 6]);
+    // The coarse LOD1/2 fuselage's chords sag ~2 cm under the ring: hang the turret lower there
+    // (the ring grows down to keep holding it), so it turns clear of the skin at every LOD.
+    const sink = ctx.pick([0, 0.03, 0.03]);
     solid(
       'turret_ring',
-      cylinder({ radius: 0.36, length: 0.08, segments: tSeg, color: DARK, at: [8.55, 0, 1.64] }),
+      cylinder({
+        radius: 0.36,
+        length: 0.08 + sink,
+        segments: tSeg,
+        color: DARK,
+        at: [8.55, 0, 1.64 - sink / 2],
+      }),
     );
     part(
       'turret',
@@ -1125,7 +1134,7 @@ export const dropship = defineAsset({
         color: PANEL,
       }),
       {
-        at: [8.55, 0, 1.6],
+        at: [8.55, 0, 1.6 - sink],
         motion: { kind: 'sway', axis: [0, 0, 1], degrees: 50, hz: 0.15 },
         clearOf: ['turret_ring'], // the turret turns in its ring: a real interlock
       },

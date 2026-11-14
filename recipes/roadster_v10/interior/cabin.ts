@@ -85,7 +85,7 @@ export function carpet(lod: Lod): Mesh {
           [0.2, s * 0.38, FLOOR_Z + 0.026],
           C.ironDark,
           'rubber',
-          0.002,
+          0.0015, // under half the 4 mm pad: a 2 mm bevel leaves no top face
         ),
       );
     }

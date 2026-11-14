@@ -15,6 +15,7 @@ function facets(
   put: (p: Vec3, n: Vec3, uv: Vec2) => number,
   tri: (a: number, b: number, c: number) => void,
   sideUv: (s: number, i: number, r: number) => Vec2,
+  poleRadius: number,
 ): void {
   const half = Math.PI / o.segments;
   const corner = (s: number): [number, number] => {
@@ -38,8 +39,9 @@ function facets(
       const bb = put([r0 * c1, r0 * s1, z0], n, sideUv(s + 1, i, r0));
       const c = put([r1 * c1, r1 * s1, z1], n, sideUv(s + 1, i + 1, r1));
       const d = put([r1 * c0, r1 * s0, z1], n, sideUv(s, i + 1, r1));
-      tri(a, bb, c);
-      tri(a, c, d);
+      // A pole ring (r = 0) keeps only the triangle that reaches the other ring.
+      if (r0 > poleRadius) tri(a, bb, c);
+      if (r1 > poleRadius) tri(a, c, d);
     }
   }
 }

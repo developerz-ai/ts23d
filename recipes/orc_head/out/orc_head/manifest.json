@@ -9,15 +9,20 @@
     "bust",
     "sculpt"
   ],
+  "lods": [
+    0,
+    1,
+    2
+  ],
   "files": {
     "lods": [],
-    "sheet": "recipes/orc_head/out/orc_head/sheet.png",
-    "thumb": "recipes/orc_head/out/orc_head/thumb.png"
+    "sheet": "sheet.png",
+    "thumb": "thumb.png"
   },
   "triangles": [
-    126128,
-    40144,
-    3672
+    126000,
+    40080,
+    3652
   ],
   "drawCalls": [
     2,

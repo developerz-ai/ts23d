@@ -6,7 +6,7 @@
 
 import { createRng, type SoundClip, Ts23dError } from '../core/index.ts';
 import { acousticOf } from './acoustics.ts';
-import { checkRange, makeClip, normalize, SAMPLE_RATE } from './clip.ts';
+import { checkRange, makeClip, normalize, SAMPLE_RATE, variant } from './clip.ts';
 import { adsrAt, biquad, loopify, noise, oscillator, shape } from './dsp.ts';
 import { renderStrike, strike } from './impact.ts';
 
@@ -132,5 +132,17 @@ export function mechanism(o: MechanismOptions): SoundClip {
   }
   if (loop) out = loopify(out, Math.round(FADE * SAMPLE_RATE));
   normalize(out, 0.8);
-  return makeClip(o.name ?? `${o.kind}_${a.id}`, out, loop);
+  // rpm's default follows speed; whine reads rpm / teeth, other kinds ignore them.
+  const whine = o.kind === 'whine';
+  const name =
+    `${o.kind}_${a.id}` +
+    variant([
+      ['speed', speed, 0.5],
+      ['dur', seconds, LENGTH[o.kind]],
+      ['rpm', whine ? (o.rpm ?? 0) : 0, 0],
+      ['teeth', whine ? (o.teeth ?? 24) : 24, 24],
+      ['loop', Number(loop), Number(LOOPS.has(o.kind))],
+      ['seed', seed, 1],
+    ]);
+  return makeClip(o.name ?? name, out, loop);
 }

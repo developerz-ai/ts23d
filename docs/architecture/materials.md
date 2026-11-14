@@ -173,9 +173,11 @@ box({ size: [4, 2, 0.05], strip: teak, color: NATURAL });
   built-in or differently redefined id `T3D_MATERIAL_CONFLICT`, and a fifteenth custom row
   `T3D_SHEET_FULL`. Also: `graph` (a `tex` graph, see below), `spanMetres` (U repeat, default 4)
   and the weathering dials `wet`, `wear`, `age`. A painter that writes NaN or ∞ fails the paint with `T3D_MATERIAL_INVALID`.
-- Rows are given out in registration order. Define materials in one shared module that every recipe
-  imports, so the same program always produces the same bytes. Redefining an id with the identical
-  definition is a no-op.
+- A row comes from the id: a stable hash picks the home row and a taken home probes to the next free
+  one (`src/material/slots.ts`). The row never depends on how many materials the process registered
+  first, so the same program always produces the same bytes; only a hash clash between two ids makes
+  the later one probe (the shipped creature and CC0 ids have none). A row never moves once given out.
+  Still define materials in one shared module. Redefining an id with the identical definition is a no-op.
 - `DEFAULT_SHEET` paints defined materials automatically. To restyle a built-in for one project,
   override its recipe: `paintTrimSheet({ ...DEFAULT_SHEET, strips: { ...DEFAULT_SHEET.strips, oak: {...} } })`.
 - `materialOf(id)` returns the recipe, origin (classic/library/defined), description and sources.

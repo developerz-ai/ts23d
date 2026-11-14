@@ -219,7 +219,7 @@ export function bx(a: Vec3, b: Vec3, color: Vec3, strip: StripId = 'plastic', be
     at: [(lo[0] + hi[0]) / 2, (lo[1] + hi[1]) / 2, lo[2]],
     color,
     strip,
-    ...(bevel > 0 && bevel < small / 2 ? { bevel } : {}),
+    ...(bevel > 0 && bevel < small / 2 - 1e-6 ? { bevel } : {}), // box's own limit
   });
 }
 
@@ -238,7 +238,7 @@ export function obox(
     at: [0, 0, -size[2] / 2],
     color,
     strip,
-    ...(bevel > 0 && bevel < small / 2 ? { bevel } : {}),
+    ...(bevel > 0 && bevel < small / 2 - 1e-6 ? { bevel } : {}), // box's own limit
   });
   return place(m, { at: c, ...rot });
 }

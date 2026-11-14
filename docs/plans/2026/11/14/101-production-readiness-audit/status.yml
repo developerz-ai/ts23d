@@ -1,49 +1,55 @@
 plan: 101-production-readiness-audit
 title: Production-readiness audit — fix what a full scan found
 roadmap: "M0: hardening sweep (cross-cutting; ticks line 37 first npm publish)"
-status: not_started        # not_started | in_progress | blocked | complete | superseded
+status: complete        # not_started | in_progress | blocked | complete | superseded
 owner: sebi
-worked_by: ""
-percent: 0
+worked_by: "claude-opus-5-5 (/feature hive)"
+percent: 100
 current_focus: ""
 slices:
   - file: 01-core-contracts.md
-    status: not_started
-    percent: 0
+    status: complete
+    percent: 100
   - file: 02-material-grammar.md
-    status: not_started
-    percent: 0
+    status: complete
+    percent: 100
   - file: 03-primitives-passes-audio.md
-    status: not_started
-    percent: 0
+    status: complete
+    percent: 100
   - file: 04-untrusted-input-network.md
-    status: not_started
-    percent: 0
+    status: complete
+    percent: 100
   - file: 05-qa-gates.md
-    status: not_started
-    percent: 0
+    status: complete
+    percent: 100
   - file: 06-export-pivots.md
-    status: not_started
-    percent: 0
+    status: complete
+    percent: 100
   - file: 07-cli.md
-    status: not_started
-    percent: 0
+    status: complete
+    percent: 100
   - file: 08-gate-guards.md
-    status: not_started
-    percent: 0
+    status: complete
+    percent: 100
   - file: 09-packaging-release-ci.md
-    status: not_started
-    percent: 0
+    status: complete
+    percent: 100
   - file: 10-site.md
-    status: not_started
-    percent: 0
+    status: complete
+    percent: 100
   - file: 11-docs.md
-    status: not_started
-    percent: 0
+    status: complete
+    percent: 100
 evidence:                  # PR links, verify --json summaries, contact-sheet paths
   - "baseline 2026-11-14 main@5e1180f: bun run verify --json ok; test 71471 ms, recipes 493912 ms unsharded"
+  - "done 2026-11-14: bun run verify green, 11 steps; test 85186 ms (1177 tests), recipes 586738 ms unsharded (64 assets + 16 recipe test files; +19 % over baseline, above the +10 % budget: denser clash sampling + recipe tests now in the step; CI shards it 12 ways), pack 2094 ms"
 notes: >-
-  Follow-ups outside this plan: weighted recipe sharding (shots shard 10 took 5m16s vs 46s for
+  Site numbers 2026-11-14 (slice 10): index chunk 741.79 kB / 189.24 kB gzip; dist/media 41 MB
+  (PNG 37 MB, WebP 2.5 MB, WAV 0.7 MB). Owner-asked additions folded into this sweep:
+  signal_gantry knee braces landed beside the posts (D41, recipe check kneesLand); wheel part
+  rebuilt from a 225/45 R17 reference; animal research layer (docs/research/animal-*.md) with a
+  gap report against src/kinds; fully AI-maintained .dz policy with a monthly cleanup lane;
+  browser-like headers on script fetches. Follow-ups outside this plan: weighted recipe sharding (shots shard 10 took 5m16s vs 46s for
   shard 11), repo weight (100 MB tracked, 482 PNGs, no LFS), site bundle split (index chunk
   738 kB) and media weight (41 MB), roadmap line 49 cross-machine determinism.
 last_updated: 2026-11-14

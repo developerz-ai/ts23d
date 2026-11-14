@@ -7,14 +7,19 @@
     "tracked",
     "ww2"
   ],
+  "lods": [
+    0,
+    1,
+    2
+  ],
   "files": {
     "lods": [],
-    "sheet": "recipes/t34/out/t34_1941/sheet.png",
-    "thumb": "recipes/t34/out/t34_1941/thumb.png"
+    "sheet": "sheet.png",
+    "thumb": "thumb.png"
   },
   "triangles": [
-    47876,
-    10648,
+    46626,
+    10010,
     1550
   ],
   "drawCalls": [

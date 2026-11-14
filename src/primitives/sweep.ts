@@ -70,6 +70,9 @@ function section(s: SweepOptions['section']): Section {
   return { pts, nrm };
 }
 
+/** Rings narrower than a nanometre are points. */
+const POLE = 1e-9;
+
 export function sweep(o: SweepOptions): Mesh {
   const arc = arcLengths(o.path);
   const frames = transportFrames(o.path);
@@ -128,14 +131,23 @@ export function sweep(o: SweepOptions): Mesh {
       });
     }
   }
+  // A ring scaled to 0 is a pole (a tapered tip): its band keeps only the triangle reaching the
+  // other ring, so no zero-area slivers (arcLengths already refuses repeated path points).
+  const reach = Math.max(...sec.pts.map(([x, y]) => Math.hypot(x, y)));
+  const pole = (i: number): boolean => Math.abs((o.scale?.[i] ?? 1) * reach) <= POLE;
   for (let i = 0; i + 1 < P; i++) {
+    if (pole(i) && pole(i + 1)) continue;
     const r0 = i * (S + 1);
     const r1 = r0 + S + 1;
-    for (let j = 0; j < S; j++) b.quad(r0 + j, r0 + j + 1, r1 + j + 1, r1 + j);
+    for (let j = 0; j < S; j++) {
+      if (!pole(i)) b.tri(r0 + j, r0 + j + 1, r1 + j + 1);
+      if (!pole(i + 1)) b.tri(r0 + j, r1 + j + 1, r1 + j);
+    }
   }
   const caps = o.caps === true ? ['start', 'end'] : o.caps ? [o.caps] : [];
   for (const end of caps) {
     const i = end === 'start' ? 0 : P - 1;
+    if (pole(i)) continue; // a tip on its path point is already closed
     const f = frames[i]?.t ?? [0, 0, 1];
     const sign = end === 'start' ? -1 : 1;
     const nn: Vec3 = [f[0] * sign, f[1] * sign, f[2] * sign];

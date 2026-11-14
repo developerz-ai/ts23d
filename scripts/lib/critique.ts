@@ -8,10 +8,23 @@ import { BOUND_RENDERS, critiqueFindings } from '../../src/qa/critique.ts';
 import type { Violation } from './files.ts';
 
 /**
- * 'warn': findings print, the gate stays green (27+ assets predate critiques).
+ * 'warn': findings print, the gate stays green (assets predate critiques).
  * 'enforce': findings fail the recipes gate. Flip once every committed asset has a critique.
  */
 export const CRITIQUE_MODE: 'warn' | 'enforce' = 'warn';
+
+/**
+ * The phase-in ends on this date (UTC): from then on the gate enforces even while CRITIQUE_MODE
+ * says 'warn'. Moving it is a deliberate, reviewed edit, never a silent forever-warn.
+ */
+export const ENFORCE_FROM = '2027-01-15';
+
+/** The mode the recipes gate applies today: CRITIQUE_MODE until ENFORCE_FROM, then 'enforce'. */
+export function critiqueMode(today: Date = new Date()): 'warn' | 'enforce' {
+  return CRITIQUE_MODE === 'enforce' || today.toISOString().slice(0, 10) >= ENFORCE_FROM
+    ? 'enforce'
+    : 'warn';
+}
 
 /** Pass mark on every criterion, repo-wide. No per-recipe overrides: fix the asset instead. */
 export const CRITIQUE_MIN_SCORE = 8;
@@ -53,7 +66,7 @@ export async function critiqueViolations(
 export function warnCritiques(violations: readonly Violation[]): void {
   if (violations.length === 0) return;
   console.error(
-    `! critique (warn mode, not failing): ${violations.length} finding(s) — score every asset ≥ ${CRITIQUE_MIN_SCORE}`,
+    `! critique (warn mode until ${ENFORCE_FROM}, then failing): ${violations.length} finding(s) — score every asset ≥ ${CRITIQUE_MIN_SCORE}`,
   );
   for (const v of violations) console.error(`  ${v.file}  ${v.message}\n    fix: ${v.fix}`);
 }

@@ -6,6 +6,7 @@ import {
   boundsOf,
   type CompiledAsset,
   notImplemented,
+  TOLERANCE,
   toWorld,
   triangleCount,
   worldTransforms,
@@ -19,7 +20,7 @@ import { joints } from './joints.ts';
 import { mass } from './mass.ts';
 import { measures } from './measures.ts';
 import { hiddenParts } from './occlusion.ts';
-import { nonFinite, normalsMatchWinding, vertexColors } from './sanity.ts';
+import { degenerateTriangles, nonFinite, normalsMatchWinding, vertexColors } from './sanity.ts';
 import { treads } from './treads.ts';
 import type { Finding, Gate } from './types.ts';
 import { weatherGate } from './weather.ts';
@@ -55,6 +56,7 @@ export const triangleBudget: Gate = (asset) => {
     ? [
         {
           gate: 'triangle-budget',
+          code: 'T3D_QA_TRIANGLE_BUDGET',
           message: `LOD${asset.lod} has ${tris} triangles, budget ${cap}`,
           fix: 'drop detail at this LOD (read ctx.lod) or raise the budget with a reason',
         },
@@ -67,6 +69,7 @@ export const partNames: Gate = (asset) =>
     .filter((p) => !/^[a-z][a-z0-9_]*$/.test(p.name))
     .map((p) => ({
       gate: 'part-names',
+      code: 'T3D_QA_PART_NAMES',
       part: p.name,
       message: `part '${p.name}' is not snake_case`,
       fix: 'rename it — engines bind to node names like axle_0, door_l',
@@ -79,7 +82,7 @@ export const proportions: Gate = (asset) => {
   const boxes = [...worldBounds(asset).values()];
   const span = (k: 0 | 1 | 2): number =>
     Math.max(...boxes.map((b) => b.max[k])) - Math.min(...boxes.map((b) => b.min[k]));
-  const tol = real.tolerance ?? 0.05;
+  const tol = real.tolerance ?? TOLERANCE.proportions;
   return (
     [
       ['length', 0, real.length],
@@ -88,10 +91,12 @@ export const proportions: Gate = (asset) => {
     ] as const
   ).flatMap(([axis, k, want]) => {
     const got = span(k);
-    return Math.abs(got - want) / want > tol
+    // `!(err <= tol)`: a NaN error (zero or non-finite span) fails instead of passing.
+    return !(Math.abs(got - want) / want <= tol)
       ? [
           {
             gate: 'proportions',
+            code: 'T3D_QA_PROPORTIONS',
             message: `${axis} ${got.toFixed(2)} m vs real ${want} m (±${tol * 100}%)`,
             fix: `rescale along ${'XYZ'[k]} — re-derive the lengths from the sources, don't fudge the tolerance`,
           },
@@ -108,6 +113,7 @@ export const silhouetteIoU = (_asset: CompiledAsset, _referencePng: Uint8Array):
 export const recipeChecks: Gate = (asset) =>
   runChecks(asset).map((f) => ({
     gate: 'check',
+    code: 'T3D_QA_CHECK',
     ...(f.part ? { part: f.part } : {}),
     message: f.message,
     fix: f.fix,
@@ -130,6 +136,7 @@ export const DEFAULT_GATES: readonly Gate[] = [
   vertexColors,
   hiddenParts,
   normalsMatchWinding,
+  degenerateTriangles,
   weatherGate,
 ];
 

@@ -9,10 +9,15 @@
     "demo",
     "showcase"
   ],
+  "lods": [
+    0,
+    1,
+    2
+  ],
   "files": {
     "lods": [],
-    "sheet": "recipes/type_specimen/out/type_specimen/sheet.png",
-    "thumb": "recipes/type_specimen/out/type_specimen/thumb.png"
+    "sheet": "sheet.png",
+    "thumb": "thumb.png"
   },
   "triangles": [
     38476,
