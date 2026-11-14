@@ -1,6 +1,6 @@
 {
   "name": "@developerz.ai/ts23d",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "TypeScript to 3D (ts23d): free, deterministic 3D asset generation in TypeScript — a DSL your coding agent writes, compiled to game-ready glTF.",
   "type": "module",
   "license": "MIT",

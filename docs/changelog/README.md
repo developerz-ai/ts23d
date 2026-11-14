@@ -6,6 +6,7 @@ Every published version of `@developerz.ai/ts23d`, newest first: one page each w
 
 | Version | Date | Summary |
 |---|---|---|
+| [0.6.0](0.6.0.md) | 2026-11-14 | Tooling for a repo that runs itself (per-release changelog pages and a written ten-year maintenance contract), plus crank-linkage motions that keep the Jupiter locomotive's rods on their crank pins. |
 | [0.5.0](0.5.0.md) | 2026-11-14 | A production-readiness release: bad recipe input, hostile GLBs and dead servers now fail with coded errors and a `fix:` instead of wrong output, the package exports an explicit list of subpaths, and the creature kind follows sourced animal biology. |
 | [0.4.0](0.4.0.md) | 2026-11-08 | Tank tracks now run round their wheels through a new `tread` motion, and `text` sets smooth lettering in four vector typefaces. |
 | [0.3.0](0.3.0.md) | 2026-11-08 | The big feature release: switchable liveries, SVG drawings to 3D, physics colliders and mass, checked joints and blueprints, reusable parts, test helpers, weathering, creatures, mesh import, the AI finish layer, pinned real-world data, offline tuning, sound and PBR finishes, with new QA gates and the first animal, car and strategy-game assets. |
