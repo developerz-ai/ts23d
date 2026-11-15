@@ -4,9 +4,26 @@ All notable changes to `@developerz.ai/ts23d`. Format: [Keep a Changelog](https:
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-11-15
+
+Realism groundwork: a calibrated critique and reference-photo matching so "looks real" is measured, a stronger sculpt engine, wolves built from bones and muscles with strand-card fur, and human, elf and goblin busts rebuilt from skull to skin with card hair.
+
 ### Added
+- Reference matching: `photoMatch` now ships (photo · model · overlay, per-view IoU, error map) with a DLT camera solve from ≥ 4 marks (`solveCamera`); `fingerprint` / `compareFingerprints` (silhouette, Lab histogram, frequency spectrum, edge density); the `silhouetteIoU` gate; `bun run ref <recipe>` writes derived numbers only (`ref.json`), never photos (#36).
+- Calibrated critique: a metric vector per asset scored by a fit on 40 CC0 game assets and degraded copies (`calibratedScore`, `bun run golden`); a ratchet against `recipes/critique-baseline.json` (`T3D_CRITIQUE_REGRESSED`, `T3D_CRITIQUE_INFLATED`); a blind three-reviewer agent panel (`golden brief` / `golden attest`) decides the flagship floor, report-only for now (#36).
+- Sculpt engine: C2 `kernel: 'cubic'` blends, `roundCone` and `superellipsoid` shapes, `crease` / `clay` / `inflate` / `flatten` / `pinch` strokes with a declared Lipschitz bound (`probeLipschitz`), finer-cell `detail` regions, and a crease-preserving `fair()` pass (#36).
+- Core: `ctx.bone` and `Armature`, named `Clip`s, skin (`joints` / `weights`) and morph attributes on `Mesh`, `budget.bones` / `budget.heroTextures`, neural task and style types; ADRs 012–015 (hero texture tier, skinned meshes, neural outputs as cached inputs, models by adapter) (#36).
+- Fur and hair cards: `hairFlow` (combed tangent field), `hairCards` (Poisson roots, clumps, roots proven inside the surface), a strand atlas on the cutout strip (`strandCells`), `creatureFur` and head fur on creatures, card hair and beards on busts, and `T3D_FUR_SILHOUETTE` (#36).
+- Derived maps: `bakeField` (curvature, cavity, thickness, AO from the SDF), the `tex.lic` strand node, finish roughness and normal from the strip height graph, and an LSCM unwrap (`lscmCharts`) replacing box projection with a stretch gate (#36).
 - `src/material/shader.test.ts` typechecks the module `threeMaterialSource` emits with strict `tsc` against the gallery's pinned `three` / `@types/three`, so a three bump that breaks the TSL module fails the gate (#33).
 - `scripts/public-tree.test.ts`: no tracked file names an internal host or the internal setup mode; a failure names the file, never the value (#21, D43).
+
+### Changed
+- `creature()`: the trunk is a ribcage, loin and pelvis plus 19 fibre-aligned muscles and landmarks with tight blends; the neck runs into the skull behind the jaw; the jaw is its own part; 28 bones are exported; canid chest depth and neck continuity are checked. The wolf's `real.width` is now its coated width (0.29 m, sourced guard-hair lengths) (#36).
+- Busts: human, elf and goblin heads are built skull → planes → muscles → features → skin on the CC0 MakeHuman base, with sourced proportion checks (eye depth, neck width, face thirds) (#36).
+
+### Fixed
+- Cutout cards (fur, hair) rendered as flat pale blobs in `hero.png`: alpha mips now preserve coverage and thin cards pick their mip from the narrow axis (D44) (#36).
 
 ### Removed
 - `.mcp.json` no longer declares an internal MCP server; add it locally with `claude mcp add --scope local` (#21).
@@ -235,7 +252,8 @@ The first published version: the asset DSL with primitives, organic sculpting, t
 - Animations: `toGlb()` exports none unless `{ animations: true }` (glTF has no autoplay flag; engines drive named pivots from code). `t3d build` bakes the `run` clip by default so viewers show play controls; `--no-animations` skips it.
 - CLI output is one folder per asset: `out/<asset>/{lod0,lod1,lod2}.glb`, `sheet.png`, `manifest.json`, plus `out/index.json`. `t3d build` renders the sheet too (`--no-shot` to skip); `t3d shot` writes sheet + manifest only.
 
-[Unreleased]: https://github.com/developerz-ai/ts23d/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/developerz-ai/ts23d/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/developerz-ai/ts23d/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/developerz-ai/ts23d/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/developerz-ai/ts23d/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/developerz-ai/ts23d/compare/v0.3.0...v0.4.0
