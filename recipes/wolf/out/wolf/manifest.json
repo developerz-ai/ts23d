@@ -21,29 +21,34 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    144128,
-    29924,
-    3112
+    137690,
+    24968,
+    2268
   ],
   "drawCalls": [
-    1,
-    1,
+    2,
+    2,
     1
   ],
   "pivots": [
     {
       "name": "body",
       "parent": null
+    },
+    {
+      "name": "body_cutout",
+      "parent": null
     }
   ],
   "emitters": [],
   "sockets": [],
   "surfaces": [
+    "cutout",
     "opaque"
   ],
   "real": {
     "length": 1.31,
-    "width": 0.27,
+    "width": 0.29,
     "height": 0.9
   },
   "measures": [],

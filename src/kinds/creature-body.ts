@@ -1,10 +1,13 @@
 // The body sculpt (trunk, neck, legs, tail, wings, fins as ONE sculpt so every join is a smooth
 // blend), in stages, each its own function:
-//   blockOut  trunk masses (ribcage, loin, pelvis), the neck and tail skins, body chains
+//   blockOut  the bones: a superellipsoid ribcage, the tucked loin, the pelvis block, blended
+//             tightly (0.3 × radius, C2) so they stay separate forms; the neck of oval section;
+//             tail skins, body chains
 //   planes    none by default: a mammal's back and flanks are round; planed flanks read as a box
 //             (tiger dossier). The narrow, deep trunk comes from the masses' radii.
-//   features  scapulae at the withers, the brisket keel, gluteals and croup → tail root, the ruff,
-//             a spine ridge (LOD0/1); legs (creature-limbs.ts); wings; fins
+//   features  fibre muscles and bony landmarks (creature-muscles.ts, LOD0/1), the separations
+//             between them (creature-separations.ts), croup → tail root, the ruff; legs
+//             (creature-limbs.ts); wings; fins
 //   ground    flat soles: everything below z = 0 is cut away so feet rest on the ground plane.
 
 import type { Vec3 } from '../core/index.ts';
@@ -12,18 +15,55 @@ import type { SculptEdit } from '../primitives/index.ts';
 import type { Bones, Wing } from './creature-bones.ts';
 import { v3 } from './creature-curve.ts';
 import { legEdits } from './creature-limbs.ts';
-import { blade, blob, skin, tube } from './creature-skin.ts';
+import { muscleEdits } from './creature-muscles.ts';
+import { separations } from './creature-separations.ts';
+import { blade, blob, type SkinNode, skin } from './creature-skin.ts';
 import type { CreatureSpec } from './creature-spec.ts';
 
-/** Block-out: the primary masses. */
+/** Trunk blend: mammals × the mass's mean radius (0.3: ribcage, loin and pelvis stay separate
+ *  forms the muscles bridge), other plans × the smaller cross radius as before. */
+const TRUNK_BLEND = { mammal: 0.3, other: 0.9 } as const;
+
+const mammal = (b: Bones): boolean => b.skeleton === 'quadruped' || b.skeleton === 'winged';
+
+/** A neck of elliptical section (deeper than wide): overlapping ellipsoids along the chain. */
+function ovalNeck(nodes: readonly SkinNode[]): SculptEdit {
+  const group: SculptEdit[] = [];
+  for (let i = 0; i + 1 < nodes.length; i++) {
+    const a = nodes[i];
+    const c = nodes[i + 1];
+    if (!a || !c) continue;
+    const u = v3.sub(c.at, a.at);
+    const r = (a.r + c.r) / 2;
+    group.push({
+      shape: 'ellipsoid',
+      at: v3.lerp(a.at, c.at, 0.5),
+      // Wider toward the head: the cheek fur runs on into the neck (no collar at the skull).
+      size: [r * (0.85 + 0.3 * (i / Math.max(1, nodes.length - 2))), r, v3.len(u) / 2 + r * 0.7],
+      // Long axis (local Z) along the segment, pitched in the sagittal plane.
+      rotate: [0, (Math.atan2(u[0], u[2]) * 180) / Math.PI, 0],
+      blend: r * 0.6,
+      kernel: 'cubic',
+    });
+  }
+  return { group, blend: (nodes[0]?.r ?? 0.05) * 0.7, kernel: 'cubic' };
+}
+
+/** Block-out: the primary masses (the bones: ribcage, loin, pelvis), the neck and tail skins. */
 export function blockOut(b: Bones): SculptEdit[] {
-  // Mammal trunks blend wide (ribcage → loin → pelvis read as one torso); other plans tighter.
-  const k = b.skeleton === 'quadruped' || b.skeleton === 'winged' ? 1.6 : 0.9;
-  const out: SculptEdit[] = b.trunk.map((m, i) =>
-    blob(m.at, m.r, i === 0 ? 0 : Math.min(m.r[1], m.r[2]) * k, m.rotate),
-  );
+  const k = mammal(b) ? TRUNK_BLEND.mammal : TRUNK_BLEND.other;
+  const out: SculptEdit[] = b.trunk.map((m, i) => ({
+    shape: m.power ? ('superellipsoid' as const) : ('ellipsoid' as const),
+    at: m.at,
+    size: m.r,
+    blend:
+      i === 0 ? 0 : mammal(b) ? ((m.r[0] + m.r[1] + m.r[2]) / 3) * k : Math.min(m.r[1], m.r[2]) * k,
+    ...(m.power ? { power: m.power } : {}),
+    ...(m.rotate ? { rotate: m.rotate } : {}),
+    ...(mammal(b) ? { kernel: 'cubic' as const } : {}),
+  }));
   const r0 = b.neck[0]?.r ?? 0.05;
-  if (b.neck.length > 1) out.push(skin(b.neck, { blend: r0 * 0.5 }));
+  if (b.neck.length > 1) out.push(mammal(b) ? ovalNeck(b.neck) : skin(b.neck, { blend: r0 * 0.5 }));
   if (b.chain.length > 1) out.push(skin(b.chain, { blend: (b.chain[0]?.r ?? 0.05) * 0.4 }));
   if (b.tail.length > 1) out.push(skin(b.tail, { blend: (b.tail[0]?.r ?? 0.03) * 0.8 }));
   return out;
@@ -34,47 +74,29 @@ export function planes(_b: Bones): SculptEdit[] {
   return [];
 }
 
-/** Mammal landmarks on the trunk: withers, brisket, gluteals, croup, ruff, spine. */
-function trunkFeatures(b: Bones, s: CreatureSpec, lod: number): SculptEdit[] {
+/** Mammal features on the trunk: muscles and bony landmarks (LOD0/1), croup → tail, ruff. */
+function trunkFeatures(
+  b: Bones,
+  s: CreatureSpec,
+  lod: number,
+  base: readonly SculptEdit[],
+): SculptEdit[] {
   const [chest, , pelvis] = b.trunk;
-  if (!chest || !pelvis || (b.skeleton !== 'quadruped' && b.skeleton !== 'winged')) return [];
+  if (!chest || !pelvis || !mammal(b)) return [];
   const D = chest.r[2] * 2;
-  const W = chest.r[1] * 2;
-  const top = chest.at[2] + chest.r[2];
-  const out: SculptEdit[] = [
-    // Scapula: a long flat blade on the ribs rolling under the skin, its top at the withers.
-    blob(
-      [chest.at[0] + chest.r[0] * 0.5, W * 0.3, top - D * 0.3],
-      [D * 0.2, W * 0.12, D * 0.3],
-      D * 0.22,
-      [0, -28, 0],
-    ),
-    // Brisket: the deep keel of the chest between the forelegs.
-    blob(
-      [chest.at[0] + chest.r[0] * 0.55, 0, chest.at[2] - D * 0.25],
-      [chest.r[0] * 0.5, W * 0.3, D * 0.26],
-      D * 0.2,
-    ),
-    // Gluteals: the rump's masses either side of the sacrum.
-    blob(
-      [pelvis.at[0] - pelvis.r[0] * 0.2, W * 0.24, pelvis.at[2] + pelvis.r[2] * 0.3],
-      [pelvis.r[0] * 0.8, W * 0.22, pelvis.r[2] * 0.7],
-      D * 0.15,
-      [0, 18, 0],
-    ),
-  ];
+  const out: SculptEdit[] = lod < 2 ? muscleEdits(b, s, base) : [];
   const tr = b.tail[0];
   if (tr)
-    // Croup → tail root: the stump runs on past the root inside the tail, so it leaves tangentially.
+    // Croup → tail root: the stump runs on past the root inside the tail, so it leaves
+    // tangentially; no thicker than the tail at the root, so the root sits under the croup line.
     out.push(
       skin(
-        tube(
-          [pelvis.at, b.tailRoot, b.tail[2]?.at ?? b.tailRoot],
-          (t) => pelvis.r[2] * 0.55 * (1 - t) + tr.r * t,
-        ),
-        {
-          blend: D * 0.25,
-        },
+        [
+          { at: pelvis.at, r: pelvis.r[2] * 0.45 },
+          { at: b.tailRoot, r: tr.r * 1.1 },
+          { at: b.tail[2]?.at ?? b.tailRoot, r: b.tail[2]?.r ?? tr.r },
+        ],
+        { blend: D * 0.1 },
       ),
     );
   const ruff = s.build?.ruff ?? 0;
@@ -91,29 +113,17 @@ function trunkFeatures(b: Bones, s: CreatureSpec, lod: number): SculptEdit[] {
               ? n.r * 0.25 + ruff * 0.3
               : n.r * 0.55 + ruff * (1 - (0.7 * i) / Math.max(1, all.length - 1)),
         })),
-        { blend: ruff * 2.5 },
+        { blend: ruff * 2 },
       ),
       // The throat ruff hangs low at the base of the neck, over the brisket; the throat under
       // the jaw stays clear so the neck reads.
       blob(
         v3.add(b.neck[1]?.at ?? chest.at, [0, 0, -(b.neck[1]?.r ?? 0) * 0.9]),
         [ruff * 2, (b.neck[1]?.r ?? 0) * 0.8, ruff * 2.2],
-        ruff * 2,
+        ruff * 1.5,
       ),
     );
   }
-  if (lod < 2)
-    // Spine: the dorsal line as a soft ridge.
-    out.push(
-      skin(
-        tube(
-          b.spine.map((p): Vec3 => [p[0], 0, p[2] - D * 0.1]),
-          () => D * 0.1,
-        ),
-        // Wide blend: a narrow ridge standing over the dip behind the withers read as a fold.
-        { blend: D * 0.3 },
-      ),
-    );
   return out;
 }
 
@@ -193,21 +203,26 @@ export function bodyEdits(
   hoof: Vec3,
   wing: Vec3,
 ): SculptEdit[] {
+  const masses = blockOut(b);
+  const legs = legEdits(b, lod, hoof);
   const out: SculptEdit[] = [
-    ...blockOut(b),
+    ...masses,
     ...planes(b),
-    ...trunkFeatures(b, s, lod),
-    ...legEdits(b, lod, hoof),
+    ...trunkFeatures(b, s, lod, [...masses, ...legs]),
+    ...legs,
   ];
+  // Separations between the muscles, pressed into the finished masses (LOD0: finer than LOD1's cell).
+  if (lod === 0) out.push(...separations(b, out));
   for (const w of b.wings) out.push(...wingEdits(w, res, wing));
   for (const f of b.fins) {
     const r = f.nodes[0]?.r ?? 0.02;
     out.push(blade(f.nodes, f.side, Math.max(r * 0.12, res * 0.65), { blend: r * 0.25 }));
   }
-  // Flat soles: everything under the ground plane is cut away.
+  // Flat soles: everything under the ground plane is cut away (LOD0: ⅓ cell above it — where the
+  // fine toes graze the cut, mesh vertices land up to that far below the plane).
   out.push({
     shape: 'roundBox',
-    at: [0, 0, -50],
+    at: [0, 0, -50 + (lod === 0 ? res * 0.3 : 0)],
     size: [100, 100, 100],
     op: 'subtract',
     blend: res * 0.4,

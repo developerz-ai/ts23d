@@ -8,6 +8,7 @@
 import { type CompiledAsset, encodePng } from '../core/index.ts';
 import type { PaintedSheet } from '../material/index.ts';
 import { DEFAULT_SHEET, paintTrimSheet } from '../material/index.ts';
+import { ALPHA_CUT } from './alpha-mips.ts';
 import { frameOrbit, type PerspectiveCamera, scaled, zoomWindow } from './camera.ts';
 import { depthMap } from './depth-map.ts';
 import { floorGrid } from './ground.ts';
@@ -85,7 +86,7 @@ export function renderBeauty(asset: CompiledAsset, o: BeautyOptions = {}): Beaut
     const u = (U[a] ?? 0) * b0 + (U[b] ?? 0) * b1 + (U[c] ?? 0) * b2;
     const w = (U[a + 1] ?? 0) * b0 + (U[b + 1] ?? 0) * b1 + (U[c + 1] ?? 0) * b2;
     sample(tex.albedo, mip, u, w, texel);
-    return (texel[3] ?? 1) >= 0.5;
+    return (texel[3] ?? 1) >= ALPHA_CUT;
   };
   const cam = scaled(cameraFor(asset, o), ss);
   const vis = rasteriseVis(scene, cam, tex.size, alpha);

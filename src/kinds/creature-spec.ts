@@ -97,6 +97,9 @@ export interface CreatureSpec {
     readonly ruff?: number;
     /** Abdomen depth at the flank ÷ chest depth: the waist tuck-up (default 0.72; greyhound ≈ 0.4). */
     readonly tuck?: number;
+    /** Muscle definition 0..1: scales the fibre muscles' bellies (creature-muscles.ts; default per
+     *  family, lean canid 0.85). 0 = smooth masses only. */
+    readonly muscle?: number;
   };
   readonly face?: {
     /** Head family; its numbers are defaults the fields below override (default: `family`'s). */
@@ -120,6 +123,8 @@ export interface CreatureSpec {
   readonly surface?: Surface;
   /** Effective coat thickness over the skin, metres (mass gate; default fur 0.02, else 0). */
   readonly coat?: number;
+  /** Strand cards over a fur coat (creature-fur.ts; default true). false = the sculpted shell only. */
+  readonly cards?: boolean;
   readonly colours: CreatureColours;
   readonly pattern?: CreaturePattern;
   readonly pose?: {
@@ -237,6 +242,7 @@ export function checkCreature(s: CreatureSpec): CreatureSpec {
   ratio(s.build?.limbs, 0.2, 4, 'build.limbs');
   ratio(s.build?.tailGirth, 0.2, 4, 'build.tailGirth');
   ratio(s.build?.tuck, 0.3, 1, 'build.tuck');
+  ratio(s.build?.muscle, 0, 1, 'build.muscle');
   if (s.face?.preset && !(s.face.preset in HEAD_PRESETS))
     bad(
       `unknown face.preset '${String(s.face.preset)}'`,

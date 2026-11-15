@@ -1,11 +1,13 @@
 // Samples a signed-distance field on a cubic grid for the meshers. The field is clipped to the
 // bounds box (max with the box's own distance), and the grid has a one-cell positive border, so
-// every surface comes out closed. Sparse: one coarse sample per 8³-cell block; a block whose
-// centre is farther from the surface than `lipschitz` × its half-diagonal cannot hold any of it,
-// so its points take that sign without evaluating the field (a head at 4 mm meshes in ~1 s).
+// every surface comes out closed. Sparse: one coarse sample per 4³-cell block (BLOCK); a block
+// whose centre is farther from the surface than `lipschitz` × its half-diagonal cannot hold any of
+// it, so its points take that sign without evaluating the field (a head at 4 mm meshes in ~1 s).
+// `detail` boxes add finer grids inside (sdf-detail.ts), meshed by surface-nets-detail.ts.
 
 import type { Vec3 } from '../core/index.ts';
 import { invalid } from './check.ts';
+import { type DetailGrid, type DetailRegion, sampleDetail } from './sdf-detail.ts';
 import type { Field } from './sdf-ops.ts';
 
 export interface Grid {
@@ -19,6 +21,8 @@ export interface Grid {
   readonly values: Float32Array;
   /** The clipped field the grid sampled (normals take its gradient). */
   readonly field: Field;
+  /** Finer grids over the detail boxes (empty without `detail`). */
+  readonly detail: readonly DetailGrid[];
 }
 
 /** Grid points above this are refused (≈ 80 MB of samples). */
@@ -31,6 +35,7 @@ export function sampleGrid(
   h: number,
   lipschitz: number,
   symmetricY = false,
+  detail: readonly DetailRegion[] = [],
 ): Grid {
   const [lo0, hi0] = bounds;
   if (!Number.isFinite(h) || h <= 0)
@@ -129,5 +134,8 @@ export function sampleGrid(
           values[id] = coarse[b] ?? 1;
         }
       }
-  return { nx, ny, nz, origin, h, values, field };
+  const coarse0 = { nx, ny, nz, origin, h, values, field };
+  if (detail.length === 0) return { ...coarse0, detail: [] };
+  const yZero = symmetricY ? (f: number): number => f * (m + 1) : null;
+  return { ...coarse0, detail: sampleDetail(coarse0, detail, lipschitz, MAX_POINTS, yZero) };
 }

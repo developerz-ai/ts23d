@@ -6,7 +6,7 @@
 // hooves, beak, lips) keep it.
 
 import type { Vec3 } from '../core/index.ts';
-import type { Bones } from './creature-bones.ts';
+import { type Bones, headToWorld } from './creature-bones.ts';
 import { arcT, mixRgb, smoothstep, v3 } from './creature-curve.ts';
 import { type BodyCoord, marks } from './creature-pattern.ts';
 import { type CreatureColours, type CreatureSpec, faceOf } from './creature-spec.ts';
@@ -185,14 +185,21 @@ function forelineMask(joints: readonly Vec3[], radii: readonly number[]): (p: Ve
   };
 }
 
-/** Head paint (head-local points: +X along the skull, origin at the atlas). */
+/** Head paint (head-local points: +X along the skull, origin at the atlas). The back of the skull
+ *  takes the body's paint at the same world point, so the coat runs on over the neck seam. */
 export function headPaint(b: Bones, s: CreatureSpec): Paint {
   const c = palette(s.colours);
   const h = b.head;
   const muzzle = faceOf(s).muzzle;
   const lc = (1 - muzzle) * h.length;
+  const body = b.legs.length > 0 || b.neck.length > 0 ? bodyPaint(b, s, h.length * 0.01) : null;
   return (p, given) => {
     if (!same(given, s.colours.coat)) return given;
+    const col = face(p);
+    const w = body ? smoothstep(lc * 0.6, lc * 0.05, p[0]) : 0;
+    return w > 0 && body ? mixRgb(col, body(headToWorld(h, p), given), w) : col;
+  };
+  function face(p: Vec3): Vec3 {
     const v = p[2] / (h.height / 2);
     let col = mixRgb(c.coat, c.back, smoothstep(0.1, 0.8, v));
     // Muzzle mask: the front and the lower lips pale; the bridge keeps the coat.
@@ -220,5 +227,5 @@ export function headPaint(b: Bones, s: CreatureSpec): Paint {
     // Ears: dark backs and rims toward the tips.
     col = mixRgb(col, c.tip, smoothstep(h.height * 0.6, h.height * 1.1, p[2]) * 0.85);
     return col;
-  };
+  }
 }

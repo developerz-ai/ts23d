@@ -15,3 +15,7 @@
 | [009](009-gltf-front-axis.md) | Exported GLBs face glTF +Z (root `[-0.5,-0.5,-0.5,0.5]`) | accepted | 2026-10-25 |
 | [010](010-ai-finish-layer.md) | AI finish is a projected texture layer on LOD0, never geometry | accepted | 2026-11-07 |
 | [011](011-imported-meshes-may-be-decimated.md) | Imported meshes may be decimated; code-built assets stay LOD-gated | accepted | 2026-11-07 |
+| [012](012-hero-texture-tier.md) | Opt-in hero texture tier on LOD0; the shared trim sheet stays the default | accepted | 2026-11-15 |
+| [013](013-skinned-meshes.md) | Skinned meshes: one draw per skinned body, linear-blend weights, baked motion | accepted | 2026-11-15 |
+| [014](014-neural-outputs-are-cached-inputs.md) | Neural outputs are cached inputs, committed with the recipe | accepted | 2026-11-15 |
+| [015](015-models-by-adapter.md) | Models are the user's choice, through adapters; licences recorded, not gated | accepted | 2026-11-15 |

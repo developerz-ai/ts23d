@@ -2,10 +2,11 @@ import { expect, it } from 'bun:test';
 import { mkdtemp, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { defineAsset } from '../core/index.ts';
+import { compile, defineAsset } from '../core/index.ts';
 import { box } from '../primitives/index.ts';
+import { METRICS } from '../qa/index.ts';
 import { contactSheet } from '../render/index.ts';
-import { committedHashes, critiqueImages, RAKING, sha256 } from './critique-cmd.ts';
+import { committedHashes, critiqueImages, measureVector, RAKING, sha256 } from './critique-cmd.ts';
 
 const crate = defineAsset({
   name: 'crate',
@@ -40,4 +41,12 @@ it('renders the pack; sheet.png is byte-identical to the committed contact sheet
   expect(sha256(images.get('raking.png') ?? new Uint8Array())).not.toBe(
     sha256(images.get('hero.png') ?? new Uint8Array()),
   );
+});
+
+it('measures the calibration vector the same way twice (golden set, CLI and gate share it)', () => {
+  const lod0 = compile(crate);
+  const v = measureVector(lod0);
+  expect(Object.keys(v)).toEqual([...METRICS]);
+  expect(v.tris).toBeCloseTo(Math.log10(13), 3);
+  expect(measureVector(lod0)).toEqual(v);
 });

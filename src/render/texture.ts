@@ -1,9 +1,12 @@
 // The trim sheet as the beauty renderer samples it: albedo (linear, alpha), tangent-space normal
 // and ORM, each as a box-filtered mip chain, sampled bilinearly — U repeats (strips tile), V clamps
 // (rows never bleed). The mip level is chosen per triangle by the caller (texel ÷ pixel footprint).
+// Albedo mips are cutout-safe (alpha-mips.ts): thin strands stay strands instead of eroding away.
 
 import type { PaintedSheet } from '../material/index.ts';
+import { keepCoverage, weighted } from './alpha-mips.ts';
 
+/** One level of a mip chain. */
 export interface Mip {
   readonly size: number;
   /** 4 floats per texel. */
@@ -22,7 +25,12 @@ const SRGB = new Float32Array(256).map((_, i) => {
   return v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
 });
 
-function chain(src: Uint8Array, size: number, decode: (c: number, v: number) => number): Mip[] {
+function chain(
+  src: Uint8Array,
+  size: number,
+  decode: (c: number, v: number) => number,
+  cutout = false,
+): Mip[] {
   const top = new Float32Array(size * size * 4);
   for (let i = 0; i < top.length; i++) top[i] = decode(i & 3, src[i] ?? 0);
   const out: Mip[] = [{ size, data: top }];
@@ -38,11 +46,14 @@ function chain(src: Uint8Array, size: number, decode: (c: number, v: number) => 
           const a = ((2 * y * w + 2 * x) << 2) + c;
           const b = a + w * 4;
           d[((y * s + x) << 2) + c] =
-            ((p[a] ?? 0) + (p[a + 4] ?? 0) + (p[b] ?? 0) + (p[b + 4] ?? 0)) * 0.25;
+            cutout && c < 3
+              ? weighted(p, a, b, c)
+              : ((p[a] ?? 0) + (p[a + 4] ?? 0) + (p[b] ?? 0) + (p[b + 4] ?? 0)) * 0.25;
         }
     cur = { size: s, data: d };
     out.push(cur);
   }
+  if (cutout) keepCoverage(out);
   return out;
 }
 
@@ -53,7 +64,7 @@ export function sheetTextures(sheet: PaintedSheet): SheetTextures {
   if (hit) return hit;
   const t: SheetTextures = {
     size: sheet.size,
-    albedo: chain(sheet.albedo, sheet.size, (c, v) => (c === 3 ? v / 255 : (SRGB[v] ?? 0))),
+    albedo: chain(sheet.albedo, sheet.size, (c, v) => (c === 3 ? v / 255 : (SRGB[v] ?? 0)), true),
     normal: chain(sheet.normal, sheet.size, (c, v) => (c === 3 ? 1 : v / 127.5 - 1)),
     orm: chain(sheet.orm, sheet.size, (_c, v) => v / 255),
   };

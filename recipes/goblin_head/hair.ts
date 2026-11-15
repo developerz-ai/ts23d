@@ -1,10 +1,13 @@
 // Goblin hair: pale wisps — a few thin tapered locks straggling up and back off a warty dome, each
 // rooted in the scalp, toned grey at the root and near-white at the tip, no two alike (seeded).
+// Card hair (`hairBaseEdits` + `goblinCardHair`): no sculpted wisps, a few thin clumped strand
+// cards standing up and back off the bare dome.
 
-import type { Field, SculptEdit } from '@developerz.ai/ts23d';
-import { lock } from '../_lib/bust/hair.ts';
+import { type Field, type SculptEdit, sculptField, type Vec3 } from '@developerz.ai/ts23d';
+import { lock, mix } from '../_lib/bust/hair.ts';
+import { headBlock } from '../_lib/bust/head.ts';
 import { type Surface, spline, surface, type V } from '../_lib/bust/kit.ts';
-import { C, H, L } from './spec.ts';
+import { C, H, L, SPEC } from './spec.ts';
 
 export function hairEdits(scalp: Field, lod: number): SculptEdit[] {
   const s = surface(scalp);
@@ -48,4 +51,42 @@ export function wispLine(s: Surface, dx: number, dy: number, len: number, lean: 
 /** Where a wisp is rooted: 6 mm into the scalp under (dx, dy). */
 export function wispRoot(s: Surface, dx: number, dy: number): V {
   return s.off([L.gx + dx * H, dy * H, L.crown], -0.006);
+}
+
+/** No sculpted hair under the cards: the dome stays bare skin. */
+export const hairBaseEdits = (_scalp: Field, _lod: number): SculptEdit[] => [];
+
+/** Card wisps for `cardHair`: sparse, thin, standing up and back off the crown. */
+export function goblinCardHair() {
+  const field = sculptField([headBlock(SPEC, 2)], { color: C.hairRoot, mirror: 'y' }).field;
+  const crown: Vec3 = [L.gx - 0.5 * H, 0, L.crown];
+  // A patch over the crown, 0.32 H across.
+  const region: Field = (p) =>
+    Math.hypot((p[0] - crown[0]) * 0.8, p[1], Math.min(0, p[2] - crown[2] + 0.12 * H)) - 0.32 * H;
+  return {
+    field,
+    bounds: [
+      [L.back - 0.03, -0.12, L.crown - 0.35 * H],
+      [L.gx + 0.03, 0.12, L.crown + 0.03],
+    ] as [Vec3, Vec3],
+    cell: 0.004,
+    comb: (p: Vec3): Vec3 => [-1, Math.sign(p[1]) * 0.4, 0.5],
+    color: mix(C.hairRoot, C.hairTip, 0.4),
+    layers: [
+      {
+        name: 'wisps',
+        kind: 'hair',
+        region,
+        density: 900,
+        length: 0.075,
+        width: 0.006,
+        lift: 0.9,
+        bend: 0.55,
+        droop: 0.15,
+        roll: 1.2,
+        clump: 3,
+        tone: [0.75, 1.25],
+      },
+    ] as const,
+  };
 }

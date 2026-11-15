@@ -9,7 +9,13 @@ import { loadAssets } from '../src/cli/load.ts';
 import { type CompiledAsset, compile, type Lod } from '../src/core/index.ts';
 import { toGlb } from '../src/export/index.ts';
 import { runLodQa, runQa } from '../src/qa/index.ts';
-import { critiqueMode, critiqueViolations, warnCritiques } from './lib/critique.ts';
+import {
+  calibratedCheck,
+  critiqueMode,
+  critiqueViolations,
+  readBaseline,
+  warnCritiques,
+} from './lib/critique.ts';
 import { recipeFolders, report, tsFiles, type Violation } from './lib/files.ts';
 import { crossRecipeImports } from './lib/recipe-imports.ts';
 import { CURRENT_SHARD, inShard, type Shard } from './lib/shard.ts';
@@ -86,6 +92,8 @@ async function main(): Promise<void> {
   const json = process.argv.includes('--json');
   const violations: Violation[] = [];
   const critiques: Violation[] = [];
+  const baseline = await readBaseline();
+  const calWarn: Violation[] = [];
   const rows: { asset: string; triangles: number[] }[] = [];
   const { folders, stray } = await recipeFolders();
   for (const file of stray)
@@ -140,6 +148,9 @@ async function main(): Promise<void> {
         });
       violations.push(...(await staleOutputs(dir, file, asset.name, triangles)));
       critiques.push(...(await critiqueViolations(dir, file, asset.name)));
+      const cal = await calibratedCheck(dir, file, lods[0] ?? compile(asset), baseline);
+      violations.push(...cal.enforced);
+      calWarn.push(...cal.warned);
       rows.push({ asset: asset.name, triangles });
     }
   }
@@ -151,6 +162,7 @@ async function main(): Promise<void> {
   violations.push(...runTests(tests, json));
   if (critiqueMode() === 'enforce') violations.push(...critiques);
   else warnCritiques(critiques);
+  warnCritiques(calWarn);
   if (!json)
     for (const r of rows) console.log(`  ${r.asset.padEnd(20)} tris ${r.triangles.join('/')}`);
   process.exitCode = report(

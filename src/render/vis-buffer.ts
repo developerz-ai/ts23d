@@ -1,6 +1,8 @@
 // Visibility buffer: perspective-rasterise every triangle once, keeping only the nearest triangle
 // id and its perspective-correct barycentrics per pixel. Shading then runs exactly once per pixel
 // (deferred), so overdraw on an 88k-triangle tank costs a depth compare, not a lighting model.
+// Mip per triangle: texel÷pixel area for opaque surfaces; cutouts use the minor axis of the
+// footprint (anisotropy-aware, ≤ MAX_ANISO) so long thin cards keep their alpha detail.
 
 import type { PerspectiveCamera } from './camera.ts';
 import type { Scene } from './scene.ts';
@@ -17,6 +19,46 @@ export interface VisBuffer {
   readonly invw: Float32Array;
   /** Per-triangle texture mip level from its texel : pixel footprint. */
   readonly mip: Uint8Array;
+}
+
+/** Anisotropy cap for cutout mip selection (a GPU's 16× anisotropic filtering). */
+const MAX_ANISO = 16;
+
+/**
+ * Mip level of a triangle from its screen edges (sx, sy, pixels) and UV edges (du, dv) on a
+ * `texSize`² sheet:
+ * isotropic = ½·log2(texel area ÷ pixel area); `aniso` = log2 of the footprint's minor axis,
+ * never finer than the major axis ÷ MAX_ANISO.
+ */
+export function footprintMip(
+  sx1: number,
+  sy1: number,
+  sx2: number,
+  sy2: number,
+  du1: number,
+  dv1: number,
+  du2: number,
+  dv2: number,
+  texSize: number,
+  aniso: boolean,
+): number {
+  const area = sx1 * sy2 - sy1 * sx2;
+  const uvArea = Math.abs(du1 * dv2 - dv1 * du2);
+  let lod = 0.5 * Math.log2((uvArea * texSize * texSize) / Math.abs(area) + 1e-12);
+  if (aniso) {
+    // Jacobian d(u, v)/d(x, y) = F · E⁻¹, then its singular values.
+    const p = (du1 * sy2 - du2 * sy1) / area;
+    const q = (du2 * sx1 - du1 * sx2) / area;
+    const r = (dv1 * sy2 - dv2 * sy1) / area;
+    const t = (dv2 * sx1 - dv1 * sx2) / area;
+    const T = texSize;
+    const e = T * T * (p * p + q * q + r * r + t * t);
+    const det = T * T * Math.abs(p * t - q * r);
+    const major = Math.sqrt((e + Math.sqrt(Math.max(0, e * e - 4 * det * det))) / 2);
+    const minor = major > 0 ? det / major : 0;
+    lod = Math.log2(Math.max(minor, major / MAX_ANISO) + 1e-12);
+  }
+  return Math.max(0, Math.min(10, Math.floor(lod + 0.25)));
 }
 
 /** Return false to discard a fragment (alpha-tested cutouts). */
@@ -73,12 +115,21 @@ export function rasteriseVis(
     const cy = sy[c] ?? 0;
     const area = (bx - ax) * (cy - ay) - (by - ay) * (cx - ax);
     if (Math.abs(area) < 1e-12) continue;
-    const uvArea = Math.abs(
-      ((UV[b * 2] ?? 0) - (UV[a * 2] ?? 0)) * ((UV[c * 2 + 1] ?? 0) - (UV[a * 2 + 1] ?? 0)) -
-        ((UV[b * 2 + 1] ?? 0) - (UV[a * 2 + 1] ?? 0)) * ((UV[c * 2] ?? 0) - (UV[a * 2] ?? 0)),
+    const cut = alpha !== undefined && s.surface[t] === 1;
+    const ua = UV[a * 2] ?? 0;
+    const va = UV[a * 2 + 1] ?? 0;
+    const m = footprintMip(
+      bx - ax,
+      by - ay,
+      cx - ax,
+      cy - ay,
+      (UV[b * 2] ?? 0) - ua,
+      (UV[b * 2 + 1] ?? 0) - va,
+      (UV[c * 2] ?? 0) - ua,
+      (UV[c * 2 + 1] ?? 0) - va,
+      texSize,
+      s.surface[t] === 1,
     );
-    const lod = 0.5 * Math.log2((uvArea * texSize * texSize) / Math.abs(area) + 1e-12);
-    const m = Math.max(0, Math.min(10, Math.floor(lod + 0.25)));
     mip[t] = m;
     const lx = ax < bx ? Math.min(ax, cx) : Math.min(bx, cx);
     const hx = ax > bx ? Math.max(ax, cx) : Math.max(bx, cx);
@@ -90,7 +141,6 @@ export function rasteriseVis(
     const maxY = hy > H - 1 ? H - 1 : Math.ceil(hy);
     if (minX > maxX || minY > maxY) continue;
     const inv = 1 / area;
-    const cut = alpha !== undefined && s.surface[t] === 1;
     // Affine edge functions, stepped per pixel.
     const A0 = (by - cy) * inv;
     const B0 = (cx - bx) * inv;

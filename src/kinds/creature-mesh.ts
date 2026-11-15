@@ -1,11 +1,18 @@
 // One sculpted creature piece → Mesh (ported from recipes/_lib/creature/sculpt-part.ts): edit list
 // → sculpt field (folded |y| when mirrored: author the left side once) → optional surface relief
 // (fur clumps, scales, feathers: a displacement evaluated only near the surface) → mesh at `res`
-// → vertex colour from the edits' colours, the coat paint pass and the painted tone.
+// → vertex colour from the edits' colours, the coat paint pass and the painted tone. `detail`
+// boxes (face, paws) mesh finer.
 
 import type { Mesh, Vec3 } from '../core/index.ts';
 import type { StripId } from '../material/index.ts';
-import { type Field, type SculptEdit, sculptField, sdf } from '../primitives/index.ts';
+import {
+  type DetailRegion,
+  type Field,
+  type SculptEdit,
+  sculptField,
+  sdf,
+} from '../primitives/index.ts';
 import { painted, type ToneOptions } from './creature-tone.ts';
 
 export interface Relief {
@@ -25,6 +32,8 @@ export interface PieceOptions {
   readonly relief?: Relief;
   /** Recolour after the edits' colours, before tone: (point, colour) → colour. */
   readonly paint?: (p: Vec3, c: Vec3) => Vec3;
+  /** Boxes meshed finer (face, paws): sdf detail regions. */
+  readonly detail?: readonly DetailRegion[];
 }
 
 export interface Piece {
@@ -71,7 +80,9 @@ export function sculptPiece(o: PieceOptions): Piece {
     bounds: box,
     resolution: res,
     color: (p) => color(p),
-    lipschitz: rel ? 1.6 : 1.25,
+    // The sculpt's own bound (strokes raise it) plus the relief's share.
+    lipschitz: s.lipschitz + (rel ? 0.35 : 0),
+    ...(o.detail && o.detail.length > 0 ? { detail: o.detail } : {}),
     ...(o.mirror ? { symmetry: 'y' as const } : {}),
     ...(o.strip ? { strip: o.strip } : {}),
   });

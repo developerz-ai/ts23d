@@ -4,27 +4,30 @@
 // finds is a seam to blend.
 
 import { type IntendedCrease, sculptField } from '@developerz.ai/ts23d';
-import { anatomyCreases, cutCreases, torsoCreases } from '../_lib/bust/anatomy-creases.ts';
-import { bustEdits } from '../_lib/bust/bust.ts';
+import { cutCreases, torsoCreases } from '../_lib/bust/anatomy-creases.ts';
+import { bustEdits, bustScalp } from '../_lib/bust/bust.ts';
 import { creaseAt, creaseCurve, edgeCreases, ringCreases } from '../_lib/bust/creases.ts';
-import { headBlock } from '../_lib/bust/head.ts';
 import { spline, surface, type V } from '../_lib/bust/kit.ts';
 import { neckSeam, torsoEdits } from '../_lib/bust/torso.ts';
+import { skullCreases } from '../_lib/face/skull-creases.ts';
 import { ELF_BUST } from './build.ts';
 import { cloakRegion, collarRing } from './clothes.ts';
 import { frontLocks, hairline, longLocks } from './hair.ts';
-import { EAR, H, L, SPEC, TORSO } from './spec.ts';
+import { H, L, SK, SPEC, TORSO } from './spec.ts';
 
 function creases(): IntendedCrease[] {
   const { skin } = bustEdits(ELF_BUST, 2, 0);
-  const scalp = sculptField([headBlock(SPEC, 2)], { color: SPEC.skin, mirror: 'y' }).field;
-  const body = sculptField(torsoEdits(L, TORSO), { color: SPEC.skin, mirror: 'y' }).field;
+  const scalp = bustScalp(ELF_BUST, 0);
+  const body = sculptField(torsoEdits(L, TORSO, { neck: false }), {
+    color: SPEC.skin,
+    mirror: 'y',
+  }).field;
   const hair = surface((p) => scalp(p) - 0.007);
   const ring = collarRing(skin.field);
   const upper = ring.map((p): V => [p[0], p[1] * 1.04, p[2] + 0.012]);
   const seam = neckSeam(L);
   return [
-    ...anatomyCreases(SPEC, L, EAR),
+    ...skullCreases(SK, H),
     ...torsoCreases(L, TORSO),
     ...longLocks(7, hair).flatMap(({ ctrl }, i) =>
       ['head', 'bust'].flatMap((part) =>

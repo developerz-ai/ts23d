@@ -12,6 +12,8 @@ apps/site/public/gallery/
 /renders/
 recipes/*/.out-tmp/
 /.ts23d/finish/
+/.ts23d/golden/
+/.ts23d/panel/
 # agent review and critique packs: regenerated, read, never committed
 /review/
 /critique/

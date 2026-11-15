@@ -6,8 +6,11 @@
 // block-out → planes → features → lines); dossier: recipes/goblin_head/README.md.
 
 import { defineAsset } from '@developerz.ai/ts23d';
-import { buildGoblin } from './build.ts';
+import { bustEdits } from '../_lib/bust/bust.ts';
+import { proportionCheck } from '../_lib/face/proportions.ts';
+import { buildGoblin, GOBLIN_BUST } from './build.ts';
 import { GOBLIN_CREASES } from './creases.ts';
+import { GOBLIN_PROPORTIONS, SK } from './spec.ts';
 
 export const goblin_head = defineAsset({
   name: 'goblin_head',
@@ -23,7 +26,7 @@ export const goblin_head = defineAsset({
   // Design spec (an invented character): overall size as built; the measure is the eye spacing.
   real: {
     length: 0.242,
-    width: 0.456,
+    width: 0.35,
     height: 0.482,
     measures: [
       {
@@ -41,6 +44,15 @@ export const goblin_head = defineAsset({
   // Intended creases (QA `connections` skips them): one small region per sculpted fold, from the
   // geometry that sculpts it (creases.ts) — never an area.
   creases: GOBLIN_CREASES,
+  // Measured facial proportions against sourced bands (README "Proportions"), every LOD.
+  checks: [
+    proportionCheck(
+      'goblin_head',
+      SK,
+      () => bustEdits(GOBLIN_BUST, 2, 1).skin.field,
+      GOBLIN_PROPORTIONS,
+    ),
+  ],
   build(ctx) {
     buildGoblin(ctx);
   },

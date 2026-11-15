@@ -3,12 +3,24 @@
 
 import type { Vec3 } from '../core/index.ts';
 import { invalid } from './check.ts';
-import { type Field, shapes } from './sdf-ops.ts';
+import { type SculptStroke, strokeBounds } from './sculpt-stroke.ts';
+import { type BlendKernel, type Field, shapes } from './sdf-ops.ts';
 
-export type SculptShape = 'sphere' | 'ellipsoid' | 'capsule' | 'roundBox' | 'cone' | 'torus';
+export type SculptShape =
+  | 'sphere'
+  | 'ellipsoid'
+  | 'capsule'
+  | 'roundCone'
+  | 'roundBox'
+  | 'superellipsoid'
+  | 'cone'
+  | 'torus';
 
-/** An edit: one shape, a ready-made field, or a group folded on its own first (local trims). */
-export type SculptEdit = SculptShapeEdit | SculptGroup | SculptFieldEdit;
+/**
+ * An edit: one shape, a ready-made field, a group folded on its own first (local trims), or a
+ * brush stroke that pushes everything folded before it (sculpt-stroke.ts).
+ */
+export type SculptEdit = SculptShapeEdit | SculptGroup | SculptFieldEdit | SculptStroke;
 
 /**
  * A ready-made 1-Lipschitz field inside `bounds` as one edit, e.g. a visual hull from drawings:
@@ -19,6 +31,8 @@ export interface SculptFieldEdit {
   readonly bounds: readonly [Vec3, Vec3];
   readonly op?: 'add' | 'subtract' | 'intersect' | 'paint';
   readonly blend?: number;
+  /** Blend kernel (default: the group's, then the sculpt's, then 'quad'). */
+  readonly kernel?: BlendKernel;
   readonly color?: Vec3;
   readonly mirror?: boolean;
 }
@@ -32,6 +46,8 @@ export interface SculptGroup {
   readonly group: readonly SculptEdit[];
   readonly op?: 'add' | 'subtract' | 'intersect';
   readonly blend?: number;
+  /** Kernel of this group's blend and default for its own edits. */
+  readonly kernel?: BlendKernel;
   /** Default colour of the group's own edits (and its colour when it carves). */
   readonly color?: Vec3;
   /** Default mirror for the group's edits. */
@@ -40,16 +56,22 @@ export interface SculptGroup {
 
 export interface SculptShapeEdit {
   readonly shape: SculptShape;
-  /** Centre (sphere, ellipsoid, roundBox, torus), base centre (cone) or start (capsule). */
+  /**
+   * Centre (sphere, ellipsoid, superellipsoid, roundBox, torus), base centre (cone) or start
+   * (capsule, roundCone).
+   */
   readonly at: Vec3;
   /**
-   * sphere: radius · ellipsoid: [rx, ry, rz] · roundBox: full [x, y, z] · cone: [base radius,
-   * top radius, height] along local +Z · torus: [ring radius, tube radius] in local XY ·
-   * capsule: radius (segment `at` → `to`).
+   * sphere: radius · ellipsoid / superellipsoid: semi-axes [rx, ry, rz] · roundBox: full
+   * [x, y, z] · cone: [base radius, top radius, height] along local +Z · torus: [ring radius, tube
+   * radius] in local XY · capsule: radius (segment `at` → `to`) · roundCone: [radius at `at`,
+   * radius at `to`] (exact tapered limb, snout, horn segment).
    */
   readonly size: number | readonly [number, number] | Vec3;
-  /** Capsule end point. */
+  /** Capsule / roundCone end point. */
   readonly to?: Vec3;
+  /** superellipsoid exponent n ≥ 2 (2 = ellipsoid, 4 = rounded box, larger = boxier). Default 4. */
+  readonly power?: number;
   /** Degrees about X, then Y, then Z (world axes), around `at`. */
   readonly rotate?: Vec3;
   /** roundBox edge radius, metres. */
@@ -57,6 +79,8 @@ export interface SculptShapeEdit {
   readonly op?: 'add' | 'subtract' | 'intersect' | 'paint';
   /** Smooth-blend radius in metres (0 = hard edge). For paint: the colour falloff width. */
   readonly blend?: number;
+  /** 'cubic' = C2 join (no highlight kink at the blend's edge). Default: group's, sculpt's, 'quad'. */
+  readonly kernel?: BlendKernel;
   readonly color?: Vec3;
   /** Override the sculpt's `mirror` for this edit (e.g. one scar). */
   readonly mirror?: boolean;
@@ -75,8 +99,11 @@ export function sculptShape(e: SculptShapeEdit, i: number, mirrorAll: boolean): 
     invalid(`${where}: size has a value ≤ 0`, 'give every size component in metres, > 0');
   if ((e.blend ?? 0) < 0 || !Number.isFinite(e.blend ?? 0))
     invalid(`${where}: blend is ${e.blend}`, 'use a blend radius ≥ 0 m (0.01 = 1 cm fillet)');
-  if (e.shape === 'capsule' && !e.to)
-    invalid(`${where}: capsule needs \`to\``, 'add to: [x, y, z], the far end');
+  if ((e.shape === 'capsule' || e.shape === 'roundCone') && !e.to)
+    invalid(`${where}: ${e.shape} needs \`to\``, 'add to: [x, y, z], the far end');
+  const power = e.power ?? 4;
+  if (e.shape === 'superellipsoid' && !(power >= 2 && Number.isFinite(power)))
+    invalid(`${where}: power is ${power}`, 'use power ≥ 2 (2 = ellipsoid, 4 = rounded box)');
   const [rx, ry, rz] = (e.rotate ?? [0, 0, 0]).map((d) => (d * Math.PI) / 180);
   const [cx, sx, cy, sy, cz, sz] = [
     Math.cos(rx ?? 0),
@@ -114,32 +141,45 @@ export function sculptShape(e: SculptShapeEdit, i: number, mirrorAll: boolean): 
           ? (x, y, z) => shapes.roundBox(x, y, z, a / 2, b / 2, c / 2, round)
           : e.shape === 'cone'
             ? (x, y, z) => shapes.cone(x, y, z, a, b, c)
-            : (x, y, z) => shapes.torus(x, y, z, a, b);
+            : e.shape === 'superellipsoid'
+              ? (x, y, z) => shapes.superellipsoid(x, y, z, a, b, c, power)
+              : (x, y, z) => shapes.torus(x, y, z, a, b);
   const rotated = e.rotate?.some((d) => d !== 0) ?? false;
+  const [ux, uy, uz] = len > 0 ? [dx / len, dy / len, dz / len] : [0, 0, 1];
   const one =
-    e.shape === 'capsule'
+    e.shape === 'roundCone'
       ? (px: number, py: number, pz: number): number => {
-          // Capsule in world space along at → to.
+          // Round cone in world space along at → to: axial t, radial distance q.
           const wx = px - ox;
           const wy = py - oy;
           const wz = pz - oz;
-          const t =
-            len > 0 ? Math.min(1, Math.max(0, (wx * dx + wy * dy + wz * dz) / (len * len))) : 0;
-          return Math.sqrt((wx - dx * t) ** 2 + (wy - dy * t) ** 2 + (wz - dz * t) ** 2) - a;
+          const t = wx * ux + wy * uy + wz * uz;
+          const q = Math.sqrt(Math.max(0, wx * wx + wy * wy + wz * wz - t * t));
+          return shapes.roundCone(q, 0, t, a, b, len);
         }
-      : rotated
+      : e.shape === 'capsule'
         ? (px: number, py: number, pz: number): number => {
+            // Capsule in world space along at → to.
             const wx = px - ox;
             const wy = py - oy;
             const wz = pz - oz;
-            return kernel(
-              m0 * wx + m3 * wy + m6 * wz,
-              m1 * wx + m4 * wy + m7 * wz,
-              m2 * wx + m5 * wy + m8 * wz,
-            );
+            const t =
+              len > 0 ? Math.min(1, Math.max(0, (wx * dx + wy * dy + wz * dz) / (len * len))) : 0;
+            return Math.sqrt((wx - dx * t) ** 2 + (wy - dy * t) ** 2 + (wz - dz * t) ** 2) - a;
           }
-        : // Identity rotation: 1·x + 0·y + 0·z is x, so skipping the product changes no bits.
-          (px: number, py: number, pz: number): number => kernel(px - ox, py - oy, pz - oz);
+        : rotated
+          ? (px: number, py: number, pz: number): number => {
+              const wx = px - ox;
+              const wy = py - oy;
+              const wz = pz - oz;
+              return kernel(
+                m0 * wx + m3 * wy + m6 * wz,
+                m1 * wx + m4 * wy + m7 * wz,
+                m2 * wx + m5 * wy + m8 * wz,
+              );
+            }
+          : // Identity rotation: 1·x + 0·y + 0·z is x, so skipping the product changes no bits.
+            (px: number, py: number, pz: number): number => kernel(px - ox, py - oy, pz - oz);
   if (!(e.mirror ?? mirrorAll)) return (p) => one(p[0], p[1], p[2]);
   // Mirrored: min of the shape and its copy across y = 0. Evaluate the nearer copy first; the
   // other only if its bound could undercut it (min is order-free, so this is exact).
@@ -175,7 +215,7 @@ export function shapeSphere(e: SculptShapeEdit): {
   const [a, b, c] = dims(e);
   const to = e.to ?? e.at;
   const centre: Vec3 =
-    e.shape === 'capsule'
+    e.shape === 'capsule' || e.shape === 'roundCone'
       ? [(e.at[0] + to[0]) / 2, (e.at[1] + to[1]) / 2, (e.at[2] + to[2]) / 2]
       : e.at;
   const r =
@@ -183,21 +223,34 @@ export function shapeSphere(e: SculptShapeEdit): {
       ? a
       : e.shape === 'ellipsoid'
         ? Math.max(a, b, c)
-        : e.shape === 'roundBox'
-          ? Math.hypot(a, b, c) / 2
-          : e.shape === 'cone'
-            ? c + Math.max(a, b) // loose but unchanged: it also sets the grid bounds
-            : e.shape === 'torus'
-              ? a + b
-              : a + Math.hypot(to[0] - e.at[0], to[1] - e.at[1], to[2] - e.at[2]) / 2;
+        : e.shape === 'superellipsoid'
+          ? Math.hypot(a, b, c)
+          : e.shape === 'roundCone'
+            ? Math.hypot(to[0] - e.at[0], to[1] - e.at[1], to[2] - e.at[2]) / 2 + Math.max(a, b)
+            : e.shape === 'roundBox'
+              ? Math.hypot(a, b, c) / 2
+              : e.shape === 'cone'
+                ? c + Math.max(a, b) // loose but unchanged: it also sets the grid bounds
+                : e.shape === 'torus'
+                  ? a + b
+                  : a + Math.hypot(to[0] - e.at[0], to[1] - e.at[1], to[2] - e.at[2]) / 2;
+  // Superellipsoid: on a ray from the centre the field grows by min(a,b,c) per unit of gauge, so
+  // v ≥ (min / r) · (|p − c| − r) outside the sphere (the surface lies within it, |x| ≤ hypot).
   const ell = e.shape === 'ellipsoid';
+  const sup = e.shape === 'superellipsoid';
   const lo = Math.min(a, b, c);
-  return { c: centre, r, scale: ell ? (lo / r) ** 2 : 1, inside: !ell };
+  return {
+    c: centre,
+    r,
+    scale: ell ? (lo / r) ** 2 : sup ? lo / r : 1,
+    inside: !ell && !sup,
+  };
 }
 
 /** Conservative world bounds of an add edit (bounding sphere), grown by its blend radius. */
 export function editBounds(e: SculptEdit, mirrorAll: boolean): [Vec3, Vec3] {
   if ('group' in e) return groupBounds(e, mirrorAll);
+  if ('stroke' in e) return strokeBounds(e, mirrorAll);
   let k = e.blend ?? 0;
   let [b0, b1]: readonly [Vec3, Vec3] = 'field' in e ? e.bounds : [e.at, e.at];
   // A field's surface can lie ON its bounds (a visual hull's flat faces): pad so the meshing
@@ -223,7 +276,7 @@ function groupBounds(g: SculptGroup, mirrorAll: boolean): [Vec3, Vec3] {
   const hi: [number, number, number] = [-Infinity, -Infinity, -Infinity];
   const k = g.blend ?? 0;
   for (const e of g.group) {
-    if ((e.op ?? 'add') !== 'add') continue;
+    if (!isAdd(e)) continue;
     const [a, b] = editBounds(e, g.mirror ?? mirrorAll);
     for (let i = 0; i < 3; i++) {
       lo[i] = Math.min(lo[i] ?? 0, (a[i] ?? 0) - k);
@@ -232,3 +285,6 @@ function groupBounds(g: SculptGroup, mirrorAll: boolean): [Vec3, Vec3] {
   }
   return [lo, hi];
 }
+
+/** Edits that grow the shape (and set bounds): adds, plus strokes (which may push out `depth`). */
+export const isAdd = (e: SculptEdit): boolean => 'stroke' in e || (e.op ?? 'add') === 'add';

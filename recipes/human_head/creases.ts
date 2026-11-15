@@ -4,21 +4,24 @@
 // the brooch. Every region ≤ 3 cm. Anything else QA `connections` finds is a seam to blend.
 
 import { type IntendedCrease, sculptField } from '@developerz.ai/ts23d';
-import { anatomyCreases, cutCreases, torsoCreases } from '../_lib/bust/anatomy-creases.ts';
-import { bustEdits } from '../_lib/bust/bust.ts';
+import { cutCreases, torsoCreases } from '../_lib/bust/anatomy-creases.ts';
+import { bustEdits, bustScalp } from '../_lib/bust/bust.ts';
 import { creaseAt, creaseCurve, edgeCreases, ringCreases } from '../_lib/bust/creases.ts';
-import { headBlock } from '../_lib/bust/head.ts';
 import { collarRing, mantleRegion, tunicFolds } from '../_lib/bust/human/clothes.ts';
-import { EAR, H, L, SPEC, TORSO } from '../_lib/bust/human/spec.ts';
+import { H, L, SK, SPEC, TORSO } from '../_lib/bust/human/spec.ts';
 import { surface, type V } from '../_lib/bust/kit.ts';
 import { torsoEdits } from '../_lib/bust/torso.ts';
+import { skullCreases } from '../_lib/face/skull-creases.ts';
 import { HUMAN_BUST } from './build.ts';
 import { beardLines, beardline, hairLines, hairline, moustache } from './hair.ts';
 
 function creases(): IntendedCrease[] {
   const { skin } = bustEdits(HUMAN_BUST, 2, 0);
-  const scalp = sculptField([headBlock(SPEC, 2)], { color: SPEC.skin, mirror: 'y' }).field;
-  const body = sculptField(torsoEdits(L, TORSO), { color: SPEC.skin, mirror: 'y' }).field;
+  const scalp = bustScalp(HUMAN_BUST, 0);
+  const body = sculptField(torsoEdits(L, TORSO, { neck: false }), {
+    color: SPEC.skin,
+    mirror: 'y',
+  }).field;
   const headBox: [[number, number, number], [number, number, number]] = [
     [L.back - 0.02, -0.12, L.mz - 0.06 * H],
     [L.gx + 0.04, 0.12, L.crown + 0.02],
@@ -28,7 +31,7 @@ function creases(): IntendedCrease[] {
   const onHair = (line: V[], t: number): V[] => line.map((p) => sc.off(p, t));
   const sc = surface(scalp);
   return [
-    ...anatomyCreases(SPEC, L, EAR),
+    ...skullCreases(SK, H),
     ...torsoCreases(L, TORSO),
     ...hairLines().flatMap((l, i) =>
       creaseCurve(

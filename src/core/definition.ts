@@ -1,6 +1,7 @@
 // The asset contract: what defineAsset takes (AssetDefinition), what build() receives
 // (BuildContext), budgets, real-world dimensions, measures, checks, and the compiled result.
 
+import type { Clip } from './clip.ts';
 import type { Finishes, ResolvedFinish } from './finish.ts';
 import type { Mesh } from './mesh.ts';
 import type { ResolvedSurfaceOptics, SurfaceOptics } from './optics.ts';
@@ -17,6 +18,7 @@ import type {
 } from './part.ts';
 import type { AssetPhysics, RealMass } from './physics.ts';
 import type { Rng } from './rng.ts';
+import type { Armature, BoneOptions } from './skeleton.ts';
 import type { TuneSpec } from './tune.ts';
 import type { Vec3 } from './vec.ts';
 import type { WeatherCoverage } from './weather-coverage.ts';
@@ -39,6 +41,8 @@ export interface BuildContext {
   use(asset: Asset, options: UseOptions): void;
   /** Declare where two parts connect (wrist, grip, peg); QA `joints` checks that they fit. */
   joint(name: string, options: JointOptions): void;
+  /** Add a skeleton bone (asset frame, parent first); returns its name. ADR 013. */
+  bone(name: string, options: BoneOptions): string;
   /** Record measured weathering coverage (passes/weather calls it): manifest + QA `weather`. */
   weathered(coverage: readonly WeatherCoverage[]): void;
   /** A `tune.params` value: the optimiser's trial, else the committed tune.json, else the default. */
@@ -50,6 +54,10 @@ export interface Budget {
   readonly triangles: readonly [number, number, number];
   /** Draw-call ceiling per LOD (integer ≥ 1); `t3d build` fails above it. Omitted: unchecked. */
   readonly draws?: number;
+  /** Bone cap for a skinned asset; default 64 when it has a skeleton (ADR 013). */
+  readonly bones?: number;
+  /** Opt-in LOD0 hero texture set: one extra material at this size (ADR 012). */
+  readonly heroTextures?: { readonly size: 1024 | 2048 | 4096 };
 }
 
 /** Real-world overall dimensions (metres) the QA `proportions` gate holds the model to. */
@@ -227,6 +235,8 @@ export interface AssetDefinition {
    * `ctx.tuned('name')`; pass the committed file as `saved` so every build sees the same numbers.
    */
   readonly tune?: TuneSpec;
+  /** Named baked keyframe clips on bones or parts (`walk`, `idle`); `run` is the parts' Motion. */
+  readonly clips?: readonly Clip[];
   build(ctx: BuildContext): void;
 }
 
@@ -264,4 +274,8 @@ export interface CompiledAsset {
   readonly physics?: AssetPhysics;
   /** Measured weathering per target and effect (`weather(ctx, …)`); absent when none. */
   readonly weather?: readonly WeatherCoverage[];
+  /** Bones from `ctx.bone` (and used children), validated; absent when none. */
+  readonly skeleton?: Armature;
+  /** Declared clips (and used children's, prefixed), validated; absent when none. */
+  readonly clips?: readonly Clip[];
 }

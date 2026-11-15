@@ -75,7 +75,7 @@ export interface FinishResult {
 }
 
 export const FINISH_NOTE =
-  'albedo projected from model images (part-masked, n·v weighted); roughness, metal and the detail normal are heuristics from the albedo, not measured';
+  'albedo projected from model images (part-masked, n·v weighted); roughness and metal from the trim sheet; detail normal from the strip height graph when one is given, else flat';
 
 /** The finished LOD0: finishable parts take their atlas mesh with white vertex colour. */
 function finishedAsset(

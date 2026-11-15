@@ -99,6 +99,31 @@ Chest and arm cuts are plane clips with flat caps; eyes are the bust library's c
 orc tusks are sweeps placed from warped landmarks; hair and beard are sculpted against the warped
 skin's distance field along lines cast onto the skin.
 
+## Skull stage (the bust heads, plan 101 slice 06)
+The human, elf and goblin busts (`recipes/_lib/bust/bust.ts` with a `skull` character) take their
+head and neck from this base instead of a union of primitives, in five stages:
+
+1. **Skull** (`recipes/_lib/face/skull.ts`): the race's warped base, placed by a similarity
+   (menton → crown = the bust's H, glabella on the bust's glabella), cut below the neck and turned
+   into an exact signed distance field (`mesh-exact.ts`): signs by a three-axis ray-parity vote
+   (`mesh-inside.ts`), the sealed mouth's cavity filled (a plug behind the lip line, then a void
+   fill), distances to the outer skin only, propagated nearest-first over the grid
+   (`mesh-distance.ts`), one [1 2 1] smoothing pass, a 1 mm field over the face, 2 mm elsewhere.
+2. **Planes** (`planes.ts`): Asaro planes as `flatten` strokes (forehead, temple, cheek front,
+   buccal side, jaw side, chin).
+3. **Muscles and bone** (`planes.ts`): supraorbital ridge, zygomatic arch, masseter, jaw line,
+   sternocleidomastoid mastoid → sternum; the bust torso's trapezius rises into the base's own.
+4. **Features** (`features.ts`): lid fold, nasolabial fold, mentolabial sulcus (`crease`),
+   vermilion border and philtrum (`pinch`); eyes in the orbit (a bore sized to the ball), the
+   bust library's lids no longer needed — the base's lids wrap the ball.
+5. **Skin** (`zones.ts`): tone zones as paint — lips, redness (nose, cheeks, ears), beard shadow
+   (human male), brows, socket shade — under the bust painter's cavity and ridge tones.
+
+Each race scales stages 2–4 with `Forms` and is held to its proportion bands
+([head-analysis.md](head-analysis.md), "Sourced proportion bands"). The eye (`eyes.size`) knob
+scales the whole eye group (orbit, lids) about its centre. Intended creases come from the same
+paths (`skull-creases.ts`). LOD0 meshes the eyes at ¼ and the ears at ½ the head cell.
+
 ## Status and gaps
 - Hair is still SDF locks over a mass: better than a cap, not yet hair cards or strand groups.
 - No expression shapes yet: the base's topology would carry morph targets (planned).

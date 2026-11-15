@@ -1,12 +1,16 @@
 // Quadruped anatomy rules held as numbers: elbow at the chest floor, a topline with withers, dip
 // and croup, the waist tuck, leg muscle masses, head presets, the bushy tail, coat helpers
-// (agouti, foreline) and seamless colour zones along a hanging tail.
+// (agouti, foreline) and seamless colour zones along a hanging tail; the chest section (no barrel,
+// canids deep and narrow) and the neck running into the skull.
 
 import { describe, expect, it } from 'bun:test';
 import { Ts23dError, type Vec3 } from '../core/index.ts';
+import { sculptField } from '../primitives/index.ts';
+import { trunkFindings } from './creature-biology.ts';
 import { bodyPaint, locator } from './creature-coat.ts';
 import { headLayout } from './creature-head.ts';
 import { marks } from './creature-pattern.ts';
+import { chestSection, neckJoin } from './creature-sections.ts';
 import { bonesOf } from './creature-skeleton.ts';
 import { type CreatureSpec, checkCreature } from './creature-spec.ts';
 
@@ -165,5 +169,50 @@ describe('coat helpers', () => {
     }
     expect(back).toBeGreaterThan(0.5);
     expect(front).toBeLessThan(-0.5);
+  });
+});
+
+describe('chest and neck sections (probed on the sculpt)', () => {
+  const s: CreatureSpec = { ...WOLF, family: 'canid', build: { depth: 0.5, width: 0.55 } };
+  const b = bonesOf(s);
+
+  it('a three-blob trunk (ellipsoids blended at 1.6 × radius) swells into a barrel; ours does not', () => {
+    const blobs = sculptField(
+      b.trunk.map((m, i) => ({
+        shape: 'ellipsoid' as const,
+        at: m.at,
+        size: m.r,
+        blend: i === 0 ? 0 : Math.min(m.r[1], m.r[2]) * 1.6,
+      })),
+      { color: [0, 0, 0] },
+    ).field;
+    const barrel = chestSection(b, (p) => blobs([p[0], Math.abs(p[1]), p[2]]));
+    expect(barrel.swell).toBeGreaterThan(1.06);
+    const ours = chestSection(b);
+    expect(ours.swell).toBeLessThan(1.06);
+    expect(ours.ratio).toBeGreaterThan(1.25);
+  });
+
+  it('a canid as wide as it is deep is refused by name; the wolf passes', () => {
+    const wide: CreatureSpec = { ...s, build: { depth: 0.5, width: 1 } };
+    expect(
+      trunkFindings(wide, bonesOf(wide))
+        .map((f) => f.message)
+        .join(),
+    ).toContain('chest:');
+    expect(trunkFindings(s, b)).toEqual([]);
+  });
+
+  it('a neck that stops short of the skull leaves a gap on the neck → skull axis', () => {
+    expect(neckJoin(b, s).inside).toBe(1);
+    // Pull the neck's last two nodes back toward the shoulders: the head now floats.
+    const n = b.neck.length;
+    const short = {
+      ...b,
+      neck: b.neck.map((node, i) =>
+        i >= n - 2 ? { ...node, at: [node.at[0] - 0.15, 0, node.at[2] - 0.12] as Vec3 } : node,
+      ),
+    };
+    expect(neckJoin(short, s).inside).toBeLessThan(1);
   });
 });

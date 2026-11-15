@@ -28,11 +28,15 @@ export {
   type SculptFieldEdit,
   type SculptOptions,
   type SculptShape,
+  type SculptStroke,
+  type StrokeBrush,
   sculpt,
   sculptField,
 } from './sculpt.ts';
+export { probeLipschitz } from './sculpt-stroke.ts';
 export { type SdfColor, type SdfOptions, sdf } from './sdf.ts';
-export { type Field, sd } from './sdf-ops.ts';
+export type { DetailRegion } from './sdf-detail.ts';
+export { type BlendKernel, type Field, sd, smoothMin } from './sdf-ops.ts';
 export {
   type FieldSolid,
   polygonSdf,

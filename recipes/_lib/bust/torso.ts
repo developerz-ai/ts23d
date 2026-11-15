@@ -23,7 +23,13 @@ export interface TorsoSpec {
   readonly cutZ: number;
 }
 
-export function torsoEdits(l: Landmarks, t: TorsoSpec): SculptEdit[] {
+/** `neck: false` leaves the neck column, sternocleidomastoids and larynx out: a skull stage
+ *  (recipes/_lib/face/skull.ts) brings its own anatomical neck. */
+export function torsoEdits(
+  l: Landmarks,
+  t: TorsoSpec,
+  o: { readonly neck?: boolean } = {},
+): SculptEdit[] {
   const { H } = l;
   const m = t.mass;
   const sh = t.shoulders;
@@ -74,6 +80,10 @@ export function torsoEdits(l: Landmarks, t: TorsoSpec): SculptEdit[] {
     },
   ];
   const out: SculptEdit[] = [{ group: body }];
+  if (o.neck === false) {
+    out.push(trapezius(l, t, chestZ, 0.18));
+    return out;
+  }
   // Neck: a column leaning forward from the chest into the skull.
   out.push(cone2(neckBase, neckTop, t.neck, t.neck * NECK_TAPER, { blend: 0.12 * H }));
   // Sternocleidomastoid: from the mastoid behind the ear down and forward to the sternal notch —
@@ -91,21 +101,27 @@ export function torsoEdits(l: Landmarks, t: TorsoSpec): SculptEdit[] {
         mirror: false,
       }),
     );
-  // Trapezius: from the skull base, sloping out over the neck to the shoulder.
+  out.push(trapezius(l, t, chestZ));
+  return out;
+}
+
+/** Trapezius: from the skull base, sloping out over the neck to the shoulder; `skip` (× H) drops
+ *  its top below the nape (a skull stage brings its own upper trapezius). */
+function trapezius(l: Landmarks, t: TorsoSpec, chestZ: number, skip = 0): SculptEdit {
+  const { H } = l;
+  const m = t.mass;
+  const sh = t.shoulders;
   const trap = spline(
     [
-      [l.back + 0.2 * H, 0, l.mz + 0.08 * H],
+      [l.back + (0.2 + skip * 0.25) * H, 0, l.mz + (0.08 - skip) * H],
       [l.back + 0.27 * H, sh * 0.42, l.mz - 0.24 * H],
       [l.back + 0.4 * H, sh * 0.92, chestZ + 0.42 * H],
     ],
     6,
   );
-  out.push(
-    chain(trap, taper(6, 0.11 * H * (0.6 + 0.6 * m), 0.13 * H * (0.6 + 0.6 * m), 0.05 * H), {
-      blend: 0.16 * H,
-    }),
-  );
-  return out;
+  return chain(trap, taper(6, 0.11 * H * (0.6 + 0.6 * m), 0.13 * H * (0.6 + 0.6 * m), 0.05 * H), {
+    blend: 0.16 * H,
+  });
 }
 
 const lerpV = (a: V, b: V, k: number, d: V): V => [

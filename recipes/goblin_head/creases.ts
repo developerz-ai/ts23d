@@ -5,12 +5,12 @@
 // finds is a seam to blend.
 
 import { type IntendedCrease, sculptField } from '@developerz.ai/ts23d';
-import { anatomyCreases, cutCreases, torsoCreases } from '../_lib/bust/anatomy-creases.ts';
-import { bustEdits } from '../_lib/bust/bust.ts';
+import { cutCreases, torsoCreases } from '../_lib/bust/anatomy-creases.ts';
+import { bustEdits, bustScalp } from '../_lib/bust/bust.ts';
 import { creaseAt, creaseCurve, edgeCreases, ringCreases } from '../_lib/bust/creases.ts';
-import { headBlock } from '../_lib/bust/head.ts';
 import { spline, surface, type V } from '../_lib/bust/kit.ts';
 import { torsoEdits } from '../_lib/bust/torso.ts';
+import { skullCreases } from '../_lib/face/skull-creases.ts';
 import { GOBLIN_BUST } from './build.ts';
 import {
   hoodRegion,
@@ -22,18 +22,21 @@ import {
 } from './clothes.ts';
 import { browLines, grinLine, WARTS } from './features.ts';
 import { WISPS, wispLine } from './hair.ts';
-import { EAR, H, L, SPEC, TORSO } from './spec.ts';
+import { H, L, SK, SPEC, TORSO } from './spec.ts';
 
 function creases(): IntendedCrease[] {
   const { skin } = bustEdits(GOBLIN_BUST, 2, 0);
-  const scalp = surface(sculptField([headBlock(SPEC, 2)], { color: SPEC.skin, mirror: 'y' }).field);
-  const body = sculptField(torsoEdits(L, TORSO), { color: SPEC.skin, mirror: 'y' }).field;
+  const scalp = surface(bustScalp(GOBLIN_BUST, 0));
+  const body = sculptField(torsoEdits(L, TORSO, { neck: false }), {
+    color: SPEC.skin,
+    mirror: 'y',
+  }).field;
   const box: [V, V] = [
     [-0.3, -0.3, 0.06],
     [0.3, 0.3, L.mz + 0.02],
   ];
   return [
-    ...anatomyCreases(SPEC, L, EAR),
+    ...skullCreases(SK, H),
     ...torsoCreases(L, TORSO),
     ...creaseCurve('grin', 'head', grinLine(), 0.02, 'the grin’s slit and its pointed teeth', true),
     ...browLines().flatMap((l, i) =>

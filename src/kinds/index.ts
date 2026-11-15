@@ -14,6 +14,16 @@ export { ALLOMETRY_BAND, type Biology, biology, MAX_WING_LOADING } from './creat
 export { allometricLimbR, type Bones, massFromBones } from './creature-bones.ts';
 export { creatureCreases } from './creature-creases.ts';
 export {
+  type CreatureFur,
+  creatureFur,
+  FUR_ZONES,
+  type FurOptions,
+  type FurZone,
+  type FurZoneName,
+  furChains,
+  furZones,
+} from './creature-fur.ts';
+export {
   type CreatureColours,
   type CreaturePattern,
   type CreatureSpec,
@@ -35,6 +45,7 @@ export {
   headEdits,
   headParams,
 } from './head.ts';
+export { type CardLayer, hairEdits, type ScalpCardOptions, scalpCards } from './head-hair.ts';
 export {
   type BeardStyle,
   type BustStyle,

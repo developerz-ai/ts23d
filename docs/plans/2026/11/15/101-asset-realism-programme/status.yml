@@ -1,0 +1,66 @@
+plan: 101-asset-realism-programme
+title: Asset realism programme — CPU-first, GPU-boosted
+roadmap: "Cross-cutting: M2 photoMatch (:96), M4 creature next (:120), M5 localGenerator (:138), Autonomy critique (:156), Gaps skinning (:249), Geometry maths (:258, :261), Real data OSM (:296)"
+status: in_progress
+owner: sebi
+worked_by: "claude (coordinator) + slice agents"
+percent: 40
+current_focus: "waves 1+2 integration: gate, PR, release 0.7.0; then hair quality, orc rebuild, clothes, wave 3"
+slices:
+  - file: 01-core-contracts.md
+    status: complete
+    percent: 100
+  - file: 02-reference-match.md
+    status: complete
+    percent: 100
+  - file: 03-critique-calibration.md
+    status: complete
+    percent: 100
+  - file: 04-sculpt-engine.md
+    status: complete
+    percent: 100
+  - file: 05-creature-forms.md
+    status: in_progress
+    percent: 80
+  - file: 06-head-forms.md
+    status: in_progress
+    percent: 80
+  - file: 07-hair-fur-cards.md
+    status: in_progress
+    percent: 80
+  - file: 08-texture-maps.md
+    status: complete
+    percent: 100
+  - file: 09-skinning-export.md
+    status: not_started
+    percent: 0
+  - file: 10-motion-deform-qa.md
+    status: not_started
+    percent: 0
+  - file: 11-hero-bake-tier.md
+    status: not_started
+    percent: 0
+  - file: 12-path-tracer.md
+    status: not_started
+    percent: 0
+  - file: 13-neural-adapters.md
+    status: not_started
+    percent: 0
+  - file: 14-reference-server.md
+    status: not_started
+    percent: 0
+  - file: 15-neural-in-recipes.md
+    status: not_started
+    percent: 0
+  - file: 16-scale.md
+    status: not_started
+    percent: 0
+  - file: 17-flagships-showcase.md
+    status: not_started
+    percent: 0
+  - file: 18-docs-release.md
+    status: not_started
+    percent: 0
+evidence: []
+notes: "Wave 2 results: wolf 6.1 calibrated (forms+fur+maps, QA PASS); human/elf/goblin rebuilt on CC0 MakeHuman base, orc not rebuilt; hair cards read as straw (follow-up); renderer alpha-mip bug fixed (D11). GPU: TRELLIS.2 + Pixal3D run on RTX 3090 (~/workspace/lab/neural-models/SETUP.md). Flagship floor arbiter = blind 3-agent panel median (golden brief/attest), calibrated metrics = inflation band 2.5 + ratchet; LOO Spearman 0.584 (floor 0.55, target 0.7 todo). Core bone type named Armature (Skeleton is the shipped kinds body-plan type). Wolf dossier photos were mislabelled; slice 05 owns recipes/wolf README + ref.json. Owner delegated all decisions (2026-11-15). Target: flagships >= 8.5 calibrated. Release after wave 2 and wave 5."
+last_updated: 2026-11-15

@@ -52,15 +52,22 @@ interface FinishModel {
   user's server (a ComfyUI / diffusers wrapper with ControlNet depth + normal) and expects
   `{ images: [base64 PNG per view] }`. Keys come from the caller, never the environment.
 - Results are cached by sha256 of (control hash, view names, prompt, negative, seed, palette, model
-  id): `fileStore()` in `.ts23d/finish/` (gitignored), `memoryStore()` for tests. A hit replays
+  id): `fileStore()` in `.ts23d/finish/` (gitignored today; [ADR 014](../decisions/014-neural-outputs-are-cached-inputs.md) moves committed outputs to `recipes/<name>/neural/`), `memoryStore()` for tests. A hit replays
   offline. **The gate never runs a model.**
 
 ## 3. Bake (`finishAsset`)
 
-1. **Atlas** — the trim sheet's UVs overlap by design, so the finish gets its own: per triangle the
-   dominant face axis picks a chart (±X/±Y/±Z), charts split into connected islands, project flat at
-   one texel density and shelf-pack with 2-texel padding (xatlas-like box projection). Vertices split
-   only where charts meet; triangle order is kept.
+1. **Atlas** — the trim sheet's UVs overlap by design, so the finish gets its own, unwrapped by
+   **least-squares conformal maps** (`src/finish/lscm.ts`, Lévy et al. 2002). Seams: triangles grow
+   into charts across welded edges until a curvature ridge (dihedral > 50°) stops them; part borders
+   are seams by construction. Each chart minimises the conformal energy Σ area·|∇v − R90 ∇u|² with
+   two pinned vertices, solved by our own Jacobi-preconditioned conjugate gradient (zero deps),
+   warm-started from the projection on the chart's mean plane, then scaled to its true area. Gate per
+   chart: Sander L2 stretch < 1.25, no flipped triangle, no self-overlap (raster test). A failing
+   chart is re-cut with a normal cone (180° → 108° → 65° → 39° → 23°); what still fails falls back to
+   **box projection** (dominant face axis ±X/±Y/±Z, connected islands, projected flat), which
+   `buildAtlas(asset, size, pad, 'box')` also selects outright. Charts shelf-pack at one texel
+   density with 2-texel padding. Vertices split only where charts meet; triangle order is kept.
 2. **Texels** — every covered atlas texel knows its part, triangle, world position, normal, base
    colour and trim ORM.
 3. **Projection** — each texel projects into every view; it takes colour only where it is visible
@@ -68,9 +75,12 @@ interface FinishModel {
    same-part taps, weighted by (n·v)² so views blend across seams.
 4. **Fill** — grow seen texels into unseen ones of the same part (4 texels), give the rest the base
    colour × the part's mean finish/base ratio, dilate into padding.
-5. **Derived maps (heuristics, not measurements)** — roughness = trim roughness + local luminance
-   variation + darkening; metal = trim metal faded where the colour changed; detail normal from the
-   albedo's high-pass. Documented as such in the provenance `note`.
+5. **Derived maps (measured, not guessed from the albedo)** — `deriveMaps(texels, albedo, { height })`:
+   roughness and metal are the trim's own under each texel (the strip's height graph made them),
+   roughened in the height's concave curvature; the detail normal is the gradient of a world-metre
+   height at each texel's surface point (`graphHeight(materialGraph)`: the strip's height graph
+   sampled triplanar), over the true metres between neighbouring texels. Without a height the normal
+   is flat: an image model's colour is never read as relief.
 
 ## 4. A layer, not a replacement
 
@@ -108,6 +118,9 @@ on a finish finding or a QA finding.
 
 - Lighting in a real model's images is baked into the albedo; ask for flat, even light (delighting
   is the model's job).
-- Box projection stretches up to √2 on 45° faces and can self-overlap on rare folded charts.
+- Charts that fail the LSCM gate at every cone fall back to box projection, which stretches up to
+  √2 on 45° faces and can self-overlap on rare folded charts.
+- `finishAsset` does not yet pass a `height` to `deriveMaps` (planned: the part's strip graph), so
+  the finish's detail normal is flat until it does.
 - Texels no view sees (undersides, occluded faces) get the tinted base colour, not model detail.
 - The hosted provider (kubeez) adapter is planned; the `httpFinish` contract is what it will speak.

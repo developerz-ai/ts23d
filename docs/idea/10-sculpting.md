@@ -25,22 +25,36 @@
 | Non-destructive booleans (Geomesh) | Edits never collapse; `op: 'subtract' \| 'intersect'`; **groups** fold their own edits first, so a subtract inside a group trims only that group | `sculpt-edit.ts` (`SculptGroup`) |
 | Voxel remesh (base forms) | `sdf()` samples a cubic grid; `resolution` (cell edge, metres) *is* the voxel size and the LOD knob; surface nets (default) or marching cubes; always closed | `sdf.ts`, `sdf-grid.ts`, `surface-nets.ts` |
 | Symmetry (mirror X in Blender) | `mirror: 'y'`, per-edit opt-out | `sculpt.ts` |
-| Primitive library | sphere, ellipsoid, capsule, roundBox, cone, torus + rotation | `sculpt-edit.ts`, `sdf-ops.ts` (`shapes`, `sd`) |
+| Primitive library | sphere, ellipsoid, superellipsoid, capsule, roundCone (exact tapered limb), roundBox, cone, torus + rotation | `sculpt-edit.ts`, `sdf-ops.ts` (`shapes`, `sd`) |
+| Blend kernel | `kernel: 'quad'` (C1, default) or `'cubic'` (C2: no highlight kink where a blend ends), per sculpt, group or edit | `sdf-ops.ts` (`smoothMin`), `sculpt-tree.ts` |
+| Brush strokes | `{ stroke: 'crease' \| 'clay' \| 'inflate' \| 'flatten' \| 'pinch', path, radius: [r0, r1], depth }`, each with a declared Lipschitz cost | `sculpt-stroke.ts` |
+| Local detail (Dyntopo-like) | `detail: [{ bounds, factor: 2 \| 4 }]` meshes boxes finer, stitched into one closed surface | `sdf-detail.ts`, `surface-nets-detail.ts` |
+| Fairing | `fair(mesh, { iterations, keep: 'creases' })`: bi-Laplacian smoothing that pins creases | `src/passes/fair.ts` |
 | Noise displacement (tertiary skin, rock pitting) | `sd.displace(f, valueNoise(rng), amount)`; `sculptField` exposes the field for it | `sdf-ops.ts`, `value-noise.ts` |
 | Primary → secondary → tertiary order | The `head` kind writes skull edits primary → secondary, explicitly "the ZBrush order" | `src/kinds/head-face.ts`, `head-extras.ts` |
 | Hand-painted cavity + top-light tone | `toned()` samples the field: cavity, warm key, cool bounce, into vertex colour | `src/kinds/head-tone.ts` |
 | Smooth normals at low res | Normals from the field gradient, so a coarse LOD2 still shades like the exact surface (vertex-frequency "high→low") | `sdf.ts` |
-| Sparse evaluation | Bounding-sphere skips, 8³ block culling by Lipschitz bound | `sculpt-tree.ts`, `sdf-grid.ts` |
+| Sparse evaluation | Bounding-sphere skips, 4³ block culling by Lipschitz bound | `sculpt-tree.ts`, `sdf-grid.ts` |
 | Lathe | Polygon `lathe` for hard surface (not an SDF shape) | `lathe.ts` |
 | Lattice | **Name clash:** `lattice` is the truss primitive, not a deformer | `lattice.ts` |
 
-Missing: brush strokes along a path, tapered tubes (draw-skin), revolve as an SDF shape, cage/lattice deformation, bend/twist/taper warps, posing a group about a pivot, adaptive resolution, reference-image overlays.
+Missing: revolve as an SDF shape, cage/lattice deformation, bend/twist/taper warps, posing a group about a pivot, full octree adaptivity, reference-image overlays.
 
-## Proposed: brushes as SDF edits (planned)
+## Brushes as SDF edits (strokes shipped; the rest planned)
 
 Each brush is a new **edit kind** in the same list, so it composes with groups, mirror, colour and blend for free. Every proposal keeps determinism (pure functions of the edit data) and the zero-dependency rule.
 
-### 1. Strokes: `crease`, `inflate`, `flatten`, `pinch` along a path
+### 1. Strokes: `crease`, `inflate`, `flatten`, `pinch` along a path (shipped, simplified)
+
+Shipped as `SculptStroke` in `sculpt-stroke.ts`, simpler than the proposal below: every brush is a
+displacement of the running field, d' = d ± depth · φ(distance to path / radius), with a per-brush
+falloff φ (crease a V, pinch a sharper ridge, inflate a smooth bump, clay a plateau, flatten a
+clamped pull toward the plane through the path's centroid with a given `normal`). One rule then
+gives every brush its Lipschitz cost, 1 + depth · max|φ'| · max over segments (1 + |Δr| / length) /
+r_min, which `sculpt` sums into the grid's culling bound; `probeLipschitz` is the check that
+catches an under-declared one. Pinch is a ridge, not the domain warp proposed below: a warp would
+re-evaluate every earlier edit and defeat the sparse fold. `radius` is one value or `[start, end]`.
+The original proposal, for reference:
 
 ```ts
 interface SculptStroke {
@@ -62,7 +76,7 @@ type SculptEdit = SculptShapeEdit | SculptGroup | SculptStroke;   // sculpt-edit
 | `flatten` | blend `d` toward the distance to the plane fitted through the path, weight w(p) | ≤ 2 |
 | `pinch` | domain warp: pull `p` toward the path by `strength · w(p)` before evaluating everything earlier | 1/(1 − max warp gradient) |
 
-The Lipschitz column matters: `sdf-grid.ts` skips whole 8³ blocks using a Lipschitz bound. Inflate and warps stretch distances, so each stroke must raise the bound it hands to `sampleGrid`, or the grid can cull real surface (a hole, not an error). The compiler sums the bounds; a test fails if a stroke's declared bound is exceeded at sample points. Size: **M** (crease/clay/inflate), **M** more for pinch/flatten.
+The Lipschitz column matters: `sdf-grid.ts` skips whole 4³ blocks using a Lipschitz bound. Inflate and warps stretch distances, so each stroke must raise the bound it hands to `sampleGrid`, or the grid can cull real surface (a hole, not an error). The compiler sums the bounds; a test fails if a stroke's declared bound is exceeded at sample points. Size: **M** (crease/clay/inflate), **M** more for pinch/flatten.
 
 ### 2. Draw-skin: `skin()` as a capsule chain with two radii
 
@@ -144,15 +158,15 @@ Uniform grids spend cells on flat cranium as on lips. Options: an octree of cell
 
 ## Next steps for ts23d (prioritised)
 
-1. **`roundCone` shape + `skin()` helper** (draw-skin). S. Unlocks tails, horns, limbs, roots; feeds the `creature` kind (M4).
+1. ~~**`roundCone` shape + `skin()` helper** (draw-skin).~~ **Shipped:** `shape: 'roundCone'` in sculpt edits (exact), `skin()` in `src/kinds/creature-skin.ts`; also `superellipsoid`.
 2. **`form` tags + `forms` LOD filter** on sculpt edits, and a primary-only review view. S.
 3. **Group `pose` and `warp` (twist/bend/taper)** with declared Lipschitz factors. S.
 4. **`ffd()` cage deform pass** on any mesh (Bernstein, vertices). S–M.
-5. **Strokes: `crease`, `clay`, `inflate`** along a path with a radius taper, Lipschitz-aware culling and a test that catches an under-declared bound. M.
+5. ~~**Strokes: `crease`, `clay`, `inflate`**~~ **Shipped** (`sculpt-stroke.ts`, see §1), with C2 `kernel: 'cubic'` blends and the `fair` pass.
 6. **`--ref front=… side=…` overlays + per-view silhouette IoU** in `t3d shot`. M.
 7. **`revolve` SDF shape.** S–M.
-8. **`pinch` / `flatten` strokes.** M.
-9. **Adaptive (octree / dual contouring) meshing**, only when a recipe needs it. L.
+8. ~~**`pinch` / `flatten` strokes.**~~ **Shipped** (pinch as a ridge displacement, not a warp).
+9. **Adaptive meshing.** **Shipped for axis-aligned boxes:** `detail: [{ bounds, factor: 2 | 4 }]` on `sculpt`/`sdf`, two levels stitched by dual contouring over minimal edges (`surface-nets-detail.ts`), always closed. Limits: boxes are snapped to coarse cells, must keep one coarse cell from the bounds and from each other (no nesting), nets mesher only; a rare sliver in the transition ring folds over (well under the 1 % `normals-winding` tolerance). A full octree refined by `|d| < h` stays planned. L.
 
 ## Sources
 

@@ -38,7 +38,8 @@ export function quadrupedBones(s: CreatureSpec): Bones {
     beak: false,
   };
   const nose0 = headToWorld(head0, [z.headLen * 0.97, 0, -0.08 * z.headLen]);
-  const tailZ = H - 0.13 * D;
+  // Tail set a little under the croup line (the root does not stand above the rump).
+  const tailZ = H - 0.16 * D;
   const run = Math.sqrt(Math.max(0, L * L - (nose0[2] - tailZ) ** 2));
   const T = Math.max(0.3 * L, run - nose0[0]);
   // Withers at +0.48 T, tail root at −0.52 T: the trunk is centred on x = 0.
@@ -55,22 +56,32 @@ export function quadrupedBones(s: CreatureSpec): Bones {
     hindLeg(z.stance, frame, footPlan(s, z.stance, 'hind')),
   ];
   // Topline heights: withers, the dip behind them, the croup.
-  const dip = H - 0.04 * H;
-  const croup = H - 0.03 * H;
+  const dip = H - 0.05 * H;
+  const croup = H - 0.042 * H;
   const dl = D * tuck;
-  const dp = D * 0.78;
+  const dp = D * 0.72;
+  // Bones first (creature-muscles.ts lays the muscles over them): the ribcage a deep, narrow
+  // superellipsoid (exponent 2.5: flat-sided like ribs under skin, not a barrel), the loin a
+  // slimmer tucked ellipsoid, the pelvis a block under the croup. Tight blends (creature-body.ts).
   const trunk = [
-    // Ribcage: egg-shaped in side view, pitched so the sternum runs forward-down and the
-    // front-top stays clear for the neck to rise out of.
+    // Ribcage: pitched so the sternum runs forward-down and the front-top stays clear for the
+    // neck to rise out of.
     {
-      at: [xw - 0.13 * T, 0, H - 0.035 * H - D / 2] as Vec3,
-      r: [0.34 * T, W / 2, D / 2] as Vec3,
-      rotate: [0, 6, 0] as Vec3,
+      at: [xw - 0.12 * T, 0, H - 0.035 * H - D / 2] as Vec3,
+      r: [0.32 * T, W / 2, D / 2] as Vec3,
+      // 11°: the underline rises from the brisket behind the elbow toward the last rib (an egg,
+      // not a level barrel floor).
+      rotate: [0, 11, 0] as Vec3,
+      power: 2.2,
     },
-    // Loin: long enough to run forward under the withers, so its top meets the ribcage
-    // tangentially (a short loin left a fold across the back behind the shoulders).
-    { at: [xw - 0.5 * T, 0, dip - dl / 2] as Vec3, r: [0.4 * T, W * 0.46, dl / 2] as Vec3 },
-    { at: [xh + 0.04 * T, 0, croup - dp / 2] as Vec3, r: [0.21 * T, W * 0.4, dp / 2] as Vec3 },
+    // Loin: runs forward under the ribs so its top meets them tangentially; narrower than the
+    // chest, its floor the tucked waist.
+    { at: [xw - 0.52 * T, 0, dip - dl / 2] as Vec3, r: [0.34 * T, W * 0.38, dl / 2] as Vec3 },
+    {
+      at: [xh + 0.03 * T, 0, croup - dp / 2] as Vec3,
+      r: [0.2 * T, W * 0.35, dp / 2] as Vec3,
+      power: 2.2,
+    },
   ];
   const neckEnd = head.atlas;
   const neck = tube(
@@ -80,7 +91,8 @@ export function quadrupedBones(s: CreatureSpec): Bones {
       v3.lerp(v3.add(neckBase, off), neckEnd, 0.6),
       neckEnd,
     ],
-    (t) => Math.min(D * 0.36, W * 0.42) * (1 - t) + z.headWidth * 0.48 * t,
+    // Thick: a wolf's neck is mostly muscle and mane (the ruff adds the rest).
+    (t) => Math.min(D * 0.34, W * 0.42) * (1 - t) + z.headWidth * 0.5 * t,
   );
   const tailR = Math.max(0.25 * r, 0.42 * r * (s.build?.tailGirth ?? 1));
   const wings: Wing[] = s.skeleton === 'winged' ? [wingOf(s, xw, T, W, H, r)] : [];

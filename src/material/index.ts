@@ -31,6 +31,14 @@ export { decodePng, type PngFailure, type Rgba } from './paint/decode-png.ts';
 export { definePalette, hex, NATURAL, type Palette, palettes } from './palette.ts';
 export { godotShaderSource, type ShaderHints, threeMaterialSource } from './shader.ts';
 export {
+  STRAND_CELLS,
+  STRAND_LAYOUT,
+  type StrandKind,
+  type StrandStrip,
+  strandCells,
+  strandPainter,
+} from './strands.ts';
+export {
   type BondOptions,
   type CellsOptions,
   type ColourField,

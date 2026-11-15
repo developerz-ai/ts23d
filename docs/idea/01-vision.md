@@ -96,7 +96,7 @@ ts23d keeps that pipeline's ideas and goes one step further: recipes are **TypeS
 | A QA gate that fails the build | `qa/gates.ts` | Shipped (7 gates incl. recipe `checks`); more planned |
 | Closed-loop agent iteration with multi-view renders | `render/sheet.ts`, `t3d shot` | Shipped |
 | Weber–Penn botanical skeletons | `kinds/vegetation.ts` → `tree`, `trees` | Shipped |
-| Photo match: photo · model · overlay in one PNG, plus silhouette IoU | `render` → `photoMatch` | Planned, M2 |
+| Photo match: photo · model · overlay in one PNG, plus silhouette IoU | `render` → `photoMatch`, `qa` → `silhouetteIoU`, `bun run ref` | Shipped (plan 101) |
 | Reverse direction: a VLM infers recipe params from photos, scored by silhouette IoU | builds on `photoMatch` | Planned, M6 |
 
 ## Principles

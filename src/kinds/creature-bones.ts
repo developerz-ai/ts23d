@@ -2,8 +2,9 @@
 // joint chains with radii, the head frame (atlas pivot + pitch), wings and fins, ground contacts.
 // Left side only (+Y); the body sculpt mirrors. Also the shared maths: allometric limb radius
 // (Campione & Evans 2012) and eye size from mass, and the head-local → world transform.
+// `armatureOf` exports the record as the core `Armature` (ADR 013) the kind declares via ctx.bone.
 
-import type { Vec3 } from '../core/index.ts';
+import type { Bone, Vec3 } from '../core/index.ts';
 import type { Hoof } from './creature-family.ts';
 import type { SkinNode } from './creature-skin.ts';
 import type { Skeleton, Stance } from './creature-spec.ts';
@@ -67,8 +68,8 @@ export interface Bones {
   readonly height: number;
   /** Upper-limb flesh radius (allometric × build.limbs). */
   readonly limbR: number;
-  /** Trunk masses (centred on y = 0). */
-  readonly trunk: readonly { at: Vec3; r: Vec3; rotate?: Vec3 }[];
+  /** Trunk masses (centred on y = 0): ellipsoids, or superellipsoids of exponent `power`. */
+  readonly trunk: readonly { at: Vec3; r: Vec3; rotate?: Vec3; power?: number }[];
   /** Round body chain (serpent) or none. */
   readonly chain: readonly SkinNode[];
   /** Dorsal top line, rear → front: colour zones read the back from it. */
@@ -120,4 +121,88 @@ export function headToWorld(h: HeadFrame, p: Vec3): Vec3 {
 /** Both feet of each leg pair on the ground (left foot and its mirror). */
 export function feet(legs: readonly Limb[]): Vec3[] {
   return legs.flatMap((l) => [l.foot, [l.foot[0], -l.foot[1], 0] as Vec3]);
+}
+
+/** Bones from a polyline: at most `max` segments (evenly picked joints), named `name_0…`. */
+function chainBones(
+  name: string,
+  pts: readonly Vec3[],
+  parent: string | undefined,
+  max: number,
+): Bone[] {
+  const n = pts.length - 1;
+  if (n < 1) return [];
+  const k = Math.min(n, max);
+  const at = (i: number): Vec3 => pts[Math.round((i * n) / k)] ?? [0, 0, 0];
+  const out: Bone[] = [];
+  for (let i = 0; i < k; i++)
+    out.push({
+      name: `${name}_${i}`,
+      head: at(i),
+      tail: at(i + 1),
+      ...(i === 0 ? (parent ? { parent } : {}) : { parent: `${name}_${i - 1}` }),
+    });
+  return out;
+}
+
+const flipY = (p: Vec3): Vec3 => [p[0], -p[1], p[2]];
+
+/**
+ * The skeleton as bones (asset frame, parent first): `spine_*` sacrum → withers (or the body
+ * chain), `neck_*`, `head` (atlas → nose), `jaw` (hinge → chin, when given), `tail_*`, each leg
+ * `fore_l_*` / `hind_l_*` (shoulder/hip → foot tip) mirrored as `_r`, wings `wing_l_*`.
+ */
+export function armatureOf(b: Bones, jaw: readonly [Vec3, Vec3] | null, prefix = ''): Bone[] {
+  const p = (n: string): string => `${prefix}${n}`;
+  const body = b.chain.length > 1 ? b.chain.map((c) => c.at) : b.spine;
+  const spine = chainBones(p('spine'), body, undefined, 6);
+  const top = spine[spine.length - 1]?.name;
+  const neckPts = b.neck.slice(1).map((n) => n.at);
+  const neck = chainBones(p('neck'), neckPts, top, 3);
+  const headParent = neck[neck.length - 1]?.name ?? top;
+  const nose = headToWorld(b.head, [b.head.length * 0.9, 0, -0.1 * b.head.length]);
+  const out: Bone[] = [
+    ...spine,
+    ...neck,
+    {
+      name: p('head'),
+      head: b.head.atlas,
+      tail: nose,
+      ...(headParent ? { parent: headParent } : {}),
+    },
+  ];
+  if (jaw)
+    out.push({
+      name: p('jaw'),
+      parent: p('head'),
+      head: jaw[0],
+      tail: jaw[1],
+      limit: { axis: [0, 1, 0], min: 0, max: 40 },
+    });
+  out.push(
+    ...chainBones(
+      p('tail'),
+      b.tail.map((t) => t.at),
+      spine[0]?.name,
+      5,
+    ),
+  );
+  for (const l of b.legs) {
+    const tip: Vec3 = [l.foot[0] + l.footSize[0], l.foot[1], l.footSize[2] * 0.5];
+    const pts = [...l.joints, tip];
+    const root = l.name === 'fore' ? top : spine[0]?.name;
+    for (const [side, f] of [
+      ['l', (q: Vec3): Vec3 => q],
+      ['r', flipY],
+    ] as const)
+      out.push(...chainBones(p(`${l.name}_${side}`), pts.map(f), root, 6));
+  }
+  for (const w of b.wings) {
+    const pts = w.arm.map((a) => a.at);
+    out.push(
+      ...chainBones(p('wing_l'), pts, top, 4),
+      ...chainBones(p('wing_r'), pts.map(flipY), top, 4),
+    );
+  }
+  return out;
 }
