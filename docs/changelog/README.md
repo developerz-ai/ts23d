@@ -6,6 +6,7 @@ Every published version of `@developerz.ai/ts23d`, newest first: one page each w
 
 | Version | Date | Summary |
 |---|---|---|
+| [0.7.0](0.7.0.md) | 2026-11-15 | Realism groundwork: a calibrated critique and reference-photo matching so "looks real" is measured, a stronger sculpt engine, wolves built from bones and muscles with strand-card fur, and human, elf and goblin busts rebuilt from skull to skin with card hair. |
 | [0.6.0](0.6.0.md) | 2026-11-14 | Tooling for a repo that runs itself (per-release changelog pages and a written ten-year maintenance contract), plus crank-linkage motions that keep the Jupiter locomotive's rods on their crank pins. |
 | [0.5.0](0.5.0.md) | 2026-11-14 | A production-readiness release: bad recipe input, hostile GLBs and dead servers now fail with coded errors and a `fix:` instead of wrong output, the package exports an explicit list of subpaths, and the creature kind follows sourced animal biology. |
 | [0.4.0](0.4.0.md) | 2026-11-08 | Tank tracks now run round their wheels through a new `tread` motion, and `text` sets smooth lettering in four vector typefaces. |
