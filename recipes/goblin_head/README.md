@@ -22,6 +22,14 @@ scarf** — cut as a collectible bust on a turned plinth.
 | ear | human structure, 2.1 × the length, width 0.6, held out, two notches; root and lobe stay small (root sized by the human ear, lobe ×0.25) | 0.263 H | **×2.1** |
 | neck | 0.51 × head width, chin 0.28 H above the scarf | 0.7–0.8 | skinny (declared `NECK`: 0.45–0.6) |
 
+## Skull stage (2026-11)
+The head is now the CC0 base warped by `GOBLIN_FACE` (`spec.ts`): vault ×1.12 high and ×1.14 wide,
+eyes ×1.45 (orbit, lids, ball) set ×1.28, nose ×2.8 projecting and hooked 5 % H, mouth ×1.4, chin
+receding ×0.7, ears ×2.6 swung out 60°, thin neck ×0.8; hard planes and deep lines (`forms`), the
+grin's teeth, worried brow and warts (`features.ts`) placed on the skull's landmarks. It is checked
+against `GOBLIN_PROPORTIONS` — the human bands with each delta declared and justified. The table
+above records the earlier primitive head.
+
 ## Built by
 `spec.ts`, `features.ts` (grin teeth, worried brow creases, seeded warts), `hair.ts` (wisps),
 `clothes.ts` (shirt, hemmed vest, soft hood roll, scarf) and `creases.ts` (the intended folds as

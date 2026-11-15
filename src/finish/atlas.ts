@@ -1,13 +1,16 @@
 // A per-asset texture atlas for the finish layer: the trim sheet's UVs overlap by design, so a
-// unique texture needs its own non-overlapping UVs. xatlas-like box projection: each triangle joins
-// the chart of its dominant face axis (±X, ±Y, ±Z), charts split into edge-connected islands,
-// projected flat onto their axis plane at one texel density, shelf-packed with padding. Vertices
-// are split only where charts meet; triangle order is kept, so triangle t is the same triangle
-// in the source and atlas meshes. Deterministic: fixed iteration order, no hashing of floats.
+// unique texture needs its own non-overlapping UVs. Default unwrap: least-squares conformal charts
+// (lscm.ts: seams at curvature ridges and part borders, each chart gated on L2 stretch, flips and
+// self-overlap); a chart that fails the gate, or `unwrap: 'box'`, falls back to box projection
+// (each triangle joins the chart of its dominant face axis, split into edge-connected islands,
+// projected flat). Charts are shelf-packed at one texel density with padding. Vertices are split
+// only where charts meet; triangle order is kept, so triangle t is the same triangle in the
+// source and atlas meshes. Deterministic: fixed iteration order, no hashing of floats.
 
 import type { CompiledAsset, Mesh, Part } from '../core/index.ts';
 import { Ts23dError } from '../core/index.ts';
 import { glob } from '../qa/index.ts';
+import { lscmCharts } from './lscm.ts';
 
 export interface AtlasPart {
   readonly name: string;
@@ -39,10 +42,13 @@ export function isFinishable(p: Part, glow: readonly RegExp[]): boolean {
 export const glowRes = (a: CompiledAsset): RegExp[] =>
   (a.glow ?? []).flatMap((g) => g.parts.map(glob));
 
+export type Unwrap = 'lscm' | 'box';
+
 interface Chart {
   readonly part: number;
-  readonly axis: number;
   readonly tris: number[];
+  /** Chart-plane coordinates (metres) of a mesh vertex. */
+  readonly at: (v: number) => readonly [number, number];
   readonly lo: [number, number];
   readonly hi: [number, number];
   x: number;
@@ -67,13 +73,47 @@ function find(parent: Int32Array, i: number): number {
   return r;
 }
 
-/** Charts of one mesh: triangles grouped by dominant normal axis, then by shared vertices. */
-function chartsOf(m: Mesh, part: number): Chart[] {
+/** A chart's box from its triangles' coordinates. */
+function chart(m: Mesh, part: number, tris: number[], at: Chart['at']): Chart {
+  const c: Chart = { part, tris, at, lo: [1e9, 1e9], hi: [-1e9, -1e9], x: 0, y: 0 };
+  for (const t of tris)
+    for (let k = 0; k < 3; k++) {
+      const [u, v] = at(m.indices[t * 3 + k] ?? 0);
+      c.lo[0] = Math.min(c.lo[0], u);
+      c.lo[1] = Math.min(c.lo[1], v);
+      c.hi[0] = Math.max(c.hi[0], u);
+      c.hi[1] = Math.max(c.hi[1], v);
+    }
+  return c;
+}
+
+/** LSCM charts; triangles of a chart that fails the gate go to box projection. */
+function conformalCharts(m: Mesh, part: number): Chart[] {
+  const out: Chart[] = [];
+  const rest: number[] = [];
+  for (const c of lscmCharts(m)) {
+    if (!c.ok) {
+      rest.push(...c.tris);
+      continue;
+    }
+    const uv = c.uv;
+    out.push(
+      chart(m, part, [...c.tris], (v) => {
+        const s = c.slot.get(v) ?? 0;
+        return [uv[2 * s] ?? 0, uv[2 * s + 1] ?? 0];
+      }),
+    );
+  }
+  return rest.length > 0 ? [...out, ...chartsOf(m, part, rest)] : out;
+}
+
+/** Box charts of the given triangles: grouped by dominant normal axis, then by shared vertices. */
+function chartsOf(m: Mesh, part: number, only?: readonly number[]): Chart[] {
   const P = m.positions;
   const I = m.indices;
   const nt = I.length / 3;
-  const cls = new Int8Array(nt);
-  for (let t = 0; t < nt; t++) {
+  const cls = new Int8Array(nt).fill(-1);
+  for (const t of only ?? Array.from({ length: nt }, (_, i) => i)) {
     const [a, b, c] = [I[t * 3] ?? 0, I[t * 3 + 1] ?? 0, I[t * 3 + 2] ?? 0].map((v) => v * 3) as [
       number,
       number,
@@ -94,7 +134,7 @@ function chartsOf(m: Mesh, part: number): Chart[] {
   const parent = new Int32Array(nt).map((_, i) => i);
   const seen = new Map<string, number>();
   for (let t = 0; t < nt; t++)
-    for (let k = 0; k < 3; k++) {
+    for (let k = 0; k < 3 && (cls[t] ?? -1) >= 0; k++) {
       const v = (I[t * 3 + k] ?? 0) * 3;
       const q = [0, 1, 2].map((j) => Math.round((P[v + j] ?? 0) * 1e5)).join(',');
       const key = `${cls[t]}|${q}`;
@@ -102,33 +142,18 @@ function chartsOf(m: Mesh, part: number): Chart[] {
       if (other === undefined) seen.set(key, t);
       else parent[find(parent, t)] = find(parent, other);
     }
-  const byRoot = new Map<number, Chart>();
+  const byRoot = new Map<number, number[]>();
   for (let t = 0; t < nt; t++) {
+    if ((cls[t] ?? -1) < 0) continue;
     const r = find(parent, t);
-    let ch = byRoot.get(r);
-    if (!ch) {
-      ch = {
-        part,
-        axis: (cls[t] ?? 0) >> 1,
-        tris: [],
-        lo: [1e9, 1e9],
-        hi: [-1e9, -1e9],
-        x: 0,
-        y: 0,
-      };
-      byRoot.set(r, ch);
-    }
-    ch.tris.push(t);
-    const [pu, pv] = PLANE[ch.axis as 0 | 1 | 2];
-    for (let k = 0; k < 3; k++) {
-      const v = (I[t * 3 + k] ?? 0) * 3;
-      ch.lo[0] = Math.min(ch.lo[0], P[v + pu] ?? 0);
-      ch.lo[1] = Math.min(ch.lo[1], P[v + pv] ?? 0);
-      ch.hi[0] = Math.max(ch.hi[0], P[v + pu] ?? 0);
-      ch.hi[1] = Math.max(ch.hi[1], P[v + pv] ?? 0);
-    }
+    const list = byRoot.get(r);
+    if (list) list.push(t);
+    else byRoot.set(r, [t]);
   }
-  return [...byRoot.values()];
+  return [...byRoot.values()].map((tris) => {
+    const [pu, pv] = PLANE[((cls[tris[0] ?? 0] ?? 0) >> 1) as 0 | 1 | 2];
+    return chart(m, part, tris, (v) => [P[v * 3 + pu] ?? 0, P[v * 3 + pv] ?? 0]);
+  });
 }
 
 /** Shelf-pack every chart at `s` texels per metre; false when they do not fit. */
@@ -153,10 +178,17 @@ function pack(charts: readonly Chart[], s: number, size: number, pad: number): b
   return true;
 }
 
-export function buildAtlas(asset: CompiledAsset, size: number, pad = 2): Atlas {
+export function buildAtlas(
+  asset: CompiledAsset,
+  size: number,
+  pad = 2,
+  unwrap: Unwrap = 'lscm',
+): Atlas {
   const glow = glowRes(asset);
   const parts = asset.parts.filter((p) => isFinishable(p, glow));
-  const charts = parts.flatMap((p, i) => (p.mesh ? chartsOf(p.mesh, i) : []));
+  const charts = parts.flatMap((p, i) =>
+    p.mesh ? (unwrap === 'lscm' ? conformalCharts(p.mesh, i) : chartsOf(p.mesh, i)) : [],
+  );
   if (charts.length === 0)
     throw new Ts23dError('T3D_FINISH_INVALID', {
       cause: `'${asset.name}' has no part the finish can paint (all are see-through, painted, glowing or named finishes)`,
@@ -215,7 +247,6 @@ function splitPart(
   for (let t = 0; t < nt; t++) {
     const ci = chartOf[t] ?? 0;
     const c = charts[ci] as Chart;
-    const [pu, pv] = PLANE[c.axis as 0 | 1 | 2];
     for (let k = 0; k < 3; k++) {
       const v = m.indices[t * 3 + k] ?? 0;
       const key = ci * nv + v;
@@ -224,10 +255,8 @@ function splitPart(
         n = src.length;
         remap.set(key, n);
         src.push(v);
-        uv.push(
-          (c.x + ((m.positions[v * 3 + pu] ?? 0) - c.lo[0]) * s) / size,
-          (c.y + ((m.positions[v * 3 + pv] ?? 0) - c.lo[1]) * s) / size,
-        );
+        const [cu, cv] = c.at(v);
+        uv.push((c.x + (cu - c.lo[0]) * s) / size, (c.y + (cv - c.lo[1]) * s) / size);
       }
       indices[t * 3 + k] = n;
     }

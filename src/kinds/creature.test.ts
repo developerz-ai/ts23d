@@ -1,8 +1,14 @@
 import { describe, expect, it } from 'bun:test';
-import { Ts23dError, type Vec3 } from '../core/index.ts';
-import { creaturePlan } from './creature.ts';
+import { compile, Ts23dError, type Vec3 } from '../core/index.ts';
+import { creaturePlan, defineCreature } from './creature.ts';
 import { biology, effectiveDensity, limbMass } from './creature-biology.ts';
-import { allometricLimbR, boneCircumference, eyeRadius, massFromBones } from './creature-bones.ts';
+import {
+  allometricLimbR,
+  armatureOf,
+  boneCircumference,
+  eyeRadius,
+  massFromBones,
+} from './creature-bones.ts';
 import { creatureCreases } from './creature-creases.ts';
 import { pathLength, v3 } from './creature-curve.ts';
 import { bonesOf } from './creature-skeleton.ts';
@@ -135,4 +141,30 @@ describe('biology numbers', () => {
     for (const n of ['mouth_line', 'eyelids_l', 'eyelids_r', 'axilla_l', 'groin', 'hind_low_r'])
       expect(names).toContain(n);
   });
+});
+
+describe('bones as an armature (ctx.bone)', () => {
+  const s: CreatureSpec = { ...wolf, family: 'canid', build: { depth: 0.5, width: 0.55 } };
+
+  it('without a jaw hinge there is no jaw bone; legs are mirrored _l / _r chains', () => {
+    const names = armatureOf(bonesOf(s), null).map((b) => b.name);
+    expect(names).not.toContain('jaw');
+    for (const n of ['spine_0', 'neck_0', 'head', 'tail_0', 'fore_l_0', 'fore_r_0', 'hind_l_2'])
+      expect(names).toContain(n);
+    expect(names.filter((n) => n.startsWith('fore_l_')).length).toBe(
+      names.filter((n) => n.startsWith('fore_r_')).length,
+    );
+  });
+
+  it('the compiled creature carries spine, neck, head, jaw, tail and limb bones; the jaw is a part', () => {
+    const a = defineCreature({ name: 'wolf_rig', spec: s });
+    const c = compile(a, { lod: 1 });
+    const bones = c.skeleton?.bones ?? [];
+    const names = bones.map((b) => b.name);
+    for (const n of ['spine_0', 'neck_0', 'head', 'jaw', 'tail_0', 'fore_l_0', 'hind_r_0'])
+      expect(names).toContain(n);
+    expect(bones.find((b) => b.name === 'jaw')?.parent).toBe('head');
+    expect(names.length).toBeLessThanOrEqual(64);
+    expect(c.parts.map((p) => p.name)).toContain('jaw');
+  }, 60_000);
 });

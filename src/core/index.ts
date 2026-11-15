@@ -71,6 +71,7 @@ export {
   type UseOptions,
   type WeatherCoverage,
 } from './asset.ts';
+export * from './clip.ts';
 export * from './define-part.ts';
 export { type ErrorCode, type ErrorDetails, notImplemented, Ts23dError } from './errors.ts';
 export { defineFamily, type Family, type FamilyDefinition, type Variant } from './family.ts';
@@ -78,9 +79,12 @@ export { type JointFit, type JointIssue, jointFit } from './joint-fit.ts';
 export {
   type Bounds,
   boundsOf,
+  checkMeshAttributes,
   type Mesh,
   MeshBuilder,
+  type Morph,
   merge,
+  SKIN_INFLUENCES,
   translate,
   triangleCount,
   type Vertex,
@@ -94,6 +98,7 @@ export {
   type Pose,
   rateOf,
 } from './motion-pose.ts';
+export * from './neural-task.ts';
 export type { AssetPhysics, BodyKind, ColliderKind, PartPhysics, RealMass } from './physics.ts';
 export { encodePng } from './png.ts';
 export { orient2d, orient3d } from './predicates.ts';
@@ -107,6 +112,8 @@ export {
   section,
   wrap,
 } from './section.ts';
+export * from './skeleton.ts';
+export * from './style.ts';
 export { type Affine, affine, applyAffine, frame, type Placement, place } from './transform.ts';
 export {
   checkTune,

@@ -196,7 +196,7 @@ Every stage has zero runtime dependencies ([ADR 005](docs/decisions/005-zero-run
 
 > **Status: early (0.x).** The core loop works: write, build, QA, shot, hero, review, with
 > textures, trees, sculpt, terrain and the gallery's passing recipes. Still declared and throwing
-> `T3D_NOT_IMPLEMENTED` (As of 2026-11): `photoMatch`, `silhouetteIoU`, `localGenerator`, `kubeezImages`. Shipped neural-module pieces: `importGlb`, `refine`, and `t3d finish --model http`. See the [roadmap](docs/plans/roadmap.md). Expect breaking changes.
+> `T3D_NOT_IMPLEMENTED` (As of 2026-11): `localGenerator`, `kubeezImages`. Shipped neural-module pieces: `importGlb`, `refine`, and `t3d finish --model http`. See the [roadmap](docs/plans/roadmap.md). Expect breaking changes.
 
 ## A recipe
 

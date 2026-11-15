@@ -2,16 +2,19 @@
 // heads (sculpt.ts builds the field). SMOOTH normals from the field gradient (central differences),
 // shared vertices. `resolution` is the cell edge in METRES, the LOD knob:
 // `ctx.pick([0.01, 0.03, 0.08])`. Default mesher is surface nets (see surface-nets.ts for why);
-// `mesher: 'cubes'` for marching cubes. UVs: planar along the normal's dominant axis, U at true
+// `mesher: 'cubes'` for marching cubes. `detail` boxes mesh finer (resolution / factor) and stitch
+// into the same closed surface (surface-nets-detail.ts; nets only). UVs: planar along the normal's dominant axis, U at true
 // metres, V mirrored every band so it never leaves the strip.
 //   triangles = 2 × grid edges the surface crosses (nets) ≈ 2 · area / resolution² · 1.5
 
 import { type Mesh, MeshBuilder, type Vec3 } from '../core/index.ts';
 import { type StripId, stripRect } from '../material/index.ts';
 import { invalid } from './check.ts';
+import type { DetailRegion } from './sdf-detail.ts';
 import { sampleGrid } from './sdf-grid.ts';
 import { mirroredV, stripU, stripVMetres } from './strip-uv.ts';
 import { marchingCubes, surfaceNets } from './surface-nets.ts';
+import { surfaceNetsDetail } from './surface-nets-detail.ts';
 
 /** One colour, or one per vertex from its position and unit normal (moss on top, dark in cracks). */
 export type SdfColor = Vec3 | ((p: Vec3, n: Vec3) => Vec3);
@@ -31,13 +34,23 @@ export interface SdfOptions {
   readonly lipschitz?: number;
   /** 'y': the field is mirror-symmetric across y = 0 — snap the grid so the mesh is too. */
   readonly symmetry?: 'y';
+  /** Boxes meshed at resolution / factor (face, paws), ≥ 1 cell apart; nets mesher only. */
+  readonly detail?: readonly DetailRegion[];
 }
 
 export function sdf(o: SdfOptions): Mesh {
   const lip = o.lipschitz ?? 1.25;
   if (!(lip >= 1)) invalid(`sdf lipschitz is ${lip}`, 'use ≥ 1 (1 = exact distance field)');
-  const g = sampleGrid(o.field, o.bounds, o.resolution, lip, o.symmetry === 'y');
-  const raw = o.mesher === 'cubes' ? marchingCubes(g) : surfaceNets(g);
+  const detail = o.detail ?? [];
+  if (detail.length > 0 && o.mesher === 'cubes')
+    invalid('sdf detail regions need the nets mesher', "drop mesher: 'cubes' or the detail boxes");
+  const g = sampleGrid(o.field, o.bounds, o.resolution, lip, o.symmetry === 'y', detail);
+  const raw =
+    o.mesher === 'cubes'
+      ? marchingCubes(g)
+      : g.detail.length > 0
+        ? surfaceNetsDetail(g, g.detail)
+        : surfaceNets(g);
   if (raw.tris.length === 0)
     invalid(
       'sdf field has no surface inside its bounds (never crosses zero)',
@@ -46,7 +59,8 @@ export function sdf(o: SdfOptions): Mesh {
   const strip = o.strip ?? 'plain';
   const rect = stripRect(strip);
   const vm = stripVMetres(strip);
-  const e = g.h * 0.5;
+  // Gradient step: half the finest cell (the coarse cell without detail).
+  const e = (g.h * 0.5) / g.detail.reduce((f, d) => Math.max(f, d.f), 1);
   const q: [number, number, number] = [0, 0, 0];
   const at = (x: number, y: number, z: number): number => {
     q[0] = x;

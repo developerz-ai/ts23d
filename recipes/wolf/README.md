@@ -19,6 +19,7 @@ muzzle and cheeks, the shoulder/neck mane, black tail tip.
 | Shoulder height | 0.80–0.85 | withers 0.84 incl. mane (test: 0.80–0.86) | same |
 | Mass | European mean 38.5, North American 36; females 2.3–4.5 lighter | **40** declared, ±25 % (`real.mass`); model 30–60 (test) | same |
 | Skull | 0.23–0.28 long, 0.13–0.15 wide | head **0.265** long, width 0.55 × length | same |
+| Coat | winter guard hairs 60–70 mm mid-back; shoulders usually ≤ 90 mm, up to 110–130 mm (the mane/"cape"); dense short underfur | fur cards by zone; coated outline width **0.29** vs body 0.27–0.28 (`real.width` is the coated box) | same, "Description" (fur) |
 | Ears | 0.09–0.11 high, "relatively small and triangular" | **0.10**, erect blades with a pale cup | same |
 | Winter fur | back 60–70 mm; shoulders ≤ 90, up to 110–130 (a crest on the neck) | coat shell 3 cm (mass gate), mane 4 cm (`build.ruff`) | same |
 
@@ -62,14 +63,21 @@ the `fur_neutral` strip (D24 fix) so the grey-ochre vertex colour is not tinted 
 
 ## Photos per view (Wikimedia Commons; linked, never committed)
 
-| View | Photo |
-|---|---|
-| Category (Eurasian wolf, many standing side views) | [Category:Canis lupus lupus](https://commons.wikimedia.org/wiki/Category:Canis_lupus_lupus) |
-| 3/4 front, standing | [Loup gris (Canis lupus).jpg](https://commons.wikimedia.org/wiki/File:Loup_gris_(Canis_lupus_).jpg) (featured picture, Clément Bardot) |
-| Side, standing in snow (winter coat, tail hang) | [Canis lupus standing in snow.jpg](https://commons.wikimedia.org/wiki/File:Canis_lupus_standing_in_snow.jpg) |
-| Front / face | [Endangered gray wolf (Canis lupus).jpg](https://commons.wikimedia.org/wiki/File:Endangered_gray_wolf_(Canis_lupus).jpg) |
+| View | Photo | Licence · author |
+|---|---|---|
+| Category (Eurasian wolf, many standing views) | [Category:Canis lupus lupus](https://commons.wikimedia.org/wiki/Category:Canis_lupus_lupus) | — |
+| Side, standing (Eurasian wolf, summer coat, facing left; vegetation behind) | [Canis lupus - Wildpark Knüll 03.jpg](https://commons.wikimedia.org/wiki/File:Canis_lupus_-_Wildpark_Kn%C3%BCll_03.jpg) | CC BY-SA 3.0 · H. Zell |
+| Front, standing in snow (grey wolf, winter coat) | [Standing Wolf (7322993830).jpg](https://commons.wikimedia.org/wiki/File:Standing_Wolf_(7322993830).jpg) | CC BY 2.0 · Ellie Attebery |
+| 3/4 front, walking in snow (grey wolf, winter coat) | [Gray Wolf (6545954933).jpg](https://commons.wikimedia.org/wiki/File:Gray_Wolf_(6545954933).jpg) | Public domain · USFWS Midwest Region |
+| Head portrait (profile: skull, cheek ruff, ear set) | [Wolf-Standing Tall (41830604430) (profile).jpg](https://commons.wikimedia.org/wiki/File:Wolf-Standing_Tall_(41830604430)_(profile).jpg) | CC BY-SA 2.0 · Arwen_7 |
+| Head portrait (3/4) | [Loup gris (Canis lupus).jpg](https://commons.wikimedia.org/wiki/File:Loup_gris_(Canis_lupus_).jpg) | featured picture · Clément Bardot |
 
-The file names were found by search; the views were not checked image by image (unverified).
+Each photo was opened and its view checked image by image (2026-11-15); the earlier table had them
+mislabelled (its "3/4 standing" was a face portrait, "side in snow" frontal, "front" lying down).
+`bun run ref wolf` fetches the side, front and 3/4 rows, but its segmentation fails on all three
+(2026-11-15: the masks pick up vegetation, snow and trees, not the wolf), so no `ref.json` is
+committed: a wrong silhouette would mislead photo-match. Needed: plain-background standing side
+and front photos (or a segmentation that copes with clutter).
 
 ## Biology (held by the kind and the tests)
 
@@ -84,13 +92,16 @@ The file names were found by search; the views were not checked image by image (
 
 ## Critique (honest, from `hero.png`, `sheet.png`, `critique.json`)
 
-Reads as a grey wolf from the side: deep chest over long legs with the elbow at the chest floor,
-a tucked waist, neck rising forward to a heavy canid head with a stop, bushy black-tipped tail
-hanging to the hocks, darker saddle over buff flanks, cream underparts, dark forelegs lines.
+Form (2026-11-15 rebuild, creature kind): the trunk is bones + muscles, not three blended blobs —
+a deep, narrow ribcage (depth ÷ width 1.8, no blend swell) whose underline rises behind the elbow
+into a tucked loin, withers the highest point of the back, scapula and triceps reading on the
+shoulder, the biceps femoris / semitendinosus seam on the thigh, a straight narrow forearm with a
+small elbow point, small bony stifle and hock. The neck has an oval section, widens toward the
+head and runs into the skull behind the jaw angle; the jaw is its own part (hinge pivot); the kind
+exports an Armature (spine, neck, head, jaw, tail, four legs × 4 bones).
 Weaker than a game-ready wolf up close:
-- fur is a smooth shell: no guard-hair clumps or strands, the mane is a soft swell (fur shells /
-  cards are planned); the grizzle is vertex colour at ~1 cm, so it reads as soft streaks;
-- ears are still thin blades (broader at the base now); the cheek fur is a smooth lobe;
-- toes read slightly lilac under the cool key light (grey-buff coat, dark pads underneath);
-- LOD2 legs are 6-sided tubes; paws are rounded spindles — the outline holds (IoU ≥ 0.92).
-Next: fur shells/cards, a jaw part that opens, tail as its own swaying part, per-zone hair flow.
+- the trunk still reads long against the legs in a straight side view (head-body, neck and pose
+  are the recipe's numbers; a shorter `neck` or a higher `pose.neck` would compact it);
+- the head part is lighter than the neck and its cheek lobe still shows a rim from behind (coat
+  paint and fur cards are separate work);
+- LOD2 legs are 6-sided tubes; paws are rounded spindles — the outline holds.

@@ -1,15 +1,32 @@
-// Secondary maps derived from the finished albedo. HEURISTICS, not measurements — an image model
-// gives colour only:
-//   roughness = trim roughness + local luminance variation (grime, rust and wear break up the
-//               sheen) + darkening vs the base colour (dirt is matte)
-//   metal     = trim metal, faded where the finish changed the colour a lot (paint/rust over metal)
-//   normal    = a detail normal from the albedo's high-pass (luminance as a height field), only
-//               inside one part, tangent space with +Y toward decreasing V (as the trim sheet)
+// Secondary maps for the finish atlas, MEASURED rather than guessed from the finished albedo (an
+// image model gives colour only):
+//   roughness = the trim roughness under the texel (the strip's own height graph made it), plus
+//               the height's cavity (crevices hold dirt and read matte) when a height is given
+//   metal     = the trim metalness under the texel
+//   normal    = the gradient of a world-metre height sampled at each texel's surface point
+//               (`graphHeight`: a material's height graph projected triplanar), tangent space
+//               with +Y toward decreasing V (as the trim sheet); flat without a height
+// Gradients use only texels of the same part, over the true metres between their surface points.
 
+import { Ts23dError } from '../core/index.ts';
+import type { MaterialGraph, TexContext } from '../material/index.ts';
 import type { Texels } from './texels.ts';
 
-const lum = (a: Uint8Array, i: number): number =>
-  0.2126 * (a[i * 4] ?? 0) + 0.7152 * (a[i * 4 + 1] ?? 0) + 0.0722 * (a[i * 4 + 2] ?? 0);
+/** Surface relief in metres at a world point with unit normal n. */
+export type HeightAt = (
+  x: number,
+  y: number,
+  z: number,
+  nx: number,
+  ny: number,
+  nz: number,
+) => number;
+
+export interface DeriveOptions {
+  readonly height?: HeightAt;
+  /** Roughness (0..255) added per metre⁻¹ of concave height curvature. Default 2. */
+  readonly cavityRough?: number;
+}
 
 export interface DerivedMaps {
   /** R occlusion (trim), G roughness, B metal: glTF metallicRoughness + occlusion layout. */
@@ -17,51 +34,110 @@ export interface DerivedMaps {
   readonly normal: Uint8Array;
 }
 
-export function deriveMaps(t: Texels, albedo: Uint8Array, strength = 2): DerivedMaps {
+/**
+ * A material graph's height as a world-metre field: evaluated once on a 1 m tile, sampled
+ * triplanar (the three axis-plane projections blended by |n|⁴), U wrapping and V mirrored so
+ * every plane tiles without a seam. Times the graph's `depth`.
+ */
+export function graphHeight(g: MaterialGraph, seed = 1, texels = 256): HeightAt {
+  if (!(Number.isInteger(texels) && texels >= 8 && texels <= 4096))
+    throw new Ts23dError('T3D_FINISH_INVALID', {
+      cause: `graphHeight texels is ${texels}`,
+      fix: 'use a whole number of texels per metre from 8 to 4096, e.g. 256',
+    });
+  const ctx = {
+    w: texels,
+    h: texels,
+    metresU: 1,
+    metresV: 1,
+    wrapU: true,
+    seed,
+    tileU: 1,
+  } satisfies TexContext;
+  const h = g.height.eval(ctx);
+  const depth = g.depth ?? 0.003;
+  const N = texels;
+  const at = (u: number, v: number): number => {
+    const x = (((Math.floor(u * N) % N) + N) % N) | 0;
+    const p = ((Math.floor(v * N) % (2 * N)) + 2 * N) % (2 * N);
+    const y = p < N ? p : 2 * N - 1 - p;
+    return h[y * N + x] ?? 0;
+  };
+  return (x, y, z, nx, ny, nz) => {
+    const wx = nx ** 4;
+    const wy = ny ** 4;
+    const wz = nz ** 4;
+    const s = wx + wy + wz || 1;
+    return ((wx * at(y, z) + wy * at(x, z) + wz * at(x, y)) / s) * depth;
+  };
+}
+
+export function deriveMaps(t: Texels, albedo: Uint8Array, o: DeriveOptions = {}): DerivedMaps {
   const N = t.size;
-  const L = new Float32Array(N * N);
-  for (let i = 0; i < N * N; i++) L[i] = lum(albedo, i);
+  if (albedo.length !== N * N * 4)
+    throw new Ts23dError('T3D_FINISH_INVALID', {
+      cause: `deriveMaps: albedo is ${albedo.length} bytes for a ${N}² atlas`,
+      fix: 'pass the RGBA8 albedo of the same atlas (size² × 4 bytes)',
+    });
+  const P = t.position;
+  const Nm = t.normal;
+  const H = new Float32Array(N * N);
+  if (o.height)
+    for (let i = 0; i < N * N; i++)
+      if ((t.part[i] ?? -1) >= 0)
+        H[i] = o.height(
+          P[i * 3] ?? 0,
+          P[i * 3 + 1] ?? 0,
+          P[i * 3 + 2] ?? 0,
+          Nm[i * 3] ?? 0,
+          Nm[i * 3 + 1] ?? 0,
+          Nm[i * 3 + 2] ?? 1,
+        );
   const orm = new Uint8Array(N * N * 4);
   const normal = new Uint8Array(N * N * 4);
-  const at = (x: number, y: number, p: number, fallback: number): number => {
-    if (x < 0 || y < 0 || x >= N || y >= N) return fallback;
-    const j = y * N + x;
-    return t.part[j] === p ? (L[j] ?? fallback) : fallback;
+  const cavK = o.cavityRough ?? 2;
+  /** Neighbour j of i if it is on the same part, else i itself. */
+  const same = (i: number, x: number, y: number): number =>
+    x >= 0 && y >= 0 && x < N && y < N && t.part[y * N + x] === t.part[i] ? y * N + x : i;
+  const dist = (a: number, b: number): number =>
+    Math.hypot(
+      (P[a * 3] ?? 0) - (P[b * 3] ?? 0),
+      (P[a * 3 + 1] ?? 0) - (P[b * 3 + 1] ?? 0),
+      (P[a * 3 + 2] ?? 0) - (P[b * 3 + 2] ?? 0),
+    );
+  /** dH per metre between neighbours a and b (0 when they are one point). */
+  const slope = (a: number, b: number): number => {
+    const d = dist(a, b);
+    return d > 1e-9 ? ((H[a] ?? 0) - (H[b] ?? 0)) / d : 0;
   };
   for (let y = 0; y < N; y++)
     for (let x = 0; x < N; x++) {
       const i = y * N + x;
-      const p = t.part[i] ?? -1;
-      const h = L[i] ?? 0;
-      if (p < 0) {
+      if ((t.part[i] ?? -1) < 0) {
         orm.set([255, 204, 0, 255], i * 4);
         normal.set([128, 128, 255, 255], i * 4);
         continue;
       }
-      let s = 0;
-      let s2 = 0;
-      for (let dy = -1; dy <= 1; dy++)
-        for (let dx = -1; dx <= 1; dx++) {
-          const v = at(x + dx, y + dy, p, h);
-          s += v;
-          s2 += v * v;
-        }
-      const std = Math.sqrt(Math.max(0, s2 / 9 - (s / 9) ** 2));
-      const darker = Math.max(0, lum(t.base, i) - h);
-      const change = Math.abs(lum(t.base, i) - h);
-      const rough = (t.orm[i * 4 + 1] ?? 204) + 1.5 * std + 0.5 * darker;
-      const metal = (t.orm[i * 4 + 2] ?? 0) * Math.max(0, 1 - change / 60);
+      const [l, r, u, d] = [
+        same(i, x - 1, y),
+        same(i, x + 1, y),
+        same(i, x, y - 1),
+        same(i, x, y + 1),
+      ];
+      const gx = slope(r, l);
+      const gy = slope(u, d);
+      // Concave curvature (1/m) of the height: second difference over the neighbour spacing.
+      const s = Math.max(1e-9, (dist(l, r) + dist(u, d)) / 4);
+      const lap =
+        ((H[l] ?? 0) + (H[r] ?? 0) + (H[u] ?? 0) + (H[d] ?? 0) - 4 * (H[i] ?? 0)) / (s * s);
+      const rough = (t.orm[i * 4 + 1] ?? 204) + cavK * Math.max(0, lap);
       orm.set(
-        [t.orm[i * 4] ?? 255, Math.min(255, Math.round(rough)), Math.round(metal), 255],
+        [t.orm[i * 4] ?? 255, Math.min(255, Math.round(rough)), t.orm[i * 4 + 2] ?? 0, 255],
         i * 4,
       );
-      const gx = (at(x + 1, y, p, h) - at(x - 1, y, p, h)) / 510;
-      const gy = (at(x, y - 1, p, h) - at(x, y + 1, p, h)) / 510;
-      const nx = -gx * strength;
-      const ny = -gy * strength;
-      const len = Math.hypot(nx, ny, 1);
+      const len = Math.hypot(gx, gy, 1);
       normal.set(
-        [nx / len, ny / len, 1 / len].map((c) => Math.round((c * 0.5 + 0.5) * 255)).concat(255),
+        [-gx / len, -gy / len, 1 / len].map((c) => Math.round((c * 0.5 + 0.5) * 255)).concat(255),
         i * 4,
       );
     }

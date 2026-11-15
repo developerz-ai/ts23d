@@ -39,6 +39,7 @@ of recipes needs review; critique scores disagree between assets.
 | Readability | silhouette first, value before colour, focal contrast | `assertLodSilhouette`; focal check **planned** |
 | Exemplar | the asset others are judged against | critique side by side |
 | Critique score | 0–10 per criterion: silhouette, proportions, materials, detail, wear, lod, technical; pass ≥ 8 | `critique.json`, recipes gate (warn mode today) |
+| Calibrated score | the same 0–10 predicted from a measured metric vector, fitted on CC0 game assets + degraded copies; a self-score may sit at most 1.5 above it, a blind agent-panel median 2.5 (the panel decides the flagship floor); ratchet in `recipes/critique-baseline.json`; flagship floor 8.5 | `t3d critique` prints it; `calibratedScore`; recipes gate (`T3D_CRITIQUE_*`) |
 
 ## Quality bar
 - [ ] Pillars, palette roles, scale rules, wear and budgets live in one imported module.
@@ -63,6 +64,10 @@ bun run t3d hero recipes/<name>/<name>.ts --out renders     # READ hero.png
 bun run t3d blueprint recipes/<name>/<name>.ts --out renders  # READ blueprint.png
 bun run site:dev                          # gallery: the set side by side
 bun run t3d critique recipes/<name>/<name>.ts --out tmp/critique  # READ every PNG, fill critique.json
+#   ↳ prints `calibrated X / 10 · claimed Y`: score what you see; a claim > 1.5 over X is T3D_CRITIQUE_INFLATED
+bun run golden brief recipes/<name>/<name>.ts  # blind panel: 3 independent agents each write review-<k>.json
+bun run golden attest recipes/<name>/<name>.ts # median → critique.json (reviewer agent-panel; decides the flagship floor)
+bun run golden baseline <name>            # after bun run shots: ratchet the calibrated baseline up
 bun run shots <name>                      # refresh committed out/
 ```
 
@@ -77,5 +82,6 @@ bun run shots <name>                      # refresh committed out/
 Shipped: `definePalette`/`palettes`, one trim sheet, `defineFamily`, `ctx.use`, shared parts,
 `assertTexelDensity`, `assertValueRange`, `assertLodSilhouette`, `t3d critique` + `critique.json`,
 gallery site. Planned / gaps: palette-membership and cross-asset consistency gates (none built in),
-focal/value checks, optional CI fresh-eyes reviewer, enforced critique mode, `variations(n)`.
+focal/value checks, optional CI fresh-eyes reviewer, enforced critique mode (calibrated inflation and
+regression are enforced; the flagship floor reports until slice 17), `variations(n)`.
 Neutral positioning: the free code-based option, no claims against other tools.

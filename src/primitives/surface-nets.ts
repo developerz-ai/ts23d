@@ -17,50 +17,63 @@ export interface RawSurface {
 const CORNER = [0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1];
 const EDGE = [0, 1, 1, 2, 2, 3, 3, 0, 4, 5, 5, 6, 6, 7, 7, 4, 0, 4, 1, 5, 2, 6, 3, 7];
 
-export function surfaceNets(g: Grid): RawSurface {
-  const { nx, ny, nz, values: v, h, origin: o } = g;
-  const cells = new Int32Array((nx - 1) * (ny - 1) * (nz - 1)).fill(-1);
-  const pos: number[] = [];
-  const c = new Float64Array(8);
-  for (let z = 0; z < nz - 1; z++)
-    for (let y = 0; y < ny - 1; y++)
-      for (let x = 0; x < nx - 1; x++) {
-        let mask = 0;
-        for (let k = 0; k < 8; k++) {
-          const val =
-            v[
-              x +
-                (CORNER[k * 3] ?? 0) +
-                nx * (y + (CORNER[k * 3 + 1] ?? 0) + ny * (z + (CORNER[k * 3 + 2] ?? 0)))
-            ] ?? 1;
-          c[k] = val;
-          if (val < 0) mask |= 1 << k;
-        }
-        if (mask === 0 || mask === 255) continue;
-        let sx = 0;
-        let sy = 0;
-        let sz = 0;
-        let n = 0;
-        for (let e = 0; e < 12; e++) {
-          const a = EDGE[e * 2] ?? 0;
-          const b = EDGE[e * 2 + 1] ?? 0;
-          const va = c[a] ?? 0;
-          const vb = c[b] ?? 0;
-          if (va < 0 === vb < 0) continue;
-          const t = va / (va - vb);
-          sx += (CORNER[a * 3] ?? 0) + t * ((CORNER[b * 3] ?? 0) - (CORNER[a * 3] ?? 0));
-          sy +=
-            (CORNER[a * 3 + 1] ?? 0) + t * ((CORNER[b * 3 + 1] ?? 0) - (CORNER[a * 3 + 1] ?? 0));
-          sz +=
-            (CORNER[a * 3 + 2] ?? 0) + t * ((CORNER[b * 3 + 2] ?? 0) - (CORNER[a * 3 + 2] ?? 0));
-          n++;
-        }
-        cells[x + (nx - 1) * (y + (ny - 1) * z)] = pos.length / 3;
-        pos.push(o[0] + (x + sx / n) * h, o[1] + (y + sy / n) * h, o[2] + (z + sz / n) * h);
-      }
-  const tris: number[] = [];
-  const cell = (x: number, y: number, z: number): number =>
-    cells[x + (nx - 1) * (y + (ny - 1) * z)] ?? 0;
+/**
+ * Surface-nets vertex of cell (x, y, z) in point grid `v` (nx × ny × …): writes the mean edge
+ * crossing, in cell units from the cell's low corner, into `out`; false when no edge crosses.
+ */
+export function cellOffset(
+  v: Float32Array,
+  nx: number,
+  ny: number,
+  x: number,
+  y: number,
+  z: number,
+  out: Float64Array,
+): boolean {
+  let mask = 0;
+  for (let k = 0; k < 8; k++) {
+    const val =
+      v[
+        x +
+          (CORNER[k * 3] ?? 0) +
+          nx * (y + (CORNER[k * 3 + 1] ?? 0) + ny * (z + (CORNER[k * 3 + 2] ?? 0)))
+      ] ?? 1;
+    C[k] = val;
+    if (val < 0) mask |= 1 << k;
+  }
+  if (mask === 0 || mask === 255) return false;
+  let sx = 0;
+  let sy = 0;
+  let sz = 0;
+  let n = 0;
+  for (let e = 0; e < 12; e++) {
+    const a = EDGE[e * 2] ?? 0;
+    const b = EDGE[e * 2 + 1] ?? 0;
+    const va = C[a] ?? 0;
+    const vb = C[b] ?? 0;
+    if (va < 0 === vb < 0) continue;
+    const t = va / (va - vb);
+    sx += (CORNER[a * 3] ?? 0) + t * ((CORNER[b * 3] ?? 0) - (CORNER[a * 3] ?? 0));
+    sy += (CORNER[a * 3 + 1] ?? 0) + t * ((CORNER[b * 3 + 1] ?? 0) - (CORNER[a * 3 + 1] ?? 0));
+    sz += (CORNER[a * 3 + 2] ?? 0) + t * ((CORNER[b * 3 + 2] ?? 0) - (CORNER[a * 3 + 2] ?? 0));
+    n++;
+  }
+  out[0] = sx / n;
+  out[1] = sy / n;
+  out[2] = sz / n;
+  return true;
+}
+const C = new Float64Array(8);
+
+/**
+ * Quad emitter over vertex positions `pos`: quad(a, b, c, d, out) pushes two triangles (CCW seen
+ * from outside when `out`, else flipped), split along the diagonal whose triangles fold least
+ * (no creases on thin features).
+ */
+export function quadEmitter(
+  pos: readonly number[],
+  tris: number[],
+): (a: number, b: number, c: number, d: number, out: boolean) => void {
   const P = (i: number, k: number): number => pos[i * 3 + k] ?? 0;
   /** Unit normal of triangle (a, b, c) written into n. */
   const n1 = new Float64Array(3);
@@ -82,9 +95,8 @@ export function surfaceNets(g: Grid): RawSurface {
   };
   const flatness = (): number =>
     (n1[0] ?? 0) * (n2[0] ?? 0) + (n1[1] ?? 0) * (n2[1] ?? 0) + (n1[2] ?? 0) * (n2[2] ?? 0);
-  const quad = (a: number, b: number, cc: number, d: number, out: boolean): void => {
+  return (a, b, cc, d, out) => {
     const [q0, q1, q2, q3] = out ? [a, b, cc, d] : [a, d, cc, b];
-    // Split along the diagonal whose two triangles fold least (no creases on thin features).
     normal(q0, q1, q2, n1);
     normal(q0, q2, q3, n2);
     const along02 = flatness();
@@ -93,6 +105,28 @@ export function surfaceNets(g: Grid): RawSurface {
     if (along02 >= flatness()) tris.push(q0, q1, q2, q0, q2, q3);
     else tris.push(q0, q1, q3, q1, q2, q3);
   };
+}
+
+export function surfaceNets(g: Grid): RawSurface {
+  const { nx, ny, nz, values: v, h, origin: o } = g;
+  const cells = new Int32Array((nx - 1) * (ny - 1) * (nz - 1)).fill(-1);
+  const pos: number[] = [];
+  const s = new Float64Array(3);
+  for (let z = 0; z < nz - 1; z++)
+    for (let y = 0; y < ny - 1; y++)
+      for (let x = 0; x < nx - 1; x++) {
+        if (!cellOffset(v, nx, ny, x, y, z, s)) continue;
+        cells[x + (nx - 1) * (y + (ny - 1) * z)] = pos.length / 3;
+        pos.push(
+          o[0] + (x + (s[0] ?? 0)) * h,
+          o[1] + (y + (s[1] ?? 0)) * h,
+          o[2] + (z + (s[2] ?? 0)) * h,
+        );
+      }
+  const tris: number[] = [];
+  const cell = (x: number, y: number, z: number): number =>
+    cells[x + (nx - 1) * (y + (ny - 1) * z)] ?? 0;
+  const quad = quadEmitter(pos, tris);
   for (let z = 1; z < nz - 1; z++)
     for (let y = 1; y < ny - 1; y++)
       for (let x = 1; x < nx - 1; x++) {

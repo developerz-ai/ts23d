@@ -1,10 +1,19 @@
 // Score one trial: compile the recipe with trial values and turn each declared objective into a
 // scalar to minimise (silhouette 1 − IoU, measures relative error, art shortfalls, triangles ÷
-// budget, or the recipe's own function), then the weighted sum. Same values in, same numbers out.
+// budget, photo-reference distance, or the recipe's own function), then the weighted sum. Same
+// values in, same numbers out.
 
 import { type Asset, type CompiledAsset, compile, type Lod, Ts23dError } from '../core/index.ts';
-import { ART_RENDER, measure, measureArt } from '../qa/index.ts';
-import { cameraFor, renderBeauty } from '../render/index.ts';
+import {
+  ART_RENDER,
+  compareFingerprints,
+  fingerprint,
+  measure,
+  measureArt,
+  type RefView,
+  refFingerprint,
+} from '../qa/index.ts';
+import { cameraFor, photoView, renderBeauty } from '../render/index.ts';
 import { silhouetteIoU } from './mask.ts';
 import type { TunedValues, TuneObjective } from './types.ts';
 
@@ -61,6 +70,25 @@ function artError(asset: Asset, lod0: CompiledAsset, lod2: CompiledAsset): numbe
   const rest = Math.max(0, metrics.rest.min - metrics.rest.share);
   const focal = metrics.focal.declared.length ? 1 - metrics.focal.focalShare : 0;
   return 1 - worst + rest + focal;
+}
+
+/**
+ * Distance of the asset from one committed reference view (`ref.json`), rendered from the view's
+ * solved camera: (1 − silhouette IoU) + value EMD + spectrum gap, lower is better. Rendered 3:2 at
+ * `height` px; the fingerprint crops and fits, so only the camera's direction and lens matter.
+ * Until `kind: 'photo'` lands in TuneObjective, use it as
+ * `{ kind: 'custom', name: 'photo side', score: (a) => photoError(a, ref.views.side) }`.
+ */
+export function photoError(asset: CompiledAsset, view: RefView | undefined, height = 256): number {
+  if (!view?.camera)
+    throw new Ts23dError('T3D_TUNE_INVALID', {
+      cause: `'${asset.name}' photo objective: ${view ? 'the reference view has no solved camera' : 'no such reference view'}`,
+      fix: 'solve the camera with photoMatch({ marks }) and re-run `bun run ref <recipe>` so ref.json carries it',
+    });
+  const width = Math.round(height * 1.5);
+  const { rgba } = photoView(asset, view.camera, width, height);
+  const d = compareFingerprints(fingerprint(rgba, width, height), refFingerprint(view));
+  return 1 - d.iou + d.valueEmd + d.spectrumGap;
 }
 
 /** Compile `asset` with `values` and score every objective. */

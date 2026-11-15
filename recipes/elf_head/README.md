@@ -23,6 +23,13 @@ collar, a **teal cloak** and a **silver leaf clasp** — cut as a collectible bu
 | ear | human structure; helix tip ×1.3 the length beyond the oval, swept 0.35, total ≈ ×2.3 the human ear, lobe ×0.6 | 0.263 H | **×2.3** |
 | expression lines | none (smooth) | some | `lines: 0` |
 
+## Skull stage (2026-11)
+The head is now the CC0 base warped by `ELF_FACE` (`spec.ts`): ears ×1.7 drawn back and up to a
+point, eyes ×1.15 set ×1.166 (IPD 64 mm), almond tilt +2 % H, cheekbones +2 % H, jaw ×0.85 dropped
+5 % H, slender neck ×0.85; soft planes, no lines (`forms`), no beard shadow. It is checked against
+`ELF_PROPORTIONS` — the human bands with the declared deltas (eyes ×1.15, a longer lower face, a
+slender neck 0.5–0.75 × head breadth). The table above records the earlier primitive head.
+
 ## Built by
 `spec.ts`, `hair.ts` (parted mass + long locks + two flat ribbon locks in front — three strands
 side by side, 14 → 7 mm wide), `clothes.ts` (tunic, one tall blended collar, a hemmed cloak, clasp)

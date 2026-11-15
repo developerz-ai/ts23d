@@ -11,6 +11,10 @@ import type { EyeSpec } from '../_lib/bust/eye.ts';
 import { type HeadSpec, HUMAN, landmarks } from '../_lib/bust/head.ts';
 import type { V } from '../_lib/bust/kit.ts';
 import type { NeckRange, TorsoSpec } from '../_lib/bust/torso.ts';
+import { HUMAN_PROPORTIONS, type ProportionTable } from '../_lib/face/proportions.ts';
+import { GOBLIN as GOBLIN_RACE } from '../_lib/face/races.ts';
+import { skullLandmarks, skullOf } from '../_lib/face/skull.ts';
+import type { Character, FaceSpec } from '../_lib/face/spec.ts';
 
 export const H = 0.19;
 export const CUT_Z = 0.08;
@@ -80,10 +84,38 @@ export const SPEC: HeadSpec = {
 
 export const L = landmarks(SPEC);
 
+/** The goblin's face on the CC0 base (race preset ../_lib/face/races.ts, pushed to the design):
+ *  eyes ×1.45 (orbit, lids and ball), set
+ *  ×1.28 wide (IPD 63 mm, human 0.265 H × 1.25), heavy lids; nose projection ×2.8 hooked 5 % H; mouth ×1.4 wide; chin receding,
+ *  ×0.7; ears ×2.6 long, held out 60°; vault ×1.12; thin neck ×0.8. */
+export const GOBLIN_FACE: FaceSpec = {
+  ...GOBLIN_RACE,
+  cranium: { width: 1.14, height: 1.12, depth: 1.08 },
+  eyes: { spacing: 1.28, tilt: 0.006, open: 0.95, size: 1.45 },
+  nose: { width: 1.1, projection: 2.8, length: 1.3, bridge: 0.02, hook: 0.05 },
+  mouth: { width: 1.4, lips: -0.002, underbite: 0 },
+  ears: { length: 2.6, tip: [0.04, 0.5, 0.1], out: 60 },
+  body: { neck: 0.8, traps: -0.02, shoulders: 0.9 },
+};
+
+/** The skull stage's character: a wiry adult goblin, lean, symmetric (warts bring the asymmetry). */
+export const CHARACTER: Character = {
+  race: GOBLIN_FACE,
+  age: 0.5,
+  weight: -0.4,
+  asym: 0,
+  tone: { base: C.skin, flush: C.warm, lips: C.lips, cool: C.cool, cavity: C.cavity },
+  eyes: { iris: C.iris },
+  mouth: 0,
+};
+
+/** The skull's own landmarks in the bust frame. */
+export const SK = skullLandmarks(skullOf(CHARACTER, SPEC));
+
 export const EYE: EyeSpec = {
-  centre: L.eye,
-  r: L.eyeR,
-  iris: L.eyeR * 0.55,
+  centre: SK.eye,
+  r: SK.eyeR,
+  iris: SK.eyeR * 0.55,
   upper: 0.36,
   lower: 0.14,
   lid: 0.0024,
@@ -119,3 +151,33 @@ export const TORSO: TorsoSpec = {
 
 /** Declared neck stylisation (stylised skinny: neck 0.45–0.6 × head width, ≤ 0.35 H above the scarf — still muscle and windpipe). */
 export const NECK: NeckRange = { width: [0.45, 0.6], length: [0.2, 0.35] };
+
+/** The goblin's proportion bands: the human's (../_lib/face/proportions.ts) with the declared
+ *  deltas — a big vault drops the eye line, big eyes set close for their size, a long hooked nose
+ *  over a receding chin, a thin neck. */
+export const GOBLIN_PROPORTIONS: ProportionTable = {
+  ...HUMAN_PROPORTIONS,
+  eyeLine: { lo: 0.4, hi: 0.5, source: 'human 0.45–0.53 under a vault ×1.12 high (declared)' },
+  eyeFifth: { lo: 0.2, hi: 0.32, source: 'human 0.17–0.23 × the goblin eye ×1.45 (declared)' },
+  interocular: {
+    lo: 0.7,
+    hi: 1.3,
+    source: 'human 0.85–1.3; the big fissures crowd the bridge (declared)',
+  },
+  noseThird: {
+    lo: 1.8,
+    hi: 3.2,
+    source: 'human 0.75–1.15; nose ×1.3 long over a receding chin ×0.7 (declared)',
+  },
+  neckWidth: {
+    lo: 0.35,
+    hi: 0.6,
+    source: 'human 0.66–0.86 × the thin goblin neck ×0.8 under a ×1.14 head (declared)',
+  },
+  eyeDepth: {
+    lo: 0.006,
+    hi: 0.024,
+    source: 'human 8–24 mm; the big ball fills the orbit forward (declared)',
+  },
+  eyeball: { lo: 0.024, hi: 0.034, source: 'human 22–26 mm × 1.45 on a 0.83 × head (declared)' },
+};

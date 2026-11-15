@@ -28,6 +28,22 @@ no character, name, costume or face from any game, film, book or real person.
 | 8 | Tone: skin value and hue zones, darker feet → lighter head | sculpt edit `color`, `paint` slots, `grime({ ground })` | greyscale hero: highest contrast at face |
 | 9 | Present | `t3d shot`, `t3d hero`, `t3d blueprint` (1.8 m figure), `t3d critique` | every critique score ≥ 8 |
 
+## Heads and busts: skull → planes → muscles → features → skin
+Don't build a realistic head from ellipsoids (the old busts read as giraffe necks with eyes on the
+surface). Start from the CC0 anatomical base and stylise it (`recipes/_lib/face/`,
+[face-base.md](../../../docs/research/face-base.md) "Skull stage"):
+
+| Stage | Code | Check |
+|---|---|---|
+| skull: race warp of the base (cranium, orbits, jaw, ears, neck) | `skullOf(character, frame)`, `skullEdit` → `BustRecipe.skull` | `proportionCheck` bands (eye line, fifths, thirds, neck ÷ head, eye depth, eyeball 24 mm) |
+| planes: forehead, temple, cheek, buccal, jaw, chin | `planeStrokes` (`flatten`), `Forms.planes` | raking light shows facets, not an egg |
+| muscles: brow ridge, zygoma, masseter, jaw line, SCM mastoid → sternum | `muscleStrokes`, `Forms` | no cylinder neck; traps slope into the shoulders |
+| features: lid fold, nasolabial, vermilion border, philtrum, sulcus | `featureLines` (one table sculpts and declares the crease) | `t3d review` close-ups |
+| skin: lips, redness (nose, cheeks, ears), beard shadow, brows, sockets | `zoneEdits` → `BustRecipe.zones` | greyscale: focus on the face |
+
+A race declares its deltas twice: as a `FaceSpec` (what moves) and as a `ProportionTable` (the
+bands it must land in, each with its reason). Close-ups: render with `beauty(c, { window })`.
+
 ## Vocabulary → measurable
 | Word | Meaning here | Check |
 |---|---|---|

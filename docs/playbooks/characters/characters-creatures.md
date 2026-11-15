@@ -57,8 +57,10 @@ and validated by `checkHead`.
 ```
 bust (today, `head` kind): bust (on z = 0), head, jaw (pivot at the hinge; sway), eye_l / eye_r
                            (pivots at eyeball centres, looking +X)
-body (planned, M4 `creature`): bones as named parts — pelvis → spine_0..n → chest → neck → head;
-     upper_arm_l → forearm_l → hand_l → finger_*; thigh_l → shin_l → foot_l; tail_*, wing_* for creatures
+creature (shipped, `creature` kind): parts body, head (pivot at the atlas), jaw (child of head,
+     pivot at the hinge; LOD0/1), eye_l / eye_r, claws; an Armature via ctx.bone — spine_* (sacrum →
+     withers), neck_*, head, jaw, tail_*, fore_l_* / fore_r_*, hind_l_* / hind_r_*, wing_l_* / wing_r_*
+humanoid body (planned): upper_arm_l → forearm_l → hand_l → finger_*; thigh_l → shin_l → foot_l
 sockets: attach 'hand_r' (weapons via ctx.use), camera 'eyes', audio 'voice'
 ```
 
@@ -81,6 +83,22 @@ Full skinned animation is the engine's job; the asset ships the pose, bones and 
 6. Skin tone variation: redder at nose, ears, cheeks; darker in creases (`bakeAo`).
 7. Creatures: the borrowed animal anatomy is consistent (a wing is a bat hand or a bird arm, not both).
 8. Silhouette at LOD2 must still name the race/species (ears, tusks, horns, tail).
+
+### Quadruped muscle list (creature kind, `creature-muscle-map.ts`)
+Bones first, muscles over them, tight blends (0.25 × width, C2, ≥ 2.5 % of the height so no
+valley reads as glued blobs), each seated so `rise` × its thickness shows above the masses:
+- bones: ribcage (superellipsoid n 2.2, deep and narrow), loin, pelvis block; scapula, withers
+  (T1–T9 spines, the highest point of the back), ischial tuberosity, manubrium
+- forequarter: supraspinatus, infraspinatus, triceps long head (caudal border = a crease),
+  trapezius, latissimus dorsi, serratus ventralis, brachiocephalicus, splenius, superficial and
+  deep pectorals; the legs carry deltoid, triceps, forearm extensors/flexors, small elbow and
+  carpal points
+- hindquarter: middle gluteal, tensor fasciae latae, biceps femoris, semitendinosus (their seam
+  a crease); the legs carry quadriceps, hamstrings, gastrocnemius → Achilles, small stifle/hock
+- separations (LOD0 crease strokes): behind the triceps, biceps femoris | semitendinosus, the
+  flank fold
+- checks: chest swell ≤ 6 % over the declared ribcage width (no barrel), canid depth ÷ width ≥
+  1.25, the neck → skull axis inside body ∪ head; `build.muscle` 0..1 scales the bellies
 
 ## Materials
 Skin via vertex colour on `plain` or a custom skin material (`defineMaterial`), `leather` for

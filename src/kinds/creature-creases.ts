@@ -79,7 +79,8 @@ export function creatureCreases(s: CreatureSpec, prefix = ''): IntendedCrease[] 
       ...both(
         `${g.name}_toes`,
         body,
-        [g.foot[0], g.foot[1], g.footSize[2]],
+        // Centred halfway up the foot: a cloven hoof's cleft runs down to the ground.
+        [g.foot[0], g.foot[1], g.footSize[2] * 0.5],
         g.footSize[0] * 1.8,
         'partings between the toes',
       ),

@@ -7,7 +7,10 @@
 // Design dossier: recipes/human_head/README.md.
 
 import { defineAsset } from '@developerz.ai/ts23d';
-import { buildHuman } from './build.ts';
+import { bustEdits } from '../_lib/bust/bust.ts';
+import { SK } from '../_lib/bust/human/spec.ts';
+import { HUMAN_PROPORTIONS, proportionCheck } from '../_lib/face/proportions.ts';
+import { buildHuman, HUMAN_BUST } from './build.ts';
 import { HUMAN_CREASES } from './creases.ts';
 
 export const human_head = defineAsset({
@@ -29,10 +32,10 @@ export const human_head = defineAsset({
     measures: [
       {
         label: 'eye spacing (pupil to pupil)',
-        value: 0.061,
+        value: 0.063,
         axis: 'y',
         between: ['eye_l', 'eye_r'],
-        source: 'interpupil 0.265 H (head scan) × 0.23 m; adult IPD ≈ 62 mm',
+        source: 'adult interpupillary distance mean 63.4 mm (Dodgson 2004); ANSUR II male 64.6 mm',
       },
     ],
   },
@@ -42,6 +45,15 @@ export const human_head = defineAsset({
   // Intended creases (QA `connections` skips them): one small region per sculpted fold, from the
   // geometry that sculpts it (creases.ts) — never an area.
   creases: HUMAN_CREASES,
+  // Measured facial proportions against sourced bands (README "Proportions"), every LOD.
+  checks: [
+    proportionCheck(
+      'human_head',
+      SK,
+      () => bustEdits(HUMAN_BUST, 2, 1).skin.field,
+      HUMAN_PROPORTIONS,
+    ),
+  ],
   build(ctx) {
     buildHuman(ctx);
   },

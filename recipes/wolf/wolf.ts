@@ -91,10 +91,12 @@ export const wolf = defineCreature({
   ],
   spec: WOLF,
   options: { strip: FUR },
-  // Overall box measured off the posed skeleton (nose → hanging tail, paws → ear tips).
+  // Overall box measured off the posed skeleton (nose → hanging tail, paws → ear tips). Width is
+  // the coated width: the README's 0.27 m is the body; winter guard hair (60–70 mm mid-back, up to 110–130 mm on the mane;
+  // README coat table) stands ~1 cm proud on each flank, so the outline is ~0.29 m.
   real: {
     length: 1.31,
-    width: 0.27,
+    width: 0.29,
     height: 0.9,
     tolerance: 0.05,
     mass: REAL.mass,

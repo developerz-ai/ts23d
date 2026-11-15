@@ -20,18 +20,22 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    80280,
-    22240,
-    4216
+    89152,
+    19160,
+    3652
   ],
   "drawCalls": [
-    2,
-    2,
+    3,
+    3,
     2
   ],
   "pivots": [
     {
       "name": "body",
+      "parent": null
+    },
+    {
+      "name": "body_cutout",
       "parent": null
     },
     {
@@ -48,9 +52,9 @@
       "to": "head",
       "kind": "socket",
       "at": [
-        0.074,
+        0.0658,
         0.0316,
-        0.3532
+        0.3492
       ]
     },
     {
@@ -59,25 +63,26 @@
       "to": "head",
       "kind": "socket",
       "at": [
-        0.074,
+        0.0658,
         -0.0316,
-        0.3532
+        0.3492
       ]
     }
   ],
   "surfaces": [
+    "cutout",
     "opaque"
   ],
   "real": {
     "length": 0.242,
-    "width": 0.456,
+    "width": 0.35,
     "height": 0.482
   },
   "measures": [
     {
       "label": "eye spacing (pupil to pupil)",
       "spec": 0.063,
-      "measured": 0.06294274516403675,
+      "measured": 0.06298208981752396,
       "source": "interpupil 0.331 H (human 0.265 × 1.25) × 0.19 m"
     }
   ],

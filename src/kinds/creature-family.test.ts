@@ -155,7 +155,8 @@ describe('digits per family', () => {
       expect(c.parts.map((p) => p.name)).toContain('body');
       expect(runQa(c).map((f) => `${f.gate}: ${f.message}`)).toEqual([]);
     }
-  });
+    // Three LODs with muscles and fur cards: ~16 s.
+  }, 60_000);
 });
 
 describe('tail defaults per family', () => {

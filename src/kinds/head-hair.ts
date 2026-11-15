@@ -1,6 +1,7 @@
 // Scalp hair as edit lists, part of the skull field: a top-knot, mohawk ridge, chunky swept locks
 // over a cap clipped at the hairline, wiry tufts, braids. Beards and eyebrows: head-beard.ts.
-// Head units, mirrored across Y unless an edit opts out.
+// Head units, mirrored across Y unless an edit opts out. Card hair (`scalpCards`) lives in
+// head-cards.ts and is re-exported here.
 
 import type { Vec3 } from '../core/index.ts';
 import type { SculptEdit } from '../primitives/index.ts';
@@ -191,3 +192,5 @@ const capOf = (l: HeadLayout, h: Vec3): SculptEdit => ({
   color: h,
   blend: 0.02,
 });
+
+export { type CardLayer, type ScalpCardOptions, scalpCards } from './head-cards.ts';

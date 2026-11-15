@@ -12,8 +12,14 @@ export interface FaceSpec {
   readonly cranium: { readonly width: number; readonly height: number; readonly depth: number };
   /** Brow ridge pushed forward / raised, ΔH. */
   readonly brow: { readonly forward: number; readonly height: number };
-  /** Eye spacing ×, outer-corner tilt ΔH (+ lifts it: almond), lid opening ×. */
-  readonly eyes: { readonly spacing: number; readonly tilt: number; readonly open: number };
+  /** Eye spacing ×, outer-corner tilt ΔH (+ lifts it: almond), lid opening ×, and the whole eye
+   *  (orbit, lids, ball) scaled about its centre (default 1). */
+  readonly eyes: {
+    readonly spacing: number;
+    readonly tilt: number;
+    readonly open: number;
+    readonly size?: number;
+  };
   /** Nose: ala width ×, tip projection ×, length ×, bridge height ΔH, tip hook ΔH (down). */
   readonly nose: {
     readonly width: number;

@@ -20,18 +20,22 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    71140,
-    25100,
-    3804
+    92904,
+    25500,
+    3640
   ],
   "drawCalls": [
-    2,
-    2,
+    3,
+    3,
     2
   ],
   "pivots": [
     {
       "name": "body",
+      "parent": null
+    },
+    {
+      "name": "body_cutout",
       "parent": null
     },
     {
@@ -48,9 +52,9 @@
       "to": "head",
       "kind": "socket",
       "at": [
-        0.0769,
-        0.0305,
-        0.4467
+        0.0698,
+        0.0314,
+        0.4412
       ]
     },
     {
@@ -59,13 +63,14 @@
       "to": "head",
       "kind": "socket",
       "at": [
-        0.0769,
-        -0.0305,
-        0.4467
+        0.0698,
+        -0.0314,
+        0.4412
       ]
     }
   ],
   "surfaces": [
+    "cutout",
     "opaque"
   ],
   "real": {
@@ -76,9 +81,9 @@
   "measures": [
     {
       "label": "eye spacing (pupil to pupil)",
-      "spec": 0.061,
-      "measured": 0.06096413638442755,
-      "source": "interpupil 0.265 H (head scan) × 0.23 m; adult IPD ≈ 62 mm"
+      "spec": 0.063,
+      "measured": 0.0626023830845952,
+      "source": "adult interpupillary distance mean 63.4 mm (Dodgson 2004); ANSUR II male 64.6 mm"
     }
   ],
   "sources": [

@@ -26,8 +26,8 @@ Original designs only; never a named creature from any IP.
 | 2 | Borrowed anatomy: each part maps to a real animal (wing from bat, neck from heron, hind leg from big cat) with measurements | dossier "reasoning" table; start from [animal-species-sheets](../../../docs/research/animal-species-sheets.md) (shoulder height, body length, mass) | every borrowed part sourced |
 | 3 | Skeleton and stance | joint positions as `Vec3` constants; `ctx.group` per bone pivot; stance chosen | side view skeleton drawn as SVG |
 | 4 | Silhouette from drawings | `visualHull({ front, side, top })` spread into a `sculpt` edit | side silhouette names the creature |
-| 5 | Masses on the skeleton: ribcage, pelvis, limb segments, neck, tail | `sculpt` edits (`capsule`, `ellipsoid`), `loft` with `ringXY` for tails/necks, `sweep` for horns | `assertCentreOfMassInside`, `assertUprightOnGround` PASS |
-| 6 | Anatomy pass: muscle groups that drive the motion, bony landmarks (scapula, hip, elbow) | more `sculpt` edits, `blend` small at landmarks | raking light shows landmarks |
+| 5 | Bones: ribcage (deep, narrow superellipsoid), loin, pelvis, limb chains, neck of oval section, tail; the skeleton as an Armature | `sculpt` edits (`superellipsoid`, `ellipsoid`, `roundCone`), tight blends 0.15–0.3 × radius, `kernel: 'cubic'`; `ctx.bone` (the `creature` kind declares spine_*, neck_*, head, jaw, tail_*, fore/hind_l/r_*) | chest swell ≤ 6 %, canid depth ÷ width ≥ 1.25; `assertCentreOfMassInside`, `assertUprightOnGround` PASS |
+| 6 | Muscles: 15–25 fibre-aligned bellies origin → insertion, seated on the bones; bony landmarks (scapula, withers, elbow, ischium); separations as `crease` strokes; the neck growing into the skull behind the jaw; jaw its own part | `creature-muscle-map.ts` / your own `FibreMuscle` list, `stroke: 'crease'`, `detail` boxes on face and paws | raking light shows landmarks; QA `connections` finds no seam |
 | 7 | Surface: scales, plates, fur, skin folds | `CREATURE_MATERIALS` strips (`dragon_scales`, `reptile_scales`, `fur`, `hair`), `tex.scales`, `tex.strands` | scale size grades dorsal → ventral |
 | 8 | Wear and story: scars, chipped horns, dust on belly | `grime({ ground })`, edits | tells where it lives |
 | 9 | Present and critique | `t3d shot / hero / blueprint / critique` | every score ≥ 8 |
@@ -106,6 +106,7 @@ Shipped: `sculpt`, `sculptField`, `visualHull`, `sd.*`, `loft`/`ringXY`, `sweep`
 (`fur_neutral` for tinted coats), `tex.scales`/`tex.strands`, stability helpers, `real.mass` + QA
 `mass`, `ctx.joint`, QA `connections`, the `creature` kind (`creature()` / `defineCreature`: six
 skeleton types, staged sculpt, patterns, allometry and wing-loading checks — `recipes/wolf`).
-Planned (M4, [roadmap](../../../docs/plans/roadmap.md#m4-creatures)): bones as named parts (jaw,
-tail, limbs), `pose`/`warp`/`ffd`, fur shells and cards, skins and morph targets.
+Shipped too: the kind's Armature (`ctx.bone`), a `jaw` part, fibre muscles (`build.muscle`).
+Planned (M4, [roadmap](../../../docs/plans/roadmap.md#m4-creatures)): tail and limbs as moving
+parts, `pose`/`warp`/`ffd`, fur shells and cards, skins and morph targets.
 Neutral positioning: the free code-based option, no claims against other tools.

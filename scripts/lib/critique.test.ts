@@ -3,7 +3,17 @@ import { mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { CRITERIA } from '../../src/qa/critique.ts';
-import { critiqueMode, critiqueViolations, ENFORCE_FROM, keepCritiques } from './critique.ts';
+import {
+  calibratedViolations,
+  critiqueMode,
+  critiqueViolations,
+  ENFORCE_FROM,
+  FLAGSHIP_FLOOR,
+  FLAGSHIPS,
+  FLOOR_ENFORCED,
+  keepCritiques,
+  ratchet,
+} from './critique.ts';
 
 const sha = (s: string): string => new Bun.CryptoHasher('sha256').update(s).digest('hex');
 
@@ -80,5 +90,66 @@ describe('keepCritiques', () => {
     expect(await readFile(join(tmp, 'crate', 'critique.json'), 'utf8')).toBe('{"asset":"crate"}');
     expect(await Bun.file(join(tmp, 'gone', 'critique.json')).exists()).toBe(false);
     expect(await keepCritiques(join(root, 'none'), tmp).catch(() => 'threw')).toEqual([]);
+  });
+});
+
+describe('calibratedViolations', () => {
+  const base = { file: 'recipes/x/x.ts', readme: '# x' };
+  const codes = (v: { message: string }[]): string[] => v.map((x) => x.message.split(' ')[0] ?? '');
+
+  it('fires T3D_CRITIQUE_INFLATED when the claim is > 1.5 over the prediction', () => {
+    const v = calibratedViolations({ ...base, asset: 'human_head', predicted: 3.8, claimed: 6 });
+    expect(codes(v.enforced)).toEqual(['T3D_CRITIQUE_INFLATED']);
+    const ok = calibratedViolations({ ...base, asset: 'human_head', predicted: 4.5, claimed: 6 });
+    expect(codes(ok.enforced)).toEqual([]);
+  });
+
+  it('enforces inflation on flagships now, elsewhere only once the critique gate enforces', () => {
+    const crate = { ...base, asset: 'crate', predicted: 3, claimed: 8 };
+    expect(codes(calibratedViolations(crate, 'warn').warned)).toEqual(['T3D_CRITIQUE_INFLATED']);
+    expect(codes(calibratedViolations(crate, 'enforce').enforced)).toEqual([
+      'T3D_CRITIQUE_INFLATED',
+    ]);
+  });
+
+  it('fires T3D_CRITIQUE_REGRESSED below baseline − 0.5 unless the README says why', () => {
+    const drop = { ...base, asset: 'crate', predicted: 5.4, baseline: 6 };
+    expect(codes(calibratedViolations(drop).enforced)).toEqual(['T3D_CRITIQUE_REGRESSED']);
+    const why = { ...drop, readme: '# x\n\nCritique why: rebuilt on the C2 kernel, forms first' };
+    expect(calibratedViolations(why).enforced).toEqual([]);
+    expect(calibratedViolations({ ...drop, predicted: 5.5 }).enforced).toEqual([]);
+  });
+
+  it('reports T3D_CRITIQUE_BELOW_FLOOR for flagships only, as a warning until slice 17', () => {
+    expect(FLAGSHIPS).toContain('human_head');
+    expect(FLAGSHIP_FLOOR).toBeGreaterThanOrEqual(8.5);
+    const floor = (v: ReturnType<typeof calibratedViolations>) =>
+      codes(FLOOR_ENFORCED ? v.enforced : v.warned);
+    // No fresh panel: the floor cannot be shown met, whatever the metrics say.
+    const none = calibratedViolations({ ...base, asset: 'wolf', predicted: 9.5 });
+    expect(floor(none)).toEqual(['T3D_CRITIQUE_BELOW_FLOOR']);
+    expect(none.warned[0]?.message).toContain('no fresh agent-panel critique');
+    // The deciding score is the blind panel median.
+    const low = calibratedViolations({ ...base, asset: 'wolf', predicted: 7, panel: 8.4 });
+    expect(low.warned[0]?.message).toContain('agent-panel median 8.4');
+    const met = { ...base, asset: 'wolf', predicted: 7, panel: 8.6 };
+    expect(floor(calibratedViolations(met))).toEqual([]);
+    expect(calibratedViolations({ ...base, asset: 'crate', predicted: 5 }).warned).toEqual([]);
+  });
+
+  it('gives a blind agent panel a 2.5 inflation band, a self-score 1.5', () => {
+    const panel = { ...base, asset: 'human_head', predicted: 3.8, reviewer: 'agent-panel' };
+    expect(codes(calibratedViolations({ ...panel, claimed: 6.2 }).enforced)).toEqual([]);
+    expect(codes(calibratedViolations({ ...panel, claimed: 6.4 }).enforced)).toEqual([
+      'T3D_CRITIQUE_INFLATED',
+    ]);
+    const self = { ...panel, reviewer: 'agent', claimed: 5.4 };
+    expect(codes(calibratedViolations(self).enforced)).toEqual(['T3D_CRITIQUE_INFLATED']);
+  });
+});
+
+describe('ratchet', () => {
+  it('only ever raises a recorded score and adds new assets', () => {
+    expect(ratchet({ a: 5, b: 7 }, { a: 4.2, b: 7.5, c: 3 })).toEqual({ a: 5, b: 7.5, c: 3 });
   });
 });

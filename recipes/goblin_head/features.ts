@@ -4,30 +4,34 @@
 
 import type { Rng, SculptEdit } from '@developerz.ai/ts23d';
 import { ball, cone2, creaseOn, type Surface, type V } from '../_lib/bust/kit.ts';
-import { C, H, L } from './spec.ts';
+import { C, H, SK } from './spec.ts';
 
 export function featureEdits(stage: number, s: Surface, rng: Rng): SculptEdit[] {
   const out: SculptEdit[] = [];
-  const mz = L.mouth[2];
-  const arc = (r: number, a: number, z: number): V => {
-    const t = (a * Math.PI) / 180;
-    return [L.teeth.x + r * Math.cos(t), r * Math.sin(t), z];
-  };
+  const line = grinLine();
   // Grin: cheeks bunched up at the mouth corners.
-  out.push(ball(arc(L.teeth.r - 0.02 * H, 48, mz + 0.03 * H), 0.032 * H, { blend: 0.08 * H }));
-  // Pointed teeth along the slit, upper row pointing down, lower up.
-  for (let i = 0; i < 4; i++) {
-    const a = 6 + i * 11;
-    for (const [z0, dz] of [
-      [mz + 0.012 * H, -0.03 * H],
-      [mz - 0.012 * H, 0.028 * H],
+  out.push(
+    ball(
+      [SK.cheilion[0] - 0.02 * H, SK.cheilion[1] + 0.012 * H, SK.cheilion[2] + 0.03 * H],
+      0.03 * H,
+      {
+        blend: 0.06 * H,
+      },
+    ),
+  );
+  // Pointed teeth along the slit, upper row pointing down, lower up, their roots behind the lips.
+  for (let i = 1; i < 5; i++) {
+    const p = line[line.length - 1 - i] ?? SK.stomion;
+    for (const [dz, tip] of [
+      [0.008 * H, -0.018 * H],
+      [-0.008 * H, 0.016 * H],
     ] as const)
       out.push(
         cone2(
-          arc(L.teeth.r + 0.004 * H, a, z0),
-          arc(L.teeth.r + 0.008 * H, a, z0 + dz),
-          0.011 * H,
-          0.002 * H,
+          [p[0] - 0.004 * H, p[1], p[2] + dz],
+          [p[0] + 0.002 * H, p[1], p[2] + dz + tip],
+          0.008 * H,
+          0.0015 * H,
           {
             blend: 0.002 * H,
             color: C.teeth,
@@ -37,7 +41,7 @@ export function featureEdits(stage: number, s: Surface, rng: Rng): SculptEdit[] 
   }
   if (stage < 4) return out;
   // Worried brow: three creases, inner ends raised.
-  for (const line of browLines()) out.push(creaseOn(s, line, 0.008 * H, 0.005 * H));
+  for (const l of browLines()) out.push(creaseOn(s, l, 0.008 * H, 0.004 * H));
   // Warts, seeded: on the nose, the cheeks and the dome (not mirrored).
   for (const [p, r] of WARTS) {
     const j = 0.7 + rng.next() * 0.6;
@@ -48,35 +52,35 @@ export function featureEdits(stage: number, s: Surface, rng: Rng): SculptEdit[] 
 
 /** The three worried-brow creases (left half, mirrored), inner ends raised. */
 export function browLines(): V[][] {
-  return (
-    [
-      [0, 0.72],
-      [1, 0.78],
-      [2, 0.84],
-    ] as const
-  ).map(([i, dz]) => {
-    const z = L.mz + dz * H;
+  const g = SK.glabella;
+  return [0, 1, 2].map((i) => {
+    const z = g[2] + (0.07 + i * 0.05) * H;
     return [
-      [L.gx - 0.02 * H, 0.2 * H, z - 0.02 * H],
-      [L.gx + 0.01 * H, 0.08 * H, z + 0.015 * H],
-      [L.gx + 0.015 * H, 0, z + 0.01 * H - i * 0.002 * H],
+      [g[0] - 0.05 * H, 0.2 * H, z - 0.02 * H],
+      [g[0] - 0.012 * H, 0.08 * H, z + 0.015 * H],
+      [g[0] - 0.008 * H, 0, z + 0.01 * H - i * 0.002 * H],
     ];
   });
 }
 
 /** Wart spots (not mirrored) and their radius × H before the seeded jitter (×0.7 … ×1.3). */
 export const WARTS: ReadonlyArray<[V, number]> = [
-  [[L.noseTip[0] - 0.05 * H, 0.03 * H, L.noseTip[2] + 0.05 * H], 0.016],
-  [[L.gx - 0.15 * H, -0.24 * H, L.eye[2] - 0.12 * H], 0.02],
-  [[L.gx - 0.3 * H, 0.18 * H, L.crown - 0.03 * H], 0.022],
-  [[L.gx - 0.12 * H, 0.22 * H, L.eye[2] - 0.18 * H], 0.014],
-  [[L.gx - 0.45 * H, -0.12 * H, L.crown - 0.05 * H], 0.018],
+  [[SK.pronasale[0] - 0.05 * H, 0.03 * H, SK.pronasale[2] + 0.05 * H], 0.016],
+  [[SK.cheek[0] - 0.02 * H, -SK.cheek[1] - 0.02 * H, SK.cheek[2]], 0.02],
+  [[SK.crown[0] + 0.06 * H, 0.18 * H, SK.crown[2] - 0.05 * H], 0.022],
+  [[SK.cheek[0] - 0.03 * H, SK.cheek[1] + 0.03 * H, SK.cheek[2] - 0.05 * H], 0.014],
+  [[SK.crown[0] - 0.1 * H, -0.12 * H, SK.crown[2] - 0.06 * H], 0.018],
 ];
 
-/** The mouth slit's arc on the teeth cylinder, corner to centre (left half). */
+/** The mouth slit, corner to centre (left half). */
 export function grinLine(): V[] {
-  return [48, 36, 24, 12, 0].map((a) => {
-    const t = (a * Math.PI) / 180;
-    return [L.teeth.x + L.teeth.r * Math.cos(t), L.teeth.r * Math.sin(t), L.mouth[2]];
-  });
+  const a = SK.cheilion;
+  const b = SK.stomion;
+  return [0, 0.25, 0.5, 0.75, 1].map(
+    (t): V => [
+      a[0] + (b[0] - a[0]) * t + Math.sin(t * Math.PI) * 0.004 * H,
+      a[1] * (1 - t),
+      a[2] + (b[2] - a[2]) * t,
+    ],
+  );
 }

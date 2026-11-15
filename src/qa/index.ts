@@ -33,6 +33,23 @@ export {
   valueMap,
 } from './critique-art-images.ts';
 export {
+  type CalibratedScore,
+  type CalibrationModel,
+  calibratedScore,
+  fitCalibration,
+  GOLDEN,
+  type GoldenRow,
+  type GoldenSet,
+  INFLATION_TOLERANCE,
+  isotonic,
+  leaveOneGroupOut,
+  PANEL_CRITERIA,
+  PANEL_INFLATION_TOLERANCE,
+  predict,
+  type Sample,
+  spearman,
+} from './critique-calibrate.ts';
+export {
   ART_RENDER,
   ART_THRESHOLDS,
   type ArtFinding,
@@ -44,6 +61,7 @@ export {
   GROUNDED_KINDS,
   measureArt,
 } from './critique-metrics.ts';
+export { REF_METRICS, type RefGaps, refGaps } from './critique-ref.ts';
 export {
   critiqueTemplate,
   RUBRIC,
@@ -54,6 +72,16 @@ export {
 } from './critique-rubric.ts';
 export { SHAPE_THRESHOLDS, type ShapeClass } from './critique-shape.ts';
 export {
+  imageStats,
+  METRICS,
+  type Metric,
+  type MetricVector,
+  meshStats,
+  metricVector,
+  VECTOR_RENDER,
+  type VectorImage,
+} from './critique-vector.ts';
+export {
   type DepthView,
   depthView,
   depthViews,
@@ -63,6 +91,13 @@ export {
 } from './depth-views.ts';
 export { floatingParts, touching } from './floating.ts';
 export { type Flushness, type FlushOptions, flushness } from './flush.ts';
+export {
+  cardRootProof,
+  cardRoots,
+  type FurSilhouetteZone,
+  furSilhouette,
+  furSilhouetteCheck,
+} from './fur-silhouette.ts';
 export { gapOverlay, gapZoom } from './gap-overlay.ts';
 export {
   describeGap,
@@ -97,6 +132,31 @@ export {
 export { type Ruler, ruler, type Size } from './measure.ts';
 export { measure, measures } from './measures.ts';
 export { hiddenParts, zFighting } from './occlusion.ts';
+export {
+  compareFingerprints,
+  type Fingerprint,
+  type FingerprintDistance,
+  FP_SIZE,
+  fingerprint,
+  srgbToLab,
+} from './ref-fingerprint.ts';
+export {
+  checkRefFile,
+  encodeRefMask,
+  maskOfRefPng,
+  modelOutline,
+  REF_LIMITS,
+  REF_VIEWS,
+  type RefCamera,
+  type RefFile,
+  type RefLimits,
+  type RefSource,
+  type RefView,
+  type RefViewName,
+  refFindings,
+  refFingerprint,
+  refSilhouette,
+} from './ref-gate.ts';
 export { degenerateTriangles, nonFinite, normalsMatchWinding, vertexColors } from './sanity.ts';
 export { findSlits, type Slit, type SlitOptions } from './slits.ts';
 export { treads } from './treads.ts';
