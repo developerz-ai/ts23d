@@ -17,7 +17,7 @@
 | 3 | `kinds` | Domain builders: building, vehicle, vegetation (`tree`, `trees`); planned vessel, creature |
 | 3 | `qa` | Gates over a `CompiledAsset` |
 | 3 | `export` | `CompiledAsset` → GLB |
-| 3 | `render` | CPU rasteriser, PNG encoder, contact sheet; planned `photoMatch` |
+| 3 | `render` | CPU rasteriser, PNG encoder, contact sheet, `photoMatch` + camera solve |
 | 3 | `data` | Real-world inputs, pinned and offline: Wikidata facts (CC0) → `real`/`measures`, DEM tiles → `terrainFromDEM`; sha256-verified, licence-tracked |
 | 4 | `testing` | assertions for users' recipe tests (subpath `/testing`) |
 | 4 | `tune` | offline parameter fitting (CMA-ES, coordinate search) → committed `tune.json` |

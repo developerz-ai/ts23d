@@ -64,7 +64,7 @@ A GPU run is not reproducible across drivers and hardware; the cached file is.
 | Rule | |
 |---|---|
 | Cache key | `(model, sha256(prompt or image), seed)` |
-| Cache location | `.ts23d/neural/`, committed to git or published with the package |
+| Cache location | `.ts23d/neural/` today; moving to `recipes/<name>/neural/<key>/` with `record.json` ([ADR 014](../decisions/014-neural-outputs-are-cached-inputs.md), plan 101 slice 13) |
 | Cache hit | No GPU, no network. CI always hits |
 | Cache miss in CI | A build error naming the key and the command to generate it locally |
 | Regenerate | Explicit, never implicit: delete the entry and rebuild with a GPU |

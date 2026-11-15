@@ -62,7 +62,8 @@ export function legTubes(b: Bones, paint: (p: Vec3) => Vec3): Mesh | null {
     );
     const [sx, sy, sz] = l.footSize;
     const f = l.foot;
-    const rr = Math.max(sy, sz) * 0.9;
+    // No rounder than the foot is wide: a tall hoof's spindle would fold back on itself.
+    const rr = Math.min(Math.max(sy, sz) * 0.9, sy * 1.1);
     // The paw as a short tapered spindle resting on the ground (heel, ball, toes), not a box.
     // Closing radii at both ends round it off instead of leaving flat caps.
     const sole = [

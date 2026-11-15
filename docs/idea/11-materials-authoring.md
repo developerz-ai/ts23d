@@ -42,6 +42,9 @@ Edge damage specifically: Designer's **Edge Damages** "represents damage done to
 | Image inputs | PNG stamped into cells | `paint/stamp.ts`, `paint/decode-png.ts` |
 | Mesh-space wear | `grime` (vertex colour near ground / zones), `bakeAo` (ray-cast AO into vertex colour), `livery` (paint by rules) | `src/passes/` |
 | Shader-side wear | `ShaderHints.wear`: darkens + roughens **cavities** (1 − AO) and ground grime | `src/material/shader.ts` |
+| Field maps, measured | `bakeField(mesh, field, { maps })`: mean curvature (½ the SDF Laplacian at one cell; 1/r on a sphere), cavity (clamp(−H·reach), blurred over the welded vertex graph), thickness (inward sphere trace ÷ reach), AO (bake-ao rays); mesh-only fallback (edge-normal curvature, RayGrid depth). `fieldProbe` gives the same probes pointwise | `src/passes/bake-field.ts` |
+| Creature tone from the field | Cavity + concave curvature darken folds; thin parts (< 1.4 cm through, pigment-weighted) glow warm red as against light; dirt pools low and under the belly; strand breakup line-integral-convolved along the hair's lie | `src/kinds/creature-tone.ts` |
+| Flow texture | `tex.lic({ angle, length, grain })`: seeded noise smeared along a flow (line-integral convolution) → strand albedo breakup; `licDirection(angle)` → the axial 0..1 direction an anisotropic highlight runs | `src/material/tex/lic.ts` |
 | Hard-surface realism | `box({ bevel })` chamfers, `weightedNormals` (big faces flat, bevels catch light) | `primitives/bevel-box.ts`, `passes/weighted-normals.ts` |
 
 **The structural constraint.** A strip is shared by every asset and tiles along U, so the texture cannot know where *this* mesh's edges are. Substance bakes curvature per asset; ts23d can't, without giving up one material. So wear splits in two: **texture-space** wear (edges *inside* the pattern: brick arrises, plank ends, plate laps), which belongs in the painter, and **mesh-space** wear (the silhouette edges of this hull), which belongs in vertex data and the shader. Today only cavities are handled mesh-side; convex edges are not.
@@ -79,7 +82,7 @@ export interface EdgeWearOptions {
 export function edgeWear(mesh: Mesh, o: EdgeWearOptions): Mesh;
 ```
 
-Per-vertex convexity from the signed dihedral angles of incident edges (polygon meshes), or from the field Laplacian for `sdf`/`sculpt` meshes (the SDF Laplacian is the level set's mean curvature up to a convention factor, because |∇d| = 1; [StEik, eq. 14](https://arxiv.org/pdf/2305.18414)). `head-tone.ts` already probes the field for cavity; convexity is the same probe with the other sign. Lightening vertex colour works in every engine with no shader; `_WEAR` follows the `_WIND` precedent and lets `threeMaterialSource` / `godotShaderSource` blend toward bare metal (`mix`, roughness down, metalness up) per pixel. Needs the GLB writer to emit `_WEAR` (an UNOWNED change in `src/export/`). Size: **M**.
+Per-vertex convexity from the signed dihedral angles of incident edges (polygon meshes), or from the field Laplacian for `sdf`/`sculpt` meshes (the SDF Laplacian is the level set's mean curvature up to a convention factor, because |∇d| = 1; [StEik, eq. 14](https://arxiv.org/pdf/2305.18414)). `fieldProbe(field, cell).curvature(p)` (`src/passes/bake-field.ts`) is that probe, shipped; convexity is its positive side. Lightening vertex colour works in every engine with no shader; `_WEAR` follows the `_WIND` precedent and lets `threeMaterialSource` / `godotShaderSource` blend toward bare metal (`mix`, roughness down, metalness up) per pixel. Needs the GLB writer to emit `_WEAR` (an UNOWNED change in `src/export/`). Size: **M**.
 
 ### 3. An `edge` trim row: the trim-sheet way to wear edges
 

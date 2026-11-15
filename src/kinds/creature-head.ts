@@ -1,6 +1,9 @@
 // The head sculpt, head-local (origin at the atlas, +X along the skull, Z up, left = +Y), in stages:
-//   blockOut  braincase, occiput, cheekbones, the muzzle as a tapering skin, the lower jaw + chin;
-//             with a head preset (`face.preset`): the stop, flews and flaring cheek fur
+//   blockOut  braincase, occiput, cheekbones, the muzzle as a tapering skin; with a head preset
+//             (`face.preset`): the stop, flews and flaring cheek fur; skull forms (zygomatic arch,
+//             masseter, temporalis, occiput) and the top of the neck (oval, its front inside the
+//             skull behind the jaw angle) so the head grows out of the neck
+//   jaw       the lower jaw + chin as its own part, pivoting at the hinge (`jawHinge`)
 //   features  nose leather and nostrils (or a beak/snout), the brow ridge, the eye socket with lids
 //             that wrap the eyeball (seated by probing the block-out), opening toward the family's
 //             orbit angle (Heesy 2004: cat 65°, dog 50°, horse 24° convergence), ears
@@ -19,6 +22,7 @@ import { type EyeSpec, lidEdits } from './creature-eye.ts';
 import { orbitOf } from './creature-family.ts';
 import { earEdits, earHeight, fangs } from './creature-head-parts.ts';
 import { blob, skin } from './creature-skin.ts';
+import { jawEdits, neckStub, skullForms } from './creature-skull.ts';
 import { type CreatureSpec, faceOf } from './creature-spec.ts';
 
 export interface HeadLayout {
@@ -43,7 +47,7 @@ export interface HeadLayout {
   readonly cheek: number;
 }
 
-type Block = Pick<HeadLayout, 'L' | 'W' | 'H' | 'lc' | 'rt' | 'zt' | 'stop' | 'cheek'>;
+export type Block = Pick<HeadLayout, 'L' | 'W' | 'H' | 'lc' | 'rt' | 'zt' | 'stop' | 'cheek'>;
 
 function blockOut(l: Block, coarse = false): SculptEdit[] {
   const { L, W, H, lc, rt, zt } = l;
@@ -58,8 +62,8 @@ function blockOut(l: Block, coarse = false): SculptEdit[] {
     // Cheek fur: flares out behind the eye and down to the jaw angle, widening the furred head.
     extra.push(
       blob(
-        [0.32 * lc, (0.3 + l.cheek * 0.4) * W, -0.06 * H],
-        [0.4 * lc, (0.16 + l.cheek * 0.3) * W, 0.27 * H],
+        [0.3 * lc, (0.3 + l.cheek * 0.6) * W, -0.08 * H],
+        [0.42 * lc, (0.16 + l.cheek * 0.5) * W, 0.3 * H],
         0.14 * L,
         [0, 0, -10],
       ),
@@ -77,7 +81,7 @@ function blockOut(l: Block, coarse = false): SculptEdit[] {
     );
   return [
     ...extra,
-    blob([0.5 * lc, 0, 0.08 * H], [0.55 * lc, 0.46 * W, 0.48 * H], 0),
+    blob([0.5 * lc, 0, 0.08 * H], [0.55 * lc, 0.5 * W, 0.48 * H], 0),
     blob([0.14 * lc, 0, 0.02 * H], [0.34 * lc, 0.4 * W, 0.4 * H], 0.1 * L),
     blob([0.78 * lc, 0.3 * W, -0.1 * H], [0.28 * lc, 0.2 * W, 0.24 * H], 0.12 * L),
     // Muzzle: from under the stop to the nose, the bridge lifted mid-way.
@@ -88,15 +92,6 @@ function blockOut(l: Block, coarse = false): SculptEdit[] {
         { at: [L - rt, 0, zt], r: rt },
       ],
       { blend: 0.08 * L },
-    ),
-    // Lower jaw: both mandibles to the chin, under the muzzle.
-    skin(
-      [
-        { at: [0.5 * lc, 0.28 * W, -0.26 * H], r: 0.13 * H },
-        { at: [lc, 0.18 * W, zt - rt * 0.7], r: 0.1 * H },
-        { at: [L - 2.2 * rt, 0.04 * W, zt - rt * 0.85], r: rt * 0.55 },
-      ],
-      { blend: 0.05 * L },
     ),
   ];
 }
@@ -258,17 +253,24 @@ function features(
   return out;
 }
 
-/** Every head edit at this cell size, and the teeth mesh (head-local). */
+/** Every head edit at this cell size, the lower jaw's edits and the teeth mesh (head-local). */
 export function headEdits(
   b: Bones,
   s: CreatureSpec,
   lod: number,
   res: number,
-): { layout: HeadLayout; edits: SculptEdit[]; teeth: Mesh | null } {
+): { layout: HeadLayout; edits: SculptEdit[]; jaw: SculptEdit[]; teeth: Mesh | null } {
   const l = headLayout(b, s);
+  const coarse = lod === 2;
   return {
     layout: l,
-    edits: [...blockOut(l, lod === 2), ...features(l, s, b, res, lod)],
+    edits: [
+      ...blockOut(l, coarse),
+      ...(coarse || b.head.beak ? [] : skullForms(l)),
+      ...(b.neck.length > 1 ? neckStub(b, l) : []),
+      ...features(l, s, b, res, lod),
+    ],
+    jaw: jawEdits(l),
     teeth: lod < 2 ? fangs(l, s, lod) : null,
   };
 }

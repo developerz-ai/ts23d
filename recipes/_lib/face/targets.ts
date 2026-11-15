@@ -106,6 +106,14 @@ export function leftTargets(c: Character): { mid: Map<MidName, P>; side: Map<Sid
   // Eyes: spacing moves the whole group; tilt lifts the outer corner; opening scales the lids.
   const dy = g('eye')[1] * (r.eyes.spacing - 1);
   for (const k of EYE_GROUP) g(k)[1] += dy;
+  const big = r.eyes.size ?? 1;
+  const e0 = g('eye');
+  for (const k of EYE_GROUP)
+    if (k !== 'eye')
+      for (let a = 0; a < 3; a++) {
+        const p = g(k);
+        p[a] = (e0[a] ?? 0) + ((p[a] ?? 0) - (e0[a] ?? 0)) * big;
+      }
   g('exocanthion')[2] += r.eyes.tilt * H;
   g('endocanthion')[2] -= r.eyes.tilt * H * 0.3;
   g('browOuter')[2] += r.eyes.tilt * H * 0.6;

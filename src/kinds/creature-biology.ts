@@ -6,6 +6,10 @@
 //                 sacs) under a hair shell (≈ 100 kg/m³), so the mass gate fills the furred volume
 //                 with an effective density (tiger dossier method, solved for thick coats)
 //   wing loading  weight ÷ wing area; a creature that declares `flies` must stay ≤ 250 N/m²
+//   chest         (legged mammals) the trunk's widest section, probed on the sculpt: blends may not
+//                 swell it past its declared ribcage width (a barrel); canids deep and narrow,
+//                 depth ÷ width ≥ 1.25 (wolf skeletons ≈ 1.5–1.8, creature-sections.ts)
+//   neck          the neck → skull axis stays inside body ∪ head (the head grows from the neck)
 //   balance       a QA check: the centre of mass (volume × density) projects inside the support
 //                 polygon of the ground contacts, at every LOD
 //   fore share    a QA check (quadrupeds): the forelegs carry the family's share of the standing
@@ -20,11 +24,14 @@ import { worldMeshes } from '../core/index.ts';
 import { massProperties } from '../physics/index.ts';
 import { BONE_FRACTION, type Bones, massFromBones } from './creature-bones.ts';
 import { familyOf, MAMMAL_FORE_SHARE } from './creature-family.ts';
+import { CANID_CHEST_RATIO, chestSection, neckJoin, trunkField } from './creature-sections.ts';
 import type { CreatureSpec } from './creature-spec.ts';
 
 /** Allowed band of limb-implied mass ÷ declared mass (C&E's 95% band is about ×0.5–×2). */
 export const ALLOMETRY_BAND = [0.5, 2.5] as const;
 export const MAX_WING_LOADING = 250;
+/** Widest chest section ÷ declared ribcage width above which the blends made a barrel. */
+export const MAX_CHEST_SWELL = 1.06;
 
 export interface Biology {
   /** Mass the limbs carry (kg), or null for legless types. */
@@ -75,7 +82,32 @@ export function biology(s: CreatureSpec, b: Bones): Biology {
       message: `wing loading ${wl.toFixed(0)} N/m² is above ${MAX_WING_LOADING} N/m²: these wings cannot lift ${s.mass} kg`,
       fix: `raise wingspan ×${Math.sqrt(wl / MAX_WING_LOADING).toFixed(2)} or drop \`flies\``,
     });
+  if (s.skeleton === 'quadruped' || s.skeleton === 'winged') findings.push(...trunkFindings(s, b));
   return { limbMass: lm, density: effectiveDensity(s), wingLoading: wl, findings };
+}
+
+/** Chest section and neck → skull join of a legged mammal (probed on the sculpt fields). */
+export function trunkFindings(s: CreatureSpec, b: Bones): CheckFinding[] {
+  const out: CheckFinding[] = [];
+  const f = trunkField(b);
+  const c = chestSection(b, f);
+  if (c.swell > MAX_CHEST_SWELL)
+    out.push({
+      message: `chest: the trunk blends swell the ribcage to ${(c.width * 100).toFixed(1)} cm, ${((c.swell - 1) * 100).toFixed(0)} % past its declared width (a barrel of blended blobs)`,
+      fix: 'tighten the trunk blends (0.15–0.3 × the mass radius) so ribcage, loin and pelvis stay separate forms',
+    });
+  if (familyOf(s) === familyOf({ ...s, family: 'canid' }) && c.ratio < CANID_CHEST_RATIO)
+    out.push({
+      message: `chest: depth ÷ width is ${c.ratio.toFixed(2)}, under ${CANID_CHEST_RATIO} — a canid chest is deep and narrow`,
+      fix: `raise build.depth or lower build.width (wolf: depth 0.5, width 0.55)`,
+    });
+  const n = neckJoin(b, s, f);
+  if (n.inside < 1)
+    out.push({
+      message: `neck: ${((1 - n.inside) * 100).toFixed(0)} % of the neck → skull axis lies outside both the neck and the head (the head floats off the neck)`,
+      fix: 'lengthen the neck (`neck`) or carry the head lower (`pose.neck`) so the neck runs into the skull',
+    });
+  return out;
 }
 
 /** 2D convex hull (monotone chain), counter-clockwise. */

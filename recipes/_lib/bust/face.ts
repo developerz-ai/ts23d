@@ -6,7 +6,7 @@
 
 import { type SculptEdit, sculptField } from '@developerz.ai/ts23d';
 import { type EyeSpec, lidEdits } from './eye.ts';
-import { type HeadSpec, headBlock, kn, type Landmarks, landmarks } from './head.ts';
+import { type HeadSpec, headBlock, kn, landmarks } from './head.ts';
 import {
   chain,
   clayOn,
@@ -25,7 +25,7 @@ import {
 export const SEAT = 1.1;
 
 /** The orbit behind the eyeball's equator: a round bore along the gaze, R × SEAT, a radius deep. */
-function orbitBore(l: Landmarks): SculptEdit {
+export function orbitBore(l: { readonly eye: V; readonly eyeR: number }): SculptEdit {
   const [ex, ey, ez] = l.eye;
   const r = l.eyeR * SEAT;
   const front = ex - l.eyeR * 0.05;

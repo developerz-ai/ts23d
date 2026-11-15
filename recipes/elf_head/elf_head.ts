@@ -6,8 +6,11 @@
 // a turned plinth. Sculpted by the shared bust library; dossier: recipes/elf_head/README.md.
 
 import { defineAsset } from '@developerz.ai/ts23d';
-import { buildElf } from './build.ts';
+import { bustEdits } from '../_lib/bust/bust.ts';
+import { proportionCheck } from '../_lib/face/proportions.ts';
+import { buildElf, ELF_BUST } from './build.ts';
 import { ELF_CREASES } from './creases.ts';
+import { ELF_PROPORTIONS, SK } from './spec.ts';
 
 export const elf_head = defineAsset({
   name: 'elf_head',
@@ -22,7 +25,7 @@ export const elf_head = defineAsset({
   ],
   // Design spec (an invented character): overall size as built; the measure is the eye spacing.
   real: {
-    length: 0.247,
+    length: 0.29,
     width: 0.491,
     height: 0.559,
     measures: [
@@ -41,6 +44,10 @@ export const elf_head = defineAsset({
   // Intended creases (QA `connections` skips them): one small region per sculpted fold, from the
   // geometry that sculpts it (creases.ts) — never an area.
   creases: ELF_CREASES,
+  // Measured facial proportions against sourced bands (README "Proportions"), every LOD.
+  checks: [
+    proportionCheck('elf_head', SK, () => bustEdits(ELF_BUST, 2, 1).skin.field, ELF_PROPORTIONS),
+  ],
   build(ctx) {
     buildElf(ctx);
   },

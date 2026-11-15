@@ -2,23 +2,34 @@
 // folded per query point. Sparse: every node carries a bounding sphere with a proven lower bound
 // on its value, and an edit is skipped only when that bound shows its blend weight would be
 // exactly 1 (nothing changes) — so skipping is bit-identical to evaluating, just faster. A weight
-// of 1 passes the running value through untouched (no `v + (d − v)` rounding).
+// of 1 passes the running value through untouched (no `v + (d − v)` rounding). Both kernels give
+// a weight of exactly 1 past the blend width, so the skip holds for 'cubic' too. Strokes are
+// skipped only outside their influence sphere, where they return the running value unchanged.
 
 import type { Vec3 } from '../core/index.ts';
 import { invalid } from './check.ts';
-import { type SculptEdit, sculptShape, shapeSphere } from './sculpt-edit.ts';
+import { isAdd, type SculptEdit, sculptShape, shapeSphere } from './sculpt-edit.ts';
 import { fieldShape } from './sculpt-field.ts';
-import type { Field } from './sdf-ops.ts';
+import { compileStroke } from './sculpt-stroke.ts';
+import { type BlendKernel, cubicMin, type Field, smoothWeight } from './sdf-ops.ts';
 
 const ADD = 0;
 const SUB = 1;
 const INTER = 2;
 const PAINT = 3;
+const STROKE = 4;
 const OPS = { add: ADD, subtract: SUB, intersect: INTER, paint: PAINT } as const;
 
 export interface Node {
   readonly op: number;
+  /** Blend width; for a stroke, its depth (how far it can lower the value). */
   readonly k: number;
+  /** C2 blend kernel instead of the quadratic one. */
+  readonly cubic: boolean;
+  /** Stroke: the running value after the stroke at p; null for every other node. */
+  readonly stroke: ((p: Vec3, d: number) => number) | null;
+  /** Declared Lipschitz cost this node (and its children) adds to the field. */
+  readonly extra: number;
   /** The edit's own colour (shapes), or null. */
   readonly color: Vec3 | null;
   readonly shape: Field | null;
@@ -41,17 +52,24 @@ export function compile(
   base: Vec3,
   mirror: boolean,
   path = 'sculpt',
+  kernel: BlendKernel = 'quad',
 ): Node[] {
-  if (!edits.some((e) => (e.op ?? 'add') === 'add'))
+  if (!edits.some((e) => !('stroke' in e) && isAdd(e)))
     invalid(`${path} has no add edits, so nothing to carve from`, "make the first edit op: 'add'");
   return edits.map((e, i): Node => {
+    const m = e.mirror ?? mirror;
+    if ('stroke' in e) {
+      const s = compileStroke(e, `${path} edit ${i} (${e.stroke} stroke)`, m);
+      const n = node(STROKE, e.depth, null, null, null, base, 0, s.c, s.r, 1, false, m, 0);
+      return { ...n, stroke: s.apply, extra: s.extra };
+    }
     const op = OPS[e.op ?? 'add'];
     const k = e.blend ?? 0;
-    const m = e.mirror ?? mirror;
+    const kern = e.kernel ?? kernel;
     if ('group' in e) {
-      const kids = compile(e.group, e.color ?? base, m, `${path} group ${i}`);
+      const kids = compile(e.group, e.color ?? base, m, `${path} group ${i}`, kern);
       const b = enclose(kids);
-      return node(
+      const g = node(
         op,
         k,
         e.color ?? null,
@@ -66,13 +84,15 @@ export function compile(
         false,
         b.under,
       );
+      return { ...g, cubic: kern === 'cubic', extra: kids.reduce((x, n) => x + n.extra, 0) };
     }
     if ('field' in e) {
       const f = fieldShape(e.field, e.bounds, m, `${path} edit ${i} (field)`);
-      return node(op, k, e.color ?? null, f.shape, null, base, 0, f.c, f.r, 1, true, m, 0);
+      const n = node(op, k, e.color ?? null, f.shape, null, base, 0, f.c, f.r, 1, true, m, 0);
+      return { ...n, cubic: kern === 'cubic' };
     }
     const s = shapeSphere(e);
-    return node(
+    const n = node(
       op,
       k,
       e.color ?? null,
@@ -87,8 +107,13 @@ export function compile(
       m,
       0,
     );
+    return { ...n, cubic: kern === 'cubic' };
   });
 }
+
+/** Total declared Lipschitz cost of the strokes in a compiled tree (0 without strokes). */
+export const lipschitzExtra = (nodes: readonly Node[]): number =>
+  nodes.reduce((x, n) => x + n.extra, 0);
 
 /** Every node built in one property order: the fold loop stays monomorphic (one hidden class). */
 function node(
@@ -109,6 +134,9 @@ function node(
   return {
     op,
     k,
+    cubic: false,
+    stroke: null,
+    extra: 0,
     color,
     shape,
     kids,
@@ -147,8 +175,11 @@ function enclose(
     scale: Math.min(...adds.map((n) => n.scale)),
     inside: adds.every((n) => n.inside),
     mirror: false,
-    // Smooth union undershoots the plain min by at most k/4 per blend; children's own undershoot adds.
-    under: adds.reduce((u, n) => u + n.k / 4 + n.under, 0),
+    // Smooth union undershoots the plain min by at most k/4 per blend (k/6 cubic); children's own
+    // undershoot adds; a stroke can lower the value by its depth (k).
+    under:
+      adds.reduce((u, n) => u + n.k / 4 + n.under, 0) +
+      kids.reduce((u, n) => u + (n.op === STROKE ? n.k : 0), 0),
   };
 }
 
@@ -194,6 +225,10 @@ export function fold(
       continue;
     }
     const empty = d === Number.POSITIVE_INFINITY;
+    if (n.stroke) {
+      if (!empty && !(sparse && lowerBound(n, p) > 0)) d = n.stroke(p, d);
+      continue;
+    }
     if (empty && n.op !== ADD) continue;
     if (sparse && !empty) {
       if (n.op === ADD && lowerBound(n, p) > d + k + slack(d)) continue;
@@ -206,7 +241,13 @@ export function fold(
         : 0;
     let w = 0;
     if (empty) d = v;
-    else if (n.op === ADD) {
+    else if (n.cubic) {
+      // Same folds with the C2 kernel: weight 1 past the blend width leaves d untouched.
+      const b = n.op === ADD ? v : n.op === SUB ? -v : v;
+      const s = n.op === ADD ? 1 : -1;
+      w = smoothWeight(s * d, s * b, k, 'cubic');
+      if (w !== 1) d = s * cubicMin(s * d, s * b, k);
+    } else if (n.op === ADD) {
       w = weight(d, v, k);
       if (w !== 1) d = v + (d - v) * w - k * w * (1 - w);
     } else {

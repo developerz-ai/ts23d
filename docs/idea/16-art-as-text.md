@@ -61,6 +61,83 @@ IoU < 0.85), a blob of uniform SDF bumps (rest 0.11), a light-base/dark-top figu
 striped body under a plain head declared `focal: 'head'`, a cube declared `aggressive`. goblin_head
 is a true positive: its LOD2 sculpt is 7–10 % smaller on every axis and drops the ear tips.
 
+## Calibrated score
+
+A self-score is a claim; the calibrated score is a measurement. `calibratedScore(vector)`
+(`src/qa/critique-calibrate.ts`) maps a **metric vector** (`metricVector`, `src/qa/critique-vector.ts`)
+to 0–10 per criterion. The vector is measured on LOD0 and one 640×360 beauty render
+(`VECTOR_RENDER`, 1024² trim sheet), the same way in the golden set, `t3d critique` and the gate:
+
+| Metric | Measures | Moves when |
+|---|---|---|
+| `tris` | log10 LOD0 triangles | decimated |
+| `smoothShading` | share of welded vertices whose normals agree (cos ≥ 0.97) | flat-shaded |
+| `curvSmooth`, `curvEntropy` | length-weighted dihedral-angle histogram: share under 10°, normalised entropy | decimated, blocky |
+| `colourDetail` | mean colour step across mesh edges | blurred colour |
+| `texelDensity` | log10 √(welded vertices / m²): colour samples per metre | low-resolution colour |
+| `chroma`, `valueKey`, `valueRange` | mean chroma, mean luminance, p95 − p5 luminance in the render | desaturated, flat-lit |
+| `hiFreq` | mean \|Laplacian\| of luminance inside the silhouette | blurred, featureless |
+| `restShare` | share of interior pixels with 5×5 luminance std < 0.02 | noisy or bare |
+| `silhouetteRoughness` | outline length over its 5×5-smoothed outline, − 1 | jagged, faceted |
+
+Reference-photo gaps join the fit when the recipe commits `ref.json` (slice 02): `refGaps`
+(`src/qa/critique-ref.ts`) gives the mean outline IoU over the reference views and the value /
+spectrum / edge gaps of the beauty image against the photos (`compareFingerprints`). Without
+`ref.json` they are imputed (median of golden rows that have them, else "matches the photo"). No
+golden row has references yet, so every gap column is constant and its map flat: **today the gaps
+are reported in `calibrated.json` but move no score.** They start counting once golden rows carry
+photos.
+
+**Fit.** An additive model of per-metric isotonic maps (pool-adjacent-violators), fitted by
+backfitting: each map is refitted on what the others leave unexplained, shrunk by 0.3 per step (the
+ridge of an additive fit). Metrics whose good direction is known (`tris`, `smoothShading`,
+`curvSmooth`, `colourDetail`, `texelDensity`, `chroma`, `valueRange`) only ever raise the score as
+they rise; the rest take the direction that fits. One model per panel criterion (silhouette,
+proportions, materials, detail, wear) plus overall; `lod` and `technical` take the overall model.
+Deterministic; refitted in-process from `src/qa/critique-golden.json`, which commits vectors, render
+hashes and scores, never meshes. A plain marginal-isotonic + non-negative ridge combine was tried
+first: same Spearman, but it ranked 37 of 160 degraded copies at or above their originals.
+
+**Golden set** (2026-11-15). `bun scripts/golden.ts fetch|measure|panel|check|baseline`. 40 CC0
+assets from Poly Haven (busts, animal heads, statues, rock, fruit, furniture, tools, appliances; URL,
+author, licence and packed-GLB sha256 per asset in `sources`), each with four degraded copies
+(QEM-decimated to 8 %; faceted: QEM to 25 % + flat shading; desaturated; vertex colour blurred ×40),
+plus 12 in-house recipes as anchors for the procedural vertex-colour look: 212 rows. Meshes live in
+the gitignored `.ts23d/golden/`. Panel: three independent blind agent reviews (tiles shuffled per
+asset, sheets renamed, rubric of `critique-rubric.ts`), median per tile and criterion (`reviewer:
+"agent-panel"`); pairwise reviewer Spearman 0.90–0.95. A row's panel score is bound to the sha256 of
+the render it judged: re-measuring a changed render drops it. Kenney and Quaternius refuse scripted
+downloads (HTTP 403 / Google Drive), so they are not in the set yet.
+
+**How good it is — honestly.** Leave-one-asset-out Spearman **0.584** over all 212 rows (target 0.7:
+not reached; the test holds the measured floor `LOO_SPEARMAN_FLOOR = 0.55`, which only rises).
+Within one asset the ranking of original vs its degraded copies averages 0.735, and no degraded copy
+scores above its original. Between different assets the metrics see little: every in-house anchor
+predicts 5.9–6.3 while the panel spread them 5.0–7.3, and `human_head` (panel 5.3) predicts 6.0.
+Anatomy errors (a long neck, eyes forward of the orbits) are invisible to image statistics: they need
+the reference-photo gaps (slice 02) in the vector, and a golden set with photos.
+
+**Who decides.** Metrics cannot see anatomy (a long neck, eyes forward of the orbits), so the
+flagship floor is judged by the **blind agent panel**: `bun run golden brief <recipe>` renders the
+critique pack and writes a self-contained `brief.md` per asset (rules, image paths, rubric, QA
+summary, output shape; no network, no calibrated score shown) under `.ts23d/panel/`; three
+independent agents each write `review-<k>.json`; `bun run golden attest <recipe>` writes
+`critique.json` with `reviewer: "agent-panel"`, the median per criterion, every reason, the three
+individual scores (`panel.reviews`) and the render hashes (stale as soon as hero.png or sheet.png
+change). The calibrated score is the sanity check beside it, with a wider band for the panel.
+
+**Gate** (`scripts/lib/critique.ts`, recipes step):
+
+| Code | When | Today |
+|---|---|---|
+| `T3D_CRITIQUE_INFLATED` | claimed overall − calibrated > 1.5 (self-score) or > 2.5 (agent panel: it legitimately sees what metrics cannot) | enforced on flagships; elsewhere with the critique phase-in |
+| `T3D_CRITIQUE_REGRESSED` | calibrated < `recipes/critique-baseline.json` − 0.5 and the README has no `Critique why: …` line | enforced |
+| `T3D_CRITIQUE_BELOW_FLOOR` | a flagship (wolf, amur_tiger, dragon, human/elf/goblin/orc heads) without a fresh agent-panel critique, or with a panel median under 8.5 | reported; enforced from slice 17 (`FLOOR_ENFORCED`) |
+
+The baseline is a ratchet: `bun run golden baseline [name…]` (after `bun run shots`) writes max(recorded, today), so
+scores only go up; the floor only rises. `t3d critique` prints the calibrated score beside the claimed
+one and writes `calibrated.json` (vector + per-criterion scores) into the pack.
+
 ## How an agent uses this
 1. Pick the playbook for the object class; research specs and photos into the dossier.
 2. State intent in code: proportions, `focal`, shape language, materials, wear.

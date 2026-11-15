@@ -3,8 +3,11 @@
 // are keratin over skin: glossier crowns, darker overlapped roots; hair is keratin strands with
 // per-strand tone. Painted from texture graphs (`tex.scales`, `tex.strands`). Tinted coats use
 // `fur_neutral` (near-white albedo, D24) so the vertex colour, not the strip, sets the hue.
+// `fur_clumps` / `hair_clumps` are the cutout strand atlases (strands.ts) the card passes map into:
+// parts on them use `surface: 'cutout'` (ADR 008), one draw per body.
 
 import type { MaterialDef } from './material-def.ts';
+import { STRAND_LAYOUT, strandPainter } from './strands.ts';
 import { tex } from './tex/index.ts';
 import { scales, strands } from './tex/stamps-organic.ts';
 
@@ -16,7 +19,18 @@ const small = scales({ width: 0.025, height: 0.016, overlap: 0.4, point: 0.2, se
 const hair = strands({ width: 0.0025, length: 0.25, clump: 0.6, wave: 0.008, seed: 4 });
 const furS = strands({ width: 0.004, length: 0.06, clump: 0.4, wave: 0.004, seed: 5 });
 
-type Creature = 'dragon_scales' | 'reptile_scales' | 'hair' | 'fur' | 'fur_neutral';
+type Creature =
+  | 'dragon_scales'
+  | 'reptile_scales'
+  | 'hair'
+  | 'fur'
+  | 'fur_neutral'
+  | 'fur_clumps'
+  | 'hair_clumps';
+
+/** Painters are compared by identity on redefinition: one per strip, made once. */
+const FUR_CLUMPS = strandPainter(STRAND_LAYOUT.fur_clumps);
+const HAIR_CLUMPS = strandPainter(STRAND_LAYOUT.hair_clumps);
 
 export const CREATURE_MATERIALS: Readonly<Record<Creature, MaterialDef>> = {
   dragon_scales: {
@@ -119,6 +133,26 @@ export const CREATURE_MATERIALS: Readonly<Record<Creature, MaterialDef>> = {
     }),
     description:
       'Short animal fur with a neutral albedo: the vertex colour carries any coat (orange, grey, cream) without going muddy.',
+    sources: [KERATIN],
+  },
+  fur_clumps: {
+    id: 'fur_clumps',
+    kind: 'flat',
+    scaleMetres: 0.05,
+    roughness: 0.6,
+    paint: FUR_CLUMPS,
+    description:
+      'Cutout fur and guard-hair clumps for strand cards (alpha = strands, grey: vertex colour tints).',
+    sources: [KERATIN],
+  },
+  hair_clumps: {
+    id: 'hair_clumps',
+    kind: 'flat',
+    scaleMetres: 0.05,
+    roughness: 0.45,
+    paint: HAIR_CLUMPS,
+    description:
+      'Cutout scalp-hair and beard clumps for strand cards (alpha = strands, grey: vertex colour tints).',
     sources: [KERATIN],
   },
 };

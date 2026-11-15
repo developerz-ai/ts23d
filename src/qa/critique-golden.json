@@ -1,0 +1,6272 @@
+{
+  "reviewer": "agent-panel",
+  "note": "Golden set for the calibrated critique (docs/idea/16-art-as-text.md, 'Calibrated score'). Rows: 40 CC0 Poly Haven assets x 5 variants (original, decimated, flat, desaturated, blurred) + 12 in-house recipe anchors (rendered 2026-11-15 from the working tree). vector = metricVector at VECTOR_RENDER; image = sha256 of the RGBA render; panel = median of three independent blind agent reviews (reviewer: agent-panel) using critique-rubric.ts. Regenerate: bun scripts/golden.ts fetch && bun scripts/golden.ts measure && bun scripts/golden.ts panel <3 review files> && bun scripts/golden.ts check.",
+  "sources": [
+    {
+      "id": "marble_bust_01",
+      "url": "https://polyhaven.com/a/marble_bust_01",
+      "license": "CC0-1.0",
+      "author": "Rico Cilliers",
+      "sha256": "a90940277a002756ce68fb052fbff1bd7f3973f5334d7fcecd859aa1b880ad3d"
+    },
+    {
+      "id": "bull_head",
+      "url": "https://polyhaven.com/a/bull_head",
+      "license": "CC0-1.0",
+      "author": "Tina",
+      "sha256": "52d1f3b62a0e4b51dd446d1b7282796d2653195b56772271f228d6b9c2037b8c"
+    },
+    {
+      "id": "horse_head",
+      "url": "https://polyhaven.com/a/horse_head",
+      "license": "CC0-1.0",
+      "author": "Tina",
+      "sha256": "1fba490bb4feda76f21a7f318373532b1667de11c0c377bfb909a9ea297d9fb7"
+    },
+    {
+      "id": "lion_head",
+      "url": "https://polyhaven.com/a/lion_head",
+      "license": "CC0-1.0",
+      "author": "Tina",
+      "sha256": "01ca1e0e23531dfed48496d1b681a1cf1b0f68c057c71745da70b30ec4dcdeea"
+    },
+    {
+      "id": "street_rat",
+      "url": "https://polyhaven.com/a/street_rat",
+      "license": "CC0-1.0",
+      "author": "Sean Buckley",
+      "sha256": "d612151cbb18adc48a18534dd3546d12e48c397efd2405dcb095ef294c7f5fc8"
+    },
+    {
+      "id": "concrete_cat_statue",
+      "url": "https://polyhaven.com/a/concrete_cat_statue",
+      "license": "CC0-1.0",
+      "author": "Rico Cilliers, Riley Queen",
+      "sha256": "6571c2578d4ceaa2d6834da35237fd86c757fdb54529de8d1ba42aad2ac417fc"
+    },
+    {
+      "id": "horse_statue_01",
+      "url": "https://polyhaven.com/a/horse_statue_01",
+      "license": "CC0-1.0",
+      "author": "Rico Cilliers",
+      "sha256": "6af2a678ff29e176304f18e954160fc64dafb9bb2abe07bfcded1c2b4e74d7e2"
+    },
+    {
+      "id": "carved_wooden_elephant",
+      "url": "https://polyhaven.com/a/carved_wooden_elephant",
+      "license": "CC0-1.0",
+      "author": "Greg Zaal",
+      "sha256": "929f37883ca9ecc0c6a809c72709711321c01d55e8944d16099792338c117703"
+    },
+    {
+      "id": "bronze_shark_statue",
+      "url": "https://polyhaven.com/a/bronze_shark_statue",
+      "license": "CC0-1.0",
+      "author": "Tina",
+      "sha256": "8c3f256eabb567ebeb4d70213730e84dca33e5169b1c4aa79fb7a1e828149ef8"
+    },
+    {
+      "id": "gothic_statue",
+      "url": "https://polyhaven.com/a/gothic_statue",
+      "license": "CC0-1.0",
+      "author": "Benny Weimer",
+      "sha256": "d6bf616288488fc04038729ea0eeaa2646b368b6710410014b492164f42f496b"
+    },
+    {
+      "id": "rubber_duck_toy",
+      "url": "https://polyhaven.com/a/rubber_duck_toy",
+      "license": "CC0-1.0",
+      "author": "Plat251",
+      "sha256": "c567dc123b0750f0f3b5a3341eb0d5458c695fec5fda347815a51a966f3f5826"
+    },
+    {
+      "id": "food_apple_01",
+      "url": "https://polyhaven.com/a/food_apple_01",
+      "license": "CC0-1.0",
+      "author": "Oliver Harries",
+      "sha256": "ca2b21967524b0ae09e5bcddd3e21b31fbeb2e912db1af5b7624641586df646e"
+    },
+    {
+      "id": "rock_07",
+      "url": "https://polyhaven.com/a/rock_07",
+      "license": "CC0-1.0",
+      "author": "Jenelle van Heerden",
+      "sha256": "9cb318edd4d3d94d2b0459524e5880654d9e3dbebdc27aa9419542f9087265e7"
+    },
+    {
+      "id": "moon_rock_01",
+      "url": "https://polyhaven.com/a/moon_rock_01",
+      "license": "CC0-1.0",
+      "author": "Dario Barresi, Greg Zaal, Jenelle van Heerden, Rico Cilliers",
+      "sha256": "dba2a5f6379f51385978c17e9c3480da55441e0359c33a09d0f5e41686b8093a"
+    },
+    {
+      "id": "wooden_crate_01",
+      "url": "https://polyhaven.com/a/wooden_crate_01",
+      "license": "CC0-1.0",
+      "author": "James Ray Cock",
+      "sha256": "a99a662e9379cdedc346282c7d087f6f0fcd79a18f14486a3eb20dd676eb0347"
+    },
+    {
+      "id": "ArmChair_01",
+      "url": "https://polyhaven.com/a/ArmChair_01",
+      "license": "CC0-1.0",
+      "author": "Kirill Sannikov",
+      "sha256": "ebbdc84e8f92bd96d9d5e47180b682a682fd5480e9b75eb0db47e0a44334e086"
+    },
+    {
+      "id": "alarm_clock_01",
+      "url": "https://polyhaven.com/a/alarm_clock_01",
+      "license": "CC0-1.0",
+      "author": "James Ray Cock, Yann Kervran",
+      "sha256": "8b1220783e5b77ed680b86faddcef5282c945773e4fd9ff6b644b359ae4518ed"
+    },
+    {
+      "id": "bench_vice_01",
+      "url": "https://polyhaven.com/a/bench_vice_01",
+      "license": "CC0-1.0",
+      "author": "Antanas Kep, Yann Kervran",
+      "sha256": "3a9dded956ac040ce7f00d972298000368f9079d6ef1d54cbbb0e4b55638469e"
+    },
+    {
+      "id": "bolt_cutters_01",
+      "url": "https://polyhaven.com/a/bolt_cutters_01",
+      "license": "CC0-1.0",
+      "author": "Antanas Kep, Yann Kervran",
+      "sha256": "4ee370d8ab4f88eb8324e267437e276568a349839145adc4979c18cbedaaf0a8"
+    },
+    {
+      "id": "metal_tool_chest",
+      "url": "https://polyhaven.com/a/metal_tool_chest",
+      "license": "CC0-1.0",
+      "author": "John Hutcheson, Yann Kervran",
+      "sha256": "de3f68479465134c9dfb57c8f872d6c6996701c1ef05e0958caf1eabc3afad1e"
+    },
+    {
+      "id": "mousetrap",
+      "url": "https://polyhaven.com/a/mousetrap",
+      "license": "CC0-1.0",
+      "author": "GreenPixel",
+      "sha256": "dbee7b07a94df65d7b492de1792620983e4c75db8ab46c42244a4330077d8d66"
+    },
+    {
+      "id": "ratchet_wrench",
+      "url": "https://polyhaven.com/a/ratchet_wrench",
+      "license": "CC0-1.0",
+      "author": "John Hutcheson",
+      "sha256": "a39e29e88de1c20fb55d9000e3c1cc066083b8380fe9f65bdf7c8f8d91888849"
+    },
+    {
+      "id": "security_camera_01",
+      "url": "https://polyhaven.com/a/security_camera_01",
+      "license": "CC0-1.0",
+      "author": "Alexander Otterbeck, Yann Kervran",
+      "sha256": "cd5d2d9c00cfdec57a5be63fbffe3cf8cc799c77e4e445946f99a183da993b81"
+    },
+    {
+      "id": "vintage_hand_drill",
+      "url": "https://polyhaven.com/a/vintage_hand_drill",
+      "license": "CC0-1.0",
+      "author": "Benjamin McDonnell, Yann Kervran",
+      "sha256": "62c295b00edeab0640f3828f2a6f4bfc1565e34cbdef87f0e78a21e15c2d0cdb"
+    },
+    {
+      "id": "Barrel_01",
+      "url": "https://polyhaven.com/a/Barrel_01",
+      "license": "CC0-1.0",
+      "author": "Jorge Camacho",
+      "sha256": "d118df3716392880edfa1c6b40f703fe556ccd87dc912e41410a93bae4f2b135"
+    },
+    {
+      "id": "old_tyre",
+      "url": "https://polyhaven.com/a/old_tyre",
+      "license": "CC0-1.0",
+      "author": "MP",
+      "sha256": "0845695665718f0455aa42dbe9301a41bfe5a35a9d6bb88b1b20e11fe6364a90"
+    },
+    {
+      "id": "wooden_bucket_01",
+      "url": "https://polyhaven.com/a/wooden_bucket_01",
+      "license": "CC0-1.0",
+      "author": "James Ray Cock",
+      "sha256": "409260bab957a9144b246179a05da553a9530f13e9153172da53198b34d40734"
+    },
+    {
+      "id": "metal_jug",
+      "url": "https://polyhaven.com/a/metal_jug",
+      "license": "CC0-1.0",
+      "author": "Anzor Lezhava",
+      "sha256": "ab975357744c3df441d2d0c9abdd0b03613269a5d8489c17567c08f41ae0973b"
+    },
+    {
+      "id": "Television_01",
+      "url": "https://polyhaven.com/a/Television_01",
+      "license": "CC0-1.0",
+      "author": "Gabriel Radić",
+      "sha256": "292cc9b5681a1650064e25c2662fea7c86cea0295c8049a781fd571cfc9ac945"
+    },
+    {
+      "id": "vintage_microwave",
+      "url": "https://polyhaven.com/a/vintage_microwave",
+      "license": "CC0-1.0",
+      "author": "Adam Nekola",
+      "sha256": "6d54b538cc9e4ab65685b411345e5e8a1a759422f81bbbf435690799a6dbd73b"
+    },
+    {
+      "id": "Lantern_01",
+      "url": "https://polyhaven.com/a/Lantern_01",
+      "license": "CC0-1.0",
+      "author": "Rajil Jose Macatangay",
+      "sha256": "22bdc973c31373f296a37b74db50eb4258cd104051fd777a7dae87c7964daa32"
+    },
+    {
+      "id": "wooden_hammer_01",
+      "url": "https://polyhaven.com/a/wooden_hammer_01",
+      "license": "CC0-1.0",
+      "author": "James Ray Cock",
+      "sha256": "02d93dbdd76677bd81f9a5938b10ea3b5d55442b88a95771e6946bb47db5dc8a"
+    },
+    {
+      "id": "Sofa_01",
+      "url": "https://polyhaven.com/a/Sofa_01",
+      "license": "CC0-1.0",
+      "author": "Kirill Sannikov",
+      "sha256": "cef65230ed8803f78f457c3b823218268ae33fcf4367cf130d533c4cdfd82674"
+    },
+    {
+      "id": "SchoolChair_01",
+      "url": "https://polyhaven.com/a/SchoolChair_01",
+      "license": "CC0-1.0",
+      "author": "Ethan Place",
+      "sha256": "b7a00ef2dc3f3e2bb3ae36c8fcca094e0d978cd4c8489b0305295a836d203aa8"
+    },
+    {
+      "id": "painted_wooden_stool",
+      "url": "https://polyhaven.com/a/painted_wooden_stool",
+      "license": "CC0-1.0",
+      "author": "Kirill Sannikov",
+      "sha256": "303cbfe1d22ce224b1ff85c742700ad33b1b27a83cc1a2ebeb7b5a1dcb9d4f62"
+    },
+    {
+      "id": "WetFloorSign_01",
+      "url": "https://polyhaven.com/a/WetFloorSign_01",
+      "license": "CC0-1.0",
+      "author": "Fran Calvente",
+      "sha256": "e317fc8b9a0e12b17df0aad569f75afc0935e892606681ce9968c94605ce20c5"
+    },
+    {
+      "id": "Shelf_01",
+      "url": "https://polyhaven.com/a/Shelf_01",
+      "license": "CC0-1.0",
+      "author": "Gabriel Radić",
+      "sha256": "9d8dbaf4dd3c0647fb67e4ad3e402f58bf7732f812a35efbd755dbc23eb28447"
+    },
+    {
+      "id": "ceramic_vase_02",
+      "url": "https://polyhaven.com/a/ceramic_vase_02",
+      "license": "CC0-1.0",
+      "author": "James Ray Cock",
+      "sha256": "e38defb6885f3f20ff8ccf09ff21c4e6073375c1145b0f9383b5a41c36566a4c"
+    },
+    {
+      "id": "oil_tin",
+      "url": "https://polyhaven.com/a/oil_tin",
+      "license": "CC0-1.0",
+      "author": "Niklas",
+      "sha256": "03a60f57b26b1a3ddb754be389ac4c561a002f1ab54b51824d57e5eba222137a"
+    },
+    {
+      "id": "brass_vase_03",
+      "url": "https://polyhaven.com/a/brass_vase_03",
+      "license": "CC0-1.0",
+      "author": "Rico Cilliers",
+      "sha256": "a42bf49fd6cf2dce96ddad1bc133cf96999a08d7dd4d314fa0833ad562ecc02d"
+    },
+    {
+      "id": "human_head",
+      "url": "recipes/human_head/human_head.ts",
+      "license": "CC0-1.0"
+    },
+    {
+      "id": "elf_head",
+      "url": "recipes/elf_head/elf_head.ts",
+      "license": "CC0-1.0"
+    },
+    {
+      "id": "goblin_head",
+      "url": "recipes/goblin_head/goblin_head.ts",
+      "license": "CC0-1.0"
+    },
+    {
+      "id": "orc_head",
+      "url": "recipes/orc_head/orc_head.ts",
+      "license": "CC0-1.0"
+    },
+    {
+      "id": "wolf",
+      "url": "recipes/wolf/wolf.ts",
+      "license": "CC0-1.0"
+    },
+    {
+      "id": "amur_tiger",
+      "url": "recipes/amur_tiger/amur_tiger.ts",
+      "license": "CC0-1.0"
+    },
+    {
+      "id": "dragon",
+      "url": "recipes/dragon/dragon.ts",
+      "license": "CC0-1.0"
+    },
+    {
+      "id": "t34",
+      "url": "recipes/t34/t34.ts",
+      "license": "CC0-1.0"
+    },
+    {
+      "id": "loco_440",
+      "url": "recipes/loco_440/loco_440.ts",
+      "license": "CC0-1.0"
+    },
+    {
+      "id": "roadster_v10",
+      "url": "recipes/roadster_v10/roadster_v10.ts",
+      "license": "CC0-1.0"
+    },
+    {
+      "id": "oak",
+      "url": "recipes/oak/oak.ts",
+      "license": "CC0-1.0"
+    },
+    {
+      "id": "rts_tank",
+      "url": "recipes/rts_tank/rts_tank.ts",
+      "license": "CC0-1.0"
+    }
+  ],
+  "rows": [
+    {
+      "id": "ts23d:human_head:original",
+      "group": "ts23d:human_head",
+      "variant": "original",
+      "vector": {
+        "tris": 4.8521,
+        "smoothShading": 0.9928,
+        "curvSmooth": 0.8623,
+        "curvEntropy": 0.6534,
+        "colourDetail": 0.0116,
+        "texelDensity": 2.3257,
+        "chroma": 0.1406,
+        "valueRange": 0.3954,
+        "valueKey": 0.2945,
+        "hiFreq": 0.0245,
+        "restShare": 0.6309,
+        "silhouetteRoughness": 0.0109
+      },
+      "panel": {
+        "overall": 5.3,
+        "silhouette": 6.5,
+        "proportions": 5.8,
+        "materials": 5.5,
+        "detail": 5.5,
+        "wear": 4.5
+      }
+    },
+    {
+      "id": "ts23d:elf_head:original",
+      "group": "ts23d:elf_head",
+      "variant": "original",
+      "vector": {
+        "tris": 4.8972,
+        "smoothShading": 0.9935,
+        "curvSmooth": 0.8432,
+        "curvEntropy": 0.6811,
+        "colourDetail": 0.0155,
+        "texelDensity": 2.3618,
+        "chroma": 0.0995,
+        "valueRange": 0.4824,
+        "valueKey": 0.3409,
+        "hiFreq": 0.0309,
+        "restShare": 0.5558,
+        "silhouetteRoughness": 0.0473
+      },
+      "panel": {
+        "overall": 5,
+        "silhouette": 6.5,
+        "proportions": 5.5,
+        "materials": 5,
+        "detail": 5,
+        "wear": 4
+      }
+    },
+    {
+      "id": "ts23d:goblin_head:original",
+      "group": "ts23d:goblin_head",
+      "variant": "original",
+      "vector": {
+        "tris": 4.9046,
+        "smoothShading": 0.9936,
+        "curvSmooth": 0.8572,
+        "curvEntropy": 0.6584,
+        "colourDetail": 0.017,
+        "texelDensity": 2.4379,
+        "chroma": 0.1536,
+        "valueRange": 0.5841,
+        "valueKey": 0.4063,
+        "hiFreq": 0.0297,
+        "restShare": 0.4741,
+        "silhouetteRoughness": 0.0955
+      },
+      "panel": {
+        "overall": 5.8,
+        "silhouette": 7,
+        "proportions": 6,
+        "materials": 6,
+        "detail": 6,
+        "wear": 4.8
+      }
+    },
+    {
+      "id": "ts23d:orc_head:original",
+      "group": "ts23d:orc_head",
+      "variant": "original",
+      "vector": {
+        "tris": 5.1004,
+        "smoothShading": 0.9934,
+        "curvSmooth": 0.7744,
+        "curvEntropy": 0.756,
+        "colourDetail": 0.0135,
+        "texelDensity": 2.2368,
+        "chroma": 0.07,
+        "valueRange": 0.3926,
+        "valueKey": 0.2925,
+        "hiFreq": 0.0356,
+        "restShare": 0.498,
+        "silhouetteRoughness": 0.0421
+      },
+      "panel": {
+        "overall": 6.4,
+        "silhouette": 7.5,
+        "proportions": 6.5,
+        "materials": 6.5,
+        "detail": 6.5,
+        "wear": 5.5
+      }
+    },
+    {
+      "id": "ts23d:wolf:original",
+      "group": "ts23d:wolf",
+      "variant": "original",
+      "vector": {
+        "tris": 5.1588,
+        "smoothShading": 0.9961,
+        "curvSmooth": 0.9437,
+        "curvEntropy": 0.5298,
+        "colourDetail": 0.0147,
+        "texelDensity": 2.3131,
+        "chroma": 0.0479,
+        "valueRange": 0.2818,
+        "valueKey": 0.3575,
+        "hiFreq": 0.0361,
+        "restShare": 0.4802,
+        "silhouetteRoughness": 0.0443
+      },
+      "panel": {
+        "overall": 6.5,
+        "silhouette": 7.5,
+        "proportions": 7,
+        "materials": 6.5,
+        "detail": 6.5,
+        "wear": 5.5
+      }
+    },
+    {
+      "id": "ts23d:amur_tiger:original",
+      "group": "ts23d:amur_tiger",
+      "variant": "original",
+      "vector": {
+        "tris": 5.1365,
+        "smoothShading": 0.9946,
+        "curvSmooth": 0.9192,
+        "curvEntropy": 0.6175,
+        "colourDetail": 0.0408,
+        "texelDensity": 2.0948,
+        "chroma": 0.3001,
+        "valueRange": 0.398,
+        "valueKey": 0.4306,
+        "hiFreq": 0.0486,
+        "restShare": 0.3441,
+        "silhouetteRoughness": 0.013
+      },
+      "panel": {
+        "overall": 7,
+        "silhouette": 8,
+        "proportions": 7,
+        "materials": 7.5,
+        "detail": 6.5,
+        "wear": 5.5
+      }
+    },
+    {
+      "id": "ts23d:dragon:original",
+      "group": "ts23d:dragon",
+      "variant": "original",
+      "vector": {
+        "tris": 5.2963,
+        "smoothShading": 0.9767,
+        "curvSmooth": 0.7905,
+        "curvEntropy": 0.7678,
+        "colourDetail": 0.016,
+        "texelDensity": 1.5167,
+        "chroma": 0.2179,
+        "valueRange": 0.3139,
+        "valueKey": 0.2616,
+        "hiFreq": 0.0363,
+        "restShare": 0.5235,
+        "silhouetteRoughness": 0.1342
+      },
+      "panel": {
+        "overall": 7.3,
+        "silhouette": 8.5,
+        "proportions": 7.5,
+        "materials": 7,
+        "detail": 7.5,
+        "wear": 5.5
+      }
+    },
+    {
+      "id": "ts23d:t34:original",
+      "group": "ts23d:t34",
+      "variant": "original",
+      "vector": {
+        "tris": 4.683,
+        "smoothShading": 0.4151,
+        "curvSmooth": 0.6437,
+        "curvEntropy": 0.5609,
+        "colourDetail": 0.0199,
+        "texelDensity": 1.0531,
+        "chroma": 0.0671,
+        "valueRange": 0.3734,
+        "valueKey": 0.32,
+        "hiFreq": 0.0798,
+        "restShare": 0.3583,
+        "silhouetteRoughness": 0.046
+      },
+      "panel": {
+        "overall": 7,
+        "silhouette": 8.5,
+        "proportions": 8,
+        "materials": 6.8,
+        "detail": 7.5,
+        "wear": 6.5
+      }
+    },
+    {
+      "id": "ts23d:loco_440:original",
+      "group": "ts23d:loco_440",
+      "variant": "original",
+      "vector": {
+        "tris": 4.6565,
+        "smoothShading": 0.3679,
+        "curvSmooth": 0.5314,
+        "curvEntropy": 0.6082,
+        "colourDetail": 0.0064,
+        "texelDensity": 0.8244,
+        "chroma": 0.134,
+        "valueRange": 0.4949,
+        "valueKey": 0.2885,
+        "hiFreq": 0.1266,
+        "restShare": 0.2596,
+        "silhouetteRoughness": 0.2206
+      },
+      "panel": {
+        "overall": 7.3,
+        "silhouette": 8.5,
+        "proportions": 8,
+        "materials": 7.1,
+        "detail": 7.5,
+        "wear": 4.5
+      }
+    },
+    {
+      "id": "ts23d:roadster_v10:original",
+      "group": "ts23d:roadster_v10",
+      "variant": "original",
+      "vector": {
+        "tris": 5.9553,
+        "smoothShading": 0.8769,
+        "curvSmooth": 0.8093,
+        "curvEntropy": 0.5201,
+        "colourDetail": 0.0105,
+        "texelDensity": 1.7772,
+        "chroma": 0.1546,
+        "valueRange": 0.4995,
+        "valueKey": 0.3359,
+        "hiFreq": 0.0706,
+        "restShare": 0.5665,
+        "silhouetteRoughness": 0.037
+      },
+      "panel": {
+        "overall": 7,
+        "silhouette": 8,
+        "proportions": 7.5,
+        "materials": 7,
+        "detail": 7,
+        "wear": 4
+      }
+    },
+    {
+      "id": "ts23d:oak:original",
+      "group": "ts23d:oak",
+      "variant": "original",
+      "vector": {
+        "tris": 4.1446,
+        "smoothShading": 0.211,
+        "curvSmooth": 0.5631,
+        "curvEntropy": 0.5032,
+        "colourDetail": 0.0038,
+        "texelDensity": 0.2366,
+        "chroma": 0.0913,
+        "valueRange": 0.2241,
+        "valueKey": 0.2451,
+        "hiFreq": 0.0674,
+        "restShare": 0.345,
+        "silhouetteRoughness": 0.5441
+      },
+      "panel": {
+        "overall": 5,
+        "silhouette": 6.5,
+        "proportions": 6,
+        "materials": 5,
+        "detail": 5,
+        "wear": 4
+      }
+    },
+    {
+      "id": "ts23d:rts_tank:original",
+      "group": "ts23d:rts_tank",
+      "variant": "original",
+      "vector": {
+        "tris": 4.5073,
+        "smoothShading": 0.4662,
+        "curvSmooth": 0.6975,
+        "curvEntropy": 0.5143,
+        "colourDetail": 0.0182,
+        "texelDensity": 0.9859,
+        "chroma": 0.096,
+        "valueRange": 0.6086,
+        "valueKey": 0.4566,
+        "hiFreq": 0.1026,
+        "restShare": 0.3491,
+        "silhouetteRoughness": 0.1717
+      },
+      "panel": {
+        "overall": 6.3,
+        "silhouette": 7.5,
+        "proportions": 6.8,
+        "materials": 6.1,
+        "detail": 6,
+        "wear": 5.5
+      }
+    },
+    {
+      "id": "ph:marble_bust_01:decimated",
+      "group": "ph:marble_bust_01",
+      "variant": "decimated",
+      "vector": {
+        "tris": 3.1452,
+        "smoothShading": 1,
+        "curvSmooth": 0.3561,
+        "curvEntropy": 0.9095,
+        "colourDetail": 0.0667,
+        "texelDensity": 1.6228,
+        "chroma": 0.0512,
+        "valueRange": 0.3873,
+        "valueKey": 0.4927,
+        "hiFreq": 0.0231,
+        "restShare": 0.7291,
+        "silhouetteRoughness": 0.0124
+      },
+      "image": "36bc318101a72c66ea84819d47fc4ed50352d9cca9a0da202d4b1b0bb8bd7957",
+      "panel": {
+        "overall": 2.5,
+        "silhouette": 4,
+        "proportions": 3.5,
+        "materials": 4.5,
+        "detail": 2.5,
+        "wear": 3
+      }
+    },
+    {
+      "id": "ph:marble_bust_01:flat",
+      "group": "ph:marble_bust_01",
+      "variant": "flat",
+      "vector": {
+        "tris": 3.64,
+        "smoothShading": 0.1016,
+        "curvSmooth": 0.4465,
+        "curvEntropy": 0.8631,
+        "colourDetail": 0.0588,
+        "texelDensity": 1.8673,
+        "chroma": 0.0527,
+        "valueRange": 0.3966,
+        "valueKey": 0.5004,
+        "hiFreq": 0.0531,
+        "restShare": 0.4537,
+        "silhouetteRoughness": 0.0152
+      },
+      "image": "05a5a308b6d1deb720ebceb279ce1ac7d80cc1a5c719f92a232d4bb6a5d919ee",
+      "panel": {
+        "overall": 4.2,
+        "silhouette": 6,
+        "proportions": 6,
+        "materials": 5,
+        "detail": 4,
+        "wear": 4
+      }
+    },
+    {
+      "id": "ph:marble_bust_01:desaturated",
+      "group": "ph:marble_bust_01",
+      "variant": "desaturated",
+      "vector": {
+        "tris": 4.242,
+        "smoothShading": 1,
+        "curvSmooth": 0.68,
+        "curvEntropy": 0.7958,
+        "colourDetail": 0.047,
+        "texelDensity": 2.168,
+        "chroma": 0.0109,
+        "valueRange": 0.3857,
+        "valueKey": 0.4979,
+        "hiFreq": 0.0291,
+        "restShare": 0.5552,
+        "silhouetteRoughness": 0.0151
+      },
+      "image": "a98fb7633882938673be22fbd9b0008c66ce9ffed88d23c8db56d23bb4934552",
+      "panel": {
+        "overall": 6.3,
+        "silhouette": 7.8,
+        "proportions": 7.5,
+        "materials": 5,
+        "detail": 7,
+        "wear": 4
+      }
+    },
+    {
+      "id": "ph:marble_bust_01:blurred",
+      "group": "ph:marble_bust_01",
+      "variant": "blurred",
+      "vector": {
+        "tris": 4.242,
+        "smoothShading": 1,
+        "curvSmooth": 0.68,
+        "curvEntropy": 0.7958,
+        "colourDetail": 0.0023,
+        "texelDensity": 2.168,
+        "chroma": 0.053,
+        "valueRange": 0.3803,
+        "valueKey": 0.4968,
+        "hiFreq": 0.0237,
+        "restShare": 0.6802,
+        "silhouetteRoughness": 0.0151
+      },
+      "image": "7ad7c2deee2fddd6badcc4192519c66fbf628c4b2ca1bf7be11375a5c2b8a710",
+      "panel": {
+        "overall": 6.6,
+        "silhouette": 7.8,
+        "proportions": 7.5,
+        "materials": 6,
+        "detail": 7,
+        "wear": 5
+      }
+    },
+    {
+      "id": "ph:marble_bust_01:original",
+      "group": "ph:marble_bust_01",
+      "variant": "original",
+      "vector": {
+        "tris": 4.242,
+        "smoothShading": 1,
+        "curvSmooth": 0.68,
+        "curvEntropy": 0.7958,
+        "colourDetail": 0.0465,
+        "texelDensity": 2.168,
+        "chroma": 0.0533,
+        "valueRange": 0.3854,
+        "valueKey": 0.4976,
+        "hiFreq": 0.0291,
+        "restShare": 0.555,
+        "silhouetteRoughness": 0.0151
+      },
+      "image": "019c006037da45d928619a10b21fcee7106295b21316a1a4749080e91d816de7",
+      "panel": {
+        "overall": 7,
+        "silhouette": 8,
+        "proportions": 7.5,
+        "materials": 6.5,
+        "detail": 7.5,
+        "wear": 5.5
+      }
+    },
+    {
+      "id": "ph:bull_head:desaturated",
+      "group": "ph:bull_head",
+      "variant": "desaturated",
+      "vector": {
+        "tris": 4.2342,
+        "smoothShading": 1,
+        "curvSmooth": 0.6586,
+        "curvEntropy": 0.7991,
+        "colourDetail": 0.0069,
+        "texelDensity": 2.2184,
+        "chroma": 0.0036,
+        "valueRange": 0.2322,
+        "valueKey": 0.2358,
+        "hiFreq": 0.0153,
+        "restShare": 0.762,
+        "silhouetteRoughness": 0.0223
+      },
+      "image": "4ae6a9cf2c151c4d3ca590c3b180d64ebfa691b5a3ca755949408bef9d6dbf46",
+      "panel": {
+        "overall": 5,
+        "silhouette": 7.5,
+        "proportions": 7,
+        "materials": 3.7,
+        "detail": 6,
+        "wear": 4
+      }
+    },
+    {
+      "id": "ph:bull_head:flat",
+      "group": "ph:bull_head",
+      "variant": "flat",
+      "vector": {
+        "tris": 3.6322,
+        "smoothShading": 0.0918,
+        "curvSmooth": 0.4254,
+        "curvEntropy": 0.8523,
+        "colourDetail": 0.0086,
+        "texelDensity": 1.9177,
+        "chroma": 0.0437,
+        "valueRange": 0.2304,
+        "valueKey": 0.2364,
+        "hiFreq": 0.0357,
+        "restShare": 0.6327,
+        "silhouetteRoughness": 0.0332
+      },
+      "image": "6692ba176c006c2f94569659259beeecd772fb1bc03b4b4c0c5b613c715f6368",
+      "panel": {
+        "overall": 4.5,
+        "silhouette": 7,
+        "proportions": 6.5,
+        "materials": 5,
+        "detail": 4,
+        "wear": 4
+      }
+    },
+    {
+      "id": "ph:bull_head:blurred",
+      "group": "ph:bull_head",
+      "variant": "blurred",
+      "vector": {
+        "tris": 4.2342,
+        "smoothShading": 1,
+        "curvSmooth": 0.6586,
+        "curvEntropy": 0.7991,
+        "colourDetail": 0.0008,
+        "texelDensity": 2.2184,
+        "chroma": 0.0439,
+        "valueRange": 0.2299,
+        "valueKey": 0.2353,
+        "hiFreq": 0.0146,
+        "restShare": 0.7711,
+        "silhouetteRoughness": 0.0223
+      },
+      "image": "293cdc737e389414e2845e7189ed504eda48df9abea9129c5729cf6aafedc93c",
+      "panel": {
+        "overall": 6,
+        "silhouette": 7.5,
+        "proportions": 7,
+        "materials": 5.8,
+        "detail": 6,
+        "wear": 5
+      }
+    },
+    {
+      "id": "ph:bull_head:decimated",
+      "group": "ph:bull_head",
+      "variant": "decimated",
+      "vector": {
+        "tris": 3.1377,
+        "smoothShading": 1,
+        "curvSmooth": 0.3377,
+        "curvEntropy": 0.893,
+        "colourDetail": 0.0142,
+        "texelDensity": 1.6734,
+        "chroma": 0.0411,
+        "valueRange": 0.2318,
+        "valueKey": 0.2329,
+        "hiFreq": 0.0127,
+        "restShare": 0.7995,
+        "silhouetteRoughness": 0.0388
+      },
+      "image": "b73c837c3092d10f992c359ef4fb7cd89642bb5031fc1286590deed39b1b4bb0",
+      "panel": {
+        "overall": 5.8,
+        "silhouette": 7.5,
+        "proportions": 7,
+        "materials": 5.6,
+        "detail": 5.5,
+        "wear": 4.5
+      }
+    },
+    {
+      "id": "ph:bull_head:original",
+      "group": "ph:bull_head",
+      "variant": "original",
+      "vector": {
+        "tris": 4.2342,
+        "smoothShading": 1,
+        "curvSmooth": 0.6586,
+        "curvEntropy": 0.7991,
+        "colourDetail": 0.0069,
+        "texelDensity": 2.2184,
+        "chroma": 0.0447,
+        "valueRange": 0.2308,
+        "valueKey": 0.2353,
+        "hiFreq": 0.0153,
+        "restShare": 0.7632,
+        "silhouetteRoughness": 0.0223
+      },
+      "image": "2d7f6819cde99dc15f8a90edafd17d92f5ce210596475b93102e626db5d6c901",
+      "panel": {
+        "overall": 6,
+        "silhouette": 7.5,
+        "proportions": 7,
+        "materials": 5.6,
+        "detail": 6,
+        "wear": 4.8
+      }
+    },
+    {
+      "id": "ph:horse_head:blurred",
+      "group": "ph:horse_head",
+      "variant": "blurred",
+      "vector": {
+        "tris": 4.0817,
+        "smoothShading": 1,
+        "curvSmooth": 0.5219,
+        "curvEntropy": 0.8696,
+        "colourDetail": 0.0011,
+        "texelDensity": 2.115,
+        "chroma": 0.0673,
+        "valueRange": 0.2649,
+        "valueKey": 0.3115,
+        "hiFreq": 0.0198,
+        "restShare": 0.7679,
+        "silhouetteRoughness": 0.0509
+      },
+      "image": "3bdaf1fc1d7030d72ab904a5d7001945e6e871187404b8130b0fde58e5bd45f6",
+      "panel": {
+        "overall": 6.3,
+        "silhouette": 8,
+        "proportions": 7.5,
+        "materials": 6,
+        "detail": 6.5,
+        "wear": 5
+      }
+    },
+    {
+      "id": "ph:horse_head:desaturated",
+      "group": "ph:horse_head",
+      "variant": "desaturated",
+      "vector": {
+        "tris": 4.0817,
+        "smoothShading": 1,
+        "curvSmooth": 0.5219,
+        "curvEntropy": 0.8696,
+        "colourDetail": 0.0302,
+        "texelDensity": 2.115,
+        "chroma": 0.005,
+        "valueRange": 0.3092,
+        "valueKey": 0.3216,
+        "hiFreq": 0.023,
+        "restShare": 0.6676,
+        "silhouetteRoughness": 0.0509
+      },
+      "image": "795a198ea1bdbad8ac212413e4c83780bc654a5717f11809bca80e89ba1fe875",
+      "panel": {
+        "overall": 5.5,
+        "silhouette": 8,
+        "proportions": 7.5,
+        "materials": 4,
+        "detail": 6.5,
+        "wear": 4
+      }
+    },
+    {
+      "id": "ph:horse_head:original",
+      "group": "ph:horse_head",
+      "variant": "original",
+      "vector": {
+        "tris": 4.0817,
+        "smoothShading": 1,
+        "curvSmooth": 0.5219,
+        "curvEntropy": 0.8696,
+        "colourDetail": 0.0296,
+        "texelDensity": 2.115,
+        "chroma": 0.0751,
+        "valueRange": 0.3054,
+        "valueKey": 0.3207,
+        "hiFreq": 0.0229,
+        "restShare": 0.6686,
+        "silhouetteRoughness": 0.0509
+      },
+      "image": "eeec56245976b55497e3e1b961b3ea0c2f6b6bd4c6dd0a059eefb2ba7be93cba",
+      "panel": {
+        "overall": 6.5,
+        "silhouette": 8,
+        "proportions": 7.5,
+        "materials": 6.3,
+        "detail": 6.5,
+        "wear": 5.8
+      }
+    },
+    {
+      "id": "ph:horse_head:flat",
+      "group": "ph:horse_head",
+      "variant": "flat",
+      "vector": {
+        "tris": 3.4796,
+        "smoothShading": 0.0744,
+        "curvSmooth": 0.3931,
+        "curvEntropy": 0.9058,
+        "colourDetail": 0.0334,
+        "texelDensity": 1.8152,
+        "chroma": 0.0746,
+        "valueRange": 0.3074,
+        "valueKey": 0.3204,
+        "hiFreq": 0.0335,
+        "restShare": 0.604,
+        "silhouetteRoughness": 0.051
+      },
+      "image": "ff55908f2bf84bfee11f87ee3766d0889b5a0299382b729bb71a8da5e51014e3",
+      "panel": {
+        "overall": 4.5,
+        "silhouette": 7.5,
+        "proportions": 7,
+        "materials": 5,
+        "detail": 4,
+        "wear": 4.5
+      }
+    },
+    {
+      "id": "ph:horse_head:decimated",
+      "group": "ph:horse_head",
+      "variant": "decimated",
+      "vector": {
+        "tris": 2.985,
+        "smoothShading": 1,
+        "curvSmooth": 0.3028,
+        "curvEntropy": 0.9151,
+        "colourDetail": 0.0321,
+        "texelDensity": 1.5722,
+        "chroma": 0.0707,
+        "valueRange": 0.2836,
+        "valueKey": 0.3103,
+        "hiFreq": 0.0202,
+        "restShare": 0.7629,
+        "silhouetteRoughness": 0.0606
+      },
+      "image": "d37e1315fdb86ef43475eea93d724df832317fab3ca75ea157b98a5eb2e6d626",
+      "panel": {
+        "overall": 5,
+        "silhouette": 7,
+        "proportions": 6,
+        "materials": 5,
+        "detail": 4,
+        "wear": 4.5
+      }
+    },
+    {
+      "id": "ph:lion_head:original",
+      "group": "ph:lion_head",
+      "variant": "original",
+      "vector": {
+        "tris": 4.6741,
+        "smoothShading": 1,
+        "curvSmooth": 0.5787,
+        "curvEntropy": 0.8459,
+        "colourDetail": 0.0258,
+        "texelDensity": 2.395,
+        "chroma": 0.0329,
+        "valueRange": 0.2781,
+        "valueKey": 0.2961,
+        "hiFreq": 0.0393,
+        "restShare": 0.3536,
+        "silhouetteRoughness": 0.0749
+      },
+      "image": "9225225f054ff60bfeb5bbb1a85c743e88d0bd53e9308d0aab333c5471b35381",
+      "panel": {
+        "overall": 7,
+        "silhouette": 8,
+        "proportions": 7.5,
+        "materials": 6.5,
+        "detail": 7,
+        "wear": 6
+      }
+    },
+    {
+      "id": "ph:lion_head:desaturated",
+      "group": "ph:lion_head",
+      "variant": "desaturated",
+      "vector": {
+        "tris": 4.6741,
+        "smoothShading": 1,
+        "curvSmooth": 0.5787,
+        "curvEntropy": 0.8459,
+        "colourDetail": 0.0262,
+        "texelDensity": 2.395,
+        "chroma": 0.0056,
+        "valueRange": 0.2784,
+        "valueKey": 0.2963,
+        "hiFreq": 0.0393,
+        "restShare": 0.3531,
+        "silhouetteRoughness": 0.0749
+      },
+      "image": "54947e1d55c05ac6db2b8b28e5c92c86e4d67ed2a73440a884f650261876c5e7",
+      "panel": {
+        "overall": 6.3,
+        "silhouette": 8,
+        "proportions": 7.5,
+        "materials": 4.7,
+        "detail": 7,
+        "wear": 5
+      }
+    },
+    {
+      "id": "ph:lion_head:decimated",
+      "group": "ph:lion_head",
+      "variant": "decimated",
+      "vector": {
+        "tris": 3.5771,
+        "smoothShading": 1,
+        "curvSmooth": 0.3098,
+        "curvEntropy": 0.9162,
+        "colourDetail": 0.0368,
+        "texelDensity": 1.849,
+        "chroma": 0.0353,
+        "valueRange": 0.2588,
+        "valueKey": 0.2965,
+        "hiFreq": 0.0285,
+        "restShare": 0.5,
+        "silhouetteRoughness": 0.0649
+      },
+      "image": "6cb962440ab9c13fd904e266f332d34553133403dff458136e20bcbf873bba5e",
+      "panel": {
+        "overall": 6,
+        "silhouette": 7.5,
+        "proportions": 7.5,
+        "materials": 5.8,
+        "detail": 6,
+        "wear": 5
+      }
+    },
+    {
+      "id": "ph:lion_head:blurred",
+      "group": "ph:lion_head",
+      "variant": "blurred",
+      "vector": {
+        "tris": 4.6741,
+        "smoothShading": 1,
+        "curvSmooth": 0.5787,
+        "curvEntropy": 0.8459,
+        "colourDetail": 0.002,
+        "texelDensity": 2.395,
+        "chroma": 0.031,
+        "valueRange": 0.2532,
+        "valueKey": 0.2927,
+        "hiFreq": 0.0306,
+        "restShare": 0.4976,
+        "silhouetteRoughness": 0.0749
+      },
+      "image": "bdf6a747bec98e084957016edd7171a209b84f550be815f118b347bceeb20e77",
+      "panel": {
+        "overall": 6.4,
+        "silhouette": 8,
+        "proportions": 7.5,
+        "materials": 6.5,
+        "detail": 6.5,
+        "wear": 5.5
+      }
+    },
+    {
+      "id": "ph:lion_head:flat",
+      "group": "ph:lion_head",
+      "variant": "flat",
+      "vector": {
+        "tris": 4.0721,
+        "smoothShading": 0.0857,
+        "curvSmooth": 0.3972,
+        "curvEntropy": 0.8769,
+        "colourDetail": 0.0317,
+        "texelDensity": 2.0943,
+        "chroma": 0.0339,
+        "valueRange": 0.2806,
+        "valueKey": 0.2962,
+        "hiFreq": 0.0605,
+        "restShare": 0.3058,
+        "silhouetteRoughness": 0.0696
+      },
+      "image": "04cb49cc18cda747f6fd927e6ed52dd5baea215e9cf3f52dc49a089cf871ea7b",
+      "panel": {
+        "overall": 7,
+        "silhouette": 8,
+        "proportions": 7.5,
+        "materials": 6.5,
+        "detail": 7.5,
+        "wear": 6.5
+      }
+    },
+    {
+      "id": "ph:street_rat:original",
+      "group": "ph:street_rat",
+      "variant": "original",
+      "vector": {
+        "tris": 4.7575,
+        "smoothShading": 1,
+        "curvSmooth": 0.8713,
+        "curvEntropy": 0.664,
+        "colourDetail": 0.007,
+        "texelDensity": 3.3072,
+        "chroma": 0.0421,
+        "valueRange": 0.1961,
+        "valueKey": 0.2569,
+        "hiFreq": 0.0082,
+        "restShare": 0.9279,
+        "silhouetteRoughness": 0.0996
+      },
+      "image": "0efdcd9703a3bf284d5dabaa391376bc5cf76905ba3979fabf5d8dff4b6ea40d",
+      "panel": {
+        "overall": 6.8,
+        "silhouette": 8,
+        "proportions": 7.5,
+        "materials": 6.6,
+        "detail": 6.5,
+        "wear": 6
+      }
+    },
+    {
+      "id": "ph:street_rat:desaturated",
+      "group": "ph:street_rat",
+      "variant": "desaturated",
+      "vector": {
+        "tris": 4.7575,
+        "smoothShading": 1,
+        "curvSmooth": 0.8713,
+        "curvEntropy": 0.664,
+        "colourDetail": 0.0071,
+        "texelDensity": 3.3072,
+        "chroma": 0.0046,
+        "valueRange": 0.1963,
+        "valueKey": 0.2572,
+        "hiFreq": 0.0081,
+        "restShare": 0.9279,
+        "silhouetteRoughness": 0.0996
+      },
+      "image": "f83aa746a5b1e8b9dbb4beab08b62041ab20cfa87c1ce2d92992f6388a605796",
+      "panel": {
+        "overall": 6.3,
+        "silhouette": 8,
+        "proportions": 7.5,
+        "materials": 4.5,
+        "detail": 6.5,
+        "wear": 5.5
+      }
+    },
+    {
+      "id": "ph:street_rat:blurred",
+      "group": "ph:street_rat",
+      "variant": "blurred",
+      "vector": {
+        "tris": 4.7575,
+        "smoothShading": 1,
+        "curvSmooth": 0.8713,
+        "curvEntropy": 0.664,
+        "colourDetail": 0.0007,
+        "texelDensity": 3.3072,
+        "chroma": 0.0422,
+        "valueRange": 0.186,
+        "valueKey": 0.2568,
+        "hiFreq": 0.0072,
+        "restShare": 0.9379,
+        "silhouetteRoughness": 0.0996
+      },
+      "image": "975ed91967a59b1b02c394b1d328a47befee8c5f9f8d3acaf2458d1077898469",
+      "panel": {
+        "overall": 6,
+        "silhouette": 8,
+        "proportions": 7.5,
+        "materials": 5.5,
+        "detail": 6,
+        "wear": 3.5
+      }
+    },
+    {
+      "id": "ph:street_rat:decimated",
+      "group": "ph:street_rat",
+      "variant": "decimated",
+      "vector": {
+        "tris": 3.6607,
+        "smoothShading": 1,
+        "curvSmooth": 0.506,
+        "curvEntropy": 0.8693,
+        "colourDetail": 0.0119,
+        "texelDensity": 2.7605,
+        "chroma": 0.0423,
+        "valueRange": 0.1887,
+        "valueKey": 0.2562,
+        "hiFreq": 0.0077,
+        "restShare": 0.925,
+        "silhouetteRoughness": 0.1041
+      },
+      "image": "c504aee961b73a84e2212d8fdfab056dae4cc6c260af4c437e9d3b808312c6a8",
+      "panel": {
+        "overall": 5.9,
+        "silhouette": 8,
+        "proportions": 7.5,
+        "materials": 6,
+        "detail": 5.8,
+        "wear": 4.5
+      }
+    },
+    {
+      "id": "ph:street_rat:flat",
+      "group": "ph:street_rat",
+      "variant": "flat",
+      "vector": {
+        "tris": 4.1555,
+        "smoothShading": 0.5428,
+        "curvSmooth": 0.7625,
+        "curvEntropy": 0.7715,
+        "colourDetail": 0.0091,
+        "texelDensity": 3.0064,
+        "chroma": 0.0427,
+        "valueRange": 0.196,
+        "valueKey": 0.2578,
+        "hiFreq": 0.0168,
+        "restShare": 0.8977,
+        "silhouetteRoughness": 0.0986
+      },
+      "image": "ed0d672a3893a8b3261d807a5806c5a1188544dac94eb705a743bb2e8d7b01a9",
+      "panel": {
+        "overall": 6.8,
+        "silhouette": 8,
+        "proportions": 7.5,
+        "materials": 6.6,
+        "detail": 6.5,
+        "wear": 6.5
+      }
+    },
+    {
+      "id": "ph:concrete_cat_statue:flat",
+      "group": "ph:concrete_cat_statue",
+      "variant": "flat",
+      "vector": {
+        "tris": 3.4755,
+        "smoothShading": 0.254,
+        "curvSmooth": 0.5932,
+        "curvEntropy": 0.8069,
+        "colourDetail": 0.0941,
+        "texelDensity": 1.9973,
+        "chroma": 0.0976,
+        "valueRange": 0.5201,
+        "valueKey": 0.4501,
+        "hiFreq": 0.0382,
+        "restShare": 0.4131,
+        "silhouetteRoughness": 0.0062
+      },
+      "image": "e6865bb58c5d203ff3c8feae5f9aaa666ceb9896af84e2bfa4c7585c408b3e4a",
+      "panel": {
+        "overall": 4.6,
+        "silhouette": 7,
+        "proportions": 6.5,
+        "materials": 5.5,
+        "detail": 4,
+        "wear": 5
+      }
+    },
+    {
+      "id": "ph:concrete_cat_statue:blurred",
+      "group": "ph:concrete_cat_statue",
+      "variant": "blurred",
+      "vector": {
+        "tris": 4.0774,
+        "smoothShading": 1,
+        "curvSmooth": 0.8157,
+        "curvEntropy": 0.6881,
+        "colourDetail": 0.0045,
+        "texelDensity": 2.2976,
+        "chroma": 0.097,
+        "valueRange": 0.4517,
+        "valueKey": 0.4447,
+        "hiFreq": 0.0201,
+        "restShare": 0.7654,
+        "silhouetteRoughness": 0.0037
+      },
+      "image": "f7cb927a7ada5d15f18822842acede534394e2f804d7869d88a8453570a38edb",
+      "panel": {
+        "overall": 4.5,
+        "silhouette": 7,
+        "proportions": 6.5,
+        "materials": 4.3,
+        "detail": 3.5,
+        "wear": 3
+      }
+    },
+    {
+      "id": "ph:concrete_cat_statue:desaturated",
+      "group": "ph:concrete_cat_statue",
+      "variant": "desaturated",
+      "vector": {
+        "tris": 4.0774,
+        "smoothShading": 1,
+        "curvSmooth": 0.8157,
+        "curvEntropy": 0.6881,
+        "colourDetail": 0.0735,
+        "texelDensity": 2.2976,
+        "chroma": 0.0071,
+        "valueRange": 0.53,
+        "valueKey": 0.4499,
+        "hiFreq": 0.0283,
+        "restShare": 0.3446,
+        "silhouetteRoughness": 0.0037
+      },
+      "image": "d3156a83c873096ae8647d1e5016965fcbf5de389aa706c90d8b9784e3d535d9",
+      "panel": {
+        "overall": 5.5,
+        "silhouette": 7,
+        "proportions": 6.5,
+        "materials": 3.7,
+        "detail": 5.5,
+        "wear": 5
+      }
+    },
+    {
+      "id": "ph:concrete_cat_statue:original",
+      "group": "ph:concrete_cat_statue",
+      "variant": "original",
+      "vector": {
+        "tris": 4.0774,
+        "smoothShading": 1,
+        "curvSmooth": 0.8157,
+        "curvEntropy": 0.6881,
+        "colourDetail": 0.0716,
+        "texelDensity": 2.2976,
+        "chroma": 0.0977,
+        "valueRange": 0.529,
+        "valueKey": 0.449,
+        "hiFreq": 0.0283,
+        "restShare": 0.3457,
+        "silhouetteRoughness": 0.0037
+      },
+      "image": "961eb80fe8a1652c5af5bd992ef05f8b87810dcaf4f33c896f3edf68e559eb73",
+      "panel": {
+        "overall": 6,
+        "silhouette": 7,
+        "proportions": 6.5,
+        "materials": 6,
+        "detail": 5.8,
+        "wear": 6
+      }
+    },
+    {
+      "id": "ph:concrete_cat_statue:decimated",
+      "group": "ph:concrete_cat_statue",
+      "variant": "decimated",
+      "vector": {
+        "tris": 2.9809,
+        "smoothShading": 1,
+        "curvSmooth": 0.4009,
+        "curvEntropy": 0.8758,
+        "colourDetail": 0.1014,
+        "texelDensity": 1.7525,
+        "chroma": 0.0986,
+        "valueRange": 0.4979,
+        "valueKey": 0.4501,
+        "hiFreq": 0.0212,
+        "restShare": 0.6382,
+        "silhouetteRoughness": 0.0099
+      },
+      "image": "231aba85b9c45c4b30a3a1696cf6d399c1ce42255220b6311684632b8c6166f4",
+      "panel": {
+        "overall": 4.3,
+        "silhouette": 6.5,
+        "proportions": 6.5,
+        "materials": 4.5,
+        "detail": 3.5,
+        "wear": 4
+      }
+    },
+    {
+      "id": "ph:horse_statue_01:flat",
+      "group": "ph:horse_statue_01",
+      "variant": "flat",
+      "vector": {
+        "tris": 3.748,
+        "smoothShading": 0.0838,
+        "curvSmooth": 0.401,
+        "curvEntropy": 0.8904,
+        "colourDetail": 0.0477,
+        "texelDensity": 2.3164,
+        "chroma": 0.0367,
+        "valueRange": 0.5779,
+        "valueKey": 0.5623,
+        "hiFreq": 0.0733,
+        "restShare": 0.4928,
+        "silhouetteRoughness": 0.053
+      },
+      "image": "1abd7760f999ebf4f9acf026ed9ad60a7c5bea1548fb9d50f0bee33eb27fb2ba",
+      "panel": {
+        "overall": 6.5,
+        "silhouette": 8,
+        "proportions": 7,
+        "materials": 6,
+        "detail": 6.5,
+        "wear": 5.2
+      }
+    },
+    {
+      "id": "ph:horse_statue_01:decimated",
+      "group": "ph:horse_statue_01",
+      "variant": "decimated",
+      "vector": {
+        "tris": 3.2531,
+        "smoothShading": 1,
+        "curvSmooth": 0.3129,
+        "curvEntropy": 0.9355,
+        "colourDetail": 0.0557,
+        "texelDensity": 2.0738,
+        "chroma": 0.0364,
+        "valueRange": 0.5636,
+        "valueKey": 0.5573,
+        "hiFreq": 0.0451,
+        "restShare": 0.5148,
+        "silhouetteRoughness": 0.0678
+      },
+      "image": "ec078195cbb8189fae3716a3dd70c2b7f7dc122a8fe2585206b3d91d0e89cdbe",
+      "panel": {
+        "overall": 6,
+        "silhouette": 7.5,
+        "proportions": 7,
+        "materials": 6,
+        "detail": 6,
+        "wear": 4.8
+      }
+    },
+    {
+      "id": "ph:horse_statue_01:blurred",
+      "group": "ph:horse_statue_01",
+      "variant": "blurred",
+      "vector": {
+        "tris": 4.35,
+        "smoothShading": 1,
+        "curvSmooth": 0.5619,
+        "curvEntropy": 0.845,
+        "colourDetail": 0.0025,
+        "texelDensity": 2.6144,
+        "chroma": 0.0343,
+        "valueRange": 0.579,
+        "valueKey": 0.5611,
+        "hiFreq": 0.0451,
+        "restShare": 0.5486,
+        "silhouetteRoughness": 0.0579
+      },
+      "image": "0b67b79b64cb37f356a6944c9e18ba1183819236ba3c756e8e91002caa36b76a",
+      "panel": {
+        "overall": 6.3,
+        "silhouette": 8,
+        "proportions": 7,
+        "materials": 6,
+        "detail": 6.5,
+        "wear": 5
+      }
+    },
+    {
+      "id": "ph:horse_statue_01:original",
+      "group": "ph:horse_statue_01",
+      "variant": "original",
+      "vector": {
+        "tris": 4.35,
+        "smoothShading": 1,
+        "curvSmooth": 0.5619,
+        "curvEntropy": 0.845,
+        "colourDetail": 0.0402,
+        "texelDensity": 2.6144,
+        "chroma": 0.0349,
+        "valueRange": 0.6076,
+        "valueKey": 0.5614,
+        "hiFreq": 0.0479,
+        "restShare": 0.5437,
+        "silhouetteRoughness": 0.0579
+      },
+      "image": "5d052312fe0369acfef63db178855bfb97a03d79b68ad1ed5e3bca53581f3520",
+      "panel": {
+        "overall": 6.5,
+        "silhouette": 8,
+        "proportions": 7,
+        "materials": 6.3,
+        "detail": 6.5,
+        "wear": 5.5
+      }
+    },
+    {
+      "id": "ph:horse_statue_01:desaturated",
+      "group": "ph:horse_statue_01",
+      "variant": "desaturated",
+      "vector": {
+        "tris": 4.35,
+        "smoothShading": 1,
+        "curvSmooth": 0.5619,
+        "curvEntropy": 0.845,
+        "colourDetail": 0.0382,
+        "texelDensity": 2.6144,
+        "chroma": 0.0164,
+        "valueRange": 0.6031,
+        "valueKey": 0.5621,
+        "hiFreq": 0.0478,
+        "restShare": 0.5435,
+        "silhouetteRoughness": 0.0579
+      },
+      "image": "8fc5e5022e8ceb6bcec7d84a0fa1bcad26d657e7af0191f95595e75940094bff",
+      "panel": {
+        "overall": 5.8,
+        "silhouette": 8,
+        "proportions": 7,
+        "materials": 5,
+        "detail": 6.5,
+        "wear": 5
+      }
+    },
+    {
+      "id": "ph:carved_wooden_elephant:decimated",
+      "group": "ph:carved_wooden_elephant",
+      "variant": "decimated",
+      "vector": {
+        "tris": 2.3444,
+        "smoothShading": 1,
+        "curvSmooth": 0.144,
+        "curvEntropy": 0.911,
+        "colourDetail": 0.0237,
+        "texelDensity": 1.8479,
+        "chroma": 0.0934,
+        "valueRange": 0.1635,
+        "valueKey": 0.2526,
+        "hiFreq": 0.0168,
+        "restShare": 0.916,
+        "silhouetteRoughness": 0.0136
+      },
+      "image": "f25e345701a47625183c15d154fe93381c11ebe46b573e03c6882bdcf2fae7de",
+      "panel": {
+        "overall": 2.5,
+        "silhouette": 4,
+        "proportions": 3.5,
+        "materials": 4,
+        "detail": 2,
+        "wear": 3
+      }
+    },
+    {
+      "id": "ph:carved_wooden_elephant:flat",
+      "group": "ph:carved_wooden_elephant",
+      "variant": "flat",
+      "vector": {
+        "tris": 2.8382,
+        "smoothShading": 0.0263,
+        "curvSmooth": 0.2682,
+        "curvEntropy": 0.8882,
+        "colourDetail": 0.021,
+        "texelDensity": 2.0947,
+        "chroma": 0.1346,
+        "valueRange": 0.2046,
+        "valueKey": 0.2495,
+        "hiFreq": 0.0176,
+        "restShare": 0.8225,
+        "silhouetteRoughness": 0.016
+      },
+      "image": "758d2954e06ee6aad6fd10b3979cc3008a6990365e2f4e905245ed3aca6f2eff",
+      "panel": {
+        "overall": 3.5,
+        "silhouette": 6,
+        "proportions": 5.5,
+        "materials": 4.5,
+        "detail": 3,
+        "wear": 3
+      }
+    },
+    {
+      "id": "ph:carved_wooden_elephant:desaturated",
+      "group": "ph:carved_wooden_elephant",
+      "variant": "desaturated",
+      "vector": {
+        "tris": 3.4398,
+        "smoothShading": 1,
+        "curvSmooth": 0.4959,
+        "curvEntropy": 0.864,
+        "colourDetail": 0.0166,
+        "texelDensity": 2.3953,
+        "chroma": 0.0051,
+        "valueRange": 0.1955,
+        "valueKey": 0.2545,
+        "hiFreq": 0.0104,
+        "restShare": 0.9069,
+        "silhouetteRoughness": 0.0133
+      },
+      "image": "9d66eb1effce36fc527d3b1ab2a6ea09a37c72b235d3ff4b21e10f1bb59cc152",
+      "panel": {
+        "overall": 4.8,
+        "silhouette": 7,
+        "proportions": 6,
+        "materials": 3.2,
+        "detail": 5.5,
+        "wear": 3.5
+      }
+    },
+    {
+      "id": "ph:carved_wooden_elephant:original",
+      "group": "ph:carved_wooden_elephant",
+      "variant": "original",
+      "vector": {
+        "tris": 3.4398,
+        "smoothShading": 1,
+        "curvSmooth": 0.4959,
+        "curvEntropy": 0.864,
+        "colourDetail": 0.0171,
+        "texelDensity": 2.3953,
+        "chroma": 0.136,
+        "valueRange": 0.1909,
+        "valueKey": 0.2506,
+        "hiFreq": 0.0103,
+        "restShare": 0.9061,
+        "silhouetteRoughness": 0.0133
+      },
+      "image": "64808990f49f229d66eec4dd9e9dedba0478b7c7f5da4a8a1e9b8ec8b8395e0f",
+      "panel": {
+        "overall": 5.5,
+        "silhouette": 7,
+        "proportions": 6,
+        "materials": 5.3,
+        "detail": 5.5,
+        "wear": 4.5
+      }
+    },
+    {
+      "id": "ph:carved_wooden_elephant:blurred",
+      "group": "ph:carved_wooden_elephant",
+      "variant": "blurred",
+      "vector": {
+        "tris": 3.4398,
+        "smoothShading": 1,
+        "curvSmooth": 0.4959,
+        "curvEntropy": 0.864,
+        "colourDetail": 0.0006,
+        "texelDensity": 2.3953,
+        "chroma": 0.1286,
+        "valueRange": 0.1914,
+        "valueKey": 0.2486,
+        "hiFreq": 0.0099,
+        "restShare": 0.9063,
+        "silhouetteRoughness": 0.0133
+      },
+      "image": "86781210662e7e73065eeaee881125e515d0e95b54a0f359543ef90d6bacab57",
+      "panel": {
+        "overall": 5.5,
+        "silhouette": 7,
+        "proportions": 6,
+        "materials": 5.3,
+        "detail": 5.5,
+        "wear": 4.5
+      }
+    },
+    {
+      "id": "ph:bronze_shark_statue:blurred",
+      "group": "ph:bronze_shark_statue",
+      "variant": "blurred",
+      "vector": {
+        "tris": 3.8662,
+        "smoothShading": 0.9913,
+        "curvSmooth": 0.7303,
+        "curvEntropy": 0.8168,
+        "colourDetail": 0.0028,
+        "texelDensity": 1.9537,
+        "chroma": 0.043,
+        "valueRange": 0.3383,
+        "valueKey": 0.3243,
+        "hiFreq": 0.0157,
+        "restShare": 0.7777,
+        "silhouetteRoughness": 0.027
+      },
+      "image": "a3d8a1273dfca97e07a49b2a3d61c29f2e9a208f38ff7f4233d0249d17b38ff1",
+      "panel": {
+        "overall": 5.6,
+        "silhouette": 8,
+        "proportions": 7.5,
+        "materials": 5,
+        "detail": 5.5,
+        "wear": 3.5
+      }
+    },
+    {
+      "id": "ph:bronze_shark_statue:flat",
+      "group": "ph:bronze_shark_statue",
+      "variant": "flat",
+      "vector": {
+        "tris": 3.2641,
+        "smoothShading": 0.2175,
+        "curvSmooth": 0.5445,
+        "curvEntropy": 0.9078,
+        "colourDetail": 0.0279,
+        "texelDensity": 1.6535,
+        "chroma": 0.0379,
+        "valueRange": 0.3117,
+        "valueKey": 0.3084,
+        "hiFreq": 0.0256,
+        "restShare": 0.6855,
+        "silhouetteRoughness": 0.0247
+      },
+      "image": "f47c166baa018f860a3cfa797070bdd9cab789a17ee614b7a350181643f8b591",
+      "panel": {
+        "overall": 5,
+        "silhouette": 7.5,
+        "proportions": 7,
+        "materials": 5,
+        "detail": 5,
+        "wear": 5
+      }
+    },
+    {
+      "id": "ph:bronze_shark_statue:desaturated",
+      "group": "ph:bronze_shark_statue",
+      "variant": "desaturated",
+      "vector": {
+        "tris": 3.8662,
+        "smoothShading": 0.9913,
+        "curvSmooth": 0.7303,
+        "curvEntropy": 0.8168,
+        "colourDetail": 0.0221,
+        "texelDensity": 1.9537,
+        "chroma": 0.0049,
+        "valueRange": 0.3176,
+        "valueKey": 0.3113,
+        "hiFreq": 0.017,
+        "restShare": 0.7308,
+        "silhouetteRoughness": 0.027
+      },
+      "image": "7b943671e28f10198da3b84320901f0d792ac7acaa5c904315adcfc3f3fab74a",
+      "panel": {
+        "overall": 5,
+        "silhouette": 8,
+        "proportions": 7.5,
+        "materials": 4,
+        "detail": 5.5,
+        "wear": 5
+      }
+    },
+    {
+      "id": "ph:bronze_shark_statue:original",
+      "group": "ph:bronze_shark_statue",
+      "variant": "original",
+      "vector": {
+        "tris": 3.8662,
+        "smoothShading": 0.9913,
+        "curvSmooth": 0.7303,
+        "curvEntropy": 0.8168,
+        "colourDetail": 0.0224,
+        "texelDensity": 1.9537,
+        "chroma": 0.0388,
+        "valueRange": 0.3164,
+        "valueKey": 0.3111,
+        "hiFreq": 0.0169,
+        "restShare": 0.7316,
+        "silhouetteRoughness": 0.027
+      },
+      "image": "e79842227e44e9626367c659625e9ee46d7384fa1585cf0fc116598a6e711fed",
+      "panel": {
+        "overall": 6,
+        "silhouette": 8,
+        "proportions": 7.5,
+        "materials": 5.8,
+        "detail": 5.7,
+        "wear": 6
+      }
+    },
+    {
+      "id": "ph:bronze_shark_statue:decimated",
+      "group": "ph:bronze_shark_statue",
+      "variant": "decimated",
+      "vector": {
+        "tris": 2.7701,
+        "smoothShading": 0.8933,
+        "curvSmooth": 0.39,
+        "curvEntropy": 0.9445,
+        "colourDetail": 0.0331,
+        "texelDensity": 1.4127,
+        "chroma": 0.037,
+        "valueRange": 0.3031,
+        "valueKey": 0.3048,
+        "hiFreq": 0.0173,
+        "restShare": 0.7943,
+        "silhouetteRoughness": 0.0401
+      },
+      "image": "c10c7a98505000cdc21b7ac7e988acf9838fb00326505c21969e212805215ae7",
+      "panel": {
+        "overall": 4.3,
+        "silhouette": 7,
+        "proportions": 6.5,
+        "materials": 5,
+        "detail": 3.5,
+        "wear": 3.5
+      }
+    },
+    {
+      "id": "ph:gothic_statue:original",
+      "group": "ph:gothic_statue",
+      "variant": "original",
+      "vector": {
+        "tris": 4.4472,
+        "smoothShading": 0.8827,
+        "curvSmooth": 0.4348,
+        "curvEntropy": 0.9541,
+        "colourDetail": 0.0891,
+        "texelDensity": 1.6867,
+        "chroma": 0.0638,
+        "valueRange": 0.571,
+        "valueKey": 0.3476,
+        "hiFreq": 0.0909,
+        "restShare": 0.1212,
+        "silhouetteRoughness": 0.1287
+      },
+      "image": "c568970c6e3246db81070676723da207e9f228d030255c31f8a50bbe85064408",
+      "panel": {
+        "overall": 6,
+        "silhouette": 7,
+        "proportions": 6.5,
+        "materials": 5.5,
+        "detail": 6.5,
+        "wear": 5.5
+      }
+    },
+    {
+      "id": "ph:gothic_statue:decimated",
+      "group": "ph:gothic_statue",
+      "variant": "decimated",
+      "vector": {
+        "tris": 3.7691,
+        "smoothShading": 0.6252,
+        "curvSmooth": 0.2269,
+        "curvEntropy": 0.9606,
+        "colourDetail": 0.0637,
+        "texelDensity": 1.4011,
+        "chroma": 0.0525,
+        "valueRange": 0.4002,
+        "valueKey": 0.2807,
+        "hiFreq": 0.0544,
+        "restShare": 0.3595,
+        "silhouetteRoughness": 0.132
+      },
+      "image": "331d6c10a3d825d06cf5b295eeaeeae9ad6ff6ba1292ced82c40607ac81e549f",
+      "panel": {
+        "overall": 3.6,
+        "silhouette": 5.5,
+        "proportions": 5.5,
+        "materials": 4,
+        "detail": 3,
+        "wear": 4
+      }
+    },
+    {
+      "id": "ph:gothic_statue:flat",
+      "group": "ph:gothic_statue",
+      "variant": "flat",
+      "vector": {
+        "tris": 3.8451,
+        "smoothShading": 0.0269,
+        "curvSmooth": 0.2186,
+        "curvEntropy": 0.9472,
+        "colourDetail": 0.0953,
+        "texelDensity": 1.4123,
+        "chroma": 0.0583,
+        "valueRange": 0.5223,
+        "valueKey": 0.3304,
+        "hiFreq": 0.0829,
+        "restShare": 0.1824,
+        "silhouetteRoughness": 0.1338
+      },
+      "image": "7f399eef479e4b012042242dd31dc9d1cc2ed67183aa7ba7bb520f75c9d3fdf6",
+      "panel": {
+        "overall": 4.8,
+        "silhouette": 6.5,
+        "proportions": 6,
+        "materials": 4.6,
+        "detail": 4.5,
+        "wear": 4.5
+      }
+    },
+    {
+      "id": "ph:gothic_statue:desaturated",
+      "group": "ph:gothic_statue",
+      "variant": "desaturated",
+      "vector": {
+        "tris": 4.4472,
+        "smoothShading": 0.8827,
+        "curvSmooth": 0.4348,
+        "curvEntropy": 0.9541,
+        "colourDetail": 0.0903,
+        "texelDensity": 1.6867,
+        "chroma": 0.0063,
+        "valueRange": 0.5723,
+        "valueKey": 0.3482,
+        "hiFreq": 0.091,
+        "restShare": 0.121,
+        "silhouetteRoughness": 0.1287
+      },
+      "image": "6c76f4bf44e9ede5237fa926532620b2654a5b9cb8e4531e32049915e657e3f7",
+      "panel": {
+        "overall": 5.5,
+        "silhouette": 7,
+        "proportions": 6.5,
+        "materials": 3.7,
+        "detail": 6.5,
+        "wear": 4.5
+      }
+    },
+    {
+      "id": "ph:gothic_statue:blurred",
+      "group": "ph:gothic_statue",
+      "variant": "blurred",
+      "vector": {
+        "tris": 4.4472,
+        "smoothShading": 0.8827,
+        "curvSmooth": 0.4348,
+        "curvEntropy": 0.9541,
+        "colourDetail": 0.0029,
+        "texelDensity": 1.6867,
+        "chroma": 0.0589,
+        "valueRange": 0.4568,
+        "valueKey": 0.3451,
+        "hiFreq": 0.0605,
+        "restShare": 0.3107,
+        "silhouetteRoughness": 0.1287
+      },
+      "image": "475d48739421efe7a93f51e2867bd91fd047d4a9c173755c14b63c10c154119a",
+      "panel": {
+        "overall": 4.6,
+        "silhouette": 6.5,
+        "proportions": 6,
+        "materials": 4.5,
+        "detail": 4.5,
+        "wear": 4.5
+      }
+    },
+    {
+      "id": "ph:rubber_duck_toy:flat",
+      "group": "ph:rubber_duck_toy",
+      "variant": "flat",
+      "vector": {
+        "tris": 3.0306,
+        "smoothShading": 0.0502,
+        "curvSmooth": 0.5102,
+        "curvEntropy": 0.8083,
+        "colourDetail": 0.0136,
+        "texelDensity": 1.6836,
+        "chroma": 0.5555,
+        "valueRange": 0.3605,
+        "valueKey": 0.5018,
+        "hiFreq": 0.0236,
+        "restShare": 0.7776,
+        "silhouetteRoughness": 0.0139
+      },
+      "image": "fcaf55d393b2a6956772b4669ededcfd36118bd01c1b3275f25a83f0c53d5e43",
+      "panel": {
+        "overall": 4,
+        "silhouette": 7,
+        "proportions": 7,
+        "materials": 5,
+        "detail": 3,
+        "wear": 3
+      }
+    },
+    {
+      "id": "ph:rubber_duck_toy:blurred",
+      "group": "ph:rubber_duck_toy",
+      "variant": "blurred",
+      "vector": {
+        "tris": 3.6324,
+        "smoothShading": 1,
+        "curvSmooth": 0.7632,
+        "curvEntropy": 0.7249,
+        "colourDetail": 0.0007,
+        "texelDensity": 1.9827,
+        "chroma": 0.5533,
+        "valueRange": 0.3683,
+        "valueKey": 0.5016,
+        "hiFreq": 0.0149,
+        "restShare": 0.9153,
+        "silhouetteRoughness": 0.0126
+      },
+      "image": "b535aa7b9788be3f03f06cceea75d202cd7fabe0a7defb05c4a097538588d542",
+      "panel": {
+        "overall": 5.5,
+        "silhouette": 8,
+        "proportions": 7.5,
+        "materials": 5.5,
+        "detail": 5.5,
+        "wear": 3
+      }
+    },
+    {
+      "id": "ph:rubber_duck_toy:original",
+      "group": "ph:rubber_duck_toy",
+      "variant": "original",
+      "vector": {
+        "tris": 3.6324,
+        "smoothShading": 1,
+        "curvSmooth": 0.7632,
+        "curvEntropy": 0.7249,
+        "colourDetail": 0.0097,
+        "texelDensity": 1.9827,
+        "chroma": 0.5526,
+        "valueRange": 0.3633,
+        "valueKey": 0.5031,
+        "hiFreq": 0.0143,
+        "restShare": 0.9076,
+        "silhouetteRoughness": 0.0126
+      },
+      "image": "afc4c8b236681c97e8adc647e7bcb5909cdb4a96b4508cd606de34f58e8213a7",
+      "panel": {
+        "overall": 6,
+        "silhouette": 8,
+        "proportions": 7.5,
+        "materials": 5.8,
+        "detail": 6,
+        "wear": 3.5
+      }
+    },
+    {
+      "id": "ph:rubber_duck_toy:decimated",
+      "group": "ph:rubber_duck_toy",
+      "variant": "decimated",
+      "vector": {
+        "tris": 2.5353,
+        "smoothShading": 1,
+        "curvSmooth": 0.307,
+        "curvEntropy": 0.8716,
+        "colourDetail": 0.0158,
+        "texelDensity": 1.4437,
+        "chroma": 0.5593,
+        "valueRange": 0.3778,
+        "valueKey": 0.5038,
+        "hiFreq": 0.0152,
+        "restShare": 0.9098,
+        "silhouetteRoughness": 0.0142
+      },
+      "image": "54e69e1fcaa2904e747e62cce91188479b1a6ccc7fdb1b6594f1fdaf05316a69",
+      "panel": {
+        "overall": 3.8,
+        "silhouette": 6,
+        "proportions": 6.5,
+        "materials": 4.5,
+        "detail": 3,
+        "wear": 2.8
+      }
+    },
+    {
+      "id": "ph:rubber_duck_toy:desaturated",
+      "group": "ph:rubber_duck_toy",
+      "variant": "desaturated",
+      "vector": {
+        "tris": 3.6324,
+        "smoothShading": 1,
+        "curvSmooth": 0.7632,
+        "curvEntropy": 0.7249,
+        "colourDetail": 0.0078,
+        "texelDensity": 1.9827,
+        "chroma": 0.0079,
+        "valueRange": 0.3888,
+        "valueKey": 0.5367,
+        "hiFreq": 0.0153,
+        "restShare": 0.9032,
+        "silhouetteRoughness": 0.0126
+      },
+      "image": "a841bd2fa17c695406dd0e5000e6c54874bb0222123ea2f0089c4400aa8b75f2",
+      "panel": {
+        "overall": 4.5,
+        "silhouette": 8,
+        "proportions": 7.5,
+        "materials": 3,
+        "detail": 5.5,
+        "wear": 3
+      }
+    },
+    {
+      "id": "ph:food_apple_01:flat",
+      "group": "ph:food_apple_01",
+      "variant": "flat",
+      "vector": {
+        "tris": 3.2438,
+        "smoothShading": 0.5034,
+        "curvSmooth": 0.7589,
+        "curvEntropy": 0.7535,
+        "colourDetail": 0.0273,
+        "texelDensity": 2.2454,
+        "chroma": 0.2357,
+        "valueRange": 0.2326,
+        "valueKey": 0.2713,
+        "hiFreq": 0.0121,
+        "restShare": 0.9447,
+        "silhouetteRoughness": 0.0057
+      },
+      "image": "be3a46419ae2c4973426703bb1ab6131b4e627d228a2fdcd966634b831a0a667",
+      "panel": {
+        "overall": 4.3,
+        "silhouette": 7,
+        "proportions": 7,
+        "materials": 5.5,
+        "detail": 3.5,
+        "wear": 5
+      }
+    },
+    {
+      "id": "ph:food_apple_01:blurred",
+      "group": "ph:food_apple_01",
+      "variant": "blurred",
+      "vector": {
+        "tris": 3.8459,
+        "smoothShading": 1,
+        "curvSmooth": 0.8946,
+        "curvEntropy": 0.6663,
+        "colourDetail": 0.0018,
+        "texelDensity": 2.546,
+        "chroma": 0.2301,
+        "valueRange": 0.2174,
+        "valueKey": 0.2694,
+        "hiFreq": 0.0077,
+        "restShare": 0.977,
+        "silhouetteRoughness": 0.0057
+      },
+      "image": "7fa7490abfe1ffe5a1e6e9cd828b2998b8b020eba659b6fa180e989b1e047ade",
+      "panel": {
+        "overall": 6,
+        "silhouette": 8,
+        "proportions": 7.5,
+        "materials": 5.8,
+        "detail": 5.7,
+        "wear": 4.5
+      }
+    },
+    {
+      "id": "ph:food_apple_01:desaturated",
+      "group": "ph:food_apple_01",
+      "variant": "desaturated",
+      "vector": {
+        "tris": 3.8459,
+        "smoothShading": 1,
+        "curvSmooth": 0.8946,
+        "curvEntropy": 0.6663,
+        "colourDetail": 0.0272,
+        "texelDensity": 2.546,
+        "chroma": 0.0035,
+        "valueRange": 0.24,
+        "valueKey": 0.285,
+        "hiFreq": 0.0093,
+        "restShare": 0.9617,
+        "silhouetteRoughness": 0.0057
+      },
+      "image": "794a192cb0fa3d5db32ca66e2d21d23541f04074bf48c0abf92e8887905b144d",
+      "panel": {
+        "overall": 4.3,
+        "silhouette": 7.5,
+        "proportions": 7,
+        "materials": 2.5,
+        "detail": 5.5,
+        "wear": 4.5
+      }
+    },
+    {
+      "id": "ph:food_apple_01:original",
+      "group": "ph:food_apple_01",
+      "variant": "original",
+      "vector": {
+        "tris": 3.8459,
+        "smoothShading": 1,
+        "curvSmooth": 0.8946,
+        "curvEntropy": 0.6663,
+        "colourDetail": 0.0242,
+        "texelDensity": 2.546,
+        "chroma": 0.2295,
+        "valueRange": 0.2328,
+        "valueKey": 0.2683,
+        "hiFreq": 0.0085,
+        "restShare": 0.9597,
+        "silhouetteRoughness": 0.0057
+      },
+      "image": "50431c249741a67a42b48bd68e1f3e2593fd518068ee76781dbbf6100cadaf0f",
+      "panel": {
+        "overall": 6.5,
+        "silhouette": 8,
+        "proportions": 7.5,
+        "materials": 6.5,
+        "detail": 6,
+        "wear": 6.2
+      }
+    },
+    {
+      "id": "ph:food_apple_01:decimated",
+      "group": "ph:food_apple_01",
+      "variant": "decimated",
+      "vector": {
+        "tris": 2.749,
+        "smoothShading": 1,
+        "curvSmooth": 0.3947,
+        "curvEntropy": 0.8391,
+        "colourDetail": 0.0372,
+        "texelDensity": 2.002,
+        "chroma": 0.2338,
+        "valueRange": 0.2434,
+        "valueKey": 0.276,
+        "hiFreq": 0.0086,
+        "restShare": 0.9768,
+        "silhouetteRoughness": 0.0035
+      },
+      "image": "af71dfa0f391c3fdaa74ab0b32c2852d055b4b5c09c3e6c1395fcc05209ec4a3",
+      "panel": {
+        "overall": 4.4,
+        "silhouette": 6,
+        "proportions": 6.5,
+        "materials": 5.5,
+        "detail": 4,
+        "wear": 4.5
+      }
+    },
+    {
+      "id": "ph:rock_07:original",
+      "group": "ph:rock_07",
+      "variant": "original",
+      "vector": {
+        "tris": 4.1716,
+        "smoothShading": 1,
+        "curvSmooth": 0.5622,
+        "curvEntropy": 0.8386,
+        "colourDetail": 0.0206,
+        "texelDensity": 2.3346,
+        "chroma": 0.0476,
+        "valueRange": 0.1394,
+        "valueKey": 0.2272,
+        "hiFreq": 0.0087,
+        "restShare": 0.9453,
+        "silhouetteRoughness": 0.0145
+      },
+      "image": "10d21feb00faa1bd15e46c5c513d0321ba9f4fb9c33ee5245869b5c943ffacc6",
+      "panel": {
+        "overall": 6.3,
+        "silhouette": 7.3,
+        "proportions": 6.8,
+        "materials": 6.1,
+        "detail": 6.5,
+        "wear": 6
+      }
+    },
+    {
+      "id": "ph:rock_07:desaturated",
+      "group": "ph:rock_07",
+      "variant": "desaturated",
+      "vector": {
+        "tris": 4.1716,
+        "smoothShading": 1,
+        "curvSmooth": 0.5622,
+        "curvEntropy": 0.8386,
+        "colourDetail": 0.0199,
+        "texelDensity": 2.3346,
+        "chroma": 0.0027,
+        "valueRange": 0.1412,
+        "valueKey": 0.228,
+        "hiFreq": 0.0086,
+        "restShare": 0.9451,
+        "silhouetteRoughness": 0.0145
+      },
+      "image": "24e5ebc18627e153f20d28323fcee37c8508373d2fa204a844b0bef2e84a472b",
+      "panel": {
+        "overall": 5.3,
+        "silhouette": 6.8,
+        "proportions": 6.5,
+        "materials": 4,
+        "detail": 6.3,
+        "wear": 5
+      }
+    },
+    {
+      "id": "ph:rock_07:flat",
+      "group": "ph:rock_07",
+      "variant": "flat",
+      "vector": {
+        "tris": 3.5695,
+        "smoothShading": 0.1966,
+        "curvSmooth": 0.5181,
+        "curvEntropy": 0.8619,
+        "colourDetail": 0.0243,
+        "texelDensity": 2.0354,
+        "chroma": 0.0494,
+        "valueRange": 0.1386,
+        "valueKey": 0.2289,
+        "hiFreq": 0.0158,
+        "restShare": 0.8949,
+        "silhouetteRoughness": 0.0121
+      },
+      "image": "0067f37ad2e5a539e2630979691ee624700c1036e156e9de9a01a09ae644d455",
+      "panel": {
+        "overall": 4,
+        "silhouette": 6,
+        "proportions": 6.5,
+        "materials": 5.5,
+        "detail": 3.5,
+        "wear": 5
+      }
+    },
+    {
+      "id": "ph:rock_07:decimated",
+      "group": "ph:rock_07",
+      "variant": "decimated",
+      "vector": {
+        "tris": 3.0752,
+        "smoothShading": 1,
+        "curvSmooth": 0.5224,
+        "curvEntropy": 0.8824,
+        "colourDetail": 0.0289,
+        "texelDensity": 1.7917,
+        "chroma": 0.0456,
+        "valueRange": 0.1395,
+        "valueKey": 0.2318,
+        "hiFreq": 0.0072,
+        "restShare": 0.9587,
+        "silhouetteRoughness": 0.0036
+      },
+      "image": "1c3f7cbce3b882ab9ac4e1385f54861446027adcbd84b87e2e327beabe33b055",
+      "panel": {
+        "overall": 4,
+        "silhouette": 5.5,
+        "proportions": 6,
+        "materials": 5,
+        "detail": 3.5,
+        "wear": 4
+      }
+    },
+    {
+      "id": "ph:rock_07:blurred",
+      "group": "ph:rock_07",
+      "variant": "blurred",
+      "vector": {
+        "tris": 4.1716,
+        "smoothShading": 1,
+        "curvSmooth": 0.5622,
+        "curvEntropy": 0.8386,
+        "colourDetail": 0.0014,
+        "texelDensity": 2.3346,
+        "chroma": 0.0472,
+        "valueRange": 0.1338,
+        "valueKey": 0.2318,
+        "hiFreq": 0.008,
+        "restShare": 0.962,
+        "silhouetteRoughness": 0.0145
+      },
+      "image": "506a037e51e6c62f6f77e8634c8134e444ef7ea487d0619d71b03410856e8e79",
+      "panel": {
+        "overall": 6.2,
+        "silhouette": 7.3,
+        "proportions": 6.8,
+        "materials": 6.1,
+        "detail": 6.3,
+        "wear": 6
+      }
+    },
+    {
+      "id": "ph:moon_rock_01:decimated",
+      "group": "ph:moon_rock_01",
+      "variant": "decimated",
+      "vector": {
+        "tris": 3.7346,
+        "smoothShading": 0.9954,
+        "curvSmooth": 0.3709,
+        "curvEntropy": 0.9196,
+        "colourDetail": 0.0171,
+        "texelDensity": 1.9365,
+        "chroma": 0.043,
+        "valueRange": 0.3078,
+        "valueKey": 0.4153,
+        "hiFreq": 0.0167,
+        "restShare": 0.8956,
+        "silhouetteRoughness": 0.0035
+      },
+      "image": "e26924855f1634034f1687955680c24fb49959d7a747af575de76a0ad2f76851",
+      "panel": {
+        "overall": 4,
+        "silhouette": 6,
+        "proportions": 6.5,
+        "materials": 4.5,
+        "detail": 3.5,
+        "wear": 4
+      }
+    },
+    {
+      "id": "ph:moon_rock_01:desaturated",
+      "group": "ph:moon_rock_01",
+      "variant": "desaturated",
+      "vector": {
+        "tris": 4.2637,
+        "smoothShading": 0.9982,
+        "curvSmooth": 0.5795,
+        "curvEntropy": 0.8456,
+        "colourDetail": 0.0138,
+        "texelDensity": 2.2967,
+        "chroma": 0.0035,
+        "valueRange": 0.298,
+        "valueKey": 0.418,
+        "hiFreq": 0.0162,
+        "restShare": 0.9149,
+        "silhouetteRoughness": 0.0034
+      },
+      "image": "85624c656041fadb439739694b9f04a65bbc6622ed6fc76e1015e50a83be919a",
+      "panel": {
+        "overall": 5.3,
+        "silhouette": 6.5,
+        "proportions": 7,
+        "materials": 3.5,
+        "detail": 6,
+        "wear": 5
+      }
+    },
+    {
+      "id": "ph:moon_rock_01:flat",
+      "group": "ph:moon_rock_01",
+      "variant": "flat",
+      "vector": {
+        "tris": 3.7346,
+        "smoothShading": 0.0156,
+        "curvSmooth": 0.3709,
+        "curvEntropy": 0.9196,
+        "colourDetail": 0.0171,
+        "texelDensity": 1.9365,
+        "chroma": 0.0443,
+        "valueRange": 0.2929,
+        "valueKey": 0.4197,
+        "hiFreq": 0.0261,
+        "restShare": 0.8466,
+        "silhouetteRoughness": 0.0035
+      },
+      "image": "7378a6c8e26e3d628fee2fcbb2b6f887ae0a81f03bae55c5fb13d020ce9c5c4a",
+      "panel": {
+        "overall": 3.8,
+        "silhouette": 6,
+        "proportions": 6.5,
+        "materials": 4.5,
+        "detail": 3,
+        "wear": 4
+      }
+    },
+    {
+      "id": "ph:moon_rock_01:blurred",
+      "group": "ph:moon_rock_01",
+      "variant": "blurred",
+      "vector": {
+        "tris": 4.2637,
+        "smoothShading": 0.9982,
+        "curvSmooth": 0.5795,
+        "curvEntropy": 0.8456,
+        "colourDetail": 0.0008,
+        "texelDensity": 2.2967,
+        "chroma": 0.0437,
+        "valueRange": 0.2918,
+        "valueKey": 0.4183,
+        "hiFreq": 0.0156,
+        "restShare": 0.9133,
+        "silhouetteRoughness": 0.0034
+      },
+      "image": "0af5541d57286d9d5f3c01aff6850788fc11d42585f5ca0facdaffbc8a527dd8",
+      "panel": {
+        "overall": 5.8,
+        "silhouette": 6.5,
+        "proportions": 7,
+        "materials": 5.5,
+        "detail": 6,
+        "wear": 5
+      }
+    },
+    {
+      "id": "ph:moon_rock_01:original",
+      "group": "ph:moon_rock_01",
+      "variant": "original",
+      "vector": {
+        "tris": 4.2637,
+        "smoothShading": 0.9982,
+        "curvSmooth": 0.5795,
+        "curvEntropy": 0.8456,
+        "colourDetail": 0.0134,
+        "texelDensity": 2.2967,
+        "chroma": 0.0438,
+        "valueRange": 0.2969,
+        "valueKey": 0.4178,
+        "hiFreq": 0.0161,
+        "restShare": 0.915,
+        "silhouetteRoughness": 0.0034
+      },
+      "image": "44c49463afef62ad498fd9f05c7ee328ead7e7d3653586f58ee7a66fa5538a03",
+      "panel": {
+        "overall": 5.8,
+        "silhouette": 6.5,
+        "proportions": 7,
+        "materials": 5.5,
+        "detail": 6,
+        "wear": 5
+      }
+    },
+    {
+      "id": "ph:wooden_crate_01:blurred",
+      "group": "ph:wooden_crate_01",
+      "variant": "blurred",
+      "vector": {
+        "tris": 3.8196,
+        "smoothShading": 0.945,
+        "curvSmooth": 0.5642,
+        "curvEntropy": 0.7096,
+        "colourDetail": 0.0004,
+        "texelDensity": 1.5143,
+        "chroma": 0.1022,
+        "valueRange": 0.234,
+        "valueKey": 0.256,
+        "hiFreq": 0.0114,
+        "restShare": 0.8509,
+        "silhouetteRoughness": 0.0586
+      },
+      "image": "dc374f8367cae4bebb1e6084d87bd2a9710e2c76f38c51b68db5c7bb806b3fdc",
+      "panel": {
+        "overall": 5.6,
+        "silhouette": 7,
+        "proportions": 7,
+        "materials": 5.4,
+        "detail": 5.5,
+        "wear": 4.5
+      }
+    },
+    {
+      "id": "ph:wooden_crate_01:desaturated",
+      "group": "ph:wooden_crate_01",
+      "variant": "desaturated",
+      "vector": {
+        "tris": 3.8196,
+        "smoothShading": 0.945,
+        "curvSmooth": 0.5642,
+        "curvEntropy": 0.7096,
+        "colourDetail": 0.0274,
+        "texelDensity": 1.5143,
+        "chroma": 0.0056,
+        "valueRange": 0.2277,
+        "valueKey": 0.2607,
+        "hiFreq": 0.0117,
+        "restShare": 0.8542,
+        "silhouetteRoughness": 0.0586
+      },
+      "image": "dc7d9547f34aa39657af56d3474df797e66e7fd51e541f76a02e22da849c0854",
+      "panel": {
+        "overall": 4.8,
+        "silhouette": 7,
+        "proportions": 7,
+        "materials": 3.2,
+        "detail": 5.5,
+        "wear": 3.5
+      }
+    },
+    {
+      "id": "ph:wooden_crate_01:original",
+      "group": "ph:wooden_crate_01",
+      "variant": "original",
+      "vector": {
+        "tris": 3.8196,
+        "smoothShading": 0.945,
+        "curvSmooth": 0.5642,
+        "curvEntropy": 0.7096,
+        "colourDetail": 0.0269,
+        "texelDensity": 1.5143,
+        "chroma": 0.108,
+        "valueRange": 0.2268,
+        "valueKey": 0.2582,
+        "hiFreq": 0.0117,
+        "restShare": 0.8551,
+        "silhouetteRoughness": 0.0586
+      },
+      "image": "0abdfc69abf95574110bf2197a01254289c4de5811ee68572eda41aaa7366e18",
+      "panel": {
+        "overall": 5.6,
+        "silhouette": 7,
+        "proportions": 7,
+        "materials": 5.5,
+        "detail": 5.5,
+        "wear": 4.6
+      }
+    },
+    {
+      "id": "ph:wooden_crate_01:decimated",
+      "group": "ph:wooden_crate_01",
+      "variant": "decimated",
+      "vector": {
+        "tris": 2.935,
+        "smoothShading": 0.842,
+        "curvSmooth": 0.4291,
+        "curvEntropy": 0.8661,
+        "colourDetail": 0.0307,
+        "texelDensity": 1.1033,
+        "chroma": 0.1038,
+        "valueRange": 0.2362,
+        "valueKey": 0.2708,
+        "hiFreq": 0.0255,
+        "restShare": 0.7897,
+        "silhouetteRoughness": 0.0383
+      },
+      "image": "143c4ff965bf47731a521bffd40adc707d1fdb8bfb3d3f7732d9885fede0942e",
+      "panel": {
+        "overall": 3.5,
+        "silhouette": 6,
+        "proportions": 6.5,
+        "materials": 4,
+        "detail": 3.5,
+        "wear": 4
+      }
+    },
+    {
+      "id": "ph:wooden_crate_01:flat",
+      "group": "ph:wooden_crate_01",
+      "variant": "flat",
+      "vector": {
+        "tris": 3.2177,
+        "smoothShading": 0.0151,
+        "curvSmooth": 0.4198,
+        "curvEntropy": 0.9066,
+        "colourDetail": 0.0304,
+        "texelDensity": 1.2362,
+        "chroma": 0.1042,
+        "valueRange": 0.2164,
+        "valueKey": 0.256,
+        "hiFreq": 0.0155,
+        "restShare": 0.845,
+        "silhouetteRoughness": 0.0516
+      },
+      "image": "052bbc23a7d04f04265b460887f9cd9fd9fc60332da1240b291f81bde1ec5917",
+      "panel": {
+        "overall": 5.3,
+        "silhouette": 7,
+        "proportions": 7,
+        "materials": 5.1,
+        "detail": 5,
+        "wear": 4.3
+      }
+    },
+    {
+      "id": "ph:ArmChair_01:blurred",
+      "group": "ph:ArmChair_01",
+      "variant": "blurred",
+      "vector": {
+        "tris": 3.7569,
+        "smoothShading": 0.8973,
+        "curvSmooth": 0.5336,
+        "curvEntropy": 0.9445,
+        "colourDetail": 0.0035,
+        "texelDensity": 1.5093,
+        "chroma": 0.0145,
+        "valueRange": 0.4286,
+        "valueKey": 0.3869,
+        "hiFreq": 0.0285,
+        "restShare": 0.75,
+        "silhouetteRoughness": 0.0323
+      },
+      "image": "745919b9e9c034a170afca05be277a9be507d9b61e97cab15c92fb9e6e82e11a",
+      "panel": {
+        "overall": 6,
+        "silhouette": 8,
+        "proportions": 7.5,
+        "materials": 5.5,
+        "detail": 6,
+        "wear": 4.5
+      }
+    },
+    {
+      "id": "ph:ArmChair_01:desaturated",
+      "group": "ph:ArmChair_01",
+      "variant": "desaturated",
+      "vector": {
+        "tris": 3.7569,
+        "smoothShading": 0.8973,
+        "curvSmooth": 0.5336,
+        "curvEntropy": 0.9445,
+        "colourDetail": 0.0344,
+        "texelDensity": 1.5093,
+        "chroma": 0.0081,
+        "valueRange": 0.4627,
+        "valueKey": 0.4011,
+        "hiFreq": 0.0332,
+        "restShare": 0.6988,
+        "silhouetteRoughness": 0.0323
+      },
+      "image": "973e056904f65a2dd97e0afd9d86b56827372cca3cdf1947b9a444178099bc2f",
+      "panel": {
+        "overall": 6,
+        "silhouette": 8,
+        "proportions": 7.5,
+        "materials": 5.5,
+        "detail": 6,
+        "wear": 4.5
+      }
+    },
+    {
+      "id": "ph:ArmChair_01:original",
+      "group": "ph:ArmChair_01",
+      "variant": "original",
+      "vector": {
+        "tris": 3.7569,
+        "smoothShading": 0.8973,
+        "curvSmooth": 0.5336,
+        "curvEntropy": 0.9445,
+        "colourDetail": 0.0343,
+        "texelDensity": 1.5093,
+        "chroma": 0.0143,
+        "valueRange": 0.4616,
+        "valueKey": 0.401,
+        "hiFreq": 0.0332,
+        "restShare": 0.6985,
+        "silhouetteRoughness": 0.0323
+      },
+      "image": "f8c510dfb6519ab8e2c3c8b59d914b337207e6a80b0d2cb8e02e1586dfc5bb74",
+      "panel": {
+        "overall": 5.8,
+        "silhouette": 8,
+        "proportions": 7.5,
+        "materials": 5.5,
+        "detail": 5.8,
+        "wear": 4.5
+      }
+    },
+    {
+      "id": "ph:ArmChair_01:decimated",
+      "group": "ph:ArmChair_01",
+      "variant": "decimated",
+      "vector": {
+        "tris": 2.938,
+        "smoothShading": 0.7626,
+        "curvSmooth": 0.2843,
+        "curvEntropy": 0.9776,
+        "colourDetail": 0.0612,
+        "texelDensity": 1.1527,
+        "chroma": 0.0159,
+        "valueRange": 0.4361,
+        "valueKey": 0.3668,
+        "hiFreq": 0.0365,
+        "restShare": 0.6718,
+        "silhouetteRoughness": 0.0349
+      },
+      "image": "0b99837f90c82ada12915684950792dacddf70fb878b4f9ef36cb49668fe5453",
+      "panel": {
+        "overall": 3.6,
+        "silhouette": 6,
+        "proportions": 5.5,
+        "materials": 4.5,
+        "detail": 3.3,
+        "wear": 2.8
+      }
+    },
+    {
+      "id": "ph:ArmChair_01:flat",
+      "group": "ph:ArmChair_01",
+      "variant": "flat",
+      "vector": {
+        "tris": 3.155,
+        "smoothShading": 0.1415,
+        "curvSmooth": 0.405,
+        "curvEntropy": 0.9702,
+        "colourDetail": 0.0427,
+        "texelDensity": 1.2342,
+        "chroma": 0.0152,
+        "valueRange": 0.4513,
+        "valueKey": 0.3964,
+        "hiFreq": 0.0403,
+        "restShare": 0.6218,
+        "silhouetteRoughness": 0.0282
+      },
+      "image": "80dd3e505a46a6b55e4516a6a82e7a914baa7afbe2ad7d789fd8bae18ed4dbbf",
+      "panel": {
+        "overall": 3.8,
+        "silhouette": 7,
+        "proportions": 6.5,
+        "materials": 4.5,
+        "detail": 3,
+        "wear": 2.8
+      }
+    },
+    {
+      "id": "ph:alarm_clock_01:original",
+      "group": "ph:alarm_clock_01",
+      "variant": "original",
+      "vector": {
+        "tris": 3.9566,
+        "smoothShading": 0.7521,
+        "curvSmooth": 0.7102,
+        "curvEntropy": 0.676,
+        "colourDetail": 0.0372,
+        "texelDensity": 2.3448,
+        "chroma": 0.0271,
+        "valueRange": 0.656,
+        "valueKey": 0.3396,
+        "hiFreq": 0.0291,
+        "restShare": 0.7388,
+        "silhouetteRoughness": 0.1172
+      },
+      "image": "e54de6d4b29c3d52a89e6a78db2bceb1b840bf0b4a4447eeac1b4b8523cd6fcb",
+      "panel": {
+        "overall": 5.5,
+        "silhouette": 7.5,
+        "proportions": 7,
+        "materials": 5.3,
+        "detail": 5.2,
+        "wear": 4
+      }
+    },
+    {
+      "id": "ph:alarm_clock_01:decimated",
+      "group": "ph:alarm_clock_01",
+      "variant": "decimated",
+      "vector": {
+        "tris": 3.2962,
+        "smoothShading": 0.5535,
+        "curvSmooth": 0.4381,
+        "curvEntropy": 0.8552,
+        "colourDetail": 0.0556,
+        "texelDensity": 2.0507,
+        "chroma": 0.0256,
+        "valueRange": 0.6022,
+        "valueKey": 0.3572,
+        "hiFreq": 0.0484,
+        "restShare": 0.7043,
+        "silhouetteRoughness": 0.0708
+      },
+      "image": "307c18a05000421ba21324563d277457379bbeead72838ae949a0c5fa4257a30",
+      "panel": {
+        "overall": 3.8,
+        "silhouette": 6.5,
+        "proportions": 6.5,
+        "materials": 4.5,
+        "detail": 3,
+        "wear": 3
+      }
+    },
+    {
+      "id": "ph:alarm_clock_01:desaturated",
+      "group": "ph:alarm_clock_01",
+      "variant": "desaturated",
+      "vector": {
+        "tris": 3.9566,
+        "smoothShading": 0.7521,
+        "curvSmooth": 0.7102,
+        "curvEntropy": 0.676,
+        "colourDetail": 0.0366,
+        "texelDensity": 2.3448,
+        "chroma": 0.0067,
+        "valueRange": 0.6557,
+        "valueKey": 0.34,
+        "hiFreq": 0.0292,
+        "restShare": 0.7388,
+        "silhouetteRoughness": 0.1172
+      },
+      "image": "91369fa4526537345427fb388f34d5716dc9013d7468a8f969ea5f4381911094",
+      "panel": {
+        "overall": 4.7,
+        "silhouette": 7.5,
+        "proportions": 7,
+        "materials": 3.2,
+        "detail": 4.7,
+        "wear": 3.5
+      }
+    },
+    {
+      "id": "ph:alarm_clock_01:blurred",
+      "group": "ph:alarm_clock_01",
+      "variant": "blurred",
+      "vector": {
+        "tris": 3.9566,
+        "smoothShading": 0.7521,
+        "curvSmooth": 0.7102,
+        "curvEntropy": 0.676,
+        "colourDetail": 0.0008,
+        "texelDensity": 2.3448,
+        "chroma": 0.0242,
+        "valueRange": 0.6512,
+        "valueKey": 0.3407,
+        "hiFreq": 0.029,
+        "restShare": 0.7408,
+        "silhouetteRoughness": 0.1172
+      },
+      "image": "ce34498554d5ea26acc0a8042b72c236388c840023450146e433494de5bebd65",
+      "panel": {
+        "overall": 5.5,
+        "silhouette": 7.5,
+        "proportions": 7,
+        "materials": 5.3,
+        "detail": 5.2,
+        "wear": 4
+      }
+    },
+    {
+      "id": "ph:alarm_clock_01:flat",
+      "group": "ph:alarm_clock_01",
+      "variant": "flat",
+      "vector": {
+        "tris": 3.3545,
+        "smoothShading": 0.1351,
+        "curvSmooth": 0.4362,
+        "curvEntropy": 0.8952,
+        "colourDetail": 0.0493,
+        "texelDensity": 2.0669,
+        "chroma": 0.0266,
+        "valueRange": 0.6597,
+        "valueKey": 0.3402,
+        "hiFreq": 0.0402,
+        "restShare": 0.7062,
+        "silhouetteRoughness": 0.0645
+      },
+      "image": "15384cef4864809886534927d40827a9ee2d0f34c6a259babfb230785ba66ffa",
+      "panel": {
+        "overall": 4,
+        "silhouette": 6.5,
+        "proportions": 6.5,
+        "materials": 4.5,
+        "detail": 3,
+        "wear": 3.2
+      }
+    },
+    {
+      "id": "ph:bench_vice_01:flat",
+      "group": "ph:bench_vice_01",
+      "variant": "flat",
+      "vector": {
+        "tris": 2.8549,
+        "smoothShading": 0.0188,
+        "curvSmooth": 0.4373,
+        "curvEntropy": 0.851,
+        "colourDetail": 0.0447,
+        "texelDensity": 1.5169,
+        "chroma": 0.0372,
+        "valueRange": 0.2633,
+        "valueKey": 0.3426,
+        "hiFreq": 0.0319,
+        "restShare": 0.6857,
+        "silhouetteRoughness": 0.0313
+      },
+      "image": "22d3bf3bbdbc19758b9163eaed192c8a94c75289f000508f64d7270f1f71b53f",
+      "panel": {
+        "overall": 3.8,
+        "silhouette": 6,
+        "proportions": 5.5,
+        "materials": 4,
+        "detail": 3.5,
+        "wear": 4
+      }
+    },
+    {
+      "id": "ph:bench_vice_01:blurred",
+      "group": "ph:bench_vice_01",
+      "variant": "blurred",
+      "vector": {
+        "tris": 3.457,
+        "smoothShading": 1,
+        "curvSmooth": 0.6207,
+        "curvEntropy": 0.7064,
+        "colourDetail": 0.0004,
+        "texelDensity": 1.615,
+        "chroma": 0.0423,
+        "valueRange": 0.2442,
+        "valueKey": 0.346,
+        "hiFreq": 0.0253,
+        "restShare": 0.7222,
+        "silhouetteRoughness": 0.0293
+      },
+      "image": "2ceb8cc638007f15e86913f352ddaed0a0b8f30760399b85f42523d937d1661d",
+      "panel": {
+        "overall": 4.8,
+        "silhouette": 7,
+        "proportions": 6.5,
+        "materials": 4.6,
+        "detail": 5,
+        "wear": 4
+      }
+    },
+    {
+      "id": "ph:bench_vice_01:desaturated",
+      "group": "ph:bench_vice_01",
+      "variant": "desaturated",
+      "vector": {
+        "tris": 3.457,
+        "smoothShading": 1,
+        "curvSmooth": 0.6207,
+        "curvEntropy": 0.7064,
+        "colourDetail": 0.0455,
+        "texelDensity": 1.615,
+        "chroma": 0.005,
+        "valueRange": 0.279,
+        "valueKey": 0.349,
+        "hiFreq": 0.0271,
+        "restShare": 0.6726,
+        "silhouetteRoughness": 0.0293
+      },
+      "image": "3bea857f2f677ae3a0db6d64dab143982a402867b4a5e77abae550b0d2da9e48",
+      "panel": {
+        "overall": 4.5,
+        "silhouette": 7,
+        "proportions": 6.5,
+        "materials": 4,
+        "detail": 4.5,
+        "wear": 4
+      }
+    },
+    {
+      "id": "ph:bench_vice_01:decimated",
+      "group": "ph:bench_vice_01",
+      "variant": "decimated",
+      "vector": {
+        "tris": 2.6812,
+        "smoothShading": 1,
+        "curvSmooth": 0.4461,
+        "curvEntropy": 0.8863,
+        "colourDetail": 0.0435,
+        "texelDensity": 1.4393,
+        "chroma": 0.0302,
+        "valueRange": 0.2535,
+        "valueKey": 0.3241,
+        "hiFreq": 0.0295,
+        "restShare": 0.6856,
+        "silhouetteRoughness": 0.0359
+      },
+      "image": "84930e6dbf0244e0ae68d43062c8217b32dc9652f6f9abe7e77335eb014e2cf6",
+      "panel": {
+        "overall": 3,
+        "silhouette": 5,
+        "proportions": 5,
+        "materials": 4,
+        "detail": 3,
+        "wear": 4
+      }
+    },
+    {
+      "id": "ph:bench_vice_01:original",
+      "group": "ph:bench_vice_01",
+      "variant": "original",
+      "vector": {
+        "tris": 3.457,
+        "smoothShading": 1,
+        "curvSmooth": 0.6207,
+        "curvEntropy": 0.7064,
+        "colourDetail": 0.0458,
+        "texelDensity": 1.615,
+        "chroma": 0.0433,
+        "valueRange": 0.2784,
+        "valueKey": 0.3487,
+        "hiFreq": 0.0271,
+        "restShare": 0.6725,
+        "silhouetteRoughness": 0.0293
+      },
+      "image": "df5a2e874d8202e07ad9ae1f5b728f99b92a6a3a99dafedfe5dd4e17327bb0e3",
+      "panel": {
+        "overall": 4.8,
+        "silhouette": 7,
+        "proportions": 6.5,
+        "materials": 4.6,
+        "detail": 4.5,
+        "wear": 4
+      }
+    },
+    {
+      "id": "ph:bolt_cutters_01:original",
+      "group": "ph:bolt_cutters_01",
+      "variant": "original",
+      "vector": {
+        "tris": 3.5344,
+        "smoothShading": 1,
+        "curvSmooth": 0.6533,
+        "curvEntropy": 0.52,
+        "colourDetail": 0.0229,
+        "texelDensity": 1.9872,
+        "chroma": 0.0179,
+        "valueRange": 0.1333,
+        "valueKey": 0.2025,
+        "hiFreq": 0.027,
+        "restShare": 0.5896,
+        "silhouetteRoughness": 0.0587
+      },
+      "image": "c23ef9b7fda57e9388902f17e37802693f973d30e5455175bc7471965fd55738",
+      "panel": {
+        "overall": 5.8,
+        "silhouette": 7.5,
+        "proportions": 7.5,
+        "materials": 5.5,
+        "detail": 5.5,
+        "wear": 4.8
+      }
+    },
+    {
+      "id": "ph:bolt_cutters_01:desaturated",
+      "group": "ph:bolt_cutters_01",
+      "variant": "desaturated",
+      "vector": {
+        "tris": 3.5344,
+        "smoothShading": 1,
+        "curvSmooth": 0.6533,
+        "curvEntropy": 0.52,
+        "colourDetail": 0.0193,
+        "texelDensity": 1.9872,
+        "chroma": 0.0037,
+        "valueRange": 0.1311,
+        "valueKey": 0.2028,
+        "hiFreq": 0.0271,
+        "restShare": 0.5903,
+        "silhouetteRoughness": 0.0587
+      },
+      "image": "a24f3258e0971bcdb64c2475fa73e3998766153f6a10288baecc02b70a8ef383",
+      "panel": {
+        "overall": 5.8,
+        "silhouette": 7.5,
+        "proportions": 7.5,
+        "materials": 5.5,
+        "detail": 5.5,
+        "wear": 4.8
+      }
+    },
+    {
+      "id": "ph:bolt_cutters_01:flat",
+      "group": "ph:bolt_cutters_01",
+      "variant": "flat",
+      "vector": {
+        "tris": 2.9325,
+        "smoothShading": 0.1187,
+        "curvSmooth": 0.4191,
+        "curvEntropy": 0.8249,
+        "colourDetail": 0.0207,
+        "texelDensity": 1.7129,
+        "chroma": 0.0185,
+        "valueRange": 0.116,
+        "valueKey": 0.1945,
+        "hiFreq": 0.0308,
+        "restShare": 0.6078,
+        "silhouetteRoughness": 0.0587
+      },
+      "image": "7a8fdb9d9bcd89484afbe0a4bb19610b5cda47e740a1a90282644dab68af2ec7",
+      "panel": {
+        "overall": 5.5,
+        "silhouette": 7,
+        "proportions": 7,
+        "materials": 5.3,
+        "detail": 5.2,
+        "wear": 4.5
+      }
+    },
+    {
+      "id": "ph:bolt_cutters_01:blurred",
+      "group": "ph:bolt_cutters_01",
+      "variant": "blurred",
+      "vector": {
+        "tris": 3.5344,
+        "smoothShading": 1,
+        "curvSmooth": 0.6533,
+        "curvEntropy": 0.52,
+        "colourDetail": 0.0003,
+        "texelDensity": 1.9872,
+        "chroma": 0.0222,
+        "valueRange": 0.1182,
+        "valueKey": 0.2027,
+        "hiFreq": 0.0249,
+        "restShare": 0.6257,
+        "silhouetteRoughness": 0.0587
+      },
+      "image": "50307482ca8c5cbf631e6f012b3ad467fdbb815b635c1fb8a0a6e380a3446f83",
+      "panel": {
+        "overall": 5.8,
+        "silhouette": 7.5,
+        "proportions": 7.5,
+        "materials": 5.5,
+        "detail": 5.5,
+        "wear": 4.8
+      }
+    },
+    {
+      "id": "ph:bolt_cutters_01:decimated",
+      "group": "ph:bolt_cutters_01",
+      "variant": "decimated",
+      "vector": {
+        "tris": 2.5658,
+        "smoothShading": 1,
+        "curvSmooth": 0.4139,
+        "curvEntropy": 0.8631,
+        "colourDetail": 0.0221,
+        "texelDensity": 1.6077,
+        "chroma": 0.0342,
+        "valueRange": 0.1574,
+        "valueKey": 0.2393,
+        "hiFreq": 0.0507,
+        "restShare": 0.3549,
+        "silhouetteRoughness": 0.0863
+      },
+      "image": "d5bdc1a75833223753f9327b842390e041f54030ef7bc3badf7b16e05a4bf5e6",
+      "panel": {
+        "overall": 5.2,
+        "silhouette": 7,
+        "proportions": 7,
+        "materials": 5,
+        "detail": 5,
+        "wear": 5.5
+      }
+    },
+    {
+      "id": "ph:metal_tool_chest:blurred",
+      "group": "ph:metal_tool_chest",
+      "variant": "blurred",
+      "vector": {
+        "tris": 4.1291,
+        "smoothShading": 0.6184,
+        "curvSmooth": 0.6275,
+        "curvEntropy": 0.6361,
+        "colourDetail": 0.0009,
+        "texelDensity": 1.7002,
+        "chroma": 0.0762,
+        "valueRange": 0.2112,
+        "valueKey": 0.2073,
+        "hiFreq": 0.0257,
+        "restShare": 0.7151,
+        "silhouetteRoughness": 0.2194
+      },
+      "image": "b3775040d2101305c926297319c9ed55534399298b55eba4612641d8e72fc887",
+      "panel": {
+        "overall": 6.3,
+        "silhouette": 7.5,
+        "proportions": 7.5,
+        "materials": 6.1,
+        "detail": 6,
+        "wear": 4.5
+      }
+    },
+    {
+      "id": "ph:metal_tool_chest:decimated",
+      "group": "ph:metal_tool_chest",
+      "variant": "decimated",
+      "vector": {
+        "tris": 3.5262,
+        "smoothShading": 0.1903,
+        "curvSmooth": 0.528,
+        "curvEntropy": 0.769,
+        "colourDetail": 0.028,
+        "texelDensity": 1.4146,
+        "chroma": 0.0916,
+        "valueRange": 0.2112,
+        "valueKey": 0.232,
+        "hiFreq": 0.0255,
+        "restShare": 0.807,
+        "silhouetteRoughness": 0.2227
+      },
+      "image": "8c4bc4668d410d6fcba5add3dd33fe4aaf4c015f1cd4777b270ae991ac0b9458",
+      "panel": {
+        "overall": 4.5,
+        "silhouette": 7,
+        "proportions": 7,
+        "materials": 4.5,
+        "detail": 4,
+        "wear": 3.5
+      }
+    },
+    {
+      "id": "ph:metal_tool_chest:desaturated",
+      "group": "ph:metal_tool_chest",
+      "variant": "desaturated",
+      "vector": {
+        "tris": 4.1291,
+        "smoothShading": 0.6184,
+        "curvSmooth": 0.6275,
+        "curvEntropy": 0.6361,
+        "colourDetail": 0.0262,
+        "texelDensity": 1.7002,
+        "chroma": 0.0053,
+        "valueRange": 0.2238,
+        "valueKey": 0.2157,
+        "hiFreq": 0.0285,
+        "restShare": 0.6762,
+        "silhouetteRoughness": 0.2194
+      },
+      "image": "c1461adef92165df33508f5a686c772bb2adba22dbfe4070e7d299c71375ea25",
+      "panel": {
+        "overall": 5,
+        "silhouette": 7.5,
+        "proportions": 7.5,
+        "materials": 4,
+        "detail": 6,
+        "wear": 4
+      }
+    },
+    {
+      "id": "ph:metal_tool_chest:flat",
+      "group": "ph:metal_tool_chest",
+      "variant": "flat",
+      "vector": {
+        "tris": 3.5272,
+        "smoothShading": 0.026,
+        "curvSmooth": 0.5288,
+        "curvEntropy": 0.7632,
+        "colourDetail": 0.0279,
+        "texelDensity": 1.4151,
+        "chroma": 0.0848,
+        "valueRange": 0.2089,
+        "valueKey": 0.2005,
+        "hiFreq": 0.0196,
+        "restShare": 0.8505,
+        "silhouetteRoughness": 0.2227
+      },
+      "image": "7c01fc11f50a7478b92b59e1cd20d074f7ceb924c2c08035ee1c89b7d0f368ad",
+      "panel": {
+        "overall": 4,
+        "silhouette": 7,
+        "proportions": 7,
+        "materials": 4,
+        "detail": 3.5,
+        "wear": 3.5
+      }
+    },
+    {
+      "id": "ph:metal_tool_chest:original",
+      "group": "ph:metal_tool_chest",
+      "variant": "original",
+      "vector": {
+        "tris": 4.1291,
+        "smoothShading": 0.6184,
+        "curvSmooth": 0.6275,
+        "curvEntropy": 0.6361,
+        "colourDetail": 0.0316,
+        "texelDensity": 1.7002,
+        "chroma": 0.0767,
+        "valueRange": 0.2131,
+        "valueKey": 0.2099,
+        "hiFreq": 0.0281,
+        "restShare": 0.6817,
+        "silhouetteRoughness": 0.2194
+      },
+      "image": "43e1994416719780305ca11451765621fc4f0e2c403d2d9f1e3c2c826c74fcf8",
+      "panel": {
+        "overall": 6.5,
+        "silhouette": 7.5,
+        "proportions": 7.5,
+        "materials": 6.3,
+        "detail": 6.5,
+        "wear": 5
+      }
+    },
+    {
+      "id": "ph:mousetrap:flat",
+      "group": "ph:mousetrap",
+      "variant": "flat",
+      "vector": {
+        "tris": 3.1106,
+        "smoothShading": 0.0075,
+        "curvSmooth": 0.3581,
+        "curvEntropy": 0.884,
+        "colourDetail": 0.0468,
+        "texelDensity": 2.3275,
+        "chroma": 0.109,
+        "valueRange": 0.3351,
+        "valueKey": 0.4141,
+        "hiFreq": 0.0561,
+        "restShare": 0.525,
+        "silhouetteRoughness": 0.0362
+      },
+      "image": "29d522e679b17c37fa99331a35b71379e9a6b7b5561bb24393d32214be8858bb",
+      "panel": {
+        "overall": 6.8,
+        "silhouette": 8,
+        "proportions": 8,
+        "materials": 6.5,
+        "detail": 7,
+        "wear": 5.2
+      }
+    },
+    {
+      "id": "ph:mousetrap:blurred",
+      "group": "ph:mousetrap",
+      "variant": "blurred",
+      "vector": {
+        "tris": 3.7127,
+        "smoothShading": 0.8656,
+        "curvSmooth": 0.5436,
+        "curvEntropy": 0.7312,
+        "colourDetail": 0.0008,
+        "texelDensity": 2.6223,
+        "chroma": 0.1121,
+        "valueRange": 0.3247,
+        "valueKey": 0.4183,
+        "hiFreq": 0.0479,
+        "restShare": 0.5082,
+        "silhouetteRoughness": 0.0357
+      },
+      "image": "a14bc9aa494d90fabde9ed4e42b091d0ade6ce47e24cdcf6518c564d379d788c",
+      "panel": {
+        "overall": 6.8,
+        "silhouette": 8,
+        "proportions": 8,
+        "materials": 6.5,
+        "detail": 7,
+        "wear": 5.5
+      }
+    },
+    {
+      "id": "ph:mousetrap:decimated",
+      "group": "ph:mousetrap",
+      "variant": "decimated",
+      "vector": {
+        "tris": 2.993,
+        "smoothShading": 0.6901,
+        "curvSmooth": 0.2966,
+        "curvEntropy": 0.9102,
+        "colourDetail": 0.05,
+        "texelDensity": 2.2747,
+        "chroma": 0.118,
+        "valueRange": 0.3309,
+        "valueKey": 0.429,
+        "hiFreq": 0.0581,
+        "restShare": 0.5295,
+        "silhouetteRoughness": 0.0349
+      },
+      "image": "d4d686f1c29336e4e178c3b2da8c065e2e7f41e2f64fa3a44ebedcc522f20920",
+      "panel": {
+        "overall": 6,
+        "silhouette": 7.5,
+        "proportions": 7.5,
+        "materials": 6,
+        "detail": 6,
+        "wear": 5
+      }
+    },
+    {
+      "id": "ph:mousetrap:desaturated",
+      "group": "ph:mousetrap",
+      "variant": "desaturated",
+      "vector": {
+        "tris": 3.7127,
+        "smoothShading": 0.8656,
+        "curvSmooth": 0.5436,
+        "curvEntropy": 0.7312,
+        "colourDetail": 0.0325,
+        "texelDensity": 2.6223,
+        "chroma": 0.0049,
+        "valueRange": 0.349,
+        "valueKey": 0.4186,
+        "hiFreq": 0.0515,
+        "restShare": 0.5146,
+        "silhouetteRoughness": 0.0357
+      },
+      "image": "6bc04498cc0f94d0ed601d2270955d5940be34b52aa3d5a911ff659ca6fdb9fe",
+      "panel": {
+        "overall": 5.3,
+        "silhouette": 8,
+        "proportions": 8,
+        "materials": 3.5,
+        "detail": 7,
+        "wear": 3.8
+      }
+    },
+    {
+      "id": "ph:mousetrap:original",
+      "group": "ph:mousetrap",
+      "variant": "original",
+      "vector": {
+        "tris": 3.7127,
+        "smoothShading": 0.8656,
+        "curvSmooth": 0.5436,
+        "curvEntropy": 0.7312,
+        "colourDetail": 0.0321,
+        "texelDensity": 2.6223,
+        "chroma": 0.1117,
+        "valueRange": 0.348,
+        "valueKey": 0.4171,
+        "hiFreq": 0.0513,
+        "restShare": 0.5149,
+        "silhouetteRoughness": 0.0357
+      },
+      "image": "c26f1a266d30177a02ad5f2f92d8ffe9aaf5ec03ab2c4cf416fbb71de2904a54",
+      "panel": {
+        "overall": 6.8,
+        "silhouette": 8,
+        "proportions": 8,
+        "materials": 6.5,
+        "detail": 7,
+        "wear": 5.5
+      }
+    },
+    {
+      "id": "ph:ratchet_wrench:original",
+      "group": "ph:ratchet_wrench",
+      "variant": "original",
+      "vector": {
+        "tris": 3.9443,
+        "smoothShading": 1,
+        "curvSmooth": 0.7463,
+        "curvEntropy": 0.6706,
+        "colourDetail": 0.0371,
+        "texelDensity": 2.6784,
+        "chroma": 0.0115,
+        "valueRange": 0.3922,
+        "valueKey": 0.5219,
+        "hiFreq": 0.0542,
+        "restShare": 0.4323,
+        "silhouetteRoughness": 0.0145
+      },
+      "image": "1a1cc9c307995363638057cf95488a856a9721726b7e001d2ce57d6c5e17985d",
+      "panel": {
+        "overall": 5,
+        "silhouette": 7,
+        "proportions": 7,
+        "materials": 3.2,
+        "detail": 5.5,
+        "wear": 3
+      }
+    },
+    {
+      "id": "ph:ratchet_wrench:flat",
+      "group": "ph:ratchet_wrench",
+      "variant": "flat",
+      "vector": {
+        "tris": 3.3424,
+        "smoothShading": 0.1142,
+        "curvSmooth": 0.5445,
+        "curvEntropy": 0.8701,
+        "colourDetail": 0.0508,
+        "texelDensity": 2.3794,
+        "chroma": 0.0114,
+        "valueRange": 0.3658,
+        "valueKey": 0.52,
+        "hiFreq": 0.0683,
+        "restShare": 0.3227,
+        "silhouetteRoughness": 0.0129
+      },
+      "image": "8afe321d00dd8d9d055c322ba5b93d830f3768bbdb53e669c24b6d79238e87d6",
+      "panel": {
+        "overall": 4.5,
+        "silhouette": 6.5,
+        "proportions": 7,
+        "materials": 3.5,
+        "detail": 4.5,
+        "wear": 3
+      }
+    },
+    {
+      "id": "ph:ratchet_wrench:blurred",
+      "group": "ph:ratchet_wrench",
+      "variant": "blurred",
+      "vector": {
+        "tris": 3.9443,
+        "smoothShading": 1,
+        "curvSmooth": 0.7463,
+        "curvEntropy": 0.6706,
+        "colourDetail": 0.0035,
+        "texelDensity": 2.6784,
+        "chroma": 0.0114,
+        "valueRange": 0.3468,
+        "valueKey": 0.5212,
+        "hiFreq": 0.0499,
+        "restShare": 0.4737,
+        "silhouetteRoughness": 0.0145
+      },
+      "image": "452a064c590ac549ce988359c535ffbcc53cbc7f015a232642d9a78e7b207783",
+      "panel": {
+        "overall": 4.8,
+        "silhouette": 6.5,
+        "proportions": 7,
+        "materials": 3,
+        "detail": 5,
+        "wear": 3
+      }
+    },
+    {
+      "id": "ph:ratchet_wrench:desaturated",
+      "group": "ph:ratchet_wrench",
+      "variant": "desaturated",
+      "vector": {
+        "tris": 3.9443,
+        "smoothShading": 1,
+        "curvSmooth": 0.7463,
+        "curvEntropy": 0.6706,
+        "colourDetail": 0.0374,
+        "texelDensity": 2.6784,
+        "chroma": 0.0094,
+        "valueRange": 0.3927,
+        "valueKey": 0.5219,
+        "hiFreq": 0.0542,
+        "restShare": 0.4325,
+        "silhouetteRoughness": 0.0145
+      },
+      "image": "3066ce08d319d6b8b208ebb50c0b8deeb3be922af5ebf41bd637df76f117987f",
+      "panel": {
+        "overall": 5,
+        "silhouette": 7,
+        "proportions": 7,
+        "materials": 3.2,
+        "detail": 5.5,
+        "wear": 3
+      }
+    },
+    {
+      "id": "ph:ratchet_wrench:decimated",
+      "group": "ph:ratchet_wrench",
+      "variant": "decimated",
+      "vector": {
+        "tris": 2.8482,
+        "smoothShading": 1,
+        "curvSmooth": 0.3694,
+        "curvEntropy": 0.9433,
+        "colourDetail": 0.096,
+        "texelDensity": 2.1381,
+        "chroma": 0.0106,
+        "valueRange": 0.4274,
+        "valueKey": 0.4951,
+        "hiFreq": 0.0462,
+        "restShare": 0.4074,
+        "silhouetteRoughness": 0.0178
+      },
+      "image": "a45479aabf27d6ceeb9421faafae475a457045b577207f92f8c05d8b6bc86b61",
+      "panel": {
+        "overall": 4,
+        "silhouette": 6.5,
+        "proportions": 6.5,
+        "materials": 3.5,
+        "detail": 4,
+        "wear": 3
+      }
+    },
+    {
+      "id": "ph:security_camera_01:blurred",
+      "group": "ph:security_camera_01",
+      "variant": "blurred",
+      "vector": {
+        "tris": 4.1329,
+        "smoothShading": 0.99,
+        "curvSmooth": 0.7664,
+        "curvEntropy": 0.5914,
+        "colourDetail": 0.0009,
+        "texelDensity": 2.0446,
+        "chroma": 0.028,
+        "valueRange": 0.4409,
+        "valueKey": 0.5423,
+        "hiFreq": 0.0137,
+        "restShare": 0.8994,
+        "silhouetteRoughness": 0.0439
+      },
+      "image": "bcde0a772879e21778472891ee402c1a74e0084e03e4a914e869d958375eb35f",
+      "panel": {
+        "overall": 5.8,
+        "silhouette": 7.5,
+        "proportions": 7,
+        "materials": 5,
+        "detail": 5.7,
+        "wear": 3.5
+      }
+    },
+    {
+      "id": "ph:security_camera_01:desaturated",
+      "group": "ph:security_camera_01",
+      "variant": "desaturated",
+      "vector": {
+        "tris": 4.1329,
+        "smoothShading": 0.99,
+        "curvSmooth": 0.7664,
+        "curvEntropy": 0.5914,
+        "colourDetail": 0.0351,
+        "texelDensity": 2.0446,
+        "chroma": 0.0118,
+        "valueRange": 0.4515,
+        "valueKey": 0.5485,
+        "hiFreq": 0.0143,
+        "restShare": 0.8963,
+        "silhouetteRoughness": 0.0439
+      },
+      "image": "c7d3703ee1d3fc655a6755121a1a30ce9014129588dd8768e2e340214abbb337",
+      "panel": {
+        "overall": 5.6,
+        "silhouette": 7.5,
+        "proportions": 7,
+        "materials": 5,
+        "detail": 5.5,
+        "wear": 4.5
+      }
+    },
+    {
+      "id": "ph:security_camera_01:decimated",
+      "group": "ph:security_camera_01",
+      "variant": "decimated",
+      "vector": {
+        "tris": 3.2565,
+        "smoothShading": 0.9726,
+        "curvSmooth": 0.5373,
+        "curvEntropy": 0.874,
+        "colourDetail": 0.0455,
+        "texelDensity": 1.6359,
+        "chroma": 0.0329,
+        "valueRange": 0.41,
+        "valueKey": 0.4877,
+        "hiFreq": 0.0129,
+        "restShare": 0.9075,
+        "silhouetteRoughness": 0.0278
+      },
+      "image": "6ae933ebbe6ead84333e68a99ea0f29de98e403f999b4e596a476d19c1418c1c",
+      "panel": {
+        "overall": 4.3,
+        "silhouette": 6.5,
+        "proportions": 6.5,
+        "materials": 4.3,
+        "detail": 4,
+        "wear": 4
+      }
+    },
+    {
+      "id": "ph:security_camera_01:original",
+      "group": "ph:security_camera_01",
+      "variant": "original",
+      "vector": {
+        "tris": 4.1329,
+        "smoothShading": 0.99,
+        "curvSmooth": 0.7664,
+        "curvEntropy": 0.5914,
+        "colourDetail": 0.0352,
+        "texelDensity": 2.0446,
+        "chroma": 0.0263,
+        "valueRange": 0.4509,
+        "valueKey": 0.5485,
+        "hiFreq": 0.0143,
+        "restShare": 0.8964,
+        "silhouetteRoughness": 0.0439
+      },
+      "image": "20813a54eba431f5ec7807be26eab18e9fa35bb442e2543bbf98822b05e59976",
+      "panel": {
+        "overall": 5.4,
+        "silhouette": 7.5,
+        "proportions": 7,
+        "materials": 5,
+        "detail": 5.3,
+        "wear": 4.6
+      }
+    },
+    {
+      "id": "ph:security_camera_01:flat",
+      "group": "ph:security_camera_01",
+      "variant": "flat",
+      "vector": {
+        "tris": 3.531,
+        "smoothShading": 0.205,
+        "curvSmooth": 0.6667,
+        "curvEntropy": 0.7927,
+        "colourDetail": 0.049,
+        "texelDensity": 1.7594,
+        "chroma": 0.0294,
+        "valueRange": 0.4288,
+        "valueKey": 0.5406,
+        "hiFreq": 0.0193,
+        "restShare": 0.8874,
+        "silhouetteRoughness": 0.0439
+      },
+      "image": "65c29c35ef5d720c93224bb885a12110b20ad35178e9d9b7b053bba198a3fdb3",
+      "panel": {
+        "overall": 5.2,
+        "silhouette": 7.5,
+        "proportions": 7,
+        "materials": 4.5,
+        "detail": 5,
+        "wear": 4.3
+      }
+    },
+    {
+      "id": "ph:vintage_hand_drill:flat",
+      "group": "ph:vintage_hand_drill",
+      "variant": "flat",
+      "vector": {
+        "tris": 3.5924,
+        "smoothShading": 0.0078,
+        "curvSmooth": 0.4167,
+        "curvEntropy": 0.9127,
+        "colourDetail": 0.0378,
+        "texelDensity": 2.1786,
+        "chroma": 0.0481,
+        "valueRange": 0.2753,
+        "valueKey": 0.2317,
+        "hiFreq": 0.0711,
+        "restShare": 0.3588,
+        "silhouetteRoughness": 0.1495
+      },
+      "image": "64bed3a483be70a0136407024bb3a90ebe714c8673934fdf8d856168cb5c1102",
+      "panel": {
+        "overall": 6.3,
+        "silhouette": 8,
+        "proportions": 7.5,
+        "materials": 6.1,
+        "detail": 6.5,
+        "wear": 5.3
+      }
+    },
+    {
+      "id": "ph:vintage_hand_drill:decimated",
+      "group": "ph:vintage_hand_drill",
+      "variant": "decimated",
+      "vector": {
+        "tris": 3.5924,
+        "smoothShading": 0.1568,
+        "curvSmooth": 0.4167,
+        "curvEntropy": 0.9127,
+        "colourDetail": 0.0378,
+        "texelDensity": 2.1786,
+        "chroma": 0.0457,
+        "valueRange": 0.2757,
+        "valueKey": 0.2343,
+        "hiFreq": 0.064,
+        "restShare": 0.3169,
+        "silhouetteRoughness": 0.1495
+      },
+      "image": "0d3faa743ae9eaa6ce14bd5487a0cf1421ac8802c393a00539942eba410928bd",
+      "panel": {
+        "overall": 6.3,
+        "silhouette": 8,
+        "proportions": 7.5,
+        "materials": 6.1,
+        "detail": 6.5,
+        "wear": 5.3
+      }
+    },
+    {
+      "id": "ph:vintage_hand_drill:blurred",
+      "group": "ph:vintage_hand_drill",
+      "variant": "blurred",
+      "vector": {
+        "tris": 3.9211,
+        "smoothShading": 0.3762,
+        "curvSmooth": 0.5398,
+        "curvEntropy": 0.8203,
+        "colourDetail": 0.0005,
+        "texelDensity": 2.3344,
+        "chroma": 0.0526,
+        "valueRange": 0.2508,
+        "valueKey": 0.2416,
+        "hiFreq": 0.0553,
+        "restShare": 0.4049,
+        "silhouetteRoughness": 0.1371
+      },
+      "image": "d7cda9f436f76fae13d1e9fb5185f8700eb59d2851d184560cde2e827b640fab",
+      "panel": {
+        "overall": 6.3,
+        "silhouette": 8,
+        "proportions": 7.5,
+        "materials": 6,
+        "detail": 6.5,
+        "wear": 5
+      }
+    },
+    {
+      "id": "ph:vintage_hand_drill:original",
+      "group": "ph:vintage_hand_drill",
+      "variant": "original",
+      "vector": {
+        "tris": 3.9211,
+        "smoothShading": 0.3762,
+        "curvSmooth": 0.5398,
+        "curvEntropy": 0.8203,
+        "colourDetail": 0.0355,
+        "texelDensity": 2.3344,
+        "chroma": 0.0526,
+        "valueRange": 0.2666,
+        "valueKey": 0.2409,
+        "hiFreq": 0.0648,
+        "restShare": 0.2918,
+        "silhouetteRoughness": 0.1371
+      },
+      "image": "cb6b8d34a79890acd667429dd0e81b21d8e3cb0ec67bb39c454031350848ac0a",
+      "panel": {
+        "overall": 6.3,
+        "silhouette": 8,
+        "proportions": 7.5,
+        "materials": 6.1,
+        "detail": 6.5,
+        "wear": 5.3
+      }
+    },
+    {
+      "id": "ph:vintage_hand_drill:desaturated",
+      "group": "ph:vintage_hand_drill",
+      "variant": "desaturated",
+      "vector": {
+        "tris": 3.9211,
+        "smoothShading": 0.3762,
+        "curvSmooth": 0.5398,
+        "curvEntropy": 0.8203,
+        "colourDetail": 0.0336,
+        "texelDensity": 2.3344,
+        "chroma": 0.0047,
+        "valueRange": 0.2669,
+        "valueKey": 0.2423,
+        "hiFreq": 0.0647,
+        "restShare": 0.2931,
+        "silhouetteRoughness": 0.1371
+      },
+      "image": "538baaa902902fe6e69802eb25852d10bd3e65643acf99aa34a5480218dfb986",
+      "panel": {
+        "overall": 5.3,
+        "silhouette": 8,
+        "proportions": 7.5,
+        "materials": 3.8,
+        "detail": 6.5,
+        "wear": 4
+      }
+    },
+    {
+      "id": "ph:Barrel_01:desaturated",
+      "group": "ph:Barrel_01",
+      "variant": "desaturated",
+      "vector": {
+        "tris": 3.4286,
+        "smoothShading": 0.6831,
+        "curvSmooth": 0.5677,
+        "curvEntropy": 0.6371,
+        "colourDetail": 0.0283,
+        "texelDensity": 1.4101,
+        "chroma": 0.0035,
+        "valueRange": 0.1725,
+        "valueKey": 0.2425,
+        "hiFreq": 0.0172,
+        "restShare": 0.8871,
+        "silhouetteRoughness": 0.0036
+      },
+      "image": "cf6c36f160e74ef2a293cb639b260f957d91b6d9f53140cd09e070f4bfbcc62c",
+      "panel": {
+        "overall": 4.8,
+        "silhouette": 7,
+        "proportions": 7.5,
+        "materials": 3.5,
+        "detail": 5.5,
+        "wear": 3.5
+      }
+    },
+    {
+      "id": "ph:Barrel_01:blurred",
+      "group": "ph:Barrel_01",
+      "variant": "blurred",
+      "vector": {
+        "tris": 3.4286,
+        "smoothShading": 0.6831,
+        "curvSmooth": 0.5677,
+        "curvEntropy": 0.6371,
+        "colourDetail": 0.0006,
+        "texelDensity": 1.4101,
+        "chroma": 0.1573,
+        "valueRange": 0.1443,
+        "valueKey": 0.2345,
+        "hiFreq": 0.0164,
+        "restShare": 0.8904,
+        "silhouetteRoughness": 0.0036
+      },
+      "image": "ad131edac741b94a243507f9ea8743388e52e3e1563c47fd0027eda147afe3c2",
+      "panel": {
+        "overall": 6,
+        "silhouette": 7,
+        "proportions": 7.5,
+        "materials": 5.8,
+        "detail": 5.7,
+        "wear": 5
+      }
+    },
+    {
+      "id": "ph:Barrel_01:original",
+      "group": "ph:Barrel_01",
+      "variant": "original",
+      "vector": {
+        "tris": 3.4286,
+        "smoothShading": 0.6831,
+        "curvSmooth": 0.5677,
+        "curvEntropy": 0.6371,
+        "colourDetail": 0.0406,
+        "texelDensity": 1.4101,
+        "chroma": 0.1569,
+        "valueRange": 0.1686,
+        "valueKey": 0.2325,
+        "hiFreq": 0.0162,
+        "restShare": 0.8924,
+        "silhouetteRoughness": 0.0036
+      },
+      "image": "6f37e9e33aed5631d1f8f0aac5c95d57790bb689e98fa55d4918873b29ff2e00",
+      "panel": {
+        "overall": 6,
+        "silhouette": 7,
+        "proportions": 7.5,
+        "materials": 5.8,
+        "detail": 5.7,
+        "wear": 6
+      }
+    },
+    {
+      "id": "ph:Barrel_01:flat",
+      "group": "ph:Barrel_01",
+      "variant": "flat",
+      "vector": {
+        "tris": 2.8274,
+        "smoothShading": 0.0058,
+        "curvSmooth": 0.418,
+        "curvEntropy": 0.9032,
+        "colourDetail": 0.049,
+        "texelDensity": 1.1147,
+        "chroma": 0.152,
+        "valueRange": 0.1549,
+        "valueKey": 0.2275,
+        "hiFreq": 0.0168,
+        "restShare": 0.8989,
+        "silhouetteRoughness": 0.0049
+      },
+      "image": "454c0da483e37b5166fb6980620cb9a33cf95726e6365e78611a038cf1967775",
+      "panel": {
+        "overall": 3.5,
+        "silhouette": 6,
+        "proportions": 6.5,
+        "materials": 4.5,
+        "detail": 2.5,
+        "wear": 4.5
+      }
+    },
+    {
+      "id": "ph:Barrel_01:decimated",
+      "group": "ph:Barrel_01",
+      "variant": "decimated",
+      "vector": {
+        "tris": 2.7143,
+        "smoothShading": 0.3333,
+        "curvSmooth": 0.4421,
+        "curvEntropy": 0.8642,
+        "colourDetail": 0.0425,
+        "texelDensity": 1.0634,
+        "chroma": 0.1442,
+        "valueRange": 0.1306,
+        "valueKey": 0.2259,
+        "hiFreq": 0.0134,
+        "restShare": 0.9483,
+        "silhouetteRoughness": 0.0049
+      },
+      "image": "1c4601805753460b5977eb7f2307d34c1d03363debe0ae6301cfee6295508427",
+      "panel": {
+        "overall": 4.2,
+        "silhouette": 6,
+        "proportions": 6.5,
+        "materials": 4.5,
+        "detail": 3,
+        "wear": 4.5
+      }
+    },
+    {
+      "id": "ph:old_tyre:blurred",
+      "group": "ph:old_tyre",
+      "variant": "blurred",
+      "vector": {
+        "tris": 3.4595,
+        "smoothShading": 1,
+        "curvSmooth": 0.6851,
+        "curvEntropy": 0.7258,
+        "colourDetail": 0.0001,
+        "texelDensity": 1.548,
+        "chroma": 0.006,
+        "valueRange": 0.1591,
+        "valueKey": 0.1759,
+        "hiFreq": 0.0066,
+        "restShare": 0.9441,
+        "silhouetteRoughness": 0.0018
+      },
+      "image": "0ec403eae42300d05513e71d66e5ed3eddb8b0d77e7aee0c027d434ca13b7f0c",
+      "panel": {
+        "overall": 4.8,
+        "silhouette": 6.5,
+        "proportions": 6.5,
+        "materials": 4.6,
+        "detail": 4.5,
+        "wear": 3.5
+      }
+    },
+    {
+      "id": "ph:old_tyre:desaturated",
+      "group": "ph:old_tyre",
+      "variant": "desaturated",
+      "vector": {
+        "tris": 3.4595,
+        "smoothShading": 1,
+        "curvSmooth": 0.6851,
+        "curvEntropy": 0.7258,
+        "colourDetail": 0.01,
+        "texelDensity": 1.548,
+        "chroma": 0.0022,
+        "valueRange": 0.1655,
+        "valueKey": 0.1764,
+        "hiFreq": 0.007,
+        "restShare": 0.9379,
+        "silhouetteRoughness": 0.0018
+      },
+      "image": "97b504eef0bfa497d1791dfe83593fd097812aecd0aa1947535c32870fe3de00",
+      "panel": {
+        "overall": 4.8,
+        "silhouette": 6.5,
+        "proportions": 6.5,
+        "materials": 4.6,
+        "detail": 4.5,
+        "wear": 4
+      }
+    },
+    {
+      "id": "ph:old_tyre:original",
+      "group": "ph:old_tyre",
+      "variant": "original",
+      "vector": {
+        "tris": 3.4595,
+        "smoothShading": 1,
+        "curvSmooth": 0.6851,
+        "curvEntropy": 0.7258,
+        "colourDetail": 0.0099,
+        "texelDensity": 1.548,
+        "chroma": 0.0062,
+        "valueRange": 0.1661,
+        "valueKey": 0.1764,
+        "hiFreq": 0.0069,
+        "restShare": 0.9381,
+        "silhouetteRoughness": 0.0018
+      },
+      "image": "10dbc3c984f448f845ef9f7de55a6d06acadbe3b08b7abc7de9aed91e4fea0e9",
+      "panel": {
+        "overall": 4.8,
+        "silhouette": 6.5,
+        "proportions": 6.5,
+        "materials": 4.6,
+        "detail": 4.5,
+        "wear": 4
+      }
+    },
+    {
+      "id": "ph:old_tyre:decimated",
+      "group": "ph:old_tyre",
+      "variant": "decimated",
+      "vector": {
+        "tris": 2.7202,
+        "smoothShading": 1,
+        "curvSmooth": 0.4157,
+        "curvEntropy": 0.9621,
+        "colourDetail": 0.0114,
+        "texelDensity": 1.1977,
+        "chroma": 0.0056,
+        "valueRange": 0.1499,
+        "valueKey": 0.1722,
+        "hiFreq": 0.0104,
+        "restShare": 0.9042,
+        "silhouetteRoughness": 0.0027
+      },
+      "image": "b5bec65f010ebfaa5f16d3bf5d73d9fd25bb982223a42f11f6f971fa23b43249",
+      "panel": {
+        "overall": 3.5,
+        "silhouette": 5.5,
+        "proportions": 6,
+        "materials": 4,
+        "detail": 2.5,
+        "wear": 3
+      }
+    },
+    {
+      "id": "ph:old_tyre:flat",
+      "group": "ph:old_tyre",
+      "variant": "flat",
+      "vector": {
+        "tris": 2.8579,
+        "smoothShading": 0.0278,
+        "curvSmooth": 0.4245,
+        "curvEntropy": 0.9453,
+        "colourDetail": 0.0109,
+        "texelDensity": 1.2466,
+        "chroma": 0.0067,
+        "valueRange": 0.1737,
+        "valueKey": 0.1764,
+        "hiFreq": 0.0133,
+        "restShare": 0.8759,
+        "silhouetteRoughness": 0.0009
+      },
+      "image": "1cb486a461aa50835ae10b26bbb515bcecfa81c2fcedd4b4cd0d04d2c3bacdb2",
+      "panel": {
+        "overall": 3,
+        "silhouette": 5,
+        "proportions": 6,
+        "materials": 4,
+        "detail": 2,
+        "wear": 3
+      }
+    },
+    {
+      "id": "ph:wooden_bucket_01:desaturated",
+      "group": "ph:wooden_bucket_01",
+      "variant": "desaturated",
+      "vector": {
+        "tris": 3.709,
+        "smoothShading": 0.8694,
+        "curvSmooth": 0.5898,
+        "curvEntropy": 0.8819,
+        "colourDetail": 0.0328,
+        "texelDensity": 1.7525,
+        "chroma": 0.0032,
+        "valueRange": 0.193,
+        "valueKey": 0.2371,
+        "hiFreq": 0.0279,
+        "restShare": 0.7323,
+        "silhouetteRoughness": 0.0119
+      },
+      "image": "4981fb136e9e717c5acb4ed3a7f6a5d9e580c7eeb6bd6465126207d707aedde6",
+      "panel": {
+        "overall": 4.8,
+        "silhouette": 8,
+        "proportions": 7.5,
+        "materials": 3.4,
+        "detail": 6,
+        "wear": 4
+      }
+    },
+    {
+      "id": "ph:wooden_bucket_01:blurred",
+      "group": "ph:wooden_bucket_01",
+      "variant": "blurred",
+      "vector": {
+        "tris": 3.709,
+        "smoothShading": 0.8694,
+        "curvSmooth": 0.5898,
+        "curvEntropy": 0.8819,
+        "colourDetail": 0.0003,
+        "texelDensity": 1.7525,
+        "chroma": 0.0857,
+        "valueRange": 0.1696,
+        "valueKey": 0.2333,
+        "hiFreq": 0.0256,
+        "restShare": 0.7697,
+        "silhouetteRoughness": 0.0119
+      },
+      "image": "03282d922ebb70f34df0ab9a7dd3553b9a45f82179b52b0ec56dbd64c52227ec",
+      "panel": {
+        "overall": 6.3,
+        "silhouette": 8,
+        "proportions": 7.5,
+        "materials": 6.1,
+        "detail": 6.5,
+        "wear": 5.3
+      }
+    },
+    {
+      "id": "ph:wooden_bucket_01:original",
+      "group": "ph:wooden_bucket_01",
+      "variant": "original",
+      "vector": {
+        "tris": 3.709,
+        "smoothShading": 0.8694,
+        "curvSmooth": 0.5898,
+        "curvEntropy": 0.8819,
+        "colourDetail": 0.0326,
+        "texelDensity": 1.7525,
+        "chroma": 0.093,
+        "valueRange": 0.1927,
+        "valueKey": 0.2351,
+        "hiFreq": 0.0278,
+        "restShare": 0.7317,
+        "silhouetteRoughness": 0.0119
+      },
+      "image": "c27e3f9d5fcbad241ccde7b0f35f63b32d277e39c0c225020448c42bb19e8d13",
+      "panel": {
+        "overall": 6.3,
+        "silhouette": 8,
+        "proportions": 7.5,
+        "materials": 6.1,
+        "detail": 6.5,
+        "wear": 6
+      }
+    },
+    {
+      "id": "ph:wooden_bucket_01:flat",
+      "group": "ph:wooden_bucket_01",
+      "variant": "flat",
+      "vector": {
+        "tris": 3.1069,
+        "smoothShading": 0.311,
+        "curvSmooth": 0.3884,
+        "curvEntropy": 0.9791,
+        "colourDetail": 0.031,
+        "texelDensity": 1.4811,
+        "chroma": 0.0923,
+        "valueRange": 0.1756,
+        "valueKey": 0.2386,
+        "hiFreq": 0.0312,
+        "restShare": 0.7226,
+        "silhouetteRoughness": 0.0693
+      },
+      "image": "7a9ad8429d6753bfb099fa51d645faa0a7e66ad4a10cdbefd720111663d3d177",
+      "panel": {
+        "overall": 5,
+        "silhouette": 7,
+        "proportions": 7,
+        "materials": 5.5,
+        "detail": 4,
+        "wear": 5
+      }
+    },
+    {
+      "id": "ph:wooden_bucket_01:decimated",
+      "group": "ph:wooden_bucket_01",
+      "variant": "decimated",
+      "vector": {
+        "tris": 2.9562,
+        "smoothShading": 0.7042,
+        "curvSmooth": 0.4359,
+        "curvEntropy": 0.9607,
+        "colourDetail": 0.0303,
+        "texelDensity": 1.4179,
+        "chroma": 0.0705,
+        "valueRange": 0.2228,
+        "valueKey": 0.2497,
+        "hiFreq": 0.0349,
+        "restShare": 0.5466,
+        "silhouetteRoughness": 0.0661
+      },
+      "image": "1f78e4196f6cb3d60a1d4e58212c3559a4709c956a81e8b09d08895047155b21",
+      "panel": {
+        "overall": 4.5,
+        "silhouette": 6.5,
+        "proportions": 6.5,
+        "materials": 4.3,
+        "detail": 4,
+        "wear": 4.5
+      }
+    },
+    {
+      "id": "ph:metal_jug:original",
+      "group": "ph:metal_jug",
+      "variant": "original",
+      "vector": {
+        "tris": 3.7811,
+        "smoothShading": 0.9776,
+        "curvSmooth": 0.7978,
+        "curvEntropy": 0.6656,
+        "colourDetail": 0.0339,
+        "texelDensity": 1.9396,
+        "chroma": 0.0242,
+        "valueRange": 0.3779,
+        "valueKey": 0.4923,
+        "hiFreq": 0.0283,
+        "restShare": 0.7898,
+        "silhouetteRoughness": 0.0181
+      },
+      "image": "a2b4e8e62effe958bf264caae6ef8bd6414d99d6a800822839b8eff9f35358a9",
+      "panel": {
+        "overall": 6.3,
+        "silhouette": 7.5,
+        "proportions": 7.5,
+        "materials": 6,
+        "detail": 6.5,
+        "wear": 5.5
+      }
+    },
+    {
+      "id": "ph:metal_jug:blurred",
+      "group": "ph:metal_jug",
+      "variant": "blurred",
+      "vector": {
+        "tris": 3.7811,
+        "smoothShading": 0.9776,
+        "curvSmooth": 0.7978,
+        "curvEntropy": 0.6656,
+        "colourDetail": 0.0014,
+        "texelDensity": 1.9396,
+        "chroma": 0.0238,
+        "valueRange": 0.3649,
+        "valueKey": 0.4892,
+        "hiFreq": 0.0285,
+        "restShare": 0.8022,
+        "silhouetteRoughness": 0.0181
+      },
+      "image": "4417beab46f1a2a261c71efeb81986c0011ab751bacb94a7f202ffc55984404b",
+      "panel": {
+        "overall": 6,
+        "silhouette": 7.5,
+        "proportions": 7.5,
+        "materials": 5.8,
+        "detail": 6.5,
+        "wear": 5
+      }
+    },
+    {
+      "id": "ph:metal_jug:flat",
+      "group": "ph:metal_jug",
+      "variant": "flat",
+      "vector": {
+        "tris": 3.1793,
+        "smoothShading": 0.229,
+        "curvSmooth": 0.6595,
+        "curvEntropy": 0.8811,
+        "colourDetail": 0.0376,
+        "texelDensity": 1.6374,
+        "chroma": 0.0263,
+        "valueRange": 0.3803,
+        "valueKey": 0.4879,
+        "hiFreq": 0.034,
+        "restShare": 0.8383,
+        "silhouetteRoughness": 0.0182
+      },
+      "image": "cf483681850bc565d2132f25605378f804674340afec44ed3586c93e0d8ad68c",
+      "panel": {
+        "overall": 3.8,
+        "silhouette": 6.5,
+        "proportions": 6,
+        "materials": 5,
+        "detail": 3.5,
+        "wear": 4.5
+      }
+    },
+    {
+      "id": "ph:metal_jug:decimated",
+      "group": "ph:metal_jug",
+      "variant": "decimated",
+      "vector": {
+        "tris": 2.6839,
+        "smoothShading": 0.8101,
+        "curvSmooth": 0.3999,
+        "curvEntropy": 0.9388,
+        "colourDetail": 0.0398,
+        "texelDensity": 1.3895,
+        "chroma": 0.0254,
+        "valueRange": 0.3652,
+        "valueKey": 0.4693,
+        "hiFreq": 0.0323,
+        "restShare": 0.8006,
+        "silhouetteRoughness": 0.0413
+      },
+      "image": "2333b553a7094b8c7cbe81e656eaef2e0ad73cbe5ce15400682f11e67424e42a",
+      "panel": {
+        "overall": 2.5,
+        "silhouette": 4.5,
+        "proportions": 4,
+        "materials": 4,
+        "detail": 2.5,
+        "wear": 3.5
+      }
+    },
+    {
+      "id": "ph:metal_jug:desaturated",
+      "group": "ph:metal_jug",
+      "variant": "desaturated",
+      "vector": {
+        "tris": 3.7811,
+        "smoothShading": 0.9776,
+        "curvSmooth": 0.7978,
+        "curvEntropy": 0.6656,
+        "colourDetail": 0.0337,
+        "texelDensity": 1.9396,
+        "chroma": 0.0089,
+        "valueRange": 0.3779,
+        "valueKey": 0.4924,
+        "hiFreq": 0.0282,
+        "restShare": 0.7895,
+        "silhouetteRoughness": 0.0181
+      },
+      "image": "48112a84db99a285c59b2956032693392bc52a53d89b4fb58c5371207901a279",
+      "panel": {
+        "overall": 5.8,
+        "silhouette": 7.5,
+        "proportions": 7.5,
+        "materials": 5,
+        "detail": 6.3,
+        "wear": 4.1
+      }
+    },
+    {
+      "id": "ph:Television_01:blurred",
+      "group": "ph:Television_01",
+      "variant": "blurred",
+      "vector": {
+        "tris": 3.2844,
+        "smoothShading": 0.5506,
+        "curvSmooth": 0.6214,
+        "curvEntropy": 0.7302,
+        "colourDetail": 0.0002,
+        "texelDensity": 1.4248,
+        "chroma": 0.0072,
+        "valueRange": 0.1731,
+        "valueKey": 0.2168,
+        "hiFreq": 0.017,
+        "restShare": 0.8116,
+        "silhouetteRoughness": 0.018
+      },
+      "image": "8dbfa1739744b4caf8ce3662534b40a6a6f05b96aad3f14e0b6e0ab2ae6e850a",
+      "panel": {
+        "overall": 5.8,
+        "silhouette": 7.5,
+        "proportions": 7.5,
+        "materials": 5.5,
+        "detail": 6,
+        "wear": 5
+      }
+    },
+    {
+      "id": "ph:Television_01:flat",
+      "group": "ph:Television_01",
+      "variant": "flat",
+      "vector": {
+        "tris": 2.8645,
+        "smoothShading": 0.0876,
+        "curvSmooth": 0.503,
+        "curvEntropy": 0.7355,
+        "colourDetail": 0.0333,
+        "texelDensity": 1.2317,
+        "chroma": 0.009,
+        "valueRange": 0.1857,
+        "valueKey": 0.2274,
+        "hiFreq": 0.0162,
+        "restShare": 0.8262,
+        "silhouetteRoughness": 0.0209
+      },
+      "image": "628dcc9dea1d38d19c06c7c8baba85f494060a0f85d2834a9d8c6a9e47339510",
+      "panel": {
+        "overall": 4.5,
+        "silhouette": 7,
+        "proportions": 7,
+        "materials": 4.5,
+        "detail": 4,
+        "wear": 4
+      }
+    },
+    {
+      "id": "ph:Television_01:decimated",
+      "group": "ph:Television_01",
+      "variant": "decimated",
+      "vector": {
+        "tris": 2.8645,
+        "smoothShading": 0.4551,
+        "curvSmooth": 0.503,
+        "curvEntropy": 0.7355,
+        "colourDetail": 0.0333,
+        "texelDensity": 1.2317,
+        "chroma": 0.0098,
+        "valueRange": 0.1739,
+        "valueKey": 0.2326,
+        "hiFreq": 0.0192,
+        "restShare": 0.8331,
+        "silhouetteRoughness": 0.0209
+      },
+      "image": "855b2a7db741d9e5c86207c34582ec890d849784e03fe8bffe716ab962a01924",
+      "panel": {
+        "overall": 4.3,
+        "silhouette": 7,
+        "proportions": 7,
+        "materials": 4.5,
+        "detail": 4,
+        "wear": 4
+      }
+    },
+    {
+      "id": "ph:Television_01:desaturated",
+      "group": "ph:Television_01",
+      "variant": "desaturated",
+      "vector": {
+        "tris": 3.2844,
+        "smoothShading": 0.5506,
+        "curvSmooth": 0.6214,
+        "curvEntropy": 0.7302,
+        "colourDetail": 0.0308,
+        "texelDensity": 1.4248,
+        "chroma": 0.0041,
+        "valueRange": 0.1765,
+        "valueKey": 0.2228,
+        "hiFreq": 0.0179,
+        "restShare": 0.8127,
+        "silhouetteRoughness": 0.018
+      },
+      "image": "2fdbac33ec98f5406dbb45fdfd3b33b0e8a9767114471eb4eb6e1fbfbd241fbe",
+      "panel": {
+        "overall": 5.8,
+        "silhouette": 7.5,
+        "proportions": 7.5,
+        "materials": 5.5,
+        "detail": 6,
+        "wear": 5
+      }
+    },
+    {
+      "id": "ph:Television_01:original",
+      "group": "ph:Television_01",
+      "variant": "original",
+      "vector": {
+        "tris": 3.2844,
+        "smoothShading": 0.5506,
+        "curvSmooth": 0.6214,
+        "curvEntropy": 0.7302,
+        "colourDetail": 0.0308,
+        "texelDensity": 1.4248,
+        "chroma": 0.0081,
+        "valueRange": 0.177,
+        "valueKey": 0.2227,
+        "hiFreq": 0.0179,
+        "restShare": 0.8129,
+        "silhouetteRoughness": 0.018
+      },
+      "image": "1f114728d12508920ea65692abaefd0814af80ad706b15960bc06c6c75228d6e",
+      "panel": {
+        "overall": 5.8,
+        "silhouette": 7.5,
+        "proportions": 7.5,
+        "materials": 5.6,
+        "detail": 6,
+        "wear": 5
+      }
+    },
+    {
+      "id": "ph:vintage_microwave:original",
+      "group": "ph:vintage_microwave",
+      "variant": "original",
+      "vector": {
+        "tris": 3.9104,
+        "smoothShading": 0.8419,
+        "curvSmooth": 0.6026,
+        "curvEntropy": 0.6795,
+        "colourDetail": 0.0247,
+        "texelDensity": 1.5478,
+        "chroma": 0.0456,
+        "valueRange": 0.33,
+        "valueKey": 0.2581,
+        "hiFreq": 0.0248,
+        "restShare": 0.813,
+        "silhouetteRoughness": 0.0101
+      },
+      "image": "bd1f3b375dfc4197a36f0094ed39eba3f849b08de763c99f411d01c26f63feac",
+      "panel": {
+        "overall": 5.8,
+        "silhouette": 7.5,
+        "proportions": 7.5,
+        "materials": 5.6,
+        "detail": 5.5,
+        "wear": 4.5
+      }
+    },
+    {
+      "id": "ph:vintage_microwave:flat",
+      "group": "ph:vintage_microwave",
+      "variant": "flat",
+      "vector": {
+        "tris": 3.3084,
+        "smoothShading": 0.053,
+        "curvSmooth": 0.4225,
+        "curvEntropy": 0.8513,
+        "colourDetail": 0.0305,
+        "texelDensity": 1.2515,
+        "chroma": 0.046,
+        "valueRange": 0.33,
+        "valueKey": 0.2584,
+        "hiFreq": 0.0262,
+        "restShare": 0.8072,
+        "silhouetteRoughness": 0.0084
+      },
+      "image": "7dad632f432749c4ba7b98099415ad8f3c8853acc1db013d4f08e3aa2f150352",
+      "panel": {
+        "overall": 5.8,
+        "silhouette": 7.5,
+        "proportions": 7.5,
+        "materials": 5.6,
+        "detail": 5.5,
+        "wear": 4.8
+      }
+    },
+    {
+      "id": "ph:vintage_microwave:desaturated",
+      "group": "ph:vintage_microwave",
+      "variant": "desaturated",
+      "vector": {
+        "tris": 3.9104,
+        "smoothShading": 0.8419,
+        "curvSmooth": 0.6026,
+        "curvEntropy": 0.6795,
+        "colourDetail": 0.0247,
+        "texelDensity": 1.5478,
+        "chroma": 0.0064,
+        "valueRange": 0.3297,
+        "valueKey": 0.2587,
+        "hiFreq": 0.0247,
+        "restShare": 0.8129,
+        "silhouetteRoughness": 0.0101
+      },
+      "image": "59092a5618d789373edeff163f05e2f0221e3a93917bb325b6a45b6519a902e8",
+      "panel": {
+        "overall": 5,
+        "silhouette": 7.5,
+        "proportions": 7.5,
+        "materials": 3.5,
+        "detail": 5.5,
+        "wear": 3.8
+      }
+    },
+    {
+      "id": "ph:vintage_microwave:decimated",
+      "group": "ph:vintage_microwave",
+      "variant": "decimated",
+      "vector": {
+        "tris": 3.1458,
+        "smoothShading": 0.5918,
+        "curvSmooth": 0.4357,
+        "curvEntropy": 0.857,
+        "colourDetail": 0.0413,
+        "texelDensity": 1.1739,
+        "chroma": 0.0376,
+        "valueRange": 0.3625,
+        "valueKey": 0.2585,
+        "hiFreq": 0.0337,
+        "restShare": 0.7316,
+        "silhouetteRoughness": 0.0118
+      },
+      "image": "defecb7572501987bbb5942a57f9e4bf6545d07474203a3ff707bd4adeabfe66",
+      "panel": {
+        "overall": 3.8,
+        "silhouette": 6.5,
+        "proportions": 7,
+        "materials": 4,
+        "detail": 3.5,
+        "wear": 3.5
+      }
+    },
+    {
+      "id": "ph:vintage_microwave:blurred",
+      "group": "ph:vintage_microwave",
+      "variant": "blurred",
+      "vector": {
+        "tris": 3.9104,
+        "smoothShading": 0.8419,
+        "curvSmooth": 0.6026,
+        "curvEntropy": 0.6795,
+        "colourDetail": 0.0011,
+        "texelDensity": 1.5478,
+        "chroma": 0.0475,
+        "valueRange": 0.2784,
+        "valueKey": 0.2625,
+        "hiFreq": 0.0243,
+        "restShare": 0.8241,
+        "silhouetteRoughness": 0.0101
+      },
+      "image": "b66911d84c0a13ee1ad96f7433270c5af4cdcdff27389a8e8d6a8a9a6568145f",
+      "panel": {
+        "overall": 5.8,
+        "silhouette": 7.5,
+        "proportions": 7.5,
+        "materials": 5.6,
+        "detail": 5.5,
+        "wear": 4.5
+      }
+    },
+    {
+      "id": "ph:Lantern_01:decimated",
+      "group": "ph:Lantern_01",
+      "variant": "decimated",
+      "vector": {
+        "tris": 3.4923,
+        "smoothShading": 0.3461,
+        "curvSmooth": 0.2295,
+        "curvEntropy": 0.9453,
+        "colourDetail": 0.0262,
+        "texelDensity": 2.0597,
+        "chroma": 0.0741,
+        "valueRange": 0.2836,
+        "valueKey": 0.2904,
+        "hiFreq": 0.0514,
+        "restShare": 0.4943,
+        "silhouetteRoughness": 0.4935
+      },
+      "image": "9d7c20c34b05066f9f6abdcd1cd4ba1c8563d4659e4c20e59279c70f1aa9ea46",
+      "panel": {
+        "overall": 4.5,
+        "silhouette": 6.5,
+        "proportions": 6,
+        "materials": 5,
+        "detail": 4,
+        "wear": 5
+      }
+    },
+    {
+      "id": "ph:Lantern_01:desaturated",
+      "group": "ph:Lantern_01",
+      "variant": "desaturated",
+      "vector": {
+        "tris": 4.5302,
+        "smoothShading": 0.8438,
+        "curvSmooth": 0.6151,
+        "curvEntropy": 0.7264,
+        "colourDetail": 0.0214,
+        "texelDensity": 2.5569,
+        "chroma": 0.0051,
+        "valueRange": 0.2356,
+        "valueKey": 0.2617,
+        "hiFreq": 0.0496,
+        "restShare": 0.4605,
+        "silhouetteRoughness": 0.4795
+      },
+      "image": "abc4c296e913056b432b9e0ec93c598c92ee312fb281801fa054082ce0ed936c",
+      "panel": {
+        "overall": 5.5,
+        "silhouette": 8,
+        "proportions": 7.5,
+        "materials": 4,
+        "detail": 7,
+        "wear": 4.5
+      }
+    },
+    {
+      "id": "ph:Lantern_01:flat",
+      "group": "ph:Lantern_01",
+      "variant": "flat",
+      "vector": {
+        "tris": 3.9282,
+        "smoothShading": 0.0491,
+        "curvSmooth": 0.3795,
+        "curvEntropy": 0.923,
+        "colourDetail": 0.0261,
+        "texelDensity": 2.2581,
+        "chroma": 0.0629,
+        "valueRange": 0.247,
+        "valueKey": 0.2618,
+        "hiFreq": 0.0562,
+        "restShare": 0.3639,
+        "silhouetteRoughness": 0.5703
+      },
+      "image": "7e15de0eb5cd04758819375426c175b24f8cf07fb0e528f798f4bd4ed92fd581",
+      "panel": {
+        "overall": 6.8,
+        "silhouette": 8,
+        "proportions": 7.5,
+        "materials": 6.5,
+        "detail": 7,
+        "wear": 6.3
+      }
+    },
+    {
+      "id": "ph:Lantern_01:blurred",
+      "group": "ph:Lantern_01",
+      "variant": "blurred",
+      "vector": {
+        "tris": 4.5302,
+        "smoothShading": 0.8438,
+        "curvSmooth": 0.6151,
+        "curvEntropy": 0.7264,
+        "colourDetail": 0.0007,
+        "texelDensity": 2.5569,
+        "chroma": 0.065,
+        "valueRange": 0.2237,
+        "valueKey": 0.265,
+        "hiFreq": 0.0428,
+        "restShare": 0.5663,
+        "silhouetteRoughness": 0.4795
+      },
+      "image": "d50439af196f54a4a57fff7ca8459af151eeab4fe8d5a2585913228e13ab47c5",
+      "panel": {
+        "overall": 6.8,
+        "silhouette": 8,
+        "proportions": 7.5,
+        "materials": 6.5,
+        "detail": 7,
+        "wear": 6.2
+      }
+    },
+    {
+      "id": "ph:Lantern_01:original",
+      "group": "ph:Lantern_01",
+      "variant": "original",
+      "vector": {
+        "tris": 4.5302,
+        "smoothShading": 0.8438,
+        "curvSmooth": 0.6151,
+        "curvEntropy": 0.7264,
+        "colourDetail": 0.0198,
+        "texelDensity": 2.5569,
+        "chroma": 0.0619,
+        "valueRange": 0.2344,
+        "valueKey": 0.2609,
+        "hiFreq": 0.0494,
+        "restShare": 0.4644,
+        "silhouetteRoughness": 0.4795
+      },
+      "image": "08d8e8143a5cb41bd3604516ef09012b0e7ee9a58340cee3574dfbc0771decf4",
+      "panel": {
+        "overall": 6.9,
+        "silhouette": 8,
+        "proportions": 7.5,
+        "materials": 6.5,
+        "detail": 7,
+        "wear": 6.5
+      }
+    },
+    {
+      "id": "ph:wooden_hammer_01:blurred",
+      "group": "ph:wooden_hammer_01",
+      "variant": "blurred",
+      "vector": {
+        "tris": 3.5585,
+        "smoothShading": 0.9657,
+        "curvSmooth": 0.6886,
+        "curvEntropy": 0.6234,
+        "colourDetail": 0.0008,
+        "texelDensity": 2.4077,
+        "chroma": 0.0806,
+        "valueRange": 0.1566,
+        "valueKey": 0.2471,
+        "hiFreq": 0.015,
+        "restShare": 0.8571,
+        "silhouetteRoughness": 0.0172
+      },
+      "image": "55143076005b52da9dd872768e0a0e04638ca32aeb8d4ba30af5f6db0945bec1",
+      "panel": {
+        "overall": 6,
+        "silhouette": 8,
+        "proportions": 7.5,
+        "materials": 5.8,
+        "detail": 5.7,
+        "wear": 5
+      }
+    },
+    {
+      "id": "ph:wooden_hammer_01:decimated",
+      "group": "ph:wooden_hammer_01",
+      "variant": "decimated",
+      "vector": {
+        "tris": 2.5855,
+        "smoothShading": 0.893,
+        "curvSmooth": 0.3339,
+        "curvEntropy": 0.917,
+        "colourDetail": 0.0271,
+        "texelDensity": 1.942,
+        "chroma": 0.0673,
+        "valueRange": 0.2162,
+        "valueKey": 0.2496,
+        "hiFreq": 0.019,
+        "restShare": 0.7114,
+        "silhouetteRoughness": 0.0213
+      },
+      "image": "2b6ae9249c4584cad63c62252f949a680aaef51d1ae45d356edddf5b66503f97",
+      "panel": {
+        "overall": 5.5,
+        "silhouette": 7.5,
+        "proportions": 7.5,
+        "materials": 5.5,
+        "detail": 5.2,
+        "wear": 4.5
+      }
+    },
+    {
+      "id": "ph:wooden_hammer_01:desaturated",
+      "group": "ph:wooden_hammer_01",
+      "variant": "desaturated",
+      "vector": {
+        "tris": 3.5585,
+        "smoothShading": 0.9657,
+        "curvSmooth": 0.6886,
+        "curvEntropy": 0.6234,
+        "colourDetail": 0.0217,
+        "texelDensity": 2.4077,
+        "chroma": 0.0054,
+        "valueRange": 0.1639,
+        "valueKey": 0.2503,
+        "hiFreq": 0.0165,
+        "restShare": 0.822,
+        "silhouetteRoughness": 0.0172
+      },
+      "image": "e1ada11e7789b93684545ade9bfe78548f77578f1aac229a3f7db690e32e970b",
+      "panel": {
+        "overall": 4.8,
+        "silhouette": 8,
+        "proportions": 7.5,
+        "materials": 3.2,
+        "detail": 5.5,
+        "wear": 4
+      }
+    },
+    {
+      "id": "ph:wooden_hammer_01:original",
+      "group": "ph:wooden_hammer_01",
+      "variant": "original",
+      "vector": {
+        "tris": 3.5585,
+        "smoothShading": 0.9657,
+        "curvSmooth": 0.6886,
+        "curvEntropy": 0.6234,
+        "colourDetail": 0.0215,
+        "texelDensity": 2.4077,
+        "chroma": 0.0799,
+        "valueRange": 0.1639,
+        "valueKey": 0.2485,
+        "hiFreq": 0.0165,
+        "restShare": 0.823,
+        "silhouetteRoughness": 0.0172
+      },
+      "image": "74544c15d8736b715f85df38db53638b4049e0e82e36c99ca481b77d1c30c87b",
+      "panel": {
+        "overall": 6,
+        "silhouette": 8,
+        "proportions": 7.5,
+        "materials": 5.8,
+        "detail": 5.7,
+        "wear": 5
+      }
+    },
+    {
+      "id": "ph:wooden_hammer_01:flat",
+      "group": "ph:wooden_hammer_01",
+      "variant": "flat",
+      "vector": {
+        "tris": 2.9566,
+        "smoothShading": 0.0713,
+        "curvSmooth": 0.529,
+        "curvEntropy": 0.8622,
+        "colourDetail": 0.0272,
+        "texelDensity": 2.1122,
+        "chroma": 0.0818,
+        "valueRange": 0.1608,
+        "valueKey": 0.249,
+        "hiFreq": 0.0219,
+        "restShare": 0.8374,
+        "silhouetteRoughness": 0.0132
+      },
+      "image": "5fa2091bea318e85584a0e6dd14f51416b67249b77fb784fc7500077939db5e5",
+      "panel": {
+        "overall": 5.9,
+        "silhouette": 8,
+        "proportions": 7.5,
+        "materials": 5.7,
+        "detail": 5.6,
+        "wear": 4.9
+      }
+    },
+    {
+      "id": "ph:Sofa_01:original",
+      "group": "ph:Sofa_01",
+      "variant": "original",
+      "vector": {
+        "tris": 3.613,
+        "smoothShading": 0.9434,
+        "curvSmooth": 0.5974,
+        "curvEntropy": 0.8539,
+        "colourDetail": 0.0633,
+        "texelDensity": 1.3602,
+        "chroma": 0.0431,
+        "valueRange": 0.4436,
+        "valueKey": 0.3815,
+        "hiFreq": 0.0219,
+        "restShare": 0.7808,
+        "silhouetteRoughness": 0.0153
+      },
+      "image": "7670b1dc29e82195cab2cfb95cfb20929c2a7a9c436742fc1b642bc172613897",
+      "panel": {
+        "overall": 6.3,
+        "silhouette": 8,
+        "proportions": 7.5,
+        "materials": 5.5,
+        "detail": 6,
+        "wear": 4.5
+      }
+    },
+    {
+      "id": "ph:Sofa_01:decimated",
+      "group": "ph:Sofa_01",
+      "variant": "decimated",
+      "vector": {
+        "tris": 2.711,
+        "smoothShading": 0.837,
+        "curvSmooth": 0.3762,
+        "curvEntropy": 0.9765,
+        "colourDetail": 0.057,
+        "texelDensity": 0.9739,
+        "chroma": 0.0424,
+        "valueRange": 0.3803,
+        "valueKey": 0.3732,
+        "hiFreq": 0.0298,
+        "restShare": 0.7294,
+        "silhouetteRoughness": 0.0306
+      },
+      "image": "22c8f137acc82b4776de1649a8a153fe65651e760ec6fbe4bf7da8bb77d77c09",
+      "panel": {
+        "overall": 2.8,
+        "silhouette": 4,
+        "proportions": 4,
+        "materials": 4.5,
+        "detail": 2.5,
+        "wear": 2.5
+      }
+    },
+    {
+      "id": "ph:Sofa_01:flat",
+      "group": "ph:Sofa_01",
+      "variant": "flat",
+      "vector": {
+        "tris": 3.0107,
+        "smoothShading": 0.1646,
+        "curvSmooth": 0.4445,
+        "curvEntropy": 0.9421,
+        "colourDetail": 0.0759,
+        "texelDensity": 1.0909,
+        "chroma": 0.0428,
+        "valueRange": 0.4475,
+        "valueKey": 0.3786,
+        "hiFreq": 0.0287,
+        "restShare": 0.7343,
+        "silhouetteRoughness": 0.0283
+      },
+      "image": "4096a6e966e39269dde83f198c96d7f4dcfe4e9cd36d0c453af860308d0bb90b",
+      "panel": {
+        "overall": 4,
+        "silhouette": 6.5,
+        "proportions": 6.5,
+        "materials": 5,
+        "detail": 3.5,
+        "wear": 3
+      }
+    },
+    {
+      "id": "ph:Sofa_01:desaturated",
+      "group": "ph:Sofa_01",
+      "variant": "desaturated",
+      "vector": {
+        "tris": 3.613,
+        "smoothShading": 0.9434,
+        "curvSmooth": 0.5974,
+        "curvEntropy": 0.8539,
+        "colourDetail": 0.0645,
+        "texelDensity": 1.3602,
+        "chroma": 0.0076,
+        "valueRange": 0.4468,
+        "valueKey": 0.3818,
+        "hiFreq": 0.0219,
+        "restShare": 0.7804,
+        "silhouetteRoughness": 0.0153
+      },
+      "image": "f99ca3833e648191c605df65fe1d8420ecd5d7346c44f5dc0a3249793f40718b",
+      "panel": {
+        "overall": 5.6,
+        "silhouette": 8,
+        "proportions": 7.5,
+        "materials": 3.8,
+        "detail": 6,
+        "wear": 4
+      }
+    },
+    {
+      "id": "ph:Sofa_01:blurred",
+      "group": "ph:Sofa_01",
+      "variant": "blurred",
+      "vector": {
+        "tris": 3.613,
+        "smoothShading": 0.9434,
+        "curvSmooth": 0.5974,
+        "curvEntropy": 0.8539,
+        "colourDetail": 0.0006,
+        "texelDensity": 1.3602,
+        "chroma": 0.0421,
+        "valueRange": 0.4084,
+        "valueKey": 0.3738,
+        "hiFreq": 0.0219,
+        "restShare": 0.8093,
+        "silhouetteRoughness": 0.0153
+      },
+      "image": "f1a712a8fd21a386f10cc8e04c0df111c97b0696802a9ac4693130551d1e4556",
+      "panel": {
+        "overall": 6.3,
+        "silhouette": 8,
+        "proportions": 7.5,
+        "materials": 5.8,
+        "detail": 6,
+        "wear": 4.5
+      }
+    },
+    {
+      "id": "ph:SchoolChair_01:blurred",
+      "group": "ph:SchoolChair_01",
+      "variant": "blurred",
+      "vector": {
+        "tris": 3.7053,
+        "smoothShading": 0.9007,
+        "curvSmooth": 0.6107,
+        "curvEntropy": 0.7591,
+        "colourDetail": 0.0003,
+        "texelDensity": 1.6259,
+        "chroma": 0.0503,
+        "valueRange": 0.3106,
+        "valueKey": 0.2447,
+        "hiFreq": 0.0092,
+        "restShare": 0.8179,
+        "silhouetteRoughness": 0.0198
+      },
+      "image": "f64fc1e1fc6a051c5c340a7773048a42067e5ccf85bc558fc6d1f5f82b4fe28d",
+      "panel": {
+        "overall": 6.5,
+        "silhouette": 8,
+        "proportions": 8,
+        "materials": 6.3,
+        "detail": 6.5,
+        "wear": 4
+      }
+    },
+    {
+      "id": "ph:SchoolChair_01:desaturated",
+      "group": "ph:SchoolChair_01",
+      "variant": "desaturated",
+      "vector": {
+        "tris": 3.7053,
+        "smoothShading": 0.9007,
+        "curvSmooth": 0.6107,
+        "curvEntropy": 0.7591,
+        "colourDetail": 0.0088,
+        "texelDensity": 1.6259,
+        "chroma": 0.0033,
+        "valueRange": 0.3098,
+        "valueKey": 0.2455,
+        "hiFreq": 0.0091,
+        "restShare": 0.8155,
+        "silhouetteRoughness": 0.0198
+      },
+      "image": "7860e1264c5641922615b9cdd9fd1a4e2d0b6b2ad4a4c6616123af582f712afd",
+      "panel": {
+        "overall": 6.3,
+        "silhouette": 8,
+        "proportions": 8,
+        "materials": 5.5,
+        "detail": 6.5,
+        "wear": 3.5
+      }
+    },
+    {
+      "id": "ph:SchoolChair_01:decimated",
+      "group": "ph:SchoolChair_01",
+      "variant": "decimated",
+      "vector": {
+        "tris": 2.7364,
+        "smoothShading": 0.5401,
+        "curvSmooth": 0.2349,
+        "curvEntropy": 0.9675,
+        "colourDetail": 0.0145,
+        "texelDensity": 1.1557,
+        "chroma": 0.0383,
+        "valueRange": 0.307,
+        "valueKey": 0.2221,
+        "hiFreq": 0.0352,
+        "restShare": 0.7052,
+        "silhouetteRoughness": 0.0306
+      },
+      "image": "ad437a4f550df8fe8babab7bd70831567f73223bd2b581a9c72ae8c89de46ac8",
+      "panel": {
+        "overall": 2.5,
+        "silhouette": 4,
+        "proportions": 4,
+        "materials": 4.5,
+        "detail": 2.5,
+        "wear": 2
+      }
+    },
+    {
+      "id": "ph:SchoolChair_01:flat",
+      "group": "ph:SchoolChair_01",
+      "variant": "flat",
+      "vector": {
+        "tris": 3.1035,
+        "smoothShading": 0.0283,
+        "curvSmooth": 0.3339,
+        "curvEntropy": 0.9214,
+        "colourDetail": 0.0117,
+        "texelDensity": 1.3252,
+        "chroma": 0.0509,
+        "valueRange": 0.2946,
+        "valueKey": 0.245,
+        "hiFreq": 0.0193,
+        "restShare": 0.799,
+        "silhouetteRoughness": 0.0238
+      },
+      "image": "6040ac8b8274063dec0310454e50646ba39793d87cde7b90ff32aa7b5698d9b2",
+      "panel": {
+        "overall": 6.5,
+        "silhouette": 8,
+        "proportions": 8,
+        "materials": 6.3,
+        "detail": 6.5,
+        "wear": 4
+      }
+    },
+    {
+      "id": "ph:SchoolChair_01:original",
+      "group": "ph:SchoolChair_01",
+      "variant": "original",
+      "vector": {
+        "tris": 3.7053,
+        "smoothShading": 0.9007,
+        "curvSmooth": 0.6107,
+        "curvEntropy": 0.7591,
+        "colourDetail": 0.0089,
+        "texelDensity": 1.6259,
+        "chroma": 0.0511,
+        "valueRange": 0.3075,
+        "valueKey": 0.2451,
+        "hiFreq": 0.0091,
+        "restShare": 0.8156,
+        "silhouetteRoughness": 0.0198
+      },
+      "image": "bea10d1ba6521dfbfd795bf38998af0516efc6957a8bf360b85ceba68e59bfd4",
+      "panel": {
+        "overall": 6.5,
+        "silhouette": 8,
+        "proportions": 8,
+        "materials": 6.3,
+        "detail": 6.5,
+        "wear": 4
+      }
+    },
+    {
+      "id": "ph:painted_wooden_stool:desaturated",
+      "group": "ph:painted_wooden_stool",
+      "variant": "desaturated",
+      "vector": {
+        "tris": 2.8555,
+        "smoothShading": 0.5833,
+        "curvSmooth": 0.5539,
+        "curvEntropy": 0.6684,
+        "colourDetail": 0.0652,
+        "texelDensity": 1.2677,
+        "chroma": 0.0084,
+        "valueRange": 0.4465,
+        "valueKey": 0.3116,
+        "hiFreq": 0.0185,
+        "restShare": 0.7702,
+        "silhouetteRoughness": 0.0261
+      },
+      "image": "28366e0d97e223eb4fd7a71afa9629acbd0336d44ba64513ee67ebdf4d4841f5",
+      "panel": {
+        "overall": 4.8,
+        "silhouette": 7,
+        "proportions": 7,
+        "materials": 3.2,
+        "detail": 5.5,
+        "wear": 3.5
+      }
+    },
+    {
+      "id": "ph:painted_wooden_stool:original",
+      "group": "ph:painted_wooden_stool",
+      "variant": "original",
+      "vector": {
+        "tris": 2.8555,
+        "smoothShading": 0.5833,
+        "curvSmooth": 0.5539,
+        "curvEntropy": 0.6684,
+        "colourDetail": 0.0645,
+        "texelDensity": 1.2677,
+        "chroma": 0.0595,
+        "valueRange": 0.4445,
+        "valueKey": 0.3106,
+        "hiFreq": 0.0185,
+        "restShare": 0.7696,
+        "silhouetteRoughness": 0.0261
+      },
+      "image": "1782f0d0c76b98d6a18688c617eb6c63515b1c1ef575d2637d21683c689532f4",
+      "panel": {
+        "overall": 6,
+        "silhouette": 7.5,
+        "proportions": 7.5,
+        "materials": 5.8,
+        "detail": 5.7,
+        "wear": 5
+      }
+    },
+    {
+      "id": "ph:painted_wooden_stool:decimated",
+      "group": "ph:painted_wooden_stool",
+      "variant": "decimated",
+      "vector": {
+        "tris": 2.0828,
+        "smoothShading": 0.5349,
+        "curvSmooth": 0.263,
+        "curvEntropy": 0.8328,
+        "colourDetail": 0.0552,
+        "texelDensity": 0.9871,
+        "chroma": 0.0709,
+        "valueRange": 0.2805,
+        "valueKey": 0.2824,
+        "hiFreq": 0.0216,
+        "restShare": 0.7777,
+        "silhouetteRoughness": 0.0261
+      },
+      "image": "f2e801dcd2c0342ee0d20463202fceadfddaf4209c1333ff06c69d36aa9b0ef6",
+      "panel": {
+        "overall": 2.5,
+        "silhouette": 4,
+        "proportions": 3,
+        "materials": 5,
+        "detail": 2.5,
+        "wear": 3.5
+      }
+    },
+    {
+      "id": "ph:painted_wooden_stool:flat",
+      "group": "ph:painted_wooden_stool",
+      "variant": "flat",
+      "vector": {
+        "tris": 2.2529,
+        "smoothShading": 0,
+        "curvSmooth": 0.4031,
+        "curvEntropy": 0.6925,
+        "colourDetail": 0.0618,
+        "texelDensity": 1.0159,
+        "chroma": 0.0673,
+        "valueRange": 0.2607,
+        "valueKey": 0.2932,
+        "hiFreq": 0.0186,
+        "restShare": 0.793,
+        "silhouetteRoughness": 0.0244
+      },
+      "image": "6cb19b7477b129a1c22f0da653af8f62be6776f40e3f0995ea89be1213916615",
+      "panel": {
+        "overall": 6,
+        "silhouette": 7.5,
+        "proportions": 7.5,
+        "materials": 5.6,
+        "detail": 5.5,
+        "wear": 4.8
+      }
+    },
+    {
+      "id": "ph:painted_wooden_stool:blurred",
+      "group": "ph:painted_wooden_stool",
+      "variant": "blurred",
+      "vector": {
+        "tris": 2.8555,
+        "smoothShading": 0.5833,
+        "curvSmooth": 0.5539,
+        "curvEntropy": 0.6684,
+        "colourDetail": 0.0007,
+        "texelDensity": 1.2677,
+        "chroma": 0.0713,
+        "valueRange": 0.2965,
+        "valueKey": 0.3007,
+        "hiFreq": 0.0172,
+        "restShare": 0.8123,
+        "silhouetteRoughness": 0.0261
+      },
+      "image": "f8b37c7fb00d456c978b103efd3f8967b3ce4aba0aaf39b04a60fed6ca7fce46",
+      "panel": {
+        "overall": 6,
+        "silhouette": 7.5,
+        "proportions": 7.5,
+        "materials": 5.8,
+        "detail": 5.7,
+        "wear": 5
+      }
+    },
+    {
+      "id": "ph:WetFloorSign_01:original",
+      "group": "ph:WetFloorSign_01",
+      "variant": "original",
+      "vector": {
+        "tris": 2.3598,
+        "smoothShading": 0.0536,
+        "curvSmooth": 0.6349,
+        "curvEntropy": 0.5208,
+        "colourDetail": 0,
+        "texelDensity": 1.0871,
+        "chroma": 0.3407,
+        "valueRange": 0.2743,
+        "valueKey": 0.4804,
+        "hiFreq": 0.0293,
+        "restShare": 0.8892,
+        "silhouetteRoughness": 0.0198
+      },
+      "image": "8fc3d60174adf0ba6a74d035dba335037d4be96dce50e169ad87ce5d196fa0db",
+      "panel": {
+        "overall": 4.8,
+        "silhouette": 7,
+        "proportions": 7,
+        "materials": 4.6,
+        "detail": 4.5,
+        "wear": 3.5
+      }
+    },
+    {
+      "id": "ph:WetFloorSign_01:decimated",
+      "group": "ph:WetFloorSign_01",
+      "variant": "decimated",
+      "vector": {
+        "tris": 2.0899,
+        "smoothShading": 0,
+        "curvSmooth": 0.5769,
+        "curvEntropy": 0.6195,
+        "colourDetail": 0,
+        "texelDensity": 0.9438,
+        "chroma": 0.3374,
+        "valueRange": 0.178,
+        "valueKey": 0.4773,
+        "hiFreq": 0.0274,
+        "restShare": 0.917,
+        "silhouetteRoughness": 0.0135
+      },
+      "image": "c2ae087db9f785606fb60d74e19d0701c7123a80f1fd3885e1b05e9f5e31d00a",
+      "panel": {
+        "overall": 4.3,
+        "silhouette": 6,
+        "proportions": 7,
+        "materials": 4.1,
+        "detail": 4,
+        "wear": 3.3
+      }
+    },
+    {
+      "id": "ph:WetFloorSign_01:flat",
+      "group": "ph:WetFloorSign_01",
+      "variant": "flat",
+      "vector": {
+        "tris": 2.0899,
+        "smoothShading": 0,
+        "curvSmooth": 0.5769,
+        "curvEntropy": 0.6195,
+        "colourDetail": 0,
+        "texelDensity": 0.9438,
+        "chroma": 0.3394,
+        "valueRange": 0.2399,
+        "valueKey": 0.4785,
+        "hiFreq": 0.0264,
+        "restShare": 0.9172,
+        "silhouetteRoughness": 0.0135
+      },
+      "image": "02eae922484afc19869c1a37a1bafee430e454be95e56fbe354750cb6753ebd0",
+      "panel": {
+        "overall": 4.3,
+        "silhouette": 6,
+        "proportions": 7,
+        "materials": 4.1,
+        "detail": 4,
+        "wear": 3.3
+      }
+    },
+    {
+      "id": "ph:WetFloorSign_01:blurred",
+      "group": "ph:WetFloorSign_01",
+      "variant": "blurred",
+      "vector": {
+        "tris": 2.3598,
+        "smoothShading": 0.0536,
+        "curvSmooth": 0.6349,
+        "curvEntropy": 0.5208,
+        "colourDetail": 0,
+        "texelDensity": 1.0871,
+        "chroma": 0.3407,
+        "valueRange": 0.2743,
+        "valueKey": 0.4804,
+        "hiFreq": 0.0293,
+        "restShare": 0.8892,
+        "silhouetteRoughness": 0.0198
+      },
+      "image": "8fc3d60174adf0ba6a74d035dba335037d4be96dce50e169ad87ce5d196fa0db",
+      "panel": {
+        "overall": 4.8,
+        "silhouette": 7,
+        "proportions": 7,
+        "materials": 4.6,
+        "detail": 4.5,
+        "wear": 3.5
+      }
+    },
+    {
+      "id": "ph:WetFloorSign_01:desaturated",
+      "group": "ph:WetFloorSign_01",
+      "variant": "desaturated",
+      "vector": {
+        "tris": 2.3598,
+        "smoothShading": 0.0536,
+        "curvSmooth": 0.6349,
+        "curvEntropy": 0.5208,
+        "colourDetail": 0,
+        "texelDensity": 1.0871,
+        "chroma": 0.0124,
+        "valueRange": 0.279,
+        "valueKey": 0.4893,
+        "hiFreq": 0.0297,
+        "restShare": 0.8892,
+        "silhouetteRoughness": 0.0198
+      },
+      "image": "d00a803bbc8afbf3477c2c212412707c8eba2dfb3c52047cac699c0a7f769c34",
+      "panel": {
+        "overall": 4,
+        "silhouette": 7,
+        "proportions": 7,
+        "materials": 2.5,
+        "detail": 4,
+        "wear": 2.5
+      }
+    },
+    {
+      "id": "ph:Shelf_01:flat",
+      "group": "ph:Shelf_01",
+      "variant": "flat",
+      "vector": {
+        "tris": 2.281,
+        "smoothShading": 0.0735,
+        "curvSmooth": 0.4856,
+        "curvEntropy": 0.5743,
+        "colourDetail": 0.0719,
+        "texelDensity": 0.5527,
+        "chroma": 0.0137,
+        "valueRange": 0.279,
+        "valueKey": 0.294,
+        "hiFreq": 0.032,
+        "restShare": 0.7034,
+        "silhouetteRoughness": 0.0039
+      },
+      "image": "cbcb51675dcd53dd2e8d458a4799f2021f7b5acae878a035aee397c5b160abd1",
+      "panel": {
+        "overall": 4.6,
+        "silhouette": 6.5,
+        "proportions": 7,
+        "materials": 4.4,
+        "detail": 4.5,
+        "wear": 3.5
+      }
+    },
+    {
+      "id": "ph:Shelf_01:original",
+      "group": "ph:Shelf_01",
+      "variant": "original",
+      "vector": {
+        "tris": 2.3444,
+        "smoothShading": 0.141,
+        "curvSmooth": 0.4894,
+        "curvEntropy": 0.5675,
+        "colourDetail": 0.0649,
+        "texelDensity": 0.5819,
+        "chroma": 0.0138,
+        "valueRange": 0.279,
+        "valueKey": 0.2958,
+        "hiFreq": 0.0336,
+        "restShare": 0.6909,
+        "silhouetteRoughness": 0.0039
+      },
+      "image": "75fcb2f743444d859b73beba14e4b4e85e21b24123cb3baf05cfd1c09b912506",
+      "panel": {
+        "overall": 4.9,
+        "silhouette": 6.5,
+        "proportions": 7,
+        "materials": 4.5,
+        "detail": 5,
+        "wear": 3.9
+      }
+    },
+    {
+      "id": "ph:Shelf_01:decimated",
+      "group": "ph:Shelf_01",
+      "variant": "decimated",
+      "vector": {
+        "tris": 2.281,
+        "smoothShading": 0.1471,
+        "curvSmooth": 0.4856,
+        "curvEntropy": 0.5743,
+        "colourDetail": 0.0719,
+        "texelDensity": 0.5527,
+        "chroma": 0.0138,
+        "valueRange": 0.279,
+        "valueKey": 0.2958,
+        "hiFreq": 0.0336,
+        "restShare": 0.6909,
+        "silhouetteRoughness": 0.0039
+      },
+      "image": "75fcb2f743444d859b73beba14e4b4e85e21b24123cb3baf05cfd1c09b912506",
+      "panel": {
+        "overall": 4.9,
+        "silhouette": 6.5,
+        "proportions": 7,
+        "materials": 4.5,
+        "detail": 5,
+        "wear": 3.9
+      }
+    },
+    {
+      "id": "ph:Shelf_01:blurred",
+      "group": "ph:Shelf_01",
+      "variant": "blurred",
+      "vector": {
+        "tris": 2.3444,
+        "smoothShading": 0.141,
+        "curvSmooth": 0.4894,
+        "curvEntropy": 0.5675,
+        "colourDetail": 0,
+        "texelDensity": 0.5819,
+        "chroma": 0.0129,
+        "valueRange": 0.2498,
+        "valueKey": 0.2946,
+        "hiFreq": 0.0319,
+        "restShare": 0.6771,
+        "silhouetteRoughness": 0.0039
+      },
+      "image": "fd7e51356fbc39300778ec37c96fa3a612b78d42782f1e4b71adc9dd0545bccb",
+      "panel": {
+        "overall": 4.8,
+        "silhouette": 6.5,
+        "proportions": 7,
+        "materials": 4.5,
+        "detail": 5,
+        "wear": 3.8
+      }
+    },
+    {
+      "id": "ph:Shelf_01:desaturated",
+      "group": "ph:Shelf_01",
+      "variant": "desaturated",
+      "vector": {
+        "tris": 2.3444,
+        "smoothShading": 0.141,
+        "curvSmooth": 0.4894,
+        "curvEntropy": 0.5675,
+        "colourDetail": 0.0643,
+        "texelDensity": 0.5819,
+        "chroma": 0.0119,
+        "valueRange": 0.2784,
+        "valueKey": 0.2959,
+        "hiFreq": 0.0337,
+        "restShare": 0.6908,
+        "silhouetteRoughness": 0.0039
+      },
+      "image": "8e5dfa6bf7b23d4c2786cc06531cba8da78cb1771235a53ba15312b9242321bc",
+      "panel": {
+        "overall": 4.7,
+        "silhouette": 6.5,
+        "proportions": 7,
+        "materials": 3,
+        "detail": 5,
+        "wear": 3.2
+      }
+    },
+    {
+      "id": "ph:ceramic_vase_02:decimated",
+      "group": "ph:ceramic_vase_02",
+      "variant": "decimated",
+      "vector": {
+        "tris": 3.1723,
+        "smoothShading": 1,
+        "curvSmooth": 0.5575,
+        "curvEntropy": 0.8379,
+        "colourDetail": 0.0328,
+        "texelDensity": 1.6391,
+        "chroma": 0.0306,
+        "valueRange": 0.4572,
+        "valueKey": 0.5988,
+        "hiFreq": 0.026,
+        "restShare": 0.8884,
+        "silhouetteRoughness": 0.0026
+      },
+      "image": "196b19bb2e3520bf0e00e3a2a0bd844e04984add22b236e14a46764bcfaa7d51",
+      "panel": {
+        "overall": 4.3,
+        "silhouette": 6.5,
+        "proportions": 7,
+        "materials": 4.5,
+        "detail": 4.5,
+        "wear": 4
+      }
+    },
+    {
+      "id": "ph:ceramic_vase_02:flat",
+      "group": "ph:ceramic_vase_02",
+      "variant": "flat",
+      "vector": {
+        "tris": 3.4445,
+        "smoothShading": 0.5061,
+        "curvSmooth": 0.7712,
+        "curvEntropy": 0.769,
+        "colourDetail": 0.0289,
+        "texelDensity": 1.7725,
+        "chroma": 0.0272,
+        "valueRange": 0.4398,
+        "valueKey": 0.5978,
+        "hiFreq": 0.0331,
+        "restShare": 0.8402,
+        "silhouetteRoughness": 0.0026
+      },
+      "image": "3edd87be7bab403e09e9b8927e66d885d733858441aea3e4c0be9f3fb4560e81",
+      "panel": {
+        "overall": 3.7,
+        "silhouette": 6.5,
+        "proportions": 6.5,
+        "materials": 3.8,
+        "detail": 3,
+        "wear": 3
+      }
+    },
+    {
+      "id": "ph:ceramic_vase_02:desaturated",
+      "group": "ph:ceramic_vase_02",
+      "variant": "desaturated",
+      "vector": {
+        "tris": 4.0465,
+        "smoothShading": 1,
+        "curvSmooth": 0.939,
+        "curvEntropy": 0.5179,
+        "colourDetail": 0.025,
+        "texelDensity": 2.0727,
+        "chroma": 0.0098,
+        "valueRange": 0.4398,
+        "valueKey": 0.5984,
+        "hiFreq": 0.0233,
+        "restShare": 0.9187,
+        "silhouetteRoughness": 0
+      },
+      "image": "df234844366f8f4e84e3825757a59a1424dc1bd9220157cc49461207642d4199",
+      "panel": {
+        "overall": 5.5,
+        "silhouette": 7,
+        "proportions": 7,
+        "materials": 5.3,
+        "detail": 5.5,
+        "wear": 4.5
+      }
+    },
+    {
+      "id": "ph:ceramic_vase_02:original",
+      "group": "ph:ceramic_vase_02",
+      "variant": "original",
+      "vector": {
+        "tris": 4.0465,
+        "smoothShading": 1,
+        "curvSmooth": 0.939,
+        "curvEntropy": 0.5179,
+        "colourDetail": 0.0263,
+        "texelDensity": 2.0727,
+        "chroma": 0.0271,
+        "valueRange": 0.4395,
+        "valueKey": 0.5983,
+        "hiFreq": 0.0233,
+        "restShare": 0.9189,
+        "silhouetteRoughness": 0
+      },
+      "image": "a26291f82de859af20f53c2f589ea1871049272b12219a112b981478e00e0989",
+      "panel": {
+        "overall": 5.6,
+        "silhouette": 7,
+        "proportions": 7,
+        "materials": 5.4,
+        "detail": 5.5,
+        "wear": 4.6
+      }
+    },
+    {
+      "id": "ph:ceramic_vase_02:blurred",
+      "group": "ph:ceramic_vase_02",
+      "variant": "blurred",
+      "vector": {
+        "tris": 4.0465,
+        "smoothShading": 1,
+        "curvSmooth": 0.939,
+        "curvEntropy": 0.5179,
+        "colourDetail": 0.0012,
+        "texelDensity": 2.0727,
+        "chroma": 0.0274,
+        "valueRange": 0.44,
+        "valueKey": 0.5977,
+        "hiFreq": 0.023,
+        "restShare": 0.9217,
+        "silhouetteRoughness": 0
+      },
+      "image": "da0b107f78ffd9ba0a0b0bd21418c4e072a16e5318b3b3e2b58002034b539c0b",
+      "panel": {
+        "overall": 5.5,
+        "silhouette": 7,
+        "proportions": 7,
+        "materials": 5.3,
+        "detail": 5.5,
+        "wear": 4.5
+      }
+    },
+    {
+      "id": "ph:oil_tin:decimated",
+      "group": "ph:oil_tin",
+      "variant": "decimated",
+      "vector": {
+        "tris": 2.4425,
+        "smoothShading": 0.3427,
+        "curvSmooth": 0.3666,
+        "curvEntropy": 0.9784,
+        "colourDetail": 0.0218,
+        "texelDensity": 1.5275,
+        "chroma": 0.0165,
+        "valueRange": 0.1888,
+        "valueKey": 0.2221,
+        "hiFreq": 0.0151,
+        "restShare": 0.9291,
+        "silhouetteRoughness": 0.0048
+      },
+      "image": "e2f383cf57e8ef66ef919e2bf1eb5a274b9ca20805f5c064b611d2d19af63ff1",
+      "panel": {
+        "overall": 5.5,
+        "silhouette": 6.5,
+        "proportions": 7,
+        "materials": 5.3,
+        "detail": 5.2,
+        "wear": 4
+      }
+    },
+    {
+      "id": "ph:oil_tin:original",
+      "group": "ph:oil_tin",
+      "variant": "original",
+      "vector": {
+        "tris": 3.4565,
+        "smoothShading": 0.8286,
+        "curvSmooth": 0.649,
+        "curvEntropy": 0.8742,
+        "colourDetail": 0.0203,
+        "texelDensity": 2.0193,
+        "chroma": 0.0114,
+        "valueRange": 0.1801,
+        "valueKey": 0.2091,
+        "hiFreq": 0.0135,
+        "restShare": 0.8902,
+        "silhouetteRoughness": 0.0047
+      },
+      "image": "ebfeaa0fbb37fa780d91fd2e3e69707ef958099d4090e95a9fb9426e2e3b06d0",
+      "panel": {
+        "overall": 5.5,
+        "silhouette": 6.5,
+        "proportions": 7,
+        "materials": 5.3,
+        "detail": 5.5,
+        "wear": 5.5
+      }
+    },
+    {
+      "id": "ph:oil_tin:desaturated",
+      "group": "ph:oil_tin",
+      "variant": "desaturated",
+      "vector": {
+        "tris": 3.4565,
+        "smoothShading": 0.8286,
+        "curvSmooth": 0.649,
+        "curvEntropy": 0.8742,
+        "colourDetail": 0.0208,
+        "texelDensity": 2.0193,
+        "chroma": 0.0029,
+        "valueRange": 0.1798,
+        "valueKey": 0.2091,
+        "hiFreq": 0.0135,
+        "restShare": 0.8899,
+        "silhouetteRoughness": 0.0047
+      },
+      "image": "daf4ae3432b6f0d2b427bac72c1669e145e7b2cbe67a39b81431471fdcab9adb",
+      "panel": {
+        "overall": 5.5,
+        "silhouette": 6.5,
+        "proportions": 7,
+        "materials": 5.3,
+        "detail": 5.5,
+        "wear": 5.5
+      }
+    },
+    {
+      "id": "ph:oil_tin:blurred",
+      "group": "ph:oil_tin",
+      "variant": "blurred",
+      "vector": {
+        "tris": 3.4565,
+        "smoothShading": 0.8286,
+        "curvSmooth": 0.649,
+        "curvEntropy": 0.8742,
+        "colourDetail": 0.0006,
+        "texelDensity": 2.0193,
+        "chroma": 0.0142,
+        "valueRange": 0.1638,
+        "valueKey": 0.2175,
+        "hiFreq": 0.0138,
+        "restShare": 0.9069,
+        "silhouetteRoughness": 0.0047
+      },
+      "image": "97a65266ba15775b7bb162b898e920c36438efda5844aae31c031125963b07b2",
+      "panel": {
+        "overall": 5.6,
+        "silhouette": 6.6,
+        "proportions": 7,
+        "materials": 5.4,
+        "detail": 5.3,
+        "wear": 4.5
+      }
+    },
+    {
+      "id": "ph:oil_tin:flat",
+      "group": "ph:oil_tin",
+      "variant": "flat",
+      "vector": {
+        "tris": 2.8543,
+        "smoothShading": 0.1492,
+        "curvSmooth": 0.4918,
+        "curvEntropy": 0.9606,
+        "colourDetail": 0.0228,
+        "texelDensity": 1.7209,
+        "chroma": 0.0121,
+        "valueRange": 0.1703,
+        "valueKey": 0.2074,
+        "hiFreq": 0.0159,
+        "restShare": 0.9077,
+        "silhouetteRoughness": 0.006
+      },
+      "image": "08e4712570e9aba1a88c6a85175022c5c3f9a58e188595c84ea9dce2a71cea25",
+      "panel": {
+        "overall": 4.5,
+        "silhouette": 6,
+        "proportions": 5.5,
+        "materials": 4.8,
+        "detail": 3.5,
+        "wear": 5
+      }
+    },
+    {
+      "id": "ph:brass_vase_03:original",
+      "group": "ph:brass_vase_03",
+      "variant": "original",
+      "vector": {
+        "tris": 3.4178,
+        "smoothShading": 1,
+        "curvSmooth": 0.591,
+        "curvEntropy": 0.6891,
+        "colourDetail": 0.0593,
+        "texelDensity": 2.1991,
+        "chroma": 0.2188,
+        "valueRange": 0.3746,
+        "valueKey": 0.4487,
+        "hiFreq": 0.0224,
+        "restShare": 0.8522,
+        "silhouetteRoughness": 0.0108
+      },
+      "image": "f19b804ad52aba613cd93930151b8081fef61d7a773ae9843a24c1701dfc7b57",
+      "panel": {
+        "overall": 5.2,
+        "silhouette": 7.5,
+        "proportions": 7,
+        "materials": 5.5,
+        "detail": 4.8,
+        "wear": 5
+      }
+    },
+    {
+      "id": "ph:brass_vase_03:flat",
+      "group": "ph:brass_vase_03",
+      "variant": "flat",
+      "vector": {
+        "tris": 2.8162,
+        "smoothShading": 0.0385,
+        "curvSmooth": 0.378,
+        "curvEntropy": 0.8814,
+        "colourDetail": 0.0991,
+        "texelDensity": 1.9036,
+        "chroma": 0.2163,
+        "valueRange": 0.3956,
+        "valueKey": 0.459,
+        "hiFreq": 0.0313,
+        "restShare": 0.7452,
+        "silhouetteRoughness": 0.0136
+      },
+      "image": "520be32d98f6cd8c8074139b26d6b91a92f281b8436f7c8a89626ae10be68f08",
+      "panel": {
+        "overall": 3.5,
+        "silhouette": 6.5,
+        "proportions": 7,
+        "materials": 5,
+        "detail": 3,
+        "wear": 4.5
+      }
+    },
+    {
+      "id": "ph:brass_vase_03:blurred",
+      "group": "ph:brass_vase_03",
+      "variant": "blurred",
+      "vector": {
+        "tris": 3.4178,
+        "smoothShading": 1,
+        "curvSmooth": 0.591,
+        "curvEntropy": 0.6891,
+        "colourDetail": 0.0027,
+        "texelDensity": 2.1991,
+        "chroma": 0.2171,
+        "valueRange": 0.3972,
+        "valueKey": 0.4597,
+        "hiFreq": 0.0208,
+        "restShare": 0.869,
+        "silhouetteRoughness": 0.0108
+      },
+      "image": "2e9d70e186bd7d51fe6b8cf261020726df6bbcf13edb1bc045100a05b9b8166d",
+      "panel": {
+        "overall": 5.5,
+        "silhouette": 7.5,
+        "proportions": 7.5,
+        "materials": 5.3,
+        "detail": 5.5,
+        "wear": 4
+      }
+    },
+    {
+      "id": "ph:brass_vase_03:decimated",
+      "group": "ph:brass_vase_03",
+      "variant": "decimated",
+      "vector": {
+        "tris": 2.3201,
+        "smoothShading": 1,
+        "curvSmooth": 0.1339,
+        "curvEntropy": 0.8244,
+        "colourDetail": 0.1613,
+        "texelDensity": 1.6839,
+        "chroma": 0.1973,
+        "valueRange": 0.353,
+        "valueKey": 0.4438,
+        "hiFreq": 0.0268,
+        "restShare": 0.816,
+        "silhouetteRoughness": 0.0124
+      },
+      "image": "cba96c3e3a19bf7a6de23678e087a264eeb039494de982c9f2e414c69f491962",
+      "panel": {
+        "overall": 3.2,
+        "silhouette": 5.5,
+        "proportions": 5.5,
+        "materials": 4.5,
+        "detail": 3,
+        "wear": 4
+      }
+    },
+    {
+      "id": "ph:brass_vase_03:desaturated",
+      "group": "ph:brass_vase_03",
+      "variant": "desaturated",
+      "vector": {
+        "tris": 3.4178,
+        "smoothShading": 1,
+        "curvSmooth": 0.591,
+        "curvEntropy": 0.6891,
+        "colourDetail": 0.0611,
+        "texelDensity": 2.1991,
+        "chroma": 0.0083,
+        "valueRange": 0.3796,
+        "valueKey": 0.4539,
+        "hiFreq": 0.0225,
+        "restShare": 0.8528,
+        "silhouetteRoughness": 0.0108
+      },
+      "image": "41e9325859f41e61358888e54f1ddc2e64f31a5b7da229c5fd4c672b07637292",
+      "panel": {
+        "overall": 4.3,
+        "silhouette": 7,
+        "proportions": 7,
+        "materials": 2.5,
+        "detail": 5,
+        "wear": 3.5
+      }
+    }
+  ]
+}

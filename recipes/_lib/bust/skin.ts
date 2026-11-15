@@ -5,6 +5,7 @@
 // skin irregularity (pores/bumps) displaced into the surface at LOD0.
 
 import {
+  type DetailRegion,
   type Field,
   type Mesh,
   type Rng,
@@ -43,6 +44,8 @@ export interface SkinOptions {
   readonly clip?: Field;
   /** Mesh only inside this box (intersected with the edits' bounds): a split part's region. */
   readonly within?: readonly [V, V];
+  /** Boxes meshed finer (the face of a skull-stage head). */
+  readonly detail?: readonly DetailRegion[];
 }
 
 export function skinMesh(edits: readonly SculptEdit[], cell: number, o: SkinOptions): Mesh {
@@ -131,6 +134,8 @@ export function skinMesh(edits: readonly SculptEdit[], cell: number, o: SkinOpti
     resolution: cell,
     color: paint,
     ...(sym ? { symmetry: 'y' as const } : {}),
-    ...(amp > 0 ? { lipschitz: 1.6 } : {}),
+    // The sculpt's own bound (strokes raise it), plus the pores' slope.
+    lipschitz: s.lipschitz + (amp > 0 ? 0.35 : 0),
+    ...(o.detail ? { detail: o.detail } : {}),
   });
 }

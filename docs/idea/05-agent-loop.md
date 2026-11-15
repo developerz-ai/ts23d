@@ -20,7 +20,7 @@ research refs ─► write recipe ─► t3d build ──QA FAIL──► fix fi
 | 4. Shot | `bunx t3d build` already wrote `out/x/sheet.png`; `bunx t3d shot recipes/x/x.ts` for a sheet without GLBs | `out/x/sheet.png` + `manifest.json` written |
 | 5. Read | Open the PNG (vision). Compare against the reference | One concrete error named, e.g. "turret 30% too tall in SIDE -Y" |
 | 6. Fix | Edit the recipe for that one error | → step 3 |
-| 6b. Photo match *(planned, M2)* | `photoMatch(asset, { photo, camera })` → one PNG: photo · model · overlay, plus silhouette IoU | IoU stops rising; the overlay shows no misplaced mass |
+| 6b. Photo match | `photoMatch(asset, { photo, camera })` → one PNG: photo · model · overlay, plus silhouette IoU | IoU stops rising; the overlay shows no misplaced mass |
 | 7. Detail pass | Once masses read right: hatches, rivets, windows, handrails. Gate each on `ctx.lod` | Detail shows at LOD0, dropped by LOD2, budget holds |
 | Stop | Two consecutive shots with nothing worth fixing | |
 
@@ -76,7 +76,7 @@ Grid step is picked so the asset spans ≤ 24 cells: 0.1, 0.5, 1, 5, 10, 50 or 1
 | Middle | The model from the same camera, scaled to the photo |
 | Bottom | 50% overlay of the two |
 
-It also returns silhouette IoU (0–1), the number the planned `silhouetteIoU` gate and the M6 reverse direction optimise. Camera solving from ≥ 4 marked correspondences comes later (M6); until then the agent passes the camera.
+It also returns silhouette IoU (0–1), the number the `silhouetteIoU` gate and the M6 reverse direction optimise. With `marks` (≥ 4 photo↔model correspondences) `photoMatch` solves the camera (DLT, refined on IoU); otherwise the agent passes the camera. `bun run ref <recipe>` turns dossier photos into committed derived numbers (`ref.json`).
 
 The bar: [`loco-photo-match.png`](https://raw.githubusercontent.com/developerz-ai/ts23d/main/docs/reference/loco-photo-match.png), from the in-house predecessor, not from this library.
 

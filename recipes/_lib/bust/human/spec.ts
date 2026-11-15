@@ -3,6 +3,8 @@
 // thick — plus palette, eye, ear and torso specs. One table every module reads.
 
 import { hex } from '@developerz.ai/ts23d';
+import { skullLandmarks, skullOf } from '../../face/skull.ts';
+import { type Character, HUMAN as HUMAN_FACE } from '../../face/spec.ts';
 import type { EarSpec } from '../ear.ts';
 import type { EyeSpec } from '../eye.ts';
 import { type HeadSpec, HUMAN, landmarks } from '../head.ts';
@@ -49,9 +51,43 @@ export const SPEC: HeadSpec = {
 
 export const L = landmarks(SPEC);
 
+/** The hero's face against the CC0 base (gender-neutral MakeHuman default) — every delta is a
+ *  sourced male norm or a declared heroic push (README "Proportions"): head breadth ×1.05 (base
+ *  147 mm → 154, ANSUR II male mean 157), bigonial ×1.16 (87 → 101 mm, Farkas male go-go ≈ 100),
+ *  chin forward 0.6 % H and ×1.15 wide (male chin), brow ridge 0.5 % H forward (male glabella),
+ *  eye spacing ×1.12 (IPD 56 → 63 mm, Dodgson 2004 adult mean 63.4 mm), nose ×1.12 projection and a 0.3 % H higher bridge, neck ×1.3 (base side-to-side 80 mm → 104,
+ *  ANSUR II male neck circumference 395 mm ≈ 120 × 100 mm section with the SCMs), face ×1.03 long. */
+export const HERO_FACE = {
+  ...HUMAN_FACE,
+  cranium: { width: 1.05, height: 1, depth: 1.02 },
+  brow: { forward: 0.005, height: 0 },
+  eyes: { spacing: 1.12, tilt: 0, open: 1, size: 1.1 },
+  nose: { width: 1.05, projection: 1.12, length: 1.02, bridge: 0.003, hook: 0 },
+  zygoma: { width: 1.03, height: 0.004, forward: 0.003 },
+  jaw: { width: 1.16, drop: 0.07 },
+  chin: { forward: 0.006, width: 1.15 },
+  mouth: { width: 1.02, lips: 0, underbite: 0 },
+  face: 1.03,
+  body: { neck: 1.3, traps: 0.02, shoulders: 1.1 },
+} as const;
+
+/** The skull stage's character: the hero face, a young adult, lean, symmetric. */
+export const CHARACTER: Character = {
+  race: HERO_FACE,
+  age: 0.3,
+  weight: -0.15,
+  asym: 0,
+  tone: { base: C.skin, flush: C.warm, lips: C.lips, cool: C.cool, cavity: C.cavity },
+  eyes: { iris: C.iris },
+  mouth: 0,
+};
+
+/** The skull's own landmarks in the bust frame (eyes sit in its orbits). */
+export const SK = skullLandmarks(skullOf(CHARACTER, SPEC));
+
 export const EYE: EyeSpec = {
-  centre: L.eye,
-  r: L.eyeR,
+  centre: SK.eye,
+  r: SK.eyeR,
   // Human iris 11.7 mm on a 24 mm ball.
   iris: 0.00585,
   upper: 0.25,

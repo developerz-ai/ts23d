@@ -3,8 +3,11 @@
 // the sculpted busts do. Exact distance (closest point on the nearest triangle, signed by the
 // interpolated vertex normal) in a band of grid nodes round the surface; beyond it ±band, with
 // the sign from a flood fill of the outside. Trilinear between nodes. Deterministic.
+// `inside: 'parity'` hands over to mesh-exact.ts (vote signs, filled voids, propagated distances).
 
 import type { Field, Mesh, Vec3 } from '@developerz.ai/ts23d';
+import { closest, W } from './mesh-distance.ts';
+import { type ExactOptions, exactField } from './mesh-exact.ts';
 
 export interface MeshField {
   readonly field: Field;
@@ -13,89 +16,14 @@ export interface MeshField {
   readonly bounds: readonly [Vec3, Vec3];
 }
 
-/** Barycentric weights of the closest point, written by `closest` (no allocation per call). */
-const W = new Float64Array(3);
-
-/** Closest point on triangle abc to p (Ericson, Real-Time Collision Detection 5.1.5), as
- *  barycentric weights in W. Coordinates are passed as scalars: this runs millions of times. */
-function closest(
-  px: number,
-  py: number,
-  pz: number,
-  ax: number,
-  ay: number,
-  az: number,
-  bx: number,
-  by: number,
-  bz: number,
-  cx: number,
-  cy: number,
-  cz: number,
-): void {
-  const abx = bx - ax;
-  const aby = by - ay;
-  const abz = bz - az;
-  const acx = cx - ax;
-  const acy = cy - ay;
-  const acz = cz - az;
-  const apx = px - ax;
-  const apy = py - ay;
-  const apz = pz - az;
-  const d1 = abx * apx + aby * apy + abz * apz;
-  const d2 = acx * apx + acy * apy + acz * apz;
-  W[0] = 1;
-  W[1] = 0;
-  W[2] = 0;
-  if (d1 <= 0 && d2 <= 0) return;
-  const bpx = px - bx;
-  const bpy = py - by;
-  const bpz = pz - bz;
-  const d3 = abx * bpx + aby * bpy + abz * bpz;
-  const d4 = acx * bpx + acy * bpy + acz * bpz;
-  if (d3 >= 0 && d4 <= d3) {
-    W[0] = 0;
-    W[1] = 1;
-    return;
-  }
-  const vc = d1 * d4 - d3 * d2;
-  if (vc <= 0 && d1 >= 0 && d3 <= 0) {
-    const v = d1 / (d1 - d3);
-    W[0] = 1 - v;
-    W[1] = v;
-    return;
-  }
-  const cpx = px - cx;
-  const cpy = py - cy;
-  const cpz = pz - cz;
-  const d5 = abx * cpx + aby * cpy + abz * cpz;
-  const d6 = acx * cpx + acy * cpy + acz * cpz;
-  if (d6 >= 0 && d5 <= d6) {
-    W[0] = 0;
-    W[2] = 1;
-    return;
-  }
-  const vb = d5 * d2 - d1 * d6;
-  if (vb <= 0 && d2 >= 0 && d6 <= 0) {
-    const w = d2 / (d2 - d6);
-    W[0] = 1 - w;
-    W[2] = w;
-    return;
-  }
-  const va = d3 * d6 - d5 * d4;
-  if (va <= 0 && d4 - d3 >= 0 && d5 - d6 >= 0) {
-    const w = (d4 - d3) / (d4 - d3 + (d5 - d6));
-    W[0] = 0;
-    W[1] = 1 - w;
-    W[2] = w;
-    return;
-  }
-  const den = 1 / (va + vb + vc);
-  W[1] = vb * den;
-  W[2] = vc * den;
-  W[0] = 1 - W[1] - W[2];
-}
-
-export function meshField(m: Mesh, cell: number, band = 3): MeshField {
+export function meshField(
+  m: Mesh,
+  cell: number,
+  band = 3,
+  opts: ExactOptions & { readonly inside?: 'flood' | 'parity' } = {},
+): MeshField {
+  if (opts.inside === 'parity')
+    return { ...exactField(m, cell, band, opts), colorAt: () => [0.5, 0.5, 0.5] };
   const P = m.positions;
   const N = m.normals;
   const T = m.indices;

@@ -1,5 +1,7 @@
 // Surface relief per skin type, LOD-gated (LOD0 only; coarser LODs carry it in colour): fur as
-// clumps stretched along the body (hair lies toward the tail), scales as domed Worley cells (the
+// clumps stretched along the body (hair lies toward the tail) or, given the coat's flow, as
+// smooth noise locks drawn out 3× along it, amplitude per zone
+// (`furRelief`: the sculpted base the fur cards lie on), scales as domed Worley cells (the
 // dragon's method), feathers as overlapping scalloped rows. Amplitudes are a fraction of the
 // sculpt cell so the relief reads without breaking the silhouette.
 
@@ -11,9 +13,44 @@ import type { Relief } from './creature-mesh.ts';
 import { worley } from './creature-pattern.ts';
 import type { Surface } from './creature-spec.ts';
 
-/** Relief for a surface at sculpt cell `res`; `size` = feature size, metres. */
-export function relief(surface: Surface, res: number, size: number, seed: number): Relief | null {
+/** The coat's lie for relief: unit-ish flow direction and an amplitude scale (zones) at p. */
+export interface FurLie {
+  readonly dir: (p: Vec3) => Vec3;
+  readonly amp?: (p: Vec3) => number;
+}
+
+/** Fur locks along the flow: smooth noise squeezed 3× along `dir`, so the relief streaks with the
+ *  coat. Smooth on purpose: Worley borders are creases (QA connections reads them as seams). */
+export function furRelief(res: number, size: number, seed: number, lie: FurLie): Relief {
+  const n = valueNoise(createRng(seed), { scale: size, octaves: 2 });
+  const amp = res * 0.45;
+  return {
+    amp,
+    at: (p) => {
+      const d0 = lie.dir(p);
+      const l = Math.hypot(d0[0], d0[1], d0[2]) || 1;
+      const d: Vec3 = [d0[0] / l, d0[1] / l, d0[2] / l];
+      // Shrink the along-flow coordinate: features become locks 3× longer than wide.
+      const a = (p[0] * d[0] + p[1] * d[1] + p[2] * d[2]) * (1 - 1 / 3);
+      const k = Math.min(1.3, lie.amp ? lie.amp(p) : 1);
+      return (
+        amp * Math.max(-1, Math.min(1, k * n([p[0] - d[0] * a, p[1] - d[1] * a, p[2] - d[2] * a])))
+      );
+    },
+  };
+}
+
+/** Relief for a surface at sculpt cell `res`; `size` = feature size, metres. With `lie`, fur
+ *  relief is flow-advected locks (`furRelief`). */
+export function relief(
+  surface: Surface,
+  res: number,
+  size: number,
+  seed: number,
+  lie?: FurLie,
+): Relief | null {
   if (surface === 'skin') return null;
+  if (surface === 'fur' && lie) return furRelief(res, size, seed, lie);
   if (surface === 'fur') {
     const n = valueNoise(createRng(seed), { scale: size, octaves: 2 });
     const amp = res * 0.45;

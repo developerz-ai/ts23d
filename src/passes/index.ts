@@ -1,9 +1,35 @@
 // Public API of /passes: whole-mesh post-processing applied after geometry — wear, optimisation.
 
 export { type AoOptions, bakeAo, bakeAoAsset } from './bake-ao.ts';
+export {
+  bakeField,
+  type DistanceField,
+  type FieldBakeOptions,
+  type FieldMap,
+  type FieldMaps,
+  type FieldProbe,
+  fieldProbe,
+} from './bake-field.ts';
 export { type BakeOptions, bakeNormals, type NormalBake } from './bake-normals.ts';
 export { uvTangents } from './bake-tangents.ts';
+export { type FairOptions, fair } from './fair.ts';
 export { type GrimeOptions, type GrimeZone, grime } from './grime.ts';
+export {
+  type CardZone,
+  type HairCardOptions,
+  type HairCards,
+  hairCards,
+} from './hair-cards.ts';
+export {
+  chainSeed,
+  type FlowChain,
+  type FlowOptions,
+  type FlowSeed,
+  flowAt,
+  flowDivergence,
+  hairFlow,
+  tangentOf,
+} from './hair-flow.ts';
 export { type Imperfect, type ImperfectOptions, imperfect } from './imperfect.ts';
 export { type Livery, type LiveryRule, livery } from './livery.ts';
 export { type OptimizeOptions, type OptimizeReport, optimize } from './optimize.ts';

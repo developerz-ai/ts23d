@@ -12,6 +12,13 @@ export {
 export { BLUEPRINT_VIEWS, type BlueprintOptions, blueprint } from './blueprint.ts';
 export { type MeasureResult, measureResults } from './blueprint-measures.ts';
 export type { PerspectiveCamera } from './camera.ts';
+export {
+  type CameraSolve,
+  type Mark,
+  type PhotoCamera,
+  perspectiveOf,
+  solveCamera,
+} from './camera-solve.ts';
 export { drawText, textWidth } from './font.ts';
 export {
   ICON_CAMERA,
@@ -43,7 +50,8 @@ export {
   viewFrame,
 } from './metrics.ts';
 export { checkBeautyOptions, parseSize } from './options.ts';
-export { type PhotoCamera, type PhotoMatchOptions, photoMatch } from './photo-match.ts';
+export { type PhotoMatch, type PhotoMatchOptions, photoMatch, photoView } from './photo-match.ts';
+export { type Photo, resizePhoto, type SegmentOptions, segmentPhoto } from './photo-segment.ts';
 export { detailWindows, type ReviewOptions, type ReviewPack, reviewPack } from './review.ts';
 export {
   REVIEW_THRESHOLDS,

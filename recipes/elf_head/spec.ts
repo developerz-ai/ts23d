@@ -10,6 +10,10 @@ import type { EyeSpec } from '../_lib/bust/eye.ts';
 import { type HeadSpec, HUMAN, landmarks } from '../_lib/bust/head.ts';
 import type { V } from '../_lib/bust/kit.ts';
 import type { NeckRange, TorsoSpec } from '../_lib/bust/torso.ts';
+import { HUMAN_PROPORTIONS, type ProportionTable } from '../_lib/face/proportions.ts';
+import { ELF as ELF_RACE } from '../_lib/face/races.ts';
+import { skullLandmarks, skullOf } from '../_lib/face/skull.ts';
+import type { Character, FaceSpec } from '../_lib/face/spec.ts';
 
 export const H = 0.23;
 export const CUT_Z = 0.1;
@@ -75,10 +79,36 @@ export const SPEC: HeadSpec = {
 
 export const L = landmarks(SPEC);
 
+/** The elf's face on the CC0 base (the race preset, ../_lib/face/races.ts, pushed): ears ×1.7
+ *  long with the helix drawn back and up to a point (the elf_head design's long swept ear), eyes
+ *  ×1.06 and set ×1.166 wide (IPD 64 mm, human 0.265 H × 1.05), almond (tilt +2 % H), cheekbones high (+2 % H), slender neck ×0.85. */
+export const ELF_FACE: FaceSpec = {
+  ...ELF_RACE,
+  eyes: { spacing: 1.166, tilt: 0.02, open: 0.95, size: 1.15 },
+  jaw: { width: 0.85, drop: 0.05 },
+  zygoma: { width: 1.04, height: 0.02, forward: 0.008 },
+  ears: { length: 1.7, tip: [0.2, 0.05, 0.26], out: 8 },
+  body: { neck: 0.85, traps: -0.01, shoulders: 0.95 },
+};
+
+/** The skull stage's character: a young adult elf, lean, symmetric. */
+export const CHARACTER: Character = {
+  race: ELF_FACE,
+  age: 0.05,
+  weight: -0.3,
+  asym: 0,
+  tone: { base: C.skin, flush: C.warm, lips: C.lips, cool: C.cool, cavity: C.cavity },
+  eyes: { iris: C.iris },
+  mouth: 0,
+};
+
+/** The skull's own landmarks in the bust frame. */
+export const SK = skullLandmarks(skullOf(CHARACTER, SPEC));
+
 export const EYE: EyeSpec = {
-  centre: L.eye,
-  r: L.eyeR,
-  iris: L.eyeR * 0.52,
+  centre: SK.eye,
+  r: SK.eyeR,
+  iris: SK.eyeR * 0.52,
   upper: 0.24,
   lower: 0.1,
   lid: 0.0021,
@@ -108,3 +138,25 @@ export const TORSO: TorsoSpec = {
 
 /** Declared neck stylisation (slender: neck 0.6–0.7 × head width (human 0.7–0.8)). */
 export const NECK: NeckRange = { width: [0.6, 0.7], length: [0.25, 0.35] };
+
+/** The elf's proportion bands: the human's (../_lib/face/proportions.ts) with the declared deltas —
+ *  eyes ×1.15 (a wider fissure and ball), a long refined lower face, a slender neck. */
+export const ELF_PROPORTIONS: ProportionTable = {
+  ...HUMAN_PROPORTIONS,
+  eyeFifth: {
+    lo: 0.19,
+    hi: 0.27,
+    source: 'human 0.17–0.23 × the elf eye ×1.15 (declared, ELF_FACE)',
+  },
+  noseThird: {
+    lo: 0.8,
+    hi: 1.25,
+    source: 'human 0.75–1.15; the elf jaw drops 5 % H less than the hero (declared)',
+  },
+  neckWidth: {
+    lo: 0.5,
+    hi: 0.75,
+    source: 'human 0.66–0.86 × the slender elf neck ×0.85 (declared)',
+  },
+  eyeball: { lo: 0.022, hi: 0.028, source: 'human 22–26 mm × 1.15 (declared)' },
+};

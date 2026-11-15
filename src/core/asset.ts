@@ -1,6 +1,7 @@
 // The DSL's root: an asset is a TypeScript function that builds named parts into a scene.
 // Code, not JSON — loops, helpers and composition are the point (docs/decisions/002).
 
+import { type Clip, checkClips, useClip } from './clip.ts';
 import type { Asset, AssetDefinition, AssetMeta, CompiledAsset } from './definition.ts';
 import { Ts23dError } from './errors.ts';
 import { checkFinishedParts, finishesOf } from './finish.ts';
@@ -11,6 +12,7 @@ import { opticsOf } from './optics.ts';
 import { checkPaintedParts, paintSetOf, repaint } from './paint.ts';
 import type { Connect, Joint, Lod, Part, PartOptions, UseOptions } from './part.ts';
 import { checkSeed, createRng, forkSeed } from './rng.ts';
+import { type Bone, boneOf, checkBoneBudget, checkSkeleton, useBone } from './skeleton.ts';
 import { checkTune, type TunedValues, tunedReader } from './tune.ts';
 import { checkAsset, checkCompileOptions, checkPivotName } from './validate-asset.ts';
 import type { WeatherCoverage } from './weather-coverage.ts';
@@ -55,6 +57,19 @@ export function compile(asset: Asset, options: CompileOptions = {}): CompiledAss
   const parts = new Map<string, Part>();
   const joints = new Map<string, Joint>();
   const weather: WeatherCoverage[] = [];
+  const bones = new Map<string, Bone>();
+  const usedClips: Clip[] = [];
+  const bone = (b: Bone): string => {
+    if (bones.has(b.name) || (b.parent !== undefined && !bones.has(b.parent)))
+      throw new Ts23dError('T3D_RECIPE_INVALID', {
+        cause: bones.has(b.name)
+          ? `bone '${b.name}' was declared twice in '${asset.name}'`
+          : `bone '${b.name}' parents to '${b.parent}', which does not exist yet`,
+        fix: 'give each bone a unique name (thigh_l, thigh_r) and add parents before children',
+      });
+    bones.set(b.name, b);
+    return b.name;
+  };
   const joint = (j: Joint): void => {
     if (joints.has(j.name))
       throw new Ts23dError('T3D_PART_DUPLICATE', {
@@ -145,10 +160,12 @@ export function compile(asset: Asset, options: CompileOptions = {}): CompiledAss
       }
     }
     for (const w of sub.weather ?? []) weather.push({ ...w, target: `${o.prefix}_${w.target}` });
-    if (sub.joints?.length) {
+    if (sub.joints?.length || sub.skeleton) {
       const xf = worldTransforms([...parts.values()]).get(o.prefix);
-      for (const j of sub.joints) if (xf) joint(useJoint(j, o.prefix, xf));
+      for (const j of sub.joints ?? []) if (xf) joint(useJoint(j, o.prefix, xf));
+      for (const b of sub.skeleton?.bones ?? []) if (xf) bone(useBone(b, o.prefix, xf));
     }
+    for (const c of sub.clips ?? []) usedClips.push(useClip(c, o.prefix));
   };
   asset.build({
     lod,
@@ -172,6 +189,7 @@ export function compile(asset: Asset, options: CompileOptions = {}): CompiledAss
     },
     use,
     joint: (name, o) => joint(jointOf(asset.name, name, o)),
+    bone: (name, o) => bone(boneOf(asset.name, name, o)),
     weathered: (coverage) => {
       weather.push(...coverage);
     },
@@ -179,6 +197,12 @@ export function compile(asset: Asset, options: CompileOptions = {}): CompiledAss
   const built = [...parts.values()];
   checkPaintedParts(asset.name, built, paintSet);
   checkFinishedParts(asset.name, built, finishes);
+  const skeleton = bones.size ? checkSkeleton(asset.name, { bones: [...bones.values()] }) : null;
+  if (skeleton) checkBoneBudget(asset.name, skeleton.bones.length, asset.budget.bones);
+  const clips = checkClips(asset.name, [...(asset.clips ?? []), ...usedClips], {
+    bone: (n) => bones.has(n),
+    part: (n) => parts.has(n),
+  });
   const variant = options.variant;
   return {
     name: asset.name,
@@ -200,6 +224,8 @@ export function compile(asset: Asset, options: CompileOptions = {}): CompiledAss
     ...(joints.size ? { joints: [...joints.values()] } : {}),
     ...(asset.physics ? { physics: asset.physics } : {}),
     ...(weather.length ? { weather } : {}),
+    ...(skeleton ? { skeleton } : {}),
+    ...(clips.length ? { clips } : {}),
   };
 }
 

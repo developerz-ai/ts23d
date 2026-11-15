@@ -1,5 +1,11 @@
 # Head analysis — measured proportions for the bust heads
 
+> **2026-11 (plan 101, slice 06):** the human, elf and goblin busts no longer build their heads
+> from the primitive head block below. Their heads are the CC0 MakeHuman base warped to the race
+> ([face-base.md](face-base.md), "Skull stage"), and the ratios they are held to are the sourced
+> bands in `recipes/_lib/face/proportions.ts` (table at the end of this page), checked every build.
+> The scan ratios below stay as the record of how the primitive heads were drawn (orc still).
+
 **The human, elf, goblin and orc busts take their landmarks from ratios measured on a real head
 scan, and every stylised race states its exaggerations against that anchor.** Reference meshes were
 downloaded for analysis only into `tmp/heads-ref/` (gitignored, never committed); the scratch
@@ -85,3 +91,21 @@ orc or a bust's collar lowers the score — the number is a sanity check, not a 
 | orc_head | 0.535 | 0.636 | head sunk between trapezius that rise to the ears, jaw ×1.75 |
 
 The human should score highest; the stylised races deliberately less.
+
+## Sourced proportion bands (the skull-stage busts' recipe checks)
+`proportionCheck` (`recipes/_lib/face/proportions.ts`) measures each head's landmarks and skin
+field and fails the build (`T3D_QA_CHECK`) outside these bands. Human (adult male):
+
+| Ratio | Band | Source | Human hero (as built) |
+|---|---|---|---|
+| eye line (pupil above menton ÷ head height) | 0.45–0.53 | Loomis; ANSUR II menton–sellion 124 mm of 232 | 0.52 |
+| eye fissure ÷ head breadth ("five eyes") | 0.17–0.23 | Farkas 1994: en–ex 31, eu–eu 151 mm | 0.20 |
+| intercanthal ÷ fissure ("one eye apart") | 0.85–1.3 | Farkas: en–en 33 / en–ex 31 | 1.07 |
+| glabella→subnasale ÷ subnasale→menton | 0.75–1.15 | Farkas: g–sn ≈ 64, sn–me ≈ 72 mm | 1.04 |
+| upper-neck breadth ÷ head breadth | 0.66–0.86 | ANSUR II neck circumference 395 mm vs head breadth 157 mm | 0.78 |
+| glabella ahead of the eyeball's front | 8–24 mm | Hertel exophthalmometry | 15 mm |
+| eyeball diameter | 22–26 mm | Bekerman et al. 2014 | 25 mm |
+
+The unmodified MakeHuman base fails one band: its lower face is short (g–sn ÷ sn–me 1.28); the
+human hero drops the jaw 7 % H to 1.04. Elf and goblin declare their deltas in their `spec.ts`
+(`ELF_PROPORTIONS`, `GOBLIN_PROPORTIONS`) with the reason beside each band.

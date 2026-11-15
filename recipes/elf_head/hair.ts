@@ -2,11 +2,15 @@
 // the parting, follow the skull over the top and behind the pointed ears, and fall free onto the
 // shoulders and back — tapered, overlapping, toned dark at the roots and pale gold at the tips —
 // and two flat ribbon locks falling in front of the ears.
+// Card hair (`hairBaseEdits` + `elfCardHair`): the parted mass is the base layer; long strand
+// cards comb out from the parting over the skull and fall to the shoulders.
 
-import { type Field, type SculptEdit, sculptField } from '@developerz.ai/ts23d';
-import { hairMass, lock, ribbon } from '../_lib/bust/hair.ts';
+import { type Field, type SculptEdit, sculptField, type Vec3 } from '@developerz.ai/ts23d';
+import { hairMass, lock, mix, ribbon } from '../_lib/bust/hair.ts';
+import { headBlock } from '../_lib/bust/head.ts';
 import { type Surface, spline, surface, type V } from '../_lib/bust/kit.ts';
-import { C, H, L } from './spec.ts';
+import { torsoEdits } from '../_lib/bust/torso.ts';
+import { C, H, L, SPEC, TORSO } from './spec.ts';
 
 export const hairline: Field = (p) => {
   const front = L.gx + 0.0;
@@ -88,4 +92,89 @@ export function frontLocks(on: Surface): Array<{ ctrl: V[]; y: number }> {
       [L.gx - 0.28 * H, 0.1 * y, L.mz - len * H],
     ],
   }));
+}
+
+/** The base layer under card hair: the parted mass alone. */
+export const hairBaseEdits = (scalp: Field, _lod: number): SculptEdit[] => {
+  const box: [V, V] = [
+    [L.back - 0.05, -0.15, L.mz - 0.2],
+    [L.gx + 0.06, 0.15, L.crown + 0.05],
+  ];
+  return [hairMass(scalp, 0.007, hairline, box, C.hairRoot, 0.03)];
+};
+
+/** Away from the centre parting, then back and down: the hair falls past the ears. */
+const comb = (p: Vec3, n: Vec3): Vec3 => {
+  const out = Math.sign(p[1] || 1);
+  const top = Math.max(0, n[2]);
+  // 0 at the forehead, 1 at the back of the skull: the front is swept back off the face.
+  const t = Math.min(1, Math.max(0, (L.gx - p[0]) / (L.gx - L.back)));
+  return [-(1.3 - t), out * (0.15 + 0.5 * top) * t, -0.3 - 0.9 * (1 - top)];
+};
+
+/** Card hairstyle for `cardHair` (recipes/_lib/face/hair-cards.ts): long, centre-parted. */
+export function elfCardHair() {
+  const scalp = sculptField([headBlock(SPEC, 2)], { color: SPEC.skin, mirror: 'y' }).field;
+  const bounds: [V, V] = [
+    [L.back - 0.05, -0.15, L.mz - 0.05],
+    [L.gx + 0.06, 0.15, L.crown + 0.05],
+  ];
+  const base = hairBaseEdits(scalp, 0);
+  const field = sculptField([...base, { field: scalp, bounds }], {
+    color: C.hairRoot,
+    mirror: 'y',
+  }).field;
+  // Long at the back and sides behind the ears, short where it would fall over the face.
+  const long = (p: Vec3): number =>
+    (L.gx - p[0]) / (L.gx - L.back) > 0.45 ? (p[2] > L.mz + 0.55 * H ? 0.24 : 0.18) : 0.09;
+  return {
+    field,
+    bounds,
+    cell: 0.004,
+    comb,
+    // Long hair falls around the head block and the shoulders, never through them.
+    collide: sculptField([headBlock(SPEC, 2), ...torsoEdits(L, TORSO)], {
+      color: SPEC.skin,
+      mirror: 'y',
+    }).field,
+    color: mix(C.hairRoot, C.hairTip, 0.45),
+    layers: [
+      {
+        name: 'hair_base',
+        kind: 'hair',
+        region: hairline,
+        density: 8000,
+        length: 0.06,
+        width: 0.018,
+        lift: 0.06,
+        bend: 0.9,
+        droop: 0.15,
+      },
+      {
+        name: 'hair_long',
+        kind: 'hair',
+        region: hairline,
+        density: 5000,
+        length: long,
+        width: 0.016,
+        lift: 0.1,
+        bend: 0.9,
+        droop: 0.55,
+        roll: 0.3,
+        clump: 5,
+      },
+      {
+        name: 'hair_fly',
+        kind: 'hair',
+        region: hairline,
+        density: 400,
+        length: 0.12,
+        width: 0.007,
+        lift: 0.25,
+        bend: 0.5,
+        droop: 0.4,
+        roll: 1.2,
+      },
+    ] as const,
+  };
 }

@@ -4,9 +4,12 @@
 // arcing back low and lying down the skull to the nape. Each lock is toned root → tip
 // (dark roots and undersides, lighter tips) by colour segments that blend along it; fine
 // secondary strands at the hairline. Stylised hand-painted idiom: big readable clumps.
+// Card hair (`orcCardHair`): strand cards over the scalp lock combed into the knot (clumped into
+// locks) and a short braided-length beard on chin and jaw, on top of the sculpted knot.
 
-import type { BuildContext, Mesh, SculptEdit } from '@developerz.ai/ts23d';
+import type { BuildContext, Field, Mesh, SculptEdit, Vec3 } from '@developerz.ai/ts23d';
 import { add, chain, crease, type Surface, spline, taper, type V } from '../_lib/bust/kit.ts';
+import { L } from './landmarks.ts';
 import { C } from './palette.ts';
 import { skinMesh } from './skin.ts';
 
@@ -147,4 +150,54 @@ export function tailPath(skull: Surface, dy: number, dz: number): V[] {
     skull.off([-0.123, dy * 2.4, 0.47], 0.009 + dz * 0.3),
     skull.off([-0.12, dy * 2.8, 0.41], 0.011),
   ];
+}
+
+/** Card hair for `cardHair` on the orc: `skull` is the stage-2 skin surface (build.ts `body`). */
+export function orcCardHair(skull: Surface) {
+  // Scalp lock: the crown patch the knot gathers (the rest of the head is shaved).
+  const lock: Field = (p) =>
+    Math.hypot((p[0] + 0.045) / 1.25, p[1] / 0.95, Math.min(0, p[2] - 0.555)) - 0.05;
+  // Beard: chin and jaw below the mouth corners, in front of the ears.
+  const beard: Field = (p) =>
+    Math.max(p[2] - (L.mouthCorner[2] - 0.012), L.ear[0] + 0.05 - p[0], L.chin[2] - 0.03 - p[2]);
+  const comb = (p: Vec3): Vec3 =>
+    beard(p) < 0.01
+      ? [0.35, Math.sign(p[1]) * 0.2, -1]
+      : [KNOT[0] - p[0], KNOT[1] - p[1], KNOT[2] + 0.02 - p[2]];
+  return {
+    field: skull.field,
+    bounds: [
+      [-0.16, -0.14, 0.26],
+      [0.2, 0.14, 0.62],
+    ] as [Vec3, Vec3],
+    cell: 0.004,
+    comb,
+    color: mix(C.hairRoot, C.hairTip, 0.3),
+    layers: [
+      {
+        name: 'scalp_lock',
+        kind: 'hair',
+        region: lock,
+        density: 9000,
+        length: 0.06,
+        width: 0.012,
+        lift: 0.1,
+        bend: 0.8,
+        droop: 0,
+        clump: 5,
+      },
+      {
+        name: 'beard',
+        kind: 'beard',
+        region: beard,
+        density: 9000,
+        length: 0.035,
+        width: 0.012,
+        lift: 0.3,
+        bend: 0.5,
+        droop: 0.5,
+        clump: 4,
+      },
+    ] as const,
+  };
 }

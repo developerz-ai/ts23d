@@ -2,30 +2,43 @@
 //   <out>/<asset>/critique/{hero,sheet,raking,raking_detail,lods}.png refs.md rubric.md
 //   {silhouette,value,detail}.png (measured art metrics) critique.template.json
 // hero.png and sheet.png are byte-identical to what `bun run shots` commits, so the hashes the
-// agent copies into critique.json bind its scores to the images that ship.
+// agent copies into critique.json bind its scores to the images that ship. calibrated.json holds
+// the measured metric vector and the calibrated scores, printed beside the committed claim.
 
 import { mkdir } from 'node:fs/promises';
 import { dirname, join, relative, resolve } from 'node:path';
 import { type Asset, type CompiledAsset, compile, encodePng, type Lod } from '../core/index.ts';
-import type { PaintedSheet } from '../material/index.ts';
+import { DEFAULT_SHEET, type PaintedSheet, paintTrimSheet } from '../material/index.ts';
 import {
   ART_RENDER,
   type ArtMetrics,
   BOUND_RENDERS,
+  type CalibratedScore,
+  calibratedScore,
+  checkRefFile,
   critiqueTemplate,
   detailHeatmap,
+  GOLDEN,
+  INFLATION_TOLERANCE,
+  type MetricVector,
   measureArt,
+  metricVector,
+  PANEL_INFLATION_TOLERANCE,
+  type RefGaps,
   type RgbaImage,
   referenceLinks,
+  refGaps,
   refsMarkdown,
   rubricMarkdown,
   runLodQa,
   runQa,
   silhouetteStrip,
+  VECTOR_RENDER,
   valueMap,
 } from '../qa/index.ts';
 import {
   type BeautyOptions,
+  type BeautyRender,
   cameraFor,
   contactSheet,
   detailWindows,
@@ -120,6 +133,80 @@ export async function committedHashes(dir: string): Promise<Record<string, strin
   return out;
 }
 
+/**
+ * The metric vector the calibration is fitted on: LOD0 rendered at VECTOR_RENDER on a 1024² trim
+ * sheet painted for this call (golden set, CLI and gate measure exactly the same way).
+ */
+export function measureVector(lod0: CompiledAsset): MetricVector {
+  return metricVector(lod0, vectorImage(lod0));
+}
+
+/** The VECTOR_RENDER beauty image of LOD0 (what measureVector measures). */
+export function vectorImage(lod0: CompiledAsset): BeautyRender {
+  const sheet = paintTrimSheet({ ...DEFAULT_SHEET, size: 1024 });
+  return renderBeauty(lod0, { ...VECTOR_RENDER, sheet });
+}
+
+export interface Calibrated {
+  readonly vector: MetricVector;
+  /** Reference-photo gaps, when the recipe folder has ref.json. */
+  readonly ref?: RefGaps;
+  readonly score: CalibratedScore;
+}
+
+/** Measure LOD0 (+ ref.json in `recipeDir`, when present) and predict its calibrated scores. */
+export async function measureCalibrated(
+  lod0: CompiledAsset,
+  recipeDir: string,
+): Promise<Calibrated> {
+  const img = vectorImage(lod0);
+  const vector = metricVector(lod0, img);
+  const rf = Bun.file(join(recipeDir, 'ref.json'));
+  const ref = (await rf.exists()) ? refGaps(lod0, img, checkRefFile(await rf.json())) : undefined;
+  return { vector, ...(ref ? { ref } : {}), score: calibratedScore(vector, GOLDEN, ref) };
+}
+
+/** How far a claim may sit over the calibrated score: wider for a blind agent panel. */
+export const inflationTolerance = (reviewer: unknown): number =>
+  reviewer === 'agent-panel' ? PANEL_INFLATION_TOLERANCE : INFLATION_TOLERANCE;
+
+/** calibrated.json + the claimed-vs-predicted line and, when inflated, a warning. */
+async function calibrated(
+  lod0: CompiledAsset,
+  recipeDir: string,
+  dir: string,
+): Promise<{
+  file: string;
+  line: string;
+  inflated?: { code: string; message: string; fix: string };
+}> {
+  const { vector, ref, score } = await measureCalibrated(lod0, recipeDir);
+  const cj = Bun.file(join(recipeDir, 'out', lod0.name, 'critique.json'));
+  // An unparsable critique.json is the recipes gate's finding; here it simply claims nothing.
+  const raw: unknown = (await cj.exists()) ? await cj.json().catch(() => null) : null;
+  const { overall: claimed, reviewer } = (raw ?? {}) as { overall?: unknown; reviewer?: unknown };
+  const tolerance = inflationTolerance(reviewer);
+  const file = join(dir, 'calibrated.json');
+  const doc = { asset: lod0.name, ...score, vector, ...(ref ? { ref } : {}) };
+  await Bun.write(file, `${JSON.stringify(doc, null, 2)}\n`);
+  const weakest = Object.entries(score.scores)
+    .sort((a, b) => a[1] - b[1])
+    .slice(0, 3)
+    .map(([c, v]) => `${c} ${v}`)
+    .join(', ');
+  const line = `${lod0.name}: calibrated ${score.overall} / 10 · claimed ${typeof claimed === 'number' ? claimed : 'none'} · weakest ${weakest}`;
+  if (typeof claimed !== 'number' || claimed - score.overall <= tolerance) return { file, line };
+  return {
+    file,
+    line,
+    inflated: {
+      code: 'T3D_CRITIQUE_INFLATED',
+      message: `claimed ${claimed} (${String(reviewer)}) is more than ${tolerance} over the calibrated ${score.overall}`,
+      fix: 'score what the renders show (bun run golden brief <recipe> runs a blind panel), or improve the asset',
+    },
+  };
+}
+
 export async function critiqueOne(
   asset: Asset,
   recipe: string,
@@ -164,10 +251,15 @@ export async function critiqueOne(
     await Bun.write(path, bytes);
     files.push(path);
   }
+  const lod0 = lods[0] ?? compile(asset);
+  const cal = await calibrated(lod0, dirname(resolve(recipe)), dir);
+  files.push(cal.file);
+  if (!args.json) console.log(cal.line);
   const warnings = drift.map((f) => ({
     code: 'critique-drift',
     message: `${f} differs from the committed out/${asset.name}/${f}`,
     fix: `bun run shots ${relative('recipes', dirname(resolve(recipe)))} first, then critique what ships`,
   }));
+  if (cal.inflated) warnings.push(cal.inflated);
   return { name: asset.name, files, warnings };
 }

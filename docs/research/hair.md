@@ -12,6 +12,23 @@ Related: [`docs/idea/10-sculpting.md`](../idea/10-sculpting.md) (SDF edit lists)
 [`docs/architecture/gltf-capabilities.md`](../architecture/gltf-capabilities.md),
 [`surfaces-volumes.md`](surfaces-volumes.md) (fur shells, scales, other surfaces).
 
+## 0. Shipped (plan 101, slice 07)
+
+Cards, not shells (overview: shell fur is not built). What exists now, with the proposal below
+kept as the design record:
+
+| Piece | Where | What it does |
+|---|---|---|
+| Flow field | `src/passes/hair-flow.ts` | `hairFlow(mesh, seed)`: per-vertex tangent, seeds projected to the tangent plane, Jacobi-smoothed over the welded vertex graph; `chainSeed` (bone chains + gravity); `flowDivergence` (a combed coat is ≈ divergence-free) |
+| Cards | `src/passes/hair-cards.ts` | `hairCards`: Poisson-disk roots per zone density, bent 2–4-segment strips along the flow (lift, bend, droop, roll), roots buried `sink` under the surface (Newton steps onto a `field` when given), skin colour root → tip, per-card value jitter, UVs into strand cells |
+| Strand atlas | `src/material/strands.ts`, `creature.ts` | `fur_clumps` / `hair_clumps` project strips (`defineMaterial(CREATURE_MATERIALS.…)`), 8 cells each: undercoat, agouti guard (grey base, pale band, dark tip), hair, beard clumps of 16–26 strands, stratified with gaps (alpha coverage 37–49 %), tapered to a point, per-strand tone jitter. Hair goes in a strip row split into cells, not in the 256 px cells (§10.4's choice), because only strips can be added without a sheet-layout change. Parts on it use `surface: 'cutout'`: one draw |
+| Creature fur | `src/kinds/creature-fur.ts`, `creature-head-fur.ts`, `creature-surface.ts` | `creatureFur(body, bones, spec, { lod, rng, field })`: dense undercoat lying ≤ 10° plus agouti guard hair in clumps of 5 (shared tips), lengths from the grey wolf's winter coat (mane/back 60–110 mm, flanks 20–40 mm, legs 10–15 mm) × `coat` ÷ 0.03, family zones (mane, throat, cheeks, elbows, breeches, tail); `creatureHeadFur` (head frame: short skull/muzzle fur, cheek ruff, bare nose/lips/eyes/ears); `furLie` + `relief(…, lie)`: flow-advected noise locks under the cards (built and tested, not on by default: the chain-seeded lie flips at chain hand-overs and QA `connections` reads the resulting relief folds as seams). Wolf ≈ 2.2k body + 0.3k head cards at LOD0, ¼ at LOD1 (×2 wider), none at LOD2 |
+| Head hair | `src/kinds/head-cards.ts`, `recipes/_lib/face/hair-cards.ts` | `scalpCards` / `cardHair`: layers (base, volume, flyaways, beard, moustache) over a sculpted cap, clumped locks, a parting comb, and a `collide` solid (head block + torso, sampled on a lazy lattice) so long hair falls around the head; styles in `recipes/{human,elf,goblin,orc}_head/hair.ts` |
+| QA | `src/qa/fur-silhouette.ts` | `furSilhouette` / `furSilhouetteCheck` (`T3D_FUR_SILHOUETTE`: coated ÷ bare outline length per zone, five axis views, ≥ 1.5×); `cardRootProof` (every buried root inside the parent solid: the floating-parts/gaps exemption by proof, not by name) |
+
+Not yet: `COLOR_0` alpha, `TANGENT` along the strand and `KHR_materials_anisotropy` (§5, §10.5),
+inside → outside triangle order, scalp-coverage and penetration gates (§11), eyelashes/brows.
+
 ## 1. The three representations
 
 | Representation | What it is | Who uses it | Cost driver |

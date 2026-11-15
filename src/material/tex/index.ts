@@ -6,6 +6,7 @@ import { colour, ramp } from './colour.ts';
 import { constant } from './field.ts';
 import { cells, fn, gradientV, noise, ridged } from './generators.ts';
 import { material } from './graph.ts';
+import { lic, licDirection } from './lic.ts';
 import { blend, cavity, edgeWear, heightBlend } from './masks.ts';
 import { bricks, pebbles, planks, scatter, strata, tiles } from './stamps.ts';
 import { scales, strands } from './stamps-organic.ts';
@@ -14,6 +15,7 @@ export type { ColourField, ColourInput, Stop } from './colour.ts';
 export { type Input, type TexContext, TexField } from './field.ts';
 export type { CellsOptions, NoiseOptions } from './generators.ts';
 export { type MaterialGraph, paintGraph, probeGraph } from './graph.ts';
+export type { LicOptions } from './lic.ts';
 export type { EdgeWearOptions } from './masks.ts';
 export type { BondOptions, ScatterOptions, Stamp, StrataOptions } from './stamps.ts';
 export type { ScalesOptions, StrandsOptions } from './stamps-organic.ts';
@@ -41,4 +43,6 @@ export const tex = {
   heightBlend,
   blend,
   material,
+  lic,
+  licDirection,
 } as const;

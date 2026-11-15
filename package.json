@@ -156,6 +156,8 @@
     "filesize": "bun run scripts/filesize.ts",
     "placeholders": "bun run scripts/placeholders.ts",
     "recipes": "bun run scripts/recipes.ts",
+    "golden": "bun run scripts/golden.ts",
+    "ref": "bun run scripts/ref.ts",
     "shots": "bun run scripts/shots.ts",
     "parts": "bun run scripts/parts-catalogue.ts",
     "data": "bun run scripts/data.ts",

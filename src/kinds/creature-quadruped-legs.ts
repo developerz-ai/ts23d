@@ -69,26 +69,26 @@ export function foreLeg(stance: Stance, f: LegFrame, digits: FootPlan): Limb {
   return {
     name: 'fore',
     joints: [S, E, C, P],
-    radii: [r * 1.05, r * 0.85, r * 0.55, r * 0.55],
+    radii: [r * 1.05, r * 0.75, r * 0.55, r * 0.55],
     foot,
     footSize: [sx, sy, top],
     ...digits,
     muscles: [
       // Deltoid over the point of the shoulder; triceps filling the back of the upper arm.
       along(S, E, 0.15, [r * 0.15, 0, 0], [r * 0.8, r * 0.7, r * 1.1]),
-      along(S, E, 0.55, [-r * 0.75, 0, r * 0.1], [r * 1.0, r * 0.78, r * 1.75]),
+      along(S, E, 0.5, [-r * 0.65, 0, r * 0.1], [r * 0.85, r * 0.68, r * 1.6]),
       // Forearm: extensors in front-outside, flexors (and their winter feathering) behind.
-      along(E, C, 0.3, [r * 0.15, r * 0.06, 0], [r * 0.62, r * 0.62, r * 1.6], true),
+      along(E, C, 0.35, [r * 0.08, 0, 0], [r * 0.4, r * 0.4, r * 1.9], true),
       along(
         E,
         C,
         0.3,
-        [-r * 0.3 - fur * 0.3, 0, 0],
-        [r * 0.5 + fur * 0.4, r * 0.55, r * 1.3],
+        [-r * 0.22 - fur * 0.15, 0, 0],
+        [r * 0.36 + fur * 0.2, r * 0.38, r * 1.5],
         true,
       ),
-      knob(v3.add(E, [-r * 0.62, 0, r * 0.12]), [r * 0.42, r * 0.4, r * 0.5]),
-      knob(v3.add(C, [-r * 0.32, 0, r * 0.1]), [r * 0.28, r * 0.3, r * 0.32]),
+      knob(v3.add(E, [-r * 0.55, 0, r * 0.1]), [r * 0.26, r * 0.24, r * 0.3]),
+      knob(v3.add(C, [-r * 0.28, 0, r * 0.08]), [r * 0.18, r * 0.2, r * 0.22]),
     ],
   };
 }
@@ -111,19 +111,19 @@ export function hindLeg(stance: Stance, f: LegFrame, digits: FootPlan): Limb {
   return {
     name: 'hind',
     joints: [Hp, K, Hk, P],
-    radii: [r * 1.2, r * 0.8, r * 0.5, r * 0.55],
+    radii: [r * 1.2, r * 0.72, r * 0.5, r * 0.55],
     foot,
     footSize: [sx, sy, top],
     ...digits,
     muscles: [
       // Quadriceps in front of the femur; hamstrings (the winter "breeches") behind it.
-      along(Hp, K, 0.5, [r * 0.55, r * 0.1, 0], [r * 1.45, r * 0.75, r * 2.1]),
-      along(ischium, tibia, 0.5, [0, 0, 0], [r * 1.3 + fur, r * 0.72, ham * 1.05]),
+      along(Hp, K, 0.5, [r * 0.55, 0, 0], [r * 1.45, r * 0.65, r * 2.1]),
+      along(ischium, tibia, 0.5, [0, 0, 0], [r * 1.25 + fur * 0.8, r * 0.62, ham * 1.05]),
       // Gastrocnemius behind the upper tibia, tapering into the Achilles tendon to the hock.
       along(K, Hk, 0.32, [-r * 0.55, 0, 0], [r * 0.55, r * 0.5, r * 1.2], true),
       along(K, Hk, 0.72, [-r * 0.4, 0, 0], [r * 0.2, r * 0.24, shin * 0.28], true),
-      knob(v3.add(K, [r * 0.38, r * 0.05, 0]), [r * 0.4, r * 0.38, r * 0.45]),
-      knob(v3.add(Hk, [-r * 0.45, 0, r * 0.12]), [r * 0.3, r * 0.26, r * 0.36]),
+      knob(v3.add(K, [r * 0.32, r * 0.03, 0]), [r * 0.22, r * 0.22, r * 0.28]),
+      knob(v3.add(Hk, [-r * 0.4, 0, r * 0.12]), [r * 0.18, r * 0.16, r * 0.26]),
     ],
   };
 }

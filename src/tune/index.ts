@@ -26,6 +26,7 @@ export {
   type FittedMasks,
   type ObjectiveValue,
   objectiveName,
+  photoError,
   type Score,
   scoreValues,
 } from './objectives.ts';

@@ -1,6 +1,8 @@
 // The IR: a triangle mesh with per-vertex normal, UV (into the shared trim sheet) and colour.
 // Every primitive emits one; passes and back ends consume one. Nothing else crosses stages.
+// Skinned bodies add 4 joint/weight influences per vertex and morph targets (ADR 013).
 
+import { Ts23dError } from './errors.ts';
 import type { Vec2, Vec3 } from './vec.ts';
 
 export interface Bounds {
@@ -14,6 +16,61 @@ export interface Mesh {
   readonly uvs: Float32Array;
   readonly colors: Float32Array;
   readonly indices: Uint32Array;
+  /** Skin: 4 bone indices per vertex (into the asset skeleton). Present iff `weights` is. */
+  readonly joints?: Uint16Array;
+  /** Skin: 4 weights per vertex matching `joints`. Present iff `joints` is. */
+  readonly weights?: Float32Array;
+  /** Morph targets: per-vertex displacements from `positions` (glTF targets), same length. */
+  readonly morphs?: readonly Morph[];
+}
+
+export interface Morph {
+  readonly name: string;
+  /** Displacement (delta, metres) per vertex, length = positions.length. */
+  readonly positions: Float32Array;
+}
+
+/** Influences per skinned vertex (glTF JOINTS_0 / WEIGHTS_0). */
+export const SKIN_INFLUENCES = 4;
+
+/**
+ * Skin and morph attributes line up with the vertices: joints and weights both or neither, 4 per
+ * vertex; morph names unique, one delta per vertex. Weight sums are the skinning pass's check.
+ */
+export function checkMeshAttributes(m: Mesh, label: string): Mesh {
+  const verts = m.positions.length / 3;
+  const skin = (cause: string, fix: string): never => {
+    throw new Ts23dError('T3D_SKIN_INVALID', { cause: `${label}: ${cause}`, fix });
+  };
+  if ((m.joints === undefined) !== (m.weights === undefined))
+    skin(
+      `has ${m.joints ? 'joints without weights' : 'weights without joints'}`,
+      'set both joints (Uint16Array) and weights (Float32Array), 4 per vertex, or neither',
+    );
+  if (m.joints && m.weights) {
+    const want = verts * SKIN_INFLUENCES;
+    if (m.joints.length !== want || m.weights.length !== want)
+      skin(
+        `${verts} vertices but ${m.joints.length} joints / ${m.weights.length} weights`,
+        `give exactly ${SKIN_INFLUENCES} influences per vertex (${want} values); pad with weight 0`,
+      );
+  }
+  const names = new Set<string>();
+  for (const t of m.morphs ?? []) {
+    const where = `${label}: morph '${t.name}'`;
+    if (names.has(t.name))
+      throw new Ts23dError('T3D_RECIPE_INVALID', {
+        cause: `${where} is declared twice`,
+        fix: 'give each morph target a unique name: blink_l, jaw_open',
+      });
+    names.add(t.name);
+    if (t.positions.length !== m.positions.length)
+      throw new Ts23dError('T3D_RECIPE_INVALID', {
+        cause: `${where} has ${t.positions.length / 3} deltas for ${verts} vertices`,
+        fix: 'build the morph from the same mesh: one displacement per vertex, zero where still',
+      });
+  }
+  return m;
 }
 
 export interface Vertex {
@@ -115,5 +172,43 @@ export function merge(meshes: readonly Mesh[]): Mesh {
     uv += m.uvs.length;
     ix += m.indices.length;
   }
-  return { positions, normals, uvs, colors, indices };
+  return { positions, normals, uvs, colors, indices, ...mergeSkin(meshes), ...mergeMorphs(meshes) };
+}
+
+/** Skins concatenate when every input is skinned; a mix would silently unbind the rigid pieces. */
+function mergeSkin(meshes: readonly Mesh[]): Pick<Mesh, 'joints' | 'weights'> {
+  const skinned = meshes.filter((m) => m.joints && m.weights).length;
+  if (skinned === 0) return {};
+  if (skinned < meshes.length)
+    throw new Ts23dError('T3D_SKIN_INVALID', {
+      cause: `merge of ${meshes.length} meshes where only ${skinned} are skinned`,
+      fix: 'weight the rigid pieces fully to one bone (joints [b,0,0,0], weights [1,0,0,0]) before merging',
+    });
+  const joints = new Uint16Array(meshes.reduce((t, m) => t + (m.joints?.length ?? 0), 0));
+  const weights = new Float32Array(joints.length);
+  let at = 0;
+  for (const m of meshes) {
+    if (m.joints) joints.set(m.joints, at);
+    if (m.weights) weights.set(m.weights, at);
+    at += m.joints?.length ?? 0;
+  }
+  return { joints, weights };
+}
+
+/** Morph targets merge by name; a mesh without one stays still under it (zero deltas). */
+function mergeMorphs(meshes: readonly Mesh[]): Pick<Mesh, 'morphs'> {
+  const names = [...new Set(meshes.flatMap((m) => (m.morphs ?? []).map((t) => t.name)))];
+  if (names.length === 0) return {};
+  const total = meshes.reduce((t, m) => t + m.positions.length, 0);
+  const morphs = names.map((name) => {
+    const positions = new Float32Array(total);
+    let at = 0;
+    for (const m of meshes) {
+      const t = m.morphs?.find((x) => x.name === name);
+      if (t) positions.set(t.positions, at);
+      at += m.positions.length;
+    }
+    return { name, positions };
+  });
+  return { morphs };
 }

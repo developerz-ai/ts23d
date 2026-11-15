@@ -5,7 +5,6 @@ import {
   type Bounds,
   boundsOf,
   type CompiledAsset,
-  notImplemented,
   TOLERANCE,
   toWorld,
   triangleCount,
@@ -105,9 +104,7 @@ export const proportions: Gate = (asset) => {
   });
 };
 
-/** Planned gates, signatures fixed: docs/idea/06-qa.md. */
-export const silhouetteIoU = (_asset: CompiledAsset, _referencePng: Uint8Array): number =>
-  notImplemented('silhouette IoU gate');
+export { silhouetteIoU } from './ref-gate.ts';
 
 /** The recipe's own `checks`, each finding reported under the gate name `check`. */
 export const recipeChecks: Gate = (asset) =>
