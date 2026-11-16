@@ -1,11 +1,17 @@
 // The gallery: category filter chips and a grid of cards showing each asset's committed beauty
 // render. No compile is needed to draw the grid; assets without renders get a live LOD2 render.
+// An asset with a model tier carries a "CPU tier / With models" switch beside its link that swaps
+// the whole card to the hybrid, with its credit line (hybrids have no card of their own).
 
 import { BLURB, CATEGORIES, type Category } from './categories.ts';
 import type { Item } from './items.ts';
 import { cardImage } from './thumbnails.ts';
+import { tierSwitch } from './tier-toggle.ts';
 
 type Filter = Category | 'All';
+
+/** An asset's model-tier variant and its credit line, or null for a CPU-only asset. */
+export type TiersOf = (item: Item) => { readonly hybrid: Item; readonly line: string } | null;
 
 const el = <K extends keyof HTMLElementTagNameMap>(
   tag: K,
@@ -25,9 +31,8 @@ const tris = (n: number | undefined): string =>
       ? `${(n / 1000).toFixed(1)}k tris`
       : `${n.toLocaleString('en')} tris`;
 
-function card(item: Item): HTMLLIElement {
-  const li = el('li');
-  li.dataset['category'] = item.category;
+/** The card link: render, QA badge, title, name, triangles, score, category (+ credit line). */
+function link(item: Item, credit?: string): HTMLAnchorElement {
   const a = el('a', 'card');
   a.href = `#${item.name}`;
   a.dataset['asset'] = item.name;
@@ -58,8 +63,27 @@ function card(item: Item): HTMLLIElement {
   if (score) meta.append(el('span', 'card-score', `critique ${score.toFixed(1)}`));
   const kind = item.category.toLowerCase().startsWith(item.kind) ? '' : ` · ${item.kind}`;
   body.append(meta, el('p', 'card-cat', `${item.category}${kind}`));
+  if (credit) body.append(el('p', 'card-credit', credit));
   a.append(figure, body);
+  return a;
+}
+
+function card(item: Item, tiers: TiersOf | null): HTMLLIElement {
+  const li = el('li');
+  li.dataset['category'] = item.category;
+  let a = link(item);
   li.append(a);
+  const pair = tiers?.(item);
+  if (!pair) return li;
+  // The switch swaps the whole card link (render, name, triangles, credit) to the other tier.
+  li.classList.add('has-tiers');
+  li.append(
+    tierSwitch(`Tier of ${item.name}`, 'cpu', (t) => {
+      const next = t === 'models' ? link(pair.hybrid, pair.line) : link(item);
+      a.replaceWith(next);
+      a = next;
+    }),
+  );
   return li;
 }
 
@@ -71,11 +95,12 @@ export class Gallery {
     private readonly list: HTMLElement,
     private readonly chips: HTMLElement,
     private readonly count: HTMLElement | null,
+    private readonly tiers: TiersOf | null = null,
   ) {}
 
   render(items: readonly Item[]): void {
     this.items = items;
-    this.list.replaceChildren(...items.map(card));
+    this.list.replaceChildren(...items.map((i) => card(i, this.tiers)));
     this.renderChips();
     this.apply();
   }

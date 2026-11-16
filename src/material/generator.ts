@@ -60,5 +60,5 @@ export function paintTrimSheet(recipe: SheetRecipe = DEFAULT_SHEET): PaintedShee
     paintCell(c, id, e, seedOf(id));
     composeRegion(sheet, c, Math.round(rect.u0 * size), Math.round(rect.v0 * size), pad);
   }
-  return sheet;
+  return { ...sheet, strips: customIds() };
 }

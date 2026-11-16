@@ -73,7 +73,7 @@ commit outputs whose licence does not allow publishing (ADR 015).
 
 | id | task | model | licence (outputs) | status | measured |
 |---|---|---|---|---|---|
-| `pixal3d` | mesh | TencentARC/Pixal3D, `low_vram` 1024 cascade | MIT | **tested** (3090, wolf photo) | see below |
+| `pixal3d` | mesh | TencentARC/Pixal3D, `low_vram` 1024 cascade | MIT (gated download; the card disallows EU access) | **tested** (3090, wolf photo) | see below |
 | `trellis2` | mesh | microsoft/TRELLIS.2-4B, 1024 cascade | MIT | **tested** (3090, wolf photo) | see below |
 | `trellis2-texture` | texture | TRELLIS.2-4B texturing pipeline (keeps the mesh's UVs) | MIT | untested | – |
 | `dinov2` | score | facebook/dinov2-base, CLS cosine × 10 | Apache-2.0 | **tested** (3090) | see below |

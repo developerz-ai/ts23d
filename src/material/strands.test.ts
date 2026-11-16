@@ -75,6 +75,41 @@ describe('strandPainter', () => {
     }
   });
 
+  it('fails if a fur or guard clump fills to an opaque lozenge at 2048² (D59): locks with gaps', () => {
+    // The 2048² preview sheet: 32-px rows, ~18 px of strands. Too many 1-texel strands merge
+    // into one solid shape, and every card reads as a chip.
+    const c = paintRow(9);
+    const rgba = c.rgba ?? new Uint8Array(0);
+    const cw = 2048 / STRAND_CELLS;
+    STRAND_LAYOUT.fur_clumps.forEach((_kind, cell) => {
+      let fill = 0;
+      let runs = 0;
+      let cols = 0;
+      for (let x = Math.round(cell * cw + cw * 0.4); x < cell * cw + cw * 0.6; x++) {
+        let first = -1;
+        let last = -1;
+        let on = 0;
+        let prev = false;
+        for (let y = 0; y < 32; y++) {
+          const o = alphaAt(rgba, 2048, x, y) >= 0.5;
+          if (o) {
+            on++;
+            if (first < 0) first = y;
+            last = y;
+            if (!prev) runs++;
+          }
+          prev = o;
+        }
+        if (first < 0) continue;
+        fill += on / (last - first + 1);
+        cols++;
+      }
+      expect(cols).toBeGreaterThan(0);
+      expect(fill / cols).toBeLessThanOrEqual(0.75);
+      expect(runs / cols).toBeGreaterThanOrEqual(2);
+    });
+  });
+
   it('is deterministic per seed and varies with it', () => {
     const a = paintRow(5).rgba ?? new Uint8Array(0);
     const b = paintRow(5).rgba ?? new Uint8Array(0);

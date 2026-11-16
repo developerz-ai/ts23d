@@ -2,17 +2,21 @@
 // scenario, and in Scene mode also compile the diorama base it stands on. No three.js staging here.
 
 import type { AnimationClip } from 'three';
-import { type BuildRequest, type Loaded, loadBuilt } from './compile.ts';
+import { type BuildRequest, type Loaded, loadBuilt, type NeuralRef } from './compile.ts';
 import type { Weighed } from './lod-policy.ts';
 import { type Hooks, readHooks } from './scenarios/hooks.ts';
 import { pickScenario } from './scenarios/pick.ts';
 import type { ScenarioDef } from './scenarios/types.ts';
 import { disposeTree } from './stage.ts';
 
-/** What the viewer shows: an asset by name, its recipe entry file and its committed weights. */
+/**
+ * What the viewer shows: an asset by name, its recipe entry file, its committed weights and, for
+ * the model tier of a hybrid, the committed model outputs it compiles with.
+ */
 export interface Subject extends Weighed {
   readonly name: string;
   readonly file?: string;
+  readonly neural?: NeuralRef;
 }
 
 export interface Staged {

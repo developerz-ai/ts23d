@@ -49,7 +49,7 @@
 | Checking | QA gates + contact sheet |
 | Export | `toGlb`, zero dependencies |
 
-Blender stays useful for organic sculpting: people, animals, hero rocks. Those come in through the planned [`/neural` adapter or `importGlb`](08-neural-adapters.md).
+Blender stays useful for organic sculpting: people, animals, hero rocks. Those come in through [`importGlb`](21-import.md) or, optionally, a model behind a [`NeuralAdapter`](08-neural-adapters.md) (shipped; hybrid recipes keep the code skeleton and QA, the model adds the skin).
 
 ## One asset pipeline, no other libraries
 
@@ -110,7 +110,7 @@ ts23d keeps that pipeline's ideas and goes one step further: recipes are **TypeS
 
 ## Non-goals
 
-- Beating image-to-3D models at organic, sculpted forms. Use them, or the planned [neural adapter](08-neural-adapters.md).
+- Beating image-to-3D models at organic, sculpted forms. Use them, or the optional [neural adapter](08-neural-adapters.md).
 - Engines, game frameworks, gameplay or demo code. ts23d ends at the GLB, textures and manifest.
 - A modelling GUI. The editor is your agent; the viewer is the [gallery](https://developerz-ai.github.io/ts23d/).
 - Photoreal hero assets. Target: game-ready, stylised-to-realistic props at consistent texel density.

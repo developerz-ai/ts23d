@@ -1,7 +1,7 @@
 import { afterAll, describe, expect, it } from 'bun:test';
 import { defineMaterial, resetMaterials } from './define.ts';
 import { DEFAULT_SHEET } from './generator.ts';
-import { liveSheet } from './live-sheet.ts';
+import { checkSheetFor, liveSheet } from './live-sheet.ts';
 import { stripRect } from './trim-sheet.ts';
 
 const SIZE = 512;
@@ -25,5 +25,19 @@ describe('liveSheet (D47)', () => {
     expect(second.repainted).toBe(true);
     expect(second.sheet).not.toBe(first.sheet);
     expect(Math.abs(roughnessAt(second.sheet.orm, late) - 0.95 * 255)).toBeLessThan(25);
+  });
+
+  it('fails: a sheet painted before compile refuses an asset that maps into a later strip', () => {
+    const live = liveSheet({ ...DEFAULT_SHEET, size: SIZE });
+    const early = live.current().sheet;
+    // As a recipe does in build(): the fur card strip appears while the asset compiles.
+    const late = defineMaterial({ id: 'test_late_cards', roughness: 0.6 });
+    const r = stripRect(late);
+    const uvs = new Float32Array([0.2, (r.v0 + r.v1) / 2]);
+    expect(() => checkSheetFor(early, uvs)).toThrow(/painted before material 'test_late_cards'/);
+    // The repainted sheet holds the row; an asset outside it never cared.
+    expect(() => checkSheetFor(live.current().sheet, uvs)).not.toThrow();
+    const plain = stripRect('plain');
+    expect(() => checkSheetFor(early, [0.2, (plain.v0 + plain.v1) / 2])).not.toThrow();
   });
 });

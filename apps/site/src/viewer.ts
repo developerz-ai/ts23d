@@ -1,13 +1,14 @@
 // The viewer: a compiled asset in one of two modes. Studio (default) is a product shot: the
 // category's look (image-based light, key shadow, contact shadow, backdrop; AO + MSAA on the high
-// tier), orbit controls with a slow turntable, and Play runs the baked `run` clip.
+// tier), orbit controls with a slow turntable, and Play runs the picked baked clip.
 // Scene stages the asset on a diorama in a looping scenario picked from its named parts (driving,
-// wind, a day on the turntable). Also switches LOD, wireframe and the trim sheet, lists the parts
+// wind, a day on the turntable). Studio picks any baked clip and shows a skinned asset's skeleton
+// (viewer-motion.ts). Also switches LOD, wireframe and the trim sheet, lists the parts
 // (hover one to outline it) and offers a GLB per LOD. Heavy assets open at LOD1 with a button for
 // LOD0; a progress bar runs while the worker compiles (a failure ends it in a visible message), and
 // leaving cancels the compile.
 
-import { AnimationMixer, Box3, BoxHelper, Group, type Object3D, Timer, Vector3 } from 'three';
+import { AnimationMixer, Box3, Group, type Object3D, Timer, Vector3 } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { backdrop } from './backdrop.ts';
 import { categoryOf } from './categories.ts';
@@ -23,9 +24,10 @@ import type { Scenario } from './scenarios/types.ts';
 import { disposeTree, Stage } from './stage.ts';
 import { anisotropyOf, studioRenderer } from './studio.ts';
 import { applySheet, setWireframe } from './textures.ts';
-import { reducedMotion, token } from './theme.ts';
+import { reducedMotion } from './theme.ts';
 import { disposeStaged, loadStaged, type Staged, type Subject } from './viewer-load.ts';
-import { renderParts, renderStats } from './viewer-panels.ts';
+import { Motion, pickable } from './viewer-motion.ts';
+import { Outline, renderParts, renderStats } from './viewer-panels.ts';
 import { Progress, syncLod0 } from './viewer-progress.ts';
 import { bindUi, type Mode, syncUi, wireUi } from './viewer-ui.ts';
 import { CancelledError } from './worker-pool.ts';
@@ -45,6 +47,7 @@ export class Viewer {
   private readonly ui: ReturnType<typeof bindUi>;
   readonly tools: MeasureTools;
   private readonly progress: Progress;
+  private readonly motion: Motion;
   private asset: Subject | null = null;
   private pending: BuildRequest | null = null;
   private lod: Lod = 0;
@@ -53,7 +56,7 @@ export class Viewer {
   private display: Object3D | null = null;
   private scenario: Scenario | null = null;
   private mixer: AnimationMixer | null = null;
-  private outline: BoxHelper | null = null;
+  private readonly outline = new Outline(this.stage.scene);
   private playing = false;
   private wireframe = false;
   private textured = false;
@@ -67,6 +70,10 @@ export class Viewer {
   constructor(root: HTMLElement) {
     this.ui = bindUi(root);
     this.progress = new Progress(this.ui.loading, root);
+    this.motion = new Motion(this.ui, this.stage.scene, () => {
+      this.playing = true;
+      syncUi(this.ui, this.lod, this.mode, this.playing);
+    });
     this.ui.lod0.addEventListener('click', () => {
       if (this.asset) void this.show(this.asset, 0, false);
     });
@@ -140,7 +147,7 @@ export class Viewer {
     this.asset = asset;
     this.lod = lod;
     const ticket = ++this.token;
-    const request = recipe(asset.name, lod, asset.file);
+    const request = recipe(asset.name, lod, asset.file, asset.neural);
     if (this.pending && fresh) cancelBuild(this.pending);
     this.pending = request;
     const label = `Compiling ${asset.name} at LOD ${lod}…`;
@@ -179,7 +186,8 @@ export class Viewer {
     if (!base) this.stage.bakeContact(this.renderer, [this.particles.object]);
     this.tools.attach(base ? null : loaded.scene, asset.name);
     this.post?.fit(this.stage.contentBox());
-    this.mixer = clip ? new AnimationMixer(loaded.scene) : null;
+    const clips = base ? [] : pickable(loaded.animations);
+    this.mixer = clip || clips.length ? new AnimationMixer(loaded.scene) : null;
     if (base) {
       this.scenario = def.create({
         hooks,
@@ -197,7 +205,7 @@ export class Viewer {
         document.createTextNode(` · ${def.describe(hooks)}`),
       );
     } else {
-      if (clip && this.mixer) this.mixer.clipAction(clip).play();
+      this.motion.bind(loaded.scene, this.mixer, clips);
       if (reframe) {
         this.controls.target.copy(center);
         this.controls.autoRotate = !reducedMotion();
@@ -217,28 +225,20 @@ export class Viewer {
     this.onModel?.(base ? null : loaded.scene);
     syncUi(this.ui, lod, this.mode, this.playing);
     syncLod0(this.ui.lod0, asset, lod, false);
-    this.ui.play.disabled = this.mode === 'studio' && !clip;
+    this.ui.play.disabled = this.mode === 'studio' && !this.motion.has;
     this.renderer.domElement.setAttribute('aria-label', `3D view of ${asset.name}, LOD ${lod}`);
     const b = loaded.built;
     renderStats(this.ui.stats, b, emitters.length);
-    renderParts(this.ui.parts, b.parts, (name) => this.highlight(name));
+    renderParts(this.ui.parts, b.parts, (name) => this.outline.show(this.model, name));
     this.ui.status.textContent = `Showing ${asset.name} at LOD ${lod}.`;
     return true;
   }
 
-  /** Outline one named node in the redline colour, or clear the outline (null). */
-  private highlight(name: string | null): void {
-    this.outline?.removeFromParent();
-    this.outline?.dispose();
-    const node = name ? this.model?.getObjectByName(name) : null;
-    this.outline = node ? new BoxHelper(node, token('--redline')) : null;
-    if (this.outline) this.stage.scene.add(this.outline);
-  }
-
   private teardown(): void {
-    this.highlight(null);
+    this.outline.show(null, null);
     this.scenario?.dispose();
     this.scenario = null;
+    this.motion.clear();
     this.mixer?.stopAllAction();
     this.mixer = null;
     if (this.model) this.particles.detach(this.model);
@@ -286,7 +286,7 @@ export class Viewer {
     }
     // Paused means still: no smoke drifting over a product shot until Play.
     this.particles.update(step);
-    this.outline?.update();
+    this.outline.update();
     this.tools.update();
     this.stage.syncShadow(this.model);
     // Scenarios may clear the sky they painted; fall back to the look's backdrop.

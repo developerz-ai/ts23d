@@ -82,10 +82,30 @@ export function mergeRecipes(
   return order([...byName.values()]);
 }
 
-/** Category order, then name. */
+/** The flagships, in showcase order: the wolf (both tiers), the heads, tiger, dragon, fox, bear, city. */
+export const FLAGSHIPS: readonly string[] = [
+  'wolf',
+  'human_head',
+  'orc_head',
+  'elf_head',
+  'goblin_head',
+  'amur_tiger',
+  'dragon',
+  'fox',
+  'brown_bear',
+  'city_block',
+];
+
+/** Flagships first (in their order), then category order, then name. */
 export function order(items: readonly Item[]): Item[] {
+  const flag = (i: Item): number => {
+    const at = FLAGSHIPS.indexOf(i.name);
+    return at < 0 ? FLAGSHIPS.length : at;
+  };
   const rank = (i: Item): number => CATEGORIES.indexOf(i.category);
-  return [...items].sort((a, b) => rank(a) - rank(b) || a.name.localeCompare(b.name));
+  return [...items].sort(
+    (a, b) => flag(a) - flag(b) || rank(a) - rank(b) || a.name.localeCompare(b.name),
+  );
 }
 
 export const REPO = 'https://github.com/developerz-ai/ts23d';

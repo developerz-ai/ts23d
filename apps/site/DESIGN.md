@@ -44,12 +44,28 @@ live canvas fades in over them. Text on a stage uses `--studio-ink`.
 - **Asset** (`#<asset_name>`): breadcrumb + prev/next, the viewer (heavy assets open at LOD1 with a
   redline "Load full detail" button; a time-based bar shows elapsed vs estimated compile time;
   Studio: orbit, turntable, Play
-  runs the baked `run` clip; Scene: the asset on a diorama in a scenario picked from its named
+  runs the picked clip (`run`, else `idle`, else the first), Skeleton for skinned assets; Scene: the asset on a diorama in a scenario picked from its named
   parts), LOD / wireframe / trim sheet, live stats, parts list (hover outlines the node), GLB per
   LOD; the info panel (category, QA verdict, triangles and draw calls per LOD, real vs model size,
   dossier and recipe links); sounds (play buttons, optional positional audio); measures (spec vs
   model, Δ%, source), sources; quality (critique scores, art metrics, weathering coverage); renders
   (contact sheet, blueprint, RTS icon/portrait/shot); recipe (file picker for multi-file recipes).
+- **Two tiers** (`src/tier-toggle.ts`, `src/credits-panel.ts`): an asset `<name>` with a recipe
+  `<name>_hybrid` whose model outputs are committed (`recipes/<name>_hybrid/neural/*/record.json`)
+  gets a "CPU tier / With models" switch on its card and under its viewer. The CPU tier is the
+  recipe alone (no GPU, deterministic); "With models" compiles the hybrid live in the worker with
+  those committed outputs (the media plugin publishes them under `media/neural/<folder>/<key>/`;
+  the worker re-checks every hash; a failed fetch is an error, never a silent CPU asset), and
+  `#<name>_hybrid` links to it. Hybrids never get their own card; a CPU-only asset shows no switch.
+  The credit line is neutral ("Made with Pixal3D (MIT) and Z-Image-Turbo (Apache-2.0) on the code
+  skeleton"), then task · model · licence · adapter kind per record; data attributions a licence
+  asks for (OpenStreetMap, ODbL) show under any viewer. `showcase.config.ts` (repo root) names
+  the model per task behind each showcased hybrid; a site test holds it to the records.
+- **Motion** (`src/viewer-motion.ts`): Studio's clip picker lists every baked clip (idle, walk,
+  trot, gallop, blink, talk, run…; never `rest`); a Skeleton checkbox draws a skinned asset's bones
+  in redline.
+- **Order**: the flagships first in the showcase and the grid (`FLAGSHIPS` in `items.ts`: wolf,
+  the heads, tiger, dragon, fox, brown bear, city block), then categories.
 - **Categories** (`src/categories.ts`): Creatures, Characters, Vehicles, Strategy kit, Architecture,
   Nature & Terrain, Sci-fi, Materials & finishes, Parts, Sound, Tech demos, Props.
 

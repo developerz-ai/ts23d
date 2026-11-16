@@ -1,11 +1,21 @@
 // Orc face features beyond the shared skull stages: forehead furrows under the low vault, heavy
-// under-eye bags, flared nose wings, the closed mouth sealed and its line drawn; scars as raised
-// pale welts; seeded warts (the tusks are their own swept part, tusks.ts). Skin tone zones beyond
-// the shared zones.ts: darker brow band, warm ear cartilage, a grey-green jaw. Left side unless
-// `mirror: false` (scars, warts: the battle-worn asymmetry).
+// under-eye bags, flared nose wings, the closed mouth sealed and its line drawn; scars, warts and
+// pores as placed VDM stamps (plan 19: `scarWelt` welts with puckered sides, lobed `wart` domes,
+// `poreField` pits over the nose and cheeks), the scars also painted pale (the tusks are their own
+// swept part, tusks.ts). Stamps at LOD0, the welts and warts at reduced depth at LOD1, colour only
+// at LOD2. Skin tone zones beyond the shared zones.ts: darker brow band, warm ear cartilage, a
+// grey-green jaw. Left side unless `mirror: false` (scars, warts: the battle-worn asymmetry).
 
-import type { Rng, SculptEdit } from '@developerz.ai/ts23d';
-import { ball, clayOn, creaseOn, ell, type Surface, type V } from '../_lib/bust/kit.ts';
+import {
+  poreField,
+  type Rng,
+  type SculptEdit,
+  type SculptVdm,
+  scarWelt,
+  type VdmPlace,
+  wart,
+} from '@developerz.ai/ts23d';
+import { creaseOn, ell, type Surface, spline, type V } from '../_lib/bust/kit.ts';
 import { C } from './palette.ts';
 import { H, SK } from './spec.ts';
 
@@ -37,16 +47,85 @@ export function featureEdits(stage: number, s: Surface, lod: number, rng: Rng): 
   out.push(
     ell(at(SK.eye, 0.026, 0.004, -0.05), [0.02 * H, 0.05 * H, 0.016 * H], { blend: 0.03 * H }),
   );
+  // Scars: pale (every LOD), then raised welts; warts; pores (LOD0) — not mirrored.
+  out.push(...SCARS.flatMap((l) => scarPaint(s, l)));
+  for (const [p, r] of WARTS)
+    out.push({
+      shape: 'sphere',
+      at: s.on(p),
+      size: r * H * 0.9,
+      op: 'paint',
+      color: C.wart,
+      blend: r * H * 0.5,
+      mirror: false,
+    });
   if (lod === 2) return out;
-  // Scars: a pale raised welt (not mirrored).
-  for (const l of SCARS)
-    out.push(clayOn(s, l, 0.02 * H, 0.006 * H, { color: C.scar, mirror: false, tips: 0.25 }));
-  // Warts, seeded sizes (not mirrored).
-  for (const [p, r] of WARTS) {
-    const j = 0.75 + rng.next() * 0.5;
-    out.push(ball(s.off(p, 0), r * H * j, { blend: r * H * 0.4, color: C.wart, mirror: false }));
-  }
+  const k = lod === 0 ? 1 : 0.6;
+  out.push(...scarStamps(s, k));
+  out.push({
+    vdm: WART,
+    places: WARTS.map(([p, r]) => wartPlace(s, p, r * (0.75 + rng.next() * 0.5), k)),
+    mirror: false,
+  });
+  if (lod === 0) out.push(pores(s));
   return out;
+}
+
+const SCAR = [1, 2, 3].map((seed) => scarWelt({ seed }));
+const WART = wart({ seed: 5, lobes: 0.18 });
+const PORES = poreField({ seed: 9, count: 60 });
+
+/** One welt stamp per scar segment, its length along the segment. */
+function scarStamps(s: Surface, k: number): SculptVdm[] {
+  return SCARS.map((l, i) => {
+    const places: VdmPlace[] = [];
+    for (let j = 0; j + 1 < l.length; j++) {
+      const a = l[j] as V;
+      const b = l[j + 1] as V;
+      const mid = s.on([(a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2]);
+      const len = Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]);
+      const up: V = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
+      places.push({ at: mid, normal: s.normal(mid), up, scale: len * 1.15, depth: 0.0022 * k });
+    }
+    return { vdm: SCAR[i % SCAR.length] as SculptVdm['vdm'], places, mirror: false };
+  });
+}
+
+/** The scar's pale tissue: a thin paint stripe along it. */
+function scarPaint(s: Surface, l: readonly V[]): SculptEdit[] {
+  return spline(l, 40).map((p) => ({
+    shape: 'sphere' as const,
+    at: s.on(p),
+    size: 0.003,
+    op: 'paint' as const,
+    color: C.scar,
+    blend: 0.003,
+    mirror: false,
+  }));
+}
+
+function wartPlace(s: Surface, p: V, r: number, k: number): VdmPlace {
+  const at = s.on(p);
+  return { at, normal: s.normal(at), scale: r * H * 2.4, depth: r * H * 0.55 * k };
+}
+
+/** Pore pits over the nose, the cheeks and the forehead (mirrored). */
+function pores(s: Surface): SculptVdm {
+  const spots: V[] = [
+    at(SK.pronasale, -0.02, 0.02, 0),
+    at(SK.cheek, 0.01, 0, 0),
+    at(SK.cheek, -0.04, 0.02, -0.06),
+    at(SK.glabella, -0.02, 0.06, 0.08),
+    at(SK.glabella, -0.03, 0.0, 0.14),
+  ];
+  return {
+    vdm: PORES,
+    places: spots.map((p) => {
+      const q = s.on(p);
+      return { at: q, normal: s.normal(q), scale: 0.045, depth: 0.0005 };
+    }),
+    mirror: true,
+  };
 }
 
 /** Skin zones beyond ../_lib/face/zones.ts: the brow band darker, warm cartilage on the ears. */

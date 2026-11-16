@@ -47,6 +47,7 @@ export {
 export { effectsOf, MOCK_MODEL_ID, mockFinish, noise3 } from './mock.ts';
 export {
   closestColour,
+  closestTexture,
   delight,
   highPassOver,
   projectViews,

@@ -70,6 +70,14 @@ export {
 } from './import-glb.ts';
 export { checkLicence, type ImportCredit, type LicenceVerdict } from './import-licence.ts';
 export { aspectOf, KUBEEZ_TERMS, type KubeezOptions, kubeezAdapter } from './kubeez-adapter.ts';
+export { MESHY_TERMS, meshyAdapter } from './meshy-adapter.ts';
+export { filePending, memoryPending } from './meshy-net.ts';
+export {
+  MESHY_MODELS,
+  type MeshyOptions,
+  type MeshyPending,
+  meshyCost,
+} from './meshy-params.ts';
 export { MOCK_LICENCE, type MockAdapter, mockAdapter } from './mock-adapter.ts';
 export {
   type OpenAiImageOptions,

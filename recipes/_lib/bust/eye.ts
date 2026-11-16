@@ -156,13 +156,11 @@ export function eyeball(e: EyeSpec, cell: number): Mesh {
       const slit = e.pupil === 'slit' && Math.abs(q[1]) < r * 0.09 && cos > Math.cos(a * 0.85);
       if (slit || (e.pupil !== 'slit' && cos > cosPupil)) return c.pupil;
       if (cos > cosIris) {
-        // Iris: darker toward its rim, lighter round the pupil.
+        // Iris: darker toward its rim, lighter round the pupil, with radial fibres (stroma).
         const t = (cos - cosIris) / (1 - cosIris);
-        return [
-          Math.min(1, c.iris[0] * (0.7 + 0.5 * t)),
-          Math.min(1, c.iris[1] * (0.7 + 0.5 * t)),
-          Math.min(1, c.iris[2] * (0.7 + 0.5 * t)),
-        ];
+        const phi = Math.atan2(q[2], q[1]);
+        const k = (0.7 + 0.5 * t) * (0.88 + 0.12 * Math.sin(37 * phi) * Math.sin(11 * phi + 1));
+        return [Math.min(1, c.iris[0] * k), Math.min(1, c.iris[1] * k), Math.min(1, c.iris[2] * k)];
       }
       if (cos > cosLimb) return limbus;
       // Sclera: a touch darker toward the back (it sits in shadow inside the socket).

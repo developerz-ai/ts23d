@@ -3,7 +3,7 @@
 // doctor exits 0 whatever it finds. Checks: $TS23D_HOME and free disk · uv · Blender (bpy in the
 // setup venv or a `blender` executable), Godot, basisu, gltfpack, Material Maker · GPU tier
 // (doctor-gpu.ts) · the reference server (found, answering) · no GPU → kubeez.com for `image`
-// (partner, disclosed in docs/idea/08). Read-only: it never installs or writes.
+// (partner, disclosed in docs/idea/08), meshy.ai for `mesh` (MESHY_API_KEY set?). Read-only: it never installs or writes.
 
 import { statfsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -159,6 +159,7 @@ async function serverChecks(host: Host, p: TierPaths): Promise<Check[]> {
 function hostedChecks(host: Host, gpu?: Gpu): Check[] {
   if (gpu && gpu.vramMb >= PROFILES['gpu-full'].minGb * 1000) return [];
   const key = host.env['KUBEEZ_API_KEY'] !== undefined && host.env['KUBEEZ_API_KEY'] !== '';
+  const mesh = host.env['MESHY_API_KEY'] !== undefined && host.env['MESHY_API_KEY'] !== '';
   const snippet =
     'neural: { image: kubeezAdapter({ apiKey: process.env.KUBEEZ_API_KEY }) } in t3d.config.ts';
   return [
@@ -170,6 +171,13 @@ function hostedChecks(host: Host, gpu?: Gpu): Check[] {
       fix: key
         ? snippet
         : `get a key at https://kubeez.com, export KUBEEZ_API_KEY=…, then ${snippet}`,
+    },
+    {
+      id: 'meshy',
+      group: 'hosted',
+      status: mesh ? 'ok' : 'info',
+      detail: `the mesh task can also run on meshy.ai (hosted, paid credits); MESHY_API_KEY ${mesh ? 'is set' : 'not set'}`,
+      fix: `${mesh ? '' : 'get a key at https://www.meshy.ai/api, export MESHY_API_KEY=…, then '}neural: { mesh: meshyAdapter({ apiKey: process.env.MESHY_API_KEY }) } in t3d.config.ts`,
     },
   ];
 }

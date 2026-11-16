@@ -197,7 +197,7 @@ Uniform grids spend cells on flat cranium as on lips. Options: an octree of cell
 |---|---|
 | Interactive mesh brushes on triangle meshes | Stroke-by-stroke mesh mutation is what remesh/Dyntopo exist to patch; it is not text an agent can diff. The edit list is the sculpt |
 | Retopology to quads | glTF engines draw triangles; edge flow matters for subdivision and hand-skinning, neither of which ts23d does. Skin weights come from blend weights instead |
-| Realistic anatomy as a goal | Stylised readable forms are the fit ([07](07-what-fits.md)); realism goes through `importGlb` / `/neural` |
+| Realistic anatomy from the edit list alone | Readable forms are what the edit list is good at ([07](07-what-fits.md)). Realism comes from the hybrid model: the sculpt stays the skeleton, proportions and QA (bones, muscles, Lipschitz-bounded strokes, VDM stamps), `importGlb` / a `NeuralAdapter` mesh is a sculpt field and adds the skin ([08](08-neural-adapters.md), `recipes/wolf_hybrid`) |
 
 ## Next steps for ts23d (prioritised)
 

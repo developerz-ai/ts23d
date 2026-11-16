@@ -15,7 +15,7 @@ warts**; **forged plate pauldrons** with bone spikes, a **leather baldric**, a *
 | skull | the CC0 MakeHuman base (docs/research/face-base.md) warped by `ORC_FACE` — cranium, orbits, nose, jaw, lips, ears and neck from one anatomical mesh — placed in the orc frame (menton 0.285 → crown 0.585) | `spec.ts`, `../_lib/face/skull.ts` |
 | planes | forehead, temple, cheek, buccal, jaw and chin planes flattened (`forms.planes` 1.4) | `../_lib/face/planes.ts` |
 | muscles | supraorbital ridge (`brow` 2.6: the shelf), zygoma, masseter, jaw line, sternocleidomastoid | `../_lib/face/planes.ts` |
-| features | lid fold, nasolabial, mentolabial, vermilion; the orc's forehead furrows, under-eye bags, flared nose wings, the sealed mouth and its line, scars (raised pale welts), seeded warts | `../_lib/face/features.ts`, `features.ts` |
+| features | lid fold, nasolabial, mentolabial, vermilion; the orc's forehead furrows, under-eye bags, flared nose wings, the sealed mouth and its line, scars, warts and pores as placed VDM stamps (`scarWelt`, `wart`, `poreField`; plan 19) | `../_lib/face/features.ts`, `features.ts` |
 | skin | zones: lips, warm flush on the nose and ears, dark sockets, a darker brow band, a grey-green jaw; the painter's curvature + cavity bake (8 mm stencil), mottle and pore-scale speckle | `../_lib/face/zones.ts`, `features.ts`, `skin.ts` |
 | body | the orc's own torso (neck leaning into the trapezius hunch, deltoids, pecs, barrel chest) in place of the shared parametric one (`BustRecipe.body`) | `torso.ts` |
 | tusks | swept tapered tubes rooted ≈ 3 cm in the mandible behind the lower lip, out through the lip, rising in front of the upper lip; ivory stained brown at the gum line; the right one snapped at 60 % | `tusks.ts` |
@@ -29,12 +29,12 @@ human base (`spec.ts` `ORC_FACE`), and each has a reason:
 |---|---|---|
 | head | H 0.30 m (×1.3 human 0.23) | a big brute; the gear was built for this frame |
 | vault | height ×0.74, depth ×0.84 | a low sloped brain case: the face, not the skull, is the mass |
-| brow | 6.5 % H forward, 2 % H down | the shelf that shadows the eyes (the archetype's scowl) |
-| eyes | size ×0.92, lids open ×0.85, outer corners 1.2 % H down | small, deep-set and hooded under the shelf |
-| nose | width ×2.2, projection ×0.72, bridge sunk 2.4 % H | broad and flat: a boxer's, not a hook |
-| muzzle | lips, nose base and chin 4.5 % H forward | prognathism: the predator's mouth leads the face |
-| jaw | bigonial ×1.75, dropped 10 % H; chin ×1.6 wide, 6 % H forward | the jaw wider than the temples (the square silhouette) |
-| mouth | ×1.3 wide, lips +2 % H, lower lip 3.5 % H ahead (underbite) | the underbite that carries the lower tusks |
+| brow | 8 % H forward, 2.8 % H down | the shelf that shadows the eyes (the archetype's scowl) |
+| eyes | size ×0.86, lids open ×0.76, outer corners 1.2 % H down | small, deep-set and hooded under the shelf |
+| nose | width ×2.6, projection ×0.62, bridge sunk 3 % H | broad, flat and porcine: a boxer's, not a hook (a ×2.2 nose still read human) |
+| muzzle | lips, nose base and chin 6 % H forward | prognathism: the predator's mouth leads the face |
+| jaw | bigonial ×1.9, dropped 11 % H; chin ×1.75 wide, 7.5 % H forward; zygoma ×1.18 | the jaw wider than the temples (the square silhouette) |
+| mouth | ×1.35 wide, lips +2 % H, lower lip 5.5 % H ahead (underbite) | the underbite that carries the lower tusks |
 | ears | ×1.4 long, tip pulled back and up, swung out 22° | pointed, swept back: the race's read in silhouette |
 | neck / traps | neck ×1.7, trapezius 18 % H higher | a neck that merges into a hunch rising to the ears |
 
@@ -43,19 +43,19 @@ Measured on the built head against `ORC_PROPORTIONS` (the human bands, each orc 
 
 | Ratio | Orc band | Built | Human band |
 |---|---|---|---|
-| eye line (pupil ÷ menton → vertex) | 0.50–0.62 | 0.61 | 0.45–0.53 |
-| eye fissure ÷ head breadth | 0.12–0.20 | 0.16 | 0.17–0.23 |
-| intercanthal ÷ fissure | 0.9–1.7 | 1.47 | 0.85–1.3 |
-| glabella → subnasale ÷ subnasale → menton | 0.6–1.0 | 0.74 | 0.75–1.15 |
-| "neck" ÷ head breadth (a third down from the jaw angle: the trap shelf) | 2.6–3.8 | 3.4 | 0.66–0.86 |
-| glabella ahead of the eyeball | 14–46 mm | 42 mm | 8–24 mm |
-| eyeball | 22–30 mm | 27.5 mm | 22–26 mm |
+| eye line (pupil ÷ menton → vertex) | 0.50–0.62 | 0.62 | 0.45–0.53 |
+| eye fissure ÷ head breadth | 0.12–0.20 | 0.15 | 0.17–0.23 |
+| intercanthal ÷ fissure | 0.9–1.7 | 1.65 | 0.85–1.3 |
+| glabella → subnasale ÷ subnasale → menton | 0.6–1.0 | 0.68 | 0.75–1.15 |
+| "neck" ÷ head breadth (a third down from the jaw angle: the trap shelf) | 2.6–3.8 | 3.45 | 0.66–0.86 |
+| glabella ahead of the eyeball | 14–50 mm | 46.7 mm | 8–24 mm |
+| eyeball | 22–30 mm | 25.1 mm | 22–26 mm |
 
 ## Defects (deliberate, measured)
 | Defect | Where | Amount |
 |---|---|---|
-| scars (raised pale welts, 12 mm wide, 1.8 mm proud) | crown → left brow; across the nose bridge; down the right cheek to the jaw | 3 strokes, not mirrored |
-| warts | left cheek, right cheekbone, crown | 3, radius 6–8 mm × seeded 0.75–1.25 |
+| scars (`scarWelt` VDM stamps, one per segment, 2.2 mm proud; painted pale) | crown → left brow; across the nose bridge; down the right cheek to the jaw | 3 strokes, not mirrored |
+| warts | left cheek, right cheekbone, crown | 3 lobed `wart` stamps, radius 6–8 mm × seeded 0.75–1.25 |
 | broken tusk | right tusk | snapped at 60 % of its length, a flat fracture |
 | asymmetry | the whole face | `asym` 0.3: seeded per-landmark offsets ≤ 0.36 % H |
 
@@ -63,6 +63,7 @@ Measured on the built head against `ORC_PROPORTIONS` (the human bands, each orc 
 | Role | Hex |
 |---|---|
 | skin / warm / cool / crevice | `#5f7a46` / `#7e8c4c` / `#465646` / `#222a1a` |
+| skin / warm / cool | `#5a6c44` / `#7a8049` / `#3f4b40` (weathered olive-grey) |
 | flush (nose) / ear cartilage / lips / sockets / brow band / warts | `#86784a` / `#8a8650` / `#5a4e36` / `#4a5038` / `#3e4630` / `#5e6a40` |
 | eyes: sclera / iris / pupil (+ glow `#ff7a1a` × 2.5, cornea clearcoat) | `#6a3a12` / `#ffb428` / `#1a0c04` |
 | tusk ivory / root stain / scars | `#e4d8b4` / `#7a5a2e` / `#b49e80` |
@@ -91,7 +92,7 @@ Every region ≤ 3 cm.
 ## LODs and budget
 Cells: head 5.5 / 10.5 / 30 mm, bust 9.5 / 18 / 32 mm. LOD0 ≈ 167k triangles (the skull-stage head
 ≈ 65k with its eye, ear and mouth boxes, plates, spikes, fur, the knot and card hair), LOD1 ≈ 45k,
-LOD2 ≈ 4.8k keeping the silhouette and tusks (budget 172k / 46k / 5k). `t3d build` ≈ 38 s.
+LOD2 ≈ 4.8k keeping the silhouette and tusks (budget 184k / 48k / 5k: the card beard and brows). `t3d build` ≈ 80 s.
 
 ## References (stylised anatomy, not likeness)
 | Topic | Link | Used for |
@@ -104,6 +105,10 @@ LOD2 ≈ 4.8k keeping the silhouette and tusks (budget 172k / 46k / 5k). `t3d bu
 | Stylised orc busts (method, not likeness) | https://www.zbrushcentral.com/t/orc-bust/371776 · https://80.lv/articles/sculpting-texturing-a-broken-orc-bust-in-zbrush-3ds-max-substance-3d-painter/ | primary → secondary → tertiary, hand-painted tone |
 
 ## Known gaps
-The closed lips still alias a little at the tusks' exits; the beard cards read as a fringe under
-the jaw (card styling is the hair slice's); skin pores are a light displacement and a colour speckle,
-not alpha stamps; the plates' dents are smooth radial pushes (no hammer facets).
+The closed lips still alias a little at the tusks' exits; the beard is three card layers (dense
+flat base, hanging locks, wiry strays) over a hair-painted chin, coarse brow cards sit on the
+shelf (both root on the finished head, not the stage-2 skin); pores are `poreField` stamps on the
+nose, cheeks and forehead (LOD0); the tusks are rigid parts, so the `talk` clip's jaw morph opens
+the lips round them without moving them; the plates' dents are smooth radial pushes (no hammer
+facets). Rig: `head` and `bust` carry the blink / talk / breathe morphs under the `face` node
+(`headClips('face')`).

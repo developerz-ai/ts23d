@@ -82,7 +82,7 @@ Each asset is a TypeScript module. `t3d build` compiles it, deterministically, t
 
 **The goal: high-definition detail up close, cheap to draw everywhere.** One texture set, batched static geometry, LODs, compact core-glTF buffers (u16 indices and colours), welded, cache-optimised meshes.
 
-**No Blender for most hard-surface asset production.** For vehicles, buildings, props and whole scenes, the LLM writes TypeScript that does the modelling, LODs, UVs onto the trim sheet, batching, QA and export. Stylised organic shapes (busts, rocks, terrain) are code too, through `sculpt` and `sdf`; realistic sculpts come in through [`importGlb`](docs/idea/08-neural-adapters.md) (scans, CC0 base meshes) or the planned `/neural` adapters.
+**No Blender for most hard-surface asset production.** For vehicles, buildings, props and whole scenes, the LLM writes TypeScript that does the modelling, LODs, UVs onto the trim sheet, batching, QA and export. Stylised organic shapes (busts, rocks, terrain) are code too, through `sculpt` and `sdf`; realistic sculpts come in through [`importGlb`](docs/idea/08-neural-adapters.md) (scans, CC0 base meshes) or, optionally, a model of your choice through a [`NeuralAdapter`](docs/idea/08-neural-adapters.md) (hybrid recipes: code owns skeleton, proportions and QA, the model adds the skin; the CPU tier builds without it).
 
 ## Generate assets with your agent
 
@@ -139,7 +139,7 @@ Godot: node names import unchanged, and `extras` are available as node metadata 
 
 ## What you get that a generated mesh doesn't
 
-Each ts23d row names how it's verified. The image-to-3D column cites only what vendors' own pages state, as collected in [docs/landscape.md](docs/landscape.md) (as of Oct 2026). Image-to-3D is the better tool for organic and sculpted shapes; for those, see the planned [`/neural` adapter](docs/idea/08-neural-adapters.md).
+Each ts23d row names how it's verified. The image-to-3D column cites only what vendors' own pages state, as collected in [docs/landscape.md](docs/landscape.md) (as of Oct 2026). Image-to-3D is the better tool for organic and sculpted shapes; for those, see the optional [`NeuralAdapter` tier](docs/idea/08-neural-adapters.md) below.
 
 | Property | ts23d | How it's verified | Typical image-to-3D output (per vendor docs) |
 |---|---|---|---|
@@ -183,12 +183,12 @@ Draw calls column: static assets (the Eiffel Tower) are 1; vehicles are one per 
 
 | Stage | Module | Status (2026-10) | Replaces |
 |---|---|---|---|
-| Geometry | `primitives`, `kinds` | Shipped: `box` (bevel), `lathe`, `prism`, `beam`, `planar`, `sweep`, `loft`, `tiled`, `cell`, `lattice`, `text`, `heightfield`, `sdf` + `sculpt`, `warpTPS` (landmark warp of a CC0 base head), `importGlb` + `simplify` + `bakeNormals`, `terrainFromDEM`, terrain + erosion, facades with openings, roofs, hulls, vehicles, Weber–Penn trees. `creature()` (six skeletons). Planned: fur shells, morph targets | Blender modelling |
-| Materials and textures | `material` (generator) | Shipped: procedural albedo / normal / ORM trim sheet, embedded or shared PNGs, palettes, `grime`. No KTX2 yet | Substance / texture tools |
+| Geometry | `primitives`, `kinds` | Shipped: `box` (bevel), `lathe`, `prism`, `beam`, `planar`, `sweep`, `loft`, `tiled`, `cell`, `lattice`, `text`, `heightfield`, `sdf` + `sculpt`, `warpTPS` (landmark warp of a CC0 base head), `importGlb` + `simplify` + `bakeNormals`, `terrainFromDEM`, terrain + erosion, facades with openings, roofs, hulls, vehicles, Weber–Penn trees. `creature()` (six skeletons) with bones as named parts, fur and hair cards, skinned export with named clips (walk, trot, gallop; head blink/talk/breathe) and morph targets; vector-displacement stamps; hybrid recipes. Planned: feather cards, fur shells (cards instead: glTF cannot express shells) | Blender modelling |
+| Materials and textures | `material` (generator) | Shipped: procedural albedo / normal / ORM trim sheet, embedded or shared PNGs, palettes, `grime`. KTX2 export profile planned (the Basis Universal tool adapter ships, as of 2026-11) | Substance / texture tools |
 | Optimisation | `passes/optimize`, `export` | Shipped: weld, degenerate removal, Forsyth vertex-cache + vertex-fetch order (ACMR reported), weighted normals, baked AO, u16 indices and colours, batching. Planned: opt-in `web` profile (quantisation + meshopt) | meshoptimizer / gltfpack |
 | LODs | `ctx.lod` | Shipped | Decimators |
 | QA | `qa` | Shipped: budget, surface-contact floating parts, motion clashes, names, proportions, spec measures, non-finite, winding, hidden parts, degenerate triangles, cross-LOD triangles; opt-in z-fighting, LOD silhouette and pivots. `/testing` helpers | Manual review |
-| Renders and photo match | `render` | Shipped: contact sheet, beauty `hero` render, `review` pack for a vision agent. Photo match planned | — |
+| Renders and photo match | `render` | Shipped: contact sheet, beauty `hero` render (raster, or `--quality path` CPU path tracing), `review` pack for a vision agent, `photoMatch` with a camera solve, `silhouetteIoU` gate | — |
 | GLB export | `export` | Shipped: faces +Z, seamless loops, trim-sheet textures, punctual lights, emissive glow, XMP provenance, 0 glTF-Validator errors and warnings (tested) | — |
 | Engine import adapters | `threeMaterialSource` (TSL), `godotShaderSource` | Shipped: shader sources with wind, window glow, wear. Planned, M3: import settings and collision naming per engine, as hooks, not runtime | — |
 
@@ -196,7 +196,7 @@ Every stage has zero runtime dependencies ([ADR 005](docs/decisions/005-zero-run
 
 > **Status: early (0.x).** The core loop works: write, build, QA, shot, hero, review, with
 > textures, trees, sculpt, terrain and the gallery's passing recipes. Still declared and throwing
-> `T3D_NOT_IMPLEMENTED` (As of 2026-11): none in `/neural`. Shipped neural-module pieces: `importGlb`, `refine`, `t3d finish --model http`, neural adapters (`http`, ComfyUI, OpenAI-compatible images, kubeez.com, mock), the committed recipe cache and `localGenerator`. See the [roadmap](docs/plans/roadmap.md). Expect breaking changes.
+> `T3D_NOT_IMPLEMENTED` (As of 2026-11): none in `/neural`. Flagship realism is in progress: calibrated critique scores sit near 6 of 10 (target 8.5, floor not yet enforced); hybrid heads are in progress. Shipped neural-module pieces: `importGlb`, `refine`, `t3d finish --model http`, neural adapters (`http`, ComfyUI, OpenAI-compatible images, kubeez.com, Meshy, mock), the committed recipe cache and `localGenerator`. See the [roadmap](docs/plans/roadmap.md). Expect breaking changes.
 
 ## A recipe
 
@@ -406,7 +406,25 @@ export const config = defineConfig({ neural: { image: kubeezAdapter({ apiKey: pr
 
 The key stays in your environment: it is sent only as a request header, never written to `record.json`, the cache, logs or errors. Outputs are recorded with licence `own` and the [Kubeez terms](https://kubeez.com/legal/terms).
 
+For the `mesh` task without a GPU, `meshyAdapter({ apiKey: process.env.MESHY_API_KEY })` runs image-to-3D (or text-to-3D from a prompt) on [meshy.ai](https://www.meshy.ai), a hosted service billed in credits; the key is handled the same way. API keys come only with paid plans, whose outputs you own: records carry licence `own`, the [Meshy terms](https://www.meshy.ai/terms-of-use) and the credits Meshy charged. A created task id is kept in `$TS23D_HOME/meshy/pending.json` until its GLB is downloaded, so a rerun after a timeout resumes the same task instead of paying again.
+
 Details: [docs/idea/08-neural-adapters.md](docs/idea/08-neural-adapters.md), ADRs [014](docs/decisions/014-neural-outputs-are-cached-inputs.md) and [015](docs/decisions/015-models-by-adapter.md).
+
+## Game projects and realism tools
+
+As of 2026-11. All CPU, deterministic, no model needed unless stated.
+
+| Command | What it does |
+|---|---|
+| `t3d init --engine godot\|three\|unity\|unreal\|babylon` | Scaffolds `assets/`, `style.ts`, `PLAN.md`, `t3d.config.ts` in a game project; never overwrites |
+| `t3d plan check` | `assets/PLAN.md` vs recipes: missing, extra, over budget |
+| `t3d build --watch` | Rebuilds changed recipes (and dependants) on save; keeps running on a failing recipe |
+| `t3d hero --quality path` | Deterministic CPU path-traced beauty render (subsurface skin, hair lobes, denoise); slower than the raster default |
+| `t3d finish --hero` | Hero texture tier: bakes normal, AO, height and ORM from the sculpt field onto a lighter LOD0 ([ADR 012](docs/decisions/012-hero-texture-tier.md)) |
+| `t3d concept <recipe.ts\|brief.md>` | Silhouette sheet and concept images from the configured image model (needs an `image` adapter); prompts and seeds land in `concept.ts` |
+| `t3d neural run --allow-bad-input` | Sends `mesh` input images that fail the input-image rules anyway; the override is recorded in `record.json` |
+
+Creatures export a skinned skeleton (weights from the sculpt's own bone fields, at most 4 influences) with walk, trot and gallop clips; the `skin`, `deform` and `gait` gates fail a build whose joints tear or feet slide. The gallery shows a "CPU tier / With models" switch for assets that have a committed hybrid, with model and licence credits read from `record.json`.
 
 ## Optional tier
 
@@ -436,7 +454,8 @@ As of 2026-10. Full matrix: [docs/idea/07-what-fits.md](docs/idea/07-what-fits.m
 | **Shipped, early** | Vegetation: Weber–Penn trees (oak, pine, palm, birch, willow); LOD2 impostors are crude |
 | **Shipped, early** | Stylised organic: `sculpt` busts, SDF rocks and asteroids, eroded terrain. Boats: lofted `hull` |
 | **Shipped, early** | Stylised creatures: `creature()` over a skeleton with per-family biology (`recipes/wolf`); [animal research](docs/research/animal-anatomy.md) |
-| **Weak** | Realistic people and animals, realistic sculpted organic forms, cloth. Use an image-to-3D tool, or a model on your own GPU through a [`/neural` adapter](docs/idea/08-neural-adapters.md) (`localGenerator`, `t3d neural run`), with the result committed to the recipe's cache |
+| **Shipped, early** | Hybrid creatures: `recipes/wolf_hybrid` keeps the code skeleton, proportions and QA and takes its skin from a model through a [`NeuralAdapter`](docs/idea/08-neural-adapters.md), committed to the recipe's cache (As of 2026-11; hybrid heads in progress) |
+| **Weak** | Realistic people and animals as pure code, realistic sculpted organic forms. Use an image-to-3D tool, or a model on your own GPU through a `NeuralAdapter` (`t3d neural run`), with the result committed to the recipe's cache |
 
 Not a replacement for AI mesh generators: a different approach with different strengths. Neutral comparison: [docs/landscape.md](docs/landscape.md).
 

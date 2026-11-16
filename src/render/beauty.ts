@@ -7,7 +7,7 @@
 
 import { type CompiledAsset, encodePng } from '../core/index.ts';
 import type { PaintedSheet } from '../material/index.ts';
-import { DEFAULT_SHEET, liveSheet } from '../material/index.ts';
+import { checkSheetFor, DEFAULT_SHEET, liveSheet } from '../material/index.ts';
 import { ALPHA_CUT } from './alpha-mips.ts';
 import { frameOrbit, type PerspectiveCamera, scaled, zoomWindow } from './camera.ts';
 import { depthMap } from './depth-map.ts';
@@ -70,7 +70,9 @@ export function renderBeauty(asset: CompiledAsset, o: BeautyOptions = {}): Beaut
   const v = checkBeautyOptions(o);
   const ss = v.supersample;
   const scene = sceneOf(asset);
-  const tex = sheetTextures(sheetOf(o));
+  const sheet = sheetOf(o);
+  checkSheetFor(sheet, scene.uvs);
+  const tex = sheetTextures(sheet);
   const rig = studioRig(v.azDeg);
   const texel = new Float32Array(4);
   const alpha = (t: number, b1: number, b2: number, mip = 2): boolean => {

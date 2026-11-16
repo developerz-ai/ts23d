@@ -4,6 +4,8 @@ All notable changes to `@developerz.ai/ts23d`. Format: [Keep a Changelog](https:
 
 ## [Unreleased]
 
+An optional model tier (any model through an adapter, outputs cached so builds stay offline and deterministic), one-command setup and diagnosis, hybrid recipes, game-project commands, a hero texture tier and scale tools, with a gallery that shows the CPU tier and the model tier side by side.
+
 ### Added
 - Optional model tier: `NeuralAdapter` contract (`t3d-neural/1` HTTP), adapters for an HTTP server, ComfyUI, OpenAI-compatible image APIs and Kubeez (recommended for image generation without a GPU; partner, disclosed); outputs cached by content hash under `recipes/<name>/neural/` with `record.json` (model, licence, weights sha256, request); `t3d neural ls|run`, `--require-neural`.
 - Reference model server (`examples/neural-server`, not in the npm package): plug-ins for Pixal3D, TRELLIS.2, Z-Image-Turbo, DINOv2 and MediaPipe motion, each GPU model in its own process; one model per machine at a time with free VRAM and RAM checks (D54).
@@ -13,9 +15,16 @@ All notable changes to `@developerz.ai/ts23d`. Format: [Keep a Changelog](https:
 - Hero texture tier: `t3d finish --hero` bakes normal, AO, height and ORM from the sculpt field onto a lighter LOD0 (wolf 141.9k → 39.9k triangles).
 - Game projects: `t3d init --engine godot|three|unity|unreal|babylon`, `assets/PLAN.md` + `t3d plan check`, `t3d build --watch`, engine import conventions; `t3d mcp` (optional stdio MCP server).
 - Scale: style coherence across a set (`T3D_STYLE_OUTLIER`), scene budgets (`T3D_SCENE_BUDGET`), pinned OpenStreetMap blocks (ODbL) and instanced export; new recipes `city_block`, `fox`, `brown_bear`.
+- Gallery: a "CPU tier / With models" switch for assets with a committed hybrid, model and licence credits read from `record.json` (ODbL attributions for OpenStreetMap data), a clip picker and skeleton display, and the model outputs verified by hash before a model-tier compile.
+- Hybrid wolf head: `similarityBlend` (a fraction of a similarity, for bending a neck between a fitted head and a body that stays); head landmarks register the model's head separately from its body in `recipes/wolf_hybrid`. Hybrid human and orc heads are in progress and not part of this release's claims.
+- Heads: eyebrows and upper lashes as strand cards and a scalp-coverage recipe check (D57).
+- Gate: `bun run conventions` fails on a duplicate defect ID in `docs/architecture/defect-catalogue.md`.
+- `meshyAdapter`: the `mesh` task on meshy.ai (image-to-3D, or text-to-3D preview with an optional texturing refine) with `MESHY_API_KEY`; GLB only, per-model face caps, PBR / pose / texture / ultra-geometry options, both kinds of HTTP 429 waited out, an interrupted task resumed instead of charged twice; outputs recorded with licence `own`, the Meshy terms URL and the credits charged; `t3d doctor` reports whether `MESHY_API_KEY` is set.
+- `t3d neural run --allow-bad-input` sends `mesh` inputs that fail the input-image rules anyway and records the override in `record.json`.
 
 ### Fixed
 - Small-pawed claws, the gait check's planted-foot band and plantigrade swing (D50–D52); a brick SDF build that never finished on near-duplicate triangles (D56).
+- Wolf fur: cards no wider than a third of their length, a shallower root sink and LOD1 cards 1.5x (was 2x) wider, so flecks and banding no longer show (D59); the build re-renders once when compiling moved the material set, and retries when the renderer refused a stale sheet.
 
 ## [0.8.0] - 2026-11-16
 

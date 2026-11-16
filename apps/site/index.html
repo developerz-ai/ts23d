@@ -135,6 +135,12 @@
             <div><dt>Material</dt><dd>One shared trim sheet</dd></div>
             <div><dt>Checks</dt><dd>QA gates fail the build</dd></div>
           </dl>
+          <p class="section-note tier-note">
+            Optional model tier: <code>t3d doctor</code> checks this machine and <code>t3d setup</code>
+            installs local models, which put a model-made surface on the same code skeleton (assets with
+            a <em>With models</em> switch). No GPU? <a href="https://kubeez.com">kubeez.com</a> is the
+            recommended image service (a partner of this project).
+          </p>
         </section>
       </div>
 
@@ -161,6 +167,8 @@
               <p class="scenario-tag" data-scenario hidden></p>
               <p class="viewport-hint" aria-hidden="true">drag to orbit · right-drag pan · wheel zoom</p>
             </div>
+            <div class="tier-bar" data-tier-bar hidden></div>
+            <div class="credits" data-credits hidden></div>
             <div class="toolbar">
               <fieldset class="segmented">
                 <legend class="visually-hidden">Presentation</legend>
@@ -168,6 +176,8 @@
                 <label><input type="radio" name="mode" value="scene" /><span>Scene</span></label>
               </fieldset>
               <button type="button" class="play" data-play aria-pressed="false">Play motion</button>
+              <label class="clip" data-clip-box hidden><span>Clip</span> <select data-clip></select></label>
+              <label class="check" data-skeleton-box hidden><input type="checkbox" data-skeleton /> Skeleton</label>
               <fieldset class="segmented">
                 <legend class="visually-hidden">Level of detail</legend>
                 <label><input type="radio" name="lod" value="0" checked /><span>LOD0</span></label>

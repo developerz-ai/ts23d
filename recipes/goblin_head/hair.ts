@@ -2,13 +2,15 @@
 // rooted in the scalp, toned grey at the root and near-white at the tip, no two alike (seeded).
 // Card hair (`hairBaseEdits` + `goblinCardHair`): no sculpted wisps; sparse stray-strand cards
 // rooted on the skull (`bustScalp`): a thin patch over the crown and two tufts behind the ears,
-// standing up off the dome and curling back under their own weight, grey roots to white tips.
+// standing up off the dome and curling back under their own weight, grey roots to white tips;
+// sparse wiry brows (../_lib/face/brows.ts).
 
 import type { Field, SculptEdit, Vec3 } from '@developerz.ai/ts23d';
 import type { BustRecipe } from '../_lib/bust/bust.ts';
 import { lock, mix } from '../_lib/bust/hair.ts';
 import { type Surface, spline, surface, type V } from '../_lib/bust/kit.ts';
-import { bustHairFields } from '../_lib/face/hair-cards.ts';
+import { browLayers, withBrowComb } from '../_lib/face/brows.ts';
+import { bustHairFields, type CardHairStyle } from '../_lib/face/hair-cards.ts';
 import { C, H, L, SK } from './spec.ts';
 
 export function hairEdits(scalp: Field, lod: number): SculptEdit[] {
@@ -60,7 +62,7 @@ export const hairBaseEdits = (_scalp: Field, _lod: number): SculptEdit[] => [];
 
 /** Card wisps for `cardHair` on the goblin bust `b`: a sparse crown patch and two tufts behind
  *  the ears, thin stray strands standing up and curling back. */
-export function goblinCardHair(b: BustRecipe, lod: number) {
+export function goblinCardHair(b: BustRecipe, lod: number): CardHairStyle {
   const { skin } = bustHairFields(b, lod);
   const crown: Vec3 = [SK.crown[0] - 0.02 * H, 0, SK.crown[2]];
   const patch: Field = (p) =>
@@ -79,7 +81,7 @@ export function goblinCardHair(b: BustRecipe, lod: number) {
       [L.gx + 0.03, 0.12, SK.crown[2] + 0.03],
     ] as [Vec3, Vec3],
     cell: 0.004,
-    comb: (p: Vec3): Vec3 => [-1, Math.sign(p[1]) * 0.5, 0.35],
+    comb: withBrowComb((p: Vec3): Vec3 => [-1, Math.sign(p[1]) * 0.5, 0.35], SK, H),
     collide: skin,
     segments: 5,
     color: mix(C.hairRoot, C.hairTip, 0.4),
@@ -118,6 +120,8 @@ export function goblinCardHair(b: BustRecipe, lod: number) {
         tone: [0.7, 1.15],
         tint: [1.05, 1.05, 1.12],
       },
-    ] as const,
+      // Sparse wiry old-man brows over the worried ridge.
+      ...browLayers(SK, H, { thick: 0.004, length: 0.012, density: 200000, tone: [0.6, 1.1] }),
+    ],
   };
 }

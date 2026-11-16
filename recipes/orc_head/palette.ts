@@ -5,11 +5,12 @@
 import { hex } from '@developerz.ai/ts23d';
 
 export const C = {
-  skin: hex('#5f7a46'),
+  // Weathered olive-grey hide (a saturated mid-green read as a toy, a painted human).
+  skin: hex('#5a6c44'),
   /** Warm, sunlit tops (crown, brow, cheekbone, shoulders). */
-  skinWarm: hex('#7e8c4c'),
+  skinWarm: hex('#7a8049'),
   /** Cool undersides (under the jaw, chest shadow). */
-  skinCool: hex('#465646'),
+  skinCool: hex('#3f4b40'),
   /** Flush: blood near the surface (ears, nose, lips, knuckles of the face). */
   flush: hex('#86784a'),
   lips: hex('#5a4e36'),

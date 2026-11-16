@@ -11,6 +11,7 @@ import type {
   CatalogEntry,
   Lod,
   Manifest,
+  NeuralRef,
   Sheet,
   SheetSize,
   Target,
@@ -23,6 +24,7 @@ export type {
   BuildResult,
   Lod,
   Manifest,
+  NeuralRef,
   PartInfo,
   Sheet,
   Target,
@@ -35,7 +37,7 @@ const cache = new Map<string, { readonly id: number; readonly job: Promise<Build
 
 /** Cache key: the entry file is only a hint for the worker, never part of the identity. */
 const targetKey = (t: Target): string =>
-  t.kind === 'recipe' ? `recipe:${t.name}` : JSON.stringify(t);
+  t.kind === 'recipe' ? `recipe:${t.name}${t.neural ? '+models' : ''}` : JSON.stringify(t);
 
 const keyOf = (r: BuildRequest): string =>
   `${targetKey(r.target)}@${r.lod}${r.keepParts ? '+parts' : ''}${r.animations === false ? '-anim' : ''}`;
@@ -93,9 +95,17 @@ export function cancelBuild(request: BuildRequest): void {
   if (hit) pool.cancel(hit.id);
 }
 
-/** A recipe build request; `file` (e.g. `dragon/dragon.ts`) lets the worker import just that. */
-export const recipe = (name: string, lod: Lod, file?: string): BuildRequest => ({
-  target: { kind: 'recipe', name, ...(file ? { file } : {}) },
+/**
+ * A recipe build request; `file` (e.g. `dragon/dragon.ts`) lets the worker import just that, and
+ * `neural` (a hybrid's committed model outputs) makes it build the model tier.
+ */
+export const recipe = (
+  name: string,
+  lod: Lod,
+  file?: string,
+  neural?: NeuralRef,
+): BuildRequest => ({
+  target: { kind: 'recipe', name, ...(file ? { file } : {}), ...(neural ? { neural } : {}) },
   lod,
 });
 

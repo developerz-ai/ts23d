@@ -11,7 +11,8 @@ import { type Field, type SculptEdit, sculptField, type Vec3 } from '@developerz
 import type { BustRecipe } from '../_lib/bust/bust.ts';
 import { hairMass, lock, mix, ribbon } from '../_lib/bust/hair.ts';
 import { type Surface, spline, surface, type V } from '../_lib/bust/kit.ts';
-import { bustHairFields, skullHairline } from '../_lib/face/hair-cards.ts';
+import { browLayers, browLine, withBrowComb } from '../_lib/face/brows.ts';
+import { bustHairFields, type CardHairStyle, skullHairline } from '../_lib/face/hair-cards.ts';
 import { C, H, L, SK } from './spec.ts';
 
 /** Where the hair grows on the skull: trichion 4.6 cm above the glabella, the nape line 2 cm up,
@@ -97,7 +98,7 @@ export function frontLocks(on: Surface): Array<{ ctrl: V[]; y: number }> {
   }));
 }
 
-const CAP: V = mix(mix(C.hairRoot, C.hairTip, 0.35), [0, 0, 0], 0.45);
+export const CAP: V = mix(mix(C.hairRoot, C.hairTip, 0.35), [0, 0, 0], 0.45);
 
 /** The base layer under card hair: the parted mass alone. */
 export const hairBaseEdits = (scalp: Field, _lod: number): SculptEdit[] => {
@@ -144,13 +145,15 @@ const long = (p: Vec3): number => {
 
 /** Card hairstyle for `cardHair` (recipes/_lib/face/hair-cards.ts) on the elf bust `b`: long,
  *  centre-parted. */
-export function elfCardHair(b: BustRecipe, lod: number) {
+export function elfCardHair(b: BustRecipe, lod: number): CardHairStyle {
   // Roots on the finished head (cap and all), falling round it.
   const { skin } = bustHairFields(b, lod);
   // No lock in front of the ears below the brow: a solid there pushes them back behind the ears.
   const shield: Field = (p) =>
     Math.max(SK.tragion[0] + 0.012 - p[0], Math.abs(p[1]) - 0.16, p[2] - (SK.glabella[2] + 0.03));
-  const collide: Field = (p) => Math.min(skin(p), shield(p));
+  // The brows stay on the face: the shield would push their cards up into a fringe.
+  const brows = browLine(SK, H, 0.012, 0.03);
+  const collide: Field = (p) => (brows(p) < 0 ? skin(p) : Math.min(skin(p), shield(p)));
   const bounds: [V, V] = [
     [L.back - 0.05, -0.15, L.mz - 0.05],
     [L.gx + 0.06, 0.15, L.crown + 0.05],
@@ -160,7 +163,7 @@ export function elfCardHair(b: BustRecipe, lod: number) {
     field: skin,
     bounds,
     cell: 0.004,
-    comb,
+    comb: withBrowComb(comb, SK, H, { thick: 0.0035 }),
     collide,
     segments: 8,
     color: mix(C.hairRoot, C.hairTip, 0.45),
@@ -217,6 +220,25 @@ export function elfCardHair(b: BustRecipe, lod: number) {
         tint: pale,
         hug: 0.4,
       },
+      // Crown: flat locks combed back over the parting's front, where the sideways comb opened
+      // a bald-looking disc of cap (D57).
+      {
+        name: 'hair_crown',
+        kind: 'hair',
+        region: (p: Vec3) =>
+          Math.max(hairline(p), Math.abs(p[1]) - 0.03, SK.euryon[2] + 0.01 - p[2]),
+        density: 4000,
+        length: 0.07,
+        width: 0.014,
+        lift: 0.05,
+        bend: 0.9,
+        droop: 0.3,
+        roll: 0.3,
+        fold: 0.4,
+        tone: [0.8, 1.1],
+        tint: pale,
+        hug: 1,
+      },
       // Hairline: short strands rooted on the edge band, over the cap's edge.
       {
         name: 'hair_edge',
@@ -249,6 +271,8 @@ export function elfCardHair(b: BustRecipe, lod: number) {
         tint: pale,
         hug: 0.3,
       },
-    ] as const,
+      // Fine, fair brows: short strands on the painted brow.
+      ...browLayers(SK, H, { thick: 0.0035, length: 0.008, tone: [0.5, 0.8] }),
+    ],
   };
 }

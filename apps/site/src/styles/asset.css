@@ -624,3 +624,59 @@ button.download:hover:not(:disabled) {
 .viewer.no-webgl .viewport-hint {
   display: none;
 }
+
+/* Clip picker (every baked clip) beside Play. */
+.clip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.clip[hidden],
+.check[hidden],
+.tier-bar[hidden],
+.credits[hidden] {
+  display: none;
+}
+
+.clip select {
+  font: inherit;
+  padding: 0.3rem 0.4rem;
+  border: 1px solid var(--rule-strong);
+  background: var(--paper-raised);
+  color: var(--ink);
+}
+
+/* The two tiers of one asset: CPU tier / With models, and what made the shown one. */
+.tier-bar {
+  display: flex;
+  padding: 0.6rem 0 0;
+  font: 0.8125rem var(--font-mono);
+}
+
+.tier-switch input:checked + span {
+  background: var(--redline);
+  color: var(--paper);
+}
+
+.credits {
+  padding: 0.5rem 0 0.1rem;
+  font-size: 0.8125rem;
+  color: var(--ink-muted);
+}
+
+.credits-line {
+  margin: 0 0 0.25rem;
+  color: var(--ink);
+}
+
+.credits-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font: 0.75rem var(--font-mono);
+}
+
+.credits-list li + li {
+  margin-top: 0.15rem;
+}

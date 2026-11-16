@@ -183,17 +183,28 @@ export const LEGACY_DEFECT_ROWS: Readonly<Record<string, string>> = Object.fromE
 
 const PATH = /`((?:src|scripts|recipes|apps|docs|examples)\/[^`\s:]+)(?::\d+)?`/g;
 
-/** "Enforce rules": every shipped defect row names a check path, and the path exists. */
+/** "Enforce rules": defect IDs are unique; every shipped row names a check path, and the path exists. */
 export function defectRows(
   doc: Source,
   exists: (p: string) => boolean = existsSync,
   legacy: Readonly<Record<string, string>> = LEGACY_DEFECT_ROWS,
 ): Violation[] {
   const out: Violation[] = [];
+  const seen = new Map<string, number>();
   doc.text.split('\n').forEach((row, i) => {
     const cells = row.split('|').map((c) => c.trim());
     const id = cells[1] ?? '';
-    if (!/^D\d+$/.test(id) || !(cells.at(-2) ?? '').startsWith('shipped')) return;
+    if (!/^D\d+$/.test(id)) return;
+    const first = seen.get(id);
+    if (first !== undefined)
+      out.push({
+        file: doc.file,
+        line: i + 1,
+        message: `${id} is used twice (first at line ${first})`,
+        fix: 'give this row the next free D-number and update the tests and comments that cite it',
+      });
+    else seen.set(id, i + 1);
+    if (!(cells.at(-2) ?? '').startsWith('shipped')) return;
     const paths = [...row.matchAll(PATH)].map((m) => m[1] ?? '');
     const at = { file: doc.file, line: i + 1 };
     if (paths.length === 0 && !(id in legacy))

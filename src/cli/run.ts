@@ -129,6 +129,18 @@ async function dispatch(argv: readonly string[], json: boolean): Promise<number>
     texture = await sheetBinding(args, painted);
     return true;
   };
+  // Run once; when compiling moved the material set, the stale sheet's render is redone — or,
+  // if the renderer refused it (`checkSheetFor`), retried — with the repainted sheet.
+  const twice = async <T>(run: () => Promise<T>): Promise<T> => {
+    let r: T;
+    try {
+      r = await run();
+    } catch (e) {
+      if (await fresh()) return run();
+      throw e;
+    }
+    return (await fresh()) ? run() : r;
+  };
   const built: AssetManifest[] = [];
   const rendered: RenderResult[] = [];
   const listed: { asset: string; file: string }[] = [];
@@ -162,15 +174,12 @@ async function dispatch(argv: readonly string[], json: boolean): Promise<number>
         else if (args.cmd === 'gaps') rendered.push(await gapsOne(asset, args));
         else if (renders && live) {
           await fresh();
-          let r = await renderOne(asset, file, args, painted ?? live.current().sheet);
-          if (await fresh())
-            r = await renderOne(asset, file, args, painted ?? live.current().sheet);
-          rendered.push(r);
+          rendered.push(
+            await twice(() => renderOne(asset, file, args, painted ?? live.current().sheet)),
+          );
         } else {
           await fresh();
-          let b = await buildOne(asset, args, texture, painted);
-          if (await fresh()) b = await buildOne(asset, args, texture, painted);
-          built.push(b);
+          built.push(await twice(() => buildOne(asset, args, texture, painted)));
         }
       } catch (e) {
         const error = recipeThrew(e, file, `${asset.name}'s build()`).toJSON();

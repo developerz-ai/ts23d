@@ -56,12 +56,25 @@ describe('t3d doctor', () => {
     expect(k?.detail).toContain('kubeez.com');
     expect(k?.detail).toContain('partner');
     expect(k?.fix).toContain('KUBEEZ_API_KEY');
+    const m = r.checks.find((c) => c.id === 'meshy');
+    expect([m?.status, m?.detail.includes('not set'), m?.fix?.includes('MESHY_API_KEY')]).toEqual([
+      'info',
+      true,
+      true,
+    ]);
     expect(r.profiles.tools.fits).toBe(true);
     expect(r.profiles['gpu-min']).toEqual({
       fits: false,
       reason: 'gpu-min needs an NVIDIA GPU with ≥ 8 GB; nvidia-smi found none',
     });
     expect(r.checks.find((c) => c.id === 'nvidia')?.status).toBe('info');
+  });
+
+  test('MESHY_API_KEY set: the meshy line is ok and never shows the key', async () => {
+    const r = await doctor(fakeHost({}, { env: { MESHY_API_KEY: 'msy_never_printed' } }));
+    const m = r.checks.find((c) => c.id === 'meshy');
+    expect([m?.status, m?.detail.includes('is set')]).toEqual(['ok', true]);
+    expect(JSON.stringify(r)).not.toContain('msy_never_printed');
   });
 
   test('a 6 GB card: gpu-full and gpu-min refused with the reason, venv fix does not send you to them', async () => {

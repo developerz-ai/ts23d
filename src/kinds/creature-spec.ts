@@ -49,6 +49,8 @@ export interface CreatureColours {
   readonly foreline?: Vec3;
   /** Facial mask: round the eyes and over the bridge of the muzzle (default none). */
   readonly mask?: Vec3;
+  /** Top of the muzzle, stop → nose (grey wolf: tawny; default none, the head's own zones). */
+  readonly bridge?: Vec3;
 }
 
 export interface CreaturePattern {
@@ -111,6 +113,10 @@ export interface CreatureSpec {
     readonly muzzle?: number;
     /** Head width ÷ head length (default from the muzzle). */
     readonly width?: number;
+    /** Preset overrides: nose-tip radius ÷ L, forehead rise ÷ H, cheek fur past the zygomata ÷ W. */
+    readonly tip?: number;
+    readonly stop?: number;
+    readonly cheek?: number;
     readonly ears?: EarShape;
     /** Ear height ÷ head length (default 0.38 erect, 0.2 round). */
     readonly earLength?: number;
@@ -277,8 +283,8 @@ export function faceOf(s: CreatureSpec) {
     width: s.face?.width ?? p?.width ?? 0.78 - 0.5 * muzzle,
     ears: s.face?.ears ?? p?.ears ?? a.ears,
     /** Nose-tip radius ÷ head length, or null for the generic rule. */
-    tip: p?.tip ?? null,
-    stop: p?.stop ?? 0,
-    cheek: p?.cheek ?? 0,
+    tip: s.face?.tip ?? p?.tip ?? null,
+    stop: s.face?.stop ?? p?.stop ?? 0,
+    cheek: s.face?.cheek ?? p?.cheek ?? 0,
   };
 }

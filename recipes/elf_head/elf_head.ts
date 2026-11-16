@@ -8,9 +8,11 @@
 import { defineAsset, headClips } from '@developerz.ai/ts23d';
 import { bustEdits } from '../_lib/bust/bust.ts';
 import { proportionCheck } from '../_lib/face/proportions.ts';
-import { buildElf, ELF_BUST } from './build.ts';
+import { scalpCoverCheck } from '../_lib/face/scalp-check.ts';
+import { buildElf, ELF_BUST, SCALP } from './build.ts';
 import { ELF_CREASES } from './creases.ts';
-import { ELF_PROPORTIONS, SK } from './spec.ts';
+import { hairline } from './hair.ts';
+import { C, ELF_PROPORTIONS, SK } from './spec.ts';
 
 export const elf_head = defineAsset({
   clips: headClips('face'),
@@ -39,7 +41,8 @@ export const elf_head = defineAsset({
       },
     ],
   },
-  budget: { triangles: [100000, 32000, 4200] },
+  // LOD0 +6k (measured 2026-11): the brow cards (≈ 2k) and the denser beard / crown cover.
+  budget: { triangles: [106000, 32000, 4200] },
   finishes: { cornea: { clearcoat: 1, clearcoatRoughness: 0.04 } },
   art: { focal: 'head', shape: 'friendly' },
   // Intended creases (QA `connections` skips them): one small region per sculpted fold, from the
@@ -48,6 +51,8 @@ export const elf_head = defineAsset({
   // Measured facial proportions against sourced bands (README "Proportions"), every LOD.
   checks: [
     proportionCheck('elf_head', SK, () => bustEdits(ELF_BUST, 2, 1).skin.field, ELF_PROPORTIONS),
+    // No bare skin under the hair (D57): the scalp inside the hairline is the cap's gold.
+    scalpCoverCheck({ part: 'head', line: hairline, hair: SCALP, skin: C.skin }),
   ],
   build(ctx) {
     buildElf(ctx);

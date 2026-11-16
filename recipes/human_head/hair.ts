@@ -12,7 +12,8 @@ import { flowLocks, hairMass, lock, mix } from '../_lib/bust/hair.ts';
 import { C, H, L, SK, TORSO } from '../_lib/bust/human/spec.ts';
 import { type Surface, spline, surface, type V } from '../_lib/bust/kit.ts';
 import { torsoEdits } from '../_lib/bust/torso.ts';
-import { bustHairFields, skullHairline } from '../_lib/face/hair-cards.ts';
+import { browLayers, withBrowComb } from '../_lib/face/brows.ts';
+import { bustHairFields, type CardHairStyle, skullHairline } from '../_lib/face/hair-cards.ts';
 
 /** The torso (neck, trapezius) the hair and beard must stop short of. */
 const neck: Field = sculptField(torsoEdits(L, TORSO), { color: C.skin, mirror: 'y' }).field;
@@ -169,7 +170,7 @@ const length = (p: Vec3): number => {
 };
 
 /** Card hairstyle for `cardHair` (recipes/_lib/face/hair-cards.ts) on the human bust `b`. */
-export function humanCardHair(b: BustRecipe, lod: number) {
+export function humanCardHair(b: BustRecipe, lod: number): CardHairStyle {
   // Roots on the finished head (cap, beard mass and all), falling round it.
   const { skin } = bustHairFields(b, lod);
   const warm: Vec3 = [1.08, 1.0, 0.86];
@@ -177,7 +178,7 @@ export function humanCardHair(b: BustRecipe, lod: number) {
     field: skin,
     bounds: box,
     cell: 0.004,
-    comb,
+    comb: withBrowComb(comb, SK, H),
     collide: skin,
     color: mix(C.hairRoot, C.hairTip, 0.3),
     layers: [
@@ -269,7 +270,7 @@ export function humanCardHair(b: BustRecipe, lod: number) {
         name: 'beard',
         kind: 'beard',
         region: beardline,
-        density: 14000,
+        density: 22000,
         length: 0.022,
         width: 0.009,
         lift: 0.35,
@@ -290,6 +291,7 @@ export function humanCardHair(b: BustRecipe, lod: number) {
         droop: 0.5,
         fold: 0,
       },
-    ] as const,
+      ...browLayers(SK, H),
+    ],
   };
 }
