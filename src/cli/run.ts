@@ -15,8 +15,9 @@ import { type Asset, Ts23dError } from '../core/index.ts';
 import { SHEET_MAPS, type SheetBinding, sheetFileName, sheetPngs } from '../export/index.ts';
 import {
   DEFAULT_SHEET,
+  type LiveSheet,
+  liveSheet,
   type PaintedSheet,
-  paintTrimSheet,
   provideTextures,
 } from '../material/index.ts';
 import { provideImports } from '../neural/index.ts';
@@ -92,8 +93,18 @@ async function dispatch(argv: readonly string[], json: boolean): Promise<number>
   }
   if (args.cmd === 'tune') return tuneAll(args);
   const renders = RENDERS.includes(args.cmd);
-  const painted = await prepareSheet(args, renders);
-  const texture = await sheetBinding(args, painted);
+  const live = await prepareSheet(args, renders);
+  let painted = live?.current().sheet;
+  let texture = await sheetBinding(args, painted);
+  // Recipes may define materials while loading or compiling; repaint (and rewrite the external
+  // sheet) whenever the set moved, and redo the asset that moved it (D47).
+  const fresh = async (): Promise<boolean> => {
+    const now = live?.current();
+    if (!now?.repainted) return false;
+    painted = now.sheet;
+    texture = await sheetBinding(args, painted);
+    return true;
+  };
   const built: AssetManifest[] = [];
   const rendered: RenderResult[] = [];
   const listed: { asset: string; file: string }[] = [];
@@ -119,8 +130,18 @@ async function dispatch(argv: readonly string[], json: boolean): Promise<number>
         if (args.cmd === 'list') listed.push({ asset: asset.name, file });
         else if (args.cmd === 'blueprint') rendered.push(await blueprintOne(asset, args));
         else if (args.cmd === 'gaps') rendered.push(await gapsOne(asset, args));
-        else if (renders && painted) rendered.push(await renderOne(asset, file, args, painted));
-        else built.push(await buildOne(asset, args, texture, painted));
+        else if (renders && live) {
+          await fresh();
+          let r = await renderOne(asset, file, args, painted ?? live.current().sheet);
+          if (await fresh())
+            r = await renderOne(asset, file, args, painted ?? live.current().sheet);
+          rendered.push(r);
+        } else {
+          await fresh();
+          let b = await buildOne(asset, args, texture, painted);
+          if (await fresh()) b = await buildOne(asset, args, texture, painted);
+          built.push(b);
+        }
       } catch (e) {
         const error = recipeThrew(e, file, `${asset.name}'s build()`).toJSON();
         failed.push({ file, asset: asset.name, error });
@@ -183,11 +204,11 @@ function renderOne(
 }
 
 /** Paint the trim sheet once per run (~3 s at 2048²); the beauty renders sample it too. */
-async function prepareSheet(args: Args, renders: boolean): Promise<PaintedSheet | undefined> {
+async function prepareSheet(args: Args, renders: boolean): Promise<LiveSheet | undefined> {
   const wantsSheet = (args.cmd === 'build' && args.sheet !== 'none') || renders;
   if (wantsSheet) provideTextures(await loadTextureCache());
   provideImports(await loadImportCache());
-  return wantsSheet ? paintTrimSheet({ ...DEFAULT_SHEET, size: args.sheetSize }) : undefined;
+  return wantsSheet ? liveSheet({ ...DEFAULT_SHEET, size: args.sheetSize }) : undefined;
 }
 
 /** External mode writes the sheet once into <out>/; every GLB references ../trim_sheet_*.png. */

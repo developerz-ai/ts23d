@@ -39,6 +39,7 @@
 | [21-import.md](idea/21-import.md) | `importGlb`: scans and CC0 meshes in, cleaned, simplified, baked, licence-pinned |
 | [22-ai-finish.md](idea/22-ai-finish.md) | `t3d finish`: optional AI texture layer over the code's structure |
 | [23-real-data.md](idea/23-real-data.md) | Real data: Wikidata facts and DEM terrain, pinned by sha256 |
+| [24-path-tracer.md](idea/24-path-tracer.md) | The path-traced hero: deterministic CPU path tracer for critique and gallery renders |
 | [playbooks/](playbooks/README.md) | Class-by-class guidance for modelling real-world objects |
 | [research/skills-matrix.md](research/skills-matrix.md) | What 3D artists, architects and designers know, mapped onto ts23d tools and gaps; backs `.claude/skills/` |
 | [research/](research/reading-list.md) | Free reading list and research notes (hair, surfaces, creatures, heads) |

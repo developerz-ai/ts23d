@@ -11,7 +11,8 @@ import { sdf } from '../primitives/index.ts';
 /** One card layer of a hairstyle or beard: where it grows, how dense, how long, how it lies. */
 export interface CardLayer {
   readonly name: string;
-  readonly kind: 'hair' | 'beard';
+  /** Atlas cells: hair (locks), wisp (stray strands: flyaways, outline), beard (wiry). */
+  readonly kind: 'hair' | 'wisp' | 'beard';
   /** Negative where the layer grows (a hairline or beardline field). */
   readonly region: (p: Vec3) => number;
   /** Cards per m² at LOD0. */
@@ -26,6 +27,12 @@ export interface CardLayer {
   readonly tone?: readonly [number, number];
   /** Cards per clump sharing a tip (locks; default 1). */
   readonly clump?: number;
+  /** V section across the card (`CardZone.fold`; default 0.5: a lock, not a ribbon). */
+  readonly fold?: number;
+  /** Colour multiplier reached at the tip (hue shift; default none). */
+  readonly tint?: Vec3;
+  /** How hard the layer lies on the head where it holds the hair up (`CardZone.hug`; default 0.6). */
+  readonly hug?: number;
 }
 
 export interface ScalpCardOptions {
@@ -42,6 +49,8 @@ export interface ScalpCardOptions {
   readonly rng: Rng;
   /** The whole head and torso (negative inside): long hair falls around it, never through it. */
   readonly collide?: (p: Vec3) => number;
+  /** Quads along each card at LOD0 (default 4; long hair 6–8 to drape); LOD1 uses half. */
+  readonly segments?: number;
 }
 
 /** A field sampled on a lazy `cell` lattice and blended trilinearly: a whole-bust sculpt is far
@@ -81,10 +90,10 @@ export function scalpCards(o: ScalpCardOptions): Mesh | null {
   const root = sdf({ field: o.field, bounds: o.bounds, resolution: o.cell, color: () => o.color });
   const k = o.lod === 0 ? 1 : 0.25;
   const wide = o.lod === 0 ? 1 : 2;
-  // A margin of one card width inside the region keeps roots off the hairline edge.
+  // A margin (half a card width, ≤ 4 mm) inside the region keeps roots off the hairline edge.
   const zones: CardZone[] = o.layers.map((l) => ({
     name: l.name,
-    density: (p) => (l.region(p) < -l.width * 0.5 ? l.density * k : 0),
+    density: (p) => (l.region(p) < -Math.min(l.width * 0.5, 0.004) ? l.density * k : 0),
     length: l.length,
     width: l.width * wide,
     lift: l.lift ?? 0.25,
@@ -94,14 +103,18 @@ export function scalpCards(o: ScalpCardOptions): Mesh | null {
     sink: 0.003,
     cells: strandCells('hair_clumps', l.kind),
     tone: l.tone ?? [0.7, 1.15],
+    // LOD1's cards are twice as wide and few: flat (half the triangles, no folded half turned away).
+    fold: o.lod === 0 ? (l.fold ?? 0.5) : 0,
+    hug: l.hug ?? 0.6,
     ...(l.clump ? { clump: l.clump } : {}),
+    ...(l.tint ? { tint: l.tint } : {}),
   }));
   const out = hairCards({
     surface: root,
     flow: hairFlow(root, o.comb),
     zones,
     rng: o.rng.fork('scalp-cards'),
-    segments: o.lod === 0 ? 4 : 2,
+    segments: o.lod === 0 ? (o.segments ?? 4) : Math.max(2, Math.round((o.segments ?? 4) / 2)),
     field: o.field,
     ...(o.collide ? { collide: lattice(o.collide, 0.004) } : {}),
   });

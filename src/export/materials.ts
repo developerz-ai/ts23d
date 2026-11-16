@@ -16,6 +16,7 @@ import {
 } from '../core/index.ts';
 import type { Json } from './bin-writer.ts';
 import { materialExtensions, opticsMaterial, withFinish } from './pbr.ts';
+import { isSkinFinish, withDiffuseTransmission } from './transmission.ts';
 
 const MATERIALS: Readonly<Record<Surface, Json>> = {
   opaque: {
@@ -173,8 +174,12 @@ export function paintMaterial(
   return finish ? withFinish(painted, finish) : painted;
 }
 
-/** A named finish's material: the opaque trim material + its KHR_materials_* blocks. */
+/**
+ * A named finish's material: the opaque trim material + its KHR_materials_* blocks; a `skin` /
+ * `skin_*` finish also transmits diffuse light (transmission.ts).
+ */
 export function finishMaterial(name: string, f: ResolvedFinish, withSheet: boolean): Json {
   const base = withSheet ? textured(MATERIALS.opaque, 'opaque') : MATERIALS.opaque;
-  return withFinish({ ...base, name: `ts23d_finish_${name}` }, f);
+  const m = withFinish({ ...base, name: `ts23d_finish_${name}` }, f);
+  return isSkinFinish(name) ? withDiffuseTransmission(m) : m;
 }

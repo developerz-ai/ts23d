@@ -21,8 +21,8 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    197828,
-    44220,
+    198668,
+    44268,
     4064
   ],
   "drawCalls": [
@@ -128,6 +128,14 @@
   ],
   "surfaces": [
     "opaque"
+  ],
+  "clips": [
+    {
+      "name": "run",
+      "seconds": 4,
+      "loop": true,
+      "speed": 0
+    }
   ],
   "real": {
     "length": 8.7,

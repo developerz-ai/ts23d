@@ -50,8 +50,18 @@ export {
   viewFrame,
 } from './metrics.ts';
 export { checkBeautyOptions, parseSize } from './options.ts';
+export {
+  HERO_PATH,
+  type PathOptions,
+  type PathRender,
+  pathHero,
+  pathHeroThreaded,
+  renderPath,
+  renderPathThreaded,
+} from './path/path-hero.ts';
 export { type PhotoMatch, type PhotoMatchOptions, photoMatch, photoView } from './photo-match.ts';
 export { type Photo, resizePhoto, type SegmentOptions, segmentPhoto } from './photo-segment.ts';
+export { type PoseFrame, poseStrip } from './pose-strip.ts';
 export { detailWindows, type ReviewOptions, type ReviewPack, reviewPack } from './review.ts';
 export {
   REVIEW_THRESHOLDS,

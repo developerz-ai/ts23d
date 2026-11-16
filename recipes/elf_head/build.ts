@@ -32,5 +32,5 @@ export const ELF_BUST: BustRecipe = {
 
 export function buildElf(ctx: BuildContext): void {
   buildBust(ctx, ELF_BUST);
-  cardHair(ctx, elfCardHair());
+  cardHair(ctx, elfCardHair(ELF_BUST, ctx.lod));
 }

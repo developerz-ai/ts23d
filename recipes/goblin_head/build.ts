@@ -31,5 +31,5 @@ export const GOBLIN_BUST: BustRecipe = {
 
 export function buildGoblin(ctx: BuildContext): void {
   buildBust(ctx, GOBLIN_BUST);
-  cardHair(ctx, goblinCardHair());
+  cardHair(ctx, goblinCardHair(GOBLIN_BUST, ctx.lod));
 }

@@ -14,6 +14,7 @@ import { skullCreases } from '../_lib/face/skull-creases.ts';
 import { GOBLIN_BUST } from './build.ts';
 import {
   hoodRegion,
+  outfitCreases,
   scarfKnot,
   scarfRing,
   scarfTails,
@@ -36,6 +37,8 @@ function creases(): IntendedCrease[] {
     [0.3, 0.3, L.mz + 0.02],
   ];
   return [
+    // Every garment edge the cloth tailoring (clothes.ts) stands off the layer beneath.
+    ...outfitCreases(skin),
     ...skullCreases(SK, H),
     ...torsoCreases(L, TORSO),
     ...creaseCurve('grin', 'head', grinLine(), 0.02, 'the grin’s slit and its pointed teeth', true),

@@ -31,9 +31,10 @@ describe('strandCells', () => {
   it('cells sit inside their row, side by side, root at low U', () => {
     defineMaterial(CREATURE_MATERIALS.hair_clumps);
     const hair = strandCells('hair_clumps', 'hair');
+    const wisp = strandCells('hair_clumps', 'wisp');
     const beard = strandCells('hair_clumps', 'beard');
-    expect(hair.length + beard.length).toBe(STRAND_CELLS);
-    for (const r of [...hair, ...beard]) {
+    expect(hair.length + wisp.length + beard.length).toBe(STRAND_CELLS);
+    for (const r of [...hair, ...wisp, ...beard]) {
       expect(r.u1).toBeGreaterThan(r.u0);
       expect(r.v1 - r.v0).toBeLessThan(STRIP_H);
       expect(r.u1 - r.u0).toBeLessThan(1 / STRAND_CELLS);
@@ -94,7 +95,8 @@ describe('strandPainter', () => {
           for (let x = cell * 512 + 10; x < cell * 512 + 502; x++, t++)
             n += alphaAt(rgba, 4096, x, y) >= 0.5 ? 1 : 0;
         expect(n / t).toBeLessThanOrEqual(0.55);
-        expect(n / t).toBeGreaterThan(0.2);
+        // Wisps are a few stray strands by design; every other clump still hides what it covers.
+        expect(n / t).toBeGreaterThan(STRAND_LAYOUT[id][cell] === 'wisp' ? 0.06 : 0.2);
       }
     }
   });
@@ -119,5 +121,26 @@ describe('strandPainter', () => {
     const guard = STRAND_LAYOUT.fur_clumps.indexOf('guard');
     expect(slice(guard, 0.97, 0.98).cover).toBeLessThan(0.05);
     expect(slice(guard, 0.38, 0.48).grey).toBeGreaterThan(slice(guard, 0.75, 0.9).grey + 40);
+  });
+
+  it('fails if hair locks stop short or end square: tips fill the last fifth, sparser than the middle', () => {
+    // At the 2048² preview size (32 px rows), where a blunt clump reads as a paper strip.
+    const c = createCanvas(2048, 32, 4, 0.05, true);
+    strandPainter(STRAND_LAYOUT.hair_clumps)(c, paintKit(c, 9));
+    const rgba = c.rgba ?? new Uint8Array(0);
+    const cover = (cell: number, a: number, b: number): number => {
+      let n = 0;
+      let t = 0;
+      for (let y = 5; y < 27; y++)
+        for (let x = Math.round(cell * 256 + a * 256); x < cell * 256 + b * 256; x++, t++)
+          n += alphaAt(rgba, 2048, x, y) >= 0.5 ? 1 : 0;
+      return n / t;
+    };
+    STRAND_LAYOUT.hair_clumps.forEach((kind, cell) => {
+      if (kind !== 'hair') return;
+      const tips = cover(cell, 0.8, 0.9);
+      expect(tips).toBeGreaterThan(0.05);
+      expect(tips).toBeLessThan(cover(cell, 0.3, 0.4) * 0.6);
+    });
   });
 });

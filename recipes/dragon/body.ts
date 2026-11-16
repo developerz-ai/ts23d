@@ -6,7 +6,7 @@
 //   planes     flattened flanks, the belly line, a level back
 //   features   pectorals, ribcage + costal arch, hip bones, sacrum, tail-root muscles
 //   creases    flank fold behind the ribs, the thigh crease, the pectoral line, serratus, navel
-// Scales and belly plates come from scales.ts as relief + paint.
+// Scales are VDM stamps (stamps.ts); belly plates come from scales.ts as relief + paint.
 
 import {
   type Field,
@@ -34,6 +34,7 @@ import {
 } from './shoulder.ts';
 import { SK, TAIL_PIVOT } from './skeleton.ts';
 import { spineMesh } from './spines.ts';
+import { bodyStamps } from './stamps.ts';
 
 type E3 = readonly [number, number, number];
 
@@ -266,13 +267,15 @@ export interface BodyMeshes {
 }
 
 export function bodyMesh(lod: 0 | 1 | 2): BodyMeshes {
+  // Scale stamps (stamps.ts) anchored on the plain body field, after every form edit.
+  const scales = bodyStamps(lod, bodyField(lod));
   const common = {
-    edits: bodyEdits(lod),
+    edits: [...bodyEdits(lod), ...scales.edits],
     res: BODY_RES[lod],
     color: C.flank,
     mirror: true,
     tone: { reach: 0.12, ground: 0.6 },
-    paint: bodyPaint(lod),
+    paint: bodyPaint(lod, scales.shade),
     ...(lod === 0 ? { relief: bodyRelief() } : {}),
   };
   const spines = spineMesh(lod, 'body');

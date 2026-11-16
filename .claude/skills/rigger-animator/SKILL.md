@@ -1,15 +1,15 @@
 ---
 name: rigger-animator
-description: Rigging and animation basics for ts23d — where pivots and joints go (anatomical and mechanical), hinge lines, range of motion, deformation zones, clearances through the full motion, baked spin/slide/sway clips, sockets and emitters for engines. Use when an asset has moving parts (doors, wheels, turrets, rotors, arms, jaws, lids, pistons), when placing ctx.group pivots or ctx.joint, when clashes fail, or when preparing a character/creature for later rigging.
+description: Rigging and animation basics for ts23d — where pivots and joints go (anatomical and mechanical), hinge lines, range of motion, deformation zones, clearances through the full motion, baked spin/slide/sway clips, sockets and emitters for engines. Use when an asset has moving parts (doors, wheels, turrets, rotors, arms, jaws, lids, pistons), when placing ctx.group pivots or ctx.joint, when clashes fail, or when skinning a character/creature (bones, weights, morphs, clips, hitboxes).
 ---
 
 # Rigger / animator (basics)
 
 Use with [02-dsl: ctx API, motion, joints](../../../docs/idea/02-dsl.md#the-ctx-api),
 [06-qa clashes](../../../docs/idea/06-qa.md), the playbooks' **Motion** tables and
-[16-art-as-text](../../../docs/idea/16-art-as-text.md). ts23d bakes **rigid** motion today: each
-moving thing is a named pivot node the engine can drive, plus a 2 s `run` clip. Skinned meshes and
-morph targets are **not shipped**; build characters so they could be rigged later.
+[16-art-as-text](../../../docs/idea/16-art-as-text.md). ts23d bakes all motion to keys (ADR 013): rigid parts move on named pivots (the
+`run` clip); skinned bodies (creatures) carry bones, weights, morphs and named clips — gaits, IK and
+springs solved at build time, never in the engine.
 
 ## When
 Any part that moves or that an engine will move: wheels, tracks, doors, hatches, turrets, guns,
@@ -24,7 +24,7 @@ rotors, propellers, pistons, cranes, jaws, wings, tails, lids, drawers.
 | 4 | Motion | `motion: { kind: 'spin', axis, rps }` (wheels about local Y), `{ kind: 'slide', offset, hz }` (drawers, gates), `{ kind: 'orbit', axis, arm, hz }` (coupling rods), `{ kind: 'crank', axis, centre, pin, line, hz }` / `'piston'` (connecting rod / crosshead or piston on the exact slider-crank; check with `assertFollows`), `{ kind: 'sway', axis, degrees, hz }` (doors, turrets, tails), `tread(beltLine, y, pitch)` (track belts: loop in `extras.ts23d.tread`) | baked `run` clip plays |
 | 5 | Clearance through the full range | `clashes` gate (swept volume), `clearOf: ['bearing']` only for real interlocks, `checks: [clear(a, b, gap)]` | QA PASS at every LOD |
 | 6 | Joints between separately built parts | `ctx.joint(name, { from, to, at, axis, kind: 'flush' \| 'socket' \| 'grip' })` | `joints` gate PASS |
-| 7 | Deformation zones (characters/creatures, for later skinning) | keep extra sculpt resolution and clean volume at shoulders, elbows, hips, knees, neck, jaw; separate rigid gear from flesh | listed in dossier |
+| 7 | Skeleton + skin (characters/creatures) | `ctx.bone(name, { parent, head, tail, limit })` parent first; weights `skinWeights(mesh, bones, { blend, only, offset })` with each bone's flesh radii (`creature()` does all of it, kinds/creature-rig.ts), cards/claws `skinPieces`, imported meshes `heatWeights`; morphs `fieldMorph` / `hingeMorph`; clips `{ name, seconds, loop, tracks: [{ bone, path, times, values }] }` (keys relative to rest) | QA `skin` PASS; validator 0 errors; clips play in the gallery |
 | 8 | Engine hooks | `ctx.socket` (`seat`, `mount`, `camera`, `attach`, `interact`, `light`), `ctx.emitter` (`smoke`, `dust` with `when: 'moving'`, `muzzle` with `when: 'event'`) | named nodes in manifest |
 | 9 | Review | `t3d build` (animations on by default), viewer in the gallery, `t3d critique` | moves like the real thing |
 
@@ -37,7 +37,14 @@ rotors, propellers, pistons, cranes, jaws, wings, tails, lids, drawers.
 | Swept volume | space a moving part occupies over its whole motion | `clashes` (`CLASH_EPS` 1 cm) |
 | Running clearance | gap kept between moving and static parts | `clear(a, b, minGap)` |
 | Interlock | parts that pass through each other by design (axle in bearing) | `clearOf` |
-| Deformation zone | region that bends when skinned; needs volume and resolution (game meshes: 2–3 loops per bending joint) | dossier; skins **planned** |
+| Deformation zone | region that bends when skinned; needs volume and resolution (game meshes: 2–3 loops per bending joint) | linear-blend skin keeps ≥ 85 % volume at a 90° bend (skin-weights.test.ts) |
+| Influences | bones moving one vertex: ≤ 4, weights sum to 1 (1/255 grid) | QA `skin` |
+| Bind pose | joints at rest reproduce the modelled mesh | QA `skin` (≤ 1e-5 m) |
+| Hitbox | per-bone capsule holding ≥ 95 % of the vertices that bone dominates | `--physics`, manifest `hitboxes` |
+| Foot lock | a planted toe stays on one ground point while the root travels | QA `gait`: < 1 mm/frame at 30 fps, root motion applied |
+| Duty factor / Froude | share of the stride a foot is down (> 0.5 walk); v = √(Fr·g·hip), stride 2.3·Fr^0.3·hip | `GAITS`, `gaitTiming` (kinds/gait.ts) |
+| Half-angle helper | `<joint>_mid` under the joint's parent, keyed at half its rotation, holds the blend band's volume | QA `deform` poses it at half; `withMidTracks` keys it |
+| Follow-through | tail / ears / jowls lag their parent on damped springs, baked periodic | `bakeSprings` (seam < 1e-4) |
 | Joint fit | sections either side of a connection match | `joints`, `assertJointsFit`, `jointFit` |
 | Arc | natural motion follows arcs, not straight lines | sway about a real pivot |
 
@@ -55,6 +62,15 @@ rotors, propellers, pistons, cranes, jaws, wings, tails, lids, drawers.
 - Wheels spinning about Z or X; tracks without `trackRun`.
 - Silencing `clashes` with `clearOf` instead of fixing clearance.
 - Writing engine animation controllers or game logic: out of scope.
+- Weighting a skin from bare bone segments: the belly follows the legs. Give each bone its flesh
+  radius (a spine on the dorsal top line weighs the trunk below it).
+- A skinned mesh under a moving pivot, or a clip named `run` (reserved for part motions): a
+  creature's fastest gait is `gallop`.
+- Posing a foot in the body frame: it slides. Plan stance toes in the ground frame and solve IK
+  per key (`gaitClip`); let QA `gait` prove it at the manifest speed.
+- Shortest-arc bend poles taken from the rest pose without turning them with the leg: knees flip.
+- Joint limits at full passive ROM on a linear-blend skin: a folded carpus loses half its volume.
+  Limit to the range the clips use and add `_mid` helpers; QA `deform` checks every extreme.
 
 ## Test it
 ```ts
@@ -83,7 +99,11 @@ bun run shots <name>                      # refresh committed out/
 
 ## Tool status
 Shipped: `ctx.group`, `parent`, `motion` (spin/slide/sway/orbit/crank/piston/tread), `clearOf`, `clashes`, `ctx.joint`,
-`ctx.socket`, `ctx.emitter`, baked `run` clip (`--no-animations` to skip).
-Planned: skins with ≤ 4 influences, morph targets (faces,
-melting), `pose`/`warp` for sculpts, steering + suspension travel clips.
+`ctx.socket`, `ctx.emitter`, baked `run` clip (`--no-animations` to skip), `ctx.bone` skeletons, glTF skins
+(≤ 4 influences), sparse morph targets, named `Clip`s, per-bone hitbox capsules, sockets on bones
+(`data: { bone }`); creatures ship skinned with `idle`, `look`, `bite`, `walk`, `trot`, `gallop`
+(root motion, planted feet), baked tail/ear springs, ear bones, joint limits and `_mid` helpers, a
+`blink` morph; QA `gait` + `deform`; review pose strip (`poseStrip` + qa `poseFrames`); head
+`faceMorphs` (`blink`, `talk`, `breathe`) + `headClips`.
+Planned: MakeHuman expression targets for heads, `pose`/`warp` for sculpts, steering + suspension travel clips.
 Neutral positioning: the free code-based option, no claims against other tools.

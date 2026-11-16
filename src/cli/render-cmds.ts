@@ -1,13 +1,22 @@
-// `t3d hero`, `t3d review` and `t3d blueprint`: beauty renders, the AI review pack and the
-// measured blueprint, one folder per asset.
+// `t3d hero`, `t3d review` and `t3d blueprint`: beauty renders (raster, or path traced with
+// `--quality path [--spp n]`), the AI review pack and the measured blueprint, one folder per asset.
 //   <out>/<asset>/hero.png · blueprint.png
-//   <out>/<asset>/review/{hero,sheet,detail_1,detail_2,lods}.png review.md review.json
+//   <out>/<asset>/review/{hero,sheet,detail_1,detail_2,lods,poses*}.png review.md review.json
+//   (*poses.png only for skinned assets)
 
 import { mkdir } from 'node:fs/promises';
 import { dirname, join, relative, resolve } from 'node:path';
 import { type Asset, compile, Ts23dError } from '../core/index.ts';
 import type { PaintedSheet } from '../material/index.ts';
-import { beauty, blueprint, type ReviewWarning, reviewPack } from '../render/index.ts';
+import { poseFrames } from '../qa/index.ts';
+import {
+  beauty,
+  blueprint,
+  pathHeroThreaded,
+  poseStrip,
+  type ReviewWarning,
+  reviewPack,
+} from '../render/index.ts';
 import type { Args } from './args.ts';
 
 export interface RenderResult {
@@ -41,9 +50,16 @@ export async function heroOne(
   await mkdir(dir, { recursive: true });
   const variant = variantOf(asset, args);
   const path = join(dir, variant ? `hero_${variant}.png` : 'hero.png');
+  const lod0 = compile(asset, { lod: 0, ...(variant ? { variant } : {}) });
   await Bun.write(
     path,
-    beauty(compile(asset, { lod: 0, ...(variant ? { variant } : {}) }), { ...args.render, sheet }),
+    args.quality === 'path'
+      ? await pathHeroThreaded(lod0, {
+          ...args.render,
+          sheet,
+          ...(args.spp !== undefined ? { spp: args.spp } : {}),
+        })
+      : beauty(lod0, { ...args.render, sheet }),
   );
   return { name: asset.name, files: [path], warnings: [] };
 }
@@ -80,8 +96,13 @@ export async function reviewOne(
   await mkdir(dir, { recursive: true });
   const refs = await refsFor(asset.name, recipe);
   const pack = reviewPack(asset, { ...args.render, sheet, ...(refs ? { refs } : {}) });
+  // Skinned assets: ROM extremes + gait frames at LOD1, so deformation is judged too (slice 10).
+  const lod1 = compile(asset, { lod: 1 });
+  const frames = lod1.skeleton ? poseFrames(lod1) : [];
+  const out = new Map(pack.files);
+  if (frames.length > 0) out.set('poses.png', poseStrip(lod1, frames));
   const files: string[] = [];
-  for (const [name, bytes] of pack.files) {
+  for (const [name, bytes] of out) {
     const path = join(dir, name);
     await Bun.write(path, bytes);
     files.push(path);

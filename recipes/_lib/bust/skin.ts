@@ -44,6 +44,12 @@ export interface SkinOptions {
   readonly clip?: Field;
   /** Mesh only inside this box (intersected with the edits' bounds): a split part's region. */
   readonly within?: readonly [V, V];
+  /** Fine colour breakup on the skin (0 = none … 1): pore-scale specks, warm and dark, the
+   *  hand-painted texture of weathered hide. */
+  readonly speckle?: number;
+  /** Stencil of the normal and curvature samples, metres (default 4 mm). Widen it on a big
+   *  skull-stage head: the mesh field's trilinear grid rings in a 4 mm Laplacian. */
+  readonly stencil?: number;
   /** Boxes meshed finer (the face of a skull-stage head). */
   readonly detail?: readonly DetailRegion[];
 }
@@ -56,6 +62,8 @@ export function skinMesh(edits: readonly SculptEdit[], cell: number, o: SkinOpti
   });
   const fine = valueNoise(o.rng.fork('pores'), { scale: 0.011, octaves: 2 });
   const mottle = valueNoise(o.rng.fork('mottle'), { scale: 0.045, octaves: 3 });
+  const speck = valueNoise(o.rng.fork('speckle'), { scale: 0.006, octaves: 2 });
+  const speckle = o.speckle ?? 0;
   const amp = o.bumps ?? 0;
   const T = o.tone;
   const q: [number, number, number] = [0, 0, 0];
@@ -71,7 +79,7 @@ export function skinMesh(edits: readonly SculptEdit[], cell: number, o: SkinOpti
         }
       : s.field;
   const field = clip ? (p: V): number => Math.max(raw(p), clip(p)) : raw;
-  const e = 0.004;
+  const e = o.stencil ?? 0.004;
   const reach = 0.02;
   const paint = (p: V): V => {
     const base = s.colorAt(p);
@@ -109,6 +117,10 @@ export function skinMesh(edits: readonly SculptEdit[], cell: number, o: SkinOpti
       c = mix(warm, T.cool, clamp(-up * 0.6) * isSkin);
       const m = mottle(p);
       c = mix(c, m > 0 ? T.warm : T.cool, Math.abs(m) * 0.35 * isSkin);
+      if (speckle > 0) {
+        const k = speck(p);
+        c = mix(c, k > 0 ? T.warm : T.cavity, Math.min(1, Math.abs(k) * 1.4) * speckle * isSkin);
+      }
     }
     // Crevices: darker, deeper olive; ridges catch a little light on everything.
     c = mix(c, mix(T.cavity, c, 0.35), cav * 0.75);

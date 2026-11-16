@@ -2,6 +2,7 @@
 
 export { AUDIO_EMITTER } from './audio.ts';
 export { type SoundFile, type SoundUse, soundFiles, soundUses } from './audio-files.ts';
+export { animationsOf, type ClipTree, clipSummary, Z_UP_TO_Y_UP } from './clips.ts';
 export { FINISH_MATERIAL, type FinishLayer, readGlbChunks, withFinishLayer } from './finish-glb.ts';
 export {
   exportGlb,
@@ -21,6 +22,7 @@ export {
   SCREEN_COVERAGE,
 } from './lod-coverage.ts';
 export { mergeToPivots } from './merge-pivots.ts';
+export { morphMeshFields, morphTargets } from './morph-targets.ts';
 export {
   type ExportReport,
   optimizeParts,
@@ -50,12 +52,14 @@ export {
   RIGID_BODIES,
 } from './physics.ts';
 export type { EngineConvention } from './physics-engines.ts';
+export { fitHitboxes, HITBOX_COVERAGE, type Hitbox } from './physics-hitbox.ts';
 export {
   type ExportProfile,
   PROFILES,
   type ProfileSettings,
   profileSettings,
 } from './profile.ts';
+export { bindLoose, skeletonOf, skinAttributes, writeSkin, Y_UP_TO_Z_UP } from './skin.ts';
 export {
   type ExternalSheet,
   SHEET_MAPS,

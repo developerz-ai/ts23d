@@ -3,6 +3,7 @@
 // as a child of that pivot's node, shapes in KHR_implicit_shapes, convex hulls and static trimeshes
 // as meshes no node instances — so no viewer draws them. Engine-convention nodes (UCX_, -colonly)
 // are opt-in (physics-engines.ts): they are visible meshes to anything that ignores the names.
+// A skinned asset adds one capsule trigger per bone on its joint node (physics-hitbox.ts).
 
 import type { CompiledAsset, Mesh } from '../core/index.ts';
 import {
@@ -25,6 +26,7 @@ import {
   writeConventionNode,
   writePositionsMesh,
 } from './physics-engines.ts';
+import { fitHitboxes, type Hitbox, writeHitboxes } from './physics-hitbox.ts';
 import { BODY, pivotGeometry } from './physics-pivots.ts';
 
 export const RIGID_BODIES = 'KHR_physics_rigid_bodies';
@@ -49,6 +51,8 @@ export interface PhysicsReport {
   readonly body: 'static' | 'dynamic' | 'kinematic';
   readonly mass: MassProperties;
   readonly colliders: readonly ColliderReport[];
+  /** Per-bone capsule triggers on the joint nodes (skinned assets only). */
+  readonly hitboxes: readonly Hitbox[];
   /** QA `mass` findings (empty unless `real.mass` is declared and missed). */
   readonly findings: readonly { readonly message: string; readonly fix: string }[];
 }
@@ -89,6 +93,7 @@ export function writePhysics(
   root: number,
   end: number,
   o: PhysicsOptions = {},
+  joints: ReadonlyMap<string, number> = new Map(),
 ): { used: string[]; extensions: Json; report: PhysicsReport } {
   checkPhysics(asset);
   const body = bodyKindOf(asset);
@@ -138,6 +143,8 @@ export function writePhysics(
       colliders.push({ node: name, shape: c.kind, ratio: r6(fit.ratio), strip });
     });
   }
+  const hitboxes = joints.size ? fitHitboxes(asset) : [];
+  writeHitboxes(doc, hitboxes, joints, shapes, RIGID_BODIES);
   const mass = massProperties(asset);
   const rootNode = doc.nodes[root];
   if (rootNode && body !== 'static') {
@@ -157,7 +164,7 @@ export function writePhysics(
     ...(shapes.length ? { [IMPLICIT_SHAPES]: { shapes } } : {}),
   };
   const findings = massFindings(asset, mass);
-  return { used, extensions, report: { body, mass, colliders, findings } };
+  return { used, extensions, report: { body, mass, colliders, hitboxes, findings } };
 }
 
 function attach(doc: GltfDoc, parentId: number, id: number): void {

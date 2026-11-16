@@ -1,6 +1,7 @@
 // Roots for strand cards: area-weighted Poisson-disk samples on a mesh (darts oversampled ×2 per
 // triangle with `rng`, shuffled, kept when no kept neighbour is closer than the local radius
-// 0.62 / √density), and clump membership (each root joins the nearest of every k-th root).
+// 0.62 / √density), clump membership (each root joins the nearest of every k-th root), and the
+// field helpers that bury a root under the skin and push a strand out of a solid.
 
 import { cross, type Mesh, type Rng, sub, normalize as unit, type Vec3 } from '../core/index.ts';
 
@@ -119,4 +120,27 @@ export function clumpOf(list: readonly Root[], k: number, reach = Infinity): Int
     }
   });
   return out;
+}
+
+export const gradient = (f: (p: Vec3) => number, p: Vec3, h: number): Vec3 =>
+  unit([
+    f([p[0] + h, p[1], p[2]]) - f([p[0] - h, p[1], p[2]]),
+    f([p[0], p[1] + h, p[2]]) - f([p[0], p[1] - h, p[2]]),
+    f([p[0], p[1], p[2] + h]) - f([p[0], p[1], p[2] - h]),
+  ]);
+
+/** Newton steps onto the field's zero set, then `sink` under it (fields need not be exact SDFs). */
+export function bury(f: (p: Vec3) => number, p: Vec3, sink: number, h: number): Vec3 {
+  let q = p;
+  for (let i = 0; i < 4; i++) q = mad(q, gradient(f, q, h), -(f(q) + (i < 2 ? 0 : sink)));
+  // Thin features (toes, ear rims) can throw Newton far: then trust the mesh normal instead.
+  const moved = Math.hypot(q[0] - p[0], q[1] - p[1], q[2] - p[2]);
+  return moved > 3 * sink + 2 * h ? mad(p, gradient(f, p, h), -sink) : q;
+}
+
+/** Push p out of a collision solid to `gap` beyond its surface. */
+export function clear(c: ((p: Vec3) => number) | undefined, p: Vec3, gap: number, h: number): Vec3 {
+  if (!c) return p;
+  const d = c(p);
+  return d < gap ? mad(p, gradient(c, p, h), gap - d) : p;
 }

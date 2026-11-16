@@ -20,18 +20,40 @@ Status legend: **shipped** = on `main` with a test · **next** = the current roa
 | Alpha modes | `OPAQUE` / `MASK` / `BLEND` | surfaces opaque / cutout / glass / translucent | shipped |
 | Node animation (TRS) | `animations` | `spin`, `slide`, `sway`, `orbit`, `crank`, `piston` → `rest` + `run` clips | shipped |
 | Sockets, emitters | `extras` on empty nodes | `ctx.socket`, `ctx.emitter` | shipped |
-| Skins (bones) | `skins`, `JOINTS_0` / `WEIGHTS_0`, `inverseBindMatrices` | `ctx.bone` + skinned sculpt (below) | later |
-| Morph targets | `targets` + `weights` | face shapes: blink, jaw open, snarl | later |
+| Skins (bones) | `skins`, `JOINTS_0` (u16) / `WEIGHTS_0` (unorm16), `inverseBindMatrices` | `ctx.bone` + `skinWeights` / `heatWeights` (below) | shipped |
+| Morph targets | sparse `targets` + mesh `weights` + `extras.targetNames` | `Mesh.morphs` from `fieldMorph` / `hingeMorph` (creature `blink`) | shipped |
+| Named clips | `animations` | `rest`, `run` (part motions), then every `Clip` on bones or parts | shipped |
+| Per-bone hitboxes | `KHR_physics_rigid_bodies` `trigger` + `KHR_implicit_shapes` capsule on joint nodes | `--physics` on a skinned asset | shipped |
 | Cameras | `cameras` | preview / hero camera per asset | later |
 
-### Skins: how ts23d will rig without auto-rigging
-Heat-diffusion auto-rigging (Pinocchio, Baran & Popović 2007; Blender "bone heat"; Maya heat map) guesses
-which bone owns which vertex, and fails on messy meshes. ts23d knows. A sculpted character is an ordered
-list of SDF edits (Dreams' model: Evans, SIGGRAPH 2015). Tag each edit with its bone, and the per-vertex
-smooth-min blend weights that already mix the edits' colours *are* the skin weights. Keep the strongest
-4 per vertex (`JOINTS_0`/`WEIGHTS_0`; Unreal's Interchange importer truncates to 4) and renormalise.
-`skin.joints` order must match `inverseBindMatrices`; that ordering is the classic broken-skin bug, so
-a test pins it. Rigid parts (`ctx.part`) stay node-animated: a tank has no skin.
+### Skins, morphs and clips (ADR 013)
+ts23d does not guess a rig: it knows which bone carries which flesh. `skinWeights(mesh, bones,
+{ blend })` (passes/skin-weights.ts) measures each vertex's distance d_i to every bone's flesh capsule
+(head → tail, the radii the sculpt used), weighs w_i = exp(−(d_i − d_min)/k) with k the sculpt's blend
+radius, keeps the 4 heaviest and quantises to 1/255 so every sum is exactly 1 (written as unorm16
+k·257: sums are exactly 65535 in every engine). `skinPieces` binds fur cards and claws rigidly per
+piece at their root; `heatWeights` (voxel geodesic distance) weights imported meshes without a field,
+never bleeding across a leg gap. `creature()` skins every part this way (kinds/creature-rig.ts): body
+smooth on all bones but `jaw`, head on head + neck, jaw part and eyes rigid (the mouth opens by the
+`jaw` bone, so there is no `jaw_open` morph), `blink` a morph turning each upper lid over the ball.
+
+The writer (export/skin.ts) puts one joint node per bone under each LOD root, at rest a pure
+translation (head − parent head), so each inverse bind matrix is the translation back and the bind
+pose reproduces the rest positions exactly (QA `skin` measures it, ≤ 1e-5 m). `skin.joints` follows
+`ctx.bone` order, which is also the index space of `Mesh.joints`. A skinned mesh node gets the
+inverse of the root's Z-up → Y-up turn, so its world matrix is identity: engines that follow the
+spec (ignore it) and engines that apply it (three.js) draw the same thing. The validator flags that
+node as `NODE_SKINNED_MESH_NON_ROOT` / `_LOCAL_TRANSFORMS` (warnings, by design; 0 errors). Rigid
+parts keep node animation; a rigid prop merging into a skinned body binds to its nearest bone;
+a socket with `data: { bone }` rides that joint (props in a hand, a saddle on the back).
+
+Morph targets are sparse POSITION accessors (only moved vertices are stored), named in
+`extras.targetNames`, default weight 0. Clips (export/clips.ts) follow `rest` and `run`: keys are
+relative to rest (rotation turns from the rest pose, translation offsets it, `weights` drive a
+part's morphs); one sampler serves every LOD tree. QA `skin` fails sums off 1 by > 1e-3, anything
+but 4 influences, joints outside the skeleton, bones that drive nothing, skinned parts under a
+moving pivot, bones over `budget.bones` (default 64). The manifest lists `skeleton`, `clips`
+(name, seconds, loop, root speed m/s) and `hitboxes` (bone, radius, cap distance, coverage ≥ 95 %).
 
 ## Ratified extensions worth writing
 

@@ -48,7 +48,9 @@ function local(mesh: Mesh, part: WorldTransform, pivot: WorldTransform): Mesh {
       i,
     );
   }
-  return { ...mesh, positions };
+  // Colliders read shape only: skin and morphs would make rigid + skinned pieces unmergeable.
+  const { joints: _joints, weights: _weights, morphs: _morphs, ...shape } = mesh;
+  return { ...shape, positions };
 }
 
 /** Collision geometry per pivot, in pivot order (BODY first), deterministic. */

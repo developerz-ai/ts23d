@@ -56,6 +56,10 @@ export interface Args {
   readonly profile?: ExportProfile;
   /** Render this paint variant (KHR_materials_variants livery) instead of the default paint. */
   readonly variant?: string;
+  /** `hero`: raster (default, seconds) or path (physically based, render/path/; for critique). */
+  readonly quality?: 'raster' | 'path';
+  /** `hero --quality path`: samples per pixel (default 64). */
+  readonly spp?: number;
   /** `tune`: evaluation budget, optimiser seed, method (cmaes | coordinate). */
   readonly evals?: number;
   readonly seed?: number;
@@ -119,6 +123,8 @@ export function parseArgs(argv: readonly string[]): Args {
   let lods: Args['lods'] = [0, 1, 2];
   let lodFiles: Args['lodFiles'] = 'both';
   let variant: string | undefined;
+  let quality: Args['quality'];
+  let spp: number | undefined;
   const tuning: { evals?: number; seed?: number; method?: 'cmaes' | 'coordinate' } = {};
   const whole = (flag: string, v: string | undefined, min: number): number => {
     const n = Number(v);
@@ -191,6 +197,15 @@ export function parseArgs(argv: readonly string[]): Args {
           fix: "pass one of the asset's `variants` keys, e.g. --variant oxide_red",
         });
       variant = v;
+    } else if (a === '--quality') quality = oneOf(a, argv[++i], ['raster', 'path'] as const);
+    else if (a === '--spp') {
+      const v = argv[++i];
+      spp = Number(v);
+      if (!Number.isInteger(spp) || spp < 1 || spp > 4096)
+        throw new Ts23dError('T3D_RENDER_OPTIONS', {
+          cause: `--spp needs a whole number 1…4096, got ${v === undefined ? 'nothing' : `"${v}"`}`,
+          fix: 'pass e.g. --spp 64 (16 for drafts, 256 for finals)',
+        });
     } else if (a === '--sheet') sheet = oneOf(a, argv[++i], ['external', 'embed', 'none'] as const);
     else if (a === '--lods' && /^(split|single|both)$/.test(argv[i + 1] ?? '')) {
       lodFiles = argv[++i] as Args['lodFiles'];
@@ -233,6 +248,8 @@ export function parseArgs(argv: readonly string[]): Args {
     sounds,
     ...(profile ? { profile } : {}),
     ...(variant ? { variant } : {}),
+    ...(quality ? { quality } : {}),
+    ...(spp !== undefined ? { spp } : {}),
     ...tuning,
     ...(cmd === 'finish' ? { finish } : {}),
     render,

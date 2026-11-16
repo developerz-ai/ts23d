@@ -32,9 +32,37 @@ export {
 } from './hair-flow.ts';
 export { type Imperfect, type ImperfectOptions, imperfect } from './imperfect.ts';
 export { type Livery, type LiveryRule, livery } from './livery.ts';
+export {
+  type FieldMorphOptions,
+  fieldMorph,
+  type HingeMorphOptions,
+  hingeMorph,
+  type MorphField,
+  sumMorphs,
+} from './morph.ts';
 export { type OptimizeOptions, type OptimizeReport, optimize } from './optimize.ts';
 export { RayGrid } from './ray-grid.ts';
 export { type Simplified, type SimplifyOptions, simplify } from './simplify.ts';
+export {
+  bindPoseError,
+  inverseBind,
+  jointLocals,
+  type Mat4,
+  poseJoints,
+  skinPositions,
+  weightBonesOf,
+} from './skin-bind.ts';
+export { type HeatOptions, heatWeights } from './skin-heat.ts';
+export {
+  bindRigid,
+  capsuleDistance,
+  pieceIds,
+  type SkinWeightOptions,
+  skinPieces,
+  skinWeights,
+  WEIGHT_STEP,
+  type WeightBone,
+} from './skin-weights.ts';
 export { type Weathered, weather } from './weather.ts';
 export { SELECTORS as WEATHER_SELECTORS } from './weather-select.ts';
 export { subdivideTo } from './weather-subdivide.ts';

@@ -21,7 +21,8 @@ import {
 import type { StripId } from '../material/index.ts';
 import { type Biology, balanced, biology, foreShareCheck } from './creature-biology.ts';
 import { bodyEdits } from './creature-body.ts';
-import { armatureOf, type Bones, headToWorld } from './creature-bones.ts';
+import { type Bones, headToWorld } from './creature-bones.ts';
+import { creatureArmature, creatureClips } from './creature-clips.ts';
 import { bodyPaint, headPaint, palette } from './creature-coat.ts';
 import { creatureCreases } from './creature-creases.ts';
 import { mixRgb, smoothstep, v3 } from './creature-curve.ts';
@@ -33,6 +34,7 @@ import { type HeadLayout, headEdits } from './creature-head.ts';
 import { creatureHeadFur } from './creature-head-fur.ts';
 import { legTubes } from './creature-limbs.ts';
 import { sculptPiece } from './creature-mesh.ts';
+import { creatureRig } from './creature-rig.ts';
 import { bonesOf } from './creature-skeleton.ts';
 import { jawHinge } from './creature-skull.ts';
 import { type CreatureSpec, checkCreature } from './creature-spec.ts';
@@ -98,6 +100,15 @@ export function creature(
   const c = palette(spec.colours);
   const res = bodyRes(b) * (b.legs.length > 0 ? LOD_SCALE : LOD_SCALE_LEGLESS)[lod];
   const surface = spec.surface ?? 'fur';
+  // Head layout first: the armature's jaw bone and the skin's blink read it (creature-rig.ts).
+  const h = b.head;
+  const hres = h.length * HEAD_RES[lod];
+  const he = headEdits(b, spec, lod, hres);
+  const l = he.layout;
+  const [hx, , hz] = jawHinge(l);
+  const hinge: Vec3 = [hx, 0, hz];
+  const arm = creatureArmature(b, spec, p).bones;
+  const rig = creatureRig(b, arm, p, l.eye);
   const paint = bodyPaint(b, spec, Math.min(res * 0.6, (spec.pattern?.scale ?? 1) * 0.12));
   // LOD0: the skin's relief. LOD2: coarse cells cut convex curves short — grow the shell back by
   // ~⅕ cell, fading to nothing at the soles so the feet stay on z = 0.
@@ -131,18 +142,18 @@ export function creature(
     eyeL: `${p}eye_l`,
     eyeR: `${p}eye_r`,
   };
-  ctx.part(names.body, tubes ? merge([body, tubes]) : body, { density: bio.density });
+  ctx.part(names.body, rig.body(tubes ? merge([body, tubes]) : body), { density: bio.density });
   // Strand cards over the sculpted coat (creature-fur.ts; LOD0/1, fur only; `cards: false` = off).
   if (spec.cards !== false) {
     const fur = creatureFur(body, b, spec, { lod, rng: ctx.rng.fork('fur'), field: piece.field });
-    if (fur) ctx.part(`${p}fur`, fur.mesh, { surface: 'cutout', ...HAIR_PHYSICS });
+    if (fur)
+      ctx.part(`${p}fur`, rig.pieces(fur.mesh, 'body', [0, 0, 0]), {
+        surface: 'cutout',
+        ...HAIR_PHYSICS,
+      });
   }
 
   // Head: sculpted level in its own frame, pitched about the atlas.
-  const h = b.head;
-  const hres = h.length * HEAD_RES[lod];
-  const he = headEdits(b, spec, lod, hres);
-  const l = he.layout;
   const hp = headPaint(b, spec);
   const eyeC = l.eye.centre;
   // LOD2: no eyeballs; a dark painted eye where the orbit is.
@@ -171,7 +182,10 @@ export function creature(
   });
   const headMesh = headPiece.mesh;
   const local: Mesh = he.teeth ? merge([headMesh, he.teeth]) : headMesh;
-  ctx.part(names.head, place(local, { pitch: h.pitch }), { at: h.atlas, density: bio.density });
+  ctx.part(names.head, rig.head(place(local, { pitch: h.pitch }), lod), {
+    at: h.atlas,
+    density: bio.density,
+  });
   // Head fur in the head's own frame, turning with it (creature-head-fur.ts; bare nose, lips, eyes).
   if (spec.cards !== false) {
     const hf = creatureHeadFur(
@@ -189,7 +203,7 @@ export function creature(
       { lod, rng: ctx.rng.fork('head-fur'), field: headPiece.field },
     );
     if (hf)
-      ctx.part(`${p}head_fur`, place(hf, { pitch: h.pitch }), {
+      ctx.part(`${p}head_fur`, rig.pieces(place(hf, { pitch: h.pitch }), 'head', h.atlas), {
         parent: names.head,
         surface: 'cutout',
         ...HAIR_PHYSICS,
@@ -197,8 +211,6 @@ export function creature(
   }
   // Lower jaw: its own part under the head, pivoting at the hinge (mouth-open clips rotate it).
   // LOD2: the coarse cell cannot hold a separate thin jaw; it stays in the head.
-  const [hx, , hz] = jawHinge(l);
-  const hinge: Vec3 = [hx, 0, hz];
   if (lod < 2) {
     const jawMesh = sculptPiece({
       edits: he.jaw,
@@ -210,15 +222,15 @@ export function creature(
       ...(o.strip ? { strip: o.strip } : {}),
     }).mesh;
     const pivot = v3.sub(headToWorld(h, hinge), h.atlas);
-    ctx.part(names.jaw, place(place(jawMesh, { pitch: h.pitch }), { at: v3.mul(pivot, -1) }), {
+    const jawLocal = place(place(jawMesh, { pitch: h.pitch }), { at: v3.mul(pivot, -1) });
+    ctx.part(names.jaw, rig.rigid(jawLocal, 'jaw'), {
       at: pivot,
       parent: names.head,
       density: bio.density,
       connect: { as: 'hinge', to: names.head },
     });
   }
-  const chin = headToWorld(h, [l.L - l.rt * 2.2, 0, l.zt - l.rt * 0.85]);
-  for (const bone of armatureOf(b, [headToWorld(h, hinge), chin], p)) ctx.bone(bone.name, bone);
+  for (const bone of arm) ctx.bone(bone.name, bone);
 
   if (lod < 2) {
     const ball = eyeball(l.eye, l.eye.r / (lod === 0 ? 6 : 3));
@@ -231,7 +243,7 @@ export function creature(
       const g = l.eye.gaze ?? [eyeC[0] + 2, 0, eyeC[2]];
       const gaze: Vec3 = [g[0], g[1] * side, g[2]];
       const yaw = Math.atan2(gaze[1] - at[1], gaze[0] - at[0]);
-      ctx.part(name, place(place(ball, { yaw }), { pitch: h.pitch }), {
+      ctx.part(name, rig.rigid(place(place(ball, { yaw }), { pitch: h.pitch }), 'head'), {
         at: headToWorld(h, at),
         density: 1000,
       });
@@ -244,7 +256,10 @@ export function creature(
   ]);
   const clawName = claws ? `${p}claws` : null;
   if (claws && clawName)
-    ctx.part(clawName, claws, { connect: { as: 'grown', to: names.body }, density: 1300 });
+    ctx.part(clawName, rig.pieces(claws, 'body', [0, 0, 0]), {
+      connect: { as: 'grown', to: names.body },
+      density: 1300,
+    });
   return { bones: b, head: l, biology: bio, parts: { ...names, claws: clawName } };
 }
 
@@ -267,6 +282,7 @@ export function defineCreature(d: CreatureDefinition): Asset {
     creases: [...creatureCreases(spec, options?.prefix), ...(d.creases ?? [])],
     checks: [balanced, ...foreShareCheck(spec, bones), ...(d.checks ?? [])],
     art: d.art ?? { focal: `${options?.prefix ?? ''}head`, grounded: true },
+    clips: [...creatureClips(bones, spec, options?.prefix ?? ''), ...(d.clips ?? [])],
     build(ctx) {
       const info = creature(ctx, spec, options);
       extra?.(ctx, info);

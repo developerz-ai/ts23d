@@ -20,6 +20,7 @@ image, or adding lamps/headlights to an asset.
 | 1 | Neutral look first: orthographic views on a metre grid | `bun run t3d shot recipes/x/x.ts --out renders` → READ `sheet.png` | silhouette right in six views |
 | 2 | Hero camera: 3/4 front, slightly above eye level | `bun run t3d hero … --az -35 --el 18 --fov 30 --size 1600x900` (defaults) | asset fills ~60–80 % of frame width *typical* |
 | 3 | Pick the view that sells the design | vary `--az` (front-left 3/4 default; rear 3/4 for engines/exhausts), `--el` low for heroic scale, high for top detail | focal part faces camera |
+| 2b | Judge under physical light | `bun run t3d hero … --quality path --spp 64` (path tracer: sun + sky, bounces, skin diffusion, strand lobes on fur/hair cards; same camera and studio) | fur, skin, metal read as themselves; committed heroes are path traced (960×540, 16 spp) |
 | 4 | Check values: squint / greyscale | read `hero.png`; critique rubric `materials` | distinct value groups; focal part has max contrast |
 | 5 | Relief check under grazing light | `t3d critique` → `raking.png`, `raking_detail.png` | modelled detail casts shadow; painted detail stays flat |
 | 6 | Distance check | `review/` LOD strip (`lodStrip`), `sheet.png` FAR LOD2 cell, `thumbnail` | reads at thumbnail size |
@@ -39,6 +40,7 @@ image, or adding lamps/headlights to an asset.
 | Exposure | no clipped whites, no crushed blacks on the subject | `review.json` exposure warning |
 | Value grouping | 3–5 clear value masses; focal part highest contrast | **planned** focal check; judge by eye |
 | Grounding | contact shadow under the asset | beauty render ground shadow |
+| Bounce / translucency | floor and body light each other; thin skin glows red | `--quality path` only (raster fakes it with AO) |
 
 ## Quality bar
 - [ ] `sheet.png` read before `hero.png`; both current (`bun run shots`).
@@ -54,12 +56,15 @@ image, or adding lamps/headlights to an asset.
 - Treating QA PASS as "looks good": critique scores decide.
 - Changing renders after the critique was written (critique becomes stale: `critique-drift`).
 - Presenting the asset inside a game scene: the gallery shows assets, not games.
+- Judging fur or skin on the raster hero: it lights cards as flat surfaces and has no subsurface; use `--quality path`.
+- Raising `--spp` in `scripts/shots.ts` without timing the shots shard (CI budget < 5 min).
 
 ## Run order
 ```sh
 bun run t3d build recipes/<name>/<name>.ts --out out        # QA per LOD, exit 1 on a finding
 bun run t3d shot recipes/<name>/<name>.ts --out renders     # READ sheet.png
-bun run t3d hero recipes/<name>/<name>.ts --out renders     # READ hero.png
+bun run t3d hero recipes/<name>/<name>.ts --out renders     # READ hero.png (raster, fast)
+bun run t3d hero recipes/<name>/<name>.ts --quality path --out renders  # READ: physical light
 bun run t3d blueprint recipes/<name>/<name>.ts --out renders  # READ blueprint.png
 bun run t3d review recipes/<name>/<name>.ts --out review   # READ review/*.png, clear review.json
 bun run t3d critique recipes/<name>/<name>.ts --out tmp/critique  # READ every PNG, fill critique.json
@@ -75,8 +80,11 @@ bun run shots <name>                      # refresh committed out/
 
 ## Tool status
 Shipped: `t3d shot | hero | review | critique | blueprint | gaps`, `contactSheet`, `beauty`,
-`thumbnail`, `lodStrip`, `reviewPack`, light sockets → KHR_lights_punctual, `glow`.
-Planned: HDRI / IBL environments for the beauty render, custom light rigs (rim control),
+`thumbnail`, `lodStrip`, `reviewPack`, light sockets → KHR_lights_punctual, `glow`,
+`pathHero` / `t3d hero --quality path` (deterministic CPU path tracer, procedural sky IBL + sun),
+`skin` / `skin_*` finishes → KHR_materials_diffuse_transmission + volume in the GLB.
+Planned: HDRI environments, glow/emission and clearcoat-only parts in the path tracer (sheen,
+anisotropy, iridescence are raster-only today), custom light rigs (rim control),
 turntable/animated presentation, zebra reflection renders, `photoMatch` side-by-side with
 reference photos (stub throws `T3D_NOT_IMPLEMENTED`), greyscale focal-point check.
 Neutral positioning: the free code-based option, no claims against other tools.

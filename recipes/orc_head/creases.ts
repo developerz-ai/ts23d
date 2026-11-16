@@ -1,136 +1,110 @@
-// The orc bust's intended creases, from the landmarks and the geometry that sculpts them
-// (../_lib/bust/creases.ts helpers): lids and the brow shelf, nose, nasolabial folds, mouth line
-// over the underbite, tusk roots, cheekbone arch, jawline, skull base, nuchal furrow, scars, the
-// big ears; the pectoral and deltoid borders and throat; spike collars; the baldric and buckle;
-// the fur clumps' roots; the scalp lock, bun turns, wraps and tail locks. Every region ≤ 3 cm.
+// The orc bust's intended creases, from the geometry that sculpts them (../_lib/bust/creases.ts
+// helpers): the skull stage's folds (lids, nose base, lips, ears, jaw angle, nuchal furrow), the
+// orc's forehead furrows, mouth line, underbite, the jaw's underside, skull base and neck, scars,
+// warts and tusk roots; the pectoral and deltoid borders and throat; spike collars; the baldric
+// and buckle; the fur clumps' roots; the necklace; the scalp lock, bun turns, wraps and tail
+// locks. Every region ≤ 3 cm.
 
 import type { IntendedCrease } from '@developerz.ai/ts23d';
 import { creaseAt, creaseCurve, ringCreases } from '../_lib/bust/creases.ts';
 import { add, cross, mul, norm, spline, sub, type V } from '../_lib/bust/kit.ts';
+import { skullCreases } from '../_lib/face/skull-creases.ts';
 import { bodySurface } from './build.ts';
-import { atEar, earRings } from './ears.ts';
+import { foreheadLines, lipLine, SCARS, WARTS } from './features.ts';
 import { BALDRIC, cap, capPoint, SPIKES } from './fittings.ts';
 import { seamRing } from './fur.ts';
 import { KNOT, tailPath } from './hair.ts';
-import { tuskStroke } from './jaw.ts';
 import { L } from './landmarks.ts';
+import { H, SK } from './spec.ts';
+import { tuskPath } from './tusks.ts';
 
-const why = {
-  lids: 'lid folds round the small deep-set eye under the brow shelf',
-  brow: 'the brow shelf overhanging the sockets and its top edge on the forehead',
-  nose: 'the broad nose: bridge, alae and the nasolabial fold to the mouth corner',
-  mouth: 'the mouth line over the underbite, lips and chin',
-  tusk: 'a lower tusk growing out of the jaw beside the lip',
-  face: 'cheekbone arch, jawline over the neck, occipital line, nuchal furrow',
-  ear: 'the pointed ear: helix rim, concha, root and the iron rings through it',
-};
-
+/** The skull stage's folds (lids, nose base, lips, ears, jaw), the orc's own strokes, tusks. */
 function head(): IntendedCrease[] {
-  const [ex, ey, ez] = L.eye;
-  const R = L.eyeR;
-  const tusk = tuskStroke().pts;
+  const tusk = tuskPath();
+  const flip = (l: V[]): V[] => l.map((p): V => [p[0], -p[1], p[2]]);
   return [
-    ...creaseCurve(
-      'lids',
-      'head',
-      [
-        [ex + R * 0.4, ey - R * 1.3, ez],
-        [ex + R * 0.9, ey, ez + R * 0.8],
-        [ex + R * 0.4, ey + R * 1.3, ez],
-        [ex + R * 0.9, ey, ez - R * 0.7],
-        [ex + R * 0.4, ey - R * 1.3, ez],
-      ],
-      0.016,
-      why.lids,
-      true,
+    ...skullCreases(SK, H),
+    ...foreheadLines().flatMap((l, i) =>
+      creaseCurve(`forehead${i}`, 'head', l, 0.015, 'a forehead furrow under the vault', true),
     ),
-    ...creaseCurve('brow', 'head', [L.glabella, L.browOuter, L.temple], 0.02, why.brow, true),
+    ...creaseCurve('mouth', 'head', lipLine(), 0.02, 'the closed mouth’s line', true),
+    // The sternocleidomastoid's front edge where the skull's neck meets the torso's.
     ...creaseCurve(
-      'brow_top',
+      'scm',
       'head',
-      [add(L.glabella, [-0.03, 0, 0.026]), add(L.browOuter, [-0.012, 0, 0.016]), L.temple],
+      [SK.mastoid, [0.03, 0.085, 0.31], [0.06, 0.07, 0.27], [0.08, 0.04, 0.23]],
       0.02,
-      why.brow,
+      'the sternocleidomastoid’s front edge down the thick neck',
       true,
     ),
-    ...creaseCurve('nose', 'head', [L.noseRoot, L.noseTip, L.subnasale], 0.02, why.nose),
-    ...creaseCurve('nose_side', 'head', [L.noseRoot, L.ala, L.mouthCorner], 0.02, why.nose, true),
-    ...creaseCurve('mouth', 'head', [L.upperLip, L.mouthCorner], 0.02, why.mouth, true),
+    ...SCARS.flatMap((l, i) =>
+      creaseCurve(`scar${i}`, 'head', l, 0.02, 'a scar: a raised pale welt'),
+    ),
+    ...WARTS.flatMap(([p, r], i) =>
+      creaseAt(`wart${i}`, 'head', p, Math.min(0.03, r * H * 3), 'a wart’s rim on the skin'),
+    ),
+    // The underbite: the lower lip pushed ahead of the upper folds under it at the lip line.
     ...creaseCurve(
       'underbite',
       'head',
-      [L.lowerLip, add(L.mouthCorner, [0.02, 0, -0.025]), L.chin],
+      [SK.labraleSup, SK.labraleInf, SK.cheilion],
       0.02,
-      why.mouth,
+      'the lower lip thrust ahead of the upper (underbite), folding under it to the corner',
       true,
     ),
-    ...creaseCurve('tusk', 'head', tusk, 0.02, why.tusk, true),
+    // The massive jaw's underside meeting the throat, and the skull's base on the trapezius.
     ...creaseCurve(
-      'lip_upper',
+      'submandibular',
       'head',
-      [add(L.upperLip, [0.006, 0, 0]), [0.13, 0.036, 0.364], L.mouthCorner],
-      0.02,
-      why.mouth,
-      true,
-    ),
-    ...creaseCurve('chin', 'head', [L.lowerLip, L.chin], 0.02, why.mouth),
-    ...creaseCurve('cheek_arch', 'head', [L.zygoma, L.zygion, L.ear], 0.02, why.face, true),
-    ...creaseCurve(
-      'jawline',
-      'head',
-      [L.gonion, [0.06, 0.09, 0.3], L.menton],
+      [
+        SK.menton,
+        [SK.menton[0] - 0.035, 0, SK.menton[2] + 0.004],
+        [SK.menton[0] - 0.045, 0.05, SK.menton[2] + 0.014],
+        SK.gonion,
+      ],
       0.025,
-      why.face,
-      true,
-    ),
-    ...creaseCurve(
-      'jaw_hinge',
-      'head',
-      [add(L.ear, [0.012, 0.012, -0.01]), add(L.gonion, [-0.005, 0.005, 0.03])],
-      0.02,
-      why.face,
+      'the jaw’s underside folding into the throat under the dropped mandible',
       true,
     ),
     ...creaseCurve(
       'skull_base',
       'head',
-      [L.ear, [-0.08, 0.056, 0.456], [-0.112, 0, 0.453]],
+      [
+        [SK.nape[0] - 0.004, 0, SK.nape[2] + 0.12],
+        [SK.nape[0] + 0.014, 0.05, SK.nape[2] + 0.1],
+        [SK.nape[0] + 0.05, 0.09, SK.nape[2] + 0.085],
+      ],
       0.025,
-      why.face,
+      'the skull’s base where the trapezius rises into it',
       true,
     ),
-    ...creaseCurve(
-      'nuchal_furrow',
-      'head',
-      [
-        [-0.112, 0, 0.453],
-        [-0.126, 0, 0.405],
-      ],
-      0.015,
-      why.face,
-    ),
-    // Ear (× its scale): along the blade's midline and both rims, the root, the rings.
-    ...[0, 0.026, -0.024].flatMap((v, k) =>
-      creaseCurve(
-        `ear${k}`,
-        'head',
-        [0, 0.025, 0.05, 0.075, 0.1].map((u) => atEar(u, v * Math.min(1, u * 40 + 0.4), 0)),
-        0.02,
-        why.ear,
-        true,
-      ),
-    ),
-    ...earRings().flatMap((r, i) => creaseAt(`ear_ring${i}`, 'head', r.c, 0.015, why.ear, true)),
+    ...[tusk, flip(tusk)].flatMap((t, i) => [
+      ...creaseCurve(`tusk_root${i}`, 'head', t.slice(0, 8), 0.02, 'a tusk leaving the jaw'),
+      ...creaseCurve(`tusk${i}`, 'tusks', t, 0.02, 'a tusk rooted in the jaw, through the lip'),
+    ]),
   ];
 }
 
 function bust(): IntendedCrease[] {
   const pecWhy = 'pectoral and deltoid borders and the throat under the necklace';
   return [
+    // Behind the shoulder, under the pauldron: the trapezius sheet draping onto the deltoid.
+    ...creaseCurve(
+      'trap_deltoid',
+      'bust',
+      [
+        [-0.06, 0.2, 0.26],
+        [-0.08, 0.22, 0.23],
+        [-0.09, 0.23, 0.2],
+      ],
+      0.02,
+      'the trapezius sheet draping onto the deltoid behind the shoulder',
+      true,
+    ),
     ...creaseCurve(
       'deltopectoral',
       'bust',
-      [L.acromion, [0.03, 0.18, 0.215], [0.06, 0.13, 0.17]],
+      [L.acromion, [0.03, 0.18, 0.215], [0.06, 0.17, 0.18], [0.06, 0.13, 0.17]],
       0.03,
       pecWhy,
       true,
@@ -209,7 +183,7 @@ function gear(): IntendedCrease[] {
   const tails = [0, 0.016, -0.016, 0.009, -0.008].map((dy, i) =>
     creaseCurve(
       `tail${i}`,
-      'hair',
+      'hair_knot',
       spline(tailPath(body, dy, [0, 0.002, -0.002, -0.006, 0.006][i] ?? 0), 16),
       0.02,
       'a tail lock out of the wraps, down the skull',
@@ -221,18 +195,32 @@ function gear(): IntendedCrease[] {
     ...creaseCurve('baldric', 'harness', strap, 0.03, 'the baldric strap: its edges and stitching'),
     ...creaseCurve('buckle', 'harness', frame, 0.02, 'the iron buckle frame on the strap'),
     ...creaseCurve('fur_base', 'mantle', ring, 0.03, 'the fur mantle’s rolled base'),
+    ...creaseAt(
+      'fur_spine',
+      'mantle',
+      [-0.19, 0, 0.33],
+      0.02,
+      'the clumps of the two shoulders overlapping on the spine',
+    ),
     ...clumps.flatMap((c, i) =>
       creaseCurve(`fur_clump${i}`, 'mantle', c, 0.025, 'a fur clump shingled over its neighbours'),
     ),
-    ...ringCreases('bun', 'hair', bunRing(), 0.02, 'the lock wound round the knot'),
+    ...ringCreases(
+      'necklace',
+      'necklace',
+      seamRing(body, 16, -80, 80).map((p) => body.off(p, 0.004)),
+      0.02,
+      'the necklace cord bending round the throat between its beads',
+    ),
+    ...ringCreases('bun', 'hair_knot', bunRing(), 0.02, 'the lock wound round the knot'),
     ...creaseCurve(
       'scalp_lock',
-      'hair',
+      'hair_knot',
       [body.off([0, 0, 0.58], 0.002), add(KNOT, [0.012, 0, 0.012])],
       0.02,
       'scalp-lock separations converging on the knot',
     ),
-    ...creaseAt('wraps', 'hair', add(KNOT, [-0.003, 0, 0.036]), 0.02, 'two leather wraps'),
+    ...creaseAt('wraps', 'hair_knot', add(KNOT, [-0.003, 0, 0.036]), 0.02, 'two leather wraps'),
     ...tails.flat(),
   ];
 }

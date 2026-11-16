@@ -1,7 +1,7 @@
 # 101 — Asset realism programme: CPU-first, GPU-boosted
 
 ## Goal
-After this plan the flagship assets (wolf, amur_tiger, dragon, human/elf/goblin/orc heads) score
+The user of ts23d is a coding agent: "use ts23d and let's build a game" must work. After this plan the flagship assets (wolf, amur_tiger, dragon, human/elf/goblin/orc heads) score
 **≥ 8.5 / 10 on a calibrated critique** and the gate enforces it. Every asset still builds byte-
 identical with no GPU (CPU tier). A user who plugs in any model through a `NeuralAdapter` gets a more
 realistic version of the same recipe (GPU tier), cached by content hash so CI never needs a GPU.
@@ -60,8 +60,13 @@ they need in `## Change`; the coordinator adds them between waves.
 | 3 | [10-motion-deform-qa](10-motion-deform-qa.md) | procedural gait, baked springs, deformation checks |
 | 3 | [11-hero-bake-tier](11-hero-bake-tier.md) | field → LOD0 normal/AO/height bake, hero material |
 | 3 | [12-path-tracer](12-path-tracer.md) | deterministic CPU path tracer with SSS + fur lobes |
+| 3 | [19-vdm-stamps](19-vdm-stamps.md) | vector-displacement stamps (scales, warts, horn bases, scars) as sculpt edits |
 | 4 | [13-neural-adapters](13-neural-adapters.md) | `NeuralAdapter` per task, `t3d-neural/1` HTTP, config, recipe cache |
 | 4 | [14-reference-server](14-reference-server.md) | example Python server with model plug-ins (not shipped in the package) |
+| 4 | [20-blender-adapter](20-blender-adapter.md) | Blender headless as a cached tool adapter: cloth drape, bakes, remesh, groom → cards, VDM brush import |
+| 3 | [22-agent-interface](22-agent-interface.md) | ts23d as an MCP server for agents (build/look/review/critique/doctor/neural_run, images inline) + skills shipped as a plugin |
+| 5 | [23-game-project-workflow](23-game-project-workflow.md) | `t3d init` in any game project, plan from the brief, `--watch` into the engine's import folder, engine conventions per profile |
+| 4 | [21-tier-setup](21-tier-setup.md) | `t3d setup <profile>` / `t3d doctor` / `t3d server`: one-command install of models, `bpy`, Material Maker, weights; self-diagnosis |
 | 4 | [15-neural-in-recipes](15-neural-in-recipes.md) | mesh-as-field, texture transfer, motion, hair, `t3d concept` |
 | 4 | [16-scale](16-scale.md) | style bible, set coherence, scene budgets, OSM city, instancing |
 | 5 | [17-flagships-showcase](17-flagships-showcase.md) | flagship recipes to ≥ 8.5, GPU variants, site CPU/GPU toggle |

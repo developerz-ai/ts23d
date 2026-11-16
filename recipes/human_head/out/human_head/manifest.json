@@ -20,14 +20,14 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    92904,
-    25500,
-    3640
+    99032,
+    27928,
+    3636
   ],
   "drawCalls": [
-    3,
-    3,
-    2
+    4,
+    4,
+    3
   ],
   "pivots": [
     {
@@ -40,6 +40,10 @@
     },
     {
       "name": "body_finish_cornea",
+      "parent": null
+    },
+    {
+      "name": "face",
       "parent": null
     }
   ],
@@ -72,6 +76,26 @@
   "surfaces": [
     "cutout",
     "opaque"
+  ],
+  "clips": [
+    {
+      "name": "blink",
+      "seconds": 4,
+      "loop": true,
+      "speed": 0
+    },
+    {
+      "name": "talk",
+      "seconds": 2.4,
+      "loop": true,
+      "speed": 0
+    },
+    {
+      "name": "breathe",
+      "seconds": 4,
+      "loop": true,
+      "speed": 0
+    }
   ],
   "real": {
     "length": 0.268,

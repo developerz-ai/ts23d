@@ -5,6 +5,7 @@ import type { Vec3 } from '../core/index.ts';
 import { invalid } from './check.ts';
 import { type SculptStroke, strokeBounds } from './sculpt-stroke.ts';
 import { type BlendKernel, type Field, shapes } from './sdf-ops.ts';
+import { type SculptVdm, vdmBounds } from './vdm.ts';
 
 export type SculptShape =
   | 'sphere'
@@ -18,9 +19,9 @@ export type SculptShape =
 
 /**
  * An edit: one shape, a ready-made field, a group folded on its own first (local trims), or a
- * brush stroke that pushes everything folded before it (sculpt-stroke.ts).
+ * brush stroke / VDM stamp that pushes everything folded before it (sculpt-stroke.ts, vdm.ts).
  */
-export type SculptEdit = SculptShapeEdit | SculptGroup | SculptFieldEdit | SculptStroke;
+export type SculptEdit = SculptShapeEdit | SculptGroup | SculptFieldEdit | SculptStroke | SculptVdm;
 
 /**
  * A ready-made 1-Lipschitz field inside `bounds` as one edit, e.g. a visual hull from drawings:
@@ -251,6 +252,7 @@ export function shapeSphere(e: SculptShapeEdit): {
 export function editBounds(e: SculptEdit, mirrorAll: boolean): [Vec3, Vec3] {
   if ('group' in e) return groupBounds(e, mirrorAll);
   if ('stroke' in e) return strokeBounds(e, mirrorAll);
+  if ('vdm' in e) return vdmBounds(e, mirrorAll);
   let k = e.blend ?? 0;
   let [b0, b1]: readonly [Vec3, Vec3] = 'field' in e ? e.bounds : [e.at, e.at];
   // A field's surface can lie ON its bounds (a visual hull's flat faces): pad so the meshing
@@ -286,5 +288,8 @@ function groupBounds(g: SculptGroup, mirrorAll: boolean): [Vec3, Vec3] {
   return [lo, hi];
 }
 
-/** Edits that grow the shape (and set bounds): adds, plus strokes (which may push out `depth`). */
-export const isAdd = (e: SculptEdit): boolean => 'stroke' in e || (e.op ?? 'add') === 'add';
+/** Edits that grow the shape (and set bounds): adds, strokes and stamps (they push out `depth`). */
+export const isAdd = (e: SculptEdit): boolean =>
+  'stroke' in e || 'vdm' in e || (e.op ?? 'add') === 'add';
+/** Displacements (strokes, stamps): they push what is there, so cannot start a sculpt. */
+export const isPush = (e: SculptEdit): boolean => 'stroke' in e || 'vdm' in e;

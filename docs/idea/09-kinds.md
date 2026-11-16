@@ -122,8 +122,25 @@ lengths, `build` ratios (chest depth/width, limb and tail girth, ruff), `face` (
   kind's `creases` (mouth, eyelids, ears, armpits, groin, flexion folds, toes, mane, tail root),
   the `balance` check, part densities and `art: { focal: 'head' }` filled in.
 
-Stylised-to-plausible, not photoreal: no fur cards/shells, no jaw part or tail sway yet. Realistic
-animals can still go through [`/neural`](08-neural-adapters.md).
+### Creature clips (baked, ADR 013)
+
+Every creature ships skinned with baked clips (`creature-clips.ts`): `idle` (breath, tail sway, an
+ear flick), `look`, `bite` and, for four-legged quadrupeds, `walk`, `trot` and `gallop` (`run` is
+reserved for part motions). Gaits (`gait.ts`, `gait-bake.ts`, `gait-ik.ts`, `gait-swing.ts`):
+Hildebrand footfall tables, speed √(Fr·g·h) and stride 2.3·Fr^0.3·h from the hip height, each
+stance toe locked to one ground point while the root travels (root motion: the manifest's
+`speed`), the swing on a cycloid with the carpus folding and the toe clear from the first frame,
+analytic two-bone IK with a coupled hock / carpus, a scapula glide, pelvis bob and spine rock.
+Tail and ears follow through on damped springs solved for their periodic orbit (`springs.ts`).
+The armature adds ear bones, joint limits (passive ROM narrowed to the locomotion working range,
+`creature-limits.ts`) and half-angle helpers `<joint>_mid` at shoulder, elbow, carpus, hip, stifle
+and hock (`creature-helpers.ts`). QA `gait` (planted toe < 1 mm/frame at 30 fps, no sinking, loops
+close) and `deform` (volume, stretch, self-crossing at every limit) check them; the review pack's
+pose strip (`render/pose-strip.ts`) shows the ROM extremes and gait frames. Heads: `faceMorphs`
+adds `blink` / `talk` / `breathe` targets and `headClips(part)` keys them (`head-clips.ts`).
+
+Stylised-to-plausible, not photoreal. Realistic animals can still go through
+[`/neural`](08-neural-adapters.md).
 
 ## Scene
 

@@ -94,6 +94,14 @@
   "surfaces": [
     "opaque"
   ],
+  "clips": [
+    {
+      "name": "run",
+      "seconds": 4,
+      "loop": true,
+      "speed": 0
+    }
+  ],
   "paint": {
     "body": "#74382a",
     "letter": "#e8e2d2"

@@ -217,3 +217,7 @@ export function mainHornRoot(): { root: Vec3; radius: number; boss: Vec3 } {
   if (!s) return { root: [0, 0, 0], radius: 0, boss: [0, 0, 0] };
   return { root: rootOf(s), radius: s.radius, boss: s.boss };
 }
+
+/** Every horn's root (left): boss centre, unit axis and base radius, for the collar stamps. */
+export const hornRoots = (): { boss: Vec3; axis: Vec3; radius: number }[] =>
+  SPECS.map((s) => ({ boss: s.boss, axis: unit(s), radius: s.radius }));

@@ -3,12 +3,13 @@
 // the local density), each card a bent strip of `segments` quads: it leaves the skin at `lift`,
 // lies down toward the tip (`bend`), droops with gravity, rolls about its own axis so the outline
 // shows width, and starts `sink` below the surface so the root is buried. With a `field` (the
-// body's SDF) each step follows the surface curvature and never dips under it; a `collide` field
-// (the whole head or body) keeps free-hanging lengths out of faces and ears. `clump` cards share
-// a tip: each card bends toward its clump leader's tip (Poisson roots: hair-roots.ts). Colour from
-// the skin under the root (root → tip tone), UVs from the zone's strand-atlas cells
-// (material/strands.ts).
-// Vertices 0 and 1 of every card straddle its buried root (QA `cardRoots` reads it back).
+// body's SDF) each step follows the surface while on it (`hug` presses it down where the skin
+// holds hair up), hangs free once 1 cm clear, and never dips under it; a `collide` field (the
+// whole head or body) keeps free-hanging lengths out of faces and ears. `clump` cards share a tip;
+// every line is then settled (hair-strand.ts) so no push-out leaves a kink. A card's width is
+// carried along it (no twist), optionally folded into a V section (`fold`), coloured from the
+// skin under the root (root → tip tone, `tint` hue shift), UVs from the zone's strand-atlas cells
+// (material/strands.ts). Vertices 0 and 1 of every card straddle its buried root (QA `cardRoots`).
 
 import {
   cross,
@@ -23,7 +24,17 @@ import {
 } from '../core/index.ts';
 import type { UvRect } from '../material/index.ts';
 import { flowAt, tangentOf } from './hair-flow.ts';
-import { clumpOf, mad, poissonRoots, type Root, sample } from './hair-roots.ts';
+import {
+  bury,
+  clear,
+  clumpOf,
+  gradient,
+  mad,
+  poissonRoots,
+  type Root,
+  sample,
+} from './hair-roots.ts';
+import { gather, lie, settle } from './hair-strand.ts';
 
 export interface CardZone {
   readonly name: string;
@@ -52,6 +63,15 @@ export interface CardZone {
   readonly color?: (p: Vec3, skin: Vec3) => Vec3;
   /** Cards per clump sharing one tip (3–7 for guard hair and locks; default 1 = none). */
   readonly clump?: number;
+  /** V/C section: the card's centre line raised `fold` × its half-width off the side edges, so
+   *  the card reads as a curved lock, not a flat ribbon (0 = flat, 2 tris per segment; > 0 = 4). */
+  readonly fold?: number;
+  /** Hue shift by the tip: the colour is multiplied by this at the tip (root × 1), e.g. sun-lightened. */
+  readonly tint?: Vec3;
+  /** 0..1: how hard the card lies on the `field` where the skin holds it up (faces up or sideways):
+   *  combed hair stays on the head instead of shooting off its curve; where the skin turns under
+   *  (below the occiput, under a belly) it hangs free. Default 0. */
+  readonly hug?: number;
 }
 
 export interface HairCardOptions {
@@ -78,22 +98,6 @@ export interface HairCards {
   readonly counts: Readonly<Record<string, number>>;
 }
 
-const gradient = (f: (p: Vec3) => number, p: Vec3, h: number): Vec3 =>
-  unit([
-    f([p[0] + h, p[1], p[2]]) - f([p[0] - h, p[1], p[2]]),
-    f([p[0], p[1] + h, p[2]]) - f([p[0], p[1] - h, p[2]]),
-    f([p[0], p[1], p[2] + h]) - f([p[0], p[1], p[2] - h]),
-  ]);
-
-/** Newton steps onto the field's zero set, then `sink` under it (fields need not be exact SDFs). */
-function bury(f: (p: Vec3) => number, p: Vec3, sink: number, h: number): Vec3 {
-  let q = p;
-  for (let i = 0; i < 4; i++) q = mad(q, gradient(f, q, h), -(f(q) + (i < 2 ? 0 : sink)));
-  // Thin features (toes, ear rims) can throw Newton far: then trust the mesh normal instead.
-  const moved = Math.hypot(q[0] - p[0], q[1] - p[1], q[2] - p[2]);
-  return moved > 3 * sink + 2 * h ? mad(p, gradient(f, p, h), -sink) : q;
-}
-
 interface Path {
   readonly pts: Vec3[];
   readonly nrm: Vec3[];
@@ -114,6 +118,7 @@ function path(o: HairCardOptions, z: CardZone, r: Root, rng: Rng): Path {
   const lift = (z.lift ?? 0.35) * (0.7 + 0.6 * rng.next());
   const bend = z.bend ?? 0.7;
   const droop = z.droop ?? 0.15;
+  const hug = z.hug ?? 0;
   const roll = (z.roll ?? 0.6) * (rng.next() * 2 - 1);
   const cell = z.cells[Math.floor(rng.next() * z.cells.length)] ?? z.cells[0];
   const f = o.field;
@@ -126,20 +131,33 @@ function path(o: HairCardOptions, z: CardZone, r: Root, rng: Rng): Path {
   for (let k = 1; k <= segs; k++) {
     const s = (k - 1) / segs;
     const p = pts[k - 1] ?? s0.p;
-    const n = f ? gradient(f, p, h) : n0;
-    const a = lift * (1 - bend * s);
-    const t = tangentOf(d, n);
+    // The surface holding the strand: the skin, or the collision solid where that is closer
+    // (long hair over the shoulders). On it the strand follows it (projected onto its tangent
+    // plane, lifted off it); 1 cm clear of both it hangs free: projecting it onto a distant
+    // plane would kink it.
+    const fd = f ? f(p) : 0;
+    const cd = o.collide && k > 1 ? o.collide(p) : Infinity;
+    const on = o.collide && cd < fd ? o.collide : f;
+    const n = on ? gradient(on, p, h) : n0;
+    const near = f && k > 1 ? Math.min(1, Math.max(0, 1 - Math.min(fd, cd) / 0.01)) : 1;
+    const a = lift * (1 - bend * s) * near;
+    const t = unit(mad(mad([0, 0, 0], d, 1 - near), tangentOf(d, n), near));
     d = unit([
       t[0] * Math.cos(a) + n[0] * Math.sin(a),
       t[1] * Math.cos(a) + n[1] * Math.sin(a),
       t[2] * Math.cos(a) + n[2] * Math.sin(a) - droop * s,
     ]);
-    let q = mad(p, d, len / segs + (k === 1 ? sink : 0));
+    const step = len / segs + (k === 1 ? sink : 0);
+    let q = mad(p, d, step);
     // Never under the skin past the root: lift a dipping step back out along the normal.
     const floor = z.width * 0.15 * (k / segs);
+    if (f && hug > 0 && k > 1) q = lie(f, p, q, step, floor, hug, h);
     const dist = f ? f(q) : floor;
     if (dist < floor) q = mad(q, f ? gradient(f, q, h) : n, floor - dist);
     q = clear(o.collide, q, floor, h);
+    // Steer on from where the step actually went: a strand pushed out of a solid slides along
+    // it instead of aiming back in and being pushed out again (a sawtooth).
+    if (k > 1) d = unit(sub(q, p));
     dirs.push(d);
     pts.push(q);
     nrm.push(f ? gradient(f, q, h) : n0);
@@ -152,56 +170,66 @@ function path(o: HairCardOptions, z: CardZone, r: Root, rng: Rng): Path {
   return { pts, nrm, dirs, roll, cell, colour: [skin[0] * g, skin[1] * g, skin[2] * g] };
 }
 
-/** Push p out of a collision solid to `gap` beyond its surface. */
-function clear(c: ((p: Vec3) => number) | undefined, p: Vec3, gap: number, h: number): Vec3 {
-  if (!c) return p;
-  const d = c(p);
-  return d < gap ? mad(p, gradient(c, p, h), gap - d) : p;
-}
-
-/** Bend a clump member's free length toward its leader's tip (s² falloff from the root). */
-function gather(m: Path, lead: Path, pull: number, o: HairCardOptions, h: number): Path {
-  const n = m.pts.length - 1;
-  const a = m.pts[n] ?? [0, 0, 0];
-  const b = lead.pts[n] ?? a;
-  const pts = m.pts.map((p, k) => {
-    const w = pull * (k / n) ** 2;
-    return k === 0 ? p : clear(o.collide, mad(p, sub(b, a), w), 0, h);
-  });
-  return { ...m, pts };
-}
-
 function emit(b: MeshBuilder, z: CardZone, c: Path): Vec3 {
   const segs = c.pts.length - 1;
   const tone = z.tone ?? [0.75, 1.05];
   const mid = (tone[0] + tone[1]) / 2;
+  const fold = z.fold ?? 0;
+  const tint = z.tint ?? [1, 1, 1];
+  const cols = fold > 0 ? 3 : 2;
   let flip = false;
   let base = -1;
+  let carry: Vec3 = [0, 1, 0];
   for (let k = 0; k <= segs; k++) {
     const s = k / segs;
     const p = c.pts[k] ?? [0, 0, 0];
     const dk = unit(sub(c.pts[Math.min(segs, k + 1)] ?? p, c.pts[Math.max(0, k - 1)] ?? p));
     const n = c.nrm[k] ?? [0, 0, 1];
-    const side0 = unit(cross(n, dk));
+    // The ribbon's width is carried along the strand (parallel transport), not re-derived from
+    // the skin normal at each row: off the head that normal swings and the card would twist.
+    const side0 = k === 0 ? unit(cross(n, dk)) : unit(mad(carry, dk, -dot(carry, dk)));
+    carry = side0;
     const side = unit(
       mad(mad([0, 0, 0], side0, Math.cos(c.roll)), cross(dk, side0), Math.sin(c.roll)),
     );
     let nc = unit(cross(side, dk));
     if (k === 0) flip = dot(nc, n) < 0;
     if (flip) nc = [-nc[0], -nc[1], -nc[2]];
-    const vn = unit(mad(mad([0, 0, 0], n, 0.7), nc, 0.3));
+    // Shade mostly with the skin's normal (cards read as one mass), but never past the card's own
+    // side: off the head the skin normal can face away from the card.
+    const skinward = unit(mad(mad([0, 0, 0], n, 0.7), nc, 0.3));
+    const agree = dot(skinward, nc);
+    const vn = agree < 0.5 ? unit(mad(skinward, nc, 0.5 - agree)) : skinward;
     const w = (z.width * (1 - 0.5 * s)) / 2;
     const g = (tone[0] + (tone[1] - tone[0]) * s) / mid;
-    const col: Vec3 = [c.colour[0] * g, c.colour[1] * g, c.colour[2] * g];
+    const hue = (i: 0 | 1 | 2): number => c.colour[i] * g * (1 + (tint[i] - 1) * s);
+    const col: Vec3 = [hue(0), hue(1), hue(2)];
     const u = (c.cell?.u0 ?? 0) + s * ((c.cell?.u1 ?? 0) - (c.cell?.u0 ?? 0));
-    const l = b.vertex({ p: mad(p, side, -w), n: vn, uv: [u, c.cell?.v0 ?? 0], color: col });
+    const v0 = c.cell?.v0 ?? 0;
+    const v1 = c.cell?.v1 ?? 0;
+    // The side edges sit `fold` × w below the centre line (toward the skin): a V section. Their
+    // normals lean outward, so light rolls across the lock instead of flashing off a flat strip.
+    const drop = fold * w;
+    const edge = (sg: number): Vec3 => mad(mad(p, side, sg * w), nc, -drop);
+    const en = (sg: number): Vec3 => unit(mad(vn, side, sg * Math.min(0.6, fold * 0.6)));
+    // Row order left, right, centre: vertices 0 and 1 still straddle the root (`cardRoots`).
+    const l = b.vertex({ p: edge(-1), n: en(-1), uv: [u, v0], color: col });
     if (base < 0) base = l;
-    b.vertex({ p: mad(p, side, w), n: vn, uv: [u, c.cell?.v1 ?? 0], color: col });
+    b.vertex({ p: edge(1), n: en(1), uv: [u, v1], color: col });
+    if (cols === 3) b.vertex({ p, n: vn, uv: [u, (v0 + v1) / 2], color: col });
   }
-  for (let k = 0; k < segs; k++) {
-    const [l0, r0, l1, r1] = [base + 2 * k, base + 2 * k + 1, base + 2 * k + 2, base + 2 * k + 3];
+  const quad = (l0: number, r0: number, l1: number, r1: number): void => {
     if (flip) b.quad(l0, l1, r1, r0);
     else b.quad(l0, r0, r1, l1);
+  };
+  for (let k = 0; k < segs; k++) {
+    const a = base + cols * k;
+    const c = a + cols;
+    if (cols === 2) quad(a, a + 1, c, c + 1);
+    else {
+      quad(a, a + 2, c, c + 2);
+      quad(a + 2, a + 1, c + 2, c + 1);
+    }
   }
   return c.pts[0] ?? [0, 0, 0];
 }
@@ -243,8 +271,9 @@ export function hairCards(o: HairCardOptions): HairCards {
     const lead = clumpOf(list, z.clump ?? 1, z.width * 3);
     paths.forEach((c, i) => {
       const l = lead[i] ?? i;
-      const g = l === i ? c : gather(c, paths[l] ?? c, 0.75, o, Math.max(1e-4, z.width * 0.25));
-      out.push(emit(b, z, g));
+      const pts = l === i ? c.pts : gather(c.pts, paths[l]?.pts ?? c.pts, 0.75);
+      const h = Math.max(1e-4, z.width * 0.25);
+      out.push(emit(b, z, { ...c, pts: settle(pts, o.field, o.collide, z.width * 0.15, h) }));
     });
     counts[z.name] = (counts[z.name] ?? 0) + list.length;
   }

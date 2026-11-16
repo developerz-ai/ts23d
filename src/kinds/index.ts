@@ -12,6 +12,7 @@ export {
 } from './creature.ts';
 export { ALLOMETRY_BAND, type Biology, biology, MAX_WING_LOADING } from './creature-biology.ts';
 export { allometricLimbR, type Bones, massFromBones } from './creature-bones.ts';
+export { creatureClips } from './creature-clips.ts';
 export { creatureCreases } from './creature-creases.ts';
 export {
   type CreatureFur,
@@ -23,6 +24,7 @@ export {
   furChains,
   furZones,
 } from './creature-fur.ts';
+export { rigBones } from './creature-limits.ts';
 export {
   type CreatureColours,
   type CreaturePattern,
@@ -36,6 +38,8 @@ export {
   type Stance,
   type Surface as CreatureSurface,
 } from './creature-spec.ts';
+export { GAITS, gaitTiming } from './gait.ts';
+export { gaitClip } from './gait-bake.ts';
 export {
   HEAD_RES,
   type HeadInfo,
@@ -45,6 +49,7 @@ export {
   headEdits,
   headParams,
 } from './head.ts';
+export { type FaceRig, faceMorphs, HEAD_MORPHS, headClips } from './head-clips.ts';
 export { type CardLayer, hairEdits, type ScalpCardOptions, scalpCards } from './head-hair.ts';
 export {
   type BeardStyle,
@@ -78,6 +83,7 @@ export {
   ridgeHeight,
   roofHeightAt,
 } from './roof-shape.ts';
+export { bakeSprings } from './springs.ts';
 export { tread } from './tread.ts';
 export {
   type TreeFamilyParams,

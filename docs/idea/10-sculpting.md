@@ -28,6 +28,7 @@
 | Primitive library | sphere, ellipsoid, superellipsoid, capsule, roundCone (exact tapered limb), roundBox, cone, torus + rotation | `sculpt-edit.ts`, `sdf-ops.ts` (`shapes`, `sd`) |
 | Blend kernel | `kernel: 'quad'` (C1, default) or `'cubic'` (C2: no highlight kink where a blend ends), per sculpt, group or edit | `sdf-ops.ts` (`smoothMin`), `sculpt-tree.ts` |
 | Brush strokes | `{ stroke: 'crease' \| 'clay' \| 'inflate' \| 'flatten' \| 'pinch', path, radius: [r0, r1], depth }`, each with a declared Lipschitz cost | `sculpt-stroke.ts` |
+| VDM stamps (detail brushes) | `{ vdm: stamp, places }`: scales, warts, horn collars, sockets, scars, pores, furrows, scattered on the block-out with flow-aligned frames (§1b) | `vdm.ts`, `vdm-library.ts`, `vdm-scatter.ts` |
 | Local detail (Dyntopo-like) | `detail: [{ bounds, factor: 2 \| 4 }]` meshes boxes finer, stitched into one closed surface | `sdf-detail.ts`, `surface-nets-detail.ts` |
 | Fairing | `fair(mesh, { iterations, keep: 'creases' })`: bi-Laplacian smoothing that pins creases | `src/passes/fair.ts` |
 | Noise displacement (tertiary skin, rock pitting) | `sd.displace(f, valueNoise(rng), amount)`; `sculptField` exposes the field for it | `sdf-ops.ts`, `value-noise.ts` |
@@ -77,6 +78,48 @@ type SculptEdit = SculptShapeEdit | SculptGroup | SculptStroke;   // sculpt-edit
 | `pinch` | domain warp: pull `p` toward the path by `strength · w(p)` before evaluating everything earlier | 1/(1 − max warp gradient) |
 
 The Lipschitz column matters: `sdf-grid.ts` skips whole 4³ blocks using a Lipschitz bound. Inflate and warps stretch distances, so each stroke must raise the bound it hands to `sampleGrid`, or the grid can cull real surface (a hole, not an error). The compiler sums the bounds; a test fails if a stroke's declared bound is exceeded at sample points. Size: **M** (crease/clay/inflate), **M** more for pinch/flatten.
+
+### 1b. VDM stamps: secondary and tertiary detail as placed brushes (shipped)
+
+Creature sculptors put scales, warts, horn collars, tooth sockets, scars and pores on with VDM
+(vector displacement) brushes: one stamp, dragged onto the surface at a position, normal, size and
+orientation, again and again. ts23d does the same as a sculpt edit kind, never as noise
+(`src/primitives/vdm.ts`, `vdm-places.ts`, `vdm-library.ts`, `vdm-scatter.ts`):
+
+```ts
+const scales = scatterStamps({ field, bounds, rng: ctx.rng.fork('scales'), scale: 0.26,
+  depth: 0.016, flow: (p, n) => tailward(p), zone: (p) => offBelly(p), size: (p) => grade(p) });
+edits.push({ vdm: scalePatch({ rows: 1, cols: 1, seed: 11 }), places: scales });
+edits.push(vdmEdit(hornBase({ rings: 3 }), { at, normal: hornAxis, scale: 0.33, depth: 0.018 }));
+```
+
+- **The stamp** (`VdmStamp { size, grid, lipschitz }`): `size²` texels of (right, up, normal)
+  displacement in footprint widths, edge ring zero (it fades into the skin). `vdmStamp` checks it and
+  computes the Lipschitz of the normal channel (bilinear gradient bound); a lower declared value is
+  refused. `scripts/vdm-import.ts` turns a CC0/permissive brush PNG into a committed quantised
+  `.vdm.bin` carrying the source url, licence and sha256 (licence rules of `import-licence.ts`).
+- **The edit** (`{ vdm, places, mirror? }`): a displacement of the running field like a stroke. The
+  query is inverse-mapped into each placement's frame (normal + tangent `up`), one fixed-point step
+  undoes the lateral (vector) part, the normal part lowers `d`. Overlaps combine by max (raises) and
+  min (cuts), so scales shingle: the higher tip wins over the next root. A shell envelope in `d`
+  makes it exactly inert off the surface (the sparse fold's skips stay bit-identical) and a normal
+  envelope stops it printing through onto a surface facing it across a gap (inner leg ↔ chest).
+  Declared Lipschitz: `1.25 · D · 3.75 / H + (raise and cut ? 2 : 1) · max(k · L_s (1 + a L_w) / scale
+  + D · 3.75 / W)`; `probeLipschitz` catches a stamp that under-declares. Meshing bounds grow only by
+  footprint + depth. With a fixed `lipschitz` (e.g. a recipe's own `sdf` call) a bounded
+  displacement is still safe while `2 · depth ≤ cell`.
+- **The library** (seeded, `createRng`): `scalePatch` (overlapping keeled scales, tips toward +v;
+  `rows: 1, cols: 1` = one scale for scatter), `wart`, `hornBase` (ringed collar, radial bulge),
+  `toothSocket` (rim + pit), `poreField`, `scarWelt`, `furrow`.
+- **Placement** (`scatterStamps`): Poisson-disk darts projected onto f = 0 by Newton steps, frame
+  from ∇f, `up` from a flow callback (bone chains / the hair-flow field of `src/passes/hair-flow.ts`,
+  passed in: primitives cannot import passes), `zone` density and `size` masks.
+- **LOD:** full stamps at LOD0, the big ones at reduced depth at LOD1, none at LOD2 (colour carries
+  them). Budget-neutral: they move the surface, not the cell size. The dragon's scales and horn
+  collars are stamps (`recipes/dragon/stamps.ts`).
+- **Limits:** the lateral part is one inverse step (no true overhangs: an SDF height cannot fold
+  back over itself); stamps carry no colour yet (paint with a `paint` edit or the recipe's paint
+  pass; the tone pass darkens their cavities); a footprint crossing a folded `|y|` midline creases.
 
 ### 2. Draw-skin: `skin()` as a capsule chain with two radii
 

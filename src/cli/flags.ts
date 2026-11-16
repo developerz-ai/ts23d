@@ -43,6 +43,8 @@ export const VALUED = [
   '--az',
   '--el',
   '--fov',
+  '--quality',
+  '--spp',
   '--model',
   '--endpoint',
   '--prompt',

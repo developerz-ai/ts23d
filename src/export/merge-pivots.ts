@@ -8,6 +8,7 @@
 // and finished parts (`finish: name`) into `<pivot>_finish_<name>` children with the finish's.
 // A pivot whose static parent merged away is re-parented to its nearest surviving pivot ancestor
 // (or the root), with `at` / `yaw` re-expressed so its world transform is exactly what QA measured.
+// Unskinned meshes merging into a skinned one bind rigidly to their nearest bone.
 
 import {
   type CompiledAsset,
@@ -22,6 +23,7 @@ import {
   type WorldTransform,
   worldTransforms,
 } from '../core/index.ts';
+import { bindLoose } from './skin.ts';
 
 const isPivot = (p: Part): boolean => p.mesh === null || p.motion !== null;
 
@@ -70,6 +72,8 @@ export function mergeToPivots(
   asset: CompiledAsset,
   glow: readonly (readonly string[])[] = [],
 ): CompiledAsset {
+  // A recipe's rigid prop merging into a skinned body binds to its nearest bone (skin.ts).
+  const join = (ms: readonly Mesh[]): Mesh => merge(bindLoose(ms, asset.skeleton));
   const glowRes = glow.map((globs) => globs.map(globRe));
   const glowOf = (name: string): number => glowRes.findIndex((rs) => rs.some((r) => r.test(name)));
   const byName = new Map(asset.parts.map((p) => [p.name, p]));
@@ -122,7 +126,7 @@ export function mergeToPivots(
       if (!meshes) continue;
       parts.push({
         name: `${pivot}_${surface}`,
-        mesh: merge(meshes),
+        mesh: join(meshes),
         at: [0, 0, 0],
         parent,
         yaw: 0,
@@ -135,7 +139,7 @@ export function mergeToPivots(
       if (!meshes) return;
       const part: Part = {
         name: `${pivot}_glow_${g}`,
-        mesh: merge(meshes),
+        mesh: join(meshes),
         at: [0, 0, 0],
         parent,
         yaw: 0,
@@ -149,7 +153,7 @@ export function mergeToPivots(
       if (!meshes) continue;
       parts.push({
         name: `${pivot}_paint_${slot}`,
-        mesh: merge(meshes),
+        mesh: join(meshes),
         at: [0, 0, 0],
         parent,
         yaw: 0,
@@ -162,7 +166,7 @@ export function mergeToPivots(
       if (!meshes) continue;
       parts.push({
         name: `${pivot}_finish_${finish}`,
-        mesh: merge(meshes),
+        mesh: join(meshes),
         at: [0, 0, 0],
         parent,
         yaw: 0,
@@ -175,7 +179,7 @@ export function mergeToPivots(
   if (body)
     parts.push({
       name: ROOT,
-      mesh: merge(body),
+      mesh: join(body),
       at: [0, 0, 0],
       parent: null,
       yaw: 0,
@@ -200,7 +204,7 @@ export function mergeToPivots(
     if (!isPivot(p)) continue;
     const own = extra.get(`${p.name}|opaque`);
     const { surface: _drop, paint: _slot, finish: _finish, ...rest } = p;
-    parts.push({ ...rest, ...reparented(p), mesh: own ? merge(own) : null });
+    parts.push({ ...rest, ...reparented(p), mesh: own ? join(own) : null });
     layers(p.name, p.name);
   }
   return { ...asset, parts };

@@ -1,35 +1,37 @@
 // Human hair and beard as sculpted locks: a swept-back hair mass inside a rounded hairline with
 // clumps flowing front → crown → nape and grooves between them, a lifted front lock; a clipped
 // beard mass along the jaw with downward locks and a drooping moustache of two locks.
-// Card hair (`hairBaseEdits` + `HUMAN_CARD_HAIR`): the masses stay as the dense base layer and
-// strand cards (swept back, beard down, moustache) break the outline instead of sculpted locks.
+// Card hair (`hairBaseEdits` + `humanCardHair`): the masses, painted hair colour, are the scalp
+// layer; strand cards root on the skull (`bustScalp`) inside a landmark hairline and lie in four
+// layers (dark base clumps flat on the cap, swept mid locks from a left side parting round a crown
+// whorl, a few long top locks for volume, flyaways), then the beard and moustache.
 
 import { type Field, type SculptEdit, sculptField, type Vec3 } from '@developerz.ai/ts23d';
+import type { BustRecipe } from '../_lib/bust/bust.ts';
 import { flowLocks, hairMass, lock, mix } from '../_lib/bust/hair.ts';
-import { headBlock } from '../_lib/bust/head.ts';
-import { C, H, L, SPEC, TORSO } from '../_lib/bust/human/spec.ts';
+import { C, H, L, SK, TORSO } from '../_lib/bust/human/spec.ts';
 import { type Surface, spline, surface, type V } from '../_lib/bust/kit.ts';
 import { torsoEdits } from '../_lib/bust/torso.ts';
+import { bustHairFields, skullHairline } from '../_lib/face/hair-cards.ts';
 
 /** The torso (neck, trapezius) the hair and beard must stop short of. */
 const neck: Field = sculptField(torsoEdits(L, TORSO), { color: C.skin, mirror: 'y' }).field;
 
-/** Hairline: keep hair above a plane rising from the nape to the forehead, above the ears. */
-export const hairline: Field = (p) => {
-  const front = L.gx + 0.02 * H;
-  const zFront = L.mz + 0.86 * H;
-  const zBack = L.mz + 0.42 * H;
-  const t = Math.min(1, Math.max(0, (front - p[0]) / (front - L.back)));
-  const above = zFront + (zBack - zFront) * t;
-  // Above the ears at the sides.
-  const ears = L.mz + 0.62 * H - Math.abs(p[1]) * 0.0;
-  // …and 12 mm short of the neck and trapezius, so the nape edge never folds into them.
-  return Math.max(
-    above - p[2],
-    Math.abs(p[1]) > L.ear[1] * 0.9 ? ears - p[2] : -1,
-    0.012 - neck(p),
-  );
-};
+/** Where the hair grows on the skull: trichion 4.6 cm above the glabella, receding temples, the
+ *  nape line 2.4 cm above the nape landmark, 1.2 cm of skin round each ear. */
+const scalpLine: Field = skullHairline(SK, {
+  front: 0.046,
+  nape: 0.024,
+  ear: 0.012,
+  temple: 0.012,
+});
+
+/** Hairline: the skull line, and 12 mm short of the neck and trapezius so the nape edge never
+ *  folds into them. */
+export const hairline: Field = (p) => Math.max(scalpLine(p), 0.012 - neck(p));
+
+/** The cap sits 8 mm inside the hairline: its edge is under the hairline cards, not on show. */
+const capline: Field = (p) => hairline(p) + 0.008;
 
 export const beardline: Field = (p) => {
   // The beard: below the cheek line, in front of the ears, outside a mouth hole.
@@ -46,7 +48,8 @@ const box: [V, V] = [
 ];
 
 export function hairEdits(scalp: Field, lod: number): SculptEdit[] {
-  const mass = hairMass(scalp, 0.008, hairline, box, C.hairRoot, 0.045);
+  // A 6 mm colour blend: the cap's edge on the skin is soft, not a stair-stepped line.
+  const mass = { ...hairMass(scalp, 0.008, capline, box, C.hairRoot, 0.045), blend: 0.006 };
   const beard = hairMass(scalp, 0.006, beardline, box, C.hairRoot, 0.015);
   const out: SculptEdit[] = [mass, beard];
   if (lod === 2) return out;
@@ -123,81 +126,144 @@ const moustacheline: Field = (p) =>
   Math.min(...MOUSTACHE.map((q) => Math.hypot(p[0] - q[0], Math.abs(p[1]) - q[1], p[2] - q[2]))) -
   0.009;
 
-/** The parting's y (left of centre). */
-const PART = 0.028;
+/** The parting's y (the man's left) and the crown whorl the back hair turns round. */
+const PART = 0.03;
+const WHORL: Vec3 = [SK.occiput[0] + 0.045, -0.012, SK.crown[2] - 0.012];
 
-/** Swept back from the hairline over the crown, falling at the nape and sides; beard downward. */
+/** Swept back from the hairline, away from a side parting, turning round the crown whorl and
+ *  falling at the nape and sides; beard downward, moustache out and down. */
 const comb = (p: Vec3, n: Vec3): Vec3 => {
-  if (beardline(p) < 0.004 || moustacheline(p) < 0.004)
-    return moustacheline(p) < 0.004 ? [0.2, Math.sign(p[1]) * 0.8, -0.6] : [0.25, 0, -1];
-  const t = clamp01((L.gx - p[0]) / (L.gx - L.back));
+  if (moustacheline(p) < 0.004) return [0.2, Math.sign(p[1]) * 0.8, -0.6];
+  if (beardline(p) < 0.004) return [0.25, Math.sign(p[1]) * 0.15, -1];
+  const t = clamp01((SK.glabella[0] - p[0]) / (SK.glabella[0] - SK.occiput[0]));
   const side = Math.abs(n[1]);
-  // Side parting on the left: hair leaves the part line sideways, then sweeps back and down.
+  // Side parting: hair leaves the part line sideways, then sweeps back and down.
   const away = p[1] - PART;
   const top = clamp01(n[2]) * clamp01(1 - Math.abs(away) / 0.05);
-  return [
+  const base: Vec3 = [
     -(0.95 - 0.35 * t) * (1 - 0.6 * top),
-    Math.sign(away) * (0.1 * (1 - t) + 0.9 * top),
+    Math.sign(away) * (0.12 * (1 - t) + 0.9 * top),
     -0.1 - 0.8 * t - 0.35 * side,
+  ];
+  // Crown whorl: a clockwise swirl about the normal within ~4 cm of it.
+  const r: Vec3 = [p[0] - WHORL[0], p[1] - WHORL[1], p[2] - WHORL[2]];
+  const w = Math.max(0, 1 - Math.hypot(r[0], r[1], r[2]) / 0.04) ** 2;
+  const swirl: Vec3 = [
+    n[1] * r[2] - n[2] * r[1],
+    n[2] * r[0] - n[0] * r[2],
+    n[0] * r[1] - n[1] * r[0],
+  ];
+  const sl = Math.hypot(swirl[0], swirl[1], swirl[2]) || 1;
+  const k = (w * 1.5) / sl;
+  return [
+    base[0] * (1 - w) + swirl[0] * k,
+    base[1] * (1 - w) + swirl[1] * k,
+    base[2] * (1 - w) + swirl[2] * k,
   ];
 };
 
-/** Card hairstyle for `cardHair` (recipes/_lib/face/hair-cards.ts): swept-back hair, beard. */
-export function humanCardHair() {
-  const scalp = sculptField([headBlock(SPEC, 2)], { color: SPEC.skin, mirror: 'y' }).field;
-  const base = hairEdits(scalp, 2);
-  const field = sculptField([...base, { field: scalp, bounds: box }], {
-    color: C.hairRoot,
-    mirror: 'y',
-  }).field;
+/** Top locks are long, sides and back short (a swept-back cut, 5–11 cm). */
+const length = (p: Vec3): number => {
+  const up = clamp01((p[2] - (SK.euryon[2] - 0.01)) / 0.05);
+  return 0.05 + 0.06 * up;
+};
+
+/** Card hairstyle for `cardHair` (recipes/_lib/face/hair-cards.ts) on the human bust `b`. */
+export function humanCardHair(b: BustRecipe, lod: number) {
+  // Roots on the finished head (cap, beard mass and all), falling round it.
+  const { skin } = bustHairFields(b, lod);
+  const warm: Vec3 = [1.08, 1.0, 0.86];
   return {
-    field,
+    field: skin,
     bounds: box,
     cell: 0.004,
     comb,
-    // Long hair falls around the head block and the shoulders, never through them.
-    collide: sculptField([headBlock(SPEC, 2), ...torsoEdits(L, TORSO)], {
-      color: SPEC.skin,
-      mirror: 'y',
-    }).field,
+    collide: skin,
     color: mix(C.hairRoot, C.hairTip, 0.3),
     layers: [
-      // Base: dense cards hugging the mass, hiding it with strands.
+      // Base: dark clumps lying flat on the painted cap, hiding the scalp.
       {
         name: 'hair_base',
         kind: 'hair',
         region: hairline,
-        density: 9000,
-        length: 0.055,
-        width: 0.018,
-        lift: 0.08,
+        density: 5000,
+        length: (p: Vec3) => length(p) * 0.75,
+        width: 0.026,
+        lift: 0.04,
         bend: 0.9,
         droop: 0.08,
+        roll: 0.2,
+        fold: 0,
+        tone: [0.45, 0.7],
+        hug: 1,
       },
-      // Volume: longer, a little lifted, swept back.
+      // Mid: the swept locks, clumped in threes, curved across their width.
+      {
+        name: 'hair_mid',
+        kind: 'hair',
+        region: hairline,
+        density: 5200,
+        length,
+        width: 0.018,
+        lift: 0.09,
+        bend: 0.85,
+        droop: 0.1,
+        roll: 0.35,
+        fold: 0.55,
+        clump: 3,
+        tone: [0.7, 1.05],
+        tint: warm,
+        hug: 0.85,
+      },
+      // Top: a few longer locks over the crown for volume.
       {
         name: 'hair_top',
         kind: 'hair',
-        region: hairline,
-        density: 6500,
-        length: 0.09,
-        width: 0.014,
-        lift: 0.12,
-        bend: 0.85,
+        region: (p: Vec3) => Math.max(hairline(p), SK.euryon[2] + 0.015 - p[2]),
+        density: 1400,
+        length: (p: Vec3) => length(p) * 1.15,
+        width: 0.013,
+        lift: 0.14,
+        bend: 0.8,
         droop: 0.12,
-        clump: 4,
+        roll: 0.4,
+        fold: 0.6,
+        clump: 2,
+        tone: [0.85, 1.15],
+        tint: warm,
+        hug: 0.6,
       },
-      // Flyaways: thin, lifted, they break the outline.
+      // Hairline: short fine strands rooted on the edge band, softening the cap's edge.
+      {
+        name: 'hair_edge',
+        kind: 'wisp',
+        region: (p: Vec3) => Math.max(hairline(p), -hairline(p) - 0.012),
+        density: 30000,
+        length: 0.03,
+        width: 0.012,
+        lift: 0.06,
+        bend: 0.8,
+        droop: 0.05,
+        roll: 0.3,
+        fold: 0,
+        tone: [0.6, 0.9],
+        hug: 1,
+      },
+      // Flyaways: stray strands, lifted, they break the outline.
       {
         name: 'hair_fly',
-        kind: 'hair',
+        kind: 'wisp',
         region: hairline,
-        density: 500,
-        length: 0.07,
-        width: 0.007,
-        lift: 0.3,
-        bend: 0.4,
-        roll: 1.2,
+        density: 220,
+        length: 0.06,
+        width: 0.01,
+        lift: 0.14,
+        bend: 0.45,
+        roll: 0.6,
+        fold: 0,
+        tone: [0.9, 1.2],
+        tint: warm,
+        hug: 0.3,
       },
       {
         name: 'beard',
@@ -210,6 +276,7 @@ export function humanCardHair() {
         bend: 0.6,
         droop: 0.4,
         clump: 3,
+        fold: 0,
       },
       {
         name: 'moustache',
@@ -221,6 +288,7 @@ export function humanCardHair() {
         lift: 0.2,
         bend: 0.5,
         droop: 0.5,
+        fold: 0,
       },
     ] as const,
   };

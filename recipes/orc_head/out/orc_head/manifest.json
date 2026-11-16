@@ -1,7 +1,7 @@
 {
   "name": "orc_head",
   "kind": "character",
-  "description": "Stylised orc warrior bust: underbite and lower tusks, heavy brow shelf, ember eyes, warrior knot, hunched trapezius, riveted plate pauldrons with bone spikes, fur mantle, leather baldric",
+  "description": "Stylised orc warrior bust: heavy brow shelf, small deep-set ember eyes, broad flat nose, massive underbite jaw with lower tusks rooted in it, scars and warts, thick neck into huge trapezius, riveted plate pauldrons with bone spikes, fur mantle, leather baldric, warrior knot",
   "tags": [
     "character",
     "fantasy",
@@ -20,18 +20,22 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    126000,
-    40080,
-    3652
+    168562,
+    45476,
+    4784
   ],
   "drawCalls": [
-    2,
-    2,
+    3,
+    3,
     2
   ],
   "pivots": [
     {
       "name": "body",
+      "parent": null
+    },
+    {
+      "name": "body_cutout",
       "parent": null
     },
     {
@@ -41,7 +45,32 @@
   ],
   "emitters": [],
   "sockets": [],
+  "joints": [
+    {
+      "name": "eye_l_orbit",
+      "from": "eye_l",
+      "to": "head",
+      "kind": "socket",
+      "at": [
+        0.0924,
+        0.0382,
+        0.4685
+      ]
+    },
+    {
+      "name": "eye_r_orbit",
+      "from": "eye_r",
+      "to": "head",
+      "kind": "socket",
+      "at": [
+        0.0924,
+        -0.0382,
+        0.4685
+      ]
+    }
+  ],
   "surfaces": [
+    "cutout",
     "opaque"
   ],
   "real": {
@@ -52,13 +81,14 @@
   "measures": [
     {
       "label": "eye spacing (pupil to pupil)",
-      "spec": 0.093,
-      "measured": 0.0930086774751544,
-      "source": "landmarks.ts: eyes ±0.0465 m (0.31 × the 0.30 m head; human 0.265, ×1.17)"
+      "spec": 0.076,
+      "measured": 0.07622770220041275,
+      "source": "spec.ts: the base IPD (0.26 H) at eyes.spacing 1.0 on the 0.30 m head"
     }
   ],
   "sources": [
-    "recipes/orc_head/README.md (design dossier: proportions, palette, references)"
+    "recipes/orc_head/README.md (design dossier: declared race deltas, proportion bands, palette)",
+    "docs/research/face-base.md (CC0 MakeHuman base head and its landmarks)"
   ],
   "qa": {
     "pass": true,

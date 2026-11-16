@@ -10,7 +10,14 @@
 //              occipital bumps
 // Horns, teeth and eyes are their own modules (finer meshes).
 
-import { type Field, type Mesh, merge, type SculptEdit, type Vec3 } from '@developerz.ai/ts23d';
+import {
+  type Field,
+  type Mesh,
+  merge,
+  type SculptEdit,
+  sculptField,
+  type Vec3,
+} from '@developerz.ai/ts23d';
 import { mixRgb, smoothstep, v3 } from '../_lib/creature/curve.ts';
 import { blob } from '../_lib/creature/lowpoly.ts';
 import { sculptPart } from '../_lib/creature/sculpt-part.ts';
@@ -27,6 +34,7 @@ import {
 } from './horns.ts';
 import { C } from './palette.ts';
 import { SK } from './skeleton.ts';
+import { hornCollars } from './stamps.ts';
 import { teethMesh, upperTeeth } from './teeth.ts';
 
 /** The mouth line (world z) the palate is cut at; the jaw closes onto it. */
@@ -317,8 +325,10 @@ export interface HeadMeshes {
  * eye ↔ orbit joints compare the pieces that actually fit together.
  */
 export function headMeshes(lod: 0 | 1 | 2): HeadMeshes {
+  const form = headEdits(lod);
   const common = {
-    edits: headEdits(lod),
+    // Ringed collars at every horn root (stamps.ts), anchored on the plain head field.
+    edits: [...form, ...hornCollars(lod, sculptField(form, { color: C.flank }).field)],
     res: HEAD_RES[lod],
     color: C.flank,
     mirror: true,

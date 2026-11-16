@@ -7,6 +7,7 @@ export { CREATURE_MATERIALS } from './creature.ts';
 export {
   defineMaterial,
   type MaterialInfo,
+  materialGeneration,
   materialOf,
   resetMaterials,
   stripCredits,
@@ -25,6 +26,7 @@ export {
   type StripRecipe,
 } from './generator.ts';
 export { MATERIAL_LIBRARY } from './library.ts';
+export { type LiveSheet, liveSheet } from './live-sheet.ts';
 export type { MaterialDef } from './material-def.ts';
 export { NATURE_LIBRARY } from './nature.ts';
 export { decodePng, type PngFailure, type Rgba } from './paint/decode-png.ts';

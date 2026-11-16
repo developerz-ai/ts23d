@@ -36,12 +36,28 @@ function cellOf(m: Mesh, i: number, t: WeldTolerance, out: Int32Array): void {
   }
   out[6] = Math.round((m.uvs[i * 2] ?? 0) / t.uv);
   out[7] = Math.round((m.uvs[i * 2 + 1] ?? 0) / t.uv);
-  out[11] = 0;
+  out[11] = extraKey(m, i, t.position);
+}
+
+/** Skin influences and morph deltas of vertex i folded into one int: they must match to weld. */
+function extraKey(m: Mesh, i: number, grid: number): number {
+  let h = 0;
+  const mix = (v: number): void => {
+    h = Math.imul(h ^ v, 16777619);
+  };
+  if (m.joints && m.weights)
+    for (let k = 0; k < 4; k++) {
+      mix(m.joints[i * 4 + k] ?? 0);
+      mix(Math.round((m.weights[i * 4 + k] ?? 0) * 65535));
+    }
+  for (const t of m.morphs ?? [])
+    for (let k = 0; k < 3; k++) mix(Math.round((t.positions[i * 3 + k] ?? 0) / grid));
+  return h;
 }
 
 const hashCell = (c: Int32Array): number => {
   let h = 2166136261;
-  for (let k = 0; k < 11; k++) h = Math.imul(h ^ (c[k] ?? 0), 16777619);
+  for (let k = 0; k < 12; k++) h = Math.imul(h ^ (c[k] ?? 0), 16777619);
   return h >>> 0;
 };
 
@@ -65,7 +81,7 @@ function weldMap(m: Mesh, t: WeldTolerance): { remap: Uint32Array; keep: number[
       if (j < 0) break;
       const rep = (keep[j] ?? 0) * 12;
       let same = true;
-      for (let k = 0; k < 11 && same; k++) same = cells[rep + k] === cur[k];
+      for (let k = 0; k < 12 && same; k++) same = cells[rep + k] === cur[k];
       if (same) {
         found = j;
         break;
@@ -98,8 +114,8 @@ function area2(p: Float32Array, a: number, b: number, c: number): number {
 
 export function weld(m: Mesh, t: WeldTolerance = DEFAULT_WELD): Welded {
   const { remap, keep } = weldMap(m, t);
-  const pick = (src: Float32Array, w: number): Float32Array => {
-    const out = new Float32Array(keep.length * w);
+  const pick = <T extends Float32Array | Uint16Array>(src: T, w: number): T => {
+    const out = new (src.constructor as new (n: number) => T)(keep.length * w);
     keep.forEach((i, j) => {
       for (let k = 0; k < w; k++) out[j * w + k] = src[i * w + k] ?? 0;
     });
@@ -140,6 +156,10 @@ export function weld(m: Mesh, t: WeldTolerance = DEFAULT_WELD): Welded {
       uvs: pick(m.uvs, 2),
       colors: pick(m.colors, 3),
       indices: new Uint32Array(idx),
+      ...(m.joints && m.weights ? { joints: pick(m.joints, 4), weights: pick(m.weights, 4) } : {}),
+      ...(m.morphs
+        ? { morphs: m.morphs.map((t) => ({ name: t.name, positions: pick(t.positions, 3) })) }
+        : {}),
     },
     degenerate,
     duplicate,

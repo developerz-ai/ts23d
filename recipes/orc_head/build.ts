@@ -1,101 +1,102 @@
-// Orc bust assembly: one skin sculpt (skull + face + jaw + ears + neck + torso, so no seam shows at
-// the neck), eyeballs as their own pivoted parts, armour, hair knot and plinth. `stage` replays
-// the sculpting order (1 block-out … 4 secondary/tertiary) for silhouette checks; the asset
-// builds stage 4. LOD policy: sculpt cell 4.2 / 8 / 22 mm; LOD2 keeps primaries and planes only.
+// Orc bust assembly on the shared skull pipeline (../_lib/bust/bust.ts `bustEdits`): the CC0 base
+// warped to the orc (spec.ts) → planes → muscles → features → skin zones, on the orc's own torso
+// (torso.ts: the neck leaning into trapezius that rise to the ears), plus the orc features
+// (features.ts) and swept tusks rooted in the jaw (tusks.ts). One sculpt meshed as two parts split
+// at the seam the fur mantle hides — `head` fine, `bust` coarser (LOD2: one coarse `head`) — then
+// the gear on the stage-2 skin: plate pauldrons with bone spikes, baldric, fur mantle, necklace,
+// the warrior's knot and card hair; socketed `eye_l` / `eye_r`; a turned plinth; vertex AO.
 
 import {
   type BuildContext,
   bakeAo,
-  createRng,
+  type DetailRegion,
   type Mesh,
   merge,
-  type Rng,
-  type SculptEdit,
-  sculptField,
+  type PartOptions,
 } from '@developerz.ai/ts23d';
+import { type BustRecipe, bustEdits, faceDetail } from '../_lib/bust/bust.ts';
 import { eyes } from '../_lib/bust/eye.ts';
-import { type Surface, surface } from '../_lib/bust/kit.ts';
+import type { Surface } from '../_lib/bust/kit.ts';
+import { cardHair } from '../_lib/face/hair-cards.ts';
 import { armour } from './armour.ts';
-import { defectEdits } from './defects.ts';
-import { earEdits } from './ears.ts';
-import { ORC_EYE } from './eyes.ts';
-import { faceEdits } from './face.ts';
+import { featureEdits, toneEdits } from './features.ts';
 import { furMantle, necklace, seamField } from './fur.ts';
-import { hairKnot } from './hair.ts';
-import { jawEdits } from './jaw.ts';
-import { warPaint } from './paint.ts';
+import { hairKnot, orcCardHair } from './hair.ts';
 import { C } from './palette.ts';
 import { plinth } from './plinth.ts';
-import { skinMesh } from './skin.ts';
-import { skullEdits } from './skull.ts';
+import { ORC_TONE, skinMesh } from './skin.ts';
+import { BL, CHARACTER, EAR, EYE, SK, SPEC, TORSO } from './spec.ts';
 import { torsoEdits } from './torso.ts';
+import { tusks } from './tusks.ts';
 
-/** Skin sculpt cell per LOD, metres. */
-export const CELL = [0.0057, 0.0115, 0.04] as const;
+export const ORC_BUST: BustRecipe = {
+  spec: SPEC,
+  skull: CHARACTER,
+  // A brute: hard planes, a brow shelf, heavy cheekbones and masseters, a corded neck, deep lines.
+  forms: { planes: 1.4, brow: 2.6, cheek: 1.3, jaw: 1.1, neck: 1.4, lines: 1.6, lips: 0.5 },
+  zones: { lips: C.lips, flush: C.flush, socket: C.socket, brows: C.brow },
+  l: BL,
+  eye: EYE,
+  ear: EAR,
+  torso: TORSO,
+  tone: ORC_TONE,
+  plinth: { radius: 0.13, color: C.plinth },
+  cells: { head: [0.0055, 0.0105, 0.03], bust: [0.0095, 0.018, 0.032] },
+  // The torso's stage-4 neck veins ran over the skull stage's wider jaw: muscle borders only.
+  body: (stage, skin) => torsoEdits(Math.min(stage, 3), skin),
+  features: (stage, skin, lod, rng) => [
+    ...featureEdits(stage, skin, lod, rng),
+    ...(stage >= 4 ? toneEdits() : []),
+  ],
+  hair: () => [],
+  outfit: () => [],
+};
 
-export interface OrcOptions {
-  /** Sculpt stage to stop at (1 block-out, 2 planes, 3 features, 4 secondary/tertiary). */
-  readonly stage?: number;
-  /** Leave the armour, hair and plinth off (look at the anatomy alone). */
-  readonly bare?: boolean;
+/** The stage-2 skin (skull, planes, torso) the gear, strokes and hair lie on. */
+export function bodySurface(lod = 0): Surface {
+  return bustEdits(ORC_BUST, 2, lod).skin;
 }
 
-/** The skin's edit list at a stage. Stage 3+ strokes (creases, clay strips, scars) are laid ON
- *  the stage-2 surface (primaries + planes), so every line follows the real skin. */
-export function skinEdits(stage: number, torso = true, rng: Rng = createRng(1)): SculptEdit[] {
-  const forms = (st: number, s?: Surface): SculptEdit[] => [
-    ...(torso ? torsoEdits(st, s) : []),
-    ...skullEdits(st, s),
-    ...jawEdits(st, s),
-    ...faceEdits(st, s),
-    { group: earEdits(st), blend: 0.014 },
+/** LOD0 detail boxes: the shared eye and ear boxes, and the mouth and nose base at half cell
+ *  (the closed lips and nostrils alias at the head cell). */
+function detail(): DetailRegion[] {
+  const w = Math.abs(SK.cheilion[1]) + 0.012;
+  return [
+    ...faceDetail(ORC_BUST),
+    {
+      bounds: [
+        [SK.stomion[0] - 0.035, -w, SK.stomion[2] - 0.025],
+        [SK.pronasale[0] + 0.01, w, SK.alare[2]],
+      ],
+      factor: 2,
+    },
   ];
-  if (stage < 3) return forms(stage);
-  const s = bodySurface(torso);
-  return [...forms(stage, s), ...defectEdits(stage, s), ...warPaint(stage, s, rng.fork('paint'))];
 }
 
-/** The stage-2 skin (primaries + planes) as a surface to lay strokes, straps and paint on. */
-export function bodySurface(torso = true): Surface {
-  const edits = [
-    ...(torso ? torsoEdits(2) : []),
-    ...skullEdits(2),
-    ...jawEdits(2),
-    ...faceEdits(2),
-    { group: earEdits(2), blend: 0.014 },
-  ];
-  return surface(sculptField(edits, { color: C.skin, mirror: 'y' }).field);
-}
-
-/** Skin sculpt cell per LOD for the `bust` (torso) part, metres: it carries less detail. */
-export const BUST_CELL = [0.0095, 0.018, 0.032] as const;
-
-export function buildOrc(ctx: BuildContext, o: OrcOptions = {}): void {
-  // LOD2 is a silhouette: the planes stage at the coarse cell.
-  const stage = Math.min(o.stage ?? 4, ctx.pick([4, 4, 2]));
-  const cell = CELL[ctx.lod];
-  const edits = skinEdits(stage, true, ctx.rng.fork('skin-edits'));
+export function buildOrc(ctx: BuildContext): void {
+  const lod = ctx.lod;
+  const { edits, skin } = bustEdits(ORC_BUST, ctx.pick([4, 4, 2]), lod, ctx.rng.fork('features'));
+  const cell = ctx.pick(ORC_BUST.cells.head);
+  const bustCell = ctx.pick(ORC_BUST.cells.bust);
   const rng = ctx.rng.fork('skin');
-  const bumps = ctx.lod === 0 ? 0.00035 : 0;
-  // One sculpt, two parts split at a seam the fur collar hides: the head at a fine cell, the
-  // torso at a coarser one. Each laps a cell past the seam so no gap can open.
+  // One sculpt, two parts split at the seam the fur collar hides; each laps a cell past it.
   const seam = seamField();
-  const lap = BUST_CELL[ctx.lod] * 0.5;
-  // LOD2: one coarse sculpt, no split (nothing up close to need the fine head cell).
+  const lap = bustCell * 0.5;
   const meshes: Record<string, Mesh> =
-    ctx.lod === 2
+    lod === 2
       ? { head: skinMesh(edits, cell, { rng }) }
       : {
           head: skinMesh(edits, cell, {
             rng,
-            bumps,
+            bumps: lod === 0 ? 0.0003 : 0,
+            ...(lod === 0 ? { detail: detail() } : {}),
             clip: (p) => -seam(p) - lap,
             within: [
-              [-0.2, -0.3, 0.24],
-              [0.25, 0.3, 0.7],
+              [-0.22, -0.3, 0.16],
+              [0.28, 0.3, 0.7],
             ],
           }),
-          bust: skinMesh(edits, BUST_CELL[ctx.lod], {
+          bust: skinMesh(edits, bustCell, {
             rng,
             clip: (p) => seam(p) - lap,
             within: [
@@ -104,30 +105,33 @@ export function buildOrc(ctx: BuildContext, o: OrcOptions = {}): void {
             ],
           }),
         };
-  if (!o.bare) {
-    const body = bodySurface();
-    const gear = armour(ctx, body);
-    meshes['pauldrons'] = gear.pauldrons;
-    meshes['spikes'] = gear.spikes;
-    if (gear.harness) meshes['harness'] = gear.harness;
-    meshes['mantle'] = furMantle(ctx, body);
-    if (ctx.lod < 2) meshes['necklace'] = necklace(ctx, body);
-    meshes['hair'] = hairKnot(ctx, body);
-    meshes['plinth'] = plinth(ctx);
-  }
-  // Vertex AO across every part (LOD0/1): creases, under the jaw, under the pauldrons and fur.
+  meshes['tusks'] = tusks(lod);
+  const gear = armour(ctx, skin);
+  meshes['pauldrons'] = gear.pauldrons;
+  meshes['spikes'] = gear.spikes;
+  if (gear.harness) meshes['harness'] = gear.harness;
+  meshes['mantle'] = furMantle(ctx, skin);
+  if (lod < 2) meshes['necklace'] = necklace(ctx, skin);
+  meshes['hair_knot'] = hairKnot(ctx, skin);
+  meshes['plinth'] = plinth(ctx);
   const all = merge(Object.values(meshes));
-  const ao = (m: Mesh): Mesh =>
-    ctx.lod < 2
-      ? bakeAo(m, { samples: ctx.pick([16, 10, 8]), radius: 0.12, strength: 0.5 }, all)
-      : m;
-  // The bone spikes stand in iron collars riveted to the pauldron caps: a hard weld onto the
-  // plate, not flesh growing out of the bust (which their name would default to).
+  // The bone spikes stand in iron collars riveted to the pauldron caps (a weld onto the plate);
+  // the tusks grow out of the jaw.
+  const opts: Record<string, PartOptions> = {
+    spikes: { connect: { as: 'welded', to: 'pauldrons' } },
+  };
   for (const [name, m] of Object.entries(meshes))
-    ctx.part(name, ao(m), name === 'spikes' ? { connect: { as: 'welded', to: 'pauldrons' } } : {});
-  eyes(ctx, ORC_EYE, {
-    cell: ctx.pick([0.0024, 0.0045, 0.012]),
+    ctx.part(
+      name,
+      lod < 2 ? bakeAo(m, { samples: ctx.pick([14, 9, 6]), radius: 0.1, strength: 0.5 }, all) : m,
+      opts[name] ?? {},
+    );
+  cardHair(ctx, orcCardHair(skin));
+  eyes(ctx, EYE, {
+    cell: ctx.pick([0.0016, 0.003, 0.008]),
     finish: 'cornea',
-    proud: ctx.lod === 0 ? 0 : cell * 0.35,
+    proud: lod === 0 ? 0 : cell * 0.3,
+    // The orbit's seat resolves at LOD0 only (coarser cells close the hollow).
+    ...(lod === 0 ? { socketIn: 'head' } : {}),
   });
 }

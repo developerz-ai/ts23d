@@ -1,9 +1,11 @@
 // Orc armour: plate pauldrons and their harness. Each pauldron is a domed cap plate over the
-// deltoid and three overlapping lames down the arm, each flaring wider than the one above — forged
-// plates with real thickness, a rolled bead along every lower edge (plates.ts), rivets and a boss
+// deltoid, hammer-peened, and three overlapping lames down the arm, each flaring wider than the
+// one above — forged plates with real thickness, a rolled bead along every lower edge, the cap's
+// lip included (plates.ts), rivets and a boss
 // — three bone spikes rooted in the boss and in iron collars; a leather baldric crosses the chest
 // from under the left pauldron with an iron buckle. Plates on `steel_painted` (gunmetal paint, chips to rusty steel), straps on `leather`.
-// LOD0 carries the rivets; LOD2 coarsens the plates' rings.
+// LOD0 carries the rivets and the hammer peening; LOD2 coarsens the plates' rings. Straps and
+// their stitching come from ../_lib/bust/cloth-strap.ts.
 
 import {
   type BuildContext,
@@ -13,10 +15,12 @@ import {
   type SculptEdit,
   sculpt,
 } from '@developerz.ai/ts23d';
+import { stitches, strap } from '../_lib/bust/cloth-strap.ts';
 import {
   add,
   cone2,
   cross,
+  dot,
   k,
   local,
   mul,
@@ -30,8 +34,6 @@ import { plateProfile, revolvePlate } from '../_lib/bust/plates.ts';
 import { BALDRIC, cap, capPoint, SPIKES } from './fittings.ts';
 import { L } from './landmarks.ts';
 import { C } from './palette.ts';
-
-const dotp = (p: V, q: V): number => p[0] * q[0] + p[1] * q[1] + p[2] * q[2];
 
 /** One pauldron (s = +1 left, −1 right): plate meshes, rivet + collar edits, spike edits. */
 function pauldron(
@@ -77,6 +79,17 @@ function pauldron(
     drip: lod === 0 ? drip : [],
     length: 0.025,
   });
+  // Hammer peening (LOD0): the forging's shallow facets over the whole dome, 0.6–1.2 mm deep,
+  // 9–15 mm wide — raking light reads beaten iron, not a pressed bowl.
+  const peen =
+    lod === 0
+      ? Array.from({ length: 22 }, () => ({
+          theta: 360 * rng.next(),
+          h: H * (0.2 + 0.75 * rng.next()),
+          radius: 0.009 + rng.next() * 0.006,
+          depth: 0.0006 + rng.next() * 0.0006,
+        }))
+      : [];
   const capRivets = Array.from({ length: 9 }, (_, i) => i * 40 + 20);
   const rev = {
     at: capAt,
@@ -91,7 +104,11 @@ function pauldron(
       from: 0,
       to: 360,
       steps,
-      dents: dents(3, 0.02, 0.06, 0, 360),
+      dents: [...dents(3, 0.02, 0.06, 0, 360), ...peen],
+      // The lip rolled over a wire like the lames' (a forged edge, not a cut one).
+      ...(lod < 2
+        ? { bead: { r: 0.006, segments: 8, color: C.plateRim, at: meridian.length - 1 } }
+        : {}),
       wear: wear(
         meridian.length - 1,
         meridian.length + arc,
@@ -178,63 +195,6 @@ function pauldron(
   return { plates, iron, bone };
 }
 
-/** A flat strap following a surface: thin rounded boxes along the path, w = the skin normal. */
-function strap(sf: Surface, path: readonly V[], width: number, thick: number): SculptEdit[] {
-  const pts = path.map((p) => sf.off(p, thick / 2 + 0.0015));
-  const out: SculptEdit[] = [];
-  for (let i = 0; i + 1 < pts.length; i++) {
-    const a = pts[i];
-    const b = pts[i + 1];
-    if (!a || !b) continue;
-    const mid = mul(add(a, b), 0.5);
-    const d = sub(b, a);
-    const l = Math.hypot(d[0], d[1], d[2]);
-    const u = norm(d);
-    const n0 = sf.normal(mid);
-    const w = norm(sub(n0, mul(u, dotp(n0, u))));
-    const f = { o: mid, u, v: cross(w, u), w };
-    out.push(
-      local(
-        f,
-        k.box([0, 0, 0], [l / 2 + width * 0.15, width / 2, thick / 2], thick * 0.45),
-        [
-          [-l / 2 - width, -width, -width],
-          [l / 2 + width, width, width],
-        ],
-        { blend: thick * 0.9 },
-      ),
-    );
-  }
-  return out;
-}
-
-/** Stitching along both edges of a strap: short raised thread dashes 3 mm in from each edge. */
-function stitches(sf: Surface, path: readonly V[], width: number, thick: number): SculptEdit[] {
-  const out: SculptEdit[] = [];
-  const pts = path.map((p) => sf.off(p, thick + 0.0015));
-  for (let i = 0; i + 1 < pts.length; i++) {
-    const a = pts[i];
-    const b = pts[i + 1];
-    if (!a || !b) continue;
-    const u = norm(sub(b, a));
-    const n = sf.normal(a);
-    const side = norm(cross(n, u));
-    const l = Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]);
-    for (let d = 0.004; d < l; d += 0.008)
-      for (const e of [-1, 1]) {
-        const c = add(add(a, mul(u, d)), mul(side, e * (width / 2 - 0.004)));
-        out.push({
-          shape: 'capsule',
-          at: add(c, mul(u, -0.0022)),
-          to: add(c, mul(u, 0.0022)),
-          size: 0.0011,
-          color: C.thread,
-        });
-      }
-  }
-  return out;
-}
-
 export interface ArmourParts {
   readonly pauldrons: Mesh;
   readonly spikes: Mesh;
@@ -263,7 +223,7 @@ export function armour(ctx: BuildContext, body: Surface): ArmourParts {
   const leather = sculpt({
     edits: [
       ...strap(body, ctrl, 0.042, 0.007),
-      ...(lod === 0 ? stitches(body, ctrl, 0.042, 0.007) : []),
+      ...(lod === 0 ? stitches(body, ctrl, 0.042, 0.007, C.thread) : []),
     ],
     resolution: ctx.pick([0.0048, 0.0055, 0.014]),
     color: C.strap,
@@ -277,7 +237,7 @@ export function armour(ctx: BuildContext, body: Surface): ArmourParts {
   const bn = body.normal(bc);
   const along = norm(sub(ctrl[6] ?? mid, ctrl[4] ?? mid));
   // Orthonormal: a raw cross product sheared the frame into a knife-cornered parallelogram.
-  const u = norm(sub(along, mul(bn, dotp(along, bn))));
+  const u = norm(sub(along, mul(bn, dot(along, bn))));
   const f = { o: bc, u, v: cross(bn, u), w: bn };
   const near: [V, V] = [
     [-0.04, -0.04, -0.02],

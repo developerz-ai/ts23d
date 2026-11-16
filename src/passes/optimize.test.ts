@@ -96,3 +96,30 @@ describe('optimize weldEpsilon', () => {
     expect(triangleCount(optimize(two, { weldEpsilon: 0.01 }).mesh)).toBe(24);
   });
 });
+
+describe('optimize keeps skin and morph data (D46)', () => {
+  it('carries joints, weights and morph displacements through weld + reorder', () => {
+    const base = soup(3);
+    const n = base.positions.length / 3;
+    const joints = new Uint16Array(n * 4);
+    const weights = new Float32Array(n * 4);
+    const disp = new Float32Array(n * 3);
+    for (let v = 0; v < n; v++) {
+      const x = base.positions[v * 3] ?? 0;
+      joints[v * 4] = x < 1.5 ? 0 : 1;
+      weights[v * 4] = 1;
+      disp[v * 3 + 2] = x;
+    }
+    const out = optimize({ ...base, joints, weights, morphs: [{ name: 'lift', positions: disp }] });
+    const m = out.mesh;
+    const k = m.positions.length / 3;
+    expect(m.joints?.length).toBe(k * 4);
+    expect(m.weights?.length).toBe(k * 4);
+    expect(m.morphs?.[0]?.positions.length).toBe(k * 3);
+    for (let v = 0; v < k; v++) {
+      const x = m.positions[v * 3] ?? 0;
+      expect(m.joints?.[v * 4]).toBe(x < 1.5 ? 0 : 1);
+      expect(m.morphs?.[0]?.positions[v * 3 + 2]).toBeCloseTo(x, 6);
+    }
+  });
+});

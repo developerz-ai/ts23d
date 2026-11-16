@@ -7,7 +7,7 @@ import { type IntendedCrease, sculptField } from '@developerz.ai/ts23d';
 import { cutCreases, torsoCreases } from '../_lib/bust/anatomy-creases.ts';
 import { bustEdits, bustScalp } from '../_lib/bust/bust.ts';
 import { creaseAt, creaseCurve, edgeCreases, ringCreases } from '../_lib/bust/creases.ts';
-import { collarRing, mantleRegion, tunicFolds } from '../_lib/bust/human/clothes.ts';
+import { collarRing, mantleRegion, outfitCreases, tunicFolds } from '../_lib/bust/human/clothes.ts';
 import { H, L, SK, SPEC, TORSO } from '../_lib/bust/human/spec.ts';
 import { surface, type V } from '../_lib/bust/kit.ts';
 import { torsoEdits } from '../_lib/bust/torso.ts';
@@ -31,6 +31,8 @@ function creases(): IntendedCrease[] {
   const onHair = (line: V[], t: number): V[] => line.map((p) => sc.off(p, t));
   const sc = surface(scalp);
   return [
+    // Every garment edge the cloth tailoring (clothes.ts) stands off the layer beneath.
+    ...outfitCreases(skin),
     ...skullCreases(SK, H),
     ...torsoCreases(L, TORSO),
     ...hairLines().flatMap((l, i) =>

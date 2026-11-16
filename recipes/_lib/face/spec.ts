@@ -37,6 +37,8 @@ export interface FaceSpec {
   readonly mouth: { readonly width: number; readonly lips: number; readonly underbite: number };
   /** Nasion → menton length ×. */
   readonly face: number;
+  /** Prognathism: the muzzle (nose base, lips, chin, jaw line) pushed forward, ΔH (default 0). */
+  readonly muzzle?: number;
   /** Ear length ×, tip pull (ΔH: back, out, up), whole ear swung out from the head, degrees. */
   readonly ears: { readonly length: number; readonly tip: Vec3; readonly out: number };
   /** Neck width ×, trapezius rise ΔH, shoulder width ×. */

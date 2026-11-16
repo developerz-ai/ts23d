@@ -3,7 +3,14 @@
 // pivoted inside the body's tail stump so an engine (or the baked sway) can swish it. Built in
 // world space, then moved into the pivot's frame. Far LOD: a swept tube and three-sided blades.
 
-import { type Mesh, merge, place, type SculptEdit, type Vec3 } from '@developerz.ai/ts23d';
+import {
+  type Mesh,
+  merge,
+  place,
+  type SculptEdit,
+  sculptField,
+  type Vec3,
+} from '@developerz.ai/ts23d';
 import { pointAt, resample, tangentAt, v3 } from '../_lib/creature/curve.ts';
 import { type HornOptions, horn, hornNodes } from '../_lib/creature/horn.ts';
 import { skinTube } from '../_lib/creature/lowpoly.ts';
@@ -14,6 +21,7 @@ import { C, HORN } from './palette.ts';
 import { tailPaint, tailRelief } from './scales.ts';
 import { TAIL_PIVOT } from './skeleton.ts';
 import { spineMesh } from './spines.ts';
+import { tailStamps } from './stamps.ts';
 
 /** The spade's three blades (world space). */
 function spadeSpecs(segments: number): HornOptions[] {
@@ -90,12 +98,14 @@ export function tailMesh(lod: 0 | 1 | 2): Mesh {
   const [px, py, pz] = TAIL_PIVOT;
   const toPivot = (m: Mesh): Mesh => place(m, { at: [-px, -py, -pz] });
   if (lod === 2) return merge([toPivot(tailLowpoly()), spineMesh(lod, 'tail')]);
+  const form = tailEdits(lod);
+  const scales = tailStamps(lod, sculptField(form, { color: C.flank }).field);
   const main = sculptPart({
-    edits: tailEdits(lod),
+    edits: [...form, ...scales.edits],
     res: [0.035, 0.085][lod] ?? 0.085,
     color: C.flank,
     tone: { reach: 0.1, ground: 0.5 },
-    paint: tailPaint(lod),
+    paint: tailPaint(lod, scales.shade),
     ...(lod === 0 ? { relief: tailRelief() } : {}),
   });
   return merge([toPivot(main.mesh), spineMesh(lod, 'tail')]);

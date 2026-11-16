@@ -24,6 +24,15 @@ import {
 } from './trim-sheet.ts';
 
 const defined = new Map<string, MaterialDef>();
+let generation = 0;
+
+/**
+ * Bumps whenever the set of defined materials changes. A painted sheet is stale when the
+ * generation it was painted at differs: repaint before exporting or rendering (D47).
+ */
+export function materialGeneration(): number {
+  return generation;
+}
 
 /** The same definition, field by field (painters by identity, colours and params by value). */
 function same(a: MaterialDef, b: MaterialDef): boolean {
@@ -63,6 +72,7 @@ export function defineMaterial(def: MaterialDef): CustomStripId {
       fix: 'reuse a built-in strip with a vertex colour, or restyle an unused built-in strip in your SheetRecipe',
     });
   defined.set(id, def);
+  generation++;
   pushCustom(id, def.spanMetres ?? 4, CUSTOM_STRIP_SLOTS);
   (HOUSE_STRIPS as Record<string, StripRecipe>)[id] = recipe;
   return id as CustomStripId;
@@ -81,6 +91,7 @@ export function resetMaterials(): void {
   }
   defined.clear();
   clearCustom();
+  generation++;
 }
 
 export interface MaterialInfo {

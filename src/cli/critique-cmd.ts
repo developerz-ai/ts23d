@@ -42,7 +42,9 @@ import {
   cameraFor,
   contactSheet,
   detailWindows,
+  HERO_PATH,
   lodStrip,
+  pathHeroThreaded,
   renderBeauty,
 } from '../render/index.ts';
 import type { Args } from './args.ts';
@@ -216,6 +218,9 @@ export async function critiqueOne(
   const dir = join(args.out, asset.name, 'critique');
   await mkdir(dir, { recursive: true });
   const { images, lods, metrics } = critiqueImages(asset, { ...args.render, sheet });
+  const lod0 = lods[0] ?? compile(asset);
+  // The bound hero is the committed one: path traced at the shots setting (render/path/).
+  images.set('hero.png', await pathHeroThreaded(lod0, { ...args.render, ...HERO_PATH, sheet }));
   const renders = Object.fromEntries([...images].map(([n, b]) => [n, sha256(b)]));
   const dossier = join(dirname(resolve(recipe)), 'README.md');
   const hasDossier = await Bun.file(dossier).exists();
@@ -251,7 +256,6 @@ export async function critiqueOne(
     await Bun.write(path, bytes);
     files.push(path);
   }
-  const lod0 = lods[0] ?? compile(asset);
   const cal = await calibrated(lod0, dirname(resolve(recipe)), dir);
   files.push(cal.file);
   if (!args.json) console.log(cal.line);
