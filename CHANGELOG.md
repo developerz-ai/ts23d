@@ -4,6 +4,8 @@ All notable changes to `@developerz.ai/ts23d`. Format: [Keep a Changelog](https:
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-11-16
+
 An optional model tier (any model through an adapter, outputs cached so builds stay offline and deterministic), one-command setup and diagnosis, hybrid recipes, game-project commands, a hero texture tier and scale tools, with a gallery that shows the CPU tier and the model tier side by side.
 
 ### Added
@@ -292,7 +294,8 @@ The first published version: the asset DSL with primitives, organic sculpting, t
 - Animations: `toGlb()` exports none unless `{ animations: true }` (glTF has no autoplay flag; engines drive named pivots from code). `t3d build` bakes the `run` clip by default so viewers show play controls; `--no-animations` skips it.
 - CLI output is one folder per asset: `out/<asset>/{lod0,lod1,lod2}.glb`, `sheet.png`, `manifest.json`, plus `out/index.json`. `t3d build` renders the sheet too (`--no-shot` to skip); `t3d shot` writes sheet + manifest only.
 
-[Unreleased]: https://github.com/developerz-ai/ts23d/compare/v0.8.0...HEAD
+[Unreleased]: https://github.com/developerz-ai/ts23d/compare/v0.9.0...HEAD
+[0.9.0]: https://github.com/developerz-ai/ts23d/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/developerz-ai/ts23d/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/developerz-ai/ts23d/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/developerz-ai/ts23d/compare/v0.5.0...v0.6.0
