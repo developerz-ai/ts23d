@@ -6,6 +6,7 @@ Every published version of `@developerz.ai/ts23d`, newest first: one page each w
 
 | Version | Date | Summary |
 |---|---|---|
+| [0.9.0](0.9.0.md) | 2026-11-16 | An optional model tier (any model through an adapter, outputs cached so builds stay offline and deterministic), one-command setup and diagnosis, hybrid recipes, game-project commands, a hero texture tier and scale tools, with a gallery that shows the CPU tier and the model tier side by side. |
 | [0.8.0](0.8.0.md) | 2026-11-16 | Assets ship rigged and animated: creatures export a skinned skeleton with walk, trot and gallop clips that keep their feet planted and their joints in shape, heads blink and talk, hero images are path traced, and organic detail is stamped on with vector displacement. |
 | [0.7.0](0.7.0.md) | 2026-11-15 | Realism groundwork: a calibrated critique and reference-photo matching so "looks real" is measured, a stronger sculpt engine, wolves built from bones and muscles with strand-card fur, and human, elf and goblin busts rebuilt from skull to skin with card hair. |
 | [0.6.0](0.6.0.md) | 2026-11-14 | Tooling for a repo that runs itself (per-release changelog pages and a written ten-year maintenance contract), plus crank-linkage motions that keep the Jupiter locomotive's rods on their crank pins. |
