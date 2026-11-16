@@ -4,6 +4,24 @@ All notable changes to `@developerz.ai/ts23d`. Format: [Keep a Changelog](https:
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-11-16
+
+Assets ship rigged and animated: creatures export a skinned skeleton with walk, trot and gallop clips that keep their feet planted and their joints in shape, heads blink and talk, hero images are path traced, and organic detail is stamped on with vector displacement.
+
+### Added
+- Skinning: `skinWeights` (weights from the sculpt's own bone fields, ≤ 4 influences), glTF skins with inverse bind matrices, morph targets, named clips, per-bone hitbox capsules and props on bones; the `skin` QA gate (#38).
+- Motion: procedural walk / trot / gallop (Hildebrand phases, two- and three-bone IK, planted feet), baked tail and ear springs, scapula bones, joint limits from each asset's own clips; head `blink` / `talk` / `breathe` clips on a `face` node; `deform` and `gait` QA gates; a pose strip in `t3d review` (#38).
+- Path tracer: `t3d hero --quality path` (deterministic CPU path tracing with subsurface skin, hair lobes and denoise); committed hero images are path traced; skin exports `KHR_materials_diffuse_transmission` / `KHR_materials_volume` (#38).
+- VDM stamps: vector-displacement sculpt edits (`scalePatch`, `wart`, `hornBase`, `toothSocket`, `poreField`, `scarWelt`, `furrow`) with declared Lipschitz bounds and anchored `scatterStamps`; `bun run vdm:import` (#38).
+
+### Changed
+- Busts: card hair rooted on the finished skull in layers with partings; the orc is rebuilt on the skull pipeline with rooted tusks; garments with thickness, folds, hems and seams from a cloth-fold library, and a check that no skin shows through declared cloth (#38).
+- The dragon's scales and horn collars are VDM stamps (#38).
+
+### Fixed
+- `optimize` dropped joints, weights and morph targets of skinned meshes (D46) (#38).
+- Materials defined while a recipe loads or builds (fur and hair strand strips) never reached the painted trim sheet in the CLI or the default beauty renderer (D47) (#38).
+
 ## [0.7.0] - 2026-11-15
 
 Realism groundwork: a calibrated critique and reference-photo matching so "looks real" is measured, a stronger sculpt engine, wolves built from bones and muscles with strand-card fur, and human, elf and goblin busts rebuilt from skull to skin with card hair.
@@ -252,7 +270,8 @@ The first published version: the asset DSL with primitives, organic sculpting, t
 - Animations: `toGlb()` exports none unless `{ animations: true }` (glTF has no autoplay flag; engines drive named pivots from code). `t3d build` bakes the `run` clip by default so viewers show play controls; `--no-animations` skips it.
 - CLI output is one folder per asset: `out/<asset>/{lod0,lod1,lod2}.glb`, `sheet.png`, `manifest.json`, plus `out/index.json`. `t3d build` renders the sheet too (`--no-shot` to skip); `t3d shot` writes sheet + manifest only.
 
-[Unreleased]: https://github.com/developerz-ai/ts23d/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/developerz-ai/ts23d/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/developerz-ai/ts23d/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/developerz-ai/ts23d/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/developerz-ai/ts23d/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/developerz-ai/ts23d/compare/v0.4.0...v0.5.0
