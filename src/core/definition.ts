@@ -4,6 +4,7 @@
 import type { Clip } from './clip.ts';
 import type { Finishes, ResolvedFinish } from './finish.ts';
 import type { Mesh } from './mesh.ts';
+import type { NeuralReader } from './neural-ctx.ts';
 import type { ResolvedSurfaceOptics, SurfaceOptics } from './optics.ts';
 import type { PaintSet, PaintSlots, PaintVariants } from './paint.ts';
 import type {
@@ -47,6 +48,11 @@ export interface BuildContext {
   weathered(coverage: readonly WeatherCoverage[]): void;
   /** A `tune.params` value: the optimiser's trial, else the committed tune.json, else the default. */
   tuned(name: string): number;
+  /**
+   * A model output from the recipe's committed neural cache (ADR 014), or `null` on a miss: the
+   * recipe then builds its CPU version. Never calls a model; `t3d neural run` fills the cache.
+   */
+  neural: NeuralReader;
 }
 
 export interface Budget {
@@ -56,8 +62,12 @@ export interface Budget {
   readonly draws?: number;
   /** Bone cap for a skinned asset; default 64 when it has a skeleton (ADR 013). */
   readonly bones?: number;
-  /** Opt-in LOD0 hero texture set: one extra material at this size (ADR 012). */
-  readonly heroTextures?: { readonly size: 1024 | 2048 | 4096 };
+  /**
+   * Opt-in LOD0 hero texture set: one extra material at this size (ADR 012), baked from the
+   * asset's own fine field at `cell` metres (default 0.0015). Kinds that sculpt (creature) then
+   * mesh a lighter LOD0 and leave the fine detail to the bake.
+   */
+  readonly heroTextures?: { readonly size: 1024 | 2048 | 4096; readonly cell?: number };
 }
 
 /** Real-world overall dimensions (metres) the QA `proportions` gate holds the model to. */

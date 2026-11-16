@@ -2,9 +2,11 @@
 // small pinned file (URL, sha256, licence) that a recipe commits and imports; compile never fetches.
 //   bun run data wikidata <QID…> --out recipes/<name>/data     facts (CC0) → wikidata-<QID>.json
 //   bun run data dem --centre <lat,lon> --size <m> [--cells 256] [--zoom 13] --name <id> --out <file>
+//   bun run data osm --bbox <minLon,minLat,maxLon,maxLat> --name <id> --out <file> [--source api|overpass]
 //   bun run data verify <wikidata-*.json…>                    re-hash cached raw responses
 
 import { demCommand } from './data-dem.ts';
+import { osmCommand } from './data-osm.ts';
 import { type Fetch, verifyWikidata, wikidataCommand } from './data-wikidata.ts';
 
 export async function run(argv: readonly string[], get: Fetch = fetch): Promise<string[]> {
@@ -16,6 +18,7 @@ export async function run(argv: readonly string[], get: Fetch = fetch): Promise<
     return wikidataCommand(qids, out, get);
   }
   if (cmd === 'dem') return demCommand(rest, get);
+  if (cmd === 'osm') return osmCommand(rest, get);
   if (cmd === 'verify') {
     const lines: string[] = [];
     for (const f of rest) {
@@ -27,7 +30,7 @@ export async function run(argv: readonly string[], get: Fetch = fetch): Promise<
     return lines;
   }
   return [
-    'usage: bun run data wikidata <QID…> --out <dir> | dem --centre <lat,lon> --size <m> --name <id> --out <file> | verify <file…>',
+    'usage: bun run data wikidata <QID…> --out <dir> | dem --centre <lat,lon> --size <m> --name <id> --out <file> | osm --bbox <w,s,e,n> --name <id> --out <file> | verify <file…>',
   ];
 }
 

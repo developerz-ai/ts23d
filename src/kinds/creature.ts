@@ -32,7 +32,11 @@ import { clawMesh } from './creature-feet.ts';
 import { creatureFur } from './creature-fur.ts';
 import { type HeadLayout, headEdits } from './creature-head.ts';
 import { creatureHeadFur } from './creature-head-fur.ts';
+
+export { bodyRes } from './creature-lod.ts';
+
 import { legTubes } from './creature-limbs.ts';
+import { creatureCells, HERO_CELL, heroField, heroTag, pitchedSource } from './creature-lod.ts';
 import { sculptPiece } from './creature-mesh.ts';
 import { creatureRig } from './creature-rig.ts';
 import { bonesOf } from './creature-skeleton.ts';
@@ -45,6 +49,8 @@ export interface CreatureOptions {
   readonly prefix?: string;
   /** Trim-sheet strip of the skin/coat (e.g. a neutral fur strip registered by the recipe). */
   readonly strip?: StripId;
+  /** Hero tier (ADR 012): lighter LOD0 tagged with its fine field (creature-hero.ts). */
+  readonly hero?: boolean;
 }
 
 export interface CreatureInfo {
@@ -64,16 +70,6 @@ export interface CreatureInfo {
 /** Cards weigh as a 0.2 mm keratin sheet (the coat's bulk is in the body's `coat` already) and
  *  never collide: open sheets have no volume to give the mass or the collider. */
 const HAIR_PHYSICS = { shell: 0.0002, density: 1300, collider: 'none' } as const;
-
-/** Cell growth per LOD: legged bodies (legs become tubes at LOD2) and legless ones. */
-const LOD_SCALE = [1, 2.2, 6.5] as const;
-const LOD_SCALE_LEGLESS = [1, 2, 3.5] as const;
-const HEAD_RES = [0.017, 0.033, 0.11] as const;
-
-/** Body sculpt cell at LOD0, metres. */
-export function bodyRes(b: Bones): number {
-  return Math.max(0.0025, b.limbR > 0 ? b.limbR * 0.165 : b.height * 0.06);
-}
 
 /** Validated spec + skeleton + biology; throws T3D_RECIPE_INVALID on an impossible animal. */
 export function creaturePlan(spec: CreatureSpec): { bones: Bones; biology: Biology } {
@@ -98,11 +94,11 @@ export function creature(
   const lod = ctx.lod;
   const p = o.prefix ?? '';
   const c = palette(spec.colours);
-  const res = bodyRes(b) * (b.legs.length > 0 ? LOD_SCALE : LOD_SCALE_LEGLESS)[lod];
+  const hero = o.hero === true && lod === 0;
+  const { res0, res, hres } = creatureCells(b, lod, hero);
   const surface = spec.surface ?? 'fur';
   // Head layout first: the armature's jaw bone and the skin's blink read it (creature-rig.ts).
   const h = b.head;
-  const hres = h.length * HEAD_RES[lod];
   const he = headEdits(b, spec, lod, hres);
   const l = he.layout;
   const [hx, , hz] = jawHinge(l);
@@ -115,7 +111,7 @@ export function creature(
   const grow = res * 0.2;
   const rel =
     lod === 0
-      ? relief(surface, res, Math.max(res * 4, b.height * 0.04), 7)
+      ? relief(surface, res0, Math.max(res0 * 4, b.height * 0.04), 7)
       : lod === 2
         ? { amp: grow, at: (q: Vec3) => grow * smoothstep(0, res, q[2]) }
         : null;
@@ -129,7 +125,7 @@ export function creature(
     tone: { reach: res * 5, ground: b.height * 0.35, strength: 0.75, edge: 0.15, ...strands },
     paint,
     detail: lod === 0 ? detailBoxes(b, res) : [],
-    ...(rel ? { relief: rel } : {}),
+    ...(rel && !hero ? { relief: rel } : {}),
     ...(o.strip ? { strip: o.strip } : {}),
   });
   const body = piece.mesh;
@@ -142,10 +138,16 @@ export function creature(
     eyeL: `${p}eye_l`,
     eyeR: `${p}eye_r`,
   };
-  ctx.part(names.body, rig.body(tubes ? merge([body, tubes]) : body), { density: bio.density });
+  const bodyMesh = rig.body(tubes ? merge([body, tubes]) : body);
+  const bodySrc = { field: heroField(piece.field, rel, surface, res0), color: piece.color };
+  ctx.part(names.body, heroTag(bodyMesh, hero, bodySrc), { density: bio.density });
   // Strand cards over the sculpted coat (creature-fur.ts; LOD0/1, fur only; `cards: false` = off).
   if (spec.cards !== false) {
-    const fur = creatureFur(body, b, spec, { lod, rng: ctx.rng.fork('fur'), field: piece.field });
+    const fur = creatureFur(body, b, spec, {
+      lod,
+      rng: ctx.rng.fork('fur'),
+      field: piece.field,
+    });
     if (fur)
       ctx.part(`${p}fur`, rig.pieces(fur.mesh, 'body', [0, 0, 0]), {
         surface: 'cutout',
@@ -182,10 +184,9 @@ export function creature(
   });
   const headMesh = headPiece.mesh;
   const local: Mesh = he.teeth ? merge([headMesh, he.teeth]) : headMesh;
-  ctx.part(names.head, rig.head(place(local, { pitch: h.pitch }), lod), {
-    at: h.atlas,
-    density: bio.density,
-  });
+  const headPart = rig.head(place(local, { pitch: h.pitch }), lod);
+  const tagged = heroTag(headPart, hero, pitchedSource(headPiece, h.pitch, [0, 0, 0], headMesh));
+  ctx.part(names.head, tagged, { at: h.atlas, density: bio.density });
   // Head fur in the head's own frame, turning with it (creature-head-fur.ts; bare nose, lips, eyes).
   if (spec.cards !== false) {
     const hf = creatureHeadFur(
@@ -212,7 +213,7 @@ export function creature(
   // Lower jaw: its own part under the head, pivoting at the hinge (mouth-open clips rotate it).
   // LOD2: the coarse cell cannot hold a separate thin jaw; it stays in the head.
   if (lod < 2) {
-    const jawMesh = sculptPiece({
+    const jawPiece = sculptPiece({
       edits: he.jaw,
       res: hres,
       color: spec.colours.coat,
@@ -220,10 +221,16 @@ export function creature(
       tone: { reach: hres * 5, strength: 0.75, edge: 0.15, ...strands },
       paint: headColour,
       ...(o.strip ? { strip: o.strip } : {}),
-    }).mesh;
+    });
     const pivot = v3.sub(headToWorld(h, hinge), h.atlas);
-    const jawLocal = place(place(jawMesh, { pitch: h.pitch }), { at: v3.mul(pivot, -1) });
-    ctx.part(names.jaw, rig.rigid(jawLocal, 'jaw'), {
+    const back = v3.mul(pivot, -1);
+    const jawLocal = place(place(jawPiece.mesh, { pitch: h.pitch }), { at: back });
+    const jawMesh = heroTag(
+      rig.rigid(jawLocal, 'jaw'),
+      hero,
+      pitchedSource(jawPiece, h.pitch, back),
+    );
+    ctx.part(names.jaw, jawMesh, {
       at: pivot,
       parent: names.head,
       density: bio.density,
@@ -233,7 +240,7 @@ export function creature(
   for (const bone of arm) ctx.bone(bone.name, bone);
 
   if (lod < 2) {
-    const ball = eyeball(l.eye, l.eye.r / (lod === 0 ? 6 : 3));
+    const ball = eyeball(l.eye, (l.eye.r / (lod === 0 ? 6 : 3)) * (hero ? HERO_CELL.eye : 1));
     for (const [name, side] of [
       [names.eyeL, 1],
       [names.eyeR, -1],
@@ -284,7 +291,8 @@ export function defineCreature(d: CreatureDefinition): Asset {
     art: d.art ?? { focal: `${options?.prefix ?? ''}head`, grounded: true },
     clips: [...creatureClips(bones, spec, options?.prefix ?? ''), ...(d.clips ?? [])],
     build(ctx) {
-      const info = creature(ctx, spec, options);
+      const hero = d.budget?.heroTextures !== undefined;
+      const info = creature(ctx, spec, hero ? { ...options, hero } : options);
       extra?.(ctx, info);
     },
   });

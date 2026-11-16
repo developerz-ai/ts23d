@@ -8,6 +8,7 @@ import { checkFinishedParts, finishesOf } from './finish.ts';
 import { jointOf, useJoint } from './joint.ts';
 import type { Mesh } from './mesh.ts';
 import { checkMotion } from './motion-check.ts';
+import { neuralReader } from './neural-ctx.ts';
 import { opticsOf } from './optics.ts';
 import { checkPaintedParts, paintSetOf, repaint } from './paint.ts';
 import type { Connect, Joint, Lod, Part, PartOptions, UseOptions } from './part.ts';
@@ -172,6 +173,7 @@ export function compile(asset: Asset, options: CompileOptions = {}): CompiledAss
     seed,
     rng: createRng(seed),
     tuned: tunedReader(asset.name, asset.tune, options.tuned),
+    neural: neuralReader(asset.name),
     pick: (perLod) => perLod[lod],
     part: add,
     group: (name, o) => add(name, null, o),

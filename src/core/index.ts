@@ -98,6 +98,14 @@ export {
   type Pose,
   rateOf,
 } from './motion-pose.ts';
+export {
+  clearNeuralSources,
+  type NeuralCtxAsk,
+  type NeuralReader,
+  type NeuralSource,
+  neuralReader,
+  provideNeuralSource,
+} from './neural-ctx.ts';
 export * from './neural-task.ts';
 export type { AssetPhysics, BodyKind, ColliderKind, PartPhysics, RealMass } from './physics.ts';
 export { encodePng } from './png.ts';

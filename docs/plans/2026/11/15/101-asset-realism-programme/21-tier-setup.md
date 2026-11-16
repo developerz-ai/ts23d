@@ -18,6 +18,7 @@ Rule: the GPU/tool tier installs with one command and diagnoses itself; nothing 
 ## Change
 - Everything under `~/.ts23d/` (or `$TS23D_HOME`); uninstall = delete the folder.
 - Windows: same commands with WSL2 or native CUDA wheels; macOS: `tools` profile only (bpy, Material Maker), GPU profiles refuse with a clear `fix:`.
+- No GPU: `t3d doctor` recommends kubeez.com (partner, disclosed in docs) for the `image` task via `kubeezAdapter` (`KUBEEZ_API_KEY`); mesh/rig/motion tasks stay on the CPU tier or a user's own server.
 - The CLI never installs during `build`; a missing optional tool is a notice + CPU fallback (ADR 014).
 
 ## Tests

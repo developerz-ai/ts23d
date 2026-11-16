@@ -1,0 +1,23 @@
+<!doctype html>
+<!-- game-starter: a three.js page that loads one ts23d asset and plays its clips, using only what
+     the build wrote (index.json, <asset>/manifest.json, the GLB). Not part of the npm package. -->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>ts23d game starter</title>
+    <style>
+      html, body { margin: 0; height: 100%; background: #20242a; color: #dde3ea; font: 14px system-ui, sans-serif; }
+      #hud { position: fixed; top: 12px; left: 12px; max-width: 360px; background: #0008; padding: 10px 12px; border-radius: 6px; }
+      #hud button { margin: 2px; padding: 3px 8px; background: #39414c; color: inherit; border: 1px solid #56606c; border-radius: 4px; cursor: pointer; }
+      #hud button.on { background: #6a8f3c; }
+      #hud small { color: #9aa5b1; }
+    </style>
+    <script type="importmap">
+      { "imports": { "three": "/three/build/three.module.js", "three/addons/": "/three/examples/jsm/" } }
+    </script>
+  </head>
+  <body>
+    <div id="hud">loading…</div>
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>

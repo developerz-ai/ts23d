@@ -3,7 +3,13 @@
 export { AUDIO_EMITTER } from './audio.ts';
 export { type SoundFile, type SoundUse, soundFiles, soundUses } from './audio-files.ts';
 export { animationsOf, type ClipTree, clipSummary, Z_UP_TO_Y_UP } from './clips.ts';
-export { FINISH_MATERIAL, type FinishLayer, readGlbChunks, withFinishLayer } from './finish-glb.ts';
+export {
+  FINISH_MATERIAL,
+  type FinishLayer,
+  HERO_MATERIAL,
+  readGlbChunks,
+  withFinishLayer,
+} from './finish-glb.ts';
 export {
   exportGlb,
   exportLodGlb,
@@ -13,6 +19,15 @@ export {
   toGlb,
   toLodGlb,
 } from './glb.ts';
+export {
+  GPU_INSTANCING,
+  type InstancedScene,
+  type InstanceSet,
+  type InstanceTransform,
+  type SceneManifest,
+  sceneManifest,
+  toInstancedGlb,
+} from './instancing.ts';
 export {
   checkCoverage,
   coverageFor,
@@ -54,12 +69,18 @@ export {
 export type { EngineConvention } from './physics-engines.ts';
 export { fitHitboxes, HITBOX_COVERAGE, type Hitbox } from './physics-hitbox.ts';
 export {
+  ENGINES,
+  type Engine,
+  type EngineLayout,
   type ExportProfile,
+  engineLayout,
   PROFILES,
   type ProfileSettings,
   profileSettings,
+  sheetInProject,
 } from './profile.ts';
 export { bindLoose, skeletonOf, skinAttributes, writeSkin, Y_UP_TO_Z_UP } from './skin.ts';
+export { tangentsOf } from './tangents.ts';
 export {
   type ExternalSheet,
   SHEET_MAPS,

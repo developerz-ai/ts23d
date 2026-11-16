@@ -23,7 +23,8 @@ export async function recipeFolders(
   const others: string[] = [];
   for (const f of await tsFiles('recipes', cwd)) {
     const [, dir, name, ...rest] = f.split('/');
-    if (dir?.startsWith('_')) continue;
+    // recipes/sets.ts declares the asset sets (style + members), not an asset.
+    if (dir?.startsWith('_') || f === 'recipes/sets.ts') continue;
     if (rest.length === 0 && dir && name === `${dir}.ts`)
       folders.push({ dir: `recipes/${dir}`, file: f });
     else if (!f.endsWith('.test.ts')) others.push(f);

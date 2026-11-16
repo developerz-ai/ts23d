@@ -13,6 +13,7 @@ import {
   kindsDrift,
   missingHeader,
   realSources,
+  unscopedBunx,
 } from './conventions.ts';
 
 const src = (file: string, text: string) => ({ file, text });
@@ -165,5 +166,17 @@ describe('changelogDocs', () => {
 
   it('passes a changelog whose index and pages are current', () => {
     expect(changelogDocs(src('CHANGELOG.md', log), pages(log))).toEqual([]);
+  });
+});
+
+describe('unscopedBunx (D49)', () => {
+  it('fails a bare `bunx t3d` in shipped docs', () => {
+    expect(unscopedBunx(src('README.md', 'run `bunx t3d build a.ts`'))).toHaveLength(1);
+  });
+
+  it('passes the scoped form', () => {
+    expect(
+      unscopedBunx(src('README.md', 'run `bunx -p @developerz.ai/ts23d t3d build a.ts`')),
+    ).toEqual([]);
   });
 });

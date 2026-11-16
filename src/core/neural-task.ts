@@ -1,10 +1,27 @@
 // The neural task contract shared by /neural adapters and /kinds callers: task names, the typed
 // request and result per task, inputs by sha256, outputs as bytes + mime. Outputs are cached
-// inputs to a build, never a build step (ADR 014); models are the user's choice (ADR 015).
+// inputs to a build, never a build step (ADR 014); models are the user's choice (ADR 015). Tool
+// tasks (cloth, fracture, engine-check, ktx2, meshopt; `rig` with a template) run external tools
+// (Blender, Godot, Basis Universal, meshoptimizer) behind the same contract; `groom` sends a scalp
+// GLB + guide curves JSON + an ordered groom op list and gets hair cards back (Blender hair curves).
 
 import { Ts23dError } from './errors.ts';
 
-export const NEURAL_TASKS = ['image', 'mesh', 'texture', 'rig', 'motion', 'hair', 'score'] as const;
+export const NEURAL_TASKS = [
+  'image',
+  'mesh',
+  'texture',
+  'rig',
+  'motion',
+  'hair',
+  'score',
+  'cloth',
+  'fracture',
+  'engine-check',
+  'ktx2',
+  'meshopt',
+  'groom',
+] as const;
 export type NeuralTask = (typeof NEURAL_TASKS)[number];
 
 export const isNeuralTask = (v: unknown): v is NeuralTask =>
@@ -51,18 +68,87 @@ export interface NeuralRequests {
     readonly size: number;
     readonly control?: readonly NeuralInput[];
   };
-  readonly rig: NeuralRequestBase & { readonly mesh: NeuralInput; readonly maxBones?: number };
+  readonly rig: NeuralRequestBase & {
+    readonly mesh: NeuralInput;
+    readonly maxBones?: number;
+    /** A rig template to generate on the mesh's armature (Rigify meta-rig), e.g. 'human'. */
+    readonly template?: string;
+  };
   readonly motion: NeuralRequestBase & {
     readonly prompt: string;
     /** Skeleton (JSON) the keys are for. */
     readonly skeleton: NeuralInput;
     readonly seconds: number;
     readonly fps: number;
+    /** A reference clip (video-to-motion: mp4/webm) the keys follow instead of only the prompt. */
+    readonly video?: NeuralInput;
   };
-  readonly hair: NeuralRequestBase & { readonly mesh: NeuralInput; readonly prompt?: string };
+  readonly hair: NeuralRequestBase & {
+    readonly mesh: NeuralInput;
+    readonly prompt?: string;
+    /** A reference photo of the hairstyle (image-to-hair). */
+    readonly image?: NeuralInput;
+  };
   readonly score: NeuralRequestBase & {
     readonly images: readonly NeuralInput[];
     readonly rubric?: string;
+  };
+  /** Drape a garment GLB on a body GLB under gravity; returns the draped garment GLB. */
+  readonly cloth: NeuralRequestBase & {
+    readonly garment: NeuralInput;
+    /** Collision body the garment falls onto. */
+    readonly body: NeuralInput;
+    /** Simulated frames at 24 fps. */
+    readonly frames: number;
+    /** Vertices at or above this height (metres, Z up) stay pinned (shoulders, a pole). */
+    readonly pinAboveZ?: number;
+    /** Solver substeps per frame (quality). */
+    readonly substeps?: number;
+  };
+  /** Voronoi cell fracture of a closed mesh into named pieces (optionally settled by rigid body). */
+  readonly fracture: NeuralRequestBase & {
+    readonly mesh: NeuralInput;
+    readonly pieces: number;
+    /** Rigid-body frames to let the pieces fall and settle on z = 0; 0 = pieces at rest. */
+    readonly settleFrames?: number;
+  };
+  /** Import a GLB in a game engine headless and report what it kept (JSON, advisory). */
+  readonly 'engine-check': NeuralRequestBase & {
+    readonly mesh: NeuralInput;
+    readonly engine: 'godot';
+  };
+  /** Encode a PNG as KTX2 (Basis Universal). */
+  readonly ktx2: NeuralRequestBase & {
+    readonly image: NeuralInput;
+    readonly mode: 'uastc' | 'etc1s';
+    readonly mipmaps?: boolean;
+    /** Colour data (albedo) vs linear data (normal, ORM). */
+    readonly srgb?: boolean;
+  };
+  /** meshoptimizer (gltfpack): EXT_meshopt_compression and/or simplification of a GLB. */
+  readonly meshopt: NeuralRequestBase & {
+    readonly mesh: NeuralInput;
+    readonly compress: boolean;
+    /** Keep this fraction of triangles (0..1]; 1 = no simplification. */
+    readonly simplify?: number;
+  };
+  /** Hair curves → cards: children interpolated from the guides on the scalp, styled by `ops`,
+   *  grouped into locks, each lock a card (UV.u across, UV.v root → tip). Returns a cards GLB. */
+  readonly groom: NeuralRequestBase & {
+    /** The root surface (head and hair cap) the children root on and clear, GLB (glTF frame). */
+    readonly mesh: NeuralInput;
+    /** What the strands and cards must clear (head, torso: long hair falls onto it), GLB. */
+    readonly body?: NeuralInput;
+    /** Guide curves + per-guide op masks (`t3d-groom/1` JSON, kinds/groom-guides.ts). */
+    readonly guides: NeuralInput;
+    /** Child strands per guide. */
+    readonly children: number;
+    /** Cards (locks) wanted; the tool groups children into this many. */
+    readonly cards: number;
+    /** Points along each card's centre line (segments + 1). */
+    readonly points: number;
+    /** Refuse a cards GLB above this. */
+    readonly maxTriangles: number;
   };
 }
 
@@ -77,6 +163,12 @@ export interface NeuralResults {
   readonly hair: { readonly outputs: readonly NeuralOutput[] };
   /** A 0..10 score plus any annotated images. */
   readonly score: { readonly outputs: readonly NeuralOutput[]; readonly score: number };
+  readonly cloth: { readonly outputs: readonly NeuralOutput[] };
+  readonly fracture: { readonly outputs: readonly NeuralOutput[] };
+  readonly 'engine-check': { readonly outputs: readonly NeuralOutput[] };
+  readonly ktx2: { readonly outputs: readonly NeuralOutput[] };
+  readonly meshopt: { readonly outputs: readonly NeuralOutput[] };
+  readonly groom: { readonly outputs: readonly NeuralOutput[] };
 }
 
 export type NeuralResult<T extends NeuralTask = NeuralTask> = NeuralResults[T];
@@ -90,6 +182,12 @@ export const NEURAL_MIMES: Readonly<Record<NeuralTask, readonly string[]>> = {
   motion: ['model/gltf-binary', 'application/json'],
   hair: ['model/gltf-binary', 'application/json'],
   score: ['application/json', 'image/png'],
+  cloth: ['model/gltf-binary'],
+  fracture: ['model/gltf-binary', 'application/json'],
+  'engine-check': ['application/json'],
+  ktx2: ['image/ktx2'],
+  meshopt: ['model/gltf-binary'],
+  groom: ['model/gltf-binary', 'application/json'],
 };
 
 const SHA256 = /^[0-9a-f]{64}$/;

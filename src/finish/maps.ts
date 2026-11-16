@@ -23,7 +23,8 @@ export type HeightAt = (
 ) => number;
 
 export interface DeriveOptions {
-  readonly height?: HeightAt;
+  /** One relief for every texel, or one per scene part (index = the texel's `part`). */
+  readonly height?: HeightAt | readonly (HeightAt | undefined)[];
   /** Roughness (0..255) added per metre⁻¹ of concave height curvature. Default 2. */
   readonly cavityRough?: number;
 }
@@ -82,10 +83,13 @@ export function deriveMaps(t: Texels, albedo: Uint8Array, o: DeriveOptions = {})
   const P = t.position;
   const Nm = t.normal;
   const H = new Float32Array(N * N);
+  const heightOf = (p: number): HeightAt | undefined =>
+    typeof o.height === 'function' ? o.height : o.height?.[p];
   if (o.height)
-    for (let i = 0; i < N * N; i++)
-      if ((t.part[i] ?? -1) >= 0)
-        H[i] = o.height(
+    for (let i = 0; i < N * N; i++) {
+      const at = heightOf(t.part[i] ?? -1);
+      if ((t.part[i] ?? -1) >= 0 && at)
+        H[i] = at(
           P[i * 3] ?? 0,
           P[i * 3 + 1] ?? 0,
           P[i * 3 + 2] ?? 0,
@@ -93,6 +97,7 @@ export function deriveMaps(t: Texels, albedo: Uint8Array, o: DeriveOptions = {})
           Nm[i * 3 + 1] ?? 0,
           Nm[i * 3 + 2] ?? 1,
         );
+    }
   const orm = new Uint8Array(N * N * 4);
   const normal = new Uint8Array(N * N * 4);
   const cavK = o.cavityRough ?? 2;

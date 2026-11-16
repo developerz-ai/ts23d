@@ -3,6 +3,24 @@
 
 export { type FacadeOptions, facade, type SetbackTier, type Side, setbacks } from './building.ts';
 export {
+  type CityInfo,
+  type CityInstance,
+  type CityOptions,
+  type CityStreet,
+  cityBlock,
+  cityWindow,
+  cityWindows,
+  ROAD_WIDTH,
+} from './city.ts';
+export {
+  type CityBuildingPlan,
+  type CityFootprint,
+  type CityPlanOptions,
+  cityPlan,
+  footprintIoU,
+  hashId,
+} from './city-plan.ts';
+export {
   type CreatureDefinition,
   type CreatureInfo,
   type CreatureOptions,
@@ -14,6 +32,14 @@ export { ALLOMETRY_BAND, type Biology, biology, MAX_WING_LOADING } from './creat
 export { allometricLimbR, type Bones, massFromBones } from './creature-bones.ts';
 export { creatureClips } from './creature-clips.ts';
 export { creatureCreases } from './creature-creases.ts';
+export {
+  FAMILY_PRESETS,
+  type FamilyMember,
+  type FamilyPreset,
+  type FamilyPresetName,
+  familyMember,
+  memberHead,
+} from './creature-families.ts';
 export {
   type CreatureFur,
   creatureFur,
@@ -40,6 +66,37 @@ export {
 } from './creature-spec.ts';
 export { GAITS, gaitTiming } from './gait.ts';
 export { gaitClip } from './gait-bake.ts';
+export { type GroomCardOptions, type GroomCards, groomCards } from './groom-cards.ts';
+export {
+  collisionMesh,
+  type GroomCardShape,
+  type GuideLayer,
+  groomJson,
+  reframe as groomReframe,
+  type ScalpGuideOptions,
+  type ScalpGuides,
+  scalpGlb,
+  scalpGuides,
+} from './groom-guides.ts';
+export {
+  checkGroomOps,
+  childrenFor,
+  type GroomField,
+  type GroomGuide,
+  type GroomOp,
+  type GroomOpName,
+  type GroomRegion,
+  isStrandOp,
+  opMask,
+  STRAND_OPS,
+} from './groom-ops.ts';
+export {
+  type ApplyGroomOptions,
+  applyGroomOps,
+  curveLength,
+  lockOf,
+  resample as resampleCurve,
+} from './groom-ops-apply.ts';
 export {
   HEAD_RES,
   type HeadInfo,

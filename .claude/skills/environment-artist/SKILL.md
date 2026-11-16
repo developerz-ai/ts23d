@@ -25,7 +25,9 @@ A street, rail yard, plaza, ruin, forest patch, mountain diorama, interior set, 
 | 6 | Terrain and nature | `heightfield`/`terrainGrid` + `hydraulicErosion`/`thermalErosion` + `terrainColor`; `tree`/`trees` with species presets (`oak`, `pine`, `birch`, `palm`, `willow`) | slopes read, trees grounded |
 | 7 | Set dressing and variation | `ctx.use(asset, { seed })` for unique instances; `ctx.rng.fork('props')`; `place` + `merge` | no visible clones side by side |
 | 8 | Story and wear | `grime({ ground, zones })` near ground, drains, traffic; `weathered` strips; moss/dirt nature strips | wear follows water and feet |
-| 9 | LOD at scene scale | `ctx.lod` drops whole layers (windows, props) at LOD2; `budget.triangles` for the scene | budgets met, silhouette holds |
+| 9 | LOD at scene scale | `ctx.lod` drops whole layers (windows, props) at LOD2; `budget.triangles` for the scene; `sceneBudgetFindings` from three reference cameras | budgets met, silhouette holds, no `T3D_SCENE_BUDGET` |
+| 9b | Real places | `bun run data osm --bbox … --name … --out recipes/<name>/data/…` once; `readOsm` → `cityBlock(ctx, OSM.buildings, { walls, roof, glass, ground, road, streets })`; credit `OSM.attribution` in `copyright` | footprint IoU ≥ 0.9, heights ±5 % (tests), ODbL credit in the GLB |
+| 9c | Instances | repeated pieces (windows, lamps, trees) as one mesh × N: `toInstancedGlb({ name, base?, sets })` (EXT_mesh_gpu_instancing), `sceneManifest` counts them | validator 0 errors; draws collapse per (asset, LOD) |
 | 10 | Present | `t3d hero --az … --el …` (a composed view), `t3d shot`, `t3d critique` | scores ≥ 8 |
 
 ## Vocabulary → measurable
@@ -35,7 +37,8 @@ A street, rail yard, plaza, ruin, forest patch, mountain diorama, interior set, 
 | Human scale | doors 2.0–2.1 m, stair rise 150–220 mm, kerb 100–150 mm *typical, verify per country* | `real.measures`, `t3d blueprint` figure |
 | Texel density | same pixels per metre across the scene | `assertTexelDensity(asset, [lo, hi])` |
 | Reuse ratio | unique pieces ÷ placed pieces; low is efficient | count `ctx.use` calls vs recipes (by hand) |
-| Repetition break | no two identical instances adjacent; vary seed, yaw, wear | seeds per instance; review hero |
+| Repetition break | no two identical instances adjacent; vary seed, yaw, wear | seeds per instance (`hashId(osmId)` for real buildings); `cityPlan` colours neighbours across shared walls differently (test) |
+| Scene budget | unique meshes, instances, draws, on-screen triangles, texture bytes | `sceneBudgetFindings(stats, placements, budget, cameras?)`; LOD by projected height (`LOD_SWITCH` 0.25 / 0.06) |
 | Leading lines | kerbs, rails, rooflines that lead to the focal piece | judge composition in `hero.png` |
 | Focal point | one hero piece holds the highest value contrast | **planned** check; judge in critique |
 | Rest area | ≥ 25 % of visible surface quiet (plain wall, ground) | **planned** metric |
@@ -56,7 +59,8 @@ A street, rail yard, plaza, ruin, forest patch, mountain diorama, interior set, 
 - Identical trees/houses in a row; one seed reused.
 - Non-square, odd-sized kit pieces that cannot tile.
 - Uniform wear; dirt that ignores gravity and water.
-- Building game logic, spawn rules or navmesh: out of scope. Assets only.
+- Building game logic, spawn rules or navmesh: out of scope. Assets only (+ instance manifests).
+- Guessing a real street: pin it from OpenStreetMap, credit ODbL, and let the tests prove the massing.
 
 ## Run order
 ```sh
@@ -78,7 +82,10 @@ bun run shots <name>                      # refresh committed out/
 
 ## Tool status
 Shipped: `ctx.use`, `defineFamily`, `definePart`, `tiled`, `cell`, `mass`, `facade`, `setbacks`,
-`opening`, `roof`, `heightfield`, erosion, `terrainColor`, `tree`/`trees`, `grime`, nature strips.
-Planned: kit grid/snap gate (none today), `variations(n)`, `EXT_mesh_gpu_instancing` scatter,
-`weather()` from geometry, city kit and road-network grammar ([roadmap](../../../docs/plans/roadmap.md)).
+`opening`, `roof`, `heightfield`, erosion, `terrainColor`, `tree`/`trees`, `grime`, nature strips,
+OSM extracts (`bun run data osm`, `readOsm`), `cityBlock` / `cityPlan` / `cityWindows`,
+`toInstancedGlb` (EXT_mesh_gpu_instancing), `sceneBudgetFindings`. Demo: `recipes/city_block`.
+Planned: kit grid/snap gate (none today), `variations(n)`, facade kits on polygon footprints
+(stoops, shopfronts, true-scale brick on prisms), DEM ground in a city recipe, road-network
+grammar ([roadmap](../../../docs/plans/roadmap.md)).
 Neutral positioning: the free code-based option, no claims against other tools.

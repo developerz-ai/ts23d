@@ -16,8 +16,8 @@ research refs ─► write recipe ─► t3d build ──QA FAIL──► fix fi
 |---|---|---|
 | 1. Research | Find real dimensions, a side elevation, photos. Put the URLs in `sources`, overall L × W × H in `real`, and every key size (driver diameter, gauge, wheelbase, turret width) in `real.measures` | The spec is in the recipe, in metres, each number with a source |
 | 2. Masses | Write the big volumes only: hull, body, tiers. Real dimensions | Silhouette roughly right |
-| 3. Build | `bunx t3d build recipes/x/x.ts` | Prints `QA PASS`, exit 0. Fix every finding first; each prints a `fix:`. A `measures` or `proportions` finding means rebuild the part, never edit the spec |
-| 4. Shot | `bunx t3d build` already wrote `out/x/sheet.png`; `bunx t3d shot recipes/x/x.ts` for a sheet without GLBs | `out/x/sheet.png` + `manifest.json` written |
+| 3. Build | `bunx -p @developerz.ai/ts23d t3d build recipes/x/x.ts` | Prints `QA PASS`, exit 0. Fix every finding first; each prints a `fix:`. A `measures` or `proportions` finding means rebuild the part, never edit the spec |
+| 4. Shot | `bunx -p @developerz.ai/ts23d t3d build` already wrote `out/x/sheet.png`; `bunx -p @developerz.ai/ts23d t3d shot recipes/x/x.ts` for a sheet without GLBs | `out/x/sheet.png` + `manifest.json` written |
 | 5. Read | Open the PNG (vision). Compare against the reference | One concrete error named, e.g. "turret 30% too tall in SIDE -Y" |
 | 6. Fix | Edit the recipe for that one error | → step 3 |
 | 6b. Photo match | `photoMatch(asset, { photo, camera })` → one PNG: photo · model · overlay, plus silhouette IoU | IoU stops rising; the overlay shows no misplaced mass |
@@ -122,20 +122,36 @@ Current numbers for the gallery recipes: `bun run bench` (README benchmarks bloc
 
 Exit codes: `0` pass · `1` QA finding or `T3D_*` error · `2` usage.
 
+## MCP tools (optional)
+
+**The CLI with `--json` stays the baseline; `t3d mcp` puts the same steps behind MCP tools for agents that prefer them, and returns every render as an image content block.** A stdio server, zero dependencies (JSON-RPC 2.0, MCP revision 2025-06-18; clients on 2025-11-25 / 2025-03-26 / 2024-11-05 get their version echoed). Source: `src/cli/mcp/`.
+
+| Tool | CLI equivalent | Returns |
+|---|---|---|
+| `build` | `t3d build <recipe> --json` | QA verdict, findings (code, gate, part, message, fix; first 20, the rest in manifest.json), triangles and draw calls per LOD, paths |
+| `shot` | `t3d shot <recipe>` | the contact sheet as an image + manifest summary |
+| `hero` | `t3d hero <recipe> [--az --el --size --variant --quality]` | the beauty render as an image |
+| `blueprint` | `t3d blueprint <recipe>` | the measured drawing as an image |
+| `review` | `t3d review <recipe>` | the review pack images (within the byte budget; the rest by path) + review.md path |
+| `critique` | `t3d critique <recipe>` | pack paths + warnings (drift from committed renders, inflated scores) |
+| `list_recipes` | `t3d list <files…>` | assets per recipe file (`recipes/*/*.ts`, `assets/**/*.ts`; `_`-folders skipped) |
+| `explain_error` | docs/architecture/errors.md | the code's rows: where thrown, cause, fix |
+
+Rules: paths are relative to the project root (`--root`, default the working directory); recipes must sit inside it, outputs inside it or `--out`; anything else is `T3D_CLI_USAGE`. Images are downscaled to a 1024 px long edge (deterministic box filter) and capped at 3 MB per result. A tool error is an `isError` result with the `T3D_*` code and `fix`; an unknown tool is JSON-RPC error −32602 with the fix in `data`. Tool calls run one at a time; `ping` and `tools/list` answer meanwhile. Setup: `claude mcp add ts23d -- bunx -p @developerz.ai/ts23d t3d mcp`. Not served: the stateless 2026-07-28 revision (`server/discover`), resources, prompts.
+
 ## Prompt snippet
 
 ```text
 Using @developerz.ai/ts23d, write recipes/<name>.ts: a <thing>, real dimensions in metres,
 Z up, +X front. Look up reference dimensions first. Block out the masses, then details.
 Name every part that moves (axle_*, door_*, rotor_*) and pivot it where it hinges.
-Loop: bunx t3d build → fix until QA PASS → read out/<name>/sheet.png →
+Loop: bunx -p @developerz.ai/ts23d t3d build → fix until QA PASS → read out/<name>/sheet.png →
 fix the single biggest error → repeat. Stop when two shots in a row show nothing worth fixing.
 Never use Math.random; use ctx.rng.
 ```
 
-The package ships `CLAUDE.md` (the repo's `AGENTS.md` links to it) and `llms.txt` for agents that read them.
+The package ships `CLAUDE.md` (the repo's `AGENTS.md` links to it), `llms.txt` and the skills as plain markdown (`.claude/skills/<skill>/SKILL.md`: `author-recipe` and the artist workflows) for agents that read them.
 
 ## Planned (as of 2026-10)
 
 - **Reverse direction:** a VLM proposes recipe params from photos; the loop scores them by silhouette IoU and keeps the best (M6).
-- **MCP server:** `build`, `shot`, `list` as tools, PNG returned inline (M6).

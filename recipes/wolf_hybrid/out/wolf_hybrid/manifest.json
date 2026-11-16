@@ -1,0 +1,500 @@
+{
+  "name": "wolf_hybrid",
+  "kind": "creature",
+  "description": "Hybrid grey wolf (Canis lupus lupus): the code-built creature-kind wolf (1.15 m head and body, 0.80 m at the shoulder, 40 kg) with an image-to-3D model surface (Pixal3D, MIT) blended under it as high-pass detail from the committed neural cache",
+  "tags": [
+    "creature",
+    "animal",
+    "mammal",
+    "canid",
+    "wolf",
+    "sculpt",
+    "neural",
+    "hybrid"
+  ],
+  "lods": [
+    0,
+    1,
+    2
+  ],
+  "files": {
+    "lods": [],
+    "sheet": "sheet.png",
+    "thumb": "thumb.png"
+  },
+  "triangles": [
+    141854,
+    24968,
+    2268
+  ],
+  "drawCalls": [
+    2,
+    2,
+    1
+  ],
+  "pivots": [
+    {
+      "name": "body",
+      "parent": null
+    },
+    {
+      "name": "body_cutout",
+      "parent": null
+    }
+  ],
+  "emitters": [],
+  "sockets": [],
+  "surfaces": [
+    "cutout",
+    "opaque"
+  ],
+  "skeleton": [
+    {
+      "name": "spine_0",
+      "parent": null
+    },
+    {
+      "name": "spine_1",
+      "parent": "spine_0"
+    },
+    {
+      "name": "spine_2",
+      "parent": "spine_1"
+    },
+    {
+      "name": "scapula_l",
+      "parent": "spine_2"
+    },
+    {
+      "name": "scapula_r",
+      "parent": "spine_2"
+    },
+    {
+      "name": "neck_0",
+      "parent": "spine_2"
+    },
+    {
+      "name": "neck_1",
+      "parent": "neck_0"
+    },
+    {
+      "name": "head",
+      "parent": "neck_1"
+    },
+    {
+      "name": "jaw",
+      "parent": "head"
+    },
+    {
+      "name": "tail_0",
+      "parent": "spine_0"
+    },
+    {
+      "name": "tail_1",
+      "parent": "tail_0"
+    },
+    {
+      "name": "tail_2",
+      "parent": "tail_1"
+    },
+    {
+      "name": "tail_3",
+      "parent": "tail_2"
+    },
+    {
+      "name": "tail_4",
+      "parent": "tail_3"
+    },
+    {
+      "name": "fore_l_0",
+      "parent": "scapula_l"
+    },
+    {
+      "name": "fore_l_1",
+      "parent": "fore_l_0"
+    },
+    {
+      "name": "fore_l_2",
+      "parent": "fore_l_1"
+    },
+    {
+      "name": "fore_l_3",
+      "parent": "fore_l_2"
+    },
+    {
+      "name": "fore_r_0",
+      "parent": "scapula_r"
+    },
+    {
+      "name": "fore_r_1",
+      "parent": "fore_r_0"
+    },
+    {
+      "name": "fore_r_2",
+      "parent": "fore_r_1"
+    },
+    {
+      "name": "fore_r_3",
+      "parent": "fore_r_2"
+    },
+    {
+      "name": "hind_l_0",
+      "parent": "spine_0"
+    },
+    {
+      "name": "hind_l_1",
+      "parent": "hind_l_0"
+    },
+    {
+      "name": "hind_l_2",
+      "parent": "hind_l_1"
+    },
+    {
+      "name": "hind_l_3",
+      "parent": "hind_l_2"
+    },
+    {
+      "name": "hind_r_0",
+      "parent": "spine_0"
+    },
+    {
+      "name": "hind_r_1",
+      "parent": "hind_r_0"
+    },
+    {
+      "name": "hind_r_2",
+      "parent": "hind_r_1"
+    },
+    {
+      "name": "hind_r_3",
+      "parent": "hind_r_2"
+    },
+    {
+      "name": "ear_l",
+      "parent": "head"
+    },
+    {
+      "name": "ear_r",
+      "parent": "head"
+    },
+    {
+      "name": "fore_l_0_mid",
+      "parent": "scapula_l"
+    },
+    {
+      "name": "fore_l_1_mid",
+      "parent": "fore_l_0"
+    },
+    {
+      "name": "fore_l_2_mid",
+      "parent": "fore_l_1"
+    },
+    {
+      "name": "fore_r_0_mid",
+      "parent": "scapula_r"
+    },
+    {
+      "name": "fore_r_1_mid",
+      "parent": "fore_r_0"
+    },
+    {
+      "name": "fore_r_2_mid",
+      "parent": "fore_r_1"
+    },
+    {
+      "name": "hind_l_0_mid",
+      "parent": "spine_0"
+    },
+    {
+      "name": "hind_l_1_mid",
+      "parent": "hind_l_0"
+    },
+    {
+      "name": "hind_l_2_mid",
+      "parent": "hind_l_1"
+    },
+    {
+      "name": "hind_r_0_mid",
+      "parent": "spine_0"
+    },
+    {
+      "name": "hind_r_1_mid",
+      "parent": "hind_r_0"
+    },
+    {
+      "name": "hind_r_2_mid",
+      "parent": "hind_r_1"
+    }
+  ],
+  "clips": [
+    {
+      "name": "idle",
+      "seconds": 4,
+      "loop": true,
+      "speed": 0
+    },
+    {
+      "name": "look",
+      "seconds": 4,
+      "loop": true,
+      "speed": 0
+    },
+    {
+      "name": "bite",
+      "seconds": 1.2,
+      "loop": true,
+      "speed": 0
+    },
+    {
+      "name": "walk",
+      "seconds": 0.8155955285669755,
+      "loop": true,
+      "speed": 1.1276
+    },
+    {
+      "name": "trot",
+      "seconds": 0.603715509942177,
+      "loop": true,
+      "speed": 2.3919
+    },
+    {
+      "name": "gallop",
+      "seconds": 0.4601158842849416,
+      "loop": true,
+      "speed": 4.7169
+    }
+  ],
+  "hitboxes": [
+    {
+      "bone": "spine_1",
+      "radius": 0.160703,
+      "height": 0.167604,
+      "coverage": 0.966
+    },
+    {
+      "bone": "spine_2",
+      "radius": 0.252327,
+      "height": 0.210426,
+      "coverage": 0.9804
+    },
+    {
+      "bone": "scapula_l",
+      "radius": 0.062094,
+      "height": 0.113795,
+      "coverage": 0.9679
+    },
+    {
+      "bone": "scapula_r",
+      "radius": 0.063077,
+      "height": 0.10643,
+      "coverage": 0.9693
+    },
+    {
+      "bone": "neck_0",
+      "radius": 0.132192,
+      "height": 0,
+      "coverage": 0.98
+    },
+    {
+      "bone": "neck_1",
+      "radius": 0.095663,
+      "height": 0.044641,
+      "coverage": 0.9675
+    },
+    {
+      "bone": "head",
+      "radius": 0.073278,
+      "height": 0.126054,
+      "coverage": 0.9692
+    },
+    {
+      "bone": "jaw",
+      "radius": 0.057063,
+      "height": 0.128223,
+      "coverage": 0.987
+    },
+    {
+      "bone": "tail_0",
+      "radius": 0.040927,
+      "height": 0.003158,
+      "coverage": 0.9595
+    },
+    {
+      "bone": "tail_4",
+      "radius": 0.039639,
+      "height": 0.033678,
+      "coverage": 0.9787
+    },
+    {
+      "bone": "fore_l_1",
+      "radius": 0.040643,
+      "height": 0.17377,
+      "coverage": 0.9552
+    },
+    {
+      "bone": "fore_l_3",
+      "radius": 0.042631,
+      "height": 0.008026,
+      "coverage": 0.9804
+    },
+    {
+      "bone": "fore_r_1",
+      "radius": 0.041431,
+      "height": 0.172189,
+      "coverage": 0.9573
+    },
+    {
+      "bone": "fore_r_3",
+      "radius": 0.042073,
+      "height": 0.009606,
+      "coverage": 0.9789
+    },
+    {
+      "bone": "hind_l_0",
+      "radius": 0.052563,
+      "height": 0.021744,
+      "coverage": 0.9732
+    },
+    {
+      "bone": "hind_l_1",
+      "radius": 0.062046,
+      "height": 0.080755,
+      "coverage": 0.9597
+    },
+    {
+      "bone": "hind_l_2",
+      "radius": 0.0314,
+      "height": 0.099847,
+      "coverage": 0.9859
+    },
+    {
+      "bone": "hind_l_3",
+      "radius": 0.043358,
+      "height": 0.020495,
+      "coverage": 0.9889
+    },
+    {
+      "bone": "hind_r_0",
+      "radius": 0.052991,
+      "height": 0.021016,
+      "coverage": 0.9677
+    },
+    {
+      "bone": "hind_r_1",
+      "radius": 0.059278,
+      "height": 0.082884,
+      "coverage": 0.9549
+    },
+    {
+      "bone": "hind_r_2",
+      "radius": 0.031048,
+      "height": 0.102338,
+      "coverage": 0.9757
+    },
+    {
+      "bone": "hind_r_3",
+      "radius": 0.042112,
+      "height": 0.02159,
+      "coverage": 0.9752
+    },
+    {
+      "bone": "ear_l",
+      "radius": 0.040146,
+      "height": 0.074049,
+      "coverage": 0.9573
+    },
+    {
+      "bone": "ear_r",
+      "radius": 0.040146,
+      "height": 0.07405,
+      "coverage": 0.9573
+    },
+    {
+      "bone": "fore_l_0_mid",
+      "radius": 0.020162,
+      "height": 0.038744,
+      "coverage": 0.9643
+    },
+    {
+      "bone": "fore_l_1_mid",
+      "radius": 0.067398,
+      "height": 0.014748,
+      "coverage": 0.9541
+    },
+    {
+      "bone": "fore_l_2_mid",
+      "radius": 0.034145,
+      "height": 0.04057,
+      "coverage": 0.9771
+    },
+    {
+      "bone": "fore_r_0_mid",
+      "radius": 0.021439,
+      "height": 0.041114,
+      "coverage": 0.9655
+    },
+    {
+      "bone": "fore_r_1_mid",
+      "radius": 0.068647,
+      "height": 0.011285,
+      "coverage": 0.9519
+    },
+    {
+      "bone": "fore_r_2_mid",
+      "radius": 0.032298,
+      "height": 0.041826,
+      "coverage": 0.9651
+    },
+    {
+      "bone": "hind_l_0_mid",
+      "radius": 0.101568,
+      "height": 0.133969,
+      "coverage": 0.9594
+    },
+    {
+      "bone": "hind_l_1_mid",
+      "radius": 0.095712,
+      "height": 0.072621,
+      "coverage": 0.9527
+    },
+    {
+      "bone": "hind_l_2_mid",
+      "radius": 0.040318,
+      "height": 0.058026,
+      "coverage": 0.954
+    },
+    {
+      "bone": "hind_r_0_mid",
+      "radius": 0.11061,
+      "height": 0.1286,
+      "coverage": 0.9581
+    },
+    {
+      "bone": "hind_r_1_mid",
+      "radius": 0.093118,
+      "height": 0.072636,
+      "coverage": 0.9518
+    },
+    {
+      "bone": "hind_r_2_mid",
+      "radius": 0.041689,
+      "height": 0.056278,
+      "coverage": 0.9747
+    }
+  ],
+  "real": {
+    "length": 1.31,
+    "width": 0.29,
+    "height": 0.9
+  },
+  "measures": [],
+  "sources": [
+    "https://en.wikipedia.org/wiki/Wolf (length, shoulder height, tail, mass, skull, ears, fur, colour)",
+    "recipes/wolf/README.md (the code wolf’s dossier) · recipes/wolf_hybrid/README.md (the hybrid)",
+    "surface: Pixal3D (TencentARC, MIT) via recipes/wolf_hybrid/neural/ record.json"
+  ],
+  "qa": {
+    "pass": true,
+    "findings": []
+  }
+}

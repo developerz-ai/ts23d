@@ -1,0 +1,41 @@
+# Every GPU plug-in (README table: several are untested and need their own repo + env).
+# Subprocess plug-ins run in their own venv: set `python` to that env's interpreter.
+[server]
+port = 8190
+keep_jobs = 16
+
+[plugins.pixal3d]
+repo = "~/models/Pixal3D"
+low_vram = true
+
+[plugins.trellis2]
+repo = "~/models/TRELLIS.2"
+
+[plugins.trellis2-texture]
+repo = "~/models/TRELLIS.2"
+
+[plugins.dinov2]
+
+[plugins.z-image]
+
+[plugins.qwen-image]
+offload = true
+
+[plugins.qwen-edit-split]
+offload = true
+
+[plugins.unirig]
+repo = "~/models/UniRig"
+python = "~/models/UniRig/.venv/bin/python"
+
+[plugins.unimate]
+repo = "~/models/UniMate"
+python = "~/models/UniMate/.venv/bin/python"
+exp_dir = "outputs/unimate_uniml3d_f60_v3"
+
+[plugins.hairdeck]
+repo = "~/models/HairDeck"
+python = "~/models/HairDeck/.venv/bin/python"
+
+[plugins.video-motion]
+model = "~/models/mediapipe/pose_landmarker_heavy.task"

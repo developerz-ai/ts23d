@@ -1,0 +1,524 @@
+{
+  "name": "fox",
+  "kind": "creature",
+  "description": "Adult red fox (Vulpes vulpes) standing alert in winter coat: 0.68 m head and body, 0.42 m brush, 0.425 m at the shoulder, 6 kg; the grey wolf’s canid family member, scaled from its skeleton",
+  "tags": [
+    "creature",
+    "animal",
+    "mammal",
+    "canid",
+    "fox",
+    "family-member",
+    "sculpt"
+  ],
+  "lods": [
+    0,
+    1,
+    2
+  ],
+  "files": {
+    "lods": [],
+    "sheet": "sheet.png",
+    "thumb": "thumb.png"
+  },
+  "triangles": [
+    152178,
+    27012,
+    2700
+  ],
+  "drawCalls": [
+    2,
+    2,
+    1
+  ],
+  "pivots": [
+    {
+      "name": "body",
+      "parent": null
+    },
+    {
+      "name": "body_cutout",
+      "parent": null
+    }
+  ],
+  "emitters": [],
+  "sockets": [],
+  "surfaces": [
+    "cutout",
+    "opaque"
+  ],
+  "skeleton": [
+    {
+      "name": "spine_0",
+      "parent": null
+    },
+    {
+      "name": "spine_1",
+      "parent": "spine_0"
+    },
+    {
+      "name": "spine_2",
+      "parent": "spine_1"
+    },
+    {
+      "name": "scapula_l",
+      "parent": "spine_2"
+    },
+    {
+      "name": "scapula_r",
+      "parent": "spine_2"
+    },
+    {
+      "name": "neck_0",
+      "parent": "spine_2"
+    },
+    {
+      "name": "neck_1",
+      "parent": "neck_0"
+    },
+    {
+      "name": "head",
+      "parent": "neck_1"
+    },
+    {
+      "name": "jaw",
+      "parent": "head"
+    },
+    {
+      "name": "tail_0",
+      "parent": "spine_0"
+    },
+    {
+      "name": "tail_1",
+      "parent": "tail_0"
+    },
+    {
+      "name": "tail_2",
+      "parent": "tail_1"
+    },
+    {
+      "name": "tail_3",
+      "parent": "tail_2"
+    },
+    {
+      "name": "tail_4",
+      "parent": "tail_3"
+    },
+    {
+      "name": "fore_l_0",
+      "parent": "scapula_l"
+    },
+    {
+      "name": "fore_l_1",
+      "parent": "fore_l_0"
+    },
+    {
+      "name": "fore_l_2",
+      "parent": "fore_l_1"
+    },
+    {
+      "name": "fore_l_3",
+      "parent": "fore_l_2"
+    },
+    {
+      "name": "fore_r_0",
+      "parent": "scapula_r"
+    },
+    {
+      "name": "fore_r_1",
+      "parent": "fore_r_0"
+    },
+    {
+      "name": "fore_r_2",
+      "parent": "fore_r_1"
+    },
+    {
+      "name": "fore_r_3",
+      "parent": "fore_r_2"
+    },
+    {
+      "name": "hind_l_0",
+      "parent": "spine_0"
+    },
+    {
+      "name": "hind_l_1",
+      "parent": "hind_l_0"
+    },
+    {
+      "name": "hind_l_2",
+      "parent": "hind_l_1"
+    },
+    {
+      "name": "hind_l_3",
+      "parent": "hind_l_2"
+    },
+    {
+      "name": "hind_r_0",
+      "parent": "spine_0"
+    },
+    {
+      "name": "hind_r_1",
+      "parent": "hind_r_0"
+    },
+    {
+      "name": "hind_r_2",
+      "parent": "hind_r_1"
+    },
+    {
+      "name": "hind_r_3",
+      "parent": "hind_r_2"
+    },
+    {
+      "name": "ear_l",
+      "parent": "head"
+    },
+    {
+      "name": "ear_r",
+      "parent": "head"
+    },
+    {
+      "name": "fore_l_0_mid",
+      "parent": "scapula_l"
+    },
+    {
+      "name": "fore_l_1_mid",
+      "parent": "fore_l_0"
+    },
+    {
+      "name": "fore_l_2_mid",
+      "parent": "fore_l_1"
+    },
+    {
+      "name": "fore_r_0_mid",
+      "parent": "scapula_r"
+    },
+    {
+      "name": "fore_r_1_mid",
+      "parent": "fore_r_0"
+    },
+    {
+      "name": "fore_r_2_mid",
+      "parent": "fore_r_1"
+    },
+    {
+      "name": "hind_l_0_mid",
+      "parent": "spine_0"
+    },
+    {
+      "name": "hind_l_1_mid",
+      "parent": "hind_l_0"
+    },
+    {
+      "name": "hind_l_2_mid",
+      "parent": "hind_l_1"
+    },
+    {
+      "name": "hind_r_0_mid",
+      "parent": "spine_0"
+    },
+    {
+      "name": "hind_r_1_mid",
+      "parent": "hind_r_0"
+    },
+    {
+      "name": "hind_r_2_mid",
+      "parent": "hind_r_1"
+    }
+  ],
+  "clips": [
+    {
+      "name": "idle",
+      "seconds": 4,
+      "loop": true,
+      "speed": 0
+    },
+    {
+      "name": "look",
+      "seconds": 4,
+      "loop": true,
+      "speed": 0
+    },
+    {
+      "name": "bite",
+      "seconds": 1.2,
+      "loop": true,
+      "speed": 0
+    },
+    {
+      "name": "walk",
+      "seconds": 0.5972446108072038,
+      "loop": true,
+      "speed": 0.8257
+    },
+    {
+      "name": "trot",
+      "seconds": 0.442089028378089,
+      "loop": true,
+      "speed": 1.7515
+    },
+    {
+      "name": "gallop",
+      "seconds": 0.33693383866241494,
+      "loop": true,
+      "speed": 3.4541
+    }
+  ],
+  "hitboxes": [
+    {
+      "bone": "spine_0",
+      "radius": 0.047926,
+      "height": 0,
+      "coverage": 0.9762
+    },
+    {
+      "bone": "spine_1",
+      "radius": 0.09166,
+      "height": 0.096921,
+      "coverage": 0.9551
+    },
+    {
+      "bone": "spine_2",
+      "radius": 0.123922,
+      "height": 0.134244,
+      "coverage": 0.9809
+    },
+    {
+      "bone": "scapula_l",
+      "radius": 0.032104,
+      "height": 0.062408,
+      "coverage": 0.9613
+    },
+    {
+      "bone": "scapula_r",
+      "radius": 0.032169,
+      "height": 0.061741,
+      "coverage": 0.9661
+    },
+    {
+      "bone": "neck_0",
+      "radius": 0.076503,
+      "height": 0,
+      "coverage": 0.9657
+    },
+    {
+      "bone": "neck_1",
+      "radius": 0.054166,
+      "height": 0.028314,
+      "coverage": 0.9645
+    },
+    {
+      "bone": "head",
+      "radius": 0.042466,
+      "height": 0.082558,
+      "coverage": 0.9694
+    },
+    {
+      "bone": "jaw",
+      "radius": 0.031312,
+      "height": 0.081597,
+      "coverage": 0.9846
+    },
+    {
+      "bone": "tail_0",
+      "radius": 0.04521,
+      "height": 0.060702,
+      "coverage": 0.9594
+    },
+    {
+      "bone": "tail_1",
+      "radius": 0.041491,
+      "height": 0,
+      "coverage": 1
+    },
+    {
+      "bone": "tail_2",
+      "radius": 0.039752,
+      "height": 0.051342,
+      "coverage": 0.9691
+    },
+    {
+      "bone": "tail_3",
+      "radius": 0.031441,
+      "height": 0,
+      "coverage": 0.9745
+    },
+    {
+      "bone": "tail_4",
+      "radius": 0.023907,
+      "height": 0.074091,
+      "coverage": 0.9559
+    },
+    {
+      "bone": "fore_l_1",
+      "radius": 0.02459,
+      "height": 0.09921,
+      "coverage": 0.9521
+    },
+    {
+      "bone": "fore_l_3",
+      "radius": 0.020772,
+      "height": 0.003002,
+      "coverage": 1
+    },
+    {
+      "bone": "fore_r_1",
+      "radius": 0.024307,
+      "height": 0.099472,
+      "coverage": 0.9525
+    },
+    {
+      "bone": "fore_r_3",
+      "radius": 0.020124,
+      "height": 0.003389,
+      "coverage": 0.9992
+    },
+    {
+      "bone": "hind_l_0",
+      "radius": 0.043116,
+      "height": 0.017994,
+      "coverage": 0.9552
+    },
+    {
+      "bone": "hind_l_1",
+      "radius": 0.034183,
+      "height": 0.049572,
+      "coverage": 0.95
+    },
+    {
+      "bone": "hind_l_2",
+      "radius": 0.015956,
+      "height": 0.07066,
+      "coverage": 0.9873
+    },
+    {
+      "bone": "hind_l_3",
+      "radius": 0.020837,
+      "height": 0.008376,
+      "coverage": 1
+    },
+    {
+      "bone": "hind_r_0",
+      "radius": 0.043973,
+      "height": 0.016126,
+      "coverage": 0.9508
+    },
+    {
+      "bone": "hind_r_1",
+      "radius": 0.035172,
+      "height": 0.048503,
+      "coverage": 0.9566
+    },
+    {
+      "bone": "hind_r_2",
+      "radius": 0.016,
+      "height": 0.070455,
+      "coverage": 0.9897
+    },
+    {
+      "bone": "hind_r_3",
+      "radius": 0.020428,
+      "height": 0.00887,
+      "coverage": 0.998
+    },
+    {
+      "bone": "ear_l",
+      "radius": 0.025598,
+      "height": 0.046227,
+      "coverage": 0.9578
+    },
+    {
+      "bone": "ear_r",
+      "radius": 0.025598,
+      "height": 0.046227,
+      "coverage": 0.9578
+    },
+    {
+      "bone": "fore_l_0_mid",
+      "radius": 0.02234,
+      "height": 0.024573,
+      "coverage": 0.9662
+    },
+    {
+      "bone": "fore_l_1_mid",
+      "radius": 0.037383,
+      "height": 0.007042,
+      "coverage": 0.9576
+    },
+    {
+      "bone": "fore_l_2_mid",
+      "radius": 0.017108,
+      "height": 0.033644,
+      "coverage": 0.9804
+    },
+    {
+      "bone": "fore_r_0_mid",
+      "radius": 0.022447,
+      "height": 0.025489,
+      "coverage": 0.9708
+    },
+    {
+      "bone": "fore_r_1_mid",
+      "radius": 0.036106,
+      "height": 0.007953,
+      "coverage": 0.9607
+    },
+    {
+      "bone": "fore_r_2_mid",
+      "radius": 0.016981,
+      "height": 0.03414,
+      "coverage": 0.9694
+    },
+    {
+      "bone": "hind_l_0_mid",
+      "radius": 0.051242,
+      "height": 0.076397,
+      "coverage": 0.9832
+    },
+    {
+      "bone": "hind_l_1_mid",
+      "radius": 0.048276,
+      "height": 0.038078,
+      "coverage": 0.9557
+    },
+    {
+      "bone": "hind_l_2_mid",
+      "radius": 0.020875,
+      "height": 0.027203,
+      "coverage": 0.9738
+    },
+    {
+      "bone": "hind_r_0_mid",
+      "radius": 0.049613,
+      "height": 0.077539,
+      "coverage": 0.9636
+    },
+    {
+      "bone": "hind_r_1_mid",
+      "radius": 0.048118,
+      "height": 0.037495,
+      "coverage": 0.9556
+    },
+    {
+      "bone": "hind_r_2_mid",
+      "radius": 0.021307,
+      "height": 0.027125,
+      "coverage": 0.9607
+    }
+  ],
+  "real": {
+    "length": 1.11,
+    "width": 0.16,
+    "height": 0.52
+  },
+  "measures": [],
+  "sources": [
+    "https://en.wikipedia.org/wiki/Red_fox (head-body, tail, shoulder, mass, skull, ears, coat)",
+    "Wikidata Q8332 \"red fox\" (CC0-1.0, fetched 2026-11-16) https://www.wikidata.org/wiki/Special:EntityData/Q8332.json?revision=2569107329",
+    "recipes/wolf (family base: skeleton, build, face) via familyMember",
+    "recipes/fox/README.md (dossier, photos per view)"
+  ],
+  "qa": {
+    "pass": true,
+    "findings": []
+  }
+}

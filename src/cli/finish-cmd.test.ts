@@ -1,5 +1,6 @@
 // `t3d finish`: bad flags fail with T3D_FINISH_INVALID before any work; a mock run writes the
-// controls, model images, atlas maps, compare.png, the finished GLB and finish.json.
+// controls, model images, atlas maps, compare.png, the finished GLB and finish.json. `--hero`
+// (heroFinishOne) refuses a bad atlas, flags an asset with no field, and writes the hero folder.
 
 import { describe, expect, it } from 'bun:test';
 import { mkdtemp, readdir, rm } from 'node:fs/promises';
@@ -9,7 +10,7 @@ import { cart } from '../finish/fixtures.ts';
 import { memoryStore } from '../finish/index.ts';
 import { DEFAULT_SHEET, paintTrimSheet } from '../material/index.ts';
 import { parseArgs } from './args.ts';
-import { finishOne } from './finish-cmd.ts';
+import { finishOne, heroFinishOne } from './finish-cmd.ts';
 
 describe('t3d finish', () => {
   it('rejects an unknown model, views out of range, and http without endpoint', async () => {
@@ -44,6 +45,23 @@ describe('t3d finish', () => {
         cache: string;
       };
       expect([report.accepted, report.cache]).toEqual([true, 'miss']);
+    } finally {
+      await rm(out, { recursive: true, force: true });
+    }
+  });
+
+  it('hero: a bad atlas fails, an asset without a field warns, the folder is written', async () => {
+    const out = await mkdtemp(join(tmpdir(), 't3d-hero-'));
+    try {
+      const sheet = paintTrimSheet({ ...DEFAULT_SHEET, size: 512 });
+      const bad = parseArgs(['finish', 'a.ts', '--out', out, '--atlas', '256']);
+      await expect(heroFinishOne(cart, bad, sheet)).rejects.toThrow('T3D_BAKE_INVALID');
+      const args = parseArgs(['finish', 'a.ts', '--out', out, '--atlas', '1024']);
+      const r = await heroFinishOne(cart, args, sheet);
+      expect(r.warnings.map((w) => w.code)).toEqual(['T3D_BAKE_FAILED']);
+      const files = await readdir(join(out, 'cart', 'hero'));
+      for (const f of ['cart_hero.glb', 'hero.json', 'hero_normal.png', 'hero_height.png'])
+        expect(files).toContain(f);
     } finally {
       await rm(out, { recursive: true, force: true });
     }

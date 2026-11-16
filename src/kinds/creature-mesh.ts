@@ -40,6 +40,8 @@ export interface Piece {
   readonly mesh: Mesh;
   /** The final (relieved, unfolded) field, for probes and volume. */
   readonly field: Field;
+  /** The vertex colour function (edits, paint, tone) at any surface point. */
+  readonly color: (p: Vec3) => Vec3;
 }
 
 export function sculptPiece(o: PieceOptions): Piece {
@@ -86,5 +88,5 @@ export function sculptPiece(o: PieceOptions): Piece {
     ...(o.mirror ? { symmetry: 'y' as const } : {}),
     ...(o.strip ? { strip: o.strip } : {}),
   });
-  return { mesh, field };
+  return { mesh, field, color };
 }

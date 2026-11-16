@@ -3,6 +3,8 @@
 //   cameras.json · model/<view>.png (the model's images) · finish_{albedo,orm,normal,base}.png
 //   (atlas) · compare.png (before | after) · <asset>_finish.glb · finish.json (provenance, QA).
 // Model results are cached in .ts23d/finish/ by content hash: a re-run replays offline.
+// `t3d finish --hero` (heroFinishOne): the hero texture tier (ADR 012) → <out>/<asset>/hero/:
+//   hero_{albedo,orm,normal,height}.png · <asset>_hero.glb (LOD0 on ts23d_hero) · hero.json.
 
 import { mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -15,6 +17,9 @@ import {
   finishCompare,
   finishedGlb,
   finishPngs,
+  heroGlb,
+  heroPngs,
+  heroTier,
   httpFinish,
   mockFinish,
 } from '../finish/index.ts';
@@ -110,6 +115,77 @@ export async function finishOne(
         message: `${q.part ?? ''} ${q.message}`.trim(),
         fix: q.fix,
       })),
+    ],
+  };
+}
+
+/**
+ * The hero bake of one asset: size and cell from `budget.heroTextures` (else `--atlas`, default
+ * 2048, and 1.5 mm). Without the opt-in a sculpting kind meshes its usual LOD0 and tags no field,
+ * so every texel is vertex colour only — the report says so.
+ */
+export async function heroFinishOne(
+  asset: Asset,
+  args: Args,
+  sheet: PaintedSheet,
+): Promise<RenderResult> {
+  const declared = asset.budget.heroTextures;
+  const atlas = declared?.size ?? args.finish?.atlas ?? 2048;
+  if (atlas !== 1024 && atlas !== 2048 && atlas !== 4096)
+    throw new Ts23dError('T3D_BAKE_INVALID', {
+      cause: `hero atlas ${atlas} is not 1024, 2048 or 4096`,
+      fix: 'declare budget.heroTextures: { size: 2048 } or pass --atlas 2048',
+    });
+  const dir = join(args.out, asset.name, 'hero');
+  await mkdir(dir, { recursive: true });
+  const r = heroTier(compile(asset, { lod: 0 }), {
+    size: atlas,
+    sheet,
+    ...(declared?.cell !== undefined ? { cell: declared.cell } : {}),
+  });
+  const files: [string, Uint8Array | string][] = [];
+  const pngs = heroPngs(r);
+  for (const k of ['albedo', 'orm', 'normal', 'height'] as const)
+    files.push([join(dir, `hero_${k}.png`), pngs[k]]);
+  const force = args.finish?.force === true;
+  if (r.findings.length === 0 || force) {
+    const lower = [1, 2].map((lod) => compile(asset, { lod: lod as 1 | 2 }));
+    const glb = heroGlb(r, lower, { sheet, animations: args.animations, force });
+    files.push([join(dir, `${asset.name}_hero.glb`), glb]);
+  }
+  const baked = r.parts.filter((p) => p.hitRate !== null).map((p) => p.name);
+  const report = {
+    asset: asset.name,
+    accepted: r.findings.length === 0,
+    size: atlas,
+    cell: r.cell,
+    cage: r.cage,
+    texelsPerMetre: Math.round(r.texelsPerMetre),
+    heightRange: r.maps.heightRange,
+    triangles: r.asset.parts.reduce((s, p) => s + (p.mesh ? p.mesh.indices.length / 3 : 0), 0),
+    parts: r.parts,
+    findings: r.findings,
+  };
+  files.push([join(dir, 'hero.json'), `${JSON.stringify(report, null, 2)}\n`]);
+  for (const [path, bytes] of files) await Bun.write(path, bytes);
+  return {
+    name: `${asset.name} (hero ${atlas}², field parts: ${baked.join(', ') || 'none'})`,
+    files: files.map(([p]) => p),
+    warnings: [
+      ...r.findings.map((x) => ({
+        code: x.code,
+        message: `${x.part ?? ''}: ${x.message}`,
+        fix: x.fix,
+      })),
+      ...(baked.length === 0
+        ? [
+            {
+              code: 'T3D_BAKE_FAILED',
+              message: 'no part carries a field to bake: the maps are vertex colour only',
+              fix: 'opt in with budget.heroTextures on a sculpted asset (defineCreature), or tag meshes with withBakeSource',
+            },
+          ]
+        : []),
     ],
   };
 }

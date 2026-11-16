@@ -17,7 +17,25 @@ export {
   finishAsset,
 } from './finish.ts';
 export { type FinishPngs, finishedGlb, finishPngs } from './glb.ts';
-export { type HttpFinishOptions, httpFinish, requestBody } from './http.ts';
+export {
+  type HeroMaps,
+  type HeroOptions,
+  type HeroPngs,
+  type HeroResult,
+  heroGlb,
+  heroPngs,
+  heroTier,
+} from './hero.ts';
+export {
+  checkHero,
+  densityRatio,
+  HERO_DENSITY_TOL,
+  HERO_MISS_MAX,
+  type HeroFinding,
+  type HeroPartStat,
+  type HeroQaInput,
+} from './hero-qa.ts';
+export { type HttpFinishOptions, httpFinish, neuralFinish, requestBody } from './http.ts';
 export { type LscmOptions, lscmCharts, STRETCH_MAX, type UvChart } from './lscm.ts';
 export {
   type DerivedMaps,
@@ -27,9 +45,26 @@ export {
   type HeightAt,
 } from './maps.ts';
 export { effectsOf, MOCK_MODEL_ID, mockFinish, noise3 } from './mock.ts';
+export {
+  closestColour,
+  delight,
+  highPassOver,
+  projectViews,
+  transferColours,
+  turnaroundCameras,
+  type View as ProjectionView,
+} from './neural-texture.ts';
 export { finishCompare, type PreviewOptions, previewImage } from './preview.ts';
 export { checkFinish, type FinishQaOptions, paletteDrift, ringLeak } from './qa.ts';
 export { type FinishScene, finishScene } from './scene.ts';
+export {
+  type ConceptImage,
+  cropPart,
+  fitIntoBox,
+  type PartCrop,
+  type SplitPartsOptions,
+  splitParts,
+} from './split-parts.ts';
 export { atlasTexels, type Texels } from './texels.ts';
 export type {
   ControlView,

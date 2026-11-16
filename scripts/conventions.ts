@@ -124,6 +124,21 @@ export function decimatesCode(s: Source): Violation[] {
   ];
 }
 
+/** Shipped docs must scope the CLI: a bare `bunx t3d` outside a project with the package fetches an
+ *  unrelated npm package named `t3d` (D49). */
+export function unscopedBunx(s: Source): Violation[] {
+  const at = s.text.search(/\bbunx t3d\b/);
+  if (at === -1) return [];
+  return [
+    {
+      file: s.file,
+      line: lineOf(s.text, at),
+      message: '`bunx t3d` resolves an unrelated npm package when ts23d is not installed (D49)',
+      fix: 'write `bunx -p @developerz.ai/ts23d t3d …`',
+    },
+  ];
+}
+
 /** Kinds that model a real, measurable thing: they must cite it. Each is a module in src/kinds. */
 export const REAL_KINDS = ['vehicle', 'building'] as const;
 
@@ -216,6 +231,15 @@ export function changelogDocs(
 
 const read = async (file: string): Promise<Source> => ({ file, text: await Bun.file(file).text() });
 
+/** Markdown an agent reads after install: root docs, docs/ (not dated plans), shipped skills. */
+async function shippedDocs(): Promise<Source[]> {
+  const files = ['README.md', 'CLAUDE.md', 'llms.txt', 'PUBLISHING.md'];
+  for (const g of ['docs/**/*.md', '.claude/skills/**/*.md'])
+    for await (const f of new Bun.Glob(g).scan({ dot: true }))
+      if (!f.startsWith('docs/plans/')) files.push(f);
+  return Promise.all(files.sort().map(read));
+}
+
 if (import.meta.main) {
   const src = await Promise.all((await tsFiles('src')).filter((f) => !isTest(f)).map(read));
   const scripts = await Promise.all((await tsFiles('scripts')).filter((f) => !isTest(f)).map(read));
@@ -235,6 +259,7 @@ if (import.meta.main) {
     ...[...folders.values()].flatMap(realSources),
     ...defectRows(await read('docs/architecture/defect-catalogue.md')),
     ...changelogDocs(await read('CHANGELOG.md'), await readPages()),
+    ...(await shippedDocs()).flatMap(unscopedBunx),
   ];
   process.exitCode = report('conventions', violations, process.argv.includes('--json'));
 }

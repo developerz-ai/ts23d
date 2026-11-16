@@ -26,15 +26,18 @@ of recipes needs review; critique scores disagree between assets.
 | 6 | Exemplars | 1–3 hero assets built to the guide first; others measured against them | exemplars score ≥ 8 in critique |
 | 7 | Production | discipline skills per asset; `defineFamily` for variants; `ctx.use` for sets | every asset imports the style module |
 | 8 | Review cadence | `bun run shots`, `t3d critique` per asset, contact sheets side by side; gallery (`bun run site:dev`) | scores ≥ 8, consistent reasons |
-| 9 | Enforce | tests per asset: palette membership, texel range, budgets, silhouette; new rule → script in `bun run verify` | a stray asset fails a test |
+| 9 | Enforce | the set in `recipes/sets.ts` with its `defineStyle` bible; `coherence(style, compiled)` (LOD1) flags robust-z outliers; tests per asset for budgets and silhouette | `checkSet(set)` returns [] and a stray asset fails `T3D_STYLE_OUTLIER` |
 
 ## Vocabulary → measurable
 | Word | Meaning here | Check |
 |---|---|---|
 | Art bible / style guide | the rules every asset follows, as importable code + a short doc | style module imported by recipes |
-| Palette role | primary / secondary / accent / neutral, with approximate area share (e.g. 60 / 30 / 10) | test: vertex colours within ΔE of the palette **(write it; no built-in)** |
+| Palette role | primary / secondary / accent / neutral, with approximate area share (e.g. 60 / 30 / 10) | `styleMetrics(c, style).palette`: area share within CIEDE2000 `paletteDeltaE` (lightness forgiven ×2, so shade ramps belong); ≥ 75 % (`MIN_PALETTE_SHARE`) |
 | Realism level | real-scale PBR vs stylised exaggeration, declared | dossier + material ranges (`assertValueRange`) |
-| Consistency | same texel density, bevel scale, wear strength, palette across a set | `assertTexelDensity`; shared constants |
+| Consistency | same texel density, bevel scale, wear strength, palette, value key across a set | `coherence(style, assets)`: per metric robust z (0.6745·(x − median)/MAD, MAD floored) > `outlierZ` (3.5) → `T3D_STYLE_OUTLIER` naming metric and value |
+| Style bible | palette roles, texel density, bevel range, wear range, value key as data | `defineStyle({ name, palette, texelDensity?, bevel?, wear?, valueKey?, outlierZ? })` |
+| Scene budget | what a scene costs from street, aerial and overview cameras | `sceneBudgetFindings(stats, placements, budget)`: unique meshes, instances, draws (instanced share), on-screen triangles (LOD by projected size), texture bytes → `T3D_SCENE_BUDGET` |
+| Family | animals that share one skeleton | `familyMember(WOLF, { family, mass, length, height, … })`: fox (canid), brown bear (ursid) |
 | Scale reference | doors, stairs, a 1.8 m human | `t3d blueprint` figure |
 | Readability | silhouette first, value before colour, focal contrast | `assertLodSilhouette`; focal check **planned** |
 | Exemplar | the asset others are judged against | critique side by side |
@@ -43,6 +46,7 @@ of recipes needs review; critique scores disagree between assets.
 
 ## Quality bar
 - [ ] Pillars, palette roles, scale rules, wear and budgets live in one imported module.
+- [ ] The set is declared in `recipes/sets.ts` and `checkSet` returns no `T3D_STYLE_OUTLIER`.
 - [ ] Every asset in the set passes the same tests (texel range, budgets, silhouette).
 - [ ] Contact sheets side by side look like one world: same light, value range, wear level.
 - [ ] Exemplars exist and score ≥ 8 on every criterion.
@@ -63,6 +67,7 @@ bun run t3d shot recipes/<name>/<name>.ts --out renders     # READ sheet.png
 bun run t3d hero recipes/<name>/<name>.ts --out renders     # READ hero.png
 bun run t3d blueprint recipes/<name>/<name>.ts --out renders  # READ blueprint.png
 bun run site:dev                          # gallery: the set side by side
+bun test recipes/_lib/sets.test.ts       # every set in recipes/sets.ts coherent; an off-palette asset fails
 bun run t3d critique recipes/<name>/<name>.ts --out tmp/critique  # READ every PNG, fill critique.json
 #   ↳ prints `calibrated X / 10 · claimed Y`: score what you see; a claim > 1.5 over X is T3D_CRITIQUE_INFLATED
 bun run golden brief recipes/<name>/<name>.ts  # blind panel: 3 independent agents each write review-<k>.json
@@ -81,7 +86,9 @@ bun run shots <name>                      # refresh committed out/
 ## Tool status
 Shipped: `definePalette`/`palettes`, one trim sheet, `defineFamily`, `ctx.use`, shared parts,
 `assertTexelDensity`, `assertValueRange`, `assertLodSilhouette`, `t3d critique` + `critique.json`,
-gallery site. Planned / gaps: palette-membership and cross-asset consistency gates (none built in),
-focal/value checks, optional CI fresh-eyes reviewer, enforced critique mode (calibrated inflation and
+gallery site, `defineStyle` + set coherence (`coherence`, `styleMetrics`, `recipes/sets.ts`: `rts`,
+`bestiary`), scene budgets (`sceneBudgetFindings`), skeleton families (`familyMember`). Planned /
+gaps: the recipes gate's `sets` pass (wiring), coherence on the beauty render's value key (today
+vertex colour), focal/value checks, optional CI fresh-eyes reviewer, enforced critique mode (calibrated inflation and
 regression are enforced; the flagship floor reports until slice 17), `variations(n)`.
 Neutral positioning: the free code-based option, no claims against other tools.

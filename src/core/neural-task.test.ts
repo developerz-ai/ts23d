@@ -53,4 +53,20 @@ describe('tasks', () => {
     expect(isNeuralTask('rig')).toBe(true);
     expect(isNeuralTask('video')).toBe(false);
   });
+
+  it('tool tasks: a drape is a GLB, a KTX2 is image/ktx2, an engine check is JSON', () => {
+    const json = { bytes: new Uint8Array([123, 125]), mime: 'application/json' };
+    const ktx2 = { bytes: new Uint8Array([171]), mime: 'image/ktx2' };
+    expect(() => checkNeuralResult('cloth', { outputs: [json] })).toThrow(/'application\/json'/);
+    expect(() => checkNeuralResult('ktx2', { outputs: [png] })).toThrow(
+      'T3D_NEURAL_OUTPUT_INVALID',
+    );
+    expect(checkNeuralResult('ktx2', { outputs: [ktx2] }).outputs).toHaveLength(1);
+    expect(checkNeuralResult('engine-check', { outputs: [json] }).outputs).toHaveLength(1);
+    for (const t of ['cloth', 'fracture', 'engine-check', 'ktx2', 'meshopt', 'groom'])
+      expect(isNeuralTask(t)).toBe(true);
+    // A groom returns cards (GLB) and may add a stats JSON; never a picture.
+    expect(() => checkNeuralResult('groom', { outputs: [png] })).toThrow(/'image\/png'/);
+    expect(checkNeuralResult('groom', { outputs: [json] }).outputs).toHaveLength(1);
+  });
 });

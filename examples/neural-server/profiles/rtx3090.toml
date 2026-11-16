@@ -1,0 +1,18 @@
+# 24 GB card (measured on an RTX 3090). One model is resident at a time; switching models unloads.
+# Run inside the model venv (README "GPU setup"). Paths are this machine's; copy and edit.
+[server]
+host = "127.0.0.1"
+port = 8190
+keep_jobs = 16
+max_input_mb = 64
+
+[plugins.pixal3d]
+repo = "~/workspace/lab/neural-models/Pixal3D"
+low_vram = true          # 1024 cascade, models on CPU between stages (17.5 GB peak, whole card)
+
+[plugins.trellis2]
+repo = "~/workspace/lab/neural-models/TRELLIS.2"
+
+[plugins.dinov2]
+
+[plugins.z-image]

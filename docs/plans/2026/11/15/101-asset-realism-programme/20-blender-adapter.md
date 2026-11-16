@@ -24,7 +24,11 @@ Rule: Blender is a power tool behind the same adapter contract as the model serv
 | 5 | Basis Universal (Apache-2.0) | `ktx2` | KTX2/UASTC textures (roadmap M2) without writing an encoder; bytes pinned by encoder version in `record.json` |
 | 6 | meshoptimizer (MIT) | `meshopt` | `EXT_meshopt_compression` and import simplification |
 | later | Blender softbody/jiggle bake, multires/Cycles bake + lightmaps, QuadriFlow + UV unwrap, data transfer, USD/FBX export, ocean | various | |
-| later | Material Maker CLI (MIT), Meshroom/COLMAP photogrammetry, CadQuery/OpenCascade B-rep, MPFB2 CC0 morphs | various | |
+| 7 | MPFB2 (MakeHuman plugin; GPL code, CC0 assets) | `human` (body shape, expressions, CC0 clothes/hair proxies on the base our heads use) | biggest character win; assets CC0 so outputs publishable |
+| 8 | Cycles bake on GPU (OptiX) | `bake` | fast high→low normal/AO/curvature; alternative backend for slice 11 (CPU baker stays default) |
+| 9 | Sapling Tree Gen, A.N.T. Landscape (bundled extensions, GPL) | `tree`, `terrain` | second opinions vs our own tree/terrain kinds |
+| later | Material Maker CLI (MIT), Meshroom/COLMAP photogrammetry, CadQuery/OpenCascade B-rep | various | |
+| no | paid add-ons (Auto-Rig Pro, UVPackmaster, Simple Bake, HairTool), BlenderKit (mixed licences) | — | users never need paid software; licence-clean outputs |
 
 ## Depends on
 13 (adapter contract + recipe cache), 19 (VDM format), clothes round (garment meshes).

@@ -276,6 +276,16 @@ function splitPart(
       uvs: new Float32Array(uv),
       colors: pick(m.colors, 3),
       indices,
+      // Skin and morphs ride along: a skinned LOD0 stays skinned on its atlas UVs.
+      ...(m.joints && m.weights
+        ? {
+            joints: Uint16Array.from(pick(Float32Array.from(m.joints), 4)),
+            weights: pick(m.weights, 4),
+          }
+        : {}),
+      ...(m.morphs?.length
+        ? { morphs: m.morphs.map((x) => ({ name: x.name, positions: pick(x.positions, 3) })) }
+        : {}),
     },
     trimUv: pick(m.uvs, 2),
   };

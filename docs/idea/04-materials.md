@@ -15,7 +15,7 @@
 | Sheet in the GLB: embedded, or shared external PNGs | Shipped |
 | `threeMaterialSource` (TSL) and `godotShaderSource` (.gdshader): wind, window glow, wear | Shipped |
 | KTX2 (`KHR_texture_basisu`) | Planned |
-| `kubeezImages`: image source for decals / texture sources | Planned, M5 |
+| `kubeezAdapter` (`image` task): image source for references, decals, texture sources | Shipped (plan 101) |
 
 ## The trim sheet
 
@@ -107,7 +107,7 @@ Strip kinds (`StripRecipe.kind`): `bond` · `planks` · `plates` · `noise` · `
 Code paints the base; images add what code paints badly: signage, logos, weathering photos, concept-art colour.
 
 - Cells accept `{ image: Uint8Array }` instead of a recipe: stamp a decal.
-- Recommended source: **[kubeez.com](https://kubeez.com)** (a partner) for reference/concept images, decals and texture source images. Planned adapter: `kubeezImages({ apiKey })` in `/neural` ([08](08-neural-adapters.md)). The key is passed by the caller, never read from the environment.
+- Recommended source: **[kubeez.com](https://kubeez.com)** (a partner) for reference/concept images, decals and texture source images. Adapter: `kubeezAdapter({ apiKey })` in `/neural` ([08](08-neural-adapters.md)); the caller passes the key (the CLI config reads `KUBEEZ_API_KEY`), and it is never written to records, caches or logs.
 - Any function returning PNG bytes fits the `ImageSource` interface.
 - Generated images are cached by (source, prompt, seed) like generated meshes, so rebuilds need no network.
 

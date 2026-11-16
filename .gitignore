@@ -14,6 +14,7 @@ recipes/*/.out-tmp/
 /.ts23d/finish/
 /.ts23d/golden/
 /.ts23d/panel/
+__pycache__/
 # agent review and critique packs: regenerated, read, never committed
 /review/
 /critique/

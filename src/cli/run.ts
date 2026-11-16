@@ -23,15 +23,22 @@ import {
 import { provideImports } from '../neural/index.ts';
 import { type Args, parseArgs } from './args.ts';
 import { buildOne } from './build-one.ts';
+import { conceptCli } from './concept-cli.ts';
 import { critiqueOne } from './critique-cmd.ts';
-import { finishOne } from './finish-cmd.ts';
+import { doctorMain } from './doctor-cmd.ts';
+import { finishOne, heroFinishOne } from './finish-cmd.ts';
 import { gapsOne } from './gaps-cmd.ts';
 import { helpText, versionOf } from './help.ts';
 import { iconOne } from './icon-cmd.ts';
 import { loadImportCache } from './import-cache.ts';
 import { writeIndex } from './index-json.ts';
+import { initMain } from './init-cmd.ts';
 import { loadAssets, recipeThrew } from './load.ts';
 import type { AssetManifest } from './manifest.ts';
+import { mcpMain } from './mcp/server.ts';
+import { neuralMain } from './neural-cmd.ts';
+import { provideRecipeNeural } from './neural-store.ts';
+import { planMain } from './plan-cmd.ts';
 import {
   blueprintOne,
   heroOne,
@@ -48,8 +55,11 @@ import {
   printFailed,
   printManifest,
 } from './report.ts';
+import { serverMain } from './server-cmd.ts';
+import { setupMain } from './setup-cmd.ts';
 import { loadTextureCache } from './texture-cache.ts';
 import { printTune, type TuneRun, tuneFile } from './tune-cmd.ts';
+import { entriesOf, watchMain } from './watch.ts';
 
 const RENDERS = ['hero', 'review', 'critique', 'icon', 'finish'];
 
@@ -76,6 +86,14 @@ export async function run(argv: readonly string[]): Promise<number> {
 }
 
 async function dispatch(argv: readonly string[], json: boolean): Promise<number> {
+  if (argv[0] === 'mcp') return mcpMain(argv.slice(1));
+  if (argv[0] === 'init' && !argv.includes('--help')) return initMain(argv.slice(1), json);
+  if (argv[0] === 'concept' && !argv.includes('--help')) return conceptCli(argv.slice(1), json);
+  if (argv[0] === 'doctor' && !argv.includes('--help')) return doctorMain(argv.slice(1), json);
+  if (argv[0] === 'setup' && !argv.includes('--help')) return setupMain(argv.slice(1), json);
+  if (argv[0] === 'server' && !argv.includes('--help')) return serverMain(argv.slice(1), json);
+  if (argv[0] === 'plan' && !argv.includes('--help')) return planMain(argv.slice(1), json);
+  if (argv[0] === 'build' && argv.includes('--watch')) return watchMain(argv);
   let args: Args;
   try {
     args = parseArgs(argv);
@@ -92,6 +110,12 @@ async function dispatch(argv: readonly string[], json: boolean): Promise<number>
     return 0;
   }
   if (args.cmd === 'tune') return tuneAll(args);
+  if (args.cmd === 'neural')
+    return neuralMain(args.files, {
+      json,
+      requireNeural: args.requireNeural,
+      allowBadInput: args.allowBadInput,
+    });
   const renders = RENDERS.includes(args.cmd);
   const live = await prepareSheet(args, renders);
   let painted = live?.current().sheet;
@@ -110,7 +134,7 @@ async function dispatch(argv: readonly string[], json: boolean): Promise<number>
   const listed: { asset: string; file: string }[] = [];
   const failed: Failed[] = [];
   const seen = new Map<string, string>();
-  for (const file of args.files) {
+  for (const file of entriesOf(args.files)) {
     let assets: Asset[];
     try {
       assets = await loadAssets(file);
@@ -119,6 +143,12 @@ async function dispatch(argv: readonly string[], json: boolean): Promise<number>
       failed.push({ file, error: recipeThrew(e, file, `loading ${file}`).toJSON() });
       continue;
     }
+    // The recipe's committed neural cache (ADR 014): offline; a miss is a CPU-tier fallback.
+    const neural = await provideRecipeNeural(
+      file,
+      assets.map((a) => a.name),
+      args.requireNeural,
+    );
     for (const asset of assets) {
       const twin = seen.get(asset.name);
       if (twin !== undefined) {
@@ -147,6 +177,8 @@ async function dispatch(argv: readonly string[], json: boolean): Promise<number>
         failed.push({ file, asset: asset.name, error });
       }
     }
+    if (!json)
+      for (const n of neural.notices()) console.error(`${n.code}: ${n.message}\n  fix: ${n.fix}`);
   }
   if (!json) failed.forEach(printFailed);
   if (args.cmd === 'list')
@@ -198,7 +230,10 @@ function renderOne(
 ): Promise<RenderResult> {
   if (args.cmd === 'hero') return heroOne(asset, args, painted);
   if (args.cmd === 'icon') return iconOne(asset, args, painted);
-  if (args.cmd === 'finish') return finishOne(asset, args, painted);
+  if (args.cmd === 'finish')
+    return args.finish?.hero
+      ? heroFinishOne(asset, args, painted)
+      : finishOne(asset, args, painted);
   if (args.cmd === 'critique') return critiqueOne(asset, file, args, painted);
   return reviewOne(asset, file, args, painted);
 }

@@ -1,0 +1,8 @@
+# No GPU, no model deps: the wire end to end (`uv run server.py --profile profiles/dummy.toml`).
+[server]
+host = "127.0.0.1"
+port = 8190
+
+[plugins.dummy-mesh]
+[plugins.dummy-image]
+[plugins.dummy-score]

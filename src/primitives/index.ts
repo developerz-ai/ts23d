@@ -9,6 +9,7 @@ export { cylinder, type LatheOptions, lathe } from './lathe.ts';
 export { type LatticeOptions, lattice, type TrussPattern } from './lattice.ts';
 export { type LoftColor, type LoftOptions, loft, ringXY } from './loft.ts';
 export type { SectionKind } from './member.ts';
+export { type TriBvh, triBvh } from './mesh-bvh.ts';
 export {
   billow,
   type FractalOptions,
@@ -20,6 +21,7 @@ export {
   valueNoise2,
   warp,
 } from './noise.ts';
+export { fitPiecewise, type PiecewiseFit } from './piecewise-fit.ts';
 export { type PlanarOptions, planar } from './planar.ts';
 export { type PrismOptions, prism } from './prism.ts';
 export {
@@ -33,6 +35,22 @@ export {
   sculpt,
   sculptField,
 } from './sculpt.ts';
+export {
+  displaceMesh,
+  type MeshDetail,
+  type MeshDetailOptions,
+  type MeshOffsetOptions,
+  meshDetail,
+  meshOffset,
+  warpMesh,
+} from './sculpt-mesh-detail.ts';
+export {
+  type MeshBrick,
+  type MeshFieldEditOptions,
+  type MeshFieldOptions,
+  meshBrick,
+  meshField,
+} from './sculpt-mesh-field.ts';
 export { probeLipschitz } from './sculpt-stroke.ts';
 export { type SdfColor, type SdfOptions, sdf } from './sdf.ts';
 export type { DetailRegion } from './sdf-detail.ts';
@@ -43,6 +61,17 @@ export {
   type SilhouetteOptions,
   visualHull,
 } from './sdf-silhouette.ts';
+export {
+  applySimilarity,
+  composeSimilarity,
+  fieldProjector,
+  fitToSurface,
+  type Projector,
+  type Similarity,
+  type SurfaceFit,
+  similarityFit,
+  yawSimilarity,
+} from './similarity-fit.ts';
 export { type SvgOptions, type SvgShape, svgShape } from './svg-doc.ts';
 export { type ExtrudeSvgOptions, extrudeSvg, type SvgView } from './svg-extrude.ts';
 export { type LatheSvgOptions, latheSvg } from './svg-lathe.ts';
