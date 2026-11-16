@@ -72,4 +72,15 @@ describe('no skin through the cloth', () => {
       });
       expect(bare.map((p) => p.map((v) => v.toFixed(3)).join(','))).toEqual([]);
     }, 120000);
+  it('goblin: the shoulder fronts beside the scarf are declared cloth, not bare (D61)', () => {
+    const { skin } = bustEdits(GOBLIN_BUST, 2, 1);
+    const covered = goblinCovered(skin.field);
+    // March in from the front onto the shoulder front, 9–14 cm out (past the scarf), 2 cm under it.
+    for (const y of [0.09, 0.12, 0.14]) {
+      let x = 0.3;
+      for (let d = skin.field([x, y, 0.2]); d > 0.0005 && x > -0.2; d = skin.field([x, y, 0.2]))
+        x -= Math.max(0.0008, d * 0.8);
+      expect(covered([x, y, 0.2])).toBeLessThan(0);
+    }
+  });
 });

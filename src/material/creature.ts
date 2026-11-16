@@ -18,6 +18,8 @@ const bigH = big.height.mul(0.85).add(tex.noise({ size: 0.006, octaves: 2, seed:
 const small = scales({ width: 0.025, height: 0.016, overlap: 0.4, point: 0.2, seed: 3 });
 const hair = strands({ width: 0.0025, length: 0.25, clump: 0.6, wave: 0.008, seed: 4 });
 const furS = strands({ width: 0.004, length: 0.06, clump: 0.4, wave: 0.004, seed: 5 });
+/** Isotropic, two-octave breakup for `fur_neutral` (D60): no direction a projection could cross. */
+const softFur = tex.noise({ size: 0.008, octaves: 2, seed: 6 });
 
 type Creature =
   | 'dragon_scales'
@@ -113,26 +115,26 @@ export const CREATURE_MATERIALS: Readonly<Record<Creature, MaterialDef>> = {
     sources: [KERATIN],
   },
   // D24: `fur`'s brown albedo multiplies the vertex colour, so an orange or grey coat goes muddy.
-  // This variant keeps the strand relief but a neutral, near-white albedo (strand-to-underfur value
-  // only), so the vertex colour carries the coat's hue and value unchanged on average.
+  // This variant keeps a neutral, near-white albedo so the vertex colour carries the coat's hue and
+  // value unchanged on average. D60: no strands either. A sculpt maps the strip by box projection
+  // (sdf.ts: U/V along world axes, V mirrored per band), which crosses the hair's lie: directional
+  // strands at 2:1 contrast drew rings round a muzzle and wood grain down a flank. Isotropic,
+  // ±8 % noise only; the coat's direction comes from the cards and the flow-aligned tone.
   fur_neutral: {
     id: 'fur_neutral',
     scaleMetres: 0.5,
     roughness: 0.7,
     graph: tex.material({
-      height: furS.height,
-      depth: 0.002,
-      albedo: furS.id
-        .mul(0.3)
-        .add(furS.height.mul(0.7))
-        .ramp([
-          [0, '#b4b4b4'],
-          [1, '#f4f4f4'],
-        ]),
-      roughness: furS.height.remap(0.8, 0.6),
+      height: softFur,
+      depth: 0.0004,
+      albedo: softFur.ramp([
+        [0, '#dadada'],
+        [1, '#f0f0f0'],
+      ]),
+      roughness: softFur.remap(0.75, 0.65),
     }),
     description:
-      'Short animal fur with a neutral albedo: the vertex colour carries any coat (orange, grey, cream) without going muddy.',
+      'Short animal fur with a neutral albedo: the vertex colour carries any coat (orange, grey, cream) without going muddy; isotropic, so no projection streaks.',
     sources: [KERATIN],
   },
   fur_clumps: {

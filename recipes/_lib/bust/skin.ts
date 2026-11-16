@@ -2,7 +2,9 @@
 // texture artist's curvature + occlusion bake, done per vertex: crevices darker and more
 // saturated, convex ridges lifted and warmed (brow, cheekbone, knuckles of the face), warm tops,
 // cool undersides, a low-frequency mottle so the green never reads as one digital flat, and fine
-// skin irregularity (pores/bumps) displaced into the surface at LOD0.
+// skin irregularity (pores/bumps) displaced into the surface at LOD0. Under hair the scalp is
+// painted the hair's root colour with strand streaks (`scalp`), so no skin reads through the
+// cut-out cards (D57, ../face/scalp-check.ts).
 
 import {
   type DetailRegion,
@@ -32,6 +34,14 @@ export interface SkinTone {
   readonly cavity: V;
 }
 
+/** Hair-coloured scalp inside a hairline (or a beardline): `line` < 0 where the hair grows. */
+export interface ScalpPaint {
+  readonly line: Field;
+  readonly color: V;
+  /** Edge ramp, metres (default 4 mm): a beard's cheek line is softer than a hairline. */
+  readonly soft?: number;
+}
+
 export interface SkinOptions {
   readonly rng: Rng;
   readonly tone: SkinTone;
@@ -53,6 +63,22 @@ export interface SkinOptions {
   readonly stencil?: number;
   /** Boxes meshed finer (the face of a skull-stage head). */
   readonly detail?: readonly DetailRegion[];
+  /** Scalp (and beard) regions painted the hair's colour, edge broken over ±1.5 mm. */
+  readonly scalp?: readonly ScalpPaint[];
+}
+
+/** Hair albedo over the scalp: full 3 mm inside the line, a 1 mm soft edge outside it, the
+ *  edge jittered and the colour streaked (strand-scale value noise) so it reads as dense roots. */
+function scalpPaint(c: V, p: V, scalp: readonly ScalpPaint[], jitter: Field, streak: Field): V {
+  let out = c;
+  for (const s of scalp) {
+    const h = s.line(p) + 0.0015 * jitter(p);
+    if (h > 0.001) continue;
+    const t = clamp((0.001 - h) / (s.soft ?? 0.004));
+    const k = 0.9 + 0.2 * streak(p);
+    out = mix(out, [s.color[0] * k, s.color[1] * k, s.color[2] * k], t * t * (3 - 2 * t));
+  }
+  return out;
 }
 
 export function skinMesh(edits: readonly SculptEdit[], cell: number, o: SkinOptions): Mesh {
@@ -65,6 +91,8 @@ export function skinMesh(edits: readonly SculptEdit[], cell: number, o: SkinOpti
   const mottle = valueNoise(o.rng.fork('mottle'), { scale: 0.045, octaves: 3 });
   const speck = valueNoise(o.rng.fork('speckle'), { scale: 0.006, octaves: 2 });
   const speckle = o.speckle ?? 0;
+  const jitter = valueNoise(o.rng.fork('hairline'), { scale: 0.004, octaves: 2 });
+  const streak = valueNoise(o.rng.fork('roots'), { scale: 0.0016, octaves: 1 });
   const amp = o.bumps ?? 0;
   const T = o.tone;
   const q: [number, number, number] = [0, 0, 0];
@@ -85,8 +113,7 @@ export function skinMesh(edits: readonly SculptEdit[], cell: number, o: SkinOpti
   const paint = (p: V): V => {
     const base = s.colorAt(p);
     const [x, y, z] = p;
-    const f0 = raw(p);
-    // Six axis samples give both the gradient (normal) and the Laplacian (mean curvature).
+    // Six axis samples give the gradient (normal).
     const xp = raw([x + e, y, z]);
     const xm = raw([x - e, y, z]);
     const yp = raw([x, y + e, z]);
@@ -98,8 +125,14 @@ export function skinMesh(edits: readonly SculptEdit[], cell: number, o: SkinOpti
     const gz = zp - zm;
     const gl = Math.hypot(gx, gy, gz) || 1;
     const n: V = [gx / gl, gy / gl, gz / gl];
-    // Mean curvature from the Laplacian: > 0 convex (ridges), < 0 concave (creases).
-    const lap = (xp + xm + yp + ym + zp + zm - 6 * f0) / (e * e);
+    // Mean curvature from the Laplacian of the smooth field (no pores) over a 2.5× wider stencil:
+    // a mesh-field sculpt's trilinear grid puts kinks in a narrow Laplacian, painted as streaks.
+    // > 0 convex (ridges), < 0 concave (creases).
+    const E = e * 2.5;
+    const f = s.field;
+    const lap =
+      (f([x + E, y, z]) + f([x - E, y, z]) + f([x, y + E, z]) + f([x, y - E, z])) / (E * E) +
+      (f([x, y, z + E]) + f([x, y, z - E]) - 6 * f(p)) / (E * E);
     const curv = Math.max(-1, Math.min(1, lap * 0.012));
     // Cavity: walk out along the normal; a crevice brings other surface closer than the walk.
     let occ = 0;
@@ -123,6 +156,7 @@ export function skinMesh(edits: readonly SculptEdit[], cell: number, o: SkinOpti
         c = mix(c, k > 0 ? T.warm : T.cavity, Math.min(1, Math.abs(k) * 1.4) * speckle * isSkin);
       }
     }
+    if (o.scalp) c = scalpPaint(c, p, o.scalp, jitter, streak);
     // Crevices: darker, deeper olive; ridges catch a little light on everything.
     c = mix(c, mix(T.cavity, c, 0.35), cav * 0.75);
     const lift = 1 + Math.max(0, curv) * 0.18;

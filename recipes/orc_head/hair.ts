@@ -5,13 +5,16 @@
 // (dark roots and undersides, lighter tips) by colour segments that blend along it; fine
 // secondary strands at the hairline. Stylised hand-painted idiom: big readable clumps.
 // Card hair (`orcCardHair`): strand cards over the scalp lock combed into the knot (clumped into
-// locks) and a short braided-length beard on chin and jaw, on top of the sculpted knot.
+// locks), a full beard on chin and jaw in three layers over a hair-painted chin (build.ts `scalp`
+// paint), and coarse brows, on top of the sculpted knot.
 
 import type { BuildContext, Field, Mesh, SculptEdit, Vec3 } from '@developerz.ai/ts23d';
 import { add, chain, crease, type Surface, spline, taper, type V } from '../_lib/bust/kit.ts';
-import { L } from './landmarks.ts';
+import { browLayers, withBrowComb } from '../_lib/face/brows.ts';
+import type { CardHairStyle } from '../_lib/face/hair-cards.ts';
 import { C } from './palette.ts';
 import { skinMesh } from './skin.ts';
+import { H, SK } from './spec.ts';
 
 const mix = (a: V, b: V, t: number): V => [
   a[0] + (b[0] - a[0]) * t,
@@ -152,32 +155,51 @@ export function tailPath(skull: Surface, dy: number, dz: number): V[] {
   ];
 }
 
-/** Card hair for `cardHair` on the orc: `skull` is the stage-2 skin surface (build.ts `body`). */
-export function orcCardHair(skull: Surface) {
-  // Scalp lock: the crown patch the knot gathers (the rest of the head is shaved).
-  const lock: Field = (p) =>
-    Math.hypot((p[0] + 0.045) / 1.25, p[1] / 0.95, Math.min(0, p[2] - 0.555)) - 0.05;
-  // Beard: chin and jaw below the mouth corners, in front of the ears.
-  const beard: Field = (p) =>
-    Math.max(p[2] - (L.mouthCorner[2] - 0.012), L.ear[0] + 0.05 - p[0], L.chin[2] - 0.03 - p[2]);
-  const comb = (p: Vec3): Vec3 =>
-    beard(p) < 0.01
-      ? [0.35, Math.sign(p[1]) * 0.2, -1]
+/** Scalp lock: the crown patch the knot gathers (the rest of the head is shaved). */
+export const scalpLock: Field = (p) =>
+  Math.hypot((p[0] + 0.045) / 1.25, p[1] / 0.95, Math.min(0, p[2] - 0.555)) - 0.05;
+
+/** Beard: chin and jaw from under the lower lip to the jaw angle and a little under the jaw,
+ *  in front of the ears (never on the lips or round the tusks). */
+export const beardRegion: Field = (p) =>
+  Math.max(
+    p[2] - (SK.cheilion[2] - 0.018) - Math.max(0, SK.cheilion[0] - 0.02 - p[0]) * 0.9,
+    SK.tragion[0] + 0.045 - p[0],
+    SK.menton[2] - 0.025 - p[2],
+  );
+
+/** Coarse brows on the brow shelf (it stands 3 cm proud of the base's brow line). */
+const BROWS = {
+  thick: 0.007,
+  length: 0.016,
+  density: 300000,
+  tone: [0.45, 0.8],
+  reach: 0.035,
+} as const;
+
+/** Card hair for `cardHair` on the orc: `skull` is the stage-2 skin surface (build.ts `body`). A
+ *  dense base of short flat clumps hides the painted chin, coarse locks hang from it in clumps
+ *  and wiry strays break the outline; the brows are coarse cards on the brow shelf. */
+export function orcCardHair(skull: Surface): CardHairStyle {
+  const comb = (p: Vec3, n: Vec3): Vec3 =>
+    beardRegion(p) < 0.01
+      ? [0.3 + 0.2 * n[0], Math.sign(p[1]) * 0.15, -1]
       : [KNOT[0] - p[0], KNOT[1] - p[1], KNOT[2] + 0.02 - p[2]];
+  const beard = { kind: 'beard', region: beardRegion, fold: 0.4, tint: [1.1, 1.02, 0.9] } as const;
   return {
     field: skull.field,
     bounds: [
-      [-0.16, -0.14, 0.26],
+      [-0.16, -0.14, 0.24],
       [0.2, 0.14, 0.62],
-    ] as [Vec3, Vec3],
+    ],
     cell: 0.004,
-    comb,
+    comb: withBrowComb(comb, SK, H, BROWS),
     color: mix(C.hairRoot, C.hairTip, 0.3),
     layers: [
       {
         name: 'scalp_lock',
         kind: 'hair',
-        region: lock,
+        region: scalpLock,
         density: 9000,
         length: 0.06,
         width: 0.012,
@@ -187,17 +209,44 @@ export function orcCardHair(skull: Surface) {
         clump: 5,
       },
       {
+        ...beard,
+        name: 'beard_base',
+        density: 16000,
+        length: 0.028,
+        width: 0.014,
+        lift: 0.08,
+        bend: 0.85,
+        droop: 0.4,
+        hug: 1,
+        tone: [0.45, 0.75],
+      },
+      {
+        ...beard,
         name: 'beard',
-        kind: 'beard',
-        region: beard,
-        density: 9000,
-        length: 0.035,
-        width: 0.012,
-        lift: 0.3,
+        density: 15000,
+        length: 0.055,
+        width: 0.011,
+        lift: 0.22,
+        bend: 0.6,
+        droop: 0.65,
+        clump: 3,
+        tone: [0.7, 1.1],
+        hug: 0.7,
+      },
+      {
+        ...beard,
+        name: 'beard_wisp',
+        kind: 'wisp',
+        density: 2500,
+        length: 0.05,
+        width: 0.006,
+        lift: 0.35,
         bend: 0.5,
         droop: 0.5,
-        clump: 4,
+        fold: 0,
+        tone: [0.8, 1.2],
       },
-    ] as const,
+      ...browLayers(SK, H, BROWS),
+    ],
   };
 }

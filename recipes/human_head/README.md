@@ -41,9 +41,18 @@ brows, socket shade.
 
 ## Parts
 `head`, `bust` (split at the neck seam under the collar; LOD2 unsplit), `eye_l` / `eye_r` (yawed
-to converge 1.5 m ahead, `cornea` clearcoat finish), `brooch`, `plinth`.
+to converge 1.5 m ahead, `cornea` clearcoat finish), `brooch`, `plinth`, `hair` (one cut-out draw).
+
+## Hair
+LOD0 hair is the **Blender groom** (`groom.ts`, ADR 014): guides traced on the card style's swept
+mid layer (`hair.ts`: left side parting, crown whorl), combed back, parting filled, crown puffed,
+nape cut, clumped into ~300 locks with curl and frizz; beard, moustache, brows and hairline wisps
+stay cards in the same part. The groom output is cached in `neural/`: refresh it with
+`t3d neural run recipes/human_head/human_head.ts` (needs a `groom` adapter in `t3d.config.ts`,
+Blender ≥ 5.2); a cache miss, LOD1 and LOD2 build the card hair (CPU). The scalp and chin under
+the cards are painted a shaded hair brown (`scalp`), held by `scalpCoverCheck` (D57).
 
 ## Known gaps
 The tunic is the torso painted blue with sculpted folds (no separate cloth thickness at the neck
-opening); hair locks are clumps on a mass, not strands; the face's planes are softer than a
-pro bust's.
+opening); eyelashes are a painted lash line (cards at the lid margin need a finer root mesh than
+the 4 mm card surface); the face's planes are softer than a pro bust's.

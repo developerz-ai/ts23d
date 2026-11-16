@@ -23,6 +23,6 @@
     "allowImportingTsExtensions": true,
     "rewriteRelativeImportExtensions": true
   },
-  "include": ["src", "apps", "recipes", "scripts", "examples"],
+  "include": ["src", "apps", "recipes", "scripts", "examples", "showcase.config.ts"],
   "exclude": ["**/node_modules", "**/dist"]
 }

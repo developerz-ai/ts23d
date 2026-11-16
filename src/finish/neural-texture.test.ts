@@ -3,6 +3,7 @@ import type { Mesh, Vec3 } from '../core/index.ts';
 import { sdf } from '../primitives/index.ts';
 import {
   closestColour,
+  closestTexture,
   delight,
   highPassOver,
   projectViews,
@@ -124,5 +125,33 @@ describe('multi-view projection (12 views round the turnaround)', () => {
     expect(at([0, 0.5, 0]).map((x) => +x.toFixed(2))).toEqual([0, 1, 0]);
     expect(at([-0.5, 0, 0]).map((x) => +x.toFixed(2))).toEqual([0, 0, 1]);
     expect(Number.isNaN(at([0, 0, 0.5])[0])).toBe(true);
+  });
+});
+
+describe('closestTexture: the source image at the closest point', () => {
+  // A unit quad in z = 0, UV = (x, y); a 2×2 image: red, green / blue, white (sRGB 255).
+  const quad: Mesh = {
+    positions: Float32Array.from([0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0]),
+    normals: Float32Array.from([0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1]),
+    uvs: Float32Array.from([0, 0, 1, 0, 1, 1, 0, 1]),
+    colors: new Float32Array(12).fill(0.5),
+    indices: Uint32Array.from([0, 1, 2, 0, 2, 3]),
+  };
+  const img = {
+    width: 2,
+    height: 2,
+    data: Uint8Array.from([255, 0, 0, 255, 0, 255, 0, 255, 0, 0, 255, 255, 255, 255, 255, 255]),
+  };
+
+  it('reads each texel at its centre from above the surface, not the vertex colour', () => {
+    const at = closestTexture(quad, img);
+    expect(at([0.25, 0.25, 0.3])).toEqual([1, 0, 0]);
+    expect(at([0.75, 0.25, -0.2])).toEqual([0, 1, 0]);
+    expect(at([0.25, 0.75, 0.1])).toEqual([0, 0, 1]);
+    expect(at([0.75, 0.75, 0.1])).toEqual([1, 1, 1]);
+    // Between texels: half red, half green, blended as stored (sRGB) then made linear.
+    const mid = at([0.5, 0.25, 0.1]);
+    expect(mid[0]).toBeCloseTo(0.214, 3);
+    expect(mid[1]).toBeCloseTo(0.214, 3);
   });
 });

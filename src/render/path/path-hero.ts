@@ -7,7 +7,7 @@
 
 import { type CompiledAsset, encodePng, Ts23dError } from '../../core/index.ts';
 import type { PaintedSheet } from '../../material/index.ts';
-import { DEFAULT_SHEET, liveSheet } from '../../material/index.ts';
+import { checkSheetFor, DEFAULT_SHEET, liveSheet } from '../../material/index.ts';
 import { type BeautyOptions, cameraFor } from '../beauty.ts';
 import { studioRig, tone, toSrgb8 } from '../lighting.ts';
 import { checkBeautyOptions } from '../options.ts';
@@ -68,6 +68,7 @@ function setup(asset: CompiledAsset, o: PathOptions) {
   const spp = whole('spp', o.spp ?? 64, 1, 4096, 'pass --spp 64 (16 drafts, 256 finals)');
   const maxDepth = whole('maxDepth', o.maxDepth ?? 6, 1, 32, 'use maxDepth: 6');
   const sheet: PaintedSheet = o.sheet ?? defaultSheet.current().sheet;
+  for (const p of asset.parts) if (p.mesh) checkSheetFor(sheet, p.mesh.uvs);
   const cam = cameraFor(asset, o);
   const rig = studioRig(v.azDeg);
   // The raster rig's numbers are irradiance ÷ π (its pixel = albedo × light): × π for radiometry.

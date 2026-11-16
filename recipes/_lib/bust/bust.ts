@@ -30,7 +30,7 @@ import { faceRigOf, withFace } from './face-rig.ts';
 import { type HeadSpec, headBlock, type Landmarks } from './head.ts';
 import { type Surface, surface, type V } from './kit.ts';
 import { plinth } from './plinth.ts';
-import { type SkinTone, skinMesh } from './skin.ts';
+import { type ScalpPaint, type SkinTone, skinMesh } from './skin.ts';
 import { checkNeck, type NeckRange, neckSeam, type TorsoSpec, torsoEdits } from './torso.ts';
 
 export interface BustRecipe {
@@ -42,6 +42,10 @@ export interface BustRecipe {
   /** The neck's declared ratio ranges (default: human, NECK_HUMAN); `checkNeck` enforces them. */
   readonly neck?: NeckRange;
   readonly tone: SkinTone;
+  /** Scalp/beard regions painted hair-coloured under card hair (D57; `scalpCoverCheck`). */
+  readonly scalp?: readonly ScalpPaint[];
+  /** Skin painter knobs: curvature stencil (wider on a ringing mesh field) and pore speckle. */
+  readonly paint?: { readonly stencil?: number; readonly speckle?: number };
   readonly plinth: { readonly radius: number; readonly color: V };
   /** Cells per LOD: head, bust. */
   readonly cells: {
@@ -65,6 +69,9 @@ export interface BustRecipe {
   readonly hair: (scalp: Field, lod: number) => SculptEdit[];
   /** Outfit sculpted onto the torso: `body` is the torso's field, `skin` the stage-2 surface. */
   readonly outfit: (body: Field, skin: Surface, lod: number) => SculptEdit[];
+  /** Where `head` and `bust` split (≤ 0 = bust), default the neck seam plane; a bust whose
+   *  shoulders rise over that plane bends it up there, so the shoulders stay in `bust`. */
+  readonly split?: Field;
   /** Hard extras as their own parts (brooch, earrings…). */
   readonly extras?: (ctx: BuildContext, skin: Surface) => Record<string, Mesh>;
 }
@@ -204,19 +211,20 @@ export function buildBust(ctx: BuildContext, b: BustRecipe, o: { hero?: boolean 
   const lod = ctx.lod;
   const hero = o.hero === true && lod === 0;
   const { edits, skin } = bustEdits(b, ctx.pick([4, 4, 2]), lod, ctx.rng.fork('features'));
-  const seam = neckSeam(b.l).field;
+  const seam = b.split ?? neckSeam(b.l).field;
   const cell = ctx.pick(b.cells.head) * (hero ? HERO_CELL.head : 1);
   const bustCell = ctx.pick(b.cells.bust) * (hero ? HERO_CELL.bust : 1);
   const lap = bustCell * 0.5;
   const rng = ctx.rng.fork('skin');
   const { l } = b;
+  const look = { tone: b.tone, ...b.paint, ...(b.scalp ? { scalp: b.scalp } : {}) };
   const meshes: Record<string, Mesh> =
     lod === 2
-      ? { head: skinMesh(edits, cell, { rng, tone: b.tone }) }
+      ? { head: skinMesh(edits, cell, { rng, ...look }) }
       : {
           head: skinMesh(edits, cell, {
             rng,
-            tone: b.tone,
+            ...look,
             bumps: lod === 0 ? 0.0002 : 0,
             ...(lod === 0 && b.skull ? { detail: faceDetail(b) } : {}),
             clip: (p) => -seam(p) - lap,
@@ -227,7 +235,7 @@ export function buildBust(ctx: BuildContext, b: BustRecipe, o: { hero?: boolean 
           }),
           bust: skinMesh(edits, bustCell, {
             rng,
-            tone: b.tone,
+            ...look,
             clip: (p) => seam(p) - lap,
             within: [
               [-0.4, -0.4, 0],

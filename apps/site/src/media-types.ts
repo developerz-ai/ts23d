@@ -37,6 +37,8 @@ export interface MediaEntry {
   /** Counts the card and the badges show without loading the facts. */
   readonly sounds: number;
   readonly liveries: number;
+  /** Data attributions the licence asks to show (e.g. OpenStreetMap, ODbL), from the sources. */
+  readonly data: readonly string[];
   /** Beauty render (1600×900), a card-sized copy of it, and the contact sheet. Null if absent. */
   readonly hero: string | null;
   readonly card: string | null;
@@ -94,3 +96,20 @@ export interface MediaFacts {
 
 export type MediaImage = 'blueprint' | 'icon' | 'portrait' | 'rts';
 export const MEDIA_IMAGES: readonly MediaImage[] = ['blueprint', 'icon', 'portrait', 'rts'];
+
+/** One committed model output behind a hybrid: `recipes/<folder>/neural/<key>/record.json`. */
+export interface MediaNeural {
+  readonly key: string;
+  /** The neural task: `mesh`, `image`, `texture`, … */
+  readonly task: string;
+  /** Model id as the record names it, e.g. `pixal3d`. */
+  readonly model: string;
+  /** The record's licence text, e.g. `MIT (model card …)`. */
+  readonly licence: string;
+  /** What ran the model, e.g. `http:…` or `script:…`. */
+  readonly adapter: string;
+  /** Output files of the key directory (beside record.json). */
+  readonly files: readonly string[];
+  /** URL of the published key directory, ending in `/` (empty in the scan, filled by the plugin). */
+  readonly dir: string;
+}

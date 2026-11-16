@@ -14,6 +14,7 @@
       "!**/coverage",
       "!apps/site/public/gallery",
       "!recipes/*/out",
+      "!recipes/*/neural",
       "!**/*.md",
       "!**/*.yml",
       "!**/*.yaml"

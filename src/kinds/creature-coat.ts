@@ -16,9 +16,9 @@ export type Paint = (p: Vec3, c: Vec3) => Vec3;
 const scale = (c: Vec3, k: number): Vec3 => [c[0] * k, c[1] * k, c[2] * k];
 const lighten = (c: Vec3, k: number): Vec3 => mixRgb(c, [1, 1, 1], k);
 
-/** Zone colours with defaults filled in; the optional marks (foreline, mask) stay optional. */
-export type Palette = Required<Omit<CreatureColours, 'foreline' | 'mask'>> &
-  Pick<CreatureColours, 'foreline' | 'mask'>;
+/** Zone colours with defaults filled in; the optional marks (foreline, mask, …) stay optional. */
+type Marks = 'foreline' | 'mask' | 'bridge';
+export type Palette = Required<Omit<CreatureColours, Marks>> & Pick<CreatureColours, Marks>;
 
 /** Every zone colour, defaults filled in. */
 export function palette(c: CreatureColours): Palette {
@@ -191,8 +191,11 @@ function forelineMask(joints: readonly Vec3[], radii: readonly number[]): (p: Ve
 export function headPaint(b: Bones, s: CreatureSpec): Paint {
   const c = palette(s.colours);
   const h = b.head;
-  const muzzle = faceOf(s).muzzle;
-  const lc = (1 - muzzle) * h.length;
+  const f = faceOf(s);
+  const lc = (1 - f.muzzle) * h.length;
+  // The lip line's height (creature-head.ts headLayout: zm = zt − 0.55 rt, zt = −0.1 H).
+  const rt = (f.tip ?? 0.1) * h.length;
+  const zm = -0.1 * h.height - rt * 0.55;
   const body = b.legs.length > 0 || b.neck.length > 0 ? bodyPaint(b, s, h.length * 0.01) : null;
   return (p, given) => {
     if (!same(given, s.colours.coat)) return given;
@@ -214,13 +217,22 @@ export function headPaint(b: Bones, s: CreatureSpec): Paint {
       (Math.abs(p[1]) - h.width * 0.26) * 1.4,
       p[2] - h.height * 0.36,
     );
-    col = mixRgb(col, c.muzzle, smoothstep(h.width * 0.08, h.width * 0.03, brow) * 0.6);
+    col = mixRgb(col, c.muzzle, smoothstep(h.width * 0.08, h.width * 0.03, brow) * 0.35);
     if (c.mask) {
       // Mask: a darker band from round the eyes forward over the bridge of the muzzle.
       const eyes = smoothstep(lc * 0.45, lc * 0.75, p[0]) * smoothstep(-0.25, 0.15, v);
       const off = Math.abs(p[1]) / (h.width * 0.5);
       const band = eyes * smoothstep(0.75, 0.35, Math.abs(v - 0.15)) * smoothstep(1.1, 0.5, off);
       col = mixRgb(col, c.mask, band * 0.75 * (1 - 0.6 * smoothstep(lc * 1.1, h.length, p[0])));
+    }
+    // Bridge: the top of the muzzle from the stop to the nose (a wolf's tawny bridge).
+    if (c.bridge) col = mixRgb(col, c.bridge, front * smoothstep(-0.05, 0.25, v) * 0.85);
+    // Lips: pigmented like the nose, a thin dark line from the corner to under the nose (furred
+    // snouts with a stop: canids, bears).
+    if (f.stop > 0) {
+      const run =
+        smoothstep(lc * 0.75, lc * 0.88, p[0]) * smoothstep(h.length, h.length - rt, p[0]);
+      col = mixRgb(col, c.nose, run * smoothstep(rt * 0.2, rt * 0.07, Math.abs(p[2] - zm)));
     }
     // Cheek fur behind the mouth corner: pale up to the eye line (canid/felid cheek ruff).
     const cheek = smoothstep(lc * 1.05, lc * 0.7, p[0]) * smoothstep(-0.05, -0.35, v);

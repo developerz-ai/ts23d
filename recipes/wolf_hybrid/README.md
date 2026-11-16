@@ -7,8 +7,12 @@ sourced proportions, stance, mass, rig, LODs and every QA gate — and **a model
 |---|---|
 | `spec.ts` | The same sourced `CreatureSpec` as [recipes/wolf](../wolf/README.md) (measurements, coat, photos: see that dossier) |
 | `concept.ts` | The concept image request as code: model, prompt, negative prompt, seed, size, view |
-| `surface.ts` | The mesh request as code (model, seed, triangle cap, params) and the blend: fit, brick, high-pass, texture |
-| `wolf_hybrid.ts` | The creature-kind wolf, its `body` part passed through `hybridBody` |
+| `surface.ts` | The mesh request as code (model, seed, triangle cap, params), the whole-animal fit and every BLEND number |
+| `head.ts` | Head landmarks on both wolves (nose tip, ear tips, eyes) → the head's own similarity; the neck weight |
+| `register.ts` | Body fit → head fit with the neck bent about the atlas → piecewise body warp: the model in OUR pose |
+| `blend.ts` | Skin move (≤ 12 mm, everywhere) + silhouette shrinkwrap (per-vertex share), texture by closest point |
+| `masks.ts` · `ride.ts` · `wrap.ts` | Per-bone share, buried-in-another-part mask, volume · fur cards and teeth ride the skin · weld, smoothing, shrinkwrap, Taubin, unfold |
+| `wolf_hybrid.ts` | The creature-kind wolf, its coat parts passed through the blend (mass kept the code's) |
 | `neural/<key>/` | The committed model outputs + `record.json` (model, licence, weights hash, request, output hashes) |
 
 ## The chain
@@ -21,13 +25,24 @@ sourced proportions, stance, mass, rig, LODs and every QA gate — and **a model
    1536 cascade, 25 steps). Committed as the GLB decimated to 60 k faces with a 1024 px albedo
    (6.6 MB with the PNG, cap 8 MB); record.json `overrides` records the decimation and that the
    lab script ran it (the shared card OOMed the server job).
-3. `hybridOf` registers the model onto the code wolf's solid coat (body + head + jaw): similarity
-   ICP from twelve yaw starts, then a 16-region piecewise warp (each region its own trimmed ICP,
-   blended: the model's turned head and planted legs bend onto OUR skeleton). Then every coat
-   part moves along its own normals onto the model's smoothed surface (≤ 12 mm, smoothed over the
-   mesh so nothing folds; none near the paws, so claws stay rooted; none where the model strays
-   > 6 cm) and takes the model's texture by closest point (full within 1 cm, none past 2 cm).
-   Fur cards follow the same warp and colour. LOD2 takes the colour only.
+3. Registration (register.ts): one similarity for the whole animal (twelve yaw starts, trimmed
+   ICP); then the HEAD's own similarity from landmarks found on both wolves — nose tip (head point
+   farthest from the torso), ear tips (two highest front points), eyes (darkest texture points
+   between ears and nose; ours: the eyeballs' front face) — solved onto our head frame (residual
+   1–2 cm), with the neck taking a smoothly rising share of that move about our atlas; then a
+   16-region piecewise warp of the rest. The model's turned, lowered ¾-photo head lands on ours.
+4. Blend (blend.ts): every coat vertex moves ≤ 12 mm along its normal onto the model's smoothed
+   surface; then each vertex takes its bone's share of a shrinkwrap onto the (Taubin-smoothed)
+   model mesh: head, jaw 1 (the model's skull, muzzle and ears replace our head field), neck,
+   withers, chest, loin 0.7, croup 0.9, thigh 0.6, ears 0.3; forearm, shank, paws and tail 0 (code).
+   The torso takes a smooth union (adds ruff and chest, keeps the sourced girth where the model
+   is slimmer) and keeps the code's belly (down-facing skin: the photo never saw it). The neck
+   stub buried in the body and the jaw's top inside the head may move in, never out, so the rig,
+   the blink and the jaw clip still work. Pinches and new creases are relaxed out (QA
+   connections). Texture: the model's 1024 px albedo at the closest point (full within 2 cm, none
+   past 5 cm); fur cards and teeth ride the moved skin. Reshaped parts keep the code part's mass
+   (density × old volume ÷ new): the model's extra volume is coat, and mass + fore share stay
+   sourced. LOD2 takes the colour only.
 
 A miss anywhere (no `neural/`, the gallery, CI without the cache) returns the code wolf.
 
@@ -39,10 +54,15 @@ A miss anywhere (no `neural/`, the gallery, CI without the cache) returns the co
 | 2 | colour high-pass ×1.2, 16 rings | blotchy camo, purple/red specks: worse |
 | 3 | value-only high-pass ×0.8 | cleaner, still mottled; head unchanged |
 | 4 | piecewise registration + full texture by closest point + normal-only, smoothed warp | wolf colouring (ochre flanks, dark saddle, pale legs); QA PASS |
+| 5 | head landmark fit + neck bend; head shrinkwrapped onto the model | the model's muzzle and ears on our head; fans onto the ears, sawtooth throat |
+| 6 | normal cone, buried mask, teeth ride, jaw pinned inward | clean muzzle and throat; jaw opens |
+| 7 | per-bone torso share, smooth union, Taubin target, unfold + crease relax, kept belly, mass kept | ruff and chest mass; QA PASS (seams, fore share, mass) |
+| 8 | albedo texture at full resolution, texture gate 2–5 cm, ears 0.3 | head reads as the model's wolf face; QA PASS |
 
-Honest state: the body reads as a wolf's coat now; the head keeps the code's shape and colour
-(the model's head does not register closely enough, so the 2 cm texture gate rejects it), and
-the silhouette is still the code's. The raw Pixal3D statue is the better still image today.
+Honest state (path-traced, s17c): the head is now the model's (long tapered muzzle, white cheeks,
+dark mask, the ochre bridge) on our skeleton, eyes and jaw; the ruff and chest have the model's
+mass and colour. Weak spots: the coat is still a painted surface (the fur cards are the code
+wolf's), the ear tips are thin and pointed, and the back shows the code fur's crest of cards.
 
 ## Re-roll
 

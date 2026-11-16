@@ -57,6 +57,18 @@ describe('hairCards', () => {
     }
   });
 
+  test('fails if a pale coat × a bright tip tone leaves linear [0, 1] (QA vertex-colors, D59)', () => {
+    const { mesh } = run({
+      zones: [zone({ tone: [1.1, 1.4], color: () => [0.95, 0.9, 0.85] })],
+    });
+    const c = mesh.colors ?? new Float32Array(0);
+    expect(c.length).toBeGreaterThan(0);
+    for (const v of c) {
+      expect(v).toBeLessThanOrEqual(1);
+      expect(v).toBeGreaterThanOrEqual(0);
+    }
+  });
+
   test('vertex normals agree with the winding (QA normals-winding)', () => {
     const { mesh } = run();
     let bad = 0;

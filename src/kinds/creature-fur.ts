@@ -5,9 +5,10 @@
 // lengths follow the grey wolf's winter coat ×(coat ÷ 0.03): 60–110 mm on the mane and back,
 // 20–40 mm on the flanks, 10–15 mm on legs and face; zones per family (mane, throat ruff, cheeks, elbows, breeches, tail). `creatureHeadFur` coats the head
 // in its own frame (creature-head-fur.ts).
-// LOD0 dense (wolf ≈ 2–4k cards), LOD1 ¼ the cards ×2 wider, LOD2 none (the sculpt carries it).
+// LOD0 dense (wolf ≈ 3k cards, each ≤ ⅓ as wide as long, D59), LOD1 ¼ the cards ×1.5 wider, LOD2
+// none (the sculpt carries it).
 
-import type { Mesh, Rng, Vec3 } from '../core/index.ts';
+import { type Mesh, merge, type Rng, type Vec3 } from '../core/index.ts';
 import { CREATURE_MATERIALS, defineMaterial, strandCells } from '../material/index.ts';
 import { type CardZone, chainSeed, type FlowChain, hairCards, hairFlow } from '../passes/index.ts';
 import type { Bones } from './creature-bones.ts';
@@ -118,6 +119,9 @@ export function furChains(b: Bones): FlowChain[] {
   ].filter((c) => c.points.length >= 2);
 }
 
+/** On a head in its own frame (+X to the nose) hair lies back from the nose along the muzzle. */
+export const headLie = (): Vec3 => [-1, 0, -0.15];
+
 /** The coat's lie for the sculpted relief under the cards (`relief(…, furLie(bones, family))`). */
 export function furLie(b: Bones, family: Family | undefined): FurLie {
   // A wide blend: the relief's phase follows the lie, so hand-overs between chains must be smooth.
@@ -146,7 +150,7 @@ export interface FurOptions {
   readonly rng: Rng;
   /** The body's SDF (negative inside): cards follow the curvature and stay out of the skin. */
   readonly field?: (p: Vec3) => number;
-  /** Undercoat cards per m² at LOD0 (default 1300) and guard hairs per m² (default 520). */
+  /** Undercoat cards per m² at LOD0 (default 1800) and guard hairs per m² (default 520). */
   readonly density?: number;
   readonly guard?: number;
 }
@@ -170,21 +174,29 @@ export function layers(
   len: (p: Vec3, n: Vec3) => number,
   guardBoost: (p: Vec3) => number,
 ): CardZone[] {
+  // LOD1: a quarter of the cards, 1.5× wider — wider still and a card's strands squash into a chip.
   const k = o.lod === 0 ? 1 : 0.25;
-  const wide = o.lod === 0 ? 1 : 2;
-  const sink = Math.min(0.004, 0.0045 * scale);
+  const wide = o.lod === 0 ? 1 : 1.5;
+  // Buried just enough to hide the root; with a deeper sink a card lying at ~15° only clears the
+  // skin near its tip and shows as a fleck.
+  const sink = Math.min(0.0025, 0.003 * scale);
   return [
     {
       name: 'undercoat',
-      density: () => (o.density ?? 1300) * k,
+      density: () => (o.density ?? 1800) * k,
       length: (p, n) => Math.min(0.025 * scale, len(p, n) * 0.6),
-      width: 0.011 * scale * wide,
-      lift: 0.08,
+      // ≤ ⅓ of its length wide: the atlas cell is ~11:1, a squarer card squashes it into a chip.
+      width: 0.0075 * scale * wide,
+      // Leaves the skin at ~17° and lies down to ~7° by the tip: a few mm of loft, so the cards
+      // stand over the coat (shadowed roots, lit tips) instead of sitting flush in it.
+      lift: 0.3,
       bend: 0.6,
       droop: 0.02,
       roll: 0.3,
       cells: strandCells('fur_clumps', 'fur'),
-      tone: [0.6, 0.85],
+      // Root → tip, × the atlas ramp (≈ 0.9 mean): the cards carry the skin's value, not a
+      // darker one (dark cards over the coat read as scratches, not fur).
+      tone: [0.95, 1.25],
       hug: 0.6,
       sink,
     },
@@ -192,14 +204,14 @@ export function layers(
       name: 'guard',
       density: (p) => (o.guard ?? 520) * k * guardBoost(p),
       length: len,
-      width: 0.014 * scale * wide,
-      lift: 0.2,
+      width: 0.01 * scale * wide,
+      lift: 0.38,
       bend: 0.55,
       droop: 0.12,
       roll: 0.8,
       clump: 5,
       cells: strandCells('fur_clumps', 'guard'),
-      tone: [0.75, 0.95],
+      tone: [1, 1.25],
       // Guard locks are curved across their width (LOD0): a lock, not a chip, from every side.
       fold: o.lod === 0 ? 0.6 : 0,
       // The coat lies along the body where the body holds it up (back, flanks), hangs under it.
@@ -240,13 +252,23 @@ export function creatureFur(
     return scale * (LEG + (body - LEG) * leg(p));
   };
   const flow = hairFlow(body, chainSeed(furChains(b), { gravity: 0.35 }));
-  const out = hairCards({
-    surface: body,
-    flow,
-    zones: layers(o, scale, len, (p) => (0.6 + 1.6 * inZone(p).w) * (0.15 + 0.85 * leg(p))),
-    rng: o.rng.fork('fur'),
-    segments: o.lod === 0 ? 3 : 2,
-    ...(o.field ? { field: o.field } : {}),
-  });
-  return { mesh: out.mesh, zones, roots: out.roots, counts: out.counts };
+  // One pass per layer (zone rng forks are per name, so the cards match a combined pass): the
+  // short undercoat needs 2 quads at LOD0, the long guard hair 3.
+  const outs = layers(o, scale, len, (p) => (0.6 + 1.6 * inZone(p).w) * (0.15 + 0.85 * leg(p))).map(
+    (z) =>
+      hairCards({
+        surface: body,
+        flow,
+        zones: [z],
+        rng: o.rng.fork('fur'),
+        segments: o.lod === 0 && z.name === 'guard' ? 3 : 2,
+        ...(o.field ? { field: o.field } : {}),
+      }),
+  );
+  return {
+    mesh: merge(outs.map((x) => x.mesh)),
+    zones,
+    roots: outs.flatMap((x) => x.roots),
+    counts: Object.assign({}, ...outs.map((x) => x.counts)) as Record<string, number>,
+  };
 }

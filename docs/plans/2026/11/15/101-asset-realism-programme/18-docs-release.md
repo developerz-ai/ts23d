@@ -25,5 +25,8 @@ All slices.
 ## Checks
 `bun run verify` · `bun run changelog --check` · `bun run site:build`
 
+## Status (2026-11-16)
+Docs pass done for README, `llms.txt`, roadmap ticks, `docs/idea/{01,07,10}`, `CHANGELOG.md [Unreleased]`. Not done: `docs/maintenance.md` lane text, skills, release `0.9.0` (waits on slice 17: flagships at calibrated 8.5, hybrid heads).
+
 ## Done when
 Release on npm; gallery live at developerz-ai.github.io/ts23d with the new flagships.

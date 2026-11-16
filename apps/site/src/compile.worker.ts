@@ -27,6 +27,7 @@ import type {
   WorkerOut,
 } from './compile-protocol.ts';
 import { dioramaFor } from './diorama.ts';
+import { provideFor } from './neural-load.ts';
 import { type Discovered, discover, importFile } from './recipe-modules.ts';
 
 const recipes = new Map<string, Asset>();
@@ -45,14 +46,15 @@ async function recipeNamed(name: string, file?: string): Promise<Asset> {
   return asset;
 }
 
-const resolve = (t: Target): Promise<Asset> =>
-  t.kind === 'diorama'
-    ? Promise.resolve(dioramaFor(t.name, t.footprint))
-    : recipeNamed(t.name, t.file);
+async function resolve(t: Target): Promise<Asset> {
+  if (t.kind === 'diorama') return dioramaFor(t.name, t.footprint);
+  if (t.neural) await provideFor(t.name, t.neural);
+  return recipeNamed(t.name, t.file);
+}
 
-/** Compile once per asset and LOD; GLB variants and the manifest reuse it. */
-function compiled0(asset: Asset, lod: Lod): CompiledAsset {
-  const key = `${asset.name}@${lod}`;
+/** Compile once per asset and LOD (and tier); GLB variants and the manifest reuse it. */
+function compiled0(asset: Asset, lod: Lod, models = false): CompiledAsset {
+  const key = `${asset.name}@${lod}${models ? '+models' : ''}`;
   const hit = compiled.get(key);
   if (hit) return hit;
   const c = compile(asset, { lod });
@@ -64,7 +66,8 @@ function compiled0(asset: Asset, lod: Lod): CompiledAsset {
 async function build(request: BuildRequest): Promise<BuildResult> {
   const asset = await resolve(request.target);
   const t0 = performance.now();
-  const c = compiled0(asset, request.lod);
+  const t = request.target;
+  const c = compiled0(asset, request.lod, t.kind === 'recipe' && Boolean(t.neural));
   const glb = toGlb(c, {
     animations: request.animations ?? true,
     keepParts: request.keepParts ?? false,

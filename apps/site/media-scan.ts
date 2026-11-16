@@ -1,9 +1,12 @@
 // Reads the committed outputs of every asset (`recipes/<folder>/out/<asset>/`: manifest.json,
 // critique.json, renders, WAVs) into the page's light `MediaEntry` and the per-asset `MediaFacts`.
-// Pure file reading; the Vite plugin (`media-plugin.ts`) decides the URLs and publishes the files.
+// Also reads each hybrid folder's committed neural records (`recipes/<name>_hybrid/neural/<key>/
+// record.json`, the models behind the model tier). Pure file reading; the Vite plugin
+// (`media-plugin.ts`) decides the URLs and publishes the files.
 
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { creditOf, dataCredits } from './src/credits-panel.ts';
 import {
   MEDIA_IMAGES,
   type MediaCritique,
@@ -11,6 +14,7 @@ import {
   type MediaFacts,
   type MediaImage,
   type MediaMeasure,
+  type MediaNeural,
   type MediaWeather,
 } from './src/media-types.ts';
 
@@ -125,6 +129,7 @@ export function read(dir: string, folder: string): Found | null {
       score: critique?.overall ?? null,
       sounds: sounds.length,
       liveries: Object.keys(variants).length,
+      data: dataCredits(arr<string>(m['sources'])),
     },
     facts: {
       measures: arr<MediaMeasure>(m['measures']),
@@ -155,6 +160,30 @@ export function scan(recipes: string): Found[] {
       const found = read(join(recipes, folder, 'out', asset), folder);
       if (found?.entry.name) out.push(found);
     }
+  }
+  return out;
+}
+
+/** A recipe folder's committed neural records (key directories with a readable record.json). */
+export function readNeural(dir: string): MediaNeural[] {
+  if (!existsSync(dir)) return [];
+  return readdirSync(dir)
+    .filter((k) => /^[0-9a-f]{64}$/.test(k))
+    .sort()
+    .flatMap((key) => {
+      const credit = creditOf(readJson(join(dir, key, 'record.json')));
+      return credit && credit.key === key ? [{ ...credit, dir: '' }] : [];
+    });
+}
+
+/** Every hybrid recipe folder (`<name>_hybrid`, the model tier) with committed neural records. */
+export function scanNeural(recipes: string): Record<string, MediaNeural[]> {
+  const out: Record<string, MediaNeural[]> = {};
+  if (!existsSync(recipes)) return out;
+  for (const d of readdirSync(recipes, { withFileTypes: true })) {
+    if (!d.isDirectory() || !d.name.endsWith('_hybrid')) continue;
+    const records = readNeural(join(recipes, d.name, 'neural'));
+    if (records.length) out[d.name] = records;
   }
   return out;
 }

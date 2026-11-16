@@ -6,14 +6,19 @@
 // spikes, a leather baldric, a fur mantle, a bead necklace, a warrior's knot and card hair; a
 // turned plinth. Design dossier, declared race deltas and proportion bands: README.md.
 
-import { defineAsset, hex } from '@developerz.ai/ts23d';
+import { defineAsset, headClips, hex } from '@developerz.ai/ts23d';
 import { bustEdits } from '../_lib/bust/bust.ts';
 import { proportionCheck } from '../_lib/face/proportions.ts';
+import { scalpCoverCheck } from '../_lib/face/scalp-check.ts';
 import { buildOrc, ORC_BUST } from './build.ts';
 import { ORC_CREASES } from './creases.ts';
+import { beardRegion } from './hair.ts';
+import { C } from './palette.ts';
 import { ORC_PROPORTIONS, SK } from './spec.ts';
 
 export const orc_head = defineAsset({
+  // Blink, talk and breathe morphs on `head` and `bust` under the `face` node (build.ts).
+  clips: headClips('face'),
   name: 'orc_head',
   kind: 'character',
   description:
@@ -26,7 +31,8 @@ export const orc_head = defineAsset({
   ],
   // Design spec, not a real-world one: overall bust size and eye spacing from the dossier.
   real: {
-    length: 0.38,
+    // 0.41 m: the anatomy push (muzzle 6 % H, chin 7.5 % H forward) and the full beard.
+    length: 0.41,
     width: 0.8,
     height: 0.62,
     measures: [
@@ -41,12 +47,22 @@ export const orc_head = defineAsset({
   },
   // LOD0 is a hero bust: the skull-stage head (≈ 65k, its eyes and ears meshed finer), plates,
   // spikes, fur, the knot and card hair all carry detail; LOD2 keeps the silhouette and tusks.
-  budget: { triangles: [172000, 46000, 5000] },
+  // +12k / +2k over the plain bust: the three-layer card beard and the brow cards.
+  budget: { triangles: [184000, 48000, 5000] },
   // Ember eyes: the whole eyeball glows (dark amber sclera, bright iris).
   glow: [{ parts: ['eye_*'], color: hex('#ff7a1a'), strength: 2.5 }],
   // Measured facial proportions against the declared orc bands (README "Proportions"), every LOD.
   checks: [
     proportionCheck('orc_head', SK, () => bustEdits(ORC_BUST, 2, 1).skin.field, ORC_PROPORTIONS),
+    // No bare green chin under the beard cards (D57).
+    scalpCoverCheck({
+      part: 'head',
+      line: beardRegion,
+      hair: C.hairRoot,
+      skin: C.skin,
+      // The beard's painted edge ramps over 8 mm (+ its jitter): the chin is full past 1 cm.
+      depth: 0.01,
+    }),
   ],
   // The eyeballs' cornea: a clear lacquer over the painted iris (KHR_materials_clearcoat).
   finishes: { cornea: { clearcoat: 1, clearcoatRoughness: 0.04 } },

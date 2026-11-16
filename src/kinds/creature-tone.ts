@@ -37,6 +37,9 @@ export interface ToneOptions {
   readonly dirt?: number;
   /** Strand breakup ± brightness along the hair's lie (default 0.12; 0 = off, e.g. scales). */
   readonly strands?: number;
+  /** The way hair lies at a point (the coat's flow; default tailward and down). D60: a fixed lie
+   *  crosses a muzzle or a leg, and the streaks become rings round it. */
+  readonly lie?: (p: Vec3) => Vec3;
 }
 
 /** Hair lies tailward (−X) and down: the comb a strand follows when nothing else is known. */
@@ -144,7 +147,7 @@ export function painted(
     const shade: Vec3 = [(1 - s) * ground, (1 - s * 1.05) * ground, (1 - s * 0.7) * ground * 0.97];
     const lum = (c[0] + c[1] + c[2]) / 3;
     const sat = 1 + cav * 0.35 + glow * 0.6;
-    const hair = strandK > 0 ? 1 + strandK * k * streak(q, tangentOf(LIE, n)) : 1;
+    const hair = strandK > 0 ? 1 + strandK * k * streak(q, tangentOf(o.lie?.(q) ?? LIE, n)) : 1;
     const lit = lift * edge * hair;
     return [
       clamp((lum + (c[0] - lum) * sat) * shade[0] * lit * warm[0]),

@@ -8,10 +8,12 @@
 
 import { defineAsset, headClips } from '@developerz.ai/ts23d';
 import { bustEdits } from '../_lib/bust/bust.ts';
-import { SK } from '../_lib/bust/human/spec.ts';
+import { C, SK } from '../_lib/bust/human/spec.ts';
 import { HUMAN_PROPORTIONS, proportionCheck } from '../_lib/face/proportions.ts';
-import { buildHuman, HUMAN_BUST } from './build.ts';
+import { scalpCoverCheck } from '../_lib/face/scalp-check.ts';
+import { buildHuman, HUMAN_BUST, SCALP } from './build.ts';
 import { HUMAN_CREASES } from './creases.ts';
+import { hairline } from './hair.ts';
 
 export const human_head = defineAsset({
   clips: headClips('face'),
@@ -40,7 +42,8 @@ export const human_head = defineAsset({
       },
     ],
   },
-  budget: { triangles: [100000, 32000, 4200] },
+  // LOD0 +6k (measured 2026-11): the brow cards (≈ 2k) and the denser beard / crown cover.
+  budget: { triangles: [106000, 32000, 4200] },
   finishes: { cornea: { clearcoat: 1, clearcoatRoughness: 0.04 } },
   art: { focal: 'head', shape: 'stable' },
   // Intended creases (QA `connections` skips them): one small region per sculpted fold, from the
@@ -54,6 +57,8 @@ export const human_head = defineAsset({
       () => bustEdits(HUMAN_BUST, 2, 1).skin.field,
       HUMAN_PROPORTIONS,
     ),
+    // No bare skin under the hair (D57): the scalp inside the hairline is hair-coloured.
+    scalpCoverCheck({ part: 'head', line: hairline, hair: SCALP, skin: C.skin }),
   ],
   build(ctx) {
     buildHuman(ctx);

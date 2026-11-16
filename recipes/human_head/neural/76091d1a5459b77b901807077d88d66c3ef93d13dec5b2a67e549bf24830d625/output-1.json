@@ -1,0 +1,16 @@
+{
+  "assets": "procedural_hair_node_assets.blend",
+  "assetsLicence": "CC0-1.0 (Blender bundled assets, datafiles/assets/LICENSE)",
+  "blender": "5.2.4 LTS",
+  "cards": 300,
+  "children": 3878,
+  "guides": 277,
+  "nodeGroups": [
+    "Clump Hair Curves",
+    "Curl Hair Curves",
+    "Frizz Hair Curves",
+    "Trim Hair Curves"
+  ],
+  "triangles": 6300,
+  "wisps": 30
+}

@@ -21,23 +21,23 @@ import { C } from './palette.ts';
 export const H = 0.3;
 
 /** The orc's face on the CC0 base: vault ×0.74 high and ×0.84 deep (low, sloped, the face the
- *  mass), brow shelf 6.5 % H forward and 2 % H down over the eyes, eyes ×0.92 under lids open
- *  ×0.85, nose ×2.2 wide and ×0.72 projecting on a sunken bridge (broad, flat), zygoma ×1.15, jaw
- *  ×1.75 dropped 10 % H, chin ×1.6 wide and 6 % H forward, a muzzle 4.5 % H forward with a 3.5 %
- *  H underbite, mouth ×1.3, face ×1.1 long, ears ×1.4 pulled back and up to a point, neck ×1.7 and
+ *  mass), brow shelf 8 % H forward and 2.8 % H down over the eyes, eyes ×0.86 under lids open
+ *  ×0.76, nose ×2.6 wide and ×0.62 projecting on a sunken bridge (broad, flat, porcine), zygoma
+ *  ×1.18, jaw ×1.9 dropped 11 % H, chin ×1.75 wide and 7.5 % H forward, a muzzle 6 % H forward
+ *  with a 5.5 % H underbite, mouth ×1.35, face ×1.1 long, ears ×1.4 pulled back and up to a point, neck ×1.7 and
  *  trapezius 18 % H higher, shoulders ×0.78 (the orc torso carries the bulk). */
 export const ORC_FACE: FaceSpec = {
   ...ORC_RACE,
   cranium: { width: 1.02, height: 0.74, depth: 0.84 },
-  brow: { forward: 0.065, height: -0.02 },
-  eyes: { spacing: 1.0, tilt: -0.012, open: 0.85, size: 0.92 },
-  nose: { width: 2.2, projection: 0.72, length: 0.88, bridge: -0.024, hook: 0 },
-  zygoma: { width: 1.15, height: -0.006, forward: 0.018 },
-  jaw: { width: 1.75, drop: 0.1 },
-  chin: { forward: 0.06, width: 1.6 },
-  mouth: { width: 1.3, lips: 0.02, underbite: 0.035 },
+  brow: { forward: 0.08, height: -0.028 },
+  eyes: { spacing: 1.0, tilt: -0.012, open: 0.76, size: 0.86 },
+  nose: { width: 2.6, projection: 0.62, length: 0.86, bridge: -0.03, hook: 0 },
+  zygoma: { width: 1.18, height: -0.006, forward: 0.022 },
+  jaw: { width: 1.9, drop: 0.11 },
+  chin: { forward: 0.075, width: 1.75 },
+  mouth: { width: 1.35, lips: 0.02, underbite: 0.055 },
   face: 1.1,
-  muzzle: 0.045,
+  muzzle: 0.06,
   ears: { length: 1.4, tip: [0.14, 0.1, 0.2], out: 22 },
   body: { neck: 1.7, traps: 0.18, shoulders: 0.78 },
 };
@@ -126,9 +126,9 @@ export const ORC_PROPORTIONS: ProportionTable = {
   },
   eyeDepth: {
     lo: 0.014,
-    hi: 0.046,
+    hi: 0.05,
     source:
-      'human 8–24 mm + the brow shelf pushed 6.5 % H (≈ 2 cm on the 0.30 m head) forward over deep-set eyes (declared)',
+      'human 8–24 mm + the brow shelf pushed 8 % H (≈ 2.4 cm on the 0.30 m head) forward over deep-set eyes (declared)',
   },
   eyeball: {
     lo: 0.022,

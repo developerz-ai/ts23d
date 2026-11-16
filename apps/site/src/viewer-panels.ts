@@ -1,8 +1,29 @@
 // Viewer side panels: the stats list (triangles vs budget, GLB size, compile time, physics mass
 // when the recipe declares it) and the parts
-// tree (pivots, motion, emitters; hovering or focusing a row outlines that node) — DOM only.
+// tree (pivots, motion, emitters; hovering or focusing a row outlines that node, `Outline`).
 
+import { BoxHelper, type Object3D, type Scene } from 'three';
 import type { BuildResult, PartInfo } from './compile.ts';
+import { token } from './theme.ts';
+
+/** The redline box around one named node of the shown model (the parts list's hover). */
+export class Outline {
+  private box: BoxHelper | null = null;
+  constructor(private readonly scene: Scene) {}
+
+  /** Outline `name` in `model`, or clear the outline (null). */
+  show(model: Object3D | null, name: string | null): void {
+    this.box?.removeFromParent();
+    this.box?.dispose();
+    const node = name ? model?.getObjectByName(name) : null;
+    this.box = node ? new BoxHelper(node, token('--redline')) : null;
+    if (this.box) this.scene.add(this.box);
+  }
+
+  update(): void {
+    this.box?.update();
+  }
+}
 
 const kib = (n: number): string =>
   n >= 1024 * 1024 ? `${(n / 1024 / 1024).toFixed(1)} MiB` : `${(n / 1024).toFixed(1)} KiB`;

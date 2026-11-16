@@ -110,12 +110,15 @@ export function outfitEdits(_torso: Field, skin: Surface, lod: number): SculptEd
   return out;
 }
 
-/** A region kept below the seam, behind x = 2 cm (the hunched
- *  goblin's jaw hangs low, in front of the neck, inside the shoulders' cap). */
+/** A region kept below the seam, behind x = 2 cm, under the jaw only (the hunched goblin's jaw
+ *  hangs low, in front of the neck, inside the shoulders' cap); beyond the jaw's half-width the
+ *  shoulder fronts stay covered (they showed bare skin, D61). */
 const behindJaw =
   (f: Field): Field =>
   (p) =>
-    Math.max(f(p), Math.min(SEAM.field(p), p[0] - 0.02));
+    Math.max(f(p), Math.min(SEAM.field(p), p[0] - 0.02, JAW - Math.abs(p[1])));
+/** Half-width of the hanging jaw, metres. */
+const JAW = 0.05;
 
 /** Vest: over the shoulders and back, open down the front in a V that widens downward (≤ 0
  *  inside). (At the neck it thins out under the scarf.) */

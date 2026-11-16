@@ -20,14 +20,14 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    168562,
-    45476,
-    4784
+    180234,
+    46132,
+    4816
   ],
   "drawCalls": [
-    3,
-    3,
-    2
+    4,
+    4,
+    3
   ],
   "pivots": [
     {
@@ -41,6 +41,10 @@
     {
       "name": "body_finish_cornea",
       "parent": null
+    },
+    {
+      "name": "face",
+      "parent": null
     }
   ],
   "emitters": [],
@@ -52,9 +56,9 @@
       "to": "head",
       "kind": "socket",
       "at": [
-        0.0924,
-        0.0382,
-        0.4685
+        0.089,
+        0.0379,
+        0.4711
       ]
     },
     {
@@ -63,9 +67,9 @@
       "to": "head",
       "kind": "socket",
       "at": [
-        0.0924,
-        -0.0382,
-        0.4685
+        0.089,
+        -0.0379,
+        0.4711
       ]
     }
   ],
@@ -73,8 +77,28 @@
     "cutout",
     "opaque"
   ],
+  "clips": [
+    {
+      "name": "blink",
+      "seconds": 4,
+      "loop": true,
+      "speed": 0
+    },
+    {
+      "name": "talk",
+      "seconds": 2.4,
+      "loop": true,
+      "speed": 0
+    },
+    {
+      "name": "breathe",
+      "seconds": 4,
+      "loop": true,
+      "speed": 0
+    }
+  ],
   "real": {
-    "length": 0.38,
+    "length": 0.41,
     "width": 0.8,
     "height": 0.62
   },
@@ -82,7 +106,7 @@
     {
       "label": "eye spacing (pupil to pupil)",
       "spec": 0.076,
-      "measured": 0.07622770220041275,
+      "measured": 0.07550460286438465,
       "source": "spec.ts: the base IPD (0.26 H) at eyes.spacing 1.0 on the 0.30 m head"
     }
   ],

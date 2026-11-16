@@ -9,14 +9,16 @@
 // palette QA reads) stays the recipe's and the model adds grain, streaks and mottling.
 
 import type { Mesh, Vec3 } from '../core/index.ts';
+import type { Rgba } from '../material/index.ts';
+import { sampleRgba, toLinear } from '../neural/index.ts';
 import { triBvh } from '../primitives/index.ts';
 import type { RasterCamera as Camera } from '../render/index.ts';
 
-/** Closest-point colour of a source mesh (vertex colours, linear RGB). */
-export function closestColour(source: Mesh): (p: Vec3) => Vec3 {
+/** The closest source triangle to p: its corner vertices and the barycentrics of the closest
+ *  point (areas of the sub-triangles). */
+function closestOn(source: Mesh): (p: Vec3) => { readonly v: readonly number[]; readonly w: Vec3 } {
   const bvh = triBvh(source);
   const P = source.positions;
-  const C = source.colors;
   const I = source.indices;
   const q: [number, number, number] = [0, 0, 0];
   return (p) => {
@@ -24,7 +26,6 @@ export function closestColour(source: Mesh): (p: Vec3) => Vec3 {
     bvh.closest(p, q);
     const v = [I[t * 3] ?? 0, I[t * 3 + 1] ?? 0, I[t * 3 + 2] ?? 0];
     const at = (k: number, a: number): number => P[(v[k] ?? 0) * 3 + a] ?? 0;
-    // Barycentrics of q in the triangle (areas of the sub-triangles).
     const e = (a: number, b: number): number => {
       const u = [0, 1, 2].map((x) => at(a, x) - (q[x] ?? 0));
       const w = [0, 1, 2].map((x) => at(b, x) - (q[x] ?? 0));
@@ -34,16 +35,40 @@ export function closestColour(source: Mesh): (p: Vec3) => Vec3 {
         (u[0] ?? 0) * (w[1] ?? 0) - (u[1] ?? 0) * (w[0] ?? 0),
       );
     };
-    const w0 = e(1, 2);
-    const w1 = e(2, 0);
-    const w2 = e(0, 1);
+    const [w0, w1, w2] = [e(1, 2), e(2, 0), e(0, 1)];
     const s = w0 + w1 + w2 || 1;
+    return { v, w: [w0 / s, w1 / s, w2 / s] };
+  };
+}
+
+/** Closest-point colour of a source mesh (vertex colours, linear RGB). */
+export function closestColour(source: Mesh): (p: Vec3) => Vec3 {
+  const on = closestOn(source);
+  const C = source.colors;
+  return (p) => {
+    const { v, w } = on(p);
     const c = (a: number): number =>
-      ((C[(v[0] ?? 0) * 3 + a] ?? 0) * w0 +
-        (C[(v[1] ?? 0) * 3 + a] ?? 0) * w1 +
-        (C[(v[2] ?? 0) * 3 + a] ?? 0) * w2) /
-      s;
+      (C[(v[0] ?? 0) * 3 + a] ?? 0) * w[0] +
+      (C[(v[1] ?? 0) * 3 + a] ?? 0) * w[1] +
+      (C[(v[2] ?? 0) * 3 + a] ?? 0) * w[2];
     return [c(0), c(1), c(2)];
+  };
+}
+
+/** Closest-point colour read from the source's own texture (its UVs at the closest point,
+ *  bilinear, sRGB → linear): the full image resolution, not the per-vertex samples. */
+export function closestTexture(source: Mesh, albedo: Rgba): (p: Vec3) => Vec3 {
+  const on = closestOn(source);
+  const U = source.uvs;
+  const s = [0, 0, 0, 0];
+  return (p) => {
+    const { v, w } = on(p);
+    const uv = (a: number): number =>
+      (U[(v[0] ?? 0) * 2 + a] ?? 0) * w[0] +
+      (U[(v[1] ?? 0) * 2 + a] ?? 0) * w[1] +
+      (U[(v[2] ?? 0) * 2 + a] ?? 0) * w[2];
+    sampleRgba(albedo, uv(0), uv(1), s);
+    return [toLinear(s[0] ?? 0), toLinear(s[1] ?? 0), toLinear(s[2] ?? 0)];
   };
 }
 

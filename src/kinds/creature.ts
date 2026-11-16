@@ -29,7 +29,7 @@ import { mixRgb, smoothstep, v3 } from './creature-curve.ts';
 import { detailBoxes, headDetail } from './creature-detail.ts';
 import { eyeball } from './creature-eye.ts';
 import { clawMesh } from './creature-feet.ts';
-import { creatureFur } from './creature-fur.ts';
+import { creatureFur, furLie, headLie } from './creature-fur.ts';
 import { type HeadLayout, headEdits } from './creature-head.ts';
 import { creatureHeadFur } from './creature-head-fur.ts';
 
@@ -115,14 +115,14 @@ export function creature(
       : lod === 2
         ? { amp: grow, at: (q: Vec3) => grow * smoothstep(0, res, q[2]) }
         : null;
-  // Strand streaks in the painted tone only on fur (scales, feathers, skin carry none).
-  const strands = surface === 'fur' ? {} : { strands: 0 };
+  // Strand streaks in the painted tone only on fur, along the coat's lie (D60; scales carry none).
+  const [strands, lie] = [surface === 'fur' ? {} : { strands: 0 }, furLie(b, spec.family).dir];
   const piece = sculptPiece({
     edits: bodyEdits(b, spec, lod, res, c.keratin, mixRgb(c.back, c.tip, 0.3)),
     res,
     color: spec.colours.coat,
     mirror: b.mirror,
-    tone: { reach: res * 5, ground: b.height * 0.35, strength: 0.75, edge: 0.15, ...strands },
+    tone: { reach: res * 5, ground: b.height * 0.35, strength: 0.75, edge: 0.15, ...strands, lie },
     paint,
     detail: lod === 0 ? detailBoxes(b, res) : [],
     ...(rel && !hero ? { relief: rel } : {}),
@@ -177,7 +177,7 @@ export function creature(
     res: hres,
     color: spec.colours.coat,
     mirror: true,
-    tone: { reach: hres * 5, strength: 0.75, edge: 0.15, ...strands },
+    tone: { reach: hres * 5, strength: 0.75, edge: 0.15, ...strands, lie: headLie },
     paint: headColour,
     detail: lod === 0 ? headDetail(l, hres) : [],
     ...(o.strip ? { strip: o.strip } : {}),
@@ -218,7 +218,7 @@ export function creature(
       res: hres,
       color: spec.colours.coat,
       mirror: true,
-      tone: { reach: hres * 5, strength: 0.75, edge: 0.15, ...strands },
+      tone: { reach: hres * 5, strength: 0.75, edge: 0.15, ...strands, lie: headLie },
       paint: headColour,
       ...(o.strip ? { strip: o.strip } : {}),
     });

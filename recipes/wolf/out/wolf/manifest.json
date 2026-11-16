@@ -21,9 +21,9 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    141854,
-    24968,
-    2268
+    141716,
+    25936,
+    2284
   ],
   "drawCalls": [
     2,
@@ -295,21 +295,21 @@
     },
     {
       "bone": "neck_1",
-      "radius": 0.099272,
-      "height": 0.046712,
-      "coverage": 0.9638
+      "radius": 0.100966,
+      "height": 0.044941,
+      "coverage": 0.9674
     },
     {
       "bone": "head",
-      "radius": 0.073277,
-      "height": 0.126048,
-      "coverage": 0.9692
+      "radius": 0.073696,
+      "height": 0.124906,
+      "coverage": 0.9689
     },
     {
       "bone": "jaw",
-      "radius": 0.057023,
-      "height": 0.128263,
-      "coverage": 0.987
+      "radius": 0.057065,
+      "height": 0.129891,
+      "coverage": 0.9877
     },
     {
       "bone": "tail_0",
@@ -397,15 +397,15 @@
     },
     {
       "bone": "ear_l",
-      "radius": 0.040146,
-      "height": 0.074049,
-      "coverage": 0.9573
+      "radius": 0.041453,
+      "height": 0.075062,
+      "coverage": 0.9592
     },
     {
       "bone": "ear_r",
-      "radius": 0.040146,
-      "height": 0.074049,
-      "coverage": 0.9573
+      "radius": 0.041453,
+      "height": 0.075062,
+      "coverage": 0.9592
     },
     {
       "bone": "fore_l_0_mid",

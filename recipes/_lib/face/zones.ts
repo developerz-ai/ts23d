@@ -17,6 +17,10 @@ export interface Zones {
   readonly shadow?: Vec3;
   /** Eyebrow colour, or omit for none. */
   readonly brows?: Vec3;
+  /** The forehead's yellower, paler zone (thin skin over bone), or omit. */
+  readonly forehead?: Vec3;
+  /** Lash line: a dark margin along the upper lid where the lashes root, or omit. */
+  readonly lashes?: Vec3;
 }
 
 const paint = (at: Vec3, size: Vec3, color: Vec3, blend: number): SculptEdit => ({
@@ -56,6 +60,15 @@ export function zoneEdits(k: SkullLandmarks, H: number, z: Zones): SculptEdit[] 
       ),
     );
   }
+  if (z.forehead)
+    out.push(
+      paint(
+        add(k.glabella, -0.012 * H, 0, 0.11 * H),
+        [0.05 * H, 0.22 * H, 0.08 * H],
+        z.forehead,
+        0.05 * H,
+      ),
+    );
   out.push(
     // Eye socket: cooler and darker round the lids.
     paint(
@@ -97,6 +110,15 @@ export function zoneEdits(k: SkullLandmarks, H: number, z: Zones): SculptEdit[] 
       0.007 * H,
     ),
   );
+  if (z.lashes) {
+    // Lash line: small dabs on an arc over the front of the ball, inner → outer corner.
+    const R = k.eyeR * 1.1;
+    for (let i = 0; i <= 6; i++) {
+      const a = (-0.55 + (1.1 * i) / 6) * 1.2;
+      const at: Vec3 = add(k.eye, R * Math.cos(a) * 0.86, R * Math.sin(a), R * 0.48 * Math.cos(a));
+      out.push(paint(at, [k.eyeR * 0.12, k.eyeR * 0.22, k.eyeR * 0.08], z.lashes, k.eyeR * 0.06));
+    }
+  }
   if (z.brows) {
     // Eyebrow: a band along the ridge, thick at the head, tapering to the tail.
     const head = add(k.brow, 0.006 * H, -0.05 * H, -0.004 * H);

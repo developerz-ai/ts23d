@@ -61,6 +61,7 @@ export {
   type SilhouetteOptions,
   visualHull,
 } from './sdf-silhouette.ts';
+export { similarityToward } from './similarity-blend.ts';
 export {
   applySimilarity,
   composeSimilarity,

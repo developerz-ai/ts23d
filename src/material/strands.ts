@@ -50,43 +50,45 @@ interface Clump {
 }
 
 const CLUMPS: Readonly<Record<StrandKind, Clump>> = {
-  // Undercoat: soft, pale, wavy, short strands.
+  // Undercoat: soft, pale, short locks. Few strands, each ≥ 2 texels at a 2048² sheet, in three
+  // locks with gaps between them: a dense cell fills to an opaque lozenge (a chip, D-row).
   fur: {
-    count: 18,
-    width: 0.04,
-    spread: 0.8,
-    clump: 0.45,
-    subs: 2,
-    point: 0.35,
-    start: 0.25,
-    length: [0.5, 0.75],
-    wave: 0.04,
-    waves: 2,
+    count: 9,
+    width: 0.06,
+    spread: 0.86,
+    clump: 0.75,
+    subs: 3,
+    point: 0.5,
+    start: 0.08,
+    length: [0.6, 0.9],
+    wave: 0.03,
+    waves: 1.5,
     tone: [
-      [0, 0.62],
-      [0.5, 0.86],
-      [1, 0.95],
+      [0, 0.72],
+      [0.5, 0.95],
+      [1, 1.05],
     ],
   },
-  // Agouti guard hair (wolf, many canids and rodents): grey base, pale band, dark tip.
+  // Agouti guard hair (wolf, many canids and rodents): grey base, pale band, darker tip. Two or
+  // three pointed locks per cell, separated.
   guard: {
-    count: 14,
-    width: 0.042,
-    spread: 0.75,
-    clump: 0.55,
-    subs: 2,
-    point: 0.45,
-    start: 0.12,
-    length: [0.75, 1],
+    count: 8,
+    width: 0.06,
+    spread: 0.8,
+    clump: 0.8,
+    subs: 3,
+    point: 0.5,
+    start: 0.06,
+    length: [0.8, 1],
     wave: 0.015,
     waves: 1,
     tone: [
-      [0, 0.55],
-      [0.3, 0.7],
-      [0.4, 1.05],
-      [0.52, 1],
-      [0.62, 0.45],
-      [1, 0.32],
+      [0, 0.72],
+      [0.3, 0.85],
+      [0.42, 1.08],
+      [0.55, 1.02],
+      [0.66, 0.55],
+      [1, 0.45],
     ],
   },
   // Head hair: 2–3 locks per card, long, pointed, separated strands.

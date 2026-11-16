@@ -13,15 +13,17 @@ import {
   type Mesh,
   merge,
   type PartOptions,
+  sculptField,
 } from '@developerz.ai/ts23d';
 import { type BustRecipe, bustEdits, faceDetail } from '../_lib/bust/bust.ts';
 import { eyes } from '../_lib/bust/eye.ts';
-import type { Surface } from '../_lib/bust/kit.ts';
+import { faceRigOf, withFace } from '../_lib/bust/face-rig.ts';
+import { type Surface, surface } from '../_lib/bust/kit.ts';
 import { cardHair } from '../_lib/face/hair-cards.ts';
 import { armour } from './armour.ts';
 import { featureEdits, toneEdits } from './features.ts';
 import { furMantle, necklace, seamField } from './fur.ts';
-import { hairKnot, orcCardHair } from './hair.ts';
+import { beardRegion, hairKnot, orcCardHair, scalpLock } from './hair.ts';
 import { C } from './palette.ts';
 import { plinth } from './plinth.ts';
 import { ORC_TONE, skinMesh } from './skin.ts';
@@ -73,6 +75,8 @@ function detail(): DetailRegion[] {
   ];
 }
 
+const FIELD = { color: SPEC.skin, mirror: 'y' } as const;
+
 export function buildOrc(ctx: BuildContext): void {
   const lod = ctx.lod;
   const { edits, skin } = bustEdits(ORC_BUST, ctx.pick([4, 4, 2]), lod, ctx.rng.fork('features'));
@@ -82,12 +86,18 @@ export function buildOrc(ctx: BuildContext): void {
   // One sculpt, two parts split at the seam the fur collar hides; each laps a cell past it.
   const seam = seamField();
   const lap = bustCell * 0.5;
+  // The chin and the crown patch painted hair-coloured under the cards (D57).
+  const scalp = [
+    { line: beardRegion, color: C.hairRoot, soft: 0.008 },
+    { line: scalpLock, color: C.hairRoot },
+  ];
   const meshes: Record<string, Mesh> =
     lod === 2
-      ? { head: skinMesh(edits, cell, { rng }) }
+      ? { head: skinMesh(edits, cell, { rng, scalp }) }
       : {
           head: skinMesh(edits, cell, {
             rng,
+            scalp,
             bumps: lod === 0 ? 0.0003 : 0,
             ...(lod === 0 ? { detail: detail() } : {}),
             clip: (p) => -seam(p) - lap,
@@ -119,14 +129,20 @@ export function buildOrc(ctx: BuildContext): void {
   // the tusks grow out of the jaw.
   const opts: Record<string, PartOptions> = {
     spikes: { connect: { as: 'welded', to: 'pauldrons' } },
+    head: { parent: 'face' },
+    bust: { parent: 'face' },
   };
-  for (const [name, m] of Object.entries(meshes))
-    ctx.part(
-      name,
-      lod < 2 ? bakeAo(m, { samples: ctx.pick([14, 9, 6]), radius: 0.1, strength: 0.5 }, all) : m,
-      opts[name] ?? {},
-    );
-  cardHair(ctx, orcCardHair(skin));
+  // Head and bust carry the blink / talk / breathe morphs under one `face` node (headClips('face')).
+  const rig = faceRigOf(ORC_BUST);
+  ctx.group('face');
+  for (const [name, m] of Object.entries(meshes)) {
+    const lit =
+      lod < 2 ? bakeAo(m, { samples: ctx.pick([14, 9, 6]), radius: 0.1, strength: 0.5 }, all) : m;
+    ctx.part(name, withFace(name, lit, rig), opts[name] ?? {});
+  }
+  // The cards root on the finished head (brow shelf, jaw and all), not the stage-2 skin: the
+  // brow and beard roots would sit buried under the stage-3 strokes.
+  if (lod < 2) cardHair(ctx, orcCardHair(surface(sculptField(edits, FIELD).field)));
   eyes(ctx, EYE, {
     cell: ctx.pick([0.0016, 0.003, 0.008]),
     finish: 'cornea',

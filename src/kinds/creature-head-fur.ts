@@ -7,7 +7,7 @@ import type { Mesh, Vec3 } from '../core/index.ts';
 import { CREATURE_MATERIALS, defineMaterial } from '../material/index.ts';
 import { hairCards, hairFlow } from '../passes/index.ts';
 import { type FurOptions, layers, smooth } from './creature-fur.ts';
-import type { CreatureSpec } from './creature-spec.ts';
+import { type CreatureSpec, faceOf } from './creature-spec.ts';
 
 /** Where the head stays bare (nose leather, lips, eyes), in the head's own frame. */
 export interface HeadBare {
@@ -43,11 +43,28 @@ export function creatureHeadFur(
   const ruff = (p: Vec3): number =>
     smooth(bare.muzzle, bare.muzzle * 0.2, p[0]) * smooth(bare.eye[2], bare.lips, p[2]);
   const len = (p: Vec3): number => 0.012 + 0.008 * smooth(bare.muzzle, 0, p[0]) + 0.045 * ruff(p);
-  const zones = layers(o, scale, len, (p) => (isBare(p) ? 0 : 0.4 + 2 * ruff(p))).map((z) => ({
+  const base = layers(o, scale, len, (p) => (isBare(p) ? 0 : 0.4 + 2 * ruff(p))).map((z) => ({
     ...z,
     density: (p: Vec3, n: Vec3) => (isBare(p) ? 0 : z.density(p, n) * 1.6),
     width: z.width * 0.6,
   }));
+  // A full cheek ruff (face.cheek ≥ 0.15: winter wolf) stands off the face and frames it in a front
+  // view: its own guard locks, lifted. Shorter-coated heads (fox, preset canid) keep it flat.
+  const guard = faceOf(spec).cheek >= 0.15 ? base[base.length - 1] : undefined;
+  const zones = guard
+    ? [
+        ...base,
+        {
+          ...guard,
+          name: 'ruff',
+          density: (p: Vec3, n: Vec3) =>
+            isBare(p) || ruff(p) < 0.25 ? 0 : guard.density(p, n) * 0.5,
+          length: (p: Vec3) => scale * (0.025 + 0.055 * ruff(p)),
+          width: guard.width * 1.4,
+          lift: 0.4,
+        },
+      ]
+    : base;
   // Lies back from the nose and flares out and down over the cheeks.
   const comb = (p: Vec3): Vec3 => [-1, Math.sign(p[1]) * (0.2 + 0.6 * ruff(p)), -0.2 * ruff(p)];
   const out = hairCards({

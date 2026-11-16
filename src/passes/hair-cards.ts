@@ -202,7 +202,9 @@ function emit(b: MeshBuilder, z: CardZone, c: Path): Vec3 {
     const vn = agree < 0.5 ? unit(mad(skinward, nc, 0.5 - agree)) : skinward;
     const w = (z.width * (1 - 0.5 * s)) / 2;
     const g = (tone[0] + (tone[1] - tone[0]) * s) / mid;
-    const hue = (i: 0 | 1 | 2): number => c.colour[i] * g * (1 + (tint[i] - 1) * s);
+    // Clamped: a pale coat × a tip tone > 1 would leave linear [0, 1] (QA vertex-colors).
+    const hue = (i: 0 | 1 | 2): number =>
+      Math.min(1, Math.max(0, c.colour[i] * g * (1 + (tint[i] - 1) * s)));
     const col: Vec3 = [hue(0), hue(1), hue(2)];
     const u = (c.cell?.u0 ?? 0) + s * ((c.cell?.u1 ?? 0) - (c.cell?.u0 ?? 0));
     const v0 = c.cell?.v0 ?? 0;

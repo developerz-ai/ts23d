@@ -15,6 +15,9 @@ export interface PaintedSheet {
   readonly normal: Uint8Array;
   /** R = occlusion, G = roughness, B = metalness. */
   readonly orm: Uint8Array;
+  /** The project (custom) strips painted into it; a renderer refuses an asset that maps into a
+   *  row defined later (`checkSheetFor`, D59 report). Absent on hand-built sheets: not checked. */
+  readonly strips?: readonly string[];
 }
 
 export type StripKind =

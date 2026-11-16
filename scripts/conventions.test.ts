@@ -118,6 +118,16 @@ describe('realSources and kindsDrift', () => {
 });
 
 describe('defectRows', () => {
+  it('fails on a defect ID used twice', () => {
+    const doc = src(
+      'cat.md',
+      '| D7 | a | b | open |\n| D7 | c | d | open |\n| D8 | e | f | open |',
+    );
+    const v = defectRows(doc, () => true, {});
+    expect(v.map((x) => x.message)).toEqual(['D7 is used twice (first at line 1)']);
+    expect(v[0]?.line).toBe(2);
+  });
+
   async function catalogue(rows: string): Promise<{ dir: string; text: string }> {
     const dir = await mkdtemp(join(tmpdir(), 'ts23d-conventions-'));
     await mkdir(join(dir, 'src/qa'), { recursive: true });

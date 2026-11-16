@@ -44,7 +44,7 @@ The human names a thing ("Tiger I, mid-production 1943"). The agent researches s
 - [Materials](https://raw.githubusercontent.com/developerz-ai/ts23d/main/docs/idea/04-materials.md): trim sheet, palettes, generator, image sources (kubeez.com)
 - [Agent loop](https://raw.githubusercontent.com/developerz-ai/ts23d/main/docs/idea/05-agent-loop.md): contact sheet layout, iteration
 - [QA gates](https://raw.githubusercontent.com/developerz-ai/ts23d/main/docs/idea/06-qa.md)
-- [What fits](https://raw.githubusercontent.com/developerz-ai/ts23d/main/docs/idea/07-what-fits.md): hard-surface vs organic; sculpted stylised characters and terrain today; realistic creatures via local-GPU adapters
+- [What fits](https://raw.githubusercontent.com/developerz-ai/ts23d/main/docs/idea/07-what-fits.md): hard-surface vs organic; sculpted stylised characters and terrain today; realistic creatures via hybrid recipes (code skeleton + model skin through adapters, optional)
 - [Kinds](https://raw.githubusercontent.com/developerz-ai/ts23d/main/docs/idea/09-kinds.md): buildings, vehicles, vessels, vegetation, scenes
 
 ## Reference
@@ -68,6 +68,10 @@ The human names a thing ("Tiger I, mid-production 1943"). The agent researches s
 - Finishes and optics: lacquered paint (clearcoat), glass/ice/liquid/jelly (transmission, ior, volume), sheen, anisotropy, iridescence; `--profile unreal|unity|godot|rt|web` (docs/idea/02-dsl.md).
 
 - Sound: `sound.impact|engine|mechanism|ui` (`@developerz.ai/ts23d/audio`) — deterministic WAVs from material, size, cylinders/RPM, part motion; positional `KHR_audio_emitter` (docs/idea/17-sound.md).
+
+- Tiers (as of 2026-11): CPU tier builds byte-identical with no GPU; the optional model tier plugs any model in through `NeuralAdapter` (`t3d neural ls|run`, outputs committed under `recipes/<name>/neural/<key>/` with `record.json`; `T3D_NEURAL_MISSING` falls back to the CPU path). `t3d doctor` / `t3d setup tools|gpu-min|gpu-full` / `t3d server start|stop|status` install and check it (docs/idea/08-neural-adapters.md). Hybrid recipes (`ctx.neural`; demo `recipes/wolf_hybrid`; hybrid heads in progress): code owns skeleton, proportions and QA, a model adds the skin.
+- Realism tools: `photoMatch` + `solveCamera` + `silhouetteIoU`; `t3d critique` calibrated score (flagships near 6 of 10, target 8.5, floor not yet enforced); sculpt engine (cubic kernels, strokes, `fair()`, VDM stamps); `creature()` with bones, fur cards, `skinWeights`, glTF skins and clips (walk/trot/gallop), `skin`/`deform`/`gait` QA; `t3d hero --quality path` (CPU path tracer); `t3d finish --hero` (normal/AO/height/ORM bake); Blender, gltfpack, Basis KTX2 and Godot tool adapters.
+- Game projects: `t3d init --engine godot|three|unity|unreal|babylon`, `assets/PLAN.md` + `t3d plan check`, `t3d build --watch`, `t3d concept <recipe.ts|brief.md>` (image adapter; no GPU: kubeez.com, partner, disclosed), `t3d neural run --allow-bad-input` (recorded override of the input-image rules).
 
 - Weathering: `weather()` — seeded, geometry-driven rust streaks, chips, dust, moss, mud, bleach, dents, sag with `where` selectors and `amount` coverage measured into the manifest; QA `weather` (docs/idea/18-weathering.md).
 

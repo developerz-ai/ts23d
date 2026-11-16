@@ -20,10 +20,11 @@ export const H = 0.19;
 export const CUT_Z = 0.08;
 
 export const C = {
-  skin: hex('#9cb84a'),
-  warm: hex('#b8c860'),
-  cool: hex('#6a8a4a'),
-  cavity: hex('#3a4a1a'),
+  // Muted olive-yellow (a bright lime read as a plastic toy).
+  skin: hex('#8c9c4c'),
+  warm: hex('#aaa85c'),
+  cool: hex('#5c7048'),
+  cavity: hex('#2e3818'),
   lips: hex('#7a7a36'),
   flush: hex('#b08a4a'),
   wart: hex('#7a8a3a'),

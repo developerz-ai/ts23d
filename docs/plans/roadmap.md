@@ -66,7 +66,7 @@ Status as of 2026-11-14: **M0 done, M1 done but for recipes, M2 under way.** Eve
 Materials:
 - [x] `paintTrimSheet`: procedural albedo / normal / ORM; strips bond, planks, plates, noise, flat, slate, concrete, glass; 6 decal + 11 foliage cells
 - [x] Sheet in the GLB: embedded or shared external PNGs (`--sheet`, `--sheet-size`)
-- [ ] KTX2 profile; fix mip bleed between strips; per-face V mapping on `box`
+- [ ] KTX2 profile (planned: the `ktx2` tool adapter via Basis Universal ships, as of 2026-11, but no export profile writes `KHR_texture_basisu`); fix mip bleed between strips; per-face V mapping on `box`
 - [ ] Image-stamped cells (decals from any `ImageSource`)
 - [ ] Painter curvature + `edgeWear` mask (`params.edgeWear`, `PaintKit.curvature`) ([11](../idea/11-materials-authoring.md))
 - [ ] `edgeWear(mesh)` pass (dihedral / SDF-Laplacian convexity → vertex colour; `_WEAR` attribute for shader sources)
@@ -93,8 +93,8 @@ Shape:
 - [ ] Lofted vehicle bodies, fuselages, wings
 
 Checking:
-- [ ] `photoMatch(asset, { photo, camera })`: photo · model · overlay in one PNG + silhouette IoU
-- [ ] `silhouetteIoU` gate on top of it
+- [x] `photoMatch(asset, { photo, camera })`: photo · model · overlay in one PNG + silhouette IoU (plan 101 slice 02)
+- [x] `silhouetteIoU` gate on top of it
 - [ ] Gates: manifold + outward normals, texel density
 
 Exit bar: a 4-4-0 with tender matching [`docs/reference/loco-photo-match.png`](https://raw.githubusercontent.com/developerz-ai/ts23d/main/docs/reference/loco-photo-match.png) (predecessor output: ~16k triangles, 17 named nodes, one embedded trim-sheet material, baked `run`). Recipes: that loco, a harbour tug, a biplane.
@@ -117,31 +117,31 @@ Exit bar: a 4-4-0 with tender matching [`docs/reference/loco-photo-match.png`](h
 - [x] `sdf`: surface nets or marching cubes over a signed-distance field; `sculpt` edit lists (Dreams-style)
 - [x] Draw → 3D from SVG: `extrudeSvg` (holes, chamfer), `latheSvg`, `visualHull` front/side/top silhouettes as a sculpt edit (`recipes/svg_showcase`)
 - [x] `creature`: SDF flesh over biped / quadruped / bird / fish / serpent / winged skeletons (landmarks from proportions + stance), staged sculpt, seeded coat patterns, fur/scale/feather relief LOD-gated, biology checks (allometry, furred density, eye size, wing loading, balance) — `recipes/wolf`
-- [ ] `creature` next: bones as named parts (jaw, tail, limb segments with pivots), fur cards/shells, feather cards, per-zone hair flow
+- [x] `creature` next (plan 101 slices 05, 07, 09): bones as named parts (28 on the wolf), fur and guard-hair cards, per-zone hair flow (`hairFlow`), skinned export. Still planned: feather cards, fur shells (not buildable in glTF; cards instead)
 - [ ] Hybrid skeletons joined at a fitted joint: humanoid+serpent (naga-like), humanoid+quadruped (centaur-like), humanoid+bird (harpy-like), humanoid+fish (merfolk)
 - [ ] Exoskeleton type (arthropods): segmented bevelled plates as jointed parts — crab-warrior (humanoid crab), giant spider, scorpion, beetle
 - [ ] Ethereal type: translucent + edge-fading glow body, wispy tail, glowing eyes (ghost, spirit); elementals (fire core + flame cards, glass water body, orbiting earth chunks, air ribbons)
 - [ ] Breadth reference: large fantasy MMOs' creature variety — original designs only, no names/characters/designs from any IP
 - [ ] Bestiary recipes: ~~wolf~~ (done: `recipes/wolf`), dog (2–3 breeds), chicken, eagle, shark, trout; full-body orc, goblin, troll, dwarf, human; naga-like, centaur-like, harpy-like, merfolk; crab-warrior, giant spider, scorpion; ghost, spirit, fire/water/earth/air elementals; dragon (flagship, in progress), wyvern, golem, ogre, ogre-mage (original caster brute: robes, runes, glow)
 - [ ] Recipes: stylised critters, rocks
-- [ ] `roundCone` sculpt shape + `skin()` (draw-skin capsule chains) — ported into `src/kinds/creature-skin.ts` for the creature kind; a public sculpt shape still to do ([10](../idea/10-sculpting.md))
+- [x] `roundCone` sculpt shape (and `superellipsoid`) + `skin()` (draw-skin capsule chains, `src/kinds/creature-skin.ts`) ([10](../idea/10-sculpting.md))
 - [ ] Sculpt `form` tags (primary/secondary/tertiary) as an LOD filter + primary-only review view
 - [ ] Group `pose` (pivot + rotate) and `warp` (twist/bend/taper) with declared Lipschitz factors
 - [ ] `ffd()` cage deform pass (Sederberg–Parry)
 - [x] Landmark warp: `warpTPS` / `tpsWarp` (3D thin-plate spline, normals by cofactor(J), `T3D_WARP_INVALID`); faces from a CC0 anatomical base (MakeHuman hm08) warped by 82 named landmarks into race presets (`recipes/_lib/face`, `recipes/face_demo`: human, orc, elf, dwarf, goblin) — [face-base](../research/face-base.md)
 - [ ] Face base next: masculine/feminine axis from MakeHuman's CC0 targets, expression morph targets on the base topology, hair cards instead of SDF locks, move the bust heads (`human_head`…) onto the face base
-- [ ] Sculpt strokes along a path: `crease`, `clay`, `inflate` (then `pinch`, `flatten`); `revolve` SDF shape
+- [x] Sculpt strokes: `crease`, `clay`, `inflate`, `flatten`, `pinch` with a declared Lipschitz bound (plan 101 slice 04). `revolve` SDF shape still planned
 - [ ] `t3d shot --ref front=… side=…` overlays + per-view silhouette IoU
 
 ## M5: Neural adapters and import
 
-- [ ] `localGenerator`: HTTP adapter for a local TRELLIS.2 / Hunyuan3D 2.1 / SF3D server
-- [ ] Content-hash cache under `.ts23d/neural/`; a CI cache miss is an error naming the regenerate command (shipped for `refine` via `RefineCache` + `offline` → `T3D_REFINE_FAILED`, and for imports via `provideImports` → `T3D_IMPORT_MISSING`; the on-disk `.ts23d/neural/` store and CLI wiring are open)
+- [x] `localGenerator`: wrapper over the `mesh` task on a `t3d-neural/1` server; the `NeuralAdapter` contract replaced the single-purpose adapter (plan 101 slice 13)
+- [x] Content-hash cache committed per recipe under `recipes/<name>/neural/<key>/` with `record.json` (ADR 014); a miss falls back to the CPU path with `T3D_NEURAL_MISSING`, an error with `--require-neural`; `t3d neural ls|run`
 - [x] `importGlb`: any GLB as a part, fitted and recoloured onto the trim sheet ([21](../idea/21-import.md)): licence gate, sha256 offline bytes, cleanup, QEM `simplify` LODs ([ADR 011](../decisions/011-imported-meshes-may-be-decimated.md)), `bakeNormals` + `withOwnTextures` opt-in own texture set, `refine` adapter (protocol + cache, no model); recipe `import_demo`
 - [x] `kubeezAdapter`: kubeez.com image source for references, decals, texture sources (plan 101 slice 13; recommended no-GPU path, partner disclosed)
-- [ ] Concept before model: `t3d concept "<idea>"` → design brief with personality (drives shape language: aggressive/friendly/stable) → optional kubeez.com concept sheet (front/side/3-4 turnaround, face close-up, palette, material callouts, variations), cached by brief hash → agent traces silhouettes to SVG for `visualHull` block-out → critique compares model to its concept (silhouette IoU, palette, focal). Offline fallback: SVG thumbnails per the concept-artist skill. Original prompts only; image rights per provider terms recorded in the dossier.
-- [ ] Recipe: a code-built cart drawn by a generated horse
-- [ ] Optional Blender bridge, never in the gate ([12](../idea/12-blender-bridge.md)): ADR, shared content-hash cache with /neural, `t3d blender doctor | render | remesh | convert`
+- [x] (shipped as `t3d concept <recipe.ts|brief.md>`: silhouette sheet + concept images from the configured image model, prompts and seeds in `concept.ts`; the brief-to-personality step and critique-vs-concept comparison remain planned) Concept before model: `t3d concept "<idea>"` → design brief with personality (drives shape language: aggressive/friendly/stable) → optional kubeez.com concept sheet (front/side/3-4 turnaround, face close-up, palette, material callouts, variations), cached by brief hash → agent traces silhouettes to SVG for `visualHull` block-out → critique compares model to its concept (silhouette IoU, palette, focal). Offline fallback: SVG thumbnails per the concept-artist skill. Original prompts only; image rights per provider terms recorded in the dossier.
+- [ ] Recipe: a code-built cart drawn by a generated horse (planned; the hybrid pattern ships in `recipes/wolf_hybrid`: code owns skeleton, proportions and QA, a model adds the skin)
+- [ ] Optional Blender bridge, never in the gate ([12](../idea/12-blender-bridge.md)). Shipped (plan 101 slice 20, as of 2026-11): a Blender tool adapter (`bpy` or the `blender` binary: cloth drape, Rigify, cell fracture, hair grooming) on the shared cache, checked by `t3d doctor`. Planned: the `t3d blender render | remesh | convert` commands
 - [ ] Vendored-input convention (sha256 + URL + licence) and a `licence` check in `bun run verify`; CC0 HDRI loader for `beauty()` IBL
 
 ## Light and surface: cinema-grade PBR
@@ -208,8 +208,8 @@ Shipped: 18 helpers in `src/testing` ([15-testing](../idea/15-testing.md)). Rema
 
 - [ ] City kit: procedural blocks and road networks (grammar), buildings with enterable interiors, kerbs/markings/signage, street furniture sets
 - [ ] Vehicle fleet from playbooks: original cars, SUVs, trucks, buses, bikes, boats — opening parts, liveries, LODs
-- [ ] `EXT_mesh_gpu_instancing` for scatter (props, foliage, crowds) + `variations(n)` for unique-looking instances
-- [ ] Consistency at scale: shared trim sheet, texel density gate, one palette system per world
+- [x] `EXT_mesh_gpu_instancing` export (`src/export/instancing.ts`, plan 101 slice 16) for scatter (props, foliage, crowds) + `variations(n)` for unique-looking instances
+- [ ] Consistency at scale: shared trim sheet, one palette system per world (shipped: `T3D_STYLE_OUTLIER` style coherence, `T3D_SCENE_BUDGET`; planned: texel density gate)
 
 ## DSL gaps found by recipe agents
 
@@ -227,9 +227,9 @@ Shipped: 18 helpers in `src/testing` ([15-testing](../idea/15-testing.md)). Rema
 
 Research: [hair](../research/hair.md) · [surfaces and volumes](../research/surfaces-volumes.md)
 
-- [ ] Vertex colour alpha end to end (RGBA meshes + export) · per-surface optical presets (IOR, attenuation) · emissive texture layer (lava cracks; ADR) · morph targets (melting, faces)
+- [ ] Vertex colour alpha end to end (RGBA meshes + export) · per-surface optical presets (IOR, attenuation) · emissive texture layer (lava cracks; ADR). Morph targets ship in the glTF writer (plan 101 slice 09); face and melt morph recipes are planned
 - [ ] Scale stamper: overlapping plates along surface flow, phyllotaxis rows, graded dorsal→ventral, LOD fallback to normal-mapped pattern
-- [ ] Hair: sculpted locks (stylised) · hair cards (alpha strand strips, game standard) · strand curves → thin tubes (cinema); fur shells / fur cards
+- [ ] Hair: sculpted locks (stylised) · strand curves → thin tubes (cinema); fur shells. Shipped (plan 101 slice 07): hair cards and fur cards (alpha strand strips, `hairCards`, `creatureFur`)
 - [ ] Particles: richer `ctx.emitter` specs (rate, size/colour over life) + baked flipbook textures (smoke, fire, dust, magic)
 - [ ] Porous solids: SDF minus seeded noise / gyroid (sponge, pumice, foam, coral, bread, cheese)
 - [ ] Translucent bodies: jelly/slime via `transmission` + `volume` + soft translucency, wobble motion
@@ -246,19 +246,19 @@ Research: [hair](../research/hair.md) · [surfaces and volumes](../research/surf
 
 ## Gaps the discipline skills exposed ([skills matrix](../research/skills-matrix.md))
 
-- [ ] Skinning (bones + weights from sculpt blend weights, ≤ 4 influences) and morph targets (faces, melting); deformation test poses
+- [x] Skinning (weights from the sculpt's bone fields, ≤ 4 influences), glTF morph targets and deformation test poses (`deform`, `gait`, `skin` gates; plan 101 slices 09, 10)
 - [ ] Architecture checks: room/area model, stair rule (2R+G), headroom, door clearances, daylight factor; adjustable human scale figure
-- [ ] Set-level consistency: palette membership, texel density across a set, modular kit grid snapping
+- [ ] Set-level consistency: texel density across a set, modular kit grid snapping (palette membership and style outliers shipped: `T3D_STYLE_OUTLIER`)
 - [ ] Surface quality for designers: zebra/reflection lines, curvature combs, section cuts, G1/G2 continuity check; optional subdivision surfaces
 - [ ] Product design: draft-angle and uniform-wall checks for moulded parts; STL export (see Reach)
 
 ## Geometry maths for good-looking code shapes
 - [ ] Quadruped base meshes: CC0 canid / felid / ungulate / ursid bases imported with `importGlb`, warped to `creature()` skeleton landmarks (the same "code is the brain, the mesh is the face" split as `import_demo`), then fur shells + cards; the code-sculpted wolf (critique 6) is the baseline to beat
 
-- [ ] C2-smooth blend kernels in the sculpt engine (replace polynomial smin where curvature continuity matters) + a surface fairing pass (bi-Laplacian / Willmore energy minimisation, feature-preserving) for organic kinds
+- [x] C2-smooth blend kernels (`kernel: 'cubic'`) in the sculpt engine + a crease-preserving `fair()` pass (plan 101 slice 04)
 - [ ] Subdivision-surface primitive (Catmull-Clark / Loop): code builds a coarse cage, the limit surface is smooth; subdivision level per LOD
 - [ ] Energy-based fitting in `t3d tune`: concept silhouettes + anatomical distance constraints + smoothness → solved shape
-- [ ] Cloth and soft tissue by position-based dynamics (drapes, folds, sag); combed direction fields for hair, fur and scale flow; conformal UVs (LSCM/ABF) for per-asset textures
+- [ ] Cloth and soft tissue by position-based dynamics (drapes, folds, sag); combed direction fields for hair, fur and scale flow (shipped: `hairFlow`); conformal UVs (shipped: `lscmCharts`, LSCM; ABF planned); cloth drape through the Blender adapter (shipped), position-based dynamics in code (planned)
 
 ## Machine learning, offline (results committed as numbers; the gate never runs a model)
 
@@ -266,14 +266,14 @@ Research: [hair](../research/hair.md) · [surfaces and volumes](../research/surf
 - [ ] AI critics as objectives: a vision model scores renders ("reads as a wolf", appeal, concept match) so tuning runs without an agent reviewing every iteration
 - [ ] Inverse procedural modelling: a local generator (`/neural`: TRELLIS, Hunyuan3D) makes a rough mesh from an idea or concept; the optimiser fits recipe parameters to it → clean code-built asset with the AI's look
 - [ ] Learn from our own data: critique.json + metrics across all assets as a dataset; a small model predicts scores and suggests the next fix
-- [x] AI finish layer ([22](../idea/22-ai-finish.md)): control maps → model (mock / local HTTP; cached by hash) → part-masked projection onto a per-asset atlas → one extra LOD0 material; finish QA (`T3D_FINISH_*`); `t3d finish`. Hosted provider (kubeez) adapter still planned
+- [x] AI finish layer ([22](../idea/22-ai-finish.md)): control maps → model (mock / local HTTP; cached by hash) → part-masked projection onto a per-asset atlas → one extra LOD0 material; finish QA (`T3D_FINISH_*`); `t3d finish`. Hosted-provider path shipped: `neuralFinish(adapter)` with `kubeezAdapter` (partner, disclosed)
 - [ ] Learned detail: texture synthesis / super-resolution for trim-sheet strips; learned priors for wrinkles, scales, fur
 
 ## Engines and ray tracing
 
 - [x] Export profiles `--profile unreal|unity|godot|rt|web`: AO bake on/off (path tracers compute their own), LOD packaging (Nanite: LOD0 only; split; MSFT_lod), collision naming (UCX_ / -col), texture format
 - [ ] Per-engine import checklists (UE5 Interchange + Nanite + Lumen, Unity glTFast, Godot 4) and a local sample project to verify; label untested claims
-- [ ] Rigged characters keep ≤ 4 influences per vertex (Interchange truncates)
+- [x] Rigged characters keep ≤ 4 influences per vertex (Interchange truncates): `skinWeights` and the `skin` QA gate (plan 101 slice 09)
 
 ## Reuse: define once, use everywhere
 
@@ -293,14 +293,24 @@ Research: [hair](../research/hair.md) · [surfaces and volumes](../research/surf
 - [x] `bun run data wikidata <QID…>`: CC0 facts → committed `wikidata-<QID>.json` (revision URL, sha256, m/kg); `realFrom`, `crossCheck`
 - [x] `bun run data dem`: AWS Terrain Tiles (terrarium) → committed 16-bit DEM JSON with tile hashes, licence, attribution; `terrainFromDEM`
 - [x] `recipes/real_valley`: Yosemite Valley east end from USGS 3DEP, Half Dome checked against Wikidata
-- [ ] OpenStreetMap via Overpass (ODbL share-alike: extract stays ODbL, meshes credited as Produced Works): rivers carved into DEMs, lakes, footprints + levels, land cover replacing slope colouring
+- [ ] OpenStreetMap via Overpass (ODbL share-alike: extract stays ODbL, meshes credited as Produced Works). Shipped (plan 101 slice 16, `src/data/osm.ts`, `city_block`): pinned blocks. Planned: rivers carved into DEMs, lakes, land cover replacing slope colouring
 - [ ] Licence propagation: inputs carry a licence; the build refuses an asset `license` that contradicts them
 - [ ] More sources on the same contract: Copernicus GLO-30 (global), OpenTopography lidar (small sites), Commons photos as review references
 - [ ] `realFrom` for item-valued facts (resolve a gauge item to its millimetres); Wikidata into existing recipes (`eiffel_tower` Q243, `tiger_1`, `t34`)
 
 ## M6: Reverse direction and reach
 
-- [ ] Camera solve for `photoMatch` from ≥ 4 marked correspondences
+- [x] Camera solve for `photoMatch` from ≥ 4 marked correspondences (`solveCamera`, plan 101 slice 02)
 - [ ] Reverse direction: a VLM proposes recipe params from photos, scored by silhouette IoU, best kept
-- [ ] MCP server: `build`, `shot`, `list` as tools, PNG inline
+- [x] MCP server (`t3d mcp`, stdio): `build`, `shot`, `hero`, `blueprint`, `review`, `critique`, `list_recipes`, `explain_error` as tools, PNG inline
 - [ ] Playground: edit a recipe in the browser, see GLB + contact sheet live
+
+## Plan 101 follow-ups (asset realism programme; as of 2026-11-16)
+
+Shipped in 0.7.0 / 0.8.0 and the 0.9.0 candidate: measurement and calibrated critique, sculpt engine, creature and head forms, fur and hair cards, derived maps, skinning and clips, path-traced hero, VDM stamps, the optional model tier (adapters, reference server, `t3d setup|doctor|server`), Blender and tool adapters, hybrid recipes, game-project commands, scale. See [CHANGELOG](../../CHANGELOG.md).
+
+- [ ] Flagships at calibrated >= 8.5 and the floor enforced (`FLOOR_ENFORCED` in `scripts/lib/critique.ts` is `false`; wolf, amur_tiger and dragon baselines sit near 6)
+- [ ] Hybrid heads (`human_head_hybrid`, `orc_head_hybrid`) built and committed with their model records (in progress; only `wolf_hybrid` ships)
+- [ ] Calibration: leave-one-out Spearman 0.584 today (floor 0.55); target 0.7
+- [ ] KTX2 export profile (`KHR_texture_basisu`): the Basis tool adapter exists, the profile does not
+- [ ] GPU sculpt evaluation (SDF evaluation on the GPU for finer cells); not built, CPU only

@@ -3,14 +3,16 @@
 // compiling a single recipe) plus `media/<asset>/facts.json` (measures, critique, liveries,
 // sounds; fetched by the asset page). The build copies renders, blueprints, RTS icons and WAVs to
 // `media/<asset>/`, re-encoding each hero as WebP (full size and card size) when an image tool
-// (cwebp, ImageMagick) is installed; without one, the hero PNG serves both roles.
+// (cwebp, ImageMagick) is installed; without one, the hero PNG serves both roles. Hybrids'
+// committed model outputs (`recipes/<folder>/neural/<key>/`) are published as they are under
+// `media/neural/<folder>/<key>/`, so the compile worker can build the model tier live.
 
 import { spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { Plugin } from 'vite';
-import { type Found, scan } from './media-scan.ts';
-import type { MediaEntry, MediaFacts } from './src/media-types.ts';
+import { type Found, scan, scanNeural } from './media-scan.ts';
+import type { MediaEntry, MediaFacts, MediaNeural } from './src/media-types.ts';
 
 const ID = 'virtual:ts23d-media';
 const RESOLVED = `\0${ID}`;
@@ -47,6 +49,22 @@ export function mediaPlugin(repoRoot: string): Plugin {
   let base = '/';
   let build = false;
   let found: Found[] = [];
+  let neural: Record<string, MediaNeural[]> = {};
+  const neuralDir = (folder: string, key: string): string => `media/neural/${folder}/${key}/`;
+  const neuralUrls = (): Record<string, MediaNeural[]> =>
+    Object.fromEntries(
+      Object.entries(neural).map(([folder, list]) => [
+        folder,
+        list.map((n) => ({ ...n, dir: `${base}${neuralDir(folder, n.key)}` })),
+      ]),
+    );
+  /** A published neural file's bytes, or null when the scan does not list it. */
+  const neuralFile = (folder: string, key: string, file: string): Uint8Array | null => {
+    const n = neural[folder]?.find((x) => x.key === key);
+    return n && (file === 'record.json' || n.files.includes(file))
+      ? tryRead(join(recipes, folder, 'neural', key, file))
+      : null;
+  };
   const encoded = new Map<string, Uint8Array | null>();
 
   /** Build-time WebP of the hero (dev serves the PNG as is). */
@@ -90,12 +108,22 @@ export function mediaPlugin(repoRoot: string): Plugin {
     load(id) {
       if (id !== RESOLVED) return null;
       found = scan(recipes);
+      neural = scanNeural(recipes);
       for (const f of found) this.addWatchFile(join(f.dir, 'manifest.json'));
-      return `export const MEDIA = ${JSON.stringify(entries())};`;
+      return `export const MEDIA = ${JSON.stringify(entries())};\nexport const NEURAL = ${JSON.stringify(neuralUrls())};`;
     },
     configureServer(server) {
       found = scan(recipes);
+      neural = scanNeural(recipes);
       server.middlewares.use((req, res, next) => {
+        const n = /\/media\/neural\/([\w-]+)\/([0-9a-f]{64})\/([\w.-]+)$/.exec(req.url ?? '');
+        if (n) {
+          const bytes = neuralFile(n[1] ?? '', n[2] ?? '', n[3] ?? '');
+          if (!bytes) return next();
+          res.setHeader('content-type', 'application/octet-stream');
+          res.end(bytes);
+          return;
+        }
         const m = /\/media\/([\w-]+)\/([\w-]+\.(png|wav|json))$/.exec(req.url ?? '');
         const f = m && found.find((x) => x.entry.name === m[1]);
         if (!m || !f) return next();
@@ -113,6 +141,17 @@ export function mediaPlugin(repoRoot: string): Plugin {
       });
     },
     generateBundle() {
+      for (const [folder, list] of Object.entries(neural))
+        for (const n of list)
+          for (const file of ['record.json', ...n.files]) {
+            const source = neuralFile(folder, n.key, file);
+            if (source)
+              this.emitFile({
+                type: 'asset',
+                fileName: `${neuralDir(folder, n.key)}${file}`,
+                source,
+              });
+          }
       for (const f of found) {
         const emit = (fileName: string, source: Uint8Array | null): void => {
           if (source)

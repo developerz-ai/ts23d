@@ -66,6 +66,15 @@ function head(): IntendedCrease[] {
       'the jaw’s underside folding into the throat under the dropped mandible',
       true,
     ),
+    // The jaw ×1.9 drops onto the trapezius behind its angle: a fold under the mandible's flank.
+    ...creaseCurve(
+      'jaw_trap',
+      'head',
+      [SK.gonion, [0.04, 0.1, 0.29], [0.005, 0.105, 0.285]],
+      0.03,
+      'the widened jaw’s flank folding onto the trapezius that rises to it',
+      true,
+    ),
     ...creaseCurve(
       'skull_base',
       'head',

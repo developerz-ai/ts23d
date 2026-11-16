@@ -47,9 +47,15 @@ export const WOLF: CreatureSpec = {
   build: { depth: 0.5, width: 0.55, limbs: 1, tailGirth: 3.2, ruff: 0.04, tuck: 0.66 },
   face: {
     preset: 'canid',
-    muzzle: 0.48,
-    // Skull 130–150 mm wide on 230–280 mm long: 0.55; the cheek fur (preset) widens the head.
+    // Stop → nose ≈ 0.46 of the furred head in side photos (the forehead fur shortens it from the
+    // skull's 0.48); a clear stop and a cheek ruff flaring past the zygomata (README photos).
+    muzzle: 0.46,
+    // Skull 130–150 mm wide on 230–280 mm long: 0.55; the cheek ruff widens the furred head.
     width: 0.55,
+    tip: 0.1,
+    stop: 0.22,
+    // A full winter ruff (≥ 0.15 grows the lifted ruff cards); the head mass keeps the fore share ≤ 66 %.
+    cheek: 0.15,
     ears: 'erect',
     earLength: REAL.ear / REAL.head,
     pupil: 'round',
@@ -59,11 +65,14 @@ export const WOLF: CreatureSpec = {
   // Winter guard hair 60–70 mm on the back lies flat: ≈ 3 cm effective shell over the skin.
   coat: 0.03,
   colours: {
-    coat: hex('#9a8c78'),
-    back: hex('#6a6259'),
-    belly: hex('#ddd5c6'),
-    legs: hex('#a59886'),
-    muzzle: hex('#d6cbb8'),
+    // Tawny-grey flanks and legs under a grizzled dark saddle; cream belly, throat, cheeks and
+    // muzzle sides; a tawny bridge (README colour notes, reference photos).
+    coat: hex('#a48e72'),
+    back: hex('#5e564d'),
+    belly: hex('#e4ddd0'),
+    legs: hex('#b49874'),
+    muzzle: hex('#e8e2d6'),
+    bridge: hex('#a8845e'),
     tip: hex('#1e1b18'),
     nose: hex('#141110'),
     iris: hex('#c8902a'),
@@ -71,7 +80,7 @@ export const WOLF: CreatureSpec = {
     mark: hex('#26221f'),
     // The dark line down the front of the forelegs and the grey mask round the eyes.
     foreline: hex('#6a5e52'),
-    mask: hex('#6a6058'),
+    mask: hex('#4e4842'),
   },
   // Agouti grizzle: banded guard hairs, dark tips dense on the saddle, none on the belly.
   pattern: { kind: 'agouti', scale: 0.012, coverage: 0.45, seed: 41 },

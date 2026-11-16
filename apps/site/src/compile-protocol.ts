@@ -5,12 +5,24 @@ import type { Footprint } from './diorama.ts';
 
 export type Lod = 0 | 1 | 2;
 
+/** A hybrid's committed model outputs: its recipe folder and the published key directories. */
+export interface NeuralRef {
+  readonly recipe: string;
+  /** URLs ending in `/`, each holding record.json and its outputs. */
+  readonly dirs: readonly string[];
+}
+
 /**
  * What to compile: a recipe by asset name (with its entry file under recipes/ when known, so the
- * worker imports just that module), or a diorama base for the viewer.
+ * worker imports just that module; with `neural`, the model outputs it reads), or a diorama base.
  */
 export type Target =
-  | { readonly kind: 'recipe'; readonly name: string; readonly file?: string }
+  | {
+      readonly kind: 'recipe';
+      readonly name: string;
+      readonly file?: string;
+      readonly neural?: NeuralRef;
+    }
   | { readonly kind: 'diorama'; readonly name: string; readonly footprint: Footprint };
 
 export interface BuildRequest {

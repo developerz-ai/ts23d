@@ -200,7 +200,8 @@ function features(
       {
         shape: 'ellipsoid',
         at: l.nose,
-        size: [rt * 0.5, rt * 0.75, rt * 0.55],
+        // Past the blob's blended skin: the whole pad is leather, not a coat-coloured rim.
+        size: [rt * 0.68, rt * 0.95, rt * 0.72],
         op: 'paint',
         blend: rt * 0.15,
         color: c.nose,

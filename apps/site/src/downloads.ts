@@ -36,7 +36,7 @@ export function renderDownloads(root: HTMLElement, asset: Subject): void {
     b.addEventListener('click', () => {
       b.setAttribute('aria-busy', 'true');
       size.textContent = 'compiling…';
-      build(recipe(asset.name, lod, asset.file)).then(
+      build(recipe(asset.name, lod, asset.file, asset.neural)).then(
         ({ glb, triangles }) => {
           b.removeAttribute('aria-busy');
           size.textContent = `${kib(glb.byteLength)} · ${triangles.toLocaleString('en')} tris`;
