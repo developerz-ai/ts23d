@@ -11,18 +11,23 @@ import {
   type Mesh,
   merge,
 } from '../core/index.ts';
+import { skinWeights, weightBonesOf } from '../passes/index.ts';
 import { box, cylinder } from '../primitives/index.ts';
 import { clashes } from './clash.ts';
 import { connections } from './connections.ts';
+import { deform } from './deform.ts';
 import { floatingParts } from './floating.ts';
+import { gait } from './gait.ts';
 import { gaps } from './gaps.ts';
 import { DEFAULT_GATES, partNames, proportions, recipeChecks, triangleBudget } from './gates.ts';
 import { joints } from './joints.ts';
 import { DEFAULT_LOD_GATES, lodTriangles } from './lods.ts';
 import { mass } from './mass.ts';
 import { measures } from './measures.ts';
+import { arm, rig, smooth, walk } from './motion-fixtures.ts';
 import { hiddenParts } from './occlusion.ts';
 import { degenerateTriangles, nonFinite, normalsMatchWinding, vertexColors } from './sanity.ts';
+import { skin } from './skin.ts';
 import { treads } from './treads.ts';
 import type { Finding, Gate } from './types.ts';
 import { weatherGate } from './weather.ts';
@@ -184,6 +189,25 @@ const FAILING: ReadonlyArray<readonly [Gate, () => CompiledAsset]> = [
       ],
     }),
   ],
+  [
+    skin,
+    () =>
+      compile(
+        defineAsset({
+          name: 'spare_bone',
+          kind: 'creature',
+          budget: { triangles: [9999, 9999, 9999] },
+          build(ctx) {
+            ctx.bone('root', { head: [0, 0, 0.5], tail: [1, 0, 0.5] });
+            ctx.bone('spare', { parent: 'root', head: [5, 0, 0.5], tail: [6, 0, 0.5] });
+            const only = weightBonesOf([{ name: 'root', head: [0, 0, 0.5], tail: [1, 0, 0.5] }]);
+            ctx.part('body', skinWeights(cube, only, { blend: 0.1 }));
+          },
+        }),
+      ),
+  ],
+  [deform, () => arm(150, smooth)],
+  [gait, () => rig(walk(0.3))],
 ];
 
 const CODE = /^T3D_[A-Z_]+$/;

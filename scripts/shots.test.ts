@@ -2,7 +2,7 @@ import { afterAll, describe, expect, it } from 'bun:test';
 import { existsSync } from 'node:fs';
 import { mkdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
-import { type Runner, refresh } from './shots.ts';
+import { HERO_FLAGS, type Runner, refresh } from './shots.ts';
 
 const root = join(import.meta.dir, '../tmp/shots-test');
 afterAll(() => rm(root, { recursive: true, force: true }));
@@ -39,5 +39,18 @@ describe('shots refresh', () => {
       '{"sheet":"sheet.png"}',
     );
     expect(existsSync(join(dir, '.out-tmp'))).toBe(false);
+  });
+
+  it('path traces the committed hero at the measured CI size and sample count', async () => {
+    const seen: string[][] = [];
+    const record: Runner = async (cmd) => {
+      seen.push([...cmd]);
+      return fake()(cmd);
+    };
+    expect(await refresh(join(root, 'flags'), 'x.ts', record)).toBe(true);
+    const hero = seen.find((c) => c[0] === 'hero') ?? [];
+    expect(hero.slice(4)).toEqual([...HERO_FLAGS]);
+    expect(HERO_FLAGS).toEqual(['--quality', 'path', '--size', '960x540', '--spp', '16']);
+    expect(seen.find((c) => c[0] === 'shot')?.length).toBe(4);
   });
 });

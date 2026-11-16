@@ -24,6 +24,7 @@ import { type Zones, zoneEdits } from '../face/zones.ts';
 import { type EarSpec, earEdits } from './ear.ts';
 import { type EyeSpec, eyes } from './eye.ts';
 import { faceEdits, orbitBore } from './face.ts';
+import { faceRigOf, withFace } from './face-rig.ts';
 import { type HeadSpec, headBlock, type Landmarks } from './head.ts';
 import { type Surface, surface, type V } from './kit.ts';
 import { plinth } from './plinth.ts';
@@ -53,6 +54,9 @@ export interface BustRecipe {
   readonly forms?: Forms;
   /** Skin tone zones on the skull (lips, redness, beard shadow, brows). */
   readonly zones?: Zones;
+  /** The torso in place of the shared parametric one (a race with its own build, the orc's
+   *  trapezius rising to the ears): stage → edits; `skin` is the stage-2 surface from stage 3. */
+  readonly body?: (stage: number, skin?: Surface) => SculptEdit[];
   /** Extra skin edits after the anatomy (race features like tusks or warts). */
   readonly features?: (stage: number, skin: Surface, lod: number, rng: Rng) => SculptEdit[];
   /** Hair, beard: `scalp` is the head block's field. */
@@ -125,7 +129,7 @@ function anatomy(b: BustRecipe, stage: number, lod: number, s?: Surface): Sculpt
     const f = b.forms ?? HERO_FORMS;
     const H = b.spec.H;
     return [
-      ...torsoEdits(b.l, b.torso, { neck: false }),
+      ...(b.body ? b.body(stage, s) : torsoEdits(b.l, b.torso, { neck: false })),
       ...skullStage(b, lod),
       // The orbit: room for the eyeball (the base's own pocket seals shut once the lids close
       // in to a cell) and the snug bore behind its equator the socket joint measures.
@@ -176,7 +180,7 @@ export function bustEdits(
 ): { edits: SculptEdit[]; skin: Surface } {
   const opts = { color: b.spec.skin, mirror: 'y' as const };
   const skin = surface(sculptField(anatomy(b, 2, lod), opts).field);
-  const body = sculptField(torsoEdits(b.l, b.torso), opts).field;
+  const body = sculptField(b.body ? b.body(2) : torsoEdits(b.l, b.torso), opts).field;
   const scalp = bustScalp(b, lod);
   return {
     skin,
@@ -231,11 +235,15 @@ export function buildBust(ctx: BuildContext, b: BustRecipe): void {
     color: b.plinth.color,
   });
   const all = merge(Object.values(meshes));
-  for (const [name, m] of Object.entries(meshes))
-    ctx.part(
-      name,
-      lod < 2 ? bakeAo(m, { samples: ctx.pick([14, 9, 6]), radius: 0.08, strength: 0.45 }, all) : m,
-    );
+  // Head and bust carry the blink / talk / breathe morphs under one `face` node (headClips('face')).
+  const rig = faceRigOf(b);
+  ctx.group('face');
+  for (const [name, m] of Object.entries(meshes)) {
+    const lit =
+      lod < 2 ? bakeAo(m, { samples: ctx.pick([14, 9, 6]), radius: 0.08, strength: 0.45 }, all) : m;
+    const face = name === 'head' || name === 'bust';
+    ctx.part(name, withFace(name, lit, rig), face ? { parent: 'face' } : undefined);
+  }
   eyes(ctx, b.eye, {
     cell: ctx.pick([0.0016, 0.003, 0.008]),
     finish: 'cornea',

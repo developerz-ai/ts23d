@@ -2,23 +2,26 @@
 // the parting, follow the skull over the top and behind the pointed ears, and fall free onto the
 // shoulders and back — tapered, overlapping, toned dark at the roots and pale gold at the tips —
 // and two flat ribbon locks falling in front of the ears.
-// Card hair (`hairBaseEdits` + `elfCardHair`): the parted mass is the base layer; long strand
-// cards comb out from the parting over the skull and fall to the shoulders.
+// Card hair (`hairBaseEdits` + `elfCardHair`): the parted mass, painted hair colour, is the scalp
+// layer; strand cards root on the skull (`bustScalp`) inside a landmark hairline clear of the long
+// ears, comb out from the centre parting, sweep back past the ears and fall behind them to the
+// shoulders, colliding with the whole bust so no lock crosses the face or an ear.
 
 import { type Field, type SculptEdit, sculptField, type Vec3 } from '@developerz.ai/ts23d';
+import type { BustRecipe } from '../_lib/bust/bust.ts';
 import { hairMass, lock, mix, ribbon } from '../_lib/bust/hair.ts';
-import { headBlock } from '../_lib/bust/head.ts';
 import { type Surface, spline, surface, type V } from '../_lib/bust/kit.ts';
-import { torsoEdits } from '../_lib/bust/torso.ts';
-import { C, H, L, SPEC, TORSO } from './spec.ts';
+import { bustHairFields, skullHairline } from '../_lib/face/hair-cards.ts';
+import { C, H, L, SK } from './spec.ts';
 
-export const hairline: Field = (p) => {
-  const front = L.gx + 0.0;
-  const zFront = L.mz + 0.9 * H;
-  const zBack = L.mz + 0.38 * H;
-  const t = Math.min(1, Math.max(0, (front - p[0]) / (front - L.back)));
-  return zFront + (zBack - zFront) * Math.sqrt(t) - p[2];
-};
+/** Where the hair grows on the skull: trichion 4.6 cm above the glabella, the nape line 2 cm up,
+ *  1.6 cm of skin round each long ear (lobe → top → helix tip): the base never swallows an ear. */
+export const hairline: Field = skullHairline(SK, {
+  front: 0.046,
+  nape: 0.02,
+  ear: 0.016,
+  temple: 0.008,
+});
 
 export function hairEdits(scalp: Field, lod: number): SculptEdit[] {
   const box: [V, V] = [
@@ -94,86 +97,157 @@ export function frontLocks(on: Surface): Array<{ ctrl: V[]; y: number }> {
   }));
 }
 
+const CAP: V = mix(mix(C.hairRoot, C.hairTip, 0.35), [0, 0, 0], 0.45);
+
 /** The base layer under card hair: the parted mass alone. */
 export const hairBaseEdits = (scalp: Field, _lod: number): SculptEdit[] => {
   const box: [V, V] = [
     [L.back - 0.05, -0.15, L.mz - 0.2],
     [L.gx + 0.06, 0.15, L.crown + 0.05],
   ];
-  return [hairMass(scalp, 0.007, hairline, box, C.hairRoot, 0.03)];
+  // The cap under the cards: a shadowed gold (hair in shade), so a parting or a gap between locks
+  // reads as depth, not as an orange scalp.
+  return [
+    {
+      // 6 mm inside the hairline: the cap's edge lies under the cards.
+      ...hairMass(scalp, 0.007, (p) => hairline(p) + 0.006, box, CAP, 0.03),
+      blend: 0.006,
+    },
+  ];
 };
 
-/** Away from the centre parting, then back and down: the hair falls past the ears. */
+const clamp01 = (v: number): number => Math.min(1, Math.max(0, v));
+
+/** Away from the centre parting, then back and down: over the ears' roots the hair is swept back
+ *  hard, so it falls behind them; at the back straight down to the shoulders. */
 const comb = (p: Vec3, n: Vec3): Vec3 => {
   const out = Math.sign(p[1] || 1);
-  const top = Math.max(0, n[2]);
-  // 0 at the forehead, 1 at the back of the skull: the front is swept back off the face.
-  const t = Math.min(1, Math.max(0, (L.gx - p[0]) / (L.gx - L.back)));
-  return [-(1.3 - t), out * (0.15 + 0.5 * top) * t, -0.3 - 0.9 * (1 - top)];
+  const top = clamp01(n[2]);
+  // 0 at the forehead, 1 at the back of the skull.
+  const t = clamp01((SK.glabella[0] - p[0]) / (SK.glabella[0] - SK.occiput[0]));
+  // Near the ear (above and in front of its root): back, not down.
+  const ear = clamp01(1 - Math.hypot(p[0] - SK.earTop[0], p[2] - SK.earTop[2] - 0.03) / 0.06);
+  return [
+    -(1.1 - 0.7 * t) - 1.2 * ear,
+    // Off the parting: sideways only once past the crown's front, so the front stays covered.
+    out * (0.5 * top * clamp01((t - 0.15) / 0.3) * (1 - t) + 0.1),
+    -0.25 - 1.1 * (1 - top) * (1 - ear) - 0.5 * t,
+  ];
 };
 
-/** Card hairstyle for `cardHair` (recipes/_lib/face/hair-cards.ts): long, centre-parted. */
-export function elfCardHair() {
-  const scalp = sculptField([headBlock(SPEC, 2)], { color: SPEC.skin, mirror: 'y' }).field;
+/** Long at the back and behind the ears (to the shoulders), shorter at the front where the hair
+ *  sweeps back over the top. */
+const long = (p: Vec3): number => {
+  const t = clamp01((SK.glabella[0] - p[0]) / (SK.glabella[0] - SK.occiput[0]));
+  return 0.12 + 0.17 * clamp01((t - 0.15) / 0.5);
+};
+
+/** Card hairstyle for `cardHair` (recipes/_lib/face/hair-cards.ts) on the elf bust `b`: long,
+ *  centre-parted. */
+export function elfCardHair(b: BustRecipe, lod: number) {
+  // Roots on the finished head (cap and all), falling round it.
+  const { skin } = bustHairFields(b, lod);
+  // No lock in front of the ears below the brow: a solid there pushes them back behind the ears.
+  const shield: Field = (p) =>
+    Math.max(SK.tragion[0] + 0.012 - p[0], Math.abs(p[1]) - 0.16, p[2] - (SK.glabella[2] + 0.03));
+  const collide: Field = (p) => Math.min(skin(p), shield(p));
   const bounds: [V, V] = [
     [L.back - 0.05, -0.15, L.mz - 0.05],
     [L.gx + 0.06, 0.15, L.crown + 0.05],
   ];
-  const base = hairBaseEdits(scalp, 0);
-  const field = sculptField([...base, { field: scalp, bounds }], {
-    color: C.hairRoot,
-    mirror: 'y',
-  }).field;
-  // Long at the back and sides behind the ears, short where it would fall over the face.
-  const long = (p: Vec3): number =>
-    (L.gx - p[0]) / (L.gx - L.back) > 0.45 ? (p[2] > L.mz + 0.55 * H ? 0.24 : 0.18) : 0.09;
+  const pale: Vec3 = [1.12, 1.08, 0.92];
   return {
-    field,
+    field: skin,
     bounds,
     cell: 0.004,
     comb,
-    // Long hair falls around the head block and the shoulders, never through them.
-    collide: sculptField([headBlock(SPEC, 2), ...torsoEdits(L, TORSO)], {
-      color: SPEC.skin,
-      mirror: 'y',
-    }).field,
+    collide,
+    segments: 8,
     color: mix(C.hairRoot, C.hairTip, 0.45),
     layers: [
+      // Base: dark clumps flat on the painted cap, hiding the scalp.
       {
         name: 'hair_base',
         kind: 'hair',
         region: hairline,
-        density: 8000,
-        length: 0.06,
-        width: 0.018,
-        lift: 0.06,
-        bend: 0.9,
-        droop: 0.15,
+        density: 5000,
+        length: (p: Vec3) => long(p) * 0.55,
+        width: 0.026,
+        lift: 0.03,
+        bend: 0.95,
+        droop: 0.3,
+        roll: 0.2,
+        fold: 0,
+        tone: [0.5, 0.75],
+        hug: 0.9,
       },
+      // Long locks: clumped, curved across, falling to the shoulders, paler toward the tips.
       {
         name: 'hair_long',
         kind: 'hair',
         region: hairline,
-        density: 5000,
+        density: 3200,
         length: long,
+        width: 0.02,
+        lift: 0.06,
+        bend: 0.95,
+        droop: 0.6,
+        roll: 0.3,
+        fold: 0.55,
+        clump: 4,
+        tone: [0.75, 1.1],
+        tint: pale,
+        hug: 0.7,
+      },
+      // Outer locks over the crown and back: the volume and the silhouette.
+      {
+        name: 'hair_top',
+        kind: 'hair',
+        region: (p: Vec3) => Math.max(hairline(p), SK.euryon[2] - p[2]),
+        density: 1300,
+        length: (p: Vec3) => long(p) * 1.05,
         width: 0.016,
         lift: 0.1,
         bend: 0.9,
-        droop: 0.55,
+        droop: 0.6,
+        roll: 0.35,
+        fold: 0.6,
+        clump: 2,
+        tone: [0.9, 1.2],
+        tint: pale,
+        hug: 0.4,
+      },
+      // Hairline: short strands rooted on the edge band, over the cap's edge.
+      {
+        name: 'hair_edge',
+        kind: 'wisp',
+        region: (p: Vec3) => Math.max(hairline(p), -hairline(p) - 0.012),
+        density: 26000,
+        length: 0.035,
+        width: 0.012,
+        lift: 0.05,
+        bend: 0.8,
+        droop: 0.2,
         roll: 0.3,
-        clump: 5,
+        fold: 0,
+        hug: 1,
+        tone: [0.75, 1],
       },
       {
         name: 'hair_fly',
-        kind: 'hair',
+        kind: 'wisp',
         region: hairline,
-        density: 400,
-        length: 0.12,
-        width: 0.007,
-        lift: 0.25,
-        bend: 0.5,
-        droop: 0.4,
-        roll: 1.2,
+        density: 160,
+        length: (p: Vec3) => long(p) * 0.6,
+        width: 0.01,
+        lift: 0.12,
+        bend: 0.6,
+        droop: 0.5,
+        roll: 1,
+        fold: 0,
+        tone: [0.95, 1.2],
+        tint: pale,
+        hug: 0.3,
       },
     ] as const,
   };

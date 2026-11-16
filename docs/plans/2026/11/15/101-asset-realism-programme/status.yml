@@ -4,8 +4,8 @@ roadmap: "Cross-cutting: M2 photoMatch (:96), M4 creature next (:120), M5 localG
 status: in_progress
 owner: sebi
 worked_by: "claude (coordinator) + slice agents"
-percent: 40
-current_focus: "waves 1+2 integration: gate, PR, release 0.7.0; then hair quality, orc rebuild, clothes, wave 3"
+percent: 55
+current_focus: "wave 3 integration (09, 10, 12, 19 + quality round: hair, orc, clothes); cloth skin-through fix; then shots, gate, PR, release 0.8.0"
 slices:
   - file: 01-core-contracts.md
     status: complete
@@ -20,29 +20,29 @@ slices:
     status: complete
     percent: 100
   - file: 05-creature-forms.md
-    status: in_progress
-    percent: 80
+    status: complete
+    percent: 100
   - file: 06-head-forms.md
-    status: in_progress
-    percent: 80
+    status: complete
+    percent: 100
   - file: 07-hair-fur-cards.md
-    status: in_progress
-    percent: 80
+    status: complete
+    percent: 100
   - file: 08-texture-maps.md
     status: complete
     percent: 100
   - file: 09-skinning-export.md
-    status: not_started
-    percent: 0
+    status: complete
+    percent: 100
   - file: 10-motion-deform-qa.md
-    status: not_started
-    percent: 0
+    status: complete
+    percent: 100
   - file: 11-hero-bake-tier.md
     status: not_started
     percent: 0
   - file: 12-path-tracer.md
-    status: not_started
-    percent: 0
+    status: complete
+    percent: 100
   - file: 13-neural-adapters.md
     status: not_started
     percent: 0
@@ -59,6 +59,21 @@ slices:
     status: not_started
     percent: 0
   - file: 18-docs-release.md
+    status: not_started
+    percent: 0
+  - file: 19-vdm-stamps.md
+    status: complete
+    percent: 100
+  - file: 20-blender-adapter.md
+    status: not_started
+    percent: 0
+  - file: 21-tier-setup.md
+    status: not_started
+    percent: 0
+  - file: 22-agent-interface.md
+    status: not_started
+    percent: 0
+  - file: 23-game-project-workflow.md
     status: not_started
     percent: 0
 evidence: []

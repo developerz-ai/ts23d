@@ -2,7 +2,8 @@
 // This entry wires the body-part modules into the engine contract (parts, pivots, baked motion),
 // declares the budgets, the design-spec dimensions and the LOD policy. Every module sculpts its
 // piece in stages (block-out → planes → features → secondary → tone); see README.md.
-//   body.ts  torso + neck.ts + legs.ts + tail stump, claws, back spines, scales.ts relief/paint
+//   body.ts  torso + neck.ts + legs.ts + tail stump, claws, back spines; stamps.ts VDM scales,
+//            scales.ts belly plates + paint
 //   head.ts  skull, horns.ts, teeth.ts · jaw.ts (bite pivot) · eyes.ts (aim pivots)
 //   wings.ts bones + membrane panels (flap pivots) · tail.ts (swish pivot)
 

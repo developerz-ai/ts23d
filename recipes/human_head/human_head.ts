@@ -6,7 +6,7 @@
 // a standing leather collar, a red mantle pinned by a brass brooch; a turned plinth.
 // Design dossier: recipes/human_head/README.md.
 
-import { defineAsset } from '@developerz.ai/ts23d';
+import { defineAsset, headClips } from '@developerz.ai/ts23d';
 import { bustEdits } from '../_lib/bust/bust.ts';
 import { SK } from '../_lib/bust/human/spec.ts';
 import { HUMAN_PROPORTIONS, proportionCheck } from '../_lib/face/proportions.ts';
@@ -14,6 +14,7 @@ import { buildHuman, HUMAN_BUST } from './build.ts';
 import { HUMAN_CREASES } from './creases.ts';
 
 export const human_head = defineAsset({
+  clips: headClips('face'),
   name: 'human_head',
   kind: 'character',
   description:

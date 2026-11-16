@@ -128,6 +128,7 @@ export function leftTargets(c: Character): { mid: Map<MidName, P>; side: Map<Sid
   g('cheek')[0] += r.zygoma.forward * H;
   g('zygion')[0] += r.zygoma.forward * H * 0.5;
   jaw(g, c);
+  muzzle(g, c);
   body(g, c);
   character(g, c);
   return { mid, side };
@@ -193,6 +194,32 @@ function jaw(g: (k: MidName | SideName) => P, c: Character): void {
   g('pogonion')[0] += u * 0.7;
   g('menton')[0] += u * 0.5;
   g('labraleSup')[0] -= u * 0.2;
+}
+
+/** Prognathism: the lower face forward, most at the lips, least at the jaw line and nose root. */
+function muzzle(g: (k: MidName | SideName) => P, c: Character): void {
+  const m = (c.race.muzzle ?? 0) * H;
+  if (m === 0) return;
+  const share: Array<[MidName | SideName, number]> = [
+    ['rhinion', 0.3],
+    ['pronasale', 0.6],
+    ['subnasale', 0.8],
+    ['alare', 0.7],
+    ['labraleSup', 1],
+    ['labraleInf', 1],
+    ['stomionSup', 1],
+    ['stomionInf', 1],
+    ['lipUpper', 1],
+    ['lipLower', 1],
+    ['lipUpper2', 1],
+    ['lipLower2', 1],
+    ['cheilion', 0.9],
+    ['pogonion', 0.9],
+    ['menton', 0.7],
+    ['jawline', 0.5],
+    ['cheek', 0.3],
+  ];
+  for (const [k, w] of share) g(k)[0] += m * w;
 }
 
 function body(g: (k: MidName | SideName) => P, c: Character): void {

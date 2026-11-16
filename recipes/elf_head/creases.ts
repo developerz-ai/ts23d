@@ -11,7 +11,7 @@ import { spline, surface, type V } from '../_lib/bust/kit.ts';
 import { neckSeam, torsoEdits } from '../_lib/bust/torso.ts';
 import { skullCreases } from '../_lib/face/skull-creases.ts';
 import { ELF_BUST } from './build.ts';
-import { cloakRegion, collarRing } from './clothes.ts';
+import { cloakRegion, collarRing, outfitCreases } from './clothes.ts';
 import { frontLocks, hairline, longLocks } from './hair.ts';
 import { H, L, SK, SPEC, TORSO } from './spec.ts';
 
@@ -27,6 +27,8 @@ function creases(): IntendedCrease[] {
   const upper = ring.map((p): V => [p[0], p[1] * 1.04, p[2] + 0.012]);
   const seam = neckSeam(L);
   return [
+    // Every garment edge the cloth tailoring (clothes.ts) stands off the layer beneath.
+    ...outfitCreases(skin),
     ...skullCreases(SK, H),
     ...torsoCreases(L, TORSO),
     ...longLocks(7, hair).flatMap(({ ctrl }, i) =>

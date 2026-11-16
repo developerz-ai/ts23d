@@ -72,5 +72,26 @@ export { type TiledOptions, tiled } from './tiled.ts';
 export { arcLengths, type SweepFrame, transportFrames } from './transport.ts';
 export { triangulate } from './triangulate.ts';
 export { valueNoise } from './value-noise.ts';
+export {
+  compileVdm,
+  type SculptVdm,
+  sampleStamp,
+  stampSlope,
+  type VdmPlace,
+  type VdmStamp,
+  vdmEdit,
+  vdmStamp,
+} from './vdm.ts';
+export {
+  furrow,
+  hornBase,
+  poreField,
+  type StampOptions,
+  scalePatch,
+  scarWelt,
+  toothSocket,
+  wart,
+} from './vdm-library.ts';
+export { type StampScatterOptions, scatterStamps } from './vdm-scatter.ts';
 export { applyWarp, type WarpOptions, warpTPS } from './warp.ts';
 export { type Tps, type TpsOptions, tpsWarp } from './warp-solve.ts';

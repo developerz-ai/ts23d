@@ -35,5 +35,5 @@ export const HUMAN_BUST: BustRecipe = {
 
 export function buildHuman(ctx: BuildContext): void {
   buildBust(ctx, HUMAN_BUST);
-  cardHair(ctx, humanCardHair());
+  cardHair(ctx, humanCardHair(HUMAN_BUST, ctx.lod));
 }

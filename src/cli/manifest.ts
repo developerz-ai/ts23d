@@ -1,6 +1,7 @@
 // manifest.json per asset: what an engine pipeline or an agent needs without opening a GLB —
 // files, triangles per LOD, pivots (the names game code binds to), emitters, joints, surfaces, QA,
-// measures with their measured values, sources, paint slots and switchable variants.
+// measures with their measured values, sources, paint slots and switchable variants, and for a
+// skinned asset the engine contract: skeleton (bones + parents), clips, per-bone hitboxes.
 // Location-independent: every path in `files` is relative to the manifest's own folder
 // (<out>/<asset>/), so two builds into two --out dirs write the same bytes. Per-LOD arrays
 // (triangles, drawCalls, lodCoverage) are indexed like `lods`, the levels actually built.
@@ -8,11 +9,12 @@
 import {
   type Asset,
   type CompiledAsset,
+  LOOP_SECONDS,
   type Lod,
   linearToHex,
   type WeatherCoverage,
 } from '../core/index.ts';
-import { mergeToPivots, soundUses } from '../export/index.ts';
+import { clipSummary, fitHitboxes, mergeToPivots, skeletonOf, soundUses } from '../export/index.ts';
 import { type Finding, measure } from '../qa/index.ts';
 
 export interface AssetManifest {
@@ -57,6 +59,12 @@ export interface AssetManifest {
     at: readonly number[];
   }[];
   readonly surfaces: readonly string[];
+  /** Bones in joint order (skinned assets); absent when none. */
+  readonly skeleton?: readonly { name: string; parent: string | null }[];
+  /** glTF animations after `rest`: name, seconds, loop, root ground speed m/s; absent when none. */
+  readonly clips?: readonly { name: string; seconds: number; loop: boolean; speed: number }[];
+  /** Per-bone capsule triggers (written with `--physics`): bone, radius, cap distance, coverage. */
+  readonly hitboxes?: readonly { bone: string; radius: number; height: number; coverage: number }[];
   /** Paint slots → default colour (sRGB hex); each is one material, one draw per pivot using it. */
   readonly paint?: Readonly<Record<string, string>>;
   /** KHR_materials_variants liveries in the GLBs: name → the slots it repaints (sRGB hex). */
@@ -134,6 +142,7 @@ export function manifestOf(
         }
       : {}),
     surfaces: [...new Set((top?.parts ?? []).map((p) => p.surface ?? 'opaque'))].sort(),
+    ...rigOf(top),
     ...paintOf(top),
     ...(asset.real
       ? { real: { length: asset.real.length, width: asset.real.width, height: asset.real.height } }
@@ -147,6 +156,25 @@ export function manifestOf(
     sources: asset.sources ?? [],
     ...weatherOf(top),
     qa: { pass: findings.length === 0, findings },
+  };
+}
+
+function rigOf(
+  top: CompiledAsset | undefined,
+): Pick<AssetManifest, 'skeleton' | 'clips' | 'hitboxes'> {
+  if (!top) return {};
+  const run = top.parts.some((p) => p.motion && p.motion.kind !== 'tread');
+  const clips = clipSummary(top.clips ?? [], run, LOOP_SECONDS);
+  const hitboxes = fitHitboxes(top).map(({ bone, radius, height, coverage }) => ({
+    bone,
+    radius,
+    height,
+    coverage,
+  }));
+  return {
+    ...(top.skeleton ? { skeleton: skeletonOf(top) } : {}),
+    ...(clips.length ? { clips } : {}),
+    ...(hitboxes.length ? { hitboxes } : {}),
   };
 }
 

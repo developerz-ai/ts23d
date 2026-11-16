@@ -74,6 +74,14 @@
     "glass",
     "opaque"
   ],
+  "clips": [
+    {
+      "name": "run",
+      "seconds": 4,
+      "loop": true,
+      "speed": 0
+    }
+  ],
   "measures": [],
   "sources": [],
   "qa": {

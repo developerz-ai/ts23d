@@ -1,5 +1,6 @@
-// Scales and plates — the secondary/tertiary surface: a cellular (Worley) pattern stretched along
-// the body gives domed, shingled scales (relief at LOD0, seam paint at every LOD); the belly,
+// Scales and plates — the secondary/tertiary surface: at LOD0 the scales are VDM stamps
+// (stamps.ts); this module keeps the zones they read (belly, dorsal, armour), a cellular (Worley)
+// pattern for the LOD1 scale paint, and the belly plates (relief at LOD0); the belly,
 // throat and tail underside carry transverse plates (ochre, dark seams) like a croc's ventral
 // scutes. Colour zones too: crimson back, ember flank, cream belly, darker toward the ground.
 // Pure functions of position (hash, not rng: the same point always gets the same scale).
@@ -9,6 +10,7 @@ import { mixRgb, smoothstep, v3 } from '../_lib/creature/curve.ts';
 import type { Relief } from '../_lib/creature/sculpt-part.ts';
 import { neckPath, tailPath, tailRadius } from './lines.ts';
 import { C } from './palette.ts';
+import { socketsRegion } from './shoulder.ts';
 
 /** Integer hash → [0, 1). */
 function hash(i: number, j: number, k: number, s: number): number {
@@ -68,7 +70,7 @@ function plateAt(u: number, pitch: number): number {
 }
 
 /** Closest point parameter + distance from p to a polyline. */
-function nearest(path: readonly Vec3[], p: Vec3): { t: number; d: number; at: Vec3 } {
+export function nearest(path: readonly Vec3[], p: Vec3): { t: number; d: number; at: Vec3 } {
   let best = { t: 0, d: Number.POSITIVE_INFINITY, at: path[0] ?? p };
   for (let i = 0; i + 1 < path.length; i++) {
     const a = path[i] ?? p;
@@ -87,7 +89,7 @@ const NECK = neckPath();
 const TAIL = tailPath();
 
 /** Belly weight of a body point: the torso's underside and the throat keel. */
-function bellyOf(p: Vec3): { w: number; u: number } {
+export function bellyOf(p: Vec3): { w: number; u: number } {
   const [x, y, z] = p;
   const torso =
     smoothstep(1.2, 1.02, z) *
@@ -118,7 +120,7 @@ function scaleTint(c: Vec3, dome: number, id: number, k: number): Vec3 {
 }
 
 /** How much of the top of the body a point is on: torso back and the neck's crest side. */
-function dorsalOf(p: Vec3): number {
+export function dorsalOf(p: Vec3): number {
   const torso = smoothstep(1.6, 2.15, p[2]) * smoothstep(1.5, 1.1, p[0]);
   const n = nearest(NECK, p);
   const up = n.d > 0 ? (p[2] - n.at[2]) / n.d : 0;
@@ -127,7 +129,7 @@ function dorsalOf(p: Vec3): number {
 }
 
 /** Big-scale zones: shoulders and thighs (the armoured, stretched areas). */
-function armourOf(p: Vec3): number {
+export function armourOf(p: Vec3): number {
   const y = Math.abs(p[1]);
   const near = (c: Vec3, r: number): number =>
     smoothstep(r, r * 0.45, Math.hypot(p[0] - c[0], y - c[1], p[2] - c[2]));
@@ -163,15 +165,22 @@ function scaleHierarchy(p: Vec3, belly: number): { dome: number; id: number; k: 
   return { dome: dome / wsum, id: id / wsum, k: big + mid * 0.5 + tiny * 0.8 };
 }
 
+/**
+ * Belly-plate relief (LOD0). The scales are VDM stamps (stamps.ts), except on the wing sockets:
+ * they are fitted parts the stamps keep off, so they keep the cellular scale relief they fit with.
+ */
 export function bodyRelief(): Relief {
   const amp = 0.009;
+  const socket = socketsRegion(0);
   return {
     amp,
     at: (p) => {
       const b = bellyOf(p);
-      const plate = b.w > 0 ? plateAt(b.u, 0.16) : 0;
-      const s = b.w < 1 ? scaleHierarchy(p, b.w) : { dome: 0.5, k: 0 };
-      return amp * (b.w * (plate - 0.5) + (1 - b.w) * (s.dome - 0.5) * Math.min(1, s.k + 0.3));
+      const plate = b.w > 0 ? b.w * (plateAt(b.u, 0.16) - 0.5) : 0;
+      const ws = smoothstep(0.12, 0, socket(p)) * (1 - b.w);
+      if (ws === 0) return amp * plate;
+      const s = scaleHierarchy(p, b.w);
+      return amp * (plate + ws * (s.dome - 0.5) * Math.min(1, s.k + 0.3));
     },
   };
 }
@@ -189,7 +198,10 @@ export function heightGrade(c: Vec3, p: Vec3): Vec3 {
   ];
 }
 
-export function bodyPaint(lod: number): (p: Vec3, c: Vec3) => Vec3 {
+/** Stamp paint key (stamps.ts): relative height `h` (crown 1 … seam 0) and its weight `k`. */
+export type StampShade = (p: Vec3) => { readonly h: number; readonly k: number };
+
+export function bodyPaint(lod: number, shade?: StampShade): (p: Vec3, c: Vec3) => Vec3 {
   return (p, c) => {
     // Countershading: dark crimson spine, ember flanks, cream belly plates.
     let col = mixRgb(c, C.back, dorsalOf(p) * 0.9);
@@ -198,36 +210,38 @@ export function bodyPaint(lod: number): (p: Vec3, c: Vec3) => Vec3 {
       const plate = plateAt(b.u, 0.16);
       col = mixRgb(col, mixRgb(C.bellySeam, C.belly, 0.3 + 0.7 * plate), b.w);
     }
-    if (lod < 2 && b.w < 1) {
+    // LOD1 carries the scales in colour (cells); LOD0 tints the stamps: dark seams, light crowns.
+    if (lod === 1 && b.w < 1) {
       const s = scaleHierarchy(p, b.w);
-      col = scaleTint(col, s.dome, s.id, (1 - b.w) * s.k * (lod === 0 ? 1 : 0.6));
+      col = scaleTint(col, s.dome, s.id, (1 - b.w) * s.k * 0.6);
     }
+    const st = lod === 0 ? shade?.(p) : undefined;
+    if (st && st.k > 0) col = scaleTint(col, st.h, 0.5, st.k);
     return heightGrade(col, p);
   };
 }
 
 /** Underside weight of a tail point (world space) and its plate coordinate. */
-function tailBelly(p: Vec3): { w: number; u: number } {
+export function tailBelly(p: Vec3): { w: number; u: number } {
   const n = nearest(TAIL, p);
   const r = tailRadius(n.t);
   const below = (n.at[2] - p[2]) / r;
   return { w: smoothstep(0.25, 0.6, below), u: n.t * 4.2 };
 }
 
+/** Tail underside plates (LOD0); the scales are VDM stamps (stamps.ts). */
 export function tailRelief(): Relief {
   const amp = 0.007;
   return {
     amp,
     at: (p) => {
       const b = tailBelly(p);
-      const plate = b.w > 0 ? plateAt(b.u, 0.13) : 0;
-      const s = b.w < 1 ? scaleAt(p, TAIL_SCALE, SEED + 11).dome : 0;
-      return amp * (b.w * (plate - 0.5) + (1 - b.w) * (s - 0.5));
+      return b.w > 0 ? amp * b.w * (plateAt(b.u, 0.13) - 0.5) : 0;
     },
   };
 }
 
-export function tailPaint(lod: number): (p: Vec3, c: Vec3) => Vec3 {
+export function tailPaint(lod: number, shade?: StampShade): (p: Vec3, c: Vec3) => Vec3 {
   return (p, c) => {
     const n = nearest(TAIL, p);
     const top = (p[2] - n.at[2]) / tailRadius(n.t);
@@ -237,15 +251,12 @@ export function tailPaint(lod: number): (p: Vec3, c: Vec3) => Vec3 {
     const b = tailBelly(p);
     if (b.w > 0)
       col = mixRgb(col, mixRgb(C.bellySeam, C.belly, 0.35 + 0.65 * plateAt(b.u, 0.13)), b.w);
-    if (lod < 2 && b.w < 1) {
+    if (lod === 1 && b.w < 1) {
       const s = scaleAt(p, TAIL_SCALE, SEED + 11);
-      col = scaleTint(
-        col,
-        s.dome,
-        s.id,
-        (1 - b.w) * (lod === 0 ? 1 : 0.6) * (1 - smoothstep(0.85, 0.95, n.t)),
-      );
+      col = scaleTint(col, s.dome, s.id, (1 - b.w) * 0.6 * (1 - smoothstep(0.85, 0.95, n.t)));
     }
+    const st = lod === 0 ? shade?.(p) : undefined;
+    if (st && st.k > 0) col = scaleTint(col, st.h, 0.5, st.k);
     return heightGrade(col, p);
   };
 }

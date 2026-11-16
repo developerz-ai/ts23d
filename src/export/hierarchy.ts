@@ -7,6 +7,7 @@ import type { CompiledAsset, Part } from '../core/index.ts';
 import { motionPaths, quatFromAxisAngle, Ts23dError } from '../core/index.ts';
 import type { BinWriter, Json } from './bin-writer.ts';
 import { LIGHTS, lightOf } from './lights.ts';
+import { morphMeshFields } from './morph-targets.ts';
 import { motionChannels, treadExtras } from './motion.ts';
 import { writePrimitive } from './primitive.ts';
 
@@ -116,6 +117,7 @@ export function writeHierarchy(
       doc.meshes.push({
         name: part.name,
         primitives: [extensions ? { ...prim, extensions } : prim],
+        ...morphMeshFields(part.mesh),
       });
       node['mesh'] = doc.meshes.length - 1;
     }

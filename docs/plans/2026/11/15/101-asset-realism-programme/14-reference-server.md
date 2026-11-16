@@ -11,6 +11,7 @@ Rule: one small, swappable server shows how to serve `t3d-neural/1`; every model
 | `examples/neural-server/plugins/trellis2.py` | new | `mesh` + `texture` an existing mesh (microsoft/TRELLIS.2-4B) |
 | `examples/neural-server/plugins/qwen_image.py` | new | `image`: concept thumbnails + orthographic turnaround prompt templates |
 | `examples/neural-server/plugins/unimate.py` | new | `motion` text → tracks for a given skeleton JSON |
+| `examples/neural-server/plugins/video_motion.py` | new | `motion` from a video: open pose-from-video model (pick one whose licence allows publishing outputs; record it) → per-bone tracks retargeted by `neural-motion.ts` (15) |
 | `examples/neural-server/plugins/unirig.py` | new | `rig` mesh → bones + weights |
 | `examples/neural-server/plugins/hairdeck.py` | new | `hair` image → cards + spring chains |
 | `examples/neural-server/plugins/dinov2.py` | new | `score`: embedding cosine render vs reference |

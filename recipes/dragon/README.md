@@ -60,7 +60,7 @@ model and `dragon.test.ts` holds them (`bun test recipes/dragon`).
 | Mass | ~7 t: ~7 m³ of flesh at ~1000 kg/m³ (water; reptile tissue ≈ 1000–1100) | volume × density from the compiled LOD2 mesh (`biology.ts`) |
 | Legs | bone ≈ 0.4 × flesh diameter → humerus + femur circumference ~1.26 m predicts ~26 t carrying mass, ~3.7× the actual 7 t (Campione & Evans quadruped scaling, bone circumference ∝ mass^0.36) — the legs are deliberately overbuilt (×1.3–1.5 thick lower limbs, flat pads) | Campione & Evans 2012, [BMC Biology 10:60](https://doi.org/10.1186/1741-7007-10-60) |
 | Wing loading | ~15 m² of membrane for ~7 t → ~4,500 N/m², ~20× a giant pterosaur's (~150–250 N/m²). **Stylised exaggeration: it does not fly**; a flying 7 t animal would need ~300 m² | Witton & Habib 2010, [PLoS ONE 5(11) e13982](https://doi.org/10.1371/journal.pone.0013982) |
-| Scales | hierarchy: big plates on back, shoulders and thighs; medium on the flanks (an area of rest, low contrast); tiny in the band between belly plates and flank; transverse ventral plates up the throat and under the tail (croc / monitor scutes); elongated along the body | croc/monitor photos above; Valve Dota 2 art guide ("areas of rest") |
+| Scales | VDM stamps (`stamps.ts`): one keeled scale per stamp, Poisson-scattered on the block-out, tips turned tailward by a flow (neck → torso → legs, out along the tail), overlapping into shingles; hierarchy: big plates on back, shoulders and thighs; medium on the flanks (an area of rest, low contrast); tiny in the band between belly plates and flank; transverse ventral plates up the throat and under the tail (croc / monitor scutes); elongated along the body | croc/monitor photos above; Valve Dota 2 art guide ("areas of rest") |
 | Horns | log-spiral sweeps (curvature ∝ e^(k·t)) growing from bony bosses ~1.45× their base radius, roots buried ≥ 0.5 × radius, skin colour creeping up the root, growth rings near the base | horn growth (ibex/bighorn); `_lib/creature/horn.ts` |
 | Eyes | deep orbit under a brow overhang, heavy upper and scaled lower lid, vertical slit pupil, forward-ish gaze | monitor / croc eyes |
 
@@ -95,8 +95,8 @@ model and `dragon.test.ts` holds them (`bun test recipes/dragon`).
 
 | LOD | Sculpt cell (body / head) | Keeps | Drops |
 |---|---|---|---|
-| 0 | 4.4 cm / 1.6 cm | scale relief (3 sizes), belly plate seams, horn rings, full tooth rows, membrane veins | — |
-| 1 | 8.5 cm / 4 cm | every mass, horns (tubes), spines, claws, every other tooth (larger) | rings, small teeth, veins, scale relief |
+| 0 | 4.4 cm / 1.6 cm | VDM scale stamps (graded by size, tips tailward, seams painted), horn-root collars, belly plate seams, horn rings, full tooth rows, membrane veins | — |
+| 1 | 8.5 cm / 4 cm | every mass, horns (tubes), spines, claws, every other tooth (larger); the big dorsal scale stamps and horn collars at reduced depth, scale paint | rings, small teeth, veins, small scale stamps |
 | 2 | 25 cm / 14 cm | silhouette: torso sculpt, tube legs / wing bones / tail, horns, fangs | all secondary forms |
 
 Thin parts (horns, claws, teeth, finger bones) are tubes at every LOD — a sculpt would need

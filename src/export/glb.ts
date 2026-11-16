@@ -1,5 +1,6 @@
 // glTF 2.0 binary writer. One material (the trim sheet) for the whole asset, one node per part
 // with its pivot as translation, and each part's motion baked as a looping animation clip.
+// Skinned assets add joint nodes + a skin per LOD tree (skin.ts) and their named clips (clips.ts).
 // Extras a stock viewer understands: light sockets → KHR_lights_punctual, glowing parts →
 // emissive (+ KHR_materials_emissive_strength), provenance → asset.copyright + KHR_xmp_json_ld.
 // `exportLodGlb` packs several LODs into ONE file (MSFT_lod alternates sharing materials,
@@ -7,9 +8,10 @@
 // KHR_materials_variants (variants.ts). Zero dependencies and byte-deterministic.
 
 import type { CompiledAsset, Part } from '../core/index.ts';
-import { Ts23dError } from '../core/index.ts';
+import { checkMeshAttributes, Ts23dError } from '../core/index.ts';
 import { AUDIO_EMITTER, writeAudio } from './audio.ts';
 import { BinWriter, type Json } from './bin-writer.ts';
+import { animationsOf, type ClipTree, Z_UP_TO_Y_UP } from './clips.ts';
 import { concat, packGlb } from './container.ts';
 import { withCredits } from './credits.ts';
 import type { GlbOptions, GlbResult, LodGlbResult } from './glb-options.ts';
@@ -30,23 +32,9 @@ import { materialExtensions } from './pbr.ts';
 import { finishPlan } from './pbr-plan.ts';
 import { writePhysics } from './physics.ts';
 import { profiled } from './profile.ts';
+import { nodeNames, writeSkin } from './skin.ts';
 import { sheetGltf } from './textures.ts';
 import { MATERIALS_VARIANTS, paintPlan, unpaintParts } from './variants.ts';
-
-// Viewers auto-play the FIRST clip and glTF has no "paused" flag, so the first clip is `rest`: two
-// keys holding the root's rest rotation. The file opens still; pick `run` to play it.
-// Authoring frame: Z up, +X front. glTF: Y up, +Z front, +X = the asset's left. This root
-// rotation maps +X→+Z, +Z→+Y, +Y→+X (verified numerically), so assets face forward in engines.
-const Z_UP_TO_Y_UP = [-0.5, -0.5, -0.5, 0.5];
-function restClip(bin: BinWriter, roots: readonly number[]): Json {
-  const input = bin.accessor(new Float32Array([0, 1]), 'SCALAR', undefined, true);
-  const output = bin.accessor(new Float32Array([...Z_UP_TO_Y_UP, ...Z_UP_TO_Y_UP]), 'VEC4');
-  return {
-    name: 'rest',
-    samplers: [{ input, output, interpolation: 'STEP' }],
-    channels: roots.map((node) => ({ sampler: 0, target: { node, path: 'rotation' } })),
-  };
-}
 
 export type { GlbOptions, GlbResult, LodGlbResult } from './glb-options.ts';
 
@@ -111,6 +99,9 @@ function prepare(input: CompiledAsset, o: GlbOptions, glow: readonly GlowRule[])
 }
 
 function prepareUncached(input: CompiledAsset, o: GlbOptions, glow: readonly GlowRule[]) {
+  // Skin / morph attributes must line up before merging and welding reshuffle them.
+  for (const p of input.parts)
+    if (p.mesh) checkMeshAttributes(p.mesh, `part '${p.name}' in '${input.name}'`);
   const opt = o.optimize === false ? false : o.optimize === true ? {} : (o.optimize ?? {});
   const merged = o.keepParts
     ? input
@@ -157,23 +148,34 @@ export function exportLodGlb(lods: readonly CompiledAsset[], o: GlbOptions = {})
     ...finish.materials,
   ]);
   const doc = newDoc(new BinWriter());
-  const roots = preps.map(({ asset, glowOf }, k) =>
-    writeHierarchy(doc, asset, k === 0 ? asset.name : `${asset.name}_LOD${asset.lod}`, {
-      withSheet,
-      animations: o.animations === true,
-      materialOf: (part, i) => {
-        const g = glowOf(part, i);
-        if (g >= 0) return glowAt + g;
-        const slot = part.paint === undefined ? undefined : paint.slotMaterial.get(part.paint);
-        const fin = part.finish === undefined ? undefined : finish.index.get(part.finish);
-        return slot ?? fin ?? mats.index.get(part.surface ?? 'opaque') ?? 0;
+  // Each LOD tree: parts, then its joint nodes + skin (a skinned asset); clips key both.
+  const skins: Json[] = [];
+  const trees: ClipTree[] = [];
+  const roots = preps.map(({ asset, glowOf }, k) => {
+    const root = writeHierarchy(
+      doc,
+      asset,
+      k === 0 ? asset.name : `${asset.name}_LOD${asset.lod}`,
+      {
+        withSheet,
+        animations: o.animations === true,
+        materialOf: (part, i) => {
+          const g = glowOf(part, i);
+          if (g >= 0) return glowAt + g;
+          const slot = part.paint === undefined ? undefined : paint.slotMaterial.get(part.paint);
+          const fin = part.finish === undefined ? undefined : finish.index.get(part.finish);
+          return slot ?? fin ?? mats.index.get(part.surface ?? 'opaque') ?? 0;
+        },
+        primitiveExtensions: (part, i) =>
+          part.paint === undefined || glowOf(part, i) >= 0
+            ? undefined
+            : paint.primitiveExtensions(part.paint),
       },
-      primitiveExtensions: (part, i) =>
-        part.paint === undefined || glowOf(part, i) >= 0
-          ? undefined
-          : paint.primitiveExtensions(part.paint),
-    }),
-  );
+    );
+    const parts = nodeNames(doc, root + 1, doc.nodes.length);
+    trees.push({ parts, joints: writeSkin(doc, skins, asset, root) });
+    return root;
+  });
   for (const r of roots) {
     const node = doc.nodes[r];
     if (node) node['rotation'] = Z_UP_TO_Y_UP;
@@ -201,13 +203,23 @@ export function exportLodGlb(lods: readonly CompiledAsset[], o: GlbOptions = {})
       : writeAudio(doc.nodes, top, roots[0] ?? 0, roots[1] ?? doc.nodes.length);
   // Physics reads the unmerged LOD0 parts; its hull/trimesh accessors precede the seal too.
   const phys = physOpts
-    ? writePhysics(doc, top, roots[0] ?? 0, roots[1] ?? doc.nodes.length, physOpts)
+    ? writePhysics(
+        doc,
+        top,
+        roots[0] ?? 0,
+        roots[1] ?? doc.nodes.length,
+        physOpts,
+        trees[0]?.joints,
+      )
     : null;
   // Every accessor — the rest clip's included — must be written BEFORE the buffer is sealed.
-  const { bin, lights, samplers, channels } = doc;
-  const animations = channels.length
-    ? [restClip(bin, roots), { name: 'run', samplers, channels }]
-    : [];
+  const { bin, lights } = doc;
+  const animations = animationsOf(
+    doc,
+    roots,
+    trees,
+    o.animations === true ? (top.clips ?? []) : [],
+  );
   const geometry = bin.bytes();
   const tex = o.sheet ? sheetGltf(o.sheet, bin.views, geometry.byteLength) : null;
   const body = tex?.tail.byteLength ? concat(geometry, tex.tail) : geometry;
@@ -245,6 +257,7 @@ export function exportLodGlb(lods: readonly CompiledAsset[], o: GlbOptions = {})
     scenes: [{ name: top.name, nodes: [0] }],
     nodes: doc.nodes,
     meshes: doc.meshes,
+    ...(skins.length ? { skins } : {}),
     materials,
     ...(tex ? tex.json : {}),
     buffers: [{ byteLength: body.byteLength }],

@@ -37,8 +37,8 @@ export interface OptimizeReport {
 const MAX_WELD = 0.01;
 
 function reorderVertices(m: Mesh, order: Uint32Array, indices: Uint32Array): Mesh {
-  const pick = (src: Float32Array, w: number): Float32Array => {
-    const out = new Float32Array(order.length * w);
+  const pick = <T extends Float32Array | Uint16Array>(src: T, w: number): T => {
+    const out = new (src.constructor as new (n: number) => T)(order.length * w);
     for (let j = 0; j < order.length; j++)
       for (let k = 0; k < w; k++) out[j * w + k] = src[(order[j] ?? 0) * w + k] ?? 0;
     return out;
@@ -49,6 +49,11 @@ function reorderVertices(m: Mesh, order: Uint32Array, indices: Uint32Array): Mes
     uvs: pick(m.uvs, 2),
     colors: pick(m.colors, 3),
     indices,
+    // Skin and morph attributes ride the same vertex order.
+    ...(m.joints && m.weights ? { joints: pick(m.joints, 4), weights: pick(m.weights, 4) } : {}),
+    ...(m.morphs
+      ? { morphs: m.morphs.map((t) => ({ name: t.name, positions: pick(t.positions, 3) })) }
+      : {}),
   };
 }
 

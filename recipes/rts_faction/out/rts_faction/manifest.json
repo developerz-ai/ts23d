@@ -372,6 +372,14 @@
   "surfaces": [
     "opaque"
   ],
+  "clips": [
+    {
+      "name": "run",
+      "seconds": 4,
+      "loop": true,
+      "speed": 0
+    }
+  ],
   "paint": {
     "team": "#b3261e"
   },

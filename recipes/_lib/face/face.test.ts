@@ -94,6 +94,20 @@ describe('face base + landmark warp', () => {
     );
   });
 
+  it('muzzle pushes the lips and chin forward, never the brow or the crown', () => {
+    const at = (c: Character, n: string): Vec3 => {
+      const p = warpPairs(c, createRng(1));
+      return p.to[p.names.indexOf(n as never)] ?? [0, 0, 0];
+    };
+    const flat = who();
+    const snout = who({ ...HUMAN, muzzle: 0.05 });
+    const dx = (n: string): number => at(snout, n)[0] - at(flat, n)[0];
+    expect(dx('labraleSup')).toBeCloseTo(0.05 * BASE_H, 6);
+    expect(dx('pogonion')).toBeGreaterThan(0.03 * BASE_H);
+    expect(dx('glabella')).toBe(0);
+    expect(dx('crown')).toBe(0);
+  });
+
   it('is deterministic, and asymmetry is seeded', () => {
     const c = who(RACES.elf, { asym: 1, age: 0.5, weight: 0.3 });
     const a = warpPairs(c, createRng(7));

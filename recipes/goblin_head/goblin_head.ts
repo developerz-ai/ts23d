@@ -5,7 +5,7 @@
 // down and a knotted red scarf; a turned plinth. Sculpted by the shared bust library (stages
 // block-out → planes → features → lines); dossier: recipes/goblin_head/README.md.
 
-import { defineAsset } from '@developerz.ai/ts23d';
+import { defineAsset, headClips } from '@developerz.ai/ts23d';
 import { bustEdits } from '../_lib/bust/bust.ts';
 import { proportionCheck } from '../_lib/face/proportions.ts';
 import { buildGoblin, GOBLIN_BUST } from './build.ts';
@@ -13,6 +13,7 @@ import { GOBLIN_CREASES } from './creases.ts';
 import { GOBLIN_PROPORTIONS, SK } from './spec.ts';
 
 export const goblin_head = defineAsset({
+  clips: headClips('face'),
   name: 'goblin_head',
   kind: 'character',
   description:
@@ -24,8 +25,10 @@ export const goblin_head = defineAsset({
     'docs/research/head-analysis.md (human anchor ratios, Lee Perry-Smith scan, CC BY 3.0)',
   ],
   // Design spec (an invented character): overall size as built; the measure is the eye spacing.
+  // Length is nose tip → back of the bust (0.223 m): card hair lies on the skull, where the old
+  // sculpted wisps stood 2 cm proud behind it (0.235 m).
   real: {
-    length: 0.242,
+    length: 0.223,
     width: 0.35,
     height: 0.482,
     measures: [

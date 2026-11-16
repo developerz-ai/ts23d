@@ -13,13 +13,16 @@ import {
 import { runChecks } from './checks.ts';
 import { clashes } from './clash.ts';
 import { connections } from './connections.ts';
+import { deform } from './deform.ts';
 import { floatingParts } from './floating.ts';
+import { gait } from './gait.ts';
 import { gaps } from './gaps.ts';
 import { joints } from './joints.ts';
 import { mass } from './mass.ts';
 import { measures } from './measures.ts';
 import { hiddenParts } from './occlusion.ts';
 import { degenerateTriangles, nonFinite, normalsMatchWinding, vertexColors } from './sanity.ts';
+import { skin } from './skin.ts';
 import { treads } from './treads.ts';
 import type { Finding, Gate } from './types.ts';
 import { weatherGate } from './weather.ts';
@@ -135,6 +138,9 @@ export const DEFAULT_GATES: readonly Gate[] = [
   normalsMatchWinding,
   degenerateTriangles,
   weatherGate,
+  skin,
+  deform,
+  gait,
 ];
 
 export function runQa(asset: CompiledAsset, gates: readonly Gate[] = DEFAULT_GATES): Finding[] {

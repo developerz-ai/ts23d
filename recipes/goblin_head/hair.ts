@@ -1,13 +1,15 @@
 // Goblin hair: pale wisps — a few thin tapered locks straggling up and back off a warty dome, each
 // rooted in the scalp, toned grey at the root and near-white at the tip, no two alike (seeded).
-// Card hair (`hairBaseEdits` + `goblinCardHair`): no sculpted wisps, a few thin clumped strand
-// cards standing up and back off the bare dome.
+// Card hair (`hairBaseEdits` + `goblinCardHair`): no sculpted wisps; sparse stray-strand cards
+// rooted on the skull (`bustScalp`): a thin patch over the crown and two tufts behind the ears,
+// standing up off the dome and curling back under their own weight, grey roots to white tips.
 
-import { type Field, type SculptEdit, sculptField, type Vec3 } from '@developerz.ai/ts23d';
+import type { Field, SculptEdit, Vec3 } from '@developerz.ai/ts23d';
+import type { BustRecipe } from '../_lib/bust/bust.ts';
 import { lock, mix } from '../_lib/bust/hair.ts';
-import { headBlock } from '../_lib/bust/head.ts';
 import { type Surface, spline, surface, type V } from '../_lib/bust/kit.ts';
-import { C, H, L, SPEC } from './spec.ts';
+import { bustHairFields } from '../_lib/face/hair-cards.ts';
+import { C, H, L, SK } from './spec.ts';
 
 export function hairEdits(scalp: Field, lod: number): SculptEdit[] {
   const s = surface(scalp);
@@ -56,36 +58,65 @@ export function wispRoot(s: Surface, dx: number, dy: number): V {
 /** No sculpted hair under the cards: the dome stays bare skin. */
 export const hairBaseEdits = (_scalp: Field, _lod: number): SculptEdit[] => [];
 
-/** Card wisps for `cardHair`: sparse, thin, standing up and back off the crown. */
-export function goblinCardHair() {
-  const field = sculptField([headBlock(SPEC, 2)], { color: C.hairRoot, mirror: 'y' }).field;
-  const crown: Vec3 = [L.gx - 0.5 * H, 0, L.crown];
-  // A patch over the crown, 0.32 H across.
-  const region: Field = (p) =>
-    Math.hypot((p[0] - crown[0]) * 0.8, p[1], Math.min(0, p[2] - crown[2] + 0.12 * H)) - 0.32 * H;
+/** Card wisps for `cardHair` on the goblin bust `b`: a sparse crown patch and two tufts behind
+ *  the ears, thin stray strands standing up and curling back. */
+export function goblinCardHair(b: BustRecipe, lod: number) {
+  const { skin } = bustHairFields(b, lod);
+  const crown: Vec3 = [SK.crown[0] - 0.02 * H, 0, SK.crown[2]];
+  const patch: Field = (p) =>
+    Math.hypot((p[0] - crown[0]) * 0.8, p[1], Math.min(0, p[2] - crown[2] + 0.12 * H)) - 0.3 * H;
+  // Behind each ear, a hand's width above the mastoid.
+  const tuft: Field = (p) =>
+    Math.hypot(
+      p[0] - (SK.earBack[0] - 0.035),
+      Math.abs(p[1]) - Math.abs(SK.earBack[1]) * 0.8,
+      p[2] - (SK.earTop[2] + 0.01),
+    ) - 0.028;
   return {
-    field,
+    field: skin,
     bounds: [
-      [L.back - 0.03, -0.12, L.crown - 0.35 * H],
-      [L.gx + 0.03, 0.12, L.crown + 0.03],
+      [L.back - 0.03, -0.12, SK.mastoid[2]],
+      [L.gx + 0.03, 0.12, SK.crown[2] + 0.03],
     ] as [Vec3, Vec3],
     cell: 0.004,
-    comb: (p: Vec3): Vec3 => [-1, Math.sign(p[1]) * 0.4, 0.5],
+    comb: (p: Vec3): Vec3 => [-1, Math.sign(p[1]) * 0.5, 0.35],
+    collide: skin,
+    segments: 5,
     color: mix(C.hairRoot, C.hairTip, 0.4),
     layers: [
       {
         name: 'wisps',
-        kind: 'hair',
-        region,
-        density: 900,
-        length: 0.075,
-        width: 0.006,
-        lift: 0.9,
-        bend: 0.55,
-        droop: 0.15,
+        kind: 'wisp',
+        region: patch,
+        density: 1500,
+        length: 0.07,
+        width: 0.009,
+        lift: 0.75,
+        bend: 0.7,
+        droop: 0.45,
         roll: 1.2,
         clump: 3,
-        tone: [0.75, 1.25],
+        fold: 0.3,
+        hug: 0.15,
+        tone: [0.7, 1.2],
+        tint: [1.05, 1.05, 1.12],
+      },
+      {
+        name: 'tufts',
+        kind: 'wisp',
+        region: tuft,
+        density: 5000,
+        length: 0.05,
+        width: 0.009,
+        lift: 0.5,
+        bend: 0.6,
+        droop: 0.5,
+        roll: 1,
+        clump: 3,
+        fold: 0.3,
+        hug: 0.15,
+        tone: [0.7, 1.15],
+        tint: [1.05, 1.05, 1.12],
       },
     ] as const,
   };

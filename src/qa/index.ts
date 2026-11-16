@@ -81,6 +81,7 @@ export {
   VECTOR_RENDER,
   type VectorImage,
 } from './critique-vector.ts';
+export { deform, deformFindings, romPoses } from './deform.ts';
 export {
   type DepthView,
   depthView,
@@ -98,6 +99,7 @@ export {
   furSilhouette,
   furSilhouetteCheck,
 } from './fur-silhouette.ts';
+export { gait, gaitFindings } from './gait.ts';
 export { gapOverlay, gapZoom } from './gap-overlay.ts';
 export {
   describeGap,
@@ -132,6 +134,7 @@ export {
 export { type Ruler, ruler, type Size } from './measure.ts';
 export { measure, measures } from './measures.ts';
 export { hiddenParts, zFighting } from './occlusion.ts';
+export { poseFrames } from './pose-frames.ts';
 export {
   compareFingerprints,
   type Fingerprint,
@@ -158,6 +161,7 @@ export {
   refSilhouette,
 } from './ref-gate.ts';
 export { degenerateTriangles, nonFinite, normalsMatchWinding, vertexColors } from './sanity.ts';
+export { BIND_TOLERANCE, SUM_TOLERANCE, skin, skinFindings } from './skin.ts';
 export { findSlits, type Slit, type SlitOptions } from './slits.ts';
 export { treads } from './treads.ts';
 export { CLASH_EPS, CONTACT_EPS, codeOf, type Finding, type Gate, qaCode } from './types.ts';

@@ -148,7 +148,26 @@ describe('creatureHeadFur', () => {
     });
     expect(m).not.toBeNull();
     const P = m?.positions ?? new Float32Array(0);
-    for (let i = 0; i < P.length; i += 24) {
+    const I = m?.indices ?? new Uint32Array(0);
+    // Each card is one connected strip; its first two vertices straddle its buried root (flat or
+    // folded cards alike).
+    const first = new Map<number, number>();
+    const comp = new Int32Array(P.length / 3).map((_, i) => i);
+    const find = (i: number): number => {
+      let r = i;
+      while ((comp[r] ?? r) !== r) r = comp[r] ?? r;
+      return r;
+    };
+    for (let t = 0; t < I.length; t += 3)
+      for (let k = 1; k < 3; k++) {
+        const a = find(I[t] ?? 0);
+        const b = find(I[t + k] ?? 0);
+        if (a !== b) comp[Math.max(a, b)] = Math.min(a, b);
+      }
+    for (let i = 0; i < P.length / 3; i++) if (!first.has(find(i))) first.set(find(i), i);
+    expect(first.size).toBeGreaterThan(10);
+    for (const v of first.values()) {
+      const i = v * 3;
       const r: Vec3 = [
         ((P[i] ?? 0) + (P[i + 3] ?? 0)) / 2,
         ((P[i + 1] ?? 0) + (P[i + 4] ?? 0)) / 2,

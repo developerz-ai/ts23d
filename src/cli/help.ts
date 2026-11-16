@@ -46,6 +46,8 @@ const FLAGS = `flags:
   --no-shot       build without rendering hero.png and the contact sheet
   --size WxH      beauty render size (default 1600x900) · --az <deg> camera azimuth from the
                   front, default -35 (front-left 3/4) · --el <deg> elevation, default 18 · --fov <deg> 30
+  --quality path  hero: path traced (sun + sky, bounces, skin diffusion, strand lobes; deterministic,
+                  slower) instead of the raster · --spp <n> samples per pixel, default 64
   --sheet <mode>  external (default): one shared trim_sheet_{albedo,normal,orm}.png in <out>/,
                   referenced by every GLB · embed: self-contained GLBs · none: vertex colour only
   --sheet-size n  512 | 1024 | 2048 (default, ~3 s) | 4096 (final exports, ~18 s)

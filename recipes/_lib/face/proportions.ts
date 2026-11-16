@@ -74,9 +74,9 @@ export const HUMAN_PROPORTIONS: ProportionTable = {
 };
 
 /** First crossing of `f` going out from `from` along `dir` (unit), metres; Infinity if none. */
-function reach(f: Field, from: Vec3, dir: Vec3, max = 0.2): number {
+function reach(f: Field, from: Vec3, dir: Vec3, max = 0.5): number {
   let t = 0;
-  for (let i = 0; i < 400 && t < max; i++) {
+  for (let i = 0; i < 1000 && t < max; i++) {
     const p: Vec3 = [from[0] + dir[0] * t, from[1] + dir[1] * t, from[2] + dir[2] * t];
     if (f(p) > 0) return t;
     t += 0.0005;

@@ -8,10 +8,11 @@
 
 import type { Vec3 } from '../core/index.ts';
 import { invalid } from './check.ts';
-import { isAdd, type SculptEdit, sculptShape, shapeSphere } from './sculpt-edit.ts';
+import { isAdd, isPush, type SculptEdit, sculptShape, shapeSphere } from './sculpt-edit.ts';
 import { fieldShape } from './sculpt-field.ts';
 import { compileStroke } from './sculpt-stroke.ts';
 import { type BlendKernel, cubicMin, type Field, smoothWeight } from './sdf-ops.ts';
+import { compileVdm } from './vdm.ts';
 
 const ADD = 0;
 const SUB = 1;
@@ -54,13 +55,18 @@ export function compile(
   path = 'sculpt',
   kernel: BlendKernel = 'quad',
 ): Node[] {
-  if (!edits.some((e) => !('stroke' in e) && isAdd(e)))
+  if (!edits.some((e) => !isPush(e) && isAdd(e)))
     invalid(`${path} has no add edits, so nothing to carve from`, "make the first edit op: 'add'");
   return edits.map((e, i): Node => {
     const m = e.mirror ?? mirror;
-    if ('stroke' in e) {
-      const s = compileStroke(e, `${path} edit ${i} (${e.stroke} stroke)`, m);
-      const n = node(STROKE, e.depth, null, null, null, base, 0, s.c, s.r, 1, false, m, 0);
+    if ('stroke' in e || 'vdm' in e) {
+      // A VDM stamp compiles to the same displacement contract as a stroke (mirror baked in).
+      const s =
+        'vdm' in e
+          ? compileVdm(e, `${path} edit ${i} (vdm)`, m)
+          : { ...compileStroke(e, `${path} edit ${i} (${e.stroke} stroke)`, m), depth: e.depth };
+      const mm = !('vdm' in e) && m;
+      const n = node(STROKE, s.depth, null, null, null, base, 0, s.c, s.r, 1, false, mm, 0);
       return { ...n, stroke: s.apply, extra: s.extra };
     }
     const op = OPS[e.op ?? 'add'];

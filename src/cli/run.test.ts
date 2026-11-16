@@ -174,3 +174,37 @@ it('t3d blueprint writes <out>/<asset>/blueprint.png only', async () => {
   expect(await Bun.file(join(out, 'bp', 'crate', 'blueprint.png')).exists()).toBe(true);
   expect(await Bun.file(join(out, 'bp', 'crate', 'lod0.glb')).exists()).toBe(false);
 });
+
+it('writes materials a recipe defines inside build() into the external sheet (D47)', async () => {
+  const fixture = join(out, 'late.ts');
+  const lib = join(import.meta.dir, '../index.ts');
+  await Bun.write(
+    fixture,
+    `import { box, defineAsset, defineMaterial } from '${lib}';
+export const late = defineAsset({ name: 'late', kind: 'prop', budget: { triangles: [12, 12, 12] },
+  build: (ctx) => {
+    const m = defineMaterial({ id: 'cli_late_matte', roughness: 0.95 });
+    ctx.part('body', box({ size: [1, 1, 1], color: [1, 1, 1], strip: m }));
+  } });`,
+  );
+  const log = console.log;
+  console.log = () => {};
+  const dir = join(out, 'late-out');
+  const code = await run([
+    'build',
+    fixture,
+    '--out',
+    dir,
+    '--sheet-size',
+    '512',
+    '--size',
+    '160x90',
+  ]);
+  console.log = log;
+  expect(code).toBe(0);
+  const { DEFAULT_SHEET, paintTrimSheet } = await import('../material/index.ts');
+  const { sheetFileName, sheetPngs } = await import('../export/index.ts');
+  const expected = sheetPngs(paintTrimSheet({ ...DEFAULT_SHEET, size: 512 })).orm;
+  const written = new Uint8Array(await Bun.file(join(dir, sheetFileName('orm'))).arrayBuffer());
+  expect(Bun.hash(written)).toBe(Bun.hash(expected));
+});

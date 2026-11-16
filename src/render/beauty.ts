@@ -7,7 +7,7 @@
 
 import { type CompiledAsset, encodePng } from '../core/index.ts';
 import type { PaintedSheet } from '../material/index.ts';
-import { DEFAULT_SHEET, paintTrimSheet } from '../material/index.ts';
+import { DEFAULT_SHEET, liveSheet } from '../material/index.ts';
 import { ALPHA_CUT } from './alpha-mips.ts';
 import { frameOrbit, type PerspectiveCamera, scaled, zoomWindow } from './camera.ts';
 import { depthMap } from './depth-map.ts';
@@ -51,12 +51,9 @@ export interface BeautyRender {
   readonly detail: Uint32Array;
 }
 
-let defaultSheet: PaintedSheet | undefined;
-const sheetOf = (o: BeautyOptions): PaintedSheet => {
-  if (o.sheet) return o.sheet;
-  defaultSheet ??= paintTrimSheet({ ...DEFAULT_SHEET, size: 2048 });
-  return defaultSheet;
-};
+// Repaints when a recipe defined materials since the last render (D47).
+const defaultSheet = liveSheet({ ...DEFAULT_SHEET, size: 2048 });
+const sheetOf = (o: BeautyOptions): PaintedSheet => o.sheet ?? defaultSheet.current().sheet;
 
 export function cameraFor(asset: CompiledAsset, o: BeautyOptions = {}): PerspectiveCamera {
   const v = checkBeautyOptions(o);

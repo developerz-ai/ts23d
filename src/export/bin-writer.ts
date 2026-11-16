@@ -16,6 +16,11 @@ export class BinWriter {
   readonly views: Json[] = [];
   readonly accessors: Json[] = [];
 
+  /** A bare bufferView of `data` (sparse indices / values); no accessor. */
+  view(data: Float32Array | Uint32Array | Uint16Array): number {
+    return this.push(new Uint8Array(data.buffer, data.byteOffset, data.byteLength));
+  }
+
   private push(bytes: Uint8Array, target?: number): number {
     const pad = (4 - (this.length % 4)) % 4;
     if (pad) {
@@ -35,14 +40,14 @@ export class BinWriter {
 
   accessor(
     data: Float32Array | Uint32Array | Uint16Array,
-    type: 'SCALAR' | 'VEC2' | 'VEC3' | 'VEC4',
+    type: 'SCALAR' | 'VEC2' | 'VEC3' | 'VEC4' | 'MAT4',
     target?: number,
     bounds = false,
     /** Integer data read as 0..1 (vertex colour as normalised unsigned short). */
     normalized = false,
   ): number {
     const view = this.push(new Uint8Array(data.buffer, data.byteOffset, data.byteLength), target);
-    const width = { SCALAR: 1, VEC2: 2, VEC3: 3, VEC4: 4 }[type];
+    const width = { SCALAR: 1, VEC2: 2, VEC3: 3, VEC4: 4, MAT4: 16 }[type];
     const acc: Json = {
       bufferView: view,
       componentType:

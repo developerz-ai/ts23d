@@ -1,16 +1,19 @@
 // The strand atlas: cutout clump cells painted into ONE custom strip row (`fur_clumps`,
 // `hair_clumps` in creature.ts), so every hair/fur card of an asset is one draw on the shared
 // sheet. The row splits along U into `STRAND_CELLS` cells; each holds one clump of seeded tapered
-// strands running root (low U) → tip (high U) across the inner V band, with alpha = coverage,
-// a root → tip tone ramp (vertex colour carries the hue) and a per-strand height ridge for the
-// normal map. Variants: fur (dense short), guard (sparse, dark-tipped), hair (long, fine), beard
-// (wiry). Cards map with `strandCells(strip, kind)`: the cell rects in sheet UV.
+// strands running root (low U) → tip (high U) across the inner V band. A clump is 1–3 sub-clumps:
+// strands start spread (dense, near-opaque root) and converge on their sub-clump's tip, the
+// outer strands shorter, so a card ends in pointed locks with alpha gaps, never a cut edge. Alpha =
+// coverage, a root → tip tone ramp (vertex colour carries the hue), a per-strand height ridge for
+// the normal map. Variants: fur (dense short), guard (sparse, dark-tipped), hair (long, fine),
+// wisp (a few stray strands: flyaways, silhouette), beard (wiry). Cards map with
+// `strandCells(strip, kind)`: the cell rects in sheet UV.
 
 import { createRng, Ts23dError } from '../core/index.ts';
 import type { MaterialPainter } from './paint/types.ts';
 import { STRIP_H, type StripId, stripRect, type UvRect } from './trim-sheet.ts';
 
-export type StrandKind = 'fur' | 'guard' | 'hair' | 'beard';
+export type StrandKind = 'fur' | 'guard' | 'hair' | 'wisp' | 'beard';
 export type StrandStrip = 'fur_clumps' | 'hair_clumps';
 
 /** Cells per strand row (512 px each at the 4096² house size). */
@@ -22,17 +25,20 @@ const BAND_U = 0.02;
 /** What each cell of each strand strip holds, in U order. */
 export const STRAND_LAYOUT: Readonly<Record<StrandStrip, readonly StrandKind[]>> = {
   fur_clumps: ['fur', 'fur', 'fur', 'fur', 'guard', 'guard', 'guard', 'guard'],
-  hair_clumps: ['hair', 'hair', 'hair', 'hair', 'hair', 'beard', 'beard', 'beard'],
+  hair_clumps: ['hair', 'hair', 'hair', 'wisp', 'wisp', 'beard', 'beard', 'beard'],
 };
 
 interface Clump {
-  /** Strands per cell (15–40: a card shows a clump, not one hair). */
+  /** Strands per cell (a card shows a clump, not one hair). */
   readonly count: number;
-  /** Root radius as a share of the band (≥ 0.035: thinner strands vanish in the alpha mips). */
+  /** Root radius as a share of the band (≥ 0.03: thinner strands vanish in the alpha mips). */
   readonly width: number;
-  /** Roots spread over this share of the band; pull toward the clump axis at the tip (0..1). */
+  /** Roots spread over this share of the band; pull toward the sub-clump tip (0..1). */
   readonly spread: number;
   readonly clump: number;
+  /** Sub-clumps per cell (each converges on its own tip) and how much shorter their edges are. */
+  readonly subs: number;
+  readonly point: number;
   /** Where a strand starts (share of the cell, staggered) and its length range. */
   readonly start: number;
   readonly length: readonly [number, number];
@@ -46,12 +52,14 @@ interface Clump {
 const CLUMPS: Readonly<Record<StrandKind, Clump>> = {
   // Undercoat: soft, pale, wavy, short strands.
   fur: {
-    count: 20,
+    count: 18,
     width: 0.04,
     spread: 0.8,
     clump: 0.45,
+    subs: 2,
+    point: 0.35,
     start: 0.25,
-    length: [0.45, 0.75],
+    length: [0.5, 0.75],
     wave: 0.04,
     waves: 2,
     tone: [
@@ -62,12 +70,14 @@ const CLUMPS: Readonly<Record<StrandKind, Clump>> = {
   },
   // Agouti guard hair (wolf, many canids and rodents): grey base, pale band, dark tip.
   guard: {
-    count: 16,
+    count: 14,
     width: 0.042,
-    spread: 0.7,
-    clump: 0.7,
-    start: 0.15,
-    length: [0.7, 1],
+    spread: 0.75,
+    clump: 0.55,
+    subs: 2,
+    point: 0.45,
+    start: 0.12,
+    length: [0.75, 1],
     wave: 0.015,
     waves: 1,
     tone: [
@@ -75,32 +85,54 @@ const CLUMPS: Readonly<Record<StrandKind, Clump>> = {
       [0.3, 0.7],
       [0.4, 1.05],
       [0.52, 1],
-      [0.62, 0.3],
-      [1, 0.14],
+      [0.62, 0.45],
+      [1, 0.32],
     ],
   },
+  // Head hair: 2–3 locks per card, long, pointed, separated strands.
   hair: {
-    count: 26,
-    width: 0.036,
-    spread: 0.8,
+    count: 16,
+    width: 0.034,
+    spread: 0.86,
     clump: 0.5,
-    start: 0.12,
-    length: [0.65, 0.88],
-    wave: 0.035,
-    waves: 1.5,
+    subs: 3,
+    point: 0.3,
+    start: 0.05,
+    length: [0.88, 1],
+    wave: 0.025,
+    waves: 1.2,
     tone: [
-      [0, 0.6],
-      [0.5, 0.9],
+      [0, 0.58],
+      [0.45, 0.9],
       [1, 1.05],
     ],
   },
+  // Flyaways and outline: a few stray strands, long, barely clumped.
+  wisp: {
+    count: 6,
+    width: 0.032,
+    spread: 0.7,
+    clump: 0.6,
+    subs: 2,
+    point: 0.5,
+    start: 0.15,
+    length: [0.6, 0.95],
+    wave: 0.08,
+    waves: 1.5,
+    tone: [
+      [0, 0.7],
+      [1, 1.1],
+    ],
+  },
   beard: {
-    count: 22,
-    width: 0.04,
+    count: 18,
+    width: 0.038,
     spread: 0.85,
-    clump: 0.3,
-    start: 0.2,
-    length: [0.45, 0.8],
+    clump: 0.4,
+    subs: 2,
+    point: 0.4,
+    start: 0.15,
+    length: [0.5, 0.85],
     wave: 0.08,
     waves: 3,
     tone: [
@@ -165,22 +197,33 @@ export function strandPainter(layout: readonly StrandKind[]): MaterialPainter {
       const r = (): number => rng.next();
       const x0 = cw * (cell + BAND_U);
       const len = cw * (1 - 2 * BAND_U);
-      const axis = 0.5 + gauss(r) * 0.04;
+      // Sub-clump centres across the spread, each with its own tip.
+      const subs = Array.from({ length: c.subs }, (_, i) => {
+        const at = 0.5 + c.spread * ((i + 0.5) / c.subs - 0.5) + gauss(r) * 0.03;
+        return { at, tip: at + (0.5 - at) * 0.35 + gauss(r) * 0.04 };
+      });
+      const half = c.spread / c.subs / 2;
       for (let k = 0; k < c.count; k++) {
         // Stratified roots across the band (gaps between strands), staggered along the cell.
         const root = 0.5 + c.spread * ((k + 0.2 + 0.6 * r()) / c.count - 0.5);
-        const tip = root + (axis - root) * c.clump + gauss(r) * 0.03;
+        let sub = subs[0] ?? { at: 0.5, tip: 0.5 };
+        for (const q of subs) if (Math.abs(q.at - root) < Math.abs(sub.at - root)) sub = q;
+        // Outer strands of a lock are shorter: the lock ends in a point.
+        const e = Math.min(1, Math.abs(root - sub.at) / half);
+        const tip = root + (sub.tip - root) * c.clump + gauss(r) * 0.02;
         const t0 = c.start * r();
-        const L = len * Math.min(1 - t0, c.length[0] + (c.length[1] - c.length[0]) * r());
+        const reach = c.length[0] + (c.length[1] - c.length[0]) * r();
+        const L = len * Math.min(1 - t0, reach * (1 - c.point * e * e));
         const phase = r() * Math.PI * 2;
         const rw = band * c.width * (0.75 + 0.5 * r());
         const shade = 0.72 + 0.5 * r();
         const steps = Math.ceil(L / 0.5);
         for (let i = 0; i <= steps; i++) {
           const t = i / steps;
-          // Taper to nothing: the tip is a point, never a cut edge.
-          const rad = rw * (1 - t) ** 0.8;
-          if (rad < 0.15) break;
+          // Taper to a texel-wide core: a thinner strand would fall under the alpha cut and the
+          // lock would stop short. The point of a lock comes from its staggered lengths.
+          const rad = Math.max(0.6, rw * (1 - t) ** 0.7);
+          const fade = t > 0.97 ? 0.6 : 1;
           const yv =
             root + (tip - root) * t * t + c.wave * Math.sin(phase + t * c.waves * Math.PI * 2) * t;
           const px = x0 + len * t0 + L * t;
@@ -191,7 +234,7 @@ export function strandPainter(layout: readonly StrandKind[]): MaterialPainter {
             for (let x = Math.floor(px - rad - 1); x <= Math.ceil(px + rad + 1); x++) {
               if (x < 0 || x >= w) continue;
               const d = Math.hypot(x + 0.5 - px, y + 0.5 - py);
-              const a = Math.min(1, Math.max(0, rad + 0.5 - d));
+              const a = Math.min(1, Math.max(0, rad + 0.5 - d)) * fade;
               const j = y * w + x;
               if (a >= (cov[j] ?? 0)) tone[j] = tn;
               cov[j] = Math.max(cov[j] ?? 0, a);

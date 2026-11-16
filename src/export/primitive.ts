@@ -1,8 +1,11 @@
 // One mesh → one glTF primitive: POSITION (with bounds), NORMAL, TEXCOORD_0, COLOR_0 as unorm16
-// RGBA, TANGENT only when a normal map is bound, and the smallest index type that fits.
+// RGBA, TANGENT only when a normal map is bound, and the smallest index type that fits. Skinned
+// meshes add JOINTS_0 / WEIGHTS_0 (skin.ts), morphed ones sparse `targets` (morph-targets.ts).
 
 import type { Mesh } from '../core/index.ts';
 import { ARRAY_BUFFER, type BinWriter, ELEMENT_ARRAY_BUFFER, type Json } from './bin-writer.ts';
+import { morphTargets } from './morph-targets.ts';
+import { skinAttributes } from './skin.ts';
 import { tangentsOf } from './tangents.ts';
 
 export function writePrimitive(bin: BinWriter, m: Mesh, material: number, tangents: boolean): Json {
@@ -23,7 +26,9 @@ export function writePrimitive(bin: BinWriter, m: Mesh, material: number, tangen
       COLOR_0: bin.accessor(colors, 'VEC4', ARRAY_BUFFER, false, true),
       // A bound normal map needs a tangent space (validator S10 / G15).
       ...(tangents ? { TANGENT: bin.accessor(tangentsOf(m), 'VEC4', ARRAY_BUFFER) } : {}),
+      ...skinAttributes(bin, m),
     },
+    ...morphTargets(bin, m),
     // 16-bit indices whenever the primitive allows: half the bytes, every engine reads them.
     indices: bin.accessor(
       m.positions.length / 3 <= 65535 ? Uint16Array.from(m.indices) : m.indices,

@@ -10,6 +10,7 @@ Rule: critique and gallery heroes are judged under physically based light, byte-
 | `src/render/path/integrator.ts` + `.test.ts` | new | unidirectional PT, next-event estimation, Russian roulette with fixed seed |
 | `src/render/path/sky.ts` + `.test.ts` | new | procedural sky IBL + sun, importance sampled |
 | `src/render/path/sss.ts` + `.test.ts` | new | Burley normalised diffusion (random-walk-free, dipole profile) for `translucent` / skin zones |
+| `src/export/transmission.ts` + `.test.ts` | new | skin zones export `KHR_materials_diffuse_transmission` (+ `KHR_materials_volume` thickness from the 08 thickness map) so engines show thin ears/nostrils translucent too |
 | `src/render/path/hair.ts` + `.test.ts` | new | Kajiya-Kay + Marschner-lite lobes for cutout strand cards |
 | `src/render/path/denoise.ts` + `.test.ts` | new | à-trous wavelet guided by albedo + normal |
 | `src/render/path/path-hero.ts` + `.test.ts` | new | `pathHero(asset, o)` entry |

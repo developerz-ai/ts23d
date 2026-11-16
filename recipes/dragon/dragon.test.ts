@@ -3,7 +3,7 @@
 // compiles): run with `bun test recipes/dragon`.
 
 import { describe, expect, it } from 'bun:test';
-import { compile, sculptField } from '@developerz.ai/ts23d';
+import { compile, type SculptEdit, sculptField } from '@developerz.ai/ts23d';
 import {
   assertConnected,
   assertLodSilhouette,
@@ -16,6 +16,7 @@ import { dragon } from './dragon.ts';
 import { headEdits } from './head.ts';
 import { bossRegion, mainHornRoot } from './horns.ts';
 import { C } from './palette.ts';
+import { bodyStamps, hornCollars } from './stamps.ts';
 
 const SLOW = 180_000;
 
@@ -88,4 +89,37 @@ describe('LOD', () => {
     },
     SLOW,
   );
+});
+
+describe('VDM detail (stamps.ts)', () => {
+  const placesOf = (edits: readonly SculptEdit[]): { scale: number; depth?: number }[] =>
+    edits.flatMap((e) => ('vdm' in e ? e.places : []));
+
+  it(
+    'LOD2 carries no stamps; LOD1 only the big ones, shallower; LOD0 the full grade',
+    () => {
+      expect(bodyStamps(2, bodyField(2)).edits).toEqual([]);
+      const s0 = placesOf(bodyStamps(0, bodyField(0)).edits);
+      const s1 = placesOf(bodyStamps(1, bodyField(1)).edits);
+      expect(s0.length).toBeGreaterThan(150);
+      expect(s1.length).toBeGreaterThan(0);
+      expect(s1.length).toBeLessThan(s0.length / 2);
+      const deepest = (s: { depth?: number }[]) => Math.max(...s.map((q) => q.depth ?? 0));
+      expect(deepest(s1)).toBeLessThan(deepest(s0));
+      // Graded: the biggest scales at least 1.5× the smallest.
+      const sizes = s0.map((q) => q.scale);
+      expect(Math.max(...sizes) / Math.min(...sizes)).toBeGreaterThan(1.5);
+      // None crosses the folded midline (it would crease).
+      for (const e of bodyStamps(0, bodyField(0)).edits)
+        if ('vdm' in e) for (const q of e.places) expect(q.at[1]).toBeGreaterThan(q.scale * 0.7);
+    },
+    SLOW,
+  );
+
+  it('every off-midline horn grows from a ringed collar at LOD0 and LOD1, none at LOD2', () => {
+    const head = sculptField(headEdits(0), { color: C.flank }).field;
+    expect(placesOf(hornCollars(0, head)).length).toBe(4);
+    expect(placesOf(hornCollars(1, head)).length).toBe(4);
+    expect(hornCollars(2, head)).toEqual([]);
+  });
 });

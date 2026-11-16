@@ -51,6 +51,14 @@
   "surfaces": [
     "opaque"
   ],
+  "clips": [
+    {
+      "name": "run",
+      "seconds": 4,
+      "loop": true,
+      "speed": 0
+    }
+  ],
   "real": {
     "length": 11.12424647592461,
     "width": 7.405600000000001,

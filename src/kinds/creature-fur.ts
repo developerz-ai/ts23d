@@ -1,9 +1,9 @@
 // Creature fur as strand cards: the coat combed along the skeleton (tailward on the trunk, away
 // from the head down the neck, distal down the legs and tail, gravity on the flanks) in two
 // layers: a dense short undercoat lying almost flat (≤ 10°) and sparse agouti guard hair in
-// clumps (5 cards share a tip). Guard lengths follow the grey wolf's winter coat ×(coat ÷ 0.03):
-// 60–110 mm on the mane and back, 20–40 mm on the flanks, 10–15 mm on legs and face; zones per
-// family (mane, throat ruff, cheeks, elbows, breeches, tail). `creatureHeadFur` coats the head
+// clumps (5 cards share a tip), curved across their width (V section, `fold`). Guard
+// lengths follow the grey wolf's winter coat ×(coat ÷ 0.03): 60–110 mm on the mane and back,
+// 20–40 mm on the flanks, 10–15 mm on legs and face; zones per family (mane, throat ruff, cheeks, elbows, breeches, tail). `creatureHeadFur` coats the head
 // in its own frame (creature-head-fur.ts).
 // LOD0 dense (wolf ≈ 2–4k cards), LOD1 ¼ the cards ×2 wider, LOD2 none (the sculpt carries it).
 
@@ -185,6 +185,7 @@ export function layers(
       roll: 0.3,
       cells: strandCells('fur_clumps', 'fur'),
       tone: [0.6, 0.85],
+      hug: 0.6,
       sink,
     },
     {
@@ -199,6 +200,10 @@ export function layers(
       clump: 5,
       cells: strandCells('fur_clumps', 'guard'),
       tone: [0.75, 0.95],
+      // Guard locks are curved across their width (LOD0): a lock, not a chip, from every side.
+      fold: o.lod === 0 ? 0.6 : 0,
+      // The coat lies along the body where the body holds it up (back, flanks), hangs under it.
+      hug: 0.6,
       sink,
     },
   ];

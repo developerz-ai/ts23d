@@ -5,7 +5,7 @@
 // falling behind the ears; green gold-trimmed tunic with a high collar, teal cloak, silver clasp;
 // a turned plinth. Sculpted by the shared bust library; dossier: recipes/elf_head/README.md.
 
-import { defineAsset } from '@developerz.ai/ts23d';
+import { defineAsset, headClips } from '@developerz.ai/ts23d';
 import { bustEdits } from '../_lib/bust/bust.ts';
 import { proportionCheck } from '../_lib/face/proportions.ts';
 import { buildElf, ELF_BUST } from './build.ts';
@@ -13,6 +13,7 @@ import { ELF_CREASES } from './creases.ts';
 import { ELF_PROPORTIONS, SK } from './spec.ts';
 
 export const elf_head = defineAsset({
+  clips: headClips('face'),
   name: 'elf_head',
   kind: 'character',
   description:
