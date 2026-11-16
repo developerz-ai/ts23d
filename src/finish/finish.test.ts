@@ -3,8 +3,9 @@
 
 import { describe, expect, it } from 'bun:test';
 import { compile, Ts23dError } from '../core/index.ts';
+import { tex } from '../material/index.ts';
 import { cart, repaint, shifted, slabs } from './fixtures.ts';
-import { finishAsset, mockFinish } from './index.ts';
+import { atlasTexels, finishAsset, finishScene, mockFinish } from './index.ts';
 
 const SMALL = { views: 6, size: 96, atlas: 256 } as const;
 const codes = (r: { findings: readonly { code: string }[] }): string[] =>
@@ -94,5 +95,32 @@ describe('finishAsset — accepts', () => {
     const lamp = r.asset.parts.find((p) => p.name === 'lamp');
     expect(lamp).toBe(before.parts.find((p) => p.name === 'lamp'));
     expect(r.qa).toEqual([]);
+  });
+});
+
+describe('finishAsset — strip height per part', () => {
+  const ridges = tex.material({
+    height: tex.noise({ size: 0.05 }),
+    albedo: tex.constant(0.5),
+    roughness: 0.6,
+    depth: 0.004,
+  });
+  const flat = (n: Uint8Array): boolean => {
+    for (let i = 0; i < n.length; i += 4) if (n[i] !== 128 || n[i + 1] !== 128) return false;
+    return true;
+  };
+
+  it('no graph: a flat detail normal; a graph on one part: relief on that part only', async () => {
+    const lod0 = compile(slabs, { lod: 0 });
+    const o = { ...SMALL, model: mockFinish(), prompt: 'clean' };
+    expect(flat((await finishAsset(lod0, o)).maps.normal)).toBe(true);
+    const r = await finishAsset(lod0, { ...o, graphs: { left: ridges } });
+    expect(flat(r.maps.normal)).toBe(false);
+    const scene = finishScene(lod0, SMALL.atlas);
+    const tx = atlasTexels(scene);
+    const right = scene.names.indexOf('right');
+    for (let i = 0; i < tx.part.length; i++)
+      if (tx.part[i] === right)
+        expect([r.maps.normal[i * 4], r.maps.normal[i * 4 + 1]]).toEqual([128, 128]);
   });
 });

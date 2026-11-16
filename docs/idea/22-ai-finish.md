@@ -114,13 +114,34 @@ Writes `<out>/<asset>/finish/`: `controls/`, `model/<view>.png`, `finish_{albedo
 `compare.png` (before | after under one simple light), `<asset>_finish.glb`, `finish.json`. Exit 1
 on a finish finding or a QA finding.
 
+## 6. Hero texture tier (ADR 012, `heroTier`)
+
+No image model: the asset's own fine field is the source. A recipe opts in with
+`budget.heroTextures: { size: 2048, cell?: 0.0015 }`; a sculpting kind (`defineCreature`, the bust
+library's `buildBust(ctx, b, { hero: true })`) then meshes a lighter LOD0 and tags each sculpted
+part's mesh with its field (`withBakeSource`, passes). `heroTier(lod0, { size, cell })`:
+
+- LSCM atlas of LOD0 (the finish's `buildAtlas`; skin and morphs ride along);
+- per tagged part, `bakeHeight` (passes): from each texel's surface point, the nearest zero
+  crossing of the field along ±n inside the cage (8 cells), normal = ∇f at `cell` in the
+  exporter's tangent frame, height, mean curvature, SDF AO. The field is evaluated only there,
+  never meshed;
+- albedo = vertex colour × trim albedo; ORM = trim occlusion × AO, trim roughness + cavity, trim
+  metal; 6 texels of dilation; the hero asset's vertex colour turns white;
+- QA (`T3D_BAKE_FAILED`): ray misses ≥ 1 % on a part, texel density off the atlas by > ±20 %, a
+  size above `budget.heroTextures.size`.
+
+`heroGlb` puts LOD0 on one extra material, `ts23d_hero`; LOD1/2 stay on the trim sheet; the bake's
+numbers go to `extras.ts23d.hero`. CLI: `t3d finish <recipe> --hero` writes `<out>/<asset>/hero/`
+(`hero_{albedo,orm,normal,height}.png`, `<asset>_hero.glb`, `hero.json`).
+
 ## Known gaps
 
 - Lighting in a real model's images is baked into the albedo; ask for flat, even light (delighting
   is the model's job).
 - Charts that fail the LSCM gate at every cone fall back to box projection, which stretches up to
   √2 on 45° faces and can self-overlap on rare folded charts.
-- `finishAsset` does not yet pass a `height` to `deriveMaps` (planned: the part's strip graph), so
-  the finish's detail normal is flat until it does.
+- `finishAsset` passes a part's strip height to `deriveMaps` only when the caller names the graph
+  (`graphs: { part: materialGraph }`); looking a part's strip graph up from its trim UVs is planned.
 - Texels no view sees (undersides, occluded faces) get the tinted base colour, not model detail.
 - The hosted provider (kubeez) adapter is planned; the `httpFinish` contract is what it will speak.

@@ -6,6 +6,7 @@
 // green".
 
 import { loadAssets } from '../src/cli/load.ts';
+import { provideRecipeNeural } from '../src/cli/neural-store.ts';
 import { type CompiledAsset, compile, type Lod } from '../src/core/index.ts';
 import { toGlb } from '../src/export/index.ts';
 import { runLodQa, runQa } from '../src/qa/index.ts';
@@ -17,6 +18,7 @@ import {
   warnCritiques,
 } from './lib/critique.ts';
 import { recipeFolders, report, tsFiles, type Violation } from './lib/files.ts';
+import { neuralLicenceViolations } from './lib/neural-licence.ts';
 import { crossRecipeImports } from './lib/recipe-imports.ts';
 import { CURRENT_SHARD, inShard, type Shard } from './lib/shard.ts';
 
@@ -108,6 +110,7 @@ async function main(): Promise<void> {
   for (const f of all) violations.push(...crossRecipeImports(f, await Bun.file(f).text()));
   const mine = inShard(folders, CURRENT_SHARD);
   for (const { dir, file } of mine) {
+    violations.push(...(await neuralLicenceViolations(dir)));
     if (!(await Bun.file(`${dir}/README.md`).exists()))
       violations.push({
         file,
@@ -115,7 +118,15 @@ async function main(): Promise<void> {
         message: `${dir} has no README.md dossier`,
         fix: `write ${dir}/README.md from the template in recipes/README.md (specs + sources first)`,
       });
-    for (const asset of await loadAssets(file)) {
+    const loaded = await loadAssets(file);
+    // The committed neural cache (ADR 014), offline, as `t3d build` sees it: hybrids build their
+    // cached variant here too, so the committed out/ and this gate agree.
+    await provideRecipeNeural(
+      file,
+      loaded.map((a) => a.name),
+      false,
+    );
+    for (const asset of loaded) {
       const triangles: number[] = [];
       const lods: CompiledAsset[] = [];
       for (const lod of [0, 1, 2] as Lod[]) {

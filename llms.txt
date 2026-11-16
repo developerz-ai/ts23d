@@ -1,13 +1,26 @@
 # ts23d — TypeScript to 3D
 
-> @developerz.ai/ts23d (TypeScript to 3D) — a free, deterministic 3D asset generator driven by coding agents. Assets are TypeScript modules (never JSON) built with a DSL: `defineAsset({ name, kind, real, sources, budget, build(ctx) })`, where `build` adds named, pivoted, animatable parts from primitives (`box`, `lathe`, `cylinder`, `prism`, `beam`, `planar`) or from SVG drawings written as text (`extrudeSvg`, `latheSvg`, `visualHull` front/side silhouettes), places detail with `place`/`merge`, composes other assets with `ctx.use`, and gates detail on `ctx.lod`. It compiles to glTF/GLB for any engine (Unity, Unreal, Godot, three.js, Babylon) — ts23d generates assets only, the engine is yours — (3 LODs, one shared trim-sheet material, baked motion), fails a QA gate on floating parts, budget overruns and wrong real-world proportions, and renders a zero-GPU six-view contact-sheet PNG so a vision-capable agent can check its own work. The CLI needs Bun; the library imports under Node ≥ 22. Zero runtime dependencies, MIT. Status 0.x: stubs (`photoMatch`, `silhouetteIoU`, `localGenerator`, `kubeezImages`) throw T3D_NOT_IMPLEMENTED with the roadmap slice that builds them.
+> @developerz.ai/ts23d (TypeScript to 3D) — a free, deterministic 3D asset generator driven by coding agents. Assets are TypeScript modules (never JSON) built with a DSL: `defineAsset({ name, kind, real, sources, budget, build(ctx) })`, where `build` adds named, pivoted, animatable parts from primitives (`box`, `lathe`, `cylinder`, `prism`, `beam`, `planar`) or from SVG drawings written as text (`extrudeSvg`, `latheSvg`, `visualHull` front/side silhouettes), places detail with `place`/`merge`, composes other assets with `ctx.use`, and gates detail on `ctx.lod`. It compiles to glTF/GLB for any engine (Unity, Unreal, Godot, three.js, Babylon) — ts23d generates assets only, the engine is yours — (3 LODs, one shared trim-sheet material, baked motion), fails a QA gate on floating parts, budget overruns and wrong real-world proportions, and renders a zero-GPU six-view contact-sheet PNG so a vision-capable agent can check its own work. The CLI needs Bun; the library imports under Node ≥ 22. Zero runtime dependencies, MIT. Status 0.x: anything unbuilt throws T3D_NOT_IMPLEMENTED with the roadmap slice that builds it. Optional tier: any model or tool through a `NeuralAdapter` (no GPU? `kubeezAdapter` for images, a partner); outputs are cached inputs, so builds stay deterministic without them.
 
 ## Offline (inside your project)
 The npm package ships the docs, skills, recipe sources and examples, versioned with the code — read them without internet (As of 2026-11: recipe `out/` renders, PNGs, tests and source maps are not in the tarball; read those on GitHub):
 - `node_modules/@developerz.ai/ts23d/CLAUDE.md` — rules and the loop (the repo's `AGENTS.md` is a symlink to it and is not shipped)
 - `node_modules/@developerz.ai/ts23d/docs/` — DSL, IR, materials, agent loop, QA, kinds, decisions, roadmap
 - `node_modules/@developerz.ai/ts23d/recipes/<name>/` — idiomatic recipes, each with its research dossier (`README.md`); committed hero + contact sheet live in the GitHub repo under `recipes/<name>/out/`
-- `node_modules/@developerz.ai/ts23d/.claude/skills/author-recipe/SKILL.md` — copy into your `.claude/skills/`
+- `node_modules/@developerz.ai/ts23d/.claude/skills/<skill>/SKILL.md` — the recipe loop (`author-recipe`) and the artist workflows (`creature-artist`, `character-artist`, `hard-surface-artist`, `architect`, `prop-artist`, `rigger-animator`, `technical-artist`, …); plain markdown: read them in place or copy them into your agent's skills folder
+
+## For agents: the loop in ten lines
+The CLI with `--json` is the baseline interface (one envelope on stdout; every error a `T3D_*` code + `fix`). `t3d mcp` is an optional stdio MCP server with the same steps as tools, renders returned as images.
+1. Write `assets/<name>.ts` exporting `defineAsset({...})` (real sizes in metres, Z up, +X front).
+2. `bunx -p @developerz.ai/ts23d t3d build assets/<name>.ts --json` (MCP `build`) — QA verdict, findings with `fix`.
+3. Fix every finding (`explain_error` / docs/architecture/errors.md for a code); rebuild until QA PASS.
+4. `bunx -p @developerz.ai/ts23d t3d shot …` (MCP `shot`) — READ `out/<name>/sheet.png`; name the single worst error.
+5. Fix it, rebuild. `t3d hero` / `t3d blueprint` (MCP `hero`, `blueprint`) for the textured look and measures.
+6. `t3d review` (MCP `review`) — read `review/*.png`, follow `review.md`.
+7. `t3d critique` (MCP `critique`) — calibrated score pack; never score above what the renders show.
+8. Add LOD-gated detail, weather, repeat from 2.
+9. Stop when two looks in a row find nothing worth fixing.
+10. MCP setup (optional): `claude mcp add ts23d -- bunx -p @developerz.ai/ts23d t3d mcp` (any MCP client: command `bunx`, args `-p @developerz.ai/ts23d t3d mcp`, run in the project root). Tools only touch the project root and `--out`.
 
 ## The workflow
 The human names a thing ("Tiger I, mid-production 1943"). The agent researches specs and real photos into `recipes/<name>/README.md` (every number sourced), writes `recipes/<name>/<name>.ts` (in your project: `assets/<name>.ts`) with `sources` + `real.measures` from that dossier, compiles until QA PASS (budget, surface contact, clashes, proportions ±5%, measures ±2%), renders the six-view contact sheet, looks at it, adds LOD-gated detail, and iterates.

@@ -59,18 +59,42 @@ Lessons from the demo: measured cliffs beat simulated erosion (droplets rounded 
 flat water level cannot draw a river on a valley floor that falls 12 m in 2 km, and slope/altitude
 colouring misreads bare granite domes as forest — land cover is the next input.
 
-## Next: OpenStreetMap (planned, ODbL)
-Rivers, lakes, roads, rail, building footprints and land cover from OSM via the Overpass API, pinned
-the same way (query text + response sha256 + date). The licence is different in kind: **ODbL is
-share-alike for databases**. Plan:
-- Treat a recipe's committed OSM extract as a *Derivative Database*: it stays ODbL, credited
-  "© OpenStreetMap contributors, ODbL 1.0" with a link, and is offered under ODbL.
-- Generated meshes are a *Produced Work*: attribution required, the mesh itself need not be ODbL —
-  but the extract it came from must be available. Record that in `sources` and the GLB XMP.
-- Never mix OSM into a CC0 asset silently: `realFrom`-style helpers will carry a `licence` field and
-  the build will refuse an asset whose `license` contradicts its inputs.
-- First uses: river centrelines carved into a DEM (the Merced), lake polygons as water, footprints +
-  `building:levels` for massing, land cover (forest / meadow / bare rock) to replace slope colouring.
+## Shipped: OpenStreetMap (ODbL)
+`bun run data osm --bbox <minLon,minLat,maxLon,maxLat> --name <id> --out <file> [--source api|overpass]`
+fetches one small extract **once** (≤ 0.0025 deg², a block or two) and writes a `ts23d-osm/1`
+record: building footprints as counter-clockwise rings in metres from the bbox centre (x east,
+y north), `height`, `building:levels`, `min_height` and the address; road centrelines with their
+`highway` class; land-use areas (`landuse`, `leisure`, `natural`, `amenity`). The raw response is
+cached by sha256; the record carries the URL (and the Overpass query), that hash, the date, the
+licence and the attribution, plus a sha256 of its own features that `readOsm` re-checks
+(`T3D_DATA_HASH` on a hand edit). `--source api` (default) is the OSM editing API's `map` call,
+fine for a block; `--source overpass` sends the equivalent Overpass QL (`out body; >; out skel qt;`).
+
+```ts
+import { citeOsm, readOsm } from '@developerz.ai/ts23d/data';
+import { cityBlock } from '@developerz.ai/ts23d';
+import osm from './data/osm-west_village.json';
+
+const OSM = readOsm(osm);                       // verified, ODbL, metres
+cityBlock(ctx, OSM.buildings, { walls, roof, glass, ground, road, streets: OSM.roads });
+// asset: copyright: OSM.attribution, sources: [citeOsm(OSM)]
+```
+
+`cityBlock` (src/kinds/city.ts) extrudes each surveyed footprint to its tagged height (prism, not
+a box), seeds each building from a hash of its OSM id (wall colour, window bay), colours
+neighbours differently across shared walls, windows street-facing edges by a split-grammar line
+per storey and leaves party walls blank. The windows are one mesh: `cityWindows(plan)` gives their
+transforms for an instanced export (`toInstancedGlb`, EXT_mesh_gpu_instancing). Demo:
+`recipes/city_block` (West Village, Manhattan; 49 footprints with NYC-import heights; footprint
+IoU ≥ 0.9 and heights ±5 % are its tests).
+
+**Licence.** ODbL is share-alike for databases (ADR 015): the committed extract is a Derivative
+Database, stays ODbL and is credited "© OpenStreetMap contributors, ODbL 1.0" with a link; the
+built mesh is a **Produced Work** — attribution required, carried in the asset's `copyright` and
+`sources` (and so in the GLB). `city_block` declares `license: 'ODbL-1.0'`, never CC0.
+
+Next: rivers carved into a DEM, lakes as water, land cover replacing slope colouring, the
+`groundAt` DEM sampler wired in a recipe, facade kits (stoops, shopfronts, fire escapes).
 
 Other candidates, same contract: Copernicus GLO-30 (global 30 m DEM, free with attribution), OpenTopography
 lidar for small sites, Wikimedia Commons photos as review references (not as textures: licences vary).

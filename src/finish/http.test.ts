@@ -3,8 +3,9 @@
 
 import { describe, expect, it } from 'bun:test';
 import { compile, Ts23dError } from '../core/index.ts';
+import { mockAdapter, type NeuralAdapter, taskResult } from '../neural/index.ts';
 import { cart } from './fixtures.ts';
-import { finishAsset, httpFinish, memoryStore } from './index.ts';
+import { finishAsset, httpFinish, memoryStore, neuralFinish } from './index.ts';
 
 const SMALL = { views: 6, size: 64, atlas: 128 } as const;
 const lod0 = compile(cart, { lod: 0 });
@@ -60,5 +61,41 @@ describe('httpFinish: failures', () => {
     expect(() => httpFinish({ endpoint: 'http://x/y', timeoutMs: 0 })).toThrow(
       'T3D_FINISH_INVALID',
     );
+  });
+});
+
+describe('neuralFinish: any adapter through the image task', () => {
+  it('an adapter answering the wrong size → T3D_NEURAL_OUTPUT_INVALID, cache stays empty', async () => {
+    const small = await mockAdapter().run({
+      task: 'image',
+      request: { seed: 1, prompt: 'x', width: 2, height: 2 },
+    });
+    const wrong: NeuralAdapter = {
+      ...mockAdapter(),
+      run: async (job) => ({ ...small, result: taskResult(job.task, small.result.outputs) }),
+    };
+    const store = memoryStore();
+    const model = neuralFinish(wrong);
+    await expect(finishAsset(lod0, { ...SMALL, prompt: 'x', model, store })).rejects.toThrow(
+      'T3D_NEURAL_OUTPUT_INVALID',
+    );
+    expect(store.size()).toBe(0);
+  });
+
+  it('one conditioned image job per view, each with control maps as inputs', async () => {
+    const mock = mockAdapter();
+    const seen: number[] = [];
+    const spy: NeuralAdapter = {
+      ...mock,
+      run: (job) => {
+        const r = job.request as { control?: readonly unknown[] };
+        seen.push(r.control?.length ?? 0);
+        return mock.run(job);
+      },
+    };
+    const r = await finishAsset(lod0, { ...SMALL, prompt: 'rust', model: neuralFinish(spy) });
+    expect(r.images.length).toBe(6);
+    expect(seen).toEqual([4, 4, 4, 4, 4, 4]);
+    expect(r.provenance.model).toBe('neural:mock:default');
   });
 });

@@ -1,0 +1,85 @@
+{
+  "name": "city_block",
+  "kind": "scene",
+  "description": "West Village block, Manhattan: 40 buildings from a pinned OpenStreetMap extract (footprints + height tags), seeded facades, street centrelines; ODbL Produced Work",
+  "tags": [
+    "scene",
+    "city",
+    "building",
+    "real-data",
+    "osm",
+    "manhattan",
+    "modular"
+  ],
+  "lods": [
+    0,
+    1,
+    2
+  ],
+  "files": {
+    "lods": [],
+    "sheet": "sheet.png",
+    "thumb": "thumb.png"
+  },
+  "triangles": [
+    29538,
+    29538,
+    2928
+  ],
+  "drawCalls": [
+    1,
+    1,
+    1
+  ],
+  "pivots": [
+    {
+      "name": "body",
+      "parent": null
+    }
+  ],
+  "emitters": [],
+  "sockets": [],
+  "surfaces": [
+    "opaque"
+  ],
+  "real": {
+    "length": 148.86,
+    "width": 120.04,
+    "height": 22.4
+  },
+  "measures": [
+    {
+      "label": "way 250474566 height (OSM height tag)",
+      "spec": 22.2,
+      "measured": 22.200000762939453,
+      "source": "https://www.openstreetmap.org/way/250474566"
+    },
+    {
+      "label": "207 West 10th Street height (OSM height tag)",
+      "spec": 21.5,
+      "measured": 21.5,
+      "source": "https://www.openstreetmap.org/way/250474574"
+    },
+    {
+      "label": "211 West 10th Street height (OSM height tag)",
+      "spec": 21.5,
+      "measured": 21.5,
+      "source": "https://www.openstreetmap.org/way/250474576"
+    },
+    {
+      "label": "way 250474569 height (OSM height tag)",
+      "spec": 21.3,
+      "measured": 21.299999237060547,
+      "source": "https://www.openstreetmap.org/way/250474569"
+    }
+  ],
+  "sources": [
+    "OpenStreetMap extract 'west_village' bbox -74.0045,40.7335,-74.003,40.7345 (https://api.openstreetmap.org/api/0.6/map.json?bbox=-74.0045,40.7335,-74.003,40.7345, fetched 2026-11-16, sha256 a8bc787e011c…); © OpenStreetMap contributors, ODbL 1.0 (https://www.openstreetmap.org/copyright)",
+    "https://wiki.openstreetmap.org/wiki/New_York_City/Buildings (NYC building import: footprints, heights)",
+    "recipes/city_block/README.md (dossier, photos)"
+  ],
+  "qa": {
+    "pass": true,
+    "findings": []
+  }
+}

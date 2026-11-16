@@ -37,6 +37,11 @@ export {
   type TeamCoverage,
   teamCoverage,
 } from './icon-rts.ts';
+export {
+  checkInputImage,
+  type InputImageFinding,
+  type InputImageReport,
+} from './input-image.ts';
 export { type LodStripOptions, lodStrip } from './lod-strip.ts';
 export {
   type ExposureStats,
@@ -50,6 +55,7 @@ export {
   viewFrame,
 } from './metrics.ts';
 export { checkBeautyOptions, parseSize } from './options.ts';
+export { type PartMasks, partBox, partMasks } from './part-masks.ts';
 export {
   HERO_PATH,
   type PathOptions,
@@ -62,6 +68,7 @@ export {
 export { type PhotoMatch, type PhotoMatchOptions, photoMatch, photoView } from './photo-match.ts';
 export { type Photo, resizePhoto, type SegmentOptions, segmentPhoto } from './photo-segment.ts';
 export { type PoseFrame, poseStrip } from './pose-strip.ts';
+export { type Camera as RasterCamera, orthoCamera, type View as RasterView } from './raster.ts';
 export { detailWindows, type ReviewOptions, type ReviewPack, reviewPack } from './review.ts';
 export {
   REVIEW_THRESHOLDS,
@@ -70,4 +77,10 @@ export {
   type ViewMetrics,
 } from './review-warnings.ts';
 export { contactSheet, type SheetOptions, VIEWS } from './sheet.ts';
+export {
+  type SilhouetteScore,
+  type SilhouetteSheet,
+  type SilhouetteVariant,
+  silhouetteSheet,
+} from './silhouette-sheet.ts';
 export { type ThumbnailOptions, thumbnail } from './thumbnail.ts';

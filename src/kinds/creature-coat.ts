@@ -31,6 +31,7 @@ export function palette(c: CreatureColours): Palette {
     legs: c.legs ?? belly,
     muzzle: c.muzzle ?? belly,
     tip: c.tip ?? scale(back, 0.6),
+    tailTip: c.tailTip ?? c.tip ?? scale(back, 0.6),
     mark: c.mark ?? [0.03, 0.025, 0.02],
   };
 }
@@ -155,7 +156,7 @@ export function bodyPaint(b: Bones, s: CreatureSpec, aa: number): Paint {
     col = mixRgb(col, c.belly, smoothstep(-0.25, -0.75, at.v));
     if (legTop > 0 && at.tail === 0)
       col = mixRgb(col, c.legs, smoothstep(legTop, legTop * 0.55, p[2]));
-    col = mixRgb(col, c.tip, smoothstep(0.72, 0.92, at.tail));
+    col = mixRgb(col, c.tailTip, smoothstep(0.72, 0.92, at.tail));
     if (line && c.foreline) col = mixRgb(col, c.foreline, line(p));
     if (mk) {
       const m = mk(p, at) * (1 - 0.8 * smoothstep(-0.4, -0.9, at.v));

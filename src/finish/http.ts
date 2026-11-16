@@ -6,8 +6,12 @@
 //   { images: [<base64 PNG per view, same order and size>], licence?: string }
 // Keys are the caller's (`headers`), never read from the environment. Never runs in the gate:
 // results go through the cache (cache.ts) and replay offline.
+// `neuralFinish` runs the same request through any NeuralAdapter (ADR 015) instead: one `image`
+// job per view, conditioned on that view's control maps (inputs by sha256), output validated at
+// the view's size. It is the image task, not `texture`, because a finish paints views, not a mesh.
 
-import { Ts23dError } from '../core/index.ts';
+import { type NeuralInput, Ts23dError } from '../core/index.ts';
+import { type NeuralAdapter, runJob, sha256Hex } from '../neural/index.ts';
 import { exportControlMaps } from './control-maps.ts';
 import type { FinishModel, FinishRequest } from './types.ts';
 
@@ -113,6 +117,45 @@ export function httpFinish(o: HttpFinishOptions): FinishModel {
       if (images.length !== req.views.views.length)
         fail(`reply has ${images.length} images for ${req.views.views.length} views`, o.endpoint);
       return (images as string[]).map((s) => new Uint8Array(Buffer.from(s, 'base64')));
+    },
+  };
+}
+
+/** A finish model over any neural adapter's `image` task: one job per view. */
+export function neuralFinish(adapter: NeuralAdapter, model?: string): FinishModel {
+  return {
+    id: `neural:${adapter.id}:${model ?? 'default'}`,
+    licence: 'per the model: see `t3d neural ls` (recorded, never gated)',
+    async run(req) {
+      const maps = exportControlMaps(req.views).files;
+      const out: Uint8Array[] = [];
+      for (const v of req.views.views) {
+        const inputs = new Map<string, Uint8Array>();
+        const control: NeuralInput[] = [];
+        for (const m of ['depth', 'normal', 'part', 'albedo']) {
+          const bytes = maps.get(`${v.name}/${m}.png`);
+          if (!bytes) continue;
+          const sha256 = sha256Hex(bytes);
+          inputs.set(sha256, bytes);
+          control.push({ sha256, mime: 'image/png' });
+        }
+        const run = await runJob(adapter, {
+          task: 'image',
+          ...(model ? { model } : {}),
+          inputs,
+          request: {
+            seed: req.seed,
+            prompt: req.prompt,
+            ...(req.negative ? { negative: req.negative } : {}),
+            width: v.width,
+            height: v.height,
+            control,
+            params: { view: v.name, palette: (req.palette ?? []).join(' ') },
+          },
+        });
+        out.push(run.result.outputs[0]?.bytes ?? new Uint8Array());
+      }
+      return out;
     },
   };
 }

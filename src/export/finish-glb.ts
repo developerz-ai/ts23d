@@ -1,9 +1,10 @@
-// The AI finish as a GLB layer: takes a GLB written by exportLodGlb (LOD0 = the finished asset,
-// whose finishable parts carry atlas UVs) and adds ONE material, `ts23d_finish`, with the finish's
-// own texture set (albedo sRGB, ORM, detail normal when the primitives have tangents). Only LOD0
-// primitives on the plain trim material switch to it; LOD1/2, glass, cutout, painted (liveries),
-// named finishes and glow keep theirs. Nodes, meshes' geometry accessors, animations, physics and
-// audio are untouched; provenance goes to `extras.ts23d.finish`. Byte-deterministic.
+// A per-asset LOD0 texture set as a GLB layer — the AI finish (`ts23d_finish`) or the hero bake
+// (`ts23d_hero`, ADR 012): takes a GLB written by exportLodGlb (LOD0 = the asset whose finishable
+// parts carry atlas UVs) and adds ONE material with the layer's own textures (albedo sRGB, ORM,
+// tangent-space normal when the primitives have tangents). Only LOD0 primitives on the plain trim
+// material switch to it; LOD1/2, glass, cutout, painted (liveries), named finishes and glow keep
+// theirs. Nodes, geometry accessors, animations, physics and audio are untouched; provenance goes
+// to `extras.ts23d.<key>` (`finish` / `hero`). Byte-deterministic.
 
 import { Ts23dError } from '../core/index.ts';
 import type { Json } from './bin-writer.ts';
@@ -16,9 +17,13 @@ export interface FinishLayer {
   readonly normal?: Uint8Array;
   /** Model, prompt, seed, cache key, licence… (JSON-safe). */
   readonly provenance: Readonly<Record<string, unknown>>;
+  /** Material name (default `ts23d_finish`) and `extras.ts23d` key (default `finish`). */
+  readonly material?: string;
+  readonly key?: string;
 }
 
 export const FINISH_MATERIAL = 'ts23d_finish';
+export const HERO_MATERIAL = 'ts23d_hero';
 
 const LINEAR = 9729;
 const LINEAR_MIPMAP_LINEAR = 9987;
@@ -97,13 +102,17 @@ export function withFinishLayer(glb: Uint8Array, layer: FinishLayer): Uint8Array
     const offset = body.byteLength + ((4 - (body.byteLength % 4)) % 4);
     body = concat(concat(body, new Uint8Array(offset - body.byteLength)), png);
     views.push({ buffer: 0, byteOffset: offset, byteLength: png.byteLength });
-    images.push({ name: `finish_${name}`, bufferView: views.length - 1, mimeType: 'image/png' });
+    images.push({
+      name: `${layer.key ?? 'finish'}_${name}`,
+      bufferView: views.length - 1,
+      mimeType: 'image/png',
+    });
     textures.push({ sampler, source: images.length - 1 });
     index[name] = textures.length - 1;
   }
   body = concat(body, new Uint8Array((4 - (body.byteLength % 4)) % 4));
   materials.push({
-    name: FINISH_MATERIAL,
+    name: layer.material ?? FINISH_MATERIAL,
     pbrMetallicRoughness: {
       baseColorTexture: { index: index['albedo'] },
       metallicRoughnessTexture: { index: index['orm'] },
@@ -118,7 +127,7 @@ export function withFinishLayer(glb: Uint8Array, layer: FinishLayer): Uint8Array
   const ts = (extras['ts23d'] as Json | undefined) ?? {};
   const out: Json = {
     ...json,
-    extras: { ...extras, ts23d: { ...ts, finish: layer.provenance } },
+    extras: { ...extras, ts23d: { ...ts, [layer.key ?? 'finish']: layer.provenance } },
     materials,
     images,
     textures,

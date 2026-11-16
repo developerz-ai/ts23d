@@ -1,0 +1,371 @@
+# `t3d setup gpu-full`: a 24 GB card (measured on an RTX 3090, sm_86). The core stack is the one
+# ~/workspace/lab/neural-models/SETUP.md proved on 2026-11-15: Python 3.12, torch 2.6.0+cu124, a
+# local CUDA 12.4.1 toolkit (no root), a gcc <= 13 shim, flash-attn 2.7.3 prebuilt wheel,
+# nvdiffrast / nvdiffrec / CuMesh / FlexGEMM / o-voxel / natten 0.21 built from pinned sources,
+# Pixal3D f7cf384 + TRELLIS.2 75fbf01. UniRig, UniMate and HairDeck are optional and untested:
+# each has its own env (different Python, torch and bpy pins); a failure there is a warning.
+# Weights land in $HF_HOME (default $TS23D_HOME/hf); HF_TOKEN comes from your shell, never a file.
+
+[profile]
+name = "gpu-full"
+notes = [
+  "server profile: $TS23D_HOME/neural/server.toml (pixal3d, trellis2, trellis2-texture, dinov2); `t3d server start` runs it",
+  "optional models (video-motion, unirig, unimate, hairdeck): once their step is done, add their [plugins.<name>] table from profiles/full.toml to server.toml",
+  "UniMate checkpoints are CC-BY-NC-4.0: this repository refuses to commit their outputs (ADR 015)",
+]
+
+[env]
+path_prepend = ["{home}/neural/toolchain-bin", "{home}/neural/cuda-12.4/bin"]
+CUDA_HOME = "{home}/neural/cuda-12.4"
+CC = "{home}/neural/toolchain-bin/gcc"
+CXX = "{home}/neural/toolchain-bin/g++"
+TORCH_CUDA_ARCH_LIST = "{arch}"
+MAX_JOBS = "{jobs}"
+
+[[step]]
+id = "venv"
+kind = "venv"
+title = "Python 3.12 model venv"
+path = "neural/.venv"
+python = "3.12"
+
+[[step]]
+id = "torch"
+kind = "pip"
+title = "torch 2.6.0 + torchvision 0.21.0 (cu124 wheels, ~3 GB)"
+venv = "neural/.venv"
+index_url = "https://download.pytorch.org/whl/cu124"
+packages = ["torch==2.6.0", "torchvision==0.21.0"]
+check = "import torch; assert torch.__version__ == '2.6.0+cu124'"
+
+[[step]]
+id = "server-deps"
+kind = "pip"
+title = "server + build helpers (fastapi, uvicorn, huggingface_hub, ninja)"
+venv = "neural/.venv"
+packages = ["fastapi==0.163.1", "uvicorn==0.54.0", "huggingface_hub==0.36.2", "ninja", "setuptools", "wheel", "packaging", "psutil"]
+check = "import fastapi, uvicorn, huggingface_hub; assert fastapi.__version__ == '0.163.1'"
+
+[[step]]
+id = "pixal3d-repo"
+kind = "git"
+title = "TencentARC/Pixal3D @ f7cf384"
+url = "https://github.com/TencentARC/Pixal3D.git"
+ref = "f7cf384"
+dest = "neural/models/Pixal3D"
+licence = "MIT"
+
+[[step]]
+id = "trellis2-repo"
+kind = "git"
+title = "microsoft/TRELLIS.2 @ 75fbf01 (+ submodules for o-voxel)"
+url = "https://github.com/microsoft/TRELLIS.2.git"
+ref = "75fbf01"
+dest = "neural/models/TRELLIS.2"
+submodules = true
+licence = "MIT"
+
+# Pixal3D's requirements with two pins changed: MoGe pinned to the commit that ran, trimesh relaxed
+# (MoGe needs >= 4.11).
+[[step]]
+id = "pixal3d-deps"
+kind = "pip"
+title = "Pixal3D requirements"
+venv = "neural/.venv"
+requirements = "neural/models/Pixal3D/requirements.txt"
+relax = { "trimesh" = "trimesh>=4.11", "git+https://github.com/microsoft/MoGe.git" = "moge @ git+https://github.com/microsoft/MoGe.git@74fbce054ebed49800de42d0ad0e83495065719a" }
+packages = ["tensorboard", "pandas", "lpips"]
+check = "import moge, diffusers, transformers, kornia; assert transformers.__version__ == '4.57.3'"
+
+[[step]]
+id = "utils3d"
+kind = "pip"
+title = "utils3d 0.0.2 wheel (Pixal3D's)"
+venv = "neural/.venv"
+packages = ["https://github.com/LDYang694/Storages/releases/download/20260430/utils3d-0.0.2-py3-none-any.whl"]
+check = "import importlib.metadata as m; assert m.version('utils3d') == '0.0.2'"
+
+[[step]]
+id = "flash-attn"
+kind = "pip"
+title = "flash-attn 2.7.3 prebuilt wheel (cu12, torch 2.6, cp312)"
+venv = "neural/.venv"
+packages = ["https://github.com/Dao-AILab/flash-attention/releases/download/v2.7.3/flash_attn-2.7.3+cu12torch2.6cxx11abiFALSE-cp312-cp312-linux_x86_64.whl"]
+check = "import importlib.metadata as m; assert m.version('flash_attn') == '2.7.3'"
+
+# torch builds extensions only with the CUDA major it was built for (12): a local 12.4.1 toolkit.
+# NVIDIA publishes md5 sums, not sha256, for runfiles: this download is not hash-pinned.
+[[step]]
+id = "cuda-runfile"
+kind = "download"
+title = "CUDA 12.4.1 toolkit runfile (~4.3 GB download)"
+url = "https://developer.download.nvidia.com/compute/cuda/12.4.1/local_installers/cuda_12.4.1_550.54.15_linux.run"
+dest = "neural/_dl/cuda_12.4.1_linux.run"
+creates = "neural/_dl/cuda_12.4.1_linux.run"
+
+[[step]]
+id = "cuda-toolkit"
+kind = "run"
+title = "install the toolkit into neural/cuda-12.4 (no root, ~7 GB)"
+run = [
+  ["mkdir", "-p", "{home}/neural/_dl/tmp"],
+  ["sh", "{home}/neural/_dl/cuda_12.4.1_linux.run", "--nox11", "--tmpdir={home}/neural/_dl/tmp", "--", "--silent", "--toolkit", "--toolkitpath={home}/neural/cuda-12.4", "--no-man-page", "--no-drm", "--no-opengl-libs", "--override"],
+  ["rm", "-rf", "{home}/neural/_dl"],
+]
+creates = "neural/cuda-12.4/bin/nvcc"
+
+[[step]]
+id = "toolchain"
+kind = "toolchain"
+title = "gcc <= 13 shim (CUDA 12.4 refuses newer gcc)"
+dest = "neural/toolchain-bin"
+max_gcc = 13
+
+[[step]]
+id = "nvdiffrast-src"
+kind = "git"
+url = "https://github.com/NVlabs/nvdiffrast.git"
+ref = "v0.4.0"
+dest = "neural/ext/nvdiffrast"
+
+[[step]]
+id = "nvdiffrec-src"
+kind = "git"
+url = "https://github.com/JeffreyXiang/nvdiffrec.git"
+ref = "b296927"
+dest = "neural/ext/nvdiffrec"
+
+[[step]]
+id = "cumesh-src"
+kind = "git"
+url = "https://github.com/JeffreyXiang/CuMesh.git"
+ref = "12289e1"
+dest = "neural/ext/CuMesh"
+submodules = true
+
+[[step]]
+id = "flexgemm-src"
+kind = "git"
+url = "https://github.com/JeffreyXiang/FlexGEMM.git"
+ref = "6dd94a8"
+dest = "neural/ext/FlexGEMM"
+submodules = true
+
+[[step]]
+id = "cuda-extensions"
+kind = "pip"
+title = "build nvdiffrast, nvdiffrec, CuMesh, FlexGEMM, o-voxel (CUDA, minutes)"
+venv = "neural/.venv"
+no_build_isolation = true
+packages = ["{home}/neural/ext/nvdiffrast", "{home}/neural/ext/nvdiffrec", "{home}/neural/ext/CuMesh", "{home}/neural/ext/FlexGEMM", "{home}/neural/models/TRELLIS.2/o-voxel"]
+check = "import importlib.metadata as m; [m.version(p) for p in ('nvdiffrast', 'nvdiffrec_render', 'cumesh', 'flex_gemm', 'o_voxel')]"
+
+[[step]]
+id = "natten"
+kind = "pip"
+title = "natten 0.21.0 from source for this GPU's arch (~15 min on 12 cores)"
+venv = "neural/.venv"
+no_build_isolation = true
+packages = ["natten==0.21.0"]
+env = { NATTEN_CUDA_ARCH = "{arch}", NATTEN_N_WORKERS = "{jobs}" }
+check = "import importlib.metadata as m; assert m.version('natten') == '0.21.0'"
+
+[[step]]
+id = "weights-pixal3d"
+kind = "hf"
+venv = "neural/.venv"
+repo = "TencentARC/Pixal3D"
+
+[[step]]
+id = "weights-trellis2"
+kind = "hf"
+venv = "neural/.venv"
+repo = "microsoft/TRELLIS.2-4B"
+
+[[step]]
+id = "weights-dinov3-mirror"
+kind = "hf"
+title = "DINOv3 ViT-L (camenduru mirror of the gated facebook repo; same weights)"
+venv = "neural/.venv"
+repo = "camenduru/dinov3-vitl16-pretrain-lvd1689m"
+
+[[step]]
+id = "weights-birefnet"
+kind = "hf"
+title = "BiRefNet background removal (MIT; replaces the CC BY-NC RMBG-2.0)"
+venv = "neural/.venv"
+repo = "ZhengPeng7/BiRefNet"
+
+[[step]]
+id = "weights-moge"
+kind = "hf"
+venv = "neural/.venv"
+repo = "Ruicheng/moge-2-vitl"
+
+[[step]]
+id = "weights-dinov2"
+kind = "hf"
+venv = "neural/.venv"
+repo = "facebook/dinov2-base"
+
+# Gated repos listed for an informed choice, never downloaded by setup.
+[[gated]]
+repo = "briaai/RMBG-2.0"
+url = "https://huggingface.co/briaai/RMBG-2.0"
+why = "the original background remover (CC BY-NC 4.0); BiRefNet (MIT) is the default. Accept, download, set REMBG_MODEL=briaai/RMBG-2.0"
+
+[[gated]]
+repo = "facebook/dinov3-vitl16-pretrain-lvd1689m"
+url = "https://huggingface.co/facebook/dinov3-vitl16-pretrain-lvd1689m"
+why = "the original DINOv3; the camenduru mirror (same weights) is downloaded and used instead"
+
+[[step]]
+id = "server-profile"
+kind = "write"
+title = "server profile for `t3d server start`"
+dest = "neural/server.toml"
+text = """
+# Written by `t3d setup gpu-full`; edit freely (setup rewrites it only when it differs from this).
+[server]
+host = "127.0.0.1"
+port = 8190
+keep_jobs = 16
+max_input_mb = 64
+
+[plugins.pixal3d]
+repo = "{home}/neural/models/Pixal3D"
+low_vram = true
+
+[plugins.trellis2]
+repo = "{home}/neural/models/TRELLIS.2"
+
+[plugins.trellis2-texture]
+repo = "{home}/neural/models/TRELLIS.2"
+
+[plugins.dinov2]
+"""
+
+# ---- optional, untested: each model in its own env ----------------------------------------
+
+[[step]]
+id = "video-motion"
+kind = "pip"
+title = "MediaPipe 0.10.21 (video-motion plug-in, CPU)"
+venv = "neural/.venv"
+packages = ["mediapipe==0.10.21"]
+check = "import mediapipe"
+optional = true
+
+[[step]]
+id = "video-motion-model"
+kind = "download"
+title = "pose_landmarker_heavy.task (Apache-2.0)"
+url = "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_heavy/float16/1/pose_landmarker_heavy.task"
+sha256 = "64437af838a65d18e5ba7a0d39b465540069bc8aae8308de3e318aad31fcbc7b"
+dest = "neural/models/mediapipe/pose_landmarker_heavy.task"
+optional = true
+
+[[step]]
+id = "unirig-repo"
+kind = "git"
+url = "https://github.com/VAST-AI-Research/UniRig.git"
+ref = "6793c6640ff01c8fb389f3993434124bb43d2933"
+dest = "neural/models/UniRig"
+optional = true
+
+[[step]]
+id = "unirig-venv"
+kind = "venv"
+path = "neural/models/UniRig/.venv"
+python = "3.11"
+optional = true
+
+[[step]]
+id = "unirig-deps"
+kind = "pip"
+title = "UniRig env (torch cu124 + requirements; bpy 4.2)"
+venv = "neural/models/UniRig/.venv"
+index_url = "https://download.pytorch.org/whl/cu124"
+packages = ["torch==2.6.0", "torchvision==0.21.0"]
+check = "import torch; assert torch.__version__ == '2.6.0+cu124'"
+optional = true
+
+[[step]]
+id = "unirig-requirements"
+kind = "pip"
+venv = "neural/models/UniRig/.venv"
+requirements = "neural/models/UniRig/requirements.txt"
+relax = { "flash_attn" = "https://github.com/Dao-AILab/flash-attention/releases/download/v2.7.3/flash_attn-2.7.3+cu12torch2.6cxx11abiFALSE-cp311-cp311-linux_x86_64.whl" }
+check = "import lightning, bpy, open3d"
+optional = true
+
+[[step]]
+id = "unimate-repo"
+kind = "git"
+url = "https://github.com/Friedrich-M/UniMate.git"
+ref = "b78c7807df7cf4231d4e67f8d0ece29c5e11025b"
+dest = "neural/models/UniMate"
+licence = "code MIT; checkpoints CC-BY-NC-4.0"
+optional = true
+
+[[step]]
+id = "unimate-venv"
+kind = "venv"
+path = "neural/models/UniMate/.venv"
+python = "3.10"
+optional = true
+
+[[step]]
+id = "unimate-setuptools"
+kind = "pip"
+title = "setuptools < 81 first (UniMate's Motion dependency imports pkg_resources)"
+venv = "neural/models/UniMate/.venv"
+packages = ["setuptools<81", "wheel"]
+check = "import pkg_resources"
+optional = true
+
+[[step]]
+id = "unimate-deps"
+kind = "pip"
+title = "UniMate env (its pinned torch 2.5.1+cu124, setuptools < 81, no build isolation)"
+venv = "neural/models/UniMate/.venv"
+no_build_isolation = true
+requirements = "neural/models/UniMate/requirements.txt"
+check = "import torch; assert torch.__version__.startswith('2.5.1')"
+optional = true
+
+[[step]]
+id = "hairdeck-repo"
+kind = "git"
+url = "https://github.com/hyz317/HairDeck.git"
+ref = "2f954d5cc13185709af45dfa0940d4b9310b838c"
+dest = "neural/models/HairDeck"
+licence = "Apache-2.0"
+optional = true
+
+[[step]]
+id = "hairdeck-venv"
+kind = "venv"
+path = "neural/models/HairDeck/.venv"
+python = "3.12"
+optional = true
+
+[[step]]
+id = "hairdeck-deps"
+kind = "pip"
+title = "HairDeck env (its pinned torch 2.8.0)"
+venv = "neural/models/HairDeck/.venv"
+requirements = "neural/models/HairDeck/requirements.txt"
+check = "import torch, iopath; assert torch.__version__.startswith('2.8.0')"
+optional = true
+
+[[step]]
+id = "hairdeck-gated"
+kind = "hf"
+title = "SAM 3 (gated; HairDeck needs it)"
+venv = "neural/models/HairDeck/.venv"
+repo = "facebook/sam3"
+gated = true
+licence_url = "https://huggingface.co/facebook/sam3"
+why = "HairDeck segments hair with SAM 3"
+optional = true

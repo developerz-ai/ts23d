@@ -1,0 +1,102 @@
+# `t3d setup gpu-min`: 8-23 GB cards. TRELLIS.2 runs through ComfyUI with GGUF Q4_K_M weights and
+# offloading (examples/comfy-workflows/trellis2-low-vram.json, node pack Aero-Ex/ComfyUI-Trellis2-GGUF
+# @ b3b9e95); DINOv2 scoring runs in the reference server. Untested end to end: the node pack's
+# workflow was written against its INPUT_TYPES, not run. No image model is installed: none with an
+# open licence for outputs was verified under 8 GB; use kubeez.com (hosted) or a 24 GB card.
+# Weights land in $HF_HOME (default $TS23D_HOME/hf); HF_TOKEN comes from your shell, never a file.
+
+[profile]
+name = "gpu-min"
+notes = [
+  "start ComfyUI: $TS23D_HOME/neural/.venv/bin/python $TS23D_HOME/neural/ComfyUI/main.py --lowvram (port 8188), then point comfyAdapter at examples/comfy-workflows/trellis2-low-vram.json",
+  "server profile: $TS23D_HOME/neural/server.toml (dinov2); `t3d server start` runs it",
+  "image task without a big GPU: kubeezAdapter({ apiKey: process.env.KUBEEZ_API_KEY }) (kubeez.com, partner)",
+]
+
+[[step]]
+id = "venv"
+kind = "venv"
+title = "Python 3.12 model venv"
+path = "neural/.venv"
+python = "3.12"
+
+[[step]]
+id = "torch"
+kind = "pip"
+title = "torch 2.6.0 + torchvision 0.21.0 (cu124 wheels, ~3 GB)"
+venv = "neural/.venv"
+index_url = "https://download.pytorch.org/whl/cu124"
+packages = ["torch==2.6.0", "torchvision==0.21.0"]
+check = "import torch; assert torch.__version__ == '2.6.0+cu124'"
+
+[[step]]
+id = "server-deps"
+kind = "pip"
+title = "server + DINOv2 deps (fastapi, uvicorn, huggingface_hub, transformers)"
+venv = "neural/.venv"
+# transformers unpinned here: the node pack pins 5.2.0 and DINOv2 runs on either.
+packages = ["fastapi==0.163.1", "uvicorn==0.54.0", "huggingface_hub", "transformers>=4.57.3", "pillow"]
+check = "import fastapi, uvicorn, transformers, huggingface_hub; assert fastapi.__version__ == '0.163.1'"
+
+[[step]]
+id = "comfyui-repo"
+kind = "git"
+title = "ComfyUI v0.45.0"
+url = "https://github.com/comfyanonymous/ComfyUI.git"
+ref = "v0.45.0"
+dest = "neural/ComfyUI"
+licence = "GPL-3.0"
+
+[[step]]
+id = "comfyui-deps"
+kind = "pip"
+title = "ComfyUI requirements"
+venv = "neural/.venv"
+requirements = "neural/ComfyUI/requirements.txt"
+check = "import importlib.metadata as m; assert m.version('comfyui-frontend-package') == '1.58.5'"
+
+[[step]]
+id = "trellis2-gguf-nodes"
+kind = "git"
+title = "Aero-Ex/ComfyUI-Trellis2-GGUF @ b3b9e95 (MIT)"
+url = "https://github.com/Aero-Ex/ComfyUI-Trellis2-GGUF.git"
+ref = "b3b9e951874c5fb5c936566c93b908299be08b2c"
+dest = "neural/ComfyUI/custom_nodes/ComfyUI-Trellis2-GGUF"
+licence = "MIT"
+
+[[step]]
+id = "trellis2-gguf-deps"
+kind = "pip"
+title = "node pack requirements"
+venv = "neural/.venv"
+requirements = "neural/ComfyUI/custom_nodes/ComfyUI-Trellis2-GGUF/requirements.txt"
+check = "import gguf"
+optional = true
+
+[[step]]
+id = "weights-trellis2-gguf"
+kind = "hf"
+title = "TRELLIS.2-4B GGUF weights (from microsoft/TRELLIS.2-4B, MIT)"
+venv = "neural/.venv"
+repo = "Aero-Ex/Trellis2-GGUF"
+
+[[step]]
+id = "weights-dinov2"
+kind = "hf"
+venv = "neural/.venv"
+repo = "facebook/dinov2-base"
+
+[[step]]
+id = "server-profile"
+kind = "write"
+title = "server profile for `t3d server start`"
+dest = "neural/server.toml"
+text = """
+# Written by `t3d setup gpu-min`; edit freely (setup rewrites it only when it differs from this).
+[server]
+host = "127.0.0.1"
+port = 8190
+keep_jobs = 16
+
+[plugins.dinov2]
+"""

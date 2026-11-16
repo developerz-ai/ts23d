@@ -8,13 +8,13 @@
 
 import type { CompiledAsset, Part } from '../core/index.ts';
 import { Ts23dError } from '../core/index.ts';
-import type { PaintedSheet } from '../material/index.ts';
+import type { MaterialGraph, PaintedSheet } from '../material/index.ts';
 import { type Finding, runQa } from '../qa/index.ts';
 import { type BakeOptions, decodeViews, project } from './bake.ts';
 import { runCached } from './cache.ts';
 import { controlViews } from './control.ts';
 import { fillAtlas, paddedBase } from './fill.ts';
-import { deriveMaps } from './maps.ts';
+import { deriveMaps, graphHeight } from './maps.ts';
 import { checkFinish, type FinishQaOptions, paletteDrift } from './qa.ts';
 import { finishScene } from './scene.ts';
 import { atlasTexels } from './texels.ts';
@@ -42,6 +42,9 @@ export interface FinishOptions extends FinishQaOptions, BakeOptions {
   readonly beauty?: boolean;
   /** Model result cache; omitted = always run the model. */
   readonly store?: FinishStore;
+  /** Part name → its strip's material graph: the detail normal and cavity roughness follow that
+   *  graph's height (`graphHeight`, triplanar in world metres); parts not named stay flat. */
+  readonly graphs?: Readonly<Record<string, MaterialGraph>>;
 }
 
 export interface FinishMaps {
@@ -75,7 +78,7 @@ export interface FinishResult {
 }
 
 export const FINISH_NOTE =
-  'albedo projected from model images (part-masked, n·v weighted); roughness and metal from the trim sheet; detail normal from the strip height graph when one is given, else flat';
+  "albedo projected from model images (part-masked, n·v weighted); roughness and metal from the trim sheet; detail normal from the part's strip height graph (options.graphs) when one is given, else flat";
 
 /** The finished LOD0: finishable parts take their atlas mesh with white vertex colour. */
 function finishedAsset(
@@ -121,7 +124,11 @@ export async function finishAsset(lod0: CompiledAsset, o: FinishOptions): Promis
   const texels = atlasTexels(scene);
   const pr = project(texels, controls, rgba, o);
   const filled = fillAtlas(texels, pr, controls.parts.length);
-  const derived = deriveMaps(texels, filled.albedo);
+  const heights = controls.parts.map((p) => {
+    const g = o.graphs?.[p];
+    return g ? graphHeight(g, seed) : undefined;
+  });
+  const derived = deriveMaps(texels, filled.albedo, { height: heights });
   const findings = checkFinish(controls, texels, filled.albedo, pr, rgba, o);
   const asset = finishedAsset(lod0, scene.atlas);
   const { drift } = paletteDrift(texels, filled.albedo, controls.parts.length);

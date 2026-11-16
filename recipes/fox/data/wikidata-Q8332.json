@@ -1,0 +1,20 @@
+{
+  "format": "ts23d-wikidata/1",
+  "qid": "Q8332",
+  "label": "red fox",
+  "url": "https://www.wikidata.org/wiki/Special:EntityData/Q8332.json?revision=2569107329",
+  "page": "https://www.wikidata.org/wiki/Q8332",
+  "license": "CC0-1.0",
+  "fetched": "2026-11-16",
+  "sha256": "ed403ae251b1251a9cbd299dd99dc493cc45a528769edfeebd3655dbdbca1c8c",
+  "quantities": {
+    "height": {
+      "value": 0.425,
+      "unit": "m",
+      "property": "P2048",
+      "amount": "+0.425",
+      "sourceUnit": "Q11573"
+    }
+  },
+  "items": {}
+}

@@ -47,6 +47,10 @@ export interface Args {
   readonly lodFiles: 'split' | 'single' | 'both';
   /** Write a rigid body, fitted colliders and mass (KHR_physics_rigid_bodies, Khronos drafts). */
   readonly physics: boolean;
+  /** A neural cache miss is an error instead of a CPU-tier fallback notice (ADR 014). */
+  readonly requireNeural: boolean;
+  /** `--allow-bad-input`: send `mesh` images that fail the input-image rules (recorded). */
+  readonly allowBadInput: boolean;
   /** Write `<clip>.wav` + KHR_audio_emitter for assets with sounds (default on; --no-sounds). */
   readonly sounds: boolean;
   /**
@@ -100,6 +104,8 @@ const metaArgs = (m: { cmd: string; topic?: string }, json: boolean): Args => ({
   lods: [0, 1, 2],
   lodFiles: 'both',
   physics: false,
+  requireNeural: false,
+  allowBadInput: false,
   sounds: true,
   render: {},
 });
@@ -136,6 +142,8 @@ export function parseArgs(argv: readonly string[]): Args {
     return n;
   };
   let physics = false;
+  let requireNeural = false;
+  let allowBadInput = false;
   let sounds = true;
   let profile: ExportProfile | undefined;
   let lodFilesSet = false;
@@ -169,6 +177,8 @@ export function parseArgs(argv: readonly string[]): Args {
     else if (a === '--animations') animations = true;
     else if (a === '--no-shot') shot = false;
     else if (a === '--physics') physics = true;
+    else if (a === '--require-neural') requireNeural = true;
+    else if (a === '--allow-bad-input') allowBadInput = true;
     else if (a === '--no-sounds') sounds = false;
     else if (a === '--profile') profile = profileSettings(argv[++i] ?? '').name;
     else if (a === '--out') {
@@ -222,6 +232,7 @@ export function parseArgs(argv: readonly string[]): Args {
     else if (a === '--fov') render.fovDeg = num(a, argv[++i]);
     else if (FINISH_FLAGS.includes(a)) finishFlag(finish, a, argv[++i]);
     else if (a === '--force') finish.force = true;
+    else if (a === '--hero') finish.hero = true;
     else files.push(a);
   }
   if (files.length === 0)
@@ -245,6 +256,8 @@ export function parseArgs(argv: readonly string[]): Args {
     lods,
     lodFiles,
     physics,
+    requireNeural,
+    allowBadInput,
     sounds,
     ...(profile ? { profile } : {}),
     ...(variant ? { variant } : {}),

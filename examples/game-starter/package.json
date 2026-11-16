@@ -1,0 +1,16 @@
+{
+  "name": "ts23d-game-starter",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "bun serve.ts",
+    "assets": "t3d build assets --out public/models --profile web",
+    "assets:watch": "t3d build --watch assets --out public/models --profile web"
+  },
+  "dependencies": {
+    "three": "0.187.0"
+  },
+  "devDependencies": {
+    "@developerz.ai/ts23d": "^0.7.0"
+  }
+}

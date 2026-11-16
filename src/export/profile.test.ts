@@ -1,12 +1,20 @@
 // Export profiles: an unknown name fails with the list; each known profile changes only its
-// documented defaults; no profile = the exact bytes of before.
+// documented defaults; no profile = the exact bytes of before. Engine layouts: an unknown engine
+// fails; every import folder keeps the shared sheet inside the project (D53).
 
 import { describe, expect, it } from 'bun:test';
-import { compile, defineAsset } from '../core/index.ts';
+import { compile, defineAsset, Ts23dError } from '../core/index.ts';
 import { DEFAULT_SHEET, paintTrimSheet } from '../material/index.ts';
 import { box } from '../primitives/index.ts';
 import { toGlb } from './glb.ts';
-import { type ExportProfile, PROFILES, profileSettings } from './profile.ts';
+import {
+  ENGINES,
+  type ExportProfile,
+  engineLayout,
+  PROFILES,
+  profileSettings,
+  sheetInProject,
+} from './profile.ts';
 
 const crate = defineAsset({
   name: 'crate',
@@ -63,5 +71,45 @@ describe('export profiles', () => {
     expect(profileSettings('unreal')).toMatchObject({ lodFiles: 'split', sheetSize: 4096 });
     expect(profileSettings('godot').lodFiles).toBe('split');
     expect(profileSettings('rt').ao).toBe(false);
+  });
+});
+
+describe('engine layouts', () => {
+  it('rejects an unknown engine with the list', () => {
+    expect(() => engineLayout('cryengine')).toThrow(/unknown engine 'cryengine'/);
+  });
+
+  it('D53: a GLB outside <out>/<asset>/ points its sheet out of the project', () => {
+    // The slice-20 engine-check copied lod0.glb alone to res://asset.glb: ../trim_sheet escaped.
+    expect(() => sheetInProject('.')).toThrow(/outside the project/);
+    let fix = '';
+    try {
+      sheetInProject('../shared/wolf');
+    } catch (e) {
+      fix = e instanceof Ts23dError ? e.fix : '';
+    }
+    expect(fix).toMatch(/--out inside the project/);
+    expect(() => sheetInProject('/abs/models/wolf')).toThrow();
+    expect(sheetInProject('models/wolf')).toBe('models/trim_sheet_albedo.png');
+  });
+
+  it('every engine: import folder inside the project, profile known, conventions linked', () => {
+    for (const e of ENGINES) {
+      const l = engineLayout(e);
+      expect(sheetInProject(`${l.out}/wolf`)).toBe(`${l.out}/trim_sheet_albedo.png`);
+      expect(PROFILES).toContain(l.profile);
+      expect(l.docs.length).toBeGreaterThan(0);
+      for (const d of l.docs) expect(d).toMatch(/^https:\/\//);
+      expect(l.out.startsWith(`${l.recipes}/`)).toBe(false);
+    }
+  });
+
+  it('godot names colliders -colonly / -convcolonly; unreal UCX_; three/babylon use web', () => {
+    expect(engineLayout('godot').colliders).toMatch(/-colonly/);
+    expect(engineLayout('godot').colliders).toMatch(/-convcolonly/);
+    expect(engineLayout('unreal').colliders).toMatch(/UCX_/);
+    expect(engineLayout('three').profile).toBe('web');
+    expect(engineLayout('babylon').profile).toBe('web');
+    expect(engineLayout('unity').recipes.toLowerCase()).not.toBe('assets');
   });
 });

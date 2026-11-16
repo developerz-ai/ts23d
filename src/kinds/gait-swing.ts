@@ -62,13 +62,20 @@ export interface SwingPath {
   readonly fore: boolean;
 }
 
+const length = (b: Bone): number => Math.hypot(...sub(b.tail, b.head));
+
+/** A plantigrade foot: the paw (the whole sole, wrist / heel to toe) is over twice the short
+ *  metapodial segment. Its carpus does not fold through straight like a dog's: folding the long
+ *  sole forward drives the toe through the ground, so it flexes back like a hock. */
+const isSole = (leg: LegBones): boolean => length(leg[3]) > 2 * length(leg[2]);
+
 /** Local rotations of a swing leg at progress s. */
 export function swingLeg(leg: LegBones, A: Vec3, parent: Quat, s: number, p: SwingPath): Quat[] {
   const bump = Math.sin(Math.PI * s);
   // Next to lift-off and touch-down the leg is its stance pose (loaded joints may sit past their
   // passive range); only the free middle of the swing is held to the limits.
   const ends = s < 0.15 || s > 0.85;
-  const foldBy = p.fore ? FOLD_FORE : FOLD_HIND;
+  const foldBy = p.fore && !isSole(leg) ? FOLD_FORE : FOLD_HIND;
   let beta = p.lo.beta + (p.td.beta - p.lo.beta) * s + foldBy * bump;
   const paw = p.lo.paw + (p.td.paw - p.lo.paw) * s + CURL * bump;
   let M = p.M(s);

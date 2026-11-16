@@ -13,6 +13,7 @@ import {
   sculptField,
   sdf,
   valueNoise,
+  withBakeSource,
 } from '@developerz.ai/ts23d';
 import type { V } from './kit.ts';
 
@@ -127,7 +128,8 @@ export function skinMesh(edits: readonly SculptEdit[], cell: number, o: SkinOpti
     const lift = 1 + Math.max(0, curv) * 0.18;
     return [clamp(c[0] * lift), clamp(c[1] * lift), clamp(c[2] * lift)];
   };
-  return sdf({
+  const lipschitz = s.lipschitz + (amp > 0 ? 0.35 : 0);
+  const mesh = sdf({
     field,
     bounds: o.within
       ? [
@@ -147,7 +149,9 @@ export function skinMesh(edits: readonly SculptEdit[], cell: number, o: SkinOpti
     color: paint,
     ...(sym ? { symmetry: 'y' as const } : {}),
     // The sculpt's own bound (strokes raise it), plus the pores' slope.
-    lipschitz: s.lipschitz + (amp > 0 ? 0.35 : 0),
+    lipschitz,
     ...(o.detail ? { detail: o.detail } : {}),
   });
+  // The field it was meshed from, for the hero bake (ADR 012; bust.ts passes it on when opted in).
+  return withBakeSource(mesh, { field, lipschitz, color: paint });
 }

@@ -12,6 +12,19 @@ export const COMMAND_HELP: Readonly<Record<string, string>> = {
   build: `build   GLB × 3 LODs + hero + contact sheet + manifest.json per asset; exit 1 on any QA
           finding (per LOD, across the LOD chain, and over budget.draws)`,
   shot: 'shot    contact sheet + manifest.json only (fast look)',
+  init: 'init    scaffold ts23d in a game project: assets/, style.ts, PLAN.md, t3d.config.ts (--engine godot|three|unity|unreal|babylon); never overwrites',
+  concept:
+    'concept t3d concept <recipe.ts|brief.md> [--variants n] [--out dir]: silhouette sheet + concept images from the configured image model; prompts and seeds land in concept.ts',
+  doctor:
+    'doctor  optional-tier check (GPU, Blender, tools, models, server); every missing item prints its fix; exit 0 (--json)',
+  setup:
+    'setup   t3d setup tools|gpu-min|gpu-full [--dry-run]: into ~/.ts23d (or $TS23D_HOME), no sudo, idempotent',
+  server:
+    'server  t3d server start|stop|status [--profile] [--port]: the reference model server from the setup venv',
+  plan: 'plan    t3d plan check: assets/PLAN.md vs recipes (missing, extra, over budget)',
+  neural:
+    'neural  t3d neural ls (models from t3d.config.ts adapters) · t3d neural run <recipe.ts…> fills recipes/<name>/neural/<key>/; --require-neural: a miss is an error',
+  mcp: 'mcp     stdio MCP server for agents (build, shot, hero, blueprint, review, critique, list_recipes, explain_error); optional — the CLI with --json does the same',
   hero: 'hero    beauty render only → <out>/<asset>/hero.png (3/4 product shot, textured, shadowed)',
   review:
     'review  AI review pack → <out>/<asset>/review/: hero, sheet, close-ups, LOD strip, review.md',
@@ -34,7 +47,8 @@ export const COMMAND_HELP: Readonly<Record<string, string>> = {
           after), <asset>_finish.glb (LOD0 on its own finish material, LOD1/2 on the trim sheet),
           finish.json (provenance + QA). --model mock|http --endpoint URL --prompt "…"
           --negative "…" --views 8 --atlas 1024 --timeout <s> (http, default 300) --seed s
-          --force; results cached in .ts23d/finish/`,
+          --force; results cached in .ts23d/finish/. --hero: bake the hero texture tier instead
+          (LOD0 normal/AO/height/ORM from the sculpt field onto its own atlas; ADR 012) → <out>/<asset>/hero/`,
   list: 'list    the assets each module exports',
 };
 
@@ -44,6 +58,7 @@ const FLAGS = `flags:
   --out <dir>     output root (default: out) → <dir>/<asset>/{lod0,lod1,lod2}.glb hero.png sheet.png manifest.json
   --animations    bake the 'run' clip (default) · --no-animations skips it
   --no-shot       build without rendering hero.png and the contact sheet
+  --watch         build: rebuild changed recipes (and their dependants) on save; never exits on a failing recipe
   --size WxH      beauty render size (default 1600x900) · --az <deg> camera azimuth from the
                   front, default -35 (front-left 3/4) · --el <deg> elevation, default 18 · --fov <deg> 30
   --quality path  hero: path traced (sun + sky, bounces, skin diffusion, strand lobes; deterministic,

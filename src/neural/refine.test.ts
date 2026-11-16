@@ -26,6 +26,18 @@ describe('refine (mock local server)', () => {
     ).catch((x: unknown) => x);
     expect(e instanceof Ts23dError && e.code).toBe('T3D_REFINE_FAILED');
   });
+  test('a GLB header over garbage → T3D_NEURAL_OUTPUT_INVALID, nothing cached', async () => {
+    const junk = new Uint8Array(32);
+    junk.set([0x67, 0x6c, 0x54, 0x46, 2, 0, 0, 0, 32]);
+    const fetch = async (): Promise<Response> => new Response(new Blob([junk]));
+    const cache = store();
+    const e = await refine(
+      { mesh: cube(), prompt: 'p' },
+      { endpoint: 'http://x', model: 'm', cache, fetch },
+    ).catch((x: unknown) => x);
+    expect(e instanceof Ts23dError && e.code).toBe('T3D_NEURAL_OUTPUT_INVALID');
+    expect(cache.size()).toBe(0);
+  });
   test('a server that never answers + timeoutMs → T3D_REFINE_FAILED within 1 s', async () => {
     const server = Bun.serve({ port: 0, fetch: () => new Promise<Response>(() => {}) });
     try {

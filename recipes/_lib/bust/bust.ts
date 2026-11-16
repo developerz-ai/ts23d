@@ -7,6 +7,7 @@
 import {
   type BuildContext,
   bakeAo,
+  bakeSourceOf,
   createRng,
   type DetailRegion,
   type Field,
@@ -15,6 +16,7 @@ import {
   type Rng,
   type SculptEdit,
   sculptField,
+  withBakeSource,
 } from '@developerz.ai/ts23d';
 import { featureStrokes } from '../face/features.ts';
 import { type Forms, HERO_FORMS, muscleStrokes, planeStrokes } from '../face/planes.ts';
@@ -193,13 +195,18 @@ export function bustEdits(
   };
 }
 
-export function buildBust(ctx: BuildContext, b: BustRecipe): void {
+/** Hero tier (ADR 012): LOD0 head and bust cells grow by these; the field's detail is baked. */
+export const HERO_CELL = { head: 2.2, bust: 1.5 } as const;
+
+/** `hero`: a lighter LOD0 whose skin parts carry their field for the hero bake (finish/hero.ts). */
+export function buildBust(ctx: BuildContext, b: BustRecipe, o: { hero?: boolean } = {}): void {
   if (!b.skull) checkNeck(b.l, b.torso, b.neck);
   const lod = ctx.lod;
+  const hero = o.hero === true && lod === 0;
   const { edits, skin } = bustEdits(b, ctx.pick([4, 4, 2]), lod, ctx.rng.fork('features'));
   const seam = neckSeam(b.l).field;
-  const cell = ctx.pick(b.cells.head);
-  const bustCell = ctx.pick(b.cells.bust);
+  const cell = ctx.pick(b.cells.head) * (hero ? HERO_CELL.head : 1);
+  const bustCell = ctx.pick(b.cells.bust) * (hero ? HERO_CELL.bust : 1);
   const lap = bustCell * 0.5;
   const rng = ctx.rng.fork('skin');
   const { l } = b;
@@ -242,7 +249,9 @@ export function buildBust(ctx: BuildContext, b: BustRecipe): void {
     const lit =
       lod < 2 ? bakeAo(m, { samples: ctx.pick([14, 9, 6]), radius: 0.08, strength: 0.45 }, all) : m;
     const face = name === 'head' || name === 'bust';
-    ctx.part(name, withFace(name, lit, rig), face ? { parent: 'face' } : undefined);
+    const src = hero ? bakeSourceOf(m) : undefined;
+    const part = withFace(name, lit, rig);
+    ctx.part(name, src ? withBakeSource(part, src) : part, face ? { parent: 'face' } : undefined);
   }
   eyes(ctx, b.eye, {
     cell: ctx.pick([0.0016, 0.003, 0.008]),

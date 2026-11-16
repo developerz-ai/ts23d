@@ -196,7 +196,7 @@ Every stage has zero runtime dependencies ([ADR 005](docs/decisions/005-zero-run
 
 > **Status: early (0.x).** The core loop works: write, build, QA, shot, hero, review, with
 > textures, trees, sculpt, terrain and the gallery's passing recipes. Still declared and throwing
-> `T3D_NOT_IMPLEMENTED` (As of 2026-11): `localGenerator`, `kubeezImages`. Shipped neural-module pieces: `importGlb`, `refine`, and `t3d finish --model http`. See the [roadmap](docs/plans/roadmap.md). Expect breaking changes.
+> `T3D_NOT_IMPLEMENTED` (As of 2026-11): none in `/neural`. Shipped neural-module pieces: `importGlb`, `refine`, `t3d finish --model http`, neural adapters (`http`, ComfyUI, OpenAI-compatible images, kubeez.com, mock), the committed recipe cache and `localGenerator`. See the [roadmap](docs/plans/roadmap.md). Expect breaking changes.
 
 ## A recipe
 
@@ -255,14 +255,14 @@ Needs Bun ≥ 1.4.4: the CLI (`t3d`) runs on Bun. The library (`compile`, `runQa
 
 ```sh
 bun add @developerz.ai/ts23d
-bunx t3d build assets/<name>.ts       # GLB × 3 LODs + sheet + manifest per asset; exit 1 on a QA finding
-bunx t3d shot  assets/<name>.ts       # sheet + manifest only: the fast look
-bunx t3d hero  assets/<name>.ts       # beauty render: textured, lit, soft shadows (1600×900)
-bunx t3d review assets/<name>.ts      # AI review pack: hero, sheet, close-ups, LOD strip, review.md
-bunx t3d tune assets/<name>.ts --evals 400   # fit tune.params to objectives → tune.json, tune-report.md, tune-strip.png
-bunx t3d finish assets/<name>.ts --endpoint URL --prompt "…"   # optional AI texture layer on LOD0
-bunx t3d list  assets/*.ts --json     # the assets each module exports (one JSON envelope)
-bunx t3d --version                    # also: t3d <command> --help
+bunx -p @developerz.ai/ts23d t3d build assets/<name>.ts       # GLB × 3 LODs + sheet + manifest per asset; exit 1 on a QA finding
+bunx -p @developerz.ai/ts23d t3d shot  assets/<name>.ts       # sheet + manifest only: the fast look
+bunx -p @developerz.ai/ts23d t3d hero  assets/<name>.ts       # beauty render: textured, lit, soft shadows (1600×900)
+bunx -p @developerz.ai/ts23d t3d review assets/<name>.ts      # AI review pack: hero, sheet, close-ups, LOD strip, review.md
+bunx -p @developerz.ai/ts23d t3d tune assets/<name>.ts --evals 400   # fit tune.params to objectives → tune.json, tune-report.md, tune-strip.png
+bunx -p @developerz.ai/ts23d t3d finish assets/<name>.ts --endpoint URL --prompt "…"   # optional AI texture layer on LOD0
+bunx -p @developerz.ai/ts23d t3d list  assets/*.ts --json     # the assets each module exports (one JSON envelope)
+bunx -p @developerz.ai/ts23d t3d --version                    # also: t3d <command> --help
 ```
 
 | Flag | Effect |
@@ -357,12 +357,74 @@ Using @developerz.ai/ts23d, write recipes/<name>/<name>.ts: a <thing>, real dime
 Z up, +X front. Put the sources in `sources` and the key dimensions in `real.measures`.
 Block out the masses, then details. Name every part that moves (axle_*, door_*, rotor_*)
 and pivot it where it hinges. Loop until done:
-  1. bunx t3d build recipes/<name>/<name>.ts   (fix every finding until it prints QA PASS;
+  1. bunx -p @developerz.ai/ts23d t3d build recipes/<name>/<name>.ts   (fix every finding until it prints QA PASS;
      a measures finding means rebuild the part, never edit the spec)
   2. Read out/<name>/sheet.png (build writes it).
   3. Name the single biggest error, fix it, go to 1.
 Stop when two consecutive shots show nothing worth fixing. Never use Math.random; use ctx.rng.
 ```
+
+## For agents
+
+**The CLI with `--json` is the interface; everything else is optional.** Each step is one command that prints one JSON envelope (`{ ok, data }` or `{ ok: false, error: { code, message, fix } }`) and writes PNGs your agent opens:
+
+1. Write `assets/<name>.ts` exporting `defineAsset({...})`: real sizes in metres, Z up, +X front.
+2. `bunx -p @developerz.ai/ts23d t3d build assets/<name>.ts --json`: fix every finding (each has a `fix:`) until QA PASS.
+3. `bunx -p @developerz.ai/ts23d t3d shot …`: read `out/<name>/sheet.png`, name the single worst error, fix it, rebuild.
+4. `bunx -p @developerz.ai/ts23d t3d hero …` / `blueprint …`: the textured look and the measured drawing.
+5. `bunx -p @developerz.ai/ts23d t3d review …`: read `review/*.png`, follow `review.md`. Then `bunx -p @developerz.ai/ts23d t3d critique …`.
+6. Add LOD-gated detail; stop when two looks in a row find nothing worth fixing.
+
+**Skills ship in the package as plain markdown**: `node_modules/@developerz.ai/ts23d/.claude/skills/<skill>/SKILL.md`: `author-recipe` (the loop) and the artist workflows (`creature-artist`, `character-artist`, `hard-surface-artist`, `architect`, `prop-artist`, `rigger-animator`, `technical-artist`, …). Read them in place, or copy one into your agent's skills folder.
+
+**Optional: MCP server.** `t3d mcp` serves the same steps over stdio (MCP 2025-06-18) as tools: `build`, `shot`, `hero`, `blueprint`, `review`, `critique`, `list_recipes`, `explain_error`. Renders come back as images the agent sees inline (downscaled to 1024 px; extra review images listed by path). Tools read and write only inside the project root and its output folder (`--root`, `--out`); errors come back as `T3D_*` code + fix and the server stays up.
+
+```sh
+bun add @developerz.ai/ts23d
+claude mcp add ts23d -- bunx -p @developerz.ai/ts23d t3d mcp      # Claude Code, from the project root
+```
+
+Other MCP clients (Claude Desktop, Cursor, …): command `bunx`, args `["-p", "@developerz.ai/ts23d", "t3d", "mcp", "--root", "/path/to/project"]`. Use `-p`: a bare `bunx -p @developerz.ai/ts23d t3d` outside a project with the package installed fetches an unrelated npm package named `t3d`.
+
+## Bring your own model
+
+Optional GPU tier: any model plugs in through a `NeuralAdapter` for the tasks `image`, `mesh`, `texture`, `rig`, `motion`, `hair`, `score`. Shipped adapters: `http` (the `t3d-neural/1` protocol), `comfyAdapter` (your ComfyUI workflow), `openaiImage` (any OpenAI-compatible images endpoint) and `mockAdapter`. Name them in `t3d.config.ts`:
+
+```ts
+import { defineConfig, http } from '@developerz.ai/ts23d';
+export const config = defineConfig({ neural: { mesh: http('http://gpu:8190', 'pixal3d') } });
+```
+
+`t3d neural ls` lists the models; `t3d neural run recipes/oak/oak.ts` runs what the recipe asks for and commits the outputs to `recipes/oak/neural/<key>/` with a `record.json` (model, licence, weights hash, request, output hashes; 8 MB cap per recipe). Builds and CI never call a model: a hit replays the committed bytes, a miss falls back to the CPU path with a `T3D_NEURAL_MISSING` notice (an error with `--require-neural`). Every output is validated before use. Licences are recorded, never gated for your builds.
+
+**No GPU?** For the `image` task, ts23d ships an adapter for [kubeez.com](https://kubeez.com), a hosted image-generation service. Disclosure: we work with Kubeez as a partner; any other adapter works the same way.
+
+```ts
+import { defineConfig, kubeezAdapter } from '@developerz.ai/ts23d';
+export const config = defineConfig({ neural: { image: kubeezAdapter({ apiKey: process.env.KUBEEZ_API_KEY }) } });
+```
+
+The key stays in your environment: it is sent only as a request header, never written to `record.json`, the cache, logs or errors. Outputs are recorded with licence `own` and the [Kubeez terms](https://kubeez.com/legal/terms).
+
+Details: [docs/idea/08-neural-adapters.md](docs/idea/08-neural-adapters.md), ADRs [014](docs/decisions/014-neural-outputs-are-cached-inputs.md) and [015](docs/decisions/015-models-by-adapter.md).
+
+## Optional tier
+
+Nothing here is needed to build assets. Three commands install and run the tools and models on your own machine:
+
+```sh
+bunx -p @developerz.ai/ts23d t3d doctor            # what is here, what is missing, the exact fix for each (--json for agents)
+bunx -p @developerz.ai/ts23d t3d setup gpu-full    # or: tools (no GPU) · gpu-min (8 GB+); --dry-run prints the plan first
+bunx -p @developerz.ai/ts23d t3d server start      # the reference model server on 127.0.0.1:8190 (status · stop)
+```
+
+| Profile | Needs | Installs |
+|---|---|---|
+| `tools` | nothing | bpy 5.2.4 (Blender as a module), Godot 4.7.2 headless, basisu 2.50 (built from source), gltfpack 1.3, Material Maker 1.8 |
+| `gpu-min` | NVIDIA, 8 GB+ | TRELLIS.2 GGUF through ComfyUI (low VRAM), DINOv2 scoring |
+| `gpu-full` | NVIDIA, 24 GB+ | Pixal3D, TRELLIS.2, DINOv2 on torch 2.6 + CUDA 12.4 (local toolkit, no root); optional video-motion, UniRig, UniMate, HairDeck |
+
+Everything lands in `~/.ts23d` (or `$TS23D_HOME`); uninstall is deleting that folder. No `sudo`, nothing system-wide; every step checks what is already there, so a re-run is a no-op and an interrupted run resumes. Downloads are version- and hash-pinned. Weights go to `$HF_HOME` (default `~/.ts23d/hf`); `HF_TOKEN` is read from your shell and never stored or printed; gated licences are listed with their URLs. GPU profiles write a `t3d.config.ts` pointing at the local server when the project has none. Linux and WSL2 today; macOS (`tools` only) is planned. No GPU: `t3d doctor` points the `image` task at kubeez.com (partner, see above); mesh, rig and motion stay on the CPU tier. The installer and server live in [`examples/neural-server/`](examples/neural-server/) (from a clone; set `TS23D_SERVER_DIR` when using the npm package).
 
 ## What fits, what doesn't
 
@@ -374,7 +436,7 @@ As of 2026-10. Full matrix: [docs/idea/07-what-fits.md](docs/idea/07-what-fits.m
 | **Shipped, early** | Vegetation: Weber–Penn trees (oak, pine, palm, birch, willow); LOD2 impostors are crude |
 | **Shipped, early** | Stylised organic: `sculpt` busts, SDF rocks and asteroids, eroded terrain. Boats: lofted `hull` |
 | **Shipped, early** | Stylised creatures: `creature()` over a skeleton with per-family biology (`recipes/wolf`); [animal research](docs/research/animal-anatomy.md) |
-| **Weak** | Realistic people and animals, realistic sculpted organic forms, cloth. Use an image-to-3D tool, or the planned `localGenerator` ([`/neural`](docs/idea/08-neural-adapters.md)) that runs open-weight models on your own GPU and caches the result |
+| **Weak** | Realistic people and animals, realistic sculpted organic forms, cloth. Use an image-to-3D tool, or a model on your own GPU through a [`/neural` adapter](docs/idea/08-neural-adapters.md) (`localGenerator`, `t3d neural run`), with the result committed to the recipe's cache |
 
 Not a replacement for AI mesh generators: a different approach with different strengths. Neutral comparison: [docs/landscape.md](docs/landscape.md).
 

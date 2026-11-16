@@ -36,6 +36,9 @@ export interface CreatureColours {
   readonly muzzle?: Vec3;
   /** Tail tip, ear backs/rims (default: back × 0.6). */
   readonly tip?: Vec3;
+  /** Tail tip only, when it differs from the ear backs (red fox: white tip, black ears;
+   *  default: `tip`). */
+  readonly tailTip?: Vec3;
   readonly nose: Vec3;
   readonly iris: Vec3;
   /** Claws, hooves, beak, talons. */

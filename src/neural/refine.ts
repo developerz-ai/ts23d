@@ -1,16 +1,20 @@
 // Optional AI refine adapter: send a mesh (+ prompt, optional reference image) to a model server
 // the USER runs locally (a TRELLIS / Hunyuan3D-style "refine/retexture this mesh" wrapper) and get
-// a GLB back. ts23d ships the protocol, the cache and the errors — never a model. Cached by
-// sha256(model, prompt, seed, input GLB, image): a hit needs no GPU and no network, a miss with
-// `offline` (CI) is T3D_REFINE_FAILED naming the command. The result is an ordinary GLB for
-// importGlb (licence: the model's output terms, declared by the caller).
+// a GLB back. ts23d ships the protocol, the cache and the errors — never a model. Keyed like every
+// neural job (adapter.ts: canonical JSON of contract, model, prompt, seed, input hashes): a hit
+// needs no GPU and no network, a miss with `offline` (CI) is T3D_REFINE_FAILED naming what to
+// commit. The reply passes the `mesh` task validation (validate.ts) before it is cached. The
+// result is an ordinary GLB for importGlb (licence: the model's output terms, declared by the
+// caller).
 //
 // Protocol: POST <endpoint>, JSON { model, prompt, seed, mesh: base64 GLB (glTF Y-up),
 // image?: base64 } → 200 with body = GLB bytes (model/gltf-binary).
 
 import { type Mesh, Ts23dError } from '../core/index.ts';
+import { canonicalJson, NEURAL_CONTRACT } from './adapter.ts';
 import { writeMeshGlb } from './glb-write.ts';
 import { sha256Hex } from './sha256.ts';
+import { validateOutputs } from './validate.ts';
 
 export interface RefineRequest {
   readonly mesh: Mesh;
@@ -44,7 +48,7 @@ export interface RefineOptions {
   readonly endpoint: string;
   /** Model id, part of the cache key: 'trellis-2', 'hunyuan3d-2.1'. */
   readonly model: string;
-  /** Where results live (scripts pass a `.ts23d/neural/` disk cache); default in-memory. */
+  /** Where results live (scripts pass a disk cache under recipes/<name>/neural/); default in-memory. */
   readonly cache?: RefineCache;
   /** Never call the server: a cache miss is an error (CI). */
   readonly offline?: boolean;
@@ -98,13 +102,15 @@ export async function refine(req: RefineRequest, o: RefineOptions): Promise<Refi
   const seed = req.seed ?? 0;
   const key = sha256Hex(
     new TextEncoder().encode(
-      JSON.stringify([
-        o.model,
-        req.prompt,
+      canonicalJson({
+        contract: NEURAL_CONTRACT,
+        task: 'refine',
+        model: o.model,
+        prompt: req.prompt,
         seed,
-        sha256Hex(input),
-        req.image ? sha256Hex(req.image) : null,
-      ]),
+        mesh: sha256Hex(input),
+        image: req.image ? sha256Hex(req.image) : null,
+      }),
     ),
   );
   const cache = o.cache ?? MEMORY;
@@ -113,7 +119,7 @@ export async function refine(req: RefineRequest, o: RefineOptions): Promise<Refi
   if (o.offline)
     throw new Ts23dError('T3D_REFINE_FAILED', {
       cause: `refine cache miss for key ${key.slice(0, 12)}… (model ${o.model}) while offline`,
-      fix: `run the build once on a machine with the ${o.model} server at ${o.endpoint}, then commit .ts23d/neural/${key}.glb`,
+      fix: `run the build once on a machine with the ${o.model} server at ${o.endpoint} and a disk \`cache\` under recipes/<name>/neural/, then commit ${key}.glb there (ADR 014)`,
     });
   const glb = await post(o, {
     method: 'POST',
@@ -126,6 +132,7 @@ export async function refine(req: RefineRequest, o: RefineOptions): Promise<Refi
       ...(req.image ? { image: b64(req.image) } : {}),
     }),
   });
+  validateOutputs('mesh', { seed }, { outputs: [{ bytes: glb, mime: 'model/gltf-binary' }] });
   cache.set(key, glb);
   return { glb, key, sha256: sha256Hex(glb), cached: false };
 }

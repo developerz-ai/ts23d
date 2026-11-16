@@ -1,0 +1,7 @@
+The scripts in examples/blender/ and examples/neural-server/plugins/blender_*.py drive Blender
+through its Python API (bpy). Blender's licence requires published scripts that use bpy to be
+GPL-compatible, so these files are licensed GPL-2.0-or-later
+(https://www.gnu.org/licenses/old-licenses/gpl-2.0.html), unlike the rest of the repository (MIT).
+
+The ts23d library never imports them: it talks to Blender only through a separate process or an
+HTTP server, and these examples are not part of the npm package.

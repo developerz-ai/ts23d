@@ -69,7 +69,7 @@ See [recipes/import_demo/README.md](../../recipes/import_demo/README.md): export
 
 ## Gaps (honest)
 
-- `localGenerator` stays planned; `refine` is the adapter shape it will share.
+- `localGenerator` ships as a wrapper over the `mesh` task of any `NeuralAdapter` (docs/idea/08-neural-adapters.md); `refine` shares the job key and recipe cache.
 - The demo's stand-in scan is the CC0 MakeHuman hm08 base (data only), not a photogrammetry capture; its hair is paint.
 - The own-texture GLB is validated (Khronos validator, 0 errors/warnings) but ts23d's CPU renderer draws only the trim-sheet path.
 - Hole filling is a fan over loops ≤ `maxHoleEdges`; large holes are reported, not patched.

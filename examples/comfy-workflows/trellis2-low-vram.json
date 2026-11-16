@@ -1,0 +1,76 @@
+{
+  "_t3d": {
+    "what": "TRELLIS.2 image -> textured GLB for 6-12 GB cards: GGUF Q4_K_M weights, models offloaded between stages, 20k triangles, 1024 texture. ComfyUI API format.",
+    "nodes": "github.com/Aero-Ex/ComfyUI-Trellis2-GGUF (MIT) @ b3b9e951874c5fb5c936566c93b908299be08b2c; weights Aero-Ex/Trellis2-GGUF (from microsoft/TRELLIS.2-4B, MIT)",
+    "placeholders": "{{image}} = file name of the photo in ComfyUI's input/ folder; {{seed}} = request seed (comfyAdapter fills both)",
+    "tested": "untested: written against the node pack's INPUT_TYPES at the pinned commit; load it in ComfyUI and run once before pointing ts23d at it",
+    "smaller": "4-6 GB: set pipeline_type to \"512\" and texture_size to 512; still out of memory: use_tiled_decoder stays true, close other GPU apps"
+  },
+  "1": {
+    "class_type": "Trellis2LoadModel_GGUF",
+    "inputs": {
+      "modelname": "TRELLIS.2-4B",
+      "model_format": "GGUF Q4_K_M",
+      "backend": "sdpa",
+      "device": "cuda",
+      "low_vram": true,
+      "keep_models_loaded": false
+    }
+  },
+  "2": {
+    "class_type": "Trellis2LoadImageWithTransparency_GGUF",
+    "inputs": { "image": "{{image}}" }
+  },
+  "3": {
+    "class_type": "Trellis2PreProcessImage_GGUF",
+    "inputs": { "image": ["2", 2], "padding": 0, "remove_background": true }
+  },
+  "4": {
+    "class_type": "Trellis2MeshWithVoxelGenerator_GGUF",
+    "inputs": {
+      "pipeline": ["1", 0],
+      "image": ["3", 0],
+      "seed": "{{seed}}",
+      "pipeline_type": "1024_cascade",
+      "sparse_structure_steps": 12,
+      "shape_steps": 12,
+      "texture_steps": 12,
+      "max_num_tokens": 49152,
+      "sparse_structure_resolution": 32,
+      "max_views": 4,
+      "generate_texture_slat": true,
+      "use_tiled_decoder": true,
+      "sampler": "euler"
+    }
+  },
+  "5": {
+    "class_type": "Trellis2PostProcessAndUnWrapAndRasterizer_GGUF",
+    "inputs": {
+      "mesh": ["4", 0],
+      "bvh": ["4", 1],
+      "mesh_cluster_threshold_cone_half_angle_rad": 60.0,
+      "mesh_cluster_refine_iterations": 0,
+      "mesh_cluster_global_iterations": 1,
+      "mesh_cluster_smooth_strength": 1,
+      "texture_size": 1024,
+      "remesh": true,
+      "remesh_band": 1.0,
+      "remesh_project": 0.0,
+      "target_face_num": 20000,
+      "simplify_method": "Cumesh",
+      "fill_holes": true,
+      "texture_alpha_mode": "OPAQUE",
+      "dual_contouring_resolution": "Auto",
+      "double_side_material": false,
+      "remove_floaters": true,
+      "bake_on_vertices": false,
+      "use_custom_normals": false,
+      "uv_unwrap_method": "Xatlas",
+      "remove_inner_faces": true
+    }
+  },
+  "6": {
+    "class_type": "Trellis2ExportMesh_GGUF",
+    "inputs": { "trimesh": ["5", 0], "filename_prefix": "t3d/trellis2", "file_format": "glb" }
+  }
+}

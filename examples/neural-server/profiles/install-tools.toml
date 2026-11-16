@@ -1,0 +1,83 @@
+# `t3d setup tools`: the no-GPU tool tier (slice 20 adapters), everything under $TS23D_HOME.
+# Versions are the ones the slice-20 smoke ran (2026-11-15); downloads are sha256-pinned.
+# Licences are the tools'; what they produce from your inputs is yours.
+
+[profile]
+name = "tools"
+
+[[step]]
+id = "bpy-venv"
+kind = "venv"
+title = "Python 3.13 venv for Blender as a module"
+path = "venv-bpy/.venv"
+python = "3.13"
+
+[[step]]
+id = "bpy"
+kind = "pip"
+title = "bpy 5.2.4 LTS (Blender as a Python module, ~400 MB)"
+venv = "venv-bpy/.venv"
+packages = ["bpy==5.2.4"]
+check = "import bpy; assert bpy.app.version_string.startswith('5.2.4')"
+licence = "GPL-2.0-or-later (Blender)"
+
+[[step]]
+id = "gltfpack"
+kind = "download"
+title = "gltfpack 1.3 (meshoptimizer)"
+url = "https://github.com/zeux/meshoptimizer/releases/download/v1.3/gltfpack-ubuntu.zip"
+sha256 = "0666d9dc40d60fe5b9a45f3fc24f8e6ca87112974bd5de9ca57152aa13d06017"
+archive = "zip"
+member = "gltfpack"
+dest = "tools/bin/gltfpack"
+executable = true
+licence = "MIT"
+
+[[step]]
+id = "godot"
+kind = "download"
+title = "Godot 4.7.2-stable (headless engine check)"
+url = "https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip"
+sha256 = "cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4"
+archive = "zip"
+member = "Godot_v4.7.2-stable_linux.x86_64"
+dest = "tools/bin/godot"
+executable = true
+licence = "MIT"
+
+# basisu publishes no release binaries: build tag v2_50 from source (CMake + a C++ compiler; no
+# CMake on PATH → `uv tool run --from cmake` fetches one).
+[[step]]
+id = "basisu-src"
+kind = "download"
+title = "basis_universal v2_50 source"
+url = "https://codeload.github.com/BinomialLLC/basis_universal/tar.gz/refs/tags/v2_50"
+sha256 = "216e49e1f4213d4bfa4afaa07527e16bac28533dddd444197d3aa19230ac130c"
+archive = "tar.gz"
+dest = "tools/src/basis_universal-2_50"
+licence = "Apache-2.0"
+
+[[step]]
+id = "basisu"
+kind = "run"
+title = "build basisu v2.50.0"
+cwd = "tools/src/basis_universal-2_50"
+run = [
+  ["{cmake}", "-S", ".", "-B", "build", "-DCMAKE_BUILD_TYPE=Release"],
+  ["{cmake}", "--build", "build", "--target", "basisu", "-j", "{jobs}"],
+]
+copy = ["bin/basisu", "tools/bin/basisu"]
+creates = "tools/bin/basisu"
+licence = "Apache-2.0"
+fix = "basisu needs a C++ compiler (gcc or clang); install one with your package manager and rerun"
+
+[[step]]
+id = "material-maker"
+kind = "download"
+title = "Material Maker 1.8 (node-graph materials)"
+url = "https://github.com/RodZill4/material-maker/releases/download/1.8/material_maker_1_8_linux.tar.gz"
+sha256 = "8e8eb7050e75086cfafeb4ddc0b09c4fe117f529693e611d6fccca1651e913b3"
+archive = "tar.gz"
+dest = "tools/material-maker"
+licence = "MIT"
+optional = true

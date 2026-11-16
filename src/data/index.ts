@@ -1,6 +1,6 @@
-// @developerz.ai/ts23d/data — real-world inputs, pinned and offline. Wikidata facts (CC0) and
-// elevation models arrive through `bun run data …` as small committed files carrying their URL,
-// sha256 and licence; these functions parse, verify and turn them into recipe numbers and
+// @developerz.ai/ts23d/data — real-world inputs, pinned and offline. Wikidata facts (CC0),
+// OpenStreetMap extracts (ODbL) and elevation models arrive through `bun run data …` as small
+// committed files carrying their URL, sha256 and licence; these functions parse, verify and turn them into recipe numbers and
 // terrain. Nothing here fetches: compile stays deterministic and offline.
 
 export {
@@ -9,6 +9,23 @@ export {
   decodeDem,
   encodeDem,
 } from './dem.ts';
+export {
+  checkBbox,
+  citeOsm,
+  OSM_ATTRIBUTION,
+  OSM_LICENSE,
+  type OsmArea,
+  type OsmBbox,
+  type OsmBuilding,
+  type OsmFeatures,
+  type OsmRecord,
+  type OsmRoad,
+  type OsmSource,
+  osmFeatures,
+  parseHeight,
+  parseOsm,
+  readOsm,
+} from './osm.ts';
 export { readDem, readWikidata } from './read.ts';
 export {
   type Conflict,

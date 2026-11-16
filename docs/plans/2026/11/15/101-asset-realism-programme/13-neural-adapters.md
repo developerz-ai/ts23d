@@ -8,6 +8,7 @@ Rule: the library defines tasks, cache and validation; users plug in any model t
 | `src/neural/adapter.ts` + `.test.ts` | new | `NeuralAdapter { id, tasks, run(task, req): Promise<Result> }`; job key = sha256(canonical JSON{contract, task, model, weightsSha256, seed, params, input sha256s}) floats rounded 1e-6 |
 | `src/neural/http-adapter.ts` + `.test.ts` | new | `t3d-neural/1`: `GET /v1/models` → `[{id, task, licence, weightsSha256, vramGb}]`; `POST /v1/jobs`; `GET /v1/jobs/:id`; timeouts, size caps, `T3D_NEURAL_FAILED` |
 | `src/neural/comfy-adapter.ts` + `.test.ts` | new | runs a user's ComfyUI workflow JSON (`/prompt`, `/history`), maps named outputs to task results |
+| `src/neural/kubeez-adapter.ts` + `.test.ts` | new | `image` task (text-to-image, image-to-image) on kubeez.com's REST API (async generate + poll, uploads, `/v1/models`); the recommended no-GPU path (partner, disclosed); key from `KUBEEZ_API_KEY`, never recorded |
 | `src/neural/openai-image-adapter.ts` + `.test.ts` | new | any OpenAI-compatible `/v1/images/generations` endpoint for the `image` task |
 | `src/neural/mock-adapter.ts` | new | deterministic fake per task for tests and CI (replaces ad-hoc fixtures) |
 | `src/neural/recipe-cache.ts` + `.test.ts` | new | `recipes/<name>/neural/<key>/{output.*, record.json}`; 8 MB cap per recipe; `offline` mode; miss → `{ fallback: true }` + `T3D_NEURAL_MISSING` notice, throw only with `requireNeural` |

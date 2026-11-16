@@ -3,6 +3,17 @@
 export { clear, noOverlap, runChecks, symmetric, touches } from './checks.ts';
 export { clashes } from './clash.ts';
 export {
+  coherence,
+  coherenceFindings,
+  MIN_PALETTE_SHARE,
+  MIN_SET_FOR_Z,
+  robustZ,
+  type StyleMetrics,
+  styleMetrics,
+  TEXEL_TOLERANCE,
+} from './coherence.ts';
+export { ciede2000, type Lab, labOfLinear } from './coherence-colour.ts';
+export {
   type ConnectionReport,
   connectionFindings,
   connectionReport,
@@ -161,6 +172,17 @@ export {
   refSilhouette,
 } from './ref-gate.ts';
 export { degenerateTriangles, nonFinite, normalsMatchWinding, vertexColors } from './sanity.ts';
+export {
+  type CameraLoad,
+  cameraLoad,
+  LOD_SWITCH,
+  referenceCameras,
+  type SceneAssetStats,
+  type SceneBudget,
+  type SceneCamera,
+  type ScenePlacement,
+  sceneBudgetFindings,
+} from './scene-budget.ts';
 export { BIND_TOLERANCE, SUM_TOLERANCE, skin, skinFindings } from './skin.ts';
 export { findSlits, type Slit, type SlitOptions } from './slits.ts';
 export { treads } from './treads.ts';

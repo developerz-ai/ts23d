@@ -12,6 +12,8 @@ export interface FinishArgs {
   readonly atlas?: number;
   /** Write the finished GLB even when finish QA rejects it (provenance records why). */
   readonly force: boolean;
+  /** `--hero`: bake the hero texture tier (ADR 012) instead of the model finish. */
+  readonly hero?: boolean;
   /** `--timeout <s>`: how long the http model may take per request. */
   readonly timeoutMs?: number;
 }
@@ -23,8 +25,12 @@ export const SWITCHES = [
   '--no-animations',
   '--no-shot',
   '--physics',
+  '--require-neural',
+  '--allow-bad-input',
+  '--watch',
   '--no-sounds',
   '--force',
+  '--hero',
   '--help',
   '-h',
   '--version',

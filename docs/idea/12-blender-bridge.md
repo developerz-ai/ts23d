@@ -1,6 +1,34 @@
 # 12 — Blender bridge (design + feasibility)
 
-**Status: all planned. Nothing here is shipped, and the core library never needs Blender.** An optional adapter could call a user-installed Blender headless (`blender -b --python`) for things ts23d's CPU paths do not do: Cycles path-traced beauty renders under a CC0 HDRI, high→low bakes, voxel remesh / decimate of imported meshes, and GLB round-trips through other formats. Blender output is not byte-deterministic across versions or hardware, so every Blender result is a **cached input**, keyed by content hash, exactly like the `/neural` cache ([08](08-neural-adapters.md)). Research as of 2026-11-07; Blender was not run on the authoring machine, so every command below is unverified on hardware.
+**Status: partly shipped (plan 101 slice 20, 2026-11-15); the core library never needs Blender.** Shipped: Blender's *data-level* tools as optional, cached **tool tasks** behind the neural adapter contract (ADR 014/015) — `cloth` (cloth-sim drape), `rig` with `template: 'human'` (Rigify), `fracture` (Voronoi cells + rigid-body settle) — plus three non-Blender tools: `engine-check` (Godot headless import), `ktx2` (Basis Universal) and `meshopt` (meshoptimizer's gltfpack). Still planned: Cycles beauty renders, high→low bakes, voxel remesh / decimate, format conversion, Material Maker textures (see the tables below, kept as the design). Not wrapped, by decision: sculpt brush strokes (`bpy.ops.sculpt.brush_stroke` needs a viewport; ts23d's SDF strokes and VDM stamps are the brushes) and Blender MCP servers (they drive a live UI: not reproducible).
+
+## Shipped: tool tasks (slice 20)
+
+| Task | Tool (licence) | TS adapter | Server plug-in | Output |
+|---|---|---|---|---|
+| `cloth` | Blender cloth (GPL app; outputs yours) | `blenderAdapter()` | `blender-cloth` | draped garment GLB |
+| `rig` (`template: 'human'`) | Blender Rigify | `blenderAdapter()` | `blender-rig` | skinned GLB (DEF- bones) + JSON (controls, face controls) |
+| `fracture` | Blender bmesh + Bullet | `blenderAdapter()` | `blender-fracture` | GLB of `piece_000…` + JSON (volumes, centres) |
+| `engine-check` | Godot 4.2+ headless (MIT) | `godotAdapter()` | `godot` | JSON: meshes, skeletons, bones, collision shapes, bodies, clips played, importer errors |
+| `ktx2` | basisu (Apache-2.0) | `basisuAdapter()` | `basisu` | `.ktx2` (UASTC or ETC1S, mipmaps, sRGB/linear) |
+| `meshopt` | gltfpack (MIT) | `gltfpackAdapter()` | `gltfpack` | GLB with `EXT_meshopt_compression` and/or simplified (named nodes, extras and constant clips kept) |
+
+- **Two Blender paths, one script set** (`examples/blender/`, GPL-2.0-or-later because it calls `bpy`): the primary path is Blender as a Python module (`pip install bpy`, pinned LTS with its matching Python: bpy 5.2.x is cp313, 4.5.x cp311) inside the reference server's plug-in system; the fallback spawns a user's `blender -b --factory-startup -noaudio -t 1 --python-exit-code 3`. `blenderAdapter({ mode: 'bpy', exe: python })` runs the same dispatcher under a bpy Python.
+- **Cached inputs, never build steps.** Every tool model's `weightsSha256` is sha256 of the tool version (+ script bytes), and `record.json` carries `model.tool = { name, version, licence, scriptSha256 }`: an upgrade is a cache miss. Outputs are validated like any model output (`validate.ts`: GLB with triangles / ≥ 2 pieces / a skin; KTX2 identifier; meshopt container).
+- **Errors:** every failure is `T3D_NEURAL_FAILED` (the proposed `T3D_BLENDER_*` codes below were folded into it): a missing tool's `fix:` names `t3d setup tools`; a crash carries the script's error and the last 40 lines of stderr; a timeout kills the process group.
+- **Recipes:** `recipes/_lib/bust/cloth-sim.ts` asks the cache for a drape and falls back to the stroke folds on a miss, so a bust without the cache builds exactly as the CPU tier does.
+- **VDM brushes:** `bun scripts/vdm-from-blender.ts <library.blend> <out> [--bpy python]` extracts vector-displacement brushes from a Blender asset library into `.vdm.bin` stamps with the asset licence recorded; `--commit` refuses licences this repository may not redistribute.
+
+Smoke on the dev box (2026-11-15; bpy 5.2.4 LTS, Godot 4.7.2, basisu 2.50.0 built from source, gltfpack 1.3; two runs each gave identical output sha256):
+
+| Job | Time | Result |
+|---|---|---|
+| cloth: 0.9 m sheet (2,401 verts) over a capsule body, 60 frames × 6 substeps | 3.6 s | settles from z 1.72 to 1.10–1.68 m over the shoulders |
+| rig: block humanoid with 16 named pivot nodes | 4.6 s | 16 meta-rig bones snapped, 159 deform bones, 219 controls (84 face) |
+| fracture: 0.6 m crate, 12 seeds, 30 settle frames | 0.6 s | 12 pieces, volume 0.2145 of 0.216 m³ |
+| meshopt: wolf LOD0 (7.1 MB), compress + simplify 0.5 | 0.4 s | 0.92 MB, 7/7 clips kept |
+| ktx2: 2048² trim-sheet albedo, UASTC + mipmaps | 2.3 s | 2.49 MB KTX2 |
+| engine-check: wolf LOD0 (`--profile godot --physics`) | 2.9 s | 2 meshes, 1 skeleton (44 bones), 1 collision shape + body, 7 clips played; importer errors for the external `../trim_sheet_*.png` URIs |
 
 ## Why at all
 

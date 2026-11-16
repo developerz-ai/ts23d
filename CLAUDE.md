@@ -90,7 +90,11 @@ Human names a thing → research specs + real photos into `recipes/<name>/README
 
 ## Using the library in another project
 `bun add @developerz.ai/ts23d`, write `assets/<name>.ts` exporting `defineAsset({...})`, then
-`bunx t3d build assets/<name>.ts --out out` (GLB × 3 LODs + QA, exit 1 on a finding) and
-`bunx t3d shot` / `hero` / `review` to look. Fix what QA prints (every finding has a `fix:`) and what
+`bunx -p @developerz.ai/ts23d t3d build assets/<name>.ts --out out` (GLB × 3 LODs + QA, exit 1 on a finding) and
+`bunx -p @developerz.ai/ts23d t3d shot` / `hero` / `review` to look. Fix what QA prints (every finding has a `fix:`) and what
 you see. No CLI needed: the same steps are functions (`compile`, `runQa`, `toGlb`, `contactSheet`,
 `beauty`), see `examples/build-with-bun.ts`; test helpers in `@developerz.ai/ts23d/testing`.
+Always scope it (`-p @developerz.ai/ts23d`): the bare binary name outside a project with the package fetches an
+unrelated npm package named `t3d`. Skills (artist workflows) ship as plain markdown:
+`node_modules/@developerz.ai/ts23d/.claude/skills/<skill>/SKILL.md`. Optional MCP server:
+`claude mcp add ts23d -- bunx -p @developerz.ai/ts23d t3d mcp`.

@@ -14,8 +14,11 @@ import type { Finding, Gate } from './types.ts';
 export const GAIT_FPS = 30;
 /** Largest horizontal slide of a planted foot per frame, metres. */
 export const SLIDE_LIMIT = 0.001;
-/** A foot is planted within this height of its lowest point in the clip, metres. */
+/** A foot is planted within this height of its lowest point in the clip, metres… */
 export const CONTACT_BAND = 0.003;
+/** …or within this share of its step height, when smaller: a fox's 4 cm step peels off the toe
+ *  2.7 mm up at lift-off, which is swing, not a planted foot sliding. */
+export const CONTACT_SHARE = 0.05;
 /** How far a foot may dip under its rest height, metres. */
 export const SINK_LIMIT = 0.002;
 /** Seam tolerance: first and last key may differ by this (quaternion components, metres). */
@@ -94,12 +97,13 @@ function footFindings(sk: Armature, c: Clip, feet: readonly Bone[]): Finding[] {
     const b = feet[i];
     if (!b || path.length < 2) return;
     const low = Math.min(...path.map((p) => p[2]));
+    const band = Math.min(CONTACT_BAND, CONTACT_SHARE * (Math.max(...path.map((p) => p[2])) - low));
     let worst = 0;
     let at = 0;
     for (let f = 1; f < path.length; f++) {
       const p = path[f] ?? [0, 0, 0];
       const q = path[f - 1] ?? [0, 0, 0];
-      if (p[2] > low + CONTACT_BAND || q[2] > low + CONTACT_BAND) continue;
+      if (p[2] > low + band || q[2] > low + band) continue;
       const d = Math.hypot(p[0] - q[0], p[1] - q[1]);
       if (d > worst) [worst, at] = [d, f];
     }

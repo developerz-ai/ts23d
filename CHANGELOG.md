@@ -4,6 +4,19 @@ All notable changes to `@developerz.ai/ts23d`. Format: [Keep a Changelog](https:
 
 ## [Unreleased]
 
+### Added
+- Optional model tier: `NeuralAdapter` contract (`t3d-neural/1` HTTP), adapters for an HTTP server, ComfyUI, OpenAI-compatible image APIs and Kubeez (recommended for image generation without a GPU; partner, disclosed); outputs cached by content hash under `recipes/<name>/neural/` with `record.json` (model, licence, weights sha256, request); `t3d neural ls|run`, `--require-neural`.
+- Reference model server (`examples/neural-server`, not in the npm package): plug-ins for Pixal3D, TRELLIS.2, Z-Image-Turbo, DINOv2 and MediaPipe motion, each GPU model in its own process; one model per machine at a time with free VRAM and RAM checks (D54).
+- Tool adapters: Blender (`bpy` or the `blender` binary) for cloth drape, Rigify, cell fracture and hair grooming with ordered groom ops (comb, puff, cut, clump, curl, frizz, smooth…); gltfpack, Basis Universal KTX2 and a Godot headless import check.
+- `t3d doctor`, `t3d setup tools|gpu-min|gpu-full` (into `~/.ts23d`, no sudo, idempotent) and `t3d server start|stop|status`.
+- Hybrid recipes: `ctx.neural`, imported meshes as sculpt fields, piecewise fit to the skeleton, texture transfer, `t3d concept` (prompts and seeds as TypeScript); `mesh` inputs must pass input-image rules (`T3D_NEURAL_INPUT`, D55); demo `wolf_hybrid`.
+- Hero texture tier: `t3d finish --hero` bakes normal, AO, height and ORM from the sculpt field onto a lighter LOD0 (wolf 141.9k → 39.9k triangles).
+- Game projects: `t3d init --engine godot|three|unity|unreal|babylon`, `assets/PLAN.md` + `t3d plan check`, `t3d build --watch`, engine import conventions; `t3d mcp` (optional stdio MCP server).
+- Scale: style coherence across a set (`T3D_STYLE_OUTLIER`), scene budgets (`T3D_SCENE_BUDGET`), pinned OpenStreetMap blocks (ODbL) and instanced export; new recipes `city_block`, `fox`, `brown_bear`.
+
+### Fixed
+- Small-pawed claws, the gait check's planted-foot band and plantigrade swing (D50–D52); a brick SDF build that never finished on near-duplicate triangles (D56).
+
 ## [0.8.0] - 2026-11-16
 
 Assets ship rigged and animated: creatures export a skinned skeleton with walk, trot and gallop clips that keep their feet planted and their joints in shape, heads blink and talk, hero images are path traced, and organic detail is stamped on with vector displacement.

@@ -1,0 +1,20 @@
+{
+  "format": "ts23d-wikidata/1",
+  "qid": "Q36341",
+  "label": "brown bear",
+  "url": "https://www.wikidata.org/wiki/Special:EntityData/Q36341.json?revision=2567936188",
+  "page": "https://www.wikidata.org/wiki/Q36341",
+  "license": "CC0-1.0",
+  "fetched": "2026-11-16",
+  "sha256": "63dabd77a220d1b08e7543114a4853c5a5d5f839410a3d8064a9b90396b37b89",
+  "quantities": {
+    "mass": {
+      "value": 500,
+      "unit": "kg",
+      "property": "P2067",
+      "amount": "+500",
+      "sourceUnit": "Q11570"
+    }
+  },
+  "items": {}
+}

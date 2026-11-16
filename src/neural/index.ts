@@ -1,7 +1,39 @@
-// Public API of /neural: optional adapters for what recipes do poorly — licensed GLB import (scans,
-// CC0 base meshes) with cleanup, a local-model refine adapter, planned local generators, and image
-// sources (kubeez.com) for references and materials. Never required by a recipe.
+// Public API of /neural: optional adapters for what recipes do poorly — any model through a
+// NeuralAdapter (t3d-neural/1 http, ComfyUI, OpenAI-compatible images, mock), the committed
+// per-recipe output cache, licensed GLB import (scans, CC0 base meshes) with cleanup, a local-model
+// refine adapter, kubeez.com (partner) for image generation without a GPU, and tool adapters
+// (Blender cloth / Rigify / fracture, Godot engine-check, basisu KTX2, gltfpack meshopt). Never
+// required by a recipe (ADR 014/015).
 
+export {
+  canonicalJson,
+  defineConfig,
+  fieldsOf,
+  inputsOf,
+  jobKey,
+  NEURAL_CONTRACT,
+  type NeuralAdapter,
+  type NeuralBinding,
+  type NeuralJob,
+  type NeuralModelInfo,
+  type NeuralRun,
+  type NeuralToolInfo,
+  pickModel,
+  requestKey,
+  runJob,
+  type T3dConfig,
+  taskResult,
+} from './adapter.ts';
+export {
+  BLENDER_LICENCE,
+  BLENDER_LTS,
+  BLENDER_TASKS,
+  type BlenderAdapterOptions,
+  blenderAdapter,
+  blenderJobArgs,
+  defaultScripts,
+} from './blender-adapter.ts';
+export { type ComfyAdapterOptions, comfyAdapter, fillWorkflow } from './comfy-adapter.ts';
 export { type GenerateRequest, localGenerator, type MeshGenerator } from './generator.ts';
 export {
   type AccessorData,
@@ -13,7 +45,14 @@ export {
 } from './glb-read.ts';
 export { type ScenePrimitive, scenePrimitives } from './glb-scene.ts';
 export { type FixtureNode, GlbBin, packGlb, writeMeshGlb } from './glb-write.ts';
-export { type ImageRequest, type ImageSource, kubeezImages } from './images.ts';
+export {
+  CHECK_GD,
+  GODOT_PROJECT,
+  type GodotAdapterOptions,
+  godotAdapter,
+  importerLines,
+} from './godot-adapter.ts';
+export { type HttpAdapterOptions, http, httpAdapter } from './http-adapter.ts';
 export { onSheet, projectAlbedo, sampleRgba, toLinear } from './import-albedo.ts';
 export { importBytes, provideImports } from './import-cache.ts';
 export {
@@ -30,6 +69,34 @@ export {
   importGlb,
 } from './import-glb.ts';
 export { checkLicence, type ImportCredit, type LicenceVerdict } from './import-licence.ts';
+export { aspectOf, KUBEEZ_TERMS, type KubeezOptions, kubeezAdapter } from './kubeez-adapter.ts';
+export { MOCK_LICENCE, type MockAdapter, mockAdapter } from './mock-adapter.ts';
+export {
+  type OpenAiImageOptions,
+  openaiImage,
+  openaiImageAdapter,
+} from './openai-image-adapter.ts';
+export {
+  entryOf,
+  NEURAL_CAP_BYTES,
+  type NeuralEntry,
+  type NeuralLookup,
+  type NeuralNotice,
+  neuralCache,
+  providedNeural,
+  provideNeural,
+  type RecipeNeuralCache,
+} from './recipe-cache.ts';
+export {
+  makeRecord,
+  type NeuralRecord,
+  type NeuralRecordOutput,
+  outputFile,
+  parseRecord,
+  publishable,
+  publishableLicence,
+  recordJson,
+} from './record.ts';
 export {
   type RefineCache,
   type Refined,
@@ -40,3 +107,20 @@ export {
   refine,
 } from './refine.ts';
 export { sha256Hex } from './sha256.ts';
+export {
+  basisuAdapter,
+  basisuArgs,
+  gltfpackAdapter,
+  gltfpackArgs,
+  type ToolAdapterOptions,
+} from './tool-adapters.ts';
+export {
+  nodeExec,
+  runTool,
+  setupFix,
+  type ToolExec,
+  type ToolExecOptions,
+  type ToolProc,
+} from './tool-spawn.ts';
+export { validateOutputs } from './validate.ts';
+export type { WireFetch, WireInit, WireReply } from './wire.ts';

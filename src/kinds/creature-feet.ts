@@ -182,12 +182,15 @@ export function clawMesh(
     if (l.hoof) continue;
     const [, , sz] = l.footSize;
     const bird = b.skeleton === 'bird';
+    // Small paws (a fox's ≈ 2.3 cm toe height): the claw root sits ~0.1 × sz in the toe, too
+    // shallow to stay buried all round, so sink it ≈ 4.6 mm deeper (0 from wolf-sized paws, sz ≥ 4.3 cm, up).
+    const sink = Math.max(0, 0.0099 - 0.225 * sz);
     for (const t of toes(b, l)) {
       const out = v3.norm([t[0] - l.foot[0], t[1] - l.foot[1], 0]);
       const dir: Vec3 = v3.norm([out[0], out[1], bird ? -0.35 : -0.9]);
       parts.push(
         keratin({
-          base: bird ? v3.add(t, v3.mul(out, -sz * 0.1)) : t,
+          base: bird ? v3.add(t, v3.mul(out, -sz * 0.1)) : v3.add(t, v3.mul(dir, -sink)),
           dir,
           down: [0, 0, -1],
           length: sz * (bird ? 1.9 : 0.45),
@@ -201,7 +204,11 @@ export function clawMesh(
     for (const d of dewclaws(l))
       parts.push(
         keratin({
-          base: v3.add(d.at, [d.r * 0.05, -d.r * 0.12, -d.r * 0.22]),
+          base: v3.add(v3.add(d.at, [d.r * 0.05, -d.r * 0.12, -d.r * 0.22]), [
+            -0.4 * sink,
+            0.25 * sink,
+            sink,
+          ]),
           dir: v3.norm([0.4, -0.25, -1]),
           down: [-1, 0.4, 0],
           length: sz * 0.6,
