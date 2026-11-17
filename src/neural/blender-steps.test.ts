@@ -187,6 +187,13 @@ describe('blenderProgram: the canonical program', () => {
         mask: { kind: 'sphere', at: [0, 0, 1], r: 1 },
       },
       {
+        op: 'weights',
+        kind: 'scale',
+        bone: 'head',
+        value: 0.5,
+        mask: { kind: 'plane', point: [0, 0, 1], normal: [1, 0, 0], feather: 0.02 },
+      },
+      {
         op: 'isolate',
         bones: ['tail_1'],
         from: [-0.6, 0, 0.3],

@@ -22,7 +22,7 @@ Creatures and humanoids go model-first and Blender-first: an image-to-3D body, f
 ### Changed
 - `CLAUDE.md` rules: the decimation exception now covers model-built meshes (gated `retopo` / `lods` steps), and the one-material rule allows a declared texture set per model-built part.
 - The reference server's UniRig plug-in rigs a 30 k-triangle three-LOD bear (27 bones, skin weights on every LOD, about 60 s on an RTX 3090).
-- `wolf_hybrid` (a model's skin blended onto the code body) is superseded as the route for organic assets; its model-first rebuild and the `brown_bear` model tier are in progress, the dragon is planned.
+- `wolf_hybrid` is rebuilt model-first (Pixal3D mesh kept whole, UniRig joints, Blender steps; idle, look, walk, trot; QA PASS); the earlier blend of a model's skin onto the code body is gone. The `brown_bear` and dragon model tiers are planned.
 
 ### Fixed
 - The GLB exporter let a moving pivot's `paint` slot or `finish` colour bleed onto its unpainted merged children; they now stay on their own material.

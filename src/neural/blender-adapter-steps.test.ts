@@ -63,6 +63,12 @@ describe('blender task: failures first', () => {
     expect(String(e)).toContain('output 0 is not the GLB');
   });
 
+  test('the GLB alone, with no JSON report, is not a result either', async () => {
+    const e = await run(fake(`${WRITE}\n${report(GLB)}`)).catch((x: unknown) => x);
+    expect(String(e)).toContain('T3D_NEURAL_OUTPUT_INVALID');
+    expect(String(e)).toContain('output 1 is missing');
+  });
+
   test('review PNGs come after the report, never before it, and must decode', async () => {
     const PNG_OUT = '{"file":"review-1-clay.png","mime":"image/png"}';
     const sheet = (bytes: Uint8Array, order: string): FakeTool => {

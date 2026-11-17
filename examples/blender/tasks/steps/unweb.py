@@ -77,6 +77,10 @@ def cap(bm, edges, layer):
     return made
 
 
+# Separation rounds, and the share of `gap` the measured clearance must reach.
+ROUNDS = 12
+CLEAR = 0.9
+
 def run(state, step):
     gap = step["gap"]
     me = state.mesh.data
@@ -112,30 +116,47 @@ def run(state, step):
     edges = [e for e in bm.edges if e.is_boundary and all(v in seam for v in e.verts)]
     facts["capFaces"] = cap(bm, edges, layer)
     # Push each limb away from the others where it is within `gap` of their surface.
-    moved = 0
+    # One pass closes only part of the distance (each side moves half of what is missing, one
+    # limb after the other), so the pass repeats until the measured clearance is the gap.
+    moved = set()
     limbs = sorted({v[layer] for v in bm.verts} - {-1})
     by_limb = {k: [v for v in bm.verts if v[layer] == k] for k in limbs}
-    for k in limbs:
-        others = [v for j in limbs if j != k for v in by_limb[j]]
-        if not others:
-            continue
-        tree = kdtree.KDTree(len(others))
-        for i, v in enumerate(others):
-            tree.insert(v.co, i)
-        tree.balance()
-        shifts = []
-        for v in by_limb[k]:
-            near, _, d = tree.find(v.co)
-            if d >= gap:
+    clearance = None
+    for _ in range(ROUNDS):
+        clearance = None
+        for k in limbs:
+            others = [v for j in limbs if j != k for v in by_limb[j]]
+            if not others:
                 continue
-            away = v.co - near
-            if away.length < 1e-9:
-                away = -v.normal if v.normal.length > 0 else Vector((0, 0, 1))
-            shifts.append((v, away.normalized() * ((gap - d) * 0.5)))
-        for v, s in shifts:
-            v.co += s
-        moved += len(shifts)
-    facts["moved"] = moved
+            tree = kdtree.KDTree(len(others))
+            for i, v in enumerate(others):
+                tree.insert(v.co, i)
+            tree.balance()
+            shifts = []
+            for v in by_limb[k]:
+                near, _, d = tree.find(v.co)
+                clearance = d if clearance is None else min(clearance, d)
+                if d >= gap:
+                    continue
+                away = v.co - near
+                if away.length < 1e-9:
+                    away = -v.normal if v.normal.length > 0 else Vector((0, 0, 1))
+                shifts.append((v, away.normalized() * ((gap - d) * 0.5)))
+            for v, s in shifts:
+                v.co += s
+                moved.add(v)
+        if clearance is None or clearance >= gap * CLEAR:
+            break
+    facts["moved"] = len(moved)
+    if clearance is not None:
+        facts["clearance"] = round(clearance, 6)
+        if clearance < gap * CLEAR:
+            bm.free()
+            raise ValueError(
+                f"unweb left limbs {clearance:.4f} m apart after {ROUNDS} rounds, under the {gap:.4f} m gap: "
+                "a remesh would fuse them again. fix: lower `gap` to what the limbs can give, or cut the "
+                "contact with a `script` step first"
+            )
     bridged = {}
     for e in bm.edges:
         a, b = (v[layer] for v in e.verts)

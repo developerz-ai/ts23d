@@ -134,6 +134,14 @@ describe('recipe cache: local outputs (keep: local)', () => {
     expect(entry.record.outputs[0]?.local).toBeUndefined();
     expect(() => entryOf(entry.record, new Map())).toThrow(/output-0\.png is missing/);
   });
+  test('a record that understates a file (bytes: 0) is refused, so the cap cannot be dodged', async () => {
+    const { entry } = await neuralCache({ recipe: 'oak' }).fill(mockAdapter(), job('image'));
+    const out = entry.record.outputs[0];
+    const lying = { ...entry.record, outputs: [{ ...out, bytes: 0 }] } as typeof entry.record;
+    const files = new Map([[out?.file ?? '', entry.outputs[0]?.bytes ?? new Uint8Array()]]);
+    expect(() => entryOf(lying, files)).toThrow(/bytes, record\.json says 0/);
+    expect(entryOf(entry.record, files).outputs[0]?.bytes.length).toBe(out?.bytes);
+  });
   test('a local output that is present but changed is refused', async () => {
     const { record } = await filled();
     expect(() => entryOf(record, new Map([['local-0.png', new Uint8Array([1])]]))).toThrow(

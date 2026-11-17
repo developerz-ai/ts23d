@@ -6,8 +6,8 @@
 // The mesh goes up as `input_task_id` when this adapter made it (meshy-task.ts remembers the task
 // of every GLB it downloaded; files live 3 days, a 404 falls back to the upload), else as a data
 // URI. Everything Meshy would refuse is refused here first, before a credit is spent: > 380 000
-// triangles, a bad height or skeleton, an unknown / duplicate clip, more than 10 clips. Clip names
-// are resolved against the free library listing (`meshyAnimations`), never cached on disk.
+// triangles, a bad height or skeleton, an unknown / duplicate clip (name or numeric id), more than
+// 10 clips. Clips are resolved against the free library listing (`meshyAnimations`), never cached on disk.
 // Meshy rigs bipeds only; quadrupeds keep our own skeletons. Not used: the walking / running GLBs
 // every rigging task also returns (`basic_animations`: separate files, one clip each).
 
@@ -88,7 +88,15 @@ export function resolveClips(
   if (clips.length > 10)
     failed(`meshy rig: ${clips.length} clips`, 'one animation task takes 1–10 clips; ask fewer');
   const ids = clips.map((clip) => {
-    if (/^\d+$/.test(clip)) return Number(clip);
+    if (/^\d+$/.test(clip)) {
+      // A numeric id is checked too: an unknown one would fail only after rigging was paid for.
+      if (!library.some((x) => x.id === Number(clip)))
+        failed(
+          `meshy rig: no animation with id ${clip} in the library`,
+          'list the library (meshyAnimations) and use an id or a name from it',
+        );
+      return Number(clip);
+    }
     const want = norm(clip);
     const byKey = library.filter((a) => norm(a.key) === want);
     const hit = byKey.length ? byKey : library.filter((a) => norm(a.name) === want);
@@ -155,8 +163,7 @@ export async function runRig(
       `use one of: ${MESHY_SKELETONS.join(', ')} (or none: meshyrig)`,
     );
   const clips = (r['clips'] ?? []) as readonly string[];
-  const named = clips.some((c) => !/^\d+$/.test(c));
-  const actions = resolveClips(clips, named ? await meshyAnimations(t) : []);
+  const actions = resolveClips(clips, clips.length ? await meshyAnimations(t) : []);
   const knobs = {
     ...(height === undefined ? {} : { height_meters: height }),
     ...(template === undefined ? {} : { skeleton_template: template }),

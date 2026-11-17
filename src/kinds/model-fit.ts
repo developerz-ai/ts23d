@@ -155,7 +155,7 @@ export function modelFit(
   b: Bones,
   o: { readonly samples?: number; readonly front?: number } = {},
 ): ModelFit {
-  const key = String(o.front);
+  const key = JSON.stringify([o.front, o.samples ?? null]);
   const seen = memo.get(mesh.positions)?.get(b)?.get(key);
   if (seen) return seen;
   const P = mesh.positions;

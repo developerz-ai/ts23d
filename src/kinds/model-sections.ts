@@ -119,21 +119,28 @@ export interface Medial {
 /**
  * Walk `p` to the medial axis of the limb it is in (or nearest to), staying in the plane through
  * `p` normal to `axis` and within `reach` metres of `p`. Outside the mesh it first steps through
- * the nearest surface.
+ * the nearest surface. With `planar` (a caller that records the plane's height, like the leg
+ * trace) that step stays IN the plane and within `reach`: when the surface is not there (it lies
+ * at another height: another section) the answer is `inside: false`, never a point elsewhere.
  */
-export function medial(bvh: TriBvh, p: Vec3, axis: Vec3, reach: number): Medial {
+export function medial(bvh: TriBvh, p: Vec3, axis: Vec3, reach: number, planar = false): Medial {
   const al = Math.hypot(axis[0], axis[1], axis[2]) || 1;
   const u: Vec3 = [axis[0] / al, axis[1] / al, axis[2] / al];
   const q: [number, number, number] = [0, 0, 0];
   const inside = (x: Vec3): boolean => bvh.winding(x) > 0.5;
   let at: Vec3 = p;
   if (!inside(at)) {
-    const d = bvh.closest(at, q);
-    const k = (d + Math.min(reach, Math.max(d, 0.002)) * 0.25) / Math.max(d, 1e-9);
+    bvh.closest(at, q);
+    const c: Vec3 = [q[0] - at[0], q[1] - at[1], q[2] - at[2]];
+    const off = planar ? c[0] * u[0] + c[1] * u[1] + c[2] * u[2] : 0;
+    const flat: Vec3 = [c[0] - u[0] * off, c[1] - u[1] * off, c[2] - u[2] * off];
+    const d = Math.hypot(flat[0], flat[1], flat[2]);
+    const go = d + Math.min(reach, Math.max(d, 0.002)) * 0.25;
+    if (d < 1e-9 || (planar && go > reach)) return { at: p, r: 0, inside: false };
     const stepped: Vec3 = [
-      at[0] + (q[0] - at[0]) * k,
-      at[1] + (q[1] - at[1]) * k,
-      at[2] + (q[2] - at[2]) * k,
+      at[0] + (flat[0] / d) * go,
+      at[1] + (flat[1] / d) * go,
+      at[2] + (flat[2] / d) * go,
     ];
     if (!inside(stepped)) return { at: p, r: 0, inside: false };
     at = stepped;

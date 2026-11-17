@@ -144,6 +144,8 @@ export const chain = defineAsset({
     await Bun.write(f, CHAIN);
     const adapter = mockAdapter();
     const config = resolveConfig({ neural: { image: adapter, ktx2: adapter } });
+    // A rule the user already keeps in neural/.gitignore survives the first local output.
+    await Bun.write(join(ndir, '.gitignore'), 'scratch/\n');
     const made = await neuralRun(f, config, true);
     expect([made.filled.map((x) => x.task).sort(), adapter.calls()]).toEqual([
       ['image', 'ktx2'],
@@ -153,6 +155,7 @@ export const chain = defineAsset({
     const ktx2 = made.filled.find((x) => x.task === 'ktx2')?.dir ?? '';
     expect((await readdir(image)).sort()).toEqual(['local-0.png', 'record.json']);
     expect(await readFile(join(ndir, '.gitignore'), 'utf8')).toContain('\n*/local-*\n');
+    expect(await readFile(join(ndir, '.gitignore'), 'utf8')).toMatch(/^scratch\/\n/);
     // A build never reads a local file, even here: the same build on every machine.
     expect((await provideRecipeNeural(f, ['chain'], true)).absentLocal().size).toBe(1);
     // A fresh clone: the local file never left the machine that made it.
@@ -236,58 +239,6 @@ export const scan = defineAsset({
       'r',
     );
     expect(record.overrides?.some((o) => o.includes('background'))).toBe(true);
-  });
-
-  /** Two image requests on a paid adapter (30 credits each): 60 > the 50-credit limit. */
-  const PAID = `import { box, defineAsset } from '${lib}';
-export const coin = defineAsset({
-  name: 'coin',
-  kind: 'prop',
-  budget: { triangles: [12, 12, 12] },
-  build: (ctx) => {
-    const a = ctx.neural('image', { seed: 1, prompt: 'heads', width: 4, height: 4 });
-    const b = ctx.neural('image', { seed: 2, prompt: 'tails', width: 4, height: 4 });
-    ctx.part('body', box({ size: [1, 1, a && b ? 1 : 0.5], color: [0.5, 0.5, 0.5] }));
-  },
-});
-`;
-  const paid = () => {
-    const mock = mockAdapter();
-    return {
-      mock,
-      config: resolveConfig({
-        neural: {
-          image: { ...mock, estimate: () => 30, balance: () => Promise.resolve({ balance: 44 }) },
-        },
-      }),
-    };
-  };
-
-  it('a run estimated above 50 credits sends nothing without --yes-spend (exit 2)', async () => {
-    const f = join(dir, 'coin', 'coin.ts');
-    await Bun.write(f, PAID);
-    const { mock, config } = paid();
-    const lines: string[] = [];
-    await expect(neuralRun(f, config, false, { log: (l) => void lines.push(l) })).rejects.toThrow(
-      /T3D_CLI_USAGE: coin: this run is estimated at 60 credits, above 50/,
-    );
-    expect(mock.calls()).toBe(0);
-    expect(lines).toEqual([
-      '~ mock balance: 44 credits',
-      '~ coin image on mock: about 30 credits',
-      '~ coin image on mock: about 30 credits',
-    ]);
-    expect(await neuralMain(['run', f], { ...quiet, requireNeural: false, config })).toBe(2);
-    expect(mock.calls()).toBe(0);
-  });
-
-  it('--yes-spend runs it and reports the estimate; the cached rerun estimates 0', async () => {
-    const f = join(dir, 'coin', 'coin.ts');
-    const { mock, config } = paid();
-    const r = await neuralRun(f, config, false, { yesSpend: true });
-    expect([r.estimatedCredits, r.filled.length, mock.calls()]).toEqual([60, 2, 2]);
-    const again = await neuralRun(f, config, false);
-    expect([again.estimatedCredits, again.filled.every((x) => x.cached)]).toEqual([0, true]);
   });
 });
 

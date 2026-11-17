@@ -50,12 +50,15 @@ export interface FittedSkeleton {
   readonly tailRadius: number;
 }
 
-const memo = new WeakMap<Float32Array, Map<string, FittedSkeleton>>();
+const memo = new WeakMap<Float32Array, WeakMap<Bones, Map<string, FittedSkeleton>>>();
 
 /** The plan's armature fitted into `mesh` (registered: modelFit). `strict: false` returns a fit
  *  that would throw (joints outside, torn leg bones) so its residuals can be read. */
 export function fitSkeleton(mesh: Mesh, b: Bones, prefix = '', strict = true): FittedSkeleton {
-  const seen = memo.get(mesh.positions)?.get(prefix);
+  // The plan and the strictness are part of the key: a lenient fit must not answer a strict ask,
+  // nor one plan's fit another's.
+  const key = `${strict ? 'strict' : 'lenient'}:${prefix}`;
+  const seen = memo.get(mesh.positions)?.get(b)?.get(key);
   if (seen) return seen;
   const H = b.height;
   const plan = rigBones(b, null, null, prefix).filter((x) => !x.name.endsWith(MID));
@@ -222,8 +225,10 @@ export function fitSkeleton(mesh: Mesh, b: Bones, prefix = '', strict = true): F
     headYaw: ends.headYaw,
     tailRadius: ends.tailRadius,
   };
-  const per = memo.get(mesh.positions) ?? new Map<string, FittedSkeleton>();
-  per.set(prefix, out);
-  memo.set(mesh.positions, per);
+  const plans = memo.get(mesh.positions) ?? new WeakMap<Bones, Map<string, FittedSkeleton>>();
+  const per = plans.get(b) ?? new Map<string, FittedSkeleton>();
+  per.set(key, out);
+  plans.set(b, per);
+  memo.set(mesh.positions, plans);
   return out;
 }

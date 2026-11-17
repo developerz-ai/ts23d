@@ -120,20 +120,32 @@ export function meshyTasks(o: MeshyOptions): MeshyTasks {
         );
       throw e;
     };
-    /** Ids of the endpoint's newest tasks, newest first. */
-    const newest = async (): Promise<string[]> => {
+    /** The endpoint's newest tasks, newest first. */
+    const newestTasks = async (): Promise<MeshyTask[]> => {
       const q = UNSORTED.includes(path) ? 'page_size=10' : 'page_size=10&sort_by=-created_at';
       const got = await wireJson(api, `${base}/${path}?${q}`, `list ${what}`).catch(busy);
-      const ids = (Array.isArray(got) ? got : []).map((t) => idOf((t as MeshyTask | null)?.['id']));
-      return ids.filter((x): x is string => x !== undefined);
+      return (Array.isArray(got) ? got : []).filter(
+        (t): t is MeshyTask => idOf((t as MeshyTask | null)?.['id']) !== undefined,
+      );
     };
+    const newest = async (): Promise<string[]> =>
+      (await newestTasks()).map((t) => idOf(t['id']) as string);
     const key = sha256Hex(new TextEncoder().encode(canonicalJson({ base, path, body })));
     let id = store().get(key);
     if (id?.startsWith('?')) {
       // A create whose outcome is unknown: look, never post again blindly.
-      const list = await newest();
+      const tasks = await newestTasks();
+      const list = tasks.map((t) => idOf(t['id']) as string);
       const mark = list.indexOf(id.slice(1));
       const since = mark < 0 ? list : list.slice(0, mark);
+      // The one newer task may be another request's (ours never arrived): whatever of the request
+      // the task echoes must agree before it is adopted.
+      const differs = since.length === 1 ? echoMismatch(tasks[0], body) : undefined;
+      if (differs)
+        failed(
+          `meshy ${what}: an earlier create ended without a reply; the one task made since (${since[0]}) is another request's (${differs})`,
+          `if this request's task exists on meshy.ai write its id as the value of "${key}" in the pending store ($TS23D_HOME/meshy/pending.json); else delete that entry (a new task is then created and charged)`,
+        );
       if (since.length > 1)
         failed(
           `meshy ${what}: an earlier create ended without a reply and ${since.length} tasks were made since (${since.join(', ')})`,
@@ -223,8 +235,11 @@ export function meshyTasks(o: MeshyOptions): MeshyTasks {
     const got = await wireBytes(shared, url as string, `download ${what}`, undefined, types).catch(
       (e: unknown) => {
         if (!refused(e)) throw e;
-        // A refused download = an expired signed URL or deleted files (kept 3 days).
-        const stale = steps.some((s) => s.resumed);
+        // A refused download = an expired signed URL or deleted files (kept 3 days). Only the
+        // task whose file was refused can tell: a resumed one may be past retention; a task
+        // created in this run cannot be, whatever was resumed before it, so its ids are kept and
+        // the rerun reads a fresh URL.
+        const stale = last?.resumed === true;
         if (stale) for (const s of steps) store().delete(s.key);
         return failed(
           `meshy ${what} of task ${last?.id ?? '?'} cannot be downloaded: ${(e as Error).message.replace(/\?\S*/, '?…')}`,
@@ -251,4 +266,22 @@ export function meshyTasks(o: MeshyOptions): MeshyTasks {
       for (const s of steps) store().delete(s.key);
     },
   };
+}
+
+/**
+ * Why `task` cannot be the task of `body`: the first request field the task echoes with another
+ * value (Meshy echoes some: prompt, ai_model, pose_mode, height_meters…), or undefined when
+ * nothing it echoes disagrees. A task that echoes nothing is adopted as before.
+ */
+export function echoMismatch(task: MeshyTask | undefined, body: object): string | undefined {
+  if (!task) return undefined;
+  for (const [k, want] of Object.entries(body)) {
+    const got = task[k];
+    if (got === undefined || got === null || typeof got === 'object') continue;
+    if (typeof want === 'object' || want === undefined) continue;
+    // Uploads are echoed as stored URLs, never as the data URI that was sent.
+    if (typeof want === 'string' && want.startsWith('data:')) continue;
+    if (String(got) !== String(want)) return `${k} is ${String(got).slice(0, 40)}`;
+  }
+  return undefined;
 }

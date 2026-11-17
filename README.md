@@ -458,7 +458,7 @@ As of 2026-10. Full matrix: [docs/idea/07-what-fits.md](docs/idea/07-what-fits.m
 | **Shipped, early** | Stylised organic: `sculpt` busts, SDF rocks and asteroids, eroded terrain. Boats: lofted `hull` |
 | **Shipped, early** | Stylised creatures: `creature()` over a skeleton with per-family biology (`recipes/wolf`); [animal research](docs/research/animal-anatomy.md) |
 | **Shipped, early** | Model-first humanoids: [`recipes/ranger`](recipes/ranger/README.md), an image-to-3D body with the rig service's skin and clips, finished by Blender steps (As of 2026-11: QA PASS; no finger bones, no blink or jaw, hair as sculpted clumps) |
-| **In progress** | Model-first quadrupeds: `recipes/wolf_hybrid` and `recipes/brown_bear` are being rebuilt on the model tier; the dragon is planned. `wolf_hybrid` as committed is the older blend of a model's skin onto the code body |
+| **Planned** | More model-first quadrupeds: `recipes/wolf_hybrid` ships on the model tier (As of 2026-11); the `brown_bear` and dragon model tiers are planned |
 | **Weak** | Realistic people and animals as pure code. Use the model tier (a model on your own GPU or a hosted one through a `NeuralAdapter`, finished by Blender steps, `t3d neural run`), with the result committed to the recipe's cache; or an image-to-3D tool on its own |
 
 Not a replacement for AI mesh generators: a different approach with different strengths. Neutral comparison: [docs/landscape.md](docs/landscape.md).

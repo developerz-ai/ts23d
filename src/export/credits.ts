@@ -21,8 +21,13 @@ export function creditsOf(asset: CompiledAsset): string[] {
   return [...out].sort();
 }
 
-export function withCredits(asset: CompiledAsset, meta: GlbMeta | undefined): GlbMeta | undefined {
-  const credits = creditsOf(asset);
+/** `lods`: every LOD in the file (a texture set used only on a lower LOD is credited too). */
+export function withCredits(
+  asset: CompiledAsset,
+  meta: GlbMeta | undefined,
+  lods: readonly CompiledAsset[] = [asset],
+): GlbMeta | undefined {
+  const credits = [...new Set(lods.flatMap(creditsOf))].sort();
   if (!credits.length) return meta;
   return { ...meta, credits: [...(meta?.credits ?? []), ...credits] };
 }

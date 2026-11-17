@@ -168,10 +168,10 @@ export function bindModel(
     blend: height / 40,
     only,
   });
-  const out = splitMid(
-    relax(separateLimbs(heat, bones, legs), bones.length, RELAX),
-    midTriples(bones),
-  );
+  // Relaxing averages over the surface, so across a tail fused to a hock it hands tail weight
+  // back to the leg and leg weight to the tail: the limbs are separated again after it.
+  const relaxed = relax(separateLimbs(heat, bones, legs), bones.length, RELAX);
+  const out = splitMid(separateLimbs(relaxed, bones, legs), midTriples(bones));
   const per = bound.get(mesh.positions) ?? new WeakMap<readonly Bone[], Mesh>();
   per.set(bones, out);
   bound.set(mesh.positions, per);

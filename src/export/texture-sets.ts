@@ -18,7 +18,6 @@ import {
   textureKey,
 } from '../core/index.ts';
 import type { Json } from './bin-writer.ts';
-import { concat } from './container.ts';
 import type { ExportWarning } from './glb-options.ts';
 import { textureSetWarnings } from './texture-uvs.ts';
 
@@ -159,9 +158,10 @@ export function textureSetPlan(
           { magFilter: LINEAR, minFilter: LINEAR_MIPMAP_LINEAR, wrapS: REPEAT, wrapT: REPEAT },
         ],
       };
-      let tail = sheet?.tail ?? new Uint8Array();
+      const chunks: Uint8Array[] = [sheet?.tail ?? new Uint8Array()];
+      let at = chunks[0]?.byteLength ?? 0;
       images.forEach((png, i) => {
-        views.push({ buffer: 0, byteOffset: offset + tail.byteLength, byteLength: png.byteLength });
+        views.push({ buffer: 0, byteOffset: offset + at, byteLength: png.byteLength });
         (json['images'] as Json[]).push({
           name: imageNames[i],
           bufferView: views.length - 1,
@@ -171,8 +171,17 @@ export function textureSetPlan(
           sampler,
           source: (json['images'] as Json[]).length - 1,
         });
-        tail = concat(concat(tail, png), new Uint8Array((4 - (png.byteLength % 4)) % 4));
+        const pad = (4 - (png.byteLength % 4)) % 4;
+        chunks.push(png, new Uint8Array(pad));
+        at += png.byteLength + pad;
       });
+      // One allocation for the whole tail, however many maps.
+      const tail = new Uint8Array(at);
+      let to = 0;
+      for (const c of chunks) {
+        tail.set(c, to);
+        to += c.byteLength;
+      }
       return { json, tail };
     },
   };

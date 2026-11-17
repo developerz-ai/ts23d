@@ -95,7 +95,7 @@ function reindex(
   return { ...mesh, joints, weights };
 }
 
-const built = new WeakMap<Mesh, Mesh>();
+const built = new WeakMap<Mesh, Map<string, Mesh>>();
 
 export function riggedBody(ctx: BuildContext, o: RiggedBodyOptions): RiggedBody {
   const { model } = o;
@@ -139,15 +139,19 @@ export function riggedBody(ctx: BuildContext, o: RiggedBodyOptions): RiggedBody 
       ...(b.parent ? { parent: called(b.parent) } : {}),
     }),
   );
-  let mesh = built.get(source);
+  // Keyed by the fold too: two characters on one model that keep different bones (different
+  // clips) index their joints differently.
+  const keptNames = keptBones.map((b) => b.name);
+  const fold = keptNames.join('\u0000');
+  let byFold = built.get(source);
+  if (!byFold) {
+    byFold = new Map();
+    built.set(source, byFold);
+  }
+  let mesh = byFold.get(fold);
   if (!mesh) {
-    mesh = reindex(
-      source,
-      all,
-      target,
-      keptBones.map((b) => b.name),
-    );
-    built.set(source, mesh);
+    mesh = reindex(source, all, target, keptNames);
+    byFold.set(fold, mesh);
   }
   for (const bone of bones) ctx.bone(bone.name, bone);
   const density = o.mass / Math.max(meshVolume(mesh), 1e-9);

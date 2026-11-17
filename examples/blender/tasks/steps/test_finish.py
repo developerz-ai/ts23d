@@ -53,7 +53,14 @@ def case_script():
     empty = {"op": "script", "python": "obj.data.clear_geometry()", "why": "break it"}
     refused([retopo(2000), empty, EXPORT], blob("none"), "step 1 (script)", "no faces")
     retopologise = {"op": "script", "python": "m = obj.modifiers.new('d', 'DECIMATE'); m.ratio = 0.5\nbpy.context.view_layer.objects.active = obj\nbpy.ops.object.modifier_apply(modifier='d')", "why": "break the maps"}
-    refused([retopo(2000), UV, bake("albedo"), retopologise, EXPORT], blob("texture"), "step 3 (script)", "topology after the bake")
+    refused([retopo(2000), UV, bake("albedo"), retopologise, EXPORT], blob("texture"), "step 3 (script)", "after the bake")
+    # Same loop count, other UVs: the maps would sit on the wrong surface.
+    smear = {"op": "script", "python": "for d in obj.data.uv_layers.active.data:\n    d.uv = (0.5, 0.5)", "why": "break the maps"}
+    refused([retopo(2000), UV, bake("albedo"), smear, EXPORT], blob("texture"), "step 3 (script)", "the UVs after the bake")
+    # Moving vertices after a bake stays allowed.
+    nudge = {"op": "script", "python": "for v in obj.data.vertices:\n    v.co.z += 0.001", "why": "lift"}
+    r, _ = run([retopo(2000), UV, bake("albedo"), nudge, EXPORT], blob("texture"))
+    expect(step_of(r, "script")["moved"] > 0, "a script may still move vertices after the bake")
 
 
 def case_rigfix():

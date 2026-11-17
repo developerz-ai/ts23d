@@ -264,7 +264,7 @@ code mesh (bust / creature skin, with UVs) ─► Meshy retexture (enable_origin
 |---|---|---|---|
 | `mesh` | `v1/image-to-3d` (`image`) · `v1/multi-image-to-3d` (`images`, 1–4 with `image` first = front) · `v2/text-to-3d` preview (+ refine) | `pose` → `pose_mode`; `maxTriangles` → `should_remesh` + `target_polycount` (90 %); `params`: `texture`, `pbr`, `textureResolution`, `textureModel`, `geometryResolution`, `imageEnhancement` (default false); always `target_formats: ["glb"]` | 1 GLB |
 | `rig` | `v1/rigging`, then `v1/animations` when `clips` is set | `height` → `height_meters`; `template` or `params.skeletonTemplate` → `skeleton_template`; `params.includeFingers`; `clips` → `action_ids` (library `key`, unique `name`, or a numeric id) | 1 GLB: `animation_glb_url` (skin + one clip per action, in request order) or `rigged_character_glb_url` |
-| `texture` | `v1/retexture` | `prompt` → `text_style_prompt`; `size` 2048 / 4096 / 8192 → `texture_resolution`; `enable_original_uv: true` (`params.originalUv`); `params.pbr` | PNG maps: base colour, then metallic, roughness, normal |
+| `texture` | `v1/retexture` | `prompt` → `text_style_prompt`; `size` 2048 / 4096 / 8192 → `texture_resolution`; `enable_original_uv: true` always (the task returns maps, not a mesh, so new UVs could not be used); `params.pbr` | PNG maps: base colour, then metallic, roughness, normal |
 
 Free helpers on the adapter: `estimate(job)` (credits, from the table in §2), `balance()`
 (`GET v1/balance` → `{ balance, monthly_credits, permanent_credits, monthly_resets_at }`),

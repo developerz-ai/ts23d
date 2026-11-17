@@ -63,10 +63,20 @@ export async function saveNeuralEntry(dir: string, e: NeuralEntry): Promise<stri
       writeFile(join(at, o.file), e.outputs[i]?.bytes ?? new Uint8Array()),
     ),
   );
-  if (e.record.outputs.some((o) => o.local))
-    await writeFile(join(dir, '.gitignore'), LOCAL_GITIGNORE);
+  if (e.record.outputs.some((o) => o.local)) await ignoreLocal(dir);
   await writeFile(join(at, 'record.json'), recordJson(e.record));
   return at;
+}
+
+/** `neural/.gitignore` ignores `local-*`; rules a user already wrote there are kept. */
+async function ignoreLocal(dir: string): Promise<void> {
+  const file = join(dir, '.gitignore');
+  const had = await readFile(file, 'utf8').catch(() => '');
+  if (had.split('\n').some((l) => l.trim() === '*/local-*')) return;
+  await writeFile(
+    file,
+    had === '' ? LOCAL_GITIGNORE : `${had.replace(/\n*$/, '\n')}${LOCAL_GITIGNORE}`,
+  );
 }
 
 /** Load the recipe's committed cache and provide it to compiles of `assets` (offline). */

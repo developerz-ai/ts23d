@@ -42,7 +42,7 @@ research ─► concept image ─► READ it ─► image-to-3D ─► Blender s
 |---|---|---|
 | 1. Concept | bind `image`; `t3d neural run recipes/x/x.ts` | exact side profile (quadruped) or A-pose front (biped), flat light, passes the input-image rules; you READ the PNG |
 | 2. Model | bind `mesh` (and `rig`); same command, up to 5 rounds; paid adapters print credits, `--yes-spend` above 50 | `neural/<key>/record.json` committed, committed bytes <= 12 MB, raw mesh local |
-| 3. Steps | edit the recipe's `blender` steps; `t3d blender review recipes/x/x.ts --out review` (needs Blender, never cached) | clay, wire, weights, poses show no shards, fused limbs or torn weights |
+| 3. Steps | edit the recipe's `blender` steps; `t3d blender review recipes/x/x.ts --out review` (needs Blender, never cached) | clay, wire, weights, poses show no shards, fused limbs or torn weights; then `t3d neural run` again so the cached Blender output the build reads is the reviewed program's |
 | 4. Build | `t3d build recipes/x/x.ts` | QA PASS incl. `model` (`T3D_MODEL_*`), `skin`, `deform`, `gait` |
 | 5. Look | `t3d shot`, `t3d hero`, READ; the model tier renders its own textures | flaws named in the recipe README, not hidden |
 Re-running only the Blender stage is free and fast (about a minute); a new concept or seed changes every key after it and, with a hosted mesh or rig, costs credits. Tests and CI never call a model or Blender. Skills: [creature-artist](../../.claude/skills/creature-artist/SKILL.md), [character-artist](../../.claude/skills/character-artist/SKILL.md).

@@ -237,7 +237,7 @@ export function exportLodGlb(lods: readonly CompiledAsset[], o: GlbOptions = {})
   const sheet = o.sheet ? sheetGltf(o.sheet, bin.views, geometry.byteLength) : null;
   const tex = sets.embed(sheet, bin.views, geometry.byteLength);
   const body = tex?.tail.byteLength ? concat(geometry, tex.tail) : geometry;
-  const meta = metadata(top.name, withCredits(top, o.meta ?? top.meta));
+  const meta = metadata(top.name, withCredits(top, o.meta ?? top.meta, lods));
   const used = [
     ...materialExtensions(materials),
     ...(lights.length ? [LIGHTS] : []),

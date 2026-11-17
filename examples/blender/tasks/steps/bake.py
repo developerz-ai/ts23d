@@ -171,7 +171,7 @@ def run(state, step):
         images["albedo"] = target.image("albedo", size, srgb=True)
         images["albedo"].pixels.foreach_set(rgba.ravel())
     if "normal" in maps:
-        images["normal"], _ = shoot(shape, "NORMAL", "normal")
+        images["normal"], _ = shoot(shape, "NORMAL", "normal", samples=step["samples"])
     if "ao" in maps or "roughness" in maps:
         n = size * size
         orm = np.empty((n, 4), dtype=np.float32)

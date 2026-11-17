@@ -54,6 +54,9 @@ def heat_colours(obj, group):
     return int((w > 0).sum())
 
 
+SHADING = ("light", "studio_light", "color_type", "single_color", "show_cavity", "cavity_type", "show_object_outline")
+
+
 class Studio:
     """Workbench set up for one look; `shot` renders the mesh from one side into a tile."""
 
@@ -67,6 +70,11 @@ class Studio:
         self.cam.data.type = "ORTHO"
         self.keep = (self.scene.render.engine, self.scene.camera, self.scene.render.resolution_x,
                      self.scene.render.resolution_y, self.scene.render.filepath)
+        r, sh = self.scene.render, self.scene.display.shading
+        # Every render and shading setting the looks below touch, put back by close().
+        self.render = {k: getattr(r, k) for k in ("resolution_percentage", "film_transparent")}
+        self.format = r.image_settings.file_format
+        self.shading = {k: (tuple(getattr(sh, k)) if k == "single_color" else getattr(sh, k)) for k in SHADING}
         self.hidden = {o.name: o.hide_render for o in self.scene.objects}
         for o in self.scene.objects:
             o.hide_render = o is not self.obj
@@ -114,6 +122,14 @@ class Studio:
     def close(self):
         s = self.scene
         s.render.engine, s.camera, s.render.resolution_x, s.render.resolution_y, s.render.filepath = self.keep
+        for k, v in self.render.items():
+            setattr(s.render, k, v)
+        s.render.image_settings.file_format = self.format
+        for k, v in self.shading.items():
+            try:
+                setattr(s.display.shading, k, v)
+            except TypeError:  # a studio light name of another look's type: nothing to restore to
+                pass
         bpy.data.objects.remove(self.cam, do_unlink=True)
         for name, hidden in self.hidden.items():
             if name in bpy.data.objects:
@@ -137,6 +153,18 @@ def wire_copy(obj, lo, hi):
 def posed(state, studio, poses):
     """Rest pose, then each pose applied alone; the bounds follow the posed mesh."""
     arm = state.armature
+    # The "rest" tile is the REST pose: a source rig's active clip (bind from 'source') and any
+    # pose left on the bones are taken off for the tiles and put back after.
+    data = arm.animation_data
+    action = data.action if data else None
+    if data:
+        data.action = None
+    was = [(b, b.location.copy(), b.rotation_mode, b.rotation_quaternion.copy(), b.rotation_euler.copy(), b.scale.copy())
+           for b in arm.pose.bones]
+    for b in arm.pose.bones:
+        b.location, b.scale = (0, 0, 0), (1, 1, 1)
+        b.rotation_quaternion, b.rotation_euler = (1, 0, 0, 0), (0, 0, 0)
+    bpy.context.view_layer.update()
     tiles = [(studio.shot(40), "rest")]
     for p in poses:
         bone = arm.pose.bones.get(p["bone"])
@@ -152,6 +180,10 @@ def posed(state, studio, poses):
         hi = Vector(np.maximum(co.max(axis=0), np.array(studio.hi)).tolist())
         tiles.append((studio.shot(40, lo, hi), f"{p['bone']} {p['axis']} {p['degrees']:g}°"))
         bone.rotation_euler, bone.rotation_mode = euler, mode
+    for b, loc, mode, quat, eul, scale in was:
+        b.location, b.rotation_mode, b.rotation_quaternion, b.rotation_euler, b.scale = loc, mode, quat, eul, scale
+    if data:
+        data.action = action
     bpy.context.view_layer.update()
     return tiles
 

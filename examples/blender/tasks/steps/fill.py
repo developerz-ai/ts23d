@@ -7,7 +7,7 @@
 
 import numpy as np
 
-PASSES = 64
+PASSES = 64  # then the distance doubles each round until every island texel has colour
 SHIFTS = ((0, 1), (0, -1), (1, 0), (-1, 0))
 
 
@@ -29,5 +29,11 @@ def solid_coat(rgba, inside):
         grow = ~have & (count > 0)
         rgb[grow] = total[grow] / count[grow][:, None]
         have = have | grow
+    # A patch wider than 2 × PASSES texels still has a colourless middle: it takes the overall
+    # mean colour of the island's filled texels, so no island texel is ever left black.
+    left = inside & ~have
+    if left.any():
+        known = inside & have
+        rgb[left] = rgb[known].mean(axis=0) if known.any() else 0.5
     rgba[:, :, 3] = 1.0
     return round(share, 4)

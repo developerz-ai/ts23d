@@ -16,6 +16,7 @@ import {
 import { at, type GltfJson, indices, list, readAccessor, readGlb } from './glb-read.ts';
 import { localMatrix, type M4, mul } from './glb-scene.ts';
 import { packGlb } from './glb-write.ts';
+import { endsMeet, keys } from './import-clips.ts';
 import { riggedGlb } from './import-fixture.ts';
 import { type ImportModelOptions, importModel } from './import-model.ts';
 
@@ -197,6 +198,21 @@ describe('importClips: keys against the ts23d rest pose', () => {
       expect(v[k + 3]).toBeCloseTo(1, 6);
     }
     expect(Math.hypot(v[4] ?? 0, v[5] ?? 0, v[6] ?? 0)).toBeGreaterThan(0.1);
+  });
+  test('a STEP hold far from 0 stays strictly between its neighbours (float32 cannot subtract 1e-4 at 4096 s)', () => {
+    const k = keys(Float32Array.of(0, 4096), Float32Array.of(1, 2), 1, 0, true);
+    expect([...k.times].every((t, i, a) => i === 0 || t > (a[i - 1] ?? 0))).toBe(true);
+    expect([k.times.length, (k.times[1] ?? 0) < 4096, [...k.values]]).toEqual([3, true, [1, 1, 2]]);
+  });
+  test('a full turn ends on −q and still closes; a half turn does not', () => {
+    const turn = (end: readonly number[]) => ({
+      path: 'rotation',
+      times: Float32Array.of(0, 1),
+      values: Float32Array.of(0, 0, 0, 1, ...end),
+    });
+    expect(endsMeet(turn([0, 0, 0, -1]))).toBe(true);
+    expect(endsMeet(turn([0, 0, 1, 0]))).toBe(false);
+    expect(endsMeet({ ...turn([0, 0, 0, -1]), path: 'translation' })).toBe(false);
   });
   test('STEP keys hold their value until the next key', () => {
     const t = m.clips[1]?.tracks[0];

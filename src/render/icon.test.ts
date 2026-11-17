@@ -44,32 +44,33 @@ describe('icon', () => {
   });
 
   it('frames the skin a focus bone drives when no part has that name (one skinned body)', () => {
-    // The block as one skinned body: bone `head` owns the vertices of its +X half.
+    // Bone `crest` owns exactly the vertices of part `roof`; `root` owns the rest.
     const skinned: CompiledAsset = {
       ...red,
       skeleton: {
         bones: [
           { name: 'root', head: [0, 0, 0], tail: [0, 0, 0.5] },
-          { name: 'head', parent: 'root', head: [0.2, 0, 0.5], tail: [0.5, 0, 0.5] },
+          { name: 'crest', parent: 'root', head: [0, 0, 1], tail: [0, 0, 1.1] },
         ],
       },
       parts: red.parts.map((p) => {
         if (!p.mesh) return p;
         const n = p.mesh.positions.length / 3;
-        const joints = new Uint16Array(n * 4);
+        const joints = new Uint16Array(n * 4).fill(p.name === 'roof' ? 1 : 0);
         const weights = new Float32Array(n * 4);
-        for (let v = 0; v < n; v++) {
-          joints[v * 4] = (p.mesh.positions[v * 3] ?? 0) > 0 ? 1 : 0;
-          weights[v * 4] = 1;
-        }
+        for (let v = 0; v < n; v++) weights[v * 4] = 1;
         return { ...p, mesh: { ...p.mesh, joints, weights } };
       }),
     };
-    // Without the skin the name is still refused; with it the portrait closes in on that half.
-    expect(() => renderPortrait(red, { size: 32, focus: ['head'] })).toThrow(/matches no part/);
+    // Without the skin the name is still refused.
+    expect(() => renderPortrait(red, { size: 32, focus: ['crest'] })).toThrow(/matches no part/);
+    // The bone's framing IS the framing of the part holding the same vertices, and neither is the
+    // whole-asset default: the bone selected its own skin, not the mesh.
+    const byBone = renderPortrait(skinned, { size: 48, sheet, focus: ['crest'] });
+    const byPart = renderPortrait(skinned, { size: 48, sheet, focus: ['roof'] });
     const whole = renderPortrait(skinned, { size: 48, sheet });
-    const head = renderPortrait(skinned, { size: 48, sheet, focus: ['head'] });
-    expect(Bun.hash(head.rgba)).not.toBe(Bun.hash(whole.rgba));
+    expect(Bun.hash(byBone.rgba)).toBe(Bun.hash(byPart.rgba));
+    expect(Bun.hash(byBone.rgba)).not.toBe(Bun.hash(whole.rgba));
   });
 
   it('writes a 256² icon and a 512² portrait by default', () => {

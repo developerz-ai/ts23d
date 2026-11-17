@@ -30,9 +30,33 @@ def alive(obj):
         return False
 
 
+def layout(obj):
+    """What a bake is attached to: each loop's vertex, each face's loops, each loop's UV."""
+    me = obj.data
+    vertex = np.empty(len(me.loops), dtype=np.int32)
+    me.loops.foreach_get("vertex_index", vertex)
+    start = np.empty(len(me.polygons), dtype=np.int32)
+    me.polygons.foreach_get("loop_start", start)
+    total = np.empty(len(me.polygons), dtype=np.int32)
+    me.polygons.foreach_get("loop_total", total)
+    uv = np.zeros(len(me.loops) * 2, dtype=np.float32)
+    if me.uv_layers.active is not None:
+        me.uv_layers.active.data.foreach_get("uv", uv)
+    return vertex, start, total, uv
+
+
+def same_layout(a, b):
+    return (
+        all(x.shape == y.shape for x, y in zip(a, b))
+        and all(np.array_equal(x, y) for x, y in zip(a[:3], b[:3]))
+        and bool(np.allclose(a[3], b[3], atol=1e-6))
+    )
+
+
 def run(state, step):
     before = state.mesh
     loops, verts = len(before.data.loops), st.coords(before).copy()
+    baked = layout(before) if state.images else None
     scope = {
         "bpy": bpy,
         "bmesh": bmesh,
@@ -56,9 +80,9 @@ def run(state, step):
         bpy.ops.object.mode_set(mode="OBJECT")
     if not obj.data.polygons:
         raise ValueError("the script left a mesh with no faces. fix: check what it deletes")
-    if state.images and len(obj.data.loops) != loops:
+    if state.images and (len(obj.data.loops) != loops or not same_layout(baked, layout(obj))):
         raise ValueError(
-            "the script changed the topology after the bake: the maps no longer fit. "
+            "the script changed the topology or the UVs after the bake: the maps no longer fit. "
             "fix: move the script before uv, or only move vertices"
         )
     state.mesh = obj

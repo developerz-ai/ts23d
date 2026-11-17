@@ -28,7 +28,7 @@ import { checkInputImage } from '../render/index.ts';
 import { type LoadedConfig, loadConfig } from './config.ts';
 import { loadAssets } from './load.ts';
 import { absentInputNotice, absentInputs } from './neural-local.ts';
-import { spendGuard } from './neural-spend.ts';
+import { type SpendGuard, spendGuard } from './neural-spend.ts';
 import { loadNeuralEntries, neuralDirOf, saveNeuralEntry } from './neural-store.ts';
 import { envelope, printError } from './report.ts';
 
@@ -147,13 +147,17 @@ export async function neuralRun(
     readonly yesSpend?: boolean;
     /** Where estimate lines go before anything is sent. */
     readonly log?: (line: string) => void;
+    /** One guard for a whole command: `neural run a.ts b.ts` has ONE limit, not one per file. */
+    readonly spend?: SpendGuard;
   } = {},
 ): Promise<NeuralRunResult> {
   const { recipe, dir } = neuralDirOf(file);
   const assets = await loadAssets(file);
   const filledBy = new Map<string, NeuralFilled>();
   const notices: string[] = [];
-  const spend = spendGuard({ yesSpend: o.yesSpend === true, ...(o.log ? { log: o.log } : {}) });
+  const spend =
+    o.spend ?? spendGuard({ yesSpend: o.yesSpend === true, ...(o.log ? { log: o.log } : {}) });
+  const spentBefore = spend.total();
   let missing: { message: string; fix: string }[] = [];
   for (let round = 0; round < ROUNDS; round++) {
     const cache = neuralCache({ recipe, entries: await loadNeuralEntries(dir) });
@@ -221,7 +225,7 @@ export async function neuralRun(
       cause: `${recipe}: ${missing.length} neural request(s) have no output and could not be sent`,
       fix: missing[0]?.fix ?? 'configure the adapters in t3d.config.ts',
     });
-  return { file, recipe, filled, missing, notices, estimatedCredits: spend.total() };
+  return { file, recipe, filled, missing, notices, estimatedCredits: spend.total() - spentBefore };
 }
 
 /** `t3d neural <ls|run> [files…]`: prints, returns the exit code. */
@@ -258,12 +262,15 @@ export async function neuralMain(
         fix: 'use `t3d neural ls` or `t3d neural run <recipe.ts…> [--require-neural] [--allow-bad-input] [--yes-spend]`',
       });
     const runs: NeuralRunResult[] = [];
+    const log = o.json ? {} : { log: (line: string) => console.log(line) };
+    const spend = spendGuard({ yesSpend: o.yesSpend === true, ...log });
     for (const f of files)
       runs.push(
         await neuralRun(f, config, require, {
           allowBadInput: o.allowBadInput === true,
           yesSpend: o.yesSpend === true,
-          ...(o.json ? {} : { log: (line: string) => console.log(line) }),
+          spend,
+          ...log,
         }),
       );
     if (o.json) envelope(true, { runs });

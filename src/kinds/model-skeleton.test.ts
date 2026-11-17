@@ -17,6 +17,22 @@ describe('fitSkeleton', () => {
     expect(() => fitSkeleton(three, bones)).toThrow(/T3D_MODEL_SKELETON.*leg/);
   });
 
+  it('a lenient fit of a broken model does not answer a later strict ask', () => {
+    const three = capsuleCreature(bones, (c) => !(c.a[1] > 0.01 && c.a[0] > 0.1 && c.b[2] < 0.5));
+    let lenient: unknown;
+    try {
+      lenient = fitSkeleton(three, bones, '', false);
+    } catch {
+      lenient = undefined; // a missing leg cannot be traced even leniently: nothing was cached
+    }
+    expect(() => fitSkeleton(three, bones)).toThrow(/T3D_MODEL_SKELETON/);
+    // And a fit is per plan: another plan object on the same mesh is fitted afresh.
+    const other = creaturePlan(FIXTURE_WOLF).bones;
+    expect(fitSkeleton(body, other)).not.toBe(fitSkeleton(body, bones));
+    expect(fitSkeleton(body, bones)).toBe(fitSkeleton(body, bones));
+    expect(lenient === undefined || typeof lenient === 'object').toBe(true);
+  });
+
   it('fails on fore paws fused into one block', () => {
     const P = Float32Array.from(body.positions);
     // Squash the fore legs' lowest 8 cm onto the mid-plane: one island where the plan has two.

@@ -49,7 +49,8 @@ export async function neuralCacheViolations(
         const bytes = await readFile(join(root, key, x.file)).catch(() => undefined);
         if (bytes) files.set(x.file, new Uint8Array(bytes));
         if (x.local) local.push(`${key}/${x.file}`);
-        else committed += x.bytes;
+        // The file's real length (a missing one is reported by entryOf below).
+        else committed += bytes?.length ?? 0;
       }
       entryOf(record, files);
     } catch (e) {

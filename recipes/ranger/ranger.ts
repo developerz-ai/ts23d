@@ -67,7 +67,7 @@ const WIDTH = 1.02;
 export const ranger = defineModelCharacter({
   name: 'ranger',
   description:
-    'A woodland ranger, 1.78 m, a-pose rest, skinned to 24 bones with idle, walk and jog clips. Model tier: image-to-3D surface with its own textures, hosted rig, Blender steps. Without the neural cache: a grey CPU mannequin, no clips.',
+    'A woodland ranger, 1.78 m, a-pose rest, skinned to 22 bones with idle, walk and jog clips. Model tier: image-to-3D surface with its own textures, hosted rig, Blender steps. Without the neural cache: a grey CPU mannequin, no clips.',
   tags: ['character', 'humanoid', 'skinned', 'model-first'],
   sources: [
     'Proportions: Drillis & Contini 1966 segment shares of stature, as tabulated in Winter, Biomechanics and Motor Control of Human Movement, 4th ed., fig. 4.1',

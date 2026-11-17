@@ -141,7 +141,9 @@ describe('meshy rig: the chain', () => {
       category: a.category,
       subCategory: a.sub_category,
     }));
-    expect(resolveClips(['run_02', 'casual walk', 'IDLE', '92'], lib)).toEqual([14, 30, 0, 92]);
+    // An id the library does not hold is refused here, before rigging is paid for.
+    expect(() => resolveClips(['92'], lib)).toThrow(/no animation with id 92/);
+    expect(resolveClips(['run_02', 'casual walk', 'IDLE', '31'], lib)).toEqual([14, 30, 0, 31]);
     expect(resolveClips(['Run'], lib)).toEqual([14]);
   });
   test('no clips: upload as a data URI with height → the rigged GLB, 5 credits', async () => {

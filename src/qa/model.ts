@@ -12,6 +12,7 @@
 // Thresholds were measured on the Pixal3D wolf (model.test.ts has the numbers).
 
 import type { Armature, Bone, CompiledAsset, Mesh, Part, Vec3 } from '../core/index.ts';
+import { worldMeshes } from '../core/index.ts';
 import { decodePng } from '../material/index.ts';
 import { triBvh } from '../primitives/index.ts';
 import { MID_SUFFIX } from './deform.ts';
@@ -133,8 +134,15 @@ export function skeletonHug(mesh: Mesh, at: Vec3, sk: Armature): number {
   return median / Math.max(top, 1e-9);
 }
 
-/** Lowest vertex (asset z) under a foot bone: within one bone length of it in plan view. */
-export function lowestSkin(mesh: Mesh, at: Vec3, bone: Bone): number | null {
+/** Lowest vertex (asset z) under a foot bone: within one bone length of it in plan view and
+ *  nearer to it than to any of the `others` (the other feet: a neighbour 14 cm away is inside a
+ *  39 cm leg's radius, and its paw on the ground must not vouch for this one in the air). */
+export function lowestSkin(
+  mesh: Mesh,
+  at: Vec3,
+  bone: Bone,
+  others: readonly Bone[] = [],
+): number | null {
   const reach = Math.hypot(
     bone.tail[0] - bone.head[0],
     bone.tail[1] - bone.head[1],
@@ -144,15 +152,26 @@ export function lowestSkin(mesh: Mesh, at: Vec3, bone: Bone): number | null {
     [bone.head[0], bone.head[1], 0],
     [bone.tail[0], bone.tail[1], 0],
   ];
+  const rivals = others
+    .filter((o) => o !== bone)
+    .map((o): [Vec3, Vec3] => [
+      [o.head[0], o.head[1], 0],
+      [o.tail[0], o.tail[1], 0],
+    ]);
   let low: number | null = null;
   const P = mesh.positions;
   for (let v = 0; v < P.length / 3; v++) {
     const p: Vec3 = [(P[v * 3] ?? 0) + at[0], (P[v * 3 + 1] ?? 0) + at[1], 0];
-    if (segment(p, a, b) <= reach) low = Math.min(low ?? Infinity, (P[v * 3 + 2] ?? 0) + at[2]);
+    const d = segment(p, a, b);
+    if (d > reach || rivals.some(([ra, rb]) => segment(p, ra, rb) < d)) continue;
+    low = Math.min(low ?? Infinity, (P[v * 3 + 2] ?? 0) + at[2]);
   }
   return low;
 }
 
+const ZERO: Vec3 = [0, 0, 0];
+
+/** `mesh` is the part's WORLD mesh (its whole parent chain applied): bones are asset-frame. */
 function partFindings(p: Part, mesh: Mesh, sk: Armature | undefined): Finding[] {
   const out: Finding[] = [];
   const std = p.textures ? albedoSpread(p.textures.albedo, mesh) : 0;
@@ -167,9 +186,8 @@ function partFindings(p: Part, mesh: Mesh, sk: Armature | undefined): Finding[] 
     );
   if (!sk || !mesh.joints) return out;
   const bvh = triBvh(mesh);
-  const local = (q: Vec3): Vec3 => [q[0] - p.at[0], q[1] - p.at[1], q[2] - p.at[2]];
   const outside = sk.bones
-    .filter((b) => !b.name.endsWith(MID_SUFFIX) && !(bvh.winding(local(b.head)) > 0.5))
+    .filter((b) => !b.name.endsWith(MID_SUFFIX) && !(bvh.winding(b.head) > 0.5))
     .map((b) => b.name);
   if (outside.length)
     out.push(
@@ -180,7 +198,7 @@ function partFindings(p: Part, mesh: Mesh, sk: Armature | undefined): Finding[] 
         'fit the skeleton into the mesh (kinds `modelBody` / `fitSkeleton` do), or correct the spec so the plan has the limbs the model has',
       ),
     );
-  const hug = skeletonHug(mesh, p.at, sk);
+  const hug = skeletonHug(mesh, ZERO, sk);
   if (!(hug <= FIT_MEDIAN))
     out.push(
       finding(
@@ -190,7 +208,7 @@ function partFindings(p: Part, mesh: Mesh, sk: Armature | undefined): Finding[] 
         'register the model first (kinds `modelFit`: yaw, scale and place), then fit the skeleton; a model facing sideways or at another scale lands here',
       ),
     );
-  for (const d of doubledFeatures(mesh, p.at, sk))
+  for (const d of doubledFeatures(mesh, ZERO, sk))
     out.push(
       finding(
         'T3D_MODEL_DOUBLED',
@@ -199,8 +217,9 @@ function partFindings(p: Part, mesh: Mesh, sk: Armature | undefined): Finding[] 
         'the mesh was mirrored across a plane that is not its sagittal plane (two muzzles), or a far-side limb was left on it: repose the model before mirroring (kinds modelRig `repose`), drop `symmetric`, or re-roll the concept as an exact side profile',
       ),
     );
-  for (const foot of feetOf(sk)) {
-    const low = lowestSkin(mesh, p.at, foot);
+  const feet = feetOf(sk);
+  for (const foot of feet) {
+    const low = lowestSkin(mesh, ZERO, foot, feet);
     if (low !== null && Math.abs(low) <= GROUND) continue;
     out.push(
       finding(
@@ -217,9 +236,10 @@ function partFindings(p: Part, mesh: Mesh, sk: Armature | undefined): Finding[] 
 }
 
 /** Every skinned or unskinned part that carries its own texture set. */
-export const model: Gate = (asset: CompiledAsset) =>
-  asset.parts.flatMap((p) =>
-    p.textures && p.mesh && p.mesh.indices.length > 0
-      ? partFindings(p, p.mesh, asset.skeleton)
-      : [],
-  );
+export const model: Gate = (asset: CompiledAsset) => {
+  const world = worldMeshes(asset.parts);
+  return asset.parts.flatMap((p) => {
+    const mesh = world.get(p.name);
+    return p.textures && mesh ? partFindings(p, mesh, asset.skeleton) : [];
+  });
+};

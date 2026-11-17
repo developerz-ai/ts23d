@@ -99,14 +99,19 @@ export function traceLegs(
     lines.forEach((line, i) => {
       const last = line[line.length - 1];
       if (top[i] || !last) return;
-      const m = medial(bvh, [last[1], last[2], z(k)], [0, 0, 1], Math.max(last[3], lv.cell) * 1.5);
+      // In the level's own plane: the trace records z(k), so an entry at another height would
+      // put another section's centre at this one.
+      const reach = Math.max(last[3], lv.cell) * 1.5;
+      const m = medial(bvh, [last[1], last[2], z(k)], [0, 0, 1], reach, true);
       if (!m.inside || (k + 1) * lv.dz > (ceil[i] ?? Infinity)) top[i] = k * lv.dz;
       else line.push([z(k), m.at[0], m.at[1], m.r]);
     });
-    lines.forEach((line, i) => {
+    // Every meeting at this level is read from the lines as they stand, before any is cut back:
+    // both of two legs that meet stop here, not only the first one visited.
+    const meets = lines.map((line, i) => {
       const a = line[line.length - 1];
-      if (top[i] || !a || a[0] !== z(k)) return;
-      const met = lines.some((other, j) => {
+      if (top[i] || !a || a[0] !== z(k)) return false;
+      return lines.some((other, j) => {
         const o = other[other.length - 1];
         return (
           j !== i &&
@@ -115,7 +120,9 @@ export function traceLegs(
           Math.hypot(a[1] - o[1], a[2] - o[2]) < (a[3] + o[3]) * 0.6
         );
       });
-      if (!met) return;
+    });
+    lines.forEach((line, i) => {
+      if (!meets[i]) return;
       if (k * lv.dz < (free[i] ?? 0))
         fail(
           `leg ${i} runs into another leg at z = ${(k * lv.dz).toFixed(3)} m, below the ${(free[i] ?? 0).toFixed(3)} m it must stay free to (legs fused)`,

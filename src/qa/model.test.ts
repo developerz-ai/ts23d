@@ -100,28 +100,58 @@ describe('QA model', () => {
 
   it('reads the same hug however densely one region is tessellated (area, not vertices)', () => {
     const plain = table();
-    // 600 more vertices on one leg tip, in zero-area triangles: a decimation that keeps detail
-    // on the paws moves a vertex median, never the surface.
-    const n = plain.positions.length / 3;
-    const dense: Mesh = {
-      ...plain,
-      positions: Float32Array.from([
-        ...plain.positions,
-        ...Array.from({ length: 600 }, () => [0.4, 0.07, 0]).flat(),
-      ]),
-      normals: Float32Array.from([
-        ...plain.normals,
-        ...Array.from({ length: 600 }, () => [0, 0, -1]).flat(),
-      ]),
-      indices: Uint32Array.from([
-        ...plain.indices,
-        ...Array.from({ length: 600 }, (_, i) => n + i),
-      ]),
+    // One leg's triangles split in four at their edge midpoints, twice: 16× the triangles and
+    // many more vertices there, the same surface. A vertex median (or an unweighted triangle
+    // median) moves toward that leg; the area median may not.
+    const split = (m: Mesh, pick: (c: Vec3) => boolean): Mesh => {
+      const P = [...m.positions];
+      const N = [...m.normals];
+      const U = [...m.uvs];
+      const C = [...m.colors];
+      const J = [...(m.joints ?? [])];
+      const W = [...(m.weights ?? [])];
+      const I: number[] = [];
+      const mid = (a: number, b: number): number => {
+        const v = P.length / 3;
+        for (let k = 0; k < 3; k++) P.push(((P[a * 3 + k] ?? 0) + (P[b * 3 + k] ?? 0)) / 2);
+        for (let k = 0; k < 3; k++) N.push(N[a * 3 + k] ?? 0);
+        for (let k = 0; k < 2; k++) U.push(((U[a * 2 + k] ?? 0) + (U[b * 2 + k] ?? 0)) / 2);
+        const cs = C.length / (m.positions.length / 3) || 3;
+        for (let k = 0; k < cs; k++) C.push(1);
+        for (let k = 0; k < 4; k++) J.push(J[a * 4 + k] ?? 0);
+        for (let k = 0; k < 4; k++) W.push(W[a * 4 + k] ?? 0);
+        return v;
+      };
+      for (let t = 0; t < m.indices.length; t += 3) {
+        const [a, b, c] = [m.indices[t] ?? 0, m.indices[t + 1] ?? 0, m.indices[t + 2] ?? 0];
+        const centre = [0, 1, 2].map(
+          (k) => ((P[a * 3 + k] ?? 0) + (P[b * 3 + k] ?? 0) + (P[c * 3 + k] ?? 0)) / 3,
+        ) as [number, number, number];
+        if (!pick(centre)) {
+          I.push(a, b, c);
+          continue;
+        }
+        const [ab, bc, ca] = [mid(a, b), mid(b, c), mid(c, a)];
+        I.push(a, ab, ca, ab, b, bc, ca, bc, c, ab, bc, ca);
+      }
+      return {
+        ...m,
+        positions: Float32Array.from(P),
+        normals: Float32Array.from(N),
+        uvs: Float32Array.from(U),
+        colors: Float32Array.from(C),
+        indices: Uint32Array.from(I),
+        ...(m.joints ? { joints: Uint16Array.from(J), weights: Float32Array.from(W) } : {}),
+      };
     };
+    const leg = (c: Vec3): boolean => c[0] > 0.3 && c[1] > 0 && c[2] < 0.35;
+    const dense = split(split(plain, leg), leg);
+    expect(dense.indices.length).toBeGreaterThan(plain.indices.length * 2);
     const sk = asset({ name: 'good' }).skeleton ?? { bones: [] };
     const hug = skeletonHug(plain, [0, 0, 0], sk);
     expect(hug).toBeLessThan(FIT_MEDIAN);
-    expect(skeletonHug(dense, [0, 0, 0], sk)).toBeCloseTo(hug, 9);
+    // Centroid samples move within a triangle when it is split: equal to a part in a hundred.
+    expect(Math.abs(skeletonHug(dense, [0, 0, 0], sk) - hug)).toBeLessThan(hug * 0.01);
   });
 
   it('fails feet that do not reach the ground', () => {
@@ -129,6 +159,42 @@ describe('QA model', () => {
     const ground = f.filter((x) => /ground/.test(x.message));
     expect(ground.length).toBe(4);
     expect(ground.every((x) => x.code === 'T3D_MODEL_FIT' && /z = 0/.test(x.fix))).toBe(true);
+  });
+
+  it('one paw 3 cm in the air is caught by ITS foot, though the next paw 14 cm away is down', () => {
+    const one = merge([
+      box({ size: [1, 0.18, 0.08], at: [0, 0, 0.41], color: [1, 1, 1] }),
+      ...FEET.map((f, i) =>
+        box({ size: [0.05, 0.05, 0.43], at: [f[0], f[1], i === 0 ? 0.03 : 0], color: [1, 1, 1] }),
+      ),
+    ]);
+    const uvs = Float32Array.from(one.uvs, (_, i) => (i * 0.618034) % 1);
+    const mesh = bindRigid({ ...one, uvs, colors: new Float32Array(one.colors.length).fill(1) }, 0);
+    const ground = model(asset({ name: 'one_up', mesh })).filter((x) => /ground/.test(x.message));
+    expect(ground.map((x) => /'(leg_\d)'/.exec(x.message)?.[1])).toEqual(['leg_0']);
+  });
+
+  it('judges a body under a moved parent where it stands in the world, not at its own pivot', () => {
+    const under = (lift: number): CompiledAsset =>
+      compile(
+        defineAsset({
+          name: 'nested',
+          kind: 'creature',
+          budget: { triangles: [500, 500, 500], textureSets: { count: 1, size: 1024 } },
+          build(ctx) {
+            for (const [name, b] of BONES) ctx.bone(name, b);
+            // The parent sits 2 m up; the body's mesh is authored 2 m down (plus `lift`).
+            ctx.group('rig', { at: [0, 0, 2] });
+            ctx.part('body_fur', table(lift - 2), {
+              parent: 'rig',
+              density: 100,
+              textures: { name: 'body', albedo: albedo(null) },
+            });
+          },
+        }),
+      );
+    expect(model(under(0))).toEqual([]);
+    expect(codes(under(GROUND * 3))).toContain('T3D_MODEL_FIT');
   });
 
   it('passes a textured body on its skeleton, and leaves untextured assets alone', () => {

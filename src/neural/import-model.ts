@@ -66,6 +66,8 @@ export interface ImportedModel {
   readonly scale: number;
 }
 
+/** Parsed models kept (LOD arrays + texture bytes each): the newest few, not every file ever read. */
+const MEMO_KEEP = 8;
 const memo = new Map<string, ImportedModel>();
 const hashes = new WeakMap<Uint8Array, string>();
 
@@ -130,6 +132,11 @@ export function importModel(
   const bytes = 'sha256' in source ? importBytes(source) : source.bytes;
   const key = JSON.stringify([src.sha256, o, licence.credit]);
   const hit = memo.get(key);
+  if (hit) {
+    // Most recently used last.
+    memo.delete(key);
+    memo.set(key, hit);
+  }
   if (hit) return hit;
   const axes = axesFrame(o);
   const doc = readGlb(bytes);
@@ -176,6 +183,16 @@ export function importModel(
       }),
     ),
   );
+  // A skin on some LODs only would leave the others with all-zero weights on the shared rig.
+  const skinnedLods = groups.map((g) => g.some((p) => skins.has(p)));
+  if (skinnedLods.some(Boolean) && !skinnedLods.every(Boolean))
+    throw new Ts23dError('T3D_IMPORT_UNSUPPORTED', {
+      cause: `'${src.path}': LOD ${skinnedLods
+        .map((s, i) => (s ? '' : i))
+        .filter((x) => x !== '')
+        .join(', ')} has no skin while another LOD has one`,
+      fix: 'skin every LOD to the same armature (the Blender `lods` step keeps weights), or export none of them skinned',
+    });
   const flesh = jointCentroids([...skins.values()]);
   const frame = fitFrame(axes, boundsOf(filed[0] as Mesh), o);
   const k = frame.scale / axes.scale;
@@ -229,5 +246,9 @@ export function importModel(
     scale: frame.scale,
   };
   memo.set(key, out);
+  for (const old of memo.keys()) {
+    if (memo.size <= MEMO_KEEP) break;
+    memo.delete(old);
+  }
   return out;
 }

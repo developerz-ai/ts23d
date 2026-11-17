@@ -57,6 +57,31 @@ describe('importModel: refusals', () => {
     );
     expect(named?.message).toContain("'body'");
   });
+  test('a skin on LOD 0 only → refused: the other LODs would get all-zero weights', () => {
+    // Strip `skin` from every mesh node that is not under lod0.
+    const bytes = edited((json) => {
+      const nodes = json['nodes'] ?? [];
+      const names = new Map(nodes.map((n, i) => [i, String((n as { name?: string }).name ?? '')]));
+      const under = (root: string): Set<number> => {
+        const out = new Set<number>();
+        const walk = (i: number): void => {
+          out.add(i);
+          for (const c of ((nodes[i] as { children?: number[] }).children ?? []) as number[])
+            walk(c);
+        };
+        for (const [i, n] of names) if (n === root) walk(i);
+        return out;
+      };
+      const keep = under('lod0');
+      nodes.forEach((n, i) => {
+        if (!keep.has(i)) delete (n as Record<string, unknown>)['skin'];
+      });
+    });
+    const e = caught(() => importModel({ bytes, ...own }));
+    expect(e?.code).toBe('T3D_IMPORT_UNSUPPORTED');
+    expect(e?.message).toMatch(/LOD 1, 2 has no skin/);
+    expect(e?.fix).toContain('`lods` step');
+  });
   test('two different textured materials → error listing them', () => {
     const bytes = writeMeshGlb([
       { name: 'a', mesh: cube(), png: png(10) },

@@ -63,7 +63,7 @@ pose the mesh is reposed to.
 | `lods` | 9 998 and 4 998 triangles, same UVs, maps and weights | |
 | `export` | one GLB | |
 
-Look at any change with `bun run t3d blender review recipes/wolf_hybrid/wolf_hybrid.ts --out review`.
+Look at a change with `bun run t3d review recipes/wolf_hybrid/wolf_hybrid.ts --out review` (pose strip, LODs) after `t3d neural run`, and at each step's numbers in the final key's `output-1.json`. `t3d blender review <recipe>` does not work here yet: it needs a `BLENDER_REVIEW` export, and this program is built from the fit (planned); `--mesh` / `--program` take any GLB and step list.
 
 ## Clips
 

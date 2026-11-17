@@ -27,6 +27,14 @@ import { snakeName } from './import-textures.ts';
 
 const EPS = 1e-5;
 const HOLD = 1e-4;
+
+/** The largest float32 below `x` (x > 0). */
+function below(x: number): number {
+  const f = new Float32Array([x]);
+  const bits = new Int32Array(f.buffer);
+  bits[0] = (bits[0] ?? 0) - 1;
+  return f[0] ?? x;
+}
 type Path = 'rotation' | 'translation' | 'scale';
 
 const qmul = (a: Quat, b: Quat): Quat => [
@@ -115,8 +123,9 @@ const REST: Record<Path, readonly number[]> = {
 const atRest = (path: Path, values: Float32Array): boolean =>
   values.every((v, i) => Math.abs(v - (REST[path][i % REST[path].length] ?? 0)) < EPS);
 
-/** Times shifted to start at `t0`, non-increasing keys dropped, STEP holds inserted. */
-function keys(
+/** Times shifted to start at `t0`, non-increasing keys dropped, STEP holds inserted. Exported
+ *  for its test. */
+export function keys(
   times: Float32Array,
   values: Float32Array,
   stride: number,
@@ -130,15 +139,37 @@ function keys(
     const time = Math.fround(Math.max((times[i] ?? 0) - t0, 0));
     const last = t[t.length - 1];
     if (last !== undefined && time <= last) continue;
-    if (step && last !== undefined && time - HOLD > last) {
-      t.push(Math.fround(time - HOLD));
-      v.push(...prevValue);
+    if (step && last !== undefined) {
+      // The hold key sits just before this key: HOLD earlier, or (far from 0, where float32
+      // cannot tell the two apart) the float just below it. Skipped when no float lies between.
+      const near = Math.fround(time - HOLD);
+      const hold = near < time ? near : below(time);
+      if (hold > last && hold < time) {
+        t.push(hold);
+        v.push(...prevValue);
+      }
     }
     prevValue = [...values.subarray(i * stride, i * stride + stride)];
     t.push(time);
     v.push(...prevValue);
   }
   return { times: Float32Array.from(t), values: Float32Array.from(v) };
+}
+
+/** A track's last key is its first (so the clip can loop). q and −q are one rotation: a full
+ *  turn keyed continuously ends on −q. */
+export function endsMeet(t: {
+  readonly path: string;
+  readonly times: Float32Array;
+  readonly values: Float32Array;
+}): boolean {
+  const stride = t.values.length / t.times.length;
+  const last = t.values.length - stride;
+  const same = (sign: 1 | -1): boolean =>
+    [...t.values.subarray(0, stride)].every(
+      (v, k) => Math.abs(v - sign * (t.values[last + k] ?? 0)) < 1e-3,
+    );
+  return same(1) || (t.path === 'rotation' && same(-1));
 }
 
 export interface ImportClipsOptions {
@@ -242,13 +273,7 @@ export function importClips(
     const span = Math.max(end - t0, 1 / 30);
     const seconds =
       typeof extras['seconds'] === 'number' && extras['seconds'] >= span ? extras['seconds'] : span;
-    const closes = tracks.every((t) => {
-      const stride = t.values.length / t.times.length;
-      const last = t.values.length - stride;
-      return [...t.values.subarray(0, stride)].every(
-        (v, k) => Math.abs(v - (t.values[last + k] ?? 0)) < 1e-3,
-      );
-    });
+    const closes = tracks.every(endsMeet);
     const loop = typeof extras['loop'] === 'boolean' ? extras['loop'] : closes;
     const clip: Clip = { name, seconds: Math.fround(seconds), loop, tracks };
     const closed =

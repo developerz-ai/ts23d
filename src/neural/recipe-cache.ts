@@ -85,8 +85,9 @@ export interface RecipeNeuralCache {
   absentLocal(): ReadonlyMap<string, string>;
 }
 
+/** Committed bytes of an entry: the files' real lengths, never the record's own `bytes`. */
 const size = (e: NeuralEntry): number =>
-  e.record.outputs.reduce((s, o) => s + (o.local ? 0 : o.bytes), 0);
+  e.record.outputs.reduce((s, o, i) => s + (o.local ? 0 : (e.outputs[i]?.bytes.length ?? 0)), 0);
 
 const resultOf = <T extends NeuralTask>(e: NeuralEntry): NeuralResult<T> =>
   taskResult(e.record.task as T, e.outputs, e.record.score);
@@ -105,6 +106,12 @@ export function entryOf(record: NeuralRecord, files: ReadonlyMap<string, Uint8Ar
     if (!bytes || sha256Hex(bytes) !== o.sha256)
       throw new Ts23dError('T3D_NEURAL_OUTPUT_INVALID', {
         cause: `neural/${record.key.slice(0, 12)}…/${o.file} is ${bytes ? 'changed' : 'missing'}`,
+        fix: 'delete that key directory and run `t3d neural run <recipe>` again',
+      });
+    // The recorded length is checked too: the cap must not be dodged by a record that says 0.
+    if (bytes.length !== o.bytes)
+      throw new Ts23dError('T3D_NEURAL_OUTPUT_INVALID', {
+        cause: `neural/${record.key.slice(0, 12)}…/${o.file} is ${bytes.length} bytes, record.json says ${o.bytes}`,
         fix: 'delete that key directory and run `t3d neural run <recipe>` again',
       });
     return { bytes, mime: o.mime, sha256: o.sha256 };

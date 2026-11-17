@@ -144,8 +144,8 @@ recipe test; the items without a check above are **planned**, §9 there):
 
 ## Model tier: creature
 Quadruped on a model surface, our sourced skeleton and gait clips (kinds `modelChain` + `defineModelCreature`).
-Status (As of 2026-11): the machinery ships and is tested on generated meshes; no quadruped asset has shipped
-on it yet (`recipes/wolf_hybrid`, `recipes/brown_bear` are being rebuilt, `recipes/dragon` is planned).
+Status (As of 2026-11): `recipes/wolf_hybrid` ships on it (QA PASS; idle, look, walk, trot); the
+`recipes/brown_bear` and `recipes/dragon` model tiers are planned.
 
 | Stage | What to do | Why / check |
 |---|---|---|

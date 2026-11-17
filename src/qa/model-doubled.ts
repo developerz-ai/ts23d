@@ -73,7 +73,12 @@ export function outlines(
     return r;
   };
   const length = new Map<string, number>();
-  const points = new Map<string, Vec3[]>();
+  // Per outline: the sum of its cut points and their count (merging stays O(1)).
+  const points = new Map<string, [number, number, number, number]>();
+  const add = (k: string, q: readonly number[], n: number): void => {
+    const s = points.get(k) ?? [0, 0, 0, 0];
+    points.set(k, [s[0] + (q[0] ?? 0), s[1] + (q[1] ?? 0), s[2] + (q[2] ?? 0), s[3] + n]);
+  };
   for (let t = 0; t < mesh.indices.length; t += 3) {
     const v = [mesh.indices[t] ?? 0, mesh.indices[t + 1] ?? 0, mesh.indices[t + 2] ?? 0];
     const d = v.map(side);
@@ -104,22 +109,20 @@ export function outlines(
     if (rx !== ry) {
       parent.set(ry, rx);
       length.set(rx, (length.get(rx) ?? 0) + (length.get(ry) ?? 0));
-      points.set(rx, [...(points.get(rx) ?? []), ...(points.get(ry) ?? [])]);
+      const moved = points.get(ry);
+      if (moved) add(rx, moved, moved[3]);
       length.delete(ry);
       points.delete(ry);
     }
     length.set(rx, (length.get(rx) ?? 0) + seg);
-    points.set(rx, [...(points.get(rx) ?? []), x.p, y.p]);
+    add(rx, x.p, 1);
+    add(rx, y.p, 1);
   }
   return [...length]
     .map(([k, l]) => {
-      const pts = points.get(k) ?? [];
-      const mean = (a: 0 | 1 | 2): number =>
-        pts.reduce((sum, q) => sum + q[a], 0) / Math.max(pts.length, 1);
-      return {
-        length: l,
-        centre: [mean(0), mean(1), mean(2)] as Vec3,
-      };
+      const s = points.get(k) ?? [0, 0, 0, 0];
+      const n = Math.max(s[3], 1);
+      return { length: l, centre: [s[0] / n, s[1] / n, s[2] / n] as Vec3 };
     })
     .sort((a, b) => b.length - a.length);
 }

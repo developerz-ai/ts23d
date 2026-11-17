@@ -70,6 +70,8 @@ describe('meshy texture: failures first', () => {
       [{ prompt: ' ' }, undefined, /prompt has 0 characters/],
       [{ control: [TEX.mesh] }, undefined, /no control maps/],
       [{ params: { style: 'x' } }, undefined, /params\.style is not a Meshy knob/],
+      // Fresh UVs would come back in a GLB this task does not return: no such switch.
+      [{ params: { originalUv: false } }, undefined, /params\.originalUv is not a Meshy knob/],
     ];
     for (const [more, model, want] of cases)
       expect((await err(paint({ ...TEX, ...more }, model))).message).toMatch(want);

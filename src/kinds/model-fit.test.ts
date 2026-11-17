@@ -52,5 +52,7 @@ describe('modelFit', () => {
 
   it('is memoised per mesh', () => {
     expect(modelFit(body, bones)).toBe(modelFit(body, bones));
+    // Another sampling is another fit, whatever was asked first.
+    expect(modelFit(body, bones, { samples: 300 })).not.toBe(modelFit(body, bones));
   });
 });

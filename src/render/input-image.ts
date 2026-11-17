@@ -102,6 +102,22 @@ export function croppedPixels(
   height: number,
   bg: Uint8Array,
 ): number {
+  return ringBackdrop(rgba, width, height, bg).backdrop.reduce((n, b) => n + (b ? 0 : 1), 0);
+}
+
+const smoothStep = (rgba: Uint8Array, a: number, b: number): boolean => {
+  for (let c = 0; c < 3; c++)
+    if (Math.abs((rgba[a * 4 + c] ?? 0) - (rgba[b * 4 + c] ?? 0)) > BORDER_STEP) return false;
+  return true;
+};
+
+/** The frame's perimeter pixels and, per pixel, whether it is backdrop (flooded or smooth band). */
+function ringBackdrop(
+  rgba: Uint8Array,
+  width: number,
+  height: number,
+  bg: Uint8Array,
+): { ring: number[]; backdrop: Uint8Array } {
   const ring: number[] = [];
   for (let x = 0; x < width; x++) ring.push(x);
   for (let y = 1; y < height; y++) ring.push(y * width + width - 1);
@@ -109,11 +125,7 @@ export function croppedPixels(
   for (let y = height - 2; y > 0 && width > 1; y--) ring.push(y * width);
   const n = ring.length;
   const backdrop = Uint8Array.from(ring, (i) => bg[i] ?? 0);
-  const smooth = (a: number, b: number): boolean => {
-    for (let c = 0; c < 3; c++)
-      if (Math.abs((rgba[a * 4 + c] ?? 0) - (rgba[b * 4 + c] ?? 0)) > BORDER_STEP) return false;
-    return true;
-  };
+  const smooth = (a: number, b: number): boolean => smoothStep(rgba, a, b);
   // Two sweeps each way round the ring carry the backdrop across the seam at index 0.
   for (const dir of [1, -1])
     for (let k = 0; k < 2 * n; k++) {
@@ -122,7 +134,40 @@ export function croppedPixels(
       if (backdrop[at] && !backdrop[next] && smooth(ring[at] ?? 0, ring[next] ?? 0))
         backdrop[next] = 1;
     }
-  return backdrop.reduce((count, b) => count + (b ? 0 : 1), 0);
+  return { ring, backdrop };
+}
+
+/**
+ * The backdrop the corner flood did not reach: a floor band or vignette, grown inward from the
+ * perimeter pixels `croppedPixels` accepts, through pixels that continue it smoothly. The
+ * subject's bounds leave it out (a small figure on a floor band does not fill the frame).
+ */
+export function backdropBand(
+  rgba: Uint8Array,
+  width: number,
+  height: number,
+  bg: Uint8Array,
+): Uint8Array {
+  const band = new Uint8Array(bg.length);
+  const { ring, backdrop } = ringBackdrop(rgba, width, height, bg);
+  const queue = new Int32Array(bg.length);
+  let tail = 0;
+  ring.forEach((i, k) => {
+    if (backdrop[k] && !bg[i] && !band[i]) {
+      band[i] = 1;
+      queue[tail++] = i;
+    }
+  });
+  for (let head = 0; head < tail; head++) {
+    const i = queue[head] ?? 0;
+    const x = i % width;
+    for (const j of [i - width, i + width, x > 0 ? i - 1 : -1, x < width - 1 ? i + 1 : -1]) {
+      if (j < 0 || j >= bg.length || bg[j] || band[j] || !smoothStep(rgba, i, j)) continue;
+      band[j] = 1;
+      queue[tail++] = j;
+    }
+  }
+  return band;
 }
 
 /** Sizes of the 8-connected foreground regions, largest first. */
@@ -191,8 +236,9 @@ export function checkInputImage(
   const { bg, count } = cornerFlood(rgba, width, height);
   let [x0, y0, x1, y1] = [width, height, -1, -1];
   const cropped = croppedPixels(rgba, width, height, bg) > 0;
+  const band = backdropBand(rgba, width, height, bg);
   for (let i = 0; i < n; i++) {
-    if (bg[i]) continue;
+    if (bg[i] || band[i]) continue;
     const x = i % width;
     const y = Math.floor(i / width);
     [x0, y0, x1, y1] = [Math.min(x0, x), Math.min(y0, y), Math.max(x1, x), Math.max(y1, y)];

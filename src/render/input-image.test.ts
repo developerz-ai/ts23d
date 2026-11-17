@@ -103,10 +103,17 @@ describe('checkInputImage (D55: cluttered photos make broken AI meshes)', () => 
     expect(rules(cut)).toContain('cropped');
     const standing = floor(clean);
     const report = checkInputImage(standing.px, standing.w, standing.h);
-    // The band is unflooded and part of the one foreground region: the old rule's false alarm.
-    expect(report.fill).toBe(1);
+    // The band is unflooded and joined to the subject, but it is backdrop: the fill is the
+    // subject's own (400 px tall in 600), not the band's full width.
+    expect(report.fill).toBeGreaterThan(0.6);
+    expect(report.fill).toBeLessThan(0.7);
     expect(report.cropped).toBe(false);
     expect(report.findings.map((f) => f.rule)).toEqual([]);
+    // And a small subject on the same floor does not pass as filling the frame.
+    const small = floor(scene(600, 600, [[300, 420, 40, 30]]));
+    const tiny = checkInputImage(small.px, small.w, small.h);
+    expect(tiny.fill).toBeLessThan(0.3);
+    expect(tiny.findings.map((f) => f.rule)).toContain('fill');
   });
 
   it('specks do not count as subjects', () => {

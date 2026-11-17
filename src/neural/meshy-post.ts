@@ -1,6 +1,7 @@
 // The `texture` task on Meshy: Retexture (POST v1/retexture, 10 credits at 2K / 4K, 15 at 8K)
-// paints OUR mesh from the request's prompt and keeps its UV layout (`enable_original_uv: true`,
-// params.originalUv to turn off), so the maps drop onto the mesh that was sent. The GLB goes up as
+// paints OUR mesh from the request's prompt and always keeps its UV layout (`enable_original_uv:
+// true`; there is no switch: fresh UVs would live in a GLB this task does not return, so the maps
+// would not fit the mesh that was sent). The GLB goes up as
 // a data URI; `size` picks the resolution (2048 → 2k, 4096 → 4k, 8192 → 8k; nothing else exists).
 // Outputs are PNG maps from `texture_urls[0]`: base colour first, then metallic, roughness and
 // normal when params.pbr is on. The task's own GLB is not downloaded: the contract's `texture`
@@ -26,7 +27,7 @@ export const MESHY_TEXTURE_MODELS: Readonly<
 };
 
 const RESOLUTION: Readonly<Record<number, string>> = { 2048: '2k', 4096: '4k', 8192: '8k' };
-const TEXTURE_PARAMS = { pbr: 'boolean', originalUv: 'boolean' } as const;
+const TEXTURE_PARAMS = { pbr: 'boolean' } as const;
 const MAPS = ['metallic', 'roughness', 'normal'] as const;
 
 /** Credits of one retexture at `size` px. */
@@ -66,7 +67,7 @@ export function retextureBody(
     model_url: modelUri,
     text_style_prompt: prompt,
     ai_model: model,
-    enable_original_uv: p['originalUv'] ?? true,
+    enable_original_uv: true,
     texture_resolution: resolution,
     target_formats: ['glb'],
     ...(p['pbr'] ? { enable_pbr: true } : {}),

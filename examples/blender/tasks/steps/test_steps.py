@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # Self-test of the `blender` task's step ops on generated blobs (no input files, ~1 minute):
-#   blender -b --factory-startup -noaudio --python examples/blender/tasks/steps/test_steps.py -- selftest
+#   blender -b --factory-startup -noaudio --python-exit-code 3 --python examples/blender/tasks/steps/test_steps.py -- selftest
 # Not part of `bun run verify` (the gate never starts Blender). Each case writes a source GLB,
 # a program with every field filled in (as ts23d's blenderProgram does) and runs tasks/blender.py
 # the way the dispatcher does; a failed expectation raises and the process exits non-zero.
@@ -9,6 +9,7 @@ import hashlib
 import json
 import os
 import sys
+import shutil
 import tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -82,8 +83,13 @@ def blob(look, doubled=False):
     return export_bytes(obj)
 
 
+# Every source GLB and job directory of the suite lives under ROOT, removed when the suite ends
+# (passed or failed): nothing is left in the temp folder.
+ROOT = tempfile.mkdtemp(prefix="t3d-selftest-")
+
+
 def export_bytes(obj, *more, animations=False):
-    path = os.path.join(tempfile.mkdtemp(prefix="t3d-selftest-"), "src.glb")
+    path = os.path.join(tempfile.mkdtemp(prefix="src-", dir=ROOT), "src.glb")
     common.export_glb(path, [obj, *more], animations=animations, skins=animations)
     with open(path, "rb") as f:
         return f.read()
@@ -116,7 +122,7 @@ def cut_out(obj):
 
 def run(steps, mesh=None, skeleton=None, cap=100_000):
     """Run a program like ts23d_job.py does; returns (report, work dir)."""
-    work = tempfile.mkdtemp(prefix="t3d-selftest-")
+    work = tempfile.mkdtemp(prefix="job-", dir=ROOT)
     request, inputs = {"seed": 7, "maxTriangles": cap}, {}
 
     def send(field, data, ext):
@@ -244,7 +250,13 @@ if __name__ == "__main__":
     from tasks.steps import test_finish, test_gates, test_limbs
 
     cases = (case_refusals, case_full, case_looks, case_focus, case_proxy, case_build, *test_gates.CASES, *test_finish.CASES, *test_limbs.CASES)
-    for case in cases:
-        print(case.__name__)
-        case()
-    print("SELFTEST OK", bpy.app.version_string)
+    try:
+        for case in cases:
+            print(case.__name__)
+            case()
+        print("SELFTEST OK", bpy.app.version_string)
+    finally:
+        # The case modules import this file under its package name: that copy has its own ROOT.
+        twin = sys.modules.get("tasks.steps.test_steps")
+        for root in {ROOT, getattr(twin, "ROOT", ROOT)}:
+            shutil.rmtree(root, ignore_errors=True)

@@ -128,6 +128,13 @@ export function validateOutputs<T extends NeuralTask>(
   if (task === 'blender') {
     if (result.outputs[0]?.mime !== 'model/gltf-binary')
       bad(task, 0, 'is not the GLB', 'return the GLB first, then the JSON report');
+    if (result.outputs[1]?.mime !== 'application/json')
+      bad(
+        task,
+        1,
+        result.outputs[1] ? `is ${result.outputs[1].mime}, not the JSON report` : 'is missing',
+        'return the GLB, then the JSON report (per-step numbers), then any review PNGs',
+      );
     // After the GLB and the report come only the review renders.
     result.outputs.forEach((o, i) => {
       if (i >= 1 && o.mime !== (i === 1 ? 'application/json' : 'image/png'))

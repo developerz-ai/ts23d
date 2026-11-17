@@ -7,7 +7,7 @@ import { cube } from './fixtures.ts';
 import { writeMeshGlb } from './glb-write.ts';
 import { FAKE_API, FAKE_CDN, fakeMeshy } from './meshy-fake.ts';
 import { memoryPending } from './meshy-net.ts';
-import { meshyTasks } from './meshy-task.ts';
+import { echoMismatch, meshyTasks } from './meshy-task.ts';
 
 const api = fakeMeshy();
 const GLB = writeMeshGlb([{ name: 'm', mesh: cube() }]);
@@ -63,6 +63,31 @@ describe('meshy tasks: a create is never repeated blindly', () => {
     expect([got.id, got.resumed, got.credits]).toEqual(['new-1', true, 20]);
     expect(api.posts(PATH).length).toBe(1);
     expect(api.seen.at(-1)?.url).toBe(`${FAKE_API}/openapi/${PATH}/new-1`);
+  });
+
+  test('the one newer task echoes another request → not adopted: reconcile by hand', async () => {
+    const pending = memoryPending();
+    const body = { prompt: 'a grey wolf', ai_model: 'latest' };
+    const mine = () =>
+      tasks(pending).run('v2/text-to-3d', body, 'text-to-3d', AbortSignal.timeout(5000));
+    // Our POST was dropped and never arrived; someone else's task is the only newer one.
+    api.script.lists = [
+      [{ id: 'old-9' }],
+      [{ id: 'theirs', prompt: 'a red dragon' }, { id: 'old-9' }],
+    ];
+    api.script.drop = 1;
+    await err(mine());
+    const e = await err(mine());
+    expect(e.message).toMatch(/theirs\) is another request's \(prompt is a red dragon\)/);
+    expect(e.fix).toContain('pending.json');
+    expect(api.posts('v2/text-to-3d').length).toBe(1);
+    expect(api.seen.some((x) => x.url.endsWith('/theirs'))).toBe(false);
+    // The same listing echoing OUR request is adopted; a data-URI upload is never compared.
+    expect(
+      echoMismatch({ id: 'x', prompt: 'a grey wolf', ai_model: 'latest' }, body),
+    ).toBeUndefined();
+    expect(echoMismatch({ id: 'x', image_url: 'https://cdn/y.png' }, BODY)).toBeUndefined();
+    expect(echoMismatch({ id: 'x' }, body)).toBeUndefined();
   });
 
   test('the rerun lists: several newer tasks → refused, naming them; none → posted again', async () => {

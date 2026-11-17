@@ -56,7 +56,7 @@ def lost(reference, reduced, tolerance):
     tree = tree_of(reduced)
     far = []
     for p in pick.tolist():
-        hit = tree.find_nearest(p, tolerance * 8)
+        hit = tree.find_nearest(p)  # no distance cap: a deep internal layer must find its surface
         if hit[0] is None:
             far.append(p)
         elif hit[3] > tolerance:
@@ -117,7 +117,13 @@ def uv_degenerate(me):
     uv = uv.reshape(-1, 3, 2)
     e1, e2 = uv[:, 1] - uv[:, 0], uv[:, 2] - uv[:, 0]
     ratio = np.abs(e1[:, 0] * e2[:, 1] - e1[:, 1] * e2[:, 0]) / 2 / np.maximum(area, 1e-12)
-    return round(float((ratio < 0.05 * np.median(ratio)).mean()), 4)
+    # Triangles with no UV area at all are counted outright, and the 5 % line is drawn from the
+    # triangles that have some: with half the map collapsed the plain median is 0 and nothing
+    # would read as "under" it.
+    zero = ratio <= 1e-12
+    if zero.all():
+        return 1.0
+    return round(float((zero | (ratio < 0.05 * np.median(ratio[~zero]))).mean()), 4)
 
 
 def handles(obj):

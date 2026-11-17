@@ -40,7 +40,6 @@ export type BlenderWeightMask =
       readonly kind: 'plane';
       readonly point: Vec3;
       readonly normal: Vec3;
-      readonly r: number;
       readonly feather?: number;
     };
 
