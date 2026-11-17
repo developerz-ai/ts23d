@@ -4,8 +4,8 @@ roadmap: "M4 creature next (:120), quadruped base meshes (:256); M5 Blender brid
 status: in_progress
 owner: sebi
 worked_by: "claude (coordinator) + slice agents"
-percent: 70
-current_focus: "Wave D: wolf + bear recipes with UniRig joints and repose; ranger shipped (QA PASS, 44 Meshy credits); site textured viewer; model-character library slice"
+percent: 88
+current_focus: "Shipped in 0.10.0 (#43, #44): the pipeline, recipes/ranger, recipes/wolf_hybrid. Open: 10 brown_bear and 11 dragon model tiers"
 slices:
   - { file: 01-textured-parts-core.md, status: complete, percent: 100 }
   - { file: 02-blender-steps.md, status: complete, percent: 100 }
@@ -13,19 +13,22 @@ slices:
   - { file: 04-meshy.md, status: complete, percent: 100 }
   - { file: 05-export-textures.md, status: complete, percent: 100 }
   - { file: 06-render-textures.md, status: complete, percent: 100 }
-  - { file: 07-model-body.md, status: in_progress, percent: 85 }
-  - { file: 08-wolf.md, status: in_progress, percent: 40 }
+  - { file: 07-model-body.md, status: complete, percent: 100 }
+  - { file: 08-wolf.md, status: complete, percent: 100 }
   - { file: 09-humanoid.md, status: complete, percent: 100 }
-  - { file: 10-bear.md, status: in_progress, percent: 30 }
+  - { file: 10-bear.md, status: not_started, percent: 0 }
   - { file: 11-dragon.md, status: not_started, percent: 0 }
-  - { file: 12-site.md, status: in_progress, percent: 10 }
-  - { file: 13-docs-release.md, status: not_started, percent: 0 }
+  - { file: 12-site.md, status: complete, percent: 100 }
+  - { file: 13-docs-release.md, status: complete, percent: 100 }
   - { file: 14-local-outputs.md, status: complete, percent: 100 }
   - { file: 15-agent-finishing.md, status: complete, percent: 100 }
-  - { file: 16-model-character.md, status: in_progress, percent: 10 }
+  - { file: 16-model-character.md, status: complete, percent: 100 }
 evidence:
+  - "https://github.com/developerz-ai/ts23d/pull/43 (pipeline, ranger, wolf_hybrid; 47 review findings fixed)"
+  - "https://github.com/developerz-ai/ts23d/pull/44 (release 0.10.0)"
+  - "wolf_hybrid: recipes/wolf_hybrid/out/wolf_hybrid/hero.png (QA PASS, 30k/10k/5k tris, idle/look/walk/trot, UniRig joints)"
   - "ranger: recipes/ranger/out/ranger/hero.png (QA PASS, 39k/12k/4k tris, idle/walk/jog); lab copies ~/workspace/lab/neural-models/out/ranger/"
   - "wolf/bear in ts23d renderer: ~/workspace/lab/neural-models/out/blender-steps/ts23d_wolfS_hero.png, ts23d_bearS_hero.png (QA deform still failing)"
   - "spike: ~/workspace/lab/neural-models/out/blender-steps/low_threequarter.png (955k → 30k tris + 2048 bake in 33 s, Blender 5.3 headless)"
-notes: "Owner 2026-11-16: hard surface looks good, organic does not; wants Blender steps in code, GPU image→model path, Meshy looked into, artist tricks researched. One GPU/model job at a time. Meshy: deliberate manual calls only."
-last_updated: 2026-11-16
+notes: "Owner 2026-11-16: hard surface looks good, organic does not; wants Blender steps in code, GPU image-to-model path, Meshy, artist tricks. One GPU/model job at a time; Meshy calls deliberate only (88 credits spent in total: two ranger chains). Bear: a scratch model bear failed QA (model 1.36-1.7 m long vs spec 2.0-2.1 m at the same shoulder height; plantigrade paws flip in gallop); use concept bearS_s5 and the README-sourced average-adult numbers, UniRig joints as on the wolf. Dragon: not started; wings are the risk (keep code wings on a model body if membranes fuse). Not built: gallop, jaw and blink on model bodies, per-LOD atlases, de-lighting, a Python self-test for the isolate op, BLENDER_REVIEW for fit-dependent programs."
+last_updated: 2026-11-17
