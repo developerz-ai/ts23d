@@ -1,0 +1,38 @@
+{
+  "adapter": "http:http://127.0.0.1:8190",
+  "contract": "t3d-neural/1",
+  "key": "f160c6f60a01537d4a6582234b2ca56523b7420169b0c5326c992fd065c5a2e6",
+  "model": {
+    "id": "pixal3d",
+    "licence": "MIT (model card TencentARC/Pixal3D: \"license: mit\"; code: MIT License, Copyright (c) 2026 Tencent)",
+    "task": "mesh",
+    "vramGb": 17.5,
+    "weightsSha256": "991e810a1446e1866062fa4c118b9a35c199832fde0bdebfd879b73a464e42de"
+  },
+  "outputs": [
+    {
+      "bytes": 75945332,
+      "file": "local-0.glb",
+      "local": true,
+      "mime": "model/gltf-binary",
+      "sha256": "e71dc19fbf622a15ea657574e0534fd6c4d03b4cd15eaf3efc71133d5d5793be"
+    }
+  ],
+  "request": {
+    "image": {
+      "mime": "image/png",
+      "sha256": "ebc02d077bc6941490caab19e761bc4ac84ece5cf08eb582a91655c226d6cd59"
+    },
+    "maxTriangles": 1000000,
+    "params": {
+      "resolution": 1536,
+      "steps": 25,
+      "texture_size": 4096,
+      "triangles": 1000000
+    },
+    "seed": 42
+  },
+  "requestKey": "af2583997633ecca19ef517cdd9ead2f630eb492690d67e7fdad177f59e80e17",
+  "server": "ts23d-neural-server/0.1.0",
+  "task": "mesh"
+}

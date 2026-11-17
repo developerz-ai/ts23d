@@ -162,6 +162,7 @@ export function mapJoints(
   inside: (p: Vec3) => boolean,
   prefix = '',
   take: readonly RigChains[] = RIG_CHAINS,
+  nose = false,
 ): Bone[] {
   const rig = rigTopology(source);
   const named = (stem: string): Bone[] =>
@@ -189,7 +190,16 @@ export function mapJoints(
     return fail('the plan has no spine or head to map the trunk onto');
   // Spine and neck joints at the fractions they hold on the fitted trunk line (croup → atlas).
   const ours: Vec3[] = [...spine.map((b) => b.head), ...neck.map((b) => b.head), head.head];
-  const line: Vec3[] = [...rig.trunk.map((b) => b.head), rig.head.head];
+  // With `nose`: a rigger may end its trunk at the snout (its last joint is the head's far end,
+  // not the skull's base). The head then starts at the last trunk joint that is at least half
+  // the plan's head length behind the traced nose tip, and the joints past it are left out.
+  const tip = head.tail;
+  const far = v3.len(v3.sub(head.tail, head.head)) * 0.5;
+  let joints: Vec3[] = [...rig.trunk.map((b) => b.head), rig.head.head];
+  while (nose && joints.length > 3 && v3.len(v3.sub(tip, joints[joints.length - 1] ?? tip)) < far)
+    joints = joints.slice(0, -1);
+  const atlas = joints[joints.length - 1] ?? rig.head.head;
+  const line: Vec3[] = joints;
   const placed = fractions(ours).map((f) => along(line, f));
   const trunk = take.includes('trunk');
   if (trunk) {
@@ -197,11 +207,19 @@ export function mapJoints(
       const [a, c] = [placed[i], placed[i + 1]];
       if (a && c) out.set(b.name, { head: a, tail: c });
     });
-    // The head joint is the rigger's; its direction and length stay the traced muzzle's.
-    out.set(head.name, {
-      head: rig.head.head,
-      tail: v3.add(rig.head.head, v3.sub(head.tail, head.head)),
-    });
+    // The head joint is the rigger's; its direction and length stay the traced muzzle's. With
+    // `nose` the bone runs from the atlas found above to the traced nose tip, cut where it
+    // leaves the mesh: the plan's head length from a joint that sits further forward than the
+    // traced atlas carried a bear's bone 0.30 m past its nose.
+    const from = atlas;
+    const reach = nose ? tip : v3.add(from, v3.sub(head.tail, head.head));
+    let exit = 1;
+    for (let i = 1; nose && i <= HEAD_STEPS; i++)
+      if (!inside(v3.lerp(from, reach, i / HEAD_STEPS))) {
+        exit = (i - 1) / HEAD_STEPS;
+        break;
+      }
+    out.set(head.name, { head: from, tail: exit > 0 ? v3.lerp(from, reach, exit) : reach });
   }
   const croup = out.get(spine[0]?.name ?? '')?.head;
   const bones = fitted.map((b): Bone => {
@@ -227,6 +245,9 @@ export function mapJoints(
   if (outside.length) fail(`mapped joint(s) outside the mesh: ${outside.join(', ')}`);
   return bones;
 }
+
+/** Samples along a head bone when looking for where it leaves the mesh (`nose`). */
+const HEAD_STEPS = 40;
 
 /**
  * A scapula's upper end lies just under the skin of the withers. When the mapped point is outside

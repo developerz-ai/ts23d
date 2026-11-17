@@ -70,6 +70,8 @@ export interface ModelChainOptions {
   readonly rig?: string | false;
   /** The chains the rigger's joints replace (model-joints.ts). Default all. */
   readonly take?: readonly RigChains[];
+  /** End the head bone at the model's nose (modelRig `nose`). Default off. */
+  readonly nose?: boolean;
   /** Creature clips to leave out by name. */
   readonly drop?: readonly string[];
   /** Triangles of the proxy pass. Default 6000. */
@@ -186,6 +188,7 @@ export function modelChain(ctx: BuildContext, o: ModelChainOptions): ChainedMode
   const rig = modelRig(shell, o.spec, {
     ...(joints ? { joints } : {}),
     ...(o.take ? { take: o.take } : {}),
+    ...(o.nose ? { nose: true } : {}),
     prefix: o.prefix ?? '',
     ...(o.symmetric ? { symmetric: o.symmetric } : {}),
     ...(o.repose ? { repose: true } : {}),

@@ -12,7 +12,15 @@ import {
 import { bindRigid } from '../passes/index.ts';
 import { box } from '../primitives/index.ts';
 import { DEFAULT_GATES } from './gates.ts';
-import { albedoSpread, FIT_MEDIAN, GROUND, model, skeletonHug, TEXTURE_STD } from './model.ts';
+import {
+  albedoSpread,
+  FIT_TURN,
+  GROUND,
+  hugTurn,
+  model,
+  skeletonHug,
+  TEXTURE_STD,
+} from './model.ts';
 
 /** A 16 × 16 albedo: every texel `grey`, or value noise. */
 function albedo(grey: number | null): Uint8Array {
@@ -94,8 +102,11 @@ describe('QA model', () => {
     expect(codes(a)).toContain('T3D_MODEL_SKELETON');
     expect(codes(a)).toContain('T3D_MODEL_FIT');
     const part = a.parts[0];
-    const hug = skeletonHug(part?.mesh as Mesh, [0, 0, 0], a.skeleton ?? { bones: [] });
-    expect(hug).toBeGreaterThan(FIT_MEDIAN);
+    // A turned copy of this skeleton fits the mesh better than the skeleton as it stands.
+    expect(hugTurn(part?.mesh as Mesh, [0, 0, 0], a.skeleton ?? { bones: [] })).toBeGreaterThan(1);
+    expect(
+      hugTurn(table(), [0, 0, 0], asset({ name: 'square' }).skeleton ?? { bones: [] }),
+    ).toBeLessThan(FIT_TURN);
   });
 
   it('reads the same hug however densely one region is tessellated (area, not vertices)', () => {
@@ -149,7 +160,6 @@ describe('QA model', () => {
     expect(dense.indices.length).toBeGreaterThan(plain.indices.length * 2);
     const sk = asset({ name: 'good' }).skeleton ?? { bones: [] };
     const hug = skeletonHug(plain, [0, 0, 0], sk);
-    expect(hug).toBeLessThan(FIT_MEDIAN);
     // Centroid samples move within a triangle when it is split: equal to a part in a hundred.
     expect(Math.abs(skeletonHug(dense, [0, 0, 0], sk) - hug)).toBeLessThan(hug * 0.01);
   });

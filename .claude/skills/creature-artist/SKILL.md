@@ -96,8 +96,8 @@ Sources: [examples/neural-server/README.md](../../../examples/neural-server/READ
 `blink` are dropped). Fingers and toes are paddles. Fur is sculpted clumps in the normal map, not cards.
 Albedo keeps the generator's baked light. A gallop can exceed what the skin takes: drop it and let QA `deform`
 judge. Outputs are not bit-identical between GPU runs: the committed output is the input to the build. As of
-2026-11 the quadruped example is [`recipes/wolf_hybrid`](../../../recipes/wolf_hybrid/README.md) (read its steps table);
-`recipes/brown_bear` and `recipes/dragon` are planned; the humanoid example is [`recipes/ranger`](../../../recipes/ranger/README.md).
+2026-11 the quadruped example is [`recipes/wolf_hybrid`](../../../recipes/wolf_hybrid/README.md) (read its steps table), and
+[`recipes/bear_hybrid`](../../../recipes/bear_hybrid/README.md) for a heavy plantigrade build (`nose: true`, wrist weights); `recipes/dragon` is planned; the humanoid example is [`recipes/ranger`](../../../recipes/ranger/README.md).
 
 ## Workflow (code route: stylised creatures, the CPU fallback)
 | # | Creature-design stage | ts23d | Exit |

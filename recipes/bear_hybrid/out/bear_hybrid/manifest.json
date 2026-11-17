@@ -1,0 +1,493 @@
+{
+  "name": "bear_hybrid",
+  "kind": "creature",
+  "description": "Eurasian brown bear (Ursus arctos arctos), an average adult standing on all fours: 1.7 m head and body, 1.0 m at the shoulder, 250 kg. Model tier: an image-to-3D surface (Pixal3D, MIT) with its own textures on three LODs, skinned to the sourced plantigrade skeleton (joints from UniRig) with idle, look and walk clips. Without the neural cache: the code-built creature-kind bear",
+  "tags": [
+    "creature",
+    "animal",
+    "mammal",
+    "ursid",
+    "bear",
+    "skinned",
+    "neural",
+    "model-first"
+  ],
+  "lods": [
+    0,
+    1,
+    2
+  ],
+  "files": {
+    "lods": [],
+    "sheet": "sheet.png",
+    "thumb": "thumb.png"
+  },
+  "triangles": [
+    29998,
+    9998,
+    4998
+  ],
+  "drawCalls": [
+    1,
+    1,
+    1
+  ],
+  "pivots": [
+    {
+      "name": "body",
+      "parent": null
+    }
+  ],
+  "emitters": [],
+  "sockets": [],
+  "surfaces": [
+    "opaque"
+  ],
+  "textureSets": [
+    {
+      "name": "body",
+      "size": 2048,
+      "maps": {
+        "albedo": {
+          "size": 2048,
+          "bytes": 5412201
+        },
+        "normal": {
+          "size": 1024,
+          "bytes": 1622218
+        },
+        "orm": {
+          "size": 1024,
+          "bytes": 946622
+        }
+      },
+      "bytes": 7981041,
+      "credit": "ts23d bear_hybrid recipe (Z-Image concept, Pixal3D mesh, UniRig joints, Blender steps) — MIT — neural cache (blender final on mesh e71dc19fbf62)"
+    }
+  ],
+  "skeleton": [
+    {
+      "name": "spine_0",
+      "parent": null
+    },
+    {
+      "name": "spine_1",
+      "parent": "spine_0"
+    },
+    {
+      "name": "spine_2",
+      "parent": "spine_1"
+    },
+    {
+      "name": "scapula_l",
+      "parent": "spine_2"
+    },
+    {
+      "name": "scapula_r",
+      "parent": "spine_2"
+    },
+    {
+      "name": "neck_0",
+      "parent": "spine_2"
+    },
+    {
+      "name": "neck_1",
+      "parent": "neck_0"
+    },
+    {
+      "name": "head",
+      "parent": "neck_1"
+    },
+    {
+      "name": "tail_0",
+      "parent": "spine_0"
+    },
+    {
+      "name": "tail_1",
+      "parent": "tail_0"
+    },
+    {
+      "name": "tail_2",
+      "parent": "tail_1"
+    },
+    {
+      "name": "tail_3",
+      "parent": "tail_2"
+    },
+    {
+      "name": "tail_4",
+      "parent": "tail_3"
+    },
+    {
+      "name": "fore_l_0",
+      "parent": "scapula_l"
+    },
+    {
+      "name": "fore_l_1",
+      "parent": "fore_l_0"
+    },
+    {
+      "name": "fore_l_2",
+      "parent": "fore_l_1"
+    },
+    {
+      "name": "fore_l_3",
+      "parent": "fore_l_2"
+    },
+    {
+      "name": "fore_r_0",
+      "parent": "scapula_r"
+    },
+    {
+      "name": "fore_r_1",
+      "parent": "fore_r_0"
+    },
+    {
+      "name": "fore_r_2",
+      "parent": "fore_r_1"
+    },
+    {
+      "name": "fore_r_3",
+      "parent": "fore_r_2"
+    },
+    {
+      "name": "hind_l_0",
+      "parent": "spine_0"
+    },
+    {
+      "name": "hind_l_1",
+      "parent": "hind_l_0"
+    },
+    {
+      "name": "hind_l_2",
+      "parent": "hind_l_1"
+    },
+    {
+      "name": "hind_l_3",
+      "parent": "hind_l_2"
+    },
+    {
+      "name": "hind_r_0",
+      "parent": "spine_0"
+    },
+    {
+      "name": "hind_r_1",
+      "parent": "hind_r_0"
+    },
+    {
+      "name": "hind_r_2",
+      "parent": "hind_r_1"
+    },
+    {
+      "name": "hind_r_3",
+      "parent": "hind_r_2"
+    },
+    {
+      "name": "fore_l_0_mid",
+      "parent": "scapula_l"
+    },
+    {
+      "name": "fore_l_1_mid",
+      "parent": "fore_l_0"
+    },
+    {
+      "name": "fore_l_2_mid",
+      "parent": "fore_l_1"
+    },
+    {
+      "name": "fore_r_0_mid",
+      "parent": "scapula_r"
+    },
+    {
+      "name": "fore_r_1_mid",
+      "parent": "fore_r_0"
+    },
+    {
+      "name": "fore_r_2_mid",
+      "parent": "fore_r_1"
+    },
+    {
+      "name": "hind_l_0_mid",
+      "parent": "spine_0"
+    },
+    {
+      "name": "hind_l_1_mid",
+      "parent": "hind_l_0"
+    },
+    {
+      "name": "hind_l_2_mid",
+      "parent": "hind_l_1"
+    },
+    {
+      "name": "hind_r_0_mid",
+      "parent": "spine_0"
+    },
+    {
+      "name": "hind_r_1_mid",
+      "parent": "hind_r_0"
+    },
+    {
+      "name": "hind_r_2_mid",
+      "parent": "hind_r_1"
+    }
+  ],
+  "clips": [
+    {
+      "name": "idle",
+      "seconds": 4,
+      "loop": true,
+      "speed": 0
+    },
+    {
+      "name": "look",
+      "seconds": 4,
+      "loop": true,
+      "speed": 0
+    },
+    {
+      "name": "walk",
+      "seconds": 0.9065801699651641,
+      "loop": true,
+      "speed": 1.2533
+    }
+  ],
+  "hitboxes": [
+    {
+      "bone": "spine_0",
+      "radius": 0.070935,
+      "height": 0.076158,
+      "coverage": 0.9691
+    },
+    {
+      "bone": "spine_1",
+      "radius": 0.321353,
+      "height": 0.058428,
+      "coverage": 0.961
+    },
+    {
+      "bone": "spine_2",
+      "radius": 0.211746,
+      "height": 0.224568,
+      "coverage": 0.9513
+    },
+    {
+      "bone": "scapula_l",
+      "radius": 0.06956,
+      "height": 0,
+      "coverage": 1
+    },
+    {
+      "bone": "scapula_r",
+      "radius": 0.090639,
+      "height": 0,
+      "coverage": 0.9714
+    },
+    {
+      "bone": "neck_0",
+      "radius": 0.099989,
+      "height": 0.023979,
+      "coverage": 0.9594
+    },
+    {
+      "bone": "head",
+      "radius": 0.165692,
+      "height": 0.098897,
+      "coverage": 0.9746
+    },
+    {
+      "bone": "tail_0",
+      "radius": 0.107828,
+      "height": 0.136717,
+      "coverage": 0.9673
+    },
+    {
+      "bone": "tail_4",
+      "radius": 0.190887,
+      "height": 0,
+      "coverage": 0.9643
+    },
+    {
+      "bone": "fore_l_0",
+      "radius": 0.189521,
+      "height": 0.165342,
+      "coverage": 0.9568
+    },
+    {
+      "bone": "fore_l_1",
+      "radius": 0.156629,
+      "height": 0.15633,
+      "coverage": 0.96
+    },
+    {
+      "bone": "fore_l_2",
+      "radius": 0.067422,
+      "height": 0.053246,
+      "coverage": 0.9535
+    },
+    {
+      "bone": "fore_l_3",
+      "radius": 0.057536,
+      "height": 0,
+      "coverage": 1
+    },
+    {
+      "bone": "fore_r_0",
+      "radius": 0.262518,
+      "height": 0.058638,
+      "coverage": 0.9576
+    },
+    {
+      "bone": "fore_r_1",
+      "radius": 0.138129,
+      "height": 0.154004,
+      "coverage": 0.9619
+    },
+    {
+      "bone": "fore_r_2",
+      "radius": 0.074547,
+      "height": 0.03471,
+      "coverage": 0.9574
+    },
+    {
+      "bone": "fore_r_3",
+      "radius": 0.017071,
+      "height": 0,
+      "coverage": 1
+    },
+    {
+      "bone": "hind_l_0",
+      "radius": 0.17865,
+      "height": 0.207788,
+      "coverage": 0.9641
+    },
+    {
+      "bone": "hind_l_1",
+      "radius": 0.164266,
+      "height": 0.163796,
+      "coverage": 0.9622
+    },
+    {
+      "bone": "hind_l_2",
+      "radius": 0.077097,
+      "height": 0.016053,
+      "coverage": 0.9735
+    },
+    {
+      "bone": "hind_l_3",
+      "radius": 0.064122,
+      "height": 0.031185,
+      "coverage": 0.9635
+    },
+    {
+      "bone": "hind_r_0",
+      "radius": 0.163666,
+      "height": 0.243161,
+      "coverage": 0.9625
+    },
+    {
+      "bone": "hind_r_1",
+      "radius": 0.168215,
+      "height": 0.142381,
+      "coverage": 0.977
+    },
+    {
+      "bone": "hind_r_2",
+      "radius": 0.077555,
+      "height": 0.025525,
+      "coverage": 0.9756
+    },
+    {
+      "bone": "hind_r_3",
+      "radius": 0.064113,
+      "height": 0.029039,
+      "coverage": 0.9607
+    },
+    {
+      "bone": "fore_l_0_mid",
+      "radius": 0.10456,
+      "height": 0,
+      "coverage": 0.9583
+    },
+    {
+      "bone": "fore_l_1_mid",
+      "radius": 0.21827,
+      "height": 0,
+      "coverage": 0.9604
+    },
+    {
+      "bone": "fore_l_2_mid",
+      "radius": 0.084498,
+      "height": 0.038369,
+      "coverage": 0.986
+    },
+    {
+      "bone": "fore_r_0_mid",
+      "radius": 0.145968,
+      "height": 0,
+      "coverage": 0.963
+    },
+    {
+      "bone": "fore_r_1_mid",
+      "radius": 0.155498,
+      "height": 0,
+      "coverage": 0.9779
+    },
+    {
+      "bone": "fore_r_2_mid",
+      "radius": 0.090262,
+      "height": 0.02377,
+      "coverage": 0.9805
+    },
+    {
+      "bone": "hind_l_0_mid",
+      "radius": 0.123824,
+      "height": 0,
+      "coverage": 0.9705
+    },
+    {
+      "bone": "hind_l_1_mid",
+      "radius": 0.31771,
+      "height": 0,
+      "coverage": 0.9813
+    },
+    {
+      "bone": "hind_l_2_mid",
+      "radius": 0.097779,
+      "height": 0.073924,
+      "coverage": 0.9672
+    },
+    {
+      "bone": "hind_r_0_mid",
+      "radius": 0.141027,
+      "height": 0,
+      "coverage": 0.9521
+    },
+    {
+      "bone": "hind_r_1_mid",
+      "radius": 0.272115,
+      "height": 0,
+      "coverage": 0.9677
+    },
+    {
+      "bone": "hind_r_2_mid",
+      "radius": 0.091584,
+      "height": 0.063228,
+      "coverage": 0.9655
+    }
+  ],
+  "real": {
+    "length": 1.7,
+    "width": 0.62,
+    "height": 1.05
+  },
+  "measures": [],
+  "sources": [
+    "https://en.wikipedia.org/wiki/Brown_bear (head-body, shoulder, tail, mass range, skull, hump)",
+    "recipes/brown_bear/README.md (the dossier and its ranges) · recipes/bear_hybrid/README.md (the chain, the steps, the measures)",
+    "surface: Pixal3D (TencentARC, MIT) · joints: UniRig (VAST-AI, MIT) · records in recipes/bear_hybrid/neural/"
+  ],
+  "qa": {
+    "pass": true,
+    "findings": []
+  }
+}

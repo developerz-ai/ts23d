@@ -4,8 +4,8 @@ roadmap: "M4 creature next (:120), quadruped base meshes (:256); M5 Blender brid
 status: in_progress
 owner: sebi
 worked_by: "claude (coordinator) + slice agents"
-percent: 88
-current_focus: "Shipped in 0.10.0 (#43, #44): the pipeline, recipes/ranger, recipes/wolf_hybrid. Open: 10 brown_bear and 11 dragon model tiers"
+percent: 94
+current_focus: "Shipped in 0.10.0 (#43, #44): the pipeline, recipes/ranger, recipes/wolf_hybrid. Bear: recipes/bear_hybrid (QA PASS, plantigrade walk). Open: 11 dragon model tier"
 slices:
   - { file: 01-textured-parts-core.md, status: complete, percent: 100 }
   - { file: 02-blender-steps.md, status: complete, percent: 100 }
@@ -16,7 +16,7 @@ slices:
   - { file: 07-model-body.md, status: complete, percent: 100 }
   - { file: 08-wolf.md, status: complete, percent: 100 }
   - { file: 09-humanoid.md, status: complete, percent: 100 }
-  - { file: 10-bear.md, status: not_started, percent: 0 }
+  - { file: 10-bear.md, status: complete, percent: 100 }
   - { file: 11-dragon.md, status: not_started, percent: 0 }
   - { file: 12-site.md, status: complete, percent: 100 }
   - { file: 13-docs-release.md, status: complete, percent: 100 }
@@ -24,6 +24,7 @@ slices:
   - { file: 15-agent-finishing.md, status: complete, percent: 100 }
   - { file: 16-model-character.md, status: complete, percent: 100 }
 evidence:
+  - "bear_hybrid: recipes/bear_hybrid/out/bear_hybrid/hero.png (QA PASS, 30k/10k/5k tris, idle/look/walk; new recipe, brown_bear kept as the code male)"
   - "https://github.com/developerz-ai/ts23d/pull/43 (pipeline, ranger, wolf_hybrid; 47 review findings fixed)"
   - "https://github.com/developerz-ai/ts23d/pull/44 (release 0.10.0)"
   - "wolf_hybrid: recipes/wolf_hybrid/out/wolf_hybrid/hero.png (QA PASS, 30k/10k/5k tris, idle/look/walk/trot, UniRig joints)"

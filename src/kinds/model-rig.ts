@@ -50,6 +50,9 @@ export interface ModelRigOptions {
   readonly joints?: readonly Bone[];
   /** The chains the rigger's joints replace. Default all: ['trunk', 'fore', 'hind']. */
   readonly take?: readonly RigChains[];
+  /** End the head bone at the nose (where it leaves the mesh) instead of at the plan's head
+   *  length from the rigger's joint: for a model whose head is shorter than the spec's. */
+  readonly nose?: boolean;
 }
 
 export interface ModelRig {
@@ -154,7 +157,7 @@ const memo = new WeakMap<Float32Array, Map<string, ModelRig>>();
 
 export function modelRig(source: Mesh, spec: CreatureSpec, o: ModelRigOptions = {}): ModelRig {
   const prefix = o.prefix ?? '';
-  const key = `${o.joints ? idOf(o.joints) : ''}|${(o.take ?? []).join('+')}|${prefix}|${o.symmetric ?? false}|${o.repose === true}|${o.front}|${(o.drop ?? []).join(',')}|${JSON.stringify(spec)}`;
+  const key = `${o.joints ? idOf(o.joints) : ''}|${(o.take ?? []).join('+')}|${prefix}|${o.symmetric ?? false}|${o.repose === true}|${o.nose === true}|${o.front}|${(o.drop ?? []).join(',')}|${JSON.stringify(spec)}`;
   const seen = memo.get(source.positions)?.get(key);
   if (seen) return seen;
   const { bones: plan } = creaturePlan(spec);
@@ -224,7 +227,14 @@ export function modelRig(source: Mesh, spec: CreatureSpec, o: ModelRigOptions = 
       tail: applySimilarity(fit.similarity, b.tail),
     }));
     try {
-      fitted = mapJoints(geometric, moved, (p) => bvh.winding(p) > 0.5, prefix, o.take);
+      fitted = mapJoints(
+        geometric,
+        moved,
+        (p) => bvh.winding(p) > 0.5,
+        prefix,
+        o.take,
+        o.nose === true,
+      );
     } catch (e) {
       if (!(e instanceof Ts23dError) || e.code !== 'T3D_MODEL_SKELETON') throw e;
       notices.push(`${e.message}: the geometric skeleton fit is used instead`);

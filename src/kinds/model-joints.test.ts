@@ -141,6 +141,37 @@ describe('mapJoints', () => {
     expect(at('fore_r_0')?.head).toEqual([0.3, -0.08, 0.5]);
   });
 
+  it('with `nose`, a rig whose trunk ends at the snout gets its head bone from the skull base to the nose', () => {
+    const was = plan.find((b) => b.name === 'head');
+    const tip = was?.tail ?? [0, 0, 0];
+    const long = Math.hypot(...[0, 1, 2].map((k) => (was?.tail[k] ?? 0) - (was?.head[k] ?? 0)));
+    // The rigger's head joint moved onto the traced nose tip: its trunk now ends at the snout.
+    const rig = riggerBones().map((b) => (b.name === 'bone_6' ? { ...b, head: tip } : b));
+    const at = (bones: readonly Bone[], n: string): Bone | undefined =>
+      bones.find((b) => b.name === n);
+    // Failure first: without the option the bone starts at the snout and runs a head past it.
+    const blind = at(
+      mapJoints(plan, rig, () => true),
+      'head',
+    );
+    expect(blind?.head).toEqual(tip);
+    // With it the head starts at a trunk joint at least half a head behind the nose and ends there.
+    const head = at(
+      mapJoints(plan, rig, () => true, '', undefined, true),
+      'head',
+    );
+    const back = Math.hypot(...[0, 1, 2].map((k) => (tip[k] ?? 0) - (head?.head[k] ?? 0)));
+    expect(back).toBeGreaterThanOrEqual(long * 0.5);
+    expect(head?.tail).toEqual(tip);
+    // And where the mesh ends before the traced tip, the bone ends at the skin.
+    const cut = at(
+      mapJoints(plan, rig, (p) => p[0] < tip[0] - 0.03, '', undefined, true),
+      'head',
+    );
+    expect(cut?.tail[0] ?? 9).toBeLessThan(tip[0]);
+    expect(cut?.tail[0] ?? 0).toBeGreaterThan(head?.head[0] ?? 0);
+  });
+
   it('refuses joints that land outside the mesh', () => {
     expect(() => mapJoints(plan, riggerBones(), (p) => p[2] > 0.2)).toThrow(
       /T3D_MODEL_SKELETON.*outside/,

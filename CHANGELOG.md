@@ -4,6 +4,13 @@ All notable changes to `@developerz.ai/ts23d`. Format: [Keep a Changelog](https:
 
 ## [Unreleased]
 
+### Added
+- `recipes/bear_hybrid`: a model-first brown bear (Pixal3D mesh kept whole, UniRig joints, Blender steps; plantigrade `idle`, `look`, `walk`; QA PASS), at average-adult sourced numbers; `recipes/brown_bear` stays the code-built big male.
+- `modelChain({ nose: true })` / `modelRig({ nose })`: the head bone runs from the skull base to the model's nose when a rigger ends its trunk at the snout.
+
+### Changed
+- QA `model` fit check is build-independent: instead of an absolute share of the skeleton's height (calibrated on a lean wolf, wrong for a barrel-bodied bear) it fails when a copy of the skeleton turned a quarter or half a turn hugs the surface clearly better (`hugTurn` > 1.15).
+
 ## [0.10.0] - 2026-11-17
 
 Creatures and humanoids go model-first and Blender-first: an image-to-3D body, finished by an ordered list of headless Blender steps the recipe writes, kept whole with its own textures on every LOD, while code keeps real scale, skeleton, clips, budgets and QA.

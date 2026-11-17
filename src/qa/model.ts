@@ -3,9 +3,9 @@
 //   texture  — the albedo under the mesh's UVs is not blank: luminance standard deviation over
 //              the triangles' centre texels ≥ TEXTURE_STD (T3D_MODEL_TEXTURE)
 //   skeleton — every bone's head (helpers aside) lies inside the mesh (T3D_MODEL_SKELETON)
-//   fit      — the surface hugs the skeleton: half its area is within FIT_MEDIAN of a bone,
-//              as a share of the skeleton's height (T3D_MODEL_FIT; a wrong yaw or scale leaves
-//              half the surface far from every bone)
+//   fit      — no copy of the skeleton turned a quarter or half a turn hugs the surface clearly
+//              better (hugTurn ≤ FIT_TURN; T3D_MODEL_FIT: a wrong yaw leaves a turned copy the
+//              better fit; a wrong scale or place leaves joints outside: `skeleton`)
 //   doubled  — one head outline, one leg outline per foot (model-doubled.ts; T3D_MODEL_DOUBLED)
 //   ground   — each foot bone's skin reaches the ground: its lowest vertex within GROUND of
 //              z = 0 (T3D_MODEL_FIT)
@@ -23,10 +23,14 @@ import type { Finding, Gate } from './types.ts';
 /** Least luminance standard deviation (0..255 scale) of a baked albedo. Wolf: 54; a flat
  *  colour: 0; a failed bake (black with noise): < 3. */
 export const TEXTURE_STD = 6;
-/** Largest area-median surface → nearest bone distance ÷ skeleton height. Profile wolf, LOD 0–2:
- *  0.098–0.099 on the geometric fit's dorsal spine, 0.114–0.115 on a learned rigger's mid-trunk
- *  spine; 0.131–0.147 with the skeleton half a turn off, 0.41 a quarter turn off. */
-export const FIT_MEDIAN = 0.125;
+/** Largest `hugTurn`: how closely the skeleton hugs the surface as it stands ÷ its best copy
+ *  turned a quarter or half a turn about its own vertical axis. Over this a turned copy fits
+ *  clearly better: the mesh is registered wrongly. An absolute limit cannot serve two builds: by
+ *  height a lean wolf reads 0.097 registered and 0.130 half a turn off, a barrel-bodied bear
+ *  0.148 and 0.220. Against their own turned copies: wolf 0.75, bear 0.67 registered; 1.34 and
+ *  1.49 half a turn off. A body the same front and back (a table, a figure in A-pose) reads 1.0
+ *  either way: its half turn cannot be told by this measure, only its quarter turn. */
+export const FIT_TURN = 1.15;
 /** How far a foot's lowest skin may be from z = 0, metres. Wolf: ≤ 0.0012 on all four paws at every LOD. */
 export const GROUND = 0.01;
 
@@ -172,6 +176,31 @@ export function lowestSkin(
 const ZERO: Vec3 = [0, 0, 0];
 
 /** `mesh` is the part's WORLD mesh (its whole parent chain applied): bones are asset-frame. */
+/**
+ * `skeletonHug` of the skeleton as it stands ÷ the best `skeletonHug` of the same skeleton turned
+ * 90°, 180° and 270° about the vertical axis through its middle: under 1 when the skeleton faces
+ * the way the mesh does, over 1 when a turned copy fits better (the mesh is registered wrongly).
+ */
+export function hugTurn(mesh: Mesh, at: Vec3, sk: Armature): number {
+  const n = Math.max(sk.bones.length, 1);
+  const cx = sk.bones.reduce((s, b) => s + (b.head[0] + b.tail[0]) / 2, 0) / n;
+  const cy = sk.bones.reduce((s, b) => s + (b.head[1] + b.tail[1]) / 2, 0) / n;
+  const turned = (quarters: number): Armature => {
+    const [c, s] = [
+      Math.round(Math.cos((quarters * Math.PI) / 2)),
+      Math.round(Math.sin((quarters * Math.PI) / 2)),
+    ];
+    const turn = (p: Vec3): Vec3 => [
+      cx + (p[0] - cx) * c - (p[1] - cy) * s,
+      cy + (p[0] - cx) * s + (p[1] - cy) * c,
+      p[2],
+    ];
+    return { bones: sk.bones.map((b) => ({ ...b, head: turn(b.head), tail: turn(b.tail) })) };
+  };
+  const others = Math.min(...[1, 2, 3].map((q) => skeletonHug(mesh, at, turned(q))));
+  return skeletonHug(mesh, at, sk) / Math.max(others, 1e-9);
+}
+
 function partFindings(p: Part, mesh: Mesh, sk: Armature | undefined): Finding[] {
   const out: Finding[] = [];
   const std = p.textures ? albedoSpread(p.textures.albedo, mesh) : 0;
@@ -198,13 +227,13 @@ function partFindings(p: Part, mesh: Mesh, sk: Armature | undefined): Finding[] 
         'fit the skeleton into the mesh (kinds `modelBody` / `fitSkeleton` do), or correct the spec so the plan has the limbs the model has',
       ),
     );
-  const hug = skeletonHug(mesh, ZERO, sk);
-  if (!(hug <= FIT_MEDIAN))
+  const hug = hugTurn(mesh, ZERO, sk);
+  if (!(hug <= FIT_TURN))
     out.push(
       finding(
         'T3D_MODEL_FIT',
         p.name,
-        `part '${p.name}': half the surface is over ${(hug * 100).toFixed(1)} % of the skeleton's height from any bone (≤ ${FIT_MEDIAN * 100} %): the mesh is not registered to the skeleton`,
+        `part '${p.name}': a copy of the skeleton turned a quarter or half a turn hugs the surface better (${hug.toFixed(2)}× the distance as it stands, ≤ ${FIT_TURN}×): the mesh is not registered to the skeleton`,
         'register the model first (kinds `modelFit`: yaw, scale and place), then fit the skeleton; a model facing sideways or at another scale lands here',
       ),
     );
