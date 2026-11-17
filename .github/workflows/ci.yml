@@ -69,7 +69,7 @@ jobs:
           path: |
             recipes/*/out/*/sheet.png
             recipes/*/out/*/hero.png
-          retention-days: 14
+          retention-days: 1
 
   site:
     runs-on: ubuntu-latest
