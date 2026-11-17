@@ -6,7 +6,7 @@
 //   head — the plane across the head bone at 70 % of its length: ONE outline near the bone, no
 //          more than GIRTH bone lengths round (two muzzles side by side fuse into one wide one)
 //   legs — the horizontal plane at a tenth of the skeleton's height: one outline per foot bone
-//          (plus one when a tail bone hangs that low; a sliver between the legs is a finding)
+//          (outlines lying on the tail's bones aside; a sliver between the legs is a finding)
 // Outlines shorter than SPECK of the skeleton's height are ignored.
 
 import type { Armature, Mesh, Vec3 } from '../core/index.ts';
@@ -25,6 +25,24 @@ export const UPRIGHT = Math.cos(Math.PI / 6);
 /** …whose outline may be this share of the skeleton's height round (a 0.57 m human head on a
  *  1.8 m body: 0.32; two heads side by side would pass 0.5). */
 export const GIRTH_UPRIGHT = 0.36;
+
+/** An outline whose centre is within this share of the skeleton's height of a tail bone is the
+ *  tail's, not a leg's. */
+const TAIL_NEAR = 0.08;
+
+/** Distance from `p` to the segment a → b. */
+function toSegment(p: Vec3, a: Vec3, b: Vec3): number {
+  const d: Vec3 = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
+  const l = d[0] * d[0] + d[1] * d[1] + d[2] * d[2];
+  const t =
+    l > 0
+      ? Math.max(
+          0,
+          Math.min(1, ((p[0] - a[0]) * d[0] + (p[1] - a[1]) * d[1] + (p[2] - a[2]) * d[2]) / l),
+        )
+      : 0;
+  return Math.hypot(p[0] - a[0] - d[0] * t, p[1] - a[1] - d[1] * t, p[2] - a[2] - d[2] * t);
+}
 
 const welded = new WeakMap<Float32Array, Int32Array>();
 
@@ -179,18 +197,19 @@ export function doubledFeatures(mesh: Mesh, at: Vec3, sk: Armature): Doubled[] {
   }
   const feet = feetOf(sk).filter((b) => !b.name.endsWith(MID_SUFFIX)).length;
   if (feet > 0) {
+    // Outlines that lie on the tail's own bones are the tail's (one where it hangs through the
+    // cut, two where it rests on the ground and its tip curls up again): not legs.
+    const tails = sk.bones.filter((b) => /(^|_)tail_\d+$/.test(b.name));
+    const onTail = (c: Vec3): boolean =>
+      tails.some((b) => toSegment(c, local(b.head), local(b.tail)) < top * TAIL_NEAR);
     const n = outlines(mesh, local([0, 0, top * 0.1]), [0, 0, 1]).filter(
-      (o) => o.length > speck,
+      (o) => o.length > speck && !onTail(o.centre),
     ).length;
-    // A tail whose bones reach down to the cut may add one outline; nothing else may.
-    const tail = sk.bones.some((b) => /(^|_)tail_\d+$/.test(b.name) && b.tail[2] < top * 0.15)
-      ? 1
-      : 0;
-    if (n < feet || n > feet + tail)
+    if (n !== feet)
       out.push({
         what: `legs at z = ${(top * 0.1).toFixed(2)} m`,
         found: n,
-        expected: tail ? `${feet} or ${feet + 1} (the tail hangs that low)` : `${feet}`,
+        expected: `${feet} (outlines on the tail's bones aside)`,
       });
   }
   return out;

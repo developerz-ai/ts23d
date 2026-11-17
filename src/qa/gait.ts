@@ -37,8 +37,13 @@ const finding = (code: string, message: string, fix: string): Finding => ({
 export function feetOf(sk: Armature): Bone[] {
   const parents = new Set(sk.bones.map((b) => b.parent));
   const top = Math.max(...sk.bones.map((b) => Math.max(b.head[2], b.tail[2])));
+  // A tail's last bone is a low leaf too (a long tail rests on the ground): it is not a foot.
   return sk.bones.filter(
-    (b) => !parents.has(b.name) && !b.name.endsWith(MID_SUFFIX) && b.tail[2] < top * 0.08,
+    (b) =>
+      !parents.has(b.name) &&
+      !b.name.endsWith(MID_SUFFIX) &&
+      !/(^|_)tail_\d+$/.test(b.name) &&
+      b.tail[2] < top * 0.08,
   );
 }
 

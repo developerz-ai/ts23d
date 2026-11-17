@@ -1,0 +1,29 @@
+{
+  "adapter": "http:http://127.0.0.1:8190",
+  "contract": "t3d-neural/1",
+  "key": "6427373225345eea7b07b9971d3cafdf751405a8367be7413b68657fab4c30c7",
+  "model": {
+    "id": "unirig",
+    "licence": "MIT (model card VAST-AI/UniRig: \"license: mit\"; code: MIT License, Copyright (c) 2025 VAST-AI-Research and contributors)",
+    "task": "rig",
+    "weightsSha256": "ea93ff980b3c4ae560015f1224fc10be9b72049ddd97e69bf1168068c3e20e8e"
+  },
+  "outputs": [
+    {
+      "bytes": 179168,
+      "file": "output-0.glb",
+      "mime": "model/gltf-binary",
+      "sha256": "b795136f7373f6b014972c4ec135327688c7f881ea5434171970698c6cc43912"
+    }
+  ],
+  "request": {
+    "mesh": {
+      "mime": "model/gltf-binary",
+      "sha256": "c56bdeb7e8f4a31e9f00b731904806333d61f2a0fa44f704f7c58518801b7bed"
+    },
+    "seed": 42
+  },
+  "requestKey": "de27d1249f01650e8389b7dbc2cfed562ea2093441515d2e0b28c0aa77c3ae50",
+  "server": "ts23d-neural-server/0.1.0",
+  "task": "rig"
+}

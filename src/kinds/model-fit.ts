@@ -49,7 +49,7 @@ function box(points: readonly Vec3[]): { lo: Vec3; hi: Vec3 } {
 
 const median = (v: number[]): number => [...v].sort((a, b) => a - b)[v.length >> 1] ?? Infinity;
 
-const matrixOf = (m: Similarity): number[] => [
+export const matrixOf = (m: Similarity): number[] => [
   ...[0, 1, 2].flatMap((i) => [
     m.s * (m.r[i * 3] ?? 0),
     m.s * (m.r[i * 3 + 1] ?? 0),

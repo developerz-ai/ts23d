@@ -1,0 +1,105 @@
+{
+  "bbox": {
+    "frame": "gltf",
+    "max": [
+      0.379631,
+      0.310058,
+      0.311015
+    ],
+    "min": [
+      -0.500553,
+      -0.339984,
+      -0.258017
+    ]
+  },
+  "blender": "5.3.0",
+  "contract": "t3d-blender-report/1",
+  "glb": {
+    "animations": [],
+    "images": [],
+    "joints": [],
+    "materials": [],
+    "meshNodes": [
+      "lod0"
+    ],
+    "skins": 0,
+    "uvOrigin": "top-left (glTF)"
+  },
+  "lods": [
+    5998
+  ],
+  "seconds": 57.09,
+  "source": {
+    "materials": 1,
+    "textures": 2,
+    "triangles": 934645,
+    "uvLayers": 1,
+    "vertexColours": 0
+  },
+  "steps": [
+    {
+      "holeFaces": 0,
+      "nonManifoldEdges": 1668,
+      "op": "clean",
+      "seconds": 14.37,
+      "shells": 56,
+      "shellsDropped": 55,
+      "triangles": 929049,
+      "welded": 244721
+    },
+    {
+      "boundaryEdges": 0,
+      "from": 929049,
+      "op": "retopo",
+      "reduce": "decimate",
+      "seconds": 42.08,
+      "shell": {
+        "bboxDrift": 0.00525,
+        "bboxSide": "-z (bottom)",
+        "close": 1,
+        "components": 1,
+        "handles": 1,
+        "largestShare": 1.0,
+        "lost": {
+          "share": 0.0,
+          "tolerance": 0.020444
+        },
+        "skin": 0.75,
+        "tried": [
+          [
+            0,
+            0.0,
+            0.1338,
+            0
+          ],
+          [
+            1,
+            0.0,
+            0.0859,
+            0
+          ],
+          [
+            1,
+            0.75,
+            0.0,
+            1
+          ]
+        ],
+        "volume": 0.013537,
+        "volumeRef": 0.009114
+      },
+      "shellTriangles": 30620,
+      "strategy": "shell",
+      "triangles": 5998,
+      "voxel": 0.009086
+    },
+    {
+      "bytes": 108836,
+      "images": {},
+      "op": "export",
+      "seconds": 0.63,
+      "triangles": 5998
+    }
+  ],
+  "threads": 1
+}

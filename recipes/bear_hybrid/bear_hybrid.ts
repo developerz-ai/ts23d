@@ -26,7 +26,8 @@ export const BOX = { length: 1.7, width: 0.62, height: 1.05 } as const;
 
 /** Sourced measures read on the model body (README.md table), metres. */
 export const SOURCED = {
-  /** Shoulder height: the 1.0 this spec chose, ± 6 % (the hump's fur rides above the joint). */
+  /** Shoulder height: the 1.0 this spec chose, − 6 % … + 10 % (the hump's coat rides above the
+   *  joint, so more is allowed above than below). */
   withers: [REAL.shoulder * 0.94, REAL.shoulder * 1.1],
   /** Nose → rump: the 1.7 this spec chose from 1.0–2.8, ± 5 %. */
   headBody: [REAL.headBody * 0.95, REAL.headBody * 1.05],

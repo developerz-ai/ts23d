@@ -41,12 +41,13 @@ describe('fitSkeleton', () => {
 
   it('fails on fore paws fused into one block', () => {
     const P = Float32Array.from(body.positions);
-    // Squash the fore legs' lowest 8 cm onto the mid-plane: one island where the plan has two.
+    // Squash the fore legs' lowest 30 cm onto the mid-plane: one leg where the plan has two, well
+    // above where toes may touch (legs are told apart up to six slabs off the ground).
     for (let v = 0; v < P.length / 3; v++)
-      if ((P[v * 3] ?? 0) > 0.15 && (P[v * 3 + 2] ?? 0) < 0.08)
+      if ((P[v * 3] ?? 0) > 0.15 && (P[v * 3 + 2] ?? 0) < 0.3)
         P[v * 3 + 1] = (P[v * 3 + 1] ?? 0) * 0.1;
     expect(() => fitSkeleton({ ...body, positions: P }, bones)).toThrow(
-      /T3D_MODEL_SKELETON.*fused/,
+      /T3D_MODEL_SKELETON.*(fused|missing)/,
     );
   });
 

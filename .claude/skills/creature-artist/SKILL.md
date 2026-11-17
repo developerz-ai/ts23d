@@ -97,7 +97,7 @@ Sources: [examples/neural-server/README.md](../../../examples/neural-server/READ
 Albedo keeps the generator's baked light. A gallop can exceed what the skin takes: drop it and let QA `deform`
 judge. Outputs are not bit-identical between GPU runs: the committed output is the input to the build. As of
 2026-11 the quadruped example is [`recipes/wolf_hybrid`](../../../recipes/wolf_hybrid/README.md) (read its steps table), and
-[`recipes/bear_hybrid`](../../../recipes/bear_hybrid/README.md) for a heavy plantigrade build (`nose: true`, wrist weights); `recipes/dragon` is planned; the humanoid example is [`recipes/ranger`](../../../recipes/ranger/README.md).
+[`recipes/bear_hybrid`](../../../recipes/bear_hybrid/README.md) for a heavy plantigrade build (`nose: true`, wrist weights); [`recipes/dragon_hybrid`](../../../recipes/dragon_hybrid/README.md) for an invented winged body the plan cannot describe (`register: 'joints'`, `take` with `'tail'`, rigid wings); the humanoid example is [`recipes/ranger`](../../../recipes/ranger/README.md).
 
 ## Workflow (code route: stylised creatures, the CPU fallback)
 | # | Creature-design stage | ts23d | Exit |
@@ -191,5 +191,5 @@ skeleton types, staged sculpt, patterns, allometry and wing-loading checks — `
 Shipped too: the kind's Armature (`ctx.bone`), a `jaw` part, fibre muscles (`build.muscle`).
 Planned (M4, [roadmap](../../../docs/plans/roadmap.md#m4-creatures)): tail and limbs as moving
 parts, `pose`/`warp`/`ffd`, fur shells and cards, skins and morph targets.
-Model tier shipped (As of 2026-11): textured parts (ADR 016), the `blender` step task, `importModel`, `modelChain` / `defineModelCreature`, QA `model`. Planned: dragon model tier, jaw and blink on a model head, finger bones.
+Model tier shipped (As of 2026-11): textured parts (ADR 016), the `blender` step task, `importModel`, `modelChain` / `defineModelCreature`, QA `model`. Planned: wing bones, gallop, jaw and blink on a model body, finger bones.
 Neutral positioning: the free code-based option, no claims against other tools.

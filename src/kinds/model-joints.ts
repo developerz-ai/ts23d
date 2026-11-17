@@ -17,6 +17,7 @@
 
 import { type Bone, Ts23dError, type Vec3 } from '../core/index.ts';
 import { v3 } from './creature-curve.ts';
+import { along, fractions, underSkin } from './model-joints-line.ts';
 
 const fail = (cause: string): never => {
   throw new Ts23dError('T3D_MODEL_SKELETON', {
@@ -25,34 +26,9 @@ const fail = (cause: string): never => {
   });
 };
 
-/** The point at arc-length fraction `f` (0..1) of a polyline. */
-function along(pts: readonly Vec3[], f: number): Vec3 {
-  const seg = pts.slice(1).map((p, i) => v3.len(v3.sub(p, pts[i] ?? p)));
-  let left = f * seg.reduce((a, b) => a + b, 0);
-  for (let i = 0; i < seg.length; i++) {
-    const l = seg[i] ?? 0;
-    if (left <= l || i === seg.length - 1)
-      return v3.lerp(
-        pts[i] ?? [0, 0, 0],
-        pts[i + 1] ?? [0, 0, 0],
-        l > 0 ? Math.min(1, left / l) : 0,
-      );
-    left -= l;
-  }
-  return pts[0] ?? [0, 0, 0];
-}
-
-/** Arc-length fraction of each point of a polyline. */
-function fractions(pts: readonly Vec3[]): number[] {
-  const run = [0];
-  for (let i = 1; i < pts.length; i++)
-    run.push((run[i - 1] ?? 0) + v3.len(v3.sub(pts[i] ?? [0, 0, 0], pts[i - 1] ?? [0, 0, 0])));
-  const total = run[run.length - 1] || 1;
-  return run.map((r) => r / total);
-}
-
-/** The chains a rigger's joints may replace. */
-export type RigChains = 'trunk' | 'fore' | 'hind';
+/** The chains a rigger's joints may replace. 'tail' is not in the default: a traced tail is
+ *  usually better, but a long one curved on the ground is the rigger's to follow. */
+export type RigChains = 'trunk' | 'fore' | 'hind' | 'tail';
 export const RIG_CHAINS: readonly RigChains[] = ['trunk', 'fore', 'hind'];
 
 /** Share of the rig's height a limb's last bone must end within, from the lowest point. */
@@ -71,6 +47,8 @@ export interface RigTopology {
   };
   /** The bone above a five-bone fore limb, by side. */
   readonly scapulae: { readonly l?: Bone; readonly r?: Bone };
+  /** The rear-most chain that is neither a limb nor the head, root first; absent without one. */
+  readonly tail?: readonly Bone[];
 }
 
 /** Reads a quadruped out of a rigger's armature (asset frame), or throws T3D_MODEL_SKELETON. */
@@ -131,6 +109,14 @@ export function rigTopology(source: readonly Bone[]): RigTopology {
   const [fore_l, fore_r] = pair(f1, f2);
   if (!((fore_l[0]?.head[0] ?? 0) > (hind_l[0]?.head[0] ?? 0)))
     fail('the fore pair is behind the hind pair (the rig faces the other way)');
+  const rear = Math.min(hind_l[0]?.head[0] ?? 0, hind_r[0]?.head[0] ?? 0);
+  const tail = chains
+    .filter((c) => {
+      const leaf = c[c.length - 1];
+      return leaf && !inLeg.has(leaf.name) && leaf !== head && leaf.parent !== head.name;
+    })
+    .filter((c) => (c[c.length - 1]?.tail[0] ?? 0) < rear)
+    .sort((p, q) => (p[p.length - 1]?.tail[0] ?? 0) - (q[q.length - 1]?.tail[0] ?? 0))[0];
   const above = (c: Bone[]): Bone | undefined => (c.length > 4 ? c[c.length - 5] : undefined);
   const [l, r] = [above(fore_l), above(fore_r)];
   return {
@@ -143,6 +129,7 @@ export function rigTopology(source: readonly Bone[]): RigTopology {
       hind_r: last4(hind_r),
     },
     scapulae: { ...(l ? { l } : {}), ...(r ? { r } : {}) },
+    ...(tail ? { tail } : {}),
   };
 }
 
@@ -219,9 +206,41 @@ export function mapJoints(
         exit = (i - 1) / HEAD_STEPS;
         break;
       }
-    out.set(head.name, { head: from, tail: exit > 0 ? v3.lerp(from, reach, exit) : reach });
+    // With `nose`, a bone that is outside from its first sample has no end in the mesh at all.
+    if (nose && exit === 0)
+      fail(
+        `the head bone leaves the mesh at once (from ${from.map((x) => x.toFixed(2)).join(', ')} toward the nose)`,
+      );
+    out.set(head.name, { head: from, tail: v3.lerp(from, reach, exit) });
   }
   const croup = out.get(spine[0]?.name ?? '')?.head;
+  // The tail on the rigger's chain (croup → its tip), at the fractions the plan's bones hold.
+  const tails = named('tail');
+  if (take.includes('tail') && rig.tail?.length && tails.length) {
+    const tailLine: Vec3[] = [
+      croup ?? rig.tail[0]?.head ?? [0, 0, 0],
+      ...rig.tail.slice(1).map((b) => b.head),
+      rig.tail[rig.tail.length - 1]?.tail ?? [0, 0, 0],
+    ];
+    const marks = fractions([
+      ...tails.map((b) => b.head),
+      tails[tails.length - 1]?.tail ?? [0, 0, 0],
+    ]);
+    // A rigger's tail runs a little outside a thin tail: each joint is pulled toward the one
+    // before it until it is inside the mesh.
+    // The plan's tail spans the rigger's chain up to TAIL_SPAN of its length: the tip beyond is
+    // thinner than a joint can sit in once the mesh is remeshed.
+    const pts = marks.map((f) => along(tailLine, f * TAIL_SPAN));
+    for (let i = 1; i < pts.length; i++) {
+      const from: Vec3 = pts[i - 1] ?? [0, 0, 0];
+      const to: Vec3 = pts[i] ?? [0, 0, 0];
+      for (let step = 0; step < 18 && !inside(pts[i] ?? to); step++)
+        pts[i] = v3.lerp(to, from, (step + 1) / 20);
+    }
+    tails.forEach((b, i) => {
+      out.set(b.name, { head: pts[i] ?? b.head, tail: pts[i + 1] ?? b.tail });
+    });
+  }
   const bones = fitted.map((b): Bone => {
     const local = b.name.slice(prefix.length);
     const got = out.get(b.name);
@@ -246,19 +265,8 @@ export function mapJoints(
   return bones;
 }
 
+/** Share of a rigger's tail chain the plan's tail bones span (`take: 'tail'`). */
+const TAIL_SPAN = 0.85;
+
 /** Samples along a head bone when looking for where it leaves the mesh (`nose`). */
 const HEAD_STEPS = 40;
-
-/**
- * A scapula's upper end lies just under the skin of the withers. When the mapped point is outside
- * the mesh it is pulled along the bone toward the shoulder joint until it is inside, then a tenth
- * of the bone further (QA `model` wants every joint inside the mesh).
- */
-function underSkin(head: Vec3, tail: Vec3, inside: (p: Vec3) => boolean): Vec3 {
-  if (inside(head)) return head;
-  const at = (t: number): Vec3 => v3.lerp(head, tail, t);
-  const STEPS = 20;
-  for (let i = 1; i < STEPS; i++)
-    if (inside(at(i / STEPS))) return at(Math.min(0.9, i / STEPS + 0.1));
-  return head;
-}
