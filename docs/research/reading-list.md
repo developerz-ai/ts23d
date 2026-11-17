@@ -40,6 +40,17 @@ learn methods, never copy designs. Verify each edition's licence before quoting 
 - Greyscale value check: highest local contrast on head / upper body (characters) or focal part (props).
 - Detail-density map: rest areas exist; no uniform noise.
 
+## Blender organic workflow, headless (sourced 2026-11)
+What artists do in Blender and what runs with `blender -b`, with the exact API per stage: [blender-organic-workflows](blender-organic-workflows.md). Best primary sources from it:
+| Source | Teaches |
+|---|---|
+| Blender manual, [Render baking](https://docs.blender.org/manual/en/latest/render/cycles/baking.html) | selected-to-active, cage vs extrusion, margins: our `bake` |
+| Blender manual, [Retopology and remeshing](https://docs.blender.org/manual/en/latest/modeling/meshes/retopology.html) | why automatic remeshers do not give deformation topology; QuadriFlow |
+| Blender Python API, [Using operators (gotchas)](https://docs.blender.org/api/5.0/info_gotchas_operators.html) | why brush strokes need a viewport and data-level ops do not |
+| Blender Studio, [Realistic character workflow: retopology and layering](https://studio.blender.org/training/realistic-human-research/chapter/retopology-layering) | what a production retopo pass looks like |
+| Polycount wiki, Limb Topology | loops at joints for deformation (not fetched in our research run) |
+| Khronos, [glTF 2.0 specification](https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html) | what the export carries: skins, images, MikkTSpace normals |
+
 ## In this repo: animal biology
 | Doc | Teaches |
 |---|---|

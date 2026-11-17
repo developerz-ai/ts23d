@@ -25,7 +25,7 @@ Recipes are weak on living things and sculpted forms ([07](07-what-fits.md)). Mo
 
 ## Tasks
 
-`NEURAL_TASKS` in `src/core/neural-task.ts`: `image`, `mesh`, `texture`, `rig`, `motion`, `hair`, `score`. Every request carries `seed` and optional `params`; inputs (images, meshes, skeletons) are named by sha256, the bytes travel beside the request. Every output is bytes + mime.
+`NEURAL_TASKS` in `src/core/neural-task.ts`: `image`, `mesh`, `texture`, `rig`, `motion`, `hair`, `score`, plus the tool tasks ([12](12-blender-bridge.md): `cloth`, `fracture`, `engine-check`, `ktx2`, `meshopt`, `groom`, `blender`). Every request carries `seed` and optional `params`; inputs (images, meshes, skeletons) are named by sha256, the bytes travel beside the request. Every output is bytes + mime.
 
 | Task | Validation before use (`T3D_NEURAL_OUTPUT_INVALID`) |
 |---|---|
@@ -35,6 +35,9 @@ Recipes are weak on living things and sculpted forms ([07](07-what-fits.md)). Mo
 | `rig` | GLB with a skin, or JSON |
 | `motion`, `hair` | GLB or JSON that parses |
 | `score` | Score in 0..10, JSON / PNG outputs |
+| `blender` | Tool task: a step program (`blenderProgram`, [12](12-blender-bridge.md)) on a `mesh` GLB, optional `skeleton`. Output 0 is a GLB with a mesh node `lod0` (triangles, finite, LOD0 alone ≤ `maxTriangles`), output 1 the JSON report |
+
+`mesh` also takes `images` (more views for multi-image models) and `pose` (`'a-pose'` / `'t-pose'`); `rig` takes `height` (m) and `clips` (adapter-specific action names). Adapters that do not know a field ignore it; every field is in the cache key.
 
 ## Adapters
 
@@ -79,6 +82,7 @@ Keys go in `headers`; the library never reads the environment.
 
 ```
 recipes/<name>/neural/<key>/output-0.png
+                           local-0.glb   a local output: git-ignored, on the machine that made it
                            record.json   model, licence, weights hash, adapter, server, request, output hashes
 ```
 
@@ -86,12 +90,34 @@ recipes/<name>/neural/<key>/output-0.png
 |---|---|
 | Job key | sha256 of canonical JSON `{contract, task, model, weightsSha256, request}`: sorted keys, floats rounded to 1e-6. Changes with seed, model, weights, params, inputs |
 | Lookup in a build | By request (`requestKey`), optionally pinned to a model; lowest key wins when several models answered |
-| Cap | 8 MB of outputs per recipe; `fill` refuses past it (`T3D_NEURAL_FAILED`) |
+| Cap | 12 MB of committed outputs per recipe; `fill` and this repo's recipes gate refuse past it (`T3D_NEURAL_FAILED`). Local outputs do not count |
 | Hit | No GPU, no network. Files and record are re-hashed and re-validated on load |
 | Miss | `{ fallback: true }` + a `T3D_NEURAL_MISSING` notice naming `t3d neural run`; the recipe takes its CPU path |
 | `--require-neural` | A miss is an error |
 | Fill | `t3d neural run <recipe.ts>`: compiles LOD 0-2, collects the misses, runs each through the task's configured adapter, writes the key directory |
 | Licence | Recorded in `record.json` and the credits, never gated for your builds. This repository's recipes gate refuses committed outputs whose licence does not allow publishing (`publishable`, ADR 015) |
+
+### Local outputs (too big to commit)
+
+A chain is concept `image` (≈ 1 MB) → raw `mesh` (70–106 MB at 1 M faces) → `blender` steps
+(≈ 8 MB, what the build uses). The raw mesh only feeds the next request, so the recipe keeps it
+local:
+
+```ts
+const raw = ctx.neural('mesh', SURFACE, { inputs, keep: 'local' })?.outputs[0];
+const low = raw?.sha256 && ctx.neural('blender', { ...STEPS, mesh: { sha256: raw.sha256, mime: raw.mime } },
+  { inputs: new Map([[raw.sha256, raw.bytes]]) });
+```
+
+| Rule | |
+|---|---|
+| `keep: 'local'` | Storage policy of the ask, never part of the key. `t3d neural run` writes the outputs as `<key>/local-<i>.<ext>`, marks them `"local": true` in `record.json` (sha256 and byte length still committed) and writes `neural/.gitignore` (`*/local-*`); this repo also ignores `recipes/*/neural/*/local-*` |
+| Every served output | Carries `sha256`: name the next request's input by it, never by hashing `bytes` |
+| A build | Never reads a local file, on any machine: the hit's output is `{ bytes: empty, mime, sha256, absent: true }`. Only `t3d neural run` reads the bytes, to send them on. A consumer that needs bytes checks `absent` |
+| Fresh clone | Record present, file absent → still a hit, so the chain reaches the committed downstream output: all hits, nothing sent |
+| Downstream miss without the file | Not sent (no bytes): `T3D_NEURAL_MISSING` "input … is a local output not on this machine"; re-run the upstream request there, or copy its `local-*` file |
+| Gate | A local file may be missing; present, its sha256 must match; it must not be tracked by git; a missing committed output still fails |
+| Big replies | `httpAdapter` refuses replies over 64 MB by default; raise it per adapter for raw meshes: `http(url, model, { maxBytes: 256 * 1024 * 1024 })` |
 
 `.ts23d/neural/` is superseded. `t3d finish` still caches in the gitignored `.ts23d/finish/` until it moves to the recipe cache.
 
@@ -103,7 +129,7 @@ hair or concept images. Prompts, seeds and models are TypeScript in the recipe f
 
 | Piece | Where | Does |
 |---|---|---|
-| `ctx.neural(task, req, { model, inputs })` | core/neural-ctx.ts | cached result or `null` |
+| `ctx.neural(task, req, { model, inputs, keep })` | core/neural-ctx.ts | cached result or `null` |
 | `meshBrick` / `meshField` / `meshDetail` / `displaceMesh` | primitives/sculpt-mesh-*.ts | mesh → int16 brick SDF (winding-number sign, Lipschitz-clamped) → sculpt edit, or its high-pass as relief |
 | `similarityFit` / `fitToSurface` | primitives/similarity-fit.ts | landmark or trimmed-ICP similarity onto the code body |
 | `closestColour` / `projectViews` / `highPassOver` / `delight` | finish/neural-texture.ts | model texture or 12-view projection → high-pass over the recipe colours |

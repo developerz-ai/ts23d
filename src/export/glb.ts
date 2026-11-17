@@ -5,7 +5,8 @@
 // emissive (+ KHR_materials_emissive_strength), provenance → asset.copyright + KHR_xmp_json_ld.
 // `exportLodGlb` packs several LODs into ONE file (MSFT_lod alternates sharing materials,
 // textures and motion samplers). Paint slots get their own materials and liveries ride
-// KHR_materials_variants (variants.ts). Zero dependencies and byte-deterministic.
+// KHR_materials_variants (variants.ts). A part with its own texture set (ADR 016) gets that set's
+// material on every LOD (texture-sets.ts). Zero dependencies and byte-deterministic.
 
 import type { CompiledAsset, Part } from '../core/index.ts';
 import { checkMeshAttributes, Ts23dError } from '../core/index.ts';
@@ -33,18 +34,20 @@ import { finishPlan } from './pbr-plan.ts';
 import { writePhysics } from './physics.ts';
 import { profiled } from './profile.ts';
 import { nodeNames, writeSkin } from './skin.ts';
+import { textureSetPlan } from './texture-sets.ts';
 import { sheetGltf } from './textures.ts';
 import { MATERIALS_VARIANTS, paintPlan, unpaintParts } from './variants.ts';
 
-export type { GlbOptions, GlbResult, LodGlbResult } from './glb-options.ts';
+export type { ExportWarning, GlbOptions, GlbResult, LodGlbResult } from './glb-options.ts';
 
 export function toGlb(input: CompiledAsset, o: GlbOptions = {}): Uint8Array {
   return exportGlb(input, o).glb;
 }
 
 export function exportGlb(input: CompiledAsset, o: GlbOptions = {}): GlbResult {
-  const { glb, reports, physics } = exportLodGlb([input], o);
-  return { glb, report: reports[0] ?? summarize([], false), ...(physics ? { physics } : {}) };
+  const { glb, reports, physics, warnings } = exportLodGlb([input], o);
+  const more = { ...(physics ? { physics } : {}), ...(warnings ? { warnings } : {}) };
+  return { glb, report: reports[0] ?? summarize([], false), ...more };
 }
 
 /** All LODs in one GLB: LOD0 in the scene, the rest as MSFT_lod alternates outside it. */
@@ -128,17 +131,24 @@ export function exportLodGlb(lods: readonly CompiledAsset[], o: GlbOptions = {})
   const preps = lods.map((l) => prepare(l, o, glow));
   const withSheet = o.sheet !== undefined;
   const mats = materialsFor(
-    new Set(preps.flatMap((p) => p.asset.parts.flatMap((q) => (q.surface ? [q.surface] : [])))),
+    // A textured part's surface picks among its set's materials, not the sheet's.
+    new Set(
+      preps.flatMap((p) =>
+        p.asset.parts.flatMap((q) => (q.surface && !q.textures ? [q.surface] : [])),
+      ),
+    ),
     withSheet,
     top.optics,
   );
   const glowAt = mats.materials.length;
   const paint = paintPlan(top.paintSet, glowAt + glow.length, withSheet);
+  const finishAt = glowAt + glow.length + paint.materials.length;
   const finish = finishPlan(
     preps.map((p) => p.asset),
-    glowAt + glow.length + paint.materials.length,
+    finishAt,
     withSheet,
   );
+  const sets = textureSetPlan(lods, finishAt + finish.materials.length, withSheet);
   // A profile (unreal|unity|godot|rt|web) only changes defaults: AO binding, collider naming.
   const { strip, physics: physOpts, extras: profileExtras } = profiled(o.profile, o.physics);
   const materials = strip([
@@ -146,6 +156,7 @@ export function exportLodGlb(lods: readonly CompiledAsset[], o: GlbOptions = {})
     ...glow.map((g, i) => glowMaterial(g, i, withSheet)),
     ...paint.materials,
     ...finish.materials,
+    ...sets.materials,
   ]);
   const doc = newDoc(new BinWriter());
   // Each LOD tree: parts, then its joint nodes + skin (a skinned asset); clips key both.
@@ -160,6 +171,8 @@ export function exportLodGlb(lods: readonly CompiledAsset[], o: GlbOptions = {})
         withSheet,
         animations: o.animations === true,
         materialOf: (part, i) => {
+          const own = sets.materialOf(part);
+          if (own !== undefined) return own;
           const g = glowOf(part, i);
           if (g >= 0) return glowAt + g;
           const slot = part.paint === undefined ? undefined : paint.slotMaterial.get(part.paint);
@@ -221,7 +234,8 @@ export function exportLodGlb(lods: readonly CompiledAsset[], o: GlbOptions = {})
     o.animations === true ? (top.clips ?? []) : [],
   );
   const geometry = bin.bytes();
-  const tex = o.sheet ? sheetGltf(o.sheet, bin.views, geometry.byteLength) : null;
+  const sheet = o.sheet ? sheetGltf(o.sheet, bin.views, geometry.byteLength) : null;
+  const tex = sets.embed(sheet, bin.views, geometry.byteLength);
   const body = tex?.tail.byteLength ? concat(geometry, tex.tail) : geometry;
   const meta = metadata(top.name, withCredits(top, o.meta ?? top.meta));
   const used = [
@@ -250,6 +264,7 @@ export function exportLodGlb(lods: readonly CompiledAsset[], o: GlbOptions = {})
       units: 'metres',
       up: 'Z (rotated to glTF Y-up at the root)',
       ...profileExtras,
+      ...sets.extras,
     },
     ...(used.length ? { extensionsUsed: used } : {}),
     ...(Object.keys(extensions).length ? { extensions } : {}),
@@ -265,6 +280,9 @@ export function exportLodGlb(lods: readonly CompiledAsset[], o: GlbOptions = {})
     accessors: bin.accessors,
     ...(animations.length ? { animations } : {}),
   };
-  const physics = phys ? { physics: phys.report } : {};
-  return { glb: packGlb(gltf, body), reports: preps.map((p) => p.report), coverage, ...physics };
+  const more = {
+    ...(phys ? { physics: phys.report } : {}),
+    ...(sets.warnings.length ? { warnings: sets.warnings } : {}),
+  };
+  return { glb: packGlb(gltf, body), reports: preps.map((p) => p.report), coverage, ...more };
 }

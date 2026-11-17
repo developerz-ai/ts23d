@@ -9,81 +9,33 @@ import { runJob } from './adapter.ts';
 import { cube } from './fixtures.ts';
 import { writeMeshGlb } from './glb-write.ts';
 import { MESHY_TERMS, meshyAdapter } from './meshy-adapter.ts';
+import { FAKE_API, FAKE_CDN, type FakeReply, fakeMeshy } from './meshy-fake.ts';
 import { memoryPending } from './meshy-net.ts';
 import type { MeshyOptions } from './meshy-params.ts';
 import { neuralCache } from './recipe-cache.ts';
 import { recordJson } from './record.ts';
 import { sha256Hex } from './sha256.ts';
-import type { WireFetch, WireInit } from './wire.ts';
 
 const KEY = 'msy_fake_secret_key_123';
-const API = 'https://api.meshy.test';
-const CDN = 'https://assets.meshy.test';
+const API = FAKE_API;
+const CDN = FAKE_CDN;
 const GLB = writeMeshGlb([{ name: 'm', mesh: cube() }]);
 const IMG = encodePng(32, 32, new Uint8Array(32 * 32 * 4).fill(180));
 const IMG_SHA = sha256Hex(IMG);
 const IMAGE_REQ = { seed: 1, image: { sha256: IMG_SHA, mime: 'image/png' }, maxTriangles: 500 };
 const inputs = new Map([[IMG_SHA, IMG]]);
 
-interface Seen {
-  method: string;
-  url: string;
-  auth: string | undefined;
-  body: string;
-}
-interface Reply {
-  status?: number;
-  body?: unknown;
-  retryAfter?: string;
-}
-let seen: Seen[] = [];
-const stray: string[] = [];
-let script: { create: Reply[]; polls: Reply[]; glb: Uint8Array; glbType: string; gone: string[] };
-
-const reply = (status: number, body: string | Uint8Array, type: string, retryAfter?: string) => ({
-  ok: status < 400,
-  status,
-  headers: {
-    get: (n: string) =>
-      n === 'content-type' ? type : n === 'retry-after' ? (retryAfter ?? null) : null,
-  },
-  arrayBuffer: () =>
-    Promise.resolve(
-      (typeof body === 'string' ? new TextEncoder().encode(body) : body).slice().buffer,
-    ),
-});
-const json = (r: Reply) =>
-  reply(r.status ?? 200, JSON.stringify(r.body ?? {}), 'application/json', r.retryAfter);
-
-const fake: WireFetch = (url: string, init: WireInit) => {
-  seen.push({
-    method: init.method,
-    url,
-    auth: init.headers['authorization'],
-    body: String(init.body ?? ''),
-  });
-  const u = new URL(url);
-  if (u.origin !== API && u.origin !== CDN) {
-    stray.push(url);
-    return Promise.reject(new Error(`test fetch refused a real host: ${u.origin}`));
-  }
-  if (u.origin === CDN) return Promise.resolve(reply(200, script.glb, script.glbType));
-  if (init.method === 'POST') {
-    const r = script.create.shift() ?? {};
-    const body = r.body ?? { result: u.pathname.includes('text') ? `t-${seen.length}` : 'i-1' };
-    return Promise.resolve(json({ ...r, body }));
-  }
-  if (script.gone.some((id) => u.pathname.endsWith(`/${id}`)))
-    return Promise.resolve(json({ status: 404, body: { message: 'not found' } }));
-  return Promise.resolve(json(script.polls.shift() ?? { body: { status: 'IN_PROGRESS' } }));
-};
+const fakeApi = fakeMeshy();
+const fake = fakeApi.fetch;
+const { seen, stray } = fakeApi;
+let script = fakeApi.script;
 
 afterAll(() => {
   expect(stray).toEqual([]);
 });
 beforeEach(() => {
-  seen = [];
-  script = { create: [], polls: [], glb: GLB, glbType: 'model/gltf-binary', gone: [] };
+  fakeApi.reset(GLB);
+  script = fakeApi.script;
 });
 const opts = (more: Partial<MeshyOptions> = {}): MeshyOptions => ({
   apiKey: KEY,
@@ -94,7 +46,7 @@ const opts = (more: Partial<MeshyOptions> = {}): MeshyOptions => ({
   pending: memoryPending(),
   ...more,
 });
-const done = (glb: unknown = `${CDN}/out/model.glb?Expires=1`, credits = 20): Reply => ({
+const done = (glb: unknown = `${CDN}/out/model.glb?Expires=1`, credits = 20): FakeReply => ({
   body: { status: 'SUCCEEDED', consumed_credits: credits, model_urls: { glb } },
 });
 const err = async (p: Promise<unknown>): Promise<Ts23dError> => {
@@ -110,8 +62,7 @@ const noKey = (e: Ts23dError): void => {
 };
 const image = (o: MeshyOptions, request: object = IMAGE_REQ) =>
   runJob(meshyAdapter(o), { task: 'mesh', request: request as typeof IMAGE_REQ, inputs });
-const posts = (path: string) =>
-  seen.filter((s) => s.method === 'POST' && s.url === `${API}/openapi/${path}`);
+const posts = fakeApi.posts;
 
 describe('meshyAdapter: failures first', () => {
   test('guard: the test fetch refuses the real api.meshy.ai (no credits spent by tests)', async () => {
@@ -119,7 +70,9 @@ describe('meshyAdapter: failures first', () => {
     const e = await err(image(real));
     expect(e.message).toContain('refused a real host');
     noKey(e);
-    expect(stray.splice(0)).toEqual(['https://api.meshy.ai/openapi/v1/image-to-3d']);
+    expect(stray.splice(0)).toEqual([
+      'https://api.meshy.ai/openapi/v1/image-to-3d?page_size=10&sort_by=-created_at',
+    ]);
   });
   test('no API key → T3D_NEURAL_FAILED naming MESHY_API_KEY', () => {
     for (const apiKey of [undefined, ''])
@@ -165,12 +118,13 @@ describe('meshyAdapter: failures first', () => {
     ]);
     expect([...pending.map.values()]).toEqual(['i-1']);
     expect(JSON.stringify([...pending.map])).not.toContain(KEY);
-    seen = [];
+    seen.length = 0;
     script.polls = [done()];
     await image(opts({ pending }));
     expect(posts('v1/image-to-3d')).toEqual([]);
     expect(seen.some((s) => s.url === `${API}/openapi/v1/image-to-3d/i-1`)).toBe(true);
-    expect(pending.map.size).toBe(0);
+    // Only the memo "these bytes came from task i-1" stays (a later rig names the task).
+    expect([...pending.map]).toEqual([[`glb:${sha256Hex(GLB)}`, 'i-1']]);
   });
   test('a resumed task that is gone (404) → entry dropped, fix says a rerun creates a new one', async () => {
     const pending = memoryPending();
@@ -195,8 +149,8 @@ describe('meshyAdapter: failures first', () => {
   });
   test('a GLB that does not parse → T3D_NEURAL_OUTPUT_INVALID (runJob validation)', async () => {
     script.polls = [done()];
-    script.glb = new TextEncoder().encode('<html>expired link</html>');
-    script.glbType = 'application/octet-stream';
+    script.file = new TextEncoder().encode('<html>expired link</html>');
+    script.fileType = 'application/octet-stream';
     expect((await err(image(opts()))).code).toBe('T3D_NEURAL_OUTPUT_INVALID');
   });
   test('a GLB over maxTriangles is refused', async () => {
@@ -253,13 +207,13 @@ describe('meshyAdapter: the API', () => {
       'meshy task i-1; consumed_credits 20',
     ]);
     expect(recordJson(rec)).not.toContain(KEY);
-    expect(pending.map.size).toBe(0);
+    expect([...pending.map.keys()]).toEqual([`glb:${sha256Hex(GLB)}`]);
   });
 
   test('polls honour Retry-After over pollMs (else this test would wait 60 s)', async () => {
     script.polls = [{ body: { status: 'IN_PROGRESS' }, retryAfter: '0' }, done()];
     await image(opts({ pollMs: 60_000 }));
-    expect(seen.filter((s) => s.method === 'GET' && s.url.startsWith(API)).length).toBe(2);
+    expect(seen.filter((s) => s.url === `${API}/openapi/v1/image-to-3d/i-1`).length).toBe(2);
   });
 
   test('text-to-3d with texture: preview, then refine on the preview id with the texture knobs', async () => {

@@ -10,8 +10,8 @@ project that installed the package, read `node_modules/@developerz.ai/ts23d/CLAU
 - **Code, not data.** Recipes are TypeScript (`recipes/<name>/<name>.ts`), never JSON: loops, functions, `ctx.use` composition.
 - **Deterministic or broken.** Same source + seed = same bytes. `ctx.rng` only; `bun run determinism` refuses the rest.
 - **Real units and references.** Metres, Z up, +X front. Vehicles/buildings declare `real` + `sources` + spec `measures`; gates: `proportions` ±5%, `measures` ±2%. Parts touch their supports (`floating-parts`); moving parts clear everything (`clashes`); no slit you can see light through (`gaps`; real openings declared with a `why`).
-- **LOD-gate, never decimate.** Recipes read `ctx.lod` and choose what to emit. Imported meshes (scans, CC0 base meshes) are the one exception: they have no recipe to gate, so `simplify` may decimate them, never code-built geometry (ADR 011).
-- **One material.** Shared trim sheet, vertex colour; one draw per moving pivot (plus one merged static body), capped by `budget.draws`.
+- **LOD-gate, never decimate.** Recipes read `ctx.lod` and choose what to emit. Imported and model-built meshes (scans, CC0 base meshes, image-to-3D output) are the one exception: they have no recipe to gate, so `simplify` or the Blender `retopo`/`lods` steps may decimate them (gated: bbox, surface, tunnels, UV), never code-built geometry (ADR 011, 016).
+- **One material.** Shared trim sheet, vertex colour; one draw per moving pivot (plus one merged static body), capped by `budget.draws`. Exception (ADR 016): a model-built part may carry its own `TextureSet` (albedo, normal, ORM; on every LOD; no `paint`/`finish`); declare `budget.textureSets { count, size }`; one material per set.
 - **See the result.** Every asset has a contact sheet (`sheet.png`) and a beauty render (`hero.png`); every error and QA finding has a `T3D_*` code and a `fix:`.
 - **Enforce rules.** A rule without a script in `bun run verify` is a suggestion. Every defect found once gets a row in `docs/architecture/defect-catalogue.md` and a check that fails on it before the fix.
 
@@ -44,6 +44,8 @@ project that installed the package, read `node_modules/@developerz.ai/ts23d/CLAU
 | Blueprint (READ it: metre grid, L×W×H, measures green/red, joints, 1.8 m figure) | `bun run t3d blueprint recipes/t34/t34.ts --out renders` |
 | AI review pack (READ `review/*.png`, follow `review.md`) | `bun run t3d review recipes/t34/t34.ts --out review` |
 | Refresh committed `recipes/*/out/` | `bun run shots [name…]` (the recipes gate fails on stale outputs) |
+| Fill a recipe's model outputs (image, mesh, rig, Blender; ≤ 5 rounds; paid adapters print credits, `--yes-spend` above 50) | `bun run t3d neural run recipes/<name>/<name>.ts` |
+| Look at a Blender step program (clay, wire, weights, poses, turnaround PNGs + `review.md`; needs Blender; never cached) | `bun run t3d blender review recipes/<name>/<name>.ts --out review` |
 | One test file | `bun test src/primitives/prism.test.ts` |
 | Lint fix | `bun run lint:fix` |
 | Gallery | `bun run site:dev` · `bun run site:build` |
@@ -80,6 +82,7 @@ Cross-module imports use `../<module>/index.ts` only. `bun run boundaries` enfor
 
 ## Recipe loop
 Human names a thing → research specs + real photos into `recipes/<name>/README.md` → `real` + `sources` + `measures` → masses → `t3d build` until QA PASS → `t3d shot` + `t3d hero` → **Read the PNGs** → `t3d review` → LOD-gated detail (build once, `place` N times, `merge`) → `grime` → iterate → `bun run shots <name>`. Full skill: `.claude/skills/author-recipe/SKILL.md`. Discipline skills (character-artist, creature-artist, hard-surface-artist, architect, technical-artist, …) load a profession's workflow and checks: [skills matrix](docs/research/skills-matrix.md). Quality: competes with real game assets up close; a few hundred triangles at LOD2.
+**Organic branch (creature, humanoid; As of 2026-11):** hard surface stays code. Code-sculpted organics did not look right, so the body is **model-first, Blender-first**: concept image (exact side profile for a quadruped, A-pose front for a biped, flat light) → image-to-3D mesh (`keep: 'local'`) → recipe-written `blender` steps (shell `retopo`, `uv`, `bake`, `bind`, `lods`; look with `t3d blender review`, adjust, look) → `importModel` as one textured part per LOD; code keeps scale, skeleton, clips, budgets, QA (`model` gate). Kinds: `modelChain` + `defineModelCreature` (quadruped), `riggedChain` + `defineModelCharacter` (rigged humanoid). Skill: `creature-artist` / `character-artist`; playbook: `docs/playbooks/characters/`. No GPU and no key: Blender-only body (`skinBody`, `metaballs`) or the CPU creature/mannequin, with honest expectations (fused fingers, sculpted hair, no jaw or blink on a fused head).
 **Recipes may be long.** Agents write code cheaply: a hero asset is 500–1,500 lines that sculpts its own forms (block-out from separate masses → planes → features → detail), not a one-line preset call. Kinds give defaults; recipes override and add until it looks professional.
 
 ## Coordination and CI

@@ -2,13 +2,15 @@
 // tail sway, an ear flick), `look` (neck and head turn left and right), `bite` (jaw snap with a
 // neck lunge) and, for four-legged quadrupeds, `walk`, `trot` and `gallop` as root-motion loops
 // (gait.ts; `run` is reserved for part motions). Tail and ears follow through on baked springs
-// (springs.ts) in every clip. Every loop's last key repeats its first.
+// (springs.ts) in every clip. In the in-place clips the paws stay planted: the legs are re-solved
+// under the moving body (creature-plant.ts). Every loop's last key repeats its first.
 
 import type { Bone, Clip, Quat, Vec3 } from '../core/index.ts';
 import type { Bones } from './creature-bones.ts';
 import { headLayout } from './creature-head.ts';
 import { withMidTracks } from './creature-helpers.ts';
 import { type Envelope, jawOf, rigBones } from './creature-limits.ts';
+import { legOf, plantLegs } from './creature-plant.ts';
 import type { CreatureSpec } from './creature-spec.ts';
 import { FEET, type Foot, GAITS, type Gait, type QuadrupedRig } from './gait.ts';
 import { bakeKeys, gaitClip, rotationTracks } from './gait-bake.ts';
@@ -34,18 +36,6 @@ function springsOf(bones: readonly Bone[], prefix: string): SpringBone[] {
     if (/^ear_[lr]$/.test(n)) return [{ bone: b.name, hz: 4, damping: 0.35, max: 12 }];
     return [];
   });
-}
-
-/** A leg's four bones, or null when the chain is not root → paw in four. */
-function legOf(bones: readonly Bone[], prefix: string, foot: Foot): LegBones | null {
-  const pair = foot[1] === 'h' ? 'hind' : 'fore';
-  const side = foot[0];
-  const chain = [0, 1, 2, 3].map((i) =>
-    bones.find((b) => b.name === `${prefix}${pair}_${side}_${i}`),
-  );
-  const [a, b, c, d] = chain;
-  const extra = bones.some((x) => x.name === `${prefix}${pair}_${side}_4`);
-  return a && b && c && d && !extra ? [a, b, c, d] : null;
 }
 
 /** The gait rig of a four-legged quadruped armature, else null. */
@@ -75,15 +65,16 @@ export function quadrupedRig(bones: readonly Bone[], prefix: string): QuadrupedR
   };
 }
 
-/** A looping in-place clip from per-phase local rotations, springs on top. */
+/** A looping in-place clip from per-phase local rotations: paws planted, springs on top. */
 function loopClip(
   name: string,
   seconds: number,
   bones: readonly Bone[],
+  legs: readonly LegBones[],
   springs: readonly SpringBone[],
   pose: (phi: number) => Map<string, Quat>,
 ): Clip {
-  const { times, keys } = bakeKeys(seconds, pose);
+  const { times, keys } = bakeKeys(seconds, (phi) => plantLegs(bones, legs, pose(phi)));
   const n = keys.length - 1;
   const roots = keys.slice(0, n).map((): Vec3 => [0, 0, 0]);
   const sprung = bakeSprings(bones, keys.slice(0, n), roots, seconds / n, springs);
@@ -97,20 +88,27 @@ const pulse = (x: number, at: number, width: number): number =>
 /** Every default clip for the creature, its bones named with `prefix`. */
 export function creatureClips(b: Bones, spec: CreatureSpec, prefix = ''): Clip[] {
   const l = headLayout(b, spec);
-  const bones = rigBones(b, l, jawOf(b, l), prefix);
+  return boneClips(rigBones(b, l, jawOf(b, l), prefix), prefix);
+}
+/** The default clips baked on any creature armature (the plan's, or one fitted into a model). */
+export function boneClips(bones: readonly Bone[], prefix = ''): Clip[] {
   const has = (n: string): boolean => bones.some((x) => x.name === `${prefix}${n}`);
   const p = (n: string): string => `${prefix}${n}`;
   const springs = springsOf(bones, prefix);
+  const legs = FEET.flatMap((f): LegBones[] => {
+    const leg = legOf(bones, prefix, f);
+    return leg ? [leg] : [];
+  });
   const set = (m: Map<string, Quat>, n: string, r: Vec3): void => {
     if (has(n)) m.set(p(n), qexp(r));
   };
   const clips: Clip[] = [];
   if (has('tail_0') || has('neck_0'))
     clips.push(
-      loopClip('idle', 4, bones, springs, (phi) => {
+      loopClip('idle', 4, bones, legs, springs, (phi) => {
         const m = new Map<string, Quat>();
         set(m, 'tail_0', [0, 0, 8 * deg * Math.sin(TAU * phi)]);
-        // Two breaths: the withers rise and fall with the ribs.
+        // Two breaths: the withers rise and fall with the ribs, over planted paws.
         set(m, 'neck_0', [0, 2 * deg * 0.5 * (1 - Math.cos(TAU * 2 * phi)), 0]);
         set(m, 'spine_1', [0, -0.6 * deg * Math.sin(TAU * 2 * phi), 0]);
         set(m, 'ear_l', [-14 * deg * pulse(phi, 0.62, 0.05), 0, 0]);
@@ -119,7 +117,7 @@ export function creatureClips(b: Bones, spec: CreatureSpec, prefix = ''): Clip[]
     );
   if (has('neck_1') && has('head'))
     clips.push(
-      loopClip('look', 4, bones, springs, (phi) => {
+      loopClip('look', 4, bones, legs, springs, (phi) => {
         const m = new Map<string, Quat>();
         const turn = Math.sin(TAU * phi);
         set(m, 'neck_1', [0, 0, 30 * deg * turn]);
@@ -128,7 +126,7 @@ export function creatureClips(b: Bones, spec: CreatureSpec, prefix = ''): Clip[]
       }),
     );
   clips.push(
-    loopClip('bite', 1.2, bones, springs, (phi) => {
+    loopClip('bite', 1.2, bones, legs, springs, (phi) => {
       const m = new Map<string, Quat>();
       const snap = pulse(phi, 0.35, 0.35);
       set(m, 'jaw', [0, 28 * deg * snap, 0]);

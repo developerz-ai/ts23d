@@ -21,6 +21,7 @@ image, or adding lamps/headlights to an asset.
 | 2 | Hero camera: 3/4 front, slightly above eye level | `bun run t3d hero … --az -35 --el 18 --fov 30 --size 1600x900` (defaults) | asset fills ~60–80 % of frame width *typical* |
 | 3 | Pick the view that sells the design | vary `--az` (front-left 3/4 default; rear 3/4 for engines/exhausts), `--el` low for heroic scale, high for top detail | focal part faces camera |
 | 2b | Judge under physical light | `bun run t3d hero … --quality path --spp 64` (path tracer: sun + sky, bounces, skin diffusion, strand lobes on fur/hair cards; same camera and studio) | fur, skin, metal read as themselves; committed heroes are path traced (960×540, 16 spp) |
+| 3b | Textured parts (model-built assets) | the raster beauty, the path tracer and `sheet.png` sample the part's own albedo, normal and ORM (ADR 016); READ them to judge baked light, blotches and seams that vertex colour never shows; `t3d blender review --views turnaround` shows the base colour under studio light before the build | no baked shadow in the albedo, no visible UV seam |
 | 4 | Check values: squint / greyscale | read `hero.png`; critique rubric `materials` | distinct value groups; focal part has max contrast |
 | 5 | Relief check under grazing light | `t3d critique` → `raking.png`, `raking_detail.png` | modelled detail casts shadow; painted detail stays flat |
 | 6 | Distance check | `review/` LOD strip (`lodStrip`), `sheet.png` FAR LOD2 cell, `thumbnail` | reads at thumbnail size |

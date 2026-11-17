@@ -1,5 +1,6 @@
 // manifest.json per asset: what an engine pipeline or an agent needs without opening a GLB —
-// files, triangles per LOD, pivots (the names game code binds to), emitters, joints, surfaces, QA,
+// files, triangles per LOD, pivots (the names game code binds to), emitters, joints, surfaces, the
+// texture sets parts carry (ADR 016: maps, sizes, bytes), QA,
 // measures with their measured values, sources, paint slots and switchable variants, and for a
 // skinned asset the engine contract: skeleton (bones + parents), clips, per-bone hitboxes.
 // Location-independent: every path in `files` is relative to the manifest's own folder
@@ -12,6 +13,9 @@ import {
   LOOP_SECONDS,
   type Lod,
   linearToHex,
+  pngHeader,
+  TEXTURE_MAPS,
+  textureSetsOf,
   type WeatherCoverage,
 } from '../core/index.ts';
 import { clipSummary, fitHitboxes, mergeToPivots, skeletonOf, soundUses } from '../export/index.ts';
@@ -59,6 +63,17 @@ export interface AssetManifest {
     at: readonly number[];
   }[];
   readonly surfaces: readonly string[];
+  /**
+   * Texture sets parts carry on every LOD (ADR 016), each one material: per map its edge in
+   * pixels and PNG bytes, `bytes` their sum (embedded once per GLB file); absent when none.
+   */
+  readonly textureSets?: readonly {
+    name: string;
+    size: number;
+    maps: Readonly<Record<string, { size: number; bytes: number }>>;
+    bytes: number;
+    credit?: string;
+  }[];
   /** Bones in joint order (skinned assets); absent when none. */
   readonly skeleton?: readonly { name: string; parent: string | null }[];
   /** glTF animations after `rest`: name, seconds, loop, root ground speed m/s; absent when none. */
@@ -89,7 +104,10 @@ export interface AssetManifest {
 const tris = (a: CompiledAsset): number =>
   a.parts.reduce((s, p) => s + (p.mesh ? p.mesh.indices.length / 3 : 0), 0);
 
-/** One draw per merged mesh, glowing parts in their own emissive layer (as the GLB writes them). */
+/**
+ * One draw per merged mesh, glowing parts in their own emissive layer and every texture set in
+ * its own (as the GLB writes them): a set costs one more draw on each pivot that uses it.
+ */
 export const drawCallsOf = (l: CompiledAsset): number =>
   mergeToPivots(
     l,
@@ -142,6 +160,7 @@ export function manifestOf(
         }
       : {}),
     surfaces: [...new Set((top?.parts ?? []).map((p) => p.surface ?? 'opaque'))].sort(),
+    ...textureSetsIn(lods),
     ...rigOf(top),
     ...paintOf(top),
     ...(asset.real
@@ -156,6 +175,29 @@ export function manifestOf(
     sources: asset.sources ?? [],
     ...weatherOf(top),
     qa: { pass: findings.length === 0, findings },
+  };
+}
+
+/** Sets by name across the LODs built, first use first (LOD0 leads). */
+function textureSetsIn(lods: readonly CompiledAsset[]): Pick<AssetManifest, 'textureSets'> {
+  const sets = textureSetsOf(lods.flatMap((l) => l.parts));
+  if (!sets.length) return {};
+  return {
+    textureSets: sets.map((set) => {
+      const maps = Object.fromEntries(
+        TEXTURE_MAPS.flatMap((m) => {
+          const png = set[m];
+          return png ? [[m, { size: pngHeader(png)?.width ?? 0, bytes: png.byteLength }]] : [];
+        }),
+      );
+      return {
+        name: set.name,
+        size: maps['albedo']?.size ?? 0,
+        maps,
+        bytes: Object.values(maps).reduce((s, m) => s + m.bytes, 0),
+        ...(set.credit ? { credit: set.credit } : {}),
+      };
+    }),
   };
 }
 

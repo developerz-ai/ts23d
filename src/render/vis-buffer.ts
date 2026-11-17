@@ -127,7 +127,7 @@ export function rasteriseVis(
       (UV[b * 2 + 1] ?? 0) - va,
       (UV[c * 2] ?? 0) - ua,
       (UV[c * 2 + 1] ?? 0) - va,
-      texSize,
+      s.sets[(s.texSet[t] ?? 0) - 1]?.size ?? texSize,
       s.surface[t] === 1,
     );
     mip[t] = m;

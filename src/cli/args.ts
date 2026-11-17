@@ -49,6 +49,8 @@ export interface Args {
   readonly physics: boolean;
   /** A neural cache miss is an error instead of a CPU-tier fallback notice (ADR 014). */
   readonly requireNeural: boolean;
+  /** --yes-spend: let `t3d neural run` exceed 50 estimated credits on paid adapters. */
+  readonly yesSpend: boolean;
   /** `--allow-bad-input`: send `mesh` images that fail the input-image rules (recorded). */
   readonly allowBadInput: boolean;
   /** Write `<clip>.wav` + KHR_audio_emitter for assets with sounds (default on; --no-sounds). */
@@ -105,6 +107,7 @@ const metaArgs = (m: { cmd: string; topic?: string }, json: boolean): Args => ({
   lodFiles: 'both',
   physics: false,
   requireNeural: false,
+  yesSpend: false,
   allowBadInput: false,
   sounds: true,
   render: {},
@@ -143,6 +146,7 @@ export function parseArgs(argv: readonly string[]): Args {
   };
   let physics = false;
   let requireNeural = false;
+  let yesSpend = false;
   let allowBadInput = false;
   let sounds = true;
   let profile: ExportProfile | undefined;
@@ -178,6 +182,7 @@ export function parseArgs(argv: readonly string[]): Args {
     else if (a === '--no-shot') shot = false;
     else if (a === '--physics') physics = true;
     else if (a === '--require-neural') requireNeural = true;
+    else if (a === '--yes-spend') yesSpend = true;
     else if (a === '--allow-bad-input') allowBadInput = true;
     else if (a === '--no-sounds') sounds = false;
     else if (a === '--profile') profile = profileSettings(argv[++i] ?? '').name;
@@ -257,6 +262,7 @@ export function parseArgs(argv: readonly string[]): Args {
     lodFiles,
     physics,
     requireNeural,
+    yesSpend,
     allowBadInput,
     sounds,
     ...(profile ? { profile } : {}),

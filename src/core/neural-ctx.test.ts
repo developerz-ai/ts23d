@@ -63,6 +63,19 @@ describe('ctx.neural', () => {
         fps: 30,
       }),
     ).toThrow('T3D_RECIPE_INVALID');
+    const ok = { sha256: SHA, mime: 'application/json' };
+    expect(() =>
+      read('blender', { seed: 1, program: { ...ok, sha256: 'steps.json' }, maxTriangles: 9 }),
+    ).toThrow('T3D_RECIPE_INVALID');
+    expect(() =>
+      read('mesh', {
+        seed: 1,
+        images: [{ sha256: 'side.png', mime: 'image/png' }],
+        pose: 'a-pose',
+      }),
+    ).toThrow('T3D_RECIPE_INVALID');
+    expect(read('blender', { seed: 1, program: ok, skeleton: ok, maxTriangles: 9 })).toBe(null);
+    expect(read('rig', { seed: 1, mesh: ok, height: 1.8, clips: ['walk'] })).toBe(null);
     expect(read('mesh', { seed: 1, image: { sha256: SHA, mime: 'image/png' } })).toBe(null);
   });
 });

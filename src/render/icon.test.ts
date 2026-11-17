@@ -43,6 +43,35 @@ describe('icon', () => {
     expect(() => renderPortrait(red, { size: 32, focus: ['turret'] })).toThrow(/matches no part/);
   });
 
+  it('frames the skin a focus bone drives when no part has that name (one skinned body)', () => {
+    // The block as one skinned body: bone `head` owns the vertices of its +X half.
+    const skinned: CompiledAsset = {
+      ...red,
+      skeleton: {
+        bones: [
+          { name: 'root', head: [0, 0, 0], tail: [0, 0, 0.5] },
+          { name: 'head', parent: 'root', head: [0.2, 0, 0.5], tail: [0.5, 0, 0.5] },
+        ],
+      },
+      parts: red.parts.map((p) => {
+        if (!p.mesh) return p;
+        const n = p.mesh.positions.length / 3;
+        const joints = new Uint16Array(n * 4);
+        const weights = new Float32Array(n * 4);
+        for (let v = 0; v < n; v++) {
+          joints[v * 4] = (p.mesh.positions[v * 3] ?? 0) > 0 ? 1 : 0;
+          weights[v * 4] = 1;
+        }
+        return { ...p, mesh: { ...p.mesh, joints, weights } };
+      }),
+    };
+    // Without the skin the name is still refused; with it the portrait closes in on that half.
+    expect(() => renderPortrait(red, { size: 32, focus: ['head'] })).toThrow(/matches no part/);
+    const whole = renderPortrait(skinned, { size: 48, sheet });
+    const head = renderPortrait(skinned, { size: 48, sheet, focus: ['head'] });
+    expect(Bun.hash(head.rgba)).not.toBe(Bun.hash(whole.rgba));
+  });
+
   it('writes a 256² icon and a 512² portrait by default', () => {
     expect(dims(icon(red, { supersample: 1, sheet }))).toEqual([256, 256]);
     expect(dims(portrait(red, { supersample: 1, sheet }))).toEqual([512, 512]);

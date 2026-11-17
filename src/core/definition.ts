@@ -20,6 +20,7 @@ import type {
 import type { AssetPhysics, RealMass } from './physics.ts';
 import type { Rng } from './rng.ts';
 import type { Armature, BoneOptions } from './skeleton.ts';
+import type { TextureBudget } from './texture-set.ts';
 import type { TuneSpec } from './tune.ts';
 import type { Vec3 } from './vec.ts';
 import type { WeatherCoverage } from './weather-coverage.ts';
@@ -68,6 +69,8 @@ export interface Budget {
    * mesh a lighter LOD0 and leave the fine detail to the bake.
    */
   readonly heroTextures?: { readonly size: 1024 | 2048 | 4096; readonly cell?: number };
+  /** Required when a part has `textures` (ADR 016): distinct set names and the largest map edge. */
+  readonly textureSets?: TextureBudget;
 }
 
 /** Real-world overall dimensions (metres) the QA `proportions` gate holds the model to. */

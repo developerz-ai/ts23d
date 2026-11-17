@@ -4,6 +4,30 @@ All notable changes to `@developerz.ai/ts23d`. Format: [Keep a Changelog](https:
 
 ## [Unreleased]
 
+Creatures and humanoids go model-first and Blender-first: an image-to-3D body, finished by an ordered list of headless Blender steps the recipe writes, kept whole with its own textures on every LOD, while code keeps real scale, skeleton, clips, budgets and QA.
+
+### Added
+- Textured parts: `PartOptions.textures` (`TextureSet`: PNG albedo, normal and ORM, name, factors, credit) on every LOD, `Budget.textureSets` (`count`, `size` 1024 / 2048 / 4096), `T3D_TEXTURE_INVALID` ([ADR 016](docs/decisions/016-textured-parts.md)). The GLB writer emits one material per set on all LODs (a pivot's draw count still holds per set); the raster beauty, path tracer and contact sheet sample the maps.
+- The `blender` neural task: a typed, ordered step program written in the recipe (`blenderProgram`; order rules fail with `T3D_RECIPE_INVALID` and the step index) run headless on `bpy` or a Blender app (4.5 LTS, 5.2 LTS and 5.3 accepted). Ops: `transform`, `clean`, `symmetrize`, `voxelRemesh`, `smooth`, `displace`, `inflate`, `skinBody`, `metaballs`, `unweb`, `amputate`, `retopo` (a measured solid shell by default, with `close`, `skin`, `focus`), `uv`, `bake` (albedo as EMIT, normal, AO into ORM), `bind` (bone heat with a voxel-proxy fallback; `from: 'source'` keeps a model's rig and clips), `repose`, `joint`, `weights`, `script` (inline bpy, `why` required), `review`, `lods`, `export`. Every step is gated (UV islands and degenerate triangles, bake hit rate, unweighted vertices, LOD drift, lost surface, new tunnels). Ops and gates: `examples/blender/README.md`.
+- `t3d blender review <recipe.ts> --out <dir>` (or `--mesh <glb> --program <json>`): clay, wire, weights, poses and turnaround PNGs plus `review.md`, for the look-adjust-look loop; needs Blender, never cached.
+- `importModel`: a GLB with LOD nodes, UVs, PNG textures, skin, armature and clips as IR values; a cycle that arrives one frame short of its period is closed at import (`closeLoops`, with a warning).
+- Model chains and kinds: `modelChain` (image, local mesh, Blender proxy, optional learned `rig`, TS fit, Blender final), `modelRig`, `fitSkeleton`, `modelFit`, repose targets, `modelBody`, `defineModelCreature` (our sourced quadruped skeleton and gait clips on a model surface; `bite` and `blink` dropped on a fused head), and `riggedChain`, `riggedBody`, `defineModelCharacter` (a rigged humanoid with the model's own skin and clips).
+- QA `model` gate (`T3D_MODEL_FIT`, `T3D_MODEL_SKELETON`, `T3D_MODEL_TEXTURE`, `T3D_MODEL_DOUBLED`) and an in-place foot-sink check in QA `gait` (the skin of a foot may not dip more than 3 mm under the floor in a clip that stays in place).
+- Neural cache: outputs of an ask with `keep: 'local'` stay on the machine that made them (`local-<i>.*`, git-ignored; sha256 and length committed; a fresh clone resolves the chain from the committed outputs); every served output carries `sha256`; the committed cap per recipe is 12 MB (was 8); `t3d neural run` fills a chain in up to 5 rounds ([ADR 014](docs/decisions/014-neural-outputs-are-cached-inputs.md) amended).
+- Meshy: multi-image and pose-mode mesh, `rig` (rigging plus library animation clips by name), `texture` (retexture), `estimate` and `balance` helpers; `t3d neural run` prints the balance and each estimate and refuses a run estimated above 50 credits without `--yes-spend`. Meshy is a hosted, paid option ([docs/research/meshy.md](docs/research/meshy.md) section 8).
+- `recipes/ranger`: the first model-built humanoid (44 Meshy credits, QA PASS, 10.15 MB Blender output), with `idle`, `walk` and `jog` clips.
+- Gallery: textured parts in the viewer and a "CPU tier / Model tier" switch for model-first assets.
+- Docs: [blender-organic-workflows](docs/research/blender-organic-workflows.md); the model-first workflow in the creature, character, rigger, technical and author-recipe skills and the characters playbook.
+
+### Changed
+- `CLAUDE.md` rules: the decimation exception now covers model-built meshes (gated `retopo` / `lods` steps), and the one-material rule allows a declared texture set per model-built part.
+- The reference server's UniRig plug-in rigs a 30 k-triangle three-LOD bear (27 bones, skin weights on every LOD, about 60 s on an RTX 3090).
+- `wolf_hybrid` (a model's skin blended onto the code body) is superseded as the route for organic assets; its model-first rebuild and the `brown_bear` model tier are in progress, the dragon is planned.
+
+### Fixed
+- The GLB exporter let a moving pivot's `paint` slot or `finish` colour bleed onto its unpainted merged children; they now stay on their own material.
+- The `cropped` input-image rule fired on a studio floor band that reaches the frame edge; it now reads only a subject cut by the frame.
+
 ## [0.9.0] - 2026-11-16
 
 An optional model tier (any model through an adapter, outputs cached so builds stay offline and deterministic), one-command setup and diagnosis, hybrid recipes, game-project commands, a hero texture tier and scale tools, with a gallery that shows the CPU tier and the model tier side by side.

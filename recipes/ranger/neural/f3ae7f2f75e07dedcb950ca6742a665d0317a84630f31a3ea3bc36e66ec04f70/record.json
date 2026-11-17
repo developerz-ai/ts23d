@@ -1,0 +1,40 @@
+{
+  "adapter": "meshy",
+  "contract": "t3d-neural/1",
+  "key": "f3ae7f2f75e07dedcb950ca6742a665d0317a84630f31a3ea3bc36e66ec04f70",
+  "model": {
+    "id": "meshy-7.1",
+    "licence": "own",
+    "task": "mesh",
+    "terms": "https://www.meshy.ai/terms-of-use"
+  },
+  "outputs": [
+    {
+      "bytes": 20378864,
+      "file": "local-0.glb",
+      "local": true,
+      "mime": "model/gltf-binary",
+      "sha256": "42c107bd2f8ab6294fdfff6411f1f7292d2b4aba301e833e83a67427990e961f"
+    }
+  ],
+  "overrides": [
+    "ranger: mesh input 74c8e619f8d5…: cropped: the object touches the frame edge: it is cropped, the model would guess the rest (allowed: --allow-bad-input)"
+  ],
+  "request": {
+    "image": {
+      "mime": "image/png",
+      "sha256": "74c8e619f8d56738bf89af152dd99c66288e7af3d81ba8f3a4dc08fe623bc85b"
+    },
+    "maxTriangles": 300000,
+    "params": {
+      "pbr": true,
+      "texture": true,
+      "textureResolution": "2k"
+    },
+    "pose": "a-pose",
+    "seed": 0
+  },
+  "requestKey": "4f88030df9a906331b109372d69bcf8db6f6640bdbf88f827ca67716e98d702c",
+  "server": "meshy task 01a1e71e-8483-745b-a85f-32318a08d854; consumed_credits 30",
+  "task": "mesh"
+}

@@ -83,6 +83,32 @@ describe('checkInputImage (D55: cluttered photos make broken AI meshes)', () => 
     ).toEqual([]);
   });
 
+  it('a studio floor band reaching the frame edge is backdrop; a subject cut by the frame is not', () => {
+    // The floor shades 250 → 200 over 100 rows under the subject's feet and runs off both sides:
+    // further than the flood tolerance from every corner, and joined to the subject.
+    const floor = (img: Img): Img => {
+      const px = Uint8Array.from(img.px);
+      for (let y = 380; y < 520; y++)
+        for (let x = 0; x < img.w; x++) {
+          const i = (y * img.w + x) * 4;
+          if ((px[i] ?? 0) < 200) continue;
+          const v = y < 480 ? 250 - (y - 380) / 2 : 200 + (y - 480) * 1.25;
+          px.set([v, v * 0.95, v * 0.9, 255], i);
+        }
+      return { ...img, px };
+    };
+    // Failure first: with the same floor, a subject that runs off the right edge is cropped.
+    const cut = floor(scene(600, 600, [[450, 300, 200, 150]]));
+    expect(checkInputImage(cut.px, cut.w, cut.h).cropped).toBe(true);
+    expect(rules(cut)).toContain('cropped');
+    const standing = floor(clean);
+    const report = checkInputImage(standing.px, standing.w, standing.h);
+    // The band is unflooded and part of the one foreground region: the old rule's false alarm.
+    expect(report.fill).toBe(1);
+    expect(report.cropped).toBe(false);
+    expect(report.findings.map((f) => f.rule)).toEqual([]);
+  });
+
   it('specks do not count as subjects', () => {
     const specked = scene(600, 600, [
       [300, 300, 200, 150],

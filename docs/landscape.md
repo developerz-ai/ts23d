@@ -1,6 +1,6 @@
 # Landscape: AI 3D generators
 
-**A neutral survey, as of Oct 2026. ts23d isn't a competitor to these tools; it's a different approach (code recipes, free, no GPU, no service) with different strengths.** Many teams will use both. Prices and features change monthly, so check the linked source before relying on a row.
+**A neutral survey, as of Oct 2026 (rows added 2026-11 are dated). ts23d isn't a competitor to these tools; it's a different approach (code recipes, free, no GPU, no service) with different strengths.** Many teams will use both. Prices and features change monthly, so check the linked source before relying on a row.
 
 Rows marked **(3rd-party)** come from aggregators or press, not the vendor's own page. Treat them as indicative.
 
@@ -23,6 +23,8 @@ Rows marked **(3rd-party)** come from aggregators or press, not the vendor's own
 |---|---|---|---|---|---|---|
 | Hunyuan3D (Tencent) | Open 2.x: image, multi-view. Hosted 3.x: text / image / sketch, up to 4–8 views | Mesh + PBR texture pipeline (Paint 2.1) | No | Open 2.1 free, ~29 GB VRAM shape + texture; hosted ~20 free gens/day then ~$0.02/credit | 2.0 / 2.1 open weights, Tencent community licence (excludes EU / UK / South Korea, terms above 1M MAU, no training other models on outputs); 2.5 / 3.x hosted only | [GitHub](https://github.com/Tencent-Hunyuan/Hunyuan3D-2.1) |
 | TRELLIS.2 (Microsoft) | Single image; can texture an existing mesh | GLB with PBR incl. opacity, 4K textures | No | Free self-hosted; ≥ 24 GB GPU, tested Linux A100 / H100 | MIT | [Hugging Face](https://huggingface.co/microsoft/TRELLIS.2-4B) |
+| Pixal3D (Tencent ARC) | Single image | Textured GLB (measured via ts23d's reference server: 37 619 triangles at `maxTriangles` 40 000, 1024 px texture; about 0.9-1 M triangles raw) | No | Free self-hosted; 18.5 GB VRAM measured on an RTX 3090 (As of 2026-11) | MIT; gated download, the model card disallows EU access | [repo](https://github.com/TencentARC/Pixal3D) · [Hugging Face](https://huggingface.co/TencentARC/Pixal3D) |
+| UniRig (VAST-AI) | A mesh (GLB) | Skeleton + skin weights on the mesh | Rigs; no animation clips | Free self-hosted; README asks for 8 GB+ VRAM; ts23d measured about 60 s for a 27-bone bear with skin (2026-11-16) | MIT | [reference server row](../examples/neural-server/README.md) (upstream repo: VAST-AI/UniRig) |
 | Stable Fast 3D / SPAR3D (Stability) | Single image 512² | UV-unwrapped textured mesh, delighted textures, rough/metal; SPAR3D point-cloud editing | No | Free self-host; hosted API credit-based | Stability Community Licence (free under $1M revenue) | [Hugging Face](https://huggingface.co/stabilityai/stable-point-aware-3d) |
 | SAM 3D Objects (Meta, Nov 2025) | Real photos; an object from a cluttered scene | Textured object + pose / layout | No | Free self-hosted | Open weights, custom SAM licence **(3rd-party)** | [Roboflow](https://roboflow.com/model/sam-3d-objects) |
 
@@ -37,7 +39,7 @@ Rows marked **(3rd-party)** come from aggregators or press, not the vendor's own
 
 | Strength | Image/text-to-3D generators | Code recipes (ts23d) |
 |---|---|---|
-| Organic and sculpted forms | Strong | Weak ([what fits](idea/07-what-fits.md)) |
+| Organic and sculpted forms | Strong | Weak as pure code ([what fits](idea/07-what-fits.md)); a model-first tier builds on these generators, with the code keeping scale, rig and QA |
 | Concept art → textured mesh in seconds | Strong | No |
 | Auto-rigging | Several tools have it; meshes and rigs usually still need cleanup | Rigid part hierarchy only |
 | Parts that line up, repeat or match real dimensions | Weaker | Strong |
@@ -46,4 +48,4 @@ Rows marked **(3rd-party)** come from aggregators or press, not the vendor's own
 | Shared materials, consistent texel density | Per-asset textures | One trim sheet |
 | Cost, licence conditions on outputs | Credits; terms vary by tier | Free; none |
 
-The open-weight rows are what the planned [`/neural` adapter](idea/08-neural-adapters.md) wraps for the organic cases, on your own GPU, cached by content hash.
+The open-weight rows are what ts23d's [`/neural` adapters](idea/08-neural-adapters.md) wrap for the organic cases, on your own GPU, cached by content hash. As of 2026-11 the shipped paths are: `image` Z-Image-Turbo (Apache-2.0) or a hosted service; `mesh` Pixal3D or TRELLIS.2 locally, or Meshy as a hosted, paid option; `rig` UniRig locally or Meshy's rigging and animation library; `texture` Meshy retexture. The mesh is then finished by headless Blender steps written in the recipe ([model-first organics](idea/10-sculpting.md#where-sculpting-happens-for-organic-forms-as-of-2026-11)); ts23d keeps scale, skeleton, clips and QA. Meshy's own terms and prices govern its outputs ([meshy.md](research/meshy.md)).

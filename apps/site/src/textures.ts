@@ -1,6 +1,7 @@
 // Textures on/off: bind the painted trim sheet (albedo, normal, ORM) to a loaded asset's
 // materials, the way a textured GLB from `toGlb({ sheet })` would, or restore vertex colour only.
-// Also the wireframe toggle, the other per-material switch.
+// A part's own texture set (texture-sets.ts) is never the sheet's: those materials keep their maps
+// whichever way the toggle stands. Also the wireframe toggle, the other per-material switch.
 
 import {
   ClampToEdgeWrapping,
@@ -14,7 +15,8 @@ import {
   SRGBColorSpace,
   type Texture,
 } from 'three';
-import type { Sheet } from './compile.ts';
+import { type Sheet, trimSheet } from './compile.ts';
+import { isTextureSetMaterial, usesTrimSheet } from './texture-sets.ts';
 
 interface Maps {
   readonly albedo: Texture;
@@ -63,7 +65,7 @@ export function applySheet(root: Object3D, sheet: Sheet | null, anisotropy = 1):
   root.traverse((node) => {
     if (!(node instanceof Mesh)) return;
     for (const mat of [node.material].flat()) {
-      if (!(mat instanceof MeshStandardMaterial)) continue;
+      if (!(mat instanceof MeshStandardMaterial) || isTextureSetMaterial(mat)) continue;
       const saved = mat.userData['ts23dSaved'] as Saved | undefined;
       // Finishes and lacquered paint that declare their own metal/roughness (glTF extras
       // `ts23d.ownFactors`, see export/pbr.ts) keep them, as the textured GLB does.
@@ -95,6 +97,33 @@ export function applySheet(root: Object3D, sheet: Sheet | null, anisotropy = 1):
       mat.needsUpdate = true;
     }
   });
+}
+
+/**
+ * The viewer's toggle: paint the sheet in the worker (once per size) and bind it, or unbind it.
+ * A model with nothing for the sheet (every material a texture set's, which keep their own maps)
+ * skips the paint and shows the toggle off and disabled. `wanted` says whether `model` is still
+ * the one shown and wanted textured, now and once the paint lands.
+ */
+export async function showSheet(
+  model: Object3D | null,
+  size: 1024 | 2048,
+  anisotropy: number,
+  wanted: () => boolean,
+  ui: {
+    readonly textures: { disabled: boolean; checked: boolean };
+    readonly status: { textContent: string | null };
+  },
+): Promise<void> {
+  if (!model) return;
+  const on = wanted();
+  ui.textures.disabled = !usesTrimSheet(model);
+  ui.textures.checked = on && !ui.textures.disabled;
+  if (!ui.textures.checked) return applySheet(model, null);
+  ui.status.textContent = 'Painting the trim sheet…';
+  const sheet = await trimSheet(size);
+  if (wanted()) applySheet(model, sheet, anisotropy);
+  ui.status.textContent = wanted() ? 'Trim sheet bound.' : '';
 }
 
 /** Wireframe on or off for every material under `root`. */

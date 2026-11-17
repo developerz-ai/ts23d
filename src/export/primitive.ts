@@ -1,14 +1,23 @@
 // One mesh → one glTF primitive: POSITION (with bounds), NORMAL, TEXCOORD_0, COLOR_0 as unorm16
 // RGBA, TANGENT only when a normal map is bound, and the smallest index type that fits. Skinned
 // meshes add JOINTS_0 / WEIGHTS_0 (skin.ts), morphed ones sparse `targets` (morph-targets.ts).
+// A part with its own texture set (`own`, ADR 016) differs twice: its tangents are the baker's
+// (MikkTSpace on its UVs), and COLOR_0 is written only when some vertex is not white (it
+// multiplies the albedo; all-white is 8 bytes a vertex of nothing).
 
 import type { Mesh } from '../core/index.ts';
 import { ARRAY_BUFFER, type BinWriter, ELEMENT_ARRAY_BUFFER, type Json } from './bin-writer.ts';
 import { morphTargets } from './morph-targets.ts';
 import { skinAttributes } from './skin.ts';
-import { tangentsOf } from './tangents.ts';
+import { mikkTangents, tangentsOf } from './tangents.ts';
 
-export function writePrimitive(bin: BinWriter, m: Mesh, material: number, tangents: boolean): Json {
+export function writePrimitive(
+  bin: BinWriter,
+  m: Mesh,
+  material: number,
+  tangents: boolean,
+  own = false,
+): Json {
   // COLOR_0 as normalised unsigned short RGBA: 8 bytes/vertex instead of 16, no banding in
   // darks (8-bit would). VEC4 because vertex attributes must be 4-byte aligned.
   const colors = new Uint16Array((m.colors.length / 3) * 4);
@@ -23,9 +32,13 @@ export function writePrimitive(bin: BinWriter, m: Mesh, material: number, tangen
       POSITION: bin.accessor(m.positions, 'VEC3', ARRAY_BUFFER, true),
       NORMAL: bin.accessor(m.normals, 'VEC3', ARRAY_BUFFER),
       TEXCOORD_0: bin.accessor(m.uvs, 'VEC2', ARRAY_BUFFER),
-      COLOR_0: bin.accessor(colors, 'VEC4', ARRAY_BUFFER, false, true),
+      ...(own && colors.every((v) => v === 65535)
+        ? {}
+        : { COLOR_0: bin.accessor(colors, 'VEC4', ARRAY_BUFFER, false, true) }),
       // A bound normal map needs a tangent space (validator S10 / G15).
-      ...(tangents ? { TANGENT: bin.accessor(tangentsOf(m), 'VEC4', ARRAY_BUFFER) } : {}),
+      ...(tangents
+        ? { TANGENT: bin.accessor((own ? mikkTangents : tangentsOf)(m), 'VEC4', ARRAY_BUFFER) }
+        : {}),
       ...skinAttributes(bin, m),
     },
     ...morphTargets(bin, m),

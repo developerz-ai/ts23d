@@ -80,7 +80,7 @@ commit outputs whose licence does not allow publishing (ADR 015).
 | `z-image` | image | Tongyi-MAI/Z-Image-Turbo (6B, 8 steps), the default local image model (kubeez hosts `z-image` too) | Apache-2.0 | **tested** (3090, wolf inputs) | see below |
 | `qwen-image` | image | Qwen/Qwen-Image; `concept` / `turnaround` templates | Apache-2.0 | untested: 58 GB weights | – |
 | `qwen-edit-split` | image | Qwen/Qwen-Image-Edit-2511; one part per job | Apache-2.0 | untested: 58 GB weights | – |
-| `unirig` | rig | VAST-AI/UniRig launch scripts, own env (bpy, spconv) | MIT | untested: own env not built | – |
+| `unirig` | rig | VAST-AI/UniRig launch scripts, own env (bpy, spconv) | MIT | ran 2026-11-16 (RTX 3090): a 30 k-triangle bear GLB with three LOD nodes → 27 bones (`bone_0…`: spine, head, two ears, four 4-bone legs) and skin weights on every LOD, about 60 s for skeleton + skin + merge | not measured (README: ≥ 8 GB) |
 | `unimate` | motion | Friedrich-M/UniMate sample + animate, own env | **CC-BY-NC-4.0** (checkpoints; code MIT) | untested: needs a `rig_preprocess`ed asset | – |
 | `hairdeck` | hair | hyz317/HairDeck `image_to_hair.py`, own env | Apache-2.0 | untested: gated SAM 3 / DINOv3 | – |
 | `video-motion` | motion | MediaPipe Pose Landmarker (BlazePose GHUM 3D) | Apache-2.0 | **tested** (CPU, public-domain Muybridge clip) | see below |
@@ -154,7 +154,7 @@ with gpu_lease("trellis2 lab run", need_gb=23, ram_gb=16):
 | `video-motion` | `video`, `seconds`, `fps` | – | JSON `t3d-pose-tracks/1` (33 joints, metres) |
 
 Mesh plug-ins decimate on the server to `min(params.triangles, 0.95 × maxTriangles)` and bake one
-PNG texture, so a result fits the 8 MB recipe cache (ADR 014) and passes ts23d's triangle cap.
+PNG texture, so a result fits the 12 MB committed recipe cache (ADR 014; larger outputs stay local with `keep: 'local'`) and passes ts23d's triangle cap.
 
 ## Write a plug-in
 

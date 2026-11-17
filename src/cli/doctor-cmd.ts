@@ -1,7 +1,8 @@
 // `t3d doctor [--json]`: what of the optional tier is here, what is missing, and the exact fix for
 // each missing piece. CPU tier (Bun) always passes; nothing else is required to build assets, so
 // doctor exits 0 whatever it finds. Checks: $TS23D_HOME and free disk · uv · Blender (bpy in the
-// setup venv or a `blender` executable), Godot, basisu, gltfpack, Material Maker · GPU tier
+// setup venv or a `blender` executable; the `blender` step task and its bake device), Godot,
+// basisu, gltfpack, Material Maker · GPU tier
 // (doctor-gpu.ts) · the reference server (found, answering) · no GPU → kubeez.com for `image`
 // (partner, disclosed in docs/idea/08), meshy.ai for `mesh` (MESHY_API_KEY set?). Read-only: it never installs or writes.
 
@@ -14,6 +15,7 @@ import { envelope, printError } from './report.ts';
 import { serverStatus } from './server-cmd.ts';
 import {
   biggestGpu,
+  blenderStepsCheck,
   type Check,
   firstTool,
   type Gpu,
@@ -50,7 +52,7 @@ const freeGb = (path: string): number | undefined => {
 
 const TOOLS_FIX = 't3d setup tools';
 
-async function toolChecks(host: Host, p: TierPaths): Promise<Check[]> {
+async function toolChecks(host: Host, p: TierPaths, gpu?: Gpu): Promise<Check[]> {
   const bin = (n: string): string[] => [join(p.toolsBin, n), n];
   const [uv, bpy, blender, godot, basisu, gltfpack] = await Promise.all([
     firstTool(host, [join(p.bin, 'uv'), 'uv'], ['--version'], /uv (\d+\.\d+\.\d+)/),
@@ -112,6 +114,7 @@ async function toolChecks(host: Host, p: TierPaths): Promise<Check[]> {
           fix: `${TOOLS_FIX} (installs uv into ${p.bin} first)`,
         },
     blenderCheck,
+    blenderStepsCheck((bpy ?? blender)?.version, gpu),
     tool('godot', godot, 'Godot'),
     tool('basisu', basisu, 'basisu'),
     tool('gltfpack', gltfpack, 'gltfpack'),
@@ -208,7 +211,7 @@ export async function doctor(host: Host = realHost()): Promise<DoctorReport> {
     },
   ];
   const [tools, gpuTier, server] = await Promise.all([
-    toolChecks(host, p),
+    toolChecks(host, p, gpu),
     gpuChecks(host, p, gpu),
     serverChecks(host, p),
   ]);

@@ -130,6 +130,37 @@ export {
 } from './hull.ts';
 export { hullLines } from './hull-lines.ts';
 export { type MassOptions, mass } from './mass.ts';
+export { bindModel } from './model-bind.ts';
+export {
+  type ModelBodyInfo,
+  type ModelBodyOptions,
+  meshVolume,
+  modelBody,
+} from './model-body.ts';
+export {
+  type ChainedModel,
+  type ModelChainOptions,
+  modelChain,
+  PROXY_TRIANGLES,
+  proxySteps,
+} from './model-chain.ts';
+export { defineModelCharacter, type ModelCharacterDefinition } from './model-character.ts';
+export {
+  foldTargets,
+  type RiggedBody,
+  type RiggedBodyOptions,
+  riggedBody,
+} from './model-character-body.ts';
+export { type RiggedChainOptions, riggedChain } from './model-character-chain.ts';
+export { liftClip } from './model-character-clips.ts';
+export { FUSED_HEAD_DROPS, type ModelClips, modelClips } from './model-clips.ts';
+export { defineModelCreature, type ModelCreatureDefinition } from './model-creature.ts';
+export { applyFit, FIT_LIMIT, type ModelFit, modelFit } from './model-fit.ts';
+export { mapJoints, type RigTopology, rigTopology } from './model-joints.ts';
+export { MIRROR_LIMIT, type MirrorResidual, mirrorResidual } from './model-mirror.ts';
+export { REPOSE_LIMIT, type ReposeTarget, reposeTarget } from './model-repose.ts';
+export { type ModelRig, type ModelRigOptions, modelRig } from './model-rig.ts';
+export { type FittedSkeleton, fitSkeleton, type JointResidual } from './model-skeleton.ts';
 export { type OpeningOptions, type OpeningSide, opening } from './openings.ts';
 export { type RoofInfo, type RoofMeshOptions, roof, roofInfo, roofMesh } from './roof.ts';
 export type { RoofChimney } from './roof-chimney.ts';

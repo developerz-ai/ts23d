@@ -15,6 +15,10 @@ from plugins import _proc
 from plugins.base import Job, Output, Plugin, PluginError, Result, hf_weights_sha256
 
 
+# The official VAST-AI/UniRig checkpoints (the weights whose sha256 is in every job key).
+LOAD_ENV = {"TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD": "1"}
+
+
 class UniRig(Plugin):
     name = "unirig"
     task = "rig"
@@ -33,44 +37,17 @@ class UniRig(Plugin):
             raise PluginError("unirig chooses the skeleton size itself: drop maxBones")
         mesh = job.input_file("mesh", suffix=".glb")
         w = job.workdir
-        _proc.run(
-            self,
-            job,
-            [
-                "bash",
-                "launch/inference/generate_skeleton.sh",
-                "--input",
-                str(mesh),
-                "--output",
-                str(w / "skeleton.fbx"),
-                "--seed",
-                str(job.seed),
-            ],
-        )
-        _proc.run(
-            self,
-            job,
-            [
-                "bash",
-                "launch/inference/generate_skin.sh",
-                "--input",
-                str(w / "skeleton.fbx"),
-                "--output",
-                str(w / "skin.fbx"),
-            ],
-        )
-        _proc.run(
-            self,
-            job,
-            [
-                "bash",
-                "launch/inference/merge.sh",
-                "--source",
-                str(w / "skin.fbx"),
-                "--target",
-                str(mesh),
-                "--output",
-                str(w / "rigged.glb"),
-            ],
-        )
+        stages = [
+            ("skeleton", "generate_skeleton.sh", ["--input", str(mesh), "--output", str(w / "skeleton.fbx"), "--seed", str(job.seed)], w / "skeleton.fbx"),
+            ("skin", "generate_skin.sh", ["--input", str(w / "skeleton.fbx"), "--output", str(w / "skin.fbx")], w / "skin.fbx"),
+            ("merge", "merge.sh", ["--source", str(w / "skin.fbx"), "--target", str(mesh), "--output", str(w / "rigged.glb")], w / "rigged.glb"),
+        ]
+        for stage, script, args, made in stages:
+            # UniRig's launch scripts exit 0 even when their Python step raised, so the stage's
+            # output file is the only truth; its checkpoints pickle a config class, which torch
+            # >= 2.6 refuses unless weights-only loading is switched off for this process.
+            out = _proc.run(self, job, ["bash", f"launch/inference/{script}", *args], env=LOAD_ENV)
+            if not made.is_file() or made.stat().st_size == 0:
+                tail = "\n".join(out.splitlines()[-40:])
+                raise PluginError(f"unirig: {stage} stage wrote no {made.name}:\n{tail}")
         return Result([Output("model/gltf-binary", (w / "rigged.glb").read_bytes())])

@@ -27,7 +27,7 @@ import type {
   WorkerOut,
 } from './compile-protocol.ts';
 import { dioramaFor } from './diorama.ts';
-import { provideFor } from './neural-load.ts';
+import { provideFor, withdrawFor } from './neural-load.ts';
 import { type Discovered, discover, importFile } from './recipe-modules.ts';
 
 const recipes = new Map<string, Asset>();
@@ -48,7 +48,9 @@ async function recipeNamed(name: string, file?: string): Promise<Asset> {
 
 async function resolve(t: Target): Promise<Asset> {
   if (t.kind === 'diorama') return dioramaFor(t.name, t.footprint);
+  // One recipe may hold both tiers: with its model outputs, or (CPU tier) with every ask a miss.
   if (t.neural) await provideFor(t.name, t.neural);
+  else withdrawFor(t.name);
   return recipeNamed(t.name, t.file);
 }
 
@@ -92,6 +94,7 @@ async function build(request: BuildRequest): Promise<BuildResult> {
 }
 
 async function manifest(name: string, file?: string): Promise<Manifest> {
+  withdrawFor(name);
   const asset = await recipeNamed(name, file);
   const lods = ([0, 1, 2] as const).map((lod) => compiled0(asset, lod));
   const { qa: _qa, files: _files, ...rest } = manifestOf(asset, lods, { lods: [] }, []);

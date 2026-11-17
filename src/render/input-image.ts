@@ -4,7 +4,11 @@
 //   subjects   — exactly one large connected foreground region (≥ 2 % of the frame; specks ignored;
 //                a region over 80 % of the frame is the scene, not a subject);
 //   fill       — the object spans ≥ 60 % of the frame along its larger side;
-//   cropped    — no object pixel on the frame border;
+//   cropped    — no SUBJECT pixel on the frame border. A studio floor that shades away from the
+//                corner colour is left unflooded and is joined to the subject standing on it, so
+//                "not background" is not "subject" there: walking the border, a stretch that
+//                continues the flooded background smoothly (≤ 6 levels from one border pixel to
+//                the next) is backdrop; a subject cut by the frame starts with an edge;
 //   resolution — the shorter side is ≥ 512 px;
 //   sharpness  — the variance of the Laplacian (luma, 0–255) over the object's interior is ≥ 25,
 //                calibrated on the test fixtures (sharp grain ≈ 12 000, its 4 px box blur ≈ 8; a ts23d
@@ -85,6 +89,42 @@ function cornerFlood(
   return { bg, count: tail };
 }
 
+/** Largest step (max channel) between neighbouring border pixels of one smooth backdrop. */
+const BORDER_STEP = 6;
+
+/**
+ * Border pixels that are neither corner-flood background nor a smooth continuation of it along
+ * the frame's perimeter (a floor band, a vignette): the subject, cut by the frame.
+ */
+export function croppedPixels(
+  rgba: Uint8Array,
+  width: number,
+  height: number,
+  bg: Uint8Array,
+): number {
+  const ring: number[] = [];
+  for (let x = 0; x < width; x++) ring.push(x);
+  for (let y = 1; y < height; y++) ring.push(y * width + width - 1);
+  for (let x = width - 2; x >= 0 && height > 1; x--) ring.push((height - 1) * width + x);
+  for (let y = height - 2; y > 0 && width > 1; y--) ring.push(y * width);
+  const n = ring.length;
+  const backdrop = Uint8Array.from(ring, (i) => bg[i] ?? 0);
+  const smooth = (a: number, b: number): boolean => {
+    for (let c = 0; c < 3; c++)
+      if (Math.abs((rgba[a * 4 + c] ?? 0) - (rgba[b * 4 + c] ?? 0)) > BORDER_STEP) return false;
+    return true;
+  };
+  // Two sweeps each way round the ring carry the backdrop across the seam at index 0.
+  for (const dir of [1, -1])
+    for (let k = 0; k < 2 * n; k++) {
+      const at = (((dir > 0 ? k : -k) % n) + n) % n;
+      const next = (at + dir + n) % n;
+      if (backdrop[at] && !backdrop[next] && smooth(ring[at] ?? 0, ring[next] ?? 0))
+        backdrop[next] = 1;
+    }
+  return backdrop.reduce((count, b) => count + (b ? 0 : 1), 0);
+}
+
 /** Sizes of the 8-connected foreground regions, largest first. */
 function regions(bg: Uint8Array, width: number, height: number): number[] {
   const seen = new Uint8Array(bg.length);
@@ -150,13 +190,12 @@ export function checkInputImage(
   const n = width * height;
   const { bg, count } = cornerFlood(rgba, width, height);
   let [x0, y0, x1, y1] = [width, height, -1, -1];
-  let cropped = false;
+  const cropped = croppedPixels(rgba, width, height, bg) > 0;
   for (let i = 0; i < n; i++) {
     if (bg[i]) continue;
     const x = i % width;
     const y = Math.floor(i / width);
     [x0, y0, x1, y1] = [Math.min(x0, x), Math.min(y0, y), Math.max(x1, x), Math.max(y1, y)];
-    if (x === 0 || y === 0 || x === width - 1 || y === height - 1) cropped = true;
   }
   const background = count / n;
   const subjects = regions(bg, width, height).filter(
@@ -189,7 +228,7 @@ export function checkInputImage(
   if (cropped)
     add(
       'cropped',
-      'the object touches the frame edge: it is cropped, the model would guess the rest',
+      'the subject touches the frame edge: it is cropped, the model would guess the rest',
       'leave a margin round the whole object',
     );
   if (Math.min(width, height) < minSide)

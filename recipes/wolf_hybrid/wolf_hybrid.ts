@@ -1,160 +1,110 @@
-// Hybrid grey wolf: code owns the animal, a model adds the skin. The creature kind builds the
-// sourced wolf (spec.ts: skeleton, proportions, stance, mass, rig, LODs, QA — identical to
-// recipes/wolf); then an image-to-3D model's wolf (surface.ts: concept image → Pixal3D mesh, both
-// from the committed cache under neural/) is registered onto it (register.ts: body, then head by
-// landmarks, neck bent between) and gives the coat its head, ruff and colour (blend.ts); legs,
-// tail, paws, rig and mass stay the code's. With no cache — a fresh clone without
-// neural/, the gallery, a GPU-less CI — every request misses and this IS the CPU wolf.
+// Grey wolf, model-first (plan 2026/11/16/101 slice 08). The surface is an image-to-3D model's
+// wolf, whole, with its own textures on all three LODs; code keeps the animal: the sourced scale
+// (spec.ts, the same dossier as recipes/wolf), the skeleton, the walk and trot, the mass, the LOD
+// budgets and QA. The chain (surface.ts): concept image → Pixal3D mesh → Blender proxy → UniRig
+// joints → Blender steps (steps.ts) → importModel; `defineModelCreature` turns that into bones,
+// one skinned textured part per LOD and clips. With no cache (a fresh clone without neural/, a
+// CI without a GPU) every request misses and this is the code wolf of the creature kind.
 
 import {
-  type BuildContext,
+  type Check,
+  type CheckFinding,
   CREATURE_MATERIALS,
-  defineAsset,
-  defineCreature,
   defineMaterial,
-  type Mesh,
-  merge,
-  type PartOptions,
-  place,
-  type Vec3,
+  defineModelCreature,
 } from '@developerz.ai/ts23d';
-import { hybridOf, hybridSolid } from './blend.ts';
-import { buriedIn, shareOf, volume } from './masks.ts';
-import { hybridCards } from './ride.ts';
 import { REAL, WOLF } from './spec.ts';
-import { BLEND } from './surface.ts';
+import { TRIANGLES } from './steps.ts';
+import { wolfModel } from './surface.ts';
+
+export { CONCEPT } from './concept.ts';
 
 const FUR = defineMaterial(CREATURE_MATERIALS.fur_neutral);
 
-const code = defineCreature({
+/** The box of THIS stand, from the sourced numbers and the pose (README.md, "Scale"):
+ *  length = head and body 1.15 + 0.09 of hanging tail brush behind the rump; height = withers
+ *  0.82 + 0.13 of ears carried above them; width = the 0.22 chest + a 5 cm winter mane a side. */
+export const BOX = { length: 1.24, width: 0.32, height: 0.95 } as const;
+
+/** Sourced measures read on the model body (recipes/wolf/README.md table), metres. */
+export const SOURCED = {
+  /** Shoulder height 0.80–0.85; the coat over the withers adds up to a centimetre. */
+  withers: [0.8, 0.86],
+  /** Nose → tail root: the 1.15 this spec chose from 1.05–1.60, ± 5 %. */
+  headBody: [REAL.headBody * 0.95, REAL.headBody * 1.05],
+  /** Tail 0.29–0.50 along its bones. */
+  tail: [0.29, 0.5],
+} as const;
+
+/** What the model body measures, for the check below and the tests. */
+export function measured(a: Parameters<Check>[0]): {
+  withers: number;
+  headBody: number;
+  tail: number;
+} | null {
+  const mesh = a.parts.find((p) => p.textures)?.mesh;
+  const bones = a.skeleton?.bones ?? [];
+  const shoulder = bones.find((b) => b.name === 'fore_l_0')?.head;
+  if (!mesh || !shoulder) return null;
+  const P = mesh.positions;
+  let [withers, nose, rump] = [0, Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY];
+  for (let i = 0; i < P.length; i += 3) {
+    const [x = 0, y = 0, z = 0] = [P[i], P[i + 1], P[i + 2]];
+    // The back's top over the shoulder joints; the nose; the rump above the hanging tail.
+    if (Math.abs(y) < 0.06 && x > shoulder[0] - 0.1 && x < shoulder[0] + 0.02)
+      withers = Math.max(withers, z);
+    nose = Math.max(nose, x);
+    if (z > 0.775 * WOLF.height) rump = Math.min(rump, x);
+  }
+  const tail = bones
+    .filter((b) => /^tail_\d+$/.test(b.name))
+    .reduce(
+      (s, b) => s + Math.hypot(b.tail[0] - b.head[0], b.tail[1] - b.head[1], b.tail[2] - b.head[2]),
+      0,
+    );
+  return { withers, headBody: nose - rump, tail };
+}
+
+/** The model at the fitted scale still measures as the sourced wolf (the code wolf is held by
+ *  the creature kind's own checks). */
+const sourced: Check = (a) => {
+  // Read on LOD 0, like `real.measures`: a decimated far LOD loses a millimetre of coat.
+  if ((a.lod ?? 0) !== 0) return [];
+  const m = measured(a);
+  if (!m) return [];
+  return (Object.keys(SOURCED) as (keyof typeof SOURCED)[]).flatMap((k): CheckFinding[] => {
+    const [lo, hi] = SOURCED[k];
+    return m[k] >= lo && m[k] <= hi
+      ? []
+      : [
+          {
+            message: `model body: ${k} measures ${m[k].toFixed(3)} m, sourced ${lo.toFixed(3)}–${hi.toFixed(3)} m`,
+            fix: 'the model is not in the sourced proportions at the fitted scale: re-roll the concept or the mesh (README.md), do not widen the range',
+          },
+        ];
+  });
+};
+
+export const wolf_hybrid = defineModelCreature({
   name: 'wolf_hybrid',
   description:
-    'Hybrid grey wolf (Canis lupus lupus): the code-built creature-kind wolf (1.15 m head and body, 0.80 m at the shoulder, 40 kg; skeleton, rig, legs, tail, mass) wearing an image-to-3D model surface (Pixal3D, MIT) from the committed neural cache: the model head, ruff and coat colour registered onto the code skeleton',
-  tags: ['creature', 'animal', 'mammal', 'canid', 'wolf', 'sculpt', 'neural', 'hybrid'],
+    'Grey wolf (Canis lupus lupus), winter coat, standing: 1.15 m head and body, 0.82 m at the withers, 40 kg. Model tier: an image-to-3D surface (Pixal3D, MIT) with its own textures on three LODs, skinned to the sourced skeleton (joints from UniRig) with idle, look, walk and trot clips. Without the neural cache: the code-built creature-kind wolf',
+  tags: ['creature', 'animal', 'mammal', 'canid', 'wolf', 'skinned', 'neural', 'model-first'],
   license: 'CC0-1.0',
   sources: [
     'https://en.wikipedia.org/wiki/Wolf (length, shoulder height, tail, mass, skull, ears, fur, colour)',
-    'recipes/wolf/README.md (the code wolf’s dossier) · recipes/wolf_hybrid/README.md (the hybrid)',
-    'surface: Pixal3D (TencentARC, MIT) via recipes/wolf_hybrid/neural/ record.json',
+    'recipes/wolf/README.md (the dossier) · recipes/wolf_hybrid/README.md (the chain, the steps, the measures)',
+    'surface: Pixal3D (TencentARC, MIT) · joints: UniRig (VAST-AI, MIT) · records in recipes/wolf_hybrid/neural/',
   ],
   spec: WOLF,
   options: { strip: FUR },
-  real: {
-    length: 1.31,
-    width: 0.29,
-    height: 0.9,
-    tolerance: 0.05,
-    mass: REAL.mass,
-    massTolerance: 0.25,
+  real: { ...BOX, tolerance: 0.05, mass: REAL.mass, massTolerance: 0.25 },
+  budget: {
+    triangles: [...TRIANGLES],
+    bones: 64,
+    textureSets: { count: 1, size: 2048 },
   },
-  budget: { triangles: [150000, 35000, 4000] },
+  checks: [sourced],
   art: { focal: 'head', shape: 'friendly', grounded: true },
-});
-
-/** The solid coat the model is registered onto and reshapes (LOD2 has no separate jaw); the
- *  cards ride it. Eyes and claws stay the code's. */
-const SOLID = ['body', 'head', 'jaw'];
-const CARDS = new Set(['fur', 'head_fur']);
-
-interface Call {
-  readonly name: string;
-  readonly mesh: Mesh | null;
-  readonly o: PartOptions | undefined;
-  readonly at: Vec3;
-}
-
-/**
- * Build the code wolf into a buffer (parts and bones), register the model onto its solid coat,
- * then emit every part (in the kind's order) with the coat reshaped and recoloured. Parts are
- * placed by translation only (the kind bakes pitches into meshes), so a part's world offset is
- * its `at` plus its parents'.
- */
-function buildHybrid(ctx: BuildContext): void {
-  const calls: Call[] = [];
-  const ats = new Map<string, Vec3>();
-  const bones: string[] = [];
-  const heads = new Map<string, Vec3>();
-  const wrapped: BuildContext = Object.create(ctx);
-  wrapped.part = (name, mesh, o) => {
-    const parent = o?.parent ? (ats.get(o.parent) ?? [0, 0, 0]) : [0, 0, 0];
-    const at: Vec3 = [
-      (o?.at?.[0] ?? 0) + parent[0],
-      (o?.at?.[1] ?? 0) + parent[1],
-      (o?.at?.[2] ?? 0) + parent[2],
-    ];
-    ats.set(name, at);
-    calls.push({ name, mesh, o, at });
-  };
-  wrapped.bone = (name, o) => {
-    bones.push(name);
-    heads.set(name, o.head);
-    return ctx.bone(name, o);
-  };
-  code.build(wrapped);
-  const find = (name: string): Call | undefined => calls.find((c) => c.name === name && c.mesh);
-  const solid = SOLID.map(find).filter((c): c is Call & { mesh: Mesh } => !!c?.mesh);
-  const head = find('head');
-  const eye = find('eye_l');
-  const eyeR = find('eye_r');
-  const neckBase = heads.get('neck_0');
-  const atlas = heads.get('head');
-  const world = (c: { mesh: Mesh; at: Vec3 }): Mesh => place(c.mesh, { at: c.at });
-  const h =
-    find('body') && head?.mesh && neckBase && atlas
-      ? hybridOf(ctx, {
-          target: merge(solid.map(world)),
-          head: world({ mesh: head.mesh, at: head.at }),
-          eyes:
-            eye?.mesh && eyeR
-              ? {
-                  l: eye.at,
-                  r: eyeR.at,
-                  radius: Math.max(...eye.mesh.positions.filter((_, i) => i % 3 === 0)),
-                }
-              : null,
-          neckBase,
-          atlas,
-        })
-      : null;
-  if (!h) {
-    for (const c of calls) ctx.part(c.name, c.mesh, c.o);
-    return;
-  }
-  const moved = new Map(
-    solid.map((c) => [
-      c.name,
-      hybridSolid(
-        c.mesh,
-        c.at,
-        h,
-        shareOf(c.mesh, bones, c.name === 'body'),
-        buriedIn(c.mesh, c.at, solid.filter((o) => o !== c).map(world)),
-        c.name === 'body' ? BLEND.smooth.body : BLEND.smooth.head,
-        c.name === 'body' ? BLEND.torso : c.name === 'jaw' ? BLEND.jaw : BLEND.face,
-      ),
-    ]),
-  );
-  const before = merge(solid.map(world));
-  const after = merge(solid.map((c) => place(moved.get(c.name) ?? c.mesh, { at: c.at })));
-  for (const c of calls) {
-    const solidMesh = moved.get(c.name);
-    // Code owns the mass: the model's extra volume is coat (ruff, cheek fur), so a reshaped part
-    // keeps the code part's mass (density × its old volume ÷ its new one) and the sourced mass
-    // and fore share stay the code's.
-    const o =
-      solidMesh && c.mesh && c.o?.density
-        ? { ...c.o, density: (c.o.density * volume(c.mesh)) / volume(solidMesh) }
-        : c.o;
-    ctx.part(
-      c.name,
-      solidMesh ??
-        (c.mesh && CARDS.has(c.name) ? hybridCards(c.mesh, c.at, before, after, h) : c.mesh),
-      o,
-    );
-  }
-}
-
-export const wolf_hybrid = defineAsset({
-  ...code,
-  build: buildHybrid,
+  model: wolfModel,
 });

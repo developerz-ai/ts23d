@@ -43,6 +43,31 @@ refine({ mesh, prompt, seed?, image? }, { endpoint, model, cache?, offline?, fet
 
 CLI-side: `bun scripts/import.ts hash|cache <file>` (sha256; content-addressed cache in `node_modules/.cache/ts23d/imports/`), `fixture` (the demo's stand-in scan), `textured` (the demo's own-texture GLB). `loadImportCache()` (`src/cli/import-cache.ts`, re-exported by `scripts/import.ts`) feeds `provideImports`; `t3d build` calls it before compiling.
 
+## importModel: a textured, skinned, animated GLB kept whole
+
+**Status: shipped 2026-11-16** ([plan 101](../plans/2026/11/16/101-organic-model-first/overview.md) slice 03; [ADR 016](../decisions/016-textured-parts.md), [ADR 013](../decisions/013-skinned-meshes.md)). Source: `src/neural/import-model.ts` (+ `import-frame`, `import-textures`, `import-skin`, `import-rig`, `import-clips`, `import-weld`). `importGlb` finishes a scan onto the trim sheet; `importModel` is for a body that already has its look and rig (an image-to-3D mesh after the Blender steps, a Meshy rig): nothing is dropped at the door.
+
+```ts
+importModel(source: ImportSource | { bytes, license, author, url?, allowNonCommercial? },
+            o?: { up?, front?, scale?, height?, fit?, place?,            // as importGlb
+                  lodNodes?: [string, string, string],                    // default lod0 / lod1 / lod2
+                  textureName?: string, ormWithoutOcclusion?: 'keep' | 'drop',
+                  closeLoops?: boolean }): ImportedModel                  // closeLoops: default true
+// → { lods: Mesh[] (1 or 3), textures?: TextureSet, armature?: Armature, boneNames, clips: Clip[],
+//     credit, warnings, sha256, scale }
+```
+
+| What | Rule |
+|---|---|
+| LODs | Nodes named `lod0` / `lod1` / `lod2` (any case, or `<name>_lod0`…) give three LODs from the meshes at or below them. None found: the whole default scene is the single LOD 0. Some but not all: `T3D_IMPORT_UNSUPPORTED` listing the mesh nodes found. |
+| Mesh | UVs exactly as stored (glTF: 0..1, V down); vertex colour white when textured; no `cleanMesh`, only bit-identical vertices are welded. Fit and placement are measured on LOD 0 and applied to every LOD, bone and clip key. |
+| Textures | One `TextureSet` of the file's PNG bytes (never decoded): baseColor, normal, and the metallicRoughness image as `orm` when the occlusion slot points at the same image. No shared occlusion: the image is dropped with a warning (its red channel is undefined) unless `ormWithoutOcclusion: 'keep'`. Roughness / metallic factors are taken from the material when it has no metallicRoughness image. Several different textured materials, JPEG / WebP, or a second UV set: `T3D_IMPORT_UNSUPPORTED` naming the Blender `bake` / `export` step. Materials are compared by image content, not index. |
+| Skin | The 4 heaviest influences per vertex (JOINTS_0..n), renormalised to 1; more than 4 is a warning. Vertices are baked to the file's **rest pose** (Σ w · jointWorld · inverseBind), so armature transforms, bind spaces and inverse binds are gone; a rest pose that is not the bind pose is a warning. |
+| Armature | One bone per joint node, parents first, `head` = the joint's rest world position in the asset frame, names in snake_case (`boneNames`: file name → bone name). `tail`: the child's head for a single child; a leaf points through the centre of the vertices it moves (twice that far); otherwise along the parent's direction. Unweighted joints with no weighted joint below are dropped (warned). |
+| Clips | Keys are re-expressed against the ts23d rest pose (no rest rotation, asset axes): rotation = A·P·(r ⊗ r₀⁻¹)·P⁻¹·A⁻¹, translation = A·P·(t − t₀), with P the rest world rotation and scale of the joint's parent node and A the import frame. Times start at 0; STEP gets hold keys; CUBICSPLINE keeps values and drops tangents (warned); tracks that never leave rest are dropped; a channel on a non-joint node is ignored with a warning; uniform scale only; `run` is reserved and becomes `run_anim`; `loop` = `extras.loop`, else first key = last key. |
+
+Checked by `src/neural/import-clips.test.ts`: the imported mesh posed by an imported key (the exporter / QA convention) lands within 1e-5 m of a direct glTF evaluation of the file. Loop closing (`closeLoops`, default on; `src/neural/import-clips-loop.ts`): a cycle whose last key sits one frame before its period (a rigging service's walk, 4.1667 s at 30 fps) gets key 0 appended one frame later, so it loops with no blend; one `warnings` line per closed clip; a clip that is not a cycle (one-shot, eased stop) is left open. Not imported yet: morph targets, sparse accessors, more than one texture set, cameras and lights.
+
 ## Decisions
 
 | Question | Decision | Why |
@@ -71,5 +96,5 @@ See [recipes/import_demo/README.md](../../recipes/import_demo/README.md): export
 
 - `localGenerator` ships as a wrapper over the `mesh` task of any `NeuralAdapter` (docs/idea/08-neural-adapters.md); `refine` shares the job key and recipe cache.
 - The demo's stand-in scan is the CC0 MakeHuman hm08 base (data only), not a photogrammetry capture; its hair is paint.
-- The own-texture GLB is validated (Khronos validator, 0 errors/warnings) but ts23d's CPU renderer draws only the trim-sheet path.
+- The post-process own-texture GLB (`withOwnTextures`) is validated (Khronos validator, 0 errors/warnings) but ts23d's CPU renderer draws only the trim-sheet path for it. A `TextureSet` on a part (`importModel`, ADR 016) is sampled by the raster, path-traced and contact-sheet renders.
 - Hole filling is a fan over loops ≤ `maxHoleEdges`; large holes are reported, not patched.

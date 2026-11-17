@@ -122,6 +122,21 @@ export {
 } from './section.ts';
 export * from './skeleton.ts';
 export * from './style.ts';
+export {
+  checkTextureSet,
+  type PngHeader,
+  pngHeader,
+  sameTextureSet,
+  TEXTURE_DEFAULTS,
+  TEXTURE_MAPS,
+  TEXTURE_SIZES,
+  type TextureBudget,
+  type TextureMap,
+  type TextureSet,
+  type TextureSize,
+  textureKey,
+  textureSetsOf,
+} from './texture-set.ts';
 export { type Affine, affine, applyAffine, frame, type Placement, place } from './transform.ts';
 export {
   checkTune,

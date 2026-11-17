@@ -9,6 +9,7 @@ import { ALPHA_CUT } from '../alpha-mips.ts';
 import { type PerspectiveCamera, project } from '../camera.ts';
 import { type Scene, sceneOf } from '../scene.ts';
 import { type SheetTextures, sample } from '../texture.ts';
+import { setAlpha } from '../texture-sets.ts';
 import { footprintMip } from '../vis-buffer.ts';
 import { type HitFilter, PathBvh } from './bvh.ts';
 import { CLS, triangleClasses } from './classes.ts';
@@ -70,7 +71,7 @@ function cameraMips(s: Scene, cam: PerspectiveCamera, size: number, cls: Uint8Ar
       (U[i1 * 2 + 1] ?? 0) - (U[i0 * 2 + 1] ?? 0),
       (U[i2 * 2] ?? 0) - (U[i0 * 2] ?? 0),
       (U[i2 * 2 + 1] ?? 0) - (U[i0 * 2 + 1] ?? 0),
-      size,
+      s.sets[(s.texSet[t] ?? 0) - 1]?.size ?? size,
       cut,
     );
   }
@@ -116,6 +117,8 @@ export function assemble(d: WorldData): World {
     const e = (I[t * 3 + 2] ?? 0) * 2;
     const u = (U[a] ?? 0) * b0 + (U[b] ?? 0) * b1 + (U[e] ?? 0) * b2;
     const w = (U[a + 1] ?? 0) * b0 + (U[b + 1] ?? 0) * b1 + (U[e + 1] ?? 0) * b2;
+    const set = scene.sets[(scene.texSet[t] ?? 0) - 1];
+    if (set) return setAlpha(set, mip[t] ?? 0, u, w) >= ALPHA_CUT;
     sample(tex.albedo, mip[t] ?? 0, u, w, texel);
     return (texel[3] ?? 1) >= ALPHA_CUT;
   };

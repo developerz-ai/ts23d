@@ -1,0 +1,31 @@
+{
+  "adapter": "http:http://127.0.0.1:8190",
+  "contract": "t3d-neural/1",
+  "key": "c29703432ca48a25cba2f10662cb0ebedb5257c9f34e041c8aa8f9665f66103b",
+  "model": {
+    "id": "z-image",
+    "licence": "Apache-2.0 (model card Tongyi-MAI/Z-Image-Turbo: \"license: apache-2.0\")",
+    "task": "image",
+    "weightsSha256": "44433e160151aff4f464f0dfcad82185a75bff83293b9bf973a59f7acb9b1379"
+  },
+  "outputs": [
+    {
+      "bytes": 936142,
+      "file": "output-0.png",
+      "mime": "image/png",
+      "sha256": "74c8e619f8d56738bf89af152dd99c66288e7af3d81ba8f3a4dc08fe623bc85b"
+    }
+  ],
+  "request": {
+    "height": 1024,
+    "params": {
+      "template": "raw"
+    },
+    "prompt": "Game character reference, a photoreal medieval ranger, a lean man in his thirties with short brown hair and a short beard, fitted dark-green leather jerkin, brown wool trousers, leather bracers, belt with pouch, tall boots, no cloak, no weapons, empty hands, standing in A-pose, arms straight held 45 degrees away from the body, legs slightly apart, facing the camera, front view, full body in frame, plain light-grey studio background, soft even light, no shadows on background, sharp focus.",
+    "seed": 42,
+    "width": 1024
+  },
+  "requestKey": "ed49bceb93885809ab2db4b009b7477159e05fdd4f4eab296a2a6a5bfdbad1b1",
+  "server": "ts23d-neural-server/0.1.0",
+  "task": "image"
+}

@@ -1,9 +1,12 @@
 // Flatten a compiled asset into one packed, world-space triangle soup for the beauty renderer:
 // positions, normals, UVs, colours per vertex; surface code, look index + tangent frame per triangle.
-// Packed typed arrays keep the per-pixel loops monomorphic and allocation-free.
+// Packed typed arrays keep the per-pixel loops monomorphic and allocation-free. Parts with their
+// own texture set (ADR 016) add a set index per triangle, the decoded sets and per-vertex tangents.
 
 import { type CompiledAsset, type Surface, worldMeshes } from '../core/index.ts';
+import { uvTangents } from '../passes/index.ts';
 import { type Look, lookTable } from './looks.ts';
+import { assetSets, type SetTextures } from './texture-sets.ts';
 
 export const SURFACE_CODE: Readonly<Record<Surface, number>> = {
   opaque: 0,
@@ -31,6 +34,12 @@ export interface Scene {
   readonly transmissive: boolean;
   /** Per-triangle tangent frame for the normal map, 6 floats: T = dP/dU, B = −dP/dV (glTF +Y). */
   readonly tangents: Float32Array;
+  /** Texture set per triangle: 0 = the shared trim sheet, k = `sets[k − 1]`. */
+  readonly texSet: Uint8Array;
+  /** The asset's decoded texture sets (released with the scene). */
+  readonly sets: readonly SetTextures[];
+  /** Per-vertex glTF tangent (xyz, handedness w) of textured parts; empty when `sets` is. */
+  readonly vtan: Float32Array;
   readonly min: readonly [number, number, number];
   readonly max: readonly [number, number, number];
   readonly triangles: number;
@@ -40,6 +49,7 @@ export function sceneOf(asset: CompiledAsset): Scene {
   const meshes = worldMeshes(asset.parts);
   const surfOf = new Map(asset.parts.map((p) => [p.name, SURFACE_CODE[p.surface ?? 'opaque']]));
   const { looks, byPart } = lookTable(asset);
+  const { sets, byPart: setOf } = assetSets(asset);
   let nv = 0;
   let nt = 0;
   for (const m of meshes.values()) {
@@ -53,6 +63,8 @@ export function sceneOf(asset: CompiledAsset): Scene {
   const indices = new Uint32Array(nt * 3);
   const surface = new Uint8Array(nt);
   const look = new Uint8Array(nt);
+  const texSet = new Uint8Array(nt);
+  const vtan = new Float32Array(sets.length > 0 ? nv * 4 : 0);
   let vo = 0;
   let to = 0;
   for (const [name, m] of meshes) {
@@ -63,6 +75,11 @@ export function sceneOf(asset: CompiledAsset): Scene {
     for (let i = 0; i < m.indices.length; i++) indices[to * 3 + i] = (m.indices[i] ?? 0) + vo;
     surface.fill(surfOf.get(name) ?? 0, to, to + m.indices.length / 3);
     look.fill(Math.min(255, byPart.get(name) ?? 0), to, to + m.indices.length / 3);
+    const set = setOf.get(name) ?? 0;
+    if (set > 0) {
+      texSet.fill(set, to, to + m.indices.length / 3);
+      vtan.set(uvTangents(m), vo * 4);
+    }
     vo += m.positions.length / 3;
     to += m.indices.length / 3;
   }
@@ -89,6 +106,9 @@ export function sceneOf(asset: CompiledAsset): Scene {
     looks,
     transmissive: looks.some((l, i) => l.transmission > 0 && look.includes(i)),
     tangents: tangentsOf(positions, uvs, indices),
+    texSet,
+    sets,
+    vtan,
     min,
     max,
     triangles: nt,

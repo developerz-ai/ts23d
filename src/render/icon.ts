@@ -68,10 +68,21 @@ export function renderIcon(asset: CompiledAsset, o: IconOptions = {}): IconImage
   return shoot(asset, sizeOf(o, 256), o, { window: { x: 0.5, y: 0.5, zoom: 1.06 } });
 }
 
-/** World-space points of the focus: parts matching a prefix, else the top 40% of the asset. */
+/** Skin weight above which a vertex belongs to a focus bone. */
+const BONE_SHARE = 0.4;
+
+/**
+ * World-space points of the focus: parts matching a prefix; else (a single skinned body has no
+ * `head` part) the skin that bones matching the prefix drive; else the top 40% of the asset.
+ */
 function focusPoints(asset: CompiledAsset, focus: readonly string[] | undefined): number[] {
   const all: number[] = [];
   const picked: number[] = [];
+  const skinned: number[] = [];
+  const bones = new Set<number>();
+  (asset.skeleton?.bones ?? []).forEach((b, i) => {
+    if (focus?.some((f) => b.name.startsWith(f))) bones.add(i);
+  });
   for (const [name, m] of worldMeshes(asset.parts)) {
     const hit = focus?.some((f) => name.startsWith(f));
     for (let i = 0; i < m.positions.length; i++) {
@@ -79,11 +90,24 @@ function focusPoints(asset: CompiledAsset, focus: readonly string[] | undefined)
       all.push(v);
       if (hit) picked.push(v);
     }
+    if (!bones.size || !m.joints || !m.weights) continue;
+    for (let v = 0; v < m.positions.length / 3; v++) {
+      let share = 0;
+      for (let k = 0; k < 4; k++)
+        if (bones.has(m.joints[v * 4 + k] ?? -1)) share += m.weights[v * 4 + k] ?? 0;
+      if (share >= BONE_SHARE)
+        skinned.push(
+          m.positions[v * 3] ?? 0,
+          m.positions[v * 3 + 1] ?? 0,
+          m.positions[v * 3 + 2] ?? 0,
+        );
+    }
   }
+  if (picked.length === 0 && skinned.length) return skinned;
   if (focus?.length && picked.length === 0)
     throw new Ts23dError('T3D_RENDER_OPTIONS', {
-      cause: `portrait focus ${focus.join(', ')} matches no part of '${asset.name}'`,
-      fix: 'pass part-name prefixes that exist (t3d shot lists them in manifest.json), or omit focus',
+      cause: `portrait focus ${focus.join(', ')} matches no part or bone of '${asset.name}'`,
+      fix: 'pass part-name or bone-name prefixes that exist (t3d shot lists them in manifest.json), or omit focus',
     });
   if (picked.length) return picked;
   let lo = Infinity;

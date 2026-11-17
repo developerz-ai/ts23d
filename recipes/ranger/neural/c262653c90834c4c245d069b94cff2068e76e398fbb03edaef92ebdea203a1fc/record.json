@@ -1,0 +1,36 @@
+{
+  "adapter": "meshy",
+  "contract": "t3d-neural/1",
+  "key": "c262653c90834c4c245d069b94cff2068e76e398fbb03edaef92ebdea203a1fc",
+  "model": {
+    "id": "meshy-rigging",
+    "licence": "own",
+    "task": "rig",
+    "terms": "https://www.meshy.ai/terms-of-use"
+  },
+  "outputs": [
+    {
+      "bytes": 26683452,
+      "file": "local-0.glb",
+      "local": true,
+      "mime": "model/gltf-binary",
+      "sha256": "0d8556521a302bbe6e1672bfe2ff87af27927c23438faee402e5b1d78ef7caaf"
+    }
+  ],
+  "request": {
+    "clips": [
+      "Idle",
+      "Casual Walk",
+      "Run 2"
+    ],
+    "height": 1.78,
+    "mesh": {
+      "mime": "model/gltf-binary",
+      "sha256": "42c107bd2f8ab6294fdfff6411f1f7292d2b4aba301e833e83a67427990e961f"
+    },
+    "seed": 0
+  },
+  "requestKey": "9c0e81767248e1187c0494d69a12aa7253295111c8da1c61494ec93c419b5638",
+  "server": "meshy task 01a1e721-0c59-73f1-be26-4eb90e85f81c + 01a1e722-1554-717e-9c51-299bca30150e; consumed_credits 14",
+  "task": "rig"
+}

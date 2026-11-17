@@ -1,0 +1,318 @@
+{
+  "name": "ranger",
+  "kind": "character",
+  "description": "A woodland ranger, 1.78 m, a-pose rest, skinned to 24 bones with idle, walk and jog clips. Model tier: image-to-3D surface with its own textures, hosted rig, Blender steps. Without the neural cache: a grey CPU mannequin, no clips.",
+  "tags": [
+    "character",
+    "humanoid",
+    "skinned",
+    "model-first"
+  ],
+  "lods": [
+    0,
+    1,
+    2
+  ],
+  "files": {
+    "lods": [],
+    "sheet": "sheet.png",
+    "thumb": "thumb.png"
+  },
+  "triangles": [
+    38998,
+    11798,
+    3898
+  ],
+  "drawCalls": [
+    1,
+    1,
+    1
+  ],
+  "pivots": [
+    {
+      "name": "body",
+      "parent": null
+    }
+  ],
+  "emitters": [],
+  "sockets": [],
+  "surfaces": [
+    "opaque"
+  ],
+  "textureSets": [
+    {
+      "name": "body",
+      "size": 2048,
+      "maps": {
+        "albedo": {
+          "size": 2048,
+          "bytes": 4904337
+        },
+        "normal": {
+          "size": 1024,
+          "bytes": 1415982
+        },
+        "orm": {
+          "size": 1024,
+          "bytes": 1417425
+        }
+      },
+      "bytes": 7737744,
+      "credit": "ts23d ranger recipe (Meshy image-to-3D and rigging, Blender steps) — own — neural cache (blender steps on rig 0d8556521a30)"
+    }
+  ],
+  "skeleton": [
+    {
+      "name": "hips",
+      "parent": null
+    },
+    {
+      "name": "left_up_leg",
+      "parent": "hips"
+    },
+    {
+      "name": "left_leg",
+      "parent": "left_up_leg"
+    },
+    {
+      "name": "left_foot",
+      "parent": "left_leg"
+    },
+    {
+      "name": "left_toe_base",
+      "parent": "left_foot"
+    },
+    {
+      "name": "right_up_leg",
+      "parent": "hips"
+    },
+    {
+      "name": "right_leg",
+      "parent": "right_up_leg"
+    },
+    {
+      "name": "right_foot",
+      "parent": "right_leg"
+    },
+    {
+      "name": "right_toe_base",
+      "parent": "right_foot"
+    },
+    {
+      "name": "spine02",
+      "parent": "hips"
+    },
+    {
+      "name": "spine01",
+      "parent": "spine02"
+    },
+    {
+      "name": "spine",
+      "parent": "spine01"
+    },
+    {
+      "name": "left_shoulder",
+      "parent": "spine"
+    },
+    {
+      "name": "left_arm",
+      "parent": "left_shoulder"
+    },
+    {
+      "name": "left_fore_arm",
+      "parent": "left_arm"
+    },
+    {
+      "name": "left_hand",
+      "parent": "left_fore_arm"
+    },
+    {
+      "name": "neck",
+      "parent": "spine"
+    },
+    {
+      "name": "head",
+      "parent": "neck"
+    },
+    {
+      "name": "right_shoulder",
+      "parent": "spine"
+    },
+    {
+      "name": "right_arm",
+      "parent": "right_shoulder"
+    },
+    {
+      "name": "right_fore_arm",
+      "parent": "right_arm"
+    },
+    {
+      "name": "right_hand",
+      "parent": "right_fore_arm"
+    }
+  ],
+  "clips": [
+    {
+      "name": "idle",
+      "seconds": 4,
+      "loop": true,
+      "speed": 0
+    },
+    {
+      "name": "walk",
+      "seconds": 4.1999998410542805,
+      "loop": true,
+      "speed": 0
+    },
+    {
+      "name": "jog",
+      "seconds": 0.7333333214124044,
+      "loop": true,
+      "speed": 0
+    }
+  ],
+  "hitboxes": [
+    {
+      "bone": "hips",
+      "radius": 0.116295,
+      "height": 0,
+      "coverage": 0.9608
+    },
+    {
+      "bone": "left_up_leg",
+      "radius": 0.191018,
+      "height": 0.370312,
+      "coverage": 0.9814
+    },
+    {
+      "bone": "left_leg",
+      "radius": 0.095419,
+      "height": 0.301441,
+      "coverage": 0.9694
+    },
+    {
+      "bone": "left_foot",
+      "radius": 0.105392,
+      "height": 0.100157,
+      "coverage": 0.9677
+    },
+    {
+      "bone": "left_toe_base",
+      "radius": 0.057897,
+      "height": 0.026296,
+      "coverage": 0.9688
+    },
+    {
+      "bone": "right_up_leg",
+      "radius": 0.201821,
+      "height": 0.391208,
+      "coverage": 0.9583
+    },
+    {
+      "bone": "right_leg",
+      "radius": 0.095393,
+      "height": 0.298594,
+      "coverage": 0.972
+    },
+    {
+      "bone": "right_foot",
+      "radius": 0.101766,
+      "height": 0.103912,
+      "coverage": 0.9681
+    },
+    {
+      "bone": "right_toe_base",
+      "radius": 0.056327,
+      "height": 0.027859,
+      "coverage": 0.9785
+    },
+    {
+      "bone": "spine02",
+      "radius": 0.185251,
+      "height": 0,
+      "coverage": 0.9919
+    },
+    {
+      "bone": "spine01",
+      "radius": 0.174084,
+      "height": 0,
+      "coverage": 0.994
+    },
+    {
+      "bone": "left_shoulder",
+      "radius": 0.179329,
+      "height": 0.063093,
+      "coverage": 0.978
+    },
+    {
+      "bone": "left_arm",
+      "radius": 0.102937,
+      "height": 0.17322,
+      "coverage": 0.954
+    },
+    {
+      "bone": "left_fore_arm",
+      "radius": 0.067318,
+      "height": 0.165785,
+      "coverage": 0.9696
+    },
+    {
+      "bone": "left_hand",
+      "radius": 0.074364,
+      "height": 0.110327,
+      "coverage": 0.9747
+    },
+    {
+      "bone": "head",
+      "radius": 0.118084,
+      "height": 0.135,
+      "coverage": 0.9625
+    },
+    {
+      "bone": "right_shoulder",
+      "radius": 0.167468,
+      "height": 0.069178,
+      "coverage": 0.9632
+    },
+    {
+      "bone": "right_arm",
+      "radius": 0.102513,
+      "height": 0.168039,
+      "coverage": 0.9609
+    },
+    {
+      "bone": "right_fore_arm",
+      "radius": 0.065996,
+      "height": 0.182438,
+      "coverage": 0.9768
+    },
+    {
+      "bone": "right_hand",
+      "radius": 0.072592,
+      "height": 0.10074,
+      "coverage": 0.9509
+    }
+  ],
+  "real": {
+    "length": 0.36,
+    "width": 1.02,
+    "height": 1.78
+  },
+  "measures": [
+    {
+      "label": "stature",
+      "spec": 1.78,
+      "measured": 1.7800000225397525,
+      "source": "design brief (README.md); ANSUR II male mean stature 1.756 m"
+    }
+  ],
+  "sources": [
+    "Proportions: Drillis & Contini 1966 segment shares of stature, as tabulated in Winter, Biomechanics and Motor Control of Human Movement, 4th ed., fig. 4.1",
+    "Breadths and depths: ANSUR II (US Army 2012) male means, https://www.openlab.psu.edu/ansur2/",
+    "Garments and mass: recipes/ranger/README.md"
+  ],
+  "qa": {
+    "pass": true,
+    "findings": []
+  }
+}

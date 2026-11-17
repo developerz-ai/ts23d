@@ -15,7 +15,12 @@ import type { Connect, Joint, Lod, Part, PartOptions, UseOptions } from './part.
 import { checkSeed, createRng, forkSeed } from './rng.ts';
 import { type Bone, boneOf, checkBoneBudget, checkSkeleton, useBone } from './skeleton.ts';
 import { checkTune, type TunedValues, tunedReader } from './tune.ts';
-import { checkAsset, checkCompileOptions, checkPivotName } from './validate-asset.ts';
+import {
+  checkAsset,
+  checkCompileOptions,
+  checkPivotName,
+  checkTexturedParts,
+} from './validate-asset.ts';
 import type { WeatherCoverage } from './weather-coverage.ts';
 import { worldTransforms } from './world.ts';
 
@@ -116,6 +121,7 @@ export function compile(asset: Asset, options: CompileOptions = {}): CompiledAss
       ...(o.shell !== undefined ? { shell: o.shell } : {}),
       ...(o.connect ? { connect: connectOf(asset.name, name, o.connect) } : {}),
       ...(o.sound ? { sound: o.sound } : {}),
+      ...(o.textures ? { textures: o.textures } : {}),
     });
   };
   const use = (child: Asset, o: UseOptions): void => {
@@ -149,6 +155,8 @@ export function compile(asset: Asset, options: CompileOptions = {}): CompiledAss
             }
           : {}),
         ...(p.sound ? { sound: p.sound } : {}),
+        // The set keeps its name: ten instances of one child share one material.
+        ...(p.textures ? { textures: p.textures } : {}),
       });
       const named = parts.get(`${o.prefix}_${p.name}`);
       if (named && (p.emitter || p.socket || p.audio)) {
@@ -199,6 +207,7 @@ export function compile(asset: Asset, options: CompileOptions = {}): CompiledAss
   const built = [...parts.values()];
   checkPaintedParts(asset.name, built, paintSet);
   checkFinishedParts(asset.name, built, finishes);
+  checkTexturedParts(asset.name, built, asset.budget.textureSets);
   const skeleton = bones.size ? checkSkeleton(asset.name, { bones: [...bones.values()] }) : null;
   if (skeleton) checkBoneBudget(asset.name, skeleton.bones.length, asset.budget.bones);
   const clips = checkClips(asset.name, [...(asset.clips ?? []), ...usedClips], {

@@ -1,5 +1,5 @@
 // Creature clips: which clips a body gets, the reserved `run` never among them, helpers keyed at
-// half their joint, weights split onto them on the 1/255 grid.
+// half their joint, weights split onto them on the 1/255 grid, paws planted in the in-place clips.
 
 import { describe, expect, it } from 'bun:test';
 import { RUN_CLIP } from '../core/index.ts';
@@ -10,6 +10,7 @@ import { rigBones } from './creature-limits.ts';
 import type { CreatureSpec } from './creature-spec.ts';
 import { GAITS } from './gait.ts';
 import { gaitClip } from './gait-bake.ts';
+import { forward, tailOf } from './pose.ts';
 
 const colours = {
   coat: [0.5, 0.45, 0.4],
@@ -144,5 +145,75 @@ describe('scapula', () => {
         rigBones(creaturePlan(s).bones, null, null).some((b) => b.name.startsWith('scapula')),
       ).toBe(false);
     }
+  });
+});
+
+describe('in-place clips keep the paws planted', () => {
+  const quad = (
+    family: NonNullable<CreatureSpec['family']>,
+    stance: NonNullable<CreatureSpec['stance']>,
+  ): CreatureSpec => ({
+    skeleton: 'quadruped',
+    family,
+    stance,
+    mass: 180,
+    length: 1.9,
+    height: 1.1,
+    colours,
+  });
+  const specs: readonly (readonly [string, CreatureSpec])[] = [
+    ['wolf (digitigrade)', wolf],
+    ['bear (plantigrade)', quad('ursid', 'plantigrade')],
+    ['deer (unguligrade)', quad('cervid', 'unguligrade')],
+    ['winged quadruped', { ...wolf, skeleton: 'winged' }],
+    ['biped', { skeleton: 'biped', mass: 60, length: 0.6, height: 1.6, colours }],
+    ['bird', { skeleton: 'bird', mass: 5, length: 0.6, height: 0.5, colours }],
+  ];
+  /** Worst distance any toe tip leaves its rest point over every key of the still clips, metres. */
+  const worstDrift = (spec: CreatureSpec): number => {
+    const { bones, clips } = creatureArmature(creaturePlan(spec).bones, spec);
+    const toes = bones.filter((b) => /^(fore|hind)_[lr]_3$/.test(b.name));
+    expect(toes.length).toBeGreaterThanOrEqual(2);
+    let worst = 0;
+    for (const c of clips.filter((x) => ['idle', 'look', 'bite'].includes(x.name))) {
+      const keys = c.tracks[0]?.times.length ?? 0;
+      for (let k = 0; k < keys; k++) {
+        const rotation = new Map(
+          c.tracks.flatMap((t) => {
+            if (!('bone' in t) || t.path !== 'rotation') return [];
+            const [x = 0, y = 0, z = 0, w = 1] = t.values.subarray(k * 4, k * 4 + 4);
+            return [[t.bone, [x, y, z, w]] as const];
+          }),
+        );
+        const world = forward(bones, { rotation });
+        for (const toe of toes) {
+          const w = world.get(toe.name);
+          if (!w) continue;
+          // Paw and metapodial keep their rest orientation (to float32 keys): the sole stays flat.
+          const meta = world.get(toe.parent ?? '');
+          expect(Math.abs(w.rot[3])).toBeGreaterThan(1 - 2e-7);
+          expect(Math.abs(meta?.rot[3] ?? 0)).toBeGreaterThan(1 - 2e-7);
+          const at = tailOf(toe, w);
+          worst = Math.max(worst, Math.hypot(...at.map((v, i) => v - (toe.tail[i] ?? 0))));
+        }
+      }
+    }
+    return worst;
+  };
+
+  for (const [name, spec] of specs)
+    it(`${name}: no toe tip sinks or slides 1 mm in idle, look or bite`, () => {
+      expect(worstDrift(spec)).toBeLessThan(1e-4);
+    });
+
+  it('the breath still moves the withers over the planted fore paws', () => {
+    const { bones, clips } = creatureArmature(creaturePlan(wolf).bones, wolf);
+    const idle = clips.find((c) => c.name === 'idle');
+    const turned = (bone: string): boolean =>
+      idle?.tracks.some((t) => 'bone' in t && t.bone === bone && t.path === 'rotation') ?? false;
+    expect(turned('spine_1')).toBe(true);
+    expect(turned('fore_l_1')).toBe(true);
+    expect(turned('hind_l_1')).toBe(false);
+    expect(bones.some((b) => b.name === 'fore_l_1')).toBe(true);
   });
 });

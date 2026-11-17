@@ -26,6 +26,27 @@ research refs ─► write recipe ─► t3d build ──QA FAIL──► fix fi
 
 Fix one thing per iteration. Proportions before details: a wrong mass makes every detail on it wrong.
 
+## The organic loop (creature, humanoid; As of 2026-11)
+
+**Hard surface is the loop above. Organic assets add a model stage and a Blender stage between "masses" and "build", and the agent looks at Blender's renders as well as ts23d's.** Code-sculpted animals and people did not read right (owner review 2026-11-16), so the body is a model's mesh, finished by steps the recipe writes ([plan 101](../plans/2026/11/16/101-organic-model-first/overview.md)).
+
+```
+research ─► concept image ─► READ it ─► image-to-3D ─► Blender steps ─► t3d blender review ─► READ
+                ▲                                          ▲                                   │
+                └──── re-roll seed (new keys) ─────────────┴──── edit steps (free) ◄──────────┘
+                                                   ▼
+                  t3d build (QA incl. model, skin, deform, gait) ─► shot / hero ─► READ ─► shots
+```
+
+| Step | Command | Done when |
+|---|---|---|
+| 1. Concept | bind `image`; `t3d neural run recipes/x/x.ts` | exact side profile (quadruped) or A-pose front (biped), flat light, passes the input-image rules; you READ the PNG |
+| 2. Model | bind `mesh` (and `rig`); same command, up to 5 rounds; paid adapters print credits, `--yes-spend` above 50 | `neural/<key>/record.json` committed, committed bytes <= 12 MB, raw mesh local |
+| 3. Steps | edit the recipe's `blender` steps; `t3d blender review recipes/x/x.ts --out review` (needs Blender, never cached) | clay, wire, weights, poses show no shards, fused limbs or torn weights |
+| 4. Build | `t3d build recipes/x/x.ts` | QA PASS incl. `model` (`T3D_MODEL_*`), `skin`, `deform`, `gait` |
+| 5. Look | `t3d shot`, `t3d hero`, READ; the model tier renders its own textures | flaws named in the recipe README, not hidden |
+Re-running only the Blender stage is free and fast (about a minute); a new concept or seed changes every key after it and, with a hosted mesh or rig, costs credits. Tests and CI never call a model or Blender. Skills: [creature-artist](../../.claude/skills/creature-artist/SKILL.md), [character-artist](../../.claude/skills/character-artist/SKILL.md).
+
 ## Fidelity from real-world sizes
 
 **The spec goes in first; the model is rebuilt until the gate agrees with it.** Real-world sizes are the cheapest fidelity there is: a 4-4-0 with the right driver diameter, wheelbase and boiler height reads as *that* locomotive before any texture exists.

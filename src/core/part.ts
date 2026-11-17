@@ -4,6 +4,7 @@
 import type { Mesh } from './mesh.ts';
 import type { Motion } from './motion.ts';
 import type { PartPhysics } from './physics.ts';
+import type { TextureSet } from './texture-set.ts';
 import type { Vec3 } from './vec.ts';
 
 /** 0 = hero detail, 1 = mid, 2 = far. A recipe reads it and drops detail; it never decimates. */
@@ -113,8 +114,8 @@ export interface PartSound {
 }
 
 /**
- * How a part's surface renders. Everything stays on ONE shared texture set; the GLB carries at
- * most four materials (one per surface in use), so batching still holds:
+ * How a part's surface renders. Everything stays on ONE shared texture set (parts with their own
+ * `textures` aside, ADR 016); the GLB carries one material per surface in use, so batching holds:
  *   opaque — the default trim-sheet material
  *   cutout — alpha-tested, double-sided: leaves, fences, grilles, ash
  *   glass — clear: transmission + IOR 1.5 + thin volume (windows, bottles, lamp lenses)
@@ -174,6 +175,12 @@ export interface PartOptions extends PartPhysics {
   readonly connect?: Connect;
   /** Sound played with this part's `motion` (KHR_audio_emitter on its node). */
   readonly sound?: PartSound;
+  /**
+   * The part's own texture set on every LOD (ADR 016), for model-built organic parts: its
+   * `mesh.uvs` address the set (0..1, V down), vertex colour multiplies the albedo (white =
+   * unchanged). Opaque or cutout only, no `paint` / `finish`; needs `budget.textureSets`.
+   */
+  readonly textures?: TextureSet;
 }
 
 /**
@@ -235,4 +242,6 @@ export interface Part extends PartPhysics {
   readonly paint?: string;
   readonly finish?: string;
   readonly connect?: Connect;
+  /** Own texture set (ADR 016); absent = the shared trim sheet. */
+  readonly textures?: TextureSet;
 }

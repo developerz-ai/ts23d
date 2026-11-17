@@ -86,7 +86,7 @@ pivot `ctx.group` at its hinge line, never at its centre.
 ### Characters and creatures
 | Playbook | Covers |
 |---|---|
-| [Characters and creatures](characters/characters-creatures.md) | humanoid busts and bodies, animals, fantasy creatures (M4) |
+| [Characters and creatures](characters/characters-creatures.md) | humanoid busts and bodies, animals, fantasy creatures; model tier for realistic organics |
 
 ## Rules that hold for every class
 

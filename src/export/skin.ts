@@ -119,10 +119,18 @@ export function writeSkin(
 
 /**
  * Unskinned meshes about to merge with skinned ones (a recipe's saddle on a creature body) bind
- * rigidly to the bone nearest their centre, so the merged body stays one valid skin.
+ * rigidly to the bone nearest their centre, so the merged body stays one valid skin. Material
+ * layers split a pivot into several meshes: `force` binds a layer with no skinned mesh of its own
+ * (a trim-sheet saddle beside a textured skinned body), so it still rides its bone.
  */
-export function bindLoose(meshes: readonly Mesh[], sk: Armature | undefined): readonly Mesh[] {
-  if (!sk || !meshes.some((m) => m.joints) || meshes.every((m) => m.joints)) return meshes;
+export function bindLoose(
+  meshes: readonly Mesh[],
+  sk: Armature | undefined,
+  /** Bind even when none of `meshes` is skinned: another material layer of the pivot is. */
+  force = false,
+): readonly Mesh[] {
+  if (!sk || meshes.every((m) => m.joints) || !(force || meshes.some((m) => m.joints)))
+    return meshes;
   return meshes.map((m) => {
     if (m.joints) return m;
     const n = m.positions.length / 3;

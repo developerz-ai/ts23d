@@ -47,6 +47,15 @@ describe('t3d doctor', () => {
       expect(r.checks.find((c) => c.id === id)?.status).toBe('missing');
     for (const c of r.checks.filter((c) => c.status !== 'ok')) expect(c.fix).toBeTruthy();
     expect(r.checks.find((c) => c.id === 'uv')?.fix).toContain('t3d setup tools');
+    expect(r.checks.find((c) => c.id === 'blender-steps')?.status).toBe('info');
+    const old = await doctor(fakeHost({ 'blender --version': 'Blender 3.6.0\n' }));
+    const steps = old.checks.find((c) => c.id === 'blender-steps');
+    expect([steps?.status, steps?.fix?.includes("allowVersions: ['3.6']")]).toEqual(['warn', true]);
+    expect(
+      (await doctor(fakeHost({ 'blender --version': 'Blender 5.2.4 LTS\n' }))).checks.find(
+        (c) => c.id === 'blender-steps',
+      )?.detail,
+    ).toContain('bake device: CPU');
     expect(await doctorMain(['--json'], true, host)).toBe(0);
   });
 
@@ -103,6 +112,11 @@ describe('t3d doctor', () => {
     for (const id of ['uv', 'blender', 'godot', 'basisu', 'gltfpack'])
       expect(r.checks.find((c) => c.id === id)?.status).toBe('ok');
     expect(r.profiles['gpu-full'].fits).toBe(true);
+    const steps = r.checks.find((c) => c.id === 'blender-steps');
+    expect([steps?.status, steps?.detail]).toEqual([
+      'ok',
+      '`blender` step task on Blender 5.3.0 · bake device: GPU (NVIDIA GeForce RTX 3090)',
+    ]);
     expect(r.checks.find((c) => c.id === 'kubeez')).toBeUndefined();
     expect(r.checks.find((c) => c.id === 'nvidia')?.detail).toContain('CUDA ≤ 12.6');
   });

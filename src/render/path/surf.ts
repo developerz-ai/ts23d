@@ -5,6 +5,7 @@
 
 import type { Look } from '../looks.ts';
 import { OPAQUE } from '../looks.ts';
+import { SET_OUT, setSurface } from '../set-shade.ts';
 import { sample } from '../texture.ts';
 import type { Hit } from './bvh.ts';
 import { CLS } from './classes.ts';
@@ -84,6 +85,7 @@ export function surfAt(w: World, h: Hit, o: ArrayLike<number>, d: ArrayLike<numb
     nl = 1;
   }
   if ((s.n[0] ?? 0) * gx + (s.n[1] ?? 0) * gy + (s.n[2] ?? 0) * gz < 0) nl = -nl;
+  const side = nl < 0 ? -1 : 1;
   for (let k = 0; k < 3; k++) s.n[k] = (s.n[k] ?? 0) / nl;
   const ua = (ia / 3) * 2;
   const ub = (ib / 3) * 2;
@@ -95,7 +97,21 @@ export function surfAt(w: World, h: Hit, o: ArrayLike<number>, d: ArrayLike<numb
   const T = sc.tangents;
   const to = t * 6;
   for (let k = 0; k < 3; k++) s.t[k] = T[to + k] ?? 0;
-  if (s.t[0] !== 0 || s.t[1] !== 0 || s.t[2] !== 0) {
+  // A textured part (ADR 016) reads its own set: albedo, ORM and normal map in one call.
+  const set = sc.sets[(sc.texSet[t] ?? 0) - 1];
+  const O = SET_OUT;
+  if (set) {
+    const n0 = s.n[0] ?? 0;
+    const n1 = s.n[1] ?? 0;
+    const n2 = s.n[2] ?? 0;
+    setSurface(set, sc.vtan, ia / 3, ib / 3, ic / 3, b0, b1, b2, u, v, mip, n0, n1, n2, side, O);
+    s.n[0] = O[0] ?? n0;
+    s.n[1] = O[1] ?? n1;
+    s.n[2] = O[2] ?? n2;
+    texel[0] = O[3] ?? 1;
+    texel[1] = O[4] ?? 1;
+    texel[2] = O[5] ?? 1;
+  } else if (s.t[0] !== 0 || s.t[1] !== 0 || s.t[2] !== 0) {
     sample(w.tex.normal, mip, u, v, texel);
     const mx = texel[0] ?? 0;
     const my = texel[1] ?? 0;
@@ -119,11 +135,15 @@ export function surfAt(w: World, h: Hit, o: ArrayLike<number>, d: ArrayLike<numb
     const l = Math.hypot(s.n[0] ?? 0, s.n[1] ?? 0, s.n[2] ?? 0) || 1;
     for (let k = 0; k < 3; k++) s.n[k] = (s.n[k] ?? 0) / l;
   }
-  sample(w.tex.albedo, mip, u, v, texel);
+  if (!set) sample(w.tex.albedo, mip, u, v, texel);
   for (let k = 0; k < 3; k++)
     s.albedo[k] =
       (texel[k] ?? 1) * ((C[ia + k] ?? 1) * b0 + (C[ib + k] ?? 1) * b1 + (C[ic + k] ?? 1) * b2);
-  sample(w.tex.orm, mip, u, v, texel);
+  if (set) {
+    texel[0] = O[7] ?? 1;
+    texel[1] = O[8] ?? 0.8;
+    texel[2] = O[9] ?? 0;
+  } else sample(w.tex.orm, mip, u, v, texel);
   const look = sc.looks[sc.look[t] ?? 0] ?? OPAQUE;
   s.look = look;
   s.occ = texel[0] ?? 1;

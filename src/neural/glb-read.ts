@@ -215,3 +215,24 @@ export function readImage(doc: GlbDoc, i: number): { bytes: Uint8Array; mime: st
   const { bytes } = viewBytes(doc, uint(img, 'bufferView'));
   return { bytes, mime: String(img['mimeType'] ?? '') };
 }
+
+/**
+ * The image index behind a material's texture reference (`{ index, texCoord? }`), or undefined
+ * when the slot is empty. Only TEXCOORD_0 is read, so another UV set is unsupported.
+ */
+export function textureSource(doc: GlbDoc, ref: unknown, slot: string): number | undefined {
+  if (typeof ref !== 'object' || ref === null) return undefined;
+  const r = ref as GltfJson;
+  if (num(r, 'texCoord', 0) !== 0)
+    unsupported(
+      `${slot} reads TEXCOORD_${r['texCoord']}`,
+      'bake every map onto the first UV set (the Blender `bake` step does)',
+    );
+  const src = at(doc, 'textures', uint(r, 'index'))['source'];
+  if (typeof src !== 'number')
+    unsupported(
+      `${slot} has no PNG source (an extension-only texture such as WebP or KTX2)`,
+      'export the textures as PNG (the Blender `export` step does), or re-encode them',
+    );
+  return uint({ src }, 'src');
+}

@@ -1,8 +1,10 @@
 // The home page's hero: featured assets compiled live (heavy ones at LOD1), slowly orbiting in
-// the studio light, one after another. The committed beauty render shows as a poster until the first compile lands.
+// the studio light, one after another. The committed beauty render shows as a poster until the
+// first compile lands. A model-first asset compiles with its committed model outputs (`neuralOf`),
+// so it shows what its card shows; main.ts leaves the heavy ones out of this list.
 
 import { type Object3D, Vector3 } from 'three';
-import { loadBuilt, recipe } from './compile.ts';
+import { loadBuilt, type NeuralRef, recipe } from './compile.ts';
 import type { Item } from './items.ts';
 import { startLod } from './lod-policy.ts';
 import { lookFor } from './look.ts';
@@ -29,6 +31,7 @@ export class Showcase {
     private readonly root: HTMLElement,
     private readonly label: HTMLAnchorElement | null,
     private readonly featured: readonly Item[],
+    private readonly neuralOf: (item: Item) => NeuralRef | undefined = () => undefined,
   ) {
     const canvas = this.renderer.domElement;
     canvas.className = 'showcase-canvas';
@@ -68,7 +71,9 @@ export class Showcase {
       if (!item) return;
       // Heavy assets (sculpts, near-million-triangle cars) orbit at LOD1.
       const lod = startLod({ ...item, triangles: item.media?.triangles ?? [] });
-      const { scene } = await loadBuilt(recipe(item.name, lod, item.recipe?.file));
+      const { scene } = await loadBuilt(
+        recipe(item.name, lod, item.recipe?.file, this.neuralOf(item)),
+      );
       this.root.classList.add('swapping');
       await new Promise((r) => setTimeout(r, this.model ? 450 : 0));
       if (this.model) disposeTree(this.model);

@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
-"""Blender tool tasks (cloth, rig, fracture, groom) as server plug-ins: the PRIMARY Blender path.
+"""Blender tool tasks (cloth, rig, fracture, groom, blender steps) as server plug-ins: the PRIMARY Blender path.
 
 Runs the same task scripts as ts23d's blenderAdapter (examples/blender/tasks/*.py), one of three ways,
 first match wins (profile table `[plugins.blender-cloth]` etc.):
@@ -37,6 +37,7 @@ class _BlenderTask(Plugin):
     licence = LICENCE
     isolate = True
     vram_gb = 0.0
+    step_files: tuple[str, ...] = ()
 
     def _route(self) -> tuple[str, Path | None]:
         if self.option_path("blender"):
@@ -79,6 +80,7 @@ class _BlenderTask(Plugin):
             BLENDER_DIR / "ts23d_job.py",
             BLENDER_DIR / "tasks" / "common.py",
             BLENDER_DIR / "tasks" / f"{self.task}.py",
+            *(BLENDER_DIR / "tasks" / "steps" / f"{name}.py" for name in self.step_files),
         ]
 
     def weights_sha256(self) -> str | None:
@@ -94,7 +96,7 @@ class _BlenderTask(Plugin):
             mime = next(
                 (
                     r.get("mime", "")
-                    for f in ("garment", "body", "mesh", "guides")
+                    for f in ("garment", "body", "mesh", "guides", "program", "skeleton")
                     for r in job.input_refs(f)
                     if r.get("sha256") == sha
                 ),
@@ -117,7 +119,7 @@ class _BlenderTask(Plugin):
                     "--factory-startup",
                     "-noaudio",
                     "-t",
-                    "1",
+                    str(int((job.request.get("params") or {}).get("threads", 1))),
                     "--python-exit-code",
                     "3",
                     "--python",
@@ -186,3 +188,29 @@ class BlenderGroom(_BlenderTask):
 
     name = "blender-groom"
     task = "groom"
+
+
+class BlenderSteps(_BlenderTask):
+    """An ordered step program (t3d-blender-steps/1) on a mesh → GLB with lod0..2 + a JSON report.
+
+    The bake step uses the GPU when Cycles finds one: run it while no model is resident.
+    step_files mirrors BLENDER_STEP_FILES in src/neural/blender-adapter.ts (same order).
+    """
+
+    name = "blender-steps"
+    task = "blender"
+    step_files = (
+        "__init__",
+        "state",
+        "io",
+        "clean",
+        "remesh",
+        "retopo",
+        "build",
+        "deform",
+        "uv",
+        "bake",
+        "bake_source",
+        "bind",
+        "lods",
+    )

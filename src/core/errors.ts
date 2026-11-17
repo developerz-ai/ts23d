@@ -93,7 +93,10 @@ export type ErrorCode =
   | 'T3D_BAKE_FAILED'
   | 'T3D_STYLE_OUTLIER'
   | 'T3D_SCENE_BUDGET'
-  | 'T3D_FUR_SILHOUETTE';
+  | 'T3D_FUR_SILHOUETTE'
+  | 'T3D_TEXTURE_INVALID'
+  | 'T3D_MODEL_FIT'
+  | 'T3D_MODEL_SKELETON';
 
 export interface ErrorDetails {
   readonly cause: string;

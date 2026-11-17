@@ -1,8 +1,11 @@
 // CPU rasteriser: orthographic, z-buffered, Lambert-shaded triangles plus depth-tested lines.
 // Slow by GPU standards and fast enough for 6 × 400² views of a game asset in well under a second.
+// Parts with their own texture set (ADR 016) are drawn per pixel by raster-textured.ts.
 
-import type { CompiledAsset, Vec3 } from '../core/index.ts';
+import type { CompiledAsset, TextureSet, Vec3 } from '../core/index.ts';
 import { cross, dot, normalize, rotateZ, sub, toWorld, worldTransforms } from '../core/index.ts';
+import { drawTextured } from './raster-textured.ts';
+import { setTextures } from './texture-sets.ts';
 
 export interface View {
   readonly label: string;
@@ -42,6 +45,9 @@ export function worldParts(asset: CompiledAsset): {
   normals: Float32Array;
   colors: Float32Array;
   indices: Uint32Array;
+  uvs: Float32Array;
+  /** The part's own texture set, its name (for errors) and whether it is alpha-tested. */
+  textured?: { set: TextureSet; part: string; cutout: boolean };
 }[] {
   const xf = worldTransforms(asset.parts);
   const out = [];
@@ -67,7 +73,16 @@ export function worldParts(asset: CompiledAsset): {
         i,
       );
     }
-    out.push({ positions, normals, colors: p.mesh.colors, indices: p.mesh.indices });
+    out.push({
+      positions,
+      normals,
+      colors: p.mesh.colors,
+      indices: p.mesh.indices,
+      uvs: p.mesh.uvs,
+      ...(p.textures
+        ? { textured: { set: p.textures, part: p.name, cutout: p.surface === 'cutout' } }
+        : {}),
+    });
   }
   return out;
 }
@@ -101,6 +116,11 @@ const toSrgb = (v: number): number =>
 
 export function drawAsset(t: Target, cam: Camera, asset: CompiledAsset): void {
   for (const m of worldParts(asset)) {
+    if (m.textured) {
+      const { set, part, cutout } = m.textured;
+      drawTextured(t, cam, m, setTextures(set, part), cutout, LIGHT);
+      continue;
+    }
     for (let i = 0; i < m.indices.length; i += 3) {
       const ids = [m.indices[i] ?? 0, m.indices[i + 1] ?? 0, m.indices[i + 2] ?? 0];
       const pts = ids.map((v) =>

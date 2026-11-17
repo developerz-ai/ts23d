@@ -4,7 +4,9 @@
 // missed, runs each through the adapter configured for its task, validates, and writes
 // recipes/<name>/neural/<key>/. Requests
 // with no adapter stay missing (notice); with --require-neural any left missing is an error.
-// The only command that talks to a model; builds never do (ADR 014).
+// A request fed by a local output that is not on this machine is never sent (neural-local.ts).
+// Paid adapters (Meshy) are estimated first: above 50 credits a run needs --yes-spend
+// (neural-spend.ts). The only command that talks to a model; builds never do (ADR 014).
 
 import {
   compile,
@@ -25,6 +27,8 @@ import {
 import { checkInputImage } from '../render/index.ts';
 import { type LoadedConfig, loadConfig } from './config.ts';
 import { loadAssets } from './load.ts';
+import { absentInputNotice, absentInputs } from './neural-local.ts';
+import { spendGuard } from './neural-spend.ts';
 import { loadNeuralEntries, neuralDirOf, saveNeuralEntry } from './neural-store.ts';
 import { envelope, printError } from './report.ts';
 
@@ -56,6 +60,8 @@ export interface NeuralFilled {
   readonly model: string;
   readonly dir: string;
   readonly cached: boolean;
+  /** A local output (`keep: 'local'`) whose file is not on this machine. */
+  readonly absent?: true;
   readonly warning?: string;
 }
 
@@ -66,6 +72,8 @@ export interface NeuralRunResult {
   readonly missing: readonly { readonly message: string; readonly fix: string }[];
   /** Input-image findings sent anyway under --allow-bad-input. */
   readonly notices: readonly string[];
+  /** Estimated credits of the jobs sent to paid adapters (0 on a full cache hit). */
+  readonly estimatedCredits: number;
 }
 
 const LODS: readonly Lod[] = [0, 1, 2];
@@ -77,6 +85,7 @@ function filledOf(entry: NeuralEntry, dir: string, cached: boolean): NeuralFille
     model: entry.record.model.id,
     dir,
     cached,
+    ...(entry.outputs.some((x) => x.absent) ? { absent: true as const } : {}),
     ...(publishable(entry.record)
       ? {}
       : {
@@ -124,19 +133,27 @@ export function checkMeshInputs(recipe: string, job: NeuralJob, allowBadInput = 
   return findings.length ? fail(findings.map((f) => `${f.rule}: ${f.message}`)) : [];
 }
 
-/** Rounds of compile → fill: an output can name the next request's input (image → mesh). */
-const ROUNDS = 4;
+/** Rounds of compile → fill: an output can name the next request's input. The longest chain is
+ *  a model body's: image → mesh → Blender proxy → rig → Blender final (kinds `modelChain`). */
+export const ROUNDS = 5;
 
 export async function neuralRun(
   file: string,
   config: LoadedConfig,
   requireNeural: boolean,
-  o: { readonly allowBadInput?: boolean } = {},
+  o: {
+    readonly allowBadInput?: boolean;
+    /** Allow a run estimated above SPEND_LIMIT credits. */
+    readonly yesSpend?: boolean;
+    /** Where estimate lines go before anything is sent. */
+    readonly log?: (line: string) => void;
+  } = {},
 ): Promise<NeuralRunResult> {
   const { recipe, dir } = neuralDirOf(file);
   const assets = await loadAssets(file);
   const filledBy = new Map<string, NeuralFilled>();
   const notices: string[] = [];
+  const spend = spendGuard({ yesSpend: o.yesSpend === true, ...(o.log ? { log: o.log } : {}) });
   let missing: { message: string; fix: string }[] = [];
   for (let round = 0; round < ROUNDS; round++) {
     const cache = neuralCache({ recipe, entries: await loadNeuralEntries(dir) });
@@ -160,14 +177,26 @@ export async function neuralRun(
     );
     for (const a of assets) for (const lod of LODS) compile(a, { lod });
     missing = [];
-    cache.misses().forEach((job, i) => {
-      if (!config.neural.has(job.task)) {
-        const n = cache.notices()[i];
-        if (n) missing.push({ message: n.message, fix: n.fix });
-      }
+    // A miss fed by a local output this machine does not hold has no bytes to send.
+    const absent = cache.absentLocal();
+    const jobs = cache.misses().filter((job, i) => {
+      const shas = absentInputs(job, absent);
+      const n = cache.notices()[i];
+      if (shas.length) missing.push(absentInputNotice({ recipe, file, dir, job, shas, absent }));
+      else if (!config.neural.has(job.task) && n) missing.push({ message: n.message, fix: n.fix });
+      return shas.length === 0;
     });
+    await spend.check(
+      recipe,
+      jobs.flatMap((job) => {
+        const b = config.neural.get(job.task);
+        return b
+          ? [{ job: b.model && !job.model ? { ...job, model: b.model } : job, adapter: b.adapter }]
+          : [];
+      }),
+    );
     let fresh = 0;
-    for (const job of cache.misses()) {
+    for (const job of jobs) {
       const b = config.neural.get(job.task);
       if (!b) continue;
       const overrides = checkMeshInputs(recipe, job, o.allowBadInput);
@@ -189,10 +218,10 @@ export async function neuralRun(
   const filled = [...filledBy.values()];
   if (requireNeural && missing.length > 0)
     throw new Ts23dError('T3D_NEURAL_MISSING', {
-      cause: `${recipe}: ${missing.length} neural request(s) have no output and no adapter`,
+      cause: `${recipe}: ${missing.length} neural request(s) have no output and could not be sent`,
       fix: missing[0]?.fix ?? 'configure the adapters in t3d.config.ts',
     });
-  return { file, recipe, filled, missing, notices };
+  return { file, recipe, filled, missing, notices, estimatedCredits: spend.total() };
 }
 
 /** `t3d neural <ls|run> [files…]`: prints, returns the exit code. */
@@ -204,6 +233,8 @@ export async function neuralMain(
     readonly config?: LoadedConfig;
     /** Send `mesh` images that fail the input-image rules anyway (recorded in record.json). */
     readonly allowBadInput?: boolean;
+    /** --yes-spend: allow a run estimated above 50 credits on paid adapters. */
+    readonly yesSpend?: boolean;
   },
 ): Promise<number> {
   const [sub, ...files] = positional;
@@ -224,17 +255,23 @@ export async function neuralMain(
     if (sub !== 'run' || files.length === 0)
       throw new Ts23dError('T3D_CLI_USAGE', {
         cause: `t3d neural ${sub ?? ''} is not a neural command`,
-        fix: 'use `t3d neural ls` or `t3d neural run <recipe.ts…> [--require-neural] [--allow-bad-input]`',
+        fix: 'use `t3d neural ls` or `t3d neural run <recipe.ts…> [--require-neural] [--allow-bad-input] [--yes-spend]`',
       });
     const runs: NeuralRunResult[] = [];
     for (const f of files)
-      runs.push(await neuralRun(f, config, require, { allowBadInput: o.allowBadInput === true }));
+      runs.push(
+        await neuralRun(f, config, require, {
+          allowBadInput: o.allowBadInput === true,
+          yesSpend: o.yesSpend === true,
+          ...(o.json ? {} : { log: (line: string) => console.log(line) }),
+        }),
+      );
     if (o.json) envelope(true, { runs });
     else
       for (const r of runs) {
         for (const f of r.filled)
           console.log(
-            `${f.cached ? '=' : '+'} ${r.recipe} ${f.task} ${f.model} → ${f.dir}${f.warning ? `\n  ! ${f.warning}` : ''}`,
+            `${f.cached ? '=' : '+'} ${r.recipe} ${f.task} ${f.model} → ${f.dir}${f.absent ? ' (local output, not on this machine)' : ''}${f.warning ? `\n  ! ${f.warning}` : ''}`,
           );
         for (const n of r.notices) console.log(`notice: ${n}`);
         for (const m of r.missing) console.log(`T3D_NEURAL_MISSING: ${m.message}\n  fix: ${m.fix}`);

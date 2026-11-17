@@ -22,6 +22,12 @@ export interface NeuralCtxAsk {
   readonly model?: string;
   /** Bytes of every input the request names, keyed by their sha256. */
   readonly inputs?: ReadonlyMap<string, Uint8Array>;
+  /**
+   * Storage policy, not part of the cache key: `'local'` keeps the outputs on the machine that
+   * made them (git-ignored, outside the cap; record.json still commits their sha256). Elsewhere
+   * the hit's outputs are `absent`: for raw meshes too big to commit that only feed a next request.
+   */
+  readonly keep?: 'local';
 }
 
 /** Where cached outputs come from (/neural's recipe cache implements it). */
@@ -52,7 +58,16 @@ export function clearNeuralSources(): void {
   sources.clear();
 }
 
-const INPUT_FIELDS = ['image', 'video', 'mesh', 'garment', 'body', 'skeleton', 'guides'] as const;
+const INPUT_FIELDS = [
+  'image',
+  'video',
+  'mesh',
+  'garment',
+  'body',
+  'skeleton',
+  'guides',
+  'program',
+] as const;
 const LIST_FIELDS = ['control', 'images'] as const;
 
 /** Every NeuralInput a request names, checked as a sha256 (T3D_RECIPE_INVALID otherwise). */

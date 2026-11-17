@@ -1,5 +1,14 @@
 import { describe, expect, test } from 'bun:test';
-import { baseOf, gridItems, pairOf } from './tier-toggle.ts';
+import {
+  baseOf,
+  gridItems,
+  pairOf,
+  parseHash,
+  payloadOf,
+  SHOWCASE_MODEL_BYTES,
+  selfTiered,
+  showcaseItems,
+} from './tier-toggle.ts';
 
 const item = (name: string, folder = name) => ({ name, folder });
 const ITEMS = [
@@ -47,5 +56,37 @@ describe('gridItems: hybrids are hidden from the grid', () => {
       'fox',
       'ghost_hybrid',
     ]);
+  });
+});
+
+describe('selfTiered: one recipe that holds both tiers', () => {
+  const OWN = { ...NEURAL, ranger: [{ key: 'b' }], fox: [] };
+
+  test('no committed records in its own folder → one tier only', () => {
+    expect(selfTiered(item('fox'), OWN)).toBe(false);
+    expect(selfTiered(item('wolf'), OWN)).toBe(false);
+  });
+
+  test('a hybrid is the model tier of its pair, never a recipe with both', () => {
+    expect(selfTiered(item('wolf_hybrid'), OWN)).toBe(false);
+  });
+
+  test('records in the recipe’s own folder → both tiers; `@cpu` asks for the fallback', () => {
+    expect(selfTiered(item('ranger'), OWN)).toBe(true);
+    expect(parseHash('ranger')).toEqual(['ranger', null]);
+    expect(parseHash('ranger@cpu')).toEqual(['ranger', 'cpu']);
+  });
+
+  test('the payload is the sum of the published bytes', () => {
+    expect(payloadOf([])).toBe(0);
+    expect(payloadOf([{ bytes: 936_142 }, { bytes: 10_159_868 }])).toBe(11_096_010);
+  });
+
+  test('the home showcase never takes a recipe whose model outputs are a heavy download', () => {
+    const heavy = { ranger: [{ bytes: 936_142 }, { bytes: 10_159_868 }] };
+    const list = [item('wolf'), item('ranger'), item('human_head')];
+    expect(showcaseItems(list, heavy).map((i) => i.name)).toEqual(['wolf', 'human_head']);
+    const light = { human_head: [{ bytes: 224_319 }], ranger: [{ bytes: SHOWCASE_MODEL_BYTES }] };
+    expect(showcaseItems(list, light).map((i) => i.name)).toEqual(['wolf', 'ranger', 'human_head']);
   });
 });

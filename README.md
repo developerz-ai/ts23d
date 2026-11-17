@@ -74,7 +74,7 @@ Each asset is a TypeScript module. `t3d build` compiles it, deterministically, t
 - **An optimiser on by default.** Weld, degenerate removal, vertex-cache and vertex-fetch order (tiger_1 LOD0: 15.4 → 6.3 MB, ACMR 2.88 → 1.16), weighted normals, baked per-vertex AO.
 - **Lights, glow and provenance in the GLB.** `KHR_lights_punctual` from light sockets, emissive glow materials, licence / creators / sources as `KHR_xmp_json_ld`. Zero glTF-Validator warnings.
 - **Physics and sound.** Per-part colliders (box, sphere, capsule, cylinder, capped convex hull), mass, centre of mass and inertia from volume × density, friction and restitution per material, exported as `KHR_physics_rigid_bodies` (`toGlb(asset, { physics: true })`); a `mass` check against `real.mass`. `@developerz.ai/ts23d/audio` synthesises deterministic impact, engine, mechanism and UI WAVs from material, size and motion, placed with `KHR_audio_emitter` ([`sound_demo`](recipes/sound_demo/)).
-- **Import and faces.** `importGlb` brings in scans and CC0 base meshes (`simplify` and `bakeNormals` for those only; code-built geometry is never decimated); `warpTPS` warps a CC0 base head onto landmarks so faces come from code ([`import_demo`](recipes/import_demo/)).
+- **Import and faces.** `importGlb` brings in scans and CC0 base meshes (`simplify` and `bakeNormals` for those only; code-built geometry is never decimated); `importModel` keeps a model's UVs, PNG textures, skin and clips whole as a textured part on every LOD (ADR 016); `warpTPS` warps a CC0 base head onto landmarks so faces come from code ([`import_demo`](recipes/import_demo/)).
 - **Tuning.** `t3d tune` fits a recipe's declared `tune.params` to objectives (silhouette IoU against an SVG or PNG mask, spec measures, art metrics, triangle budget, custom) and writes `tune.json` the recipe reads back ([`tune_demo`](recipes/tune_demo/)).
 - **AI finish (optional).** `t3d finish` projects model-painted views onto LOD0 as one extra texture layer, masked per part; geometry, names and motion stay the recipe's; QA flags palette drift and mask leaks. Mock or local HTTP endpoint, cached by hash ([`finish_demo`](recipes/finish_demo/)).
 - **Real data.** `@developerz.ai/ts23d/data`: `bun run data wikidata <QID>` → `realFrom` dimensions, `bun run data dem --centre lat,lon --size m` → `terrainFromDEM`; fetched once, sha256-pinned, offline builds ([`real_valley`](recipes/real_valley/)).
@@ -82,7 +82,9 @@ Each asset is a TypeScript module. `t3d build` compiles it, deterministically, t
 
 **The goal: high-definition detail up close, cheap to draw everywhere.** One texture set, batched static geometry, LODs, compact core-glTF buffers (u16 indices and colours), welded, cache-optimised meshes.
 
-**No Blender for most hard-surface asset production.** For vehicles, buildings, props and whole scenes, the LLM writes TypeScript that does the modelling, LODs, UVs onto the trim sheet, batching, QA and export. Stylised organic shapes (busts, rocks, terrain) are code too, through `sculpt` and `sdf`; realistic sculpts come in through [`importGlb`](docs/idea/08-neural-adapters.md) (scans, CC0 base meshes) or, optionally, a model of your choice through a [`NeuralAdapter`](docs/idea/08-neural-adapters.md) (hybrid recipes: code owns skeleton, proportions and QA, the model adds the skin; the CPU tier builds without it).
+**No Blender for most hard-surface asset production.** For vehicles, buildings, props and whole scenes, the LLM writes TypeScript that does the modelling, LODs, UVs onto the trim sheet, batching, QA and export. Stylised organic shapes (busts, rocks, terrain) are code too, through `sculpt` and `sdf`; realistic sculpts come in through [`importGlb`](docs/idea/08-neural-adapters.md) (scans, CC0 base meshes) or, optionally, a model of your choice through a [`NeuralAdapter`](docs/idea/08-neural-adapters.md).
+
+**Realistic animals and people are model-first and Blender-first** (As of 2026-11). Bodies sculpted from code primitives did not read as animals or people, so a creature or humanoid takes an image-to-3D body (a local GPU model, or [Meshy](https://www.meshy.ai) as a hosted, paid option) and finishes it with an ordered list of headless Blender steps written in the recipe: shell retopology, UVs, bake to albedo / normal / ORM, bind or keep the model's rig, LODs, review renders. The body stays whole with its textures on all three LODs ([ADR 016](docs/decisions/016-textured-parts.md)); code keeps real scale, skeleton, clips, budgets and QA (`model`, `skin`, `deform`, `gait`). First shipped asset: [`recipes/ranger`](recipes/ranger/README.md) (a humanoid; its README lists the measured cost, time and known flaws). Quadruped model tiers (`wolf_hybrid`, `brown_bear`) are being rebuilt and the dragon is planned. Without Blender, a GPU or a key the CPU tier still builds every asset (a stand-in, not the model's look). Honest limits: fused fingers, sculpted-clump hair, no jaw or blink on a fused head. Workflow: [creature-artist](.claude/skills/creature-artist/SKILL.md) and [character-artist](.claude/skills/character-artist/SKILL.md) skills, [playbook](docs/playbooks/characters/characters-creatures.md).
 
 ## Generate assets with your agent
 
@@ -152,8 +154,8 @@ Each ts23d row names how it's verified. The image-to-3D column cites only what v
 | Cost per asset or variant | $0 | MIT, runs locally, a variant is a new seed | Credits, e.g. Meshy ~20–25 credits per generation; Rodin $1.50/credit pay-per-result |
 | GPU needed | No | CPU compile and CPU contact sheet | Hosted: no. Self-hosted open weights: yes (TRELLIS.2 ≥ 24 GB) |
 | Editable by an LLM | A TypeScript diff | Code review, `bun run verify` | A binary mesh; edit by regenerating or in a DCC tool |
-| Repair / retopo step | None: authored with pivots, units and budgets | QA gates fail the build instead | Remesh / retopology tools offered (Meshy Smart Topology, quad remesh; CSM AI retopology, 3rd-party) |
-| Texture memory per asset | Shares one trim sheet: with `--sheet external` every GLB references the same three PNGs | `out/trim_sheet_*.png` written once per build | Own texture set per asset, up to 4K (TRELLIS.2) |
+| Repair / retopo step | None for code-built assets: authored with pivots, units and budgets. Model-tier assets run a gated Blender `retopo` / `lods` step on the model's mesh (As of 2026-11) | QA gates fail the build instead | Remesh / retopology tools offered (Meshy Smart Topology, quad remesh; CSM AI retopology, 3rd-party) |
+| Texture memory per asset | Shares one trim sheet: with `--sheet external` every GLB references the same three PNGs. Exception: a model-built part carries its own declared texture set (`budget.textureSets`, ADR 016) | `out/trim_sheet_*.png` written once per build | Own texture set per asset, up to 4K (TRELLIS.2) |
 
 ### Benchmarks
 
@@ -196,7 +198,7 @@ Every stage has zero runtime dependencies ([ADR 005](docs/decisions/005-zero-run
 
 > **Status: early (0.x).** The core loop works: write, build, QA, shot, hero, review, with
 > textures, trees, sculpt, terrain and the gallery's passing recipes. Still declared and throwing
-> `T3D_NOT_IMPLEMENTED` (As of 2026-11): none in `/neural`. Flagship realism is in progress: calibrated critique scores sit near 6 of 10 (target 8.5, floor not yet enforced); hybrid heads are in progress. Shipped neural-module pieces: `importGlb`, `refine`, `t3d finish --model http`, neural adapters (`http`, ComfyUI, OpenAI-compatible images, kubeez.com, Meshy, mock), the committed recipe cache and `localGenerator`. See the [roadmap](docs/plans/roadmap.md). Expect breaking changes.
+> `T3D_NOT_IMPLEMENTED` (As of 2026-11): none in `/neural`. Flagship realism is in progress: calibrated critique scores sit near 6 of 10 (target 8.5, floor not yet enforced); hybrid heads are in progress; the quadruped and dragon model tiers are in progress. Shipped neural-module pieces: `importGlb`, `importModel`, `refine`, `t3d finish --model http`, neural adapters (`http`, ComfyUI, OpenAI-compatible images, kubeez.com, Meshy, mock), the `blender` step task, the committed recipe cache with local outputs and `localGenerator`. See the [roadmap](docs/plans/roadmap.md). Expect breaking changes.
 
 ## A recipe
 
@@ -395,7 +397,7 @@ import { defineConfig, http } from '@developerz.ai/ts23d';
 export const config = defineConfig({ neural: { mesh: http('http://gpu:8190', 'pixal3d') } });
 ```
 
-`t3d neural ls` lists the models; `t3d neural run recipes/oak/oak.ts` runs what the recipe asks for and commits the outputs to `recipes/oak/neural/<key>/` with a `record.json` (model, licence, weights hash, request, output hashes; 8 MB cap per recipe). Builds and CI never call a model: a hit replays the committed bytes, a miss falls back to the CPU path with a `T3D_NEURAL_MISSING` notice (an error with `--require-neural`). Every output is validated before use. Licences are recorded, never gated for your builds.
+`t3d neural ls` lists the models; `t3d neural run recipes/oak/oak.ts` runs what the recipe asks for and commits the outputs to `recipes/oak/neural/<key>/` with a `record.json` (model, licence, weights hash, request, output hashes; 12 MB of committed bytes per recipe, big intermediates kept local with `{ keep: 'local' }`: git-ignored, only their sha256 is committed, so a fresh clone still resolves the chain). A chain (image, mesh, rig, Blender) fills over up to 5 rounds of `t3d neural run`. Builds and CI never call a model: a hit replays the committed bytes, a miss falls back to the CPU path with a `T3D_NEURAL_MISSING` notice (an error with `--require-neural`). Every output is validated before use. Licences are recorded, never gated for your builds.
 
 **No GPU?** For the `image` task, ts23d ships an adapter for [kubeez.com](https://kubeez.com), a hosted image-generation service. Disclosure: we work with Kubeez as a partner; any other adapter works the same way.
 
@@ -406,7 +408,7 @@ export const config = defineConfig({ neural: { image: kubeezAdapter({ apiKey: pr
 
 The key stays in your environment: it is sent only as a request header, never written to `record.json`, the cache, logs or errors. Outputs are recorded with licence `own` and the [Kubeez terms](https://kubeez.com/legal/terms).
 
-For the `mesh` task without a GPU, `meshyAdapter({ apiKey: process.env.MESHY_API_KEY })` runs image-to-3D (or text-to-3D from a prompt) on [meshy.ai](https://www.meshy.ai), a hosted service billed in credits; the key is handled the same way. API keys come only with paid plans, whose outputs you own: records carry licence `own`, the [Meshy terms](https://www.meshy.ai/terms-of-use) and the credits Meshy charged. A created task id is kept in `$TS23D_HOME/meshy/pending.json` until its GLB is downloaded, so a rerun after a timeout resumes the same task instead of paying again.
+For the `mesh` task without a GPU, `meshyAdapter({ apiKey: process.env.MESHY_API_KEY })` runs image-to-3D (or text-to-3D from a prompt) on [meshy.ai](https://www.meshy.ai), a hosted service billed in credits; the key is handled the same way. The same adapter runs the `rig` task (rigging, plus library animation clips by name) and the `texture` task (retexture); `t3d neural run` prints the credit balance and an estimate per request and refuses a run estimated above 50 credits without `--yes-spend`. The ranger's chain cost 44 credits (30 mesh, 14 rig and three clips; measured 2026-11-16). API keys come only with paid plans, whose outputs you own: records carry licence `own`, the [Meshy terms](https://www.meshy.ai/terms-of-use) and the credits Meshy charged. A created task id is kept in `$TS23D_HOME/meshy/pending.json` until its GLB is downloaded, so a rerun after a timeout resumes the same task instead of paying again.
 
 Details: [docs/idea/08-neural-adapters.md](docs/idea/08-neural-adapters.md), ADRs [014](docs/decisions/014-neural-outputs-are-cached-inputs.md) and [015](docs/decisions/015-models-by-adapter.md).
 
@@ -422,9 +424,10 @@ As of 2026-11. All CPU, deterministic, no model needed unless stated.
 | `t3d hero --quality path` | Deterministic CPU path-traced beauty render (subsurface skin, hair lobes, denoise); slower than the raster default |
 | `t3d finish --hero` | Hero texture tier: bakes normal, AO, height and ORM from the sculpt field onto a lighter LOD0 ([ADR 012](docs/decisions/012-hero-texture-tier.md)) |
 | `t3d concept <recipe.ts\|brief.md>` | Silhouette sheet and concept images from the configured image model (needs an `image` adapter); prompts and seeds land in `concept.ts` |
+| `t3d blender review <recipe.ts> --out <dir>` | Runs the recipe's Blender step program with a review step and writes clay, wire, weights, poses and turnaround PNGs plus `review.md` (needs Blender; `t3d setup tools`; never cached, never in a build); or `--mesh <glb> --program <json>` |
 | `t3d neural run --allow-bad-input` | Sends `mesh` input images that fail the input-image rules anyway; the override is recorded in `record.json` |
 
-Creatures export a skinned skeleton (weights from the sculpt's own bone fields, at most 4 influences) with walk, trot and gallop clips; the `skin`, `deform` and `gait` gates fail a build whose joints tear or feet slide. The gallery shows a "CPU tier / With models" switch for assets that have a committed hybrid, with model and licence credits read from `record.json`.
+Creatures export a skinned skeleton (weights from the sculpt's own bone fields, at most 4 influences) with walk, trot and gallop clips; the `skin`, `deform` and `gait` gates fail a build whose joints tear or feet slide. The gallery shows a "CPU tier / Model tier" switch for assets that have a committed model tier (textured parts included), with model and licence credits read from `record.json`.
 
 ## Optional tier
 
@@ -442,7 +445,7 @@ bunx -p @developerz.ai/ts23d t3d server start      # the reference model server 
 | `gpu-min` | NVIDIA, 8 GB+ | TRELLIS.2 GGUF through ComfyUI (low VRAM), DINOv2 scoring |
 | `gpu-full` | NVIDIA, 24 GB+ | Pixal3D, TRELLIS.2, DINOv2 on torch 2.6 + CUDA 12.4 (local toolkit, no root); optional video-motion, UniRig, UniMate, HairDeck |
 
-Everything lands in `~/.ts23d` (or `$TS23D_HOME`); uninstall is deleting that folder. No `sudo`, nothing system-wide; every step checks what is already there, so a re-run is a no-op and an interrupted run resumes. Downloads are version- and hash-pinned. Weights go to `$HF_HOME` (default `~/.ts23d/hf`); `HF_TOKEN` is read from your shell and never stored or printed; gated licences are listed with their URLs. GPU profiles write a `t3d.config.ts` pointing at the local server when the project has none. Linux and WSL2 today; macOS (`tools` only) is planned. No GPU: `t3d doctor` points the `image` task at kubeez.com (partner, see above); mesh, rig and motion stay on the CPU tier. The installer and server live in [`examples/neural-server/`](examples/neural-server/) (from a clone; set `TS23D_SERVER_DIR` when using the npm package).
+The Blender step task runs on the `bpy` module or a Blender app (4.5 LTS, 5.2 LTS or 5.3 accepted; the step ops were run on 5.3.0 and bpy 5.2.4); `review` renders need a machine with a GPU (checked on one RTX 3090 only). Everything lands in `~/.ts23d` (or `$TS23D_HOME`); uninstall is deleting that folder. No `sudo`, nothing system-wide; every step checks what is already there, so a re-run is a no-op and an interrupted run resumes. Downloads are version- and hash-pinned. Weights go to `$HF_HOME` (default `~/.ts23d/hf`); `HF_TOKEN` is read from your shell and never stored or printed; gated licences are listed with their URLs. GPU profiles write a `t3d.config.ts` pointing at the local server when the project has none. Linux and WSL2 today; macOS (`tools` only) is planned. No GPU: `t3d doctor` points the `image` task at kubeez.com (partner, see above); mesh, rig and motion stay on the CPU tier. The installer and server live in [`examples/neural-server/`](examples/neural-server/) (from a clone; set `TS23D_SERVER_DIR` when using the npm package).
 
 ## What fits, what doesn't
 
@@ -454,8 +457,9 @@ As of 2026-10. Full matrix: [docs/idea/07-what-fits.md](docs/idea/07-what-fits.m
 | **Shipped, early** | Vegetation: Weber–Penn trees (oak, pine, palm, birch, willow); LOD2 impostors are crude |
 | **Shipped, early** | Stylised organic: `sculpt` busts, SDF rocks and asteroids, eroded terrain. Boats: lofted `hull` |
 | **Shipped, early** | Stylised creatures: `creature()` over a skeleton with per-family biology (`recipes/wolf`); [animal research](docs/research/animal-anatomy.md) |
-| **Shipped, early** | Hybrid creatures: `recipes/wolf_hybrid` keeps the code skeleton, proportions and QA and takes its skin from a model through a [`NeuralAdapter`](docs/idea/08-neural-adapters.md), committed to the recipe's cache (As of 2026-11; hybrid heads in progress) |
-| **Weak** | Realistic people and animals as pure code, realistic sculpted organic forms. Use an image-to-3D tool, or a model on your own GPU through a `NeuralAdapter` (`t3d neural run`), with the result committed to the recipe's cache |
+| **Shipped, early** | Model-first humanoids: [`recipes/ranger`](recipes/ranger/README.md), an image-to-3D body with the rig service's skin and clips, finished by Blender steps (As of 2026-11: QA PASS; no finger bones, no blink or jaw, hair as sculpted clumps) |
+| **In progress** | Model-first quadrupeds: `recipes/wolf_hybrid` and `recipes/brown_bear` are being rebuilt on the model tier; the dragon is planned. `wolf_hybrid` as committed is the older blend of a model's skin onto the code body |
+| **Weak** | Realistic people and animals as pure code. Use the model tier (a model on your own GPU or a hosted one through a `NeuralAdapter`, finished by Blender steps, `t3d neural run`), with the result committed to the recipe's cache; or an image-to-3D tool on its own |
 
 Not a replacement for AI mesh generators: a different approach with different strengths. Neutral comparison: [docs/landscape.md](docs/landscape.md).
 

@@ -1,7 +1,7 @@
 # Characters and creatures playbook
 
-Humanoid busts and (planned) full bodies — human, orc, goblin, dwarf, elf — animals and fantasy
-creatures. Status: busts ship today via the `head` kind builder; whole-body animals ship via the
+Humanoid busts and full bodies — human, orc, goblin, dwarf, elf — animals and fantasy
+creatures. Status: busts ship today via the `head` kind builder; full-body humans ship on the model tier ([`ranger`](../../../recipes/ranger/README.md)); whole-body animals ship via the
 `creature` kind ([`wolf`](../../../recipes/wolf/README.md)); bones as named parts, poses and fur
 cards are **planned for M4** ([roadmap](../../plans/roadmap.md#m4-creatures)). Reference recipes:
 [`human_head`](../../../recipes/human_head/README.md), [`orc_head`](../../../recipes/orc_head/README.md),
@@ -9,6 +9,13 @@ cards are **planned for M4** ([roadmap](../../plans/roadmap.md#m4-creatures)). R
 [`dragon`](../../../recipes/dragon/README.md). Original designs only — no characters, names or
 designs from any game, film or book. **Scale from head height** (the artist's unit) and real
 animal measurements for creatures.
+
+**Two routes (As of 2026-11).** Stylised busts, creatures and fantasy beasts: code (`head`, `sculpt`,
+`creature()`; sections above). Realistic animals and full-body humans: the **model tier**, because a body
+sculpted from code primitives did not read as an animal or a person (owner review 2026-11-16). Model-tier
+sections below; skills [creature-artist](../../../.claude/skills/creature-artist/SKILL.md) and
+[character-artist](../../../.claude/skills/character-artist/SKILL.md); step reference
+[examples/blender/README.md](../../../examples/blender/README.md).
 
 ## Research
 Anthropometric data (ISO 7250-1 body measurements; national surveys such as ANSUR II for adult
@@ -135,6 +142,46 @@ recipe test; the items without a check above are **planned**, §9 there):
 - [ ] centre of mass gives the fore-limb share: dog ≈ 0.60, horse ≈ 0.58 (§4);
 - [ ] baked walk follows LH → LF → RH → RF with duty factor > 0.5; joints inside their range (§6–7).
 
+## Model tier: creature
+Quadruped on a model surface, our sourced skeleton and gait clips (kinds `modelChain` + `defineModelCreature`).
+Status (As of 2026-11): the machinery ships and is tested on generated meshes; no quadruped asset has shipped
+on it yet (`recipes/wolf_hybrid`, `recipes/brown_bear` are being rebuilt, `recipes/dragon` is planned).
+
+| Stage | What to do | Why / check |
+|---|---|---|
+| Research | Species sheet numbers ([animal-species-sheets](../../research/animal-species-sheets.md)) into the recipe's `CreatureSpec`; `real` + `sources` + `measures`; the model is registered to THESE numbers | `proportions` and `measures` gates |
+| Concept | Exact side profile, head straight, legs apart, tail clear, flat light, plain grey; READ it before any mesh call | A turned head and an invented far side gave a two-headed wolf; baked light stays in the albedo |
+| Mesh | `mesh` request on the concept sha256, `keep: 'local'`; `pixal3d` (165-187 s) or `trellis2` locally, Meshy hosted | raw outputs are 70-100 MB: never committed |
+| Proxy + fit | Blender proxy (~6 000 triangles) committed; TS registers it (`modelFit`) and fits the plan's skeleton (`fitSkeleton`); `rig: 'unirig'` optional | joints inside the mesh; mesh hugs the bones |
+| Steps | `clean` -> `unweb` (tail fused to hocks) -> `amputate` + `symmetrize` (profile models: keep the near half) -> `retopo` shell with `focus` on head and paws -> `uv` -> `bake` -> `bind` -> `repose` -> `lods` -> `export` | each op's trick: [creature-artist](../../../.claude/skills/creature-artist/SKILL.md) |
+| Look | `t3d blender review recipes/<name>/<name>.ts --out review`: clay, wire, weights, poses | adjust, look again |
+| Import | `importModel` -> ONE skinned textured part per LOD; `bite` and `blink` dropped | fused head: no jaw, no lids |
+| QA | `model` (`T3D_MODEL_TEXTURE`, `T3D_MODEL_SKELETON`, `T3D_MODEL_FIT`, `T3D_MODEL_DOUBLED`), `skin`, `deform`, `gait` | `drop: ['gallop']` when the skin cannot take it |
+
+Budget: triangles about 30 000 / 10 000 / 2 500-6 000; one texture set 2048 (albedo) with normal and ORM at
+1024; committed cache <= 12 MB. No GPU and no key: the code creature builds (CPU tier), with the look of a code
+sculpt, not a photographed animal. Measured Pixal3D wolf on Blender 5.3: 955 337 -> 29 994 triangles, 226 UV
+islands, no open edge on any LOD, 52 s.
+
+## Model tier: humanoid
+Rigged human on a model surface (kinds `riggedChain` + `defineModelCharacter`). Shipped:
+[`recipes/ranger`](../../../recipes/ranger/README.md) (As of 2026-11: QA PASS, 44 Meshy credits, 7 min 41 s,
+11.09 MB committed).
+
+| Stage | What to do | Why / check |
+|---|---|---|
+| Research | Stature, mass, segment shares (Drillis and Contini, ANSUR II) into `real` and a table of built versus sourced; say which rows the rig misses | the rig service places hip and ankle by its own template: honest misses, not gated |
+| Concept | Front view, A-pose, empty hands, flat light, plain grey, original design | limbs clear of the torso for the rigger; no baked shadows |
+| Mesh + rig | `mesh` (`pose: 'a-pose'`, <= 300 k triangles) then `rig` (`height`, library clips by name), both `keep: 'local'` | a hosted rig refuses over 380 000 triangles and non-humanoids (HTTP 422, not charged) |
+| Steps | `clean` -> `retopo` shell (`focus` head x4, hands x3) -> `uv` -> `bake` -> `bind` `from: 'source'` -> `lods` -> `export` | the model's skin and clips are kept; no `transform` on a rigged source |
+| Import | `importModel` closes a loop clip one frame short; `riggedBody` folds leaf bones no clip moves; clips renamed `idle`, `walk`, `jog` | `run` is reserved for part motions (ADR 013) |
+| QA | `model`, `skin`, `deform`, `gait` (in-place: skin of a foot <= 3 mm under the floor; `lift` the root) | the ranger's `idle` is lifted 6 mm |
+
+Honest limits (ranger): fingers are a closed paddle (no finger bones); hair is sculpted clumps; eyes painted,
+no blink or jaw; a jerkin skirt skinned to the thighs stretches on a high knee; the albedo has invented
+blotches. Planned: finger bones, jaw and blink, hair cards on a model head, AI motion with commercial-use
+weights. No GPU and no key: `mannequin` fallback (grey, no face, bones or clips): buildable, not the character.
+
 ## Common mistakes
 - Eyes too high (in the upper third) — the commonest beginner error.
 - Neck a cylinder from under the chin; ears at the top of the head.
@@ -142,8 +189,10 @@ recipe test; the items without a check above are **planned**, §9 there):
 - Fantasy creatures that borrow from a famous IP design.
 - Prey animals with forward-facing eyes; one hoof on a cow or deer; a bear with four toes.
 - The generic quadruped tail (0.37 L) left on a bear, deer or boar (real ≈ 0.05–0.1 L): set `family`.
-- Realistic people: out of scope for SDF stylised sculpting; route to the planned `/neural`
-  adapters ([08](../../idea/08-neural-adapters.md)).
+- Realistic people or animals sculpted from code primitives: use the model tier above
+  ([08](../../idea/08-neural-adapters.md) for the adapters).
+- Model tier: a 3/4 or turned-head concept, a concept with cast shadows, mirroring a turned head instead of
+  `repose`, collapsing the raw scan instead of the shell `retopo`, spending paid credits before reading the concept.
 
 ## Reuse
 `head` kind builder (`race`, `params`, `jawSway`), `HEADS`, `checkHead`, `sculpt`, `visualHull`

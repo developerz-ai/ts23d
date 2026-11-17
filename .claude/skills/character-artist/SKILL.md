@@ -28,6 +28,58 @@ no character, name, costume or face from any game, film, book or real person.
 | 8 | Tone: skin value and hue zones, darker feet → lighter head | sculpt edit `color`, `paint` slots, `grime({ ground })` | greyscale hero: highest contrast at face |
 | 9 | Present | `t3d shot`, `t3d hero`, `t3d blueprint` (1.8 m figure), `t3d critique` | every critique score ≥ 8 |
 
+## Full-body humanoids: model-first (As of 2026-11; the route for realistic bodies)
+A whole body sculpted from code primitives did not read as a person (`recipes/rts_soldier` is blocks). Heads
+and busts below stay code (`head`, `sculpt`). For a full figure the surface, skin and clips come from a cached
+model chain and code keeps scale, mass, clip names, budgets and QA. First shipped asset:
+[`recipes/ranger`](../../../recipes/ranger/README.md) (QA PASS; its README holds every number and flaw).
+Playbook: [characters-creatures](../../../docs/playbooks/characters/characters-creatures.md#model-tier-humanoid).
+
+**1. Concept image.**
+| Rule | Why |
+|---|---|
+| Front view, A-pose (the ranger: arms about 26 deg from vertical), legs apart, empty hands, no cape, no loose weapon | A rigger needs limbs clear of the body; anything touching the torso is fused in the mesh |
+| Flat even light on a plain light-grey background; one figure, >= 60 % of the frame, not cropped | Light is baked into the albedo; input-image rules (`T3D_NEURAL_INPUT`) |
+| Original design, no named character or costume | Licence and house rule |
+| READ the PNG before spending (bind only `image`, `t3d neural run`) | Every key after the image changes with it |
+
+**2. Chain** (kinds `riggedChain` + `defineModelCharacter`): `image` (local GPU `z-image`, or kubeez) -> `mesh`
+(`pose: 'a-pose'`, hosted Meshy or local `pixal3d` / `trellis2`; kept local) -> `rig` (hosted: `height`, library
+clips by name; local: `unirig` returns a skin, no library clips (not run on a humanoid here)) -> `blender` steps with `bind: { from: 'source' }`
+(keeps the model's skin and clips) -> `importModel` -> ONE skinned textured part per LOD. No GPU and no key: the
+`fallback` builds a grey mannequin (no face, bones or clips): honest, buildable everywhere, not the character.
+```sh
+bun run t3d neural run recipes/<name>/<name>.ts            # prints the credit estimate; --yes-spend above 50 credits
+bun run t3d blender review recipes/<name>/<name>.ts --out review --pose LeftArm:z:50   # READ the PNGs
+```
+
+**3. Steps for a human** (ops and fields: [examples/blender/README.md](../../../examples/blender/README.md)):
+| Op | Artist trick | Ranger value |
+|---|---|---|
+| `clean`, `retopo` shell | one solid surface, normal map carries the detail | 39 000 triangles, 5.5 mm voxel |
+| `retopo.focus` | density on face and hands | head x4, hands x3 |
+| `uv` smart, `bake` | albedo (EMIT), normal, AO, roughness; cage 12 mm, max ray 30 mm | 532 islands, hit rate 0.995 |
+| `bind` from `'source'` | transfer the rigger's weights onto the shell; no `transform` on a rigged source (scale at import) | 0 vertices unweighted |
+| `weights`, `joint` | fix a stretching skirt or shoulder by mask; move a bone end before `bind` | not needed |
+| `lods` | gated decimate keeping weights | 38 998 / 11 798 / 3 898 |
+
+Look with `t3d blender review` (clay, wire, `weights`, `poses`, `turnaround`); edit steps; look again.
+
+**4. Gates.** QA `model` (`T3D_MODEL_TEXTURE`: blank albedo; `T3D_MODEL_FIT` / `T3D_MODEL_SKELETON`: wrong scale
+or a joint outside the mesh), `skin`, `deform`, `gait` (in-place clips: skin of a foot may not go > 3 mm under
+the floor; fix with the kind's `lift`). `importModel` closes a loop clip that ends one frame short of its
+period and says so in `warnings`; `run` is reserved for part motions (ADR 013), name a run clip `jog`.
+
+**5. Budget and cost.** Triangles about 39 000 / 12 000 / 4 000; `textureSets { count: 1, size: 2048 }`;
+committed cache <= 12 MB (ranger: 11.09 MB). Ranger run 2026-11-16: image 0 credits 1 min 36 s; mesh 30 credits
+about 2 min 30 s; rig 5 + 3 x 3 clips = 14 credits about 4 min; Blender 1 min 20 s; total 44 credits. Meshy is a
+hosted, paid option: no seed, a re-run is a new sample ([meshy.md](../../../docs/research/meshy.md) section 8).
+
+**6. Honest limits.** Fingers are a closed paddle (one hand bone, no finger bones). Hair is sculpted clumps, not
+cards. Eyes are painted: no blink, no jaw. Albedo carries invented blotches and baked light (no de-lighting).
+Loose clothes are skinned to the legs: a skirt stretches on a high knee, no cloth sim. Library clips are not
+neutral (`idle` is a staggered stance). Planned: finger bones, jaw and blink, hair cards on a model head.
+
 ## Heads and busts: skull → planes → muscles → features → skin
 Don't build a realistic head from ellipsoids (the old busts read as giraffe necks with eyes on the
 surface). Start from the CC0 anatomical base and stylise it (`recipes/_lib/face/`,
@@ -95,6 +147,7 @@ bun run t3d review recipes/<name>/<name>.ts --out review   # close-ups of face, 
 bun run t3d critique recipes/<name>/<name>.ts --out tmp/critique  # READ every PNG, fill critique.json
 bun run shots <name>                      # refresh committed out/
 ```
+Model tier: add `t3d neural run` (fill the cache) and `t3d blender review` (look) before `t3d build`.
 
 ## Pairs with
 - [creature-artist](../creature-artist/SKILL.md): non-human anatomy, stance, weight.
@@ -106,6 +159,6 @@ bun run shots <name>                      # refresh committed out/
 ## Tool status
 Shipped: `head` (+ `HEADS`, `headParams`, `checkHead`), `sculpt`, `sculptField`, `visualHull`,
 `sd.*`, `ctx.joint` + `joints`, `assertJointsFit`, `assertLodSilhouette`, `t3d blueprint`.
-Planned: full-body `creature` skeletons (M4), `roundCone` + `skin()` capsule chains, sculpt `form`
+Shipped (As of 2026-11): full-body model-tier humanoids (`defineModelCharacter`, `recipes/ranger`). Planned: code-built full-body `creature` skeletons (M4), `roundCone` + `skin()` capsule chains, sculpt `form`
 tags, `pose`/`warp`, `focal` readability check, hair cards, skins/morph targets for animation.
 Neutral positioning: ts23d is the free code-based option; it does not compete on claims.

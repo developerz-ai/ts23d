@@ -13,8 +13,11 @@ export interface WireInit {
   readonly method: 'GET' | 'POST';
   readonly headers: Readonly<Record<string, string>>;
   readonly body?: string | Uint8Array;
-  /** An AbortSignal (typed structurally: consumers may compile without the DOM lib). */
-  readonly signal?: { readonly aborted: boolean };
+  readonly signal?: WireSignal;
+}
+/** An AbortSignal, typed structurally: consumers may compile without the DOM lib. */
+export interface WireSignal {
+  readonly aborted: boolean;
 }
 export interface WireReply {
   readonly ok: boolean;
@@ -145,7 +148,7 @@ async function attempt(
   const tooBig = (n: number): never =>
     invalid(
       `${what} ${url}: reply is ${n} bytes, cap ${o.maxBytes}`,
-      'ask for smaller outputs or raise maxBytes',
+      "ask for smaller outputs, or raise the adapter's maxBytes in t3d.config.ts: http(url, model, { maxBytes: 256 * 1024 * 1024 })",
     );
   const declared = Number(res.headers.get('content-length') ?? Number.NaN);
   if (declared > o.maxBytes) tooBig(declared);

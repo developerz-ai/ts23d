@@ -55,12 +55,21 @@ export interface GlbOptions {
   readonly sounds?: boolean;
 }
 
+/** Something the writer exported but a human or agent should fix (same shape as a QA finding). */
+export interface ExportWarning {
+  readonly code: string;
+  readonly message: string;
+  readonly fix: string;
+}
+
 /** The GLB bytes plus what the optimiser did (vertex counts, ACMR before/after, per part). */
 export interface GlbResult {
   readonly glb: Uint8Array;
   readonly report: ExportReport;
   /** Mass, body and colliders written (only with `physics`). */
   readonly physics?: PhysicsReport;
+  /** Present only when there is one (e.g. a textured part's UVs leave its atlas). */
+  readonly warnings?: readonly ExportWarning[];
 }
 
 /** One GLB holding several LODs, plus one optimiser report per LOD (same order as the input). */
@@ -70,4 +79,5 @@ export interface LodGlbResult {
   /** The `MSFT_screencoverage` written (empty for a single LOD). */
   readonly coverage: readonly number[];
   readonly physics?: PhysicsReport;
+  readonly warnings?: readonly ExportWarning[];
 }

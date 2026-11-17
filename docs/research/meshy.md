@@ -15,9 +15,9 @@ here called the Meshy API. Positioning: Meshy is a commercial service ts23d can 
 the free, code-based option and finishes what any generator produces
 ([21-import](../idea/21-import.md), [08-neural-adapters](../idea/08-neural-adapters.md)).
 
-Related: `src/neural/meshy-adapter.ts` (shipped `mesh` task: image-to-3D, text-to-3D preview +
-optional refine), [`docs/landscape.md`](../landscape.md) (Meshy row), `recipes/wolf_hybrid`
-(the hybrid chain this would plug into).
+Related: `src/neural/meshy-*.ts` (shipped: `mesh`, `rig`, `texture`; see §8),
+[`docs/landscape.md`](../landscape.md) (Meshy row), `recipes/wolf_hybrid` (the hybrid chain this
+would plug into).
 
 ## 1. Rules for any Meshy wrapper (from the docs, binding)
 
@@ -254,6 +254,59 @@ code mesh (bust / creature skin, with UVs) ─► Meshy retexture (enable_origin
 | `licence: 'CC-BY-4.0'` option | Free accounts cannot create API keys | API outputs are always paid-plan → `own`; keep CC BY only for web-app GLBs imported by hand |
 | `meshy-7` retirement | 400 from 2026-12-31 | already absent from `MESHY_MODELS`; keep `latest` → 7.1 |
 | PBR maps arrive as separate `texture_urls` | not embedded guarantees *(unverified for GLB)* | read the GLB's own materials first; fetch maps only if missing |
+
+## 8. What ts23d ships (plan 2026/11/16/101 slice 04)
+
+`meshyAdapter({ apiKey })` runs three tasks; one adapter object can be bound to all of them in
+`t3d.config.ts`. No test and no gate step calls Meshy (a scripted fetch, `src/neural/meshy-fake.ts`).
+
+| Task | Meshy call | Request → body | Output |
+|---|---|---|---|
+| `mesh` | `v1/image-to-3d` (`image`) · `v1/multi-image-to-3d` (`images`, 1–4 with `image` first = front) · `v2/text-to-3d` preview (+ refine) | `pose` → `pose_mode`; `maxTriangles` → `should_remesh` + `target_polycount` (90 %); `params`: `texture`, `pbr`, `textureResolution`, `textureModel`, `geometryResolution`, `imageEnhancement` (default false); always `target_formats: ["glb"]` | 1 GLB |
+| `rig` | `v1/rigging`, then `v1/animations` when `clips` is set | `height` → `height_meters`; `template` or `params.skeletonTemplate` → `skeleton_template`; `params.includeFingers`; `clips` → `action_ids` (library `key`, unique `name`, or a numeric id) | 1 GLB: `animation_glb_url` (skin + one clip per action, in request order) or `rigged_character_glb_url` |
+| `texture` | `v1/retexture` | `prompt` → `text_style_prompt`; `size` 2048 / 4096 / 8192 → `texture_resolution`; `enable_original_uv: true` (`params.originalUv`); `params.pbr` | PNG maps: base colour, then metallic, roughness, normal |
+
+Free helpers on the adapter: `estimate(job)` (credits, from the table in §2), `balance()`
+(`GET v1/balance` → `{ balance, monthly_credits, permanent_credits, monthly_resets_at }`),
+`animations({ search, category })` (`GET v1/animations/library` → `[{ action_id, name, key,
+category, sub_category, preview_url }]`, unpaginated; categories `WalkAndRun`, `BodyMovements`,
+`DailyActions`, `Fighting`, `Dancing`). `t3d neural run` prints the balance and each estimate before
+sending and refuses a run estimated above 50 credits without `--yes-spend`.
+
+How the §1 rules are kept (`src/neural/meshy-task.ts`):
+
+| Rule | Mechanism |
+|---|---|
+| Never re-POST | Before a create the endpoint's newest task id is stored as a marker; the task id replaces it when the POST answers. A POST that ends in a timeout, dropped connection or 5xx leaves the marker: the next run lists the endpoint (`sort_by=-created_at`) and adopts the one newer task, posts only when there is none, and refuses when there are several. A 4xx is a refusal and clears the marker |
+| Resume by id | Stored ids are polled, never re-created; a job deadline (default 60 min) keeps the id |
+| `FAILED` / `CANCELED` | Reported with `task_error.message` and "refunded"; the same request is not retried |
+| Two kinds of 429 | Both waited out inside the deadline (`meshy-net.ts`); past it the fix names the plan's concurrency |
+| Download at `SUCCEEDED` | Keyless, at once. A refused download (expired signature) keeps the pending id: the rerun resumes free. On a resumed task it means the files are gone (3 days): the id is dropped |
+| Size limits before POST | image ≤ 20 MB; model data URI ≤ 100 MB (encoded length, the conservative reading); rig mesh ≤ 380 000 triangles, counted from the GLB's accessors |
+| No re-upload in a chain | The store remembers the task of every GLB it downloaded; a `rig` of those bytes sends `input_task_id`. A 404 (files expired) falls back to the upload |
+
+Rigging facts read from the docs on 2026-11-16: HTTP 422 = pose estimation failed (not a humanoid,
+or not facing +Z), not charged; 400 above 380 000 triangles; `texture_image_url` deprecated; every
+rigging task also returns walking and running GLBs (`result.basic_animations`), which the adapter
+does not download. An animation task takes `action_id`, `action_ids` (1–10 unique, one merged file,
+clips in the order sent, charged per action) or `motion_task_id`.
+
+Left out, on purpose (planned, not shipped): Remesh and UV Unwrap (no task fits: `meshopt` asks
+for meshopt compression and a kept fraction); `post_process` (`change_fps` returns FBX only);
+text-to-motion; retexture from an image or multi-view style; `basic_animations`.
+
+*(unverified, no real call was made in this slice)*: that `animation_glb_url` carries the skinned
+mesh (the adapter's output is refused by `runJob` when it has no skin) and what the clips are named
+inside it; that retexture maps are PNG at exactly 2048 / 4096 / 8192 px (a JPEG or another size is
+refused after the credits are spent); that the rigging / animation list endpoints sort newest
+first without `sort_by` (the docs say so; the adapter sends no `sort_by` there); that a data-URI
+`model_url` for rigging takes `application/octet-stream` (documented for retexture only); that a
+re-read task returns a fresh signed URL; whether the library call needs the key (it is sent).
+
+Licence recorded: `own` + the terms URL, for every task. The recipes gate
+(`scripts/lib/neural-licence.ts` → `publishableLicence` in `src/neural/record.ts`) accepts `own`,
+so committed Meshy outputs pass with no change to the allow-list. The ground is §4: the help
+centre's "full private ownership" on paid plans; the Terms of Use page itself is still unread (403).
 
 ## Sources
 

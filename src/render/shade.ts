@@ -8,6 +8,7 @@ import { type DepthMap, openness, visibility } from './depth-map.ts';
 import type { Rig } from './lighting.ts';
 import { OPAQUE } from './looks.ts';
 import type { Scene } from './scene.ts';
+import { SET_OUT, setSurface } from './set-shade.ts';
 import { lightSurf, type Surf } from './shade-light.ts';
 import { type SheetTextures, sample } from './texture.ts';
 import type { VisBuffer } from './vis-buffer.ts';
@@ -143,13 +144,44 @@ export function shadeSample(
     nrm[k] = (nrm[k] ?? 0) / nl;
     geo[k] = nrm[k] ?? 0;
   }
-  // Normal map through the triangle's tangent frame (skipped where UVs are degenerate).
   const T = s.tangents;
   const to = t * 6;
   const tx = T[to] ?? 0;
   const ty = T[to + 1] ?? 0;
   const tz = T[to + 2] ?? 0;
-  if (tx !== 0 || ty !== 0 || tz !== 0) {
+  // A textured part (ADR 016) reads its own set: albedo, ORM and normal map in one call.
+  const own = s.sets[(s.texSet[t] ?? 0) - 1];
+  const O = SET_OUT;
+  if (own) {
+    const n0 = nrm[0] ?? 0;
+    const n1 = nrm[1] ?? 0;
+    const n2 = nrm[2] ?? 0;
+    setSurface(
+      own,
+      s.vtan,
+      ia / 3,
+      ib / 3,
+      ic / 3,
+      b0,
+      b1,
+      b2,
+      u,
+      v,
+      mip,
+      n0,
+      n1,
+      n2,
+      nl < 0 ? -1 : 1,
+      O,
+    );
+    nrm[0] = O[0] ?? n0;
+    nrm[1] = O[1] ?? n1;
+    nrm[2] = O[2] ?? n2;
+    texel[0] = O[3] ?? 1;
+    texel[1] = O[4] ?? 1;
+    texel[2] = O[5] ?? 1;
+  } else if (tx !== 0 || ty !== 0 || tz !== 0) {
+    // Normal map through the triangle's tangent frame (skipped where UVs are degenerate).
     sample(c.tex.normal, mip, u, v, texel);
     const mx = texel[0] ?? 0;
     const my = texel[1] ?? 0;
@@ -168,12 +200,16 @@ export function shadeSample(
     nrm[1] = py / pl;
     nrm[2] = pz / pl;
   }
-  sample(c.tex.albedo, mip, u, v, texel);
+  if (!own) sample(c.tex.albedo, mip, u, v, texel);
   const al = S.albedo;
   al[0] = (texel[0] ?? 1) * ((C[ia] ?? 1) * b0 + (C[ib] ?? 1) * b1 + (C[ic] ?? 1) * b2);
   al[1] = (texel[1] ?? 1) * ((C[ia + 1] ?? 1) * b0 + (C[ib + 1] ?? 1) * b1 + (C[ic + 1] ?? 1) * b2);
   al[2] = (texel[2] ?? 1) * ((C[ia + 2] ?? 1) * b0 + (C[ib + 2] ?? 1) * b1 + (C[ic + 2] ?? 1) * b2);
-  sample(c.tex.orm, mip, u, v, texel);
+  if (own) {
+    texel[0] = O[7] ?? 1;
+    texel[1] = O[8] ?? 0.8;
+    texel[2] = O[9] ?? 0;
+  } else sample(c.tex.orm, mip, u, v, texel);
   const look = s.looks[s.look[t] ?? 0] ?? OPAQUE;
   S.occ = texel[0] ?? 1;
   S.rough = Math.max(0.05, look.roughness >= 0 ? look.roughness : (texel[1] ?? 0.8));

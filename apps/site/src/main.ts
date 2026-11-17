@@ -4,8 +4,9 @@
 // worker's full catalog (recipes with no renders yet) loads when the page is idle. The viewer and
 // its panels are a lazy chunk, fetched on the first asset page. Without WebGL neither the showcase
 // nor the viewer starts: the committed renders stay, with one line saying why (GLBs still download).
-// An asset with a model-tier pair (`<name>_hybrid` with committed model outputs) gets a
-// "CPU tier / With models" switch; `#<name>_hybrid` opens the pair on its model tier.
+// An asset with two tiers gets a "CPU tier / Model tier" switch: a pair (`<name>_hybrid` with
+// committed model outputs; `#<name>_hybrid` opens the model tier) or one model-first recipe that
+// holds both (`#<name>` is its model tier, `#<name>@cpu` its fallback without the outputs).
 
 import './style.css';
 import { NEURAL } from 'virtual:ts23d-media';
@@ -24,7 +25,18 @@ import { renderRenders } from './renders-panel.ts';
 import { Showcase } from './showcase.ts';
 import type { SoundPanel } from './sound-panel.ts';
 import { renderRecipe } from './source.ts';
-import { baseOf, gridItems, HYBRID, pairOf, type Tier, tierSwitch } from './tier-toggle.ts';
+import {
+  baseOf,
+  CPU_SUFFIX,
+  gridItems,
+  HYBRID,
+  pairOf,
+  parseHash,
+  selfTiered,
+  showcaseItems,
+  type Tier,
+  tierSwitch,
+} from './tier-toggle.ts';
 import type { Subject, Viewer } from './viewer.ts';
 import { endInMessage, hasWebGl, loadingParts, noWebGlLine } from './viewer-fallback.ts';
 
@@ -51,6 +63,8 @@ let items: Item[] = order(mediaItems());
 const home = $('[data-view="home"]');
 const page = $('[data-view="asset"]');
 const pair = (item: Item): Item | null => pairOf(item, items, NEURAL);
+/** True when `item`'s own recipe holds both tiers (model-first, CPU fallback). */
+const self = (item: Item): boolean => selfTiered(item, NEURAL);
 /** The card's switch: the hybrid and its credit line, when the asset has one. */
 const tiersOf = (item: Item) => {
   const hybrid = pair(item);
@@ -76,8 +90,8 @@ let showcaseOn = false;
 const webgl = hasWebGl(() => document.createElement('canvas'));
 const loading = loadingParts($('[data-loading]'));
 
-/** What the viewer needs to know about an item (a hybrid also brings its model outputs). */
-const subjectOf = (item: Item, tier: Tier = 'cpu'): Subject => {
+/** What the viewer needs to know about an item (the model tier also brings its model outputs). */
+const subjectOf = (item: Item, tier: Tier = self(item) ? 'models' : 'cpu'): Subject => {
   const neural = tier === 'models' ? (NEURAL[item.folder] ?? []) : [];
   return {
     name: item.name,
@@ -136,29 +150,30 @@ function neighbours(item: Item): void {
 /** The tier switch and the credits under the viewer, for `base` shown on `tier`. */
 function renderTier(base: Item, hybrid: Item | null, tier: Tier): void {
   const bar = $('[data-tier-bar]');
-  bar.hidden = !hybrid;
+  const both = self(base);
+  const hash = (t: Tier): string =>
+    t === 'models' ? (hybrid ?? base).name : `${base.name}${both ? CPU_SUFFIX : ''}`;
+  bar.hidden = !hybrid && !both;
   bar.replaceChildren(
-    ...(hybrid
-      ? [
-          tierSwitch(`Tier of ${base.name}`, tier, (t) =>
-            location.replace(`#${t === 'models' ? hybrid.name : base.name}`),
-          ),
-        ]
-      : []),
+    ...(bar.hidden
+      ? []
+      : [tierSwitch(`Tier of ${base.name}`, tier, (t) => location.replace(`#${hash(t)}`))]),
   );
   const shown = tier === 'models' && hybrid ? hybrid : base;
   renderCredits($('[data-credits]'), {
     tier,
-    paired: Boolean(hybrid),
+    paired: !bar.hidden,
+    fallback: both,
     neural: tier === 'models' ? (NEURAL[shown.folder] ?? []) : [],
     data: shown.media?.data ?? [],
     folder: shown.folder,
   });
 }
 
-function openAsset(base: Item, tier: Tier = 'cpu'): void {
+function openAsset(base: Item, tier: Tier | null = null): void {
   const hybrid = pair(base);
-  const on: Tier = hybrid ? tier : 'cpu';
+  // One recipe with both tiers opens on its model tier (what its committed renders show).
+  const on: Tier = self(base) ? (tier ?? 'models') : hybrid ? (tier ?? 'cpu') : 'cpu';
   const item = on === 'models' && hybrid ? hybrid : base;
   const same = current === base && currentTier === on;
   const sameAsset = current === base;
@@ -206,7 +221,7 @@ function openAsset(base: Item, tier: Tier = 'cpu'): void {
 }
 
 function route(): void {
-  const name = decodeURIComponent(location.hash.slice(1));
+  const [name, asked] = parseHash(decodeURIComponent(location.hash.slice(1)));
   const item = items.find((i) => i.name === name);
   const base = baseOf(name);
   const paired = base ? items.find((i) => i.name === base) : undefined;
@@ -215,7 +230,7 @@ function route(): void {
     return;
   }
   if (item) {
-    openAsset(item);
+    openAsset(item, asked);
     return;
   }
   if (current)
@@ -229,7 +244,12 @@ function route(): void {
   home.hidden = false;
   // The showcase compiles only once home is actually seen (not behind a deep link).
   if (!showcaseOn && webgl)
-    new Showcase($('[data-showcase]'), $<HTMLAnchorElement>('[data-showcase-label]'), featured());
+    new Showcase(
+      $('[data-showcase]'),
+      $<HTMLAnchorElement>('[data-showcase-label]'),
+      showcaseItems(featured(), NEURAL),
+      (item) => subjectOf(item).neural,
+    );
   showcaseOn = true;
   if (name) document.getElementById(name)?.scrollIntoView();
 }

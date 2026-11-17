@@ -28,6 +28,17 @@ describe('record.json', () => {
         ...good,
         outputs: [{ file: 'output-0.glb', mime: 'model/gltf-binary', sha256: 'a'.repeat(64) }],
       }),
+      // `local` and the file name must agree: a local output is `local-<i>.*`, nothing else is.
+      ...[
+        { file: 'output-0.png', local: true },
+        { file: 'local-0.png' },
+        { file: 'local-0.png', local: false },
+      ].map((o) =>
+        JSON.stringify({
+          ...good,
+          outputs: [{ mime: 'image/png', sha256: 'a'.repeat(64), bytes: 1, ...o }],
+        }),
+      ),
     ])
       expect(() => parseRecord(bad, 'neural/k/record.json')).toThrow('T3D_NEURAL_OUTPUT_INVALID');
   });

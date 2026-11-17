@@ -28,6 +28,25 @@ rotors, propellers, pistons, cranes, jaws, wings, tails, lids, drawers.
 | 8 | Engine hooks | `ctx.socket` (`seat`, `mount`, `camera`, `attach`, `interact`, `light`), `ctx.emitter` (`smoke`, `dust` with `when: 'moving'`, `muzzle` with `when: 'event'`) | named nodes in manifest |
 | 9 | Review | `t3d build` (animations on by default), viewer in the gallery, `t3d critique` | moves like the real thing |
 
+## Model-built bodies: rig and weights from a model (As of 2026-11)
+A model-first creature or humanoid ([creature-artist](../creature-artist/SKILL.md),
+[character-artist](../character-artist/SKILL.md)) is ONE skinned textured part per LOD; you place bones and fix
+weights with Blender steps, not `ctx.bone` + `skinWeights`.
+| Need | Do | Check |
+|---|---|---|
+| Quadruped skeleton | our sourced plan fitted INTO the mesh (`fitSkeleton`: legs on each leg's centre line, spine under the dorsal line); optional learned joints: `modelChain({ rig: 'unirig' })`, mapped by topology | QA `model`: every joint inside the mesh (`T3D_MODEL_SKELETON`), mesh hugs the bones (`T3D_MODEL_FIT`) |
+| Humanoid skeleton | the model's own (hosted rig: Meshy `rig` with `height`); `bind: { from: 'source' }` keeps its weights and clips | no vertex unweighted, <= 4 influences (Blender report) |
+| Gait clips (quadruped) | the creature clips (`idle`, `look`, `walk`, `trot`, `gallop`) baked on the fitted bones; `bite` and `blink` are dropped (fused head, no jaw or lids); `drop: ['gallop']` when the skin cannot take it | QA `deform` poses the skin at the limits; QA `gait` seam, slide, sink |
+| Humanoid clips | library clips by name (`Idle`, `Casual Walk`, `Run 2`) renamed `idle`, `walk`, `jog`; `importModel` closes a cycle one frame short and warns; `lift` raises a root that sinks | `gait`: skin of a foot <= 3 mm under the floor in in-place clips |
+| Turned head, uneven stance | `repose` (after `bind`): straighten and symmetrize the armature, keep the deformed mesh, same weights; never mirror a turned head | `T3D_MODEL_DOUBLED` finds two muzzles |
+| Bad weights | `weights` by mask: `assign` / `scale` / `smooth` one bone (`sphere`, `box`, `z`, `plane`); `joint` moves a bone end BEFORE `bind`; bone heat that weights nothing falls back to a voxel proxy (reported) | `t3d blender review --views weights,poses`, one tile per bone |
+```sh
+bun run t3d blender review recipes/<name>/<name>.ts --out review --views weights,poses --pose neck:x:-30   # READ
+```
+Limits: no finger bones (one hand bone), no jaw or blink on a fused head, no cloth or hair sim, a skirt skinned to
+the thighs stretches on a high knee. Planned: finger bones, jaw and blink on model heads, AI motion with
+commercial-use weights.
+
 ## Vocabulary → measurable
 | Word | Meaning here | Check |
 |---|---|---|
@@ -105,5 +124,5 @@ Shipped: `ctx.group`, `parent`, `motion` (spin/slide/sway/orbit/crank/piston/tre
 (root motion, planted feet), baked tail/ear springs, ear bones, joint limits and `_mid` helpers, a
 `blink` morph; QA `gait` + `deform`; review pose strip (`poseStrip` + qa `poseFrames`); head
 `faceMorphs` (`blink`, `talk`, `breathe`) + `headClips`.
-Planned: MakeHuman expression targets for heads, `pose`/`warp` for sculpts, steering + suspension travel clips.
+Model-built bodies (kinds `modelChain`, `riggedChain`, ops `bind` / `repose` / `weights` / `joint`) are shipped; see above. Planned: MakeHuman expression targets for heads, `pose`/`warp` for sculpts, steering + suspension travel clips.
 Neutral positioning: the free code-based option, no claims against other tools.

@@ -2,6 +2,25 @@
 
 **Artists fight topology so they can push clay; ts23d has no topology until it meshes. Most of the sculpting toolbox maps onto the existing `sculpt` edit list as new edit kinds, not as a mesh editor.** This page surveys how sculptors work (Blender, ZBrush, the SpeedSculpt add-on), maps each technique onto `src/primitives/sculpt*.ts` and `sdf*.ts`, and proposes the next DSL steps. Research as of 2026-11; everything under "Proposed" is **planned, not shipped**.
 
+## Where sculpting happens for organic forms (As of 2026-11)
+**Realistic animals and people are not sculpted from the edit list.** The SDF `sculpt` stays the tool for stylised
+organics (busts, rocks, creatures built by `creature()`). A realistic body comes from an image-to-3D model and is
+finished by the sculptor's data-level toolbox, run headless in Blender as typed `blender` steps the recipe writes
+([plan 101](../plans/2026/11/16/101-organic-model-first/overview.md); op table:
+[examples/blender/README.md](../../examples/blender/README.md)).
+| Sculptor's tool | ts23d, model tier |
+|---|---|
+| Voxel remesh, then retopology | `retopo` shell: voxel-remesh to one solid surface, reduce it, bring the detail back through the normal bake; never collapse the raw scan |
+| Skin modifier, metaballs (block-out) | `skinBody`, `metaballs` as a first step (a Blender-only body, no model needed) |
+| Smooth, inflate, noise displace by mask | `smooth`, `inflate`, `displace` |
+| Cutting fused forms, mirroring the good half | `unweb`, `amputate` + `symmetrize`, `repose` (straighten the armature, keep the deformed mesh) |
+| Bake high to low, UVs | `uv`, `bake` (albedo as EMIT, normal, AO, roughness) |
+| Weight paint fixes | `bind`, `weights` by mask, `joint` |
+| Look at clay, wire, weights, poses | `review` step, `t3d blender review` |
+Brush strokes (`bpy.ops.sculpt.*`) still need a viewport and are not wrapped: ts23d's own SDF strokes and VDM stamps
+are its brushes. Why this route: a raw Pixal3D wolf read as a wolf, while the same mesh shrink-wrapped onto a code
+body with its colour in vertex colour did not (measured 2026-11-16).
+
 ## How sculptors work
 
 | Technique | What it does | Source |
@@ -196,8 +215,8 @@ Uniform grids spend cells on flat cranium as on lips. Options: an octree of cell
 | Idea | Why not |
 |---|---|
 | Interactive mesh brushes on triangle meshes | Stroke-by-stroke mesh mutation is what remesh/Dyntopo exist to patch; it is not text an agent can diff. The edit list is the sculpt |
-| Retopology to quads | glTF engines draw triangles; edge flow matters for subdivision and hand-skinning, neither of which ts23d does. Skin weights come from blend weights instead |
-| Realistic anatomy from the edit list alone | Readable forms are what the edit list is good at ([07](07-what-fits.md)). Realism comes from the hybrid model: the sculpt stays the skeleton, proportions and QA (bones, muscles, Lipschitz-bounded strokes, VDM stamps), `importGlb` / a `NeuralAdapter` mesh is a sculpt field and adds the skin ([08](08-neural-adapters.md), `recipes/wolf_hybrid`) |
+| Hand retopology to quads | glTF engines draw triangles; edge flow matters for subdivision and hand-skinning, neither of which ts23d does. Code-built forms take skin weights from blend weights; model bodies get an automatic triangle `retopo` shell in Blender (`reduce: 'quadriflow'` is optional) |
+| Realistic anatomy from the edit list alone | Readable forms are what the edit list is good at ([07](07-what-fits.md)). Realism comes from a model body kept whole with its own textures (ADR 016) and finished by Blender steps; code keeps scale, skeleton, clips and QA (section above, [08](08-neural-adapters.md)). Blending a model's skin into the code body (`recipes/wolf_hybrid` as first built) lost the quality in the blend |
 
 ## Next steps for ts23d (prioritised)
 

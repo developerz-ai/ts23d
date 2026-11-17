@@ -3,7 +3,9 @@ import { compile, defineAsset } from './asset.ts';
 import type { AssetDefinition, Measure } from './definition.ts';
 import { Ts23dError } from './errors.ts';
 import { merge } from './mesh.ts';
-import type { Lod } from './part.ts';
+import type { Lod, PartOptions } from './part.ts';
+import { encodePng } from './png.ts';
+import type { TextureSet } from './texture-set.ts';
 
 const budget = { triangles: [10, 10, 10] as const };
 const base: AssetDefinition = { name: 'probe', kind: 'prop', budget, build() {} };
@@ -108,5 +110,141 @@ describe('compile validation', () => {
     expect(thrown(body((ctx) => ctx.use(defineAsset(base), { prefix: 'body' })))).toMatch(fix);
     // A static meshed part named body merges into the root: allowed (most hulls are one).
     expect(thrown(body((ctx) => ctx.part('body', merge([]))))).toBe('none');
+  });
+});
+
+/** A real 4×4 PNG whose IHDR claims `size`² (core reads the header only); `salt` varies the bytes. */
+function png(size: number, salt = 0): Uint8Array {
+  const out = encodePng(4, 4, new Uint8Array(64).fill(salt));
+  const dv = new DataView(out.buffer, out.byteOffset);
+  dv.setUint32(16, size);
+  dv.setUint32(20, size);
+  return out;
+}
+
+describe('textured parts (ADR 016)', () => {
+  const wolf: TextureSet = { name: 'wolf', albedo: png(2048), normal: png(1024, 1) };
+  const sets = { count: 1, size: 2048 } as const;
+  const textured = (
+    o: PartOptions,
+    textureSets: AssetDefinition['budget']['textureSets'] = sets,
+    more: AssetDefinition['build'] = () => {},
+  ) =>
+    defineAsset({
+      ...base,
+      budget: { ...budget, ...(textureSets ? { textureSets } : {}) },
+      ...(o.paint ? { paint: { [o.paint]: '#808080' } } : {}),
+      ...(o.finish ? { finishes: { [o.finish]: { sheen: { colour: '#808080' } } } } : {}),
+      build(ctx) {
+        ctx.part('torso', merge([]), o);
+        more(ctx);
+      },
+    });
+  const fails = (re: RegExp, ...a: Parameters<typeof textured>) =>
+    expect(thrown(() => compile(textured(...a)))).toMatch(re);
+
+  it('refuses textures without budget.textureSets, and says what to declare', () => {
+    const none = defineAsset({
+      ...base,
+      build: (ctx) => ctx.part('torso', merge([]), { textures: wolf }),
+    });
+    expect(thrown(() => compile(none))).toBe(
+      'T3D_TEXTURE_INVALID|declare budget.textureSets: { count: 1, size: 2048 }',
+    );
+  });
+
+  it('refuses a malformed budget.textureSets at defineAsset', () => {
+    const bad = (textureSets: unknown) => define({ budget: { ...budget, textureSets } as never });
+    expect(thrown(bad({ count: 0, size: 2048 }))).toMatch(/^T3D_TEXTURE_INVALID\|declare/);
+    expect(thrown(bad({ count: 1.5, size: 2048 }))).toMatch(/^T3D_TEXTURE_INVALID/);
+    expect(thrown(bad({ count: 1, size: 3000 }))).toMatch(/^T3D_TEXTURE_INVALID/);
+    expect(thrown(bad({ count: 2, size: 4096 }))).toBe('none');
+  });
+
+  it('refuses a map over the declared size, non-PNG bytes and a non-square map', () => {
+    fails(/^T3D_TEXTURE_INVALID\|.*1024²/, { textures: wolf }, { count: 1, size: 1024 });
+    fails(/^T3D_TEXTURE_INVALID\|pass the PNG/, {
+      textures: { name: 'wolf', albedo: new Uint8Array(64) },
+    });
+    const wide = png(2048);
+    new DataView(wide.buffer, wide.byteOffset).setUint32(20, 1024);
+    fails(/^T3D_TEXTURE_INVALID\|bake it square/, { textures: { name: 'wolf', albedo: wide } });
+  });
+
+  it('refuses paint, finish, a see-through surface or a group with textures: drop the option', () => {
+    fails(/^T3D_TEXTURE_INVALID\|drop `paint`/, { textures: wolf, paint: 'body' });
+    fails(/^T3D_TEXTURE_INVALID\|drop `finish`/, { textures: wolf, finish: 'velvet' });
+    fails(/^T3D_TEXTURE_INVALID\|drop `surface`/, { textures: wolf, surface: 'glass' });
+    fails(/^T3D_TEXTURE_INVALID\|drop `textures`/, {}, sets, (ctx) =>
+      ctx.group('rig', { textures: wolf }),
+    );
+  });
+
+  it('refuses one name with different bytes, and more names than the budget counts', () => {
+    const other = (textures: TextureSet): AssetDefinition['build'] => {
+      return (ctx) => ctx.part('head', merge([]), { textures });
+    };
+    fails(
+      /^T3D_TEXTURE_INVALID\|share one TextureSet/,
+      { textures: wolf },
+      sets,
+      other({
+        ...wolf,
+        albedo: png(2048, 7),
+      }),
+    );
+    fails(
+      /^T3D_TEXTURE_INVALID\|.*raise count to 2/,
+      { textures: wolf },
+      sets,
+      other({
+        ...wolf,
+        name: 'eye',
+      }),
+    );
+    // Equal bytes in a separate array are the same set; two names fit a count of 2.
+    const copy = other({ ...wolf, albedo: png(2048) });
+    expect(thrown(() => compile(textured({ textures: wolf }, sets, copy)))).toBe('none');
+    const two = textured(
+      { textures: wolf },
+      { count: 2, size: 2048 },
+      other({ ...wolf, name: 'eye' }),
+    );
+    expect(thrown(() => compile(two))).toBe('none');
+  });
+
+  it('wants an alpha channel on the albedo of a cutout part', () => {
+    const rgb = png(2048);
+    rgb[25] = 2;
+    fails(/^T3D_TEXTURE_INVALID\|bake the albedo as RGBA/, {
+      textures: { name: 'fur', albedo: rgb },
+      surface: 'cutout',
+    });
+    expect(thrown(() => compile(textured({ textures: wolf, surface: 'cutout' })))).toBe('none');
+  });
+
+  it('carries the set through compile at every LOD and through ctx.use, name unprefixed', () => {
+    const child = textured({ textures: wolf });
+    for (const lod of [0, 1, 2] as const)
+      expect(compile(child, { lod }).parts[0]?.textures).toBe(wolf);
+    const pack = (textureSets?: typeof sets) =>
+      defineAsset({
+        ...base,
+        name: 'pack',
+        budget: { ...budget, ...(textureSets ? { textureSets } : {}) },
+        build(ctx) {
+          ctx.use(child, { prefix: 'a' });
+          ctx.use(child, { prefix: 'b' });
+        },
+      });
+    const out = compile(pack(sets), { lod: 2 });
+    expect(out.parts.map((p) => [p.name, p.textures?.name])).toEqual([
+      ['a', undefined],
+      ['a_torso', 'wolf'],
+      ['b', undefined],
+      ['b_torso', 'wolf'],
+    ]);
+    // The parent counts its children's sets against its own budget.
+    expect(thrown(() => compile(pack()))).toMatch(/^T3D_TEXTURE_INVALID\|declare/);
   });
 });

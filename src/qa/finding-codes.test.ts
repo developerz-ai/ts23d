@@ -8,6 +8,7 @@ import {
   type CompiledAsset,
   compile,
   defineAsset,
+  encodePng,
   type Mesh,
   merge,
 } from '../core/index.ts';
@@ -24,6 +25,7 @@ import { joints } from './joints.ts';
 import { DEFAULT_LOD_GATES, lodTriangles } from './lods.ts';
 import { mass } from './mass.ts';
 import { measures } from './measures.ts';
+import { model } from './model.ts';
 import { arm, rig, smooth, walk } from './motion-fixtures.ts';
 import { hiddenParts } from './occlusion.ts';
 import { degenerateTriangles, nonFinite, normalsMatchWinding, vertexColors } from './sanity.ts';
@@ -208,6 +210,21 @@ const FAILING: ReadonlyArray<readonly [Gate, () => CompiledAsset]> = [
   ],
   [deform, () => arm(150, smooth)],
   [gait, () => rig(walk(0.3))],
+  [
+    model,
+    () =>
+      compile(
+        defineAsset({
+          name: 'blank_albedo',
+          kind: 'creature',
+          budget: { triangles: [99, 99, 99], textureSets: { count: 1, size: 1024 } },
+          build(ctx) {
+            const albedo = encodePng(4, 4, new Uint8Array(64).fill(128));
+            ctx.part('body_fur', cube, { textures: { name: 'body', albedo } });
+          },
+        }),
+      ),
+  ],
 ];
 
 const CODE = /^T3D_[A-Z_]+$/;
