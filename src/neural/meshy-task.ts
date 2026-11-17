@@ -11,6 +11,7 @@
 // it (`input_task_id`) instead of uploading it again.
 
 import { canonicalJson } from './adapter.ts';
+import { echoIdentity, echoMismatch, type MeshyTask } from './meshy-echo.ts';
 import { filePending, meshyNet } from './meshy-net.ts';
 import type { MeshyOptions, MeshyPending } from './meshy-params.ts';
 import { sha256Hex } from './sha256.ts';
@@ -25,7 +26,7 @@ import {
   wireJson,
 } from './wire.ts';
 
-export type MeshyTask = Readonly<Record<string, unknown>>;
+export type { MeshyTask } from './meshy-echo.ts';
 
 export interface MeshyDone {
   /** The pending-store key, dropped once the result is downloaded. */
@@ -138,13 +139,15 @@ export function meshyTasks(o: MeshyOptions): MeshyTasks {
       const list = tasks.map((t) => idOf(t['id']) as string);
       const mark = list.indexOf(id.slice(1));
       const since = mark < 0 ? list : list.slice(0, mark);
-      // The one newer task may be another request's (ours never arrived): whatever of the request
-      // the task echoes must agree before it is adopted.
+      // The one newer task may be another request's (ours never arrived). It is adopted only on
+      // positive identity: the task echoes a field that names THIS request (its prompt, the task
+      // or URL it builds on) and nothing it echoes disagrees. An upload (data URI) is never
+      // echoed, so an image-to-3D create cannot be told apart from another: by hand then.
       const differs = since.length === 1 ? echoMismatch(tasks[0], body) : undefined;
-      if (differs)
+      if (since.length === 1 && (differs || !echoIdentity(tasks[0], body)))
         failed(
-          `meshy ${what}: an earlier create ended without a reply; the one task made since (${since[0]}) is another request's (${differs})`,
-          `if this request's task exists on meshy.ai write its id as the value of "${key}" in the pending store ($TS23D_HOME/meshy/pending.json); else delete that entry (a new task is then created and charged)`,
+          `meshy ${what}: an earlier create ended without a reply; the one task made since (${since[0]}) ${differs ? `is another request's (${differs})` : 'cannot be told from another request (it echoes nothing that names this one)'}`,
+          `look at task ${since[0]} on meshy.ai: if it is this request's, write its id as the value of "${key}" in the pending store ($TS23D_HOME/meshy/pending.json); if not, delete that entry (a new task is then created and charged)`,
         );
       if (since.length > 1)
         failed(
@@ -235,17 +238,13 @@ export function meshyTasks(o: MeshyOptions): MeshyTasks {
     const got = await wireBytes(shared, url as string, `download ${what}`, undefined, types).catch(
       (e: unknown) => {
         if (!refused(e)) throw e;
-        // A refused download = an expired signed URL or deleted files (kept 3 days). Only the
-        // task whose file was refused can tell: a resumed one may be past retention; a task
-        // created in this run cannot be, whatever was resumed before it, so its ids are kept and
-        // the rerun reads a fresh URL.
-        const stale = last?.resumed === true;
-        if (stale) for (const s of steps) store().delete(s.key);
+        // A refused download = an expired signed URL, or files past retention (3 days). Which
+        // one cannot be told from here, so no task id is ever dropped on a guess: a rerun resumes
+        // the task and reads a fresh URL (free); creating a new, charged task is the user's
+        // explicit act of deleting the entry.
         return failed(
           `meshy ${what} of task ${last?.id ?? '?'} cannot be downloaded: ${(e as Error).message.replace(/\?\S*/, '?…')}`,
-          stale
-            ? 'the files are gone (Meshy keeps them 3 days): run again to create a new task (charged)'
-            : 'the signed URL expired: run again, the task is resumed and its fresh URL used (no new charge)',
+          `the signed URL expired: run again, the task is resumed and its fresh URL used (no new charge). If it fails again and the task is over 3 days old its files are gone: delete "${last?.key ?? ''}" from the pending store ($TS23D_HOME/meshy/pending.json) and run again to create a new task (charged)`,
         );
       },
     );
@@ -266,22 +265,4 @@ export function meshyTasks(o: MeshyOptions): MeshyTasks {
       for (const s of steps) store().delete(s.key);
     },
   };
-}
-
-/**
- * Why `task` cannot be the task of `body`: the first request field the task echoes with another
- * value (Meshy echoes some: prompt, ai_model, pose_mode, height_meters…), or undefined when
- * nothing it echoes disagrees. A task that echoes nothing is adopted as before.
- */
-export function echoMismatch(task: MeshyTask | undefined, body: object): string | undefined {
-  if (!task) return undefined;
-  for (const [k, want] of Object.entries(body)) {
-    const got = task[k];
-    if (got === undefined || got === null || typeof got === 'object') continue;
-    if (typeof want === 'object' || want === undefined) continue;
-    // Uploads are echoed as stored URLs, never as the data URI that was sent.
-    if (typeof want === 'string' && want.startsWith('data:')) continue;
-    if (String(got) !== String(want)) return `${k} is ${String(got).slice(0, 40)}`;
-  }
-  return undefined;
 }

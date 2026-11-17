@@ -136,7 +136,7 @@ describe('defineModelCharacter', () => {
   it('two characters on ONE model that keep different bones do not share a skin, either order', () => {
     // `hop` moves only the leg, so `head` (and its helper) fold into the root; `walk` keeps `head`.
     const hop: Clip = { ...clip('hop', true, [0, 0.01, 0]), tracks: [track('leg', [0, 0.01, 0])] };
-    const shared = model({ clips: [clip('casual_walk', true, [0, 0.01, 0]), hop] });
+    let shared = model();
     const make = (name: string, rename: Record<string, string>) =>
       defineModelCharacter({
         name,
@@ -156,6 +156,8 @@ describe('defineModelCharacter', () => {
       ['walker', 'hopper'],
       ['hopper', 'walker'],
     ]) {
+      // A fresh model per order: the second order must be a cold build too, not a cache read.
+      shared = model({ clips: [clip('casual_walk', true, [0, 0.01, 0]), hop] });
       const seen = Object.fromEntries(
         order.map((n) => [
           n,

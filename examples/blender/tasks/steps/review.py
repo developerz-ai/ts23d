@@ -157,8 +157,10 @@ def posed(state, studio, poses):
     # pose left on the bones are taken off for the tiles and put back after.
     data = arm.animation_data
     action = data.action if data else None
+    nla = data.use_nla if data else None
     if data:
         data.action = None
+        data.use_nla = False  # clips kept as NLA strips would still pose the "rest"
     was = [(b, b.location.copy(), b.rotation_mode, b.rotation_quaternion.copy(), b.rotation_euler.copy(), b.scale.copy())
            for b in arm.pose.bones]
     for b in arm.pose.bones:
@@ -184,6 +186,7 @@ def posed(state, studio, poses):
         b.location, b.rotation_mode, b.rotation_quaternion, b.rotation_euler, b.scale = loc, mode, quat, eul, scale
     if data:
         data.action = action
+        data.use_nla = nla
     bpy.context.view_layer.update()
     return tiles
 

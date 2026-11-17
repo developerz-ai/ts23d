@@ -18,19 +18,25 @@ describe('fitSkeleton', () => {
   });
 
   it('a lenient fit of a broken model does not answer a later strict ask', () => {
-    const three = capsuleCreature(bones, (c) => !(c.a[1] > 0.01 && c.a[0] > 0.1 && c.b[2] < 0.5));
-    let lenient: unknown;
-    try {
-      lenient = fitSkeleton(three, bones, '', false);
-    } catch {
-      lenient = undefined; // a missing leg cannot be traced even leniently: nothing was cached
+    // Legs squashed to 45 % of their height: every joint is found, the upper hind bone is 0.55×
+    // its plan length. The lenient fit returns (to read residuals); the strict one must throw.
+    const P = Float32Array.from(body.positions);
+    let top = 0;
+    for (let v = 0; v < P.length / 3; v++) top = Math.max(top, P[v * 3 + 2] ?? 0);
+    const belly = top * 0.5;
+    for (let v = 0; v < P.length / 3; v++) {
+      const z = P[v * 3 + 2] ?? 0;
+      P[v * 3 + 2] = z < belly ? z * 0.45 : z + belly * (0.45 - 1);
     }
-    expect(() => fitSkeleton(three, bones)).toThrow(/T3D_MODEL_SKELETON/);
+    const short = { ...body, positions: P };
+    const lenient = fitSkeleton(short, bones, '', false);
+    expect(lenient.residuals.some((r) => r.stretch < STRETCH[0])).toBe(true);
+    expect(() => fitSkeleton(short, bones)).toThrow(/T3D_MODEL_SKELETON.*plan length/);
+    expect(fitSkeleton(short, bones, '', false)).toBe(lenient);
     // And a fit is per plan: another plan object on the same mesh is fitted afresh.
     const other = creaturePlan(FIXTURE_WOLF).bones;
     expect(fitSkeleton(body, other)).not.toBe(fitSkeleton(body, bones));
     expect(fitSkeleton(body, bones)).toBe(fitSkeleton(body, bones));
-    expect(lenient === undefined || typeof lenient === 'object').toBe(true);
   });
 
   it('fails on fore paws fused into one block', () => {

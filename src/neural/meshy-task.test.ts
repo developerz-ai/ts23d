@@ -5,9 +5,10 @@ import { afterAll, beforeEach, describe, expect, test } from 'bun:test';
 import { Ts23dError } from '../core/index.ts';
 import { cube } from './fixtures.ts';
 import { writeMeshGlb } from './glb-write.ts';
+import { echoIdentity, echoMismatch } from './meshy-echo.ts';
 import { FAKE_API, FAKE_CDN, fakeMeshy } from './meshy-fake.ts';
 import { memoryPending } from './meshy-net.ts';
-import { echoMismatch, meshyTasks } from './meshy-task.ts';
+import { meshyTasks } from './meshy-task.ts';
 
 const api = fakeMeshy();
 const GLB = writeMeshGlb([{ name: 'm', mesh: cube() }]);
@@ -55,14 +56,32 @@ describe('meshy tasks: a create is never repeated blindly', () => {
 
   test('the rerun lists: one newer task is adopted and polled, with no second POST', async () => {
     const pending = memoryPending();
-    api.script.lists = [[{ id: 'old-9' }], [{ id: 'new-1' }, { id: 'old-9' }]];
+    const T2 = 'v2/text-to-3d';
+    const body = { prompt: 'a grey wolf', mode: 'preview' };
+    const mine = () => tasks(pending).run(T2, body, 'text-to-3d', AbortSignal.timeout(5000));
+    // Failure first: an image upload is never echoed, so the one newer task cannot be told from
+    // another request's and is NOT adopted (the wrong mesh would be cached for this request).
+    api.script.lists = [[{ id: 'old-9' }], [{ id: 'new-0' }, { id: 'old-9' }]];
     api.script.drop = 1;
-    await err(go(pending));
+    await err(go());
+    const blind = memoryPending();
+    api.script.lists = [[{ id: 'old-9' }], [{ id: 'new-0' }, { id: 'old-9' }]];
+    api.script.drop = 1;
+    await err(go(blind));
+    expect((await err(go(blind))).message).toContain('cannot be told from another request');
+    expect(echoIdentity({ id: 'new-0' }, BODY)).toBe(false);
+    // A task that echoes this request's prompt is this request's.
+    api.script.lists = [
+      [{ id: 'old-9' }],
+      [{ id: 'new-1', prompt: 'a grey wolf' }, { id: 'old-9' }],
+    ];
+    api.script.drop = 1;
+    await err(mine());
     api.script.polls = [done];
-    const got = await go(pending);
+    const got = await mine();
     expect([got.id, got.resumed, got.credits]).toEqual(['new-1', true, 20]);
-    expect(api.posts(PATH).length).toBe(1);
-    expect(api.seen.at(-1)?.url).toBe(`${FAKE_API}/openapi/${PATH}/new-1`);
+    expect(api.posts(T2).length).toBe(1);
+    expect(api.seen.at(-1)?.url).toBe(`${FAKE_API}/openapi/${T2}/new-1`);
   });
 
   test('the one newer task echoes another request → not adopted: reconcile by hand', async () => {
@@ -134,7 +153,7 @@ describe('meshy tasks: downloads', () => {
     expect([...pending.map.values()]).toEqual(['i-1']);
   });
 
-  test('the same on a resumed task → files are gone (3 days), entry dropped, rerun is charged', async () => {
+  test('the same on a resumed task → the id is KEPT (expiry is a guess); recreating is an explicit delete', async () => {
     const pending = memoryPending();
     api.script.polls = [done, done];
     await go(pending);
@@ -143,8 +162,10 @@ describe('meshy tasks: downloads', () => {
     expect(step.resumed).toBe(true);
     api.script.fileStatus = 404;
     const e = await err(t.download(url, 'model_urls.glb', [step]));
+    // No silent repeat charge: the rerun resumes; only deleting the entry by hand creates anew.
+    expect([e.fix.includes('no new charge'), e.fix.includes('delete "')]).toEqual([true, true]);
     expect(e.fix).toContain('charged');
-    expect(pending.map.size).toBe(0);
+    expect(pending.map.size).toBe(1);
   });
 
   test('downloads carry no API key', async () => {
