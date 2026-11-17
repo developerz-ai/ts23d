@@ -4,6 +4,10 @@ All notable changes to `@developerz.ai/ts23d`. Format: [Keep a Changelog](https:
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-11-17
+
+Two more model-first creatures, a brown bear and a winged drake, and the library options and QA rules they needed.
+
 ### Added
 - `recipes/bear_hybrid`: a model-first brown bear (Pixal3D mesh kept whole, UniRig joints, Blender steps; plantigrade `idle`, `look`, `walk`; QA PASS), at average-adult sourced numbers; `recipes/brown_bear` stays the code-built big male.
 - `recipes/dragon_hybrid`: Emberwing, a model-first invented drake (3.2 m body, 1.6 m shoulder; horns, claws and both membrane wings in one textured skin on three LODs; `idle`, `look`, `walk`; QA PASS). The wings carry no bones and do not flap; `recipes/dragon` stays the code-built winged dragon.
@@ -336,7 +340,8 @@ The first published version: the asset DSL with primitives, organic sculpting, t
 - Animations: `toGlb()` exports none unless `{ animations: true }` (glTF has no autoplay flag; engines drive named pivots from code). `t3d build` bakes the `run` clip by default so viewers show play controls; `--no-animations` skips it.
 - CLI output is one folder per asset: `out/<asset>/{lod0,lod1,lod2}.glb`, `sheet.png`, `manifest.json`, plus `out/index.json`. `t3d build` renders the sheet too (`--no-shot` to skip); `t3d shot` writes sheet + manifest only.
 
-[Unreleased]: https://github.com/developerz-ai/ts23d/compare/v0.10.0...HEAD
+[Unreleased]: https://github.com/developerz-ai/ts23d/compare/v0.11.0...HEAD
+[0.11.0]: https://github.com/developerz-ai/ts23d/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/developerz-ai/ts23d/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/developerz-ai/ts23d/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/developerz-ai/ts23d/compare/v0.7.0...v0.8.0
