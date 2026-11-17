@@ -15,6 +15,7 @@ import { MID, midBones } from './creature-helpers.ts';
 import type { CreatureSpec } from './creature-spec.ts';
 import { modelClips } from './model-clips.ts';
 import { applyFit, FIT_LIMIT, type ModelFit, modelFit, shiftFit } from './model-fit.ts';
+import { jointsFit } from './model-fit-joints.ts';
 import { mapJoints, type RigChains } from './model-joints.ts';
 import type { LegTrace } from './model-legs.ts';
 import {
@@ -50,6 +51,13 @@ export interface ModelRigOptions {
   readonly joints?: readonly Bone[];
   /** The chains the rigger's joints replace. Default all: ['trunk', 'fore', 'hind']. */
   readonly take?: readonly RigChains[];
+  /** How the model is registered to the plan: on the surface (default; model-fit.ts) or from
+   *  the rigger's `joints` (model-fit-joints.ts: for a body carrying what the plan does not,
+   *  like raised wings). */
+  readonly register?: 'surface' | 'joints';
+  /** End the head bone at the nose (where it leaves the mesh) instead of at the plan's head
+   *  length from the rigger's joint: for a model whose head is shorter than the spec's. */
+  readonly nose?: boolean;
 }
 
 export interface ModelRig {
@@ -154,12 +162,15 @@ const memo = new WeakMap<Float32Array, Map<string, ModelRig>>();
 
 export function modelRig(source: Mesh, spec: CreatureSpec, o: ModelRigOptions = {}): ModelRig {
   const prefix = o.prefix ?? '';
-  const key = `${o.joints ? idOf(o.joints) : ''}|${(o.take ?? []).join('+')}|${prefix}|${o.symmetric ?? false}|${o.repose === true}|${o.front}|${(o.drop ?? []).join(',')}|${JSON.stringify(spec)}`;
+  const key = `${o.joints ? idOf(o.joints) : ''}|${(o.take ?? []).join('+')}|${prefix}|${o.symmetric ?? false}|${o.repose === true}|${o.nose === true}|${o.register ?? 'surface'}|${o.front}|${(o.drop ?? []).join(',')}|${JSON.stringify(spec)}`;
   const seen = memo.get(source.positions)?.get(key);
   if (seen) return seen;
   const { bones: plan } = creaturePlan(spec);
-  const first = modelFit(source, plan, o.front === undefined ? {} : { front: o.front });
-  if (!(first.relative <= FIT_LIMIT))
+  const byJoints = o.register === 'joints' && o.joints;
+  const first = byJoints
+    ? jointsFit(source, plan, byJoints, prefix)
+    : modelFit(source, plan, o.front === undefined ? {} : { front: o.front });
+  if (!byJoints && !(first.relative <= FIT_LIMIT))
     throw new Ts23dError('T3D_MODEL_FIT', {
       cause: `modelRig: the model sits ${(first.relative * 100).toFixed(1)} % of the plan's height off its flesh (median; limit ${FIT_LIMIT * 100} %)`,
       fix: "the model is not this animal in a standing pose: re-roll the concept (side-on, square stand), or correct the spec's proportions from the sources",
@@ -209,7 +220,9 @@ export function modelRig(source: Mesh, spec: CreatureSpec, o: ModelRigOptions = 
   const mesh = mirrored ? mirrorHalf(without(placed, far.flat()), side) : placed;
   // Mirrored halves meet in a seam on y = 0, where the centre chains lie and the inside test is
   // a coin toss: the mirrored fit is not strict (QA `model` checks the joints in the final mesh).
-  const found = fitSkeleton(mesh, plan, prefix, !mirrored);
+  // Registered from a rigger's joints, the geometric fit is the fallback and the source of what
+  // the rigger lacks: it need not pass its own strict checks (the mapped skeleton is checked).
+  const found = fitSkeleton(mesh, plan, prefix, !mirrored && !byJoints);
   const real = (bones: readonly Bone[]): Bone[] => bones.filter((b) => !b.name.endsWith(MID));
   const geometric = mirrored ? mirrorBones(real(found.bones)) : real(found.bones);
   // A rigger's joints (o.joints: its armature in the source mesh's frame) replace the geometric
@@ -224,7 +237,14 @@ export function modelRig(source: Mesh, spec: CreatureSpec, o: ModelRigOptions = 
       tail: applySimilarity(fit.similarity, b.tail),
     }));
     try {
-      fitted = mapJoints(geometric, moved, (p) => bvh.winding(p) > 0.5, prefix, o.take);
+      fitted = mapJoints(
+        geometric,
+        moved,
+        (p) => bvh.winding(p) > 0.5,
+        prefix,
+        o.take,
+        o.nose === true,
+      );
     } catch (e) {
       if (!(e instanceof Ts23dError) || e.code !== 'T3D_MODEL_SKELETON') throw e;
       notices.push(`${e.message}: the geometric skeleton fit is used instead`);

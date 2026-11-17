@@ -12,7 +12,8 @@ import {
 import { bindRigid } from '../passes/index.ts';
 import { box } from '../primitives/index.ts';
 import { DEFAULT_GATES } from './gates.ts';
-import { albedoSpread, FIT_MEDIAN, GROUND, model, skeletonHug, TEXTURE_STD } from './model.ts';
+import { albedoSpread, GROUND, model, TEXTURE_STD } from './model.ts';
+import { FIT_SPAN, FIT_TURN, hugTurn, skeletonHug, skeletonSpan } from './model-hug.ts';
 
 /** A 16 × 16 albedo: every texel `grey`, or value noise. */
 function albedo(grey: number | null): Uint8Array {
@@ -94,8 +95,36 @@ describe('QA model', () => {
     expect(codes(a)).toContain('T3D_MODEL_SKELETON');
     expect(codes(a)).toContain('T3D_MODEL_FIT');
     const part = a.parts[0];
-    const hug = skeletonHug(part?.mesh as Mesh, [0, 0, 0], a.skeleton ?? { bones: [] });
-    expect(hug).toBeGreaterThan(FIT_MEDIAN);
+    // A turned copy of this skeleton fits the mesh better than the skeleton as it stands.
+    expect(hugTurn(part?.mesh as Mesh, [0, 0, 0], a.skeleton ?? { bones: [] })).toBeGreaterThan(1);
+    expect(
+      hugTurn(table(), [0, 0, 0], asset({ name: 'square' }).skeleton ?? { bones: [] }),
+    ).toBeLessThan(FIT_TURN);
+  });
+
+  it('fails a skeleton shrunk inside its body: every joint inside, no turn fits better, wrong scale', () => {
+    const half = compile(
+      defineAsset({
+        name: 'shrunk',
+        kind: 'creature',
+        budget: { triangles: [500, 500, 500], textureSets: { count: 1, size: 1024 } },
+        build(ctx) {
+          // The table's skeleton at 40 % about the trunk's middle: it lies inside the trunk box.
+          const k = (p: Vec3): Vec3 => [p[0] * 0.4, p[1] * 0.4, 0.45 + (p[2] - 0.45) * 0.08];
+          for (const [name, b] of BONES) ctx.bone(name, { ...b, head: k(b.head), tail: k(b.tail) });
+          ctx.part('body_fur', table(), {
+            density: 100,
+            textures: { name: 'body', albedo: albedo(null) },
+          });
+        },
+      }),
+    );
+    const sk = half.skeleton ?? { bones: [] };
+    expect(skeletonSpan(table(), sk)).toBeLessThan(FIT_SPAN);
+    expect(model(half).some((f) => /not at one scale/.test(f.message))).toBe(true);
+    expect(
+      skeletonSpan(table(), asset({ name: 'whole' }).skeleton ?? { bones: [] }),
+    ).toBeGreaterThan(FIT_SPAN);
   });
 
   it('reads the same hug however densely one region is tessellated (area, not vertices)', () => {
@@ -149,7 +178,6 @@ describe('QA model', () => {
     expect(dense.indices.length).toBeGreaterThan(plain.indices.length * 2);
     const sk = asset({ name: 'good' }).skeleton ?? { bones: [] };
     const hug = skeletonHug(plain, [0, 0, 0], sk);
-    expect(hug).toBeLessThan(FIT_MEDIAN);
     // Centroid samples move within a triangle when it is split: equal to a part in a hundred.
     expect(Math.abs(skeletonHug(dense, [0, 0, 0], sk) - hug)).toBeLessThan(hug * 0.01);
   });

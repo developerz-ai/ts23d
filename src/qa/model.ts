@@ -3,9 +3,9 @@
 //   texture  — the albedo under the mesh's UVs is not blank: luminance standard deviation over
 //              the triangles' centre texels ≥ TEXTURE_STD (T3D_MODEL_TEXTURE)
 //   skeleton — every bone's head (helpers aside) lies inside the mesh (T3D_MODEL_SKELETON)
-//   fit      — the surface hugs the skeleton: half its area is within FIT_MEDIAN of a bone,
-//              as a share of the skeleton's height (T3D_MODEL_FIT; a wrong yaw or scale leaves
-//              half the surface far from every bone)
+//   fit      — no copy of the skeleton turned a quarter or half a turn hugs the surface clearly
+//              better (hugTurn ≤ FIT_TURN; T3D_MODEL_FIT: a wrong yaw leaves a turned copy the
+//              better fit; a wrong scale or place leaves joints outside: `skeleton`)
 //   doubled  — one head outline, one leg outline per foot (model-doubled.ts; T3D_MODEL_DOUBLED)
 //   ground   — each foot bone's skin reaches the ground: its lowest vertex within GROUND of
 //              z = 0 (T3D_MODEL_FIT)
@@ -18,17 +18,16 @@ import { triBvh } from '../primitives/index.ts';
 import { MID_SUFFIX } from './deform.ts';
 import { feetOf } from './gait.ts';
 import { doubledFeatures } from './model-doubled.ts';
+import { FIT_SPAN, FIT_TURN, hugTurn, segment, skeletonSpan } from './model-hug.ts';
 import type { Finding, Gate } from './types.ts';
 
 /** Least luminance standard deviation (0..255 scale) of a baked albedo. Wolf: 54; a flat
  *  colour: 0; a failed bake (black with noise): < 3. */
 export const TEXTURE_STD = 6;
-/** Largest area-median surface → nearest bone distance ÷ skeleton height. Profile wolf, LOD 0–2:
- *  0.098–0.099 on the geometric fit's dorsal spine, 0.114–0.115 on a learned rigger's mid-trunk
- *  spine; 0.131–0.147 with the skeleton half a turn off, 0.41 a quarter turn off. */
-export const FIT_MEDIAN = 0.125;
 /** How far a foot's lowest skin may be from z = 0, metres. Wolf: ≤ 0.0012 on all four paws at every LOD. */
 export const GROUND = 0.01;
+/** …or this share of the skeleton's height when that is more (the wolf's 0.84 m: 1.0 cm). */
+export const GROUND_SHARE = 0.012;
 
 const finding = (code: string, part: string, message: string, fix: string): Finding => ({
   gate: 'model',
@@ -67,71 +66,6 @@ export function albedoSpread(albedo: Uint8Array, mesh: Mesh): number {
   per.set(mesh.uvs, std);
   stds.set(albedo, per);
   return std;
-}
-
-const segment = (p: Vec3, a: Vec3, b: Vec3): number => {
-  const u: Vec3 = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
-  const l2 = u[0] * u[0] + u[1] * u[1] + u[2] * u[2];
-  const t =
-    l2 > 0
-      ? Math.min(
-          1,
-          Math.max(0, ((p[0] - a[0]) * u[0] + (p[1] - a[1]) * u[1] + (p[2] - a[2]) * u[2]) / l2),
-        )
-      : 0;
-  return Math.hypot(p[0] - a[0] - u[0] * t, p[1] - a[1] - u[1] * t, p[2] - a[2] - u[2] * t);
-};
-
-/** Most triangles sampled for the hug (every n-th beyond that). */
-const HUG_SAMPLES = 4000;
-
-/**
- * Median distance from the part's surface to the nearest bone ÷ the skeleton's height. The
- * median is over AREA (triangle centroids weighted by triangle area), not over vertices: a mesh
- * decimated with more vertices kept on the head and paws read 0.142 / 0.132 / 0.112 by vertex on
- * LOD 0 / 1 / 2 of one wolf on one skeleton, and 0.115 on all three by area.
- */
-export function skeletonHug(mesh: Mesh, at: Vec3, sk: Armature): number {
-  const [P, T] = [mesh.positions, mesh.indices];
-  const count = T.length / 3;
-  const step = Math.max(1, Math.floor(count / HUG_SAMPLES));
-  const d: [number, number][] = [];
-  let total = 0;
-  for (let t = 0; t < count; t += step) {
-    const v = [0, 1, 2].map((k): Vec3 => {
-      const i = (T[t * 3 + k] ?? 0) * 3;
-      return [(P[i] ?? 0) + at[0], (P[i + 1] ?? 0) + at[1], (P[i + 2] ?? 0) + at[2]];
-    }) as [Vec3, Vec3, Vec3];
-    const [e, f] = [1, 2].map((j) => [0, 1, 2].map((k) => (v[j]?.[k] ?? 0) - (v[0][k] ?? 0))) as [
-      number[],
-      number[],
-    ];
-    const area =
-      Math.hypot(
-        (e[1] ?? 0) * (f[2] ?? 0) - (e[2] ?? 0) * (f[1] ?? 0),
-        (e[2] ?? 0) * (f[0] ?? 0) - (e[0] ?? 0) * (f[2] ?? 0),
-        (e[0] ?? 0) * (f[1] ?? 0) - (e[1] ?? 0) * (f[0] ?? 0),
-      ) / 2;
-    const centre: Vec3 = [
-      (v[0][0] + v[1][0] + v[2][0]) / 3,
-      (v[0][1] + v[1][1] + v[2][1]) / 3,
-      (v[0][2] + v[1][2] + v[2][2]) / 3,
-    ];
-    d.push([Math.min(...sk.bones.map((b) => segment(centre, b.head, b.tail))), area]);
-    total += area;
-  }
-  d.sort((a, b) => a[0] - b[0]);
-  let seen = 0;
-  let median = Number.POSITIVE_INFINITY;
-  for (const [distance, area] of d) {
-    seen += area;
-    if (seen >= total / 2) {
-      median = distance;
-      break;
-    }
-  }
-  const top = Math.max(...sk.bones.map((b) => Math.max(b.head[2], b.tail[2])));
-  return median / Math.max(top, 1e-9);
 }
 
 /** Lowest vertex (asset z) under a foot bone: within one bone length of it in plan view and
@@ -198,13 +132,26 @@ function partFindings(p: Part, mesh: Mesh, sk: Armature | undefined): Finding[] 
         'fit the skeleton into the mesh (kinds `modelBody` / `fitSkeleton` do), or correct the spec so the plan has the limbs the model has',
       ),
     );
-  const hug = skeletonHug(mesh, ZERO, sk);
-  if (!(hug <= FIT_MEDIAN))
+  // Scale: the yaw comparison below cannot see a skeleton shrunk inside its body (every joint
+  // inside, equally far from the skin at every turn), so the skeleton must also reach along the
+  // body's longest side.
+  const span = skeletonSpan(mesh, sk);
+  if (!(span >= FIT_SPAN))
     out.push(
       finding(
         'T3D_MODEL_FIT',
         p.name,
-        `part '${p.name}': half the surface is over ${(hug * 100).toFixed(1)} % of the skeleton's height from any bone (≤ ${FIT_MEDIAN * 100} %): the mesh is not registered to the skeleton`,
+        `part '${p.name}': the skeleton reaches ${(span * 100).toFixed(0)} % of the body's longest side (≥ ${FIT_SPAN * 100} %): the mesh and the skeleton are not at one scale`,
+        "register the model first (kinds `modelFit` or `register: 'joints'`): scale, then fit the skeleton",
+      ),
+    );
+  const hug = hugTurn(mesh, ZERO, sk);
+  if (!(hug <= FIT_TURN))
+    out.push(
+      finding(
+        'T3D_MODEL_FIT',
+        p.name,
+        `part '${p.name}': a copy of the skeleton turned a quarter or half a turn hugs the surface better (${hug.toFixed(2)}× the distance as it stands, ≤ ${FIT_TURN}×): the mesh is not registered to the skeleton`,
         'register the model first (kinds `modelFit`: yaw, scale and place), then fit the skeleton; a model facing sideways or at another scale lands here',
       ),
     );
@@ -218,16 +165,19 @@ function partFindings(p: Part, mesh: Mesh, sk: Armature | undefined): Finding[] 
       ),
     );
   const feet = feetOf(sk);
+  // 1 cm on a wolf-sized body, the same share of a larger one (a 2 m dragon: 2.4 cm).
+  const height = Math.max(...sk.bones.map((b) => Math.max(b.head[2], b.tail[2])));
+  const ground = Math.max(GROUND, height * GROUND_SHARE);
   for (const foot of feet) {
     const low = lowestSkin(mesh, ZERO, foot, feet);
-    if (low !== null && Math.abs(low) <= GROUND) continue;
+    if (low !== null && Math.abs(low) <= ground) continue;
     out.push(
       finding(
         'T3D_MODEL_FIT',
         p.name,
         low === null
           ? `part '${p.name}': no skin under foot bone '${foot.name}'`
-          : `part '${p.name}': the skin of foot '${foot.name}' ends ${(low * 100).toFixed(1)} cm from the ground (± ${GROUND * 100} cm)`,
+          : `part '${p.name}': the skin of foot '${foot.name}' ends ${(low * 100).toFixed(1)} cm from the ground (± ${(ground * 100).toFixed(1)} cm)`,
         'put the lowest vertex of every foot on z = 0 (kinds `modelFit` grounds the mesh; a paw held up in the concept needs a re-roll in a square stand)',
       ),
     );

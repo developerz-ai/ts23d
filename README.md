@@ -198,7 +198,7 @@ Every stage has zero runtime dependencies ([ADR 005](docs/decisions/005-zero-run
 
 > **Status: early (0.x).** The core loop works: write, build, QA, shot, hero, review, with
 > textures, trees, sculpt, terrain and the gallery's passing recipes. Still declared and throwing
-> `T3D_NOT_IMPLEMENTED` (As of 2026-11): none in `/neural`. Flagship realism is in progress: calibrated critique scores sit near 6 of 10 (target 8.5, floor not yet enforced); hybrid heads are in progress; the quadruped and dragon model tiers are in progress. Shipped neural-module pieces: `importGlb`, `importModel`, `refine`, `t3d finish --model http`, neural adapters (`http`, ComfyUI, OpenAI-compatible images, kubeez.com, Meshy, mock), the `blender` step task, the committed recipe cache with local outputs and `localGenerator`. See the [roadmap](docs/plans/roadmap.md). Expect breaking changes.
+> `T3D_NOT_IMPLEMENTED` (As of 2026-11): none in `/neural`. Flagship realism is in progress: calibrated critique scores sit near 6 of 10 (target 8.5, floor not yet enforced); hybrid heads are in progress; the wolf, bear and dragon model tiers ship (no wing motion, gallop, jaw or blink yet). Shipped neural-module pieces: `importGlb`, `importModel`, `refine`, `t3d finish --model http`, neural adapters (`http`, ComfyUI, OpenAI-compatible images, kubeez.com, Meshy, mock), the `blender` step task, the committed recipe cache with local outputs and `localGenerator`. See the [roadmap](docs/plans/roadmap.md). Expect breaking changes.
 
 ## A recipe
 
@@ -458,7 +458,7 @@ As of 2026-10. Full matrix: [docs/idea/07-what-fits.md](docs/idea/07-what-fits.m
 | **Shipped, early** | Stylised organic: `sculpt` busts, SDF rocks and asteroids, eroded terrain. Boats: lofted `hull` |
 | **Shipped, early** | Stylised creatures: `creature()` over a skeleton with per-family biology (`recipes/wolf`); [animal research](docs/research/animal-anatomy.md) |
 | **Shipped, early** | Model-first humanoids: [`recipes/ranger`](recipes/ranger/README.md), an image-to-3D body with the rig service's skin and clips, finished by Blender steps (As of 2026-11: QA PASS; no finger bones, no blink or jaw, hair as sculpted clumps) |
-| **Planned** | More model-first quadrupeds: `recipes/wolf_hybrid` ships on the model tier (As of 2026-11); the `brown_bear` and dragon model tiers are planned |
+| **Planned** | Model-first creatures that move more: `recipes/wolf_hybrid`, `recipes/bear_hybrid` and `recipes/dragon_hybrid` ship on the model tier (As of 2026-11); wing bones, gallop, jaw and blink on a model body are planned |
 | **Weak** | Realistic people and animals as pure code. Use the model tier (a model on your own GPU or a hosted one through a `NeuralAdapter`, finished by Blender steps, `t3d neural run`), with the result committed to the recipe's cache; or an image-to-3D tool on its own |
 
 Not a replacement for AI mesh generators: a different approach with different strengths. Neutral comparison: [docs/landscape.md](docs/landscape.md).

@@ -1,0 +1,339 @@
+{
+  "bbox": {
+    "frame": "gltf",
+    "max": [
+      0.31014,
+      1.039063,
+      1.149079
+    ],
+    "min": [
+      -0.324993,
+      -0.001517,
+      -0.503487
+    ]
+  },
+  "bind": {
+    "bones": 29,
+    "filled": 0,
+    "heatUnweighted": 0.0,
+    "maxInfluences": 4,
+    "method": "bone-heat",
+    "unusedBones": [],
+    "weightSum": [
+      1.0,
+      1.0
+    ]
+  },
+  "blender": "5.3.0",
+  "contract": "t3d-blender-report/1",
+  "glb": {
+    "animations": [],
+    "images": [
+      {
+        "channels": 3,
+        "mime": "image/png",
+        "name": "tex-normal"
+      },
+      {
+        "channels": 3,
+        "mime": "image/png",
+        "name": "tex-orm"
+      },
+      {
+        "channels": 3,
+        "mime": "image/png",
+        "name": "tex-albedo"
+      }
+    ],
+    "joints": [
+      "spine_0",
+      "hind_l_0",
+      "hind_l_1",
+      "hind_l_2",
+      "hind_l_3",
+      "hind_r_0",
+      "hind_r_1",
+      "hind_r_2",
+      "hind_r_3",
+      "spine_1",
+      "spine_2",
+      "neck_0",
+      "neck_1",
+      "head",
+      "scapula_l",
+      "fore_l_0",
+      "fore_l_1",
+      "fore_l_2",
+      "fore_l_3",
+      "scapula_r",
+      "fore_r_0",
+      "fore_r_1",
+      "fore_r_2",
+      "fore_r_3",
+      "tail_0",
+      "tail_1",
+      "tail_2",
+      "tail_3",
+      "tail_4"
+    ],
+    "materials": [
+      {
+        "name": "body",
+        "textures": [
+          "baseColorTexture",
+          "metallicRoughnessTexture",
+          "normalTexture",
+          "occlusionTexture"
+        ]
+      }
+    ],
+    "meshNodes": [
+      "lod0",
+      "lod1",
+      "lod2"
+    ],
+    "skins": 1,
+    "uvOrigin": "top-left (glTF)"
+  },
+  "lods": [
+    29998,
+    9998,
+    4998
+  ],
+  "seconds": 87.64,
+  "source": {
+    "materials": 1,
+    "textures": 2,
+    "triangles": 941691,
+    "uvLayers": 1,
+    "vertexColours": 0
+  },
+  "steps": [
+    {
+      "determinant": 4.6491,
+      "op": "transform",
+      "seconds": 0.07,
+      "triangles": 941691
+    },
+    {
+      "holeFaces": 0,
+      "nonManifoldEdges": 3234,
+      "op": "clean",
+      "seconds": 13.04,
+      "shells": 3638,
+      "shellsDropped": 3637,
+      "triangles": 892702,
+      "welded": 397125
+    },
+    {
+      "capFaces": 647,
+      "clearance": 0.018633,
+      "gap": 0.02,
+      "limbVertices": [
+        28574,
+        22583,
+        24856,
+        23005,
+        39512
+      ],
+      "moved": 2749,
+      "op": "unweb",
+      "pairs": {
+        "2 + 4": 187,
+        "3 + 4": 487
+      },
+      "seconds": 16.55,
+      "triangles": 892675,
+      "webFaces": 674
+    },
+    {
+      "boundaryEdges": 0,
+      "focusVertexShare": 0.6608,
+      "from": 892675,
+      "op": "retopo",
+      "reduce": "decimate",
+      "seconds": 25.2,
+      "shell": {
+        "bboxDrift": 0.00903,
+        "bboxSide": "-y (right)",
+        "close": 1,
+        "components": 1,
+        "handles": 0,
+        "largestShare": 1.0,
+        "lost": {
+          "centre": [
+            0.6271,
+            -0.1155,
+            0.4013
+          ],
+          "share": 0.0,
+          "tolerance": 0.015515,
+          "where": "+x (front)"
+        },
+        "skin": 0.0,
+        "tried": [
+          [
+            0,
+            0.0,
+            0.9071,
+            21
+          ],
+          [
+            1,
+            0.0,
+            0.0,
+            0
+          ]
+        ],
+        "volume": 0.34487,
+        "volumeRef": 0.355913
+      },
+      "shellTriangles": 103376,
+      "strategy": "shell",
+      "triangles": 29998,
+      "voxel": 0.010343
+    },
+    {
+      "islands": 159,
+      "kind": "smart",
+      "op": "uv",
+      "seconds": 5.27,
+      "triangles": 29998,
+      "uvDegenerate": 0.0
+    },
+    {
+      "albedoFrom": "texture",
+      "albedoMean": 0.2965,
+      "albedoUnfilled": 0.0,
+      "cage": 0.040219,
+      "device": "OPTIX: NVIDIA GeForce RTX 3090",
+      "hitRate": 0.9887,
+      "maps": [
+        "albedo",
+        "normal",
+        "ao"
+      ],
+      "op": "bake",
+      "seconds": 24.86,
+      "size": 2048,
+      "triangles": 29998,
+      "uvCoverage": 0.6446
+    },
+    {
+      "bones": 29,
+      "filled": 0,
+      "heatUnweighted": 0.0,
+      "maxInfluences": 4,
+      "method": "bone-heat",
+      "op": "bind",
+      "seconds": 0.75,
+      "triangles": 29998,
+      "unusedBones": [],
+      "weightSum": [
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "bodyRefilled": 1025,
+      "bones": [
+        "tail_1",
+        "tail_2",
+        "tail_3",
+        "tail_4"
+      ],
+      "changed": 1283,
+      "foreignBefore": 0.5102,
+      "inside": 263,
+      "op": "isolate",
+      "reassigned": [
+        0,
+        0
+      ],
+      "seconds": 0.24,
+      "triangles": 29998
+    },
+    {
+      "bone": "fore_l_2",
+      "changed": 552,
+      "kind": "smooth",
+      "masked": 553,
+      "meanAfter": 0.3729,
+      "meanBefore": 0.3749,
+      "op": "weights",
+      "seconds": 0.07,
+      "triangles": 29998
+    },
+    {
+      "bone": "fore_r_2",
+      "changed": 556,
+      "kind": "smooth",
+      "masked": 557,
+      "meanAfter": 0.4048,
+      "meanBefore": 0.4069,
+      "op": "weights",
+      "seconds": 0.07,
+      "triangles": 29998
+    },
+    {
+      "at": "tail_1",
+      "bones": 29,
+      "largestTurn": 40.89,
+      "offTarget": 1e-07,
+      "op": "repose",
+      "seconds": 0.03,
+      "triangles": 29998
+    },
+    {
+      "lod0": {
+        "boundaryEdges": 0,
+        "handles": 0,
+        "maxFaceShare": 0.0005,
+        "uvDegenerate": 0.0
+      },
+      "lods": [
+        {
+          "bboxDrift": 0.00079,
+          "bboxSide": "-x (back)",
+          "boundaryEdges": 0,
+          "handles": 0,
+          "lost": {
+            "share": 0.0,
+            "tolerance": 0.020536
+          },
+          "maxFaceShare": 0.0017,
+          "triangles": 9998,
+          "uvDegenerate": 0.0
+        },
+        {
+          "bboxDrift": 0.00144,
+          "bboxSide": "-x (back)",
+          "boundaryEdges": 0,
+          "handles": 0,
+          "lost": {
+            "share": 0.0,
+            "tolerance": 0.030804
+          },
+          "maxFaceShare": 0.0019,
+          "triangles": 4998,
+          "uvDegenerate": 0.0004
+        }
+      ],
+      "op": "lods",
+      "seconds": 0.68,
+      "triangles": 29998
+    },
+    {
+      "bytes": 9656284,
+      "images": {
+        "albedo": 2048,
+        "normal": 1024,
+        "orm": 1024
+      },
+      "op": "export",
+      "seconds": 0.81,
+      "triangles": 29998
+    }
+  ],
+  "threads": 1
+}

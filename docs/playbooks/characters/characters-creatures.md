@@ -144,8 +144,10 @@ recipe test; the items without a check above are **planned**, §9 there):
 
 ## Model tier: creature
 Quadruped on a model surface, our sourced skeleton and gait clips (kinds `modelChain` + `defineModelCreature`).
-Status (As of 2026-11): `recipes/wolf_hybrid` ships on it (QA PASS; idle, look, walk, trot); the
-`recipes/brown_bear` and `recipes/dragon` model tiers are planned.
+Status (As of 2026-11): `recipes/wolf_hybrid` (idle, look, walk, trot), `recipes/bear_hybrid`
+(plantigrade; idle, look, walk) and `recipes/dragon_hybrid` (an invented drake with rigid wings;
+`register: 'joints'`, `take` with `'tail'`; idle, look, walk) ship on it, QA PASS. Planned: wing
+bones on a model body, gallop, jaw and blink.
 
 | Stage | What to do | Why / check |
 |---|---|---|

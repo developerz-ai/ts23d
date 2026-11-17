@@ -1,0 +1,496 @@
+{
+  "name": "dragon_hybrid",
+  "kind": "creature",
+  "description": "Emberwing, an original fantasy drake standing on all fours, wings raised: 3.2 m nose to rump, 1.6 m at the shoulder, 5.0 m with the tail, 600 kg. Model tier: an image-to-3D surface (Pixal3D, MIT) with its own textures on three LODs, skinned to a quadruped skeleton (joints from UniRig) with idle, look and walk clips; the wings ride with the chest and do not flap. Without the neural cache: a code-built wingless quadruped at the same scale",
+  "tags": [
+    "creature",
+    "fantasy",
+    "dragon",
+    "skinned",
+    "neural",
+    "model-first"
+  ],
+  "lods": [
+    0,
+    1,
+    2
+  ],
+  "files": {
+    "lods": [],
+    "sheet": "sheet.png",
+    "thumb": "thumb.png"
+  },
+  "triangles": [
+    29998,
+    9998,
+    4998
+  ],
+  "drawCalls": [
+    1,
+    1,
+    1
+  ],
+  "pivots": [
+    {
+      "name": "body",
+      "parent": null
+    }
+  ],
+  "emitters": [],
+  "sockets": [],
+  "surfaces": [
+    "opaque"
+  ],
+  "textureSets": [
+    {
+      "name": "body",
+      "size": 2048,
+      "maps": {
+        "albedo": {
+          "size": 2048,
+          "bytes": 5122091
+        },
+        "normal": {
+          "size": 1024,
+          "bytes": 1303710
+        },
+        "orm": {
+          "size": 1024,
+          "bytes": 833461
+        }
+      },
+      "bytes": 7259262,
+      "credit": "ts23d dragon_hybrid recipe (Z-Image concept, Pixal3D mesh, UniRig joints, Blender steps) — MIT — neural cache (blender final on mesh bf86212bfe38)"
+    }
+  ],
+  "skeleton": [
+    {
+      "name": "spine_0",
+      "parent": null
+    },
+    {
+      "name": "spine_1",
+      "parent": "spine_0"
+    },
+    {
+      "name": "spine_2",
+      "parent": "spine_1"
+    },
+    {
+      "name": "scapula_l",
+      "parent": "spine_2"
+    },
+    {
+      "name": "scapula_r",
+      "parent": "spine_2"
+    },
+    {
+      "name": "neck_0",
+      "parent": "spine_2"
+    },
+    {
+      "name": "neck_1",
+      "parent": "neck_0"
+    },
+    {
+      "name": "head",
+      "parent": "neck_1"
+    },
+    {
+      "name": "tail_0",
+      "parent": "spine_0"
+    },
+    {
+      "name": "tail_1",
+      "parent": "tail_0"
+    },
+    {
+      "name": "tail_2",
+      "parent": "tail_1"
+    },
+    {
+      "name": "tail_3",
+      "parent": "tail_2"
+    },
+    {
+      "name": "tail_4",
+      "parent": "tail_3"
+    },
+    {
+      "name": "fore_l_0",
+      "parent": "scapula_l"
+    },
+    {
+      "name": "fore_l_1",
+      "parent": "fore_l_0"
+    },
+    {
+      "name": "fore_l_2",
+      "parent": "fore_l_1"
+    },
+    {
+      "name": "fore_l_3",
+      "parent": "fore_l_2"
+    },
+    {
+      "name": "fore_r_0",
+      "parent": "scapula_r"
+    },
+    {
+      "name": "fore_r_1",
+      "parent": "fore_r_0"
+    },
+    {
+      "name": "fore_r_2",
+      "parent": "fore_r_1"
+    },
+    {
+      "name": "fore_r_3",
+      "parent": "fore_r_2"
+    },
+    {
+      "name": "hind_l_0",
+      "parent": "spine_0"
+    },
+    {
+      "name": "hind_l_1",
+      "parent": "hind_l_0"
+    },
+    {
+      "name": "hind_l_2",
+      "parent": "hind_l_1"
+    },
+    {
+      "name": "hind_l_3",
+      "parent": "hind_l_2"
+    },
+    {
+      "name": "hind_r_0",
+      "parent": "spine_0"
+    },
+    {
+      "name": "hind_r_1",
+      "parent": "hind_r_0"
+    },
+    {
+      "name": "hind_r_2",
+      "parent": "hind_r_1"
+    },
+    {
+      "name": "hind_r_3",
+      "parent": "hind_r_2"
+    },
+    {
+      "name": "fore_l_0_mid",
+      "parent": "scapula_l"
+    },
+    {
+      "name": "fore_l_1_mid",
+      "parent": "fore_l_0"
+    },
+    {
+      "name": "fore_l_2_mid",
+      "parent": "fore_l_1"
+    },
+    {
+      "name": "fore_r_0_mid",
+      "parent": "scapula_r"
+    },
+    {
+      "name": "fore_r_1_mid",
+      "parent": "fore_r_0"
+    },
+    {
+      "name": "fore_r_2_mid",
+      "parent": "fore_r_1"
+    },
+    {
+      "name": "hind_l_0_mid",
+      "parent": "spine_0"
+    },
+    {
+      "name": "hind_l_1_mid",
+      "parent": "hind_l_0"
+    },
+    {
+      "name": "hind_l_2_mid",
+      "parent": "hind_l_1"
+    },
+    {
+      "name": "hind_r_0_mid",
+      "parent": "spine_0"
+    },
+    {
+      "name": "hind_r_1_mid",
+      "parent": "hind_r_0"
+    },
+    {
+      "name": "hind_r_2_mid",
+      "parent": "hind_r_1"
+    }
+  ],
+  "clips": [
+    {
+      "name": "idle",
+      "seconds": 4,
+      "loop": true,
+      "speed": 0
+    },
+    {
+      "name": "look",
+      "seconds": 4,
+      "loop": true,
+      "speed": 0
+    },
+    {
+      "name": "walk",
+      "seconds": 0.8441640742163852,
+      "loop": true,
+      "speed": 1.167
+    }
+  ],
+  "hitboxes": [
+    {
+      "bone": "spine_1",
+      "radius": 1.569178,
+      "height": 0.032891,
+      "coverage": 0.9649
+    },
+    {
+      "bone": "spine_2",
+      "radius": 0.456385,
+      "height": 0.213884,
+      "coverage": 0.9648
+    },
+    {
+      "bone": "scapula_l",
+      "radius": 0.2677,
+      "height": 0.340968,
+      "coverage": 0.9794
+    },
+    {
+      "bone": "scapula_r",
+      "radius": 0.328965,
+      "height": 0.282853,
+      "coverage": 0.9522
+    },
+    {
+      "bone": "neck_0",
+      "radius": 0.243328,
+      "height": 0.005838,
+      "coverage": 0.9704
+    },
+    {
+      "bone": "neck_1",
+      "radius": 0.24267,
+      "height": 0,
+      "coverage": 0.9747
+    },
+    {
+      "bone": "head",
+      "radius": 0.385572,
+      "height": 0.432903,
+      "coverage": 0.9571
+    },
+    {
+      "bone": "tail_0",
+      "radius": 0.433328,
+      "height": 0.030231,
+      "coverage": 0.9598
+    },
+    {
+      "bone": "tail_1",
+      "radius": 0.300606,
+      "height": 0.20031,
+      "coverage": 0.9544
+    },
+    {
+      "bone": "tail_2",
+      "radius": 0.224721,
+      "height": 0.578394,
+      "coverage": 0.9582
+    },
+    {
+      "bone": "tail_3",
+      "radius": 0.142039,
+      "height": 0.142011,
+      "coverage": 0.9583
+    },
+    {
+      "bone": "tail_4",
+      "radius": 0.218942,
+      "height": 0.560784,
+      "coverage": 0.9507
+    },
+    {
+      "bone": "fore_l_0",
+      "radius": 0.155933,
+      "height": 0.202772,
+      "coverage": 1
+    },
+    {
+      "bone": "fore_l_1",
+      "radius": 0.14459,
+      "height": 0.029179,
+      "coverage": 0.978
+    },
+    {
+      "bone": "fore_l_2",
+      "radius": 0.096232,
+      "height": 0.072031,
+      "coverage": 0.964
+    },
+    {
+      "bone": "fore_l_3",
+      "radius": 0.146271,
+      "height": 0.079504,
+      "coverage": 0.9741
+    },
+    {
+      "bone": "fore_r_0",
+      "radius": 0.151275,
+      "height": 0.192825,
+      "coverage": 0.9831
+    },
+    {
+      "bone": "fore_r_1",
+      "radius": 0.136979,
+      "height": 0.079461,
+      "coverage": 0.9706
+    },
+    {
+      "bone": "fore_r_2",
+      "radius": 0.071868,
+      "height": 0.064869,
+      "coverage": 0.956
+    },
+    {
+      "bone": "fore_r_3",
+      "radius": 0.114708,
+      "height": 0.221308,
+      "coverage": 0.9518
+    },
+    {
+      "bone": "hind_l_0",
+      "radius": 0.208558,
+      "height": 0.395909,
+      "coverage": 0.9686
+    },
+    {
+      "bone": "hind_l_1",
+      "radius": 0.12933,
+      "height": 0.106339,
+      "coverage": 0.9649
+    },
+    {
+      "bone": "hind_l_2",
+      "radius": 0.188287,
+      "height": 0.098527,
+      "coverage": 0.9786
+    },
+    {
+      "bone": "hind_l_3",
+      "radius": 0.139221,
+      "height": 0.091,
+      "coverage": 0.9686
+    },
+    {
+      "bone": "hind_r_0",
+      "radius": 0.212922,
+      "height": 0.426322,
+      "coverage": 0.9646
+    },
+    {
+      "bone": "hind_r_1",
+      "radius": 0.123568,
+      "height": 0.097357,
+      "coverage": 0.9551
+    },
+    {
+      "bone": "hind_r_2",
+      "radius": 0.173813,
+      "height": 0.083038,
+      "coverage": 0.9727
+    },
+    {
+      "bone": "hind_r_3",
+      "radius": 0.148033,
+      "height": 0,
+      "coverage": 0.9633
+    },
+    {
+      "bone": "fore_l_0_mid",
+      "radius": 0.207501,
+      "height": 0,
+      "coverage": 0.9726
+    },
+    {
+      "bone": "fore_l_1_mid",
+      "radius": 0.109744,
+      "height": 0,
+      "coverage": 1
+    },
+    {
+      "bone": "fore_l_2_mid",
+      "radius": 0.177989,
+      "height": 0.046506,
+      "coverage": 0.9518
+    },
+    {
+      "bone": "fore_r_0_mid",
+      "radius": 0.211888,
+      "height": 0,
+      "coverage": 0.9747
+    },
+    {
+      "bone": "fore_r_1_mid",
+      "radius": 0.126473,
+      "height": 0,
+      "coverage": 0.95
+    },
+    {
+      "bone": "fore_r_2_mid",
+      "radius": 0.124218,
+      "height": 0.111632,
+      "coverage": 0.9565
+    },
+    {
+      "bone": "hind_l_1_mid",
+      "radius": 0.15905,
+      "height": 0,
+      "coverage": 1
+    },
+    {
+      "bone": "hind_l_2_mid",
+      "radius": 0.152986,
+      "height": 0,
+      "coverage": 0.9524
+    },
+    {
+      "bone": "hind_r_1_mid",
+      "radius": 0.169239,
+      "height": 0,
+      "coverage": 1
+    },
+    {
+      "bone": "hind_r_2_mid",
+      "radius": 0.146768,
+      "height": 0,
+      "coverage": 1
+    }
+  ],
+  "real": {
+    "length": 5,
+    "width": 2.8,
+    "height": 3.3
+  },
+  "measures": [],
+  "sources": [
+    "recipes/dragon_hybrid/README.md (design brief and spec, borrowed anatomy, the chain, the steps)",
+    "surface: Pixal3D (TencentARC, MIT) · joints: UniRig (VAST-AI, MIT) · records in recipes/dragon_hybrid/neural/"
+  ],
+  "qa": {
+    "pass": true,
+    "findings": []
+  }
+}

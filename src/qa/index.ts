@@ -145,8 +145,9 @@ export {
 } from './lods.ts';
 export { type Ruler, ruler, type Size } from './measure.ts';
 export { measure, measures } from './measures.ts';
-export { albedoSpread, FIT_MEDIAN, GROUND, model, skeletonHug, TEXTURE_STD } from './model.ts';
+export { albedoSpread, GROUND, GROUND_SHARE, model, TEXTURE_STD } from './model.ts';
 export { doubledFeatures, GIRTH, GIRTH_UPRIGHT, outlines, UPRIGHT } from './model-doubled.ts';
+export { FIT_SPAN, FIT_TURN, hugTurn, skeletonHug, skeletonSpan } from './model-hug.ts';
 export { hiddenParts, zFighting } from './occlusion.ts';
 export { poseFrames } from './pose-frames.ts';
 export {

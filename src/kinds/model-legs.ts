@@ -25,6 +25,9 @@ const fail = (cause: string, fix: string): never => {
   throw new Ts23dError('T3D_MODEL_SKELETON', { cause: `model skeleton: ${cause}`, fix });
 };
 
+/** Highest slab the legs may first be told apart at (slabs are 1/40 of the plan's height). */
+const SEED_TOP = 6;
+
 const REROLL =
   'ask the concept image for a square neutral stand with all legs apart and visible (side-on, no crossed or hidden legs), re-run the mesh model, or fall back to the code creature';
 
@@ -63,9 +66,17 @@ export function traceLegs(
   free: readonly number[],
   ceil: readonly number[],
 ): LegTrace[] {
-  const seedLevel = 1;
   const z = (k: number): number => (k + 0.5) * lv.dz;
-  const islands = components(lv.cells[seedLevel] ?? new Set()).filter((g) => g.length >= 3);
+  const islandsAt = (k: number): number[][] =>
+    components(lv.cells[k] ?? new Set()).filter((g) => g.length >= 3);
+  // The legs are told apart at the lowest level that shows them all: one slab up as a rule;
+  // higher when spread toes or claws touch on the ground (a dragon's fore feet), never past
+  // SEED_TOP slabs.
+  const seedLevel =
+    Array.from({ length: SEED_TOP }, (_, i) => i + 1).find(
+      (k) => islandsAt(k).length >= feet.length,
+    ) ?? 1;
+  const islands = islandsAt(seedLevel);
   const kept = islands.slice(0, 8);
   if (kept.length < feet.length)
     fail(
