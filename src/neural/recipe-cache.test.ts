@@ -55,6 +55,7 @@ const REQ: { readonly [T in NeuralTask]: NeuralRequest<T> } = {
     points: 5,
     maxTriangles: 100,
   },
+  blender: { seed: 0, mesh: meshIn, program: skelIn, maxTriangles: 100 },
 };
 
 const job = <T extends NeuralTask>(task: T): NeuralJob<T> => ({ task, request: REQ[task], inputs });
@@ -75,12 +76,12 @@ describe('recipe cache: misses (failure first)', () => {
     const e = await c.fill(mockAdapter(), job('mesh')).catch((x: unknown) => x);
     expect(e instanceof Ts23dError && e.code).toBe('T3D_NEURAL_MISSING');
   });
-  test('over the cap (8 MB default) → T3D_NEURAL_FAILED, nothing stored', async () => {
+  test('over the cap (12 MB default) → T3D_NEURAL_FAILED, nothing stored', async () => {
     const c = neuralCache({ recipe: 'big', capBytes: 64 });
     const e = await c.fill(mockAdapter(), job('image')).catch((x: unknown) => x);
     expect(e instanceof Ts23dError && e.code).toBe('T3D_NEURAL_FAILED');
     expect(c.entries().length).toBe(0);
-    expect(NEURAL_CAP_BYTES).toBe(8 * 1024 * 1024);
+    expect(NEURAL_CAP_BYTES).toBe(12 * 1024 * 1024);
   });
   test('a tampered committed output → T3D_NEURAL_OUTPUT_INVALID', async () => {
     const c = neuralCache({ recipe: 'oak' });
@@ -121,4 +122,71 @@ describe('recipe cache: every task round-trips through mockAdapter', () => {
       );
       expect(ci.bytes()).toBeGreaterThan(0);
     });
+});
+
+describe('recipe cache: local outputs (keep: local)', () => {
+  const local = { ...job('image'), keep: 'local' as const };
+  const filled = async () =>
+    (await neuralCache({ recipe: 'oak' }).fill(mockAdapter(), local)).entry;
+
+  test('a committed (non-local) output without its file is still missing', async () => {
+    const { entry } = await neuralCache({ recipe: 'oak' }).fill(mockAdapter(), job('image'));
+    expect(entry.record.outputs[0]?.local).toBeUndefined();
+    expect(() => entryOf(entry.record, new Map())).toThrow(/output-0\.png is missing/);
+  });
+  test('a record that understates a file (bytes: 0) is refused, so the cap cannot be dodged', async () => {
+    const { entry } = await neuralCache({ recipe: 'oak' }).fill(mockAdapter(), job('image'));
+    const out = entry.record.outputs[0];
+    const lying = { ...entry.record, outputs: [{ ...out, bytes: 0 }] } as typeof entry.record;
+    const files = new Map([[out?.file ?? '', entry.outputs[0]?.bytes ?? new Uint8Array()]]);
+    expect(() => entryOf(lying, files)).toThrow(/bytes, record\.json says 0/);
+    expect(entryOf(entry.record, files).outputs[0]?.bytes.length).toBe(out?.bytes);
+  });
+  test('a local output that is present but changed is refused', async () => {
+    const { record } = await filled();
+    expect(() => entryOf(record, new Map([['local-0.png', new Uint8Array([1])]]))).toThrow(
+      /T3D_NEURAL_OUTPUT_INVALID.*local-0\.png is changed/,
+    );
+  });
+  test('fill: local-<i> files, "local": true, outside the cap; keep is not in the key', async () => {
+    const c = neuralCache({ recipe: 'oak', capBytes: 1 });
+    const { entry } = await c.fill(mockAdapter(), local);
+    const plain = await neuralCache({ recipe: 'oak' }).fill(mockAdapter(), job('image'));
+    expect(entry.record.key).toBe(plain.entry.record.key);
+    expect(entry.record.outputs.map((o) => [o.file, o.local, o.bytes > 0])).toEqual([
+      ['local-0.png', true, true],
+    ]);
+    expect(entry.outputs[0]?.sha256).toBe(entry.record.outputs[0]?.sha256 ?? '');
+    expect([c.bytes(), c.entries().length, c.absentLocal().size]).toEqual([0, 1, 0]);
+    expect(parseRecord(recordJson(entry.record), 'r').outputs[0]?.local).toBe(true);
+  });
+  test('without the file: a hit whose output is absent (hash only), never a miss', async () => {
+    const { record, outputs } = await filled();
+    const sha = record.outputs[0]?.sha256 ?? '';
+    const ci = neuralCache({ recipe: 'oak', offline: true, entries: [entryOf(record, new Map())] });
+    const hit = ci.get('image', REQ.image, { keep: 'local' });
+    expect(hit.fallback).toBe(false);
+    if (!hit.fallback)
+      expect(hit.result.outputs).toEqual([
+        { bytes: new Uint8Array(), mime: 'image/png', sha256: sha, absent: true },
+      ]);
+    expect([...ci.absentLocal()]).toEqual([[sha, record.key]]);
+    expect([ci.notices().length, ci.bytes()]).toEqual([0, 0]);
+    // With the file (the machine that made it): the bytes, hashed and validated.
+    const here = entryOf(record, new Map([['local-0.png', outputs[0]?.bytes ?? new Uint8Array()]]));
+    expect([here.outputs[0]?.absent, here.outputs[0]?.sha256]).toEqual([undefined, sha]);
+  });
+  test('a miss carries keep to the fill; a record without `local` loads as before', async () => {
+    const c = neuralCache({ recipe: 'oak' });
+    c.get('image', REQ.image, { keep: 'local' });
+    expect(c.misses()).toEqual([{ task: 'image', request: REQ.image, keep: 'local' }]);
+    const old = await neuralCache({ recipe: 'oak' }).fill(mockAdapter(), job('image'));
+    const text = recordJson(old.entry.record);
+    expect(text).not.toContain('local');
+    const e = entryOf(
+      parseRecord(text, 'r'),
+      new Map([['output-0.png', old.entry.outputs[0]?.bytes ?? new Uint8Array()]]),
+    );
+    expect(e.outputs[0]?.sha256).toBe(old.entry.record.outputs[0]?.sha256 ?? '');
+  });
 });

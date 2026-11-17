@@ -22,8 +22,10 @@ export const COMMAND_HELP: Readonly<Record<string, string>> = {
   server:
     'server  t3d server start|stop|status [--profile] [--port]: the reference model server from the setup venv',
   plan: 'plan    t3d plan check: assets/PLAN.md vs recipes (missing, extra, over budget)',
+  blender:
+    "blender t3d blender review <recipe.ts> --out <dir> (the module's BLENDER_REVIEW = { mesh, steps, skeleton? }) or --mesh <glb> --program <json> [--skeleton <json>]: runs the Blender step program with a review step and writes clay / wire / weights / poses / turnaround PNG sheets + review.md; --views a,b --size px --pose bone:axis:degrees; needs Blender (t3d setup tools); never cached",
   neural:
-    'neural  t3d neural ls (models from t3d.config.ts adapters) · t3d neural run <recipe.ts…> fills recipes/<name>/neural/<key>/; --require-neural: a miss is an error',
+    'neural  t3d neural ls (models from t3d.config.ts adapters) · t3d neural run <recipe.ts…> fills recipes/<name>/neural/<key>/; --require-neural: a miss is an error; paid adapters print estimated credits and need --yes-spend above 50',
   mcp: 'mcp     stdio MCP server for agents (build, shot, hero, blueprint, review, critique, list_recipes, explain_error); optional — the CLI with --json does the same',
   hero: 'hero    beauty render only → <out>/<asset>/hero.png (3/4 product shot, textured, shadowed)',
   review:

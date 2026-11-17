@@ -1,0 +1,31 @@
+plan: 101-organic-model-first
+title: Organic assets go model-first and Blender-first
+roadmap: "M4 creature next (:120), quadruped base meshes (:256); M5 Blender bridge (:144); inverse procedural modelling (:267)"
+status: in_progress
+owner: sebi
+worked_by: "claude (coordinator) + slice agents"
+percent: 70
+current_focus: "Wave D: wolf + bear recipes with UniRig joints and repose; ranger shipped (QA PASS, 44 Meshy credits); site textured viewer; model-character library slice"
+slices:
+  - { file: 01-textured-parts-core.md, status: complete, percent: 100 }
+  - { file: 02-blender-steps.md, status: complete, percent: 100 }
+  - { file: 03-import-model.md, status: complete, percent: 100 }
+  - { file: 04-meshy.md, status: complete, percent: 100 }
+  - { file: 05-export-textures.md, status: complete, percent: 100 }
+  - { file: 06-render-textures.md, status: complete, percent: 100 }
+  - { file: 07-model-body.md, status: in_progress, percent: 85 }
+  - { file: 08-wolf.md, status: in_progress, percent: 40 }
+  - { file: 09-humanoid.md, status: complete, percent: 100 }
+  - { file: 10-bear.md, status: in_progress, percent: 30 }
+  - { file: 11-dragon.md, status: not_started, percent: 0 }
+  - { file: 12-site.md, status: in_progress, percent: 10 }
+  - { file: 13-docs-release.md, status: not_started, percent: 0 }
+  - { file: 14-local-outputs.md, status: complete, percent: 100 }
+  - { file: 15-agent-finishing.md, status: complete, percent: 100 }
+  - { file: 16-model-character.md, status: in_progress, percent: 10 }
+evidence:
+  - "ranger: recipes/ranger/out/ranger/hero.png (QA PASS, 39k/12k/4k tris, idle/walk/jog); lab copies ~/workspace/lab/neural-models/out/ranger/"
+  - "wolf/bear in ts23d renderer: ~/workspace/lab/neural-models/out/blender-steps/ts23d_wolfS_hero.png, ts23d_bearS_hero.png (QA deform still failing)"
+  - "spike: ~/workspace/lab/neural-models/out/blender-steps/low_threequarter.png (955k → 30k tris + 2048 bake in 33 s, Blender 5.3 headless)"
+notes: "Owner 2026-11-16: hard surface looks good, organic does not; wants Blender steps in code, GPU image→model path, Meshy looked into, artist tricks researched. One GPU/model job at a time. Meshy: deliberate manual calls only."
+last_updated: 2026-11-16

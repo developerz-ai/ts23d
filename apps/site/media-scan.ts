@@ -1,12 +1,13 @@
 // Reads the committed outputs of every asset (`recipes/<folder>/out/<asset>/`: manifest.json,
 // critique.json, renders, WAVs) into the page's light `MediaEntry` and the per-asset `MediaFacts`.
-// Also reads each hybrid folder's committed neural records (`recipes/<name>_hybrid/neural/<key>/
-// record.json`, the models behind the model tier). Pure file reading; the Vite plugin
+// Also reads every recipe folder's committed neural records (`recipes/<folder>/neural/<key>/
+// record.json`, the models and tools behind a model tier) and the step list of a committed Blender
+// report. Local outputs (git-ignored `local-*`) are never listed. Pure file reading; the Vite plugin
 // (`media-plugin.ts`) decides the URLs and publishes the files.
 
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { creditOf, dataCredits } from './src/credits-panel.ts';
+import { creditOf, dataCredits, stepsOf } from './src/credits-panel.ts';
 import {
   MEDIA_IMAGES,
   type MediaCritique,
@@ -172,16 +173,26 @@ export function readNeural(dir: string): MediaNeural[] {
     .sort()
     .flatMap((key) => {
       const credit = creditOf(readJson(join(dir, key, 'record.json')));
-      return credit && credit.key === key ? [{ ...credit, dir: '' }] : [];
+      if (!credit || credit.key !== key) return [];
+      // A tool record's report (a committed JSON output) names the steps it ran.
+      const steps = credit.tool
+        ? credit.files
+            .filter((f) => f.endsWith('.json'))
+            .flatMap((f) => stepsOf(readJson(join(dir, key, f))))
+        : [];
+      return [{ ...credit, steps, dir: '' }];
     });
 }
 
-/** Every hybrid recipe folder (`<name>_hybrid`, the model tier) with committed neural records. */
+/**
+ * Every recipe folder with committed neural records: a `<name>_hybrid` (the model tier of
+ * `<name>`) or a recipe that holds both tiers itself (model-first assets with a CPU fallback).
+ */
 export function scanNeural(recipes: string): Record<string, MediaNeural[]> {
   const out: Record<string, MediaNeural[]> = {};
   if (!existsSync(recipes)) return out;
   for (const d of readdirSync(recipes, { withFileTypes: true })) {
-    if (!d.isDirectory() || !d.name.endsWith('_hybrid')) continue;
+    if (!d.isDirectory() || d.name.startsWith('_')) continue;
     const records = readNeural(join(recipes, d.name, 'neural'));
     if (records.length) out[d.name] = records;
   }

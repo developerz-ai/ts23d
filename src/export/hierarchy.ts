@@ -112,7 +112,10 @@ export function writeHierarchy(
       };
     }
     if (part.mesh && part.mesh.indices.length > 0) {
-      const prim = writePrimitive(doc.bin, part.mesh, o.materialOf(part, i), o.withSheet);
+      // Its own set (ADR 016): TANGENT only for the set's normal map, never for the sheet's.
+      const set = part.textures;
+      const tangents = set ? set.normal !== undefined : o.withSheet;
+      const prim = writePrimitive(doc.bin, part.mesh, o.materialOf(part, i), tangents, !!set);
       const extensions = o.primitiveExtensions?.(part, i);
       doc.meshes.push({
         name: part.name,

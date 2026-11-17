@@ -106,3 +106,21 @@ describe('the kind reproduces a big cat in a few lines', () => {
     expect(pale).toBeGreaterThan(20);
   });
 });
+
+describe('biped armature', () => {
+  it('runs its spine up the back and hangs both arms from it (not the spine down an arm)', () => {
+    const c = compile(defineCreature({ name: 'test_biped_rig', spec: SPECS.biped }), { lod: 2 });
+    const bones = c.skeleton?.bones ?? [];
+    const spine = bones.filter((b) => /^spine_\d+$/.test(b.name));
+    expect(spine.length).toBeGreaterThan(0);
+    for (const b of spine) {
+      expect(Math.abs(b.head[1]) + Math.abs(b.tail[1])).toBe(0);
+      expect(b.tail[2]).toBeGreaterThan(b.head[2]);
+    }
+    const [l, r] = ['arm_l_0', 'arm_r_0'].map((n) => bones.find((b) => b.name === n));
+    expect(l?.parent).toBe(spine[spine.length - 1]?.name);
+    expect(l?.head[1]).toBeGreaterThan(0.05);
+    expect(r?.head[1]).toBeCloseTo(-(l?.head[1] ?? 0), 9);
+    expect(r?.tail[2]).toBeLessThan(r?.head[2] ?? 0);
+  });
+});

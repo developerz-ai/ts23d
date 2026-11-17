@@ -1,15 +1,18 @@
 // blenderAdapter: Blender's data-level tools as tool tasks — `cloth` (cloth sim drape), `rig`
 // (Rigify meta-rig → rig on a humanoid armature), `fracture` (Voronoi cells + rigid-body settle),
-// `groom` (guide curves on a scalp → child hair curves styled by an op list → lock cards).
-// Not sculpt brushes: headless strokes are unreliable without a viewport; SDF strokes and VDM
-// stamps are ts23d's brushes. Two ways to run the same GPL scripts in examples/blender/:
+// `groom` (guide curves on a scalp → child hair curves styled by an op list → lock cards),
+// `blender` (an ordered step program, blender-steps.ts: clean, remesh, deform, retopo, UV, bake,
+// bind, LODs → one GLB + a report). Not brush strokes: those need a viewport; everything
+// data-level (modifiers, remesh, bake, bone heat) runs with `-b`. Two ways to run the same GPL
+// scripts in examples/blender/:
 //   mode 'blender' (default): a user's Blender app,
 //     blender -b --factory-startup -noaudio -t 1 --python-exit-code 3 --python ts23d_job.py -- job.json
 //   mode 'bpy': a Python that has `pip install bpy` (Blender as a module), python -I ts23d_job.py …
 // The job dir holds the inputs by sha256, job.json and the report.json the script writes last
-// (`{ ok, blender, outputs: [{ file, mime }], error? }`). Supported Blender lines are the LTS ones
-// (4.5, 5.2); version + script sha256 enter the cache key and the record (ADR 014), so an upgrade
-// is a cache miss, never a silent change. The library never imports the scripts: it spawns them.
+// (`{ ok, blender, outputs: [{ file, mime }], error? }`). Supported Blender lines: the LTS ones
+// (4.5, 5.2) and the current stable release (5.3); version + script sha256 enter the cache key and
+// the record (ADR 014), so an upgrade is a cache miss, never a silent change. The library never
+// imports the scripts: it spawns them.
 
 import type { NeuralOutput, NeuralTask } from '../core/index.ts';
 import {
@@ -38,9 +41,38 @@ export const BLENDER_TASKS = [
   'rig',
   'fracture',
   'groom',
+  'blender',
 ] as const satisfies readonly NeuralTask[];
 /** Blender LTS lines the scripts are tested on. */
 export const BLENDER_LTS = ['4.5', '5.2'] as const;
+/** Every line the adapter accepts: the LTS ones + the stable release the step ops were run on. */
+export const BLENDER_LINES = [...BLENDER_LTS, '5.3'] as const;
+/** tasks/steps/*.py behind the `blender` task, in hash order (the test compares the directory). */
+export const BLENDER_STEP_FILES = [
+  '__init__',
+  'state',
+  'io',
+  'clean',
+  'unweb',
+  'repose',
+  'remesh',
+  'shell',
+  'gates',
+  'retopo',
+  'build',
+  'deform',
+  'uv',
+  'bake',
+  'bake_source',
+  'fill',
+  'bind',
+  'rig_source',
+  'rigfix',
+  'script',
+  'review',
+  'review_sheet',
+  'lods',
+] as const;
 /** Blender's licence; scripts calling bpy are published GPL-compatible (examples/blender). */
 export const BLENDER_LICENCE = 'GPL-2.0-or-later';
 
@@ -65,15 +97,23 @@ const EXT: Readonly<Record<string, string>> = {
   'application/json': 'json',
 };
 
-/** Arguments that run the dispatcher `entry` on `jobJson` (also used by scripts/vdm-from-blender). */
-export function blenderJobArgs(mode: 'blender' | 'bpy', entry: string, jobJson: string): string[] {
+/**
+ * Arguments that run the dispatcher `entry` on `jobJson` (also used by scripts/vdm-from-blender).
+ * `threads` is Blender's `-t` (0 = every core); the job repeats it for the bpy module.
+ */
+export function blenderJobArgs(
+  mode: 'blender' | 'bpy',
+  entry: string,
+  jobJson: string,
+  threads = 1,
+): string[] {
   if (mode === 'bpy') return ['-I', entry, '--', jobJson];
   return [
     '-b',
     '--factory-startup',
     '-noaudio',
     '-t',
-    '1',
+    String(threads),
     '--python-exit-code',
     '3',
     '--python',
@@ -101,7 +141,7 @@ export function blenderAdapter(o: BlenderAdapterOptions = {}): NeuralAdapter {
   const exec = o.exec ?? nodeExec;
   const timeoutMs = o.timeoutMs ?? 600_000;
   const maxBytes = o.maxBytes ?? DEFAULT_MAX_BYTES;
-  const lines = [...BLENDER_LTS, ...(o.allowVersions ?? [])];
+  const lines: readonly string[] = [...BLENDER_LINES, ...(o.allowVersions ?? [])];
   const id = `blender:${mode}`;
   const call = (args: readonly string[], cwd?: string, ms = timeoutMs) => ({
     tool: 'blender',
@@ -118,6 +158,7 @@ export function blenderAdapter(o: BlenderAdapterOptions = {}): NeuralAdapter {
     `${dir}/ts23d_job.py`,
     `${dir}/tasks/common.py`,
     `${dir}/tasks/${task}.py`,
+    ...(task === 'blender' ? BLENDER_STEP_FILES.map((f) => `${dir}/tasks/steps/${f}.py`) : []),
   ];
 
   let listed: Promise<readonly NeuralModelInfo[]> | undefined;
@@ -172,15 +213,17 @@ export function blenderAdapter(o: BlenderAdapterOptions = {}): NeuralAdapter {
           await writeBytes(`${work}/${name}`, bytes);
           files[i.sha256] = name;
         }
+        const threads = threadsOf(job.request.params?.['threads']);
         const spec = {
           contract: 't3d-blender/1',
           task: job.task,
           request: fieldsOf(job.request),
           inputs: files,
+          threads,
         };
         await writeBytes(`${work}/job.json`, JSON.stringify(spec));
         const entry = `${dir}/ts23d_job.py`;
-        const args = blenderJobArgs(mode, entry, `${work}/job.json`);
+        const args = blenderJobArgs(mode, entry, `${work}/job.json`, threads);
         const c = call(args, work);
         const proc = await exec(exe, args, c);
         const report = proc.missing ? undefined : await readReport(work);
@@ -220,6 +263,14 @@ export function blenderAdapter(o: BlenderAdapterOptions = {}): NeuralAdapter {
       });
     },
   };
+}
+
+/** `params.threads`: Blender's thread count for this job; 1 unless asked (0 = every core). */
+function threadsOf(v: unknown): number {
+  if (v === undefined) return 1;
+  if (typeof v !== 'number' || !Number.isInteger(v) || v < 0 || v > 1024)
+    failed(`params.threads is ${String(v)}`, 'pass a whole number of threads (0 = every core)');
+  return v as number;
 }
 
 async function readReport(work: string): Promise<Report | undefined> {

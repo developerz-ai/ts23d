@@ -22,6 +22,7 @@ import {
 } from '../material/index.ts';
 import { provideImports } from '../neural/index.ts';
 import { type Args, parseArgs } from './args.ts';
+import { blenderMain } from './blender-review-cmd.ts';
 import { buildOne } from './build-one.ts';
 import { conceptCli } from './concept-cli.ts';
 import { critiqueOne } from './critique-cmd.ts';
@@ -93,6 +94,7 @@ async function dispatch(argv: readonly string[], json: boolean): Promise<number>
   if (argv[0] === 'setup' && !argv.includes('--help')) return setupMain(argv.slice(1), json);
   if (argv[0] === 'server' && !argv.includes('--help')) return serverMain(argv.slice(1), json);
   if (argv[0] === 'plan' && !argv.includes('--help')) return planMain(argv.slice(1), json);
+  if (argv[0] === 'blender' && !argv.includes('--help')) return blenderMain(argv.slice(1), json);
   if (argv[0] === 'build' && argv.includes('--watch')) return watchMain(argv);
   let args: Args;
   try {
@@ -115,6 +117,7 @@ async function dispatch(argv: readonly string[], json: boolean): Promise<number>
       json,
       requireNeural: args.requireNeural,
       allowBadInput: args.allowBadInput,
+      yesSpend: args.yesSpend,
     });
   const renders = RENDERS.includes(args.cmd);
   const live = await prepareSheet(args, renders);

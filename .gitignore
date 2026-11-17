@@ -11,8 +11,11 @@ coverage/
 apps/site/public/gallery/
 /renders/
 recipes/*/.out-tmp/
+# local neural outputs (keep: 'local'): too big to commit; record.json carries their sha256 (ADR 014)
+recipes/*/neural/*/local-*
 /.ts23d/finish/
 /.ts23d/golden/
+/.ts23d/meshy/
 /.ts23d/panel/
 __pycache__/
 # agent review and critique packs: regenerated, read, never committed

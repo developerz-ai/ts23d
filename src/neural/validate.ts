@@ -1,7 +1,9 @@
 // Task validation of model outputs, after the structural check (checkNeuralResult): PNGs decode at
 // the requested size, GLBs parse with finite positions under the triangle cap (a rig GLB carries a
 // skin, a cloth or groom GLB has triangles, a fracture GLB ≥ 2 pieces; a meshopt GLB is compressed, so only
-// its container is read), KTX2 has its identifier, JSON parses. Every refusal is
+// its container is read; a `blender` GLB comes first, has a node `lod0` and its cap counts LOD0
+// alone; its report is second and only review PNGs follow), KTX2 has its identifier, JSON parses.
+// Every refusal is
 // T3D_NEURAL_OUTPUT_INVALID: a model's (or tool's) bytes are untrusted.
 
 import {
@@ -50,13 +52,17 @@ function glb(task: NeuralTask, i: number, o: NeuralOutput, maxTriangles?: number
       return bad(task, i, `is not a readable GLB (${why(e)})`, 'return glTF 2.0 binary bytes');
     }
   })();
+  // A step program's GLB holds every LOD: only the node `lod0` (and its extra primitives) counts.
+  const lod0 = (name: string): boolean => name === 'lod0' || name.startsWith('lod0_');
+  if (task === 'blender' && !prims.some((p) => lod0(p.name)))
+    bad(task, i, "has no mesh node named 'lod0'", "end the program with { op: 'export' }");
   let tris = 0;
   for (const p of prims) {
     if (!p.mesh.positions.every(Number.isFinite))
       bad(task, i, `has non-finite positions in '${p.name}'`, 'fix the model export');
-    tris += p.mesh.indices.length / 3;
+    if (task !== 'blender' || lod0(p.name)) tris += p.mesh.indices.length / 3;
   }
-  if ((task === 'mesh' || task === 'cloth' || task === 'groom') && tris === 0)
+  if (TRIANGLES.includes(task) && tris === 0)
     bad(task, i, 'has no triangles', 'return a triangle mesh');
   if (task === 'fracture' && prims.length < 2)
     bad(task, i, `has ${prims.length} piece(s)`, 'fracture into ≥ 2 pieces (raise pieces)');
@@ -69,6 +75,8 @@ function glb(task: NeuralTask, i: number, o: NeuralOutput, maxTriangles?: number
     );
   if (task === 'rig' && skins === 0) bad(task, i, 'has no skin', 'return a skinned GLB (skins[0])');
 }
+
+const TRIANGLES: readonly NeuralTask[] = ['mesh', 'cloth', 'groom', 'blender'];
 
 /** A compressed GLB (EXT_meshopt_compression): header, version 2 and a JSON chunk with meshes. */
 function glbShell(task: NeuralTask, i: number, o: NeuralOutput): void {
@@ -117,6 +125,27 @@ export function validateOutputs<T extends NeuralTask>(
     return undefined;
   };
   const cap = typeof r['maxTriangles'] === 'number' ? r['maxTriangles'] : undefined;
+  if (task === 'blender') {
+    if (result.outputs[0]?.mime !== 'model/gltf-binary')
+      bad(task, 0, 'is not the GLB', 'return the GLB first, then the JSON report');
+    if (result.outputs[1]?.mime !== 'application/json')
+      bad(
+        task,
+        1,
+        result.outputs[1] ? `is ${result.outputs[1].mime}, not the JSON report` : 'is missing',
+        'return the GLB, then the JSON report (per-step numbers), then any review PNGs',
+      );
+    // After the GLB and the report come only the review renders.
+    result.outputs.forEach((o, i) => {
+      if (i >= 1 && o.mime !== (i === 1 ? 'application/json' : 'image/png'))
+        bad(
+          task,
+          i,
+          `is ${o.mime}, not ${i === 1 ? 'the JSON report' : 'a review PNG'}`,
+          'return the GLB, the JSON report, then the review PNGs',
+        );
+    });
+  }
   result.outputs.forEach((o, i) => {
     if (o.mime === 'image/png') png(task, i, o, size());
     else if (o.mime === 'image/ktx2') ktx2(task, i, o);

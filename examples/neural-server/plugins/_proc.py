@@ -37,7 +37,7 @@ def run(p: Plugin, job: Job, args: list[str], timeout_s: float = 3600, env: dict
     if r.returncode != 0:
         tail = "\n".join((r.stdout + r.stderr).splitlines()[-40:])
         raise PluginError(f"{p.name}: `{' '.join(cmd[:3])} …` exited {r.returncode}:\n{tail}")
-    return r.stdout
+    return r.stdout + r.stderr
 
 
 def newest(d: Path, pattern: str) -> Path:

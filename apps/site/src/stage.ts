@@ -18,6 +18,7 @@ import { ContactShadow } from './contact-shadow.ts';
 import { environmentFor } from './lightbox.ts';
 import { LOOKS, type Look } from './look.ts';
 import { castShadows, shadowCatcher } from './studio.ts';
+import { disposeTextureSet } from './texture-sets.ts';
 import { onSchemeChange, token } from './theme.ts';
 
 export class Stage {
@@ -182,11 +183,14 @@ export class Stage {
   }
 }
 
-/** Free the GPU buffers of a loaded GLB scene. */
+/** Free the GPU buffers of a loaded GLB scene (and the textures its own texture sets brought). */
 export function disposeTree(object: Object3D): void {
   object.traverse((o) => {
     if (!(o instanceof Mesh)) return;
     o.geometry.dispose();
-    for (const m of [o.material].flat()) m.dispose();
+    for (const m of [o.material].flat()) {
+      disposeTextureSet(m);
+      m.dispose();
+    }
   });
 }

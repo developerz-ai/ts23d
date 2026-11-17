@@ -50,17 +50,28 @@ live canvas fades in over them. Text on a stage uses `--studio-ink`.
   dossier and recipe links); sounds (play buttons, optional positional audio); measures (spec vs
   model, Δ%, source), sources; quality (critique scores, art metrics, weathering coverage); renders
   (contact sheet, blueprint, RTS icon/portrait/shot); recipe (file picker for multi-file recipes).
-- **Two tiers** (`src/tier-toggle.ts`, `src/credits-panel.ts`): an asset `<name>` with a recipe
-  `<name>_hybrid` whose model outputs are committed (`recipes/<name>_hybrid/neural/*/record.json`)
-  gets a "CPU tier / With models" switch on its card and under its viewer. The CPU tier is the
-  recipe alone (no GPU, deterministic); "With models" compiles the hybrid live in the worker with
-  those committed outputs (the media plugin publishes them under `media/neural/<folder>/<key>/`;
-  the worker re-checks every hash; a failed fetch is an error, never a silent CPU asset), and
-  `#<name>_hybrid` links to it. Hybrids never get their own card; a CPU-only asset shows no switch.
-  The credit line is neutral ("Made with Pixal3D (MIT) and Z-Image-Turbo (Apache-2.0) on the code
-  skeleton"), then task · model · licence · adapter kind per record; data attributions a licence
-  asks for (OpenStreetMap, ODbL) show under any viewer. `showcase.config.ts` (repo root) names
-  the model per task behind each showcased hybrid; a site test holds it to the records.
+- **Two tiers** (`src/tier-toggle.ts`, `src/credits-panel.ts`): a "CPU tier / Model tier" switch
+  under the viewer, in two layouts. A pair: an asset `<name>` with a recipe `<name>_hybrid` whose
+  model outputs are committed (`recipes/<name>_hybrid/neural/*/record.json`) also gets the switch
+  on its card; `#<name>_hybrid` links to the model tier and hybrids never get their own card. One
+  recipe: a model-first asset with records in its own folder (`ranger`) opens on the model tier
+  (what its committed renders show) and `#<name>@cpu` shows the same recipe built without them.
+  The CPU tier is the recipe alone (no GPU, deterministic); the model tier compiles live in the
+  worker with the committed outputs (the media plugin publishes them under
+  `media/neural/<folder>/<key>/`, never the local-only raw files; the worker re-checks every hash;
+  a failed fetch is an error, never a silent CPU asset). Outputs load only on that asset's page:
+  the home showcase skips a model-first asset above 2 MB. The credit line is neutral ("Made with
+  Pixal3D (MIT) and Z-Image-Turbo (Apache-2.0)"), then one line per record: task · model ·
+  licence · adapter kind; a hosted service reads "a hosted service (paid)" with its terms link,
+  and a Blender record lists its steps and the tool's version and licence. Data attributions a
+  licence asks for (OpenStreetMap, ODbL) show under any viewer. `showcase.config.ts` (repo root)
+  names the model or tool per task behind each showcased model tier; a site test holds it to the
+  records.
+- **Own textures** (`src/texture-sets.ts`): a part's texture set (ADR 016) arrives inside the GLB
+  as a `ts23d_tex_<set>` material and is decoded by the browser. The viewer keeps albedo sRGB,
+  normal and ORM linear, UVs unflipped, the normal map on the mesh's tangents; the trim-sheet
+  toggle never touches these materials (it is off and disabled when nothing else is on screen),
+  and the stats name each set and its map sizes.
 - **Motion** (`src/viewer-motion.ts`): Studio's clip picker lists every baked clip (idle, walk,
   trot, gallop, blink, talk, run…; never `rest`); a Skeleton checkbox draws a skinned asset's bones
   in redline.

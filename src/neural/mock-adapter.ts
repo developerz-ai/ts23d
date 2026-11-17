@@ -2,7 +2,7 @@
 // GPU, no network). Same job → same bytes: images and textures are seeded gradients at the asked
 // size, meshes a box GLB, rig / motion / hair small JSON documents, score a fixed rubric reply;
 // tool tasks: cloth / meshopt a box GLB, fracture two boxes, engine-check a JSON report, ktx2 a
-// header-only KTX2.
+// header-only KTX2, blender a `lod0` box GLB + an empty report.
 
 import { encodePng, NEURAL_TASKS, type NeuralOutput, type NeuralTask } from '../core/index.ts';
 import type { NeuralAdapter, NeuralJob, NeuralModelInfo, NeuralRun } from './adapter.ts';
@@ -63,6 +63,11 @@ function outputsFor(job: NeuralJob): NeuralOutput[] {
     case 'groom':
     case 'meshopt':
       return [glbOut([1 + (seed % 4) * 0.25])];
+    case 'blender':
+      return [
+        { ...glbOut([1]), bytes: writeMeshGlb([{ name: 'lod0', mesh: cube([1, 1, 1]) }]) },
+        jsonOut({ contract: 't3d-blender-report/1', blender: 'mock', steps: [] }),
+      ];
     case 'fracture':
       return [glbOut([0.5, 0.25])];
     case 'engine-check':

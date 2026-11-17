@@ -26,13 +26,31 @@ export {
 } from './adapter.ts';
 export {
   BLENDER_LICENCE,
+  BLENDER_LINES,
   BLENDER_LTS,
+  BLENDER_STEP_FILES,
   BLENDER_TASKS,
   type BlenderAdapterOptions,
   blenderAdapter,
   blenderJobArgs,
   defaultScripts,
 } from './blender-adapter.ts';
+export { BLENDER_SKELETON_CONTRACT, skeletonJson } from './blender-skeleton.ts';
+export {
+  BLENDER_REPORT_CONTRACT,
+  BLENDER_STEPS_CONTRACT,
+  type BlenderBakeMap,
+  type BlenderFocus,
+  type BlenderMask,
+  type BlenderOp,
+  type BlenderPose,
+  type BlenderReviewView,
+  type BlenderStep,
+  type BlenderWeightMask,
+  blenderProgram,
+  checkBlenderSteps,
+  jsonInput,
+} from './blender-steps.ts';
 export { type ComfyAdapterOptions, comfyAdapter, fillWorkflow } from './comfy-adapter.ts';
 export { type GenerateRequest, localGenerator, type MeshGenerator } from './generator.ts';
 export {
@@ -42,8 +60,15 @@ export {
   readAccessor,
   readGlb,
   readImage,
+  textureSource,
 } from './glb-read.ts';
-export { type ScenePrimitive, scenePrimitives } from './glb-scene.ts';
+export {
+  type M4,
+  type SceneGraph,
+  type ScenePrimitive,
+  sceneGraph,
+  scenePrimitives,
+} from './glb-scene.ts';
 export { type FixtureNode, GlbBin, packGlb, writeMeshGlb } from './glb-write.ts';
 export {
   CHECK_GD,
@@ -62,6 +87,7 @@ export {
   type ShellReport,
   smoothNormals,
 } from './import-clean.ts';
+export { closeCycle } from './import-clips-loop.ts';
 export {
   type ImportedMesh,
   type ImportOptions,
@@ -69,15 +95,37 @@ export {
   importGlb,
 } from './import-glb.ts';
 export { checkLicence, type ImportCredit, type LicenceVerdict } from './import-licence.ts';
+export {
+  type ImportedModel,
+  type ImportModelOptions,
+  type InlineModel,
+  importModel,
+} from './import-model.ts';
+export type { TextureOptions } from './import-textures.ts';
 export { aspectOf, KUBEEZ_TERMS, type KubeezOptions, kubeezAdapter } from './kubeez-adapter.ts';
-export { MESHY_TERMS, meshyAdapter } from './meshy-adapter.ts';
+export {
+  MESHY_RIG_MODEL,
+  MESHY_TERMS,
+  type MeshyAdapter,
+  meshyAdapter,
+} from './meshy-adapter.ts';
+export { type MeshyBalance, meshyBalance, meshyEstimate } from './meshy-credits.ts';
 export { filePending, memoryPending } from './meshy-net.ts';
 export {
+  MESHY_LIMITS,
   MESHY_MODELS,
   type MeshyOptions,
   type MeshyPending,
   meshyCost,
 } from './meshy-params.ts';
+export { MESHY_TEXTURE_MODELS } from './meshy-post.ts';
+export {
+  MESHY_SKELETONS,
+  type MeshyAnimation,
+  meshyAnimations,
+  resolveClips,
+} from './meshy-rig.ts';
+export { meshyTasks } from './meshy-task.ts';
 export { MOCK_LICENCE, type MockAdapter, mockAdapter } from './mock-adapter.ts';
 export {
   type OpenAiImageOptions,

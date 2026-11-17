@@ -5,7 +5,7 @@ import { compile } from '../core/index.ts';
 import { mockAdapter, parseRecord } from '../neural/index.ts';
 import { resolveConfig } from './config.ts';
 import { loadAssets } from './load.ts';
-import { neuralLs, neuralMain, neuralRun } from './neural-cmd.ts';
+import { neuralLs, neuralMain, neuralRun, ROUNDS } from './neural-cmd.ts';
 import { provideRecipeNeural } from './neural-store.ts';
 
 const dir = join(import.meta.dir, '../../tmp/cli-neural-test');
@@ -121,6 +121,68 @@ export const pebble = defineAsset({
     expect(top()).toBeCloseTo(1, 6);
   });
 
+  /** A chain: a local (never committed) image names the input of a committed ktx2. */
+  const CHAIN = `import { box, defineAsset } from '${lib}';
+export const chain = defineAsset({
+  name: 'chain',
+  kind: 'prop',
+  budget: { triangles: [12, 12, 12] },
+  build: (ctx) => {
+    const raw = ctx.neural('image', { seed: 7, prompt: 'raw', width: 4, height: 4 }, { keep: 'local' })?.outputs[0];
+    const k = raw?.sha256
+      ? ctx.neural('ktx2', { seed: 0, image: { sha256: raw.sha256, mime: raw.mime }, mode: 'uastc' }, { inputs: new Map([[raw.sha256, raw.bytes]]) })
+      : null;
+    ctx.part('body', box({ size: [1, 1, k ? 1 : 0.5], color: [0.5, 0.5, 0.5] }));
+  },
+});
+`;
+
+  it('local outputs: without the upstream file the chain is all hits; a miss fed by it is not sent', async () => {
+    const f = join(dir, 'chain', 'chain.ts');
+    const ndir = join(dir, 'chain', 'neural');
+    await rm(join(dir, 'chain'), { recursive: true, force: true });
+    await Bun.write(f, CHAIN);
+    const adapter = mockAdapter();
+    const config = resolveConfig({ neural: { image: adapter, ktx2: adapter } });
+    // A rule the user already keeps in neural/.gitignore survives the first local output.
+    await Bun.write(join(ndir, '.gitignore'), 'scratch/\n');
+    const made = await neuralRun(f, config, true);
+    expect([made.filled.map((x) => x.task).sort(), adapter.calls()]).toEqual([
+      ['image', 'ktx2'],
+      2,
+    ]);
+    const image = made.filled.find((x) => x.task === 'image')?.dir ?? '';
+    const ktx2 = made.filled.find((x) => x.task === 'ktx2')?.dir ?? '';
+    expect((await readdir(image)).sort()).toEqual(['local-0.png', 'record.json']);
+    expect(await readFile(join(ndir, '.gitignore'), 'utf8')).toContain('\n*/local-*\n');
+    expect(await readFile(join(ndir, '.gitignore'), 'utf8')).toMatch(/^scratch\/\n/);
+    // A build never reads a local file, even here: the same build on every machine.
+    expect((await provideRecipeNeural(f, ['chain'], true)).absentLocal().size).toBe(1);
+    // A fresh clone: the local file never left the machine that made it.
+    await rm(join(image, 'local-0.png'));
+    const clone = await neuralRun(f, config, true);
+    expect(clone.filled.map((x) => [x.task, x.cached, x.absent])).toEqual([
+      ['image', true, true],
+      ['ktx2', true, undefined],
+    ]);
+    expect([clone.missing.length, adapter.calls()]).toEqual([0, 2]);
+    const [chain] = await loadAssets(f);
+    if (!chain) throw new Error('no asset');
+    const cache = await provideRecipeNeural(f, ['chain'], true);
+    compile(chain, { lod: 0 });
+    expect(cache.notices().length).toBe(0);
+    // The downstream output is gone too: its input has no bytes here, so nothing is sent.
+    await rm(ktx2, { recursive: true });
+    const stuck = await neuralRun(f, config, false);
+    expect(stuck.missing.length).toBe(1);
+    expect(stuck.missing[0]?.message).toMatch(
+      /ktx2 request not sent: input [0-9a-f]{12}… is a local output not on this machine/,
+    );
+    expect(stuck.missing[0]?.fix).toContain('re-run the upstream request here');
+    expect(adapter.calls()).toBe(2);
+    await expect(neuralRun(f, config, true)).rejects.toThrow('T3D_NEURAL_MISSING');
+  });
+
   /** A recipe sending a 600² image to the mesh task: a clean subject, or the snow-photo clutter. */
   const meshRecipe = (
     clutter: boolean,
@@ -177,5 +239,12 @@ export const scan = defineAsset({
       'r',
     );
     expect(record.overrides?.some((o) => o.includes('background'))).toBe(true);
+  });
+});
+
+describe('neural run rounds', () => {
+  it('covers the longest request chain: image → mesh → proxy → rig → final', () => {
+    // One round fills one link; fewer rounds would leave a model body's last ask unfilled.
+    expect(ROUNDS).toBeGreaterThanOrEqual(5);
   });
 });

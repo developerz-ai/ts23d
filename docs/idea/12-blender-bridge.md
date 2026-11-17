@@ -1,6 +1,6 @@
 # 12 — Blender bridge (design + feasibility)
 
-**Status: partly shipped (plan 101 slice 20, 2026-11-15); the core library never needs Blender.** Shipped: Blender's *data-level* tools as optional, cached **tool tasks** behind the neural adapter contract (ADR 014/015) — `cloth` (cloth-sim drape), `rig` with `template: 'human'` (Rigify), `fracture` (Voronoi cells + rigid-body settle) — plus three non-Blender tools: `engine-check` (Godot headless import), `ktx2` (Basis Universal) and `meshopt` (meshoptimizer's gltfpack). Still planned: Cycles beauty renders, high→low bakes, voxel remesh / decimate, format conversion, Material Maker textures (see the tables below, kept as the design). Not wrapped, by decision: sculpt brush strokes (`bpy.ops.sculpt.brush_stroke` needs a viewport; ts23d's SDF strokes and VDM stamps are the brushes) and Blender MCP servers (they drive a live UI: not reproducible).
+**Status: partly shipped (plan 101 slice 20, 2026-11-15); the core library never needs Blender.** Shipped: Blender's *data-level* tools as optional, cached **tool tasks** behind the neural adapter contract (ADR 014/015) — `cloth` (cloth-sim drape), `rig` with `template: 'human'` (Rigify), `fracture` (Voronoi cells + rigid-body settle) — plus three non-Blender tools: `engine-check` (Godot headless import), `ktx2` (Basis Universal) and `meshopt` (meshoptimizer's gltfpack). Since plan 2026/11/16/101 slice 02 the `blender` task runs an ordered **step program** written in the recipe (clean, voxel remesh, deform, retopo, UV, high→low bake, bind, LODs: section below). Still planned: Cycles beauty renders, format conversion, Material Maker textures (see the tables below, kept as the design). Not wrapped, by decision: brush *strokes* only (every `bpy.ops.sculpt.*` tried fails its poll or crashes under `-b`: [research](../research/blender-organic-workflows.md); everything data-level — modifiers, remesh, bake, bone heat — is wrapped; ts23d's SDF strokes and VDM stamps stay the brushes) and Blender MCP servers (they drive a live UI: not reproducible).
 
 ## Shipped: tool tasks (slice 20)
 
@@ -18,6 +18,53 @@
 - **Errors:** every failure is `T3D_NEURAL_FAILED` (the proposed `T3D_BLENDER_*` codes below were folded into it): a missing tool's `fix:` names `t3d setup tools`; a crash carries the script's error and the last 40 lines of stderr; a timeout kills the process group.
 - **Recipes:** `recipes/_lib/bust/cloth-sim.ts` asks the cache for a drape and falls back to the stroke folds on a miss, so a bust without the cache builds exactly as the CPU tier does.
 - **VDM brushes:** `bun scripts/vdm-from-blender.ts <library.blend> <out> [--bpy python]` extracts vector-displacement brushes from a Blender asset library into `.vdm.bin` stamps with the asset licence recorded; `--commit` refuses licences this repository may not redistribute.
+
+## Shipped: the step program (`blender` task, plan 2026/11/16/101 slice 02)
+
+A recipe writes WHAT to do to a mesh as ordered, typed data; headless Blender does it; the GLB + report are a cached input like any model output (ADR 014).
+
+```ts
+const program = blenderProgram([            // → canonical t3d-blender-steps/1 JSON bytes (defaults filled in)
+  { op: 'clean' },
+  { op: 'retopo', triangles: 30000, focus: [{ at: [0.62, 0, 1.02], r: 0.2, weight: 3 }] },
+  { op: 'uv' },
+  { op: 'bake', maps: ['albedo', 'normal', 'ao'] },
+  { op: 'bind' },
+  { op: 'lods', triangles: [10000, 2500] },
+  { op: 'export', normalSize: 1024 },
+]);
+const request = { seed: 1, mesh, program: jsonInput(program), skeleton: jsonInput(skeletonJson(armature)), maxTriangles: 30000 };
+```
+
+| op | Does | Blender |
+|---|---|---|
+| `transform` | 4×4 in the asset frame, on the mesh and its bake sources | `mesh.transform` |
+| `clean` | weld, drop small shells and loose geometry, fill holes, consistent normals | bmesh |
+| `symmetrize` | mirror one half across an asset-frame plane | `mesh.symmetrize` |
+| `amputate` | delete the geometry inside given limb capsules and close the stumps (a profile model's far legs, before `symmetrize`) | bmesh delete + `holes_fill` (`steps/unweb.py`) |
+| `unweb` | cut geometry bridging two limbs given as capsules (tail ↔ hocks, leg ↔ leg), cap each side, push them `gap` apart | bmesh delete + per-limb caps (`steps/unweb.py`) |
+| `repose` | after `bind`: pose the bound mesh to a target rest (straight head, even left and right), keep it as the new rest; optional gated mirror of one half | pose bones → apply Armature modifier → `pose.armature_apply` (`steps/repose.py`) |
+| `voxelRemesh` | one watertight surface | Remesh modifier (VOXEL) |
+| `smooth` · `displace` · `inflate` | scripted deformation, optional z-band / sphere mask | Laplacian / Corrective Smooth, Displace + procedural texture, numpy |
+| `skinBody` · `metaballs` | build a body with no input mesh (first step only) | Skin + Subdivision modifiers, metaball → mesh |
+| `retopo` | the LOD0 shell; `strategy: 'shell'` (default) builds ONE filled, closed surface before reducing: voxel remesh, and when the source leaks (a crust with tunnels) a closing by `close` voxels (0, 1, 2, 4 tried), `skin` voxels fatter when sheets thinner than a voxel would be lost; `'decimate'` collapses directly; `reduce: 'quadriflow'`; `focus` balls and thin parts keep density | Remesh, SDF grid nodes (dilate / fill / erode), Decimate (vertex-group weighted) / QuadriFlow + Shrinkwrap |
+| `uv` | fresh UVs projected on a smoothed copy, packed; gated on island count and UV-degenerate triangles | Smart UV Project / minimum-stretch unwrap, `pack_islands` |
+| `bake` | albedo (EMIT of the source base colour; a cut-out source is looked through), normal, AO, roughness/metallic → albedo, normal, ORM; the albedo is a solid RGB coat (unreached texels take the nearest colour, their share is gated) | Cycles selected-to-active (GPU when found) |
+| `joint` | move a bone's head / tail before `bind` | skeleton JSON / edit bones |
+| `bind` | `from: 'skeleton'` (default): armature from `t3d-skeleton/1`, bone heat, voxel-proxy weight transfer when it fails. `from: 'source'`: the input GLB's own rig (a Meshy humanoid) is kept, its weights transferred onto the shell and every LOD, its clips exported. ≤ 4 influences | `parent_set(ARMATURE_AUTO)`, Data Transfer |
+| `weights` | after `bind`: assign / scale / smooth one bone's weights inside a mask (z band, sphere, box, half-space); the other bones give way | vertex groups (numpy) |
+| `script` | the agent's own bpy code as a recorded step (`python`, required `why`): in the program JSON, so in the cache key; gated like any step | `exec` with `obj`, `source`, `arm`, `bpy`, `bmesh`, `mathutils`, `np` |
+| `review` | PNG sheets after the GLB and report: clay, wire, per-bone weight heat maps, posed frames, textured turnaround; changes nothing | Workbench matcap / vertex colour / texture, orthographic |
+| `lods` | decimated copies sharing UVs, maps and weights, thin parts collapsed last; gated per level (open edges, shard faces, which bbox side moved, lost surface, new tunnels, UVs alive) | Decimate |
+| `export` | one GLB: nodes `lod0..2`, RGB PNG images, opaque material (both checked on the written file), skin, and every clip of a kept source rig at its own frame rate | glTF exporter |
+
+- **Why `shell` is the default retopo:** collapsing a raw image-to-3D surface (fur noise over internal layers) left 1,290 UV islands and a LOD2 of shards; voxel-remeshing first gives a closed shell, 226 islands and three clean LODs, and the fine detail returns through the normal bake. Numbers and renders: [`examples/blender/README.md`](../../examples/blender/README.md).
+- **Why the shell must be measured:** Pixal3D meshes are thin crusts (two walls ≈ 1.5 mm apart) with tunnels; a voxel remesh finer than a tunnel floods the inside and returns confetti (4,026 closed specks on a wolf, 1,622 on a clothed human) that still counts as "closed". The same root cause gave three different late failures (a transparent-looking wolf, a dragon LOD whose bbox moved, a human LOD with 35 % UV-dead triangles). Now `retopo` fails at the step, or repairs it: numbers per model in `examples/blender/README.md`.
+- **The finishing loop:** `t3d blender review <recipe.ts> --out <dir>` (the module exports `BLENDER_REVIEW = { mesh, steps, skeleton? }`) or `--mesh <glb> --program <json> [--skeleton <json>]` runs the program with a `review` step before its export and writes the sheets + `review.md` (tile legend, per-step facts). The agent reads them, adds a `joint` / `weights` / `script` step to the recipe, and looks again. Never cached, never in a build.
+- **Gates:** after every step the result must be a finite mesh with faces whose size did not jump (except `transform`); each op adds its own (shell solidity and lost surface, UV islands, albedo fill, weights after a script, LOD measures, opaque RGB export, clip names and lengths). Every message names the step, the measure and a `fix:`.
+- **Report** (`t3d-blender-report/1`, second output): per step seconds, triangles and facts (shell tries, bake hit rate, unfilled share and device, bind method, UV islands, LOD gate values, script sha256 and stdout tail), bbox, the review sheets, and what the GLB holds (mesh nodes, image mimes and channels, joints, animations).
+- **Versions:** 4.5 LTS, 5.2 LTS and 5.3 (stable release, the one the ops were run on); the version and the hash of every step script are in the cache key.
+- **Not in the gate:** unit tests drive a fake `blender`; `examples/blender/tasks/steps/test_steps.py` is the real self-test (manual; it also runs `test_gates.py` and `test_finish.py`).
 
 Smoke on the dev box (2026-11-15; bpy 5.2.4 LTS, Godot 4.7.2, basisu 2.50.0 built from source, gltfpack 1.3; two runs each gave identical output sha256):
 
@@ -71,7 +118,7 @@ t3d blender render recipe.ts ─┐
 | Piece | Where | Notes |
 |---|---|---|
 | Discovery | `blender` on PATH, or `T3D_BLENDER` / `--blender <path>` | Env is read by the **CLI only**, never by `src/` library code (same rule as API keys in [08](08-neural-adapters.md)) |
-| Version pin | `blender --version` parsed; supported list in code (e.g. `['4.5', '5.2']`); others refused | Version (major.minor + build hash) goes into the cache key and `report.json` |
+| Version pin | `blender --version` parsed; supported list in code (`BLENDER_LINES`: `['4.5', '5.2', '5.3']`); others refused | Version (major.minor + build hash) goes into the cache key and `report.json` |
 | Job | A JSON file: `{ op, input, params, seed, ts23dVersion }` | One Python entry script dispatches on `op`; no Python ever imported by TS |
 | Python scripts | `blender/ts23d_job.py` + one file per op, shipped in the npm package as data | GPL-compliant licence required if published (Blender licence page). MIT is generally considered GPL-compatible; **confirm with counsel before publishing** |
 | Module | New `src/blender/` at tier 3 (needs `export` for GLB bytes and `render` types), or `cli`-only | Must stay out of `src/index.ts` main barrel; subpath `@developerz.ai/ts23d/blender`. Needs `scripts/lib/tiers.ts` entry (UNOWNED) |

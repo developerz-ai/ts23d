@@ -20,6 +20,7 @@ import { gaps } from './gaps.ts';
 import { joints } from './joints.ts';
 import { mass } from './mass.ts';
 import { measures } from './measures.ts';
+import { model } from './model.ts';
 import { hiddenParts } from './occlusion.ts';
 import { degenerateTriangles, nonFinite, normalsMatchWinding, vertexColors } from './sanity.ts';
 import { skin } from './skin.ts';
@@ -141,6 +142,7 @@ export const DEFAULT_GATES: readonly Gate[] = [
   skin,
   deform,
   gait,
+  model,
 ];
 
 export function runQa(asset: CompiledAsset, gates: readonly Gate[] = DEFAULT_GATES): Finding[] {

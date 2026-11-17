@@ -18,6 +18,7 @@ import { resolve } from './resolve.ts';
 import { sceneOf } from './scene.ts';
 import type { ShadeContext } from './shade.ts';
 import { sample, sheetTextures } from './texture.ts';
+import { setAlpha } from './texture-sets.ts';
 import { rasteriseVis } from './vis-buffer.ts';
 
 export interface BeautyOptions {
@@ -71,7 +72,8 @@ export function renderBeauty(asset: CompiledAsset, o: BeautyOptions = {}): Beaut
   const ss = v.supersample;
   const scene = sceneOf(asset);
   const sheet = sheetOf(o);
-  checkSheetFor(sheet, scene.uvs);
+  // Textured parts (ADR 016) address their own set, not the sheet's rows.
+  for (const p of asset.parts) if (p.mesh && !p.textures) checkSheetFor(sheet, p.mesh.uvs);
   const tex = sheetTextures(sheet);
   const rig = studioRig(v.azDeg);
   const texel = new Float32Array(4);
@@ -84,6 +86,8 @@ export function renderBeauty(asset: CompiledAsset, o: BeautyOptions = {}): Beaut
     const c = (I[t * 3 + 2] ?? 0) * 2;
     const u = (U[a] ?? 0) * b0 + (U[b] ?? 0) * b1 + (U[c] ?? 0) * b2;
     const w = (U[a + 1] ?? 0) * b0 + (U[b + 1] ?? 0) * b1 + (U[c + 1] ?? 0) * b2;
+    const set = scene.sets[(scene.texSet[t] ?? 0) - 1];
+    if (set) return setAlpha(set, mip, u, w) >= ALPHA_CUT;
     sample(tex.albedo, mip, u, w, texel);
     return (texel[3] ?? 1) >= ALPHA_CUT;
   };

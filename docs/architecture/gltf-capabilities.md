@@ -17,6 +17,7 @@ Status legend: **shipped** = on `main` with a test · **next** = the current roa
 | Static batching | one mesh per pivot | `mergeToPivots` | shipped |
 | Vertex colour albedo | `COLOR_0` (u16 normalised) | every primitive's `color` | shipped |
 | PBR metal/rough + normal + ORM | `pbrMetallicRoughness`, `normalTexture`, `occlusionTexture` | procedural trim sheet | shipped |
+| A part's own texture set (ADR 016) | one extra material + embedded PNG `images` per set, on every LOD | `ctx.part(name, mesh, { textures })` + `budget.textureSets` (below) | shipped |
 | Alpha modes | `OPAQUE` / `MASK` / `BLEND` | surfaces opaque / cutout / glass / translucent | shipped |
 | Node animation (TRS) | `animations` | `spin`, `slide`, `sway`, `orbit`, `crank`, `piston` → `rest` + `run` clips | shipped |
 | Sockets, emitters | `extras` on empty nodes | `ctx.socket`, `ctx.emitter` | shipped |
@@ -54,6 +55,29 @@ part's morphs); one sampler serves every LOD tree. QA `skin` fails sums off 1 by
 but 4 influences, joints outside the skeleton, bones that drive nothing, skinned parts under a
 moving pivot, bones over `budget.bones` (default 64). The manifest lists `skeleton`, `clips`
 (name, seconds, loop, root speed m/s) and `hitboxes` (bone, radius, cap distance, coverage ≥ 95 %).
+
+### Texture sets: a part's own maps on every LOD (ADR 016)
+A part with `textures: TextureSet` leaves the trim sheet for its set's material. Written by
+`src/export/texture-sets.ts`:
+
+| Piece | What is written |
+|---|---|
+| Material | `ts23d_tex_<set>`: `baseColorTexture` (sRGB), `normalTexture`, and the ORM map in `occlusionTexture` + `metallicRoughnessTexture` with factors 1; without an ORM map the set's `roughness` / `metallic` (0.8 / 0). A `surface: 'cutout'` part uses `ts23d_texcut_<set>`: the same maps, `alphaMode: MASK`, cutoff 0.5, double-sided |
+| Order | after trim, glow, paint and finish materials, and images after the sheet's three: an asset without sets keeps its indices and bytes |
+| Images | PNG bytes as given, in the BIN chunk, once per file: every LOD tree of a single-file GLB (MSFT_lod) indexes the same material; each split `lodN.glb` embeds its own copy. Equal bytes under two set names are one image |
+| Sampler | one, trilinear, REPEAT both ways |
+| Nodes | texture sets never share a primitive with trim-sheet geometry: a pivot whose own geometry is all ONE set carries it (a fully textured body stays the node `body`); otherwise `<pivot>_tex_<set>` / `<pivot>_cutout_tex_<set>` children, one draw each (counted in the manifest's `drawCalls` and `budget.draws`) |
+| `TEXCOORD_0` | the part's `mesh.uvs` unchanged: glTF convention, 0..1, V down. A UV more than a texel outside 0..1 is an export warning (`GlbResult.warnings`) |
+| `TANGENT` | only when the set has a normal map; MikkTSpace-style (below). A normal map on a mesh with no UV area is `T3D_TEXTURE_INVALID` |
+| `COLOR_0` | multiplies the albedo; written only when some vertex is not white |
+| Skin, morphs | unchanged: `JOINTS_0` / `WEIGHTS_0` and sparse targets ride the textured primitive |
+| Declared | root `extras.ts23d.textureSets`: `[{ name, size, maps: { albedo: px, normal?: px, orm?: px }, materials, credit? }]`; `credit` also joins the XMP `dc:contributor`; `manifest.json` lists `textureSets` with per-map bytes |
+
+The hero / AI finish layer (`withFinishLayer`) only re-materials primitives on `ts23d_trim`, so it
+never touches a textured part. `withOwnTextures` (a post-process on a written GLB) remains for
+`scripts/import-textured.ts` only. Verified here: glTF-Validator (0 errors, 0 warnings) and F3D
+4.0.1 rendering all three LODs; three.js, Unity, Unreal and Godot read core-glTF textured
+materials, **untested here** for these files.
 
 ## Ratified extensions worth writing
 
@@ -269,7 +293,7 @@ only sets defaults (explicit flags win) and records `extras.profile`. Light unit
 
 ## Everything else: `extras`
 Any JSON fits in `extras` on any object. ts23d uses `extras.ts23d` for sockets, emitters, the
-generator version and provenance. Engines read it on import (Godot `meta`, Unity glTFast extras
+generator version, provenance and the texture sets parts carry (`textureSets`). Engines read it on import (Godot `meta`, Unity glTFast extras
 callbacks, three.js `userData`).
 
 ## Sources
@@ -294,7 +318,7 @@ callbacks, three.js `userData`).
 
 ## Light units and tangents
 **Light units.** `KHR_lights_punctual` intensities are physical: directional in lux, point/spot in candela. Sockets without `intensity` export a clear-sky sun (100 000 lx) or a ~1000 lm lamp (point 79.6 cd; spot = 1000 lm ÷ its cone's solid angle). three.js ≥ r155, Babylon, Godot (physical light units) and Unreal read these directly; viewers with legacy units need exposure.
-**Tangents.** TANGENT is written whenever the normal map is bound: without it glTF-Validator warns `MESH_PRIMITIVE_GENERATED_TANGENT_SPACE` and engines fall back to their own tangents. Ours are Lengyel + Gram-Schmidt per vertex: equal to MikkTSpace on flat-shaded trim, close on curved parts.
+**Tangents.** TANGENT is written whenever the normal map is bound: without it glTF-Validator warns `MESH_PRIMITIVE_GENERATED_TANGENT_SPACE` and engines fall back to their own tangents. Ours are Lengyel + Gram-Schmidt per vertex: equal to MikkTSpace on flat-shaded trim, close on curved parts. A part's own normal map (ADR 016) was baked by Blender / Cycles in MikkTSpace, so its primitives get `mikkTangents` (`src/export/tangents.ts`) instead: per triangle the unit dP/du, flattened into each vertex normal's plane, weighted by the corner angle, summed and normalised; w = +1 where the UV map keeps orientation, −1 where it is mirrored; bitangent toward decreasing v (green up). Limit: MikkTSpace splits a vertex whose triangles disagree in orientation, we keep the vertex count (such a vertex takes the angle-weighted majority), and results equal the reference to float rounding, not bit for bit; verified by unit tests and an F3D render, not against a Blender round trip.
 
 ## Sound
 `KHR_audio_emitter` (Khronos draft, `extensionsUsed` only): positional emitters on LOD0 nodes, external `<clip>.wav` files beside the GLB; see [17-sound](../idea/17-sound.md).

@@ -20,12 +20,14 @@ export interface SheetTextures {
   readonly orm: readonly Mip[];
 }
 
-const SRGB = new Float32Array(256).map((_, i) => {
+/** sRGB byte → linear. */
+export const SRGB = new Float32Array(256).map((_, i) => {
   const v = i / 255;
   return v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
 });
 
-function chain(
+/** RGBA8 → box-filtered float mips down to 4²; `cutout` keeps alpha-tested coverage. */
+export function chain(
   src: Uint8Array,
   size: number,
   decode: (c: number, v: number) => number,

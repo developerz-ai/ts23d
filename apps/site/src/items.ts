@@ -82,9 +82,10 @@ export function mergeRecipes(
   return order([...byName.values()]);
 }
 
-/** The flagships, in showcase order: the wolf (both tiers), the heads, tiger, dragon, fox, bear, city. */
+/** The flagships, in showcase order: the wolf (both tiers), the ranger (model-first), the heads, tiger, dragon, fox, bear, city. */
 export const FLAGSHIPS: readonly string[] = [
   'wolf',
+  'ranger',
   'human_head',
   'orc_head',
   'elf_head',

@@ -1,7 +1,14 @@
 // Meshy request building without any request: option refusals, per-model face caps, the cost table.
 
 import { describe, expect, test } from 'bun:test';
-import { checkOptions, imageBody, type MeshyOptions, meshyCost } from './meshy-params.ts';
+import {
+  checkOptions,
+  imageBody,
+  type MeshyOptions,
+  meshOptions,
+  meshyCost,
+  multiBody,
+} from './meshy-params.ts';
 
 const KEY = 'msy_fake';
 const o = (more: Partial<MeshyOptions> = {}): MeshyOptions => ({ apiKey: KEY, ...more });
@@ -18,6 +25,18 @@ describe('meshy params: failures first', () => {
     expect(() => checkOptions(o({ pbr: true }), 'latest')).toThrow(/need a texture/);
     expect(() => checkOptions(o({ geometryResolution: '2k' }), 'meshy-7.1')).not.toThrow();
   });
+  test('request params: unknown names, wrong types and values are refused; multi-image limits', () => {
+    const bad = (params: Record<string, unknown>) => () => meshOptions(o(), { params });
+    expect(bad({ textur: true })).toThrow(/params\.textur is not a Meshy knob/);
+    expect(bad({ texture: 'yes' })).toThrow(/params\.texture is "yes"/);
+    expect(bad({ textureResolution: '16k' })).toThrow(/textureResolution is "16k"/);
+    expect(() => meshOptions(o(), { pose: 'sitting' })).toThrow(/pose is "sitting"/);
+    expect(() => multiBody(o(), 'meshy-t2.5', ['a'])).toThrow(/no smart-topology model/);
+    expect(() => multiBody(o({ geometryResolution: '4k' }), 'latest', ['a'])).toThrow(
+      /4k geometry/,
+    );
+    expect(() => multiBody(o(), 'latest', ['a', 'b', 'c', 'd', 'e'])).toThrow(/got 5 images/);
+  });
 });
 
 describe('meshy params', () => {
@@ -33,6 +52,22 @@ describe('meshy params', () => {
       ['latest', 300_000, true, 'standard'],
     ]);
     expect(imageBody(o(), 'latest', 'x', 10)['target_polycount']).toBe(100);
+  });
+
+  test('a request overrides the adapter options: params and pose win', () => {
+    const got = meshOptions(o({ texture: false, poseMode: 't-pose' }), {
+      pose: 'a-pose',
+      params: { texture: true, pbr: true },
+    });
+    expect([got.texture, got.pbr, got.poseMode, got.apiKey]).toEqual([true, true, 'a-pose', KEY]);
+    expect(multiBody(got, 'latest', ['f', 's'])).toMatchObject({
+      image_urls: ['f', 's'],
+      pose_mode: 'a-pose',
+      should_texture: true,
+      enable_pbr: true,
+      image_enhancement: false,
+      target_formats: ['glb'],
+    });
   });
 
   test('meshyCost: ultra geometry, texture pass, 8k and a foreign texture model', () => {

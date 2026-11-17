@@ -11,6 +11,7 @@ export {
   withFinishLayer,
 } from './finish-glb.ts';
 export {
+  type ExportWarning,
   exportGlb,
   exportLodGlb,
   type GlbOptions,
@@ -80,7 +81,9 @@ export {
   sheetInProject,
 } from './profile.ts';
 export { bindLoose, skeletonOf, skinAttributes, writeSkin, Y_UP_TO_Z_UP } from './skin.ts';
-export { tangentsOf } from './tangents.ts';
+export { mikkTangents, tangentsOf } from './tangents.ts';
+export { type TextureJson, type TextureSetPlan, textureSetPlan } from './texture-sets.ts';
+export { hasUvLayout, textureSetWarnings, uvsOutside } from './texture-uvs.ts';
 export {
   type ExternalSheet,
   SHEET_MAPS,

@@ -27,11 +27,27 @@ learned from public practice; every design stays original ([16-art-as-text](../i
 | Rigger / animator basics ([`rigger-animator`](../../.claude/skills/rigger-animator/SKILL.md)) | joint placement at anatomical pivots, deformation zones, pivots for mechanics, clearances, arcs | skeleton → pivots → range of motion → deformation test → motion bake | pivot at the hinge line (playbooks); 2–3 loops per bending joint [S9][S10] | full-range motion clears; pivot at hinge | `ctx.group` pivots, `motion: spin/slide/sway`, `clashes`, `clearOf`, `assertMotionClear`, `assertPartMotionClear`, `ctx.joint`; skins/morphs **not shipped** |
 | Game art director ([`art-director`](../../.claude/skills/art-director/SKILL.md)) | style guide / art bible, palette roles, scale rules, review cadence, consistency across a set | pillars → references → style guide → exemplar assets → reviews → enforce | palette entries carry usage roles; scale from doors, stairs, humans [S23]; "the guide is law until amended" [S23] | every asset on palette, same texel density, same proportions system | `definePalette`/`palettes`, trim sheet (one material), `defineFamily`, `assertTexelDensity`, `t3d critique` rubric, `critique.json`, gallery |
 
+## Organic professions meet the model tier (As of 2026-11)
+
+Character, creature, technical and rigger skills now carry a model-first branch: a concept image, an
+image-to-3D body and headless Blender steps the recipe writes, because bodies sculpted from code
+primitives did not read as animals or people ([plan 101](../plans/2026/11/16/101-organic-model-first/overview.md)).
+What each profession does at each step, and the ts23d op that carries it
+([ops and gates](../../examples/blender/README.md); sources: [blender-organic-workflows](blender-organic-workflows.md)):
+
+| Profession step | What the artist does | ts23d |
+|---|---|---|
+| Concept / reference ([`concept-artist`](../../.claude/skills/concept-artist/SKILL.md)) | orthographic turnaround, neutral pose, flat light | exact side profile (quadruped) or A-pose front (biped), input-image rules (`T3D_NEURAL_INPUT`) |
+| Clean-up, retopology ([`character-artist`](../../.claude/skills/character-artist/SKILL.md), [`creature-artist`](../../.claude/skills/creature-artist/SKILL.md)) | voxel remesh, retopo, detail to a normal map | `clean`, `retopo` (solid shell, `focus`), `unweb`, `amputate`, `symmetrize`, `repose` |
+| UV and bake ([`technical-artist`](../../.claude/skills/technical-artist/SKILL.md)) | seams, island packing, high-to-low bake | `uv`, `bake`, `lods`; one texture set per asset, ADR 016 |
+| Rig and weights ([`rigger-animator`](../../.claude/skills/rigger-animator/SKILL.md)) | bone heat, proxy transfer, weight paint fixes, correctives | `bind`, `weights`, `joint`, `fitSkeleton`, rigger adapters (`unirig`, Meshy) |
+| Review ([`presentation-artist`](../../.claude/skills/presentation-artist/SKILL.md)) | clay, wire, weight and pose sheets | `review` step, `t3d blender review` |
+
 ## Gaps these professions expose (ranked)
 
 | # | Need | Who needs it | ts23d today |
 |---|---|---|---|
-| 1 | Skinning and morph targets: bones with weights, ≤ 4 influences, deformation test poses | character, creature, rigger | rigid pivots + baked `spin/slide/sway`; no skins, no morphs ([surfaces-volumes](surfaces-volumes.md)) |
+| 1 | Skinning and morph targets: bones with weights, ≤ 4 influences, deformation test poses | character, creature, rigger | Skins (≤ 4 influences), sparse morph targets and the `skin` / `deform` / `gait` gates ship (ADR 013); model-built bodies bind in Blender (`bind`, `weights`, `repose`). Missing: finger bones, jaw and blink on a model head ([surfaces-volumes](surfaces-volumes.md) is the older plan) |
 | 2 | Readability gates: focal-point value contrast, value grouping, rest areas, shape-language metric | concept, art director, character | definitions only ([16-art-as-text](../idea/16-art-as-text.md), planned); `assertLodSilhouette` is the one shipped silhouette helper |
 | 3 | Surface-quality review: zebra / reflection lines, curvature combs, section cuts, G1/G2 continuity | automotive, product | none; raking light in `t3d critique` only (zebra planned, roadmap "Reach") |
 | 4 | Architectural programme and code checks: room areas, stair rule, door/headroom, daylight factor, egress | architect, environment | `blueprint` 1.8 m figure, `measures`; no stair part, no room/area model, no daylight analysis |

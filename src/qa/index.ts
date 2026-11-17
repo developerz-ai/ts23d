@@ -111,6 +111,7 @@ export {
   furSilhouetteCheck,
 } from './fur-silhouette.ts';
 export { gait, gaitFindings } from './gait.ts';
+export { SKIN_SINK_LIMIT, soleSinks } from './gait-skin.ts';
 export { gapOverlay, gapZoom } from './gap-overlay.ts';
 export {
   describeGap,
@@ -144,6 +145,8 @@ export {
 } from './lods.ts';
 export { type Ruler, ruler, type Size } from './measure.ts';
 export { measure, measures } from './measures.ts';
+export { albedoSpread, FIT_MEDIAN, GROUND, model, skeletonHug, TEXTURE_STD } from './model.ts';
+export { doubledFeatures, GIRTH, GIRTH_UPRIGHT, outlines, UPRIGHT } from './model-doubled.ts';
 export { hiddenParts, zFighting } from './occlusion.ts';
 export { poseFrames } from './pose-frames.ts';
 export {

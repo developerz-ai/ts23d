@@ -56,6 +56,24 @@ export const my_asset = defineAsset({
 | 7 iterate | repeat 3–6. Be harsh: compare the hero side by side with the reference photos; flat single-colour paint, blobby forms or toy proportions are failures even at QA PASS. Use the material library (wood, iron, brass, rubber…), not plain colour | a stranger names it from the 3/4 view and it could sit in a shipped game |
 | 8 publish | `bun run shots <name>` → commit `recipes/<name>/out/` | the recipes gate checks the committed outputs match the recipe |
 
+## Organic branch: creature or humanoid (As of 2026-11)
+Hard surface stays code (the loop above). A realistic animal or person does not get sculpted from primitives:
+the body is a model plus Blender steps you write. Pick the tier first and say it in the recipe README.
+| Situation | Tier | Skill |
+|---|---|---|
+| Local GPU (24 GB+ for `pixal3d` / `trellis2`) or a Meshy key | Model tier: concept image -> image-to-3D (`keep: 'local'`) -> `blender` steps -> `importModel`; code keeps scale, skeleton, clips, budgets, QA | [creature-artist](../creature-artist/SKILL.md) (kinds `modelChain`, `defineModelCreature`), [character-artist](../character-artist/SKILL.md) (`riggedChain`, `defineModelCharacter`) |
+| No GPU, no key | Blender-only body (`skinBody` / `metaballs` as first step) or the CPU creature / mannequin fallback; say plainly that it is a stand-in | same skills |
+| Stylised creature, bust, rock | Code (`sculpt`, `creature()`, `head`) | creature-artist, character-artist |
+Steps after step 1 (research) for the model tier:
+| Step | Command | Exit criterion |
+|---|---|---|
+| concept | bind only `image` in `t3d.config.ts`; `bun run t3d neural run recipes/x/x.ts`; READ the PNG | passes the input-image rules; exact side profile (quadruped) or A-pose front (biped), flat light |
+| model | bind `mesh` (and `rig`); same command (up to 5 rounds; paid adapters print credits, `--yes-spend` above 50) | `neural/<key>/record.json` committed; committed bytes <= 12 MB; raw mesh stays local |
+| steps | edit the recipe's `steps`, `bun run t3d blender review recipes/x/x.ts --out review`; READ clay, wire, weights, poses | no shards, no fused limbs, weights clean; then `bun run t3d neural run recipes/x/x.ts` again: only the Blender stage re-runs (free) and the build reads that cached output, never the review's |
+| build | `bun run t3d build recipes/x/x.ts --out out` | QA PASS including `model`, `skin`, `deform`, `gait`; `budget.textureSets` declared |
+| publish | `bun run shots x`, README with real numbers (credits, times, cache size, known flaws) | `bun run verify --only recipes` passes on a fresh clone with no Blender, GPU or key (cache hits, CPU fallback on a miss) |
+Tests and CI never call Blender, a model or Meshy.
+
 ## Write as much code as the asset needs
 **Search `recipes/_parts/README.md` (the parts kit: bolts, hinges, wheels, pipes, doors, windows, ladders, lamps…) before writing geometry**; reuse a part with `part(ctx, name, overrides)` or `part.mesh(overrides, ctx)`, and add a missing reusable piece there with `definePart` ([14-parts](../../../docs/idea/14-parts.md)).
 Code is cheap for an agent; quality is not. A kind preset (`head(ctx, { race: 'orc' })`) is a starting

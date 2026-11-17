@@ -150,11 +150,15 @@ const flipY = (p: Vec3): Vec3 => [p[0], -p[1], p[2]];
 /**
  * The skeleton as bones (asset frame, parent first): `spine_*` sacrum → withers (or the body
  * chain), `neck_*`, `head` (atlas → nose), `jaw` (hinge → chin, when given), `tail_*`, each leg
- * `fore_l_*` / `hind_l_*` (shoulder/hip → foot tip) mirrored as `_r`, wings `wing_l_*`.
+ * `fore_l_*` / `hind_l_*` (shoulder/hip → foot tip) mirrored as `_r`, wings `wing_l_*`, a
+ * biped's arms `arm_l_*` / `arm_r_*`.
  */
 export function armatureOf(b: Bones, jaw: readonly [Vec3, Vec3] | null, prefix = ''): Bone[] {
   const p = (n: string): string => `${prefix}${n}`;
-  const body = b.chain.length > 1 ? b.chain.map((c) => c.at) : b.spine;
+  // A biped's `chain` is its left arm (the sculpt mirrors it), not a body chain: its spine is
+  // the dorsal line and the arms hang from the top of it.
+  const arms = b.skeleton === 'biped' && b.chain.length > 1 ? b.chain.map((c) => c.at) : [];
+  const body = arms.length === 0 && b.chain.length > 1 ? b.chain.map((c) => c.at) : b.spine;
   const spine = chainBones(p('spine'), body, undefined, 6);
   const top = spine[spine.length - 1]?.name;
   const neckPts = b.neck.slice(1).map((n) => n.at);
@@ -197,6 +201,11 @@ export function armatureOf(b: Bones, jaw: readonly [Vec3, Vec3] | null, prefix =
     ] as const)
       out.push(...chainBones(p(`${l.name}_${side}`), pts.map(f), root, 6));
   }
+  if (arms.length)
+    out.push(
+      ...chainBones(p('arm_l'), arms, top, 3),
+      ...chainBones(p('arm_r'), arms.map(flipY), top, 3),
+    );
   for (const w of b.wings) {
     const pts = w.arm.map((a) => a.at);
     out.push(

@@ -7,7 +7,7 @@ import { existsSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { nodeExec, type ToolExec } from '../neural/index.ts';
+import { BLENDER_LTS, nodeExec, type ToolExec } from '../neural/index.ts';
 
 export interface Host {
   readonly env: Readonly<Record<string, string | undefined>>;
@@ -179,6 +179,36 @@ export async function biggestGpu(host: Host): Promise<Gpu | undefined> {
     (await probe(host, 'nvidia-smi', [])) ?? '',
   )?.[1];
   return cuda ? { ...best, cuda } : best;
+}
+
+/**
+ * The `blender` step task (retopo, UV, bake, bind, LODs) here: the Blender that would run it and
+ * the device its Cycles bake would use (the task itself picks OptiX/CUDA/HIP/Metal/oneAPI, else CPU).
+ */
+export function blenderStepsCheck(version: string | undefined, gpu?: Gpu): Check {
+  const base = { id: 'blender-steps', group: 'tools' } as const;
+  const oldest = BLENDER_LTS[0];
+  if (version === undefined)
+    return {
+      ...base,
+      status: 'info',
+      detail: '`blender` step task needs Blender: organic recipes use their committed cache',
+      fix: 't3d setup tools',
+    };
+  const line = /^\d+\.\d+/.exec(version)?.[0] ?? '';
+  const bake = gpu ? `GPU (${gpu.name})` : 'CPU (no GPU found: a 2048² bake takes minutes)';
+  if (!(Number(line) >= Number(oldest)))
+    return {
+      ...base,
+      status: 'warn',
+      detail: `\`blender\` step task: Blender ${version} is older than ${oldest} LTS`,
+      fix: `install Blender ${BLENDER_LTS.at(-1)} LTS (t3d setup tools), or pass allowVersions: ['${line}'] to blenderAdapter`,
+    };
+  return {
+    ...base,
+    status: 'ok',
+    detail: `\`blender\` step task on Blender ${version} · bake device: ${bake}`,
+  };
 }
 
 export const gb = (mb: number): string => `${(mb / 1024).toFixed(1)} GB`;

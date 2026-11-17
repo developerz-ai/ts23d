@@ -3,7 +3,9 @@
 // inputs to a build, never a build step (ADR 014); models are the user's choice (ADR 015). Tool
 // tasks (cloth, fracture, engine-check, ktx2, meshopt; `rig` with a template) run external tools
 // (Blender, Godot, Basis Universal, meshoptimizer) behind the same contract; `groom` sends a scalp
-// GLB + guide curves JSON + an ordered groom op list and gets hair cards back (Blender hair curves).
+// GLB + guide curves JSON + an ordered groom op list and gets hair cards back (Blender hair curves);
+// `blender` sends a mesh + an ordered step program (`t3d-blender-steps/1`, /neural blender-steps.ts)
+// and gets one GLB (lod0..2, own UVs, baked PNG maps, a skin when bound) + a JSON report back.
 
 import { Ts23dError } from './errors.ts';
 
@@ -21,6 +23,7 @@ export const NEURAL_TASKS = [
   'ktx2',
   'meshopt',
   'groom',
+  'blender',
 ] as const;
 export type NeuralTask = (typeof NEURAL_TASKS)[number];
 
@@ -36,8 +39,13 @@ export interface NeuralInput {
 
 /** One file a model returned. */
 export interface NeuralOutput {
+  /** Empty when `absent`. */
   readonly bytes: Uint8Array;
   readonly mime: string;
+  /** Lowercase hex sha256 of the file; always set on outputs the recipe cache serves. */
+  readonly sha256?: string;
+  /** A local output (`keep: 'local'`) whose file is not on this machine: only its hash is known. */
+  readonly absent?: true;
 }
 
 /** Fields every request carries; all enter the cache key. */
@@ -58,7 +66,11 @@ export interface NeuralRequests {
   };
   readonly mesh: NeuralRequestBase & {
     readonly image?: NeuralInput;
+    /** More views of the same subject (front, side, back…), for multi-image models. */
+    readonly images?: readonly NeuralInput[];
     readonly prompt?: string;
+    /** Rest pose asked of a humanoid. */
+    readonly pose?: 'a-pose' | 't-pose';
     readonly maxTriangles?: number;
   };
   readonly texture: NeuralRequestBase & {
@@ -73,6 +85,10 @@ export interface NeuralRequests {
     readonly maxBones?: number;
     /** A rig template to generate on the mesh's armature (Rigify meta-rig), e.g. 'human'. */
     readonly template?: string;
+    /** Height of the character, metres (hosted riggers scale their skeleton by it). */
+    readonly height?: number;
+    /** Animation clips to bake on the rig: adapter-specific action names. */
+    readonly clips?: readonly string[];
   };
   readonly motion: NeuralRequestBase & {
     readonly prompt: string;
@@ -150,6 +166,17 @@ export interface NeuralRequests {
     /** Refuse a cards GLB above this. */
     readonly maxTriangles: number;
   };
+  /** Run an ordered program of Blender mesh steps headless; returns a GLB (nodes lod0..2) + report. */
+  readonly blender: NeuralRequestBase & {
+    /** The mesh the program starts from (GLB, glTF frame). Absent: it must start with a build op. */
+    readonly mesh?: NeuralInput;
+    /** `t3d-blender-steps/1` JSON: the ordered ops (`blenderProgram` in /neural). */
+    readonly program: NeuralInput;
+    /** `t3d-skeleton/1` JSON (`skeletonJson` in /neural), when a step binds. */
+    readonly skeleton?: NeuralInput;
+    /** Refuse an output LOD0 above this. */
+    readonly maxTriangles: number;
+  };
 }
 
 export type NeuralRequest<T extends NeuralTask = NeuralTask> = NeuralRequests[T];
@@ -169,6 +196,9 @@ export interface NeuralResults {
   readonly ktx2: { readonly outputs: readonly NeuralOutput[] };
   readonly meshopt: { readonly outputs: readonly NeuralOutput[] };
   readonly groom: { readonly outputs: readonly NeuralOutput[] };
+  /** Output 0: the GLB; output 1: the `t3d-blender-report/1` JSON; then one PNG per view of
+   *  every `review` step, in step order (named in the report's `review` list). */
+  readonly blender: { readonly outputs: readonly NeuralOutput[] };
 }
 
 export type NeuralResult<T extends NeuralTask = NeuralTask> = NeuralResults[T];
@@ -188,6 +218,7 @@ export const NEURAL_MIMES: Readonly<Record<NeuralTask, readonly string[]>> = {
   ktx2: ['image/ktx2'],
   meshopt: ['model/gltf-binary'],
   groom: ['model/gltf-binary', 'application/json'],
+  blender: ['model/gltf-binary', 'application/json', 'image/png'],
 };
 
 const SHA256 = /^[0-9a-f]{64}$/;

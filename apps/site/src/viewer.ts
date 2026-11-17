@@ -3,7 +3,8 @@
 // tier), orbit controls with a slow turntable, and Play runs the picked baked clip.
 // Scene stages the asset on a diorama in a looping scenario picked from its named parts (driving,
 // wind, a day on the turntable). Studio picks any baked clip and shows a skinned asset's skeleton
-// (viewer-motion.ts). Also switches LOD, wireframe and the trim sheet, lists the parts
+// (viewer-motion.ts). A part's own texture set (texture-sets.ts) shows as the GLB carries it. Also
+// switches LOD, wireframe and the trim sheet, lists the parts
 // (hover one to outline it) and offers a GLB per LOD. Heavy assets open at LOD1 with a button for
 // LOD0; a progress bar runs while the worker compiles (a failure ends it in a visible message), and
 // leaving cancels the compile.
@@ -12,7 +13,7 @@ import { AnimationMixer, Box3, Group, type Object3D, Timer, Vector3 } from 'thre
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { backdrop } from './backdrop.ts';
 import { categoryOf } from './categories.ts';
-import { type BuildRequest, cancelBuild, type Lod, recipe, trimSheet } from './compile.ts';
+import { type BuildRequest, cancelBuild, type Lod, recipe } from './compile.ts';
 import { renderDownloads } from './downloads.ts';
 import { estimateSeconds } from './lod-policy.ts';
 import { LOOKS, type Look, lookFor } from './look.ts';
@@ -23,7 +24,8 @@ import { FrameBudget, qualityTier, tierPinned } from './quality.ts';
 import type { Scenario } from './scenarios/types.ts';
 import { disposeTree, Stage } from './stage.ts';
 import { anisotropyOf, studioRenderer } from './studio.ts';
-import { applySheet, setWireframe } from './textures.ts';
+import { bindTextureSets } from './texture-sets.ts';
+import { setWireframe, showSheet } from './textures.ts';
 import { reducedMotion } from './theme.ts';
 import { disposeStaged, loadStaged, type Staged, type Subject } from './viewer-load.ts';
 import { Motion, pickable } from './viewer-motion.ts';
@@ -150,7 +152,8 @@ export class Viewer {
     const request = recipe(asset.name, lod, asset.file, asset.neural);
     if (this.pending && fresh) cancelBuild(this.pending);
     this.pending = request;
-    const label = `Compiling ${asset.name} at LOD ${lod}…`;
+    const verb = asset.neural ? 'Fetching model outputs, compiling' : 'Compiling';
+    const label = `${verb} ${asset.name} at LOD ${lod}…`;
     this.ui.status.textContent = label;
     syncLod0(this.ui.lod0, asset, lod, true);
     syncUi(this.ui, lod, this.mode, this.playing);
@@ -181,6 +184,7 @@ export class Viewer {
     this.stage.setFloor(!base);
     this.stage.showGrid(Boolean(base));
     if (this.model) setWireframe(this.model, this.wireframe);
+    const sets = bindTextureSets(loaded.scene, anisotropyOf(this.renderer));
     void this.applyTextures();
     const center = this.stage.show(this.display, reframe || Boolean(base));
     if (!base) this.stage.bakeContact(this.renderer, [this.particles.object]);
@@ -228,7 +232,7 @@ export class Viewer {
     this.ui.play.disabled = this.mode === 'studio' && !this.motion.has;
     this.renderer.domElement.setAttribute('aria-label', `3D view of ${asset.name}, LOD ${lod}`);
     const b = loaded.built;
-    renderStats(this.ui.stats, b, emitters.length);
+    renderStats(this.ui.stats, b, emitters.length, sets);
     renderParts(this.ui.parts, b.parts, (name) => this.outline.show(this.model, name));
     this.ui.status.textContent = `Showing ${asset.name} at LOD ${lod}.`;
     return true;
@@ -246,15 +250,11 @@ export class Viewer {
     this.stage.relight();
   }
 
-  private async applyTextures(): Promise<void> {
+  private applyTextures(): Promise<void> {
     const model = this.model;
-    if (!model) return;
-    if (!this.textured) return applySheet(model, null);
-    this.ui.status.textContent = 'Painting the trim sheet…';
-    const sheet = await trimSheet(this.tier === 'high' ? 2048 : 1024);
-    if (this.textured && this.model === model)
-      applySheet(model, sheet, anisotropyOf(this.renderer));
-    this.ui.status.textContent = this.textured ? 'Trim sheet bound.' : '';
+    const wanted = (): boolean => this.textured && this.model === model;
+    const size = this.tier === 'high' ? 2048 : 1024;
+    return showSheet(model, size, anisotropyOf(this.renderer), wanted, this.ui);
   }
 
   private resize(): void {

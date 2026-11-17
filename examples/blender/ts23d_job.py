@@ -17,7 +17,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 if HERE not in sys.path:
     sys.path.insert(0, HERE)
 
-TASKS = {"cloth", "rig", "fracture", "groom", "vdm_extract"}
+TASKS = {"cloth", "rig", "fracture", "groom", "vdm_extract", "blender"}
 
 
 def job_path(argv):

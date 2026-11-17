@@ -2,6 +2,7 @@ import { expect, it } from 'bun:test';
 import { boundsOf, compile, defineAsset, worldTransforms } from '../core/index.ts';
 import { box } from '../primitives/index.ts';
 import { mergeToPivots } from './merge-pivots.ts';
+import { albedo, hide, plate } from './texture-fixtures.ts';
 
 const c: [number, number, number] = [1, 1, 1];
 
@@ -94,4 +95,56 @@ it('re-parents to the nearest pivot ancestor and keeps moving-under-moving chain
   expect(hub?.at[1] ?? 9).toBeCloseTo(0.5 * Math.cos(0.2), 9);
   expect(blade?.parent).toBe('hub');
   expect(blade?.at).toEqual([0, 0, 0.2]);
+});
+
+it('never merges a texture set with trim-sheet geometry or another set under one pivot', () => {
+  const door = defineAsset({
+    name: 'door',
+    kind: 'prop',
+    budget: { triangles: [999, 999, 999], textureSets: { count: 2, size: 1024 } },
+    build(ctx) {
+      // A moving textured pivot with an untextured static child and a second set on it.
+      ctx.part('leaf', plate(1), { motion: spin, textures: hide });
+      ctx.part('knob', box({ size: [0.1, 0.1, 0.1], color: c }), { parent: 'leaf' });
+      ctx.part('sign', plate(1), { parent: 'leaf', textures: { name: 'sign', albedo } });
+      ctx.part('frame', plate(2), { textures: hide });
+    },
+  });
+  const merged = mergeToPivots(compile(door));
+  const seen = merged.parts.map((p) => [p.name, p.textures?.name ?? null, p.parent]);
+  expect(seen).toEqual([
+    // Static geometry of one set and nothing else: the root carries the set itself.
+    ['body', 'hide', null],
+    // The pivot's own mesh is its trim-sheet child; each set is its own draw.
+    ['leaf', null, null],
+    ['leaf_tex_hide', 'hide', 'leaf'],
+    ['leaf_tex_sign', 'sign', 'leaf'],
+  ]);
+  const tris = (name: string): number =>
+    (merged.parts.find((p) => p.name === name)?.mesh?.indices.length ?? 0) / 3;
+  expect([tris('body'), tris('leaf'), tris('leaf_tex_hide'), tris('leaf_tex_sign')]).toEqual([
+    8, 12, 2, 2,
+  ]);
+  expect(merged.parts.find((p) => p.name === 'leaf')?.motion).toEqual(spin);
+});
+
+it("keeps a moving painted pivot's slot off its unpainted children", () => {
+  const cab = defineAsset({
+    name: 'cab',
+    kind: 'vehicle',
+    budget: { triangles: [999, 999, 999] },
+    paint: { body: [0.5, 0.1, 0.1] },
+    build(ctx) {
+      ctx.part('door', box({ size: [1, 0.1, 1], color: [0.5, 0.1, 0.1] }), {
+        motion: spin,
+        paint: 'body',
+      });
+      ctx.part('handle', box({ size: [0.1, 0.1, 0.1], color: c }), { parent: 'door' });
+    },
+  });
+  const merged = mergeToPivots(compile(cab));
+  expect(merged.parts.map((p) => [p.name, p.paint ?? null])).toEqual([
+    ['door', null],
+    ['door_paint_body', 'body'],
+  ]);
 });

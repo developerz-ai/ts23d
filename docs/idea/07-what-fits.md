@@ -1,6 +1,6 @@
 # 07 — What fits
 
-**Code recipes win where parts line up, repeat, or match real dimensions. Organic forms work as stylised sculpts (SDF edit lists); realistic anatomy as pure code is still the weak spot; hybrid recipes (code skeleton and QA, model-made skin) cover it optionally.** Pick the tool by the asset, not by loyalty; many teams will use both.
+**Code recipes win where parts line up, repeat, or match real dimensions. Organic forms work as stylised sculpts (SDF edit lists); realistic anatomy as pure code is still the weak spot; the model tier covers it (an image-to-3D body kept whole with its own textures, finished by recipe-written Blender steps; code keeps scale, skeleton, clips, LODs and QA; ADR 016).** Pick the tool by the asset, not by loyalty; many teams will use both.
 
 As of 2026-11. "Today" = shipped in this repo; "Planned" names the milestone ([roadmap](../plans/roadmap.md)).
 
@@ -18,7 +18,7 @@ As of 2026-11. "Today" = shipped in this repo; "Planned" names the milestone ([r
 | Vegetation | Trees, shrubs | **Good** | `tree` (Weber–Penn; oak, pine, palm, birch, willow), `trees` family | Vertex wind weights; crossed-billboard LOD2 impostors | Botanical rules are code |
 | Rocks, terrain | Boulders, cliffs, mountain tiles | **Good** | `sdf` / `sculpt` + noise; `heightfield` + hydraulic / thermal erosion + `terrainColor`; `boulders`, `asteroid`, `mountain_range` recipes | Rivers carved as meshes | Erosion is what makes terrain read as real |
 | Stylised characters | Fantasy busts, mascots | **Fair** | `head` kind (orc, goblin, human, dwarf, elf presets) on `sculpt`; jaw and eyes as pivots | Skinned bodies (`creature`, glTF skins) | Readable stylised shapes; realism is not the goal |
-| Realistic animals | Wolf, fox, bear, tiger | **Fair** | `creature()`: bones, muscles, fur cards, skinned clips (`wolf`, `fox`, `brown_bear`); hybrid `wolf_hybrid` (model skin through `NeuralAdapter`, committed cache) | Flagship calibrated score 8.5 (today near 6) | Anatomy is specified as bones and muscles; skin realism needs the model tier |
+| Realistic animals | Wolf, fox, bear, tiger | **Fair** | `creature()`: bones, muscles, fur cards, skinned clips (`wolf`, `fox`, `brown_bear`); model tier: image-to-3D body + Blender steps on the sourced skeleton (`defineModelCreature`; `recipes/ranger` shipped for humanoids, quadrupeds in progress as of 2026-11) | Flagship calibrated score 8.5 (CPU tier today near 6) | Anatomy is specified as bones and muscles; skin realism comes from the model tier |
 | People | Characters, NPCs | **Fair** (heads) | Busts on a CC0 MakeHuman base: skull, planes, muscles, skin, card hair; `importGlb` | Hybrid heads (in progress), bodies | Faces and anatomy are the weak part; hands and bodies are not built |
 | Cloth, hair, soft goods | Flags, sofas, garments | **Weak** | Card hair and fur; garments with folds on busts; cloth drape through the Blender adapter (optional) | Cloth simulation in code | Simulation / sculpt territory |
 | Photoreal hero assets | Close-up scans | **Out of scope** | — | — | Photogrammetry or a sculptor |

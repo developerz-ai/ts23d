@@ -26,6 +26,7 @@ export const SWITCHES = [
   '--no-shot',
   '--physics',
   '--require-neural',
+  '--yes-spend',
   '--allow-bad-input',
   '--watch',
   '--no-sounds',

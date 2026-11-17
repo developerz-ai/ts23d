@@ -7,8 +7,14 @@ import {
   creditLine,
   creditOf,
   dataCredits,
+  isHosted,
+  licenceLabel,
+  megabytes,
   modelName,
+  recordLine,
   shortLicence,
+  sorted,
+  stepsOf,
 } from './credits-panel.ts';
 
 const RECIPES = join(import.meta.dir, '../../../recipes');
@@ -17,10 +23,46 @@ const RECIPES = join(import.meta.dir, '../../../recipes');
 const recordsOf = (folder: string) => {
   const dir = join(RECIPES, folder, 'neural');
   return readdirSync(dir).flatMap((key) => {
+    if (!/^[0-9a-f]{64}$/.test(key)) return [];
     const c = creditOf(JSON.parse(readFileSync(join(dir, key, 'record.json'), 'utf8')));
     return c ? [c] : [];
   });
 };
+
+/** A record as `t3d neural run` writes it (fields the site reads, plus ones it must ignore). */
+const record = (over: Record<string, unknown> = {}) => ({
+  adapter: 'meshy',
+  contract: 't3d-neural/1',
+  key: 'k1',
+  model: {
+    id: 'meshy-7.1',
+    licence: 'own',
+    task: 'mesh',
+    terms: 'https://www.meshy.ai/terms-of-use',
+  },
+  outputs: [
+    { bytes: 20_378_864, file: 'local-0.glb', local: true, mime: 'model/gltf-binary', sha256: 'a' },
+  ],
+  server: 'meshy task 0000; consumed_credits 30',
+  task: 'mesh',
+  ...over,
+});
+
+const BLENDER = record({
+  adapter: 'blender:blender',
+  key: 'k2',
+  task: 'blender',
+  model: {
+    id: 'blender-blender',
+    licence: 'own',
+    task: 'blender',
+    tool: { name: 'blender', version: '5.3.0', licence: 'GPL-2.0-or-later', scriptSha256: 'x' },
+  },
+  outputs: [
+    { bytes: 10_154_260, file: 'output-0.glb', mime: 'model/gltf-binary', sha256: 'b' },
+    { bytes: 5608, file: 'output-1.json', mime: 'application/json', sha256: 'c' },
+  ],
+});
 
 describe('creditOf', () => {
   test('anything but a t3d-neural record is no credit', () => {
@@ -29,17 +71,68 @@ describe('creditOf', () => {
     expect(creditOf({ contract: 't3d-neural/1', key: 'k', model: {} })).toBeNull();
   });
 
-  test('reads model id, licence, task, adapter and outputs from wolf_hybrid’s record.json', () => {
-    const records = recordsOf('wolf_hybrid');
-    const mesh = records.find((r) => r.task === 'mesh');
-    expect(mesh?.model).toBe('pixal3d');
-    expect(shortLicence(mesh?.licence ?? '')).toBe('MIT');
-    expect(mesh?.files).toEqual(['output-0.glb']);
-    const image = records.find((r) => r.task === 'image');
-    expect(image?.model).toBe('z-image');
-    expect(shortLicence(image?.licence ?? '')).toBe('Apache-2.0');
+  test('a local output is never listed or counted: it is not published', () => {
+    const c = creditOf(record());
+    expect(c?.files).toEqual([]);
+    expect(c?.bytes).toBe(0);
+  });
+
+  test('a terms link that is not https is dropped', () => {
+    const model = { id: 'm', licence: 'own', terms: 'javascript:alert(1)' };
+    expect(creditOf(record({ model }))?.terms).toBe('');
+  });
+
+  test('a hosted service: model, own outputs, terms, and "a hosted service (paid)"', () => {
+    const c = creditOf(record());
+    expect(c?.model).toBe('meshy-7.1');
+    expect(c?.terms).toBe('https://www.meshy.ai/terms-of-use');
+    expect(c ? recordLine(c) : '').toBe(
+      'mesh: Meshy 7.1 image-to-3D · own outputs · a hosted service (paid)',
+    );
+  });
+
+  test('a tool record: Blender, its version and licence, the committed files and their bytes', () => {
+    const c = creditOf(BLENDER);
+    expect(c?.tool).toEqual({ name: 'blender', version: '5.3.0', licence: 'GPL-2.0-or-later' });
+    expect(c?.files).toEqual(['output-0.glb', 'output-1.json']);
+    expect(c?.bytes).toBe(10_159_868);
+    expect(megabytes(c?.bytes ?? 0)).toBe('10.2 MB');
+    expect(megabytes(223_952)).toBe('224 KB');
+  });
+});
+
+describe('Blender steps', () => {
+  test('only a t3d-blender-report lists steps', () => {
+    expect(stepsOf(null)).toEqual([]);
+    expect(stepsOf({ steps: [{ op: 'clean' }] })).toEqual([]);
+    expect(stepsOf({ contract: 't3d-blender-report/1', steps: 'clean' })).toEqual([]);
+  });
+
+  test('the step ops, in run order, lead the record line', () => {
+    const steps = stepsOf({
+      contract: 't3d-blender-report/1',
+      steps: [{ op: 'clean', seconds: 2.8 }, { op: 'retopo' }, { nope: 1 }, { op: 'export' }],
+    });
+    expect(steps).toEqual(['clean', 'retopo', 'export']);
+    const c = creditOf(BLENDER);
+    expect(c ? recordLine({ ...c, steps }) : '').toBe(
+      'Blender steps (clean → retopo → export): Blender 5.3.0 · GPL-2.0-or-later tool, own outputs · run headless, cached',
+    );
+  });
+});
+
+describe('the ranger’s committed records (recipes/ranger/neural)', () => {
+  const records = recordsOf('ranger');
+
+  test('four records; the raw mesh and the rigged mesh stay local, 11.1 MB is published', () => {
+    expect(sorted(records).map((r) => r.task)).toEqual(['mesh', 'rig', 'blender', 'image']);
+    expect(records.flatMap((r) => r.files).filter((f) => f.startsWith('local-'))).toEqual([]);
+    expect(megabytes(records.reduce((n, r) => n + r.bytes, 0))).toBe('11.1 MB');
+  });
+
+  test('the credit line names every model and tool with its licence, and nothing else', () => {
     expect(creditLine(records)).toBe(
-      'Made with Pixal3D (MIT) and Z-Image-Turbo (Apache-2.0) on the code skeleton',
+      'Made with Meshy 7.1 image-to-3D (own outputs), Meshy rigging and animation (own outputs), Blender 5.3.0 (GPL-2.0-or-later tool, own outputs) and Z-Image-Turbo (Apache-2.0)',
     );
   });
 });
@@ -47,8 +140,21 @@ describe('creditOf', () => {
 describe('creditLine', () => {
   test('no models → no line; one model, repeated models named once', () => {
     expect(creditLine([])).toBe('');
-    const c = { task: 'mesh', model: 'trellis2', licence: 'MIT' };
-    expect(creditLine([c, c])).toBe('Made with TRELLIS.2 (MIT) on the code skeleton');
+    const c = { task: 'mesh', model: 'trellis2', licence: 'MIT', tool: null };
+    expect(creditLine([c, c])).toBe('Made with TRELLIS.2 (MIT)');
+  });
+
+  test('the surface model comes before the concept image, whatever the record order', () => {
+    const image = {
+      task: 'image',
+      model: 'z-image',
+      licence: 'Apache-2.0 (model card Tongyi-MAI/Z-Image-Turbo: "license: apache-2.0")',
+      tool: null,
+    };
+    const mesh = { task: 'mesh', model: 'pixal3d', licence: 'MIT (model card)', tool: null };
+    expect(creditLine([image, mesh])).toBe(
+      'Made with Pixal3D (MIT) and Z-Image-Turbo (Apache-2.0)',
+    );
   });
 
   test('adapters show their kind and script, never a host', () => {
@@ -57,11 +163,14 @@ describe('creditLine', () => {
       'script:pixal3d_best.py',
     );
     expect(adapterLabel('')).toBe('adapter not stated');
+    expect(isHosted('meshy')).toBe(true);
+    expect(isHosted('meshy-local:x')).toBe(false);
   });
 
   test('an unknown model shows its id and never invents a licence', () => {
     expect(modelName('mystery')).toBe('mystery');
     expect(shortLicence('')).toBe('licence not stated');
+    expect(licenceLabel({ licence: '', tool: null })).toBe('licence not stated');
   });
 });
 

@@ -3,10 +3,11 @@
 // The paw is set by the toe tip and its roll; the metapodial is the coupled third bone (the hock /
 // carpus takes `couple` of the leg's length change, the stifle / elbow the rest), then a closed-
 // form two-bone solve bends the upper pair toward its rest pole. Directions only: lengths never
-// change, so the skin never stretches along a bone.
+// change, so the skin never stretches along a bone. A standing leg (`solvePlanted`) keeps paw and
+// metapodial where they rest and lets the upper pair alone follow the body.
 
 import { type Bone, type Quat, quatRotate, type Vec3 } from '../core/index.ts';
-import { qbetween, qconj, qexp, qmul } from './pose.ts';
+import { IDENTITY, qbetween, qconj, qexp, qmul } from './pose.ts';
 
 export type LegBones = readonly [Bone, Bone, Bone, Bone];
 
@@ -158,4 +159,18 @@ export function solveSwing(
   const c = chain(leg, root, W, M, parentRot, (r2) => qmul(r2, qexp([0, paw, 0])));
   const toe = addS(c.Mr, quatRotate(c.world[3], sub(leg[3].tail, leg[3].head)), 1);
   return { ...c, miss: len(sub(c.Mr, M)), beta, paw, toe };
+}
+
+/** Standing: paw and metapodial stay where they rest in the world; the upper pair alone follows
+ *  `root` (the body breathing over a planted foot). `miss` = how far the toe tip leaves its rest
+ *  point when the root is out of the pair's reach. */
+export function solvePlanted(
+  leg: LegBones,
+  root: Vec3,
+  parentRot: Quat,
+): Pick<LegSolve, 'world' | 'local' | 'miss' | 'toe'> {
+  const paw = leg[3];
+  const c = chain(leg, root, leg[2].head, paw.head, parentRot, () => IDENTITY);
+  const toe = addS(c.Mr, sub(paw.tail, paw.head), 1);
+  return { world: c.world, local: c.local, miss: len(sub(toe, paw.tail)), toe };
 }

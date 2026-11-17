@@ -12,6 +12,10 @@ const gpu = process.env['T3D_NEURAL_URL'] ?? 'http://127.0.0.1:8190';
 export const config = defineConfig({
   neural: {
     // A mesh job is minutes of GPU (model load + 3 diffusion stages + bake): allow 30 min.
+    // Replies are capped at 64 MB by default. A raw 1 M-face mesh is 70-106 MB (about 4/3 of that
+    // as base64 JSON): raise the cap for it, and keep it off git in the recipe with
+    //   ctx.neural('mesh', request, { inputs, keep: 'local' })
+    // mesh: http(gpu, 'pixal3d', { jobTimeoutMs: 1_800_000, maxBytes: 256 * 1024 * 1024 }),
     mesh: http(gpu, 'pixal3d', { jobTimeoutMs: 1_800_000 }),
     texture: http(gpu, 'trellis2-texture', { jobTimeoutMs: 1_800_000 }),
     image: http(gpu, 'z-image'),

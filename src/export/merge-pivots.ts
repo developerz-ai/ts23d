@@ -6,9 +6,13 @@
 // glowing parts (GlbOptions.glow) into `<pivot>_glow_<i>` children with their emissive material,
 // and painted parts (`paint: slot`) into `<pivot>_paint_<slot>` children with the slot's material,
 // and finished parts (`finish: name`) into `<pivot>_finish_<name>` children with the finish's.
+// Parts with their own texture set (ADR 016) never mix with trim-sheet geometry: a pivot whose own
+// geometry is all ONE set carries that set itself; otherwise each set in use splits into a
+// `<pivot>_tex_<set>` child (`<pivot>_cutout_tex_<set>` for its cutout parts).
 // A pivot whose static parent merged away is re-parented to its nearest surviving pivot ancestor
 // (or the root), with `at` / `yaw` re-expressed so its world transform is exactly what QA measured.
-// Unskinned meshes merging into a skinned one bind rigidly to their nearest bone.
+// Unskinned meshes merging into a skinned one, or into another material layer of its pivot, bind
+// rigidly to their nearest bone.
 
 import {
   type CompiledAsset,
@@ -18,6 +22,8 @@ import {
   ROOT_PART,
   rotateZ,
   type Surface,
+  type TextureSet,
+  textureSetsOf,
   toWorld,
   type Vec3,
   type WorldTransform,
@@ -39,6 +45,15 @@ export const globRe = (pattern: string): RegExp =>
       .replaceAll('?', '.')}$`,
   );
 const SURFACES: readonly Surface[] = ['cutout', 'glass', 'translucent', 'ice', 'liquid', 'jelly'];
+
+/** One bucket of a pivot's geometry: its key and what the merged part carries for it. */
+interface Layer {
+  readonly key: string;
+  readonly props: Pick<Part, 'surface' | 'paint' | 'finish' | 'textures'>;
+  readonly glow?: number;
+}
+const texLayer = (set: TextureSet, cutout: boolean): string =>
+  `${cutout ? 'cutout_' : ''}tex_${set.name}`;
 
 /** Re-express a part's mesh in its pivot's local space. */
 function intoPivot(mesh: Mesh, part: WorldTransform, pivot: WorldTransform): Mesh {
@@ -73,7 +88,10 @@ export function mergeToPivots(
   glow: readonly (readonly string[])[] = [],
 ): CompiledAsset {
   // A recipe's rigid prop merging into a skinned body binds to its nearest bone (skin.ts).
-  const join = (ms: readonly Mesh[]): Mesh => merge(bindLoose(ms, asset.skeleton));
+  // The body's layers are separate meshes: a rigid prop rides its bone in whichever it lands.
+  const skinned = new Set<string>();
+  const join = (ms: readonly Mesh[], pivot: string): Mesh =>
+    merge(bindLoose(ms, asset.skeleton, skinned.has(pivot)));
   const glowRes = glow.map((globs) => globs.map(globRe));
   const glowOf = (name: string): number => glowRes.findIndex((rs) => rs.some((r) => r.test(name)));
   const byName = new Map(asset.parts.map((p) => [p.name, p]));
@@ -85,21 +103,25 @@ export function mergeToPivots(
     while (cur && !isPivot(cur)) cur = cur.parent ? byName.get(cur.parent) : undefined;
     return cur?.name ?? ROOT;
   };
-  // Buckets keyed by pivot + surface: opaque merges into the pivot's own mesh; each other
-  // surface in use becomes one child `<pivot>_<surface>` so materials never mix in a primitive.
+  // Buckets keyed by pivot + layer: opaque merges into the pivot's own mesh; each other layer in
+  // use becomes one child `<pivot>_<layer>` so materials never mix in a primitive.
   const extra = new Map<string, Mesh[]>();
-  // Glow wins over paint (a lit lens keeps its emissive material); paint is opaque-only (core).
+  // A texture set wins over everything (core allows it no paint or finish, and it has no emissive
+  // map to glow with); glow wins over paint (a lit lens keeps its emissive material).
   const layerOf = (p: Part, g: number): string =>
-    g >= 0
-      ? `glow_${g}`
-      : (p.surface ??
-        (p.paint !== undefined
-          ? `paint_${p.paint}`
-          : p.finish !== undefined
-            ? `finish_${p.finish}`
-            : 'opaque'));
+    p.textures
+      ? texLayer(p.textures, p.surface === 'cutout')
+      : g >= 0
+        ? `glow_${g}`
+        : (p.surface ??
+          (p.paint !== undefined
+            ? `paint_${p.paint}`
+            : p.finish !== undefined
+              ? `finish_${p.finish}`
+              : 'opaque'));
   const bucket = (pivot: string, layer: string, mesh: Mesh): void => {
     const k = `${pivot}|${layer}`;
+    if (mesh.joints) skinned.add(pivot);
     extra.set(k, [...(extra.get(k) ?? []), mesh]);
   };
   for (const p of asset.parts) {
@@ -114,82 +136,67 @@ export function mergeToPivots(
     const pt = pivot === ROOT ? identity : (xf.get(pivot) ?? identity);
     bucket(pivot, layer, intoPivot(p.mesh, t, pt));
   }
-  const slots = [...new Set(asset.parts.flatMap((p) => (p.paint === undefined ? [] : [p.paint])))];
-  slots.sort();
-  const finishes = [
-    ...new Set(asset.parts.flatMap((p) => (p.finish === undefined ? [] : [p.finish]))),
-  ].sort();
+  const used = <T>(of: (p: Part) => T | undefined): T[] =>
+    [...new Set(asset.parts.flatMap((p) => of(p) ?? []))].sort();
+  const sets = [...textureSetsOf(asset.parts)].sort((a, b) => (a.name < b.name ? -1 : 1));
+  const tex = (set: TextureSet, cutout: boolean): Layer => ({
+    key: texLayer(set, cutout),
+    props: cutout ? { textures: set, surface: 'cutout' } : { textures: set },
+  });
+  // Every layer a pivot may split into, in the order its children are written.
+  const all: readonly Layer[] = [
+    ...SURFACES.map((surface) => ({ key: surface, props: { surface } })),
+    ...glow.map((_, g) => ({ key: `glow_${g}`, props: {}, glow: g })),
+    ...used((p) => p.paint).map((paint) => ({ key: `paint_${paint}`, props: { paint } })),
+    ...used((p) => p.finish).map((finish) => ({ key: `finish_${finish}`, props: { finish } })),
+    ...sets.flatMap((set) => [tex(set, false), tex(set, true)]),
+  ];
+  // The pivot's own mesh: its trim-sheet opaque geometry; with none, its ONE opaque texture set
+  // (a fully textured body stays the node `body`, so skins, morph tracks and names hold).
+  const ownOf = (pivot: string): Layer | null => {
+    if (extra.has(`${pivot}|opaque`)) return { key: 'opaque', props: {} };
+    const own = sets.filter((s) => extra.has(`${pivot}|${texLayer(s, false)}`));
+    return own.length === 1 && own[0] ? tex(own[0], false) : null;
+  };
+  const meshOf = (pivot: string, layer: Layer | null): Mesh | null => {
+    const meshes = layer ? extra.get(`${pivot}|${layer.key}`) : undefined;
+    return meshes ? join(meshes, pivot) : null;
+  };
   const parts: Part[] = [];
-  const layers = (pivot: string, parent: string | null): void => {
-    for (const surface of SURFACES) {
-      const meshes = extra.get(`${pivot}|${surface}`);
-      if (!meshes) continue;
-      parts.push({
-        name: `${pivot}_${surface}`,
-        mesh: join(meshes),
-        at: [0, 0, 0],
-        parent,
-        yaw: 0,
-        motion: null,
-        surface,
-      });
-    }
-    glow.forEach((_, g) => {
-      const meshes = extra.get(`${pivot}|glow_${g}`);
-      if (!meshes) return;
+  const layers = (pivot: string, parent: string | null, own: Layer | null): void => {
+    for (const layer of all) {
+      const mesh = layer.key === own?.key ? null : meshOf(pivot, layer);
+      if (!mesh) continue;
       const part: Part = {
-        name: `${pivot}_glow_${g}`,
-        mesh: join(meshes),
+        name: `${pivot}_${layer.key}`,
+        mesh,
         at: [0, 0, 0],
         parent,
         yaw: 0,
         motion: null,
+        ...layer.props,
       };
-      glowLayer.set(part, g);
+      if (layer.glow !== undefined) glowLayer.set(part, layer.glow);
       parts.push(part);
-    });
-    for (const slot of slots) {
-      const meshes = extra.get(`${pivot}|paint_${slot}`);
-      if (!meshes) continue;
-      parts.push({
-        name: `${pivot}_paint_${slot}`,
-        mesh: join(meshes),
-        at: [0, 0, 0],
-        parent,
-        yaw: 0,
-        motion: null,
-        paint: slot,
-      });
-    }
-    for (const finish of finishes) {
-      const meshes = extra.get(`${pivot}|finish_${finish}`);
-      if (!meshes) continue;
-      parts.push({
-        name: `${pivot}_finish_${finish}`,
-        mesh: join(meshes),
-        at: [0, 0, 0],
-        parent,
-        yaw: 0,
-        motion: null,
-        finish,
-      });
     }
   };
-  const body = extra.get(`${ROOT}|opaque`);
+  const body = ownOf(ROOT);
   if (body)
     parts.push({
       name: ROOT,
-      mesh: join(body),
+      mesh: meshOf(ROOT, body),
       at: [0, 0, 0],
       parent: null,
       yaw: 0,
       motion: null,
+      ...body.props,
     });
-  layers(ROOT, null);
+  layers(ROOT, null, body);
   // A pivot under a static (merged) parent keeps its world transform under the nearest pivot.
   const reparented = (p: Part): Pick<Part, 'parent' | 'at' | 'yaw'> => {
     const parent = p.parent ? byName.get(p.parent) : undefined;
-    if (!parent || isPivot(parent)) return p;
+    // Only these three: spreading `p` would hand its paint / finish / textures to the merged mesh.
+    if (!parent || isPivot(parent)) return { parent: p.parent, at: p.at, yaw: p.yaw };
     const anchor = pivotOf(p);
     const w = xf.get(p.name) ?? identity;
     const a = anchor === ROOT ? identity : (xf.get(anchor) ?? identity);
@@ -202,10 +209,10 @@ export function mergeToPivots(
   };
   for (const p of asset.parts) {
     if (!isPivot(p)) continue;
-    const own = extra.get(`${p.name}|opaque`);
-    const { surface: _drop, paint: _slot, finish: _finish, ...rest } = p;
-    parts.push({ ...rest, ...reparented(p), mesh: own ? join(own) : null });
-    layers(p.name, p.name);
+    const own = ownOf(p.name);
+    const { surface: _drop, paint: _slot, finish: _finish, textures: _set, ...rest } = p;
+    parts.push({ ...rest, ...reparented(p), mesh: meshOf(p.name, own), ...own?.props });
+    layers(p.name, p.name, own);
   }
   return { ...asset, parts };
 }

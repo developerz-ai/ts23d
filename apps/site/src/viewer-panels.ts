@@ -1,9 +1,10 @@
 // Viewer side panels: the stats list (triangles vs budget, GLB size, compile time, physics mass
-// when the recipe declares it) and the parts
+// when the recipe declares it, the texture sets bound as the GLB carries them) and the parts
 // tree (pivots, motion, emitters; hovering or focusing a row outlines that node, `Outline`).
 
 import { BoxHelper, type Object3D, type Scene } from 'three';
 import type { BuildResult, PartInfo } from './compile.ts';
+import { describeSet, type TextureSetInfo } from './texture-sets.ts';
 import { token } from './theme.ts';
 
 /** The redline box around one named node of the shown model (the parts list's hover). */
@@ -30,13 +31,19 @@ const kib = (n: number): string =>
 const kg = (n: number): string =>
   n >= 1000 ? `${(n / 1000).toFixed(n >= 10_000 ? 1 : 2)} t` : `${n.toFixed(n >= 10 ? 0 : 2)} kg`;
 
-export function renderStats(target: HTMLElement, b: BuildResult, emitters: number): void {
+export function renderStats(
+  target: HTMLElement,
+  b: BuildResult,
+  emitters: number,
+  sets: readonly TextureSetInfo[] = [],
+): void {
   const rows: [string, string][] = [
     ['triangles', `${b.triangles.toLocaleString('en')} / ${b.budget.toLocaleString('en')}`],
     ['glb', kib(b.glb.byteLength)],
     ['compile', b.ms >= 1000 ? `${(b.ms / 1000).toFixed(1)} s` : `${b.ms.toFixed(0)} ms`],
     ...(emitters ? [['emitters', String(emitters)] as [string, string]] : []),
     ...(b.mass ? [['mass', kg(b.mass.kg)] as [string, string]] : []),
+    ...sets.map((s) => ['textures', describeSet(s)] as [string, string]),
   ];
   target.replaceChildren(
     ...rows.flatMap(([k, v]) => {

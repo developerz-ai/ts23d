@@ -6,6 +6,7 @@
 import { Ts23dError } from '../../core/index.ts';
 import type { PerspectiveCamera } from '../camera.ts';
 import type { Mip, SheetTextures } from '../texture.ts';
+import type { Mip8 } from '../texture-sets.ts';
 import { type Film, renderTile, tileCount } from './film.ts';
 import type { TraceParams } from './integrator.ts';
 import { assemble, type WorldData } from './world.ts';
@@ -33,6 +34,7 @@ function shared<T extends Typed>(a: T, make: (b: SharedArrayBuffer) => T): T {
 const f32 = (a: Float32Array): Float32Array => shared(a, (b) => new Float32Array(b, 0, a.length));
 const u32 = (a: Uint32Array): Uint32Array => shared(a, (b) => new Uint32Array(b, 0, a.length));
 const u8 = (a: Uint8Array): Uint8Array => shared(a, (b) => new Uint8Array(b, 0, a.length));
+const mips8 = (m: readonly Mip8[]): Mip8[] => m.map((x) => ({ size: x.size, data: u8(x.data) }));
 const mips = (m: readonly Mip[]): Mip[] => m.map((x) => ({ size: x.size, data: f32(x.data) }));
 
 /** The same world data with every large array in shared memory. */
@@ -56,6 +58,14 @@ export function shareWorld(d: WorldData): WorldData {
       surface: u8(s.surface),
       look: u8(s.look),
       tangents: f32(s.tangents),
+      texSet: u8(s.texSet),
+      sets: s.sets.map((t) => ({
+        ...t,
+        albedo: mips8(t.albedo),
+        normal: mips8(t.normal),
+        orm: mips8(t.orm),
+      })),
+      vtan: f32(s.vtan),
     },
     tex,
     cls: u8(d.cls),

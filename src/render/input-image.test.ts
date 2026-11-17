@@ -83,6 +83,39 @@ describe('checkInputImage (D55: cluttered photos make broken AI meshes)', () => 
     ).toEqual([]);
   });
 
+  it('a studio floor band reaching the frame edge is backdrop; a subject cut by the frame is not', () => {
+    // The floor shades 250 → 200 over 100 rows under the subject's feet and runs off both sides:
+    // further than the flood tolerance from every corner, and joined to the subject.
+    const floor = (img: Img): Img => {
+      const px = Uint8Array.from(img.px);
+      for (let y = 380; y < 520; y++)
+        for (let x = 0; x < img.w; x++) {
+          const i = (y * img.w + x) * 4;
+          if ((px[i] ?? 0) < 200) continue;
+          const v = y < 480 ? 250 - (y - 380) / 2 : 200 + (y - 480) * 1.25;
+          px.set([v, v * 0.95, v * 0.9, 255], i);
+        }
+      return { ...img, px };
+    };
+    // Failure first: with the same floor, a subject that runs off the right edge is cropped.
+    const cut = floor(scene(600, 600, [[450, 300, 200, 150]]));
+    expect(checkInputImage(cut.px, cut.w, cut.h).cropped).toBe(true);
+    expect(rules(cut)).toContain('cropped');
+    const standing = floor(clean);
+    const report = checkInputImage(standing.px, standing.w, standing.h);
+    // The band is unflooded and joined to the subject, but it is backdrop: the fill is the
+    // subject's own (400 px tall in 600), not the band's full width.
+    expect(report.fill).toBeGreaterThan(0.6);
+    expect(report.fill).toBeLessThan(0.7);
+    expect(report.cropped).toBe(false);
+    expect(report.findings.map((f) => f.rule)).toEqual([]);
+    // And a small subject on the same floor does not pass as filling the frame.
+    const small = floor(scene(600, 600, [[300, 420, 40, 30]]));
+    const tiny = checkInputImage(small.px, small.w, small.h);
+    expect(tiny.fill).toBeLessThan(0.3);
+    expect(tiny.findings.map((f) => f.rule)).toContain('fill');
+  });
+
   it('specks do not count as subjects', () => {
     const specked = scene(600, 600, [
       [300, 300, 200, 150],

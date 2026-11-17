@@ -97,7 +97,7 @@ export interface MediaFacts {
 export type MediaImage = 'blueprint' | 'icon' | 'portrait' | 'rts';
 export const MEDIA_IMAGES: readonly MediaImage[] = ['blueprint', 'icon', 'portrait', 'rts'];
 
-/** One committed model output behind a hybrid: `recipes/<folder>/neural/<key>/record.json`. */
+/** One committed model output behind a model tier: `recipes/<folder>/neural/<key>/record.json`. */
 export interface MediaNeural {
   readonly key: string;
   /** The neural task: `mesh`, `image`, `texture`, … */
@@ -108,8 +108,20 @@ export interface MediaNeural {
   readonly licence: string;
   /** What ran the model, e.g. `http:…` or `script:…`. */
   readonly adapter: string;
-  /** Output files of the key directory (beside record.json). */
+  /** Committed output files of the key directory (beside record.json); local outputs are not listed. */
   readonly files: readonly string[];
+  /** Bytes of those files: what a model-tier view fetches for this record. */
+  readonly bytes: number;
+  /** The service's terms page when the record names one (hosted services), else ''. */
+  readonly terms: string;
+  /** The tool behind a tool task (Blender steps, groom): name, version and its own licence. */
+  readonly tool: {
+    readonly name: string;
+    readonly version: string;
+    readonly licence: string;
+  } | null;
+  /** The Blender step ops in run order, from the record's committed report ([] for a model). */
+  readonly steps: readonly string[];
   /** URL of the published key directory, ending in `/` (empty in the scan, filled by the plugin). */
   readonly dir: string;
 }

@@ -4,6 +4,8 @@
 // cannot tint the albedo. Every LOD tree's node of that name gets it. The extra material = one
 // extra draw call per part, recorded in `extras.ts23d.ownMaterials` so QA, the manifest and engine
 // importers can see the rule was broken on purpose. Byte-deterministic.
+// Kept for `scripts/import-textured.ts`; new code gives the part `PartOptions.textures` (ADR 016),
+// which compile, QA, the renderers and the GLB writer (texture-sets.ts) all see.
 
 import { Ts23dError } from '../core/index.ts';
 import { GlbBin, type GltfJson, packGlb, readAccessor, readGlb } from '../neural/index.ts';

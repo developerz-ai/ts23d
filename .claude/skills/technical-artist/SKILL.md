@@ -31,6 +31,20 @@ determinism or hash failures, slow builds, writing a test or a gate for an asset
 | 10 | Performance of the build | `bun run bench`; `optimize` pass; cache meshes via `definePart` | gate < 5 min in CI |
 | 11 | Automate | test beside the recipe, failure case first; new rule → script in `bun run verify` | the rule fails a broken asset |
 
+## Textured parts and model-built assets (ADR 016; As of 2026-11)
+The trim sheet stays the default. A model-built part (kinds `modelBody`, `riggedBody`; `importModel`) may carry its
+own `TextureSet`; the budget, export and gates change:
+| Topic | Rule | Check |
+|---|---|---|
+| Declare | `budget.textureSets: { count, size }` (size 1024, 2048 or 4096; maps are square power-of-two PNGs <= size); a textured part is `opaque` or `cutout`, no `paint`, no `finish` | `T3D_TEXTURE_INVALID` names the option to drop or the budget line to add |
+| Typical set | albedo 2048 (sRGB), normal 1024 (glTF green-up), ORM 1024 (R occlusion, G roughness, B metallic) | `export` step `normalSize` / `ormSize` downscale |
+| Every LOD | the set rides all three LODs: one material per set, one draw per pivot per set; LOD1/2 share LOD0's maps, so a collapse across a UV seam can smear a few texels (per-LOD atlases: planned) | manifest draws; `bun run t3d build` |
+| Triangles | Blender `lods` decimate (gated: bbox 1 % / 2 % of the diagonal, no lost surface, no new tunnel, <= 8 % UV-degenerate faces); never decimate code-built geometry | the step fails and names the measure |
+| Gates | QA `model` (texture not blank, joints inside the mesh, mesh registered, no doubled feature, feet on z = 0), `skin`, `deform`, `gait` (in-place skin sink <= 3 mm) | `model`: `T3D_MODEL_TEXTURE`, `T3D_MODEL_SKELETON`, `T3D_MODEL_FIT`, `T3D_MODEL_DOUBLED` |
+| Repository weight | committed neural outputs <= 12 MB per recipe; raw 70-100 MB meshes stay local (`keep: 'local'`, git-ignored, sha256 committed); a fresh clone resolves the chain from the committed Blender output | `bun run verify --only recipes` |
+| Determinism | a model or Blender output is a cached INPUT (ADR 014): the cache key holds Blender's version and the scripts' hash; GPU runs and GPU bakes differ, so the committed bytes are the truth | `bun run determinism` |
+| Look | the raster beauty, the path tracer and the contact sheet sample texture sets | `t3d hero`, `t3d shot` |
+
 ## Vocabulary → measurable
 | Word | Meaning here | Check |
 |---|---|---|

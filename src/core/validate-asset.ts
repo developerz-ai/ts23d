@@ -5,8 +5,16 @@
 import type { AssetDefinition, Measure } from './definition.ts';
 import { Ts23dError } from './errors.ts';
 import type { Mesh } from './mesh.ts';
-import type { Lod, PartOptions } from './part.ts';
+import type { Lod, Part, PartOptions } from './part.ts';
 import { checkSeed } from './rng.ts';
+import {
+  checkTextureSet,
+  sameTextureSet,
+  TEXTURE_SIZES,
+  type TextureBudget,
+  type TextureSet,
+  textureInvalid,
+} from './texture-set.ts';
 
 /** Default relative tolerances (QA `measures`, `proportions`, `joints`) and the hard cap. */
 export const TOLERANCE = { measure: 0.02, proportions: 0.05, joint: 0.2, max: 0.5 } as const;
@@ -70,6 +78,7 @@ export function checkAsset(def: AssetDefinition): void {
       `'${name}' budget.draws ${draws} is not an integer ≥ 1`,
       'use e.g. draws: 4, or omit it',
     );
+  checkTextureBudget(name, def.budget.textureSets);
   if (def.seed !== undefined) checkSeed(def.seed, `'${name}' seed`);
   const real = def.real;
   if (!real) return;
@@ -101,5 +110,65 @@ export function checkPivotName(
     invalid(
       `'${asset}' declares a pivot named '${ROOT_PART}'`,
       `rename the group; \`${ROOT_PART}\` is the merged static root`,
+    );
+}
+
+const DECLARE = 'declare budget.textureSets: { count: 1, size: 2048 }';
+
+/** `budget.textureSets`: an integer count ≥ 1 and a size of 1024, 2048 or 4096. */
+function checkTextureBudget(asset: string, b: TextureBudget | undefined): void {
+  if (b === undefined) return;
+  const sized = (TEXTURE_SIZES as readonly number[]).includes(b?.size);
+  if (!(Number.isInteger(b?.count) && b.count >= 1 && sized))
+    textureInvalid(
+      `'${asset}' budget.textureSets is ${JSON.stringify(b)}`,
+      `${DECLARE} (count: integer ≥ 1; size: ${TEXTURE_SIZES.join(', ')})`,
+    );
+}
+
+/**
+ * Textured parts (ADR 016) are opt-in, counted and plain: each has a mesh, is opaque or cutout
+ * with no paint or finish, its set passes `checkTextureSet` under the declared size, one name
+ * means one set of bytes, and the distinct names fit `budget.textureSets.count`.
+ */
+export function checkTexturedParts(
+  asset: string,
+  parts: readonly Part[],
+  budget: TextureBudget | undefined,
+): void {
+  const sets = new Map<string, { readonly set: TextureSet; readonly alpha: boolean }>();
+  for (const p of parts) {
+    const set = p.textures;
+    if (set === undefined) continue;
+    const where = `part '${p.name}' in '${asset}'`;
+    const drop = (what: string, option: string, why: string): never =>
+      textureInvalid(`${where} has textures and ${what}`, `drop \`${option}\` from it: ${why}`);
+    if (!p.mesh) drop('no mesh', 'textures', 'a group draws nothing; set it on the meshed parts');
+    if (p.surface && p.surface !== 'cutout')
+      drop(`surface '${p.surface}'`, 'surface', 'a textured part is opaque or cutout');
+    if (p.paint !== undefined)
+      drop(`paint '${p.paint}'`, 'paint', 'its colour comes from the albedo map');
+    if (p.finish !== undefined)
+      drop(`finish '${p.finish}'`, 'finish', 'its shading comes from the ORM map or factors');
+    if (!budget)
+      textureInvalid(`${where} has textures but '${asset}' declares no budget for them`, DECLARE);
+    const known = sets.get(set.name);
+    if (known && !sameTextureSet(known.set, set))
+      textureInvalid(
+        `${where} uses texture set '${set.name}' with other maps or factors than an earlier part`,
+        'share one TextureSet value between the parts, or give the second set its own name',
+      );
+    const alpha = known?.alpha ?? checkTextureSet(where, set, budget.size).alpha;
+    if (!known) sets.set(set.name, { set, alpha });
+    if (p.surface === 'cutout' && !alpha)
+      textureInvalid(
+        `${where} is cutout but the albedo of '${set.name}' has no alpha channel`,
+        "bake the albedo as RGBA (alpha = the mask), or drop `surface: 'cutout'`",
+      );
+  }
+  if (budget && sets.size > budget.count)
+    textureInvalid(
+      `'${asset}' carries ${sets.size} texture sets (${[...sets.keys()].join(', ')}), budget.textureSets.count is ${budget.count}`,
+      `bake the parts into ${budget.count} set(s) (one atlas), or raise count to ${sets.size} with a reason: each set is a material and a draw per pivot`,
     );
 }

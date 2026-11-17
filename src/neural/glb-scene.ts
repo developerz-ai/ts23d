@@ -2,6 +2,9 @@
 // baked into positions and normals (inverse-transpose; winding flipped under a mirror), strips and
 // fans unrolled to triangles, COLOR_0 × baseColorFactor as vertex colour, the baseColor image
 // kept for projection. Still in the FILE's frame (glTF Y up); import-glb converts axes.
+// `sceneGraph` is the same walk as data (rest world matrix, parent, name per node), and
+// `{ skins: true }` keeps a skinned primitive in its mesh space (the skin poses it, not its
+// node), for import-model.
 
 import { type Mesh, Ts23dError } from '../core/index.ts';
 import {
@@ -23,12 +26,30 @@ export interface ScenePrimitive {
   readonly image?: { readonly bytes: Uint8Array; readonly mime: string };
   /** Normals were absent and must be computed. */
   readonly flatNormals: boolean;
+  /** Index of the node that carries the mesh, and of its material (when it has one). */
+  readonly node: number;
+  readonly material?: number;
+  /**
+   * Only with `{ skins: true }` on a skinned node: index into `skins`; positions then stay in
+   * mesh space (unbaked) and `attributes` names the JOINTS_n / WEIGHTS_n accessors.
+   */
+  readonly skin?: number;
+  readonly attributes: Readonly<Record<string, unknown>>;
 }
 
-type M4 = Float64Array;
-const IDENTITY = (): M4 => new Float64Array([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]);
+/** The default scene's nodes: rest world matrix, parent (−1 at a root), name; walk order. */
+export interface SceneGraph {
+  readonly order: readonly number[];
+  readonly world: ReadonlyMap<number, M4>;
+  readonly parent: ReadonlyMap<number, number>;
+  readonly name: (i: number) => string;
+}
 
-function mul(a: M4, b: M4): M4 {
+export type M4 = Float64Array;
+export const IDENTITY = (): M4 =>
+  new Float64Array([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]);
+
+export function mul(a: M4, b: M4): M4 {
   const o = new Float64Array(16);
   for (let c = 0; c < 4; c++)
     for (let r = 0; r < 4; r++) {
@@ -71,16 +92,21 @@ export function localMatrix(node: GltfJson): M4 {
   ]);
 }
 
-/** Every triangle primitive in the default scene, transforms baked. */
-export function scenePrimitives(doc: GlbDoc): ScenePrimitive[] {
+const nodeName = (node: GltfJson, i: number): string =>
+  typeof node['name'] === 'string' && node['name'] ? node['name'] : `node_${i}`;
+
+/** Depth-first over the default scene, parents first: node, rest world matrix, parent index. */
+function walkScene(
+  doc: GlbDoc,
+  visit: (i: number, node: GltfJson, world: M4, parent: number) => void,
+): void {
   const scenes = list(doc.json, 'scenes');
   const sceneIdx = num(doc.json, 'scene', 0);
   const roots: number[] = scenes.length
     ? indices(at(doc, 'scenes', sceneIdx), 'nodes')
     : list(doc.json, 'nodes').map((_, i) => i);
-  const out: ScenePrimitive[] = [];
   const seen = new Set<number>();
-  const walk = (i: number, parent: M4): void => {
+  const walk = (i: number, parent: number, above: M4): void => {
     if (seen.has(i))
       throw new Ts23dError('T3D_IMPORT_GLB', {
         cause: `node ${i} is reached twice (a cycle or a shared child)`,
@@ -88,18 +114,40 @@ export function scenePrimitives(doc: GlbDoc): ScenePrimitive[] {
       });
     seen.add(i);
     const node = at(doc, 'nodes', i);
-    const world = mul(parent, localMatrix(node));
-    if (typeof node['mesh'] === 'number') {
-      const name = typeof node['name'] === 'string' && node['name'] ? node['name'] : `node_${i}`;
-      const prims = list(at(doc, 'meshes', node['mesh']), 'primitives');
-      prims.forEach((p, k) => {
-        const made = primitive(doc, p, world, k ? `${name}_${k}` : name);
-        if (made) out.push(made);
-      });
-    }
-    for (const c of indices(node, 'children')) walk(c, world);
+    const world = mul(above, localMatrix(node));
+    visit(i, node, world, parent);
+    for (const c of indices(node, 'children')) walk(c, i, world);
   };
-  for (const r of roots) walk(r, IDENTITY());
+  for (const r of roots) walk(r, -1, IDENTITY());
+}
+
+export function sceneGraph(doc: GlbDoc): SceneGraph {
+  const order: number[] = [];
+  const world = new Map<number, M4>();
+  const parent = new Map<number, number>();
+  walkScene(doc, (i, _node, w, p) => {
+    order.push(i);
+    world.set(i, w);
+    parent.set(i, p);
+  });
+  return { order, world, parent, name: (i) => nodeName(at(doc, 'nodes', i), i) };
+}
+
+/** Every triangle primitive in the default scene, transforms baked. */
+export function scenePrimitives(doc: GlbDoc, o: { skins?: boolean } = {}): ScenePrimitive[] {
+  const out: ScenePrimitive[] = [];
+  walkScene(doc, (i, node, world) => {
+    if (typeof node['mesh'] !== 'number') return;
+    const name = nodeName(node, i);
+    const skin = o.skins && typeof node['skin'] === 'number' ? node['skin'] : -1;
+    list(at(doc, 'meshes', node['mesh']), 'primitives').forEach((p, k) => {
+      const made = primitive(doc, p, skin < 0 ? world : IDENTITY(), k ? `${name}_${k}` : name);
+      if (!made) return;
+      const material = typeof p['material'] === 'number' ? { material: p['material'] } : {};
+      const attributes = (p['attributes'] ?? {}) as Record<string, unknown>;
+      out.push({ ...made, node: i, attributes, ...material, ...(skin < 0 ? {} : { skin }) });
+    });
+  });
   return out;
 }
 
@@ -119,7 +167,9 @@ function triangles(mode: number, idx: Uint32Array): Uint32Array | null {
   return Uint32Array.from(out);
 }
 
-function primitive(doc: GlbDoc, p: GltfJson, world: M4, name: string): ScenePrimitive | null {
+type Baked = Omit<ScenePrimitive, 'node' | 'material' | 'skin' | 'attributes'>;
+
+function primitive(doc: GlbDoc, p: GltfJson, world: M4, name: string): Baked | null {
   const attrs = (p['attributes'] ?? {}) as Record<string, unknown>;
   if (typeof attrs['POSITION'] !== 'number') return null;
   const pos = readAccessor(doc, attrs['POSITION']);

@@ -51,6 +51,7 @@ TASKS = (
     "ktx2",
     "meshopt",
     "groom",
+    "blender",
 )
 # Mirrors NEURAL_MIMES in src/core/neural-task.ts: anything else is refused before it leaves.
 MIMES: dict[str, tuple[str, ...]] = {
@@ -67,9 +68,10 @@ MIMES: dict[str, tuple[str, ...]] = {
     "ktx2": ("image/ktx2",),
     "meshopt": ("model/gltf-binary",),
     "groom": ("model/gltf-binary", "application/json"),
+    "blender": ("model/gltf-binary", "application/json", "image/png"),
 }
 # Request fields that name input files (inputsOf in src/neural/adapter.ts), in that order.
-INPUT_FIELDS = ("image", "video", "mesh", "garment", "body", "skeleton", "control", "images", "guides")
+INPUT_FIELDS = ("image", "video", "mesh", "garment", "body", "skeleton", "control", "images", "guides", "program")
 
 
 class PluginError(Exception):

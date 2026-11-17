@@ -18,10 +18,20 @@ iteration, contact sheets, review close-ups and the calibrated metric vector.
 | Samples | `sampler.ts` | 4-D Sobol, hash-based Owen scrambling, seeded per pixel |
 | Lights | `sky.ts`, `nee.ts` | procedural studio sky (tabulated CDF) + sun disc, MIS with the BSDF |
 | Surfaces | `surf.ts`, `bsdf.ts`, `ggx-table.ts` | glTF BRDF (GGX, Smith, Schlick, clearcoat), tabulated multiple-scatter compensation: white furnace within 1% |
+| Textured parts | `../texture-sets.ts`, `../set-shade.ts` | a part's own texture set (ADR 016): albedo × vertex colour, ORM or the set's factors, normal map in the exporter's per-vertex tangent frame (glTF: green up, v down); shared with the raster and the contact sheet |
 | Fur / hair | `hair.ts` | diffuse + R / TT / TRT lobes about the strand; cutout cards alpha-tested on the coverage-preserving mips |
 | Skin | `sss.ts`, `classes.ts` | Burley normalised diffusion, disk-probe exit points; skin = `skin*` finish, or plain parts of characters/creatures |
 | Image | `film.ts`, `denoise.ts` | 32 px tiles merged by index; asset layer + floor shadow-catcher layer, each à-trous denoised |
 | Threads | `parallel.ts`, `worker.ts` | shared arrays, atomic tile counter; same bytes on 1 or N threads |
+
+**Textured parts.** A model-built part keeps its own albedo / normal / ORM on every LOD (ADR 016),
+and every renderer samples them through the same two files, so `hero.png` and `sheet.png` show the
+surface the GLB carries. Each PNG is decoded once per process (content key) into 8-bit mips
+(2048² ≈ 22 MB per map; workers share them), sampled bilinearly with clamp addressing, and
+released with the last scene that holds it. Classes are unchanged: a textured part of a
+`creature` or `character` is skin unless its name says otherwise (`classes.ts`); a textured
+`cutout` part is alpha-tested on its albedo's alpha. An undecodable map is `T3D_TEXTURE_INVALID`
+naming the part, never a grey render.
 
 **Engines too.** A finish named `skin` / `skin_*` also exports
 `KHR_materials_diffuse_transmission` + `KHR_materials_volume` (`src/export/transmission.ts`), so

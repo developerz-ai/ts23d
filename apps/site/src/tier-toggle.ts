@@ -1,8 +1,9 @@
-// The two tiers of one asset: the CPU tier (recipe `<name>`, no GPU, deterministic) and, when a
-// recipe `<name>_hybrid` exists with committed model outputs (`neural/*/record.json`), the
-// model tier (a model's surface on the same code skeleton). Pairing and grid filtering are pure;
-// `tierSwitch` is the "CPU tier / With models" control the card and the asset page share.
-// A hybrid never gets its own card: it is reached through its CPU asset's switch.
+// The two tiers of one asset: the CPU tier (no GPU, no model, deterministic) and the model tier
+// (built with committed model outputs, `neural/*/record.json`). Two layouts: a pair of recipes,
+// `<name>` and `<name>_hybrid` (the hybrid never gets its own card: its CPU asset's switch reaches
+// it), or ONE recipe that holds both (`selfTiered`: a model-first asset whose build without the
+// cache is its CPU fallback; it opens on the model tier, `#<name>@cpu` opens the fallback).
+// Pairing and grid filtering are pure; `tierSwitch` is the "CPU tier / Model tier" control.
 
 import type { Tier } from './credits-panel.ts';
 
@@ -33,6 +34,38 @@ export function pairOf<T extends Named>(
   return hybrid && (neural[hybrid.folder]?.length ?? 0) > 0 ? hybrid : null;
 }
 
+/** Hash suffix that opens the CPU tier of a recipe holding both tiers: `#ranger@cpu`. */
+export const CPU_SUFFIX = '@cpu';
+
+/** True when `item`'s own recipe folder has committed neural records: both tiers are this recipe. */
+export const selfTiered = (
+  item: Named,
+  neural: Readonly<Record<string, readonly unknown[]>>,
+): boolean => !baseOf(item.name) && (neural[item.folder]?.length ?? 0) > 0;
+
+/** `ranger@cpu` → `['ranger', 'cpu']`; any other hash names the asset on its default tier. */
+export const parseHash = (hash: string): readonly [name: string, tier: Tier | null] =>
+  hash.endsWith(CPU_SUFFIX) ? [hash.slice(0, -CPU_SUFFIX.length), 'cpu'] : [hash, null];
+
+/** The home showcase never fetches more model output than this for one asset (first paint stays light). */
+export const SHOWCASE_MODEL_BYTES = 2_000_000;
+
+/** Bytes a model-tier view of these records fetches. */
+export const payloadOf = (records: readonly { readonly bytes: number }[]): number =>
+  records.reduce((n, r) => n + r.bytes, 0);
+
+/**
+ * The live showcase's items: a recipe holding both tiers shows its model tier there, so one whose
+ * outputs are a heavy download is left out (its card and page still show it).
+ */
+export const showcaseItems = <T extends Named>(
+  items: readonly T[],
+  neural: Readonly<Record<string, readonly { readonly bytes: number }[]>>,
+): T[] =>
+  items.filter(
+    (i) => !selfTiered(i, neural) || payloadOf(neural[i.folder] ?? []) <= SHOWCASE_MODEL_BYTES,
+  );
+
 /** The grid's items: every hybrid whose CPU asset is listed is left out (the switch reaches it). */
 export function gridItems<T extends Named>(items: readonly T[]): T[] {
   const names = new Set(items.map((i) => i.name));
@@ -42,7 +75,7 @@ export function gridItems<T extends Named>(items: readonly T[]): T[] {
   });
 }
 
-const LABELS: Readonly<Record<Tier, string>> = { cpu: 'CPU tier', models: 'With models' };
+const LABELS: Readonly<Record<Tier, string>> = { cpu: 'CPU tier', models: 'Model tier' };
 
 let uid = 0;
 

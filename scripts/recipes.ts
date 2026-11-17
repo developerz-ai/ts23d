@@ -18,6 +18,7 @@ import {
   warnCritiques,
 } from './lib/critique.ts';
 import { recipeFolders, report, tsFiles, type Violation } from './lib/files.ts';
+import { neuralCacheViolations } from './lib/neural-cache.ts';
 import { neuralLicenceViolations } from './lib/neural-licence.ts';
 import { crossRecipeImports } from './lib/recipe-imports.ts';
 import { CURRENT_SHARD, inShard, type Shard } from './lib/shard.ts';
@@ -111,6 +112,10 @@ async function main(): Promise<void> {
   const mine = inShard(folders, CURRENT_SHARD);
   for (const { dir, file } of mine) {
     violations.push(...(await neuralLicenceViolations(dir)));
+    // A broken cache would throw from the loader below: report it and skip this recipe's build.
+    const cacheViolations = await neuralCacheViolations(dir);
+    violations.push(...cacheViolations);
+    if (cacheViolations.length > 0) continue;
     if (!(await Bun.file(`${dir}/README.md`).exists()))
       violations.push({
         file,

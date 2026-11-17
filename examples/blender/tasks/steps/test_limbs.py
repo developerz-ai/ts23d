@@ -1,0 +1,94 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+# Self-test cases for the limb ops (run by test_steps.py's `selftest`): `unweb` on two posts fused
+# by a remesh, `amputate` on one end of the blob, `repose` turning the blob's head bone (with and
+# without the gated mirror), and their refusals.
+
+import math
+
+import bpy
+
+from tasks import common
+from tasks.steps.test_finish import BIND
+from tasks.steps.test_steps import CLEAN, EXPORT, SKELETON, blob, expect, export_bytes, retopo, run, step_of
+
+
+def posts():
+    """Two upright posts (r = 5 cm, 0.6 m, 9 cm apart) fused into one surface by a voxel remesh."""
+    common.reset_scene()
+    made = []
+    for x in (-0.045, 0.045):
+        bpy.ops.mesh.primitive_cylinder_add(vertices=24, radius=0.05, depth=0.6, location=(x, 0, 0.3))
+        made.append(bpy.context.view_layer.objects.active)
+    common.select_only(made)
+    bpy.context.view_layer.objects.active = made[0]
+    bpy.ops.object.join()
+    obj = bpy.context.view_layer.objects.active
+    mod = obj.modifiers.new("fuse", "REMESH")
+    mod.mode = "VOXEL"
+    mod.voxel_size = 0.008
+    bpy.ops.object.modifier_apply(modifier=mod.name)
+    return export_bytes(obj)
+
+
+def refused(steps, mesh, *needles, skeleton=None):
+    try:
+        run(steps, mesh, skeleton)
+    except Exception as e:  # the job wraps the op's error with its step
+        text = str(e)
+        expect(all(n in text for n in needles), f"refused with {needles}: {text[:120]}")
+        return
+    raise AssertionError(f"not refused: {needles}")
+
+
+def case_unweb():
+    # Asset +y is Blender +x: the posts stand at asset y = ±0.045.
+    limbs = [[{"head": [0, y, 0.02], "tail": [0, y, 0.58], "r": 0.05}] for y in (0.045, -0.045)]
+    r, _ = run([CLEAN, {"op": "unweb", "limbs": limbs, "gap": 0.02}, EXPORT], posts())
+    u = step_of(r, "unweb")
+    expect(u["webFaces"] > 0 and list(u["pairs"]) == ["0 + 1"], f"faces joining the two posts are found: {u['pairs']}")
+    expect(u["capFaces"] > 0 and u["moved"] > 0, f"each side is capped and pushed apart: {u['capFaces']} caps, {u['moved']} moved")
+    far = [[{"head": [5, y, 0], "tail": [5, y, 1], "r": 0.05}] for y in (0.045, -0.045)]
+    r, _ = run([CLEAN, {"op": "unweb", "limbs": far, "gap": 0.02}, EXPORT], posts())
+    expect(step_of(r, "unweb")["webFaces"] == 0, "limbs that claim nothing cut nothing")
+
+
+def case_amputate():
+    whole, _ = run([EXPORT], blob("none"))
+    # The blob's front end (asset +x): everything within 0.3 m of a point on its nose.
+    limb = [[{"head": [0.7, 0, 0.5], "tail": [0.8, 0, 0.5], "r": 0.2}]]
+    r, _ = run([CLEAN, {"op": "amputate", "limbs": limb}, EXPORT], blob("none"))
+    a = step_of(r, "amputate")
+    expect(a["faces"] > 0 and a["capFaces"] > 0, f"the end is cut off and the stump closed: {a}")
+    expect(r["bbox"]["max"][2] < whole["bbox"]["max"][2] - 0.1, f"the blob is shorter in front: {r['bbox']['max']}")
+    refused([{"op": "amputate", "limbs": [[{"head": [0, 0, 0.5], "tail": [0, 0, 0.5], "r": 5}]]}, EXPORT], blob("none"), "step 0 (amputate)", "no faces")
+
+
+def target(yaw):
+    """SKELETON in the asset frame, the head bone yawed `yaw` degrees to the animal's left."""
+    a = math.radians(yaw)
+    return [
+        {"name": "hips", "head": [-0.7, 0, 0.5], "tail": [-0.2, 0, 0.5]},
+        {"name": "spine", "head": [-0.2, 0, 0.5], "tail": [0.3, 0, 0.5]},
+        {"name": "head", "head": [0.3, 0, 0.5], "tail": [0.3 + 0.45 * math.cos(a), 0.45 * math.sin(a), 0.5]},
+    ]
+
+
+def case_repose():
+    steps = [retopo(3000, "decimate"), BIND, {"op": "repose", "to": target(20)}, EXPORT]
+    r, _ = run(steps, blob("none"), SKELETON)
+    p = step_of(r, "repose")
+    expect(abs(p["largestTurn"] - 20) < 0.5 and p["at"] == "head", f"the head bone turns 20°: {p}")
+    expect(p["offTarget"] < 1e-4 and r["glb"]["skins"] >= 1, f"the rest is the target and the skin is kept: {p['offTarget']}")
+    mirrored = [retopo(3000, "decimate"), BIND, {"op": "repose", "to": target(0), "mirror": "+", "mirrorLimit": 0.05}, EXPORT]
+    r, _ = run(mirrored, blob("none"), SKELETON)
+    p = step_of(r, "repose")
+    expect(p["mirrored"] and p["mirrorResidual"] < 0.05, f"a symmetric body is mirrored: residual {p['mirrorResidual']}")
+    leaning = [retopo(3000, "decimate"), BIND, {"op": "repose", "to": target(25), "mirror": "+", "mirrorLimit": 0.02}, EXPORT]
+    r, _ = run(leaning, blob("none"), SKELETON)
+    p = step_of(r, "repose")
+    expect(not p["mirrored"] and p["mirrorResidual"] > 0.02, f"a head off the plane is NOT mirrored: residual {p['mirrorResidual']}")
+    refused([retopo(3000, "decimate"), {"op": "repose", "to": target(0)}, EXPORT], blob("none"), "step 1 (repose)", "bind")
+    refused([retopo(3000, "decimate"), BIND, {"op": "repose", "to": target(0)[:2]}, EXPORT], blob("none"), "step 2 (repose)", "no target", skeleton=SKELETON)
+
+
+CASES = (case_unweb, case_amputate, case_repose)

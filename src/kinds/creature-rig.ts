@@ -85,7 +85,8 @@ function fleshOf(b: Bones, bone: Bone, name: string): WeightBone {
   const limb = b.legs.find((l) => name.startsWith(`${l.name}_`));
   if (limb)
     return ends(mirror(limb.joints.map((at, i) => ({ at, r: limb.radii[i] ?? b.limbR }))), b.limbR);
-  if (b.chain.length > 1) return ends(b.chain, b.limbR);
+  if (name.startsWith('arm_')) return ends(mirror(b.chain), b.limbR);
+  if (b.chain.length > 1 && b.skeleton !== 'biped') return ends(b.chain, b.limbR);
   // Spine: the bone runs along the dorsal top line; its flesh is the trunk below it.
   const ta = trunkAt(b, bone.head[0]);
   const tb = trunkAt(b, bone.tail[0]);

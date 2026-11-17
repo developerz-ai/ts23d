@@ -129,6 +129,7 @@ export function inputsOf<T extends NeuralTask>(task: T, request: NeuralRequest<T
     'control',
     'images',
     'guides',
+    'program',
   ]) {
     const v = r[k];
     const list = Array.isArray(v) ? v : v && typeof v === 'object' ? [v] : [];

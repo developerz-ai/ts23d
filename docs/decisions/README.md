@@ -19,3 +19,4 @@
 | [013](013-skinned-meshes.md) | Skinned meshes: one draw per skinned body, linear-blend weights, baked motion | accepted | 2026-11-15 |
 | [014](014-neural-outputs-are-cached-inputs.md) | Neural outputs are cached inputs, committed with the recipe | accepted | 2026-11-15 |
 | [015](015-models-by-adapter.md) | Models are the user's choice, through adapters; licences recorded, not gated | accepted | 2026-11-15 |
+| [016](016-textured-parts.md) | A part may carry its own texture set on every LOD; the trim sheet stays the default | accepted | 2026-11-16 |

@@ -69,4 +69,15 @@ describe('tasks', () => {
     expect(() => checkNeuralResult('groom', { outputs: [png] })).toThrow(/'image\/png'/);
     expect(checkNeuralResult('groom', { outputs: [json] }).outputs).toHaveLength(1);
   });
+
+  it('blender (step program): a GLB, a JSON report, review PNGs; never KTX2, never nothing', () => {
+    const json = { bytes: new Uint8Array([123, 125]), mime: 'application/json' };
+    const glb = { bytes: new Uint8Array([103, 108, 84, 70]), mime: 'model/gltf-binary' };
+    const ktx = { bytes: new Uint8Array([1]), mime: 'image/ktx2' };
+    expect(() => checkNeuralResult('blender', { outputs: [ktx] })).toThrow(/'image\/ktx2'/);
+    expect(() => checkNeuralResult('blender', { outputs: [] })).toThrow(/returned no outputs/);
+    expect(isNeuralTask('blender')).toBe(true);
+    expect(NEURAL_MIMES.blender).toEqual(['model/gltf-binary', 'application/json', 'image/png']);
+    expect(checkNeuralResult('blender', { outputs: [glb, json, png] }).outputs).toHaveLength(3);
+  });
 });

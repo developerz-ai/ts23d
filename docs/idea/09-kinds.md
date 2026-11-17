@@ -139,8 +139,43 @@ close) and `deform` (volume, stretch, self-crossing at every limit) check them; 
 pose strip (`render/pose-strip.ts`) shows the ROM extremes and gait frames. Heads: `faceMorphs`
 adds `blink` / `talk` / `breathe` targets and `headClips(part)` keys them (`head-clips.ts`).
 
-Stylised-to-plausible, not photoreal. Realistic animals can still go through
-[`/neural`](08-neural-adapters.md).
+Stylised-to-plausible, not photoreal. Realistic animals go model-first (below).
+
+### Model tier: the model is the surface, code is the animal (plan 2026/11/16/101)
+
+A creature recipe may take its surface from an image-to-3D model and keep everything else code:
+sourced scale, skeleton, clips, mass, LOD budgets and QA. The mesh and its own textures stay whole
+as one textured part on every LOD (ADR 016); the code creature is the CPU fallback (ADR 014).
+
+| Call | File | Does |
+|---|---|---|
+| `modelChain(ctx, { concept, surface, spec, steps: (rig) => […], … })` | `model-chain.ts` | Four cached asks, each named by the previous output's sha256: `image` → `mesh` (kept local: raw meshes are 70–100 MB, a build never sees them) → `blender` PROXY (clean → 6 000-triangle shell: the committed geometry TS fits on) → `blender` FINAL (`transform(fit)` first, then the recipe's steps built from the rig, with the fitted skeleton as input so Blender can `bind`). `null` on any miss. A plain `steps` array is one pass (rigged models) |
+| `modelRig(mesh, spec, { symmetric, drop })` | `model-rig.ts` | Everything TS derives from one mesh, memoised: fit, registered mesh, fitted skeleton, clips, limb capsules for `unweb`, `at(bone)` for focus spheres. `symmetric` (exact side-profile concepts; `true`, or '+' / '-' for the half the camera saw): puts the plane midway between the traced left and right legs, takes the far legs off, mirrors the kept half and forces a left/right symmetric skeleton; `side` feeds the `symmetrize` step and `far` the `amputate` step before it |
+| `modelFit(mesh, bones)` | `model-fit.ts`, `model-flesh.ts` | Registers a mesh of any yaw and size onto the plan's flesh capsules: 12 yaw starts, a two-sided trimmed ICP solved upright, scale set by the sourced dorsal height, levelled (≤ 6°) and grounded. Returns the similarity, a row-major 4×4 and the residual |
+| `fitSkeleton(mesh, bones, prefix)` | `model-skeleton.ts`, `model-legs.ts`, `model-ends.ts`, `model-sections.ts` | Fits the plan's armature INTO the mesh (its pose is not our rest pose): legs traced from the ground up along their medial axis, spine under the dorsal line, the head wherever the model turned it, the tail to its tip. Same names, order and parents |
+| `bindModel(mesh, bones, height, legs)` | `model-bind.ts` | Weights in TS: geodesic through the voxelised solid, limbs that touch told apart, relaxed over the surface, ≤ 4 influences in 255ths, half-angle helpers |
+| `modelClips(bones, prefix, drop)` | `model-clips.ts` | The creature's clips baked on the FITTED bones (`boneClips`): gait IK reads the fitted joints; `bite` and `blink` dropped (fused head) |
+| `reposeTarget(bones)` · `modelRig(…, { repose: true })` | `model-repose.ts` | The straightened, bilaterally symmetric rest (centre chains unrolled onto y = 0, left/right averaged, ≤ 25° per bone or `T3D_MODEL_SKELETON`): the asset's bones and clips. Blender binds in the fitted rest, then the `repose` step poses the mesh to `rig.target`: a head turned a few degrees is straightened, never mirrored |
+| `mirrorResidual(mesh, bones, height)` | `model-mirror.ts` | Before any mirror: the mesh's mirror image against itself per region; over 8 % of height on head, neck or trunk nothing is mirrored (`rig.symmetric` false, `rig.mirror` says where) |
+| `modelBody(ctx, { model, spec })` | `model-body.ts` | The part for the LOD being compiled: bones, one skinned textured part (`body_fur` on a furred spec, so the path tracer does not shade it as bare skin), density solved from `spec.mass`. After two passes the mesh is already registered and, if the program bound it, carries its own skin on the fitted bones (checked within 1 mm, else `T3D_MODEL_SKELETON`: re-run `t3d neural run`); otherwise TS binds |
+| `defineModelCreature({ spec, model, … })` | `model-creature.ts` | The asset: model body when `model(ctx)` returns one, else `creature(ctx, spec)`; the clips follow whichever built |
+
+Rules the code enforces: nothing at build time needs the raw mesh (the fit is recomputed from
+the committed proxy by the code that wrote the final program); a model that is not the
+planned animal throws `T3D_MODEL_FIT`; missing, fused or crossed legs, a joint left outside the
+mesh, or a leg bone outside 0.6–1.6 × its plan length throw `T3D_MODEL_SKELETON`. QA `model`
+(`qa/model.ts`) then checks every textured part: albedo not blank under its UVs
+(`T3D_MODEL_TEXTURE`), joints inside the mesh (`T3D_MODEL_SKELETON`), no doubled feature (one
+muzzle outline, one leg outline per foot: `T3D_MODEL_DOUBLED`), the surface hugging the
+skeleton and every foot on the ground (`T3D_MODEL_FIT`); `skin`, `deform` and `gait` judge the
+weights and the motion as for any creature.
+
+Known limits (v1): the head is the model's, fused (no jaw, eye or lid parts); a turned head stays
+turned in every clip (`look` sweeps about it); the scale follows the dorsal line, so `real`
+length and height are the model's at that scale; limbs fused in the mesh (a tail pressed on the
+hocks) cannot deform apart and fail `deform`: re-roll the concept with the limbs clear.
+`clips: 'model'` takes a rigged model (a humanoid from a rigging service) with its own skin,
+armature and clips, untouched. Wings and other chains keep the plan's joints.
 
 ## Scene
 

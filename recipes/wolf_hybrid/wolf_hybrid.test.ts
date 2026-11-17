@@ -1,84 +1,124 @@
-// The hybrid's contract: with no cache it IS the code wolf; with the committed cache the model
-// replaces the head's surface (skull, muzzle, ears) and adds the torso's ruff, while forearms,
-// shanks, paws and tail move by at most the skin amplitude (code owns them), the mass stays the
-// code's, LOD2 takes the colour only, and the build is byte-identical twice.
+// The model-tier wolf's contract. Without the cache it IS the code wolf of the creature kind
+// (several trim-sheet parts, no texture set). With the committed cache: one skinned textured body
+// on every LOD inside the triangle budget, the sourced withers height, head-and-body length and
+// tail length, ≤ 64 bones, clips idle / look / walk / trot (gallop dropped, bite and blink
+// impossible on a fused head), QA PASS on every LOD and the same bytes twice. No test calls a
+// model or Blender: the cache is read from disk.
 
-import { describe, expect, it } from 'bun:test';
+import { afterEach, describe, expect, it } from 'bun:test';
 import { join } from 'node:path';
-import { clearNeuralSources, compile, toGlb } from '@developerz.ai/ts23d';
-import { massProperties } from '@developerz.ai/ts23d/physics';
+import { clearNeuralSources, compile, runQa, toGlb } from '@developerz.ai/ts23d';
+import { compileLods } from '@developerz.ai/ts23d/testing';
 import { provideRecipeNeural } from '../../src/cli/neural-store.ts';
-import { shareOf } from './masks.ts';
-import { BLEND } from './surface.ts';
-import { wolf_hybrid } from './wolf_hybrid.ts';
+import { TRIANGLES } from './steps.ts';
+import { DROPPED } from './surface.ts';
+import { measured, SOURCED, wolf_hybrid } from './wolf_hybrid.ts';
 
 const SLOW = 300_000;
 const file = join(import.meta.dir, 'wolf_hybrid.ts');
-const part = (lod: 0 | 1 | 2, name: string) => {
-  const a = compile(wolf_hybrid, { lod });
-  return { a, mesh: a.parts.find((p) => p.name === name)?.mesh };
+const cached = async (): Promise<void> => {
+  clearNeuralSources();
+  await provideRecipeNeural(file, ['wolf_hybrid'], true);
 };
-const moves = (a: Float32Array, b: Float32Array): Float64Array =>
-  Float64Array.from({ length: a.length / 3 }, (_, v) =>
-    Math.hypot(
-      (a[v * 3] ?? 0) - (b[v * 3] ?? 0),
-      (a[v * 3 + 1] ?? 0) - (b[v * 3 + 1] ?? 0),
-      (a[v * 3 + 2] ?? 0) - (b[v * 3 + 2] ?? 0),
-    ),
-  );
+const textured = (lod: 0 | 1 | 2) => compile(wolf_hybrid, { lod }).parts.filter((p) => p.textures);
 
-describe('wolf_hybrid', () => {
+afterEach(() => clearNeuralSources());
+
+describe('wolf_hybrid, CPU tier (no neural cache)', () => {
   it(
-    'no cache: the code wolf; the cache reshapes the head, keeps legs and tail, keeps the mass',
+    'is the code wolf: trim-sheet parts, no texture set, the creature clips',
+    () => {
+      clearNeuralSources();
+      const a = compile(wolf_hybrid, { lod: 2 });
+      expect(a.parts.some((p) => p.textures)).toBe(false);
+      expect(a.parts.length).toBeGreaterThan(1);
+      expect((a.clips ?? []).map((c) => c.name)).toContain('walk');
+    },
+    SLOW,
+  );
+});
+
+describe('wolf_hybrid, model tier (committed cache)', () => {
+  it(
+    'a missing cache is not mistaken for the model: the textured body appears only with it',
     async () => {
       clearNeuralSources();
-      const cpu = part(1, 'body');
-      const cpuHead = part(1, 'head').mesh;
-      await provideRecipeNeural(file, ['wolf_hybrid'], true);
-      const hy = part(1, 'body');
-      const hyHead = part(1, 'head').mesh;
-      clearNeuralSources();
-      const [a, b] = [cpu.mesh?.positions, hy.mesh?.positions];
-      if (!a || !b || !cpuHead || !hyHead || !cpu.mesh) throw new Error('no body or head part');
-      expect(b.length).toBe(a.length);
-      // The head takes the model's skull: centimetres, not millimetres.
-      const head = moves(cpuHead.positions, hyHead.positions);
-      expect(Math.max(...head)).toBeGreaterThan(0.03);
-      // Where the share is ~0 (< 0.001: forearm, shank, paws, tail) only the skin move: ≤ BLEND.skin.amp.
-      const bones = cpu.a.skeleton?.bones.map((x) => x.name) ?? [];
-      const share = shareOf(cpu.mesh, bones, true);
-      const body = moves(a, b);
-      let kept = 0;
-      let worst = 0;
-      share.forEach((s, v) => {
-        if (s >= 1e-3) return;
-        kept++;
-        worst = Math.max(worst, body[v] ?? 0);
-      });
-      expect(kept).toBeGreaterThan(1000);
-      expect(worst).toBeLessThanOrEqual(BLEND.skin.amp + 1e-6);
-      // Code owns the mass: reshaped parts keep it.
-      expect(massProperties(hy.a).mass).toBeCloseTo(massProperties(cpu.a).mass, 1);
+      expect(textured(2)).toHaveLength(0);
+      await cached();
+      const set = textured(2)[0]?.textures;
+      // PNG header: width and height are big-endian at bytes 16 and 20.
+      const edge = (at: number) =>
+        new DataView(
+          set?.albedo.buffer ?? new ArrayBuffer(24),
+          set?.albedo.byteOffset ?? 0,
+        ).getUint32(at);
+      expect([edge(16), edge(20)]).toEqual([2048, 2048]);
+      expect(set?.normal).toBeDefined();
+      expect(set?.orm).toBeDefined();
     },
     SLOW,
   );
 
   it(
-    'LOD2 takes the colour only (same shape); the cached build is byte-identical twice',
+    'one skinned textured body per LOD, inside the budget and not a stub',
     async () => {
-      clearNeuralSources();
-      const plain = part(2, 'body').mesh;
-      await provideRecipeNeural(file, ['wolf_hybrid'], true);
-      const hy = part(2, 'body').mesh;
-      expect(Bun.hash(hy?.positions ?? new Float32Array())).toBe(
-        Bun.hash(plain?.positions ?? new Float32Array()),
-      );
-      expect(Bun.hash(hy?.colors ?? new Float32Array())).not.toBe(
-        Bun.hash(plain?.colors ?? new Float32Array()),
-      );
+      await cached();
+      for (const lod of [0, 1, 2] as const) {
+        const a = compile(wolf_hybrid, { lod });
+        const body = textured(lod);
+        expect(body).toHaveLength(1);
+        const mesh = body[0]?.mesh;
+        expect(mesh?.joints?.length).toBe(((mesh?.positions.length ?? 0) / 3) * 4);
+        const triangles = (mesh?.indices.length ?? 0) / 3;
+        expect(triangles).toBeLessThanOrEqual(a.budget.triangles[lod]);
+        // Blender was asked for TRIANGLES and lands within 1 %.
+        expect(triangles).toBeGreaterThan(TRIANGLES[lod] * 0.99);
+      }
+    },
+    SLOW,
+  );
+
+  it(
+    'measures as the sourced wolf: withers, head and body, tail',
+    async () => {
+      await cached();
+      const m = measured(compile(wolf_hybrid, { lod: 0 }));
+      expect(m).not.toBeNull();
+      for (const k of Object.keys(SOURCED) as (keyof typeof SOURCED)[]) {
+        const [lo, hi] = SOURCED[k];
+        expect(m?.[k] ?? Number.NaN).toBeGreaterThanOrEqual(lo);
+        expect(m?.[k] ?? Number.NaN).toBeLessThanOrEqual(hi);
+      }
+    },
+    SLOW,
+  );
+
+  it(
+    '≤ 64 plan-named bones; clips idle, look, walk, trot on them; gallop, bite and blink absent',
+    async () => {
+      await cached();
+      const a = compile(wolf_hybrid, { lod: 2 });
+      const names = new Set((a.skeleton?.bones ?? []).map((b) => b.name));
+      expect(names.size).toBeGreaterThan(20);
+      expect(names.size).toBeLessThanOrEqual(64);
+      for (const n of ['head', 'neck_0', 'spine_0', 'fore_l_3', 'hind_r_3', 'tail_0'])
+        expect(names.has(n)).toBe(true);
+      const clips = (a.clips ?? []).map((c) => c.name);
+      for (const c of ['idle', 'look', 'walk', 'trot']) expect(clips).toContain(c);
+      for (const c of [...DROPPED, 'bite', 'blink']) expect(clips).not.toContain(c);
+      for (const c of a.clips ?? [])
+        for (const t of c.tracks) if ('bone' in t) expect(names.has(t.bone)).toBe(true);
+    },
+    SLOW,
+  );
+
+  it(
+    'passes QA on every LOD and builds the same bytes twice',
+    async () => {
+      await cached();
+      for (const a of compileLods(wolf_hybrid)) expect(runQa(a)).toEqual([]);
       const once = Bun.hash(toGlb(compile(wolf_hybrid, { lod: 1 })));
       expect(Bun.hash(toGlb(compile(wolf_hybrid, { lod: 1 })))).toBe(once);
-      clearNeuralSources();
     },
     SLOW,
   );

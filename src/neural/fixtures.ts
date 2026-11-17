@@ -1,4 +1,5 @@
-// Test fixtures for /neural (not exported): a split-normal box in the glTF frame.
+// Test fixtures for /neural (not exported): a split-normal box in the glTF frame. The skinned,
+// textured, animated GLB fixture lives in import-fixture.ts.
 
 import { type Mesh, MeshBuilder } from '../core/index.ts';
 

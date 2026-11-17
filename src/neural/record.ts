@@ -3,6 +3,8 @@
 // re-checked on every read. The licence is reported (credits), never gated for users' builds; this
 // repository refuses committed outputs whose licence does not allow publishing (`publishable`).
 // No timestamps: the record is a function of the job, so re-running it changes no bytes.
+// A **local** output (`"local": true`, file `local-<i>.*`) stays on the machine that made it: too
+// big to commit, git-ignored by name, its sha256 still here so the next request can name it.
 
 import {
   isNeuralTask,
@@ -15,11 +17,13 @@ import { canonicalJson, NEURAL_CONTRACT, type NeuralModelInfo, type NeuralRun } 
 import { sha256Hex } from './sha256.ts';
 
 export interface NeuralRecordOutput {
-  /** File name inside the key directory: `output-<i>.<png|glb|json|ktx2>`. */
+  /** File name inside the key directory: `output-<i>.<png|glb|json|ktx2>`, or `local-<i>.*`. */
   readonly file: string;
   readonly mime: string;
   readonly sha256: string;
   readonly bytes: number;
+  /** Kept on the machine that made it, never committed (`keep: 'local'`); outside the cap. */
+  readonly local?: true;
 }
 
 export interface NeuralRecord {
@@ -48,7 +52,8 @@ const EXT: Readonly<Record<string, string>> = {
 /** Prices change; a record is a function of the job, so the cost stays out of it. */
 const withoutCost = ({ cost: _cost, ...m }: NeuralModelInfo): NeuralModelInfo => m;
 
-export const outputFile = (i: number, mime: string): string => `output-${i}.${EXT[mime] ?? 'bin'}`;
+export const outputFile = (i: number, mime: string, local = false): string =>
+  `${local ? 'local' : 'output'}-${i}.${EXT[mime] ?? 'bin'}`;
 
 export function makeRecord<T extends NeuralTask>(o: {
   readonly key: string;
@@ -57,6 +62,8 @@ export function makeRecord<T extends NeuralTask>(o: {
   readonly adapter: string;
   readonly request: NeuralRequest<T>;
   readonly run: NeuralRun<T>;
+  /** Every output is a local one (`keep: 'local'`). */
+  readonly local?: boolean;
 }): NeuralRecord {
   const r = o.run.result;
   return {
@@ -69,10 +76,11 @@ export function makeRecord<T extends NeuralTask>(o: {
     ...(o.run.server !== undefined ? { server: o.run.server } : {}),
     request: o.request,
     outputs: r.outputs.map((x, i) => ({
-      file: outputFile(i, x.mime),
+      file: outputFile(i, x.mime, o.local),
       mime: x.mime,
       sha256: sha256Hex(x.bytes),
       bytes: x.bytes.length,
+      ...(o.local ? { local: true as const } : {}),
     })),
     ...('score' in r ? { score: r.score } : {}),
   };
@@ -83,6 +91,8 @@ export const recordJson = (r: NeuralRecord): string =>
   `${JSON.stringify(JSON.parse(canonicalJson(r)), null, 2)}\n`;
 
 const SHA = /^[0-9a-f]{64}$/;
+const FILE = /^output-\d+\.(png|glb|json|ktx2)$/;
+const LOCAL_FILE = /^local-\d+\.(png|glb|json|ktx2)$/;
 
 /** Parse and check a record.json; `where` names the file in the error. */
 export function parseRecord(text: string, where: string): NeuralRecord {
@@ -109,10 +119,11 @@ export function parseRecord(text: string, where: string): NeuralRecord {
   if (typeof m?.id !== 'string' || typeof m.licence !== 'string') bad('model needs id and licence');
   if (!Array.isArray(r.outputs) || r.outputs.length === 0) bad('outputs is empty');
   const task = r.task as NeuralTask;
-  for (const o of r.outputs as Partial<NeuralRecordOutput>[])
+  for (const o of r.outputs as Partial<Record<keyof NeuralRecordOutput, unknown>>[])
     if (
       typeof o.file !== 'string' ||
-      !/^output-\d+\.(png|glb|json|ktx2)$/.test(o.file) ||
+      !(o.local === undefined ? FILE : LOCAL_FILE).test(o.file) ||
+      (o.local !== undefined && o.local !== true) ||
       typeof o.sha256 !== 'string' ||
       !SHA.test(o.sha256) ||
       !NEURAL_MIMES[task].includes(String(o.mime))

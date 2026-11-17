@@ -3,12 +3,14 @@
 // move the root, each foot (a leaf bone reaching the ground) is sampled at 30 fps with the root
 // motion applied, i.e. at the manifest's root speed: a planted foot (its toe within 3 mm of its
 // lowest point) may slide < 1 mm per frame (T3D_GAIT_FOOT_SLIDE) and no foot sinks more than
-// 2 mm below its rest height.
+// 2 mm below its rest height. Clips that stay in place have no ground speed to slide against;
+// there the SKIN of each foot may not dip more than 3 mm under the floor (gait-skin.ts).
 
 import type { Armature, Bone, Clip, CompiledAsset, Track, Vec3 } from '../core/index.ts';
 import { quatRotate } from '../core/index.ts';
 import { clipPose, jointWorlds } from './clip-pose.ts';
 import { MID_SUFFIX } from './deform.ts';
+import { SKIN_SINK_LIMIT, type SoleSink, soleSinks } from './gait-skin.ts';
 import type { Finding, Gate } from './types.ts';
 
 export const GAIT_FPS = 30;
@@ -127,6 +129,19 @@ function footFindings(sk: Armature, c: Clip, feet: readonly Bone[]): Finding[] {
   return out;
 }
 
+/** In-place clips: the skin of a foot under the floor. */
+function skinFindings(c: Clip, sinks: readonly SoleSink[]): Finding[] {
+  return sinks
+    .filter((s) => s.sink > SKIN_SINK_LIMIT)
+    .map((s) =>
+      finding(
+        'T3D_QA_GAIT',
+        `clip '${c.name}' (in place): the skin of foot '${s.foot}' sinks ${(s.sink * 1000).toFixed(1)} mm under the floor at frame ${s.frame} (${GAIT_FPS} fps; limit ${SKIN_SINK_LIMIT * 1000} mm)`,
+        `raise the clip's root by ${(s.sink * 1000).toFixed(1)} mm (kinds defineModelCharacter \`clips.lift\`, or the root's translation keys), or re-target the clip to this skeleton's leg lengths; a foot meant to go under (a dig, a wade) is a clip to keep out of the asset`,
+      ),
+    );
+}
+
 /** True when a clip moves a root bone horizontally over its length. */
 function travels(c: Clip, roots: ReadonlySet<string>): boolean {
   return c.tracks.some((t) => {
@@ -147,9 +162,12 @@ export function gaitFindings(asset: CompiledAsset): Finding[] {
   if (!sk || clips.length === 0) return [];
   const roots = new Set(sk.bones.filter((b) => b.parent === undefined).map((b) => b.name));
   const feet = feetOf(sk);
+  const still = feet.length ? clips.filter((c) => !travels(c, roots)) : [];
+  const sinks = still.length ? soleSinks(asset, sk, feet, still) : new Map();
   return clips.flatMap((c) => [
     ...seamFindings(c, roots),
     ...(travels(c, roots) && feet.length ? footFindings(sk, c, feet) : []),
+    ...skinFindings(c, sinks.get(c.name) ?? []),
   ]);
 }
 
