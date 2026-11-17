@@ -24,7 +24,7 @@ const midOf = (rig: readonly Bone[], a: string, b: string): Vec3 => {
 describe('jointsFit', () => {
   it('refuses an armature with a limb missing', () => {
     expect(() => jointsFit(body, bones, riggerBones({ legs: 3 }))).toThrow(
-      /T3D_MODEL_SKELETON.*3 limb chain/,
+      /T3D_MODEL_SKELETON.*1 pair\(s\) of limb chains/,
     );
   });
 
@@ -43,6 +43,27 @@ describe('jointsFit', () => {
     expect(midOf(placed, 'bone_7', 'bone_11')[0]).toBeGreaterThan(
       midOf(placed, 'bone_15', 'bone_19')[0],
     );
+  });
+
+  it('does not take a tail that ends under the toes for a leg', () => {
+    const rig = riggerBones({ wolf: true });
+    const plain = jointsFit(body, bones, rig);
+    // The four-bone tail hangs from the hips' own bone: stretch it to end below every toe.
+    const tail = ['bone_10', 'bone_11', 'bone_12', 'bone_13'];
+    const zs = [0.6, 0.4, 0.2, 0.05, 0];
+    const sunk = rig.map((b) => {
+      const k = tail.indexOf(b.name);
+      return k < 0
+        ? b
+        : {
+            ...b,
+            head: [b.head[0], b.head[1], zs[k] ?? 0] as Vec3,
+            tail: [b.tail[0], b.tail[1], zs[k + 1] ?? 0] as Vec3,
+          };
+    });
+    // The toes end at z = 0.01: the tail's tip is now the lowest chain end of all.
+    const fit = jointsFit(body, bones, sunk);
+    expect(fit.yaw).toBeCloseTo(plain.yaw, 3);
   });
 
   it('lands the lowest skin under the feet on the ground', () => {

@@ -43,21 +43,42 @@ export function jointsFit(mesh: Mesh, b: Bones, joints: readonly Bone[], prefix 
   const floor0 = Math.min(...joints.flatMap((j) => [j.head[2], j.tail[2]]));
   const top = Math.max(...joints.flatMap((j) => [j.head[2], j.tail[2]]));
   const end = (c: readonly Bone[]): number => c[c.length - 1]?.tail[2] ?? 0;
-  const legs = leaves
+  // Limbs are found by where they hang, not by how low they end: every long chain that reaches
+  // the ground is grouped by the trunk bone it hangs from, and a group's pair is its two most
+  // alike chains (a tail hanging from the hips beside the hind legs, ending under the toes, is
+  // the odd one out: legs of a pair have one length and end at one height).
+  const low = leaves
     .map(chainOf)
-    .filter((c) => c.length >= 4 && end(c) <= floor0 + (top - floor0) * 0.15)
-    .sort((p, q) => end(p) - end(q))
-    .slice(0, 4);
-  if (legs.length !== 4) fail(`${legs.length} limb chain(s) reach the ground, a quadruped has 4`);
-  const pairs = new Map<string, Bone[][]>();
-  for (const c of legs) {
+    .filter((c) => c.length >= 4 && end(c) <= floor0 + (top - floor0) * 0.15);
+  const reach = (c: readonly Bone[]): number =>
+    c.reduce(
+      (t, j) => t + Math.hypot(j.tail[0] - j.head[0], j.tail[1] - j.head[1], j.tail[2] - j.head[2]),
+      0,
+    );
+  const groups = new Map<string, Bone[][]>();
+  for (const c of low) {
     const at = c[0]?.parent ?? '';
-    pairs.set(at, [...(pairs.get(at) ?? []), c]);
+    groups.set(at, [...(groups.get(at) ?? []), c]);
   }
-  const two = [...pairs.values()];
+  const two = [...groups.values()]
+    .filter((g) => g.length >= 2)
+    .map((g) => {
+      let best: Bone[][] = g.slice(0, 2);
+      let cost = Infinity;
+      g.forEach((x, m) => {
+        g.slice(m + 1).forEach((y) => {
+          const d = Math.abs(reach(x) - reach(y)) + Math.abs(end(x) - end(y));
+          if (d < cost) [best, cost] = [[x, y], d];
+        });
+      });
+      return best;
+    });
+  const legs = two.flat();
   const [p, q] = two;
-  if (two.length !== 2 || p?.length !== 2 || q?.length !== 2)
-    return fail('the four limbs do not hang from the trunk as two pairs');
+  if (two.length !== 2 || !p || !q)
+    return fail(
+      `${two.length} pair(s) of limb chains reach the ground from the trunk, a quadruped has 2`,
+    );
   const root = (pair: Bone[][]): Vec3 =>
     mid(pair[0]?.[0]?.head ?? [0, 0, 0], pair[1]?.[0]?.head ?? [0, 0, 0]);
   const [a, c] = [root(p), root(q)];
