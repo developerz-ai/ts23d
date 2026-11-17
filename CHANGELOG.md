@@ -4,6 +4,8 @@ All notable changes to `@developerz.ai/ts23d`. Format: [Keep a Changelog](https:
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-11-17
+
 Creatures and humanoids go model-first and Blender-first: an image-to-3D body, finished by an ordered list of headless Blender steps the recipe writes, kept whole with its own textures on every LOD, while code keeps real scale, skeleton, clips, budgets and QA.
 
 ### Added
@@ -27,6 +29,10 @@ Creatures and humanoids go model-first and Blender-first: an image-to-3D body, f
 ### Fixed
 - The GLB exporter let a moving pivot's `paint` slot or `finish` colour bleed onto its unpainted merged children; they now stay on their own material.
 - The `cropped` input-image rule fired on a studio floor band that reaches the frame edge; it now reads only a subject cut by the frame.
+- Code creatures' in-place clips (`idle`, `look`, `bite`) keep every paw planted while the body breathes: the fore paws used to swing up to 13 mm under the floor (bear) once per cycle.
+- `t3d neural run a.ts b.ts` holds one 50-credit limit for the whole command, not one per file.
+- A Meshy task found after a create that got no reply is adopted only when it echoes this request; a refused download never drops task ids, so a rerun resumes at no charge.
+- The recipe cache cap counts real file lengths, and a `record.json` that understates a file is refused.
 
 ## [0.9.0] - 2026-11-16
 
@@ -318,7 +324,8 @@ The first published version: the asset DSL with primitives, organic sculpting, t
 - Animations: `toGlb()` exports none unless `{ animations: true }` (glTF has no autoplay flag; engines drive named pivots from code). `t3d build` bakes the `run` clip by default so viewers show play controls; `--no-animations` skips it.
 - CLI output is one folder per asset: `out/<asset>/{lod0,lod1,lod2}.glb`, `sheet.png`, `manifest.json`, plus `out/index.json`. `t3d build` renders the sheet too (`--no-shot` to skip); `t3d shot` writes sheet + manifest only.
 
-[Unreleased]: https://github.com/developerz-ai/ts23d/compare/v0.9.0...HEAD
+[Unreleased]: https://github.com/developerz-ai/ts23d/compare/v0.10.0...HEAD
+[0.10.0]: https://github.com/developerz-ai/ts23d/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/developerz-ai/ts23d/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/developerz-ai/ts23d/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/developerz-ai/ts23d/compare/v0.6.0...v0.7.0
