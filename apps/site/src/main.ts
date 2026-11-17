@@ -5,8 +5,8 @@
 // its panels are a lazy chunk, fetched on the first asset page. Without WebGL neither the showcase
 // nor the viewer starts: the committed renders stay, with one line saying why (GLBs still download).
 // An asset with two tiers gets a "CPU tier / Model tier" switch: a pair (`<name>_hybrid` with
-// committed model outputs; `#<name>_hybrid` opens the model tier) or one model-first recipe that
-// holds both (`#<name>` is its model tier, `#<name>@cpu` its fallback without the outputs).
+// committed model outputs) or one model-first recipe that holds both. Either way `#<name>` opens
+// the model tier and `#<name>@cpu` the CPU tier.
 
 import './style.css';
 import { NEURAL } from 'virtual:ts23d-media';
@@ -152,7 +152,7 @@ function renderTier(base: Item, hybrid: Item | null, tier: Tier): void {
   const bar = $('[data-tier-bar]');
   const both = self(base);
   const hash = (t: Tier): string =>
-    t === 'models' ? (hybrid ?? base).name : `${base.name}${both ? CPU_SUFFIX : ''}`;
+    t === 'models' ? (hybrid ?? base).name : `${base.name}${CPU_SUFFIX}`;
   bar.hidden = !hybrid && !both;
   bar.replaceChildren(
     ...(bar.hidden
@@ -172,8 +172,9 @@ function renderTier(base: Item, hybrid: Item | null, tier: Tier): void {
 
 function openAsset(base: Item, tier: Tier | null = null): void {
   const hybrid = pair(base);
-  // One recipe with both tiers opens on its model tier (what its committed renders show).
-  const on: Tier = self(base) ? (tier ?? 'models') : hybrid ? (tier ?? 'cpu') : 'cpu';
+  // An asset with a model tier (one recipe holding both, or a `_hybrid` pair) opens on it;
+  // `#<name>@cpu` opens the CPU tier.
+  const on: Tier = self(base) || hybrid ? (tier ?? 'models') : 'cpu';
   const item = on === 'models' && hybrid ? hybrid : base;
   const same = current === base && currentTier === on;
   const sameAsset = current === base;

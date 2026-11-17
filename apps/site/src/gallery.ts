@@ -1,7 +1,8 @@
 // The gallery: category filter chips and a grid of cards showing each asset's committed beauty
 // render. No compile is needed to draw the grid; assets without renders get a live LOD2 render.
-// An asset with a model tier carries a "CPU tier / With models" switch beside its link that swaps
-// the whole card to the hybrid, with its credit line (hybrids have no card of their own).
+// An asset with a model tier shows its hybrid (with its credit line) and carries a
+// "CPU tier / Model tier" switch beside its link that swaps the whole card to the CPU asset
+// (hybrids have no card of their own).
 
 import { BLURB, CATEGORIES, type Category } from './categories.ts';
 import type { Item } from './items.ts';
@@ -71,14 +72,14 @@ function link(item: Item, credit?: string): HTMLAnchorElement {
 function card(item: Item, tiers: TiersOf | null): HTMLLIElement {
   const li = el('li');
   li.dataset['category'] = item.category;
-  let a = link(item);
-  li.append(a);
   const pair = tiers?.(item);
+  let a = pair ? link(pair.hybrid, pair.line) : link(item);
+  li.append(a);
   if (!pair) return li;
   // The switch swaps the whole card link (render, name, triangles, credit) to the other tier.
   li.classList.add('has-tiers');
   li.append(
-    tierSwitch(`Tier of ${item.name}`, 'cpu', (t) => {
+    tierSwitch(`Tier of ${item.name}`, 'models', (t) => {
       const next = t === 'models' ? link(pair.hybrid, pair.line) : link(item);
       a.replaceWith(next);
       a = next;
