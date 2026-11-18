@@ -59,7 +59,7 @@ commercial-use weights.
 | Deformation zone | region that bends when skinned; needs volume and resolution (game meshes: 2–3 loops per bending joint) | linear-blend skin keeps ≥ 85 % volume at a 90° bend (skin-weights.test.ts) |
 | Influences | bones moving one vertex: ≤ 4, weights sum to 1 (1/255 grid) | QA `skin` |
 | Bind pose | joints at rest reproduce the modelled mesh | QA `skin` (≤ 1e-5 m) |
-| Own paws | below a paired limb's wrist/hock (`<limb>_l_2` / `_r_2`) no vertex carries both sides' weights (≥ 5 % each): feet that stand close would drag each other | QA `skin` (`T3D_SKIN_CROSSED`) |
+| Own paws | below a paired limb's wrist/hock (`<limb>_l_2` / `_r_2`) no vertex carries both sides' weights (≥ 5 % each): feet that stand close would drag each other. A model's touching paws need the mesh cut (`unweb`, a retopo voxel under the gap ÷ 1.5); weights alone tear a joined web | QA `skin` (`T3D_SKIN_CROSSED`, model-built parts; code-built pending D73) |
 | Hitbox | per-bone capsule holding ≥ 95 % of the vertices that bone dominates | `--physics`, manifest `hitboxes` |
 | Foot lock | a planted toe stays on one ground point while the root travels | QA `gait`: < 1 mm/frame at 30 fps, root motion applied |
 | Duty factor / Froude | share of the stride a foot is down (> 0.5 walk); v = √(Fr·g·hip), stride 2.3·Fr^0.3·hip | `GAITS`, `gaitTiming` (kinds/gait.ts) |

@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'bun:test';
-import { type CompiledAsset, compile, defineAsset, type Mesh, merge } from '../core/index.ts';
+import {
+  type CompiledAsset,
+  compile,
+  defineAsset,
+  encodePng,
+  type Mesh,
+  merge,
+} from '../core/index.ts';
 import { box } from '../primitives/index.ts';
 import { skin } from './skin.ts';
 import { crossedLimbFindings } from './skin-sides.ts';
@@ -29,19 +36,21 @@ const legs = (): Mesh => {
   return { ...m, joints, weights };
 };
 
-const rigged = (mesh: Mesh): CompiledAsset =>
+/** The legs as a model-built part (its own texture set) or as a code-built one. */
+const rigged = (mesh: Mesh, model = true): CompiledAsset =>
   compile(
     defineAsset({
       name: 'legs',
       kind: 'creature',
-      budget: { triangles: [9999, 9999, 9999] },
+      budget: { triangles: [9999, 9999, 9999], textureSets: { count: 1, size: 1024 } },
       build(ctx) {
         for (const [s, y] of SIDES) {
           ctx.bone(`leg_${s}_0`, { head: [0, y, 1], tail: [0, y, 0.6] });
           ctx.bone(`leg_${s}_1`, { parent: `leg_${s}_0`, head: [0, y, 0.6], tail: [0, y, 0.2] });
           ctx.bone(`leg_${s}_2`, { parent: `leg_${s}_1`, head: [0, y, 0.2], tail: [0, y, 0] });
         }
-        ctx.part('body', mesh);
+        const albedo = encodePng(4, 4, new Uint8Array(64).fill(128));
+        ctx.part('body', mesh, model ? { textures: { name: 'body', albedo } } : {});
       },
     }),
   );
@@ -77,6 +86,11 @@ describe('QA skin: crossed limbs (D72)', () => {
 
   it('passes legs that keep their own weights', () => {
     expect(crossedLimbFindings(rigged(legs()))).toEqual([]);
+  });
+
+  it('leaves a code-built part to the sculpt (D73, open)', () => {
+    const m = legs();
+    expect(crossedLimbFindings(rigged(crossed(m, lowest(m)), false))).toEqual([]);
   });
 
   it('allows shared weights above the hock (brisket, groin)', () => {

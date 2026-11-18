@@ -1,7 +1,7 @@
 // Paired limbs of a skeleton (D72): bones named `<limb>_<l|r>_<n>` (helpers `…_mid` included),
 // grouped per limb with both sides present and a joint 2 (wrist or hock) on each. Below the lower
 // of the two joint-2 heads the skin is a forearm, a shin or a paw: one leg's only. QA `skin`
-// checks it (`T3D_SKIN_CROSSED`); the creature kind's skinning keeps to it.
+// checks it (`T3D_SKIN_CROSSED`).
 
 import type { Bone } from './skeleton.ts';
 
@@ -14,6 +14,10 @@ export interface LimbPair {
   /** Height (asset z, metres) of the lower joint-2 head: below it only one side may weight. */
   readonly below: number;
 }
+
+/** A side's share below which a weight is noise (quantised weights reach 1/255): a vertex is
+ *  crossed when both sides of a limb hold at least this much of it. */
+export const CROSS_SHARE = 0.05;
 
 const SIDED = /^(.+)_([lr])_(\d+)(?:_mid)?$/;
 

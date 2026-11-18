@@ -5,8 +5,7 @@
 // head: head + neck (+ jaw at LOD2, where the jaw is sculpted in); jaw part rigid on `jaw` (the
 // mouth opens by the bone, so no jaw morph is needed); eyes rigid on `head`; fur cards and claws
 // rigid per piece at their root; ears on their own bones (they follow through). `blink` is a
-// morph on the head: each upper lid turns down over the ball about its lateral axis. Below the
-// wrists and hocks each leg's skin keeps to its own side (creature-sides.ts). Clips:
+// morph on the head: each upper lid turns down over the ball about its lateral axis. Clips:
 // creature-clips.ts.
 
 import type { Bone, Mesh, Vec3 } from '../core/index.ts';
@@ -21,7 +20,6 @@ import {
 import type { Bones, HeadFrame } from './creature-bones.ts';
 import type { EyeSpec } from './creature-eye.ts';
 import { MID, midTriples, splitMid } from './creature-helpers.ts';
-import { ownSides } from './creature-sides.ts';
 
 export interface CreatureRig {
   /** Smooth weights over every bone but the jaw (body, trunk, legs, tail, neck into the head). */
@@ -150,8 +148,7 @@ export function creatureRig(
   const head = all.filter((i) => /^(head|neck_\d+|ear_[lr])$/.test(local(bones[i] as Bone)));
   const blend = Math.max(b.limbR, b.height * 0.05) * 0.5;
   return {
-    body: (mesh) =>
-      ownSides(splitMid(skinWeights(mesh, flesh, { blend, only: body }), mids), bones),
+    body: (mesh) => splitMid(skinWeights(mesh, flesh, { blend, only: body }), mids),
     head: (mesh, lod) =>
       blink(
         skinWeights(mesh, flesh, {
@@ -164,13 +161,9 @@ export function creatureRig(
       ),
     rigid: (mesh, bone) => bindRigid(mesh, Math.max(0, index(bone))),
     pieces: (mesh, on, at) =>
-      ownSides(
-        splitMid(
-          skinPieces(mesh, flesh, { blend, only: on === 'body' ? body : head, offset: at }),
-          mids,
-        ),
-        bones,
-        at,
+      splitMid(
+        skinPieces(mesh, flesh, { blend, only: on === 'body' ? body : head, offset: at }),
+        mids,
       ),
   };
 }

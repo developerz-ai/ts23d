@@ -3,9 +3,14 @@
 // leg's. Weight from the other leg makes that paw follow both, so feet standing close drag each
 // other along in the walk (bone heat reached across the 2 cm between a dragon's fore toes).
 // Higher up (brisket, groin) the two legs' skin really meets and shared weights are allowed.
+// Model-built parts only (their own texture set, ADR 016): their limbs are cut apart before
+// retopo (`unweb`), so a crossed paw is a defect a recipe can fix. A code-built creature's
+// close paws are still one webbed surface from the sculpt's smooth union (the wolf's hind
+// paws: D73, open), which weights alone cannot part.
 
 import {
   type CompiledAsset,
+  CROSS_SHARE,
   type LimbPair,
   limbPairs,
   type Part,
@@ -14,9 +19,6 @@ import {
   worldTransforms,
 } from '../core/index.ts';
 import type { Finding } from './types.ts';
-
-/** A side's share below which a weight is noise (quantised weights reach 1/255). */
-export const CROSS_SHARE = 0.05;
 
 function partCrossings(
   p: Part,
@@ -64,12 +66,13 @@ function partCrossings(
   });
 }
 
-/** Findings for every skinned part of `asset` (none without a skeleton or paired limbs). */
+/** Findings for every skinned model-built part of `asset` (none without a skeleton or paired
+ *  limbs). */
 export function crossedLimbFindings(asset: CompiledAsset): Finding[] {
   const sk = asset.skeleton;
   if (!sk) return [];
   const limbs = limbPairs(sk.bones);
   if (limbs.length === 0) return [];
   const xf = worldTransforms(asset.parts);
-  return asset.parts.flatMap((p) => partCrossings(p, limbs, xf));
+  return asset.parts.filter((p) => p.textures).flatMap((p) => partCrossings(p, limbs, xf));
 }
