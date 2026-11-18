@@ -169,29 +169,34 @@ for (;;) {
 });
 
 describe('waiting for a hung session without /proc', () => {
-  const hung = async (): Promise<{ dir: string; close: () => void }> => {
+  /** Runs `check` against a socket that never answers, and always closes it. */
+  const withHungSession = async (check: (dir: string) => Promise<void>): Promise<void> => {
     const dir = room();
     const server = createServer(() => undefined);
     await new Promise<void>((r) => server.listen(join(dir, 'sock'), r));
-    return { dir, close: () => server.close() };
+    try {
+      await check(dir);
+    } finally {
+      server.close();
+    }
   };
   const id = { pid: process.pid, token: 't', job: 'j' };
 
   test('the grace is a deadline, however slow each probe is', async () => {
-    const { dir, close } = await hung();
-    const t0 = performance.now();
-    expect(await waitForExit(id, dir, 300, '/nonexistent')).toBe(false);
-    const took = performance.now() - t0;
-    close();
-    expect(took).toBeGreaterThanOrEqual(250);
-    expect(took).toBeLessThan(900); // six full probes would take six seconds
+    await withHungSession(async (dir) => {
+      const t0 = performance.now();
+      expect(await waitForExit(id, dir, 300, '/nonexistent')).toBe(false);
+      const took = performance.now() - t0;
+      expect(took).toBeGreaterThanOrEqual(250);
+      expect(took).toBeLessThan(900); // six full probes would take six seconds
+    });
   });
 
   test('a session that cannot be proven is reported, not signalled', async () => {
-    const { dir, close } = await hung();
-    const t0 = performance.now();
-    expect(await message(endSession(id, dir, 200, '/nonexistent'))).toContain('cannot be proven');
-    close();
-    expect(performance.now() - t0).toBeLessThan(1500);
+    await withHungSession(async (dir) => {
+      const t0 = performance.now();
+      expect(await message(endSession(id, dir, 200, '/nonexistent'))).toContain('cannot be proven');
+      expect(performance.now() - t0).toBeLessThan(1500);
+    });
   });
 });
