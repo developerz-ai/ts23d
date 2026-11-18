@@ -3,9 +3,10 @@
 // and the spheres, capsules and bones come from the rig TS fitted on the committed proxy (kinds
 // `modelRig`). Every number is in the cache key. Each step and what it is for:
 //   clean    weld the generator's duplicate vertices, drop its loose shells
-//   unweb    the fore feet stand toe to toe: cut the bridges, 2 cm apart
-//   retopo   closed voxel shell → 30 k triangles, three times the density on the head and round
-//            the hips, twice on the feet; the wing membranes come through as closed slabs
+//   unweb    the fore feet stand toe to toe: cut the bridges, 3.2 cm apart
+//   retopo   closed voxel shell at 1.4 cm (the cut toes stay apart) → 30 k triangles, three
+//            times the density on the head and round the hips, twice on the feet; the wing
+//            membranes come through as closed slabs
 //   uv, bake fresh UVs; the model's colour, relief and AO baked from the 900 k source
 //   bind     bone heat on the fitted skeleton: the wings take the chest and spine
 //   weights  the paw bone's weights smoothed round each wrist: the walk folds it 146°
@@ -19,9 +20,15 @@ import type { BlenderStep, ModelRig } from '@developerz.ai/ts23d';
  *  wolf's and the bear's. */
 export const TRIANGLES = [30000, 10000, 5000] as const;
 
-/** Gap `unweb` leaves between limbs that touch, metres: over 1.5 voxels of the shell
- *  (5.5 mm), so the remesh cannot fuse them again. */
-const GAP = 0.02;
+/** The retopo shell's voxel, metres, and the gap `unweb` leaves between limbs that touch (D72).
+ *  Left to itself the shell took 2.03 cm here (the wings' area sets it) and its closing pass
+ *  (4 voxels, for the source's open seams) welded the 2 cm gap shut: the fore paws were joined
+ *  by 30 triangles, bone heat gave 110 paw vertices both legs' weights, and in the walk each
+ *  paw dragged the other's toes along. Measured window: at 1.8 cm the shell does not close,
+ *  at 2.0 cm the paws fuse again, at 1.5–1.6 cm a hind claw sinks 2.7 cm under the ground at
+ *  LOD 1–2 (± 2.6 cm), at 1.2 cm the toe joints fall outside the thinner paws. 1.4 cm passes. */
+const VOXEL = 0.014;
+const GAP = 0.032;
 
 export const steps = (rig: ModelRig): readonly BlenderStep[] => {
   const h = rig.height;
@@ -36,7 +43,7 @@ export const steps = (rig: ModelRig): readonly BlenderStep[] => {
   return [
     { op: 'clean' },
     ...(rig.limbs.length > 1 ? [{ op: 'unweb', limbs: rig.limbs, gap: GAP } as const] : []),
-    { op: 'retopo', triangles: TRIANGLES[0], focus },
+    { op: 'retopo', triangles: TRIANGLES[0], focus, voxel: VOXEL },
     { op: 'uv', kind: 'smart' },
     { op: 'bake', size: 2048, maps: ['albedo', 'normal', 'ao'] },
     { op: 'bind' },

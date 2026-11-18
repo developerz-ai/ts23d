@@ -2,14 +2,14 @@
   "bbox": {
     "frame": "gltf",
     "max": [
-      1.506535,
-      3.28808,
-      1.96841
+      1.508333,
+      3.285877,
+      1.96357
     ],
     "min": [
-      -1.318103,
-      -0.022022,
-      -2.988736
+      -1.313924,
+      -0.025263,
+      -2.984967
     ]
   },
   "bind": {
@@ -100,7 +100,7 @@
     9998,
     4998
   ],
-  "seconds": 133.14,
+  "seconds": 262.69,
   "source": {
     "materials": 1,
     "textures": 2,
@@ -112,14 +112,14 @@
     {
       "determinant": 124.951584,
       "op": "transform",
-      "seconds": 0.06,
+      "seconds": 0.09,
       "triangles": 934645
     },
     {
       "holeFaces": 0,
       "nonManifoldEdges": 1668,
       "op": "clean",
-      "seconds": 8.09,
+      "seconds": 17.37,
       "shells": 56,
       "shellsDropped": 55,
       "triangles": 929049,
@@ -127,8 +127,8 @@
     },
     {
       "capFaces": 407,
-      "clearance": 0.018889,
-      "gap": 0.02,
+      "clearance": 0.029166,
+      "gap": 0.032,
       "limbVertices": [
         20994,
         19298,
@@ -136,100 +136,100 @@
         24810,
         1493
       ],
-      "moved": 744,
+      "moved": 1335,
       "op": "unweb",
       "pairs": {
         "0 + 3": 75,
         "2 + 4": 348
       },
-      "seconds": 19.12,
+      "seconds": 42.9,
       "triangles": 929033,
       "webFaces": 423
     },
     {
       "boundaryEdges": 0,
-      "focusVertexShare": 0.2123,
+      "focusVertexShare": 0.2109,
       "from": 929033,
       "op": "retopo",
       "reduce": "decimate",
-      "seconds": 69.34,
+      "seconds": 160.8,
       "shell": {
-        "bboxDrift": 0.01154,
+        "bboxDrift": 0.008,
         "bboxSide": "+x (front)",
         "close": 4,
         "components": 1,
-        "handles": 1,
+        "handles": 0,
         "largestShare": 1.0,
         "lost": {
           "share": 0.0,
-          "tolerance": 0.045746
+          "tolerance": 0.0315
         },
         "skin": 0.75,
         "tried": [
           [
             0,
             0.0,
-            0.1122,
-            5
+            0.6154,
+            291
           ],
           [
             1,
             0.0,
-            0.0935,
-            7
+            0.0775,
+            37
           ],
           [
             2,
             0.0,
-            0.0838,
-            7
+            0.0655,
+            29
           ],
           [
             4,
             0.0,
-            0.0654,
-            13
+            0.0422,
+            43
           ],
           [
             4,
             0.75,
             0.0,
-            1
+            0
           ]
         ],
-        "volume": 1.392847,
-        "volumeRef": 1.153236
+        "volume": 1.248762,
+        "volumeRef": 1.153534
       },
-      "shellTriangles": 149548,
+      "shellTriangles": 312588,
       "strategy": "shell",
       "triangles": 29998,
-      "voxel": 0.020332
+      "voxel": 0.014
     },
     {
-      "islands": 257,
+      "islands": 374,
       "kind": "smart",
       "op": "uv",
-      "seconds": 9.95,
+      "seconds": 7.56,
       "triangles": 29998,
-      "uvDegenerate": 0.0002
+      "uvDegenerate": 0.0006
     },
     {
       "albedoFrom": "texture",
-      "albedoMean": 0.3213,
-      "albedoUnfilled": 0.0009,
-      "cage": 0.130785,
+      "albedoMean": 0.3194,
+      "albedoUnfilled": 0.0,
+      "cage": 0.130586,
       "device": "OPTIX: NVIDIA GeForce RTX 3090",
-      "hitRate": 0.9774,
+      "hitRate": 0.9862,
       "maps": [
         "albedo",
         "normal",
         "ao"
       ],
       "op": "bake",
-      "seconds": 24.23,
+      "seconds": 30.87,
       "size": 2048,
       "triangles": 29998,
-      "uvCoverage": 0.5112
+      "uvCoverage": 0.455
     },
     {
       "bones": 29,
@@ -238,7 +238,7 @@
       "maxInfluences": 4,
       "method": "bone-heat",
       "op": "bind",
-      "seconds": 0.62,
+      "seconds": 0.72,
       "triangles": 29998,
       "unusedBones": [],
       "weightSum": [
@@ -248,22 +248,22 @@
     },
     {
       "bone": "fore_l_2",
-      "changed": 762,
+      "changed": 538,
       "kind": "smooth",
-      "masked": 776,
-      "meanAfter": 0.1626,
-      "meanBefore": 0.1638,
+      "masked": 894,
+      "meanAfter": 0.1644,
+      "meanBefore": 0.1651,
       "op": "weights",
-      "seconds": 0.09,
+      "seconds": 0.08,
       "triangles": 29998
     },
     {
       "bone": "fore_r_2",
-      "changed": 686,
+      "changed": 498,
       "kind": "smooth",
-      "masked": 740,
-      "meanAfter": 0.1499,
-      "meanBefore": 0.1517,
+      "masked": 836,
+      "meanAfter": 0.1699,
+      "meanBefore": 0.1713,
       "op": "weights",
       "seconds": 0.08,
       "triangles": 29998
@@ -280,51 +280,51 @@
     {
       "lod0": {
         "boundaryEdges": 0,
-        "handles": 1,
+        "handles": 0,
         "maxFaceShare": 0.0004,
-        "uvDegenerate": 0.0002
+        "uvDegenerate": 0.0006
       },
       "lods": [
         {
-          "bboxDrift": 0.00279,
-          "bboxSide": "+z (top)",
+          "bboxDrift": 0.00165,
+          "bboxSide": "+x (front)",
           "boundaryEdges": 0,
-          "handles": 1,
+          "handles": 0,
           "lost": {
             "share": 0.0,
-            "tolerance": 0.065961
+            "tolerance": 0.065891
           },
-          "maxFaceShare": 0.0013,
+          "maxFaceShare": 0.0009,
           "triangles": 9998,
-          "uvDegenerate": 0.0013
+          "uvDegenerate": 0.0009
         },
         {
-          "bboxDrift": 0.00574,
-          "bboxSide": "-x (back)",
+          "bboxDrift": 0.00623,
+          "bboxSide": "-y (right)",
           "boundaryEdges": 0,
-          "handles": 1,
+          "handles": 0,
           "lost": {
             "share": 0.0,
-            "tolerance": 0.098942
+            "tolerance": 0.098837
           },
           "maxFaceShare": 0.0014,
           "triangles": 4998,
-          "uvDegenerate": 0.0028
+          "uvDegenerate": 0.0014
         }
       ],
       "op": "lods",
-      "seconds": 0.71,
+      "seconds": 0.85,
       "triangles": 29998
     },
     {
-      "bytes": 9085048,
+      "bytes": 9115420,
       "images": {
         "albedo": 2048,
         "normal": 1024,
         "orm": 1024
       },
       "op": "export",
-      "seconds": 0.8,
+      "seconds": 1.33,
       "triangles": 29998
     }
   ],
