@@ -682,15 +682,15 @@
     },
     {
       "bone": "mantle_2",
-      "radius": 0.101246,
+      "radius": 0.108021,
       "height": 0,
       "coverage": 1
     },
     {
       "bone": "mantle_3",
-      "radius": 0.089646,
+      "radius": 0.091328,
       "height": 0,
-      "coverage": 0.9801
+      "coverage": 0.9834
     },
     {
       "bone": "rib_2_0",
@@ -700,26 +700,26 @@
     },
     {
       "bone": "head_0",
-      "radius": 0.09483,
-      "height": 0.024556,
-      "coverage": 0.9869
+      "radius": 0.098642,
+      "height": 0.020744,
+      "coverage": 0.9861
     },
     {
       "bone": "funnel_0",
-      "radius": 0.029301,
-      "height": 0.001846,
+      "radius": 0.029295,
+      "height": 0.001422,
       "coverage": 0.963
     },
     {
       "bone": "funnel_1",
-      "radius": 0.021827,
-      "height": 0.008908,
+      "radius": 0.021823,
+      "height": 0.008915,
       "coverage": 0.9915
     },
     {
       "bone": "arm_0_0",
-      "radius": 0.03699,
-      "height": 0.001703,
+      "radius": 0.037309,
+      "height": 0.00123,
       "coverage": 0.9516
     },
     {
@@ -778,9 +778,9 @@
     },
     {
       "bone": "arm_1_0",
-      "radius": 0.052677,
+      "radius": 0.052645,
       "height": 0,
-      "coverage": 1
+      "coverage": 0.9592
     },
     {
       "bone": "arm_1_9",
@@ -826,7 +826,7 @@
     },
     {
       "bone": "arm_2_0",
-      "radius": 0.060317,
+      "radius": 0.061361,
       "height": 0,
       "coverage": 0.9639
     },
@@ -928,7 +928,7 @@
     },
     {
       "bone": "arm_4_0",
-      "radius": 0.067677,
+      "radius": 0.069749,
       "height": 0,
       "coverage": 0.9506
     },
@@ -982,9 +982,9 @@
     },
     {
       "bone": "arm_5_0",
-      "radius": 0.053428,
+      "radius": 0.05755,
       "height": 0,
-      "coverage": 1
+      "coverage": 0.9821
     },
     {
       "bone": "arm_5_7",
@@ -1042,9 +1042,9 @@
     },
     {
       "bone": "arm_6_0",
-      "radius": 0.052379,
+      "radius": 0.050764,
       "height": 0,
-      "coverage": 0.981
+      "coverage": 0.9524
     },
     {
       "bone": "arm_6_9",
@@ -1090,9 +1090,9 @@
     },
     {
       "bone": "arm_7_0",
-      "radius": 0.046604,
+      "radius": 0.044975,
       "height": 0,
-      "coverage": 0.9701
+      "coverage": 0.9552
     },
     {
       "bone": "arm_7_9",

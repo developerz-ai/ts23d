@@ -3,11 +3,22 @@
 // plan: mantle, head, funnel and eight separately posed arms, each a 16-bone chain, with the web,
 // double sucker rows, papillae and slit-pupil eyes bound to those bones.
 
-import { bodyPlan, type Check, defineBodyPlan, octopusClips } from '@developerz.ai/ts23d';
-import { ARM_IDS, AXIS, DORSAL_ARM, OCTOPUS_SPEC, REAL, RIB_NAMES } from './anatomy.ts';
+import {
+  bodyPlan,
+  type Check,
+  defineBodyPlan,
+  octopusClips,
+  type Vec3,
+} from '@developerz.ai/ts23d';
+import { ARM_IDS, DORSAL_ARM, OCTOPUS_SPEC, REAL, RIB_NAMES } from './anatomy.ts';
 import { octopusDetail } from './detail.ts';
 
 export const OCTOPUS_PLAN = bodyPlan(OCTOPUS_SPEC);
+
+/** Scale keys need a coordinate axis, and the mantle axis is 34 degrees off Z: Z is the nearest, an
+ *  approximation. Measured at full contraction: 7.1 % across Y, 4.4 % across the tilted width,
+ *  0.5 cm of slide along the mantle axis. */
+const PULSE_AXIS: Vec3 = [0, 0, 1];
 
 /** Breathing, not jetting: depth and rate are design values (README). The skin shares its weight
  *  with the mantle bones, so the surface moves about half of these numbers. */
@@ -89,7 +100,11 @@ export const common_octopus = defineBodyPlan({
   clips: octopusClips(OCTOPUS_PLAN, {
     arms: ARM_IDS,
     seed: 1797,
-    mantle: { bones: RIB_NAMES.map((r) => `${r}_0`), skeleton: OCTOPUS_PLAN.bones, axis: AXIS },
+    mantle: {
+      bones: RIB_NAMES.map((r) => `${r}_0`),
+      skeleton: OCTOPUS_PLAN.bones,
+      axis: PULSE_AXIS,
+    },
     pulse: MANTLE_BREATH,
   }),
   detail: (ctx, _plan, kit) => octopusDetail(ctx, kit),

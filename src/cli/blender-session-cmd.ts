@@ -7,7 +7,7 @@
 // Every command takes --name and --json. Environment (read here only): T3D_BLENDER_SCRIPTS (the
 // scripts directory), T3D_BLENDER_SOFTWARE_GPU=1, T3D_BLENDER_SESSIONS (where sessions live).
 
-import { Ts23dError } from '../core/index.ts';
+import { formatCount, Ts23dError } from '../core/index.ts';
 import {
   type BlenderStep,
   blenderSessionStatus,
@@ -159,7 +159,7 @@ function human(command: string, r: Record<string, unknown>): void {
   else if (command === 'run') {
     for (const s of r['steps'] as Record<string, unknown>[])
       console.log(
-        `  ${String(s['op'])}: ${String(s['seconds'])} s, ${String(s['triangles'])} triangles`,
+        `  ${String(s['op'])}: ${String(s['seconds'])} s, ${formatCount(Number(s['triangles']))} triangles`,
       );
     for (const s of (r['reviews'] ?? []) as Record<string, unknown>[])
       console.log(`  READ ${String(s['file'])}`);

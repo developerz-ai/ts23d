@@ -114,7 +114,8 @@ function webSector(
     id === ARM_IDS[0] || id === ARM_IDS[ARMS - 1] ? 0.86 : 0.9;
   const sideOf = (id: string, other: string, u: number): number => {
     const toOther = v.sub(kit.surface(other, u, 0).p, kit.surface(id, u, 0).p);
-    const plus = kit.surface(id, u, Math.PI / 2).n;
+    // Across the section, not a normal: a normal on a fillet leans toward the neighbouring arm.
+    const plus = v.sub(kit.surface(id, u, Math.PI / 2).p, kit.surface(id, u, -Math.PI / 2).p);
     // The membrane leaves the arm below its side, toward the sucker face.
     return v.dot(plus, toOther) > 0 ? Math.PI / 2 + 0.55 : (3 * Math.PI) / 2 - 0.55;
   };
@@ -122,8 +123,10 @@ function webSector(
     const edge = WEB_REACH * (1 - 0.34 * Math.sin(Math.PI * t) ** 0.8);
     const dist = 0.018 + w * (edge * reachOf(a) - 0.018);
     const [ua, ub] = [dist / reachOf(a), dist / reachOf(b)];
-    const pa = kit.surface(a, ua, sideOf(a, b, ua)).p;
-    const pb = kit.surface(b, ub, sideOf(b, a, ub)).p;
+    // Anchored on the swept arms: their fillets would fold the membrane, and bury its root anyway.
+    const qa = kit.surface(a, ua, sideOf(a, b, ua));
+    const qb = kit.surface(b, ub, sideOf(b, a, ub));
+    const [pa, pb] = [qa.swept ?? qa.p, qb.swept ?? qb.p];
     const m = v.lerp(pa, pb, t);
     // The membrane hangs a little between the arms.
     return [m[0], m[1], m[2] - 0.012 * w * Math.sin(Math.PI * t)];

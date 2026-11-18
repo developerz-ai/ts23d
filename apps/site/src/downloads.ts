@@ -3,6 +3,7 @@
 // the real size once built. The bytes are exactly what `toGlb` writes (pivots merged, `rest` +
 // `run` clips baked).
 
+import { formatCount } from '@developerz.ai/ts23d/core';
 import { build, LODS, recipe } from './compile.ts';
 import type { Subject } from './viewer-load.ts';
 
@@ -30,7 +31,7 @@ export function renderDownloads(root: HTMLElement, asset: Subject): void {
     });
     const size = Object.assign(document.createElement('span'), { className: 'download-size' });
     const tris = asset.triangles[lod];
-    size.textContent = tris ? `${tris.toLocaleString('en')} tris` : 'compile & save';
+    size.textContent = tris ? `${formatCount(tris)} tris` : 'compile & save';
     b.append(lodSpan, size);
     b.setAttribute('aria-label', `Download ${file}`);
     b.addEventListener('click', () => {
@@ -39,7 +40,7 @@ export function renderDownloads(root: HTMLElement, asset: Subject): void {
       build(recipe(asset.name, lod, asset.file, asset.neural)).then(
         ({ glb, triangles }) => {
           b.removeAttribute('aria-busy');
-          size.textContent = `${kib(glb.byteLength)} · ${triangles.toLocaleString('en')} tris`;
+          size.textContent = `${kib(glb.byteLength)} · ${formatCount(triangles)} tris`;
           save(file, glb);
         },
         () => {

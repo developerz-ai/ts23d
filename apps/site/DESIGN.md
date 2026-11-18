@@ -76,7 +76,7 @@ asset: its stage is deep water, and the home showcase's copy turns light while i
   and the stats name each set and its map sizes.
 - **Motion** (`src/viewer-motion.ts`): Studio's clip picker lists every baked clip (idle, walk,
   trot, gallop, blink, talk, cruise, slither, run…; never `rest`); a skinned asset's travelling
-  loops play on the spot, so they have no seam. The model holds its rest pose until Play; a clip
+  loops play on the spot, so they have no seam. The model holds its rest pose until Play, except that a water asset starts swimming on open unless reduced motion is set; a clip
   that carries it well outside the framed pose pulls the camera back. A Skeleton checkbox draws its
   bones in redline.
 - **Order**: the flagships first in the showcase and the grid (`FLAGSHIPS` in `flagships.ts`: wolf,

@@ -46,6 +46,18 @@
 
 <sub>Every image above is a real render: the committed <code>hero.png</code> next to each recipe, made on the CPU by <code>t3d hero</code> (regenerate with <code>bun run shots &lt;name&gt;</code>). Click one for its recipe, reference dossier and contact sheet.</sub>
 
+**Bodies beyond four legs.** Sharks, fish, snakes, an octopus and a many-necked hydra, built from bone chains with `defineBodyPlan`. Their swim, slither, reach and strike clips are baked from published biomechanics numbers and checked by QA.
+
+<table>
+  <tr>
+    <td align="center" width="20%"><a href="recipes/great_white/"><img src="recipes/great_white/out/great_white/hero.png" alt="Great white shark, rendered by ts23d"></a><br><sub><a href="recipes/great_white/"><code>great_white</code></a> · Great white shark</sub></td>
+    <td align="center" width="20%"><a href="recipes/bluefin_tuna/"><img src="recipes/bluefin_tuna/out/bluefin_tuna/hero.png" alt="Atlantic bluefin tuna, rendered by ts23d"></a><br><sub><a href="recipes/bluefin_tuna/"><code>bluefin_tuna</code></a> · Atlantic bluefin tuna</sub></td>
+    <td align="center" width="20%"><a href="recipes/common_octopus/"><img src="recipes/common_octopus/out/common_octopus/hero.png" alt="Common octopus, rendered by ts23d"></a><br><sub><a href="recipes/common_octopus/"><code>common_octopus</code></a> · Common octopus</sub></td>
+    <td align="center" width="20%"><a href="recipes/king_cobra/"><img src="recipes/king_cobra/out/king_cobra/hero.png" alt="King cobra, rendered by ts23d"></a><br><sub><a href="recipes/king_cobra/"><code>king_cobra</code></a> · King cobra</sub></td>
+    <td align="center" width="20%"><a href="recipes/hydra/"><img src="recipes/hydra/out/hydra/hero.png" alt="Five-necked hydra, rendered by ts23d"></a><br><sub><a href="recipes/hydra/"><code>hydra</code></a> · Five-necked hydra</sub></td>
+  </tr>
+</table>
+
 **Model tier: characters and creatures.** The same recipe loop with a model in it: an image-to-3D body (a local GPU model or [Meshy](https://www.meshy.ai)), finished by headless Blender steps the recipe writes (retopology, UVs, bake to albedo / normal / ORM, skinning, LODs), then held to real scale, a sourced skeleton, baked clips, budgets and the same QA gate. Each one ships as a skinned GLB with its own textures on three LODs (about 30–39k / 10–12k / 4–5k triangles, 1 draw call); the model outputs are committed with their licence, so builds and CI replay them without a GPU or a key.
 
 <table>
@@ -58,6 +70,8 @@
 </table>
 
 <sub>Rendered on the CPU by <code>t3d hero</code> like every other asset. In the <a href="https://developerz-ai.github.io/ts23d/">gallery</a> these open on the Model tier; the switch shows the CPU tier, which builds without a model. Known limits and measured cost are in each recipe's README.</sub>
+
+**Pairs well with [Meshy](https://www.meshy.ai).** Use Meshy for the image-to-3D body and rig, then let a recipe finish the result: headless Blender steps clean it, rebuild its topology, UVs and baked maps, keep its rig and clips, and write three LODs, with ts23d QA on the final GLB. [`recipes/ranger`](recipes/ranger/) is a worked example. Local GPU models use the same path.
 
 [![The ts23d gallery site: a live, orbiting Tiger I compiled in the browser](docs/media/site.png)](https://developerz-ai.github.io/ts23d/)
 
@@ -172,22 +186,27 @@ Each ts23d row names how it's verified. The image-to-3D column cites only what v
 
 ### Benchmarks
 
-To be measured: `bun run bench --write` fills the block below (triangles per LOD, compile + QA time, GLB size, parts, draw calls per gallery recipe) from real runs. Nothing in it is typed by hand; empty means not yet run.
+`bun run bench --write` fills the block below (triangles per LOD, compile + QA time, GLB size, parts, draw calls per gallery recipe) from real runs. Nothing in it is typed by hand; empty means not yet run.
 
 <!-- bench:start -->
-_Measured by `bun run bench` on 1.4.3 (Bun)._
+_Measured by `bun run bench` on 1.4.4 (Bun)._
 
-| asset | tris LOD0 / 1 / 2 | GLB KiB LOD0 / 1 / 2 | parts | animated | draw calls (1 material) | compile + QA, 3 LODs | QA |
+| asset | tris LOD0 / 1 / 2 | GLB size LOD0 / 1 / 2 | parts | animated | draw calls (1 material) | compile + QA, 3 LODs | QA |
 |---|---|---|---|---|---|---|---|
-| `eiffel_tower` | 188016 / 21860 / 1062 | 16863 / 1819 / 85 | 28 | 0 | 1 | 1543 ms | PASS |
-| `loco_440` | 23868 / 13552 / 1400 | 1035 / 614 / 104 | 80 | 14 | 17 | 521 ms | PASS |
-| `material_swatches` | 10926 / 226 / 226 | 921 / 23 / 23 | 52 | 0 | 3 | 71 ms | PASS |
-| `oak` | 12408 / 2536 / 180 | 649 / 135 / 8 | 5 | 1 | 2 | 297 ms | PASS |
-| `palm` | 5032 / 1986 / 211 | 371 / 174 / 19 | 5 | 1 | 2 | 103 ms | PASS |
-| `pine` | 6496 / 1212 / 180 | 322 / 64 / 8 | 5 | 1 | 2 | 95 ms | PASS |
-| `t34` | 36452 / 9960 / 556 | 1761 / 415 / 35 | 28 | 16 | 17 | 360 ms | PASS |
-| `t34_1941` | 35060 / 9460 / 500 | 1694 / 391 / 33 | 28 | 16 | 17 | 315 ms | PASS |
-| `tiger_1` | 88176 / 16304 / 648 | 10709 / 1975 / 41 | 37 | 22 | 23 | 1827 ms | PASS |
+| `bluefin_tuna` | 32.3k / 4k / 476 | 1.08 MB / 150 KB / 26 KB | 8 | 0 | 1 | 498 ms | PASS |
+| `common_octopus` | 134k / 13.4k / 2.09k | 6.2 MB / 729 KB / 142 KB | 6 | 0 | 2 | 4.48 s | PASS |
+| `eiffel_tower` | 188k / 21.8k / 1.05k | 16.5 MB / 1.78 MB / 85 KB | 28 | 0 | 1 | 8.03 s | PASS |
+| `great_white` | 61k / 7.03k / 680 | 2.1 MB / 269 KB / 35 KB | 7 | 0 | 1 | 1.17 s | PASS |
+| `hydra` | 348k / 38.8k / 7.16k | 13.7 MB / 1.43 MB / 303 KB | 9 | 0 | 2 | 26.8 s | PASS |
+| `king_cobra` | 62k / 3.85k / 584 | 5.02 MB / 146 KB / 33 KB | 1 | 0 | 1 | 1.92 s | PASS |
+| `loco_440` | 45.3k / 18.1k / 1.4k | 2.42 MB / 967 KB / 106 KB | 84 | 14 | 18 | 1.33 s | PASS |
+| `material_swatches` | 27.3k / 778 / 778 | 2.24 MB / 70 KB / 70 KB | 132 | 0 | 3 | 732 ms | PASS |
+| `oak` | 13.9k / 3k / 159 | 745 KB / 166 KB / 10 KB | 6 | 1 | 2 | 10.7 s | PASS |
+| `palm` | 5.57k / 2.33k / 205 | 407 KB / 196 KB / 19 KB | 6 | 1 | 2 | 1.09 s | PASS |
+| `pine` | 23.7k / 5.74k / 306 | 1.16 MB / 295 KB / 36 KB | 6 | 1 | 2 | 12.5 s | PASS |
+| `t34` | 48.2k / 10.4k / 1.58k | 2.63 MB / 684 KB / 163 KB | 28 | 18 | 19 | 1.94 s | PASS |
+| `t34_1941` | 46.6k / 10k / 1.55k | 2.54 MB / 660 KB / 162 KB | 28 | 18 | 19 | 1.91 s | PASS |
+| `tiger_1` | 72.2k / 17.4k / 3.41k | 4.36 MB / 960 KB / 288 KB | 39 | 24 | 25 | 3.28 s | PASS |
 <!-- bench:end -->
 
 Draw calls column: static assets (the Eiffel Tower) are 1; vehicles are one per movable part. Trim-sheet painting: 512² ≈ 0.22 s, 1024² ≈ 0.8 s, 2048² ≈ 2.95 s. The predecessor's reference loco (below) is about 16k triangles at LOD0.

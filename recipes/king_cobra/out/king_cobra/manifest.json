@@ -20,7 +20,7 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    61400,
+    61960,
     3848,
     584
   ],
@@ -399,39 +399,39 @@
     },
     {
       "bone": "spine_26",
-      "radius": 0.023209,
-      "height": 0.050181,
-      "coverage": 0.959
+      "radius": 0.023107,
+      "height": 0.050284,
+      "coverage": 0.9568
     },
     {
       "bone": "spine_27",
-      "radius": 0.020519,
-      "height": 0.058804,
-      "coverage": 0.9633
+      "radius": 0.019857,
+      "height": 0.059264,
+      "coverage": 0.9628
     },
     {
       "bone": "spine_28",
-      "radius": 0.016004,
-      "height": 0.066478,
-      "coverage": 0.954
+      "radius": 0.015704,
+      "height": 0.067063,
+      "coverage": 0.9546
     },
     {
       "bone": "spine_29",
-      "radius": 0.012078,
-      "height": 0.076083,
-      "coverage": 0.957
+      "radius": 0.011877,
+      "height": 0.076084,
+      "coverage": 0.9632
     },
     {
       "bone": "spine_30",
-      "radius": 0.00905,
-      "height": 0.082575,
-      "coverage": 0.9526
+      "radius": 0.009009,
+      "height": 0.08258,
+      "coverage": 0.9618
     },
     {
       "bone": "spine_31",
-      "radius": 0.006553,
-      "height": 0.093758,
-      "coverage": 0.9524
+      "radius": 0.006654,
+      "height": 0.093648,
+      "coverage": 0.9578
     },
     {
       "bone": "hood_rib_1_l_0",

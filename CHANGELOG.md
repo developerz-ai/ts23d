@@ -13,6 +13,7 @@ All notable changes to `@developerz.ai/ts23d`. Format: [Keep a Changelog](https:
 - QA: `chain-cross` (limbs passing through each other in clips), `T3D_DEFORM_TWIST`, and a refusal of crease declarations that blanket a whole body.
 - Recipes `great_white`, `bluefin_tuna`, `king_cobra`, `common_octopus` and `hydra`; a gallery swim show in deep water.
 - `blender-artist` skill and research notes on Blender and on swimming, snake, neck and tentacle motion.
+- `formatCount`: counts people read now appear as `188k`, `21.9k`, `1.23M` in the README, gallery, CLI summaries and benchmark table; JSON and manifests keep exact numbers.
 
 ### Fixed
 - `serpent` skeletons parented the head to the tail tip.

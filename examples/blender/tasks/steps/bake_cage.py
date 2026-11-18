@@ -4,8 +4,8 @@
 # each vertex pushed out along its normal by min(cage, 0.45 × the gap to the next wall outward), so
 # a ray starts on its own side of the middle of the gap. The limit spreads over two rings of
 # neighbours: a face between a limited vertex and a free one would otherwise slant across the gap.
-# A floor keeps the cage off the shell where walls meet in a crease. Same topology as the shell
-# (Cycles needs that).
+# No minimum: however narrow the gap, the cage stays inside it. Same topology as the shell (Cycles
+# needs that).
 
 import numpy as np
 
@@ -13,7 +13,6 @@ from tasks.steps import gates
 from tasks.steps import state as st
 
 GAP_SHARE = 0.45
-FLOOR = 0.05  # of the cage distance
 SPREAD = 2  # rings of neighbours that take a vertex's limit
 
 
@@ -31,7 +30,7 @@ def fit(low, cage):
     for i, (p, n) in enumerate(zip((co + normals * start).tolist(), normals.tolist())):
         hit = tree.ray_cast(p, n, reach)
         if hit[0] is not None:
-            offset[i] = max(min(cage, GAP_SHARE * (hit[3] + start)), FLOOR * cage)
+            offset[i] = min(cage, GAP_SHARE * (hit[3] + start))
     ends = np.empty(len(low.data.edges) * 2, dtype=np.int32)
     low.data.edges.foreach_get("vertices", ends)
     a, b = ends[::2], ends[1::2]

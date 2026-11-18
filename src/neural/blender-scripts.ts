@@ -41,10 +41,11 @@ export async function defaultScripts(): Promise<string> {
   return fileURLToPath(new URL('../../examples/blender/', import.meta.url));
 }
 
-/** The scripts directory to use, without a trailing slash; refuses one without ts23d_job.py. */
+/** The scripts directory to use, absolute (Blender runs elsewhere); refuses one without ts23d_job.py. */
 export async function blenderScriptsDir(given?: string): Promise<string> {
   const { access } = await import('node:fs/promises');
-  const dir = (given ?? (await defaultScripts())).replace(/\/+$/, '');
+  const { resolve } = await import('node:path');
+  const dir = resolve(given ?? (await defaultScripts()));
   const found = await access(`${dir}/ts23d_job.py`).then(
     () => true,
     () => false,

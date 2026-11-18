@@ -7,7 +7,7 @@
 import { mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { createServer, type Socket } from 'node:net';
 import { dirname, join } from 'node:path';
-import { decodeFrame, encodeFrame } from './blender-session-wire.ts';
+import { encodeFrame, FrameReader } from './blender-session-wire.ts';
 
 type Step = Readonly<Record<string, unknown>>;
 type Request = {
@@ -18,7 +18,10 @@ type Request = {
 
 const jobPath = process.argv[2] ?? '';
 const dir = dirname(jobPath);
-JSON.parse(readFileSync(jobPath, 'utf8'));
+const job = JSON.parse(readFileSync(jobPath, 'utf8')) as {
+  request: { session: { token: string } };
+};
+const token = job.request.session.token;
 const put = (name: string, value: unknown): void => {
   writeFileSync(join(dir, `${name}.tmp`), JSON.stringify(value));
   renameSync(join(dir, `${name}.tmp`), join(dir, name));
@@ -80,6 +83,7 @@ function runBatch(r: Request): Record<string, unknown> {
 }
 
 function answer(r: Request): Record<string, unknown> {
+  if (r.cmd === 'hello') return { ok: true, token, pid: process.pid };
   if (r.cmd === 'status') return { ok: true, ...facts() };
   if (r.cmd === 'run') return runBatch(r);
   if (r.cmd === 'undo') {
@@ -94,10 +98,9 @@ function answer(r: Request): Record<string, unknown> {
 }
 
 const server = createServer((c: Socket) => {
-  let got = new Uint8Array(0);
+  const reader = new FrameReader();
   c.on('data', (chunk: Uint8Array) => {
-    got = new Uint8Array([...got, ...chunk]);
-    const r = decodeFrame(got) as Request | undefined;
+    const r = reader.push(chunk) as Request | undefined;
     if (r === undefined) return;
     if (r.cmd === 'stop') {
       c.end(encodeFrame({ ok: true, stopped: true }), () => {
@@ -113,5 +116,10 @@ const server = createServer((c: Socket) => {
 });
 server.listen(join(dir, 'sock'), () => {
   keep();
-  put('ready.json', { contract: 't3d-blender-session/1', source: { triangles: 10 }, ...facts() });
+  put('ready.json', {
+    contract: 't3d-blender-session/1',
+    token,
+    source: { triangles: 10 },
+    ...facts(),
+  });
 });

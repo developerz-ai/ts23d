@@ -3,6 +3,7 @@
 // committed manifest (light part bundled, measures fetched with the facts); assets without one get
 // the worker's manifest (no QA). Renders, quality and sounds have their own panels.
 
+import { formatCount } from '@developerz.ai/ts23d/core';
 import { manifest } from './compile.ts';
 import { loadFacts } from './facts.ts';
 import { dossierUrl, folderUrl, type Item, recipeUrl } from './items.ts';
@@ -38,7 +39,7 @@ function lodTable(f: Facts): HTMLTableElement {
   const head = el('tr');
   head.append(el('th'), ...f.triangles.map((_, i) => el('th', `LOD${i}`, 'lod-head')));
   const tris = el('tr');
-  tris.append(el('th', 'triangles'), ...f.triangles.map((n) => el('td', n.toLocaleString('en'))));
+  tris.append(el('th', 'triangles'), ...f.triangles.map((n) => el('td', formatCount(n))));
   const draws = el('tr');
   draws.append(el('th', 'draw calls'), ...f.drawCalls.map((n) => el('td', String(n))));
   t.append(head, tris, draws);

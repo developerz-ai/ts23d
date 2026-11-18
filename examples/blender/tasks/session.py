@@ -8,7 +8,9 @@
 # (session_checkpoint.py). `kept.json` always holds the steps that produced the current state, so
 # ts23d can write them as a program even after Blender has died; a committed asset comes from
 # replaying that program, never from this process. After `idle` seconds without a request the
-# session ends by itself: an unattended Blender must not keep gigabytes of RAM.
+# session ends by itself: an unattended Blender must not keep gigabytes of RAM. It also ends when
+# its job file disappears (another `start` took the name, or the directory was deleted), touching
+# nothing there. `hello` answers the token this start was given: proof of which session is listening.
 
 import json
 import os
@@ -25,6 +27,7 @@ from tasks.steps import state as st
 CONTRACT = "t3d-blender-session/1"
 MAX_FRAME = 64 * 1024 * 1024
 PEER_SECONDS = 30.0
+TICK = 5.0  # seconds between checks that this session still owns its directory
 
 
 def write_json(path, value):
@@ -70,6 +73,7 @@ class Session:
         self.work = work
         self.idle = float(options["idleSeconds"])
         self.depth = int(options["undoDepth"])
+        self.token = options["token"]
         self.diag = None
         self.kept = []
         self.revision = 0
@@ -82,6 +86,9 @@ class Session:
 
     def path(self, name):
         return os.path.join(self.work, name)
+
+    def owns_directory(self):
+        return os.path.exists(self.path(f"job-{self.token}.json"))
 
     def write_kept(self):
         write_json(self.path("kept.json"), {"contract": CONTRACT, "revision": self.revision, "steps": self.kept})
@@ -184,6 +191,8 @@ class Session:
 
     def handle(self, request):
         cmd = request.get("cmd")
+        if cmd == "hello":
+            return {"ok": True, "token": self.token, "pid": os.getpid()}
         if cmd == "status":
             return {"ok": True, **self.facts()}
         if cmd == "run":
@@ -193,7 +202,7 @@ class Session:
         if cmd == "stop":
             self.stop = True
             return {"ok": True, "stopped": True}
-        return {"ok": False, "code": "usage", "error": f"unknown command {cmd!r}", "fix": "use status, run, undo or stop"}
+        return {"ok": False, "code": "usage", "error": f"unknown command {cmd!r}", "fix": "use hello, status, run, undo or stop"}
 
     def answer(self, conn):
         conn.settimeout(PEER_SECONDS)
@@ -221,23 +230,32 @@ class Session:
             server.bind(path)
             os.chmod(path, 0o600)
             server.listen(8)
-            write_json(self.path("ready.json"), {"contract": CONTRACT, "source": self.state.report.get("source"), **self.facts()})
+            write_json(self.path("ready.json"), {"contract": CONTRACT, "token": self.token, "source": self.state.report.get("source"), **self.facts()})
+            last = time.monotonic()
             while not self.stop:
-                server.settimeout(self.idle)
+                if not self.owns_directory():
+                    reason = "orphaned"
+                    break
+                left = self.idle - (time.monotonic() - last)
+                if left <= 0:
+                    reason = "idle"
+                    break
+                server.settimeout(min(left, TICK))
                 try:
                     conn, _ = server.accept()
                 except TimeoutError:
-                    reason = "idle"
-                    break
+                    continue
                 with conn:
                     self.answer(conn)
+                last = time.monotonic()
         finally:
             server.close()
-            if os.path.exists(path):
-                os.remove(path)
-            for blend in self.undo_stack:
-                checkpoint.drop(blend)
-            write_json(self.path("ended.json"), {"reason": reason})
+            if reason != "orphaned":  # an orphan's directory may already be another session's
+                if os.path.exists(path):
+                    os.remove(path)
+                for blend in self.undo_stack:
+                    checkpoint.drop(blend)
+                write_json(self.path("ended.json"), {"reason": reason})
         return reason
 
 
@@ -246,5 +264,7 @@ def run(request, inputs, work):
     if not isinstance(options, dict):
         raise TypeError("request.session is missing: start a session with `t3d blender session start`")
     state = blender.open_state(request, inputs, work, builds=False)
+    if not os.path.exists(os.path.join(work, f"job-{options['token']}.json")):  # replaced while loading
+        return {"outputs": [], "stats": {"ended": "orphaned"}}
     reason = Session(state, work, options).serve()
     return {"outputs": [], "stats": {"ended": reason}}

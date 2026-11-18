@@ -43,7 +43,8 @@ export const PULSE_PRESETS: Readonly<Record<'squid' | 'jelly', PulseSpec>> = {
 };
 
 export type PulseTarget =
-  /** Scale keys on ring joints with no children; `axis` is the ring's axis and keeps its scale. */
+  /** Scale keys on ring joints with no children. `axis`, the ring's axis, keeps its scale and must
+   *  be a coordinate axis: joints rest unrotated, so scale acts along X, Y and Z only. */
   | { readonly bones: readonly string[]; readonly skeleton: readonly Bone[]; readonly axis: Vec3 }
   /** Weights on a part with two morph targets: [contracted, inflated]. */
   | { readonly part: string };
@@ -63,6 +64,17 @@ function checkPulse(p: PulseSpec): void {
   const { inflate, contract, coast } = p.timing;
   if (!(inflate >= 0 && contract > 0 && coast >= 0 && inflate + contract + coast < 1))
     invalid('pulse timing shares do not fit in one cycle', 'leave part of the cycle for refill');
+}
+
+/** Which coordinate axis the ring turns about; a tilted axis has no scale-key form. */
+function ringAxis(axis: Vec3): 0 | 1 | 2 {
+  const l = Math.hypot(...axis);
+  if (!(l > 0)) invalid('pulse ring axis is zero', 'give the axis the ring turns about');
+  for (const k of [0, 1, 2] as const) if (Math.abs(axis[k]) >= l * (1 - 1e-9)) return k;
+  return invalid(
+    `pulse ring axis (${axis.join(', ')}) is not a coordinate axis`,
+    'scale keys act along X, Y and Z only: use a coordinate axis, or drive a morph with { part }',
+  );
 }
 
 /** Radius change at cycle phase u in 0..1: inflate, contract fast, refill slowly, coast. */
@@ -102,8 +114,7 @@ export function radialPulseClip(
     }
     tracks = [{ part: target.part, path: 'weights', times, values }];
   } else {
-    const l = Math.hypot(...target.axis);
-    if (!(l > 0)) invalid('pulse ring axis is zero', 'give the axis the ring turns about');
+    const axis = ringAxis(target.axis);
     const parents = new Set(target.skeleton.map((b) => b.parent));
     tracks = target.bones.map((bone) => {
       if (!target.skeleton.some((b) => b.name === bone))
@@ -117,10 +128,7 @@ export function radialPulseClip(
       const values = new Float32Array((n + 1) * 3);
       for (let i = 0; i <= n; i++) {
         const v = value(i);
-        for (let k = 0; k < 3; k++) {
-          const along = Math.abs((target.axis[k as 0 | 1 | 2] ?? 0) / l);
-          values[i * 3 + k] = 1 + v * (1 - along);
-        }
+        for (let k = 0; k < 3; k++) values[i * 3 + k] = k === axis ? 1 : 1 + v;
       }
       return { bone, path: 'scale' as const, times, values };
     });

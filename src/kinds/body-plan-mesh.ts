@@ -44,7 +44,7 @@ export interface BodyPiece {
   readonly mesh: Mesh;
 }
 
-type Lod = 0 | 1 | 2;
+export type Lod = 0 | 1 | 2;
 
 const RINGS_PER_LINK: readonly [number, number, number] = [6, 3, 1];
 const ROUND_SIDES: readonly [number, number, number] = [20, 12, 6];
@@ -90,7 +90,7 @@ function ringStops(c: ChainSpec, curve: ChainCurve, flareU: number, lod: Lod): n
     .filter((u, i, all) => i === 0 || u - (all[i - 1] ?? 0) > min);
 }
 
-interface Sweep {
+export interface Sweep {
   readonly c: ChainSpec;
   readonly curve: ChainCurve;
   readonly copy: ChainCopy;
@@ -124,7 +124,7 @@ function keptOutside(curve: ChainCurve, u: number, offset: Vec3): Vec3 {
 }
 
 /** The skin point at (u, angle) before relief, with its shading normal. */
-function skinPoint(s: Sweep, u: number, angle: number, eps: number): SurfacePoint {
+export function skinPoint(s: Sweep, u: number, angle: number, eps: number): SurfacePoint {
   const { c, curve, copy } = s;
   const flatten = c.flatten ?? 1;
   const radius = (x: number): number => curve.at(x).r * flareOf(s, x);
@@ -168,7 +168,9 @@ function sweepChain(s: Sweep, stops: readonly number[], sides: number): Mesh {
   const moved = pts.map((row) =>
     row.map((q) => (c.relief ? v3.add(q.p, v3.mul(q.n, c.relief(q))) : q.p)),
   );
-  const normals = c.relief ? gridNormals(pts, moved, sides) : pts.map((row) => row.map((q) => q.n));
+  // Relief and antiFold both move the skin off its ellipse: shade what is really there.
+  const normals =
+    c.relief || c.antiFold ? gridNormals(pts, moved, sides) : pts.map((row) => row.map((q) => q.n));
   /** Round the section: 0..1, or a mirrored zigzag over `bands` repeats of the strip. */
   const across = (j: number): number => {
     const x = (j / sides) * bands;
@@ -243,7 +245,12 @@ function nearestOn(a: Vec3, b: Vec3, p: Vec3): Vec3 {
   return v3.add(a, v3.mul(ab, t));
 }
 
-function sweepOf(plan: BodyPlan, chain: PlanChain, look: BodyPlanLook, lod: Lod): Sweep | null {
+export function sweepOf(
+  plan: BodyPlan,
+  chain: PlanChain,
+  look: BodyPlanLook,
+  lod: Lod,
+): Sweep | null {
   const c = chainSpecOf(plan, chain);
   const copy = c && chainCopies(c).find((k) => k.id === chain.id);
   if (!c || !copy) return null;
@@ -268,25 +275,6 @@ export function bodyPlanPieces(plan: BodyPlan, lod: Lod, look: BodyPlanLook): Bo
     return [{ chain, mesh, spec: s.c, curve: s.curve, copy: s.copy }];
   });
   return weldPieces(plan, items).map(({ chain, mesh }) => ({ chain, mesh }));
-}
-
-/** The rest skin at (u, angle) of a chain copy, relief included: where detail is seated. */
-export function chainSurface(
-  plan: BodyPlan,
-  id: string,
-  look: BodyPlanLook,
-): (u: number, angle: number) => SurfacePoint {
-  const chain = plan.chains.find((x) => x.id === id);
-  const s = chain && sweepOf(plan, chain, look, 0);
-  if (!s)
-    throw new Ts23dError('T3D_RECIPE_INVALID', {
-      cause: `body plan '${plan.name}' has no chain '${id}'`,
-      fix: `use one of: ${plan.chains.map((x) => x.id).join(', ')}`,
-    });
-  return (u, angle) => {
-    const q = skinPoint(s, u, angle, 0.01);
-    return s.c.relief ? { ...q, p: v3.add(q.p, v3.mul(q.n, s.c.relief(q))) } : q;
-  };
 }
 
 /** The whole unskinned surface (a static body, or a look at the shape). */

@@ -1,16 +1,16 @@
-// Body-plan skin features: `blend` removes the crease where two chains meet, every child's root
-// stays under its parent's skin (a root standing proud left a lit sliver beside the hydra's leg),
-// and `relief`, `tint`, `skin: false`, `parts`, the detail kit and the length bound all do their job.
+// Body-plan joints: `blend` removes the crease where two chains meet and changes nothing unasked,
+// detail seats on the welded skin, every child's root stays under its parent's skin (a root standing
+// proud left a lit sliver beside the hydra's leg), and the length bound holds.
 
 import { describe, expect, it } from 'bun:test';
-import { compile, type Mesh, type Vec3 } from '../core/index.ts';
+import type { Mesh, Vec3 } from '../core/index.ts';
 import { bodyPlan } from './body-plan.ts';
-import { defineBodyPlan } from './body-plan-asset.ts';
 import { chainCopies, chainCurve } from './body-plan-curve.ts';
 import { HYDRA, OCTOPUS, SHARK } from './body-plan-fixtures.ts';
-import { type BodyPlanLook, bodyPlanPieces, chainSurface } from './body-plan-mesh.ts';
+import { type BodyPlanLook, bodyPlanPieces } from './body-plan-mesh.ts';
+import { chainSurface } from './body-plan-surface.ts';
 import type { BodyPlan, BodyPlanSpec, ChainSpec } from './body-plan-types.ts';
-import { distanceTo, fieldOf, type WeldItem } from './body-plan-weld.ts';
+import { distanceTo, fieldOf, type WeldItem, weldPieces } from './body-plan-weld.ts';
 
 const look: BodyPlanLook = { back: [0.2, 0.2, 0.2], belly: [0.6, 0.6, 0.6] };
 const trunk: ChainSpec = {
@@ -79,10 +79,74 @@ describe('body-plan blend', () => {
     expect(filletLean(spec({ ...limb, blend: 0.12 }))).toBeGreaterThan(bare + 0.05);
   });
 
-  it('changes nothing when no chain asks for it', () => {
-    const [a] = bodyPlanPieces(bodyPlan(spec(limb)), 1, look);
-    const [b] = bodyPlanPieces(bodyPlan(spec(limb)), 1, look);
-    expect([...(a?.mesh.positions ?? [])]).toEqual([...(b?.mesh.positions ?? [])]);
+  /** The two swept meshes as weld input, with what they held before welding. */
+  function weldInput(p: BodyPlanSpec): { plan: BodyPlan; items: WeldItem[] } {
+    const plan = bodyPlan(p);
+    const pieces = bodyPlanPieces(bodyPlan(spec(limb)), 1, look);
+    // These meshes already went through weldPieces once: nudged, so a change it repeats still shows.
+    const items = ['trunk', 'limb'].map((id, i) => {
+      const m = pieces[i]?.mesh as Mesh;
+      return {
+        ...itemOf(plan, id),
+        mesh: {
+          ...m,
+          positions: m.positions.map((x, k) => x + (0.001 * (1 + (k % 7))) / 7),
+          normals: m.normals.map((x, k) => x + (0.001 * (1 + (k % 5))) / 5),
+        },
+      };
+    });
+    return { plan, items };
+  }
+
+  /** What a mesh holds now, kept apart so a change made in place is seen too. */
+  const held = (m: Mesh) => ({ p: [...m.positions], n: [...m.normals] });
+
+  it('leaves every position and normal alone when no chain asks for a fillet', () => {
+    for (const l of [limb, { ...limb, blend: 0 }]) {
+      const { plan, items } = weldInput(spec(l));
+      const before = items.map((it) => held(it.mesh));
+      weldPieces(plan, items).forEach((out, i) => {
+        expect(held(out.mesh)).toEqual(before[i] as ReturnType<typeof held>);
+      });
+    }
+  });
+
+  it('does move them when one does: the comparison above can fail', () => {
+    const { plan, items } = weldInput(spec({ ...limb, blend: 0.12 }));
+    const before = items.map((it) => held(it.mesh));
+    const moved = weldPieces(plan, items).filter(
+      (o, i) => held(o.mesh).p.join() !== before[i]?.p.join(),
+    );
+    expect(moved.length).toBe(2);
+  });
+
+  it('says where a filleted seat was swept, and only there', () => {
+    const at = chainSurface(bodyPlan(spec({ ...limb, blend: 0.12 })), 'limb', look);
+    const near = at(12 / 36, 0);
+    expect(near.swept).toBeDefined();
+    expect(near.swept).not.toEqual(near.p);
+    expect(at(0.95, 0).swept).toBeUndefined();
+  });
+
+  it('seats detail on the welded skin, not on the swept one under it', () => {
+    const blended = bodyPlan(spec({ ...limb, blend: 0.12 }));
+    const mesh = bodyPlanPieces(blended, 0, look)[1]?.mesh as Mesh;
+    const nearest = (p: Vec3): number => {
+      let best = Number.POSITIVE_INFINITY;
+      for (let v = 0; v < mesh.positions.length / 3; v++) {
+        const q = point(mesh, v);
+        best = Math.min(best, Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2]));
+      }
+      return best;
+    };
+    const welded = chainSurface(blended, 'limb', look);
+    const swept = chainSurface(bodyPlan(spec(limb)), 'limb', look);
+    // A ring of the mesh just above the trunk: 12 rings per link, 3 links, 40 sides.
+    for (const j of [0, 7, 19, 33]) {
+      const [u, a] = [12 / 36, (j / 40) * Math.PI * 2];
+      expect(nearest(welded(u, a).p)).toBeLessThan(1e-4);
+      expect(nearest(swept(u, a).p)).toBeGreaterThan(0.002);
+    }
   });
 });
 
@@ -106,96 +170,6 @@ describe('fixture joints', () => {
         }
       }
     });
-});
-
-describe('body-plan surface hooks', () => {
-  it('relief moves the skin and turns its normals', () => {
-    const bumped = { ...trunk, relief: () => 0.05 };
-    const plan = bodyPlan({ name: 'one', length: 2, chains: [bumped] });
-    const q = chainSurface(plan, 'trunk', look)(0.5, 0);
-    expect(q.p[2]).toBeCloseTo(1.35, 2);
-    const [piece] = bodyPlanPieces(plan, 2, look);
-    const zs = [...(piece?.mesh.positions ?? [])].filter((_, i) => i % 3 === 2);
-    expect(Math.max(...zs)).toBeGreaterThan(1.33);
-  });
-
-  it('tint sets the colour, skin: false leaves bones without a surface', () => {
-    const red: Vec3 = [1, 0, 0];
-    const plan = bodyPlan(spec({ ...limb, skin: false }));
-    expect(bodyPlanPieces(plan, 2, look).map((p) => p.chain.id)).toEqual(['trunk']);
-    const tinted = bodyPlan({
-      name: 'one',
-      length: 2,
-      chains: [{ ...trunk, tint: () => red }],
-    });
-    expect(bodyPlanPieces(tinted, 2, look)[0]?.mesh.colors[0]).toBe(1);
-  });
-
-  it('closes a tinted chain in its tint, not in the plain back colour', () => {
-    const red: Vec3 = [1, 0, 0];
-    const tinted = bodyPlan({ name: 'one', length: 2, chains: [{ ...trunk, tint: () => red }] });
-    const m = bodyPlanPieces(tinted, 2, look)[0]?.mesh;
-    const greens = [...(m?.colors ?? [])].filter((_, i) => i % 3 === 1);
-    expect(Math.max(...greens)).toBe(0);
-  });
-
-  it('splits named chains into parts, refuses an unknown one, and gives detail a kit', () => {
-    let seated = 0;
-    const a = compile(
-      defineBodyPlan({
-        name: 'tee',
-        spec: spec(limb),
-        medium: 'water',
-        parts: { limb: ['limb'] },
-        detail: (_ctx, _plan, kit) => {
-          seated = kit.surface('limb', 0.5, 0).radius;
-        },
-      }),
-    );
-    expect(a.parts.map((p) => p.name).sort()).toEqual(['body', 'limb']);
-    expect(seated).toBeCloseTo(0.15, 2);
-    const bad = defineBodyPlan({ name: 'tee', spec: spec(limb), parts: { x: ['nope'] } });
-    expect(() => compile(bad)).toThrow(/names chain 'nope'/);
-  });
-});
-
-describe('body-plan antiFold', () => {
-  const knee: ChainSpec = {
-    name: 'knee',
-    path: [
-      [0, 0, 1],
-      [0.2, 0, 1],
-      [0.26, 0, 0.94],
-      [0.26, 0, 0.74],
-    ],
-    radius: [0.12, 0.12, 0.12, 0.12],
-    links: 3,
-    detail: { rings: [10, 2, 1], sides: [16, 8, 6] },
-  };
-  /** Steps of the bend's inside line that run backward along the chain. */
-  const backward = (c: ChainSpec): number => {
-    const plan = bodyPlan({ name: 'one', length: 0.5, chains: [c] });
-    const at = chainSurface(plan, 'knee', look);
-    const curve = chainCurve(c);
-    let n = 0;
-    let prev: Vec3 | null = null;
-    for (let i = 0; i <= 60; i++) {
-      const u = i / 60;
-      // Angle π faces -bend, which is the inside of this downward turn.
-      const p = at(u, Math.PI).p;
-      if (prev) {
-        const t = curve.at(u).t;
-        if ((p[0] - prev[0]) * t[0] + (p[1] - prev[1]) * t[1] + (p[2] - prev[2]) * t[2] < 0) n++;
-      }
-      prev = p;
-    }
-    return n;
-  };
-
-  it('stops the inside of a tight bend folding back on itself', () => {
-    expect(backward(knee)).toBeGreaterThan(0);
-    expect(backward({ ...knee, antiFold: true })).toBe(0);
-  });
 });
 
 describe('body-plan length', () => {

@@ -7,6 +7,7 @@
 
 import type { Armature, Bone, Clip, Vec3 } from '../core/index.ts';
 import { bodyPath, boneEnd, boneLength, childMap, reach } from './chain-bones.ts';
+import { harmonicPowers } from './chain-fft.ts';
 import { clipPose, type JointWorld, jointWorlds } from './clip-pose.ts';
 
 export const SWIM_FPS = 30;
@@ -121,13 +122,14 @@ function harmonic(y: readonly number[], m: number): readonly [number, number] {
 
 const swing = (y: readonly number[]): number => Math.max(...y) - Math.min(...y);
 
-/** The strongest harmonic of `y` (1 = once per clip). */
+/** The strongest harmonic of `y` (1 = once per clip), its mean taken out. */
 function strongest(y: readonly number[]): number {
+  const mean = y.reduce((a, v) => a + v, 0) / y.length;
+  const powers = harmonicPowers(y.map((v) => v - mean));
   let best = 1;
   let power = -1;
-  for (let m = 1; m <= y.length / 2; m++) {
-    const [re, im] = harmonic(y, m);
-    const p = re * re + im * im;
+  for (let m = 1; m < powers.length; m++) {
+    const p = powers[m] ?? 0;
     if (p > power + 1e-12) [best, power] = [m, p];
   }
   return best;
@@ -218,7 +220,7 @@ export function measureWave(sk: Armature, body: BodyChain, clip: Clip): ClipWave
   const excursion = y.map(swing);
   const tail = y[tip] ?? [];
   const beating = (excursion[tip] ?? 0) > STILL_TAIL * body.length;
-  const m = beating ? strongest(tail.map((v) => v - tail.reduce((a, b) => a + b, 0) / frames)) : 0;
+  const m = beating ? strongest(tail) : 0;
   // Uniform mass per length: each station carries half of the two links beside it.
   const weights = body.s.map((s, i) => ((body.s[i + 1] ?? s) - (body.s[i - 1] ?? s)) / 2);
   const com = track.map((_, k) => y.reduce((t, v, i) => t + (weights[i] ?? 0) * (v[k] ?? 0), 0));

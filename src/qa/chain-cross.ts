@@ -1,11 +1,18 @@
 // QA `chain-cross`: one long limb may not pass through another during a clip (arm through arm, neck
 // through neck). Each bone of a long chain is a capsule: its radius is the median distance of the
 // skin it carries from the bone, or 3 % of the chain's length on an unskinned rig. Clips are
-// posed at 15 fps. Bone pairs already close at rest (arms meeting at the hub) are exempt, and a
-// contact shallower than PENETRATION_SHARE of the two radii is soft flesh pressing, not a crossing.
+// posed at 15 fps and at every key that moves a chain, so a flick between frames is seen. Bone
+// pairs already close at rest (arms meeting at the hub) are exempt, and a contact shallower than
+// PENETRATION_SHARE of the two radii is soft flesh pressing, not a crossing.
 // Skeletons with fewer than two long chains (tanks, quadrupeds) cost nothing here.
 
-import { type Armature, type CompiledAsset, SKIN_INFLUENCES, type Vec3 } from '../core/index.ts';
+import {
+  type Armature,
+  type Clip,
+  type CompiledAsset,
+  SKIN_INFLUENCES,
+  type Vec3,
+} from '../core/index.ts';
 import { type BoneChain, boneEnd, longChains } from './chain-bones.ts';
 import { clipPose, jointWorlds } from './clip-pose.ts';
 import { skinned } from './deform.ts';
@@ -78,7 +85,9 @@ function boneRadii(
       if (!b || !wanted.has(b.name)) continue;
       const p: Vec3 = [P[v * 3] ?? 0, P[v * 3 + 1] ?? 0, P[v * 3 + 2] ?? 0];
       const d = segmentDistance([p, p], [b.head, b.tail]);
-      dists.set(b.name, [...(dists.get(b.name) ?? []), d]);
+      const list = dists.get(b.name);
+      if (list) list.push(d);
+      else dists.set(b.name, [d]);
     }
   }
   const radii = new Map<string, number>();
@@ -110,7 +119,32 @@ interface Hit {
   readonly b: string;
   readonly depth: number;
   readonly share: number;
-  readonly frame: number;
+  readonly time: number;
+}
+
+/** The chain bones and everything above them: the bones whose keys can move a chain. */
+function movers(sk: Armature, chains: readonly BoneChain[]): Set<string> {
+  const parent = new Map(sk.bones.map((b) => [b.name, b.parent]));
+  const out = new Set<string>();
+  for (const c of chains)
+    for (const b of c.bones)
+      for (let n: string | undefined = b.name; n !== undefined && !out.has(n); n = parent.get(n))
+        out.add(n);
+  return out;
+}
+
+/** Times to pose, ascending: the 15 fps frames plus every key of a moving bone. Keys are 32-bit
+ *  floats, so times are compared at a microsecond or each frame's key would be posed twice. */
+function sampleTimes(clip: Clip, moving: ReadonlySet<string>): number[] {
+  const at = (t: number): number => Math.round(t * 1e6) / 1e6;
+  const frames = Math.max(1, Math.round(clip.seconds * CROSS_FPS));
+  const times = new Set<number>();
+  for (let f = 0; f <= frames; f++) times.add(at((f * clip.seconds) / frames));
+  for (const t of clip.tracks) {
+    if (!('bone' in t) || !moving.has(t.bone)) continue;
+    for (const v of t.times) if (v >= 0 && v <= clip.seconds) times.add(at(v));
+  }
+  return [...times].sort((a, b) => a - b);
 }
 
 /** Index pairs of two chains' bones that are apart at rest, the only ones allowed to be judged. */
@@ -136,13 +170,13 @@ export function chainCrossFindings(asset: CompiledAsset): Finding[] {
   const pairs = chains.flatMap((a, i) =>
     chains.slice(i + 1).map((b) => ({ a, b, bones: judged(a, b, radii) })),
   );
+  const moving = movers(sk, chains);
   const out: Finding[] = [];
   for (const clip of clips) {
-    const frames = Math.max(1, Math.round(clip.seconds * CROSS_FPS));
     let worst: Hit | null = null;
     const crossing = new Set<string>();
-    for (let f = 0; f <= frames; f++) {
-      const w = jointWorlds(sk, clipPose(clip, (f * clip.seconds) / frames));
+    for (const time of sampleTimes(clip, moving)) {
+      const w = jointWorlds(sk, clipPose(clip, time));
       const posed = new Map<string, Posed>();
       for (const c of chains)
         for (const b of c.bones) {
@@ -164,14 +198,14 @@ export function chainCrossFindings(asset: CompiledAsset): Finding[] {
           if (depth <= sum * PENETRATION_SHARE) continue;
           crossing.add(`${x}|${y}`);
           if (!worst || depth / sum > worst.share)
-            worst = { a: x, b: y, depth, share: depth / sum, frame: f };
+            worst = { a: x, b: y, depth, share: depth / sum, time };
         }
     }
     if (worst)
       out.push({
         gate: 'chain-cross',
         code: 'T3D_QA_CHAIN_CROSS',
-        message: `T3D_QA_CHAIN_CROSS clip '${clip.name}': '${worst.a}' passes ${(worst.depth * 100).toFixed(1)} cm into '${worst.b}' at frame ${worst.frame} (${CROSS_FPS} fps), ${crossing.size} bone pair(s) in all`,
+        message: `T3D_QA_CHAIN_CROSS clip '${clip.name}': '${worst.a}' passes ${(worst.depth * 100).toFixed(1)} cm into '${worst.b}' at ${worst.time.toFixed(3)} s, ${crossing.size} bone pair(s) in all`,
         fix: "spread the chains' phases or targets so their paths stay apart, or give each limb its own sector round the body",
       });
   }

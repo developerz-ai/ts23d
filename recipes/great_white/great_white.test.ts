@@ -113,6 +113,9 @@ describe('close-up detail', () => {
     const a = merge(scars(rng()));
     const b = merge(scars(rng()));
     expect([...a.positions]).toEqual([...b.positions]);
+    const c = merge(faceDetail(0, rng()));
+    const d = merge(faceDetail(0, rng()));
+    expect([...c.positions]).toEqual([...d.positions]);
   });
 
   it('shows the upper teeth below the lip with the mouth at rest', () => {

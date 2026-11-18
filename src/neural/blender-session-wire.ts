@@ -20,15 +20,40 @@ export function encodeFrame(value: unknown): Uint8Array {
   return out;
 }
 
-/** The frame at the start of `bytes`, or undefined while it is incomplete. */
-export function decodeFrame(bytes: Uint8Array): unknown {
-  if (bytes.length < 4) return undefined;
-  const size = new DataView(bytes.buffer, bytes.byteOffset, bytes.length).getUint32(0);
-  if (size > MAX_FRAME)
-    failed(`a session frame of ${size} bytes is over the limit`, 'send a smaller batch');
-  if (bytes.length < 4 + size) return undefined;
-  return JSON.parse(new TextDecoder().decode(bytes.subarray(4, 4 + size)));
+/** Reassembles one frame from socket chunks: its body is one buffer, filled once. */
+export class FrameReader {
+  private readonly head = new Uint8Array(4);
+  private body: Uint8Array | undefined;
+  private filled = 0;
+
+  /** The decoded frame once `chunk` completes it, else undefined. */
+  push(chunk: Uint8Array): unknown {
+    let at = 0;
+    if (this.body === undefined) {
+      at = Math.min(4 - this.filled, chunk.length);
+      this.head.set(chunk.subarray(0, at), this.filled);
+      this.filled += at;
+      if (this.filled < 4) return undefined;
+      const size = new DataView(this.head.buffer).getUint32(0);
+      if (size > MAX_FRAME)
+        failed(`a session frame of ${size} bytes is over the limit`, 'send a smaller batch');
+      this.body = new Uint8Array(size);
+      this.filled = 0;
+    }
+    const part = chunk.subarray(at, at + this.body.length - this.filled);
+    this.body.set(part, this.filled);
+    this.filled += part.length;
+    if (this.filled < this.body.length) return undefined;
+    try {
+      return JSON.parse(new TextDecoder().decode(this.body));
+    } catch {
+      return failed('a session frame is not JSON', 'stop the session and start it again');
+    }
+  }
 }
+
+/** The frame at the start of `bytes`, or undefined while it is incomplete. */
+export const decodeFrame = (bytes: Uint8Array): unknown => new FrameReader().push(bytes);
 
 /** Why a request got no answer: nobody listens, the peer vanished, or it took too long. */
 export type NoReply = 'refused' | 'closed' | 'timeout';
@@ -46,7 +71,7 @@ export async function sessionRequest(
   const { createConnection } = await import('node:net');
   return new Promise((resolve, reject) => {
     const c = createConnection({ path: socketPath });
-    let got = new Uint8Array(0);
+    const reader = new FrameReader();
     let settled = false;
     const finish = (act: () => void): void => {
       if (settled) return;
@@ -61,12 +86,12 @@ export async function sessionRequest(
     );
     c.on('connect', () => c.write(encodeFrame(value)));
     c.on('data', (chunk: Uint8Array) => {
-      const next = new Uint8Array(got.length + chunk.length);
-      next.set(got);
-      next.set(chunk, got.length);
-      got = next;
-      const reply = decodeFrame(got);
-      if (reply !== undefined) finish(() => resolve(reply as SessionReply));
+      try {
+        const reply = reader.push(chunk);
+        if (reply !== undefined) finish(() => resolve(reply as SessionReply));
+      } catch (e) {
+        finish(() => reject(e)); // thrown here it would escape the request, uncaught
+      }
     });
     c.on('error', (e: NodeJS.ErrnoException) =>
       finish(() =>
@@ -81,12 +106,13 @@ export async function sessionRequest(
   });
 }
 
-/** Sessions root: on disk, per user. */
+/** Sessions root, absolute (Blender runs in another directory): on disk, per user. */
 export async function sessionsRoot(root?: string): Promise<string> {
-  if (root !== undefined) return root;
+  const { resolve } = await import('node:path');
+  if (root !== undefined) return resolve(root);
   const { homedir } = await import('node:os');
   const cache = process.env['XDG_CACHE_HOME'] || `${homedir()}/.cache`;
-  return `${cache}/t3d/blender-sessions`;
+  return resolve(cache, 't3d/blender-sessions');
 }
 
 /** Create `dir` (mode 0700) or accept it if it is already private; anything else is refused. */

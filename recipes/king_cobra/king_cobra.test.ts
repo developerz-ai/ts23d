@@ -20,6 +20,8 @@ import {
   TOTAL,
 } from './shape.ts';
 
+import { scutes } from './surface.ts';
+
 const sk = { bones: PLAN.bones };
 const clip = (name: string) => {
   const c = CLIPS.find((x) => x.name === name);
@@ -38,6 +40,13 @@ const body = (lod: 0 | 1 | 2): Mesh => {
   if (!m) throw new Error('no body');
   return m;
 };
+
+describe('ventral scutes', () => {
+  it('continue past the 241 body plates onto the tail', () => {
+    const plateTriangles = 8 * 2;
+    expect(triangleCount(scutes()) / plateTriangles).toBeGreaterThan(241);
+  });
+});
 
 describe('sourced proportions', () => {
   it('is 3.5 m along the body, and the bones follow it', () => {

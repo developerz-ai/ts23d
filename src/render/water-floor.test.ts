@@ -5,6 +5,8 @@ import { describe, expect, it } from 'bun:test';
 import { compile, defineAsset } from '../core/index.ts';
 import { box } from '../primitives/index.ts';
 import { renderBeauty } from './beauty.ts';
+import type { PerspectiveCamera } from './camera.ts';
+import { floorLight, NO_FLOOR } from './ground.ts';
 import { renderPath } from './path/path-hero.ts';
 
 const slab = (medium: 'ground' | 'water') =>
@@ -40,10 +42,25 @@ describe('water assets have no studio floor', () => {
     expect(shadowPixels(ground.rgba, water.rgba)).toBeGreaterThan(50);
   });
 
+  it('the empty floor leaves every downward eye ray fully lit', () => {
+    const cam = {
+      cx: 0,
+      cy: 0,
+      focal: 1,
+      eye: [0, 0, 5],
+      f: [0, 0, -1],
+      r: [1, 0, 0],
+      u: [0, 1, 0],
+    } as unknown as PerspectiveCamera;
+    expect(floorLight(NO_FLOOR, cam, 0, 0)).toBe(1);
+  });
+
   it('the path-traced hero casts no shadow', () => {
     const o = { width: 160, height: 90, spp: 8, denoise: false };
     const ground = renderPath(slab('ground'), o);
     const water = renderPath(slab('water'), o);
     expect(shadowPixels(ground.rgba, water.rgba, water.mask)).toBeGreaterThan(50);
+    const noFloor = renderPath(slab('ground'), { ...o, floor: false });
+    expect(Buffer.compare(water.rgba, noFloor.rgba)).toBe(0);
   });
 });

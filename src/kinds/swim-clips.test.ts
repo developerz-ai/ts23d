@@ -64,11 +64,8 @@ function tailSwing(plan: BodyPlan, c: Clip): number {
     const pose = clipPose(c, (i / 600) * c.seconds);
     const w = jointWorlds(sk, pose).get(last.name);
     if (!w) throw new Error('no tail joint');
-    const d: Vec3 = [
-      last.tail[0] - last.head[0],
-      last.tail[1] - last.head[1],
-      last.tail[2] - last.head[2],
-    ];
+    const [h, e] = [last.head, last.tail];
+    const d: Vec3 = [e[0] - h[0], e[1] - h[1], e[2] - h[2]];
     ys.push(w.head[1] + quatRotate(w.rot, d)[1]);
   }
   return Math.max(...ys) - Math.min(...ys);
@@ -128,7 +125,7 @@ describe('swimClips', () => {
         expect(cruise.heading).toBe('tailward');
       });
 
-      it('bursts by frequency alone', () => {
+      it('bursts by frequency, holding tail swing and wavelength', () => {
         expect(burst.frequency / cruise.frequency).toBeGreaterThan(1.5);
         // Read densely: the gate's 30 fps lands only 3 to 7 samples on a burst beat.
         const dense = (name: string): number => tailSwing(plan, clipNamed(clips, name));
@@ -151,15 +148,28 @@ describe('swimClips', () => {
     });
 
   const plan = fishPlan({ length: 2, fins: true });
-  const clips = swimClips(plan, {
+  const shark = {
     chain: 'spine',
     preset: 'shark',
     ...finned,
     jaw: { lower: 'jaw_low', upper: 'jaw_up' },
-  });
+  } as const;
+  const clips = swimClips(plan, shark);
 
   it('bakes clips the asset checker accepts', () => {
     for (const c of clips) expect(checkClip('t', c)).toBe(c);
+  });
+
+  it('steepens only the eel envelope in a burst [T04]; other presets keep the cruise shape', () => {
+    const headShare = (preset: SwimPreset): number => {
+      const p = fishPlan({ length: sizes[preset] });
+      const set = swimClips(p, { chain: 'spine', preset });
+      const ratio = ({ excursion: e }: ReturnType<typeof measure>): number =>
+        (e[0] ?? 0) / (e.at(-1) ?? 1);
+      return ratio(measure(p, set, 'burst')) / ratio(measure(p, set, 'cruise'));
+    };
+    expect(headShare('eel')).toBeGreaterThan(1.5);
+    expect(Math.abs(headShare('shark') - 1)).toBeLessThan(0.02);
   });
 
   it('names the whole set, root motion first', () => {
@@ -278,12 +288,7 @@ describe('swimClips', () => {
   });
 
   it('bakes the same bytes twice', () => {
-    const again = swimClips(plan, {
-      chain: 'spine',
-      preset: 'shark',
-      ...finned,
-      jaw: { lower: 'jaw_low', upper: 'jaw_up' },
-    });
+    const again = swimClips(plan, shark);
     clips.forEach((c, i) => {
       c.tracks.forEach((t, k) => {
         expect([...(again[i]?.tracks[k]?.values ?? [])]).toEqual([...t.values]);

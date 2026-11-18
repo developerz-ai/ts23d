@@ -33,7 +33,7 @@ from tasks.steps.test_steps import (
 BIND = {"op": "bind", "from": "skeleton", "maxInfluences": 4}
 BREAK = {"op": "script", "python": "for v in obj.data.vertices:\n    v.co.z += 0.5\nraise RuntimeError('on purpose')", "why": "fail"}
 LIFT = {"op": "script", "python": "for v in obj.data.vertices:\n    v.co.z += 0.001", "why": "lift"}
-OPTIONS = {"idleSeconds": 60, "undoDepth": 3}
+OPTIONS = {"idleSeconds": 60, "undoDepth": 3, "token": "t0"}
 
 
 def opened(mesh, skeleton=None, options=OPTIONS):
@@ -42,6 +42,8 @@ def opened(mesh, skeleton=None, options=OPTIONS):
     path = os.path.join(work, "src.glb")
     with open(path, "wb") as f:
         f.write(mesh)
+    with open(os.path.join(work, f"job-{options['token']}.json"), "w", encoding="utf-8") as f:
+        f.write("{}")
     request = {"mesh": {"sha256": "mesh", "mime": "x"}, "session": options}
     inputs = {"mesh": path}
     if skeleton is not None:
@@ -147,6 +149,7 @@ def case_session_socket():
             threading.Event().wait(0.05)
         answers["mode"] = os.stat(sock).st_mode & 0o777
         answers["status"] = request_of(sock, {"cmd": "status"})
+        answers["hello"] = request_of(sock, {"cmd": "hello"})
         answers["bad"] = request_of(sock, {"cmd": "nope"})
         answers["stop"] = request_of(sock, {"cmd": "stop"})
 
@@ -157,6 +160,7 @@ def case_session_socket():
     finally:
         thread.join(30)
     expect(answers["mode"] == 0o600 and answers["status"]["ok"] and answers["status"]["kept"] == [], f"framed status over the socket, socket mode {oct(answers['mode'])}")
+    expect(answers["hello"]["token"] == "t0" and answers["hello"]["pid"] == os.getpid(), "hello proves which session answers")
     expect(not answers["bad"]["ok"] and "unknown command" in answers["bad"]["error"], "an unknown command is answered, not fatal")
     expect(answers["stop"]["stopped"] and result["stats"]["ended"] == "stopped" and not os.path.exists(os.path.join(moved, "sock")), "stop ends the loop and removes the socket")
     shutil.rmtree(short, ignore_errors=True)
@@ -164,7 +168,7 @@ def case_session_socket():
 
 def case_session_idle():
     common.reset_scene()
-    request, inputs, work = opened(blob("none"), options={"idleSeconds": 0.2, "undoDepth": 1})
+    request, inputs, work = opened(blob("none"), options={"idleSeconds": 0.2, "undoDepth": 1, "token": "t0"})
     short = tempfile.mkdtemp(prefix="t3d-s-")
     moved = os.path.join(short, "w")
     shutil.move(work, moved)
@@ -177,4 +181,35 @@ def case_session_idle():
     expect(bool(bpy.data.objects), "the scene is still there for whatever runs next")
 
 
-CASES = (case_session_batches, case_session_replay, case_session_socket, case_session_idle)
+def case_session_orphan():
+    """Another start replaced this session's directory: leave its new files alone and exit."""
+    common.reset_scene()
+    request, inputs, work = opened(blob("none"))
+    short = tempfile.mkdtemp(prefix="t3d-s-")
+    moved = os.path.join(short, "w")
+    shutil.move(work, moved)
+    inputs["mesh"] = os.path.join(moved, "src.glb")
+    tick, session.TICK = session.TICK, 0.05
+
+    def replace():
+        while not os.path.exists(os.path.join(moved, "ready.json")):
+            threading.Event().wait(0.02)
+        os.remove(os.path.join(moved, "job-t0.json"))
+        for name in ("ready.json", "sock"):
+            os.remove(os.path.join(moved, name))
+        with open(os.path.join(moved, "sock"), "w", encoding="utf-8") as f:
+            f.write("the new session's")
+
+    thread = threading.Thread(target=replace)
+    thread.start()
+    try:
+        result = session.run(request, inputs, moved)
+    finally:
+        session.TICK = tick
+        thread.join(30)
+    expect(result["stats"]["ended"] == "orphaned", "a session whose job file is gone ends itself")
+    expect(os.path.exists(os.path.join(moved, "sock")) and not os.path.exists(os.path.join(moved, "ended.json")), "and touches nothing the new session owns")
+    shutil.rmtree(short, ignore_errors=True)
+
+
+CASES = (case_session_orphan, case_session_batches, case_session_replay, case_session_socket, case_session_idle)

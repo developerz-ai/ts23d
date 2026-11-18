@@ -7,21 +7,12 @@ import { loadAssets } from '../src/cli/load.ts';
 import { compile, type Lod } from '../src/core/index.ts';
 import { mergeToPivots, toGlb } from '../src/export/index.ts';
 import { runQa } from '../src/qa/index.ts';
-import { tsFiles } from './lib/files.ts';
+import { type BenchRow, benchTable, readmeRows } from './lib/bench-table.ts';
+import { recipeFolders } from './lib/files.ts';
 
-interface Row {
-  asset: string;
-  triangles: number[];
-  kib: number[];
-  parts: number;
-  animated: number;
-  drawCalls: number;
-  ms: number;
-  qa: 'PASS' | 'FAIL';
-}
-
-const rows: Row[] = [];
-for (const file of await tsFiles('recipes')) {
+const rows: BenchRow[] = [];
+// Recipe entry files only: shared helpers under recipes/ export no asset.
+for (const { file } of (await recipeFolders()).folders) {
   for (const asset of await loadAssets(file)) {
     const t0 = performance.now();
     const lods = ([0, 1, 2] as Lod[]).map((lod) => compile(asset, { lod }));
@@ -44,14 +35,7 @@ for (const file of await tsFiles('recipes')) {
   }
 }
 
-const table = [
-  '| asset | tris LOD0 / 1 / 2 | GLB KiB LOD0 / 1 / 2 | parts | animated | draw calls (1 material) | compile + QA, 3 LODs | QA |',
-  '|---|---|---|---|---|---|---|---|',
-  ...rows.map(
-    (r) =>
-      `| \`${r.asset}\` | ${r.triangles.join(' / ')} | ${r.kib.join(' / ')} | ${r.parts} | ${r.animated} | ${r.drawCalls} | ${r.ms} ms | ${r.qa} |`,
-  ),
-].join('\n');
+const table = benchTable(rows);
 
 if (process.argv.includes('--json')) console.log(JSON.stringify({ ok: true, data: rows }));
 else console.log(table);
@@ -66,7 +50,7 @@ if (process.argv.includes('--write')) {
     );
     process.exit(1);
   }
-  const block = `${start}\n_Measured by \`bun run bench\` on ${Bun.version} (Bun)._\n\n${table}\n${end}`;
+  const block = `${start}\n_Measured by \`bun run bench\` on ${Bun.version} (Bun)._\n\n${benchTable(readmeRows(rows))}\n${end}`;
   await Bun.write('README.md', readme.replace(new RegExp(`${start}[\\s\\S]*?${end}`), block));
   console.log('✔ README bench block updated');
 }

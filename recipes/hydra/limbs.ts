@@ -9,6 +9,7 @@ import {
   type Mesh,
   merge,
   type SculptEdit,
+  type SurfacePoint,
   sculpt,
   type Vec3,
 } from '@developerz.ai/ts23d';
@@ -158,6 +159,21 @@ const scuteUnit = (segments: number): Mesh =>
     color: lerp(C.saddle, C.back, 0.5),
   });
 
+/** How far the real skin drops below a seat at the rim of its base: a fillet is not a round tube. */
+function sagUnderRim(kit: Kit, chain: string, q: SurfacePoint, rim: number): number {
+  const length = q.s / Math.max(q.u, 1e-6);
+  const [du, da] = [rim / length, rim / q.radius];
+  let sag = 0;
+  for (let k = 0; k < 8; k++) {
+    const a = (k / 8) * Math.PI * 2;
+    const u = Math.min(1, Math.max(0, q.u + du * Math.cos(a)));
+    const p = kit.surface(chain, u, q.angle + da * Math.sin(a)).p;
+    const drop = q.n[0] * (q.p[0] - p[0]) + q.n[1] * (q.p[1] - p[1]) + q.n[2] * (q.p[2] - p[2]);
+    sag = Math.max(sag, drop);
+  }
+  return sag;
+}
+
 /** One row of pieces along a chain; `size` and spacing come from the chain's own radius. */
 function rowOn(
   kit: Kit,
@@ -183,7 +199,10 @@ function rowOn(
       // The skin falls away under the rim of the base: sink by that sag plus a real root.
       const rim = Math.min(q.radius * 0.98, s * BASE_RADIUS);
       const sag = q.radius - Math.sqrt(q.radius * q.radius - rim * rim);
-      const sink = sag + s * o.sink;
+      // On a fillet the skin is not a round tube. Capped: sunk further, the flare would pass under
+      // the skin and leave a hard crease.
+      const fallen = q.swept ? Math.min(sagUnderRim(kit, chain, q, rim), sag + s * 0.25) : 0;
+      const sink = Math.max(sag, fallen) + s * o.sink;
       const at: Vec3 = [q.p[0] - q.n[0] * sink, q.p[1] - q.n[1] * sink, q.p[2] - q.n[2] * sink];
       out.push(stamp(unit, at, q.n, s, u * 90));
     }

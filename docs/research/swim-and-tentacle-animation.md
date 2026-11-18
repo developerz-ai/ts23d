@@ -5,15 +5,16 @@ TypeScript generator: a chain of bones posed from fields along arc length (curva
 functions of `(s, t)`. Only the driver changes: a travelling wave for fish and snakes, a travelling bend pulse for
 octopus reaching, a delayed head path for necks. The best-supported targets are Strouhal number 0.2 to 0.4 (median
 0.29), stride about 0.7 body lengths per tail beat, tail peak-to-peak amplitude about 0.2 body lengths, and a wave
-faster than the body (slip 0.57 to 0.78 in eels). Speed is changed through frequency alone: across 44 fish species
+faster than the body (slip 0.57 to 0.78 in eels). Speed is changed through frequency, with tail swing and wavelength held (an eel's envelope also steepens): across 44 fish species
 speed correlates with tail-beat frequency (r = 0.95) and hardly at all with amplitude or wavelength. Build a shark
 first. It proves the generator and the swim checks on the best evidence, with no ground contact to solve.**
 
 **How to read the evidence.** Every source in [Sources](#sources) carries an access grade: **F** full text opened,
 **A** abstract only, **S** search-result snippet only (page not opened). **[D]** means derived here from cited numbers,
 with the arithmetic shown or reproduced in [Numeric checks](#8-numeric-checks-run-for-this-document). *(unverified)*
-marks anything without a source. *(design)* marks a choice of ours that no paper prescribes. All check names are
-**planned**; none exists in `src/` yet. Tolerances labelled *(design)* are starting values to tune against real assets.
+marks anything without a source. *(design)* marks a choice of ours that no paper prescribes. The checks shipped
+since this was written are the QA gates `swim` and `chain-cross` and `T3D_DEFORM_TWIST`; any other check named here is
+still a proposal. Tolerances labelled *(design)* are starting values to tune against real assets.
 
 ## 0. The shared model
 

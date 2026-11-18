@@ -25,6 +25,9 @@ const BOB = 0.012;
 const TAU = 2 * Math.PI;
 
 /** A whole number of `clip` repeats, at least MIN_LOOP seconds. */
+/** The clip time to show: reduced motion holds the first pose. */
+export const poseTime = (t: number, still: boolean): number => (still ? 0 : t);
+
 export const loopSeconds = (clip: number | null): number =>
   clip ? Math.ceil(MIN_LOOP / clip) * clip : MIN_LOOP;
 
@@ -67,7 +70,7 @@ class Swim implements Scenario {
 
   update(t: number): void {
     const { hooks: h, camera, carrier, mixer, reducedMotion } = this.ctx;
-    this.pose(t);
+    this.pose(poseTime(t, reducedMotion));
     mixer?.update(0);
     const turn = reducedMotion ? 0 : (TAU * t) / this.duration;
     carrier.position.y = Math.sin(turn * 2) * h.size.z * BOB;

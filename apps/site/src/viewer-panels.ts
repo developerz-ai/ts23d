@@ -2,6 +2,7 @@
 // when the recipe declares it, the texture sets bound as the GLB carries them) and the parts
 // tree (pivots, motion, emitters; hovering or focusing a row outlines that node, `Outline`).
 
+import { formatCount } from '@developerz.ai/ts23d/core';
 import { BoxHelper, type Object3D, type Scene } from 'three';
 import type { BuildResult, PartInfo } from './compile.ts';
 import { describeSet, type TextureSetInfo } from './texture-sets.ts';
@@ -38,7 +39,7 @@ export function renderStats(
   sets: readonly TextureSetInfo[] = [],
 ): void {
   const rows: [string, string][] = [
-    ['triangles', `${b.triangles.toLocaleString('en')} / ${b.budget.toLocaleString('en')}`],
+    ['triangles', `${formatCount(b.triangles)} / ${formatCount(b.budget)}`],
     ['glb', kib(b.glb.byteLength)],
     ['compile', b.ms >= 1000 ? `${(b.ms / 1000).toFixed(1)} s` : `${b.ms.toFixed(0)} ms`],
     ...(emitters ? [['emitters', String(emitters)] as [string, string]] : []),

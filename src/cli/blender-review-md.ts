@@ -3,6 +3,7 @@
 // bottom), says what to look for in each view, and lists what every step of the program measured.
 
 /** One sheet as the Blender report names it (`report.review[]`). */
+import { formatCount } from '../core/index.ts';
 export interface ReviewedSheet {
   readonly step: number;
   readonly view: string;
@@ -45,7 +46,7 @@ export function reviewMarkdown(
   steps.forEach((step, i) => {
     const { op, seconds, triangles, ...facts } = step;
     lines.push(
-      `| ${i} | ${String(op)} | ${String(seconds)} | ${String(triangles)} | ${brief(facts).replaceAll('|', '\\|')} |`,
+      `| ${i} | ${String(op)} | ${String(seconds)} | ${typeof triangles === 'number' ? formatCount(triangles) : String(triangles)} | ${brief(facts).replaceAll('|', '\\|')} |`,
     );
   });
   lines.push(

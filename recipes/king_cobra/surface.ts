@@ -217,7 +217,7 @@ export function scutes(): Mesh {
   const pitch = SVL / count;
   const segs = 8;
   for (let i = 0; i < count + 62; i++) {
-    const s0 = 0.062 + i * (i < count ? pitch : pitch * 1.25);
+    const s0 = 0.062 + pitch * (Math.min(i, count) + Math.max(0, i - count) * 1.25);
     if (s0 > TOTAL - 0.06) break;
     const s1 = s0 + pitch * 1.08;
     const reach = 0.86 + 0.5 * hoodShare(s0);

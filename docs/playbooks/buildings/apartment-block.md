@@ -58,7 +58,7 @@ Grime: streaks under every sill and balcony drip, darker ground floor, moss at p
 
 ## LOD policy
 - LOD0: reveals, sills, balcony guards as bars, curtains/blinds as interior cards behind glass,
-  AC units, pipes. Per bay 300–1,000 tris; a 6-storey block 30–80k.
+  AC units, pipes. Per bay 300–1k tris; a 6-storey block 30–80k.
 - LOD1: openings as inset glass panels, balconies as slabs + solid guard. 5–15k.
 - LOD2: mass boxes, roof plant, window grid in the texture. 300–800.
 Instance identical bays; LOD2 must stay one mesh per mass.

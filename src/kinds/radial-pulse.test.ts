@@ -28,6 +28,21 @@ describe('radialPulseClip', () => {
     expect(() => radialPulseClip('p', squid, target)).toThrow(/child joints/);
   });
 
+  it('refuses a ring axis off the coordinate axes: scale keys cannot contract across it', () => {
+    const target = { bones: ['ring'], skeleton: bones, axis: [1, 1, 0] as const };
+    expect(() => radialPulseClip('p', squid, target)).toThrow(/coordinate axis/);
+  });
+
+  it('accepts a coordinate axis of either sign and any length', () => {
+    const target = { bones: ['ring'], skeleton: bones, axis: [0, -3, 0] as const };
+    const t = radialPulseClip('p', squid, target).tracks[0];
+    const n = t?.times.length ?? 0;
+    const ys = Array.from({ length: n }, (_, i) => t?.values[i * 3 + 1]);
+    expect(new Set(ys)).toEqual(new Set([1]));
+    const xs = Array.from({ length: n }, (_, i) => t?.values[i * 3] ?? 0);
+    expect(Math.min(...xs)).toBeCloseTo(0.7, 2);
+  });
+
   it('inflates, contracts fast, refills slowly', () => {
     const { inflate: a, contract: b } = squid.timing;
     expect(pulseAt(squid, 0)).toBe(0);

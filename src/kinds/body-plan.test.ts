@@ -40,6 +40,16 @@ const near = (a: Vec3 | undefined, b: Vec3, eps = 1e-9): void => {
 describe('bodyPlan refuses', () => {
   const refused: readonly (readonly [string, BodyPlanSpec, RegExp])[] = [
     ['a name not in snake_case', { ...plan([trunk]), name: 'Bad Name' }, /snake_case/],
+    [
+      'a repeated child sharing the root chain name',
+      plan([trunk, { ...fin, name: 'spine', repeat: { kind: 'mirror' } }]),
+      /two chains are named 'spine'/,
+    ],
+    [
+      'a bias that collapses link joints onto the tip',
+      plan([{ ...trunk, links: 40, bias: 20 }]),
+      /collapse/,
+    ],
     ['no chains', plan([]), /no chains/],
     ['a chain name not in snake_case', plan([{ ...trunk, name: 'Spine' }]), /snake_case/],
     ['one station', plan([{ ...trunk, path: [[0, 0, 0]], radius: [0.1] }]), /station/],

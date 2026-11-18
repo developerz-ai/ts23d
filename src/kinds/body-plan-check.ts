@@ -5,7 +5,7 @@
 // root-to-tip run of chains. Every refusal is T3D_RECIPE_INVALID with a fix.
 
 import { Ts23dError, type Vec3 } from '../core/index.ts';
-import { chainCopies, chainCurve } from './body-plan-curve.ts';
+import { chainCopies, chainCurve, linkStops } from './body-plan-curve.ts';
 import type { BodyPlanSpec, ChainRepeat, ChainSpec } from './body-plan-types.ts';
 
 const NAME = /^[a-z][a-z0-9_]*$/;
@@ -54,6 +54,14 @@ function checkChain(c: ChainSpec): void {
     fail(`${at} bias is ${c.bias}`, 'use a number > 0 (1 spaces links evenly)');
   if (c.flatten !== undefined && !(Number.isFinite(c.flatten) && c.flatten > 0))
     fail(`${at} flatten is ${c.flatten}`, 'use height ÷ width > 0 (1 is round)');
+  if (Number.isFinite(c.bias ?? 1) && (c.bias ?? 1) > 0) {
+    const stops = linkStops(c.links, c.bias);
+    if (stops.some((u, i) => i > 0 && !(u > (stops[i - 1] ?? 0))))
+      fail(
+        `${at} has link joints that collapse onto each other at bias ${c.bias}: some bones would have no length`,
+        'lower `bias` or use fewer links, so every joint keeps its own place on the chain',
+      );
+  }
   if (c.repeat) checkRepeat(c, c.repeat);
   if (c.blend !== undefined && !(Number.isFinite(c.blend) && c.blend >= 0))
     fail(`${at} blend is ${c.blend}`, 'give a fillet radius in metres, 0 or more');
@@ -125,6 +133,13 @@ export function checkBodyPlan(s: BodyPlanSpec): void {
     fail(`root chain '${root.name}' has a parent`, 'drop it: the first chain is the root');
   if (root.repeat)
     fail(`root chain '${root.name}' is repeated`, 'a body has one root: drop `repeat`');
+  // Parents and skins are looked up by name: two chains under one name would be confused.
+  const names = new Set<string>();
+  for (const c of s.chains) {
+    if (names.has(c.name))
+      fail(`two chains are named '${c.name}'`, 'give every chain its own name');
+    names.add(c.name);
+  }
   s.chains.forEach((c, i) => {
     checkChain(c);
     if (i > 0) checkParent(c, s.chains.slice(0, i));

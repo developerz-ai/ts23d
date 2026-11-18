@@ -8,15 +8,13 @@
 
 import { Ts23dError } from '../core/index.ts';
 import { REVIEW_CRASH_FIX } from './blender-gpu.ts';
+import { endSession, readJson, sessionAlive, takeSessionLock } from './blender-session-process.ts';
 import {
-  isSessionProcess,
   logTail,
-  readJson,
   type SessionFiles,
   type SessionMeta,
   type SpawnOptions,
   spawnSession,
-  waitForExit,
 } from './blender-session-start.ts';
 import {
   privateDir,
@@ -42,6 +40,8 @@ export interface BlenderSessionOptions {
   readonly name?: string;
   /** Directory holding the sessions (default: ~/.cache/t3d/blender-sessions). */
   readonly root?: string;
+  /** How long `stop` waits for each stage before going further (default 10 s). */
+  readonly stopGraceMs?: number;
 }
 export type BlenderSessionStart = BlenderSessionOptions & SpawnOptions;
 export type BlenderBatch = Readonly<Record<string, unknown>>;
@@ -67,7 +67,7 @@ const metaOf = (f: SessionFiles): Promise<SessionMeta | undefined> =>
   readJson<SessionMeta>(`${f.dir}/session.json`);
 
 async function isLive(f: SessionFiles, meta: SessionMeta | undefined): Promise<boolean> {
-  return meta !== undefined && (await isSessionProcess(meta.pid, f.dir));
+  return meta !== undefined && (await sessionAlive(meta, f.dir));
 }
 
 /** The reason a session is gone, and what still works, as an error. Removes its stale socket. */
@@ -140,14 +140,19 @@ export async function startBlenderSession(
   o: BlenderSessionStart,
 ): Promise<Record<string, unknown>> {
   const f = await filesOf(o);
-  const meta = await metaOf(f);
-  if (await isLive(f, meta))
-    failed(
-      `Blender session '${f.name}' is already running (pid ${meta?.pid})`,
-      `stop it first (t3d blender session stop --name ${f.name}), or start another with --name`,
-    );
-  const started = await spawnSession(f, o);
-  return { name: f.name, dir: f.dir, pid: started.meta.pid, ...started.ready };
+  const lock = await takeSessionLock(f.dir, f.name);
+  try {
+    const meta = await metaOf(f);
+    if (await isLive(f, meta))
+      failed(
+        `Blender session '${f.name}' is already running (pid ${meta?.pid})`,
+        `stop it first (t3d blender session stop --name ${f.name}), or start another with --name`,
+      );
+    const started = await spawnSession(f, o, lock);
+    return { name: f.name, dir: f.dir, pid: started.meta.pid, ...started.ready };
+  } finally {
+    await lock.release();
+  }
 }
 
 /** Check `steps` as the next batch, then run them. The reply carries one fact entry per step. */
@@ -244,29 +249,22 @@ export async function finishBlenderSession(
   };
 }
 
-/** End the process (politely, then by signal) and remove the session's directory. */
+/** End the process (politely, then by signal if proven ours) and remove the session's directory. */
 export async function stopBlenderSession(o: BlenderSessionOptions): Promise<BlenderBatch> {
   const { rm, stat } = await import('node:fs/promises');
   const f = await filesOf(o);
-  const meta = await metaOf(f);
-  const there = await stat(f.dir).then(
-    () => true,
-    () => false,
-  );
-  let how = 'not running';
-  if (meta !== undefined && (await isLive(f, meta))) {
-    how = 'stopped';
-    await sessionRequest(socketPath(f.dir), { cmd: 'stop' }, 5_000).catch(() => undefined);
-    if (!(await waitForExit(meta.pid, f.dir, 10_000))) {
-      how = 'terminated';
-      process.kill(meta.pid, 'SIGTERM');
-      if (!(await waitForExit(meta.pid, f.dir, 5_000))) {
-        how = 'killed';
-        process.kill(meta.pid, 'SIGKILL');
-        await waitForExit(meta.pid, f.dir, 5_000);
-      }
-    }
+  const lock = await takeSessionLock(f.dir, f.name);
+  try {
+    const meta = await metaOf(f);
+    const there = await stat(f.dir).then(
+      () => true,
+      () => false,
+    );
+    const live = meta !== undefined && (await isLive(f, meta));
+    const how = live ? await endSession(meta, f.dir, o.stopGraceMs ?? 10_000) : 'not running';
+    await rm(f.dir, { recursive: true, force: true });
+    return { name: f.name, stopped: how, removed: there };
+  } finally {
+    await lock.release();
   }
-  await rm(f.dir, { recursive: true, force: true });
-  return { name: f.name, stopped: how, removed: there };
 }

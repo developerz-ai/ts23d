@@ -4,6 +4,7 @@
 // "CPU tier / Model tier" switch beside its link that swaps the whole card to the CPU asset
 // (hybrids have no card of their own).
 
+import { formatCount } from '@developerz.ai/ts23d/core';
 import { BLURB, CATEGORIES, type Category } from './categories.ts';
 import type { Item } from './items.ts';
 import { cardImage } from './thumbnails.ts';
@@ -25,12 +26,7 @@ const el = <K extends keyof HTMLElementTagNameMap>(
   return node;
 };
 
-const tris = (n: number | undefined): string =>
-  n === undefined
-    ? ''
-    : n >= 10_000
-      ? `${(n / 1000).toFixed(1)}k tris`
-      : `${n.toLocaleString('en')} tris`;
+const tris = (n: number | undefined): string => (n === undefined ? '' : `${formatCount(n)} tris`);
 
 /** The card link: render, QA badge, title, name, triangles, score, category (+ credit line). */
 function link(item: Item, credit?: string): HTMLAnchorElement {

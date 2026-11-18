@@ -4,6 +4,7 @@
 // so it shows what its card shows; main.ts leaves the heavy ones out of this list. A water asset
 // has no floor: the stage turns to deep water and the animal swims on the spot while it orbits.
 
+import { formatCount } from '@developerz.ai/ts23d/core';
 import { type AnimationClip, AnimationMixer, type Object3D, Vector3 } from 'three';
 import { loadBuilt, type NeuralRef, recipe } from './compile.ts';
 import type { Item } from './items.ts';
@@ -61,7 +62,7 @@ export class Showcase {
     this.label
       .querySelector('[data-label-meta]')
       ?.replaceChildren(
-        `${item.name} · ${item.category}${tris ? ` · ${tris.toLocaleString('en')} tris at LOD${lod}` : ''}`,
+        `${item.name} · ${item.category}${tris ? ` · ${formatCount(tris)} tris at LOD${lod}` : ''}`,
       );
   }
 

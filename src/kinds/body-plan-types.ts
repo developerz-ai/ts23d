@@ -33,6 +33,9 @@ export interface SurfacePoint {
   readonly lod: 0 | 1 | 2;
   readonly p: Vec3;
   readonly n: Vec3;
+  /** Where the swept skin was before a fillet moved it; set only on a filleted point. A membrane
+   *  anchored here stays rooted inside the fillet instead of riding its folds. */
+  readonly swept?: Vec3;
 }
 
 /** Skin resolution of one chain per LOD; omitted entries keep the kind's default. */

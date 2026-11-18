@@ -1,7 +1,15 @@
 // chain-cross: one long limb through another fails; limbs that stay apart, or short ones, do not.
 
 import { describe, expect, it } from 'bun:test';
-import { type Bone, compile, defineAsset, translate, type Vec3 } from '../core/index.ts';
+import {
+  type Bone,
+  type Clip,
+  compile,
+  defineAsset,
+  type Mesh,
+  translate,
+  type Vec3,
+} from '../core/index.ts';
 import { chainCrossFindings, segmentDistance } from './chain-cross.ts';
 import { radial, rigged, swing } from './chain-fixtures.ts';
 import { smooth, tube } from './motion-fixtures.ts';
@@ -37,7 +45,68 @@ function pair(r: number | null, degrees: number) {
   );
 }
 
+/** `clip` played in `seconds`, its keys moved with it. */
+const squeezed = (clip: Clip, seconds: number): Clip => ({
+  ...clip,
+  seconds,
+  tracks: clip.tracks.map((t) => ({
+    ...t,
+    times: t.times.map((v) => (v / clip.seconds) * seconds),
+  })),
+});
+
+/** `n` vertices all on one arm bone, 3 cm round it. */
+function heavySkin(n: number) {
+  const arms = radial(2, 5).bones;
+  const bone = arms.findIndex((b) => b.name === 'arm_0_2');
+  const positions = new Float32Array(n * 3);
+  const joints = new Uint16Array(n * 4);
+  const weights = new Float32Array(n * 4);
+  for (let v = 0; v < n; v++) {
+    positions.set([0.4 + (0.2 * v) / n, 0.03 * Math.cos(v), 1 + 0.03 * Math.sin(v)], v * 3);
+    joints[v * 4] = bone;
+    weights[v * 4] = 1;
+  }
+  const mesh: Mesh = {
+    positions,
+    normals: new Float32Array(n * 3),
+    uvs: new Float32Array(n * 2),
+    colors: new Float32Array(n * 3).fill(0.5),
+    indices: Uint32Array.from([0, 1, 2]),
+    joints,
+    weights,
+  };
+  return compile(
+    defineAsset({
+      name: 'heavy',
+      kind: 'creature',
+      medium: 'water',
+      budget: { triangles: [9, 9, 9], bones: 64 },
+      clips: [swing('arm_0_0', [0, 0, 1], 10)],
+      build(ctx) {
+        for (const b of arms) ctx.bone(b.name, b);
+        ctx.part('skin', mesh);
+      },
+    }),
+  );
+}
+
 describe('chain-cross', () => {
+  it('fails a crossing that exists only at a key between two sampled frames', () => {
+    // 0.05 s is under one 15 fps frame: apart at both ends, through the other arm at the middle key.
+    const flick = squeezed(swing('arm_0_0', [0, 0, 1], 180), 0.05);
+    const [f, ...rest] = chainCrossFindings(rigged(radial(2, 5).bones, [flick]));
+    expect(rest).toEqual([]);
+    expect(f?.message).toContain('0.025 s');
+  });
+
+  it('reads a very heavy skin in linear time', () => {
+    const asset = heavySkin(100_000);
+    const start = performance.now();
+    expect(chainCrossFindings(asset)).toEqual([]);
+    expect(performance.now() - start).toBeLessThan(3000);
+  }, 60_000);
+
   it('fails an arm swung through another', () => {
     const arms = radial(2, 5);
     const [f, ...rest] = chainCrossFindings(rigged(arms.bones, [swing('arm_0_0', [0, 0, 1], 180)]));

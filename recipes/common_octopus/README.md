@@ -28,8 +28,8 @@ quadruped kind cannot describe, with every arm a real bone chain and suckers tha
 Head plus neck between mantle and arm crown: 1.2 − 0.25 − 0.90 = **0.05 m**, derived, not measured.
 
 ### Design values (no source found; do not cite them as biology)
-Mantle width and profile, arm radius (3.3 cm at the base), web depth (a fifth of the arm), sucker
-size and spacing, sucker count (about 75 per arm over both rows at this spacing, fewer than a real arm carries;
+Mantle width and profile, arm radius (4.3 cm at the base), web depth (a quarter of the arm along each arm, about a sixth
+at the middle of each sector), sucker size and spacing, sucker count (about 75 per arm over both rows at this spacing, fewer than a real arm carries;
 the 200 to 250 per arm that appears in search results was never opened, so it is not claimed), eye radius, funnel size, pose box. A
 morphometric table lists a "web depth index" near 20 and sucker indices, but its denominator could
 not be read ([PMC6286802 table 2](https://pmc.ncbi.nlm.nih.gov/articles/PMC6286802/table/table-2)).
@@ -56,7 +56,9 @@ the agent, so which file best shows which feature is unverified.
 
 ## Parts the engine needs
 `body` (arms, head, funnel), `mantle`, `web`, `suckers`, `papillae`, `eyes`. Bones: `mantle_*`,
-`rib_<i>_0` (leaf joints inside the mantle: `mantle_pulse` scales them across its axis), `head_0`,
+`rib_<i>_0` (leaf joints inside the mantle: `mantle_pulse` scales them across world Z, the coordinate
+axis nearest the mantle axis, which is 34 degrees off it; an approximation, because scale keys only
+act along X, Y and Z), `head_0`,
 `arm_<k>_<i>`, `funnel_*`.
 
 ## Open questions

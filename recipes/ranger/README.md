@@ -57,9 +57,9 @@ solid), so the part's density is derived: 726 kg/m³.
 | # | Request | Model | Output | Kept |
 |---|---|---|---|---|
 | 1 | `image`: `CONCEPT` (concept.ts), seed 42, 1024² | `z-image` (Z-Image-Turbo, Apache-2.0), local GPU | PNG, 0.94 MB | committed |
-| 2 | `mesh`: `SURFACE` (surface.ts) on that PNG: a-pose, ≤ 300 k triangles, 2K PBR texture | `meshy-7.1` (Meshy image-to-3D, hosted, paid) | GLB, 278,552 triangles, 20.4 MB | local |
+| 2 | `mesh`: `SURFACE` (surface.ts) on that PNG: a-pose, ≤ 300 k triangles, 2K PBR texture | `meshy-7.1` (Meshy image-to-3D, hosted, paid) | GLB, 279k triangles, 20.4 MB | local |
 | 3 | `rig`: `RIG` on that mesh: height 1.78 m, clips `Idle`, `Casual Walk`, `Run 2` | `meshy-rigging` (hosted, paid) | the mesh skinned to 24 bones + 3 clips at 30 fps, 26.7 MB | local |
-| 4 | `blender`: `STEPS` (steps.ts) on the rigged GLB | Blender 5.3.0 headless, RTX 3090 OptiX bake | game GLB: 38,998 / 11,798 / 3,898 triangles, albedo 2048², normal and ORM 1024², one skin, 3 clips, 10.15 MB | committed |
+| 4 | `blender`: `STEPS` (steps.ts) on the rigged GLB | Blender 5.3.0 headless, RTX 3090 OptiX bake | game GLB: 38,998 / 11,798 / 3.9k triangles, albedo 2048², normal and ORM 1024², one skin, 3 clips, 10.15 MB | committed |
 | 5 | `importModel` → `defineModelCharacter` (kinds: `riggedChain`, `riggedBody`) | TypeScript, at build | one skinned textured part per LOD, 22 bones, clips `idle`, `walk`, `jog` | — |
 
 Local outputs (`keep: 'local'`) stay on the machine that made them; `record.json` commits their

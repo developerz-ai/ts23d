@@ -35,8 +35,14 @@ function sample(tr: Track, time: number, stride: number): number[] {
   const at = (i: number): number[] => [...tr.values.subarray(i * stride, i * stride + stride)];
   if (time <= (t[0] ?? 0)) return at(0);
   if (time >= (t[n - 1] ?? 0)) return at(n - 1);
+  // The last key at or before `time`: binary search, because long clips are sampled at every frame.
   let i = 0;
-  while (i < n - 2 && (t[i + 1] ?? 0) <= time) i++;
+  let hi = n - 2;
+  while (i < hi) {
+    const mid = (i + hi + 1) >> 1;
+    if ((t[mid] ?? 0) <= time) i = mid;
+    else hi = mid - 1;
+  }
   const a = at(i);
   const b = at(i + 1);
   const u = (time - (t[i] ?? 0)) / ((t[i + 1] ?? 1) - (t[i] ?? 0));

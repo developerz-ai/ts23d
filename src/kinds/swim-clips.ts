@@ -1,5 +1,5 @@
 // The swim clip set of one body plan, from published kinematics (doc section 1): `cruise`, `burst`
-// (frequency only), full-circle `turn_l` / `turn_r`, `cstart_l` / `cstart_r`, `idle`, and `bite` when
+// (faster beat, same tail swing and wavelength; an eel's envelope also steepens), full-circle `turn_l` / `turn_r`, `cstart_l` / `cstart_r`, `idle`, and `bite` when
 // jaw chains are named. Root travel is along +X, the trunk's head leading.
 
 import type { Clip } from '../core/index.ts';
@@ -96,7 +96,8 @@ function idleClip(rig: SwimRig): Clip {
   });
 }
 
-/** Every swim clip of the plan. Burst keeps the cruise wave; only frequency changes. */
+/** Every swim clip of the plan. Burst raises the frequency and holds tail swing and wavelength;
+ *  presets with `alpha` (the eel) also move to the fast envelope rate [T04]. */
 export function swimClips(plan: BodyPlan, options: SwimOptions): Clip[] {
   const rig = swimRig(plan, options);
   const { cruiseHz: f, burstHz: fast } = rig;

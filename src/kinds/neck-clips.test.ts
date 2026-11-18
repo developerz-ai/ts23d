@@ -173,6 +173,20 @@ describe('hydraClips', () => {
     expect(Math.max(...xs.map(Math.abs))).toBeLessThan(0.25);
   });
 
+  it('brings the striking jaw back to its idle pose by the end of the clip', () => {
+    const set = hydraClips(real, { necks, jaws: heads, seed: 7 });
+    const [idle, strike] = [named(set, 'idle'), named(set, 'strike_2')];
+    const bone = 'head_2_0';
+    const turn = (c: Clip, t: number) => clipPose(c, t).rotation?.get(bone) ?? [0, 0, 0, 1];
+    const gape = (q: readonly number[]): number =>
+      2 * Math.atan2(Math.hypot(q[0] ?? 0, q[1] ?? 0, q[2] ?? 0), Math.abs(q[3] ?? 1));
+    // It does open wide on the way.
+    const steps = Array.from({ length: 40 }, (_, i) => (i / 40) * strike.seconds);
+    expect(Math.max(...steps.map((t) => gape(turn(strike, t))))).toBeGreaterThan(0.3);
+    const end = gape(turn(strike, strike.seconds));
+    expect(Math.abs(end - gape(turn(idle, strike.seconds)))).toBeLessThan(1e-3);
+  });
+
   it('bakes on a plain fan of necks without heads', () => {
     const p = hydraPlan(3, 8);
     const set = hydraClips(p, { necks: ['neck_0', 'neck_1', 'neck_2'], seed: 1 });

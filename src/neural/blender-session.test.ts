@@ -21,7 +21,7 @@ import {
   stopBlenderSession,
   undoBlenderBatch,
 } from './blender-session.ts';
-import { isSessionProcess } from './blender-session-start.ts';
+import { provenSession } from './blender-session-process.ts';
 import { decodeFrame, encodeFrame } from './blender-session-wire.ts';
 import { type BlenderStep, blenderProgram } from './blender-steps.ts';
 import { type FakeTool, fakeBlenderSession, fakeTool } from './fake-tool.ts';
@@ -184,13 +184,14 @@ describe('Blender session: failures first', () => {
   });
 
   test('a dead Blender is detected, its socket cleaned, its kept steps still usable', async () => {
-    const { root, at, dir, pid } = await started();
+    const { root, at, dir } = await started();
+    const meta = JSON.parse(readFileSync(join(dir, 'session.json'), 'utf8'));
     await runBlenderBatch(at, [RETOPO]);
     writeFileSync(join(dir, 'checkpoint-1.blend'), 'large');
     const crash = await error(runBlenderBatch(at, [fail('crash')]));
     expect(crash.message).toContain('died while running script');
     expect(crash.fix).toContain('finish --out');
-    expect(await isSessionProcess(pid, dir)).toBe(false);
+    expect(await provenSession(meta)).toBe(false);
     expect(existsSync(join(dir, 'sock'))).toBe(false);
     expect(existsSync(join(dir, 'checkpoint-1.blend'))).toBe(false);
     expect((await error(blenderSessionStatus(at))).message).toContain('died');
@@ -219,7 +220,8 @@ describe('Blender session: failures first', () => {
 
 describe('Blender session: the loop', () => {
   test('start, batches, review, undo, finish, stop', async () => {
-    const { root, at, dir, pid } = await started('work');
+    const { root, at, dir } = await started('work');
+    const meta = JSON.parse(readFileSync(join(dir, 'session.json'), 'utf8'));
     expect(statSync(dir).mode & 0o777).toBe(0o700);
     expect(statSync(at.root).mode & 0o777).toBe(0o700);
     const first = await runBlenderBatch(at, [{ op: 'clean' }, RETOPO]);
@@ -239,7 +241,7 @@ describe('Blender session: the loop', () => {
     expect(SESSION_REPLAY_NOTE).toContain('t3d neural run');
     expect(await stopBlenderSession(at)).toMatchObject({ stopped: 'stopped', removed: true });
     expect(existsSync(dir)).toBe(false);
-    expect(await isSessionProcess(pid, dir)).toBe(false);
+    expect(await provenSession(meta)).toBe(false);
   });
 
   test('a stopped session can start again under its name', async () => {

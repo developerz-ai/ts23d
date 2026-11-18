@@ -105,7 +105,7 @@ JSON are in the glTF frame (Y up, +Z front, +X left), the same space turned: ass
 | `amputate` | `limbs` (each a list of capsules `{ head, tail, r }`, asset frame) | Deletes the faces inside the limbs' capsules and fills the stumps: the far legs of a profile model, before `symmetrize` mirrors the good half over them |
 | `unweb` | `limbs` (each a list of capsules `{ head, tail, r }`, asset frame), `gap` (0.02 m) | Cuts geometry bridging two limbs that are separate in the animal (a tail fused to the hocks): a vertex belongs to the limb whose capsule it is nearest to (within 1.5 radii of its axis), faces holding two limbs are deleted, each side capped on its own, the limbs pushed `gap` apart. Before `retopo` (keep its voxel under `gap` / 1.5). Fails if an edge still joins two limbs |
 | `repose` | `to` (every bone `{ name, head, tail }`, asset frame), `mirror` ('+' / '-'), `mirrorLimit` (0.05 m) | After `bind` and the bake: poses the armature from the rest it was bound in to `to`, keeps the deformed mesh as the new rest shape and the pose as the armature's rest, same weights. With `mirror`: then replaces the other half by the kept one (weights moved to the twin bones) only if the reposed mesh's mirror image lies within `mirrorLimit` of it over head, neck and spine |
-| `voxelRemesh` | `voxel` (m), `adaptivity` (0) | Remesh modifier, VOXEL; refused over 1,500 voxels per side |
+| `voxelRemesh` | `voxel` (m), `adaptivity` (0) | Remesh modifier, VOXEL; refused over 1.5k voxels per side |
 | `smooth` | `iterations`, `factor`, `kind` ('laplacian' \| 'corrective') | Laplacian Smooth / Corrective Smooth (only-smooth) modifier |
 | `displace` | `strength` (m), `scale` (m), `kind` ('noise' \| 'voronoi' \| 'musgrave'), `seed` (0), `mask?` | Displace modifier along normals, procedural texture, texture space moved by the seed |
 | `inflate` | `distance` (m), `mask?` | vertices along their normals |
@@ -157,8 +157,8 @@ falloff u²(3 − 2u), times `mask`; coincident vertices (a glTF splits them alo
 edges) count as one point, so a stroke crosses seams without tearing them. Every move is computed
 from the positions at the start of the stroke and divided by the stroke's highest coverage, so the
 path moves about `strength` however dense the dabs are, the same bytes at any thread count (checked
-over all nine brushes at `-t 1` and `-t 4`). On the 906,084-triangle wolf source a 25-dab stroke took
-1.5 s and a 20-dab crease 1.3 s, 5 of 15,863 touched triangles flipped (inside the limit).
+over all nine brushes at `-t 1` and `-t 4`). On the 906k-triangle wolf source a 25-dab stroke took
+1.5 s and a 20-dab crease 1.3 s, 5 of 15.9k touched triangles flipped (inside the limit).
 
 | brush | What it does; `strength` is |
 |---|---|
@@ -182,7 +182,7 @@ edges): `clean`, `voxelRemesh` or `retopo` it first.
 
 **Retopo: never collapse the raw generator surface.** An image-to-3D mesh is noisy fur over
 internal layers. Collapsing it directly ('decimate') keeps that junk: on the Pixal3D wolf the UV map
-came out as 1,290 islands (still 1,081 with 600 smoothing passes: the islands come from the
+came out as 1.29k islands (still 1.08k with 600 smoothing passes: the islands come from the
 topology) and Blender's collapse, which has no seam lock, squeezed 10 % of LOD2's triangles to
 zero UV area: shards. The default 'shell' voxel-remeshes first (voxel = 0.6 × sqrt(area /
 triangles), clamped to diagonal / 1000 .. / 60, or `voxel`), reduces that closed surface, and
@@ -194,7 +194,7 @@ source snaps to internal layers.
 
 **The shell is measured, not trusted (`steps/shell.py`).** A Pixal3D mesh is a thin crust: two
 walls about 1.5 mm apart (signed volume 0.0016 m³ on a wolf whose body is 0.042 m³) with tunnels
-through it. A voxel remesh finer than a tunnel floods the inside and returns confetti: 4,026 closed
+through it. A voxel remesh finer than a tunnel floods the inside and returns confetti: 4.03k closed
 specks at a 5.4 mm voxel, one solid at 12 mm. Every later number then lies (0 open edges, a 95 %
 bake hit rate) and the job "succeeds". So the plain remesh is tried first and measured; when it is
 not one filled surface, the shell is rebuilt by a morphological closing in SDF grids (Geometry
@@ -202,7 +202,7 @@ Nodes *Mesh to SDF Grid* → *Grid to Mesh*, Blender ≥ 5.0): dilate by `close`
 erode by `close − skin` voxels; `close` 0, 1, 2, 4 are tried in order unless the step names one. A
 candidate passes when its largest component holds ≥ 90 % of the faces, its volume is ≥ 70 % of a
 coarse closed reference (voxel = diagonal / 110, closed by 2), no bbox side moved more than
-2 + skin voxels and ≤ 1 % of the source surface (40,000 area-weighted samples) lies more than
+2 + skin voxels and ≤ 1 % of the source surface (40k area-weighted samples) lies more than
 1.5 + skin voxels outside it. An erosion turns a sheet thinner than a voxel into lace (the
 dragon's wing membranes: 37 tunnels, 6.2 % of the surface lost); then the closing is redone with
 `skin` 0.75, which leaves a zero-thickness sheet 1.5 voxels thick. No radius passing fails the
@@ -225,7 +225,7 @@ across a UV seam can still smear a few texels on LOD1/2.
 
 **Other gates.** After every step: a finite mesh with faces whose diagonal did not jump 20 ×
 (`transform` excepted). `uv`: at most max(64, triangles / 20) islands and 5 % UV-degenerate
-triangles (good shells: 145–523 islands; confetti: 5,298–8,950). `bake`: the albedo is baked with
+triangles (good shells: 145–523 islands; confetti: 5.3k–8.95k). `bake`: the albedo is baked with
 alpha, texels inside the islands that got no colour take the nearest one, their share is reported
 (`albedoUnfilled`) and over 2 % fails; a source material with a linked Alpha is mixed with a
 transparent shader so rays read the surface beneath. `export`: the written GLB is read back and
@@ -280,16 +280,16 @@ a build step; step seconds make the report differ run to run.
 
 ### Smoke: the Pixal3D wolf (2026-11-16, Blender 5.3.0, RTX 3090 OptiX, `-t 1`)
 
-Source 955,337 triangles, one 2-texture material, 38 MB. Program: `transform` (head to +X, feet on
-z = 0, ×1.6), `clean`, `retopo` 30,000 with focus (head ×3, paws ×2), `uv`, `bake` 2048² albedo +
-normal + AO, `bind` to an 8-bone test skeleton, `lods` [10,000, 2,500], `export` (normal and ORM at
+Source 955k triangles, one 2-texture material, 38 MB. Program: `transform` (head to +X, feet on
+z = 0, ×1.6), `clean`, `retopo` 30k with focus (head ×3, paws ×2), `uv`, `bake` 2048² albedo +
+normal + AO, `bind` to an 8-bone test skeleton, `lods` [10,000, 2.5k], `export` (normal and ORM at
 1024²), through `blenderAdapter()`.
 
 | | direct collapse (`strategy: 'decimate'`) | shell (default) |
 |---|---|---|
 | Wall time | 83 s | 52 s |
-| Triangles LOD0 / 1 / 2 | 29,998 / 9,998 / 2,554 | 29,994 / 9,994 / 2,494 |
-| UV islands · coverage | 1,290 · 0.57 | 226 · 0.55 |
+| Triangles LOD0 / 1 / 2 | 30k / 10k / 2.55k | 30k / 9.99k / 2.49k |
+| UV islands · coverage | 1.29k · 0.57 | 226 · 0.55 |
 | Bake hit rate | 0.9999 | 0.9998 |
 | Open edges LOD0 / 1 / 2 | not measured | 0 / 0 / 0 |
 | UV-degenerate triangles LOD1 / LOD2 | 1.7 % / 10.2 % (measured on the exported LOD0, outside the job) | 0.1 % / 0.3 % |
@@ -297,30 +297,30 @@ normal + AO, `bind` to an 8-bone test skeleton, `lods` [10,000, 2,500], `export`
 | Bind | bone heat | bone heat (0.04 % strays filled) |
 | GLB | 12.2 MB (ORM at 2048²) | 8.6 MB (ORM at 1024²) |
 
-Shell run by step: clean 11.0 s (206,504 vertices welded, 17 of 18 shells dropped), retopo 9.1 s
-(voxel 9.2 mm → 113,572-triangle shell → 29,998), uv 8.1 s, bake 13.9 s, bind 0.7 s, lods 0.5 s,
+Shell run by step: clean 11.0 s (207k vertices welded, 17 of 18 shells dropped), retopo 9.1 s
+(voxel 9.2 mm → 114k-triangle shell → 30k), uv 8.1 s, bake 13.9 s, bind 0.7 s, lods 0.5 s,
 export 0.8 s. The direct-collapse run predates the LOD gate; its 10.2 % is over the gate's 8 %, so
 it should now fail at `lods` (not re-run). A third run with an explicit 4 mm `voxelRemesh` before a direct collapse sent the
 bind to the proxy (bone heat left every vertex unweighted): the fallback works on real data. Posing
-neck and two legs moved 14,483 of 17,738 vertices by up to 0.48 m.
+neck and two legs moved 14.5k of 17.7k vertices by up to 0.48 m.
 
 ### Four Pixal3D models (2026-11-16, Blender 5.3.0, RTX 3090 OptiX, `-t 1`)
 
 Raw ≈ 0.9 M-triangle GLBs, about 1 unit tall, program `clean → retopo N → uv → bake 2048²
 (albedo, normal, AO) → lods → export` through `blenderAdapter()`. Before: only the bear passed
-(the wolf "passed" as confetti: 6,766 islands, 30 % UV-degenerate triangles at LOD0, 10,065 open
+(the wolf "passed" as confetti: 6.77k islands, 30 % UV-degenerate triangles at LOD0, 10.1k open
 edges in the exported file). Times were taken while another model job held the GPU and 31 GB of
 RAM; the wolf program ran alone in 25 s before the thin-part and tunnel measures were added (not
 re-timed alone since).
 
 | | wolf | dragon | ranger (clothed human) | bear |
 |---|---|---|---|---|
-| Source triangles | 908,072 | 919,122 | 920,001 | 877,748 |
-| Triangles LOD0 / 1 / 2 | 29,998 / 9,998 / 5,998 | 44,998 / 14,998 / 7,998 | 39,998 / 12,998 / 6,998 | 29,998 / 9,998 / 5,998 |
+| Source triangles | 908k | 919k | 920k | 878k |
+| Triangles LOD0 / 1 / 2 | 30k / 10k / 6k | 45k / 15k / 8k | 40k / 13k / 7k | 30k / 10k / 6k |
 | Voxel | 5.4 mm | 3.9 mm | 4.0 mm | 7.3 mm |
 | Shell tries: close, skin → lost share, tunnels | 0 → 97 %, 14 · 1 → 0.02 %, 2 | 0 → 83 %, 56 · 1 → 6.2 %, 37 · 1 + 0.75 → 0 %, 1 | 0 → 43 %, 72 · 1 → 0.24 %, 2 | 0 → 0.01 %, 0 |
 | Shell volume / reference (m³) | 0.0418 / 0.0439 | 0.0152 / 0.0135 | 0.0136 / 0.0148 | 0.1398 / 0.1453 |
-| UV islands (before the fix) | 166 (6,766) | 523 (8,950) | 438 (5,298) | 145 (138) |
+| UV islands (before the fix) | 166 (6.77k) | 523 (8.95k) | 438 (5.3k) | 145 (138) |
 | Bake hit rate · albedo unfilled | 0.997 · 0 | 0.995 · 0 | 0.994 · 0 | 0.998 · 0 |
 | Bbox drift LOD1 / LOD2 | 0.35 / 0.60 mm | 0.61 / 0.51 mm | 0.28 / 0.28 mm | 0.59 / 1.87 mm |
 | Surface lost · new tunnels, LOD1 / LOD2 | 0 · 0 / 0 · 0 | 0 · 0 / 0 · 0 | 0 · 0 / 0 · 0 | 0 · 0 / 0 · 0 |
@@ -331,8 +331,8 @@ Known blemishes: the ranger's wispy generator hair (loose points) is not kept, t
 solid cap in the scalp colour; the dragon's LOD1 shows one small tunnel in a wing membrane that
 LOD0 already has (genus 1 on all three).
 
-The rigged Meshy ranger (278,926 triangles, JPEG base colour, 24 joints, clips Idle 4.0 s,
-Casual_Walk 4.1667 s, Run_02 0.7 s at 30 fps) with `bind from 'source'`, 30,000 / 9,998 / 3,998
+The rigged Meshy ranger (279k triangles, JPEG base colour, 24 joints, clips Idle 4.0 s,
+Casual_Walk 4.1667 s, Run_02 0.7 s at 30 fps) with `bind from 'source'`, 30k / 10k / 4k
 triangles: 54 s (bake 31 s), plain shell accepted (lost 0.09 %), 502 islands, hit rate 0.998, no
 vertex unweighted after the transfer, ≤ 4 influences; the GLB holds one skin (24 joints), the
 three clips at 4.0 / 4.1667 / 0.7 s under their names, and three PNG images.
@@ -379,8 +379,8 @@ Every command takes `--name <n>` (several sessions at once) and `--json`. `start
   review sheets included: copy what you want first.
 
 Measured (2026-11-18, Blender 5.3.0, one thread, bake on the CPU, review on lavapipe, while another
-job held the GPU) on the Pixal3D wolf source (906,084 triangles), program `clean → stroke → retopo
-8,000 → uv → bake 1024² albedo + normal with cageFit → bind → weights`:
+job held the GPU) on the Pixal3D wolf source (906k triangles), program `clean → stroke → retopo
+8k → uv → bake 1024² albedo + normal with cageFit → bind → weights`:
 
 | | |
 |---|---|
@@ -406,7 +406,7 @@ blender -b --factory-startup -noaudio --python-exit-code 3 \
 About a minute on generated blobs: refusals, the full program with every map and three LODs, a
 vertex-colour source and a source with no colour at all, a subset without `uv` / `bake`, focus
 density, the bone-heat failure → proxy path, metaballs → QuadriFlow, `skinBody` → `symmetrize` →
-`transform`; then the gates (`test_gates.py`: a leaky crust that the plain remesh turns into 4,642
+`transform`; then the gates (`test_gates.py`: a leaky crust that the plain remesh turns into 4.64k
 specks, a tilted 1 mm fin, a bake that reaches a third of its source, a cut-out source, a
 confetti UV map, the LOD gate's messages) and the finishing ops (`test_finish.py`: `script` and
 its refusals, `joint`, `weights`, the five `review` sheets, a rigged source with two clips

@@ -70,7 +70,7 @@ Smoke on the dev box (2026-11-15; bpy 5.2.4 LTS, Godot 4.7.2, basisu 2.50.0 buil
 
 | Job | Time | Result |
 |---|---|---|
-| cloth: 0.9 m sheet (2,401 verts) over a capsule body, 60 frames × 6 substeps | 3.6 s | settles from z 1.72 to 1.10–1.68 m over the shoulders |
+| cloth: 0.9 m sheet (2.4k verts) over a capsule body, 60 frames × 6 substeps | 3.6 s | settles from z 1.72 to 1.10–1.68 m over the shoulders |
 | rig: block humanoid with 16 named pivot nodes | 4.6 s | 16 meta-rig bones snapped, 159 deform bones, 219 controls (84 face) |
 | fracture: 0.6 m crate, 12 seeds, 30 settle frames | 0.6 s | 12 pieces, volume 0.2145 of 0.216 m³ |
 | meshopt: wolf LOD0 (7.1 MB), compress + simplify 0.5 | 0.4 s | 0.92 MB, 7/7 clips kept |

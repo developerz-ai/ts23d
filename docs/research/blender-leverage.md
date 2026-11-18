@@ -35,7 +35,7 @@ Python under `examples/blender/` is GPL-2.0-or-later; nothing GPL enters `src/`.
 
 | Tool | What it is | Licence | Headless | Fit for ts23d |
 |---|---|---|---|---|
-| QuadriFlow (in Blender) | Field-aligned quads, already behind `retopo reduce: 'quadriflow'` | Ships in Blender | Yes (local, prior doc) | Keep. Local: asked for 6,648 faces, got 4,802; asked for 1,662, got 1,512, and at that budget it left target points up to 274 mm away |
+| QuadriFlow (in Blender) | Field-aligned quads, already behind `retopo reduce: 'quadriflow'` | Ships in Blender | Yes (local, prior doc) | Keep. Local: asked for 6.65k faces, got 4,802; asked for 1,662, got 1,512, and at that budget it left target points up to 274 mm away |
 | [QuadWild Bi-MDF](https://github.com/cgg-bern/quadwild-bimdf) | Feature-line patch layout + flow quantisation | GPL-3.0 ("QuadWild as well as our additions and changes") | CLI: `quadwild <mesh.obj> 2 <prep config>`, then `quad_from_patches <mesh_rem_p0.obj> 123 <config>`; binaries for Linux, Windows, macOS | User-installed subprocess only. Not run here: downloaded binaries were not executed |
 | [QRemeshify](https://github.com/ksami/QRemeshify) | Blender add-on over QuadWild; symmetry, sharp detection, seam and material guides | GPL-3.0 | N-panel tool; README lists Windows as confirmed and Linux as "still testing"; no headless mode documented | Skip; call QuadWild directly |
 | [Instant Meshes](https://github.com/wjakob/instant-meshes) | Field-aligned remesher | [BSD-3-Clause](https://raw.githubusercontent.com/wjakob/instant-meshes/master/LICENSE.txt) | Batch via [`main.cpp`](https://raw.githubusercontent.com/wjakob/instant-meshes/master/src/main.cpp): `-o`, `-f`, `-v`, `-s`, `-c` crease, `-d` deterministic, `-b` boundaries, `-S` smooth, `-r`/`-p`, `-D`, `-i`, `-t` | The most permissive external option. Not run here |
@@ -57,7 +57,7 @@ Target: an independent 51,422-face quadruped (metaballs, voxel remesh, noise) wi
 skeleton does not know. All three meshes were bound by bone heat; forearm bent 75°; zone = within
 11 cm of the elbow.
 
-| Measure | Wrap (6,648 quads, 13,296 tris) | Decimate (13,296 tris) | QuadriFlow (4,802 quads, 9,604 tris) |
+| Measure | Wrap (6,648 quads, 13.3k tris) | Decimate (13.3k tris) | QuadriFlow (4,802 quads, 9.6k tris) |
 |---|---|---|---|
 | Vertices in the elbow zone | **256** | 145 | 85 |
 | Edges aligned with or across the limb | 100 % | 63 % | 98.7 % |
@@ -129,7 +129,7 @@ and applied in `-b`.
 | Rasterize Points, Poisson Solver, Grid Topology Boolean | [5.3](https://developer.blender.org/docs/release_notes/5.3/geometry_nodes/) | Poisson type present, not run | 5.3-only, while 4.5 and 5.2 are also supported lines |
 | Bundles, closures | 5.0, no longer experimental ([workshop](https://code.blender.org/2025/10/geometry-nodes-workshop-september-2025/)) | **A closure built and evaluated from Python returned the right value** (0.25 × 2 = 0.5) | Not needed: step programs already give reuse in TypeScript |
 | Lists, Transfer Attributes, Merge Points, Cluster by Distance, Mesh Bevel | [5.2](https://developer.blender.org/docs/release_notes/5.2/geometry_nodes/) | Types present | Mesh Bevel and Transfer Attributes are worth a look for a 5.2+ path |
-| Surface scatter: Distribute (Poisson) → Instance on Points → Realize | Long-standing | Cone scales on a sphere: 18,247 vertices, **identical bytes twice**, then a CPU normal bake onto a low sphere in 0.1 s (normal R/G std 0.10) | **Candidate `scatter`**: scales, studs, bark plates as baked detail |
+| Surface scatter: Distribute (Poisson) → Instance on Points → Realize | Long-standing | Cone scales on a sphere: 18.2k vertices, **identical bytes twice**, then a CPU normal bake onto a low sphere in 0.1 s (normal R/G std 0.10) | **Candidate `scatter`**: scales, studs, bark plates as baked detail |
 | XPBD physics, Hair and Cloth Dynamics assets | [5.2](https://developer.blender.org/docs/release_notes/5.2/geometry_nodes/), experimental; manual page [XPBD Solver](https://docs.blender.org/manual/en/5.2/modeling/geometry_nodes/simulation/xpbd_solver.html) | Asset file `geometry_nodes_dynamics_assets.blend` holds `Hair Dynamics` and `Cloth Dynamics (Experimental)`; not run | Wait: experimental, and 5.2+ only |
 
 API trap, already handled in the prior doc: from 5.2 modifier inputs are set through
@@ -152,7 +152,7 @@ Fixed-value trees avoid the difference across versions.
 
 | Source | Test | Result |
 |---|---|---|
-| **Spline IK** chain of 8 bones following an animated curve | `nla.bake(visual_keying=True, clear_constraints=True, bake_types={'POSE'})`, bones with `inherit_scale='ALIGNED'`, export, re-import, compare 1,040 vertices at 4 frames | **0.0 mm** after the bake and 0.0 mm through GLB. Older reports of inaccurate Spline IK bakes ([#52063](https://projects.blender.org/blender/blender/issues/52063), [#79670](https://projects.blender.org/blender/blender/issues/79670)) did not reproduce with these settings |
+| **Spline IK** chain of 8 bones following an animated curve | `nla.bake(visual_keying=True, clear_constraints=True, bake_types={'POSE'})`, bones with `inherit_scale='ALIGNED'`, export, re-import, compare 1.04k vertices at 4 frames | **0.0 mm** after the bake and 0.0 mm through GLB. Older reports of inaccurate Spline IK bakes ([#52063](https://projects.blender.org/blender/blender/issues/52063), [#79670](https://projects.blender.org/blender/blender/issues/79670)) did not reproduce with these settings |
 | **B-bone**, 8 segments, curved by `bbone_curve*` | Export directly | 1 joint in the GLB; **the bend is lost: 148.95 mm** maximum error |
 | Same B-bone resampled to 8 plain bones | Joints read from the evaluated pose bone's `bbone_segment_matrix`, each new bone aimed along its chord, weights blended along the length, keys exported | **24.4 mm**, the same inside Blender and after GLB. Six times better, not exact: bone scale is ignored and only 8 segments were used |
 | **Corrective shape key** driven by a joint angle | Driver sampled per frame into keys (0 → 0.5 → 1.0), then exported | Works. Drivers themselves do not export |
@@ -175,7 +175,7 @@ so `importModel` must learn morph targets before a corrective op is useful end t
 
 ## 5. Simulation baked to assets
 
-Sim used in the tests: Blender cloth, 1,600 vertices, 41 frames, 0.92 s on CPU.
+Sim used in the tests: Blender cloth, 1.6k vertices, 41 frames, 0.92 s on CPU.
 
 | Delivery | Result | Engine use |
 |---|---|---|
@@ -254,14 +254,14 @@ would have to be written from the behaviour, not from this source.**
 
 | Brush | Algorithm | Reproducible in numpy along a 3D path? | Prototype result |
 |---|---|---|---|
-| [Grab](https://github.com/blender/blender/blob/v5.0.0/source/blender/editors/sculpt_paint/brushes/grab.cc) | Factors from **original** positions and normals; translation = grab delta × strength × factor; optional silhouette term from normals | Yes | Yes: 12 mm delta moved 1,179 vertices, 0 flipped |
+| [Grab](https://github.com/blender/blender/blob/v5.0.0/source/blender/editors/sculpt_paint/brushes/grab.cc) | Factors from **original** positions and normals; translation = grab delta × strength × factor; optional silhouette term from normals | Yes | Yes: 12 mm delta moved 1.18k vertices, 0 flipped |
 | [Smooth](https://github.com/blender/blender/blob/v5.0.0/source/blender/editors/sculpt_paint/brushes/smooth.cc) | Up to 4 iterations by strength; each moves toward the neighbour average × factor | Yes | Roughness at the path 0.901 → 0.135 mm, 0 vertices changed beyond the radius |
 | Flatten ([Plane](https://github.com/blender/blender/blob/v5.0.0/source/blender/editors/sculpt_paint/brushes/plane.cc)) | Moves vertices along the brush plane's normal to the plane; height and depth scale each side. In 5.0 there is no separate `flatten.cc` | Yes | Mean −2.34 mm on a curved wall, 0 flipped. 4 vertices just past the radius moved (neighbour drift, see below) |
 | [Clay Strips](https://github.com/blender/blender/blob/v5.0.0/source/blender/editors/sculpt_paint/brushes/clay_strips.cc) | Local brush matrix on the area plane; only vertices below the plane move, along the plane normal; XY square falloff × parabolic z(1 − z); offset = normal × strength × radius | Yes | 6 mm request: 6.6 mm mean on the path, max 11.5 mm: the strength needs calibration |
 | [Crease](https://github.com/blender/blender/blob/v5.0.0/source/blender/editors/sculpt_paint/brushes/crease.cc) | Draw offset along the sculpt normal, plus a pinch "towards a line instead of a single point" with strength from `crease_pinch_factor²` ÷ alpha² | Yes | 8 mm request: −7.55 mm mean, 0 flipped; 92 vertices just past the radius moved because the pinch carries them |
 | [Pinch](https://github.com/blender/blender/blob/v5.0.0/source/blender/editors/sculpt_paint/brushes/pinch.cc) | Displacement toward the centre, projected on the stroke-perpendicular axis and the area normal | Yes | Max 3.3 mm, 0 flipped |
 | [Inflate](https://github.com/blender/blender/blob/v5.0.0/source/blender/editors/sculpt_paint/brushes/inflate.cc) | Each vertex along its own normal × scale × factor | Yes | 8 mm request: 7.43 mm mean, 0 flipped |
-| [Pose](https://github.com/blender/blender/blob/v5.0.0/source/blender/editors/sculpt_paint/sculpt_pose.cc) | Grows a factor by flood fill from an origin, solves an IK chain of segments, then rotates, rolls or scales weighted regions ([manual](https://docs.blender.org/manual/en/latest/sculpt_paint/sculpting/brushes/pose.html)) | Partly. On a bound mesh, `repose`/`weights` is the better tool | My naive single rotation folded **1,755 faces**: not acceptable, do not ship it |
+| [Pose](https://github.com/blender/blender/blob/v5.0.0/source/blender/editors/sculpt_paint/sculpt_pose.cc) | Grows a factor by flood fill from an origin, solves an IK chain of segments, then rotates, rolls or scales weighted regions ([manual](https://docs.blender.org/manual/en/latest/sculpt_paint/sculpting/brushes/pose.html)) | Partly. On a bound mesh, `repose`/`weights` is the better tool | My naive single rotation folded **1.75k faces**: not acceptable, do not ship it |
 | [Mask](https://github.com/blender/blender/blob/v5.0.0/source/blender/editors/sculpt_paint/brushes/mask.cc) | `mask += factor × current × strength`, clamped 0..1 | Yes | A mask multiplying a stroke's factor: **0 masked vertices moved**. `.sculpt_mask` attribute writable in `-b` |
 | [Face Sets](https://github.com/blender/blender/blob/v5.0.0/source/blender/editors/sculpt_paint/brushes/draw_face_sets.cc) | Paints a face-domain integer from face factors | Yes | `.sculpt_face_set` writable in `-b`. Face sets could carry part regions |
 | [Cloth](https://github.com/blender/blender/blob/v5.0.0/source/blender/editors/sculpt_paint/sculpt_cloth.cc) | Constraint solver, 5 iterations per step, soft-body pull to the start shape, local / global / dynamic areas ([brush list](https://docs.blender.org/manual/en/latest/sculpt_paint/sculpting/brushes/brushes.html)) | Not as a small op. Use the Cloth modifier with a pinned vertex group, as the `cloth` task does | Not prototyped |
@@ -277,7 +277,7 @@ stable tie-break); area normal and centre per dab; strength normalised over over
 | Check | Result |
 |---|---|
 | Time | 2.1–2.5 s per path stroke (about 42 dabs), pure Python and numpy, no BVH; single-dab `grab` and `vdm` 0.05–0.08 s |
-| Geodesic falloff | `draw`: 9,947 vertices moved, **0 on the facing leg** |
+| Geodesic falloff | `draw`: 9.95k vertices moved, **0 on the facing leg** |
 | Euclidean falloff, same stroke | 20,233 moved, **8,378 on the facing leg** |
 | Requested vs achieved (`draw`, 8 mm) | 7.46 mm mean along the path, 8.09 mm max |
 | Flipped faces | 0 for draw, inflate, clay, flatten, crease, pinch, smooth, VDM, grab |
@@ -292,7 +292,7 @@ uneven falloff *(expected, not measured)*.
 The coordinator saw `sculpt.brush_stroke(override_location=True)` return `FINISHED` and move 0
 vertices, against 3,922 in the prior doc. **Cause found: each stroke element's `mouse` still has to
 land on the mesh.** Under `xvfb-run` with Vulkan on lavapipe (llvmpipe reported), subdivided Suzanne
-(31,658 vertices), the same 16 surface points each time:
+(31.7k vertices), the same 16 surface points each time:
 
 | `mouse` in each stroke element | Vertices moved | Max |
 |---|---|---|
@@ -304,7 +304,7 @@ land on the mesh.** Under `xvfb-run` with Vulkan on lavapipe (llvmpipe reported)
 That the fixed mouse moved only 150 vertices suggests stroke spacing follows the mouse path
 *(inferred, not traced in source)*. Repeat runs: **identical bytes at `-t 1`; at `-t 2`, the same
 vertex count but different bytes, by at most 6e-8 m**. `sculpt.mesh_filter(INFLATE)` moved all
-31,658 vertices, with the same hash in every session.
+31.7k vertices, with the same hash in every session.
 
 ### A.5 Routes compared
 
@@ -312,8 +312,8 @@ vertex count but different bytes, by at most 6e-8 m**. `sculpt.mesh_filter(INFLA
 |---|---|---|---|---|---|
 | **numpy/bmesh stroke** | **Yes (geodesic)** | **Yes, across thread counts** | `-b` only | 2 s | **Build** |
 | Windowed `sculpt.*` | Blender's own options | Only at `-t 1`; depends on window, view and brush assets | Xvfb, a GL or Vulkan driver | Seconds plus start-up | Keep as a manual escape hatch; not for recipes |
-| Geometry Nodes proximity to a path | **No**: Euclidean, 7,975 vertices moved on the facing leg | Yes | `-b` | 0.02–0.04 s | Good for broad masks, wrong for strokes near other surfaces |
-| VDM stamp on a mesh (numpy, tangent frame) | Yes when the geodesic region is used | Yes | `-b` | 0.05–0.07 s | **Include as a stroke mode**: 20 mm request reached 20.8 mm, 1,187 vertices. Can reuse ts23d's `.vdm.bin` library |
+| Geometry Nodes proximity to a path | **No**: Euclidean, 7.97k vertices moved on the facing leg | Yes | `-b` | 0.02–0.04 s | Good for broad masks, wrong for strokes near other surfaces |
+| VDM stamp on a mesh (numpy, tangent frame) | Yes when the geodesic region is used | Yes | `-b` | 0.05–0.07 s | **Include as a stroke mode**: 20 mm request reached 20.8 mm, 1.19k vertices. Can reuse ts23d's `.vdm.bin` library |
 
 ## B. The professional checklist, verified
 
@@ -329,7 +329,7 @@ Two AI-written guides supplied these items as leads. "Covered" means what ts23d 
 | Decals | Mesh decals are a texturing style; [DECALmachine](https://superhivemarket.com/products/decalmachine) makes atlases for engines | `src/material/paint` stamps decal cells into the trim sheet, including from PNG | No |
 | Apply transforms | Done by the pipeline: `transform` writes into mesh data | Covered | No |
 | Merge by distance | `clean.weld` | Covered | No |
-| Interior face removal | Local visibility test, 256 directions: **removed 588 of 2,616 faces, exactly the hidden cube**, in 0.3 s | `retopo` shell removes interiors, but `strategy: 'decimate'` keeps them | Small op `dropHidden` for surfaces that must keep their topology |
+| Interior face removal | Local visibility test, 256 directions: **removed 588 of 2.62k faces, exactly the hidden cube**, in 0.3 s | `retopo` shell removes interiors, but `strategy: 'decimate'` keeps them | Small op `dropHidden` for surfaces that must keep their topology |
 | Collision meshes | Convex hull is one bmesh call (local). [V-HACD](https://github.com/kmammou/v-hacd) is BSD-3-Clause *(excerpt)*; CoACD's licence was only seen in a forum post | `src/physics`: box, sphere, capsule, cylinder, capped hull **per pivot** | Convex **decomposition** of a single concave model part is the gap; better done in `src/physics` than in Blender |
 | Texel density | Measure √(UV area × size² ÷ world area) | `assertTexelDensity`; `uv` averages islands | Report px/m in the `uv` step: small |
 | Triangle budgets by class | **No official per-class table was found.** Meta gives per-frame baselines of [1–2 million triangles and 500–1,000 draw calls](https://developers.meta.com/horizon/documentation/native/pc/dg-performance-guidelines/) for PC *(excerpt)*. CRYENGINE's [Character Budgets](https://www.cryengine.com/docs/static/engines/cryengine-5/categories/23756816/pages/23307976) page quotes one game (35,000–70,000 LOD0) *(excerpt; page body did not load)*. Vendor blog ranges disagree with each other | Per-recipe `budget.triangles`, enforced; playbooks give bands | No. Do not import the guide's unsourced numbers |
@@ -365,7 +365,7 @@ test. Bugs found in the test scripts were fixed and the tests re-run; only final
 | glTF options and compression round trips | 114 operator options read. Meshopt, Draco, WebP, KTX2 written; meshopt and Draco re-imported with shape keys |
 | Skeleton wrap vs decimate vs QuadriFlow, bone heat, posed metrics (two densities) | §1.2 |
 | Stroke prototype: nine modes, mask, VDM, geodesic vs Euclidean, `-t 1` vs `-t 4` | §A.2, §A.3 |
-| Pose-style rotation | Folded 1,755 faces; rejected |
+| Pose-style rotation | Folded 1.75k faces; rejected |
 | Geometry Nodes proximity stroke | Repeatable; leaks across the gap |
 | `xvfb-run` sculpt lane, 4 sessions: the 2 that set the thread counts in §A.4 confirmed lavapipe; the first 2 did not force or log the Vulkan driver, and gave the same vertex counts | §A.4 |
 | De-lighting by SH fit, with oracle control (RMSE 0.003) | §2.1 |

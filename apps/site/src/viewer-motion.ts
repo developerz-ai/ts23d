@@ -3,8 +3,9 @@
 // skinned assets (three's SkeletonHelper in the redline colour). The viewer owns the clock and
 // the Play state; this binds the chosen clip on its mixer and keeps the controls in step. A skinned
 // asset's travelling loops play on the spot, so the model neither walks away nor snaps back. The
-// model keeps its rest pose until Play; a clip that carries it outside the framed rest pose (a
-// reared snake lying down to crawl) is reported once, posed, so the viewer can pull back.
+// model keeps its rest pose until Play (a water asset starts on open, unless motion is reduced);
+// a clip that carries it outside the framed rest pose (a reared snake lying down to crawl) is
+// reported once, posed, so the viewer can pull back.
 
 import {
   type AnimationClip,

@@ -133,11 +133,11 @@ const ramp2 =
   (t: number): number =>
     ramp(t, 0, end);
 
-/** 0 until the strike nears contact, 1 from contact until the recovery lets it relax. */
+/** 0 until the strike nears contact, then 1: the gape is gone and the jaw is back at idle. */
 const ramp2Shut =
-  (from: number, to: number, hold: number, end: number) =>
+  (from: number, to: number) =>
   (t: number): number =>
-    ramp(t, from + (to - from) * 0.55, to) * (1 - ramp(t, hold, end));
+    ramp(t, from + (to - from) * 0.55, to);
 
 function strikeClip(
   plan: BodyPlan,
@@ -211,7 +211,7 @@ function strikeClip(
               : field,
         };
       })
-      .concat(jawDrives(plan, o, k, { open: ramp2(t1), shut: ramp2Shut(t2, t3, t4, T) })),
+      .concat(jawDrives(plan, o, k, { open: ramp2(t1), shut: ramp2Shut(t2, t3) })),
     // Centre of mass stays put [D]: the body answers the neck.
     recoil: {
       chains: plan.chains,

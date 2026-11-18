@@ -107,10 +107,14 @@ export function chainSampler(spec: ChainClipSpec): (t: number) => ChainKey {
       for (const [k, v] of p.rotation) rotation.set(k, v);
       for (const [k, v] of p.offset) offset.set(k, v);
     }
-    const shift: [number, number, number] = [0, 0, 0];
+    // A slide of the root bone is root motion: one bone, one translation track.
+    const slide = offset.get(plan.root) ?? ([0, 0, 0] as Vec3);
+    offset.delete(plan.root);
+    const shift: [number, number, number] = [slide[0], slide[1], slide[2]];
     if (recoil && rest) {
-      const c = centreOf(plan, recoil, forward(plan.bones, { rotation, offset }));
-      for (const k of recoil.axes) shift[k] = rest[k] - c[k];
+      const posed = forward(plan.bones, { rotation, offset, root: slide });
+      const c = centreOf(plan, recoil, posed);
+      for (const k of recoil.axes) shift[k] = slide[k] + rest[k] - c[k];
     }
     const at = spec.root?.(t) ?? { pos: [0, 0, 0] as Vec3, yaw: 0 };
     const turn = qexp([0, 0, at.yaw]);
@@ -173,7 +177,7 @@ export function bakeChainClip(spec: ChainClipSpec): Clip {
   }
   const times = Float32Array.from({ length: n + 1 }, (_, i) => (i * T) / n);
   const tracks: Track[] = [];
-  if (spec.root || spec.recoil)
+  if (spec.root || spec.recoil || keys.some((k) => k.root.some((v) => v !== 0)))
     tracks.push({
       bone: spec.plan.root,
       path: 'translation',

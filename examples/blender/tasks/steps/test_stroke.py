@@ -7,8 +7,8 @@ import bpy
 import numpy as np
 
 from tasks import common
+from tasks.steps import bake_cage, stroke
 from tasks.steps import state as st
-from tasks.steps import stroke
 from tasks.steps.test_steps import (
     EXPORT,
     UV,
@@ -207,4 +207,22 @@ def case_cage_fit():
     expect(fit["limited"] > 0 and fit["max"] <= 0.02 and "t3d_bake_cage" not in bpy.data.objects, f"the cage was limited ({fit['limited']:.0%}) and removed")
 
 
-CASES = (case_stroke_refusals, case_stroke_leak, case_stroke_brushes, case_stroke_rules, case_stroke_program, case_cage_fit)
+def case_cage_narrow_gap():
+    """Two plates facing each other 0.5 mm apart under a 20 mm cage: no offset may cross the gap."""
+    common.reset_scene()
+    gap, n = 0.0005, 21
+    grid = [(x * 0.01, y * 0.01) for y in range(n) for x in range(n)]
+    verts = [(x, y, 0.0) for x, y in grid] + [(x, y, gap) for x, y in grid]
+    quads = [(y * n + x, y * n + x + 1, (y + 1) * n + x + 1, (y + 1) * n + x) for y in range(n - 1) for x in range(n - 1)]
+    top = [tuple(v + n * n for v in reversed(q)) for q in quads]  # its normal faces the lower plate
+    me = bpy.data.meshes.new("plates")
+    me.from_pydata(verts, [], quads + top)
+    me.update()
+    low = st.link(bpy.data.objects.new("plates", me))
+    cage, facts = bake_cage.fit(low, 0.02)
+    moved = np.linalg.norm(st.coords(cage).astype(np.float64) - st.coords(low).astype(np.float64), axis=1)
+    expect(float(moved.max()) < gap and facts["max"] < gap, f"every cage offset stays inside the {gap * 1000} mm gap: at most {moved.max() * 1000:.3f} mm")
+    expect(float(moved.min()) > 0, "and the cage still stands off the shell")
+
+
+CASES = (case_cage_narrow_gap, case_stroke_refusals, case_stroke_leak, case_stroke_brushes, case_stroke_rules, case_stroke_program, case_cage_fit)

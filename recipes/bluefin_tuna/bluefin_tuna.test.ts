@@ -5,7 +5,7 @@ import { describe, expect, it } from 'bun:test';
 import { compile, type Mesh, swimFindings, triangleCount } from '@developerz.ai/ts23d';
 import { bodyChain, measureWave } from '../../src/qa/chain-wave.ts';
 import { bluefin_tuna, CLIPS, PLAN } from './bluefin_tuna.ts';
-import { finlets, HEIGHT, pectoralTip } from './fins.ts';
+import { finlets, pectoralTip } from './fins.ts';
 import { FL, plainPoint, T_HEAD, topZ, xOf } from './shape.ts';
 
 const lod0 = compile(bluefin_tuna, { lod: 0 });
@@ -23,7 +23,13 @@ const span = (m: Mesh, k: 0 | 1 | 2): number => {
   }
   return hi - lo;
 };
+const maxOf = (m: Mesh, k: 0 | 1 | 2): number => {
+  let hi = -Infinity;
+  for (let i = k; i < m.positions.length; i += 3) hi = Math.max(hi, m.positions[i] ?? 0);
+  return hi;
+};
 const percent = (v: number): number => (100 * v) / FL;
+const FIN_ROOT = 0.018;
 const inside = (v: number, lo: number, hi: number): void => {
   expect(v).toBeGreaterThanOrEqual(lo);
   expect(v).toBeLessThanOrEqual(hi);
@@ -31,9 +37,14 @@ const inside = (v: number, lo: number, hi: number): void => {
 
 describe('proportions, % of fork length (FAO synopsis 62)', () => {
   it('body depth 24 to 28', () => inside(percent(span(mesh('body'), 2)), 24, 28));
-  it('head 23 to 26', () => inside(100 * T_HEAD, 23, 26));
-  it('second dorsal 14 to 17', () => inside(percent(HEIGHT.dorsal2), 14, 17));
-  it('anal 13 to 16', () => inside(percent(HEIGHT.anal), 13, 16));
+  it('head 23 to 26, snout to gill cover on the compiled body', () => {
+    inside(percent(maxOf(mesh('body'), 0) - xOf(T_HEAD)), 23, 26);
+  });
+  // A fin's mesh runs SINK below the skin at its root: what shows is the span without it.
+  it('second dorsal 14 to 17', () => {
+    inside(percent(span(mesh('fin_dorsal_2'), 2) - FIN_ROOT), 14, 17);
+  });
+  it('anal 13 to 16', () => inside(percent(span(mesh('fin_anal'), 2) - FIN_ROOT), 13, 16));
   it('first dorsal stands 11', () => {
     const top = span(mesh('fin_dorsal_1'), 2);
     expect(percent(top)).toBeGreaterThan(10);

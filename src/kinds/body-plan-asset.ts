@@ -20,8 +20,9 @@ import {
 import type { StripId } from '../material/index.ts';
 import { bindRigid, skinPieces, skinWeights } from '../passes/index.ts';
 import { bodyPlan } from './body-plan.ts';
-import { type BodyPiece, bodyPlanPieces, chainSurface } from './body-plan-mesh.ts';
+import { type BodyPiece, type BodyPlanLook, bodyPlanPieces } from './body-plan-mesh.ts';
 import { bodyPlanFlesh, bodyPlanSkin, chainBoneIndices } from './body-plan-skin.ts';
+import { chainSurfaces } from './body-plan-surface.ts';
 import type { BodyPlan, BodyPlanSpec, SurfacePoint } from './body-plan-types.ts';
 
 export interface BodyPlanColours {
@@ -36,7 +37,8 @@ export interface BodyPlanColours {
 
 /** What a recipe's `detail` uses to put pieces on the body and make them follow its bones. */
 export interface BodyPlanKit {
-  /** Rest skin of a chain copy at arc fraction u and section angle, relief included. */
+  /** Rest skin of a chain copy at arc fraction u and section angle, as this LOD's mesh has it:
+   *  relief and fillets included. */
   surface(chain: string, u: number, angle: number): SurfacePoint;
   /** Each connected piece rigid, with the blended weights at its root (suckers, spikes). */
   bindPieces(mesh: Mesh, chains: readonly string[]): Mesh;
@@ -80,16 +82,17 @@ function planOf(d: BodyPlanDefinition): BodyPlan {
   });
 }
 
-function kitOf(plan: BodyPlan, look: Parameters<typeof chainSurface>[2]): BodyPlanKit {
+function kitOf(plan: BodyPlan, look: BodyPlanLook, lod: 0 | 1 | 2): BodyPlanKit {
   const flesh = bodyPlanFlesh(plan);
   const blendOf = (ids: readonly string[]): number => {
     const c = plan.chains.find((x) => x.id === ids[0]);
     return ((c?.length ?? 1) / Math.max(1, c?.links.length ?? 1)) * 0.35;
   };
-  const surfaces = new Map<string, ReturnType<typeof chainSurface>>();
+  const surfaceOf = chainSurfaces(plan, look, lod);
+  const surfaces = new Map<string, ReturnType<typeof surfaceOf>>();
   return {
     surface(chain, u, angle) {
-      const f = surfaces.get(chain) ?? chainSurface(plan, chain, look);
+      const f = surfaces.get(chain) ?? surfaceOf(chain);
       surfaces.set(chain, f);
       return f(u, angle);
     },
@@ -162,7 +165,7 @@ export function defineBodyPlan(d: BodyPlanDefinition): Asset {
         const { name, ...bone } = b;
         ctx.bone(name, bone);
       }
-      detail?.(ctx, plan, kitOf(plan, look));
+      detail?.(ctx, plan, kitOf(plan, look, ctx.lod));
     },
   });
 }

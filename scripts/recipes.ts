@@ -7,7 +7,7 @@
 
 import { loadAssets } from '../src/cli/load.ts';
 import { provideRecipeNeural } from '../src/cli/neural-store.ts';
-import { type CompiledAsset, compile, type Lod } from '../src/core/index.ts';
+import { type CompiledAsset, compile, formatCount, type Lod } from '../src/core/index.ts';
 import { toGlb } from '../src/export/index.ts';
 import { runLodQa, runQa } from '../src/qa/index.ts';
 import {
@@ -180,7 +180,8 @@ async function main(): Promise<void> {
   else warnCritiques(critiques);
   warnCritiques(calWarn);
   if (!json)
-    for (const r of rows) console.log(`  ${r.asset.padEnd(20)} tris ${r.triangles.join('/')}`);
+    for (const r of rows)
+      console.log(`  ${r.asset.padEnd(20)} tris ${r.triangles.map(formatCount).join('/')}`);
   process.exitCode = report(
     `recipes (${rows.length} assets, ${tests.length} test files)`,
     violations,

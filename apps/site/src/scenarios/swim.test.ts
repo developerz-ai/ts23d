@@ -12,7 +12,7 @@ afterAll(() => {
 const { AnimationClip, Object3D, Vector3, VectorKeyframeTrack } = await import('three');
 const { readHooks } = await import('./hooks.ts');
 const { pickScenario } = await import('./pick.ts');
-const { burstWeight, fitDistance, loopSeconds, swim } = await import('./swim.ts');
+const { burstWeight, fitDistance, loopSeconds, poseTime, swim } = await import('./swim.ts');
 
 const cruise = new AnimationClip('cruise', -1, [
   new VectorKeyframeTrack('root.position', [0, 2], [0, 0, 0, 3, 0, 0]),
@@ -21,6 +21,11 @@ const hooksOf = (medium: 'water' | 'ground' | null, kind = 'creature') =>
   readHooks(new Object3D(), kind, null, [cruise], medium);
 
 describe('swim scenario', () => {
+  test('reduced motion holds the body at its first pose', () => {
+    expect(poseTime(3.5, true)).toBe(0);
+    expect(poseTime(3.5, false)).toBe(3.5);
+  });
+
   test('a ground creature with the same clips is not picked for it', () => {
     expect(pickScenario(hooksOf('ground')).id).not.toBe('swim');
     expect(pickScenario(hooksOf(null)).id).not.toBe('swim');

@@ -418,31 +418,31 @@
       "name": "strike_0",
       "seconds": 1.4498733885096908,
       "loop": false,
-      "speed": 0.0092
+      "speed": 0.0081
     },
     {
       "name": "strike_1",
       "seconds": 1.5073082633334702,
       "loop": false,
-      "speed": 0.0077
+      "speed": 0.0061
     },
     {
       "name": "strike_2",
       "seconds": 1.5145579406522391,
       "loop": false,
-      "speed": 0.0076
+      "speed": 0.0059
     },
     {
       "name": "strike_3",
       "seconds": 1.470499880636714,
       "loop": false,
-      "speed": 0.0079
+      "speed": 0.0074
     },
     {
       "name": "strike_4",
       "seconds": 1.4517784118931751,
       "loop": false,
-      "speed": 0.0095
+      "speed": 0.0081
     }
   ],
   "hitboxes": [
@@ -454,15 +454,15 @@
     },
     {
       "bone": "body_1",
-      "radius": 0.53903,
-      "height": 0.302782,
-      "coverage": 0.9682
+      "radius": 0.539725,
+      "height": 0.302087,
+      "coverage": 0.9685
     },
     {
       "bone": "body_4",
-      "radius": 0.576456,
-      "height": 0.185879,
-      "coverage": 0.9603
+      "radius": 0.579558,
+      "height": 0.195136,
+      "coverage": 0.9573
     },
     {
       "bone": "body_5",

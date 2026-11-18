@@ -17,6 +17,7 @@ import {
 import { ContactShadow } from './contact-shadow.ts';
 import { environmentFor } from './lightbox.ts';
 import { LOOKS, type Look } from './look.ts';
+import { sphereDistance } from './sphere-fit.ts';
 import { castShadows, shadowCatcher } from './studio.ts';
 import { disposeTextureSet } from './texture-sets.ts';
 import { onSchemeChange, token } from './theme.ts';
@@ -146,7 +147,7 @@ export class Stage {
     if (sphere.radius <= this.radius * OUTGROWN) return;
     this.coverShadow(sphere.radius);
     this.contact.plane.visible = false;
-    const dist = sphere.radius / Math.sin(((this.camera.fov / 2) * Math.PI) / 180);
+    const dist = sphereDistance(sphere.radius, this.camera.fov, this.camera.aspect);
     const view = this.camera.getWorldDirection(new Vector3());
     this.camera.position.copy(sphere.center).addScaledVector(view, -dist);
     this.reach(dist * 20);
