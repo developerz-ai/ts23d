@@ -4,6 +4,10 @@ All notable changes to `@developerz.ai/ts23d`. Format: [Keep a Changelog](https:
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-11-18
+
+Swimming and many-limbed creatures with motion from published biomechanics, one open Blender session for chained work, and brushes for existing meshes.
+
 ### Added
 - `t3d blender session`: keep one Blender open and run chained step batches with undo and review; `finish` writes a program that replays through `t3d neural run`.
 - Blender `stroke` step: nine brushes (`draw`, `inflate`, `clay`, `flatten`, `crease`, `pinch`, `smooth`, `grab`, `vdm`) on an existing mesh, with falloff measured along the surface.
@@ -355,7 +359,8 @@ The first published version: the asset DSL with primitives, organic sculpting, t
 - Animations: `toGlb()` exports none unless `{ animations: true }` (glTF has no autoplay flag; engines drive named pivots from code). `t3d build` bakes the `run` clip by default so viewers show play controls; `--no-animations` skips it.
 - CLI output is one folder per asset: `out/<asset>/{lod0,lod1,lod2}.glb`, `sheet.png`, `manifest.json`, plus `out/index.json`. `t3d build` renders the sheet too (`--no-shot` to skip); `t3d shot` writes sheet + manifest only.
 
-[Unreleased]: https://github.com/developerz-ai/ts23d/compare/v0.11.0...HEAD
+[Unreleased]: https://github.com/developerz-ai/ts23d/compare/v0.12.0...HEAD
+[0.12.0]: https://github.com/developerz-ai/ts23d/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/developerz-ai/ts23d/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/developerz-ai/ts23d/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/developerz-ai/ts23d/compare/v0.8.0...v0.9.0

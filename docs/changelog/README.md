@@ -6,6 +6,7 @@ Every published version of `@developerz.ai/ts23d`, newest first: one page each w
 
 | Version | Date | Summary |
 |---|---|---|
+| [0.12.0](0.12.0.md) | 2026-11-18 | Swimming and many-limbed creatures with motion from published biomechanics, one open Blender session for chained work, and brushes for existing meshes. |
 | [0.11.0](0.11.0.md) | 2026-11-17 | Two more model-first creatures, a brown bear and a winged drake, and the library options and QA rules they needed. |
 | [0.10.0](0.10.0.md) | 2026-11-17 | Creatures and humanoids go model-first and Blender-first: an image-to-3D body, finished by an ordered list of headless Blender steps the recipe writes, kept whole with its own textures on every LOD, while code keeps real scale, skeleton, clips, budgets and QA. |
 | [0.9.0](0.9.0.md) | 2026-11-16 | An optional model tier (any model through an adapter, outputs cached so builds stay offline and deterministic), one-command setup and diagnosis, hybrid recipes, game-project commands, a hero texture tier and scale tools, with a gallery that shows the CPU tier and the model tier side by side. |
