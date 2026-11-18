@@ -2,8 +2,11 @@
 // reused, and after a reboot session.json may name anything. A session's Blender is proven by its
 // start time (/proc) together with its exact job argument, which carries a token made for that one
 // start; only a proven process is ever signalled. Where /proc is missing nothing can be proven, so
-// no signal is sent and liveness comes from the token over the session's private socket. The name
-// lock (`<name>.lock`, created atomically) lets one `start` or `stop` work on a session at a time.
+// no signal is sent and liveness comes from the token over the session's private socket.
+// The name lock lets one `start` or `stop` work on a session at a time. It is a chain of numbered
+// files, `<name>.lock.<n>`: generation n + 1 may be created (atomically, once) only after generation
+// n's owner has released it or died, and no one but its owner ever changes a file that may be live.
+// Recovery from a dead owner is therefore just the next link; there is nothing to steal.
 
 import { type SessionUnreachable, sessionRequest, socketPath } from './blender-session-wire.ts';
 import { failed } from './wire.ts';
@@ -30,6 +33,7 @@ interface LockOwner {
   readonly token: string;
   readonly pid: number;
   readonly startTime?: string;
+  readonly released?: boolean;
 }
 
 export async function readJson<T>(path: string): Promise<T | undefined> {
@@ -82,11 +86,12 @@ export async function sessionAlive(
   id: SessionIdentity,
   dir: string,
   proc = '/proc',
+  probeMs = 1_000,
 ): Promise<boolean> {
   if (await hasProc(proc)) return provenSession(id, proc);
   if (!signalZero(id.pid)) return false;
   try {
-    const hello = await sessionRequest(socketPath(dir), { cmd: 'hello' }, 1_000);
+    const hello = await sessionRequest(socketPath(dir), { cmd: 'hello' }, probeMs);
     return hello['token'] === id.token;
   } catch (e) {
     // Only this user's process can listen in the private directory: slow means busy.
@@ -94,17 +99,31 @@ export async function sessionAlive(
   }
 }
 
-async function waitForExit(id: SessionIdentity, dir: string, ms: number): Promise<boolean> {
-  for (let left = ms; left > 0; left -= POLL_MS) {
-    if (!(await sessionAlive(id, dir))) return true;
-    await sleep(POLL_MS);
+const nowMs = (): number => Number(process.hrtime.bigint() / 1_000_000n);
+
+/** True once the session is gone; false at `ms`, however long each look at it takes. */
+export async function waitForExit(
+  id: SessionIdentity,
+  dir: string,
+  ms: number,
+  proc = '/proc',
+): Promise<boolean> {
+  const deadline = nowMs() + ms;
+  for (;;) {
+    const left = deadline - nowMs();
+    if (left <= 0) return false;
+    if (!(await sessionAlive(id, dir, proc, Math.min(left, 1_000)))) return true;
+    await sleep(Math.min(POLL_MS, Math.max(0, deadline - nowMs())));
   }
-  return !(await sessionAlive(id, dir));
 }
 
 /** Signal the session's Blender, proving it again right before; false when it is not proven. */
-async function signalProven(id: SessionIdentity, signal: NodeJS.Signals): Promise<boolean> {
-  if (!(await provenSession(id))) return false;
+async function signalProven(
+  id: SessionIdentity,
+  signal: NodeJS.Signals,
+  proc: string,
+): Promise<boolean> {
+  if (!(await provenSession(id, proc))) return false;
   try {
     process.kill(id.pid, signal);
   } catch {
@@ -118,15 +137,16 @@ export async function endSession(
   id: SessionIdentity,
   dir: string,
   graceMs: number,
+  proc = '/proc',
 ): Promise<string> {
   await sessionRequest(socketPath(dir), { cmd: 'stop' }, Math.min(graceMs, 5_000)).catch(
     () => undefined,
   );
-  if (await waitForExit(id, dir, graceMs)) return 'stopped';
-  if (await signalProven(id, 'SIGTERM')) {
-    if (await waitForExit(id, dir, Math.min(graceMs, 5_000))) return 'terminated';
-    await signalProven(id, 'SIGKILL');
-    if (await waitForExit(id, dir, 5_000)) return 'killed';
+  if (await waitForExit(id, dir, graceMs, proc)) return 'stopped';
+  if (await signalProven(id, 'SIGTERM', proc)) {
+    if (await waitForExit(id, dir, Math.min(graceMs, 5_000), proc)) return 'terminated';
+    await signalProven(id, 'SIGKILL', proc);
+    if (await waitForExit(id, dir, 5_000, proc)) return 'killed';
   }
   return failed(
     `Blender session process ${id.pid} did not stop and cannot be proven to be this session's`,
@@ -141,53 +161,77 @@ async function ownerAlive(o: LockOwner): Promise<boolean> {
 
 const code = (e: unknown): string | undefined => (e as NodeJS.ErrnoException).code;
 
-/** Take the session name for this `start` or `stop`; a live holder means refusal. */
-export async function takeSessionLock(dir: string, name: string): Promise<SessionLock> {
-  const { link, readFile, rename, rm, writeFile } = await import('node:fs/promises');
-  const path = `${dir}.lock`;
+/** The generations of `name`'s lock that exist, lowest first. */
+async function generations(root: string, name: string): Promise<number[]> {
+  const { readdir } = await import('node:fs/promises');
+  const prefix = `${name}.lock.`;
+  return (await readdir(root))
+    .filter((f) => f.startsWith(prefix) && /^\d+$/.test(f.slice(prefix.length)))
+    .map((f) => Number(f.slice(prefix.length)))
+    .sort((a, b) => a - b);
+}
+
+/**
+ * Take the session name for this `start` or `stop`; a live holder means refusal. `beforeClaim` runs
+ * between deciding the top generation is free and claiming the next: tests delay a contender there.
+ */
+export async function takeSessionLock(
+  dir: string,
+  name: string,
+  beforeClaim?: () => Promise<void>,
+): Promise<SessionLock> {
+  const { link, rename, rm, writeFile } = await import('node:fs/promises');
+  const { dirname } = await import('node:path');
+  const root = dirname(dir);
+  const file = (n: number): string => `${dir}.lock.${n}`;
   const token = await newToken();
   const startTime = await procStartTime(process.pid);
   const mine: LockOwner = { token, pid: process.pid, ...(startTime ? { startTime } : {}) };
-  const draft = `${path}.${token}`;
+  const draft = `${dir}.draft.${token}`;
   await writeFile(draft, JSON.stringify(mine), { mode: 0o600 });
   try {
-    for (let tries = 0; tries < 8; tries++) {
+    for (let tries = 0; tries < 64; tries++) {
+      const top = (await generations(root, name)).at(-1) ?? 0;
+      if (top > 0) {
+        const owner = await readJson<LockOwner>(file(top));
+        if (owner === undefined) continue; // tidied away: a newer generation exists
+        if (!owner.released && (await ownerAlive(owner)))
+          failed(
+            `Blender session '${name}' is being started or stopped by process ${owner.pid}`,
+            'wait for that command to finish, then try again',
+          );
+      }
+      await beforeClaim?.();
+      const next = top + 1;
       try {
-        await link(draft, path); // atomic, and the file is complete from its first instant
-        return {
-          holds: async () => (await readJson<LockOwner>(path))?.token === token,
-          release: async () => {
-            if ((await readJson<LockOwner>(path))?.token === token) await rm(path, { force: true });
-          },
-        };
+        await link(draft, file(next)); // atomic: one claimant per generation, complete at once
       } catch (e) {
         if (code(e) !== 'EEXIST') throw e;
+        continue;
       }
-      const owner = await readJson<LockOwner>(path);
-      if (owner === undefined) continue; // released just now
-      if (await ownerAlive(owner))
-        failed(
-          `Blender session '${name}' is being started or stopped by process ${owner.pid}`,
-          'wait for that command to finish, then try again',
-        );
-      // A dead owner's lock. Rename is atomic, so one process wins it; if what it won is not the
-      // lock it inspected (a new owner slipped in), it goes back, and that owner's holds() decides.
-      const stale = `${path}.stale.${token}`;
-      const won = await rename(path, stale).then(
-        () => true,
-        () => false,
-      );
-      if (won) {
-        const got = await readFile(stale, 'utf8').catch(() => '');
-        if (!got.includes(owner.token)) await link(stale, path).catch(() => undefined);
-        await rm(stale, { force: true });
+      // A contender delayed since an old generation can re-create a tidied number: not the top.
+      const now = await generations(root, name);
+      if (now.at(-1) !== next) {
+        await rm(file(next), { force: true });
+        continue;
       }
+      for (const old of now) if (old < next) await rm(file(old), { force: true });
+      const holds = async (): Promise<boolean> =>
+        (await generations(root, name)).at(-1) === next &&
+        (await readJson<LockOwner>(file(next)))?.token === token;
+      return {
+        holds,
+        release: async () => {
+          if (!(await holds())) return;
+          // The file stays, marked: the chain's top must never disappear.
+          const done = `${draft}.released`;
+          await writeFile(done, JSON.stringify({ ...mine, released: true }), { mode: 0o600 });
+          await rename(done, file(next));
+        },
+      };
     }
   } finally {
     await rm(draft, { force: true });
   }
-  return failed(
-    `could not lock Blender session '${name}'`,
-    `remove ${path} if nothing is using it`,
-  );
+  return failed(`could not lock Blender session '${name}'`, 'too much contention: try again');
 }

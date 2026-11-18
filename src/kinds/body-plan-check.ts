@@ -12,6 +12,8 @@ const NAME = /^[a-z][a-z0-9_]*$/;
 /** How far `length` may sit under the root chain's arc, or over the longest run of chains. */
 const LENGTH_UNDER = 0.75;
 const LENGTH_OVER = 1.15;
+/** Shortest bone, metres: below this, joints collapse once stored as Float32. */
+const MIN_BONE = 1e-4;
 
 function fail(cause: string, fix: string): never {
   throw new Ts23dError('T3D_RECIPE_INVALID', { cause: `body plan: ${cause}`, fix });
@@ -29,6 +31,18 @@ function checkRepeat(c: ChainSpec, r: ChainRepeat): void {
     fail(`chain '${c.name}' radial centre is not finite`, 'pass a point, e.g. [0, 0, 0.4]');
   if (r.start !== undefined && !Number.isFinite(r.start))
     fail(`chain '${c.name}' radial start is ${r.start}`, 'give the first turn in radians');
+}
+
+/** Stops can still rise while the bone between them is too short for a Float32 joint to hold. */
+function checkBoneLengths(c: ChainSpec): void {
+  const stops = linkStops(c.links, c.bias);
+  const arc = chainCurve(c).length;
+  const short = stops.findIndex((u, i) => i > 0 && (u - (stops[i - 1] ?? 0)) * arc < MIN_BONE);
+  if (short > 0)
+    fail(
+      `chain '${c.name}' link ${short - 1} is shorter than ${MIN_BONE * 1000} mm at bias ${c.bias ?? 1}`,
+      'lower `bias` or use fewer links, so every bone keeps a real length',
+    );
 }
 
 function checkChain(c: ChainSpec): void {
@@ -54,14 +68,7 @@ function checkChain(c: ChainSpec): void {
     fail(`${at} bias is ${c.bias}`, 'use a number > 0 (1 spaces links evenly)');
   if (c.flatten !== undefined && !(Number.isFinite(c.flatten) && c.flatten > 0))
     fail(`${at} flatten is ${c.flatten}`, 'use height ÷ width > 0 (1 is round)');
-  if (Number.isFinite(c.bias ?? 1) && (c.bias ?? 1) > 0) {
-    const stops = linkStops(c.links, c.bias);
-    if (stops.some((u, i) => i > 0 && !(u > (stops[i - 1] ?? 0))))
-      fail(
-        `${at} has link joints that collapse onto each other at bias ${c.bias}: some bones would have no length`,
-        'lower `bias` or use fewer links, so every joint keeps its own place on the chain',
-      );
-  }
+  checkBoneLengths(c);
   if (c.repeat) checkRepeat(c, c.repeat);
   if (c.blend !== undefined && !(Number.isFinite(c.blend) && c.blend >= 0))
     fail(`${at} blend is ${c.blend}`, 'give a fillet radius in metres, 0 or more');

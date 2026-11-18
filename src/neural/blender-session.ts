@@ -262,6 +262,8 @@ export async function stopBlenderSession(o: BlenderSessionOptions): Promise<Blen
     );
     const live = meta !== undefined && (await isLive(f, meta));
     const how = live ? await endSession(meta, f.dir, o.stopGraceMs ?? 10_000) : 'not running';
+    if (!(await lock.holds()))
+      failed(`lost the lock on session '${f.name}'`, 'its directory was kept: run stop again');
     await rm(f.dir, { recursive: true, force: true });
     return { name: f.name, stopped: how, removed: there };
   } finally {

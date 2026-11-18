@@ -9,13 +9,8 @@
 
 import { type Mesh, MeshBuilder, merge, Ts23dError, type Vec3 } from '../core/index.ts';
 import { type StripId, stripRect } from '../material/index.ts';
-import {
-  type ChainCopy,
-  type ChainCurve,
-  chainCopies,
-  chainCurve,
-  linkStops,
-} from './body-plan-curve.ts';
+import { type ChainCurve, chainCopies, chainCurve, linkStops } from './body-plan-curve.ts';
+import { flareOf, POINT_END, type Sweep, skinGrid } from './body-plan-grid.ts';
 import type {
   BodyPlan,
   BodyPlanSpec,
@@ -23,7 +18,7 @@ import type {
   PlanChain,
   SurfacePoint,
 } from './body-plan-types.ts';
-import { gridNormals, type WeldItem, weldPieces } from './body-plan-weld.ts';
+import { type WeldItem, weldPieces } from './body-plan-weld.ts';
 import { mixRgb, smoothstep, v3 } from './creature-curve.ts';
 
 /** Linear colours of the skin; `line` is the normal z where back gives way to belly. */
@@ -49,14 +44,8 @@ export type Lod = 0 | 1 | 2;
 const RINGS_PER_LINK: readonly [number, number, number] = [6, 3, 1];
 const ROUND_SIDES: readonly [number, number, number] = [20, 12, 6];
 const FLAT_SIDES: readonly [number, number, number] = [12, 8, 4];
-/** Root flare: extra radius at the joint, and its length in root radii. */
-const FLARE = 0.35;
+/** Root flare: its length in root radii. */
 const FLARE_RADII = 2;
-/** A chain end under this share of the chain's widest radius closes on a point. */
-const POINT_END = 0.06;
-const MIN_RING = 0.001;
-/** `antiFold`: how much of the local bend radius a section may reach toward the inside. */
-const INSIDE_REACH = 0.42;
 
 export function specOf(plan: BodyPlan): BodyPlanSpec {
   if (plan.spec) return plan.spec;
@@ -90,17 +79,6 @@ function ringStops(c: ChainSpec, curve: ChainCurve, flareU: number, lod: Lod): n
     .filter((u, i, all) => i === 0 || u - (all[i - 1] ?? 0) > min);
 }
 
-export interface Sweep {
-  readonly c: ChainSpec;
-  readonly curve: ChainCurve;
-  readonly copy: ChainCopy;
-  readonly flareU: number;
-  readonly look: BodyPlanLook;
-  readonly lod: Lod;
-  /** World point the root closes on (a child: on its parent's bone), or null. */
-  readonly anchor: Vec3 | null;
-}
-
 const colourAt = (o: BodyPlanLook, n: Vec3, u: number): Vec3 => {
   const line = o.line ?? -0.3;
   const soft = o.soft ?? 0.25;
@@ -108,43 +86,10 @@ const colourAt = (o: BodyPlanLook, n: Vec3, u: number): Vec3 => {
   return o.tip ? mixRgb(c, o.tip, smoothstep(0.6, 1, u)) : c;
 };
 
-const flareOf = (s: Sweep, u: number): number =>
-  s.flareU > 0 && u < s.flareU ? 1 + FLARE * (1 - u / s.flareU) ** 2 : 1;
-
-/** The section offset, shortened on the inside of a bend tighter than it can follow. */
-function keptOutside(curve: ChainCurve, u: number, offset: Vec3): Vec3 {
-  // Wide enough to read the bend, not the curve's sampling steps.
-  const h = 0.04;
-  const [lo, hi] = [Math.max(0, u - h), Math.min(1, u + h)];
-  const turn = v3.mul(v3.sub(curve.at(hi).t, curve.at(lo).t), 1 / ((hi - lo) * curve.length));
-  const reach = v3.dot(turn, offset);
-  if (reach <= 1e-6) return offset;
-  // A soft limit: a hard one would leave a kink along the line where it starts to bite.
-  return v3.mul(offset, (INSIDE_REACH * (1 - Math.exp(-reach / INSIDE_REACH))) / reach);
-}
-
-/** The skin point at (u, angle) before relief, with its shading normal. */
-export function skinPoint(s: Sweep, u: number, angle: number, eps: number): SurfacePoint {
-  const { c, curve, copy } = s;
-  const flatten = c.flatten ?? 1;
-  const radius = (x: number): number => curve.at(x).r * flareOf(s, x);
-  const q = curve.at(u);
-  const r = Math.max(MIN_RING, radius(u));
-  const slope = (radius(u + eps) - radius(u - eps)) / (2 * eps * curve.length);
-  const [cos, sin] = [Math.cos(angle), Math.sin(angle)];
-  const round = v3.add(v3.mul(q.bend, cos * r * flatten), v3.mul(q.pitch, sin * r));
-  const out = c.antiFold ? keptOutside(curve, u, round) : round;
-  const shade = v3.add(v3.mul(q.bend, cos / flatten), v3.mul(q.pitch, sin));
-  return {
-    u,
-    angle,
-    s: u * curve.length,
-    radius: r,
-    chain: copy.id,
-    lod: s.lod,
-    p: copy.point(v3.add(q.p, out)),
-    n: copy.dir(v3.norm(v3.sub(shade, v3.mul(q.t, slope)))),
-  };
+/** Rings and sides of a chain's sweep at its LOD. */
+export function sweepShape(s: Sweep): { stops: number[]; sides: number } {
+  const sides = s.c.detail?.sides?.[s.lod] ?? (isFlat(s.c) ? FLAT_SIDES : ROUND_SIDES)[s.lod];
+  return { stops: ringStops(s.c, s.curve, s.flareU, s.lod), sides };
 }
 
 function sweepChain(s: Sweep, stops: readonly number[], sides: number): Mesh {
@@ -156,21 +101,7 @@ function sweepChain(s: Sweep, stops: readonly number[], sides: number): Mesh {
   const b = new MeshBuilder();
   const radius = (u: number): number => curve.at(u).r * flareOf(s, u);
   const pointy = (u: number): boolean => radius(u) < widest * POINT_END;
-  const inner = stops.filter((u, i) => {
-    const end = i === 0 || i === stops.length - 1;
-    return !(end && pointy(u));
-  });
-  const kept = inner.length > 0 ? inner : [0.5];
-  const eps = 0.5 / Math.max(1, stops.length * 8);
-  const pts = kept.map((u) =>
-    Array.from({ length: sides + 1 }, (_, j) => skinPoint(s, u, (j / sides) * Math.PI * 2, eps)),
-  );
-  const moved = pts.map((row) =>
-    row.map((q) => (c.relief ? v3.add(q.p, v3.mul(q.n, c.relief(q))) : q.p)),
-  );
-  // Relief and antiFold both move the skin off its ellipse: shade what is really there.
-  const normals =
-    c.relief || c.antiFold ? gridNormals(pts, moved, sides) : pts.map((row) => row.map((q) => q.n));
+  const { pts, moved, normals } = skinGrid(s, stops, sides);
   /** Round the section: 0..1, or a mirrored zigzag over `bands` repeats of the strip. */
   const across = (j: number): number => {
     const x = (j / sides) * bands;
@@ -270,8 +201,8 @@ export function bodyPlanPieces(plan: BodyPlan, lod: Lod, look: BodyPlanLook): Bo
   const items: WeldItem[] = plan.chains.flatMap((chain) => {
     const s = sweepOf(plan, chain, look, lod);
     if (!s || s.c.skin === false) return [];
-    const sides = s.c.detail?.sides?.[lod] ?? (isFlat(s.c) ? FLAT_SIDES : ROUND_SIDES)[lod];
-    const mesh = sweepChain(s, ringStops(s.c, s.curve, s.flareU, lod), sides);
+    const { stops, sides } = sweepShape(s);
+    const mesh = sweepChain(s, stops, sides);
     return [{ chain, mesh, spec: s.c, curve: s.curve, copy: s.copy }];
   });
   return weldPieces(plan, items).map(({ chain, mesh }) => ({ chain, mesh }));

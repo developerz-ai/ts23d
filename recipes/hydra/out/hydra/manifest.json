@@ -454,15 +454,15 @@
     },
     {
       "bone": "body_1",
-      "radius": 0.539725,
-      "height": 0.302087,
+      "radius": 0.539763,
+      "height": 0.30205,
       "coverage": 0.9685
     },
     {
       "bone": "body_4",
-      "radius": 0.579558,
-      "height": 0.195136,
-      "coverage": 0.9573
+      "radius": 0.579459,
+      "height": 0.196084,
+      "coverage": 0.9581
     },
     {
       "bone": "body_5",
@@ -478,8 +478,8 @@
     },
     {
       "bone": "tail_7",
-      "radius": 0.068826,
-      "height": 0.077456,
+      "radius": 0.068828,
+      "height": 0.077443,
       "coverage": 0.9535
     },
     {

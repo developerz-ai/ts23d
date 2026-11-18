@@ -6,7 +6,7 @@ import { compile, type Mesh, swimFindings, triangleCount } from '@developerz.ai/
 import { bodyChain, measureWave } from '../../src/qa/chain-wave.ts';
 import { bluefin_tuna, CLIPS, PLAN } from './bluefin_tuna.ts';
 import { finlets, pectoralTip } from './fins.ts';
-import { FL, plainPoint, T_HEAD, topZ, xOf } from './shape.ts';
+import { FL, plainPoint, topZ, xOf, Z0 } from './shape.ts';
 
 const lod0 = compile(bluefin_tuna, { lod: 0 });
 const mesh = (name: string): Mesh => {
@@ -29,6 +29,75 @@ const maxOf = (m: Mesh, k: 0 | 1 | 2): number => {
   return hi;
 };
 const percent = (v: number): number => (100 * v) / FL;
+/** Least dip that counts as the groove (metres of skin) and as its painted line (summed colour). */
+const GROOVE_DEPTH = 0.0015;
+const LINE_DEPTH = 0.4;
+
+interface FlankSample {
+  readonly x: number;
+  /** Half-width of the skin here, metres: a groove is a dip in it. */
+  readonly y: number;
+  /** Summed linear colour: the painted groove line is a dip in it. */
+  readonly light: number;
+}
+
+/** The compiled skin's +Y flank column at the body axis, snout side first, over the gill region. */
+function flankColumn(m: Mesh): FlankSample[] {
+  const snout = maxOf(m, 0);
+  const out: FlankSample[] = [];
+  for (let v = 0; v < m.positions.length / 3; v++) {
+    const [x, y, z] = [
+      m.positions[v * 3] ?? 0,
+      m.positions[v * 3 + 1] ?? 0,
+      m.positions[v * 3 + 2] ?? 0,
+    ];
+    const back = (snout - x) / FL;
+    if (y <= 0 || Math.abs(z - Z0) > 0.002 || back < 0.15 || back > 0.34) continue;
+    const c = [m.colors[v * 3] ?? 0, m.colors[v * 3 + 1] ?? 0, m.colors[v * 3 + 2] ?? 0];
+    out.push({ x, y, light: (c[0] ?? 0) + (c[1] ?? 0) + (c[2] ?? 0) });
+  }
+  return out.sort((a, b) => b.x - a.x);
+}
+
+/** X of the rearmost dip in `value` deeper than `depth` against the samples `reach` metres away. */
+function rearmostDip(
+  column: readonly FlankSample[],
+  value: (s: FlankSample) => number,
+  depth: number,
+  reach = 0.03,
+): number | null {
+  const near = (x: number): number => {
+    let best = column[0];
+    for (const s of column) if (best && Math.abs(s.x - x) < Math.abs(best.x - x)) best = s;
+    return best ? value(best) : 0;
+  };
+  // Only where both comparison points exist: at the window's ends a taper would read as a dip.
+  const [front, rear] = [column[0]?.x ?? 0, column.at(-1)?.x ?? 0];
+  const dips = column.map((s) => ({
+    x: s.x,
+    dip:
+      s.x + reach > front || s.x - reach < rear
+        ? -Infinity
+        : (near(s.x + reach) + near(s.x - reach)) / 2 - value(s),
+  }));
+  let found: number | null = null;
+  dips.forEach((d, i) => {
+    const [a, b] = [dips[i - 1]?.dip ?? -Infinity, dips[i + 1]?.dip ?? -Infinity];
+    if (d.dip >= depth && d.dip >= a && d.dip >= b) found = d.x;
+  });
+  return found;
+}
+
+/** The gill cover's rear edge on the compiled skin: carved groove and painted line must agree. */
+function gillCoverX(m: Mesh): number {
+  const column = flankColumn(m);
+  const carved = rearmostDip(column, (s) => s.y, GROOVE_DEPTH);
+  const painted = rearmostDip(column, (s) => s.light, LINE_DEPTH);
+  if (carved === null || painted === null)
+    throw new Error(`no gill cover on the flank (groove ${carved}, line ${painted})`);
+  expect(Math.abs(carved - painted)).toBeLessThan(0.012);
+  return carved;
+}
 const FIN_ROOT = 0.018;
 const inside = (v: number, lo: number, hi: number): void => {
   expect(v).toBeGreaterThanOrEqual(lo);
@@ -38,7 +107,8 @@ const inside = (v: number, lo: number, hi: number): void => {
 describe('proportions, % of fork length (FAO synopsis 62)', () => {
   it('body depth 24 to 28', () => inside(percent(span(mesh('body'), 2)), 24, 28));
   it('head 23 to 26, snout to gill cover on the compiled body', () => {
-    inside(percent(maxOf(mesh('body'), 0) - xOf(T_HEAD)), 23, 26);
+    const body = mesh('body');
+    inside(percent(maxOf(body, 0) - gillCoverX(body)), 23, 26);
   });
   // A fin's mesh runs SINK below the skin at its root: what shows is the span without it.
   it('second dorsal 14 to 17', () => {

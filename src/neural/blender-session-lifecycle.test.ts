@@ -98,7 +98,7 @@ describe('starting: one name, one Blender', () => {
     live.push(at);
     const go = () => startBlenderSession({ ...at, exe: blender().exe, mesh: join(root, 'm.glb') });
     await stopBlenderSession(at); // makes the root
-    const lock = join(at.root, 'default.lock');
+    const lock = join(at.root, 'default.lock.5');
     const holder = decoy('holder');
     await Bun.sleep(20);
     const owner = { token: 'x', pid: holder.pid, startTime: await procStartTime(holder.pid ?? 0) };
@@ -107,7 +107,8 @@ describe('starting: one name, one Blender', () => {
     expect(await message(stopBlenderSession(at))).toContain('being started or stopped');
     writeFileSync(lock, JSON.stringify({ ...owner, startTime: 'long-ago' })); // pid reused since
     expect(await go()).toMatchObject({ kept: [] });
-    expect(existsSync(lock)).toBe(false);
+    expect(existsSync(lock)).toBe(false); // superseded by generation 6, released after the start
+    expect(JSON.parse(readFileSync(join(at.root, 'default.lock.6'), 'utf8')).released).toBe(true);
   });
 
   test('a start that times out kills its own child and frees the name', async () => {

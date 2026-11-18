@@ -46,9 +46,14 @@ describe('bodyPlan refuses', () => {
       /two chains are named 'spine'/,
     ],
     [
+      'a bias that leaves bones shorter than a float can tell apart',
+      plan([{ ...trunk, links: 40, bias: 8 }]),
+      /shorter than/,
+    ],
+    [
       'a bias that collapses link joints onto the tip',
       plan([{ ...trunk, links: 40, bias: 20 }]),
-      /collapse/,
+      /shorter than/,
     ],
     ['no chains', plan([]), /no chains/],
     ['a chain name not in snake_case', plan([{ ...trunk, name: 'Spine' }]), /snake_case/],

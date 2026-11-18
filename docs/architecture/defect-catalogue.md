@@ -101,6 +101,8 @@ again. A defect is not fixed until its check exists and fails on a reproduction.
 | D91 | The hydra's jaw stayed open at the end of a strike and jumped back to idle | the gape envelope was not faded in recovery | `src/kinds/neck-clips.test.ts` | shipped |
 | D92 | Detail seated on a filleted chain was buried in the skin, by up to 15 mm | `kit.surface` returned the position before the fillet moved it | `src/kinds/body-plan-hooks.test.ts` | shipped |
 | D93 | The king cobra's tail had no belly scutes | the tail pitch multiplied the whole plate index, which jumped past the body's end | `recipes/king_cobra/king_cobra.test.ts` | shipped |
+| D94 | Racing recovery of a stale Blender session lock could let two callers hold it, so one could delete an active session's folder | recovery renamed a lock file that might already belong to a new owner | locks are numbered generations that are never moved while live; `src/neural/blender-session-lock.test.ts` | shipped |
+| D95 | A body-plan chain could produce bones too short to store, including zero-length ones | strictly rising stops still allowed spans below float precision | bones under 0.1 mm are refused; `src/kinds/body-plan.test.ts` | shipped |
 
 Related: [errors.md](errors.md) (every `T3D_*` code), [16-art-as-text](../idea/16-art-as-text.md)
 (measurable art definitions), `docs/idea/06-qa.md` (gate table).

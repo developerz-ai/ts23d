@@ -193,20 +193,20 @@ _Measured by `bun run bench` on 1.4.4 (Bun)._
 
 | asset | tris LOD0 / 1 / 2 | GLB size LOD0 / 1 / 2 | parts | animated | draw calls (1 material) | compile + QA, 3 LODs | QA |
 |---|---|---|---|---|---|---|---|
-| `bluefin_tuna` | 32.3k / 4k / 476 | 1.08 MB / 150 KB / 26 KB | 8 | 0 | 1 | 498 ms | PASS |
-| `common_octopus` | 134k / 13.4k / 2.09k | 6.2 MB / 729 KB / 142 KB | 6 | 0 | 2 | 4.48 s | PASS |
-| `eiffel_tower` | 188k / 21.8k / 1.05k | 16.5 MB / 1.78 MB / 85 KB | 28 | 0 | 1 | 8.03 s | PASS |
-| `great_white` | 61k / 7.03k / 680 | 2.1 MB / 269 KB / 35 KB | 7 | 0 | 1 | 1.17 s | PASS |
-| `hydra` | 348k / 38.8k / 7.16k | 13.7 MB / 1.43 MB / 303 KB | 9 | 0 | 2 | 26.8 s | PASS |
-| `king_cobra` | 62k / 3.85k / 584 | 5.02 MB / 146 KB / 33 KB | 1 | 0 | 1 | 1.92 s | PASS |
-| `loco_440` | 45.3k / 18.1k / 1.4k | 2.42 MB / 967 KB / 106 KB | 84 | 14 | 18 | 1.33 s | PASS |
-| `material_swatches` | 27.3k / 778 / 778 | 2.24 MB / 70 KB / 70 KB | 132 | 0 | 3 | 732 ms | PASS |
-| `oak` | 13.9k / 3k / 159 | 745 KB / 166 KB / 10 KB | 6 | 1 | 2 | 10.7 s | PASS |
-| `palm` | 5.57k / 2.33k / 205 | 407 KB / 196 KB / 19 KB | 6 | 1 | 2 | 1.09 s | PASS |
-| `pine` | 23.7k / 5.74k / 306 | 1.16 MB / 295 KB / 36 KB | 6 | 1 | 2 | 12.5 s | PASS |
-| `t34` | 48.2k / 10.4k / 1.58k | 2.63 MB / 684 KB / 163 KB | 28 | 18 | 19 | 1.94 s | PASS |
-| `t34_1941` | 46.6k / 10k / 1.55k | 2.54 MB / 660 KB / 162 KB | 28 | 18 | 19 | 1.91 s | PASS |
-| `tiger_1` | 72.2k / 17.4k / 3.41k | 4.36 MB / 960 KB / 288 KB | 39 | 24 | 25 | 3.28 s | PASS |
+| `bluefin_tuna` | 32.3k / 4k / 476 | 1.08 MB / 150 KB / 26 KB | 8 | 0 | 1 | 375 ms | PASS |
+| `common_octopus` | 134k / 13.4k / 2.09k | 6.2 MB / 729 KB / 142 KB | 6 | 0 | 2 | 3.25 s | PASS |
+| `eiffel_tower` | 188k / 21.8k / 1.05k | 16.5 MB / 1.78 MB / 85 KB | 28 | 0 | 1 | 6.7 s | PASS |
+| `great_white` | 61k / 7.03k / 680 | 2.1 MB / 269 KB / 35 KB | 7 | 0 | 1 | 795 ms | PASS |
+| `hydra` | 348k / 38.8k / 7.16k | 13.7 MB / 1.43 MB / 303 KB | 9 | 0 | 2 | 21.2 s | PASS |
+| `king_cobra` | 62k / 3.85k / 584 | 5.02 MB / 146 KB / 33 KB | 1 | 0 | 1 | 1.1 s | PASS |
+| `loco_440` | 45.3k / 18.1k / 1.4k | 2.42 MB / 967 KB / 106 KB | 84 | 14 | 18 | 798 ms | PASS |
+| `material_swatches` | 27.3k / 778 / 778 | 2.24 MB / 70 KB / 70 KB | 132 | 0 | 3 | 454 ms | PASS |
+| `oak` | 13.9k / 3k / 159 | 745 KB / 166 KB / 10 KB | 6 | 1 | 2 | 8.42 s | PASS |
+| `palm` | 5.57k / 2.33k / 205 | 407 KB / 196 KB / 19 KB | 6 | 1 | 2 | 891 ms | PASS |
+| `pine` | 23.7k / 5.74k / 306 | 1.16 MB / 295 KB / 36 KB | 6 | 1 | 2 | 10.2 s | PASS |
+| `t34` | 48.2k / 10.4k / 1.58k | 2.63 MB / 684 KB / 163 KB | 28 | 18 | 19 | 1.26 s | PASS |
+| `t34_1941` | 46.6k / 10k / 1.55k | 2.54 MB / 660 KB / 162 KB | 28 | 18 | 19 | 1.23 s | PASS |
+| `tiger_1` | 72.2k / 17.4k / 3.41k | 4.36 MB / 960 KB / 288 KB | 39 | 24 | 25 | 2.31 s | PASS |
 <!-- bench:end -->
 
 Draw calls column: static assets (the Eiffel Tower) are 1; vehicles are one per movable part. Trim-sheet painting: 512² ≈ 0.22 s, 1024² ≈ 0.8 s, 2048² ≈ 2.95 s. The predecessor's reference loco (below) is about 16k triangles at LOD0.

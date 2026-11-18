@@ -34,13 +34,30 @@ function shadowPixels(ground: Uint8Array, water: Uint8Array, mask?: Uint8Array):
   return n;
 }
 
+/** The darkest red value in the bottom row, which only the floor's shadow can reach here. */
+function darkestBackdrop(rgba: Uint8Array, width: number): number {
+  let low = 255;
+  for (let x = 0; x < width; x++) low = Math.min(low, rgba[rgba.length - (x + 1) * 4] ?? 255);
+  return low;
+}
+
+const RENDER_MS = 60_000;
+
 describe('water assets have no studio floor', () => {
-  it('the raster beauty casts no shadow', () => {
-    const size = { width: 160, height: 90 };
-    const ground = renderBeauty(slab('ground'), size);
-    const water = renderBeauty(slab('water'), size);
-    expect(shadowPixels(ground.rgba, water.rgba)).toBeGreaterThan(50);
-  });
+  it(
+    'the raster beauty casts no shadow',
+    () => {
+      const size = { width: 160, height: 90 };
+      const ground = renderBeauty(slab('ground'), size);
+      const water = renderBeauty(slab('water'), size);
+      expect(shadowPixels(ground.rgba, water.rgba)).toBeGreaterThan(50);
+      // Far from the asset both show the plain backdrop; under it only the ground render darkens.
+      expect(darkestBackdrop(water.rgba, water.width)).toBeGreaterThan(
+        darkestBackdrop(ground.rgba, ground.width) + 8,
+      );
+    },
+    RENDER_MS,
+  );
 
   it('the empty floor leaves every downward eye ray fully lit', () => {
     const cam = {
@@ -55,12 +72,16 @@ describe('water assets have no studio floor', () => {
     expect(floorLight(NO_FLOOR, cam, 0, 0)).toBe(1);
   });
 
-  it('the path-traced hero casts no shadow', () => {
-    const o = { width: 160, height: 90, spp: 8, denoise: false };
-    const ground = renderPath(slab('ground'), o);
-    const water = renderPath(slab('water'), o);
-    expect(shadowPixels(ground.rgba, water.rgba, water.mask)).toBeGreaterThan(50);
-    const noFloor = renderPath(slab('ground'), { ...o, floor: false });
-    expect(Buffer.compare(water.rgba, noFloor.rgba)).toBe(0);
-  });
+  it(
+    'the path-traced hero casts no shadow',
+    () => {
+      const o = { width: 160, height: 90, spp: 8, denoise: false };
+      const ground = renderPath(slab('ground'), o);
+      const water = renderPath(slab('water'), o);
+      expect(shadowPixels(ground.rgba, water.rgba, water.mask)).toBeGreaterThan(50);
+      const noFloor = renderPath(slab('ground'), { ...o, floor: false });
+      expect(Buffer.compare(water.rgba, noFloor.rgba)).toBe(0);
+    },
+    RENDER_MS,
+  );
 });

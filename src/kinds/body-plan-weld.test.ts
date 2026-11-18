@@ -128,6 +128,52 @@ describe('body-plan blend', () => {
     expect(at(0.95, 0).swept).toBeUndefined();
   });
 
+  /** Worst distance from `kit.surface` to the welded mesh, over filleted seats on mesh vertices. */
+  function seatError(l: ChainSpec): { worst: number; seats: number } {
+    const plan = bodyPlan(spec(l));
+    const mesh = bodyPlanPieces(plan, 0, look)[1]?.mesh as Mesh;
+    const at = chainSurface(plan, 'limb', look);
+    let [worst, seats] = [0, 0];
+    // Mesh rings: 12 per link over 3 even links; 40 sides.
+    for (let ring = 2; ring < 36; ring += 2)
+      for (let j = 0; j < 40; j += 3) {
+        const q = at(ring / 36, (j / 40) * Math.PI * 2);
+        if (!q.swept) continue;
+        let best = Number.POSITIVE_INFINITY;
+        for (let v = 0; v < mesh.positions.length / 3; v++) {
+          const m = point(mesh, v);
+          best = Math.min(best, Math.hypot(q.p[0] - m[0], q.p[1] - m[1], q.p[2] - m[2]));
+        }
+        worst = Math.max(worst, best);
+        seats++;
+      }
+    return { worst, seats };
+  }
+
+  it('seats on the welded vertices of a chain with varying relief', () => {
+    const relief = (q: { angle: number; u: number }): number =>
+      0.03 * Math.sin(5 * q.angle) * Math.cos(30 * q.u);
+    const { worst, seats } = seatError({ ...limb, blend: 0.12, relief });
+    expect(seats).toBeGreaterThan(20);
+    expect(worst).toBeLessThan(1e-4);
+  });
+
+  it('seats on the welded vertices of a chain with antiFold', () => {
+    const bent: ChainSpec = {
+      ...limb,
+      path: [
+        [0, 0, 1],
+        [0, 0, 1.3],
+        [0.1, 0, 1.42],
+        [0.3, 0, 1.5],
+      ],
+      radius: [0.15, 0.15, 0.15, 0.12],
+    };
+    const { worst, seats } = seatError({ ...bent, blend: 0.12, antiFold: true });
+    expect(seats).toBeGreaterThan(20);
+    expect(worst).toBeLessThan(1e-4);
+  });
+
   it('seats detail on the welded skin, not on the swept one under it', () => {
     const blended = bodyPlan(spec({ ...limb, blend: 0.12 }));
     const mesh = bodyPlanPieces(blended, 0, look)[1]?.mesh as Mesh;
