@@ -91,23 +91,37 @@ schedules:
   - name: release-due
     days: [wed]
     hours_utc: [3]
-    brief_file: .dz/briefs/release-due.md
+    brief_file: .dz/schedules/release-due.md
   # The one exception to the weekly slot: a confirmed security fix ships the same day.
   - name: security-release
     days: [mon, tue, thu, fri, sat, sun]
     hours_utc: [5]
-    brief_file: .dz/briefs/security-release.md
+    brief_file: .dz/schedules/security-release.md
   - name: health
     days: [mon, tue, wed, thu, fri, sat, sun]
     hours_utc: [7]
-    brief_file: .dz/briefs/health.md
+    brief_file: .dz/schedules/health.md
   # Monthly: the schema has weekdays, not days of the month, so these fire weekly and each brief
   # acts only in the first week of the month (UTC day 1-7).
   - name: improve
     days: [mon]
     hours_utc: [8]
-    brief_file: .dz/briefs/improve.md
+    brief_file: .dz/schedules/improve.md
   - name: cleanup
     days: [tue]
     hours_utc: [8]
-    brief_file: .dz/briefs/cleanup.md
+    brief_file: .dz/schedules/cleanup.md
+
+# Added by the developerz.ai maintainer agent: blocks from the current template this file did not have. Each states the value already in effect; edit it like any other key.
+
+# branches: on at 60 because this file exists. A branch with no new commit
+# this long is tagged archive/<branch>/<date> at its last commit, then deleted.
+# false keeps every branch. See /docs/maintainer-yml.
+branches:
+  close_inactive_after_days: 60
+
+# scout: the platform's daily survey of this repo files only what is already BROKEN
+# (red CI, failing tests, a security advisory, a broken build or link) — never an
+# improvement idea. `full` lets it file ideas too; `off` stops the survey.
+scout:
+  survey: broken_only
