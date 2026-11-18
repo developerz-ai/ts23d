@@ -76,6 +76,7 @@ export * from './define-part.ts';
 export { type ErrorCode, type ErrorDetails, notImplemented, Ts23dError } from './errors.ts';
 export { defineFamily, type Family, type FamilyDefinition, type Variant } from './family.ts';
 export { type JointFit, type JointIssue, jointFit } from './joint-fit.ts';
+export * from './limb-pairs.ts';
 export {
   type Bounds,
   boundsOf,

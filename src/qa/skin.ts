@@ -2,7 +2,7 @@
 // exactly 4 influences per vertex, weights finite, ≥ 0 and summing to 1 (± 1e-3: 0.98 fails),
 // joint indices inside the skeleton; the part sits where bones can move it (no moving pivot above
 // it); the bind pose reproduces the rest positions (≤ 1e-5 m). Over the asset: every bone drives
-// some vertex, and the bones fit `budget.bones`.
+// some vertex, and the bones fit `budget.bones`; no paw carries both legs' weights (skin-sides.ts).
 
 import {
   type Armature,
@@ -16,6 +16,7 @@ import {
   worldTransforms,
 } from '../core/index.ts';
 import { bindPoseError, inverseBind } from '../passes/index.ts';
+import { crossedLimbFindings } from './skin-sides.ts';
 import type { Finding, Gate } from './types.ts';
 
 /** Largest bind-pose drift from the rest positions, metres. */
@@ -140,6 +141,7 @@ export function skinFindings(asset: CompiledAsset, ibm?: Float32Array): Finding[
         'drop the bones, or weight the flesh they carry (the bone set of skinWeights `only`)',
       ),
     );
+  out.push(...crossedLimbFindings(asset));
   const bind = ibm ?? inverseBind(sk);
   const xf = worldTransforms(asset.parts);
   for (const p of skinned) {
