@@ -6,8 +6,11 @@
 //   t3d blender review <recipe.ts> --out <dir>            the module's `BLENDER_REVIEW` export
 //   t3d blender review --mesh <glb> --program <json> [--skeleton <json>] --out <dir>   any GLB
 // Flags: --views clay,wire,weights,poses,turnaround · --size <px> · --pose bone:axis:degrees
-// (repeatable) · --max-triangles <n> · --json. A program that already has review steps runs as
-// written. Needs Blender on this machine: without it T3D_NEURAL_FAILED names `t3d setup tools`.
+// (repeatable) · --max-triangles <n> · --scripts <dir> (or T3D_BLENDER_SCRIPTS: examples/blender of
+// a checkout, which npm does not ship) · --software-gpu (or T3D_BLENDER_SOFTWARE_GPU=1: render on
+// lavapipe, off the GPU) · --json. A program that already has review steps runs as written. Needs
+// Blender on this machine: without it T3D_NEURAL_FAILED names `t3d setup tools`. `t3d blender
+// session` (blender-session-cmd.ts) keeps one Blender open for chained work.
 
 import { mkdir } from 'node:fs/promises';
 import { dirname, isAbsolute, join, resolve } from 'node:path';
@@ -17,12 +20,18 @@ import {
   type BlenderStep,
   blenderAdapter,
   blenderProgram,
+  findLavapipe,
   jsonInput,
+  looksCrashed,
   type NeuralAdapter,
+  nodeExec,
+  REVIEW_CRASH_FIX,
   runJob,
   sha256Hex,
+  softwareGpuExec,
 } from '../neural/index.ts';
 import { type ReviewedSheet, reviewMarkdown } from './blender-review-md.ts';
+import { blenderSessionMain } from './blender-session-cmd.ts';
 import { usage } from './flags.ts';
 import { envelope, printError } from './report.ts';
 
@@ -55,12 +64,23 @@ interface Options {
   size?: number;
   maxTriangles: number;
   poses: BlenderPose[];
+  scripts?: string;
+  softwareGpu: boolean;
 }
 
 const VIEWS: readonly BlenderReviewView[] = ['clay', 'wire', 'weights', 'poses', 'turnaround'];
-const VALUED = ['--mesh', '--program', '--skeleton', '--out', '--views', '--size', '--pose'];
+const VALUED = [
+  '--mesh',
+  '--program',
+  '--skeleton',
+  '--out',
+  '--views',
+  '--size',
+  '--pose',
+  '--scripts',
+];
 const HOW =
-  't3d blender review <recipe.ts> --out <dir>, or --mesh <glb> --program <json> --out <dir>';
+  't3d blender review <recipe.ts> --out <dir>, or --mesh <glb> --program <json> --out <dir>; t3d blender session …';
 
 function pose(v: string): BlenderPose {
   const [bone, axis, degrees] = v.split(':');
@@ -71,17 +91,31 @@ function pose(v: string): BlenderPose {
 
 function options(argv: readonly string[]): Options {
   if (argv[0] !== 'review') throw usage(`unknown blender command "${argv[0] ?? ''}"`, `run ${HOW}`);
-  const o: Options = { out: 'review', maxTriangles: 10_000_000, poses: [] };
+  const scripts = process.env['T3D_BLENDER_SCRIPTS'];
+  const o: Options = {
+    out: 'review',
+    maxTriangles: 10_000_000,
+    poses: [],
+    softwareGpu: process.env['T3D_BLENDER_SOFTWARE_GPU'] === '1',
+    ...(scripts ? { scripts } : {}),
+  };
   for (let i = 1; i < argv.length; i++) {
     const a = argv[i] ?? '';
     if (a === '--json') continue;
+    if (a === '--software-gpu') {
+      o.softwareGpu = true;
+      continue;
+    }
     if (!a.startsWith('-')) {
       o.recipe = a;
       continue;
     }
     const v = argv[++i];
     if (![...VALUED, '--max-triangles'].includes(a))
-      throw usage(`unknown flag ${a} for t3d blender review`, `flags: ${VALUED.join(' ')} --json`);
+      throw usage(
+        `unknown flag ${a} for t3d blender review`,
+        `flags: ${VALUED.join(' ')} --software-gpu --json`,
+      );
     if (v === undefined || v.startsWith('--')) throw usage(`${a} needs a value`, `run ${HOW}`);
     if (a === '--views') {
       const views = v.split(',');
@@ -97,6 +131,7 @@ function options(argv: readonly string[]): Options {
     else if (a === '--mesh') o.mesh = v;
     else if (a === '--program') o.program = v;
     else if (a === '--skeleton') o.skeleton = v;
+    else if (a === '--scripts') o.scripts = v;
     else o.out = v;
   }
   if (o.recipe === undefined && (o.mesh === undefined || o.program === undefined))
@@ -172,11 +207,28 @@ export function withReview(
   return [...steps.slice(0, end), review, ...steps.slice(end)];
 }
 
+/** The adapter a review runs on: this CLI's scripts directory and software-GPU choice. */
+async function reviewAdapter(o: Options): Promise<NeuralAdapter> {
+  return blenderAdapter({
+    timeoutMs: 1_800_000,
+    ...(o.scripts ? { scriptsDir: o.scripts } : {}),
+    ...(o.softwareGpu ? { exec: softwareGpuExec(nodeExec, await findLavapipe()) } : {}),
+  });
+}
+
+/** A crash during a review is usually the missing graphics driver: say so. */
+function explainCrash(e: unknown): never {
+  if (e instanceof Ts23dError && e.code === 'T3D_NEURAL_FAILED' && looksCrashed(e.message))
+    throw new Ts23dError(e.code, { cause: e.message, fix: REVIEW_CRASH_FIX });
+  throw e;
+}
+
 export async function blenderReview(
   argv: readonly string[],
-  adapter: NeuralAdapter = blenderAdapter({ timeoutMs: 1_800_000 }),
+  given?: NeuralAdapter,
 ): Promise<BlenderReviewResult> {
   const o = options(argv);
+  const adapter = given ?? (await reviewAdapter(o));
   const spec = await specOf(o);
   const mesh = spec.mesh as Uint8Array;
   const program = blenderProgram(withReview(spec.steps, o));
@@ -199,7 +251,7 @@ export async function blenderReview(
       maxTriangles: o.maxTriangles,
     },
     inputs,
-  });
+  }).catch(explainCrash);
   const [, reportOut, ...pngs] = run.result.outputs;
   const report = JSON.parse(new TextDecoder().decode(reportOut?.bytes ?? new Uint8Array())) as {
     review?: ReviewedSheet[];
@@ -224,6 +276,7 @@ export async function blenderReview(
 }
 
 export async function blenderMain(argv: readonly string[], json: boolean): Promise<number> {
+  if (argv[0] === 'session') return blenderSessionMain(argv.slice(1), json);
   try {
     const r = await blenderReview(argv);
     if (json) envelope(true, r);

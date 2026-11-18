@@ -49,7 +49,13 @@ export function missingHeader(s: Source): Violation[] {
 }
 
 /** Env-var names that look like codes but are not errors. */
-export const ENV_NAMES: ReadonlySet<string> = new Set(['T3D_SHARD', 'T3D_UPDATE_GOLDEN']);
+export const ENV_NAMES: ReadonlySet<string> = new Set([
+  'T3D_BLENDER_SCRIPTS',
+  'T3D_BLENDER_SESSIONS',
+  'T3D_BLENDER_SOFTWARE_GPU',
+  'T3D_SHARD',
+  'T3D_UPDATE_GOLDEN',
+]);
 
 /** Codes documented before the code that raises them lands. Owner + reason per entry. */
 export const PENDING_CODES: Readonly<Record<string, string>> = {};

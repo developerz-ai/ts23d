@@ -2,8 +2,8 @@
 // (Rigify meta-rig → rig on a humanoid armature), `fracture` (Voronoi cells + rigid-body settle),
 // `groom` (guide curves on a scalp → child hair curves styled by an op list → lock cards),
 // `blender` (an ordered step program, blender-steps.ts: clean, remesh, deform, retopo, UV, bake,
-// bind, LODs → one GLB + a report). Not brush strokes: those need a viewport; everything
-// data-level (modifiers, remesh, bake, bone heat) runs with `-b`. Two ways to run the same GPL
+// bind, LODs → one GLB + a report). `stroke` brushes a mesh from numpy, so everything
+// runs with `-b` and no viewport (modifiers, remesh, bake, bone heat). Two ways to run the same GPL
 // scripts in examples/blender/:
 //   mode 'blender' (default): a user's Blender app,
 //     blender -b --factory-startup -noaudio -t 1 --python-exit-code 3 --python ts23d_job.py -- job.json
@@ -23,6 +23,7 @@ import {
   pickModel,
   taskResult,
 } from './adapter.ts';
+import { blenderJobArgs, blenderScriptsDir } from './blender-scripts.ts';
 import {
   checkProc,
   filesSha256,
@@ -35,6 +36,8 @@ import {
   writeBytes,
 } from './tool-spawn.ts';
 import { DEFAULT_MAX_BYTES, failed } from './wire.ts';
+
+export { blenderJobArgs, defaultScripts } from './blender-scripts.ts';
 
 export const BLENDER_TASKS = [
   'cloth',
@@ -61,8 +64,11 @@ export const BLENDER_STEP_FILES = [
   'retopo',
   'build',
   'deform',
+  'stroke',
+  'stroke_brush',
   'uv',
   'bake',
+  'bake_cage',
   'bake_source',
   'fill',
   'bind',
@@ -80,7 +86,8 @@ export interface BlenderAdapterOptions {
   /** Blender executable (mode 'blender') or a Python with bpy installed (mode 'bpy'). */
   readonly exe?: string;
   readonly mode?: 'blender' | 'bpy';
-  /** Directory holding ts23d_job.py and tasks/; default: this package's examples/blender. */
+  /** Directory holding ts23d_job.py and tasks/; default: examples/blender of a repository
+   *  checkout (the npm package does not ship the GPL scripts). */
   readonly scriptsDir?: string;
   /** Accept these major.minor lines too (recorded like any other). */
   readonly allowVersions?: readonly string[];
@@ -96,38 +103,6 @@ const EXT: Readonly<Record<string, string>> = {
   'image/png': 'png',
   'application/json': 'json',
 };
-
-/**
- * Arguments that run the dispatcher `entry` on `jobJson` (also used by scripts/vdm-from-blender).
- * `threads` is Blender's `-t` (0 = every core); the job repeats it for the bpy module.
- */
-export function blenderJobArgs(
-  mode: 'blender' | 'bpy',
-  entry: string,
-  jobJson: string,
-  threads = 1,
-): string[] {
-  if (mode === 'bpy') return ['-I', entry, '--', jobJson];
-  return [
-    '-b',
-    '--factory-startup',
-    '-noaudio',
-    '-t',
-    String(threads),
-    '--python-exit-code',
-    '3',
-    '--python',
-    entry,
-    '--',
-    jobJson,
-  ];
-}
-
-/** examples/blender of this package (ts23d_job.py + tasks/). */
-export async function defaultScripts(): Promise<string> {
-  const { fileURLToPath } = await import('node:url');
-  return fileURLToPath(new URL('../../examples/blender/', import.meta.url));
-}
 
 interface Report {
   readonly ok?: unknown;
@@ -152,8 +127,7 @@ export function blenderAdapter(o: BlenderAdapterOptions = {}): NeuralAdapter {
     maxBytes: 1 << 20,
     ...(cwd ? { cwd } : {}),
   });
-  const scripts = async (): Promise<string> =>
-    (o.scriptsDir ?? (await defaultScripts())).replace(/\/+$/, '');
+  const scripts = (): Promise<string> => blenderScriptsDir(o.scriptsDir);
   const scriptsOf = (dir: string, task: string): string[] => [
     `${dir}/ts23d_job.py`,
     `${dir}/tasks/common.py`,
@@ -164,6 +138,7 @@ export function blenderAdapter(o: BlenderAdapterOptions = {}): NeuralAdapter {
   let listed: Promise<readonly NeuralModelInfo[]> | undefined;
   const models = (): Promise<readonly NeuralModelInfo[]> => {
     listed ??= (async () => {
+      const dir = await scripts(); // before Blender starts: a missing directory needs no launch
       const args =
         mode === 'bpy'
           ? ['-I', '-c', "import bpy; print('Blender', bpy.app.version_string)"]
@@ -178,7 +153,6 @@ export function blenderAdapter(o: BlenderAdapterOptions = {}): NeuralAdapter {
           `Blender ${version} is not a supported line (${lines.join(', ')})`,
           `install Blender ${BLENDER_LTS.at(-1)} LTS (or pip install bpy==${BLENDER_LTS.at(-1)}.*), or pass allowVersions: ['${line}']`,
         );
-      const dir = await scripts();
       const out: NeuralModelInfo[] = [];
       for (const task of BLENDER_TASKS)
         out.push(

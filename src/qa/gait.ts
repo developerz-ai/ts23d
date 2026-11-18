@@ -4,12 +4,14 @@
 // motion applied, i.e. at the manifest's root speed: a planted foot (its toe within 3 mm of its
 // lowest point) may slide < 1 mm per frame (T3D_GAIT_FOOT_SLIDE) and no foot sinks more than
 // 2 mm below its rest height. Clips that stay in place have no ground speed to slide against;
-// there the SKIN of each foot may not dip more than 3 mm under the floor (gait-skin.ts).
+// there the SKIN of each foot may not dip more than 3 mm under the floor (gait-skin.ts). A foot
+// ends a limb (chain-bones.ts): a serpent's tail or a tentacle's tip lying low is not one, and a
+// water asset (`medium: 'water'`) has no feet at all; its loops are still checked.
 
 import type { Armature, Bone, Clip, CompiledAsset, Track, Vec3 } from '../core/index.ts';
 import { quatRotate } from '../core/index.ts';
+import { isLimb, LOW_SHARE, leafChains, MID_SUFFIX, skeletonTop } from './chain-bones.ts';
 import { clipPose, jointWorlds } from './clip-pose.ts';
-import { MID_SUFFIX } from './deform.ts';
 import { SKIN_SINK_LIMIT, type SoleSink, soleSinks } from './gait-skin.ts';
 import type { Finding, Gate } from './types.ts';
 
@@ -33,17 +35,23 @@ const finding = (code: string, message: string, fix: string): Finding => ({
   fix,
 });
 
-/** Feet: leaf bones (helpers `*_mid` aside) whose tail lies in the lowest 8 % of the skeleton. */
+/** Feet: leaf bones (helpers `*_mid` aside) in the lowest 8 % of the skeleton that end a limb. */
 export function feetOf(sk: Armature): Bone[] {
   const parents = new Set(sk.bones.map((b) => b.parent));
-  const top = Math.max(...sk.bones.map((b) => Math.max(b.head[2], b.tail[2])));
+  const top = skeletonTop(sk);
+  const runs = new Map(leafChains(sk).map((c) => [c.bones.at(-1)?.name, c]));
+  const limb = (b: Bone): boolean => {
+    const run = runs.get(b.name);
+    return !run || isLimb(run, top);
+  };
   // A tail's last bone is a low leaf too (a long tail rests on the ground): it is not a foot.
   return sk.bones.filter(
     (b) =>
       !parents.has(b.name) &&
       !b.name.endsWith(MID_SUFFIX) &&
       !/(^|_)tail_\d+$/.test(b.name) &&
-      b.tail[2] < top * 0.08,
+      b.tail[2] < top * LOW_SHARE &&
+      limb(b),
   );
 }
 
@@ -166,7 +174,7 @@ export function gaitFindings(asset: CompiledAsset): Finding[] {
   const clips = asset.clips ?? [];
   if (!sk || clips.length === 0) return [];
   const roots = new Set(sk.bones.filter((b) => b.parent === undefined).map((b) => b.name));
-  const feet = feetOf(sk);
+  const feet = asset.medium === 'water' ? [] : feetOf(sk);
   const still = feet.length ? clips.filter((c) => !travels(c, roots)) : [];
   const sinks = still.length ? soleSinks(asset, sk, feet, still) : new Map();
   return clips.flatMap((c) => [

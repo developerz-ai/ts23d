@@ -17,6 +17,16 @@ export interface FloorGrid {
 
 const UP = [0, 0, 1];
 
+/** No floor (an asset in water): every eye ray misses the empty grid, so nothing is shadowed. */
+export const NO_FLOOR: FloorGrid = {
+  z: 0,
+  x0: 0,
+  y0: 0,
+  cell: 1,
+  size: 0,
+  light: new Float32Array(0),
+};
+
 export function floorGrid(c: ShadeContext, size: number): FloorGrid {
   const s = c.scene;
   const z = s.min[2];

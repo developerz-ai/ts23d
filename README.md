@@ -390,7 +390,7 @@ Stop when two consecutive shots show nothing worth fixing. Never use Math.random
 5. `bunx -p @developerz.ai/ts23d t3d review …`: read `review/*.png`, follow `review.md`. Then `bunx -p @developerz.ai/ts23d t3d critique …`.
 6. Add LOD-gated detail; stop when two looks in a row find nothing worth fixing.
 
-**Skills ship in the package as plain markdown**: `node_modules/@developerz.ai/ts23d/.claude/skills/<skill>/SKILL.md`: `author-recipe` (the loop) and the artist workflows (`creature-artist`, `character-artist`, `hard-surface-artist`, `architect`, `prop-artist`, `rigger-animator`, `technical-artist`, …). Read them in place, or copy one into your agent's skills folder.
+**Skills ship in the package as plain markdown**: `node_modules/@developerz.ai/ts23d/.claude/skills/<skill>/SKILL.md`: `author-recipe` (the loop) and the artist workflows (`creature-artist`, `character-artist`, `hard-surface-artist`, `architect`, `prop-artist`, `rigger-animator`, `technical-artist`, `blender-artist`, …). Read them in place, or copy one into your agent's skills folder.
 
 **Optional: MCP server.** `t3d mcp` serves the same steps over stdio (MCP 2025-06-18) as tools: `build`, `shot`, `hero`, `blueprint`, `review`, `critique`, `list_recipes`, `explain_error`. Renders come back as images the agent sees inline (downscaled to 1024 px; extra review images listed by path). Tools read and write only inside the project root and its output folder (`--root`, `--out`); errors come back as `T3D_*` code + fix and the server stays up.
 
@@ -437,6 +437,7 @@ As of 2026-11. All CPU, deterministic, no model needed unless stated.
 | `t3d hero --quality path` | Deterministic CPU path-traced beauty render (subsurface skin, hair lobes, denoise); slower than the raster default |
 | `t3d finish --hero` | Hero texture tier: bakes normal, AO, height and ORM from the sculpt field onto a lighter LOD0 ([ADR 012](docs/decisions/012-hero-texture-tier.md)) |
 | `t3d concept <recipe.ts\|brief.md>` | Silhouette sheet and concept images from the configured image model (needs an `image` adapter); prompts and seeds land in `concept.ts` |
+| `t3d blender session start --mesh <glb>` | Keeps one Blender open: `run <batch.json>` chains steps, `undo` goes back a batch, `finish --out <program.json>` writes the steps for a clean `t3d neural run` replay, `stop` ends it |
 | `t3d blender review <recipe.ts> --out <dir>` | Runs the recipe's Blender step program with a review step and writes clay, wire, weights, poses and turnaround PNGs plus `review.md` (needs Blender; `t3d setup tools`; never cached, never in a build); or `--mesh <glb> --program <json>` |
 | `t3d neural run --allow-bad-input` | Sends `mesh` input images that fail the input-image rules anyway; the override is recorded in `record.json` |
 

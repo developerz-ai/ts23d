@@ -13,7 +13,7 @@ Status as of 2026-11:
 | Vessel | `hull` / `hullMesh` / `hullLines` | Shipped |
 | Vegetation | `tree`, `trees` family, `treeReal`; presets `oak`, `pine`, `palm`, `birch`, `willow` | Shipped |
 | Character | `head` (orc, goblin, human, dwarf, elf via `HEADS`), `headParams`, `headEdits`, `checkHead` | Shipped (stylised busts) |
-| Creature | `creature`, `defineCreature`, `creaturePlan`, `checkCreature`, `creatureCreases`, `biology` | Shipped (quadruped, winged, biped, bird, fish, serpent); hybrids, exoskeletons, ethereals planned (M4) |
+| Creature | `creature`, `defineCreature`, `creaturePlan`, `checkCreature`, `creatureCreases`, `biology` | Shipped (quadruped, winged, biped, bird, fish, serpent; fish and serpent have no swim or slither clips: use `defineBodyPlan`); hybrids, exoskeletons, ethereals planned (M4) |
 | Scene | `ctx.use` (core), `heightfield` terrain with erosion and `terrainColor` | Shipped |
 | Families | `defineFamily` (core): variants of any kind | Shipped |
 

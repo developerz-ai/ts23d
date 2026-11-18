@@ -14,6 +14,8 @@ import {
 } from '../core/index.ts';
 import { skinWeights, weightBonesOf } from '../passes/index.ts';
 import { box, cylinder } from '../primitives/index.ts';
+import { chainCross } from './chain-cross.ts';
+import { radial, rigged, swimmer, swing } from './chain-fixtures.ts';
 import { clashes } from './clash.ts';
 import { connections } from './connections.ts';
 import { deform } from './deform.ts';
@@ -30,6 +32,7 @@ import { arm, rig, smooth, walk } from './motion-fixtures.ts';
 import { hiddenParts } from './occlusion.ts';
 import { degenerateTriangles, nonFinite, normalsMatchWinding, vertexColors } from './sanity.ts';
 import { skin } from './skin.ts';
+import { swim } from './swim.ts';
 import { treads } from './treads.ts';
 import type { Finding, Gate } from './types.ts';
 import { weatherGate } from './weather.ts';
@@ -210,6 +213,8 @@ const FAILING: ReadonlyArray<readonly [Gate, () => CompiledAsset]> = [
   ],
   [deform, () => arm(150, smooth)],
   [gait, () => rig(walk(0.3))],
+  [swim, () => swimmer({ stride: 0.3 })],
+  [chainCross, () => rigged(radial(2, 5).bones, [swing('arm_0_0', [0, 0, 1], 180)])],
   [
     model,
     () =>

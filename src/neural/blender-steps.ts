@@ -10,6 +10,7 @@ import type { NeuralInput, Vec3 } from '../core/index.ts';
 import { canonicalJson } from './adapter.ts';
 import { normaliseStep } from './blender-step-fields.ts';
 import { checkOrder } from './blender-step-order.ts';
+import type { BlenderStrokeStep } from './blender-step-stroke.ts';
 import { sha256Hex } from './sha256.ts';
 
 export const BLENDER_STEPS_CONTRACT = 't3d-blender-steps/1';
@@ -124,6 +125,7 @@ export type BlenderStep =
     }
   /** Move vertices `distance` metres along their normals (negative shrinks). */
   | { readonly op: 'inflate'; readonly distance: number; readonly mask?: BlenderMask }
+  | BlenderStrokeStep
   /** Build a body with no input mesh: a Skin modifier over bone segments (radius r0 → r1). */
   | {
       readonly op: 'skinBody';
@@ -191,6 +193,9 @@ export type BlenderStep =
       readonly samples?: number;
       readonly aoSamples?: number;
       readonly margin?: number;
+      /** Limit the cage per vertex to 0.45 × the gap to the next wall outward, so a finger does
+       *  not bake its neighbour. Absent: the flat cage. */
+      readonly cageFit?: boolean;
     }
   /** Skin the shell. `from` 'skeleton' (default): to the request's skeleton, by bone heat, else a
    *  voxel proxy + weight transfer. 'source': the input GLB is already rigged (a Meshy humanoid):

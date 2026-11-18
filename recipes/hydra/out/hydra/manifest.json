@@ -1,0 +1,715 @@
+{
+  "name": "hydra",
+  "kind": "creature",
+  "description": "Original five-necked reptile on four legs: heavy monitor-lizard body, crocodilian belly scutes, five distinct horned heads with jaws and teeth.",
+  "tags": [
+    "creature",
+    "fantasy",
+    "reptile",
+    "hydra",
+    "many-necked",
+    "body-plan"
+  ],
+  "lods": [
+    0,
+    1,
+    2
+  ],
+  "files": {
+    "lods": [],
+    "sheet": "sheet.png",
+    "thumb": "thumb.png"
+  },
+  "triangles": [
+    348404,
+    38821,
+    7162
+  ],
+  "drawCalls": [
+    2,
+    2,
+    2
+  ],
+  "pivots": [
+    {
+      "name": "body",
+      "parent": null
+    },
+    {
+      "name": "body_paint_skin",
+      "parent": null
+    }
+  ],
+  "emitters": [],
+  "sockets": [],
+  "surfaces": [
+    "opaque"
+  ],
+  "skeleton": [
+    {
+      "name": "body_0",
+      "parent": null
+    },
+    {
+      "name": "body_1",
+      "parent": "body_0"
+    },
+    {
+      "name": "body_2",
+      "parent": "body_1"
+    },
+    {
+      "name": "body_3",
+      "parent": "body_2"
+    },
+    {
+      "name": "body_4",
+      "parent": "body_3"
+    },
+    {
+      "name": "body_5",
+      "parent": "body_4"
+    },
+    {
+      "name": "tail_0",
+      "parent": "body_5"
+    },
+    {
+      "name": "tail_1",
+      "parent": "tail_0"
+    },
+    {
+      "name": "tail_2",
+      "parent": "tail_1"
+    },
+    {
+      "name": "tail_3",
+      "parent": "tail_2"
+    },
+    {
+      "name": "tail_4",
+      "parent": "tail_3"
+    },
+    {
+      "name": "tail_5",
+      "parent": "tail_4"
+    },
+    {
+      "name": "tail_6",
+      "parent": "tail_5"
+    },
+    {
+      "name": "tail_7",
+      "parent": "tail_6"
+    },
+    {
+      "name": "tail_8",
+      "parent": "tail_7"
+    },
+    {
+      "name": "tail_9",
+      "parent": "tail_8"
+    },
+    {
+      "name": "tail_10",
+      "parent": "tail_9"
+    },
+    {
+      "name": "tail_11",
+      "parent": "tail_10"
+    },
+    {
+      "name": "fore_l_0",
+      "parent": "body_1"
+    },
+    {
+      "name": "fore_l_1",
+      "parent": "fore_l_0"
+    },
+    {
+      "name": "fore_l_2",
+      "parent": "fore_l_1"
+    },
+    {
+      "name": "fore_r_0",
+      "parent": "body_1"
+    },
+    {
+      "name": "fore_r_1",
+      "parent": "fore_r_0"
+    },
+    {
+      "name": "fore_r_2",
+      "parent": "fore_r_1"
+    },
+    {
+      "name": "hind_l_0",
+      "parent": "body_4"
+    },
+    {
+      "name": "hind_l_1",
+      "parent": "hind_l_0"
+    },
+    {
+      "name": "hind_l_2",
+      "parent": "hind_l_1"
+    },
+    {
+      "name": "hind_r_0",
+      "parent": "body_4"
+    },
+    {
+      "name": "hind_r_1",
+      "parent": "hind_r_0"
+    },
+    {
+      "name": "hind_r_2",
+      "parent": "hind_r_1"
+    },
+    {
+      "name": "neck_0_0",
+      "parent": "body_1"
+    },
+    {
+      "name": "neck_0_1",
+      "parent": "neck_0_0"
+    },
+    {
+      "name": "neck_0_2",
+      "parent": "neck_0_1"
+    },
+    {
+      "name": "neck_0_3",
+      "parent": "neck_0_2"
+    },
+    {
+      "name": "neck_0_4",
+      "parent": "neck_0_3"
+    },
+    {
+      "name": "neck_0_5",
+      "parent": "neck_0_4"
+    },
+    {
+      "name": "neck_0_6",
+      "parent": "neck_0_5"
+    },
+    {
+      "name": "neck_0_7",
+      "parent": "neck_0_6"
+    },
+    {
+      "name": "neck_0_8",
+      "parent": "neck_0_7"
+    },
+    {
+      "name": "neck_0_9",
+      "parent": "neck_0_8"
+    },
+    {
+      "name": "neck_1_0",
+      "parent": "body_1"
+    },
+    {
+      "name": "neck_1_1",
+      "parent": "neck_1_0"
+    },
+    {
+      "name": "neck_1_2",
+      "parent": "neck_1_1"
+    },
+    {
+      "name": "neck_1_3",
+      "parent": "neck_1_2"
+    },
+    {
+      "name": "neck_1_4",
+      "parent": "neck_1_3"
+    },
+    {
+      "name": "neck_1_5",
+      "parent": "neck_1_4"
+    },
+    {
+      "name": "neck_1_6",
+      "parent": "neck_1_5"
+    },
+    {
+      "name": "neck_1_7",
+      "parent": "neck_1_6"
+    },
+    {
+      "name": "neck_1_8",
+      "parent": "neck_1_7"
+    },
+    {
+      "name": "neck_1_9",
+      "parent": "neck_1_8"
+    },
+    {
+      "name": "neck_2_0",
+      "parent": "body_1"
+    },
+    {
+      "name": "neck_2_1",
+      "parent": "neck_2_0"
+    },
+    {
+      "name": "neck_2_2",
+      "parent": "neck_2_1"
+    },
+    {
+      "name": "neck_2_3",
+      "parent": "neck_2_2"
+    },
+    {
+      "name": "neck_2_4",
+      "parent": "neck_2_3"
+    },
+    {
+      "name": "neck_2_5",
+      "parent": "neck_2_4"
+    },
+    {
+      "name": "neck_2_6",
+      "parent": "neck_2_5"
+    },
+    {
+      "name": "neck_2_7",
+      "parent": "neck_2_6"
+    },
+    {
+      "name": "neck_2_8",
+      "parent": "neck_2_7"
+    },
+    {
+      "name": "neck_2_9",
+      "parent": "neck_2_8"
+    },
+    {
+      "name": "neck_3_0",
+      "parent": "body_1"
+    },
+    {
+      "name": "neck_3_1",
+      "parent": "neck_3_0"
+    },
+    {
+      "name": "neck_3_2",
+      "parent": "neck_3_1"
+    },
+    {
+      "name": "neck_3_3",
+      "parent": "neck_3_2"
+    },
+    {
+      "name": "neck_3_4",
+      "parent": "neck_3_3"
+    },
+    {
+      "name": "neck_3_5",
+      "parent": "neck_3_4"
+    },
+    {
+      "name": "neck_3_6",
+      "parent": "neck_3_5"
+    },
+    {
+      "name": "neck_3_7",
+      "parent": "neck_3_6"
+    },
+    {
+      "name": "neck_3_8",
+      "parent": "neck_3_7"
+    },
+    {
+      "name": "neck_3_9",
+      "parent": "neck_3_8"
+    },
+    {
+      "name": "neck_4_0",
+      "parent": "body_1"
+    },
+    {
+      "name": "neck_4_1",
+      "parent": "neck_4_0"
+    },
+    {
+      "name": "neck_4_2",
+      "parent": "neck_4_1"
+    },
+    {
+      "name": "neck_4_3",
+      "parent": "neck_4_2"
+    },
+    {
+      "name": "neck_4_4",
+      "parent": "neck_4_3"
+    },
+    {
+      "name": "neck_4_5",
+      "parent": "neck_4_4"
+    },
+    {
+      "name": "neck_4_6",
+      "parent": "neck_4_5"
+    },
+    {
+      "name": "neck_4_7",
+      "parent": "neck_4_6"
+    },
+    {
+      "name": "neck_4_8",
+      "parent": "neck_4_7"
+    },
+    {
+      "name": "neck_4_9",
+      "parent": "neck_4_8"
+    },
+    {
+      "name": "head_0_0",
+      "parent": "neck_0_9"
+    },
+    {
+      "name": "head_1_0",
+      "parent": "neck_1_9"
+    },
+    {
+      "name": "head_2_0",
+      "parent": "neck_2_9"
+    },
+    {
+      "name": "head_3_0",
+      "parent": "neck_3_9"
+    },
+    {
+      "name": "head_4_0",
+      "parent": "neck_4_9"
+    },
+    {
+      "name": "jaw_0_0",
+      "parent": "head_0_0"
+    },
+    {
+      "name": "jaw_1_0",
+      "parent": "head_1_0"
+    },
+    {
+      "name": "jaw_2_0",
+      "parent": "head_2_0"
+    },
+    {
+      "name": "jaw_3_0",
+      "parent": "head_3_0"
+    },
+    {
+      "name": "jaw_4_0",
+      "parent": "head_4_0"
+    }
+  ],
+  "clips": [
+    {
+      "name": "idle",
+      "seconds": 8,
+      "loop": true,
+      "speed": 0
+    },
+    {
+      "name": "strike_0",
+      "seconds": 1.4498733885096908,
+      "loop": false,
+      "speed": 0.0092
+    },
+    {
+      "name": "strike_1",
+      "seconds": 1.5073082633334702,
+      "loop": false,
+      "speed": 0.0077
+    },
+    {
+      "name": "strike_2",
+      "seconds": 1.5145579406522391,
+      "loop": false,
+      "speed": 0.0076
+    },
+    {
+      "name": "strike_3",
+      "seconds": 1.470499880636714,
+      "loop": false,
+      "speed": 0.0079
+    },
+    {
+      "name": "strike_4",
+      "seconds": 1.4517784118931751,
+      "loop": false,
+      "speed": 0.0095
+    }
+  ],
+  "hitboxes": [
+    {
+      "bone": "body_0",
+      "radius": 0.164136,
+      "height": 0,
+      "coverage": 1
+    },
+    {
+      "bone": "body_1",
+      "radius": 0.53903,
+      "height": 0.302782,
+      "coverage": 0.9682
+    },
+    {
+      "bone": "body_4",
+      "radius": 0.576456,
+      "height": 0.185879,
+      "coverage": 0.9603
+    },
+    {
+      "bone": "body_5",
+      "radius": 0.397349,
+      "height": 0,
+      "coverage": 0.9966
+    },
+    {
+      "bone": "tail_6",
+      "radius": 0.03439,
+      "height": 0.028965,
+      "coverage": 0.963
+    },
+    {
+      "bone": "tail_7",
+      "radius": 0.068826,
+      "height": 0.077456,
+      "coverage": 0.9535
+    },
+    {
+      "bone": "tail_8",
+      "radius": 0.122787,
+      "height": 0,
+      "coverage": 1
+    },
+    {
+      "bone": "tail_9",
+      "radius": 0.070733,
+      "height": 0.038536,
+      "coverage": 1
+    },
+    {
+      "bone": "tail_10",
+      "radius": 0.0468,
+      "height": 0.083547,
+      "coverage": 0.9903
+    },
+    {
+      "bone": "tail_11",
+      "radius": 0.026768,
+      "height": 0.104835,
+      "coverage": 0.9607
+    },
+    {
+      "bone": "fore_l_1",
+      "radius": 0.138039,
+      "height": 0.060491,
+      "coverage": 0.9635
+    },
+    {
+      "bone": "fore_l_2",
+      "radius": 0.299901,
+      "height": 0.420246,
+      "coverage": 0.956
+    },
+    {
+      "bone": "fore_r_1",
+      "radius": 0.138039,
+      "height": 0.060491,
+      "coverage": 0.9635
+    },
+    {
+      "bone": "fore_r_2",
+      "radius": 0.299791,
+      "height": 0.416387,
+      "coverage": 0.9558
+    },
+    {
+      "bone": "hind_l_0",
+      "radius": 0.330903,
+      "height": 0,
+      "coverage": 0.9638
+    },
+    {
+      "bone": "hind_l_1",
+      "radius": 0.092239,
+      "height": 0.059744,
+      "coverage": 0.9709
+    },
+    {
+      "bone": "hind_l_2",
+      "radius": 0.399246,
+      "height": 0.179404,
+      "coverage": 0.9577
+    },
+    {
+      "bone": "hind_r_0",
+      "radius": 0.329304,
+      "height": 0,
+      "coverage": 0.9595
+    },
+    {
+      "bone": "hind_r_1",
+      "radius": 0.092239,
+      "height": 0.059744,
+      "coverage": 0.9709
+    },
+    {
+      "bone": "hind_r_2",
+      "radius": 0.399823,
+      "height": 0.184163,
+      "coverage": 0.9583
+    },
+    {
+      "bone": "neck_0_0",
+      "radius": 0.226179,
+      "height": 0,
+      "coverage": 0.9845
+    },
+    {
+      "bone": "neck_0_9",
+      "radius": 0.143074,
+      "height": 0.066677,
+      "coverage": 0.9869
+    },
+    {
+      "bone": "neck_1_7",
+      "radius": 0.065529,
+      "height": 0.071871,
+      "coverage": 0.9506
+    },
+    {
+      "bone": "neck_1_9",
+      "radius": 0.144613,
+      "height": 0.064257,
+      "coverage": 0.9935
+    },
+    {
+      "bone": "neck_2_7",
+      "radius": 0.06748,
+      "height": 0.074129,
+      "coverage": 0.9506
+    },
+    {
+      "bone": "neck_2_9",
+      "radius": 0.14495,
+      "height": 0.078431,
+      "coverage": 0.9935
+    },
+    {
+      "bone": "neck_3_7",
+      "radius": 0.064404,
+      "height": 0.070647,
+      "coverage": 0.9506
+    },
+    {
+      "bone": "neck_3_9",
+      "radius": 0.144539,
+      "height": 0.061721,
+      "coverage": 0.9918
+    },
+    {
+      "bone": "neck_4_0",
+      "radius": 0.193708,
+      "height": 0,
+      "coverage": 0.9646
+    },
+    {
+      "bone": "neck_4_7",
+      "radius": 0.067557,
+      "height": 0.069171,
+      "coverage": 0.9506
+    },
+    {
+      "bone": "neck_4_9",
+      "radius": 0.143061,
+      "height": 0.068763,
+      "coverage": 0.9869
+    },
+    {
+      "bone": "head_0_0",
+      "radius": 0.207457,
+      "height": 0.83992,
+      "coverage": 0.95
+    },
+    {
+      "bone": "head_1_0",
+      "radius": 0.186538,
+      "height": 0.549424,
+      "coverage": 0.9582
+    },
+    {
+      "bone": "head_2_0",
+      "radius": 0.233298,
+      "height": 0.491469,
+      "coverage": 0.955
+    },
+    {
+      "bone": "head_3_0",
+      "radius": 0.245733,
+      "height": 0.508315,
+      "coverage": 0.9521
+    },
+    {
+      "bone": "head_4_0",
+      "radius": 0.254167,
+      "height": 0.49024,
+      "coverage": 0.9601
+    },
+    {
+      "bone": "jaw_0_0",
+      "radius": 0.139472,
+      "height": 0.42571,
+      "coverage": 0.9862
+    },
+    {
+      "bone": "jaw_1_0",
+      "radius": 0.13341,
+      "height": 0.483239,
+      "coverage": 0.9971
+    },
+    {
+      "bone": "jaw_2_0",
+      "radius": 0.146599,
+      "height": 0.44826,
+      "coverage": 0.9905
+    },
+    {
+      "bone": "jaw_3_0",
+      "radius": 0.150816,
+      "height": 0.382376,
+      "coverage": 0.9883
+    },
+    {
+      "bone": "jaw_4_0",
+      "radius": 0.137328,
+      "height": 0.445024,
+      "coverage": 0.9838
+    }
+  ],
+  "paint": {
+    "skin": "#ffffff"
+  },
+  "real": {
+    "length": 7.71,
+    "width": 5.16,
+    "height": 4.24
+  },
+  "measures": [],
+  "sources": [
+    "https://en.wikipedia.org/wiki/Komodo_dragon",
+    "https://en.wikipedia.org/wiki/Giraffe",
+    "https://biodiversityadvisor.sanbi.org/search/detail/80956",
+    "https://commons.wikimedia.org/wiki/Category:Varanus_komodoensis"
+  ],
+  "qa": {
+    "pass": true,
+    "findings": []
+  }
+}

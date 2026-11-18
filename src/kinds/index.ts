@@ -1,7 +1,41 @@
 // Public API of /kinds: domain builders (buildings, vehicles, vessels, vegetation, creatures) recipes
 // compose.
 
+export { bodyPlan } from './body-plan.ts';
+export {
+  type BodyPlanColours,
+  type BodyPlanDefinition,
+  type BodyPlanKit,
+  defineBodyPlan,
+} from './body-plan-asset.ts';
+export type {
+  BodyPlan,
+  BodyPlanSpec,
+  ChainRepeat,
+  ChainSpec,
+  PlanChain,
+  PlanLink,
+  SurfacePoint,
+} from './body-plan-types.ts';
 export { type FacadeOptions, facade, type SetbackTier, type Side, setbacks } from './building.ts';
+export { bakeChainClip, type ChainClipSpec, type ChainDrive, loopLength } from './chain-bake.ts';
+export {
+  bendPulse,
+  ds21Envelope,
+  expEnvelope,
+  followPath,
+  hingeGroups,
+  orthogonalWaves,
+  serpenoid,
+  travellingWave,
+} from './chain-drivers.ts';
+export {
+  type ChainField,
+  fadeField,
+  MAX_JOINT_TWIST,
+  poseChain,
+  sumFields,
+} from './chain-field.ts';
 export {
   type CityInfo,
   type CityInstance,
@@ -161,7 +195,9 @@ export { MIRROR_LIMIT, type MirrorResidual, mirrorResidual } from './model-mirro
 export { REPOSE_LIMIT, type ReposeTarget, reposeTarget } from './model-repose.ts';
 export { type ModelRig, type ModelRigOptions, modelRig } from './model-rig.ts';
 export { type FittedSkeleton, fitSkeleton, type JointResidual } from './model-skeleton.ts';
+export { type HydraOptions, hydraClips } from './neck-clips.ts';
 export { type OpeningOptions, type OpeningSide, opening } from './openings.ts';
+export { PULSE_PRESETS, type PulseSpec, radialPulseClip } from './radial-pulse.ts';
 export { type RoofInfo, type RoofMeshOptions, roof, roofInfo, roofMesh } from './roof.ts';
 export type { RoofChimney } from './roof-chimney.ts';
 export {
@@ -171,7 +207,11 @@ export {
   ridgeHeight,
   roofHeightAt,
 } from './roof-shape.ts';
+export { type SnakeOptions, snakeClips } from './snake-clips.ts';
 export { bakeSprings } from './springs.ts';
+export { type SwimOptions, swimClips } from './swim-clips.ts';
+export { SWIM_PRESETS, type SwimParams, type SwimPreset } from './swim-presets.ts';
+export { type OctopusOptions, octopusClips } from './tentacle-clips.ts';
 export { tread } from './tread.ts';
 export {
   type TreeFamilyParams,

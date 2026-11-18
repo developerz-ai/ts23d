@@ -1,0 +1,65 @@
+# hydra: an original five-necked reptile (design dossier)
+
+## Brief
+A large ground predator that never existed: a heavy monitor-lizard body carried on four weight-bearing
+legs, a long counterbalancing tail, and five long necks rising in a fan from one broad shoulder girdle.
+It is an **original design**, built from the anatomy of real animals; it copies no game, film, book or
+existing character. Function first: the necks are what let a low, heavy body hunt in five directions,
+so the body stays planted and the heads do the work.
+
+## Borrowed anatomy
+| Part | Animal | What is taken | Number used | Source |
+|---|---|---|---|---|
+| Trunk and sprawling-to-semi-erect stance, heavy limbs | Komodo dragon (*Varanus komodoensis*) | low heavy trunk, five clawed toes, tail as a counterbalance | tail about as long as the body | [Wikipedia: Komodo dragon](https://en.wikipedia.org/wiki/Komodo_dragon) ("a tail as long as its body") |
+| Tail share | Nile crocodile (*Crocodylus niloticus*) | laterally strong tail near half of total length | 40 to 50 % across sources; this design 53 % of trunk + tail (a little over, on purpose: it balances five necks) | [SANBI](https://biodiversityadvisor.sanbi.org/search/detail/80956) (40 %), [A-Z Animals](https://a-z-animals.com/animals/nile-crocodile/) (about 48 to 50 %, computed from its figures) |
+| Skull: long snout, brow, belly scutes | Nile crocodile | head length about 0.14 of total length in the living animal | not applied to this body: here each head serves one long neck, see below | [Warner 2015, KZN thesis](https://researchspace.ukzn.ac.za/bitstream/10413/13305/1/Warner_Jonathan_K._2015.pdf) (search excerpt only, not opened) |
+| Neck length | Giraffe (*Giraffa*) | the longest neck on a living land animal | up to 2.4 m; necks here 2.8 to 3.2 m along the arc, a deliberate 15 to 30 % past it | [Wikipedia: Giraffe](https://en.wikipedia.org/wiki/Giraffe) |
+| Neck bone count | *Mamenchisaurus* | many cervicals give a believable bend | 19 cervicals; 10 bones per neck here, each standing for about two (plus a head and a jaw bone) | `docs/research/swim-and-tentacle-animation.md` section 3 [TW13] |
+| Neck flexibility | Ostrich | per-joint limits, stiff base and flexible middle | dorsal up to 25.6 degrees per vertebra | same document [C13] |
+| Teeth | Komodo dragon | serrated, recurved, about 60 teeth | teeth up to 2.5 cm in the real animal; this animal is scaled up, so its teeth are longer (design) | Wikipedia: Komodo dragon |
+| Strike | Snakes | acceleration limit | mean about 190 m/s² | same document [P16] |
+
+Claw length, osteoderm size, horn and crest shapes have no borrowed number: they are design values.
+
+## Scale (design, metres; +X front, Z up)
+| Dimension | Value |
+|---|---|
+| Trunk, chest to hip, along the spine | 2.9 |
+| Tail along its curve | 3.3 |
+| Back height at the shoulder | about 1.5 |
+| Neck arcs | 2.8 to 3.2 |
+| Head length (occiput to snout) | about 0.7 |
+Overall `real` is the model's measured box: it pins the design so later edits cannot drift. It is
+not a measurement of any animal.
+
+## Shape language
+Heavy, low, wide body; five necks as a fan of S-curves, each with its own height and reach so the
+silhouette is a hand, not a comb. Each head differs: swept horns, a nose horn with brow spikes, a
+sagittal crest, a spiked frill, curled horns. Dorsal spines and osteoderms run head to tail.
+
+## Motion (clips from `hydraClips`; every timing is a design value, doc section 3)
+`idle`: each head looks about on its own loop, one attending at a time. `strike_<k>`: wind-up in the
+neck's own plane, strike at the snake acceleration bound, body recoil opposite, jaw snapping shut,
+feet locked. Necks keep their order and stay out of each other (QA `chain-cross`).
+
+## Photos (linked, never committed)
+| View | Link |
+|---|---|
+| Komodo dragon, whole body, walking | <https://commons.wikimedia.org/wiki/File:Komodo_dragon_walking.JPG> |
+| Komodo dragon, category | <https://commons.wikimedia.org/wiki/Category:Varanus_komodoensis> |
+| Nile crocodile, category | <https://commons.wikimedia.org/wiki/Category:Crocodylus_niloticus> |
+| Giraffe necks | <https://commons.wikimedia.org/wiki/Category:Giraffa> |
+
+File and category titles were read from Commons listings or chosen by name; the images were not
+opened by the agent.
+
+## Declared creases
+Every seam QA finds on this body is either fixed in the geometry or named here, in a region that is
+small next to the piece it sits on (`creases` in `anatomy.ts` and `head.ts`, 14 cm radius at most):
+the fold behind each hind knee, the groove at the top of the left hip, the fold on the inside of each
+neck's first bend, nostril rims, the groove between horn roots, and the webbing between grown spikes.
+The neck folds are the least satisfying of these: they are geometry that could still improve.
+
+## Parts the engine needs
+`body` (trunk, tail, legs, necks), `heads`, `jaws`, `eyes`, `teeth`, `horns`, `feet`, `claws`,
+`spines`. Bones: `body_*`, `tail_*`, `fore_l_*`, `hind_r_*`, `neck_<k>_*`, `head_<k>_0`, `jaw_<k>_0`.

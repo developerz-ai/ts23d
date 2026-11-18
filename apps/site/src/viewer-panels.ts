@@ -56,6 +56,18 @@ export function renderStats(
   );
 }
 
+/** The stats line and the parts list of a build; hovering a part calls `highlight`. */
+export function renderBuild(
+  ui: { readonly stats: HTMLElement; readonly parts: HTMLOListElement },
+  b: BuildResult,
+  emitters: number,
+  sets: readonly TextureSetInfo[],
+  highlight: (name: string | null) => void,
+): void {
+  renderStats(ui.stats, b, emitters, sets);
+  renderParts(ui.parts, b.parts, highlight);
+}
+
 export function renderParts(
   target: HTMLOListElement,
   parts: readonly PartInfo[],

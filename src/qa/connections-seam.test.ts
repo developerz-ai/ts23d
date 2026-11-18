@@ -9,8 +9,9 @@ import {
   type PartOptions,
   type Vec3,
 } from '../core/index.ts';
-import { sd, sdf } from '../primitives/index.ts';
+import { box, sd, sdf } from '../primitives/index.ts';
 import { connectionReport } from './connections.ts';
+import { MODEL_SURFACE } from './connections-crease.ts';
 
 const grey: Vec3 = [0.5, 0.5, 0.5];
 type Piece = readonly [string, Mesh, PartOptions?];
@@ -49,6 +50,49 @@ describe('connections: seams inside sculpts', () => {
     expect(codes(asset('character', [['head', sculpt(0.08)]]))).not.toContain(
       'T3D_CONNECT_SEAM:head',
     );
+  });
+
+  it('refuses a crease big enough to swallow the whole mesh it excuses', () => {
+    const blanket = asset('character', [['head', sculpt(0)]], {
+      creases: [{ name: 'all', part: 'head', at: [0.05, 0, 0.2], radius: 0.6, why: 'hides it' }],
+    });
+    const issues = connectionReport(compile(blanket)).issues;
+    expect(issues.map((i) => `${i.code}:${i.part}`)).toContain('T3D_CONNECT_INVALID:head');
+    expect(issues.find((i) => i.code === 'T3D_CONNECT_INVALID')?.message).toContain("'all'");
+  });
+
+  it('keeps a seam alive under a refused crease: it excuses nothing', () => {
+    const blanket = asset('character', [['head', sculpt(0)]], {
+      creases: [{ name: 'all', part: 'head', at: [0.05, 0, 0.2], radius: 0.6, why: 'hides it' }],
+    });
+    expect(codes(blanket)).toContain('T3D_CONNECT_SEAM:head');
+  });
+
+  it('allows a big sphere that only grazes the mesh, and any size on a small shell', () => {
+    const grazing = asset('character', [['head', sculpt(0)]], {
+      creases: [{ name: 'side', part: 'head', at: [0.9, 0, 0.2], radius: 0.62, why: 'edge' }],
+    });
+    expect(codes(grazing)).not.toContain('T3D_CONNECT_INVALID:head');
+    const lid = box({ size: [0.05, 0.05, 0.05], color: grey });
+    const small = asset('character', [['lid', lid]], {
+      creases: [{ name: 'lid', part: 'lid', at: [0, 0, 0], radius: 0.2, why: 'a small fold' }],
+    });
+    expect(codes(small)).not.toContain('T3D_CONNECT_INVALID:lid');
+  });
+
+  it('leaves the model tier its whole-surface exemption (ADR 016)', () => {
+    const model = asset('creature', [['body', sculpt(0.08)]], {
+      creases: [
+        {
+          name: MODEL_SURFACE,
+          part: 'body',
+          at: [0, 0, 0.2],
+          radius: 3,
+          why: 'model-built surface (ADR 016): its relief is the model',
+        },
+      ],
+    });
+    expect(codes(model)).not.toContain('T3D_CONNECT_INVALID:body');
   });
 
   it('skips a declared crease and every hard-surface kind', () => {

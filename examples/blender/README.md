@@ -3,9 +3,14 @@
 Python scripts that ts23d runs inside Blender for the `cloth`, `rig` (Rigify), `fracture`, `groom`
 and `blender` (step program) tool tasks, plus `vdm_extract` for `scripts/vdm-from-blender.ts`. The
 library never imports them; it spawns them (`blenderAdapter` in `src/neural/blender-adapter.ts`) or
-the reference server loads them (`examples/neural-server/plugins/blender_tasks.py`). Not brush
-strokes: `bpy.ops.sculpt.*` needs a viewport; everything data-level (modifiers, remesh, bake, bone
-heat) runs with `-b`, and ts23d's SDF strokes and VDM stamps are its brushes.
+the reference server loads them (`examples/neural-server/plugins/blender_tasks.py`). Everything runs
+with `-b`: modifiers, remesh, bake, bone heat, and brushes too, through the `stroke` op (numpy over
+the mesh, because `bpy.ops.sculpt.*` needs a viewport and its result depends on the thread count).
+`t3d blender session` keeps one Blender open for chained work.
+
+**These scripts are not in the npm package** (`!examples/blender` in `package.json`). From an
+installed ts23d, clone the repository and pass `--scripts <clone>/examples/blender` or set
+`T3D_BLENDER_SCRIPTS` (the `t3d blender` commands), or `scriptsDir` (`blenderAdapter()`).
 
 ## Licence: GPL
 
@@ -104,11 +109,12 @@ JSON are in the glTF frame (Y up, +Z front, +X left), the same space turned: ass
 | `smooth` | `iterations`, `factor`, `kind` ('laplacian' \| 'corrective') | Laplacian Smooth / Corrective Smooth (only-smooth) modifier |
 | `displace` | `strength` (m), `scale` (m), `kind` ('noise' \| 'voronoi' \| 'musgrave'), `seed` (0), `mask?` | Displace modifier along normals, procedural texture, texture space moved by the seed |
 | `inflate` | `distance` (m), `mask?` | vertices along their normals |
+| `stroke` | `brush`, `path` (points on the surface), `radius` (m, one or per point), `strength` (m; not for `grab`), `spacing` (0.2 × radius), `mask?`, `symmetry?` ('x' \| 'y' \| 'z'), `stamp?` (`vdm`: `{ size, grid }`) | A sculpt brush along a path, see below. Before `uv` only |
 | `skinBody` | `bones: [{ head, tail, r0, r1 }]`, `subdiv` (2) | Skin + Subdivision modifiers over an edge skeleton (first step, no input mesh) |
 | `metaballs` | `balls: [{ at, r, stiffness (2), negative (false) }]`, `resolution` (m) | metaball union → mesh, threshold 0.6: the surface sits inside `r` (first step, no input mesh) |
 | `retopo` | `triangles`, `strategy` ('shell' \| 'decimate'), `reduce` ('decimate' \| 'quadriflow'), `voxel?`, `close?` (voxels; absent: 0, 1, 2, 4 tried), `skin?` (voxels; absent: 0, then 0.75 when thin parts vanish), `smooth` (0), `preserveSymmetry` (false), `focus?` | see below |
 | `uv` | `kind` ('smart' \| 'unwrap'), `angle` (1.45 rad), `margin` (0.003), `smooth` (30) | Smart UV Project on a copy smoothed `smooth` times (same topology, UVs copied back); 'unwrap' turns those islands into seams and unwraps with minimum stretch; `average_islands_scale`, `pack_islands` (concave) |
-| `bake` | `size` (2048), `maps` (['albedo', 'normal']; also 'ao', 'roughness'), `cage?` (2 % of the bbox diagonal), `maxRay?` (2 × cage), `samples` (1), `aoSamples` (32), `margin` (16 px) | Cycles selected-to-active, margin ADJACENT_FACES; see below |
+| `bake` | `size` (2048), `maps` (['albedo', 'normal']; also 'ao', 'roughness'), `cage?` (2 % of the bbox diagonal), `maxRay?` (2 × cage), `samples` (1), `aoSamples` (32), `margin` (16 px), `cageFit?` | Cycles selected-to-active, margin ADJACENT_FACES; see below |
 | `joint` | `bone`, `head?`, `tail?` (asset frame; before `bind`) | the bone in the skeleton JSON (or the source rig's edit bone) is moved |
 | `bind` | `from` ('skeleton' \| 'source'), `maxInfluences` (4), `proxyVoxel?` (1.2 % of the diagonal) | 'skeleton': armature from the skeleton JSON, automatic weights, proxy fallback. 'source': the input GLB's own armature, weights by Data Transfer from its skinned mesh, clips kept. Then limit / clean (< 0.01) / normalise |
 | `weights` | `kind` ('assign' \| 'smooth' \| 'scale'), `bone`, `mask`, `value` (1), `iterations` (2) (after `bind`) | one bone's vertex group edited inside the mask; the other bones rescaled so every vertex sums to 1; limited again |
@@ -123,7 +129,7 @@ Masks: `{ kind: 'z', min, max, feather? }` or `{ kind: 'sphere', at, r, feather?
 
 Order rules (checked in TypeScript, `T3D_RECIPE_INVALID` with the step index): the list ends with
 `export`; `skinBody` / `metaballs` only as the first step; `retopo` before `uv`; `uv` before
-`bake`; after `bind` only `repose`, `uv`, `bake`, `weights`, `isolate`, `script`, `review`, `lods`, `export`; after
+`bake`; `stroke` before `uv`, `bake`, `bind` and `lods`; after `bind` only `repose`, `uv`, `bake`, `weights`, `isolate`, `script`, `review`, `lods`, `export`; after
 `lods` only `review` and `export`; `joint` before `bind`, `weights` and `isolate` after it; a bind from 'source'
 rules out `transform`; one each of `retopo`, `uv`, `bake`, `bind`, `lods`. Any subset is a program (no `bind`, no `bake`…).
 
@@ -137,6 +143,42 @@ materials are handled one by one. Normal (tangent space) and AO come from the sh
 own materials. The ORM map packs R = AO, G = roughness, B = metallic (unbaked channels 1, 0.8, 0).
 Two 1-sample probe bakes give `hitRate` (texels the source covered / texels the UV islands cover);
 a bake that hits nothing, or an all-black albedo, fails the job.
+
+**`bake.cageFit`.** A flat cage lets a ray start past the next surface, so two fingers closer than
+the cage bake each other. With `cageFit: true` rays start on a copy of the shell whose vertices sit
+min(`cage`, 0.45 × the gap to the next wall outward) off it, the limit spread over two rings of
+neighbours; rays then reach the shell itself unless `maxRay` is given. Two tubes 6 mm apart with a
+20 mm cage: 10.0 % of the faces took the other tube's colour flat, 0 % fitted (self-test, offsets
+2.7..20 mm). Absent means the flat cage, so existing programs and their cache keys do not change.
+
+**`stroke`: brushes without a viewport (`steps/stroke.py`).** Dabs every `spacing` × radius along
+`path`. A dab reaches the vertices within `radius` of its nearest vertex **along the mesh's edges**,
+falloff u²(3 − 2u), times `mask`; coincident vertices (a glTF splits them along UV seams and hard
+edges) count as one point, so a stroke crosses seams without tearing them. Every move is computed
+from the positions at the start of the stroke and divided by the stroke's highest coverage, so the
+path moves about `strength` however dense the dabs are, the same bytes at any thread count (checked
+over all nine brushes at `-t 1` and `-t 4`). On the 906,084-triangle wolf source a 25-dab stroke took
+1.5 s and a 20-dab crease 1.3 s, 5 of 15,863 touched triangles flipped (inside the limit).
+
+| brush | What it does; `strength` is |
+|---|---|
+| `draw` | moves along the dab's area normal; metres, negative digs in |
+| `inflate` | moves along each vertex's own normal; metres, negative shrinks |
+| `clay` | fills up to a plane `strength` above the area, only what is below it |
+| `flatten` | moves to the area's plane; the most any vertex moves |
+| `pinch` | pulls towards the path, never past it; the most any vertex moves |
+| `crease` | cuts in by `strength` and pinches by half of it |
+| `smooth` | four passes of neighbour averaging; the most any vertex moves |
+| `grab` | moves the region round `path[0]` by `path[1] - path[0]`; no `strength` |
+| `vdm` | a vector displacement stamp at each dab (`{ size, grid }`, a `VdmStamp` as plain numbers: right, up, normal per texel); the tallest point of the stamp, metres |
+
+A `stroke` before `retopo` edits the source, so the normal and colour bakes carry it; one after
+`retopo` edits the shell and changes the silhouette only. After `uv` it is refused: it would stretch
+the islands, and a bake or a bind already made from the old shape would no longer match. Gates: a
+path point off the surface (over its radius from the nearest vertex), a radius under the edge length
+(under 4 vertices per dab), a stroke that moved nothing, more than max(4, 0.1 %) of the touched
+triangles turned over. A mesh with long triangles gets uneven falloff (graph distance follows
+edges): `clean`, `voxelRemesh` or `retopo` it first.
 
 **Retopo: never collapse the raw generator surface.** An image-to-3D mesh is noisy fur over
 internal layers. Collapsing it directly ('decimate') keeps that junk: on the Pixal3D wolf the UV map
@@ -224,7 +266,12 @@ module exports `BLENDER_REVIEW = { mesh, steps, skeleton? }`) or `--mesh <glb> -
 [--skeleton <json>]` adds that step before `export`, writes the PNGs, `report.json` and
 `review.md`; then the agent edits the recipe: `joint` (a bone end, before `bind`), `weights`
 (assign / scale / smooth one bone in a mask, after `bind`), `script` (bpy source with a `why`).
-Workbench renders with `-b` on a machine with a GPU (checked on 5.3 + RTX 3090 only).
+Workbench renders with `-b` given any Vulkan or OpenGL driver; `review` reports which
+(`renderer`). Without a GPU, Mesa's lavapipe (Vulkan on the CPU; `apt install mesa-vulkan-drivers`)
+is found by Blender unaided; `--software-gpu` or `T3D_BLENDER_SOFTWARE_GPU=1` forces it, which keeps
+a review off a GPU another job is using. Checked on 5.3 with the GPU device nodes hidden: with
+lavapipe a review renders; with no Vulkan driver at all Blender **crashes** (SIGSEGV) at the first
+render, and ts23d's error then names the driver.
 
 **Determinism.** `-t 1` unless `request.params.threads` says otherwise (0 = every core; voxel
 remesh bytes change with the thread count). The bake device (OptiX / CUDA / HIP / Metal / oneAPI,
@@ -290,6 +337,65 @@ triangles: 54 s (bake 31 s), plain shell accepted (lost 0.09 %), 502 islands, hi
 vertex unweighted after the transfer, ≤ 4 influences; the GLB holds one skin (24 joints), the
 three clips at 4.0 / 4.1667 / 0.7 s under their names, and three PNG images.
 
+### `t3d blender session`: one open Blender for chained work
+
+`t3d blender review` starts Blender and redoes load, clean, retopo, UV, bake and bind for one look. A
+session keeps them done:
+
+```
+t3d blender session start --mesh wolf.glb --skeleton skeleton.json --software-gpu
+t3d blender session run build.json     # [{ "op": "clean" }, { "op": "retopo", "triangles": 8000 }, …]
+t3d blender session run tweak.json     # [{ "op": "weights", … }, { "op": "review", "views": ["weights"] }]
+t3d blender session undo               # one batch back; a failed batch goes back by itself
+t3d blender session status
+t3d blender session finish --out program.json --normal-size 1024
+t3d blender session stop
+```
+
+Every command takes `--name <n>` (several sessions at once) and `--json`. `start` also takes
+`--idle <minutes>` (30), `--undo <n>` (5 batches kept), `--threads <n>` (1), `--blender <exe>`,
+`--scripts <dir>`. `run` takes `--timeout <seconds>` (7200).
+
+- **Same behaviour as a program.** A batch is a list of steps, run by the same `OPS`, `gates.whole`
+  and report code as `tasks/blender.py`. TypeScript checks kept steps + batch + `export` with
+  `checkBlenderSteps` before Blender sees it, so the order rules hold across batches. `export` is
+  refused in a batch (`finish` adds it), as are `skinBody` and `metaballs`.
+- **The reply** has one facts entry per step, the batch's seconds, the checkpoint's cost, and the
+  absolute path of every `review` sheet (`batch-<n>/review-*.png` in the session directory). On
+  failure: the step index, the op's message and fix, and the scene already restored.
+- **Checkpoints.** Before each batch that changes anything, an uncompressed `.blend` plus a JSON map
+  of the State's objects and images. `restore` reopens it and rebuilds the State; baked images are
+  packed so their pixels come back. A batch of only `review` steps takes none. Cheap enough to take
+  every time, so no op is special-cased (numbers below).
+- **`finish`** writes the kept steps + `export` as canonical `t3d-blender-steps/1` JSON (`review`
+  steps are left out: they change nothing). **A committed asset always comes from replaying that
+  program with `t3d neural run`, never from session state.**
+- **Access.** A Unix socket inside a mode-0700 directory (`~/.cache/t3d/blender-sessions/<name>`, on
+  disk because checkpoints are large), no TCP; the peer's uid is checked as well.
+- **Staying tidy.** After `--idle` minutes without a request Blender exits and deletes its
+  checkpoints, so no forgotten session keeps its RAM. A dead process is detected by the next command:
+  stale socket and checkpoints removed, `T3D_NEURAL_FAILED` saying why, and `finish` still works
+  because the kept steps live in `kept.json`. `stop` ends the process and deletes the directory, its
+  review sheets included: copy what you want first.
+
+Measured (2026-11-18, Blender 5.3.0, one thread, bake on the CPU, review on lavapipe, while another
+job held the GPU) on the Pixal3D wolf source (906,084 triangles), program `clean → stroke → retopo
+8,000 → uv → bake 1024² albedo + normal with cageFit → bind → weights`:
+
+| | |
+|---|---|
+| Full program as one job (relaunch, load, every step, export) | 40.2 s |
+| Session start (load) | 6.1 s |
+| First batch, `clean` to `bind` | 32.1 s |
+| **Next batch, `weights` + a `review` sheet** | **0.44 s**, then 0.15 s |
+| Checkpoint | 0.02–0.15 s, 109–116 MB (0.15 s is the first after the bake: packing the maps) |
+| A failed batch, restored | 0.10 s |
+| `undo` | 0.04 s |
+| Process peak memory | 1.7 GB |
+
+The finished program replayed through the normal `blender` task gave the same triangles and the same
+facts as the session for every step (`seconds` aside).
+
 ### Self-test (manual; the gate never starts Blender)
 
 ```
@@ -304,11 +410,17 @@ density, the bone-heat failure → proxy path, metaballs → QuadriFlow, `skinBo
 specks, a tilted 1 mm fin, a bake that reaches a third of its source, a cut-out source, a
 confetti UV map, the LOD gate's messages) and the finishing ops (`test_finish.py`: `script` and
 its refusals, `joint`, `weights`, the five `review` sheets, a rigged source with two clips
-carried to three LODs).
+carried to three LODs), `stroke` and `bake.cageFit` (`test_stroke.py`: nine brushes on a U-shaped
+tube whose legs face each other 3 cm apart, the gates, a stroke through a whole program, two tubes
+baked with a flat and a fitted cage), and the session (`test_session.py`: batches, a failed batch and
+`undo` restoring vertices and baked pixels, the socket, the idle timeout, a replay of the kept
+steps). Set `T3D_SELFTEST_ONLY=case_a,case_b` to run a few; `CUDA_VISIBLE_DEVICES=` keeps the bakes
+on the CPU.
 
 ## Files
 
 - `ts23d_job.py`: dispatcher (reads job.json, runs `tasks/<task>.py`, writes report.json)
 - `tasks/common.py`: scene reset, GLB import/export, joins, evaluated copies
 - `tasks/cloth.py`, `tasks/rig.py`, `tasks/fracture.py`, `tasks/groom.py`, `tasks/vdm_extract.py`
-- `tasks/blender.py`: runs a step program; `tasks/steps/`: `state` (shared state, frames), `io` (load, export), `clean`, `remesh`, `retopo`, `build`, `deform`, `shell` (the solid shell), `gates` (shared measures), `uv`, `bake` + `bake_source` + `fill`, `bind`, `rig_source` (a rigged source), `rigfix` (`joint`, `weights`), `script`, `review` + `review_sheet`, `lods`, `unweb`, `test_steps` + `test_gates` + `test_finish` (self-test)
+- `tasks/session.py` + `tasks/session_checkpoint.py`: the long-lived session loop and its checkpoints
+- `tasks/blender.py`: runs a step program; `tasks/steps/`: `state` (shared state, frames), `io` (load, export), `clean`, `remesh`, `retopo`, `build`, `deform`, `stroke` + `stroke_brush` (brushes), `shell` (the solid shell), `gates` (shared measures), `uv`, `bake` + `bake_source` + `bake_cage` + `fill`, `bind`, `rig_source` (a rigged source), `rigfix` (`joint`, `weights`), `script`, `review` + `review_sheet`, `lods`, `unweb`, `test_steps` + `test_gates` + `test_finish` + `test_limbs` + `test_stroke` + `test_session` (self-test)

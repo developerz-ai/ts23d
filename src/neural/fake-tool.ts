@@ -1,10 +1,12 @@
 // Test fixture for the tool adapters (not exported): a fake executable — a POSIX sh script in a
 // temp dir that logs its arguments to calls.log and then runs `body` — so adapter tests spawn a
-// real process without Blender, Godot, basisu or gltfpack installed.
+// real process without Blender, Godot, basisu or gltfpack installed. `fakeBlenderSession` is such
+// an executable answering a session's socket (blender-session-fake.ts runs behind it).
 
 import { chmodSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 export interface FakeTool {
   readonly dir: string;
@@ -33,3 +35,12 @@ export function fakeTool(name: string, body: string): FakeTool {
     dispose: () => rmSync(dir, { recursive: true, force: true }),
   };
 }
+
+const SESSION_SERVER = fileURLToPath(new URL('./blender-session-fake.ts', import.meta.url));
+
+/** A `blender` that reports a version and otherwise serves a session over its Unix socket. */
+export const fakeBlenderSession = (): FakeTool =>
+  fakeTool(
+    'blender',
+    `case "$*" in *--version*) echo "Blender 5.3.0"; exit 0;; esac\nexec '${process.execPath}' '${SESSION_SERVER}' "$last"`,
+  );

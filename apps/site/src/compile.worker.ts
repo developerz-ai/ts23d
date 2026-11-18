@@ -89,6 +89,7 @@ async function build(request: BuildRequest): Promise<BuildResult> {
     budget: asset.budget.triangles[request.lod],
     ms: performance.now() - t0,
     parts,
+    ...(c.medium ? { medium: c.medium } : {}),
     ...(mp ? { mass: { kg: mp.mass, centre: [...mp.centerOfMass] } } : {}),
   };
 }

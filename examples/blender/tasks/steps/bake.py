@@ -4,6 +4,8 @@
 # (bake_source.py); normal (tangent space) and AO come from the shape source with its own
 # materials. The ORM map packs R = AO, G = roughness, B = metallic (unbaked channels: 1, 0.8, 0).
 # Rays start `cage` outside the shell (2 % of the bbox diagonal) and reach `maxRay` (2 × cage).
+# With `cageFit` they start on a fitted cage instead (bake_cage.py), reaching the shell itself
+# unless `maxRay` says otherwise: a part never takes the colour of the part next to it.
 # Two 1-sample probe bakes at <= 512 px measure the hit rate: texels the source covered / texels
 # the UV islands cover (the colour source when a colour map is asked, else the shape source). The
 # albedo is a solid coat: texels the source did not reach take the nearest colour (fill.py), the
@@ -13,7 +15,7 @@
 import bpy
 import numpy as np
 
-from tasks.steps import bake_source, fill
+from tasks.steps import bake_cage, bake_source, fill
 from tasks.steps import state as st
 
 GPUS = ("OPTIX", "CUDA", "HIP", "METAL", "ONEAPI")
@@ -121,6 +123,10 @@ def run(state, step):
     bake.use_clear = True
     bake.normal_space = "TANGENT"
     size, maps = step["size"], step["maps"]
+    fitted, cage_facts = bake_cage.fit(low, cage) if step.get("cageFit") else (None, None)
+    if fitted is not None:
+        bake.cage_object = fitted
+        bake.max_ray_distance = step.get("maxRay") or 0.0
     target = Target(low)
 
     def shoot(source, kind, name, samples=1, margin=step["margin"], px=size, srgb=False, channel=None, alpha=False):
@@ -129,6 +135,7 @@ def run(state, step):
         scene.cycles.samples = samples
         bake.margin = margin
         bake.use_selected_to_active = source is not low
+        bake.use_cage = fitted is not None and source is not low
         for o in scene.objects:  # nothing but the pair may occlude or be hit
             o.hide_render = o not in (low, source)
         st.activate(low, source)
@@ -139,6 +146,8 @@ def run(state, step):
         return img, origins
 
     facts = {"device": device, "size": size, "maps": list(maps), "cage": round(cage, 6)}
+    if cage_facts is not None:
+        facts["cageFit"] = cage_facts
     probe = min(size, 512)
     probed = colour if {"albedo", "roughness"} & set(maps) else shape
     hit, _ = shoot(probed, "EMIT", "hit", margin=0, px=probe, channel="white")
@@ -184,6 +193,12 @@ def run(state, step):
         images["orm"] = target.image("orm", size)
         images["orm"].pixels.foreach_set(orm.ravel())
     target.wire(images)
+    if fitted is not None:
+        bake.use_cage = False
+        bake.cage_object = None
+        data = fitted.data
+        bpy.data.objects.remove(fitted, do_unlink=True)
+        bpy.data.meshes.remove(data)
     for o in scene.objects:
         o.hide_render = False
     state.images = images

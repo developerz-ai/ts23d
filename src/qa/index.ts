@@ -1,5 +1,16 @@
 // Public API of /qa: the gate every compiled asset passes before it ships.
 
+export { type BoneChain, bodyPath, leafChains, longChains } from './chain-bones.ts';
+export { CROSS_FPS, chainCross, chainCrossFindings, PENETRATION_SHARE } from './chain-cross.ts';
+export { AREA_KEPT, chainTwistFindings, TWIST_LIMIT, twistDegrees } from './chain-twist.ts';
+export {
+  type BodyChain,
+  bodyChain,
+  type ClipWave,
+  measureWave,
+  SWIM_FPS,
+  type WaveHeading,
+} from './chain-wave.ts';
 export { clear, noOverlap, runChecks, symmetric, touches } from './checks.ts';
 export { clashes } from './clash.ts';
 export {
@@ -189,6 +200,18 @@ export {
 } from './scene-budget.ts';
 export { BIND_TOLERANCE, SUM_TOLERANCE, skin, skinFindings } from './skin.ts';
 export { findSlits, type Slit, type SlitOptions } from './slits.ts';
+export {
+  BURST_TOLERANCE,
+  HEAD_TO_TAIL,
+  PEAK_AT,
+  RECOIL_LIMIT,
+  SLIP,
+  STRIDE,
+  STROUHAL,
+  swim,
+  swimFindings,
+  TAIL_EXCURSION,
+} from './swim.ts';
 export { treads } from './treads.ts';
 export { CLASH_EPS, CONTACT_EPS, codeOf, type Finding, type Gate, qaCode } from './types.ts';
 export { weatherGate } from './weather.ts';

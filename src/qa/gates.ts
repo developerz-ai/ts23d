@@ -10,6 +10,7 @@ import {
   triangleCount,
   worldTransforms,
 } from '../core/index.ts';
+import { chainCross } from './chain-cross.ts';
 import { runChecks } from './checks.ts';
 import { clashes } from './clash.ts';
 import { connections } from './connections.ts';
@@ -24,6 +25,7 @@ import { model } from './model.ts';
 import { hiddenParts } from './occlusion.ts';
 import { degenerateTriangles, nonFinite, normalsMatchWinding, vertexColors } from './sanity.ts';
 import { skin } from './skin.ts';
+import { swim } from './swim.ts';
 import { treads } from './treads.ts';
 import type { Finding, Gate } from './types.ts';
 import { weatherGate } from './weather.ts';
@@ -142,6 +144,8 @@ export const DEFAULT_GATES: readonly Gate[] = [
   skin,
   deform,
   gait,
+  swim,
+  chainCross,
   model,
 ];
 

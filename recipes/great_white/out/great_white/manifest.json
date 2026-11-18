@@ -1,0 +1,339 @@
+{
+  "name": "great_white",
+  "kind": "creature",
+  "description": "Adult female white shark, 4.5 m: conical snout, five gill slits, black eye, serrated-tooth jaws that protrude in the bite, sharp countershading, crescent tail with keel.",
+  "tags": [
+    "creature",
+    "fish",
+    "shark",
+    "marine",
+    "animated",
+    "swim"
+  ],
+  "lods": [
+    0,
+    1,
+    2
+  ],
+  "files": {
+    "lods": [],
+    "sheet": "sheet.png",
+    "thumb": "thumb.png"
+  },
+  "triangles": [
+    60958,
+    7026,
+    680
+  ],
+  "drawCalls": [
+    1,
+    1,
+    1
+  ],
+  "pivots": [
+    {
+      "name": "body",
+      "parent": null
+    }
+  ],
+  "emitters": [],
+  "sockets": [],
+  "surfaces": [
+    "opaque"
+  ],
+  "skeleton": [
+    {
+      "name": "spine_0",
+      "parent": null
+    },
+    {
+      "name": "spine_1",
+      "parent": "spine_0"
+    },
+    {
+      "name": "spine_2",
+      "parent": "spine_1"
+    },
+    {
+      "name": "spine_3",
+      "parent": "spine_2"
+    },
+    {
+      "name": "spine_4",
+      "parent": "spine_3"
+    },
+    {
+      "name": "spine_5",
+      "parent": "spine_4"
+    },
+    {
+      "name": "spine_6",
+      "parent": "spine_5"
+    },
+    {
+      "name": "spine_7",
+      "parent": "spine_6"
+    },
+    {
+      "name": "spine_8",
+      "parent": "spine_7"
+    },
+    {
+      "name": "spine_9",
+      "parent": "spine_8"
+    },
+    {
+      "name": "spine_10",
+      "parent": "spine_9"
+    },
+    {
+      "name": "spine_11",
+      "parent": "spine_10"
+    },
+    {
+      "name": "spine_12",
+      "parent": "spine_11"
+    },
+    {
+      "name": "spine_13",
+      "parent": "spine_12"
+    },
+    {
+      "name": "spine_14",
+      "parent": "spine_13"
+    },
+    {
+      "name": "spine_15",
+      "parent": "spine_14"
+    },
+    {
+      "name": "caudal_upper_0",
+      "parent": "spine_15"
+    },
+    {
+      "name": "caudal_upper_1",
+      "parent": "caudal_upper_0"
+    },
+    {
+      "name": "caudal_upper_2",
+      "parent": "caudal_upper_1"
+    },
+    {
+      "name": "caudal_lower_0",
+      "parent": "spine_15"
+    },
+    {
+      "name": "caudal_lower_1",
+      "parent": "caudal_lower_0"
+    },
+    {
+      "name": "dorsal_0",
+      "parent": "spine_6"
+    },
+    {
+      "name": "dorsal_1",
+      "parent": "dorsal_0"
+    },
+    {
+      "name": "pectoral_l_0",
+      "parent": "spine_5"
+    },
+    {
+      "name": "pectoral_l_1",
+      "parent": "pectoral_l_0"
+    },
+    {
+      "name": "pectoral_r_0",
+      "parent": "spine_5"
+    },
+    {
+      "name": "pectoral_r_1",
+      "parent": "pectoral_r_0"
+    },
+    {
+      "name": "jaw_lower_0",
+      "parent": "spine_1"
+    },
+    {
+      "name": "jaw_upper_0",
+      "parent": "spine_1"
+    }
+  ],
+  "clips": [
+    {
+      "name": "cruise",
+      "seconds": 2.3255813953488373,
+      "loop": true,
+      "speed": 1.4698
+    },
+    {
+      "name": "burst",
+      "seconds": 2.1701780052894604,
+      "loop": true,
+      "speed": 6.3
+    },
+    {
+      "name": "turn_l",
+      "seconds": 25.58139534883721,
+      "loop": true,
+      "speed": 0
+    },
+    {
+      "name": "turn_r",
+      "seconds": 25.58139534883721,
+      "loop": true,
+      "speed": 0
+    },
+    {
+      "name": "cstart_l",
+      "seconds": 2.9327785563481767,
+      "loop": false,
+      "speed": 3.2201
+    },
+    {
+      "name": "cstart_r",
+      "seconds": 2.9327785563481767,
+      "loop": false,
+      "speed": 3.2281
+    },
+    {
+      "name": "idle",
+      "seconds": 3.3222591362126246,
+      "loop": true,
+      "speed": 1.0288
+    },
+    {
+      "name": "bite",
+      "seconds": 1.381163287652078,
+      "loop": false,
+      "speed": 0
+    }
+  ],
+  "hitboxes": [
+    {
+      "bone": "spine_0",
+      "radius": 0.184581,
+      "height": 0.07082,
+      "coverage": 0.9722
+    },
+    {
+      "bone": "spine_1",
+      "radius": 0.121859,
+      "height": 0.092448,
+      "coverage": 0.9646
+    },
+    {
+      "bone": "spine_15",
+      "radius": 0.092923,
+      "height": 0.159628,
+      "coverage": 0.9547
+    },
+    {
+      "bone": "caudal_upper_0",
+      "radius": 0.11022,
+      "height": 0.113506,
+      "coverage": 1
+    },
+    {
+      "bone": "caudal_upper_1",
+      "radius": 0.129834,
+      "height": 0.170082,
+      "coverage": 0.9506
+    },
+    {
+      "bone": "caudal_upper_2",
+      "radius": 0.059321,
+      "height": 0.261209,
+      "coverage": 0.9519
+    },
+    {
+      "bone": "caudal_lower_0",
+      "radius": 0.14109,
+      "height": 0.138806,
+      "coverage": 0.9667
+    },
+    {
+      "bone": "caudal_lower_1",
+      "radius": 0.109499,
+      "height": 0.293987,
+      "coverage": 0.9527
+    },
+    {
+      "bone": "dorsal_0",
+      "radius": 0.237674,
+      "height": 0.042105,
+      "coverage": 0.9568
+    },
+    {
+      "bone": "dorsal_1",
+      "radius": 0.096615,
+      "height": 0.145055,
+      "coverage": 0.9527
+    },
+    {
+      "bone": "pectoral_l_0",
+      "radius": 0.188084,
+      "height": 0.253053,
+      "coverage": 0.9714
+    },
+    {
+      "bone": "pectoral_l_1",
+      "radius": 0.112469,
+      "height": 0.239331,
+      "coverage": 0.958
+    },
+    {
+      "bone": "pectoral_r_0",
+      "radius": 0.188084,
+      "height": 0.253053,
+      "coverage": 0.9714
+    },
+    {
+      "bone": "pectoral_r_1",
+      "radius": 0.112469,
+      "height": 0.239331,
+      "coverage": 0.958
+    },
+    {
+      "bone": "jaw_lower_0",
+      "radius": 0.255492,
+      "height": 0.091453,
+      "coverage": 0.9833
+    },
+    {
+      "bone": "jaw_upper_0",
+      "radius": 0.262676,
+      "height": 0.040746,
+      "coverage": 0.9643
+    }
+  ],
+  "real": {
+    "length": 4.5,
+    "width": 1.77,
+    "height": 1.49
+  },
+  "measures": [
+    {
+      "label": "body width at 4.5 m, 0.197 TL - 4.84 cm (drone frontal span)",
+      "spec": 0.838,
+      "measured": 0.8412647247314453,
+      "source": "https://doi.org/10.1371/journal.pone.0348174"
+    },
+    {
+      "label": "first dorsal length, origin to free rear tip (10.9 % of natural TL)",
+      "spec": 0.492,
+      "measured": 0.4920000066049397,
+      "source": "recipes/great_white/README.md, Lausanne specimen (unverified search excerpt)"
+    }
+  ],
+  "sources": [
+    "https://doi.org/10.1371/journal.pone.0348174",
+    "https://commons.wikimedia.org/wiki/File:White_shark.jpg",
+    "https://en.wikipedia.org/wiki/Great_white_shark",
+    "https://publikace.nm.cz/en/file/39e05b0c91119b5d713179f5aee0777b/15231/175-2006-DeMaddalena.pdf"
+  ],
+  "qa": {
+    "pass": true,
+    "findings": []
+  }
+}

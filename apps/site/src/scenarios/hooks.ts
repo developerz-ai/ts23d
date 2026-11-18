@@ -1,14 +1,20 @@
-// What a scenario may rely on: the asset's kind, its named GLB nodes, its baked clip, its emitters
-// and its size. Read once from the loaded, unmoved model.
+// What a scenario may rely on: the asset's kind and medium, its named GLB nodes, its baked clips,
+// its emitters and its size. Read once from the loaded, unmoved model.
 
 import type { Emitter } from '@developerz.ai/ts23d';
 import { type AnimationClip, Box3, type Object3D, Vector3 } from 'three';
+import type { Medium } from '../compile-protocol.ts';
 import { emitterOf } from '../particles.ts';
 
 export interface Hooks {
   readonly kind: string;
   readonly root: Object3D;
+  /** What holds the asset up, when it declares that. */
+  readonly medium: Medium | null;
+  /** The `run` clip. */
   readonly clip: AnimationClip | null;
+  /** Every baked clip, for scenarios that choose by clip name. */
+  readonly clips: readonly AnimationClip[];
   readonly emitters: readonly { readonly node: Object3D; readonly spec: Emitter }[];
   /** glTF-frame bounds of the unmoved model: x = width (left), y = height, z = length (front). */
   readonly size: Vector3;
@@ -22,7 +28,13 @@ export interface Hooks {
 
 const family = (name: string): string => name.replace(/(_[lr])?(_\d+)*$/, '');
 
-export function readHooks(root: Object3D, kind: string, clip: AnimationClip | null): Hooks {
+export function readHooks(
+  root: Object3D,
+  kind: string,
+  clip: AnimationClip | null,
+  clips: readonly AnimationClip[] = [],
+  medium: Medium | null = null,
+): Hooks {
   root.updateMatrixWorld(true);
   const named = new Map<string, Object3D>();
   const emitters: { node: Object3D; spec: Emitter }[] = [];
@@ -36,8 +48,10 @@ export function readHooks(root: Object3D, kind: string, clip: AnimationClip | nu
     [...named.values()].filter((n) => pattern.test(n.name));
   return {
     kind,
+    medium,
     root,
     clip,
+    clips,
     emitters,
     size: box.getSize(new Vector3()),
     center: box.getCenter(new Vector3()),

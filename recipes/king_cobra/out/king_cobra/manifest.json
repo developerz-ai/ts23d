@@ -1,0 +1,506 @@
+{
+  "name": "king_cobra",
+  "kind": "creature",
+  "description": "King cobra, 3.5 m, front third raised with the long narrow hood spread: 15-row scales with pale chevron bands, broad ventral scutes, head shields with the paired occipitals, forked tongue.",
+  "tags": [
+    "creature",
+    "reptile",
+    "snake",
+    "cobra",
+    "animated"
+  ],
+  "lods": [
+    0,
+    1,
+    2
+  ],
+  "files": {
+    "lods": [],
+    "sheet": "sheet.png",
+    "thumb": "thumb.png"
+  },
+  "triangles": [
+    61400,
+    3848,
+    584
+  ],
+  "drawCalls": [
+    1,
+    1,
+    1
+  ],
+  "pivots": [
+    {
+      "name": "body",
+      "parent": null
+    }
+  ],
+  "emitters": [],
+  "sockets": [],
+  "surfaces": [
+    "opaque"
+  ],
+  "skeleton": [
+    {
+      "name": "spine_0",
+      "parent": null
+    },
+    {
+      "name": "spine_1",
+      "parent": "spine_0"
+    },
+    {
+      "name": "spine_2",
+      "parent": "spine_1"
+    },
+    {
+      "name": "spine_3",
+      "parent": "spine_2"
+    },
+    {
+      "name": "spine_4",
+      "parent": "spine_3"
+    },
+    {
+      "name": "spine_5",
+      "parent": "spine_4"
+    },
+    {
+      "name": "spine_6",
+      "parent": "spine_5"
+    },
+    {
+      "name": "spine_7",
+      "parent": "spine_6"
+    },
+    {
+      "name": "spine_8",
+      "parent": "spine_7"
+    },
+    {
+      "name": "spine_9",
+      "parent": "spine_8"
+    },
+    {
+      "name": "spine_10",
+      "parent": "spine_9"
+    },
+    {
+      "name": "spine_11",
+      "parent": "spine_10"
+    },
+    {
+      "name": "spine_12",
+      "parent": "spine_11"
+    },
+    {
+      "name": "spine_13",
+      "parent": "spine_12"
+    },
+    {
+      "name": "spine_14",
+      "parent": "spine_13"
+    },
+    {
+      "name": "spine_15",
+      "parent": "spine_14"
+    },
+    {
+      "name": "spine_16",
+      "parent": "spine_15"
+    },
+    {
+      "name": "spine_17",
+      "parent": "spine_16"
+    },
+    {
+      "name": "spine_18",
+      "parent": "spine_17"
+    },
+    {
+      "name": "spine_19",
+      "parent": "spine_18"
+    },
+    {
+      "name": "spine_20",
+      "parent": "spine_19"
+    },
+    {
+      "name": "spine_21",
+      "parent": "spine_20"
+    },
+    {
+      "name": "spine_22",
+      "parent": "spine_21"
+    },
+    {
+      "name": "spine_23",
+      "parent": "spine_22"
+    },
+    {
+      "name": "spine_24",
+      "parent": "spine_23"
+    },
+    {
+      "name": "spine_25",
+      "parent": "spine_24"
+    },
+    {
+      "name": "spine_26",
+      "parent": "spine_25"
+    },
+    {
+      "name": "spine_27",
+      "parent": "spine_26"
+    },
+    {
+      "name": "spine_28",
+      "parent": "spine_27"
+    },
+    {
+      "name": "spine_29",
+      "parent": "spine_28"
+    },
+    {
+      "name": "spine_30",
+      "parent": "spine_29"
+    },
+    {
+      "name": "spine_31",
+      "parent": "spine_30"
+    },
+    {
+      "name": "hood_rib_0_l_0",
+      "parent": "spine_1"
+    },
+    {
+      "name": "hood_rib_0_r_0",
+      "parent": "spine_1"
+    },
+    {
+      "name": "hood_rib_1_l_0",
+      "parent": "spine_1"
+    },
+    {
+      "name": "hood_rib_1_r_0",
+      "parent": "spine_1"
+    },
+    {
+      "name": "hood_rib_2_l_0",
+      "parent": "spine_2"
+    },
+    {
+      "name": "hood_rib_2_r_0",
+      "parent": "spine_2"
+    },
+    {
+      "name": "hood_rib_3_l_0",
+      "parent": "spine_2"
+    },
+    {
+      "name": "hood_rib_3_r_0",
+      "parent": "spine_2"
+    },
+    {
+      "name": "tongue_0",
+      "parent": "spine_0"
+    },
+    {
+      "name": "tongue_1",
+      "parent": "tongue_0"
+    },
+    {
+      "name": "tongue_2",
+      "parent": "tongue_1"
+    }
+  ],
+  "clips": [
+    {
+      "name": "slither",
+      "seconds": 2,
+      "loop": true,
+      "speed": 0.77
+    },
+    {
+      "name": "idle_ground",
+      "seconds": 4,
+      "loop": true,
+      "speed": 0
+    },
+    {
+      "name": "idle",
+      "seconds": 5,
+      "loop": true,
+      "speed": 0
+    },
+    {
+      "name": "hood_up",
+      "seconds": 4,
+      "loop": true,
+      "speed": 0
+    },
+    {
+      "name": "rear",
+      "seconds": 1.6,
+      "loop": false,
+      "speed": 0.8965
+    }
+  ],
+  "hitboxes": [
+    {
+      "bone": "spine_0",
+      "radius": 0.032612,
+      "height": 0.075034,
+      "coverage": 0.975
+    },
+    {
+      "bone": "spine_1",
+      "radius": 0.039455,
+      "height": 0,
+      "coverage": 0.9799
+    },
+    {
+      "bone": "spine_3",
+      "radius": 0.030101,
+      "height": 0.020219,
+      "coverage": 0.9502
+    },
+    {
+      "bone": "spine_4",
+      "radius": 0.027333,
+      "height": 0.042629,
+      "coverage": 0.9532
+    },
+    {
+      "bone": "spine_5",
+      "radius": 0.032524,
+      "height": 0.035634,
+      "coverage": 0.9845
+    },
+    {
+      "bone": "spine_6",
+      "radius": 0.029498,
+      "height": 0.039256,
+      "coverage": 0.9853
+    },
+    {
+      "bone": "spine_7",
+      "radius": 0.030057,
+      "height": 0.033995,
+      "coverage": 0.9908
+    },
+    {
+      "bone": "spine_8",
+      "radius": 0.034922,
+      "height": 0.028131,
+      "coverage": 0.9833
+    },
+    {
+      "bone": "spine_9",
+      "radius": 0.031864,
+      "height": 0.03607,
+      "coverage": 0.9844
+    },
+    {
+      "bone": "spine_10",
+      "radius": 0.032433,
+      "height": 0.031847,
+      "coverage": 0.9787
+    },
+    {
+      "bone": "spine_11",
+      "radius": 0.03267,
+      "height": 0.030725,
+      "coverage": 0.9751
+    },
+    {
+      "bone": "spine_12",
+      "radius": 0.033434,
+      "height": 0.030125,
+      "coverage": 0.9837
+    },
+    {
+      "bone": "spine_13",
+      "radius": 0.033933,
+      "height": 0.032509,
+      "coverage": 0.9882
+    },
+    {
+      "bone": "spine_14",
+      "radius": 0.033907,
+      "height": 0.028511,
+      "coverage": 0.9781
+    },
+    {
+      "bone": "spine_15",
+      "radius": 0.034304,
+      "height": 0.028551,
+      "coverage": 0.988
+    },
+    {
+      "bone": "spine_16",
+      "radius": 0.034254,
+      "height": 0.027961,
+      "coverage": 0.983
+    },
+    {
+      "bone": "spine_17",
+      "radius": 0.033791,
+      "height": 0.031456,
+      "coverage": 0.9829
+    },
+    {
+      "bone": "spine_18",
+      "radius": 0.033466,
+      "height": 0.031567,
+      "coverage": 0.9832
+    },
+    {
+      "bone": "spine_19",
+      "radius": 0.0327,
+      "height": 0.032557,
+      "coverage": 0.9808
+    },
+    {
+      "bone": "spine_20",
+      "radius": 0.032535,
+      "height": 0.031493,
+      "coverage": 0.9812
+    },
+    {
+      "bone": "spine_21",
+      "radius": 0.032265,
+      "height": 0.034825,
+      "coverage": 0.9861
+    },
+    {
+      "bone": "spine_22",
+      "radius": 0.031217,
+      "height": 0.034736,
+      "coverage": 0.9804
+    },
+    {
+      "bone": "spine_23",
+      "radius": 0.029623,
+      "height": 0.038556,
+      "coverage": 0.9769
+    },
+    {
+      "bone": "spine_24",
+      "radius": 0.028107,
+      "height": 0.042894,
+      "coverage": 0.9812
+    },
+    {
+      "bone": "spine_25",
+      "radius": 0.025904,
+      "height": 0.047204,
+      "coverage": 0.9758
+    },
+    {
+      "bone": "spine_26",
+      "radius": 0.023209,
+      "height": 0.050181,
+      "coverage": 0.959
+    },
+    {
+      "bone": "spine_27",
+      "radius": 0.020519,
+      "height": 0.058804,
+      "coverage": 0.9633
+    },
+    {
+      "bone": "spine_28",
+      "radius": 0.016004,
+      "height": 0.066478,
+      "coverage": 0.954
+    },
+    {
+      "bone": "spine_29",
+      "radius": 0.012078,
+      "height": 0.076083,
+      "coverage": 0.957
+    },
+    {
+      "bone": "spine_30",
+      "radius": 0.00905,
+      "height": 0.082575,
+      "coverage": 0.9526
+    },
+    {
+      "bone": "spine_31",
+      "radius": 0.006553,
+      "height": 0.093758,
+      "coverage": 0.9524
+    },
+    {
+      "bone": "hood_rib_1_l_0",
+      "radius": 0.006444,
+      "height": 0.004611,
+      "coverage": 1
+    },
+    {
+      "bone": "hood_rib_1_r_0",
+      "radius": 0.006271,
+      "height": 0.005277,
+      "coverage": 1
+    },
+    {
+      "bone": "hood_rib_2_l_0",
+      "radius": 0.008153,
+      "height": 0.002733,
+      "coverage": 0.9714
+    },
+    {
+      "bone": "hood_rib_2_r_0",
+      "radius": 0.007633,
+      "height": 0.00359,
+      "coverage": 0.9714
+    },
+    {
+      "bone": "hood_rib_3_l_0",
+      "radius": 0.006849,
+      "height": 0.001079,
+      "coverage": 1
+    },
+    {
+      "bone": "hood_rib_3_r_0",
+      "radius": 0.006556,
+      "height": 0.000955,
+      "coverage": 1
+    },
+    {
+      "bone": "tongue_0",
+      "radius": 0.002256,
+      "height": 0.018613,
+      "coverage": 0.9655
+    },
+    {
+      "bone": "tongue_1",
+      "radius": 0.001485,
+      "height": 0.012886,
+      "coverage": 0.9524
+    },
+    {
+      "bone": "tongue_2",
+      "radius": 0.008676,
+      "height": 0.016483,
+      "coverage": 0.9828
+    }
+  ],
+  "real": {
+    "length": 0.56,
+    "width": 0.55,
+    "height": 0.78
+  },
+  "measures": [],
+  "sources": [
+    "https://doi.org/10.5852/ejt.2024.961.2681",
+    "https://en.wikipedia.org/wiki/King_cobra",
+    "https://commons.wikimedia.org/wiki/File:King-Cobra.jpg"
+  ],
+  "qa": {
+    "pass": true,
+    "findings": []
+  }
+}

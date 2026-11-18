@@ -158,12 +158,14 @@ export function armatureOf(b: Bones, jaw: readonly [Vec3, Vec3] | null, prefix =
   // A biped's `chain` is its left arm (the sculpt mirrors it), not a body chain: its spine is
   // the dorsal line and the arms hang from the top of it.
   const arms = b.skeleton === 'biped' && b.chain.length > 1 ? b.chain.map((c) => c.at) : [];
-  const body = arms.length === 0 && b.chain.length > 1 ? b.chain.map((c) => c.at) : b.spine;
+  const chainBody = arms.length === 0 && b.chain.length > 1;
+  const body = chainBody ? b.chain.map((c) => c.at) : b.spine;
   const spine = chainBones(p('spine'), body, undefined, 6);
   const top = spine[spine.length - 1]?.name;
   const neckPts = b.neck.slice(1).map((n) => n.at);
   const neck = chainBones(p('neck'), neckPts, top, 3);
-  const headParent = neck[neck.length - 1]?.name ?? top;
+  // A chain body runs head → tail: the bone beside the head is its first, not its last.
+  const headParent = neck[neck.length - 1]?.name ?? (chainBody ? spine[0]?.name : top);
   const nose = headToWorld(b.head, [b.head.length * 0.9, 0, -0.1 * b.head.length]);
   const out: Bone[] = [
     ...spine,

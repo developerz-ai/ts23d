@@ -35,7 +35,35 @@ export {
   blenderJobArgs,
   defaultScripts,
 } from './blender-adapter.ts';
+export {
+  findLavapipe,
+  LAVAPIPE_MANIFESTS,
+  looksCrashed,
+  REVIEW_CRASH_FIX,
+  SOFTWARE_GPU_ARGS,
+  softwareGpuEnv,
+  softwareGpuExec,
+} from './blender-gpu.ts';
+export { BLENDER_SCRIPTS_FIX, blenderScriptsDir } from './blender-scripts.ts';
+export {
+  type BlenderBatch,
+  type BlenderSessionOptions,
+  type BlenderSessionStart,
+  blenderSessionStatus,
+  finishBlenderSession,
+  runBlenderBatch,
+  SESSION_REPLAY_NOTE,
+  startBlenderSession,
+  stopBlenderSession,
+  undoBlenderBatch,
+} from './blender-session.ts';
 export { BLENDER_SKELETON_CONTRACT, skeletonJson } from './blender-skeleton.ts';
+export {
+  BLENDER_BRUSHES,
+  type BlenderBrush,
+  type BlenderStrokeStamp,
+  type BlenderStrokeStep,
+} from './blender-step-stroke.ts';
 export {
   BLENDER_REPORT_CONTRACT,
   BLENDER_STEPS_CONTRACT,

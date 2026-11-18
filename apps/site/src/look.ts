@@ -1,9 +1,11 @@
 // Lighting looks per gallery category: which procedural environment, how strong, the key light
 // (the one that casts shadows), and the backdrop the viewer paints behind the asset. Vehicles and
 // hard-surface things get a product studio, characters and creatures a warm portrait key with a
-// cool rim, terrain and vegetation an outdoor sky with a low sun.
+// cool rim, terrain and vegetation an outdoor sky with a low sun. An asset that lives in water gets
+// open water whatever its category: light from above, a deep blue backdrop, no floor to shadow.
 
 import type { Category } from './categories.ts';
+import type { Medium } from './compile-protocol.ts';
 import type { EnvPreset } from './lightbox.ts';
 
 type Rgb = readonly [number, number, number];
@@ -25,7 +27,7 @@ export interface Look {
   readonly exposure: number;
 }
 
-export const LOOKS: Record<'studio' | 'portrait' | 'outdoor', Look> = {
+export const LOOKS: Record<'studio' | 'portrait' | 'outdoor' | 'water', Look> = {
   studio: {
     env: 'studio',
     envIntensity: 0.5,
@@ -56,10 +58,21 @@ export const LOOKS: Record<'studio' | 'portrait' | 'outdoor', Look> = {
     backdrop: ['#eef3f8', '#bccbd9'],
     exposure: 1,
   },
+  water: {
+    env: 'water',
+    envIntensity: 0.9,
+    key: { rgb: [0.74, 0.92, 1], intensity: 2, dir: [-0.25, 1, 0.3] },
+    hemi: 0.2,
+    shadow: 0,
+    contact: 0,
+    backdrop: ['#1d7a96', '#04182a'],
+    exposure: 1,
+  },
 };
 
-/** The look a gallery category is shown in. */
-export function lookFor(category: Category): Look {
+/** The look an asset is shown in: open water if it lives there, else its category's. */
+export function lookFor(category: Category, medium?: Medium): Look {
+  if (medium === 'water') return LOOKS.water;
   if (category === 'Characters' || category === 'Creatures') return LOOKS.portrait;
   if (category === 'Nature & Terrain') return LOOKS.outdoor;
   return LOOKS.studio;

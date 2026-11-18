@@ -191,6 +191,8 @@ export interface AssetDefinition {
   readonly sources?: readonly string[];
   readonly real?: RealDimensions;
   readonly tags?: readonly string[];
+  /** What holds the asset up; 'water': it touches no ground (default 'ground'). */
+  readonly medium?: 'ground' | 'water';
   readonly budget: Budget;
   readonly seed?: number;
   /** The recipe's own physical intent, enforced by QA (see Check). */
@@ -261,6 +263,7 @@ export interface CompiledAsset {
   readonly name: string;
   readonly kind: string;
   readonly lod: Lod;
+  readonly medium?: AssetDefinition['medium'];
   readonly budget: Budget;
   readonly real: RealDimensions | null;
   readonly checks: readonly Check[];

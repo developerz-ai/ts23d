@@ -10,6 +10,7 @@ import {
   translate,
 } from '../core/index.ts';
 import { box } from '../primitives/index.ts';
+import { radial, rigged, spine } from './chain-fixtures.ts';
 import { feetOf, gaitFindings, SLIDE_LIMIT } from './gait.ts';
 import { SKIN_SINK_LIMIT } from './gait-skin.ts';
 import { rig, walk, walkerBones } from './motion-fixtures.ts';
@@ -116,5 +117,50 @@ describe('gait', () => {
       ],
     };
     expect(feetOf(sk).map((b) => b.name)).toEqual(['leg']);
+  });
+
+  it('fails nothing on a water asset for feet it does not have, but still checks its loops', () => {
+    const swimmer = rigged(walkerBones, [walk(0.3)]);
+    expect(gaitFindings(swimmer).filter((x) => x.code === 'T3D_GAIT_FOOT_SLIDE')).toEqual([]);
+    expect(gaitFindings(rigged(walkerBones, [walk(0, 0.3)]))[0]?.message).toContain(
+      'does not loop',
+    );
+  });
+
+  it('does not call the tips of arms lying on the ground feet, at any link count', () => {
+    for (const links of [3, 5, 8, 24]) expect(feetOf(radial(8, links, 1, 0.005))).toEqual([]);
+  });
+
+  it('does not call a serpent lying on the ground feet', () => {
+    const flat = spine(12, 2).map((b) => ({
+      ...b,
+      head: [b.head[0], b.head[1], 0.01] as const,
+      tail: [b.tail[0], b.tail[1], 0.01] as const,
+    }));
+    expect(feetOf({ bones: flat })).toEqual([]);
+  });
+
+  it('does not call a long chain hanging straight down a leg', () => {
+    const bones: Armature['bones'] = [
+      { name: 'hub', head: [0, 0, 1], tail: [0.1, 0, 1] },
+      ...Array.from({ length: 8 }, (_, i) => ({
+        name: `arm_${i}`,
+        parent: i === 0 ? 'hub' : `arm_${i - 1}`,
+        head: [0, 0, 1 - i / 8] as const,
+        tail: [0, 0, 1 - (i + 1) / 8 + 0.001] as const,
+      })),
+    ];
+    expect(feetOf({ bones })).toEqual([]);
+  });
+
+  it('keeps a jointed leg and a flat toe branching off a foot', () => {
+    const bones: Armature['bones'] = [
+      { name: 'hip', head: [0, 0, 1], tail: [0.2, 0, 1] },
+      { name: 'thigh', parent: 'hip', head: [0, 0, 1], tail: [0, 0, 0.5] },
+      { name: 'shin', parent: 'thigh', head: [0, 0, 0.5], tail: [0, 0, 0.05] },
+      { name: 'toe_a', parent: 'shin', head: [0, 0, 0.05], tail: [0.1, 0.02, 0.02] },
+      { name: 'toe_b', parent: 'shin', head: [0, 0, 0.05], tail: [0.1, -0.02, 0.02] },
+    ];
+    expect(feetOf({ bones }).map((b) => b.name)).toEqual(['toe_a', 'toe_b']);
   });
 });

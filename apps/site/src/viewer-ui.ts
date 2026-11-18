@@ -52,6 +52,14 @@ export function wireUi(ui: ViewerUi, act: ViewerActions): void {
   ui.textures.addEventListener('change', () => act.textures(ui.textures.checked));
 }
 
+/** The overlay line naming the running scenario. */
+export function showScenario(ui: ViewerUi, title: string, line: string): void {
+  ui.scenario.replaceChildren(
+    Object.assign(document.createElement('strong'), { textContent: title }),
+    document.createTextNode(` · ${line}`),
+  );
+}
+
 export function syncUi(ui: ViewerUi, lod: number, mode: Mode, playing: boolean): void {
   for (const r of ui.lods) r.checked = Number(r.value) === lod;
   for (const r of ui.modes) r.checked = r.value === mode;

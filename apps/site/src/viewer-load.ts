@@ -1,5 +1,6 @@
 // The viewer's load step: compile the asset in the worker pool, read its engine hooks, pick the
-// scenario, and in Scene mode also compile the diorama base it stands on. No three.js staging here.
+// scenario, and in Scene mode also compile the diorama base it stands on (if the scenario wants
+// one: open water has none). No three.js staging here.
 
 import type { AnimationClip } from 'three';
 import { type BuildRequest, type Loaded, loadBuilt, type NeuralRef } from './compile.ts';
@@ -24,7 +25,7 @@ export interface Staged {
   readonly clip: AnimationClip | null;
   readonly hooks: Hooks;
   readonly def: ScenarioDef;
-  /** The diorama base (Scene mode), else null. */
+  /** The diorama base (Scene mode, when the scenario has ground), else null. */
   readonly base: Loaded | null;
 }
 
@@ -35,11 +36,12 @@ export async function loadStaged(
 ): Promise<Staged> {
   const loaded = await loadBuilt(request);
   const clip = loaded.animations.find((c) => c.name === 'run') ?? null;
-  const hooks = readHooks(loaded.scene, asset.kind, clip);
+  const hooks = readHooks(loaded.scene, asset.kind, clip, loaded.animations, loaded.built.medium);
   const def = pickScenario(hooks);
-  const base = scene
+  const footprint = scene ? def.ground(hooks) : null;
+  const base = footprint
     ? await loadBuilt({
-        target: { kind: 'diorama', name: `${asset.name}_${def.id}`, footprint: def.ground(hooks) },
+        target: { kind: 'diorama', name: `${asset.name}_${def.id}`, footprint },
         lod: 0,
         animations: false,
       })

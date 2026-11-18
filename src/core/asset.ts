@@ -219,6 +219,7 @@ export function compile(asset: Asset, options: CompileOptions = {}): CompiledAss
     name: asset.name,
     kind: asset.kind,
     lod,
+    ...(asset.medium ? { medium: asset.medium } : {}),
     budget: asset.budget,
     real: asset.real ?? null,
     checks: asset.checks ?? [],

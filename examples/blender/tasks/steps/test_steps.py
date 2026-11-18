@@ -247,9 +247,11 @@ def case_refusals():
 if __name__ == "__main__":
     if sys.argv[-1] != "selftest":
         raise SystemExit("usage: blender -b --factory-startup --python test_steps.py -- selftest")
-    from tasks.steps import test_finish, test_gates, test_limbs
+    from tasks.steps import test_finish, test_gates, test_limbs, test_session, test_stroke
 
-    cases = (case_refusals, case_full, case_looks, case_focus, case_proxy, case_build, *test_gates.CASES, *test_finish.CASES, *test_limbs.CASES)
+    only = os.environ.get("T3D_SELFTEST_ONLY", "")  # a comma list of case names, to run a few
+    cases = (case_refusals, case_full, case_looks, case_focus, case_proxy, case_build, *test_gates.CASES, *test_finish.CASES, *test_limbs.CASES, *test_stroke.CASES, *test_session.CASES)
+    cases = [c for c in cases if not only or c.__name__ in only.split(",")]
     try:
         for case in cases:
             print(case.__name__)

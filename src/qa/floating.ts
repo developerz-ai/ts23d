@@ -1,7 +1,9 @@
 // Gate: everything is attached. A part is grounded if some surface of it lies within CONTACT_EPS of
 // z = 0 (or it straddles z = 0) or its SURFACE comes within CONTACT_EPS of a grounded part's
 // surface, transitively. Bounding boxes are only the prefilter. A part wholly below the ground is
-// its own finding: sunk geometry is invisible and was counted as grounded before (D36).
+// its own finding: sunk geometry is invisible and was counted as grounded before (D36). A water
+// asset (`medium: 'water'`) has no ground: its largest connected body, by surface area, holds the
+// rest, and nothing is ever "sunk".
 
 import { type Bounds, type CompiledAsset, type Mesh, worldMeshes } from '../core/index.ts';
 import { surfaceSamples, type TriangleGrid } from './geometry.ts';
@@ -55,12 +57,15 @@ function gapBetween(a: Mesh, b: Mesh): number {
   return Math.max(box, best);
 }
 
-/** The closest thing that holds `m`: a grounded part, or the ground (`nearest` undefined). */
+/** The closest thing that holds `m`: a held part, or the ground (`nearest` undefined). */
 function closest(
   m: Mesh,
   grounded: ReadonlyArray<readonly [string, Mesh]>,
+  ground: boolean,
 ): { gap: number; nearest?: string } {
-  let out: { gap: number; nearest?: string } = { gap: meshBounds(m).min[2] };
+  let out: { gap: number; nearest?: string } = {
+    gap: ground ? meshBounds(m).min[2] : Number.POSITIVE_INFINITY,
+  };
   const byBox = grounded
     .map(([n, g]) => ({ n, g, box: boxGap(meshBounds(m), meshBounds(g)) }))
     .sort((x, y) => x.box - y.box);
@@ -72,20 +77,18 @@ function closest(
   return out;
 }
 
+type Named = readonly [string, Mesh];
+
 const cm = (m: number): string => `${(m * 100).toFixed(1)} cm`;
 
-export const floatingParts: Gate = (asset: CompiledAsset): Finding[] => {
-  const meshes = [...worldMeshes(asset.parts)];
-  const bounds = new Map(meshes.map(([n, m]) => [n, meshBounds(m)]));
-  const sunk = new Set(
-    meshes.filter(([n]) => (bounds.get(n)?.max[2] ?? 0) < -CONTACT_EPS).map(([n]) => n),
-  );
-  const grounded = new Set(
-    meshes
-      .filter(([n]) => !sunk.has(n) && (bounds.get(n)?.min[2] ?? 1) <= CONTACT_EPS)
-      .map(([n]) => n),
-  );
-  const frontier = [...grounded];
+/** Grows `held` by every part touching it, transitively (`sunk` parts hold nothing). */
+function spread(
+  meshes: readonly Named[],
+  bounds: ReadonlyMap<string, Bounds>,
+  held: Set<string>,
+  sunk: ReadonlySet<string>,
+): void {
+  const frontier = [...held];
   while (frontier.length > 0) {
     const g = frontier.pop() ?? '';
     const gm = meshes.find(([n]) => n === g)?.[1];
@@ -93,13 +96,67 @@ export const floatingParts: Gate = (asset: CompiledAsset): Finding[] => {
     if (!gm || !gb) continue;
     for (const [n, m] of meshes) {
       const b = bounds.get(n);
-      if (grounded.has(n) || sunk.has(n) || !b || !near(b, gb, CONTACT_EPS)) continue;
+      if (held.has(n) || sunk.has(n) || !b || !near(b, gb, CONTACT_EPS)) continue;
       if (touching(m, gm, triangleGrid(gm)) || touching(gm, m, triangleGrid(m))) {
-        grounded.add(n);
+        held.add(n);
         frontier.push(n);
       }
     }
   }
+}
+
+function surfaceArea(m: Mesh): number {
+  const P = m.positions;
+  const T = m.indices;
+  let sum = 0;
+  for (let t = 0; t < T.length; t += 3) {
+    const [a, b, c] = [(T[t] ?? 0) * 3, (T[t + 1] ?? 0) * 3, (T[t + 2] ?? 0) * 3];
+    const u = [0, 1, 2].map((k) => (P[b + k] ?? 0) - (P[a + k] ?? 0));
+    const v = [0, 1, 2].map((k) => (P[c + k] ?? 0) - (P[a + k] ?? 0));
+    const [ux = 0, uy = 0, uz = 0] = u;
+    const [vx = 0, vy = 0, vz = 0] = v;
+    sum += Math.hypot(uy * vz - uz * vy, uz * vx - ux * vz, ux * vy - uy * vx) / 2;
+  }
+  return sum;
+}
+
+/** The connected group of parts with the most surface: what a swimmer's other parts must reach. */
+function largestBody(meshes: readonly Named[], bounds: ReadonlyMap<string, Bounds>): Set<string> {
+  const seen = new Set<string>();
+  let best = new Set<string>();
+  let bestArea = -1;
+  for (const [n] of meshes) {
+    if (seen.has(n)) continue;
+    const group = new Set([n]);
+    spread(meshes, bounds, group, new Set());
+    let area = 0;
+    for (const [g, m] of meshes) {
+      if (!group.has(g)) continue;
+      seen.add(g);
+      area += surfaceArea(m);
+    }
+    if (area > bestArea) [best, bestArea] = [group, area];
+  }
+  return best;
+}
+
+export const floatingParts: Gate = (asset: CompiledAsset): Finding[] => {
+  const meshes = [...worldMeshes(asset.parts)];
+  const bounds = new Map(meshes.map(([n, m]) => [n, meshBounds(m)]));
+  const water = asset.medium === 'water';
+  const sunk = new Set(
+    water
+      ? []
+      : meshes.filter(([n]) => (bounds.get(n)?.max[2] ?? 0) < -CONTACT_EPS).map(([n]) => n),
+  );
+  const grounded = water
+    ? largestBody(meshes, bounds)
+    : new Set(
+        meshes
+          .filter(([n]) => !sunk.has(n) && (bounds.get(n)?.min[2] ?? 1) <= CONTACT_EPS)
+          .map(([n]) => n),
+      );
+  if (!water) spread(meshes, bounds, grounded, sunk);
   const holders = meshes.filter(([n]) => grounded.has(n));
   return meshes.flatMap(([n, m]): Finding[] => {
     if (sunk.has(n)) {
@@ -116,8 +173,9 @@ export const floatingParts: Gate = (asset: CompiledAsset): Finding[] => {
       ];
     }
     if (grounded.has(n)) return [];
-    const c = closest(m, holders);
+    const c = closest(m, holders, !water);
     const onto = c.nearest ? `'${c.nearest}'` : 'the ground';
+    const held = water ? 'the main body' : 'anything attached to the ground';
     return [
       {
         gate: 'floating-parts',
@@ -125,7 +183,7 @@ export const floatingParts: Gate = (asset: CompiledAsset): Finding[] => {
         part: n,
         gap: c.gap,
         ...(c.nearest ? { nearest: c.nearest } : {}),
-        message: `'${n}' has no surface within ${cm(CONTACT_EPS)} of anything attached to the ground; nearest support ${onto} is ${cm(c.gap)} away`,
+        message: `'${n}' has no surface within ${cm(CONTACT_EPS)} of ${held}; nearest support ${onto} is ${cm(c.gap)} away`,
         fix: `move it ${cm(c.gap)} onto ${onto} (check \`at\`, parent and the LOD-gated detail around it) — bounding boxes touching is not enough; ${ANCHOR}`,
       },
     ];

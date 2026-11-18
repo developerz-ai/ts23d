@@ -174,6 +174,7 @@ describe('blenderProgram: the canonical program', () => {
       { op: 'smooth', iterations: 2, factor: 0.5 },
       { op: 'displace', strength: 0.01, scale: 0.1, mask: { kind: 'z', min: 0, max: 1 } },
       { op: 'inflate', distance: 0.01, mask: { kind: 'sphere', at: [0, 0, 0], r: 1 } },
+      { op: 'stroke', brush: 'draw', path: [[0, 0, 0]], radius: 0.1, strength: 0.01 },
       { op: 'retopo', triangles: 2000, focus: [{ at: [0.5, 0, 1], r: 0.2, weight: 3 }] },
       { op: 'uv' },
       { op: 'bake' },
