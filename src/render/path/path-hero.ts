@@ -29,7 +29,7 @@ export interface PathOptions extends Omit<BeautyOptions, 'supersample'> {
   readonly seed?: number;
   /** Replace the studio sun + sky (tests: a white furnace). */
   readonly sky?: Sky;
-  /** Studio floor (bounce light + shadow catcher). Default true. */
+  /** Studio floor (bounce light + shadow catcher). Default: true, false for a water asset. */
   readonly floor?: boolean;
 }
 
@@ -74,7 +74,8 @@ function setup(asset: CompiledAsset, o: PathOptions) {
   // The raster rig's numbers are irradiance ÷ π (its pixel = albedo × light): × π for radiometry.
   const sunColor = rig.sunColor.map((c) => c * Math.PI) as typeof rig.sunColor;
   const sky = o.sky ?? makeSky({ sun: rig.sun, sunColor });
-  const data = worldData(asset, cam, sheetTextures(sheet), { sky, floor: o.floor ?? true });
+  const floor = o.floor ?? asset.medium !== 'water';
+  const data = worldData(asset, cam, sheetTextures(sheet), { sky, floor });
   const job = {
     data,
     cam,

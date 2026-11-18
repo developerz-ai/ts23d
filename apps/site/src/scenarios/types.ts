@@ -37,8 +37,8 @@ export interface ScenarioDef {
   /** Shown in the overlay, e.g. "Driving". */
   readonly title: string;
   matches(h: Hooks): boolean;
-  /** The diorama this scenario needs, in authoring space (Z-up, front +X). */
-  ground(h: Hooks): Footprint;
+  /** The diorama this scenario needs, in authoring space (Z-up, front +X); null for none. */
+  ground(h: Hooks): Footprint | null;
   /** One line naming the hooks used, for the overlay. */
   describe(h: Hooks): string;
   create(ctx: ScenarioContext): Scenario;

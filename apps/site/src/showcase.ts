@@ -1,14 +1,17 @@
 // The home page's hero: featured assets compiled live (heavy ones at LOD1), slowly orbiting in
 // the studio light, one after another. The committed beauty render shows as a poster until the
 // first compile lands. A model-first asset compiles with its committed model outputs (`neuralOf`),
-// so it shows what its card shows; main.ts leaves the heavy ones out of this list.
+// so it shows what its card shows; main.ts leaves the heavy ones out of this list. A water asset
+// has no floor: the stage turns to deep water and the animal swims on the spot while it orbits.
 
-import { type Object3D, Vector3 } from 'three';
+import { formatCount } from '@developerz.ai/ts23d/core';
+import { type AnimationClip, AnimationMixer, type Object3D, Vector3 } from 'three';
 import { loadBuilt, type NeuralRef, recipe } from './compile.ts';
 import type { Item } from './items.ts';
 import { startLod } from './lod-policy.ts';
 import { lookFor } from './look.ts';
 import { qualityTier } from './quality.ts';
+import { inPlace, swimClip } from './scenarios/clips.ts';
 import { disposeTree, Stage } from './stage.ts';
 import { studioRenderer } from './studio.ts';
 import { reducedMotion } from './theme.ts';
@@ -25,6 +28,7 @@ export class Showcase {
   private index = -1;
   private last = 0;
   private model: Object3D | null = null;
+  private mixer: AnimationMixer | null = null;
   private busy = false;
 
   constructor(
@@ -58,7 +62,7 @@ export class Showcase {
     this.label
       .querySelector('[data-label-meta]')
       ?.replaceChildren(
-        `${item.name} · ${item.category}${tris ? ` · ${tris.toLocaleString('en')} tris at LOD${lod}` : ''}`,
+        `${item.name} · ${item.category}${tris ? ` · ${formatCount(tris)} tris at LOD${lod}` : ''}`,
       );
   }
 
@@ -71,19 +75,24 @@ export class Showcase {
       if (!item) return;
       // Heavy assets (sculpts, near-million-triangle cars) orbit at LOD1.
       const lod = startLod({ ...item, triangles: item.media?.triangles ?? [] });
-      const { scene } = await loadBuilt(
+      const { scene, animations, built } = await loadBuilt(
         recipe(item.name, lod, item.recipe?.file, this.neuralOf(item)),
       );
+      const water = built.medium === 'water';
       this.root.classList.add('swapping');
       await new Promise((r) => setTimeout(r, this.model ? 450 : 0));
+      this.mixer?.stopAllAction();
       if (this.model) disposeTree(this.model);
       this.model = scene;
-      this.stage.setLook(lookFor(item.category), this.renderer);
+      this.mixer = water ? this.swimmer(scene, animations) : null;
+      this.root.closest('.showcase')?.classList.toggle('underwater', water);
+      this.stage.setLook(lookFor(item.category, built.medium), this.renderer);
+      this.stage.setFloor(!water);
       const sphereCenter = this.stage.show(scene, true);
       this.center.copy(sphereCenter);
       this.distance = this.stage.camera.position.distanceTo(sphereCenter) * 0.78;
       this.stage.syncShadow();
-      this.stage.bakeContact(this.renderer);
+      if (!water) this.stage.bakeContact(this.renderer);
       this.index = index;
       this.shown = -1;
       this.setLabel(item);
@@ -95,6 +104,14 @@ export class Showcase {
     } finally {
       this.busy = false;
     }
+  }
+
+  private swimmer(scene: Object3D, clips: readonly AnimationClip[]): AnimationMixer | null {
+    const clip = swimClip(clips);
+    if (!clip) return null;
+    const mixer = new AnimationMixer(scene);
+    mixer.clipAction(inPlace(clip)).play();
+    return mixer;
   }
 
   private resize(): void {
@@ -110,7 +127,10 @@ export class Showcase {
     const dt = Math.min(t - this.last, 0.1);
     this.last = t;
     if (this.shown < 0) this.shown = t;
-    if (!reducedMotion()) this.angle += dt * 0.12;
+    if (!reducedMotion()) {
+      this.angle += dt * 0.12;
+      this.mixer?.update(dt);
+    }
     const c = this.stage.camera;
     const elev = 0.38;
     // Narrow screens frame the subject alone, so pull back to keep it whole.

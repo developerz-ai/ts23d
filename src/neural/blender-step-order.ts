@@ -2,9 +2,11 @@
 // steps: what comes first and last, what needs what before it, what may follow `bind` and `lods`,
 // and the cross-field rules of the finishing ops (a `joint` needs a point and a later `bind`,
 // `weights`, `isolate` and the 'weights' / 'poses' review views need a `bind` before them, a bind from the
-// source's own rig rules out `transform`). Every refusal is T3D_RECIPE_INVALID naming the step.
+// source's own rig rules out `transform`, a `stroke` comes before `uv`, `bake`, `bind` and `lods`).
+// Every refusal is T3D_RECIPE_INVALID naming the step.
 
-import { invalidStep } from './blender-step-fields.ts';
+import { invalidStep } from './blender-step-checks.ts';
+import { checkStroke } from './blender-step-stroke.ts';
 
 type Step = Readonly<Record<string, unknown>>;
 
@@ -23,11 +25,23 @@ const AFTER_BIND: readonly string[] = [
 ];
 const AFTER_LODS: readonly string[] = ['export', 'review'];
 const NEED_BIND: readonly string[] = ['weights', 'poses'];
+/** A stroke moves vertices these ops have already been computed from. */
+const BEFORE_STROKE: readonly string[] = ['uv', 'bake', 'bind', 'lods'];
 
 function checkFinishing(steps: readonly Step[], ops: readonly string[], i: number): void {
   const s = steps[i] ?? {};
   const at = `step ${i} (${ops[i]})`;
   const bind = ops.indexOf('bind');
+  if (ops[i] === 'stroke') {
+    checkStroke(s, at);
+    const late = BEFORE_STROKE.find((op) => ops.indexOf(op) >= 0 && ops.indexOf(op) < i);
+    if (late !== undefined)
+      invalidStep(
+        at,
+        `comes after '${late}', whose result it would invalidate`,
+        'stroke the source before retopo, or the shell between retopo and uv',
+      );
+  }
   if (ops[i] === 'joint') {
     if (s['head'] === undefined && s['tail'] === undefined)
       invalidStep(at, 'moves nothing', 'give head and / or tail (asset frame, metres)');

@@ -4,7 +4,7 @@
 // findings that repeat across LODs into one `LOD0-2: …` line.
 
 import { join } from 'node:path';
-import type { Lod, Ts23dError } from '../core/index.ts';
+import { formatCount, type Lod, type Ts23dError } from '../core/index.ts';
 import type { Finding } from '../qa/index.ts';
 import type { AssetManifest } from './manifest.ts';
 
@@ -99,7 +99,7 @@ export function findingLine(f: Finding): string {
 /** Human summary of one built asset; `dir` resolves the manifest's relative file paths. */
 export function printManifest(m: AssetManifest, dir: string): void {
   console.log(
-    `${m.name}  QA ${m.qa.pass ? 'PASS' : 'FAIL'}  tris ${m.triangles.join('/')}  draws ${m.drawCalls.join('/')}`,
+    `${m.name}  QA ${m.qa.pass ? 'PASS' : 'FAIL'}  tris ${m.triangles.map(formatCount).join('/')}  draws ${m.drawCalls.join('/')}`,
   );
   const f = m.files;
   for (const p of [

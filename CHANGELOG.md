@@ -4,6 +4,21 @@ All notable changes to `@developerz.ai/ts23d`. Format: [Keep a Changelog](https:
 
 ## [Unreleased]
 
+### Added
+- `t3d blender session`: keep one Blender open and run chained step batches with undo and review; `finish` writes a program that replays through `t3d neural run`.
+- Blender `stroke` step: nine brushes (`draw`, `inflate`, `clay`, `flatten`, `crease`, `pinch`, `smooth`, `grab`, `vdm`) on an existing mesh, with falloff measured along the surface.
+- `bake.cageFit`, Blender review without a GPU (`--software-gpu`), and `--scripts` / `T3D_BLENDER_SCRIPTS` for installs without the GPL scripts.
+- `defineBodyPlan`: bodies built from bone chains (mirrored fins, radial arms, many necks), with `swimClips`, `snakeClips`, `hydraClips` and `octopusClips` baked from published biomechanics numbers.
+- `medium: 'water'` on assets: no ground rules, no studio floor in renders, and the new `swim` QA gate.
+- QA: `chain-cross` (limbs passing through each other in clips), `T3D_DEFORM_TWIST`, and a refusal of crease declarations that blanket a whole body.
+- Recipes `great_white`, `bluefin_tuna`, `king_cobra`, `common_octopus` and `hydra`; a gallery swim show in deep water.
+- `blender-artist` skill and research notes on Blender and on swimming, snake, neck and tentacle motion.
+- `formatCount`: counts people read now appear as `188k`, `21.9k`, `1.23M` in the README, gallery, CLI summaries and benchmark table; JSON and manifests keep exact numbers.
+
+### Fixed
+- `serpent` skeletons parented the head to the tail tip.
+- The `gait` gate no longer reads tentacle or snake tips as feet.
+
 ## [0.11.0] - 2026-11-17
 
 Two more model-first creatures, a brown bear and a winged drake, and the library options and QA rules they needed.

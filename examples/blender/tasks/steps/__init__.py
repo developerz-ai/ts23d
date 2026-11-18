@@ -2,7 +2,7 @@
 # The step ops of the `blender` task (t3d-blender-steps/1): op name → function(state, step) that
 # changes the State and returns facts for the report. One module per op family.
 
-from tasks.steps import bake, bind, build, clean, deform, io, lods, remesh, repose, retopo, review, rigfix, script, unweb, uv
+from tasks.steps import bake, bind, build, clean, deform, io, lods, remesh, repose, retopo, review, rigfix, script, stroke, unweb, uv
 
 OPS = {
     "transform": clean.transform,
@@ -14,6 +14,7 @@ OPS = {
     "smooth": deform.smooth,
     "displace": deform.displace,
     "inflate": deform.inflate,
+    "stroke": stroke.run,
     "skinBody": build.skin_body,
     "metaballs": build.metaballs,
     "retopo": retopo.run,

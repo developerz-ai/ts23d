@@ -114,6 +114,7 @@ bun run shots <name>                      # refresh committed out/
 - [hard-surface-artist](../hard-surface-artist/SKILL.md): mechanisms and hinges.
 - [character-artist](../character-artist/SKILL.md) / [creature-artist](../creature-artist/SKILL.md): anatomical joints.
 - [technical-artist](../technical-artist/SKILL.md): node naming and engine contract.
+- [blender-artist](../blender-artist/SKILL.md): weights and binds on generated meshes, in one open Blender.
 - [automotive-designer](../automotive-designer/SKILL.md): doors and wheels.
 - [product-designer](../product-designer/SKILL.md): lids, triggers, buttons.
 

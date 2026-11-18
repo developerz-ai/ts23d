@@ -16,6 +16,7 @@ Original designs only; never a named creature from any IP.
 
 ## When
 - Any animal, beast, monster, insectoid, serpent, winged or elemental creature.
+- A body that is not four legs and a head (fish, shark, octopus, snake, many-necked beast): start from [Bodies built from chains](#bodies-built-from-chains).
 - A humanoid that departs from human proportions far enough that animal anatomy rules (a
   digitigrade-legged brute, a hybrid). Pure humanoids: [character-artist](../character-artist/SKILL.md).
 
@@ -99,6 +100,18 @@ judge. Outputs are not bit-identical between GPU runs: the committed output is t
 2026-11 the quadruped example is [`recipes/wolf_hybrid`](../../../recipes/wolf_hybrid/README.md) (read its steps table), and
 [`recipes/bear_hybrid`](../../../recipes/bear_hybrid/README.md) for a heavy plantigrade build (`nose: true`, wrist weights); [`recipes/dragon_hybrid`](../../../recipes/dragon_hybrid/README.md) for an invented winged body the plan cannot describe (`register: 'joints'`, `take` with `'tail'`, rigid wings); the humanoid example is [`recipes/ranger`](../../../recipes/ranger/README.md).
 
+## Bodies built from chains
+For bodies the creature kind cannot describe, write a `defineBodyPlan` spec: a trunk chain plus child chains, `repeat: { kind: 'mirror' }` for paired fins and `{ kind: 'radial', count: 8, ... }` for arms. Declare `medium: 'water'` for swimmers. Motion comes from sourced numbers, not by eye ([research](../../../docs/research/swim-and-tentacle-animation.md)).
+
+| Body | Clips | The check that matters |
+|---|---|---|
+| Shark, tuna, trout, eel | `swimClips(plan, { chain: 'spine', preset })` | QA `swim`: Strouhal 0.20 to 0.40, stride 0.40 to 0.80, slip 0.50 to 0.90, tail 0.13 to 0.24 L, wave runs head to tail |
+| Snake | `snakeClips(plan, { chain: 'spine' })` | no sliding on `slither`; `sidewind` still misses its foot-lock target, so do not ship it |
+| Many necks | `hydraClips(plan, { necks, heads, seed })` | QA `chain-cross`: necks never pass through each other |
+| Octopus | `octopusClips(plan, { arms, seed, mantle })` | `chain-cross`, and `T3D_DEFORM_TWIST`: at most 45.6 degrees of twist per joint |
+
+Speed comes from tail-beat frequency, never from a bigger swing. A shark's upper jaw moves forward while the mouth closes.
+
 ## Workflow (code route: stylised creatures, the CPU fallback)
 | # | Creature-design stage | ts23d | Exit |
 |---|---|---|---|
@@ -181,6 +194,7 @@ bun run shots <name>                      # refresh committed out/
 - [concept-artist](../concept-artist/SKILL.md): purpose, silhouette options.
 - [material-artist](../material-artist/SKILL.md): scales, fur, skin strips.
 - [rigger-animator](../rigger-animator/SKILL.md): pivots at real joints.
+- [blender-artist](../blender-artist/SKILL.md): finishing a generated body in one open Blender.
 - [art-director](../art-director/SKILL.md): bestiary consistency.
 
 ## Tool status

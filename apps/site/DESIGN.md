@@ -28,7 +28,8 @@ chrome stays flat, square and hairline.
 | `--tok-*`                       | source highlighting                        |                       |                       |
 
 The studio stays light in the dark scheme: the committed renders are shot on light grey, and the
-live canvas fades in over them. Text on a stage uses `--studio-ink`.
+live canvas fades in over them. Text on a stage uses `--studio-ink`. The one exception is a water
+asset: its stage is deep water, and the home showcase's copy turns light while it is shown.
 
 ## Type
 
@@ -44,8 +45,9 @@ live canvas fades in over them. Text on a stage uses `--studio-ink`.
 - **Asset** (`#<asset_name>`): breadcrumb + prev/next, the viewer (heavy assets open at LOD1 with a
   redline "Load full detail" button; a time-based bar shows elapsed vs estimated compile time;
   Studio: orbit, turntable, Play
-  runs the picked clip (`run`, else `idle`, else the first), Skeleton for skinned assets; Scene: the asset on a diorama in a scenario picked from its named
-  parts), LOD / wireframe / trim sheet, live stats, parts list (hover outlines the node), GLB per
+  runs the picked clip (`run`, else `cruise`, `idle`, else the first), Skeleton for skinned assets; Scene: the asset on a diorama in a scenario picked from its named
+  parts; an asset declaring `medium: 'water'` swims in open water instead, with no floor, diorama
+  or contact shadow in either mode), LOD / wireframe / trim sheet, live stats, parts list (hover outlines the node), GLB per
   LOD; the info panel (category, QA verdict, triangles and draw calls per LOD, real vs model size,
   dossier and recipe links); sounds (play buttons, optional positional audio); measures (spec vs
   model, Δ%, source), sources; quality (critique scores, art metrics, weathering coverage); renders
@@ -73,10 +75,13 @@ live canvas fades in over them. Text on a stage uses `--studio-ink`.
   toggle never touches these materials (it is off and disabled when nothing else is on screen),
   and the stats name each set and its map sizes.
 - **Motion** (`src/viewer-motion.ts`): Studio's clip picker lists every baked clip (idle, walk,
-  trot, gallop, blink, talk, run…; never `rest`); a Skeleton checkbox draws a skinned asset's bones
-  in redline.
-- **Order**: the flagships first in the showcase and the grid (`FLAGSHIPS` in `items.ts`: wolf,
-  the heads, tiger, dragon, fox, brown bear, city block), then categories.
+  trot, gallop, blink, talk, cruise, slither, run…; never `rest`); a skinned asset's travelling
+  loops play on the spot, so they have no seam. The model holds its rest pose until Play, except that a water asset starts swimming on open unless reduced motion is set; a clip
+  that carries it well outside the framed pose pulls the camera back. A Skeleton checkbox draws its
+  bones in redline.
+- **Order**: the flagships first in the showcase and the grid (`FLAGSHIPS` in `flagships.ts`: wolf,
+  ranger, great white, bluefin tuna, octopus, king cobra, hydra, the heads, tiger, dragon, fox, brown
+  bear, city block), then categories.
 - **Categories** (`src/categories.ts`): Creatures, Characters, Vehicles, Strategy kit, Architecture,
   Nature & Terrain, Sci-fi, Materials & finishes, Parts, Sound, Tech demos, Props.
 
@@ -114,7 +119,8 @@ engines, so there is no game code here.
   `studio.ts` (renderer, shadow catcher), `look.ts` + `lightbox.ts` + `backdrop.ts` (per-category
   light, procedural environment, backdrop), `contact-shadow.ts`, `post.ts` (lazy AO chunk),
   `quality.ts` (tiers), `theme.ts`.
-- Scenarios (`scenarios/`): unchanged contract; they read part names and kind, never the name.
+- Scenarios (`scenarios/`): unchanged contract; they read part names, kind and medium, never the
+  name. `ground` may return null (no diorama).
 - Presentation: `textures.ts`, `diorama.ts` + `ground-color.ts` + `noise.ts`, `particle-*.ts`.
 - Styles: `style.css` imports `styles/{base,home,gallery,asset}.css`.
 

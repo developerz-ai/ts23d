@@ -76,6 +76,18 @@ T3D_PART_UNKNOWN: part 'gun_barrel' parents to 'gun', which does not exist yet
 | `T3D_DEFORM_INTERSECT` | deformation QA | At a joint-limit pose the skinned surface passes through itself. The message names the joint and pose | Add a helper bone, move the pivot, or narrow the joint `limit` |
 | `T3D_DEFORM_STRETCH` | deformation QA | At a joint-limit pose a triangle stretches past the cap. The message names the joint and pose | Add a helper bone or move the pivot; add edge loops across the joint |
 | `T3D_GAIT_FOOT_SLIDE` | gait QA | A planted foot slides on the ground during a walk/trot clip. The message names the leg and frame | Match stride length to body speed (stride = speed × cycle × duty), or foot-lock the leg with IK baked to keys |
+| `T3D_DEFORM_TWIST` | deformation QA | A clip or a `limit.twist` turns one chain joint past 45.6°, which pinches the section below 85 % of its area under linear skinning. The message names the bone and clip | Spread the twist over more links of the chain |
+| `T3D_QA_CHAIN_CROSS` | `chain-cross` QA | Two long limbs (arms, necks) pass through each other during a clip. The message names both bones and the clip | Keep each limb in its own sector, or offset the phases so they do not meet |
+| `T3D_QA_SWIM_STROUHAL` | `swim` QA | The `cruise` tail beat is outside Strouhal 0.20 to 0.40 (f × tail excursion ÷ speed) | Set frequency and tail amplitude from the swim preset; change speed through frequency |
+| `T3D_QA_SWIM_STRIDE` | `swim` QA | Travel per tail beat is outside 0.40 to 0.80 body lengths | Make root speed match stride × frequency × body length |
+| `T3D_QA_SWIM_SLIP` | `swim` QA | Body speed ÷ wave speed is outside 0.50 to 0.90 | Change the wavelength or root speed so the wave runs faster than the body |
+| `T3D_QA_SWIM_WAVE` | `swim` QA | The body wave does not run from head to tail | Make phase fall along the chain from head to tail |
+| `T3D_QA_SWIM_ENVELOPE` | `swim` QA | Side-to-side amplitude does not peak in the last tenth of the body | Use an envelope that grows toward the tail |
+| `T3D_QA_SWIM_HEAD` | `swim` QA | Head ÷ tail amplitude is outside 0.02 to 0.35 | Adjust the envelope at the head |
+| `T3D_QA_SWIM_TAIL` | `swim` QA | Tail peak-to-peak excursion is outside 0.13 to 0.24 body lengths | Scale the envelope until the measured excursion is in range |
+| `T3D_QA_SWIM_RECOIL` | `swim` QA | The lateral centre of mass swings over 0.5 % of body length | Remove recoil at the root when baking |
+| `T3D_QA_SWIM_BURST` | `swim` QA | `burst` changes tail amplitude or wavelength over 15 % from `cruise` | Raise frequency only |
+| `T3D_QA_SWIM_BEAT` | `swim` QA | `cruise` or `burst` travels but the tail does not beat | Drive the spine with a travelling wave; the root only follows |
 | `T3D_NEURAL_MISSING` | neural recipe cache (planned, [plan 101](../plans/2026/11/15/101-asset-realism-programme/overview.md) slice 13) | A recipe asked a neural task whose output is not in `recipes/<name>/neural/` (ADR 014). A notice and CPU-tier fallback by default; an error only with `--require-neural`. Also when a request's input is a local output (`keep: 'local'`) that is not on this machine: the request is not sent | `t3d neural run <recipe>` with a configured adapter, then commit the cache; for an absent local input, re-run or copy the upstream output on this machine |
 | `T3D_NEURAL_FAILED` | neural adapters (planned, [plan 101](../plans/2026/11/15/101-asset-realism-programme/overview.md) slice 13) | The adapter or model server failed: network, HTTP status, timeout, job error. The message names the adapter, task and server message | Start or fix the server the adapter points at; check `t3d neural ls` |
 | `T3D_NEURAL_OUTPUT_INVALID` | `checkNeuralResult`; per-task output validation (planned, [plan 101](../plans/2026/11/15/101-asset-realism-programme/overview.md) slice 13/15) | A model returned no output, empty bytes, a mime the task does not allow, a score outside 0..10, or an output failing its task's validation (mesh, texture, rig, motion). The message names which check failed | Make the adapter return the task's file type (`NEURAL_MIMES`) with real bytes; fix the model output the message names; for a reply over the cap raise the adapter's `maxBytes` in `t3d.config.ts` (`http(url, model, { maxBytes: 256 * 1024 * 1024 })`) |
@@ -146,8 +158,10 @@ QA findings carry a code too (outside the `ErrorCode` union, like `T3D_CONNECT_*
 | `degenerate-triangles` | `T3D_QA_DEGENERATE_TRIANGLES` |
 | `weather` | `T3D_WEATHER_*` (below) |
 | `skin` | `T3D_SKIN_INVALID`, `T3D_SKIN_CROSSED` |
-| `deform` | `T3D_DEFORM_VOLUME`, `T3D_DEFORM_INTERSECT`, `T3D_DEFORM_STRETCH` |
+| `deform` | `T3D_DEFORM_VOLUME`, `T3D_DEFORM_INTERSECT`, `T3D_DEFORM_STRETCH`, `T3D_DEFORM_TWIST` |
 | `gait` | `T3D_GAIT_FOOT_SLIDE` (planted foot slides or sinks), `T3D_QA_GAIT` (a looping clip whose last key differs from its first; fix: bake the last key from the first, or `loop: false`. Also: in an in-place clip the skin of a foot goes more than 3 mm under the floor; fix: raise the clip's root by the amount printed (`clips.lift`), re-target, or keep the feet planted in the clip) |
+| `swim` | `T3D_QA_SWIM_*` (library table); water assets with a skeleton |
+| `chain-cross` | `T3D_QA_CHAIN_CROSS`; skeletons with two or more long limb chains |
 
 | Gate (`DEFAULT_LOD_GATES`, `src/qa/lods.ts`) | Finding code |
 |---|---|

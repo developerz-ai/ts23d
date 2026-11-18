@@ -24,6 +24,7 @@ export type {
   BuildResult,
   Lod,
   Manifest,
+  Medium,
   NeuralRef,
   PartInfo,
   Sheet,

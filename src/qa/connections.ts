@@ -5,6 +5,7 @@
 // warnings (T3D_CONNECT_BURIED) print in the report and on `connectionsOverlay`.
 
 import type { CompiledAsset, ConnectAs, Part } from '../core/index.ts';
+import { blanketIssues, honestCreases } from './connections-crease.ts';
 import {
   type ConnectIssue,
   type ConnectOk,
@@ -17,7 +18,7 @@ import { type Eye, eyeIssues, gazeIssues } from './connections-eyes.ts';
 import { connectivity } from './connections-graph.ts';
 import { grownIssues } from './connections-grown.ts';
 import { partnerOf } from './connections-partner.ts';
-import { seamIssues } from './connections-seam.ts';
+import { SCULPT_TRIS, seamIssues } from './connections-seam.ts';
 import { assetShells, type Shell } from './connections-shells.ts';
 import { glob } from './inspect.ts';
 import type { Finding, Gate } from './types.ts';
@@ -53,7 +54,7 @@ function analyse(asset: CompiledAsset): ConnectionReport {
   for (const s of shells) if (s.area > 1e-9) byPart.set(s.part, [...(byPart.get(s.part) ?? []), s]);
   const issues: ConnectIssue[] = [
     ...invalid(asset, declared),
-    ...connectivity(shells, kindOf).issues,
+    ...connectivity(shells, kindOf, asset.medium === 'water').issues,
   ];
   const ok: ConnectOk[] = [];
   const eyes: Eye[] = [];
@@ -93,10 +94,11 @@ function analyse(asset: CompiledAsset): ConnectionReport {
     }
   }
   issues.push(...gazeIssues(eyes, asset.kind === 'character'));
+  issues.push(...blanketIssues(asset, shells, SCULPT_TRIS));
+  const creases = honestCreases(asset.creases ?? [], shells, SCULPT_TRIS);
   for (const [part, d] of declared)
     if ((ORGANIC_KINDS.has(asset.kind) && !EYE.test(part)) || d.as === 'grown')
-      for (const s of byPart.get(part) ?? [])
-        issues.push(...seamIssues(s, asset.creases ?? [], shells));
+      for (const s of byPart.get(part) ?? []) issues.push(...seamIssues(s, creases, shells));
   return { issues, ok };
 }
 

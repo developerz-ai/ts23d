@@ -11,7 +11,7 @@ import { checkSheetFor, DEFAULT_SHEET, liveSheet } from '../material/index.ts';
 import { ALPHA_CUT } from './alpha-mips.ts';
 import { frameOrbit, type PerspectiveCamera, scaled, zoomWindow } from './camera.ts';
 import { depthMap } from './depth-map.ts';
-import { floorGrid } from './ground.ts';
+import { floorGrid, NO_FLOOR } from './ground.ts';
 import { pcfTaps, studioRig } from './lighting.ts';
 import { checkBeautyOptions } from './options.ts';
 import { resolve } from './resolve.ts';
@@ -110,7 +110,7 @@ export function renderBeauty(asset: CompiledAsset, o: BeautyOptions = {}): Beaut
     pcf: pcfTaps(Math.max(1.2, 0.004 * extent * sunMap.k)),
     reach: 0.12 * extent,
   };
-  const floor = floorGrid(ctx, res(96, 512, 0.25));
+  const floor = asset.medium === 'water' ? NO_FLOOR : floorGrid(ctx, res(96, 512, 0.25));
   if (scene.transmissive) {
     // What see-through surfaces show: the same view without them (one more rasterisation).
     const skip = scene.look.map((l) => ((scene.looks[l]?.transmission ?? 0) > 0 ? 1 : 0));

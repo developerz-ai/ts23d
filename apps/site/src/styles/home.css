@@ -338,3 +338,21 @@
 .tok-keyword {
   color: var(--tok-keyword);
 }
+
+/* A water asset on stage: the studio sweep becomes deep water, and the copy turns light to stay
+   readable on it (the canvas is transparent, so this is the backdrop). */
+.showcase.underwater {
+  --ink: #e6f4fa;
+  --ink-muted: #b4d3e0;
+  background: radial-gradient(ellipse 80% 90% at 62% 34%, #1d7a96, #04182a);
+}
+
+.showcase.underwater .button:not(.primary),
+.showcase.underwater .install code {
+  color: var(--studio-ink);
+  background: rgb(255 255 255 / 0.88);
+}
+
+.showcase.underwater .eyebrow {
+  color: #ffc2a8;
+}

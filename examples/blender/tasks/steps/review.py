@@ -6,13 +6,16 @@
 # first), 'turnaround' (the baked base colour, studio light, four sides). The step changes
 # nothing: helpers, pose and render settings are put back. Orthographic camera on LOD0's bounds;
 # a sheet is about 2 × `size` px wide (four tiles of size / 2; weights: eight of size / 4).
-# Tile names are in the report (`review[].tiles`, reading order). Workbench needs a GPU context:
-# it renders with -b on a machine with a GPU (verified on 5.3 + RTX 3090; not without one).
+# Tile names are in the report (`review[].tiles`, reading order). Workbench needs a Vulkan or
+# OpenGL driver. Verified on 5.3 with -b: an RTX 3090, and with no GPU at all Mesa's lavapipe (a
+# Vulkan driver on the CPU; Blender finds it unaided, `--software-gpu` forces it). With neither,
+# Blender crashes when the first render starts, before Python can report anything.
 
 import math
 import os
 
 import bpy
+import gpu
 import numpy as np
 from mathutils import Vector
 
@@ -232,4 +235,8 @@ def run(state, step):
     for i in range(studio.count):
         os.remove(os.path.join(state.work, f"review-tile-{i}.png"))
     state.report.setdefault("review", []).extend(written)
-    return {"views": [w["view"] for w in written], "files": [w["file"] for w in written]}
+    return {
+        "views": [w["view"] for w in written],
+        "files": [w["file"] for w in written],
+        "renderer": f"{gpu.platform.backend_type_get()}: {gpu.platform.renderer_get()}",
+    }

@@ -42,6 +42,8 @@
 | [24-path-tracer.md](idea/24-path-tracer.md) | The path-traced hero: deterministic CPU path tracer for critique and gallery renders |
 | [playbooks/](playbooks/README.md) | Class-by-class guidance for modelling real-world objects |
 | [research/skills-matrix.md](research/skills-matrix.md) | What 3D artists, architects and designers know, mapped onto ts23d tools and gaps; backs `.claude/skills/` |
+| [research/blender-leverage.md](research/blender-leverage.md) | What else headless Blender can do for generated meshes: tested options, ranked |
+| [research/swim-and-tentacle-animation.md](research/swim-and-tentacle-animation.md) | Swimming, snake, neck and tentacle motion as sourced numbers and checks |
 | [research/](research/reading-list.md) | Free reading list and research notes (hair, surfaces, creatures, heads) |
 
 ## Decisions

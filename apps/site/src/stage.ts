@@ -17,9 +17,13 @@ import {
 import { ContactShadow } from './contact-shadow.ts';
 import { environmentFor } from './lightbox.ts';
 import { LOOKS, type Look } from './look.ts';
+import { sphereDistance } from './sphere-fit.ts';
 import { castShadows, shadowCatcher } from './studio.ts';
 import { disposeTextureSet } from './texture-sets.ts';
 import { onSchemeChange, token } from './theme.ts';
+
+/** How far past the framed radius a pose may reach before the camera backs off. */
+const OUTGROWN = 1.2;
 
 export class Stage {
   readonly scene = new Scene();
@@ -116,13 +120,7 @@ export class Stage {
     const box = this.bounds(object);
     this.layGrid(box);
     const sphere = box.getBoundingSphere(new Sphere());
-    this.radius = sphere.radius;
-    const cam = this.sun.shadow.camera;
-    cam.left = cam.bottom = -sphere.radius * 1.3;
-    cam.right = cam.top = sphere.radius * 1.3;
-    cam.near = 0.1;
-    cam.far = sphere.radius * 8;
-    cam.updateProjectionMatrix();
+    this.coverShadow(sphere.radius);
     this.catcher.position.set(sphere.center.x, box.min.y - 0.005, sphere.center.z);
     // Wide enough that its edge stays off-screen at any orbit distance.
     this.catcher.scale.setScalar(sphere.radius * 40);
@@ -137,6 +135,23 @@ export class Stage {
       this.camera.lookAt(sphere.center);
     }
     return sphere.center;
+  }
+
+  /**
+   * A clip took the content well outside its framed rest pose: back the camera off along its view
+   * until `box` fits and aim `target` at it. The baked contact shadow belongs to the rest pose, so
+   * it goes; the key light's shadow stays. Does nothing for a pose that still fits.
+   */
+  frame(box: Box3, target: Vector3): void {
+    const sphere = box.getBoundingSphere(new Sphere());
+    if (sphere.radius <= this.radius * OUTGROWN) return;
+    this.coverShadow(sphere.radius);
+    this.contact.plane.visible = false;
+    const dist = sphereDistance(sphere.radius, this.camera.fov, this.camera.aspect);
+    const view = this.camera.getWorldDirection(new Vector3());
+    this.camera.position.copy(sphere.center).addScaledVector(view, -dist);
+    this.reach(dist * 20);
+    target.copy(sphere.center);
   }
 
   /** Grid on or off (the studio look hides it; the drawing look keeps it). */
@@ -160,6 +175,17 @@ export class Stage {
   resize(width: number, height: number): void {
     this.camera.aspect = width / Math.max(1, height);
     this.camera.updateProjectionMatrix();
+  }
+
+  /** Size the key light's shadow camera for content of this radius. */
+  private coverShadow(radius: number): void {
+    this.radius = radius;
+    const cam = this.sun.shadow.camera;
+    cam.left = cam.bottom = -radius * 1.3;
+    cam.right = cam.top = radius * 1.3;
+    cam.near = 0.1;
+    cam.far = radius * 8;
+    cam.updateProjectionMatrix();
   }
 
   private bounds(object: Object3D): Box3 {

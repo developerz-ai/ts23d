@@ -17,7 +17,7 @@ import {
   type WebGLRenderer,
 } from 'three';
 
-export type EnvPreset = 'studio' | 'portrait' | 'outdoor';
+export type EnvPreset = 'studio' | 'portrait' | 'outdoor' | 'water';
 
 type Rgb = readonly [number, number, number];
 
@@ -73,6 +73,11 @@ const SETUPS: Record<EnvPreset, Setup> = {
   outdoor: {
     dome: { zenith: [0.55, 0.68, 0.95], horizon: [1.1, 1.1, 1.08], ground: [0.42, 0.38, 0.32] },
     panels: [],
+  },
+  // Open water: light comes down from a bright surface and dies into dark blue below.
+  water: {
+    dome: { zenith: [0.5, 0.82, 0.95], horizon: [0.09, 0.27, 0.36], ground: [0.02, 0.06, 0.1] },
+    panels: [{ rgb: [0.72, 0.93, 1], power: 3, size: [14, 14], at: [0, 9, 0] }],
   },
 };
 

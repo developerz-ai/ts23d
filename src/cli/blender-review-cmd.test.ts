@@ -167,6 +167,19 @@ describe('t3d blender review', () => {
     expect(r.sheets.map((s) => s.file)).toEqual(['review-1-wire.png']);
   });
 
+  test('--scripts names a directory without the scripts, before Blender starts', async () => {
+    const f = files();
+    const argv = ['review', '--mesh', f.mesh, '--program', f.program, '--out', join(f.dir, 'o')];
+    const e = await blenderReview([...argv, '--scripts', '/nonexistent/scripts']).catch(
+      (x: unknown) => x,
+    );
+    expect(String(e)).toContain('T3D_NEURAL_FAILED');
+    expect(String(e)).toContain('/nonexistent/scripts');
+    expect((e as { fix: string }).fix).toContain('ts23d_job.py');
+    const missing = await blenderReview([...argv, '--scripts']).catch((x: unknown) => x);
+    expect(String(missing)).toContain('--scripts needs a value');
+  });
+
   test('withReview: no bind, no weights view; explicit views win', () => {
     const plain = withReview([{ op: 'retopo', triangles: 900 }, { op: 'export' }]);
     expect(plain[1]).toEqual({ op: 'review', views: ['clay', 'wire', 'turnaround'] });

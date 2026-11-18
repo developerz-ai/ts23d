@@ -1,9 +1,12 @@
 // Messages between the page and the compile worker. Types only.
 
-import type { AssetManifest } from '@developerz.ai/ts23d';
+import type { AssetManifest, CompiledAsset } from '@developerz.ai/ts23d';
 import type { Footprint } from './diorama.ts';
 
 export type Lod = 0 | 1 | 2;
+
+/** What holds an asset up, when the recipe declares it. */
+export type Medium = NonNullable<CompiledAsset['medium']>;
 
 /** A hybrid's committed model outputs: its recipe folder and the published key directories. */
 export interface NeuralRef {
@@ -48,6 +51,7 @@ export interface BuildResult {
   readonly budget: number;
   readonly ms: number;
   readonly parts: readonly PartInfo[];
+  readonly medium?: Medium;
   /** Mass from volume × density, for recipes that declare `physics` (kg, centre of mass). */
   readonly mass?: { readonly kg: number; readonly centre: readonly number[] };
 }

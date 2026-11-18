@@ -124,7 +124,11 @@ export interface Graph {
   readonly held: ReadonlySet<Shell>;
 }
 
-export function connectivity(shells: readonly Shell[], kindOf: (part: string) => ConnectAs): Graph {
+export function connectivity(
+  shells: readonly Shell[],
+  kindOf: (part: string) => ConnectAs,
+  water = false,
+): Graph {
   const live = shells.filter((s) => s.area > 1e-9 && kindOf(s.part) !== 'free');
   const n = live.length;
   const ROOT = n;
@@ -132,7 +136,7 @@ export function connectivity(shells: readonly Shell[], kindOf: (part: string) =>
   const strong = new Union(n + 1);
   let grounded = false;
   live.forEach((s, i) => {
-    if (s.bounds.min[2] <= CONTACT_EPS) {
+    if (!water && s.bounds.min[2] <= CONTACT_EPS) {
       weak.join(i, ROOT);
       strong.join(i, ROOT);
       grounded = true;

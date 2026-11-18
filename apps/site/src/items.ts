@@ -6,10 +6,12 @@
 import { MEDIA } from 'virtual:ts23d-media';
 import { CATEGORIES, type Category, categoryOf } from './categories.ts';
 import type { AssetInfo } from './compile-protocol.ts';
+import { flagshipRank } from './flagships.ts';
 import type { MediaEntry } from './media-types.ts';
 import { entryFor, type Recipe } from './recipes.ts';
 
 export { CATEGORIES, type Category, categoryOf } from './categories.ts';
+export { FLAGSHIPS } from './flagships.ts';
 
 export interface Item {
   readonly name: string;
@@ -82,27 +84,9 @@ export function mergeRecipes(
   return order([...byName.values()]);
 }
 
-/** The flagships, in showcase order: the wolf (both tiers), the ranger (model-first), the heads, tiger, dragon, fox, bear, city. */
-export const FLAGSHIPS: readonly string[] = [
-  'wolf',
-  'ranger',
-  'human_head',
-  'orc_head',
-  'elf_head',
-  'goblin_head',
-  'amur_tiger',
-  'dragon',
-  'fox',
-  'brown_bear',
-  'city_block',
-];
-
 /** Flagships first (in their order), then category order, then name. */
 export function order(items: readonly Item[]): Item[] {
-  const flag = (i: Item): number => {
-    const at = FLAGSHIPS.indexOf(i.name);
-    return at < 0 ? FLAGSHIPS.length : at;
-  };
+  const flag = (i: Item): number => flagshipRank(i.name);
   const rank = (i: Item): number => CATEGORIES.indexOf(i.category);
   return [...items].sort(
     (a, b) => flag(a) - flag(b) || rank(a) - rank(b) || a.name.localeCompare(b.name),

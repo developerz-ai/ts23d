@@ -1,0 +1,1159 @@
+{
+  "name": "common_octopus",
+  "kind": "creature",
+  "description": "Common octopus (Octopus vulgaris), large adult female at true scale: warty mottled mantle, slit-pupil eyes, funnel, web, eight individually posed arms with double sucker rows.",
+  "tags": [
+    "creature",
+    "animal",
+    "marine",
+    "cephalopod",
+    "octopus",
+    "body-plan"
+  ],
+  "lods": [
+    0,
+    1,
+    2
+  ],
+  "files": {
+    "lods": [],
+    "sheet": "sheet.png",
+    "thumb": "thumb.png"
+  },
+  "triangles": [
+    133690,
+    13416,
+    2092
+  ],
+  "drawCalls": [
+    2,
+    2,
+    2
+  ],
+  "pivots": [
+    {
+      "name": "body",
+      "parent": null
+    },
+    {
+      "name": "body_paint_skin",
+      "parent": null
+    }
+  ],
+  "emitters": [],
+  "sockets": [],
+  "surfaces": [
+    "opaque"
+  ],
+  "skeleton": [
+    {
+      "name": "mantle_0",
+      "parent": null
+    },
+    {
+      "name": "mantle_1",
+      "parent": "mantle_0"
+    },
+    {
+      "name": "mantle_2",
+      "parent": "mantle_1"
+    },
+    {
+      "name": "mantle_3",
+      "parent": "mantle_2"
+    },
+    {
+      "name": "rib_0_0",
+      "parent": "mantle_2"
+    },
+    {
+      "name": "rib_1_0",
+      "parent": "mantle_1"
+    },
+    {
+      "name": "rib_2_0",
+      "parent": "mantle_0"
+    },
+    {
+      "name": "head_0",
+      "parent": "mantle_3"
+    },
+    {
+      "name": "funnel_0",
+      "parent": "head_0"
+    },
+    {
+      "name": "funnel_1",
+      "parent": "funnel_0"
+    },
+    {
+      "name": "arm_0_0",
+      "parent": "head_0"
+    },
+    {
+      "name": "arm_0_1",
+      "parent": "arm_0_0"
+    },
+    {
+      "name": "arm_0_2",
+      "parent": "arm_0_1"
+    },
+    {
+      "name": "arm_0_3",
+      "parent": "arm_0_2"
+    },
+    {
+      "name": "arm_0_4",
+      "parent": "arm_0_3"
+    },
+    {
+      "name": "arm_0_5",
+      "parent": "arm_0_4"
+    },
+    {
+      "name": "arm_0_6",
+      "parent": "arm_0_5"
+    },
+    {
+      "name": "arm_0_7",
+      "parent": "arm_0_6"
+    },
+    {
+      "name": "arm_0_8",
+      "parent": "arm_0_7"
+    },
+    {
+      "name": "arm_0_9",
+      "parent": "arm_0_8"
+    },
+    {
+      "name": "arm_0_10",
+      "parent": "arm_0_9"
+    },
+    {
+      "name": "arm_0_11",
+      "parent": "arm_0_10"
+    },
+    {
+      "name": "arm_0_12",
+      "parent": "arm_0_11"
+    },
+    {
+      "name": "arm_0_13",
+      "parent": "arm_0_12"
+    },
+    {
+      "name": "arm_0_14",
+      "parent": "arm_0_13"
+    },
+    {
+      "name": "arm_0_15",
+      "parent": "arm_0_14"
+    },
+    {
+      "name": "arm_1_0",
+      "parent": "head_0"
+    },
+    {
+      "name": "arm_1_1",
+      "parent": "arm_1_0"
+    },
+    {
+      "name": "arm_1_2",
+      "parent": "arm_1_1"
+    },
+    {
+      "name": "arm_1_3",
+      "parent": "arm_1_2"
+    },
+    {
+      "name": "arm_1_4",
+      "parent": "arm_1_3"
+    },
+    {
+      "name": "arm_1_5",
+      "parent": "arm_1_4"
+    },
+    {
+      "name": "arm_1_6",
+      "parent": "arm_1_5"
+    },
+    {
+      "name": "arm_1_7",
+      "parent": "arm_1_6"
+    },
+    {
+      "name": "arm_1_8",
+      "parent": "arm_1_7"
+    },
+    {
+      "name": "arm_1_9",
+      "parent": "arm_1_8"
+    },
+    {
+      "name": "arm_1_10",
+      "parent": "arm_1_9"
+    },
+    {
+      "name": "arm_1_11",
+      "parent": "arm_1_10"
+    },
+    {
+      "name": "arm_1_12",
+      "parent": "arm_1_11"
+    },
+    {
+      "name": "arm_1_13",
+      "parent": "arm_1_12"
+    },
+    {
+      "name": "arm_1_14",
+      "parent": "arm_1_13"
+    },
+    {
+      "name": "arm_1_15",
+      "parent": "arm_1_14"
+    },
+    {
+      "name": "arm_2_0",
+      "parent": "head_0"
+    },
+    {
+      "name": "arm_2_1",
+      "parent": "arm_2_0"
+    },
+    {
+      "name": "arm_2_2",
+      "parent": "arm_2_1"
+    },
+    {
+      "name": "arm_2_3",
+      "parent": "arm_2_2"
+    },
+    {
+      "name": "arm_2_4",
+      "parent": "arm_2_3"
+    },
+    {
+      "name": "arm_2_5",
+      "parent": "arm_2_4"
+    },
+    {
+      "name": "arm_2_6",
+      "parent": "arm_2_5"
+    },
+    {
+      "name": "arm_2_7",
+      "parent": "arm_2_6"
+    },
+    {
+      "name": "arm_2_8",
+      "parent": "arm_2_7"
+    },
+    {
+      "name": "arm_2_9",
+      "parent": "arm_2_8"
+    },
+    {
+      "name": "arm_2_10",
+      "parent": "arm_2_9"
+    },
+    {
+      "name": "arm_2_11",
+      "parent": "arm_2_10"
+    },
+    {
+      "name": "arm_2_12",
+      "parent": "arm_2_11"
+    },
+    {
+      "name": "arm_2_13",
+      "parent": "arm_2_12"
+    },
+    {
+      "name": "arm_2_14",
+      "parent": "arm_2_13"
+    },
+    {
+      "name": "arm_2_15",
+      "parent": "arm_2_14"
+    },
+    {
+      "name": "arm_3_0",
+      "parent": "head_0"
+    },
+    {
+      "name": "arm_3_1",
+      "parent": "arm_3_0"
+    },
+    {
+      "name": "arm_3_2",
+      "parent": "arm_3_1"
+    },
+    {
+      "name": "arm_3_3",
+      "parent": "arm_3_2"
+    },
+    {
+      "name": "arm_3_4",
+      "parent": "arm_3_3"
+    },
+    {
+      "name": "arm_3_5",
+      "parent": "arm_3_4"
+    },
+    {
+      "name": "arm_3_6",
+      "parent": "arm_3_5"
+    },
+    {
+      "name": "arm_3_7",
+      "parent": "arm_3_6"
+    },
+    {
+      "name": "arm_3_8",
+      "parent": "arm_3_7"
+    },
+    {
+      "name": "arm_3_9",
+      "parent": "arm_3_8"
+    },
+    {
+      "name": "arm_3_10",
+      "parent": "arm_3_9"
+    },
+    {
+      "name": "arm_3_11",
+      "parent": "arm_3_10"
+    },
+    {
+      "name": "arm_3_12",
+      "parent": "arm_3_11"
+    },
+    {
+      "name": "arm_3_13",
+      "parent": "arm_3_12"
+    },
+    {
+      "name": "arm_3_14",
+      "parent": "arm_3_13"
+    },
+    {
+      "name": "arm_3_15",
+      "parent": "arm_3_14"
+    },
+    {
+      "name": "arm_4_0",
+      "parent": "head_0"
+    },
+    {
+      "name": "arm_4_1",
+      "parent": "arm_4_0"
+    },
+    {
+      "name": "arm_4_2",
+      "parent": "arm_4_1"
+    },
+    {
+      "name": "arm_4_3",
+      "parent": "arm_4_2"
+    },
+    {
+      "name": "arm_4_4",
+      "parent": "arm_4_3"
+    },
+    {
+      "name": "arm_4_5",
+      "parent": "arm_4_4"
+    },
+    {
+      "name": "arm_4_6",
+      "parent": "arm_4_5"
+    },
+    {
+      "name": "arm_4_7",
+      "parent": "arm_4_6"
+    },
+    {
+      "name": "arm_4_8",
+      "parent": "arm_4_7"
+    },
+    {
+      "name": "arm_4_9",
+      "parent": "arm_4_8"
+    },
+    {
+      "name": "arm_4_10",
+      "parent": "arm_4_9"
+    },
+    {
+      "name": "arm_4_11",
+      "parent": "arm_4_10"
+    },
+    {
+      "name": "arm_4_12",
+      "parent": "arm_4_11"
+    },
+    {
+      "name": "arm_4_13",
+      "parent": "arm_4_12"
+    },
+    {
+      "name": "arm_4_14",
+      "parent": "arm_4_13"
+    },
+    {
+      "name": "arm_4_15",
+      "parent": "arm_4_14"
+    },
+    {
+      "name": "arm_5_0",
+      "parent": "head_0"
+    },
+    {
+      "name": "arm_5_1",
+      "parent": "arm_5_0"
+    },
+    {
+      "name": "arm_5_2",
+      "parent": "arm_5_1"
+    },
+    {
+      "name": "arm_5_3",
+      "parent": "arm_5_2"
+    },
+    {
+      "name": "arm_5_4",
+      "parent": "arm_5_3"
+    },
+    {
+      "name": "arm_5_5",
+      "parent": "arm_5_4"
+    },
+    {
+      "name": "arm_5_6",
+      "parent": "arm_5_5"
+    },
+    {
+      "name": "arm_5_7",
+      "parent": "arm_5_6"
+    },
+    {
+      "name": "arm_5_8",
+      "parent": "arm_5_7"
+    },
+    {
+      "name": "arm_5_9",
+      "parent": "arm_5_8"
+    },
+    {
+      "name": "arm_5_10",
+      "parent": "arm_5_9"
+    },
+    {
+      "name": "arm_5_11",
+      "parent": "arm_5_10"
+    },
+    {
+      "name": "arm_5_12",
+      "parent": "arm_5_11"
+    },
+    {
+      "name": "arm_5_13",
+      "parent": "arm_5_12"
+    },
+    {
+      "name": "arm_5_14",
+      "parent": "arm_5_13"
+    },
+    {
+      "name": "arm_5_15",
+      "parent": "arm_5_14"
+    },
+    {
+      "name": "arm_6_0",
+      "parent": "head_0"
+    },
+    {
+      "name": "arm_6_1",
+      "parent": "arm_6_0"
+    },
+    {
+      "name": "arm_6_2",
+      "parent": "arm_6_1"
+    },
+    {
+      "name": "arm_6_3",
+      "parent": "arm_6_2"
+    },
+    {
+      "name": "arm_6_4",
+      "parent": "arm_6_3"
+    },
+    {
+      "name": "arm_6_5",
+      "parent": "arm_6_4"
+    },
+    {
+      "name": "arm_6_6",
+      "parent": "arm_6_5"
+    },
+    {
+      "name": "arm_6_7",
+      "parent": "arm_6_6"
+    },
+    {
+      "name": "arm_6_8",
+      "parent": "arm_6_7"
+    },
+    {
+      "name": "arm_6_9",
+      "parent": "arm_6_8"
+    },
+    {
+      "name": "arm_6_10",
+      "parent": "arm_6_9"
+    },
+    {
+      "name": "arm_6_11",
+      "parent": "arm_6_10"
+    },
+    {
+      "name": "arm_6_12",
+      "parent": "arm_6_11"
+    },
+    {
+      "name": "arm_6_13",
+      "parent": "arm_6_12"
+    },
+    {
+      "name": "arm_6_14",
+      "parent": "arm_6_13"
+    },
+    {
+      "name": "arm_6_15",
+      "parent": "arm_6_14"
+    },
+    {
+      "name": "arm_7_0",
+      "parent": "head_0"
+    },
+    {
+      "name": "arm_7_1",
+      "parent": "arm_7_0"
+    },
+    {
+      "name": "arm_7_2",
+      "parent": "arm_7_1"
+    },
+    {
+      "name": "arm_7_3",
+      "parent": "arm_7_2"
+    },
+    {
+      "name": "arm_7_4",
+      "parent": "arm_7_3"
+    },
+    {
+      "name": "arm_7_5",
+      "parent": "arm_7_4"
+    },
+    {
+      "name": "arm_7_6",
+      "parent": "arm_7_5"
+    },
+    {
+      "name": "arm_7_7",
+      "parent": "arm_7_6"
+    },
+    {
+      "name": "arm_7_8",
+      "parent": "arm_7_7"
+    },
+    {
+      "name": "arm_7_9",
+      "parent": "arm_7_8"
+    },
+    {
+      "name": "arm_7_10",
+      "parent": "arm_7_9"
+    },
+    {
+      "name": "arm_7_11",
+      "parent": "arm_7_10"
+    },
+    {
+      "name": "arm_7_12",
+      "parent": "arm_7_11"
+    },
+    {
+      "name": "arm_7_13",
+      "parent": "arm_7_12"
+    },
+    {
+      "name": "arm_7_14",
+      "parent": "arm_7_13"
+    },
+    {
+      "name": "arm_7_15",
+      "parent": "arm_7_14"
+    }
+  ],
+  "clips": [
+    {
+      "name": "idle",
+      "seconds": 6,
+      "loop": true,
+      "speed": 0
+    },
+    {
+      "name": "reach_0",
+      "seconds": 2.4,
+      "loop": false,
+      "speed": 0.0135
+    },
+    {
+      "name": "reach_1",
+      "seconds": 2.4,
+      "loop": false,
+      "speed": 0.0127
+    },
+    {
+      "name": "reach_2",
+      "seconds": 2.4,
+      "loop": false,
+      "speed": 0.0123
+    },
+    {
+      "name": "reach_3",
+      "seconds": 2.4,
+      "loop": false,
+      "speed": 0.0124
+    },
+    {
+      "name": "reach_4",
+      "seconds": 2.4,
+      "loop": false,
+      "speed": 0.0123
+    },
+    {
+      "name": "reach_5",
+      "seconds": 2.4,
+      "loop": false,
+      "speed": 0.0126
+    },
+    {
+      "name": "reach_6",
+      "seconds": 2.4,
+      "loop": false,
+      "speed": 0.0123
+    },
+    {
+      "name": "reach_7",
+      "seconds": 2.4,
+      "loop": false,
+      "speed": 0.013
+    },
+    {
+      "name": "fetch",
+      "seconds": 2,
+      "loop": false,
+      "speed": 0
+    },
+    {
+      "name": "crawl",
+      "seconds": 5,
+      "loop": true,
+      "speed": 0.06
+    },
+    {
+      "name": "mantle_pulse",
+      "seconds": 3.2,
+      "loop": true,
+      "speed": 0
+    }
+  ],
+  "hitboxes": [
+    {
+      "bone": "mantle_1",
+      "radius": 0.094381,
+      "height": 0,
+      "coverage": 0.9983
+    },
+    {
+      "bone": "mantle_2",
+      "radius": 0.107807,
+      "height": 0,
+      "coverage": 1
+    },
+    {
+      "bone": "mantle_3",
+      "radius": 0.091182,
+      "height": 0,
+      "coverage": 0.9827
+    },
+    {
+      "bone": "rib_2_0",
+      "radius": 0.076103,
+      "height": 0,
+      "coverage": 0.9711
+    },
+    {
+      "bone": "head_0",
+      "radius": 0.098653,
+      "height": 0.020733,
+      "coverage": 0.9852
+    },
+    {
+      "bone": "funnel_0",
+      "radius": 0.029295,
+      "height": 0.001422,
+      "coverage": 0.963
+    },
+    {
+      "bone": "funnel_1",
+      "radius": 0.021823,
+      "height": 0.008915,
+      "coverage": 0.9915
+    },
+    {
+      "bone": "arm_0_0",
+      "radius": 0.040881,
+      "height": 0,
+      "coverage": 1
+    },
+    {
+      "bone": "arm_0_1",
+      "radius": 0.014277,
+      "height": 0,
+      "coverage": 1
+    },
+    {
+      "bone": "arm_0_8",
+      "radius": 0.013353,
+      "height": 0,
+      "coverage": 1
+    },
+    {
+      "bone": "arm_0_9",
+      "radius": 0.017786,
+      "height": 0,
+      "coverage": 1
+    },
+    {
+      "bone": "arm_0_10",
+      "radius": 0.016353,
+      "height": 0,
+      "coverage": 0.9545
+    },
+    {
+      "bone": "arm_0_11",
+      "radius": 0.016761,
+      "height": 0,
+      "coverage": 1
+    },
+    {
+      "bone": "arm_0_12",
+      "radius": 0.014847,
+      "height": 0.000518,
+      "coverage": 0.9643
+    },
+    {
+      "bone": "arm_0_13",
+      "radius": 0.012435,
+      "height": 0.002407,
+      "coverage": 0.9655
+    },
+    {
+      "bone": "arm_0_14",
+      "radius": 0.008602,
+      "height": 0.01029,
+      "coverage": 0.9697
+    },
+    {
+      "bone": "arm_0_15",
+      "radius": 0.006609,
+      "height": 0.017096,
+      "coverage": 0.9593
+    },
+    {
+      "bone": "arm_1_0",
+      "radius": 0.061199,
+      "height": 0,
+      "coverage": 0.961
+    },
+    {
+      "bone": "arm_1_9",
+      "radius": 0.017842,
+      "height": 0,
+      "coverage": 1
+    },
+    {
+      "bone": "arm_1_10",
+      "radius": 0.019606,
+      "height": 0,
+      "coverage": 0.9583
+    },
+    {
+      "bone": "arm_1_11",
+      "radius": 0.027545,
+      "height": 0,
+      "coverage": 0.9727
+    },
+    {
+      "bone": "arm_1_12",
+      "radius": 0.019504,
+      "height": 0,
+      "coverage": 0.9697
+    },
+    {
+      "bone": "arm_1_13",
+      "radius": 0.019118,
+      "height": 0.000425,
+      "coverage": 0.9752
+    },
+    {
+      "bone": "arm_1_14",
+      "radius": 0.009539,
+      "height": 0.011276,
+      "coverage": 0.9722
+    },
+    {
+      "bone": "arm_1_15",
+      "radius": 0.006619,
+      "height": 0.022194,
+      "coverage": 0.9569
+    },
+    {
+      "bone": "arm_2_0",
+      "radius": 0.061267,
+      "height": 0,
+      "coverage": 0.9639
+    },
+    {
+      "bone": "arm_2_8",
+      "radius": 0.017725,
+      "height": 0,
+      "coverage": 1
+    },
+    {
+      "bone": "arm_2_9",
+      "radius": 0.017557,
+      "height": 0,
+      "coverage": 1
+    },
+    {
+      "bone": "arm_2_10",
+      "radius": 0.017424,
+      "height": 0,
+      "coverage": 0.9583
+    },
+    {
+      "bone": "arm_2_11",
+      "radius": 0.015436,
+      "height": 0.00092,
+      "coverage": 0.96
+    },
+    {
+      "bone": "arm_2_12",
+      "radius": 0.014977,
+      "height": 0.000858,
+      "coverage": 1
+    },
+    {
+      "bone": "arm_2_13",
+      "radius": 0.011227,
+      "height": 0.007784,
+      "coverage": 0.963
+    },
+    {
+      "bone": "arm_2_14",
+      "radius": 0.005592,
+      "height": 0.011532,
+      "coverage": 0.9565
+    },
+    {
+      "bone": "arm_2_15",
+      "radius": 0.006675,
+      "height": 0.018492,
+      "coverage": 0.9576
+    },
+    {
+      "bone": "arm_3_0",
+      "radius": 0.057578,
+      "height": 0,
+      "coverage": 0.963
+    },
+    {
+      "bone": "arm_3_9",
+      "radius": 0.019481,
+      "height": 0,
+      "coverage": 1
+    },
+    {
+      "bone": "arm_3_10",
+      "radius": 0.019158,
+      "height": 0,
+      "coverage": 0.9545
+    },
+    {
+      "bone": "arm_3_11",
+      "radius": 0.028271,
+      "height": 0.002071,
+      "coverage": 0.9689
+    },
+    {
+      "bone": "arm_3_12",
+      "radius": 0.019563,
+      "height": 0,
+      "coverage": 0.9706
+    },
+    {
+      "bone": "arm_3_13",
+      "radius": 0.019173,
+      "height": 0.000384,
+      "coverage": 0.9764
+    },
+    {
+      "bone": "arm_3_14",
+      "radius": 0.010434,
+      "height": 0.011285,
+      "coverage": 0.9524
+    },
+    {
+      "bone": "arm_3_15",
+      "radius": 0.006738,
+      "height": 0.022023,
+      "coverage": 0.9541
+    },
+    {
+      "bone": "arm_4_0",
+      "radius": 0.069668,
+      "height": 0,
+      "coverage": 0.9506
+    },
+    {
+      "bone": "arm_4_8",
+      "radius": 0.012667,
+      "height": 0,
+      "coverage": 1
+    },
+    {
+      "bone": "arm_4_9",
+      "radius": 0.018399,
+      "height": 0,
+      "coverage": 1
+    },
+    {
+      "bone": "arm_4_10",
+      "radius": 0.017254,
+      "height": 0,
+      "coverage": 0.9565
+    },
+    {
+      "bone": "arm_4_11",
+      "radius": 0.017983,
+      "height": 0,
+      "coverage": 0.9615
+    },
+    {
+      "bone": "arm_4_12",
+      "radius": 0.018167,
+      "height": 0,
+      "coverage": 0.9667
+    },
+    {
+      "bone": "arm_4_13",
+      "radius": 0.013631,
+      "height": 0.002101,
+      "coverage": 1
+    },
+    {
+      "bone": "arm_4_14",
+      "radius": 0.007644,
+      "height": 0.011416,
+      "coverage": 0.9667
+    },
+    {
+      "bone": "arm_4_15",
+      "radius": 0.006529,
+      "height": 0.022044,
+      "coverage": 0.9539
+    },
+    {
+      "bone": "arm_5_0",
+      "radius": 0.05755,
+      "height": 0,
+      "coverage": 0.9821
+    },
+    {
+      "bone": "arm_5_7",
+      "radius": 0.011217,
+      "height": 0,
+      "coverage": 1
+    },
+    {
+      "bone": "arm_5_8",
+      "radius": 0.019359,
+      "height": 0,
+      "coverage": 1
+    },
+    {
+      "bone": "arm_5_9",
+      "radius": 0.0173,
+      "height": 0,
+      "coverage": 1
+    },
+    {
+      "bone": "arm_5_10",
+      "radius": 0.017539,
+      "height": 0,
+      "coverage": 0.9583
+    },
+    {
+      "bone": "arm_5_11",
+      "radius": 0.016557,
+      "height": 0,
+      "coverage": 0.96
+    },
+    {
+      "bone": "arm_5_12",
+      "radius": 0.015423,
+      "height": 0.000587,
+      "coverage": 0.9643
+    },
+    {
+      "bone": "arm_5_13",
+      "radius": 0.012866,
+      "height": 0.001975,
+      "coverage": 1
+    },
+    {
+      "bone": "arm_5_14",
+      "radius": 0.006838,
+      "height": 0.011519,
+      "coverage": 0.9643
+    },
+    {
+      "bone": "arm_5_15",
+      "radius": 0.006687,
+      "height": 0.018544,
+      "coverage": 0.9593
+    },
+    {
+      "bone": "arm_6_0",
+      "radius": 0.050679,
+      "height": 0,
+      "coverage": 0.9524
+    },
+    {
+      "bone": "arm_6_9",
+      "radius": 0.01927,
+      "height": 0,
+      "coverage": 1
+    },
+    {
+      "bone": "arm_6_10",
+      "radius": 0.02072,
+      "height": 0,
+      "coverage": 1
+    },
+    {
+      "bone": "arm_6_11",
+      "radius": 0.027706,
+      "height": 0.003085,
+      "coverage": 0.9694
+    },
+    {
+      "bone": "arm_6_12",
+      "radius": 0.019029,
+      "height": 0,
+      "coverage": 0.9697
+    },
+    {
+      "bone": "arm_6_13",
+      "radius": 0.01899,
+      "height": 0.00077,
+      "coverage": 0.9752
+    },
+    {
+      "bone": "arm_6_14",
+      "radius": 0.010028,
+      "height": 0.011176,
+      "coverage": 0.9737
+    },
+    {
+      "bone": "arm_6_15",
+      "radius": 0.006683,
+      "height": 0.021939,
+      "coverage": 0.9554
+    },
+    {
+      "bone": "arm_7_0",
+      "radius": 0.044857,
+      "height": 0,
+      "coverage": 0.9552
+    },
+    {
+      "bone": "arm_7_9",
+      "radius": 0.016503,
+      "height": 0,
+      "coverage": 1
+    },
+    {
+      "bone": "arm_7_10",
+      "radius": 0.01689,
+      "height": 0,
+      "coverage": 0.95
+    },
+    {
+      "bone": "arm_7_11",
+      "radius": 0.017222,
+      "height": 0,
+      "coverage": 1
+    },
+    {
+      "bone": "arm_7_12",
+      "radius": 0.015968,
+      "height": 0,
+      "coverage": 1
+    },
+    {
+      "bone": "arm_7_13",
+      "radius": 0.013781,
+      "height": 0.001316,
+      "coverage": 0.9677
+    },
+    {
+      "bone": "arm_7_14",
+      "radius": 0.008829,
+      "height": 0.010637,
+      "coverage": 1
+    },
+    {
+      "bone": "arm_7_15",
+      "radius": 0.006603,
+      "height": 0.017115,
+      "coverage": 0.9559
+    }
+  ],
+  "paint": {
+    "skin": "#ffffff"
+  },
+  "real": {
+    "length": 1.31,
+    "width": 1.36,
+    "height": 0.46
+  },
+  "measures": [],
+  "sources": [
+    "https://www.fao.org/4/ac479e/ac479e34.pdf",
+    "https://en.wikipedia.org/wiki/Common_octopus",
+    "https://ns-zooplankton.linnaeus.naturalis.nl/linnaeus_ng/app/views/species/taxon.php?id=132450",
+    "https://commons.wikimedia.org/wiki/Category:Octopus_vulgaris"
+  ],
+  "qa": {
+    "pass": true,
+    "findings": []
+  }
+}

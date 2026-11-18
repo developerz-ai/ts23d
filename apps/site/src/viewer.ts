@@ -2,12 +2,11 @@
 // category's look (image-based light, key shadow, contact shadow, backdrop; AO + MSAA on the high
 // tier), orbit controls with a slow turntable, and Play runs the picked baked clip.
 // Scene stages the asset on a diorama in a looping scenario picked from its named parts (driving,
-// wind, a day on the turntable). Studio picks any baked clip and shows a skinned asset's skeleton
-// (viewer-motion.ts). A part's own texture set (texture-sets.ts) shows as the GLB carries it. Also
-// switches LOD, wireframe and the trim sheet, lists the parts
-// (hover one to outline it) and offers a GLB per LOD. Heavy assets open at LOD1 with a button for
-// LOD0; a progress bar runs while the worker compiles (a failure ends it in a visible message), and
-// leaving cancels the compile.
+// wind, a day on the turntable); a water asset swims with no diorama, and its Studio has no floor.
+// Studio picks any baked clip and shows a skinned asset's skeleton (viewer-motion.ts). Also switches
+// LOD, wireframe and the trim sheet, lists the parts and offers a GLB per LOD. Heavy assets open at
+// LOD1 with a button for LOD0; a progress bar runs while the worker compiles (a failure ends it in a
+// visible message), and leaving cancels the compile.
 
 import { AnimationMixer, Box3, Group, type Object3D, Timer, Vector3 } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
@@ -29,9 +28,9 @@ import { setWireframe, showSheet } from './textures.ts';
 import { reducedMotion } from './theme.ts';
 import { disposeStaged, loadStaged, type Staged, type Subject } from './viewer-load.ts';
 import { Motion, pickable } from './viewer-motion.ts';
-import { Outline, renderParts, renderStats } from './viewer-panels.ts';
+import { Outline, renderBuild } from './viewer-panels.ts';
 import { Progress, syncLod0 } from './viewer-progress.ts';
-import { bindUi, type Mode, syncUi, wireUi } from './viewer-ui.ts';
+import { bindUi, type Mode, showScenario, syncUi, wireUi } from './viewer-ui.ts';
 import { CancelledError } from './worker-pool.ts';
 
 export type { Subject } from './viewer-load.ts';
@@ -72,10 +71,12 @@ export class Viewer {
   constructor(root: HTMLElement) {
     this.ui = bindUi(root);
     this.progress = new Progress(this.ui.loading, root);
-    this.motion = new Motion(this.ui, this.stage.scene, () => {
+    const pick = (): void => {
       this.playing = true;
       syncUi(this.ui, this.lod, this.mode, this.playing);
-    });
+    };
+    const fit = (box: Box3): void => this.stage.frame(box, this.controls.target);
+    this.motion = new Motion(this.ui, this.stage.scene, pick, fit);
     this.ui.lod0.addEventListener('click', () => {
       if (this.asset) void this.show(this.asset, 0, false);
     });
@@ -149,6 +150,7 @@ export class Viewer {
     this.asset = asset;
     this.lod = lod;
     const ticket = ++this.token;
+    const scenic = this.mode === 'scene';
     const request = recipe(asset.name, lod, asset.file, asset.neural);
     if (this.pending && fresh) cancelBuild(this.pending);
     this.pending = request;
@@ -160,7 +162,7 @@ export class Viewer {
     this.progress.start(label, estimateSeconds(asset, lod));
     let staged: Staged;
     try {
-      staged = await loadStaged(asset, request, this.mode === 'scene');
+      staged = await loadStaged(asset, request, scenic);
     } catch (error) {
       if (ticket !== this.token || error instanceof CancelledError) return false;
       // A visible message, not a rethrow: every caller fires and forgets.
@@ -175,24 +177,26 @@ export class Viewer {
     const { loaded, clip, hooks, def, base } = staged;
     this.progress.stop();
     this.teardown();
-    this.look = lookFor(categoryOf(asset.kind, asset.tags, asset.name));
+    this.look = lookFor(categoryOf(asset.kind, asset.tags, asset.name), loaded.built.medium);
+    const water = this.look === LOOKS.water;
     this.stage.setLook(this.look, this.renderer);
     this.stage.scene.background = backdrop(this.look);
     this.model = loaded.scene;
     const carrier = new Group().add(loaded.scene);
     this.display = base ? new Group().add(base.scene, carrier) : carrier;
-    this.stage.setFloor(!base);
+    const floor = !base && !water;
+    this.stage.setFloor(floor);
     this.stage.showGrid(Boolean(base));
     if (this.model) setWireframe(this.model, this.wireframe);
     const sets = bindTextureSets(loaded.scene, anisotropyOf(this.renderer));
     void this.applyTextures();
-    const center = this.stage.show(this.display, reframe || Boolean(base));
-    if (!base) this.stage.bakeContact(this.renderer, [this.particles.object]);
-    this.tools.attach(base ? null : loaded.scene, asset.name);
+    const center = this.stage.show(this.display, reframe || scenic);
+    if (floor) this.stage.bakeContact(this.renderer, [this.particles.object]);
+    this.tools.attach(scenic ? null : loaded.scene, asset.name);
     this.post?.fit(this.stage.contentBox());
-    const clips = base ? [] : pickable(loaded.animations);
-    this.mixer = clip || clips.length ? new AnimationMixer(loaded.scene) : null;
-    if (base) {
+    const clips = scenic ? [] : pickable(loaded.animations);
+    this.mixer = loaded.animations.length ? new AnimationMixer(loaded.scene) : null;
+    if (scenic) {
       this.scenario = def.create({
         hooks,
         carrier,
@@ -204,10 +208,7 @@ export class Viewer {
         clip,
         reducedMotion: reducedMotion(),
       });
-      this.ui.scenario.replaceChildren(
-        Object.assign(document.createElement('strong'), { textContent: def.title }),
-        document.createTextNode(` · ${def.describe(hooks)}`),
-      );
+      showScenario(this.ui, def.title, def.describe(hooks));
     } else {
       this.motion.bind(loaded.scene, this.mixer, clips);
       if (reframe) {
@@ -215,7 +216,7 @@ export class Viewer {
         this.controls.autoRotate = !reducedMotion();
       }
     }
-    this.controls.enabled = !base;
+    this.controls.enabled = !scenic;
     this.time = 0;
     const scenario = this.scenario;
     const emitters = this.particles.attach(loaded.scene, (e) =>
@@ -223,17 +224,17 @@ export class Viewer {
     );
     if (fresh) {
       renderDownloads(this.ui.downloads, asset);
-      this.playing = false;
+      this.playing = water && this.motion.has && !reducedMotion();
       this.onSize?.(new Box3().setFromObject(loaded.scene).getSize(new Vector3()));
     }
-    this.onModel?.(base ? null : loaded.scene);
+    this.onModel?.(scenic ? null : loaded.scene);
     syncUi(this.ui, lod, this.mode, this.playing);
     syncLod0(this.ui.lod0, asset, lod, false);
     this.ui.play.disabled = this.mode === 'studio' && !this.motion.has;
     this.renderer.domElement.setAttribute('aria-label', `3D view of ${asset.name}, LOD ${lod}`);
-    const b = loaded.built;
-    renderStats(this.ui.stats, b, emitters.length, sets);
-    renderParts(this.ui.parts, b.parts, (name) => this.outline.show(this.model, name));
+    renderBuild(this.ui, loaded.built, emitters.length, sets, (name) =>
+      this.outline.show(this.model, name),
+    );
     this.ui.status.textContent = `Showing ${asset.name} at LOD ${lod}.`;
     return true;
   }
@@ -281,7 +282,7 @@ export class Viewer {
       this.time = (this.time + step) % this.scenario.duration;
       this.scenario.update(this.time, step);
     } else {
-      this.mixer?.update(step);
+      this.motion.advance(step);
       this.controls.update(dt);
     }
     // Paused means still: no smoke drifting over a product shot until Play.

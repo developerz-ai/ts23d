@@ -25,6 +25,47 @@ def read_json(request, field, inputs):
         return json.load(f)
 
 
+def open_state(request, inputs, work, builds):
+    """Scene threads, the State, the source mesh and the skeleton: what every program starts from."""
+    threads = int((request.get("params") or {}).get("threads", 1))
+    scene = bpy.context.scene
+    scene.render.threads_mode = "AUTO" if threads == 0 else "FIXED"
+    if threads > 0:
+        scene.render.threads = threads
+    state = st.State(request, inputs, work)
+    state.report["blender"] = bpy.app.version_string
+    state.report["threads"] = threads
+    if request.get("mesh") is not None:
+        if builds:
+            raise ValueError("the program starts with a build op but request.mesh was sent: drop one")
+        state.report["source"] = io.load(state)
+    elif not builds:
+        raise ValueError("no request.mesh: the program must start with skinBody or metaballs")
+    if request.get("skeleton") is not None:
+        state.skeleton = read_json(request, "skeleton", inputs)
+    return state
+
+
+def run_step(state, i, step, diag):
+    """One step, gated and reported; returns the bbox diagonal the next step is held to."""
+    op = step.get("op")
+    if op not in OPS:
+        raise ValueError(f"step {i}: unknown op {op!r}; known: {sorted(OPS)}")
+    t0 = time.time()
+    try:
+        facts = OPS[op](state, step)
+        # every step's result is a whole mesh; a transform may rescale it, the others may not
+        diag = gates.whole(state, None if op == "transform" else diag)
+    except KeyError as e:
+        raise ValueError(f"step {i} ({op}): missing field {e}") from e
+    except Exception as e:
+        raise RuntimeError(f"step {i} ({op}): {e}") from e
+    state.report["steps"].append(
+        {"op": op, "seconds": round(time.time() - t0, 2), "triangles": st.triangles(state.mesh), **facts}
+    )
+    return diag
+
+
 def run(request, inputs, work):
     program = read_json(request, "program", inputs)
     if program.get("contract") != "t3d-blender-steps/1" or program.get("frame") != "asset":
@@ -32,43 +73,12 @@ def run(request, inputs, work):
     steps = program.get("steps") or []
     if not steps or steps[-1].get("op") != "export":
         raise ValueError("the program does not end with an export step")
-    threads = int((request.get("params") or {}).get("threads", 1))
-    scene = bpy.context.scene
-    scene.render.threads_mode = "AUTO" if threads == 0 else "FIXED"
-    if threads > 0:
-        scene.render.threads = threads
-
-    state = st.State(request, inputs, work)
-    state.report["blender"] = bpy.app.version_string
-    state.report["threads"] = threads
-    builds = steps[0].get("op") in BUILD
-    if request.get("mesh") is not None:
-        if builds:
-            raise ValueError(f"the program starts with {steps[0]['op']} but request.mesh was sent: drop one")
-        state.report["source"] = io.load(state)
-    elif not builds:
-        raise ValueError("no request.mesh: the program must start with skinBody or metaballs")
-    if request.get("skeleton") is not None:
-        state.skeleton = read_json(request, "skeleton", inputs)
+    state = open_state(request, inputs, work, steps[0].get("op") in BUILD)
 
     started = time.time()
     diag = None
     for i, step in enumerate(steps):
-        op = step.get("op")
-        if op not in OPS:
-            raise ValueError(f"step {i}: unknown op {op!r}; known: {sorted(OPS)}")
-        t0 = time.time()
-        try:
-            facts = OPS[op](state, step)
-            # every step's result is a whole mesh; a transform may rescale it, the others may not
-            diag = gates.whole(state, None if op == "transform" else diag)
-        except KeyError as e:
-            raise ValueError(f"step {i} ({op}): missing field {e}") from e
-        except Exception as e:
-            raise RuntimeError(f"step {i} ({op}): {e}") from e
-        state.report["steps"].append(
-            {"op": op, "seconds": round(time.time() - t0, 2), "triangles": st.triangles(state.mesh), **facts}
-        )
+        diag = run_step(state, i, step, diag)
     state.report["seconds"] = round(time.time() - started, 2)
     cap = request.get("maxTriangles")
     if isinstance(cap, (int, float)) and state.report["lods"][0] > cap:

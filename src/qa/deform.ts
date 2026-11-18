@@ -9,7 +9,8 @@
 //   surface — triangles within 1.5 band radii of the joint that newly cross ≤ 6 % of them
 //             (T3D_DEFORM_INTERSECT; a limb swung through the body crosses far more)
 // Thresholds were set on the wolf's working range (worst: shoulder 0.63, hip ×3.5, hip 5 % at
-// LOD2) and the failing fixtures in deform.test.ts.
+// LOD2) and the failing fixtures in deform.test.ts. A `limit.twist` is posed both ways about the
+// bone; twist along chains is held to its own limit (chain-twist.ts, T3D_DEFORM_TWIST).
 
 import {
   type Armature,
@@ -23,6 +24,8 @@ import {
   worldTransforms,
 } from '../core/index.ts';
 import { inverseBind, poseJoints, skinPositions } from '../passes/index.ts';
+import { boneLength, MID_SUFFIX } from './chain-bones.ts';
+import { chainTwistFindings } from './chain-twist.ts';
 import { crossingPairs, weldIds } from './self-intersect.ts';
 import type { Finding, Gate } from './types.ts';
 
@@ -43,9 +46,7 @@ export interface RomPose {
   readonly rotation: ReadonlyMap<string, Quat>;
 }
 
-/** Half-angle helper suffix: a bone `<joint>_mid` turns half as far as `<joint>` (the
- *  convention kinds/creature-helpers.ts bakes into every clip). */
-export const MID_SUFFIX = '_mid';
+export { MID_SUFFIX };
 
 /** One pose per joint-limit extreme (zero extremes skipped), bone order; helpers at half. */
 export function romPoses(sk: Armature): RomPose[] {
@@ -54,14 +55,27 @@ export function romPoses(sk: Armature): RomPose[] {
     const l = b.limit;
     if (!l) return [];
     const mid = `${b.name}${MID_SUFFIX}`;
-    return [l.min, l.max]
+    const pose = (axis: Vec3, d: number, label: string): RomPose => {
+      const rad = (d * Math.PI) / 180;
+      const rotation = new Map([[b.name, quatFromAxisAngle(axis, rad)]]);
+      if (names.has(mid)) rotation.set(mid, quatFromAxisAngle(axis, rad / 2));
+      return { bone: b.name, label, degrees: d, rotation };
+    };
+    const sign = (d: number): string => `${d > 0 ? '+' : ''}${d}°`;
+    const hinge = [l.min, l.max]
       .filter((d) => d !== 0)
-      .map((d) => {
-        const rad = (d * Math.PI) / 180;
-        const rotation = new Map([[b.name, quatFromAxisAngle(l.axis, rad)]]);
-        if (names.has(mid)) rotation.set(mid, quatFromAxisAngle(l.axis, rad / 2));
-        return { bone: b.name, label: `${b.name} ${d > 0 ? '+' : ''}${d}°`, degrees: d, rotation };
-      });
+      .map((d) => pose(l.axis, d, `${b.name} ${sign(d)}`));
+    const len = boneLength(b);
+    if (!l.twist || len === 0) return hinge;
+    const along: Vec3 = [
+      (b.tail[0] - b.head[0]) / len,
+      (b.tail[1] - b.head[1]) / len,
+      (b.tail[2] - b.head[2]) / len,
+    ];
+    return [
+      ...hinge,
+      ...[l.twist, -l.twist].map((d) => pose(along, d, `${b.name} twist ${sign(d)}`)),
+    ];
   });
 }
 
@@ -168,7 +182,7 @@ export function poseDeform(
 }
 
 /** Opaque skinned parts in the asset frame. */
-function skinned(asset: CompiledAsset): { name: string; mesh: Mesh }[] {
+export function skinned(asset: CompiledAsset): { name: string; mesh: Mesh }[] {
   const xf = worldTransforms(asset.parts);
   return asset.parts.flatMap((p) => {
     const m = p.mesh;
@@ -188,9 +202,9 @@ function skinned(asset: CompiledAsset): { name: string; mesh: Mesh }[] {
 export function deformFindings(asset: CompiledAsset): Finding[] {
   const sk = asset.skeleton;
   if (!sk) return [];
+  const out = chainTwistFindings(asset);
   const poses = romPoses(sk);
-  if (poses.length === 0) return [];
-  const out: Finding[] = [];
+  if (poses.length === 0) return out;
   for (const { name, mesh } of skinned(asset)) {
     const weld = weldIds(mesh.positions);
     for (const pose of poses) {

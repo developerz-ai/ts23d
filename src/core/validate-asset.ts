@@ -66,6 +66,8 @@ export function checkAsset(def: AssetDefinition): void {
       'rename it to [a-z][a-z0-9_]* — it becomes the GLB file name and the root node',
     );
   const name = def.name;
+  if (def.medium !== undefined && def.medium !== 'ground' && def.medium !== 'water')
+    invalid(`'${name}' medium '${String(def.medium)}' is unknown`, "use 'ground' or 'water'");
   const tris = def.budget?.triangles;
   if (!Array.isArray(tris) || tris.length !== 3 || !tris.every(positive))
     invalid(
