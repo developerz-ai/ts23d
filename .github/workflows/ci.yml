@@ -28,7 +28,8 @@ name: ci
 # The costs are now that run's own GitHub seconds (`bun run scripts/recipe-costs.ts --from-run
 # 44492321426`; scripts/recipe-costs-run.ts says what is measured and what is derived), with
 # 16 s of overhead per job (checkout, setup, the stale check) and 26 s of shard 1's own steps.
-# Expected, not yet measured: still 18 shards (the fewest whose worst job fits 240 s), every job
+# Measured after rebalancing (run 44494826233, 2026-11-19): 4.6 minutes push → green, slowest job 269 s.
+# The plan it ran on: still 18 shards (the fewest whose worst job fits 240 s), every job
 # about 222 s (`--plan`: 221-223 s; up to 237 s where the heaviest recipe shard also draws the
 # 30 s test file src/kinds/creature-family.test.ts), about 4.3 minutes push → green (the slowest
 # job plus about 30 s of queueing and the `verify` job), the same 67 runner-minutes. No single
