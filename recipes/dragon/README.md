@@ -14,7 +14,7 @@ tubes, tone, probes).
 
 | Dimension | Value | Reasoning |
 |---|---|---|
-| Nose to tail tip (X) | 8.9 m | tail ≈ 45% of length like a monitor lizard, resting on the ground in an S; the neck 18 % longer than the bind skeleton's (`pose.ts`) |
+| Nose to tail tip (X) | 9.2 m | tail ≈ 45% of length like a monitor lizard, resting on the ground in an S; the neck 27 % longer than the bind skeleton's (`pose.ts`) |
 | Wing span in the pose (Y) | 7.9 m | raised and swept back 28° so both membranes show from 3/4 views |
 | Height to wing tips (Z) | 4.9 m | wings raised in a V over the back; the trunk stands 0.2 m higher on longer forearms and shanks (`pose.ts`) |
 | Shoulder height | ~2.2 m | front limbs heavier than hind (gorilla/lion stance = power read) |
@@ -102,22 +102,35 @@ model and `dragon.test.ts` holds them (`bun test recipes/dragon`).
 Thin parts (horns, claws, teeth, finger bones) are tubes at every LOD — a sculpt would need
 sub-centimetre cells; the torso, head and jaw are sculpts.
 
-Budget: 150k / 30k / 4k triangles, the creature band (measured 148.9k / 27.7k / 4.0k); see
+Budget: 150k / 30k / 4k triangles, the creature band (measured 149.1k / 28.0k / 3.97k); see
 `dragon.ts`. The wing-finger spur is a banded tube (it was a 6 mm sculpt: 3 k triangles a wing).
 
 ## Proportions (`pose.ts`)
 Every module sculpts against the bind skeleton (`skeleton.ts`). `pose.ts` carries the finished
 parts, their pivots, joints and crease regions to the posed skeleton, as a rig carries a
 bind-pose mesh: the lower legs (paw top → elbow / knee height) stretch so the trunk stands 0.2 m
-higher, and the neck line scales 1.18 × about its base, the head riding its end. Change a
+higher, and the neck line scales 1.27 × about its base (one more vertebra's worth), the head
+riding its end. Change a
 proportion there; no module holds a posed coordinate.
 
 ## Wear (`field.ts`)
-Ash from its own breath settled grey on the back and wing tops; soot baked round the nostrils
-and the corners of the mouth; cinder mud on the feet, belly edge and the dragging tail; three
-claw rakes healed across the right flank, a cut across the snout and one down the neck; the right
-main horn's last fifth snapped off on a slanted break; the right wing's trailing edge torn in a
-V between the second and third fingers (vertices pulled in, the membrane slab stays closed).
+Everything here is sized to read in the hero (the body is ≈ 75 px per metre there):
+pale wood ash lying in drifts on the back, crest and wing tops; soot baked black round the
+nostrils and the corners of the mouth and blown back in a fan down the throat and the cream
+chest plates; an old burn scorched matt black on the right flank; cinder mud wet and black on
+the claws and the dragging tail, a grey ash crust with a ragged edge up the shanks, splashed to
+the knees; three claw rakes healed pale across the right flank (11 → 8 cm of scale-less skin,
+0.9 m long), a cut across the snout and one down the right of the neck; the right main horn's
+last two fifths snapped off on a slanted break; the right wing's trailing edge torn in a V
+between the second and third fingers and the left wing's in two (vertices pulled in, the
+membrane slab stays closed). The far mesh takes only the broad layers (`worn(…, far)`).
+
+Scales: the stamped scales' paint is `stampTint` (scales.ts): the seam between two scales
+near-black, the keeled crown lit toward ember, over the whole back, flanks, neck, legs and tail
+(the earlier ±14 % tint left the hide one flat red at the hero's distance). The tail root is as
+thick as the hips (`tailR` 0.52 → 0.5 → 0.43) and the spade 1.6 × its earlier span (blade
+0.95 m, flukes 0.8 m), so the tail's end reads from the side and 3/4, not only from above.
+Hero camera `{ azDeg: -42, elDeg: 9 }`: the raked, burnt right flank and the jaw to the lens.
 
 Known gaps (2026-11-19): the pose stretches the lower legs' sculpt and scale stamps by 26 %
 rather than re-sculpting them longer, and it does not narrow them; the head cell cannot go past

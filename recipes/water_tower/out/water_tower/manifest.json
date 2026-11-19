@@ -20,9 +20,9 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    7570,
-    3214,
-    568
+    6930,
+    3054,
+    586
   ],
   "drawCalls": [
     2,
@@ -68,7 +68,7 @@
     {
       "label": "tank diameter (22 ft)",
       "spec": 6.7056000000000004,
-      "measured": 6.779474496841431,
+      "measured": 6.7874743938446045,
       "source": "NRHP 93000843 §7"
     },
     {

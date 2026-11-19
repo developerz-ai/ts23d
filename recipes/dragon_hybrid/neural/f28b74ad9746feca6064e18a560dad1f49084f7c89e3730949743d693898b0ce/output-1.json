@@ -2,13 +2,13 @@
   "bbox": {
     "frame": "gltf",
     "max": [
-      1.699129,
-      3.579847,
+      2.526086,
+      3.183744,
       1.963558
     ],
     "min": [
-      -1.650018,
-      -0.01554,
+      -2.468121,
+      -0.0155,
       -2.982925
     ]
   },
@@ -106,7 +106,7 @@
     9998,
     4998
   ],
-  "seconds": 168.09,
+  "seconds": 238.09,
   "source": {
     "materials": 1,
     "textures": 2,
@@ -118,14 +118,14 @@
     {
       "determinant": 124.951584,
       "op": "transform",
-      "seconds": 0.06,
+      "seconds": 0.08,
       "triangles": 934645
     },
     {
       "holeFaces": 0,
       "nonManifoldEdges": 1668,
       "op": "clean",
-      "seconds": 8.95,
+      "seconds": 12.43,
       "shells": 56,
       "shellsDropped": 55,
       "triangles": 929049,
@@ -133,21 +133,23 @@
     },
     {
       "op": "script",
-      "seconds": 2.87,
-      "sha256": "80a45c14374cd4a7c0c32548ab16823323c24a4596a5ee8f6fde531f5cc5e908",
+      "seconds": 5.06,
+      "sha256": "9bcf9789e42eaf168274b42d6246abe3b009f54624274122cec498a0b5cb51c0",
       "stdout": [
         "knuckle [0.865 0.219 0.077] skin at 0.0127 joint above it 0.0122 raised 0.0322",
         "knuckle [ 0.755 -0.359  0.074] skin at 0.0136 joint above it 0.0119 raised 0.0319",
         "wing 1 root [0.084 0.325 1.645] vertices 70431",
         "wing -1 root [ 0.102 -0.371  1.693] vertices 77176",
-        "tear at [-0.478  0.609  1.785] faces 1364"
+        "tear -1 at [-0.498 -0.59   1.653] vertices 1925",
+        "tear 1 at [-0.554  0.687  1.677] vertices 532",
+        "torn faces 4480"
       ],
-      "triangles": 927685,
+      "triangles": 924569,
       "vertices": [
         463207,
-        462573
+        461171
       ],
-      "why": "wings \u00d71.25 about their roots, legs \u00d71.1 thick, one torn notch in the left wing (dragon_hybrid critique: wings small for the body, legs thin, no torn membrane)"
+      "why": "wings \u00d71.4 about their roots and lowered 22\u00b0, legs \u00d71.1 thick, a torn notch in each wing (dragon_hybrid critique: span small for the body, legs thin, no torn membrane visible)"
     },
     {
       "capFaces": 410,
@@ -166,23 +168,23 @@
         "0 + 3": 72,
         "2 + 4": 348
       },
-      "seconds": 19.91,
-      "triangles": 927675,
+      "seconds": 32.31,
+      "triangles": 924559,
       "webFaces": 420
     },
     {
       "boundaryEdges": 0,
-      "focusVertexShare": 0.1869,
-      "from": 927675,
+      "focusVertexShare": 0.168,
+      "from": 924559,
       "op": "retopo",
       "reduce": "decimate",
-      "seconds": 66.93,
+      "seconds": 91.86,
       "shell": {
         "bboxDrift": 0.00674,
         "bboxSide": "+x (front)",
         "close": 1,
         "components": 1,
-        "handles": 3,
+        "handles": 4,
         "largestShare": 1.0,
         "lost": {
           "share": 0.0,
@@ -193,55 +195,55 @@
           [
             0,
             0.0,
-            0.4844,
-            799
+            0.4109,
+            1515
           ],
           [
             1,
             0.0,
-            0.0257,
-            216
+            0.0047,
+            629
           ],
           [
             1,
             0.75,
             0.0,
-            3
+            4
           ]
         ],
-        "volume": 1.322525,
-        "volumeRef": 1.286643
+        "volume": 1.419167,
+        "volumeRef": 1.417017
       },
-      "shellTriangles": 386068,
+      "shellTriangles": 440176,
       "strategy": "shell",
       "triangles": 29998,
       "voxel": 0.014
     },
     {
-      "islands": 536,
+      "islands": 499,
       "kind": "smart",
       "op": "uv",
-      "seconds": 9.02,
+      "seconds": 16.63,
       "triangles": 29998,
       "uvDegenerate": 0.0015
     },
     {
       "albedoFrom": "texture",
-      "albedoMean": 0.3213,
+      "albedoMean": 0.3227,
       "albedoUnfilled": 0.0,
-      "cage": 0.139375,
+      "cage": 0.154371,
       "device": "OPTIX: NVIDIA GeForce RTX 3090",
-      "hitRate": 0.9986,
+      "hitRate": 0.9979,
       "maps": [
         "albedo",
         "normal",
         "ao"
       ],
       "op": "bake",
-      "seconds": 26.3,
+      "seconds": 31.19,
       "size": 2048,
       "triangles": 29998,
-      "uvCoverage": 0.4518
+      "uvCoverage": 0.4759
     },
     {
       "bones": 35,
@@ -250,7 +252,7 @@
       "maxInfluences": 4,
       "method": "bone-heat",
       "op": "bind",
-      "seconds": 0.98,
+      "seconds": 0.97,
       "triangles": 29998,
       "unusedBones": [],
       "weightSum": [
@@ -260,24 +262,24 @@
     },
     {
       "bone": "fore_l_2",
-      "changed": 558,
+      "changed": 526,
       "kind": "smooth",
-      "masked": 929,
-      "meanAfter": 0.186,
-      "meanBefore": 0.1859,
+      "masked": 874,
+      "meanAfter": 0.189,
+      "meanBefore": 0.1888,
       "op": "weights",
-      "seconds": 0.14,
+      "seconds": 0.1,
       "triangles": 29998
     },
     {
       "bone": "fore_r_2",
-      "changed": 511,
+      "changed": 483,
       "kind": "smooth",
-      "masked": 862,
-      "meanAfter": 0.1823,
-      "meanBefore": 0.1829,
+      "masked": 818,
+      "meanAfter": 0.1805,
+      "meanBefore": 0.181,
       "op": "weights",
-      "seconds": 0.14,
+      "seconds": 0.08,
       "triangles": 29998
     },
     {
@@ -286,79 +288,84 @@
       "largestTurn": 24.37,
       "offTarget": 5e-07,
       "op": "repose",
-      "seconds": 0.06,
+      "seconds": 0.03,
       "triangles": 29998
     },
     {
       "moved": 0.0,
       "op": "script",
-      "seconds": 31.01,
-      "sha256": "793d19e1c89cff598413873493dfc6fdb871e82756530372a2c2b6a771a9345f",
+      "seconds": 45.43,
+      "sha256": "7f7189b2a5f81c325e14c44a0f550f1c6b40acf5d025acb3e5610d0cae829b8f",
       "stdout": [
-        "delight 0.11022119891979569",
-        "horn 0.014886886624891984 root to tip 0.283 0.443",
-        "soot (1.8998703382355884, 0.0, 2.1020877292458047) 0.01282580399138189",
-        "dust 0.06246654518962704",
-        "rake 0.00025997973917971735",
-        "rake 0.0002645676971953294",
-        "rake 0.0004861458653379952",
-        "scuff 0.027069419922872734"
+        "delight 0.11527419077965587",
+        "horn 0.016328372023418105 root to tip 0.271 0.442",
+        "soot (1.8677985361666491, 0.0, 2.098143841063342) 0.03302165179634601",
+        "dust 0.0878157030591684",
+        "rake 0.000935149975594721",
+        "rake 0.0007638031475257094",
+        "rake 0.0013981778596477055",
+        "haunch 0.00048124688178306937",
+        "haunch 0.0004020638713930619",
+        "neck 0.0006449146008002946",
+        "slash 0.0019166253605143976",
+        "slash 0.0022384321641217763",
+        "slash 0.0014852316780722924"
       ],
       "triangles": 29998,
       "vertices": [
-        14995,
-        14995
+        14993,
+        14993
       ],
-      "why": "the generator's baked light and chalk-grey horns leave the albedo; roughness, soot, dust, scars and scuffed wing leather go into the maps (a textured part takes no grime pass)"
+      "why": "the generator's baked light, the wings' dapple and chalk-grey horns leave the albedo; roughness, soot, dust and scars on hide and membrane go into the maps (a textured part takes no grime pass)"
     },
     {
       "lod0": {
         "boundaryEdges": 0,
-        "handles": 3,
-        "maxFaceShare": 0.0003,
-        "uvDegenerate": 0.0015
+        "handles": 4,
+        "maxFaceShare": 0.0004,
+        "uvDegenerate": 0.0016
       },
       "lods": [
         {
-          "bboxDrift": 0.00295,
-          "bboxSide": "-x (back)",
+          "bboxDrift": 0.00193,
+          "bboxSide": "+x (front)",
           "boundaryEdges": 0,
-          "handles": 3,
+          "handles": 4,
           "lost": {
             "share": 0.0,
-            "tolerance": 0.069722
+            "tolerance": 0.07723
           },
           "maxFaceShare": 0.0008,
           "triangles": 9998,
-          "uvDegenerate": 0.0022
+          "uvDegenerate": 0.0033
         },
         {
           "bboxDrift": 0.00397,
           "bboxSide": "+x (front)",
           "boundaryEdges": 0,
-          "handles": 3,
+          "handles": 4,
           "lost": {
             "share": 0.0,
-            "tolerance": 0.104583
+            "tolerance": 0.115845
           },
-          "maxFaceShare": 0.0019,
+          "maxFaceShare": 0.0025,
           "triangles": 4998,
-          "uvDegenerate": 0.0032
+          "uvDegenerate": 0.005
         }
       ],
       "op": "lods",
-      "seconds": 0.85,
+      "seconds": 0.91,
       "triangles": 29998
     },
     {
-      "bytes": 9979780,
+      "bytes": 9791188,
       "images": {
         "albedo": 2048,
         "normal": 1024,
         "orm": 1024
       },
       "op": "export",
-      "seconds": 0.87,
+      "seconds": 1.0,
       "triangles": 29998
     }
   ],

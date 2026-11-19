@@ -26,7 +26,8 @@ import { reproject, tessellate } from '../_lib/finish/finish.ts';
 import { pineBark } from '../_lib/trees/bark.ts';
 import { lowTrunk } from '../_lib/trees/trunk.ts';
 import { deadFrond, dryLowFronds, frondCards, frondsOf } from './fronds.ts';
-import { boots, ringedStem } from './stem.ts';
+import { coconuts } from './nuts.ts';
+import { boots, ringedStem, rings } from './stem.ts';
 
 const size = { height: 20, spread: 9, dbh: 0.35 };
 const FLOOR_R = 3.5;
@@ -38,13 +39,18 @@ const SCARS = [
   { spacing: 0.5, groove: 0, segments: 6 },
 ] as const;
 /** LOD2: card value against the fronds' mean leaflet colour, and width over the leaflet span. */
-export const FAR = { value: 1.15, wide: 0.85 } as const;
+export const FAR = { value: 1.3, wide: 1.25 } as const;
 
-/** A full hand of coconuts (12 at ~0.3 m across) under the frond bases. */
+/**
+ * The kind's fruit hugs the stem inside the boots, unseen: one token nut is left to it and the
+ * real hands of coconuts hang out on stalks (nuts.ts).
+ */
 export const PALM: TreeParams = {
   ...palmPreset,
-  fruit: { count: 14, radius: 0.16, color: [0.42, 0.44, 0.14] },
+  fruit: { count: 1, radius: 0.12, color: [0.46, 0.3, 0.14] },
 };
+/** Coconut hands under the frond bases: bunches, nut radius (husk ~0.3 m across). */
+const NUTS = { bunches: 4, radius: 0.17, below: 0.85 } as const;
 const PAIRS = PALM.leaves.perStem;
 
 interface Captured {
@@ -73,13 +79,13 @@ function grow(ctx: BuildContext, lod: 0 | 1, live: boolean, moss: (p: Vec3) => n
     let out = mesh;
     if (out && name === 'trunk') {
       cap.trunk = out;
-      out = bark(merge([ringedStem(out, SCARS[lod]), boots(out, 1.1, 1.2, lod)]));
+      out = bark(merge([ringedStem(out, SCARS[lod]), boots(out, 1.3, 1.55, lod)]));
     } else if (out && name === 'roots') {
       const base = cap.trunk ? stemFoot(cap.trunk) : [0, 0, 0];
       out = bark(widen(out, base as Vec3, FLARE));
     } else if (out && name === 'branches') {
       const dead = deadFronds(cap, lod);
-      out = bark(merge([out, ...dead.map((d) => d.rachis)]));
+      out = merge([bark(merge([out, ...dead.map((d) => d.rachis)])), hands(cap, lod)]);
     } else if (out && name === 'leaves') {
       cap.leaves = out;
       cap.leavesOpts = opts ?? {};
@@ -104,10 +110,20 @@ function deadFronds(cap: Captured, lod: number): { rachis: Mesh; leaflets: Mesh 
   // From the boots at the crown base, hanging below the live fronds' drooping tips (a skirt).
   const root: Vec3 = [top[0] - at[0], top[1] - at[1], top[2] - at[2] - 1.1];
   return [
-    deadFrond(root, 330, 0.7, 5.2, lod === 0 ? 24 : 10),
-    deadFrond(root, 60, 0.6, 4.4, lod === 0 ? 22 : 9),
-    deadFrond(root, 160, 0.65, 4.8, lod === 0 ? 22 : 9),
+    deadFrond(root, 205, 0.7, 5.2, lod === 0 ? 24 : 10),
+    deadFrond(root, 110, 0.6, 4.4, lod === 0 ? 22 : 9),
+    deadFrond(root, 270, 0.65, 4.8, lod === 0 ? 22 : 9),
   ];
+}
+
+/** The coconut hands under the frond bases, crown frame. */
+function hands(cap: Captured, lod: number): Mesh {
+  if (!cap.trunk) return merge([]);
+  const at = cap.crown.at ?? [0, 0, 0];
+  const top = stemTop(cap.trunk);
+  const r = rings(cap.trunk).at(-1)?.r ?? 0.15;
+  const base: Vec3 = [top[0] - at[0], top[1] - at[1], top[2] - at[2] - NUTS.below];
+  return coconuts(base, r, NUTS.bunches, NUTS.radius, lod);
 }
 
 /** Height below which the lowest fronds brown: 45% up the crown's leaflet span. */
@@ -170,6 +186,8 @@ export const palm = defineAsset({
     'https://en.wikipedia.org/wiki/Cocos_nucifera',
   ],
   real: treeReal({ ...size, source: 'recipes/palm/README.md' }),
+  // Low, looking up under the frond bases at the coconut hands and boots.
+  hero: { elDeg: 3 },
   // The kind's tree budget plus the ground patch, stem rings and dead fronds.
   budget: {
     triangles: [

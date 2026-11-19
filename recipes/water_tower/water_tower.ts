@@ -70,7 +70,7 @@ const STAVE_STRETCH = 3;
 /**
  * The stave tub: one tiled quad per stave, U up the stave (vertical grain, stretched so a stave
  * is one long board), V scaled so each stave is exactly one board of the strip (the pine strip
- * holds four boards per band), each stave its own value (±7 %), and `rows` vertex rows up the
+ * holds four boards per band), each stave its own value (−14…+12 %), and `rows` vertex rows up the
  * height so the weeps and the soaked bottom course have room. The far LOD keeps the same strip,
  * the same mean colour and one band per facet.
  */
@@ -82,7 +82,7 @@ function staveTub(rng: Rng, n: number, rows: number, far: boolean): Mesh {
     const a1 = ((k + 1) / n) * Math.PI * 2;
     const p0: Vec3 = [Math.cos(a0) * TANK_R, Math.sin(a0) * TANK_R, FLOOR_Z];
     const p1: Vec3 = [Math.cos(a1) * TANK_R, Math.sin(a1) * TANK_R, FLOOR_Z];
-    const v = rng.range(0.93, 1.07);
+    const v = rng.range(0.86, 1.12);
     const u0 = rng.range(0, 4);
     const m = tiled({
       origin: p1,
@@ -140,9 +140,10 @@ const ink = hex('#1e1c1a');
 /**
  * Float gauge on the −Y/+X quarter (seen from the track): a painted board standing on the hoops,
  * tick bars every half metre, the target that rides up and down on its cable, and the pulley on
- * an iron bracket near the rim that carries the cable over the staves to the float inside.
+ * an iron bracket near the rim that carries the cable over the staves to the float inside. LOD1
+ * (`full` false) keeps the board, the target and the pulley.
  */
-function floatGauge(r0: number): Mesh {
+function floatGauge(r0: number, full: boolean): Mesh {
   const h = TANK_H - 0.35;
   const z0 = FLOOR_Z + 0.15;
   const g: Mesh[] = [
@@ -153,7 +154,7 @@ function floatGauge(r0: number): Mesh {
       strip: 'wood_painted',
     }),
   ];
-  for (let z = z0 + 0.4; z < z0 + h - 0.2; z += 0.5)
+  for (let z = z0 + 0.4; full && z < z0 + h - 0.2; z += 0.5)
     g.push(
       box({ size: [0.006, 0.12, 0.025], at: [r0 + 0.043, 0.05, z], color: ink, strip: 'plain' }),
     );
@@ -170,27 +171,47 @@ function floatGauge(r0: number): Mesh {
   // Bracket, pulley and the cable from the target up over it.
   const zp = z0 + h - 0.1;
   g.push(
-    box({ size: [0.12, 0.03, 0.05], at: [r0 + 0.08, 0, zp - 0.12], color: steel, strip: 'iron' }),
+    box({ size: [0.16, 0.03, 0.05], at: [r0 + 0.1, 0, zp - 0.16], color: steel, strip: 'iron' }),
   );
   g.push(
     cylinder({
-      radius: 0.07,
-      length: 0.03,
-      segments: 10,
+      radius: 0.11,
+      length: 0.04,
+      segments: full ? 12 : 8,
       axis: 'y',
-      at: [r0 + 0.12, 0, zp],
+      at: [r0 + 0.16, 0, zp],
       color: steel,
     }),
   );
-  g.push(
-    beam({
-      from: [r0 + 0.12 + 0.065, 0, zp],
-      to: [r0 + 0.06, 0, z0 + 2.8],
-      width: 0.008,
-      color: steel,
-    }),
-  );
+  if (full)
+    g.push(
+      beam({
+        from: [r0 + 0.16 + 0.1, 0, zp],
+        to: [r0 + 0.06, 0, z0 + 2.8],
+        width: 0.014,
+        color: steel,
+      }),
+    );
   return merge(g.map((m) => place(m, { yaw: GAUGE_A })));
+}
+
+/** The far gauge: the board as one quad on the far hoop bands' face (radius `TANK_R` + 12 mm). */
+function farGauge(): Mesh {
+  const step = (Math.PI * 2) / STAVES[2];
+  const off = (((GAUGE_A % step) + step) % step) - step / 2;
+  const r = ((TANK_R + 0.012) * Math.cos(step / 2)) / Math.cos(off) + 0.004;
+  const z0 = FLOOR_Z + 0.15;
+  return place(
+    tiled({
+      origin: [r, -0.13, z0],
+      u: [0, 0.26, 0],
+      v: [0, 0, TANK_H - 0.35],
+      color: gaugePaint,
+      strip: 'wood_painted',
+      vMetres: TANK_H,
+    }),
+    { yaw: GAUGE_A },
+  );
 }
 
 /** Axis-aligned box from two corners. */
@@ -281,6 +302,7 @@ export const water_tower = defineAsset({
       floorZ: FLOOR_Z,
       footH: FOOT_H,
       sun: [-0.6, 0.8],
+      spillX: POST_R * 0.6,
     });
     /** Materials, then the part's water story, splash-back mud low down and dust on top faces. */
     const part = (
@@ -301,19 +323,21 @@ export const water_tower = defineAsset({
       return [Math.cos(a) * POST_R, Math.sin(a) * POST_R] as const;
     });
     // Posts and footings face the centre (one face out), so the strap plates sit flat on them.
+    // Far, the faces nobody sees go: the post ends (on the footing, under the cap beam) and the
+    // footing's base.
     const post = box({
       size: [POST_W, POST_W, CAP_Z0 - FOOT_H],
       at: [0, 0, 0],
       color: timber,
       strip: 'wood',
-      ...(lod < 2 ? { bevel: bevel / 2 } : {}),
+      ...(lod < 2 ? { bevel: bevel / 2 } : { omit: ['top', 'bottom'] }),
     });
     const footing = box({
       size: [0.66, 0.66, FOOT_H],
       at: [0, 0, 0],
       color: concrete,
       strip: 'concrete',
-      ...(lod < 2 ? { bevel } : {}),
+      ...(lod < 2 ? { bevel } : { omit: ['bottom'] }),
     });
     // Iron strap plate over the post head and the cap beam, two bolts through each.
     const strap: Mesh[] = [
@@ -351,6 +375,8 @@ export const water_tower = defineAsset({
           color: timberDark,
           strip: 'wood',
           up: [0, 0, 1],
+          // Far, the ends meet inside the neighbouring beams: no caps.
+          ...(lod === 2 ? { caps: false } : {}),
         }),
       );
       // X brace on the outer face of the bay, foot of one post to the head of the next.
@@ -452,8 +478,10 @@ export const water_tower = defineAsset({
 
     // ---- central core: vertical planking round a 10 ft cylinder, with its access door.
     const coreN = ctx.pick([12, 12, 8]);
+    // Silvered board-and-batten (the trestle's weathered fir, not the tank's oiled staves), so the
+    // 10 ft core reads as the timber housing round the outlet pipe, not a second tub.
     const core: Mesh[] = [
-      staveRing(CORE_R, 0, 14 * FT, coreN, timberDark, lod === 2 ? 'plain' : 'wood'),
+      staveRing(CORE_R, 0, 14 * FT, coreN, timber, lod === 2 ? 'plain' : 'wood'),
     ];
     core.push(
       lathe({
@@ -477,6 +505,20 @@ export const water_tower = defineAsset({
       }
     }
     part('core', merge(core), drips);
+    const battens: Mesh[] = [];
+    if (lod === 0)
+      for (let k = 0; k < coreN; k++) {
+        // A batten over every board joint (the facet corners), bedded 1 cm into them: their own
+        // part, so the core's measured 10 ft is the boarding.
+        const a = (k / coreN) * Math.PI * 2;
+        battens.push(
+          place(box({ size: [0.05, 0.09, 14 * FT - 0.02], at: [0, 0, 0], color: timberDark }), {
+            at: [Math.cos(a) * (CORE_R + 0.015), Math.sin(a) * (CORE_R + 0.015), 0],
+            yaw: a,
+          }),
+        );
+      }
+    if (battens.length) part('housing_battens', merge(battens), drips);
 
     // ---- tank: stave tub, hoops (closer near the bottom), lugs; weeping water stains.
     const nStaves = STAVES[lod] ?? 16;
@@ -491,9 +533,28 @@ export const water_tower = defineAsset({
       staveTub(ctx.rng.fork('staves'), nStaves, ctx.pick([6, 2, 1]), lod === 2),
       wetTank,
     );
+    if (lod === 2) {
+      // Far: three hoops as flat iron bands on the stave polygon, so the tub stays hooped.
+      const band: Mesh[] = [];
+      for (const t of [0.12, 0.45, 0.8])
+        band.push(
+          lathe({
+            profile: [
+              [TANK_R + 0.012, FLOOR_Z + TANK_H * t],
+              [TANK_R + 0.012, FLOOR_Z + TANK_H * t + 0.07],
+            ],
+            segments: nStaves,
+            color: hoopIron,
+            strip: 'iron',
+          }),
+        );
+      part('tank_hoops', merge(band));
+      part('float_gauge', farGauge());
+    }
     if (lod < 2) {
       const hoops: Mesh[] = [];
-      const n = lod === 0 ? 14 : 7;
+      // Eight heavy hoops (five at LOD1): few enough that the vertical staves lead.
+      const n = lod === 0 ? 8 : 5;
       const segs = HOOP_SEGS[lod] ?? 30;
       // Round iron rods drawn tight onto the staves: a half-round profile on `segs` facets whose
       // chord midpoints bed 1 mm into the stave polygon (corners stand proud by the chord sag).
@@ -511,8 +572,8 @@ export const water_tower = defineAsset({
           lathe({
             profile: [
               [rr, z],
-              [rr + 0.016, z + 0.012],
-              [rr, z + 0.024],
+              [rr + 0.024, z + 0.022],
+              [rr, z + 0.044],
             ],
             segments: segs,
             color: hoopIron,
@@ -533,7 +594,7 @@ export const water_tower = defineAsset({
       }
       part('tank_hoops', merge(hoops));
       // The board's back sinks 6 mm into the hoops' rounded faces where it crosses them.
-      if (lod === 0) part('float_gauge', floatGauge(faceR(GAUGE_A) + 0.01));
+      part('float_gauge', floatGauge(faceR(GAUGE_A) + 0.01, lod === 0));
     }
 
     // ---- roof: low six-sided pyramid of shingles, fascia, finial and lightning rod, hatch.

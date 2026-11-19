@@ -21,9 +21,9 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    9954,
-    5494,
-    462
+    10024,
+    5522,
+    528
   ],
   "drawCalls": [
     2,
@@ -101,7 +101,7 @@
   "real": {
     "length": 11.85,
     "width": 30,
-    "height": 8.557729690942503
+    "height": 9.057729690942503
   },
   "measures": [
     {

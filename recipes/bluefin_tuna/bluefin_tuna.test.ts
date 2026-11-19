@@ -7,7 +7,7 @@ import { bodyChain, measureWave } from '../../src/qa/chain-wave.ts';
 import { bluefin_tuna, CLIPS, PLAN } from './bluefin_tuna.ts';
 import { finletStrips, finlets, pectoralTip } from './fins.ts';
 import { SKIN } from './material.ts';
-import { FL, plainPoint, topZ, xOf, Z0 } from './shape.ts';
+import { FL, plainPoint, scaleLossAt, topZ, xOf, Z0 } from './shape.ts';
 
 const lod0 = compile(bluefin_tuna, { lod: 0 });
 const mesh = (name: string): Mesh => {
@@ -146,6 +146,16 @@ describe('materials', () => {
     for (const b of bandsOf(mesh('body'))) expect(b).toBeLessThan(2);
     for (const name of ['fin_dorsal_2', 'fin_anal', 'caudal_fin', 'pectoral_fin_l'])
       for (const b of bandsOf(mesh(name))) expect(b).toBeGreaterThanOrEqual(2);
+  });
+  it('rubs scales off the hero-side flank only, in patches big enough to read', () => {
+    let [near, far] = [0, 0];
+    for (let t = 0.3; t < 0.75; t += 0.005)
+      for (let h = -0.5; h < 0.5; h += 0.02) {
+        if (scaleLossAt(t, h, -1) > 0.5) near++;
+        far = Math.max(far, scaleLossAt(t, h, 1));
+      }
+    expect(near).toBeGreaterThan(200);
+    expect(far).toBe(0);
   });
   it('frays the median fins: some of their trailing edge is on the rough margin band', () => {
     expect(bandsOf(mesh('caudal_fin')).has(3)).toBe(true);

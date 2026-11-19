@@ -9,7 +9,7 @@ import { box, lathe } from '../primitives/index.ts';
 import { renderBeauty } from './beauty.ts';
 import { lookOf } from './looks.ts';
 
-const sheet = paintTrimSheet({ ...DEFAULT_SHEET, size: 512 });
+const sheet = paintTrimSheet({ ...DEFAULT_SHEET, size: 512 }, []);
 const pane = (surface: Surface) =>
   defineAsset({
     name: 'pane',

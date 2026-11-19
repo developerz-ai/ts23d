@@ -103,6 +103,19 @@ export interface CoatOptions {
   readonly where: (p: Vec3, n: Vec3) => number;
   /** Root → tip tone (default [0.9, 1.22]: shadowed roots, lit tips). */
   readonly tone?: readonly [number, number];
+  /** A card's colour from its root point and the skin colour there (frost on the topline's
+   *  hair, a pale saddle); default the skin's colour. Short cards and guard locks both. */
+  readonly color?: (p: Vec3, skin: Vec3) => Vec3;
+  /**
+   * Clumped guard locks over the same region (LOD0/1): longer cards sharing a tip, curved across
+   * their width, lit at the tip. They are what breaks the light between the short cards.
+   */
+  readonly guard?: {
+    readonly density: number;
+    readonly length: number | ((p: Vec3, n: Vec3) => number);
+    readonly width: number;
+    readonly tone?: readonly [number, number];
+  };
   /**
    * LOD2: a few big locks where the outline needs its fringe (mane, back, breeches). The far mesh
    * has no other cards; without this the animal's edge goes smooth at the switch.
@@ -143,22 +156,51 @@ export function coatCards(
     cells: strandCells('fur_clumps', far ? 'guard' : 'fur'),
     tone: o.tone ?? [0.9, 1.22],
     sink: 0.002,
+    ...(o.color && !far ? { color: o.color } : {}),
   };
-  const out = hairCards({
-    surface: body,
-    flow: hairFlow(body, chainSeed(furChains(info.bones), { gravity: 0.35 })),
-    zones: [zone],
-    rng: rng.fork('coat'),
-    segments: far ? 1 : 2,
-    maxCards: 20000,
-  });
-  return out.roots.length > 0 ? info.rig.pieces(out.mesh, 'body', [0, 0, 0]) : null;
+  const flow = hairFlow(body, chainSeed(furChains(info.bones), { gravity: 0.35 }));
+  const grow = (z: CardZone, segments: number): Mesh | null => {
+    const out = hairCards({
+      surface: body,
+      flow,
+      zones: [z],
+      rng: rng.fork(z.name),
+      segments,
+      maxCards: 20000,
+    });
+    return out.roots.length > 0 ? out.mesh : null;
+  };
+  const g = far ? undefined : o.guard;
+  const guard = g
+    ? grow(
+        {
+          name: 'coat-guard',
+          density: (p, n) => g.density * k * o.where(p, n),
+          length: g.length,
+          width: g.width * (lod === 0 ? 1 : 1.5),
+          lift: 0.3,
+          bend: 0.6,
+          droop: 0.12,
+          roll: 0.7,
+          clump: 4,
+          fold: lod === 0 ? 0.6 : 0,
+          cells: strandCells('fur_clumps', 'guard'),
+          tone: g.tone ?? [0.8, 1.4],
+          sink: 0.003,
+          ...(o.color ? { color: o.color } : {}),
+        },
+        lod === 0 ? 3 : 2,
+      )
+    : null;
+  const short = grow(zone, far ? 1 : 2);
+  const all = short && guard ? joinSkinned(short, guard) : (short ?? guard);
+  return all ? info.rig.pieces(all, 'body', [0, 0, 0]) : null;
 }
 
 /**
  * Drop every card (connected piece) with a vertex outside the box |y| ≤ `y`, z ≤ `z`: the coat
  * may not grow the animal past its sourced width and height, whatever a stray lock does.
- * Unskinned cards only (the caller binds what is left).
+ * A skinned mesh keeps its joints and weights.
  */
 export function withinBox(cards: Mesh, box: { readonly y?: number; readonly z?: number }): Mesh {
   const ids = pieces(cards);
@@ -192,12 +234,18 @@ export function withinBox(cards: Mesh, box: { readonly y?: number; readonly z?: 
     if (a < 0) continue;
     indices.push(a, remap[cards.indices[t + 1] ?? 0] ?? 0, remap[cards.indices[t + 2] ?? 0] ?? 0);
   }
+  const joints = new Uint16Array(cards.joints ? keep.length * 4 : 0);
+  if (cards.joints)
+    keep.forEach((v, i) => {
+      for (let c = 0; c < 4; c++) joints[i * 4 + c] = cards.joints?.[v * 4 + c] ?? 0;
+    });
   return {
     positions: take(cards.positions, 3),
     normals: take(cards.normals, 3),
     uvs: take(cards.uvs, 2),
     colors: take(cards.colors, 3),
     indices: new Uint32Array(indices),
+    ...(cards.joints && cards.weights ? { joints, weights: take(cards.weights, 4) } : {}),
   };
 }
 

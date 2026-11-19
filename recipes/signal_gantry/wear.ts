@@ -36,7 +36,7 @@ const smooth = (a: number, b: number, x: number): number => {
 };
 
 /** Sun-faded black paint (linear RGB): a dusty charcoal. */
-const FADED: Vec3 = [0.16, 0.155, 0.145];
+const FADED: Vec3 = [0.26, 0.25, 0.23];
 const SOOT: Vec3 = [0.012, 0.011, 0.01];
 const RUST: Vec3 = [0.3, 0.12, 0.045];
 const MOSS: Vec3 = [0.12, 0.16, 0.06];
@@ -47,29 +47,38 @@ export interface SteelWear {
   /** Underside of the girder: the exhaust hits from here up. */
   readonly girderZ: number;
   readonly deckZ: number;
+  /** How far side faces fade toward charcoal (0..1). Black steel 0.7, so the soot over the
+   *  tracks reads against it; signal-red arms keep their colour (0.1). */
+  readonly sideFade: number;
 }
 
 /**
  * Painted steelwork: up-facing faces fade toward charcoal (blotchy), down-facing faces keep the
- * deep black, and the steel over each track takes soot that is heaviest on the soffit and fades
- * a metre up the girder and 1.4 m either side of the track centre.
+ * deep black, side faces to a mid charcoal, and the steel over each track takes soot that is
+ * heaviest on the soffit and the lower metre of the girder (from the knee braces up), thinning
+ * by the deck, and 1.3 m either side of the track centre (clean steel between the tracks).
  */
 export function steelWear(rng: Rng, w: SteelWear): Shade {
   const blot = valueNoise(rng.fork('fade'), { scale: 0.6, octaves: 3 });
   const rot = valueNoise(rng.fork('rot'), { scale: 0.35, octaves: 3 });
   return (p, n, c) => {
     const b = 0.6 + 0.4 * blot(p);
-    let out = mix(c, FADED, (0.15 + 0.6 * smooth(0.2, 0.9, n[2])) * b);
+    // Side faces fade too (to a mid charcoal), so the soot over the tracks reads black against
+    // them from the hero's low front view, not black on black.
+    const fade = w.sideFade + (0.9 - w.sideFade) * smooth(0.2, 0.9, n[2]);
+    let out = mix(c, FADED, fade * b);
     // Rust breaking through the paint in patches, worst where water lies (up faces) and low
     // down where the ballast splash keeps the steel wet.
     const wet = 0.45 * smooth(0.3, 0.9, n[2]) + 0.4 * (1 - smooth(0.4, 2.2, p[2]));
     out = mix(out, RUST, (0.3 + wet) * smooth(0, 0.4, rot(p)));
     out = mix(out, SOOT, 0.3 * smooth(0.2, 0.9, -n[2]));
     const near = Math.min(...w.tracks.map((t) => Math.abs(p[1] - t)));
-    const over = 1 - smooth(0.6, 1.6, near);
+    const over = 1 - smooth(0.5, 1.3, near);
+    // From the knee braces up through the girder's lower two thirds, thinning toward the deck.
     const band =
-      smooth(w.girderZ - 0.4, w.girderZ + 0.1, p[2]) * (1 - smooth(w.girderZ + 0.3, w.deckZ, p[2]));
-    return mix(out, SOOT, 0.85 * over * band * (0.75 + 0.25 * blot([p[0], p[1] * 3, p[2]])));
+      smooth(w.girderZ - 0.9, w.girderZ - 0.1, p[2]) *
+      (1 - smooth(w.girderZ + 0.9, w.deckZ + 0.4, p[2]));
+    return mix(out, SOOT, 0.95 * over * band * (0.8 + 0.2 * blot([p[0], p[1] * 3, p[2]])));
   };
 }
 

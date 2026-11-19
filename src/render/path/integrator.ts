@@ -1,15 +1,16 @@
 // Unidirectional path tracing of one camera sample: closest hit (cutout cards alpha-tested), the
 // studio floor as a Lambert plane for bounce light and as a shadow catcher for camera rays, next-
 // event estimation + MIS at every vertex (nee.ts), lobe sampling by surface class (glTF PBR, hair,
-// foliage, thin see-through, skin with Burley diffusion), Russian roulette from a fixed depth with
-// the sampler's own dimension. `glow` parts emit. Every random number comes from sampler.ts: same
-// pixel, same bytes.
+// foliage, skin with Burley diffusion), Russian roulette from a fixed depth with the sampler's own
+// dimension. A thin see-through surface splits: its reflected sun and sky are added at every
+// crossing, and only the path's way on (through or off) is a coin toss. `glow` parts emit. Every
+// random number comes from sampler.ts: same pixel, same bytes.
 
 import { lambertLobes, MODE, newLobes, prepare, sampleBsdf } from './bsdf.ts';
 import { type Hit, newHit } from './bvh.ts';
 import { CLS } from './classes.ts';
 import { sampleSphere } from './hair.ts';
-import { directLight, lightLe, lightPdf, mis, scatter } from './nee.ts';
+import { directLight, escapedLight, lightLe, lightPdf, mis, scatter } from './nee.ts';
 import { sample4 } from './sampler.ts';
 import { probeExit } from './sss.ts';
 import { newSurf, origin, type Surf, surfAt } from './surf.ts';
@@ -52,6 +53,10 @@ const pd = new Float64Array(3);
 const sw = new Float64Array(3);
 const vis = new Float64Array(2);
 const add = new Float64Array(3);
+const rd = new Float64Array(3);
+
+/** thinVertex's answer when the path goes straight on through the surface. */
+const THROUGH = -1;
 
 /**
  * Indirect light is clamped to this luminance per sample: a rare BSDF-sampled path into the sun
@@ -92,6 +97,8 @@ export function traceSample(
   let prevPdf = 0;
   // Still on the camera's straight line (only see-through surfaces so far): shows the backdrop.
   let primary = true;
+  // The last scattering was a thin surface's reflection, which added its own sun and sky.
+  let counted = false;
   for (let depth = 0; depth <= p.maxDepth; depth++) {
     const g = 1 + depth * 3;
     const tf = floorT(w, o, d);
@@ -101,7 +108,7 @@ export function traceSample(
       if (depth === 0) a.bgN++;
       else if (primary)
         for (let k = 0; k < 3; k++) a.rad[k] = (a.rad[k] ?? 0) + (tp[k] ?? 0) * (bg[k] ?? 0);
-      else {
+      else if (!counted) {
         const wgt = prevPdf > 0 ? mis(prevPdf, lightPdf(w.sky, d)) : 1;
         for (let k = 0; k < 3; k++) add[k] = (tp[k] ?? 0) * lightLe(w.sky, d, k) * wgt;
         addClamped(a.rad, add, depth);
@@ -143,21 +150,25 @@ export function traceSample(
         }
       }
       sample4(seed, g + 2, index, q);
-      if (!shapeVertex(w, q)) {
-        // Delta pass-through (thin see-through surface): keep going in a straight line.
-        for (let k = 0; k < 3; k++) o[k] = (s.p[k] ?? 0) - (s.ng[k] ?? 0) * w.eps;
-        prevPdf = 0;
-        continue;
-      }
+      shapeVertex(w, q);
+    }
+    sample4(seed, g + 1, index, v);
+    const thin = any && s.cls === CLS.thin;
+    const hair = s.cls === CLS.hair && lobes.mode !== MODE.lambert;
+    let pdf = 0;
+    if (thin) {
+      pdf = thinVertex(w, a.rad, depth);
+      // Straight on: the light sampled at the vertex before still owns this direction (prevPdf).
+      if (pdf === THROUGH) continue;
+    } else {
+      add.fill(0);
+      directLight(w, s, lobes, hair, wo, tp, u[0] ?? 0, u[1] ?? 0, u[2] ?? 0, add);
+      addClamped(a.rad, add, depth);
     }
     primary = false;
-    const hair = s.cls === CLS.hair && lobes.mode !== MODE.lambert;
-    add.fill(0);
-    directLight(w, s, lobes, hair, wo, tp, u[0] ?? 0, u[1] ?? 0, u[2] ?? 0, add);
-    addClamped(a.rad, add, depth);
-    sample4(seed, g + 1, index, v);
-    let pdf: number;
-    if (hair) {
+    counted = thin;
+    if (thin) d.set(rd);
+    else if (hair) {
       pdf = sampleSphere(v[1] ?? 0, v[2] ?? 0, d);
       scatter(s, lobes, true, wo, d, wt);
       for (let k = 0; k < 3; k++) wt[k] = (wt[k] ?? 0) / pdf;
@@ -179,48 +190,64 @@ export function traceSample(
 }
 
 /**
- * Pick the vertex's lobes by surface class (random numbers `r`): false = a delta pass-through
- * was chosen (thin surfaces), the throughput already tinted. Skin may move `s` to its exit point.
+ * A thin see-through surface (glass, liquid, ice…), split in two. Its reflected sun and sky are
+ * added here at every crossing, by a light sample and a lobe sample, each weighted by the
+ * surface's own Fresnel term: choosing the reflection lobe by chance instead (4 % of samples
+ * face-on, weighted × 25) returned the key light's mirror image as lone white pixels (D401). Only
+ * the way on is chosen: THROUGH (throughput tinted, `d` unchanged, `o` behind the surface), or off
+ * the surface along `rd` with weight `wt` (the pdf is returned; 0 ends the path).
  */
-function shapeVertex(w: World, r: Float64Array): boolean {
+function thinVertex(w: World, rad: Float64Array, depth: number): number {
   const look = s.look;
+  const trans = look.transmission * (1 - s.metal);
+  prepare(s, wo, MODE.pbr, trans, lobes);
+  const f0 = ((look.ior - 1) / (look.ior + 1)) ** 2;
+  const c = Math.max(
+    0,
+    Math.min(
+      1,
+      (s.n[0] ?? 0) * (wo[0] ?? 0) + (s.n[1] ?? 0) * (wo[1] ?? 0) + (s.n[2] ?? 0) * (wo[2] ?? 0),
+    ),
+  );
+  const pT = trans * (1 - (f0 + (1 - f0) * (1 - c) ** 5));
+  add.fill(0);
+  directLight(w, s, lobes, false, wo, tp, u[0] ?? 0, u[1] ?? 0, u[2] ?? 0, add);
+  const pdf = sampleBsdf(s, lobes, wo, v[0] ?? 0, v[1] ?? 0, v[2] ?? 0, rd, wt);
+  if (pdf > 0) escapedLight(w, s, rd, wt, pdf, tp, add);
+  addClamped(rad, add, depth);
+  if ((q[0] ?? 0) < pT) {
+    for (let k = 0; k < 3; k++) {
+      tp[k] = (tp[k] ?? 0) * (s.albedo[k] ?? 0) * Math.exp(-(look.absorb[k] ?? 0) * look.thickness);
+      o[k] = (s.p[k] ?? 0) - (s.ng[k] ?? 0) * w.eps;
+    }
+    return THROUGH;
+  }
+  for (let k = 0; k < 3; k++) wt[k] = (wt[k] ?? 0) / (1 - pT);
+  return pdf;
+}
+
+/**
+ * Pick the vertex's lobes by surface class (random numbers `r`); thin surfaces are thinVertex's.
+ * Skin may move `s` to its exit point.
+ */
+function shapeVertex(w: World, r: Float64Array): void {
+  if (s.cls === CLS.thin) return;
   if (s.cls === CLS.hair) {
     lobes.mode = MODE.pbr;
-    return true;
+    return;
   }
   if (s.cls === CLS.foliage) {
     prepare(s, wo, MODE.foliage, 0, lobes);
-    return true;
-  }
-  if (s.cls === CLS.thin) {
-    const trans = look.transmission * (1 - s.metal);
-    prepare(s, wo, MODE.pbr, trans, lobes);
-    const f0 = ((look.ior - 1) / (look.ior + 1)) ** 2;
-    const c = Math.max(
-      0,
-      Math.min(
-        1,
-        (s.n[0] ?? 0) * (wo[0] ?? 0) + (s.n[1] ?? 0) * (wo[1] ?? 0) + (s.n[2] ?? 0) * (wo[2] ?? 0),
-      ),
-    );
-    const pT = trans * (1 - (f0 + (1 - f0) * (1 - c) ** 5));
-    if ((r[0] ?? 0) < pT) {
-      for (let k = 0; k < 3; k++)
-        tp[k] =
-          (tp[k] ?? 0) * (s.albedo[k] ?? 0) * Math.exp(-(look.absorb[k] ?? 0) * look.thickness);
-      return false;
-    }
-    for (let k = 0; k < 3; k++) tp[k] = (tp[k] ?? 0) / (1 - pT);
-    return true;
+    return;
   }
   prepare(s, wo, MODE.pbr, 0, lobes);
-  if (s.cls !== CLS.skin) return true;
+  if (s.cls !== CLS.skin) return;
   // Skin: the specular lobes at the entry point, or Burley diffusion to an exit point.
   const pSpec = lobes.ps + lobes.pc;
   if ((r[0] ?? 0) < pSpec) {
     prepare(s, wo, MODE.spec, 0, lobes);
     for (let k = 0; k < 3; k++) tp[k] = (tp[k] ?? 0) / pSpec;
-    return true;
+    return;
   }
   const keep = 1 - pSpec;
   for (let k = 0; k < 3; k++) {
@@ -238,5 +265,4 @@ function shapeVertex(w: World, r: Float64Array): boolean {
     for (let k = 0; k < 3; k++) tp[k] = ((tp[k] ?? 0) * (wt[k] ?? 0) * (s.albedo[k] ?? 0)) / keep;
   s.albedo.fill(1);
   lambertLobes(s, lobes);
-  return true;
 }

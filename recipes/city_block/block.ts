@@ -22,6 +22,7 @@ import {
   prism,
   type Rng,
   ROAD_WIDTH,
+  type StripId,
   tiled,
   type Vec2,
   type Vec3,
@@ -29,7 +30,8 @@ import {
 import type { OsmBuilding, OsmRoad } from '@developerz.ai/ts23d/data';
 import { along, distToLine, type Edge, edgesOf } from './edges.ts';
 import { fireEscape, IRON_BLACK, sashWindow, shopfront, stoop } from './facade.ts';
-import { facadeWear, roofWear, shade } from './wear.ts';
+import { FAR_BAND, FAR_BRICK, FAR_STONE, SIDEWALK, SIDEWALK_BAND } from './materials.ts';
+import { facadeWear, roofWear, shade, sootRuns, streetWear } from './wear.ts';
 
 export interface BlockStyle {
   readonly walls: readonly Vec3[];
@@ -117,10 +119,12 @@ export function tankAt(p: CityBuildingPlan): Vec2 | null {
 /** Cornice brackets along an edge: one every ~4.8 m, at least both ends. */
 const brackets = (len: number): number => Math.max(2, Math.round(len / 4.8) + 1);
 
-/** Wall strip by colour: the stucco and brownstone colours are not brick. */
-function wallStrip(style: BlockStyle, wall: Vec3): 'brick' | 'stone' | 'concrete' {
+/** Wall strip by colour (the stucco and brownstone colours are not brick): the true-scale strip
+ *  for street faces up close, and its 2.7 m-band twin for side and rear walls and LOD1. */
+function wallStrip(style: BlockStyle, wall: Vec3): { near: StripId; far: StripId } {
   const k = style.walls.indexOf(wall);
-  return k === 5 ? 'concrete' : k === 3 ? 'stone' : 'brick';
+  if (k === 5) return { near: 'concrete', far: 'concrete' };
+  return k === 3 ? { near: 'stone', far: FAR_STONE } : { near: 'brick', far: FAR_BRICK };
 }
 
 /** Clip a polygon to the half-plane f(p) ≤ 0 (Sutherland–Hodgman). */
@@ -145,7 +149,80 @@ interface Site {
   readonly roads: readonly OsmRoad[];
 }
 
-/** Ground slab (concrete sidewalk flags) and the asphalt carriageways clipped to it. */
+/** Granite kerb and road paint (linear RGB): worn white lane paint, pale kerb stone. */
+const KERB = hex('#a7a49c');
+const PAINT: Vec3 = [0.78, 0.77, 0.72];
+
+/** The t-interval of a→b (metres from a) inside the rectangle shrunk by `pad`, or null. */
+function inside(a: Vec2, b: Vec2, ext: Site['extent'], pad: number): [number, number] | null {
+  const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+  let [t0, t1] = [0, len];
+  for (const k of [0, 1] as const) {
+    const d = ((b[k] ?? 0) - (a[k] ?? 0)) / len;
+    const [lo, hi] = [(ext[k] ?? 0) + pad, (ext[k + 2] ?? 0) - pad];
+    if (Math.abs(d) < 1e-9) {
+      if ((a[k] ?? 0) < lo || (a[k] ?? 0) > hi) return null;
+      continue;
+    }
+    const [s0, s1] = [(lo - (a[k] ?? 0)) / d, (hi - (a[k] ?? 0)) / d];
+    t0 = Math.max(t0, Math.min(s0, s1));
+    t1 = Math.min(t1, Math.max(s0, s1));
+  }
+  return t1 - t0 > 0.5 ? [t0, t1] : null;
+}
+
+/** Runs of a line (offset `off` from a→b) that stay out of every other carriageway. */
+function runs(
+  a: Vec2,
+  b: Vec2,
+  span: readonly [number, number],
+  off: number,
+  clear: (p: Vec2) => boolean,
+): [number, number][] {
+  const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+  const [ux, uy] = [(b[0] - a[0]) / len, (b[1] - a[1]) / len];
+  const out: [number, number][] = [];
+  let start = -1;
+  for (let t = span[0]; t <= span[1] + 1e-9; t += 0.5) {
+    const ok = clear([a[0] + ux * t - uy * off, a[1] + uy * t + ux * off]);
+    if (ok && start < 0) start = t;
+    if ((!ok || t + 0.5 > span[1]) && start >= 0) {
+      if (t - start > 1) out.push([start, t]);
+      start = -1;
+    }
+  }
+  return out;
+}
+
+/** A flat strip along a→b from t0 to t1, `off` to the left, `w` wide, `h` tall, base at z. */
+function runStrip(
+  a: Vec2,
+  b: Vec2,
+  [t0, t1]: readonly [number, number],
+  o: { off: number; w: number; h: number; z: number; color: Vec3; strip?: StripId },
+): Mesh {
+  const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+  const [ux, uy] = [(b[0] - a[0]) / len, (b[1] - a[1]) / len];
+  const t = (t0 + t1) / 2;
+  return place(
+    box({
+      size: [t1 - t0, o.w, o.h],
+      color: o.color,
+      strip: o.strip ?? 'plain',
+      omit: ['bottom'],
+    }),
+    {
+      at: [a[0] + ux * t - uy * o.off, a[1] + uy * t + ux * o.off, o.z],
+      yaw: Math.atan2(uy, ux),
+    },
+  );
+}
+
+/**
+ * Ground slab (5 ft concrete flags), the asphalt carriageways clipped to it, granite kerbs along
+ * both edges (cut at the crossings) and the lane paint: a dashed centre line and solid parking
+ * lines 2.4 m in from each kerb (LOD0/1).
+ */
 function streets(ctx: BuildContext, s: Site, style: BlockStyle): void {
   const [x0, y0, x1, y1] = s.extent;
   ctx.part(
@@ -163,15 +240,20 @@ function streets(ctx: BuildContext, s: Site, style: BlockStyle): void {
         u: [x1 - x0, 0, 0],
         v: [0, y1 - y0, 0],
         color: style.ground,
-        strip: 'concrete',
-        ...(ctx.lod === 2 ? { vMetres: y1 - y0 } : {}),
+        strip: ctx.lod === 2 ? 'concrete' : SIDEWALK,
+        vMetres: ctx.lod === 2 ? y1 - y0 : SIDEWALK_BAND,
       }),
     ]),
   );
   const roads: Mesh[] = [];
+  const marks: Mesh[] = [];
   for (const r of s.roads) {
     const width = ROAD_WIDTH[r.highway];
     if (!width) continue;
+    // Clear of every OTHER carriageway (plus a 1 m kerb return): kerbs and paint stop there.
+    const others = s.roads.filter((o) => o !== r && ROAD_WIDTH[o.highway]);
+    const clear = (p: Vec2): boolean =>
+      others.every((o) => distToLine(p, o.line) > (ROAD_WIDTH[o.highway] ?? 0) / 2 + 1);
     for (let i = 0; i + 1 < r.line.length; i++) {
       const a = r.line[i] ?? [0, 0];
       const b = r.line[i + 1] ?? a;
@@ -201,44 +283,76 @@ function streets(ctx: BuildContext, s: Site, style: BlockStyle): void {
             strip: 'asphalt',
           }),
         );
+      if (ctx.lod === 2) continue;
+      for (const side of [-1, 1]) {
+        const off = side * (width / 2 + 0.09);
+        const span = inside(a, b, s.extent, 0.3);
+        if (!span) continue;
+        for (const run of runs(a, b, span, off, clear)) {
+          marks.push(
+            runStrip(a, b, run, { off, w: 0.18, h: 0.12, z: 0, color: KERB, strip: 'stone' }),
+          );
+          if (ctx.lod === 0 && width >= 9)
+            marks.push(
+              runStrip(a, b, run, {
+                off: side * (width / 2 - 2.4),
+                w: 0.12,
+                h: 0.004,
+                z: 0.039,
+                color: PAINT,
+              }),
+            );
+        }
+      }
+      const span = inside(a, b, s.extent, 0.5);
+      if (!span) continue;
+      for (const [r0, r1] of runs(a, b, span, 0, clear))
+        for (let t = r0; t + 3 <= r1; t += 9)
+          marks.push(
+            runStrip(a, b, [t, t + 3], { off: 0, w: 0.12, h: 0.004, z: 0.039, color: PAINT }),
+          );
     }
   }
-  if (roads.length) ctx.part('streets', merge(roads));
+  if (roads.length) ctx.part('streets', merge([...roads, ...marks]));
 }
 
-/** London planes and honey locusts on the sidewalks, 8 m apart, clear of every facade. */
+/**
+ * London planes and honey locusts on the sidewalks, 8 m apart, clear of every facade: a 3.2 m
+ * trunk under an irregular crown 8–11 m tall overall (a main dome and a seeded side lobe; far, one
+ * cone), its radius held a little inside the clearance to the nearest wall.
+ */
 function trees(ctx: BuildContext, s: Site): void {
   const rng = ctx.rng.fork('trees');
   const lod = ctx.lod;
-  const seg = ctx.pick([5, 5, 3]);
+  const seg = ctx.pick([5, 4, 3]);
   const trunk = lathe({
     profile: [
-      [0.14, 0],
-      [0.09, 2.3],
-      [0, 2.3],
+      [0.2, 0],
+      [0.13, 3.4],
+      [0, 3.4],
     ],
-    segments: lod === 0 ? 5 : 4,
+    segments: ctx.pick([5, 4, 3]),
     color: [0.32, 0.27, 0.22],
     strip: 'bark_oak',
   });
-  const crown = (r: number, h: number): Mesh =>
+  const crown = (r: number, h: number, z: number, green: Vec3): Mesh =>
     lathe({
       profile:
-        lod === 2
+        lod > 0
           ? [
-              [0, 2.0],
-              [r, 2.0 + h * 0.45],
-              [0, 2.0 + h],
+              [0, z],
+              [r, z + h * 0.45],
+              [0, z + h],
             ]
           : [
-              [0, 1.9],
-              [r * 0.7, 2.2],
-              [r, 2.0 + h * 0.4],
-              [r * 0.85, 2.0 + h * 0.75],
-              [0, 2.0 + h],
+              [0, z - 0.1],
+              [r * 0.7, z + 0.3],
+              [r, z + h * 0.4],
+              [r * 0.85, z + h * 0.75],
+              [0, z + h],
             ],
       segments: seg,
-      color: [0.2, 0.3, 0.12],
+      color: green,
       strip: 'grass',
     });
   const out: Mesh[] = [];
@@ -266,14 +380,30 @@ function trees(ctx: BuildContext, s: Site): void {
   for (let t = y0 + 6; t < y1 - 4; t += 13) spots.push([x0 + 1.6, t], [x1 - 1.6, t]);
   for (const p of spots) {
     if (p[0] < x0 + 1.5 || p[0] > x1 - 1.5 || p[1] < y0 + 1.5 || p[1] > y1 - 1.5) continue;
-    if (rings.some((g) => inPoly(p, g) || distToLine(p, [...g, g[0] ?? p]) < 2.6)) continue;
+    if (rings.some((g) => inPoly(p, g))) continue;
+    const wall = Math.min(...rings.map((g) => distToLine(p, [...g, g[0] ?? p])));
+    if (wall < 2.6) continue;
     if (s.roads.some((o) => distToLine(p, o.line) < (ROAD_WIDTH[o.highway] ?? 0) / 2 + 0.6))
       continue;
-    const rr = rng.range(1.4, 2.0);
-    const hh = rng.range(3.6, 5.0);
-    out.push(
-      place(merge([trunk, crown(rr, hh)]), { at: [p[0], p[1], 0], yaw: rng.range(0, 6.28) }),
-    );
+    // Inside the clearance to the nearest wall, and (with its side lobe) inside the slab.
+    const rim = Math.min(p[0] - x0, x1 - p[0], p[1] - y0, y1 - p[1]);
+    const rr = Math.min(rng.range(2.2, 3.2), wall - 0.6, (rim - 0.1) / 1.2);
+    const hh = rng.range(5, 7.5);
+    const g = rng.range(0.8, 1.2);
+    const green: Vec3 = [0.2 * g, 0.3 * g, 0.12 * g];
+    const lobe = rng.range(0, 6.28);
+    const yaw = rng.range(0, 6.28);
+    const parts = [trunk, crown(rr, hh, 3.0, green)];
+    if (lod === 0 && rng.next() < 0.6) {
+      // Side lobe: a smaller dome pushed out and up, so no two crowns share an outline.
+      const d = rr * rng.range(0.3, 0.5);
+      parts.push(
+        place(crown(rr * 0.65, hh * 0.6, 3.0 + hh * 0.3, green), {
+          at: [Math.cos(lobe) * d, Math.sin(lobe) * d, 0],
+        }),
+      );
+    }
+    out.push(place(merge(parts), { at: [p[0], p[1], 0], yaw }));
   }
   if (out.length) ctx.part('trees', merge(out));
 }
@@ -305,6 +435,28 @@ function shrink(ring: readonly Vec2[], d: number): Vec2[] {
   });
 }
 
+/** The triangles of `m` whose normal faces up (vertices compacted): a prism's top cap alone. */
+function topFaces(m: Mesh): Mesh {
+  const ids: number[] = [];
+  for (let t = 0; t < m.indices.length; t += 3)
+    if ((m.normals[(m.indices[t] ?? 0) * 3 + 2] ?? 0) > 0.5)
+      ids.push(m.indices[t] ?? 0, m.indices[t + 1] ?? 0, m.indices[t + 2] ?? 0);
+  const map = new Map<number, number>();
+  for (const i of ids) if (!map.has(i)) map.set(i, map.size);
+  const pick = (a: Float32Array, k: number): Float32Array => {
+    const out = new Float32Array(map.size * k);
+    for (const [from, to] of map) out.set(a.subarray(from * k, from * k + k), to * k);
+    return out;
+  };
+  return {
+    positions: pick(m.positions, 3),
+    normals: pick(m.normals, 3),
+    uvs: pick(m.uvs, 2),
+    colors: pick(m.colors, 3),
+    indices: Uint32Array.from(ids, (i) => map.get(i) ?? 0),
+  };
+}
+
 /** One building: walls, cap, roof band, cornices, windows and its facade pieces. */
 function building(
   ctx: BuildContext,
@@ -331,7 +483,7 @@ function building(
   for (const e of edges) {
     if (!street.has(e.i)) continue;
     const r = rng.next();
-    if (r < (tall ? 0.6 : 0.35) && e.len > 4) shops.add(e.i);
+    if (r < (tall ? 0.85 : 0.55) && e.len > 4) shops.add(e.i);
     else if (!tall && p.floors >= 3 && e.len > 4.5) stoops.set(e.i, rng.range(1.6, e.len - 1.6));
     if (tall && !shops.has(e.i) && e.len > 6 && rng.next() < 0.7) escapes.set(e.i, e.len / 2);
     else if (tall && shops.has(e.i) && e.len > 9 && rng.next() < 0.5) escapes.set(e.i, e.len * 0.6);
@@ -339,40 +491,68 @@ function building(
 
   // ---- walls: every edge at true scale (brick 75 mm courses), one face per edge.
   const walls: Mesh[] = [];
-  for (const e of edges)
-    walls.push(
+  // Faces of one band (every face far; side and rear walls at LOD1) have vertex rows only at
+  // their foot and top: they take the wall's mean wear, not the black of its two ends.
+  const coarse: Mesh[] = [];
+  const sootRng = rng.fork('soot');
+  for (const e of edges) {
+    const near = lod === 0 && street.has(e.i);
+    const one = lod === 2 || (lod === 1 && !street.has(e.i));
+    (one ? coarse : walls).push(
       tiled({
         origin: [e.a[0], e.a[1], 0],
         u: [e.b[0] - e.a[0], e.b[1] - e.a[1], 0],
         v: [0, 0, wallH],
         color: p.wall,
-        strip,
-        // Street faces at true scale up close; side and rear walls and LOD1 in coarser bands;
-        // far, one band (the same strip and mean colour, two triangles a face).
-        ...(lod === 2
+        // Street faces at true scale up close, on the same bond painted over 2.7 m bands at LOD1;
+        // side and rear walls in 2.7 m bands at LOD0, one band from LOD1 on; far, every face one
+        // band (the same mean colour, two triangles a face).
+        strip: near ? strip.near : strip.far,
+        ...(one
           ? { vMetres: wallH + 0.01 }
-          : lod === 1
-            ? { vMetres: 1.35 }
-            : street.has(e.i)
-              ? {}
-              : { vMetres: 1.8 }),
+          : near
+            ? {}
+            : // A 1.1 m first band, so the street grime has a vertex row to end at.
+              { vMetres: FAR_BAND, vOffset: FAR_BAND - 1.1 }),
       }),
     );
-  // The hidden cap under the roof band: the footprint read from above (and its silhouette).
-  walls.push(
-    prism({
-      profile: shrink(p.ring, 0.03),
-      depth: 0.02,
-      centred: false,
-      color: p.wall,
-      strip: 'plain',
-    }),
+    // Soot runs under the cornice on the street faces (LOD0/1; far, the soot band alone).
+    if (lod < 2 && street.has(e.i) && wallH > 6)
+      walls.push(
+        ...sootRuns(sootRng, e, {
+          top: wallH - CORNICE,
+          wall: p.wall,
+          strip: near ? strip.near : strip.far,
+        }),
+      );
+  }
+  // The hidden cap under the roof band: the footprint read from above (and its silhouette),
+  // its top face only, flush with the band's underside. Far, the roof band alone carries both.
+  if (lod < 2)
+    walls.push(
+      place(
+        topFaces(
+          prism({
+            profile: shrink(p.ring, 0.03),
+            depth: 0.02,
+            centred: false,
+            color: p.wall,
+            strip: 'plain',
+          }),
+        ),
+        { at: [0, 0, wallH - 0.02] },
+      ),
+    );
+  const wear = { base: 0, top: wallH, age };
+  const wallRng = rng.fork('wall');
+  ctx.part(
+    name,
+    merge([
+      ...(walls.length ? [shade(merge(walls), facadeWear(wallRng, wear))] : []),
+      ...(coarse.length ? [shade(merge(coarse), facadeWear(wallRng, { ...wear, far: true }))] : []),
+    ]),
+    { at: [0, 0, p.base] },
   );
-  const cap = walls.pop();
-  if (cap) walls.push(place(cap, { at: [0, 0, wallH - 0.02] }));
-  ctx.part(name, shade(merge(walls), facadeWear(rng.fork('wall'), { base: 0, top: wallH, age })), {
-    at: [0, 0, p.base],
-  });
 
   // ---- roof band with patches, bulkhead and water tank. Each roof has its own finish, as on
   // the aerials: black tar, a silver aluminium coating, or pale ballast gravel (one tar tone for
@@ -396,28 +576,65 @@ function building(
       [-r, -r],
     ].every(([dx = 0, dy = 0]) => inPoly([q[0] + dx, q[1] + dy], p.ring)) &&
     edges.every((e) => distToLine(q, [e.a, e.b]) > r + 0.4);
-  // Patches are LOD0 only: their own stream, so later draws (cornice depth) match on every LOD.
+  // Patches (LOD0/1) and vents (LOD0) draw from their own streams, so later draws (cornice
+  // depth) match on every LOD. A patch is a fresh sheet of membrane: blacker new tar on a grey
+  // roof, a fresh silver coat on a dark one, each a few metres across, so no roof is one colour.
   const patchRng = rng.fork('roof_patches');
-  if (lod === 0)
-    for (let k = 0; k < 4; k++) {
-      const q: Vec2 = [c[0] + patchRng.range(-4, 4), c[1] + patchRng.range(-4, 4)];
-      const [w, d] = [patchRng.range(1.2, 3.5), patchRng.range(1.2, 3.5)];
+  const [rx0, ry0, rx1, ry1] = [
+    Math.min(...p.ring.map((q) => q[0])),
+    Math.min(...p.ring.map((q) => q[1])),
+    Math.max(...p.ring.map((q) => q[0])),
+    Math.max(...p.ring.map((q) => q[1])),
+  ];
+  const spot = (r: Rng): Vec2 => [r.range(rx0, rx1), r.range(ry0, ry1)];
+  if (lod < 2)
+    for (let k = 0; k < 9; k++) {
+      const q = spot(patchRng);
+      const [w, d] = [patchRng.range(1.5, 5), patchRng.range(1.5, 5)];
+      const g = patchRng.next() < 0.5 ? patchRng.range(0.4, 0.65) : patchRng.range(1.35, 1.8);
       if (!fits(q, Math.max(w, d) / 2)) continue;
-      const g = patchRng.range(0.55, 1.4);
       roof.push(
         box({
           size: [w, d, 0.02],
           at: [q[0], q[1], ROOF_BAND - 0.008],
-          color: [roofC[0] * g, roofC[1] * g, roofC[2] * g],
+          color: [
+            Math.min(0.8, roofC[0] * g),
+            Math.min(0.8, roofC[1] * g),
+            Math.min(0.8, roofC[2] * g),
+          ],
           strip: 'concrete',
+          omit: ['bottom'],
+        }),
+      );
+    }
+  // Vents stand on the roof, above its tagged height: they go with the rooftop structures.
+  const vents: Mesh[] = [];
+  const ventRng = rng.fork('roof_vents');
+  if (lod === 0)
+    for (let k = 0; k < 4; k++) {
+      const q = spot(ventRng);
+      const h = ventRng.range(0.4, 0.9);
+      if (!fits(q, 0.5)) continue;
+      vents.push(
+        box({
+          size: [0.5, 0.5, h],
+          at: [q[0], q[1], ROOF_BAND - 0.01],
+          color: [0.55, 0.55, 0.53],
+          strip: 'aluminium',
+          omit: ['bottom'],
         }),
       );
     }
   // Rooftop structures stand on the roof but are not the tagged height: their own part.
-  const rooftop: Mesh[] = [];
+  const rooftop: Mesh[] = [...vents];
   if (p.floors >= 3 && lod < 2 && fits(c, 1.6))
     rooftop.push(
-      box({ size: [2.4, 2.8, 2.5], at: [c[0], c[1], ROOF_BAND - 0.01], color: p.wall, strip }),
+      box({
+        size: [2.4, 2.8, 2.5],
+        at: [c[0], c[1], ROOF_BAND - 0.01],
+        color: p.wall,
+        strip: strip.far,
+      }),
     );
   {
     const q = tankAt(p);
@@ -437,6 +654,7 @@ function building(
               at: [q[0] + dx * 1.0, q[1] + dy * 1.0, ROOF_BAND - 0.01],
               color: IRON_BLACK,
               strip: 'steel_painted',
+              omit: ['bottom'],
             }),
           );
       // Far: one block for the stand and its deck, the tank bearing on its top.
@@ -468,7 +686,7 @@ function building(
               [1.62, 3.0],
               [0, 4.0],
             ],
-            segments: ctx.pick([10, 8, 6]),
+            segments: ctx.pick([8, 6, 6]),
             color: [0.42, 0.36, 0.3],
             strip: 'wood_weathered',
           }),
@@ -483,7 +701,7 @@ function building(
 
   // ---- cornices on the street edges (all LODs but the far one).
   if (lod < 2) {
-    const depth = rng.range(0.3, 0.6);
+    const depth = rng.range(0.45, 0.8);
     const paint = CORNICE_PAINT[p.seed % CORNICE_PAINT.length] ?? trim;
     const corn: Mesh[] = [];
     for (const e of edges) {
@@ -509,6 +727,7 @@ function building(
                 at: [0.025, e.len / 2, -CORNICE - 0.35],
                 color: paint,
                 strip: 'wood_painted',
+                omit: ['back', 'top'],
               }),
               ...Array.from({ length: brackets(e.len) }, (_, k) =>
                 box({
@@ -520,6 +739,8 @@ function building(
                   ],
                   color: paint,
                   strip: 'wood_painted',
+                  // Back in the frieze, top under the cornice: never seen.
+                  omit: ['back', 'top'],
                 }),
               ),
             ]),
@@ -530,14 +751,52 @@ function building(
     if (corn.length) ctx.part(`${name}_cornice`, merge(corn), { at: [0, 0, top] });
   }
 
-  // ---- windows: the plan's slots, less those behind shopfronts and stoop doors.
+  // ---- windows: the plan's slots, less those behind shopfronts and stoop doors. Framed sashes
+  // at LOD0 (stone sills and lintels on the street faces), decals at LOD1 on the street faces
+  // and the rows as dark bands on the others. Far, every open face keeps its rows as bands.
   const fh = p.floorHeight;
   const wins: Mesh[] = [];
+  /** One face's window rows as dark glass bands (the grid still reads): up close a 12 mm slab
+   *  bedded 2 mm in the wall, so it seats on a face; past LOD0 one quad 1 cm proud. */
+  const rows = (e: Edge): void => {
+    for (let f = 0; f < p.floors; f++) {
+      const z = f * fh + fh * 0.26;
+      const h = Math.min(fh * 0.56, wallH - CORNICE - z);
+      if (h <= 0.2) continue;
+      const o = along(e, 0.4, 0.01);
+      wins.push(
+        lod === 0
+          ? place(
+              box({
+                size: [0.012, e.len - 0.8, h],
+                at: [0.004, e.len / 2, z],
+                color: [0.05, 0.06, 0.07],
+                strip: 'glass',
+                // Its ends tie the face to the bedded back: one closed-enough piece.
+                omit: ['top', 'bottom'],
+              }),
+              { at: [e.a[0], e.a[1], 0], yaw: e.yaw },
+            )
+          : tiled({
+              origin: [o[0], o[1], z],
+              u: [e.u[0] * (e.len - 0.8), e.u[1] * (e.len - 0.8), 0],
+              v: [0, 0, h],
+              color: [0.05, 0.06, 0.07],
+              strip: 'glass',
+              vMetres: 100,
+            }),
+      );
+    }
+  };
+  const banded = (e: Edge): boolean =>
+    !p.party[e.i] && e.len >= 3 && (lod === 2 || (lod === 1 && !street.has(e.i)));
+  for (const e of edges) if (banded(e)) rows(e);
   if (lod < 2) {
     for (const w of cityWindows(p)) {
       const e = edges.find(
         (g) => Math.abs(g.yaw - w.yaw) < 1e-9 && distToLine([w.at[0], w.at[1]], [g.a, g.b]) < 0.01,
       );
+      if (e && banded(e)) continue;
       const floor0 = w.at[2] < p.base + fh;
       if (e && floor0 && shops.has(e.i)) continue;
       if (e && floor0 && stoops.has(e.i)) {
@@ -545,7 +804,6 @@ function building(
         if (Math.abs(t - (stoops.get(e.i) ?? 0)) < 1.5) continue;
       }
       const ww = w.scale[1];
-      // Street windows with sills; rear-yard windows framed but without them.
       const onFront = !!e && street.has(e.i);
       wins.push(
         place(sashWindow(ww, w.scale[2], trim, lod, lod === 0 && onFront && !floor0), {
@@ -553,27 +811,6 @@ function building(
           yaw: w.yaw,
         }),
       );
-    }
-  } else {
-    // Far: each street face's window rows as dark bands 1 cm proud (the grid still reads).
-    for (const e of edges) {
-      if (!street.has(e.i) || e.len < p.bay + 0.6) continue;
-      for (let f = 0; f < p.floors; f++) {
-        const z = f * fh + fh * 0.26;
-        const h = Math.min(fh * 0.56, wallH - CORNICE - z);
-        if (h <= 0.2) continue;
-        const o = along(e, 0.4, 0.01);
-        wins.push(
-          tiled({
-            origin: [o[0], o[1], z],
-            u: [e.u[0] * (e.len - 0.8), e.u[1] * (e.len - 0.8), 0],
-            v: [0, 0, h],
-            color: [0.05, 0.06, 0.07],
-            strip: 'glass',
-            vMetres: 100,
-          }),
-        );
-      }
     }
   }
   if (wins.length) ctx.part(`${name}_windows`, merge(wins), { at: [0, 0, p.base] });
@@ -589,8 +826,9 @@ function building(
     const sy = stoops.get(e.i);
     if (sy !== undefined && lod === 0)
       extras.push(place(place(stoop(trim, lod), { at: [0, sy, 0] }), at));
+    // Fire escapes are LOD0 only: their rails are sub-pixel at LOD1 distance.
     const fy = escapes.get(e.i);
-    if (fy !== undefined && lod < 2)
+    if (fy !== undefined && lod === 0)
       extras.push(
         place(
           place(fireEscape(Math.min(3.2, e.len - 1), p.floors, fh, lod), { at: [0, fy, 0] }),
@@ -598,7 +836,10 @@ function building(
         ),
       );
   }
-  if (extras.length) ctx.part(`${name}_street`, merge(extras), { at: [0, 0, p.base] });
+  if (extras.length)
+    ctx.part(`${name}_street`, shade(merge(extras), streetWear(rng.fork('street'), 0)), {
+      at: [0, 0, p.base],
+    });
 }
 
 export function buildBlock(

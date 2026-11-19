@@ -17,7 +17,7 @@ import { norm } from '../_lib/body-plan-kit.ts';
 import { REAR, rearHinge } from './clips.ts';
 import { IDLE_GROUND, jointArcs } from './ground.ts';
 import { CLIPS, king_cobra, PLAN, RIG } from './king_cobra.ts';
-import { scarAt, shedAt } from './material.ts';
+import { dustAt, scarAt, shedAt } from './material.ts';
 import {
   bellyHalf,
   COIL_TOP,
@@ -208,6 +208,8 @@ describe('sourced proportions', () => {
       0.01,
     );
     expect(Math.max(...pile.map((p) => Math.hypot(p[0], p[1])))).toBeLessThan(0.42);
+    // Two turns, not one flat ring: the smaller top turn rides a body depth above the ground ring.
+    expect(COIL_TOP).toBeGreaterThan(0.06);
   });
   it('keeps every skin point on its own turn, never inside the turn it touches', () => {
     let foreign = 0;
@@ -266,6 +268,10 @@ describe('surface', () => {
     }
     expect(shed).toBeGreaterThan(0.8);
     expect(scar).toBeGreaterThan(0.8);
+    // Dust coats the turn lying on the ground, broad enough to read from the hero camera; the raised
+    // front stays clean.
+    expect(dustAt(2.9, Math.PI * 0.7)).toBeGreaterThan(0.5);
+    expect(dustAt(0.5, Math.PI * 0.7)).toBe(0);
   });
 });
 

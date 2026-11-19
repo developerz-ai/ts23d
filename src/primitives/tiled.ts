@@ -5,7 +5,7 @@
 //   triangles = 2 · segments · bands · (doubleSided ? 2 : 1),  bands = ⌈|v| / vMetres⌉ at offset 0
 
 import { type Mesh, MeshBuilder, type Vec3 } from '../core/index.ts';
-import { type StripId, stripRect } from '../material/index.ts';
+import { mappedOnto, type StripId, stripRect } from '../material/index.ts';
 import { count, positive, spanOf } from './check.ts';
 import { stripU, stripV, stripVMetres } from './strip-uv.ts';
 
@@ -59,7 +59,7 @@ export function tiled(o: TiledOptions): Mesh {
     }
     t += step;
   }
-  return b.build();
+  return mappedOnto(b.build(), strip);
 }
 
 /** One row of segs + 1 vertices at fraction `fv` up the face; returns the first index. */

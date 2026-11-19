@@ -2,12 +2,14 @@
 // merged pixel rectangles (text-layout.ts) become flush decals lifted 2 mm (depth 0, 2 triangles
 // each) or raised boxes (face + 4 sides, 10 each). Flat normals. With `surface`, rectangles split
 // into column groups wherever the offset under them changes and each sits on the highest surface
-// under it. Output is byte-identical to text() before vector fonts existed.
+// under it; `wrap` also paints the steps between pieces at different depths (text-pixel-wrap.ts).
+// Without `wrap` the output is byte-identical to text() before vector fonts existed.
 
 import { type Mesh, MeshBuilder, type Vec3 } from '../core/index.ts';
-import { stripRect } from '../material/index.ts';
+import { mappedOnto, stripRect } from '../material/index.ts';
 import { stripU, stripV } from './strip-uv.ts';
 import { layout, type PixelFont, type PixelRect } from './text-layout.ts';
+import { type Piece, risers } from './text-pixel-wrap.ts';
 
 export interface PixelTextInput {
   readonly origin: Vec3;
@@ -23,6 +25,8 @@ export interface PixelTextInput {
   readonly align?: 'left' | 'centre' | 'right' | undefined;
   readonly surface?: ((u: number, v: number) => number) | undefined;
   readonly strip?: Parameters<typeof stripRect>[0] | undefined;
+  /** Paint the steps between pieces at different surface offsets (needs `surface`). */
+  readonly wrap?: boolean | undefined;
 }
 
 const LIFT = 0.002;
@@ -71,7 +75,8 @@ export function pixelText(str: string, o: PixelTextInput): Mesh {
     else b.quad(i0, i3, i2, i1);
   };
   const neg = (v: Vec3): Vec3 => [-v[0], -v[1], -v[2]];
-  for (const piece of pieces(rects, px, start, o.surface)) {
+  const all = pieces(rects, px, start, o.surface);
+  for (const piece of all) {
     const { u0, u1, v0, v1, s } = piece;
     const lo = depth > 0 ? s : s + LIFT;
     const hi = depth > 0 ? s + depth : lo;
@@ -108,16 +113,21 @@ export function pixelText(str: string, o: PixelTextInput): Mesh {
       [0, 0, depth, depth],
     );
   }
-  return b.build();
-}
-
-interface Piece {
-  readonly u0: number;
-  readonly u1: number;
-  readonly v0: number;
-  readonly v1: number;
-  /** Surface offset under this piece. */
-  readonly s: number;
+  if (o.wrap && o.surface)
+    // The riser stands LIFT clear of the step, on the lower piece's side, so it never lies in the
+    // plane of the proud member's own side face.
+    for (const r of risers(all, depth > 0 ? depth : LIFT, depth > 0 ? 0 : LIFT)) {
+      const e = r.at + r.out * LIFT;
+      const p = (a: number, w: number): Vec3 => (r.axis === 'u' ? at(e, a, w) : at(a, e, w));
+      const axis = r.axis === 'u' ? along : up;
+      quad(
+        [p(r.a0, r.w0), p(r.a1, r.w0), p(r.a1, r.w1), p(r.a0, r.w1)],
+        r.out > 0 ? axis : neg(axis),
+        [r.a0, r.a1, r.a1, r.a0],
+        [0, 0, r.w1 - r.w0, r.w1 - r.w0],
+      );
+    }
+  return mappedOnto(b.build(), o.strip ?? 'plain');
 }
 
 /** Rects in metres, split into column groups wherever the surface offset changes. */

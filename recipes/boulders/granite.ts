@@ -29,7 +29,7 @@ export const GRANITE = defineMaterial({
     depth: 0.02,
     // Near-white: flecks dark, quartz paler, broad blotches ±8 %; the vertex colour is the tone.
     albedo: mica
-      .remap(0.72, 1)
+      .remap(0.55, 1)
       .mul(quartz.remap(1.06, 0.94))
       .mul(mottle.remap(0.9, 1.04))
       .mul(blotch.remap(0.92, 1.05))

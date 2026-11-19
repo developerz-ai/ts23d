@@ -83,7 +83,7 @@ function trunkPoint(t: number, raw: number, lod: Lod): Vec3 {
   z += (z / r) * push;
   // The caudal keel: a low horizontal blade along each side of the peduncle.
   const keel = keelAt(t);
-  y += Math.sign(y) * 0.058 * keel * gauss(z, 0.024);
+  y += Math.sign(y) * 0.085 * keel * gauss(z, 0.026);
   const pocket = z < 0 ? MOUTH.pocket * pocketMask(p[0], y) : 0;
   return [p[0], y, c + z + pocket];
 }
@@ -124,10 +124,10 @@ function trunkColour(p: Vec3, t: number, raw: number, sides: number): Vec3 {
   // The lateral line, a faint pale thread of pores; the keel's ridge dark from the side.
   if (sides > 20) {
     const line =
-      gauss(h - lateralShare(t), 0.07) * smooth(0.27, 0.32, t) * (1 - smooth(0.8, 0.86, t));
-    back = mixRgb(back, COLOUR.belly, 0.16 * line);
+      gauss(h - lateralShare(t), 0.035) * smooth(0.27, 0.32, t) * (1 - smooth(0.8, 0.86, t));
+    back = mixRgb(back, COLOUR.belly, 0.34 * line);
   }
-  back = mixRgb(back, COLOUR.tip, 0.45 * keelAt(t) * gauss(h, 0.3));
+  back = mixRgb(back, COLOUR.tip, 0.7 * keelAt(t) * gauss(h, 0.3));
   let out = mixRgb(back, COLOUR.belly, white);
   if (sides > 20 && white > 0.5 && noise(t * 260, a * 30, seed + 7) > 0.86)
     out = mixRgb(out, COLOUR.back, 0.16);
@@ -190,7 +190,9 @@ export function eyeMesh(side: 1 | -1, lod: Lod): Mesh {
       const ring = add(scale(u0, Math.cos(a)), scale(v0, Math.sin(a)));
       return add(centre, add(scale(out, R * Math.cos(th)), scale(ring, R * Math.sin(th))));
     },
-    color: (_p, _n, u) => (u < 0.18 ? COLOUR.eye : u < 0.3 ? COLOUR.iris : COLOUR.eye),
+    // Pupil, a thin pale ring round it, the blue-grey iris, then the dark sclera under the lid.
+    color: (_p, _n, u) =>
+      u < 0.16 ? COLOUR.eye : u < 0.2 ? COLOUR.pupilRing : u < 0.34 ? COLOUR.iris : COLOUR.eye,
   });
   if (lod === 2) return ball;
   // The lid: a soft ring of skin hugging the visible rim of the ball.

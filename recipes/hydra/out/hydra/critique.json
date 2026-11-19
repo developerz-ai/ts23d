@@ -1,28 +1,28 @@
 {
   "asset": "hydra",
   "reviewer": "agent",
-  "overall": 6.9,
+  "overall": 7.3,
   "scores": {
     "silhouette": {
       "score": 8,
-      "reason": "Five necks rise and separate above the shoulders with spiked crests and differently horned heads; the sprawling body and long tail read as a hydra in every view.",
+      "reason": "Five necks rise and fan out with spiked crests and differently horned heads, and the dorsal spines are now large enough to read along the back in SIDE and hero.png.",
       "fixes": [
-        "larger dorsal spines along the back so the spine line reads in SIDE"
+        "vary neck lengths and poses so the heads do not fan symmetrically in FRONT"
       ]
     },
     "proportions": {
-      "score": 7,
-      "reason": "Legs are thicker and under the body; the trunk is a near-rectangular box in TOP and FRONT, with flat sides between the legs.",
+      "score": 8,
+      "reason": "The trunk is now a rounded barrel in TOP with shoulders and hips and a taper into the tail; legs sit under the body and carry it.",
       "fixes": [
-        "round the torso plan into a barrel tapering into the tail and the neck root"
+        "deepen the chest under the neck root in SIDE so the necks grow out of mass"
       ]
     },
     "materials": {
-      "score": 6,
-      "reason": "Olive skin with darker dorsal saddles, pale horns and claws, a lighter belly; skin, horn and claw share one roughness and the scales are colour only.",
+      "score": 7,
+      "reason": "Olive skin with darker dorsal saddles, a visible scale pattern on necks and flanks in hero.png, pale horns and dark claws, lighter belly; skin, horn and claw still share one sheen.",
       "fixes": [
-        "scale normal on the back and necks",
-        "separate keratin roughness for horns and claws"
+        "separate keratin roughness for horns and claws",
+        "scale normal on the back so scales catch raking light"
       ]
     },
     "detail": {
@@ -35,7 +35,7 @@
     },
     "wear": {
       "score": 6,
-      "reason": "One pink scar patch on the flank; no chipped horns, mud or cauterised stump.",
+      "reason": "Darker feet and one pink scar patch on the flank; no chipped horn or scarred neck visible.",
       "fixes": [
         "mud on the feet and lower belly",
         "a chipped horn and a scarred neck"
@@ -49,16 +49,15 @@
       ]
     },
     "technical": {
-      "score": 6,
-      "reason": "210k LOD0 triangles is still about double a hero creature budget, though down from 348k; 2 draws.",
+      "score": 7,
+      "reason": "161k / 39k / 7k triangles (from 210k), 2 draws; still above a ~120k hero-creature LOD0.",
       "fixes": [
-        "cut neck and tail ring counts so LOD0 lands near 120k",
-        "spend the saved triangles on the heads"
+        "cut neck and tail ring counts so LOD0 lands near 120k"
       ]
     }
   },
   "renders": {
-    "hero.png": "684de5bff6f23102ed5d8425530b2a729c912cd0b676720a009ec453d9f76b83",
-    "sheet.png": "c09adf9ac34a52d89c061ccef17dc965e8f8481c77c7e3d78ffa89bfee39dd2e"
+    "hero.png": "0857668fd092f2bb3ec80e0dcf0f45e14bc45d21cb769c276fc0102cb758cbff",
+    "sheet.png": "c22a96d7db13ed14f1dc46e3c1569c77a50119cfa0f001f6d0151100d98cac7a"
   }
 }

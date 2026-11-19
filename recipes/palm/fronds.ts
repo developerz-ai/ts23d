@@ -134,13 +134,15 @@ export function frondsOf(leaves: Mesh, pairs: number): Frond[] {
 }
 
 /** Spine stations of a far frond card (fractions of its leaflet pairs). */
-const STATIONS = [0.3, 0.6, 0.85] as const;
+const STATIONS = [0.35, 0.75] as const;
 
 /**
- * One bent cutout card per frond (6 triangles): from `root` (the stem top) through stations along
- * its own rachis, each as wide as its leaflet tips (× `wide` about the rachis, following their
- * droop), to the frond's tip. The cell is painted green already, so the tint is the frond's mean
- * leaflet colour over the species `leaf` colour (its shade and browning), × `value`.
+ * One bent, folded cutout card per frond (8 triangles): from `root` (the stem top) through
+ * stations along its own rachis, each a V from the left leaflet tips up to the rachis and down to
+ * the right tips (× `wide` about the rachis, following their droop), to the frond's tip. The fold
+ * keeps the leaflet mass from the side and from above, where a flat strip between the drooping
+ * tips shows edge-on as a bare midrib. The cell is painted green already, so the tint is the
+ * frond's mean leaflet colour over the species `leaf` colour (its shade and browning), × `value`.
  * Single-sided: a cutout surface is double-sided.
  */
 export function frondCards(
@@ -180,7 +182,7 @@ export function frondCards(
       const L = add(s, scale(sub(lft, s), wide));
       const R = add(s, scale(sub(rgt, s), wide));
       const across = sub(R, L);
-      return [vert(L, across, 0, f), vert(R, across, 1, f)] as const;
+      return [vert(L, across, 0, f), vert(s, across, 0.5, f), vert(R, across, 1, f)] as const;
     });
     const first = rows[0];
     const last = rows[rows.length - 1];
@@ -189,13 +191,17 @@ export function frondCards(
     const r0 = vert(root, across0, 0.5, 0);
     const t1 = vert(tip, across0, 0.5, 1);
     mb.tri(r0, first[1], first[0]);
+    mb.tri(r0, first[2], first[1]);
     for (let k = 0; k + 1 < rows.length; k++) {
-      const [a, b] = rows[k] ?? first;
-      const [c, d] = rows[k + 1] ?? last;
-      mb.tri(a, b, d);
-      mb.tri(a, d, c);
+      const [a, b, c] = rows[k] ?? first;
+      const [d, e, f] = rows[k + 1] ?? last;
+      mb.tri(a, b, e);
+      mb.tri(a, e, d);
+      mb.tri(b, c, f);
+      mb.tri(b, f, e);
     }
     mb.tri(last[0], last[1], t1);
+    mb.tri(last[1], last[2], t1);
   }
   return mb.build();
 }

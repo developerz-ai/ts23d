@@ -75,7 +75,7 @@ describe('skin diffuse transmission', () => {
   });
 
   it('passes the Khronos glTF-Validator with 0 errors / 0 warnings, with and without the sheet', async () => {
-    const sheet = paintTrimSheet({ ...DEFAULT_SHEET, size: 512 });
+    const sheet = paintTrimSheet({ ...DEFAULT_SHEET, size: 512 }, []);
     for (const o of [{}, { sheet }]) {
       const r = await validate(toGlb(compile(head('skin')), o));
       const bad = (r.issues.messages as Message[]).filter((x) => x.severity <= 1);

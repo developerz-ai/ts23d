@@ -22,7 +22,7 @@ All values are general alpine figures cited from prior knowledge, **not re-fetch
 | summit altitude (in a 2 km tile around such a valley) | 2500–3200 m | measured 2683 / 2605 / 2733 m; highest cut point 2560 / 2488 / 2659 m | unsourced, approximate |
 | local relief valley → ridge over ~1 km | 700–1200 m | ~950 m | unsourced; more than ~1000 m/km makes mean slopes > 45° |
 | treeline (Alps, conifers: spruce, larch, Swiss pine) | 1800–2200 m | 2000 m | unsourced, approximate |
-| climatic snowline (Alps, summer; lower on north faces, early season) | 2600–3200 m; patches to ~2300 m in June | 2420 m (early-summer look; b 2350 m, c 2470 m) | unsourced, approximate |
+| climatic snowline (Alps, summer; lower on north faces, early season) | 2600–3200 m; patches to ~2300 m in June | 2420 m (early-summer look; b 2350 m, c 2250 m) | unsourced, approximate |
 | angle of repose of scree / talus | 30–40° (≈ 34° typical) | thermal `talus` 1.0 (45°) caps cliffs, scree colour on 11–24° deposit fans | unsourced, approximate |
 | slope where bare rock dominates | > ~40° | `rockSlope` 0.85 (40°) | unsourced, approximate |
 | slope above which snow rarely holds | ~50–55° | snow thins from 35° to none at 53° (`snow.ts`) | unsourced, approximate |
@@ -62,16 +62,34 @@ and `stream` (the valley's water ribbon): all static, one draw call. LOD by grid
   convexity are read off a blurred copy of the ground; the line drops 220 m on north faces, lifts
   110 m on south faces and drops 120 m in gullies; snow thins from 35° to none at 53°, is scoured
   off sharp crests, and a strip too narrow to be a snowfield fades out, so no ridge carries a
-  one-cell white seam. The hero looks from the north-east (az 35°, el 25°) to see the snowy faces.
-- The cut sides carry `rock_strata` with one band over the full 1 200 m wall: beds read as
-  formations tens of metres thick, darkening toward the base.
+  one-cell white seam. High flanks (150–450 m over the line) hold snow on ground up to 1.5 × as
+  steep (summit caps). The blurred cover is then cut by a narrow ramp whose threshold the jitter
+  moves, so snowfields have edges in TOP and the line wanders off the altitude contours; scoured
+  crests stay bare through the blur. Rock standing inside a snowfield (snow within ~30 m) is a
+  paler, unstreaked frost-shattered outcrop, not a dark smudge. Each vertex carries the mean
+  colour (snow cover included) of the ground it stands for: ±0.75 cell at LOD0/1, ±2 cells at
+  LOD2, where a snowfield edge crossing 53 m cells otherwise stepped into white squares. The hero
+  looks from the north-east (az 35°, el 25°) to see the snowy faces; variant b from the east (az
+  10°, el 28°), square to its stream and cone, its north cut edge-on (the field's own crest runs
+  along that cut for ~200 m, two 830 m tops with the ground falling inward: two thin teeth on the
+  skirt seen at 35°; the border stays the untouched field); variant c looks down its NW → SE
+  valley from the north-west end (az 127°, el 32°), so the floor and both peaks' north faces show
+  instead of a cut wall.
+- Rock wear (`../_lib/terrain/cliff.ts`): on ground steeper than ~35°, dark water streaks (a plan
+  noise ~14 m across barely changes down a steep face, so its bands run down the fall line) and
+  ±12 % bedding bands 38 m thick, wobbled in plan; none under snow.
+- The cut sides carry `rock_strata` with one band over the full 1 200 m wall, mapped at the same
+  texel scale along the wall as up it (U squeezed harder than V drew tall thin texels: vertical
+  streaks): beds read as formations tens of metres thick, darkening toward the base.
 - 160 k erosion droplets per tile area (250 k over the tile + margin); a summit point standing over all eight neighbours is clamped (twice, 8 m)
   so no one-cell needle survives.
-- The stream follows the least-cost path along the floor between the valley's lowest border points.
+- The stream follows the least-cost path along the floor between the valley's lowest border
+  points: 14 → 28 m wide downstream, with a pale gravel bank 14 m wide either side painted into the
+  ground, so the channel reads in the hero.
 
 ## Open questions
 - Snowline: a summer climatic snowline (~2800 m) would leave these summits bare; we chose an
-  early-summer look (2420 m; b 2350 m, c 2470 m) so the tile shows the snow band. Raise `snowline` for late summer.
+  early-summer look (2420 m; b 2350 m, c 2250 m: its summits stand only ~2730 m) so the tile shows the snow band. Raise `snowline` for late summer.
 - Neighbour tiles: the raw field matches along a shared cut exactly, the eroded one only roughly
   (each tile erodes its own window; `mountain_range` and its east neighbour differ along the cut
   by median 2.4 m, p90 7 m, max 22 m). Seamless eroded tiling would need erosion anchored to world

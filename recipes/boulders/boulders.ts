@@ -16,6 +16,7 @@ import {
   type Mesh,
   materialVariant,
   merge,
+  place,
   planar,
   sd,
   sdf,
@@ -31,17 +32,38 @@ const STONE = hex('#a8a49c');
 const FOOT = hex('#6a5e50');
 const MOSS = hex('#3f5a1a');
 const LICHEN = hex('#d2cfa6');
-const SOIL = hex('#a89880');
 
 type Family = 'round' | 'angular' | 'slab';
 
 /** Length (X), width (Y), height (Z) in metres; fracture planes; how deep it sits (m). */
-const ROCKS: readonly { size: Vec3; family: Family; cuts: number; sink: number }[] = [
-  { size: [0.6, 0.45, 0.35], family: 'angular', cuts: 2, sink: 0.05 },
-  { size: [1.3, 0.9, 0.42], family: 'slab', cuts: 2, sink: 0.06 },
-  { size: [1.6, 1.1, 0.85], family: 'round', cuts: 1, sink: 0.08 },
-  { size: [2.4, 1.7, 1.1], family: 'angular', cuts: 3, sink: 0.1 },
+const ROCKS: readonly {
+  size: Vec3;
+  family: Family;
+  cuts: number;
+  sink: number;
+  /** Frost cracks: fissures cut into the surface. */
+  cracks: number;
+}[] = [
+  // A tall frost-split block standing on end, so the set is not all low domes.
+  { size: [0.6, 0.5, 0.85], family: 'angular', cuts: 3, sink: 0.05, cracks: 1 },
+  { size: [1.3, 0.9, 0.42], family: 'slab', cuts: 2, sink: 0.06, cracks: 1 },
+  // Half-buried: an erratic settled deep into the soil (its lower half below ground).
+  { size: [1.6, 1.1, 1.3], family: 'round', cuts: 1, sink: 0.55, cracks: 1 },
+  { size: [2.4, 1.7, 1.1], family: 'angular', cuts: 3, sink: 0.1, cracks: 2 },
 ];
+/** Fissure half-width at the surface and depth into the rock, m (wider than a LOD0 cell). */
+const CRACK = { half: 0.045, depth: 0.12 } as const;
+const CRACK_DARK = hex('#4a443c');
+/** Pebble colours: mixed river and frost-shattered stones, never one uniform pale. */
+const PEBBLES = [hex('#6e6a64'), hex('#8a7460'), hex('#4c4844'), hex('#9a9282'), hex('#7a6248')];
+/** Grus (decomposed granite, on the sand strip): damp and dark at the rock's foot, drying to the
+ * pale of the ground at the feathered edge. */
+const SOIL_DAMP = hex('#6a5a48');
+const SOIL_DRY = hex('#ffffff');
+/** The skirt's feathered rim: the sand strip greyed toward a neutral dusty ground. */
+const SOIL_EDGE = hex('#d4d2d6');
+/** How far the skirt reaches past the rock's outline, m. */
+const SKIRT = 0.32;
 
 /** A plane through `at` with outward normal `n` (unit): negative behind it. */
 const plane =
@@ -95,7 +117,7 @@ function core(ctx: BuildContext, i: number, size: Vec3, family: Family, y: numbe
 }
 
 function rock(ctx: BuildContext, i: number, spec: (typeof ROCKS)[number], y: number): Mesh {
-  const { size, family, cuts, sink } = spec;
+  const { size, family, cuts, sink, cracks } = spec;
   const rng = ctx.rng.fork(`rock-${i}`);
   const [l, w, h] = size;
   // Weathering first: pits and grus hollows on the old mass.
@@ -125,14 +147,40 @@ function rock(ctx: BuildContext, i: number, spec: (typeof ROCKS)[number], y: num
     const cut = plane(at, n);
     f = sd.intersect(f, (p) => cut(p) + grain(p) * 0.008);
   }
+  // Frost cracks: a thin slab removed only within CRACK.depth of the surface (no split rock).
+  const fissures: Field[] = [];
+  for (let k = 0; k < cracks; k++) {
+    const n = unit([rng.range(-1, 1), rng.range(-1, 1), rng.range(-0.3, 0.3)]);
+    const flat = plane([rng.range(-0.15, 0.15) * l, y + rng.range(-0.15, 0.15) * w, h * 0.5], n);
+    // Wandering, not ruled: the crack plane is bent by the grain noise.
+    fissures.push((p) => flat(p) + grain(p) * 0.03);
+  }
+  const solid = f;
+  // Geometry only at LOD0 (cells finer than the fissure); far LODs keep the dark line in colour.
+  for (const q of ctx.lod === 0 ? fissures : []) {
+    const depth = Math.min(CRACK.depth, 0.22 * h);
+    // A V-groove: CRACK.half wide at the surface closing to nothing at `depth` (a wedge meshes
+    // cleanly where a parallel slot one cell wide stair-steps).
+    const crack: Field = (p) => {
+      const s = solid(p);
+      return Math.max(Math.abs(q(p)) - CRACK.half * Math.max(0, 1 + s / depth), -(s + depth));
+    };
+    const prev = f;
+    f = (p) => Math.max(prev(p), -crack(p));
+  }
+  const inCrack = (p: Vec3): number => {
+    let k = 0;
+    for (const q of fissures) k = Math.max(k, 1 - Math.abs(q(p)) / (CRACK.half * 2.2));
+    return Math.max(0, k);
+  };
   // Sunk: the field drops by `sink`, the bearing face is the section at the ground.
   const lifted: Field = (p) => f([p[0], p[1], p[2] + sink]);
   const field: Field = (p) => Math.max(lifted(p), -p[2]);
   const lichen = valueNoise(rng.fork('lichen'), { scale: 0.12, octaves: 2 });
   const damp = valueNoise(rng.fork('moss'), { scale: 0.25, octaves: 3 });
   const pad = 0.15 * l;
-  // Cells scale with the rock (the same cell count across each), LOD-gated.
-  const cell = ctx.pick([0.037, 0.1, 0.3]) * Math.max(0.55, Math.min(1.3, l / 1.6));
+  // Cells scale with the rock's largest side (about the same cell count across each), LOD-gated.
+  const cell = ctx.pick([0.037, 0.1, 0.3]) * Math.max(0.8, Math.min(1.45, Math.max(l, h) / 1.5));
   return sdf({
     field,
     bounds: [
@@ -148,8 +196,9 @@ function rock(ctx: BuildContext, i: number, spec: (typeof ROCKS)[number], y: num
       const t = Math.min(1, p[2] / h);
       const n = lichen(p);
       const d = damp(p) * 0.5 + 0.5;
-      // Soil splash and damp at the foot (the bottom 12 cm), fading up.
-      let col = mix(FOOT, STONE, Math.min(1, p[2] / 0.12) * 0.7 + 0.3 * t);
+      // Soil splash and a dark damp band at the foot (the bottom 25 cm), fading up.
+      const foot = Math.min(1, p[2] / 0.25);
+      let col = mix(mix(FOOT, CRACK_DARK, 0.35), STONE, foot * foot * 0.75 + 0.25 * t);
       // Moss: north faces and hollows, thickest low down; never on overhangs.
       const hollow = Math.max(0, -pits(p)) * 1.2;
       // …and in cushions wherever it stays damp (the noise), even on the tops.
@@ -157,7 +206,12 @@ function rock(ctx: BuildContext, i: number, spec: (typeof ROCKS)[number], y: num
       const moss =
         Math.min(1, north * 1.7 * (1 - 0.5 * t) + hollow * 0.8 + cushion + (t < 0.2 ? 0.35 : 0)) *
         (nrm[2] > -0.35 ? 1 : 0);
-      col = mix(col, MOSS, Math.min(0.92, moss * (0.35 + 0.75 * d)));
+      // Far LOD: big cells sample moss as solid patches, so it is thinned to keep the mean value.
+      const far = ctx.lod === 2 ? 0.55 : 1;
+      col = mix(col, MOSS, Math.min(0.92, moss * (0.35 + 0.75 * d)) * far);
+      // Fissures: dark and damp inside, moss in their lips.
+      const c = inCrack([p[0], p[1], p[2] + sink]);
+      if (c > 0) col = mix(mix(col, MOSS, 0.4 * c), CRACK_DARK, Math.min(1, c * 1.4));
       // Lichen rosettes on sunny tops.
       if (n > 0.3) col = mix(col, LICHEN, Math.min(0.8, (n - 0.3) * 3.2) * up);
       return col;
@@ -165,7 +219,17 @@ function rock(ctx: BuildContext, i: number, spec: (typeof ROCKS)[number], y: num
   });
 }
 
-/** The soil skirt (an irregular polygon) and three half-buried pebbles around a rock's foot. */
+/** Soil colour at `r` (0 at the rock, 1 at the skirt's edge): damp → dry, mottled, feathered. */
+function soilAt(r: number, n: number): Vec3 {
+  const t = Math.min(1, Math.max(0, r));
+  const base = mix(SOIL_DAMP, SOIL_DRY, Math.min(1, Math.max(0, t * 0.8 + 0.25 * n)));
+  // The outer half fades to a pale, grey-washed dust (the strip's tan muted), so the skirt thins
+  // out into the ground instead of ending in a tan mat edge.
+  const e = Math.max(0, (t - 0.5) / 0.5);
+  return mix(base, SOIL_EDGE, e * e * (3 - 2 * e));
+}
+
+/** The soil skirt (an irregular polygon) and half-buried pebbles around a rock's foot. */
 function footing(
   ctx: BuildContext,
   i: number,
@@ -174,32 +238,64 @@ function footing(
 ): { soil: Mesh; pebbles: Mesh } {
   const rng = ctx.rng.fork(`foot-${i}`);
   const [l, w] = size;
-  const n = ctx.pick([14, 10, 6]);
+  const n = ctx.pick([28, 16, 12]);
+  // A lobed outline from three soft waves (not a random radius per point, which drew a jagged
+  // saw-tooth rim), lying 1 mm over the ground: flush, no drop-shadow step under its edge.
+  const lobes = rng.fork('outline');
+  const phase = [lobes.range(0, 6.28), lobes.range(0, 6.28), lobes.range(0, 6.28)];
+  const reach = (a: number): number =>
+    SKIRT *
+    (1 +
+      0.18 * Math.sin(2 * a + (phase[0] ?? 0)) +
+      0.1 * Math.sin(3 * a + (phase[1] ?? 0)) +
+      0.05 * Math.sin(5 * a + (phase[2] ?? 0)));
   const disc = planar({
     points: Array.from({ length: n }, (_, k): Vec3 => {
       const a = (k / n) * Math.PI * 2;
-      const r = 1.18 + rng.range(-0.06, 0.1);
-      return [(Math.cos(a) * l * r) / 2, y + (Math.sin(a) * w * r) / 2, 0.004];
+      const r = reach(a);
+      return [Math.cos(a) * (l / 2 + r), y + Math.sin(a) * (w / 2 + r), 0.001];
     }),
-    color: SOIL,
-    strip: materialVariant('gravel', i + 1),
+    color: SOIL_DRY,
+    strip: materialVariant('sand', i + 1),
   });
   // Split and box-projected so the strip keeps true scale (planar UVs wrap V inside a triangle).
-  const soil = ctx.lod === 2 ? disc : reproject(tessellate(disc, Math.max(0.2, l / 4)));
+  const tess =
+    ctx.lod === 2 ? disc : reproject(tessellate(disc, Math.max(0.15, l / ctx.pick([5, 2.5, 1]))));
+  const mottle = valueNoise(rng.fork('soil'), { scale: 0.3, octaves: 2 });
+  const colors = new Float32Array(tess.colors);
+  for (let v = 0; v < tess.positions.length / 3; v++) {
+    const x = tess.positions[v * 3] ?? 0;
+    const yy = (tess.positions[v * 3 + 1] ?? 0) - y;
+    // 0 at the rock's own outline (an ellipse l × w), 1 at the skirt's edge (metres out over the
+    // outline's reach at that bearing).
+    const e = Math.hypot(x / (l / 2), yy / (w / 2));
+    const r = ((e - 1) * Math.min(l, w)) / 2 / reach(Math.atan2(yy / (w / 2), x / (l / 2)));
+    colors.set(
+      ctx.lod === 2 ? mix(SOIL_DAMP, SOIL_DRY, 0.55) : soilAt(r, mottle([x, yy, 0])),
+      v * 3,
+    );
+  }
+  const soil = { ...tess, colors };
   const pebbles: Mesh[] = [];
+  const count = ctx.lod === 0 ? 6 : 3;
   if (ctx.lod < 2)
-    for (let k = 0; k < 3; k++) {
+    for (let k = 0; k < count; k++) {
       const a = rng.range(0, Math.PI * 2);
-      const r = rng.range(0.03, 0.07) * Math.max(1, l);
-      const at: Vec3 = [(Math.cos(a) * l * 0.62) / 1, y + (Math.sin(a) * w * 0.62) / 1, 0];
-      const bump = valueNoise(rng.fork(`pebble-${k}`), { scale: r, octaves: 2 });
-      const s = r * 1.4;
+      const r = rng.range(0.025, 0.065) * Math.max(1, l);
+      const far = rng.range(0.6, 0.78);
+      const at: Vec3 = [
+        Math.cos(a) * (l / 2 + 0.1) * far * 1.6,
+        y + Math.sin(a) * (w / 2 + 0.1) * far * 1.6,
+        0,
+      ];
+      const bump = valueNoise(rng.fork(`pebble-${k}`), { scale: r * 0.8, octaves: 2 });
+      const s = r * rng.range(1.1, 1.6);
       pebbles.push(
         sdf({
           field: sd.displace(
-            sd.ellipsoid([at[0], at[1], r * 0.1], [s, r, r * 0.55]),
+            sd.ellipsoid([at[0], at[1], r * 0.05], [s, r, r * rng.range(0.5, 0.62)]),
             bump,
-            r * 0.18,
+            r * 0.16,
           ),
           bounds: [
             [at[0] - s * 1.3, at[1] - s * 1.3, -r],
@@ -207,11 +303,19 @@ function footing(
           ],
           resolution: ctx.pick([r / 2, r / 1.2, r]),
           strip: materialVariant(GRANITE, 6),
-          color: mix(STONE, FOOT, rng.range(0.1, 0.5)),
+          color: PEBBLES[(i + k * 3) % PEBBLES.length] ?? STONE,
         }),
       );
     }
-  return { soil, pebbles: merge(pebbles) };
+  // Each pebble rests on the soil, nothing below z = 0: the studio floor is the asset's lowest
+  // point, and the pebbles' buried halves put it 3 cm under the skirts, which then cast a drop
+  // shadow round their edges.
+  const rest = (m: Mesh): Mesh => {
+    let low = 0;
+    for (let k = 2; k < m.positions.length; k += 3) low = Math.min(low, m.positions[k] ?? 0);
+    return place(m, { at: [0, 0, -low] });
+  };
+  return { soil, pebbles: merge(pebbles.map(rest)) };
 }
 
 export const boulders = defineAsset({

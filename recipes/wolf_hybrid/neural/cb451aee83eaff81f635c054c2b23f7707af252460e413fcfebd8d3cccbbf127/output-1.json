@@ -2,14 +2,14 @@
   "bbox": {
     "frame": "gltf",
     "max": [
-      0.15642,
-      0.944376,
-      0.736512
+      0.159895,
+      0.946559,
+      0.735788
     ],
     "min": [
-      -0.168898,
-      -0.000282,
-      -0.49606
+      -0.170597,
+      -0.000381,
+      -0.502275
     ]
   },
   "bind": {
@@ -100,7 +100,7 @@
     9998,
     4998
   ],
-  "seconds": 95.46,
+  "seconds": 171.96,
   "source": {
     "materials": 1,
     "textures": 2,
@@ -112,14 +112,14 @@
     {
       "determinant": 2.018792,
       "op": "transform",
-      "seconds": 0.05,
+      "seconds": 0.08,
       "triangles": 906084
     },
     {
       "holeFaces": 0,
       "nonManifoldEdges": 228,
       "op": "clean",
-      "seconds": 6.68,
+      "seconds": 13.57,
       "shells": 27,
       "shellsDropped": 26,
       "triangles": 904626,
@@ -143,19 +143,55 @@
         "2 + 4": 313,
         "3 + 4": 376
       },
-      "seconds": 22.91,
+      "seconds": 29.17,
       "triangles": 904610,
       "webFaces": 747
     },
     {
+      "moved": 0.045503,
+      "op": "script",
+      "seconds": 27.03,
+      "sha256": "3e84071eb3cf4c2dd38ddf4d48bb506e2340961054fc92922bda5b8ec1e82c3a",
+      "stdout": [
+        "haunches 124474 vertices, largest move 0.0455"
+      ],
+      "triangles": 904610,
+      "vertices": [
+        452190,
+        452190
+      ],
+      "why": "rib-like ridges across both thighs read as a starved animal, and a row of pits behind the ruff (wolf_hybrid critique: flank ridges): smoothed out of the source there"
+    },
+    {
+      "moved": 0.039454,
+      "op": "script",
+      "seconds": 0.72,
+      "sha256": "e0032e7b9db114b064fdcaf90d2d3e22672efcec5866bcf2519d82894791fb52",
+      "stdout": [
+        "tufts up vertices 8443 highest 0.023",
+        "tufts down vertices 13020 highest 0.0256",
+        "tufts up vertices 43203 highest 0.016",
+        "tufts down vertices 109399 highest 0.0224",
+        "tufts back vertices 24201 highest 0.016",
+        "tufts back vertices 24869 highest 0.016",
+        "tufts back vertices 11942 highest 0.0208"
+      ],
+      "triangles": 904610,
+      "vertices": [
+        452190,
+        452190
+      ],
+      "why": "the outline was one smooth hull (wolf_hybrid critique: tufted ruff, strand pass on ruff, back and tail): locks of coat raised on the source, so the shell and the bake carry them"
+    },
+    {
       "boundaryEdges": 0,
-      "focusVertexShare": 0.6442,
+      "focusVertexShare": 0.621,
       "from": 904610,
       "op": "retopo",
       "reduce": "decimate",
-      "seconds": 26.73,
+      "seconds": 29.42,
       "shell": {
-        "bboxDrift": 0.00668,
+        "bboxDrift": 0.00443,
         "bboxSide": "+z (top)",
         "close": 1,
         "components": 1,
@@ -163,15 +199,15 @@
         "largestShare": 1.0,
         "lost": {
           "share": 0.0,
-          "tolerance": 0.010094
+          "tolerance": 0.010289
         },
         "skin": 0.0,
         "tried": [
           [
             0,
             0.0,
-            0.9579,
-            20
+            0.9674,
+            4
           ],
           [
             1,
@@ -180,39 +216,39 @@
             0
           ]
         ],
-        "volume": 0.085282,
-        "volumeRef": 0.0894
+        "volume": 0.091171,
+        "volumeRef": 0.095691
       },
-      "shellTriangles": 109564,
+      "shellTriangles": 109196,
       "strategy": "shell",
       "triangles": 29998,
-      "voxel": 0.00673
+      "voxel": 0.00686
     },
     {
-      "islands": 184,
+      "islands": 199,
       "kind": "smart",
       "op": "uv",
-      "seconds": 10.9,
+      "seconds": 8.98,
       "triangles": 29998,
-      "uvDegenerate": 0.0001
+      "uvDegenerate": 0.0
     },
     {
       "albedoFrom": "texture",
-      "albedoMean": 0.4767,
-      "albedoUnfilled": 0.0,
-      "cage": 0.03142,
+      "albedoMean": 0.472,
+      "albedoUnfilled": 0.0002,
+      "cage": 0.031597,
       "device": "OPTIX: NVIDIA GeForce RTX 3090",
-      "hitRate": 0.9967,
+      "hitRate": 0.9965,
       "maps": [
         "albedo",
         "normal",
         "ao"
       ],
       "op": "bake",
-      "seconds": 25.58,
+      "seconds": 31.17,
       "size": 2048,
       "triangles": 29998,
-      "uvCoverage": 0.5656
+      "uvCoverage": 0.6253
     },
     {
       "bones": 29,
@@ -221,7 +257,7 @@
       "maxInfluences": 4,
       "method": "bone-heat",
       "op": "bind",
-      "seconds": 0.76,
+      "seconds": 0.82,
       "triangles": 29998,
       "unusedBones": [],
       "weightSum": [
@@ -230,26 +266,26 @@
       ]
     },
     {
-      "bodyRefilled": 602,
+      "bodyRefilled": 601,
       "bones": [
         "tail_1",
         "tail_2",
         "tail_3",
         "tail_4"
       ],
-      "changed": 903,
+      "changed": 918,
       "contact": {
-        "edges": 89,
-        "vertices": 390
+        "edges": 84,
+        "vertices": 374
       },
-      "foreignBefore": 0.1313,
-      "inside": 686,
+      "foreignBefore": 0.1223,
+      "inside": 740,
       "op": "isolate",
       "reassigned": [
         0,
         0
       ],
-      "seconds": 0.29,
+      "seconds": 0.3,
       "triangles": 29998
     },
     {
@@ -262,53 +298,77 @@
       "triangles": 29998
     },
     {
+      "moved": 0.0,
+      "op": "script",
+      "seconds": 29.04,
+      "sha256": "f404a9b7abb8438a9b03bcb218067749ee0410a460b3c7e6f0a3520d4d68c613",
+      "stdout": [
+        "delight 0.0847232519166766",
+        "cast 0.06865869533573002",
+        "healed 0.00169246178362994",
+        "mud 0.13688385718099502",
+        "splashes 0.10322022223476031",
+        "wet 0.07110938761308466",
+        "rake 0.0009569862483767692",
+        "rake 0.0008310261659034343",
+        "rake 0.0006780325001024799",
+        "muzzle 0.0007908813368170616"
+      ],
+      "triangles": 29998,
+      "vertices": [
+        15001,
+        15001
+      ],
+      "why": "the generator's baked light, orange cast, bake holes and haunch stripes leave the albedo; roughness, mud and scars go into the maps (a textured part takes no grime pass)"
+    },
+    {
       "lod0": {
         "boundaryEdges": 0,
         "handles": 0,
-        "maxFaceShare": 0.0005,
-        "uvDegenerate": 0.0001
+        "maxFaceShare": 0.0006,
+        "uvDegenerate": 0.0
       },
       "lods": [
         {
-          "bboxDrift": 0.00085,
-          "bboxSide": "-y (right)",
+          "bboxDrift": 0.00081,
+          "bboxSide": "+y (left)",
           "boundaryEdges": 0,
           "handles": 0,
           "lost": {
             "share": 0.0,
-            "tolerance": 0.015866
+            "tolerance": 0.015933
           },
-          "maxFaceShare": 0.0017,
+          "maxFaceShare": 0.0011,
           "triangles": 9998,
-          "uvDegenerate": 0.0001
+          "uvDegenerate": 0.0002
         },
         {
-          "bboxDrift": 0.00085,
-          "bboxSide": "-y (right)",
+          "bboxDrift": 0.00094,
+          "bboxSide": "-x (back)",
           "boundaryEdges": 0,
           "handles": 0,
           "lost": {
             "share": 0.0,
-            "tolerance": 0.0238
+            "tolerance": 0.0239
           },
-          "maxFaceShare": 0.0022,
+          "maxFaceShare": 0.0017,
           "triangles": 4998,
-          "uvDegenerate": 0.0004
+          "uvDegenerate": 0.0002
         }
       ],
       "op": "lods",
-      "seconds": 0.72,
+      "seconds": 0.74,
       "triangles": 29998
     },
     {
-      "bytes": 9335076,
+      "bytes": 10388404,
       "images": {
         "albedo": 2048,
         "normal": 1024,
         "orm": 1024
       },
       "op": "export",
-      "seconds": 0.81,
+      "seconds": 0.87,
       "triangles": 29998
     }
   ],

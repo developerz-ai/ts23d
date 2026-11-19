@@ -16,7 +16,7 @@ ore veins; glowing teal crystal clusters at the mining points.
 | S-type (silicate) albedo | 0.10–0.22 | same |
 | M-type (metallic, nickel-iron) | bright, metallic, the mining target | https://www.esa.int/Science_Exploration/Space_Science/Rosetta/Debris_of_the_Solar_System_Asteroids |
 
-The base rock (`#3b3632`/`#4f4841`) is C-type dark. The ore veins (`#b78a45`) stand in for
+The base rock (`#3b3632`/`#4f4841`) is C-type dark. The ore veins (`#b98a48`) stand in for
 M-type metal. The glowing crystals (`#3fe0d0`) are a game convention, not science.
 
 ## How it is built
@@ -30,13 +30,22 @@ M-type metal. The glowing crystals (`#3fe0d0`) are a game convention, not scienc
    bowl sphere. All shape draws come from `ctx.rng.fork('shape')`, so the shape is identical at
    every LOD.
    Boulders (ejecta that fell back) settle in the floors of the larger craters.
-5. Mining workings at each crystal site: three drill bores cut into the field and heaps of tailings.
-6. Colour per vertex over the project regolith strip (`regolith.ts`: cobbles, dusty matrix,
-   nickel-iron flecks, low contrast so the SDF's box-projected UVs never show their axis switches):
-   stony grey-brown one step above carbonaceous black (so craters read in the hero), dust where
-   n·z > 0.55, soft-edged ore veins wider than a cell (they blend across vertices; dropped at LOD2),
-   teal near crystals, paler tailings round the workings, dark old crater floors, and one fresh
-   crater with a bright floor and ejecta rays.
+5. Mining workings at each crystal site: three drill bores cut into the field, each with a scorched
+   ring painted round it (drill scars), and heaps of tailings chips: lopsided double cones turned
+   and stretched per axis by a hash of their position (irregular chips, not little blocks; hashed,
+   not drawn, so every later bore and the triangle count stay put).
+6. Colour per vertex over the project regolith strip (`regolith.ts`: per-cobble shade, large pale
+   and dark clasts and low-roughness nickel-iron flecks; the cobble edges kept faint, since a crack
+   network on every cell read as crazed mud): stony grey-brown, darker space-weathered rock away
+   from the fresh impact, dust where n·z > 0.55; ore veins as four fault sheets through the body
+   (planes bent by noise, so they cross craters instead of ringing them; the first contains the
+   hero camera's line of sight so a vein crosses the face it sees), with a halo four LOD0 cells
+   wide (the contact sheet draws one flat colour a triangle, so a hard band edge stair-steps along
+   the cell grid); a crusted teal deposit with an edge round each crystal site; paler tailings
+   round the workings; dark old crater floors; and the fresh crater — the mid-sized one facing the
+   hero camera — with a bright floor, a blanket to ~2 r and rays to ~6 r. LOD2 (1.5 m cells, one
+   flat colour a triangle) keeps only the broad blocks: veins as soft 1 m bands, deposit, crater
+   floors and the fresh crater's blanket, no tone noise or rays (they made a checkerboard).
 7. `bakeAo` (16 / 8 rays at LOD0 / LOD1) for crevice darkening; LOD2 is darkened to match.
 
 A free body: no flat cut. Each LOD rests on its own lowest vertex, sunk 3 cm into z = 0. The SDF

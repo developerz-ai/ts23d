@@ -139,22 +139,20 @@ function lowerBound(x: number): number {
 }
 
 /**
- * The far LOD's stripes: eight broad authored bands, shoulder to croup. The far mesh's cells are
+ * The far LOD's stripes: six broad authored bands, shoulder to croup. The far mesh's cells are
  * 8 cm, four times a real stripe's width: sampling the LOD0 pattern there gave random dark
- * triangles that changed at the switch. Each band is as wide as a cell, so every one lands on
- * vertices, leaning back as it descends like the stripes it stands for.
+ * triangles that changed at the switch, and so did eight bands a cell wide. Each band here is
+ * two cells wide with an edge a cell soft, and vertical (a slant across an axis-aligned grid
+ * stair-steps), so every band covers whole rows of vertices and fades over the next.
  */
-const FAR_BANDS = [-0.78, -0.6, -0.42, -0.24, -0.05, 0.14, 0.33, 0.52] as const;
+const FAR_BANDS = [-0.74, -0.48, -0.22, 0.04, 0.3, 0.54] as const;
 
 function farStripe(x: number, s: number): number {
-  if (s > 1.05) return 0;
+  if (s > 1.1) return 0;
   let c = 0;
-  for (const [k, x0] of FAR_BANDS.entries()) {
-    const centre = x0 + 0.05 * s - (x0 < -0.4 ? 0.08 * s * s : 0);
-    const w = 0.034 * (1 - 0.35 * smoothstep(0.55, 1.05, s)) * (0.85 + 0.3 * hash(700 + k, 1));
-    c = Math.max(c, cover(Math.abs(x - centre), w, 0.03));
-  }
-  return c * 0.85;
+  for (const x0 of FAR_BANDS) c = Math.max(c, cover(Math.abs(x - x0), 0.05, 0.045));
+  // Thinning into the white belly, as the stripes they stand for do.
+  return c * 0.8 * smoothstep(1.1, 0.75, s);
 }
 
 /** Trunk / neck stripes at a body point (0..1). */

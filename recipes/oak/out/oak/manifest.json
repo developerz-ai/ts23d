@@ -18,8 +18,8 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    16240,
-    2666,
+    16658,
+    2858,
     306
   ],
   "drawCalls": [
@@ -57,9 +57,9 @@
     }
   ],
   "real": {
-    "length": 22,
-    "width": 22,
-    "height": 22
+    "length": 24,
+    "width": 24,
+    "height": 20
   },
   "measures": [
     {
@@ -70,8 +70,8 @@
     },
     {
       "label": "total height",
-      "spec": 22,
-      "measured": 21.8824520111084,
+      "spec": 20,
+      "measured": 19.924741744995117,
       "source": "recipes/oak/README.md"
     }
   ],

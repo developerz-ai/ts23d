@@ -1,7 +1,7 @@
 {
   "name": "dragon_hybrid",
   "kind": "creature",
-  "description": "Emberwing, an original fantasy drake standing on all fours, wings raised: 3.2 m nose to rump, 1.6 m at the shoulder, 5.0 m with the tail, 600 kg. Model tier: an image-to-3D surface (Pixal3D, MIT) with its own textures on three LODs, skinned to a quadruped skeleton (joints from UniRig) and three bones a wing, with idle, look, walk and flap clips. Without the neural cache: a code-built wingless quadruped at the same scale",
+  "description": "Emberwing, an original fantasy drake standing on all fours, wings half spread: 3.2 m nose to rump, 1.6 m at the shoulder, 5.0 m with the tail, 5.0 m across the wings, 600 kg. Model tier: an image-to-3D surface (Pixal3D, MIT) with its own textures on three LODs, skinned to a quadruped skeleton (joints from UniRig) and three bones a wing, with idle, look, walk and flap clips. Without the neural cache: a code-built wingless quadruped at the same scale",
   "tags": [
     "creature",
     "fantasy",
@@ -48,18 +48,18 @@
       "maps": {
         "albedo": {
           "size": 2048,
-          "bytes": 5346990
+          "bytes": 5185169
         },
         "normal": {
           "size": 1024,
-          "bytes": 1297565
+          "bytes": 1385544
         },
         "orm": {
           "size": 1024,
-          "bytes": 1333276
+          "bytes": 1257577
         }
       },
-      "bytes": 7977831,
+      "bytes": 7828290,
       "credit": "ts23d dragon_hybrid recipe (Z-Image concept, Pixal3D mesh, UniRig joints, Blender steps) — MIT — neural cache (blender final on mesh bf86212bfe38)"
     }
   ],
@@ -282,273 +282,273 @@
   "hitboxes": [
     {
       "bone": "spine_1",
-      "radius": 0.446185,
-      "height": 0.156787,
-      "coverage": 0.9527
+      "radius": 0.451892,
+      "height": 0.160913,
+      "coverage": 0.9555
     },
     {
       "bone": "spine_2",
-      "radius": 0.392569,
-      "height": 0.178956,
-      "coverage": 0.9573
+      "radius": 0.393579,
+      "height": 0.203238,
+      "coverage": 0.9577
     },
     {
       "bone": "scapula_l",
-      "radius": 0.239532,
-      "height": 0.346763,
-      "coverage": 0.9656
+      "radius": 0.246444,
+      "height": 0.34732,
+      "coverage": 0.9741
     },
     {
       "bone": "scapula_r",
-      "radius": 0.350448,
-      "height": 0.266926,
-      "coverage": 0.9623
+      "radius": 0.328996,
+      "height": 0.292618,
+      "coverage": 0.9522
     },
     {
       "bone": "neck_0",
-      "radius": 0.253085,
-      "height": 0,
-      "coverage": 0.9688
-    },
-    {
-      "bone": "neck_1",
-      "radius": 0.234345,
-      "height": 0,
-      "coverage": 0.9536
-    },
-    {
-      "bone": "head",
-      "radius": 0.374661,
-      "height": 0.41996,
-      "coverage": 0.9552
-    },
-    {
-      "bone": "tail_0",
-      "radius": 0.440333,
-      "height": 0.024629,
-      "coverage": 0.9517
-    },
-    {
-      "bone": "tail_1",
-      "radius": 0.302424,
-      "height": 0.228911,
-      "coverage": 0.9714
-    },
-    {
-      "bone": "tail_2",
-      "radius": 0.235203,
-      "height": 0.569697,
-      "coverage": 0.9759
-    },
-    {
-      "bone": "tail_3",
-      "radius": 0.133832,
-      "height": 0.145758,
-      "coverage": 0.9633
-    },
-    {
-      "bone": "tail_4",
-      "radius": 0.205973,
-      "height": 0.572708,
+      "radius": 0.240344,
+      "height": 0.01057,
       "coverage": 0.9581
     },
     {
-      "bone": "fore_l_0",
-      "radius": 0.150888,
-      "height": 0.219814,
-      "coverage": 0.9848
-    },
-    {
-      "bone": "fore_l_1",
-      "radius": 0.136384,
-      "height": 0.083095,
-      "coverage": 0.9801
-    },
-    {
-      "bone": "fore_l_2",
-      "radius": 0.100059,
-      "height": 0.095534,
-      "coverage": 0.9556
-    },
-    {
-      "bone": "fore_l_3",
-      "radius": 0.112423,
-      "height": 0.022382,
-      "coverage": 0.9813
-    },
-    {
-      "bone": "fore_r_0",
-      "radius": 0.152317,
-      "height": 0.193444,
-      "coverage": 1
-    },
-    {
-      "bone": "fore_r_1",
-      "radius": 0.139908,
-      "height": 0.0292,
-      "coverage": 0.9535
-    },
-    {
-      "bone": "fore_r_2",
-      "radius": 0.101641,
-      "height": 0.103079,
-      "coverage": 0.9624
-    },
-    {
-      "bone": "fore_r_3",
-      "radius": 0.09542,
-      "height": 0.083403,
-      "coverage": 0.9627
-    },
-    {
-      "bone": "hind_l_0",
-      "radius": 0.206248,
-      "height": 0.403543,
-      "coverage": 0.9571
-    },
-    {
-      "bone": "hind_l_1",
-      "radius": 0.137742,
-      "height": 0.11437,
-      "coverage": 0.9799
-    },
-    {
-      "bone": "hind_l_2",
-      "radius": 0.188177,
-      "height": 0.104959,
-      "coverage": 0.9645
-    },
-    {
-      "bone": "hind_l_3",
-      "radius": 0.126463,
-      "height": 0.065359,
+      "bone": "neck_1",
+      "radius": 0.239208,
+      "height": 0,
       "coverage": 0.95
     },
     {
+      "bone": "head",
+      "radius": 0.377349,
+      "height": 0.41871,
+      "coverage": 0.9624
+    },
+    {
+      "bone": "tail_0",
+      "radius": 0.456935,
+      "height": 0.01063,
+      "coverage": 0.9534
+    },
+    {
+      "bone": "tail_1",
+      "radius": 0.299107,
+      "height": 0.231533,
+      "coverage": 0.9542
+    },
+    {
+      "bone": "tail_2",
+      "radius": 0.231235,
+      "height": 0.565709,
+      "coverage": 0.9667
+    },
+    {
+      "bone": "tail_3",
+      "radius": 0.133723,
+      "height": 0.142855,
+      "coverage": 0.9515
+    },
+    {
+      "bone": "tail_4",
+      "radius": 0.211909,
+      "height": 0.558494,
+      "coverage": 0.9569
+    },
+    {
+      "bone": "fore_l_0",
+      "radius": 0.148889,
+      "height": 0.204381,
+      "coverage": 0.972
+    },
+    {
+      "bone": "fore_l_1",
+      "radius": 0.151378,
+      "height": 0.069057,
+      "coverage": 0.9857
+    },
+    {
+      "bone": "fore_l_2",
+      "radius": 0.099587,
+      "height": 0.098203,
+      "coverage": 0.956
+    },
+    {
+      "bone": "fore_l_3",
+      "radius": 0.105391,
+      "height": 0.029542,
+      "coverage": 0.956
+    },
+    {
+      "bone": "fore_r_0",
+      "radius": 0.153292,
+      "height": 0.191901,
+      "coverage": 0.9933
+    },
+    {
+      "bone": "fore_r_1",
+      "radius": 0.139028,
+      "height": 0.02791,
+      "coverage": 0.9593
+    },
+    {
+      "bone": "fore_r_2",
+      "radius": 0.105741,
+      "height": 0.113426,
+      "coverage": 0.9521
+    },
+    {
+      "bone": "fore_r_3",
+      "radius": 0.083521,
+      "height": 0.114728,
+      "coverage": 0.9574
+    },
+    {
+      "bone": "hind_l_0",
+      "radius": 0.193805,
+      "height": 0.428598,
+      "coverage": 0.9688
+    },
+    {
+      "bone": "hind_l_1",
+      "radius": 0.128871,
+      "height": 0.119803,
+      "coverage": 0.9655
+    },
+    {
+      "bone": "hind_l_2",
+      "radius": 0.185199,
+      "height": 0.108231,
+      "coverage": 0.957
+    },
+    {
+      "bone": "hind_l_3",
+      "radius": 0.131524,
+      "height": 0.074191,
+      "coverage": 0.9716
+    },
+    {
       "bone": "hind_r_0",
-      "radius": 0.194205,
-      "height": 0.404795,
-      "coverage": 0.9514
+      "radius": 0.196189,
+      "height": 0.402395,
+      "coverage": 0.9608
     },
     {
       "bone": "hind_r_1",
-      "radius": 0.128573,
-      "height": 0.11964,
-      "coverage": 0.9551
+      "radius": 0.132597,
+      "height": 0.123099,
+      "coverage": 0.9663
     },
     {
       "bone": "hind_r_2",
-      "radius": 0.163871,
-      "height": 0.139682,
-      "coverage": 0.9677
+      "radius": 0.162305,
+      "height": 0.142151,
+      "coverage": 0.9718
     },
     {
       "bone": "hind_r_3",
-      "radius": 0.080852,
-      "height": 0.024983,
-      "coverage": 0.9551
+      "radius": 0.084396,
+      "height": 0.021442,
+      "coverage": 0.9744
     },
     {
       "bone": "wing_l_0",
-      "radius": 0.529171,
-      "height": 0.762008,
-      "coverage": 0.9754
+      "radius": 0.598747,
+      "height": 0.828401,
+      "coverage": 0.9507
     },
     {
       "bone": "wing_l_1",
-      "radius": 1.009976,
-      "height": 0.173081,
-      "coverage": 0.9565
+      "radius": 1.09323,
+      "height": 0.23945,
+      "coverage": 0.9577
     },
     {
       "bone": "wing_l_2",
-      "radius": 0.650744,
-      "height": 0.253715,
-      "coverage": 0.9635
+      "radius": 0.743979,
+      "height": 0.262646,
+      "coverage": 0.9666
     },
     {
       "bone": "wing_r_0",
-      "radius": 0.595599,
-      "height": 0.686674,
-      "coverage": 0.9505
+      "radius": 0.539376,
+      "height": 0.847808,
+      "coverage": 0.9762
     },
     {
       "bone": "wing_r_1",
-      "radius": 0.504622,
-      "height": 0.517146,
-      "coverage": 0.9701
+      "radius": 0.661219,
+      "height": 0.485215,
+      "coverage": 0.9612
     },
     {
       "bone": "wing_r_2",
-      "radius": 0.719425,
-      "height": 0.159016,
-      "coverage": 0.9546
+      "radius": 0.784092,
+      "height": 0.201407,
+      "coverage": 0.9537
     },
     {
       "bone": "fore_l_0_mid",
-      "radius": 0.151393,
+      "radius": 0.153859,
       "height": 0,
-      "coverage": 0.9661
+      "coverage": 0.9692
     },
     {
       "bone": "fore_l_1_mid",
-      "radius": 0.126322,
+      "radius": 0.143732,
       "height": 0,
       "coverage": 1
     },
     {
       "bone": "fore_l_2_mid",
-      "radius": 0.234622,
+      "radius": 0.227995,
       "height": 0,
-      "coverage": 0.9612
+      "coverage": 0.9533
     },
     {
       "bone": "fore_r_0_mid",
-      "radius": 0.150025,
+      "radius": 0.150935,
       "height": 0,
       "coverage": 1
     },
     {
       "bone": "fore_r_1_mid",
-      "radius": 0.12957,
+      "radius": 0.12796,
       "height": 0,
       "coverage": 1
     },
     {
       "bone": "fore_r_2_mid",
-      "radius": 0.152844,
-      "height": 0.125488,
-      "coverage": 0.9671
+      "radius": 0.158184,
+      "height": 0.112364,
+      "coverage": 0.9632
     },
     {
       "bone": "hind_l_1_mid",
-      "radius": 0.155432,
+      "radius": 0.161853,
       "height": 0,
-      "coverage": 0.973
+      "coverage": 1
     },
     {
       "bone": "hind_l_2_mid",
-      "radius": 0.148413,
+      "radius": 0.150696,
       "height": 0,
       "coverage": 1
     },
     {
       "bone": "hind_r_1_mid",
-      "radius": 0.156022,
-      "height": 0.001916,
-      "coverage": 1
+      "radius": 0.170554,
+      "height": 0,
+      "coverage": 0.9556
     },
     {
       "bone": "hind_r_2_mid",
-      "radius": 0.152272,
+      "radius": 0.153999,
       "height": 0,
-      "coverage": 1
+      "coverage": 0.9778
     }
   ],
   "real": {
     "length": 5,
-    "width": 3.4,
-    "height": 3.7
+    "width": 5,
+    "height": 3.2
   },
   "measures": [],
   "sources": [

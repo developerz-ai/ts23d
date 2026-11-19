@@ -1,13 +1,13 @@
 {
   "asset": "cargo_container_scifi",
   "reviewer": "agent",
-  "overall": 7,
+  "overall": 7.6,
   "scores": {
     "silhouette": {
-      "score": 7,
-      "reason": "ISO-container box with corner castings, bay ribs, door bars and a glow strip; the long side is still a near-flat plane in the outline.",
+      "score": 8,
+      "reason": "Deep pilaster ribs between the bays now break the long-side outline in hero.png and SIDE; corner castings, door bars and the glow strip read.",
       "fixes": [
-        "deeper bay relief (8–10 cm) or trapezoidal ribs between bays so the long-side outline breaks"
+        "a slight roof camber or raised roof ribs so the TOP-edge outline is less of a flat line"
       ]
     },
     "proportions": {
@@ -26,36 +26,38 @@
       ]
     },
     "detail": {
-      "score": 7,
-      "reason": "Louvres, door bars, keypad, code text, forklift pockets and a rear vent hatch hold at 3/4.",
+      "score": 8,
+      "reason": "Louvres, deep bay ribs, door bars with handles, keypad, code text, hazard-striped door sill and forklift pockets hold in the closer hero.",
       "fixes": [
-        "door gasket line and customs seal on the right leaf; roof plate fasteners"
+        "door gasket line and customs seal on the right leaf",
+        "roof plate fasteners"
       ]
     },
     "wear": {
-      "score": 7,
-      "reason": "Rust and grime at the frame base, scraped paint at the corners, a weathered roof, and rust streaks now run below the louvres.",
+      "score": 8,
+      "reason": "Rust and scraped paint at corners and the frame base, rust streaks below the louvres, a chalk \"OK 7\" mark on the door and a weathered roof tell a container in service.",
       "fixes": [
-        "faded/scraped owner code and chalk or stencil marks on the doors"
+        "a faded or partly scraped owner code",
+        "dents in one or two side panels"
       ]
     },
     "lod": {
-      "score": 6,
-      "reason": "FAR LOD2 drops the louvres and the weathering: sides go clean teal and the roof flat grey. The softer LOD0 weathering makes the value shift smaller, but the louvres still vanish.",
+      "score": 7,
+      "reason": "FAR LOD2 now keeps the louvres as dark quads and the orange stripe, but the roof is a flat clean grey and the sides lose the rust weathering, so the value shift remains.",
       "fixes": [
-        "carry the average weathering tone onto the LOD2 roof and side faces; keep the louvres as dark quads"
+        "carry the average weathering tone onto the LOD2 roof and side faces"
       ]
     },
     "technical": {
       "score": 7,
-      "reason": "QA clean; 17k / 7k / 0.7k triangles over 5 draws; the triangle-shaped weathering suggests refinement spent on the bevelled frame rather than plates.",
+      "reason": "QA clean; 16k / 7k / 0.2k triangles over 5 draws; the TOP view still shows triangle-shaped tint on the roof plates, so weathering still follows the triangulation.",
       "fixes": [
         "weather only the side/roof plates on a regular grid to halve refinement cost"
       ]
     }
   },
   "renders": {
-    "hero.png": "fbf2db743fdbe1ecbb3e451910e929d68608c6cfdf0b14828ee7b2aa347b956a",
-    "sheet.png": "5edd337e0dd2878a92987cace6829846694673879a74189a18cd45f26488b5fa"
+    "hero.png": "08aa3e538b14a3472c06c76aa9e3cbae170d8321b2e6e075ba64c8a65d8fc2c3",
+    "sheet.png": "4022bb63bd5f502fb453b1a95ec785c6d7f926c9fbdd827089573fff2556e7d9"
   }
 }

@@ -176,7 +176,7 @@ function membranes(lod: 0 | 1 | 2): Mesh[] {
   return out;
 }
 
-export const WING_RES = [0.038] as const;
+export const WING_RES = [0.042] as const;
 
 /** The arm: sculpted near (muscle, knuckles, thumb claw), a tube + knuckle blobs far. */
 function armMesh(lod: 0 | 1 | 2): Mesh {

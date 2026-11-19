@@ -1,13 +1,14 @@
 {
   "asset": "face_elf",
   "reviewer": "agent",
-  "overall": 5.6,
+  "overall": 5.9,
   "scores": {
     "silhouette": {
       "score": 6,
-      "reason": "Pointed ears now show, but the hair is a spray of straw-like cards that sticks out sideways in hero.png and TOP; the outline reads as hay, not hair.",
+      "reason": "Pointed ears show, and there are fewer stray cards, but the hair is still straw-like: a solid flat hair slab hangs behind the ear in hero.png and stray strands stick out sideways in FRONT.",
       "fixes": [
-        "denser, longer, aligned hair cards that fall with gravity; fewer stray cards"
+        "replace the flat hair slab behind the ear with layered cards",
+        "denser, aligned cards that fall with gravity; no sideways strays"
       ]
     },
     "proportions": {
@@ -18,11 +19,10 @@
       ]
     },
     "materials": {
-      "score": 4,
-      "reason": "Hair reads as straw (yellow-grey matte strips), skin is pocked with dark spots over the whole face.",
+      "score": 5,
+      "reason": "The skin is now clean with a soft sheen (no blemish rash); the hair still reads as matte yellow straw.",
       "fixes": [
-        "hair strip with anisotropic sheen, darker roots and a golden value range",
-        "skin strip with sheen and far fewer blemish spots"
+        "hair strip with anisotropic sheen, darker roots and a golden value range"
       ]
     },
     "detail": {
@@ -33,15 +33,15 @@
       ]
     },
     "wear": {
-      "score": 4,
-      "reason": "Blemish dots everywhere read as a skin disease rather than character.",
+      "score": 5,
+      "reason": "The blemish rash is gone; the face is now clean with no character marks at all.",
       "fixes": [
-        "cut blemishes to 3–5 seeded marks and one small scar"
+        "one small scar or a few seeded freckles"
       ]
     },
     "lod": {
       "score": 5,
-      "reason": "FAR LOD2 is a distance-field re-mesh: the face breaks into flat patches of different tone and the features smear. The ears survive; the hair becomes blocky slabs.",
+      "reason": "FAR LOD2 is still a distance-field re-mesh: the face breaks into flat patches of different tone and the features smear.",
       "fixes": [
         "LOD2 from an authored coarse topology (decimated quad base mesh) instead of the distance-field re-mesh, keeping vertex colour smooth"
       ]
@@ -55,7 +55,7 @@
     }
   },
   "renders": {
-    "hero.png": "4b4968fb262a388265667bd5de4e8cfa17d7b664ddad844d8607cdfeaa5f74d2",
-    "sheet.png": "ae4fec3edd6a0d417d3d14e39d48ad4e0805d2fae5c46cd9610659fd3187a81a"
+    "hero.png": "76298d14a37e3c3a32fc99bda89041289fecea8d565ce9b0569c2ab0e51c9212",
+    "sheet.png": "2cf4b7f979e1bc8df9057dda18b0a42bdd8f9c0594ae8c47dc3e9c0917b0202b"
   }
 }

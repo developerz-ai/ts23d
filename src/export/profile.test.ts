@@ -34,7 +34,7 @@ const json = (glb: Uint8Array): G => {
   const n = new DataView(glb.buffer, glb.byteOffset).getUint32(12, true);
   return JSON.parse(new TextDecoder().decode(glb.subarray(20, 20 + n)));
 };
-const sheet = paintTrimSheet({ ...DEFAULT_SHEET, size: 512 });
+const sheet = paintTrimSheet({ ...DEFAULT_SHEET, size: 512 }, []);
 
 describe('export profiles', () => {
   it('rejects an unknown profile with the list in the fix', () => {

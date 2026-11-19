@@ -207,10 +207,6 @@ const roadster = defineFamily({
     body: { colour: LIVERY.crimson, clearcoat: 1, clearcoatRoughness: 0.03, metallicFlake: 0.5 },
     stripe: { colour: LIVERY.crimson, clearcoat: 1, clearcoatRoughness: 0.03, metallicFlake: 0.5 },
   },
-  finishes: {
-    brushed: { metallic: 1, roughness: 0.25, anisotropy: { strength: 0.8 } },
-    carpet: { roughness: 0.95, sheen: { colour: '#6a6a70', roughness: 0.55 } },
-  },
   optics: { glass: { ior: 1.52, thickness: 0.005 } },
   gaps: GAPS,
 
@@ -334,7 +330,7 @@ const roadster = defineFamily({
     // Far and shut, the rails and the bay aprons are behind the skin: nothing shows.
     if (lod < 2 || p.open > 0) {
       ctx.part('frame', st.frame);
-      ctx.part('engine_bay', bayGrime(st.bay, 0.2, 0.7, 0.5), { paint: 'body' });
+      ctx.part('engine_bay', bayGrime(st.bay, 0.25, 0.92, 0.85), { paint: 'body' });
     }
     ctx.part('under_tray', st.tray);
     if (lod === 0) {
@@ -360,6 +356,8 @@ export const roadster_v10_open = roadster.variant({
   description:
     'The V10 roadster with hood, doors and trunk lid open: engine bay and cockpit on show.',
   params: { open: 1 },
+  // Higher than the default 18°: the lens looks down into the engine bay.
+  hero: { azDeg: -32, elDeg: 30 },
   // Everything open: the mid LOD keeps the dressed engine, the far LOD the block and bay.
   budget: { triangles: [158000, 31000, 4600] },
   // Open pose envelope, from the hinge geometry: doors 1.08 m long swung 65° out of 0.92 m

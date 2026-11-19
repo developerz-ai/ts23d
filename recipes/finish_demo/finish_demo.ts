@@ -5,11 +5,25 @@
 //   bun run t3d finish recipes/finish_demo/finish_demo.ts --model mock --prompt "soot, rust, worn"
 // Origin = pallet base centre; pallet long side along X. Numbers: ./README.md.
 
-import { box, defineAsset, hex, type Mesh, merge, weather } from '@developerz.ai/ts23d';
-import { bungAt, caskMesh, crateMesh } from './props.ts';
+import {
+  box,
+  defineAsset,
+  hex,
+  lathe,
+  type Mesh,
+  merge,
+  place,
+  type Vec3,
+  weather,
+} from '@developerz.ai/ts23d';
+import { bungAt, caskMesh, crateMesh, only } from './props.ts';
 
 const PINE = hex('#b08a5a');
 const BLOCK = hex('#9a7a50');
+const MUD = hex('#3e3226');
+const GREASE = hex('#3b3129');
+const GREY = hex('#8f877a');
+const NAIL = hex('#4a4844');
 
 // EUR pallet (EN 13698-1): 1200 × 800 × 144 mm; boards 22 mm, blocks 78 mm.
 const L = 1.2;
@@ -81,6 +95,69 @@ function pallet(lod: 0 | 1 | 2): Mesh {
   return merge(parts);
 }
 
+const mix = (a: Vec3, b: Vec3, t: number): Vec3 => [
+  a[0] + (b[0] - a[0]) * t,
+  a[1] + (b[1] - a[1]) * t,
+  a[2] + (b[2] - a[2]) * t,
+];
+
+/**
+ * A yard pallet's life, per face (its boxes are untessellated, so every face gets its own corner
+ * colours, clean blocks at any LOD): timber greyed by sun and rain, mud splashed up every side
+ * face, darkest at the foot, and the deck top grimed board by board by boot and forklift traffic.
+ */
+function palletDirt(m: Mesh): Mesh {
+  const colors = new Float32Array(m.colors);
+  for (let v = 0; v < colors.length / 3; v++) {
+    const x = m.positions[v * 3] ?? 0;
+    const y = m.positions[v * 3 + 1] ?? 0;
+    const z = m.positions[v * 3 + 2] ?? 0;
+    const nz = m.normals[v * 3 + 2] ?? 0;
+    const c: Vec3 = [colors[v * 3] ?? 0, colors[v * 3 + 1] ?? 0, colors[v * 3 + 2] ?? 0];
+    let t = 0;
+    if (Math.abs(nz) < 0.5) t = 0.75 * Math.max(0, 1 - z / (BOARD + BLOCK_H)) + 0.15;
+    else if (nz > 0.5 && z > TOP - 0.001)
+      t = 0.2 + 0.4 * Math.max(0, Math.sin(x * 6.3 + y * 2.1) * Math.sin(y * 8.7 - x * 1.7));
+    // Sun and rain grey the exposed timber before the dirt goes on.
+    colors.set(mix(mix(c, GREY, 0.35), MUD, t), v * 3);
+  }
+  return { ...m, colors };
+}
+
+/** Deck nail heads (two per board per block row) as 1 mm-proud quads and grease spots (LOD0). */
+function deckMarks(): Mesh {
+  const out: Mesh[] = [];
+  const quad = (size: Vec3, at: Vec3, color: Vec3): Mesh =>
+    box({ size, at, color, strip: 'iron', omit: only('top') });
+  for (const [y, w] of DECK)
+    for (const x of BLOCK_X)
+      for (const s of [-1, 1])
+        out.push(quad([0.012, 0.012, 0.001], [x + s * 0.04, y + s * (w / 4), TOP], NAIL));
+  // Grease dripped off a forklift and trodden along the −Y deck board, beside the cask: soft
+  // ellipses, each a flat fan.
+  for (const [x, r, k] of [
+    [0.05, 0.045, 1.5],
+    [0.13, 0.025, 1.1],
+    [0.42, 0.04, 1.7],
+    [0.5, 0.02, 1],
+  ] as const)
+    out.push(
+      place(
+        lathe({
+          profile: [
+            [r, 0],
+            [0, 0],
+          ],
+          segments: 9,
+          color: GREASE,
+          strip: 'plain',
+        }),
+        { at: [x, -(W - 0.145) / 2 + 0.012, TOP + 0.0006], scale: [k, 0.8, 1] },
+      ),
+    );
+  return merge(out);
+}
+
 export const finish_demo = defineAsset({
   name: 'finish_demo',
   kind: 'prop',
@@ -124,7 +201,8 @@ export const finish_demo = defineAsset({
         },
       },
     );
-    ctx.part('pallet', p.pallet ?? pallet(lod));
+    const deck = palletDirt(p.pallet ?? pallet(lod));
+    ctx.part('pallet', lod === 0 ? merge([deck, deckMarks()]) : deck);
     // The crate's battens are chipped and its lid dusty from storage.
     const c = weather(
       ctx,

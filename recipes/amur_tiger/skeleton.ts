@@ -15,7 +15,7 @@ export const HEAD_PIVOT: Vec3 = [0.775, 0, 0.73];
 
 /** The head frame is authored at skull scale; the Amur's winter fur (ruff, nape, crown: Geptner &
  *  Sludskij 70–110 mm) makes the furred head bigger than the skull: scale it into the world. */
-export const HEAD_SCALE = 1.08;
+export const HEAD_SCALE = 1.13;
 
 /** Head-local point → world (scale, pitch about Y, then move to the pivot). */
 export function headToWorld(p: Vec3): Vec3 {

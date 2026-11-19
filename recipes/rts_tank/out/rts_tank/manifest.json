@@ -20,13 +20,13 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    32102,
-    8264,
-    598
+    35152,
+    9232,
+    590
   ],
   "drawCalls": [
     23,
-    23,
+    9,
     7
   ],
   "pivots": [
@@ -226,25 +226,25 @@
   ],
   "weather": {
     "chips": {
-      "target": 0.13,
-      "actual": 0.13,
+      "target": 0.05,
+      "actual": 0.05,
       "eligible": "convex-edges",
-      "area": 61.2627,
+      "area": 61.4507,
       "by": {
         "brinehound_hull": {
-          "target": 0.13,
-          "actual": 0.13,
-          "area": 22.2835
+          "target": 0.05,
+          "actual": 0.05,
+          "area": 22.372
         },
         "brinehound_kit": {
-          "target": 0.13,
-          "actual": 0.13,
-          "area": 18.1202
+          "target": 0.05,
+          "actual": 0.05,
+          "area": 18.2319
         },
         "brinehound_turret": {
-          "target": 0.13,
-          "actual": 0.13,
-          "area": 20.859
+          "target": 0.05,
+          "actual": 0.05,
+          "area": 20.8468
         }
       }
     },
@@ -253,47 +253,6 @@
       "actual": 0.5,
       "eligible": "fasteners | below-fasteners",
       "area": 0.2728
-    },
-    "mud": {
-      "target": 0.8,
-      "actual": 0.8,
-      "eligible": "ground-near & !down-facing",
-      "area": 10.0001,
-      "by": {
-        "brinehound_hull": {
-          "target": 0.8,
-          "actual": 0.8,
-          "area": 7.409
-        },
-        "brinehound_kit": {
-          "target": 0.8,
-          "actual": 0.8,
-          "area": 2.5911
-        }
-      }
-    },
-    "dust": {
-      "target": 0.3,
-      "actual": 0.3,
-      "eligible": "up-facing",
-      "area": 38.7096,
-      "by": {
-        "brinehound_hull": {
-          "target": 0.3,
-          "actual": 0.3,
-          "area": 26.9951
-        },
-        "brinehound_kit": {
-          "target": 0.3,
-          "actual": 0.3,
-          "area": 4.7861
-        },
-        "brinehound_turret": {
-          "target": 0.3,
-          "actual": 0.3,
-          "area": 6.9284
-        }
-      }
     }
   },
   "qa": {

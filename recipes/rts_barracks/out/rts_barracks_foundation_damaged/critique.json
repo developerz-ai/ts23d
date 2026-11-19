@@ -1,13 +1,13 @@
 {
   "asset": "rts_barracks_foundation_damaged",
   "reviewer": "agent",
-  "overall": 7.1,
+  "overall": 7.3,
   "scores": {
     "silhouette": {
       "score": 7,
-      "reason": "The foundation with a crushed slab corner, scattered planks, a broken pallet and a torn team tarp on the ground: the damage reads in the hero; FRONT/SIDE remain a flat strip.",
+      "reason": "The foundation with the sheer-legs knocked flat, a heap of toppled blocks and snapped timbers at one corner, a torn tarp sheet on the ground: damage reads in the hero; FRONT/SIDE are a low strip with the banner as the one vertical.",
       "fixes": [
-        "a leaning or toppled stake/pole that breaks the strip outline in FRONT and SIDE"
+        "leave one sheer-leg leaning against the footing so FRONT and SIDE keep a broken vertical"
       ]
     },
     "proportions": {
@@ -18,11 +18,10 @@
       ]
     },
     "materials": {
-      "score": 6,
-      "reason": "As the foundation: blotchy camouflage slab and a flat saturated team triangle; the crushed corner shows faceted dark triangles that read as a mesh artefact more than broken concrete.",
+      "score": 7,
+      "reason": "The floor is now a flagstone strip with readable joints and per-flag value (sheet TOP), no longer the camouflage slab. The torn tarp is still a flat saturated red board on the ground.",
       "fixes": [
-        "broken slab pieces as separate tilted slabs with a lighter fractured edge instead of a faceted dent",
-        "slab on a flagstone/rammed-earth strip"
+        "torn tarp as a draped sheet with folds, frayed edge and dust, value down"
       ]
     },
     "detail": {
@@ -35,79 +34,28 @@
     },
     "wear": {
       "score": 7,
-      "reason": "A clear story: impact at one corner, the yard knocked over, the tarp blown off. No scorch or dust around the impact.",
+      "reason": "A black scorch fan spreads from the impact corner in sheet TOP and the yard is knocked over; in hero.png the scorch is lost in the debris shadow and nothing is dusty.",
       "fixes": [
-        "scorch ring and dust fan round the crushed corner"
+        "pale dust coat on the toppled blocks and the flags round the impact so it reads in hero.png"
       ]
     },
     "lod": {
       "score": 7,
-      "reason": "FAR LOD2 (738 tris) keeps the debris blocks and the fallen tarp; the crushed corner flattens and the slab pattern is lost.",
+      "reason": "FAR LOD2 keeps the slab, footings, banner and fallen tarp, but the debris heap thins to two blocks, so the damage story mostly vanishes at distance.",
       "fixes": [
-        "keep the crushed corner as two tilted quads at LOD2"
+        "keep 4-5 tilted debris blocks and one fallen timber at LOD2"
       ]
     },
     "technical": {
       "score": 8,
-      "reason": "QA PASS, tris 14.0k / 4.3k / 738, draws 2/2/2; one trim material + team slot, LOD2 well under 1k. Triangles mostly sit in the running-bond blocks and slates, where they show.",
+      "reason": "QA PASS: 10.4k / 3.2k / 784 tris, 2 / 2 / 2 draws; one trim material + team slot, LOD2 well under 1k. LOD0 down ~3.6k.",
       "fixes": [
-        "merge the per-block wall boxes into one course mesh per bay at LOD0 (shared inner faces removed) so the coursing costs fewer triangles"
+        "spend some of the LOD0 savings on the fixes above (quoins, string course, gravel) instead of more blocks"
       ]
     }
   },
   "renders": {
-    "hero.png": "66c1bfe3510d99acad05df144c1f322b7dda61ed6d0c7644616a6f8bbf169a11",
-    "sheet.png": "ec57a381589388f58f51883578fa08a9ee47241f0901fdbe1549db5fe0786529"
-  },
-  "metrics": {
-    "silhouette": [
-      {
-        "view": "front",
-        "iou": 0.903
-      },
-      {
-        "view": "side",
-        "iou": 0.829
-      },
-      {
-        "view": "3/4",
-        "iou": 0.902
-      }
-    ],
-    "focal": {
-      "peakPart": "tower_r",
-      "peak": [
-        124,
-        163
-      ],
-      "focalShare": 0,
-      "focalArea": 0,
-      "top": [
-        {
-          "part": "materials",
-          "share": 0.301
-        },
-        {
-          "part": "tower_r",
-          "share": 0.218
-        },
-        {
-          "part": "plinth",
-          "share": 0.151
-        }
-      ],
-      "declared": []
-    },
-    "rest": {
-      "share": 0.662,
-      "spread": 0.728,
-      "min": 0.25
-    },
-    "shape": {
-      "acuteShare": 0.084,
-      "straightShare": 0.769,
-      "taper": 0.571,
-      "shape": "stable"
-    }
+    "hero.png": "d0dd6cfc05b3597892df4886135698c3cdd3e600f1b357489b1751f1738abdaa",
+    "sheet.png": "f305224966bf71500ee185c81c35603364cbdb494e0f2002d0b3464f005bb628"
   }
 }

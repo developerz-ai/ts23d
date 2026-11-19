@@ -8,7 +8,7 @@ import { contactSheet } from './sheet.ts';
 import { previewSheet, sheetTones, toneAt } from './sheet-tones.ts';
 import { thumbnail } from './thumbnail.ts';
 
-const sheet = paintTrimSheet({ ...DEFAULT_SHEET, size: 512 });
+const sheet = paintTrimSheet({ ...DEFAULT_SHEET, size: 512 }, []);
 const CELL = 64;
 
 const asset = (build: Parameters<typeof defineAsset>[0]['build']): CompiledAsset =>

@@ -245,7 +245,7 @@ function teeth(
   const open = JAW_REST[k] ?? 0.1;
   const unit = toothUnit(lod === 0 ? 6 : 4);
   // LOD1: a tooth every 8 cm, enough to read a toothed mouth at mid range.
-  const step = lod === 0 ? 0.031 : 0.08;
+  const step = lod === 0 ? 0.036 : 0.08;
   const [up, low]: [Mesh[], Mesh[]] = [[], []];
   // Teeth shorten toward the hinge, where the open mouth leaves them less room.
   const room = (x: number): number => (0.3 * (x - JAW_HINGE[0]) * Math.sin(open) + 0.012) / 3;
@@ -382,7 +382,7 @@ function buildHead(k: number, lod: number): HeadMeshes {
   const part = (edits: readonly SculptEdit[], cell = res): Mesh =>
     sculptPart({ edits, res: cell, color: s.tone, mirror: true, paint: mottle }).mesh;
   // The jaw has no ornament to hold: a coarser cell up close keeps its triangles for the skulls.
-  const jawRes = lod === 0 ? 0.0135 : res;
+  const jawRes = lod === 0 ? 0.0165 : res;
   const plain = skullEdits(s, neckComesFrom(k), lip);
   const bare = foldedField(plain, s.tone);
   const horns: SeatedHorn[] = hornSpecs(s.ornament, s.snout, lod).map((h) => seat(h, bare));
@@ -408,7 +408,7 @@ function buildHead(k: number, lod: number): HeadMeshes {
     foldedField(skullForm, s.tone),
     foldedField(jawForm, s.tone),
   );
-  const eye = eyeUnit(lod === 0 ? 18 : 8, lod === 0 ? 12 : lod === 1 ? 6 : 4);
+  const eye = eyeUnit(lod === 0 ? 14 : 8, lod === 0 ? 10 : lod === 1 ? 6 : 4);
   const eyes = [1, -1].map((side) =>
     stamp(eye, [0.225, side * 0.092 * s.width, 0.07], [0.3, side * 0.9, 0.16], 0.031),
   );

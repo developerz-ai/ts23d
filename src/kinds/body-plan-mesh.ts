@@ -8,7 +8,7 @@
 // add `relief` and `tint`, and `blend` fillets it into its neighbours (body-plan-weld.ts).
 
 import { type Mesh, MeshBuilder, merge, Ts23dError, type Vec3 } from '../core/index.ts';
-import { type StripId, stripRect } from '../material/index.ts';
+import { mappedOnto, type StripId, stripRect } from '../material/index.ts';
 import { type ChainCurve, chainCopies, chainCurve, linkStops } from './body-plan-curve.ts';
 import { flareOf, POINT_END, type Sweep, skinGrid } from './body-plan-grid.ts';
 import type {
@@ -165,7 +165,7 @@ function sweepChain(s: Sweep, stops: readonly number[], sides: number): Mesh {
   };
   pole(0, rings[0] ?? [], pts[0] ?? [], -1, s.anchor);
   pole(1, rings[rings.length - 1] ?? [], pts[pts.length - 1] ?? [], 1, null);
-  return b.build();
+  return mappedOnto(b.build(), look.strip ?? 'plain');
 }
 
 /** The point of bone segment a → b nearest to p. */

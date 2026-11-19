@@ -3,7 +3,7 @@
 // blurred again, so a snow line or a scoured crest fades over several cells: a one-cell ridge never
 // switches to a bright seam (or a bare line) on its own. Snow lies above the snowline (lower on
 // north faces and in gullies, a little higher on south faces, broken up by noise), thins from ~35° to none at ~53° (it sloughs
-// off), and wind scours it off sharp convex crests: a knife ridge stays bare rock between its
+// off; high summits hold it on steeper ground), and wind scours it off sharp convex crests: a knife ridge stays bare rock between its
 // flanks' snowfields instead of carrying a thin white line.
 
 import type { TerrainGrid } from '@developerz.ai/ts23d';
@@ -53,10 +53,13 @@ export function snowCover(g: TerrainGrid, o: SnowOptions): Float64Array {
   const [x0, y0, x1, y1] = g.rect;
   const sx = (x1 - x0) / (nx - 1);
   const sy = (y1 - y0) / (ny - 1);
-  const soft = boxBlur(boxBlur(Float64Array.from(g.z), nx, ny, 1), nx, ny, 1);
+  const ground = boxBlur(boxBlur(Float64Array.from(g.z), nx, ny, 1), nx, ny, 1);
   const at = (i: number, j: number): number =>
-    soft[Math.min(ny - 1, Math.max(0, j)) * nx + Math.min(nx - 1, Math.max(0, i))] ?? 0;
+    ground[Math.min(ny - 1, Math.max(0, j)) * nx + Math.min(nx - 1, Math.max(0, i))] ?? 0;
+  // High flanks hold snow steeper than low ones (summit caps; the crest itself stays scoured).
+  const steepAt = (alt: number): number => 1 + 0.5 * ramp(o.snowline + 150, o.snowline + 450, alt);
   const cover = new Float64Array(nx * ny);
+  const scour = new Float64Array(nx * ny);
   for (let j = 0; j < ny; j++)
     for (let i = 0; i < nx; i++) {
       const gx = (at(i + 1, j) - at(i - 1, j)) / (2 * sx);
@@ -81,12 +84,25 @@ export function snowCover(g: TerrainGrid, o: SnowOptions): Float64Array {
         o.jitter(x, y);
       cover[j * nx + i] =
         ramp(o.snowline - 60, o.snowline + 140, alt) *
-        (1 - ramp(0.7, 1.35, slope)) *
+        // High up, wind-packed snow and ice hold on steeper ground (summit caps): the slope
+        // limit rises by half from 150 to 450 m above the line.
+        (1 - ramp(0.7 * steepAt(alt), 1.35 * steepAt(alt), slope)) *
         (1 - ramp(6, 16, crest));
+      scour[j * nx + i] = ramp(6, 16, crest);
     }
   // Snow needs a field round it: a strip a few cells wide (a rounded crest just under the slope
   // limit) has little cover within ±5 points and fades out, while a snowfield keeps its own.
   const field = boxBlur(cover, nx, ny, 5);
   const kept = cover.map((c, k) => c * ramp(0.2, 0.55, field[k] ?? 0));
-  return boxBlur(kept, nx, ny, 1);
+  // A snowfield has an edge: the blurred cover is cut by a narrow ramp whose threshold the jitter
+  // moves (±0.12), so patches read with outlines in TOP instead of cloudy blurs, and the line
+  // wanders instead of tracing the altitude contours.
+  const soft = boxBlur(kept, nx, ny, 1);
+  return soft.map((c, k) => {
+    const x = x0 + (k % nx) * sx;
+    const y = y0 + Math.floor(k / nx) * sy;
+    const t = 0.38 + o.jitter(x * 1.7 + 311, y * 1.7 - 97) / 900;
+    // The wind keeps scoured crests bare through the blur (a knife ridge between snowfields).
+    return ramp(t - 0.12, t + 0.12, c) * (1 - (scour[k] ?? 0));
+  });
 }

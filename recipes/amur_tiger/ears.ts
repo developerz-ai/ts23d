@@ -21,13 +21,15 @@ import { HEAD } from './skeleton.ts';
 export const EAR = (() => {
   const base = HEAD.ear;
   const up = v3.norm([-0.12, 0.36, 1]);
-  const face0 = v3.norm([1, 0.7, 0.05]);
+  // Opening forward and a little out: turned further out, the far ear stood edge-on to a 3/4
+  // camera (a spike) while the near one faced it flat (a disc).
+  const face0 = v3.norm([1, 0.42, 0.05]);
   // Orthonormalise: face ⟂ up, side = up × face.
   const face = v3.norm(v3.sub(face0, v3.mul(up, v3.dot(face0, up))));
   const side = v3.cross(up, face);
-  // Thick with fur and as wide as it is tall: a rounded ear from every side (a thin plate read
-  // as a disc face-on and a spike edge-on).
-  return { base, up, face, side, height: 0.076, width: 0.04, thick: 0.017 };
+  // Thick with fur and as wide as it is tall: a rounded lobe from every side, two-thirds as
+  // deep as it is wide (a 3.4 cm plate still read as a disc face-on and a spike edge-on).
+  return { base, up, face, side, height: 0.078, width: 0.04, thick: 0.027 };
 })();
 
 /** Ear-local coordinates (face, side, up) of a head-local point, origin at the ear's centre. */
@@ -67,16 +69,16 @@ export function earEdits(lod: number, notch = false): SculptEdit[] {
     // Pinna: a rounded plate, a little narrower toward the round tip.
     earBlob([0, 0, 0], [EAR.thick, EAR.width, h], 'add', 0),
     // Root: thickens into the crown and sinks below it.
-    earBlob([-0.006, 0, -h * 1.15], [0.03, EAR.width * 1.08, 0.038], 'add', 0.026),
+    earBlob([-0.006, 0, -h * 1.15], [0.04, EAR.width * 1.15, 0.042], 'add', 0.032),
   ];
   if (lod < 2)
-    // The cup: hollow the front, leaving a thick rim.
+    // The cup: a shallow hollow in the front, leaving a thick rounded rim.
     out.push(
       earBlob(
-        [EAR.thick * 0.95, 0, -h * 0.08],
-        [EAR.thick * 0.8, EAR.width * 0.72, h * 0.8],
+        [EAR.thick * 1.02, 0, -h * 0.08],
+        [EAR.thick * 0.55, EAR.width * 0.66, h * 0.74],
         'subtract',
-        0.012,
+        0.014,
       ),
     );
   // Pale fur tufts filling the cup's lower half (the ear furnishings).
@@ -85,7 +87,7 @@ export function earEdits(lod: number, notch = false): SculptEdit[] {
   );
   if (notch && lod < 2)
     // A bite out of the outer rim, healed: the mark of an old fight.
-    out.push(earBlob([0, EAR.width * 0.98, h * 0.3], [0.03, 0.011, 0.012], 'subtract', 0.004));
+    out.push(earBlob([0, EAR.width * 0.98, h * 0.3], [0.04, 0.019, 0.017], 'subtract', 0.005));
   return out;
 }
 
@@ -94,20 +96,22 @@ export function earPaint(p: Vec3, _c: Vec3): Vec3 {
   const q = earLocal(p);
   const h = EAR.height / 2;
   const rr = Math.hypot(q[1] / EAR.width, q[2] / h);
-  const back = smoothstep(0.002, -0.004, q[0]);
+  const back = smoothstep(0.004, -0.006, q[0]);
   // Ocellus: a white oval in the middle of the back, a little above centre.
   const oc = smoothstep(1.05, 0.85, Math.hypot(q[1] / 0.015, (q[2] - 0.002) / 0.017));
   const backCol = mixRgb(C.earBack, C.ocellus, oc);
   // Inside: pale fur, the deep cup pinkish, a dark rim at the edge.
-  const rim = smoothstep(0.78, 0.95, rr);
+  const rim = smoothstep(0.86, 0.99, rr);
   const deep = smoothstep(0.004, -0.004, q[0] - EAR.thick * 0.2) * smoothstep(0.7, 0.3, rr);
   // The pale furnishings fill the lower cup only; toward the rim the inside darkens to the
   // back's black, so the ear never shows as one pale disc.
   const inside = mixRgb(C.earInside, C.orange, smoothstep(-h * 0.1, h * 0.5, q[2]) * 0.55);
+  // Orange fur round the pale furnishings, black only at the very edge: a dark ring half the
+  // ear wide read as a target.
   const front = mixRgb(
-    mixRgb(inside, C.earSkin, deep * 0.6),
+    mixRgb(mixRgb(inside, C.earSkin, deep * 0.5), C.orange, smoothstep(0.5, 0.85, rr) * 0.7),
     C.earBack,
-    Math.max(rim, smoothstep(0.55, 0.95, rr) * 0.6),
+    rim,
   );
   // The root shades into the crown's orange.
   const root = smoothstep(-h * 0.7, -h * 1.05, q[2]);

@@ -1,7 +1,7 @@
 {
   "asset": "mountain_range",
   "reviewer": "agent",
-  "overall": 7.6,
+  "overall": 7.7,
   "scores": {
     "silhouette": {
       "score": 8,
@@ -18,11 +18,10 @@
       ]
     },
     "materials": {
-      "score": 7,
-      "reason": "Rock, grass, forest, snow and a strata skirt blend; the grey TOP frame is gone and snow now sits as soft patches on the crests, but the patches are cloudy blurs in TOP rather than snowfields with edges, the grass/rock boundary smears downslope in hero.png, and the cut walls carry fine vertical streaks in hero.png (the strata texture stretched down the wall).",
+      "score": 8,
+      "reason": "Rock, grass, forest and snow blend; snowfields now have crisp edges in TOP and hero.png, and the skirt shows horizontal strata instead of vertical streaks; the rock faces carry a slightly smeared vertical streak texture.",
       "fixes": [
-        "give the smoothed snow cover a sharper threshold (a narrow ramp on the cover map) so patches have edges in TOP",
-        "map the skirt strata in planar U along the wall and V by height so it stops streaking vertically"
+        "sharpen the rock streak texture (less vertical smear) and add strata bands on steep faces"
       ]
     },
     "detail": {
@@ -34,18 +33,19 @@
       ]
     },
     "wear": {
-      "score": 7,
-      "reason": "The valley stream is now a continuous blue line along the floor in TOP (water at the water level, no longer broken specks), but in hero.png it is hidden under the forest canopy and the rock carries no weathering.",
+      "score": 8,
+      "reason": "The new hero along the valley shows the stream as a water strip with gravel banks, and dark streaks run down the left massif face below the gullies.",
       "fixes": [
-        "widen the stream into a continuous water strip with a gravel bank so it reads in hero.png",
-        "dark water streaks below the gullies on the rock faces"
+        "scree and rockfall debris below the streaked faces"
       ]
     },
     "lod": {
-      "score": 8,
-      "reason": "FAR LOD2 now keeps the snow line and forest edge as soft blocks instead of blocky white squares; the faces still show faceted diamond shading.",
+      "score": 7,
+      "reason": "FAR LOD2: the snow cover now blends softly at LOD2 instead of stepping into blocky white squares; but the blend washes a pale grey-white over much of the grass, the forest band shrinks to a few dark specks, and the faces still show faceted diamond shading.",
       "fixes": [
-        "smooth the LOD2 normals so the faceted diamonds do not show at the switch"
+        "keep the forest as a dark cover block at LOD2 (it shrinks to specks)",
+        "keep the snow threshold tight at LOD2 so it does not wash pale over the grass",
+        "smooth the LOD2 normals"
       ]
     },
     "technical": {
@@ -57,7 +57,7 @@
     }
   },
   "renders": {
-    "hero.png": "7f4c148070469c7b0a9a97738069825375b51f36ec46d54b13c8715f93a91b72",
-    "sheet.png": "54aa22f3f0556df330f641eb03363fb372fc2c12b981aa6a35bf49b5ff9eb158"
+    "hero.png": "303bf2bca4fc7a42cdf80f2a657d75ae09f008fb0f3c9dd72776e44454ffd043",
+    "sheet.png": "be14e513dcaefc55f78a8e99e790b9319ba15e489e5ab29e8bf5029cf078e857"
   }
 }

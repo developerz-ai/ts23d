@@ -8,7 +8,7 @@
 // width around and one strip height along the profile.
 
 import { type Mesh, MeshBuilder, type Vec2, type Vec3 } from '../core/index.ts';
-import { type StripId, stripRect } from '../material/index.ts';
+import { mappedOnto, type StripId, stripRect } from '../material/index.ts';
 import { colorOf, count, invalid, positive, profileOf } from './check.ts';
 import { facets } from './lathe-facets.ts';
 import { mirroredV, stripU, stripVMetres } from './strip-uv.ts';
@@ -206,7 +206,7 @@ export function lathe(opts: LatheOptions): Mesh {
       }
     }
   }
-  return b.build();
+  return mappedOnto(b.build(), o.strip ?? 'plain');
 }
 
 /** Convenience: a capped cylinder, the most common lathe. */

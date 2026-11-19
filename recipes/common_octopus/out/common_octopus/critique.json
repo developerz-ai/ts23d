@@ -1,7 +1,7 @@
 {
   "asset": "common_octopus",
   "reviewer": "agent",
-  "overall": 7,
+  "overall": 7.1,
   "scores": {
     "silhouette": {
       "score": 8,
@@ -12,7 +12,7 @@
     },
     "proportions": {
       "score": 7,
-      "reason": "Arms taper and the web is visible, but a cylindrical neck collar with a seam separates the head from the arm crown in hero.png, which a real octopus does not show.",
+      "reason": "Arms taper and the web is visible, but a cylindrical collar band still separates the head from the arm crown under the eyes in hero.png.",
       "fixes": [
         "blend the head into the arm crown (remove the collar ring) in anatomy.ts",
         "enlarge the inter-arm web toward the base"
@@ -20,7 +20,7 @@
     },
     "materials": {
       "score": 7,
-      "reason": "Wet sheen on the skin and pale sucker rims read well; the papillae are uniform pale dots that read like studs.",
+      "reason": "Wet sheen, pale sucker rims and pale mottling along the arms read; the papillae on the mantle are still uniform pale dots that read like studs.",
       "fixes": [
         "papillae in skin colour with only a slight value lift, varied size"
       ]
@@ -34,16 +34,16 @@
     },
     "wear": {
       "score": 5,
-      "reason": "Pristine: no regenerating arm tip, no healed scars.",
+      "reason": "No regenerating arm tip or healed scar is clearly visible in hero.png or the sheet; the arms are all full length and clean.",
       "fixes": [
         "one shorter regenerating arm tip and a few healed scars (seeded)"
       ]
     },
     "lod": {
-      "score": 7,
-      "reason": "FAR LOD2 keeps all eight arms and the curls; the mantle and arm colour break into blocky patches.",
+      "score": 8,
+      "reason": "FAR LOD2 keeps all eight arms, the curls and an even body colour; the switch is quiet.",
       "fixes": [
-        "smooth the LOD2 colour per face (average of LOD0) and add rings to the mantle"
+        "a few more rings on the LOD2 mantle so its outline stays round"
       ]
     },
     "technical": {
@@ -55,7 +55,7 @@
     }
   },
   "renders": {
-    "hero.png": "4cd6c681bb3b65b688cb81ba2311a9fb7bacd264677f918825c279b949a8457f",
-    "sheet.png": "fe8f189b159162b9d6f23bdf70f0d557c55312f272a3332b20fd7757916a0f44"
+    "hero.png": "b3d92606e6241cff150a0ca4d6e76283d6cf612536831bec7e74533fd139f79f",
+    "sheet.png": "084b3b27a0bcd0e428bc467bdb274e17c52ad8b6f1aa27c8ab80493e36264bfa"
   }
 }

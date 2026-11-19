@@ -4,14 +4,19 @@
 The Saltmarch Accord's rifleman (style guide: [`../rts_faction/README.md`](../rts_faction/README.md)).
 Signature features: domed bone helmet with a **forward chevron crest** (team), dark visor housing
 with an **amber slit**, big **team pauldrons**, team chest stripe and pack flap, the boxy
-**sunlance carbine** (cooling rings, brass muzzle collar, amber cell) held at the hip.
+**sunlance carbine** (cooling rings, brass muzzle collar, amber cell) carried at **port arms**:
+diagonal across the chest, grip by the right hip, the left glove under the shroud, so the front view
+reads the whole weapon. Wear that reads at hero distance: pale caked brine mud up the boots and
+shins (a mud shell on its own grey strip, wet and dark at the soles), chips of bone primer on the
+pauldrons' rims, salt dust on the shoulders and helmet; trousers bloused over the boots.
 
 ## Specs
 | Dimension | Value (m) | Source |
 |---|---|---|
 | height (to antenna tip) | 1.95 | design brief |
-| length (carbine forward) | 1.36 | design brief |
-| width (pauldrons) | 0.82 | design brief |
+| length (boot toe to pack) | 0.72 | design brief, port-arms carry pose |
+| width (carbine stock to pauldron) | 0.97 | design brief, port-arms carry pose |
+| pauldron span (body only; `measures`, ±2 %) | 0.82 | design brief (infantry shoulders 0.75–0.82) |
 | carbine grip Ø | 0.038 | fits the fist (grip joint QA) |
 
 ## Photos (by view)

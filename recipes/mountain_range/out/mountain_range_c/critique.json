@@ -5,9 +5,9 @@
   "scores": {
     "silhouette": {
       "score": 8,
-      "reason": "An eroded cone with couloirs and a second peak read as a massif; both summits now sit inside the tile (3/4 FRONT, hero.png) and the skirt no longer climbs a peak. The north-east hero camera looks over the near ridge, so half of hero.png is skirt wall and the forested valley is hidden.",
+      "reason": "Two peaks with couloirs either side of a forested valley; the hero now looks along the valley so the floor, stream and both peaks show instead of skirt wall.",
       "fixes": [
-        "aim this variant's hero along the valley (from the south-west) so the forested floor and both peaks show instead of half the frame being skirt wall"
+        "break the left peak snowfield slope with a rock rib so the left mass is not one smooth ramp"
       ]
     },
     "proportions": {
@@ -19,11 +19,10 @@
     },
     "materials": {
       "score": 7,
-      "reason": "Rock, grass and forest blend well; the one-cell crest seam and the grey frame are gone and snow now shows in hero.png and TOP, but as one smeared white blotch on a mid-flank with vertical streaks while both summits stay bare, and the cut walls carry fine vertical streaks in hero.png (the strata texture stretched down the wall).",
+      "reason": "Snow sits on both summits and the north faces with sharp edges; TOP no longer shows dark holes in the left snowfield, but hero.png still shows two soft dark blobs in it and 3/4 REAR one more, still reading as smudges, not rock. Rock faces are smooth grey.",
       "fixes": [
-        "put the snow cover on the summits and north faces of both peaks, not only one flank patch",
-        "give the snow patch a sharper edge so it reads as a snowfield, not a smeared haze",
-        "map the skirt strata in planar U along the wall and V by height so it stops streaking vertically"
+        "turn the remaining soft dark blobs into crisp-edged pale-grey outcrops (or remove them)",
+        "strata or crack texture on the rock faces"
       ]
     },
     "detail": {
@@ -35,14 +34,14 @@
     },
     "wear": {
       "score": 7,
-      "reason": "The valley stream is now a continuous blue line along the floor in TOP (water at the water level, no longer broken specks), but hero.png looks over the ridge so it does not show; little rock weathering.",
+      "reason": "The stream now reads down the valley floor in hero.png; little weathering on the rock.",
       "fixes": [
         "water streaks below the couloirs"
       ]
     },
     "lod": {
       "score": 8,
-      "reason": "FAR LOD2 keeps both peaks, forest and snow blocks.",
+      "reason": "FAR LOD2 keeps both peaks and the forest, and the snow cover now blends softly at LOD2 instead of stepping into blocky white squares; ridge crest snow thins.",
       "fixes": [
         "keep the ridge crest snow at LOD2"
       ]
@@ -56,7 +55,7 @@
     }
   },
   "renders": {
-    "hero.png": "e8126989662fc69c85aa0a5c7fd418d52f890e7cd798b23ad765e5df36147ece",
-    "sheet.png": "082a9bda74abd85a86a0f325abf43f1e2b142ae6fabef8ea8d4d0c6a5e949e69"
+    "hero.png": "c2a8d51d57bb3c4cfdd60b7940a1b0639dec7524deac9b563b6088dd9bdb6d7f",
+    "sheet.png": "e4b7c12cddcbab1f94e159caa789d940b085972d2b7386438708458450268aa8"
   }
 }

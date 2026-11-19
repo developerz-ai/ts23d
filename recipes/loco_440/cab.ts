@@ -17,6 +17,9 @@ const W = 2.5;
 const H = 1.95;
 const T = 0.06;
 const SILL = 0.95;
+/** The arched roof: half width, rise, eave height and its overhang past the cab's two ends. As
+ *  on the replica it shades the fireman's deck: 35 cm behind the open back, 15 cm in front. */
+export const ROOF = { halfWidth: 1.4, rise: 0.22, z: DECK_Z + H, front: 0.15, rear: 0.35 } as const;
 const LINTEL = 1.6;
 
 /** A frame (four bars) round a rectangle on a ±Y face. */
@@ -212,21 +215,30 @@ export function buildCab(ctx: BuildContext, L: Layout, name: string): void {
         }),
       );
   }
-  // Roof: a shallow arch with deep overhangs; vermilion, a gold-lined eave board each side.
+  // Roof: a shallow arch, vermilion, a gold-lined eave board each side.
   const roof: Vec2[] = Array.from({ length: 9 }, (_, i): Vec2 => {
     const a = Math.PI * (i / 8);
-    return [Math.cos(a) * 1.4, Math.sin(a) * 0.22];
+    return [Math.cos(a) * ROOF.halfWidth, Math.sin(a) * ROOF.rise];
   });
   m.push(
-    translate(prism({ profile: roof, depth: len + 0.5, plane: 'yz', ...F.redWood }), [
-      (xf + xr) / 2,
-      0,
-      z + H,
-    ]),
+    translate(
+      prism({ profile: roof, depth: len + ROOF.front + ROOF.rear, plane: 'yz', ...F.redWood }),
+      [(xf + ROOF.front + xr - ROOF.rear) / 2, 0, ROOF.z],
+    ),
   );
   if (lod < 2)
     for (const s of [1, -1])
-      m.push(bx(xf + 0.25, xr - 0.25, s * 1.33, s * 1.4, z + H - 0.12, z + H + 0.02, F.redWood));
+      m.push(
+        bx(
+          xf + ROOF.front,
+          xr - ROOF.rear,
+          s * 1.33,
+          s * 1.4,
+          z + H - 0.12,
+          z + H + 0.02,
+          F.redWood,
+        ),
+      );
   ctx.part('cab', merge(m), { parent: 'locomotive' });
   if (glass.length) ctx.part('cab_glass', merge(glass), { parent: 'locomotive', surface: 'glass' });
 }

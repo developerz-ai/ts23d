@@ -17,7 +17,11 @@ export function heightGrade(c: Vec3, p: Vec3): Vec3 {
   return [Math.min(1, c[0] * v), Math.min(1, c[1] * v), Math.min(1, c[2] * v)];
 }
 
-export function bodyPaint(lod: number): (p: Vec3, c: Vec3) => Vec3 {
+/**
+ * The coat at a body point; `stripes: false` gives the ground colour alone (what a long guard
+ * hair rooted in a stripe shows along most of its length: field.ts).
+ */
+export function bodyPaint(lod: number, stripes = true): (p: Vec3, c: Vec3) => Vec3 {
   return (p, c) => {
     let col = mixRgb(c, C.back, dorsalOf(p) * 0.7);
     // Coat variation: broad patches where the fur lies paler (golden) or deeper (rust), so the
@@ -32,7 +36,9 @@ export function bodyPaint(lod: number): (p: Vec3, c: Vec3) => Vec3 {
       Math.max(smoothstep(0, 0.5, w) * 0.6, smoothstep(0.38, 0.1, p[2]) * 0.55),
     );
     col = mixRgb(col, C.white, smoothstep(0.35, 1, w));
-    const s = Math.max(bodyStripe(p, lod), legStripe(p, lod));
+    // The far legs are tubes with a ring per joint: a 1 cm band sampled there paints a whole
+    // segment dark, so the far mesh carries the trunk's broad bands only.
+    const s = stripes ? Math.max(bodyStripe(p, lod), lod === 2 ? 0 : legStripe(p, lod)) : 0;
     if (s > 0) col = mixRgb(col, w > 0.5 ? C.stripeBrown : C.stripe, s);
     // Pads on the sole.
     if (p[2] < 0.007) col = mixRgb(col, C.pad, smoothstep(0.007, 0.002, p[2]));

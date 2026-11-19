@@ -85,6 +85,42 @@ decided by length alone, so co-located hard edges split identically and never cr
 cost knob: `weather_demo` (four weathered objects at 5 cm) is ~95k triangles at LOD0, ~22k at LOD1. LOD2 keeps the plain
 mesh; its corners carry the same masks.
 
+Halving overshoots the request: an edge ends at L / 2ⁿ (anywhere down to half the limit) and a
+quad's diagonal is split again, so a flat panel gets 3–4 × the triangles the limit asks for.
+`tessellation: 'exact'` (opt-in; the default `'halving'` keeps every tuned asset's bytes) cuts each
+input edge into ⌈L / resolution⌉ equal parts and fills each triangle with a lattice of those parts,
+zipped to its longest side. Tolerance: edges along input edges and lattice rows are ≤ `resolution`
+and > half of it, cell diagonals ≤ √2 ×, zip edges ≤ 2.3 × (worst random sliver; ≤ 1.6 × on
+rectangles); mean edge within 15 % of `resolution`. A 2 × 1 m plate:
+
+| `resolution` | asked (2 · area / r²) | `'halving'` | `'exact'` |
+|---|---|---|---|
+| 0.04 m | 2,500 | 10,240 | 2,562 |
+| 0.10 m | 400 | 1,536 | 426 |
+| 0.25 m | 64 | 224 | 74 |
+
+Keep `resolution` at or under the radius of the fastener spots, or a bolt falls between vertices
+and starts no streak.
+
+## Reading distance
+
+The default looks are sized for a close view: chips and rust 3 cm across, mud 7 cm, a 35 cm splash
+band, coverage that leaves most of a face clean. On a 3 m object framed whole (the hero render, a
+game camera) that is speckle a few pixels wide. `read: 'hero'` (opt-in; default `'close'`) sizes
+the same effects to the target (`src/passes/weather-read.ts`):
+
+| | `'close'` | `'hero'` |
+|---|---|---|
+| Patch size | the look's own (3–35 cm) | at least 6 % of the target's longest side |
+| Splash band (`groundBand` unset) | 0.35 m | max(0.35 m, height / 4) |
+| Default amounts (`amount` unset) | default × `age` | × 1.6, capped at 0.9 |
+| Rust streaks (`streakLength` unset) | 0.35 m | max(0.35 m, height / 2) |
+| Under the patches | nothing | a graded wash: mud and moss fading up through the band (ragged top), dust and bleach by how squarely the surface faces the sky; 0.8 × the effect's strength at most, dust and bleach at 0.45 of that |
+
+Declared amounts, bands and streak lengths are never scaled, and coverage is still met exactly by
+the patches; the wash is extra and is not counted. Bigger patches need fewer vertices: pair it
+with `tessellation: 'exact'` and a `resolution` near a third of the patch size.
+
 ## The %
 
 Every eligible vertex carries its area (a third of each incident triangle). Vertices are taken

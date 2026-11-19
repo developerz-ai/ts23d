@@ -115,12 +115,27 @@ function slateTone(rng: Rng, v: number, vl: number, eave: boolean): number {
   return Math.min(1, k);
 }
 
+/** A slate's edges a step darker than its face (local frame, face up): each course's butt
+ *  edge reads as the shadow line over the next. */
+function shadowEdges(m: Mesh): Mesh {
+  const colors = new Float32Array(m.colors);
+  for (let i = 0; i < colors.length; i += 3)
+    if ((m.normals[i + 2] ?? 0) < 0.5)
+      for (let c = 0; c < 3; c++) colors[i + c] = (colors[i + c] ?? 0) * 0.55;
+  return { ...m, colors };
+}
+
 interface SlateOptions {
   /** u ranges with no deck and no slates (a shell hole). */
   readonly holes?: readonly (readonly [number, number])[];
   /** Fraction of slates gone (a raid stripped them). */
   readonly loss?: number;
+  /** Where slates within 0.8 m of a hole's edge go: burnt black, no team paint left (LOD0). */
+  readonly charred?: Mesh[];
 }
+
+/** A slate burnt through by the fire round a shell hole. */
+export const CHARRED_SLATE: Vec3 = [0.04, 0.037, 0.034];
 
 /**
  * Slates in lapped courses over one plane. LOD0: every slate (staggered, tilted so each rides
@@ -133,6 +148,8 @@ function slates(lod: Lod, pl: Plane, rng: Rng, o: SlateOptions = {}): Mesh[] {
   const inHole = (u: number): boolean => holes.some(([a, b]) => u > a && u < b);
   const nearHole = (u0: number, u1: number): boolean =>
     holes.some(([a, b]) => (u1 > a - 0.15 && u0 < a + 0.25) || (u1 > b - 0.25 && u0 < b + 0.15));
+  const burnt = (u0: number, u1: number): boolean =>
+    holes.some(([a, b]) => (u1 > a - 0.8 && u0 < a) || (u1 > b && u0 < b + 0.8));
   const L = SLATE.length;
   const n = Math.ceil(pl.vl / SLATE.exposed);
   // Present u runs (between holes) for the per-course strips.
@@ -151,13 +168,15 @@ function slates(lod: Lod, pl: Plane, rng: Rng, o: SlateOptions = {}): Mesh[] {
         out.push(
           onPlane(
             pl,
-            box({
-              size: [b - a, len, SLATE.t],
-              at: [0, 0, -SLATE.t / 2],
-              color: teamShade(kk),
-              strip: 'slate',
-              omit: ['bottom'],
-            }),
+            shadowEdges(
+              box({
+                size: [b - a, len, SLATE.t],
+                at: [0, 0, -SLATE.t / 2],
+                color: teamShade(kk),
+                strip: 'slate',
+                omit: ['bottom'],
+              }),
+            ),
             (a + b) / 2,
             (v0 + v1) / 2,
             w,
@@ -176,18 +195,28 @@ function slates(lod: Lod, pl: Plane, rng: Rng, o: SlateOptions = {}): Mesh[] {
       if (inHole(mid) || (o.loss && rng.next() < o.loss)) continue;
       const broken = nearHole(a, b);
       if (broken && rng.next() < 0.3) continue;
-      const tone = teamShade(slateTone(rng, v1, pl.vl, k === 0) * (broken ? 0.82 : 1));
+      const char = o.charred !== undefined && (broken || (burnt(a, b) && rng.next() < 0.8));
+      const kk = slateTone(rng, v1, pl.vl, k === 0) * (broken ? 0.82 : 1);
+      const tone: Vec3 = char
+        ? [
+            CHARRED_SLATE[0] * (0.7 + kk * 0.4),
+            CHARRED_SLATE[1] * (0.7 + kk * 0.4),
+            CHARRED_SLATE[2] * (0.7 + kk * 0.4),
+          ]
+        : teamShade(kk);
       // Broken edge slates: shorter, skewed on their nail, sliding toward the hole.
       const short = broken ? rng.range(0.55, 0.95) : 1;
-      const slate = box({
-        size: [b - a - 0.02, len * short, SLATE.t],
-        at: [0, 0, -SLATE.t / 2],
-        color: tone,
-        strip: 'slate',
-        omit: ['bottom'],
-      });
+      const slate = shadowEdges(
+        box({
+          size: [b - a - 0.02, len * short, SLATE.t],
+          at: [0, 0, -SLATE.t / 2],
+          color: tone,
+          strip: 'slate',
+          omit: ['bottom'],
+        }),
+      );
       const skewed = broken ? place(slate, { yaw: rng.range(-0.25, 0.25) }) : slate;
-      out.push(
+      (char && o.charred ? o.charred : out).push(
         onPlane(
           pl,
           skewed,
@@ -203,7 +232,14 @@ function slates(lod: Lod, pl: Plane, rng: Rng, o: SlateOptions = {}): Mesh[] {
 }
 
 /** Roof slope (team) on side s (+1 = +Y), minus the `missing` strips (a shell hole). */
-export function roofSlopes(lod: Lod, s: 1 | -1, missing: readonly number[], rng: Rng): Mesh | null {
+export function roofSlopes(
+  lod: Lod,
+  s: 1 | -1,
+  missing: readonly number[],
+  rng: Rng,
+  /** Collects the burnt slates round a hole (not team-painted any more). */
+  charred?: Mesh[],
+): Mesh | null {
   const ul = (HALF_X + OVERHANG) * 2;
   const pl = plane([-HALF_X - OVERHANG, 0, RIDGE], s, PITCH, ul, SLOPE_W);
   const strip = ul / STRIPS;
@@ -228,7 +264,7 @@ export function roofSlopes(lod: Lod, s: 1 | -1, missing: readonly number[], rng:
       );
     } else out.push(deck(pl, a, b, 0, SLOPE_W, 0.45));
   }
-  out.push(...slates(lod, pl, rng, { holes }));
+  out.push(...slates(lod, pl, rng, { holes, ...(charred ? { charred } : {}) }));
   if (lod === 0 && holes.length)
     // Two or three slates hang off the hole's top edge on their last nail.
     for (const [a] of holes)
@@ -370,8 +406,13 @@ export type Crown = 'none' | 'laying' | 'broken';
 function crown(lod: Lod, at: Vec3, r: number, height: number, kind: Crown, rng: Rng): Mesh[] {
   // A low footing breaks to one course at most; a standing stub keeps up to three.
   const maxRows = height < 1.5 ? 1 : 3;
-  if (kind === 'none' || lod === 2) return [];
-  const n = SEG(lod, 16, 12, 0);
+  if (kind === 'none') return [];
+  // LOD2: a ruin's standing stub (under 3 m) keeps a stepped crown of five plain blocks on its
+  // high side (the far ruin's broken top); a low footing, a course being laid, none.
+  if (lod === 2)
+    return kind === 'broken' && height >= 1.5 && height < 3 ? farCrown(at, r, height, rng) : [];
+  // Course-sized blocks on a standing stub (22 round, ~0.42 m); a low footing keeps 16.
+  const n = SEG(lod, maxRows > 1 ? 22 : 16, 12, 0);
   const mid = r - 0.22;
   const arc = ((2 * Math.PI * mid) / n) * 0.93;
   const phase = rng.range(0, Math.PI * 2);
@@ -395,8 +436,10 @@ function crown(lod: Lod, at: Vec3, r: number, height: number, kind: Crown, rng: 
       if (kind === 'broken' && top && k > 0 && rng.next() < 0.3) continue;
       const loose = kind === 'broken' && top;
       const k2 = rng.range(0.82, 1.02);
-      // Running bond round the drum: odd courses offset half a block.
-      const ak = a + (k % 2 === 1 ? Math.PI / n : 0);
+      // Running bond round the drum: odd courses offset half a block; a loose top block sits
+      // square on the block of its own column below it, not across a joint.
+      const bond = (row: number): number => (row % 2 === 1 ? Math.PI / n : 0);
+      const ak = a + (loose && k > 0 ? bond(k - 1) : bond(k));
       const b = pebble(
         lod,
         [0.44, arc * (loose ? rng.range(0.45, 0.9) : 1), COURSE * (loose ? rng.range(0.6, 1) : 1)],
@@ -408,12 +451,31 @@ function crown(lod: Lod, at: Vec3, r: number, height: number, kind: Crown, rng: 
         place(b, {
           at: [at[0] + Math.cos(ak) * mid, at[1] + Math.sin(ak) * mid, height + k * COURSE - 0.01],
           yaw: ak + (loose ? rng.range(-0.25, 0.25) : 0),
-          roll: loose ? rng.range(-0.08, 0.08) : 0,
+          roll: loose ? rng.range(-0.04, 0.04) : 0,
         }),
       );
     }
   }
   return out;
+}
+
+/** The far crown: five blocks round the high side, stepping 3-2-2-1-1 courses down. */
+function farCrown(at: Vec3, r: number, height: number, rng: Rng): Mesh[] {
+  const mid = r - 0.22;
+  const phase = rng.range(0, Math.PI * 2);
+  return [3, 2, 2, 1, 1].map((rows, i) => {
+    const a = phase + (i - 2) * 0.55;
+    return place(
+      box({
+        size: [0.44, 0.8, COURSE * rows],
+        at: [0, 0, 0],
+        color: BONE,
+        strip: 'concrete',
+        omit: ['bottom'],
+      }),
+      { at: [at[0] + Math.cos(a) * mid, at[1] + Math.sin(a) * mid, height - 0.01], yaw: a },
+    );
+  });
 }
 
 /** An outward-facing feature on the drum at angle `a`: a local box (x out of the wall). */

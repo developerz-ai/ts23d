@@ -1,7 +1,7 @@
 {
   "adapter": "blender:blender",
   "contract": "t3d-neural/1",
-  "key": "5ad037b45b57ba3281f6cdfaf551250265a241f26d25f421b5abe722409aeefd",
+  "key": "f28b74ad9746feca6064e18a560dad1f49084f7c89e3730949743d693898b0ce",
   "model": {
     "id": "blender-blender",
     "licence": "own",
@@ -16,35 +16,35 @@
   },
   "outputs": [
     {
-      "bytes": 9335076,
+      "bytes": 9791188,
       "file": "output-0.glb",
       "mime": "model/gltf-binary",
-      "sha256": "87539860ad5e77cddfb7c58e72383669b52ce8903da963addb2c8e5d8cb2f849"
+      "sha256": "910812902aad75a2327e2ca6a328d547f66d52b018f7d48ae5e36ce57ac86fc0"
     },
     {
-      "bytes": 5941,
+      "bytes": 8140,
       "file": "output-1.json",
       "mime": "application/json",
-      "sha256": "2dea8df844ae5157dd967ad981c03b7d5f3e989ffe260a48ddeaec682500b4ea"
+      "sha256": "59856eb0254b5c31b31259ab0a38fc57135c0fa34b008f6adb04319e48bf7e9f"
     }
   ],
   "request": {
     "maxTriangles": 30000,
     "mesh": {
       "mime": "model/gltf-binary",
-      "sha256": "3be220b6a8014cee21ad629ad70c8ba01d7d9bed8259e788f5521d5b35753093"
+      "sha256": "bf86212bfe389f1049f84efb4e0eaf72a878413669088210fb6629fb97f8dcfd"
     },
     "program": {
       "mime": "application/json",
-      "sha256": "7b0370a9ed02783ed9e932992801125443511c150a5c4ca7579954acddea8785"
+      "sha256": "f336b21e1ce27277bf43b32b5df60f116c7b715244bbde24cb2fd491a891245a"
     },
     "seed": 42,
     "skeleton": {
       "mime": "application/json",
-      "sha256": "a5c8d5fbc73439b64d1e62c961bfc29a1cea05f93334faafd62318459b5745f0"
+      "sha256": "605435971e3873603b437a5435b63788d6a146376ab09da91f4a582db24d1f51"
     }
   },
-  "requestKey": "b31cd67099636d319b3dce9dcb0c1d5f6e488220f13fe26dbcbb7eb160fe73bb",
+  "requestKey": "b32cdf266ea2a00432022e169df0f5a7959b70962a8e4bfb8b87431aa6bf8bd7",
   "server": "blender 5.3.0",
   "task": "blender"
 }

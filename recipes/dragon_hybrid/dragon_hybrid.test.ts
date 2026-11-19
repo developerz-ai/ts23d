@@ -25,7 +25,7 @@ import {
 import { compileLods } from '@developerz.ai/ts23d/testing';
 import { provideRecipeNeural } from '../../src/cli/neural-store.ts';
 import { BOX, dragon_hybrid, measured, SOURCED } from './dragon_hybrid.ts';
-import { TRIANGLES, WING_SCALE } from './steps.ts';
+import { TRIANGLES, WING_SCALE, WING_TILT } from './steps.ts';
 import { DROPPED } from './surface.ts';
 import { FLAP } from './wings.ts';
 
@@ -116,7 +116,7 @@ describe('dragon_hybrid, model tier (committed cache)', () => {
   );
 
   it(
-    "the wings are the generator's × 1.25: a 3.4 m V where 2.8 m was drawn",
+    "the wings are the generator's × 1.4, lowered 22°: 5.0 m across where a 2.8 m V was drawn",
     async () => {
       await cached();
       const P = textured(0)[0]?.mesh?.positions ?? new Float32Array();
@@ -126,10 +126,12 @@ describe('dragon_hybrid, model tier (committed cache)', () => {
         right = Math.min(right, P[i + 1] ?? 0);
         top = Math.max(top, P[i + 2] ?? 0);
       }
-      // The generator's V was 2.8 m wide and 3.3 m high: neither fits the scaled box's ± 5 %.
-      expect(2.8).toBeLessThan(BOX.width * 0.95);
-      expect(3.3).toBeLessThan(BOX.height * 0.95);
-      expect(WING_SCALE).toBe(1.25);
+      // The generator's V was 2.8 m wide, and × 1.25, still raised, it was 3.35 m wide and 3.6 m
+      // high: neither fits this box's ± 5 %. The span is now the animal's length.
+      expect(3.35).toBeLessThan(BOX.width * 0.95);
+      expect(3.6).toBeGreaterThan(BOX.height * 1.05);
+      expect([WING_SCALE, WING_TILT]).toEqual([1.4, 22]);
+      expect(Math.abs(left - right - BOX.length) / BOX.length).toBeLessThan(0.05);
       expect(Math.abs(left - right - BOX.width) / BOX.width).toBeLessThan(0.05);
       expect(Math.abs(top - BOX.height) / BOX.height).toBeLessThan(0.05);
     },
@@ -263,13 +265,13 @@ describe('dragon_hybrid, model tier (committed cache)', () => {
       // Travel: the widest two places a tip is in over the beat.
       const travel = (v: number): number =>
         Math.max(...poses.flatMap((P) => poses.map((Q) => dist(P, v, Q, v))));
-      // Measured 1.95 m and 1.90 m on wings 2.9 m long; half the length is the least a flap is.
+      // Measured 2.25 m and 2.18 m on wings 3.2 m long; half the length is the least a flap is.
       expect(travel(left)).toBeGreaterThan(1.5);
       expect(travel(right)).toBeGreaterThan(1.5);
       // The beat is symmetric (the two wings' own surfaces are not: nothing is mirrored).
       expect(Math.abs(travel(left) / travel(right) - 1)).toBeLessThan(0.1);
       // The membrane: every edge of a triangle the wing bones move, posed ÷ rest, over the whole
-      // beat. QA `deform` allows ×4 at the 99th percentile; the worst edge here is ×1.26.
+      // beat. QA `deform` allows ×4 at the 99th percentile; the worst edge here is ×1.51.
       let worst = 1;
       for (let t = 0; t < T.length; t += 3) {
         const tri = [T[t] ?? 0, T[t + 1] ?? 0, T[t + 2] ?? 0] as const;

@@ -1,7 +1,7 @@
 {
   "asset": "face_orc",
   "reviewer": "agent",
-  "overall": 6,
+  "overall": 6.3,
   "scores": {
     "silhouette": {
       "score": 7,
@@ -11,17 +11,18 @@
       ]
     },
     "proportions": {
-      "score": 6,
-      "reason": "The face underneath is a human face tinted green: narrow nose, no brow shelf.",
+      "score": 7,
+      "reason": "A heavier brow shelf and a flatter, wider nose now read as an orc face rather than a tinted human.",
       "fixes": [
-        "flatten the nose bridge and widen the nostrils; heavy brow shelf over lowered eyes"
+        "lower the eyes under the brow shelf and widen the jaw"
       ]
     },
     "materials": {
-      "score": 5,
-      "reason": "Green matte skin, ivory tusks with some gradient, the mohawk is a dark slab that reads like a helmet crest more than hair.",
+      "score": 6,
+      "reason": "The mohawk now has loose tips and reads as hair in SIDE; the skin has sheen but it is uniform over head and shoulders, so it reads as plastic.",
       "fixes": [
-        "skin strip with sheen; hair strip with anisotropic sheen and loose tips on the crest"
+        "vary roughness: rougher on scalp and shoulders, sheen on nose and brow",
+        "pores or mottling in the green skin"
       ]
     },
     "detail": {
@@ -40,7 +41,7 @@
     },
     "lod": {
       "score": 5,
-      "reason": "FAR LOD2 is a distance-field re-mesh: the face breaks into flat patches of different tone and the features smear. Tusks survive.",
+      "reason": "FAR LOD2 is still a distance-field re-mesh: the face breaks into flat patches of different tone and the features smear.",
       "fixes": [
         "LOD2 from an authored coarse topology (decimated quad base mesh) instead of the distance-field re-mesh, keeping vertex colour smooth"
       ]
@@ -54,7 +55,7 @@
     }
   },
   "renders": {
-    "hero.png": "520430137f2121b63965ea5d0f7996eceef91fd2945247bccdbdf8539785940b",
-    "sheet.png": "3af5729ee22647a1c601d13ea35e87c57538bbaa6788537dcf702bff1def05d6"
+    "hero.png": "3921d845fd3fd4fe801f03b37e2355a77f23fe296a127b21aa4fb48d75b559f8",
+    "sheet.png": "d03fe463a6f46d6a84b9acc11d79b9a0334353d9684b9a791c7c80845e46b1dd"
   }
 }

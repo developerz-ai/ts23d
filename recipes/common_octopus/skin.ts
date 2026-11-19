@@ -51,9 +51,11 @@ const SAND = hex('#c49a78');
 const PALE = hex('#e6cfba');
 const ROSE = hex('#d9a593');
 
-/** Mottling shared by every chain: broad patches, finer flecks, pale spots on the warts. */
-function mottle(p: Vec3): Vec3 {
+/** Mottling shared by every chain: broad patches, finer flecks, pale spots on the warts. Far away
+ *  (LOD2) only the broad patches: flecks sampled on a coarse ring paint whole faces. */
+function mottle(p: Vec3, far = false): Vec3 {
   const broad = noise3(scaled(p, 13, 3.1));
+  if (far) return lerp(DEEP, RUST, 0.25 + 0.5 * smooth(Math.min(1, broad * 1.35)));
   const fine = noise3(scaled(p, 46, 7.7));
   const fleck = noise3(scaled(p, 120, 1.3));
   const base = lerp(DEEP, RUST, smooth(Math.min(1, broad * 1.35)));
@@ -73,24 +75,32 @@ const SCAR_SIDE: Vec3 = [0.19, -0.97, 0.15];
 export function scarAt(q: Q): number {
   if (q.chain === 'mantle') {
     const face = q.n[0] * SCAR_SIDE[0] + q.n[1] * SCAR_SIDE[1] + q.n[2] * SCAR_SIDE[2];
-    const patch = Math.max(0, Math.min(1, (face - 0.55) / 0.25));
+    const patch = Math.max(0, Math.min(1, (face - 0.35) / 0.25));
     const w = q.n[2] - 0.15;
-    const slash = (k: number): number => Math.exp(-(((q.u - 0.42 - k - 0.5 * w) / 0.016) ** 2));
+    const slash = (k: number): number => Math.exp(-(((q.u - 0.42 - k - 0.5 * w) / 0.026) ** 2));
     return patch * Math.max(slash(0), 0.8 * slash(0.07));
   }
   if (q.chain === 'arm_1' || q.chain === 'arm_4') {
     const aboral = Math.max(0, Math.cos(q.angle));
     const at = q.chain === 'arm_1' ? 0.34 : 0.27;
     const ragged = 0.012 * Math.sin(q.angle * 5 + q.u * 40);
-    return aboral ** 0.5 * Math.exp(-(((q.u - at + ragged) / 0.012) ** 2));
+    return aboral ** 0.5 * Math.exp(-(((q.u - at + ragged) / 0.02) ** 2));
   }
   return 0;
 }
 
 export const mantleTint: Tint = (q) => {
+  if (q.lod === 2) return mottle(q.p, true);
   const c = mottle(q.p);
-  const warty = lerp(c, SAND, Math.max(0, warts(q.p, 62, 0.62) - 0.2) * 0.9);
-  return q.lod === 2 ? warty : lerp(warty, SCAR, scarAt(q) * 0.85);
+  // Warts in skin colour with only a slight lift, not pale studs.
+  const warty = lerp(c, SAND, Math.max(0, warts(q.p, 62, 0.62) - 0.2) * 0.3);
+  return lerp(warty, SCAR, scarAt(q) * 0.95);
+};
+
+/** A papilla takes the skin colour under it, a shade lighter: raised skin, not a stud. */
+export const papillaColour = (p: Vec3): Vec3 => {
+  const c = mottle(p);
+  return lerp([c[0] * 1.1, c[1] * 1.1, c[2] * 1.1], SAND, 0.04);
 };
 
 /** Mantle: soft lobes, warts, and folds running round it near the opening. */
@@ -108,14 +118,18 @@ export const mantleRelief: Relief = (q) => {
 export const headRelief: Relief = (q: Q) => {
   const side = Math.abs(Math.sin(q.angle)) ** 8;
   const turret = 0.014 * side * Math.exp(-(((q.u - 0.45) / 0.26) ** 2));
-  return turret + warts(q.p, 70, 0.62) * 0.003 + (noise3(scaled(q.p, 18, 2)) - 0.5) * 0.004;
+  // Concentric skin folds round each eye turret, a few millimetres apart.
+  const across = Math.abs((((q.angle % Math.PI) + Math.PI) % Math.PI) - Math.PI / 2) * q.radius;
+  const d = Math.hypot(across, (q.u - 0.45) * 0.07);
+  const folds = 0.0012 * Math.sin(d * 650) * Math.exp(-(((d - 0.032) / 0.012) ** 2));
+  return turret + folds + warts(q.p, 70, 0.62) * 0.003 + (noise3(scaled(q.p, 18, 2)) - 0.5) * 0.004;
 };
 
 /** Arms: transverse skin folds and warts on the aboral side, smooth on the sucker side. */
 export const armRelief: Relief = (q) => {
   const aboral = Math.max(0, Math.cos(q.angle));
   // Folds every 1.5 to 2 cm, wandering, where the arm bends; fine rings between them.
-  const folds = Math.max(0, Math.sin(q.s * 360 + noise3(scaled(q.p, 30, 4)) * 4)) ** 3 * 0.0016;
+  const folds = Math.max(0, Math.sin(q.s * 360 + noise3(scaled(q.p, 30, 4)) * 4)) ** 3 * 0.003;
   const rings = Math.sin(q.s * 260) * 0.0005;
   const wart = warts(q.p, 95, 0.6) * 0.0036;
   // No folds in the fillets round the crown, where the arms blend into the head and the web.
@@ -128,7 +142,7 @@ const TIP = hex('#efc7b8');
 
 export const armTint: Tint = (q, base) => {
   const aboral = (Math.cos(q.angle) + 1) / 2;
-  const top = lerp(mottle(q.p), SAND, Math.max(0, warts(q.p, 95, 0.62) - 0.25) * 0.8);
+  const top = lerp(mottle(q.p, q.lod === 2), SAND, Math.max(0, warts(q.p, 95, 0.62) - 0.25) * 0.35);
   const under = lerp(ROSE, PALE, 0.35 + q.u * 0.4);
   const c = lerp(under, top, smooth(Math.min(1, aboral * 1.5)));
   const tipped = lerp(c, TIP, smooth(Math.min(1, Math.max(0, (q.u - 0.72) / 0.28))) * 0.7);
@@ -142,9 +156,11 @@ export const regenTint =
   (q, base) => {
     const c = armTint(q, base);
     if (q.u < from - 0.02) return c;
-    const bud = lerp(lerp(ROSE, PALE, 0.5), TIP, 0.4);
-    const join = Math.exp(-(((q.u - from) / 0.012) ** 2));
-    return lerp(lerp(c, bud, smooth(Math.min(1, (q.u - from + 0.02) / 0.04)) * 0.85), SCAR, join);
+    const bud = lerp(PALE, TIP, 0.3);
+    // A dark healed ring at the break, then the pale smooth regrowth.
+    const join = Math.exp(-(((q.u - from) / 0.014) ** 2));
+    const grown = lerp(c, bud, smooth(Math.min(1, Math.max(0, (q.u - from - 0.01) / 0.03))));
+    return lerp(grown, INK, join * 0.8);
   };
 
 export const SUCKER_RIM = hex('#ecd4c4');

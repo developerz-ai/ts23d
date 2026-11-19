@@ -50,8 +50,8 @@ export const BLUE = hex('#2a44b8');
 export const RED = hex('#c92a22');
 /** Black engine enamel: frames, saddle, firebox, lead truck. */
 export const BLACK = hex('#2b2b2e');
-/** Russia iron jacket: planished blue-grey sheet iron, a dark metal with a soft sheen. */
-export const RUSSIA = hex('#6a717c');
+/** Russia iron jacket: planished blue-grey sheet iron under lacquer (the `enamel` clear coat). */
+export const RUSSIA = hex('#5d6a7c');
 /** Smokebox and stack: graphite-black cast/sheet iron. */
 export const GRAPHITE = hex('#5a5a5c');
 export const GREEN = hex('#1f6a3a');
@@ -72,7 +72,7 @@ export const F = {
   redWood: { color: RED, strip: 'wood_painted' },
   black: { color: BLACK, strip: 'steel_painted' },
   greenWood: { color: GREEN, strip: 'wood_painted' },
-  russia: { color: RUSSIA, strip: 'chrome' },
+  russia: { color: RUSSIA, strip: 'steel_painted' },
   smokebox: { color: GRAPHITE, strip: 'iron_cast' },
   castIron: { color: NATURAL, strip: 'iron_cast' },
   rust: { color: NATURAL, strip: 'iron_rust' },

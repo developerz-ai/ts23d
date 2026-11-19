@@ -1,44 +1,43 @@
 {
   "asset": "rts_soldier",
   "reviewer": "agent",
-  "overall": 7,
+  "overall": 7.3,
   "scores": {
     "silhouette": {
-      "score": 7,
-      "reason": "Red crest, red pauldrons, radio pack with antenna and a carbine carried across the body read \"infantry\" in 3/4 and side; in FRONT the carbine still points at the camera and nearly vanishes.",
+      "score": 8,
+      "reason": "Carbine now at port arms across the chest: FRONT reads the whole weapon, plus red crest, red pauldrons and radio pack with antenna; reads \"infantry\" from every view.",
       "fixes": [
-        "carry the carbine at port arms (diagonal across the chest) so it reads in FRONT too"
+        "angle the antenna back a little so it separates from the crest in SIDE"
       ]
     },
     "proportions": {
       "score": 8,
-      "reason": "1.3 x 0.8 x 2.0 m chunky RTS figure; head and hands now read at 64 px against the pauldrons.",
+      "reason": "0.7 x 1.0 x 2.0 m chunky RTS figure at port arms; head and hands read at 64 px; boots are still long flat blocks in SIDE and hero.png.",
       "fixes": [
-        "boots ~10% shorter (they read clown-long in SIDE)"
+        "boots ~10% shorter with a raised toe"
       ]
     },
     "materials": {
       "score": 7,
-      "reason": "Bone ceramic, olive canvas, brown leather boots and belts (now brown in sheet.png too), gunmetal carbine separate; ceramic and canvas still share one roughness, and the face is a smooth egg.",
+      "reason": "Bone ceramic, olive canvas, brown leather, gunmetal carbine, and the face is now a shaded skin tone under the visor; ceramic and canvas still share one roughness.",
       "fixes": [
-        "rougher matte canvas versus satin ceramic",
-        "face planes or a face decal under the visor"
+        "rougher matte canvas versus satin ceramic"
       ]
     },
     "detail": {
       "score": 6,
-      "reason": "Raking.png: webbing, chest pouches, red stripe, knee pads, belt, radio pack with grille; the limbs are plain boxes with no folds or seams, no relief at all under raking light.",
+      "reason": "Webbing, chest pouches, red stripe, knee pads, belt, radio pack with grille, pauldron chips; the limbs are still plain boxes with no folds or seams.",
       "fixes": [
         "8-sided limbs with knee/elbow folds at LOD0",
         "panel lines on the chest plate"
       ]
     },
     "wear": {
-      "score": 5,
-      "reason": "Raking and hero show a clean figure: no mud on boots or shins, no scuffs on knee pads or chipped ceramic.",
+      "score": 6,
+      "reason": "Pale caked mud now climbs the boots and shins and the knee guards are scuffed (hero.png, sheet FRONT); pauldron chips are too small to read at hero distance and the torso and pack are clean.",
       "fixes": [
-        "mud on boots and shins and scuffed knee pads visible at hero distance (grime ground mask)",
-        "chipped edges on the pauldrons"
+        "larger pauldron rim chips that read at hero distance",
+        "dust and scuffs on the pack and chest plate"
       ]
     },
     "lod": {
@@ -57,79 +56,7 @@
     }
   },
   "renders": {
-    "hero.png": "d0b9f62d9de25a5b44f903fa62b63f6edca619c3c87d6b429ba63a197fc0ed8c",
-    "sheet.png": "6655ed73fceb615843fd798980883c708af4cf6e177f893ff96b97a4bf8588ab",
-    "raking.png": "fe36a9c6d2c95ffc92c12bc76c75cd6de85b5034d1a483f55be910197848bc36",
-    "raking_detail.png": "94c1fe7bd9c94d0c1dff9ebd6cae1f72742dd775955c875757f20e2bbce1c503",
-    "lods.png": "bd9ca58251213e1df23a8d611c68e3c1515d2a0ee3252271e659e539878d1f2e",
-    "silhouette.png": "f45b1522f0f25f75aa73281fc26429ccdc27a04600977f5de1c59f21d58eb63c",
-    "value.png": "20c3000f85fdd9829becb7f9c8542b67dbd10806badca94e7ae0d699285da5ec",
-    "detail.png": "d63a6fbf6e5aa269501b48a766c1836ce429fdf4c9b5382c13929d04b485578e"
-  },
-  "metrics": {
-    "silhouette": [
-      {
-        "view": "front",
-        "iou": 0.909
-      },
-      {
-        "view": "side",
-        "iou": 0.877
-      },
-      {
-        "view": "3/4",
-        "iou": 0.898
-      }
-    ],
-    "focal": {
-      "peakPart": "visor",
-      "peak": [
-        385,
-        98
-      ],
-      "focalShare": 0.543,
-      "focalArea": 0.118,
-      "top": [
-        {
-          "part": "rifle",
-          "share": 0.145
-        },
-        {
-          "part": "helmet",
-          "share": 0.143
-        },
-        {
-          "part": "visor",
-          "share": 0.12
-        }
-      ],
-      "declared": [
-        "helmet",
-        "visor",
-        "crest"
-      ]
-    },
-    "rest": {
-      "share": 0.209,
-      "spread": 0.532,
-      "min": 0.2
-    },
-    "grounded": {
-      "rise": 0.301,
-      "bands": [
-        0.211,
-        0.275,
-        0.241,
-        0.367,
-        0.465
-      ]
-    },
-    "shape": {
-      "acuteShare": 0.133,
-      "straightShare": 0.626,
-      "taper": 0.088,
-      "shape": "stable",
-      "declared": "stable"
-    }
+    "hero.png": "abcf095735266daa8da2bcd7b6f1afd98d4bf101be6d77113414ce146afe4ab6",
+    "sheet.png": "0262b217b18179483e7d8115a64e2a8330e8f97bb22d7af3cdca9fc7ba87c7f3"
   }
 }

@@ -10,7 +10,6 @@
 
 import {
   bakeAo,
-  box,
   type Check,
   type CheckFinding,
   cylinder,
@@ -19,7 +18,6 @@ import {
   type Mesh,
   merge,
   place,
-  planar,
   symmetric,
   text,
   translate,
@@ -28,86 +26,52 @@ import {
   weather as weatherPass,
 } from '@developerz.ai/ts23d';
 import { rustStreaks, type StreakSource } from '../_lib/finish/aging.ts';
-import {
-  reproject,
-  restrip,
-  type StripRule,
-  tessellate,
-  weatherer,
-} from '../_lib/finish/finish.ts';
+import { reproject, restrip, tessellate, weatherer } from '../_lib/finish/finish.ts';
 import { mix, shade, smooth } from '../_lib/finish/wear.ts';
+import { buildFar } from './far.ts';
+import {
+  ACCENT,
+  BLACK,
+  bevelled,
+  CAST,
+  CH,
+  CL,
+  CW,
+  DARK,
+  DEG,
+  DOOR_T,
+  DOOR_X,
+  DOOR_Z0,
+  DOOR_Z1,
+  doorMount,
+  FRAME,
+  GLOW,
+  GRIME,
+  H,
+  HAZARD,
+  HINGE_OUT,
+  HINGE_Y,
+  HL,
+  HW,
+  ID_LINES,
+  L,
+  LEAF,
+  LEAF_X,
+  METAL,
+  POST,
+  quad,
+  RECESS,
+  RULES,
+  RUST_STAIN,
+  SHELL,
+  SHELL_DARK,
+  STENCIL,
+  SWING,
+  W,
+} from './shared.ts';
 
-// Authoring colour → material: painted steel shell and frame (chips show steel), cast corner
-// castings, galvanised lock bars/hinges/bolts. Plain strips stay for stencils, hazard and glow.
-
-// ── palette: deep teal shell, off-white frame, orange accent ────────────────────────────────────
-const SHELL = hex('#2f5c63');
-const SHELL_DARK = hex('#244a50');
-const FRAME = hex('#c9c8bf');
-const CAST = hex('#3a3d40');
-const DARK = hex('#1c1f21');
-const METAL = hex('#6b7075');
-const ACCENT = hex('#d0661e');
-const HAZARD = hex('#d9a421');
-const BLACK = hex('#17181a');
-const GLOW = hex('#5dffb0');
-/** Soft stains on the weather grids: dark rain-run grime and a rust bloom. */
-const GRIME = hex('#1a2a2c');
-const RUST_STAIN = hex('#6a3a22');
-const STENCIL = hex('#e4e2d8');
-const RULES: readonly StripRule[] = [
-  { from: SHELL, strip: 'steel_painted' },
-  { from: SHELL_DARK, strip: 'steel_painted' },
-  { from: FRAME, strip: 'steel_painted' },
-  { from: CAST, strip: 'iron_cast', color: hex('#b8b4ae') },
-  { from: METAL, strip: 'steel_galvanised', color: hex('#c8ccd0') },
-  { from: DARK, strip: 'rubber', color: hex('#9a9a9a') },
-];
-/** ISO 6346-style marking for an invented owner code; check digit computed (AXSU 204118 → 1). */
-const ID_LINES = ['AXSU', '204118 1', '22G1'] as const;
-
-// ── ISO 668 / ISO 1161 numbers ─────────────────────────────────────────────────────────────────
-const L = 6.058;
-const W = 2.438;
-const H = 2.591;
-const CL = 0.178; // casting length (X)
-const CW = 0.162; // casting width (Y)
-const CH = 0.118; // casting height (Z)
-const POST = 0.16;
-const HL = L / 2;
-const HW = W / 2;
-const RECESS = 0.11; // side skin sits this far inside the frame face (bays 6 cm deep, plate 9)
-// Door leaves fill the rear opening like a real ISO box: between the corner posts, from the sill
-// (bottom end rail, top at 0.182 m) to the header (top end rail, underside at 2.441 m), outer
-// face flush with the frame's rear face. The hinge axis sits just outside the posts, so the leaf
-// swings out without its edge ever entering the post.
-const HINGE_OUT = 0.035; // hinge axis behind the rear frame face (pin radius)
-const DOOR_T = 0.06; // leaf thickness
-const DOOR_X = -HL - HINGE_OUT; // hinge axis x
-const LEAF_X = HINGE_OUT + DOOR_T / 2; // leaf mid-plane, in hinge space (+X = into the box)
-const HINGE_Y = HW - POST - 0.003; // leaf hinge edge: 3 mm off the post inner face (swing clearance)
-const LEAF = HINGE_Y - 0.002; // leaf width to the centre line: a 4 mm gasket seam between leaves
-const DOOR_Z0 = 0.182; // sill top
-const DOOR_Z1 = 2.441; // header underside
-const SWING = 90; // doors rest closed and swing one way, outward, to square with the box
-const DEG = Math.PI / 180;
-
-const bevelled = (size: Vec3, color: Vec3, bevel: number, at: Vec3 = [0, 0, 0]): Mesh =>
-  box({ size, color, at, bevel: bevel > 0 && bevel < Math.min(...size) / 2 ? bevel : 0 });
-
-/** A flat quad lifted `off` along its normal; CCW seen from the side it faces. */
-function quad(a: Vec3, b: Vec3, c: Vec3, d: Vec3, color: Vec3, off = 0.003): Mesh {
-  const u: Vec3 = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
-  const v: Vec3 = [d[0] - a[0], d[1] - a[1], d[2] - a[2]];
-  const n: Vec3 = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
-  const l = Math.hypot(...n) || 1;
-  const lift = (p: Vec3): Vec3 => [
-    p[0] + (n[0] / l) * off,
-    p[1] + (n[1] / l) * off,
-    p[2] + (n[2] / l) * off,
-  ];
-  return planar({ points: [lift(a), lift(b), lift(c), lift(d)], color });
-}
+/** Ground dirt splashed up the sills and the lowest panels. */
+const MUD: Vec3 = [0.05, 0.036, 0.022];
 
 /**
  * A plate's visible face as a regular grid of `cell`-sized quads, 1 mm proud of the plate it
@@ -128,27 +92,6 @@ function sheet(origin: Vec3, u: Vec3, v: Vec3, cell: number, color: Vec3): Mesh 
     for (let j = 0; j < nv; j++)
       out.push(quad(at(i, j), at(i + 1, j), at(i + 1, j + 1), at(i, j + 1), color, 0.001));
   return merge(out);
-}
-/**
- * Far-LOD weather: the near LODs' dust and dirt as their even average (dust on every upward face,
- * dirt fading out 45 cm above the ground), with no noise. A far plate is two triangles: any
- * per-vertex variation on it shows as a diagonal seam.
- */
-function far(m: Mesh): Mesh {
-  const colors = new Float32Array(m.colors);
-  const dust: Vec3 = [0.5, 0.44, 0.33];
-  const mud: Vec3 = [0.028, 0.02, 0.012];
-  for (let i = 0; i < m.positions.length / 3; i++) {
-    const up = (m.normals[i * 3 + 2] ?? 0) > 0.4 ? 0.34 : 0;
-    const low = 0.4 * Math.max(0, 1 - (m.positions[i * 3 + 2] ?? 0) / 0.45);
-    for (let k = 0; k < 3; k++) {
-      let c = colors[i * 3 + k] ?? 0;
-      c += ((dust[k] ?? 0) - c) * up;
-      c += ((mud[k] ?? 0) - c) * low;
-      colors[i * 3 + k] = c;
-    }
-  }
-  return { ...m, colors };
 }
 /** Yellow/black band from a→b, `up` tall; outward normal = (b − a) × up. */
 function hazard(a: Vec3, b: Vec3, up: Vec3, n: number): Mesh {
@@ -234,9 +177,8 @@ export const cargo_container_scifi = defineAsset({
     ],
   },
   // Regular grids on the read faces (roof, bays, blind end) carry the weathering; nothing is
-  // refined blindly any more.
-  // Measured 16.9k / 6.95k / 0.74k.
-  budget: { triangles: [19000, 8000, 820] },
+  // refined blindly. Measured 16.2k / 6.95k / 170 (the far LOD is far.ts: a box with baked colour).
+  budget: { triangles: [19000, 8000, 200] },
   checks: [symmetric('door_l', 'door_r', 'y'), doorArc],
   // Indicator LEDs: green and lit, not blown white with a halo over the door frame.
   glow: [{ parts: ['status_light', 'keypad'], color: GLOW, strength: 1.5 }],
@@ -252,20 +194,36 @@ export const cargo_container_scifi = defineAsset({
      */
     const stained = (m: Mesh): Mesh =>
       shade(m, (p, n, c) => {
-        const k = soft([p[0], p[1], p[2] * (Math.abs(n[2]) > 0.7 ? 1 : 0.3)]);
+        // The roof takes broad stains (pooled water, 1–2 m across): at half the frequency the
+        // tone steps from one 16 cm cell to the next stay under what reads as blocks.
+        const roof = Math.abs(n[2]) > 0.7;
+        const k = roof ? soft([p[0] * 0.5, p[1] * 0.5, p[2]]) : soft([p[0], p[1], p[2] * 0.3]);
         const run = mix(c, GRIME, 0.3 * smooth(0.35, 0.75, k));
         return mix(run, RUST_STAIN, 0.6 * smooth(0.58, 0.8, k));
       });
     /** Materials, at true scale (box-projected per triangle), then dust on the roof, dirt splashed up the bottom rail. Mesh is in root space
      *  (the root is turned half a turn, which does not change heights or up-facing). */
-    const finish = (m: Mesh): Mesh => {
+    const finish = (m: Mesh, z0 = 0): Mesh => {
       const mapped = reproject(restrip(tessellate(m, ctx.pick([1.2, 2.0, 4.0])), RULES));
-      return lod < 2 ? weather(mapped, { dust: 0.45, mud: 0.45, mudStrength: 0.55 }) : far(mapped);
+      // Dust from the noise field; the dirt splashed up the bottom 60 cm is a function of height
+      // alone, so it cannot take the shape of the triangles it is interpolated on (a noisy mud
+      // line drew brown saw teeth along the feet of the lower panels).
+      // `z0`: the height of the mesh's own origin (a door leaf is built in hinge space).
+      return shade(
+        weather(mapped, { dust: 0.45 }),
+        (p, _n, c) => mix(c, MUD, 0.42 * (1 - smooth(0.05, 0.62, p[2]))),
+        [0, 0, z0],
+      );
     };
     // Built with the doors at −X, then turned half a turn so the door end faces +X (the front
     // the gallery's 3/4 shot looks at). Moving doors are children of this yawed root.
     const root = 'container';
     ctx.group(root, { yaw: Math.PI });
+    // Far, the container is a box with baked colour (far.ts); everything below is LOD0 and LOD1.
+    if (lod === 2) {
+      buildFar(ctx, root);
+      return;
+    }
 
     // ── frame: posts, side + end rails (big) ──────────────────────────────────────────────────
     const frame: Mesh[] = [];
@@ -287,16 +245,15 @@ export const cargo_container_scifi = defineAsset({
       frame.push(bevelled([0.14, W - 2 * CW, 0.14], FRAME, bv, [sx * (HL - 0.07), 0, H - 0.15]));
     }
     // Forklift pockets in the bottom side rails.
-    if (lod < 2)
-      for (const sy of [-1, 1])
-        for (const x of [-1.03, 1.03])
-          frame.push(bevelled([0.36, 0.02, 0.1], DARK, 0, [x, sy * (HW + 0.002), 0.04]));
+    for (const sy of [-1, 1])
+      for (const x of [-1.03, 1.03])
+        frame.push(bevelled([0.36, 0.02, 0.1], DARK, 0, [x, sy * (HW + 0.002), 0.04]));
     statics.push(['frame', merge(frame)]);
 
     // ── corner castings (ISO 1161): dark oval apertures on the three outer faces ────────────
     const casting = (sx: number, sy: number, top: boolean): Mesh => {
       const m: Mesh[] = [bevelled([CL, CW, CH], CAST, ctx.pick([0.008, 0.004, 0]))];
-      if (lod < 2) {
+      {
         const t = 0.006; // aperture plates stand 3 mm proud: orientation-free dark insets
         m.push(bevelled([t, 0.064, 0.05], DARK, 0, [(sx * CL) / 2, 0, CH / 2 - 0.025]));
         m.push(bevelled([0.08, t, 0.05], DARK, 0, [0, (sy * CW) / 2, CH / 2 - 0.025]));
@@ -310,7 +267,7 @@ export const cargo_container_scifi = defineAsset({
         for (const sy of [1, -1]) {
           const at: Vec3 = [sx * (HL - CL / 2), sy * (HW - CW / 2), top ? H - CH : 0];
           statics.push([`casting_${ci}`, place(casting(sx, sy, top), { at })]);
-          if (top && lod < 2)
+          if (top)
             ctx.socket(`twistlock_${ci - 4}`, {
               parent: root,
               kind: 'attach',
@@ -335,8 +292,8 @@ export const cargo_container_scifi = defineAsset({
     // (chips, rust, bleach: 3-35 cm noise), which on 12-16 cm cells alias into whole-triangle
     // blotches and sawtooth along every grid border.
     const grids: Mesh[] = [];
-    if (lod < 2) {
-      const cell = ctx.pick([0.125, 0.4, 1]);
+    {
+      const cell = ctx.pick([0.16, 0.4, 1]);
       const rx = (L - 0.26) / 2;
       const ry = (W - 0.24) / 2;
       grids.push(sheet([-rx, -ry, H - 0.12], [2 * rx, 0, 0], [0, 2 * ry, 0], cell, SHELL_DARK));
@@ -352,7 +309,7 @@ export const cargo_container_scifi = defineAsset({
     }
 
     // ── armoured bays on the long sides (medium), seams + vents + bolts (small) ──────────────
-    if (lod < 2) {
+    {
       const bays = 6;
       const span = L - 2 * CL;
       const bay = span / bays;
@@ -457,22 +414,6 @@ export const cargo_container_scifi = defineAsset({
           ),
         );
     }
-    if (lod === 2)
-      // Far: the orange band and the bay grid as flush quads on the recessed side plates.
-      for (const sy of [-1, 1]) {
-        const y = sy * (HW - RECESS + 0.02);
-        const x0 = sy > 0 ? HL - CL - 0.1 : -HL + CL + 0.1;
-        const x1 = -x0;
-        shell.push(quad([x0, y, 1.21], [x1, y, 1.21], [x1, y, 1.27], [x0, y, 1.27], ACCENT, 0.002));
-        const span = L - 2 * CL;
-        for (let i = 0; i <= 6; i++) {
-          const x = -span / 2 + (i * span) / 6;
-          const [a, b] = sy > 0 ? [x + 0.04, x - 0.04] : [x - 0.04, x + 0.04];
-          shell.push(
-            quad([a, y, 0.2], [b, y, 0.2], [b, y, H - 0.2], [a, y, H - 0.2], SHELL_DARK, 0.003),
-          );
-        }
-      }
     // Rust bleeding from vents, bolts and the bottom rail; scuffed, dusty, dirty from the ground.
     if (lod === 0) {
       const src: StreakSource[] = [];
@@ -528,7 +469,7 @@ export const cargo_container_scifi = defineAsset({
             at: [-0.075, -s * y, (DOOR_Z1 - DOOR_Z0) / 2],
           }),
         );
-      if (lod < 2) {
+      {
         // Raised armour panel, two lock bars with cams and handles.
         leaf.push(bevelled([0.03, LEAF - 0.2, 1.0], SHELL_DARK, bv, [-0.04, -s * (LEAF / 2), 1.1]));
         leaf.push(
@@ -562,6 +503,29 @@ export const cargo_container_scifi = defineAsset({
               }),
             ),
           );
+        if (lod === 0) {
+          // What every box carries on its doors besides the owner code: the weight panel on the
+          // right-hand leaf, and on the left one the last inspector's mark, sprayed by hand a
+          // little off level.
+          const marks: readonly (readonly [string, number, number, readonly [number, number]])[] =
+            s > 0
+              ? [
+                  ['MAX 30480', 0.74, 0.05, [0, 1]],
+                  ['TARE 2180', 0.63, 0.05, [0, 1]],
+                ]
+              : [['OK 7', 1.5, 0.11, [0.12, 0.99]]];
+          for (const [line, z, height, [uy, uz]] of marks)
+            leaf.push(
+              text(line, {
+                origin: [-0.055, -s * 0.55, z],
+                along: [0, -uz, uy],
+                up: [0, uy, uz],
+                height,
+                align: 'centre',
+                color: STENCIL,
+              }),
+            );
+        }
         for (const y of [0.32, 0.78]) {
           if (lod === 0) {
             leaf.push(bevelled([0.05, 0.08, 0.1], METAL, 0.008, [-0.08, -s * y, 0.05]));
@@ -584,27 +548,25 @@ export const cargo_container_scifi = defineAsset({
             ),
           );
       }
-      if (lod < 2) {
-        // Gasket: the rubber lip down the meeting edge, bedded 2 mm in the leaf's outer face.
+      // Gasket: the rubber lip down the meeting edge, bedded 2 mm in the leaf's outer face.
+      leaf.push(
+        bevelled([0.01, 0.025, DOOR_Z1 - DOOR_Z0 - 0.04], DARK, 0, [
+          -0.033,
+          -s * (LEAF - 0.0125),
+          0.02,
+        ]),
+      );
+      // Customs bolt seal through the right leaf's inner cam handle (the one opened first).
+      if (s > 0 && lod === 0)
         leaf.push(
-          bevelled([0.01, 0.025, DOOR_Z1 - DOOR_Z0 - 0.04], DARK, 0, [
-            -0.033,
-            -s * (LEAF - 0.0125),
-            0.02,
-          ]),
+          cylinder({
+            radius: 0.012,
+            length: 0.06,
+            segments: 6,
+            color: HAZARD,
+            at: [-0.09, -s * (0.78 + 0.04), 0.93],
+          }),
         );
-        // Customs bolt seal through the right leaf's inner cam handle (the one opened first).
-        if (s > 0 && lod === 0)
-          leaf.push(
-            cylinder({
-              radius: 0.012,
-              length: 0.06,
-              segments: 6,
-              color: HAZARD,
-              at: [-0.09, -s * (0.78 + 0.04), 0.93],
-            }),
-          );
-      }
       // Hinge knuckles on the axis, their rims on the leaf's outer face at the hinge edge.
       const knuckles = [0.25, 1.15, 2.05].map((z) =>
         cylinder({
@@ -622,38 +584,28 @@ export const cargo_container_scifi = defineAsset({
         at: [LEAF_X - 0.09, -s * (y + 0.04), 1.1],
         radius: 0.28,
       }));
-      const built = finish(merge([translate(merge(leaf), [LEAF_X, 0, 0]), ...knuckles]));
-      // Far: the even dirt from `finish` only (see `far`).
-      const aged =
-        lod === 2
-          ? { leaf: built }
-          : weatherPass(
-              ctx,
-              { leaf: built },
-              {
-                name: `door_${side}`,
-                seed: s > 0 ? 11 : 13,
-                age: 0.8,
-                climate: 'coastal',
-                // The armour panels' faces are grids already; nothing else needs splitting.
-                resolution: 0,
-                touched: grips,
-                effects: {
-                  chips: { where: 'convex-edges', amount: 0.15 },
-                  rust: { where: 'convex-edges & side-facing', amount: 0.08, streaks: true },
-                  scratches: { where: 'touched', amount: 0.35 },
-                  mud: { where: 'ground-near', amount: 0.25 },
-                },
-              },
-            );
-      const leafFaces = stained(finish(translate(merge(leafGrids), [LEAF_X, 0, 0])));
-      ctx.part(`door_${side}`, merge([aged.leaf, leafFaces]), {
-        parent: root,
-        at: [DOOR_X, s * HINGE_Y, DOOR_Z0],
-        motion: { kind: 'sway', axis: [0, 0, -s], degrees: SWING, hz: 0.15, oneWay: true },
-        clearOf: [`hinge_${side}`], // knuckles turn on the hinge pins: a real interlock
-      });
-      if (s > 0 && lod < 2)
+      const built = finish(merge([translate(merge(leaf), [LEAF_X, 0, 0]), ...knuckles]), DOOR_Z0);
+      const aged = weatherPass(
+        ctx,
+        { leaf: built },
+        {
+          name: `door_${side}`,
+          seed: s > 0 ? 11 : 13,
+          age: 0.8,
+          climate: 'coastal',
+          // The armour panels' faces are grids already; nothing else needs splitting.
+          resolution: 0,
+          touched: grips,
+          effects: {
+            chips: { where: 'convex-edges', amount: 0.15 },
+            rust: { where: 'convex-edges & side-facing', amount: 0.08, streaks: true },
+            scratches: { where: 'touched', amount: 0.35 },
+          },
+        },
+      );
+      const leafFaces = stained(finish(translate(merge(leafGrids), [LEAF_X, 0, 0]), DOOR_Z0));
+      ctx.part(`door_${side}`, merge([aged.leaf, leafFaces]), doorMount(root, s, side));
+      if (s > 0)
         // Seated on the upper armour panel (outer face at −0.055 before the leaf offset).
         ctx.part(
           'keypad',
@@ -717,31 +669,25 @@ export const cargo_container_scifi = defineAsset({
     }
     // Measured wear on the shell and frame (manifest + QA `weather`): chipped edges, rust streaking
     // down from side edges, two or three dents per side, dust on top, dirt at the sill.
-    // LOD0/1 only: on the far LOD's two-triangle plates a per-vertex stain is a diagonal seam, so
-    // it carries the even dust and dirt from `far` instead.
     const plates = { body: done.get('body') ?? merge([]), frame: done.get('frame') ?? merge([]) };
-    const worn =
-      lod === 2
-        ? plates
-        : weatherPass(ctx, plates, {
-            name: 'container',
-            seed: 7,
-            age: 0.8,
-            climate: 'coastal',
-            // No refinement: the read faces are regular grids already, and the bevelled frame only
-            // needs its own edges (chips), not thousands of split rail triangles.
-            resolution: 0,
-            effects: {
-              chips: { where: 'convex-edges', amount: 0.15 },
-              rust: { where: 'convex-edges & side-facing', amount: 0.08, streaks: true },
-              // Thin films, not paint: a stain moves the colour part of the way, so neighbouring
-              // cells differ by a tone, not by a colour.
-              dust: { where: 'up-facing', amount: 0.3, strength: 0.4 },
-              mud: { where: 'ground-near', amount: 0.25 },
-              bleach: { where: 'up-facing', amount: 0.2, strength: 0.3 },
-              dents: { where: 'exposed-panels', count: [2, 4], depth: 0.012 },
-            },
-          });
+    const worn = weatherPass(ctx, plates, {
+      name: 'container',
+      seed: 7,
+      age: 0.8,
+      climate: 'coastal',
+      // No refinement: the read faces are regular grids already, and the bevelled frame only
+      // needs its own edges (chips), not thousands of split rail triangles.
+      resolution: 0,
+      effects: {
+        chips: { where: 'convex-edges', amount: 0.15 },
+        rust: { where: 'convex-edges & side-facing', amount: 0.08, streaks: true },
+        // Thin films, not paint: a stain moves the colour part of the way, so neighbouring
+        // cells differ by a tone, not by a colour.
+        dust: { where: 'up-facing', amount: 0.3, strength: 0.4 },
+        bleach: { where: 'up-facing', amount: 0.2, strength: 0.3 },
+        dents: { where: 'exposed-panels', count: [2, 4], depth: 0.012 },
+      },
+    });
     const faces =
       lod === 0
         ? bakeAo(merge(grids), { samples: 16, radius: 0.6, strength: 0.5 }, occ)

@@ -36,7 +36,7 @@ export const CHARACTERS: Record<'human' | 'orc' | 'elf' | 'dwarf' | 'goblin', Fa
         sun: 0.55,
         freckles: 0.5,
         grime: 0.25,
-        stubble: { colour: [0.4, 0.33, 0.32], amount: 0.42 },
+        stubble: { colour: [0.26, 0.22, 0.22], amount: 0.72 },
         scars: [[off(LEFT.brow, [0.003, 0.012, 0.014]), off(LEFT.brow, [0.004, 0.017, -0.004])]],
       },
     },
@@ -47,7 +47,12 @@ export const CHARACTERS: Record<'human' | 'orc' | 'elf' | 'dwarf' | 'goblin', Fa
     character: {
       race: {
         ...ORC,
-        nose: { ...ORC.nose, width: 1.95, bridge: -0.03 },
+        // The brute's mask: a shelf of brow low over small eyes, a flat broad nose, a jaw
+        // wider than the cheekbones.
+        brow: { forward: 0.1, height: -0.032 },
+        eyes: { ...ORC.eyes, open: 0.7 },
+        nose: { ...ORC.nose, width: 2.25, bridge: -0.05, projection: 0.58 },
+        jaw: { width: 1.52, drop: 0.08 },
         body: { ...ORC.body, traps: 0.2 },
       },
       age: 0.4,
@@ -89,7 +94,7 @@ export const CHARACTERS: Record<'human' | 'orc' | 'elf' | 'dwarf' | 'goblin', Fa
       race: {
         ...ELF,
         eyes: { ...ELF.eyes, tilt: 0.032 },
-        ears: { ...ELF.ears, length: 1.25, tip: [0.19, 0.055, 0.24] },
+        ears: { ...ELF.ears, length: 1.25, tip: [0.21, 0.06, 0.28] },
       },
       age: 0.05,
       weight: -0.4,
@@ -104,15 +109,20 @@ export const CHARACTERS: Record<'human' | 'orc' | 'elf' | 'dwarf' | 'goblin', Fa
       eyes: { iris: [0.22, 0.52, 0.42] },
       mouth: 0,
       // Ageless but not porcelain: a dusting of freckles and a little sun.
-      wear: { sun: 0.3, freckles: 0.65, grime: 0.08 },
+      wear: { sun: 0.3, freckles: 0.2, grime: 0.08 },
     },
-    hair: { cut: 'long', root: [0.6, 0.48, 0.26], tip: [0.86, 0.76, 0.5] },
+    hair: { cut: 'long', root: [0.52, 0.36, 0.15], tip: [0.84, 0.66, 0.34] },
     plinth: STONE,
   },
   dwarf: {
     character: {
-      race: DWARF,
-      age: 0.6,
+      // An old smith: a heavier brow and a broader nose than the preset's.
+      race: {
+        ...DWARF,
+        brow: { forward: 0.05, height: -0.016 },
+        nose: { ...DWARF.nose, width: 1.6 },
+      },
+      age: 0.9,
       weight: 0.5,
       asym: 0.6,
       tone: {
@@ -143,9 +153,11 @@ export const CHARACTERS: Record<'human' | 'orc' | 'elf' | 'dwarf' | 'goblin', Fa
     character: {
       race: {
         ...GOBLIN,
-        eyes: { ...GOBLIN.eyes, size: 1.3 },
+        eyes: { ...GOBLIN.eyes, size: 1.42 },
         nose: { ...GOBLIN.nose, hook: GOBLIN.nose.hook + 0.012 },
+        brow: { forward: 0.035, height: -0.004 },
       },
+      warts: 7,
       age: 0.3,
       weight: -0.3,
       asym: 1,

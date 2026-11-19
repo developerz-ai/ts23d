@@ -24,7 +24,7 @@ const unit = (hidden: boolean) =>
     },
   });
 /** A small sheet: the default 2048² one costs seconds to paint. */
-const sheet = paintTrimSheet({ ...DEFAULT_SHEET, size: 512 });
+const sheet = paintTrimSheet({ ...DEFAULT_SHEET, size: 512 }, []);
 const red = compile(unit(false), { variant: 'red' });
 const blue = compile(unit(false), { variant: 'blue' });
 

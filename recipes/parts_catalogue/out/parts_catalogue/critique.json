@@ -1,13 +1,13 @@
 {
   "asset": "parts_catalogue",
   "reviewer": "agent",
-  "overall": 7.3,
+  "overall": 7.6,
   "scores": {
     "silhouette": {
-      "score": 7,
-      "reason": "Each part reads on its own, but in FRONT the drum overlaps the door and the stool/chair/bench overlap each other.",
+      "score": 8,
+      "reason": "Items are now spaced so no two outlines overlap in FRONT; each part reads on its own.",
       "fixes": [
-        "space the items so no two outlines overlap in FRONT"
+        "stagger item heights front-to-back so the row is not one flat line in FRONT"
       ]
     },
     "proportions": {
@@ -19,25 +19,24 @@
     },
     "materials": {
       "score": 7,
-      "reason": "Wood strips now render in both images; rust on the drum, rubber tyre, glass window; the floor reads as worn boards.",
+      "reason": "Wood strips, rust on the drum and beam, rubber tyre and a frosted glass window read; the floor is now a flat grey with faint grain.",
       "fixes": [
-        "matte rubber roughness on the hose",
-        "a painted-steel finish on the crane post"
+        "a painted-steel finish on the crane post",
+        "more tone variation on the floor boards"
       ]
     },
     "detail": {
       "score": 7,
-      "reason": "Labels are readable on the floor, bench tools, lamp, bolts on the crane, a tread on the tyre; two labels are hidden under the drum and crate.",
+      "reason": "Labels moved out from under the items, but PANEL DOOR and STEEL DRUM overlap each other and LAMP + BEAM is too small to read in hero.png.",
       "fixes": [
-        "move the PANEL DOOR and CRATE labels out from under their items",
-        "bolt heads on the beams and pipe flanges"
+        "space the floor labels so none overlap and give each the same text size"
       ]
     },
     "wear": {
-      "score": 6,
-      "reason": "Rust on the drum and scuffed floor boards; the crate, beams and door are clean.",
+      "score": 7,
+      "reason": "Rust on the drum and the I-beam, a dirty crate; the door and window are clean.",
       "fixes": [
-        "rust on the beams, scuffs on the crate corners"
+        "scuffs at the door foot and grime in the window corners"
       ]
     },
     "lod": {
@@ -49,14 +48,14 @@
     },
     "technical": {
       "score": 8,
-      "reason": "49.9k / 19.7k / 3.4k triangles and 10 draws for a catalogue of 15 parts.",
+      "reason": "60.7k / 19.7k / 3.4k triangles and 10 draws for a catalogue of 15 parts.",
       "fixes": [
         "merge static parts into fewer draws"
       ]
     }
   },
   "renders": {
-    "hero.png": "0a92b4fd3d8c9576e3053e45e958527ad28e31b15e6a0eacd029e39fde7d7723",
-    "sheet.png": "7368b3f918c9a7eb46691497407fe857025948ccc05fa5d59b977428f9e67104"
+    "hero.png": "7ec4fc46d307da9256e6920df7eaf14a8847e71a12482882a58b390897610808",
+    "sheet.png": "66b67876c855352e41b1d9f9e7dbe4ce636be03dcd7268ac015f2a603133b317"
   }
 }

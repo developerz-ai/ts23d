@@ -5,9 +5,9 @@
   "scores": {
     "silhouette": {
       "score": 8,
-      "reason": "Barracks, a squad formed up at the gate, the tank parked on its path, the crystal deposit, a low perimeter wall, sandbags, crates and drums on one plate: reads as a faction compound from every view.",
+      "reason": "Barracks, squad at the gate, tank on its lane, crystal deposit, a perimeter wall with a gap where the path leaves, sandbags, crates and drums: reads as a faction compound from every view.",
       "fixes": [
-        "a gate gap with two posts in the perimeter wall so the path leads somewhere"
+        "two gate posts at the wall gap so the exit reads as a gate"
       ]
     },
     "proportions": {
@@ -42,72 +42,21 @@
     },
     "lod": {
       "score": 8,
-      "reason": "lods.png: LOD2 (3.95k) keeps every asset, colour block, the paths, wall and props; the tank and soldiers simplify but hold outline and team red.",
+      "reason": "lods.png / FAR LOD2 (3.9k) keeps every asset, colour block, the paths, wall and props; the crystal deposit keeps its dark rock value at LOD2 now; the tank and soldiers simplify but hold outline and team red.",
       "fixes": [
         "keep the tank road wheels at LOD2 (rts_tank)"
       ]
     },
     "technical": {
       "score": 7,
-      "reason": "QA PASS: 144k / 34.1k / 3.95k tris, 36 / 36 / 22 draws. Fine as a showcase, but 36 draws for one placed asset is heavy and was not reduced.",
+      "reason": "QA PASS: 143.8k / 35.0k / 3.9k tris, 36 / 22 / 22 draws. LOD1 dropped from 36 to 22 draws, but LOD0 is still 36 draws for one placed asset.",
       "fixes": [
         "merge static parts across the composed assets into one body per material so LOD0 drops well below 36 draws"
       ]
     }
   },
   "renders": {
-    "hero.png": "99cc0e23872eb7ff268aa515336cf7708259c5ada24bdf30f42ac55b9aae86bf",
-    "sheet.png": "e78c71aea5d880367317a9dcf3416ebd768d353be89ad0c83b102035fe35d335"
-  },
-  "metrics": {
-    "silhouette": [
-      {
-        "view": "front",
-        "iou": 0.982
-      },
-      {
-        "view": "side",
-        "iou": 0.981
-      },
-      {
-        "view": "3/4",
-        "iou": 0.992
-      }
-    ],
-    "focal": {
-      "peakPart": "tank_hull_dress",
-      "peak": [
-        367,
-        306
-      ],
-      "focalShare": 0,
-      "focalArea": 0,
-      "top": [
-        {
-          "part": "ground",
-          "share": 0.285
-        },
-        {
-          "part": "tank_hull_dress",
-          "share": 0.119
-        },
-        {
-          "part": "tank_hull",
-          "share": 0.11
-        }
-      ],
-      "declared": []
-    },
-    "rest": {
-      "share": 0.406,
-      "spread": 0.785,
-      "min": 0.25
-    },
-    "shape": {
-      "acuteShare": 0.455,
-      "straightShare": 0.564,
-      "taper": 0.786,
-      "shape": "aggressive"
-    }
+    "hero.png": "7af66ff54b105beff424fea834c8f86086bbe021905742c63797ea8f78515aa5",
+    "sheet.png": "899dc8415a498903b57c8410a5d736f6da98c70f57f4c8bf2d52a546b61fd955"
   }
 }

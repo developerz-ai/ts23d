@@ -10,7 +10,7 @@
 // UVs: true metres on the strip; walls run U along the outline, V across the depth.
 
 import { type Mesh, MeshBuilder, type Vec2, type Vec3 } from '../core/index.ts';
-import { type StripId, stripRect } from '../material/index.ts';
+import { mappedOnto, type StripId, stripRect } from '../material/index.ts';
 import { invalid } from './check.ts';
 import { mirroredV, stripU, stripVMetres } from './strip-uv.ts';
 import { type SvgOptions, svgShape } from './svg-doc.ts';
@@ -167,5 +167,5 @@ export function extrudeSvg(svg: string, o: ExtrudeSvgOptions): Mesh {
       if (bevel > 0) band(l, w1 - bevel, li, w1, o.depth - bevel);
     });
   }
-  return b.build();
+  return mappedOnto(b.build(), strip);
 }

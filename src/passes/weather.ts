@@ -8,12 +8,14 @@ import {
   type BuildContext,
   type Lod,
   type Mesh,
+  mappedOf,
   Ts23dError,
   type WeatherCoverage,
 } from '../core/index.ts';
 import { deform } from './imperfect.ts';
 import { mergeGeometry } from './merge-geometry.ts';
 import { BARE_STEEL, paintEffect } from './weather-paint.ts';
+import { readOf } from './weather-read.ts';
 import { sceneOf } from './weather-scene.ts';
 import { subdivideTo } from './weather-subdivide.ts';
 import {
@@ -41,6 +43,16 @@ function check(o: WeatheringOptions): void {
       cause: `weather age ${age} is outside 0..1`,
       fix: 'use 0 (new) .. 1 (decades outdoors), e.g. age: 0.6',
     });
+  if (o.tessellation !== undefined && o.tessellation !== 'halving' && o.tessellation !== 'exact')
+    throw new Ts23dError('T3D_RECIPE_INVALID', {
+      cause: `weather tessellation is ${JSON.stringify(o.tessellation)}`,
+      fix: "use 'halving' (default) or 'exact' (edges cut to the resolution, fewer triangles)",
+    });
+  if (o.read !== undefined && o.read !== 'close' && o.read !== 'hero')
+    throw new Ts23dError('T3D_RECIPE_INVALID', {
+      cause: `weather read is ${JSON.stringify(o.read)}`,
+      fix: "use 'close' (default) or 'hero' (stains sized to read with the whole asset in frame)",
+    });
   for (const [k, e] of Object.entries(o.effects ?? {})) {
     const { amount, strength } = e as { amount?: number; strength?: number };
     if (amount !== undefined && !(amount >= 0 && amount <= 1))
@@ -59,14 +71,16 @@ function check(o: WeatheringOptions): void {
 /** Weather meshes already split into parts: tessellate, deform, paint, measure, split back. */
 function run(
   meshes: readonly (readonly [string, Mesh])[],
-  o: WeatheringOptions,
+  given: WeatheringOptions,
   lod: Lod,
   seed: number,
 ): { meshes: Mesh[]; coverage: WeatherCoverage[] } {
-  check(o);
+  check(given);
+  const read = readOf(given, mergeGeometry(meshes.map(([, m]) => m)));
+  const o = read && given.groundBand === undefined ? { ...given, groundBand: read.band } : given;
   const name = o.name ?? 'weather';
   const res = resolutionOf(o, lod);
-  const fine = meshes.map(([, m]) => subdivideTo(m, res));
+  const fine = meshes.map(([, m]) => subdivideTo(m, res, 10, o.tessellation === 'exact'));
   // Geometry only: the meshes may mix skinned and rigid; `split` hands each its own skin back.
   const union = mergeGeometry(fine);
   const spots = (
@@ -124,7 +138,7 @@ function run(
     const e = effects[k];
     if (!e) continue;
     const where = e.where ?? DEFAULT_WHERE[k];
-    const amount = e.amount ?? DEFAULT_AMOUNT[k] * age;
+    const amount = e.amount ?? Math.min(0.9, DEFAULT_AMOUNT[k] * age * (read?.amount ?? 1));
     const r = paintEffect(
       scene,
       colors,
@@ -134,6 +148,7 @@ function run(
       amount,
       (seed * 31 + k.length * 977 + k.charCodeAt(0)) | 0,
       o.under ?? BARE_STEEL,
+      read,
     );
     coverage.push({
       target: name,
@@ -184,6 +199,7 @@ function split(done: Mesh, parts: readonly Mesh[]): Mesh[] {
       indices: Uint32Array.from(done.indices.subarray(ix, ix + m.indices.length), (i) => i - v),
       ...(m.joints && m.weights ? { joints: m.joints, weights: m.weights } : {}),
       ...(m.morphs ? { morphs: m.morphs } : {}),
+      ...mappedOf(m),
     };
     v += n;
     ix += m.indices.length;

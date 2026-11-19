@@ -1,5 +1,5 @@
 // The palm's stem carries its leaf-scar rings without losing its measured width, and its far LOD
-// draws every frond (one cutout card each) instead of the kind's few solid blades. Failure cases
+// draws every frond (one folded cutout card each) instead of the kind's few solid blades. Failure cases
 // first: the kind's own stem has a ring only every ~1.7 m.
 import { describe, expect, it } from 'bun:test';
 import { boundsOf, compile, defineAsset, tree, treeReal } from '@developerz.ai/ts23d';
@@ -39,10 +39,10 @@ describe('palm stem', () => {
 });
 
 describe('palm far LOD', () => {
-  it('one cutout card (6 triangles) per frond', () => {
+  it('one folded cutout card (8 triangles) per frond', () => {
     const leaves = compile(palm, { lod: 2 }).parts.find((p) => p.name === 'leaves');
     expect(leaves?.surface).toBe('cutout');
     const fronds = PALM.levels[1]?.branches ?? 0;
-    expect((leaves?.mesh?.indices.length ?? 0) / 3).toBe(fronds * 6);
+    expect((leaves?.mesh?.indices.length ?? 0) / 3).toBe(fronds * 8);
   });
 });

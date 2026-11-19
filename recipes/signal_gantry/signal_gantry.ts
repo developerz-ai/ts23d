@@ -61,7 +61,9 @@ const KNEE_W = 0.1; // knee brace section
 const mastR = (h: number): number =>
   h <= 0.4 ? 0.09 - (0.015 * h) / 0.4 : 0.075 - (0.01 * (h - 0.4)) / (MAST_H - 0.4);
 
-const steel = hex('#383c40');
+/** Black paint a century old: weathered to a dark charcoal (side faces greyed by `steelWear`), so
+ *  the soot over the tracks reads against it. */
+const steel = hex('#4f5254');
 /** Galvanised hand rail and its stanchions (renewed in the 1930s, as surviving bridges show). */
 const galv = hex('#a3a7a6');
 const steelDark = hex('#1f2123');
@@ -376,6 +378,10 @@ const bridge = defineFamily({
     ],
   },
   budget: { triangles: [10000, 4400, 830] },
+  // Low and close, from the front-left, looking up: the girder's front lattice and lower chord
+  // (sooted black over each track against the faded charcoal between them), its knee braces and
+  // the ladder and rods down the posts fill the frame, feet to semaphore arms.
+  hero: { eye: [11, -7.5, 1.5], target: [0, 0.2, 5.6], fovDeg: 62 },
   // A paraffin signal lamp: a warm point behind the spectacle glass, lit but never white.
   glow: [{ parts: ['lamp_*_lens'], color: [1, 0.78, 0.45], strength: 1.5 }],
   defaults: { tracks: 2 } as Params,
@@ -384,11 +390,14 @@ const bridge = defineFamily({
     const hs = halfSpan(p.tracks);
     const dirt = (m: Mesh): Mesh => grime(m, { ground: 1.2, groundStrength: 0.35 });
     const weather = weatherer(ctx.rng.fork('weather'));
-    const sooty = steelWear(ctx.rng.fork('steel-wear'), {
+    const steelAt = {
       tracks: trackYs(p.tracks),
       girderZ: ZB - CHORD / 2,
       deckZ: DECK_Z,
-    });
+    };
+    const sooty = steelWear(ctx.rng.fork('steel-wear'), { ...steelAt, sideFade: 0.7 });
+    // The arms' red and white paint fades on its top edge only: the same wear, sides kept.
+    const armWear = steelWear(ctx.rng.fork('steel-wear'), { ...steelAt, sideFade: 0.1 });
     const footed = footWear(ctx.rng.fork('foot-wear'));
     /** Every part through the material library, its wear story (painted steel fades and soots by
      *  default), then dust on top faces and ground splash; all read at the asset-space position,
@@ -535,6 +544,28 @@ const bridge = defineFamily({
         strip: 'wood',
       }),
     ];
+    if (lod < 2) {
+      // The tread path: boards worn pale and smooth down the middle by a century of linemen,
+      // a 6 mm skin bedded 3 mm into the planks.
+      deck.push(
+        box({
+          size: [0.38, 2 * hs + 0.2, 0.006],
+          at: [0.06, 0, DECK_Z - 0.003],
+          color: hex('#efe6d6'),
+          strip: 'wood_weathered',
+        }),
+      );
+      // Exhaust soot on the plank soffit over each track (bedded 1 mm into the underside).
+      for (const ty of trackYs(p.tracks))
+        deck.push(
+          box({
+            size: [GIRDER_W + 0.08, 2.8, 0.004],
+            at: [0, ty, DECK_Z - 0.053],
+            color: hex('#151413'),
+            strip: 'wood',
+          }),
+        );
+    }
     if (lod === 2)
       for (const y of [-hs, hs])
         deck.push(
@@ -573,32 +604,42 @@ const bridge = defineFamily({
         deck.push(box({ size: [0.05, 0.05, 1.02], at: [railX, y, DECK_Z], color: galv }));
       }
     }
-    part('walkway', merge(deck));
+    // Timber and galvanised rail: no paint to fade (the soffit soot is its own plates).
+    part('walkway', merge(deck), undefined, null);
 
-    // ---- ladder up the right post to the walkway.
+    // ---- ladder up the right post to the walkway, standing a quarter metre off the post face
+    // (it reads clear of the lattice in SIDE), its stiles down to the ground 6 cm off the footing.
     if (lod < 2) {
-      const ly = -hs - 0.32;
+      const ly = -hs - 0.48;
       const lad: Mesh[] = [];
       for (const x of [-0.2, 0.2])
-        lad.push(box({ size: [0.05, 0.04, DECK_Z - FOOT_H], at: [x, ly, FOOT_H], color: steel }));
+        lad.push(box({ size: [0.05, 0.04, DECK_Z], at: [x, ly, 0], color: steel }));
       for (let z = FOOT_H + 0.3; z < DECK_Z - 0.05; z += lod === 0 ? 0.3 : 0.6)
         lad.push(
           box({ size: [0.4, 0.022, 0.022], at: [0, ly, z - 0.011], color: steel, strip: 'iron' }),
         ); // square-bar rung
+      // Stand-off brackets from each stile to the post's corner angle (x ±0.3), bedded in both.
       for (const z of [FOOT_H + 1.5, ZB - 1, ZB + 0.6])
-        for (const x of [-0.2, 0.2])
-          lad.push(box({ size: [0.04, 0.12, 0.04], at: [x, ly + 0.08, z], color: steel })); // stand-off brackets
+        for (const s of [-1, 1])
+          lad.push(
+            box({
+              size: [0.12, 0.27, 0.04],
+              at: [s * 0.26, ly + 0.135, z],
+              color: steel,
+            }),
+          );
       part('ladder', merge(lad));
     }
 
     // ---- operating rods: up-and-down rods from each arm's mechanism case to the deck, a crank
-    // and a rod along the walkway to the right post, down its back face to a crank on the
+    // and a rod along the walkway to the right post, down its outer face to a crank on the
     // footing (the lever frame's pipe line leaves from there). LOD0 only.
     if (lod === 0)
       trackYs(p.tracks).forEach((y, t) => {
         const r: Mesh[] = [];
+        // Galvanised 1 in pipe rods: they read pale against the black bridge, as in the photos.
         const rod = (from: Vec3, to: Vec3): Mesh =>
-          beam({ from, to, width: 0.025, color: steel, strip: 'iron', caps: false });
+          beam({ from, to, width: 0.034, color: galv, caps: false });
         const caseZ = (kind: 'home' | 'distant'): number =>
           DECK_Z + LOW_ARM + (kind === 'home' ? ARM_GAP : 0) - 0.2;
         for (const [dy, kind] of [
@@ -627,13 +668,16 @@ const bridge = defineFamily({
             strip: 'iron',
           }),
         );
-        const px = -POST_D / 2 - 0.045 - 0.0125;
-        r.push(rod([rx, py, DECK_Z], [px, py, DECK_Z - 0.3]));
-        r.push(rod([px, py, DECK_Z - 0.3], [px, py, FOOT_H + 0.06]));
+        // Under the deck to the front of the post, then down its outer face (4 cm off it, in
+        // front of the ladder) to a crank on the footing.
+        const px = 0.36 + 0.035 * t;
+        const dy = -hs - POST_W / 2 - 0.09;
+        r.push(rod([rx, py, DECK_Z], [px, dy, DECK_Z - 0.3]));
+        r.push(rod([px, dy, DECK_Z - 0.3], [px, dy, FOOT_H + 0.06]));
         r.push(
           box({
-            size: [0.14, 0.1, 0.12],
-            at: [px + 0.02, py, FOOT_H],
+            size: [0.14, 0.12, 0.12],
+            at: [px, dy, FOOT_H],
             color: steelDark,
             strip: 'iron',
           }),
@@ -798,10 +842,10 @@ const bridge = defineFamily({
             // Carried on its spindle in the mast bearing (LOD2 hub bears on the mast face).
             connect: { as: 'hinge', to: lod < 2 ? `bearing_${t}_${kind}` : `mast_${t}` },
           },
-          sooty,
+          armWear,
           pivot,
         );
-        part(`${name}_blade`, a.blade, { parent: name }, sooty, pivot);
+        part(`${name}_blade`, a.blade, { parent: name }, armWear, pivot);
       }
       part(`mast_${t}`, merge(mast));
     });
@@ -819,6 +863,8 @@ export const signal_gantry_4 = bridge.variant({
   name: 'signal_gantry_4',
   description: 'The same signal bridge over four tracks, as in the 1909 photograph.',
   params: { tracks: 4 },
+  // The same low look up at the girder, stepped back for the wider bridge (arms in frame).
+  hero: { eye: [15, -12, 1.5], target: [0, 0.6, 6.4], fovDeg: 62 },
   real: {
     length: GIRDER_W + 0.12, // walkway + hand rail
     width: 2 * halfSpan(4) + 0.9,

@@ -18,9 +18,9 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    58071,
+    57768,
     12648,
-    1488
+    1456
   ],
   "drawCalls": [
     19,
@@ -204,29 +204,29 @@
   ],
   "weather": {
     "chips": {
-      "target": 0.3653,
-      "actual": 0.3653,
+      "target": 0.097,
+      "actual": 0.097,
       "eligible": "convex-edges",
-      "area": 46.1268,
+      "area": 47.9522,
       "by": {
         "t34_fittings": {
-          "target": 0.3,
-          "actual": 0.3,
-          "area": 18.5102
+          "target": 0.12,
+          "actual": 0.12,
+          "area": 20.3356
         },
         "t34_hull": {
-          "target": 0.4,
-          "actual": 0.4,
+          "target": 0.08,
+          "actual": 0.08,
           "area": 20.4101
         },
         "t34_turret": {
-          "target": 0.45,
-          "actual": 0.45,
+          "target": 0.08,
+          "actual": 0.08,
           "area": 4.9708
         },
         "t34_gun": {
-          "target": 0.4,
-          "actual": 0.4,
+          "target": 0.08,
+          "actual": 0.08,
           "area": 2.2357
         }
       }
@@ -248,12 +248,6 @@
           "area": 0.0956
         }
       }
-    },
-    "mud": {
-      "target": 0.5,
-      "actual": 0.5,
-      "eligible": "ground-near",
-      "area": 66.347
     }
   },
   "qa": {

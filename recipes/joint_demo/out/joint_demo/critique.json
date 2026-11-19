@@ -1,53 +1,51 @@
 {
   "asset": "joint_demo",
   "reviewer": "agent",
-  "overall": 6.7,
+  "overall": 7.1,
   "scores": {
     "silhouette": {
       "score": 7,
-      "reason": "Arm on a stand with a fist round an arming sword reads: flared quillons, pommel and a blade with a fuller show in SIDE and hero.png.",
+      "reason": "Arm on a stand with a fist round an arming sword reads, and the shoulder now ends in a cut cap (3/4 REAR); the arm is still a straight horizontal tube with no elbow bend.",
       "fixes": [
-        "give the shoulder end a cut cap so the arm does not end in a ball",
-        "show the elbow bend so the arm is not a straight tube"
+        "bend the elbow ~15° so the arm is not a straight tube"
       ]
     },
     "proportions": {
       "score": 7,
-      "reason": "The new hammer-grip fist and the arming-sword blade, guard and pommel read right; the fist is boxy (a mitten with ridges) and the forearm is uniform.",
+      "reason": "Hammer-grip fist, arming sword blade, guard and pommel read right, and the forearm now tapers to the wrist with a bicep swell; the fist is small and boxy.",
       "fixes": [
-        "round the knuckle line and separate the finger rolls",
-        "taper the forearm to the wrist"
+        "enlarge the fist ~10 % and round the knuckle line"
       ]
     },
     "materials": {
-      "score": 6,
-      "reason": "Brass guard and pommel, leather grip and an iron plate read; the blade is flat grey without a chrome highlight, and the LOD0 TOP view still shows a per-triangle light/dark checker on the plate (the far LOD is now even).",
+      "score": 7,
+      "reason": "The blade now renders as metal with a gradient highlight in hero.png; brass guard and pommel, leather grip and an even iron plate read.",
       "fixes": [
-        "low-roughness metal finish on the blade so it reflects",
-        "blend the plate weathering across triangles instead of per-face"
+        "lower blade roughness further so a sharp specular streak runs along the fuller",
+        "leather grain on the grip"
       ]
     },
     "detail": {
-      "score": 6,
-      "reason": "Finger rolls, thumb, cross with flared quillons, pommel peen and bolts on the plate; the arm has no elbow or wrist landmarks visible in hero.png.",
+      "score": 7,
+      "reason": "Notches along the blade edge, finger rolls, thumb, flared quillons, pommel and plate bolts hold; the arm shows muscle swells but no elbow or wrist landmarks.",
       "fixes": [
         "olecranon and wrist knobs that read in raking light",
         "cord binding visible on the grip"
       ]
     },
     "wear": {
-      "score": 6,
-      "reason": "Rust at the post foot and worn edges on the plate; the plate field is now mostly plain grey, and blade nicks and skin wear are not visible at hero distance.",
+      "score": 7,
+      "reason": "Blade nicks now read along the edge in hero.png, rust at the post foot; the grip and skin are clean.",
       "fixes": [
-        "larger nicks along the blade edge",
-        "a darker sweat-stained grip"
+        "a darker sweat-stained grip",
+        "scuffs on the base plate"
       ]
     },
     "lod": {
       "score": 7,
-      "reason": "FAR LOD2 keeps the arm, guard and blade, and the plate is now one even dark grey with a rust edge; the fist and arm still collapse to a flat slab.",
+      "reason": "FAR LOD2 keeps the arm, guard and blade with the forearm taper; the fist collapses to a small block.",
       "fixes": [
-        "keep a rounded fist and the forearm taper at LOD2"
+        "keep a rounded fist at LOD2"
       ]
     },
     "technical": {
@@ -59,7 +57,7 @@
     }
   },
   "renders": {
-    "hero.png": "f90af3fda3ba6c3212676aab01c6296d89abe7db8780ad78f2e15f7dc8449af6",
-    "sheet.png": "96f126219d1837c7cc837cb5914cb389d17f69dfe5f35dc4a6a6921620be8602"
+    "hero.png": "14d541bee62a0fded94efd5aa1fd9f25b143185ce67ea5c5779d95e20010d144",
+    "sheet.png": "c09e9efd746c4193ac26efc3bb6d4c661ad1ec3df5dfa2a50d616ef9ee2d834a"
   }
 }

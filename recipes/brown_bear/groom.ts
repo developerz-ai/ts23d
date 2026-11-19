@@ -17,6 +17,7 @@ import {
 } from '@developerz.ai/ts23d';
 import { smooth } from '../_lib/creature/wild-paint.ts';
 import type { GroomLayer } from '../_lib/creature/wild-parts.ts';
+import { earDisc } from './head.ts';
 
 // The cutout strand atlas every card maps into (the kind registers it only when it grows cards).
 defineMaterial(CREATURE_MATERIALS.fur_clumps);
@@ -76,9 +77,9 @@ export function bearGroom(
     const side = 1 - 0.45 * smooth(0.75, 0.95, Math.abs(n[1]));
     return (0.03 + (long - 0.03) * leg(p)) * side;
   };
-  // The dossier's envelope: 0.70 m wide, 1.25 m to the top of the hump (±5 % is the gate's, not
-  // the coat's to spend): no lock past 0.36 m off the midline or above 1.29 m.
-  const box = { y: 0.36, z: 1.29 };
+  // The dossier's envelope: 0.71 m wide, 1.30 m to the top of the hump (±5 % is the gate's, not
+  // the coat's to spend): no lock past 0.36 m off the midline or above 1.335 m.
+  const box = { y: 0.36, z: 1.335 };
   const k = lod === 0 ? 1 : 0.25;
   const wide = lod === 0 ? 1 : 1.5;
   if (lod === 2)
@@ -179,27 +180,28 @@ export function bearGroom(
       smooth(l.lc, l.lc * 0.25, p[0]) * smooth(l.eye.centre[2], l.zm, p[2]),
       smooth(l.lc * 0.45, l.lc * 0.1, p[0]),
     );
-  const ear = (p: Vec3): number =>
-    l.ear ? smooth(l.ear[2], l.ear[2] + l.earHeight * 0.25, p[2]) : 0;
+  const disc = earDisc(l);
+  const ear = (p: Vec3): number => smooth(disc.r * 1.25, disc.r * 0.85, dist(p, disc.at));
   const head: GroomLayer[] = [
     {
       name: 'face',
-      density: (p) => (bare(p) ? 0 : 2400 * k * (1 + 0.8 * ear(p))),
-      length: (p) => (0.018 + 0.014 * smooth(l.lc, 0, p[0])) * (1 - 0.35 * ear(p)),
+      density: (p) => (bare(p) ? 0 : 2600 * k * (1 + 0.8 * ear(p))),
+      // Velvet on the muzzle, thickening over the forehead and crown.
+      length: (p) => (0.016 + 0.026 * smooth(l.lc * 1.05, l.lc * 0.5, p[0])) * (1 - 0.3 * ear(p)),
       width: 0.009 * wide,
-      lift: 0.3,
+      lift: 0.34,
       bend: 0.6,
       droop: 0.02,
       roll: 0.3,
       cells: fur,
-      tone: [0.93, 1.22],
+      tone: [0.78, 1.3],
       sink: 0.0025,
       segments: 2,
     },
     {
       name: 'ruff',
-      density: (p) => (bare(p) ? 0 : 650 * k * smooth(0.2, 0.7, ruff(p)) * (1 - ear(p))),
-      length: (p) => 0.05 + 0.06 * ruff(p),
+      density: (p) => (bare(p) ? 0 : 800 * k * smooth(0.15, 0.6, ruff(p)) * (1 - ear(p))),
+      length: (p) => 0.05 + 0.07 * ruff(p),
       width: 0.016 * wide,
       lift: 0.4,
       bend: 0.55,

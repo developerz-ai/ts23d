@@ -52,6 +52,8 @@ export const COLOUR = {
   iridescent: hex('#8fa6d8'),
   lateral: hex('#3a4a5c'),
   scratch: hex('#f4f2ec'),
+  corselet: hex('#5c6f80'),
+  rubbed: hex('#7d8288'),
   keel: hex('#3a3418'),
 } as const;
 
@@ -74,10 +76,10 @@ const halfWidth = profile([
 ]);
 const halfTop = profile([
   [0, 0],
-  [0.008, 0.012],
-  [0.03, 0.04],
-  [0.07, 0.083],
-  [0.13, 0.137],
+  [0.008, 0.014],
+  [0.03, 0.047],
+  [0.07, 0.091],
+  [0.13, 0.142],
   [0.2, 0.19],
   [0.3, 0.243],
   [0.4, 0.26],
@@ -206,8 +208,25 @@ function scratchAt(t: number, h: number, side: number): number {
     const [dt, dh] = [t1 - t0, h1 - h0];
     const k = Math.max(0, Math.min(1, ((t - t0) * dt + (h - h0) * dh) / (dt * dt + dh * dh)));
     const d = Math.hypot((t - t0 - k * dt) * FL, (h - h0 - k * dh) * 0.45);
-    best = Math.max(best, gauss(d, 0.011) * (0.65 + 0.35 * Math.sin(k * 9 + i)));
+    best = Math.max(best, gauss(d, 0.018) * (0.7 + 0.3 * Math.sin(k * 9 + i)));
   });
+  return best;
+}
+
+/** Rubbed patches where scales are lost (net, a seal's tooth), 0..1: two on the hero (-Y) side. */
+const LOSS: readonly (readonly [number, number, number, number])[] = [
+  // t, h, half-length (t), half-height (h), side
+  [0.42, -0.18, 0.06, 0.2],
+  [0.62, 0.08, 0.045, 0.16],
+];
+export function scaleLossAt(t: number, h: number, side: number): number {
+  if (side > 0) return 0;
+  let best = 0;
+  for (const [t0, h0, dt, dh] of LOSS) {
+    const ragged = 0.8 + 0.35 * noise(t * 90, h * 12, 41);
+    const d = Math.hypot((t - t0) / dt, (h - h0) / dh) / ragged;
+    best = Math.max(best, 1 - smooth(0.7, 1, d));
+  }
   return best;
 }
 
@@ -230,9 +249,13 @@ function trunkColour(p: Vec3, t: number, a: number, lod: Lod): Vec3 {
   if (lod < 2) {
     // The lateral line: a thin darker line of pored scales; scratches cut pale through the sheen.
     const line =
-      gauss(h - lateralLine(t), 0.018) * smooth(0.24, 0.3, t) * (1 - smooth(0.85, 0.9, t));
-    c = mixRgb(c, COLOUR.lateral, 0.32 * line);
-    c = mixRgb(c, COLOUR.scratch, 0.85 * scratchAt(t, h, Math.sign(p[1]) || 1));
+      gauss(h - lateralLine(t), 0.026) * smooth(0.24, 0.3, t) * (1 - smooth(0.85, 0.9, t));
+    c = mixRgb(c, COLOUR.lateral, 0.6 * line);
+    // The corselet's thick scales are a duller grey-blue patch behind the pectoral.
+    c = mixRgb(c, COLOUR.corselet, 0.5 * corseletAt(t, h));
+    // Scale loss: broad rubbed patches where the silver guanine is gone and the skin shows grey.
+    c = mixRgb(c, COLOUR.rubbed, 0.75 * scaleLossAt(t, h, Math.sign(p[1]) || 1));
+    c = mixRgb(c, COLOUR.scratch, 0.9 * scratchAt(t, h, Math.sign(p[1]) || 1));
   }
   c = mixRgb(c, COLOUR.keel, 0.75 * smooth(0.25, 0.8, keelAt(t) / 0.046) * gauss(h, 0.35));
   if (t < T_HEAD) {
@@ -258,18 +281,18 @@ export function eye(side: 1 | -1, lod: Lod): Mesh {
   );
 }
 
-const SIDES: readonly [number, number, number] = [72, 36, 9];
+const SIDES: readonly [number, number, number] = [72, 40, 12];
 
 export function trunk(joints: readonly number[], lod: Lod): Mesh {
   const end = 0.985;
   const us =
     lod === 2
-      ? stations([0.006, 0.03, 0.07, 0.15, ...joints.filter((t) => t > 0.04), 0.9, end])
+      ? stations([0.006, 0.03, 0.07, 0.11, 0.15, ...joints.filter((t) => t > 0.04), 0.9, end])
       : stations(
           [
-            ...even(0.004, 0.13, lod === 0 ? 36 : 18),
-            ...even(0.13, 0.3, lod === 0 ? 44 : 16),
-            ...even(0.3, end, lod === 0 ? 110 : 46),
+            ...even(0.004, 0.13, lod === 0 ? 36 : 20),
+            ...even(0.13, 0.3, lod === 0 ? 44 : 20),
+            ...even(0.3, end, lod === 0 ? 110 : 56),
           ],
           2e-3,
         );
@@ -283,12 +306,14 @@ export function trunk(joints: readonly number[], lod: Lod): Mesh {
     point: (t, a) => trunkPoint(t, a, lod),
     color: (p, _n, t, a) => trunkColour(p, clamp(t), a, lod),
   });
-  // The corselet's thicker scales are duller than the polished flank round them.
+  // The corselet's thicker scales and the rubbed patches are duller than the polished flank.
   const ring = sides + 1;
   return toBand(mesh, (i) => {
     const r = Math.min(us.length - 1, Math.floor(i / ring));
     const t = clamp(us[r] ?? 0);
     const p = plainPoint(t, ((i % ring) / sides) * Math.PI * 2);
-    return ['flank', 'corselet', i >= us.length * ring ? 0 : corseletAt(t, share(p, t))];
+    const h = share(p, t);
+    const dull = Math.max(corseletAt(t, h), lod < 2 ? scaleLossAt(t, h, Math.sign(p[1]) || 1) : 0);
+    return ['flank', 'corselet', i >= us.length * ring ? 0 : dull];
   });
 }

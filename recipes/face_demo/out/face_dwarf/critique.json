@@ -1,28 +1,28 @@
 {
   "asset": "face_dwarf",
   "reviewer": "agent",
-  "overall": 5.9,
+  "overall": 6.3,
   "scores": {
     "silhouette": {
       "score": 7,
-      "reason": "Tapered beard with locks and a full hair mass read as a dwarf in FRONT and 3/4; in SIDE a moustache strand sticks out from the face like a straw.",
+      "reason": "The tapered beard reads and the moustache no longer pokes out in SIDE; the hair is a flat slicked cap that reads as a helmet in hero.png.",
       "fixes": [
-        "curl the moustache ends down into the beard so no strand pokes forward in SIDE"
+        "add volume and a few loose locks to the hair cap so it reads as hair at 3/4"
       ]
     },
     "proportions": {
-      "score": 6,
-      "reason": "The face reads young and smooth for a dwarf: no deep nasolabial folds, no lid sag, a narrow nose.",
+      "score": 7,
+      "reason": "The nose is broader and a brow scar shows; the face still reads young and smooth for a dwarf (shallow nasolabial folds, no lid sag).",
       "fixes": [
-        "stronger age: deeper nasolabial folds and lid sag as displacement; broader nose"
+        "deeper nasolabial folds and lid sag as displacement"
       ]
     },
     "materials": {
-      "score": 5,
-      "reason": "Skin reads as matte plastic with a uniform pink-beige and dark spot decals; no subsurface warmth at ears/nose, no wet eyes or lips. The beard and hair cards read as hair with some value variation.",
+      "score": 6,
+      "reason": "The face now has T-zone sheen, a red lip line and warmth at the nose; but the shoulders and chest are shiny plastic and the hair cards are flat orange strips.",
       "fixes": [
-        "skin strip with sheen/lower roughness on the T-zone, red warmth at ears, nose and lips; glossy eyes and wet lip line",
-        "hair strip with anisotropic sheen and darker roots, per-card value variation"
+        "rougher skin on the shoulders and chest (sheen only on the T-zone)",
+        "hair strip with anisotropic sheen and darker roots"
       ]
     },
     "detail": {
@@ -33,15 +33,15 @@
       ]
     },
     "wear": {
-      "score": 5,
-      "reason": "Freckle/blemish dots and red cheeks; no scars, no weathered skin.",
+      "score": 6,
+      "reason": "A seeded scar now crosses the brow in FRONT; no wind-reddened weathering.",
       "fixes": [
-        "one seeded scar across the brow and wind-reddened, weathered skin"
+        "wind-reddened, weathered skin on the cheeks and nose"
       ]
     },
     "lod": {
       "score": 5,
-      "reason": "FAR LOD2 is a distance-field re-mesh: the face breaks into flat patches of different tone and the features smear. The beard holds as a mass.",
+      "reason": "FAR LOD2 is still a distance-field re-mesh: the face breaks into flat patches of different tone and the features smear.",
       "fixes": [
         "LOD2 from an authored coarse topology (decimated quad base mesh) instead of the distance-field re-mesh, keeping vertex colour smooth"
       ]
@@ -55,7 +55,7 @@
     }
   },
   "renders": {
-    "hero.png": "2cbdbe41471d1f69bd6e1e98fb60277781c17dce5cb1f64579a42cd3d28661ab",
-    "sheet.png": "c939441eaf2f4bd0e3340cb47707165f75211242848c41dd84478b2975c191ce"
+    "hero.png": "5576db7820abcba0ef1d08ceac17fbc5fde90351dcaf5604018789e0df6b9995",
+    "sheet.png": "88f0e4fc78bda50096301cd52ae8fdd8197058af0acca3267f54c84a431ee7e2"
   }
 }

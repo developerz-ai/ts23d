@@ -30,7 +30,7 @@ export const ELF_BUST: BustRecipe = {
   // Skin zones: rose on cheeks, nose and ears, cooler sockets, a pale forehead.
   zones: {
     lips: C.lips,
-    flush: hex('#eab0a0'),
+    flush: hex('#e9b9a6'),
     socket: hex('#d2ada2'),
     brows: hex('#b09070'),
     forehead: hex('#f4dcc6'),
@@ -76,8 +76,11 @@ export function buildElf(ctx: BuildContext): void {
         name: 'cloak',
         age: 0.4,
         resolution: 0,
-        effects: { dust: { amount: 0.3, strength: 0.4, color: [0.6, 0.58, 0.5] } },
+        effects: { dust: { amount: 0.45, strength: 0.4, color: [0.62, 0.54, 0.4] } },
       },
+      // (An even film on what faces up, in the road's own tan: as scattered grey patches it
+      // read as texture noise.)
+      even: true,
     },
   });
   // Far LOD: the long fair hair stays as a few wide cards in the near LODs' colours.

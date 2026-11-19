@@ -3,7 +3,7 @@
 // edges (split normals) and UV seams survive. First occurrence wins; output order is the order of
 // first appearance — deterministic, no hashing of floats into iteration order.
 
-import type { Mesh } from '../core/index.ts';
+import { type Mesh, mappedOf } from '../core/index.ts';
 
 export interface WeldTolerance {
   /** Position grid, metres. */
@@ -156,6 +156,7 @@ export function weld(m: Mesh, t: WeldTolerance = DEFAULT_WELD): Welded {
       uvs: pick(m.uvs, 2),
       colors: pick(m.colors, 3),
       indices: new Uint32Array(idx),
+      ...mappedOf(m),
       ...(m.joints && m.weights ? { joints: pick(m.joints, 4), weights: pick(m.weights, 4) } : {}),
       ...(m.morphs
         ? { morphs: m.morphs.map((t) => ({ name: t.name, positions: pick(t.positions, 3) })) }

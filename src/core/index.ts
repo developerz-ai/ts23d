@@ -87,10 +87,14 @@ export { type JointFit, type JointIssue, jointFit } from './joint-fit.ts';
 export * from './limb-pairs.ts';
 export * from './limit-tolerance.ts';
 export {
+  type MappedMaterial,
   type MaterialUse,
+  mappedOf,
+  materialOnRow,
   materialsInUse,
   noteMaterial,
   trackMaterials,
+  withMapped,
 } from './material-use.ts';
 export {
   type Bounds,

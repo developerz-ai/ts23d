@@ -1,9 +1,11 @@
 // Running gear for the Saltmarch light tank: five road wheels, a front idler and a toothed rear
 // sprocket per side (all spinning about Y), and a track belt laid round them: the belt is the
 // convex hull of the wheel circles offset by half a link, so it hugs every wheel at every LOD.
-// LOD0 places individual links with grousers; LOD1 coarse links; LOD2 24 slabs round a solid core
-// and keeps the wheel pivots (empty) so engine code driving them never breaks. Each belt is a
-// `tread` motion part whose pitch is loop length ÷ link count, so the run clip moves it at every LOD.
+// LOD0 places individual links with grousers and spins every wheel on its own pivot; LOD1 (the
+// strategy camera's LOD) coarse links and the wheels as one static part a side; LOD2 18 slabs in
+// an open belt with every wheel a two-polygon disc (dark tyre, muddy slate disc). Below LOD0 the
+// wheel pivots stay (empty), so engine code driving them never breaks. Each belt is a `tread`
+// motion part whose pitch is loop length ÷ link count, so the run clip moves it at every LOD.
 
 import {
   box,
@@ -14,17 +16,13 @@ import {
   merge,
   type PartOptions,
   place,
+  planar,
   prism,
   tread,
   type Vec2,
   type Vec3,
 } from '@developerz.ai/ts23d';
 import { BRASS, IRON, RUBBER, SEG, SLATE } from '../_lib/rts/style.ts';
-
-/** Far LOD: the shadowed block inside the belt, and a road wheel's mean tone (slate disc, dark
- *  tyre, brine mud) for the cone that stands for it. */
-export const CORE_SHADOW: Vec3 = [0.014, 0.014, 0.015];
-export const WHEEL_FAR: Vec3 = [0.115, 0.1, 0.08];
 
 export const TRACK_Y = 1.225;
 export const TRACK_W = 0.46;
@@ -116,8 +114,8 @@ export function resample(path: readonly Vec2[], n: number): { p: Vec2; angle: nu
   return out;
 }
 
-/** Links round the belt per LOD: every link, coarse links, and 20 far slabs. */
-export const LINKS = [96, 44, 20] as const;
+/** Links round the belt per LOD: every link, coarse links, and 18 far slabs. */
+export const LINKS = [96, 44, 18] as const;
 
 /**
  * The length after which the belt repeats: loop length ÷ link count, measured along the centre
@@ -129,8 +127,8 @@ export function beltPitch(lod: Lod, path: readonly Vec2[] = beltPath()): number 
 
 /**
  * One link (local: along +X, outer face +Z) with a grouser bar at LOD0. The far slab is longer
- * than its pitch and open at both ends, so the slabs close round the end wheels (48° a slab), and
- * open on the wheel side, which the core block hides: 6 triangles a slab.
+ * than its pitch and open at both ends, so the slabs close round the end wheels, and open on the
+ * wheel side (the wheel discs stand in front of it): 6 triangles a slab.
  */
 function link(lod: Lod, len: number): Mesh {
   if (lod === 2)
@@ -159,25 +157,38 @@ function link(lod: Lod, len: number): Mesh {
 /** A road wheel (about local Y): rubber tyre, dished slate disc, brass hub (LOD0 bolts). */
 function wheel(lod: Lod, r: number, width: number): Mesh {
   const w = width / 2;
-  const profile: Vec2[] = [
-    [0.001, -w * 0.7],
-    [r * 0.3, -w * 0.7],
-    [r * 0.72, -w * 0.85],
-    [r * 0.82, -w],
-    [r, -w * 0.9],
-    [r, w * 0.9],
-    [r * 0.82, w],
-    [r * 0.72, w * 0.85],
-    [r * 0.3, w * 0.7],
-    [0.001, w * 0.7],
-  ];
-  const disc = lathe({ profile, segments: SEG(lod, 28, 14, 6), color: SLATE, axis: 'y' });
-  const tyre = cylinder({
-    radius: r * 1.0,
-    length: width * 0.86,
-    segments: SEG(lod, 28, 14, 6),
+  const segments = SEG(lod, 28, 14, 6);
+  // The dished disc out to the rim seat (both faces), and the tyre as its own closed band round
+  // it: nothing of the tyre lies over the dish, so the disc's paint and mud are what shows.
+  const seat = r * 0.8;
+  const disc = lathe({
+    profile: [
+      [seat, -w * 0.92],
+      [r * 0.7, -w * 0.82],
+      [r * 0.3, -w * 0.7],
+      [0.001, -w * 0.7],
+      [0.001, w * 0.7],
+      [r * 0.3, w * 0.7],
+      [r * 0.7, w * 0.82],
+      [seat, w * 0.92],
+    ],
+    segments,
+    color: SLATE,
     axis: 'y',
+  });
+  const tyre = lathe({
+    profile: [
+      [seat, -w],
+      [r * 0.96, -w],
+      [r, -w * 0.86],
+      [r, w * 0.86],
+      [r * 0.96, w],
+      [seat, w],
+      [seat, -w],
+    ],
+    segments,
     color: RUBBER,
+    axis: 'y',
   });
   const parts: Mesh[] = [disc, tyre];
   if (lod < 2)
@@ -239,24 +250,20 @@ function sprocket(lod: Lod, r: number): Mesh {
 }
 
 /**
- * A dense hull outline cut down to its corners: both ends of every straight run, plus the middle
- * of every arc longer than 60° (the sprocket and idler ends). About ten points.
+ * A far wheel on the left side (+Y face): the tyre as an eight-sided polygon and the disc as a
+ * six-sided one 5 mm proud of it (10 triangles). `toward` is the angle of the corner that touches
+ * the belt (straight down for a road wheel, fore or aft for idler and sprocket); `s` mirrors it.
  */
-function corners(path: readonly Vec2[]): Vec2[] {
-  const n = path.length;
-  const at = (k: number): Vec2 => path[((k % n) + n) % n] ?? [0, 0];
-  const straight = (k: number): boolean =>
-    Math.hypot(at(k + 1)[0] - at(k)[0], at(k + 1)[1] - at(k)[1]) > 0.1;
-  const starts = path.map((_, k) => k).filter(straight);
-  const out: Vec2[] = [];
-  starts.forEach((k, i) => {
-    // The run k → k + 1, then the arc from k + 1 to the next run's start.
-    const next = (starts[(i + 1) % starts.length] ?? k) + (i + 1 === starts.length ? n : 0);
-    out.push(at(k));
-    if (next > k + 1) out.push(at(k + 1));
-    if (next - (k + 1) > 20) out.push(at(Math.round((k + 1 + next) / 2)));
-  });
-  return out;
+function farWheel(r: number, toward: number, s: number): Mesh {
+  const gon = (n: number, rr: number, y: number, color: Vec3): Mesh =>
+    planar({
+      points: Array.from({ length: n }, (_, i): Vec3 => {
+        const a = toward - s * (i / n) * Math.PI * 2;
+        return [Math.cos(a) * rr, s * y, Math.sin(a) * rr];
+      }),
+      color,
+    });
+  return merge([gon(8, r, 0, RUBBER), gon(6, r * 0.78, 0.005, SLATE)]);
 }
 
 /** Registers a part (the tank's Kit: materials and wear happen there). */
@@ -265,21 +272,23 @@ export type Add = (name: string, m: Mesh | null, opts?: PartOptions) => void;
 /** The hubs run on stub axles into the lower hull (their bearings): allowed to pass through it. */
 const AXLE = ['hull'] as const;
 
-/** The far-LOD block inside the belt: how deep it is, how far behind the track's outer face, and
- *  how far inside the wheels' outline (clear of the running belt). */
-const CORE_W = 0.4;
-const CORE_INSET = 0.095;
-const CORE_GAP = 0.02;
+/** Far LOD: the wheel discs' face sits this far inside the track's outer edge. */
+const FAR_INSET = 0.015;
 
 /**
  * `finishLink` puts ONE track link on its material and wears it before it is laid round the loop:
  * every link then looks the same, so the run clip can put each in its neighbour's place unseen
  * (the `treads` gate checks colour and UV one pitch on). Wear laid over the placed belt would stay
- * where it is while the links run through it, and jump at every wrap.
+ * where it is while the links run through it, and jump at every wrap. `finishWheel` does the same
+ * for one wheel about its own axle (`r` its rim radius; `far`: a two-polygon disc).
  */
-export function runningGear(add: Add, lod: Lod, finishLink: (link: Mesh) => Mesh): void {
+export function runningGear(
+  add: Add,
+  lod: Lod,
+  finishLink: (link: Mesh) => Mesh,
+  finishWheel: (wheel: Mesh, r: number, far: boolean) => Mesh,
+): void {
   const belt = beltPath();
-  const core = lod === 2 ? corners(beltPath(-CORE_GAP)) : [];
   for (const [side, s] of [
     ['l', 1],
     ['r', -1],
@@ -288,57 +297,50 @@ export function runningGear(add: Add, lod: Lod, finishLink: (link: Mesh) => Mesh
     // +rps about +Y rolls the wheel tops forward (+X): the tank drives forward and the belt's
     // ground run moves back (−X). All three rims run at the same 1.70 m/s.
     const spin = (rps: number) => ({ kind: 'spin' as const, axis: [0, 1, 0] as Vec3, rps });
-    ROAD_X.forEach((x, i) => {
-      add(`wheel_${side}_${i}`, lod < 2 ? wheel(lod, ROAD_R, TRACK_W * 0.8) : null, {
-        at: [x, y, ROAD_Z],
-        motion: spin(0.9),
-        clearOf: AXLE,
-      });
-    });
-    add(`idler_${side}`, lod < 2 ? wheel(lod, IDLER.r, TRACK_W * 0.7) : null, {
-      at: [IDLER.x, y, IDLER.z],
-      motion: spin(1.04),
-      clearOf: AXLE,
-    });
-    add(`sprocket_${side}`, lod < 2 ? sprocket(lod, SPROCKET.r) : null, {
-      at: [SPROCKET.x, y, SPROCKET.z],
-      motion: spin(0.97),
-      clearOf: AXLE,
-    });
-    if (lod === 2) {
-      // Far: the wheel pivots stay empty, so a dark block inside the belt (the wheels' outline,
-      // set back from the track's outer face) closes the side, and each road wheel is a shallow
-      // six-sided cone on its face (rim on the block, hub 4 cm proud; 6 triangles): the side
-      // still reads as five wheels in a belt from the strategy camera. Static: one draw with the
-      // hull, where 14 spinning pivots would be 14.
-      const face = s * (TRACK_Y + TRACK_W / 2 - CORE_INSET);
-      const disc = lathe({
-        profile: [
-          [ROAD_R * 0.92, 0],
-          [0, 0.04],
-        ],
-        segments: 6,
-        axis: 'y',
-        color: WHEEL_FAR,
-      });
+    // The seven wheels of a side: mesh (finished about its own axle), axle position, spin.
+    const gear: readonly (readonly [string, Mesh, Vec3, number])[] = [
+      ...ROAD_X.map(
+        (x, i) =>
+          [
+            `wheel_${side}_${i}`,
+            lod === 2
+              ? finishWheel(farWheel(ROAD_R, -Math.PI / 2, s), ROAD_R, true)
+              : finishWheel(wheel(lod, ROAD_R, TRACK_W * 0.8), ROAD_R, false),
+            [x, y, ROAD_Z] as Vec3,
+            0.9,
+          ] as const,
+      ),
+      [
+        `idler_${side}`,
+        lod === 2
+          ? finishWheel(farWheel(IDLER.r, 0, s), IDLER.r, true)
+          : finishWheel(wheel(lod, IDLER.r, TRACK_W * 0.7), IDLER.r, false),
+        [IDLER.x, y, IDLER.z],
+        1.04,
+      ],
+      [
+        `sprocket_${side}`,
+        lod === 2
+          ? finishWheel(farWheel(SPROCKET.r, Math.PI, s), SPROCKET.r, true)
+          : finishWheel(sprocket(lod, SPROCKET.r), SPROCKET.r, false),
+        [SPROCKET.x, y, SPROCKET.z],
+        0.97,
+      ],
+    ];
+    // LOD0 spins each wheel on its own pivot (one draw each: the close-up LOD). Below it the
+    // pivots stay empty and the wheels are one static part a side, drawn with the hull: 14 fewer
+    // draws on the LODs a strategy camera shows by the hundred. Far: each disc stands on the
+    // belt's outer edge, in front of the lower hull, so the side reads as wheels in an open belt.
+    const out = s * (TRACK_W / 2 - FAR_INSET);
+    for (const [name, m, at, rps] of gear)
+      add(name, lod === 0 ? m : null, { at, motion: spin(rps), clearOf: AXLE });
+    if (lod > 0)
       add(
-        `track_core_${side}`,
-        merge([
-          place(
-            prism({
-              profile: core,
-              depth: CORE_W,
-              plane: 'xz',
-              color: CORE_SHADOW,
-            }),
-            { at: [0, face - (s * CORE_W) / 2, 0] },
-          ),
-          ...ROAD_X.map((x) =>
-            place(disc, { at: [x, face, ROAD_Z], ...(s < 0 ? { yaw: Math.PI } : {}) }),
-          ),
-        ]),
+        `wheels_${side}`,
+        merge(
+          gear.map(([, m, at]) => place(m, { at: [at[0], at[1] + (lod === 2 ? out : 0), at[2]] })),
+        ),
       );
-    }
     const pitch = beltPitch(lod, belt);
     const one = finishLink(link(lod, pitch));
     // The belt runs counter-clockwise in XZ: pitch −angle lays local +X along the tangent, and a

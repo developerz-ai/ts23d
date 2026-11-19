@@ -33,6 +33,7 @@ import {
   PLINTH_OUT,
   WALL_T,
 } from './plan.ts';
+import { streak } from './surface.ts';
 
 type Face = 'top' | 'bottom' | 'front' | 'back' | 'left' | 'right';
 
@@ -185,14 +186,17 @@ function blocks(b: Bay, rng: Rng): Mesh[] {
   const out: Mesh[] = [];
   const [start, end] = ends(b);
   const lay = (t0: number, t1: number, r: number): void => {
-    const k = rng.range(0.86, 1.06);
+    // Dressed stone: every block its own value and warmth (±12%), one in ten from a darker bed.
+    const k = rng.range(0.84, 1.08) * (rng.next() < 0.1 ? 0.8 : 1);
+    const warm = rng.range(-0.05, 0.05);
     const omit: Face[] = [];
     // The bottom course sits on the plinth; any face against a neighbour is never seen.
     if (r === 0 || covered(b, r - 1, t0, t1)) omit.push('bottom');
     if (covered(b, r + 1, t0, t1) && r + 1 < b.cells.length) omit.push('top');
     if (at(b, r, t0 - 1e-3)) omit.push(start);
     if (at(b, r, t1 + 1e-3)) omit.push(end);
-    out.push(dressed(b, t0, t1, r, [BONE[0] * k, BONE[1] * k, BONE[2] * k], 0.035, omit));
+    const tone: Vec3 = [BONE[0] * k * (1 + warm), BONE[1] * k, BONE[2] * k * (1 - warm * 1.5)];
+    out.push(dressed(b, t0, t1, r, tone, 0.035, omit));
   };
   b.cells.forEach((row, r) => {
     if (r % 2 === 0) {
@@ -225,7 +229,7 @@ function columns(b: Bay): Mesh[] {
       }
       const r0 = r;
       while (has(b, r, c)) r++;
-      out.push(block(b, c * w, (c + 1) * w, r0, r, BONE, 0, 'stone'));
+      out.push(block(b, c * w, (c + 1) * w, r0, r, BONE, 0, 'concrete'));
     }
   }
   return out;
@@ -295,7 +299,8 @@ function courses(list: readonly Bay[], roofed: boolean): Mesh[] {
         ];
         if (side && i0 === 0 && standing(list, tip(-WALL_T / 2), r0, r1)) omit.push(start);
         if (side && i === n && standing(list, tip(n * w + WALL_T / 2), r0, r1)) omit.push(end);
-        out.push(block(span, i0 * w, i * w, r0, r1, tone, 0, 'stone', omit));
+        // The LOD0 blocks' strip: the far wall keeps their value instead of turning grey.
+        out.push(block(span, i0 * w, i * w, r0, r1, tone, 0, 'concrete', omit));
       }
     };
     // Courses in pairs: a run standing in both rows is one box, so a wall knocked about by holes
@@ -317,6 +322,8 @@ export interface WallMeshes {
   readonly trim: Mesh | null;
   readonly frames: Mesh | null;
   readonly windows: Mesh | null;
+  /** Rain streaks fading down the face under each sill (LOD0), never weathered over. */
+  readonly stains: Mesh | null;
   /** Window sill centres: where rain streaks start (weather fasteners). */
   readonly sills: readonly Vec3[];
 }
@@ -392,11 +399,94 @@ function window(b: Bay, lod: Lod): { frame: Mesh; pane: Mesh; sill: Vec3 } {
   };
 }
 
+/** Fresh lime mortar run down a face: paler and greyer than the stone. */
+const MORTAR_WET: Vec3 = [0.86, 0.85, 0.8];
+
+/** Grime at the top of a sill streak (lime wash and soot carried down by rain). */
+const STREAK: Vec3 = [0.26, 0.24, 0.2];
+
+/** The two front corners of the hall, where quoins replace the pilasters. */
+const CORNERS: readonly Vec3[] = [
+  [HALF_X + WALL_T / 2, -(HALF_Y + WALL_T / 2), PLINTH],
+  [HALF_X + WALL_T / 2, HALF_Y + WALL_T / 2, PLINTH],
+];
+
+/** Near a front corner (plan distance), where a quoin stack stands. */
+const atCorner = (p: Vec3): boolean =>
+  CORNERS.some((c) => Math.hypot(p[0] - c[0], p[1] - c[1]) < 0.7);
+
+/**
+ * Quoins on a front corner, `rows` courses: dressed blocks alternately long on the front face and
+ * long on the side face, 8 cm proud of both and a step lighter than the walling.
+ */
+function quoins(corner: Vec3, rows: number, rng: Rng): Mesh[] {
+  const sy = Math.sign(corner[1]);
+  const out: Mesh[] = [];
+  for (let r = 0; r < rows; r++) {
+    const longFront = r % 2 === 0;
+    const ax = longFront ? 0.45 : 0.85;
+    const ay = longFront ? 0.85 : 0.45;
+    const k = rng.range(1.1, 1.2);
+    out.push(
+      box({
+        size: [ax + 0.08, ay + 0.08, COURSE - 0.04],
+        at: [
+          corner[0] + 0.08 - (ax + 0.08) / 2,
+          corner[1] - sy * (ay / 2 - 0.04),
+          corner[2] + r * COURSE + 0.02,
+        ],
+        color: [Math.min(1, BONE[0] * k), Math.min(1, BONE[1] * k), Math.min(1, BONE[2] * k)],
+        strip: 'concrete',
+      }),
+    );
+  }
+  return out;
+}
+
+/** The string course: a step darker than the walling, so the band reads at hero distance. */
+const COURSE_TONE: Vec3 = [BONE_DARK[0] * 0.85, BONE_DARK[1] * 0.85, BONE_DARK[2] * 0.82];
+
+/** String course at sill level: a 20 cm band 15 cm proud, run per standing column. */
+function stringCourse(b: Bay): Mesh[] {
+  const w = b.len / COLS;
+  const out: Mesh[] = [];
+  for (let c = 0; c < COLS; c++) {
+    if (!(has(b, 3, c) && has(b, 4, c))) continue;
+    const t0 = c * w;
+    const t1 = (c + 1) * w;
+    // Stop short of a corner quoin; run through the pilasters (they sit over it).
+    const a = atCorner(onBay(b, t0, WALL_T / 2, 0)) ? t0 + 0.9 : t0;
+    const z = atCorner(onBay(b, t1, WALL_T / 2, 0)) ? t1 - 0.9 : t1;
+    if (z - a < 0.1) continue;
+    out.push(
+      faceBox(
+        b,
+        onBay(b, (a + z) / 2, WALL_T / 2 + 0.04, WIN.z0 - 0.32),
+        z - a,
+        0.22,
+        0.2,
+        COURSE_TONE,
+        ['bottom'],
+      ),
+    );
+  }
+  return out;
+}
+
 /**
  * Walls, pilasters and windows for this LOD (the hall scorches them after restripping). `roofed`:
- * a roof closes the hall over the walls, so the far mesh may drop their inside faces.
+ * a roof closes the hall over the walls, so the far mesh may drop their inside faces. `dressed`
+ * (a finished hall): quoins on the front corners and a string course at sill level (LOD0).
  */
-export function walls(lod: Lod, list: readonly Bay[], rng: Rng, roofed: boolean): WallMeshes {
+export function walls(
+  lod: Lod,
+  list: readonly Bay[],
+  rng: Rng,
+  roofed: boolean,
+  dressed = false,
+  /** A wall going up: lime mortar slopped off the top course runs down the outer faces (LOD0). */
+  mortar = false,
+): WallMeshes {
   const ms =
     lod === 0
       ? list.flatMap((b) => blocks(b, rng))
@@ -407,11 +497,52 @@ export function walls(lod: Lod, list: readonly Bay[], rng: Rng, roofed: boolean)
   const frames: Mesh[] = [];
   const glow: Mesh[] = [];
   const sills: Vec3[] = [];
+  const stains: Mesh[] = [];
+  const quoined = dressed && lod === 0;
+  if (quoined) {
+    const qr = rng.fork('quoins');
+    for (const c of CORNERS) {
+      // As tall as the shorter of the two walls meeting there.
+      const meet = list.filter(
+        (b) => atCorner(onBay(b, 0, WALL_T / 2, 0)) || atCorner(onBay(b, b.len, WALL_T / 2, 0)),
+      );
+      const rows = Math.min(...meet.map((b) => bayTop(b)));
+      if (rows > 0) trim.push(...quoins(c, rows, qr));
+    }
+    for (const b of list) trim.push(...stringCourse(b));
+  }
+  if (mortar && lod === 0) {
+    const mr = rng.fork('mortar');
+    for (const b of list) {
+      const top = bayTop(b);
+      if (top < 2) continue;
+      for (let i = 0; i < 2; i++) {
+        const t = b.len * mr.range(0.15, 0.85);
+        // Only under a column standing to the top course.
+        if (!has(b, top - 1, Math.min(COLS - 1, Math.floor(t / (b.len / COLS))))) continue;
+        stains.push(
+          streak(onBay(b, t, WALL_T / 2, PLINTH + top * COURSE - 0.02), b.dir, b.out, {
+            w0: mr.range(0.14, 0.26),
+            w1: 0.06,
+            len: mr.range(0.6, 1.3),
+            from: MORTAR_WET,
+            to: [BONE[0] * 0.95, BONE[1] * 0.95, BONE[2] * 0.93],
+          }),
+        );
+      }
+    }
+  }
   for (const b of list) {
     const top = bayTop(b);
-    // Pilaster at the bay's start, as tall as the wall there (none inside the gate opening).
+    // Pilaster at the bay's start, as tall as the wall there (none inside the gate opening, none
+    // where a corner's quoins stand).
     const start = onBay(b, 0, WALL_T / 2, PLINTH);
-    if (lod < 2 && top >= 2 && !(b.door && Math.abs(start[1]) < GATE_HALF + 0.01)) {
+    if (
+      lod < 2 &&
+      top >= 2 &&
+      !(b.door && Math.abs(start[1]) < GATE_HALF + 0.01) &&
+      !(quoined && atCorner(start))
+    ) {
       const size: Vec3 = b.dir[0] !== 0 ? [0.42, 0.36, top * COURSE] : [0.36, 0.42, top * COURSE];
       // Bevelled at LOD0 only: at LOD1 the chamfers are below a pixel.
       trim.push(pebble(lod === 0 ? 0 : 2, size, start, BONE_DARK));
@@ -424,12 +555,34 @@ export function walls(lod: Lod, list: readonly Bay[], rng: Rng, roofed: boolean)
       frames.push(w.frame);
       sills.push(w.sill);
     }
+    if (lod === 0)
+      // Three drips off each sill (the middle one longest), fading down the face.
+      for (const [dt, w0, len] of [
+        [-0.28, 0.16, 1.0],
+        [0.02, 0.24, 1.55],
+        [0.3, 0.14, 0.75],
+      ] as const)
+        stains.push(
+          streak(
+            onBay(b, b.len / 2 + dt, WALL_T / 2, WIN.z0 - (dressed ? 0.32 : 0.12)),
+            b.dir,
+            b.out,
+            {
+              w0,
+              w1: w0 * 0.45,
+              len,
+              from: STREAK,
+              to: [BONE[0] * 0.8, BONE[1] * 0.8, BONE[2] * 0.78],
+            },
+          ),
+        );
   }
   return {
     walls: ms.length ? merge(ms) : null,
     trim: trim.length ? merge(trim) : null,
     frames: frames.length ? merge(frames) : null,
     windows: glow.length ? merge(glow) : null,
+    stains: stains.length ? merge(stains) : null,
     sills,
   };
 }

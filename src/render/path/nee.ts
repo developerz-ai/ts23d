@@ -71,3 +71,24 @@ export function directLight(
   for (let k = 0; k < 3; k++)
     acc[k] = (acc[k] ?? 0) + (tp[k] ?? 0) * (f[k] ?? 0) * lightLe(sky, wi, k) * weight;
 }
+
+/**
+ * The other half of a split direct estimate: the sun and sky a lobe-sampled direction `dir`
+ * (weight `wt` = f·cos ÷ pdf) reaches when nothing opaque is in its way, MIS-weighted against the
+ * light's pdf. For a vertex whose own path does not always go that way (thin surfaces).
+ */
+export function escapedLight(
+  w: World,
+  s: Surf,
+  dir: ArrayLike<number>,
+  wt: ArrayLike<number>,
+  pdf: number,
+  tp: ArrayLike<number>,
+  acc: Float64Array,
+): void {
+  origin(w, s, dir, org);
+  if (floorT(w, org, dir) < Infinity || w.bvh.occluded(org, dir, Infinity, w.shadowHit)) return;
+  const weight = mis(pdf, lightPdf(w.sky, dir));
+  for (let k = 0; k < 3; k++)
+    acc[k] = (acc[k] ?? 0) + (tp[k] ?? 0) * (wt[k] ?? 0) * lightLe(w.sky, dir, k) * weight;
+}

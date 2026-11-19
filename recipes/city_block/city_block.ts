@@ -105,7 +105,10 @@ export const city_block = defineAsset({
     tolerance: 0.02,
     measures: MEASURES,
   },
-  budget: { triangles: [60000, 40000, 6000], draws: 3 },
+  budget: { triangles: [60000, 15000, 6000], draws: 3 },
+  // A street-corner view from three storeys up: the storefronts, kerbs, lane paint, street grime
+  // and cornice soot of the front corner fill the frame instead of a 150 m slab seen whole.
+  hero: { eye: [108, 30, 20], target: [20, 14, 7], fovDeg: 46 },
   art: { focal: `b${BUILDINGS[0]?.id ?? 0}`, grounded: true },
   build,
 });

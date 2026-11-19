@@ -1,13 +1,13 @@
 {
   "asset": "rts_barracks_rubble",
   "reviewer": "agent",
-  "overall": 6.9,
+  "overall": 7.3,
   "scores": {
     "silhouette": {
       "score": 8,
-      "reason": "A 4 m standing corner with a stepped broken top and a tower stub with a ragged crown now give the ruin verticals; FRONT and SIDE read as a ruined hall, not a slab.",
+      "reason": "A 4 m standing corner with stepped broken top, a tower stub with a ragged crown and now a door frame left standing in the gate: FRONT and SIDE read as a ruined hall.",
       "fixes": [
-        "one leaning rafter or a door frame left standing in the gate so the entrance still reads"
+        "one leaning rafter against the standing corner to break its straight top"
       ]
     },
     "proportions": {
@@ -18,11 +18,11 @@
       ]
     },
     "materials": {
-      "score": 6,
-      "reason": "Stone blocks and wall stubs read as stone with damp streaks; the fallen team slates are bright clean red and the floor is the blotchy camouflage slab, so nothing reads burnt or dusty.",
+      "score": 7,
+      "reason": "The floor is now a flagstone strip with readable joints and per-flag value (sheet TOP), no longer the camouflage slab. Wall stubs read as stone with damp; the fallen slates are partly greyed but still clean red in places.",
       "fixes": [
-        "char/dust on the fallen slates (value down ~40%)",
-        "floor strip with ash and burnt patches"
+        "char/dust on every fallen team slate",
+        "ash patches on the flags"
       ]
     },
     "detail": {
@@ -34,83 +34,31 @@
       ]
     },
     "wear": {
-      "score": 5,
-      "reason": "Raking.png and hero.png show crisp bevelled cube blocks, a little damp at the drum foot and no scorch, soot or ash anywhere; the fallen team slates are still bright saturated red, not dusty or charred. The collapse is told by arrangement only, not by surface.",
+      "score": 6,
+      "reason": "Scorched, darker blocks now cap the broken wall tops and dark flags patch the floor round the heap (sheet TOP, darker crown blocks in hero.png); but the rubble blocks are still crisp bevelled cubes with no chipped arrises, there is no ash or dust fan, and some fallen slates stay bright team red.",
       "fixes": [
-        "scorch and soot on the broken wall tops and on the floor round the heap (rubble() in site.ts): dark, low-roughness patches that read at hero distance",
-        "dust/char coat on the fallen team slates (fallenSlabs) so the red reads buried, value down ~40%",
-        "chip one or two arrises per rubble block instead of whole clean cubes"
+        "dust/char coat on every fallen team slate (value down ~40%) so none read as fresh paint",
+        "chip one or two arrises per rubble block",
+        "a pale dust fan spreading from the heap across the flags"
       ]
     },
     "lod": {
-      "score": 6,
-      "reason": "lods.png: LOD2 (528 tris) keeps the corner wall and tower stub, but the heap collapses to one flat red quad with two blocks and the crown blocks vanish, so the ruin flattens visibly at distance.",
+      "score": 7,
+      "reason": "FAR LOD2 now keeps the standing corner, a stepped tower crown, the door frame and a few red heap pieces; the heap is still thinner than LOD0.",
       "fixes": [
-        "keep 3-4 tilted heap blocks and 3 slate shards at LOD2",
-        "keep a stepped crown (4-6 blocks) on the tower stub at LOD2"
+        "keep 3-4 tilted heap blocks at LOD2"
       ]
     },
     "technical": {
       "score": 8,
-      "reason": "QA PASS, tris 19.1k / 3.8k / 528, draws 2/2/2; one trim material + team slot, LOD2 well under 1k. Triangles mostly sit in the running-bond blocks and slates, where they show.",
+      "reason": "QA PASS: 12.3k / 3.2k / 700 tris, 2 / 2 / 2 draws; one trim material + team slot, LOD2 well under 1k. LOD0 down from 19k to 12k.",
       "fixes": [
-        "merge the per-block wall boxes into one course mesh per bay at LOD0 (shared inner faces removed) so the coursing costs fewer triangles"
+        "spend some of the LOD0 savings on the fixes above (quoins, string course, gravel) instead of more blocks"
       ]
     }
   },
   "renders": {
-    "hero.png": "86ebd755c61b81690d70999b7adda1e5017bf8bbe7ea2aa2da6aaf6c105cd191",
-    "sheet.png": "81e0069aeb8d16d163cf611b6591e4b05e5393259b6939ebe15e803a59c8e157"
-  },
-  "metrics": {
-    "silhouette": [
-      {
-        "view": "front",
-        "iou": 0.886
-      },
-      {
-        "view": "side",
-        "iou": 0.817
-      },
-      {
-        "view": "3/4",
-        "iou": 0.931
-      }
-    ],
-    "focal": {
-      "peakPart": "tower_l",
-      "peak": [
-        455,
-        156
-      ],
-      "focalShare": 0,
-      "focalArea": 0,
-      "top": [
-        {
-          "part": "walls",
-          "share": 0.384
-        },
-        {
-          "part": "tower_r",
-          "share": 0.223
-        },
-        {
-          "part": "tower_l",
-          "share": 0.104
-        }
-      ],
-      "declared": []
-    },
-    "rest": {
-      "share": 0.459,
-      "spread": 0.709,
-      "min": 0.25
-    },
-    "shape": {
-      "acuteShare": 0.021,
-      "straightShare": 0.745,
-      "taper": 0.498,
-      "shape": "stable"
-    }
+    "hero.png": "eae19bdc465532400ec4f5d3ea5823202dc17fc4c545bdfa30d3cf6022db0dbf",
+    "sheet.png": "05a19630d0515aae1e357a2b3a6bd72f196c38ccab7e54f29b70731a29c32af7"
   }
 }

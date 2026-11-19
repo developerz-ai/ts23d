@@ -1,13 +1,13 @@
 {
   "asset": "rts_barracks_scaffold_rubble",
   "reviewer": "agent",
-  "overall": 6.9,
+  "overall": 7.3,
   "scores": {
     "silhouette": {
-      "score": 7,
-      "reason": "Standing wall stubs, a tower stub with a ragged crown and fallen scaffold poles (two crossed and leaning) read as a ruined build; the crossed poles read a little like an A-frame placed on purpose.",
+      "score": 8,
+      "reason": "Wall stubs, a tower stub with a ragged crown, and scaffold poles now leaning on the wall top or lying on the ground (no mid-air A-frame): reads as a ruined build site from every view.",
       "fixes": [
-        "let the leaning poles rest on the wall top rather than meeting in mid-air"
+        "one standard still upright in a corner so the scaffold origin reads in FRONT"
       ]
     },
     "proportions": {
@@ -18,11 +18,11 @@
       ]
     },
     "materials": {
-      "score": 6,
-      "reason": "Stone stubs and timber poles read; the fallen team slates are clean saturated red, the floor the camouflage slab.",
+      "score": 7,
+      "reason": "The floor is now a flagstone strip with readable joints and per-flag value (sheet TOP), no longer the camouflage slab. Stone stubs and timber poles read; most fallen slates are greyed, a few stay bright red.",
       "fixes": [
-        "char/dust on the fallen slates",
-        "floor strip with ash patches"
+        "char/dust on every fallen team slate",
+        "ash patches on the flags"
       ]
     },
     "detail": {
@@ -34,12 +34,12 @@
       ]
     },
     "wear": {
-      "score": 5,
-      "reason": "Raking.png and hero.png show crisp bevelled cube blocks, a little damp at the drum foot and no scorch, soot or ash anywhere; the fallen team slates are still bright saturated red, not dusty or charred. The collapse is told by arrangement only, not by surface.",
+      "score": 6,
+      "reason": "Scorched, darker blocks now cap the broken wall tops and dark flags patch the floor round the heap (sheet TOP, darker crown and wall-top blocks in hero.png); but the rubble blocks are still crisp bevelled cubes with no chipped arrises, there is no ash or dust fan, and some fallen slates stay bright team red.",
       "fixes": [
-        "scorch and soot on the broken wall tops and on the floor round the heap (rubble() in site.ts): dark, low-roughness patches that read at hero distance",
-        "dust/char coat on the fallen team slates (fallenSlabs) so the red reads buried, value down ~40%",
-        "chip one or two arrises per rubble block instead of whole clean cubes"
+        "dust/char coat on every fallen team slate (value down ~40%) so none read as fresh paint",
+        "chip one or two arrises per rubble block",
+        "a pale dust fan spreading from the heap across the flags"
       ]
     },
     "lod": {
@@ -51,65 +51,14 @@
     },
     "technical": {
       "score": 8,
-      "reason": "QA PASS, tris 18.8k / 3.8k / 500, draws 2/2/2; one trim material + team slot, LOD2 well under 1k. Triangles mostly sit in the running-bond blocks and slates, where they show.",
+      "reason": "QA PASS: 12.0k / 3.2k / 636 tris, 2 / 2 / 2 draws; one trim material + team slot, LOD2 well under 1k. LOD0 down from 18.8k to 12k.",
       "fixes": [
-        "merge the per-block wall boxes into one course mesh per bay at LOD0 (shared inner faces removed) so the coursing costs fewer triangles"
+        "spend some of the LOD0 savings on the fixes above (quoins, string course, gravel) instead of more blocks"
       ]
     }
   },
   "renders": {
-    "hero.png": "3ad3f4e43a89373fcc42c64fc3c32c7c8425e15f72e6ac09266e6ef34843f647",
-    "sheet.png": "54a3f12a0b13ee81bccae1aca04191e1fa9a1185906df409be279d85c53b1125"
-  },
-  "metrics": {
-    "silhouette": [
-      {
-        "view": "front",
-        "iou": 0.858
-      },
-      {
-        "view": "side",
-        "iou": 0.883
-      },
-      {
-        "view": "3/4",
-        "iou": 0.926
-      }
-    ],
-    "focal": {
-      "peakPart": "walls",
-      "peak": [
-        302,
-        168
-      ],
-      "focalShare": 0,
-      "focalArea": 0,
-      "top": [
-        {
-          "part": "walls",
-          "share": 0.391
-        },
-        {
-          "part": "tower_r",
-          "share": 0.227
-        },
-        {
-          "part": "plinth",
-          "share": 0.099
-        }
-      ],
-      "declared": []
-    },
-    "rest": {
-      "share": 0.411,
-      "spread": 0.72,
-      "min": 0.25
-    },
-    "shape": {
-      "acuteShare": 0.189,
-      "straightShare": 0.69,
-      "taper": 0.466,
-      "shape": "stable"
-    }
+    "hero.png": "e8ecb337077d168a9ad2dd2949ed5ee2aeb06a441ffd8feb09c8b0f795ddf14f",
+    "sheet.png": "46eef1e56c792ecd6ed7ae06686c150bcb50dbd77d709e19370a65400572926b"
   }
 }

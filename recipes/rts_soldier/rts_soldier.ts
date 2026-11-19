@@ -6,20 +6,33 @@
 // emitter at the barrel tip. LOD2 ≈ 350 triangles for crowds.
 
 import {
+  applyAffine,
   box,
   cylinder,
   defineAsset,
+  frame,
   type Lod,
   type Mesh,
   merge,
   type PartOptions,
-  place,
+  type Rng,
   sweep,
   symmetric,
   type Vec3,
 } from '@developerz.ai/ts23d';
-import { figure } from '../_lib/rts/figure.ts';
-import { Kit, MUD, type Rule, restrip, role, wearOf } from '../_lib/rts/finish.ts';
+import { type FigurePoints, figure } from '../_lib/rts/figure.ts';
+import {
+  band,
+  CAKED,
+  DUST,
+  Kit,
+  MUD,
+  type Rule,
+  restrip,
+  role,
+  topDust,
+  wearOf,
+} from '../_lib/rts/finish.ts';
 import {
   BONE,
   BONE_DARK,
@@ -189,7 +202,8 @@ function helmet(add: Add, lod: Lod, head: Vec3, headR: Vec3): void {
 }
 
 /** Pauldrons, chest plates, belt, knee and shin guards, elbow pads. */
-function armour(add: Add, lod: Lod, shoulder: Vec3): void {
+function armour(add: Add, lod: Lod, pts: FigurePoints): void {
+  const shoulder = pts.shoulder;
   // Pauldrons: big team-colour domes, the read from the RTS camera.
   const p = dome(
     lod,
@@ -224,33 +238,53 @@ function armour(add: Add, lod: Lod, shoulder: Vec3): void {
   ]);
   add('greave_l', knee);
   add('greave_r', mirrorY(knee));
-  const elbow = ellipsoid(lod === 0 ? 1 : lod, [-0.06, 0.31, 1.12], [0.05, 0.06, 0.06], BONE);
-  add('elbow_l', elbow);
-  add('elbow_r', mirrorY(elbow));
+  // Elbow cops behind each elbow joint (the left one reaches across the body at port arms).
+  const cop = (e: Vec3, side: number): Mesh =>
+    ellipsoid(
+      lod === 0 ? 1 : lod,
+      [e[0] - 0.04, e[1] + side * 0.01, e[2]],
+      [0.05, 0.06, 0.06],
+      BONE,
+    );
+  add('elbow_l', cop(pts.elbowL, 1));
+  add('elbow_r', cop(pts.elbowR, -1));
 }
 
-/** How far the carbine turns across the body about its grip (radians). */
-const PORT = 0.25;
+/**
+ * Port arms: the carbine diagonal across the chest, muzzle up by the left shoulder, grip low by
+ * the right hip, its side to the front (the FRONT view reads the whole weapon). Carbine frame:
+ * barrel along D, grip axis (the gun's "up") along U, both in the frontal plane.
+ */
+const GRIP: Vec3 = [0.31, -0.24, 1.0];
+const D: Vec3 = [0, 0.75, 0.66].map((v, _, a) => v / Math.hypot(...a)) as unknown as Vec3;
+const U: Vec3 = [0, -D[2], D[1]];
+/** The fore-end under the shroud, where the left glove holds it. */
+const SUPPORT: Vec3 = [GRIP[0], GRIP[1] + D[1] * 0.42 - U[1] * 0.0, GRIP[2] + D[2] * 0.42 + 0.04];
+/** The carbine's local frame onto the port pose: x → D, y → forward-facing side, z → U. */
+const PORT_FRAME = frame(
+  D,
+  [U[1] * D[2] - U[2] * D[1], U[2] * D[0] - U[0] * D[2], U[0] * D[1] - U[1] * D[0]],
+  U,
+  GRIP,
+);
 
 /**
  * Load-bearing kit over the armour: webbing straps from the shoulders over the chest plates to
  * the belt, two magazine pouches on the chest rig, panel grooves on the chest plates, and
  * gauntlets (cuff + back plate) that make the hands read bigger at strategy scale.
  */
-function harness(add: Add, lod: Lod): void {
+function harness(add: Add, lod: Lod, pts: FigurePoints): void {
   if (lod === 2) return;
-  // Gauntlets: a cuff over each wrist and an armour plate on the back of the hand.
-  const cuffL = tube(lod, [0.02, 0.32, 0.84], [0.02, 0.32, 0.93], 0.066, 0.07, BONE_DARK);
-  const plateL = pebble(lod, [0.075, 0.03, 0.1], [0.025, 0.352, 0.74], BONE_DARK);
-  add('gauntlet_l', merge([cuffL, plateL]));
-  const e: Vec3 = [-0.02, -0.31, 1.12];
-  const w: Vec3 = [0.25, -0.27, 1.06];
-  const t = (k: number): Vec3 => [
+  // Gauntlets: a cuff over the last quarter of each forearm.
+  const along = (e: Vec3, w: Vec3, k: number): Vec3 => [
     e[0] + (w[0] - e[0]) * k,
     e[1] + (w[1] - e[1]) * k,
     e[2] + (w[2] - e[2]) * k,
   ];
-  add('gauntlet_r', tube(lod, t(0.72), t(0.98), 0.066, 0.072, BONE_DARK));
+  const cuff = (e: Vec3, w: Vec3): Mesh =>
+    tube(lod, along(e, w, 0.72), along(e, w, 0.98), 0.066, 0.072, BONE_DARK);
+  add('gauntlet_l', cuff(pts.elbowL, pts.wristL));
+  add('gauntlet_r', cuff(pts.elbowR, pts.wristR));
   const strap = sweep({
     section: { radius: 0.017, segments: lod === 0 ? 5 : 4 },
     path: [
@@ -286,6 +320,42 @@ function harness(add: Add, lod: Lod): void {
     );
 }
 
+/**
+ * Chips knocked out of both pauldrons' team paint, round the lower rim where they knock on doors
+ * and rifles: thin flakes of bone primer lying on the dome (its outward normal), 3-6 cm across.
+ */
+function pauldronChips(shoulder: Vec3, rng: Rng): Mesh {
+  const c: Vec3 = [shoulder[0], shoulder[1] + 0.02, shoulder[2] - 0.04];
+  const r: Vec3 = [0.13, 0.12, 0.12];
+  const out: Mesh[] = [];
+  for (const side of [1, -1])
+    for (let i = 0; i < 7; i++) {
+      const az = rng.range(-1.9, 1.9);
+      const el = rng.range(0.12, 0.5);
+      const d: Vec3 = [Math.cos(el) * Math.cos(az), Math.cos(el) * Math.sin(az), Math.sin(el)];
+      const p: Vec3 = [c[0] + r[0] * d[0], side * (c[1] + r[1] * d[1]), c[2] + r[2] * d[2]];
+      const n0: Vec3 = [d[0] / r[0], (side * d[1]) / r[1], d[2] / r[2]];
+      const nl = Math.hypot(...n0);
+      const n: Vec3 = [n0[0] / nl, n0[1] / nl, n0[2] / nl];
+      const t0: Vec3 = [-n[1], n[0], 0];
+      const tl = Math.hypot(...t0) || 1;
+      const t: Vec3 = [t0[0] / tl, t0[1] / tl, 0];
+      const b: Vec3 = [
+        n[1] * t[2] - n[2] * t[1],
+        n[2] * t[0] - n[0] * t[2],
+        n[0] * t[1] - n[1] * t[0],
+      ];
+      const s = rng.range(0.03, 0.06);
+      out.push(
+        applyAffine(
+          box({ size: [s, s * rng.range(0.5, 0.8), 0.008], at: [0, 0, -0.004], color: BONE_DARK }),
+          frame(t, b, n, p),
+        ),
+      );
+    }
+  return merge(out);
+}
+
 export const rts_soldier = defineAsset({
   name: 'rts_soldier',
   kind: 'character',
@@ -293,7 +363,23 @@ export const rts_soldier = defineAsset({
     'Saltmarch Warden: original RTS line infantry. Bone ceramic armour, team-colour pauldrons and crest, amber visor, sunlance carbine on the hand socket; 8 team liveries.',
   tags: ['rts', 'saltmarch', 'infantry', 'character', 'team-colour'],
   // Design envelope from the faction brief (an invented unit: the brief is the source).
-  real: { length: 1.36, width: 0.82, height: 1.95 },
+  // As built at port arms (the carbine across the chest, not pointing forward).
+  // Length and width are the design brief's figure in its port-arms carry pose (the carbine
+  // across the chest sets both); the pauldron span is the body's own, which no pose changes.
+  real: {
+    length: 0.72,
+    width: 0.97,
+    height: 1.95,
+    measures: [
+      {
+        label: 'pauldron span (infantry shoulders 0.75–0.82 m, design brief)',
+        axis: 'y',
+        value: 0.82,
+        parts: ['pauldron'],
+        source: 'recipes/rts_faction/README.md (original design brief)',
+      },
+    ],
+  },
   sources: [
     'recipes/rts_faction/README.md (original design brief: proportions, shape language, palette)',
   ],
@@ -323,11 +409,13 @@ export const rts_soldier = defineAsset({
       torsoStrip: 'plastic',
       boots: BOOT,
       hands: LEATHER,
-      right: 'hold',
+      right: 'port',
       handleR: HANDLE_R,
+      mud: 0.34,
+      port: { grip: GRIP, axis: U, support: SUPPORT },
     });
     helmet(add, lod, pts.head, pts.headR);
-    armour(add, lod, pts.shoulder);
+    armour(add, lod, pts);
     // The carbine rides the right-hand socket: grip centre at the fist, muzzle forward.
     ctx.socket('hand_r_socket', {
       kind: 'mount',
@@ -337,21 +425,23 @@ export const rts_soldier = defineAsset({
     });
     const gun = carbine(lod);
     const at = pts.grip;
-    // Carried at the ready, angled across the body (turned about the grip's own axis, so the
-    // fist still closes round it): the front view reads the weapon, not just its muzzle.
-    const pose = { at, yaw: PORT };
-    add('rifle_grip', place(gun.grip, pose));
-    add('rifle', place(gun.body, pose));
-    if (gun.cell) add('rifle_cell', place(gun.cell, pose));
-    if (gun.sling) add('rifle_sling', place(gun.sling, pose));
-    ctx.joint('grip_r', { from: 'hand_r', to: 'rifle_grip', at, axis: [0, 0, 1], kind: 'grip' });
+    // At port arms across the chest (the grip's own axis tilted onto U, so the fist still closes
+    // round it): the front view reads the whole weapon, not a muzzle pointing at the lens.
+    const pose = (m: Mesh): Mesh => applyAffine(m, PORT_FRAME);
+    add('rifle_grip', pose(gun.grip));
+    add('rifle', pose(gun.body));
+    if (gun.cell) add('rifle_cell', pose(gun.cell));
+    if (gun.sling) add('rifle_sling', pose(gun.sling));
+    ctx.joint('grip_r', { from: 'hand_r', to: 'rifle_grip', at, axis: U, kind: 'grip' });
     const m = gun.muzzle;
-    const c = Math.cos(PORT);
-    const sn = Math.sin(PORT);
     ctx.emitter('muzzle', {
       kind: 'muzzle',
-      at: [at[0] + m[0] * c - m[1] * sn, at[1] + m[0] * sn + m[1] * c, at[2] + m[2]],
-      dir: [c, sn, 0],
+      at: [
+        at[0] + D[0] * m[0] + U[0] * m[2],
+        at[1] + D[1] * m[0] + U[1] * m[2],
+        at[2] + D[2] * m[0] + U[2] * m[2],
+      ],
+      dir: D,
       rate: 120,
       life: 0.08,
       size: [0.08, 0.25],
@@ -360,7 +450,7 @@ export const rts_soldier = defineAsset({
       spreadDeg: 12,
       when: 'event',
     });
-    harness(add, lod);
+    harness(add, lod, pts);
     // Back: a power pack with vents and a whip antenna; team flap on top (top-visible). Its front
     // face sits 5 mm into the torso's back at the shoulder blades, where the harness pulls it.
     const px = PACK_X;
@@ -376,6 +466,24 @@ export const rts_soldier = defineAsset({
     add('pack_flap', pebble(lod, [0.17, 0.33, 0.06], [px, 0, 1.38], TEAM), {
       paint: 'team',
     });
+    // Chipped team paint on the pauldrons' rims: bone primer showing through (LOD0).
+    if (lod === 0) add('pauldron_chips', pauldronChips(pts.shoulder, ctx.rng.fork('chips')));
+    // Caked brine mud up the boots and shins, splashes on the knee guards; salt dust on the
+    // shoulders, helmet and pack tops (after weathering, so nothing paints over them).
+    kit.post(
+      (n) => /^(boot|shin|greave)_/.test(n),
+      (m) =>
+        // Pale dried mud to mid-shin, wet and dark at the soles.
+        band(
+          band(m, { top: 0.52, full: 0.12, color: CAKED, k: 0.9 }, 0.06),
+          { top: 0.12, full: 0.02, color: MUD, k: 0.75 },
+          0.02,
+        ),
+    );
+    kit.post(
+      (n) => /^(torso|helmet|helmet_trim|pack|chest_plates|webbing)$/.test(n),
+      (m) => topDust(m, 1.2, DUST, 0.55),
+    );
     // Measured wear on everything but skin, lenses and team plates: chipped ceramic edges,
     // salt dust on the tops, brine mud up the boots.
     const bare = new Set(['head', 'neck', 'visor', 'rifle_cell']);

@@ -11,7 +11,7 @@ const METALS = Object.values(MATERIAL_LIBRARY)
   .map((m) => m.id);
 
 describe('metal strips: metalness is binary', () => {
-  const sheet = paintTrimSheet({ ...DEFAULT_SHEET, size: 512 });
+  const sheet = paintTrimSheet({ ...DEFAULT_SHEET, size: 512 }, []);
   const maps = { size: sheet.size, albedo: sheet.albedo, normal: sheet.normal, orm: sheet.orm };
 
   it('covers the iron strips the helper flagged', () => {

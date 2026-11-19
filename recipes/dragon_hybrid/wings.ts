@@ -11,8 +11,9 @@
 //            middle of the finger, the tip
 // Three bones a side, wing_l_0..2 and wing_r_0..2, hung from spine_2. Each hinges about the
 // body's long axis, the stroke a wing raised in a V can make without its membrane leaving the
-// back. The joints are given in the fitted rest AFTER the build step's × 1.25 (the mesh Blender
-// binds); the scale centres go to that step from here, so both sides of the chain agree.
+// back. The joints are given in the fitted rest AFTER the build step has scaled and lowered the
+// wings (the mesh Blender binds); the centres go to that step from here, so both sides of the
+// chain agree.
 
 import {
   type Bone,
@@ -23,10 +24,17 @@ import {
   type Vec3,
 } from '@developerz.ai/ts23d';
 
-/** Wing scale about the wing roots. At 600 kg the generator's wings (span 2.8 m) read as a
- *  hatchling's; ×1.25 gives 3.5 m. Still far short of flight for the mass, as on every heavy
- *  fantasy drake: README.md, "Wings". */
-export const WING_SCALE = 1.25;
+/** Wing scale about the wing roots. At 600 kg the generator's wings (a V 2.8 m wide) read as a
+ *  hatchling's, and at ×1.25 the raised V still measured 3.3 m across a 4.9 m animal: the span
+ *  read as decorative. ×1.4, and lowered by WING_TILT, the wings spread about as wide as the
+ *  animal is long. Still far short of flight for the mass, as on every heavy fantasy drake:
+ *  README.md, "Wings". */
+export const WING_SCALE = 1.4;
+
+/** Degrees each wing is lowered about the body's long axis through its root: the generator
+ *  raised them 52° above the horizon (a narrow V); at 30° they read as a flying surface from the
+ *  front and the side. */
+export const WING_TILT = 22;
 
 /** The bones no wing vertex is near (steps.ts and wear.ts use the same list). */
 export const TRUNK = [
@@ -46,15 +54,17 @@ export const FLAP = {
   /** Beats per second. A display beat on the ground, slow enough to read as heavy. Flight is
    *  out of reach either way (README.md, "Wings"). */
   hz: 0.9,
-  /** Shoulder, wrist, finger: the top and the bottom of the stroke. */
+  /** Shoulder, wrist, finger: the top and the bottom of the stroke. The shoulder's is the same
+   *  arc in space as before the wings were lowered by WING_TILT (it was 8 … −30 from the raised
+   *  rest): the membrane was fitted to it. */
   stroke: [
-    [8, -30],
+    [30, -8],
     [5, -16],
     [4, -10],
   ],
   /** The joint limits QA `deform` poses the skin at: the stroke and 2° to spare. */
   limits: [
-    [-32, 10],
+    [-10, 32],
     [-18, 7],
     [-12, 6],
   ],
@@ -149,12 +159,17 @@ export function findWings(fit: ExtraFit): readonly Wing[] {
     const corner = arm.reduce((best, p, i) => (off(p) > off(arm[best] ?? p) ? i : best), 0);
     const wrist = arm[corner] ?? shoulder;
     const finger = arm[Math.floor(corner / 2)] ?? wrist;
+    // As the build step moves the mesh (steps.ts): scaled about the root, then turned about the
+    // body's long axis through it, both by how much of a wing the point is.
     const scaled = (p: Vec3): Vec3 => {
-      const k = 1 + (WING_SCALE - 1) * mask(p).m;
+      const m = mask(p).m;
+      const k = 1 + (WING_SCALE - 1) * m;
+      const turn = (-side * WING_TILT * m * Math.PI) / 180;
+      const [y, z] = [(p[1] - root[1]) * k, (p[2] - root[2]) * k];
       return [
         root[0] + (p[0] - root[0]) * k,
-        root[1] + (p[1] - root[1]) * k,
-        root[2] + (p[2] - root[2]) * k,
+        root[1] + y * Math.cos(turn) - z * Math.sin(turn),
+        root[2] + y * Math.sin(turn) + z * Math.cos(turn),
       ];
     };
     return { side, root, joints: [scaled(shoulder), scaled(wrist), scaled(finger), scaled(tip)] };

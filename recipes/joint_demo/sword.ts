@@ -27,7 +27,7 @@ const RUST: Vec3 = [0.52, 0.33, 0.2];
 const BRASS: Vec3 = [0.95, 0.92, 0.86];
 const TARNISH: Vec3 = [0.5, 0.42, 0.3];
 const LEATHER: Vec3 = [0.8, 0.74, 0.68];
-const SWEAT: Vec3 = [0.36, 0.3, 0.26];
+const SWEAT: Vec3 = [0.24, 0.19, 0.16];
 const RUBBED: Vec3 = [1, 0.95, 0.88];
 
 export interface SwordOptions {
@@ -138,8 +138,9 @@ function blade(ctx: BuildContext, base: Vec3, length: number, rng: Rng): Mesh {
           (_, i): Nick => ({
             t: 0.2 + 0.09 * i + r.range(-0.03, 0.03),
             side: i % 3 === 1 ? -1 : 1,
-            depth: r.range(0.0018, 0.0042),
-            half: r.range(0.003, 0.006),
+            // (Thumbnail-sized bites: at 2-4 mm they were under a pixel in the hero.)
+            depth: r.range(0.004, 0.0085),
+            half: r.range(0.006, 0.012),
           }),
         )
       : [];
@@ -239,7 +240,7 @@ export function sword(ctx: BuildContext, o: SwordOptions): void {
   const steps = ctx.lod === 2 ? 1 : Math.max(3, turns * 2);
   for (let i = 0; i <= steps; i++) {
     const t = i / steps;
-    const ridge = turns > 0 && i % 2 === 1 ? 0.0007 : 0;
+    const ridge = turns > 0 && i % 2 === 1 ? 0.0018 : 0;
     profile.push([barrel(t) + ridge, -half + 0.007 + (o.gripLength - 0.014) * t]);
   }
   if (riser) profile.push([barrel(1) + riser, half - 0.006], [barrel(1) + riser, half]);
@@ -256,7 +257,14 @@ export function sword(ctx: BuildContext, o: SwordOptions): void {
       }),
       (p) => {
         const d = Math.abs(p[2] - z) / half;
-        return mix(mix(SWEAT, LEATHER, Math.min(1, d * 0.9)), RUBBED, Math.max(0, d - 0.82) * 2.5);
+        // Sweat-dark where the fist holds it; the cord binding's turns stand paler, rubbed.
+        const cord = Math.max(0, Math.hypot(p[0] - x, p[1] - y) - barrel(0.5) - 0.0002) / 0.0016;
+        const held = mix(SWEAT, LEATHER, Math.min(1, d * d * 0.8));
+        return mix(
+          mix(held, RUBBED, Math.min(1, cord) * 0.45),
+          RUBBED,
+          Math.max(0, d - 0.86) * 2.5,
+        );
       },
     ),
   );
@@ -274,7 +282,13 @@ export function sword(ctx: BuildContext, o: SwordOptions): void {
     [0.2, 0.0105, 0.0088, 0],
     [0, 0.012, 0.009, 0],
   ];
-  const picked = ctx.lod > 0 ? cross.filter((_, i) => i % 2 === 0 || i === 5) : cross;
+  // (Far: tip, waist and centre only; the triangles saved keep the arm's belly rings.)
+  const picked =
+    ctx.lod === 2
+      ? cross.filter((_, i) => i === 0 || i === 2 || i === 5)
+      : ctx.lod > 0
+        ? cross.filter((_, i) => i % 2 === 0 || i === 5)
+        : cross;
   const sides = ctx.pick([8, 5, 4]);
   const stations = [
     ...picked.map(([t, ry, rz, lift]) => bar(x - span * t, y, ry, rz, gz + lift, sides)),

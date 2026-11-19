@@ -101,8 +101,8 @@ export function ringedStem(kindTrunk: Mesh, o: RingedOptions): Mesh {
     scale.push(q.r * (scar ? 1 - o.groove : 1));
     // Grey, weathered low; the band between scars pale, the scar itself dark.
     const low = Math.max(0, 1 - q.c[2] / 9);
-    const grey = 0.35 * low;
-    const v = scar ? 0.62 : 1.08;
+    const grey = 0.6 * low;
+    const v = scar ? 0.42 : 1.12;
     const g = (q.col[0] + q.col[1] + q.col[2]) / 3;
     tint.push([
       (q.col[0] + (g - q.col[0]) * grey) * v,

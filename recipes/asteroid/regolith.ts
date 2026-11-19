@@ -12,8 +12,11 @@ const shade = tex.cells({ size: 0.4, jitter: 1, out: 'id', seed: 61 });
 const clasts = tex.cells({ size: 0.4, jitter: 1, out: 'edge', seed: 61 }).smoothstep(0, 0.35);
 /** Nickel-iron grains: sparse bright clusters ~15 cm. */
 const metal = tex.cells({ size: 0.7, jitter: 1, out: 'f1', seed: 62 }).smoothstep(0.12, 0.04);
+/** Clasts: large pale and dark fragments ~25–40 cm, so the grain reads as broken rock. */
+const pale = tex.cells({ size: 0.9, jitter: 1, out: 'f1', seed: 64 }).smoothstep(0.2, 0.08);
+const dark = tex.cells({ size: 0.8, jitter: 1, out: 'f1', seed: 65 }).smoothstep(0.18, 0.06);
 const dust = tex.noise({ size: 0.9, octaves: 3, seed: 63 });
-const height = clasts.mul(0.5).add(dust.mul(0.5)).clamp();
+const height = clasts.mul(0.2).add(dust.mul(0.5)).add(pale.mul(0.3)).clamp();
 
 export const REGOLITH = defineMaterial({
   id: 'asteroid_regolith',
@@ -29,14 +32,18 @@ export const REGOLITH = defineMaterial({
     depth: 0.015,
     // Low contrast on purpose: box-projected SDF UVs switch axis triangle by triangle, and any
     // strong feature would show the switch as a jagged outline. Tone lives in vertex colour.
+    // The cobble edges kept faint (a crack network on every cell read as crazed mud); tone
+    // comes from per-cobble shade and the large pale and dark clasts instead.
     albedo: clasts
-      .remap(0.88, 1)
-      .mul(shade.remap(0.9, 1.02))
+      .remap(0.95, 1)
+      .mul(shade.remap(0.84, 1.04))
       .mul(dust.remap(0.92, 1.03))
-      .add(metal.mul(0.18))
+      .mul(dark.remap(1, 0.62))
+      .add(pale.mul(0.16))
+      .add(metal.mul(0.3))
       .clamp(0, 1),
     // Metal grains are smoother and glint under a raking sun.
-    roughness: metal.remap(0.95, 0.45),
+    roughness: metal.remap(0.95, 0.3),
   }),
   description:
     'Rubble-pile regolith: angular cobbles in a dusty matrix with nickel-iron flecks; near-white so vertex colour tints it.',

@@ -20,9 +20,9 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    16862,
+    16220,
     6950,
-    736
+    170
   ],
   "drawCalls": [
     5,
@@ -138,7 +138,7 @@
       "target": 0.2017,
       "actual": 0.2017,
       "eligible": "up-facing | sunlit ; up-facing",
-      "area": 34.0019,
+      "area": 34.0397,
       "by": {
         "door_r": {
           "target": 0.32,
@@ -153,7 +153,7 @@
         "container": {
           "target": 0.2,
           "actual": 0.2,
-          "area": 33.511
+          "area": 33.5488
         }
       }
     },
@@ -161,7 +161,7 @@
       "target": 0.15,
       "actual": 0.15,
       "eligible": "convex-edges",
-      "area": 199.5227,
+      "area": 201.4618,
       "by": {
         "door_r": {
           "target": 0.15,
@@ -176,7 +176,7 @@
         "container": {
           "target": 0.15,
           "actual": 0.15,
-          "area": 180.8921
+          "area": 182.8312
         }
       }
     },
@@ -184,12 +184,12 @@
       "target": 0.35,
       "actual": 0.35,
       "eligible": "touched",
-      "area": 5.6517,
+      "area": 5.652,
       "by": {
         "door_r": {
           "target": 0.35,
           "actual": 0.35,
-          "area": 2.8284
+          "area": 2.8287
         },
         "door_l": {
           "target": 0.35,
@@ -202,7 +202,7 @@
       "target": 0.08,
       "actual": 0.08,
       "eligible": "convex-edges & side-facing",
-      "area": 138.4398,
+      "area": 140.3105,
       "by": {
         "door_r": {
           "target": 0.08,
@@ -217,30 +217,7 @@
         "container": {
           "target": 0.08,
           "actual": 0.08,
-          "area": 120.5257
-        }
-      }
-    },
-    "mud": {
-      "target": 0.25,
-      "actual": 0.25,
-      "eligible": "ground-near",
-      "area": 51.0389,
-      "by": {
-        "door_r": {
-          "target": 0.25,
-          "actual": 0.25,
-          "area": 1.895
-        },
-        "door_l": {
-          "target": 0.25,
-          "actual": 0.25,
-          "area": 1.8998
-        },
-        "container": {
-          "target": 0.25,
-          "actual": 0.25,
-          "area": 47.2441
+          "area": 122.3964
         }
       }
     },
@@ -248,7 +225,7 @@
       "target": 0.3011,
       "actual": 0.3011,
       "eligible": "up-facing",
-      "area": 33.8692,
+      "area": 33.907,
       "by": {
         "door_r": {
           "target": 0.4,
@@ -263,15 +240,15 @@
         "container": {
           "target": 0.3,
           "actual": 0.3,
-          "area": 33.511
+          "area": 33.5488
         }
       }
     },
     "dents": {
       "target": 0.012,
-      "actual": 0.0022,
+      "actual": 0,
       "eligible": "exposed-panels",
-      "area": 151.6449,
+      "area": 153.5495,
       "count": 4
     }
   },

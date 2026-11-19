@@ -21,7 +21,7 @@ import { DESIGN, HEAD_IDS, JAW_IDS, LEG_FEET, NECK_IDS, NECKS } from './anatomy.
 import { HEAD_STYLES } from './head.ts';
 import { HYDRA_PLAN, hydra } from './hydra.ts';
 import { KERATIN, SCALES } from './material.ts';
-import { mudAt } from './skin.ts';
+import { bodyRelief, mudAt } from './skin.ts';
 
 const SLOW = 240_000;
 const lod0: CompiledAsset = compile(hydra, { lod: 0 });
@@ -250,15 +250,31 @@ describe('surface and wear', () => {
     for (const name of ['horns', 'claws', 'teeth', 'spines'])
       expect(onStrip(name, KERATIN)).toBeGreaterThan(0.95);
   });
-  it('cakes mud on the feet and leaves the back clean', () => {
+  it('rounds the trunk into a barrel: widest mid-trunk, not a box between the legs', () => {
+    const flankAt = (u: number): number =>
+      bodyRelief({
+        u,
+        angle: Math.PI / 2,
+        s: u * 2.9,
+        radius: 0.55,
+        chain: 'body',
+        lod: 0,
+        p: [0, 0.6, 1],
+        n: [0, 1, 0],
+      });
+    expect(flankAt(0.5) - flankAt(0.25)).toBeGreaterThan(0.08);
+    expect(flankAt(0.5) - flankAt(0.75)).toBeGreaterThan(0.08);
+  });
+  it('cakes mud on the feet and up the shins, broad enough to read from the hero camera', () => {
     expect(mudAt([1.2, 0.9, 0.05])).toBeGreaterThan(0.6);
+    expect(mudAt([1.0, 0.9, 0.35])).toBeGreaterThan(0.5);
     expect(mudAt([0, 0, 1.6], 0)).toBe(0);
   });
   it('spends LOD0 on heads, not on rings: the body is under a third of the triangles', () => {
     const tris = (name: string): number => part(name).indices.length / 3;
     const all = lod0.parts.reduce((t, p) => t + (p.mesh?.indices.length ?? 0) / 3, 0);
     expect(tris('body') / all).toBeLessThan(1 / 3);
-    expect(all).toBeLessThan(215_000);
+    expect(all).toBeLessThan(165_000);
   });
 });
 

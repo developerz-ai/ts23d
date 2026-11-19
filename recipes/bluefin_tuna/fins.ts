@@ -49,7 +49,7 @@ const median = (
   const fray = (u: number): number =>
     lod === 2
       ? 0
-      : 0.045 * smooth(0.15, 0.4, u) * Math.max(0, noise(u * 34, seed, 31) - 0.45) ** 1.4;
+      : 0.09 * smooth(0.15, 0.4, u) * Math.max(0, noise(u * 34, seed, 31) - 0.42) ** 1.2;
   const us = lod === 0 ? even(0, 0.99, 28) : span(lod, 1);
   const sides = lod === 0 && rays > 0 ? 30 : chord[lod];
   const m = plate({
@@ -65,12 +65,22 @@ const median = (
     sides,
     normal: [0, 1, 0],
     strip: FIN,
-    color: (p, n, u, c) =>
-      mixRgb(
+    color: (p, n, u, c) => {
+      // Rays read as fine dark lines fanning root to tip, membrane lighter between them.
+      const ray = lod < 2 && rays > 0 ? Math.max(0, Math.cos(c * Math.PI * rays)) ** 6 : 0;
+      const lined = mixRgb(
         color(p, n, u, c),
+        COLOUR.groove,
+        0.45 * ray * (1 - smooth(0.6, 0.9, u)),
+      );
+      // The thin trailing margin lets light through: paler, and torn back to pale where frayed.
+      const margin = mixRgb(lined, COLOUR.steel, 0.35 * smooth(0.82, 0.97, c));
+      return mixRgb(
+        margin,
         COLOUR.scratch,
-        0.5 * smooth(0.8, 0.98, c) * smooth(0, 0.02, fray(u)),
-      ),
+        0.7 * smooth(0.75, 0.98, c) * smooth(0, 0.015, fray(u)),
+      );
+    },
   });
   const ridged = lod === 0 && rays > 0 ? rayRidges(m, us, sides, rays) : m;
   return toBand(ridged, (i) => {

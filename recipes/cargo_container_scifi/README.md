@@ -37,12 +37,14 @@ hazard `#d9a421` + `#17181a` · status glow `#5dffb0`.
 | `keypad` | child of `door_r` | glow |
 | `status_light` | strip over the doors | glow; socket `status_lamp` (point light) |
 | `casting_0…7` | ISO 1161 castings | sockets `twistlock_0…3` on the top four (`attach`, +Z) |
-| `frame`, `body`, `hinge_l/_r`, `cargo` | static, AO-baked | — |
+| `frame`, `body`, `hinge_l/_r`, `cargo` | static, AO-baked (`hinge_*` at LOD0–1, `cargo` at LOD0) | — |
 
 ## Markings
 ISO 6346-style ID for an invented owner code: `AXSU` / `204118 1` / `22G1` (the check digit 1 is
 computed by the ISO 6346 rule), stencilled on the bay next to the doors on both sides and between
-the lock bars of the right-hand leaf. Built with `text`.
+the lock bars of the right-hand leaf. Built with `text`. At LOD0 the right-hand leaf also carries
+the weight panel (`MAX 30480`, `TARE 2180`, the ISO 668 1CC gross mass and a typical 20 ft tare in
+kg) and the left one an inspector's hand-sprayed `OK 7`, a little off level.
 
 ## Open questions
 - `clearOf` lists only the hinge pins (a real interlock); the clashes gate sweeps the real 0–90°
@@ -57,13 +59,29 @@ the lock bars of the right-hand leaf. Built with `text`.
 ## Weathering on regular grids
 Vertex-colour stains take the shape of the triangles they live on. The read faces (roof, the 24
 bay armour panels, the blind end, the door armour panels) therefore carry a regular grid of quads
-1 mm proud of their plate (`sheet()`: 12.5 cm cells on the roof, 16 cm on the panels at LOD0;
-40 cm at LOD1), and `weather()` runs with `resolution: 0`: nothing is split blindly, the bevelled
-frame keeps only its own edges for chips. LOD0 fell from 22.9k to 16.9k triangles.
+1 mm proud of their plate (`sheet()`: 16 cm cells at LOD0, 40 cm at LOD1), and `weather()` runs
+with `resolution: 0`: nothing is split blindly, the bevelled frame keeps only its own edges for
+chips. LOD0 fell from 22.9k to 16.2k triangles.
+- Ground dirt is a function of height alone (0.42 at the sill, gone 62 cm up): the noisy mud
+  line it replaces drew brown saw teeth along the feet of the lower panels. Roof stains use
+  half the frequency of the wall stains (pooled water, 1–2 m across).
 - Door leaves weather in their own hinge space (separate `weather()` call per leaf): chipped
   edges, rust runs, dirt at the sill, paint rubbed through round the cam handles (`touched`).
-- LOD2 has no per-vertex stains at all: on a two-triangle plate any variation is a diagonal seam.
-  It carries the near LODs' dust and dirt as their even average (`far()`).
-- Bays are 6 cm deep (side plate 9 cm inside the frame face; was 2 and 5), ribs run from the
+- LOD2 (`far.ts`) is a box with baked colour, 170 triangles (it was 736): one closed body with
+  a 7 cm pocket for the leaves (28), and flat colour blocks 3 mm off its faces. No per-vertex
+  stains: on a two-triangle plate any variation is a diagonal seam, so the weathering is carried
+  as one tone per block: six bays a side, each with its own grime and rust average, a dirt strip
+  along each sill, the louvres as darker quads, six dusted roof sheets.
+- Bays are 9 cm deep (side plate 12 cm inside the frame face; was 6 and 9), ribs run from the
   plate to the frame face; roof ribs are bolted (four hex heads each); doors have a gasket lip
   and the right leaf a customs bolt seal.
+
+## Far-LOD triangles against the container band
+The containers playbook's far band is 40 triangles: a box with baked colour. LOD2 here is 170,
+and each group is something the far view or the engine uses: body with the door pocket 28; two
+door leaves that still swing on their hinge lines 24, with painted lock bars 8; eight named ISO
+castings as three dark caps each 48; twelve bay tone blocks 24, two sill dirt strips 4, two
+accent bands 4, six louvres 12; six roof sheets 12; blind end and service panel 4; status strip
+2. A static crate with no named castings and no hinged doors would be the 12-triangle box.
+LOD0 (16.2k) and LOD1 (6.95k) are still over the band's 10k / 1.5k: the weather grids and the
+bevelled frame; `scripts/lib/budget-baseline.ts` records them.

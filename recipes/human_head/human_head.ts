@@ -8,6 +8,7 @@
 
 import { defineAsset, headClips } from '@developerz.ai/ts23d';
 import { bustEdits } from '../_lib/bust/bust.ts';
+import { portrait } from '../_lib/bust/hero.ts';
 import { C, SK } from '../_lib/bust/human/spec.ts';
 import { HUMAN_PROPORTIONS, proportionCheck } from '../_lib/face/proportions.ts';
 import { scalpCoverCheck } from '../_lib/face/scalp-check.ts';
@@ -48,9 +49,15 @@ export const human_head = defineAsset({
   // The eyeballs' cornea (a clear lacquer over the painted iris) and the skin: the pore strip's
   // own roughness (matte cheeks, a glossier T-zone) under a soft grazing sheen. The wool and the
   // linen are strips of their own (../_lib/bust/cloth-strips.ts), no finish.
+  // A portrait: the bust fills the frame (the default orbit leaves the face a thumbnail).
+  hero: portrait(0.581, { at: 0.48, fill: 0.86 }),
   finishes: {
     cornea: { clearcoat: 1, clearcoatRoughness: 0.04 },
-    skin: { sheen: { colour: '#8c7b72', roughness: 0.45 } },
+    skin: {
+      sheen: { colour: '#8c7b72', roughness: 0.45 },
+      clearcoat: 0.3,
+      clearcoatRoughness: 0.28,
+    },
   },
   art: { focal: 'head', shape: 'stable' },
   // Intended creases (QA `connections` skips them): one small region per sculpted fold, from the

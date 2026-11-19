@@ -5,7 +5,7 @@
 
 import { type Mesh, merge, stripRect, sweep, type Vec3 } from '@developerz.ai/ts23d';
 
-const LICHEN: Vec3 = [0.68, 0.72, 0.58];
+const LICHEN: Vec3 = [0.8, 0.84, 0.5];
 
 const sub = (a: Vec3, b: Vec3): Vec3 => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
 const dot = (a: Vec3, b: Vec3): number => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];

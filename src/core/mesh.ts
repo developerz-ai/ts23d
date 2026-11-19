@@ -3,6 +3,7 @@
 // Skinned bodies add 4 joint/weight influences per vertex and morph targets (ADR 013).
 
 import { Ts23dError } from './errors.ts';
+import { type MappedMaterial, mappedOf } from './material-use.ts';
 import type { Vec2, Vec3 } from './vec.ts';
 
 export interface Bounds {
@@ -22,6 +23,12 @@ export interface Mesh {
   readonly weights?: Float32Array;
   /** Morph targets: per-vertex displacements from `positions` (glTF targets), same length. */
   readonly morphs?: readonly Morph[];
+  /**
+   * Project materials (custom trim-sheet strips) the UVs were mapped onto, in row order: set by
+   * whatever maps the UVs, carried by everything that makes a mesh from meshes, and recorded by
+   * the compile the mesh is added to (core/material-use.ts). Never exported.
+   */
+  readonly mapped?: readonly MappedMaterial[];
 }
 
 export interface Morph {
@@ -172,7 +179,16 @@ export function merge(meshes: readonly Mesh[]): Mesh {
     uv += m.uvs.length;
     ix += m.indices.length;
   }
-  return { positions, normals, uvs, colors, indices, ...mergeSkin(meshes), ...mergeMorphs(meshes) };
+  return {
+    positions,
+    normals,
+    uvs,
+    colors,
+    indices,
+    ...mergeSkin(meshes),
+    ...mergeMorphs(meshes),
+    ...mappedOf(...meshes),
+  };
 }
 
 /** Skins concatenate when every input is skinned; a mix would silently unbind the rigid pieces. */

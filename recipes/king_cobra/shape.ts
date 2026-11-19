@@ -32,14 +32,17 @@ export const BODY_WIDTH = 0.9 * HEAD.width;
 export const HOOD_WIDTH = 2.05 * HEAD.width;
 export const RAISED = TOTAL / 3;
 
+/** A live head reads about a tenth wider than the fixed holotype's against the spread hood in the
+ *  front photos (README); the holotype keeps its numbers, the skin takes this factor. */
+export const LIVE_HEAD = 1.1;
 const halfWidth = profile([
-  [0, 0.0004],
-  [0.004, 0.0105],
-  [0.014, 0.0185],
-  [0.034, 0.0265],
-  [HEAD.length * 0.72, HEAD.width / 2],
-  [HEAD.length, 0.0255],
-  [0.112, 0.022],
+  [0, 0.0004 * LIVE_HEAD],
+  [0.004, 0.0105 * LIVE_HEAD],
+  [0.014, 0.0185 * LIVE_HEAD],
+  [0.034, 0.0265 * LIVE_HEAD],
+  [HEAD.length * 0.72, (HEAD.width / 2) * LIVE_HEAD],
+  [HEAD.length, 0.0255 * LIVE_HEAD],
+  [0.112, 0.0225],
   [0.5, 0.0238],
   [0.9, BODY_WIDTH * 0.47],
   [1.45, BODY_WIDTH * 0.55],
@@ -82,18 +85,19 @@ const faced = (f: number, w: number, z: number): Vec3 => [
   z,
 ];
 
-const COIL_TURNS = 1.85;
+const COIL_TURNS = 2.4;
 const COIL_STEP = 0.49;
 const COIL_POINTS = Math.round((COIL_TURNS * Math.PI * 2) / COIL_STEP);
 /** Axis height the neck comes down to; the pile's own heights are settled (`settlePile`). */
-const PILE_ENTRY = 0.075;
+const PILE_ENTRY = 0.095;
 
-/** The pile's planform: a spiral widening toward the tail, one turn about 4 cm inside the next,
- *  so each upper turn sits on the inner shoulder of the turn below (heights: `settlePile`). */
+/** The pile's planform: a tight spiral widening toward the tail, each turn 2.4 cm inside the next,
+ *  so the smaller top turn rides on the inner shoulder of the ground ring under the raised forebody
+ *  and the rest reads as a pile of two turns, not one flat ring (heights: `settleHeights`). */
 const coil = (i: number): Vec3 => {
-  const k = i / COIL_POINTS;
+  const u = (i * COIL_STEP) / (Math.PI * 2);
   const a = (100 * Math.PI) / 180 + i * COIL_STEP;
-  const r = 0.21 + 0.07 * k + 0.02 * Math.max(0, k - 1);
+  const r = 0.165 + 0.024 * u;
   return faced(r * Math.cos(a), r * Math.sin(a), PILE_ENTRY);
 };
 

@@ -26,11 +26,12 @@ import { beardlineOf, type HairStyle, hairlineOf, hairSculpt } from './hair.ts';
 import { cardHair } from './hair-cards.ts';
 import { faceCardStyle } from './hair-strands.ts';
 import { CUT_Z, type FaceHead, faceHead } from './head.ts';
-import { LEFT } from './landmarks.ts';
+import { LEFT, MIDLINE } from './landmarks.ts';
 import { meshField } from './mesh-field.ts';
 import { paintSkin, type SkinWear } from './paint.ts';
 import { quadToMesh, stripUv, subdivide } from './quad.ts';
-import { onSkin } from './skin-strip.ts';
+import { characterStrokes, molesOf, relieve, wartsOf } from './relief.ts';
+import { lipZone, onSkin, tZone } from './skin-strip.ts';
 import type { Character } from './spec.ts';
 import { teethRows, tusks } from './teeth.ts';
 
@@ -52,7 +53,7 @@ function wearOf(head: FaceHead, c: Character, hair: HairStyle): SkinWear | undef
     line.slice(1).map((q, i) => ({
       a: head.map(line[i] ?? q),
       b: head.map(q),
-      width: 0.0026 * s,
+      width: 0.0032 * s,
     })),
   );
   return {
@@ -78,8 +79,18 @@ function wearOf(head: FaceHead, c: Character, hair: HairStyle): SkinWear | undef
 
 /** The skin, cut and capped, in bust space (chest cut at z = CUT_Z). */
 function skin(ctx: BuildContext, head: FaceHead, c: Character, hair: HairStyle): Mesh {
-  const qm = ctx.lod === 0 ? subdivide(head.mesh) : head.mesh;
+  // Folds, brow shelf, warts: every stroke at LOD0, those the base's own quads can hold below.
+  const strokes = characterStrokes(head, c, ctx.rng.fork('warts'));
+  const s = head.scale;
+  const qm =
+    ctx.lod === 0 ? relieve(subdivide(head.mesh), strokes) : relieve(head.mesh, strokes, 0.008 * s);
   const wear = wearOf(head, c, hair);
+  const marks = [
+    ...molesOf(head, 3 + Math.round(2 * (c.wear?.freckles ?? 0)), ctx.rng.fork('moles')).map(
+      (m) => ({ ...m, tone: 0.5 }),
+    ),
+    ...wartsOf(head, c.warts ?? 0, ctx.rng.fork('warts')).map((m) => ({ ...m, tone: 0.74 })),
+  ];
   const paint = paintSkin(qm, head, {
     tone: c.tone,
     // A hairless head has no dark brows: the ridge keeps a shadow of the skin's own crevice tone.
@@ -95,6 +106,7 @@ function skin(ctx: BuildContext, head: FaceHead, c: Character, hair: HairStyle):
     age: c.age,
     ...(wear ? { wear } : {}),
     ...(hair.cut === 'none' ? {} : { hairline: hairlineOf(head, hair.cut) }),
+    ...(ctx.lod < 2 ? { marks } : { far: true }),
     rng: ctx.rng.fork('paint'),
   });
   const raw = quadToMesh(qm, (v) => paint(v), stripUv('plain'));
@@ -129,12 +141,34 @@ export function buildFaceBust(ctx: BuildContext, b: FaceBust): void {
   const hair = hairSculpt(head, b.hair, ctx.lod);
   if (hair) parts['hair'] = hair.mesh;
   const all = merge(Object.values(parts));
+  // (The far skin is 1 000 flat-toned triangles: six AO rays a vertex is noise at that size, so
+  // it takes more rays and a lighter hand.)
   const ao = (m: Mesh): Mesh =>
-    bakeAo(m, { samples: ctx.pick([12, 8, 6]), radius: 0.06 * s, strength: 0.5 }, all);
+    bakeAo(
+      m,
+      { samples: ctx.pick([12, 8, 24]), radius: 0.06 * s, strength: ctx.pick([0.5, 0.5, 0.3]) },
+      all,
+    );
+  // Roughness zones on the one skin draw: the oily T-zone, the wet lips.
+  const oil = tZone(
+    {
+      forehead: head.map(MIDLINE.forehead),
+      glabella: head.map(MIDLINE.glabella),
+      noseTip: head.map(MIDLINE.pronasale),
+      chin: head.map(MIDLINE.pogonion),
+    },
+    Math.abs(head.map(LEFT.alare)[1]),
+  );
+  const moist = lipZone({
+    sup: head.map(MIDLINE.labraleSup),
+    inf: head.map(MIDLINE.labraleInf),
+    corner: head.map(LEFT.cheilion),
+  });
   for (const [name, m] of Object.entries(parts)) {
     let mesh = ao(m);
     // The painted, shaded base at its LOD's triangle count, then onto the pore strip.
-    if (name === 'skin') mesh = onSkin(baseLod(mesh, ctx.lod));
+    if (name === 'skin')
+      mesh = onSkin(baseLod(mesh, ctx.lod), oil, ctx.lod < 2 ? moist : undefined);
     ctx.part(name, up(mesh), {
       ...(name === 'teeth' ? { connect: { as: 'rest' as const, to: 'skin' } } : {}),
       ...(name === 'skin' ? { finish: name } : {}),

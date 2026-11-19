@@ -1,13 +1,14 @@
 {
   "asset": "rts_resource_depleted",
   "reviewer": "agent",
-  "overall": 6.9,
+  "overall": 7.1,
   "scores": {
     "silhouette": {
       "score": 7,
-      "reason": "Quarried-out top with two snapped crystals standing, sheared stubs round the sides, spoil and the flag: identifiable as the same node, harvested. The rock is the same smooth dome.",
+      "reason": "A dark quarry cut in the top with two snapped crystals standing, sheared stubs round the sides, spoil and the flag: the same node, harvested. The rock outline is still a smooth dome.",
       "fixes": [
-        "fracture planes on the outcrop, and a deeper, sharper-rimmed quarry cut"
+        "fracture planes and a ledge on the outcrop",
+        "a sharper rim on the quarry cut"
       ]
     },
     "proportions": {
@@ -18,11 +19,10 @@
       ]
     },
     "materials": {
-      "score": 6,
-      "reason": "Stubs are amber crystal with pale fracture tops, and the side stubs now show flat facets instead of rounded blobs; but they are still lumpy polyhedra rather than cleanly sheared prisms, and the rock carries the same camouflage salt patches.",
+      "score": 8,
+      "reason": "The stitch-line veins are replaced by irregular grey strata (sheet FRONT, SIDE); the re-framed hero shows the dark mottled rock, cleanly sheared prism stubs with pale fracture tops and facet-shaded crystals.",
       "fixes": [
-        "sharp sheared faces on the side stubs (one flat cut plane across each prism)",
-        "salt only in crevices"
+        "salt and dust only in crevices and round the scoop rim"
       ]
     },
     "detail": {
@@ -41,72 +41,21 @@
     },
     "lod": {
       "score": 7,
-      "reason": "FAR LOD2 (338 tris) keeps the scoop, stubs, snapped crystals and the flag; spoil drops and the rock facets get lighter.",
+      "reason": "FAR LOD2 rock now matches the near-black LOD0 value and keeps the stubs, crystals and flag; the spoil piles and scattered blocks still drop to one grey slab under the flag.",
       "fixes": [
-        "keep the spoil as one low mound at LOD2"
+        "keep the spoil as one or two low mounds at LOD2"
       ]
     },
     "technical": {
       "score": 8,
-      "reason": "QA PASS: 10.2k / 2.3k / 338 tris, 3 / 3 / 3 draws.",
+      "reason": "QA PASS: 8.7k / 2.0k / 286 tris, 3 / 3 / 3 draws.",
       "fixes": [
         "coarser SDF cell on the rock body"
       ]
     }
   },
   "renders": {
-    "hero.png": "0b2273629950e7ff7b42abf58b5537e9284e850f138b8075bcee867a2a8f3c31",
-    "sheet.png": "cf5aee81b33e63d363ffc371d406a4f1e8040f8557abc788b59b44b5eba7177a"
-  },
-  "metrics": {
-    "silhouette": [
-      {
-        "view": "front",
-        "iou": 0.799
-      },
-      {
-        "view": "side",
-        "iou": 0.669
-      },
-      {
-        "view": "3/4",
-        "iou": 0.664
-      }
-    ],
-    "focal": {
-      "peakPart": "crystal_stubs",
-      "peak": [
-        331,
-        82
-      ],
-      "focalShare": 0,
-      "focalArea": 0,
-      "top": [
-        {
-          "part": "crystal_stubs",
-          "share": 0.519
-        },
-        {
-          "part": "rock",
-          "share": 0.287
-        },
-        {
-          "part": "claim_pole",
-          "share": 0.108
-        }
-      ],
-      "declared": []
-    },
-    "rest": {
-      "share": 0.599,
-      "spread": 0.694,
-      "min": 0.25
-    },
-    "shape": {
-      "acuteShare": 0.159,
-      "straightShare": 0.529,
-      "taper": 0.612,
-      "shape": "stable"
-    }
+    "hero.png": "a644478bc585e68101aa3e9e9a13dcd2b26e5e481322f2ae58829ecf63ca7e9b",
+    "sheet.png": "95ce8686baf86029ddd4a6052c05c8432596e8017472d04a0acaeab21ce5401d"
   }
 }

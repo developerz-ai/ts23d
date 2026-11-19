@@ -18,14 +18,14 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    51694,
-    19214,
-    1532
+    53972,
+    19444,
+    1556
   ],
   "drawCalls": [
-    20,
-    20,
-    13
+    19,
+    19,
+    12
   ],
   "pivots": [
     {
@@ -42,10 +42,6 @@
     },
     {
       "name": "locomotive_finish_enamel",
-      "parent": "locomotive"
-    },
-    {
-      "name": "locomotive_finish_russia_iron",
       "parent": "locomotive"
     },
     {

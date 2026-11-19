@@ -1,45 +1,46 @@
 {
   "asset": "brown_bear",
   "reviewer": "agent",
-  "overall": 6,
+  "overall": 6.6,
   "scores": {
     "silhouette": {
-      "score": 6,
-      "reason": "The furry body and hump read as a bear, but the head is a flat wedge with a long, thin pointed snout and tiny ears: from 3/4 it reads as a wombat or wolverine, not a dished bear face.",
+      "score": 7,
+      "reason": "The head is larger with a shorter, wider muzzle and rounder ears, so the hump-and-head profile now reads as a bear in hero.png; the muzzle is still a little long and dog-like and the topline fur cards bristle.",
       "fixes": [
-        "enlarge the head ~15%, shorten and widen the muzzle and raise the forehead so the dished bear profile reads",
-        "thicker, rounder ears set wider"
+        "shorten the muzzle a further ~10% and raise the forehead for the dished profile",
+        "lay the back fur cards flatter so the topline stops bristling"
       ]
     },
     "proportions": {
       "score": 6,
-      "reason": "The trunk is long and the legs short for a brown bear in SIDE; the neck is short but the head is undersized against the hump.",
+      "reason": "The head now matches the hump better, but the trunk is still long and the legs short and thin for a brown bear in SIDE.",
       "fixes": [
-        "shorten the trunk ~10% and lengthen the legs ~8% (plantigrade stance, hind feet under the hips)",
+        "shorten the trunk ~10% and lengthen the legs ~8%",
         "thicken the forearms ~15%"
       ]
     },
     "materials": {
       "score": 6,
-      "reason": "Fur cards cover the body now, but the face is smooth tan plastic with a hard seam to the fur, and the paws are pale tan socks with no dark pads or claws.",
+      "reason": "Fur cards cover the body, but the face is smooth tan plastic with a hard seam to the fur, the lower legs carry pale chalky blotches, and the paws are grey socks.",
       "fixes": [
         "extend fur cards onto the face edge and cheeks; darker brown muzzle",
-        "dark leathery paw pads and dark claws; glossy nose and eyes"
+        "remove the pale chalky blotches on the lower legs",
+        "dark leathery paw pads; glossy nose and eyes"
       ]
     },
     "detail": {
-      "score": 6,
-      "reason": "Fur cards break the back and belly outline; the face has no brow/cheek planes, there are no visible claws, and the ears are tiny nubs.",
+      "score": 7,
+      "reason": "Small claws now show on the paws and the ears are rounder; the face still has no brow or cheek planes.",
       "fixes": [
-        "claws on each paw as curved cones",
-        "sharper brow and cheek planes, rounder ears"
+        "sharper brow and cheek planes",
+        "longer, darker claws on the forepaws (brown bears have 5-10 cm claws)"
       ]
     },
     "wear": {
-      "score": 5,
-      "reason": "A pink scar on the face and a rubbed pale patch on the shoulder; paws are clean and pale, no mud.",
+      "score": 6,
+      "reason": "Claw scars on the chest, a scar on the face and mud-darkened paws tell a life outdoors; the pale rubbed patch on the shoulder reads as a texture hole rather than wear.",
       "fixes": [
-        "mud on the paws and lower legs (grime with the ground mask)",
+        "blend the rubbed shoulder patch into the coat (shorter, lighter tips) instead of a flat pale disc",
         "matted wet fur on the belly fringe"
       ]
     },
@@ -51,15 +52,15 @@
       ]
     },
     "technical": {
-      "score": 7,
-      "reason": "QA clean; 123k / 25k / 2k triangles over 4 draws: LOD0 is heavy for what shows, much of it fur cards on the back.",
+      "score": 8,
+      "reason": "QA clean; 108k / 26k / 2.8k triangles over 4 draws: LOD0 trimmed toward the fur-card budget.",
       "fixes": [
-        "cap LOD0 near 100k by coarsening the fur-card density on the back"
+        "spend the remaining back fur-card budget on the face"
       ]
     }
   },
   "renders": {
-    "hero.png": "265998132c67357aae1c30d3db3be2f294737f1bc88d2c0e9db9eb1cac58963a",
-    "sheet.png": "f2fb1ff1905e4542b40415841c6998c300dc05c4b0e49435bb4a9c5f4a7596f4"
+    "hero.png": "8e26b501d233b20633dfe730d3e08dd4a36da6db7eeaed6e352af656e91eeb9b",
+    "sheet.png": "e8b6044863d6c16ec68bb48dc38de3570f50ffe2e155b92e6fce83ff3dbace64"
   }
 }

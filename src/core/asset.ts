@@ -13,7 +13,7 @@ import { Ts23dError } from './errors.ts';
 import { checkFinishedParts, finishesOf } from './finish.ts';
 import { jointOf, useJoint } from './joint.ts';
 import { withTolerances } from './limit-tolerance.ts';
-import { trackMaterials } from './material-use.ts';
+import { noteMeshMaterials, trackMaterials } from './material-use.ts';
 import type { Mesh } from './mesh.ts';
 import { checkMotion } from './motion-check.ts';
 import { neuralReader } from './neural-ctx.ts';
@@ -115,6 +115,8 @@ export function compile(asset: Asset, options: CompileOptions = {}): CompiledAss
       });
     }
     if (o.motion) checkMotion(name, o.motion);
+    // A mesh built outside this build (a module-level constant) brings its materials here (D354).
+    if (mesh && !o.textures) noteMeshMaterials(mesh, name);
     parts.set(name, {
       name,
       mesh,

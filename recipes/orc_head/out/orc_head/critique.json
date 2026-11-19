@@ -12,7 +12,7 @@
     },
     "proportions": {
       "score": 7,
-      "reason": "The pauldrons now sit on the shoulder and the lames close into a tube round the arm, but the lame tubes still stand off the torso flank and hang below the bust cut in FRONT, reading as stumps beside the body.",
+      "reason": "Pauldrons sit on the shoulder, but the lame tubes still stand off the torso flank and hang below the bust cut in FRONT and hero.png, reading as stumps beside the body.",
       "fixes": [
         "shorten the lame tubes so they end at the bust cut",
         "pull the lame tubes in against the torso flank"
@@ -20,9 +20,9 @@
     },
     "materials": {
       "score": 7,
-      "reason": "Steel with rivets, leather baldric (now brown in both images), fur collar, bone spikes and green skin separate; the skin is one roughness.",
+      "reason": "Steel with rivets, brown leather baldric, fur collar, bone spikes and green skin separate; the skin renders as evenly wet and glossy over the whole head in the closer hero.png.",
       "fixes": [
-        "roughness variation on the skin (oily forehead, matte cheeks)"
+        "roughness variation on the skin (oily forehead, matte cheeks), overall rougher"
       ]
     },
     "detail": {
@@ -57,7 +57,7 @@
     }
   },
   "renders": {
-    "hero.png": "2633c4fbbbcac154e33d66eec425d37bcb99d8771724576a771a0669e43d4590",
-    "sheet.png": "9ecb9c69d368f9f4ca31b87b5cbf702133289c729eeca3fa40d32c2600255fb2"
+    "hero.png": "700a2d955f9950529a9b8160efc71b3ef460e743589e07557dbcc23cd33ff440",
+    "sheet.png": "885d9edc2bf4c054a8a485aef59bad370493e71333c12f46bd5c7b188e1cad42"
   }
 }

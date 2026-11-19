@@ -196,7 +196,8 @@ export function cobraClips(
    *  the raised length grows from the head; the body behind it never leaves the ground or the pile. */
   const rear = (): Clip => {
     const seconds = REAR.seconds;
-    const laid = laidFront(rest, arcs, hinge);
+    // Three links of curl: on the tighter two-turn pile a fourth would lay the neck over the top turn.
+    const laid = laidFront(rest, arcs, hinge, 3);
     const H = arcs[hinge] ?? RAISED;
     return bake(rig, 'rear', seconds, false, 96, (_k, time) => {
       const u = time / seconds;

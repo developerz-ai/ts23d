@@ -13,9 +13,10 @@
 import type { Mesh, Vec3 } from '@developerz.ai/ts23d';
 import { SK } from './skeleton.ts';
 
-/** Legs 13 % longer to the shoulder (the trunk 0.2 m higher), the neck 18 % longer: the bind
- *  pose read short-legged and short-necked for its body (critique 2026-11-19). */
-export const PROPORTIONS = { lift: 0.2, neck: 1.18 } as const;
+/** Legs 13 % longer to the shoulder (the trunk 0.2 m higher), the neck 27 % longer (one more
+ *  vertebra's worth on 1.9 m): the bind pose read short-legged and short-necked for its body,
+ *  and so did 18 % (critiques 2026-11-19). */
+export const PROPORTIONS = { lift: 0.2, neck: 1.27 } as const;
 
 export type Family = 'body' | 'head' | 'rigid';
 

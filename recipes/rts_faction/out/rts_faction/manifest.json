@@ -20,13 +20,13 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    144276,
-    34106,
-    3950
+    143780,
+    35038,
+    3914
   ],
   "drawCalls": [
     36,
-    36,
+    22,
     22
   ],
   "pivots": [
@@ -319,9 +319,9 @@
       "to": "warden_0_rifle_grip",
       "kind": "grip",
       "at": [
-        6.5,
-        -0.265,
-        1.06
+        6.51,
+        -0.24,
+        1
       ]
     },
     {
@@ -330,9 +330,9 @@
       "to": "warden_1_rifle_grip",
       "kind": "grip",
       "at": [
-        5.3,
-        -1.415,
-        1.06
+        5.31,
+        -1.39,
+        1
       ]
     },
     {
@@ -341,9 +341,9 @@
       "to": "warden_2_rifle_grip",
       "kind": "grip",
       "at": [
-        5.3,
-        0.885,
-        1.06
+        5.31,
+        0.91,
+        1
       ]
     },
     {
@@ -352,9 +352,9 @@
       "to": "delver_0_tool_handle",
       "kind": "grip",
       "at": [
-        4.7941,
-        5.4703,
-        1.06
+        4.7588,
+        5.4982,
+        1
       ]
     },
     {
@@ -363,9 +363,9 @@
       "to": "delver_1_tool_handle",
       "kind": "grip",
       "at": [
-        6.2941,
-        5.9703,
-        1.06
+        6.2588,
+        5.9982,
+        1
       ]
     }
   ],
@@ -415,15 +415,15 @@
   ],
   "weather": {
     "chips": {
-      "target": 0.105,
-      "actual": 0.105,
+      "target": 0.1017,
+      "actual": 0.1017,
       "eligible": "convex-edges",
-      "area": 1401.0286,
+      "area": 1463.0592,
       "by": {
         "hall_hall_masonry": {
           "target": 0.1,
           "actual": 0.1,
-          "area": 770.2577
+          "area": 826.9533
         },
         "hall_hall_plinth": {
           "target": 0.12,
@@ -433,60 +433,60 @@
         "hall_hall_render": {
           "target": 0.1,
           "actual": 0.1,
-          "area": 343.2064
+          "area": 349.0059
         },
         "tank_brinehound_hull": {
-          "target": 0.13,
-          "actual": 0.13,
-          "area": 22.2835
+          "target": 0.05,
+          "actual": 0.05,
+          "area": 22.372
         },
         "tank_brinehound_kit": {
-          "target": 0.13,
-          "actual": 0.13,
-          "area": 18.1202
+          "target": 0.05,
+          "actual": 0.05,
+          "area": 18.2319
         },
         "tank_brinehound_turret": {
-          "target": 0.13,
-          "actual": 0.13,
-          "area": 20.859
+          "target": 0.05,
+          "actual": 0.05,
+          "area": 20.8468
         },
         "warden_0_warden": {
           "target": 0.15,
           "actual": 0.15,
-          "area": 3.5086
+          "area": 3.4251
         },
         "warden_1_warden": {
           "target": 0.15,
           "actual": 0.15,
-          "area": 3.5086
+          "area": 3.4251
         },
         "warden_2_warden": {
           "target": 0.15,
           "actual": 0.15,
-          "area": 3.5086
+          "area": 3.4251
         },
         "delver_0_delver": {
-          "target": 0.2,
-          "actual": 0.2,
-          "area": 2.4087
+          "target": 0.28,
+          "actual": 0.28,
+          "area": 2.2077
         },
         "delver_1_delver": {
-          "target": 0.2,
-          "actual": 0.2,
-          "area": 2.4087
+          "target": 0.28,
+          "actual": 0.28,
+          "area": 2.2077
         }
       }
     },
     "rust": {
-      "target": 0.6986,
-      "actual": 0.6986,
+      "target": 0.6988,
+      "actual": 0.6988,
       "eligible": "fasteners | below-fasteners",
-      "area": 37.6646,
+      "area": 47.3047,
       "by": {
         "hall_hall_masonry": {
           "target": 0.7,
           "actual": 0.7,
-          "area": 37.3918
+          "area": 47.0319
         },
         "tank_brinehound_hull": {
           "target": 0.5,
@@ -499,12 +499,12 @@
       "target": 0.4432,
       "actual": 0.4432,
       "eligible": "ground-near & !down-facing ; ground-near & side-facing",
-      "area": 230.5896,
+      "area": 231.1561,
       "by": {
         "hall_hall_masonry": {
           "target": 0.45,
           "actual": 0.45,
-          "area": 151.3126
+          "area": 150.111
         },
         "hall_hall_plinth": {
           "target": 0.4,
@@ -514,20 +514,20 @@
         "hall_hall_render": {
           "target": 0.45,
           "actual": 0.45,
-          "area": 47.8135
+          "area": 49.5816
         }
       }
     },
     "mud": {
-      "target": 0.3808,
-      "actual": 0.3808,
-      "eligible": "ground-near & !up-facing ; ground-near & side-facing ; ground-near ; ground-near & !down-facing",
-      "area": 222.4835,
+      "target": 0.3688,
+      "actual": 0.3688,
+      "eligible": "ground-near & !up-facing ; ground-near & side-facing ; ground-near",
+      "area": 212.5668,
       "by": {
         "hall_hall_masonry": {
           "target": 0.3,
           "actual": 0.3,
-          "area": 157.3483
+          "area": 156.7803
         },
         "hall_hall_plinth": {
           "target": 0.5,
@@ -539,83 +539,73 @@
           "actual": 0.55,
           "area": 2.6104
         },
-        "tank_brinehound_hull": {
-          "target": 0.8,
-          "actual": 0.8,
-          "area": 7.409
-        },
-        "tank_brinehound_kit": {
-          "target": 0.8,
-          "actual": 0.8,
-          "area": 2.5911
-        },
         "warden_0_warden": {
           "target": 0.7,
           "actual": 0.7,
-          "area": 0.9839
+          "area": 0.93
         },
         "warden_0_warden_kit": {
           "target": 0.7,
           "actual": 0.7,
-          "area": 0.6711
+          "area": 1.0462
         },
         "warden_1_warden": {
           "target": 0.7,
           "actual": 0.7,
-          "area": 0.9839
+          "area": 0.93
         },
         "warden_1_warden_kit": {
           "target": 0.7,
           "actual": 0.7,
-          "area": 0.6711
+          "area": 1.0462
         },
         "warden_2_warden": {
           "target": 0.7,
           "actual": 0.7,
-          "area": 0.9839
+          "area": 0.93
         },
         "warden_2_warden_kit": {
           "target": 0.7,
           "actual": 0.7,
-          "area": 0.6711
+          "area": 1.0462
         },
         "delver_0_delver": {
           "target": 0.75,
           "actual": 0.75,
-          "area": 0.8824
+          "area": 0.8286
         },
         "delver_0_delver_kit": {
           "target": 0.75,
           "actual": 0.75,
-          "area": 0.7539
+          "area": 1.0876
         },
         "delver_1_delver": {
           "target": 0.75,
           "actual": 0.75,
-          "area": 0.8824
+          "area": 0.8286
         },
         "delver_1_delver_kit": {
           "target": 0.75,
           "actual": 0.75,
-          "area": 0.7539
+          "area": 1.0876
         },
         "deposit_outcrop": {
-          "target": 0.5,
-          "actual": 0.5,
-          "area": 12.8236
+          "target": 0.6,
+          "actual": 0.6,
+          "area": 11.9516
         }
       }
     },
     "dust": {
-      "target": 0.3121,
-      "actual": 0.3121,
+      "target": 0.3206,
+      "actual": 0.3206,
       "eligible": "up-facing",
-      "area": 350.1729,
+      "area": 317.34,
       "by": {
         "hall_hall_masonry": {
           "target": 0.35,
           "actual": 0.35,
-          "area": 56.6138
+          "area": 73.7578
         },
         "hall_hall_plinth": {
           "target": 0.3,
@@ -632,108 +622,88 @@
           "actual": 0.3,
           "area": 7.5884
         },
-        "tank_brinehound_hull": {
-          "target": 0.3,
-          "actual": 0.3,
-          "area": 26.9951
-        },
-        "tank_brinehound_kit": {
-          "target": 0.3,
-          "actual": 0.3,
-          "area": 4.7861
-        },
-        "tank_brinehound_turret": {
-          "target": 0.3,
-          "actual": 0.3,
-          "area": 6.9284
-        },
         "warden_0_warden": {
           "target": 0.3,
           "actual": 0.3,
-          "area": 0.9061
+          "area": 0.9301
         },
         "warden_0_warden_kit": {
           "target": 0.3,
           "actual": 0.3,
-          "area": 0.5509
+          "area": 0.7141
         },
         "warden_1_warden": {
           "target": 0.3,
           "actual": 0.3,
-          "area": 0.9061
+          "area": 0.9301
         },
         "warden_1_warden_kit": {
           "target": 0.3,
           "actual": 0.3,
-          "area": 0.5509
+          "area": 0.7112
         },
         "warden_2_warden": {
           "target": 0.3,
           "actual": 0.3,
-          "area": 0.9061
+          "area": 0.9301
         },
         "warden_2_warden_kit": {
           "target": 0.3,
           "actual": 0.3,
-          "area": 0.5509
+          "area": 0.708
         },
         "delver_0_delver": {
           "target": 0.3,
           "actual": 0.3,
-          "area": 0.5299
+          "area": 0.4811
         },
         "delver_0_delver_kit": {
           "target": 0.3,
           "actual": 0.3,
-          "area": 0.857
+          "area": 1.1057
         },
         "delver_1_delver": {
           "target": 0.3,
           "actual": 0.3,
-          "area": 0.5299
+          "area": 0.4811
         },
         "delver_1_delver_kit": {
           "target": 0.3,
           "actual": 0.3,
-          "area": 0.857
-        },
-        "deposit_outcrop": {
-          "target": 0.18,
-          "actual": 0.18,
-          "area": 12.2197
+          "area": 1.1057
         }
       }
     },
     "scratches": {
-      "target": 0.3388,
-      "actual": 0.3388,
+      "target": 0.3415,
+      "actual": 0.3415,
       "eligible": "touched",
-      "area": 1.9281,
+      "area": 1.7987,
       "by": {
         "warden_0_warden": {
           "target": 0.3,
           "actual": 0.3,
-          "area": 0.5595
+          "area": 0.5167
         },
         "warden_1_warden": {
           "target": 0.3,
           "actual": 0.3,
-          "area": 0.5595
+          "area": 0.5167
         },
         "warden_2_warden": {
           "target": 0.3,
           "actual": 0.3,
-          "area": 0.5595
+          "area": 0.5167
         },
         "delver_0_delver_kit": {
           "target": 0.6,
           "actual": 0.6,
-          "area": 0.1248
+          "area": 0.1243
         },
         "delver_1_delver_kit": {
           "target": 0.6,
           "actual": 0.6,
-          "area": 0.1248
+          "area": 0.1243
         }
       }
     }

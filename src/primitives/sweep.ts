@@ -6,7 +6,7 @@
 // points, P path points).
 
 import { type Mesh, MeshBuilder, type Vec2, type Vec3 } from '../core/index.ts';
-import { type StripId, stripRect } from '../material/index.ts';
+import { mappedOnto, type StripId, stripRect } from '../material/index.ts';
 import { count, invalid, positive, profileOf } from './check.ts';
 import { arcLengths, transportFrames } from './transport.ts';
 
@@ -180,5 +180,5 @@ export function sweep(o: SweepOptions): Mesh {
       else b.tri(centre, c, a);
     }
   }
-  return b.build();
+  return mappedOnto(b.build(), o.strip ?? 'plain');
 }

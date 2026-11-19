@@ -71,7 +71,7 @@ describe('glTF-Validator: PBR extensions', () => {
   });
 
   it('0 errors / 0 warnings, untextured and with the sheet; every extension recognised', async () => {
-    const sheet = paintTrimSheet({ ...DEFAULT_SHEET, size: 512 });
+    const sheet = paintTrimSheet({ ...DEFAULT_SHEET, size: 512 }, []);
     for (const o of [{}, { sheet }]) {
       const r = await validate(toGlb(compile(showcase), o));
       expect(bad(r)).toEqual([]);

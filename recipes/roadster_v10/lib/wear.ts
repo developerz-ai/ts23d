@@ -35,8 +35,9 @@ export function speckle(rng: Rng, scale: number): (p: Vec3) => number {
  * Road film on the body, 0 (clean lacquer) .. 1 (caked): a band rising from the rocker, a fan
  * thrown back and up behind each wheel, the wake on the tail under the lamps and a light peppering
  * of the nose under the lip. Broken up by noise so it never reads as a painted two-tone.
+ * `only: 'spray'` leaves out the rocker band, the arch lips and the tail wake.
  */
-export function roadFilm(rng: Rng): (p: Vec3) => number {
+export function roadFilm(rng: Rng, only?: 'spray'): (p: Vec3) => number {
   const blotch = speckle(rng.fork('blotch'), 0.22);
   const fleck = speckle(rng.fork('fleck'), 0.05);
   const wheels = [
@@ -47,7 +48,7 @@ export function roadFilm(rng: Rng): (p: Vec3) => number {
     const z = p[2];
     const ragged = 0.6 + 0.8 * blotch(p);
     // Rocker band: thick at the sill, gone 35 cm up.
-    let f = (1 - smooth(RIDE, RIDE + 0.35 * ragged, z)) * 0.85;
+    let f = only ? 0 : (1 - smooth(RIDE, RIDE + 0.35 * ragged, z)) * 0.85;
     for (const w of wheels) {
       // Spray: behind the wheel, fading over 0.9 m, rising to hub height + 20 cm at the arch.
       const back = (w.x - w.r - p[0]) / 0.9;
@@ -58,7 +59,13 @@ export function roadFilm(rng: Rng): (p: Vec3) => number {
       }
       // Arch lip: the last few centimetres round the opening catch what the tread throws.
       const d = Math.hypot(p[0] - w.x, z - w.z) - w.r;
-      if (d < 0.1 && z > w.z - 0.1) f = Math.max(f, (1 - smooth(0.02, 0.1, d)) * 0.7);
+      if (!only && d < 0.1 && z > w.z - 0.1) f = Math.max(f, (1 - smooth(0.02, 0.1, d)) * 0.7);
+    }
+    // Spray only (where dried mud flecks sit): the fans behind the wheels and the nose, which
+    // meets the grit head on up to the lamps.
+    if (only) {
+      if (p[0] > 1.85) f = Math.max(f, (1 - smooth(0.3, 0.6, z)) * 0.7);
+      return clamp(f * (0.7 + 0.6 * fleck(p)), 0, 1);
     }
     // Tail wake: the low-pressure zone behind the car sucks the spray onto the tail.
     if (p[0] < -1.9) f = Math.max(f, (1 - smooth(0.45, 0.85 * ragged, z)) * 0.8);
@@ -151,6 +158,23 @@ export function bayGrime(m: Mesh, floor: number, clean: number, strength = 0.6):
     const low = 1 - smooth(floor, clean, p[2]);
     const k = clamp(strength * low + 0.12 * smooth(0.5, 1, n[2]), 0, 0.9);
     return mix(c, [c[0] * 0.2, c[1] * 0.18, c[2] * 0.16], k);
+  });
+}
+
+const BAY_DUST: Vec3 = [0.3, 0.26, 0.21];
+const BAY_OIL: Vec3 = [0.03, 0.027, 0.024];
+
+/**
+ * A driven engine's top end: tan dust settled in blotches on every upward face (valve covers,
+ * runners, plenum) and black oil weep on the side faces below `gasket`, fading over 12 cm.
+ */
+export function bayDust(m: Mesh, gasket: number, rng: Rng): Mesh {
+  const blotch = valueNoise(rng, { scale: 0.09, octaves: 3 });
+  return tinted(m, (p, c, n) => {
+    const b = clamp(0.5 + 0.5 * blotch(p), 0, 1);
+    const dust = smooth(0.35, 0.9, n[2]) * (0.3 + 0.5 * b);
+    const weep = (1 - smooth(0.2, 0.7, n[2])) * (1 - smooth(gasket - 0.12, gasket, p[2])) * 0.75;
+    return mix(mix(c, BAY_DUST, dust), BAY_OIL, weep * (0.6 + 0.4 * b));
   });
 }
 

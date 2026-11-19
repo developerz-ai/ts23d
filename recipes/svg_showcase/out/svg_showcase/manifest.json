@@ -21,14 +21,14 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    20786,
-    6568,
-    1726
+    19178,
+    6550,
+    1748
   ],
   "trianglesCompiled": [
-    20786,
-    6568,
-    1728
+    19178,
+    6550,
+    1750
   ],
   "drawCalls": [
     1,
@@ -55,18 +55,18 @@
       "target": 0.25,
       "actual": 0.25,
       "eligible": "convex-edges",
-      "area": 0.3512
+      "area": 0.3439
     },
     "dust": {
-      "target": 0.4538,
-      "actual": 0.4538,
+      "target": 0.4539,
+      "actual": 0.4539,
       "eligible": "up-facing",
-      "area": 0.1589,
+      "area": 0.1586,
       "by": {
         "gear_wear": {
           "target": 0.4,
           "actual": 0.4,
-          "area": 0.0734
+          "area": 0.0731
         },
         "amphora_wear": {
           "target": 0.5,

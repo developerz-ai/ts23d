@@ -40,10 +40,10 @@ export const SKIN = defineMaterial({
       .fn((_xm, ym, c) => pick(ym, c.metresV, [0.9, 0.97, 0.95, 0.88]), 'tone')
       .add(big.mul(band((b) => (b === 0 ? 0.08 : 0))))
       .clamp(0, 1),
-    // Corselet 0.34, polished flank 0.2 (sharper and the studio horizon breaks up on the facets),
+    // Corselet 0.34, polished flank 0.12 (a mirror-silver side that reflects the studio),
     // fin membrane 0.42, frayed margin 0.68.
     roughness: tex
-      .fn((_xm, ym, c) => pick(ym, c.metresV, [0.34, 0.2, 0.42, 0.68]), 'rough')
+      .fn((_xm, ym, c) => pick(ym, c.metresV, [0.34, 0.12, 0.42, 0.68]), 'rough')
       .add(fine.mul(band((b) => (b === 1 ? 0.06 : 0))))
       .add(big.mul(band((b) => (b === 0 ? 0.12 : 0)))),
     metalness: band((b) => (b < 2 ? 1 : 0)),

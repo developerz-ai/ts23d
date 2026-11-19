@@ -1,10 +1,12 @@
-// What the drake's maps get after the bake (bear_hybrid/paint.ts runs it as one `script` step, in
-// the reposed rest): the generator's light taken out, the chalk-grey horns repainted as ringed
-// keratin (dark root, pale tip), a roughness map that tells scales from belly plates, wing
-// leather, horn and claw, and the wear of an animal that burns what it eats.
-// The story: soot round the mouth, nostrils and down the throat; three claw scars from a rival
-// across the right flank (the side the hero shot shows); pale dust on the feet, the belly's underside and the dragging tail;
-// the wing leather scuffed pale where the fingers fold it.
+// What the drake's maps get after the bake (_lib/creature/texture-paint.ts runs it as one
+// `script` step, in the reposed rest): the generator's light taken out (and the pale dapple it
+// left on the wing leather), the chalk-grey horns repainted as ringed keratin (dark root, pale
+// tip), a roughness map that tells scales from belly plates, wing leather, horn and claw, and
+// the wear of an animal that burns what it eats and fights its own kind.
+// The story: soot over the muzzle, the jaw and down the throat to the chest; a rival's claws
+// across the right flank, the right haunch and the neck, and three long slashes healed pale
+// across the right wing's membrane (the side the hero shot shows; the torn notches are cut in
+// steps.ts); pale dust caked on the feet and shanks, under the belly and along the dragging tail.
 
 import type { Vec3 } from '@developerz.ai/ts23d';
 import { offset, py, rgb } from '../_lib/creature/texture-paint.ts';
@@ -17,13 +19,27 @@ export interface RestBone {
 /** Seeds of the noise fields: change one and that effect re-rolls. */
 const SEED = { scales: 5, soot: 17, dust: 29, scar: 43, wing: 59 } as const;
 
-/** The paint body (Python, after the kit). `bone` reads the asset's rest skeleton. */
+const unit = (v: Vec3): Vec3 => {
+  const l = Math.hypot(v[0], v[1], v[2]) || 1;
+  return [v[0] / l, v[1] / l, v[2] / l];
+};
+
+/** The paint body (Python, after KIT and RELIEF). `bone` reads the asset's rest skeleton. */
 export function drakePaint(bone: (name: string) => RestBone, height: number): string {
   const h = height;
   const head = bone('head');
   const loin = bone('spine_1');
   const flank: Vec3 = offset(loin.head, [0.3 * h, -0.14 * h, -0.1 * h]);
-  const scars = [-1, 0, 1].map((k) => offset(flank, [k * 0.05 * h, 0, k * 0.015 * h]));
+  const scars = [-1, 0, 1].map((k) => offset(flank, [k * 0.075 * h, 0, k * 0.02 * h]));
+  const haunch: Vec3 = offset(bone('hind_r_0').head, [-0.08 * h, -0.1 * h, 0.12 * h]);
+  const [n0, n1] = [bone('neck_0'), bone('neck_1')];
+  const throat: Vec3 = [(n0.head[0] + n1.tail[0]) / 2, -0.1 * h, (n0.head[2] + n1.tail[2]) / 2];
+  const along = unit([n1.tail[0] - n0.head[0], 0, n1.tail[2] - n0.head[2]]);
+  // The right wing's plane: its span (root to tip) and the body's long axis. The slashes run
+  // across the membrane on a diagonal; `slab` wants the normal of the plane that cuts them.
+  const [root, tip] = [bone('wing_r_0').head, bone('wing_r_2').tail];
+  const span = unit([tip[0] - root[0], tip[1] - root[1], tip[2] - root[2]]);
+  const slash = unit([0.8 * span[0] + 0.6, 0.8 * span[1], 0.8 * span[2]]);
   const trunk = ['spine_0', 'spine_1', 'spine_2', 'neck_0', 'neck_1', 'head', 'tail_0', 'tail_1']
     .map((n) => bone(n))
     .map((b) => `(${py(b.head)}, ${py(b.tail)})`);
@@ -40,7 +56,12 @@ for a, b in [${trunk.join(', ')}]:
     a, b = np.array(a), np.array(b); ab = b - a
     t = np.clip(((X - a[0]) * ab[0] + (Y - a[1]) * ab[1] + (Z - a[2]) * ab[2]) / float(ab @ ab), 0, 1)
     off = np.minimum(off, np.sqrt((X - a[0] - t * ab[0]) ** 2 + (Y - a[1] - t * ab[1]) ** 2 + (Z - a[2] - t * ab[2]) ** 2))
-wing = sstep(0.3 * h, 0.4 * h, off) * (Z > 0.8 * h)
+wing = sstep(0.3 * h, 0.4 * h, off) * (Z > 0.72 * h)
+# The membranes kept a pale dapple (the concept's light through the leather): blotches up to
+# 20 cm x h pulled to the wing's own value over 70 cm x h, on the wings only.
+L = np.maximum(lum(), 1e-4)
+ratio = np.maximum(lowpass(L, 0.7 * h), 1e-4) / np.maximum(lowpass(L, 0.1 * h), 1e-4)
+shade(wing, np.clip(np.power(ratio, np.where(ratio < 1, 0.95, 0.6)), 0.5, 1.8))
 # 2. Horns and face spikes: chalk grey out of the generator. Keratin: dark at the root, bone
 # pale at the tip, growth rings 2.5 cm x h apart.
 skull = ${py(offset(head.head, [0.02 * h, 0, 0.02 * h]))}
@@ -63,31 +84,50 @@ rough(wing, 0.78)
 rough(horn, 0.42 - 0.12 * t)
 claw = (Z < 0.09 * h) * (1 - sstep(0.03, 0.08, lum()))
 rough(claw, 0.3)
-# 4. Soot: round the mouth and nostrils, fading down the throat and up to the horn roots.
+# 4. Soot: black over the muzzle and jaw, fading down the throat to the chest and up to the horn
+# roots.
 k = np.unravel_index(int(np.argmax(np.where(OK & (Z > ${head.head[2].toFixed(4)} - 0.3 * h) & (np.abs(Y) < 0.1 * h), X, -1e9))), X.shape)
-muzzle = (float(X[k]) - 0.04 * h, 0.0, float(Z[k]))
-soot = np.maximum(ball(muzzle, 0.1 * h, 0.2 * h), 0.7 * capsule(muzzle, ${py(offset(head.head, [0.05 * h, 0, -0.35 * h]))}, 0.1 * h, 0.14 * h))
-soot = soot * (1 - wing) * (0.35 + 0.65 * sstep(0.3, 0.7, fbm(0.05 * h, ${SEED.soot})))
-shade(soot * (1 - horn), 0.14)
+muzzle = (float(X[k]) - 0.06 * h, 0.0, float(Z[k]))
+soot = np.maximum(ball(muzzle, 0.12 * h, 0.2 * h), 0.8 * capsule(muzzle, ${py(offset(n0.head, [0.12 * h, 0, -0.3 * h]))}, 0.16 * h, 0.2 * h))
+soot = soot * (1 - wing) * (0.45 + 0.55 * sstep(0.3, 0.65, fbm(0.07 * h, ${SEED.soot})))
+shade(soot * (1 - horn), 0.24)
 shade(soot * horn, 0.6)
-rough(soot, 0.9)
+desat(soot, 0.7)
+rough(soot, 0.92)
+plane(soot, 0.6)
 print('soot', muzzle, float(soot[OK].mean()))
-# 5. Dust: feet and shanks, the underside of the belly and the tail that drags.
-edge = Z + 0.2 * h * (fbm(0.08 * h, ${SEED.dust}) - 0.5)
-low = 1 - sstep(0.06 * h, 0.22 * h, edge)
-drag = (X < ${bone('tail_1').tail[0].toFixed(4)}) * (1 - sstep(0.1 * h, 0.3 * h, edge))
-speck = sstep(0.6, 0.68, fbm(0.03 * h, ${SEED.dust + 3}, 3)) * (1 - sstep(0.3 * h, 0.6 * h, Z))
-dust = np.clip(np.maximum(np.maximum(low, drag), 0.8 * speck), 0, 1) * (1 - wing)
-print('dust', paint(dust * 0.62 * (1 - 0.7 * claw), ${rgb('#a39274')}, keep=0.75, value=0.93))
-# 6. Scars across the right flank: pale, smooth, a dark lip.
+# 5. Dust: caked pale on the feet and shanks, under the belly and along the tail that drags.
+edge = Z + 0.24 * h * (fbm(0.09 * h, ${SEED.dust}) - 0.5)
+low = 1 - sstep(0.14 * h, 0.32 * h, edge)
+drag = (X < ${bone('tail_1').tail[0].toFixed(4)}) * (1 - sstep(0.12 * h, 0.34 * h, edge))
+speck = sstep(0.57, 0.64, fbm(0.035 * h, ${SEED.dust + 3}, 3)) * (1 - sstep(0.35 * h, 0.7 * h, Z))
+dust = np.clip(np.maximum(np.maximum(low, drag), 0.85 * speck), 0, 1) * (1 - wing)
+print('dust', paint(dust * 0.7 * (1 - 0.7 * claw), ${rgb('#a89878')}, keep=0.65, value=0.95))
+emboss(0.004 * h * dust * fbm(0.015 * h, ${SEED.dust + 7}, 2))
+# 6. Scars: pale, smooth skin in a groove, a dark lip each side.
+def scar(at, n, half, reach, wobble, seed, where):
+    lip = slab(at, n, 2.3 * half, 1.05 * reach, wobble, seed) * where
+    cut = slab(at, n, half, reach, wobble, seed) * where
+    shade(lip, 0.4)
+    emboss(-0.006 * h * cut)
+    plane(cut, 0.15)
+    return paint(cut, ${rgb('#d4a390')}, keep=0.2, value=0.38)
+hide = (Y < 0) * (1 - wing)
 for k, at in enumerate(${`[${scars.map(py).join(', ')}]`}):
-    n = (0.8, 0.0, 0.6)
-    lip = slab(at, n, 0.02 * h, (0.2 - 0.03 * k) * h, 0.006 * h, ${SEED.scar} + k) * (Y < 0) * (1 - wing)
-    cut = slab(at, n, 0.009 * h, (0.19 - 0.03 * k) * h, 0.006 * h, ${SEED.scar} + k) * (Y < 0) * (1 - wing)
-    shade(lip, 0.5)
-    print('rake', paint(cut, ${rgb('#c9a08c')}, keep=0.2, value=0.4))
-# 7. Wing leather: scuffed pale in streaks along the span, darker and thin toward the hem.
-streak = sstep(0.55, 0.75, 0.5 * vnoise(0.03 * h, ${SEED.wing}, (8, 8, 1)) + 0.5 * fbm(0.12 * h, ${SEED.wing + 1}))
-print('scuff', paint(wing * streak * 0.55, ${rgb('#c4907c')}, keep=0.7, value=0.88))
+    print('rake', scar(at, (0.8, 0.0, 0.6), 0.014 * h, (0.3 - 0.04 * k) * h, 0.01 * h, ${SEED.scar} + k, hide))
+for k in range(2):
+    at = (${haunch[0].toFixed(4)} + k * 0.08 * h, ${haunch[1].toFixed(4)}, ${haunch[2].toFixed(4)} + k * 0.02 * h)
+    print('haunch', scar(at, (0.75, 0.0, 0.66), 0.013 * h, (0.26 - 0.04 * k) * h, 0.01 * h, ${SEED.scar + 5} + k, hide))
+print('neck', scar(${py(throat)}, ${py(unit([along[0] * 0.8 + 0.2, 0, along[2] * 0.8 - 0.55]))}, 0.014 * h, 0.2 * h, 0.008 * h, ${SEED.scar + 9}, hide))
+# 7. The right wing's membrane: three slashes healed pale, through the leather (both faces).
+sail = wing * (Y < 0)
+centre = tuple(float(np.sum(c * sail) / np.sum(sail)) for c in (X, Y, Z))
+n = np.array(${py(slash)})
+for k in (-1, 0, 1):
+    at = tuple(np.array(centre) + k * 0.11 * h * n)
+    print('slash', scar(at, tuple(n), 0.013 * h, (0.52 - 0.07 * abs(k)) * h, 0.014 * h, ${SEED.wing} + k, sail))
+# Wing leather: darker and sooty toward the hems, where it drags and folds.
+hem = sstep(0.45, 0.7, fbm(0.25 * h, ${SEED.wing + 5})) * wing
+shade(hem, 0.72)
 `;
 }

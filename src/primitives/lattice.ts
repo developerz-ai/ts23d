@@ -10,7 +10,7 @@
 //   chords = 2 | 4, faces = 1 | 4, web = warren k · pratt/howe 2k + 1 + (k odd) · x 3k + 1
 
 import { type Mesh, MeshBuilder, normalize, type Vec3 } from '../core/index.ts';
-import { type StripId, stripRect } from '../material/index.ts';
+import { mappedOnto, type StripId, stripRect } from '../material/index.ts';
 import { count, invalid, positive } from './check.ts';
 import { emitMember, type SectionKind, section } from './member.ts';
 
@@ -109,7 +109,7 @@ export function lattice(o: LatticeOptions): Mesh {
   for (const [lo, hi, n] of faces)
     for (const [ta, la, tb, lb] of webMembers(o.pattern ?? 'warren', k))
       emitMember(mb, sw, (la ? hi : lo)(ta), (lb ? hi : lo)(tb), n, false, o.color, rect);
-  return mb.build();
+  return mappedOnto(mb.build(), o.strip ?? 'iron');
 }
 
 /** Web members of one face as [t0, onTop0, t1, onTop1], in a fixed order (determinism). */

@@ -1,7 +1,7 @@
 {
   "asset": "loco_440",
   "reviewer": "agent",
-  "overall": 7,
+  "overall": 7.3,
   "scores": {
     "silhouette": {
       "score": 8,
@@ -11,10 +11,9 @@
       ]
     },
     "proportions": {
-      "score": 7,
-      "reason": "Wheel sizes, boiler and cab sit right against the Jupiter replica; the tender sides are plain boxes and the cab roof overhang is long.",
+      "score": 8,
+      "reason": "Wheel sizes, boiler and cab sit right against the Jupiter replica, and the tender now has a flared top with coping; the cab roof overhang still looks long.",
       "fixes": [
-        "tender sides with flare and coping",
         "check the cab roof overhang against the replica photos"
       ]
     },
@@ -34,8 +33,8 @@
       ]
     },
     "wear": {
-      "score": 5,
-      "reason": "Some specks of grime on the panels; no soot down the stack or oil on the motion.",
+      "score": 6,
+      "reason": "The closer hero.png shows streaked boiler jacketing, a grimy cab roof and rusty rails; no soot down the stack or smokebox and no oil on the motion.",
       "fixes": [
         "soot down the stack and smokebox front",
         "oil and grime on the motion and wheels"
@@ -50,14 +49,14 @@
     },
     "technical": {
       "score": 7,
-      "reason": "51.7k / 19.2k / 1.5k triangles but 20 draws at LOD0.",
+      "reason": "54k / 19.4k / 1.6k triangles but 19 draws at LOD0.",
       "fixes": [
         "merge static body parts so only wheels and rods keep their own pivots"
       ]
     }
   },
   "renders": {
-    "hero.png": "762503827183690369a6d82df3954af487173d9f0019940bf43adafc1bf33424",
-    "sheet.png": "23a22af934e6b5a46c9765d0e9825d6db5f92c58a28ee831a8a89d243361aa0d"
+    "hero.png": "5d27b10b877a29c191045a009e56d943fe0940d4639099d06a388c6a2ae8c5e1",
+    "sheet.png": "328c3e36d5ad27235f99151cc0c335d3b746082cf32cf42a83359918b56a1d4f"
   }
 }

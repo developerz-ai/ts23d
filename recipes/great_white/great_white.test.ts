@@ -26,6 +26,7 @@ import {
   xOf,
 } from './anatomy.ts';
 import {
+  biteAt,
   copepods,
   DORSAL,
   dorsalCopepods,
@@ -114,6 +115,14 @@ describe('sourced dimensions', () => {
     const fin = mesh('dorsal_fin');
     expect(triangleCount(fin)).toBeGreaterThan(triangleCount(dorsalFin(0)));
     expect(copepods(2, seats)).toEqual([]);
+  });
+
+  it('carries a healed bite across a pectoral: a crescent of tooth scars, clear of the root', () => {
+    let peak = 0;
+    for (let u = 0; u <= 1; u += 0.01)
+      for (let c = 0; c <= 1; c += 0.01) peak = Math.max(peak, biteAt(u, c));
+    expect(peak).toBeGreaterThan(0.8);
+    expect(biteAt(0.02, 0.1)).toBeLessThan(0.05);
   });
 
   it('cuts the notch into the generated trailing edge, not only into dorsalNotch', () => {

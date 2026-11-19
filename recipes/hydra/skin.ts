@@ -56,8 +56,8 @@ export const C = {
   mouth: hex('#3a1517'),
   spine: hex('#2c2a20'),
   iris: hex('#d3a02c'),
-  mud: hex('#4a3d2b'),
-  dryMud: hex('#8a7a5c'),
+  mud: hex('#33261a'),
+  dryMud: hex('#b9ae98'),
   scar: hex('#a68a78'),
   scarDeep: hex('#5c3a32'),
   tongue: hex('#7a3a44'),
@@ -77,19 +77,21 @@ const fromLine = (s: number, pitch: number): number => {
 const plates = (s: number, pitch: number, q: number): number =>
   -smooth(clamp01(q * 2 - 1)) * Math.exp(-((fromLine(s, pitch) / 0.16) ** 2));
 
-/** River mud, 0..1: caked thick on the feet and shins, splashed up the legs, dusting the belly. */
+/** River mud, 0..1: caked thick on the feet and shins up to the knee, splashed in a broad band
+ *  under the belly and chest where it drags through the shallows. Big ragged shapes, so it reads
+ *  from the hero camera, not a speckle. */
 export function mudAt(p: Vec3, low = 0): number {
-  const ragged = 0.75 + 0.5 * noise3(at(p, 7, 9));
-  const legs = 1 - smooth(clamp01((p[2] - 0.12 * ragged) / (0.42 * ragged)));
-  const belly = smooth(clamp01((low - 0.78) * 5)) * 0.55 * ragged;
-  return clamp01(Math.max(legs, belly) * (0.8 + 0.4 * noise3(at(p, 3, 5))));
+  const ragged = 0.75 + 0.5 * noise3(at(p, 4, 9));
+  const legs = 1 - smooth(clamp01((p[2] - 0.3 * ragged) / (0.32 * ragged)));
+  const belly = smooth(clamp01((low - 0.62) * 4)) * (0.55 + 0.45 * ragged);
+  return clamp01(Math.max(legs, belly) * (0.85 + 0.3 * noise3(at(p, 2, 5))));
 }
 
 /** Mud over a colour: wet and dark low down, dried pale at its upper edge. */
 export function muddy(c: Vec3, p: Vec3, low = 0): Vec3 {
   const m = mudAt(p, low);
-  const dried = smooth(clamp01((p[2] - 0.08) / 0.3));
-  return lerp(c, lerp(C.mud, C.dryMud, dried * 0.7), m * 0.82);
+  const dried = smooth(clamp01((p[2] - 0.16) / 0.22));
+  return lerp(c, lerp(C.mud, C.dryMud, dried), m * 0.95);
 }
 
 /** Healed claw rakes, 0..1: three parallel diagonal slashes across one neck's flank. */
@@ -97,9 +99,9 @@ function rakeAt(s: number, angle: number, radius: number): number {
   const across = (angle > Math.PI ? angle - Math.PI * 2 : angle) * radius;
   let best = 0;
   for (const k of [0, 1, 2]) {
-    const d = s - 0.95 - k * 0.1 - across * 0.9;
-    const lengthwise = Math.exp(-(((across + 0.05 + k * 0.02) / 0.2) ** 2));
-    best = Math.max(best, Math.exp(-((d / 0.024) ** 2)) * lengthwise);
+    const d = s - 0.95 - k * 0.14 - across * 0.9;
+    const lengthwise = Math.exp(-(((across + 0.05 + k * 0.02) / 0.24) ** 2));
+    best = Math.max(best, Math.exp(-((d / 0.038) ** 2)) * lengthwise);
   }
   return best;
 }
@@ -108,7 +110,7 @@ function rakeAt(s: number, angle: number, radius: number): number {
 function biteAt(p: Vec3): number {
   const c: Vec3 = [0.12, -0.5, 1.08];
   const d = Math.hypot((p[0] - c[0]) / 1.4, p[1] - c[1], p[2] - c[2]);
-  const ring = Math.exp(-(((d - 0.2) / 0.035) ** 2));
+  const ring = Math.exp(-(((d - 0.22) / 0.05) ** 2));
   const teeth = 0.5 + 0.5 * Math.cos(Math.atan2(p[2] - c[2], p[0] - c[0]) * 9);
   return p[1] < -0.2 ? ring * (0.35 + 0.65 * teeth) : 0;
 }
@@ -121,14 +123,13 @@ function baseColour(p: Vec3, angle: number, s: number, pitch: number, tone: numb
   // Dark saddles across the back at a regular pitch (as a monitor's bands), edges broken by noise.
   const band = 0.5 + 0.5 * Math.cos((p[0] / 0.62) * Math.PI * 2 + noise3(at(p, 1.2, 4)) * 2.4);
   const saddle = smooth(clamp01((band - 0.42) * 3.2)) * (1 - smooth(clamp01((low - 0.3) * 4)));
-  // Far away a few vertices cannot hold blotches: broad back-to-belly colour, saddles averaged.
+  // Far away a few vertices cannot hold blotches: broad back-to-belly colour, and the saddles as
+  // clean bands (their 0.62 m pitch is several far rings long, so they survive without noise).
   if (lod === 2) {
+    const clean = 0.5 + 0.5 * Math.cos((p[0] / 0.62) * Math.PI * 2);
+    const farSaddle = smooth(clamp01((clean - 0.4) * 2.5)) * (1 - smooth(clamp01((low - 0.3) * 4)));
     const far = lerp(
-      lerp(
-        lerp(C.back, C.flank, 0.3 + tone),
-        C.saddle,
-        0.32 * (1 - smooth(clamp01((low - 0.3) * 4))),
-      ),
+      lerp(lerp(C.back, C.flank, 0.3 + tone), C.saddle, 0.75 * farSaddle),
       C.ochre,
       smooth(clamp01((low - 0.42) * 3.2)),
     );
@@ -150,12 +151,15 @@ const scarred = (c: Vec3, k: number): Vec3 =>
 export const bodyRelief: Relief = (q) => {
   const up = Math.max(0, Math.cos(q.angle));
   const flank = Math.abs(Math.sin(q.angle));
-  const shoulder = 0.07 * bump(q.u, 0.2, 0.16) * flank;
-  const hip = 0.08 * bump(q.u, 0.8, 0.14) * flank;
+  // A barrel, not a box: the ribcage swells widest mid-trunk and rounds into shoulder and hip,
+  // which stay only as soft masses.
+  const barrel = 0.3 * bump(q.u, 0.48, 0.2) * flank ** 1.5;
+  const shoulder = 0.03 * bump(q.u, 0.2, 0.14) * flank;
+  const hip = 0.035 * bump(q.u, 0.8, 0.12) * flank;
   const spine = 0.035 * up ** 10;
   const ribs = 0.006 * Math.sin(q.s * 21) * flank ** 2 * bump(q.u, 0.5, 0.26);
   const scute = plates(q.s, 0.17, under(q.angle)) * 0.008;
-  return shoulder + hip + spine + ribs + scute - 0.008 * biteAt(q.p);
+  return barrel + shoulder + hip + spine + ribs + scute - 0.008 * biteAt(q.p);
 };
 
 export const bodyTint: Tint = (q) =>

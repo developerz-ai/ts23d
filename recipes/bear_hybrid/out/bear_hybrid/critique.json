@@ -1,7 +1,7 @@
 {
   "asset": "bear_hybrid",
   "reviewer": "agent",
-  "overall": 7.7,
+  "overall": 7.6,
   "scores": {
     "silhouette": {
       "score": 8,
@@ -18,15 +18,17 @@
       ]
     },
     "materials": {
-      "score": 8,
-      "reason": "The textured coat reads as fur with grizzled tips, ears are body brown, nose dark and the claws pale keratin; only a faint baked top-light remains on the back and shoulders.",
+      "score": 7,
+      "reason": "The coat reads as grizzled fur and claws are pale keratin, but the closer hero.png exposes baked lighting in the albedo (a dark shadow band behind the hump, bright top-lit back), a stretched pale smear on the chest under the neck, and the claw scars are a flat lilac-pink like paint.",
       "fixes": [
-        "de-light the albedo further (divide out the remaining top light on the back) so it relights correctly in engine"
+        "de-light the albedo (divide out the baked top light and the shadow band behind the hump)",
+        "repair the stretched texture on the chest under the neck",
+        "scars as darker, hairless pinkish-grey skin lines with fur parted round them, not lilac paint"
       ]
     },
     "detail": {
       "score": 7,
-      "reason": "Claws on each paw, scars and fur grain hold in the hero, but the outline is a smooth hull: no fur clumps break it on the back, belly fringe or legs, and the face has little plane structure in close-up.",
+      "reason": "Claws on each paw and fur grain hold in the closer hero, but the outline is still a smooth hull with no fur clumps on the back, belly fringe or legs, and the face has little plane structure.",
       "fixes": [
         "a strand/shell or card pass on the back, belly fringe and backs of the forelegs so the outline breaks into fur clumps",
         "sharper brow and muzzle planes in the Blender step (eye sockets, lip line)"
@@ -34,9 +36,10 @@
     },
     "wear": {
       "score": 7,
-      "reason": "Three healed claw scars on the shoulder and darker, dirtier paws and lower legs tell a life outdoors; the coat is otherwise clean and evenly groomed.",
+      "reason": "Three claw scars on the shoulder and dark, wet lower legs tell a life outdoors; the dark legs end in a hard line like boots and the scars read painted.",
       "fixes": [
-        "wet/matted darker fur on the lower legs and belly, a rubbed patch on the flank"
+        "feather the wet-leg darkening upward with clumped fur instead of a hard boot line",
+        "a rubbed patch on the flank and matted belly fur"
       ]
     },
     "lod": {
@@ -55,7 +58,7 @@
     }
   },
   "renders": {
-    "hero.png": "a02b1cda6d06fb4e24e0c46ce00b55b447a160bcb28f4c9157b2c85abf1fb036",
-    "sheet.png": "d1c2fe0b9805680a1c7fcc6268f9e497b355cfe08539eeebbced16931f457490"
+    "hero.png": "371f382950a320b3a1ae7c2a5ca3dc1df3a9e7d65a884eeb1da43dacc1cbd3af",
+    "sheet.png": "45c2cc229166f1a1b50146014b1471b10b8f1f5b60c81861ee00716c3ddd0374"
   }
 }

@@ -23,11 +23,17 @@ describe('red fox from the wolf family (Wikipedia: Red fox; Wikidata Q8332)', ()
     expect(() => creaturePlan({ ...FOX, mass: 6000 })).toThrow();
   });
 
-  it('shoulder is the pinned Wikidata height; head + body 0.68 m (±2 %)', () => {
+  it('shoulder is the pinned Wikidata height; head + body 0.74 m (±2 %)', () => {
     expect(REAL.shoulder).toBe(0.425);
     expect(FOX_DATA.qid).toBe('Q8332');
     const hb = dist(bones.nose, bones.tailRoot);
     expect(Math.abs(hb - REAL.headBody) / REAL.headBody).toBeLessThan(0.02);
+  });
+
+  it('carries the sourced 11 cm ear (the face override used to drop it to the kind’s 6 cm)', () => {
+    expect((FOX.face?.earLength ?? 0) * REAL.head).toBeCloseTo(REAL.ear, 6);
+    expect(REAL.ear).toBeGreaterThanOrEqual(0.077);
+    expect(REAL.ear).toBeLessThanOrEqual(0.125);
   });
 
   it('is the wolf skeleton: same bones and legs, canid digits 5 fore / 4 hind', () => {
@@ -38,7 +44,7 @@ describe('red fox from the wolf family (Wikipedia: Red fox; Wikidata Q8332)', ()
   });
 
   it(
-    'weighs within ±30 % of 6 kg (volume × furred density), stands, and its gaits do not slide',
+    'weighs within ±30 % of 7.5 kg (volume × furred density), stands, and its gaits do not slide',
     () => {
       const c = compile(fox, { lod: 2 });
       const m = massProperties(compile(fox, { lod: 1 })).mass;

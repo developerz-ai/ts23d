@@ -14,7 +14,7 @@ import {
   type Vec3,
 } from '@developerz.ai/ts23d';
 import { ARM_IDS, ARMS, AXIS, armLength, CROWN, NECK, radiusOf } from './anatomy.ts';
-import { noise3, PAPILLA, SUCKER_CUP, SUCKER_RIM, WEB_TOP } from './skin.ts';
+import { noise3, PAPILLA, papillaColour, SUCKER_CUP, SUCKER_RIM, WEB_TOP } from './skin.ts';
 import { stamp } from './stamp.ts';
 
 type Kit = Parameters<NonNullable<BodyPlanDefinition['detail']>>[2];
@@ -238,6 +238,13 @@ function web(kit: Kit, lod: number): Mesh {
   return merge(out);
 }
 
+/** A piece in one colour. */
+function tinted(m: Mesh, c: Vec3): Mesh {
+  const colors = new Float32Array(m.colors.length);
+  for (let i = 0; i < colors.length; i += 3) [colors[i], colors[i + 1], colors[i + 2]] = c;
+  return { ...m, colors };
+}
+
 /** Papillae: little cones on the mantle, head and arm bases, scattered by a noise test. */
 function papillae(kit: Kit, ctx: BuildContext): Mesh | null {
   if (ctx.lod !== 0) return null;
@@ -265,8 +272,9 @@ function papillae(kit: Kit, ctx: BuildContext): Mesh | null {
     for (let i = 0; i < n; i++) {
       const u = umin + (umax - umin) * rng.range(0, 1) ** 1.6;
       const q = kit.surface(id, u, rng.range(-aboral, aboral));
-      const s = size * rng.range(0.55, 1.35);
-      here.push(stamp(cone, q.p, q.n, s, rng.range(0, 6)));
+      // Sizes vary a lot, as on the animal: a few big cirri among many small bumps.
+      const s = size * rng.range(0.4, 1.1) * (rng.next() < 0.12 ? 1.7 : 1);
+      here.push(tinted(stamp(cone, q.p, q.n, s, rng.range(0, 6)), papillaColour(q.p)));
     }
     if (here.length > 0) out.push(kit.bindPieces(merge(here), [id]));
   };

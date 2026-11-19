@@ -4,7 +4,7 @@
 // turns by more than ~78° when a moves onto b), and the final compaction to a Mesh (skin and
 // morph targets ride along: a surviving vertex keeps its exact attributes).
 
-import type { Mesh } from '../core/index.ts';
+import { type Mesh, mappedOf } from '../core/index.ts';
 import type { Topology } from './simplify-topology.ts';
 import { carrySkin } from './skin-carry.ts';
 
@@ -118,6 +118,7 @@ export function compact(m: Mesh, T: Topology, alive: Uint8Array): Mesh {
     uvs: pick(m.uvs, 2),
     colors: pick(m.colors, 3),
     indices: Uint32Array.from(idx),
+    ...mappedOf(m),
     ...carrySkin(m, order),
   };
 }

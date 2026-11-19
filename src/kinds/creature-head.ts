@@ -262,6 +262,7 @@ export function headEdits(
   s: CreatureSpec,
   lod: number,
   res: number,
+  extra?: (l: HeadLayout) => readonly SculptEdit[],
 ): { layout: HeadLayout; edits: SculptEdit[]; jaw: SculptEdit[]; teeth: Mesh | null } {
   const l = headLayout(b, s);
   const coarse = lod === 2;
@@ -271,6 +272,7 @@ export function headEdits(
       ...blockOut(l, coarse),
       ...(coarse || b.head.beak ? [] : skullForms(l)),
       ...(b.neck.length > 1 ? neckStub(b, l) : []),
+      ...(extra?.(l) ?? []),
       ...features(l, s, b, res, lod),
     ],
     jaw: jawEdits(l),

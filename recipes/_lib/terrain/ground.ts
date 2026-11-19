@@ -42,9 +42,11 @@ export function macroUV(
     const z = m.positions[i * 3 + 2] ?? 0;
     const nz = Math.abs(m.normals[i * 3 + 2] ?? 1);
     if (nz < SIDE) {
-      // Beds horizontal: V up the wall in one band, U along the perimeter at the same scale.
+      // Beds horizontal: V up the wall in one band, U along the perimeter at the SAME texel
+      // scale (texture metres per wall metre = 1 / wall both ways). U squeezed harder than V
+      // drew every texel as a tall thin sliver: vertical streaks down the cut sides.
       const along = (x - rect[0] + (y - rect[1])) / wall;
-      uvs[i * 2] = side.u0 + along * (side.u1 - side.u0) * 0.15;
+      uvs[i * 2] = side.u0 + (along / side.metres) * (side.u1 - side.u0);
       uvs[i * 2 + 1] =
         side.v0 + HALF + Math.min(1, Math.max(0, z / wall)) * (side.v1 - side.v0 - 2 * HALF);
     } else {
@@ -243,6 +245,7 @@ export function smoothPath(p: readonly [number, number][], every: number): [numb
 /**
  * A water ribbon `width` metres wide along a plan path, `lift` metres over the ground read by
  * `height` (the same surface the terrain meshes), widening downstream, on the `water` strip.
+ * `vary(x, y)` (default 1) scales the width there: pools and riffles instead of a canal.
  */
 export function ribbon(
   path: readonly [number, number][],
@@ -250,6 +253,7 @@ export function ribbon(
   height: (x: number, y: number) => number,
   lift: number,
   color: Vec3,
+  vary: (x: number, y: number) => number = () => 1,
 ): Mesh {
   const r = stripRect('water');
   const mb = new MeshBuilder();
@@ -264,7 +268,7 @@ export function ribbon(
     if (i > 0)
       run += Math.hypot(p[0] - (path[i - 1]?.[0] ?? p[0]), p[1] - (path[i - 1]?.[1] ?? p[1]));
     const t = i / Math.max(1, path.length - 1);
-    const w = (width[0] + (width[1] - width[0]) * t) / 2;
+    const w = ((width[0] + (width[1] - width[0]) * t) / 2) * vary(p[0], p[1]);
     const side: [number, number] = [-dy / l, dx / l];
     const v = r.v0 + HALF + ((run % 40) / 40) * (r.v1 - r.v0 - 2 * HALF);
     // The water level: `lift` over the bed's centre line. The centre row carries it; the banks

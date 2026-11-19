@@ -21,14 +21,14 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    156754,
-    23140,
-    3030
+    153630,
+    22672,
+    3078
   ],
   "drawCalls": [
-    30,
-    30,
-    23
+    24,
+    24,
+    18
   ],
   "pivots": [
     {
@@ -45,14 +45,6 @@
     },
     {
       "name": "body_paint_stripe",
-      "parent": null
-    },
-    {
-      "name": "body_finish_brushed",
-      "parent": null
-    },
-    {
-      "name": "body_finish_carpet",
       "parent": null
     },
     {
@@ -119,10 +111,6 @@
       "motion": "spin"
     },
     {
-      "name": "wheel_fl_finish_brushed",
-      "parent": "wheel_fl"
-    },
-    {
       "name": "steer_fr",
       "parent": null,
       "motion": "sway"
@@ -133,26 +121,14 @@
       "motion": "spin"
     },
     {
-      "name": "wheel_fr_finish_brushed",
-      "parent": "wheel_fr"
-    },
-    {
       "name": "wheel_rl",
       "parent": null,
       "motion": "spin"
     },
     {
-      "name": "wheel_rl_finish_brushed",
-      "parent": "wheel_rl"
-    },
-    {
       "name": "wheel_rr",
       "parent": null,
       "motion": "spin"
-    },
-    {
-      "name": "wheel_rr_finish_brushed",
-      "parent": "wheel_rr"
     }
   ],
   "emitters": [
@@ -309,7 +285,7 @@
     {
       "label": "overall length",
       "spec": 4.46,
-      "measured": 4.4518537521362305,
+      "measured": 4.4523351192474365,
       "source": "README"
     }
   ],

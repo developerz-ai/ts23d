@@ -6,7 +6,13 @@
 import { describe, expect, it } from 'bun:test';
 import { compile, createRng, type Lod, type Mesh, sampler, type Vec3 } from '@developerz.ai/ts23d';
 import { RECT, tileField } from './field.ts';
-import { mountain_range, mountainRange, VARIANTS } from './mountain_range.ts';
+import {
+  mountain_range,
+  mountain_range_b,
+  mountain_range_c,
+  mountainRange,
+  VARIANTS,
+} from './mountain_range.ts';
 
 const field = sampler(
   tileField(createRng(VARIANTS.mountain_range.seed), {
@@ -57,4 +63,28 @@ describe.each([0, 1, 2] as Lod[])('mountain_range LOD%i', (lod) => {
     const tris = c.parts.reduce((s, p) => s + (p.mesh ? p.mesh.indices.length / 3 : 0), 0);
     expect(tris).toBeLessThanOrEqual([140000, 40000, 4000][lod] ?? 0);
   });
+});
+
+describe('mountain_range far snow', () => {
+  // Failure first: each far vertex took the mean colour of only ±0.75 of its 53 m cell, so a crisp
+  // snowfield edge switched from one vertex to the next and rendered as stepped white squares
+  // (adjacent luminance p99 ≈ 0.35). Over ±2 cells the edge blends across the far cells.
+  for (const asset of [mountain_range, mountain_range_b, mountain_range_c])
+    it(`${asset.name}: neighbouring LOD2 surface vertices differ by < 0.25 luminance (p99)`, () => {
+      const m = compile(asset, { lod: 2 }).parts.find((p) => p.name === 'terrain')?.mesh;
+      if (!m) throw new Error('no terrain part');
+      const n = 39;
+      const luma = (k: number): number =>
+        0.2126 * (m.colors[k * 3] ?? 0) +
+        0.7152 * (m.colors[k * 3 + 1] ?? 0) +
+        0.0722 * (m.colors[k * 3 + 2] ?? 0);
+      const steps: number[] = [];
+      for (let j = 0; j < n; j++)
+        for (let i = 0; i < n; i++) {
+          if (i + 1 < n) steps.push(Math.abs(luma(j * n + i) - luma(j * n + i + 1)));
+          if (j + 1 < n) steps.push(Math.abs(luma(j * n + i) - luma((j + 1) * n + i)));
+        }
+      steps.sort((a, b) => b - a);
+      expect(steps[Math.floor(steps.length * 0.01)] ?? 1).toBeLessThan(0.25);
+    });
 });

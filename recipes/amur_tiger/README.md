@@ -107,7 +107,7 @@ mask against black stripes and amber eyes).
 | Head + body, nose tip → tail root (straight line) | 1.957 m | 1.95 m mean (Kerley 2005) | test ±2 % |
 | Tail along its curve | 0.987 m | 0.99 m (Kerley 2005) | test ±3 % |
 | Shoulder height (withers, coat) | 1.013 m | 0.8–1.1 m | `measures` ±2 % of 1.0 |
-| Furred head length | 0.43 m | skull 0.33–0.38 m + coat | `HEAD_SCALE` 1.08 (winter fur) |
+| Furred head length | 0.45 m | skull 0.33–0.38 m + coat | `HEAD_SCALE` 1.13 (winter fur; at 1.08 the head read small for an Amur male) |
 | Mass (QA `mass` gate, LOD0) | 237 kg | 243 kg declared ±25 % = Mazák's 180–306 kg range | gate + test |
 | Body union volume (voxelised field, no double count) | 0.272 m³ | — | test: × density inside 180–306 kg |
 | Limb allometry (Campione & Evans 2012) | humerus + femur ≈ 236 mm → 264 kg | 243 kg | test 0.6–1.6 × |
@@ -129,35 +129,48 @@ it is not sourced, so the test only guards against gross errors (deer legs on a 
 
 ## Status / known gaps
 
-- Fur cards cover the trunk, legs, nape, belly fringe and cheek ruff only (see `field.ts` below):
-  the face in front of the eyes, the lips and the muzzle stay sculpted relief + vertex paint on
-  the `plain` strip (the library `fur` strip's brown albedo mutes the orange), with no fur shell.
+- Fur cards cover the trunk, legs, nape, belly fringe, cheek ruff, crown and (a 1.1 cm velvet)
+  the forehead, bridge and cheeks (see `field.ts` below): the lips, the whisker pads and the
+  muzzle's front stay sculpted relief + vertex paint on the `plain` strip (the library `fur`
+  strip's brown albedo mutes the orange).
 - Whiskers are tapered strands at LOD0/1; LOD2 has none (the pads keep the dark spot rows).
-- Stripe edges stair-step at the 1.2 cm body cell (vertex colour); LOD2 stripes are blotchy.
+- Stripe edges stair-step at the 1.3 cm body cell (vertex colour); LOD2 carries six soft broad
+  bands, not the stripes (its faces are 8 cm).
 - Face planes: forehead, cheek, bridge, brow and cheekbone blends tightened by about a quarter
   (2026-11-19); the change is slight at hero distance. LOD2 leg tubes are 8-sided; the far budget
-  (3 000) leaves no room for colour rings or rounder paws.
+  (3 000) leaves no room for colour rings or rounder paws; every tube vertex takes the coat at
+  its own point (white inner faces), where one colour per ring painted whole segments dark.
 - Wear is vertex colour only (mud, damp, matting and scars in `field.ts`): no displaced mud
   cake or puckered scar relief.
 - Eye sockets are checked by ray probes in the test (enclosure, open pupil, lid cover, gaze), not
   a `socket` joint: the joints gate compares the head's whole section with the 3 cm eye.
 - Anatomical folds (mouth, nostrils, eyelids, gape, armpits, carpus, hock, groin, flank fold,
   toe partings) are declared `creases` with reasons so QA `connections` skips them.
-- Critique (`out/amur_tiger/critique.json`): overall 6.6 — silhouette 7, proportions 7,
-  materials 6, detail 7, wear 5, LOD 6, technical 8.
+- Critique: `out/amur_tiger/critique.json` (an independent reviewer's, re-judged after each round).
 
 ## Field wear and coat cards (`field.ts`)
 - Wear (world-space layers from `recipes/_lib/creature/wild-paint.ts`, so body, tail, head and claws take
-  the same stain): thaw mud on the paws and lower legs, wet fur to the hocks and along the belly
-  fringe, matted flank and breeches, three claw rakes healed across the right shoulder, a cut
-  across the bridge of the nose and one over the left brow; the left ear carries a notch
-  (`earEdits(lod, true)`: a bite subtracted from the outer rim).
+  the same stain): thaw mud wet and dark on the paws, drying to a grey-brown crust with a ragged
+  edge up the cannons (to ≈ 0.2 m) and splashed in flecks to the elbows and the belly fringe, wet
+  fur to 0.44 m and along the belly, matted flank and breeches, three claw rakes healed across
+  the right shoulder (2.2 → 1.6 cm of pale hairless skin, 25 cm long), a cut across the bridge of
+  the nose and one over the left brow; the left ear carries a notch (`earEdits(lod, true)`: a
+  bite 3.4 cm across subtracted from the outer rim). The far mesh takes only the broad layers
+  (`worn(…, far)`): flecks and scars alias on 8 cm cells.
 - Coat: strand cards over the painted sculpt (`fur` part, cutout): a short undercoat on the trunk
-  and upper legs, clumped guard hair on the nape, throat, chest, belly fringe, elbows and
-  breeches; the cheek ruff's locks and crown fur on the head (`head_fur`). Cards take the skin
-  colour under their root, so the stripes run on through the fur.
+  and upper legs (tone 0.82 → 1.24), clumped guard hair on the nape, throat, chest, belly fringe,
+  elbows and breeches, short and close along the back (a smooth topline); the cheek ruff's
+  locks, crown fur and the face's velvet on the head (`head_fur`). A card rooted in a stripe
+  used to be black for its whole length and lie across the stripe: a floating scratch. Now the
+  undercoat fades to the ground colour past the stripe's core and guard and ruff locks never
+  carry a stripe (`color` hooks: `bodyPaint(lod, false)`), so the stripes stay painted on the coat.
+  The ruff's cards are cream (they read as grey straw at the skin's shaded value).
 - Whiskers: one tapered strand from each follicle spot on the pads, three over each brow.
-- LOD2 stripes are eight broad authored bands (`farStripe`): the far mesh's 8 cm cells cannot
-  carry 2 cm stripes, and sampling them gave random dark triangles.
-- Ears: 1.7 cm thick with a rounded rim and a darker inner rim, so the ear keeps a rounded
-  outline edge-on and never shows as one pale disc.
+- LOD2 stripes are six soft, vertical, authored bands (`farStripe`), each two cells wide with an
+  edge a cell soft: the far mesh's 8 cm cells cannot carry 2 cm stripes, sampling them gave
+  random dark triangles, and so did eight slanted bands a cell wide. No leg bands at LOD2.
+- Ears: a lobe 5.4 cm deep and 8 cm wide opening forward and a little out, a shallow hollow,
+  orange fur round the pale furnishings and black only at the very edge: both ears read as
+  rounded ears from a 3/4 camera (the 3.4 cm plate was a disc face-on and a spike edge-on).
+- Proportions: brisket ≈ 1.5 cm deeper and 3 cm longer (`torso.ts`), head × 1.13.
+- Hero camera `{ azDeg: -50, elDeg: 11 }`: the raked right shoulder and the muddy legs to the lens.

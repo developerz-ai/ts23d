@@ -7,7 +7,7 @@ import { MATERIAL_STRIPS, type MaterialStripId, stripRect } from './trim-sheet.t
 const SIZE = 512;
 let sheet: PaintedSheet;
 beforeAll(() => {
-  sheet = paintTrimSheet({ ...DEFAULT_SHEET, size: SIZE });
+  sheet = paintTrimSheet({ ...DEFAULT_SHEET, size: SIZE }, []);
 });
 
 /** Mean of channel k of a map over a strip's rows. */

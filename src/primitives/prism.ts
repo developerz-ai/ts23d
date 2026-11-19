@@ -3,7 +3,7 @@
 //   plane 'xz' (side profile, extrude along Y) · 'xy' (plan, extrude up Z) · 'yz' (front, along X)
 
 import { type Mesh, MeshBuilder, normalize, type Vec2, type Vec3 } from '../core/index.ts';
-import { type StripId, stripRect } from '../material/index.ts';
+import { mappedOnto, type StripId, stripRect } from '../material/index.ts';
 import { colorOf, positive, profileOf } from './check.ts';
 import { faceBand } from './strip-uv.ts';
 import { triangulate } from './triangulate.ts';
@@ -99,5 +99,5 @@ export function prism(o: PrismOptions): Mesh {
       }
     }
   }
-  return b.build();
+  return mappedOnto(b.build(), o.strip ?? 'plain');
 }

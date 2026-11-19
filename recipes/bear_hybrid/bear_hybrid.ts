@@ -126,6 +126,9 @@ export const bear_hybrid = defineModelCreature({
   },
   checks: [sourced],
   art: { focal: 'head', shape: 'friendly', grounded: true },
+  // The right side carries the claw scars and the rubbed flank (wear.ts); low enough to show
+  // the belly's fringe and the mud on the legs.
+  hero: { azDeg: -50, elDeg: 12 },
   model: (ctx) => {
     built = bearModel(ctx);
     return built;

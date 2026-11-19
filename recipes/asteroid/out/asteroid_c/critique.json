@@ -1,7 +1,7 @@
 {
   "asset": "asteroid_c",
   "reviewer": "agent",
-  "overall": 6.7,
+  "overall": 6.9,
   "scores": {
     "silhouette": {
       "score": 7,
@@ -19,46 +19,45 @@
     },
     "materials": {
       "score": 6,
-      "reason": "Rock, ore veins and crystals separate by hue and the crystals glow without blowing out. In hero.png the veins are now soft-edged and the regolith carries a faint cell grain, but every sheet.png view still shows the veins stair-stepping in square blocks (per-vertex colour), and the cyan mining stain is a soft haze rather than a deposit.",
+      "reason": "Crystals are crisp cyan and the ore veins are now broad orange bands, but the bands read as painted stripes (a tennis-ball seam in hero.png) rather than veins, the hero regolith shows contour-line rings (iso-line banding) across the grey, and every sheet.png view still stair-steps the colour edges in square blocks.",
       "fixes": [
-        "carry the per-pixel vein and stain colour into the vertex colour too (or sample it per pixel in every renderer) so the veins stop stair-stepping in the sheet views",
-        "break the cell grain with clast variation (larger pale and dark flecks, iron-nickel glints with low roughness): it currently reads as crazed mud more than rock",
-        "route the ore veins across craters instead of round them: two veins trace perfect rings round craters in hero.png and SIDE"
+        "break the orange bands into branching veins of varying width that follow fractures, not great circles",
+        "remove the contour-line banding in the regolith (smooth the quantised colour/height field that draws iso-rings in hero.png)",
+        "carry the per-pixel colour into the vertex colour (or sample per pixel in every renderer) so the sheet views stop stair-stepping"
       ]
     },
     "detail": {
       "score": 6,
-      "reason": "The horizontal terrace banding is gone from hero.png and a faint cell grain now covers the rock, but at hero distance the body is still a smooth blob; the rubble is cube-like and the crater rims are soft.",
+      "reason": "A rimmed pit with chips and dark lumps now sits at the crystal site in hero.png; the long body is still a smooth sausage with soft dents.",
       "fixes": [
-        "a finer secondary noise octave at LOD0 for rock grain and sharper crater rims (raised lip, steeper inner wall)",
-        "rubble as irregular chips (random-plane cut cells) instead of cube-like blocks"
+        "a finer secondary noise octave at LOD0 for rock grain",
+        "sharper crater rims elsewhere on the body (raised lip, steeper inner wall)"
       ]
     },
     "wear": {
-      "score": 5,
-      "reason": "Some story: rubble and a cyan stain around the crystal sites. No fresh bright ejecta, no drill scars or tailings, and the crater ages are indistinguishable.",
+      "score": 6,
+      "reason": "Chips and dark tailings lumps on the pit rim beside the crystals and the cyan stain read as a mining site; no ejecta rays and no darker space-weathered old surfaces.",
       "fixes": [
-        "bright fresh ejecta rays around the youngest crater, darker space-weathered older surfaces",
-        "drill scars and tailings piles at the crystal mining sites"
+        "bright fresh ejecta rays round the youngest crater, darker space-weathered older surfaces"
       ]
     },
     "lod": {
       "score": 7,
-      "reason": "FAR LOD2 keeps the outline and the crystals, but drops the orange veins entirely and is faceted, so the colour read shifts from banded to plain grey at the switch.",
+      "reason": "FAR LOD2 now keeps the orange vein colour as per-face patches and the crystals, so the colour read survives the switch; but the faces are large and flat-shaded, giving a harsher light/dark patchwork than LOD0.",
       "fixes": [
-        "keep the 2–3 broadest vein bands at LOD2 as per-face colour on a few larger faces so the colour block survives"
+        "smooth the LOD2 normals and add ~30% more faces so the patchwork softens at the switch"
       ]
     },
     "technical": {
       "score": 8,
-      "reason": "QA clean; ~18k / 2k / 340 triangles and 2 draws (body + glowing crystals) are proportionate to a hero rock.",
+      "reason": "QA clean; ~18-20k / 2k / 0.3k triangles over 2 draws (body + glowing crystals), proportionate to a hero rock.",
       "fixes": [
         "shrink the sdf bounds to the body extent to cut build time and spend the saved LOD0 budget on crater rims"
       ]
     }
   },
   "renders": {
-    "hero.png": "c4f902bb1a8581de4144bde65e38aecd999c7510f459bf949eef87fc26cd56c5",
-    "sheet.png": "1af362fb57c479feb621b7f82df90eedf1c5f9775e20886ea8178e2fd5a2323d"
+    "hero.png": "f3aa7fd5afafd4c9e5e4586de32a27a51ac8b95b948024cd4a720f15462e0b9b",
+    "sheet.png": "9a718ec091fcffae4a0d81bd4901cce837523cd4a89c91615c9410456636e822"
   }
 }

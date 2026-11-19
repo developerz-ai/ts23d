@@ -5,10 +5,10 @@
   "scores": {
     "silhouette": {
       "score": 7,
-      "reason": "Massif and valley read and the rim no longer rolls down; the big right cone is now inside the tile with a snow cap, but it is still one smooth mass, and where the right cut crosses its ridge the skirt top shows thin knife teeth at the corner (hero.png).",
+      "reason": "Massif, cone and forested valley read along the new hero, which no longer shows the back-right corner; the knife teeth on the skirt top are only hidden by the angle: they still show along the cut in sheet 3/4 REAR, FRONT and FAR LOD2, and a thin snow sliver stands on the left cut in hero.png. The right cone is still one smooth mass.",
       "fixes": [
-        "erode the right cone into ridges and couloirs",
-        "shift the window or soften the ridge where the right/back cut crosses it so the corner does not end in two thin teeth"
+        "shift the window or soften the ridges where the cut crosses them so the skirt top has no thin teeth (sheet 3/4 REAR)",
+        "erode the right cone into ridges and couloirs"
       ]
     },
     "proportions": {
@@ -20,16 +20,15 @@
     },
     "materials": {
       "score": 7,
-      "reason": "Blended rock, grass, forest and snow; the grey TOP frame is gone and the cone now carries a snow cap that reads in hero.png and TOP, but the cap shows faint contour-line banding, the cone has no rock strata, and the cut walls carry fine vertical streaks in hero.png (the strata texture stretched down the wall).",
+      "reason": "Blended rock, grass, forest and snow, and the skirt streaking is mostly gone; the right cone face shows faint concentric contour rings in hero.png and has no strata.",
       "fixes": [
-        "rock strata bands on the steep faces of the cone",
-        "remove the contour banding in the snow cap (smooth the cover map or add break-up noise)",
-        "map the skirt strata in planar U along the wall and V by height so it stops streaking vertically"
+        "remove the contour banding on the cone (break-up noise on the cover/shading)",
+        "rock strata bands on the steep faces of the cone"
       ]
     },
     "detail": {
-      "score": 6,
-      "reason": "Forest in the valley and a stream in TOP; the big slopes are smooth.",
+      "score": 7,
+      "reason": "The stream with gravel banks and the forest now read through the valley in hero.png; the big slopes are still smooth.",
       "fixes": [
         "more erosion iterations on the smooth slopes",
         "scree fans at slope feet"
@@ -37,16 +36,16 @@
     },
     "wear": {
       "score": 7,
-      "reason": "The valley stream is now a continuous blue line along the floor in TOP (water at the water level, no longer broken specks), and shows faintly through the trees in hero.png; little weathering on the rock.",
+      "reason": "The stream reads in hero.png; no dark streaks below drainage lines on the cone.",
       "fixes": [
         "dark streaks below drainage lines on the cone"
       ]
     },
     "lod": {
-      "score": 8,
-      "reason": "FAR LOD2 now keeps the snow line and forest edge as soft blocks instead of blocky white squares; the faces still show faceted diamond shading.",
+      "score": 7,
+      "reason": "FAR LOD2 keeps the forest and the cone, and the snow cover now blends softly at LOD2 instead of stepping into blocky white squares; the faces still show strong faceted diamond shading on the cone.",
       "fixes": [
-        "smooth the LOD2 normals so the faceted diamonds do not show at the switch"
+        "smooth the LOD2 normals so the faceting on the cone does not show"
       ]
     },
     "technical": {
@@ -58,7 +57,7 @@
     }
   },
   "renders": {
-    "hero.png": "b83e727a5f245db93256c6ca91adf5cbef3fce2f90a4619b6dc0b0b629f691f9",
-    "sheet.png": "dcebd2b6ad2449e06d6c1dd1373debc3a574e1d58e432ab274822cb940bfe6bf"
+    "hero.png": "ec79e4797ca751814664d22e6eb2b73262d2eccbfa8aa9e0b0003ea7af84e6b2",
+    "sheet.png": "77ccc73446b335a22c175a41264d5f4111f26335cd34c8f978b8a05b6eca956f"
   }
 }

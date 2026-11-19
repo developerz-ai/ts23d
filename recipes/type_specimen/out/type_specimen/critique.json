@@ -1,7 +1,7 @@
 {
   "asset": "type_specimen",
   "reviewer": "agent",
-  "overall": 7.4,
+  "overall": 7.9,
   "scores": {
     "silhouette": {
       "score": 8,
@@ -18,26 +18,24 @@
       ]
     },
     "materials": {
-      "score": 7,
-      "reason": "Green painted board with boarded texture, cream painted and brass raised letters, wood posts with grain; brass faces have no polished highlight and the hood reads flat dark.",
+      "score": 8,
+      "reason": "Green painted boarded face, cream painted and brass raised letters with a polished highlight on their faces, the hood now weathered tar-felt with an edge trim, posts with wood grain.",
       "fixes": [
-        "polished brass highlight on the raised letter faces",
-        "hood as tar-felt or slate with an edge trim"
+        "a faint brass tarnish in the letter recesses"
       ]
     },
     "detail": {
-      "score": 7,
-      "reason": "Six faces twice (flat and raised), title, brass divider, labels, hood brackets, back battens.",
+      "score": 8,
+      "reason": "Six faces twice (flat and raised), title, brass divider, small labels, hood brackets, bolt heads at the post joints, back battens.",
       "fixes": [
-        "bolts at the post-to-board joint"
+        "a small maker's plate on one post"
       ]
     },
     "wear": {
-      "score": 6,
-      "reason": "Weathered post feet and a darker hood; letters and frame pristine, no fading band.",
+      "score": 7,
+      "reason": "The board face fades lighter towards the top, the frame and posts show pale chipped edges, the hood felt is patchy and the post feet are darker; the letters themselves are pristine.",
       "fixes": [
-        "sun-faded top band and chipped edges on the frame",
-        "damp at the post feet"
+        "slight fading and a few chips on the cream letters"
       ]
     },
     "lod": {
@@ -49,63 +47,14 @@
     },
     "technical": {
       "score": 8,
-      "reason": "QA PASS: 30.0k / 8.5k / 282 tris (LOD1 now properly stepped), 1 draw.",
+      "reason": "QA PASS: 27.6k / 8.5k / 282 tris, 1 / 1 / 1 draws.",
       "fixes": [
         "fewer text() segments on the flat column at LOD0"
       ]
     }
   },
   "renders": {
-    "hero.png": "c322f718a033fd1694d272c99ad0a24300a3e0fc43d9d332fcba365a382cf832",
-    "sheet.png": "16d1745cc84d938247bc9fc61aed6269d11fd0c5e01cc797ae26b1d352f5d7cf",
-    "raking.png": "29efde1fd7263b133b993ff1b1b7a6f23d64aa011a05de34f11aedcdbf5962a8",
-    "raking_detail.png": "8b86ce2bac3bc720828e7a52dcb401e8a6e55fa217e7691e0f1cf2a61b1c052a",
-    "lods.png": "7db5f57a7601884a2bdee42bad9e60af3bff4c7f23072f43ac1dfc3a7b93ea5d",
-    "silhouette.png": "156b5e987ad808f7650101213abe9f503a8d0aa134a513f2f129dd6d76774fba",
-    "value.png": "8b973f436031de93c4ecd494e038a6a34fab65c200bf294db176b6c2dc3c005e",
-    "detail.png": "098609ac592acd6b539adc4fc0115b2052e4c21da4a430dc4f5e20f842a2cb92"
-  },
-  "metrics": {
-    "silhouette": [
-      {
-        "view": "front",
-        "iou": 1
-      },
-      {
-        "view": "side",
-        "iou": 0.967
-      },
-      {
-        "view": "3/4",
-        "iou": 1
-      }
-    ],
-    "focal": {
-      "peakPart": "board",
-      "peak": [
-        303,
-        210
-      ],
-      "focalShare": 0,
-      "focalArea": 0,
-      "top": [
-        {
-          "part": "board",
-          "share": 1
-        }
-      ],
-      "declared": []
-    },
-    "rest": {
-      "share": 0.816,
-      "spread": 0.618,
-      "min": 0.25
-    },
-    "shape": {
-      "acuteShare": 0.037,
-      "straightShare": 0.942,
-      "taper": -0.757,
-      "shape": "stable"
-    }
+    "hero.png": "37a9a8a6f602c2555f47f60e3fc46e6d3af3c6f4b414f7eb2063a984d7a84cba",
+    "sheet.png": "28728ab94cef6e56d2959faf678ed27426b1f1ded6f956bdb0785d4b7e92caf7"
   }
 }

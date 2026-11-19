@@ -3,7 +3,7 @@
 // over faces within `hardAngle` of its own face. Big flat faces dominate, so a bevelled box keeps
 // dead-flat sides while its bevels bend the light into soft highlights — no normal map needed.
 
-import type { Mesh, Vec3 } from '../core/index.ts';
+import { type Mesh, mappedOf, type Vec3 } from '../core/index.ts';
 import { carrySkin } from './skin-carry.ts';
 
 export interface WeightedNormalsOptions {
@@ -124,6 +124,7 @@ function splitByNormal(m: Mesh, cornerNormals: Float32Array): Mesh {
     uvs: new Float32Array(uv),
     colors: new Float32Array(col),
     indices: idx,
+    ...mappedOf(m),
     ...carrySkin(m, src),
   };
 }

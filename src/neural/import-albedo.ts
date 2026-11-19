@@ -6,6 +6,7 @@
 import type { Mesh } from '../core/index.ts';
 import {
   DEFAULT_SHEET,
+  mappedOnto,
   type Rgba,
   type StripId,
   stripRect,
@@ -71,5 +72,5 @@ export function onSheet(m: Mesh, strip: StripId = 'plain'): Mesh {
     uvs[i * 2] = r.u0 + (s / r.metres) * (r.u1 - r.u0);
     uvs[i * 2 + 1] = r.v0 + half + band * (r.v1 - r.v0 - 2 * half);
   }
-  return { ...m, uvs };
+  return mappedOnto({ ...m, uvs }, strip);
 }

@@ -20,16 +20,19 @@ const hinge = SK.head.hinge;
 
 export const WEAR: WearSpec = {
   seed: 77,
-  settle: { colour: [0.2, 0.185, 0.175], strength: 0.42, above: 1.7, patch: 0.3 },
-  mud: { top: 0.5, colour: [0.06, 0.05, 0.045], strength: 0.85 },
-  damp: { top: 0.75, strength: 0.22 },
+  // Pale wood ash lying in drifts on the back, crest and wing tops: grey on crimson.
+  settle: { colour: [0.5, 0.47, 0.44], strength: 0.62, above: 1.7, patch: 0.42 },
+  // Cinder mud: black and wet on the claws and the dragging tail, a grey ash crust drying up
+  // the shanks, splashed to the knees and the belly plates' edge.
+  mud: { top: 0.42, colour: [0.3, 0.27, 0.25], strength: 0.9 },
+  damp: { top: 0.8, strength: 0.25 },
   patches: [
     // Soot: the nostrils, the lips' corners, the throat under the jaw.
     {
-      at: [nose[0] - 0.08, 0, nose[2] + 0.04],
-      radius: 0.36,
+      at: [nose[0] - 0.12, 0, nose[2] + 0.04],
+      radius: 0.5,
       colour: [0.02, 0.018, 0.016],
-      strength: 0.8,
+      strength: 0.88,
     },
     {
       at: [hinge[0] + 0.35, 0.3, hinge[2] + 0.02],
@@ -45,34 +48,41 @@ export const WEAR: WearSpec = {
     },
     {
       at: [hinge[0] + 0.75, 0, hinge[2] - 0.12],
-      radius: 0.4,
+      radius: 0.5,
       colour: [0.03, 0.025, 0.022],
-      strength: 0.5,
+      strength: 0.6,
     },
+    // …and a fan of soot blown back down the throat and the cream chest plates.
+    { at: [1.75, 0, 2.25], radius: 0.55, colour: [0.05, 0.04, 0.035], strength: 0.72 },
+    { at: [1.35, 0, 1.55], radius: 0.6, colour: [0.06, 0.05, 0.045], strength: 0.6 },
+    // An old burn on the right flank: scales scorched matt black, grey at the edge.
+    { at: [-0.35, -0.72, 1.75], radius: 0.5, colour: [0.07, 0.06, 0.055], strength: 0.7 },
   ],
   // Healed scale-less skin: a dull rose a few steps above the crimson, not white.
-  scarColour: [0.5, 0.2, 0.16],
+  scarColour: [0.72, 0.42, 0.36],
   scars: [
     // Claw rakes across the right flank (projected along Y onto the ribs).
     ...[0, 1, 2].map((k) => ({
-      a: [0.55 - k * 0.2, -0.7, 1.98 - k * 0.03] as Vec3,
-      b: [0.2 - k * 0.2, -0.7, 1.38 + k * 0.05] as Vec3,
-      width: 0.024 - k * 0.003,
+      a: [0.62 - k * 0.24, -0.7, 2.08 - k * 0.03] as Vec3,
+      b: [0.12 - k * 0.24, -0.7, 1.3 + k * 0.05] as Vec3,
+      width: 0.055 - k * 0.008,
       axis: 1 as const,
       reach: 0.45,
     })),
     // Down the right side of the neck.
-    { a: [1.72, -0.35, 2.75], b: [1.5, -0.4, 2.3], width: 0.026, axis: 1, reach: 0.4 },
+    { a: [1.76, -0.35, 2.85], b: [1.46, -0.4, 2.2], width: 0.05, axis: 1, reach: 0.4 },
     // Across the snout, brow side to lip.
-    { a: [3.0, -0.16, 3.5], b: [3.3, 0.1, 3.42], width: 0.011, axis: 2, reach: 0.3 },
+    { a: [2.95, -0.18, 3.5], b: [3.32, 0.1, 3.42], width: 0.024, axis: 2, reach: 0.3 },
   ],
 };
 
 const wear = wearPaint(WEAR);
+/** The far mesh's wear: the broad layers only (flecks and scars alias on 25 cm cells). */
+const wearFar = wearPaint(WEAR, true);
 
-/** A part's mesh with the wear painted in; `at` = the part's world offset. */
-export function worn(mesh: Mesh, at: Vec3 = [0, 0, 0]): Mesh {
-  const m = recolour(mesh, at, wear);
+/** A part's mesh with the wear painted in; `at` = the part's world offset; `far`: the far LOD. */
+export function worn(mesh: Mesh, at: Vec3 = [0, 0, 0], far = false): Mesh {
+  const m = recolour(mesh, at, far ? wearFar : wear);
   return at[0] === 0 && at[1] === 0 && at[2] === 0
     ? grime(m, { ground: 0.9, groundStrength: 0.22 })
     : m;

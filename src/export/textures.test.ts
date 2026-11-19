@@ -19,7 +19,7 @@ const shed = defineAsset({
 
 let sheet: PaintedSheet;
 beforeAll(() => {
-  sheet = paintTrimSheet({ ...DEFAULT_SHEET, size: 512 });
+  sheet = paintTrimSheet({ ...DEFAULT_SHEET, size: 512 }, []);
 });
 
 function parse(glb: Uint8Array) {

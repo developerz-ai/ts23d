@@ -38,7 +38,7 @@ neck), an old-brass brooch, a turned plinth. Muted palette in `build.ts` (`DYED`
 
 Materials: the garment on the shared `bust_wool` strip (`../_lib/bust/cloth-strips.ts`: twill
 relief, matte, a near-white ground, so the dye is its vertex colour), the collar on `leather`, the brooch on `brass`, the scan's
-skin on `face_skin` with a `skin` sheen finish, the plinth on `stone`.
+skin on `face_skin` with a `skin` finish (a soft sheen plus a thin oily coat, clearcoat 0.3 at roughness 0.28), the plinth on `stone`. The hero is a portrait camera (`../_lib/bust/hero.ts`).
 
 Wear: the cloth sun-faded and dusty on the shoulders and soiled at the hem (`weather()`, coverage
 in the manifest), the mantle's edge frayed to pale thread, the collar rubbed pale on top and dark

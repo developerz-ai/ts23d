@@ -26,31 +26,31 @@ export const BUDGET_BASELINE: Readonly<Record<string, BaselineEntry>> = {
     next: 'reduce LOD1/2 to 1.5k/150 (SDF cells)',
   },
   boxcar: {
-    triangles: [19098, 7500, 1112],
+    triangles: [18878, 7488, 1068],
     next: 'reduce LOD2 to 800 (trucks as blocks)',
   },
   boxcar_nw: {
-    triangles: [19274, 7680, 1112],
+    triangles: [19054, 7668, 1084],
     next: 'reduce LOD2 to 800 (trucks as blocks)',
   },
   cargo_container_scifi: {
-    triangles: [16862, 6950, 736],
+    triangles: [16220, 6950, 170],
     next: 'reduce to 10k/1.5k/40: a container LOD2 is a box',
   },
   rts_barracks: {
-    triangles: [39024, 7802, 668],
+    triangles: [36818, 7802, 664],
     next: 'reduce to 20k/6k/800 (RTS crowd view)',
   },
   rts_barracks_damaged: {
-    triangles: [35810, 8056, 860],
+    triangles: [33716, 8040, 852],
     next: 'reduce to 20k/6k/800 (RTS crowd view)',
   },
   rts_resource: {
-    triangles: [9730, 2158, 330],
+    triangles: [8238, 1910, 282],
     next: 'reduce to 5k/1.5k/300 (crystal facets)',
   },
   rts_resource_depleted: {
-    triangles: [10158, 2282, 338],
+    triangles: [8698, 2026, 286],
     next: 'reduce to 5k/1.5k/300 (crystal facets)',
   },
 };

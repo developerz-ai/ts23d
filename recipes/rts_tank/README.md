@@ -20,11 +20,13 @@ sprocket per side, link-by-link tracks.
 ## Finish and wear (Nov 2026 quality pass)
 | What | How |
 |---|---|
-| bone and slate paint | project material `armour_paint` (`../_lib/finish/field.ts`: matte film, 8 % flakes) at true scale; the library `steel_painted` chipped a fifth of the film in dashes that read as wood grain. Team plates stay on `steel_painted` and are never weathered |
-| edge chips, salt dust, brine mud | `weather()` per space (`Kit.commit`): hull mud covers 80 % of the 1.1 m splash band (belly excluded), manifest `weather` |
-| wheels | slate-painted discs with radial mud (`wheelMud`), tyres on a rough greyscale strip so the mud shows |
+| bone and slate paint | project material `brine_enamel` (defined in `rts_tank.ts`: smooth matte film, 1.5 % flakes, no rust runs) at true scale; the runs and dashes of `steel_painted` and of the field tanks' `armour_paint` read as wood grain on the big pale plates. Team plates stay on `steel_painted` and are never weathered |
+| brine mud, salt dust | `fieldGrade` (`../_lib/finish/afv.ts`): red-brown clay mud opaque up to ~0.9 m and gone at 1.22 m with a ragged edge (over the rear plate at the tail), wet mud lowest, on lower hull, prow and skirts (cut to 25 cm at LOD0 so the edge has vertices); dust (0.5) only on the deck and what faces the sky on the turret |
+| edge chips | `weather()` per space (`Kit.commit`): 5 % of the convex edges (more smeared dashes along the tessellation), manifest `weather` |
+| wheels | a dished slate disc out to the rim seat and the rubber tyre as its own band round it (the old solid tyre cylinder's cap covered the dish and showed pale); `wheelDirt`: dark tyre, mud in the outer dish, brass hub clean |
 | track | one link worn in its own space (chips, pale salt crust), laid round the belt (`treads` gate) |
-| exhaust | a soot plume over each stack onto the rear deck and a streak down the rear plate (vertex colour on a 25 cm hull), plus the measured soot stain |
+| exhaust | a soot fan (0.8 m) from each stack over the rear plate and the deck's tail (vertex colour on a 25 cm hull), plus the measured soot stain |
+| lamps | headlamps: a slate bucket sunk into the glacis, an iron bezel ring and a small domed amber lens set back in it; the turret sensor likewise (housing and bezel plain, only the lenses glow at 1.2) |
 | detail | bolt rows on the glacis applique plates and round the turret roof plate, a tow cable on two hooks on the rear plate, three skirt plates a side with hanger bolts |
 
 Turret plan ×1.23 and 12 cm taller than the first cut (RTS exaggeration); the barrel is 15 cm
@@ -32,21 +34,24 @@ shorter so the overall length holds: the gun stands 2.1 m ahead of the trunnion 
 (0.40), inside the light-tank range of the AFV playbook examples.
 
 ## LOD and draws
-32.1k / 8.3k / 598 triangles. LOD2 keeps five road wheels a side as six-triangle cones on a dark
-block inside the belt (static, drawn with the hull), a skirt strip a side and 20 belt slabs.
-Draws 23 / 23 / 7: one per spinning pivot at LOD0/1 (14 wheels, 2 belts, turret, gun) plus the
-team-paint parts and the static body. The wheels cannot share a draw while each spins about its
-own axle (the engine contract below); LOD2 drops them to empty pivots.
+35.2k / 9.2k / 590 triangles. LOD2 is an open belt of 18 slabs a side with all seven wheels in
+it as two-polygon discs (dark eight-sided tyre, six-sided slate disc with the near dish's mean
+mud: 10 triangles), a skirt strip a side and two amber hexagons where the headlamps are (plain
+amber, drawn with the body).
+Draws 23 / 9 / 7. LOD0, the close-up LOD, spins each of the 14 wheels on its own pivot (one draw
+each) beside 2 belts, turret, gun, the team-paint and glow parts and the static body. LOD1, the
+strategy camera's LOD, keeps the pivots empty and draws the wheels as one static part a side
+(`wheels_l/_r`) with the hull: 14 fewer draws per unit where hundreds are on screen; LOD2 the same.
 
 ## Photos (by view)
 Original design — scale only from [`docs/playbooks/vehicles/afv.md`](../../docs/playbooks/vehicles/afv.md).
 
 ## Parts the engine needs
 `turret` (spin Z, 0.05 rps), `gun` (sway ±4° elevation; trunnion just ahead of the turret nose so
-it clears without `clearOf`), `wheel_l_0…4` / `_r_`, `idler_*`, `sprocket_*` (spin Y; pivots kept
-at LOD2; +rps = forward), `track_l/_r` (tread: 96 / 44 / 20 links one pitch apart, pitch = loop
-length 11.014 m ÷ link count = 0.1147 / 0.2503 / 0.5507 m, so the `run` clip moves the belt at every
-LOD; LOD2 adds a static `track_core_l/_r` block with a cone per road wheel where the wheels were), emitters `muzzle` (event), `exhaust_l/_r`, `dust_l/_r` (moving), seat `commander`.
+it clears without `clearOf`), `wheel_l_0…4` / `_r_`, `idler_*`, `sprocket_*` (spin Y; meshes at LOD0,
+empty pivots at LOD1/2 where static `wheels_l/_r` stand for them; +rps = forward), `track_l/_r`
+(tread: 96 / 44 / 18 links one pitch apart, pitch = loop length 11.014 m ÷ link count = 0.1147 /
+0.2503 / 0.6119 m, so the `run` clip moves the belt at every LOD), emitters `muzzle` (event), `exhaust_l/_r`, `dust_l/_r` (moving), seat `commander`.
 
 ## Open questions
 None.

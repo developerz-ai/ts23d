@@ -5,9 +5,11 @@
 // upright in the right fist (grip joint). Reads as "builder" from the RTS camera by the pack.
 
 import {
+  applyAffine,
   box,
   cylinder,
   defineAsset,
+  frame,
   type Lod,
   type Mesh,
   merge,
@@ -17,7 +19,18 @@ import {
   type Vec3,
 } from '@developerz.ai/ts23d';
 import { type FigurePoints, figure } from '../_lib/rts/figure.ts';
-import { Kit, MUD, type Rule, restrip, role, wearOf } from '../_lib/rts/finish.ts';
+import {
+  band,
+  CAKED,
+  DUST,
+  Kit,
+  MUD,
+  type Rule,
+  restrip,
+  role,
+  topDust,
+  wearOf,
+} from '../_lib/rts/finish.ts';
 import {
   BOOT,
   BRASS,
@@ -41,6 +54,12 @@ import {
 } from '../_lib/rts/style.ts';
 
 const HANDLE_R = 0.018;
+/** The pick at port: grip low by the right hip, shaft up across the chest to the left, the head
+ *  out past the left shoulder. AXIS is the shaft (in the frontal plane). */
+const GRIP: Vec3 = [0.3, -0.22, 1.0];
+const AXIS: Vec3 = [0, 0.62 / Math.hypot(0.62, 0.78), 0.78 / Math.hypot(0.62, 0.78)];
+/** The left glove under the shaft, 0.42 m up it. */
+const SUPPORT: Vec3 = [GRIP[0], GRIP[1] + AXIS[1] * 0.42 + 0.03, GRIP[2] + AXIS[2] * 0.42 - 0.025];
 const SUIT = CLOTH;
 const VEST: Vec3 = [CLOTH[0] * 0.75, CLOTH[1] * 0.72, CLOTH[2] * 0.62];
 /** Ash-wood tool handle. */
@@ -113,8 +132,9 @@ function headgear(add: Add, lod: Lod, head: Vec3, r: Vec3): void {
 
 /** The big tool pack: frame, team lid, cable coil, canister, a spare pick head. */
 function backpack(add: Add, lod: Lod, back: Vec3): void {
-  const x = back[0] - 0.12;
-  const body: Mesh[] = [pebble(lod, [0.24, 0.4, 0.5], [x, 0, 0.92], SLATE)];
+  // 10% under the first cut: the figure no longer reads top-heavy from the rear.
+  const x = back[0] - 0.11;
+  const body: Mesh[] = [pebble(lod, [0.22, 0.36, 0.45], [x, 0, 0.97], SLATE)];
   if (lod < 2) {
     // Canister on the left, cable coil on the right, brass frame rails.
     body.push(
@@ -122,7 +142,7 @@ function backpack(add: Add, lod: Lod, back: Vec3): void {
         radius: 0.07,
         length: 0.36,
         segments: SEG(lod, 16, 8, 4),
-        at: [x - 0.03, 0.245, 1.1],
+        at: [x - 0.03, 0.225, 1.1],
         color: BRASS,
       }),
     );
@@ -130,7 +150,7 @@ function backpack(add: Add, lod: Lod, back: Vec3): void {
     const n = SEG(lod, 36, 18, 8);
     for (let i = 0; i <= n; i++) {
       const a = (i / n) * Math.PI * 6;
-      coil.push([x - 0.02 + Math.cos(a) * 0.08, -0.2 - (i / n) * 0.03, 1.08 + Math.sin(a) * 0.08]);
+      coil.push([x - 0.02 + Math.cos(a) * 0.08, -0.18 - (i / n) * 0.03, 1.08 + Math.sin(a) * 0.08]);
     }
     body.push(
       sweep({
@@ -140,17 +160,30 @@ function backpack(add: Add, lod: Lod, back: Vec3): void {
         caps: true,
       }),
     );
-    body.push(tube(lod, [x + 0.12, 0.19, 0.95], [x + 0.12, 0.19, 1.42], 0.015, 0.015, BRASS));
-    body.push(tube(lod, [x + 0.12, -0.19, 0.95], [x + 0.12, -0.19, 1.42], 0.015, 0.015, BRASS));
+    body.push(tube(lod, [x + 0.11, 0.17, 0.97], [x + 0.11, 0.17, 1.42], 0.015, 0.015, BRASS));
+    body.push(tube(lod, [x + 0.11, -0.17, 0.97], [x + 0.11, -0.17, 1.42], 0.015, 0.015, BRASS));
   }
   if (lod === 0) {
     // Pockets and a spare pick head strapped to the back.
-    body.push(pebble(lod, [0.06, 0.16, 0.14], [x - 0.15, 0.1, 1.0], LEATHER));
-    body.push(pebble(lod, [0.06, 0.16, 0.14], [x - 0.15, -0.1, 1.0], LEATHER));
-    body.push(box({ size: [0.04, 0.3, 0.05], at: [x - 0.14, 0, 1.25], color: IRON, bevel: 0.01 }));
+    body.push(pebble(lod, [0.06, 0.15, 0.13], [x - 0.14, 0.09, 1.02], LEATHER));
+    body.push(pebble(lod, [0.06, 0.15, 0.13], [x - 0.14, -0.09, 1.02], LEATHER));
+    body.push(box({ size: [0.04, 0.28, 0.05], at: [x - 0.13, 0, 1.25], color: IRON, bevel: 0.01 }));
   }
   add('pack', merge(body));
-  add('pack_lid', pebble(lod, [0.3, 0.46, 0.09], [x, 0, 1.42], TEAM), { paint: 'team' });
+  add('pack_lid', pebble(lod, [0.27, 0.42, 0.08], [x, 0, 1.42], TEAM), { paint: 'team' });
+  // A rolled tarp strapped across the lid (its own top-view shape over the team lid's back half).
+  if (lod < 2)
+    add(
+      'tarp_roll',
+      cylinder({
+        radius: 0.055,
+        length: 0.5,
+        segments: SEG(lod, 12, 8, 4),
+        axis: 'y',
+        at: [x - 0.06, 0, 1.555],
+        color: TARP,
+      }),
+    );
   // Straps over the shoulders.
   if (lod < 2) {
     const strap = sweep({
@@ -173,13 +206,22 @@ function backpack(add: Add, lod: Lod, back: Vec3): void {
  * and turned onto the figure's grip axis (in the XZ plane).
  */
 function pick(add: Add, lod: Lod, grip: Vec3, axis: Vec3): void {
-  const onAxis = (m: Mesh): Mesh => place(m, { at: grip, pitch: Math.atan2(axis[0], axis[2]) });
+  // Local +Z → the shaft, local +X (the blade) → outward and down, away from the face, in the
+  // frontal plane so the head reads in the front view; local Y completes the frame.
+  const bx: Vec3 = [0, axis[2], -axis[1]];
+  const by: Vec3 = [
+    axis[1] * bx[2] - axis[2] * bx[1],
+    axis[2] * bx[0] - axis[0] * bx[2],
+    axis[0] * bx[1] - axis[1] * bx[0],
+  ];
+  const onAxis = (m: Mesh): Mesh => applyAffine(m, frame(bx, by, axis, grip));
   add(
     'tool_handle',
     onAxis(
       cylinder({
         radius: HANDLE_R,
-        length: 0.7,
+        // A full 0.9 m haft: carried across the body, the head stands out past the shoulder.
+        length: 0.9,
         // Never 4-sided: a square handle measures Ø 2.5–3.6 cm by heading against the fist's
         // 3.6 cm opening, so a scene that turns the worker broke the grip joint at LOD2 (D310).
         segments: SEG(lod, 12, 6, 6),
@@ -188,7 +230,7 @@ function pick(add: Add, lod: Lod, grip: Vec3, axis: Vec3): void {
       }),
     ),
   );
-  const top = 0.47;
+  const top = 0.57;
   const head: Mesh[] = [
     pebble(lod, [0.12, 0.09, 0.11], [0, 0, top - 0.055], IRON),
     // Pick blade forward, hammer face back: big enough to read from the strategy camera.
@@ -252,17 +294,25 @@ function workKit(add: Add, lod: Lod, pts: FigurePoints): void {
   const pad = pebble(lod, [0.06, 0.11, 0.11], [0.098, 0.13, 0.39], LEATHER);
   add('knee_pad_l', pad);
   add('knee_pad_r', mirrorY(pad));
-  const cuffL = tube(lod, [0.02, 0.32, 0.85], [0.02, 0.32, 0.94], 0.066, 0.072, LEATHER);
-  add('glove_cuff_l', cuffL);
-  const e = pts.elbowR;
-  const w = pts.wristR;
-  const t = (k: number): Vec3 => [
+  const along = (e: Vec3, w: Vec3, k: number): Vec3 => [
     e[0] + (w[0] - e[0]) * k,
     e[1] + (w[1] - e[1]) * k,
     e[2] + (w[2] - e[2]) * k,
   ];
-  add('glove_cuff_r', tube(lod, t(0.72), t(0.98), 0.066, 0.074, LEATHER));
-  if (lod === 2) return;
+  const cuff = (e: Vec3, w: Vec3): Mesh =>
+    tube(lod, along(e, w, 0.72), along(e, w, 0.98), 0.066, 0.074, LEATHER);
+  add('glove_cuff_l', cuff(pts.elbowL, pts.wristL));
+  add('glove_cuff_r', cuff(pts.elbowR, pts.wristR));
+  const x = back[0] - 0.11;
+  // Shovel across the pack's back, its D-grip standing up over the right shoulder.
+  const bx = x - 0.125;
+  const foot: Vec3 = [bx, 0.2, 0.78];
+  const top: Vec3 = [bx, -0.24, 1.78];
+  if (lod === 2) {
+    // Far: the shovel's haft alone (its line over the shoulder is the side silhouette's).
+    add('shovel', tube(lod, foot, top, 0.016, 0.016, ASH));
+    return;
+  }
   const pockets: Mesh[] = [];
   for (const y of [-0.1, 0.1]) {
     pockets.push(pebble(lod, [0.035, 0.09, 0.1], [0.165, y, 1.17], VEST));
@@ -270,14 +320,13 @@ function workKit(add: Add, lod: Lod, pts: FigurePoints): void {
       pockets.push(box({ size: [0.02, 0.1, 0.035], at: [0.18, y, 1.255], color: LEATHER }));
   }
   add('pockets', merge(pockets));
-  const x = back[0] - 0.12;
   const roll: Mesh[] = [
     cylinder({
       radius: 0.075,
       length: 0.44,
       segments: SEG(lod, 12, 8, 4),
       axis: 'y',
-      at: [x, 0, 0.85],
+      at: [x, 0, 0.895],
       color: TARP,
     }),
   ];
@@ -289,15 +338,11 @@ function workKit(add: Add, lod: Lod, pts: FigurePoints): void {
           length: 0.03,
           segments: 12,
           axis: 'y',
-          at: [x, y, 0.85],
+          at: [x, y, 0.895],
           color: LEATHER,
         }),
       );
   add('bedroll', merge(roll));
-  // Shovel across the pack's back, its D-grip standing up over the right shoulder.
-  const bx = x - 0.135;
-  const foot: Vec3 = [bx, 0.2, 0.78];
-  const top: Vec3 = [bx, -0.24, 1.78];
   const shovel: Mesh[] = [
     // 8-sided: a 3 cm handle needs no more.
     tube(lod === 0 ? 1 : lod, foot, top, 0.016, 0.016, ASH),
@@ -317,7 +362,23 @@ export const rts_worker = defineAsset({
     'Saltmarch Delver: original RTS worker. Padded work suit, team-colour cap and pack lid, amber goggles, tool backpack and a sunstone pick on a grip joint; 8 team liveries.',
   tags: ['rts', 'saltmarch', 'worker', 'character', 'team-colour'],
   // Design envelope from the faction brief (an invented unit: the brief is the source).
-  real: { length: 1.06, width: 0.75, height: 1.83 },
+  // As built with the pick carried across the body.
+  // Length and width are the design brief's figure in its work pose (the pick carried across the
+  // body sets both); boot sole to cap crown is the body's own, which no pose changes.
+  real: {
+    length: 0.83,
+    width: 0.75,
+    height: 1.83,
+    measures: [
+      {
+        label: 'standing height, boot sole to cap crown (design brief)',
+        axis: 'z',
+        value: 1.83,
+        parts: ['boot', 'cap'],
+        source: 'recipes/rts_faction/README.md (original design brief)',
+      },
+    ],
+  },
   sources: [
     'recipes/rts_faction/README.md (original design brief: proportions, shape language, palette)',
   ],
@@ -344,10 +405,13 @@ export const rts_worker = defineAsset({
       torsoStrip: 'canvas',
       boots: BOOT,
       hands: LEATHER,
-      // Upright in the fist, not over the shoulder (figure's `shoulder` pose, tried): shouldered,
-      // the pick head piles up against the cap and the slung shovel and the top view loses it.
-      right: 'hold',
+      // Carried across the body in both hands (figure's `port` pose): the shaft breaks the front
+      // outline and the head stands out past the left shoulder. Over the shoulder (tried) piled
+      // the head against the cap and the slung shovel.
+      right: 'port',
       handleR: HANDLE_R,
+      mud: 0.34,
+      port: { grip: GRIP, axis: AXIS, support: SUPPORT },
     });
     headgear(add, lod, pts.head, pts.headR);
     face(add, lod, pts.head, pts.headR);
@@ -387,9 +451,23 @@ export const rts_worker = defineAsset({
       size: [0.05, 0.3],
       when: 'event',
     });
-    // Measured wear: scuffed edges, salt dust on the shoulders and pack, mud up the boots.
-    // A digger's wear: mud to the knees (he kneels on the pads), scuffed boots and shovel, salt
-    // dust over the shoulders and pack.
+    // Caked brine mud to the knees (he kneels on the pads), salt dust over the shoulders, the
+    // pack and the tarp: after weathering, so nothing paints over them.
+    kit.post(
+      (n) => /^(boot|shin|knee_pad)_/.test(n),
+      (m) =>
+        // Pale dried mud to mid-shin, wet and dark at the soles.
+        band(
+          band(m, { top: 0.56, full: 0.14, color: CAKED, k: 0.9 }, 0.06),
+          { top: 0.12, full: 0.02, color: MUD, k: 0.75 },
+          0.02,
+        ),
+    );
+    kit.post(
+      (n) => /^(torso|arm_[lr]_upper|pack|tarp_roll|straps|pockets|shovel)$/.test(n),
+      (m) => topDust(m, 1.15, DUST, 0.6),
+    );
+    // Measured wear: scuffed edges (dented pack corners, a chipped pick head), mud up the boots.
     const bare = new Set(['head', 'neck', 'goggles', 'tool_gem', 'face', 'moustache']);
     const hard = /^(boot|pack$|cap|tool_head|helmet|shovel)/;
     const unit = wearOf('unit', 'delver', 23);
@@ -401,7 +479,7 @@ export const rts_worker = defineAsset({
           groundBand: 0.35,
           effects: {
             ...unit.effects,
-            chips: { where: 'convex-edges', amount: 0.2, strength: 0.85 },
+            chips: { where: 'convex-edges', amount: 0.28, strength: 0.9 },
             mud: { where: 'ground-near', amount: 0.75, color: MUD, strength: 0.95 },
           },
         },

@@ -2,7 +2,7 @@
 // Flat normals. `bevel` > 0 chamfers every edge once (bevel-box.ts); 0 keeps these exact bytes.
 
 import { type Mesh, MeshBuilder, type Vec3 } from '../core/index.ts';
-import { type StripId, stripRect } from '../material/index.ts';
+import { mappedOnto, type StripId, stripRect } from '../material/index.ts';
 import { bevelBox } from './bevel-box.ts';
 import { colorOf, invalid, positive } from './check.ts';
 
@@ -101,5 +101,5 @@ export function box(o: BoxOptions): Mesh {
     const [a = 0, c = 0, e = 0, g = 0] = ids;
     b.quad(a, c, e, g);
   }
-  return b.build();
+  return mappedOnto(b.build(), o.strip ?? 'plain');
 }

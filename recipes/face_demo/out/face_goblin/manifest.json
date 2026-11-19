@@ -21,9 +21,9 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    34616,
-    8064,
-    1224
+    34532,
+    8040,
+    1216
   ],
   "drawCalls": [
     3,
@@ -58,7 +58,7 @@
     {
       "label": "eye spacing (pupil to pupil)",
       "spec": 0.05898815999999999,
-      "measured": 0.05791450757533312,
+      "measured": 0.05789321241900325,
       "source": "base IPD 61.6 mm (MakeHuman hm08) × race eye spacing × head scale"
     }
   ],

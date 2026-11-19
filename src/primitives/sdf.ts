@@ -8,7 +8,7 @@
 //   triangles = 2 × grid edges the surface crosses (nets) ≈ 2 · area / resolution² · 1.5
 
 import { type Mesh, MeshBuilder, type Vec3 } from '../core/index.ts';
-import { type StripId, stripRect } from '../material/index.ts';
+import { mappedOnto, type StripId, stripRect } from '../material/index.ts';
 import { invalid } from './check.ts';
 import type { DetailRegion } from './sdf-detail.ts';
 import { sampleGrid } from './sdf-grid.ts';
@@ -93,5 +93,5 @@ export function sdf(o: SdfOptions): Mesh {
   }
   for (let i = 0; i < raw.tris.length; i += 3)
     b.tri(raw.tris[i] ?? 0, raw.tris[i + 1] ?? 0, raw.tris[i + 2] ?? 0);
-  return b.build();
+  return mappedOnto(b.build(), strip);
 }

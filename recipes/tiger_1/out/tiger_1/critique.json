@@ -1,7 +1,7 @@
 {
   "asset": "tiger_1",
   "reviewer": "agent",
-  "overall": 7,
+  "overall": 7.4,
   "scores": {
     "silhouette": {
       "score": 8,
@@ -18,11 +18,11 @@
       ]
     },
     "materials": {
-      "score": 6,
-      "reason": "Dunkelgelb with red-brown spots and green, Zimmerit as corrugation, dark tracks; the red-brown camo reads as small round \"measles\" spots with drip tails that look printed over the Zimmerit, and the road wheels share the hull paint with no rubber tyre value.",
+      "score": 7,
+      "reason": "Camo is now soft-edged sprayed bands of green and red-brown following the plates over Dunkelgelb, Zimmerit corrugation reads; a scatter of small red-brown chip spots remains on turret and hull, and the road wheels are still pale paint with only a faint darker rim.",
       "fixes": [
-        "sprayed soft-edged camo bands following the plates (fewer, larger shapes)",
-        "dark rubber rims on the road wheels"
+        "dark rubber rims on the road wheels that read in SIDE",
+        "drop the small red-brown spot scatter (it fights the bands)"
       ]
     },
     "detail": {
@@ -34,82 +34,29 @@
       ]
     },
     "wear": {
-      "score": 6,
-      "reason": "Raking.png: dust/mud on the road wheels and running gear now reads; the hull sides and rear carry no mud, no exhaust soot.",
+      "score": 7,
+      "reason": "Mud and dust on the lower hull nose and running gear, heavier low down; still no exhaust soot on the rear deck or exhaust covers.",
       "fixes": [
-        "mud on the lower hull, heavier at the rear",
-        "exhaust soot on the deck and exhaust covers"
+        "exhaust soot on the rear deck and exhaust covers"
       ]
     },
     "lod": {
-      "score": 6,
-      "reason": "lods.png: LOD2 (1.38k) keeps turret, number and cross, but the camo turns into large hard-edged polygons unlike the LOD0 spots, and the interleaved wheels become separated octagon slabs with gaps.",
+      "score": 7,
+      "reason": "FAR LOD2 carries the same soft camo bands, number and cross; the interleaved wheels still become a single row of separated discs.",
       "fixes": [
-        "same camo pattern at LOD2 (vertex-colour bake of the LOD0 spots)",
         "keep the wheel rows as overlapping discs at LOD2"
       ]
     },
     "technical": {
       "score": 8,
-      "reason": "QA PASS: 58.6k / 16.4k / 1.38k tris (LOD0 now under 60k), 25 draws (moving pivots), one material.",
+      "reason": "QA PASS: 54.9k / 16.4k / 1.4k tris, 25 / 25 / 25 draws (moving pivots), one material.",
       "fixes": [
         "merge the static wheel pivots per side where they spin together"
       ]
     }
   },
   "renders": {
-    "hero.png": "95131d1b3eb7b502d000e32eaa2dbe7c71b9c5126649ae484845fa671b8c0d9d",
-    "sheet.png": "e97894fc7d5e3933d61ef0a8d3a6a3c4894a3eb10fdbe822ab742a61093c6f2f"
-  },
-  "metrics": {
-    "silhouette": [
-      {
-        "view": "front",
-        "iou": 0.966
-      },
-      {
-        "view": "side",
-        "iou": 0.927
-      },
-      {
-        "view": "3/4",
-        "iou": 0.983
-      }
-    ],
-    "focal": {
-      "peakPart": "turret_zimmerit",
-      "peak": [
-        213,
-        122
-      ],
-      "focalShare": 0,
-      "focalArea": 0,
-      "top": [
-        {
-          "part": "hull_detail",
-          "share": 0.263
-        },
-        {
-          "part": "hull",
-          "share": 0.223
-        },
-        {
-          "part": "turret_body",
-          "share": 0.146
-        }
-      ],
-      "declared": []
-    },
-    "rest": {
-      "share": 0.447,
-      "spread": 0.754,
-      "min": 0.25
-    },
-    "shape": {
-      "acuteShare": 0.153,
-      "straightShare": 0.658,
-      "taper": 0.18,
-      "shape": "stable"
-    }
+    "hero.png": "f7927478ae378b34bc086aaaab13d90ec9df21f0319ee562561d7c0d14145a7b",
+    "sheet.png": "44a1897c87bdda5248b4153491c618f58329815d01789418f2ee76cadfcf54ae"
   }
 }

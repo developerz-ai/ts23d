@@ -12,6 +12,7 @@ import { buildCab } from './cab.ts';
 import { buildBoards, buildHeadlamp, buildPilot, buildPipework } from './fittings.ts';
 import { buildFrame, buildRods, buildSplashers, gearOf } from './running-gear.ts';
 import { GAUGE, HEAD, layoutOf, mirrored, whenBuilt } from './shared.ts';
+import { buildSoot } from './soot.ts';
 import { buildTender } from './tender.ts';
 import { buildTrack } from './track.ts';
 import { FINISHES, worn } from './wear.ts';
@@ -84,7 +85,7 @@ const americanFamily = defineFamily<Params>({
       },
     ],
   },
-  // Measured 51.7k / 19.2k / 1.5k: sixteen wheels, a 17 m tender + track, riveted smokebox and
+  // Measured 54.0k / 19.4k / 1.56k: sixteen wheels, a 17 m tender + track, riveted smokebox and
   // tender at LOD0, the big plates split so soot, dust and lime have vertices to live on; LOD1
   // keeps every wheel spoked and the rods; LOD2 is the silhouette with two-tone wheel discs.
   budget: { triangles: [54000, 20000, 1650] },
@@ -98,6 +99,9 @@ const americanFamily = defineFamily<Params>({
     mirrored,
   ],
   finishes: FINISHES,
+  // Lower and more side-on than the default 3/4: the 17 m train fills the frame and the worn
+  // side (soot off the stack, oil on the motion, dust up the trucks) faces the lens.
+  hero: { azDeg: -52, elDeg: 13 },
   defaults: { arrangement: '4-4-0', number: '60', name: 'JUPITER' },
   build(raw, p) {
     const L = layoutOf(raw, p.arrangement);
@@ -128,6 +132,7 @@ const americanFamily = defineFamily<Params>({
     buildPilot(ctx, L);
     buildPipework(ctx, L);
     buildCab(ctx, L, p.name);
+    buildSoot(ctx, L);
 
     buildTender(ctx, L, gear, p.name);
   },

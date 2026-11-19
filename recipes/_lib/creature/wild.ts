@@ -21,7 +21,7 @@ import {
   type PartOptions,
   type Vec3,
 } from '@developerz.ai/ts23d';
-import { type WearSpec, wearPaint } from './wild-paint.ts';
+import { type Locks, lockShade, lockTone, mix, type WearSpec, wearPaint } from './wild-paint.ts';
 import {
   type CoatOptions,
   coatCards,
@@ -33,6 +33,7 @@ import {
   unpitched,
   type WhiskerOptions,
   whiskers,
+  withinBox,
 } from './wild-parts.ts';
 
 export interface BasePoint {
@@ -67,6 +68,16 @@ export interface Wild {
     /** No body card may pass |y| ≤ `y`, z ≤ `z` (metres): the sourced width and height hold. */
     readonly box?: { readonly y?: number; readonly z?: number };
   };
+  /**
+   * Clumped locks painted on the skin and the cards along the coat's lie (LOD0/1; the far mesh's
+   * cells are wider than a lock). Without it the coat between the cards is a smooth shell.
+   */
+  readonly locks?: Locks;
+  /**
+   * No fur card (the kind's own or the `coat` layer) may pass |y| ≤ `y`, z ≤ `z` (metres, asset
+   * frame): a stray lock does not grow the animal past its sourced width or height.
+   */
+  readonly box?: { readonly y?: number; readonly z?: number };
   readonly whiskers?: WhiskerOptions;
   /** Nick one ear: 1 = left, −1 = right. */
   readonly nick?: 1 | -1;
@@ -124,8 +135,18 @@ export function recolour(mesh: Mesh, at: Vec3, f: (p: Vec3, n: Vec3, c: Vec3) =>
 function finish(run: Run, info: CreatureInfo, prefix: string, wild: Wild): void {
   const ctx = run.real;
   const lod = ctx.lod;
-  const wear = wearPaint(typeof wild.wear === 'function' ? wild.wear(info) : wild.wear);
+  const wear = wearPaint(typeof wild.wear === 'function' ? wild.wear(info) : wild.wear, lod === 2);
   const base = wild.base?.(info);
+  const lie = chainSeed(furChains(info.bones), { gravity: 0.35, blend: 0.1 });
+  const lock = wild.locks && lod < 2 ? lockTone((p) => lie(p, [0, 0, 1]), wild.locks) : null;
+  const strength = wild.locks?.strength ?? 0;
+  // Coat colour, then the locks in it, then what the season left on top.
+  const paint = (p: Vec3, n: Vec3, c: Vec3, part: string): Vec3 => {
+    const coat = base ? base({ p, n, c, lod, part }) : c;
+    // Claws stay keratin under a film of dirt: caked whole they vanish into the paw.
+    if (part === 'claws') return mix(coat, wear(p, n, coat), 0.3);
+    return wear(p, n, lock ? lockShade(coat, lock(p), strength) : coat);
+  };
   const band = info.bones.height * (wild.ground?.band ?? 0.3);
   const groundStrength = wild.ground?.strength ?? 0.25;
   const offsets = new Map<string, Vec3>();
@@ -144,7 +165,7 @@ function finish(run: Run, info: CreatureInfo, prefix: string, wild: Wild): void 
     if (mesh && !eyes.has(h.name)) {
       if (h.name === info.parts.head && wild.nick && lod < 2)
         mesh = earNick(mesh, info.head, info.bones.head, wild.nick);
-      mesh = recolour(mesh, at, (p, n, c) => wear(p, n, base ? base({ p, n, c, lod, part }) : c));
+      mesh = recolour(mesh, at, (p, n, c) => paint(p, n, c, part));
       // Parts in the asset frame take the ground grade; the head and its children sit above it.
       if (at[0] === 0 && at[1] === 0 && at[2] === 0)
         mesh = grime(mesh, { ground: band, groundStrength });
@@ -183,7 +204,10 @@ function finish(run: Run, info: CreatureInfo, prefix: string, wild: Wild): void 
         coat = null;
       }
       // A lock hanging off a pastern lies on the ground; it does not pass through it.
-      if (part === 'fur') mesh = onGround(mesh);
+      if (part === 'fur') mesh = onGround(wild.box ? withinBox(mesh, wild.box) : mesh);
+      // The head's own cards sit in its frame, on the midline: the width holds there too.
+      if (part === 'head_fur' && wild.box?.y !== undefined)
+        mesh = withinBox(mesh, { y: wild.box.y });
     }
     // Roughness split: wet corneas under a clear coat; the coat's sheen on the furred skin.
     const skin =
@@ -198,7 +222,11 @@ function finish(run: Run, info: CreatureInfo, prefix: string, wild: Wild): void 
       });
   }
   // `cards: false` on the spec, or the far LOD's locks: the layer is the animal's only fur part.
-  if (coat) ctx.part(`${prefix}fur`, onGround(coat), { surface: 'cutout', ...HAIR });
+  if (coat)
+    ctx.part(`${prefix}fur`, onGround(wild.box ? withinBox(coat, wild.box) : coat), {
+      surface: 'cutout',
+      ...HAIR,
+    });
   if (wild.whiskers) {
     const mesh = whiskers(info.head, info.bones.head, lod, ctx.rng.fork('whiskers'), wild.whiskers);
     const bone = run.bones.indexOf(`${prefix}head`);

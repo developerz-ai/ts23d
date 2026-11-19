@@ -22,8 +22,8 @@
   },
   "triangles": [
     38564,
-    7088,
-    618
+    9016,
+    768
   ],
   "drawCalls": [
     1,
@@ -186,13 +186,13 @@
   "hitboxes": [
     {
       "bone": "spine_0",
-      "radius": 0.077863,
-      "height": 0.048137,
-      "coverage": 0.9509
+      "radius": 0.084309,
+      "height": 0.041691,
+      "coverage": 0.9714
     },
     {
       "bone": "spine_1",
-      "radius": 0.102283,
+      "radius": 0.102306,
       "height": 0,
       "coverage": 1
     },
@@ -210,26 +210,26 @@
     },
     {
       "bone": "caudal_upper_0",
-      "radius": 0.053323,
-      "height": 0.057374,
+      "radius": 0.053331,
+      "height": 0.057366,
       "coverage": 0.9691
     },
     {
       "bone": "caudal_upper_1",
-      "radius": 0.106331,
-      "height": 0.11856,
+      "radius": 0.106368,
+      "height": 0.118648,
       "coverage": 0.9588
     },
     {
       "bone": "caudal_lower_0",
-      "radius": 0.050669,
-      "height": 0.06023,
+      "radius": 0.050687,
+      "height": 0.060212,
       "coverage": 0.9529
     },
     {
       "bone": "caudal_lower_1",
-      "radius": 0.10521,
-      "height": 0.113087,
+      "radius": 0.104793,
+      "height": 0.114269,
       "coverage": 0.9588
     },
     {

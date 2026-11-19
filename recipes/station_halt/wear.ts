@@ -55,7 +55,7 @@ export function canopyWear(rng: Rng, o: { wallX: number; edgeX: number }): Shade
   const blot = valueNoise(rng.fork('canopy'), { scale: 1.5, octaves: 3 });
   return (p, n, c) => {
     const t = smooth(o.wallX, o.edgeX, p[0]);
-    const under = n[2] < -0.3 ? 1 : 0.45;
+    const under = n[2] < -0.3 ? 1 : 0.6;
     return mix(c, SOOT, (0.3 + 0.5 * t) * under * (0.7 + 0.3 * blot(p)));
   };
 }

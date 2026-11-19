@@ -1,13 +1,13 @@
 {
   "asset": "dragon",
   "reviewer": "agent",
-  "overall": 6.7,
+  "overall": 7,
   "scores": {
     "silhouette": {
       "score": 8,
-      "reason": "Horns, open jaw with teeth, dorsal spines, membrane wings with fingers and a long tail: the dragon reads in black from every view.",
+      "reason": "Horns, open jaw with teeth, dorsal spines, membrane wings with fingers and a long tail with a spade read from every view; the spade now reads in TOP and 3/4 REAR.",
       "fixes": [
-        "enlarge the tail spade (it reads in TOP only) so the tail end also reads in SIDE and 3/4"
+        "lift the tail tip in the idle pose so the spade also reads in hero.png"
       ]
     },
     "proportions": {
@@ -18,25 +18,27 @@
       ]
     },
     "materials": {
-      "score": 6,
-      "reason": "Red hide, pale belly and bone horns separate, membranes are slightly translucent-looking; but the hide is mostly flat red with no scale pattern except a stamped dot patch on the shoulder that reads as a decal.",
+      "score": 7,
+      "reason": "A scale pattern now covers the back, flanks and neck instead of one decal patch, and eyes/teeth separate; but the scales are large round orange spots that read as leopard/blister spots, not overlapping scales.",
       "fixes": [
-        "scale pattern across the back and flanks (not one patch) at LOD0",
-        "roughness split: glossy eyes and teeth, rough membrane"
+        "overlapping scale shapes (rows of rounded plates with a darker gap) instead of round spots",
+        "rougher membrane than hide"
       ]
     },
     "detail": {
       "score": 7,
-      "reason": "Teeth, spines, wing fingers and veins, claws and belly plates hold at the hero distance; the trunk surface is smooth between them.",
+      "reason": "Teeth, spines, wing fingers, claws and belly plates hold; the spot pattern now covers the trunk, but there is no relief between the spots.",
       "fixes": [
-        "stamped scale rows on the neck and back; crisper belly-plate edges"
+        "shallow relief on the scale rows on the neck and back",
+        "crisper belly-plate edges"
       ]
     },
     "wear": {
-      "score": 5,
-      "reason": "Ragged trailing edges on the membranes only; no scars, no chipped horn tips, no soot at the jaw.",
+      "score": 6,
+      "reason": "Ragged membrane edges, a sooty dark snout and pale scars on the shoulder now show; the shoulder scars read as exposed white ribs and the horn tips are intact.",
       "fixes": [
-        "scars on the flank, chipped horn tips and soot around the jaw"
+        "scars as short diagonal raised marks, not parallel white rib-like stripes",
+        "chipped horn tips"
       ]
     },
     "lod": {
@@ -55,7 +57,7 @@
     }
   },
   "renders": {
-    "hero.png": "7df2e4d49d2b71f2b858605a1eaf5bc4ee33c80f2c3958c8a7d6802631b0f8c0",
-    "sheet.png": "e7581e1fc655f377d24e5bdef6dcaffde4cb9acdc46955e9ee952e4b0c927723"
+    "hero.png": "b48e4ab7dccbe0502acf0879f43069d169db01df4aeb554ab7bb914314cfe28d",
+    "sheet.png": "48d818633be3ad68340026f7b12bf59b96187b823867c1423c5494a6478db713"
   }
 }

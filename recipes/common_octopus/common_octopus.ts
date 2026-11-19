@@ -79,7 +79,6 @@ export const common_octopus = defineBodyPlan({
   // along the bones, because `measures` only reads straight extents.
   real: { length: 1.43, width: 1.28, height: 0.46 },
   plan: OCTOPUS_PLAN,
-  parts: { mantle: ['mantle'] },
   colours: { back: '#8f5238', belly: '#d9a593', line: -0.2, soft: 0.3 },
   // Wet skin: the satin built-in strip (roughness 0.35, neutral albedo) under the vertex colour.
   strip: 'plastic',

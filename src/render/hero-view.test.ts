@@ -12,7 +12,7 @@ import { beauty, cameraFor } from './beauty.ts';
 import { pathHero } from './path/path-hero.ts';
 import { reviewPack } from './review.ts';
 
-const sheet = paintTrimSheet({ ...DEFAULT_SHEET, size: 512 });
+const sheet = paintTrimSheet({ ...DEFAULT_SHEET, size: 512 }, []);
 const def = (hero?: HeroView) =>
   defineAsset({
     name: 'crate',

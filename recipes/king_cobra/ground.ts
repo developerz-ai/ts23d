@@ -229,9 +229,13 @@ export function rearing(
     profile.push(add(profile.at(-1) ?? base, scale(along(f + dz / 2), dz)));
   const onProfile = (from: number): Vec3 =>
     profile[Math.min(profile.length - 1, Math.round(from / dz))] ?? base;
-  const laidOrRaised = arcs.map(
-    (s, i): Vec3 => (s >= L || i >= hinge ? (laid[i] as Vec3) : onProfile(L - s)),
-  );
+  // Where the profile still runs flat it lies over the laid track, so it keeps the track's drape
+  // over the pile turns below; a straight run at the base's height would cut into them.
+  const laidOrRaised = arcs.map((s, i): Vec3 => {
+    if (s >= L || i >= hinge) return laid[i] as Vec3;
+    const p = onProfile(L - s);
+    return [p[0], p[1], Math.max(p[2], (laid[i] as Vec3)[2])];
+  });
   // Into the stance: each segment's direction turns toward the stance's, rebuilt from the hinge
   // at bone length, so the front neither stretches nor shoots up past either pose.
   const atJ = [...laidOrRaised];

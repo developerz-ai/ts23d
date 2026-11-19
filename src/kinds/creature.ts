@@ -78,7 +78,7 @@ export function creature(
   const surface = spec.surface ?? 'fur';
   // Head layout first: the armature's jaw bone and the skin's blink read it (creature-rig.ts).
   const h = b.head;
-  const he = headEdits(b, spec, lod, hres);
+  const he = headEdits(b, spec, lod, hres, o.head);
   const l = he.layout;
   const [hx, , hz] = jawHinge(l);
   const hinge: Vec3 = [hx, 0, hz];

@@ -111,6 +111,25 @@ describe('city_block from the pinned West Village extract', () => {
     }
   });
 
+  it('far, every wall keeps its own colour (mean wear, not its blackened foot and top)', () => {
+    const c2 = compile(city_block, { lod: 2 });
+    const lum = (c: readonly number[]): number =>
+      0.2126 * (c[0] ?? 0) + 0.7152 * (c[1] ?? 0) + 0.0722 * (c[2] ?? 0);
+    let walls = 0;
+    for (const p of cityPlan(BUILDINGS, STYLE)) {
+      const C = c2.parts.find((q) => q.name === `b${p.id}`)?.mesh?.colors;
+      if (!C?.length) continue;
+      const mean = [0, 1, 2].map((k) => {
+        let s = 0;
+        for (let i = k; i < C.length; i += 3) s += C[i] ?? 0;
+        return s / (C.length / 3);
+      });
+      expect(lum(mean) / lum(p.wall)).toBeGreaterThan(0.6);
+      walls++;
+    }
+    expect(walls).toBeGreaterThan(30);
+  });
+
   it('two neighbours are never identical', () => {
     const plans = cityPlan(BUILDINGS, STYLE);
     const byId = new Map(plans.map((p) => [p.id, p]));

@@ -9,7 +9,7 @@
 // `align` anchor. This file validates options, builds the frame and dispatches.
 
 import { type Mesh, normalize, type Vec3 } from '../core/index.ts';
-import { type StripId, stripRect } from '../material/index.ts';
+import { mappedOnto, type StripId, stripRect } from '../material/index.ts';
 import { count, invalid } from './check.ts';
 import { isVectorFont } from './glyph-hershey.ts';
 import { measureText, type TextFont } from './text-layout.ts';
@@ -42,6 +42,10 @@ export interface TextOptions {
   /** Offset (m, along the facing normal) of the surface under a letter piece. `u` = metres along
    *  `along` from `origin` (negative left of a centre/right anchor), `v` = metres up from it. */
   readonly surface?: (u: number, v: number) => number;
+  /** Pixel fonts with `surface`: also paint the step between letter pieces that sit at different
+   *  offsets, so lettering wraps a proud post or brace instead of showing its bare side at 3/4
+   *  (2 triangles per step). Default false. Vector fonts ignore it. */
+  readonly wrap?: boolean;
   readonly strip?: StripId;
   /** Vector fonts: stroke width as a fraction of the cap height, (0, 0.4]. Default per face:
    *  sans 0.12, serif 0.07, script 0.06, gothic 0.055. */
@@ -109,12 +113,13 @@ export function text(str: string, o: TextOptions): Mesh {
       align: o.align,
       surface: o.surface,
       strip: o.strip,
+      wrap: o.wrap,
     });
   }
   const cap = o.cap ?? 'round';
   if (cap !== 'round' && cap !== 'square')
     invalid(`text cap is ${JSON.stringify(cap)}`, "use 'round' or 'square'");
-  return vectorText(str, {
+  const mesh = vectorText(str, {
     ...frame,
     rect: stripRect(o.strip ?? 'plain'),
     font,
@@ -126,4 +131,5 @@ export function text(str: string, o: TextOptions): Mesh {
     align: o.align,
     surface: o.surface,
   });
+  return mappedOnto(mesh, o.strip ?? 'plain');
 }

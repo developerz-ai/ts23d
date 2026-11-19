@@ -2,14 +2,14 @@
   "bbox": {
     "frame": "gltf",
     "max": [
-      0.309543,
-      1.02483,
-      1.149386
+      0.313509,
+      1.025107,
+      1.149288
     ],
     "min": [
-      -0.326773,
-      -0.001694,
-      -0.503746
+      -0.325215,
+      -0.001566,
+      -0.525119
     ]
   },
   "bind": {
@@ -100,7 +100,7 @@
     9498,
     4998
   ],
-  "seconds": 124.08,
+  "seconds": 177.97,
   "source": {
     "materials": 1,
     "textures": 2,
@@ -112,14 +112,14 @@
     {
       "determinant": 4.6491,
       "op": "transform",
-      "seconds": 0.08,
+      "seconds": 0.07,
       "triangles": 941691
     },
     {
       "holeFaces": 0,
       "nonManifoldEdges": 3234,
       "op": "clean",
-      "seconds": 15.99,
+      "seconds": 15.79,
       "shells": 3638,
       "shellsDropped": 3637,
       "triangles": 892702,
@@ -128,7 +128,7 @@
     {
       "moved": 0.013518,
       "op": "script",
-      "seconds": 0.15,
+      "seconds": 0.16,
       "sha256": "e0d8a69298ac88d18f75ea75010e2ba9024c259bd20fdd938074bbecc5912ca6",
       "stdout": [
         "ear tip 0.9486 0.0569 1.043 vertices 3427",
@@ -158,82 +158,105 @@
         "2 + 4": 187,
         "3 + 4": 487
       },
-      "seconds": 17.75,
+      "seconds": 21.37,
       "triangles": 892675,
       "webFaces": 674
     },
     {
+      "moved": 0.118247,
+      "op": "script",
+      "seconds": 0.96,
+      "sha256": "26c593fffe19e4963fc3dbedc8f8d99201009e4660fa748b8796c97c00aa004e",
+      "stdout": [
+        "tufts up vertices 23343 highest 0.045",
+        "tufts up vertices 696 highest 0.022",
+        "tufts down vertices 21514 highest 0.045",
+        "tufts down vertices 155692 highest 0.06",
+        "tufts back vertices 8855 highest 0.035",
+        "tufts back vertices 16585 highest 0.035",
+        "tufts back vertices 11355 highest 0.035",
+        "tufts back vertices 6858 highest 0.035",
+        "tufts back vertices 12830 highest 0.035"
+      ],
+      "triangles": 892675,
+      "vertices": [
+        441700,
+        441700
+      ],
+      "why": "the outline was a smooth hull (bear_hybrid critique: no fur clumps break it on the back, belly fringe or legs): locks of coat raised on the source, so the shell and the bake carry them"
+    },
+    {
       "boundaryEdges": 0,
-      "focusVertexShare": 0.6584,
+      "focusVertexShare": 0.6053,
       "from": 892675,
       "op": "retopo",
       "reduce": "decimate",
-      "seconds": 26.42,
+      "seconds": 29.22,
       "shell": {
-        "bboxDrift": 0.00882,
-        "bboxSide": "-x (back)",
+        "bboxDrift": 0.00884,
+        "bboxSide": "-y (right)",
         "close": 1,
         "components": 1,
         "handles": 0,
         "largestShare": 1.0,
         "lost": {
           "centre": [
-            0.3417,
-            0.0785,
-            0.4324
+            0.1985,
+            0.003,
+            0.3767
           ],
-          "share": 0.0,
-          "tolerance": 0.01581,
-          "where": "+y (left)"
+          "share": 0.0003,
+          "tolerance": 0.01704,
+          "where": "-z (bottom)"
         },
         "skin": 0.0,
         "tried": [
           [
             0,
             0.0,
-            0.9062,
-            23
+            0.8267,
+            20
           ],
           [
             1,
             0.0,
-            0.0,
+            0.0003,
             0
           ]
         ],
-        "volume": 0.344663,
-        "volumeRef": 0.355467
+        "volume": 0.385634,
+        "volumeRef": 0.401493
       },
-      "shellTriangles": 99376,
+      "shellTriangles": 91644,
       "strategy": "shell",
       "triangles": 28798,
-      "voxel": 0.01054
+      "voxel": 0.01136
     },
     {
-      "islands": 105,
+      "islands": 146,
       "kind": "smart",
       "op": "uv",
-      "seconds": 7.18,
+      "seconds": 11.93,
       "triangles": 28798,
       "uvDegenerate": 0.0
     },
     {
       "albedoFrom": "texture",
-      "albedoMean": 0.2896,
+      "albedoMean": 0.2918,
       "albedoUnfilled": 0.0,
-      "cage": 0.040079,
+      "cage": 0.040556,
       "device": "OPTIX: NVIDIA GeForce RTX 3090",
-      "hitRate": 0.9895,
+      "hitRate": 0.9866,
       "maps": [
         "albedo",
         "normal",
         "ao"
       ],
       "op": "bake",
-      "seconds": 26.36,
+      "seconds": 28.91,
       "size": 2048,
       "triangles": 28798,
-      "uvCoverage": 0.5442
+      "uvCoverage": 0.6746
     },
     {
       "bones": 29,
@@ -242,7 +265,7 @@
       "maxInfluences": 4,
       "method": "bone-heat",
       "op": "bind",
-      "seconds": 0.83,
+      "seconds": 0.87,
       "triangles": 28798,
       "unusedBones": [],
       "weightSum": [
@@ -251,44 +274,44 @@
       ]
     },
     {
-      "bodyRefilled": 980,
+      "bodyRefilled": 1183,
       "bones": [
         "tail_1",
         "tail_2",
         "tail_3",
         "tail_4"
       ],
-      "changed": 1238,
-      "foreignBefore": 0.5097,
-      "inside": 265,
+      "changed": 1390,
+      "foreignBefore": 0.4186,
+      "inside": 212,
       "op": "isolate",
       "reassigned": [
         0,
         0
       ],
-      "seconds": 0.25,
+      "seconds": 0.3,
       "triangles": 28798
     },
     {
       "bone": "fore_l_2",
-      "changed": 611,
+      "changed": 617,
       "kind": "smooth",
-      "masked": 675,
-      "meanAfter": 0.3,
-      "meanBefore": 0.3019,
+      "masked": 679,
+      "meanAfter": 0.2921,
+      "meanBefore": 0.2937,
       "op": "weights",
-      "seconds": 0.08,
+      "seconds": 0.1,
       "triangles": 28798
     },
     {
       "bone": "fore_r_2",
-      "changed": 593,
+      "changed": 605,
       "kind": "smooth",
-      "masked": 646,
-      "meanAfter": 0.3393,
-      "meanBefore": 0.3415,
+      "masked": 666,
+      "meanAfter": 0.3308,
+      "meanBefore": 0.333,
       "op": "weights",
-      "seconds": 0.08,
+      "seconds": 0.09,
       "triangles": 28798
     },
     {
@@ -303,77 +326,80 @@
     {
       "moved": 0.0,
       "op": "script",
-      "seconds": 27.4,
-      "sha256": "e69bc919421e7d9c1b4b407300d569a496736f5b29de3306b766c9aa9f03cf70",
+      "seconds": 66.5,
+      "sha256": "19b0dac21422e254d12add7fdea199b5ec53c57bc66876890935726ac44f0bc2",
       "stdout": [
-        "delight 0.25575080354145385",
-        "healed 0.00972185422855243",
-        "ear (0.8121339042203719, 0.13550184768273138, 0.9968461198015512) 0.009094572341805506",
-        "ear (0.9564701891230676, -0.060696271424143994, 1.0249727380727085) 0.006279433256452733",
-        "mud 0.20342344074441127",
-        "wet 0.10423163582208889",
-        "rake 0.001675008917770381",
-        "rake 0.0015189056952356306",
-        "rake 0.0011029644569327415",
-        "flank 0.0010803696595750435",
-        "scar 3.1222336248245854e-05",
-        "rub 0.027203571100810675"
+        "delight 0.2792874662662828",
+        "top light 0.02702749506515172",
+        "healed 0.009149656452985619",
+        "ear (0.8195232266859055, 0.12934287455475257, 0.9975054640572111) 0.005942660680448683",
+        "ear (0.9558563943557675, -0.06803737091995231, 1.0253848965967511) 0.005267250689351644",
+        "mud 0.3705094960672852",
+        "wet 0.13438806544479898",
+        "soaked 0.05375438103772652",
+        "rake 0.002417253059367065",
+        "rake 0.0017431272960054158",
+        "rake 0.001553094335423356",
+        "flank 0.0011818953814597502",
+        "scar 3.0043866698485912e-05",
+        "rub 0.027341190621551645",
+        "bare 0.008834546360981245"
       ],
       "triangles": 28798,
       "vertices": [
         14401,
         14401
       ],
-      "why": "the generator's baked light, white ear caps and bake holes leave the albedo; roughness, mud, scars and rubbed coat go into the maps (a textured part takes no grime pass)"
+      "why": "the generator's baked light, white ear caps and bake holes leave the albedo; the coat's locks, roughness, mud, scars and rubbed coat go into the maps (a textured part takes no grime pass)"
     },
     {
       "lod0": {
         "boundaryEdges": 0,
         "handles": 0,
-        "maxFaceShare": 0.0006,
+        "maxFaceShare": 0.0005,
         "uvDegenerate": 0.0
       },
       "lods": [
         {
-          "bboxDrift": 0.00096,
-          "bboxSide": "+z (top)",
+          "bboxDrift": 0.00059,
+          "bboxSide": "-x (back)",
           "boundaryEdges": 0,
           "handles": 0,
           "lost": {
             "share": 0.0,
-            "tolerance": 0.020473
+            "tolerance": 0.020653
           },
-          "maxFaceShare": 0.0012,
+          "maxFaceShare": 0.0013,
           "triangles": 9498,
-          "uvDegenerate": 0.0002
+          "uvDegenerate": 0.0003
         },
         {
-          "bboxDrift": 0.0009,
+          "bboxDrift": 0.00085,
           "bboxSide": "-y (right)",
           "boundaryEdges": 0,
           "handles": 0,
           "lost": {
             "share": 0.0,
-            "tolerance": 0.03071
+            "tolerance": 0.03098
           },
-          "maxFaceShare": 0.0016,
+          "maxFaceShare": 0.0017,
           "triangles": 4998,
-          "uvDegenerate": 0.0004
+          "uvDegenerate": 0.0002
         }
       ],
       "op": "lods",
-      "seconds": 0.68,
+      "seconds": 0.78,
       "triangles": 28798
     },
     {
-      "bytes": 9120996,
+      "bytes": 10663180,
       "images": {
         "albedo": 2048,
         "normal": 1024,
         "orm": 1024
       },
       "op": "export",
-      "seconds": 0.8,
+      "seconds": 0.89,
       "triangles": 28798
     }
   ],

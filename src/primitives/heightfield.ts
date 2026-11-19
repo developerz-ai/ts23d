@@ -5,7 +5,7 @@
 //   triangles = 2 · cx · cy + (skirt ? 4 · (cx + cy) : 0)
 
 import { type Mesh, MeshBuilder, normalize, type Vec3 } from '../core/index.ts';
-import { type StripId, stripRect } from '../material/index.ts';
+import { mappedOnto, type StripId, stripRect } from '../material/index.ts';
 import { count, invalid } from './check.ts';
 import { mirroredV, stripVMetres } from './strip-uv.ts';
 
@@ -68,7 +68,7 @@ export function heightfield(o: HeightfieldOptions): Mesh {
   for (let j = 0; j < ny; j++)
     for (let i = 0; i < nx; i++) b.quad(at(i, j), at(i + 1, j), at(i + 1, j + 1), at(i, j + 1));
   if (o.skirt !== undefined) skirt(b, o, rect);
-  return b.build();
+  return mappedOnto(b.build(), o.strip ?? 'plain');
 }
 
 /** Four walls from the edge vertices down to `o.skirt`, each quad CCW seen from outside. */

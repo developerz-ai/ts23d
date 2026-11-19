@@ -1,5 +1,5 @@
-// Dried road spatter: hundreds of small mud flecks on the lower body where `roadFilm` says the
-// tyres throw it (sills, behind the wheels, arch lips, the tail). The lacquer under them is only
+// Dried road spatter: mud flecks where the tyres throw them and nowhere else: a fan behind each
+// wheel and the grit the nose meets head on (scattered along the whole sill they read as noise). The lacquer under them is only
 // darkened (a paint slot stores a tone); the flecks are what reads as dirt: matte, tan, proud of
 // the clearcoat. Each fleck is one tilted shard: two corners sink into the skin, the third stands
 // 3 mm off it, so it is seated on the panel, never floating over it. Flecks on the door
@@ -17,9 +17,9 @@ import { sAtX, U } from './shape.ts';
 
 /** Dried mud, light (dusty) to dark (still damp), linear RGB on the plain strip. */
 const MUD: readonly Vec3[] = [
-  [0.3, 0.24, 0.17],
-  [0.22, 0.17, 0.12],
-  [0.13, 0.1, 0.075],
+  [0.17, 0.135, 0.095],
+  [0.12, 0.094, 0.066],
+  [0.075, 0.058, 0.043],
 ];
 
 export interface Film {
@@ -65,7 +65,7 @@ function fleck(
 /** Scatter flecks over the lower body by rejection sampling against the film density. */
 export function roadSpatter(S: Surface, lod: Lod, rng: Rng): Film {
   const tries = [7000, 2000, 0][lod] ?? 0;
-  const film = roadFilm(rng.fork('road_film'));
+  const film = roadFilm(rng.fork('road_film'), 'spray');
   const pick = rng.fork('spatter');
   const shell = new MeshBuilder();
   const door = new MeshBuilder();
@@ -78,10 +78,14 @@ export function roadSpatter(S: Surface, lod: Lod, rng: Rng): Film {
     // Down to just above the rocker roll: under it the skin turns too tightly for a flat shard.
     const u = pick.range(U.creaseOut, U.rocker - 0.3);
     const keep = pick.next();
-    const size = pick.range(0.008, 0.026) * (lod === 0 ? 1 : 1.9);
+    const grain = pick.range(0.01, 0.03) * (lod === 0 ? 1 : 1.9);
     const turn = pick.range(0, Math.PI * 2);
     const tone = MUD[pick.int(0, MUD.length - 1)] ?? [0.2, 0.16, 0.11];
     const streak = pick.range(1, 2.2);
+    // Thick spray dries in bigger clots: the fan reads as a patch near the wheel, specks at its rim.
+    const density = film(S.row(s)(u));
+    if (density <= 0) continue;
+    const size = grain * (0.7 + 1.1 * density);
     // Keep clear of the arch openings, the shut lines and the cockpit cut.
     const arch = archU(S, s);
     if (arch !== null && u > arch - 0.25) continue;
@@ -100,8 +104,7 @@ export function roadSpatter(S: Surface, lod: Lod, rng: Rng): Film {
       continue;
     // The gills are holes in the fender: nothing there for a fleck to sit on.
     if (GILLS.some((h) => Math.abs(u - holeUc(h, s)) < h.hu * holeG(h, s) + edge)) continue;
-    const p = S.row(s)(u);
-    if (keep > film(p) ** 1.3) continue;
+    if (keep > density) continue;
     fleck(inDoor ? door : shell, S, [s, u], size, streak, turn, tone);
     if (inDoor) onDoor++;
     else onShell++;

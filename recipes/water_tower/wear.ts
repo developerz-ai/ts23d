@@ -71,11 +71,14 @@ export interface TrestleWear {
   readonly footH: number;
   /** Direction toward the sun (unit, xy): the far side of a footing is the mossy side. */
   readonly sun: readonly [number, number];
+  /** x past which the spout's spill soaks the trestle (the track side). */
+  readonly spillX: number;
 }
 
 /**
  * Timber under the tank: drips off the floor darken everything near it, fading down the posts in
- * runs; footings get moss on their shaded faces and a dark wet line at the ground.
+ * runs; the spout's spill soaks the track-side posts; footings get moss on their shaded faces
+ * and a dark wet line at the ground.
  */
 export function trestleWear(rng: Rng, w: TrestleWear): Shade {
   const run = valueNoise(rng.fork('drip'), { scale: 0.3, octaves: 2 });
@@ -84,6 +87,8 @@ export function trestleWear(rng: Rng, w: TrestleWear): Shade {
     const drip = 1 - smooth(0.6, 3.4, w.floorZ - p[2]);
     const r = run([p[0] * 2.5, p[1] * 2.5, p[2] * 0.15]);
     let out = mix(c, WET, 0.75 * drip * (0.35 + 0.65 * smooth(-0.3, 0.4, r)));
+    // Spill from the spout: the track-side (+X) posts and footings stay soaked to the ground.
+    out = mix(out, WET, 0.55 * smooth(w.spillX - 1.2, w.spillX + 0.6, p[0]) * (0.6 + 0.4 * r));
     if (p[2] <= w.footH + 0.05) {
       const shaded = 1 - smooth(-0.3, 0.3, n[0] * w.sun[0] + n[1] * w.sun[1]);
       const low = 1 - smooth(0, w.footH + 0.05, p[2]);
@@ -95,26 +100,30 @@ export function trestleWear(rng: Rng, w: TrestleWear): Shade {
   };
 }
 
-const LICHEN: Vec3 = [0.36, 0.38, 0.2];
+/** Roof moss: a dull olive, darker and greener than lichen. */
+const MOSS_ROOF: Vec3 = [0.17, 0.2, 0.08];
 const SOOT: Vec3 = [0.06, 0.055, 0.05];
 
 /**
- * Shingle roof: lichen and moss in blotches on the north (shaded) slopes, a sun-bleached crown,
+ * Shingle roof: moss in soft broad patches on the shaded slopes only, a sun-bleached crown,
  * dark run-off lines along the eave, and engine soot drifting onto the track (+X) side.
  */
 export function roofWear(
   rng: Rng,
   o: { eaveZ: number; apexZ: number; sun: readonly [number, number] },
 ): Shade {
-  const blot = valueNoise(rng.fork('lichen'), { scale: 0.5, octaves: 3 });
+  const blot = valueNoise(rng.fork('lichen'), { scale: 1.4, octaves: 2 });
   const fine = valueNoise(rng.fork('fine'), { scale: 0.15, octaves: 2 });
   return (p, n, c) => {
     if (n[2] < 0.3) return c;
     const up = (p[2] - o.eaveZ) / (o.apexZ - o.eaveZ);
-    const shaded = 1 - smooth(-0.2, 0.2, n[0] * o.sun[0] + n[1] * o.sun[1]);
+    // Shade: 1 on the slopes facing away from the sun, a soft ramp across the side slopes.
+    const shaded = 1 - smooth(-0.5, 0.3, n[0] * o.sun[0] + n[1] * o.sun[1]);
     let out = mix(c, SILVER, 0.3 * smooth(0.4, 1, up));
-    const b = blot(p) + 0.35 * fine(p);
-    out = mix(out, LICHEN, (0.25 + 0.5 * shaded) * smooth(0.05, 0.6, b));
+    // Moss on the shaded slopes only, heaviest toward the damp eave, in soft broad patches.
+    const b = blot(p);
+    const damp = 0.55 + 0.45 * (1 - smooth(0, 0.7, up));
+    out = mix(out, MOSS_ROOF, 0.85 * shaded * damp * smooth(-0.4, 0.5, b));
     out = mix(out, WET, 0.45 * (1 - smooth(0, 0.18, up)));
     return mix(out, SOOT, 0.4 * smooth(0.5, 3, p[0]) * (0.6 + 0.4 * fine(p)));
   };

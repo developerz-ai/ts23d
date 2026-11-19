@@ -29,6 +29,7 @@ import {
   type Vec3,
 } from '@developerz.ai/ts23d';
 import { restrip, type StripRule, weatherer } from '../_lib/finish/finish.ts';
+import { BOARD, BOARD_SPAN, BRICK, CANOPY } from './materials.ts';
 import { slateCourses } from './slates.ts';
 import { brickWear, canopyWear, platformWear, type Shade, shade } from './wear.ts';
 
@@ -50,6 +51,11 @@ const COL_X = 5.6;
 const canZ = (x: number): number =>
   CAN_Z_WALL + ((CAN_Z_FRONT - CAN_Z_WALL) * (x - B_X1)) / (CAN_X1 - B_X1);
 
+/** The platform front, left to right: windows and doors, 1.87 m centres. */
+const FRONT = ['W', 'D', 'W', 'W', 'D', 'W', 'W', 'D', 'W', 'W'] as const;
+const frontY = (i: number): number => -8.4 + i * 1.87;
+const SILL_Z = PLAT_Z + 0.85;
+
 const brick = hex('#a24f36');
 const blueBrick = hex('#3b3a44');
 const slate = hex('#4b5058');
@@ -70,6 +76,7 @@ const RULES: readonly StripRule[] = [
   { from: iron, strip: 'iron_cast', color: hex('#8a8480') },
 ];
 
+const CHIMNEY_H = 1.6;
 const ROOF: RoofMeshOptions = {
   type: 'gable',
   footprint: [B_X1 - B_X0, 2 * B_Y],
@@ -82,10 +89,18 @@ const ROOF: RoofMeshOptions = {
   rake: 0.35,
   ridge: 'y',
   trim: cream,
-  wall: { color: brick, strip: 'brick' },
+  wall: { color: brick, strip: BRICK },
   chimneys: [
-    { at: [-0.9, -4.6], size: [0.75, 0.55], height: 1.1, color: brick, strip: 'brick', pots: 2 },
-    { at: [-0.9, 5.2], size: [0.75, 0.55], height: 1.1, color: brick, strip: 'brick', pots: 2 },
+    // Stacks 1.6 m over the slates, as tall as the Toddington photos show them.
+    {
+      at: [-0.9, -4.6],
+      size: [0.75, 0.55],
+      height: CHIMNEY_H,
+      color: brick,
+      strip: BRICK,
+      pots: 2,
+    },
+    { at: [-0.9, 5.2], size: [0.75, 0.55], height: CHIMNEY_H, color: brick, strip: BRICK, pots: 2 },
   ],
 };
 const RIDGE_Z = ridgeHeight(ROOF); // world z of the ridge
@@ -210,18 +225,67 @@ function nameBoard(name: string, lod: Lod): Mesh {
       }),
     );
   }
-  // Far: the lettering as one decal quad on the board face (the station still names itself).
+  // Far: the name painted on one quad of the board strip (the station still names itself).
   else
     out.push(
-      cell({
-        origin: [0.141, -2.3, 1.55],
-        u: [0, 4.6, 0],
+      tiled({
+        origin: [0.141, -BOARD_SPAN / 2, 1.55],
+        u: [0, BOARD_SPAN, 0],
         v: [0, 0, 0.55],
-        color: white,
-        cell: 'sign',
+        color: [1, 1, 1],
+        strip: BOARD,
+        vMetres: 0.56,
       }),
     );
   return merge(out);
+}
+
+/**
+ * A damp stain run under a sill on the +X wall at `x`: a slab 6 mm proud and bedded 5 cm (its
+ * ends pierce the wall face), brick-coloured at its foot `z0`, dark under the sill at `z1`.
+ */
+function sillStain(x: number, y: number, z0: number, z1: number): Mesh {
+  const m = box({
+    size: [0.056, 0.9, z1 - z0],
+    at: [x - 0.022, y, z0],
+    color: brick,
+    strip: BRICK,
+    omit: ['top', 'bottom', 'back'],
+  });
+  const colors = new Float32Array(m.colors);
+  const damp: Vec3 = [0.07, 0.05, 0.04];
+  for (let i = 0; i < m.positions.length / 3; i++) {
+    const f = Math.min(1, Math.max(0, ((m.positions[i * 3 + 2] ?? 0) - z0) / (z1 - z0)));
+    colors.set(
+      [0, 1, 2].map((c) => (brick[c] ?? 0) + ((damp[c] ?? 0) - (brick[c] ?? 0)) * 0.7 * f),
+      i * 3,
+    );
+  }
+  return { ...m, colors };
+}
+
+/**
+ * A grime skin along the platform edge: `w` wide, its outer edge (at x = `x1`) dark and its inner
+ * edge the paving colour, so the band fades into the flags; 6 mm thick, bedded 3 mm.
+ */
+function edgeDirt(x1: number, w: number, len: number, z: number, under: Vec3): Mesh {
+  const m = box({
+    size: [w, len, 0.006],
+    at: [x1 - w / 2, 0, z - 0.003],
+    color: under,
+    strip: 'stone',
+  });
+  const colors = new Float32Array(m.colors);
+  const dirt: Vec3 = [0.06, 0.055, 0.05];
+  for (let i = 0; i < m.positions.length / 3; i++) {
+    const f = ((m.positions[i * 3] ?? 0) - (x1 - w)) / w; // 0 inner edge → 1 outer edge
+    const k = 0.85 * Math.min(1, Math.max(0, f));
+    colors.set(
+      [0, 1, 2].map((c) => (under[c] ?? 0) + ((dirt[c] ?? 0) - (under[c] ?? 0)) * k),
+      i * 3,
+    );
+  }
+  return { ...m, colors };
 }
 
 // ---------------------------------------------------------------- the station
@@ -243,7 +307,7 @@ export const station_halt = defineAsset({
   real: {
     length: PLAT_EDGE + 0.25 - PLAT_X0,
     width: 2 * PLAT_Y,
-    height: RIDGE_Z + 1.45,
+    height: RIDGE_Z + CHIMNEY_H + 0.35,
     measures: [
       {
         label: 'platform height over rail (3 ft)',
@@ -273,6 +337,9 @@ export const station_halt = defineAsset({
     ],
   },
   budget: { triangles: [10500, 5800, 550] },
+  // A little lower than the default orbit: the sooted canopy soffit and valance show under the
+  // eaves, and the platform edge runs into the frame.
+  hero: { azDeg: -35, elDeg: 12 },
   // Gas lanterns: a warm glow in the glass that keeps its hue, never a white blob.
   glow: [{ parts: ['lamp_*_glass'], color: [1, 0.82, 0.55], strength: 1 }],
   build(ctx) {
@@ -307,7 +374,7 @@ export const station_halt = defineAsset({
           size: [PLAT_EDGE - 0.25 - PLAT_X0, 2 * PLAT_Y, PLAT_Z - 0.08],
           at: [(PLAT_EDGE - 0.25 + PLAT_X0) / 2, 0, 0],
           color: blueBrick,
-          strip: 'brick',
+          strip: BRICK,
           omit: ['bottom', 'top'],
         },
         lod,
@@ -325,20 +392,20 @@ export const station_halt = defineAsset({
         v: [0, 2 * PLAT_Y, 0],
         color: paving,
         strip: 'stone',
-        // Far: the same stone strip and tint (its value matches), stretched to one band.
-        ...(lod === 2 ? { vMetres: 2 * PLAT_Y } : {}),
+        // At true scale on every LOD: one stretched band read as planks far away.
       }),
     ];
-    // Coping: 0.9 m stone slabs with 4 mm joints (LOD0), each its own tone; one run far away.
+    // Coping: 0.9 m stone slabs with 12 mm joints (LOD0), each its own tone; one run far away.
     const slab = lod === 0 ? 0.9 : 2 * PLAT_Y;
+    const joint = 0.012;
     const slabs = Math.round((2 * PLAT_Y) / slab);
     const copeRng = ctx.rng.fork('coping');
     for (let i = 0; i < slabs; i++) {
       const len = (2 * PLAT_Y) / slabs;
-      const t = lod === 0 ? copeRng.range(0.9, 1.08) : 1;
+      const t = lod === 0 ? copeRng.range(0.8, 1.1) : 1;
       pf.push(
         box({
-          size: [0.5, len - (lod === 0 ? 0.004 : 0), 0.1],
+          size: [0.5, len - (lod === 0 ? joint : 0), 0.1],
           at: [PLAT_EDGE - 0.25, -PLAT_Y + (i + 0.5) * len, PLAT_Z - 0.1],
           color: [coping[0] * t, coping[1] * t, coping[2] * t],
           strip: 'stone',
@@ -348,10 +415,14 @@ export const station_halt = defineAsset({
         }),
       );
     }
-    if (lod < 2)
+    if (lod < 2) {
       pf.push(
         box({ size: [0.12, 2 * PLAT_Y, 0.004], at: [PLAT_EDGE - 0.12, 0, PLAT_Z], color: white }),
       ); // white edge line
+      // Dirt along the edge: oil drip, brake dust and boot grime in a 1.1 m band behind the
+      // coping, black at the edge fading into the flags (a 6 mm skin bedded 3 mm in the paving).
+      pf.push(edgeDirt(PLAT_EDGE - 0.5, 1.1, 2 * PLAT_Y, PLAT_Z, paving));
+    }
     part(
       'platform',
       grime(merge(pf), { ground: 0.5, groundStrength: 0.35 }),
@@ -366,7 +437,7 @@ export const station_halt = defineAsset({
           size: [B_X1 - B_X0, 2 * B_Y, WALL_H],
           at: [(B_X0 + B_X1) / 2, 0, PLAT_Z],
           color: brick,
-          strip: 'brick',
+          strip: BRICK,
           omit: ['bottom', 'top'],
           courseOrigin: PLAT_Z,
         },
@@ -380,7 +451,7 @@ export const station_halt = defineAsset({
             size: [B_X1 - B_X0 + 0.08, 2 * B_Y + 0.08, 0.45],
             at: [(B_X0 + B_X1) / 2, 0, PLAT_Z],
             color: blueBrick,
-            strip: 'brick',
+            strip: BRICK,
             omit: ['bottom', 'top'],
             courseOrigin: PLAT_Z,
           },
@@ -398,16 +469,21 @@ export const station_halt = defineAsset({
             size: [bandX, 0.028, 0.15],
             at: [(B_X0 + B_X1) / 2, s * (B_Y + 0.016), bz],
             color: blueBrick,
-            strip: 'brick',
+            strip: BRICK,
           }),
           box({
             size: [0.028, bandY, 0.15],
             at: [s > 0 ? B_X1 + 0.016 : B_X0 - 0.016, 0, bz],
             color: blueBrick,
-            strip: 'brick',
+            strip: BRICK,
           }),
         );
     }
+    if (lod === 0)
+      // Damp stains under the front sills: rain off each sill darkens the brick to the plinth.
+      FRONT.forEach((k, i) => {
+        if (k === 'W') bw.push(sillStain(B_X1, frontY(i), PLAT_Z + 0.46, SILL_Z - 0.06));
+      });
     part(
       'building',
       dirt(merge(bw)),
@@ -417,11 +493,10 @@ export const station_halt = defineAsset({
 
     // ---- openings: sashes and panelled doors (chocolate doors, cream frames, stone sills/heads).
     type Op = { kind: 'window' | 'door'; side: OpeningSide; at: Vec3 };
-    const front = ['W', 'D', 'W', 'W', 'D', 'W', 'W', 'D', 'W', 'W'];
-    const ops: Op[] = front.map((k, i) => ({
+    const ops: Op[] = FRONT.map((k, i) => ({
       kind: k === 'D' ? 'door' : 'window',
       side: 'front',
-      at: [B_X1, -8.4 + i * 1.87, k === 'D' ? PLAT_Z : PLAT_Z + 0.85],
+      at: [B_X1, frontY(i), k === 'D' ? PLAT_Z : PLAT_Z + 0.85],
     }));
     for (const y of [-6.5, -2.2, 2.2, 6.5])
       ops.push({ kind: 'window', side: 'back', at: [B_X0, y, PLAT_Z + 0.85] });
@@ -445,7 +520,7 @@ export const station_halt = defineAsset({
             glass,
             frame: isDoor ? chocolate : cream,
             wall: brick,
-            wallStrip: 'brick',
+            wallStrip: BRICK,
             trim: coping,
             panes: [2, 3],
           },
@@ -504,7 +579,7 @@ export const station_halt = defineAsset({
         depth: 2 * CAN_Y,
         plane: 'xz',
         color: slate,
-        strip: 'iron',
+        strip: CANOPY,
       }),
       // Eaves girder on the column heads.
       box({

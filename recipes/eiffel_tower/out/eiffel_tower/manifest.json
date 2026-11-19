@@ -22,17 +22,17 @@
   "triangles": [
     143696,
     19580,
-    764
+    792
   ],
   "trianglesCompiled": [
     143776,
     19628,
-    764
+    792
   ],
   "drawCalls": [
     1,
     1,
-    1
+    2
   ],
   "pivots": [
     {

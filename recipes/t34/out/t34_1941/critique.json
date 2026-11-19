@@ -1,7 +1,7 @@
 {
   "asset": "t34_1941",
   "reviewer": "agent",
-  "overall": 7,
+  "overall": 7.4,
   "scores": {
     "silhouette": {
       "score": 8,
@@ -18,11 +18,11 @@
       ]
     },
     "materials": {
-      "score": 6,
-      "reason": "Track links now read as dark steel and the dot chips are gone. The hull carries a mottled khaki/green dust layer that in hero.png and the sheet TOP reads as a printed camouflage pattern (pixel-blocky in TOP) rather than dust settling on horizontal faces; road wheels are uniformly dust-tan including the hub caps.",
+      "score": 7,
+      "reason": "The camo mottle is gone: plain 4BO green with pale dust on the lower hull, glacis and running gear, fading with height; road wheels show green discs with dust-pale rims. Upper plates and turret are clean flat green.",
       "fixes": [
-        "dust only on up-facing plates and lower hull, fading with height (grime ground/up masks) instead of an all-over mottle",
-        "rubber tyres darker than the dusted wheel discs"
+        "subtle roughness/value variation on the upper plates (sun-faded tops)",
+        "darker rubber showing through the dust on the tyre treads"
       ]
     },
     "detail": {
@@ -35,88 +35,30 @@
       ]
     },
     "wear": {
-      "score": 6,
-      "reason": "Dusty wheels and running gear and a weathered hull now give a field story; the dust is all-over rather than where it would settle, and the exhausts leave no soot on the rear plate.",
+      "score": 7,
+      "reason": "Dust and mud heaviest on the lower hull and track run, lighter up the sides; the rear soot is now a soft fan round the exhausts with no blocky noise (3/4 REAR, TOP), but it is so faint it barely reads, and the dust fade on the rear deck shows triangle-faceted steps in TOP.",
       "fixes": [
-        "exhaust soot on the rear plate",
-        "mud heaviest on the lower hull and track run, lighter up the sides"
+        "darken the rear soot fan one or two steps so it reads at the sheet scale",
+        "smooth the dust mask on the rear deck (finer vertex density or texture mask) so it does not step in triangles"
       ]
     },
     "lod": {
-      "score": 6,
-      "reason": "lods.png: LOD2 keeps the outline and turret, but the dust-tan road wheels become green faceted slabs and the hull mottle goes flat green, so the running gear changes colour at the switch.",
+      "score": 7,
+      "reason": "FAR LOD2 keeps outline, turret and running gear and the hull colour now matches LOD0; the road wheels go uniformly dark olive, losing the dusty rims.",
       "fixes": [
-        "keep the road-wheel discs dust-tan at LOD2 (same vertex/tile colour as LOD0)",
-        "bake the hull mottle into LOD2 colour or remove it from LOD0"
+        "keep the dust-pale rim colour on the LOD2 road wheels"
       ]
     },
     "technical": {
       "score": 8,
-      "reason": "QA PASS: 57.2k / 12.3k / 1.45k tris, 19 draws (one per moving pivot), one material.",
+      "reason": "QA PASS: 56.9k / 12.3k / 1.4k tris, 19 / 19 / 19 draws (one per moving pivot), one material.",
       "fixes": [
         "declare real.mass (26.5 t) and a physics shell so the mass gate covers it"
       ]
     }
   },
   "renders": {
-    "hero.png": "8b73f0614a5443cf8df0ff86c4eaef63822a30ba000a08a740f7479eb7155654",
-    "sheet.png": "63d3fb19dab15ecb4796f45b6d3eb429ad6af4203c53914ea2f59f2584794cd0",
-    "raking.png": "fd8042aafe1d164ed05032a796c02ae85c0a4c07918cbfbdb061d1edaa4dcdce",
-    "raking_detail.png": "a61d62c2e195f2ae581cd33b5cda50d1aaade72be8009b93c9355e35ca40a3df",
-    "lods.png": "71a6a40ffee9880d943049042aa8ef042547c42ba502580ee567d87abf3548ff",
-    "silhouette.png": "e255a6a3623902e9ceefd33afcf25fbe9daf5f8cc993206f46f8eec85ffca9a9",
-    "value.png": "76771277097631c4f2c131c3b94108f604f61fa728355e78c794e9d3b54d4ad5",
-    "detail.png": "0125a23a2bb341fcfbad46471145aa47c5b9a638b6f2f1f67d330224a79fc4c8"
-  },
-  "metrics": {
-    "silhouette": [
-      {
-        "view": "front",
-        "iou": 0.965
-      },
-      {
-        "view": "side",
-        "iou": 0.93
-      },
-      {
-        "view": "3/4",
-        "iou": 0.987
-      }
-    ],
-    "focal": {
-      "peakPart": "hull",
-      "peak": [
-        128,
-        152
-      ],
-      "focalShare": 0,
-      "focalArea": 0,
-      "top": [
-        {
-          "part": "track_r",
-          "share": 0.314
-        },
-        {
-          "part": "hull",
-          "share": 0.274
-        },
-        {
-          "part": "fittings",
-          "share": 0.213
-        }
-      ],
-      "declared": []
-    },
-    "rest": {
-      "share": 0.439,
-      "spread": 0.809,
-      "min": 0.25
-    },
-    "shape": {
-      "acuteShare": 0.292,
-      "straightShare": 0.629,
-      "taper": 0.234,
-      "shape": "stable"
-    }
+    "hero.png": "a3b5d1070668fbd8214c5b81962654decdaef6d8d40af93b6e1ef00ee0011f8d",
+    "sheet.png": "5c98222480f4aeaae6fa1fa866d51a26efbf04ede3c0fd55b22851d76111cb8c"
   }
 }

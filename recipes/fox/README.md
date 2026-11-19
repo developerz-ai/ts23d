@@ -8,7 +8,7 @@ the fox's own skull length is given, so the exponent only fills gaps), coat thic
 mass^(1/6). The recipe then overrides what makes a fox not a small wolf.
 
 ## Identity
-A mid-sized adult dog fox in winter coat. Signature: the long, full brush with a **white tip**;
+A good-sized adult dog fox in winter coat. Signature: the long, full brush with a **white tip**;
 big erect ears with **black backs**; a slim pointed muzzle; white chin, lips and throat; rusty
 upper limbs over **black paws**; vertical slit pupils.
 
@@ -16,12 +16,12 @@ upper limbs over **black paws**; vertical slit pupils.
 | Dimension | Real | Model | Source |
 |---|---|---|---|
 | Shoulder height | 0.35–0.50 m | **0.425** (pinned) | [Wikidata Q8332](https://www.wikidata.org/wiki/Q8332) P2048, `data/wikidata-Q8332.json`; [Wikipedia: Red fox](https://en.wikipedia.org/wiki/Red_fox) "Dimensions" |
-| Head + body | 0.45–0.90 m | **0.68** (test: skeleton ±2 %) | Wikipedia: Red fox |
+| Head + body | 0.45–0.90 m | **0.74** (test: skeleton ±2 %; at 0.68 on the pinned 0.425 m shoulder the legs read long, a coyote's) | Wikipedia: Red fox |
 | Tail | 0.30–0.555 m, "longer than half the body length" | **0.42** | same |
-| Mass | 2.2–14 kg, vixens 15–20 % lighter | **6** declared, ±30 % (`real.mass`) | same |
-| Skull | males 129–167 mm | head **0.16** incl. fur | same |
-| Ears | 77–125 mm | **0.11** | same |
-| Coated box | — | 1.11 × 0.16 × 0.52 m (nose → level brush, paws → ear tips; measured off the posed model) | — |
+| Mass | 2.2–14 kg, vixens 15–20 % lighter | **7.5** declared, ±30 % (`real.mass`) | same |
+| Skull | males 129–167 mm | head **0.17** incl. fur; furred width 0.56 × length with a cheek ruff (`face.cheek 0.16`), muzzle half the head | same |
+| Ears | 77–125 mm | **0.11** (`face.earLength` restated in the face override, which replaces the family member's; before, the ear fell back to the kind's 0.38 × head = 6 cm), `earWidth 1.15` | same |
+| Coated box | — | 1.20 × 0.18 × 0.56 m (nose → level brush, paws → ear tips; measured off the posed model; no card passes 9.2 cm off the midline: `FOX_WILD.box`) | — |
 
 ## Photos (by view)
 | View | URL | Notes |
@@ -46,10 +46,23 @@ upper limbs over **black paws**; vertical slit pupils.
 - Colour blocks painted before wear, at every LOD: the hind thigh and upper arm red (the kind's
   cream belly zone climbed over them); black stockings from just under the elbow and hock, the
   same edge at LOD2 (the far leg tubes carry a ring where the colour turns).
-- Density set directly: body cell × 1.35, head × 1.15 (`options.cells`): 96 k triangles at LOD0
-  (was 147 k); the kind's fur at 2 600 undercoat / 170 guard cards per m² (`spec.fur`).
-- Winter story: snow dusted on the back and shoulders, thaw mud drying pale on the black paws,
-  wet fur under the belly, the right ear nicked, a healed bite on the left of the muzzle.
-- Coat: 5 200 short cards per m² over the trunk; the brush's fullness is 6 cm card fur standing
+- Build: chest 0.53 of the shoulder height deep (a fox in winter coat is deep-bodied; 0.48 read
+  lanky), tuck 0.9, limbs 1.1 × the allometric limb, a 3 cm ruff.
+- Density set directly: body cell × 1.6 (7.5 mm), head × 1.5 (4.3 mm) (`options.cells`): 84 k
+  triangles at LOD0 (was 96 k, before that 147 k), the difference spent on cards; the far mesh
+  finer than the kind's default (× 0.9, × 0.8); the kind's fur at 2 600 undercoat / 170 guard
+  cards per m² (`spec.fur`). Triangles 84 k / 28 k / 4.0 k (band 150 k / 30 k / 4 k).
+- Winter story: snow on the hair tips along the topline (every second or third card from the
+  withers to the croup is frosted white: fine flecks, not painted blobs) over a thin painted
+  frost, thaw mud wet on the paws and drying pale up the black stockings with a ragged edge,
+  splashed to the belly fringe, wet matted fur on the flanks and under the belly, the right ear
+  nicked, a healed bite on the left of the muzzle and one across the right haunch.
+- Coat: 9 000 short cards per m² over the trunk, shoulders and thighs (tone 0.8 → 1.28 root to
+  tip) and 1 700 clumped pale-tipped guard locks per m²; locks 1.9 cm across painted along the
+  hair's lie under them (`locks`); the brush's fullness is 6 cm card fur standing
   off the tail (a thicker tail chain weighs as flesh and pulls the fore share under 55 %).
+- LOD2: the coat painted as blocks (russet back, red flank, cream underside and chest) instead
+  of the sculpt's per-vertex tone, a fringe of locks along the back and the brush, and only the
+  broad wear layers.
+- Hero camera `{ azDeg: -55, elDeg: 10 }`: side-on enough for the brush, stockings and snowed back.
 - Black whiskers, 12 a side.

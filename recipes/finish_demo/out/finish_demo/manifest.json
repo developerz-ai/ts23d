@@ -18,9 +18,9 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    4308,
-    1420,
-    272
+    4572,
+    1440,
+    296
   ],
   "drawCalls": [
     1,
@@ -59,7 +59,7 @@
     {
       "label": "pallet height",
       "spec": 0.144,
-      "measured": 0.14399999380111694,
+      "measured": 0.14499999582767487,
       "source": "EN 13698-1"
     }
   ],
@@ -72,7 +72,7 @@
       "target": 0.25,
       "actual": 0.25,
       "eligible": "convex-edges",
-      "area": 11.7622,
+      "area": 11.7668,
       "by": {
         "pallet_wear": {
           "target": 0.25,
@@ -82,15 +82,15 @@
         "crate_wear": {
           "target": 0.25,
           "actual": 0.25,
-          "area": 7.4036
+          "area": 7.4082
         }
       }
     },
     "mud": {
-      "target": 0.2885,
-      "actual": 0.2885,
+      "target": 0.2861,
+      "actual": 0.2861,
       "eligible": "ground-near & side-facing ; ground-near",
-      "area": 4.2759,
+      "area": 4.5643,
       "by": {
         "pallet_wear": {
           "target": 0.4,
@@ -100,20 +100,20 @@
         "crate_wear": {
           "target": 0.25,
           "actual": 0.25,
-          "area": 2.5769
+          "area": 2.8634
         },
         "cask_wear": {
           "target": 0.3,
           "actual": 0.3,
-          "area": 0.903
+          "area": 0.9049
         }
       }
     },
     "dust": {
-      "target": 0.3423,
-      "actual": 0.3423,
+      "target": 0.3424,
+      "actual": 0.3424,
       "eligible": "up-facing",
-      "area": 3.0882,
+      "area": 3.0925,
       "by": {
         "pallet_wear": {
           "target": 0.3,
@@ -123,12 +123,12 @@
         "crate_wear": {
           "target": 0.4,
           "actual": 0.4,
-          "area": 1.0737
+          "area": 1.0776
         },
         "cask_wear": {
           "target": 0.4,
           "actual": 0.4,
-          "area": 0.2332
+          "area": 0.2336
         }
       }
     },

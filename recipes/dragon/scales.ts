@@ -119,6 +119,17 @@ function scaleTint(c: Vec3, dome: number, id: number, k: number): Vec3 {
   return [c[0] * m, c[1] * m, c[2] * m];
 }
 
+/**
+ * The stamped scales' own paint (LOD0): the seam between two scales near-black, the keeled
+ * crown lit toward ember. The subtle tint above left the hide one flat red at the hero's
+ * distance: a scale is 20 px there and needs a seam it can show.
+ */
+function stampTint(c: Vec3, h: number, k: number): Vec3 {
+  const seam = (1 - smoothstep(0.08, 0.5, h)) * k;
+  const crown = smoothstep(0.55, 0.95, h) * k;
+  return mixRgb(mixRgb(c, C.scaleSeam, seam * 0.62), C.ember, crown * 0.3);
+}
+
 /** How much of the top of the body a point is on: torso back and the neck's crest side. */
 export function dorsalOf(p: Vec3): number {
   const torso = smoothstep(1.6, 2.15, p[2]) * smoothstep(1.5, 1.1, p[0]);
@@ -216,7 +227,7 @@ export function bodyPaint(lod: number, shade?: StampShade): (p: Vec3, c: Vec3) =
       col = scaleTint(col, s.dome, s.id, (1 - b.w) * s.k * 0.6);
     }
     const st = lod === 0 ? shade?.(p) : undefined;
-    if (st && st.k > 0) col = scaleTint(col, st.h, 0.5, st.k);
+    if (st && st.k > 0) col = stampTint(col, st.h, Math.min(1, st.k));
     return heightGrade(col, p);
   };
 }
@@ -256,7 +267,7 @@ export function tailPaint(lod: number, shade?: StampShade): (p: Vec3, c: Vec3) =
       col = scaleTint(col, s.dome, s.id, (1 - b.w) * 0.6 * (1 - smoothstep(0.85, 0.95, n.t)));
     }
     const st = lod === 0 ? shade?.(p) : undefined;
-    if (st && st.k > 0) col = scaleTint(col, st.h, 0.5, st.k);
+    if (st && st.k > 0) col = stampTint(col, st.h, Math.min(1, st.k));
     return heightGrade(col, p);
   };
 }

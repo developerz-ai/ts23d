@@ -19,7 +19,8 @@ benches against the wall, oil/gas lamps and a black running-in name board.
 | wall height (platform → eaves) | ≈ 3.9 | ESTIMATE, same photos |
 | roof pitch | ≈ 33° | ESTIMATE, gable end in the photo |
 | canopy depth / valance | ≈ 3.4 / 0.5 | ESTIMATE, platform photo |
-| brick course | 0.075 (UK brick 65 mm + 10 mm joint) | trim-sheet `brick` strip (true scale) |
+| brick course | 0.075 (UK brick 65 mm + 10 mm joint) | `station_brick` strip (the house bond, true scale) |
+| chimney stack over the slates | ≈ 1.6 | ESTIMATE, Toddington photos (stack ≈ a third of the roof rise) |
 
 ## Photos (by view)
 | View | URL | Notes |
@@ -33,16 +34,25 @@ benches against the wall, oil/gas lamps and a black running-in name board.
 `platform`, `building`, `roof`, `canopy` (static) · `lamp_*` (glow) · sockets `bench_*` (seat),
 `door_*` (interact) · emitters `chimney_*` (smoke).
 
-## Modelling notes (2026-11 quality pass)
+## Modelling notes (2026-11 quality passes)
 - Roof: slate courses laid over the library roof slab (`slates.ts`), 0.24 m gauge, each course a
   shallow wedge whose 12 mm butt casts the course line, split into runs of slates with their own
   tone; lichen on the shaded (−X) slope, engine soot on the lowest track-side courses. LOD1 keeps
   courses at double gauge; LOD2 the slab.
-- Brick: course-by-course tone, rising damp above the blue plinth, soot under the eaves; canopy
-  soffit sooted toward the track edge; lichen and a trodden band on the platform edge; coping in
-  0.9 m slabs with 4 mm joints (LOD0); rise-and-fall gutter brackets; valance fret kept at LOD1.
-- LOD2: the platform keeps the stone strip and tint (no value jump); the name board keeps a
-  lettering decal.
+- Materials (`materials.ts`): `station_brick` is the house bond with a wider per-brick spread
+  and a painted tone per course (and now and then a darker over-burnt run), on the walls, plinth,
+  stacks and reveals; `station_canopy_felt` is roll-top felt on boarding (a raised, lighter
+  batten every 0.45 m down the slope) on the canopy deck; `station_board_name` paints
+  "TODDINGTON" white on black for the far name board.
+- Wear: rising damp above the blue plinth and damp stains under every front sill (LOD0), soot
+  under the eaves; the canopy deck, soffit and valance sooted toward the track edge; lichen and a
+  trodden band on the platform, a dark dirt band fading in from behind the coping (LOD0/1);
+  coping in 0.9 m slabs with 12 mm joints, each its own tone (LOD0); rise-and-fall gutter
+  brackets; valance fret kept at LOD1.
+- LOD2: the platform flags stay at true scale (a single stretched band read as planks); the name
+  board keeps its lettering as one quad of `station_board_name`.
+- Hero: the default 3/4 orbit at 12° elevation, low enough to see under the canopy.
+- Triangles: 10.0k / 5.5k / 528 (budget 10.5k / 5.8k / 550).
 
 ## Open questions
 - Toddington's canopy is cantilevered from the wall on brackets; this model carries its front edge on

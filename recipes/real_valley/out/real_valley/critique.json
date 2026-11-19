@@ -1,13 +1,13 @@
 {
   "asset": "real_valley",
   "reviewer": "agent",
-  "overall": 7.6,
+  "overall": 7.9,
   "scores": {
     "silhouette": {
       "score": 8,
-      "reason": "Half Dome's shaved face and the granite walls of the valley read in hero.png and FRONT.",
+      "reason": "The new hero looks up the valley over the meadow at the granite peak with its sheer face, walls rising on both sides; the domes and walls also read in FRONT. The headline peak reads more as a pointed horn than a rounded dome from this angle.",
       "fixes": [
-        "frame the hero so El Capitan also shows"
+        "nudge the hero azimuth so Half Dome reads as a dome with its shaved face in profile"
       ]
     },
     "proportions": {
@@ -18,25 +18,26 @@
       ]
     },
     "materials": {
-      "score": 7,
-      "reason": "Land cover now separates granite, forest, meadow on the valley floor and grass; the granite is a flat smooth grey.",
+      "score": 8,
+      "reason": "Granite now carries vertical streaking and tone variation (TOP, 3/4 REAR); forest, meadow and grass separate.",
       "fixes": [
-        "granite with vertical streaking and exfoliation tone variation"
+        "exfoliation sheets (lighter curved bands) on the domes"
       ]
     },
     "detail": {
       "score": 7,
-      "reason": "Tree specks on the forest and the meadow pattern; the Merced now runs as a continuous thin line through the valley in TOP, but it is a hairline, not a river channel, and does not read in hero.png.",
+      "reason": "The Merced now meanders through the meadow (hero.png, TOP) in a dark slate-blue channel; but it keeps one constant width with uniform pale edge lines, so it still half-reads as a winding road. Tree specks on the forest.",
       "fixes": [
-        "widen the Merced to its real ~30-50 m channel with a gravel bank so it reads in hero.png",
+        "vary the channel width and break the pale bank lines into irregular gravel bars on the inside of the bends",
+        "a lighter blue-green water tone so it reads as water, not asphalt",
         "tree impostors on the forest floor"
       ]
     },
     "wear": {
-      "score": 6,
-      "reason": "No dark water streaks down the cliffs below drainage lines.",
+      "score": 7,
+      "reason": "Vertical dark/light streaks now run down the granite walls in TOP and 3/4 REAR.",
       "fixes": [
-        "dark water streaks below drainage lines on the granite walls"
+        "concentrate the dark streaks below drainage lines instead of uniform striping"
       ]
     },
     "lod": {
@@ -55,7 +56,7 @@
     }
   },
   "renders": {
-    "hero.png": "6b2db222b57f2e536255879d4f57c1961a7ef62ba09118b7601c8c1c3e6071fa",
-    "sheet.png": "b7eee65644e701218c4ed60d9b1230a5b7909060cb0108f50ea58dacbaf1384d"
+    "hero.png": "9c608656ab8ef53014238908b88f971e836d6c00a2a70fd79b0a06951f8264f4",
+    "sheet.png": "aa63643923beab0e6b27b40c10cbd5566adf1415dd1021d2d76eba9aa5b5491d"
   }
 }

@@ -75,7 +75,7 @@ export interface SkinTone {
 export interface Wear {
   /** Sun-darkened forehead, nose, cheek tops and shoulders. */
   readonly sun: number;
-  /** Freckles, moles, blotches. */
+  /** Uneven colour (blotches) and moles: 3 seeded marks at 0, 5 at 1, never a rash. */
   readonly freckles: number;
   /** Dirt in the hollows and on the neck. */
   readonly grime: number;
@@ -99,5 +99,7 @@ export interface Character {
   readonly mouth?: number;
   /** Tusks from the lower jaw (orc), length ΔH. */
   readonly tusks?: number;
+  /** Seeded warts (raised, darker): 0–8 on the vault, nose and cheeks. */
+  readonly warts?: number;
   readonly wear?: Wear;
 }

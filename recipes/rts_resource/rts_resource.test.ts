@@ -3,8 +3,8 @@
 // radial normals, so a flat face shaded as if curved (corners 30° off the face).
 
 import { describe, expect, it } from 'bun:test';
-import type { Mesh, Vec3 } from '@developerz.ai/ts23d';
-import { type CrystalState, crystal } from './rts_resource.ts';
+import { compile, type Mesh, type Vec3 } from '@developerz.ai/ts23d';
+import { type CrystalState, crystal, rts_resource, rts_resource_depleted } from './rts_resource.ts';
 
 /** Largest angle (degrees) between a shaft triangle's face normal and its vertex normals, and how
  *  many triangles lie wholly in z0..z1. */
@@ -48,5 +48,47 @@ describe('crystal LOD0 facets', () => {
       const r = worstSideNormal(crystal(0, 0.1, h, state), -1e-6, h * shaft[state] + 1e-6);
       expect(r.n).toBeGreaterThanOrEqual(24);
       expect(r.worst).toBeLessThan(8);
+    });
+});
+
+/** Area-weighted mean luminance of a mesh's vertex colour. */
+function meanLuma(m: Mesh): number {
+  let [sum, area] = [0, 0];
+  const p = (i: number): Vec3 => [
+    m.positions[i * 3] ?? 0,
+    m.positions[i * 3 + 1] ?? 0,
+    m.positions[i * 3 + 2] ?? 0,
+  ];
+  const luma = (i: number): number =>
+    0.2126 * (m.colors[i * 3] ?? 0) +
+    0.7152 * (m.colors[i * 3 + 1] ?? 0) +
+    0.0722 * (m.colors[i * 3 + 2] ?? 0);
+  for (let t = 0; t < m.indices.length; t += 3) {
+    const ids = [m.indices[t] ?? 0, m.indices[t + 1] ?? 0, m.indices[t + 2] ?? 0];
+    const [a, b, c] = ids.map(p) as [Vec3, Vec3, Vec3];
+    const u: Vec3 = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
+    const v: Vec3 = [c[0] - a[0], c[1] - a[1], c[2] - a[2]];
+    const w =
+      Math.hypot(u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]) /
+      2;
+    area += w;
+    sum += (w * ids.reduce((s, i) => s + luma(i), 0)) / 3;
+  }
+  return sum / area;
+}
+
+describe('far rock value', () => {
+  // Failure first: the far rock's few big faces caught salt-dusted tops and crevice probes at
+  // every vertex and came out twice as light as the near-black near rock: a pop at the switch.
+  for (const asset of [rts_resource, rts_resource_depleted])
+    it(`${asset.name}: LOD2 rock keeps the LOD0 rock's mean value (±15 %)`, () => {
+      const rock = (lod: 0 | 2): Mesh => {
+        const m = compile(asset, { lod }).parts.find((p) => p.name === 'rock')?.mesh;
+        if (!m) throw new Error('no rock part');
+        return m;
+      };
+      const ratio = meanLuma(rock(2)) / meanLuma(rock(0));
+      expect(ratio).toBeGreaterThan(0.85);
+      expect(ratio).toBeLessThan(1.15);
     });
 });

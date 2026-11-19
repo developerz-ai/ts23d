@@ -6,7 +6,7 @@
 import type { BuildContext, Mesh } from '@developerz.ai/ts23d';
 import { merge } from '@developerz.ai/ts23d';
 import { X_CRANK_FRONT, Z_CRANK } from '../dims.ts';
-import { bayGrime } from '../lib/wear.ts';
+import { bayDust, bayGrime } from '../lib/wear.ts';
 import { ancillaries } from './ancillaries.ts';
 import { block, driveline, mounts } from './block.ts';
 import { cooling } from './cooling.ts';
@@ -63,8 +63,10 @@ export function powertrain(ctx: BuildContext, open: number): void {
     return;
   }
   ctx.part('engine_block', oily(merge([block(lod), mounts(lod)])));
-  ctx.part('engine_heads', topEnd(lod));
-  ctx.part('engine_intake', intake(lod));
+  // Dust on the covers and runners, oil weeping below the valve-cover gaskets (z 0.62 m).
+  const dust = ctx.rng.fork('bay_dust');
+  ctx.part('engine_heads', bayDust(topEnd(lod), 0.62, dust));
+  ctx.part('engine_intake', bayDust(intake(lod), 0.62, dust));
   ctx.part('exhaust', exhaust(lod, true));
   ctx.part('cooling', oily(cooling(lod)));
   ctx.part('bay_ancillaries', bayGrime(ancillaries(lod), 0.3, 0.6, 0.35));

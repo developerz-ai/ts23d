@@ -6,7 +6,7 @@
 // Triangles = 2·N·(R−1) + N per cap (N vertices per ring, R rings).
 
 import { type Mesh, MeshBuilder, Ts23dError, type Vec3 } from '../core/index.ts';
-import { type StripId, stripRect } from '../material/index.ts';
+import { mappedOnto, type StripId, stripRect } from '../material/index.ts';
 
 export type LoftColor = Vec3 | ((ring: readonly Vec3[], i: number, p: Vec3) => Vec3);
 
@@ -193,5 +193,5 @@ export function loft(o: LoftOptions): Mesh {
       else tri([mid, z, a], [c, pz, pa]);
     }
   }
-  return b.build();
+  return mappedOnto(b.build(), o.strip ?? 'plain');
 }

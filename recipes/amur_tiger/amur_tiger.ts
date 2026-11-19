@@ -164,19 +164,22 @@ export const amur_tiger = defineAsset({
   // Shape language as measured: rounded masses dominate a relaxed big cat's outline (claws and teeth
   // sheathed; the threat reads in the face, not the silhouette).
   art: { focal: 'head', shape: 'friendly', grounded: true },
+  // The raked right shoulder and the muddy legs to the lens, from a crouching height.
+  hero: { azDeg: -50, elDeg: 11 },
   build(ctx) {
     const lod = ctx.lod;
-    const body = worn(bodyMesh(lod));
+    const far = lod === 2;
+    const body = worn(bodyMesh(lod), [0, 0, 0], far, 'body');
     ctx.part('body', body, { finish: 'coat' });
     const fur = coat(body, lod, ctx.rng.fork('coat'));
     if (fur) ctx.part('fur', fur, { surface: 'cutout', ...HAIR });
     if (lod !== 2) ctx.part('claws', worn(clawMesh(lod)), { connect: { as: 'grown', to: 'body' } });
-    ctx.part('tail', worn(tailMesh(lod), TAIL_PIVOT), {
+    ctx.part('tail', worn(tailMesh(lod), TAIL_PIVOT, far), {
       at: TAIL_PIVOT,
       motion: { kind: 'sway', axis: [0, 0, 1], degrees: 6, hz: 0.2 },
       clearOf: ['body'],
     });
-    const head = worn(headMeshes(lod).mesh, HEAD_PIVOT);
+    const head = worn(headMeshes(lod).mesh, HEAD_PIVOT, far, 'head');
     ctx.part('head', head, { at: HEAD_PIVOT, finish: 'coat' });
     const ruff = ruffCards(head, lod, ctx.rng.fork('ruff'));
     if (ruff) ctx.part('head_fur', ruff, { at: HEAD_PIVOT, surface: 'cutout', ...HAIR });

@@ -194,12 +194,33 @@ box({ size: [4, 2, 0.05], strip: teak, color: NATURAL });
   `paintTrimSheet(recipe)` with no list still paints every defined material and throws
   `T3D_MATERIAL_CONFLICT` once two of them hold one row; `paintTrimSheet(recipe, ids)` paints a
   list. The renderers default to `sheetFor(asset)` and `checkSheetFor(sheet, asset)` refuses a
-  sheet that lacks one of the asset's materials. A mesh built outside any compile (a module-level
-  constant) records nothing: its row is read from its UVs, which works while one defined material
-  holds that row and is `T3D_MATERIAL_UNKNOWN` otherwise (build it inside `build()` or a
-  `definePart`). Open gap: when the compile recorded a different material on that same row, the
-  module-level mesh is painted as the recorded one without an error (meshes carry no material
-  provenance yet), so never build a project-material mesh at module level.
+  sheet that lacks one of the asset's materials.
+- **Where the record comes from (D354).** Several materials may hold one row, so UVs alone cannot
+  name a material; three things do, and none depends on WHERE the mesh was built:
+  1. *The mesh says so.* Whatever maps UVs onto a custom strip writes it into `Mesh.mapped`
+     (`mappedOnto(mesh, id)`: every primitive with a `strip`, `cell`'s `reveal`, `onSheet`, the
+     body-plan sweep), everything that makes a mesh from meshes carries it (`merge`, `place`,
+     `translate`, `optimize`, `simplify`, `weightedNormals`, `subdivideTo`, `weather`, `grime`,
+     `fair`, `bakeAo`, the skin passes; `mappedOf(mesh)` in a mesh literal), and `ctx.part` notes
+     it in the compile the mesh is added to. A module-level mesh on material A therefore registers
+     A in every asset that uses it, through `ctx.use` too; in an asset that maps B on the same row
+     it is `T3D_MATERIAL_CONFLICT` naming both and the part. Only entries the triangles still
+     sample count, so UVs re-pointed by hand leave no false claim.
+  2. *The build asked.* `stripRect(id)` inside `build()` or a `definePart` records at once. A
+     rectangle kept in a module-level constant (`const R = stripRect('skin')`) records when a
+     build READS one of its coordinates, so UVs written by hand from a constant are recorded by
+     the asset that uses them; a constant no build reads records nothing and is never an error.
+  3. *The UVs, as a last resort.* A mesh that names nothing for a custom row it samples (UVs
+     written by hand; a copy made by code that dropped `mapped`) is taken as the material the
+     compile recorded on that row, or as the one defined material holding it when the compile
+     recorded none (`T3D_MATERIAL_UNKNOWN` when several do). It is refused, not guessed, when a
+     mesh built outside every compile was mapped onto ANOTHER material of that row: the part may
+     be that mesh with its record lost (`T3D_MATERIAL_UNKNOWN`, fix: `mappedOnto(mesh, id)`).
+
+  What stays unrecorded: coordinates copied out of a rectangle while no compile runs and written
+  into a mesh by hand, with no `mappedOnto`. Say what such a mesh maps onto, or build it inside
+  `build()`. `src/primitives/mapped.test.ts` fails when a file in `core`, `primitives` or
+  `passes` maps onto a strip or builds a mesh literal without carrying the record.
 - **CLI.** `t3d build --sheet external` (default) writes `<out>/trim_sheet_*.png` holding the
   materials of every asset of the run while they fit on one sheet; an asset whose material sits on
   a row an earlier asset of the run holds gets `<out>/<asset>/trim_sheet_*.png` and its GLBs point

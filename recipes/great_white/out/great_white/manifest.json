@@ -212,21 +212,21 @@
   "hitboxes": [
     {
       "bone": "spine_0",
-      "radius": 0.191043,
-      "height": 0.064362,
-      "coverage": 0.9513
+      "radius": 0.20677,
+      "height": 0.048639,
+      "coverage": 0.9536
     },
     {
       "bone": "spine_1",
-      "radius": 0.122371,
-      "height": 0.088103,
-      "coverage": 0.9815
+      "radius": 0.122886,
+      "height": 0.087586,
+      "coverage": 0.9766
     },
     {
       "bone": "spine_15",
-      "radius": 0.095279,
-      "height": 0.156714,
-      "coverage": 0.9573
+      "radius": 0.111006,
+      "height": 0.140086,
+      "coverage": 0.9503
     },
     {
       "bone": "caudal_upper_0",
@@ -260,51 +260,51 @@
     },
     {
       "bone": "dorsal_0",
-      "radius": 0.216697,
-      "height": 0.045272,
+      "radius": 0.217319,
+      "height": 0.044651,
       "coverage": 0.9529
     },
     {
       "bone": "dorsal_1",
-      "radius": 0.081443,
-      "height": 0.159475,
+      "radius": 0.081769,
+      "height": 0.159149,
       "coverage": 0.958
     },
     {
       "bone": "pectoral_l_0",
       "radius": 0.187906,
-      "height": 0.258016,
+      "height": 0.257653,
       "coverage": 0.9843
     },
     {
       "bone": "pectoral_l_1",
       "radius": 0.120086,
-      "height": 0.229899,
+      "height": 0.22988,
       "coverage": 0.965
     },
     {
       "bone": "pectoral_r_0",
       "radius": 0.187906,
-      "height": 0.258016,
+      "height": 0.257653,
       "coverage": 0.9843
     },
     {
       "bone": "pectoral_r_1",
       "radius": 0.120086,
-      "height": 0.229899,
+      "height": 0.22988,
       "coverage": 0.965
     },
     {
       "bone": "jaw_lower_0",
-      "radius": 0.255256,
-      "height": 0.091617,
+      "radius": 0.255003,
+      "height": 0.091816,
       "coverage": 0.9823
     },
     {
       "bone": "jaw_upper_0",
-      "radius": 0.261715,
-      "height": 0.041718,
-      "coverage": 0.9626
+      "radius": 0.261651,
+      "height": 0.041791,
+      "coverage": 0.9613
     }
   ],
   "real": {

@@ -4,7 +4,7 @@ import { DEFAULT_SHEET, paintTrimSheet } from '../material/index.ts';
 import { box } from '../primitives/index.ts';
 import { type BeautyRender, renderBeauty } from './beauty.ts';
 
-const sheet = paintTrimSheet({ ...DEFAULT_SHEET, size: 512 });
+const sheet = paintTrimSheet({ ...DEFAULT_SHEET, size: 512 }, []);
 const block = compile(
   defineAsset({
     name: 'block',

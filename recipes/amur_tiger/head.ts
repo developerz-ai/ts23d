@@ -57,9 +57,9 @@ function earBosses(): SculptEdit[] {
   return [
     {
       shape: 'ellipsoid',
-      at: [e[0] - 0.004, e[1], e[2] - 0.012],
-      size: [0.038, 0.046, 0.033],
-      blend: 0.036,
+      at: [e[0] - 0.004, e[1], e[2] - 0.01],
+      size: [0.046, 0.052, 0.036],
+      blend: 0.04,
     },
   ];
 }

@@ -1,14 +1,13 @@
 {
   "asset": "elf_head",
   "reviewer": "agent",
-  "overall": 5.7,
+  "overall": 5.9,
   "scores": {
     "silhouette": {
-      "score": 6,
-      "reason": "Bust with long blond hair and a green tunic; the hair hangs as separate stringy strands rather than a mass, and the elf ear tips do not break the outline in any view, so it reads as a human woman.",
+      "score": 7,
+      "reason": "The pointed ear tips now break the outline in FRONT, SIDE and hero.png, so it reads as an elf; the hair is still thin stringy strands over a slicked crown.",
       "fixes": [
-        "more hair volume over the crown and denser, wider locks (hair.ts) so the hair reads as a mass",
-        "part the hair behind the ears so the long ear tips break the outline at 3/4 and FRONT"
+        "more hair volume over the crown and denser, wider locks (hair.ts) so the hair reads as a mass"
       ]
     },
     "proportions": {
@@ -21,10 +20,9 @@
     },
     "materials": {
       "score": 5,
-      "reason": "The tunic is a blotchy green with grey smears, not cloth; skin is flat pink with rouge circles; the gold trim and clasp read as metal.",
+      "reason": "Skin is a more even pink without rouge circles, and the gold trim reads as metal; the tunic is still blotchy green with grey smears that read as paint, not cloth.",
       "fixes": [
-        "a silk/wool strip for tunic and cloak with even colour and soft sheen, no grey blotches",
-        "skin strip with subsurface-like warmth instead of rouge circles"
+        "a silk/wool strip for tunic and cloak with even colour and soft sheen, no grey blotches"
       ]
     },
     "detail": {
@@ -44,7 +42,7 @@
     },
     "lod": {
       "score": 6,
-      "reason": "LOD2 now keeps blond hair cards in the LOD0 colour, but they become blocky slabs and the face is faceted with dark eye holes.",
+      "reason": "FAR LOD2 hair becomes blocky slabs, the face is faceted with dark eye holes, and the tunic smears into green-grey camouflage.",
       "fixes": [
         "thinner, more numerous LOD2 hair cards and smoothed face colour"
       ]
@@ -58,7 +56,7 @@
     }
   },
   "renders": {
-    "hero.png": "5c92c707c8323d113e28eeb3b6936a897f99ab9054bdd637bbc796ef504260c6",
-    "sheet.png": "168fd787b2d1beb4711f4e2228bed8b3b3dca49c9262f9f53a719682cf0482b2"
+    "hero.png": "e051a04e0a134464e86ddfd85076be2bf62d510f19416ea544ff3ed018bc348d",
+    "sheet.png": "30d3dc96a6668be0fd42c0907f2937cc67f559ea864d4aba6357334b9cf1493b"
   }
 }

@@ -8,7 +8,7 @@
 
 import type { Vec2, Vec3 } from '@developerz.ai/ts23d';
 import { X_NOSE, X_TAIL } from '../dims.ts';
-import { curve, lerp3, splineAt } from '../lib/geo.ts';
+import { curve, lerp3, smooth, splineAt } from '../lib/geo.ts';
 import type { Surface } from '../lib/grid.ts';
 
 /** Where the plan starts rounding into the nose / tail. */
@@ -330,19 +330,30 @@ export const U_MAX = 10;
 const superY = (t: number, p: number): number => Math.cos(t) ** (2 / p);
 const superX = (t: number, p: number): number => Math.sin(t) ** (2 / p);
 
+/**
+ * The nose droops: ahead of the hood's front shut line (x 1.72 m) every line from the centre
+ * crown down to the side character falls a further 4.5 cm by x 2.15 m (3 cm at the centre-line
+ * tip), so the leading edge sits low over the mouth instead of standing blunt in side view. The
+ * hood itself does not move: its front edge swings forward within 1 cm of the fascia as it lifts.
+ */
+const NOSE_DROP = 0.045;
+const UPPER_LINES = new Set(['centre', 'dome', 'valley', 'crown', 'shoulder', 'side']);
+const lineZ = (l: Line, x: number): number =>
+  curve(l.z, x) - (UPPER_LINES.has(l.name) ? NOSE_DROP * smooth(1.72, 2.15, x) : 0);
+
 /** The line's 3D point at body parameter s. */
 function linePoint(l: Line, s: number): Vec3 {
   if (s > X_NR) {
     const th = (Math.min(1, (s - X_NR) / CAP) * Math.PI) / 2;
     const x = X_NR + (l.noseX - X_NR) * superX(th, P_NOSE);
-    return [x, curve(l.y, X_NR) * superY(th, P_NOSE), curve(l.z, x)];
+    return [x, curve(l.y, X_NR) * superY(th, P_NOSE), lineZ(l, x)];
   }
   if (s < X_TR) {
     const th = (Math.min(1, (X_TR - s) / CAP) * Math.PI) / 2;
     const x = X_TR + (l.tailX - X_TR) * superX(th, P_TAIL);
     return [x, curve(l.y, X_TR) * superY(th, P_TAIL), curve(l.z, x)];
   }
-  return [s, curve(l.y, s), curve(l.z, s)];
+  return [s, curve(l.y, s), lineZ(l, s)];
 }
 
 /** The section's knots at s (C, dome, valley, crown, crease-, shoulder, crease+, side…). */

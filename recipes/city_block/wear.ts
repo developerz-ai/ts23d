@@ -1,9 +1,19 @@
-// City wear as vertex colour. The story is a century of New York street life: traffic grime and
-// splash darken the first storey, soot settles in a band under every cornice and drips below it,
-// each building has its own age (fresh repointing next to a sooty neighbour), tar roofs are
-// patched in different greys.
+// City wear as vertex colour and soot streaks. The story is a century of New York street life:
+// traffic grime and splash blacken the first storey (a ragged band up to 3 m), coal soot settles
+// in a broad band under every cornice and runs down the brick in streaks a metre wide, each
+// building has its own age (fresh repointing next to a sooty neighbour), tar roofs are patched
+// in different greys. Large and dark enough to read at hero distance, not a texel-scale tint.
 
-import { type Mesh, type Rng, type Vec3, valueNoise } from '@developerz.ai/ts23d';
+import {
+  box,
+  type Mesh,
+  place,
+  type Rng,
+  type StripId,
+  type Vec3,
+  valueNoise,
+} from '@developerz.ai/ts23d';
+import type { Edge } from './edges.ts';
 
 export type Shade = (p: Vec3, n: Vec3, c: Vec3) => Vec3;
 
@@ -29,22 +39,81 @@ const smooth = (a: number, b: number, x: number): number => {
   return t * t * (3 - 2 * t);
 };
 
-const GRIME: Vec3 = [0.05, 0.045, 0.04];
-const SOOT: Vec3 = [0.025, 0.023, 0.022];
+const GRIME: Vec3 = [0.04, 0.036, 0.032];
+const SOOT: Vec3 = [0.02, 0.019, 0.018];
 
 /**
- * Facade wear for one building: street grime up to ~2.5 m (ragged), a soot band under the roof
- * line fading 2 m down, and blotchy age over the wall; `age` 0..1 is the building's own.
+ * Facade wear for one building: street grime up to ~3.5 m (ragged), a soot band under the roof
+ * line fading 3.5 m down, and blotchy age over the wall; `age` 0..1 is the building's own.
+ * `far`: a wall is one quad with vertex rows only at its foot and top, where the grime and soot
+ * are blackest; shading those would blacken the whole face. Far, every vertex takes the wall's
+ * MEAN wear instead (each band's share of the wall height), so the wall keeps its colour.
  */
-export function facadeWear(rng: Rng, o: { base: number; top: number; age: number }): Shade {
+export function facadeWear(
+  rng: Rng,
+  o: { base: number; top: number; age: number; far?: boolean },
+): Shade {
   const blot = valueNoise(rng.fork('facade'), { scale: 2.5, octaves: 3 });
+  if (o.far) {
+    const h = Math.max(1, o.top - o.base);
+    const grime = ((0.72 + 0.2 * o.age) * Math.min(h, 2.6)) / h;
+    const soot = ((0.7 + 0.25 * o.age) * Math.min(h, 2.5)) / h;
+    return (_p, _n, c) => mix(mix(c, GRIME, 0.5 * grime), SOOT, 0.5 * soot);
+  }
   return (p, _n, c) => {
     const h = p[2] - o.base;
     const b = blot(p);
-    let out = mix(c, GRIME, (0.35 + 0.3 * o.age) * (1 - smooth(0.6, 2.6 + 0.6 * b, h)));
-    out = mix(out, SOOT, (0.25 + 0.45 * o.age) * smooth(o.top - 2.4 - b, o.top - 0.2, p[2]));
-    return mix(out, GRIME, 0.18 * o.age * smooth(-0.1, 0.6, b));
+    let out = mix(c, GRIME, (0.72 + 0.2 * o.age) * (1 - smooth(1.2, 3.4 + 0.8 * b, h)));
+    out = mix(out, SOOT, (0.7 + 0.25 * o.age) * smooth(o.top - 4 - b, o.top - 1, p[2]));
+    return mix(out, GRIME, 0.22 * o.age * smooth(-0.1, 0.6, b));
   };
+}
+
+/** Street-level pieces (shopfront bulkheads, stoops, fire-escape feet): splash and grime. */
+export function streetWear(rng: Rng, base: number): Shade {
+  const blot = valueNoise(rng.fork('street'), { scale: 1.2, octaves: 2 });
+  return (p, _n, c) => mix(c, GRIME, 0.55 * (1 - smooth(0.2, 1.4 + 0.5 * blot(p), p[2] - base)));
+}
+
+/**
+ * Soot runs under a cornice on edge `e`: slabs 6 mm proud of the wall and bedded 6 cm into it
+ * (its ends pierce the wall face, so it seats on it), each 0.5–1.3 m wide and 1.5–5 m long, black at the top and fading
+ * into the wall colour at the foot. They take the wall's strip and tint, so only the soot reads;
+ * `shade` the wall over them after.
+ */
+export function sootRuns(
+  rng: Rng,
+  e: Edge,
+  o: { top: number; wall: Vec3; strip: StripId },
+): Mesh[] {
+  const out: Mesh[] = [];
+  const n = Math.floor(e.len / 2.2);
+  for (let k = 0; k < n; k++) {
+    if (rng.next() < 0.4) continue;
+    const w = rng.range(0.5, 1.3);
+    const len = Math.min(rng.range(1.5, 5), o.top - 1);
+    const t = rng.range(0.5, Math.max(0.51, e.len - w - 0.5));
+    if (len < 1 || t + w > e.len - 0.5) continue;
+    const z0 = o.top - len;
+    const q = place(
+      box({
+        size: [0.066, w, len],
+        at: [-0.027, t + w / 2, z0],
+        color: o.wall,
+        strip: o.strip,
+        // The back is inside the wall; the ends pierce its face, so the run seats on it.
+        omit: ['top', 'bottom', 'back'],
+      }),
+      { at: [e.a[0], e.a[1], 0], yaw: e.yaw },
+    );
+    const colors = new Float32Array(q.colors);
+    for (let i = 0; i < q.positions.length / 3; i++) {
+      const f = Math.min(1, Math.max(0, ((q.positions[i * 3 + 2] ?? 0) - z0) / len));
+      colors.set(mix(o.wall, SOOT, 0.95 * f ** 1.2), i * 3);
+    }
+    out.push({ ...q, colors });
+  }
+  return out;
 }
 
 /**

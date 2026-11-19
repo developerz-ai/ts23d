@@ -29,15 +29,21 @@ dead rachises + coconuts), `leaves` (leaflets, dead leaflets), plus `ground` (sa
 - **Stem** (`stem.ts`): the kind's trunk (a ring every ~1.7 m) resampled with a leaf-scar ring every
   0.22 m (LOD0: a 7 % groove, dark scar, pale band; LOD1: colour bands every 0.5 m), greyer low
   down; the grooves cut inward only and the stem is rescaled to the kind's Y extent, so the DBH
-  measure holds. Crown shaft: tiers of fibrous frond boots wrap the top 1.1 m.
+  measure holds. Crown shaft: tiers of fibrous frond boots wrap the top 1.3 m, flaring to 1.55 × the
+  stem. Scar rings dark (× 0.42) against pale bands (× 1.12), the low stem weathered grey.
 - **Root ball**: the kind's buttress lobes widened × 1.3 about the stem axis.
-- **Coconuts**: 14 at ~0.3 m under the frond bases (LOD0).
+- **Coconuts** (`nuts.ts`): four hands on stalks out from the stem 0.85 m under the frond bases,
+  six husked nuts each (0.34 m across; three at LOD1), green-yellow, ochre and brown as they ripen.
+  The kind's own fruit (inside the boots, unseen) is cut to one token nut.
 - **Wear** (`fronds.ts`): the oldest, lowest fronds brown toward their tips; three dead fronds
-  hang straw-brown below the crown (a skirt), leaflets collapsed.
+  hang straw-brown below the crown (a skirt), leaflets collapsed, on the side away from the hero
+  camera so they do not hide the coconuts.
 - **LOD2**: every LOD0 frond read back from the kind's leaflet mesh and redrawn as one bent
-  cutout card on the `foliage_palm` cell along its own rachis and leaflet tips (6 triangles), tinted
-  by the frond's own shade and browning: the far crown keeps its fronds and colour instead of a
-  few solid dark blades (silhouette IoU 0.72 / 0.61 / 0.78 vs 0.67 / 0.61 / 0.65 before).
+  cutout card on the `foliage_palm` cell along its own rachis and leaflet tips, folded into a V
+  along the rachis (8 triangles) and 1.25 × as wide as the drooping tips, so the leaflet mass shows
+  from the side and above instead of a flat strip edge-on (a bare midrib); tinted 1.3 × the
+  frond's own shade and browning (silhouette IoU 0.74 / 0.64 / 0.74).
+- **Hero**: `hero: { elDeg: 3 }`, looking up under the frond bases.
 
 ## Open questions
 The stem bows (lean 12°, curving back by 24°) so the crown sits back over the base and the

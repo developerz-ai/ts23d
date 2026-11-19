@@ -29,8 +29,11 @@ Sources:
 `grip` (written to the manifest).
 
 ## Build
-- **Arm** (`arm.ts`): shaped rings, not plain ellipses: biceps over triceps, the olecranon under
-  the shared elbow ring, brachioradialis and the flexor belly, the ulna's knob short of the wrist.
+- **Arm** (`arm.ts`): shaped rings, not plain ellipses: a deltoid cap sawn off flat (a study
+  cast's cut, dark red), biceps over triceps, the arm narrowing above the elbow, the olecranon and
+  both epicondyles on the shared elbow ring, brachioradialis and the flexor belly, a taper to the
+  wrist with the ulna's knob short of it. Far LOD: the forearm keeps a belly ring, so it still
+  tapers.
 - **Hand** (`hand.ts`): a hammer grip, thumb side up. The palm squares from the wrist section to
   the knuckle line; four fingers each roll round the handle (knuckle, two joints, tucked tip); the
   thumb lies over them with its nail. The palm is tangent to the handle, which is what `grip`
@@ -43,10 +46,13 @@ Sources:
   `chrome`, cross and pommel on `brass`, grip on `leather`, stand on `iron`.
 - **Wear** (one story: a working sword arm on a workshop stand): sun on the back of the arm, a
   paler inner side, red dry elbow and knuckles, grime thickest at the hand and between the fingers;
-  seven nicks along the edges, grey clouds of old polish, rust specks in the fuller and against
-  the cross; tarnished brass rubbed bright at the quillon ends and the pommel's belly; a grip
-  darkened by sweat; the stand's black chipped to bare steel on its edges, rust creeping from the
-  bolts and the floor, dust on the plate (`weather()`, coverage in the manifest).
+  seven thumbnail-sized nicks (4–8 mm deep) along the edges, grey clouds of old polish, rust
+  specks in the fuller and against the cross; tarnished brass rubbed bright at the quillon ends
+  and the pommel's belly; a grip sweat-dark where the fist holds it, its cord turns rubbed paler;
+  the stand's post chipped to bare steel and rusting from the floor, its plate under an even film
+  of dust with rust at the bolts (`weather()`, coverage in the manifest; the plate's top takes no
+  chips or scratches: on its 10 cm grid each one bares a whole triangle).
+- **Hero view**: a fixed camera from the arm's side (`hero` in `joint_demo.ts`).
 
 ## Open questions
 Stylised: no veins, tendons or finger nails beyond the thumb's. The palm is a loft, so the

@@ -2,21 +2,27 @@
 
 ## Identity
 A teaching asset for the AI finish layer ([22-ai-finish](../../docs/idea/22-ai-finish.md)), not a
-scene: three code-built props, each with its own use wear from `weather()` (a scuffed, dusty pallet
-deck with muddy blocks; chipped crate battens and a dusty lid; wine weeping from the cask bung), that
-`t3d finish` weathers further without changing any part, pivot or dimension.
+scene: three code-built props, each with its own use wear, that `t3d finish` weathers further
+without changing any part, pivot or dimension.
 - **EUR pallet** — EN 13698-1 footprint and height; three bottom boards, nine blocks, three stringer
-  boards, five deck boards.
+  boards, five deck boards; deck nail heads (LOD0). Wear: timber greyed by sun and rain, mud
+  splashed up every side face (darkest at the foot), the deck grimed board by board, grease
+  trodden along the −Y deck board, chipped edges (`weather()`).
 - **Crate** — 0.55 × 0.75 × 0.6 m (`props.ts`): three planks a face with 5 mm seams over a dark
   core, four lid boards, edge battens proud of the planks, a diagonal brace on every face, nail
-  heads where the battens cross (LOD0).
+  heads where the battens cross (LOD0), a stencilled `FRAGILE` on the −Y face (LOD0). Wear: the
+  +X −Y corner batten's top split off by a knock and hanging skewed, mud splashed up the bottom of
+  every face, chipped battens and a dusty lid.
 - **Oak cask** — 0.8 m tall, head Ø 0.48 m, bilge Ø 0.57 m (`props.ts`): 28 staves as flat facets,
-  each its own oak tone; the head recessed 25 mm inside the chime; four iron hoops; a bung in the
-  bilge stave facing the viewer.
+  each its own tone of seasoned (grey-brown) oak; the head recessed 25 mm inside the chime; four
+  iron hoops with two rivets at each lap (LOD0); a bung in the bilge stave facing the viewer, wine
+  weeping from it down the staves.
 
-LOD policy (inside the generic prop band 5k / 1.5k / 300): LOD0 ≈ 4.3k, LOD1 ≈ 1.4k, LOD2 ≈ 270.
+LOD policy (inside the generic prop band 5k / 1.5k / 300): LOD0 ≈ 4.6k, LOD1 ≈ 1.4k, LOD2 ≈ 296.
 LOD2 keeps the pallet's nine blocks and three bottom boards (both fork openings still show
-daylight), the crate's corner battens and the cask's two inner hoops.
+daylight), the crate's frame (corner battens plus top and bottom battens as quads, a deep shade so
+it reads; no chips there, which would bleach the thin quads) and the cask at 12 staves with its two
+inner hoops.
 
 ## Specs
 | Dimension | Value (m) | Source |
@@ -39,8 +45,8 @@ bun run t3d finish recipes/finish_demo/finish_demo.ts --model mock \
 ```
 [`finish/compare.png`](finish/compare.png): before (the compiled base colour) | after (mock finish),
 same simple light. [`finish/finish_albedo.png`](finish/finish_albedo.png): the 1024² atlas.
-[`finish/finish.json`](finish/finish.json): provenance, 56 % of texels seen directly, zero mask leak,
-palette drift ΔE 2.7–6.8 (bound 25), QA clean.
+[`finish/finish.json`](finish/finish.json): provenance, 55 % of texels seen directly, zero mask leak,
+palette drift ΔE 2.5–6 (bound 25), QA clean.
 
 ## Parts the engine needs
 `pallet`, `crate`, `cask` — static props, one pivot each.

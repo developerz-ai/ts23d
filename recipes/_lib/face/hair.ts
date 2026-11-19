@@ -83,7 +83,9 @@ export function hairlineOf(head: FaceHead, cut: HairStyle['cut']): Field {
     const out = Math.min(1, Math.abs(p[1]) / (Math.abs(earTop[1]) || 1));
     const temple = 0.014 * s * out * out * Math.max(0, 1 - t * 2.5) * (cut === 'crest' ? 0 : 1);
     const wander = (Math.sin(p[1] * 140 + 1.3) + Math.sin(p[1] * 310)) * 0.0022 * s;
-    const line = lerp(fh[2] - 0.042 * s, nape[2] + 0.03 * s, t * t) + temple + wander;
+    // (The front line a brow's height above the brows: 4 cm lower it sat ON them, the fringe
+    // hid the forehead and the eyebrows, and the face read as a mask under a bowl.)
+    const line = lerp(fh[2] - 0.01 * s, nape[2] + 0.03 * s, t * t) + temple + wander;
     // Above the ear only behind its front edge: the temples follow the front line.
     const side =
       Math.abs(p[1]) > Math.abs(earTop[1]) * 0.78 &&

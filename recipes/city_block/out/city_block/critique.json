@@ -1,41 +1,42 @@
 {
   "asset": "city_block",
   "reviewer": "agent",
-  "overall": 6.3,
+  "overall": 7,
   "scores": {
     "silhouette": {
       "score": 7,
-      "reason": "Reads as a dense brick block: water tanks, bulkheads, fire escapes, cornices and street trees now break the roofline.",
+      "reason": "From the new street-level hero the block reads as dense brick tenements: water tanks, bulkheads, fire escapes and cornices break the roofline; the cornices are thin and parapets mostly level.",
       "fixes": [
         "deeper projecting cornices (0.4–0.6 m) and parapets of varied height on each building"
       ]
     },
     "proportions": {
       "score": 7,
-      "reason": "Storey heights vary between buildings now, but many roofs are the same flat slab height in FRONT/SIDE and the trees are small lollipops for a city street.",
+      "reason": "Storey heights vary between buildings and the street trees are taller now; roofs within each row are still the same slab height in FRONT/SIDE, and the trees are thin-trunked faceted crowns.",
       "fixes": [
-        "taller street trees (8–12 m) with irregular crowns; vary roof heights within each row"
+        "vary roof heights within each row",
+        "street trees with spreading irregular crowns and thicker trunks"
       ]
     },
     "materials": {
-      "score": 7,
-      "reason": "Brick tones vary per building and windows read as a grid; the street is now dark-grey asphalt instead of black and the roofs vary between dark grey, light grey and buff membranes. The street has no lane markings, each roof is still one flat colour, and the sidewalk is a striped grey.",
+      "score": 8,
+      "reason": "Brick tones vary per building, windows read as framed grids, the asphalt now has centre dashes and edge lines, and the sidewalk is laid in slabs; the roofs remain one flat colour each and the tree crowns are flat green.",
       "fixes": [
-        "lane markings and kerb lines on the asphalt; sidewalk slabs instead of stripes",
-        "patches, gravel and vents on each roof membrane"
+        "patches, gravel and vents on each roof membrane",
+        "leaf-clump variation in the tree crowns"
       ]
     },
     "detail": {
-      "score": 6,
-      "reason": "Fire escapes, water tanks and some storefront bands exist; at hero distance windows have no sills/lintels and the ground floors are mostly blank.",
+      "score": 7,
+      "reason": "Fire escapes, water tanks, green cornice trims, window sills and storefront awnings now show at street level; many ground floors are still dark blank bands without doors or shop windows.",
       "fixes": [
-        "storefronts with awnings and doors on every street-facing ground floor",
-        "window sills and lintels as shallow boxes at LOD0"
+        "storefront glazing and doors on every street-facing ground floor",
+        "lintels over the windows"
       ]
     },
     "wear": {
-      "score": 4,
-      "reason": "Roofs now vary in tone, but nothing is weathered: no grime gradient at street level, no soot streaks under cornices, no patched roofs.",
+      "score": 5,
+      "reason": "Faint darker patches in the asphalt and some tone variation, but the facades are clean: no grime gradient at street level, no soot under cornices, no patched roofs.",
       "fixes": [
         "grime gradient at street level and soot streaks below cornices",
         "patched roof membranes in varied greys"
@@ -43,21 +44,21 @@
     },
     "lod": {
       "score": 7,
-      "reason": "FAR LOD2 keeps the massing and many window grids, but a few front facades go blank brown.",
+      "reason": "FAR LOD2 facades now keep their per-building red-brown brick, brownstone and pale stucco with the window grids, so the grey pop is gone; the rooftop water tanks and fire escapes drop out, so the roofline flattens at the switch.",
       "fixes": [
-        "bake the window grid into LOD2 vertex colour on every facade"
+        "keep the water tanks at LOD2 as one low-poly cylinder + cone each so the roofline survives the switch"
       ]
     },
     "technical": {
-      "score": 6,
-      "reason": "QA clean; 60k / 29k / 6k triangles, 1 draw. LOD1 at 29k is half of LOD0 for a block seen from distance.",
+      "score": 8,
+      "reason": "QA clean; 60k / 13k / 5.6k triangles, 1 draw: LOD1 now drops to ~22% of LOD0.",
       "fixes": [
-        "make LOD1 drop window frames/insets and fire escapes (ctx.lod gate) so it sits near 10k"
+        "LOD2 at 5.6k could drop window insets to sit near 3k"
       ]
     }
   },
   "renders": {
-    "hero.png": "c87acda3fac3b2b29f383166155fe6f4157f8578cbfaa37bdfc23bfbf8df7904",
-    "sheet.png": "88c01ab3311505adb47aad7e7ca221e35981d51fb895531d6737394ef01e883f"
+    "hero.png": "0f1dbe46243ed366dc25d3f5db0ff92ae1e64da25f6c5bb7bae9e88d15d20652",
+    "sheet.png": "fb5e5756205ba22d242d868a297bb6888300a1bad4927e5e5e8f00483994f2af"
   }
 }

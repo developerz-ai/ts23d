@@ -10,7 +10,19 @@ door up two steps and amber beacons, a **pitched team porch** on oak posts over 
 mullion cross) and a brass oculus, team banners. Ruins keep a 4 m corner and a tower stub standing
 with a broken stepped crown; build stages carry lashed timber scaffolding with a ladder and a
 gin-pole hoist, or a working yard (draped tarps, stickered oak stack, setting-out lines, mortar
-tub, wheelbarrow).
+tub, wheelbarrow, a hod, sheer-legs over the −Y footing with a stone on its rope).
+
+Surfaces carry the story at hero distance (`surface.ts`, `yard.ts`): roofless stages stand on a
+**flagstone floor** (1 m flags, each its own tone, 4 cm joints) stained per stage (trodden mud and
+mortar splash on a site, scorch and ash in a ruin) with the **team chevron painted on the flags**
+(worn: every flag's piece its own shade, some flaked off); walls are dressed blocks with ±12% value
+and warmth jitter, rising damp at the foot, rain streaks under the sills (finished hall: front-corner
+quoins and a string course at sill level), lime mortar runs below a wall going up. Damage and ruin
+soot goes on after weathering (`soot()`): near-black patches on broken wall tops, hole rims, tower
+crowns; slates round the roof hole burnt black (`roof_burnt`, no team paint); fallen roof pieces
+charred, every other one burnt through, ash lying on them; a charred door frame stands in a ruined
+gate, a burnt shed frame on a ruined site. A raided site has its slab corner broken into tilted
+pieces (pale fresh fractures, snapped formwork) with a scorch on the ground round it.
 
 | | intact | damaged | rubble |
 |---|---|---|---|
@@ -35,7 +47,13 @@ Original design — scale from [`docs/playbooks/buildings/house.md`](../../docs/
 
 ## Parts the engine needs
 `rally` (spawn socket), `door` (interact), emitters `smoke_*`, `fire_0`, `tower_r_smoke`,
-`build_dust`; team parts `roof_*`, `tower_*_cap`, `banner_*`, `tarp(s)`, `floor_emblem`, `fallen_roof`.
+`build_dust`; team parts `roof_l`, `roof_r`, `roof_ridge`, `porch_roof`, `tower_*_cap`, `banner_*`,
+`tarp(s)`, `floor_emblem`, `fallen_roof`.
+
+## Budget
+Triangles per LOD as built (2026-11-19): complete 36.8k / 7.8k / 664, damaged 33.7k / 8.0k / 852
+(both under their ratchet baseline); every other stage under the 20k / 6k / 800 building band
+(largest: scaffold damaged 17.2k / 4.6k / 662).
 
 ## Open questions
 A "burning" state between damaged and rubble is the damaged asset + its fire/smoke emitters.

@@ -6,7 +6,7 @@
 //   triangles = 44 − 2 per omitted face
 
 import { type Mesh, MeshBuilder, normalize, type Vec3 } from '../core/index.ts';
-import { type StripId, stripRect } from '../material/index.ts';
+import { mappedOnto, type StripId, stripRect } from '../material/index.ts';
 
 type Sign = 1 | -1;
 type FaceName = 'top' | 'bottom' | 'front' | 'back' | 'left' | 'right';
@@ -136,5 +136,5 @@ export function bevelBox(o: BevelBoxInput): Mesh {
           normalize([sx, sy, sz]),
         );
       }
-  return b.build();
+  return mappedOnto(b.build(), o.strip);
 }

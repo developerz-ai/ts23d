@@ -18,8 +18,10 @@ wrong here, they read wrong on every asset.
 ## Parts
 Stepped plinths (`plinth_<row>`, darkened toward the ground), one panel per strip (`strip_<id>`),
 one ball per strip in the same strip (`ball_<id>`, LOD0: the strip on curvature, so roughness,
-metal and normal read on its highlight), labels (`label_<id>`: flush 5 × 7 letters sized to the
-panel at LOD0, one greeked quad at LOD1, none at LOD2), the rear plinth of decal and foliage cells
+metal and normal read on its highlight), labels (`label_<id>`: flush 5 × 7 letters on the plinth
+face, cap height 8 % of the panel width (0.32 m on a 4 m panel, so they read across the whole stand
+in the hero), at most 60 % of the face, shrunk to fit 90 % of the panel; one greeked quad at LOD1,
+none at LOD2; the front plinth face is 0.45 m tall so its labels match the rows behind), the rear plinth of decal and foliage cells
 (`cell_<id>`), and a 1.8 m `figure` at the front row for scale.
 
 ## Budget

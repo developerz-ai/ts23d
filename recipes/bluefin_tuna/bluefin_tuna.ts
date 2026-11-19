@@ -148,6 +148,8 @@ export const bluefin_tuna = defineAsset({
   // LOD1 ~8 k softens the switch from LOD0; LOD2 ~700 keeps the body round and the finlet strips.
   budget: { triangles: [42000, 9500, 800], bones: PLAN.bones.length },
   art: { grounded: false },
+  // Nearer side-on than the default 3/4: the worn -Y flank, its fins and keel face the lens.
+  hero: { azDeg: -62, elDeg: 14 },
   clips: CLIPS,
   build(ctx) {
     const lod = ctx.lod;

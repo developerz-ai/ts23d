@@ -8,7 +8,7 @@
 //   triangles = (doubleSided ? 4 : 2) + (inset ≠ 0 ? 8 : 0)
 
 import { type Mesh, MeshBuilder, normalize, type Vec3 } from '../core/index.ts';
-import { type CellId, cellRect, type StripId, stripRect } from '../material/index.ts';
+import { type CellId, cellRect, mappedOnto, type StripId, stripRect } from '../material/index.ts';
 import { invalid, spanOf } from './check.ts';
 import { HALF_TEXEL, stripU, stripV, stripVMetres } from './strip-uv.ts';
 
@@ -70,8 +70,9 @@ export function cell(o: CellOptions): Mesh {
     if (side > 0) b.quad(i0, i1, i2, i3);
     else b.quad(i0, i3, i2, i1);
   }
-  if (d !== 0) reveals(b, o, rim, face, n, d, [lu, lv, lu, lv]);
-  return b.build();
+  if (d === 0) return b.build();
+  reveals(b, o, rim, face, n, d, [lu, lv, lu, lv]);
+  return mappedOnto(b.build(), o.reveal ?? 'plain');
 }
 
 /** Four side quads rim[i] → rim[i+1] → face[i+1] → face[i]; that order is CCW for either sign. */

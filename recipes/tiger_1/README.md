@@ -60,8 +60,8 @@ inferred from the side photos; the tables give only the magnitude.
 
 Markings modelled: Balkenkreuz (black, white edges) on both pannier sides behind the centre; turret
 number 332 as outlined digits on both turret sides, read front-to-back. Weathering: mud from the
-ground up to ~1.3 m on running gear and lower hull, soot over the exhausts, three-tone
-Dunkelgelb / Rotbraun / Olivgrün patches seeded from `ctx.rng`.
+ground up to ~1.6 m on running gear, lower hull and the foot of the pannier sides, soot over the
+exhausts, three-tone Dunkelgelb / Rotbraun / Olivgrün in broad sprayed bands seeded from `ctx.rng`.
 
 ## Parts the engine needs
 `turret` (sway ±20° about Z), `gun` (sway ±5° about Y), `wheel_{l,r}_{0..7}`, `sprocket_*`,
@@ -77,16 +77,16 @@ Dunkelgelb / Rotbraun / Olivgrün patches seeded from `ctx.rng`.
 - Zimmerit on the lower hull sides behind the road wheels: not modelled (hidden by the wheels; no
   photo of this batch checked).
 
-## Finish and wear (Nov 2026 quality pass; `../_lib/finish/field.ts`)
+## Finish and wear (Nov 2026 quality pass; `../_lib/finish/field.ts`, `afv.ts`)
 | What | How |
 |---|---|
-| Dunkelgelb and the camouflage | project material `armour_paint` (matte film, 8 % flakes) at true scale under the sprayed three-tone vertex colour; Zimmerit keeps its own strip |
-| mud | `fieldCoat`: dried dark earth from the ground to ~1.15 m (a third higher behind the tracks; fenders to 1.7 m), wet mud along its lowest part, on hull, Zimmerit, fenders, stowage |
-| dust | grey-brown haze on up-facing plates (0.3) |
-| wheels | plain Dunkelgelb with radial mud (`wheelMud`): tyre, rim and the outer dish; turns with the wheel |
+| Dunkelgelb and the camouflage | project material `armour_paint` (matte film, 8 % flakes) at true scale under the sprayed three-tone vertex colour: nine broad soft-edged bands of red-brown and olive marching down the hull, each taller than the plate it crosses, plus two sleeves on the barrel (the 30 small blobs before read as printed spots); Zimmerit keeps its own strip |
+| mud | `fieldGrade` (`afv.ts`): dried red-brown earth opaque up to ~1.2 m and gone at 1.58 m (a splash line across the pannier sides, a third higher at the tail; fenders at 0.6 strength), wet mud along its lowest part, on hull, Zimmerit, fenders, stowage; none on turret or gun |
+| dust | grey-brown haze (0.45) only on plates that face the sky |
+| wheels | plain Dunkelgelb with radial dirt (`wheelDirt`): the rubber tyre stays dark, mud packs the outer dish, the hub stays in paint; turns with the wheel |
 | track | dark manganese steel, road-polished grouser bar, mud packed either side of it; one link finished and laid round the belt (`treads` gate) |
-| soot | plumes from both exhaust mouths over the shrouds, the rear plate and the engine deck; muzzle brake |
-| chipping | the Zimmerit's flaked patches are real cuts to the primer (see Zimmerit); weld beads down the interlocked corners |
+| soot | a fan (0.95 m) from each exhaust mouth over the shrouds, the rear plate and the engine deck's tail; muzzle brake |
+| chipping | the Zimmerit's flaked patches are real cuts to the primer (see Zimmerit); weld beads (4.5 cm, two values under the paint) down the interlocked corners |
 
 ## Length
 `real.length` 8.45 m is the gun-forward length; the model measures 8.70 m (+3 %, gate ±5 %). The
@@ -97,11 +97,14 @@ fittings is not stated by the sources in Specs; the recipe keeps 6.316 m as the 
 (the `hull length` measure) and leaves the fittings where the rear photos put them.
 
 ## Triangles
-58.6k / 16.4k / 1.35k (was 68.9k / 17.4k / 3.5k). LOD0: the hidden inboard discs of the
+54.9k / 16.4k / 1.44k (was 68.9k / 17.4k / 3.5k). LOD0: the hidden inboard discs of the
 interleave are a tyre band and a flat web with fewer sides, the outer discs are flat behind, the
-twin guide horns are one block. LOD2: wheels as shallow six-sided cones (6 triangles each),
-plates split at 4.2 m only, digits without outlines, a five-sided barrel and
-pipes, exhaust shrouds as one box each. LOD2 is now inside the AFV playbook band (≤ 1.5k), so
+twin guide horns are one block. LOD2: every wheel is two flat eight-sided polygons (dark tyre,
+painted disc 5 mm proud with the near dish's mean mud: 12 triangles), so the rows still overlap as
+discs; belt slabs without ends or hull-facing edge; the camouflage and the mud band ride on
+colour-block quads 4 mm proud of the pannier sides (16 × 2 a side), the front deck (6) and the
+turret wall facets (10), each one flat block sampled from the same bands as LOD0; plates split at
+4.2 m only, digits without outlines, a five-sided barrel and pipes, exhaust shrouds as one box each. LOD2 is now inside the AFV playbook band (≤ 1.5k), so
 the `tiger_1` row in `scripts/lib/budget-baseline.ts` can go.
 
 ## Rear (rebuilt Nov 2026)
@@ -163,7 +166,7 @@ front plate in 101I-299-1802-08):
 | hull ridge pitch | 22 mm | between the photo estimate and the modellers' count |
 | turret and mantlet ridge pitch | 34 mm | modellers' count, matches the photos |
 | column width | 13 cm (each column its own ridge phase) | photo estimate |
-| flakes | ≈ 7 % of the hull coat, ≈ 3.5 % of the turret, ≈ 6 % of the mantlet; 10–40 cm patches, more at plate edges and on the front/sides; cut back to a red-oxide primer floor (1.5 mm) with a crisp 4.5 mm broken edge of raw grey-ochre paste | photos show broken patches, not missing single ridges; primer per the forum consensus above |
+| flakes | ≈ 2.6 % of the hull coat, ≈ 1.3 % of the turret, ≈ 3.2 % of the mantlet (measured; cut back from 7 / 3.5 / 6 %, where the primer patches read as red spots printed over the coat); 10–40 cm patches, more at plate edges and on the front/sides; cut back to a dull red-oxide primer floor (1.5 mm) with a crisp 4.5 mm broken edge of raw grey-ochre paste | photos show broken patches, not missing single ridges; primer per the forum consensus above |
 | coverage | pannier sides, driver's plate, nose, upper rear plate, turret walls and front plate beside the mantlet, mantlet face; not deck, roof, glacis, running gear | Panzerworld, photos |
 | markings | Balkenkreuz and turret number painted on intact coat (no flakes under them) | photos |
 
@@ -173,7 +176,7 @@ enough for the column seam). The coating is cut into columns so V never wraps in
 At hero distance (≈ 1 cm/px) the ridges sit near the pixel pitch and read as fine striping, which is
 also how the 1944 photographs look; close views resolve them fully.
 
-**LODs.** LOD0 carries the slab and the flake cuts (11.1k triangles: hull 7.6k, turret 2.5k, mantlet 1.0k;
+**LODs.** LOD0 carries the slab and the flake cuts (11.1k triangles before the flakes were cut back, fewer now: hull 7.6k, turret 2.5k, mantlet 1.0k then;
 the ridge boxes were 14.4k on hull and turret alone).
 LOD1 and LOD2 add no geometry: the plate faces themselves take the strip (U at the same pitch, V on a
 column middle), so the ridged tone, camo and markings carry to the far LODs; only the small flakes

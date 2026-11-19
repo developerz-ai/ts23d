@@ -1,7 +1,7 @@
 {
   "asset": "dropship",
   "reviewer": "agent",
-  "overall": 7.3,
+  "overall": 7.6,
   "scores": {
     "silhouette": {
       "score": 8,
@@ -18,11 +18,11 @@
       ]
     },
     "materials": {
-      "score": 6,
-      "reason": "The large tan triangles are gone: the hull is now a scratched mid grey, and glass, hazard and orange stripes separate. The white speckle is still on the left canopy pane in hero.png, and the hull is one grey with little plate-to-plate variation.",
+      "score": 7,
+      "reason": "The canopy speckle is gone (clean dark glass), a few darker access plates break the hull grey, and hazard and orange stripes separate; the dark scratch dashes are a uniform noise spread evenly over every plate.",
       "fixes": [
-        "remove the canopy speckle (glass coplanar with the frame/interior, or grime on glass)",
-        "vary the tone of a few plates (replacement panels, darker access hatches) so the hull is not one grey"
+        "concentrate the scratches on edges, hatches and walkways instead of an even dash noise",
+        "a slight roughness change between replacement panels and the base hull"
       ]
     },
     "detail": {
@@ -33,10 +33,11 @@
       ]
     },
     "wear": {
-      "score": 6,
-      "reason": "Scratches and chipped edges on the plates and some darkening on the nacelles; no scorch at the nacelle mouths, no oil streaks from the gear bays.",
+      "score": 7,
+      "reason": "Nacelle bellies are scorched brown, plates chipped and scratched; no oil streaks from the gear bays.",
       "fixes": [
-        "heat scorch inside and below the nacelle mouths; oil streaks from the gear bays"
+        "oil streaks from the gear bays",
+        "heat discolouration inside the nacelle mouths"
       ]
     },
     "lod": {
@@ -55,7 +56,7 @@
     }
   },
   "renders": {
-    "hero.png": "f8034fe0e5b1de89c615640e9f0653dceb3c195c79acc24bab6a830e56ae1fea",
-    "sheet.png": "56d154211fa4c5ec7be2e19db88af432a7bba9ff51f87db4cfc80959c37ea42a"
+    "hero.png": "c0dc62e8e1fee48782a75368b8e51faf810da31074898b07b159d02345473f53",
+    "sheet.png": "83a09c7ae5da01c5e673f31decc79966d88789ffe66301cd0b565cde807900dc"
   }
 }

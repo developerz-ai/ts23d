@@ -97,6 +97,28 @@ describe('canid biology (docs/research/animal-anatomy.md)', () => {
   );
 });
 
+describe('coat (WOLF_WILD)', () => {
+  /** Widest |y| of a part's world mesh, metres, and its triangle count. */
+  const fur = (lod: 0 | 1 | 2): { y: number; tris: number } => {
+    const m = worldMeshes(compile(wolf, { lod }).parts).get('fur');
+    let y = 0;
+    for (let i = 1; i < (m?.positions.length ?? 0); i += 3)
+      y = Math.max(y, Math.abs(m?.positions[i] ?? 0));
+    return { y, tris: (m?.indices.length ?? 0) / 3 };
+  };
+
+  it(
+    'the far mesh keeps a fringe of locks, and no card at any LOD leaves the 0.29 m coated width',
+    () => {
+      const far = fur(2);
+      expect(far.tris).toBeGreaterThan(60);
+      expect(far.tris).toBeLessThan(400);
+      for (const lod of [1, 2] as const) expect(fur(lod).y).toBeLessThanOrEqual(0.148);
+    },
+    SLOW,
+  );
+});
+
 describe('stance and outline', () => {
   it('stands on the ground at every LOD', () => void assertUprightOnGround(wolf), SLOW);
   it(

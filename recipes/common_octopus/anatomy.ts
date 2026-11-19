@@ -107,7 +107,7 @@ function mantleChain(): ChainSpec {
     {
       name: 'mantle',
       path: [...path].reverse().reverse(),
-      radius: [0.02, 0.078, 0.106, 0.104, 0.078, 0.056],
+      radius: [0.02, 0.078, 0.106, 0.1, 0.068, 0.046],
       links: 4,
       // The mantle is what the eye goes to: it gets the rings the hidden sucker undersides gave up.
       detail: { rings: [14, 5, 3], sides: [48, 18, 10] },

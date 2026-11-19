@@ -20,9 +20,9 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    4306,
+    4884,
     1344,
-    276
+    288
   ],
   "drawCalls": [
     1,
@@ -47,19 +47,13 @@
       "target": 0.12,
       "actual": 0.12,
       "eligible": "convex-edges",
-      "area": 0.0662
-    },
-    "rust": {
-      "target": 0.5,
-      "actual": 0.5,
-      "eligible": "below-fasteners | fasteners",
-      "area": 0.0129
+      "area": 0.0621
     },
     "dust": {
       "target": 0.3,
       "actual": 0.3,
       "eligible": "up-facing",
-      "area": 0.0713
+      "area": 0.0691
     }
   },
   "qa": {

@@ -1,7 +1,7 @@
 {
   "asset": "eiffel_tower",
   "reviewer": "agent",
-  "overall": 7.4,
+  "overall": 7.6,
   "scores": {
     "silhouette": {
       "score": 9,
@@ -19,9 +19,9 @@
     },
     "materials": {
       "score": 7,
-      "reason": "Bronze-brown painted iron reads, deck floors and the antenna separate; the paint is one uniform tone from base to top.",
+      "reason": "Bronze-brown painted iron reads and the top shaft is a touch lighter; at hero distance the three-tone gradient is too faint to read.",
       "fixes": [
-        "slightly glossier, fresher paint on the upper shaft and a three-tone gradient (darker at the base) as on the real tower"
+        "a clearer three-tone gradient (darker at the base, lighter at the top) as on the real tower"
       ]
     },
     "detail": {
@@ -33,16 +33,16 @@
     },
     "wear": {
       "score": 6,
-      "reason": "Some darkening at the base, but at render distance no rust streaks below nodes or dirt on deck tops are visible.",
+      "reason": "At hero distance no rust streaks or deck dirt are visible; only a slightly darker base.",
       "fixes": [
         "stronger rust streaks below the lattice nodes on the lower legs; dirt on the deck tops"
       ]
     },
     "lod": {
-      "score": 6,
-      "reason": "FAR LOD2 is four opaque solid brown frustums: the see-through lattice becomes a solid mass, a clear density and value pop at the switch.",
+      "score": 7,
+      "reason": "FAR LOD2 is now see-through (open strut strips instead of solid frustums), but it reads lighter and sparser than the dense dark LOD0 lattice, so a value change shows at the switch.",
       "fixes": [
-        "an alpha-cutout lattice strip on the LOD2 frustums so it stays see-through at distance"
+        "darken and thicken the LOD2 strut strips (or add an alpha-cutout cross-brace strip) to match the LOD0 lattice density"
       ]
     },
     "technical": {
@@ -54,7 +54,7 @@
     }
   },
   "renders": {
-    "hero.png": "fa9eb9ab14ab53d097ef66af7a5cf610d16d9c08e40be31c91eaa3f24757d5b3",
-    "sheet.png": "a2da377b2fa8e409939c2e5df883bcd50d4b62d21d74bdc78bdf2ae30654eef3"
+    "hero.png": "d1730d7c006c7801e3d9af9091221a163dd420bde72d80d2f5198ebee27caf03",
+    "sheet.png": "7bbb75b3bc9105af97c974429a8705e90fe654663d188b528e6722b5fb49d3ea"
   }
 }

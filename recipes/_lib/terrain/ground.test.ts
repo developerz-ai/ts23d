@@ -1,8 +1,8 @@
 // Terrain colour helpers. Failure first: a one-cell colour line must come out softened.
 
 import { describe, expect, it } from 'bun:test';
-import type { Vec3 } from '@developerz.ai/ts23d';
-import { footprint, ribbon } from './ground.ts';
+import { type Mesh, stripRect, type Vec3 } from '@developerz.ai/ts23d';
+import { footprint, macroUV, ribbon } from './ground.ts';
 
 describe('footprint', () => {
   it('spreads a one-cell bright line over its neighbours instead of keeping it whole', () => {
@@ -43,5 +43,27 @@ describe('ribbon', () => {
       const cross = (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]);
       expect(cross).toBeGreaterThan(0);
     }
+  });
+});
+
+describe('macroUV cut sides', () => {
+  it('maps the wall at the same texel scale along and up (no tall thin texels: vertical streaks)', () => {
+    // One wall quad on the south cut, 2000 m long and 1200 m tall, normal −Y.
+    const wall: Mesh = {
+      positions: new Float32Array([
+        -1000, -1000, 0, 1000, -1000, 0, 1000, -1000, 1200, -1000, -1000, 1200,
+      ]),
+      normals: new Float32Array([0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0]),
+      uvs: new Float32Array(8),
+      colors: new Float32Array(12),
+      indices: new Uint32Array([0, 1, 2, 0, 2, 3]),
+    };
+    const m = macroUV(wall, [-1000, -1000, 1000, 1000], 1200);
+    const r = stripRect('rock_strata');
+    // Texture metres per wall metre, along (U over the strip's metres) and up (V over one band).
+    const along = ((((m.uvs[2] ?? 0) - (m.uvs[0] ?? 0)) / (r.u1 - r.u0)) * r.metres) / 2000;
+    const up = ((m.uvs[5] ?? 0) - (m.uvs[1] ?? 0)) / (r.v1 - r.v0) / 1200;
+    expect(along / up).toBeGreaterThan(0.8);
+    expect(along / up).toBeLessThan(1.25);
   });
 });
