@@ -54,8 +54,11 @@ export function codeOnly(source: string): string {
   };
   while (i < end) {
     const c = source[i];
-    if (source.startsWith('//', i)) take(run(i, (j) => source[j] === '\n'));
-    else if (source.startsWith('/*', i)) {
+    if (source.startsWith('//', i)) {
+      // To the line break itself: a backslash escapes nothing in a line comment.
+      const eol = source.indexOf('\n', i);
+      take(eol < 0 ? end : eol);
+    } else if (source.startsWith('/*', i)) {
       const close = source.indexOf('*/', i + 2);
       take(close < 0 ? end : close + 2);
     } else if (c === "'" || c === '"') {

@@ -9,7 +9,8 @@
 // Triangles, draw calls and `clips` are what the GLBs hold (export's `glbContents`), not what the
 // recipe compiled to: the writer merges, drops dead triangles and skips empty meshes; a clip is
 // listed when at least one built LOD's file keeps a channel of it (clip-channels.ts), and none is
-// when the GLBs are written without animations (`--no-animations`).
+// when the GLBs are written without animations: `--no-animations`, or a library `toGlb` call that
+// does not ask for them (`manifestOf` shares the writer's default, GLB_ANIMATIONS_DEFAULT).
 
 import {
   type Asset,
@@ -26,6 +27,7 @@ import {
   clipPlays,
   clipSummary,
   fitHitboxes,
+  GLB_ANIMATIONS_DEFAULT,
   type GlbContents,
   glbContents,
   mergeToPivots,
@@ -131,7 +133,11 @@ const tris = (a: CompiledAsset): number =>
 export { drawCallsOf } from '../export/index.ts';
 
 export interface ManifestOptions {
-  /** The GLBs carry animations (`GlbOptions.animations`, `--no-animations`); default true. */
+  /**
+   * The GLBs carry animations: pass what `toGlb` got (`GlbOptions.animations`). Default
+   * `GLB_ANIMATIONS_DEFAULT` (false), the writer's own, so defaults on both sides agree; the CLI
+   * passes its flag (`t3d build` bakes them unless `--no-animations`).
+   */
   readonly animations?: boolean;
 }
 
@@ -186,7 +192,7 @@ export function manifestOf(
       : {}),
     surfaces: [...new Set((top?.parts ?? []).map((p) => p.surface ?? 'opaque'))].sort(),
     ...textureSetsIn(lods),
-    ...rigOf(top, options.animations === false ? [] : held),
+    ...rigOf(top, (options.animations ?? GLB_ANIMATIONS_DEFAULT) ? held : []),
     ...paintOf(top),
     ...(asset.real
       ? { real: { length: asset.real.length, width: asset.real.width, height: asset.real.height } }

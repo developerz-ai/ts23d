@@ -260,6 +260,21 @@ describe('cityBlock', () => {
     expect(c.parts.some((p) => p.name === 'b101_windows')).toBe(true);
   });
 
+  it('keeps the top window row under the cornice on a short one-storey body', () => {
+    // A 1.2 m body: one storey of 0.6 m, so a head at 82% (0.49 m) would pass the wall top (0.45 m).
+    for (const height of [1, 1.2, 1.43, 3.6, 12.4]) {
+      const [p] = cityPlan([{ id: 7, ring: rect(0, 0, 8, 8), height, levels: null }], { walls: W });
+      const plan = p ?? never();
+      const wallTop = plan.base + plan.height - CITY_BANDS.roof - CITY_BANDS.cornice;
+      const ws = cityWindows(plan);
+      expect(ws.length).toBeGreaterThan(0);
+      for (const w of ws) {
+        expect(w.at[2] + w.scale[2]).toBeLessThanOrEqual(wallTop + 1e-9);
+        expect(w.scale[2]).toBeGreaterThan(0);
+      }
+    }
+  });
+
   it('LOD2 keeps massing and roofs, drops windows and cornices', () => {
     const c = compile(block, { lod: 2 });
     expect(c.parts.filter((p) => p.name.endsWith('_windows'))).toEqual([]);

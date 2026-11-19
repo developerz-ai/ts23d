@@ -28,6 +28,7 @@ export {
   toGlb,
   toLodGlb,
 } from './glb.ts';
+export { GLB_ANIMATIONS_DEFAULT } from './glb-options.ts';
 export {
   GPU_INSTANCING,
   type InstancedScene,

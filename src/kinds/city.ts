@@ -76,6 +76,8 @@ export function cityWindows(p: CityBuildingPlan): CityInstance[] {
   const w = p.bay * 0.48;
   const pier = (p.bay - w) / 2;
   const line = `pier:~ | {wall:${pier.toFixed(2)} | win:${w.toFixed(2)} | wall:${pier.toFixed(2)}}* | pier:~`;
+  // The wall top under the cornice (whether or not one is drawn): no window head goes past it.
+  const top = p.base + p.height - ROOF_BAND - CORNICE;
   for (let i = 0; i < n; i++) {
     if (p.party[i]) continue;
     const taken = p.shared[i] ?? [];
@@ -91,9 +93,10 @@ export function cityWindows(p: CityBuildingPlan): CityInstance[] {
       (s) => s.symbol === 'win' && !taken.some(([lo, hi]) => s.start < hi && s.start + s.size > lo),
     );
     for (let f = 0; f < p.floors; f++) {
-      // Sill at 26% of the storey, head at 82%: the top row stays under the cornice.
-      const h = p.floorHeight * 0.56;
+      // Sill at 26% of the storey, head at 82%, clamped to the wall top: a storey under about
+      // 0.83 m (a body under 1.43 m) would put the head into the cornice.
       const z = p.base + f * p.floorHeight + p.floorHeight * 0.26;
+      const h = Math.min(p.floorHeight * 0.56, top - z);
       for (const s of slots) {
         const t = s.start + s.size / 2;
         out.push({ at: [a[0] + ux * t, a[1] + uy * t, z], yaw, scale: [1, s.size, h] });

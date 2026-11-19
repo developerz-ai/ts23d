@@ -208,4 +208,20 @@ describe('hairCards', () => {
     const lead = clumpOf(list, 6, 0.1);
     for (let i = 3; i < 6; i++) expect(lead[i]).toBe(i);
   });
+
+  test('reads each root length once: the cap check and the cards share one evaluation', () => {
+    let calls = 0;
+    const h = run({
+      zones: [
+        zone({
+          length: () => {
+            calls++;
+            return 0.05;
+          },
+        }),
+      ],
+    });
+    expect(h.counts['coat']).toBeGreaterThan(100);
+    expect(calls).toBe(h.counts['coat'] ?? -1);
+  });
 });

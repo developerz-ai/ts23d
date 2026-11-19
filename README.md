@@ -326,7 +326,7 @@ out/
                             with measured values; sources; QA
 ```
 
-Library calls differ on one default: `toGlb(asset)` exports no animation unless `{ animations: true }`.
+Library calls differ on one default: `toGlb(asset)` exports no animation unless `{ animations: true }`. `manifestOf` shares that default: pass `{ animations: true }` as its last argument when the GLBs were exported with it.
 
 Every exported asset in a module is built (`defineAsset` or `family.variant`). Every CLI error (missing file, throwing recipe, unknown flag, duplicate asset name) prints a stable `T3D_*` code and its `fix:`; exit 0 = ok, 1 = QA finding or build error, 2 = usage error ([errors](docs/architecture/errors.md)).
 

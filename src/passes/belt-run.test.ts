@@ -181,6 +181,8 @@ describe('beltRun', () => {
     }
     const run = beltRun(stadium(), pitch, { positions, normals, indices });
     expect(run.unmatched).toBe(0);
+    // Every vertex of the band is its own body, so every one has its twin one pitch on.
+    expect([...run.twins]).toEqual(Array.from({ length: 2 * n }, (_, v) => (v + 2) % (2 * n)));
     expect(apart(posed(run, 1), positions)).toBeLessThan(1e-6);
   });
 });

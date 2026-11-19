@@ -156,6 +156,7 @@ export function beltRun(
     const { body } = x;
     const guess = wrap(heading(x.s + pitch) - heading(x.s));
     if (!body.rigid) {
+      // A bending body is ONE vertex (belt-bodies.ts): its twin is the whole body's.
       const v = body.verts[0] ?? 0;
       const landed = ride(x.s + pitch, x.off);
       const twin = twinAt(landed, turned(at(nrm, v), guess), BEND);

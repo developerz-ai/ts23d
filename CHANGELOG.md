@@ -31,7 +31,7 @@ A correctness sweep across the library, CLI, gates, gallery and recipes: over a 
 - Input that used to build broken output now throws `T3D_RECIPE_INVALID` with a fix:
   - `ctx.part` / `ctx.group` / `ctx.use`: names and prefixes that are not snake_case, non-finite `at` or `yaw`; `tread` motion with a bad path or pitch; an unknown `motion.kind`.
   - Primitives: a missing or malformed `color` (a misspelt key such as `colour` is named); `planar` with fewer than 3 points, NaN or no area; `beam` with `up` along its axis, coincident ends or `segments` of 1 or 2; `sweep` with non-finite points, scale or twist; erosion and noise options out of range (`octaves: 0`, NaN rates); hair card lengths that are NaN or negative.
-  - Lights: a spot `cone` outside (0, 89], a negative or non-finite `intensity`, `range` or `inner`.
+  - Lights: a spot `cone` outside [0.5, 89], a negative or non-finite `intensity`, `range` or `inner`.
   - Materials: finish and optics colours that are not three channels, a non-finite `anisotropy.rotation`, weather `params` and effect `strength` outside 0..1 (`T3D_MATERIAL_INVALID` from `defineMaterial`).
   - Kinds: `hull` (`bootTop`, `camber`, `deadriseDeg`), `mass` (non-finite `size` / `at`), `facade` (`floors`, `floorHeight`, `windowRatio`), roof chimneys (`size`, `height`, position), `hairRig` `segments` outside 1..12, a partial override of a head field the preset leaves null, `modelRig({ register: 'joints' })` without joints, a mirrored body-plan chain hung from one named copy of a mirrored chain, `radialPulseClip` with `inflate > 0` and `timing.inflate: 0`, a `cityPlan` height at or below `minHeight`.
   - Measures: exactly one of `parts` or `between`, and `between` needs exactly two part names.
@@ -85,7 +85,7 @@ A correctness sweep across the library, CLI, gates, gallery and recipes: over a 
   - `t34`: the turret slogan follows the real turret shell; the LOD2 track keeps its outboard edge. `rts_tank`: belt pitch is loop ÷ links, the LOD2 belt loops, and the `run` clip drives forward.
   - Parts seated on what carries them: `boxcar` (door hangers and guide shoes, handles, uncoupling lever brackets), `roadster_v10` (grille, splitter air dam, hinge pins, interior and lamp fittings), `loco_440` (lettering, rivets, bands, stanchions, dome rings on the real boiler facets and taper), `dropship` (decal lift, seam strips, pitot masts), `signal_gantry` (arms on a modelled bearing), `station_halt`, `water_tower` (chain, ladder stays, `clear` checks that tested nothing), `cargo_container_scifi`, `weather_demo`, `pbr_showcase`, `rts_soldier` (pack).
 - `wolf_hybrid`: the hip web between the tail and the right thigh is a mesh defect that is still open (D253). It is now declared (`limitTolerances`, with the cause as the `why`) instead of passing unmeasured, and a ratchet test keeps it from getting worse. The fix needs a re-generated mesh (GPU).
-- Review follow-up to the sweep (D255–D277): `t3d concept --json` prints its usage error as the one stdout envelope with `error.fix`; a table test holds every command to that contract.
+- Review follow-up to the sweep (D255–D282): `t3d concept --json` prints its usage error as the one stdout envelope with `error.fix`; a table test holds every command to that contract.
 - Ctrl-C reaps running tools on every signal when the host handles SIGINT itself, not only the first time.
 - Gallery: switching an asset's tier while its Scene plays keeps the scenario playing.
 - Transparent icons: see-through surfaces (glass, ice, water) keep their own surface light and their alpha is coverage × opacity, so the studio backdrop no longer shows inside the glass.
@@ -101,6 +101,10 @@ A correctness sweep across the library, CLI, gates, gallery and recipes: over a 
 - `floating-parts`: the fix for a floating chain says to move the hanging parts with the root (or their shared `ctx.group`).
 - `bun run boundaries` ignores imports written in comments and message strings.
 - `tiger_1`: the mantlet's Zimmerit uses the turret's ridge pitch.
+- `manifestOf` shares `toGlb`'s animations default (`GLB_ANIMATIONS_DEFAULT`, off), so a manifest built with defaults lists no `clips` for GLBs written without them. Pass `{ animations: true }` when the GLBs were exported with it; `t3d build` is unchanged.
+- City windows: the top row on a body under about 1.43 m is clamped to the wall top and no longer cuts into the cornice.
+- `hairCards` computes each root's card length once instead of twice; `t34` no longer builds an unused track slab at LOD0. Output bytes unchanged.
+- `bun run boundaries` no longer misses an import on the line after a `//` comment ending in a backslash.
 
 ## [0.12.0] - 2026-11-18
 

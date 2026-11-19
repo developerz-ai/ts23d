@@ -1,8 +1,17 @@
 // Zimmerit coating: flakes are real cuts (bare floor where the field says flaked, none where it
-// does not), the slab is seated in the plate, and the strip's texels resolve the true ridge pitch.
+// does not), the slab is seated in the plate, the strip's texels resolve the true ridge pitch, and
+// the far-LOD mantlet (plate faces moved onto the strip) keeps the turret's coarser pitch.
 import { describe, expect, it } from 'bun:test';
-import { createRng, type Mesh, stripRect } from '@developerz.ai/ts23d';
-import { type CoatWall, coating, HULL_PITCH, ZIMMERIT } from './zimmerit.ts';
+import { box, compile, createRng, type Mesh, stripRect } from '@developerz.ai/ts23d';
+import { tiger_1 } from './tiger_1.ts';
+import {
+  type CoatWall,
+  coatFaces,
+  coating,
+  HULL_PITCH,
+  TURRET_PITCH,
+  ZIMMERIT,
+} from './zimmerit.ts';
 
 const plate: CoatWall = {
   path: [
@@ -29,6 +38,31 @@ const facesOut = (m: Mesh): number => {
     if ((m.normals[(m.indices[t] ?? 0) * 3 + 1] ?? 0) > 0.9) n++;
   return n;
 };
+/**
+ * World ridge pitch on the upright faces `coatFaces` moved onto the strip: the strip draws one
+ * ridge per HULL_PITCH of its own length, so pitch = HULL_PITCH × rise / strip metres travelled.
+ * Median over every such triangle edge; NaN when the mesh has none.
+ */
+const ridgePitch = (m: Mesh): number => {
+  const zr = stripRect(ZIMMERIT);
+  const mid = (zr.v0 + zr.v1) / 2;
+  const z = (i: number): number => m.positions[i * 3 + 2] ?? 0;
+  const stripM = (i: number): number =>
+    (((m.uvs[i * 2] ?? 0) - zr.u0) / (zr.u1 - zr.u0)) * zr.metres;
+  const found: number[] = [];
+  for (let t = 0; t < m.indices.length; t += 3) {
+    const ids = [m.indices[t] ?? 0, m.indices[t + 1] ?? 0, m.indices[t + 2] ?? 0];
+    const upright = ids.every((i) => Math.abs(m.normals[i * 3 + 2] ?? 1) < 0.01);
+    if (!upright || ids.some((i) => Math.abs((m.uvs[i * 2 + 1] ?? 0) - mid) > 1e-6)) continue;
+    const [a = 0, b = 0, c = 0] = ids;
+    for (const [lo, hi] of [[a, b] as const, [b, c] as const]) {
+      const rise = z(hi) - z(lo);
+      if (Math.abs(rise) > 0.01) found.push((HULL_PITCH * rise) / (stripM(hi) - stripM(lo)));
+    }
+  }
+  found.sort((p, q) => p - q);
+  return found[found.length >> 1] ?? Number.NaN;
+};
 
 describe('tiger_1 zimmerit', () => {
   it('a fully flaked plate keeps no painted coat face, only a bare primer floor', () => {
@@ -53,5 +87,17 @@ describe('tiger_1 zimmerit', () => {
   it('the strip resolves the hull ridge pitch along U (≥ 8 texels per ridge at 4096 px)', () => {
     const texel = stripRect(ZIMMERIT).metres / 4096;
     expect(HULL_PITCH / texel).toBeGreaterThanOrEqual(8);
+  });
+
+  it('the far-LOD mantlet carries the turret ridge pitch, not the hull default', () => {
+    // The measure tells the two apart: the same plate coated without a pitch reads the hull's.
+    const slab = box({ size: [0.1, 1, 0.6], color: [1, 1, 1] });
+    const front = (_c: readonly number[], n: readonly number[]): boolean => (n[0] ?? 0) > 0.9;
+    expect(ridgePitch(coatFaces(slab, front))).toBeCloseTo(HULL_PITCH, 5);
+    expect(ridgePitch(coatFaces(slab, front, TURRET_PITCH))).toBeCloseTo(TURRET_PITCH, 5);
+    for (const lod of [1, 2] as const) {
+      const mantlet = compile(tiger_1, { lod }).parts.find((p) => p.name === 'gun_mantlet')?.mesh;
+      expect(mantlet ? ridgePitch(mantlet) : Number.NaN).toBeCloseTo(TURRET_PITCH, 4);
+    }
   });
 });

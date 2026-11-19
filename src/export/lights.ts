@@ -40,7 +40,9 @@ const MAX_CONE = 89;
 /**
  * Narrowest spot half-angle, degrees: a 1° beam, about the tightest real searchlight or pin-spot
  * optics. A default 1000 lm lamp in it is ~4.2 Mcd; narrower cones only push the default toward
- * absurd (and, below ~1e-6°, infinite) candela, which a file writes as `null`.
+ * absurd candela, and with the older 2π(1 − cos θ) solid angle a tiny cone rounded to 0 and the
+ * candela to Infinity, which a file writes as `null`. A cone under this is refused before the
+ * default is computed.
  */
 export const MIN_CONE = 0.5;
 

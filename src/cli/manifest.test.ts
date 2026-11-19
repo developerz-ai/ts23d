@@ -5,6 +5,7 @@ import {
   compile,
   defineAsset,
   encodePng,
+  GLB_ANIMATIONS_DEFAULT,
   type Lod,
   type Mesh,
   MeshBuilder,
@@ -158,9 +159,9 @@ it('lists the run clip of an asset whose only motion is a belt, as its GLB has i
   const names = (moving: boolean) => {
     const lod = compile(ring(moving), { lod: 0 });
     const file = (gltf(toGlb(lod, { animations: true })).animations ?? []).map((a) => a.name);
-    const listed = (manifestOf(ring(moving), [lod], { lods: [] }, []).clips ?? []).map(
-      (c) => c.name,
-    );
+    const listed = (
+      manifestOf(ring(moving), [lod], { lods: [] }, [], [], { animations: true }).clips ?? []
+    ).map((c) => c.name);
     return { file, listed };
   };
   expect(names(true).file).toEqual(['rest', 'run']);
@@ -206,13 +207,24 @@ const face = (clips: readonly Clip[]) =>
       });
     },
   });
-const listed = (clips: readonly Clip[], lods: readonly Lod[], animations?: boolean): string[] => {
+const listed = (clips: readonly Clip[], lods: readonly Lod[], animations = true): string[] => {
   const built = lods.map((lod) => compile(face(clips), { lod }));
-  const opts = animations === undefined ? {} : { animations };
-  return (manifestOf(face(clips), built, { lods: [] }, [], [], opts).clips ?? []).map(
+  return (manifestOf(face(clips), built, { lods: [] }, [], [], { animations }).clips ?? []).map(
     (c) => c.name,
   );
 };
+
+it('lists no clip by default, as `toGlb` writes none by default (one shared default)', () => {
+  const lod = compile(face([nod]), { lod: 0 });
+  // The library path: export with defaults, then describe the file with defaults.
+  expect(gltf(toGlb(lod)).animations).toBeUndefined();
+  expect(manifestOf(face([nod]), [lod], { lods: [] }, []).clips).toBeUndefined();
+  expect(GLB_ANIMATIONS_DEFAULT).toBe(false);
+  // Asked for on both sides, both hold the same clips.
+  const baked = (gltf(toGlb(lod, { animations: true })).animations ?? []).map((a) => a.name);
+  expect(baked).toEqual(['rest', 'run', 'nod']);
+  expect(listed([nod], [0])).toEqual(['run', 'nod']);
+});
 
 it('lists a clip only when a requested LOD file keeps a channel of it, as the exporter does', () => {
   // The LOD2 file drops `blink` (its lid has no morph targets): the manifest must too.

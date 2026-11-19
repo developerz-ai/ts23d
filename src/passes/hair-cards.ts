@@ -259,9 +259,16 @@ export function hairCards(o: HairCardOptions): HairCards {
         fix: 'give each zone strandCells(strip, kind) and a card width > 0 (metres)',
       });
     // The cap is on cards: a root too short to grow one (hair-length.ts) does not count.
-    const grows = (r: Root): boolean => grown(o.surface, z, [r]).list.length > 0;
+    // Each kept root's length is read once, here, and reused for the zone's cards below.
+    const length = new Map<Root, number>();
+    const grows = (r: Root): boolean => {
+      const l = grown(o.surface, z, [r]).lengths[0];
+      if (l !== undefined) length.set(r, l);
+      return l !== undefined;
+    };
     const roots = poissonRoots(o.surface, z.density, o.rng.fork(`roots:${z.name}`), cap, grows);
-    return { z, ...grown(o.surface, z, roots) };
+    const list = roots.filter((r) => length.has(r));
+    return { z, list, lengths: list.map((r) => length.get(r) ?? 0) };
   });
   const total = picked.reduce((s, x) => s + x.list.length, 0);
   if (total > cap) throw overCap(total, cap);

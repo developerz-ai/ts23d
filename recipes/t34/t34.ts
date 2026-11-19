@@ -196,21 +196,24 @@ function treadPitch(lod: Lod, line: readonly Vec2[]): number {
 function trackMesh(lod: Lod, line: readonly Vec2[], y: number, finish: (link: Mesh) => Mesh): Mesh {
   const stations = stationsOf(lod, line);
   const len = stations[0]?.len ?? 0.172;
-  const band = finish(
-    box({
-      size: [len * 1.04, TRACK_W, LINK_T],
-      at: [0, 0, -LINK_T / 2],
-      color: trackSteel,
-      // LOD2 drops only the edge that faces the hull ('left' = +Y, 'right' = −Y in `box`): the
-      // outboard edge is the 6 cm of track you see from the side, the ends show round the wheels.
-      ...(lod === 2 ? { omit: [y > 0 ? 'right' : 'left'] as const } : {}),
-    }),
-  );
-  const links = lod === 0 ? [trackLink(len, true), trackLink(len, false)].map(finish) : [];
+  // The slab that stands for a link below LOD0, built only there (LOD0 lays two real links).
+  const band = (): Mesh =>
+    finish(
+      box({
+        size: [len * 1.04, TRACK_W, LINK_T],
+        at: [0, 0, -LINK_T / 2],
+        color: trackSteel,
+        // LOD2 drops only the edge that faces the hull ('left' = +Y, 'right' = −Y in `box`): the
+        // outboard edge is the 6 cm of track you see from the side, the ends show round the wheels.
+        ...(lod === 2 ? { omit: [y > 0 ? 'right' : 'left'] as const } : {}),
+      }),
+    );
+  const even = lod === 0 ? finish(trackLink(len, true)) : band();
+  const odd = lod === 0 ? finish(trackLink(len, false)) : even;
   return onGround(
     merge(
       stations.map((s, i) =>
-        place(links[i % 2] ?? band, {
+        place(i % 2 ? odd : even, {
           at: [s.p[0], y, s.p[1]],
           pitch: s.pitch,
         }),

@@ -33,7 +33,7 @@ export function assertQaPass(asset: Asset, o: QaOptions = {}): void {
   const found = lods.flatMap((a) =>
     runQa(a, o.gates ?? DEFAULT_GATES).map((finding) => ({ finding, lod: a.lod })),
   );
-  // On one LOD too, as `t3d build --lod` does: each chain gate knows what it needs to judge.
+  // On one LOD too, as `t3d build --lods 0` does: each chain gate knows what it needs to judge.
   const chain = runLodQa(lods, o.lodGates ?? DEFAULT_LOD_GATES);
   const whole = [...chain, ...drawFindings(asset, lods)];
   failOn(`${asset.name} QA`, [...found, ...whole.map((finding) => ({ finding }))]);

@@ -98,7 +98,13 @@ async function manifest(name: string, file?: string): Promise<Manifest> {
   withdrawFor(name);
   const asset = await recipeNamed(name, file);
   const lods = ([0, 1, 2] as const).map((lod) => compiled0(asset, lod));
-  const { qa: _qa, files: _files, ...rest } = manifestOf(asset, lods, { lods: [] }, []);
+  const {
+    qa: _qa,
+    files: _files,
+    ...rest
+  } = manifestOf(asset, lods, { lods: [] }, [], undefined, {
+    animations: true, // the gallery builds its GLBs with clips
+  });
   return rest;
 }
 

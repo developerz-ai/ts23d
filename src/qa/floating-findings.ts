@@ -102,7 +102,7 @@ export function floatingFindings(input: FloatingInput): Finding[] {
         code: CODE,
         part: n,
         message: `'${n}' touches '${via}', which is itself floating (root of the chain: '${root}')`,
-        fix: `fix '${root}' first (its finding is listed above): '${n}' is held through it, so move '${n}' by the same distance and direction as '${root}' — nothing to do when a \`ctx.group\` parent that was moved already carries both; closing '${n}''s own gap to the ground is the wrong distance`,
+        fix: `fix '${root}' first (its finding is listed above): '${n}' is held through it, so move '${n}' by the same distance and direction as '${root}' — nothing to do when a \`ctx.group\` parent that was moved already carries both; closing '${n}''s own gap to ${held} is the wrong distance`,
       });
     }
   }

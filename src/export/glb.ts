@@ -16,7 +16,12 @@ import { animationsOf, type ClipTree, Z_UP_TO_Y_UP } from './clips.ts';
 import { concat, packGlb } from './container.ts';
 import { withCredits } from './credits.ts';
 import { checkGlow, checkLods, checkMeshArrays } from './glb-checks.ts';
-import type { GlbOptions, GlbResult, LodGlbResult } from './glb-options.ts';
+import {
+  GLB_ANIMATIONS_DEFAULT,
+  type GlbOptions,
+  type GlbResult,
+  type LodGlbResult,
+} from './glb-options.ts';
 import { newDoc, writeHierarchy } from './hierarchy.ts';
 import { LIGHTS } from './lights.ts';
 import {
@@ -144,7 +149,7 @@ export function exportLodGlb(lods: readonly CompiledAsset[], o: GlbOptions = {})
       k === 0 ? asset.name : `${asset.name}_LOD${asset.lod}`,
       {
         withSheet,
-        animations: o.animations === true,
+        animations: o.animations ?? GLB_ANIMATIONS_DEFAULT,
         materialOf: (part, i) => {
           const own = sets.materialOf(part);
           if (own !== undefined) return own;
@@ -205,7 +210,7 @@ export function exportLodGlb(lods: readonly CompiledAsset[], o: GlbOptions = {})
     doc,
     roots,
     trees,
-    o.animations === true ? (top.clips ?? []) : [],
+    (o.animations ?? GLB_ANIMATIONS_DEFAULT) ? (top.clips ?? []) : [],
   );
   const geometry = bin.bytes();
   const sheet = o.sheet ? sheetGltf(o.sheet, bin.views, geometry.byteLength) : null;

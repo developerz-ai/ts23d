@@ -51,4 +51,31 @@ describe('resolve asset-only output', () => {
     }
     expect(partial).toBeGreaterThan(10);
   });
+
+  it('keeps glass over the asset’s own opaque parts opaque: opacity = coverage there', () => {
+    // A glass shell round an opaque core: through the middle the shell shows the core, at its
+    // rim (past the core's silhouette) only backdrop.
+    const jar = compile(
+      defineAsset({
+        name: 'jar',
+        kind: 'prop',
+        budget: { triangles: [24, 24, 24] },
+        build(ctx) {
+          ctx.part('core', box({ size: [0.4, 0.4, 0.4], at: [0, 0, 0.5], color: [0.6, 0.1, 0.1] }));
+          ctx.part('shell', box({ size: [1, 1, 1], at: [0, 0, 0.5], color: [0.9, 0.95, 1] }), {
+            surface: 'glass',
+          });
+        },
+      }),
+    );
+    const r = renderBeauty(jar, shot);
+    const { hits } = sums(r);
+    const n = shot.supersample ** 2;
+    const opacity = r.opacity ?? new Float32Array(0);
+    const centre = (shot.height / 2) * shot.width + shot.width / 2;
+    expect(hits[centre]).toBe(n);
+    expect(opacity[centre]).toBe(n);
+    // The rim is see-through to the backdrop: opacity below coverage, so the glass is in play.
+    expect([...hits.keys()].some((i) => hits[i] === n && (opacity[i] ?? n) < n)).toBe(true);
+  });
 });

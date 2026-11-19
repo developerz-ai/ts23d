@@ -1,5 +1,5 @@
 import { expect, it } from 'bun:test';
-import { checkFile } from './boundaries.ts';
+import { checkFile, codeOnly } from './boundaries.ts';
 
 it('allows downward imports through index.ts', () => {
   expect(checkFile('src/kinds/a.ts', "import { box } from '../primitives/index.ts';")).toEqual([]);
@@ -65,4 +65,12 @@ it('ignores imports written in comments and inside strings, and still sees the c
   expect(checkFile('src/core/a.ts', "/* a\n b */\n\nimport '../qa/index.ts';")).toEqual([
     expect.objectContaining({ line: 4 }),
   ]);
+});
+
+it('ends a line comment at its line break, also after a trailing backslash', () => {
+  // `\` continues nothing in a `//` comment: the next line is code.
+  const source = "// C:\\tmp\\\nimport { x } from '../qa/index.ts';";
+  expect(checkFile('src/core/a.ts', source)).toEqual([expect.objectContaining({ line: 2 })]);
+  expect(codeOnly('// a\\\nb')).toBe('     \nb');
+  expect(codeOnly('// a\\')).toBe('     ');
 });
