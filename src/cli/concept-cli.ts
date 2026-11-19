@@ -1,7 +1,7 @@
 // `t3d concept` argument parsing: `<recipe.ts|brief.md>… [--variants n] [--out dir] [--json]`
 // → conceptMain (concept-cmd.ts). Kept apart so concept-cmd.ts stays the command, not the flags.
 
-import { Ts23dError } from '../core/index.ts';
+import { isTs23dError, Ts23dError } from '../core/index.ts';
 import { conceptMain } from './concept-cmd.ts';
 
 export interface ConceptArgs {
@@ -53,7 +53,7 @@ export async function conceptCli(argv: readonly string[], json: boolean): Promis
   try {
     args = parseConceptArgs(argv);
   } catch (e) {
-    if (!(e instanceof Ts23dError)) throw e;
+    if (!isTs23dError(e)) throw e;
     if (json)
       console.log(JSON.stringify({ ok: false, error: { code: e.code, message: e.message } }));
     else console.error(e.message);

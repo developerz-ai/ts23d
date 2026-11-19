@@ -98,7 +98,7 @@ describe('image assertions — failure cases first', () => {
   it('expectImageClose fails on a changed image and writes <golden>.diff.png', () => {
     const dir = mkdtempSync(join(tmpdir(), 't3d-golden-'));
     const golden = join(dir, 'a.png');
-    expect(expectImageClose(solid(32, 32, [10, 10, 10]), golden)).toBe(0);
+    expect(expectImageClose(solid(32, 32, [10, 10, 10]), golden, { update: true })).toBe(0);
     const changed = solid(32, 32, [10, 10, 10]);
     for (let i = 0; i < 100; i++) changed.data.set([250, 250, 250], i * 4);
     const r = run(() => expectImageClose(changed, golden));
@@ -106,6 +106,21 @@ describe('image assertions — failure cases first', () => {
     const diff = decodeImage(new Uint8Array(readFileSync(join(dir, 'a.diff.png'))));
     expect([...diff.data.subarray(0, 4)]).toEqual([255, 0, 0, 255]);
     expect(run(() => expectImageClose(solid(16, 16, [0, 0, 0]), golden))).toContain('golden');
+  });
+
+  it('expectImageClose refuses a missing golden on CI instead of writing it and passing', () => {
+    const golden = join(mkdtempSync(join(tmpdir(), 't3d-golden-')), 'missing.png');
+    const was = process.env['CI'];
+    process.env['CI'] = 'true';
+    try {
+      const r = run(() => expectImageClose(solid(8, 8, [10, 10, 10]), golden));
+      expect(r).toContain('T3D_ASSERT_INPUT');
+      expect(r).toContain('missing.png');
+      expect(existsSync(golden)).toBe(false);
+    } finally {
+      if (was === undefined) delete process.env['CI'];
+      else process.env['CI'] = was;
+    }
   });
 
   it('assertSilhouetteMatches fails a different shape, assertNoHoles a see-through tube', () => {
@@ -123,7 +138,7 @@ describe('image assertions — passing cases', () => {
     for (let i = 1; i < 200; i++) img.data.set([200, 200, 200], i * 4);
     expect(assertNotEmpty(img, undefined, { background: [20, 20, 20] })).toBeGreaterThan(0.15);
     const dir = mkdtempSync(join(tmpdir(), 't3d-golden-'));
-    expectImageClose(img, join(dir, 'b.png'));
+    expectImageClose(img, join(dir, 'b.png'), { update: true });
     expect(expectImageClose(img, join(dir, 'b.png'))).toBe(0);
     expect(existsSync(join(dir, 'b.diff.png'))).toBe(false);
   });

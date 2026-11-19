@@ -11,7 +11,7 @@
 
 import { mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
-import { type Asset, Ts23dError } from '../core/index.ts';
+import { type Asset, isTs23dError, Ts23dError } from '../core/index.ts';
 import { SHEET_MAPS, type SheetBinding, sheetFileName, sheetPngs } from '../export/index.ts';
 import {
   DEFAULT_SHEET,
@@ -51,10 +51,12 @@ import {
 import {
   envelope,
   type Failed,
+  finish,
   jsonStdout,
   printError,
   printFailed,
   printManifest,
+  qaFailed,
 } from './report.ts';
 import { serverMain } from './server-cmd.ts';
 import { setupMain } from './setup-cmd.ts';
@@ -66,7 +68,7 @@ const RENDERS = ['hero', 'review', 'critique', 'icon', 'finish'];
 
 /** A throw outside any recipe (texture cache, disk) still leaves with a code and a fix. */
 function outside(e: unknown): Ts23dError {
-  if (e instanceof Ts23dError) return e;
+  if (isTs23dError(e)) return e;
   return new Ts23dError('T3D_RECIPE_THREW', {
     cause: `t3d failed outside a recipe: ${e instanceof Error ? e.message : String(e)}`,
     fix: 'check the files t3d reads and writes (.ts23d/, --out); if it persists, open an issue with the command line',
@@ -100,8 +102,12 @@ async function dispatch(argv: readonly string[], json: boolean): Promise<number>
   try {
     args = parseArgs(argv);
   } catch (e) {
-    if (!(e instanceof Ts23dError)) throw e;
-    if (!json && e.code === 'T3D_CLI_USAGE' && e.message.includes('unknown command'))
+    if (!isTs23dError(e)) throw e;
+    if (
+      !json &&
+      e.code === 'T3D_CLI_USAGE' &&
+      (e.message.includes('unknown command') || e.message.includes('no command given'))
+    )
       console.error(`${helpText()}\n`);
     return printError(e, json);
   }
@@ -198,33 +204,27 @@ async function dispatch(argv: readonly string[], json: boolean): Promise<number>
   if (renders || args.cmd === 'blueprint' || args.cmd === 'gaps') {
     // An undeclared slit is a QA failure: `t3d gaps` exits 1 like `t3d build`.
     // Rejected finishes (T3D_FINISH_*) and QA findings on the finished asset exit 1 too.
-    const clean =
-      (args.cmd !== 'gaps' && args.cmd !== 'finish') ||
-      rendered.every((r) => r.warnings.length === 0);
-    return finish(json, failed, rendered, printRendered, clean);
+    const warned = rendered.filter((r) => r.warnings.length > 0);
+    const clean = (args.cmd !== 'gaps' && args.cmd !== 'finish') || warned.length === 0;
+    const count = warned.reduce((n, r) => n + r.warnings.length, 0);
+    const why = qaFailed(
+      count,
+      warned.map((r) => r.name),
+      'data[].warnings',
+    );
+    return finish(json, failed, rendered, printRendered, clean ? undefined : why);
   }
   if (built.length) await writeIndex(args.out, built);
-  return finish(
-    json,
-    failed,
-    built,
-    (m) => printManifest(m, join(args.out, m.name)),
-    built.every((m) => m.qa.pass),
+  // `files` stay relative (manifest.json's own form); `dir` is the folder they are in.
+  const placed = built.map((m) => ({ ...m, dir: join(args.out, m.name) }));
+  const red = built.filter((m) => !m.qa.pass);
+  const count = red.reduce((n, m) => n + m.qa.findings.length, 0);
+  const why = qaFailed(
+    count,
+    red.map((m) => m.name),
+    'data[].qa.findings',
   );
-}
-
-/** The run's one output: envelope or human lines; exit 1 on any failure or finding. */
-function finish<T>(
-  json: boolean,
-  failed: readonly Failed[],
-  items: readonly T[],
-  print: (item: T) => void,
-  clean = true,
-): number {
-  const ok = clean && failed.length === 0;
-  if (json) envelope(ok, [...items, ...failed], failed[0]?.error);
-  else items.forEach(print);
-  return ok ? 0 : 1;
+  return finish(json, failed, placed, (m) => printManifest(m, m.dir), red.length ? why : undefined);
 }
 
 function duplicate(name: string, first: string, again: string): Ts23dError {

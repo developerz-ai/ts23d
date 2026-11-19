@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { buildFlags, dependants, entriesOf, importGraph, startWatch } from './watch.ts';
+import { buildFlags, cliEntry, dependants, entriesOf, importGraph, startWatch } from './watch.ts';
 
 let dir = '';
 const put = (rel: string, text: string): string => {
@@ -82,6 +82,20 @@ describe('t3d build --watch', () => {
     await w.flush();
     expect(builds.slice(1)).toEqual([['assets/fox/fox.ts', 'assets/wolf/wolf.ts']]);
     w.close();
+  });
+
+  it('rebuilds with the CLI entry that exists: bin.js in the published dist/, bin.ts in src/', () => {
+    const dist = mkdtempSync(join(tmpdir(), 't3d-watch-entry-'));
+    try {
+      mkdirSync(join(dist, 'cli'));
+      writeFileSync(join(dist, 'cli', 'bin.js'), '');
+      expect(cliEntry(join(dist, 'cli'), 'main.js')).toBe(join(dist, 'cli', 'bin.js'));
+      expect(cliEntry(dist, 'main.js')).toBe(join(dist, 'cli', 'bin.js'));
+      expect(cliEntry(join(dist, 'none'), 'main.js')).toBe('main.js');
+      expect(cliEntry()).toBe(join(import.meta.dir, 'bin.ts'));
+    } finally {
+      rmSync(dist, { recursive: true, force: true });
+    }
   });
 
   it('flags pass through; --watch and files do not', () => {

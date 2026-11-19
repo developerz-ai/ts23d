@@ -80,9 +80,10 @@ export interface Piston extends Linkage {
 }
 
 /**
- * A track belt that runs round its wheels: the mesh stays where it is in the baked clip (glTF
- * cannot move vertices along a curve), and `path` + `pitch` ride the node's `extras.ts23d.tread`
- * so an engine (or the gallery) slides the links along the loop at the vehicle's speed.
+ * A track belt that runs round its wheels. The baked clip moves it one `pitch` per cycle with
+ * morph targets (every link onto the next one), at the rim speed of the wheels inside the loop;
+ * `path` + `pitch` also ride the node's `extras.ts23d.tread` for an engine (or the gallery) that
+ * slides the links along the loop at its own speed. The mesh must repeat every `pitch`.
  */
 export interface Tread {
   readonly kind: 'tread';

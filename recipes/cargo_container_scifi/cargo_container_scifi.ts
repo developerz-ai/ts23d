@@ -343,9 +343,16 @@ export const cargo_container_scifi = defineAsset({
           bevelled([0.1, W - 0.3, 0.05], SHELL_DARK, bv, [-HL + 0.5 + i * 0.84, 0, H - 0.12]),
         );
       shell.push(bevelled([0.05, 1.4, 1.5], SHELL_DARK, bv, [HL - RECESS + 0.03, 0, 0.5]));
+      // Hazard band painted on the service panel's face (x = HL − RECESS + 0.055): drawn 1 mm
+      // inside it and lifted 3 mm by quad(), below the panel's top bevel (z 1.988).
       if (lod === 0)
         shell.push(
-          hazard([HL - RECESS + 0.06, -0.7, 1.9], [HL - RECESS + 0.06, 0.7, 1.9], [0, 0, 0.12], 10),
+          hazard(
+            [HL - RECESS + 0.054, -0.7, 1.85],
+            [HL - RECESS + 0.054, 0.7, 1.85],
+            [0, 0, 0.12],
+            10,
+          ),
         );
     }
     if (lod === 2)
@@ -443,15 +450,17 @@ export const cargo_container_scifi = defineAsset({
             leaf.push(
               bevelled([0.05, 0.08, 0.1], METAL, 0.008, [-0.08, -s * y, DOOR_Z1 - DOOR_Z0 - 0.15]),
             );
-            leaf.push(bevelled([0.04, 0.05, 0.3], DARK, 0.008, [-0.11, -s * (y + 0.06), 0.95]));
+            // Cam handle welded to its lock bar: the lever's inner edge runs 9 mm into the bar.
+            leaf.push(bevelled([0.04, 0.05, 0.3], DARK, 0.008, [-0.09, -s * (y + 0.04), 0.95]));
           }
         }
         if (lod === 0)
           leaf.push(
             hazard(
-              // Run along −Y so (b − a) × up = −X: the leaf's outer face.
-              [-0.031, s > 0 ? -0.02 : LEAF - 0.02, 0.02],
-              [-0.031, s > 0 ? -LEAF + 0.02 : -0.02, 0.02],
+              // Run along −Y so (b − a) × up = −X: the leaf's outer face (−0.030); drawn 1 mm
+              // inside it, quad() lifts the band 3 mm out, so the paint sits 2 mm proud.
+              [-0.029, s > 0 ? -0.02 : LEAF - 0.02, 0.02],
+              [-0.029, s > 0 ? -LEAF + 0.02 : -0.02, 0.02],
               [0, 0, 0.12],
               8,
             ),

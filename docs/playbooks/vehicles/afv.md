@@ -45,7 +45,7 @@ hull (static: plates as prisms at their sourced angles) · fenders · stowage_*
 | gun | sway | Y at trunnion | −5…−10° depression, +15…+20° elevation |
 | road wheels, sprockets, idlers | spin | Y | sprocket rps = track speed / (teeth × pitch) |
 | hatches | sway `oneWay` | hinge | 90–110° |
-| track_l / track_r | tread | belt plane | `motion: tread(beltLine, y, linkPitch)` (× 2 pitch for alternating links); the `treads` gate fails a belt without it |
+| track_l / track_r | tread | belt plane | `motion: tread(beltLine, y, linkPitch)` (× 2 pitch for alternating links). The `run` clip runs the belt in every glTF reader: morph targets carry each link onto the next one over one pitch, at the rim speed of the road wheels (their `rps` × rim circumference, rounded to whole pitches per 4 s loop), in the direction the wheels turn. So: one link mesh `place`d at stations exactly one pitch apart round the whole loop at every LOD (a far-LOD band too: slabs or outline points one pitch apart), `linkPitch` = loop length ÷ link count measured along the line (not the chord between two stations), wheels spinning the way the vehicle drives (+rps about +Y = forward). The `treads` gate fails a belt without the motion, a loop that is not a whole number of pitches, and a belt that does not repeat every pitch (it would stand still) |
 | suspension arms | sway | Y | ±10° |
 
 ## Signature details

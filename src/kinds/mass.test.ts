@@ -9,6 +9,21 @@ describe('mass', () => {
     expect(() => mass({ size: [6, 2, -3], color: [1, 1, 1] })).toThrow('T3D_RECIPE_INVALID');
   });
 
+  it('rejects a non-finite size or position instead of emitting an empty mesh', () => {
+    const inf = Number.POSITIVE_INFINITY;
+    expect(() => mass({ size: [inf, 3, 2.5], color: [1, 1, 1] })).toThrow('mass size is [Infinity');
+    expect(() => mass({ size: [4, 3, Number.NaN], color: [1, 1, 1] })).toThrow(Ts23dError);
+    expect(() => mass({ size: [4, 3, 2.5], at: [Number.NaN, 1, 0], color: [1, 1, 1] })).toThrow(
+      'mass at [NaN',
+    );
+    expect(() => mass({ size: [4, 3, 2.5], at: [0, 0, inf], color: [1, 1, 1] })).toThrow(
+      'T3D_RECIPE_INVALID',
+    );
+    expect(() => mass({ size: [4, 3, 2.5], courseOrigin: Number.NaN, color: [1, 1, 1] })).toThrow(
+      'courseOrigin NaN',
+    );
+  });
+
   it('lays brick courses at true scale from the ground line, not stretched over the face', () => {
     const m = mass({ size: [6, 8, 6], at: [0, 0, 0], color: [1, 1, 1], omit: ['top', 'bottom'] });
     const r = stripRect('brick');

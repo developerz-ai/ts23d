@@ -3,6 +3,7 @@
 // out of the surface. Catches the material mistakes that make an asset look "CG" in any engine.
 //   it('sheet values are physical', () => assertValueRange(paintTrimSheet(mySheet)));
 
+import { Ts23dError } from '../core/index.ts';
 import { CLASSIC_STRIPS, STRIPS, stripRow } from '../material/index.ts';
 import type { Finding } from '../qa/index.ts';
 import { failOn } from './compiled.ts';
@@ -16,12 +17,19 @@ export interface ValueRangeOptions {
   readonly strips?: readonly string[];
 }
 
-/** Physically plausible values per strip row. Returns how many strips were checked. */
+/** Physically plausible values per strip row. Returns how many strips were checked; an id the
+ *  sheet has no strip for throws T3D_ASSERT_INPUT. */
 export function assertValueRange(sheet: SheetMaps, o: ValueRangeOptions = {}): number {
   const { h } = rowsOf(sheet.size);
   const [lo, hi] = o.albedo ?? [30, 240];
   const ids =
     o.strips ?? STRIPS.filter((id) => !(CLASSIC_STRIPS as readonly string[]).includes(id));
+  const unknown = ids.filter((id) => stripRow(id) < 0);
+  if (unknown.length > 0)
+    throw new Ts23dError('T3D_ASSERT_INPUT', {
+      cause: `assertValueRange: no strip ${unknown.map((id) => `'${id}'`).join(', ')} on the trim sheet`,
+      fix: `name strips the sheet has (STRIPS from @developerz.ai/ts23d/material): ${STRIPS.slice(0, 6).join(', ')} …`,
+    });
   const found: Finding[] = [];
   const mean = (
     px: Uint8Array,
@@ -37,7 +45,6 @@ export function assertValueRange(sheet: SheetMaps, o: ValueRangeOptions = {}): n
   };
   for (const id of ids) {
     const s = stripRow(id);
-    if (s < 0) continue;
     const lum =
       (mean(sheet.albedo, s, 0) + mean(sheet.albedo, s, 1) + mean(sheet.albedo, s, 2)) / 3;
     if (lum < lo || lum > hi)

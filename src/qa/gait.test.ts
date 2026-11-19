@@ -66,6 +66,43 @@ describe('gait', () => {
     expect(slide?.fix).toContain('stride');
   });
 
+  /** A rigid leg dragged 1 m by the root (33 mm a frame) while the root bobs `amp` × `cycles`. */
+  const skate = (amp: number, cycles: number): Clip => {
+    const n = 30;
+    const values = new Float32Array((n + 1) * 3);
+    for (let i = 0; i <= n; i++) {
+      values[i * 3] = i / n;
+      values[i * 3 + 2] = amp * (1 - Math.cos((2 * Math.PI * cycles * i) / n));
+    }
+    const times = Float32Array.from({ length: n + 1 }, (_, i) => i / n);
+    return {
+      name: 'walk',
+      seconds: 1,
+      loop: true,
+      tracks: [{ bone: 'root', path: 'translation', times, values }],
+    };
+  };
+
+  it('fails a skating foot however little the root bobs (the contact band has a floor)', () => {
+    for (const [amp, cycles] of [
+      [0.00001, 5],
+      [0.0005, 3],
+      [0.0009, 5],
+    ] as const) {
+      const f = gaitFindings(rig(skate(amp, cycles)));
+      expect(f.map((x) => x.code)).toContain('T3D_GAIT_FOOT_SLIDE');
+      expect(f.find((x) => x.code === 'T3D_GAIT_FOOT_SLIDE')?.message).toContain('slides 33.3 mm');
+    }
+  });
+
+  it('fails a travelling clip whose foot is never planted two frames in a row', () => {
+    // 5 cm hops every other frame: no frame pair is on the ground, so no slide could be read.
+    const f = gaitFindings(rig(skate(0.025, 15)));
+    expect(f.map((x) => x.code)).toEqual(['T3D_GAIT_FOOT_SLIDE']);
+    expect(f[0]?.message).toContain('never planted');
+    expect(f[0]?.fix).toContain('two frames');
+  });
+
   it('fails a loop whose last key is not its first', () => {
     expect(gaitFindings(rig(walk(0, 0.3))).some((x) => x.message.includes('does not loop'))).toBe(
       true,

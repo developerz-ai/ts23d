@@ -18,16 +18,24 @@ import {
   bx,
   F,
   type Finish,
+  facetDepth,
+  facetRadius,
+  jacketRadius,
   type Layout,
   lath,
   pipe,
   SMOKEBOX_R,
+  TAPER,
+  TAPER_LEN,
+  WAGON_LEN,
 } from './shared.ts';
 
 const TOP = BOILER_Z + BOILER_R * 0.95;
 
-/** Rivet heads in a ring round the X axis at station x, radius r. */
-function rivetRing(x: number, r: number, n: number, f = F.smokebox): Mesh[] {
+/** Rivet heads in a ring round the X axis at station x on a `segs`-sided jacket of radius r: each
+ *  head sits on the flat under it, 1.5 mm in (QA connections: heads between two vertices stood
+ *  up to 4 mm off the chord). */
+function rivetRing(x: number, r: number, n: number, segs: number, f = F.smokebox): Mesh[] {
   const head = lath({
     profile: [
       [0.014, 0],
@@ -41,7 +49,11 @@ function rivetRing(x: number, r: number, n: number, f = F.smokebox): Mesh[] {
     const a = (i / n) * Math.PI * 2;
     // Local +Z of the head turns to the radial direction (0, cos a, sin a).
     return place(head, {
-      at: [x, Math.cos(a) * r, BOILER_Z + Math.sin(a) * r],
+      at: [
+        x,
+        Math.cos(a) * (facetRadius(r, segs, a) - 0.0015),
+        BOILER_Z + Math.sin(a) * (facetRadius(r, segs, a) - 0.0015),
+      ],
       roll: -(Math.PI / 2 - a),
     });
   });
@@ -55,9 +67,9 @@ export function buildBoiler(ctx: BuildContext, L: Layout, number: string): void 
     lath({
       profile: [
         [BOILER_R, barrelRear],
-        [BOILER_R, barrelRear + 1.0],
-        [BOILER_R * 0.95, barrelRear + 1.4],
-        [BOILER_R * 0.95, barrelFront],
+        [BOILER_R, barrelRear + WAGON_LEN],
+        [BOILER_R * TAPER, barrelRear + WAGON_LEN + TAPER_LEN],
+        [BOILER_R * TAPER, barrelFront],
       ],
       segments: segs,
       axis: 'x',
@@ -98,10 +110,11 @@ export function buildBoiler(ctx: BuildContext, L: Layout, number: string): void 
   if (lod < 2) {
     const plateX = smokeFront + 0.07;
     sm.push(
-      // Number plate: brass ring round a blue enamel disc, brass numerals.
+      // Number plate: brass ring round a blue enamel disc, brass numerals. The ring's back edge
+      // sinks into the dished door (QA connections: it stood 4 mm proud of the dish).
       lath({
         profile: [
-          [0.16, plateX],
+          [0.16, plateX - 0.007],
           [0.16, plateX + 0.02],
           [0.13, plateX + 0.025],
           [0.13, plateX + 0.015],
@@ -129,14 +142,15 @@ export function buildBoiler(ctx: BuildContext, L: Layout, number: string): void 
     if (lod === 0) {
       sm.push(
         text(number, {
-          origin: [plateX + 0.016, 0, BOILER_Z - 0.06],
+          // On the enamel disc: the decal's 2 mm lift is all the gap there is.
+          origin: [plateX + 0.015, 0, BOILER_Z - 0.06],
           along: [0, 1, 0],
           height: 0.12,
           align: 'centre',
           ...F.brass,
         }),
-        ...rivetRing(barrelFront + 0.04, SMOKEBOX_R, 40),
-        ...rivetRing(smokeFront - 0.1, SMOKEBOX_R, 40),
+        ...rivetRing(barrelFront + 0.04, SMOKEBOX_R, 40, segs),
+        ...rivetRing(smokeFront - 0.1, SMOKEBOX_R, 40, segs),
       );
       // Door dogs round the rim.
       for (let i = 0; i < 8; i++) {
@@ -154,18 +168,20 @@ export function buildBoiler(ctx: BuildContext, L: Layout, number: string): void 
         );
       }
     }
-    // Brass boiler bands: jacket seams.
+    // Brass boiler bands: jacket seams. Each follows the jacket under it (the one on the wagon-top
+    // taper is a cone) with its edges 2 mm into the sheet (QA connections: a band at the full
+    // radius over the taper stood 3 mm off it).
     const bands = lod === 0 ? 7 : 3;
     for (let i = 0; i <= bands; i++) {
       const x = barrelRear + 0.1 + ((barrelFront - barrelRear - 0.2) * i) / bands;
-      const r = x < barrelRear + 1.2 ? BOILER_R : BOILER_R * 0.95;
+      const r = (dx: number): number => jacketRadius(L, x + dx);
       sm.push(
         lath({
           profile: [
-            [r, x - 0.03],
-            [r + 0.008, x - 0.025],
-            [r + 0.008, x + 0.025],
-            [r, x + 0.03],
+            [r(-0.03) - 0.002, x - 0.03],
+            [r(-0.025) + 0.008, x - 0.025],
+            [r(0.025) + 0.008, x + 0.025],
+            [r(0.03) - 0.002, x + 0.03],
           ],
           segments: segs,
           axis: 'x',
@@ -260,11 +276,16 @@ export function buildBoiler(ctx: BuildContext, L: Layout, number: string): void 
   const bellX = (sandX + stackX) / 2 + 0.05;
   const d: Mesh[] = [dome(steamX, 0.78, 0.33, F.brass), dome(sandX, 0.62, 0.3, F.blueSteel)];
   if (lod < 2) {
-    const ring = (x: number, r: number, z0: number, z1: number, f: Finish): Mesh =>
+    // A band round a dome: a solid ring from just inside the dome wall (radius `wall`) out to r
+    // (QA connections: open sheets at r hovered 4-7 mm off the wall).
+    const ring = (x: number, wall: number, r: number, z0: number, z1: number, f: Finish): Mesh =>
       lath({
         profile: [
+          [wall - 0.003, z0],
           [r, z0],
           [r, z1],
+          [wall - 0.003, z1],
+          [wall - 0.003, z0],
         ],
         segments: segs,
         at: [x, 0, TOP - 0.06],
@@ -272,11 +293,11 @@ export function buildBoiler(ctx: BuildContext, L: Layout, number: string): void 
       });
     d.push(
       // Steam-dome skirt in blue with a brass beading.
-      ring(steamX, 0.345, 0.0, 0.14, F.blueSteel),
-      ring(steamX, 0.352, 0.13, 0.16, F.brass),
+      ring(steamX, 0.33, 0.345, 0.0, 0.14, F.blueSteel),
+      ring(steamX, 0.33, 0.352, 0.13, 0.16, F.brass),
       // Sand dome: brass bands, crowned cap with a finial.
-      ring(sandX, 0.315, 0.02, 0.06, F.brass),
-      ring(sandX, 0.315, 0.34, 0.38, F.brass),
+      ring(sandX, 0.3, 0.315, 0.02, 0.06, F.brass),
+      ring(sandX, 0.3, 0.315, 0.34, 0.38, F.brass),
       lath({
         profile: [
           [0.32, 0],
@@ -323,13 +344,15 @@ export function buildBoiler(ctx: BuildContext, L: Layout, number: string): void 
     if (lod === 0)
       for (const s of [1, -1])
         d.push(
+          // Between the two bands (they hid the numerals' tops), on the dome's flats: the decal
+          // lifts 2 mm off each facet (QA connections: a true-circle offset left 4 mm at chords).
           text(number, {
-            origin: [sandX, s * 0.302, TOP + 0.2],
+            origin: [sandX, s * 0.3, TOP + 0.075],
             along: [-s, 0, 0],
             height: 0.13,
             align: 'centre',
             ...F.brass,
-            surface: (u) => -(0.3 - Math.sqrt(Math.max(0, 0.09 - u * u))),
+            surface: (u) => facetDepth(0.3, segs, u) - 0.3,
           }),
         );
     // Bell in its yoke on a pedestal.

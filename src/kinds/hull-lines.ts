@@ -38,13 +38,14 @@ export interface HullOptions {
   readonly entrance?: number;
   /** Deck-edge breadth over waterline breadth − 1. Default 0.06. */
   readonly flare?: number;
-  /** Bottom deadrise, degrees. Default 5. */
+  /** Bottom deadrise, degrees, 0–45; the rise over the half-beam must stay under the hull depth. Default 5. */
   readonly deadriseDeg?: number;
   /** Bulwark height above the deck, metres; 0 = none. Default 0. */
   readonly bulwark?: number;
-  /** Deck camber at the centreline, metres. Default beam / 50. */
+  /** Deck camber at the centreline, metres, 0 … beam / 4. Default beam / 50. */
   readonly camber?: number;
-  /** Height of the boot-top band above the waterline. Default 0.3. */
+  /** Height of the boot-top band above the waterline, above 0 and below the freeboard.
+   *  Default 0.3, or half the freeboard on a low hull. */
   readonly bootTop?: number;
   readonly colors: HullColors;
   /** A rubbing strake / fender along each side just below the sheer (LOD0/1). */
@@ -68,6 +69,9 @@ export interface HullLines {
 const bad = (cause: string, fix: string): Ts23dError =>
   new Ts23dError('T3D_RECIPE_INVALID', { cause, fix });
 
+/** Boot-top height above the waterline: the option, else 0.3 m or half a low freeboard. */
+export const bootTop = (o: HullOptions): number => o.bootTop ?? Math.min(0.3, o.freeboard / 2);
+
 export function validateHull(o: HullOptions): void {
   const dims = [o.length, o.beam, o.draft, o.freeboard];
   if (!dims.every((v) => v > 0 && Number.isFinite(v)))
@@ -85,6 +89,22 @@ export function validateHull(o: HullOptions): void {
   const tw = o.transomWidth ?? 0.75;
   if (!(tw > 0 && tw <= 1))
     throw bad(`hull transomWidth is ${tw}`, 'use a share 0.3–1 of the half-beam');
+  const boot = bootTop(o);
+  if (!(boot > 0 && boot < o.freeboard))
+    throw bad(
+      `hull bootTop is ${boot} with freeboard ${o.freeboard}`,
+      'the boot-top band sits above the waterline and below the deck edge: 0 < bootTop < freeboard',
+    );
+  const camber = o.camber ?? o.beam / 50;
+  if (!(camber >= 0 && camber <= o.beam / 4))
+    throw bad(`hull camber is ${camber}`, 'use 0 … beam / 4 metres (beam / 50 is typical)');
+  const dead = o.deadriseDeg ?? 5;
+  const depth = o.draft + o.freeboard;
+  if (!(dead >= 0 && dead <= 45) || Math.tan((dead * Math.PI) / 180) * (o.beam / 2) >= depth)
+    throw bad(
+      `hull deadriseDeg is ${dead} (beam ${o.beam}, depth ${depth})`,
+      'use 0–45° (5 displacement, 15–25 planing), with tan(deadrise) × beam / 2 below draft + freeboard',
+    );
 }
 
 const smooth = (t: number): number => (t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t));

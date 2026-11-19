@@ -11,7 +11,8 @@ export {
   SWIM_FPS,
   type WaveHeading,
 } from './chain-wave.ts';
-export { clear, noOverlap, runChecks, symmetric, touches } from './checks.ts';
+export { checkSelectors } from './check-selectors.ts';
+export { clear, noOverlap, runChecks, selectorsOf, symmetric, touches } from './checks.ts';
 export { clashes } from './clash.ts';
 export {
   coherence,
@@ -136,6 +137,7 @@ export {
 } from './gaps.ts';
 export {
   DEFAULT_GATES,
+  emptyAsset,
   partNames,
   proportions,
   runQa,
@@ -186,7 +188,13 @@ export {
   refFingerprint,
   refSilhouette,
 } from './ref-gate.ts';
-export { degenerateTriangles, nonFinite, normalsMatchWinding, vertexColors } from './sanity.ts';
+export {
+  degenerateTriangles,
+  meshArrays,
+  nonFinite,
+  normalsMatchWinding,
+  vertexColors,
+} from './sanity.ts';
 export {
   type CameraLoad,
   cameraLoad,

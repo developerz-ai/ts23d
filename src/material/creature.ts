@@ -37,6 +37,7 @@ const HAIR_CLUMPS = strandPainter(STRAND_LAYOUT.hair_clumps);
 export const CREATURE_MATERIALS: Readonly<Record<Creature, MaterialDef>> = {
   dragon_scales: {
     id: 'dragon_scales',
+    row: 5, // its hash row (7) is the great white's `shark_skin`
     scaleMetres: 0.5,
     roughness: 0.45,
     graph: tex.material({
@@ -97,6 +98,7 @@ export const CREATURE_MATERIALS: Readonly<Record<Creature, MaterialDef>> = {
   },
   fur: {
     id: 'fur',
+    row: 2, // its hash row (0) is the Tiger's `zimmerit`
     scaleMetres: 0.5,
     roughness: 0.7,
     graph: tex.material({

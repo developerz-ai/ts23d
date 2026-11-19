@@ -29,6 +29,9 @@ with red/green roundels in front of oil lamps.
 ## Parts the engine needs
 `arm_<track>_home`, `arm_<track>_distant` (pivots, one-way `sway` about −X: the blade drops 0–60° and returns) ·
 `lamp_*_lens` (glow) · sockets `lamp_*_light` (light) · `post_l`, `post_r`, `girder`, `mast_*`.
+Each arm's spectacle carries a spindle turning in `bearing_<track>_<arm>` (clamp band + bored boss
+on the mast, LOD0/1): `connect: { as: 'hinge' }` to the bearing, and the arm lists the bearing in
+`clearOf` (the spindle runs in its bore). LOD2 drops the bearing; the hub bears on the mast face.
 
 ## Open questions
 - Arms rest horizontal (stop) and drop one way to 60° (clear) with `oneWay` sway; the 30° approach

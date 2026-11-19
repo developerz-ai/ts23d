@@ -1,7 +1,7 @@
 // The packaging contract the smoke test enforces: explicit exports and a clean tarball listing.
 
 import { expect, it } from 'bun:test';
-import { expectedExports, exportTargets, tarballProblems } from './pack-smoke.ts';
+import { expectedExports, exportTargets, RUNTIME_FILES, tarballProblems } from './pack-smoke.ts';
 
 const CLEAN = [
   'package.json',
@@ -10,6 +10,7 @@ const CLEAN = [
   'dist/index.js',
   'dist/index.d.ts',
   'src/index.ts',
+  ...RUNTIME_FILES,
 ];
 const TARGETS = ['dist/index.js', 'dist/index.d.ts', 'src/index.ts', 'package.json'];
 
@@ -23,6 +24,15 @@ it('rejects a listing that ships a test file, a demo PNG or a source map', () =>
   expect(tarballProblems([...CLEAN, 'dist/chunk-a.js.map'], TARGETS)).toEqual([
     'ships a source map: dist/chunk-a.js.map',
   ]);
+});
+
+it('rejects a listing without the CLI bin or the path-tracer worker (loaded by path, not exports)', () => {
+  expect(
+    tarballProblems(
+      CLEAN.filter((f) => f !== 'dist/render/path/worker.js'),
+      TARGETS,
+    ),
+  ).toEqual(['runtime file missing: dist/render/path/worker.js']);
 });
 
 it('rejects a listing missing CLAUDE.md or an exports target', () => {

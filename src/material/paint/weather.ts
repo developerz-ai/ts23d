@@ -4,12 +4,20 @@
 // Wet follows Lagarde's physically based wet surfaces (darkening grows with porosity, water film
 // roughness → ~0.1, puddles flat and near-mirror); coefficients are approximations, see
 // docs/architecture/materials.md#weathering. `porosity` 0..1 (default 0.6) scales the darkening.
+// Puddles flatten an image strip's normal map as well as the height. Ranges are validated
+// upstream (validate.ts, material-def.ts); `wear` and `wet` are still clamped here.
 
 import { type Canvas, noiseAt, param, smooth } from './canvas.ts';
 import { grime } from './masks.ts';
 import { curvature } from './relief.ts';
 
 type Params = Readonly<Record<string, number>> | undefined;
+
+/** Weathering params, each 0..1 (validate.ts and material-def.ts reject anything else). */
+export const WEATHER_PARAMS = ['wear', 'age', 'wet', 'porosity'] as const;
+
+/** A flat tangent-space normal, RGB bytes. */
+const FLAT = [128, 128, 255] as const;
 
 function wearEdges(c: Canvas, amount: number, seed: number): void {
   const k = curvature(c, 0.006);
@@ -39,6 +47,8 @@ function soak(c: Canvas, wet: number, porosity: number): void {
   // Water fills the lowest share of the relief as wetness passes 0.5 (none below).
   const level = lo + (hi - lo) * 0.45 * smooth(0.5, 1, wet);
   const dark = wet * (0.15 + 0.45 * porosity);
+  // An image normal map overrides the height's normals: flatten it under the water too.
+  const nrm = c.normalRgba;
   for (let i = 0; i < c.height.length; i++) {
     const h = c.height[i] ?? 0;
     const pool = level > lo && h < level ? smooth(0, 0.3 * (level - lo), level - h) : 0;
@@ -46,7 +56,16 @@ function soak(c: Canvas, wet: number, porosity: number): void {
     const r = c.rough[i] ?? 0.8;
     const film = r + (0.12 - r) * wet * 0.85;
     c.rough[i] = film + (0.03 - film) * pool;
-    if (pool > 0) c.height[i] = h + (level - h) * pool;
+    if (pool > 0) {
+      c.height[i] = h + (level - h) * pool;
+      if (nrm)
+        for (let k = 0; k < 3; k++) {
+          const o = i * 4 + k;
+          const f = FLAT[k] ?? 128;
+          const v = nrm[o] ?? f;
+          nrm[o] = Math.round(v + (f - v) * pool);
+        }
+    }
   }
 }
 

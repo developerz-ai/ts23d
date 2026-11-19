@@ -1,5 +1,6 @@
 // Entry: the home page (live showcase, gallery, how it works) and the asset page, routed by hash:
-// `#<asset_name>` opens an asset; anything else is home. Committed renders draw the gallery at
+// `#<asset_name>` opens an asset; an in-page anchor (`#main`, "Skip to content") keeps the shown
+// view; anything else is home (a malformed hash too, `route.ts`). Committed renders draw the gallery at
 // once and already name each recipe's entry file, so viewers start compiling immediately; the
 // worker's full catalog (recipes with no renders yet) loads when the page is idle. The viewer and
 // its panels are a lazy chunk, fetched on the first asset page. Without WebGL neither the showcase
@@ -22,6 +23,7 @@ import { startLod } from './lod-policy.ts';
 import { renderQuality } from './quality-panel.ts';
 import { loadCatalog } from './recipes.ts';
 import { renderRenders } from './renders-panel.ts';
+import { decodeHash, keepsView, toAnchor } from './route.ts';
 import { Showcase } from './showcase.ts';
 import type { SoundPanel } from './sound-panel.ts';
 import { renderRecipe } from './source.ts';
@@ -221,8 +223,9 @@ function openAsset(base: Item, tier: Tier | null = null): void {
   );
 }
 
-function route(): void {
-  const [name, asked] = parseHash(decodeURIComponent(location.hash.slice(1)));
+/** Show what the hash names. `scroll` is false when nothing navigated (the catalog arrived). */
+function route(scroll = true): void {
+  const [name, asked] = parseHash(decodeHash(location.hash));
   const item = items.find((i) => i.name === name);
   const base = baseOf(name);
   const paired = base ? items.find((i) => i.name === base) : undefined;
@@ -232,6 +235,13 @@ function route(): void {
   }
   if (item) {
     openAsset(item, asked);
+    return;
+  }
+  const target = name ? document.getElementById(name) : null;
+  const place = target ? (home.contains(target) ? 'home' : 'page') : null;
+  // "Skip to content" on an asset page is an anchor, not a route: the asset stays.
+  if (keepsView(place, current !== null)) {
+    toAnchor(target, scroll);
     return;
   }
   if (current)
@@ -252,11 +262,12 @@ function route(): void {
       (item) => subjectOf(item).neural,
     );
   showcaseOn = true;
-  if (name) document.getElementById(name)?.scrollIntoView();
+  toAnchor(target, scroll);
 }
 
+// Listening first: whatever the first route does, later hash changes still route.
+window.addEventListener('hashchange', () => route());
 route();
-window.addEventListener('hashchange', route);
 
 /** Recipes with no committed renders yet join the gallery once the page is idle. */
 const idle = (fn: () => void): void => {
@@ -273,6 +284,7 @@ idle(() => {
       const before = items.length;
       items = mergeRecipes(items, found);
       if (items.length !== before) gallery.render(gridItems(items));
-      if (!current) route();
+      // Not a navigation: a recipe the hash names may have arrived, but the scroll stays put.
+      if (!current) route(false);
     });
 });

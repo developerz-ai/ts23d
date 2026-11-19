@@ -71,3 +71,18 @@ describe('split grammar', () => {
     expect(total(split('a:~', 0))).toBe(0);
   });
 });
+
+describe('split grammar: repeats that fit exactly', () => {
+  it('takes the third copy when 3 × 1.1 m fills 3.3 m (floor lost it to rounding)', () => {
+    const bays = split('{bay:1.1}*', 3.3);
+    expect(bays).toHaveLength(3);
+    for (const b of bays) expect(b.size).toBeCloseTo(1.1, 9);
+    expect(total(bays)).toBeCloseTo(3.3, 9);
+  });
+
+  it('gives a stretch beside an exact repeat zero metres, never a negative size', () => {
+    const slots = split('{bay:0.1}* | end:~', 0.3);
+    expect(slots.filter((s) => s.symbol === 'bay')).toHaveLength(3);
+    for (const s of slots) expect(s.size).toBeGreaterThanOrEqual(0);
+  });
+});

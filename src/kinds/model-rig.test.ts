@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test';
 import type { Mesh } from '../core/index.ts';
 import { creaturePlan } from './creature.ts';
-import { capsuleCreature, FIXTURE_WOLF } from './model-fixtures.ts';
+import { capsuleCreature, FIXTURE_WOLF, riggerBones } from './model-fixtures.ts';
 import { mirrorBones, mirrorHalf, modelRig } from './model-rig.ts';
 
 const { bones } = creaturePlan(FIXTURE_WOLF);
@@ -15,6 +15,19 @@ describe('modelRig', () => {
     expect(() => modelRig(body, FIXTURE_WOLF).at('wing_l_0')).toThrow(
       /T3D_RECIPE_INVALID.*wing_l_0/,
     );
+  });
+
+  it("refuses register: 'joints' without joints (it fell back to the surface fit silently)", () => {
+    expect(() => modelRig(body, FIXTURE_WOLF, { register: 'joints' })).toThrow(
+      /T3D_RECIPE_INVALID.*no `joints`/,
+    );
+  });
+
+  it("says so when a mirrored fit leaves the rigger's joints unused", () => {
+    const rig = modelRig(lopsided, FIXTURE_WOLF, { symmetric: '+', joints: riggerBones() });
+    expect(rig.symmetric).toBe(true);
+    expect(rig.joints).toBe('fit');
+    expect(rig.notices.some((n) => /mirrored/.test(n))).toBe(true);
   });
 
   it('cannot fit a one-sided model as it is (two legs are missing)', () => {

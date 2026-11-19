@@ -129,7 +129,7 @@ export function paintSetOf(
       throw invalid(`variant '${v}' in '${asset}' is not snake_case`, 'rename it [a-z][a-z0-9_]*');
     const repaint: Record<string, Vec3> = {};
     for (const [s, c] of Object.entries(over)) {
-      if (!(s in out))
+      if (!Object.hasOwn(out, s))
         throw invalid(
           `variant '${v}' in '${asset}' repaints slot '${s}', which paint does not declare`,
           `declare it in paint (slots: ${slots.join(', ')}) or fix the name`,
@@ -145,7 +145,7 @@ export function paintSetOf(
 export function checkPaintedParts(asset: string, parts: readonly Part[], l: PaintSet | null): void {
   for (const p of parts) {
     if (p.paint === undefined) continue;
-    if (!l || !(p.paint in l.paint))
+    if (!l || !Object.hasOwn(l.paint, p.paint))
       throw invalid(
         `part '${p.name}' in '${asset}' uses paint slot '${p.paint}', which the asset does not declare`,
         `add it to defineAsset({ paint: { ${p.paint}: '#rrggbb' } })${l ? ` or use one of: ${Object.keys(l.paint).join(', ')}` : ''}`,

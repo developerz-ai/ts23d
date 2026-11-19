@@ -13,6 +13,7 @@ import {
   kindsDrift,
   missingHeader,
   realSources,
+  scopedSources,
   unscopedBunx,
 } from './conventions.ts';
 
@@ -188,5 +189,20 @@ describe('unscopedBunx (D49)', () => {
     expect(
       unscopedBunx(src('README.md', 'run `bunx -p @developerz.ai/ts23d t3d build a.ts`')),
     ).toEqual([]);
+  });
+
+  it('passes the line that warns about the bare form, still fails a use elsewhere', () => {
+    const warn = 'a bare `bunx t3d` outside a project fetches an unrelated npm package';
+    expect(unscopedBunx(src('README.md', warn))).toEqual([]);
+    const v = unscopedBunx(src('README.md', `${warn}\nthen run \`bunx t3d shot\``));
+    expect(v.map((x) => x.line)).toEqual([2]);
+  });
+
+  it('scans the CLI help text, and the shipped help is scoped', async () => {
+    const all = await scopedSources();
+    const help = all.find((s) => s.file === 'src/cli/help.ts');
+    expect(help).toBeDefined();
+    expect(all.some((s) => s.file === 'llms.txt')).toBe(true);
+    expect(help ? unscopedBunx(help) : ['missing']).toEqual([]);
   });
 });

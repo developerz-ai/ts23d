@@ -30,6 +30,17 @@ describe('staleOutputs', () => {
     const v = await staleOutputs(dir, 'x.ts', 'crate', [12, 8, 3]);
     expect(v[0]?.message).toContain('stale (tris 12/8/4 vs 12/8/3 now)');
   });
+
+  it('compares the compiled count when the manifest carries one beside the file count', async () => {
+    const dir = await outputs(['hero.png', 'sheet.png']);
+    await writeFile(
+      join(dir, 'out', 'crate', 'manifest.json'),
+      JSON.stringify({ triangles: [10, 8, 4], trianglesCompiled: [12, 8, 4] }),
+    );
+    expect(await staleOutputs(dir, 'x.ts', 'crate', [12, 8, 4])).toEqual([]);
+    const v = await staleOutputs(dir, 'x.ts', 'crate', [10, 8, 4]);
+    expect(v[0]?.message).toContain('stale (tris 12/8/4 vs 10/8/4 now)');
+  });
 });
 
 describe('recipeTests', () => {

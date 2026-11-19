@@ -9,7 +9,7 @@ import {
 } from './define.ts';
 import { DEFAULT_SHEET, paintTrimSheet } from './generator.ts';
 import type { MaterialDef } from './material-def.ts';
-import { customIds } from './slots.ts';
+import { customIds, homeOwner } from './slots.ts';
 import { provideTextures } from './texture-source.ts';
 import { CUSTOM_STRIP_SLOTS, type StripId, stripRect } from './trim-sheet.ts';
 
@@ -76,6 +76,16 @@ describe('defineMaterial: bad input', () => {
     );
   });
 
+  it('takes the same definition with its keys in another order as the same (it conflicted)', () => {
+    const a = { id: 'test_order', roughness: 0.6, metalness: 1, params: { width: 0.1, rings: 2 } };
+    const b = { params: { rings: 2, width: 0.1 }, metalness: 1, id: 'test_order', roughness: 0.6 };
+    expect(String(defineMaterial(a))).toBe('test_order');
+    expect(code(() => defineMaterial(b))).toBe('no error');
+    expect(code(() => defineMaterial({ ...b, params: { rings: 3, width: 0.1 } }))).toBe(
+      'T3D_MATERIAL_CONFLICT',
+    );
+  });
+
   it('names unknown strips, and a painter that writes NaN fails the paint', () => {
     expect(code(() => stripRect('nope' as StripId))).toBe('T3D_MATERIAL_UNKNOWN');
     expect(code(() => materialOf('nope' as StripId))).toBe('T3D_MATERIAL_UNKNOWN');
@@ -105,8 +115,10 @@ describe('defineMaterial: bad input', () => {
     defineMaterial(imageDef);
     // v3 layout: 14 custom rows (56 strip rows − 42 built-ins).
     expect(CUSTOM_STRIP_SLOTS).toBe(14);
-    for (let k = customIds().length; k < CUSTOM_STRIP_SLOTS; k++)
-      defineMaterial({ id: `test_fill${k}`, roughness: 0.5 });
+    // A row comes from the id alone, so fill the sheet with ids whose rows are still free.
+    for (let k = 0; customIds().length < CUSTOM_STRIP_SLOTS; k++)
+      if (homeOwner(`test_fill${k}`, CUSTOM_STRIP_SLOTS) === undefined)
+        defineMaterial({ id: `test_fill${k}`, roughness: 0.5 });
     expect(code(() => defineMaterial({ id: 'test_over', roughness: 0.5 }))).toBe('T3D_SHEET_FULL');
   });
 });
@@ -130,5 +142,21 @@ describe('defineMaterial: output', () => {
     expect(stripCredits([0.001, 0.002])).toEqual([]);
     expect(stripCredits([(r.v0 + r.v1) / 2])[0]).toContain('CC0-1.0');
     expect(textureSources().map((t) => t.id)).toEqual(['swatch']);
+  });
+
+  it('does not credit an image strip for a neighbour whose vertices sit on the shared edge', () => {
+    const r = stripRect('test_image' as StripId);
+    const h = r.v1 - r.v0;
+    // A box on the row below (V = its v0 and v1, which is the image row's v0) and one above.
+    expect(stripCredits([r.v0 - h, r.v0])).toEqual([]);
+    expect(stripCredits([r.v1, r.v1 + h])).toEqual([]);
+    // A lathe on the row below: V strictly inside it, plus the shared top edge.
+    expect(stripCredits([r.v0 - h, r.v0 - h / 2, r.v0])).toEqual([]);
+    // A box on the image row itself is credited; so is one triangle of it, exactly.
+    expect(stripCredits([r.v0, r.v1])).toHaveLength(1);
+    expect(stripCredits([r.v0, r.v0, r.v1], [0, 1, 2])).toHaveLength(1);
+    expect(stripCredits([r.v0 - h, r.v0 - h, r.v0, r.v1, r.v1 + h], [0, 1, 2, 3, 4, 4])).toEqual(
+      [],
+    );
   });
 });

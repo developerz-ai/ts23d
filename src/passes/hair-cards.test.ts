@@ -10,6 +10,29 @@ describe('hairCards', () => {
     expect(() => run({ maxCards: 10 })).toThrow(/cap 10/);
   });
 
+  test('fails: a card length that is NaN, infinite or negative (constant or per root)', () => {
+    for (const length of [Number.NaN, -0.03, Number.POSITIVE_INFINITY])
+      expect(() => run({ zones: [zone({ length })] })).toThrow(/length/);
+    expect(() => run({ zones: [zone({ length: () => Number.NaN })] })).toThrow(/length/);
+    expect(() => run({ zones: [zone({ length: (p) => p[0] - 0.5 })] })).toThrow(/length/);
+  });
+
+  test('a length under a tenth of the width grows no card: no specks, counts match roots', () => {
+    const none = run({ zones: [zone({ length: 0 })] });
+    expect(none.roots).toHaveLength(0);
+    expect(none.counts['coat']).toBe(0);
+    expect(none.mesh.indices).toHaveLength(0);
+    // Fading to nothing toward x = 0: only the far half grows cards, each a real strip.
+    const fade = run({ zones: [zone({ length: (p) => Math.max(0, p[0] - 0.5) * 0.1 })] });
+    const full = run();
+    expect(fade.roots.length).toBeGreaterThan(0);
+    expect(fade.roots.length).toBeLessThan(full.roots.length * 0.7);
+    expect(fade.counts['coat']).toBe(fade.roots.length);
+    expect(fade.mesh.positions.length / 3).toBe(fade.roots.length * 8);
+    for (const r of fade.roots) expect(r[0]).toBeGreaterThan(0.5);
+    expect(fade.mesh.positions.every(Number.isFinite)).toBe(true);
+  });
+
   test('fails if a root is outside the surface: every root is buried by `sink`', () => {
     const { roots } = run({ zones: [zone({ sink: 0.004 })] });
     expect(roots.length).toBeGreaterThan(0);

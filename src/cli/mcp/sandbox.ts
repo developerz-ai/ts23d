@@ -2,10 +2,13 @@
 // directory, nothing else. A path is resolved against the root, symlinks followed through its
 // deepest existing ancestor, and refused with T3D_CLI_USAGE when it lands outside every allowed
 // directory, so `../../etc` and a symlink out of the project both fail before any file is touched.
+// A recipe directory is expanded here and every entry confined, so a linked entry is refused
+// before anything is imported.
 
-import { realpathSync } from 'node:fs';
+import { realpathSync, statSync } from 'node:fs';
 import { basename, dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { Ts23dError } from '../../core/index.ts';
+import { entriesOf } from '../watch.ts';
 
 export interface Sandbox {
   /** Absolute, symlink-free project root: recipes are read from here, relative paths start here. */
@@ -56,4 +59,17 @@ export function confine(
     cause: `${what} '${p}' resolves to ${abs}, outside ${allowed.join(' and ')}`,
     fix: `pass a path inside the project, e.g. ${what === 'recipe' ? 'recipes/<name>/<name>.ts' : 'out'}; start \`t3d mcp\` in the project root (or --root <dir>, --out <dir>)`,
   });
+}
+
+/** The recipe files `p` names (a directory expands to its entries), each confined to the root. */
+export function confineRecipes(box: Sandbox, p: string): string[] {
+  const abs = confine(box, p, 'recipe', [box.root]);
+  let dir = false;
+  try {
+    dir = statSync(abs).isDirectory();
+  } catch {
+    return [abs]; // missing: the command reports T3D_RECIPE_NOT_FOUND
+  }
+  if (!dir) return [abs];
+  return entriesOf([abs]).map((e) => confine(box, e, 'recipe', [box.root]));
 }

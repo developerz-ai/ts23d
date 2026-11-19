@@ -24,3 +24,19 @@ export function mirroredV(rect: UvRect, metres: number, vMetres: number): number
   const m = t - 2 * Math.floor(t / 2);
   return stripV(rect, m <= 1 ? m : 2 - m);
 }
+
+/**
+ * Band fractions for one flat face from its vertices' heights in band units. V cannot wrap inside
+ * a face (the next strip sits there), and wrapping each vertex alone collapsed a face exactly one
+ * band tall and ran one crossing a band edge backwards. A face inside one band keeps its phase
+ * (and its historical bytes); any other starts at 0 and, when taller than a band, is squeezed
+ * onto it: monotonic either way. Tile taller faces at true scale with `tiled`.
+ */
+export function faceBand(heights: readonly number[]): (height: number) => number {
+  const lo = Math.min(...heights);
+  const hi = Math.max(...heights);
+  const top = Math.floor(lo) + 1;
+  if (hi <= top) return (h) => (h === top ? 1 : ((h % 1) + 1) % 1);
+  const span = Math.max(1, hi - lo);
+  return (h) => (h - lo) / span;
+}

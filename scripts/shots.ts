@@ -16,8 +16,10 @@ import { CURRENT_SHARD, inShard } from './lib/shard.ts';
 /**
  * The committed hero is what critiques judge, so it is path traced (src/render/path/): 960 × 540
  * at 16 samples per pixel + denoise. Measured on 4 threads: wolf (138k tris) 6.7 s of tracing,
- * human_head 6 s, roadster_v10 (900k tris) 13 s; a 4-vCPU CI runner ≈ 1.5× that, which keeps
- * the 12-shard shots job under its 5-minute budget. Raise spp only with a fresh measurement.
+ * human_head 6 s, roadster_v10 (900k tris) 13 s; a 4-vCPU CI runner ≈ 1.5× that. Tracing is not
+ * what makes the shots job slow: each of the four `t3d` processes below re-imports and recompiles
+ * the recipe, and the head recipes take minutes to import (measured 2026-11-18: the slowest of the
+ * 12 shards runs 11-13 minutes). Raise spp only with a fresh measurement.
  */
 export const HERO_FLAGS: readonly string[] = [
   '--quality',

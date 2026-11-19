@@ -17,24 +17,24 @@
 
 ## Primitives (shipped)
 
-| Primitive | Key options | For |
-|---|---|---|
-| `box` | `size`, `at`, `strip`, `omit`, `bevel?` | Hulls, walls, crates; `bevel` = the mid-poly chamfer |
-| `lathe` / `cylinder` | `profile` or `radius`+`length`, `segments`, `axis`, `creaseDeg?`, `uv?: 'metres'`, `faceted?` | Wheels, boilers, domes, n-sided tanks |
-| `prism` | `profile`, `depth`, `plane: 'xy'\|'xz'\|'yz'` | Sloped armour, gables, fins |
-| `beam` | `from`, `to`, `width`, `segments?`, `up?`, `caps?` | Girders, rods, rails |
-| `planar` | `points`, `doubleSided?` | Plates, decks, signs |
-| `sweep` | `section` (polygon or `{ radius, segments }`), `path`, `scale?` (taper), `twist?`, `caps?` | Branches, pipes, handrails, cables. Parallel-transport frames; triangles = 2·S·(P−1) + S per cap |
-| `loft` | `rings` (Vec3 rings), `capStart?`, `capEnd?`, `uv?` | Trunks, fuselages, bottles. `ringXY(centre, rx, ry, …)` builds a ring, with wobble |
-| `heightfield` | `rect`, `cells`, `height(x, y)`, `color`, `skirt?` | Terrain, dioramas; with `terrainGrid` + `hydraulicErosion` / `thermalErosion` + `terrainColor` for real-looking mountains |
-| `tiled` | `origin`, `u`, `v`, `strip`, `segments?` | Walls, roofs, decks at true texture scale |
-| `cell` | `origin`, `u`, `v`, `cell`, `inset?` | Windows, doors, clocks, signs; `inset` adds reveals |
-| `lattice` | `from`, `to`, `depth`, `pattern: warren\|pratt\|howe\|x`, `bays`, `chord`, `web`, `section` | Bridges, towers, cranes, gantries |
-| `text` | `str`, `origin`, `along`, `up`, `height`, `font`, `depth?`, `align?`, `maxWidth?`, `surface?`; vector fonts also `weight?`, `segments?` (LOD), `cap?`, `kerning?` | Name boards, wagon lettering, hull markings, plaques. Fonts: `'5x7'` / `'block'` pixel (Latin + Cyrillic) or smooth Hershey strokes `'sans'`, `'serif'`, `'script'`, `'gothic'` (ASCII); see `recipes/type_specimen` |
-| `sdf` | `field(p)`, `bounds`, `resolution`, `mesher?`, `symmetry?` | Any signed-distance shape; `sd.*` combinators, `valueNoise` |
-| `sculpt` | `edits` (shape, op, blend, color, groups, `{ field, bounds }`), `resolution`, `mirror?` | Busts, rocks, asteroids: Dreams-style edit lists |
-| `extrudeSvg` / `latheSvg` | SVG string, `scale` or `size`, `depth`, `bevel?`, `view`, `tolerance?`, `lod?` | Emblems, gears, brackets, vases from a drawing ([Drawing with SVG](#drawing-with-svg)) |
-| `visualHull` / `sd.silhouette` | `front`, `side`, `top?` SVGs, `scale`, `round?` | Block out a head, creature or vehicle from two drawings, then sculpt |
+| Primitive | Key options | Anchor (where `at` / the coordinates sit) | For |
+|---|---|---|---|
+| `box` | `size`, `at`, `strip`, `omit`, `bevel?` | `at` = centre of the **base** face: the box spans `at.z` to `at.z + size[2]`, centred in X and Y | Hulls, walls, crates; `bevel` = the mid-poly chamfer |
+| `lathe` / `cylinder` | `profile` or `radius`+`length`, `segments`, `axis`, `creaseDeg?`, `uv?: 'metres'`, `faceted?` | `at` is on the axis (`axis`, default Z). `lathe`: profile heights are measured from `at`. `cylinder`: **centred** on `at`, `length / 2` each way along the axis (a standing post at `at: [x, y, h / 2]`) | Wheels, boilers, domes, n-sided tanks |
+| `prism` | `profile`, `depth`, `plane: 'xy'\|'xz'\|'yz'` | No `at`: profile points are coordinates in `plane`; the extrusion straddles the plane (±`depth / 2`), or starts at it with `centred: false` | Sloped armour, gables, fins |
+| `beam` | `from`, `to`, `width`, `segments?`, `up?`, `caps?` | No `at`: the section is centred on the line `from` → `to` | Girders, rods, rails |
+| `planar` | `points`, `doubleSided?` | No `at`: `points` are absolute | Plates, decks, signs |
+| `sweep` | `section` (polygon or `{ radius, segments }`), `path`, `scale?` (taper), `twist?`, `caps?` | No `at`: the section is centred on the absolute `path` | Branches, pipes, handrails, cables. Parallel-transport frames; triangles = 2·S·(P−1) + S per cap |
+| `loft` | `rings` (Vec3 rings), `capStart?`, `capEnd?`, `uv?` | No `at`: `rings` are absolute | Trunks, fuselages, bottles. `ringXY(centre, rx, ry, …)` builds a ring, with wobble |
+| `heightfield` | `rect`, `cells`, `height(x, y)`, `color`, `skirt?` | No `at`: `rect` is world X/Y, `height` returns world Z | Terrain, dioramas; with `terrainGrid` + `hydraulicErosion` / `thermalErosion` + `terrainColor` for real-looking mountains |
+| `tiled` | `origin`, `u`, `v`, `strip`, `segments?` | `origin` = one corner; the face spans `u` and `v` from it | Walls, roofs, decks at true texture scale |
+| `cell` | `origin`, `u`, `v`, `cell`, `inset?` | `origin` = bottom-left corner seen from the front; `u` across, `v` up | Windows, doors, clocks, signs; `inset` adds reveals |
+| `lattice` | `from`, `to`, `depth`, `pattern: warren\|pratt\|howe\|x`, `bays`, `chord`, `web`, `section` | `from` → `to` is the base chord, `depth` rises along `up`; `centred: true` makes it the centreline | Bridges, towers, cranes, gantries |
+| `text` | `str`, `origin`, `along`, `up`, `height`, `font`, `depth?`, `align?`, `maxWidth?`, `surface?`; vector fonts also `weight?`, `segments?` (LOD), `cap?`, `kerning?` | `origin` = the baseline under the first letter (`align: 'centre'` / `'right'`: under the middle / end of the line); letters rise along `up` | Name boards, wagon lettering, hull markings, plaques. Fonts: `'5x7'` / `'block'` pixel (Latin + Cyrillic) or smooth Hershey strokes `'sans'`, `'serif'`, `'script'`, `'gothic'` (ASCII); see `recipes/type_specimen` |
+| `sdf` | `field(p)`, `bounds`, `resolution`, `mesher?`, `symmetry?` | No `at`: `field` and `bounds` are in the part's space | Any signed-distance shape; `sd.*` combinators, `valueNoise` |
+| `sculpt` | `edits` (shape, op, blend, color, groups, `{ field, bounds }`), `resolution`, `mirror?` | No `at`: each edit's shape sits where its own options put it | Busts, rocks, asteroids: Dreams-style edit lists |
+| `extrudeSvg` / `latheSvg` | SVG string, `scale` or `size`, `depth`, `bevel?`, `view`, `tolerance?`, `lod?` | The SVG `origin` (default `'bottom'`, `latheSvg` `'bottom-left'` = the axis) lands on `at`; `extrudeSvg` straddles the drawing plane for `front`/`side`, rises from it for `top` | Emblems, gears, brackets, vases from a drawing ([Drawing with SVG](#drawing-with-svg)) |
+| `visualHull` / `sd.silhouette` | `front`, `side`, `top?` SVGs, `scale`, `round?` | The drawings' origin lands on `at` | Block out a head, creature or vehicle from two drawings, then sculpt |
 
 Noise for any primitive: `gradientNoise2`, `valueNoise2`, `fbm`, `billow`, `ridged`, `warp`, `terrace` — all seeded from an `Rng`.
 
@@ -107,7 +107,7 @@ One module may export several assets; `t3d` builds every one. No default exports
 | `build` | `(ctx) => void` | yes | Synchronous |
 | `real` | `{ length, width, height, tolerance?, measures? }` | no | Real overall dimensions, metres (X, Y, Z). The `proportions` gate holds LOD0 to them, default ±5% |
 | `real.measures` | `Measure[]` | no | Spec-sheet dimensions checked on LOD0 by the `measures` gate, default ±2%. See below |
-| `sources` | `string[]` | with `real` | Where the numbers came from: spec sheets, rosters, drawings, photos. The type says "required for `real`"; as of 2026-10 nothing enforces it |
+| `sources` | `string[]` | with `real` | Where the numbers came from: spec sheets, rosters, drawings, photos. The type says "required for `real`". Neither `defineAsset` nor QA checks it. In the ts23d repo only, `bun run conventions` (`realSources`) fails a recipe folder whose `kind: 'vehicle'` or `'building'` asset lacks `real`, `sources` or `measures`; a library user's project gets no check (As of 2026-11) |
 | `checks` | `Check[]` | no | The recipe's own physical intent, run by QA at every LOD ([below](#checks-declared-intent)) |
 | `description`, `tags` | `string`, `string[]` | no | Gallery / search metadata |
 | `seed` | `number` | no | Default `1`; overridden by `compile(…, { seed })` or `ctx.use(…, { seed })` |
@@ -133,7 +133,7 @@ One module may export several assets; `t3d` builds every one. No default exports
 | `at` | Pivot in the parent's space. The mesh is authored relative to it |
 | `parent` | Name of an existing part/group. Parents first, else `T3D_PART_UNKNOWN` |
 | `yaw` | Rotation about local Z, radians |
-| `motion` | `{ kind: 'spin', axis, rps }` · `{ kind: 'slide', offset, hz }` · `{ kind: 'sway', axis, degrees, hz }` (turret scan, gun elevation, tree wind, a door) · `{ kind: 'orbit', axis, arm, hz }` (parallel circular translation, no turn: a coupling rod on its crank pins; `arm` = pin − axle centre at rest) · `{ kind: 'crank', axis, centre, pin, line, hz }` (a connecting rod: pivot on the small end, which slides along `line`; big end on the crank pin `pin` turning about the axle through `centre`; throw, phase and rod length come from these rest points) · `{ kind: 'piston', … }` (same fields: the crosshead / piston, translation only, exact slider-crank law). Rates and axes match the wheel's `spin`, so a rod cannot drift off its pin (`assertFollows`) · `{ kind: 'tread', path, pitch }` (a track belt: `tread(beltLine, y, linkPitch)`; no clip channel, the loop rides `extras.ts23d.tread` for engines). Baked to a 4 s (`LOOP_SECONDS`) `run` clip only when exporting with animations ([03](03-ir.md#glb-layout)) |
+| `motion` | `{ kind: 'spin', axis, rps }` · `{ kind: 'slide', offset, hz }` · `{ kind: 'sway', axis, degrees, hz }` (turret scan, gun elevation, tree wind, a door) · `{ kind: 'orbit', axis, arm, hz }` (parallel circular translation, no turn: a coupling rod on its crank pins; `arm` = pin − axle centre at rest) · `{ kind: 'crank', axis, centre, pin, line, hz }` (a connecting rod: pivot on the small end, which slides along `line`; big end on the crank pin `pin` turning about the axle through `centre`; throw, phase and rod length come from these rest points) · `{ kind: 'piston', … }` (same fields: the crosshead / piston, translation only, exact slider-crank law). Rates and axes match the wheel's `spin`, so a rod cannot drift off its pin (`assertFollows`) · `{ kind: 'tread', path, pitch }` (a track belt: `tread(beltLine, y, linkPitch)`; the `run` clip moves it one link pitch per cycle with morph targets, at the rim speed of the wheels inside the loop, so it runs in any glTF reader; the loop also rides `extras.ts23d.tread` for engines that drive the links themselves. The belt must repeat every pitch and the loop be a whole number of pitches: the `treads` gate checks both). Baked to a 4 s (`LOOP_SECONDS`) `run` clip only when exporting with animations ([03](03-ir.md#glb-layout)) |
 | `surface` | `'opaque'` (default) · `'cutout'` · `'glass'` · `'translucent'` ([below](#surfaces)) |
 | `clearOf` | Part names this moving part may pass through by design (an axle in its bearing, a crosshead in its guide). Exempts them from the `clashes` gate |
 
@@ -415,11 +415,21 @@ Result: six different houses (2–4 floors each) as `house_0` … `house_5`, wit
 
 **Same source + seed + LOD → same bytes.** Breaking any rule below breaks that.
 
+**Scope (as of 2026-11): one runtime.** The guarantee holds on a given runtime and version: the pinned
+Bun (`.bun-version`) is what the gate, the committed `recipes/*/out/` and the releases are built with.
+PNG bytes are the same under Bun, Node and the browser (the library carries its own deflate encoder).
+Geometry is not bit-identical across engines: `Math.sin`, `cos`, `atan2`, `hypot` and friends are
+allowed to differ in the last bit between JavaScriptCore (Bun) and V8 (Node, Chrome), so a GLB built
+under Node has the same shape within float rounding but a different hash. Pin snapshot hashes
+(`snapshotHash`) on the runtime you build with.
+
 | Rule | Why | Enforced by (in this repo) |
 |---|---|---|
 | Never `Math.random()`. Use `ctx.rng` or `createRng(seed)` | Ambient entropy | `scripts/determinism.ts` (static ban in `src/` + `recipes/`); test preload makes `Math.random` throw |
 | No `Date.now()`, `new Date()`, `performance.now()` in library or recipe code | Wall clock | `scripts/determinism.ts` |
 | No `toLocale*String()` | Locale changes bytes; format with `toFixed` | `scripts/determinism.ts` |
+| No `localeCompare`, `Intl.*`, crypto randomness or `process.hrtime` | Locale and entropy | `scripts/determinism.ts` |
+| No `deflateSync` / `gzipSync` from the runtime | The runtime's zlib differs between Bun and Node | `scripts/determinism.ts` |
 | `ctx.rng.fork('name')` per independent feature | Adding a draw in one part must not shift another | Convention |
 | No env vars, file or network reads in `build` | Ambient state | Convention |
 | `build` is synchronous | No ordering races | The type signature |

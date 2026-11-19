@@ -170,8 +170,9 @@ function frame(lod: Lod): Mesh {
       parts.push(
         bx([-0.15, s * 0.17 - 0.015, -0.03], [0.45, s * 0.17 + 0.015, 0.0], C.natural, 'aluminium'),
       );
+  // Adjuster bar across the front of both rails, run through them.
   if (lod === 0)
-    parts.push(rod([0.46, -0.12, 0.0], [0.46, 0.12, 0.0], 0.012, C.natural, 'chrome', 8));
+    parts.push(rod([0.44, -0.18, -0.008], [0.44, 0.18, -0.008], 0.012, C.natural, 'chrome', 8));
   return merge(parts);
 }
 
@@ -188,6 +189,7 @@ function harness(lod: Lod): Mesh {
           [-0.22, s * 0.085, 0.78],
           [0.0, s * 0.08, 0.5],
           [0.16, s * 0.05, 0.25],
+          [0.19, s * 0.02, 0.225],
         ],
         0.006,
         red,
@@ -202,7 +204,7 @@ function harness(lod: Lod): Mesh {
         [
           [0.0, s * 0.24, 0.12],
           [0.12, s * 0.18, 0.2],
-          [0.2, s * 0.04, 0.22],
+          [0.2, s * 0.025, 0.22],
         ],
         0.006,
         red,
@@ -213,6 +215,7 @@ function harness(lod: Lod): Mesh {
       ),
     );
   }
+  // All four straps end inside the buckle.
   parts.push(bx([0.17, -0.035, 0.2], [0.23, 0.035, 0.235], C.natural, 'chrome', 0.006));
   return merge(parts);
 }

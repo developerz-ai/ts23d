@@ -19,6 +19,8 @@ export interface MeasureResult {
   readonly measure: Measure;
   /** Model value, metres; null when no part matches. */
   readonly value: number | null;
+  /** Selectors that matched no part: the measure is red even if the rest lands on spec. */
+  readonly missing: readonly string[];
   readonly ok: boolean;
   /** World end points along the measure's axis. */
   readonly a: Vec3;
@@ -46,13 +48,18 @@ function union(bs: readonly (Box3 | null)[]): Box3 | null {
   };
 }
 
+/** A selector names a part exactly or as a prefix; same rule as the qa `measures` gate (a copy:
+ *  render and qa share a tier and may not import each other). */
+const matches = (name: string, selector: string): boolean =>
+  name === selector || name.startsWith(`${selector}_`);
+
 export function measureResults(asset: CompiledAsset): MeasureResult[] {
   const meshes = [...worldMeshes(asset.parts)];
   const boxOf = (prefix: string): Box3 | null => {
     const lo = [Infinity, Infinity, Infinity];
     const hi = [-Infinity, -Infinity, -Infinity];
     for (const [n, m] of meshes) {
-      if (n !== prefix && !n.startsWith(`${prefix}_`)) continue;
+      if (!matches(n, prefix)) continue;
       for (let i = 0; i < m.positions.length; i++) {
         const k = i % 3;
         lo[k] = Math.min(lo[k] ?? 0, m.positions[i] ?? 0);
@@ -70,11 +77,17 @@ export function measureResults(asset: CompiledAsset): MeasureResult[] {
     const value = box && (!pair || (pair[0] && pair[1])) ? Math.abs(a1 - a0) : null;
     const base = box?.min ?? [0, 0, 0];
     const end = (v: number): Vec3 => v3(base.map((x, i) => (i === k ? v : x)));
+    const missing = [...(m.parts ?? []), ...(m.between ?? [])].filter(
+      (sel) => !meshes.some(([n]) => matches(n, sel)),
+    );
     return {
       measure: m,
       value,
+      missing,
       ok:
-        value !== null && Math.abs(value - m.value) / m.value <= (m.tolerance ?? TOLERANCE.measure),
+        value !== null &&
+        missing.length === 0 &&
+        Math.abs(value - m.value) / m.value <= (m.tolerance ?? TOLERANCE.measure),
       a: end(Math.min(a0, a1)),
       b: end(Math.max(a0, a1)),
       box: box ?? { min: [0, 0, 0], max: [0, 0, 0] },

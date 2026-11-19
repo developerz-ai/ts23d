@@ -44,9 +44,18 @@ const ARM_X = 0.1; // front face of the mast + clearance: arms live in x ∈ [0.
 const LOW_ARM = 1.75; // pivot over the deck: the swept blade (r ≈ 1.67) clears the walkway
 const ARM_GAP = 2.35; // the upper spectacle clears the lower blade's sweep
 const MAST_H = LOW_ARM + ARM_GAP + 0.45;
+/** Bearing boss on the mast front (x from inside the pipe to BEARING_X1) whose bore carries the
+ *  arm's spindle; the spindle starts at SPINDLE_X0, clear of the pipe wall (r ≤ 0.072). */
+const BEARING_X1 = 0.09;
+const SPINDLE_R = 0.02;
+const SPINDLE_X0 = 0.076;
 const POST_D = 0.6; // post depth along X (the girder is GIRDER_W deep)
 const POST_W = 0.45; // post width along Y
 const KNEE_FOOT_X = POST_D / 2 - 0.045; // knee foot on the post's corner chord, not beside the post
+
+/** Mast pipe radius at height h over the deck (the lathe profile below, linear between rings). */
+const mastR = (h: number): number =>
+  h <= 0.4 ? 0.09 - (0.015 * h) / 0.4 : 0.075 - (0.01 * (h - 0.4)) / (MAST_H - 0.4);
 
 const steel = hex('#2d3033');
 const steelDark = hex('#1f2123');
@@ -197,14 +206,17 @@ function arm(kind: 'home' | 'distant', lod: Lod): { blade: Mesh; spectacle: Mesh
       }),
     );
   }
+  // Hub on the spindle and the cast spectacle plate. LOD0/1: the hub runs just clear of the
+  // mast's bearing boss, carried by the spindle turning in the boss bore; LOD2 has no bearing,
+  // so its hub reaches back to the mast face.
+  const hub0 = lod === 2 ? 0.075 : BEARING_X1 + 0.001;
   const rg: Mesh[] = [
-    // Hub on the spindle (touches the mast face) and the cast spectacle plate.
     cylinder({
       radius: 0.06,
-      length: ARM_X + 0.05 - 0.075,
+      length: ARM_X + 0.05 - hub0,
       segments: lod === 2 ? 4 : 8,
       axis: 'x',
-      at: [(0.075 + ARM_X + 0.05) / 2, 0, 0],
+      at: [(hub0 + ARM_X + 0.05) / 2, 0, 0],
       color: steelDark,
     }),
     place(
@@ -225,6 +237,22 @@ function arm(kind: 'home' | 'distant', lod: Lod): { blade: Mesh; spectacle: Mesh
       { at: [ARM_X + 0.0125, 0, 0] },
     ),
   ];
+  if (lod < 2)
+    rg.push(
+      lathe({
+        // Spindle: from just in front of the pipe (it must not sweep the pipe wall) through
+        // the bore into the hub, 0.5 mm smaller than the bore so it turns.
+        profile: [
+          [0, SPINDLE_X0],
+          [SPINDLE_R - 0.0005, SPINDLE_X0],
+          [SPINDLE_R - 0.0005, ARM_X + 0.05],
+          [0, ARM_X + 0.05],
+        ],
+        segments: lod === 0 ? 8 : 6,
+        axis: 'x',
+        color: steelDark,
+      }),
+    );
   if (lod < 2) {
     const red0: Vec2 = [-0.25, -0.25];
     const a = Math.PI / 3; // green comes in front of the lamp when the blade drops 60°
@@ -512,8 +540,44 @@ const bridge = defineFamily({
         [1, 'distant'],
       ] as const) {
         const pz = DECK_Z + LOW_ARM + (kind === 'home' ? ARM_GAP : 0);
-        if (lod < 2)
-          mast.push(box({ size: [0.2, 0.22, 0.32], at: [-0.17, y, pz - 0.2], color: steelDark })); // mechanism case
+        if (lod < 2) {
+          // Mechanism case, its front face sunk 2 cm into the pipe it is strapped to.
+          mast.push(box({ size: [0.22, 0.22, 0.32], at: [-0.16, y, pz - 0.2], color: steelDark }));
+          // Bearing bracket (its own part, so only it is cleared for the spindle turning in it):
+          // a clamp band round the pipe and the bored boss.
+          const r = mastR(pz - DECK_Z);
+          const brg: Mesh[] = [
+            lathe({
+              profile: [
+                [SPINDLE_R, 0.035],
+                [0.045, 0.035],
+                [0.045, BEARING_X1],
+                [SPINDLE_R, BEARING_X1],
+                [SPINDLE_R, 0.035],
+              ],
+              segments: lod === 0 ? 8 : 6,
+              axis: 'x',
+              color: steelDark,
+              at: [0, y, pz],
+            }),
+          ];
+          if (lod === 0)
+            brg.push(
+              lathe({
+                profile: [
+                  [r - 0.004, pz - 0.07],
+                  [r + 0.01, pz - 0.07],
+                  [r + 0.01, pz + 0.07],
+                  [r - 0.004, pz + 0.07],
+                  [r - 0.004, pz - 0.07],
+                ],
+                segments: segs,
+                color: steelDark,
+                at: [0, y, 0],
+              }),
+            );
+          part(`bearing_${t}_${kind}`, merge(brg));
+        }
         // Lamp behind the red roundel's stop position, on a bracket from the mast.
         const ly = y - 0.25;
         const lz = pz - 0.25;
@@ -555,6 +619,8 @@ const bridge = defineFamily({
         const name = `arm_${t}_${kind}`;
         ctx.group(name, {
           at: [0, y, pz],
+          // The spindle turns in the bearing's bore: that interlock is the pivot.
+          ...(lod < 2 ? { clearOf: [`bearing_${t}_${kind}`] } : {}),
           // Lower quadrant: about −X the blade (+Y) drops; stop → 60° clear → stop.
           motion: {
             kind: 'sway',
@@ -564,7 +630,11 @@ const bridge = defineFamily({
             oneWay: true,
           },
         });
-        part(`${name}_spectacle`, a.spectacle, { parent: name });
+        part(`${name}_spectacle`, a.spectacle, {
+          parent: name,
+          // Carried on its spindle in the mast bearing (LOD2 hub bears on the mast face).
+          connect: { as: 'hinge', to: lod < 2 ? `bearing_${t}_${kind}` : `mast_${t}` },
+        });
         part(`${name}_blade`, a.blade, { parent: name });
       }
       part(`mast_${t}`, merge(mast));

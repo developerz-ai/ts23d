@@ -4,6 +4,7 @@
 // licence asks for (OpenStreetMap, ODbL). Neutral wording: what made it, under which licence,
 // never a comparison. The record readers are pure (the media scan uses them at build).
 
+import { byCodeUnit } from './compare.ts';
 import type { MediaNeural } from './media-types.ts';
 
 export type Tier = 'cpu' | 'models';
@@ -91,9 +92,14 @@ export function stepsOf(report: unknown): string[] {
   return r['steps'].map((s) => str(obj(s)['op'])).filter(Boolean);
 }
 
+/**
+ * What kind of adapter ran: the word before any detail. `http:http://127.0.0.1:8190` and
+ * `http (ts23d-neural-server)` are both `http`; `blender:blender` is `blender`.
+ */
+export const adapterKind = (adapter: string): string => adapter.split(/[:\s(]/)[0] ?? '';
+
 /** True when the record's adapter called a hosted, paid service. */
-export const isHosted = (adapter: string): boolean =>
-  HOSTED.includes(adapter.split(/[:\s]/)[0] ?? '');
+export const isHosted = (adapter: string): boolean => HOSTED.includes(adapterKind(adapter));
 
 /** `http:http://127.0.0.1:8193` → `http`; `script:x.py (lab …)` → `script:x.py` (no hosts, no notes). */
 export const adapterLabel = (adapter: string): string =>
@@ -114,7 +120,7 @@ const list = (parts: readonly string[]): string =>
 
 /** Credits by task rank, then name. */
 export const sorted = <T extends Pick<MediaNeural, 'task' | 'model'>>(credits: readonly T[]): T[] =>
-  [...credits].sort((a, b) => rank(a.task) - rank(b.task) || a.model.localeCompare(b.model));
+  [...credits].sort((a, b) => rank(a.task) - rank(b.task) || byCodeUnit(a.model, b.model));
 
 /** "Made with Pixal3D (MIT), Blender 5.3.0 (GPL-2.0-or-later tool, own outputs) and Z-Image-Turbo (Apache-2.0)". */
 export function creditLine(

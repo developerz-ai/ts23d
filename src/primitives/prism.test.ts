@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'bun:test';
 import { boundsOf, triangleCount } from '../core/index.ts';
+import { stripRect } from '../material/index.ts';
 import { beam } from './beam.ts';
 import { planar } from './planar.ts';
 import { prism } from './prism.ts';
@@ -105,5 +106,49 @@ describe('prism input', () => {
     expect(() =>
       prism({ profile: [...SQ.slice(0, 3), [Number.NaN, 1]], depth: 1, color: [1, 1, 1] }),
     ).toThrow('T3D_RECIPE_INVALID');
+  });
+});
+
+describe('prism V', () => {
+  const square = [
+    [0, 0],
+    [1, 0],
+    [1, 1],
+    [0, 1],
+  ] as const;
+  const sideVs = (depth: number): number[] => {
+    const m = prism({ profile: square, depth, color: [1, 1, 1], caps: false });
+    return [0, 1, 2, 3].map((k) => m.uvs[k * 2 + 1] ?? 0);
+  };
+
+  it('spans V up a side at whole-metre depths (every vertex had the same V at depth 1)', () => {
+    for (const depth of [1, 2, 2.5]) {
+      const [a = 0, , c = 0] = sideVs(depth);
+      expect(c - a).toBeGreaterThan(1e-3);
+    }
+  });
+
+  it('runs V the same way across a cap that crosses a whole metre (0.8…1.2 ran backwards)', () => {
+    const m = prism({
+      profile: [
+        [0, 0.8],
+        [1, 0.8],
+        [1, 1.2],
+        [0, 1.2],
+      ],
+      depth: 0.5,
+      color: [1, 1, 1],
+    });
+    // Caps follow the four sides (4 vertices each): 16…19 is the first cap.
+    const v = (k: number): number => m.uvs[(16 + k) * 2 + 1] ?? 0;
+    expect(v(2)).toBeGreaterThan(v(1));
+    expect(v(3)).toBeGreaterThan(v(0));
+  });
+
+  it('keeps the historical V of a face inside one band (no committed output moves)', () => {
+    const r = stripRect('plain');
+    const [a = 0, , c = 0] = sideVs(0.3);
+    expect(a).toBe(Math.fround(r.v0));
+    expect(c).toBe(Math.fround(r.v0 + (((0.3 % 1) + 1) % 1) * (r.v1 - r.v0)));
   });
 });

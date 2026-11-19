@@ -24,6 +24,19 @@ describe('sound.mechanism', () => {
     }
   });
 
+  it('a one-shot hiss shorter than its 0.25 s release still fades in and out', () => {
+    // hold was duration − 0.25 < 0: the envelope went negative and the clip began at full level.
+    for (const duration of [0.05, 0.1, 0.2]) {
+      const x = mechanism({ kind: 'hiss', material: 'steel', duration, loop: false }).samples;
+      const peak = x.reduce((m, v) => Math.max(m, Math.abs(v)), 0);
+      const edge = (from: number): number =>
+        x.slice(from, from + 8).reduce((m, v) => Math.max(m, Math.abs(v)), 0);
+      expect(peak).toBeGreaterThan(0.5);
+      expect(edge(0)).toBeLessThan(peak * 0.1);
+      expect(edge(x.length - 8)).toBeLessThan(peak * 0.1);
+    }
+  });
+
   it('whine sits at teeth × shaft rate', () => {
     const w = mechanism({ kind: 'whine', material: 'steel', rpm: 1500, teeth: 30 });
     const mesh = (1500 / 60) * 30;

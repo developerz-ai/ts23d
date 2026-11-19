@@ -9,8 +9,9 @@ import { Ts23dError } from '../core/index.ts';
 import { materialGeneration } from './define.ts';
 import type { PaintedSheet, SheetRecipe } from './generator.ts';
 import { paintTrimSheet } from './generator.ts';
+import { rowsSampled } from './rows-sampled.ts';
 import { customIds } from './slots.ts';
-import { type StripId, stripRect } from './trim-sheet.ts';
+import { stripRow } from './trim-sheet.ts';
 
 export interface LiveSheet {
   /** The sheet for the materials defined right now; `repainted` when it had to paint. */
@@ -31,20 +32,26 @@ export function liveSheet(recipe: SheetRecipe): LiveSheet {
   };
 }
 
-/** Throw when `uvs` (u, v pairs) land in a project strip `sheet` was painted without. */
-export function checkSheetFor(sheet: PaintedSheet, uvs: ArrayLike<number>): void {
+/**
+ * Throw when `uvs` (u, v pairs) land in a project strip `sheet` was painted without. Pass the
+ * mesh's `indices` for an exact, per-triangle answer (`rowsSampled`).
+ */
+export function checkSheetFor(
+  sheet: PaintedSheet,
+  uvs: ArrayLike<number>,
+  indices?: ArrayLike<number>,
+): void {
   const painted = sheet.strips;
   if (!painted) return;
-  for (const id of customIds()) {
-    if (painted.includes(id)) continue;
-    const r = stripRect(id as StripId);
-    for (let i = 1; i < uvs.length; i += 2) {
-      const v = uvs[i] ?? -1;
-      if (v >= r.v0 && v < r.v1)
-        throw new Ts23dError('T3D_MATERIAL_UNKNOWN', {
-          cause: `the trim sheet was painted before material '${id}' was defined, and the asset maps into its row: it would render as a blank, opaque strip`,
-          fix: 'paint the sheet after compile(asset) (liveSheet(recipe).current() repaints when materials changed), or omit `sheet` and let the renderer paint one',
-        });
-    }
-  }
+  const missing = customIds().filter((id) => !painted.includes(id));
+  if (!missing.length) return;
+  const vs = new Float64Array(uvs.length >> 1);
+  for (let i = 0; i < vs.length; i++) vs[i] = uvs[i * 2 + 1] ?? -1;
+  const rows = rowsSampled(vs, indices);
+  for (const id of missing)
+    if (rows.has(stripRow(id)))
+      throw new Ts23dError('T3D_MATERIAL_UNKNOWN', {
+        cause: `the trim sheet was painted before material '${id}' was defined, and the asset maps into its row: it would render as a blank, opaque strip`,
+        fix: 'paint the sheet after compile(asset) (liveSheet(recipe).current() repaints when materials changed), or omit `sheet` and let the renderer paint one',
+      });
 }

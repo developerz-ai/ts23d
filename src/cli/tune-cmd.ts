@@ -1,7 +1,7 @@
 // `t3d tune <recipe.ts>`: offline tuning of every exported asset that declares `tune`. Writes, beside
 // the recipe: tune.json (committed; the recipe imports it), tune-report.md and tune-strip.png
 // (before/after — Read it). Creates an empty tune.json first so the recipe's import resolves
-// (removed again when nothing in the file declares tune).
+// (removed again when nothing in the file declares tune or the tune fails).
 // Same recipe + --seed + --evals → the same tune.json bytes.
 
 import { existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -27,6 +27,8 @@ export interface TuneRun {
   readonly strips: readonly string[];
 }
 
+/** Tune every `tune`-declaring asset in `file`; a failure removes the placeholder tune.json this
+ *  run created, so no stray `{}` is left beside the recipe. */
 export async function tuneFile(file: string, args: Args): Promise<TuneRun> {
   const dir = dirname(resolve(file));
   const json = join(dir, 'tune.json');
@@ -47,27 +49,32 @@ export async function tuneFile(file: string, args: Args): Promise<TuneRun> {
   const results: TuneResult[] = [];
   const reports: string[] = [];
   const strips: string[] = [];
-  for (const asset of assets) {
-    const spec = asset.tune;
-    if (!spec) continue;
-    const masks = loadMasks(spec, dir);
-    const r = tune(asset, {
-      masks,
-      ...(args.evals !== undefined ? { evals: args.evals } : {}),
-      ...(args.seed !== undefined ? { seed: args.seed } : {}),
-      ...(args.method ? { method: args.method } : {}),
-    });
-    results.push(r);
-    const suffix = assets.length > 1 ? `-${asset.name}` : '';
-    const strip = `tune-strip${suffix}.png`;
-    const report = join(dir, `tune-report${suffix}.md`);
-    writeFileSync(join(dir, strip), tuneStrip(asset, r, masks));
-    writeFileSync(report, reportMd(r, strip));
-    strips.push(join(dir, strip));
-    reports.push(report);
+  try {
+    for (const asset of assets) {
+      const spec = asset.tune;
+      if (!spec) continue;
+      const masks = loadMasks(spec, dir);
+      const r = tune(asset, {
+        masks,
+        ...(args.evals !== undefined ? { evals: args.evals } : {}),
+        ...(args.seed !== undefined ? { seed: args.seed } : {}),
+        ...(args.method ? { method: args.method } : {}),
+      });
+      results.push(r);
+      const suffix = assets.length > 1 ? `-${asset.name}` : '';
+      const strip = `tune-strip${suffix}.png`;
+      const report = join(dir, `tune-report${suffix}.md`);
+      writeFileSync(join(dir, strip), tuneStrip(asset, r, masks));
+      writeFileSync(report, reportMd(r, strip));
+      strips.push(join(dir, strip));
+      reports.push(report);
+    }
+    const existing: unknown = JSON.parse(readFileSync(json, 'utf8'));
+    writeFileSync(json, tuneJson(existing, results));
+  } catch (e) {
+    if (created) rmSync(json, { force: true });
+    throw e;
   }
-  const existing: unknown = JSON.parse(readFileSync(json, 'utf8'));
-  writeFileSync(json, tuneJson(existing, results));
   return { file, json, results, reports, strips };
 }
 

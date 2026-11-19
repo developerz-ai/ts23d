@@ -17,16 +17,22 @@ export function rewriteDtsSpecifiers(text: string): string {
     .replace(INLINE_IMPORT, (_m, head: string, q: string, tail: string) => `${head}.js${q}${tail}`);
 }
 
-async function build(): Promise<void> {
-  await rm('dist', { recursive: true, force: true });
+/** What Bun.build emits: the root and module barrels, the CLI, and every file the code loads by
+ *  URL at run time (the path tracer's worker → dist/render/path/worker.js, found by parallel.ts). */
+export function buildEntrypoints(): string[] {
   const modules = Object.keys(TIERS).filter((m) => m !== 'cli');
-  const entrypoints = [
+  return [
     'src/index.ts',
     ...modules.map((m) => `src/${m}/index.ts`),
     'src/cli/bin.ts',
+    'src/render/path/worker.ts',
   ];
+}
+
+async function build(): Promise<void> {
+  await rm('dist', { recursive: true, force: true });
   const result = await Bun.build({
-    entrypoints,
+    entrypoints: buildEntrypoints(),
     outdir: 'dist',
     root: 'src',
     target: 'node',

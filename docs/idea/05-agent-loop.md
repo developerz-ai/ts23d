@@ -41,7 +41,7 @@ research ─► concept image ─► READ it ─► image-to-3D ─► Blender s
 | Step | Command | Done when |
 |---|---|---|
 | 1. Concept | bind `image`; `t3d neural run recipes/x/x.ts` | exact side profile (quadruped) or A-pose front (biped), flat light, passes the input-image rules; you READ the PNG |
-| 2. Model | bind `mesh` (and `rig`); same command, up to 5 rounds; paid adapters print credits, `--yes-spend` above 50 | `neural/<key>/record.json` committed, committed bytes <= 12 MB, raw mesh local |
+| 2. Model | bind `mesh` (and `rig`); same command, up to 5 rounds; paid adapters print credits, `--yes-spend` above 50 or when a job cannot be priced | `neural/<key>/record.json` committed, committed bytes <= 12 MB, raw mesh local |
 | 3. Steps | edit the recipe's `blender` steps; `t3d blender review recipes/x/x.ts --out review` (needs Blender, never cached) | clay, wire, weights, poses show no shards, fused limbs or torn weights; then `t3d neural run` again so the cached Blender output the build reads is the reviewed program's |
 | 4. Build | `t3d build recipes/x/x.ts` | QA PASS incl. `model` (`T3D_MODEL_*`), `skin`, `deform`, `gait` |
 | 5. Look | `t3d shot`, `t3d hero`, READ; the model tier renders its own textures | flaws named in the recipe README, not hidden |
@@ -128,16 +128,19 @@ Also exported: `glob(pattern) → RegExp`, `insideSolid`. Once you know the inte
 
 ## Output an agent reads
 
-`out/<asset>/manifest.json` answers most questions without opening a GLB: triangles and draw calls per LOD, pivots (the names engine code binds to), emitters, sockets, surfaces, `real` and each measure with its **measured** value, sources, QA findings. `out/index.json` lists every asset in the run with its verdict.
+`out/<asset>/manifest.json` answers most questions without opening a GLB: triangles and draw calls per LOD as the GLB holds them (`triangles` counts what is in the file, after the exporter dropped degenerate and duplicate triangles; `trianglesCompiled` appears beside it only when that differs from what the recipe compiled to, the number `budget.triangles` is checked against; `drawCalls` counts primitives, so a pivot left with no triangles is none), pivots (the names engine code binds to), emitters, sockets, surfaces, `real` and each measure with its **measured** value, sources, QA findings. `out/index.json` lists every asset in the run with its verdict.
 
 ## Machine-readable output
 
 `--json` on any command:
 
 ```json
-{"ok":true,"data":[{"asset":"<name>","findings":[],"triangles":[<lod0>,<lod1>,<lod2>]}]}
-{"ok":false,"error":{"code":"T3D_PART_UNKNOWN","message":"…","fix":"add the parent (ctx.group or ctx.part) before its children"}}
+{"ok":true,"data":[{"name":"<asset>","dir":"out/<asset>","files":{"lods":["lod0.glb","lod1.glb","lod2.glb"],…},"qa":{"pass":true,"findings":[]},"triangles":[<lod0>,<lod1>,<lod2>],…}]}
+{"ok":false,"error":{"code":"T3D_CLI_USAGE","message":"…","fix":"…"}}
+{"ok":false,"error":{"code":"T3D_QA_FAILED","message":"T3D_QA_FAILED: QA failed: 2 finding(s) on 1 asset(s): <asset>","fix":"read data[].qa.findings: …"},"data":[{"name":"<asset>",…,"qa":{"pass":false,"findings":[{"gate":"floating-parts","code":"T3D_QA_FLOATING_PARTS","message":"…","fix":"…"}]}}]}
 ```
+
+**When `ok` is false, `error` is always there**: read `error.code` and `error.fix` first. Three shapes: passed (`ok: true, data`); stopped by a coded error before anything was built (`ok: false, error`, no `data`); ran but something failed (`ok: false, error, data`: `data` holds every built item plus `{ file, asset?, error }` per failed recipe or asset, and `error` is the first such failure, or `T3D_QA_FAILED` when only QA failed). A build item is its `manifest.json` plus `dir`: its `files` are relative to `dir`. `hero`, `review`, `gaps` and the other renders give `files` as full paths. Details: [errors.md](../architecture/errors.md).
 
 Current numbers for the gallery recipes: `bun run bench` (README benchmarks block).
 

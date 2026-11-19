@@ -1,10 +1,11 @@
 // The custom-strip slot table: which `defineMaterial` id sits in which custom row, and the world
 // metres each one spans along U. A leaf module (no imports) so the layout (trim-sheet.ts) and the
 // registry (define.ts) can both read it.
-// A row comes from the id itself: a stable hash picks a home row and a taken home probes to the
-// next free one. So a material's row never depends on how many materials the process registered
-// before it, only on a hash clash (the shipped creature and CC0 ids have none, slots.test.ts), and
-// a row never moves once given out (meshes already compiled keep valid UVs).
+// A row comes from the definition alone: the id's stable hash picks its home row, or the material
+// names a `row` itself. Two materials on one row cannot both keep theirs whatever order they
+// register in, so the second is refused (define.ts names the free rows) instead of probing to
+// another row: probing made the same recipe compile to different UV bytes depending on what the
+// process had imported before it.
 
 const rows = new Map<string, number>();
 const spans = new Map<string, number>();
@@ -31,20 +32,33 @@ export const customIds = (): readonly string[] =>
 /** U span (metres) a custom strip was registered with, or undefined. */
 export const customSpan = (id: string): number | undefined => spans.get(id);
 
-/** Give `id` its home row, or the next free one after it; −1 when all `slots` rows are taken. */
-export function pushCustom(id: string, spanMetres: number, slots: number): number {
-  const prior = rows.get(id);
-  if (prior !== undefined) return prior;
-  const taken = new Set(rows.values());
-  const home = homeSlot(id, slots);
-  for (let k = 0; k < slots; k++) {
-    const row = (home + k) % slots;
-    if (taken.has(row)) continue;
-    rows.set(id, row);
-    spans.set(id, spanMetres);
-    return row;
+/** The id sitting on `row`, or undefined while it is free. */
+export function rowOwner(row: number): string | undefined {
+  for (const [id, r] of rows) if (r === row) return id;
+  return undefined;
+}
+
+/** The id sitting on `id`'s home row (itself once registered there), or undefined while free. */
+export const homeOwner = (id: string, slots: number): string | undefined =>
+  rowOwner(homeSlot(id, slots));
+
+/** Rows nobody holds, ascending. */
+export const freeRows = (slots: number): number[] =>
+  Array.from({ length: slots }, (_, r) => r).filter((r) => rowOwner(r) === undefined);
+
+/** `id` with the first numeric suffix whose home row is free (ids stay ≤ 32 chars), or undefined. */
+export function freeId(id: string, slots: number): string | undefined {
+  for (let k = 2; k < 1000; k++) {
+    const next = `${id.slice(0, 28)}_${k}`;
+    if (homeOwner(next, slots) === undefined) return next;
   }
-  return -1;
+  return undefined;
+}
+
+/** Put `id` on `row` (the caller checked it is free or already `id`'s). */
+export function pushCustom(id: string, spanMetres: number, row: number): void {
+  rows.set(id, row);
+  spans.set(id, spanMetres);
 }
 
 export function clearCustom(): void {

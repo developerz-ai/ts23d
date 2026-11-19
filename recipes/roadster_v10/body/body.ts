@@ -51,6 +51,8 @@ export interface BodyOptions {
   };
   /** Twin stripes (paint slot `stripe`): static, on the hood, on the trunk lid. */
   readonly stripes?: { readonly shell: Mesh; readonly hood: Mesh; readonly trunk: Mesh };
+  /** The part carrying the door hinge pins the doors' leaves turn on (when it is built). */
+  readonly doorHinge?: string;
   readonly hoodClearOf: readonly string[];
   readonly doorClearOf: readonly string[];
   readonly trunkClearOf: readonly string[];
@@ -126,6 +128,7 @@ export function body(ctx: BuildContext, S: Surface, o: BodyOptions): Hinges {
       // The quarter's front flange sits 4.5 mm behind the door's rear edge (the shut line).
       clearOf: [...o.doorClearOf, `quarter_${side > 0 ? 'l' : 'r'}`],
       paint: 'body',
+      ...(o.doorHinge ? { connect: { as: 'hinge', to: o.doorHinge } } : {}),
     });
     if (doorTrimL) {
       const lt = side > 0 ? doorTrimL : mirrorY(doorTrimL);

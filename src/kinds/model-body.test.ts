@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test';
 import { compile, type Mesh, Ts23dError } from '../core/index.ts';
-import { applySimilarity, yawSimilarity } from '../primitives/index.ts';
+import { applySimilarity, triBvh, yawSimilarity } from '../primitives/index.ts';
 import { creaturePlan } from './creature.ts';
 import { meshVolume } from './model-body.ts';
 import { defineModelCreature } from './model-creature.ts';
@@ -57,6 +57,53 @@ describe('modelBody / defineModelCreature', () => {
     expect(Math.abs(low)).toBeLessThan(1e-4);
     expect(applySimilarity(yawSimilarity(0), [1, 0, 0])[0]).toBe(1);
   });
+
+  it('declares the model_surface crease on the part a skinned body emits (not body_*)', () => {
+    const a = defineModelCreature({
+      name: 'model_skin',
+      spec: { ...FIXTURE_WOLF, surface: 'skin' },
+      budget,
+      model: () => fixtureModel(turned),
+    });
+    const c = compile(a, { lod: 2 });
+    const part = c.parts.find((p) => p.textures)?.name;
+    expect(part).toBe('body');
+    expect(c.creases?.find((x) => x.name === 'model_surface')?.part).toBe(part);
+  }, 60_000);
+
+  it('does not declare model_surface on the code creature (it would excuse its seams)', () => {
+    const a = defineModelCreature({
+      name: 'model_skin_miss',
+      spec: { ...FIXTURE_WOLF, surface: 'skin' },
+      budget,
+      model: () => null,
+    });
+    const c = compile(a, { lod: 2 });
+    expect(c.parts.map((p) => p.name)).toContain('body');
+    expect(c.creases?.some((x) => x.name === 'model_surface')).toBe(false);
+  });
+
+  it('one-pass symmetric: emits the mirrored mesh the skeleton was fitted into', () => {
+    // A profile model: the far (right) legs are missing; the fit mirrors the left half.
+    const lopsided = capsuleCreature(bones, (k) => !(k.a[1] < -0.01 && k.b[2] < 0.5));
+    const a = defineModelCreature({
+      name: 'model_symmetric',
+      spec: FIXTURE_WOLF,
+      budget,
+      model: () => fixtureModel(lopsided),
+      body: { symmetric: '+' },
+    });
+    const c = compile(a, { lod: 0 });
+    const mesh = c.parts.find((p) => p.textures)?.mesh;
+    if (!mesh) throw new Error('no model body');
+    const bvh = triBvh(mesh);
+    const legs = c.skeleton?.bones.filter((b) => /^(fore|hind)_[lr]_\d$/.test(b.name)) ?? [];
+    expect(legs.length).toBe(16);
+    for (const b of legs) {
+      const mid = [0, 1, 2].map((k) => ((b.head[k] ?? 0) + (b.tail[k] ?? 0)) / 2);
+      expect([b.name, bvh.winding(mid as [number, number, number]) > 0.5]).toEqual([b.name, true]);
+    }
+  }, 60_000);
 
   it('falls back to the code creature, with its clips, when there is no model', () => {
     const a = asset(null, 'model_miss');

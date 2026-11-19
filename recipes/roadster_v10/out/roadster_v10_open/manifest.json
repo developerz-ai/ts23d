@@ -21,9 +21,14 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    902138,
-    77234,
-    6228
+    908952,
+    77894,
+    6348
+  ],
+  "trianglesCompiled": [
+    909070,
+    77902,
+    6348
   ],
   "drawCalls": [
     30,

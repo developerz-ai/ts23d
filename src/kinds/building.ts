@@ -2,7 +2,7 @@
 // `win`/`door`/`arch`/`shop` slots become openings, everything else stays wall. Plain mode: inset
 // glass/door panels. With `kit`: real openings (reveal, sill, lintel, sash, panelled door).
 
-import type { BuildContext, Vec3 } from '../core/index.ts';
+import { type BuildContext, Ts23dError, type Vec3 } from '../core/index.ts';
 import { split } from '../grammar/index.ts';
 import type { StripId } from '../material/index.ts';
 import { box } from '../primitives/index.ts';
@@ -16,7 +16,9 @@ export interface FacadeOptions {
   readonly at: Vec3;
   /** Footprint width (X) and depth (Y) of the mass this facade wraps. */
   readonly footprint: readonly [number, number];
+  /** Whole storeys, ≥ 1. */
   readonly floors: number;
+  /** Storey height, metres, > 0. */
   readonly floorHeight: number;
   /** Grammar per floor; the same line for every floor unless `ground` overrides floor 0. */
   readonly grammar: string;
@@ -24,7 +26,7 @@ export interface FacadeOptions {
   readonly sides: readonly Side[];
   readonly glass: Vec3;
   readonly frame?: Vec3;
-  /** Window height as a fraction of the floor. */
+  /** Window height as a fraction of the floor, 0.1–1. Default 0.6. */
   readonly windowRatio?: number;
   /** Detailed openings (see `opening`): reveal in the wall colour, stone sill/lintel, sash bars. */
   readonly kit?: {
@@ -42,6 +44,16 @@ const OPENINGS = new Set(['win', 'door', 'arch', 'shop']);
 export function facade(ctx: BuildContext, o: FacadeOptions): void {
   const [w, d] = o.footprint;
   const ratio = o.windowRatio ?? 0.6;
+  if (!(Number.isInteger(o.floors) && o.floors >= 1) || !(o.floorHeight > 0 && w > 0 && d > 0))
+    throw new Ts23dError('T3D_RECIPE_INVALID', {
+      cause: `facade '${o.prefix}': ${o.floors} floors of ${o.floorHeight} m on a ${w} × ${d} m footprint`,
+      fix: 'floors is a whole number ≥ 1; floorHeight and both footprint sides are metres > 0',
+    });
+  if (!(ratio >= 0.1 && ratio <= 1))
+    throw new Ts23dError('T3D_RECIPE_INVALID', {
+      cause: `facade '${o.prefix}': windowRatio is ${ratio}`,
+      fix: 'windowRatio is the window height as a share of the storey: 0.1–1 (default 0.6)',
+    });
   const depth = 0.08;
   for (const side of o.sides) {
     const along = side === 'front' || side === 'back' ? d : w;

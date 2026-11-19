@@ -62,15 +62,24 @@ function analyse(asset: CompiledAsset): ConnectionReport {
     const mine = byPart.get(part) ?? [];
     if (mine.length === 0) continue;
     const before = issues.length;
-    if (d.as === 'grown') for (const s of mine) issues.push(...grownIssues(s, shells, d.to));
-    if (d.as === 'socket') {
-      const main = mine.reduce((m, s) => (s.area > m.area ? s : m));
-      const host = partnerOf(main, shells, d.to);
-      if (host && EYE.test(part) && host.shell.solid) {
+    const main = mine.reduce((m, s) => (s.area > m.area ? s : m));
+    const hosts = mine.map((s) =>
+      d.as === 'grown' || (d.as === 'socket' && s === main) ? partnerOf(s, shells, d.to) : null,
+    );
+    const host = hosts[mine.indexOf(main)] ?? hosts.find((h) => h) ?? null;
+    const alone = !shells.some((c) => c.part !== part && c.area > 1e-9);
+    if ((d.as === 'grown' || d.as === 'socket') && !host && !alone)
+      issues.push(unheld(part, d, main, shells));
+    if (d.as === 'grown')
+      mine.forEach((s, i) => {
+        issues.push(...grownIssues(s, shells, d.to, hosts[i] ?? null));
+      });
+    if (d.as === 'socket' && host) {
+      if (EYE.test(part) && host.shell.solid) {
         const r = eyeIssues(part, mine, host.shell, shells);
         eyes.push(r.eye);
         issues.push(...r.issues);
-      } else if (host && host.patch.buried < SOCKET_SHARE * main.area)
+      } else if (host.patch.buried < SOCKET_SHARE * main.area)
         issues.push({
           code: 'T3D_CONNECT_SOCKET',
           severity: 'error',
@@ -81,17 +90,13 @@ function analyse(asset: CompiledAsset): ConnectionReport {
           fix: `sink it deeper into '${host.shell.part}' or declare it welded / rest`,
         });
     }
-    if ((d.as === 'grown' || d.as === 'socket') && issues.length === before) {
-      const main = mine.reduce((m, s) => (s.area > m.area ? s : m));
-      const host = partnerOf(main, shells, d.to);
-      if (host)
-        ok.push({
-          part,
-          to: host.shell.part,
-          at: host.patch.at ?? main.centroid,
-          radius: Math.sqrt(main.area) / 2,
-        });
-    }
+    if ((d.as === 'grown' || d.as === 'socket') && host && issues.length === before)
+      ok.push({
+        part,
+        to: host.shell.part,
+        at: host.patch.at ?? main.centroid,
+        radius: Math.sqrt(main.area) / 2,
+      });
   }
   issues.push(...gazeIssues(eyes, asset.kind === 'character'));
   issues.push(...blanketIssues(asset, shells, SCULPT_TRIS));
@@ -102,19 +107,45 @@ function analyse(asset: CompiledAsset): ConnectionReport {
   return { issues, ok };
 }
 
+/** A grown or socket part with nothing to grow from or sit in: no piece of it touches the
+ *  declared `to` (or, undeclared, any other part). */
+function unheld(part: string, d: Declared, main: Shell, shells: readonly Shell[]): ConnectIssue {
+  const how = d.as === 'socket' ? 'sits in a socket' : 'grows from its parent';
+  const says = d.declared ? `declares it ${how}` : `${how} (by its name)`;
+  const want = d.to ? `'${d.to}'` : 'any other part';
+  const real = d.to ? partnerOf(main, shells, null)?.shell.part : undefined;
+  return {
+    code: d.as === 'socket' ? 'T3D_CONNECT_SOCKET' : 'T3D_CONNECT_ISLAND',
+    severity: 'error',
+    part,
+    at: main.centroid,
+    radius: Math.sqrt(main.area) / 2,
+    message: `'${part}' ${says}, but no piece of it reaches ${want}${real ? ` (it touches '${real}')` : ''}`,
+    fix: `move its root into ${d.to ? `'${d.to}'` : 'the part that holds it'}, or correct connect: { as, to } to how it is really held${real ? ` (to: '${real}')` : ''}`,
+  };
+}
+
 function invalid(asset: CompiledAsset, declared: ReadonlyMap<string, Declared>): ConnectIssue[] {
   const names = asset.parts.map((p) => p.name);
-  return [...declared]
-    .filter(([, d]) => d.to !== null && !names.some((n) => glob(d.to ?? '').test(n)))
-    .map(([part, d]) => ({
-      code: 'T3D_CONNECT_INVALID',
-      severity: 'error',
-      part,
-      at: [0, 0, 0],
-      radius: 0,
-      message: `'${part}' declares connect.to '${d.to}', which matches no part`,
-      fix: 'name an existing part (globs allowed; ctx.use prefixes are added for you)',
-    }));
+  const issue = (part: string, message: string): ConnectIssue => ({
+    code: 'T3D_CONNECT_INVALID',
+    severity: 'error',
+    part,
+    at: [0, 0, 0],
+    radius: 0,
+    message,
+    fix: 'name another existing part (globs allowed; ctx.use prefixes are added for you)',
+  });
+  return [...declared].flatMap(([part, d]) => {
+    if (d.to === null) return [];
+    const hits = names.filter((n) => glob(d.to ?? '').test(n));
+    if (hits.length === 0)
+      return [issue(part, `'${part}' declares connect.to '${d.to}', which matches no part`)];
+    // A part cannot hold itself: `to` must reach some other part.
+    return hits.every((n) => n === part)
+      ? [issue(part, `'${part}' declares connect.to '${d.to}', which names only the part itself`)]
+      : [];
+  });
 }
 
 /** Errors as gate findings, a few per (code, part) and a count for the rest. */

@@ -3,7 +3,7 @@
 // real light every engine and viewer can switch on. The socket node stays as authored; the light
 // rides a child node `<socket>_light` rotated so its −Z (the glTF light direction) is `dir`.
 
-import type { Part, Quat, Vec3 } from '../core/index.ts';
+import { type Part, type Quat, Ts23dError, type Vec3 } from '../core/index.ts';
 import { hex } from '../material/index.ts';
 import type { Json } from './bin-writer.ts';
 
@@ -30,8 +30,33 @@ function between(a: Vec3, b: Vec3): Quat {
   return [c[0] / n, c[1] / n, c[2] / n, w / n];
 }
 
-const num = (v: unknown, fallback: number): number =>
-  typeof v === 'number' && Number.isFinite(v) ? v : fallback;
+type Data = NonNullable<NonNullable<Part['socket']>['data']>;
+
+/** Widest spot half-angle, degrees: glTF needs outerConeAngle < π/2. */
+const MAX_CONE = 89;
+
+/**
+ * `data[key]` as a number in [min, max], or `fallback` when the key is absent. Anything else
+ * would reach the file as `null`, a negative angle or a light no engine can evaluate.
+ */
+function num(
+  part: string,
+  data: Data,
+  key: string,
+  fallback: number,
+  range: { min: number; max?: number; open?: boolean; unit: string; eg: number },
+): number {
+  const v = data[key];
+  if (v === undefined) return fallback;
+  const max = range.max ?? Infinity;
+  const low = typeof v === 'number' && (range.open ? v > range.min : v >= range.min);
+  if (typeof v === 'number' && Number.isFinite(v) && low && v <= max) return v;
+  const span = `${range.open ? 'above' : 'at least'} ${range.min}${range.max === undefined ? '' : ` and at most ${max}`}`;
+  throw new Ts23dError('T3D_RECIPE_INVALID', {
+    cause: `light socket '${part}': ${key} ${String(v)} is not a number ${span} (${range.unit})`,
+    fix: `pass data: { ${key}: ${range.eg} } on the socket, or drop '${key}' for the default`,
+  });
+}
 
 /** The glTF light for a light socket, or null for any other part. */
 export function lightOf(part: Part): { light: Json; rotation: Quat } | null {
@@ -42,23 +67,29 @@ export function lightOf(part: Part): { light: Json; rotation: Quat } | null {
   const color = typeof d['color'] === 'string' ? hex(d['color']) : [1, 1, 1];
   const dir = s.dir ?? [1, 0, 0];
   const len = Math.hypot(...dir) || 1;
-  const outer = (Math.min(89, num(d['cone'], 30)) * Math.PI) / 180;
-  const inner = Math.min(outer * 0.999, (num(d['inner'], 0) * Math.PI) / 180);
-  const range = num(d['range'], 0);
+  const spot = type === 'spot';
+  const cone = { min: 0, max: MAX_CONE, unit: 'degrees, the half-angle of the beam' };
+  const outerDeg = spot ? num(part.name, d, 'cone', 30, { ...cone, open: true, eg: 25 }) : 30;
+  const innerDeg = spot ? num(part.name, d, 'inner', 0, { ...cone, eg: 12 }) : 0;
+  const outer = (outerDeg * Math.PI) / 180;
+  // glTF requires inner < outer: an inner cone as wide as the beam stops just inside it.
+  const inner = Math.min(outer * 0.999, (innerDeg * Math.PI) / 180);
+  const fallback =
+    type === 'directional'
+      ? DEFAULT_SUN_LUX
+      : DEFAULT_LAMP_LUMENS / (type === 'point' ? 4 * Math.PI : coneSr(outer));
+  const unit = type === 'directional' ? 'lux' : 'candela';
+  const intensity = num(part.name, d, 'intensity', fallback, { min: 0, unit, eg: 200 });
+  const range = num(part.name, d, 'range', 0, { min: 0, unit: 'metres; 0 = unlimited', eg: 30 });
   return {
     light: {
       name: part.name,
       type,
       color,
       // Spot/point: candela; directional: lux (DEFAULT_* above).
-      intensity: num(
-        d['intensity'],
-        type === 'directional'
-          ? DEFAULT_SUN_LUX
-          : DEFAULT_LAMP_LUMENS / (type === 'point' ? 4 * Math.PI : coneSr(outer)),
-      ),
+      intensity,
       ...(range > 0 && type !== 'directional' ? { range } : {}),
-      ...(type === 'spot' ? { spot: { innerConeAngle: inner, outerConeAngle: outer } } : {}),
+      ...(spot ? { spot: { innerConeAngle: inner, outerConeAngle: outer } } : {}),
     },
     rotation: between([0, 0, -1], [dir[0] / len, dir[1] / len, dir[2] / len]),
   };

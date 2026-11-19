@@ -6,6 +6,7 @@
 // gallery. The page never imports this; it asks the worker.
 
 import { type Asset, isAsset } from '@developerz.ai/ts23d';
+import { byCodeUnit } from './compare.ts';
 import type { CatalogEntry } from './compile-protocol.ts';
 
 const ROOT = '../../../recipes/';
@@ -87,5 +88,5 @@ export function importFile(file: string): Promise<Discovered[]> {
 /** Every recipe's assets, sorted by name. */
 export async function discover(): Promise<Discovered[]> {
   const all = await Promise.all([...modules.keys()].map(importFile));
-  return all.flat().sort((a, b) => a.asset.name.localeCompare(b.asset.name));
+  return all.flat().sort((a, b) => byCodeUnit(a.asset.name, b.asset.name));
 }

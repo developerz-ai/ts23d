@@ -1,7 +1,8 @@
 // Tiles on worker threads: the world's arrays and the film move into SharedArrayBuffers once,
 // each worker rebuilds the BVH and claims tiles from a shared atomic counter until none are left.
 // Every pixel owns its seed and its film slot, so the result is byte-identical to the sequential
-// loop whatever the thread count or claim order. Without a global Worker (Node), runs in-line.
+// loop whatever the thread count or claim order. Without a global Worker (Node), or when no worker
+// script can be found next to this code, runs in-line (same bytes, one core).
 
 import { Ts23dError } from '../../core/index.ts';
 import type { PerspectiveCamera } from '../camera.ts';
@@ -95,15 +96,37 @@ export function runJob(j: TileJob): void {
     renderTile(w, j.cam, j.film, t, j.spp, j.params, j.salt);
 }
 
+/** Where the worker script lives relative to this code: source tree, unbundled dist, bundled chunk. */
+const WORKER_PATHS = ['./worker.ts', './worker.js', './render/path/worker.js'] as const;
+
+const fileExists = async (u: URL): Promise<boolean> =>
+  u.protocol !== 'file:' || typeof Bun === 'undefined' ? true : Bun.file(u).exists();
+
+/**
+ * The worker script for code loaded from `base` (this module's URL, or the dist chunk it was
+ * bundled into); undefined when none exists, so the caller traces in-line instead of failing.
+ */
+export async function workerUrl(
+  base: string,
+  exists: (u: URL) => Promise<boolean> = fileExists,
+): Promise<string | undefined> {
+  for (const rel of WORKER_PATHS) {
+    const u = new URL(rel, base);
+    if (await exists(u)) return u.href;
+  }
+  return undefined;
+}
+
 /** Render every tile of `film` (shared) on `threads` workers; resolves when all are done. */
 export async function renderThreads(job: Omit<TileJob, 'counter'>, threads: number): Promise<void> {
   const counter = new Int32Array(new SharedArrayBuffer(4));
   const full: TileJob = { ...job, counter };
-  if (threads <= 1 || typeof Worker === 'undefined') {
+  const url =
+    threads <= 1 || typeof Worker === 'undefined' ? undefined : await workerUrl(import.meta.url);
+  if (url === undefined) {
     runJob(full);
     return;
   }
-  const url = new URL('./worker.ts', import.meta.url).href;
   const runs = Array.from({ length: threads }, () => {
     const w = new Worker(url);
     return new Promise<void>((resolve, reject) => {
@@ -125,5 +148,5 @@ export async function renderThreads(job: Omit<TileJob, 'counter'>, threads: numb
 const fail = (cause: string): Ts23dError =>
   new Ts23dError('T3D_RENDER_OPTIONS', {
     cause: `path-tracer worker failed: ${cause}`,
-    fix: 'retry with threads: 1 (in-line) and report the asset if it fails the same way',
+    fix: 'trace in-line: pathHeroThreaded(asset, { threads: 1 }) or pathHero(asset) from @developerz.ai/ts23d/render (same bytes, one core); report the asset if that fails too',
   });

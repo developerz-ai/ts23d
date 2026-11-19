@@ -8,7 +8,7 @@
 import type { Lod, Mesh, Vec3 } from '@developerz.ai/ts23d';
 import { lathe, loft, merge, sweep } from '@developerz.ai/ts23d';
 import { emblem } from '../body/details.ts';
-import { X_COWL } from '../dims.ts';
+import { X_COWL, X_FIREWALL } from '../dims.ts';
 import { C } from '../lib/colors.ts';
 import {
   add,
@@ -49,8 +49,9 @@ function dashSection(y: number): Vec3[] {
   return pts.map(([x, z]): Vec3 => [x, y, z]);
 }
 
-/** x of the dash's rear face (between the top lip and the knee roll) at height z. */
+/** x of the dash's rear face at height z: the lip-to-roll face, then the knee roll below it. */
 function dashFaceX(z: number): number {
+  if (z < 0.62) return 0.13 + (0.02 * Math.max(0, z - 0.55)) / (0.62 - 0.55);
   const f = Math.min(1, Math.max(0, (0.76 - z) / (0.76 - 0.62)));
   return 0.12 + 0.03 * f;
 }
@@ -67,11 +68,11 @@ function dashBody(lod: Lod): Mesh {
   ];
   if (lod === 0) {
     // Stitch line along the top edge of the dash, red.
+    // Sewn into the lip: on the dash's own sections, half sunk in the leather.
     const st: Vec3[] = [];
-    for (let i = 0; i <= 24; i++) {
-      const y = -0.68 + (1.36 * i) / 24;
-      const p = dashSection(y)[3] ?? [0, y, 0.8];
-      st.push(add(p, [-0.004, 0, 0.004]));
+    for (const ring of rings) {
+      const p = ring[3] ?? [0, 0, 0.8];
+      st.push(add(p, [-0.0005, 0, 0.0005]));
     }
     parts.push(tube(st, 0.003, C.stitch, 'plastic', 4, 1, false));
     // Glovebox seam and latch on the passenger side, sunk 2 mm into the dash's rear face (which
@@ -207,9 +208,10 @@ export function dashboard(lod: Lod): DashMeshes {
     if (lod === 0)
       for (let k = 0; k < 6; k++)
         g.push(
+          // Rooted 5 mm in the knee roll (which leans away below the stack), 11 mm proud.
           bx(
-            [0.12, -0.075 + k * 0.03, 0.585],
-            [0.135, -0.065 + k * 0.03, 0.605],
+            [dashFaceX(0.595) - 0.011, -0.075 + k * 0.03, 0.585],
+            [dashFaceX(0.595) + 0.005, -0.065 + k * 0.03, 0.605],
             C.ironDark,
             'plastic',
             0.002,
@@ -313,6 +315,16 @@ export function dashboard(lod: Lod): DashMeshes {
       ),
     );
   }
+  // Pedal box on the firewall: the three hanging arms pivot in it (their tops used to end in
+  // mid-air 1.5 cm short of the bulkhead).
+  ctl.push(
+    bx(
+      [0.385, DRIVER_Y - 0.14, 0.54],
+      [X_FIREWALL + 0.005, DRIVER_Y + 0.15, 0.63],
+      C.ironDark,
+      'steel_painted',
+    ),
+  );
   const sh: Vec3 = [-0.06, 0, 0.43];
   ctl.push(
     shift(

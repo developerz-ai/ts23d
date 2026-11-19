@@ -2,8 +2,8 @@
 // that hit the same triangle are shaded ONCE at their mean barycentrics and weighted by count, so
 // edges get ss² coverage samples while interiors cost one shade. Background samples show the
 // studio backdrop × the floor's shadow light. See-through samples add what lies behind them (the
-// opaque-only buffer, refraction-offset) × their transmitted tint. Also yields the coverage mask
-// and a detail grid.
+// opaque-only buffer, refraction-offset) × their transmitted tint. Also yields the coverage mask,
+// a detail grid and, for cut-outs, the asset-only colour sum + hit count (no backdrop in them).
 
 import type { FloorGrid } from './ground.ts';
 import { floorLight } from './ground.ts';
@@ -17,6 +17,10 @@ export interface Resolved {
   readonly rgba: Uint8Array;
   readonly mask: Uint8Array;
   readonly detail: Uint32Array;
+  /** Per pixel × 3: tone-mapped linear colour summed over the ASSET samples only (no backdrop). */
+  readonly assetSum: Float32Array;
+  /** Per pixel: how many of its ss² samples hit the asset. `assetSum / hits` = straight colour. */
+  readonly hits: Uint8Array;
 }
 
 /** Backdrop colour (linear) at normalised screen (nx, ny): soft radial falloff below centre. */
@@ -66,6 +70,8 @@ export function resolve(
 ): Resolved {
   const rgba = new Uint8Array(width * height * 4);
   const mask = new Uint8Array(width * height);
+  const assetSum = new Float32Array(width * height * 3);
+  const hitCount = new Uint8Array(width * height);
   // Last detail cell each triangle was counted in: ≈ distinct triangles per cell, no hash set.
   const counted = new Int32Array(ctx.scene.triangles).fill(-1);
   const detail = new Uint32Array(16 * 9);
@@ -89,6 +95,10 @@ export function resolve(
       let b = 0;
       let groups = 0;
       let hits = 0;
+      // Asset samples alone, kept apart so `r, g, b` add up in the order they always did.
+      let ar = 0;
+      let ag = 0;
+      let ab = 0;
       for (let sy = 0; sy < ss; sy++)
         for (let sx = 0; sx < ss; sx++) {
           const X = x * ss + sx;
@@ -148,17 +158,28 @@ export function resolve(
           );
           for (let q = 0; q < 3; q++) lin[q] = (lin[q] ?? 0) + (thru[q] ?? 0) * (back[q] ?? 0);
         }
-        r += tone(lin[0] ?? 0) * c;
-        g += tone(lin[1] ?? 0) * c;
-        b += tone(lin[2] ?? 0) * c;
+        const tr = tone(lin[0] ?? 0) * c;
+        const tg = tone(lin[1] ?? 0) * c;
+        const tb = tone(lin[2] ?? 0) * c;
+        r += tr;
+        g += tg;
+        b += tb;
+        ar += tr;
+        ag += tg;
+        ab += tb;
       }
       const o = (y * width + x) * 4;
       rgba[o] = toSrgb8(r * inv);
       rgba[o + 1] = toSrgb8(g * inv);
       rgba[o + 2] = toSrgb8(b * inv);
       rgba[o + 3] = 255;
-      mask[y * width + x] = Math.round(hits * inv * 255);
+      const p = y * width + x;
+      mask[p] = Math.round(hits * inv * 255);
+      assetSum[p * 3] = ar;
+      assetSum[p * 3 + 1] = ag;
+      assetSum[p * 3 + 2] = ab;
+      hitCount[p] = hits;
     }
   }
-  return { width, height, rgba, mask, detail };
+  return { width, height, rgba, mask, detail, assetSum, hits: hitCount };
 }

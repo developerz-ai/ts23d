@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'bun:test';
-import { type Asset, type AssetDefinition, compile, defineAsset } from '../core/index.ts';
+import {
+  type Asset,
+  type AssetDefinition,
+  compile,
+  defineAsset,
+  type Surface,
+} from '../core/index.ts';
 import { box, cylinder } from '../primitives/index.ts';
 import { flushness } from './flush.ts';
 import { gapOverlay, gapZoom } from './gap-overlay.ts';
@@ -70,6 +76,32 @@ describe('gaps gate', () => {
     const wrongPair = cabinet({ slot: 0.01, gaps: [{ parts: ['door', 'frame_4'], why: 'x' }] });
     expect(gaps(compile(wrongPair, { lod: 0 })).length).toBeGreaterThan(0);
     expect(gaps(compile(cabinet({ slot: 0.01, spin: true }), { lod: 0 }))).toEqual([]);
+  });
+
+  it('flags a slit beside a glass or translucent panel; only a cutout card is exempt', () => {
+    // Two 1 m panels on a sill with a 2 cm see-through slit between them.
+    const wall = (surface: Surface): Asset =>
+      defineAsset({
+        name: 'wall',
+        kind: 'prop',
+        budget: { triangles: [999, 999, 999] },
+        build: (ctx) => {
+          ctx.part('sill', box({ size: [0.1, 2.02, 0.1], color: grey }));
+          ctx.part('panel_l', box({ size: [0.1, 1, 1], color: grey }), { at: [0, -0.51, 0.1] });
+          ctx.part('panel_r', box({ size: [0.1, 1, 1], color: grey }), {
+            at: [0, 0.51, 0.1],
+            surface,
+          });
+        },
+      });
+    for (const surface of ['opaque', 'glass', 'translucent', 'ice', 'liquid', 'jelly'] as const) {
+      const found = gaps(compile(wall(surface), { lod: 0 }));
+      expect(found.map((f) => f.code)).toEqual(['T3D_QA_GAPS']);
+      expect(found[0]?.message).toContain("'panel_l' ↔ 'panel_r'");
+    }
+    expect(gaps(compile(wall('cutout'), { lod: 0 }))).toEqual([]);
+    const scan = scanGaps(compile(wall('cutout'), { lod: 0 }), { includeAllowed: true });
+    expect(scan.gaps[0]?.allowed).toContain('cutout');
   });
 
   it('runs at LOD0 only', () => {

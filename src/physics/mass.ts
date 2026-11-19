@@ -35,7 +35,7 @@ export interface PartMass {
 }
 
 export interface MassProperties {
-  /** kg (the recipe's `physics.mass` when set). */
+  /** kg (the recipe's `physics.mass` when set; spread over the surface when no volume is enclosed). */
   readonly mass: number;
   /** Mass from volume × density, before any override. */
   readonly computedMass: number;
@@ -121,22 +121,37 @@ function partMass(part: Part, mesh: Mesh, phys: AssetPhysics | undefined, into: 
   };
 }
 
+/** Every triangle as a thin sheet of unit areal density: where mass sits when no volume is enclosed. */
+function sheetMoments(meshes: readonly Mesh[]): Moments {
+  const out = emptyMoments();
+  for (const m of meshes)
+    for (let t = 0; t < m.indices.length / 3; t++) addSheet(out, ...triangle(m, t), 1);
+  return out;
+}
+
 /** Mass, centre of mass and inertia of `asset` (pass the LOD0 compile: it is the real shape). */
 export function massProperties(asset: CompiledAsset, phys = asset.physics): MassProperties {
   const world = worldTransforms(asset.parts);
   const total = emptyMoments();
   const parts: PartMass[] = [];
+  const meshes: Mesh[] = [];
   for (const p of asset.parts) {
     const t = world.get(p.name);
     if (!p.mesh || !t || p.mesh.indices.length === 0) continue;
-    parts.push(partMass(p, worldMesh(p.mesh, t), phys, total));
+    const mesh = worldMesh(p.mesh, t);
+    meshes.push(mesh);
+    parts.push(partMass(p, mesh, phys, total));
   }
   const computedMass = total.mass;
-  if (phys?.mass !== undefined && computedMass > 0) {
-    const k = phys.mass / computedMass;
-    const scaled = emptyMoments();
-    accumulate(scaled, total, k);
-    Object.assign(total, scaled);
+  if (phys?.mass !== undefined) {
+    // Flat or open parts without `shell` enclose no volume: the declared mass is then spread over
+    // the surface, so a dynamic body never exports mass 0 (infinite mass in KHR rigid bodies).
+    const from = computedMass > 0 ? total : sheetMoments(meshes);
+    if (from.mass > 0) {
+      const scaled = emptyMoments();
+      accumulate(scaled, from, phys.mass / from.mass);
+      Object.assign(total, scaled);
+    }
   }
   const { com, inertia } = inertiaAboutCom(total);
   const eig = eigenSym(inertia);

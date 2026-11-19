@@ -161,7 +161,7 @@ export const water_tower = defineAsset({
     ],
   },
   budget: { triangles: [7900, 3350, 590] },
-  checks: [clear('spout', 'tank', 0.02), clear('spout', 'roof', 0.05)],
+  checks: [clear('spout_*', 'tank', 0.02), clear('spout_*', 'roof', 0.05)],
   build(ctx) {
     const lod = ctx.lod;
     const bevel = ctx.pick([0.02, 0.01, 0]);
@@ -506,11 +506,12 @@ export const water_tower = defineAsset({
     }
     if (lod === 0) {
       // Pull chain hanging from the mouth (the fireman pulls it down over the tender).
+      // Links hang through one another: each 12 cm link reaches 1 cm into the next (crossed 90°).
       const tip = along(SPOUT_L - 0.1, -0.2);
-      for (let i = 0; i < 9; i++)
+      for (let i = 0; i < 10; i++)
         sp.push(
           place(box({ size: [0.03, 0.06, 0.12], color: steel, strip: 'iron' }), {
-            at: [tip[0], 0, tip[2] - i * 0.13],
+            at: [tip[0], 0, tip[2] - i * 0.11],
             yaw: (i % 2) * (Math.PI / 2),
           }),
         );
@@ -544,13 +545,16 @@ export const water_tower = defineAsset({
         );
       for (const z of [CAP_Z0 + 0.15, FLOOR_Z + 1.5, TANK_TOP - 0.4])
         for (const y of [-0.22, 0.22]) {
+          // A stay runs from inside its stile to 1.5 cm inside what it is spiked to: the stave
+          // faces either side of the tank's −X corner, or the −X cap beam of the trestle.
+          const fa = Math.PI / facets;
           const r =
             z > FLOOR_Z
-              ? TANK_R / Math.cos(Math.PI / facets) - 0.01
+              ? TANK_R - Math.abs(y * 0.6) * Math.tan(fa) - 0.015 / Math.cos(fa)
               : POST_R * Math.cos(Math.PI / 8) + 0.05;
           lad.push(
             beam({
-              from: [lx + 0.05, y, z],
+              from: [lx, y, z],
               to: [-r, y * 0.6, z],
               width: 0.05,
               height: 0.03,

@@ -7,7 +7,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { Ts23dError } from '../src/core/index.ts';
 import { changelogSection, drift, readPages } from './changelog.ts';
-import { compareSemver, stampChangelog } from './release.ts';
+import { compareSemver, parseArgs, stampChangelog } from './release.ts';
 
 const LOG = `# Changelog
 
@@ -102,6 +102,28 @@ it('orders versions by semver precedence', () => {
   expect(compareSemver('2.1.3', '2.1.3')).toBe(0);
 });
 
+it('refuses an unknown mode, a missing version and extra arguments', () => {
+  for (const args of [
+    ['--chek', '0.5.0'],
+    ['--stamp', '0.5.0'],
+    ['0.5.0', '0.5.1'],
+    [],
+    ['--check'],
+  ]) {
+    const e = refusal(() => parseArgs(args));
+    expect(e.code).toBe('T3D_RELEASE');
+    expect(e.fix).toContain('bun run release <x.y.z>');
+  }
+  expect(refusal(() => parseArgs(['--chek', '0.5.0'])).message).toContain("'--chek'");
+  expect(refusal(() => parseArgs(['--check', '0.5.0', 'x'])).message).toContain('extra');
+});
+
+it('reads the three modes and drops a leading v', () => {
+  expect(parseArgs(['v0.5.0'])).toEqual({ mode: 'stamp', version: '0.5.0' });
+  expect(parseArgs(['--check', '0.5.0'])).toEqual({ mode: 'check', version: '0.5.0' });
+  expect(parseArgs(['--notes', 'v0.5.0'])).toEqual({ mode: 'notes', version: '0.5.0' });
+});
+
 const REPO = 'https://github.com/developerz-ai/ts23d';
 
 /** Temp trees made by stampIn, removed after the file's tests pass or fail. */
@@ -109,14 +131,17 @@ const temps: string[] = [];
 afterAll(() => Promise.all(temps.map((d) => rm(d, { recursive: true, force: true }))));
 
 /** A minimal stamped-at-0.4.0 tree in a temp dir, then `bun run scripts/release.ts 0.5.0` in it. */
-async function stampIn(changelog: string): Promise<{ dir: string; code: number; err: string }> {
+async function stampIn(
+  changelog: string,
+  args: readonly string[] = ['0.5.0'],
+): Promise<{ dir: string; code: number; err: string }> {
   const dir = await mkdtemp(join(tmpdir(), 'ts23d-release-'));
   temps.push(dir);
   await mkdir(join(dir, 'src/export'), { recursive: true });
   await writeFile(join(dir, 'package.json'), '{\n  "version": "0.4.0"\n}\n');
   await writeFile(join(dir, 'src/export/version.ts'), "export const VERSION = '0.4.0';\n");
   await writeFile(join(dir, 'CHANGELOG.md'), changelog.replace('### Fixed', 'Old.\n\n### Fixed'));
-  const p = Bun.spawnSync(['bun', join(import.meta.dir, 'release.ts'), '0.5.0'], {
+  const p = Bun.spawnSync(['bun', join(import.meta.dir, 'release.ts'), ...args], {
     cwd: dir,
     env: { ...process.env, RELEASE_DATE: '2026-11-14' },
   });
@@ -149,4 +174,14 @@ it('stamps the tree: version files, link index and docs/changelog/ with no drift
   );
   expect(await Bun.file(join(r.dir, 'package.json')).json()).toEqual({ version: '0.5.0' });
   expect(await Bun.file(join(r.dir, 'src/export/version.ts')).text()).toContain("'0.5.0'");
+});
+
+it('a mistyped mode stamps nothing', async () => {
+  const good = `${LOG}\n[Unreleased]: ${REPO}/compare/v0.4.0...HEAD\n[0.4.0]: ${REPO}/releases/tag/v0.4.0\n`;
+  const r = await stampIn(good, ['--chek', '0.5.0']);
+  expect(r.code).toBe(1);
+  expect(r.err).toContain("unknown mode '--chek'");
+  expect(r.err).toContain('fix:');
+  expect(await Bun.file(join(r.dir, 'package.json')).json()).toEqual({ version: '0.4.0' });
+  expect(await Bun.file(join(r.dir, 'CHANGELOG.md')).text()).not.toContain('[0.5.0]');
 });

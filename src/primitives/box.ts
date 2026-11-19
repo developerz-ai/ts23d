@@ -4,7 +4,7 @@
 import { type Mesh, MeshBuilder, type Vec3 } from '../core/index.ts';
 import { type StripId, stripRect } from '../material/index.ts';
 import { bevelBox } from './bevel-box.ts';
-import { invalid, positive } from './check.ts';
+import { colorOf, invalid, positive } from './check.ts';
 
 export interface BoxOptions {
   /** Width (X), depth (Y), height (Z) in metres. */
@@ -20,6 +20,15 @@ export interface BoxOptions {
   readonly bevel?: number;
 }
 
+const KEYS: Record<keyof BoxOptions, true> = {
+  size: true,
+  color: true,
+  strip: true,
+  at: true,
+  omit: true,
+  bevel: true,
+};
+
 type Face = { name: NonNullable<BoxOptions['omit']>[number]; n: Vec3; u: Vec3; v: Vec3 };
 const FACES: readonly Face[] = [
   { name: 'front', n: [1, 0, 0], u: [0, 1, 0], v: [0, 0, 1] },
@@ -31,6 +40,7 @@ const FACES: readonly Face[] = [
 ];
 
 export function box(o: BoxOptions): Mesh {
+  colorOf('box', o, KEYS);
   const eg = 'size: [2, 1, 0.5]';
   const w = positive('box width size[0]', o.size[0], eg);
   const d = positive('box depth size[1]', o.size[1], eg);

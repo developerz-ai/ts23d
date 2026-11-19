@@ -94,18 +94,22 @@ export interface ThermalOptions {
 }
 
 /**
- * Thermal erosion: wherever a neighbour sits lower than the talus slope allows, part of the
- * excess slides down to it. Every iteration reads the old heights and writes a new array, so the
+ * Thermal erosion: wherever a neighbour sits lower than the talus slope allows (over the real
+ * distance to it: cells need not be square), part of the excess slides down to it. Every iteration reads the old heights and writes a new array, so the
  * result is independent of visiting order.
  */
 export function thermalErosion(g: TerrainGrid, o: ThermalOptions = {}): TerrainGrid {
   const talus = o.talus ?? 0.7;
   const rate = Math.min(0.5, Math.max(0, o.rate ?? 0.4));
   const iterations = count('thermal iterations', o.iterations ?? 30, 0, 10000);
-  const [x0, , x1] = g.rect;
-  const cell = (x1 - x0) / (g.nx - 1);
+  const [x0, y0, x1, y1] = g.rect;
+  const dx = (x1 - x0) / (g.nx - 1);
+  const dy = (y1 - y0) / (g.ny - 1);
   const D = [-1, 0, 1, 0, 0, -1, 0, 1, -1, -1, 1, -1, -1, 1, 1, 1];
-  const limit = D.map((_, k) => (k < 8 ? talus * cell : talus * cell * Math.SQRT2));
+  // The run to each neighbour: dx, dy or the cell diagonal. Written as dx · √(1 + (dy/dx)²) so a
+  // square cell gives dx · √2 to the bit (terrain recipes are square and stay byte-identical).
+  const diagonal = Math.sqrt(1 + (dy / dx) * (dy / dx));
+  const limit = D.map((_, k) => (k < 4 ? talus * dx : k < 8 ? talus * dy : talus * dx * diagonal));
   let z = Float64Array.from(g.z);
   for (let it = 0; it < iterations; it++) {
     const next = Float64Array.from(z);

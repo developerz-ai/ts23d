@@ -15,7 +15,7 @@
 import { mkdir } from 'node:fs/promises';
 import { dirname, isAbsolute, join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { type NeuralInput, Ts23dError } from '../core/index.ts';
+import { isTs23dError, type NeuralInput, Ts23dError } from '../core/index.ts';
 import {
   type BlenderStep,
   blenderAdapter,
@@ -218,7 +218,7 @@ async function reviewAdapter(o: Options): Promise<NeuralAdapter> {
 
 /** A crash during a review is usually the missing graphics driver: say so. */
 function explainCrash(e: unknown): never {
-  if (e instanceof Ts23dError && e.code === 'T3D_NEURAL_FAILED' && looksCrashed(e.message))
+  if (isTs23dError(e) && e.code === 'T3D_NEURAL_FAILED' && looksCrashed(e.message))
     throw new Ts23dError(e.code, { cause: e.message, fix: REVIEW_CRASH_FIX });
   throw e;
 }
@@ -286,7 +286,7 @@ export async function blenderMain(argv: readonly string[], json: boolean): Promi
     }
     return 0;
   } catch (e) {
-    if (e instanceof Ts23dError) return printError(e, json);
+    if (isTs23dError(e)) return printError(e, json);
     throw e;
   }
 }

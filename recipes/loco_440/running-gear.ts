@@ -208,10 +208,13 @@ export function buildFrame(ctx: BuildContext, L: Layout): void {
     if (lod < 2)
       for (const dx of [-0.5, 0.5]) {
         const k = Math.sign(dx);
-        // Cylinder head: cast-iron cover with a raised boss.
+        // Cylinder head: cast-iron cover with a raised boss, its spigot 12 mm into the cylinder
+        // mouth (QA connections: the open rim only met the cylinder's end along a line).
         m.push(
           lath({
             profile: [
+              [0.2, -k * 0.012],
+              [0.23, -k * 0.012],
               [0.23, 0],
               [0.23, k * 0.03],
               [0.12, k * 0.05],

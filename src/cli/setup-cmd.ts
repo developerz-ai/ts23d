@@ -9,7 +9,7 @@
 
 import { existsSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { Ts23dError } from '../core/index.ts';
+import { isTs23dError, Ts23dError } from '../core/index.ts';
 import { CONFIG_FILE } from './config.ts';
 import { usage } from './flags.ts';
 import { envelope, printError } from './report.ts';
@@ -232,7 +232,7 @@ export async function setupMain(
       );
     return 0;
   } catch (e) {
-    if (e instanceof Ts23dError) return printError(e, json);
+    if (isTs23dError(e)) return printError(e, json);
     throw e;
   }
 }

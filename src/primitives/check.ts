@@ -60,3 +60,20 @@ export function positive(what: string, n: number, example: string): number {
   if (!Number.isFinite(n) || n <= 0) invalid(`${what} is ${n}`, `use a length > 0 m (${example})`);
   return n;
 }
+
+/**
+ * `o.color` is an RGB triple of finite numbers. A missing or misspelt colour (`colour: wood`)
+ * otherwise surfaces as a spread TypeError deep in the mesh builder; option keys the primitive
+ * does not know are named, since a typo is the usual cause. Only reads `known` on failure.
+ */
+export function colorOf<O extends object>(what: string, o: O, known: Record<keyof O, true>): void {
+  const c: unknown = (o as { color?: unknown }).color;
+  if (Array.isArray(c) && c.length === 3 && c.every(Number.isFinite)) return;
+  const stray = Object.keys(o).filter((k) => !Object.hasOwn(known, k));
+  const got = c === undefined ? 'is missing' : `is ${JSON.stringify(c)}, not 3 finite numbers`;
+  const named = stray.length ? ` (unknown option ${stray.map((k) => `'${k}'`).join(', ')})` : '';
+  invalid(
+    `${what} color ${got}${named}`,
+    `give ${what} color: hex('#7a5530')${stray.length ? `; rename ${stray.map((k) => `'${k}'`).join(', ')} if it was meant as color` : ''}`,
+  );
+}

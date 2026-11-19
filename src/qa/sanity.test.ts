@@ -1,7 +1,14 @@
 import { describe, expect, it } from 'bun:test';
-import { compile, defineAsset, type Mesh } from '../core/index.ts';
+import { type CompiledAsset, compile, defineAsset, type Mesh, type Part } from '../core/index.ts';
 import { box } from '../primitives/index.ts';
-import { degenerateTriangles, nonFinite, normalsMatchWinding, vertexColors } from './sanity.ts';
+import { runQa } from './gates.ts';
+import {
+  degenerateTriangles,
+  meshArrays,
+  nonFinite,
+  normalsMatchWinding,
+  vertexColors,
+} from './sanity.ts';
 
 const c: [number, number, number] = [0.5, 0.5, 0.5];
 const one = (mesh: Mesh) =>
@@ -43,7 +50,52 @@ describe('sanity gates', () => {
 
   it('pass a clean box', () => {
     const a = one(box({ size: [1, 1, 1], color: c }));
-    for (const g of [nonFinite, vertexColors, normalsMatchWinding, degenerateTriangles])
+    for (const g of [meshArrays, nonFinite, vertexColors, normalsMatchWinding, degenerateTriangles])
       expect(g(a)).toEqual([]);
+  });
+});
+
+const placed = (build: Parameters<typeof defineAsset>[0]['build']) =>
+  compile(
+    defineAsset({ name: 'placed', kind: 'prop', budget: { triangles: [99, 99, 99] }, build }),
+  );
+
+// The gate stands on its own: core may refuse these at compile time too, so the transforms are
+// broken after compiling, the way a hand-built or transformed CompiledAsset could carry them.
+const broken = (name: string, change: Partial<Part>): CompiledAsset => {
+  const a = placed((ctx) => {
+    ctx.part('a', box({ size: [1, 1, 1], color: c }));
+    ctx.group('g', { at: [0, 0, 1] });
+  });
+  return { ...a, parts: a.parts.map((p) => (p.name === name ? { ...p, ...change } : p)) };
+};
+
+describe('non-finite transforms', () => {
+  it('flag NaN at, NaN yaw and a mesh-less group at Infinity', () => {
+    const found = (a: CompiledAsset) => nonFinite(a).map((f) => f.part);
+    expect(found(broken('a', { at: [Number.NaN, 0, 0] }))).toEqual(['a']);
+    expect(found(broken('a', { yaw: Number.NaN }))).toEqual(['a']);
+    const group = broken('g', { at: [0, 0, Number.POSITIVE_INFINITY] });
+    expect(found(group)).toEqual(['g']);
+    expect(nonFinite(group)[0]?.message).toContain('transform');
+  });
+});
+
+describe('mesh array lengths', () => {
+  const b = box({ size: [1, 1, 1], color: c });
+  it('flag short normals, uvs, colours and a partial triangle, before any gate reads them', () => {
+    for (const bad of [
+      { ...b, normals: b.normals.slice(0, 12) },
+      { ...b, uvs: b.uvs.slice(0, b.uvs.length - 6) },
+      { ...b, colors: b.colors.slice(0, b.colors.length - 6) },
+      { ...b, indices: b.indices.slice(0, 34) },
+    ]) {
+      const [f, ...rest] = runQa(one(bad));
+      expect(rest).toEqual([]);
+      expect(f).toMatchObject({ gate: 'mesh-arrays', code: 'T3D_QA_MESH_ARRAYS', part: 'thing' });
+    }
+    expect(meshArrays(one({ ...b, normals: b.normals.slice(0, 12) }))[0]?.message).toContain(
+      'normals 12 (want 72)',
+    );
   });
 });

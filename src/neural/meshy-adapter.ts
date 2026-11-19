@@ -157,6 +157,7 @@ export function meshyAdapter(o: MeshyOptions): MeshyAdapter {
     id: 'meshy',
     tasks: ['mesh', 'rig', 'texture'],
     models,
+    paid: true,
     estimate: (job) => meshyEstimate(o, job),
     balance: () => meshyBalance(t),
     animations: (q) => meshyAnimations(t, q),

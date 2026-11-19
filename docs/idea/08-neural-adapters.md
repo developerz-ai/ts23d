@@ -13,7 +13,7 @@ Recipes are weak on living things and sculpted forms ([07](07-what-fits.md)). Mo
 | `NeuralAdapter`, `runJob`, `jobKey` | Shipped | The contract and the one way a job reaches a model (`adapter.ts`) |
 | `httpAdapter` / `http(url, model)` | Shipped | `t3d-neural/1` wire protocol, below |
 | `comfyAdapter` | Shipped | Your ComfyUI workflow (API format) for `image` / `texture`; no input upload yet |
-| `openaiImageAdapter` / `openaiImage(url, model)` | Shipped | Any OpenAI-compatible `/v1/images/generations` for `image` |
+| `openaiImageAdapter` / `openaiImage(url, model)` | Shipped | Any OpenAI-compatible `/v1/images/generations` for `image`; pass `paid: true` for a billed endpoint so `t3d neural run` asks for `--yes-spend` |
 | `kubeezAdapter({ apiKey, model?, baseUrl?, resolution? })` | Shipped | kubeez.com (partner, disclosed below) for `image`, text-to-image or image-to-image; for users without a GPU |
 | `mockAdapter` | Shipped | Deterministic fake for every task: tests, demos, CI |
 | `neuralCache`, `provideNeural`, `providedNeural` | Shipped | The per-recipe committed cache (`recipe-cache.ts`) |
@@ -47,6 +47,9 @@ interface NeuralAdapter {
   tasks: readonly NeuralTask[];
   models(): Promise<NeuralModelInfo[]>;         // { id, task, licence, weightsSha256?, vramGb? }
   run<T>(job: NeuralJob<T>): Promise<NeuralRun<T>>;  // { result, model, server? }
+  paid?: boolean;                               // a billed service: t3d neural run prices every job
+  estimate?(job): number | Promise<number>;     // credits; NaN = cannot price → needs --yes-spend
+  balance?(): Promise<{ balance: number }>;
 }
 ```
 
@@ -170,7 +173,7 @@ export const config = defineConfig({
 | Poll | `GET /generate/media/{id}` until `completed` with every `outputs[].url` set (the CDN can lag: keep polling) or `failed` |
 | Download | Each URL, **without** the API key (another host); the PNG is centre-cropped to the asked aspect and resampled to `width × height` (`png-fit.ts`) |
 
-HTTP 429 backs off (doubling, honouring the job deadline); 401/402/403 are `T3D_NEURAL_FAILED` with a fix (403: the key needs the `generate:media` scope). The key is the caller's: the library never reads the environment, and the key never reaches `record.json`, the cache, logs or errors. Records carry licence `own` and `terms: https://kubeez.com/legal/terms` (Kubeez terms: you retain the rights to outputs generated using your prompts, subject to third-party rights). Seeds pass through; determinism comes from the committed cache, as for any model.
+Kubeez is a paid adapter: `t3d neural run` prices each job at the model's `cost_per_generation` and needs `--yes-spend` above 50 credits, or for a model that lists no cost. HTTP 429 backs off (doubling, or the server's `Retry-After` when longer, within the job deadline); 401/402/403 are `T3D_NEURAL_FAILED` with a fix (403: the key needs the `generate:media` scope). The key is the caller's: the library never reads the environment, and the key never reaches `record.json`, the cache, logs or errors. Records carry licence `own` and `terms: https://kubeez.com/legal/terms` (Kubeez terms: you retain the rights to outputs generated using your prompts, subject to third-party rights). Seeds pass through; determinism comes from the committed cache, as for any model.
 
 ## Non-goals
 

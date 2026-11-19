@@ -11,9 +11,14 @@ const code = (argv: string[]): string | undefined => {
   return undefined;
 };
 
-it('rejects bad render flags with T3D_RENDER_OPTIONS', () => {
-  expect(code(['hero', 'a.ts', '--size', '1600'])).toBe('T3D_RENDER_OPTIONS');
-  expect(code(['hero', 'a.ts', '--size', '10x10'])).toBe('T3D_RENDER_OPTIONS');
+it('rejects a bad --size value as a usage error (exit 2), like --sheet-size and --lods', () => {
+  for (const v of ['1600', '100', 'abc', '10x10', '9000x900'])
+    expect(code(['hero', 'a.ts', '--size', v])).toBe('T3D_CLI_USAGE');
+  expect(code(['hero', 'a.ts', '--size'])).toBe('T3D_CLI_USAGE');
+  expect(() => parseArgs(['hero', 'a.ts', '--size', 'abc'])).toThrow(/WIDTHxHEIGHT/);
+});
+
+it('rejects bad camera flags with T3D_RENDER_OPTIONS', () => {
   expect(code(['hero', 'a.ts', '--el', 'high'])).toBe('T3D_RENDER_OPTIONS');
   expect(code(['hero', 'a.ts', '--el', '120'])).toBe('T3D_RENDER_OPTIONS');
   expect(code(['hero', 'a.ts', '--fov'])).toBe('T3D_RENDER_OPTIONS');
@@ -64,8 +69,10 @@ it('--physics is off unless asked, and is not taken for a file', () => {
 });
 
 it('--profile rejects an unknown engine, sets its defaults, and explicit flags win', () => {
-  expect(code(['build', 'a.ts', '--profile', 'cryengine'])).toBe('T3D_RECIPE_INVALID');
-  expect(code(['build', 'a.ts', '--profile'])).toBe('T3D_RECIPE_INVALID');
+  expect(code(['build', 'a.ts', '--profile', 'cryengine'])).toBe('T3D_CLI_USAGE');
+  expect(code(['build', 'a.ts', '--profile', 'unrel'])).toBe('T3D_CLI_USAGE');
+  expect(code(['build', 'a.ts', '--profile'])).toBe('T3D_CLI_USAGE');
+  expect(() => parseArgs(['build', 'a.ts', '--profile', 'unrel'])).toThrow(/unreal \| unity/);
   const web = parseArgs(['build', 'a.ts', '--profile', 'web']);
   expect([web.profile, web.lodFiles, web.sheetSize]).toEqual(['web', 'single', 2048]);
   const ue = parseArgs(['build', 'a.ts', '--profile', 'unreal']);
@@ -117,10 +124,20 @@ it('names the closest command and flag in a usage error', () => {
   };
   expect(fixOf(['biuld', 'a.ts'])).toContain('t3d build');
   expect(fixOf(['build', 'a.ts', '--sheet-szie', '512'])).toContain('--sheet-size');
+  expect(fixOf(['build', 'a.ts', '-o', 'x'])).toContain('--out');
+});
+
+it('bare `t3d` is a usage error (exit 2) that lists the commands', () => {
+  expect(code([])).toBe('T3D_CLI_USAGE');
+  expect(() => parseArgs([])).toThrow(/no command/);
+  try {
+    parseArgs([]);
+  } catch (e) {
+    expect(e instanceof Ts23dError && e.fix).toContain('build, ');
+  }
 });
 
 it('reads --help / -h / help <cmd> and --version before anything else', () => {
-  expect(parseArgs([]).cmd).toBe('help');
   expect(parseArgs(['--help']).cmd).toBe('help');
   expect(parseArgs(['build', '--help'])).toMatchObject({ cmd: 'help', topic: 'build' });
   expect(parseArgs(['help', 'icon'])).toMatchObject({ cmd: 'help', topic: 'icon' });
@@ -132,4 +149,15 @@ it('--timeout gives the http finish model seconds → ms, refuses ≤ 0', () => 
   expect(parseArgs(['finish', 'a.ts', '--timeout', '600']).finish?.timeoutMs).toBe(600_000);
   expect(code(['finish', 'a.ts', '--timeout', '0'])).toBe('T3D_FINISH_INVALID');
   expect(code(['finish', 'a.ts', '--timeout'])).toBe('T3D_FINISH_INVALID');
+});
+
+it('--watch outside build is a usage error naming t3d build, not a recipe path', () => {
+  expect(code(['shot', 'a.ts', '--watch'])).toBe('T3D_CLI_USAGE');
+  expect(() => parseArgs(['hero', 'a.ts', '--watch'])).toThrow(/--watch works with t3d build only/);
+});
+
+it('--seed "" is refused, never read as seed 0', () => {
+  expect(code(['tune', 'a.ts', '--seed', ''])).toBe('T3D_TUNE_INVALID');
+  expect(code(['tune', 'a.ts', '--seed', ' '])).toBe('T3D_TUNE_INVALID');
+  expect(parseArgs(['tune', 'a.ts', '--seed', '0']).seed).toBe(0);
 });

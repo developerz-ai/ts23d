@@ -9,12 +9,13 @@
 // material on every LOD (texture-sets.ts). Zero dependencies and byte-deterministic.
 
 import type { CompiledAsset, Part } from '../core/index.ts';
-import { checkMeshAttributes, Ts23dError } from '../core/index.ts';
+import { checkMeshAttributes } from '../core/index.ts';
 import { AUDIO_EMITTER, writeAudio } from './audio.ts';
 import { BinWriter, type Json } from './bin-writer.ts';
 import { animationsOf, type ClipTree, Z_UP_TO_Y_UP } from './clips.ts';
 import { concat, packGlb } from './container.ts';
 import { withCredits } from './credits.ts';
+import { checkGlow, checkLods, checkMeshArrays } from './glb-checks.ts';
 import type { GlbOptions, GlbResult, LodGlbResult } from './glb-options.ts';
 import { newDoc, writeHierarchy } from './hierarchy.ts';
 import { LIGHTS } from './lights.ts';
@@ -33,7 +34,7 @@ import { materialExtensions } from './pbr.ts';
 import { finishPlan } from './pbr-plan.ts';
 import { writePhysics } from './physics.ts';
 import { profiled } from './profile.ts';
-import { nodeNames, writeSkin } from './skin.ts';
+import { writeSkin } from './skin.ts';
 import { textureSetPlan } from './texture-sets.ts';
 import { sheetGltf } from './textures.ts';
 import { MATERIALS_VARIANTS, paintPlan, unpaintParts } from './variants.ts';
@@ -53,35 +54,6 @@ export function exportGlb(input: CompiledAsset, o: GlbOptions = {}): GlbResult {
 /** All LODs in one GLB: LOD0 in the scene, the rest as MSFT_lod alternates outside it. */
 export function toLodGlb(lods: readonly CompiledAsset[], o: GlbOptions = {}): Uint8Array {
   return exportLodGlb(lods, o).glb;
-}
-
-function checkGlow(rules: readonly GlowRule[]): void {
-  for (const r of rules)
-    if ((r.strength ?? 4) < 0 || (r.color ?? [0, 0, 0]).some((c) => c < 0 || c > 1))
-      throw new Ts23dError('T3D_RECIPE_INVALID', {
-        cause: `glow rule for ${JSON.stringify(r.parts)} has a colour outside 0..1 or a negative strength`,
-        fix: 'colour is linear 0..1 (hex() converts sRGB); brightness goes in `strength`',
-      });
-}
-
-function checkLods(lods: readonly CompiledAsset[]): void {
-  const names = new Set(lods.map((l) => l.name));
-  const levels = lods.map((l) => l.lod);
-  if (
-    lods.length === 0 ||
-    names.size !== 1 ||
-    levels.some((l, i) => i > 0 && l <= (levels[i - 1] ?? 0))
-  )
-    throw new Ts23dError('T3D_RECIPE_INVALID', {
-      cause: `exportLodGlb got LODs [${levels.join(', ')}] of [${[...names].join(', ')}]`,
-      fix: 'pass compile(asset, { lod }) results of ONE asset, highest detail first: LOD0, LOD1, LOD2',
-    });
-  const preview = lods.find((l) => l.variant !== undefined);
-  if (preview)
-    throw new Ts23dError('T3D_RECIPE_INVALID', {
-      cause: `exportLodGlb got '${preview.name}' compiled as variant '${preview.variant}'`,
-      fix: 'export compile(asset, { lod }) without `variant`: the GLB carries every variant',
-    });
 }
 
 type Prepared = ReturnType<typeof prepareUncached>;
@@ -104,7 +76,10 @@ function prepare(input: CompiledAsset, o: GlbOptions, glow: readonly GlowRule[])
 function prepareUncached(input: CompiledAsset, o: GlbOptions, glow: readonly GlowRule[]) {
   // Skin / morph attributes must line up before merging and welding reshuffle them.
   for (const p of input.parts)
-    if (p.mesh) checkMeshAttributes(p.mesh, `part '${p.name}' in '${input.name}'`);
+    if (p.mesh) {
+      checkMeshArrays(p.mesh, `part '${p.name}' in '${input.name}'`);
+      checkMeshAttributes(p.mesh, `part '${p.name}' in '${input.name}'`);
+    }
   const opt = o.optimize === false ? false : o.optimize === true ? {} : (o.optimize ?? {});
   const merged = o.keepParts
     ? input
@@ -163,7 +138,7 @@ export function exportLodGlb(lods: readonly CompiledAsset[], o: GlbOptions = {})
   const skins: Json[] = [];
   const trees: ClipTree[] = [];
   const roots = preps.map(({ asset, glowOf }, k) => {
-    const root = writeHierarchy(
+    const { root, index } = writeHierarchy(
       doc,
       asset,
       k === 0 ? asset.name : `${asset.name}_LOD${asset.lod}`,
@@ -185,8 +160,7 @@ export function exportLodGlb(lods: readonly CompiledAsset[], o: GlbOptions = {})
             : paint.primitiveExtensions(part.paint),
       },
     );
-    const parts = nodeNames(doc, root + 1, doc.nodes.length);
-    trees.push({ parts, joints: writeSkin(doc, skins, asset, root) });
+    trees.push({ parts: index, joints: writeSkin(doc, skins, asset, root, index) });
     return root;
   });
   for (const r of roots) {
@@ -271,13 +245,14 @@ export function exportLodGlb(lods: readonly CompiledAsset[], o: GlbOptions = {})
     scene: 0,
     scenes: [{ name: top.name, nodes: [0] }],
     nodes: doc.nodes,
-    meshes: doc.meshes,
+    // glTF forbids empty arrays and a zero-length buffer: a mesh-less LOD writes none of them.
+    ...(doc.meshes.length ? { meshes: doc.meshes } : {}),
     ...(skins.length ? { skins } : {}),
     materials,
     ...(tex ? tex.json : {}),
-    buffers: [{ byteLength: body.byteLength }],
-    bufferViews: bin.views,
-    accessors: bin.accessors,
+    ...(body.byteLength ? { buffers: [{ byteLength: body.byteLength }] } : {}),
+    ...(bin.views.length ? { bufferViews: bin.views } : {}),
+    ...(bin.accessors.length ? { accessors: bin.accessors } : {}),
     ...(animations.length ? { animations } : {}),
   };
   const more = {

@@ -23,6 +23,15 @@ describe('radialPulseClip', () => {
     expect(() => radialPulseClip('p', { ...squid, timing }, { part: 'm' })).toThrow(/timing/);
   });
 
+  it('refuses an inflation with no share of the cycle (the loop would pop at its seam)', () => {
+    const timing = { inflate: 0, contract: 0.2, coast: 0.1 };
+    expect(() => radialPulseClip('p', { ...squid, timing }, { part: 'm' })).toThrow(/no share/);
+    // No inflation and no share for it is the jellyfish: still fine.
+    expect(() =>
+      radialPulseClip('p', { ...squid, inflate: 0, timing }, { part: 'm' }),
+    ).not.toThrow();
+  });
+
   it('refuses scale on a joint with children (it would shear them)', () => {
     const target = { bones: ['hub'], skeleton: bones, axis: [0, 0, 1] as const };
     expect(() => radialPulseClip('p', squid, target)).toThrow(/child joints/);

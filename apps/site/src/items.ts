@@ -5,6 +5,7 @@
 
 import { MEDIA } from 'virtual:ts23d-media';
 import { CATEGORIES, type Category, categoryOf } from './categories.ts';
+import { byCodeUnit } from './compare.ts';
 import type { AssetInfo } from './compile-protocol.ts';
 import { flagshipRank } from './flagships.ts';
 import type { MediaEntry } from './media-types.ts';
@@ -84,12 +85,12 @@ export function mergeRecipes(
   return order([...byName.values()]);
 }
 
-/** Flagships first (in their order), then category order, then name. */
+/** Flagships first (in their order), then category order, then name (code units, any locale). */
 export function order(items: readonly Item[]): Item[] {
   const flag = (i: Item): number => flagshipRank(i.name);
   const rank = (i: Item): number => CATEGORIES.indexOf(i.category);
   return [...items].sort(
-    (a, b) => flag(a) - flag(b) || rank(a) - rank(b) || a.name.localeCompare(b.name),
+    (a, b) => flag(a) - flag(b) || rank(a) - rank(b) || byCodeUnit(a.name, b.name),
   );
 }
 

@@ -1,44 +1,32 @@
 // `t3d build` / `t3d shot` for one asset → <out>/<asset>/: the GLBs, hero / thumb / sheet PNGs,
 // sound clips and manifest.json. QA covers exactly the LODs asked for: every gate per LOD (folded
 // across LODs), the LOD-chain gates when more than one LOD is built, and `budget.draws` (draw calls
-// exist only after export's per-pivot merge, so they are counted here).
+// exist only after export's per-pivot merge, so export counts them: `drawFindings`, which the
+// testing module's `assertQaPass` runs too).
 
 import { mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { type Asset, type CompiledAsset, compile, type Lod } from '../core/index.ts';
-import { exportLodGlb, type SheetBinding, soundFiles, toGlb } from '../export/index.ts';
+import {
+  drawFindings,
+  exportLodGlb,
+  type SheetBinding,
+  soundFiles,
+  toGlb,
+} from '../export/index.ts';
 import type { PaintedSheet } from '../material/index.ts';
 import { codeOf, type Finding, runLodQa, runQa } from '../qa/index.ts';
 import { beauty, contactSheet, thumbnail } from '../render/index.ts';
 import type { Args } from './args.ts';
-import { type AssetManifest, drawCallsOf, manifestOf } from './manifest.ts';
+import { type AssetManifest, manifestOf } from './manifest.ts';
 import { variantOf } from './render-cmds.ts';
 import { foldLods } from './report.ts';
-
-/** `budget.draws` exceeded at a LOD → one finding. */
-export function drawFindings(asset: Asset, lods: readonly CompiledAsset[]): Finding[] {
-  const max = asset.budget.draws;
-  if (max === undefined) return [];
-  return lods.flatMap((l): Finding[] => {
-    const n = drawCallsOf(l);
-    return n > max
-      ? [
-          {
-            gate: 'draw-calls',
-            code: 'T3D_QA_DRAW_CALLS',
-            message: `LOD${l.lod} needs ${n} draw calls, budget.draws is ${max}`,
-            fix: 'give parts that move together one pivot (ctx.group) and share paint slots, so the export merges them; or raise budget.draws',
-          },
-        ]
-      : [];
-  });
-}
 
 /** Per-LOD gates folded across LODs, then the LOD-chain gates and the draw-call budget. */
 export function qaOf(asset: Asset, lods: readonly CompiledAsset[]): Finding[] {
   return [
     ...foldLods(lods.map((a) => ({ lod: a.lod, findings: runQa(a) }))),
-    ...(lods.length > 1 ? runLodQa(lods) : []),
+    ...runLodQa(lods),
     ...drawFindings(asset, lods),
   ];
 }

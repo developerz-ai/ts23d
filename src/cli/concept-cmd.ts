@@ -13,6 +13,7 @@ import {
   type Asset,
   compile,
   encodePng,
+  isTs23dError,
   type NeuralRequests,
   type NeuralResult,
   type NeuralTask,
@@ -235,7 +236,7 @@ export async function conceptMain(
       }
     return 0;
   } catch (e) {
-    if (e instanceof Ts23dError) return printError(e, o.json);
+    if (isTs23dError(e)) return printError(e, o.json);
     throw e;
   }
 }

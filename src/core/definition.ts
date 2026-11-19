@@ -19,7 +19,7 @@ import type {
 } from './part.ts';
 import type { AssetPhysics, RealMass } from './physics.ts';
 import type { Rng } from './rng.ts';
-import type { Armature, BoneOptions } from './skeleton.ts';
+import type { Armature, BoneOptions, LimitTolerance } from './skeleton.ts';
 import type { TextureBudget } from './texture-set.ts';
 import type { TuneSpec } from './tune.ts';
 import type { Vec3 } from './vec.ts';
@@ -231,6 +231,8 @@ export interface AssetDefinition {
   readonly gaps?: readonly IntendedGap[];
   /** Intended creases inside sculpted meshes, so QA `connections` skips them (organic kinds). */
   readonly creases?: readonly IntendedCrease[];
+  /** Raised QA `deform` stretch per limited bone, for limits a kind generates (needs `why`). */
+  readonly limitTolerances?: Readonly<Record<string, LimitTolerance>>;
   /** Rigid body, mass and collider defaults (`t3d build --physics`, docs/architecture/gltf-capabilities.md). */
   readonly physics?: AssetPhysics;
   /**

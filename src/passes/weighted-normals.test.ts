@@ -63,3 +63,37 @@ describe('weightedNormals', () => {
     expect(m.indices.length).toBe(12);
   });
 });
+
+describe('weightedNormals on a skinned, morphed mesh', () => {
+  it('carries joints, weights and morph deltas to every split vertex (they were dropped)', () => {
+    const cube = sharedCube();
+    const joints = new Uint16Array(8 * 4);
+    const weights = new Float32Array(8 * 4);
+    const lift = new Float32Array(8 * 3);
+    for (let v = 0; v < 8; v++) {
+      joints[v * 4] = v;
+      weights[v * 4] = 1;
+      lift[v * 3 + 2] = v + 1;
+    }
+    const m = weightedNormals({
+      ...cube,
+      joints,
+      weights,
+      morphs: [{ name: 'lift', positions: lift }],
+    });
+    expect(m.joints?.length).toBe(24 * 4);
+    expect(m.weights?.length).toBe(24 * 4);
+    expect(m.morphs?.[0]?.name).toBe('lift');
+    expect(m.morphs?.[0]?.positions.length).toBe(24 * 3);
+    for (let i = 0; i < 24; i++) {
+      // The source vertex is the cube corner at this position: bit k set where coordinate k is +1.
+      const src = [0, 1, 2].reduce(
+        (s, k) => s + ((m.positions[i * 3 + k] ?? 0) > 0 ? 1 << k : 0),
+        0,
+      );
+      expect(m.joints?.[i * 4]).toBe(src);
+      expect(m.weights?.[i * 4]).toBe(1);
+      expect(m.morphs?.[0]?.positions[i * 3 + 2]).toBe(src + 1);
+    }
+  });
+});

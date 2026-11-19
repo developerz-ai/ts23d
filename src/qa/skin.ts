@@ -1,7 +1,8 @@
 // QA `skin` (ADR 013): a skinned asset's weights are valid in every engine. Per skinned part:
 // exactly 4 influences per vertex, weights finite, ≥ 0 and summing to 1 (± 1e-3: 0.98 fails),
-// joint indices inside the skeleton; the part sits where bones can move it (no moving pivot above
-// it); the bind pose reproduces the rest positions (≤ 1e-5 m). Over the asset: every bone drives
+// joint indices inside the skeleton; the part sits where bones can move it (nothing above it
+// moves: no motion, no clip keying an ancestor; a still group such as a `ctx.use` prefix is
+// fine); the bind pose reproduces the rest positions (≤ 1e-5 m). Over the asset: every bone drives
 // some vertex, and the bones fit `budget.bones`; no paw carries both legs' weights (skin-sides.ts).
 
 import {
@@ -9,9 +10,9 @@ import {
   type CompiledAsset,
   checkBoneBudget,
   checkMeshAttributes,
+  isTs23dError,
   type Part,
   SKIN_INFLUENCES,
-  Ts23dError,
   toWorld,
   worldTransforms,
 } from '../core/index.ts';
@@ -47,7 +48,7 @@ function partFindings(p: Part, sk: Armature | undefined, used: Set<number>): Fin
   try {
     checkMeshAttributes(m, `part '${p.name}'`);
   } catch (e) {
-    if (!(e instanceof Ts23dError)) throw e;
+    if (!isTs23dError(e)) throw e;
     return [finding(e.message.replace(/^T3D_[A-Z_]+:\s*/, ''), e.fix, p.name)];
   }
   let bad = -1;
@@ -86,9 +87,16 @@ function partFindings(p: Part, sk: Armature | undefined, used: Set<number>): Fin
   return out;
 }
 
-/** Skinned meshes must sit at the root: a moving pivot above them would move them twice. */
+/**
+ * A skinned mesh may hang under parts and groups that stay put (a `ctx.use` prefix group among
+ * them; export bakes it to the root). An ancestor that moves, by its motion or keyed by a clip,
+ * would move it a second time on top of its bones.
+ */
 function placementFindings(asset: CompiledAsset): Finding[] {
   const byName = new Map(asset.parts.map((p) => [p.name, p]));
+  const keyed = new Set(
+    (asset.clips ?? []).flatMap((c) => c.tracks.flatMap((t) => ('part' in t ? [t.part] : []))),
+  );
   return asset.parts.flatMap((p) => {
     if (!p.mesh?.joints) return [];
     for (
@@ -96,11 +104,11 @@ function placementFindings(asset: CompiledAsset): Finding[] {
       q;
       q = q.parent ? byName.get(q.parent) : undefined
     )
-      if (q.mesh === null || q.motion !== null)
+      if (q.motion !== null || keyed.has(q.name))
         return [
           finding(
-            `skinned part '${p.name}' sits under pivot '${q.name}'`,
-            'parent skinned meshes to nothing (or to static parts): the bones move them',
+            `skinned part '${p.name}' sits under pivot '${q.name}', which ${q.motion ? 'has a motion' : 'a clip keys'}`,
+            'parent skinned meshes to nothing, or to parts and groups that never move: the bones move them',
             p.name,
           ),
         ];
@@ -124,7 +132,7 @@ export function skinFindings(asset: CompiledAsset, ibm?: Float32Array): Finding[
     try {
       checkBoneBudget(asset.name, sk.bones.length, asset.budget.bones);
     } catch (e) {
-      if (!(e instanceof Ts23dError)) throw e;
+      if (!isTs23dError(e)) throw e;
       out.push(finding(e.message.replace(/^T3D_[A-Z_]+:\s*/, ''), e.fix));
     }
   }

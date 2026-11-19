@@ -4,7 +4,6 @@
 // Christie wheels, 550 mm track; 60° glacis, 40° side plates; 76.2 mm F-34 L/41.5.
 
 import {
-  applyAffine,
   beam,
   box,
   type Check,
@@ -12,7 +11,6 @@ import {
   cross,
   cylinder,
   defineFamily,
-  frame,
   hex,
   type Lod,
   lathe,
@@ -178,7 +176,7 @@ function trackLink(pitch: number, horn: boolean): Mesh {
   return merge(parts);
 }
 
-/** Belt stations per LOD: LOD2 keeps an open belt of 32 slabs so the wheels show through it. */
+/** Belt stations per LOD: LOD2 keeps a belt of 32 slabs round the wheels (no solid side slab). */
 function stationsOf(lod: Lod, line: readonly Vec2[]): Station[] {
   const perimeter = resample(line, 1)[0]?.len ?? 1;
   return resample(line, lod === 2 ? 32 : Math.round(perimeter / (lod === 0 ? 0.172 : 0.25)));
@@ -196,7 +194,9 @@ function trackMesh(lod: Lod, line: readonly Vec2[], y: number): Mesh {
     size: [len * 1.04, TRACK_W, LINK_T],
     at: [0, 0, -LINK_T / 2],
     color: trackSteel,
-    ...(lod === 2 ? { omit: ['left', 'right'] as const } : {}),
+    // LOD2 drops only the edge that faces the hull ('left' = +Y, 'right' = −Y in `box`): the
+    // outboard edge is the 6 cm of track you see from the side, the ends show round the wheels.
+    ...(lod === 2 ? { omit: [y > 0 ? 'right' : 'left'] as const } : {}),
   });
   const links = [trackLink(len, true), trackLink(len, false)];
   return onGround(
@@ -420,28 +420,64 @@ function lettering(text: string, h: number): Vec2[][] {
   return out;
 }
 
+/** Where the ray from `o` along `d` first meets `m` (null: it misses). */
+function rayHit(m: Mesh, o: Vec3, d: Vec3): Vec3 | null {
+  const at = (i: number): Vec3 => [
+    m.positions[i * 3] ?? 0,
+    m.positions[i * 3 + 1] ?? 0,
+    m.positions[i * 3 + 2] ?? 0,
+  ];
+  const dot3 = (p: Vec3, q: Vec3): number => p[0] * q[0] + p[1] * q[1] + p[2] * q[2];
+  let best = Number.POSITIVE_INFINITY;
+  for (let k = 0; k < m.indices.length; k += 3) {
+    const p0 = at(m.indices[k] ?? 0);
+    const e1 = sub(at(m.indices[k + 1] ?? 0), p0);
+    const e2 = sub(at(m.indices[k + 2] ?? 0), p0);
+    const h = cross(d, e2);
+    const det = dot3(e1, h);
+    if (Math.abs(det) < 1e-12) continue;
+    const s = sub(o, p0);
+    const bu = dot3(s, h) / det;
+    const q = cross(s, e1);
+    const bv = dot3(d, q) / det;
+    if (bu < -1e-6 || bv < -1e-6 || bu + bv > 1 + 1e-6) continue;
+    const t = dot3(e2, q) / det;
+    if (t > 0 && t < best) best = t;
+  }
+  return Number.isFinite(best)
+    ? [o[0] + d[0] * best, o[1] + d[1] * best, o[2] + d[2] * best]
+    : null;
+}
+
 /**
- * Paint flat quads onto a (possibly sloped) plate. `a` → `b` is the plate's bottom edge in the
- * reading direction, `up` a point higher on the plate; the decal stands 8 mm proud.
+ * Paint flat quads onto a plate of `onto`. `a` → `b` is the plate's bottom edge in the reading
+ * direction, `up` a point higher on the plate. A four-cornered armour plate is rarely flat (the hex
+ * turret's sides warp 2.6 cm corner to corner), so every corner of every stroke is dropped onto the
+ * surface itself and stands 2 mm proud of it: paint, not a board held off the plate.
  */
-function plateDecal(quads: readonly Vec2[][], a: Vec3, b: Vec3, up: Vec3, at: Vec2, c: Vec3) {
+function plateDecal(
+  quads: readonly Vec2[][],
+  onto: Mesh,
+  [a, b, up]: readonly [Vec3, Vec3, Vec3],
+  at: Vec2,
+  c: Vec3,
+): Mesh {
   const u = normalize(sub(b, a));
   const raw = sub(up, a);
   const v = normalize(sub(raw, scale(u, raw[0] * u[0] + raw[1] * u[1] + raw[2] * u[2])));
   const n = cross(u, v);
-  const o: Vec3 = [
-    a[0] + u[0] * at[0] + v[0] * at[1] + n[0] * 0.008,
-    a[1] + u[1] * at[0] + v[1] * at[1] + n[1] * 0.008,
-    a[2] + u[2] * at[0] + v[2] * at[1] + n[2] * 0.008,
-  ];
-  return merge(
-    quads.map((q) =>
-      applyAffine(
-        planar({ points: q.map(([x, y]): Vec3 => [x, y, 0]), color: c }),
-        frame(u, v, n, o),
-      ),
-    ),
-  );
+  const back: Vec3 = [-n[0], -n[1], -n[2]];
+  const drop = ([x, y]: Vec2): Vec3 => {
+    const flat: Vec3 = [
+      a[0] + u[0] * (at[0] + x) + v[0] * (at[1] + y),
+      a[1] + u[1] * (at[0] + x) + v[1] * (at[1] + y),
+      a[2] + u[2] * (at[0] + x) + v[2] * (at[1] + y),
+    ];
+    const above: Vec3 = [flat[0] + n[0] * 0.1, flat[1] + n[1] * 0.1, flat[2] + n[2] * 0.1];
+    const hit = rayHit(onto, above, back) ?? flat;
+    return [hit[0] + n[0] * 0.002, hit[1] + n[1] * 0.002, hit[2] + n[2] * 0.002];
+  };
+  return merge(quads.map((q) => planar({ points: q.map(drop), color: c })));
 }
 
 // ---------------------------------------------------------------- turrets
@@ -930,7 +966,8 @@ const t34Family = defineFamily<Params>({
     });
     const shell = turretShell(p.turret);
     const roofZ = shell.top[0]?.[2] ?? 0.7;
-    const turret: Mesh[] = [taper(shell.bottom, shell.top, paint)];
+    const armour = taper(shell.bottom, shell.top, paint);
+    const turret: Mesh[] = [armour];
     if (p.cupola)
       turret.push(
         lathe({
@@ -1016,7 +1053,7 @@ const t34Family = defineFamily<Params>({
         const c = b[i1] as Vec3;
         const up = t[i0] as Vec3;
         const len = Math.hypot(c[0] - a[0], c[1] - a[1]);
-        turret.push(plateDecal(text, a, c, up, [(len - width) / 2, 0.24], white));
+        turret.push(plateDecal(text, armour, [a, c, up], [(len - width) / 2, 0.24], white));
       }
     }
     ctx.part('turret_body', finish(merge(turret), TURRET_AT, { dust: 0.5 }), { parent: 'turret' });

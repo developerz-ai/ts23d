@@ -143,7 +143,7 @@ export const pbr_showcase = defineAsset({
       { surface: 'ice' },
     );
     label('label_ice', front, at(4), 'ice');
-    // Water: a white ceramic bowl, the water surface a disc just under its rim.
+    // Water: a white ceramic bowl, the water surface a disc just under its rim, touching the wall.
     const bowl: Vec2[] = [
       [0, 0],
       [0.1, 0],
@@ -156,6 +156,10 @@ export const pbr_showcase = defineAsset({
       [0.09, 0.018],
       [0, 0.018],
     ];
+    // The surface meets the inner wall as real water does: its radius is the wall's at the water
+    // line (interpolated on the inner flank (0.145, 0.035)→(0.175, 0.085)) plus 2 mm into it.
+    const waterZ = 0.075;
+    const wallR = 0.145 + ((waterZ - 0.035) / (0.085 - 0.035)) * (0.175 - 0.145);
     stand('water', front, at(5));
     ctx.part(
       'water_bowl',
@@ -165,8 +169,8 @@ export const pbr_showcase = defineAsset({
       'water',
       lathe({
         profile: [
-          [0, 0.075],
-          [0.165, 0.075],
+          [0, waterZ],
+          [wallR + 0.002, waterZ],
         ],
         segments: seg,
         color: hex('#d8eef0'),

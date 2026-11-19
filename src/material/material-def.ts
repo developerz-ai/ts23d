@@ -5,9 +5,11 @@
 
 import { Ts23dError, type Vec3 } from '../core/index.ts';
 import type { MaterialPainter, StripKind, StripRecipe } from './paint/types.ts';
+import { WEATHER_PARAMS } from './paint/weather.ts';
 import { hex, isHex } from './palette.ts';
 import { type MaterialGraph, probeGraph } from './tex/graph.ts';
 import { type TextureSource, validateTexture } from './texture-source.ts';
+import { CUSTOM_STRIP_SLOTS } from './trim-sheet.ts';
 
 export interface MaterialDef {
   /** snake_case, unique; becomes the strip id recipes pass as `strip`. */
@@ -34,6 +36,12 @@ export interface MaterialDef {
   readonly graph?: MaterialGraph;
   /** World metres the strip spans along U before it repeats (custom strips; default 4). */
   readonly spanMetres?: number;
+  /**
+   * Custom strip row 0..13, instead of the row the id hashes to. Set it only when two ids one
+   * process loads hash to the same row (`T3D_MATERIAL_CONFLICT` names the free rows). Changing it
+   * moves the material's UVs, so an asset's bytes change once.
+   */
+  readonly row?: number;
   /** 0..1 rubbed convex edges (lighter, smoother, albedo2 shows through). Same as params.wear. */
   readonly wear?: number;
   /** 0..1 grime, darkening and roughening with age. Same as params.age. */
@@ -78,6 +86,11 @@ export function toStripRecipe(d: MaterialDef): StripRecipe {
     fail(id, 'paint is not a function', 'paint is (surface, kit) => void');
   for (const [k, v] of Object.entries(d.params ?? {}))
     if (!Number.isFinite(v)) fail(id, `params.${k} is ${v}`, 'params are finite numbers');
+  for (const k of WEATHER_PARAMS) {
+    const v = d.params?.[k];
+    if (v !== undefined && !unit(v))
+      fail(id, `params.${k} ${v}`, `${k} is 0..1 (0 = none, 1 = full), as the top-level dial`);
+  }
   if (d.texture) validateTexture(id, d.texture);
   for (const k of ['wear', 'age', 'wet'] as const)
     if (d[k] !== undefined && !unit(d[k] ?? 0)) fail(id, `${k} ${d[k]}`, `${k} is 0..1`);
@@ -88,6 +101,8 @@ export function toStripRecipe(d: MaterialDef): StripRecipe {
       `spanMetres ${span}`,
       'spanMetres is 0.5..64 m (how far the strip runs along U before repeating)',
     );
+  if (d.row !== undefined && !(Number.isInteger(d.row) && d.row >= 0 && d.row < CUSTOM_STRIP_SLOTS))
+    fail(id, `row ${d.row}`, `row is an integer 0..${CUSTOM_STRIP_SLOTS - 1} (a custom strip row)`);
   if (d.graph && d.texture)
     fail(
       id,

@@ -3,6 +3,7 @@
 import { Ts23dError } from '../../core/index.ts';
 import { CELLS, STRIPS, stripRow } from '../trim-sheet.ts';
 import type { CellImage, SheetRecipe, StripKind, StripRecipe } from './types.ts';
+import { WEATHER_PARAMS } from './weather.ts';
 
 const KINDS: readonly StripKind[] = [
   'bond',
@@ -48,6 +49,11 @@ export function validateStrip(where: string, r: StripRecipe): void {
     fail(`${where}.paint is not a function`, 'paint is (surface, kit) => void');
   for (const [k, v] of Object.entries(r.params ?? {}))
     if (!Number.isFinite(v)) fail(`${where}.params.${k} is ${v}`, 'params are finite numbers');
+  for (const k of WEATHER_PARAMS) {
+    const v = r.params?.[k];
+    if (v !== undefined && !unit(v))
+      fail(`${where}.params.${k} is ${v}`, `${k} is 0..1 (0 = none, 1 = full)`);
+  }
 }
 
 export function validateSheet(recipe: SheetRecipe): void {

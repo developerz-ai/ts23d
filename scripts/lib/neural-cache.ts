@@ -6,7 +6,7 @@
 
 import { readdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { Ts23dError } from '../../src/core/index.ts';
+import { isTs23dError } from '../../src/core/index.ts';
 import { entryOf, NEURAL_CAP_BYTES, parseRecord } from '../../src/neural/index.ts';
 import type { Violation } from './files.ts';
 
@@ -54,7 +54,7 @@ export async function neuralCacheViolations(
       }
       entryOf(record, files);
     } catch (e) {
-      if (!(e instanceof Ts23dError)) throw e;
+      if (!isTs23dError(e)) throw e;
       out.push({ file, line: 1, message: e.message, fix: e.fix });
     }
   }

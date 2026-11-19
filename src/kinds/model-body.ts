@@ -15,6 +15,7 @@ import type { CreatureSpec } from './creature-spec.ts';
 import { bindModel, quantiseWeights } from './model-bind.ts';
 import type { ChainedModel } from './model-chain.ts';
 import { applyFit, type ModelFit } from './model-fit.ts';
+import { mirrorHalf, without } from './model-mirror.ts';
 import { type ModelRig, modelRig } from './model-rig.ts';
 import type { FittedSkeleton } from './model-skeleton.ts';
 
@@ -24,8 +25,7 @@ export interface ModelBodyOptions {
   readonly spec: CreatureSpec;
   /** Bone and part name prefix. Default none. */
   readonly prefix?: string;
-  /** Part name. Default `<prefix>body_fur` for a furred spec (the path tracer shades a creature
-   *  part named `body` as bare skin), else `<prefix>body`. */
+  /** Part name. Default `modelBodyName(spec, prefix)`. */
   readonly name?: string;
   /** 'creature' (default): fit the plan's skeleton and bake its clips; 'model': the model's own
    *  skin, armature and clips, untouched (a rigged humanoid). */
@@ -67,6 +67,12 @@ export function meshVolume(m: Mesh): number {
   }
   return Math.abs(v) / 6;
 }
+
+/** The body part's default name, shared with the `model_surface` crease (model-creature.ts):
+ *  `<prefix>body_fur` for a furred spec (the path tracer shades a creature part named `body` as
+ *  bare skin), else `<prefix>body`. */
+export const modelBodyName = (spec: CreatureSpec, prefix = ''): string =>
+  `${prefix}${(spec.surface ?? 'fur') === 'fur' ? 'body_fur' : 'body'}`;
 
 const placed = new WeakMap<Float32Array, WeakMap<ModelRig, Mesh>>();
 const skinned = new WeakMap<Float32Array, WeakMap<ModelRig, Mesh>>();
@@ -110,7 +116,7 @@ export function modelBody(ctx: BuildContext, o: ModelBodyOptions): ModelBodyInfo
   const chained: ChainedModel = 'lods' in o.model ? { model: o.model } : o.model;
   const { model } = chained;
   const p = o.prefix ?? '';
-  const part = o.name ?? `${p}${(spec.surface ?? 'fur') === 'fur' ? 'body_fur' : 'body'}`;
+  const part = o.name ?? modelBodyName(spec, p);
   const source = model.lods[Math.min(ctx.lod, model.lods.length - 1)];
   const first = model.lods[0];
   if (!source || !first || !model.textures)
@@ -159,7 +165,10 @@ export function modelBody(ctx: BuildContext, o: ModelBodyOptions): ModelBodyInfo
       colors: source.colors,
       indices: source.indices,
     };
-    return applyFit(bare, rig.fit.similarity);
+    // One-pass symmetric: this LOD is mirrored as LOD 0 was for the fit (far legs off, the kept
+    // half mirrored), so the mesh bound and emitted is the one the skeleton was fitted into.
+    const placed = applyFit(bare, rig.fit.similarity);
+    return rig.symmetric ? mirrorHalf(without(placed, rig.far.flat()), rig.side) : placed;
   });
   const own =
     chained.rig && ownsRig(source, model, rig)

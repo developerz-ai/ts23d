@@ -5,6 +5,7 @@
 
 import { existsSync } from 'node:fs';
 import { drift, readPages } from './changelog.ts';
+import { brandChecks } from './conventions-brand.ts';
 import { report, tsFiles, type Violation } from './lib/files.ts';
 
 export interface Source {
@@ -130,19 +131,20 @@ export function decimatesCode(s: Source): Violation[] {
   ];
 }
 
-/** Shipped docs must scope the CLI: a bare `bunx t3d` outside a project with the package fetches an
- *  unrelated npm package named `t3d` (D49). */
+/** Shipped docs and the CLI help must scope the CLI: a bare `bunx t3d` outside a project with the
+ *  package fetches an unrelated npm package named `t3d` (D49). The line warning about exactly
+ *  that (it says "unrelated") is the one place the bare form may appear. */
 export function unscopedBunx(s: Source): Violation[] {
-  const at = s.text.search(/\bbunx t3d\b/);
-  if (at === -1) return [];
-  return [
-    {
+  return [...s.text.matchAll(/\bbunx t3d\b/g)]
+    .map((m) => lineOf(s.text, m.index))
+    .filter((line) => !/unrelated/.test(s.text.split('\n')[line - 1] ?? ''))
+    .slice(0, 1)
+    .map((line) => ({
       file: s.file,
-      line: lineOf(s.text, at),
+      line,
       message: '`bunx t3d` resolves an unrelated npm package when ts23d is not installed (D49)',
       fix: 'write `bunx -p @developerz.ai/ts23d t3d …`',
-    },
-  ];
+    }));
 }
 
 /** Kinds that model a real, measurable thing: they must cite it. Each is a module in src/kinds. */
@@ -248,9 +250,10 @@ export function changelogDocs(
 
 const read = async (file: string): Promise<Source> => ({ file, text: await Bun.file(file).text() });
 
-/** Markdown an agent reads after install: root docs, docs/ (not dated plans), shipped skills. */
-async function shippedDocs(): Promise<Source[]> {
-  const files = ['README.md', 'CLAUDE.md', 'llms.txt', 'PUBLISHING.md'];
+/** What an agent reads after install: root docs, docs/ (not dated plans), shipped skills, and the
+ *  `t3d --help` text. `unscopedBunx` runs over all of it. */
+export async function scopedSources(): Promise<Source[]> {
+  const files = ['README.md', 'CLAUDE.md', 'llms.txt', 'PUBLISHING.md', 'src/cli/help.ts'];
   for (const g of ['docs/**/*.md', '.claude/skills/**/*.md'])
     for await (const f of new Bun.Glob(g).scan({ dot: true }))
       if (!f.startsWith('docs/plans/')) files.push(f);
@@ -269,6 +272,7 @@ if (import.meta.main) {
   }
   const violations = [
     ...src.flatMap(bareErrors),
+    ...brandChecks([...src, ...scripts]),
     ...[...src, ...scripts].filter((s) => !s.file.endsWith('/index.ts')).flatMap(missingHeader),
     ...errorsDoc(src, await read('docs/architecture/errors.md')),
     ...[...recipes, ...src.filter((s) => s.file.startsWith('src/kinds/'))].flatMap(decimatesCode),
@@ -276,7 +280,7 @@ if (import.meta.main) {
     ...[...folders.values()].flatMap(realSources),
     ...defectRows(await read('docs/architecture/defect-catalogue.md')),
     ...changelogDocs(await read('CHANGELOG.md'), await readPages()),
-    ...(await shippedDocs()).flatMap(unscopedBunx),
+    ...(await scopedSources()).flatMap(unscopedBunx),
   ];
   process.exitCode = report('conventions', violations, process.argv.includes('--json'));
 }

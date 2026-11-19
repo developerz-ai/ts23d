@@ -6,7 +6,7 @@
 // asset: a committed output comes from replaying the finished program with `t3d neural run`.
 // Blender never runs in the gate: the tests drive a fake executable that speaks the same socket.
 
-import { Ts23dError } from '../core/index.ts';
+import { isTs23dError, Ts23dError } from '../core/index.ts';
 import { REVIEW_CRASH_FIX } from './blender-gpu.ts';
 import { endSession, readJson, sessionAlive, takeSessionLock } from './blender-session-process.ts';
 import {
@@ -179,7 +179,7 @@ export async function runBlenderBatch(
   try {
     checked = checkBlenderSteps(whole);
   } catch (e) {
-    if (!(e instanceof Ts23dError)) throw e;
+    if (!isTs23dError(e)) throw e;
     throw new Ts23dError(e.code, {
       cause: `${e.message} (steps before ${kept.steps.length} are the session's kept steps)`,
       fix: e.fix,

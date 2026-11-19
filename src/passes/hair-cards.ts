@@ -24,12 +24,14 @@ import {
 } from '../core/index.ts';
 import type { UvRect } from '../material/index.ts';
 import { flowAt, tangentOf } from './hair-flow.ts';
+import { grown } from './hair-length.ts';
 import {
   bury,
   clear,
   clumpOf,
   gradient,
   mad,
+  overCap,
   poissonRoots,
   type Root,
   sample,
@@ -40,7 +42,8 @@ export interface CardZone {
   readonly name: string;
   /** Cards per m² of surface at p (≤ 0 = none). */
   readonly density: (p: Vec3, n: Vec3) => number;
-  /** Card length, metres (root to tip, above the skin). */
+  /** Card length, metres (root to tip, above the skin), finite and ≥ 0. A root where it is under
+   *  a tenth of `width` grows no card. */
   readonly length: number | ((p: Vec3, n: Vec3) => number);
   /** Card width at the root, metres. */
   readonly width: number;
@@ -108,12 +111,11 @@ interface Path {
 }
 
 /** One card's centre line: root buried, then `segments` steps along the combed, lifted flow. */
-function path(o: HairCardOptions, z: CardZone, r: Root, rng: Rng): Path {
+function path(o: HairCardOptions, z: CardZone, r: Root, L0: number, rng: Rng): Path {
   const segs = o.segments ?? 3;
   const s0 = sample(o.surface, r.t, r.b1, r.b2);
   const n0 = s0.n;
   const sink = z.sink ?? 0.003;
-  const L0 = typeof z.length === 'number' ? z.length : z.length(s0.p, n0);
   const len = L0 * (1 + (z.jitter ?? 0.25) * (rng.next() * 2 - 1));
   const lift = (z.lift ?? 0.35) * (0.7 + 0.6 * rng.next());
   const bend = z.bend ?? 0.7;
@@ -249,27 +251,24 @@ export function hairCards(o: HairCardOptions): HairCards {
       cause: `hairCards: flow has ${o.flow.length / 3} directions for ${o.surface.positions.length / 3} vertices`,
       fix: 'compute the flow on the same mesh: hairFlow(surface, seed)',
     });
+  const cap = o.maxCards ?? 20000;
   const picked = o.zones.map((z) => {
     if (z.cells.length === 0 || !(z.width > 0))
       throw new Ts23dError('T3D_RECIPE_INVALID', {
         cause: `hairCards: zone '${z.name}' has ${z.cells.length} atlas cells, width ${z.width}`,
         fix: 'give each zone strandCells(strip, kind) and a card width > 0 (metres)',
       });
-    return { z, list: poissonRoots(o.surface, z.density, o.rng.fork(`roots:${z.name}`)) };
+    const roots = poissonRoots(o.surface, z.density, o.rng.fork(`roots:${z.name}`), cap);
+    return { z, ...grown(o.surface, z, roots) };
   });
   const total = picked.reduce((s, x) => s + x.list.length, 0);
-  const cap = o.maxCards ?? 20000;
-  if (total > cap)
-    throw new Ts23dError('T3D_RECIPE_INVALID', {
-      cause: `hairCards: ${total} cards, cap ${cap}`,
-      fix: 'lower the zone densities (cards per m²) or raise maxCards with a measured reason',
-    });
+  if (total > cap) throw overCap(total, cap);
   const b = new MeshBuilder();
   const out: Vec3[] = [];
   const counts: Record<string, number> = {};
-  for (const { z, list } of picked) {
+  for (const { z, list, lengths } of picked) {
     const rng = o.rng.fork(`cards:${z.name}`);
-    const paths = list.map((r) => path(o, z, r, rng));
+    const paths = list.map((r, i) => path(o, z, r, lengths[i] ?? 0, rng));
     const lead = clumpOf(list, z.clump ?? 1, z.width * 3);
     paths.forEach((c, i) => {
       const l = lead[i] ?? i;

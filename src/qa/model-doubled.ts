@@ -6,10 +6,11 @@
 //   head — the plane across the head bone at 70 % of its length: ONE outline near the bone, no
 //          more than GIRTH bone lengths round (two muzzles side by side fuse into one wide one)
 //   legs — the horizontal plane at a tenth of the skeleton's height: one outline per foot bone
-//          (outlines lying on the tail's bones aside; a sliver between the legs is a finding)
+//          (outlines lying on the tail's bones aside; a sliver between the legs is a finding);
+//          not for a water asset (`medium: 'water'`): a swimmer has no ground to cut above
 // Outlines shorter than SPECK of the skeleton's height are ignored.
 
-import type { Armature, Mesh, Vec3 } from '../core/index.ts';
+import type { Armature, CompiledAsset, Mesh, Vec3 } from '../core/index.ts';
 import { MID_SUFFIX } from './deform.ts';
 import { feetOf } from './gait.ts';
 
@@ -151,8 +152,14 @@ export interface Doubled {
   readonly expected: string;
 }
 
-/** Features the part shows more than once (or not at all), given its skeleton. */
-export function doubledFeatures(mesh: Mesh, at: Vec3, sk: Armature): Doubled[] {
+/** Features the part shows more than once (or not at all), given its skeleton and the asset's
+ *  medium (water: no leg cut, there is no ground). */
+export function doubledFeatures(
+  mesh: Mesh,
+  at: Vec3,
+  sk: Armature,
+  medium?: CompiledAsset['medium'],
+): Doubled[] {
   const top = Math.max(...sk.bones.map((b) => Math.max(b.head[2], b.tail[2])));
   const speck = top * SPECK;
   const local = (p: Vec3): Vec3 => [p[0] - at[0], p[1] - at[1], p[2] - at[2]];
@@ -195,7 +202,8 @@ export function doubledFeatures(mesh: Mesh, at: Vec3, sk: Armature): Doubled[] {
       }
     }
   }
-  const feet = feetOf(sk).filter((b) => !b.name.endsWith(MID_SUFFIX)).length;
+  const feet =
+    medium === 'water' ? 0 : feetOf(sk).filter((b) => !b.name.endsWith(MID_SUFFIX)).length;
   if (feet > 0) {
     // Outlines that lie on the tail's own bones are the tail's (one where it hangs through the
     // cut, two where it rests on the ground and its tip curls up again): not legs.

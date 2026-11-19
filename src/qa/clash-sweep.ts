@@ -1,16 +1,26 @@
 // Swept volume of a spinning part for the clashes gate: the solid of revolution (exact largest
 // radius per 1 cm axial slab) a wheel, axle or rotor fills over a full turn. Also the shared axis
-// frame and Volume shape; hinged parts (sways) sweep only their sector in clash-sector.ts.
+// frame, Volume shape and the thin-body shave; hinged parts (sways) sweep only their sector in clash-sector.ts.
 
 import type { Mesh, Vec3 } from '../core/index.ts';
 import { CLASH_EPS } from './types.ts';
 
-/** A swept volume plus its conservative world AABB, so far-away parts and samples skip the test. */
+/** A swept volume plus its conservative world AABB, so far-away parts and samples skip the test.
+ *  `band`, when set, bounds it along one direction: every inside point has lo < p·dir < hi. A
+ *  thin band (a rotor's disc, a door's slide) is where the static parts get extra section samples. */
 export interface Volume {
   readonly inside: (p: Vec3) => boolean;
   readonly min: Vec3;
   readonly max: Vec3;
+  readonly band?: { readonly dir: Vec3; readonly lo: number; readonly hi: number };
 }
+
+/** Part of a body span the swept surface gives up as tolerance: CLASH_EPS, but never more than a
+ *  quarter of the span, so a 2 cm blade keeps a 1 cm core instead of shaving itself to nothing. */
+const SHAVE_FRAC = 0.25;
+export const shave = (span: number): number => Math.min(CLASH_EPS, Math.max(0, span) * SHAVE_FRAC);
+
+export const dot = (a: Vec3, b: Vec3): number => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
 
 /** An orthonormal frame around `axis`: u along it, e1/e2 spanning the plane of rotation. */
 export function axisBasis(axis: Vec3): { u: Vec3; e1: Vec3; e2: Vec3 } {
@@ -107,12 +117,16 @@ export function spinVolume(mesh: Mesh, pivot: Vec3, axis: Vec3): Volume {
     }
   }
   const reach = rMax + Math.max(Math.abs(lo), Math.abs(hi));
+  const ea = shave(hi - lo);
+  const { u } = axisBasis(axis);
+  const at = dot(pivot, u);
   return {
     min: [pivot[0] - reach, pivot[1] - reach, pivot[2] - reach],
     max: [pivot[0] + reach, pivot[1] + reach, pivot[2] + reach],
+    band: { dir: u, lo: at + lo + ea, hi: at + hi - ea },
     inside: (p) => {
       const [a, r] = coords(p);
-      if (a < lo + CLASH_EPS || a > hi - CLASH_EPS) return false;
+      if (a < lo + ea || a > hi - ea) return false;
       return r < (sliceMax[slab(a)] ?? -1) - CLASH_EPS;
     },
   };

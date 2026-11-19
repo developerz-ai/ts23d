@@ -22,12 +22,17 @@ export interface MassOptions {
 
 export function mass(o: MassOptions, lod: Lod = 0): Mesh {
   const [w, d, h] = o.size;
-  if (!(w > 0 && d > 0 && h > 0))
+  if (!(w > 0 && d > 0 && h > 0 && Number.isFinite(w + d + h)))
     throw new Ts23dError('T3D_RECIPE_INVALID', {
       cause: `mass size is [${o.size.join(', ')}]`,
-      fix: 'give width (X), depth (Y) and height (Z) in metres, all > 0',
+      fix: 'give width (X), depth (Y) and height (Z) in metres, all > 0 and finite',
     });
   const [cx, cy, z0] = o.at ?? [0, 0, 0];
+  if (!Number.isFinite(cx + cy + z0 + (o.courseOrigin ?? 0)))
+    throw new Ts23dError('T3D_RECIPE_INVALID', {
+      cause: `mass at [${[cx, cy, z0].join(', ')}], courseOrigin ${o.courseOrigin ?? 0}`,
+      fix: 'give `at` (centre of the base) and `courseOrigin` as finite metres',
+    });
   const [x0, x1, y0, y1, z1] = [cx - w / 2, cx + w / 2, cy - d / 2, cy + d / 2, z0 + h];
   const b = new MeshBuilder();
   const strip = o.strip ?? 'brick';

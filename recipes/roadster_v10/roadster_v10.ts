@@ -162,6 +162,10 @@ const GAPS: IntendedGap[] = [
     parts: ['wheel_*', 'rim_*'],
     why: 'inboard of the wheel: the tyre bead sits on the rim seat, the open slot is the barrel seen past the inner flange',
   },
+  {
+    parts: ['door_*_trim', 'seats'],
+    why: 'the 5 cm between the seat bolster and the door card: the seat slides on its rails and the door swings away from it',
+  },
 ];
 
 const roadster = defineFamily({
@@ -259,6 +263,7 @@ const roadster = defineFamily({
         trunk: [...(showHinges ? [hg.trunkArms] : []), ...(lod < 2 ? [trunkBadge(S)] : [])],
       },
       stripes: stripes(S, lod, sHoodFront, sTail),
+      ...(showHinges ? { doorHinge: 'hinges' } : {}),
       hoodClearOf: HOOD_CLEAR,
       // The jambs and quarters touch the closed door card (< 2 cm): true contacts.
       doorClearOf: ['door_jambs', 'quarter_l', 'quarter_r'],
@@ -292,6 +297,8 @@ const roadster = defineFamily({
         motion: { kind: 'sway', axis: fd.axis, degrees: FUEL_DEG, hz: 0.25, oneWay: true },
         // The flap lies on its seat in the quarter; it only ever lifts away from it.
         paint: 'body',
+        // Its straps turn on the pin carried by the seal ring.
+        connect: { as: 'hinge', to: 'fuel_door_seal' },
       });
       ctx.part('fuel_door_seal', fd.ring);
     }

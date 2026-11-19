@@ -82,6 +82,16 @@ describe('toInstancedGlb', () => {
     expect(msgs.filter((m) => m.severity <= 1).map((m) => m.code)).toEqual([]);
   });
 
+  it('declares EXT_mesh_gpu_instancing only when a set uses it; refuses an empty scene', async () => {
+    const plain = toInstancedGlb({ ...scene, sets: [] });
+    expect(json(plain)['extensionsUsed']).toBeUndefined();
+    expect(json(plain)['extensionsRequired']).toBeUndefined();
+    const report = await validate(plain);
+    const msgs = (report.issues as { messages: { severity: number; code: string }[] }).messages;
+    expect(msgs.filter((m) => m.severity <= 1).map((m) => m.code)).toEqual([]);
+    expect(() => toInstancedGlb({ name: 'void', sets: [] })).toThrow(/T3D_RECIPE_INVALID.*nothing/);
+  });
+
   it('is deterministic and the manifest counts what the GLB holds', () => {
     expect(toInstancedGlb(scene)).toEqual(toInstancedGlb(scene));
     const m = sceneManifest(scene);

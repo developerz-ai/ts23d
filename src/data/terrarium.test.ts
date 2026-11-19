@@ -25,6 +25,17 @@ function tile(tx: number, ty: number, h: (x: number, y: number) => number, size 
   return { width: size, height: size, data };
 }
 
+/** `tile` built once per tile: the resampler asks for the same one at every sample. */
+function cached(h: (x: number, y: number) => number): (tx: number, ty: number) => TileImage {
+  const made = new Map<string, TileImage>();
+  return (tx, ty) => {
+    const k = `${tx}/${ty}`;
+    const t = made.get(k) ?? tile(tx, ty, h);
+    made.set(k, t);
+    return t;
+  };
+}
+
 const BOX: DemBox = {
   centre: { lat: 37.738, lon: -119.553 },
   size: [4000, 4000],
@@ -39,6 +50,37 @@ describe('terrarium', () => {
     );
     expect(() => tilesFor({ ...BOX, zoom: 16 })).toThrow('T3D_DATA_DEM');
     expect(() => tilesFor({ ...BOX, cells: 1 })).toThrow('T3D_DATA_DEM');
+  });
+
+  test('a box across the antimeridian wraps tile x instead of asking for x = 2^z', () => {
+    const box: DemBox = { ...BOX, centre: { lat: 0, lon: 179.999 } };
+    const n = 2 ** box.zoom;
+    const tiles = tilesFor(box);
+    expect(tiles.every((t) => t.x >= 0 && t.x < n)).toBe(true);
+    expect(new Set(tiles.map((t) => t.x))).toEqual(new Set([n - 1, 0]));
+    const seen = new Set(tiles.map((t) => `${t.x}/${t.y}`));
+    expect(seen.size).toBe(tiles.length);
+    // Height rises 1 m per pixel eastwards from the antimeridian, on both sides of it.
+    const east = (x: number): number => (x < 128 * n ? x : x - 256 * n);
+    const tileAt = cached((px) => 1000 + east(px));
+    const h = resampleTerrarium(box, (x, y) => {
+      expect(seen.has(`${x}/${y}`)).toBe(true);
+      return tileAt(x, y);
+    });
+    for (let i = 1; i <= box.cells; i++) expect(h[i] ?? 0).toBeGreaterThan(h[i - 1] ?? 0);
+  });
+
+  test('a box past the Web-Mercator edge (85.05°) clamps tile y to the last row', () => {
+    const box: DemBox = { ...BOX, centre: { lat: 84.9, lon: 10 }, size: [4000, 200000], zoom: 8 };
+    const tiles = tilesFor(box);
+    expect(tiles.every((t) => t.y >= 0)).toBe(true);
+    const seen = new Set(tiles.map((t) => `${t.x}/${t.y}`));
+    expect(seen.size).toBe(tiles.length);
+    const flat = cached(() => 0);
+    resampleTerrarium(box, (x, y) => {
+      expect(seen.has(`${x}/${y}`)).toBe(true);
+      return flat(x, y);
+    });
   });
 
   test('decodes known pixels', () => {
@@ -67,9 +109,10 @@ describe('terrarium', () => {
     const seen = new Set(tiles.map((t) => `${t.x}/${t.y}`));
     // Height rises 1 m per pixel to the east and falls 2 m per pixel to the south.
     const field = (x: number, y: number): number => 1000 + (x - 352000) - 2 * (y - 810000);
+    const tileAt = cached(field);
     const h = resampleTerrarium(BOX, (x, y) => {
       expect(seen.has(`${x}/${y}`)).toBe(true);
-      return tile(x, y, field);
+      return tileAt(x, y);
     });
     expect(h.length).toBe(17 * 17);
     const [x0, y0] = lonLatToPixel(...localToLonLat(BOX.centre, -2000, -2000), 13);

@@ -113,6 +113,41 @@ describe('wolf_hybrid, model tier (committed cache)', () => {
   );
 
   it(
+    'the tail is no more joined to the hind legs than the committed mesh (ratchet: ≤ 128 edges)',
+    async () => {
+      // Known defect, OPEN (README.md "Known limits"): the generator fused the tail to the inner
+      // face of the right thigh, and the skin between them webs at the hip's limits (declared
+      // `limitTolerances`). Each tail-only ↔ leg-only edge is counted once per triangle side; the
+      // committed mesh has 128 at LOD 0. A re-generated mesh should take it to 0: lower JOINED then.
+      const JOINED = 128;
+      await cached();
+      const a = compile(wolf_hybrid, { lod: 0 });
+      const names = (a.skeleton?.bones ?? []).map((b) => b.name);
+      const m = textured(0)[0]?.mesh;
+      expect(m?.indices.length ?? 0).toBeGreaterThan(0);
+      const share = (v: number, re: RegExp): number => {
+        let s = 0;
+        for (let k = 0; k < 4; k++)
+          if (re.test(names[m?.joints?.[v * 4 + k] ?? 0] ?? '')) s += m?.weights?.[v * 4 + k] ?? 0;
+        return s;
+      };
+      const T = m?.indices ?? new Uint32Array();
+      const only = (v: number, re: RegExp) => share(v, re) >= 0.98;
+      let joined = 0;
+      for (let t = 0; t < T.length; t += 3)
+        for (const [p = 0, q = 0] of [
+          [T[t], T[t + 1]],
+          [T[t + 1], T[t + 2]],
+          [T[t + 2], T[t]],
+        ])
+          if ((only(p, /^tail_/) && only(q, /^hind_/)) || (only(q, /^tail_/) && only(p, /^hind_/)))
+            joined++;
+      expect(joined).toBeLessThanOrEqual(JOINED);
+    },
+    SLOW,
+  );
+
+  it(
     'passes QA on every LOD and builds the same bytes twice',
     async () => {
       await cached();

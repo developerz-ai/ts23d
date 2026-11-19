@@ -47,7 +47,8 @@ describe('skinned GLB', () => {
           : p,
       ),
     };
-    expect(() => toGlb(moved)).toThrow('is moved or parented');
+    // keepParts: merging would put the static parts into a second 'body' node, refused first.
+    expect(() => toGlb(moved, { keepParts: true })).toThrow('is moved or parented');
     const lost = {
       ...a,
       parts: a.parts.map((p) =>

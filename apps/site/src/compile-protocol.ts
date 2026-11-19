@@ -36,6 +36,7 @@ export interface BuildRequest {
   readonly animations?: boolean;
 }
 
+/** One row of the parts list: a named node of the exported GLB (glb-export.ts). */
 export interface PartInfo {
   readonly name: string;
   readonly parent: string | null;
@@ -50,6 +51,7 @@ export interface BuildResult {
   /** The recipe's triangle budget at this LOD (0 for a diorama). */
   readonly budget: number;
   readonly ms: number;
+  /** The GLB's named nodes (merged pivots, layers, emitters), parents first. */
   readonly parts: readonly PartInfo[];
   readonly medium?: Medium;
   /** Mass from volume × density, for recipes that declare `physics` (kg, centre of mass). */

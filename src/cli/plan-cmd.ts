@@ -8,7 +8,7 @@ import { basename, dirname, join } from 'node:path';
 import { ENGINES, engineLayout } from '../export/index.ts';
 import { usage } from './flags.ts';
 import { type BuiltStats, checkPlan, type PlanFinding, parsePlan } from './plan-template.ts';
-import { envelope } from './report.ts';
+import { envelope, qaFailed } from './report.ts';
 import { recipeEntries } from './watch.ts';
 
 export interface PlanReport {
@@ -85,7 +85,18 @@ export function planCheck(argv: readonly string[]): PlanReport {
 export function planMain(argv: readonly string[], json: boolean): number {
   const r = planCheck(argv);
   const ok = r.findings.length === 0;
-  if (json) envelope(ok, r);
+  if (json)
+    envelope(
+      ok,
+      r,
+      ok
+        ? undefined
+        : qaFailed(
+            r.findings.length,
+            [...new Set(r.findings.map((f) => f.asset))],
+            'data.findings',
+          ),
+    );
   else {
     for (const f of r.findings)
       console.log(`✘ ${f.code} ${f.asset} (${f.check}): ${f.message}\n  fix: ${f.fix}`);

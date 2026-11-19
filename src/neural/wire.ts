@@ -1,7 +1,8 @@
 // The HTTP plumbing every network adapter shares: one JSON request over fetch (injected or global)
 // with a deadline, a byte cap checked before and after the body is read, and the reply's content
-// type checked. HTTP 429 is retried with exponential backoff (honouring Retry-After) while a
-// `retryForMs` budget lasts. Network failures and HTTP errors are T3D_NEURAL_FAILED with a fix
+// type checked. HTTP 429 is retried while a `retryForMs` budget lasts, each wait the longer of
+// the exponential backoff and the server's Retry-After (seconds or an HTTP date); a Retry-After
+// past the budget fails at once. Network failures and HTTP errors are T3D_NEURAL_FAILED with a fix
 // naming the endpoint (or the caller's `statusFix`); a reply of the wrong type or size is
 // T3D_NEURAL_OUTPUT_INVALID. Errors never carry headers (API keys). No Bun or Node API: it runs
 // wherever fetch, AbortSignal and atob/btoa exist.
@@ -41,6 +42,21 @@ export interface WireOptions {
   readonly backoffMs?: number;
   /** A fix per HTTP status, e.g. { 403: 'grant the key the generate:media scope' }. */
   readonly statusFix?: Readonly<Record<number, string>>;
+  /** How a 429 waits; default `pause` (injectable for tests). */
+  readonly pause?: (ms: number) => Promise<void>;
+}
+
+/** A 429 reply: how long the server asked to wait, when it said (Retry-After). */
+interface RateLimited {
+  readonly retryAfterMs: number | undefined;
+}
+
+/** Retry-After → ms: delta-seconds or an HTTP date; undefined when absent or unreadable. */
+function retryAfterMs(v: string | null, now = Date.now()): number | undefined {
+  if (v === null || v.trim() === '') return undefined;
+  if (/^\s*\d+\s*$/.test(v)) return Number(v) * 1000;
+  const at = Date.parse(v);
+  return Number.isNaN(at) ? undefined : Math.max(0, at - now);
 }
 
 /** A non-JSON request body (multipart uploads). */
@@ -82,17 +98,19 @@ export async function wireBytes(
   body?: unknown,
   types: readonly string[] = ['application/json'],
 ): Promise<{ readonly bytes: Uint8Array; readonly type: string }> {
-  const budget = AbortSignal.timeout(o.retryForMs ?? 1);
+  const until = Date.now() + (o.retryForMs ?? 0);
   let backoff = o.backoffMs ?? 1000;
   for (;;) {
     const r = await attempt(o, url, what, body, types);
-    if (r !== 429) return r;
-    if (o.retryForMs === undefined || budget.aborted)
+    if (!('retryAfterMs' in r)) return r;
+    const left = until - Date.now();
+    const asked = r.retryAfterMs;
+    if (o.retryForMs === undefined || left <= 0 || (asked !== undefined && asked > left))
       failed(
-        `${what} ${url}: HTTP 429 rate limited`,
+        `${what} ${url}: HTTP 429 rate limited${asked === undefined ? '' : ` (Retry-After ${Math.ceil(asked / 1000)} s)`}`,
         `wait and run again, or raise retryForMs (now ${o.retryForMs ?? 0})`,
       );
-    await pause(backoff);
+    await (o.pause ?? pause)(Math.min(Math.max(asked ?? 0, backoff), left));
     backoff = Math.min(backoff * 2, 30_000);
   }
 }
@@ -103,7 +121,7 @@ async function attempt(
   what: string,
   body: unknown,
   types: readonly string[],
-): Promise<{ readonly bytes: Uint8Array; readonly type: string } | 429> {
+): Promise<{ readonly bytes: Uint8Array; readonly type: string } | RateLimited> {
   const signal = AbortSignal.timeout(o.timeoutMs);
   const type0 = isRaw(body) ? body.type : 'application/json';
   const init: WireInit = {
@@ -138,7 +156,7 @@ async function attempt(
       `start the model server at ${url} and check its log, or raise timeoutMs (now ${o.timeoutMs})`,
     );
   const res = await Promise.race([go(url, init), late]).catch(down);
-  if (res.status === 429) return 429;
+  if (res.status === 429) return { retryAfterMs: retryAfterMs(res.headers.get('retry-after')) };
   if (!res.ok)
     failed(
       `${what} ${url}: HTTP ${res.status}`,

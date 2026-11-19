@@ -6,7 +6,7 @@
 // the same on any relief; the result is rescaled to metres. Also records flow and deposit maps.
 
 import type { Rng } from '../core/index.ts';
-import { count } from './check.ts';
+import { count, invalid } from './check.ts';
 import { arrayMemo } from './erosion-memo.ts';
 import type { TerrainGrid } from './terrain-grid.ts';
 
@@ -17,17 +17,33 @@ export interface ErosionOptions {
   readonly lifetime?: number;
   /** 0 = droplets follow the gradient exactly, 1 = they never turn. Default 0.05. */
   readonly inertia?: number;
-  /** Sediment a droplet can carry per unit of speed × water × drop. Default 4. */
+  /** Sediment a droplet can carry per unit of speed × water × drop, ≥ 0. Default 4. */
   readonly capacity?: number;
+  /** Least capacity on flat ground, ≥ 0. Default 0.01. */
   readonly minCapacity?: number;
-  /** Share of spare capacity eroded per step. Default 0.3. */
+  /** Share (0..1) of spare capacity eroded per step. Default 0.3. */
   readonly erode?: number;
-  /** Share of surplus sediment deposited per step. Default 0.3. */
+  /** Share (0..1) of surplus sediment deposited per step. Default 0.3. */
   readonly deposit?: number;
+  /** Share (0..1) of a droplet's water lost per step. Default 0.01. */
   readonly evaporate?: number;
+  /** Speed gained per unit of drop, ≥ 0. Default 4. */
   readonly gravity?: number;
   /** Erosion brush radius in grid cells (wider = smoother gullies). Default 3. */
   readonly radius?: number;
+}
+
+/** A share of something per step: one NaN here turns the whole terrain into NaN. */
+function share(what: string, v: number): number {
+  if (!(v >= 0 && v <= 1))
+    invalid(`erosion ${what} is ${v}`, `use a share 0..1, e.g. ${what}: 0.3`);
+  return v;
+}
+
+function amount(what: string, v: number): number {
+  if (!(Number.isFinite(v) && v >= 0))
+    invalid(`erosion ${what} is ${v}`, `use a finite number ≥ 0, e.g. ${what}: 4`);
+  return v;
 }
 
 const put = (h: Float64Array, dep: Float64Array, k: number, a: number): void => {
@@ -167,13 +183,13 @@ export function hydraulicErosion(g: TerrainGrid, rng: Rng, o: ErosionOptions = {
     hi = Math.max(hi, v);
   }
   const relief = hi - lo || 1;
-  const inertia = o.inertia ?? 0.05;
-  const capK = o.capacity ?? 4;
-  const minCap = o.minCapacity ?? 0.01;
-  const erodeK = o.erode ?? 0.3;
-  const depositK = o.deposit ?? 0.3;
-  const evap = o.evaporate ?? 0.01;
-  const gravity = o.gravity ?? 4;
+  const inertia = share('inertia', o.inertia ?? 0.05);
+  const capK = amount('capacity', o.capacity ?? 4);
+  const minCap = amount('minCapacity', o.minCapacity ?? 0.01);
+  const erodeK = share('erode', o.erode ?? 0.3);
+  const depositK = share('deposit', o.deposit ?? 0.3);
+  const evap = share('evaporate', o.evaporate ?? 0.01);
+  const gravity = amount('gravity', o.gravity ?? 4);
   // Draw every start first (same order as one droplet at a time), so a memo hit leaves the Rng
   // exactly where a full run would.
   const starts = new Float64Array(drops * 2);

@@ -4,7 +4,7 @@
 // as in skin-weights.ts. Distance runs through flesh, never through air, so a leg never bleeds
 // onto the leg beside it across the gap. Deterministic: fixed grid, fixed neighbour order.
 
-import { type Mesh, SKIN_INFLUENCES, type Vec3 } from '../core/index.ts';
+import { type Mesh, SKIN_INFLUENCES, Ts23dError, type Vec3 } from '../core/index.ts';
 import {
   capsuleDistance,
   checkBones,
@@ -17,9 +17,9 @@ import {
 const v3 = (f: (k: number) => number): Vec3 => [f(0), f(1), f(2)];
 
 export interface HeatOptions extends SkinWeightOptions {
-  /** Voxel edge, metres; coarsened so the grid stays under `maxVoxels`. */
+  /** Voxel edge, metres, finite and > 0; coarsened so the grid stays under `maxVoxels`. */
   readonly cell: number;
-  /** Default 2^21. */
+  /** A whole number ≥ 27. Default 2^21. */
   readonly maxVoxels?: number;
 }
 
@@ -39,6 +39,21 @@ const NEIGHBOURS: readonly (readonly [number, number, number, number])[] = (() =
       for (let x = -1; x <= 1; x++) if (x || y || z) out.push([x, y, z, Math.hypot(x, y, z)]);
   return out;
 })();
+
+/** A cell of 0 or NaN never coarsens under the cap (an endless loop); a negative one sizes NaN. */
+function checkGrid(o: HeatOptions): void {
+  const cap = o.maxVoxels ?? 2 ** 21;
+  if (!(Number.isFinite(o.cell) && o.cell > 0))
+    throw new Ts23dError('T3D_SKIN_INVALID', {
+      cause: `heat voxel cell ${o.cell} m is not a finite length > 0`,
+      fix: 'pass the voxel edge in metres, about half the thinnest limb: cell: 0.01',
+    });
+  if (!(Number.isInteger(cap) && cap >= 27))
+    throw new Ts23dError('T3D_SKIN_INVALID', {
+      cause: `heat maxVoxels ${cap} is not a whole number ≥ 27`,
+      fix: 'drop maxVoxels (default 2^21) or pass a whole number ≥ 27 (a 3 × 3 × 3 grid)',
+    });
+}
 
 function voxelise(mesh: Mesh, o: HeatOptions): Grid {
   const p = mesh.positions;
@@ -193,6 +208,7 @@ function geodesic(g: Grid, bone: WeightBone): Float64Array {
 /** Weights by geodesic distance through the voxelised solid. Same mesh + joints + weights. */
 export function heatWeights(mesh: Mesh, bones: readonly WeightBone[], o: HeatOptions): Mesh {
   const only = checkBones(bones, o);
+  checkGrid(o);
   const off = o.offset ?? [0, 0, 0];
   const local = bones.map((b) => ({ ...b, a: sub3(b.a, off), b: sub3(b.b, off) }));
   const g = voxelise(mesh, o);

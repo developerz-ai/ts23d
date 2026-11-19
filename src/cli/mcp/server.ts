@@ -10,8 +10,9 @@
 // (server/discover, per-request _meta version) is not implemented; such clients fall back to the
 // initialize handshake, which that revision keeps for backward compatibility.
 
-import { Ts23dError } from '../../core/index.ts';
+import { isTs23dError, Ts23dError } from '../../core/index.ts';
 import { versionOf } from '../help.ts';
+import { jsonStdout, printError, stdoutWriter } from '../report.ts';
 import { type Sandbox, sandboxOf } from './sandbox.ts';
 import { TOOLS } from './schemas.ts';
 import { callTool, hasTool } from './tools.ts';
@@ -132,7 +133,7 @@ export function createServer(box: Sandbox, version: string): McpServer {
       try {
         return await request(id, m.method, params);
       } catch (e) {
-        const coded = e instanceof Ts23dError ? e : undefined;
+        const coded = isTs23dError(e) ? e : undefined;
         const message =
           coded?.message ?? `internal error: ${e instanceof Error ? e.message : String(e)}`;
         return fail(
@@ -172,29 +173,47 @@ export async function serve(
 
 const USAGE = 'usage: t3d mcp [--root <dir>] [--out <dir>]   (stdio MCP server; logs on stderr)';
 
-/** `t3d mcp [--root dir] [--out dir]` → exit code. stdout carries protocol messages only. */
-export async function mcpMain(argv: readonly string[]): Promise<number> {
+/** `--root` / `--out` values (`--json` only shapes errors); a bad argument is T3D_CLI_USAGE. */
+function options(argv: readonly string[]): Record<string, string> {
   const opts: Record<string, string> = {};
   for (let i = 0; i < argv.length; i++) {
     const flag = argv[i] ?? '';
+    if (flag === '--json') continue;
     const value = argv[i + 1];
-    if ((flag !== '--root' && flag !== '--out') || value === undefined || value.startsWith('-')) {
-      console.error(
-        `T3D_CLI_USAGE: t3d mcp: bad argument ${JSON.stringify(flag)}\n  fix: ${USAGE}`,
-      );
-      return 2;
-    }
+    if ((flag !== '--root' && flag !== '--out') || value === undefined || value.startsWith('-'))
+      throw new Ts23dError('T3D_CLI_USAGE', {
+        cause: `t3d mcp: bad argument ${JSON.stringify(flag)}`,
+        fix: USAGE,
+      });
     opts[flag.slice(2)] = value;
     i++;
+  }
+  return opts;
+}
+
+/**
+ * `t3d mcp [--root dir] [--out dir]` → exit code. stdout carries protocol messages only: console
+ * output and direct `process.stdout.write` (a recipe's) go to stderr while the server runs.
+ */
+export async function mcpMain(argv: readonly string[]): Promise<number> {
+  let opts: Record<string, string>;
+  try {
+    opts = options(argv);
+  } catch (e) {
+    if (isTs23dError(e)) return printError(e, argv.includes('--json'));
+    throw e;
   }
   const box = sandboxOf(opts['root'] ?? process.cwd(), opts['out']);
   // Recipes resolve refs/, .ts23d/ caches and relative paths from the working directory.
   process.chdir(box.root);
-  console.log = console.error;
-  console.info = console.error;
-  console.debug = console.error;
-  console.error(`ts23d MCP server: root ${box.root}, out ${box.out} (protocol ${PROTOCOL})`);
-  const server = createServer(box, await versionOf());
-  await serve(server, process.stdin, (line) => process.stdout.write(`${line}\n`));
-  return 0;
+  const restore = jsonStdout();
+  const write = stdoutWriter();
+  try {
+    console.error(`ts23d MCP server: root ${box.root}, out ${box.out} (protocol ${PROTOCOL})`);
+    const server = createServer(box, await versionOf());
+    await serve(server, process.stdin, (line) => write(`${line}\n`));
+    return 0;
+  } finally {
+    restore();
+  }
 }

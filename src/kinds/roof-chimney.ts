@@ -3,17 +3,18 @@
 // cap course (LOD0/1) and clay pots (LOD0). Building-regs rule of thumb: ≥ 0.9 m above the
 // highest point where it passes through the roof.
 
-import { type Lod, type Mesh, MeshBuilder, merge, type Vec3 } from '../core/index.ts';
+import { type Lod, type Mesh, MeshBuilder, merge, Ts23dError, type Vec3 } from '../core/index.ts';
 import type { StripId } from '../material/index.ts';
 import { box, lathe } from '../primitives/index.ts';
 import { emitFace } from './faces.ts';
+import { CHIMNEY_SIZE } from './roof-shape.ts';
 
 export interface RoofChimney {
-  /** Centre offset from the roof's `at`, world X/Y metres. */
+  /** Centre offset from the roof's `at`, world X/Y metres; the stack stays inside the walls. */
   readonly at: readonly [number, number];
   /** Stack width (X) and depth (Y). Default [0.9, 0.6]. */
   readonly size?: readonly [number, number];
-  /** Height above the highest roof point it touches. Default 0.9. */
+  /** Height above the highest roof point it touches, 0.3–10 m. Default 0.9. */
   readonly height?: number;
   readonly color: Vec3;
   readonly strip?: StripId;
@@ -28,7 +29,13 @@ export function chimney(
   at: Vec3,
   lod: Lod,
 ): Mesh {
-  const [w, d] = c.size ?? [0.9, 0.6];
+  const [w, d] = c.size ?? CHIMNEY_SIZE;
+  const rise = c.height ?? 0.9;
+  if (!(w > 0 && d > 0 && Number.isFinite(w + d)) || !(rise >= 0.3 && rise <= 10))
+    throw new Ts23dError('T3D_RECIPE_INVALID', {
+      cause: `chimney size [${w}, ${d}] m, height ${rise} m above the roof`,
+      fix: 'size is [width X, depth Y] > 0; height is 0.3–10 m above the slope (0.9 m is the building-regs minimum; the cap courses alone take 0.22 m)',
+    });
   const cx = at[0] + c.at[0];
   const cy = at[1] + c.at[1];
   const corners: [number, number][] = [
@@ -38,7 +45,7 @@ export function chimney(
     [cx - w / 2, cy + d / 2],
   ];
   const exit = Math.max(...corners.map(([x, y]) => heightAt(x, y)));
-  const top = exit + (c.height ?? 0.9);
+  const top = exit + rise;
   const z0 = at[2];
   const strip = c.strip ?? 'brick';
   const b = new MeshBuilder();

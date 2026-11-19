@@ -160,3 +160,84 @@ describe('sweep poles', () => {
     }
   });
 });
+
+describe('sweep input', () => {
+  const circle = { radius: 0.2, segments: 6 } as const;
+  const NaN_ = Number.NaN;
+
+  it('refuses NaN path points, bad segment counts and non-finite or negative scale / twist', () => {
+    const bad: readonly (() => unknown)[] = [
+      () =>
+        sweep({
+          section: circle,
+          path: [
+            [0, 0, 0],
+            [0, NaN_, 1],
+            [0, 0, 2],
+          ],
+          color: C,
+        }),
+      () =>
+        sweep({
+          section: circle,
+          path: [
+            [0, 0, 0],
+            [0, 0, Infinity],
+          ],
+          color: C,
+        }),
+      () => sweep({ section: { radius: 0.2, segments: NaN_ }, path: straight, color: C }),
+      () => sweep({ section: { radius: 0.2, segments: 3.5 }, path: straight, color: C }),
+      () => sweep({ section: { radius: Infinity, segments: 6 }, path: straight, color: C }),
+      () =>
+        sweep({
+          section: [
+            [0, 0],
+            [1, 0],
+            [NaN_, 1],
+          ],
+          path: straight,
+          color: C,
+        }),
+      () => sweep({ section: circle, path: straight, scale: [1, -1, 1], color: C }),
+      () => sweep({ section: circle, path: straight, scale: [1, NaN_, 1], color: C }),
+      () => sweep({ section: circle, path: straight, twist: NaN_, color: C }),
+    ];
+    for (const f of bad) expect(fails(f).code).toBe('T3D_RECIPE_INVALID');
+    expect(
+      fails(() =>
+        transportFrames([
+          [0, 0, 0],
+          [NaN_, 0, 0],
+        ]),
+      ).code,
+    ).toBe('T3D_RECIPE_INVALID');
+  });
+
+  it('skips cap triangles without area (a section with a repeated point)', () => {
+    const m = sweep({
+      section: [
+        [0, 0.1],
+        [0, 0.1],
+        [-0.1, -0.1],
+        [0.1, -0.1],
+      ],
+      path: straight,
+      color: C,
+      caps: true,
+    });
+    expect(zeroArea(caps(m))).toBe(0);
+    // 4 section points → 3 real fan triangles per cap.
+    expect(triangleCount(caps(m))).toBe(6);
+  });
+});
+
+/** The cap triangles only: those whose three normals are ±Z on this straight Z path. */
+function caps(m: ReturnType<typeof sweep>): ReturnType<typeof sweep> {
+  const keep: number[] = [];
+  for (let t = 0; t < m.indices.length; t += 3) {
+    const tri = [m.indices[t] ?? 0, m.indices[t + 1] ?? 0, m.indices[t + 2] ?? 0];
+    if (tri.every((i) => Math.abs(m.normals[i * 3 + 2] ?? 0) > 0.999)) keep.push(...tri);
+  }
+  return { ...m, indices: new Uint32Array(keep) };
+}

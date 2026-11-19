@@ -89,6 +89,11 @@ describe('threeMaterialSource', () => {
     expect(src).toContain('wear: uniform(0.3)');
     expect(src).toContain('night: uniform(0)');
   });
+  it('passes the glow colour as sRGB hex (three converts it; color(r, g, b) would read as linear)', () => {
+    expect(src).toContain('glowColor: uniform(color(0xffcc88))');
+    expect(src).not.toMatch(/color\(\d[\d.]*, /);
+    expect(threeMaterialSource()).toContain('glowColor: uniform(color(0xffbf66))');
+  });
   it('keys window glow on the window_sash cell rect', () => {
     const r = cellRect('window_sash');
     expect(src).toContain(`inRect(${r.u0}.0, ${r.v0}, ${r.u1}, ${r.v1})`);

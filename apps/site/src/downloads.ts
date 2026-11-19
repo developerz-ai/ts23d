@@ -1,7 +1,8 @@
 // Download buttons: one GLB per LOD. Nothing compiles until a button is pressed (LOD0 of a heavy
 // asset is a 20-second compile and a 30 MB file); labels show the committed triangle counts, then
 // the real size once built. The bytes are exactly what `toGlb` writes (pivots merged, `rest` +
-// `run` clips baked).
+// `run` clips baked), minus sound emitters: a download is one file, and KHR_audio_emitter would
+// reference `<clip>.wav` files that do not come with it (`exportOptions`, glb-export.ts).
 
 import { formatCount } from '@developerz.ai/ts23d/core';
 import { build, LODS, recipe } from './compile.ts';

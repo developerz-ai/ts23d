@@ -1,10 +1,12 @@
-// What `t3d` prints. With --json: exactly one envelope on stdout — { ok, data } on success or QA
-// findings, { ok: false, error: { code, message, fix } } on a coded error (plus `data` when other
-// assets of the run were built). Human text: results on stdout, errors on stderr. Also folds
-// findings that repeat across LODs into one `LOD0-2: …` line.
+// What `t3d` prints. With --json: exactly one envelope on stdout — { ok: true, data } on success;
+// whenever ok is false an `error: { code, message, fix }` is there too: the coded error that
+// stopped the run (no `data`), the first failed file or asset (`data` holds the built items and
+// each failure as { file, asset?, error }), or T3D_QA_FAILED summing up QA findings (`data` as
+// on success). Human text: results on stdout, errors on stderr. Also folds findings that repeat
+// across LODs into one `LOD0-2: …` line.
 
 import { join } from 'node:path';
-import { formatCount, type Lod, type Ts23dError } from '../core/index.ts';
+import { formatCount, type Lod, Ts23dError } from '../core/index.ts';
 import type { Finding } from '../qa/index.ts';
 import type { AssetManifest } from './manifest.ts';
 
@@ -22,18 +24,46 @@ export const exitOf = (e: Ts23dError): number => (e.code === 'T3D_CLI_USAGE' ? 2
 
 /** Where the envelope goes: the console.log in place when the run started (stdout). */
 let stdout: (line: string) => void = (line) => console.log(line);
+/** process.stdout.write before the outermost active jsonStdout (protocol output goes there). */
+let realWrite: typeof process.stdout.write | undefined;
+
+/** A writer to the real stdout, past any jsonStdout redirect: for protocol lines (MCP). */
+export function stdoutWriter(): (text: string) => void {
+  const w = realWrite ?? process.stdout.write;
+  return (text) => {
+    w.call(process.stdout, text);
+  };
+}
 
 /**
  * For one --json run: keep the current console.log for the envelope and send every other
- * console.log (human lines, a recipe's own logging) to stderr. Returns the undo.
+ * console.log / info / debug and every direct `process.stdout.write` (human lines, a recipe's own
+ * output) to stderr. The envelope is printed with the original writer put back for that one line
+ * (Node's console.log writes through it). Returns the undo.
  */
 export function jsonStdout(): () => void {
-  const log = console.log;
+  const { log, info, debug } = console;
   const before = stdout;
-  stdout = (line) => log(line);
+  const write = process.stdout.write;
+  const outermost = realWrite === undefined;
+  if (outermost) realWrite = write;
+  const toStderr = process.stderr.write.bind(process.stderr) as typeof process.stdout.write;
+  stdout = (line) => {
+    process.stdout.write = write;
+    try {
+      log(line);
+    } finally {
+      process.stdout.write = toStderr;
+    }
+  };
+  process.stdout.write = toStderr;
   console.log = console.error;
+  console.info = console.error;
+  console.debug = console.error;
   return () => {
-    console.log = log;
+    Object.assign(console, { log, info, debug });
+    process.stdout.write = write;
+    if (outermost) realWrite = undefined;
     stdout = before;
   };
 }
@@ -43,6 +73,31 @@ export function envelope(ok: boolean, data: unknown, error?: ErrorJson): void {
   stdout(
     JSON.stringify(error ? { ok, error, ...(data === undefined ? {} : { data }) } : { ok, data }),
   );
+}
+
+/** The envelope `error` for a run whose items failed QA: the count, the assets, where to look. */
+export function qaFailed(count: number, assets: readonly string[], where: string): ErrorJson {
+  return new Ts23dError('T3D_QA_FAILED', {
+    cause: `QA failed: ${count} finding(s) on ${assets.length} asset(s): ${assets.join(', ')}`,
+    fix: `read ${where}: each finding has its own code and fix; apply them and run again`,
+  }).toJSON();
+}
+
+/**
+ * The run's one output: envelope or human lines; exit 1 on any failure or finding. `qa` is the
+ * error when the items themselves failed (QA findings, gaps); a failed file or asset wins.
+ */
+export function finish<T>(
+  json: boolean,
+  failed: readonly Failed[],
+  items: readonly T[],
+  print: (item: T) => void,
+  qa?: ErrorJson,
+): number {
+  const ok = !qa && failed.length === 0;
+  if (json) envelope(ok, [...items, ...failed], failed[0]?.error ?? qa);
+  else items.forEach(print);
+  return ok ? 0 : 1;
 }
 
 /** Print one coded error: the envelope under --json, `CODE: cause` + `fix:` on stderr otherwise. */

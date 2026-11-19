@@ -231,6 +231,18 @@
       "parent": "hind_r_1"
     }
   ],
+  "deformTolerances": [
+    {
+      "bone": "hind_l_0",
+      "stretch": 4.3,
+      "why": "the image-to-3D mesh fused the tail to the inner face of the right thigh (and the back of the left), so the hip extremes web the skin between them; the fix is a re-generated mesh (GPU), tracked as a follow-up"
+    },
+    {
+      "bone": "hind_r_0",
+      "stretch": 5.7,
+      "why": "the image-to-3D mesh fused the tail to the inner face of the right thigh (and the back of the left), so the hip extremes web the skin between them; the fix is a re-generated mesh (GPU), tracked as a follow-up"
+    }
+  ],
   "clips": [
     {
       "name": "idle",

@@ -1,7 +1,7 @@
 {
   "name": "ranger",
   "kind": "character",
-  "description": "A woodland ranger, 1.78 m, a-pose rest, skinned to 24 bones with idle, walk and jog clips. Model tier: image-to-3D surface with its own textures, hosted rig, Blender steps. Without the neural cache: a grey CPU mannequin, no clips.",
+  "description": "A woodland ranger, 1.78 m, a-pose rest, skinned to 22 bones with idle, walk and jog clips. Model tier: image-to-3D surface with its own textures, hosted rig, Blender steps. Without the neural cache: a grey CPU mannequin, no clips.",
   "tags": [
     "character",
     "humanoid",

@@ -12,7 +12,7 @@ import { HEADLAMP, type Hole, holeG, holeUc, TAILLAMP } from '../body/panels.ts'
 const shrink = (h: Hole, k: number): Hole => ({ ...h, hs: h.hs * k, hu: h.hu * k });
 
 import { C } from '../lib/colors.ts';
-import { add, along, bothSides, mirrorY, mul, tube } from '../lib/geo.ts';
+import { add, along, bothSides, mirrorY, mul, rod, sub, tube } from '../lib/geo.ts';
 import { normalAt, type Surface } from '../lib/grid.ts';
 
 const dim = (c: Vec3, k: number): Vec3 => [c[0] * k, c[1] * k, c[2] * k];
@@ -103,11 +103,19 @@ export function lamps(S: Surface, lod: Lod): LampMeshes {
     // Halo light-guide round the lens: visible through any glass, reads at every distance.
     const halo = outline(S, h, 0.004, 20, 0.93);
     drl.push(tube([...halo, halo[0] ?? [0, 0, 0]], 0.008, C.lampGlow, 'plastic', 6, 1, false));
-    drl.push(tube(top.slice(2, 13), 0.006, C.lampGlow, 'plastic', 6, 2));
+    // The light guide's two ends turn outward and plug into the pocket's top wall, which carries
+    // it (it used to hang 5 mm under the lens, touching nothing).
+    const plug = (i: number): Vec3 => {
+      const s = h.sc - h.hs * 0.88 + (h.hs * 1.76 * i) / 14;
+      return inward(S, s, holeUc(h, s) - h.hu * holeG(h, s) * 1.04, 0.014);
+    };
+    drl.push(tube([plug(1), ...top.slice(2, 13), plug(13)], 0.006, C.lampGlow, 'plastic', 6, 2));
     // Amber indicator segment along the bottom edge.
     headBody.push(tube(bot.slice(2, 12), 0.012, C.lensAmber, 'plastic', 6, 2));
     // Tail: black pocket, three LED bars, reverse light inboard.
-    tailBody.push(pocket(S, t, 0.05, C.black, 'plastic', lod === 0 ? 20 : 8));
+    const POCKET_T = 0.05;
+    const tc = holeCentre(S, t);
+    tailBody.push(pocket(S, t, POCKET_T, C.black, 'plastic', lod === 0 ? 20 : 8));
     for (const f of [-0.45, 0, 0.45]) {
       const bar: Vec3[] = [];
       for (let i = 0; i <= 12; i++) {
@@ -117,7 +125,13 @@ export function lamps(S: Surface, lod: Lod): LampMeshes {
         if (s < t.sc - t.hs * 0.55 && f > 0.2) continue;
         bar.push(inward(S, s, holeUc(t, s) + t.hu * g * f, 0.016));
       }
-      if (bar.length > 1) tailLed.push(tube(bar, 0.016, C.tailGlow, 'plastic', 6, 2));
+      if (bar.length > 1) {
+        tailLed.push(tube(bar, 0.016, C.tailGlow, 'plastic', 6, 2));
+        // Each bar stands on two posts off the housing floor (it used to float in the pocket).
+        for (const q of [bar[1], bar[bar.length - 2]])
+          if (q)
+            tailLed.push(rod(q, sub(q, mul(tc.n, POCKET_T + 0.004)), 0.008, C.black, 'plastic', 6));
+      }
     }
     const rs = t.sc - t.hs * 0.7;
     rev.push(

@@ -24,6 +24,23 @@ export interface ReadabilityOptions {
 }
 
 const cache = new WeakMap<Asset, Map<string, { metrics: ArtMetrics; maps: ArtMaps }>>();
+const ids = new WeakMap<object, number>();
+let nextId = 0;
+
+/** A cache key over every render option: numbers and `window` by value, the big objects (sheet,
+ *  frameFrom) by identity, so a different sheet or camera is never served a stale measurement. */
+function renderKey(r: BeautyOptions = {}): string {
+  return JSON.stringify(
+    Object.entries(r)
+      .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+      .map(([k, v]) => {
+        if (typeof v !== 'object' || v === null || k === 'window') return [k, v];
+        const id = ids.get(v) ?? ++nextId;
+        ids.set(v, id);
+        return [k, `#${id}`];
+      }),
+  );
+}
 
 /** All five metrics for `asset` (cached per asset + options within a test run). */
 export function artMetrics(
@@ -33,7 +50,7 @@ export function artMetrics(
   const key = JSON.stringify({
     art: o.art ?? null,
     seed: o.seed ?? null,
-    az: o.render?.azDeg ?? null,
+    render: renderKey(o.render),
   });
   const per = cache.get(asset) ?? new Map();
   cache.set(asset, per);

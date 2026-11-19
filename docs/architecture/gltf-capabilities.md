@@ -19,13 +19,46 @@ Status legend: **shipped** = on `main` with a test · **next** = the current roa
 | PBR metal/rough + normal + ORM | `pbrMetallicRoughness`, `normalTexture`, `occlusionTexture` | procedural trim sheet | shipped |
 | A part's own texture set (ADR 016) | one extra material + embedded PNG `images` per set, on every LOD | `ctx.part(name, mesh, { textures })` + `budget.textureSets` (below) | shipped |
 | Alpha modes | `OPAQUE` / `MASK` / `BLEND` | surfaces opaque / cutout / glass / translucent | shipped |
-| Node animation (TRS) | `animations` | `spin`, `slide`, `sway`, `orbit`, `crank`, `piston` → `rest` + `run` clips | shipped |
+| Node animation (TRS) | `animations` | `spin`, `slide`, `sway`, `orbit`, `crank`, `piston` → `rest` + `run` clips (`tread`: morph weights, below) | shipped |
 | Sockets, emitters | `extras` on empty nodes | `ctx.socket`, `ctx.emitter` | shipped |
 | Skins (bones) | `skins`, `JOINTS_0` (u16) / `WEIGHTS_0` (unorm16), `inverseBindMatrices` | `ctx.bone` + `skinWeights` / `heatWeights` (below) | shipped |
 | Morph targets | sparse `targets` + mesh `weights` + `extras.targetNames` | `Mesh.morphs` from `fieldMorph` / `hingeMorph` (creature `blink`) | shipped |
+| Track belts that run | 2, 4 or 8 morph targets (POSITION + NORMAL) on the belt mesh + a `weights` channel in `run` | a `tread` motion ([below](#track-belts-tread-motion)) | shipped |
 | Named clips | `animations` | `rest`, `run` (part motions), then every `Clip` on bones or parts | shipped |
 | Per-bone hitboxes | `KHR_physics_rigid_bodies` `trigger` + `KHR_implicit_shapes` capsule on joint nodes | `--physics` on a skinned asset | shipped |
 | Cameras | `cameras` | preview / hero camera per asset | later |
+
+### Track belts (`tread` motion)
+
+glTF has no way to slide vertices round a loop, and a node transform cannot do it either. A belt
+does look the same after one link pitch of travel, so the `run` clip plays one pitch and starts
+again, with morph targets on the belt mesh (`src/export/tread-morphs.ts`, `tread-write.ts`; the
+loop maths is `src/passes/belt-loop.ts`, `belt-bodies.ts`, `belt-run.ts`). No extension, no runtime
+code: morph targets and a `weights` channel are core glTF 2.0, played the way any blend shape is
+(checked: Khronos validator 0 errors 0 warnings; three.js r187 `GLTFLoader` + `AnimationMixer`).
+
+| Step | What happens |
+|---|---|
+| Bodies | every connected piece of the belt mesh no longer than a pitch is one rigid body (a plate, a horn, a grouser); a longer piece (a rubber band) bends vertex by vertex |
+| Twins | each body is paired with the congruent body one pitch on (turn read from its normals; a link pressed flat by `onGround` still pairs and eases into that shape). No twin = the belt does not repeat: no targets are written and the `treads` gate fails |
+| Targets | target 0 `tread` is the whole pitch (every vertex onto its twin). Then refinements, coarse to fine: `tread_1_2`, `tread_1_4`, `tread_3_4`, `tread_1_8` …, each the pose at that phase minus the mean of its two neighbours, zero on straight runs, so sparse. POSITION and NORMAL (a link turns up to 60° going round a sprocket; without NORMAL its shading would jump at every wrap) |
+| K | 2, 4 or 8 phases per pitch: the smallest that keeps a vertex halfway between two keys within 3 mm (LOD0), 6 mm (LOD1), 20 mm (LOD2) of its true pose (`TREAD_TOLERANCE`); refinements under a tenth of that are dropped |
+| Keys | LINEAR `weights`, K + 1 keys per pitch, each target weighted by a hat round its phase. One float32 step (under 0.5 µs) after the last key the weights are back at 0: the same picture, so the wrap is not seen |
+| Speed | the median rim speed of the spinning parts whose axle is the belt's normal and whose pivot is inside the loop (whole turns per loop × rim circumference), rounded to whole pitches per 4 s loop so the clip closes; the sign follows the wheels. No wheel: 1 m/s along the path's winding |
+| Shared data | left and right belts with equal deltas share one set of accessors; belts and LOD trees with the same K and pitch count share one sampler; each LOD tree of a single-file GLB has its own targets and channel |
+| Off | `--no-animations` (`animations: false`) writes no targets. A belt mesh with `Mesh.morphs` of its own keeps those and stands still |
+
+Measured (worst deviation halfway between two keys; bytes added to the GLB by both belts):
+
+| Asset | LOD0 | LOD1 | LOD2 |
+|---|---|---|---|
+| `t34` (two link shapes alternate, pitch 0.343 m) | K 8, 2.7 mm, +588 KB | K 4, 4.7 mm, +65 KB | K 2, 17.6 mm, +28 KB |
+| `tiger_1` (pitch 0.130 m) | K 2, 1.5 mm, +191 KB | K 4, 2.6 mm, +41 KB | K 4, 8.1 mm, +28 KB |
+
+Limits. A reader that keeps the keys (three.js does) never shows the wrap; an importer that
+re-samples the clip at a fixed frame rate and blends across the wrap shows one in-between frame
+per pitch (not tested in Unity, Unreal, Godot or Blender). TANGENT is not morphed. An engine that wants the exact belt at
+any speed reads `extras.ts23d.tread` (`path`, `pitch`) and leaves the weights at 0.
 
 ### Skins, morphs and clips (ADR 013)
 ts23d does not guess a rig: it knows which bone carries which flesh. `skinWeights(mesh, bones,
@@ -65,7 +98,7 @@ A part with `textures: TextureSet` leaves the trim sheet for its set's material.
 | Material | `ts23d_tex_<set>`: `baseColorTexture` (sRGB), `normalTexture`, and the ORM map in `occlusionTexture` + `metallicRoughnessTexture` with factors 1; without an ORM map the set's `roughness` / `metallic` (0.8 / 0). A `surface: 'cutout'` part uses `ts23d_texcut_<set>`: the same maps, `alphaMode: MASK`, cutoff 0.5, double-sided |
 | Order | after trim, glow, paint and finish materials, and images after the sheet's three: an asset without sets keeps its indices and bytes |
 | Images | PNG bytes as given, in the BIN chunk, once per file: every LOD tree of a single-file GLB (MSFT_lod) indexes the same material; each split `lodN.glb` embeds its own copy. Equal bytes under two set names are one image |
-| Sampler | one, trilinear, REPEAT both ways |
+| Sampler | one, trilinear, CLAMP_TO_EDGE both ways (a set is a unique unwrap, never a tiling strip) |
 | Nodes | texture sets never share a primitive with trim-sheet geometry: a pivot whose own geometry is all ONE set carries it (a fully textured body stays the node `body`); otherwise `<pivot>_tex_<set>` / `<pivot>_cutout_tex_<set>` children, one draw each (counted in the manifest's `drawCalls` and `budget.draws`) |
 | `TEXCOORD_0` | the part's `mesh.uvs` unchanged: glTF convention, 0..1, V down. A UV more than a texel outside 0..1 is an export warning (`GlbResult.warnings`) |
 | `TANGENT` | only when the set has a normal map; MikkTSpace-style (below). A normal map on a mesh with no UV area is `T3D_TEXTURE_INVALID` |

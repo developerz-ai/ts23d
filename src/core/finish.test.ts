@@ -5,6 +5,7 @@ import { describe, expect, it } from 'bun:test';
 import { box } from '../primitives/index.ts';
 import { compile, defineAsset } from './asset.ts';
 import type { AssetDefinition } from './definition.ts';
+import { resolveFinish } from './finish.ts';
 import { OPTICS } from './optics.ts';
 
 const c: [number, number, number] = [0.5, 0.5, 0.5];
@@ -19,9 +20,49 @@ const asset = (over: Partial<AssetDefinition>, part: Record<string, unknown> = {
     ...over,
   });
 
+describe('resolveFinish: colours and rotation', () => {
+  const code = (fn: () => unknown): string => {
+    try {
+      fn();
+    } catch (e) {
+      return (e as { code?: string }).code ?? 'thrown';
+    }
+    return 'ok';
+  };
+  it('rejects a colour that is not three channels', () => {
+    for (const colour of [[0.5], [0.5, 0.5], [0.5, 0.5, 0.5, 1], []])
+      expect(code(() => resolveFinish('f', { sheen: { colour: colour as never } }))).toBe(
+        'T3D_RECIPE_INVALID',
+      );
+    expect(() => resolveFinish('f', { specular: { colour: [0.2] as never } })).toThrow(
+      /three channels/,
+    );
+  });
+  it('rejects a non-finite colour channel or anisotropy rotation', () => {
+    expect(code(() => resolveFinish('f', { sheen: { colour: [0.5, Number.NaN, 0.5] } }))).toBe(
+      'T3D_RECIPE_INVALID',
+    );
+    for (const rotation of [Number.NaN, Number.POSITIVE_INFINITY])
+      expect(code(() => resolveFinish('f', { anisotropy: { strength: 1, rotation } }))).toBe(
+        'T3D_RECIPE_INVALID',
+      );
+  });
+  it('accepts three channels and a finite rotation', () => {
+    const r = resolveFinish('f', {
+      sheen: { colour: [0.5, 0.25, 1] },
+      anisotropy: { strength: 1, rotation: -1.5 },
+    });
+    expect(r.sheen?.colour).toEqual([0.5, 0.25, 1]);
+    expect(r.anisotropy?.rotation).toBe(-1.5);
+  });
+});
+
 describe('finishes: failures first', () => {
   it('rejects a part naming an undeclared finish', () => {
     expect(() => compile(asset({}, { finish: 'velvet' }))).toThrow(/does not declare/);
+    // An Object.prototype member is not a declared finish either.
+    const velvet = { finishes: { velvet: { sheen: { colour: '#802040' } } } };
+    expect(() => compile(asset(velvet, { finish: 'constructor' }))).toThrow(/does not declare/);
   });
   it('rejects a finish on a see-through part', () => {
     const a = asset(

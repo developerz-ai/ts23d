@@ -20,6 +20,8 @@ import {
 } from './trim-sheet.ts';
 import { materialVariant, weathered } from './variant.ts';
 
+// A row comes from the id alone: start from an empty table, whatever earlier files registered.
+resetMaterials();
 afterAll(resetMaterials);
 
 const codeOf = (fn: () => unknown): string => {

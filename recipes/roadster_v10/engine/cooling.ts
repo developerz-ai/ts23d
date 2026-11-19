@@ -100,7 +100,8 @@ function fanBlades(lod: Lod, r: number): Mesh {
     // Swept, twisted blade as a strip of quads from hub to tip.
     for (let i = 0; i <= steps; i++) {
       const t = i / steps;
-      const rr = 0.05 + (r - 0.06) * t;
+      // Rooted 5 mm inside the 45 mm motor hub.
+      const rr = 0.04 + (r - 0.05) * t;
       const sweep = 0.35 * t * t;
       const chord = 0.28 - 0.08 * t;
       const pitch = 0.5 - 0.25 * t;

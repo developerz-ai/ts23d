@@ -6,11 +6,11 @@
 import {
   type CompiledAsset,
   type Mesh,
-  merge,
   Ts23dError,
   type Vec3,
   worldMeshes,
 } from '../core/index.ts';
+import { mergeGeometry } from './merge-geometry.ts';
 import { RayGrid } from './ray-grid.ts';
 
 export interface AoOptions {
@@ -196,7 +196,7 @@ export function bakeAoAsset(asset: CompiledAsset, o: AoOptions = {}): CompiledAs
   checkAo(o);
   const world = worldMeshes(asset.parts);
   if (world.size === 0) return asset;
-  const grid = new RayGrid(merge([...world.values()]));
+  const grid = new RayGrid(mergeGeometry([...world.values()]));
   const strength = o.strength ?? 0.6;
   return {
     ...asset,

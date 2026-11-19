@@ -14,7 +14,7 @@ export interface HairRigOptions {
   readonly parent: string;
   /** Bone name prefix: `${prefix}${card}_${segment}`. Default `hair_`. */
   readonly prefix?: string;
-  /** Bones per card (≥ 1). Default 3. */
+  /** Bones per card: an integer 1..12 (as `scalpGuides` segments). Default 3. */
   readonly segments?: number;
   /** The scalp (negative inside): the card end nearer it is the root. */
   readonly scalp: (p: Vec3) => number;
@@ -65,8 +65,16 @@ function cards(m: Mesh): number[][] {
   return [...groups.entries()].sort((a, b) => a[0] - b[0]).map((g) => g[1]);
 }
 
+/** Most bones a card's chain may have. */
+const MAX_SEGMENTS = 12;
+
 export function hairRig(m: Mesh, o: HairRigOptions): HairRig {
   const seg = o.segments ?? 3;
+  if (!Number.isInteger(seg) || seg < 1 || seg > MAX_SEGMENTS)
+    throw new Ts23dError('T3D_RECIPE_INVALID', {
+      cause: `hairRig: segments ${seg} is not a whole number of bones per card in 1..${MAX_SEGMENTS}`,
+      fix: `give segments as an integer from 1 to ${MAX_SEGMENTS} (default 3)`,
+    });
   const prefix = o.prefix ?? 'hair_';
   const spring = o.spring ?? { hz: 2.2, damping: 0.35, max: 25 };
   const groups = cards(m);

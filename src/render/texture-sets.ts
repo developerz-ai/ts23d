@@ -7,6 +7,7 @@
 
 import {
   type CompiledAsset,
+  isTs23dError,
   pngHeader,
   TEXTURE_DEFAULTS,
   type TextureMap,
@@ -70,7 +71,7 @@ function decode(bytes: Uint8Array, where: string): Rgba {
   try {
     img = decodePng(bytes, bad);
   } catch (e) {
-    if (e instanceof Ts23dError) throw e;
+    if (isTs23dError(e)) throw e;
     return bad(`its pixel data does not inflate (${e instanceof Error ? e.message : String(e)})`);
   }
   if (img.width !== img.height || (img.width & (img.width - 1)) !== 0)

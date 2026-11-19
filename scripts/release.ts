@@ -8,7 +8,7 @@
 // `[Unreleased]` has no entries or no summary sentence, when CHANGELOG already has that version's
 // section, or when the `[Unreleased]` link does not compare from the latest version.
 
-import { Ts23dError } from '../src/core/index.ts';
+import { isTs23dError, Ts23dError } from '../src/core/index.ts';
 import {
   changelogSection,
   releases,
@@ -90,24 +90,45 @@ export function stampChangelog(
   return changelog.replace(/^## \[Unreleased\]/m, `## [Unreleased]\n\n## [${version}] - ${date}`);
 }
 
-async function main(args: readonly string[]): Promise<void> {
-  const mode = args[0]?.startsWith('--') ? args[0] : '--stamp';
-  const version = (mode === '--stamp' ? args[0] : args[1])?.replace(/^v/, '') ?? '';
+const USAGE =
+  'bun run release <x.y.z> stamps; bun run release --check <x.y.z> and --notes <x.y.z> only read';
+
+/**
+ * The mode and version of a command line. Anything else (a mistyped mode, a second version) is
+ * refused, so a typo of `--check` can never fall through to a stamp.
+ */
+export function parseArgs(args: readonly string[]): {
+  mode: 'stamp' | 'check' | 'notes';
+  version: string;
+} {
+  const usage = (cause: string): Ts23dError => new Ts23dError('T3D_RELEASE', { cause, fix: USAGE });
+  const flag = args[0]?.startsWith('-') ? args[0] : undefined;
+  if (flag !== undefined && flag !== '--check' && flag !== '--notes')
+    throw usage(`unknown mode '${flag}'`);
+  const [raw, ...extra] = flag === undefined ? args : args.slice(1);
+  if (raw === undefined) throw usage('no version given');
+  if (extra.length > 0) throw usage(`extra argument(s): ${extra.join(' ')}`);
+  const version = raw.replace(/^v/, '');
   parse(version);
+  return { mode: flag === '--check' ? 'check' : flag === '--notes' ? 'notes' : 'stamp', version };
+}
+
+async function main(args: readonly string[]): Promise<void> {
+  const { mode, version } = parseArgs(args);
   const pkgFile = Bun.file('package.json');
   const pkg = (await pkgFile.json()) as { version: string };
   const changelog = await Bun.file('CHANGELOG.md').text();
   const notStamped = (cause: string): Ts23dError =>
     new Ts23dError('T3D_RELEASE', { cause, fix: `bun run release ${version}` });
 
-  if (mode === '--check') {
+  if (mode === 'check') {
     if (pkg.version !== version) throw notStamped(`package.json is ${pkg.version}, not ${version}`);
     if (!changelogSection(changelog, version))
       throw notStamped(`CHANGELOG.md has no [${version}] section`);
     if (!(await Bun.file(VERSION_FILE).text()).includes(`VERSION = '${version}'`))
       throw notStamped(`${VERSION_FILE} is not ${version}`);
     console.log(`✔ stamped at ${version}`);
-  } else if (mode === '--notes') {
+  } else if (mode === 'notes') {
     const notes = changelogSection(changelog, version);
     if (!notes)
       throw new Ts23dError('T3D_RELEASE', {
@@ -139,7 +160,7 @@ if (import.meta.main) {
   try {
     await main(process.argv.slice(2));
   } catch (e) {
-    if (!(e instanceof Ts23dError)) throw e;
+    if (!isTs23dError(e)) throw e;
     console.error(`${e.message}\n  fix: ${e.fix}`);
     process.exit(1);
   }

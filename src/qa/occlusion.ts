@@ -1,7 +1,8 @@
 // Gates: surfaces a viewer either can't see or can't see cleanly. `zFighting` — a face lying in
 // another part's face, both facing the same way, flickers in every engine. `hiddenParts` — a part
-// entirely inside another closed solid is budget nobody ever sees. Both need a closed partner
-// (point-in-solid); open sheets are skipped, never guessed.
+// entirely inside another closed OPAQUE solid is budget nobody ever sees (wine in a glass bottle,
+// a seat under a canopy, a fly in amber are seen: any other surface is see-through). Both need a
+// closed partner (point-in-solid); open sheets are skipped, never guessed.
 
 import {
   type Bounds,
@@ -132,6 +133,10 @@ export const zFighting: Gate = (asset) => {
 
 export const hiddenParts: Gate = (asset) => {
   const s = scene(asset);
+  // Hosts you can see into hide nothing: glass, translucent, ice, liquid, jelly, cutout.
+  const seeThrough = new Set(
+    asset.parts.filter((p) => p.surface && p.surface !== 'opaque').map((p) => p.name),
+  );
   return s.names.flatMap((a): Finding[] => {
     const ba = s.bounds.get(a);
     const ma = s.mesh.get(a);
@@ -146,7 +151,7 @@ export const hiddenParts: Gate = (asset) => {
       ]);
     const host = s.names.find((b) => {
       const bb = s.bounds.get(b);
-      if (b === a || !bb || !contains(bb, ba)) return false;
+      if (b === a || seeThrough.has(b) || !bb || !contains(bb, ba)) return false;
       // Inside, and not merely flush with the host's skin (that is seating, not hiding).
       return (
         pts.every((p) => s.solid(b).inside(p)) &&

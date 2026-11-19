@@ -15,7 +15,7 @@ import {
 import { stripRect } from '../material/index.ts';
 import { sweep, triangulate } from '../primitives/index.ts';
 import { dedupe, stripScale } from './faces.ts';
-import { type HullLines, type HullOptions, hullLines, thetaAt } from './hull-lines.ts';
+import { bootTop, type HullLines, type HullOptions, hullLines, thetaAt } from './hull-lines.ts';
 import { emitBand, type Grid, normalsOf, skinQuad } from './hull-skin.ts';
 
 export type { HullColors, HullLines, HullOptions } from './hull-lines.ts';
@@ -78,7 +78,7 @@ export function hullMesh(o: HullOptions, lod: Lod = 0): HullMesh {
     { length: stations + 1 },
     (_, i) => -half + (o.length * (1 - Math.cos((Math.PI * i) / stations))) / 2,
   );
-  const boot = o.bootTop ?? 0.3;
+  const boot = bootTop(o);
   const hb = o.bulwark ?? 0;
   const tb = 0.12;
   const grid: Grid = xs.map((x) => {

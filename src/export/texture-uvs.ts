@@ -1,8 +1,8 @@
 // What a textured part's UVs must be for its own set (ADR 016) to show: a normal map needs a UV
 // layout to build tangents from (an error: the map cannot be decoded without one), and a baked
-// atlas is addressed inside 0..1 (a warning: the sampler repeats, so a UV more than a texel
-// outside the square wraps onto another island's pixels, which is what an unconverted UDIM tile
-// or a V-flipped import looks like).
+// atlas is addressed inside 0..1 (a warning: the sampler clamps, so a UV more than a texel
+// outside the square smears the edge texel instead of landing on its own island, which is what an
+// unconverted UDIM tile or a V-flipped import looks like).
 
 import { type CompiledAsset, type Mesh, pngHeader, Ts23dError } from '../core/index.ts';
 import type { ExportWarning } from './glb-options.ts';
@@ -53,7 +53,7 @@ export function textureSetWarnings(lods: readonly CompiledAsset[]): ExportWarnin
         out.push({
           code: 'T3D_TEXTURE_INVALID',
           message: `${where}: ${stray} of ${p.mesh.uvs.length / 2} vertices have UVs more than a texel outside 0..1 of texture set '${set.name}' (${size}²)`,
-          fix: 'bake the part into one 0..1 atlas (no UDIM tiles) and keep glTF UVs (V down); UVs outside the square wrap onto other islands',
+          fix: 'bake the part into one 0..1 atlas (no UDIM tiles) and keep glTF UVs (V down); UVs outside the square are clamped to the edge texel',
         });
     }
   return out;

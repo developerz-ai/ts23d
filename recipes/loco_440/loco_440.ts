@@ -83,7 +83,7 @@ const americanFamily = defineFamily<Params>({
       },
     ],
   },
-  // Measured 46.0k / 18.0k / 1.4k: sixteen wheels, a 17 m tender + track, riveted smokebox and
+  // Measured 46.5k / 18.6k / 1.4k: sixteen wheels, a 17 m tender + track, riveted smokebox and
   // tender at LOD0; LOD1 keeps every wheel spoked and the rods; LOD2 is the silhouette.
   budget: { triangles: [54000, 20000, 1650] },
   checks: [

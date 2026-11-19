@@ -162,6 +162,41 @@ export function layoutOf(ctx: BuildContext, arrangement: string): Layout {
   };
 }
 
+/** Wagon-top barrel: full radius for this length ahead of the firebox, then a taper of TAPER_LEN
+ *  down to TAPER × BOILER_R, which runs on to the smokebox. */
+export const WAGON_LEN = 1.0;
+export const TAPER_LEN = 0.4;
+export const TAPER = 0.95;
+
+/** Jacket radius (barrel or smokebox) at station x: what bands, rivets and stanchions sit on. */
+export function jacketRadius(L: Layout, x: number): number {
+  if (x >= L.barrelFront - 0.02) return SMOKEBOX_R;
+  const t = Math.min(1, Math.max(0, (x - L.barrelRear - WAGON_LEN) / TAPER_LEN));
+  return BOILER_R * (1 - (1 - TAPER) * t);
+}
+
+/**
+ * Distance from the axis, along a direction `u` metres off a vertex direction, to the facet of a
+ * `segments`-sided lathe of radius r whose vertex lies on that direction (lathes put vertices on
+ * ±Y for a Z-axis lathe, on ±Y and ±Z for an X-axis one when `segments` is a multiple of 4).
+ * Decals and rivets sit on these flats, not on the true circle a chord sags inside.
+ */
+export function facetDepth(r: number, segments: number, u: number): number {
+  const step = (Math.PI * 2) / segments;
+  const a = Math.abs(u);
+  const k = Math.min(Math.floor(Math.asin(Math.min(1, a / r)) / step), segments / 4 - 1);
+  const [x0, y0] = [r * Math.sin(k * step), r * Math.cos(k * step)];
+  const [x1, y1] = [r * Math.sin((k + 1) * step), r * Math.cos((k + 1) * step)];
+  return y0 + ((y1 - y0) * (a - x0)) / (x1 - x0);
+}
+
+/** Radius of the facet of a `segments`-sided X-axis lathe at angle a round the axis (from +Y). */
+export function facetRadius(r: number, segments: number, a: number): number {
+  const step = (Math.PI * 2) / segments;
+  const off = (((a % step) + step) % step) - step / 2;
+  return (r * Math.cos(step / 2)) / Math.cos(off);
+}
+
 // ---------------------------------------------------------------- builders
 /** `lathe` with the strip mapped at true scale, so grain, brushing and pits keep their size. */
 export const lath = (o: LatheOptions): Mesh => lathe({ uv: 'metres', ...o });

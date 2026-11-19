@@ -3,7 +3,15 @@
 // 0.62 / √density), clump membership (each root joins the nearest of every k-th root), and the
 // field helpers that bury a root under the skin and push a strand out of a solid.
 
-import { cross, type Mesh, type Rng, sub, normalize as unit, type Vec3 } from '../core/index.ts';
+import {
+  cross,
+  type Mesh,
+  type Rng,
+  sub,
+  Ts23dError,
+  normalize as unit,
+  type Vec3,
+} from '../core/index.ts';
 
 export interface Root {
   readonly p: Vec3;
@@ -40,8 +48,23 @@ export function sample(m: Mesh, t: number, b1: number, b2: number): { p: Vec3; n
   return { p: at(m.positions), n: unit(at(m.normals)), c: at(m.colors) };
 }
 
-/** Poisson-disk roots of one zone: oversampled darts, shuffled, kept when no neighbour is closer. */
-export function poissonRoots(m: Mesh, density: (p: Vec3, n: Vec3) => number, rng: Rng): Root[] {
+/** The card-cap refusal: `count` cards (a number, or 'more than N') against `cap`. */
+export const overCap = (count: number | string, cap: number): Ts23dError =>
+  new Ts23dError('T3D_RECIPE_INVALID', {
+    cause: `hairCards: ${count} cards, cap ${cap}`,
+    fix: 'lower the zone densities (cards per m²) or raise maxCards with a measured reason',
+  });
+
+/**
+ * Poisson-disk roots of one zone: oversampled darts, shuffled, kept when no neighbour is closer.
+ * Throws the card-cap refusal as soon as more than `cap` roots are kept.
+ */
+export function poissonRoots(
+  m: Mesh,
+  density: (p: Vec3, n: Vec3) => number,
+  rng: Rng,
+  cap = Number.POSITIVE_INFINITY,
+): Root[] {
   const darts: Root[] = [];
   for (let t = 0; t < m.indices.length / 3; t++) {
     const [a, b, c] = [0, 1, 2].map((k) => V(m.positions, m.indices[t * 3 + k] ?? 0)) as [
@@ -73,7 +96,9 @@ export function poissonRoots(m: Mesh, density: (p: Vec3, n: Vec3) => number, rng
       darts[j] = a;
     }
   }
-  const cell = Math.max(1e-6, ...darts.map((d) => d.r));
+  // A loop, not Math.max(...): a dense zone has more darts than a call takes arguments.
+  let cell = 1e-6;
+  for (const d of darts) if (d.r > cell) cell = d.r;
   const grid = new Map<string, Root[]>();
   const key = (x: number, y: number, z: number): string => `${x},${y},${z}`;
   const kept: Root[] = [];
@@ -92,6 +117,7 @@ export function poissonRoots(m: Mesh, density: (p: Vec3, n: Vec3) => number, rng
             }
     if (!free) continue;
     kept.push(d);
+    if (kept.length > cap) throw overCap(`more than ${cap}`, cap);
     const k = key(g[0] ?? 0, g[1] ?? 0, g[2] ?? 0);
     grid.set(k, [...(grid.get(k) ?? []), d]);
   }

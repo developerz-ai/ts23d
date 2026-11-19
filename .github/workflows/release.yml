@@ -24,7 +24,7 @@ concurrency:
 jobs:
   check:
     runs-on: ubuntu-latest
-    timeout-minutes: 45 # the unsharded recipes step alone is ~9 minutes
+    timeout-minutes: 45 # the unsharded recipes step alone is ~15 minutes (measured 2026-11-18)
     permissions:
       contents: read
       actions: read # gh run list: the tag commit's ci runs

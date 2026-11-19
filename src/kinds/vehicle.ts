@@ -56,7 +56,8 @@ export function whyteAxles(
       x += r * 2 + o.spacing;
     }
   }
-  const mid = x / 2;
+  // `x` ran one spacing past the last wheel: the layout spans rim to rim, centred on x = 0.
+  const mid = out.length ? (x - o.spacing) / 2 : 0;
   // Front (+X) is the leading end.
   return out.map((a) => ({ ...a, x: mid - a.x }));
 }

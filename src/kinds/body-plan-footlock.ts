@@ -111,8 +111,18 @@ export function lockFeet(clip: Clip, rootBone: string, legs: readonly PlanChain[
       slide.set(pose.slide, k * 3);
       pose.turns.forEach((q, j) => {
         const v = values[j];
-        const back = k > 0 && v ? (v[(k - 1) * 4 + 3] ?? 1) * q[3] < 0 : false;
-        v?.set(back ? [-q[0], -q[1], -q[2], -q[3]] : q, k * 4);
+        if (!v) return;
+        // Same hemisphere as the key before, by the full 4D dot: near a half turn w is about 0
+        // and its sign alone says nothing.
+        const p = (k - 1) * 4;
+        const dot =
+          k === 0
+            ? 1
+            : (v[p] ?? 0) * q[0] +
+              (v[p + 1] ?? 0) * q[1] +
+              (v[p + 2] ?? 0) * q[2] +
+              (v[p + 3] ?? 0) * q[3];
+        v.set(dot < 0 ? [-q[0], -q[1], -q[2], -q[3]] : q, k * 4);
       });
     }
     const foot = leg.links[2]?.bone.name ?? '';

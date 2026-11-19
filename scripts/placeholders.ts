@@ -5,24 +5,46 @@ import { report, tsFiles, type Violation } from './lib/files.ts';
 
 const FIX = 'write the real code, or throw notImplemented() and name the gap in the PR body';
 
+const DOTS = String.raw`(?:\.\.\.|…)`;
+
 const BANNED: readonly { re: RegExp; what: string }[] = [
-  // A bare ellipsis comment stands in for code; `// …and then` continuing prose does not.
-  { re: /^\s*\/\/\s*(\.\.\.|…)\s*$|\/\*\s*(\.\.\.|…)\s*\*\//, what: 'elided code comment' },
+  // An ellipsis comment stands in for code, bare (`// ...`, `/* … */`) or wrapped round a label
+  // (`// ... existing code ...`); `// …and then` continuing prose does not.
+  {
+    re: new RegExp(
+      String.raw`\/\/\s*${DOTS}\s*$|\/\/\s*${DOTS}.*${DOTS}\s*$|\/\*\s*${DOTS}(?:.*${DOTS})?\s*\*\/`,
+    ),
+    what: 'elided code comment',
+  },
+  // The whole comment, so prose that merely mentions existing code or an unchanged value passes.
+  {
+    re: new RegExp(
+      String.raw`(?:\/\/|\/\*)\s*(?:${DOTS}\s*)?(?:(?:the |all )?existing (?:code|logic|methods|functions|imports|implementation)(?: (?:here|unchanged|stays|remains|as is))?|unchanged)\s*(?:${DOTS})?\s*(?:\*\/\s*)?$`,
+      'i',
+    ),
+    what: '"existing code" elision',
+  },
   { re: /rest of (the )?(code|file|implementation)/i, what: '"rest of the code" placeholder' },
+  {
+    re: /\brest of (the )?\w+ (stays|remains|is|are) (the same|unchanged|as (is|before))|\brest of (the )?\w+ (unchanged|omitted)\b/i,
+    what: '"rest stays the same" elision',
+  },
+  { re: /\bremaining\b[^.;]*\bomitted\b/i, what: '"remaining omitted" elision' },
   { re: /\b(implement|add) (this|logic|here|me)\b/i, what: '"implement here" placeholder' },
   {
     re: /\b(similar(ly)?|same) (to |for |as |pattern as )?(above|(the )?(rest|remaining))\b/i,
     what: '"same as above" elision',
   },
-  { re: /TODO:?\s*implement/i, what: 'TODO stub' },
+  { re: /TODO:?\s*(implement|fill|write)\b/i, what: 'TODO stub' },
   { re: /for brevity/i, what: '"for brevity" elision' },
 ];
 
 export function checkSource(file: string, source: string): Violation[] {
   const out: Violation[] = [];
   source.split('\n').forEach((text, i) => {
-    for (const b of BANNED)
-      if (b.re.test(text)) out.push({ file, line: i + 1, message: b.what, fix: FIX });
+    // One finding a line: the first pattern names it.
+    const hit = BANNED.find((b) => b.re.test(text));
+    if (hit) out.push({ file, line: i + 1, message: hit.what, fix: FIX });
   });
   return out;
 }

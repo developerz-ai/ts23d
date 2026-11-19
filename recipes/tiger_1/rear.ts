@@ -210,7 +210,8 @@ export function rearPlate(o: RearSpec): Mesh[] {
       }),
       box({ size: [0.22, 0.24, 0.12], at: [o.rearX(1.0) - 0.06, 0, 0.94], color: steel }),
       box({ size: [0.06, 0.12, 0.1], at: [o.rearX(1.65) - 0.03, 0.95, 1.6], color: dark }),
-      box({ size: [0.04, 0.08, 0.06], at: [o.rearX(1.65) - 0.04, -0.95, 1.62], color: o.red }),
+      // Tail light bolted through the Zimmerit onto the plate (back face sunk, not 2 cm off it).
+      box({ size: [0.04, 0.08, 0.06], at: [o.rearX(1.65) - 0.015, -0.95, 1.62], color: o.red }),
     );
   }
   if (lod === 0)

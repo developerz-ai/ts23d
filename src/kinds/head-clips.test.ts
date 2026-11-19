@@ -69,6 +69,12 @@ describe('head morphs', () => {
     expect(faceMorphs(once, rig).morphs?.map((m) => m.name)).toEqual([...HEAD_MORPHS]);
   });
 
+  it("puts the head morphs first, before the mesh's own (blink is target 0, not 'smile')", () => {
+    const smile = { name: 'smile', positions: new Float32Array(head.positions.length) };
+    const m = faceMorphs({ ...head, morphs: [smile] }, rig);
+    expect(m.morphs?.map((x) => x.name)).toEqual([...HEAD_MORPHS, 'smile']);
+  });
+
   it('blink moves only round the eyes, talk only below the lips, breathe nothing on a head', () => {
     const m = faceMorphs(head, rig);
     const lids = moved(m, 'blink');
@@ -84,6 +90,26 @@ describe('head morphs', () => {
 });
 
 describe('head clips', () => {
+  it('refuses a target list without the three head morphs, or with one twice', () => {
+    expect(() => headClips('face', ['smile', 'blink', 'talk'])).toThrow(/T3D_RECIPE_INVALID/);
+    expect(() => headClips('face', ['blink', 'talk', 'breathe', 'talk'])).toThrow(Ts23dError);
+  });
+
+  it('keys every target of a mesh with morphs of its own, each weight on its own target', () => {
+    const names = faceMorphs(
+      { ...head, morphs: [{ name: 'smile', positions: new Float32Array(head.positions.length) }] },
+      rig,
+    ).morphs?.map((x) => x.name);
+    const [blink] = headClips('face', names);
+    const t = blink?.tracks[0];
+    const n = t?.times.length ?? 0;
+    expect((t?.values.length ?? 0) / n).toBe(4);
+    const at = (k: number, s: number): number => t?.values[k * 4 + s] ?? 0;
+    const peak = [...Array(n).keys()].reduce((a, k) => (at(k, 0) > at(a, 0) ? k : a), 0);
+    expect(at(peak, 0)).toBeGreaterThan(0.9);
+    for (let k = 0; k < n; k++) expect(at(k, 3)).toBe(0);
+  });
+
   it('key all three weights on the part and close every loop', () => {
     const clips = headClips('face');
     expect(clips.map((c) => c.name)).toEqual(['blink', 'talk', 'breathe']);

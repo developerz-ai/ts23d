@@ -2,7 +2,11 @@
 // serves is what the gate tested: (1) `bunx t3d build` a two-box recipe to QA PASS; (2) import
 // every `exports` subpath under Bun and under Node (skipped with a notice when `node` is not on
 // PATH); (3) `tsc` a file importing every subpath with `skipLibCheck: false` and no DOM lib;
-// (4) the tarball ships no tests, maps or demo PNGs, ships CLAUDE.md, NOTICE and every exports target.
+// (4) the tarball ships no tests, maps or demo PNGs, ships CLAUDE.md, NOTICE, every exports target and
+// the files code loads by path at run time (the CLI bin, the path-tracer worker); (5) `t3d hero
+// --quality path` traces on worker threads from the installed package; (6) `t3d build --watch`
+// does its first rebuild through the installed CLI entry (then is killed); (7) a PNG and a contact
+// sheet hash the same under Bun and Node (with (2), skipped when `node` is not on PATH).
 // AGENTS.md is a symlink to CLAUDE.md, and npm and bun pack both skip symlinks: CLAUDE.md is the copy
 // agents in a consumer project read.
 // Offline-safe: the package has no runtime dependencies, so `bun add <tarball>` fetches nothing.
@@ -11,7 +15,7 @@
 import { mkdir, mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { Ts23dError } from '../src/core/index.ts';
+import { isTs23dError, Ts23dError } from '../src/core/index.ts';
 import { TIERS } from './lib/tiers.ts';
 
 const NAME = '@developerz.ai/ts23d';
@@ -34,6 +38,9 @@ export function exportTargets(exportsMap: Record<string, unknown>): string[] {
   return [...new Set(out)].sort();
 }
 
+/** Files loaded by path, not through `exports`: `t3d` itself and the path tracer's worker script. */
+export const RUNTIME_FILES = ['dist/cli/bin.js', 'dist/render/path/worker.js'] as const;
+
 /** What is wrong with a tarball listing (paths relative to the package root); empty = fine. */
 export function tarballProblems(files: readonly string[], targets: readonly string[]): string[] {
   const set = new Set(files);
@@ -48,6 +55,7 @@ export function tarballProblems(files: readonly string[], targets: readonly stri
     problems.push('CLAUDE.md (the agent brain AGENTS.md links to) is missing');
   if (!set.has('NOTICE')) problems.push('NOTICE (third-party acknowledgements) is missing');
   for (const t of targets) if (!set.has(t)) problems.push(`exports target missing: ${t}`);
+  for (const r of RUNTIME_FILES) if (!set.has(r)) problems.push(`runtime file missing: ${r}`);
   return problems;
 }
 
@@ -61,6 +69,23 @@ export const stack = defineAsset({
     ctx.part('top', box({ size: [0.6, 0.6, 0.4], at: [0, 0, 0.5], color: [0.3, 0.4, 0.5] }));
   },
 });
+`;
+
+/** (7) Bytes that must not depend on the runtime: a PNG and a contact sheet of a two-box asset. */
+const PNG_HASHES = `import { createHash } from 'node:crypto';
+import { box, compile, contactSheet, defineAsset, encodePng } from '${NAME}';
+const asset = defineAsset({
+  name: 'stack',
+  kind: 'prop',
+  budget: { triangles: [24, 24, 24] },
+  build: (ctx) => {
+    ctx.part('base', box({ size: [1, 1, 0.5], color: [0.5, 0.4, 0.3] }));
+    ctx.part('top', box({ size: [0.6, 0.6, 0.4], at: [0, 0, 0.5], color: [0.3, 0.4, 0.5] }));
+  },
+});
+const pixels = Uint8Array.from({ length: 64 * 48 * 4 }, (_, i) => (i * 7 + (i >> 5)) & 255);
+const outputs = [encodePng(64, 48, pixels), contactSheet(compile(asset, { lod: 0 }))];
+console.log(outputs.map((b) => createHash('sha256').update(b).digest('hex')).join(' '));
 `;
 
 function fail(step: string, cause: string): never {
@@ -104,6 +129,52 @@ const TSCONFIG = {
   files: ['types.ts'],
 };
 
+/** (5) The path tracer on worker threads, from the installed bin (the worker ships in dist/). */
+function pathHero(app: string): void {
+  const out = sh(
+    '5 hero --quality path',
+    [
+      'bun',
+      'x',
+      't3d',
+      'hero',
+      'stack.ts',
+      '--out',
+      'path',
+      '--quality',
+      'path',
+      '--spp',
+      '2',
+      '--size',
+      '96x54',
+    ],
+    app,
+  );
+  if (/worker failed|ModuleNotFound|Cannot find module/i.test(out))
+    fail('5 hero --quality path', `the path-tracer worker did not load:\n${out}`);
+  console.log('✔ (5) t3d hero --quality path: traced on workers');
+}
+
+/** (6) `t3d build --watch`: its first build (a child of the installed CLI entry) writes the GLB. */
+async function watchOnce(app: string): Promise<void> {
+  const glb = join(app, 'watched', 'stack', 'lod0.glb');
+  const p = Bun.spawn(
+    ['bun', 'x', 't3d', 'build', '--watch', 'stack.ts', '--out', 'watched', '--sheet-size', '512'],
+    { cwd: app, stdout: 'pipe', stderr: 'pipe' },
+  );
+  const deadline = performance.now() + 120_000;
+  let built = false;
+  while (!built && p.exitCode === null && performance.now() < deadline) {
+    await Bun.sleep(250);
+    built = await Bun.file(glb).exists();
+  }
+  p.kill();
+  await p.exited;
+  const err = await new Response(p.stderr).text();
+  if (!built) fail('6 build --watch', `no ${glb} from the first watch build:\n${err.trim()}`);
+  console.log('✔ (6) t3d build --watch: first build through the installed CLI entry');
+}
+
 async function smoke(): Promise<void> {
   const t0 = performance.now();
   const work = await mkdtemp(join(tmpdir(), 'ts23d-pack-'));
@@ -134,7 +205,7 @@ async function smoke(): Promise<void> {
     const problems = tarballProblems(listing, exportTargets(pkg.exports));
     if (problems.length > 0) fail('4 tarball', problems.join('\n'));
     console.log(
-      `✔ (4) tarball: ${listing.length} files, no tests/maps/demo PNGs, CLAUDE.md, NOTICE`,
+      `✔ (4) tarball: ${listing.length} files, no tests/maps/demo PNGs, CLAUDE.md, NOTICE, bin + worker`,
     );
 
     await Bun.write(
@@ -162,12 +233,20 @@ async function smoke(): Promise<void> {
     );
     if (!built.includes('QA PASS')) fail('1 t3d build', `no QA PASS in:\n${built}`);
     console.log('✔ (1) bunx t3d build: QA PASS');
+    pathHero(app);
+    await watchOnce(app);
 
     const specifiers = expectedExports().map((k) => (k === '.' ? NAME : `${NAME}/${k.slice(2)}`));
     await Bun.write(join(app, 'imports.mjs'), importScript(specifiers));
     sh('2 bun imports', ['bun', 'imports.mjs'], app);
     if (Bun.which('node')) {
       sh('2 node imports', ['node', 'imports.mjs'], app);
+      await Bun.write(join(app, 'png-hashes.mjs'), PNG_HASHES);
+      const underBun = sh('7 png bytes (bun)', ['bun', 'png-hashes.mjs'], app).trim();
+      const underNode = sh('7 png bytes (node)', ['node', 'png-hashes.mjs'], app).trim();
+      if (underBun !== underNode)
+        fail('7 png bytes', `PNG bytes differ by runtime:\nbun  ${underBun}\nnode ${underNode}`);
+      console.log('✔ (7) PNG and contact-sheet bytes: identical under bun and node');
       console.log(`✔ (2) ${specifiers.length} subpaths import under bun and node`);
     } else {
       console.log(
@@ -193,7 +272,7 @@ if (import.meta.main) {
   try {
     await smoke();
   } catch (e) {
-    if (!(e instanceof Ts23dError)) throw e;
+    if (!isTs23dError(e)) throw e;
     console.error(`${e.message}\n  fix: ${e.fix}`);
     process.exit(1);
   }

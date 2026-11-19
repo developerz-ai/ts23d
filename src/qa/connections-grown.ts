@@ -10,7 +10,15 @@
 
 import type { Vec3 } from '../core/index.ts';
 import { APPENDAGE, type ConnectIssue, cm, fmt } from './connections-declare.ts';
-import { basis, dot, norm, partnerOf, principalAxis, sub } from './connections-partner.ts';
+import {
+  basis,
+  dot,
+  norm,
+  type Partner,
+  partnerOf,
+  principalAxis,
+  sub,
+} from './connections-partner.ts';
 import type { Shell } from './connections-shells.ts';
 import { boxGap, epsOf, patch, probeOf, samplesIn, stepOf } from './contact.ts';
 import { CONTACT_EPS } from './types.ts';
@@ -28,8 +36,15 @@ const NO_FILLET = /(^|_)(tooth|teeth|tusks?|fangs?|claws?)(?=_|\d|$)/;
 /** The appendage word of a name (`wing_l_membrane` → `wing`), or null. */
 const word = (name: string): string | null => APPENDAGE.exec(name)?.[2]?.replace(/s$/, '') ?? null;
 
-export function grownIssues(s: Shell, shells: readonly Shell[], to: string | null): ConnectIssue[] {
-  const host = partnerOf(s, shells, to);
+/** Issues of one piece against its `host` (default: the piece it touches most, or the declared
+ *  `to`). A piece with no host is not judged here: a horn's tip touches only its own part; the
+ *  PART having no host at all is `unheld` in connections.ts. */
+export function grownIssues(
+  s: Shell,
+  shells: readonly Shell[],
+  to: string | null,
+  host: Partner | null = partnerOf(s, shells, to),
+): ConnectIssue[] {
   if (!host?.shell.solid) return [];
   // A wing membrane on its wing arm, a horn tip on its horn: parts of one appendage join
   // each other (welded); only the appendage's root grows from the body. Unless declared.

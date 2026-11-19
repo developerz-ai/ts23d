@@ -5,8 +5,9 @@
 // around the section inside the strip's band. Triangles = 2·S·(P−1) + S per cap (S section
 // points, P path points).
 
-import { type Mesh, MeshBuilder, Ts23dError, type Vec2, type Vec3 } from '../core/index.ts';
+import { type Mesh, MeshBuilder, type Vec2, type Vec3 } from '../core/index.ts';
 import { type StripId, stripRect } from '../material/index.ts';
+import { count, invalid, positive, profileOf } from './check.ts';
 import { arcLengths, transportFrames } from './transport.ts';
 
 export interface SweepOptions {
@@ -32,12 +33,8 @@ interface Section {
 function section(s: SweepOptions['section']): Section {
   if (!Array.isArray(s)) {
     const c = s as { radius: number; segments: number };
-    if (c.segments < 3 || !(c.radius > 0)) {
-      throw new Ts23dError('T3D_RECIPE_INVALID', {
-        cause: `sweep circle section has radius ${c.radius} and ${c.segments} segments`,
-        fix: 'use radius > 0 and segments >= 3 (pick segments from ctx.lod: e.g. 8 / 5 / 3)',
-      });
-    }
+    positive('sweep circle section radius', c.radius, 'radius: 0.05');
+    count('sweep circle section segments', c.segments, 3, 1024);
     const nrm: Vec2[] = [];
     for (let k = 0; k < c.segments; k++) {
       const a = (k / c.segments) * Math.PI * 2;
@@ -45,13 +42,7 @@ function section(s: SweepOptions['section']): Section {
     }
     return { pts: nrm.map(([x, y]) => [x * c.radius, y * c.radius]), nrm };
   }
-  const poly = s as readonly Vec2[];
-  if (poly.length < 3) {
-    throw new Ts23dError('T3D_RECIPE_INVALID', {
-      cause: `sweep section has ${poly.length} point(s)`,
-      fix: 'pass a closed polygon of at least 3 points, or { radius, segments }',
-    });
-  }
+  const poly = profileOf('sweep section', s as readonly Vec2[], 3);
   const area = poly.reduce((a, p, i) => {
     const q = poly[(i + 1) % poly.length] ?? p;
     return a + p[0] * q[1] - q[0] * p[1];
@@ -70,6 +61,15 @@ function section(s: SweepOptions['section']): Section {
   return { pts, nrm };
 }
 
+/** Twice the area of the fan triangle centre → rim[a] → rim[b]. */
+function fanArea2(c: Vec3, rim: Float64Array, a: number, b: number): number {
+  const u = [0, 1, 2].map((k) => (rim[a * 3 + k] ?? 0) - (c[k] ?? 0));
+  const v = [0, 1, 2].map((k) => (rim[b * 3 + k] ?? 0) - (c[k] ?? 0));
+  const [ux = 0, uy = 0, uz = 0] = u;
+  const [vx = 0, vy = 0, vz = 0] = v;
+  return Math.hypot(uy * vz - uz * vy, uz * vx - ux * vz, ux * vy - uy * vx);
+}
+
 /** Rings narrower than a nanometre are points. */
 const POLE = 1e-9;
 
@@ -77,12 +77,19 @@ export function sweep(o: SweepOptions): Mesh {
   const arc = arcLengths(o.path);
   const frames = transportFrames(o.path);
   const P = o.path.length;
-  if (o.scale && o.scale.length !== P) {
-    throw new Ts23dError('T3D_RECIPE_INVALID', {
-      cause: `sweep has ${P} path points but ${o.scale.length} scales`,
-      fix: 'pass exactly one scale per path point (or omit scale for a constant section)',
-    });
-  }
+  if (o.scale && o.scale.length !== P)
+    invalid(
+      `sweep has ${P} path points but ${o.scale.length} scales`,
+      'pass exactly one scale per path point (or omit scale for a constant section)',
+    );
+  const badScale = o.scale?.findIndex((k) => !(Number.isFinite(k) && k >= 0)) ?? -1;
+  if (badScale >= 0)
+    invalid(
+      `sweep scale ${badScale} is ${o.scale?.[badScale]}`,
+      'use finite scales ≥ 0 (0 closes the section to a tip; a negative one turns it inside out)',
+    );
+  if (!Number.isFinite(o.twist ?? 0))
+    invalid(`sweep twist is ${o.twist}`, 'pass the total twist in degrees, e.g. twist: 90');
   const sec = section(o.section);
   const S = sec.pts.length;
   const total = arc[P - 1] ?? 1;
@@ -166,6 +173,9 @@ export function sweep(o: SweepOptions): Mesh {
     for (let j = 0; j < S; j++) {
       const a = first + j;
       const c = first + ((j + 1) % S);
+      // A repeated or centre-collinear section point leaves a fan triangle without area: skip it.
+      if (!(fanArea2(o.path[i] ?? [0, 0, 0], rim, i * S + j, i * S + ((j + 1) % S)) > 1e-12))
+        continue;
       if (sign > 0) b.tri(centre, a, c);
       else b.tri(centre, c, a);
     }

@@ -48,10 +48,12 @@ export function scales(o: ScalesOptions): Stamp {
     const seed = ctx.seed + (o.seed ?? 0) * 7919;
     const len = o.height / (1 - Math.min(0.8, o.overlap ?? 0.4));
     const point = o.point ?? 0.3;
+    // A scale hangs `len` below its row's top, so rows up to r0 + ceil(len / height) may cover a texel.
+    const reach = Math.ceil(len / o.height);
     eachTexel(ctx, (i, xm, ym) => {
       const r0 = Math.floor(ym / o.height);
-      // Rows r0 … r0+2 may cover this texel (scales hang down from their row's top); higher on top.
-      for (let r = r0 + 2; r >= r0; r--) {
+      // Highest covering row wins: it lies on top.
+      for (let r = r0 + reach; r >= r0; r--) {
         const top = (r + 1) * o.height;
         const t = (top - ym) / len; // 0 at the root, 1 at the free edge
         if (t < 0 || t > 1) continue;

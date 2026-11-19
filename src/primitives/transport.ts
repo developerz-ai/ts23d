@@ -29,7 +29,7 @@ const reflect = (v: Vec3, axis: Vec3, c: number): Vec3 => {
   return [v[0] - k * axis[0], v[1] - k * axis[1], v[2] - k * axis[2]];
 };
 
-/** Throws unless the path has ≥ 2 points and no zero-length segment. Returns cumulative lengths. */
+/** Throws unless the path has ≥ 2 finite points and no zero-length segment. Returns cumulative lengths. */
 export function arcLengths(path: readonly Vec3[]): number[] {
   if (path.length < 2) {
     throw new Ts23dError('T3D_RECIPE_INVALID', {
@@ -37,10 +37,18 @@ export function arcLengths(path: readonly Vec3[]): number[] {
       fix: 'pass at least 2 path points (from → to); a single point has no direction to sweep along',
     });
   }
+  const bad = path.findIndex((p) => !p.every(Number.isFinite));
+  if (bad >= 0) {
+    throw new Ts23dError('T3D_RECIPE_INVALID', {
+      cause: `sweep path point ${bad} has a NaN or Infinity`,
+      fix: 'pass finite metre values for every path point',
+    });
+  }
   const s = [0];
   for (let i = 1; i < path.length; i++) {
     const d = Math.hypot(...sub(path[i] ?? [0, 0, 0], path[i - 1] ?? [0, 0, 0]));
-    if (d < 1e-9) {
+    // Written so a NaN distance fails too.
+    if (!(d >= 1e-9)) {
       throw new Ts23dError('T3D_RECIPE_INVALID', {
         cause: `sweep path points ${i - 1} and ${i} coincide (zero-length segment)`,
         fix: 'make consecutive path points distinct — drop duplicates before sweeping',

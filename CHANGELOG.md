@@ -4,6 +4,84 @@ All notable changes to `@developerz.ai/ts23d`. Format: [Keep a Changelog](https:
 
 ## [Unreleased]
 
+A correctness sweep across the library, CLI, gates, gallery and recipes: over a hundred and fifty defects fixed, stricter input validation and QA gates, track belts that move in any glTF reader, and PNG bytes that no longer depend on the runtime.
+
+### Added
+- `isTs23dError(e)`: a brand check that recognises a coded error from another copy of the library (the CLI's `bunx -p` copy against the project's `node_modules`), so its code and fix survive.
+- Neural adapters can declare `paid: true` and `estimate(job)`; `openaiImageAdapter({ paid: true })` marks a billed endpoint. `t3d neural run` prices Kubeez jobs at the model's listed cost.
+- QA gate `empty` (`T3D_QA_EMPTY`): a LOD with no triangles. QA gate `mesh-arrays` (`T3D_QA_MESH_ARRAYS`): mesh arrays of the wrong length; it runs first.
+- `stripAtV`, `stripCredits` and `checkSheetFor` accept a triangle's indices or three V values, so a vertex on a shared row edge is attributed to the row its triangle samples.
+- `cityPlan` plans carry `shared`: the stretches of each wall a neighbour stands against.
+- Beauty renders carry `assetSum` and `hits` (the asset's colour without the backdrop); transparent icons use them.
+- The DSL docs say where each primitive's `at` sits (box on its base, cylinder centred), and the docs recommend `t3d build … --no-shot --sheet none` while clearing QA findings.
+- Track belts move in the baked `run` clip in any glTF reader: morph targets and a `weights` channel, no extension and no runtime code. One link pitch per cycle, at the road wheels' rim speed rounded to whole pitches per loop; `--no-animations` writes no targets; `extras.ts23d.tread` stays for engines that drive the belt themselves. GLBs with animations grow by the belt targets (t34 LOD0 +588 KB, LOD1 +65 KB, LOD2 +28 KB).
+- The `treads` gate fails a `tread` belt whose loop is not a whole number of pitches or whose mesh does not repeat every pitch (`T3D_QA_TREADS`, with the pitch to pass in the fix). `BeltLoop` and `beltRun` in `/passes` (belt centre-line ruler; rigid link travel over one pitch).
+- `defineMaterial` takes an optional `row` (0..13) that replaces the id's hash row. A bad row is `T3D_MATERIAL_INVALID`; a taken row is `T3D_MATERIAL_CONFLICT`, whose fix lists the free rows.
+- QA: a `touches` / `clear` / `noOverlap` selector that matches no part at any LOD fails as `T3D_QA_CHECK` and lists the closest part names.
+- `--json` (additive, nothing removed or renamed): every `ok: false` envelope carries `error`; a run that only failed QA reports `T3D_QA_FAILED` with the count and a fix pointing at `data[].qa.findings`. Each build item gains `dir`, the folder its relative `files` live in.
+- Manifest `trianglesCompiled`: the compiled count that `budget.triangles` is checked against, written when it differs from `triangles`.
+- A conventions rule refuses `instanceof Ts23dError` outside tests, so `isTs23dError` stays the one check.
+- QA `deform`: a joint limit may declare its own edge-stretch tolerance, `limit: { …, stretch, why }`, or `limitTolerances: { <bone>: { stretch, why } }` for limits a kind generates. Default ×4, cap ×6; above ×4 it needs a `why`. Declared tolerances are listed in `manifest.json` under `deformTolerances`, and a failing finding quotes them. Volume and intersection have no tolerance.
+
+### Changed
+- **`connections` no longer credits contact across a gap.** A part hovering within 2 cm of its support used to count as held; it now fails with `T3D_CONNECT_POINT` ("hover N cm off …"). This is the change most likely to fail an existing asset. Remedy: seat the part on or a few millimetres into its support, or model what carries it (bracket, hinge pin, hanger). Parts seated all round on a rim and parts crossing their support count as held. A `grown` or `socket` part that does not reach its declared partner fails, and `connect.to` may not name the part itself.
+- Every PNG (contact sheets, hero renders, trim sheets) and every GLB with an embedded sheet changes bytes once: the library now compresses with its own deflate encoder instead of `node:zlib`, which differs between Bun and Node. Pixels are unchanged; encoding takes 20–35 ms longer per image.
+- Review warnings have stable codes: `T3D_REVIEW_LOD_POPPING`, `_TINY_IN_FRAME`, `_TOO_DARK`, `_WASHED_OUT`, `_LOW_CONTRAST`, `_CRUSHED_BLACKS`, `_BLOWN_WHITES` replace `lod-popping` and the like in `review.json`. `t3d finish` reports re-run QA findings under their own `T3D_QA_*` codes.
+- `defineMaterial`: a custom strip's row depends on its id only. An id whose row is taken throws `T3D_MATERIAL_CONFLICT` and names a free id, instead of taking a row that depended on registration order.
+- Input that used to build broken output now throws `T3D_RECIPE_INVALID` with a fix:
+  - `ctx.part` / `ctx.group` / `ctx.use`: names and prefixes that are not snake_case, non-finite `at` or `yaw`; `tread` motion with a bad path or pitch; an unknown `motion.kind`.
+  - Primitives: a missing or malformed `color` (a misspelt key such as `colour` is named); `planar` with fewer than 3 points, NaN or no area; `beam` with `up` along its axis, coincident ends or `segments` of 1 or 2; `sweep` with non-finite points, scale or twist; erosion and noise options out of range (`octaves: 0`, NaN rates); hair card lengths that are NaN or negative.
+  - Lights: a spot `cone` outside (0, 89], a negative or non-finite `intensity`, `range` or `inner`.
+  - Materials: finish and optics colours that are not three channels, a non-finite `anisotropy.rotation`, weather `params` and effect `strength` outside 0..1 (`T3D_MATERIAL_INVALID` from `defineMaterial`).
+  - Kinds: `hull` (`bootTop`, `camber`, `deadriseDeg`), `mass` (non-finite `size` / `at`), `facade` (`floors`, `floorHeight`, `windowRatio`), roof chimneys (`size`, `height`, position), `hairRig` `segments` outside 1..12, a partial override of a head field the preset leaves null, `modelRig({ register: 'joints' })` without joints, a mirrored body-plan chain hung from one named copy of a mirrored chain, `radialPulseClip` with `inflate > 0` and `timing.inflate: 0`, a `cityPlan` height at or below `minHeight`.
+  - Measures: exactly one of `parts` or `between`, and `between` needs exactly two part names.
+  - Export: a pivot named like a generated node (`<pivot>_glass`, `<socket>_light`); non-finite values in a node transform or accessor; an instanced scene with neither base nor sets.
+- `parseMotion` refuses rotation keys that are not unit quaternions and root keys that are not 3 numbers; `resampleCycles` refuses a motion shorter than one cycle (`T3D_NEURAL_OUTPUT_INVALID`). `heatWeights` refuses a `cell` that is not finite and positive (`T3D_SKIN_INVALID`).
+- CLI: a bad `--profile` or `--size` value and a bare `t3d` are `T3D_CLI_USAGE` (exit 2); `--watch` outside `t3d build` is a usage error; `--seed ""` is refused; `-o` suggests `--out`.
+- `t3d neural run` refuses a paid job it cannot price (no estimate, NaN or Infinity) unless `--yes-spend` is given, and lists requests it did not reach within 5 rounds as `T3D_NEURAL_MISSING`.
+- Geometry that changes for existing recipes: `prism` / `planar` V on faces exactly one band tall or crossing a band edge; trees (ground line, trunk diameter per LOD, root flare); `cityBlock` windows, shared walls and street edges; the `iron` strip's rivet rows at 1024 px and above; `terrace` for a sharpness strictly between 0 and 1.
+- Texture-set samplers in GLB are `CLAMP_TO_EDGE` on both axes, matching the renderers.
+- Contact-sheet 3/4 views are framed from the projected extent, so cube-like assets are no longer cropped; the sixth cell names the LOD it shows.
+- `expectImageClose` throws on a missing golden when `CI` is set; `assertValueRange` throws `T3D_ASSERT_INPUT` on an unknown strip id; `assertTouches` checks every matching part.
+- A clip left with no channels on a LOD (a morph clip on a LOD without morph targets) is left out of that file.
+- Gallery downloads omit sound references (the site does not ship the WAV files); the viewer's parts list shows the nodes of the exported GLB.
+- `assets/<name>/<name>.ts` is the documented layout for a project's recipes, matching what `t3d init` writes.
+- Gate scripts: `boundaries` resolves every import (wrapped, dynamic, side-effect, nested folders, the root barrel); `determinism` also refuses `localeCompare`, `Intl`, crypto randomness, `Date()`, `process.hrtime` and aliased `Math.random`; `placeholders` catches `// ... existing code ...` and similar; `release` refuses an unknown mode.
+- Other gates that now catch what they claimed to: `deform` measures a joint whose skin is hard-weighted across the seam; `gait` fails a skating foot whatever the root bob, and a travelling clip whose foot is never planted; `gaps` exempts only `cutout` rims (a slit beside glass is reported); `assertQaPass` checks `budget.draws` as `t3d build` does.
+- Gates that no longer misfire: `floating-parts` accepts a part embedded in or passing through its support and reports true gaps; `hidden-parts` ignores parts inside see-through hosts; `model` and `T3D_MODEL_DOUBLED` skip ground rules for `medium: 'water'`. Edge contact in `floating-parts` and `connections` is exact (segment against triangle), and both gates run faster.
+- Manifest `triangles` and `drawCalls` are what the GLB holds (degenerate and duplicate triangles dropped, no draw for a pivot left without triangles); the LOD strip and review pack show the same numbers. The manifest lists `run` for an asset whose only motion is a track belt.
+- The library materials `fur` and `dragon_scales` sit on explicit rows (2 and 5), so every shipped material fits one process in any load order; assets using them change UV bytes once. 13 of the 14 custom sheet rows are in use.
+- Reproducibility across runtimes: bytes are reproducible under the pinned Bun. Under Node the same source gives the same PNG encoding and the same geometry within float rounding, because the two engines' `Math` functions differ in the last bits.
+
+### Fixed
+- `t3d build --watch` and `t3d hero --quality path` work from the installed package (the CLI entry and the path-tracer worker that ship are the ones spawned).
+- MCP: a directory `recipe` argument has every entry confined to the project before anything is imported. A recipe's direct `process.stdout.write`, `console.info` or `console.debug` no longer corrupts the JSON-RPC stream or the `--json` envelope.
+- Ctrl-C (or SIGTERM) on `t3d` also stops the Blender, Godot, basisu or gltfpack process it is running. Network adapters wait as long as `Retry-After` asks on HTTP 429. Every view of a multi-image `mesh` request is checked before sending.
+- Coded errors keep their code and fix when the recipe and the CLI load different copies of the library. A throw from library code shows the top three stack frames; a missing package says to run `bun install`.
+- `clashes` catches thin moving parts (rotors and sliding doors a few cm thick). `proportions` measures yawed parts correctly. `measures` and the blueprint flag every selector that matches no part. QA reports a NaN or Infinity `at` / `yaw`.
+- Clips in a single-file LOD GLB key each LOD from its own rest pose. Skin weights always sum to exactly 1 in the GLB. `EXT_mesh_gpu_instancing` is declared only when used.
+- `heightfield` normals on non-square cells and skirt walls below the skirt; `planar` loops starting at a reflex or collinear corner; `split` repeats that fit exactly (`{bay:1.1}*` over 3.3 m).
+- `place` / `applyAffine` transform morph deltas; `weightedNormals`, `simplify`, weathering and `warpTPS` keep joints, weights and morph targets; `ctx.use` of a skinned asset binds to the prefixed bones; `bakeAoAsset`, `weather` and the `joints` gate no longer crash on a mix of skinned and rigid parts.
+- `thermalErosion` on non-square tiles; weather `bleach` pushing vertex colours above 1; a fur zone far over `maxCards` reports the cap instead of overflowing the stack.
+- Paint and finish slots named like `Object.prototype` members are ordinary names; redefining a material with the same fields in another key order is not a conflict.
+- Model creatures skinned in TS keep their weight on the root bone; the `model_surface` crease covers skin, scales and feathers bodies; a one-pass `symmetric` model creature emits the mesh its skeleton was fitted into; `faceMorphs` puts `blink` / `talk` / `breathe` first and `headClips` keys every target.
+- `sound.engine` loops no longer click at the seam for some seeds; one-shot `hiss` clips shorter than 0.5 s fade in and out.
+- A declared `physics.mass` is honoured on flat or open parts with no volume. `whyteAxles` centres the layout. Foot lock keeps rotations on the short path near 180°. `tilesFor` and `resampleTerrarium` wrap across ±180° and clamp at the Web-Mercator edge.
+- `treeReal`'s "total height" measure names only parts that carry a mesh. A gambrel's `knee` is a share of the half-span for either ridge direction.
+- Photo (CC0) texture strips take `wet`, `age`, `wear` and paint tone, and are downsampled in linear light; flat normal maps stay flat. Stamped PNG cells have no dark fringes; custom `weave` pitches tile; `tex.scales` stacks correctly above overlap 2/3. `threeMaterialSource()` passes the glow colour as sRGB hex.
+- A spot light never exports `"intensity": null`. Transparent icons and portraits have no halo. The blueprint legend prints tolerances below 1 % as they are and grows to fit every joint row; bitmap text is clipped at the canvas edge.
+- The README's first recipe builds with QA PASS, and a test keeps it building. `t3d --help` shows the scoped `bunx -p @developerz.ai/ts23d t3d`. `t3d tune` leaves no placeholder `tune.json` after a failure. `artMetrics` caches per full set of render options.
+- Gallery: downloads, size and framing follow the asset and tier on screen; the home showcase moves on after a failed compile; a malformed hash no longer stops navigation; "Skip to content" stays on the asset page; order is the same in every browser locale; measuring tools free their overlays; the home page keeps its scroll position when the catalog loads; the credits table covers every model-tier recipe.
+- `floating-parts` fix text states each primitive's anchor correctly (`box` `at.z` is the bottom; `cylinder` is centred on `at`); parts that float together name their root first instead of each getting a misleading distance to the ground.
+- `proportions`: the fix names a units slip when `real` or the model is about 1000× or 100× the other. `ref.json` with a null view or no views is refused, and `bun run ref` no longer writes one.
+- A track belt runs at the same ground speed at every LOD, including LODs that keep the wheels as empty pivots. A skinned asset placed with `ctx.use` (at the origin, or at an offset and yaw) passes the `skin` gate and exports; its morph targets turn with the yaw.
+- Loading every recipe in one process (gallery, `t3d build recipes/*/*.ts`) no longer fails on a material row clash.
+- Recipes:
+  - `tiger_1`: Zimmerit rebuilt as a true-scale material (horizontal ridges in vertical trowel columns, as the photos show, with flaked patches) in place of rows of bars; tow shackles, tail light, escape hatch and turret digits seated; the LOD2 track keeps its outboard edge.
+  - `t34`: the turret slogan follows the real turret shell; the LOD2 track keeps its outboard edge. `rts_tank`: belt pitch is loop ÷ links, the LOD2 belt loops, and the `run` clip drives forward.
+  - Parts seated on what carries them: `boxcar` (door hangers and guide shoes, handles, uncoupling lever brackets), `roadster_v10` (grille, splitter air dam, hinge pins, interior and lamp fittings), `loco_440` (lettering, rivets, bands, stanchions, dome rings on the real boiler facets and taper), `dropship` (decal lift, seam strips, pitot masts), `signal_gantry` (arms on a modelled bearing), `station_halt`, `water_tower` (chain, ladder stays, `clear` checks that tested nothing), `cargo_container_scifi`, `weather_demo`, `pbr_showcase`, `rts_soldier` (pack).
+- `wolf_hybrid`: the hip web between the tail and the right thigh is a mesh defect that is still open (D253). It is now declared (`limitTolerances`, with the cause as the `why`) instead of passing unmeasured, and a ratchet test keeps it from getting worse. The fix needs a re-generated mesh (GPU).
+
 ## [0.12.0] - 2026-11-18
 
 Swimming and many-limbed creatures with motion from published biomechanics, one open Blender session for chained work, and brushes for existing meshes.

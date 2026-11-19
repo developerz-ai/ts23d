@@ -11,7 +11,8 @@ Signature features:
 2. Schachtellaufwerk: 8 stations per side at 515 mm, 800 mm rubber-tyred discs, interleaved.
 3. Horseshoe turret, wide curved mantlet, long 8.8 cm KwK 36 L/56 with double-baffle brake.
 4. Low cast cupola with 7 periscopes (from July 1943), one Bosch light centred on the front plate.
-5. Factory Zimmerit: vertical ridges laid in horizontal bands on the vertical plates.
+5. Factory Zimmerit: fine horizontal ridges combed in vertical trowel columns on the vertical and
+   sloped plates, turret and mantlet (see "Zimmerit" below; corrected Nov 2026).
 
 Mid-production changes relative to early (what is deliberately absent): no Feifel air filters
 (deleted ~Aug 1943), no turret smoke-candle dischargers (deleted from June 1943), no second headlight.
@@ -51,9 +52,9 @@ inferred from the side photos; the tables give only the magnitude.
 ## Photos (by view)
 | View | URL | Date / unit | Notes |
 |---|---|---|---|
-| left side, turret | https://commons.wikimedia.org/wiki/File:Bundesarchiv_Bild_101I-277-0846-08,_Russland,_Panzer_VI_(Tiger_I).jpg | Jan–Feb 1944, Russia, PK 697 (photographer Jacob); CC BY-SA 3.0 DE | Zimmerit vertical ridges in horizontal bands on hull side and turret; spare track links on the turret side; outlined three-digit turret number ("…32", first digit partly hidden; modelled as 332); whitewash; stowage bin |
+| left side, turret | https://commons.wikimedia.org/wiki/File:Bundesarchiv_Bild_101I-277-0846-08,_Russland,_Panzer_VI_(Tiger_I).jpg | Jan–Feb 1944, Russia, PK 697 (photographer Jacob); CC BY-SA 3.0 DE | Zimmerit on hull side and turret (horizontal ridge lines under the turret); spare track links on the turret side; outlined three-digit turret number ("…32", first digit partly hidden; modelled as 332); whitewash; stowage bin |
 | front | https://commons.wikimedia.org/wiki/File:Bundesarchiv_Bild_101I-299-1805-10,_Nordfrankreich,_Panzer_VI_(Tiger_I).jpg | 21 Mar 1944, N. France, LSSAH (PK 698, Scheck) | later unit, same batch features: Zimmerit on the front plate and mantlet, spare links on turret sides, single headlight position, driver's visor, bow MG ball, unit emblem on the front plate (not modelled; different unit) |
-| side, Wittmann | https://commons.wikimedia.org/wiki/File:Bundesarchiv_Bild_101I-299-1802-08,_Nordfrankreich,_Michael_Wittmann_auf_Panzer_VI_(Tiger_I).jpg | spring 1944, N. France | turret-side numbers and Zimmerit texture reference |
+| side, Wittmann | https://commons.wikimedia.org/wiki/File:Bundesarchiv_Bild_101I-299-1802-08,_Nordfrankreich,_Michael_Wittmann_auf_Panzer_VI_(Tiger_I).jpg | spring 1944, N. France | Zimmerit texture reference: driver's plate and mantlet close up, horizontal ridges in ~10–16 cm vertical columns, offset at each column seam |
 | wheels | https://tankmuseum.org/tiger-wheels/ | Tank Museum, Bovington | rubber-tyred 800 mm discs, 24 per side |
 | mid-production change list | https://tamiyausa.com/shop/135-military-miniature/german-tiger-i-mid-production | — | Jul 1943–Jan 1944: new cupola (7 periscopes), single headlight, Zimmerit from Sep 1943 |
 
@@ -72,7 +73,9 @@ Dunkelgelb / Rotbraun / Olivgrün patches seeded from `ctx.rng`.
 - First digit of the photographed turret number is hidden by a crewman; "332" is a guess. The
   unit is unidentified (PK caption only).
 - Zimmerit on the glacis and roof: photos show it on vertical faces only; horizontal plates are left
-  smooth.
+  smooth (Panzerworld: "all vertical and sloped surfaces"; the 81° glacis is treated as horizontal).
+- Zimmerit on the lower hull sides behind the road wheels: not modelled (hidden by the wheels; no
+  photo of this batch checked).
 
 ## Rear (rebuilt Nov 2026)
 Variant: mid production Oct–Nov 1943, so **no Feifel air filters** (phased out during mid
@@ -95,3 +98,60 @@ production) and **armoured exhaust covers** over the two tall vertical exhausts.
 | Exhaust pipes bolted to rear-plate studs | https://forum.armortek.co.uk/viewtopic.php?p=88464 | builder's notes |
 | Kursk photos: with/without Feifel and shields | https://www.rctankwarfare.co.uk/forums/viewtopic.php?p=98068 | cites Healy, *Zitadelle* |
 | Tiger 131 rear (early production, has Feifel: for layout of deck/plate only) | https://commons.wikimedia.org/wiki/Category:Tiger_131 | Bovington walkaround photos |
+
+## Zimmerit (rebuilt Nov 2026)
+Owner question: "why does the tiger have these many bars on the surface?" The first model placed a
+box per ridge (20 mm wide, 16 mm proud, 45 mm pitch, *vertical* ridges in 160 mm horizontal bands)
+with random missing boxes as "chips". That was wrong in scale, relief and orientation.
+
+**What the sources say**
+| Figure | Value | Source |
+|---|---|---|
+| total coating thickness | 6 mm: a 2 mm base coat, dried 4 h and torch-hardened, then 4 mm more, patterned | Tank Museum, "Zimmerit and why" — https://tankmuseum.org/article/zimmerit |
+| paste per vehicle | Tiger I 200 kg (Panther 160, Pz IV 100); order of 29 Dec 1943 | Tank Museum (above); Panzerworld — https://panzerworld.com/zimmerit |
+| factory start / stop | Tiger from Aug 1943; stopped 9 Sep 1944 | Panzerworld; Tank Museum. **Disagrees:** Wikipedia (https://en.wikipedia.org/wiki/Zimmerit) says vehicles produced from Dec 1943; Oct–Nov 1943 tanks photographed with factory Zimmerit (this README's photos) support the earlier date |
+| where applied | "all vertical and sloped surfaces" in reach of infantry, not hinges, automotive parts, tracks, lamps, tools; also turrets | Panzerworld; Tank Museum ("armoured surfaces in easy reach of troops on foot") |
+| pattern, Tiger Ausf. E | "vertical columns of horizontal ridges" (pattern 1; waffle pattern 6 also seen) | Panzerworld pattern catalogue |
+| hull vs turret | different styles: hull (Henschel) and turret (Wegmann) were coated in different plants; ridges shaped round plate edges and fittings | tiger1.info — https://tiger1.info/EN/9540-Zimmerit.html |
+| composition | barium sulphate 40 %, PVA 25 %, ochre 15 %, zinc sulphide 10 %, sawdust 10 % | Panzerworld |
+| primer under factory coat | red-oxide primer; flaked factory Zimmerit shows primer (forum consensus citing T. Chorý; some say grey paste remains) | https://forum.finescale.com/t/what-color-is-under-zimm/133177 · https://archive.armorama.com/forums/67420/index.htm |
+
+**Measured from the photos** (no source gives a ridge pitch or column width in millimetres, so these
+are photo estimates, scaled from the driver's visor and bow MG mount in Bild 101I-299-1805-10 and the
+front plate in 101I-299-1802-08):
+- Column (one trowel stroke) 10–16 cm wide; ridges inside run horizontally and wave a few mm.
+- Hull ridge pitch 2–3 cm. Modellers' counts (Missing-Lynx forum, Tiger I Zimmerit thread,
+  https://www.tapatalk.com/groups/missinglynx/tiger-i-zimmerit-question-t43544.html) give ≈ 40
+  ridges up the hull side (≈ 16–18 mm) and ≈ 1 mm at 1:35 on the turret (≈ 35 mm, 22–23 ridges up
+  the side). **Sources disagree** on the hull figure (photo estimate 20–30 mm vs 16–18 mm from the
+  counts); the turret figure agrees with the photos (coarser than the hull).
+- Orientation: the photos and Panzerworld agree on horizontal ridges in vertical columns. The README
+  and model previously said the opposite; corrected.
+
+**What the model uses**
+| Choice | Value | Why |
+|---|---|---|
+| coating slab | 6 mm proud (crest), panel rim sunk 3 mm into the plate | Tank Museum total; seated, not hovering |
+| ridge relief | 4 mm (height field, normal map + cavity AO) | the patterned layer |
+| hull ridge pitch | 22 mm | between the photo estimate and the modellers' count |
+| turret and mantlet ridge pitch | 34 mm | modellers' count, matches the photos |
+| column width | 13 cm (each column its own ridge phase) | photo estimate |
+| flakes | ≈ 7 % of the hull coat, ≈ 3.5 % of the turret, ≈ 6 % of the mantlet; 10–40 cm patches, more at plate edges and on the front/sides; cut back to a red-oxide primer floor (1.5 mm) with a crisp 4.5 mm broken edge of raw grey-ochre paste | photos show broken patches, not missing single ridges; primer per the forum consensus above |
+| coverage | pannier sides, driver's plate, nose, upper rear plate, turret walls and front plate beside the mantlet, mantlet face; not deck, roof, glacis, running gear | Panzerworld, photos |
+| markings | Balkenkreuz and turret number painted on intact coat (no flakes under them) | photos |
+
+**Texel density.** The `zimmerit` strip runs U up the plate (4 m span over 4096 px ≈ 1 mm/texel, so
+a 22 mm ridge is 22 texels: true pitch, no compromise) and V across one 13 cm column (64 px ≈ 2 mm,
+enough for the column seam). The coating is cut into columns so V never wraps inside a triangle.
+At hero distance (≈ 1 cm/px) the ridges sit near the pixel pitch and read as fine striping, which is
+also how the 1944 photographs look; close views resolve them fully.
+
+**LODs.** LOD0 carries the slab and the flake cuts (11.1k triangles: hull 7.6k, turret 2.5k, mantlet 1.0k;
+the ridge boxes were 14.4k on hull and turret alone).
+LOD1 and LOD2 add no geometry: the plate faces themselves take the strip (U at the same pitch, V on a
+column middle), so the ridged tone, camo and markings carry to the far LODs; only the small flakes
+and the column seams drop out.
+
+**Weight.** Weighed as a 6 mm skin of paste at ~1600 kg/m³ (density unverified): 179 kg modelled
+against the 200 kg allotment.
+

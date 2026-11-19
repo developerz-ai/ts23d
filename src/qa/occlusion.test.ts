@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { compile, defineAsset, type Mesh } from '../core/index.ts';
+import { compile, defineAsset, type Mesh, type Surface } from '../core/index.ts';
 import { box } from '../primitives/index.ts';
 import { hiddenParts, zFighting } from './occlusion.ts';
 
@@ -24,6 +24,26 @@ describe('occlusion gates', () => {
     expect(zFighting(flush).map((f) => f.part)).toContain('inner');
     const sealed = two(outer, box({ size: [0.3, 0.3, 0.3], at: [0, 0, 0.3], color: c }));
     expect(hiddenParts(sealed).map((f) => f.part)).toEqual(['inner']);
+  });
+
+  it('flag a part sealed in an opaque host, never one seen through glass, liquid or a cutout', () => {
+    const inner = box({ size: [0.3, 0.3, 0.3], at: [0, 0, 0.3], color: c });
+    const sealedIn = (surface?: Surface) =>
+      compile(
+        defineAsset({
+          name: 'jar',
+          kind: 'prop',
+          budget: { triangles: [999, 999, 999] },
+          build: (ctx) => {
+            ctx.part('outer', outer, surface ? { surface } : {});
+            ctx.part('inner', inner);
+          },
+        }),
+      );
+    expect(hiddenParts(sealedIn()).map((f) => f.part)).toEqual(['inner']);
+    expect(hiddenParts(sealedIn('opaque')).map((f) => f.part)).toEqual(['inner']);
+    for (const surface of ['glass', 'translucent', 'ice', 'liquid', 'jelly', 'cutout'] as const)
+      expect(hiddenParts(sealedIn(surface))).toEqual([]);
   });
 
   it('pass a part standing proud and a part seated on top', () => {

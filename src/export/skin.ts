@@ -21,12 +21,36 @@ import type { GltfDoc } from './hierarchy.ts';
 /** Inverse of the root's Z-up → Y-up turn: a child carrying it sits at world identity. */
 export const Y_UP_TO_Z_UP = [0.5, 0.5, 0.5, 0.5];
 
+/**
+ * One vertex's 4 weights in 255ths summing to exactly 255: largest-remainder rounding (ties to the
+ * lower slot), slots kept in place. An all-zero vertex stays zero (the skin gate reports it).
+ * passes/skin-weights `quantise` does the same but reorders slots, so this is its in-place twin.
+ */
+function quantise255(w: readonly number[]): number[] {
+  const sum = w.reduce((s, v) => s + Math.max(0, v), 0);
+  if (!(sum > 0)) return [0, 0, 0, 0];
+  const raw = w.map((v) => (Math.max(0, v) / sum) * 255);
+  const q = raw.map(Math.floor);
+  let left = 255 - q.reduce((s, v) => s + v, 0);
+  const order = raw.map((v, i) => [v - Math.floor(v), i] as const).sort((x, y) => y[0] - x[0]);
+  for (const [, i] of order) {
+    if (left <= 0) break;
+    q[i] = (q[i] ?? 0) + 1;
+    left--;
+  }
+  return q;
+}
+
 /** JOINTS_0 + WEIGHTS_0 of a skinned mesh (none for a rigid one). */
 export function skinAttributes(bin: BinWriter, m: Mesh): Json {
   if (!m.joints || !m.weights) return {};
   checkMeshAttributes(m, 'skinned mesh');
   const weights = new Uint16Array(m.weights.length);
-  for (let i = 0; i < weights.length; i++) weights[i] = Math.round((m.weights[i] ?? 0) * 255) * 257;
+  for (let i = 0; i < weights.length; i += 4)
+    weights.set(
+      quantise255([0, 1, 2, 3].map((k) => m.weights?.[i + k] ?? 0)).map((q) => q * 257),
+      i,
+    );
   return {
     JOINTS_0: bin.accessor(Uint16Array.from(m.joints), 'VEC4', ARRAY_BUFFER),
     WEIGHTS_0: bin.accessor(weights, 'VEC4', ARRAY_BUFFER, false, true),
@@ -43,33 +67,24 @@ function detach(doc: GltfDoc, parent: number, id: number): void {
   if (n) n['children'] = ((n['children'] as number[] | undefined) ?? []).filter((c) => c !== id);
 }
 
-/** Node index of each named node in [from, to), first wins (parts precede joints). */
-export function nodeNames(doc: GltfDoc, from: number, to: number): Map<string, number> {
-  const out = new Map<string, number>();
-  for (let i = from; i < to; i++) {
-    const name = doc.nodes[i]?.['name'];
-    if (typeof name === 'string' && !out.has(name)) out.set(name, i);
-  }
-  return out;
-}
-
 const parentOf = (doc: GltfDoc, id: number): number =>
   doc.nodes.findIndex((n) => ((n['children'] as number[] | undefined) ?? []).includes(id));
 
 /**
- * Joint nodes + one skin for the LOD tree under `root` (parts already written). Returns bone →
- * joint node, empty when the asset has no skeleton. Pushes the skin onto `skins`.
+ * Joint nodes + one skin for the LOD tree under `root` (parts already written, `parts` = their
+ * nodes from writeHierarchy). Returns bone → joint node, empty when the asset has no skeleton.
+ * Pushes the skin onto `skins`.
  */
 export function writeSkin(
   doc: GltfDoc,
   skins: Json[],
   asset: CompiledAsset,
   root: number,
+  parts: ReadonlyMap<string, number>,
 ): Map<string, number> {
   const sk = asset.skeleton;
   const joints = new Map<string, number>();
   if (!sk) return joints;
-  const parts = nodeNames(doc, root + 1, doc.nodes.length);
   const locals = jointLocals(sk);
   sk.bones.forEach((b, i) => {
     doc.nodes.push({ name: b.name, translation: locals[i] });

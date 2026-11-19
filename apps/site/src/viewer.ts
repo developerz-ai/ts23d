@@ -21,6 +21,7 @@ import { Particles } from './particles.ts';
 import type { Post } from './post.ts';
 import { FrameBudget, qualityTier, tierPinned } from './quality.ts';
 import type { Scenario } from './scenarios/types.ts';
+import { Shown } from './shown.ts';
 import { disposeTree, Stage } from './stage.ts';
 import { anisotropyOf, studioRenderer } from './studio.ts';
 import { bindTextureSets } from './texture-sets.ts';
@@ -50,6 +51,7 @@ export class Viewer {
   private readonly progress: Progress;
   private readonly motion: Motion;
   private asset: Subject | null = null;
+  private readonly shown = new Shown(); // the asset + tier on screen, not the one asked for
   private pending: BuildRequest | null = null;
   private lod: Lod = 0;
   private mode: Mode = 'studio';
@@ -140,19 +142,15 @@ export class Viewer {
   }
 
   /** Compile and show `asset`; true once it is on screen, false if superseded, cancelled or failed. */
-  async show(
-    asset: Subject,
-    lod: Lod = this.lod,
-    reframe = asset.name !== this.asset?.name,
-  ): Promise<boolean> {
-    const fresh = asset.name !== this.asset?.name;
-    if (fresh) this.mode = 'studio';
+  async show(asset: Subject, lod: Lod = this.lod, reframe = false): Promise<boolean> {
+    const other = asset.name !== this.asset?.name;
+    if (other) this.mode = 'studio';
     this.asset = asset;
     this.lod = lod;
     const ticket = ++this.token;
     const scenic = this.mode === 'scene';
     const request = recipe(asset.name, lod, asset.file, asset.neural);
-    if (this.pending && fresh) cancelBuild(this.pending);
+    if (this.pending && other) cancelBuild(this.pending);
     this.pending = request;
     const verb = asset.neural ? 'Fetching model outputs, compiling' : 'Compiling';
     const label = `${verb} ${asset.name} at LOD ${lod}…`;
@@ -174,6 +172,8 @@ export class Viewer {
       return false;
     }
     this.pending = null;
+    const fresh = this.shown.arrive(asset);
+    const frame = reframe || fresh;
     const { loaded, clip, hooks, def, base } = staged;
     this.progress.stop();
     this.teardown();
@@ -190,7 +190,7 @@ export class Viewer {
     if (this.model) setWireframe(this.model, this.wireframe);
     const sets = bindTextureSets(loaded.scene, anisotropyOf(this.renderer));
     void this.applyTextures();
-    const center = this.stage.show(this.display, reframe || scenic);
+    const center = this.stage.show(this.display, frame || scenic);
     if (floor) this.stage.bakeContact(this.renderer, [this.particles.object]);
     this.tools.attach(scenic ? null : loaded.scene, asset.name);
     this.post?.fit(this.stage.contentBox());
@@ -211,7 +211,7 @@ export class Viewer {
       showScenario(this.ui, def.title, def.describe(hooks));
     } else {
       this.motion.bind(loaded.scene, this.mixer, clips);
-      if (reframe) {
+      if (frame) {
         this.controls.target.copy(center);
         this.controls.autoRotate = !reducedMotion();
       }

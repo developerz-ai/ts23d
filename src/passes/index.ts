@@ -20,6 +20,9 @@ export { type BakeOptions, bakeNormals, type NormalBake } from './bake-normals.t
 export { type BakeSource, bakeSourceOf, withBakeSource } from './bake-source.ts';
 export { uvTangents } from './bake-tangents.ts';
 export { dilateTexels, type TexelFrame, walkTexels } from './bake-texels.ts';
+export type { BeltMesh } from './belt-bodies.ts';
+export { BeltLoop } from './belt-loop.ts';
+export { type BeltRun, beltRun } from './belt-run.ts';
 export { type FairOptions, fair } from './fair.ts';
 export { type GrimeOptions, type GrimeZone, grime } from './grime.ts';
 export {

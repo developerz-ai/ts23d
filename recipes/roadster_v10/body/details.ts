@@ -41,18 +41,39 @@ import { cockpitU, cockpitY, uAtY, uAtZ } from './regions.ts';
 import { S_MAX, S_MIN as S_MIN_TAIL, sAtX, U, U_MAX } from './shape.ts';
 
 // ---------------------------------------------------------------- splitter
-/** Carbon splitter: follows the nose plan 4 cm proud of the under-line, 12 mm thick. */
+/** Top of the splitter blade. */
+const Z_SPLITTER = 0.128;
+
+/**
+ * Carbon splitter: follows the nose plan 4 cm proud of the under-line, 12 mm thick, and hangs
+ * from the nose by its air dam: an 8 mm wall up from the blade into the skin above the rocker
+ * line (the blade alone sat 2–4 cm under the body with daylight between).
+ */
 export function splitter(S: Surface, lod: Lod): Mesh {
   const pts: [number, number][] = [];
   const n = [40, 16, 6][lod] ?? 6;
   const s0 = sAtX(1.66, 7);
+  const damTop: Vec3[] = [];
+  const damFoot: Vec3[] = [];
+  const damN: Vec3[] = [];
   for (let i = 0; i <= n; i++) {
     const s = s0 + ((S_MAX - s0) * i) / n;
     const p = S.row(s)(U.rocker);
     const q = S.row(s)(U_MAX);
     const d = unit([p[0] - q[0], p[1] - q[1], 0]);
     pts.push([p[0] + d[0] * 0.035, p[1] + d[1] * 0.035]);
+    const t = inward(S, s, U.rocker - 0.2, 0.004);
+    damTop.push(t);
+    damFoot.push([t[0], t[1], Z_SPLITTER - 0.004]);
+    damN.push(d);
   }
+  const dam = bothSides(
+    skin([damFoot, damTop], [damN, damN], {
+      color: C.carbon,
+      strip: 'plastic',
+      thickness: lod === 2 ? 0 : 0.008,
+    }),
+  );
   const outer = pts.filter(([, y]) => y >= 0);
   const profile: [number, number][] = [[1.62, 0], [1.62, (outer[0]?.[1] ?? 0.8) - 0.02], ...outer];
   const full = [
@@ -63,7 +84,7 @@ export function splitter(S: Surface, lod: Lod): Mesh {
       .map(([x, y]): [number, number] => [x, -y]),
   ];
   const m = prism({ profile: full, depth: 0.012, plane: 'xy', color: C.carbon, strip: 'plastic' });
-  return shift(m, [0, 0, 0.122]);
+  return merge([shift(m, [0, 0, Z_SPLITTER - 0.006]), dam]);
 }
 
 // ---------------------------------------------------------------- windscreen
@@ -233,7 +254,7 @@ export function gills(S: Surface, lod: Lod): { black: Mesh; paint: Mesh } {
   return { black: merge(black), paint: merge([]) };
 }
 
-/** Mouth: a recessed duct and a two-layer bar grille with a centre blade. */
+/** Mouth: a recessed duct and a crossed-bar grille with a centre blade. */
 export function mouth(S: Surface, lod: Lod): Mesh {
   const h = MOUTH;
   const parts: Mesh[] = [];
@@ -261,17 +282,21 @@ export function mouth(S: Surface, lod: Lod): Mesh {
       thickness: 0.004,
     }),
   );
-  if (lod === 0) parts.push(grille(S, h, 0.045, 22, 7, 0.004, C.black));
-  else parts.push(grille(S, h, 0.045, 8, 3, 0.006, C.black));
-  // Horizontal blade across the middle, satin.
+  // Grille 3.6 cm down the duct, on the sheet between its two walls: the cross bars end in the
+  // walls, the long bars cross them, and the satin centre blade lies on the bars' front.
+  const SET_BACK = 0.036;
+  const gt = e.top.map((q) => add(q, [-SET_BACK, 0, 0]));
+  const gb = e.bottom.map((q) => add(q, [-SET_BACK, 0, 0]));
+  if (lod === 0) parts.push(grille(gt, gb, 22, 7, 0.004, C.black));
+  else parts.push(grille(gt, gb, 8, 3, 0.006, C.black));
   const bl: Vec3[] = [];
-  for (let i = 0; i <= 12; i++) {
-    const s = h.sc - h.hs + ((S_MAX - (h.sc - h.hs)) * i) / 12;
-    const g = holeG(h, s);
-    if (g < 0.05) continue;
-    bl.push(inward(S, s, holeUc(h, s) + h.hu * g * 0.1, 0.02));
+  for (let i = 0; i < gt.length; i++) {
+    const a = gt[i] ?? [0, 0, 0];
+    const b = gb[i] ?? a;
+    if (Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]) < 0.04) continue;
+    bl.push(add(lerp3(a, b, 0.55), [0.005, 0, 0]));
   }
-  if (bl.length > 1) parts.push(tube(bl, 0.012, C.carbon, 'plastic', 6, 2, true));
+  if (bl.length > 1) parts.push(tube(bl, 0.012, C.carbon, 'plastic', 6, 1, true));
   return merge(parts);
 }
 
@@ -349,41 +374,34 @@ export function mirror(S: Surface, lod: Lod): { paint: Mesh; trim: Mesh } {
   return { paint, trim: merge(trim) };
 }
 
-/** Flush door pull and key lock on the left door's top rear. */
+/** Flush door pull and key lock on the left door's top rear, each seated on the skin where it is
+ *  (the door bows in plan: a lock placed on the pull's line stood 14 mm off the paint). */
 export function doorHandle(S: Surface, lod: Lod): Mesh {
   if (lod === 2) return merge([]);
   const s = -0.62;
-  const u = uAtZ(S, s, 0.79);
-  const p = S.row(s)(u);
-  const n = normalAt(S, s, u);
-  const parts: Mesh[] = [
-    beamBetween(
-      add(p, mul(n, 0.001)),
-      add(add(p, mul(n, 0.001)), [0.14, 0, 0]),
-      0.004,
-      0.026,
-      C.black,
-    ),
-  ];
+  /** A point `lift` proud of the skin at station `sx`, `dz` above the handle line. */
+  const on = (sx: number, lift: number, dz = 0): Vec3 => {
+    const u = uAtZ(S, sx, 0.79 + dz);
+    return add(S.row(sx)(u), mul(normalAt(S, sx, u), lift));
+  };
+  const parts: Mesh[] = [beamBetween(on(s, 0.001), on(s + 0.14, 0.001), 0.004, 0.026, C.black)];
   if (lod === 0) {
     parts.push(
       beamBetween(
-        add(p, add(mul(n, 0.004), [0.01, 0, 0.004])),
-        add(p, add(mul(n, 0.004), [0.13, 0, 0.004])),
+        on(s + 0.01, 0.004, 0.004),
+        on(s + 0.13, 0.004, 0.004),
         0.003,
         0.012,
         C.natural,
         'chrome',
       ),
     );
-    parts.push(
-      shift(rod([0, 0, 0], mul(n, 0.004), 0.016, C.natural, 'chrome', 12), add(p, [0.18, 0, 0])),
-    );
+    parts.push(rod(on(s + 0.18, -0.001), on(s + 0.18, 0.004), 0.016, C.natural, 'chrome', 12));
   }
   return merge(parts);
 }
 
-/** Fuel door: a round flap on the left rear deck, hinged on its inboard edge. */
+/** Fuel door: a round flap on the left rear deck, on a pin hinge at its inboard edge. */
 export function fuelDoor(S: Surface): { flap: Mesh; ring: Mesh; hinge: Vec3; axis: Vec3 } {
   const s = -1.62;
   const uc = 2.55;
@@ -418,11 +436,23 @@ export function fuelDoor(S: Surface): { flap: Mesh; ring: Mesh; hinge: Vec3; axi
   const orient = (m: Mesh, lift: number): Mesh =>
     along(along(m, [0, 0, 0], [1, 0, 0]), add(c, mul(n, lift)), e1, n);
   const hinge = add(add(c, mul(e2, r)), mul(n, 0.002));
-  void e2;
+  // The hinge itself: a pin on the seal ring along the swing axis, and two straps from the flap
+  // that end on it, so the flap hangs on the pin at every angle.
+  const pin = rod(
+    add(hinge, mul(e1, -0.015)),
+    add(hinge, mul(e1, 0.015)),
+    0.005,
+    C.black,
+    'plastic',
+  );
+  const root = add(add(c, mul(e2, r - 0.014)), mul(n, 0.002));
+  const straps = [-0.008, 0.008].map((k) =>
+    rod(add(root, mul(e1, k)), add(hinge, mul(e1, k)), 0.004, C.black, 'plastic', 6),
+  );
   // Axis sense chosen so a positive swing lifts the flap off its seat.
   return {
-    flap: orient(flapM, 0.0004),
-    ring: orient(ring, 0.0008),
+    flap: merge([orient(flapM, 0.0004), ...straps]),
+    ring: merge([orient(ring, 0.0008), pin]),
     hinge,
     axis: unit(mul(e1, -1)),
   };
@@ -518,11 +548,13 @@ export function rearPlate(S: Surface, lod: Lod): Mesh {
   ];
   if (lod === 0)
     parts.push(
+      // Embossed characters: rooted half a millimetre in the plate's face, 1.5 mm proud of it.
       text('TS 23D', {
-        origin: [c[0] - 0.009, 0, c[2] - 0.03],
+        origin: [c[0] - 0.0075, 0, c[2] - 0.03],
         along: [0, -1, 0],
         up: [0, 0, 1],
         height: 0.06,
+        depth: 0.002,
         color: [0.08, 0.08, 0.1],
         align: 'centre',
         font: 'block',

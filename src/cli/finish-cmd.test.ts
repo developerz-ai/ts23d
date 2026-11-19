@@ -10,9 +10,24 @@ import { cart } from '../finish/fixtures.ts';
 import { memoryStore } from '../finish/index.ts';
 import { DEFAULT_SHEET, paintTrimSheet } from '../material/index.ts';
 import { parseArgs } from './args.ts';
-import { finishOne, heroFinishOne } from './finish-cmd.ts';
+import { finishOne, finishWarnings, heroFinishOne } from './finish-cmd.ts';
 
 describe('t3d finish', () => {
+  it('reports re-run QA findings under their own T3D_QA_* code', () => {
+    const qa = [
+      {
+        gate: 'floating-parts',
+        code: 'T3D_QA_FLOATING_PARTS',
+        part: 'lid',
+        message: 'floats',
+        fix: 'sink it',
+      },
+    ];
+    expect(finishWarnings({ findings: [], qa })).toEqual([
+      { code: 'T3D_QA_FLOATING_PARTS', message: 'lid floats', fix: 'sink it' },
+    ]);
+  });
+
   it('rejects an unknown model, views out of range, and http without endpoint', async () => {
     expect(() => parseArgs(['finish', 'a.ts', '--model', 'dalle'])).toThrow('T3D_FINISH_INVALID');
     expect(() => parseArgs(['finish', 'a.ts', '--views', '99'])).toThrow('T3D_FINISH_INVALID');

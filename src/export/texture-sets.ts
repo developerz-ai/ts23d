@@ -23,7 +23,8 @@ import { textureSetWarnings } from './texture-uvs.ts';
 
 const LINEAR = 9729;
 const LINEAR_MIPMAP_LINEAR = 9987;
-const REPEAT = 10497;
+/** A set is a unique 0..1 unwrap, never a tiling strip: the edges must not bleed across. */
+const CLAMP_TO_EDGE = 33071;
 
 /** glTF `images` / `textures` / `samplers` plus the bytes to append to the BIN chunk. */
 export interface TextureJson {
@@ -155,7 +156,12 @@ export function textureSetPlan(
         textures: [...((sheet?.json['textures'] as Json[] | undefined) ?? [])],
         samplers: [
           ...((sheet?.json['samplers'] as Json[] | undefined) ?? []),
-          { magFilter: LINEAR, minFilter: LINEAR_MIPMAP_LINEAR, wrapS: REPEAT, wrapT: REPEAT },
+          {
+            magFilter: LINEAR,
+            minFilter: LINEAR_MIPMAP_LINEAR,
+            wrapS: CLAMP_TO_EDGE,
+            wrapT: CLAMP_TO_EDGE,
+          },
         ],
       };
       const chunks: Uint8Array[] = [sheet?.tail ?? new Uint8Array()];

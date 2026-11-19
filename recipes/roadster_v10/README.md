@@ -76,6 +76,10 @@ Liveries (paint slots `body` + `stripe`, clearcoat + metallic flake kept by ever
   `real.width` is the over-mirror width.
 - The QA `clashes` gate sweeps a hinged panel to millimetres (D23). `clearOf` keeps only true contacts and the nose lip, which dips into the fascia because the hood hinge sits 13 cm behind the hood front.
   Open design question: move the hood hinge to the lip so it no longer dips into the nose.
+- The door's swing axis stands 8–18 mm outside the skin (so the front edge clears the fender as it
+  opens), which makes the door hinges external: each has a pin on that axis that both leaves wrap,
+  and the door hangs on it at every angle (`connect: hinge` to `hinges`).
+  Open design question: a concealed hinge needs the axis inside the skin and a tucked front edge.
 - Front track 1.55 m (not 1.58): with ±8° of steer the 295 tyre's corners need ~4 cm inside the
   fender skin, and the clashes gate proved 1.58 m too tight.
 - `roadster_v10_open` declares its own `real` envelope (3.8 m wide with both doors out, 1.93 m

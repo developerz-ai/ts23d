@@ -23,7 +23,9 @@ Original design — scale only from [`docs/playbooks/vehicles/afv.md`](../../doc
 ## Parts the engine needs
 `turret` (spin Z, 0.05 rps), `gun` (sway ±4° elevation; trunnion just ahead of the turret nose so
 it clears without `clearOf`), `wheel_l_0…4` / `_r_`, `idler_*`, `sprocket_*` (spin Y; pivots kept
-at LOD2), emitters `muzzle` (event), `exhaust_l/_r`, `dust_l/_r` (moving), seat `commander`.
+at LOD2; +rps = forward), `track_l/_r` (tread: 96 / 44 / 24 links one pitch apart, pitch = loop
+length 11.014 m ÷ link count = 0.1147 / 0.2503 / 0.4589 m, so the `run` clip moves the belt at every
+LOD; LOD2 adds a static `track_core_l/_r` block where the wheels were), emitters `muzzle` (event), `exhaust_l/_r`, `dust_l/_r` (moving), seat `commander`.
 
 ## Open questions
-Track UV scrolling is an engine concern; the belt is static geometry.
+None.

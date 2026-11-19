@@ -1,6 +1,7 @@
 // Vegetation kind: `tree(ctx, …)` grows a Weber–Penn skeleton from species params and emits a
 // game tree — `trunk`, `roots` (buttress flare), and a swaying group `crown` holding `branches`
-// (merged) and `leaves` (merged cards) — then fits it onto its real height and crown spread.
+// (merged) and `leaves` (merged cards) — then fits it onto its real height (ground z = 0 to the
+// top), crown spread and DBH at every LOD (vegetation-fit.ts).
 // LOD policy: LOD0 every level and every leaf card; LOD1 one level fewer (trees with ≥ 3 levels),
 // halved path resolution, twigs replaced by cluster cards; LOD2 an impostor under 300 triangles.
 
@@ -14,22 +15,14 @@ import {
   Ts23dError,
   translate,
   triangleCount,
-  type Vec3,
 } from '../core/index.ts';
+import { clampToGround, fitTree, liftCards, widen } from './vegetation-fit.ts';
 import { frondLeaflets, fruit } from './vegetation-fronds.ts';
 import { blob, frondCards } from './vegetation-impostor.ts';
 import { clusterCards, crownShade, leafCards } from './vegetation-leaves.ts';
-import {
-  barkTint,
-  fitFactors,
-  radialSegments,
-  rootsMesh,
-  scaleMesh,
-  stemsMesh,
-  trunkMesh,
-} from './vegetation-mesh.ts';
+import { barkTint, radialSegments, rootsMesh, stemsMesh, trunkMesh } from './vegetation-mesh.ts';
 import { needleTufts } from './vegetation-needles.ts';
-import type { TreeParams } from './vegetation-params.ts';
+import { OUTLINES, type TreeParams } from './vegetation-params.ts';
 import { SPECIES } from './vegetation-presets.ts';
 import { grow } from './vegetation-skeleton.ts';
 
@@ -95,6 +88,10 @@ export function tree(ctx: BuildContext, o: TreeOptions): TreeInfo {
   const lod = ctx.lod;
   const top = trunkStem.pts[trunkStem.pts.length - 1]?.[2] ?? o.height;
   const shade = crownShade(stems, 1);
+  const ground = trunkStem.pts[0]?.[2] ?? 0;
+  // Double-sided cards: 2 × outline vertices each, the first one the card's root on the bark.
+  const perCard = 2 * OUTLINES[p.leaves.shape === 'frond' ? 'oval' : p.leaves.shape].length;
+  const cards = (m: Mesh): Mesh => liftCards(m, perCard, ground);
   let trunk: (r: number) => Mesh;
   let roots: ((r: number) => Mesh) | null = null;
   let branches: Mesh | null = null;
@@ -102,8 +99,9 @@ export function tree(ctx: BuildContext, o: TreeOptions): TreeInfo {
   if (lod === 2) {
     const imp =
       p.impostor === 'cards' ? frondCards(stems, p, 1) : blob(stems, p, rng.fork('impostor'));
-    trunk = () => barkTint(imp.trunk, p, top, rng.fork('bark'));
-    leaves = imp.leaves;
+    // The impostor trunk is built once at the skeleton's radius: widen it like the real one.
+    trunk = (r) => barkTint(widen(imp.trunk, trunkStem, r), p, top, rng.fork('bark'));
+    leaves = p.impostor === 'cards' ? imp.leaves : clampToGround(imp.leaves, ground);
   } else {
     const hi = lod === 0 || deepest < 2 ? deepest : deepest - 1;
     trunk = (r) => trunkMesh(trunkStem, p, lod, r, rng.fork('bark'));
@@ -115,8 +113,9 @@ export function tree(ctx: BuildContext, o: TreeOptions): TreeInfo {
       wood.push(fruit(trunkStem, p.baseSize - 0.01, p.fruit, rng.fork('fruit')));
     branches = merge(wood);
     const lr = rng.fork('leaves');
+    const shape = p.leaves.shape;
     leaves =
-      p.leaves.shape === 'frond'
+      shape === 'frond'
         ? frondLeaflets(
             stems,
             deepest,
@@ -126,22 +125,26 @@ export function tree(ctx: BuildContext, o: TreeOptions): TreeInfo {
             lr,
           )
         : hi !== deepest
-          ? clusterCards(stems, deepest, p.leaves, shade, lr)
-          : p.leaves.shape === 'needles'
+          ? cards(clusterCards(stems, deepest, p.leaves, shade, lr))
+          : shape === 'needles'
             ? needleTufts(stems, deepest, p.leaves, shade, lr)
-            : leafCards(stems, deepest, radialSegments(deepest, lod), p.leaves, shade, lr);
+            : cards(leafCards(stems, deepest, radialSegments(deepest, lod), p.leaves, shade, lr));
   }
-  // Fit onto the real envelope; the trunk is rebuilt thinner by 1/sy so DBH (across Y) is exact.
-  const s = fitFactors(
-    [trunk(1), branches, leaves, roots?.(1) ?? null].filter((m): m is Mesh => m !== null),
-    [spread, spread, o.height],
+  const fitted = fitTree({
+    trunk,
+    roots,
+    crown: branches ? [branches, leaves] : [leaves],
+    spread,
+    height: o.height,
+    dbh,
+  });
+  const fit = fitted.mesh;
+  const pivot = fitted.point(
+    trunkStem.pts[Math.round(p.baseSize * (trunkStem.pts.length - 1))] ?? [0, 0, 0],
   );
-  const fit = (m: Mesh): Mesh => scaleMesh(m, s);
-  const base = trunkStem.pts[Math.round(p.baseSize * (trunkStem.pts.length - 1))] ?? [0, 0, 0];
-  const pivot: Vec3 = [base[0] * s[0], base[1] * s[1], base[2] * s[2]];
-  const back: Vec3 = [-pivot[0], -pivot[1], -pivot[2]];
-  ctx.part(parts.trunk, fit(trunk(1 / s[1])));
-  if (roots) ctx.part(parts.roots, fit(roots(1 / s[1])));
+  const back = [-pivot[0], -pivot[1], -pivot[2]] as const;
+  ctx.part(parts.trunk, fitted.trunk);
+  if (fitted.roots) ctx.part(parts.roots, fitted.roots);
   ctx.group(parts.crown, {
     at: pivot,
     motion: { kind: 'sway', axis: [1, 0, 0], degrees: 2, hz: 0.4 },
@@ -159,7 +162,11 @@ export function tree(ctx: BuildContext, o: TreeOptions): TreeInfo {
   return { parts, height: o.height, spread, dbh };
 }
 
-/** `real` for a tree recipe: overall envelope plus DBH (trunk across Y) and total height. */
+/**
+ * `real` for a tree recipe: overall envelope plus DBH (trunk across Y) and total height (ground to
+ * top: the trunk stands on z = 0, the root flare is buried). Only parts every tree has as a mesh
+ * at LOD0, where `measures` runs: the `crown` group has none and not every species has `roots`.
+ */
 export function treeReal(o: {
   height: number;
   spread: number;
@@ -185,7 +192,7 @@ export function treeReal(o: {
         label: 'total height',
         value: o.height,
         axis: 'z',
-        parts: [`${pre}trunk`, `${pre}crown`, `${pre}branches`, `${pre}leaves`, `${pre}roots`],
+        parts: [`${pre}trunk`, `${pre}branches`, `${pre}leaves`],
         ...src,
       },
     ],

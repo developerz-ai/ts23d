@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import type { Part, Socket } from '../core/index.ts';
+import { type Part, type Socket, Ts23dError } from '../core/index.ts';
 import { DEFAULT_LAMP_LUMENS, DEFAULT_SUN_LUX, lightOf } from './lights.ts';
 
 const socket = (data: Socket['data']): Part =>
@@ -8,6 +8,57 @@ const intensity = (data: Socket['data']): number => {
   const l = lightOf(socket(data));
   return typeof l?.light['intensity'] === 'number' ? l.light['intensity'] : Number.NaN;
 };
+
+const refusal = (data: Socket['data']): string => {
+  try {
+    lightOf(socket(data));
+  } catch (e) {
+    if (e instanceof Ts23dError) return `${e.code}|${e.message}|${e.fix}`;
+    throw e;
+  }
+  return 'accepted';
+};
+const cones = (data: Socket['data']): { inner: number; outer: number } => {
+  const spot = lightOf(socket(data))?.light['spot'] as Record<string, number> | undefined;
+  return { inner: spot?.['innerConeAngle'] ?? Number.NaN, outer: spot?.['outerConeAngle'] ?? -1 };
+};
+
+describe('light numbers a file cannot carry are refused', () => {
+  test('a spot cone of 0 (infinite default candela, inner = outer) or below is refused', () => {
+    expect(refusal({ light: 'spot', cone: 0 })).toMatch(
+      /^T3D_RECIPE_INVALID\|.*'s': cone 0 .*cone: 25/,
+    );
+    expect(refusal({ light: 'spot', cone: -20 })).toMatch(/T3D_RECIPE_INVALID.*cone -20/);
+    expect(refusal({ light: 'spot', cone: 120 })).toMatch(/cone 120 .*at most 89/);
+    expect(refusal({ light: 'spot', cone: Number.NaN })).toMatch(/cone NaN/);
+  });
+  test('a negative or non-finite intensity, range or inner cone is refused', () => {
+    expect(refusal({ light: 'point', intensity: -5 })).toMatch(/T3D_RECIPE_INVALID.*intensity -5/);
+    expect(refusal({ light: 'spot', intensity: Infinity })).toMatch(/intensity Infinity/);
+    expect(refusal({ light: 'point', range: -1 })).toMatch(/range -1/);
+    expect(refusal({ light: 'spot', range: Number.NaN })).toMatch(/range NaN/);
+    expect(refusal({ light: 'spot', inner: -3 })).toMatch(/inner -3/);
+  });
+  test('every accepted spot has a finite intensity and 0 ≤ inner < outer < π/2', () => {
+    for (const data of [
+      { cone: 0.001 },
+      { cone: 89 },
+      { cone: 22, inner: 12 },
+      { cone: 20, inner: 20 },
+      { cone: 20, inner: 60 },
+      {},
+    ]) {
+      const { inner, outer } = cones({ light: 'spot', ...data });
+      expect(inner).toBeGreaterThanOrEqual(0);
+      expect(inner).toBeLessThan(outer);
+      expect(outer).toBeLessThan(Math.PI / 2);
+      expect(Number.isFinite(intensity({ light: 'spot', ...data }))).toBe(true);
+    }
+  });
+  test('a cone on a point light is not read, so it is not refused', () => {
+    expect(refusal({ light: 'point', cone: 0 })).toBe('accepted');
+  });
+});
 
 describe('light defaults are physical units (KHR_lights_punctual: cd / lux)', () => {
   test('a default directional light is daylight, not 3 lux (near-black in physical engines)', () => {

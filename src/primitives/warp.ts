@@ -25,7 +25,10 @@ function turn(J: readonly number[], n: Vec3): Vec3 {
   return [x / l, y / l, z / l];
 }
 
-/** Apply a solved warp to a mesh (positions moved, normals turned; everything else kept). */
+/**
+ * Apply a solved warp to a mesh: positions moved, normals turned, morph targets re-expressed in
+ * the warped space (δ' = w(p + δ) − w(p)); UVs, colours, topology and the skin kept.
+ */
 export function applyWarp(mesh: Mesh, w: Tps): Mesh {
   const P = mesh.positions;
   const N = mesh.normals;
@@ -42,12 +45,28 @@ export function applyWarp(mesh: Mesh, w: Tps): Mesh {
     normals[v + 1] = n[1];
     normals[v + 2] = n[2];
   }
+  const morphs = mesh.morphs?.map((t) => {
+    const out = new Float32Array(t.positions.length);
+    for (let v = 0; v < P.length; v += 3) {
+      const q = w.map([
+        (P[v] ?? 0) + (t.positions[v] ?? 0),
+        (P[v + 1] ?? 0) + (t.positions[v + 1] ?? 0),
+        (P[v + 2] ?? 0) + (t.positions[v + 2] ?? 0),
+      ]);
+      out[v] = q[0] - (positions[v] ?? 0);
+      out[v + 1] = q[1] - (positions[v + 1] ?? 0);
+      out[v + 2] = q[2] - (positions[v + 2] ?? 0);
+    }
+    return { ...t, positions: out };
+  });
   return {
+    ...mesh,
     positions,
     normals,
     uvs: mesh.uvs.slice(),
     colors: mesh.colors.slice(),
     indices: mesh.indices.slice(),
+    ...(morphs ? { morphs } : {}),
   };
 }
 

@@ -19,9 +19,9 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    72150,
+    68882,
     17440,
-    3410
+    3506
   ],
   "drawCalls": [
     25,
@@ -241,7 +241,8 @@
     "https://tiger1.info/EN/RoadWheelSpacing.html (800 mm wheels, 515 mm station pitch, 725 mm track)",
     "https://tankmuseum.org/tiger-wheels/ (800 mm steel wheels with solid rubber tyres, 24 per side)",
     "https://tamiyausa.com/shop/135-military-miniature/german-tiger-i-mid-production (mid production Jul 1943–Jan 1944: new cupola, single headlight, Zimmerit from Sep 1943)",
-    "Jentz & Doyle, Germany’s Tiger Tanks: D.W. to Tiger I (Schiffer 2000), stowage and tool layout"
+    "Jentz & Doyle, Germany’s Tiger Tanks: D.W. to Tiger I (Schiffer 2000), stowage and tool layout",
+    "https://tankmuseum.org/article/zimmerit (Zimmerit 6 mm: 2 mm + 4 mm patterned) · https://panzerworld.com/zimmerit (Tiger: vertical columns of horizontal ridges, 200 kg)"
   ],
   "qa": {
     "pass": true,

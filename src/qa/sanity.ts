@@ -1,6 +1,7 @@
-// Gates: per-part mesh sanity a reviewer would spot at once — non-finite numbers (NaN from a
-// zero-length normalize), vertex colours outside [0,1], shading normals that point against the
-// face winding (black or inside-out lighting), and wasted zero-area triangles.
+// Gates: per-part mesh sanity a reviewer would spot at once — attribute arrays of the wrong length
+// (runQa runs that one first: later gates would read past them), non-finite numbers (NaN from a
+// zero-length normalize, a NaN `at`/`yaw`), vertex colours outside [0,1], shading normals that
+// point against the face winding (black or inside-out lighting), and wasted zero-area triangles.
 
 import type { CompiledAsset, Mesh, Part } from '../core/index.ts';
 import type { Finding, Gate } from './types.ts';
@@ -13,8 +14,45 @@ const finite = (a: Float32Array): boolean => {
   return true;
 };
 
-export const nonFinite: Gate = (asset) =>
+/** Every attribute array matches the vertex count; indices come in whole triangles. */
+export const meshArrays: Gate = (asset) =>
   parts(asset).flatMap(([p, m]): Finding[] => {
+    const verts = Math.floor(m.positions.length / 3);
+    const wrong = [
+      m.positions.length % 3 === 0 ? '' : `positions ${m.positions.length} (not a multiple of 3)`,
+      m.normals.length === verts * 3 ? '' : `normals ${m.normals.length} (want ${verts * 3})`,
+      m.uvs.length === verts * 2 ? '' : `uvs ${m.uvs.length} (want ${verts * 2})`,
+      m.colors.length === verts * 3 ? '' : `colors ${m.colors.length} (want ${verts * 3})`,
+      m.indices.length % 3 === 0 ? '' : `indices ${m.indices.length} (not a multiple of 3)`,
+    ].filter((w) => w !== '');
+    return wrong.length
+      ? [
+          {
+            gate: 'mesh-arrays',
+            code: 'T3D_QA_MESH_ARRAYS',
+            part: p.name,
+            message: `'${p.name}' (${verts} vertices) has attribute arrays of the wrong length: ${wrong.join(', ')}`,
+            fix: 'build meshes with MeshBuilder or a primitive; a hand-made Mesh needs 3 normals, 2 uvs and 3 colours per vertex and 3 indices per triangle',
+          },
+        ]
+      : [];
+  });
+
+/** `at` and `yaw` of every part, pivots and sockets included: a NaN there exports as `null`. */
+const transformFindings = (asset: CompiledAsset): Finding[] =>
+  asset.parts
+    .filter((p) => !(p.at.every((v) => Number.isFinite(v)) && Number.isFinite(p.yaw)))
+    .map((p) => ({
+      gate: 'non-finite',
+      code: 'T3D_QA_NON_FINITE',
+      part: p.name,
+      message: `'${p.name}' has a non-finite transform: at [${p.at.join(', ')}], yaw ${p.yaw}`,
+      fix: `look for a divide by zero or an undefined lookup in the maths that computes '${p.name}' at/yaw`,
+    }));
+
+export const nonFinite: Gate = (asset) => [
+  ...transformFindings(asset),
+  ...parts(asset).flatMap(([p, m]): Finding[] => {
     const bad = (
       [
         ['positions', m.positions],
@@ -39,7 +77,8 @@ export const nonFinite: Gate = (asset) =>
           },
         ]
       : [];
-  });
+  }),
+];
 
 export const vertexColors: Gate = (asset) =>
   parts(asset).flatMap(([p, m]): Finding[] => {

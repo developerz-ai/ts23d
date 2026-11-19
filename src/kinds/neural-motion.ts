@@ -28,6 +28,29 @@ const bad = (cause: string, fix: string): never => {
   throw new Ts23dError('T3D_NEURAL_OUTPUT_INVALID', { cause: `motion: ${cause}`, fix });
 };
 
+/** Keys this close to unit length are normalised; further off is not a rotation (Euler, zero). */
+const UNIT_SLACK = 1e-3;
+
+const isKey = (v: unknown, n: number): boolean =>
+  Array.isArray(v) && v.length === n && v.every(Number.isFinite);
+
+/** One rotation key, checked (4 finite numbers, unit within `UNIT_SLACK`) and normalised. */
+function unitKey(bone: string, frame: number, q: unknown): Quat {
+  if (!isKey(q, 4))
+    bad(
+      `bone '${bone}' frame ${frame} is ${JSON.stringify(q)}, not 4 numbers`,
+      'bake rotations as quaternions [x, y, z, w], not Euler angles',
+    );
+  const [x, y, z, w] = q as Quat;
+  const l = Math.hypot(x, y, z, w);
+  if (!(Math.abs(l - 1) <= UNIT_SLACK))
+    bad(
+      `bone '${bone}' frame ${frame} has length ${l.toFixed(4)}, not a unit quaternion`,
+      'bake unit quaternions [x, y, z, w] (the rest pose is [0, 0, 0, 1])',
+    );
+  return [x / l, y / l, z / l, w / l];
+}
+
 /** Parse `t3d-motion/1`: { fps, root: [[x,y,z]…], bones: { name: [[x,y,z,w]…] } }. */
 export function parseMotion(bytes: Uint8Array, bones: readonly Bone[]): MotionTracks {
   let j: { fps?: unknown; root?: unknown; bones?: unknown };
@@ -46,6 +69,13 @@ export function parseMotion(bytes: Uint8Array, bones: readonly Bone[]): MotionTr
     : bad('no root track', 'give root: [[x,y,z]…]');
   const n = root.length;
   if (n < 2) bad(`${n} frame(s)`, 'return at least 2 frames');
+  root.forEach((v, f) => {
+    if (!isKey(v, 3))
+      bad(
+        `root frame ${f} is ${JSON.stringify(v)}, not 3 numbers`,
+        'give root: [[x,y,z]…] in metres',
+      );
+  });
   const names = new Set(bones.map((b) => b.name));
   const rotations = new Map<string, Quat[]>();
   for (const [name, keys] of Object.entries((j.bones ?? {}) as Record<string, Quat[]>)) {
@@ -53,14 +83,11 @@ export function parseMotion(bytes: Uint8Array, bones: readonly Bone[]): MotionTr
       bad(`bone '${name}' is not in the skeleton`, 'retarget the motion to the asset’s bone names');
     if (!Array.isArray(keys) || keys.length !== n)
       bad(`bone '${name}' has ${String(keys?.length)} keys for ${n} frames`, 'one key per frame');
-    rotations.set(name, keys);
+    rotations.set(
+      name,
+      keys.map((q, f) => unitKey(name, f, q)),
+    );
   }
-  if (
-    ![...root, ...[...rotations.values()].flat()].every(
-      (v) => Array.isArray(v) && v.every(Number.isFinite),
-    )
-  )
-    bad('a key is not finite', 'bake finite keys');
   return { fps, root, rotations };
 }
 
@@ -82,11 +109,17 @@ function nlerp(a: Quat, b: Quat, t: number): Quat {
 
 export const MOTION_FPS = 30;
 
-/** Resample to a whole number of `period`-second cycles (≥ 1) at 30 fps. */
+/** Resample to a whole number of `period`-second cycles at 30 fps; under one cycle is refused. */
 export function resampleCycles(m: MotionTracks, period: number): MotionTracks {
   if (!(period > 0)) bad(`cycle period ${period}`, 'give the cycle length in seconds');
   const dur = (m.root.length - 1) / m.fps;
-  const cycles = Math.max(1, Math.floor(dur / period + 1e-6));
+  const cycles = Math.floor(dur / period + 1e-6);
+  // Padding a short motion out to the period would freeze its last frame for the rest of the loop.
+  if (cycles < 1)
+    bad(
+      `${dur.toFixed(3)} s of motion is shorter than one ${period} s cycle`,
+      'generate at least one whole cycle, or pass a period no longer than the motion',
+    );
   const frames = Math.round(cycles * period * MOTION_FPS);
   const at = <T>(keys: readonly T[], f: number, mix: (a: T, b: T, t: number) => T): T => {
     const src = Math.min(keys.length - 1, (f / MOTION_FPS) * m.fps);

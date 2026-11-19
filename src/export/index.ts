@@ -4,6 +4,13 @@ export { AUDIO_EMITTER } from './audio.ts';
 export { type SoundFile, type SoundUse, soundFiles, soundUses } from './audio-files.ts';
 export { animationsOf, type ClipTree, clipSummary, Z_UP_TO_Y_UP } from './clips.ts';
 export {
+  type DrawFinding,
+  drawCallsOf,
+  drawFindings,
+  type GlbContents,
+  glbContents,
+} from './draw-budget.ts';
+export {
   FINISH_MATERIAL,
   type FinishLayer,
   HERO_MATERIAL,

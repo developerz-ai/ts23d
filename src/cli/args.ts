@@ -1,12 +1,13 @@
 // argv → Args for `t3d`. No dependency, no magic: flags are few and documented in help.ts.
-// Strict: an unknown command or flag, a `--sheet` / `--sheet-size` / `--lods` value outside its
-// set, a missing `--out` value or no files is T3D_CLI_USAGE (exit 2). Flags owned by a module
-// keep that module's code (exit 1): render flags (--size/--az/--el/--fov) T3D_RENDER_OPTIONS,
-// `--variant` / `--profile` T3D_RECIPE_INVALID, tune and finish flags their own codes.
+// Strict: no command, an unknown command or flag, a `--sheet` / `--sheet-size` / `--lods` /
+// `--profile` / `--size` value outside its set, a missing `--out` value, `--watch` on any command
+// but build or no files is T3D_CLI_USAGE (exit 2). Other flags owned by a module keep that
+// module's code (exit 1): camera flags (--az/--el/--fov) T3D_RENDER_OPTIONS, `--variant`
+// T3D_RECIPE_INVALID, tune and finish flags their own codes (an empty `--seed ""` too, never 0).
 // `--help` / `-h` / `help [cmd]` → cmd 'help' (topic = the command); `--version` → 'version'.
 
-import { Ts23dError } from '../core/index.ts';
-import { type ExportProfile, profileSettings } from '../export/index.ts';
+import { isTs23dError, Ts23dError } from '../core/index.ts';
+import { type ExportProfile, PROFILES, profileSettings } from '../export/index.ts';
 import { checkBeautyOptions, parseSize } from '../render/index.ts';
 import {
   FINISH_FLAGS,
@@ -82,13 +83,12 @@ export interface Args {
   };
 }
 
-/** `help`, `--help`, `-h`, no argv → help; `--version` → version; else null. */
+/** `help`, `--help`, `-h` → help; `--version` → version; else null. */
 function meta(argv: readonly string[]): { cmd: string; topic?: string } | null {
   if (argv.includes('--version')) return { cmd: 'version' };
   const first = argv[0];
   const topic = first === 'help' ? argv[1] : first;
-  const wantsHelp =
-    first === undefined || first === 'help' || argv.some((a) => a === '--help' || a === '-h');
+  const wantsHelp = first === 'help' || argv.some((a) => a === '--help' || a === '-h');
   if (!wantsHelp) return null;
   return topic !== undefined && COMMANDS.includes(topic) ? { cmd: 'help', topic } : { cmd: 'help' };
 }
@@ -113,9 +113,24 @@ const metaArgs = (m: { cmd: string; topic?: string }, json: boolean): Args => ({
   render: {},
 });
 
+/** `--size WxH`: parseSize's check, re-thrown as the usage error a bad flag value is. */
+function sizeFlag(v = ''): { width: number; height: number } {
+  try {
+    return parseSize(v);
+  } catch (e) {
+    if (!isTs23dError(e)) throw e;
+    throw usage(e.message.slice(e.code.length + 2), e.fix);
+  }
+}
+
 export function parseArgs(argv: readonly string[]): Args {
   const m = meta(argv);
   if (m) return metaArgs(m, argv.includes('--json'));
+  if (argv.length === 0)
+    throw usage(
+      'no command given',
+      `run t3d <command> <recipe.ts…>, e.g. t3d build recipes/t34/t34.ts; commands: ${COMMANDS.join(', ')} (t3d --help prints the flags)`,
+    );
   const cmd = argv[0] ?? '';
   if (!COMMANDS.includes(cmd))
     throw usage(
@@ -137,7 +152,7 @@ export function parseArgs(argv: readonly string[]): Args {
   const tuning: { evals?: number; seed?: number; method?: 'cmaes' | 'coordinate' } = {};
   const whole = (flag: string, v: string | undefined, min: number): number => {
     const n = Number(v);
-    if (v === undefined || !Number.isInteger(n) || n < min)
+    if (v === undefined || v.trim() === '' || !Number.isInteger(n) || n < min)
       throw new Ts23dError('T3D_TUNE_INVALID', {
         cause: `${flag} needs a whole number ≥ ${min}, got ${v === undefined ? 'nothing' : `"${v}"`}`,
         fix: `pass e.g. ${flag} ${flag === '--evals' ? 120 : 1}`,
@@ -176,6 +191,11 @@ export function parseArgs(argv: readonly string[]): Args {
         `unknown flag ${a}`,
         `did you mean ${closest(a, [...SWITCHES, ...VALUED])}? (t3d ${cmd} --help lists the flags)`,
       );
+    if (a === '--watch')
+      throw usage(
+        `--watch works with t3d build only, not t3d ${cmd}`,
+        'drop --watch, or rebuild on save with t3d build <recipe.ts…> --watch',
+      );
     if (a === '--json') json = true;
     else if (a === '--no-animations') animations = false;
     else if (a === '--animations') animations = true;
@@ -185,7 +205,7 @@ export function parseArgs(argv: readonly string[]): Args {
     else if (a === '--yes-spend') yesSpend = true;
     else if (a === '--allow-bad-input') allowBadInput = true;
     else if (a === '--no-sounds') sounds = false;
-    else if (a === '--profile') profile = profileSettings(argv[++i] ?? '').name;
+    else if (a === '--profile') profile = oneOf(a, argv[++i], PROFILES);
     else if (a === '--out') {
       const v = argv[++i];
       if (v === undefined || v.startsWith('-'))
@@ -231,7 +251,7 @@ export function parseArgs(argv: readonly string[]): Args {
         oneOf(a, argv[++i], ['512', '1024', '2048', '4096'] as const),
       ) as Args['sheetSize'];
       sheetSizeSet = true;
-    } else if (a === '--size') Object.assign(render, parseSize(argv[++i] ?? ''));
+    } else if (a === '--size') Object.assign(render, sizeFlag(argv[++i]));
     else if (a === '--az') render.azDeg = num(a, argv[++i]);
     else if (a === '--el') render.elDeg = num(a, argv[++i]);
     else if (a === '--fov') render.fovDeg = num(a, argv[++i]);

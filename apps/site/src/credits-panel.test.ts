@@ -1,8 +1,9 @@
 import { describe, expect, test } from 'bun:test';
-import { readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { SHOWCASE } from '../../../showcase.config.ts';
+import { SHOWCASE, type ShowcasePick } from '../../../showcase.config.ts';
 import {
+  adapterKind,
   adapterLabel,
   creditLine,
   creditOf,
@@ -22,6 +23,7 @@ const RECIPES = join(import.meta.dir, '../../../recipes');
 /** Every committed record.json of a recipe folder, through the site's reader. */
 const recordsOf = (folder: string) => {
   const dir = join(RECIPES, folder, 'neural');
+  if (!existsSync(dir)) return [];
   return readdirSync(dir).flatMap((key) => {
     if (!/^[0-9a-f]{64}$/.test(key)) return [];
     const c = creditOf(JSON.parse(readFileSync(join(dir, key, 'record.json'), 'utf8')));
@@ -187,11 +189,65 @@ describe('dataCredits', () => {
 });
 
 describe('showcase.config.ts', () => {
-  test('names the model each committed record actually used, per task', () => {
-    for (const [asset, tasks] of Object.entries(SHOWCASE)) {
-      const records = recordsOf(asset);
-      for (const [task, pick] of Object.entries(tasks))
-        expect(records.find((r) => r.task === task)?.model).toBe(pick.model);
+  /** Every recipe folder holding committed records, whether or not the table knows it. */
+  const folders = readdirSync(RECIPES)
+    .filter((folder) => recordsOf(folder).length > 0)
+    .sort();
+  const rowsOf = (folder: string): Map<string, ShowcasePick> =>
+    new Map(Object.entries(SHOWCASE[folder] ?? {}));
+
+  test('has an entry for every recipe folder with committed records, and for no other', () => {
+    expect(folders.length).toBeGreaterThan(0);
+    expect(Object.keys(SHOWCASE).sort()).toEqual(folders);
+  });
+
+  test('has a row for every task the records hold, and no row without a record', () => {
+    for (const folder of folders) {
+      const tasks = [...new Set(recordsOf(folder).map((r) => r.task))].sort();
+      expect({ folder, tasks: [...rowsOf(folder).keys()].sort() }).toEqual({ folder, tasks });
     }
+  });
+
+  test('each row names the model, adapter kind and licence of every record of its task', () => {
+    for (const folder of folders)
+      for (const r of recordsOf(folder)) {
+        const pick = rowsOf(folder).get(r.task);
+        const at = { folder, task: r.task };
+        // The adapter is compared by kind: a record holds the machine-local URL the run used
+        // (`http:http://127.0.0.1:8190`), which the table must not publish as a name.
+        expect({
+          ...at,
+          model: pick?.model,
+          adapter: adapterKind(pick?.adapter ?? ''),
+          licence: pick?.licence,
+        }).toEqual({
+          ...at,
+          model: r.model,
+          adapter: adapterKind(r.adapter),
+          licence: shortLicence(r.licence),
+        });
+        // A tool row names the tool and the version that ran (`Blender 5.3.0`).
+        if (r.tool)
+          expect({ ...at, adapter: pick?.adapter }).toMatchObject({
+            ...at,
+            adapter: expect.stringContaining(modelName(r)),
+          });
+      }
+  });
+
+  test('no row shows a URL or a host', () => {
+    for (const [folder, tasks] of Object.entries(SHOWCASE))
+      for (const [task, pick] of Object.entries(tasks))
+        expect(`${folder}.${task}: ${pick.adapter}`).not.toMatch(
+          /https?:|localhost|\d+\.\d+\.\d+\.\d+/,
+        );
+  });
+
+  test('adapterKind reads the same kind from a record and from a table row', () => {
+    expect(adapterKind('http:http://127.0.0.1:8190')).toBe('http');
+    expect(adapterKind('http (ts23d-neural-server)')).toBe('http');
+    expect(adapterKind('blender:blender')).toBe('blender');
+    expect(adapterKind('script (pixal3d_best.py, --low_vram)')).not.toBe(adapterKind('http:x'));
+    expect(adapterKind('')).toBe('');
   });
 });

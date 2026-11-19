@@ -111,7 +111,9 @@ describe('textured parts: materials', () => {
     });
     expect(m?.['normalTexture']).toEqual({ index: 1 });
     expect(m?.['occlusionTexture']).toEqual({ index: 2 });
-    expect(g.samplers).toEqual([{ magFilter: 9729, minFilter: 9987, wrapS: 10497, wrapT: 10497 }]);
+    // CLAMP_TO_EDGE on both axes, as the renderers sample a set: a unique unwrap never tiles, and
+    // REPEAT would filter the opposite edge's texels into every island that touches the border.
+    expect(g.samplers).toEqual([{ magFilter: 9729, minFilter: 9987, wrapS: 33071, wrapT: 33071 }]);
   });
 
   it('embeds each map once, as the PNG bytes it was given', () => {

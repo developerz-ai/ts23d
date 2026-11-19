@@ -4,7 +4,8 @@
 // Spins sweep a solid of revolution (clash-sweep.ts); sways sweep only the sector they travel,
 // resolved to millimetres (clash-sector.ts); slides use the moving mesh's bounds extended along the stroke (one
 // side only for `oneWay`); orbits, cranks and pistons carry the body's box along their real path
-// (clash-path.ts).
+// (clash-path.ts). Static parts are sampled every STEP, plus sections through any thin band the
+// sweep fills (clash-section.ts), so a 2 cm blade between two samples is still seen.
 
 import {
   type CompiledAsset,
@@ -16,8 +17,9 @@ import {
   worldTransforms,
 } from '../core/index.ts';
 import { pathVolume } from './clash-path.ts';
+import { sectionSamples } from './clash-section.ts';
 import { sectorVolume } from './clash-sector.ts';
-import { spinVolume, type Volume } from './clash-sweep.ts';
+import { shave, spinVolume, type Volume } from './clash-sweep.ts';
 import { surfaceSamples } from './geometry.ts';
 import { meshBounds } from './geometry-cache.ts';
 import { CLASH_EPS, type Finding, type Gate } from './types.ts';
@@ -41,11 +43,17 @@ function slideVolume(mesh: Mesh, offset: Vec3, oneWay = false): Volume {
     oneWay ? Math.min(0, offset[k] ?? 0) : -Math.abs(offset[k] ?? 0);
   const pos = (k: number): number =>
     oneWay ? Math.max(0, offset[k] ?? 0) : Math.abs(offset[k] ?? 0);
-  const lo = [0, 1, 2].map((k) => (b.min[k] ?? 0) + neg(k) + CLASH_EPS);
-  const hi = [0, 1, 2].map((k) => (b.max[k] ?? 0) + pos(k) - CLASH_EPS);
+  // Shave each face by CLASH_EPS, but never the body's own thickness away (a 2 cm door leaf).
+  const eps = [0, 1, 2].map((k) => shave((b.max[k] ?? 0) - (b.min[k] ?? 0)));
+  const lo = [0, 1, 2].map((k) => (b.min[k] ?? 0) + neg(k) + (eps[k] ?? 0));
+  const hi = [0, 1, 2].map((k) => (b.max[k] ?? 0) + pos(k) - (eps[k] ?? 0));
+  const spans = [0, 1, 2].map((k) => (hi[k] ?? 0) - (lo[k] ?? 0));
+  const thin = spans.indexOf(Math.min(...spans));
+  const dir: Vec3 = [thin === 0 ? 1 : 0, thin === 1 ? 1 : 0, thin === 2 ? 1 : 0];
   return {
     min: [lo[0] ?? 0, lo[1] ?? 0, lo[2] ?? 0],
     max: [hi[0] ?? 0, hi[1] ?? 0, hi[2] ?? 0],
+    band: { dir, lo: lo[thin] ?? 0, hi: hi[thin] ?? 0 },
     inside: (p) => [0, 1, 2].every((k) => (p[k] ?? 0) > (lo[k] ?? 0) && (p[k] ?? 0) < (hi[k] ?? 0)),
   };
 }
@@ -95,15 +103,16 @@ export const clashes: Gate = (asset: CompiledAsset): Finding[] => {
         })
       )
         continue;
-      const hits = surfaceSamples(mesh, STEP, 4, INTERIOR).filter(
-        (p) => inBox(p, vol) && vol.inside(p),
-      ).length;
+      const swept = (p: Vec3): boolean => inBox(p, vol) && vol.inside(p);
+      const hits =
+        surfaceSamples(mesh, STEP, 4, INTERIOR).filter(swept).length +
+        (vol.band ? sectionSamples(mesh, vol.band).filter(swept).length : 0);
       if (hits > 0) {
         findings.push({
           gate: 'clashes',
           code: 'T3D_QA_CLASHES',
           part: name,
-          message: `'${name}' cuts into the swept ${root.motion.kind} of '${root.name}' (${hits} sample${hits === 1 ? '' : 's'} deeper than ${CLASH_EPS * 100} cm)`,
+          message: `'${name}' cuts into the swept ${root.motion.kind} of '${root.name}' (${hits} sample${hits === 1 ? '' : 's'} deeper than ${CLASH_EPS * 100} cm, or a quarter of a thinner body)`,
           fix: `move/trim '${name}' or '${root.name}' for running clearance; if they are meant to interlock (an axle through its bearing), list it: clearOf: ['${name}'] on '${root.name}'`,
         });
       }

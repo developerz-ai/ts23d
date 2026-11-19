@@ -20,7 +20,12 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    18880,
+    18766,
+    6458,
+    2002
+  ],
+  "trianglesCompiled": [
+    18902,
     6458,
     2002
   ],
@@ -182,7 +187,7 @@
     {
       "label": "main gear track",
       "spec": 4.1,
-      "measured": 4.099999904632568,
+      "measured": 4.099999964237213,
       "source": "design spec"
     },
     {

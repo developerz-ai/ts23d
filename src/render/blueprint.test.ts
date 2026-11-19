@@ -54,6 +54,16 @@ describe('blueprint', () => {
     expect(count(img.px, BAD)).toBeGreaterThan(50);
   });
 
+  it('marks a measure red when one of its selectors matches no part', () => {
+    const a = compile(post(1.9));
+    const real = a.real;
+    if (!real) throw new Error('post declares real');
+    const typo: Measure = { label: 'pole', value: 1.9, axis: 'z', parts: ['pole', 'pole2'] };
+    const [r] = measureResults({ ...a, real: { ...real, measures: [typo] } });
+    expect(r?.missing).toEqual(['pole2']);
+    expect(r?.ok).toBe(false);
+  });
+
   it('draws a measure within tolerance in green, and no red', () => {
     const img = blueprintImage(compile(post(1.9)), { panel: 400 });
     expect(count(img.px, OK)).toBeGreaterThan(50);
@@ -64,6 +74,27 @@ describe('blueprint', () => {
     // The 0.4 m base meets a 0.1 m pole: T3D_JOINT_MISMATCH, so the marker and legend go red.
     const img = blueprintImage(compile(post(1.9, true)), { panel: 400 });
     expect(count(img.px, BAD)).toBeGreaterThan(20);
+  });
+
+  it('keeps the title on its own line at a narrow panel (no glyph wraps to the left edge)', () => {
+    // 'post  BLUEPRINT  L … M  LOD0  FIGURE 1.8 M' is wider than an 800 px sheet at scale 4.
+    const img = blueprintImage(compile(post(1.9)), { panel: 400 });
+    let wrapped = 0;
+    let titled = 0;
+    for (let y = 0; y < 52; y++)
+      for (let x = 0; x < img.width; x++) {
+        if ((img.px[(y * img.width + x) * 4] ?? 255) > 100) continue;
+        if (x < 12) wrapped++;
+        else titled++;
+      }
+    expect(wrapped).toBe(0);
+    expect(titled).toBeGreaterThan(200);
+    // The whole title is there, shrunk: its last glyph ends short of the right edge.
+    let right = 0;
+    for (let y = 14; y < 34; y++)
+      for (let x = 0; x < img.width; x++)
+        if ((img.px[(y * img.width + x) * 4] ?? 255) < 100) right = Math.max(right, x);
+    expect(right).toBeLessThan(img.width - 12);
   });
 
   it('is a deterministic PNG', () => {

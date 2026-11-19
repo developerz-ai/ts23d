@@ -45,6 +45,7 @@ export interface ShaderParams {
   readonly windAttribute: boolean;
   readonly windHeight: number;
   readonly windHz: number;
+  /** sRGB 0..1; each emitter declares it as sRGB (Godot `source_color`, three hex `color()`). */
   readonly glow: readonly [number, number, number];
   readonly glowRatio: number;
   readonly glowIntensity: number;

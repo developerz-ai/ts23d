@@ -2,13 +2,16 @@
 // share a weak edge when their surfaces come within CONTACT_EPS; a strong edge when the contact
 // patch is a real face (≥ STRONG_SHARE of the smaller piece's cross-section, thickness²).
 //   T3D_CONNECT_ISLAND — a piece reaches nothing that holds it (merged meshes hide these)
-//   T3D_CONNECT_POINT  — a piece hangs on by a point or an edge (unless declared rest/hinge)
-// A cluster that only kisses its holders still counts as held when its contacts add up to a
-// face, or when it bridges: two or more contacts spread across it (a slat across a vent, a rung
+//   T3D_CONNECT_POINT  — a piece hangs on by a point or an edge (unless declared rest/hinge), or
+//                        hovers inside CONTACT_EPS without touching anything
+// A cluster that only kisses its holders still counts as held when its contacts (those that
+// really touch: gap ≤ the piece's eps) add up to a face, when it sits on a rim all round
+// (connections-rim.ts), or when it bridges: two or more contacts spread across it (a slat across a vent, a rung
 // between stiles) — one corner is a hinge, two ends are a span.
 
 import type { ConnectAs, Vec3 } from '../core/index.ts';
-import type { ConnectIssue } from './connections-declare.ts';
+import { edgeContact } from './connections-crossing.ts';
+import { type ConnectIssue, cm } from './connections-declare.ts';
 import {
   clusterIssue,
   NAMED_ISLANDS_DEFAULT,
@@ -16,6 +19,7 @@ import {
   STRONG_SHARE,
   span,
 } from './connections-island.ts';
+import { rimContact } from './connections-rim.ts';
 import type { Shell } from './connections-shells.ts';
 import { boxGap, epsOf, holds, patch, stepOf, thickness } from './contact.ts';
 import { CONTACT_EPS } from './types.ts';
@@ -75,12 +79,24 @@ function pairs(shells: readonly Shell[]): [number, number][] {
   return out;
 }
 
-/** A weak contact between two pieces: where, and its tight patch area. */
+/** A weak contact between two pieces: where, its tight patch area (0 when the pieces come
+ *  within CONTACT_EPS but do not touch) and how far apart they are. */
 interface Kiss {
   readonly i: number;
   readonly j: number;
   readonly area: number;
   readonly at: Vec3;
+  readonly gap: number;
+  readonly touches: boolean;
+}
+
+/** A cluster none of whose contacts touch: it hovers, which is not "hanging on by a point". */
+function hovering(issue: ConnectIssue, k: Kiss, onto: string): ConnectIssue {
+  return {
+    ...issue,
+    message: `${issue.message.split(' hang on by ')[0]} hover ${cm(k.gap)} off '${onto}': inside the ${cm(CONTACT_EPS)} floating-parts tolerance, but no surface touches`,
+    fix: `move it ${cm(k.gap)} onto '${onto}' and seat it on a face (sink it a few mm in); a gap you can see under a part is never a joint`,
+  };
 }
 
 /** Join clusters whose weak contacts to held pieces add up to a face or span the cluster. */
@@ -96,6 +112,8 @@ function bridge(
     for (const k of kisses) {
       const [mine, other] = strong.same(k.j, ROOT) ? [k.i, k.j] : [k.j, k.i];
       if (!strong.same(other, ROOT) || strong.same(mine, ROOT)) continue;
+      // A kiss that does not touch is a hover: it adds no area and is no end of a span.
+      if (!k.touches) continue;
       const r = strong.find(mine);
       byCluster.set(r, [...(byCluster.get(r) ?? []), k]);
     }
@@ -157,18 +175,37 @@ export function connectivity(
     const need = STRONG_SHARE * thickness(small) ** 2;
     const eps = epsOf(small);
     const one = patch(small, big, eps, stepOf(small), need);
-    if (!one.touches) continue;
-    weak.join(i, j);
     const loose = LOOSE.has(kindOf(a.part)) || LOOSE.has(kindOf(b.part));
+    if (!one.touches) {
+      // The patch samples saw nothing: a wall across a joist or a rail through a post still
+      // meet, and a wall 1 cm over its joists still hovers.
+      const there = edgeContact(big, small, eps, CONTACT_EPS);
+      const back = there && there.gap <= eps ? null : edgeContact(small, big, eps, CONTACT_EPS);
+      const near = back && (!there || back.gap < there.gap) ? back : there;
+      if (!near) continue;
+      weak.join(i, j);
+      if (loose) strong.join(i, j);
+      else kisses.push({ i, j, area: 0, at: near.at, gap: near.gap, touches: near.gap <= eps });
+      continue;
+    }
+    weak.join(i, j);
     const two = loose || holds(one, eps, need) ? null : patch(big, small, eps, stepOf(small), need);
-    if (!two || holds(two, eps, need)) strong.join(i, j);
-    else
+    // Seated all round on a rim (a roof on a tank, an open-backed box on a wall) holds like a face.
+    if (!two || holds(two, eps, need) || (one.gap <= eps && rimContact(small, big, eps)))
+      strong.join(i, j);
+    else {
+      // `tight` is measured from the closest approach, whatever it is: only a patch that
+      // touches (gap ≤ eps) is contact area. A lid hovering 1 cm has a full face of `tight`.
+      const real = Math.max(one.gap <= eps ? one.tight : 0, two.gap <= eps ? two.tight : 0);
       kisses.push({
         i,
         j,
-        area: Math.max(one.tight, two.tight),
+        area: real,
         at: one.closest ?? small.centroid,
+        gap: Math.min(one.gap, two.gap),
+        touches: one.gap <= eps || two.gap <= eps,
       });
+    }
   }
   bridge(live, strong, kisses, ROOT);
   const held = live.filter((_, i) => strong.same(i, ROOT));
@@ -190,7 +227,15 @@ export function connectivity(
     if (island && parts.length === 1 && group.length === partShells.get(parts[0] ?? '')) continue;
     // Nearest neighbour only for the first few islands: it is for the message, and costs.
     const near = island && ++named <= NAMED_ISLANDS ? nearest(group, held) : null;
-    issues.push(clusterIssue(group, parts, island, near));
+    const issue = clusterIssue(group, parts, island, near);
+    const mine = kisses.filter((k) => (strong.find(k.i) === r) !== (strong.find(k.j) === r));
+    const closest = mine.reduce<Kiss | null>((m, k) => (m && m.gap <= k.gap ? m : k), null);
+    const other = closest ? live[strong.find(closest.i) === r ? closest.j : closest.i] : undefined;
+    issues.push(
+      !island && closest && other && !mine.some((k) => k.touches)
+        ? hovering(issue, closest, other.part)
+        : issue,
+    );
   }
   return { issues, held: new Set(held) };
 }

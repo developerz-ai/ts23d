@@ -21,6 +21,11 @@
     "thumb": "thumb.png"
   },
   "triangles": [
+    198636,
+    44248,
+    4056
+  ],
+  "trianglesCompiled": [
     198668,
     44268,
     4064

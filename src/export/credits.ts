@@ -16,7 +16,7 @@ export function creditsOf(asset: CompiledAsset): string[] {
     if (!uv) continue;
     const v = new Float32Array(uv.length >> 1);
     for (let i = 0; i < v.length; i++) v[i] = uv[i * 2 + 1] ?? 0;
-    for (const c of stripCredits(v)) out.add(c);
+    for (const c of stripCredits(v, p.mesh?.indices)) out.add(c);
   }
   return [...out].sort();
 }

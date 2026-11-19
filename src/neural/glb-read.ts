@@ -4,7 +4,7 @@
 // T3D_IMPORT_UNSUPPORTED naming the way out; anything malformed fails with T3D_IMPORT_GLB.
 // Pure functions of the bytes: no I/O, deterministic, browser-safe.
 
-import { Ts23dError } from '../core/index.ts';
+import { isTs23dError, Ts23dError } from '../core/index.ts';
 
 export type GltfJson = Record<string, unknown>;
 
@@ -46,7 +46,7 @@ export function readGlb(bytes: Uint8Array): GlbDoc {
       bad('the JSON chunk is not an object');
     json = parsed as GltfJson;
   } catch (e) {
-    if (e instanceof Ts23dError) throw e;
+    if (isTs23dError(e)) throw e;
     return bad(`the JSON chunk does not parse (${String(e)})`);
   }
   let bin: Uint8Array | null = null;

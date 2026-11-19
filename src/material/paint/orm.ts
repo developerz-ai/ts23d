@@ -1,9 +1,12 @@
 // ORM + albedo packing. Occlusion comes from the height cavity (blurred height minus height: deep
 // where a texel sits below its surroundings — mortar, seams, grain); roughness and metalness are
 // the painted layers. Albedo is the linear tone, sRGB-encoded, with a mild cavity darkening baked
-// in so engines that ignore the occlusion map still read the joints.
+// in so engines that ignore the occlusion map still read the joints. An sRGB image base (photo
+// strip, stamp, foliage) is multiplied by the tone in linear light instead (weathering and paint
+// layers reach it; tone 1 keeps its bytes); its own pixels already carry their cavities.
 
 import type { Canvas } from './canvas.ts';
+import { linearToSrgbByte, SRGB_TO_LINEAR } from './srgb.ts';
 
 /** Depth (metres) below the local mean that counts as fully occluded. */
 const AO_DEPTH = 0.006;
@@ -81,9 +84,21 @@ export function packOrm(c: Canvas, ao: Float32Array): Uint8Array {
 
 const enc = (t: number): number => SRGB[t <= 0 ? 0 : t >= 1 ? 4095 : Math.round(t * 4095)] ?? 255;
 
-/** RGBA8 sRGB albedo: the stamped image if any, else (colour pair by mix or grey) × tone × cavity. */
+/** The sRGB image × tone, in linear light; texels at tone 1 (and alpha) keep their bytes. */
+function tonedImage(c: Canvas, rgba: Uint8Array): Uint8Array {
+  const out = rgba.slice();
+  for (let i = 0, o = 0; i < c.tone.length; i++, o += 4) {
+    const t = c.tone[i] ?? 1;
+    if (t === 1) continue;
+    for (let k = 0; k < 3; k++)
+      out[o + k] = linearToSrgbByte((SRGB_TO_LINEAR[rgba[o + k] ?? 0] ?? 0) * t);
+  }
+  return out;
+}
+
+/** RGBA8 sRGB albedo: the stamped image × tone if any, else (colour pair by mix or grey) × tone × cavity. */
 export function packAlbedo(c: Canvas, ao: Float32Array): Uint8Array {
-  if (c.rgba) return c.rgba;
+  if (c.rgba) return tonedImage(c, c.rgba);
   const out = new Uint8Array(c.w * c.h * 4);
   const lin = c.linear;
   if (lin) {

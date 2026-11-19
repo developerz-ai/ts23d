@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { compile, defineAsset, encodePng } from '../core/index.ts';
+import { compile, defineAsset, encodePng, Ts23dError } from '../core/index.ts';
 import { box } from '../primitives/index.ts';
 import { type Fingerprint, fingerprint } from './ref-fingerprint.ts';
 import {
@@ -60,6 +60,21 @@ describe('checkRefFile', () => {
       /lab must be 48/,
     );
     expect(() => checkRefFile({ views: { back: {} } })).toThrow(/unknown view/);
+  });
+
+  it('refuses a null view and a file with no view at all as T3D_RECIPE_INVALID', () => {
+    const code = (json: unknown): string => {
+      try {
+        checkRefFile(json);
+      } catch (e) {
+        return e instanceof Ts23dError ? `${e.code} ${e.message} ${e.fix}` : `bare ${String(e)}`;
+      }
+      return 'accepted';
+    };
+    expect(code({ views: { side: null } })).toMatch(/^T3D_RECIPE_INVALID .*view 'side' must be/);
+    expect(code({ views: { side: 7 } })).toMatch(/^T3D_RECIPE_INVALID /);
+    // An empty file used to validate, and every reference check then passed with nothing compared.
+    expect(code({ views: {} })).toMatch(/^T3D_RECIPE_INVALID .*`views` is empty.*Photos per view/);
   });
 
   it('accepts a generated view', () => {

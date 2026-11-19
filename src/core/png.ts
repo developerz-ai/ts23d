@@ -1,6 +1,8 @@
-// RGBA → PNG bytes: contact sheets, painted trim sheets, embedded GLB textures. Zero dependencies beyond node:zlib (present in Bun and Node).
+// RGBA → PNG bytes: contact sheets, painted trim sheets, embedded GLB textures. Zero dependencies:
+// the pixel data is compressed by the repo's own `deflate`, never `node:zlib`, whose output differs
+// between Bun and Node. Same pixels = same PNG bytes on every runtime, and in the browser.
 
-import { deflateSync } from 'node:zlib';
+import { deflate } from './deflate.ts';
 
 const CRC = new Uint32Array(256).map((_, n) => {
   let c = n;
@@ -36,7 +38,7 @@ export function encodePng(width: number, height: number, rgba: Uint8Array): Uint
   const parts = [
     new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]),
     chunk('IHDR', ihdr),
-    chunk('IDAT', new Uint8Array(deflateSync(raw))),
+    chunk('IDAT', deflate(raw)),
     chunk('IEND', new Uint8Array()),
   ];
   const out = new Uint8Array(parts.reduce((s, p) => s + p.length, 0));
