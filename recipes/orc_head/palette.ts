@@ -46,6 +46,8 @@ export const C = {
   leather: hex('#8a6448'),
   /** Over the leather strip (which carries its own brown): a light tint. */
   strap: hex('#e6d2b8'),
+  /** The strap's grime: the same tint darkened (sweat, grease, soot). */
+  strapGrime: hex('#6e5a48'),
   cord: hex('#3a2618'),
   thread: hex('#c8b48a'),
   cordBead: hex('#6a4a2a'),

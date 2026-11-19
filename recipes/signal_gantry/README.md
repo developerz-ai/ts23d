@@ -33,6 +33,23 @@ Each arm's spectacle carries a spindle turning in `bearing_<track>_<arm>` (clamp
 on the mast, LOD0/1): `connect: { as: 'hinge' }` to the bearing, and the arm lists the bearing in
 `clearOf` (the spindle runs in its bore). LOD2 drops the bearing; the hub bears on the mast face.
 
+## Modelling notes (2026-11 quality pass)
+- Wear (`wear.ts`): sun-faded charcoal on up-facing faces of the black paint, rust breaking through
+  in patches (worst on up faces and low down), soot over each track on the girder soffit, rust
+  bleeds down the left post's outer corner angle, moss and splash on the footings.
+- Detail: up-and-down rods from each mechanism case, cranks, a rod run along the walkway and down
+  the right post to a ground crank; riveted gusset plates at the girder's front nodes; galvanised
+  hand rail; square-bar ladder rungs. LOD2 posts are open frames (corner angles, battens, cap).
+- The static steel already merges into one draw; the remaining draws are the moving arm pivots
+  (one each) and the lamp glow, which cannot merge.
+- Triangles (2026-11-19 integration pass): 8.95k / 3.83k / 752 (two tracks) and 12.2k / 5.29k /
+  1.24k (four tracks). Bearing bosses and clamp bands keep only their visible faces (root face
+  and bore are inside the pipe and round the spindle), gusset plates drop the face against the
+  chord, LOD2 posts drop the 4 cm base plate, the foot batten and the cap's underside.
+- Lamp glow: strength 1.5, a paraffin lamp lit warm behind the spectacle, not a white bloom.
+
+Budget why: a lineside signal bridge 13 m tall spanning two or four tracks (up to 18 m wide) on two box-lattice posts and a lattice girder, with one pivoted arm pair per track; the 5k generic prop band is for a crate-sized object, and an open lattice cannot fold into a few hundred triangles without turning into solid slabs.
+
 ## Open questions
 - Arms rest horizontal (stop) and drop one way to 60° (clear) with `oneWay` sway; the 30° approach
   position of three-position signals is passed through, not held.

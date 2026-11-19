@@ -41,7 +41,7 @@ export const C = {
   /** Ears: black backs, a white ocellus, pale fur inside the pinna. */
   earBack: hex('#161110'),
   ocellus: hex('#f2ede2'),
-  earInside: hex('#f1ece2'),
+  earInside: hex('#e0d2b8'),
   /** Pink inside the pinna where the fur thins. */
   earSkin: hex('#b88a7e'),
 } as const;

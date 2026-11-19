@@ -1,15 +1,18 @@
 // Body nodes: the static shell (cowl, fenders, sills, quarters, deck, fascias) and the moving
-// panels as hinged pivots — `hood` (front-hinged clamshell), `door_l/_r` (A-pillar hinges),
-// `trunk_lid`. `open` (0..1) bakes the panels part-way open for the `_open` showcase asset; the
-// motion clips still swing from closed.
+// panels as hinged pivots — `hood` (clamshell on rear goosenecks at the cowl), `door_l/_r` (A-pillar hinges),
+// `trunk_lid`. `open` (0..1) bakes the panels part-way open for the `_open` showcase asset; its
+// motion clips then swing the panels shut again (the same sector, the other way), never past
+// their stops.
 
-import type { BuildContext, Mesh, Vec3 } from '@developerz.ai/ts23d';
+import type { BuildContext, Mesh, Motion, Vec3 } from '@developerz.ai/ts23d';
 import { merge } from '@developerz.ai/ts23d';
 import { X_DOOR_FRONT } from '../dims.ts';
+import { PIPE_TIP } from '../engine/exhaust.ts';
 import { C } from '../lib/colors.ts';
-import { bothSides, DEG, mirrorY, rotateAbout, shift, sub } from '../lib/geo.ts';
+import { bothSides, DEG, mirrorY, mul, rotateAbout, shift, smooth, sub } from '../lib/geo.ts';
 import type { Surface } from '../lib/grid.ts';
-import { bodyPanels, quality, X_HOOD_FRONT, X_TRUNK_FRONT } from './panels.ts';
+import { filmed, roadFilm } from '../lib/wear.ts';
+import { bodyPanels, quality, X_HOOD_REAR, X_TRUNK_FRONT } from './panels.ts';
 import { U } from './shape.ts';
 
 export interface Hinges {
@@ -18,14 +21,18 @@ export interface Hinges {
   readonly trunk: Vec3;
 }
 
-export const HOOD_DEG = 58;
+export const HOOD_DEG = 50;
+/** The hood lifts its nose: it turns about −Y at the cowl. */
+export const HOOD_AXIS: Vec3 = [0, -1, 0];
 export const DOOR_DEG = 65;
 export const TRUNK_DEG = 50;
 
 export function hinges(S: Surface): Hinges {
   const doorSkin = S.row(X_DOOR_FRONT)(U.side);
   return {
-    hood: [X_HOOD_FRONT + 0.13, 0, 0.52],
+    // Gooseneck pins under the cowl, 3 cm behind the hood's rear edge and 2–3 cm under the skin:
+    // the rear edge rises as it swings back, so it clears the cowl and the wipers.
+    hood: [X_HOOD_REAR - 0.03, 0, 0.87],
     door: [X_DOOR_FRONT - 0.004, doorSkin[1] + 0.006, 0.5],
     // The goosenecks' pins on the deck bulkhead: the lid turns about them, not about its skin.
     trunk: [X_TRUNK_FRONT - 0.02, 0, 0.84],
@@ -60,7 +67,18 @@ export interface BodyOptions {
 
 /** Adds the static panels, hood, door_l, door_r, trunk_lid (+ trims, stripes). Returns the hinges. */
 export function body(ctx: BuildContext, S: Surface, o: BodyOptions): Hinges {
-  const q = quality(ctx.lod, C.paint);
+  // Lacquer under the road film the tyres throw up, and the soot the side pipes leave behind
+  // their tips: baked into the tone, so every LOD and livery carries it.
+  const film = filmed(C.paint, roadFilm(ctx.rng.fork('road_film')));
+  const q = quality(ctx.lod, (at) => {
+    const c = film(at);
+    const tip: Vec3 = [PIPE_TIP[0], Math.abs(at[1]) < 0.01 ? 0 : PIPE_TIP[1], PIPE_TIP[2]];
+    const back = (tip[0] - at[0]) / 0.55;
+    if (back < -0.2 || back > 1) return c;
+    const d = Math.hypot((Math.abs(at[1]) - tip[1]) / 0.2, (at[2] - tip[2] - 0.1 * back) / 0.2);
+    const k = 1 - 0.8 * (1 - smooth(0.25, 1, d)) * (1 - smooth(0.35, 1, back));
+    return [c[0] * k, c[1] * k, c[2] * k];
+  });
   const p = bodyPanels(S, q);
   const h = hinges(S);
   const ex = o.extras ?? {};
@@ -76,12 +94,17 @@ export function body(ctx: BuildContext, S: Surface, o: BodyOptions): Hinges {
   ctx.part('rear_deck', bothSides(p.deck), { paint: 'body' });
   ctx.part('nose_fascia', merge([bothSides(p.noseFascia), ...(ex.shell ?? [])]), { paint: 'body' });
   ctx.part('tail_fascia', bothSides(p.tailFascia), { paint: 'body' });
-  // Hood: authored around its hinge, opened about +Y.
+  // Hood: authored around its hinge at the cowl, nose lifting.
   const hood = shift(merge([bothSides(p.hood), ...(ex.hood ?? [])]), sub([0, 0, 0], h.hood));
-  const hoodRot = (m: Mesh): Mesh => rotateAbout(m, [0, 0, 0], [0, 1, 0], o.open * HOOD_DEG * DEG);
+  const hoodRot = (m: Mesh): Mesh => rotateAbout(m, [0, 0, 0], HOOD_AXIS, o.open * HOOD_DEG * DEG);
+  // A panel baked open swings shut: the opening sector, travelled back to closed.
+  const swing = (axis: Vec3, degrees: number): Motion =>
+    o.open > 0
+      ? { kind: 'sway', axis: mul(axis, -1), degrees: degrees * o.open, hz: 0.25, oneWay: true }
+      : { kind: 'sway', axis, degrees, hz: 0.25, oneWay: true };
   ctx.part('hood', hoodRot(hood), {
     at: h.hood,
-    motion: { kind: 'sway', axis: [0, 1, 0], degrees: HOOD_DEG, hz: 0.25, oneWay: true },
+    motion: swing(HOOD_AXIS, HOOD_DEG),
     clearOf: o.hoodClearOf,
     paint: 'body',
   });
@@ -103,7 +126,7 @@ export function body(ctx: BuildContext, S: Surface, o: BodyOptions): Hinges {
     rotateAbout(m, [0, 0, 0], [0, 1, 0], o.open * TRUNK_DEG * DEG);
   ctx.part('trunk_lid', trunkRot(trunk), {
     at: h.trunk,
-    motion: { kind: 'sway', axis: [0, 1, 0], degrees: TRUNK_DEG, hz: 0.25, oneWay: true },
+    motion: swing([0, 1, 0], TRUNK_DEG),
     clearOf: o.trunkClearOf,
     paint: 'body',
   });
@@ -124,7 +147,7 @@ export function body(ctx: BuildContext, S: Surface, o: BodyOptions): Hinges {
     const local = side > 0 ? doorL : mirrorY(doorL);
     ctx.part(name, rotateAbout(local, [0, 0, 0], axis, o.open * DOOR_DEG * DEG), {
       at: [h.door[0], side * h.door[1], h.door[2]],
-      motion: { kind: 'sway', axis, degrees: DOOR_DEG, hz: 0.25, oneWay: true },
+      motion: swing(axis, DOOR_DEG),
       // The quarter's front flange sits 4.5 mm behind the door's rear edge (the shut line).
       clearOf: [...o.doorClearOf, `quarter_${side > 0 ? 'l' : 'r'}`],
       paint: 'body',

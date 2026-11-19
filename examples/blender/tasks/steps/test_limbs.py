@@ -1,7 +1,8 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # Self-test cases for the limb ops (run by test_steps.py's `selftest`): `unweb` on two posts fused
 # by a remesh, `amputate` on one end of the blob, `repose` turning the blob's head bone (with and
-# without the gated mirror), and their refusals.
+# without the gated mirror), `isolate` with `contact` on a chain fused to the body along its
+# length, and their refusals.
 
 import math
 
@@ -63,6 +64,27 @@ def case_amputate():
     refused([{"op": "amputate", "limbs": [[{"head": [0, 0, 0.5], "tail": [0, 0, 0.5], "r": 5}]]}, EXPORT], blob("none"), "step 0 (amputate)", "no faces")
 
 
+def case_contact():
+    # One fused post is the body, the other a chain hanging against it (asset y = ∓0.045; the
+    # skeleton is in the glTF frame: asset (x, y, z) = glTF (y, z, x)).
+    skeleton = {
+        "contract": "t3d-skeleton/1",
+        "frame": "gltf",
+        "bones": [
+            {"name": "body", "parent": None, "head": [0.045, 0.6, 0], "tail": [0.045, 0, 0]},
+            {"name": "tail_0", "parent": "body", "head": [-0.045, 0.6, 0], "tail": [-0.045, 0.3, 0]},
+            {"name": "tail_1", "parent": "tail_0", "head": [-0.045, 0.3, 0], "tail": [-0.045, 0, 0]},
+        ],
+    }
+    chain = {"op": "isolate", "bones": ["tail_0", "tail_1"], "from": [0, -0.045, 0], "point": [0, -0.045, 0.55], "normal": [0, 0, -1], "r": 0.06, "feather": 0.03, "maxShare": 0.9}
+    r, _ = run([CLEAN, BIND, chain, EXPORT], posts(), skeleton)
+    expect("contact" not in step_of(r, "isolate"), "without `contact` the chain's weights stop at a hard edge, as before")
+    r, _ = run([CLEAN, BIND, {**chain, "contact": 0.03}, EXPORT], posts(), skeleton)
+    c = step_of(r, "isolate")["contact"]
+    expect(c["edges"] > 0 and c["vertices"] > c["edges"], f"edges joining chain skin to body skin are found and a band round them blended: {c}")
+    expect(r["glb"]["skins"] == 1, "the skin is kept")
+
+
 def target(yaw):
     """SKELETON in the asset frame, the head bone yawed `yaw` degrees to the animal's left."""
     a = math.radians(yaw)
@@ -91,4 +113,4 @@ def case_repose():
     refused([retopo(3000, "decimate"), BIND, {"op": "repose", "to": target(0)[:2]}, EXPORT], blob("none"), "step 2 (repose)", "no target", skeleton=SKELETON)
 
 
-CASES = (case_unweb, case_amputate, case_repose)
+CASES = (case_unweb, case_amputate, case_contact, case_repose)

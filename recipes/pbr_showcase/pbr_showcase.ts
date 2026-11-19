@@ -3,7 +3,9 @@
 // solid — KHR_materials_clearcoat via paint slots), a glass ball, an ice cube, water in a bowl
 // (transmission + ior + volume). Back row: velvet pouf (sheen), brushed aluminium can
 // (anisotropy), heat-tinted titanium exhaust (iridescence), jelly dome (soft transmission).
-// Build with `t3d build` and open <asset>.glb in a KHR-aware viewer (three.js, Babylon).
+// The board is a dark charcoal studio slab (glass, ice and gloss highlights read against it), each
+// exhibit raised on a turned, chamfered pedestal, with a 1 m black-and-white ruler along the
+// front edge for scale. Build with `t3d build` and open <asset>.glb in a KHR-aware viewer.
 
 import {
   box,
@@ -13,20 +15,22 @@ import {
   type Lod,
   lathe,
   type Mesh,
+  merge,
   NATURAL,
   text,
   type Vec2,
   type Vec3,
 } from '@developerz.ai/ts23d';
 
-const SLATE = hex('#2f3238');
-const PLINTH = hex('#c9c5bd');
-const INK = hex('#26282c');
+const SLATE = hex('#1d1f23');
+const PLINTH = hex('#3a3c41');
+const INK = hex('#e6e2d8');
+const TICK_DARK = hex('#151517');
 const RED = '#a5121a';
 const BLUE = '#123a8c';
 const WHITE = '#e8e6e0';
 const TOP = 0.16; // plinth height
-const PED = 0.05; // pedestal height
+const PED = 0.12; // pedestal height
 
 /** Profile of a sphere of radius r sitting on z = 0, `n` steps pole to pole. */
 const ball = (r: number, n: number): Vec2[] =>
@@ -35,17 +39,47 @@ const ball = (r: number, n: number): Vec2[] =>
     return [r * Math.sin(a), r - r * Math.cos(a)] as Vec2;
   });
 
-const SEG: Readonly<Record<Lod, number>> = { 0: 48, 1: 24, 2: 12 };
+const SEG: Readonly<Record<Lod, number>> = { 0: 40, 1: 20, 2: 12 };
 
-/** A short round pedestal at (x, y) on the plinth: every exhibit stands on one. */
-function pedestal(x: number, y: number, seg: number): Mesh {
-  return cylinder({
-    radius: 0.09,
-    length: PED,
-    segments: seg,
+/** A turned pedestal at (x, y) on the plinth: a foot, a waist, a chamfered top (LOD2: a drum). */
+function pedestal(x: number, y: number, lod: Lod): Mesh {
+  const profile: Vec2[] =
+    lod === 2
+      ? [
+          [0, 0],
+          [0.09, 0],
+          [0.09, PED],
+          [0, PED],
+        ]
+      : [
+          [0, 0],
+          [0.1, 0],
+          [0.1, 0.008],
+          [0.086, 0.02],
+          [0.08, PED - 0.016],
+          [0.09, PED - 0.006],
+          [0.086, PED],
+          [0, PED],
+        ];
+  return lathe({
+    profile,
+    segments: [32, 12, 8][lod] ?? 8,
     color: SLATE,
-    at: [x, y, TOP + PED / 2],
+    strip: 'steel_painted',
+    at: [x, y, TOP],
   });
+}
+
+/** A 1 m ruler lying along the plinth's front edge: ten alternating 0.1 m bars. */
+function ruler(x: number, y0: number): Mesh[] {
+  return Array.from({ length: 10 }, (_, i) =>
+    box({
+      size: [0.04, 0.1, 0.004],
+      at: [x, y0 + 0.05 + i * 0.1, TOP],
+      color: i % 2 === 0 ? INK : TICK_DARK,
+      strip: 'plain',
+    }),
+  );
 }
 
 export const pbr_showcase = defineAsset({
@@ -79,26 +113,39 @@ export const pbr_showcase = defineAsset({
   build(ctx) {
     const seg = SEG[ctx.lod];
     const rings = Math.max(6, seg / 2);
-    ctx.part('plinth', box({ size: [1.5, 4.6, TOP], at: [0, 0, 0], color: PLINTH }));
+    ctx.part(
+      'plinth',
+      box({
+        size: [1.5, 4.6, TOP],
+        at: [0, 0, 0],
+        color: PLINTH,
+        strip: 'slate',
+        bevel: ctx.pick([0.01, 0.005, 0]),
+      }),
+    );
+    // Scale: a 1 m ruler along the front edge, from the board's −Y end.
+    ctx.part('ruler', merge(ruler(0.73, -2.25)));
     const front = 0.38;
     const back = -0.38;
     const label = (name: string, x: number, y: number, word: string): void => {
-      if (ctx.lod !== 0) return;
+      if (ctx.lod === 2) return;
       ctx.part(
         name,
         // Flat on the plinth top in front of the exhibit, read from the front (+X).
         text(word, {
           origin: [x + 0.27, y, TOP],
           up: [-1, 0, 0],
-          height: 0.04,
+          height: 0.06,
           color: INK,
           align: 'centre',
+          maxWidth: 0.6,
+          segments: ctx.pick([2, 1, 1]),
         }),
       );
     };
     const at = (i: number): number => -1.9 + i * 0.76;
     const stand = (name: string, x: number, y: number): void => {
-      ctx.part(`${name}_pedestal`, pedestal(x, y, seg));
+      ctx.part(`${name}_pedestal`, pedestal(x, y, ctx.lod));
     };
     const z0 = TOP + PED;
 
@@ -139,6 +186,7 @@ export const pbr_showcase = defineAsset({
         at: [front, at(4), z0],
         color: hex('#e8f4ff'),
         strip: 'glass',
+        bevel: ctx.pick([0.012, 0.008, 0]),
       }),
       { surface: 'ice' },
     );

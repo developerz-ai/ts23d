@@ -5,6 +5,7 @@
 import type { Field, Mesh, SculptEdit, Vec3 } from '@developerz.ai/ts23d';
 import { type HornOptions, horn, hornBand, hornNodes } from '../_lib/creature/horn.ts';
 import { tubeMesh } from '../_lib/creature/lowpoly.ts';
+import { pinKeratin } from './material.ts';
 import { C } from './skin.ts';
 
 export type Ornament = 'swept' | 'nasal' | 'crest' | 'frill' | 'curled';
@@ -181,7 +182,7 @@ export const spikeEdit = (h: SeatedHorn): SculptEdit =>
   });
 
 /** The horn's tube, swelling where it leaves the skull so bone runs into horn with no hard ring. */
-function flaredTube(o: HornOptions, surfaceAt: number, sides: number): Mesh {
+function flaredTube(o: HornOptions, surfaceAt: number, sides: number, keep = 1): Mesh {
   const nodes = hornNodes(o);
   const n = nodes.length - 1;
   const band = hornBand(o.colors);
@@ -189,13 +190,22 @@ function flaredTube(o: HornOptions, surfaceAt: number, sides: number): Mesh {
     const d = ((i / n) * o.length - surfaceAt) / (o.radius * 1.5);
     return { ...node, r: node.r * (1 + 0.7 * Math.exp(-d * d)) };
   });
-  return tubeMesh(flared, { sides, colors: nodes.map((_, i) => band(i, n)) });
+  // A chipped horn ends in a blunt break, the fresh keratin there paler than the weathered sheath.
+  const last = Math.max(2, Math.round(n * keep));
+  const colors = nodes.map((_, i) => (keep < 1 && i >= last - 1 ? BREAK : band(i, n)));
+  const tube = tubeMesh(flared.slice(0, last + 1), { sides, colors: colors.slice(0, last + 1) });
+  return pinKeratin(tube, o.base, o.dir, o.length);
 }
 
+/** Fresh keratin at a break: pale, not yet darkened by weather. */
+const BREAK: Vec3 = [0.62, 0.56, 0.44];
+
 /** A seated horn as mesh; off the midline it comes with its mirror twin. */
-export function hornMeshes(h: SeatedHorn, lod: number): Mesh[] {
-  const sides = [10, 6, 4][lod] ?? 4;
-  const segments = [18, 7, 3][lod] ?? 3;
+export function hornMeshes(h: SeatedHorn, lod: number, chipped = false): Mesh[] {
+  // Far away a horn pair stays a pair of real cones: enough segments to keep the sweep or the curl.
+  // LOD1 is a pentagon in section (a 3 cm horn's sixth side is under a pixel at that range).
+  const sides = [10, 5, 5][lod] ?? 5;
+  const segments = [18, 6, 4][lod] ?? 4;
   const o: HornOptions = { ...h.spec, segments, colors: COLOURS };
   // The boss lifts the skull round the root: the horn leaves it about a radius past the bone.
   const sink = h.spec.radius * (ROOT_DEPTH + 1.2);
@@ -203,5 +213,6 @@ export function hornMeshes(h: SeatedHorn, lod: number): Mesh[] {
   if (Math.abs(o.base[1]) < 1e-6) return [m];
   const flip = (v: Vec3): Vec3 => [v[0], -v[1], v[2]];
   const axis: Vec3 = [-o.axis[0], o.axis[1], -o.axis[2]];
-  return [m, flaredTube({ ...o, base: flip(o.base), dir: flip(o.dir), axis }, sink, sides)];
+  const twin = { ...o, base: flip(o.base), dir: flip(o.dir), axis };
+  return [m, flaredTube(twin, sink, sides, chipped ? 0.66 : 1)];
 }

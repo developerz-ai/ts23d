@@ -45,6 +45,15 @@ describe('finishing steps: refusals first', () => {
     >[];
     expect(filled?.['feather']).toBe(0.03);
     expect(filled?.['maxShare']).toBe(0.25);
+    // `contact` has no default: a program that never asked for it keeps its request key.
+    refuses([BIND, { ...tail, contact: 0 }, EXPORT], /contact: 0 is outside/);
+    expect(filled && 'contact' in filled).toBe(false);
+    const [, blended] = checkBlenderSteps([
+      BIND,
+      { ...tail, contact: 0.04 },
+      EXPORT,
+    ] as never) as readonly Record<string, unknown>[];
+    expect(blended?.['contact']).toBe(0.04);
   });
 
   test('weights comes after bind, joint before it and moves something', () => {

@@ -1,62 +1,62 @@
 {
   "asset": "mountain_range_c",
   "reviewer": "agent",
-  "overall": 6.9,
+  "overall": 7.4,
   "scores": {
     "silhouette": {
-      "score": 7,
-      "reason": "Two conical peaks with a valley read as mountains; the peaks are smooth cones; TOP shows a bright knife-edge seam along one ridge.",
+      "score": 8,
+      "reason": "An eroded cone with couloirs and a second peak read as a massif; both summits now sit inside the tile (3/4 FRONT, hero.png) and the skirt no longer climbs a peak. The north-east hero camera looks over the near ridge, so half of hero.png is skirt wall and the forested valley is hidden.",
       "fixes": [
-        "erode the cone flanks into ridges and couloirs",
-        "check the bright seam along the ridge crest in TOP (normal flip at the crest?)"
+        "aim this variant's hero along the valley (from the south-west) so the forested floor and both peaks show instead of half the frame being skirt wall"
       ]
     },
     "proportions": {
       "score": 7,
-      "reason": "About 1 120 m relief on 2 × 2 km; peak flanks are evenly conical.",
+      "reason": "Flank slopes are uniform by aspect.",
       "fixes": [
         "vary flank slope by aspect"
       ]
     },
     "materials": {
-      "score": 6,
-      "reason": "Banding on the slopes; meadow green and a grey-blue patch on the left; little snow.",
+      "score": 7,
+      "reason": "Rock, grass and forest blend well; the one-cell crest seam and the grey frame are gone and snow now shows in hero.png and TOP, but as one smeared white blotch on a mid-flank with vertical streaks while both summits stay bare, and the cut walls carry fine vertical streaks in hero.png (the strata texture stretched down the wall).",
       "fixes": [
-        "blend strips across triangle borders",
-        "snow on the north faces of the two peaks"
+        "put the snow cover on the summits and north faces of both peaks, not only one flank patch",
+        "give the snow patch a sharper edge so it reads as a snowfield, not a smeared haze",
+        "map the skirt strata in planar U along the wall and V by height so it stops streaking vertically"
       ]
     },
     "detail": {
-      "score": 6,
-      "reason": "Some ridges on the left peak; most surfaces are smooth.",
+      "score": 7,
+      "reason": "Couloirs, ridges and forest on the lower flanks; no talus.",
       "fixes": [
-        "more erosion iterations; talus at slope feet"
+        "talus at slope feet"
       ]
     },
     "wear": {
-      "score": 6,
-      "reason": "Erosion only.",
+      "score": 7,
+      "reason": "A stream in the valley floor (TOP) and forest; little rock weathering.",
       "fixes": [
-        "a stream along the valley floor (water strip)"
+        "water streaks below the couloirs"
       ]
     },
     "lod": {
       "score": 8,
-      "reason": "FAR LOD2 holds outline and colour.",
+      "reason": "FAR LOD2 keeps both peaks, forest and snow blocks.",
       "fixes": [
-        "keep the ridge crest at LOD2"
+        "keep the ridge crest snow at LOD2"
       ]
     },
     "technical": {
       "score": 8,
-      "reason": "QA clean; 133k / 34k / 8.7k tris, one draw.",
+      "reason": "One draw, ~137k / 37k / 3.5k triangles for a 2 km tile with a skirt; QA clean. The edge calming is gone: the tile edge is the untouched field, TOP shows no frame and the skirt top follows the border row without a step, so neighbours cut from the same field meet flush.",
       "fixes": [
-        "drop skirt triangles that are never seen from above"
+        "drop skirt triangles that are never seen from above (the skirt is a flat wall at every LOD)"
       ]
     }
   },
   "renders": {
-    "hero.png": "ccdda777804c48ab76fbe4c0dfeed0dea11d05e765c4b82e9bb2dd89653e1e90",
-    "sheet.png": "2c0ce1ed57c62192ddc8741998443e6b70767f2c3e8834b26713a3180521c054"
+    "hero.png": "b31fa8f51db97d58904dfab77174c3d03fc06e6112610773a04e67feab59d788",
+    "sheet.png": "046e63eedfecfbd1e9f08ca451979c8b7f84766269726fd1a89a35a0800d5862"
   }
 }

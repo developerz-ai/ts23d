@@ -23,9 +23,9 @@
     ]
   },
   "triangles": [
-    5256,
-    2852,
-    1092
+    5322,
+    2454,
+    546
   ],
   "drawCalls": [
     5,
@@ -114,8 +114,8 @@
     {
       "label": "crate length",
       "spec": 0.8,
-      "measured": 0.8080000281333923,
-      "source": "kit crate"
+      "measured": 0.8059999942779541,
+      "source": "README"
     }
   ],
   "sources": [
@@ -124,6 +124,73 @@
     "https://en.wikipedia.org/wiki/Chrysler_LA_engine#Viper_V10",
     "https://en.wikipedia.org/wiki/Firing_order"
   ],
+  "weather": {
+    "chips": {
+      "target": 0.2,
+      "actual": 0.2,
+      "eligible": "convex-edges",
+      "area": 10.0013,
+      "by": {
+        "door_frame_wear": {
+          "target": 0.2,
+          "actual": 0.2,
+          "area": 1.5658
+        },
+        "belfry_wear": {
+          "target": 0.2,
+          "actual": 0.2,
+          "area": 1.0167
+        },
+        "crate_wear": {
+          "target": 0.2,
+          "actual": 0.2,
+          "area": 7.4188
+        }
+      }
+    },
+    "rust": {
+      "target": 0.2738,
+      "actual": 0.2738,
+      "eligible": "ground-near ; below-fasteners | convex-edges",
+      "area": 0.5279,
+      "by": {
+        "belfry_wear": {
+          "target": 0.25,
+          "actual": 0.25,
+          "area": 0.2761
+        },
+        "bell_wear": {
+          "target": 0.3,
+          "actual": 0.3,
+          "area": 0.2518
+        }
+      }
+    },
+    "dust": {
+      "target": 0.3473,
+      "actual": 0.3473,
+      "eligible": "up-facing",
+      "area": 1.1338,
+      "by": {
+        "bell_wear": {
+          "target": 0.3,
+          "actual": 0.3,
+          "area": 0.0616
+        },
+        "crate_wear": {
+          "target": 0.35,
+          "actual": 0.35,
+          "area": 1.0722
+        }
+      }
+    },
+    "mud": {
+      "target": 0.3,
+      "actual": 0.3,
+      "eligible": "ground-near & side-facing",
+      "area": 2.593
+    }
+  },
   "qa": {
     "pass": true,
     "findings": []

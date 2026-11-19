@@ -1,12 +1,20 @@
 import { afterAll, describe, expect, it } from 'bun:test';
 import { compile, defineAsset, encodePng } from '../core/index.ts';
-import { defineMaterial, NATURAL, provideTextures, resetMaterials } from '../material/index.ts';
+import {
+  defineMaterial,
+  materialSnapshot,
+  NATURAL,
+  provideTextures,
+  resetMaterials,
+} from '../material/index.ts';
 import { box } from '../primitives/index.ts';
 import { creditsOf } from './credits.ts';
 import { toGlb } from './glb.ts';
 
+// Put back what other test files' recipes defined at import (materialSnapshot).
+const restoreMaterials = materialSnapshot();
 resetMaterials();
-afterAll(resetMaterials);
+afterAll(restoreMaterials);
 
 const png = encodePng(2, 2, new Uint8Array(16).fill(128));
 const sha256 = new Bun.CryptoHasher('sha256').update(png).digest('hex');

@@ -125,7 +125,7 @@ function tongue(): SculptEdit[] {
 const jawPaint = (p: readonly [number, number, number], c: readonly [number, number, number]) =>
   mixRgb(c, C.back, smoothstep(-0.05, -0.2, p[2]) * smoothstep(0.1, 0.18, Math.abs(p[1])) * 0.5);
 
-export const JAW_RES = [0.018, 0.04, 0.1] as const;
+export const JAW_RES = [0.03, 0.052, 0.125] as const;
 
 /** Jaw mesh in the hinge's frame (part pivot = SK.head.hinge), opened by the rest angle. */
 export function jawMesh(lod: 0 | 1 | 2): { mesh: Mesh; field: Field } {

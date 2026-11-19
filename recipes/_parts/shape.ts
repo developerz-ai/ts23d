@@ -23,7 +23,6 @@ export const PAINT_RED = hex('#9a2b22');
 export const PAINT_GREEN = hex('#3f5a3a');
 export const DOOR_GREEN = hex('#2f4c3c');
 export const PAINT_YELLOW = hex('#d9a520');
-export const RUBBER = hex('#2a2a2a');
 export const WOOD = hex('#8a6440');
 export const WARM_LIGHT = hex('#ffe2a8');
 

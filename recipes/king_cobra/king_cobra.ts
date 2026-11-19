@@ -102,7 +102,7 @@ export const king_cobra = defineAsset({
   name: 'king_cobra',
   kind: 'creature',
   description:
-    'King cobra, 3.5 m, front third raised with the long narrow hood spread: 15-row scales with pale chevron bands, broad ventral scutes, head shields with the paired occipitals, forked tongue.',
+    'King cobra, 3.5 m, front third raised with the long hood spread: 15-row glossy scales with pale chevron crossbands, broad ventral scutes, head shields with the paired occipitals, forked tongue; a milky pre-shed patch, a healed bite scar and scuffed tail scutes.',
   tags: ['creature', 'reptile', 'snake', 'cobra', 'animated'],
   sources: [
     SOURCE,
@@ -110,7 +110,8 @@ export const king_cobra = defineAsset({
     'https://commons.wikimedia.org/wiki/File:King-Cobra.jpg',
   ],
   real: { length: 0.56, width: 0.55, height: 0.78 },
-  budget: { triangles: [72000, 4500, 640], bones: PLAN.bones.length },
+  // LOD1 holds ~9 k: enough rings that the bands still resolve and the switch from 62 k is no pop.
+  budget: { triangles: [72000, 11000, 640], bones: PLAN.bones.length },
   art: { grounded: false, focal: 'body' },
   creases: [
     // Local on purpose: the mouth line each side, and the shield sutures over the crown.

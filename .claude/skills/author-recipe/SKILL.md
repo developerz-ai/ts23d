@@ -83,7 +83,17 @@ features → secondary forms → tertiary detail and wear. 500–1,500 lines for
 
 ## Contact sheet layout
 Row 1: 3/4 FRONT · FRONT +X · SIDE -Y. Row 2: TOP · 3/4 REAR · FAR LOD2. Header: name, overall
-dimensions, grid step, LOD. Grid = ground plane, step chosen from the asset size.
+dimensions, grid step, LOD. Grid = ground plane, step chosen from the asset size. Colour is the
+hero's base colour, flat per triangle (the strip's mean albedo × vertex colour; glass see-through;
+cutout cards alpha-tested, so leaves and fur show their real silhouette): a part that is white in the
+sheet is white in the GLB. Grain, joints and relief show only in `hero.png`.
+
+**Hero view.** The hero camera is a front-left 3/4 orbit. When that hides the point of the asset,
+record the view in the recipe: `hero: { azDeg: 145, elDeg: 25 }` (same degrees as `--az` / `--el` /
+`--fov`; turn the worn or detailed side to the lens) or a fixed viewpoint for a place,
+`hero: { eye: [x, y, z], target: [x, y, z], fovDeg: 50 }` (metres in the asset frame, no
+auto-framing). `t3d hero`, `bun run shots`, `t3d review` and `t3d critique` use it by default; a
+flag still overrides it. The contact sheet, blueprint and icons keep their fixed views.
 
 ## QA gates (all must pass at every LOD)
 | Gate | Fails when | Fix |

@@ -50,7 +50,9 @@ and `--attribution` for the regional source (EU-DEM, Kartverket, LINZ, …).
 
 `terrainFromDEM(dem, { lod, size?, vertical?, base?, detail?, ground, strips?, water? })` builds the
 tile: heightfield at 256/128/64 cells by LOD from one grid, skirt to z = 0, `terrainColor` by altitude
-and slope, nature strips per triangle (snow / cliff / gravel / grass / moss / rock strata), optional
+and slope, a ground finish (`strips`, default on: the mesh stays welded, classes blend per vertex
+on one matte strip stretched over the tile, scree on slopes, rock strata on the cut sides; no
+per-triangle strip switches, which rendered as stripe banding), optional
 seeded erosion `detail` and a `water` surface at a level wherever the ground dips below it. Demo:
 `recipes/real_valley` (Yosemite Valley east end, 4 × 4 km; Half Dome's DEM summit agrees with Wikidata
 to 0.15 m).
@@ -80,10 +82,13 @@ cityBlock(ctx, OSM.buildings, { walls, roof, glass, ground, road, streets: OSM.r
 // asset: copyright: OSM.attribution, sources: [citeOsm(OSM)]
 ```
 
-`cityBlock` (src/kinds/city.ts) extrudes each surveyed footprint to its tagged height (prism, not
-a box), seeds each building from a hash of its OSM id (wall colour, window bay), colours
+`cityBlock` (src/kinds/city.ts) raises each surveyed footprint to its tagged height (its polygon,
+not a box), seeds each building from a hash of its OSM id (wall colour, window bay), colours
 neighbours differently across shared walls, windows street-facing edges by a split-grammar line
-per storey and leaves party walls blank. The windows are one mesh: `cityWindows(plan)` gives their
+per storey and leaves party walls blank. Walls are the `wallStrip` (default `brick`) at true scale
+along every edge; detail is gated by LOD (`src/kinds/city-facade.ts`): glazed window boxes and,
+with `trim`, an oversailing cornice, belt course and plinth at LOD0; flat panes and a flush
+cornice at LOD1 (under 0.7 × LOD0's triangles); the window rows as dark bands at LOD2. The windows are one mesh: `cityWindows(plan)` gives their
 transforms for an instanced export (`toInstancedGlb`, EXT_mesh_gpu_instancing). Demo:
 `recipes/city_block` (West Village, Manhattan; 49 footprints with NYC-import heights; footprint
 IoU ≥ 0.9 and heights ±5 % are its tests).

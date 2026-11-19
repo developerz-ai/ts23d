@@ -10,6 +10,9 @@ Use with [11-materials-authoring](../../../docs/idea/11-materials-authoring.md),
 [surfaces-volumes research](../../../docs/research/surfaces-volumes.md) and
 [16-art-as-text](../../../docs/idea/16-art-as-text.md). One material per asset: everything lands on
 the shared trim sheet + vertex colour; extra slots only via `paint`, `finishes`, `optics`, surfaces.
+The sheet's 14 custom rows are per asset: define as many materials as the work needs, an asset
+maps onto at most 14, one per row (two on one row in one asset: `T3D_MATERIAL_CONFLICT` from
+`compile`, give one a free `row`); other assets may reuse any row. Paint with `sheetFor(compiled)`.
 
 ## When
 A new strip or library material, a texture graph, a weathered variant, a palette, a finish, glass

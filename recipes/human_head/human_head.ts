@@ -30,8 +30,8 @@ export const human_head = defineAsset({
   // Design spec (an invented character): overall size as built; the measure is the eye spacing.
   real: {
     length: 0.268,
-    width: 0.558,
-    height: 0.566,
+    width: 0.342,
+    height: 0.581,
     measures: [
       {
         label: 'eye spacing (pupil to pupil)',
@@ -42,9 +42,16 @@ export const human_head = defineAsset({
       },
     ],
   },
-  // LOD0 +6k (measured 2026-11): the brow cards (≈ 2k) and the denser beard / crown cover.
-  budget: { triangles: [106000, 32000, 4200] },
-  finishes: { cornea: { clearcoat: 1, clearcoatRoughness: 0.04 } },
+  // LOD0: the head's skin ≈ 26k (eyes, ears and mouth meshed finer), hair ≈ 10k, the garments
+  // ≈ 24k. Draws: skin, face-node cloth, static fittings, corneas, hair cards.
+  budget: { triangles: [72000, 20500, 3100], draws: 5 },
+  // The eyeballs' cornea (a clear lacquer over the painted iris) and the skin: the pore strip's
+  // own roughness (matte cheeks, a glossier T-zone) under a soft grazing sheen. The wool and the
+  // linen are strips of their own (../_lib/bust/cloth-strips.ts), no finish.
+  finishes: {
+    cornea: { clearcoat: 1, clearcoatRoughness: 0.04 },
+    skin: { sheen: { colour: '#8c7b72', roughness: 0.45 } },
+  },
   art: { focal: 'head', shape: 'stable' },
   // Intended creases (QA `connections` skips them): one small region per sculpted fold, from the
   // geometry that sculpts it (creases.ts) — never an area.

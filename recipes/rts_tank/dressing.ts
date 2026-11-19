@@ -4,7 +4,7 @@
 // with bolt rows, pioneer tools (shovel, crowbar) in clamps and a jerry-can rack on the hull
 // sides — everything on the deck stays outside the turret's and mantlet's swept circles.
 
-import { box, type Lod, type Mesh, merge, place, type Vec3 } from '@developerz.ai/ts23d';
+import { box, type Lod, type Mesh, merge, place, type Vec2, type Vec3 } from '@developerz.ai/ts23d';
 import { BONE, BRASS, IRON, SLATE, tube } from '../_lib/rts/style.ts';
 
 /** Glacis line in XZ: front foot (2.62, 0.93) → deck crease (1.55, 1.42). */
@@ -79,6 +79,24 @@ export function hullDressing(lod: Lod, deck: number): Mesh | null {
     out.push(...bolts(4, -2.13, -1.77, s * 1.43, deck + 0.018));
     out.push(...bolts(4, -2.13, -1.77, s * 1.01, deck + 0.018));
   }
+  // Bolt rows across the applique plates: along their top and bottom edges.
+  for (const s of [1, -1])
+    for (const t of [0.14, 0.7])
+      for (let i = 0; i < 6; i++)
+        out.push(onGlacis(t, s * (0.14 + i * 0.232), [0.04, 0.04, 0.075], IRON, 0.008));
+  // Tow cable stowed on the sloped rear plate between the exhaust stacks: a flattened loop on two
+  // hooks, lying into the plate so it is seated.
+  const rear = (t: number, y: number): Vec3 => [-2.3 - 0.32 * t + 0.01, y, deck - 0.3 * t + 0.01];
+  const loop: Vec3[] = [rear(0.3, -0.3), rear(0.8, -0.22), rear(0.8, 0.22), rear(0.3, 0.3)];
+  for (let i = 0; i + 1 < loop.length; i++)
+    out.push(tube(lod, loop[i] as Vec3, loop[i + 1] as Vec3, 0.02, 0.02, IRON));
+  for (const y of [-0.3, 0.3])
+    out.push(
+      place(box({ size: [0.07, 0.09, 0.05], at: [0, 0, -0.012], color: IRON, bevel: 0.008 }), {
+        at: rear(0.3, y),
+        pitch: -Math.atan2(0.3, 0.32),
+      }),
+    );
   // Pioneer tools on the left hull side (clear of the turret and mantlet sweep): shovel and
   // crowbar in brass clamps bolted to the side plate.
   const y = HALF_W + 0.018;
@@ -95,5 +113,25 @@ export function hullDressing(lod: Lod, deck: number): Mesh | null {
       box({ size: [0.3, 0.1, 0.36], at: [x, -HALF_W - 0.035, 1.0], color: SLATE, bevel: 0.012 }),
     );
   out.push(box({ size: [1.1, 0.05, 0.05], at: [-0.95, -HALF_W - 0.02, 1.27], color: IRON }));
+  return merge(out);
+}
+
+/** Bolt heads just inside the turret roof's edge: `plan` is the bolt line (turret space), two to
+ *  a side, at height `z` (LOD0 only). */
+export function turretBolts(lod: Lod, plan: readonly Vec2[], z: number): Mesh | null {
+  if (lod !== 0) return null;
+  const out: Mesh[] = [];
+  plan.forEach((a, i) => {
+    const b = plan[(i + 1) % plan.length] ?? a;
+    for (const t of [0.25, 0.75])
+      out.push(
+        box({
+          size: [0.045, 0.045, 0.03],
+          at: [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, z - 0.008],
+          color: IRON,
+          bevel: 0.008,
+        }),
+      );
+  });
   return merge(out);
 }

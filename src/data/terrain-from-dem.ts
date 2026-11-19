@@ -1,7 +1,8 @@
 // Real terrain from a pinned DEM: decode + verify the heights, optionally add erosion detail finer
 // than the survey (hydraulic droplets from the recipe's Rng, then thermal relaxation), colour by
 // altitude/slope/flow (terrainColor), mesh at the LOD's density with a skirt (a solid map tile),
-// lay nature strips per triangle and, if asked, a water surface wherever the ground dips below a
+// finish the ground (ground-strips.ts: welded, classes blended per vertex on one stretched strip,
+// strata on the cut sides) and, if asked, lay a water surface wherever the ground dips below a
 // level. Every LOD samples the SAME grid, so LODs only differ in density.
 
 import type { Mesh, Rng } from '../core/index.ts';
@@ -49,7 +50,11 @@ export interface TerrainFromDemOptions {
     readonly talus?: number;
   };
   readonly ground: DemGround;
-  /** Per-triangle nature strips (default true); false keeps the plain vertex-coloured mesh. */
+  /**
+   * Ground finish on the trim sheet (default true): classes blended per vertex over one stretched
+   * matte strip, scree on slopes, rock strata on the cut sides. False keeps the heightfield's own
+   * UVs and colours.
+   */
   readonly strips?: boolean;
   /** Water surface at this altitude (m) wherever the ground lies below it. */
   readonly water?: { readonly level: number };
@@ -121,13 +126,11 @@ export function terrainFromDEM(dem: DemRecord, o: TerrainFromDemOptions): DemTer
     o.strips === false
       ? mesh
       : groundStrips(mesh, {
-          datum,
-          perZ: 1 / zPerMetre,
-          treeline: g.treeline,
-          snowline: g.snowline,
-          ...(g.rockSlope !== undefined ? { rockSlope: g.rockSlope } : {}),
-          ...(g.snowSlope !== undefined ? { snowSlope: g.snowSlope } : {}),
-          ...(g.screeSlope !== undefined ? { screeSlope: g.screeSlope } : {}),
+          scree: {
+            color: (g.palette ?? PALETTE).scree,
+            slope: g.screeSlope ?? 0.55,
+            rockSlope: g.rockSlope ?? 0.85,
+          },
         });
   const water = o.water
     ? waterSurface(grid, height, (o.water.level - datum) * zPerMetre, n)

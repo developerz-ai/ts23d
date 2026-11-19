@@ -1,14 +1,26 @@
-// A city block from real footprints: each building is its footprint extruded to its height
-// (`prism`, so the massing is the survey's polygon, not a box), a roof band in the roof colour,
-// and windows laid along every street-facing edge by a split-grammar line per storey
-// (`pier:~ | {wall | win | wall}* | pier:~`, bay width by the building's seed); a slot on a
-// stretch shared with a neighbour gets none. Streets are flat ribbons clipped to the ground slab. Windows are one repeated mesh: the block
-// returns their transforms so a scene can export them as GPU instances (EXT_mesh_gpu_instancing)
-// while the asset merges them per building. LOD2 keeps massing and roofs only.
+// A city block from real footprints: each building is its footprint raised to its height (one
+// wall face per surveyed edge, so the massing is the survey's polygon, not a box) on the wall
+// strip at true scale, a roof band in the roof colour, and windows laid along every street-facing
+// edge by a split-grammar line per storey (`pier:~ | {wall | win | wall}* | pier:~`, bay width by
+// the building's seed); a slot on a stretch shared with a neighbour gets none. Streets are flat
+// ribbons clipped to the ground slab. Windows are one repeated mesh: the block returns their
+// transforms so a scene can export them as GPU instances (EXT_mesh_gpu_instancing) while the asset
+// merges them per building. LOD policy (city-facade.ts): LOD0 glazed boxes, brick courses and,
+// with `trim`, an oversailing cornice, belt course and plinth; LOD1 flat panes, a band a storey
+// and a flush cornice; LOD2 massing, roofs and the window rows as dark bands.
 
 import { type BuildContext, type Mesh, merge, place, type Vec2, type Vec3 } from '../core/index.ts';
-import { split } from '../grammar/index.ts';
+import type { StripId } from '../material/index.ts';
 import { box, prism } from '../primitives/index.ts';
+import {
+  type CityInstance,
+  cityGlazing,
+  cityLedge,
+  cityWalls,
+  cityWindow,
+  cityWindowBands,
+  cityWindows,
+} from './city-facade.ts';
 import {
   CITY_BANDS,
   type CityBuildingPlan,
@@ -17,6 +29,8 @@ import {
   cityPlan,
 } from './city-plan.ts';
 import { area2, clipPoly } from './faces.ts';
+
+export { type CityInstance, cityWindow, cityWindows } from './city-facade.ts';
 
 export interface CityStreet {
   readonly highway: string;
@@ -27,20 +41,18 @@ export interface CityOptions extends CityPlanOptions {
   readonly prefix?: string;
   readonly roof: Vec3;
   readonly glass: Vec3;
-  /** Cornice band under the roof line (LOD0/1); none when absent. */
+  /**
+   * Trim colour: a cornice under the roof line (oversailing at LOD0, flush at LOD1) and, at LOD0,
+   * a belt course over the ground floor and a plinth. None of it when absent.
+   */
   readonly trim?: Vec3;
+  /** Wall material, at true scale along every edge (default `brick`); per building if a function. */
+  readonly wallStrip?: StripId | ((p: CityBuildingPlan) => StripId);
   readonly ground: Vec3;
   readonly road: Vec3;
   readonly streets?: readonly CityStreet[];
   /** Ground slab extent [minX, minY, maxX, maxY]; default the footprints' box + 4 m. */
   readonly extent?: readonly [number, number, number, number];
-}
-
-export interface CityInstance {
-  /** Bottom centre of the window on the wall plane (the unit window's origin). */
-  readonly at: Vec3;
-  readonly yaw: number;
-  readonly scale: Vec3;
 }
 
 export interface CityInfo {
@@ -62,49 +74,10 @@ export const ROAD_WIDTH: Readonly<Record<string, number>> = {
 };
 
 const { roof: ROOF_BAND, cornice: CORNICE } = CITY_BANDS;
-const WINDOW_DEPTH = 0.08;
-
-/** The unit window: 1 m wide, 1 m tall from z = 0 up (the sill), centred on the wall plane in X
- *  and Y, facing +X. */
-export const cityWindow = (glass: Vec3): Mesh =>
-  box({ size: [WINDOW_DEPTH, 1, 1], at: [0, 0, 0], color: glass, strip: 'glass', omit: ['back'] });
-
-/** Window transforms of one building (street-facing edges × storeys × grammar slots). */
-export function cityWindows(p: CityBuildingPlan): CityInstance[] {
-  const out: CityInstance[] = [];
-  const n = p.ring.length;
-  const w = p.bay * 0.48;
-  const pier = (p.bay - w) / 2;
-  const line = `pier:~ | {wall:${pier.toFixed(2)} | win:${w.toFixed(2)} | wall:${pier.toFixed(2)}}* | pier:~`;
-  // The wall top under the cornice (whether or not one is drawn): no window head goes past it.
-  const top = p.base + p.height - ROOF_BAND - CORNICE;
-  for (let i = 0; i < n; i++) {
-    if (p.party[i]) continue;
-    const taken = p.shared[i] ?? [];
-    const a = p.ring[i] ?? [0, 0];
-    const b = p.ring[(i + 1) % n] ?? a;
-    const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
-    if (len < p.bay + 0.6) continue;
-    const [ux, uy] = [(b[0] - a[0]) / len, (b[1] - a[1]) / len];
-    // Counter-clockwise ring: the outward normal is the edge turned clockwise.
-    const yaw = Math.atan2(-ux, uy);
-    // A window needs open wall: not on a stretch a neighbour stands against.
-    const slots = split(line, len).filter(
-      (s) => s.symbol === 'win' && !taken.some(([lo, hi]) => s.start < hi && s.start + s.size > lo),
-    );
-    for (let f = 0; f < p.floors; f++) {
-      // Sill at 26% of the storey, head at 82%, clamped to the wall top: a storey under about
-      // 0.83 m (a body under 1.43 m) would put the head into the cornice.
-      const z = p.base + f * p.floorHeight + p.floorHeight * 0.26;
-      const h = Math.min(p.floorHeight * 0.56, top - z);
-      for (const s of slots) {
-        const t = s.start + s.size / 2;
-        out.push({ at: [a[0] + ux * t, a[1] + uy * t, z], yaw, scale: [1, s.size, h] });
-      }
-    }
-  }
-  return out;
-}
+/** LOD0 articulation, metres [proud of the wall, tall]: cornice oversail, belt course, plinth. */
+const OVERSAIL = 0.18;
+const BELT = [0.06, 0.16] as const;
+const PLINTH = [0.05, 0.5] as const;
 
 /** A street segment as a flat ribbon prism (0.04 m, from the ground up): the widened ribbon,
  *  not just its centre line, is clipped to the slab `e`. */
@@ -169,39 +142,52 @@ export function cityBlock(
     }
   }
   if (roads.length) ctx.part(`${pre}streets`, merge(roads));
-  const unit = cityWindow(o.glass);
+  const unit = cityWindow(o.glass, ctx.lod);
   const windows: CityInstance[] = [];
   for (const p of plans) {
     const name = `${pre}b${p.id}`;
+    const lod = ctx.lod;
     // The cornice: a pale band under the roof line (LOD0/1), the wall running up to it.
-    const cornice = ctx.lod === 2 || !o.trim ? 0 : CORNICE;
+    const cornice = lod === 2 || !o.trim ? 0 : CORNICE;
     const wall = p.height - ROOF_BAND - cornice;
-    ctx.part(
-      name,
-      prism({ profile: p.ring, depth: wall, centred: false, color: p.wall, strip: 'plain' }),
-      {
-        at: [0, 0, p.base],
-      },
-    );
-    if (cornice && o.trim)
+    const strip = typeof o.wallStrip === 'function' ? o.wallStrip(p) : (o.wallStrip ?? 'brick');
+    ctx.part(name, cityWalls(p, wall, strip, lod), { at: [0, 0, p.base] });
+    if (cornice && o.trim) {
+      const band = prism({
+        profile: p.ring,
+        depth: cornice,
+        centred: false,
+        color: o.trim,
+        strip: 'stone',
+      });
+      // Up close the top third of the band oversails the wall.
+      const lip = lod === 0 ? cityLedge(p, OVERSAIL, cornice / 3, o.trim) : [];
       ctx.part(
         `${name}_cornice`,
-        prism({ profile: p.ring, depth: cornice, centred: false, color: o.trim, strip: 'stone' }),
+        merge([band, ...lip.map((m) => place(m, { at: [0, 0, (2 * cornice) / 3] }))]),
         { at: [0, 0, p.base + wall] },
       );
+    }
+    if (lod === 0 && o.trim) {
+      const bands = cityLedge(p, PLINTH[0], PLINTH[1], o.trim);
+      // A belt course where the ground floor ends, on bodies that have a floor above it.
+      if (p.floors > 1)
+        bands.push(
+          ...cityLedge(p, BELT[0], BELT[1], o.trim).map((m) =>
+            place(m, { at: [0, 0, p.floorHeight - BELT[1] / 2] }),
+          ),
+        );
+      if (bands.length) ctx.part(`${name}_bands`, merge(bands), { at: [0, 0, p.base] });
+    }
     ctx.part(
       `${name}_roof`,
       prism({ profile: p.ring, depth: ROOF_BAND, centred: false, color: o.roof, strip: 'plain' }),
       { at: [0, 0, p.base + wall + cornice] },
     );
-    if (ctx.lod === 2) continue;
     const ws = cityWindows(p);
-    windows.push(...ws);
-    if (ws.length)
-      ctx.part(
-        `${name}_windows`,
-        merge(ws.map((w) => place(unit, { at: w.at, yaw: w.yaw, scale: w.scale }))),
-      );
+    if (lod < 2) windows.push(...ws);
+    const glazing = lod === 2 ? merge(cityWindowBands(p, o.glass)) : cityGlazing(ws, unit);
+    if (ws.length) ctx.part(`${name}_windows`, glazing);
   }
   return { plans, windows, extent };
 }

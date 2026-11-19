@@ -51,7 +51,7 @@ const Z_SPLITTER = 0.128;
  */
 export function splitter(S: Surface, lod: Lod): Mesh {
   const pts: [number, number][] = [];
-  const n = [40, 16, 6][lod] ?? 6;
+  const n = [20, 8, 4][lod] ?? 4;
   const s0 = sAtX(1.66, 7);
   const damTop: Vec3[] = [];
   const damFoot: Vec3[] = [];
@@ -93,8 +93,8 @@ const SCREEN_TOP_W = 0.63;
 
 /** Glass grid: base on the cowl, top at the header; wrapped laterally, bowed forward. */
 function screenGrid(S: Surface, lod: Lod): { P: Vec3[][]; N: Vec3[][] } {
-  const ns = [16, 8, 2][lod] ?? 2;
-  const nu = [40, 16, 6][lod] ?? 6;
+  const ns = [8, 4, 2][lod] ?? 2;
+  const nu = [20, 8, 4][lod] ?? 4;
   const P: Vec3[][] = [];
   const N: Vec3[][] = [];
   const base = (y: number): Vec3 => {
@@ -144,7 +144,7 @@ export function windscreen(S: Surface, lod: Lod): { glass: Mesh; frame: Mesh } {
   const glass = skin(P, N, { color: C.glass, strip: 'glass', thickness: 0.006 });
   const ns = P.length - 1;
   const nu = (P[0]?.length ?? 1) - 1;
-  const segs = [10, 6, 4][lod] ?? 4;
+  const segs = [8, 5, 3][lod] ?? 3;
   const fr: Mesh[] = [];
   const pillar = (j: number): Vec3[] => P.map((row) => row[j] ?? [0, 0, 0]);
   const top = P[ns] ?? [];
@@ -228,7 +228,7 @@ export function wipers(S: Surface, lod: Lod): Mesh {
 export function hoodVent(S: Surface, lod: Lod): Mesh {
   if (lod === 2) return merge([]);
   const h = HOOD_VENT;
-  const parts: Mesh[] = [pocket(S, h, 0.05, C.black, 'plastic', lod === 0 ? 20 : 8)];
+  const parts: Mesh[] = [pocket(S, h, 0.05, C.black, 'plastic', lod === 0 ? 10 : 4)];
   const n = lod === 0 ? 7 : 4;
   for (let k = 0; k < n; k++) {
     const s = h.sc - h.hs * 0.85 + (k / (n - 1)) * h.hs * 1.7;
@@ -250,7 +250,7 @@ export function hoodVent(S: Surface, lod: Lod): Mesh {
 export function gills(S: Surface, lod: Lod): { black: Mesh; paint: Mesh } {
   if (lod === 2) return { black: merge([]), paint: merge([]) };
   const black: Mesh[] = [];
-  for (const h of GILLS) black.push(pocket(S, h, 0.035, C.black, 'plastic', lod === 0 ? 16 : 6));
+  for (const h of GILLS) black.push(pocket(S, h, 0.035, C.black, 'plastic', lod === 0 ? 8 : 3));
   return { black: merge(black), paint: merge([]) };
 }
 
@@ -262,7 +262,7 @@ export function mouth(S: Surface, lod: Lod): Mesh {
   if (lod === 2) return cover(S, h, -0.002, C.black, 'plastic', 3);
   // Duct walls (an open-ended pocket: the mouth runs to the centre line, mirrored).
   // Duct walls along the top and bottom edges, running back 9 cm (the right half mirrors).
-  const e = edges(S, h, 0.008, lod === 0 ? 24 : 8);
+  const e = edges(S, h, 0.008, lod === 0 ? 10 : 4);
   for (const [line, down] of [
     [e.top, false],
     [e.bottom, true],
@@ -287,8 +287,8 @@ export function mouth(S: Surface, lod: Lod): Mesh {
   const SET_BACK = 0.036;
   const gt = e.top.map((q) => add(q, [-SET_BACK, 0, 0]));
   const gb = e.bottom.map((q) => add(q, [-SET_BACK, 0, 0]));
-  if (lod === 0) parts.push(grille(gt, gb, 22, 7, 0.004, C.black));
-  else parts.push(grille(gt, gb, 8, 3, 0.006, C.black));
+  if (lod === 0) parts.push(grille(gt, gb, 16, 5, 0.004, C.black));
+  else parts.push(grille(gt, gb, 5, 2, 0.006, C.black));
   const bl: Vec3[] = [];
   for (let i = 0; i < gt.length; i++) {
     const a = gt[i] ?? [0, 0, 0];
@@ -307,8 +307,8 @@ export function mirror(S: Surface, lod: Lod): { paint: Mesh; trim: Mesh } {
   const root = S.row(s)(U.shoulder);
   const base: Vec3 = [root[0] - 0.01, root[1] - 0.015, root[2] + 0.004];
   const H: Vec3 = [root[0] - 0.035, root[1] + 0.155, root[2] + 0.105];
-  const segs = lod === 0 ? 20 : 8;
-  const nr = lod === 0 ? 12 : 5;
+  const segs = lod === 0 ? 12 : 6;
+  const nr = lod === 0 ? 7 : 3;
   const half = 0.105;
   const ring = (y: number, k: number): Vec3[] => {
     const out: Vec3[] = [];
@@ -360,8 +360,8 @@ export function mirror(S: Surface, lod: Lod): { paint: Mesh; trim: Mesh } {
       0.02,
       C.black,
       'plastic',
-      8,
-      3,
+      [8, 5, 3][lod] ?? 3,
+      [3, 2, 1][lod] ?? 1,
     ),
     beamBetween(
       add(base, [0.045, -0.002, -0.004]),
@@ -570,18 +570,19 @@ const STRIPE_OUT = 0.165;
 
 /** Twin stripes (left stripe; mirror for the right) on a panel's s range, lifted off the paint. */
 function stripeOn(S: Surface, s0: number, s1: number, lod: Lod, avoidCockpit = false): Mesh {
-  const ns = Math.max(2, Math.ceil(Math.abs(s1 - s0) / ([0.02, 0.06, 0.2][lod] ?? 0.2)));
+  const ns = Math.max(2, Math.ceil(Math.abs(s1 - s0) / ([0.04, 0.1, 0.24][lod] ?? 0.24)));
   return patch(S, {
     s0,
     s1,
     ns,
-    nu: lod === 0 ? 6 : 2,
+    nu: lod === 0 ? 3 : 1,
     lo: (s) => (avoidCockpit && cockpitY(s) > 0 ? 0 : uAtY(S, s, STRIPE_IN)),
     hi: (s) => (avoidCockpit && cockpitY(s) > 0 ? 0 : uAtY(S, s, STRIPE_OUT)),
     color: C.paint,
     strip: 'plastic',
     thickness: 0,
-    lift: 0.0009,
+    // Proud by more than the body skin's chord sag at this LOD's step, so it never z-fights.
+    lift: [0.002, 0.006, 0.012][lod] ?? 0.012,
   });
 }
 
@@ -614,7 +615,7 @@ export const lerpN = lerp;
 // ---------------------------------------------------------------- door jambs
 /** Body-colour jamb faces behind both door shut lines (left), so the gaps close onto paint. */
 export function doorJambs(S: Surface, lod: Lod): Mesh {
-  const n = [16, 6, 2][lod] ?? 2;
+  const n = [8, 4, 2][lod] ?? 2;
   const out: Mesh[] = [];
   for (const [s, face] of [
     [X_DOOR_FRONT, -1],
@@ -645,19 +646,20 @@ export function doorJambs(S: Surface, lod: Lod): Mesh {
 // ---------------------------------------------------------------- rear graphic
 /** Black rear valance over the tail's lower skin, and the black band joining the lamps (left). */
 export function rearBlackout(S: Surface, lod: Lod): Mesh {
-  const step = [0.03, 0.08, 0.3][lod] ?? 0.3;
+  const step = [0.04, 0.1, 0.24][lod] ?? 0.24;
+  const lift = [0.003, 0.008, 0.02][lod] ?? 0.02;
   const sEnd = sAtX(-1.9, 7);
   const valance = patch(S, {
     s0: S_MIN_TAIL,
     s1: sEnd,
     ns: Math.max(2, Math.ceil((sEnd - S_MIN_TAIL) / step)),
-    nu: lod === 0 ? 8 : 3,
+    nu: lod === 0 ? 5 : 2,
     lo: () => 7.95,
     hi: () => U_MAX,
     color: C.black,
     strip: 'plastic',
     thickness: 0,
-    lift: 0.0015,
+    lift,
   });
   const t = TAILLAMP;
   const band = patch(S, {
@@ -670,7 +672,7 @@ export function rearBlackout(S: Surface, lod: Lod): Mesh {
     color: C.black,
     strip: 'plastic',
     thickness: 0,
-    lift: 0.0015,
+    lift,
   });
   return merge([valance, band]);
 }

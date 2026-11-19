@@ -2,8 +2,9 @@
 // eyes — one image read shows proportions from every side, so it fixes the right thing first.
 //   row 1: 3/4 FRONT · FRONT (+X) · SIDE (-Y)
 //   row 2: TOP · 3/4 REAR · FAR LOD (`far`, else the asset itself; labelled with the LOD drawn)
-// Axis views share one scale (the largest span); a 3/4 view widens to its projected bounds so a
-// cube's corners are not cut off.
+// Colour is flat Lambert over vertex colour; pass `sheet` for the hero's base colour (trim-sheet
+// albedo × vertex colour, see-through glass). Axis views share one scale (the largest span); a
+// 3/4 view widens to its projected bounds so a cube's corners are not cut off.
 
 import {
   type CompiledAsset,
@@ -14,8 +15,10 @@ import {
   sub,
   type Vec3,
 } from '../core/index.ts';
+import { checkSheetFor, type PaintedSheet } from '../material/index.ts';
 import { drawText } from './font.ts';
 import { drawAsset, line, orthoCamera, type Target, type View, worldParts } from './raster.ts';
+import { sheetTones } from './sheet-tones.ts';
 
 export const VIEWS: readonly View[] = [
   { label: '3/4 FRONT', dir: [-1, 0.8, -0.6], up: [0, 0, 1] },
@@ -77,6 +80,21 @@ export interface SheetOptions {
   readonly cell?: number;
   /** The far view's asset — compile the same recipe at LOD 2 and pass it here. */
   readonly far?: CompiledAsset;
+  /**
+   * The painted trim sheet. With it the panels show the hero's base colour (the strip's mean
+   * albedo × vertex colour) and see-through parts blended over what is behind; without it,
+   * vertex colour only, every part opaque. Paint it for the asset (`previewSheet(asset)` does).
+   */
+  readonly sheet?: PaintedSheet;
+}
+
+/** The sheet's mean colours, after refusing a sheet painted before one of `assets`' materials. */
+export function tonesFor(
+  sheet: PaintedSheet,
+  assets: readonly CompiledAsset[],
+): ReturnType<typeof sheetTones> {
+  checkSheetFor(sheet, assets);
+  return sheetTones(sheet);
 }
 
 /** The six cell labels; the sixth names the LOD actually drawn there. */
@@ -92,6 +110,7 @@ export function contactSheet(asset: CompiledAsset, o: SheetOptions = {}): Uint8A
   const b = bounds(asset);
   const step = gridStep(b.extent);
   const labels = sheetLabels(asset, o);
+  const tones = o.sheet ? tonesFor(o.sheet, o.far ? [asset, o.far] : [asset]) : undefined;
   VIEWS.forEach((view, i) => {
     const t: Target = {
       px: new Uint8Array(cell * cell * 4),
@@ -101,7 +120,7 @@ export function contactSheet(asset: CompiledAsset, o: SheetOptions = {}): Uint8A
     };
     for (let k = 0; k < cell * cell; k++) t.px.set([238, 240, 243, 255], k * 4);
     const cam = orthoCamera(view, b.centre, viewExtent(view, b), cell);
-    drawAsset(t, cam, i === 5 && o.far ? o.far : asset);
+    drawAsset(t, cam, i === 5 && o.far ? o.far : asset, tones);
     const g0 = Math.floor(Math.min(b.min[0], b.min[1]) / step - 1) * step;
     const g1 = Math.ceil(Math.max(b.max[0], b.max[1]) / step + 1) * step;
     for (let g = g0; g <= g1 + 1e-9; g += step) {

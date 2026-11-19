@@ -33,6 +33,17 @@ benches against the wall, oil/gas lamps and a black running-in name board.
 `platform`, `building`, `roof`, `canopy` (static) · `lamp_*` (glow) · sockets `bench_*` (seat),
 `door_*` (interact) · emitters `chimney_*` (smoke).
 
+## Modelling notes (2026-11 quality pass)
+- Roof: slate courses laid over the library roof slab (`slates.ts`), 0.24 m gauge, each course a
+  shallow wedge whose 12 mm butt casts the course line, split into runs of slates with their own
+  tone; lichen on the shaded (−X) slope, engine soot on the lowest track-side courses. LOD1 keeps
+  courses at double gauge; LOD2 the slab.
+- Brick: course-by-course tone, rising damp above the blue plinth, soot under the eaves; canopy
+  soffit sooted toward the track edge; lichen and a trodden band on the platform edge; coping in
+  0.9 m slabs with 4 mm joints (LOD0); rise-and-fall gutter brackets; valance fret kept at LOD1.
+- LOD2: the platform keeps the stone strip and tint (no value jump); the name board keeps a
+  lettering decal.
+
 ## Open questions
 - Toddington's canopy is cantilevered from the wall on brackets; this model carries its front edge on
   cast-iron columns (the other common GWR arrangement and the brief's ask). Flagged deviation.

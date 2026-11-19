@@ -4,7 +4,6 @@
 
 import {
   beam,
-  cylinder,
   type Lod,
   type Mesh,
   merge,
@@ -15,6 +14,7 @@ import {
   type Vec3,
 } from '@developerz.ai/ts23d';
 import { F, lath, TREAD_W } from './shared.ts';
+import { farWheel } from './wear.ts';
 
 /** A five-point star, flush on a +Y face at `y`, radius `r`. */
 function star(r: number, y: number): Mesh {
@@ -36,15 +36,26 @@ export function wheelMesh(
   spokes: number,
   crankAngle: number | null,
 ): Mesh {
-  if (lod === 2)
-    return cylinder({
-      radius: r,
-      length: TREAD_W,
-      segments: 6,
-      axis: 'y',
-      at: [0, y, 0],
-      ...F.redSteel,
-    });
+  if (lod === 2) {
+    // Far: a closed disc with a ring of vertices at the tyre's inner edge, so the centre stays
+    // vermilion, the hub goes dark and the tyre steel (a plain red drum read as a red block).
+    const h2 = TREAD_W / 2;
+    return farWheel(
+      lath({
+        profile: [
+          [0, y + h2],
+          [r - 0.08, y + h2],
+          [r, y + h2],
+          [r, y - h2],
+          [0, y - h2],
+        ],
+        segments: spokes > 0 ? 10 : 6,
+        axis: 'y',
+        ...F.redSteel,
+      }),
+      r,
+    );
+  }
   const segs = (spokes > 0 ? [32, 14, 8] : [24, 10, 8])[lod] ?? 8;
   const h = TREAD_W / 2;
   const parts: Mesh[] = [

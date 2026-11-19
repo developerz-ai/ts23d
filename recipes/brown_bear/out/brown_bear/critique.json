@@ -1,66 +1,65 @@
 {
   "asset": "brown_bear",
   "reviewer": "agent",
-  "overall": 5.9,
+  "overall": 6,
   "scores": {
     "silhouette": {
       "score": 6,
-      "reason": "Reads as a big furry quadruped, but the long narrow snout, small head and long low trunk read wolverine/badger or canid more than bear in hero.png and SIDE; the shoulder hump is weak.",
+      "reason": "The furry body and hump read as a bear, but the head is a flat wedge with a long, thin pointed snout and tiny ears: from 3/4 it reads as a wombat or wolverine, not a dished bear face.",
       "fixes": [
-        "shorten and widen the muzzle and enlarge the head ~15% so the dished bear face reads",
-        "raise the shoulder hump mass and shorten the trunk so the back slopes from hump to rump"
+        "enlarge the head ~15%, shorten and widen the muzzle and raise the forehead so the dished bear profile reads",
+        "thicker, rounder ears set wider"
       ]
     },
     "proportions": {
       "score": 6,
-      "reason": "2.3 × 0.7 × 1.2 m matches the declared adult male envelope, but within it the neck is long, the head small and the hind legs stretched back like a dog's stance.",
+      "reason": "The trunk is long and the legs short for a brown bear in SIDE; the neck is short but the head is undersized against the hump.",
       "fixes": [
-        "shorten the neck chain and bring the hind feet under the hips (plantigrade stance)",
+        "shorten the trunk ~10% and lengthen the legs ~8% (plantigrade stance, hind feet under the hips)",
         "thicken the forearms ~15%"
       ]
     },
     "materials": {
       "score": 6,
-      "reason": "Fur cards on the back and a dark-leg gradient read as fur at distance; the face and lower body are smooth painted vertex colour with one roughness.",
+      "reason": "Fur cards cover the body now, but the face is smooth tan plastic with a hard seam to the fur, and the paws are pale tan socks with no dark pads or claws.",
       "fixes": [
-        "extend the fur cards over the flanks and face edge so the coat is continuous",
-        "roughness split: glossy nose and eyes, rough coat"
+        "extend fur cards onto the face edge and cheeks; darker brown muzzle",
+        "dark leathery paw pads and dark claws; glossy nose and eyes"
       ]
     },
     "detail": {
       "score": 6,
-      "reason": "Claws, nose, eyes, fur fringe on the spine; no fur clumps on the belly or legs, ear and face planes soft.",
+      "reason": "Fur cards break the back and belly outline; the face has no brow/cheek planes, there are no visible claws, and the ears are tiny nubs.",
       "fixes": [
-        "longer fur fringe on the belly and back of the forelegs",
-        "sharper brow and cheek planes; thicker, rounder ears"
+        "claws on each paw as curved cones",
+        "sharper brow and cheek planes, rounder ears"
       ]
     },
     "wear": {
-      "score": 4,
-      "reason": "Clean: no mud, no wet fur, no scars.",
+      "score": 5,
+      "reason": "A pink scar on the face and a rubbed pale patch on the shoulder; paws are clean and pale, no mud.",
       "fixes": [
         "mud on the paws and lower legs (grime with the ground mask)",
-        "seeded scars and a rubbed patch on the shoulder"
+        "matted wet fur on the belly fringe"
       ]
     },
     "lod": {
       "score": 6,
-      "reason": "LOD2 (1.8k) keeps the outline but is heavily faceted, loses the fur fringe and the legs become thin tubes.",
+      "reason": "FAR LOD2 keeps the outline but the legs become straight tubes and the coat breaks into angular light/dark patches.",
       "fixes": [
-        "keep a coarse fur fringe on the back at LOD2 (a few cards)",
-        "LOD2 legs from the sculpt with an inflate instead of tubes"
+        "LOD2 legs from the sculpt with an inflate instead of tubes; average the coat colour per face"
       ]
     },
     "technical": {
       "score": 7,
-      "reason": "QA PASS; 160.9k / 29.4k / 1.8k triangles; 2 draws. LOD0 is heavy for a game creature and much of it is fur cards on the back.",
+      "reason": "QA clean; 123k / 25k / 2k triangles over 4 draws: LOD0 is heavy for what shows, much of it fur cards on the back.",
       "fixes": [
         "cap LOD0 near 100k by coarsening the fur-card density on the back"
       ]
     }
   },
   "renders": {
-    "hero.png": "6e995cad47762adf4aabdb71d3fa0dd2960dfa4c97d37eab3a102d393ae936ab",
-    "sheet.png": "71351a341262a42b2023e6b948ce8f85a3600492a471aa29e51326f6fc4e70ed"
+    "hero.png": "95a19534dc82dc9c403557aa4a252abddfe503715cacb666c84815d1f00122b1",
+    "sheet.png": "ae41c136b16a371b832f5cbbe9413a4306b39a515e2a0f963bfd6c5066742615"
   }
 }

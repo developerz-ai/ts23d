@@ -1,159 +1,161 @@
 // Mountain range: a 2 × 2 km alpine map tile. Numbers and their caveats: README.md (dossier).
 //
-// Pipeline, all seeded from ctx.rng (three variants = three seeds + valley headings):
-//   1. masses — ridged multifractal (sharp ridgelines, smooth lows) domain-warped so ranges fold,
-//      over a U-shaped glacial trough along `valley`, plus low fBm hills.
-//   2. erosion on one 256² grid shared by every LOD — hydraulic droplets carve gullies and drop
-//      fans, then thermal erosion caps cliffs at 45°.
-//   3. colour — forest below the treeline, meadow above, rock on steep ground, scree on fans, damp
-//      gullies, snow above the snowline where the slope holds it.
-//   4. mesh — heightfield at 256 / 128 / 64 cells by LOD, sampling the eroded grid, with a skirt
-//      down to z = 0 (a solid tile). One part, one draw call.
+// Pipeline, all seeded from ctx.rng (three variants = three seeds, valley headings and windows):
+//   1. field (field.ts) — ridged multifractal over a U-shaped glacial trough, sampled at the
+//      variant's window (`offset`) of an endless field; eroded on one 256² grid shared by every
+//      LOD (hydraulic droplets, thermal 45° cap, needle clamp), erosion faded out at the cut so the
+//      tile's boundary is the raw field (neighbour tiles of the same field meet flush).
+//   2. colour — smooth per-vertex blends (ground.ts: no per-triangle strip switches, so no stripe
+//      banding): forest below the treeline, meadow above, rock on steep ground, scree on fans, damp
+//      torrent beds; north faces lose forest ~220 m lower, and the lines break up with noise. Snow
+//      is a smooth cover map (snow.ts) from blurred slope, aspect and crest convexity.
+//   3. mesh — heightfield at 256 / 128 / 38 cells by LOD, sampling the eroded grid, with a skirt
+//      down to z = 0 (a solid tile; its top is the surface's own border row) whose cut sides show
+//      rock strata; conifer impostors over the forest belt and the valley stream. One draw call.
 
 import {
   type BuildContext,
-  DEFAULT_SHEET,
   defineFamily,
   fbm,
   gradientNoise2,
   heightfield,
   hex,
-  hydraulicErosion,
-  type Mesh,
-  ridged,
-  type StripId,
   sampler,
-  stripRect,
   terrainColor,
-  terrainGrid,
-  thermalErosion,
-  warp,
+  type Vec3,
 } from '@developerz.ai/ts23d';
-import { tessellate } from '../_lib/finish/finish.ts';
-
-/** Altitude (m above sea level) of z = 0. */
-const DATUM = 1650;
-const HALF = 1000;
-const RECT = [-HALF, -HALF, HALF, HALF] as const;
+import { DATUM, type FieldParams, RECT, tileField } from './field.ts';
+import {
+  conifers,
+  d8Flow,
+  footprint,
+  macroUV,
+  mapAt,
+  ribbon,
+  sideTint,
+  smoothPath,
+  valleyPath,
+} from './ground.ts';
+import { withSkirt } from './skirt.ts';
+import { snowCover } from './snow.ts';
 
 const PALETTE = {
-  forest: hex('#2f4a2a'),
-  grass: hex('#6f8a45'),
-  scree: hex('#8a8272'),
-  rock: hex('#5a5652'),
+  forest: hex('#2c3f26'),
+  grass: hex('#6b7448'),
+  scree: hex('#8c8578'),
+  rock: hex('#6a6560'),
   snow: hex('#f2f4f7'),
   wet: hex('#4a4a3c'),
 };
+const STRATA = hex('#b8a894');
+const WATER = hex('#5a7a88');
 
-interface Params {
-  /** Unit direction of the main valley in plan. */
-  readonly valley: readonly [number, number];
-  /** Valley floor and ridge relief, m. */
-  readonly floor: number;
-  readonly relief: number;
+interface Params extends FieldParams {
   readonly treeline: number;
   readonly snowline: number;
-  /** Hydraulic droplets on the 257² grid (~2 per point carves strongly). */
-  readonly droplets: number;
 }
 
-/**
- * Ground materials by slope and altitude, per triangle (the heightfield is unwelded first so each
- * triangle owns its UVs): snow above the snowline on gentle slopes, granite cliff on steep faces,
- * gravel scree below them, grass on meadows, moss on the
- * forest floor. UVs are a top-down true-scale projection (V squeezed to one band per triangle);
- * the terrain colour stays as a half-strength tint so the bands keep their hue. The tile's cut
- * sides show layered rock_strata.
- */
-function groundStrips(m: Mesh, p: Readonly<Params>): Mesh {
-  const u = tessellate(m, Number.POSITIVE_INFINITY);
-  const uvs = new Float32Array(u.uvs);
-  const colors = new Float32Array(u.colors);
-  const P = u.positions;
-  const half = 0.5 / 4096;
-  for (let t = 0; t < u.indices.length; t += 3) {
-    const ids = [u.indices[t] ?? 0, u.indices[t + 1] ?? 0, u.indices[t + 2] ?? 0];
-    const z = ids.reduce((s, i) => s + (P[i * 3 + 2] ?? 0), 0) / 3 + DATUM;
-    const nz = ids.reduce((s, i) => s + (u.normals[i * 3 + 2] ?? 1), 0) / 3;
-    const steep = Math.sqrt(Math.max(0, 1 - nz * nz)) / Math.max(nz, 1e-3);
-    const id: StripId =
-      nz < 0.05
-        ? 'rock_strata' // the tile's cut sides: a geological cross-section
-        : z > p.snowline && steep < 1.1
-          ? 'snow'
-          : steep > 0.85
-            ? 'cliff'
-            : steep > 0.55 || z > p.treeline + 250
-              ? 'gravel'
-              : z > p.treeline
-                ? 'grass'
-                : 'moss';
-    const r = stripRect(id);
-    const vm = DEFAULT_SHEET.strips[id]?.scaleMetres ?? 1;
-    // Strata and cliff run their beds horizontally: project those onto the vertical plane.
-    const side = id === 'rock_strata' || id === 'cliff';
-    const vs = ids.map((i) => (side ? (P[i * 3 + 2] ?? 0) : (P[i * 3 + 1] ?? 0)));
-    const lo = Math.min(...vs);
-    const base = Math.floor(lo / vm) * vm;
-    const k = Math.min(1, vm / Math.max(1e-6, Math.max(...vs) - base));
-    for (const i of ids) {
-      const along = side ? (P[i * 3] ?? 0) + (P[i * 3 + 1] ?? 0) : (P[i * 3] ?? 0);
-      uvs[i * 2] = r.u0 + (along / r.metres) * (r.u1 - r.u0);
-      const f = (((side ? (P[i * 3 + 2] ?? 0) : (P[i * 3 + 1] ?? 0)) - base) / vm) * k;
-      uvs[i * 2 + 1] = r.v0 + half + Math.min(1, f) * (r.v1 - r.v0 - 2 * half);
-      for (let c = 0; c < 3; c++) colors[i * 3 + c] = 0.55 + 0.45 * (colors[i * 3 + c] ?? 0);
-    }
-  }
-  return { ...u, uvs, colors };
-}
+/** Lowest tile altitude the skirt walls start from (z = 0), and the wall height used by strata. */
+const WALL = 1200;
+/** Shift (m of altitude) applied to north-facing slopes: lower snow and tree lines in shade. */
+const NORTH_SHIFT = 220;
 
 function build(ctx: BuildContext, p: Readonly<Params>): void {
   const rng = ctx.rng;
-  const [vx, vy] = p.valley;
-  const wx = fbm(gradientNoise2(rng.fork('warp-x')), { scale: 900, octaves: 3 });
-  const wy = fbm(gradientNoise2(rng.fork('warp-y')), { scale: 900, octaves: 3 });
-  const range = warp(
-    ridged(gradientNoise2(rng.fork('range')), { scale: 1700, octaves: 6, gain: 0.35 }),
-    wx,
-    wy,
-    350,
-  );
-  const hills = fbm(gradientNoise2(rng.fork('hills')), { scale: 700, octaves: 5 });
-  const altitude = (x: number, y: number): number => {
-    // Distance across the valley axis, meandering by up to 300 m; U-shaped trough profile.
-    const along = x * vx + y * vy;
-    const across = -x * vy + y * vx - 300 * wx(along * 0.7, 0);
-    const d = Math.min(1, (across / 450) ** 2);
-    return p.floor + p.relief * range(x, y) * (0.2 + 0.8 * d) + 60 * hills(x, y) + 120 * d;
-  };
-  let grid = terrainGrid({ rect: RECT, cells: 256, height: (x, y) => altitude(x, y) - DATUM });
-  grid = hydraulicErosion(grid, rng.fork('erosion'), { droplets: p.droplets });
-  grid = thermalErosion(grid, { talus: 1, iterations: 25 });
-  const color = terrainColor(grid, {
+  const grid = tileField(rng, p);
+  const height = sampler(grid);
+  const flow = d8Flow(grid);
+  const jitter = fbm(gradientNoise2(rng.fork('jitter')), { scale: 120, octaves: 3 });
+  const base = terrainColor(grid, {
     palette: PALETTE,
     datum: DATUM,
     treeline: p.treeline,
     snowline: p.snowline,
     rockSlope: 0.85,
-    snowSlope: 1.2,
-    noise: fbm(gradientNoise2(rng.fork('jitter')), { scale: 120, octaves: 3 }),
+    // No slope holds snow here: snow comes from the smooth cover map below, not per point.
+    snowSlope: -1,
+    noise: jitter,
     jitter: 70,
   });
-  const cells = ctx.pick([256, 128, 64]);
-  ctx.part(
-    'terrain',
-    groundStrips(
-      heightfield({
-        rect: RECT,
-        cells: [cells, cells],
-        height: sampler(grid),
-        color,
-        skirt: 0,
-        skirtColor: hex('#5a4a3a'),
-      }),
-      p,
-    ),
+  const snow = snowCover(grid, {
+    datum: DATUM,
+    snowline: p.snowline,
+    northShift: NORTH_SHIFT,
+    jitter: (x, y) => 70 * jitter(x, y) + 45 * jitter(x * 2.3, y * 2.3),
+  });
+  // Aspect: north faces (+Y) lose the forest sooner; the line breaks up.
+  const northness = (x: number, y: number): number => {
+    const e = 8;
+    const dy = (height(x, y + e) - height(x, y - e)) / (2 * e);
+    // Ground falling toward +Y faces north.
+    return Math.max(-1, Math.min(1, -dy * 1.6));
+  };
+  const color = (x: number, y: number, z: number): Vec3 => {
+    const shift = NORTH_SHIFT * northness(x, y) + 45 * jitter(x * 2.3, y * 2.3);
+    const land = base(x, y, z + shift);
+    const s = mapAt(grid, snow, x, y);
+    // Torrent beds: damp, darker gravel where water gathers below the snow.
+    const wet = Math.max(0, Math.min(1, (mapAt(grid, flow, x, y) - 0.55) / 0.2)) * (1 - s);
+    // Value breakup (±12 %, ~60 m patches): lichen-dark and fresh-pale rock, thin and thick turf.
+    const v = 1 + 0.12 * jitter(x * 2, y * 2 + 500);
+    const k = (c: number, w: number): number =>
+      Math.min(
+        1,
+        ((land[c] ?? 0) + ((PALETTE.snow[c] ?? 0) - (land[c] ?? 0)) * s) * v * (1 - w * wet),
+      );
+    return [k(0, 0.25), k(1, 0.22), k(2, 0.15)];
+  };
+  // LOD2 at 38 cells keeps the far tile inside the terrain band (4 k triangles, terrain.md).
+  const cells = ctx.pick([256, 128, 38]);
+  // Each vertex carries the mean colour of the ground it stands for (±0.75 cell): smooth snow
+  // and forest edges at the far LOD, no one-cell snow seam on a crest at the near ones.
+  const step = (RECT[2] - RECT[0]) / cells;
+  const surface = heightfield({
+    rect: RECT,
+    cells: [cells, cells],
+    height,
+    color: footprint(color, height, 0.75 * step, ctx.pick([3, 3, 5])),
+  });
+  // A solid tile down to z = 0, its walls topped by the surface's own border vertices.
+  const block = withSkirt(surface, [cells, cells], 0);
+  const ground = sideTint(macroUV(block, RECT, WALL), WALL, STRATA);
+  // The forest belt: dense below the treeline on gentle, dry ground, thinning upward.
+  const forest = (x: number, y: number): number => {
+    const alt = height(x, y) + DATUM + NORTH_SHIFT * northness(x, y) + 70 * jitter(x, y);
+    const slope = slopeAt(height, x, y);
+    const wet = mapAt(grid, flow, x, y);
+    return (
+      Math.max(0, Math.min(1, (p.treeline - 40 - alt) / 160)) *
+      Math.max(0, Math.min(1, (0.7 - slope) / 0.3)) *
+      (wet > 0.62 ? 0 : 1)
+    );
+  };
+  const trees = conifers(
+    grid,
+    height,
+    forest,
+    ctx.pick([1500, 1100, 110]),
+    { height: [14, 26], radius: ctx.pick([3.2, 3.6, 5]) },
+    PALETTE.forest,
+    ctx.rng.fork('trees'),
   );
+  // The valley stream: along the floor between the lowest points where the valley leaves the tile.
+  const course = smoothPath(valleyPath(grid, 1200), ctx.pick([3, 5, 14]));
+  const stream = ribbon(course, [6, 16], height, 0.6, WATER);
+  ctx.part('terrain', ground);
+  // Static like the ground, so they share its one draw; each spire and the water rest on it.
+  ctx.part('forest', trees, {
+    connect: { as: 'rest', why: 'impostor spires stand in the ground on their base ring' },
+  });
+  ctx.part('stream', stream, {
+    connect: { as: 'rest', why: 'the water surface lies in its bed, banks sunk into the ground' },
+  });
+}
+
+/** Rise over run at (x, y) from central differences on the height. */
+function slopeAt(h: (x: number, y: number) => number, x: number, y: number): number {
+  const e = 8;
+  return Math.hypot(h(x + e, y) - h(x - e, y), h(x, y + e) - h(x, y - e)) / (2 * e);
 }
 
 export const mountainRange = defineFamily<Params>({
@@ -161,26 +163,48 @@ export const mountainRange = defineFamily<Params>({
   description:
     '2 × 2 km alpine map tile: eroded ridges, a glacial valley, forest, meadow, rock and snow bands.',
   tags: ['terrain', 'landscape', 'alpine', 'erosion', 'map'],
-  budget: { triangles: [140000, 40000, 10000] },
+  // LOD2 inside the terrain band (≤ 4 k triangles).
+  budget: { triangles: [140000, 40000, 4000] },
+  // From the north-east, a little high: the snow lies on north faces, which the default
+  // south-east 3/4 view only sees from behind.
+  hero: { azDeg: 35, elDeg: 25 },
   defaults: {
     valley: [1, 0],
     floor: 1720,
     relief: 950,
+    offset: [0, 0],
     treeline: 2000,
-    snowline: 2480,
-    droplets: 100000,
+    snowline: 2420,
+    droplets: 160000,
   },
   build,
 });
 
-export const mountain_range = mountainRange.variant({ name: 'mountain_range', seed: 1 });
+/**
+ * The three tiles: seed, valley heading and window. Each window (`offset`) keeps the variant's
+ * tallest summit 450–750 m inside the cut (README.md: dossier).
+ */
+export const VARIANTS = {
+  mountain_range: { seed: 1, params: { offset: [100, -300] } },
+  mountain_range_b: {
+    seed: 2,
+    params: { valley: [0.8, 0.6], offset: [400, 500], snowline: 2350 },
+  },
+  mountain_range_c: {
+    seed: 3,
+    params: { valley: [0.6, -0.8], relief: 1050, offset: [300, -400], snowline: 2470 },
+  },
+} as const satisfies Record<string, { seed: number; params: Partial<Params> }>;
+
+export const mountain_range = mountainRange.variant({
+  name: 'mountain_range',
+  ...VARIANTS.mountain_range,
+});
 export const mountain_range_b = mountainRange.variant({
   name: 'mountain_range_b',
-  seed: 2,
-  params: { valley: [0.8, 0.6] },
+  ...VARIANTS.mountain_range_b,
 });
 export const mountain_range_c = mountainRange.variant({
   name: 'mountain_range_c',
-  seed: 3,
-  params: { valley: [0.6, -0.8], relief: 1050, snowline: 2550 },
+  ...VARIANTS.mountain_range_c,
 });

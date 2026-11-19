@@ -132,11 +132,12 @@ export function hairKnot(ctx: BuildContext, skull: Surface): Mesh {
           .slice(0, lod === 0 ? 5 : 3)
           .map(([dy, dz, r]): [number, number, number] => [dy, dz, lod === 0 ? r : r * 1.45]);
   for (const [dy, dz, r] of tails) {
-    const ctrl = tailPath(skull, dy, dz);
+    // (The far LOD's one fat lock keeps the higher arc: 1 cm lower it folds into the crown.)
+    const ctrl = tailPath(skull, dy, dz, lod === 2 ? 0 : 0.01);
     edits.push(...lock(spline(ctrl, 16), r, 0.0022, r * 0.25, 3));
   }
-  // 3.5 mm at LOD0 so the bun's wound turns and the leather wraps read as themselves.
-  return skinMesh(edits, ctx.pick([0.0035, 0.009, 0.022]), {
+  // 4.4 mm at LOD0 so the bun's wound turns and the leather wraps read as themselves.
+  return skinMesh(edits, ctx.pick([0.0044, 0.009, 0.022]), {
     rng: ctx.rng.fork('hair'),
     color: C.hairRoot,
     mirror: false,
@@ -144,11 +145,12 @@ export function hairKnot(ctx: BuildContext, skull: Surface): Mesh {
 }
 
 /** One tail lock's control path: out of the wraps, back low over the crown, down to the nape. */
-export function tailPath(skull: Surface, dy: number, dz: number): V[] {
+export function tailPath(skull: Surface, dy: number, dz: number, drop = 0.01): V[] {
   return [
     add(KNOT, [-0.004, dy * 0.3, 0.048]),
-    add(KNOT, [-0.026, dy, 0.046 + dz]),
-    add(KNOT, [-0.05, dy * 1.4, 0.024 + dz]),
+    // (The arc 1 cm lower than it first stood: a tail hanging off the knot, not a handle.)
+    add(KNOT, [-0.026, dy, 0.046 - drop + dz]),
+    add(KNOT, [-0.05, dy * 1.4, 0.024 - drop * 0.9 + dz]),
     skull.off([-0.105, dy * 2, 0.54], 0.01 + dz * 0.3),
     skull.off([-0.123, dy * 2.4, 0.47], 0.009 + dz * 0.3),
     skull.off([-0.12, dy * 2.8, 0.41], 0.011),
@@ -200,7 +202,7 @@ export function orcCardHair(skull: Surface): CardHairStyle {
         name: 'scalp_lock',
         kind: 'hair',
         region: scalpLock,
-        density: 9000,
+        density: 7000,
         length: 0.06,
         width: 0.012,
         lift: 0.1,
@@ -211,7 +213,7 @@ export function orcCardHair(skull: Surface): CardHairStyle {
       {
         ...beard,
         name: 'beard_base',
-        density: 16000,
+        density: 12000,
         length: 0.028,
         width: 0.014,
         lift: 0.08,
@@ -223,7 +225,7 @@ export function orcCardHair(skull: Surface): CardHairStyle {
       {
         ...beard,
         name: 'beard',
-        density: 15000,
+        density: 11500,
         length: 0.055,
         width: 0.011,
         lift: 0.22,

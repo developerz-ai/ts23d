@@ -5,11 +5,14 @@
 // has no jaw and no lids: `bite` and `blink` are dropped. Leg and tail limits are narrowed to what
 // these clips move through (QA `deform` poses the skin at the limits): a model's tail hangs where
 // the picture caught it (on the hocks, often), so the plan's ±40° passive swing would put it
-// through the legs.
+// through the legs. Extra chains (model-extra.ts) keep the limits the recipe declared and get
+// their own clip and their part in idle and the gaits (model-extra-clips.ts).
 
 import type { Bone, Clip } from '../core/index.ts';
 import { boneClips, clipEnvelope } from './creature-clips.ts';
 import { ENVELOPE_MARGIN } from './creature-limits.ts';
+import type { ExtraChain } from './model-extra.ts';
+import { extraClips } from './model-extra-clips.ts';
 
 /** Clips the creature kind bakes that a fused model head cannot play (no jaw, no lids). */
 export const FUSED_HEAD_DROPS: readonly string[] = ['bite', 'blink'];
@@ -31,13 +34,15 @@ export function modelClips(
   fitted: readonly Bone[],
   prefix = '',
   drop: readonly string[] = [],
+  extra: readonly ExtraChain[] = [],
 ): ModelClips {
-  const key = `${prefix}|${drop.join(',')}`;
+  const key = `${prefix}|${drop.join(',')}|${extra.length ? JSON.stringify(extra) : ''}`;
   const seen = clipped.get(fitted)?.get(key);
   if (seen) return seen;
   const all = boneClips(fitted, prefix);
-  const clips = all.filter((c) => !FUSED_HEAD_DROPS.includes(c.name) && !drop.includes(c.name));
-  const env = clipEnvelope(clips, fitted);
+  const kept = all.filter((c) => !FUSED_HEAD_DROPS.includes(c.name) && !drop.includes(c.name));
+  const env = clipEnvelope(kept, fitted);
+  const clips = extraClips(fitted, extra, kept, prefix);
   const leg = /^((fore|hind)_[lr]|tail)_\d+$/;
   const m = ENVELOPE_MARGIN;
   const round = (x: number): number => Math.round(x * 10) / 10;

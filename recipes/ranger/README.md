@@ -59,17 +59,35 @@ solid), so the part's density is derived: 726 kg/m³.
 | 1 | `image`: `CONCEPT` (concept.ts), seed 42, 1024² | `z-image` (Z-Image-Turbo, Apache-2.0), local GPU | PNG, 0.94 MB | committed |
 | 2 | `mesh`: `SURFACE` (surface.ts) on that PNG: a-pose, ≤ 300 k triangles, 2K PBR texture | `meshy-7.1` (Meshy image-to-3D, hosted, paid) | GLB, 279k triangles, 20.4 MB | local |
 | 3 | `rig`: `RIG` on that mesh: height 1.78 m, clips `Idle`, `Casual Walk`, `Run 2` | `meshy-rigging` (hosted, paid) | the mesh skinned to 24 bones + 3 clips at 30 fps, 26.7 MB | local |
-| 4 | `blender`: `STEPS` (steps.ts) on the rigged GLB | Blender 5.3.0 headless, RTX 3090 OptiX bake | game GLB: 38,998 / 11,798 / 3.9k triangles, albedo 2048², normal and ORM 1024², one skin, 3 clips, 10.15 MB | committed |
+| 4 | `blender`: `STEPS` (steps.ts) on the rigged GLB | Blender 5.3.0 headless, RTX 3090 OptiX bake | game GLB: 29,998 / 9,998 / 3.9k triangles, albedo 2048², normal and ORM 1024², one skin, 3 clips, 10.39 MB | committed |
 | 5 | `importModel` → `defineModelCharacter` (kinds: `riggedChain`, `riggedBody`) | TypeScript, at build | one skinned textured part per LOD, 22 bones, clips `idle`, `walk`, `jog` | — |
 
 Local outputs (`keep: 'local'`) stay on the machine that made them; `record.json` commits their
 sha256, so a fresh clone resolves the chain from the committed Blender output. Committed bytes:
-11.09 MB of the 12 MB per-recipe cap.
+11.33 MB of the 12 MB per-recipe cap (delete the superseded Blender key before a re-run: two do not fit).
 
-Blender program: `clean` → `retopo` 39,000 (closed shell, default 5.5 mm voxel; focus on the head
-× 4 and hands × 3) → `uv` smart (532 islands) → `bake` albedo, normal, AO, roughness (cage 12 mm,
+Blender program: `clean` → `retopo` 30,000 (closed shell, default 5.5 mm voxel; focus on the head
+× 4 and hands × 5; it was 39,000 / 11,800, over the playbook's model-tier band of 30,000 / 10,000) → `uv` smart (532 islands) → `bake` albedo, normal, AO, roughness (cage 12 mm,
 max ray 30 mm; hit rate 0.995, nothing unfilled) → `bind from: 'source'` (weights transferred, no
-vertex unweighted) → `lods` → `export`.
+vertex unweighted) → `script` (the wear and the roughness contrast painted into the maps, below)
+→ `lods` → `export`.
+
+## Paint and wear (`wear.ts`)
+
+One `script` step after the bind, run by [bear_hybrid/paint.ts](../bear_hybrid/paint.ts): the
+shell's triangles are rasterised in UV space, so every texel knows where it stands on the figure.
+Masks are height bands and balls in metres, materials are told by colour (the jerkin is the only
+green, belts and boots the only saturated brown), edges are broken by seeded noise. A textured part
+takes no `paint`, `finish` or grime pass (ADR 016), so the wear is in the maps, and all three LODs
+sample the same maps.
+
+| Pass | What |
+|---|---|
+| Roughness | wool trousers held at ≥ 0.93; boot leather waxed, 0.36–0.55 (the model's map had them alike) |
+| Mud | wet and dark on the soles and welts (roughness 0.5), a paler cracked crust to mid-boot (0.97), fine splashes to the knee |
+| Dust | the trouser legs above the boots and the jerkin's hem |
+| Straps | belt and baldric scuffed pale along their length |
+| Jerkin | leather rubbed matt on the elbows and the shoulder capes |
 
 What code does to the import (the library: `importModel`, kinds `defineModelCharacter`):
 

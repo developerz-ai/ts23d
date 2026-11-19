@@ -1,62 +1,63 @@
 {
   "asset": "mountain_range",
   "reviewer": "agent",
-  "overall": 7.4,
+  "overall": 7.6,
   "scores": {
     "silhouette": {
       "score": 8,
-      "reason": "Snow-capped eroded peaks over a U-valley read as alpine mountains from every view.",
+      "reason": "Two massifs either side of a U-valley with arêtes read as alpine terrain in FRONT and hero.png; the rolled rim is gone and the ridges now run straight out to the cut, but the main left face is one long smooth sweep without spurs.",
       "fixes": [
-        "sharper arête crests on the right ridge"
+        "break the long left-massif face with one or two secondary spurs or a rock rib"
       ]
     },
     "proportions": {
       "score": 8,
-      "reason": "About 1 050 m relief on a 2 × 2 km tile, plausible alpine slopes.",
+      "reason": "Slopes, valley width and relief are plausible for a 2 km tile.",
       "fixes": [
         "a steeper headwall at the valley end (cirque)"
       ]
     },
     "materials": {
-      "score": 6,
-      "reason": "Snow, rock, scree and meadow strips by slope/altitude read, but fine diagonal moiré banding covers every slope in hero.png and the snow edge is hard; the cut sides are plain brown with no strata.",
+      "score": 7,
+      "reason": "Rock, grass, forest, snow and a strata skirt blend; the grey TOP frame is gone and snow now sits as soft patches on the crests, but the patches are cloudy blurs in TOP rather than snowfields with edges, the grass/rock boundary smears downslope in hero.png, and the cut walls carry fine vertical streaks in hero.png (the strata texture stretched down the wall).",
       "fixes": [
-        "blend strips across triangle borders (vertex weights) instead of per-triangle switches",
-        "rock_strata beds visible on the skirt sides"
+        "give the smoothed snow cover a sharper threshold (a narrow ramp on the cover map) so patches have edges in TOP",
+        "map the skirt strata in planar U along the wall and V by height so it stops streaking vertically"
       ]
     },
     "detail": {
       "score": 7,
-      "reason": "Erosion gullies and talus on the left peaks; the valley floor and the right slope are smooth.",
+      "reason": "Forest canopy texture fills the valley and snow streaks run down gullies; slopes are smooth between gullies.",
       "fixes": [
-        "scatter tree impostors below the tree line and boulders on the scree",
-        "more erosion on the long smooth slopes"
+        "boulders and scree fans at slope feet",
+        "more erosion detail on the long slopes"
       ]
     },
     "wear": {
       "score": 7,
-      "reason": "Erosion and snow on gentle slopes tell the weather.",
+      "reason": "Gully snow, a forest line and now a thin stream along the valley floor (TOP) tell a climate, but in hero.png the stream shows only as scattered blue specks through the trees and the rock carries no weathering.",
       "fixes": [
-        "a stream along the valley floor (water strip)"
+        "widen the stream into a continuous water strip with a gravel bank so it reads in hero.png",
+        "dark water streaks below the gullies on the rock faces"
       ]
     },
     "lod": {
       "score": 8,
-      "reason": "Same grid at 256/128/64 cells; FAR LOD2 holds outline and colour.",
+      "reason": "FAR LOD2 now keeps the snow line and forest edge as soft blocks instead of blocky white squares; the faces still show faceted diamond shading.",
       "fixes": [
-        "keep the snow line edge at LOD2 (it softens)"
+        "smooth the LOD2 normals so the faceted diamonds do not show at the switch"
       ]
     },
     "technical": {
       "score": 8,
-      "reason": "QA clean; 133k / 34k / 8.7k tris, one draw.",
+      "reason": "One draw, ~137k / 37k / 3.5k triangles for a 2 km tile with a skirt; QA clean. The edge calming is gone: the tile edge is the untouched field, TOP shows no frame and the skirt top follows the border row without a step, so neighbours cut from the same field meet flush.",
       "fixes": [
-        "drop skirt triangles that are never seen from above"
+        "drop skirt triangles that are never seen from above (the skirt is a flat wall at every LOD)"
       ]
     }
   },
   "renders": {
-    "hero.png": "d6e3bbc9b9a66fcc3474ba6c9b94ac340f11b81da42932766ab440c85d58ae7c",
-    "sheet.png": "fcc2fa20169151863adcecceece3488b9cdd1a7b07bdfc69136f410639b69252"
+    "hero.png": "a2d14aeea1151b9f4919a95fcd6988320e323b814740c9b22254f09fd232a0d5",
+    "sheet.png": "ebe647678c971b17d2e10b3f8a97b5326480fba4b583d5bdb43a2d23a8e9ef20"
   }
 }

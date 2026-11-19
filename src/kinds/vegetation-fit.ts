@@ -1,13 +1,13 @@
 // The fit that puts a finished tree onto its real numbers at every LOD: crown spread across X and
 // Y, height from the ground (the trunk's base, z = 0) to the top, DBH across the trunk's Y extent.
-// Plus the two ground rules for foliage: cards that would hang into the soil are shortened about
-// their root, and a blob impostor's underside is flattened just above the ground.
+// Plus the ground rule for foliage: cards that would hang into the soil are shortened about their
+// root.
 
 import { boundsOf, type Mesh, type Vec3 } from '../core/index.ts';
 import { axisAt } from './vegetation-mesh.ts';
 import type { Stem } from './vegetation-skeleton.ts';
 
-/** Foliage stays this far above the trunk's base, metres (no card or blob face in the soil). */
+/** Foliage stays this far above the trunk's base, metres (no card face in the soil). */
 const GROUND_CLEARANCE = 0.05;
 
 /** Horizontal offsets from the trunk axis times `f`: the LOD2 impostor trunk's radius scale. */
@@ -44,14 +44,6 @@ export function liftCards(m: Mesh, perCard: number, groundZ: number): Mesh {
         positions[i] = (root[k] ?? 0) + ((positions[i] ?? 0) - (root[k] ?? 0)) * f;
       }
   }
-  return { ...m, positions };
-}
-
-/** No vertex below the ground clearance: the blob impostor's underside flattens above the soil. */
-export function clampToGround(m: Mesh, groundZ: number): Mesh {
-  const floor = groundZ + GROUND_CLEARANCE;
-  const positions = new Float32Array(m.positions);
-  for (let i = 2; i < positions.length; i += 3) positions[i] = Math.max(positions[i] ?? 0, floor);
   return { ...m, positions };
 }
 

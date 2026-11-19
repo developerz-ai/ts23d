@@ -179,7 +179,11 @@ it('writes materials a recipe defines inside build() into the external sheet (D4
   const fixture = join(out, 'late.ts');
   const lib = join(import.meta.dir, '../index.ts');
   // An empty registry: the fixture's row must not depend on what earlier test files defined.
-  const { DEFAULT_SHEET, paintTrimSheet, resetMaterials } = await import('../material/index.ts');
+  const { DEFAULT_SHEET, materialSnapshot, paintTrimSheet, resetMaterials } = await import(
+    '../material/index.ts'
+  );
+  // Put back afterwards what other test files' recipes defined at import.
+  const restoreMaterials = materialSnapshot();
   resetMaterials();
   await Bun.write(
     fixture,
@@ -207,7 +211,7 @@ export const late = defineAsset({ name: 'late', kind: 'prop', budget: { triangle
   expect(code).toBe(0);
   const { sheetFileName, sheetPngs } = await import('../export/index.ts');
   const expected = sheetPngs(paintTrimSheet({ ...DEFAULT_SHEET, size: 512 })).orm;
-  resetMaterials();
+  restoreMaterials();
   const written = new Uint8Array(await Bun.file(join(dir, sheetFileName('orm'))).arrayBuffer());
   expect(Bun.hash(written)).toBe(Bun.hash(expected));
 });

@@ -32,9 +32,7 @@ function barrel(s: RimSize, segments: number): Mesh {
   const r = s.r;
   const prof: Vec2[] = [
     [r - 0.035, -hw + 0.01], // inner (brake-side) lip turn
-    [r + 0.016, -hw - 0.008],
-    [r + 0.019, -hw - 0.002],
-    [r + 0.006, -hw + 0.008],
+    [r + 0.018, -hw - 0.006],
     [r, -hw + 0.02], // inner bead seat
     [r - 0.012, -hw * 0.35], // drop centre
     [r - 0.012, hw * 0.05],
@@ -86,8 +84,8 @@ const faceY = (s: RimSize, rho: number): number => {
 
 /** One spoke arm: a loft of rounded-trapezoid sections from the hub to the lip at angle 0. */
 function spokeArm(s: RimSize, lod: Lod, offset: number): Mesh {
-  const stations = lod === 0 ? 14 : 6;
-  const sec = lod === 0 ? 3 : 1; // points per corner round
+  const stations = lod === 0 ? 8 : 3;
+  const sec = lod === 0 ? 2 : 1; // points per corner round
   const rings: Vec3[][] = [];
   const r0 = 0.07;
   const r1 = s.r - 0.012;
@@ -163,7 +161,7 @@ function hub(s: RimSize, segments: number): Mesh {
 function hardware(s: RimSize, lod: Lod): Mesh {
   const y = faceY(s, 0.07);
   const parts: Mesh[] = [];
-  if (lod < 2) {
+  if (lod === 0) {
     const nut = lathe({
       profile: [
         [0.0, y + 0.03],
@@ -193,7 +191,7 @@ function hardware(s: RimSize, lod: Lod): Mesh {
         [0.034, y + 0.004],
         [0.034, y - 0.004],
       ],
-      segments: lod === 0 ? 32 : 12,
+      segments: lod === 0 ? 20 : 8,
       axis: 'y',
       color: C.black,
       strip: 'plastic',
@@ -232,7 +230,7 @@ function hardware(s: RimSize, lod: Lod): Mesh {
 }
 
 export function rim(lod: Lod, s: RimSize): Mesh {
-  const segs = [96, 24, 10][lod] ?? 10;
+  const segs = [48, 16, 10][lod] ?? 10;
   if (lod === 2) {
     // Far: a dished face disc with the spoke pattern implied by a darker hub; no barrel detail.
     return lathe({
@@ -249,10 +247,33 @@ export function rim(lod: Lod, s: RimSize): Mesh {
       caps: false,
     });
   }
-  const parts: Mesh[] = [barrel(s, segs), hub(s, segs), innerBarrel(s, segs)];
+  // The hub is a third of the rim's radius: it holds its circle on a third of the segments.
+  const parts: Mesh[] =
+    lod === 0 ? [barrel(s, segs), hub(s, 28), innerBarrel(s, segs)] : [lip(s, segs), hub(s, 10)];
   const spoke = merge([-1, 1].map((o) => spokeArm(s, lod, o)));
   for (let k = 0; k < SPOKES; k++)
     parts.push(rotateAbout(spoke, [0, 0, 0], [0, 1, 0], (k / SPOKES) * Math.PI * 2 + Math.PI / 2));
   parts.push(hardware(s, lod));
   return merge(parts);
+}
+
+/** LOD1 barrel: the outer lip, the step into the face and the dark well behind the spokes. */
+function lip(s: RimSize, segments: number): Mesh {
+  const hw = s.width / 2;
+  return lathe({
+    profile: [
+      [s.r - 0.03, -hw * 0.3],
+      [s.r - 0.02, hw - 0.03],
+      [s.r - 0.016, hw + 0.004],
+      [s.r - 0.006, hw + 0.012],
+      [s.r + 0.02, hw + 0.006],
+      [s.r, hw - 0.02],
+    ],
+    segments,
+    axis: 'y',
+    color: C.natural,
+    strip: 'aluminium',
+    caps: false,
+    creaseDeg: 35,
+  });
 }

@@ -1,62 +1,118 @@
 {
   "asset": "rts_resource_depleted",
   "reviewer": "agent",
-  "overall": 6.1,
+  "overall": 6.9,
   "scores": {
     "silhouette": {
-      "score": 6,
-      "reason": "The same outcrop with a scooped quarry top and sheared crystal stubs, plus the claim flag: reads as harvested, but without crystals it is an anonymous rounded boulder from the side.",
+      "score": 7,
+      "reason": "Quarried-out top with two snapped crystals standing, sheared stubs round the sides, spoil and the flag: identifiable as the same node, harvested. The rock is the same smooth dome.",
       "fixes": [
-        "keep one or two broken crystal shards standing (sheared halfway, jagged) so the node stays identifiable"
+        "fracture planes on the outcrop, and a deeper, sharper-rimmed quarry cut"
       ]
     },
     "proportions": {
-      "score": 7,
-      "reason": "4.9 x 3.8 x 2.7 m, lower than the full node: plausible after harvesting.",
+      "score": 8,
+      "reason": "4.9 x 4.3 x 2.8 m; the spoil thrown out on the worked side widens it, scoop depth reads.",
       "fixes": [
-        "make the quarry scoop deeper (~0.8 m) relative to the rim"
+        "scoop ~0.2 m deeper at the centre"
       ]
     },
     "materials": {
-      "score": 5,
-      "reason": "Basalt with blotchy salt patches and SDF contour banding as on the full node; the sheared crystal stubs read as brown wood stumps, not broken amber crystal.",
+      "score": 6,
+      "reason": "Stubs are amber crystal now (not wood), with pale fracture tops; but the side stubs read as rounded amber blobs, and the rock carries the same camouflage salt patches.",
       "fixes": [
-        "crystal stubs keep the amber crystal colour with a pale fractured top",
-        "texture-space rock strip without contour banding"
+        "sharp sheared faces on the side stubs (flat cut planes)",
+        "salt only in crevices"
       ]
     },
     "detail": {
-      "score": 5,
-      "reason": "Quarry scoop, crystal stubs and the flag; no tool marks, spoil or rubble in the scoop.",
+      "score": 6,
+      "reason": "Snapped crystals, stubs, spoil heaps, drill holes, shards; the scoop walls are smooth.",
       "fixes": [
-        "spoil and crystal chips inside the scoop",
         "pick and drill marks on the scoop walls"
       ]
     },
     "wear": {
-      "score": 5,
-      "reason": "The scoop is the scar; salt and mud patches as on the full node. No dust or spoil around the base.",
+      "score": 6,
+      "reason": "Spoil fans on the worked side and shards tell a harvest story; the rock surface itself is unmarked.",
       "fixes": [
-        "spoil dust fan around the base on the side the crew worked from"
+        "dust on the rock round the scoop rim"
       ]
     },
     "lod": {
       "score": 7,
-      "reason": "FAR LOD2 keeps the outcrop, scoop, stubs and flag; salt becomes big flat facets.",
+      "reason": "FAR LOD2 (338 tris) keeps the scoop, stubs, snapped crystals and the flag; spoil drops and the rock facets get lighter.",
       "fixes": [
-        "lower-contrast salt at LOD2"
+        "keep the spoil as one low mound at LOD2"
       ]
     },
     "technical": {
       "score": 8,
-      "reason": "QA PASS (rebuilt today): 12.6k / 2.98k / 474 tris, 2 / 2 / 2 draws.",
+      "reason": "QA PASS: 10.2k / 2.3k / 338 tris, 3 / 3 / 3 draws.",
       "fixes": [
         "coarser SDF cell on the rock body"
       ]
     }
   },
   "renders": {
-    "hero.png": "4327661f4ec4f547da7975d0c5504fa49c283b8a9d66bb967761f48b7442affa",
-    "sheet.png": "0d1f367378855902cbaa32a6740e9e53c461b7d08e69a680bf0a2b946031f2d2"
+    "hero.png": "d7f72df1682475c530f93c0216f2c69f1f6d4e1bf297720f5cbe9fcf87d3d8b6",
+    "sheet.png": "7e13172b5fa920e815ae311f074190ae6437445ddae90e523fb4bd360b0f354c",
+    "raking.png": "a1b065530a17bd8afe67626211869fb25d309a9ae0af22d8c4fd126d5fd1bf80",
+    "raking_detail.png": "a14444d36cad227595756024f635c7f16643979ed7ae661784c3d19d8ff08a84",
+    "lods.png": "148c7f0382dcdbaf50d286dc32cba1bcfe2f239576141cd3ae0ffb4bbf7598ad",
+    "silhouette.png": "1d8f80302d7776e976039f78b14be27174dc80e429616ffe4110ec7f968c76fb",
+    "value.png": "a872a5e05df7852516d2ee69986404fa4577c01c68c4030200403defd85270d4",
+    "detail.png": "450ce3b68ca8098a02e2f35b3dae3c45734ee45463b236137f1cb5f982fd391c"
+  },
+  "metrics": {
+    "silhouette": [
+      {
+        "view": "front",
+        "iou": 0.799
+      },
+      {
+        "view": "side",
+        "iou": 0.669
+      },
+      {
+        "view": "3/4",
+        "iou": 0.664
+      }
+    ],
+    "focal": {
+      "peakPart": "crystal_stubs",
+      "peak": [
+        331,
+        82
+      ],
+      "focalShare": 0,
+      "focalArea": 0,
+      "top": [
+        {
+          "part": "crystal_stubs",
+          "share": 0.519
+        },
+        {
+          "part": "rock",
+          "share": 0.287
+        },
+        {
+          "part": "claim_pole",
+          "share": 0.108
+        }
+      ],
+      "declared": []
+    },
+    "rest": {
+      "share": 0.599,
+      "spread": 0.694,
+      "min": 0.25
+    },
+    "shape": {
+      "acuteShare": 0.159,
+      "straightShare": 0.529,
+      "taper": 0.612,
+      "shape": "stable"
+    }
   }
 }

@@ -14,7 +14,7 @@ between them**, not a solid cone and not a bare frame.
 | height (mature) | 25 m (range 25–35) | https://en.wikipedia.org/wiki/Pinus_sylvestris |
 | trunk diameter at breast height | 0.6 m (up to 1 m) | Wikipedia (above) |
 | crown spread | 9 m (typical 6–12) | https://www.woodlandtrust.org.uk/trees-woods-and-wildlife/british-trees/a-z-of-british-trees/scots-pine/ · photo-estimated |
-| clear bole / crown base | ≈ 55–60% of height (branches from 14 m, foliage from 13.5 m) | photo-estimated; crowns of mature stands are densest at 50–70% of height (Silva Fennica crown-structure studies) |
+| clear bole / crown base | ≈ 65–70% of height for an old tree (branches from ~17 m; a flat crown ≈ 1/3 of height) | photo-estimated; crowns of mature stands are densest at 50–70% of height (Silva Fennica crown-structure studies) |
 | branch angle to the stem | ≈ 80° low in the crown → ≈ 50° at the top (`downAngle` 84, `downAngleV` −34) | https://bbr.nefu.edu.cn/EN/Y2006/V26/I4/490 (var. *mongolica*: mean 45–50°, smaller in the upper crown) |
 | primary branches per whorl | ≈ 4 (18 whorl branches over the crown) | same (3.84 primary, 2.80 secondary per whorl) |
 
@@ -25,30 +25,27 @@ between them**, not a solid cone and not a bare frame.
 | upper bark | https://commons.wikimedia.org/wiki/Category:Pinus_sylvestris_bark | orange flaking bark → `barkTop` |
 
 ## Parts the engine needs
-`trunk`, `roots`, `crown` (sway) › `branches`, `leaves`, plus `ground` (needle litter).
+`trunk`, `roots`, `crown` (sway) › `branches` (with one dead branch), `leaves` (cutout), `cones`
+(LOD0), plus `stubs` (dead branch stubs on the bole) and `ground` (needle litter).
 
 ## How it is built (LOD policy)
-- **Species preset `pine`** (`src/kinds/vegetation-presets.ts`): 18 whorl branches (curving up 24°),
-  6 side shoots each on their outer 55%, 4 needle tufts (1.6 m crossed brushes) per shoot. Branch
-  lengths are set so the *natural* crown is ~9 m across: the kind's fit then scales X/Y by ≈ 1, so
-  tufts are not squashed (the old preset grew a 17.5 m crown and squeezed it to 9 m, ×0.52).
-- **LOD0** 23 652 triangles: every tuft (404 × 48).
-- **LOD1** 5 740: the kind's LOD1 wood with one LOD0 tuft per shoot grown ×1.9 about its centre
-  (`lod1.ts`). The kind's flat cluster cards read sparse and twice as light (crown luminance 0.41 vs
-  0.17); the thinned tufts measure 0.173 vs LOD0's 0.171.
-- **LOD2** 311: the LOD0 tufts are clustered (k-means, `clumps.ts`) into 20 needle pads — flat-
-  bottomed hexagonal bipyramids (`impostor.ts`) — then each pad is scaled against LOD0's silhouette
-  from eight views (`fit.ts`). The trunk is LOD0's resampled to a pentagon (`trunk.ts`); the leader
-  pad peaks on its apex, so the crown provably touches the trunk. Pads use the matte `concrete`
-  strip at 0.7 × the tufts' mean colour: on LOD0's shiny `plain` strip a convex solid's sky-facing
-  facets render ~50% lighter than the self-shadowed card crown. Measured crown colour in the beauty
-  render: LOD0 rgb 0.154/0.178/0.160, LOD2 0.154/0.182/0.160.
-- **Silhouette** (`silhouetteReads`, 32 px, hole-filled): LOD0↔LOD2 IoU front 0.879, side 0.865,
-  3/4 0.891 (was 0.355 / 0.402 / 0.418 with the kind's lathe blob). `pine.test.ts` holds ≥ 0.85.
-- **Bark** (`bark.ts`): the tree kind's wood strip moved onto `bark_pine`. A sweep's seam column and
-  cap rims sit at V = v1 of the wood band, which `stripAtV` reads as the next strip; the shared
-  `_lib/finish/grove.ts` finish skipped them, leaving one column of untinted, wrong-strip vertices —
-  the grey streak down the trunk. The band test here includes its top edge.
+- **Species preset `pine`** with this tree's overrides (`PINE` in `pine.ts`): crown base at 68% of
+  height (crown ≈ 32% deep: an old tree's shallow, flat-topped crown), 16 whorl branches leaving
+  near level (86° → 74°) so the top whorls spread as wide as the lower ones (flat top, not a spire),
+  6 needle tufts per shoot. Skeleton seed 5: the most even crown of seeds 0–29.
+- **Needles**: every kind needle brush becomes one hexagonal cutout card on the `foliage_needles`
+  cell (painted pine needle sprays), same root, length and baked crown shade
+  (`../oak/leaf-cards.ts`). LOD1 keeps one LOD0 tuft per shoot grown × 2.1 (`lod1.ts`).
+- **LOD2**: the LOD0 needle cards clustered (k-means, `clumps.ts`) into 20 clumps of three crossed
+  needle cards (12 triangles each, hexagonal: blunt pad tops, no shards), ±3.6 standard deviations
+  across, over LOD0's trunk resampled to a pentagon (`trunk.ts`) whose leader runs into the top
+  clump. `pine.test.ts` holds the 32 px silhouette IoU ≥ 0.85 (front 0.90, side 0.86, 3/4 0.89).
+- **Bark** (`bark.ts`): the tree kind's wood strip moved onto `bark_pine`, seam-safe (a sweep's seam
+  column sits at V = v1 of the wood band, which `stripAtV` reads as the next strip), graded darker
+  grey-brown below 6 m to the orange upper bark from ~14 m.
+- **Wear** (`wear.ts`): a Scots pine self-prunes, so the clear bole carries 7 whorls of short
+  silver-grey dead stubs; one bare dead branch at the crown base; cones (3–7.5 cm) in twos and
+  threes under the outer shoots (LOD0); moss on the north foot; needle litter.
 
 ## Open questions
 Crown spread is not given in most floras; 9 m is estimated from photos of mature open-grown trees.

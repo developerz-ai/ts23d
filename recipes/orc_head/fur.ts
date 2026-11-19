@@ -95,7 +95,7 @@ export function furMantle(ctx: BuildContext, body: Surface): Mesh {
       );
     }
   }
-  return skinMesh(edits, ctx.pick([0.0072, 0.012, 0.028]), {
+  return skinMesh(edits, ctx.pick([0.0078, 0.013, 0.028]), {
     rng: ctx.rng.fork('fur-tone'),
     color: C.fur,
     mirror: false,
@@ -121,7 +121,7 @@ export function necklace(ctx: BuildContext, body: Surface): Mesh {
         blend: 0.002,
       });
     }
-  return skinMesh(edits, ctx.pick([0.0038, 0.0055, 0.01]), {
+  return skinMesh(edits, ctx.pick([0.0046, 0.0075, 0.01]), {
     rng: ctx.rng.fork('necklace'),
     color: C.cord,
     mirror: false,

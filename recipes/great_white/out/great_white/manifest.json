@@ -1,7 +1,7 @@
 {
   "name": "great_white",
   "kind": "creature",
-  "description": "Adult female white shark, 4.5 m: conical snout, five gill slits, black eye, serrated-tooth jaws that protrude in the bite, sharp countershading, crescent tail with keel.",
+  "description": "Adult female white shark, 4.5 m: blunt conical snout, five gill slits, black eye in a lidded socket, serrated-tooth jaws that protrude in the bite, sharp ragged countershading, thick pectorals with dark tips, lunate tail on a dark keel; healed scars, a bitten notch in the first dorsal and parasitic copepods on it.",
   "tags": [
     "creature",
     "fish",
@@ -21,9 +21,9 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    60958,
-    7026,
-    680
+    64838,
+    12746,
+    716
   ],
   "drawCalls": [
     1,
@@ -212,99 +212,99 @@
   "hitboxes": [
     {
       "bone": "spine_0",
-      "radius": 0.184581,
-      "height": 0.07082,
-      "coverage": 0.9722
+      "radius": 0.191043,
+      "height": 0.064362,
+      "coverage": 0.9513
     },
     {
       "bone": "spine_1",
-      "radius": 0.121859,
-      "height": 0.092448,
-      "coverage": 0.9646
+      "radius": 0.122371,
+      "height": 0.088103,
+      "coverage": 0.9815
     },
     {
       "bone": "spine_15",
-      "radius": 0.092923,
-      "height": 0.159628,
-      "coverage": 0.9547
+      "radius": 0.095279,
+      "height": 0.156714,
+      "coverage": 0.9573
     },
     {
       "bone": "caudal_upper_0",
-      "radius": 0.11022,
-      "height": 0.113506,
-      "coverage": 1
+      "radius": 0.10801,
+      "height": 0.104211,
+      "coverage": 0.9655
     },
     {
       "bone": "caudal_upper_1",
-      "radius": 0.129834,
-      "height": 0.170082,
-      "coverage": 0.9506
+      "radius": 0.132195,
+      "height": 0.167323,
+      "coverage": 0.9583
     },
     {
       "bone": "caudal_upper_2",
-      "radius": 0.059321,
-      "height": 0.261209,
-      "coverage": 0.9519
+      "radius": 0.059184,
+      "height": 0.259194,
+      "coverage": 0.9615
     },
     {
       "bone": "caudal_lower_0",
-      "radius": 0.14109,
-      "height": 0.138806,
-      "coverage": 0.9667
+      "radius": 0.157332,
+      "height": 0.190575,
+      "coverage": 0.9589
     },
     {
       "bone": "caudal_lower_1",
-      "radius": 0.109499,
-      "height": 0.293987,
-      "coverage": 0.9527
+      "radius": 0.106363,
+      "height": 0.327057,
+      "coverage": 0.9597
     },
     {
       "bone": "dorsal_0",
-      "radius": 0.237674,
-      "height": 0.042105,
-      "coverage": 0.9568
+      "radius": 0.216697,
+      "height": 0.045272,
+      "coverage": 0.9529
     },
     {
       "bone": "dorsal_1",
-      "radius": 0.096615,
-      "height": 0.145055,
-      "coverage": 0.9527
+      "radius": 0.081443,
+      "height": 0.159475,
+      "coverage": 0.958
     },
     {
       "bone": "pectoral_l_0",
-      "radius": 0.188084,
-      "height": 0.253053,
-      "coverage": 0.9714
+      "radius": 0.187906,
+      "height": 0.258016,
+      "coverage": 0.9843
     },
     {
       "bone": "pectoral_l_1",
-      "radius": 0.112469,
-      "height": 0.239331,
-      "coverage": 0.958
+      "radius": 0.120086,
+      "height": 0.229899,
+      "coverage": 0.965
     },
     {
       "bone": "pectoral_r_0",
-      "radius": 0.188084,
-      "height": 0.253053,
-      "coverage": 0.9714
+      "radius": 0.187906,
+      "height": 0.258016,
+      "coverage": 0.9843
     },
     {
       "bone": "pectoral_r_1",
-      "radius": 0.112469,
-      "height": 0.239331,
-      "coverage": 0.958
+      "radius": 0.120086,
+      "height": 0.229899,
+      "coverage": 0.965
     },
     {
       "bone": "jaw_lower_0",
-      "radius": 0.255492,
-      "height": 0.091453,
-      "coverage": 0.9833
+      "radius": 0.255256,
+      "height": 0.091617,
+      "coverage": 0.9823
     },
     {
       "bone": "jaw_upper_0",
-      "radius": 0.262676,
-      "height": 0.040746,
-      "coverage": 0.9643
+      "radius": 0.261715,
+      "height": 0.041718,
+      "coverage": 0.9626
     }
   ],
   "real": {

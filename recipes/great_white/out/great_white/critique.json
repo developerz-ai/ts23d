@@ -1,64 +1,63 @@
 {
   "asset": "great_white",
   "reviewer": "agent",
-  "overall": 6.7,
+  "overall": 7.4,
   "scores": {
     "silhouette": {
       "score": 8,
-      "reason": "Torpedo body, tall first dorsal, crescent caudal, pectorals and five gill slits read as a great white from every view.",
+      "reason": "Torpedo body, tall notched first dorsal, crescent caudal, pectorals and gill slits read as a great white in every view.",
       "fixes": [
-        "a more lunate caudal with the lower lobe nearly as long as the upper"
+        "lengthen the lower caudal lobe so the tail is closer to lunate in SIDE"
       ]
     },
     "proportions": {
       "score": 7,
-      "reason": "4.5 m TL with the sourced girth and dorsal position; the pectoral fins are paper-thin plates (a line in FRONT) and the snout is slightly pointed for a white shark.",
+      "reason": "4.5 m with sourced girth and fin positions; the pectorals are still paper-thin lines in FRONT and the snout is a touch pointed.",
       "fixes": [
         "give the pectorals a root thickness (~6 % of chord) tapering to the edge",
-        "blunt the snout cone ~10 %"
+        "blunt the snout ~10 %"
       ]
     },
     "materials": {
-      "score": 6,
-      "reason": "Countershading grey over white with a ragged boundary reads; skin is one uniform satin with fine speckle; the eye is a glossy black ball with no rim.",
+      "score": 7,
+      "reason": "Countershaded grey over white with a ragged boundary, speckled skin and pores read as shark skin; the eye is a plain black ball and the skin is one uniform satin.",
       "fixes": [
-        "denticle micro-normal and slight sheen variation over the flank",
-        "an eyelid rim and darker pupil ring around the eye"
+        "an eyelid rim and pupil ring on the eye",
+        "slight roughness variation over the flank (denticle micro-normal)"
       ]
     },
     "detail": {
-      "score": 6,
-      "reason": "Gill slits, teeth row, pores on the snout, pelvic and second dorsal fins; no lateral line, claspers or fin-edge darkening.",
+      "score": 7,
+      "reason": "Gill slits, tooth row, snout pores, scars, second dorsal and pelvic fins at hero distance; fin edges are not darkened and there are no caudal keels.",
       "fixes": [
         "dark pectoral tips and trailing edges",
-        "the lateral line and caudal keels"
+        "caudal keels and a lateral line"
       ]
     },
     "wear": {
-      "score": 6,
-      "reason": "Pink scratch scars on the back tell a fighting history.",
+      "score": 7,
+      "reason": "A torn notch in the first dorsal and pale scratch scars on the back tell a fighting history.",
       "fixes": [
-        "a torn notch in the first dorsal",
-        "parasitic copepods on the fins"
+        "parasitic copepods or a healed bite on a fin"
       ]
     },
     "lod": {
-      "score": 7,
-      "reason": "FAR LOD2 keeps outline and countershading; the white boundary straightens to a hard edge.",
+      "score": 8,
+      "reason": "FAR LOD2 keeps outline, fins and the white belly; LOD1 at 12.7k now keeps fins and gills.",
       "fixes": [
-        "keep the boundary wave at LOD2 by colouring along a jagged vertex row"
+        "keep the ragged countershading boundary at LOD2 instead of a straight edge"
       ]
     },
     "technical": {
-      "score": 7,
-      "reason": "QA clean; 61k / 7k / 680 tris across 7 parts; the LOD1 step is steep (8.7×).",
+      "score": 8,
+      "reason": "64.8k / 12.7k / 716 triangles, one draw; triangles sit in the head and fins where they show.",
       "fixes": [
-        "raise LOD1 to ~15k so the fins and gills survive the first switch"
+        "move some uniform mid-body density into fin thickness"
       ]
     }
   },
   "renders": {
-    "hero.png": "34c7eca6469d52f85a074d99337971da7ab0c381d01320f98ffb12e85c835a06",
-    "sheet.png": "1dcbd70ce508d33a809d0016a27f61a976cad8ccbcbc754987fd6f924f53d959"
+    "hero.png": "8ffbe56ab68ee60ecb0b65ae5dbd8d209a70865a56567bd32f2453e36aac0365",
+    "sheet.png": "77ad5ab03d75e299fac3fa26577117c255c7fa67f2c3d992c2c3a498ae11d67c"
   }
 }

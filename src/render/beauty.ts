@@ -2,18 +2,20 @@
 // Perspective 3/4 hero camera, trim-sheet textures × vertex colour with normal + ORM maps, a key
 // sun with soft PCF shadows, sky fill with multi-direction ambient occlusion, a seamless studio
 // floor that only shows the shadows, 2× supersampling. glTF reference BRDF (GGX) with clearcoat,
-// sheen, anisotropy, iridescence and screen-space refraction for see-through surfaces.
+// sheen, anisotropy, iridescence and screen-space refraction for see-through surfaces. `glow`
+// parts emit (scene.ts); see-through parts only dim the sun, so what they hold stays lit.
 // Deterministic: same asset → same bytes.
 
 import { type CompiledAsset, encodePng } from '../core/index.ts';
 import type { PaintedSheet } from '../material/index.ts';
-import { checkSheetFor, DEFAULT_SHEET, liveSheet } from '../material/index.ts';
+import { checkSheetFor, DEFAULT_SHEET, sheetFor } from '../material/index.ts';
 import { ALPHA_CUT } from './alpha-mips.ts';
-import { frameOrbit, type PerspectiveCamera, scaled, zoomWindow } from './camera.ts';
+import { frameOrbit, lookAt, type PerspectiveCamera, scaled, zoomWindow } from './camera.ts';
 import { depthMap } from './depth-map.ts';
 import { floorGrid, NO_FLOOR } from './ground.ts';
 import { pcfTaps, studioRig } from './lighting.ts';
-import { checkBeautyOptions } from './options.ts';
+import { throughShade } from './looks.ts';
+import { checkBeautyOptions, withHeroView } from './options.ts';
 import { resolve } from './resolve.ts';
 import { sceneOf } from './scene.ts';
 import type { ShadeContext } from './shade.ts';
@@ -31,6 +33,13 @@ export interface BeautyOptions {
   readonly elDeg?: number;
   /** Vertical field of view, degrees. Default 30. */
   readonly fovDeg?: number;
+  /**
+   * A fixed viewpoint instead of the orbit: camera position and the point it looks at, metres in
+   * the asset's frame (both, never with azDeg / elDeg). No auto-framing; `fovDeg` is the lens.
+   * Unset angles and viewpoint default to the asset's own `hero` view when it declares one.
+   */
+  readonly eye?: readonly [number, number, number];
+  readonly target?: readonly [number, number, number];
   /** Samples per pixel edge (1–4). Default 2 (4 samples per pixel). */
   readonly supersample?: number;
   /** The painted trim sheet; default paints `DEFAULT_SHEET` at 1024² once per process. */
@@ -60,29 +69,30 @@ export interface BeautyRender {
   readonly opacity?: Float32Array;
 }
 
-// Repaints when a recipe defined materials since the last render (D47).
-const defaultSheet = liveSheet({ ...DEFAULT_SHEET, size: 2048 });
-const sheetOf = (o: BeautyOptions): PaintedSheet => o.sheet ?? defaultSheet.current().sheet;
+// The asset's own sheet: the built-ins plus the materials it maps onto (D47, D299).
+const DEFAULT_2048 = { ...DEFAULT_SHEET, size: 2048 } as const;
 
 export function cameraFor(asset: CompiledAsset, o: BeautyOptions = {}): PerspectiveCamera {
-  const v = checkBeautyOptions(o);
-  const cam = frameOrbit(
-    sceneOf(o.frameFrom ?? asset).positions,
-    { azDeg: v.azDeg, elDeg: v.elDeg, fovDeg: v.fovDeg, fill: 0.8 },
-    v.width,
-    v.height,
-  );
+  const v = checkBeautyOptions(withHeroView(asset.hero, o));
+  const cam =
+    v.eye && v.target
+      ? lookAt(v.eye, v.target, v.fovDeg, v.width, v.height)
+      : frameOrbit(
+          sceneOf(o.frameFrom ?? asset).positions,
+          { azDeg: v.azDeg, elDeg: v.elDeg, fovDeg: v.fovDeg, fill: 0.8 },
+          v.width,
+          v.height,
+        );
   return o.window ? zoomWindow(cam, o.window.x, o.window.y, o.window.zoom) : cam;
 }
 
-export function renderBeauty(asset: CompiledAsset, o: BeautyOptions = {}): BeautyRender {
+export function renderBeauty(asset: CompiledAsset, opts: BeautyOptions = {}): BeautyRender {
+  const o = withHeroView(asset.hero, opts);
   const v = checkBeautyOptions(o);
   const ss = v.supersample;
   const scene = sceneOf(asset);
-  const sheet = sheetOf(o);
-  // Textured parts (ADR 016) address their own set, not the sheet's rows.
-  for (const p of asset.parts)
-    if (p.mesh && !p.textures) checkSheetFor(sheet, p.mesh.uvs, p.mesh.indices);
+  const sheet: PaintedSheet = o.sheet ?? sheetFor(asset, DEFAULT_2048);
+  checkSheetFor(sheet, asset);
   const tex = sheetTextures(sheet);
   const rig = studioRig(v.azDeg);
   const texel = new Float32Array(4);
@@ -107,22 +117,42 @@ export function renderBeauty(asset: CompiledAsset, o: BeautyOptions = {}): Beaut
   const px = Math.max(v.width, v.height) * ss;
   const res = (lo: number, hi: number, f: number): number =>
     Math.max(lo, Math.min(hi, Math.round(px * f)));
-  const sunMap = depthMap(scene, rig.sun, res(256, 2048, 1), undefined, alpha);
+  // See-through triangles: out of the opaque sun map and the occlusion maps (they get a sun map
+  // of their own, which only dims) and out of the "behind" buffer the refraction reads.
+  const skip = scene.transmissive
+    ? scene.look.map((l) => ((scene.looks[l]?.transmission ?? 0) > 0 ? 1 : 0))
+    : undefined;
+  const sunSize = res(256, 2048, 1);
+  const sunMap = depthMap(scene, rig.sun, sunSize, undefined, alpha, skip);
   const ctx: ShadeContext = {
     scene,
     cam,
     tex,
     rig,
     sunMap,
-    aoMaps: rig.skyDirs.map((d) => depthMap(scene, d, res(96, 384, 0.25), undefined, alpha)),
+    aoMaps: rig.skyDirs.map((d) => depthMap(scene, d, res(96, 384, 0.25), undefined, alpha, skip)),
     // Penumbra ~0.4% of the asset's size: soft enough to read as a studio key, never mushy.
     pcf: pcfTaps(Math.max(1.2, 0.004 * extent * sunMap.k)),
     reach: 0.12 * extent,
+    ...(skip
+      ? {
+          sunThru: {
+            map: depthMap(
+              scene,
+              rig.sun,
+              sunSize,
+              undefined,
+              alpha,
+              skip.map((v) => 1 - v),
+            ),
+            shade: throughShade(scene.looks, scene.look),
+          },
+        }
+      : {}),
   };
   const floor = asset.medium === 'water' ? NO_FLOOR : floorGrid(ctx, res(96, 512, 0.25));
-  if (scene.transmissive) {
+  if (skip) {
     // What see-through surfaces show: the same view without them (one more rasterisation).
-    const skip = scene.look.map((l) => ((scene.looks[l]?.transmission ?? 0) > 0 ? 1 : 0));
     return resolve(
       { ...ctx, behind: rasteriseVis(scene, cam, tex.size, alpha, skip) },
       vis,

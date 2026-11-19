@@ -2,9 +2,10 @@
 // keels, the mouth pocket and the countershading with its ragged, sharp boundary; plus eyes, nostrils
 // and the small median and pelvic fins, which ride the spine.
 
-import type { BodyPlan, Mesh, Rng, Vec3 } from '@developerz.ai/ts23d';
+import { type BodyPlan, type Mesh, merge, type Rng, type Vec3 } from '@developerz.ai/ts23d';
 import {
   add,
+  cross,
   curve3,
   even,
   fbm,
@@ -81,11 +82,17 @@ function trunkPoint(t: number, raw: number, lod: Lod): Vec3 {
   y += (y / r) * push;
   z += (z / r) * push;
   // The caudal keel: a low horizontal blade along each side of the peduncle.
-  const keel = smooth(0.74, 0.8, t) * (1 - smooth(0.86, 0.885, t));
-  y += Math.sign(y) * 0.042 * keel * gauss(z, 0.022);
+  const keel = keelAt(t);
+  y += Math.sign(y) * 0.058 * keel * gauss(z, 0.024);
   const pocket = z < 0 ? MOUTH.pocket * pocketMask(p[0], y) : 0;
   return [p[0], y, c + z + pocket];
 }
+
+/** The caudal keel's share along the peduncle, 0..1. */
+const keelAt = (t: number): number => smooth(0.73, 0.79, t) * (1 - smooth(0.86, 0.885, t));
+
+/** Height share of the lateral line: high behind the gills, running level down the flank. */
+const lateralShare = (t: number): number => 0.3 - 0.18 * smooth(0.28, 0.7, t);
 
 export const eyeCentre = (side: 1 | -1): Vec3 => {
   const p = plainPoint(T_EYE, 1.2);
@@ -114,6 +121,13 @@ function trunkColour(p: Vec3, t: number, raw: number, sides: number): Vec3 {
     const freckle = noise(t * 310, a * 34, seed + 5) > 0.74 ? 0.86 : 1;
     back = scale(back, cloud * freckle);
   }
+  // The lateral line, a faint pale thread of pores; the keel's ridge dark from the side.
+  if (sides > 20) {
+    const line =
+      gauss(h - lateralShare(t), 0.07) * smooth(0.27, 0.32, t) * (1 - smooth(0.8, 0.86, t));
+    back = mixRgb(back, COLOUR.belly, 0.16 * line);
+  }
+  back = mixRgb(back, COLOUR.tip, 0.45 * keelAt(t) * gauss(h, 0.3));
   let out = mixRgb(back, COLOUR.belly, white);
   if (sides > 20 && white > 0.5 && noise(t * 260, a * 30, seed + 7) > 0.86)
     out = mixRgb(out, COLOUR.back, 0.16);
@@ -124,8 +138,10 @@ function trunkColour(p: Vec3, t: number, raw: number, sides: number): Vec3 {
   return out;
 }
 
-const RINGS: readonly [number, number, number] = [120, 44, 0];
-const SIDES: readonly [number, number, number] = [88, 30, 7];
+// LOD1 keeps enough rings that fins, gills and the colour line survive the first switch; LOD2's
+// eight sides are even so one column still bends onto the ragged colour line.
+const RINGS: readonly [number, number, number] = [120, 96, 0];
+const SIDES: readonly [number, number, number] = [88, 40, 8];
 
 function trunkStations(plan: BodyPlan, lod: Lod): number[] {
   const end = T_CAUDAL + 0.042;
@@ -154,27 +170,44 @@ export function trunkMesh(plan: BodyPlan, lod: Lod): Mesh {
   });
 }
 
-/** Eye: a glossy black ball seated in its dent, the pupil-less look of a white shark. */
+/** Eye: a glossy black ball seated in its dent, a dark blue-grey iris ring round the black pupil,
+ *  and the eyelid's thick rim of skin round it (the white shark has no nictitating membrane). */
 export function eyeMesh(side: 1 | -1, lod: Lod): Mesh {
   const c = eyeCentre(side);
   const out = norm(sub(c, [c[0], 0, axisZ(T_EYE)]));
   const centre = add(c, scale(out, -0.024));
   const R = 0.031;
-  const [rings, sides] = lod === 0 ? [8, 16] : lod === 1 ? [4, 8] : [2, 4];
-  return loft({
+  const [rings, sides] = lod === 0 ? [10, 18] : lod === 1 ? [4, 8] : [2, 4];
+  // Ball poles along the outward axis, so the iris and pupil are rings about it.
+  const u0 = norm(Math.abs(out[2]) > 0.9 ? [1, 0, 0] : cross(out, [0, 0, 1]));
+  const v0 = cross(out, u0);
+  const ball = loft({
     us: even(0.06, 0.94, rings),
     sides,
     strip: 'plastic',
     point: (u, a) => {
       const th = u * Math.PI;
-      return [
-        centre[0] + R * Math.cos(th),
-        centre[1] + R * Math.sin(th) * Math.cos(a),
-        centre[2] + R * Math.sin(th) * Math.sin(a),
-      ];
+      const ring = add(scale(u0, Math.cos(a)), scale(v0, Math.sin(a)));
+      return add(centre, add(scale(out, R * Math.cos(th)), scale(ring, R * Math.sin(th))));
     },
-    color: () => COLOUR.eye,
+    color: (_p, _n, u) => (u < 0.18 ? COLOUR.eye : u < 0.3 ? COLOUR.iris : COLOUR.eye),
   });
+  if (lod === 2) return ball;
+  // The lid: a soft ring of skin hugging the visible rim of the ball.
+  const lid = loft({
+    us: even(0, 1, lod === 0 ? 28 : 10),
+    sides: lod === 0 ? 8 : 5,
+    strip: SKIN,
+    point: (u, a) => {
+      const th = u * TAU;
+      const rim = add(scale(u0, Math.cos(th)), scale(v0, Math.sin(th)));
+      const at = add(centre, add(scale(out, R * 0.62), scale(rim, R * 0.84)));
+      const r = 0.0075;
+      return add(at, add(scale(rim, r * Math.cos(a)), scale(out, r * 0.8 * Math.sin(a))));
+    },
+    color: () => COLOUR.lid,
+  });
+  return merge([ball, lid]);
 }
 
 interface SmallFin {

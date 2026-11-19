@@ -1,66 +1,63 @@
 {
   "asset": "orc_head",
   "reviewer": "agent",
-  "overall": 6.6,
+  "overall": 7.1,
   "scores": {
     "silhouette": {
       "score": 8,
-      "reason": "Brute head, tusks, topknot and spiked pauldrons read at a glance in every view.",
+      "reason": "Brute head, tusks, topknot, beard and spiked pauldrons read at a glance in every view.",
       "fixes": [
-        "a clearer neck line under the jaw in the SIDE view"
+        "a clearer neck line under the jaw in SIDE"
       ]
     },
     "proportions": {
       "score": 7,
-      "reason": "Head, tusks and ears read against the jaw; the pauldrons sit outboard of the shoulders with a visible gap in FRONT, so the armour looks hung beside the body rather than worn.",
+      "reason": "The pauldrons now sit on the shoulder and the lames close into a tube round the arm, but the lame tubes still stand off the torso flank and hang below the bust cut in FRONT, reading as stumps beside the body.",
       "fixes": [
-        "move the pauldrons in 3–4 cm so they rest on the deltoid",
-        "drop the topknot tail arc 1 cm"
+        "shorten the lame tubes so they end at the bust cut",
+        "pull the lame tubes in against the torso flank"
       ]
     },
     "materials": {
-      "score": 6,
-      "reason": "Painted steel with rivets and rust, leather baldric, fur collar and bone spikes separate; skin is one roughness; the baldric reads cream in sheet.png but brown leather in hero.png.",
+      "score": 7,
+      "reason": "Steel with rivets, leather baldric (now brown in both images), fur collar, bone spikes and green skin separate; the skin is one roughness.",
       "fixes": [
-        "roughness variation on the skin (oily forehead, matte cheeks)",
-        "one leather colour for the baldric across both renderers"
+        "roughness variation on the skin (oily forehead, matte cheeks)"
       ]
     },
     "detail": {
       "score": 7,
-      "reason": "Scars, war paint, rivets, buckle, fur clumps, wound bun and lamed pauldrons.",
+      "reason": "Scars, rivets, buckle, fur, beard, topknot and lames.",
       "fixes": [
-        "finer hair strands on the tail locks",
-        "stitching on the baldric edge"
+        "stitching on the baldric edge",
+        "finer hair strands on the topknot"
       ]
     },
     "wear": {
-      "score": 6,
-      "reason": "Dents, chipped paint and rust on the pauldrons, scars on the face.",
+      "score": 7,
+      "reason": "Face scars, and the pauldrons now carry rust blotches and a worn rim; the domes show no clear dents at hero distance and the fur and strap are clean.",
       "fixes": [
-        "dirt on the fur and strap",
-        "nicks on the tusks"
+        "visible dents (height/normal) on the pauldron domes and rust streaks running down from the rivets",
+        "dirt on the fur and strap"
       ]
     },
     "lod": {
-      "score": 6,
-      "reason": "FAR LOD2 keeps mass and armour but the pauldrons turn into flat hollow slabs and the skin breaks into blotchy faceted patches.",
+      "score": 7,
+      "reason": "FAR LOD2 keeps pauldrons as closed shells and the head mass; the skin is faceted and the lames vanish.",
       "fixes": [
-        "keep the pauldron dome as a closed 8-segment shell at LOD2",
-        "average the skin vertex colour per LOD2 face instead of sampling one corner"
+        "keep the lame stacks as one stepped band at LOD2"
       ]
     },
     "technical": {
-      "score": 6,
-      "reason": "QA clean; 180k / 46k / 4.8k tris is far over a game bust budget; pauldron lames and fur clumps eat most of it.",
+      "score": 7,
+      "reason": "112k / 30k / 4.1k triangles and 4 draws: down from 180k, still heavy for a bust.",
       "fixes": [
-        "halve pauldron lame and fur clump segment counts at LOD0",
-        "orbit bore + socket joints like the other busts"
+        "halve pauldron lame and fur segment counts at LOD0 (target ~70k)"
       ]
     }
   },
   "renders": {
-    "hero.png": "90980d003f1ddf4d246d5af3eb1ef399f2f8dbfa8f1c5a1495dfa63ab9a0d9bd",
-    "sheet.png": "cba3c1ec909f0e25e5894933a8076307ba7c7fe59313c5f7e2656402baf464c0"
+    "hero.png": "2633c4fbbbcac154e33d66eec425d37bcb99d8771724576a771a0669e43d4590",
+    "sheet.png": "9ecb9c69d368f9f4ca31b87b5cbf702133289c729eeca3fa40d32c2600255fb2"
   }
 }

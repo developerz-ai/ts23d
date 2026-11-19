@@ -1,8 +1,9 @@
-// The pine's far LOD keeps its near silhouette, and its trunk carries no stray strip. Failure
-// cases first: the kind's own lathe-blob LOD2 pops (IoU ≈ 0.4), and a sweep's seam column sits on
-// the next strip's V (the grey streak the shared grove finish left down the trunk).
+// The pine's far LOD keeps its near silhouette, its needles are cutout cards, and its trunk carries
+// no stray strip. Failure cases first: the kind's own lathe-blob LOD2 pops (IoU ≈ 0.4), and a
+// sweep's seam column sits on the next strip's V (the grey streak the shared grove finish left).
 import { describe, expect, it } from 'bun:test';
 import {
+  cellRect,
   compile,
   defineAsset,
   stripAtV,
@@ -37,7 +38,7 @@ describe('pine LOD2 silhouette', () => {
     expect((err as Ts23dError).code).toBe('T3D_ART_SILHOUETTE');
   }, 120_000);
 
-  it('needle pads fitted to LOD0 hold IoU ≥ 0.85 from front, side and 3/4', () => {
+  it('clumped needle cards hold IoU ≥ 0.85 from front, side and 3/4', () => {
     const views = silhouetteReads(pine);
     expect(views.length).toBe(3);
     for (const v of views) expect(v.iou).toBeGreaterThanOrEqual(0.85);
@@ -52,8 +53,18 @@ describe('pine bark', () => {
   });
 
   for (const lod of [0, 1, 2] as const)
-    it(`LOD${lod}: every trunk, root and branch vertex is on bark_pine`, () => {
+    it(`LOD${lod}: needles are cutout cards on foliage_needles`, () => {
+      const leaves = compile(pine, { lod }).parts.find((p) => p.name === 'leaves');
+      expect(leaves?.surface).toBe('cutout');
+      const cell = cellRect('foliage_needles');
+      const v = leaves?.mesh?.uvs[1] ?? 0;
+      expect(v > cell.v0 && v < cell.v1).toBe(true);
+    });
+
+  for (const lod of [0, 1, 2] as const)
+    it(`LOD${lod}: every trunk, root and branch vertex is on bark_pine (dead wood weathered)`, () => {
       const bark = stripRect('bark_pine');
+      const dead = stripRect('wood_weathered');
       let wood = 0;
       let off = 0;
       for (const p of compile(pine, { lod }).parts) {
@@ -61,7 +72,7 @@ describe('pine bark', () => {
         for (let i = 1; i < p.mesh.uvs.length; i += 2) {
           const v = p.mesh.uvs[i] ?? 0;
           wood++;
-          if (!(v > bark.v0 && v < bark.v1)) off++;
+          if (!(v > bark.v0 && v < bark.v1) && !(v > dead.v0 && v < dead.v1)) off++;
         }
       }
       expect(wood).toBeGreaterThan(0);

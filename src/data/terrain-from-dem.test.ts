@@ -46,8 +46,13 @@ describe('terrainFromDEM', () => {
     const [lo, hi] = zRange(t.terrain.positions);
     expect(lo).toBe(0);
     expect(hi).toBeCloseTo(1400 - 960, 0);
-    // 16² cells × 2 + 4 · 16 skirt quads × 2, unwelded for strips.
+    // 16² cells × 2 + 4 · 16 skirt quads × 2.
     expect(t.terrain.indices.length / 3).toBe(2 * 16 * 16 + 8 * 16);
+    // The default ground finish keeps the mesh welded (per-triangle strips tripled it: D307).
+    const plain = terrainFromDEM(DEM, { lod: 0, ground: GROUND, base: 40, strips: false });
+    expect(t.terrain.positions.length).toBe(plain.terrain.positions.length);
+    expect(t.terrain.positions.length / 3).toBeLessThan(t.terrain.indices.length / 2);
+    expect(t.terrain.uvs).not.toEqual(plain.terrain.uvs);
     expect(t.water).toBeUndefined();
   });
 

@@ -225,7 +225,10 @@ export type BlenderStep =
    *  the vertex nearest `from` (its tip) within `r` metres of `bones` and beyond the cut plane
    *  (`point`, `normal` along the chain): there only `bones` keep weight (the others fade out
    *  over `feather` m, 0.03), elsewhere `bones` lose theirs. Fails when over `maxShare` (0.25) of
-   *  the mesh is reached: the chain is fused to the body. */
+   *  the mesh is reached: the chain is fused to the body. `contact` (metres; absent: off) is for
+   *  a chain joined to the body away from its root (a tail generated lying on a thigh): weights
+   *  within that distance of an edge joining chain skin to body skin are relaxed into a blend,
+   *  so the edge no longer stretches by the whole motion between the two. */
   | {
       readonly op: 'isolate';
       readonly bones: readonly string[];
@@ -235,6 +238,7 @@ export type BlenderStep =
       readonly r: number;
       readonly feather?: number;
       readonly maxShare?: number;
+      readonly contact?: number;
     }
   /** Run `python` (bpy source text) on the working mesh, with `obj`, `source`, `arm`, `bpy`,
    *  `bmesh`, `mathutils` and `np` in scope; `why` says what it fixes and is required. The text

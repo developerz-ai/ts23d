@@ -8,7 +8,6 @@
 
 import {
   type BuildContext,
-  cityBlock,
   cityPlan,
   cityWindow,
   cityWindows,
@@ -19,6 +18,7 @@ import {
 } from '@developerz.ai/ts23d';
 import { citeOsm, type OsmBuilding, readOsm } from '@developerz.ai/ts23d/data';
 import type { InstancedScene } from '@developerz.ai/ts23d/export';
+import { buildBlock, TANK_RISE, tankAt } from './block.ts';
 import osmJson from './data/osm-west_village.json';
 
 export const OSM = readOsm(osmJson, 'data/osm-west_village.json');
@@ -52,7 +52,9 @@ export const STYLE = {
   // Painted wood / brownstone cornices and lintel bands.
   trim: hex('#d8d0c0'),
   ground: hex('#8d8a84'),
-  road: hex('#3a3a3c'),
+  // A light neutral tint: the asphalt strip carries its own dark binder and pale aggregate
+  // (a dark tint on it multiplied out to pure black from above).
+  road: hex('#d6d4cf'),
 } as const;
 
 const OPTIONS = { ...STYLE, floorHeight: 3.2, streets: OSM.roads } as const;
@@ -71,12 +73,17 @@ const MEASURES: Measure[] = [...BUILDINGS]
   }));
 
 function build(ctx: BuildContext): void {
-  cityBlock(ctx, BUILDINGS, OPTIONS);
+  buildBlock(ctx, BUILDINGS, OSM.roads, { ...STYLE, floorHeight: OPTIONS.floorHeight });
 }
 
 const xs = BUILDINGS.flatMap((b) => b.ring.map((p) => p[0]));
 const ys = BUILDINGS.flatMap((b) => b.ring.map((p) => p[1]));
 const tallest = Math.max(...BUILDINGS.map((b) => b.height ?? 0));
+/** Highest point: a roof, or the top of a rooftop water tank (they stand on the taller roofs). */
+const skyline = Math.max(
+  tallest + 0.2,
+  ...cityPlan(BUILDINGS, OPTIONS).map((p) => p.base + p.height + (tankAt(p) ? TANK_RISE : 0)),
+);
 
 export const city_block = defineAsset({
   name: 'city_block',
@@ -94,7 +101,7 @@ export const city_block = defineAsset({
     // The slab reaches 4 m past the footprints on every side.
     length: Math.max(...xs) - Math.min(...xs) + 8,
     width: Math.max(...ys) - Math.min(...ys) + 8,
-    height: tallest + 0.2,
+    height: skyline,
     tolerance: 0.02,
     measures: MEASURES,
   },

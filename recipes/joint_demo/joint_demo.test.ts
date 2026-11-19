@@ -12,8 +12,8 @@ describe('joint_demo', () => {
   it('fails a hand twice the wrist with T3D_JOINT_MISMATCH and the scale fix', () => {
     const [f, ...rest] = issues(jointDemo(2, 'joint_demo_big_hand'));
     expect(rest).toEqual([]);
-    expect(f?.message).toMatch(/^T3D_JOINT_MISMATCH joint 'wrist'.*95% larger/);
-    expect(f?.fix).toContain('scale hand ×0.51');
+    expect(f?.message).toMatch(/^T3D_JOINT_MISMATCH joint 'wrist'.*105% larger/);
+    expect(f?.fix).toContain('scale hand ×0.49');
   });
 
   it('fits at every joint and passes QA', () => {

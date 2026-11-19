@@ -180,12 +180,18 @@ export function buildFrame(ctx: BuildContext, L: Layout): void {
     const y = s * ROD_Y;
     m.push(
       lath({
-        profile: [
-          [0.22, cylX - 0.5],
-          [0.26, cylX - 0.46],
-          [0.26, cylX + 0.46],
-          [0.22, cylX + 0.5],
-        ],
+        profile:
+          lod === 2
+            ? [
+                [0.26, cylX - 0.5],
+                [0.26, cylX + 0.5],
+              ]
+            : [
+                [0.22, cylX - 0.5],
+                [0.26, cylX - 0.46],
+                [0.26, cylX + 0.46],
+                [0.22, cylX + 0.5],
+              ],
         segments: segs,
         axis: 'x',
         at: [0, y, CYL_Z],
@@ -201,9 +207,21 @@ export function buildFrame(ctx: BuildContext, L: Layout): void {
         CYL_Z + 0.35,
         F.black,
       ),
-      // Steam chest: a brass box over a blue base band.
-      bx(cylX - 0.42, cylX + 0.42, y - 0.2, y + 0.2, CYL_Z + 0.2, CYL_Z + 0.3, F.blueSteel),
-      bx(cylX - 0.4, cylX + 0.4, y - 0.18, y + 0.18, CYL_Z + 0.3, CYL_Z + 0.55, F.brass),
+    );
+    // Steam chest: a brass box over a blue base band (far: the brass box alone, down to the
+    // cylinder).
+    if (lod < 2)
+      m.push(bx(cylX - 0.42, cylX + 0.42, y - 0.2, y + 0.2, CYL_Z + 0.2, CYL_Z + 0.3, F.blueSteel));
+    m.push(
+      bx(
+        cylX - 0.4,
+        cylX + 0.4,
+        y - 0.18,
+        y + 0.18,
+        CYL_Z + (lod < 2 ? 0.3 : 0.2),
+        CYL_Z + 0.55,
+        F.brass,
+      ),
     );
     if (lod < 2)
       for (const dx of [-0.5, 0.5]) {

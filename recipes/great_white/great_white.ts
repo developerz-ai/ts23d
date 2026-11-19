@@ -27,8 +27,10 @@ import {
 } from './anatomy.ts';
 import {
   CAUDAL_ROOT,
+  copepods,
   DORSAL,
   DORSAL_TIP,
+  dorsalCopepods,
   dorsalFin,
   FORK,
   LOWER_TIP,
@@ -154,7 +156,7 @@ export const great_white = defineAsset({
   kind: 'creature',
   medium: 'water',
   description:
-    'Adult female white shark, 4.5 m: conical snout, five gill slits, black eye, serrated-tooth jaws that protrude in the bite, sharp countershading, crescent tail with keel.',
+    'Adult female white shark, 4.5 m: blunt conical snout, five gill slits, black eye in a lidded socket, serrated-tooth jaws that protrude in the bite, sharp ragged countershading, thick pectorals with dark tips, lunate tail on a dark keel; healed scars, a bitten notch in the first dorsal and parasitic copepods on it.',
   tags: ['creature', 'fish', 'shark', 'marine', 'animated', 'swim'],
   sources: [
     'https://doi.org/10.1371/journal.pone.0348174',
@@ -199,7 +201,8 @@ export const great_white = defineAsset({
       why: 'five gill slits are real grooves in the skin',
     })),
   ],
-  budget: { triangles: [68000, 8000, 780], bones: PLAN.bones.length },
+  // LOD1 ~13 k so fins, gills and the colour line survive the first switch (was 7 k from 61 k).
+  budget: { triangles: [72000, 16000, 820], bones: PLAN.bones.length },
   art: { grounded: false },
   clips: CLIPS,
   build(ctx) {
@@ -225,7 +228,7 @@ export const great_white = defineAsset({
     part('jaw_upper', upperJaw(lod), bonesOf(PLAN, 'jaw_upper'));
     part(
       'dorsal_fin',
-      dorsalFin(lod),
+      merge([dorsalFin(lod), ...copepods(lod, dorsalCopepods())]),
       [...bonesOf(PLAN, 'dorsal'), spine[linkAt(0.43)] ?? ''],
       0.08,
     );

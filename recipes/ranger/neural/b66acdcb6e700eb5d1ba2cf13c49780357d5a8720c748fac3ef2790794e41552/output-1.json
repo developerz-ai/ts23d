@@ -1,0 +1,315 @@
+{
+  "bbox": {
+    "frame": "gltf",
+    "max": [
+      0.509263,
+      1.779233,
+      0.179255
+    ],
+    "min": [
+      -0.509287,
+      0.000104,
+      -0.179762
+    ]
+  },
+  "bind": {
+    "bones": 24,
+    "clips": [
+      "Casual_Walk",
+      "Idle",
+      "Run_02"
+    ],
+    "filled": 0,
+    "maxInfluences": 4,
+    "method": "source-transfer",
+    "transferUnweighted": 0.0,
+    "weightSum": [
+      1.0,
+      1.0
+    ]
+  },
+  "blender": "5.3.0",
+  "contract": "t3d-blender-report/1",
+  "glb": {
+    "animations": [
+      {
+        "channels": 72,
+        "name": "Casual_Walk",
+        "seconds": 4.1667
+      },
+      {
+        "channels": 72,
+        "name": "Idle",
+        "seconds": 4
+      },
+      {
+        "channels": 72,
+        "name": "Run_02",
+        "seconds": 0.7
+      }
+    ],
+    "images": [
+      {
+        "channels": 3,
+        "mime": "image/png",
+        "name": "tex-normal"
+      },
+      {
+        "channels": 3,
+        "mime": "image/png",
+        "name": "tex-orm"
+      },
+      {
+        "channels": 3,
+        "mime": "image/png",
+        "name": "tex-albedo"
+      }
+    ],
+    "joints": [
+      "Hips",
+      "LeftUpLeg",
+      "LeftLeg",
+      "LeftFoot",
+      "LeftToeBase",
+      "RightUpLeg",
+      "RightLeg",
+      "RightFoot",
+      "RightToeBase",
+      "Spine02",
+      "Spine01",
+      "Spine",
+      "LeftShoulder",
+      "LeftArm",
+      "LeftForeArm",
+      "LeftHand",
+      "neck",
+      "Head",
+      "head_end",
+      "headfront",
+      "RightShoulder",
+      "RightArm",
+      "RightForeArm",
+      "RightHand"
+    ],
+    "materials": [
+      {
+        "name": "body",
+        "textures": [
+          "baseColorTexture",
+          "metallicRoughnessTexture",
+          "normalTexture",
+          "occlusionTexture"
+        ]
+      }
+    ],
+    "meshNodes": [
+      "lod0",
+      "lod1",
+      "lod2"
+    ],
+    "skins": 1,
+    "uvOrigin": "top-left (glTF)"
+  },
+  "lods": [
+    29998,
+    9998,
+    3898
+  ],
+  "seconds": 74.56,
+  "source": {
+    "materials": 1,
+    "rig": {
+      "bones": 24,
+      "clips": [
+        {
+          "name": "Casual_Walk",
+          "seconds": 4.1667
+        },
+        {
+          "name": "Idle",
+          "seconds": 4.0
+        },
+        {
+          "name": "Run_02",
+          "seconds": 0.7
+        }
+      ],
+      "fps": 30,
+      "maxInfluences": 4,
+      "unweighted": 0.0
+    },
+    "textures": 3,
+    "triangles": 278552,
+    "uvLayers": 1,
+    "vertexColours": 0
+  },
+  "steps": [
+    {
+      "holeFaces": 6,
+      "nonManifoldEdges": 452,
+      "op": "clean",
+      "seconds": 2.61,
+      "shells": 2,
+      "shellsDropped": 0,
+      "triangles": 278558,
+      "welded": 88693
+    },
+    {
+      "boundaryEdges": 0,
+      "focusVertexShare": 0.2145,
+      "from": 278558,
+      "op": "retopo",
+      "reduce": "decimate",
+      "seconds": 9.15,
+      "shell": {
+        "bboxDrift": 0.00146,
+        "bboxSide": "+y (left)",
+        "close": 0,
+        "components": 5,
+        "handles": 5,
+        "largestShare": 0.9998,
+        "lost": {
+          "centre": [
+            0.019,
+            -0.0521,
+            0.9288
+          ],
+          "share": 0.0005,
+          "tolerance": 0.009465,
+          "where": "+x (front)"
+        },
+        "skin": 0.0,
+        "tried": [
+          [
+            0,
+            0.0,
+            0.0005,
+            5
+          ]
+        ],
+        "volume": 0.111616,
+        "volumeRef": 0.120895
+      },
+      "shellTriangles": 203424,
+      "strategy": "shell",
+      "triangles": 29998,
+      "voxel": 0.00631
+    },
+    {
+      "islands": 398,
+      "kind": "smart",
+      "op": "uv",
+      "seconds": 15.12,
+      "triangles": 29998,
+      "uvDegenerate": 0.0014
+    },
+    {
+      "albedoFrom": "texture",
+      "albedoMean": 0.1795,
+      "albedoUnfilled": 0.0,
+      "cage": 0.012,
+      "device": "OPTIX: NVIDIA GeForce RTX 3090",
+      "hitRate": 0.9943,
+      "maps": [
+        "albedo",
+        "normal",
+        "ao",
+        "roughness"
+      ],
+      "op": "bake",
+      "seconds": 29.3,
+      "size": 2048,
+      "triangles": 29998,
+      "uvCoverage": 0.6016
+    },
+    {
+      "bones": 24,
+      "clips": [
+        "Casual_Walk",
+        "Idle",
+        "Run_02"
+      ],
+      "filled": 0,
+      "maxInfluences": 4,
+      "method": "source-transfer",
+      "op": "bind",
+      "seconds": 0.37,
+      "transferUnweighted": 0.0,
+      "triangles": 29998,
+      "weightSum": [
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "moved": 0.0,
+      "op": "script",
+      "seconds": 15.61,
+      "sha256": "fcf2f68f4709a083fdc6582ab337d56a44323a1952dafbefa1e663a1ad2d3bb8",
+      "stdout": [
+        "mud 0.06681601268616216",
+        "wet 0.03109124155429329",
+        "dust 0.01231742476107413",
+        "belt 0.006948147683766726",
+        "rub 0.002746601318059392"
+      ],
+      "triangles": 29998,
+      "vertices": [
+        14991,
+        14991
+      ],
+      "why": "boots and hem were clean and wool shone like leather: mud, dust, strap scuffs, rubbed elbows and the roughness contrast go into the maps (a textured part takes no grime pass)"
+    },
+    {
+      "lod0": {
+        "boundaryEdges": 0,
+        "handles": 5,
+        "maxFaceShare": 0.0007,
+        "uvDegenerate": 0.0014
+      },
+      "lods": [
+        {
+          "bboxDrift": 0.00154,
+          "bboxSide": "+x (front)",
+          "boundaryEdges": 0,
+          "handles": 5,
+          "lost": {
+            "share": 0.0,
+            "tolerance": 0.020813
+          },
+          "maxFaceShare": 0.0014,
+          "triangles": 9998,
+          "uvDegenerate": 0.0018
+        },
+        {
+          "bboxDrift": 0.00233,
+          "bboxSide": "-y (right)",
+          "boundaryEdges": 0,
+          "handles": 5,
+          "lost": {
+            "share": 0.0,
+            "tolerance": 0.031219
+          },
+          "maxFaceShare": 0.0021,
+          "triangles": 3898,
+          "uvDegenerate": 0.0036
+        }
+      ],
+      "op": "lods",
+      "seconds": 0.71,
+      "triangles": 29998
+    },
+    {
+      "bytes": 10387184,
+      "images": {
+        "albedo": 2048,
+        "normal": 1024,
+        "orm": 1024
+      },
+      "op": "export",
+      "seconds": 1.68,
+      "triangles": 29998
+    }
+  ],
+  "threads": 1
+}

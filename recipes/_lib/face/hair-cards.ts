@@ -1,6 +1,7 @@
 // Card hair for the busts: a recipe's card hairstyle (cap field, comb, layers) → strand cards on
 // the shared `hair_clumps` cutout strip as ONE `hair` part (one draw). LOD0 dense, LOD1 ¼ the
-// cards ×2 wider, LOD2 none (the sculpted mass is the far LOD). Use with the recipe's
+// cards ×2 wider, LOD2 a handful of wide cards (`farStyle`) over the sculpted mass, so the far
+// head keeps the near LODs' broken outline and tones instead of a smooth cap. Use with the recipe's
 // `hairBaseEdits` as the bust's `hair` so the sculpted cap (painted hair colour) sits under the
 // cards. `bustHairFields` gives a style the skull scalp (`bustScalp`) for the cap and the finished
 // bust the head is meshed from, to root on and collide with; `skullHairline` draws a hairline
@@ -9,6 +10,7 @@
 import {
   type BuildContext,
   type Field,
+  type Mesh,
   type ScalpCardOptions,
   scalpCards,
   sculptField,
@@ -19,10 +21,51 @@ import type { SkullLandmarks } from './skull.ts';
 
 export type CardHairStyle = Omit<ScalpCardOptions, 'lod' | 'rng'>;
 
-/** Emit `part` (default 'hair') as cutout strand cards rooted on the style's cap. */
-export function cardHair(ctx: BuildContext, style: CardHairStyle, part = 'hair'): void {
-  const mesh = scalpCards({ ...style, lod: ctx.lod, rng: ctx.rng.fork(part) });
-  if (mesh) ctx.part(part, mesh, { surface: 'cutout' });
+export interface CardHairOptions {
+  /** Applied to the cards before they are emitted (a bust lifted onto its plinth). */
+  readonly move?: (m: Mesh) => Mesh;
+  /** The far LOD's style from the near one (default `farStyle`); `false`: no cards at LOD2. */
+  readonly far?: false | ((style: CardHairStyle) => CardHairStyle);
+}
+
+/** The far LOD's cards from a style: its locks only (no wisps: a stray strand is sub-pixel at
+ *  that distance), `density` × as many and `width` × as wide, in the same tones. `keep` names
+ *  the layers that stay instead. `cardHair` then meshes them by the LOD1 rule (¼, ×2 wide, flat),
+ *  so the defaults leave about 1 card in 16, 3.6 × as wide. */
+export function farStyle(
+  style: CardHairStyle,
+  o: { readonly keep?: readonly string[]; readonly density?: number; readonly width?: number } = {},
+): CardHairStyle {
+  const keep = o.keep;
+  return {
+    ...style,
+    // The roots' surface at twice the cell: a far card does not need a 4 mm root lattice.
+    cell: style.cell * 2,
+    layers: style.layers
+      .filter((l) => (keep ? keep.includes(l.name) : l.kind !== 'wisp'))
+      .map((l) => ({
+        ...l,
+        density: l.density * (o.density ?? 0.25),
+        width: l.width * (o.width ?? 1.8),
+      })),
+  };
+}
+
+/** Emit `part` (default 'hair') as cutout strand cards rooted on the style's cap. `scalpCards`
+ *  has no far level (it returns null at LOD2), so the far LOD runs its LOD1 rule on the thinned
+ *  `far` style. */
+export function cardHair(
+  ctx: BuildContext,
+  style: CardHairStyle,
+  part = 'hair',
+  o: CardHairOptions = {},
+): void {
+  const far = ctx.lod === 2;
+  if (far && o.far === false) return;
+  const st = far ? (o.far ? o.far(style) : farStyle(style)) : style;
+  if (st.layers.length === 0) return;
+  const mesh = scalpCards({ ...st, lod: Math.min(ctx.lod, 1), rng: ctx.rng.fork(part) });
+  if (mesh) ctx.part(part, o.move ? o.move(mesh) : mesh, { surface: 'cutout' });
 }
 
 /** The skull scalp the hair cap is sculpted on (`bustScalp`), and the finished bust (stage 4: skin
@@ -73,6 +116,8 @@ export function skullHairline(k: SkullLandmarks, s: HairlineShape): Field {
     const line = zF + (zB - zF) * t * t + temple;
     const q: Vec3 = [p[0], Math.abs(p[1]), p[2]];
     const ear = s.ear - Math.min(segDist(q, lobe, top), segDist(q, top, tip));
-    return Math.max(line - p[2], ear);
+    // Never outside the skull's own width: the back of a long ear's blade is further than `ear`
+    // from the lobe → top → tip line, and a lock rooted on it hangs in the air beside the head.
+    return Math.max(line - p[2], ear, q[1] - wide - 0.006);
   };
 }

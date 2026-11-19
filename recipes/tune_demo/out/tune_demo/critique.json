@@ -1,114 +1,114 @@
 {
   "asset": "tune_demo",
   "reviewer": "agent",
-  "overall": 6,
+  "overall": 6.7,
   "scores": {
     "silhouette": {
       "score": 8,
-      "reason": "Slim two-handled amphora with a stem foot, high shoulders, tall neck and flared lip; the outline matches the tuned drawing from the front.",
+      "reason": "Slim two-handled amphora with stem foot, high shoulders, tall neck and a rolled lip; matches the tuned drawing from the front.",
       "fixes": [
-        "slight lip thickening (rolled rim) so the top edge reads in silhouette"
+        "fit the side silhouette too (handles read thin from the side)"
       ]
     },
     "proportions": {
       "score": 8,
-      "reason": "0.3 x 0.3 x 0.6 m, tuned to target_front.svg: belly, neck and handle reach read as a real storage amphora.",
+      "reason": "0.3 x 0.3 x 0.6 m tuned to target_front.svg; belly, neck and handle reach read as a real amphora.",
       "fixes": [
-        "fit the side silhouette as well (handles are thin from the side)"
+        "handle attachment slightly lower on the neck per the target drawing"
       ]
     },
     "materials": {
-      "score": 5,
-      "reason": "One flat terracotta colour with a soft sheen; no clay texture, throw rings or colour variation.",
+      "score": 6,
+      "reason": "Terracotta with a little slip variation and pale chips at lip and foot; still one smooth satin colour with no clay grain or throw rings.",
       "fixes": [
-        "terracotta strip with throw-ring relief and a slightly darker, rougher foot"
+        "terracotta strip with throw-ring relief and a rougher, darker foot"
       ]
     },
     "detail": {
-      "score": 4,
-      "reason": "Body, foot, lip and two handles; nothing else (no stamp, seam, handle attachment pads).",
+      "score": 6,
+      "reason": "A potter's stamp on the shoulder, attachment pads at the handles, rolled lip; nothing else.",
       "fixes": [
-        "handle attachment pads where the handles meet the neck and shoulder",
-        "a potter's stamp on the shoulder"
+        "throw rings on the body",
+        "a seam or two at the handle roots"
       ]
     },
     "wear": {
-      "score": 3,
-      "reason": "Pristine: no chips on the lip, no dirt in the foot, no stains.",
+      "score": 6,
+      "reason": "Chips on the lip and foot ring now show; no residue staining or dirt in the foot.",
       "fixes": [
-        "chipped lip and worn foot ring",
-        "dark residue stain below the lip"
+        "dark residue stain below the lip and soil in the foot ring"
       ]
     },
     "lod": {
-      "score": 6,
-      "reason": "FAR LOD2 (272 tris) keeps the outline but the body becomes visibly 12-sided and the handles become angular polylines.",
+      "score": 5,
+      "reason": "lods.png: LOD2 (276 tris) pops: the rolled lip becomes a flat-topped cone, the flared foot a straight pale cylinder, the body visibly 10-12 sided and the handles angular.",
       "fixes": [
-        "16 sides at LOD2 within the 272-triangle budget by fewer profile stations"
+        "keep the lip roll and foot flare as one profile station each at LOD2",
+        "16 sides at LOD2 within budget by fewer body stations"
       ]
     },
     "technical": {
       "score": 8,
-      "reason": "QA clean (pack): 4.1k / 1.2k / 272 tris; tune.json params read by every build.",
+      "reason": "QA PASS: 4.3k / 1.3k / 276 tris, 1 draw; tune.json params read by every build.",
       "fixes": [
-        "fewer LOD0 profile stations on the straight neck"
+        "fewer LOD0 stations on the straight neck"
       ]
     }
   },
   "renders": {
-    "hero.png": "e60676ac44025bd1c0aa4428d7a499b7539e934f9fc5d5743785904f16b3d149",
-    "sheet.png": "5c57651ca55b3193d26154d8aee153c149d2a525e132c51e4769cdf5ffcf9c25",
-    "raking.png": "94c59969cd9d316fd35dd3c1dbb7fa032815a8f25b4046bbf72310ece667d47a",
-    "raking_detail.png": "7bbf0182d78ff9c63fbf3f07e3aa3a898ebce17def1c3df2f626ddf5b6ff39d8",
-    "lods.png": "5fc5342d99248392c927e4498143d7578a9f53c17eb1eec10dc64faa4ef72454",
-    "silhouette.png": "9777359d8d7b2315f3e1b0a61dcabae8fc2a74434bd5e17d94f0545310df7de7",
-    "value.png": "a79553ffbb9861e913df08c1e1181a066a3e548be778777b40fed25282148a21",
-    "detail.png": "3249dfed1ca0bb8b49b4a41169615ba1507bc2a509a2be1313a33ab183c8fa50"
+    "hero.png": "c4faedd2a610868189f82ad29b053b84371fdd22dff1d1e82b42947c0f89930d",
+    "sheet.png": "795bd1ffd970d11b7a14be63b351d4dd8e36574c79e967338ff657c0aa8d235f",
+    "raking.png": "c6bb1fa38c3d93746a2d0484ed6c7a2cb25b5a0f0c762fecb3d539ffc62c22cd",
+    "raking_detail.png": "db48225e790217900b276449e18f64b4e1c9f802b86eb0d3a1334b9e6b9ab32e",
+    "lods.png": "ae8bbeaada894c1d5fc54b906ef784da83bc2bd19cbd2d7662b672bb9c909345",
+    "silhouette.png": "5d4774745cfafcd5398fae94993d95ac81c37dd893a93d27fbc63c5a07fae0c9",
+    "value.png": "86d0df7a104732bd09f6825ec6c24e699e0e9462ab98fbe04b85786782b43903",
+    "detail.png": "aa1ffc3710a54211693eedb816274daf1b998e1d71d4875f92f2db5691eade81"
   },
   "metrics": {
     "silhouette": [
       {
         "view": "front",
-        "iou": 0.968
+        "iou": 0.946
       },
       {
         "view": "side",
-        "iou": 0.968
+        "iou": 0.936
       },
       {
         "view": "3/4",
-        "iou": 0.956
+        "iou": 0.948
       }
     ],
     "focal": {
       "peakPart": "body",
       "peak": [
         352,
-        151
+        152
       ],
       "focalShare": 0,
       "focalArea": 0,
       "top": [
         {
           "part": "body",
-          "share": 0.769
+          "share": 0.829
         },
         {
           "part": "handle_r",
-          "share": 0.231
+          "share": 0.171
         }
       ],
       "declared": []
     },
     "rest": {
-      "share": 0.848,
-      "spread": 0.533,
+      "share": 0.837,
+      "spread": 0.555,
       "min": 0.25
     },
     "shape": {
-      "acuteShare": 0.599,
-      "straightShare": 0.496,
-      "taper": -0.27,
+      "acuteShare": 0.5,
+      "straightShare": 0.499,
+      "taper": -0.271,
       "shape": "aggressive"
     }
   }

@@ -1,63 +1,62 @@
 {
   "asset": "roadster_v10",
   "reviewer": "agent",
-  "overall": 6.3,
+  "overall": 7.1,
   "scores": {
     "silhouette": {
       "score": 8,
-      "reason": "Long bonnet, cab-rearward roadster with roll hoops, raked screen and side exhaust reads as a front-engined V10 roadster.",
+      "reason": "Long bonnet, short tail, roll hoops and low screen read as a front-engined roadster.",
       "fixes": [
         "a more pronounced rear haunch over the rear wheel"
       ]
     },
     "proportions": {
       "score": 7,
-      "reason": "4.5 m long, 1.3 m high; wheels and overhangs look right; the front is tall and blunt in FRONT.",
+      "reason": "Wheelbase and overhangs plausible; the nose is high and blunt in SIDE.",
       "fixes": [
-        "lower the nose 3–4 cm and sharpen the front overhang plan shape"
+        "lower the nose 3–4 cm and sharpen the front overhang in plan"
       ]
     },
     "materials": {
       "score": 7,
-      "reason": "Red paint, black grille mesh, alloy wheels, rubber, glass and chrome exhaust separate; the paint reads satin without clearcoat reflections; the windscreen renders opaque light grey in sheet.png.",
+      "reason": "Clearcoat red with reflections, glass, chrome side pipes, rubber and brake discs read; the headlamp glow is thinner than before but still draws a white rim round the top and outer edge of each lamp in hero.png.",
       "fixes": [
-        "clearcoat finish with sharp reflections on the body paint",
+        "soften the DRL glow into a thin strip inside the lamp instead of an outline",
         "consistent transparent glass in both renderers"
       ]
     },
     "detail": {
-      "score": 7,
-      "reason": "Bonnet vents, side gills, grille mesh, headlamp internals, mirrors, calipers, side exhaust, interior.",
+      "score": 8,
+      "reason": "Vents, louvres, badges, mirrors, wipers, shut-lines, a plate and brake callipers hold at third person.",
       "fixes": [
-        "shut-lines for doors and bonnet",
-        "badges and fuel filler"
+        "fuel filler and door handles recessed into the panels"
       ]
     },
     "wear": {
-      "score": 4,
-      "reason": "Showroom-clean apart from a light dust speckle.",
+      "score": 6,
+      "reason": "Stone chips and grime along the sills and lower doors; the chips are white specks scattered over the whole lower body and read as noise.",
       "fixes": [
-        "brake dust on the wheels and road grime on the sills"
+        "brake dust on the wheels",
+        "concentrate chips behind the wheels and on the nose"
       ]
     },
     "lod": {
-      "score": 6,
-      "reason": "FAR LOD2 turns the tyres light grey with the wheels: the black rubber disappears and the wheels read as white discs.",
+      "score": 7,
+      "reason": "FAR LOD2 keeps outline and colour; the wheels become grey discs with little tyre/rim contrast and the lamps cream blobs.",
       "fixes": [
         "keep a black tyre ring separate from the rim at LOD2"
       ]
     },
     "technical": {
-      "score": 5,
-      "reason": "QA clean but 909k / 78k / 5.5k tris: LOD0 is roughly 5–10× a hero car budget and drops 12× to LOD1.",
+      "score": 7,
+      "reason": "155k / 23k / 3k triangles (from 909k) but 30 draws at LOD0.",
       "fixes": [
-        "gate wheel spokes, grille mesh and interior ring counts by ctx.lod to bring LOD0 under ~150k",
-        "merge static body draws (91 parts)"
+        "merge static body draws (keep pivots on wheels, doors, bonnet)"
       ]
     }
   },
   "renders": {
-    "hero.png": "985611e643917323773d1fcfef8505365978152a852d9f4661ee8df3964d7a11",
-    "sheet.png": "6159d4f047c5988a09884ff18864db92442bffe98bb83295c710c4138c5ef6d7"
+    "hero.png": "18c516bb10a30007db90454702a60723d9cb55b1b7f41201644a65a0c6e6d3f9",
+    "sheet.png": "caebae39187a7e3b7778c27d74748aadd86e0d2c4519d23e3e7773b2fa7104ed"
   }
 }

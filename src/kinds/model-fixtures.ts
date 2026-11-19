@@ -65,6 +65,11 @@ export function capsuleCreature(b: Bones, keep: (c: WeightBone) => boolean = () 
   return merge(planCapsules(b).filter(keep).map(tube));
 }
 
+/** `mesh` with a closed tube from `a` to `b` merged on: a limb the plan lacks (a wing spar). */
+export function withLimb(mesh: Mesh, a: Vec3, b: Vec3, r: number): Mesh {
+  return merge([mesh, tube({ a, b, r1: r, r2: r })]);
+}
+
 /** A 16 × 16 albedo: value noise (`flat` false) or one grey. */
 export function albedoPng(flat: boolean): Uint8Array {
   const px = new Uint8Array(16 * 16 * 4);

@@ -81,11 +81,11 @@ const h = SK.hind;
 const foreChain = (per: number): SkinNode[] =>
   limb(
     [f.shoulder, f.elbow, f.wrist, [f.palm[0] - 0.02, f.palm[1], 0.16]],
-    [0.28, 0.22, 0.19, 0.19],
+    [0.28, 0.21, 0.165, 0.175],
     per,
   );
 const hindChain = (per: number): SkinNode[] =>
-  limb([h.hip, h.knee, h.hock, [h.ball[0] - 0.04, h.ball[1], 0.15]], [0.3, 0.2, 0.15, 0.16], per);
+  limb([h.hip, h.knee, h.hock, [h.ball[0] - 0.04, h.ball[1], 0.15]], [0.3, 0.19, 0.135, 0.15], per);
 
 /** Fore leg masses and muscle forms (left). */
 function foreLeg(lod: number): SculptEdit[] {

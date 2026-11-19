@@ -63,3 +63,19 @@ The neck folds are the least satisfying of these: they are geometry that could s
 ## Parts the engine needs
 `body` (trunk, tail, legs, necks), `heads`, `jaws`, `eyes`, `teeth`, `horns`, `feet`, `claws`,
 `spines`. Bones: `body_*`, `tail_*`, `fore_l_*`, `hind_r_*`, `neck_<k>_*`, `head_<k>_0`, `jaw_<k>_0`.
+
+## Surface, wear and budget (2026-11 quality pass)
+| Feature | How | Why |
+|---|---|---|
+| scales | `hydra_scales` strip (`material.ts`): overlapping 6 × 4.5 cm scales in true metres, crowns glossy (0.36), grooves rough (0.78); `uvBands` per chain keep them square round thick and thin sections | the old per-vertex scale relief cost 176 k triangles and still read as one smooth olive |
+| keratin | horns, claws, teeth and spines on the built-in satin `plastic` strip, UVs along each piece | horn separated from skin only by hue |
+| dorsal saddles | dark crossbands at a 0.62 m pitch, broken by noise, as on a monitor | uniform olive back |
+| mud | `mudAt`: caked on the feet and shins, splashed up the legs, dusting the belly; dried pale at its upper edge | it lives in a river marsh |
+| scars | claw rakes across neck 1, a healed bite ring on the right flank (both on the hero camera's side), the tip of head 0's swept horn broken off | it fights |
+| mouths | a forked tongue in every open jaw | empty mouths |
+| proportions | thigh roots +24 %, upper arms +25 %, fore feet 16 cm further under the body; lowest necks raised 0.3 to 0.45 m so all five heads clear the shoulders; tail curls to one side | thin splayed legs, a head hanging in front of the chest |
+| triangles | LOD0 348 k to 210 k: neck, tail, leg and trunk rings cut (scales moved to the strip), jaws at a 1.35 cm cell, eyes 18 × 12; heads keep their 1.15 cm cell | 9× drop to LOD1 |
+| far LOD | horn pairs keep 4 segments and 5 sides; the saddle pattern averages into the back colour | wedge heads far away |
+| LOD1 (2026-11-19) | 40.2 k to 38.5 k: horns 6 segments × 5 sides, a tooth every 8 cm, eyes 8 × 6 | stay at or under the 38.8 k recorded before the wave |
+
+Budget why: five complete sculpted heads (skull, open jaw, tongue, teeth, eyes, horns) on five necks plus a monitor-lizard body; each head is a creature head's worth of surface, so LOD0 (210k) and LOD1 (38.5k) sit over the one-body 150k/30k creature band and LOD2 keeps five head wedges at 7.1k.

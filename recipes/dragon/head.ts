@@ -290,7 +290,7 @@ function headPaint(p: Vec3, c: Vec3): Vec3 {
   return mixRgb(mixRgb(side, C.backDeep, top * 0.85), C.belly, lip * 0.4);
 }
 
-export const HEAD_RES = [0.016, 0.04, 0.14] as const;
+export const HEAD_RES = [0.016, 0.054, 0.16] as const;
 
 export function headEdits(lod: number): SculptEdit[] {
   return [...blockOut(), ...planes(), ...features(lod), ...secondary(lod)];

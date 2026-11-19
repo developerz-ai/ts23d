@@ -38,21 +38,59 @@ brows, socket shade.
 | eyes: sclera / iris / wet line / caruncle | `#ece6dc` / `#3d6e9e` / `#f0c0b0` / `#d07a74` |
 | hair + beard root → tip | `#3a2416` → `#8a6038` |
 | tunic / folds / collar / mantle / brooch (`brass`) | `#2e4f8a` / `#1e3560` / `#6b4428` / `#7a2420` / `#c9a24a` |
+| linen / its sweat-grey / braid / mantle's worn edge / woven border / darn / scar | `#dcd8c8` / `#9c9480` / `#b08a3e` / `#b06a52` / `#2c1410` / `#a8764e` / `#e6b8a4` |
 
 ## Parts
-`head`, `bust` (split at the neck seam under the collar; LOD2 unsplit), `eye_l` / `eye_r` (yawed
-to converge 1.5 m ahead, `cornea` clearcoat finish), `brooch`, `plinth`, `hair` (one cut-out draw).
+`head`, `bust` (split at the neck seam under the collar; LOD2 unsplit), `clothes` (shirt, tunic,
+braid, cord), `mantle` (finish `wool`: sheen over the weave), `eye_l` / `eye_r` (yawed to converge
+1.5 m ahead, `cornea` clearcoat finish), `brooch`, `plinth`, `hair` (one cut-out draw). Head,
+bust, clothes and mantle hang under the `face` node and carry its morphs.
+
+## Outfit: one closed solid per material (2026-11)
+The garments are no longer sculpted into the skin. `outfitLayers` (`clothes.ts`, this folder; the
+shared `../_lib/bust/human/clothes.ts` still serves `import_demo`) returns each layer with its
+strip; `build.ts` meshes each, fairs it, weathers the mantle (`weather`: dust on the shoulders)
+and merges them per part. The skin under them is cut away (`hiddenBody`), the torso is 15 %
+narrower than the shared spec's (`torso.ts`: 0.172 m half-span, mass 0.42, arms cut two fingers
+outside the shoulder point) and the base mesh's shoulders ×0.92.
+
+| Layer | Part | Strip / finish | What it carries |
+|---|---|---|---|
+| linen | `clothes` | `canvas` | shirt in the V and its band collar, sweat-grey at the collar, blotched |
+| tunic | `clothes` | `canvas` | 5 mm blue wool, rolled stitched V, drag and gravity folds, an old spill down the front |
+| braid | `clothes` | `canvas` | ochre braid round the V as raised geometry (4 mm cell), the brooches' cord |
+| mantle | `mantle` | `canvas` + finish `wool` | 9 mm red wool, rolled neck edge, shoulder seam, darker woven border, rubbed pale front edges, a darn on the left shoulder, mud toward the base |
+
+Face (2026-11): lid and nasolabial folds a fifth deeper (`forms.lines`), sun on nose, cheekbones
+and ears, a pale scar through the left brow's tail, the beard's cheek line fading over 1.8 cm.
+
+## LODs and budget
+| LOD | Triangles | What changes |
+|---|---|---|
+| 0 | ≈ 90k (budget 94k) | head 5.2 mm (hair and beard cover half of it), groomed hair, garments ≈ 30k |
+| 1 | ≈ 29k (30k) | head 8 mm, card hair |
+| 2 | ≈ 3.6k (3.8k) | one coarse head with the brow ridge and nose as masses the 2 cm cell holds (`farFace`); every garment layer in ONE sculpt on `canvas` with flat colour blocks |
 
 ## Hair
 LOD0 hair is the **Blender groom** (`groom.ts`, ADR 014): guides traced on the card style's swept
 mid layer (`hair.ts`: left side parting, crown whorl), combed back, parting filled, crown puffed,
-nape cut, clumped into ~300 locks with curl and frizz; beard, moustache, brows and hairline wisps
+nape cut, the front lock puffed and grown so it lifts off the forehead, clumped into ~300 locks
+with curl and frizz; beard, moustache, brows and hairline wisps
 stay cards in the same part. The groom output is cached in `neural/`: refresh it with
 `t3d neural run recipes/human_head/human_head.ts` (needs a `groom` adapter in `t3d.config.ts`,
 Blender ≥ 5.2); a cache miss, LOD1 and LOD2 build the card hair (CPU). The scalp and chin under
 the cards are painted a shaded hair brown (`scalp`), held by `scalpCoverCheck` (D57).
 
 ## Known gaps
-The tunic is the torso painted blue with sculpted folds (no separate cloth thickness at the neck
-opening); eyelashes are a painted lash line (cards at the lid margin need a finer root mesh than
-the 4 mm card surface); the face's planes are softer than a pro bust's.
+The skin is one roughness (the shared skin mesher puts it on the `plain` strip and takes no
+finish); the mantle covers the shoulders and back only, so from the front it reads close to
+sleeves; the braid is a 4 mm-cell cord, lumpy up close; eyelashes are a painted lash line (cards
+at the lid margin need a finer root mesh than the 4 mm card surface); the face's planes are softer
+than a pro bust's. The groom cache key covers the dressed bust (its collision body): any change
+to the outfit or torso needs `t3d neural run` again (Blender, free).
+
+## Triangle budget (As of 2026-11-19)
+About 67k / 19k / 2.9k against the bust band of 60k / 12k / 1.5k (it was 90k / 29k / 3.6k). The head is meshed at a 6.6 mm cell (5.2 mm before), finer only round the eyes, ears and mouth; the garment cells grew by a fifth.
+
+Budget why: uniform-cell sculpt (an iso-surface cannot thin its flat areas) plus the groomed hair, beard cards and four closed garment layers; LOD2 below a 2.6 cm head cell loses the brow and nose.
+

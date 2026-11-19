@@ -1,64 +1,135 @@
 {
   "asset": "rts_soldier",
   "reviewer": "agent",
-  "overall": 6.4,
+  "overall": 7,
   "scores": {
     "silhouette": {
       "score": 7,
-      "reason": "Red crest, big red pauldrons, carbine and backpack radio read \"infantry\" in the 3/4 views; in the front view the carbine points at the camera and nearly vanishes, and the stiff straight-arm stance is generic.",
+      "reason": "Red crest, red pauldrons, radio pack with antenna and a carbine carried across the body read \"infantry\" in 3/4 and side; in FRONT the carbine still points at the camera and nearly vanishes.",
       "fixes": [
-        "carry the carbine at port arms across the chest so it reads from the front as well",
-        "a longer crest tail for the back view"
+        "carry the carbine at port arms (diagonal across the chest) so it reads in FRONT too"
       ]
     },
     "proportions": {
-      "score": 7,
-      "reason": "1.3 x 0.8 x 2.0 m, a chunky ~6-head figure; legs and pauldrons read at RTS scale. The head and hands are small next to the pauldrons for a 64 px read.",
+      "score": 8,
+      "reason": "1.3 x 0.8 x 2.0 m chunky RTS figure; head and hands now read at 64 px against the pauldrons.",
       "fixes": [
-        "head and hands ~10% bigger for the RTS read"
+        "boots ~10% shorter (they read clown-long in SIDE)"
       ]
     },
     "materials": {
-      "score": 6,
-      "reason": "Bone ceramic armour, olive canvas undersuit, brown leather boots and gunmetal carbine separate in hero.png; in sheet.png the boots and gloves render pale blue-grey/white, and every surface has the same soft plastic sheen.",
+      "score": 7,
+      "reason": "Bone ceramic, olive canvas, brown leather boots and belts (now brown in sheet.png too), gunmetal carbine separate; ceramic and canvas still share one roughness, and the face is a smooth egg.",
       "fixes": [
-        "rougher matte canvas versus glossier ceramic armour (roughness contrast)",
-        "check the leather role on boots/gloves: pale blue-grey in sheet.png"
+        "rougher matte canvas versus satin ceramic",
+        "face planes or a face decal under the visor"
       ]
     },
     "detail": {
-      "score": 5,
-      "reason": "Visor, crest, chest plates, red stripe, knee pads, belt and radio pack with antenna; the body is blocky low-poly limbs with no webbing, pouches or panel lines visible at hero distance.",
+      "score": 6,
+      "reason": "Raking.png: webbing, chest pouches, red stripe, knee pads, belt, radio pack with grille; the limbs are plain boxes with no folds or seams, no relief at all under raking light.",
       "fixes": [
-        "webbing straps and magazine pouches on the chest",
-        "panel lines on the torso shell",
-        "rounder limb cross-sections (8 sides) at LOD0"
+        "8-sided limbs with knee/elbow folds at LOD0",
+        "panel lines on the chest plate"
       ]
     },
     "wear": {
       "score": 5,
-      "reason": "weather() chips, dust and mud are measured, but at hero distance the figure reads clean; boots carry no visible mud.",
+      "reason": "Raking and hero show a clean figure: no mud on boots or shins, no scuffs on knee pads or chipped ceramic.",
       "fixes": [
-        "stronger mud on boots and shins, scuffs on knee pads visible at hero distance"
+        "mud on boots and shins and scuffed knee pads visible at hero distance (grime ground mask)",
+        "chipped edges on the pauldrons"
       ]
     },
     "lod": {
-      "score": 7,
-      "reason": "FAR LOD2 (348 tris) keeps crest, pauldrons, carbine and team colour; boots become blue-grey blocks.",
+      "score": 8,
+      "reason": "FAR LOD2 (380 tris) keeps crest, pauldrons, carbine, pack, boot colour and team red; the switch is invisible at RTS zoom.",
       "fixes": [
-        "keep the boot colour consistent between LODs"
+        "keep the antenna at LOD2"
       ]
     },
     "technical": {
       "score": 8,
-      "reason": "QA PASS (rebuilt today): 12.1k / 2.6k / 348 tris, 3 / 3 / 3 draws; triangles mostly on the head and carbine.",
+      "reason": "QA PASS: 10.6k / 2.9k / 380 tris, 3 / 3 / 3 draws.",
       "fixes": [
-        "spend fewer LOD0 triangles on the carbine barrel rings and more on rounder limbs"
+        "spend LOD0 triangles on limb cross-sections instead of carbine barrel rings"
       ]
     }
   },
   "renders": {
-    "hero.png": "5d80d58ae7fe2b60c3937cec7d4c643583187247e14f86529bb73c43864155ed",
-    "sheet.png": "0fb2a5405529051675f7f9368b171fce273e95e28a6f04b6abd26236555aae72"
+    "hero.png": "d0b9f62d9de25a5b44f903fa62b63f6edca619c3c87d6b429ba63a197fc0ed8c",
+    "sheet.png": "6655ed73fceb615843fd798980883c708af4cf6e177f893ff96b97a4bf8588ab",
+    "raking.png": "fe36a9c6d2c95ffc92c12bc76c75cd6de85b5034d1a483f55be910197848bc36",
+    "raking_detail.png": "94c1fe7bd9c94d0c1dff9ebd6cae1f72742dd775955c875757f20e2bbce1c503",
+    "lods.png": "bd9ca58251213e1df23a8d611c68e3c1515d2a0ee3252271e659e539878d1f2e",
+    "silhouette.png": "f45b1522f0f25f75aa73281fc26429ccdc27a04600977f5de1c59f21d58eb63c",
+    "value.png": "20c3000f85fdd9829becb7f9c8542b67dbd10806badca94e7ae0d699285da5ec",
+    "detail.png": "d63a6fbf6e5aa269501b48a766c1836ce429fdf4c9b5382c13929d04b485578e"
+  },
+  "metrics": {
+    "silhouette": [
+      {
+        "view": "front",
+        "iou": 0.909
+      },
+      {
+        "view": "side",
+        "iou": 0.877
+      },
+      {
+        "view": "3/4",
+        "iou": 0.898
+      }
+    ],
+    "focal": {
+      "peakPart": "visor",
+      "peak": [
+        385,
+        98
+      ],
+      "focalShare": 0.543,
+      "focalArea": 0.118,
+      "top": [
+        {
+          "part": "rifle",
+          "share": 0.145
+        },
+        {
+          "part": "helmet",
+          "share": 0.143
+        },
+        {
+          "part": "visor",
+          "share": 0.12
+        }
+      ],
+      "declared": [
+        "helmet",
+        "visor",
+        "crest"
+      ]
+    },
+    "rest": {
+      "share": 0.209,
+      "spread": 0.532,
+      "min": 0.2
+    },
+    "grounded": {
+      "rise": 0.301,
+      "bands": [
+        0.211,
+        0.275,
+        0.241,
+        0.367,
+        0.465
+      ]
+    },
+    "shape": {
+      "acuteShare": 0.133,
+      "straightShare": 0.626,
+      "taper": 0.088,
+      "shape": "stable",
+      "declared": "stable"
+    }
   }
 }

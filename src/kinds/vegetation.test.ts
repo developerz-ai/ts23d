@@ -45,12 +45,16 @@ describe('tree', () => {
     expect(bad({ species: { ...oak, levels: [] }, height: 10 }).fix).toContain('1–3 branch levels');
   });
 
-  it('names parts trunk / roots / crown{branches, leaves}; LOD2 drops branches and roots', () => {
+  it('names parts trunk / roots / crown{branches, leaves}; LOD2 drops roots, keeps main limbs', () => {
     const names = (lod: Lod) =>
       compile(asset({ species: 'oak', height: 22 }), { lod }).parts.map((p) => p.name);
     expect(names(0)).toEqual(['trunk', 'roots', 'crown', 'branches', 'leaves']);
     expect(names(1)).toEqual(['trunk', 'roots', 'crown', 'branches', 'leaves']);
-    expect(names(2)).toEqual(['trunk', 'crown', 'leaves']);
+    expect(names(2)).toEqual(['trunk', 'crown', 'branches', 'leaves']);
+    // A palm's first-order stems are its fronds: no limbs to keep.
+    expect(
+      compile(asset({ species: 'palm', height: 20 }), { lod: 2 }).parts.map((p) => p.name),
+    ).toEqual(['trunk', 'crown', 'leaves']);
     const pre = compile(asset({ species: 'pine', height: 25, prefix: 'pine_3' })).parts.map(
       (p) => p.name,
     );

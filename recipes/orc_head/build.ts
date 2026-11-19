@@ -9,13 +9,13 @@
 import {
   type BuildContext,
   bakeAo,
-  type DetailRegion,
   type Mesh,
   merge,
   type PartOptions,
   sculptField,
+  weather,
 } from '@developerz.ai/ts23d';
-import { type BustRecipe, bustEdits, faceDetail } from '../_lib/bust/bust.ts';
+import { type BustRecipe, bustEdits, faceDetail, oilOf } from '../_lib/bust/bust.ts';
 import { eyes } from '../_lib/bust/eye.ts';
 import { faceRigOf, withFace } from '../_lib/bust/face-rig.ts';
 import { type Surface, surface } from '../_lib/bust/kit.ts';
@@ -27,7 +27,7 @@ import { beardRegion, hairKnot, orcCardHair, scalpLock } from './hair.ts';
 import { C } from './palette.ts';
 import { plinth } from './plinth.ts';
 import { ORC_TONE, skinMesh } from './skin.ts';
-import { BL, CHARACTER, EAR, EYE, SK, SPEC, TORSO } from './spec.ts';
+import { BL, CHARACTER, EAR, EYE, SPEC, TORSO } from './spec.ts';
 import { torsoEdits } from './torso.ts';
 import { tusks } from './tusks.ts';
 
@@ -43,7 +43,7 @@ export const ORC_BUST: BustRecipe = {
   torso: TORSO,
   tone: ORC_TONE,
   plinth: { radius: 0.13, color: C.plinth },
-  cells: { head: [0.0055, 0.0105, 0.03], bust: [0.0095, 0.018, 0.032] },
+  cells: { head: [0.0076, 0.014, 0.036], bust: [0.014, 0.024, 0.038] },
   // The torso's stage-4 neck veins ran over the skull stage's wider jaw: muscle borders only.
   body: (stage, skin) => torsoEdits(Math.min(stage, 3), skin),
   features: (stage, skin, lod, rng) => [
@@ -57,22 +57,6 @@ export const ORC_BUST: BustRecipe = {
 /** The stage-2 skin (skull, planes, torso) the gear, strokes and hair lie on. */
 export function bodySurface(lod = 0): Surface {
   return bustEdits(ORC_BUST, 2, lod).skin;
-}
-
-/** LOD0 detail boxes: the shared eye and ear boxes, and the mouth and nose base at half cell
- *  (the closed lips and nostrils alias at the head cell). */
-function detail(): DetailRegion[] {
-  const w = Math.abs(SK.cheilion[1]) + 0.012;
-  return [
-    ...faceDetail(ORC_BUST),
-    {
-      bounds: [
-        [SK.stomion[0] - 0.035, -w, SK.stomion[2] - 0.025],
-        [SK.pronasale[0] + 0.01, w, SK.alare[2]],
-      ],
-      factor: 2,
-    },
-  ];
 }
 
 const FIELD = { color: SPEC.skin, mirror: 'y' } as const;
@@ -91,15 +75,30 @@ export function buildOrc(ctx: BuildContext): void {
     { line: beardRegion, color: C.hairRoot, soft: 0.008 },
     { line: scalpLock, color: C.hairRoot },
   ];
+  // The hide on the shared pore strip: matte, cratered cheeks, a glossier brow, nose and chin.
+  const oil = oilOf(ORC_BUST);
+  const strip = oil ? { oil } : {};
   const meshes: Record<string, Mesh> =
     lod === 2
-      ? { head: skinMesh(edits, cell, { rng, scalp }) }
+      ? // (No pore speckle and a wider stencil at the far cell: per-vertex specks 3 cm apart read
+        // as camouflage blotches; each vertex takes its faces' mean colour.)
+        {
+          head: skinMesh(edits, cell, {
+            rng,
+            scalp,
+            speckle: 0,
+            stencil: 0.016,
+            strip,
+            far: true,
+          }),
+        }
       : {
           head: skinMesh(edits, cell, {
             rng,
             scalp,
+            strip,
             bumps: lod === 0 ? 0.0003 : 0,
-            ...(lod === 0 ? { detail: detail() } : {}),
+            ...(lod === 0 ? { detail: faceDetail(ORC_BUST) } : {}),
             clip: (p) => -seam(p) - lap,
             within: [
               [-0.22, -0.3, 0.16],
@@ -108,6 +107,7 @@ export function buildOrc(ctx: BuildContext): void {
           }),
           bust: skinMesh(edits, bustCell, {
             rng,
+            strip,
             clip: (p) => seam(p) - lap,
             within: [
               [-0.3, -0.4, 0],
@@ -119,8 +119,21 @@ export function buildOrc(ctx: BuildContext): void {
   const gear = armour(ctx, skin);
   meshes['pauldrons'] = gear.pauldrons;
   meshes['spikes'] = gear.spikes;
-  if (gear.harness) meshes['harness'] = gear.harness;
-  meshes['mantle'] = furMantle(ctx, skin);
+  // The fur and the strap carry the road: mud dried into the fur's lower clumps and the strap's
+  // low end, dust on what faces up.
+  const fresh: Record<string, Mesh> = { mantle: furMantle(ctx, skin) };
+  if (gear.harness) fresh['harness'] = gear.harness;
+  const soft = weather(ctx, fresh, {
+    name: 'fur_and_strap',
+    age: 0.7,
+    resolution: 0,
+    groundBand: 0.1,
+    effects: {
+      mud: { amount: 0.5, strength: 0.55, color: [0.1, 0.075, 0.05] },
+      dust: { amount: 0.3, strength: 0.4, color: [0.36, 0.3, 0.22] },
+    },
+  });
+  Object.assign(meshes, soft);
   if (lod < 2) meshes['necklace'] = necklace(ctx, skin);
   meshes['hair_knot'] = hairKnot(ctx, skin);
   meshes['plinth'] = plinth(ctx);
@@ -129,8 +142,8 @@ export function buildOrc(ctx: BuildContext): void {
   // the tusks grow out of the jaw.
   const opts: Record<string, PartOptions> = {
     spikes: { connect: { as: 'welded', to: 'pauldrons' } },
-    head: { parent: 'face' },
-    bust: { parent: 'face' },
+    head: { parent: 'face', finish: 'skin' },
+    bust: { parent: 'face', finish: 'skin' },
   };
   // Head and bust carry the blink / talk / breathe morphs under one `face` node (headClips('face')).
   const rig = faceRigOf(ORC_BUST);
@@ -142,9 +155,10 @@ export function buildOrc(ctx: BuildContext): void {
   }
   // The cards root on the finished head (brow shelf, jaw and all), not the stage-2 skin: the
   // brow and beard roots would sit buried under the stage-3 strokes.
-  if (lod < 2) cardHair(ctx, orcCardHair(surface(sculptField(edits, FIELD).field)));
+  // (The far LOD keeps the beard and the brows as a handful of wide cards.)
+  cardHair(ctx, orcCardHair(surface(sculptField(edits, FIELD).field)));
   eyes(ctx, EYE, {
-    cell: ctx.pick([0.0016, 0.003, 0.008]),
+    cell: ctx.pick([0.002, 0.0036, 0.01]),
     finish: 'cornea',
     proud: lod === 0 ? 0 : cell * 0.3,
     // The orbit's seat resolves at LOD0 only (coarser cells close the hollow).

@@ -32,7 +32,8 @@ const h = SK.hind;
 export const foreChain = (per: number): SkinNode[] =>
   limb(
     [f.shoulder, f.elbow, f.wrist, [f.paw[0] - 0.01, f.paw[1], 0.075]],
-    [0.09, 0.075, 0.052, 0.054],
+    // The grappling arm: a male Amur's forearm is as thick as the upper arm almost to the wrist.
+    [0.09, 0.082, 0.057, 0.056],
     per,
   );
 
@@ -58,14 +59,14 @@ function foreLeg(lod: number): SculptEdit[] {
     {
       shape: 'ellipsoid',
       at: [0.44, 0.137, 0.33],
-      size: [0.076, 0.068, 0.15],
+      size: [0.084, 0.075, 0.155],
       rotate: [0, -14, 0],
       blend: 0.05,
     },
     {
       shape: 'ellipsoid',
       at: [0.415, 0.132, 0.36],
-      size: [0.05, 0.052, 0.1],
+      size: [0.055, 0.057, 0.105],
       rotate: [0, -14, 0],
       blend: 0.04,
     },
@@ -87,7 +88,7 @@ function hindLeg(lod: number): SculptEdit[] {
     {
       shape: 'ellipsoid',
       at: [-0.54, 0.122, 0.62],
-      size: [0.12, 0.068, 0.17],
+      size: [0.132, 0.076, 0.182],
       rotate: [0, -40, 0],
       blend: 0.07,
     },
@@ -95,7 +96,7 @@ function hindLeg(lod: number): SculptEdit[] {
     {
       shape: 'ellipsoid',
       at: [-0.7, 0.107, 0.66],
-      size: [0.1, 0.07, 0.16],
+      size: [0.114, 0.077, 0.172],
       rotate: [0, 20, 0],
       blend: 0.07,
     },
@@ -139,7 +140,8 @@ export function legsLowpoly(paint: (p: Vec3, c: Vec3) => Vec3): Mesh {
     tubeMesh(
       nodes.map((n) => ({ at: n.at, r: n.r * 1.12 })),
       {
-        sides: 6,
+        // Eight sides: six read as a faceted stick beside the sculpted trunk.
+        sides: 8,
         colors: nodes.map((n) => paint([n.at[0], n.at[1] + n.r, n.at[2]], C.orange)),
       },
     );

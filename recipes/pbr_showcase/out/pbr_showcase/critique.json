@@ -1,61 +1,60 @@
 {
   "asset": "pbr_showcase",
   "reviewer": "agent",
-  "overall": 7.6,
+  "overall": 8,
   "scores": {
     "silhouette": {
-      "score": 7,
-      "reason": "A board of labelled samples: spheres, a cylinder, a tube, a dome, a cube and a bowl; reads as a material test card.",
+      "score": 8,
+      "reason": "Samples on plinths separate from the board in FRONT; spheres, cylinder, cube, dome and dish read as a material board.",
       "fixes": [
-        "raise the samples on taller plinths so they separate from the board in FRONT"
+        "taller plinths for the back row"
       ]
     },
     "proportions": {
       "score": 8,
-      "reason": "Samples at a consistent ~20 cm scale, board 1.5 × 4.6 m.",
+      "reason": "A ruler strip along the front edge gives scale; samples sized consistently.",
       "fixes": [
-        "add a 1.8 m figure or a ruler for scale"
+        "a 1.8 m figure for scale"
       ]
     },
     "materials": {
       "score": 8,
-      "reason": "Flake clearcoat red and blue, brushed metal, white gloss, glass, ice, milk and velvet read as themselves in hero.png.",
+      "reason": "Flake paints, white gloss, brushed metal, glass, ice, water and velvet each read as themselves with highlights.",
       "fixes": [
-        "an HDR environment band so the brushed metal and glass show anisotropy and refraction"
+        "an HDR environment band so the brushed metal shows anisotropy and the glass refracts"
       ]
     },
     "detail": {
-      "score": 6,
-      "reason": "Labels too small to read; plain plinths.",
+      "score": 8,
+      "reason": "Labels are readable at hero distance, plinths seat each sample, the board has a tile pattern.",
       "fixes": [
-        "larger labels",
-        "a bevel on each plinth"
+        "a bevel on each plinth top"
       ]
     },
     "wear": {
       "score": 8,
-      "reason": "A test card is clean by design.",
+      "reason": "A showcase board; clean by design.",
       "fixes": [
         "a worn variant of each sample on a second row"
       ]
     },
     "lod": {
       "score": 8,
-      "reason": "FAR LOD2 keeps every sample and its colour.",
+      "reason": "FAR LOD2 keeps every sample, colour and plinth.",
       "fixes": [
-        "keep sphere segment count high enough that highlights stay round"
+        "keep sphere segment counts high enough that highlights stay round"
       ]
     },
     "technical": {
       "score": 8,
-      "reason": "QA clean; 16k / 4.6k / 1.5k tris over 33 parts.",
+      "reason": "14.2k / 4.8k / 1.5k triangles, 11 draws (one per finish).",
       "fixes": [
         "merge labels per word to cut LOD0 triangles"
       ]
     }
   },
   "renders": {
-    "hero.png": "5c9068268fcbed0ef3f7b70b49058e26edc2ee7ee30a3fcce4a1ee7156b0f894",
-    "sheet.png": "57f45cadcd0dc2766f8bc212ec1f8af2805eefacd67946c05cef078fe6f7b3e6"
+    "hero.png": "b84901e71c908b40e94b8730a38b236a268444dedf6e3661c65fb7265c93331d",
+    "sheet.png": "95a88f62982855108fa9ad89fbc03db8409fcaa09ea9cbc30e82d4a80e7285ff"
   }
 }

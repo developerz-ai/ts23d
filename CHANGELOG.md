@@ -4,6 +4,40 @@ All notable changes to `@developerz.ai/ts23d`. Format: [Keep a Changelog](https:
 
 ## [Unreleased]
 
+Contact sheets show the hero's base colour, triangle budgets are checked against the playbook bands, custom materials are per asset, and every committed asset was reworked and independently re-judged: criteria below the pass mark of 8 fell from 416 to 352, and two assets now pass on all seven.
+
+### Added
+- `contactSheet(asset, { sheet })`, `thumbnail(asset, { sheet })` and `previewSheet()` (a 512² default sheet). Omitting `sheet` keeps the previous vertex-colour output pixel for pixel.
+- `sheetFor(compiled, recipe)`, `sheetWith(ids, recipe)`, `materialsOf(compiled)`, `CompiledAsset.materials`, `paintTrimSheet(recipe, ids)`, `previewSheet(assets)`, `ReviewOptions.sheetRecipe`.
+- Blender `isolate` step: optional `contact` (metres) for a chain generated fused to the body along its length (a tail lying on a thigh). Weights within that distance of an edge joining chain skin to body skin are blended. No default: committed programs keep their request keys.
+- Per-asset hero view: `hero: { azDeg, elDeg, fovDeg }` or `hero: { eye, target, fovDeg }` on the definition; `t3d hero`, `bun run shots`, `review` and `critique` use it by default, `--az` / `--el` / `--fov` override.
+- `glow` parts emit in the raster and path-traced hero, visible through glass and translucent shells; in the path tracer they light their neighbours.
+- `modelChain`, `modelRig` and `modelBody` take `extra`: bone chains the creature plan lacks (wings, fins, a second tail), each declared by its joints along the mesh, the bone it hangs from, a limit per bone with a source, and an optional `motion` clip. Blender `bind` weights the skin to them; QA `deform` and `model` cover them. `tracePath(mesh, from, to, { cell })` finds a limb's centre line for placing the joints.
+- `dragon_hybrid`: three bones a wing and a `flap` clip (0.9 Hz, design values); the wings settle in `idle` and are carried in the walk.
+- Creature kind: `options.cells { body, head }` sets sculpt density directly; `spec.fur { density, guard }` sets fur card counts; `build.hock`, `build.heel`, `build.track` and `build.topline` give a shoulder hump, a plantigrade heel under the hip and a stance that holds its width; `CreatureInfo.rig` / `.bare` and `creatureHeadFur` let a recipe groom its own coat with the kind's skinning.
+- Triangle bands per asset class: the `conventions` gate fails a committed asset whose triangles at any LOD exceed its class band from the playbooks (`T3D_BUDGET_BAND`, `scripts/lib/budget-bands.ts`), unless its README says `Budget why: <reason>`. The assets over band on 2026-11-19 are listed in `scripts/lib/budget-baseline.ts`; they warn until reduced or justified, new offenders fail now, and the list only shrinks.
+
+### Fixed
+- Creature kind: far-LOD legs are 8-sided with a ring wherever the coat's colour turns, on rounded paws, so stockings and leg colour survive at LOD2; QA connections no longer flips on a 2–5 % change of chest width or limb thickness.
+- `tree` kind: LOD2 is the tree's own LOD0 crown as card clumps over a visible trunk and main limbs (palms: one folded card per frond); silhouette IoU ≥ 0.8 for oak, pine and palm (was 0.55–0.72). `impostor` takes `'clumps' | 'fronds'` (`'blob' | 'cards'` still accepted).
+- `cityBlock`: walls use `wallStrip` (default `brick`) at true scale; windows are LOD-gated (LOD1 about 0.2 × LOD0 triangles, LOD2 keeps window rows as dark bands); with `trim`, LOD0 gets a cornice, belt course and plinth.
+- `terrainFromDEM`'s default ground no longer bands: welded mesh, classes blended per vertex, rock strata on cut sides. Default output changes; `strips: false` is unchanged.
+- QA `skin` (`T3D_SKIN_CROSSED`) reads a paired limb that stands on its roots (raised wings) the right way up.
+- A model body whose Blender skin has a bone that is neither the plan's nor a declared `extra` chain fails with `T3D_MODEL_SKELETON` naming the bones; it used to re-bind silently.
+- Contact sheet and thumbnail alpha-test cutout cards against the trim sheet, so foliage and fur show their real silhouette.
+- See-through parts no longer put what they hold in opaque shadow in the raster hero; they dim the sun instead.
+- `rts_faction` builds again: far-LOD tool handles are six-sided, so a grip joint agrees at any heading.
+- Shared recipe libraries: mud contrasts with the paint instead of being near-black, `reproject` handles project materials, and the parts kit's hose, ladder, crate and painted door read correctly.
+- The gallery binds each asset's own trim sheet instead of one sheet per worker.
+- `wolf_hybrid` passes QA `deform` with no declared tolerance: hip stretch ×5.7 → ×2.2 through `isolate`'s `contact: 0.04`; both `limitTolerances` are removed (D253, open since 0.13.0).
+
+### Changed
+- Recipes: a quality pass over all 76 committed assets (wear, materials, far-LOD identity, triangle counts). `roadster_v10` ships 155k / 23k / 3k triangles (was 909k / 78k / 5.5k), `hydra` 210k (was 348k), `weather_demo` 21k (was 95k); the over-band baseline went from 44 assets to 10. Every `critique.json` was re-judged by a reviewer other than the author; the typical overall score rose from about 6.3 to 7.0.
+- The trim sheet's 14 custom rows are per asset. Define any number of materials; a conflict is two materials on one row in the same asset (`T3D_MATERIAL_CONFLICT` from `compile`), including assets composed with `ctx.use`. `T3D_SHEET_FULL` now means one asset maps onto more than 14.
+- Breaking (0.x): `checkSheetFor(sheet, assets)` takes compiled assets, not UVs; `paintTrimSheet(recipe)` throws once two defined materials share a row (use `sheetFor`); `stripCredits` takes an optional material list.
+- `t3d build --sheet external` writes an asset's own `trim_sheet_*.png` beside its GLBs when its materials cannot share the run's sheet; `--sheet embed` bytes no longer depend on what else the run loaded. A single-recipe build no longer paints rows of materials it defines but never maps onto.
+- `sheet.png` and `thumb.png` show the hero's base colour (trim-sheet albedo × vertex colour, flat per triangle) and draw glass, ice and liquid parts see-through. Wood, bark, leather and terrain no longer read white or grey in the sheet (ADR 007 revisited). Every committed `sheet.png` and `thumb.png` changed. `blueprint.png` stays vertex colour.
+
 ## [0.14.0] - 2026-11-19
 
 Several agents can share one machine through a resource queue, the npm package shrinks from 40 MB to 4 MB, CI runs in under five minutes, and the check that committed renders are fresh now works.

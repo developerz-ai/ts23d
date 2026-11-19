@@ -20,9 +20,9 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    32158,
-    8520,
-    574
+    32102,
+    8264,
+    598
   ],
   "drawCalls": [
     23,
@@ -229,22 +229,22 @@
       "target": 0.13,
       "actual": 0.13,
       "eligible": "convex-edges",
-      "area": 50.0792,
+      "area": 61.2627,
       "by": {
         "brinehound_hull": {
           "target": 0.13,
           "actual": 0.13,
-          "area": 20.3044
+          "area": 22.2835
         },
         "brinehound_kit": {
           "target": 0.13,
           "actual": 0.13,
-          "area": 12.1285
+          "area": 18.1202
         },
         "brinehound_turret": {
           "target": 0.13,
           "actual": 0.13,
-          "area": 17.6463
+          "area": 20.859
         }
       }
     },
@@ -252,28 +252,23 @@
       "target": 0.5,
       "actual": 0.5,
       "eligible": "fasteners | below-fasteners",
-      "area": 0.2618
+      "area": 0.2728
     },
     "mud": {
-      "target": 0.461,
-      "actual": 0.461,
-      "eligible": "ground-near",
-      "area": 24.4411,
+      "target": 0.8,
+      "actual": 0.8,
+      "eligible": "ground-near & !down-facing",
+      "area": 10.0001,
       "by": {
         "brinehound_hull": {
-          "target": 0.5,
-          "actual": 0.5,
-          "area": 14.8239
+          "target": 0.8,
+          "actual": 0.8,
+          "area": 7.409
         },
         "brinehound_kit": {
-          "target": 0.5,
-          "actual": 0.5,
-          "area": 0.0738
-        },
-        "brinehound_wheels": {
-          "target": 0.4,
-          "actual": 0.4,
-          "area": 9.5434
+          "target": 0.8,
+          "actual": 0.8,
+          "area": 2.5911
         }
       }
     },
@@ -281,7 +276,7 @@
       "target": 0.3,
       "actual": 0.3,
       "eligible": "up-facing",
-      "area": 37.2881,
+      "area": 38.7096,
       "by": {
         "brinehound_hull": {
           "target": 0.3,
@@ -291,12 +286,12 @@
         "brinehound_kit": {
           "target": 0.3,
           "actual": 0.3,
-          "area": 4.4184
+          "area": 4.7861
         },
         "brinehound_turret": {
           "target": 0.3,
           "actual": 0.3,
-          "area": 5.8746
+          "area": 6.9284
         }
       }
     }

@@ -31,7 +31,7 @@ export function bodyField(lod: number): Field {
 }
 
 /** Sculpt cell per LOD (metres). */
-export const BODY_RES = [0.012, 0.027, 0.078] as const;
+export const BODY_RES = [0.013, 0.028, 0.078] as const;
 
 export function bodyMesh(lod: 0 | 1 | 2): Mesh {
   const main = sculptPart({

@@ -14,8 +14,18 @@ import { clipPose, jointWorlds } from '../../src/qa/clip-pose.ts';
 import { blanketCreases } from '../../src/qa/connections-crease.ts';
 import { SCULPT_TRIS } from '../../src/qa/connections-seam.ts';
 import { assetShells } from '../../src/qa/connections-shells.ts';
-import { ARM_IDS, DORSAL_ARM, REAL } from './anatomy.ts';
+import {
+  ARM_IDS,
+  armRadius,
+  DORSAL_ARM,
+  REAL,
+  REGEN_ARM,
+  REGEN_FROM,
+  REGEN_LENGTH,
+  radiusOf,
+} from './anatomy.ts';
 import { common_octopus, OCTOPUS_PLAN } from './common_octopus.ts';
+import { scarAt } from './skin.ts';
 
 const SLOW = 180_000;
 const lod0: CompiledAsset = compile(common_octopus, { lod: 0 });
@@ -55,8 +65,40 @@ describe('sourced anatomy', () => {
   it('holds the mantle and every arm to their lengths along the bones (2 %)', () => {
     within(arc('mantle'), REAL.mantle, 0.02);
     ARM_IDS.forEach((id, k) => {
-      within(arc(id), k === 0 || k === 7 ? DORSAL_ARM : REAL.arm, 0.02);
+      const want = k === REGEN_ARM ? REGEN_LENGTH : k === 0 || k === 7 ? DORSAL_ARM : REAL.arm;
+      within(arc(id), want, 0.02);
     });
+  });
+
+  it('tapers every arm continuously from the web to the tip', () => {
+    for (let u = 0.05; u < 1; u += 0.05) expect(armRadius(u)).toBeLessThan(armRadius(u - 0.05));
+    // Half way out an arm is already well under three quarters of its base width.
+    expect(armRadius(0.5) / armRadius(0)).toBeLessThan(0.6);
+  });
+
+  it('regrows one lost tip: shorter, and thinner than the stump past the break', () => {
+    expect(REGEN_LENGTH).toBeLessThan(REAL.arm * 0.9);
+    const before = radiusOf(REGEN_ARM, REGEN_FROM - 0.01);
+    expect(radiusOf(REGEN_ARM, REGEN_FROM + 0.02)).toBeLessThan(before * 0.7);
+  });
+
+  it('carries healed scars on the mantle', () => {
+    let best = 0;
+    for (let u = 0; u <= 1; u += 0.01)
+      best = Math.max(
+        best,
+        scarAt({
+          u,
+          angle: 0,
+          s: 0,
+          radius: 0.1,
+          chain: 'mantle',
+          lod: 0,
+          p: [0, 0, 0],
+          n: [0.19, -0.97, 0.15],
+        }),
+      );
+    expect(best).toBeGreaterThan(0.8);
   });
 
   it('keeps the dorsal pair slightly shorter than the other arms', () => {

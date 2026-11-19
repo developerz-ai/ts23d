@@ -9,7 +9,13 @@ guard railing; a steel drum, an oak cask, a crate, a chair and a stool; a workbe
 sizes (M8–M24) and their nuts and washers, a rivet row, a hinge, a lever handle, a chain, a spring,
 a valve handwheel and a flange; a flanged pipe, a hose, a wheel and two beam sections on the floor.
 It is also the composition test: `flange` carries `hex_nut`, `pipe` carries `flange`,
-`panel_door` carries `hinge` (split across frame and leaf) and `door_handle`.
+`panel_door` carries `hinge` (split across frame and leaf) and `door_handle`; the gallows post
+stands on a base plate held by four `hex_nut`s.
+
+Layout: the flat back-row pieces (door, window, ladder) stand turned 26° and each row is staggered
+in x, so every item reads in the FRONT and SIDE views, not edge-on or behind its neighbour.
+Wear (`weather()`): the drum rusts from its chimes and hoops, the crate is scuffed and dirty along
+the bottom, the stock beams have rust on their flange edges; all three carry a little dust.
 
 ## Specs
 A display piece, not a real object. Each part's own numbers and their sources are in its header
@@ -35,8 +41,8 @@ with the per-part thumbnails in [`recipes/_parts/out/`](../_parts/out/).
 ## Parts the engine needs
 Every part keeps its kit name as a prefix (`door_leaf`, `hinge_leaf`, `lamp_glow`, `bolt_m24`,
 `label_*`). Moving: `door_leaf` and `hinge_leaf` sway 90° one way about their pins; `wheel` spins
-about Y. `lamp_glow` is emissive. Small fasteners drop out at LOD2, rivets at LOD1 (their `lod`
-policy).
+about Y. `lamp_glow` is emissive. Rivets drop out at LOD1 (their `lod` policy); LOD2 drops the
+labels and the small bench hardware (bolts, nuts, washers, rivets, chain, spring).
 
 ## Open questions
 - The sway clash gate sweeps a conservative sector, so a hinged leaf lists its frame (`clearOf`)

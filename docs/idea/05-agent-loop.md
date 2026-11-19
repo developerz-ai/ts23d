@@ -75,7 +75,7 @@ One PNG, 1200 × 840 px. Every view orthographic, on the same scale, over a grou
 | Row 2, middle | `3/4 REAR` | From rear-left (−X, +Y), above | The back nobody modelled |
 | Row 2, right | `FAR LOD2` | 3/4 front, LOD2 compile | Does the far LOD keep the silhouette? |
 
-Grid step is picked so the asset spans ≤ 24 cells: 0.1, 0.5, 1, 5, 10, 50 or 100 m. Shading is flat Lambert over vertex colour; texture is not shown.
+Grid step is picked so the asset spans ≤ 24 cells: 0.1, 0.5, 1, 5, 10, 50 or 100 m. Shading is flat Lambert, one colour per triangle, over the hero's base colour: the trim sheet's mean albedo for the triangle's strip × vertex colour, so an oak plank is brown and terrain is green, rock and snow, as in `hero.png`. Texture detail (grain, joints, normal and roughness maps) is not shown: judge that in the hero. See-through parts (`surface: 'glass'`, `ice`, `liquid`…) are blended over what is behind them. Cutout cards (`surface: 'cutout'`: leaves, needles, fur) are alpha-tested per pixel against the sheet, so foliage shows its real silhouette, not the quads that carry it. Parts with their own texture set are sampled per pixel (ADR 016). `thumb.png` uses the same colours; `blueprint.png` stays vertex colour only (a technical drawing). Library callers get this by passing `contactSheet(asset, { sheet })`; without `sheet` the panels are vertex colour only.
 
 ### Reading it
 

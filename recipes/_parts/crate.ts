@@ -1,5 +1,5 @@
 // Wooden shipping crate: a board box framed by battens on every edge, with diagonal braces on the
-// end faces at LOD0. Origin = base centre. Real: a 1.2 × 0.8 m Euro-pallet footprint crate.
+// end faces at LOD0; LOD2 keeps the boards and the corner battens. Origin = base centre. Real: a 1.2 × 0.8 m Euro-pallet footprint crate.
 
 import { beam, box, definePart, type Mesh, merge } from '@developerz.ai/ts23d';
 import { NAT } from './shape.ts';
@@ -29,12 +29,14 @@ export const crate = definePart({
       strip: 'pine',
     });
     const meshes: Mesh[] = [board];
-    if (b.lod === 2) return box({ size: [x, y, z], color: NAT, strip: 'pine' });
     const bat = (size: [number, number, number], at: [number, number, number]): Mesh =>
       box({ size, at, color: NAT, strip: 'wood_weathered', bevel: bev });
     for (const sx of [-1, 1])
       for (const sy of [-1, 1])
         meshes.push(bat([w, w, z], [(sx * (x - w)) / 2, (sy * (y - w)) / 2, 0]));
+    // Far: the pine boards and the four weathered corner battens (60 triangles) still say
+    // "crate"; a single box read as a cardboard carton.
+    if (b.lod === 2) return merge(meshes);
     for (const sz of [0, z - w]) {
       for (const sy of [-1, 1]) meshes.push(bat([x - 2 * w, w, w], [0, (sy * (y - w)) / 2, sz]));
       for (const sx of [-1, 1]) meshes.push(bat([w, y - 2 * w, w], [(sx * (x - w)) / 2, 0, sz]));

@@ -92,8 +92,12 @@ export type Ask =
   | { readonly request: BuildRequest }
   | { readonly list: true }
   | { readonly manifest: string; readonly file?: string }
-  /** The painted trim sheet at `size` px square (the library default when omitted). */
-  | { readonly sheet: true; readonly size?: SheetSize };
+  /**
+   * The painted trim sheet at `size` px square (the library default when omitted): the built-in
+   * strips plus the project materials the asset of `of` maps onto (each asset has its own sheet;
+   * the worker compiles it when it has not yet). Without `of`: the built-ins only.
+   */
+  | { readonly sheet: true; readonly size?: SheetSize; readonly of?: BuildRequest };
 
 export type Answer = BuildResult | readonly CatalogEntry[] | Manifest | Sheet;
 

@@ -126,10 +126,10 @@ describe('Blender steps', () => {
 describe('the ranger’s committed records (recipes/ranger/neural)', () => {
   const records = recordsOf('ranger');
 
-  test('four records; the raw mesh and the rigged mesh stay local, 11.1 MB is published', () => {
+  test('four records; the raw mesh and the rigged mesh stay local, 11.3 MB is published', () => {
     expect(sorted(records).map((r) => r.task)).toEqual(['mesh', 'rig', 'blender', 'image']);
     expect(records.flatMap((r) => r.files).filter((f) => f.startsWith('local-'))).toEqual([]);
-    expect(megabytes(records.reduce((n, r) => n + r.bytes, 0))).toBe('11.1 MB');
+    expect(megabytes(records.reduce((n, r) => n + r.bytes, 0))).toBe('11.3 MB');
   });
 
   test('the credit line names every model and tool with its licence, and nothing else', () => {

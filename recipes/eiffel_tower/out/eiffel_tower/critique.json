@@ -1,61 +1,60 @@
 {
   "asset": "eiffel_tower",
   "reviewer": "agent",
-  "overall": 7.6,
+  "overall": 7.4,
   "scores": {
     "silhouette": {
       "score": 9,
-      "reason": "Unmistakable: four lattice legs on masonry piers, the first-floor arches, three decks, the tapering upper shaft, campanile lantern and antenna. Reads in pure black.",
+      "reason": "The curved legs, arch, platforms and see-through lattice name the Eiffel Tower from the outline in every view.",
       "fixes": [
-        "open the lattice between the upper-shaft corner posts a little more so the shaft reads see-through against the sky as in photos"
+        "open the lattice between the upper-shaft corner posts slightly more"
       ]
     },
     "proportions": {
       "score": 8,
-      "reason": "Height to the antenna, base span and deck heights pass the sourced measures (124.9 × 125 × 330.6 m).",
+      "reason": "125 × 125 × 330 m; deck heights and leg spread match the elevation by eye.",
       "fixes": [
-        "check the second-deck height and width against the elevation plate by overlay"
+        "check the second-deck width against the elevation plate by overlay"
       ]
     },
     "materials": {
       "score": 7,
-      "reason": "Painted wrought iron under the three-tone brown gradient, stone piers, glazed pavilions; the paint film reads uniform at hero distance.",
+      "reason": "Bronze-brown painted iron reads, deck floors and the antenna separate; the paint is one uniform tone from base to top.",
       "fixes": [
-        "slightly glossier, fresher paint on the upper shaft (repainted most often)"
+        "slightly glossier, fresher paint on the upper shaft and a three-tone gradient (darker at the base) as on the real tower"
       ]
     },
     "detail": {
       "score": 8,
-      "reason": "188k LOD0 triangles: lattice girders with zig-zag webs, arches, decks with railings, pavilions, lift housings, campanile ribs.",
+      "reason": "Lattice bracing, deck railings and the top campanile hold in the portrait close-up.",
       "fixes": [
         "mid rails on the deck railings with square posts"
       ]
     },
     "wear": {
       "score": 6,
-      "reason": "Grime at the feet, paint chips; no rust bleeding at rivet lines or streaks on the decks.",
+      "reason": "Some darkening at the base, but at render distance no rust streaks below nodes or dirt on deck tops are visible.",
       "fixes": [
-        "weather() rust streaks below the lattice nodes on the lower legs",
-        "dirt on the deck tops"
+        "stronger rust streaks below the lattice nodes on the lower legs; dirt on the deck tops"
       ]
     },
     "lod": {
-      "score": 7,
-      "reason": "LOD2 (1 052) keeps the silhouette shell and decks, but the lattice becomes solid brown frustums: the far view reads as a solid sculpture, not a see-through tower.",
+      "score": 6,
+      "reason": "FAR LOD2 is four opaque solid brown frustums: the see-through lattice becomes a solid mass, a clear density and value pop at the switch.",
       "fixes": [
         "an alpha-cutout lattice strip on the LOD2 frustums so it stays see-through at distance"
       ]
     },
     "technical": {
       "score": 8,
-      "reason": "QA PASS incl. connections; 187 768 / 21 796 / 1 052, one draw.",
+      "reason": "QA clean; 144k / 20k / 0.8k triangles, 1 draw.",
       "fixes": [
-        "instance the repeated lattice panels (EXT_mesh_gpu_instancing) to cut LOD0 file size"
+        "instance repeated lattice panels to cut LOD0 file size"
       ]
     }
   },
   "renders": {
-    "hero.png": "fb28196fd72b6c84719c9d07a23eb94ba22cfb55a9d7f0b8aebaead4bf6e9ff7",
-    "sheet.png": "9e5577e97ab0cdc3b535c01fad0cf49e5d5456184f981f0a6498d3a513d628df"
+    "hero.png": "fa9eb9ab14ab53d097ef66af7a5cf610d16d9c08e40be31c91eaa3f24757d5b3",
+    "sheet.png": "a2da377b2fa8e409939c2e5df883bcd50d4b62d21d74bdc78bdf2ae30654eef3"
   }
 }

@@ -21,14 +21,14 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    38744,
-    10224,
-    1914
+    20786,
+    6568,
+    1726
   ],
   "trianglesCompiled": [
-    38744,
-    10224,
-    1916
+    20786,
+    6568,
+    1728
   ],
   "drawCalls": [
     1,
@@ -50,6 +50,44 @@
   "sources": [
     "recipes/svg_showcase/README.md (design spec; the SVG drawings are inline in this file)"
   ],
+  "weather": {
+    "rust": {
+      "target": 0.25,
+      "actual": 0.25,
+      "eligible": "convex-edges",
+      "area": 0.3512
+    },
+    "dust": {
+      "target": 0.4538,
+      "actual": 0.4538,
+      "eligible": "up-facing",
+      "area": 0.1589,
+      "by": {
+        "gear_wear": {
+          "target": 0.4,
+          "actual": 0.4,
+          "area": 0.0734
+        },
+        "amphora_wear": {
+          "target": 0.5,
+          "actual": 0.5,
+          "area": 0.0855
+        }
+      }
+    },
+    "chips": {
+      "target": 0.15,
+      "actual": 0.15,
+      "eligible": "convex-edges",
+      "area": 0.0613
+    },
+    "mud": {
+      "target": 0.25,
+      "actual": 0.25,
+      "eligible": "ground-near",
+      "area": 0.2015
+    }
+  },
   "qa": {
     "pass": true,
     "findings": []

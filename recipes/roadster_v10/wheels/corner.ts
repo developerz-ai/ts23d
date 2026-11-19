@@ -3,11 +3,12 @@
 // same without the steering pivot. Meshes are authored in the wheel's local frame (axle along Y,
 // outer face +Y) and mirrored for the right side so the outer face always points outboard.
 
-import type { BuildContext, Lod, Mesh, Vec3 } from '@developerz.ai/ts23d';
+import type { BuildContext, Lod, Mesh, Rng, Vec3 } from '@developerz.ai/ts23d';
 import { merge } from '@developerz.ai/ts23d';
 import type { Corner } from '../chassis/points.ts';
 import { C } from '../lib/colors.ts';
 import { mirrorY, rod, shift, sub, tube } from '../lib/geo.ts';
+import { brakeDust, tyreDust } from '../lib/wear.ts';
 import { caliper, caliperBracket, disc } from './brakes.ts';
 import { rim } from './rim.ts';
 import { tyre } from './tyre.ts';
@@ -16,17 +17,40 @@ import { tyre } from './tyre.ts';
 /** Tyre + disc in the local wheel frame (left-hand: outer face +Y). The rim is its own child
  *  part so it can carry the brushed-alloy finish without making the rubber metallic. */
 export function wheelMesh(lod: Lod, c: Corner): Mesh {
-  if (lod === 2) return tyre(lod, c.tyre);
-  return merge([tyre(lod, c.tyre), disc(lod, c.disc)]);
+  const rubber = tyreDust(tyre(lod, c.tyre), c.tyre.rim, c.tyre.rim + c.tyre.side);
+  if (lod === 2) return rubber;
+  return merge([rubber, disc(lod, c.disc)]);
 }
 
-export const rimMesh = (lod: Lod, c: Corner): Mesh =>
-  rim(lod, { r: c.tyre.rim, width: c.rimWidth });
+/** The rim under its brake dust: the front axle does most of the braking, so it is dirtier. Both
+ *  sides of an axle take the same seeded blotches (the right wheel is the left one mirrored). */
+export const rimMesh = (lod: Lod, c: Corner, rng: Rng): Mesh =>
+  brakeDust(
+    rim(lod, { r: c.tyre.rim, width: c.rimWidth }),
+    c.tyre.rim,
+    c.front ? 0.95 : 0.7,
+    rng.fork(c.front ? 'brake_dust_front' : 'brake_dust_rear'),
+  );
 
 /** Upright (knuckle), hub and caliper in the local wheel frame, left-hand. */
 export function uprightMesh(lod: Lod, c: Corner): Mesh {
   if (lod === 2)
     return caliper(lod, { disc: c.disc, pistons: 4, at: c.caliperAt, color: C.caliperRed });
+  if (lod === 1) {
+    // Mid: what shows through the spokes — the caliper on its bracket and the hub.
+    const cal1 = {
+      disc: c.disc,
+      pistons: c.front ? (6 as const) : (4 as const),
+      at: c.caliperAt,
+      color: C.caliperRed,
+    };
+    const y = c.disc.y + c.disc.thick / 2 + 0.03;
+    return merge([
+      caliper(lod, cal1),
+      caliperBracket(cal1),
+      rod([0, c.disc.y - 0.05, 0], [0, y, 0], 0.095, C.alloyCast, 'aluminium', 8),
+    ]);
+  }
   const w = c.wheel;
   const s = c.side;
   // Ball joints in the local (left-hand) frame.
@@ -38,7 +62,7 @@ export function uprightMesh(lod: Lod, c: Corner): Mesh {
   const lb = loc(c.lowerBj);
   const te = loc(c.tieOut);
   const hubY = c.disc.y + c.disc.thick / 2 + 0.03;
-  const segs = lod === 0 ? 12 : 6;
+  const segs = lod === 0 ? 8 : 6;
   const parts: Mesh[] = [];
   const cast = C.alloyCast;
   // Knuckle body: a tapered column from the lower to the upper ball joint, bulging round the
@@ -51,7 +75,7 @@ export function uprightMesh(lod: Lod, c: Corner): Mesh {
       cast,
       'aluminium',
       segs,
-      lod === 0 ? 4 : 2,
+      lod === 0 ? 3 : 2,
     ),
   );
   parts.push(
@@ -66,7 +90,7 @@ export function uprightMesh(lod: Lod, c: Corner): Mesh {
   );
   // Bearing housing + hub flange (the disc hat bolts to it).
   parts.push(
-    rod([0, spindle[1] - 0.02, 0], [0, hubY, 0], 0.095, cast, 'aluminium', lod === 0 ? 20 : 8),
+    rod([0, spindle[1] - 0.02, 0], [0, hubY, 0], 0.095, cast, 'aluminium', lod === 0 ? 14 : 8),
   );
   // Ball-joint housings.
   if (lod < 2)
@@ -110,7 +134,7 @@ export function uprightMesh(lod: Lod, c: Corner): Mesh {
     // Dust shield (backing plate) behind the disc.
     parts.push(
       shift(
-        rod([0, -0.002, 0], [0, 0.002, 0], 2 * (c.disc.r - 0.01), C.ironDark, 'iron_cast', 32),
+        rod([0, -0.002, 0], [0, 0.002, 0], 2 * (c.disc.r - 0.01), C.ironDark, 'iron_cast', 20),
         [0, c.disc.y - c.disc.thick / 2 - 0.016, 0],
       ),
     );
@@ -145,7 +169,10 @@ export function addCorner(
       motion: { kind: 'spin', axis: [0, 1, 0], rps: opts.spinRps },
       clearOf: [uprName, ...opts.clearOf],
     });
-    ctx.part(`rim_${c.id}`, sideOf(c, rimMesh(lod, c)), { parent: wheelName, finish: 'brushed' });
+    ctx.part(`rim_${c.id}`, sideOf(c, rimMesh(lod, c, ctx.rng)), {
+      parent: wheelName,
+      finish: 'brushed',
+    });
   } else {
     if (lod < 2) ctx.part(uprName, sideOf(c, uprightMesh(lod, c)), { at: c.wheel });
     ctx.part(wheelName, sideOf(c, wheelMesh(lod, c)), {
@@ -153,6 +180,9 @@ export function addCorner(
       motion: { kind: 'spin', axis: [0, 1, 0], rps: opts.spinRps },
       clearOf: [uprName, ...opts.clearOf],
     });
-    ctx.part(`rim_${c.id}`, sideOf(c, rimMesh(lod, c)), { parent: wheelName, finish: 'brushed' });
+    ctx.part(`rim_${c.id}`, sideOf(c, rimMesh(lod, c, ctx.rng)), {
+      parent: wheelName,
+      finish: 'brushed',
+    });
   }
 }

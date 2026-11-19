@@ -1,6 +1,6 @@
 // Roadster V10 — an original front-mid-engine V10 two-seat roadster: 4.46 × 1.94 × 1.235 m,
-// 2.51 m wheelbase, 295/30 ZR18 + 355/30 ZR19 tyres, 8.4 L 90° V10 under a front-hinged
-// clamshell hood. Origin mid-wheelbase on the ground, +X front, +Y left. Dossier: ./README.md.
+// 2.51 m wheelbase, 295/30 ZR18 + 355/30 ZR19 tyres, 8.4 L 90° V10 under a clamshell hood
+// hinged at the cowl. Origin mid-wheelbase on the ground, +X front, +Y left. Dossier: ./README.md.
 // This file wires the modules: body/ (surface, panels, details), wheels/, chassis/, engine/,
 // interior/, lights/. `roadster_v10_open` is the same build with hood, doors and trunk baked open.
 
@@ -33,6 +33,7 @@ import {
   windscreen,
   wipers,
 } from './body/details.ts';
+import { roadSpatter } from './body/film.ts';
 import { hingeParts } from './body/hinges.ts';
 import { quality, region, X_HOOD_FRONT, X_HOOD_REAR, X_TAIL_SHUT } from './body/panels.ts';
 import { bodySurface, sAtX, U } from './body/shape.ts';
@@ -45,6 +46,7 @@ import { doorCard } from './interior/cabin.ts';
 import { cockpit } from './interior/interior.ts';
 import { C, LIVERY } from './lib/colors.ts';
 import { bothSides, bx, DEG, rotateAbout, shift, sub } from './lib/geo.ts';
+import { bayGrime } from './lib/wear.ts';
 import { addLamps } from './lights/lamps.ts';
 import { addCorner } from './wheels/corner.ts';
 
@@ -63,16 +65,14 @@ const lod0 =
 /**
  * True contacts of the closed clamshell, kept after the clashes gate swept hinged panels to
  * millimetres (D23): the bay, ancillaries and stripes sit < 2 cm under the closed skin; the pivot
- * pins turn the gooseneck arms. `nose_fascia` and the headlamps are a design note, not slack: the
- * hinge sits 13 cm behind the hood front, so the lip ahead of it dips ~9 cm into the nose as the
- * hood opens (README → Open questions).
+ * pins turn the gooseneck arms. The hood hinges at the cowl and lifts its nose, so nothing ahead
+ * of it needs listing.
  */
 const HOOD_CLEAR = [
-  'nose_fascia',
-  'headlamps',
-  'headlamp_l_drl',
-  'headlamp_r_drl',
-  'headlamp_lenses',
+  // Shut-line neighbours, 4.5 mm from the hood's edge all the way along it.
+  'fender_l',
+  'fender_r',
+  'cowl',
   'engine_bay',
   'bay_ancillaries',
   'body_stripes',
@@ -172,7 +172,12 @@ const roadster = defineFamily({
   kind: 'vehicle',
   tags: ['car', 'roadster', 'v10', 'sports-car', 'hero', 'original-design'],
   license: 'CC0-1.0',
-  budget: { triangles: [1200000, 90000, 9000] },
+  // Sports-car playbook band: 40–100k / 8–20k / 800–1,500. This car sits above it on purpose
+  // and by a stated margin: under the skin it carries a dressed V10 bay, a full cockpit, four
+  // suspension corners, vented discs with calipers and closed (two-skin) opening panels, about
+  // 60k triangles of LOD0 the playbook's shell-plus-interior car does not have. Skin density is
+  // LOD-gated (5 / 10 / 24 cm chords), the hidden systems drop out at LOD1 and LOD2.
+  budget: { triangles: [158000, 25000, 3200] },
   defaults: { open: 0 } as Params,
   sources: [
     'https://en.wikipedia.org/wiki/Tire_code',
@@ -214,10 +219,13 @@ const roadster = defineFamily({
     sun_yellow: { body: LIVERY.sunYellow, stripe: LIVERY.sunYellow },
     gloss_black: { body: LIVERY.black, stripe: LIVERY.black },
   },
+  // Lit, never blown out: the DRL strip stays a warm-white line (6 haloed it; 1.5 still drew a
+  // hard white ring round each headlamp), the tail LEDs
+  // keep their red, the gauges glow amber.
   glow: [
-    { parts: ['headlamp_*_drl'], color: [1, 0.95, 0.85], strength: 6 },
-    { parts: ['taillight_*_led'], color: [1, 0.08, 0.04], strength: 5 },
-    { parts: ['gauge_faces'], color: [1, 0.6, 0.25], strength: 1.5 },
+    { parts: ['headlamp_*_drl'], color: [1, 0.93, 0.8], strength: 0.9 },
+    { parts: ['taillight_*_led'], color: [1, 0.08, 0.04], strength: 2 },
+    { parts: ['gauge_faces'], color: [1, 0.6, 0.25], strength: 1 },
   ],
   build(ctx, p) {
     const lod = ctx.lod;
@@ -240,14 +248,15 @@ const roadster = defineFamily({
               rims: { lo: false },
               lift: -0.022,
             },
-            { ...quality(lod, C.liner), thickness: 0, step: lod === 0 ? 0.05 : 0.12 },
+            { ...quality(lod, C.liner), thickness: 0, step: lod === 0 ? 0.08 : 0.16 },
           ),
         ),
       );
     const h = hinges(S);
+    const spatter = roadSpatter(S, lod, ctx.rng);
     const hg = hingeParts(S, lod, h);
-    // Far and shut, hinges are invisible: keep them only where they can be seen.
-    const showHinges = lod < 2 || p.open > 0;
+    // Shut, hinges are invisible beyond arm's length: keep them only where they can be seen.
+    const showHinges = lod === 0 || p.open > 0;
     if (showHinges) ctx.part('hinges', merge([hg.brackets, bothSides(hg.doorBrackets)]));
     body(ctx, S, {
       open: p.open,
@@ -257,6 +266,7 @@ const roadster = defineFamily({
         door: [
           mir.trim,
           doorHandle(S, lod),
+          ...(lod < 2 ? [spatter.door] : []),
           ...(showHinges ? [hg.doorLeaves] : []),
           ...(lod < 2 ? [doorCard(S, lod)] : []),
         ],
@@ -283,6 +293,7 @@ const roadster = defineFamily({
         rearPlate(S, lod),
       ]),
     );
+    if (lod < 2) ctx.part('road_film', spatter.shell);
     ctx.part('windscreen_frame', ws.frame);
     ctx.part('door_jambs', bothSides(doorJambs(S, lod)), { paint: 'body' });
     if (lod < 2) ctx.part('wipers', wipers(S, lod));
@@ -310,17 +321,20 @@ const roadster = defineFamily({
     const st = structure(lod);
     ctx.part('floor_pan', st.floor);
     ctx.part('wheel_liners', st.liners);
-    ctx.part('frame', st.frame);
-    ctx.part('engine_bay', st.bay, { paint: 'body' });
+    // Far and shut, the rails and the bay aprons are behind the skin: nothing shows.
+    if (lod < 2 || p.open > 0) {
+      ctx.part('frame', st.frame);
+      ctx.part('engine_bay', bayGrime(st.bay, 0.2, 0.7, 0.5), { paint: 'body' });
+    }
     ctx.part('under_tray', st.tray);
-    if (lod < 2) {
-      // Hidden under the body from far away: the far LOD drops the links entirely.
+    if (lod === 0) {
+      // Hidden under the body beyond arm's length: the mid and far LODs drop the links.
       const su = suspension(lod);
       for (const id of CORNERS) ctx.part(`suspension_${id}`, su.arms[id] ?? null);
       ctx.part('front_axle', su.front);
       ctx.part('rear_axle', su.rear);
     }
-    powertrain(ctx);
+    powertrain(ctx, p.open);
     cockpit(ctx);
   },
 });
@@ -336,14 +350,20 @@ export const roadster_v10_open = roadster.variant({
   description:
     'The V10 roadster with hood, doors and trunk lid open: engine bay and cockpit on show.',
   params: { open: 1 },
+  // Everything open: the mid LOD keeps the dressed engine, the far LOD the block and bay.
+  budget: { triangles: [158000, 31000, 4600] },
   // Open pose envelope, from the hinge geometry: doors 1.08 m long swung 65° out of 0.92 m
-  // hinge lines; the hood's 1.45 m radius lifted 58° about its 0.52 m pivot.
-  real: { length: LENGTH, width: 3.8, height: 1.93, measures: MEASURES },
+  // hinge lines; the hood's 1.4 m reach lifted 50° about its goosenecks at the cowl (z 0.87 m).
+  real: { length: LENGTH, width: 3.8, height: 1.86, measures: MEASURES },
   gaps: [
     ...GAPS,
     {
       parts: ['door_*', 'door_jambs'],
       why: 'door swung open: the shut line between door and jamb is wide open',
+    },
+    {
+      parts: ['hood', 'cowl'],
+      why: 'hood raised on its goosenecks: its rear edge has lifted off the cowl shut line',
     },
     {
       parts: ['tail_fascia', 'trunk_tub'],

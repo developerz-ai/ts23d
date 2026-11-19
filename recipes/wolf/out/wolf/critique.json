@@ -1,67 +1,136 @@
 {
   "asset": "wolf",
   "reviewer": "agent",
-  "overall": 5.9,
+  "overall": 6,
   "scores": {
     "silhouette": {
       "score": 7,
-      "reason": "Long legs, tucked waist, neck carrying the head forward, upright ears, bushy tail to the hocks and a fur fringe along the back and chest: reads as a wild canid from every view. The narrow, long muzzle, big ears and slim chest read closer to a coyote than a grey wolf.",
+      "reason": "Long legs, tucked waist, neck forward, upright ears, brush tail and fur cards on back and chest: reads as a wild canid; the narrow long muzzle and slim chest still read coyote rather than grey wolf (unchanged since last round).",
       "fixes": [
-        "broaden the muzzle and skull and deepen the chest so the head and front read as a grey wolf, not a coyote"
+        "broaden the muzzle and skull and deepen the chest"
       ]
     },
     "proportions": {
       "score": 6,
-      "reason": "1.3 x 0.3 x 0.9 m fits the sourced head+body and withers; by eye the head is small and the snout long and thin for a wolf, the ears large, and the hind cannons long in the side view.",
+      "reason": "1.3 x 0.3 x 0.9 m fits the sourced box; by eye the head is still small with a long thin snout, ears large, and the forelegs thin and long for a wolf.",
       "fixes": [
         "skull width ~0.55 of skull length with a shorter, deeper muzzle",
         "ears ~15% smaller",
-        "shorten the hind cannon toward the dossier skeleton"
+        "thicker forearms"
       ]
     },
     "materials": {
       "score": 6,
-      "reason": "Agouti saddle, buff flanks, cream chest and belly, dark tail tip and glossy nose read; strand cards along the back and chest break the outline like fur, but the body between reads as smooth painted velvet, and the grey chest goes lilac under the cool key.",
+      "reason": "Agouti saddle darker now, buff flanks, cream chest no longer lilac, glossy nose; fur cards break the outline on the back, but the flanks and legs still read as smooth painted velvet.",
       "fixes": [
-        "fur shells or more strand cards over the flanks and shoulders, not only the fringe",
-        "warm the chest cream so it does not go lilac"
+        "fur cards or shells over flanks and shoulders, not only the fringe"
       ]
     },
     "detail": {
       "score": 6,
-      "reason": "Eyes with lids, nose, lip line, knuckled toes with claws and pads, ear interiors, chest ruff; the coat surface has no hair-flow relief at hero distance, and the face has no cheek ruff or brow fur.",
+      "reason": "Eyes with lids, nose, lip line, toes with claws, ear interiors, chest ruff; no hair-flow relief on the flanks, no cheek ruff.",
       "fixes": [
-        "guard-hair relief following the hair flow on the flanks",
-        "cheek ruff and brow tufts on the head"
+        "guard-hair relief following the hair flow",
+        "cheek ruff and brow tufts"
       ]
     },
     "wear": {
-      "score": 4,
-      "reason": "No story: clean coat, no matted or wet fur, no mud on the paws or belly, no scars.",
+      "score": 5,
+      "reason": "Darker lower legs suggest a little dirt; no matted fur, no mud on paws or belly, no scars.",
       "fixes": [
-        "grime({ ground }) mud on paws and lower legs",
-        "darker matted streaks on the flank and a nick in one ear"
+        "mud on paws and lower legs (grime ground mask)",
+        "matted streaks on the flank and a nick in one ear"
       ]
     },
     "lod": {
       "score": 5,
-      "reason": "lods.png: LOD2 (2.3k) keeps the pose and outline, but the fur fringe and tail volume go, legs become pale faceted tubes with boxy paws, and the saddle colour washes out to one beige.",
+      "reason": "lods.png: LOD2 (2.6k) keeps pose and outline, but every fur card goes, the agouti saddle washes to one tan-grey, the head turns blocky, legs become plain tubes with bun-shaped paws, and a dark sliver shows on the back: an obvious pop.",
       "fixes": [
-        "8-sided leg tubes and rounded paws at LOD2 within budget",
-        "paint the agouti saddle as a darker block at LOD2 so the value pattern holds"
+        "paint the agouti saddle and pale chest into LOD2 vertex colour",
+        "8-sided legs and shaped paws at LOD2 within budget",
+        "a few silhouette fur cards on the back and tail at LOD2"
       ]
     },
     "technical": {
       "score": 7,
-      "reason": "QA clean (pack): 141.7k / 25.9k / 2.3k tris, inside the 150k / 35k / 4k budget; most LOD0 triangles go to smooth flank areas that do not need them. The pack hero re-render drifted from the committed hero.png bytes (visually identical).",
+      "reason": "QA PASS: 121k / 27.9k / 2.6k tris, 4 / 4 / 1 draws; most LOD0 triangles still go to smooth flanks.",
       "fixes": [
-        "adaptive cell size: finer on the head and paws, coarser on the flanks",
-        "re-run bun run shots wolf so the committed hero matches a fresh render byte for byte"
+        "adaptive cell size: finer on head and paws, coarser on flanks"
       ]
     }
   },
   "renders": {
-    "hero.png": "082d00756a01060b95bb56375596149a91aafc8e85efc410e3c706dfa2368385",
-    "sheet.png": "a6431e8ff36861d8087a070d41f5f9b08a277c3815f0b2554531f16e7ec4f9bf"
+    "hero.png": "54747f6af0ca44c2052c524aebcf16ea498053e9ba9b577b60a4ef4d89f14903",
+    "sheet.png": "ff28dc1853d109a9db760360ad66c0fad370e0c0081417dbd4b6ae648231a408",
+    "raking.png": "ad6f648bc772e959849d5612dd6a8c2d8339ad7286cc7135c99ce7f0be23328e",
+    "raking_detail.png": "1ed78e4c9571723f37a45e4b884754bdacb2acebbc3a6d2d80eaeefdd65c0729",
+    "lods.png": "7057b76060500ad325cce2f6b22763d9819f952ef8266b44025f25fa4ffb5968",
+    "silhouette.png": "e7d58af62650f5700deb3c3593d3fc72f5ffa9ffbf695f8faf7f3ce886655473",
+    "value.png": "9b55ce47907a58aad08454999c5fe23c1bec78e1a7881a9ab6c24af1b6f52ccb",
+    "detail.png": "2e3c3f5fa4c3bdeef79430ee375d829a9d903b0d7b94f48a5ee68961e5c3661c"
+  },
+  "metrics": {
+    "silhouette": [
+      {
+        "view": "front",
+        "iou": 0.894
+      },
+      {
+        "view": "side",
+        "iou": 0.869
+      },
+      {
+        "view": "3/4",
+        "iou": 0.895
+      }
+    ],
+    "focal": {
+      "peakPart": "head",
+      "peak": [
+        488,
+        152
+      ],
+      "focalShare": 0.213,
+      "focalArea": 0.175,
+      "top": [
+        {
+          "part": "fur",
+          "share": 0.469
+        },
+        {
+          "part": "body",
+          "share": 0.296
+        },
+        {
+          "part": "head",
+          "share": 0.209
+        }
+      ],
+      "declared": [
+        "head"
+      ]
+    },
+    "rest": {
+      "share": 0.093,
+      "spread": 0.383,
+      "min": 0.25
+    },
+    "grounded": {
+      "rise": 0.163,
+      "bands": [
+        0.257,
+        0.331,
+        0.416,
+        0.375,
+        0.398
+      ]
+    },
+    "shape": {
+      "acuteShare": 0.283,
+      "straightShare": 0.486,
+      "taper": -0.603,
+      "shape": "friendly",
+      "declared": "friendly"
+    }
   }
 }

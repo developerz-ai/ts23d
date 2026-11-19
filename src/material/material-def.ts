@@ -37,9 +37,10 @@ export interface MaterialDef {
   /** World metres the strip spans along U before it repeats (custom strips; default 4). */
   readonly spanMetres?: number;
   /**
-   * Custom strip row 0..13, instead of the row the id hashes to. Set it only when two ids one
-   * process loads hash to the same row (`T3D_MATERIAL_CONFLICT` names the free rows). Changing it
-   * moves the material's UVs, so an asset's bytes change once.
+   * Custom strip row 0..13, instead of the row the id hashes to. An asset holds one material per
+   * row, so set it when two materials of one asset land on the same row
+   * (`T3D_MATERIAL_CONFLICT` lists the rows that asset holds); other assets may reuse the row.
+   * Changing it moves the material's UVs, so the assets that use it change bytes once.
    */
   readonly row?: number;
   /** 0..1 rubbed convex edges (lighter, smoother, albedo2 shows through). Same as params.wear. */

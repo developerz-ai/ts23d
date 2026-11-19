@@ -82,7 +82,25 @@ export function buildTrack(ctx: BuildContext, L: Layout): void {
       }
     }
   } else {
-    m.push(bx(x0, x1, -1.3, 1.3, 0, TIE_H, F.ties));
+    // Far: the ballast bed with the tie course lying in it, creosote-dark between rusty rails
+    // (one pale slab read as a white plank).
+    m.push(
+      translate(
+        prism({
+          profile: [
+            [-1.4, 0],
+            [1.4, 0],
+            [1.3, 0.1],
+            [-1.3, 0.1],
+          ],
+          depth: len,
+          plane: 'yz',
+          ...F.ballast,
+        }),
+        [(x0 + x1) / 2, 0, 0],
+      ),
+      bx(x0, x1, -1.2, 1.2, 0.08, TIE_H, { ...F.ties, color: [0.42, 0.36, 0.3] }),
+    );
   }
   ctx.part('track_ties', grime(merge(m), { ground: 0.2, groundStrength: 0.3 }), {
     parent: 'track',

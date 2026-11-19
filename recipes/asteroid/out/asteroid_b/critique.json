@@ -5,61 +5,60 @@
   "scores": {
     "silhouette": {
       "score": 7,
-      "reason": "Lumpy rock with craters, pits and glowing crystal clusters, distinct per seed. But the base is clipped flat at z = 0 and the fracture half-spaces cut near-vertical walls, so FRONT and SIDE in sheet.png read as a rounded box on a floor, not a free body in space.",
+      "reason": "Rounded body with a big crater on top and crystal clusters; the outline is a near-sphere with few signature lobes.",
       "fixes": [
-        "drop the flat z = 0 clip (bounds from below the body) or keep it only for a ground-resting variant",
-        "raise the fracture-plane reach (rng.range(0.62, 0.8) → 0.75–0.9) and use fewer chips so they facet the lumps instead of squaring the sides"
+        "add one large lobe or shoulder so the outline is not a near-sphere",
+        "larger, deeper crater with a raised rim that breaks the outline in SIDE"
       ]
     },
     "proportions": {
       "score": 8,
-      "reason": "Declared envelope per variant; crater sizes in proportion to the body; crystals at a believable scale against the 0.5 m grid.",
+      "reason": "8.3 × 9.0 × 7.5 m: a rounder variant, plausible next to the elongated _c.",
       "fixes": [
-        "vary the aspect between variants more (one elongated ~2:1 body) as real small bodies are rarely this blocky"
+        "flatten one axis ~10% so it reads less spherical"
       ]
     },
     "materials": {
       "score": 6,
-      "reason": "Regolith on the asphalt strip tinted carbonaceous, ochre ore veins, cyan glowing crystals. The asphalt pattern reads as a fine tiled tread in hero.png, the hero is close to black with little value range, and the vein edges stair-step at the vertex cell in every sheet view.",
+      "reason": "Rock, ore veins and crystals separate by hue and the crystals glow without blowing out. In hero.png the veins are now soft-edged and the regolith carries a faint cell grain, but every sheet.png view still shows the veins stair-stepping in square blocks (per-vertex colour), and the cyan mining stain is a soft haze rather than a deposit.",
       "fixes": [
-        "a project regolith material with larger clasts and iron-nickel flecks instead of the asphalt strip",
-        "blend the vein colour across vertices with a falloff (or sample it per pixel) so veins stop stair-stepping",
-        "lift the regolith albedo one step so craters read in the hero"
+        "carry the per-pixel vein and stain colour into the vertex colour too (or sample it per pixel in every renderer) so the veins stop stair-stepping in the sheet views",
+        "break the cell grain with clast variation (larger pale and dark flecks, iron-nickel glints with low roughness): it currently reads as crazed mud more than rock"
       ]
     },
     "detail": {
       "score": 6,
-      "reason": "Craters with rims, pits, veins and crystal clusters; between them the surface is smooth blobby SDF at 0.17 m with no rubble or boulders.",
+      "reason": "The horizontal terrace banding is gone from hero.png and a faint cell grain now covers the rock, but at hero distance the body is still a smooth blob; the rubble is cube-like and the crater rims are soft.",
       "fixes": [
-        "boulders and rubble resting in crater floors",
-        "a finer secondary noise octave at LOD0 for rock grain"
+        "a finer secondary noise octave at LOD0 for rock grain and sharper crater rims (raised lip, steeper inner wall)",
+        "rubble as irregular chips (random-plane cut cells) instead of cube-like blocks"
       ]
     },
     "wear": {
       "score": 5,
-      "reason": "Darkened crater floors and veins; otherwise uniform. No fresh ejecta, no mining scars around the crystal sites.",
+      "reason": "Some story: rubble and a cyan stain around the crystal sites. No fresh bright ejecta, no drill scars or tailings, and the crater ages are indistinguishable.",
       "fixes": [
-        "bright fresh ejecta rays around the youngest crater",
-        "drill scars and tailings around the crystal mining sites"
+        "bright fresh ejecta rays around the youngest crater, darker space-weathered older surfaces",
+        "drill scars and tailings piles at the crystal mining sites"
       ]
     },
     "lod": {
       "score": 7,
-      "reason": "LOD2 (548) keeps the outline, the crystals and the colour blocks, but the veins become large triangle patches.",
+      "reason": "FAR LOD2 keeps the outline and the crystals, but drops the orange veins entirely and is faceted, so the colour read shifts from banded to plain grey at the switch.",
       "fixes": [
-        "drop the vein colour at LOD2 (keep the base tint) so it does not turn into triangle patches"
+        "keep the 2–3 broadest vein bands at LOD2 as per-face colour on a few larger faces so the colour block survives"
       ]
     },
     "technical": {
       "score": 8,
-      "reason": "QA PASS; 18 044 / 3 920 / 548 triangles, two draws, glow on the crystals.",
+      "reason": "QA clean; ~18k / 2k / 340 triangles and 2 draws (body + glowing crystals) are proportionate to a hero rock.",
       "fixes": [
-        "shrink the sdf bounds to the body extent (ext = max size + 3.2 m wastes cells) to cut build time"
+        "shrink the sdf bounds to the body extent to cut build time and spend the saved LOD0 budget on crater rims"
       ]
     }
   },
   "renders": {
-    "hero.png": "0c1b61eb653e5a34175f3c4acad567da4a0ba649cc54ce211618d0356a913651",
-    "sheet.png": "9a12d0097ecea3894417c60800a3c909d0db939f73b4e3922776ccff73986ffd"
+    "hero.png": "aee794671aaf9530e89c01b31fcadb877503614b0fc0cb06139250db33df1efe",
+    "sheet.png": "9c5fbebec4b75321e7b4955d7598ee10ac9ce7943aefea34e4eed03986b1c4c3"
   }
 }

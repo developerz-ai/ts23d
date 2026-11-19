@@ -19,8 +19,8 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    38998,
-    11798,
+    29998,
+    9998,
     3898
   ],
   "drawCalls": [
@@ -46,18 +46,18 @@
       "maps": {
         "albedo": {
           "size": 2048,
-          "bytes": 4904337
+          "bytes": 5350355
         },
         "normal": {
           "size": 1024,
-          "bytes": 1415982
+          "bytes": 1493509
         },
         "orm": {
           "size": 1024,
-          "bytes": 1417425
+          "bytes": 1546187
         }
       },
-      "bytes": 7737744,
+      "bytes": 8390051,
       "credit": "ts23d ranger recipe (Meshy image-to-3D and rigging, Blender steps) — own — neural cache (blender steps on rig 0d8556521a30)"
     }
   ],
@@ -174,123 +174,123 @@
   "hitboxes": [
     {
       "bone": "hips",
-      "radius": 0.116295,
+      "radius": 0.11676,
       "height": 0,
-      "coverage": 0.9608
+      "coverage": 0.9634
     },
     {
       "bone": "left_up_leg",
-      "radius": 0.191018,
-      "height": 0.370312,
-      "coverage": 0.9814
+      "radius": 0.188057,
+      "height": 0.376156,
+      "coverage": 0.9771
     },
     {
       "bone": "left_leg",
-      "radius": 0.095419,
-      "height": 0.301441,
-      "coverage": 0.9694
+      "radius": 0.095757,
+      "height": 0.299292,
+      "coverage": 0.9511
     },
     {
       "bone": "left_foot",
-      "radius": 0.105392,
-      "height": 0.100157,
-      "coverage": 0.9677
+      "radius": 0.101557,
+      "height": 0.099781,
+      "coverage": 0.9515
     },
     {
       "bone": "left_toe_base",
-      "radius": 0.057897,
-      "height": 0.026296,
-      "coverage": 0.9688
+      "radius": 0.058641,
+      "height": 0.023999,
+      "coverage": 0.9726
     },
     {
       "bone": "right_up_leg",
-      "radius": 0.201821,
-      "height": 0.391208,
-      "coverage": 0.9583
+      "radius": 0.200886,
+      "height": 0.3965,
+      "coverage": 0.9603
     },
     {
       "bone": "right_leg",
-      "radius": 0.095393,
-      "height": 0.298594,
-      "coverage": 0.972
+      "radius": 0.097107,
+      "height": 0.297717,
+      "coverage": 0.9727
     },
     {
       "bone": "right_foot",
-      "radius": 0.101766,
-      "height": 0.103912,
-      "coverage": 0.9681
+      "radius": 0.103867,
+      "height": 0.09236,
+      "coverage": 0.9873
     },
     {
       "bone": "right_toe_base",
-      "radius": 0.056327,
-      "height": 0.027859,
-      "coverage": 0.9785
+      "radius": 0.059612,
+      "height": 0.022725,
+      "coverage": 1
     },
     {
       "bone": "spine02",
-      "radius": 0.185251,
+      "radius": 0.177572,
       "height": 0,
-      "coverage": 0.9919
+      "coverage": 0.9967
     },
     {
       "bone": "spine01",
-      "radius": 0.174084,
+      "radius": 0.192918,
       "height": 0,
-      "coverage": 0.994
+      "coverage": 1
     },
     {
       "bone": "left_shoulder",
-      "radius": 0.179329,
-      "height": 0.063093,
-      "coverage": 0.978
+      "radius": 0.179421,
+      "height": 0.062231,
+      "coverage": 0.9834
     },
     {
       "bone": "left_arm",
-      "radius": 0.102937,
-      "height": 0.17322,
-      "coverage": 0.954
+      "radius": 0.103996,
+      "height": 0.168999,
+      "coverage": 0.956
     },
     {
       "bone": "left_fore_arm",
-      "radius": 0.067318,
-      "height": 0.165785,
-      "coverage": 0.9696
+      "radius": 0.067844,
+      "height": 0.171599,
+      "coverage": 0.9724
     },
     {
       "bone": "left_hand",
-      "radius": 0.074364,
-      "height": 0.110327,
-      "coverage": 0.9747
+      "radius": 0.070488,
+      "height": 0.107585,
+      "coverage": 0.951
     },
     {
       "bone": "head",
-      "radius": 0.118084,
-      "height": 0.135,
-      "coverage": 0.9625
+      "radius": 0.11883,
+      "height": 0.142217,
+      "coverage": 0.9646
     },
     {
       "bone": "right_shoulder",
-      "radius": 0.167468,
-      "height": 0.069178,
-      "coverage": 0.9632
+      "radius": 0.160012,
+      "height": 0.072623,
+      "coverage": 0.9636
     },
     {
       "bone": "right_arm",
-      "radius": 0.102513,
-      "height": 0.168039,
-      "coverage": 0.9609
+      "radius": 0.102827,
+      "height": 0.1655,
+      "coverage": 0.9558
     },
     {
       "bone": "right_fore_arm",
-      "radius": 0.065996,
-      "height": 0.182438,
-      "coverage": 0.9768
+      "radius": 0.066357,
+      "height": 0.18486,
+      "coverage": 0.9759
     },
     {
       "bone": "right_hand",
-      "radius": 0.072592,
-      "height": 0.10074,
-      "coverage": 0.9509
+      "radius": 0.075815,
+      "height": 0.093073,
+      "coverage": 0.9714
     }
   ],
   "real": {
@@ -302,7 +302,7 @@
     {
       "label": "stature",
       "spec": 1.78,
-      "measured": 1.7800000225397525,
+      "measured": 1.7799999681592453,
       "source": "design brief (README.md); ANSUR II male mean stature 1.756 m"
     }
   ],

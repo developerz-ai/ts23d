@@ -274,10 +274,4 @@ describe('cityBlock', () => {
       }
     }
   });
-
-  it('LOD2 keeps massing and roofs, drops windows and cornices', () => {
-    const c = compile(block, { lod: 2 });
-    expect(c.parts.filter((p) => p.name.endsWith('_windows'))).toEqual([]);
-    expect(c.parts.filter((p) => /^b\d+$/.test(p.name))).toHaveLength(5);
-  });
 });

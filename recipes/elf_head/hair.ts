@@ -9,7 +9,7 @@
 
 import { type Field, type SculptEdit, sculptField, type Vec3 } from '@developerz.ai/ts23d';
 import type { BustRecipe } from '../_lib/bust/bust.ts';
-import { hairMass, lock, mix, ribbon } from '../_lib/bust/hair.ts';
+import { flowLocks, hairMass, lock, mix, ribbon } from '../_lib/bust/hair.ts';
 import { type Surface, spline, surface, type V } from '../_lib/bust/kit.ts';
 import { browLayers, browLine, withBrowComb } from '../_lib/face/brows.ts';
 import { bustHairFields, type CardHairStyle, skullHairline } from '../_lib/face/hair-cards.ts';
@@ -98,26 +98,53 @@ export function frontLocks(on: Surface): Array<{ ctrl: V[]; y: number }> {
   }));
 }
 
-export const CAP: V = mix(mix(C.hairRoot, C.hairTip, 0.35), [0, 0, 0], 0.45);
+export const CAP: V = mix(mix(C.hairRoot, C.hairTip, 0.35), [0, 0, 0], 0.3);
 
-/** The base layer under card hair: the parted mass alone. */
-export const hairBaseEdits = (scalp: Field, _lod: number): SculptEdit[] => {
+/** Lock lines over the cap (left half, mirrored): meridians from the brow over the crown and
+ *  down the back, fanning from the centre parting; kept where the hair grows. */
+function capLines(hair: Surface): V[][] {
+  const c: V = [(SK.glabella[0] + SK.occiput[0]) / 2, 0, SK.euryon[2]];
+  return [7, 20, 33, 47, 62, 78]
+    .map((deg) => {
+      const phi = (deg * Math.PI) / 180;
+      const pts: V[] = [];
+      for (let i = 0; i <= 9; i++) {
+        const e = ((30 + (175 * i) / 9) * Math.PI) / 180;
+        const d: V = [Math.cos(e), Math.sin(e) * Math.sin(phi), Math.sin(e) * Math.cos(phi)];
+        pts.push(hair.on([c[0] + d[0] * 0.1, c[1] + d[1] * 0.1, c[2] + d[2] * 0.1]));
+      }
+      return pts.filter((p) => hairline(p) < -0.012);
+    })
+    .filter((l) => l.length >= 4);
+}
+
+/** The base layer under card hair: the parted mass, combed into broad locks (LOD0/1) so the
+ *  crown, where the cards lie flattest, still reads as strands drawn back from the parting. */
+export const hairBaseEdits = (scalp: Field, lod: number): SculptEdit[] => {
   const box: [V, V] = [
     [L.back - 0.05, -0.15, L.mz - 0.2],
     [L.gx + 0.06, 0.15, L.crown + 0.05],
   ];
   // The cap under the cards: a shadowed gold (hair in shade), so a parting or a gap between locks
   // reads as depth, not as an orange scalp.
-  return [
-    {
-      // 6 mm inside the hairline: the cap's edge lies under the cards.
-      ...hairMass(scalp, 0.007, (p) => hairline(p) + 0.006, box, CAP, 0.03),
-      blend: 0.006,
-    },
-  ];
+  const mass: SculptEdit = {
+    // 6 mm inside the hairline: the cap's edge lies under the cards.
+    ...hairMass(scalp, 0.007, (p) => hairline(p) + 0.006, box, CAP, 0.03),
+    blend: 0.006,
+  };
+  if (lod === 2) return [mass];
+  const hair = surface(sculptField([{ field: scalp, bounds: box }, mass], { color: CAP }).field);
+  // (Toned between the cap and the cards' gold: lighter ridges, the cap's shade between them.)
+  const tone = { root: CAP, tip: mix(C.hairRoot, C.hairTip, 0.25) };
+  return [mass, ...flowLocks(hair, capLines(hair), 0.0058, tone)];
 };
 
 const clamp01 = (v: number): number => Math.min(1, Math.max(0, v));
+
+/** Half-width of the solid in front of the ears that keeps locks off the face: a finger past the
+ *  ear tips. (At 16 cm a lock that met it slid out along its side and hung in the air beside the
+ *  shoulder as a stray.) */
+const SHIELD = Math.abs(SK.earTip[1]) + 0.012;
 
 /** Away from the centre parting, then back and down: over the ears' roots the hair is swept back
  *  hard, so it falls behind them; at the back straight down to the shoulders. */
@@ -150,7 +177,7 @@ export function elfCardHair(b: BustRecipe, lod: number): CardHairStyle {
   const { skin } = bustHairFields(b, lod);
   // No lock in front of the ears below the brow: a solid there pushes them back behind the ears.
   const shield: Field = (p) =>
-    Math.max(SK.tragion[0] + 0.012 - p[0], Math.abs(p[1]) - 0.16, p[2] - (SK.glabella[2] + 0.03));
+    Math.max(SK.tragion[0] + 0.012 - p[0], Math.abs(p[1]) - SHIELD, p[2] - (SK.glabella[2] + 0.03));
   // The brows stay on the face: the shield would push their cards up into a fringe.
   const brows = browLine(SK, H, 0.012, 0.03);
   const collide: Field = (p) => (brows(p) < 0 ? skin(p) : Math.min(skin(p), shield(p)));
@@ -189,10 +216,10 @@ export function elfCardHair(b: BustRecipe, lod: number): CardHairStyle {
         name: 'hair_long',
         kind: 'hair',
         region: hairline,
-        density: 3200,
+        density: 4000,
         length: long,
-        width: 0.02,
-        lift: 0.06,
+        width: 0.024,
+        lift: 0.07,
         bend: 0.95,
         droop: 0.6,
         roll: 0.3,
@@ -207,10 +234,10 @@ export function elfCardHair(b: BustRecipe, lod: number): CardHairStyle {
         name: 'hair_top',
         kind: 'hair',
         region: (p: Vec3) => Math.max(hairline(p), SK.euryon[2] - p[2]),
-        density: 1300,
+        density: 2000,
         length: (p: Vec3) => long(p) * 1.05,
-        width: 0.016,
-        lift: 0.1,
+        width: 0.02,
+        lift: 0.12,
         bend: 0.9,
         droop: 0.6,
         roll: 0.35,
@@ -243,36 +270,36 @@ export function elfCardHair(b: BustRecipe, lod: number): CardHairStyle {
       {
         name: 'hair_edge',
         kind: 'wisp',
-        region: (p: Vec3) => Math.max(hairline(p), -hairline(p) - 0.012),
-        density: 26000,
-        length: 0.035,
-        width: 0.012,
-        lift: 0.05,
+        // (Sparse and lifted: a dense band of them hugging the cap piled up along the hairline
+        // like a braided circlet.)
+        region: (p: Vec3) => Math.max(hairline(p), -hairline(p) - 0.014),
+        density: 9000,
+        length: 0.05,
+        width: 0.01,
+        lift: 0.08,
         bend: 0.8,
-        droop: 0.2,
+        droop: 0.15,
         roll: 0.3,
         fold: 0,
-        hug: 1,
-        tone: [0.75, 1],
+        hug: 0.5,
+        tone: [0.75, 1.05],
       },
-      {
-        name: 'hair_fly',
-        kind: 'wisp',
-        region: hairline,
-        density: 160,
-        length: (p: Vec3) => long(p) * 0.6,
-        width: 0.01,
-        lift: 0.12,
-        bend: 0.6,
-        droop: 0.5,
-        roll: 1,
-        fold: 0,
-        tone: [0.95, 1.2],
-        tint: pale,
-        hug: 0.3,
-      },
+      // (No flyaways: at this length a strand with no clump to hold it arcs out past the
+      // shoulders as a stray lock.)
       // Fine, fair brows: short strands on the painted brow.
       ...browLayers(SK, H, { thick: 0.0035, length: 0.008, tone: [0.5, 0.8] }),
     ],
+  };
+}
+
+/** The far LOD's hair from the card style: its long locks and crown only, a quarter as many and
+ *  three times as wide (scalpCards' LOD1 rule halves and widens them again), in the same tones. */
+export function farHair(style: CardHairStyle): CardHairStyle {
+  const keep = ['hair_long', 'hair_top', 'hair_crown'];
+  return {
+    ...style,
+    layers: style.layers
+      .filter((l) => keep.includes(l.name))
+      .map((l) => ({ ...l, density: l.density * 0.3, width: l.width * 1.6 })),
   };
 }

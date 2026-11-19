@@ -21,19 +21,14 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    48946,
-    12990,
-    5716
-  ],
-  "trianglesCompiled": [
-    48948,
-    12990,
-    5716
+    34616,
+    8064,
+    1224
   ],
   "drawCalls": [
-    2,
-    2,
-    2
+    3,
+    3,
+    3
   ],
   "pivots": [
     {
@@ -42,6 +37,10 @@
     },
     {
       "name": "body_finish_cornea",
+      "parent": null
+    },
+    {
+      "name": "body_finish_skin",
       "parent": null
     }
   ],
@@ -59,7 +58,7 @@
     {
       "label": "eye spacing (pupil to pupil)",
       "spec": 0.05898815999999999,
-      "measured": 0.057888370007276535,
+      "measured": 0.05791450757533312,
       "source": "base IPD 61.6 mm (MakeHuman hm08) × race eye spacing × head scale"
     }
   ],
@@ -68,6 +67,26 @@
     "docs/research/face-base.md (base mesh licence, landmarks, race ratios)",
     "MakeHuman hm08 base mesh, CC0 1.0 (makehumancommunity/makehuman @3c701a8, sha256 8e761e66…)"
   ],
+  "weather": {
+    "chips": {
+      "target": 0.35,
+      "actual": 0.35,
+      "eligible": "convex-edges",
+      "area": 0.0469
+    },
+    "mud": {
+      "target": 0.4,
+      "actual": 0.4,
+      "eligible": "ground-near & side-facing",
+      "area": 0.01
+    },
+    "dust": {
+      "target": 0.5,
+      "actual": 0.5,
+      "eligible": "up-facing",
+      "area": 0.0311
+    }
+  },
   "qa": {
     "pass": true,
     "findings": []

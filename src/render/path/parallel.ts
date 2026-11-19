@@ -58,6 +58,8 @@ export function shareWorld(d: WorldData): WorldData {
       indices: u32(s.indices),
       surface: u8(s.surface),
       look: u8(s.look),
+      glow: u8(s.glow),
+      glows: f32(s.glows),
       tangents: f32(s.tangents),
       texSet: u8(s.texSet),
       sets: s.sets.map((t) => ({

@@ -62,18 +62,20 @@ export function manifest(name: string, file?: string): Promise<Manifest> {
   return m;
 }
 
-const sheets = new Map<SheetSize, Promise<Sheet>>();
+const sheets = new Map<string, Promise<Sheet>>();
 
 /**
- * The painted trim sheet at `size` px (painted once per size, in the worker: about a second at
- * 1024², about four at 2048²).
+ * The painted trim sheet of `of`'s asset at `size` px: the built-in strips plus that asset's own
+ * project materials (painted in the worker: about a second at 1024², about four at 2048², once
+ * per asset and size). Without `of`, the built-ins only.
  */
-export const trimSheet = (size: SheetSize): Promise<Sheet> => {
-  let s = sheets.get(size);
+export const trimSheet = (size: SheetSize, of?: BuildRequest): Promise<Sheet> => {
+  const key = `${size}|${of ? `${targetKey(of.target)}@${of.lod}` : ''}`;
+  let s = sheets.get(key);
   if (!s) {
-    s = ask({ sheet: true, size }) as Promise<Sheet>;
-    sheets.set(size, s);
-    s.catch(() => sheets.delete(size));
+    s = ask({ sheet: true, size, ...(of ? { of } : {}) }) as Promise<Sheet>;
+    sheets.set(key, s);
+    s.catch(() => sheets.delete(key));
   }
   return s;
 };

@@ -85,37 +85,34 @@ function thumbClaw(lod: number): HornOptions {
 /** Finger k's bone: tapering tube with a knuckle and an end cap (tubes: thin bones would need
  *  sub-centimetre sculpt cells). The leading finger ends in a horn spur. */
 function fingerMesh(k: number, lod: 0 | 1 | 2): Mesh {
-  const path = resample(fingerPath(k), [20, 10, 4][lod] ?? 4);
+  const path = resample(fingerPath(k), [16, 8, 4][lod] ?? 4);
   const r0 = 0.062 - k * 0.006;
   const knuckle = 0.45;
   const r = (t: number): number =>
     r0 * (1 - 0.62 * t) + 0.012 + (lod < 2 ? 0.018 * Math.exp(-(((t - knuckle) / 0.05) ** 2)) : 0);
-  const sides = [14, 8, 3][lod] ?? 3;
+  const sides = [8, 6, 3][lod] ?? 3;
   const out: Mesh[] = [skinTube(tube(path, r), { sides, color: C.back })];
   if (k === 0 && lod < 2) {
     const n = path.length;
     const tip = path[n - 1] ?? W.wrist;
     const dir = v3.sub(tip, path[n - 2] ?? W.wrist);
+    // A banded tube, as the claws are: sculpted at a 6 mm cell this 30 cm spur cost 3 k
+    // triangles a wing for a form a tube holds exactly.
     out.push(
-      sculptPart({
-        edits: [
-          horn({
-            base: v3.sub(tip, v3.mul(v3.norm(dir), 0.04)),
-            dir,
-            length: 0.3,
-            radius: 0.03,
-            tip: [0.005, 0.012, 0.03][lod] ?? 0.03,
-            axis: v3.cross(v3.norm(dir), [0, 0, -1]),
-            bend: 25,
-            segments: [8, 5, 3][lod] ?? 3,
-            colors: HORN,
-            // Blend the segments: unblended cones kinked into a 2 cm notch near the tip (QA seam).
-            blend: 0.008,
-          }),
-        ],
-        res: [0.006, 0.012][lod] ?? 0.012,
-        color: C.horn,
-      }).mesh,
+      hornTube(
+        {
+          base: v3.sub(tip, v3.mul(v3.norm(dir), 0.04)),
+          dir,
+          length: 0.3,
+          radius: 0.03,
+          tip: [0.005, 0.012, 0.03][lod] ?? 0.03,
+          axis: v3.cross(v3.norm(dir), [0, 0, -1]),
+          bend: 25,
+          segments: [8, 5, 3][lod] ?? 3,
+          colors: HORN,
+        },
+        lod === 0 ? 10 : 6,
+      ),
     );
   }
   return merge(out);
@@ -135,7 +132,8 @@ function skinColour(u: number, v: number, veins: boolean): Vec3 {
 
 function membranes(lod: 0 | 1 | 2): Mesh[] {
   const across = [10, 4, 2][lod] ?? 2;
-  const along = [14, 6, 3][lod] ?? 3;
+  // Far: four spans along each panel, so the scalloped trailing edge survives the switch.
+  const along = [14, 6, 4][lod] ?? 4;
   const thick = 0.012;
   const sagDir: Vec3 = [-0.25, -0.15, -1];
   const veins = lod === 0;
@@ -178,7 +176,7 @@ function membranes(lod: 0 | 1 | 2): Mesh[] {
   return out;
 }
 
-export const WING_RES = [0.03] as const;
+export const WING_RES = [0.038] as const;
 
 /** The arm: sculpted near (muscle, knuckles, thumb claw), a tube + knuckle blobs far. */
 function armMesh(lod: 0 | 1 | 2): Mesh {
@@ -187,7 +185,7 @@ function armMesh(lod: 0 | 1 | 2): Mesh {
     const ring = { rings: far ? 3 : 5, sides: far ? 5 : 8, color: C.back };
     return merge([
       skinTube(tube(resample(armPath(), far ? 5 : 12), armRadius), {
-        sides: far ? 5 : 10,
+        sides: far ? 5 : 8,
         color: C.back,
       }),
       blob(W.wrist, [0.11, 0.1, 0.1], ring),

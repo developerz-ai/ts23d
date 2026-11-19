@@ -19,7 +19,7 @@ const dim = (c: Vec3, k: number): Vec3 => [c[0] * k, c[1] * k, c[2] * k];
 
 /** One projector module: black can, chrome bezel, glass lens dome, aimed along +X. */
 function projector(lod: Lod, r: number): Mesh {
-  const segs = lod === 0 ? 24 : 10;
+  const segs = lod === 0 ? 14 : 8;
   return merge([
     lathe({
       profile: [
@@ -82,7 +82,7 @@ export function lamps(S: Surface, lod: Lod): LampMeshes {
   const tailLed: Mesh[] = [];
   const rev: Mesh[] = [];
   if (lod < 2) {
-    headBody.push(pocket(S, h, 0.06, dim(C.natural, 0.55), 'chrome', lod === 0 ? 20 : 8));
+    headBody.push(pocket(S, h, 0.06, dim(C.natural, 0.55), 'chrome', lod === 0 ? 20 : 4));
     // Twin projectors along the pocket, aimed forward and a touch down.
     for (const f of [-0.45, 0.35]) {
       const s = h.sc + h.hs * f;
@@ -101,36 +101,59 @@ export function lamps(S: Surface, lod: Lod): LampMeshes {
       bot.push(inward(S, s, c + h.hu * g * 0.78, 0.014));
     }
     // Halo light-guide round the lens: visible through any glass, reads at every distance.
-    const halo = outline(S, h, 0.004, 20, 0.93);
-    drl.push(tube([...halo, halo[0] ?? [0, 0, 0]], 0.008, C.lampGlow, 'plastic', 6, 1, false));
+    // Set 8 mm into the pocket, 10 % inside its lip, on 20 rows near: on 10 rows 4 mm down its
+    // straight chords stood proud of the curved opening and the lit ring drew a hard white
+    // outline round the lamp.
+    const halo = outline(S, h, 0.008, lod === 0 ? 20 : 4, 0.9);
+    drl.push(
+      tube(
+        [...halo, halo[0] ?? [0, 0, 0]],
+        0.008,
+        C.lampGlow,
+        'plastic',
+        lod === 0 ? 6 : 4,
+        1,
+        false,
+      ),
+    );
     // The light guide's two ends turn outward and plug into the pocket's top wall, which carries
     // it (it used to hang 5 mm under the lens, touching nothing).
     const plug = (i: number): Vec3 => {
       const s = h.sc - h.hs * 0.88 + (h.hs * 1.76 * i) / 14;
       return inward(S, s, holeUc(h, s) - h.hu * holeG(h, s) * 1.04, 0.014);
     };
-    drl.push(tube([plug(1), ...top.slice(2, 13), plug(13)], 0.006, C.lampGlow, 'plastic', 6, 2));
+    drl.push(
+      tube(
+        [plug(1), ...top.slice(2, 13), plug(13)],
+        0.006,
+        C.lampGlow,
+        'plastic',
+        lod === 0 ? 6 : 4,
+        1,
+      ),
+    );
     // Amber indicator segment along the bottom edge.
-    headBody.push(tube(bot.slice(2, 12), 0.012, C.lensAmber, 'plastic', 6, 2));
+    headBody.push(tube(bot.slice(2, 12), 0.012, C.lensAmber, 'plastic', lod === 0 ? 6 : 4, 1));
     // Tail: black pocket, three LED bars, reverse light inboard.
     const POCKET_T = 0.05;
     const tc = holeCentre(S, t);
-    tailBody.push(pocket(S, t, POCKET_T, C.black, 'plastic', lod === 0 ? 20 : 8));
+    const BAR = lod === 0 ? 12 : 6;
+    tailBody.push(pocket(S, t, POCKET_T, C.black, 'plastic', lod === 0 ? 10 : 4));
     for (const f of [-0.45, 0, 0.45]) {
       const bar: Vec3[] = [];
-      for (let i = 0; i <= 12; i++) {
-        const s = t.sc - t.hs * 0.85 + (t.hs * 1.7 * i) / 12;
+      for (let i = 0; i <= BAR; i++) {
+        const s = t.sc - t.hs * 0.85 + (t.hs * 1.7 * i) / BAR;
         const g = holeG(t, s);
         if (g < 0.2) continue;
         if (s < t.sc - t.hs * 0.55 && f > 0.2) continue;
         bar.push(inward(S, s, holeUc(t, s) + t.hu * g * f, 0.016));
       }
       if (bar.length > 1) {
-        tailLed.push(tube(bar, 0.016, C.tailGlow, 'plastic', 6, 2));
+        tailLed.push(tube(bar, 0.016, C.tailGlow, 'plastic', lod === 0 ? 6 : 4, 1));
         // Each bar stands on two posts off the housing floor (it used to float in the pocket).
         for (const q of [bar[1], bar[bar.length - 2]])
           if (q)
-            tailLed.push(rod(q, sub(q, mul(tc.n, POCKET_T + 0.004)), 0.008, C.black, 'plastic', 6));
+            tailLed.push(rod(q, sub(q, mul(tc.n, POCKET_T + 0.004)), 0.008, C.black, 'plastic', 4));
       }
     }
     const rs = t.sc - t.hs * 0.7;
@@ -159,11 +182,11 @@ export function lamps(S: Surface, lod: Lod): LampMeshes {
   }
   const headLens =
     lod < 2
-      ? cover(S, shrink(h, 0.86), 0.003, C.lensClear, 'glass', lod === 0 ? 18 : 6)
+      ? cover(S, shrink(h, 0.86), 0.003, C.lensClear, 'glass', lod === 0 ? 18 : 4)
       : merge([]);
   // The tail lens IS the lit surface (emissive red), sitting over the LED bars.
   const tailLens =
-    lod < 2 ? cover(S, t, 0.004, C.lensRed, 'plastic', lod === 0 ? 18 : 6) : merge([]);
+    lod < 2 ? cover(S, t, 0.004, C.lensRed, 'plastic', lod === 0 ? 10 : 4) : merge([]);
   return {
     headBody: bothSides(merge(headBody)),
     headDrl: merge(drl),

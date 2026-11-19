@@ -8,7 +8,7 @@
 import { mkdir } from 'node:fs/promises';
 import { dirname, join, relative, resolve } from 'node:path';
 import { type Asset, type CompiledAsset, encodePng, type Lod } from '../core/index.ts';
-import { DEFAULT_SHEET, type PaintedSheet, paintTrimSheet } from '../material/index.ts';
+import { DEFAULT_SHEET, sheetFor } from '../material/index.ts';
 import {
   ART_RENDER,
   type ArtMetrics,
@@ -45,11 +45,13 @@ import {
   HERO_PATH,
   lodStrip,
   pathHeroThreaded,
+  previewSheet,
   renderBeauty,
 } from '../render/index.ts';
 import type { Args } from './args.ts';
 import { compileOnce } from './compile-cache.ts';
 import type { RenderResult } from './render-cmds.ts';
+import { type SheetSource, sheetOf } from './run-sheets.ts';
 
 export const sha256 = (b: Uint8Array): string =>
   new Bun.CryptoHasher('sha256').update(b).digest('hex');
@@ -92,18 +94,23 @@ export function artImages(
   };
 }
 
-/** Images of the pack, name → PNG bytes. hero/sheet match the committed out/ byte for byte. */
+/**
+ * Images of the pack, name → PNG bytes. hero/sheet match the committed out/ byte for byte.
+ * `look`: the sheet to render with, or the recipe to paint the asset's own from (D299).
+ */
 export function critiqueImages(
   asset: Asset,
-  o: BeautyOptions,
+  options: BeautyOptions,
+  look?: SheetSource,
 ): { images: Map<string, Uint8Array>; lods: CompiledAsset[]; metrics: ArtMetrics } {
   const lods = ([0, 1, 2] as Lod[]).map((lod) => compileOnce(asset, { lod }));
   const lod0 = lods[0] ?? compileOnce(asset);
   const lod2 = lods[2] ?? lod0;
+  const o = look ? { ...options, sheet: sheetOf(look, lod0) } : options;
   const images = new Map<string, Uint8Array>();
   const hero = renderBeauty(lod0, o);
   images.set('hero.png', encodePng(hero.width, hero.height, hero.rgba));
-  images.set('sheet.png', contactSheet(lod0, { far: lod2 }));
+  images.set('sheet.png', contactSheet(lod0, { far: lod2, sheet: previewSheet([lod0, lod2]) }));
   const rake = { ...o, ...RAKING };
   const raking = renderBeauty(lod0, rake);
   images.set('raking.png', encodePng(raking.width, raking.height, raking.rgba));
@@ -146,7 +153,7 @@ export function measureVector(lod0: CompiledAsset): MetricVector {
 
 /** The VECTOR_RENDER beauty image of LOD0 (what measureVector measures). */
 export function vectorImage(lod0: CompiledAsset): BeautyRender {
-  const sheet = paintTrimSheet({ ...DEFAULT_SHEET, size: 1024 });
+  const sheet = sheetFor(lod0, { ...DEFAULT_SHEET, size: 1024 });
   return renderBeauty(lod0, { ...VECTOR_RENDER, sheet });
 }
 
@@ -214,12 +221,13 @@ export async function critiqueOne(
   asset: Asset,
   recipe: string,
   args: Args,
-  sheet: PaintedSheet,
+  look: SheetSource,
 ): Promise<RenderResult> {
   const dir = join(args.out, asset.name, 'critique');
   await mkdir(dir, { recursive: true });
-  const { images, lods, metrics } = critiqueImages(asset, { ...args.render, sheet });
+  const { images, lods, metrics } = critiqueImages(asset, args.render, look);
   const lod0 = lods[0] ?? compileOnce(asset);
+  const sheet = sheetOf(look, lod0);
   // The bound hero is the committed one: path traced at the shots setting (render/path/).
   images.set('hero.png', await pathHeroThreaded(lod0, { ...args.render, ...HERO_PATH, sheet }));
   const renders = Object.fromEntries([...images].map(([n, b]) => [n, sha256(b)]));

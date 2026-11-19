@@ -139,8 +139,11 @@ export interface TreeParams {
   readonly roots?: number;
   /** Fruit hung under the crown (coconuts), merged into `branches`. LOD0 only. */
   readonly fruit?: { readonly count: number; readonly radius: number; readonly color: Vec3 };
-  /** LOD2 stand-in: a lathe of the crown envelope, or a few coarse frond cards. */
-  readonly impostor: 'blob' | 'cards';
+  /**
+   * LOD2 stand-in, built from this tree's LOD0: `clumps` of its leaf cards over the trunk and main
+   * limbs, or `fronds`, one folded card per frond. `blob` and `cards` are the old names of the two.
+   */
+  readonly impostor: 'clumps' | 'fronds' | 'blob' | 'cards';
   /** Typical mature size this preset was tuned on (used when the caller omits spread/dbh). */
   readonly typical: { readonly height: number; readonly spread: number; readonly dbh: number };
 }

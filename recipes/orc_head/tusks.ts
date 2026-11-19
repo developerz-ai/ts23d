@@ -56,6 +56,7 @@ export function tusks(lod: number): Mesh {
       caps: true,
     });
     stain(m, gumLine());
+    if (lod === 0) nick(m, path);
     return m;
   };
   return merge([make(1, 1), make(-1, 0.6)]);
@@ -69,5 +70,36 @@ function stain(m: Mesh, gum: number): void {
     const k = t * t * (3 - 2 * t);
     for (let a = 0; a < 3; a++)
       colors[v + a] = (C.tuskRoot[a] ?? 0) + ((C.bone[a] ?? 0) - (C.tuskRoot[a] ?? 0)) * k;
+  }
+}
+
+/** Nicks: [share of the path, depth m, radius m] — chips knocked out of the ivory in old fights,
+ *  each a shallow dent on the tusk's front edge, dirt-dark in its floor. */
+const NICKS: ReadonlyArray<readonly [number, number, number]> = [
+  [0.42, 0.0022, 0.007],
+  [0.58, 0.0016, 0.005],
+  [0.74, 0.0026, 0.008],
+];
+
+/** Press the nicks into a tusk swept along `path`: vertices within a nick's radius of its point on
+ *  the tusk's front (+X) face sink toward the axis and darken. */
+function nick(m: Mesh, path: readonly V[]): void {
+  const { colors, positions } = m;
+  for (const [t, depth, radius] of NICKS) {
+    const c = path[Math.min(path.length - 1, Math.round(t * (path.length - 1)))];
+    if (!c) continue;
+    const at: V = [c[0] + 0.03 * H * (1 - t ** 1.5), c[1], c[2]];
+    for (let v = 0; v < positions.length; v += 3) {
+      const p: V = [positions[v] ?? 0, positions[v + 1] ?? 0, positions[v + 2] ?? 0];
+      const d = Math.hypot(p[0] - at[0], p[1] - at[1], p[2] - at[2]);
+      if (d >= radius) continue;
+      const k = (1 - d / radius) ** 2;
+      const axis = Math.hypot(p[0] - c[0], p[1] - c[1], p[2] - c[2]) || 1;
+      for (let a = 0; a < 3; a++) {
+        positions[v + a] = (p[a] ?? 0) - (((p[a] ?? 0) - (c[a] ?? 0)) / axis) * depth * k;
+        colors[v + a] =
+          (colors[v + a] ?? 0) + ((C.tuskRoot[a] ?? 0) * 0.7 - (colors[v + a] ?? 0)) * k;
+      }
+    }
   }
 }

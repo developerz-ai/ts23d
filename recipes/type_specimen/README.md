@@ -5,7 +5,8 @@ Not a real-world object: a free-standing notice board, the shape of a station or
 board, that shows every `TextFont` ts23d ships, each set twice: as flush painted decals (left
 column) and as raised cast letters (right column). It is the visual test of `text()`, the way
 `material_swatches` tests the trim sheet. Signature features: the serif title, the six specimen
-rows, the brass divider, round pen-stroke letters that read cleanly at hero distance.
+rows, the brass divider, round pen-stroke letters that read cleanly at hero distance, under a
+gabled hood on bracketed posts.
 
 ## Specs
 | Dimension | Value (m) | Source |
@@ -36,13 +37,23 @@ Cognition, Inc. Files from <https://github.com/kamalmostafa/hershey-fonts>.
 | `.jhf` files used | https://github.com/kamalmostafa/hershey-fonts/tree/master/hershey-fonts |
 
 ## Parts
-`posts` (two timber posts), `board` (board, frame, capping, divider and all lettering merged: one
-static part, one draw call). No moving parts.
+`posts` (two 0.12 m timber posts and the two back battens the board is bolted through), `board`
+(eight tongue-and-groove planks, frame, capping, gabled hood and brackets, divider, carriage bolts
+and all lettering merged: one static part, one draw call). No moving parts.
+
+## Wear
+`weather()` on the timber: damp and mud at the post feet, moss low on the shaded side, chipped and
+sun-bleached frame and hood edges. The top three planks are painted progressively toward a faded grey
+green (the band the sun reaches under the short hood).
 
 ## LOD
-Lettering resolution is LOD-gated through `text({ segments })`: 3 / 2 / 1 curve subdivisions per
-Hershey segment (LOD0 / 1 / 2). LOD2 keeps the title and the brass column, set flush (12 mm of
-relief is a pixel or two at that distance), and drops the cream decals and column headings.
+| LOD | Lettering | Triangles |
+|---|---|---|
+| 0 | raised brass at 12 mm, `segments: 2` | ≈ 30k |
+| 1 | every row flush, `segments: 1` | ≈ 8.5k |
+| 2 | greeked: one flat bar per word in its colour (cream left, brass right, title brass), so both columns, the title and their rhythm survive | ≈ 280 |
+
+Budget why: a type specimen; twelve rows of real lettering in six faces are the content, and LOD2 (greeked word bars) fits the prop band.
 
 ## Open questions
 - The vector faces cover printable ASCII only; Cyrillic still needs `'5x7'` or `'block'`.

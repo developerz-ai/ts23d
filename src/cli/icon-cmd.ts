@@ -6,11 +6,11 @@
 import { mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { Asset, ErrorCode, Lod } from '../core/index.ts';
-import type { PaintedSheet } from '../material/index.ts';
 import { icon, portrait, type ReviewWarning, rtsView, teamCoverage } from '../render/index.ts';
 import type { Args } from './args.ts';
 import { compileOnce } from './compile-cache.ts';
 import { type RenderResult, variantOf } from './render-cmds.ts';
+import { type SheetSource, sheetOf } from './run-sheets.ts';
 
 /** Team colour must cover at least this share of the 64-px RTS silhouette. */
 export const MIN_TEAM_SHARE = 0.08;
@@ -32,16 +32,13 @@ function teamPair(asset: Asset): [string, string] | undefined {
   return a && b ? [a, b] : undefined;
 }
 
-export async function iconOne(
-  asset: Asset,
-  args: Args,
-  sheet: PaintedSheet,
-): Promise<RenderResult> {
+export async function iconOne(asset: Asset, args: Args, look: SheetSource): Promise<RenderResult> {
   const dir = join(args.out, asset.name);
   await mkdir(dir, { recursive: true });
   const variant = variantOf(asset, args);
   const lod: Lod = 0;
   const lod0 = compileOnce(asset, { lod, ...(variant ? { variant } : {}) });
+  const sheet = sheetOf(look, lod0);
   const png = (n: string): string => join(dir, variant ? `${n}_${variant}.png` : `${n}.png`);
   const focus = focusOf(asset);
   const files: [string, Uint8Array][] = [

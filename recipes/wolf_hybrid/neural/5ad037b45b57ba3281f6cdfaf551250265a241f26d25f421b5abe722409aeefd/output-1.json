@@ -1,0 +1,316 @@
+{
+  "bbox": {
+    "frame": "gltf",
+    "max": [
+      0.15642,
+      0.944376,
+      0.736512
+    ],
+    "min": [
+      -0.168898,
+      -0.000282,
+      -0.49606
+    ]
+  },
+  "bind": {
+    "bones": 29,
+    "filled": 0,
+    "heatUnweighted": 0.0,
+    "maxInfluences": 4,
+    "method": "bone-heat",
+    "unusedBones": [],
+    "weightSum": [
+      1.0,
+      1.0
+    ]
+  },
+  "blender": "5.3.0",
+  "contract": "t3d-blender-report/1",
+  "glb": {
+    "animations": [],
+    "images": [
+      {
+        "channels": 3,
+        "mime": "image/png",
+        "name": "tex-normal"
+      },
+      {
+        "channels": 3,
+        "mime": "image/png",
+        "name": "tex-orm"
+      },
+      {
+        "channels": 3,
+        "mime": "image/png",
+        "name": "tex-albedo"
+      }
+    ],
+    "joints": [
+      "spine_0",
+      "hind_l_0",
+      "hind_l_1",
+      "hind_l_2",
+      "hind_l_3",
+      "hind_r_0",
+      "hind_r_1",
+      "hind_r_2",
+      "hind_r_3",
+      "spine_1",
+      "spine_2",
+      "neck_0",
+      "neck_1",
+      "head",
+      "scapula_l",
+      "fore_l_0",
+      "fore_l_1",
+      "fore_l_2",
+      "fore_l_3",
+      "scapula_r",
+      "fore_r_0",
+      "fore_r_1",
+      "fore_r_2",
+      "fore_r_3",
+      "tail_0",
+      "tail_1",
+      "tail_2",
+      "tail_3",
+      "tail_4"
+    ],
+    "materials": [
+      {
+        "name": "body",
+        "textures": [
+          "baseColorTexture",
+          "metallicRoughnessTexture",
+          "normalTexture",
+          "occlusionTexture"
+        ]
+      }
+    ],
+    "meshNodes": [
+      "lod0",
+      "lod1",
+      "lod2"
+    ],
+    "skins": 1,
+    "uvOrigin": "top-left (glTF)"
+  },
+  "lods": [
+    29998,
+    9998,
+    4998
+  ],
+  "seconds": 95.46,
+  "source": {
+    "materials": 1,
+    "textures": 2,
+    "triangles": 906084,
+    "uvLayers": 1,
+    "vertexColours": 0
+  },
+  "steps": [
+    {
+      "determinant": 2.018792,
+      "op": "transform",
+      "seconds": 0.05,
+      "triangles": 906084
+    },
+    {
+      "holeFaces": 0,
+      "nonManifoldEdges": 228,
+      "op": "clean",
+      "seconds": 6.68,
+      "shells": 27,
+      "shellsDropped": 26,
+      "triangles": 904626,
+      "welded": 180727
+    },
+    {
+      "capFaces": 731,
+      "clearance": 0.01934,
+      "gap": 0.02,
+      "limbVertices": [
+        17443,
+        18565,
+        19617,
+        20057,
+        87406
+      ],
+      "moved": 5239,
+      "op": "unweb",
+      "pairs": {
+        "0 + 1": 58,
+        "2 + 4": 313,
+        "3 + 4": 376
+      },
+      "seconds": 22.91,
+      "triangles": 904610,
+      "webFaces": 747
+    },
+    {
+      "boundaryEdges": 0,
+      "focusVertexShare": 0.6442,
+      "from": 904610,
+      "op": "retopo",
+      "reduce": "decimate",
+      "seconds": 26.73,
+      "shell": {
+        "bboxDrift": 0.00668,
+        "bboxSide": "+z (top)",
+        "close": 1,
+        "components": 1,
+        "handles": 0,
+        "largestShare": 1.0,
+        "lost": {
+          "share": 0.0,
+          "tolerance": 0.010094
+        },
+        "skin": 0.0,
+        "tried": [
+          [
+            0,
+            0.0,
+            0.9579,
+            20
+          ],
+          [
+            1,
+            0.0,
+            0.0,
+            0
+          ]
+        ],
+        "volume": 0.085282,
+        "volumeRef": 0.0894
+      },
+      "shellTriangles": 109564,
+      "strategy": "shell",
+      "triangles": 29998,
+      "voxel": 0.00673
+    },
+    {
+      "islands": 184,
+      "kind": "smart",
+      "op": "uv",
+      "seconds": 10.9,
+      "triangles": 29998,
+      "uvDegenerate": 0.0001
+    },
+    {
+      "albedoFrom": "texture",
+      "albedoMean": 0.4767,
+      "albedoUnfilled": 0.0,
+      "cage": 0.03142,
+      "device": "OPTIX: NVIDIA GeForce RTX 3090",
+      "hitRate": 0.9967,
+      "maps": [
+        "albedo",
+        "normal",
+        "ao"
+      ],
+      "op": "bake",
+      "seconds": 25.58,
+      "size": 2048,
+      "triangles": 29998,
+      "uvCoverage": 0.5656
+    },
+    {
+      "bones": 29,
+      "filled": 0,
+      "heatUnweighted": 0.0,
+      "maxInfluences": 4,
+      "method": "bone-heat",
+      "op": "bind",
+      "seconds": 0.76,
+      "triangles": 29998,
+      "unusedBones": [],
+      "weightSum": [
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "bodyRefilled": 602,
+      "bones": [
+        "tail_1",
+        "tail_2",
+        "tail_3",
+        "tail_4"
+      ],
+      "changed": 903,
+      "contact": {
+        "edges": 89,
+        "vertices": 390
+      },
+      "foreignBefore": 0.1313,
+      "inside": 686,
+      "op": "isolate",
+      "reassigned": [
+        0,
+        0
+      ],
+      "seconds": 0.29,
+      "triangles": 29998
+    },
+    {
+      "at": "head",
+      "bones": 29,
+      "largestTurn": 27.84,
+      "offTarget": 1e-07,
+      "op": "repose",
+      "seconds": 0.03,
+      "triangles": 29998
+    },
+    {
+      "lod0": {
+        "boundaryEdges": 0,
+        "handles": 0,
+        "maxFaceShare": 0.0005,
+        "uvDegenerate": 0.0001
+      },
+      "lods": [
+        {
+          "bboxDrift": 0.00085,
+          "bboxSide": "-y (right)",
+          "boundaryEdges": 0,
+          "handles": 0,
+          "lost": {
+            "share": 0.0,
+            "tolerance": 0.015866
+          },
+          "maxFaceShare": 0.0017,
+          "triangles": 9998,
+          "uvDegenerate": 0.0001
+        },
+        {
+          "bboxDrift": 0.00085,
+          "bboxSide": "-y (right)",
+          "boundaryEdges": 0,
+          "handles": 0,
+          "lost": {
+            "share": 0.0,
+            "tolerance": 0.0238
+          },
+          "maxFaceShare": 0.0022,
+          "triangles": 4998,
+          "uvDegenerate": 0.0004
+        }
+      ],
+      "op": "lods",
+      "seconds": 0.72,
+      "triangles": 29998
+    },
+    {
+      "bytes": 9335076,
+      "images": {
+        "albedo": 2048,
+        "normal": 1024,
+        "orm": 1024
+      },
+      "op": "export",
+      "seconds": 0.81,
+      "triangles": 29998
+    }
+  ],
+  "threads": 1
+}

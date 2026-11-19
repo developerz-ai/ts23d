@@ -1,63 +1,61 @@
 {
   "asset": "palm",
   "reviewer": "agent",
-  "overall": 6.7,
+  "overall": 7.1,
   "scores": {
     "silhouette": {
       "score": 8,
-      "reason": "Slender bowed stem and a crown of drooping pinnate fronds read as a coconut palm at once.",
+      "reason": "Tall curved stem and a pinnate frond crown read as a coconut palm; dead fronds now hang below the crown.",
       "fixes": [
-        "a few fronds drooping lower below the crown"
+        "a few live fronds drooping lower below the crown"
       ]
     },
     "proportions": {
       "score": 8,
-      "reason": "20 m height, 9 m crown and 0.35 m stem pass the measures.",
+      "reason": "20 m stem with a modest base flare and a crown span in range.",
       "fixes": [
-        "slightly thicker base flare at the foot"
+        "slightly thicker base bulb"
       ]
     },
     "materials": {
-      "score": 6,
-      "reason": "Fronds green with pinnate leaflets, sand floor; the stem is one dark brown with no ring scars visible; sheet.png draws the bark/stem strip near-white while hero.png shows it brown, so the two images disagree on the trunk material.",
+      "score": 7,
+      "reason": "Pinnate frond cards with alpha, brown dead fronds and a dark ringed stem read; the stem rings are faint.",
       "fixes": [
-        "ringed-stem material (leaf scars)",
-        "dry brown lower fronds"
+        "stronger leaf-scar rings on the stem"
       ]
     },
     "detail": {
       "score": 6,
-      "reason": "Pinnate leaflets read; coconuts and frond boots are not visible in hero.",
+      "reason": "Leaflets and dead fronds hold up; no coconut cluster or frond boots visible under the crown.",
       "fixes": [
-        "coconut cluster under the frond bases large enough to read",
+        "a coconut cluster large enough to read under the frond bases",
         "frond boots and fibre at the crown"
       ]
     },
     "wear": {
-      "score": 5,
-      "reason": "Sand underfoot; no dead hanging fronds.",
+      "score": 7,
+      "reason": "Dead hanging fronds tell the palm's age.",
       "fixes": [
-        "two dead fronds hanging under the crown"
+        "a lean scar or weathered base on the stem"
       ]
     },
     "lod": {
       "score": 6,
-      "reason": "FAR LOD2 replaces the lacy fronds with few solid dark cards: the crown thins and darkens.",
+      "reason": "FAR LOD2 thins the crown to a star of bare midribs: the leaflet mass vanishes and the crown pops lighter.",
       "fixes": [
-        "more LOD2 frond cards with cut-out alpha",
-        "match LOD2 frond colour to LOD0 mean"
+        "LOD2 frond cards with the alpha leaflet texture instead of thin strips"
       ]
     },
     "technical": {
       "score": 8,
-      "reason": "QA clean; 5.6k / 2.4k / 205 tris, one material.",
+      "reason": "8.9k / 3.4k / 196 triangles, 2 draws.",
       "fixes": [
         "trim stem segments on the straight lower stem"
       ]
     }
   },
   "renders": {
-    "hero.png": "5e6303476f34a8369d54e1d11d0462201c1c4e1959ea8b2920ff018c2a12ac51",
-    "sheet.png": "55c285f987a32bdc292084a5192a9799564aa051abd66059acda095e4bfa279c"
+    "hero.png": "90bc112f2cadd93f7835264c9866165e0bf569c58d9e66bc4d8d15669c1f2d89",
+    "sheet.png": "7d1041c4fca0f80f67a0b3a575c9748d9d0f6f5e2e16eb0255058fa1877d8031"
   }
 }

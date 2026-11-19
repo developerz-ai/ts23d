@@ -108,3 +108,22 @@ Static landmark: no motion. Named parts: `pedestal_0..3` (stone footings), `leg_
 - **Arch.** Circle through the inner leg feet (74.24 m) and the keystone (38.90 m): R = 37.16 m,
   centre 1.74 m above ground.
 - **Floor areas** disagree (official ft² vs fr.wikipedia m²); not used.
+
+## Wear and LOD notes (2026-11 quality pass)
+- Wear (`wear.ts`) follows the seven-year repaint cycle, top down: below ~120 m rust runs weep down
+  the members (noise stretched 25× along z) and up-facing flanges chalk; the upper shaft is a
+  fresher, slightly brighter coat; deck tops carry blotchy city grime. Hash noise, no generator
+  state, so every LOD and rebuild agrees.
+- Deck railings: square posts (faces on the rail axes) and a mid rail at LOD0.
+- Triangles (2026-11-19 integration pass): 144k / 19.6k / 764, down from 191k / 22.7k / 1.05k.
+  Lattice web bars and LOD1 member bars end inside their chords and uprights, so they ship
+  without end caps (a third of each bar); the far legs' stacked frustums drop the caps buried at
+  their joins; the far arch is 7 uncapped bars. LOD2 fits the building band (800).
+
+Budget why: a 330 m wrought-iron lattice landmark, not a 20k-triangle house; each of its four legs is ~30k triangles of lattice girders with zig-zag webs at LOD0, and LOD0/LOD1 must draw that open lattice or the tower reads as a solid pylon.
+
+- **Gap:** the far LOD (764 triangles) still draws the legs and shaft as solid frustums. A
+  see-through far lattice needs an alpha-cutout lattice decal cell on the house trim sheet
+  (`src/material/trim-sheet.ts` DECAL_CELLS + a painter in `src/material/paint/`), so LOD2 can
+  wrap the frustum faces in `surface: 'cutout'` cards for 2 triangles a face; a geometric open
+  frame costs 1.5–2k triangles at LOD2, over the 1.25k budget.

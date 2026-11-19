@@ -7,18 +7,19 @@ import { type IntendedCrease, sculptField } from '@developerz.ai/ts23d';
 import { cutCreases, torsoCreases } from '../_lib/bust/anatomy-creases.ts';
 import { bustEdits, bustScalp } from '../_lib/bust/bust.ts';
 import { creaseAt, creaseCurve, edgeCreases, ringCreases } from '../_lib/bust/creases.ts';
-import { collarRing, mantleRegion, outfitCreases, tunicFolds } from '../_lib/bust/human/clothes.ts';
-import { H, L, SK, SPEC, TORSO } from '../_lib/bust/human/spec.ts';
+import { collarRing } from '../_lib/bust/human/clothes.ts';
+import { H, L, SK, SPEC } from '../_lib/bust/human/spec.ts';
 import { surface, type V } from '../_lib/bust/kit.ts';
-import { torsoEdits } from '../_lib/bust/torso.ts';
 import { skullCreases } from '../_lib/face/skull-creases.ts';
-import { HUMAN_BUST } from './build.ts';
+import { HUMAN_BUST, scarLine } from './build.ts';
+import { BROOCH, mantleRegion, outfitCreases, PARTS } from './clothes.ts';
 import { beardLines, beardline, hairLines, hairline, moustache } from './hair.ts';
+import { bodyEdits, TORSO } from './torso.ts';
 
 function creases(): IntendedCrease[] {
   const { skin } = bustEdits(HUMAN_BUST, 2, 0);
   const scalp = bustScalp(HUMAN_BUST, 0);
-  const body = sculptField(torsoEdits(L, TORSO, { neck: false }), {
+  const body = sculptField(bodyEdits(), {
     color: SPEC.skin,
     mirror: 'y',
   }).field;
@@ -75,15 +76,13 @@ function creases(): IntendedCrease[] {
       0.02,
       'edge of the beard',
     ),
-    ...['head', 'bust'].flatMap((part) =>
-      ringCreases(`collar_${part}`, part, ring, 0.025, 'leather collar roll on the neck seam'),
+    ...PARTS.flatMap((part) =>
+      ringCreases(`collar_${part}`, part, ring, 0.025, 'the shirt collar’s roll on the neck seam'),
     ),
-    ...tunicFolds().flatMap((f, i) =>
-      creaseCurve(`tunic_fold${i}`, 'bust', f, 0.02, 'tunic fold under the collar', true),
-    ),
+    ...creaseCurve('scar', 'head', scarLine(), 0.012, 'the old scar through the brow’s tail'),
     ...edgeCreases(
       'mantle_edge',
-      'bust',
+      'mantle',
       body,
       mantleRegion,
       [
@@ -93,15 +92,20 @@ function creases(): IntendedCrease[] {
       0.025,
       'the mantle’s edge standing 16 mm off the tunic',
     ),
-    ...cutCreases(body, TORSO.cutZ),
-    ...creaseAt(
-      'brooch',
-      'brooch',
-      [L.gx - 0.12 * H, 0.08, L.mz - 0.3 * H - 0.035],
-      0.02,
-      'ring and boss of the brooch',
+    // Where the mantle's back panel, hanging clear of the body, turns the corner of the arm's cut.
+    ...creaseCurve(
+      'mantle_back',
+      'mantle',
+      [
+        [-0.06, TORSO.shoulders + 0.008, 0.28],
+        [-0.06, TORSO.shoulders + 0.008, 0.18],
+      ],
+      0.028,
+      'the hanging back panel turning onto the arm’s cut',
       true,
     ),
+    ...cutCreases(body, TORSO.cutZ),
+    ...creaseAt('brooch', 'brooch', BROOCH, 0.02, 'ring and boss of the brooch', true),
   ];
 }
 

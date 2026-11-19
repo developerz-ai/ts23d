@@ -3,13 +3,32 @@
 // commits the numbers to `tune.json`, imported below, so every build reads the same values
 // (docs/idea/20-tuning.md). Body: a lathe through a monotone cubic profile (no overshoot between
 // stations), closed at the base and inside the neck. Handles: tubes swept along a cubic from the
-// neck to the shoulder, both ends sunk into the wall. Dossier: recipes/tune_demo/README.md.
+// neck to the shoulder, both ends sunk into the wall, seated on attachment pads. Surface: matte
+// terracotta with throw rings toned in by height, a darker, rougher foot, a potter's stamp on the
+// shoulder; wear from `weather()`: a chipped rolled lip and foot ring, dark residue run down from
+// the lip, dust on the shoulder. Dossier: recipes/tune_demo/README.md.
 
-import { defineAsset, hex, lathe, sweep, type Vec2, type Vec3 } from '@developerz.ai/ts23d';
+import {
+  box,
+  cylinder,
+  defineAsset,
+  hex,
+  lathe,
+  type Mesh,
+  merge,
+  place,
+  sweep,
+  text,
+  type Vec2,
+  type Vec3,
+  weather,
+} from '@developerz.ai/ts23d';
 import saved from './tune.json';
 
 const H = 0.6;
-const CLAY = hex('#b5643c');
+const CLAY = hex('#c27a52');
+const FOOT = hex('#8a5236');
+const STAMP = hex('#9a5a3a');
 const WALL = 0.012;
 const TUBE = 0.013;
 
@@ -52,6 +71,19 @@ const cubic = (p: readonly Vec3[], t: number): Vec3 => {
   return [at(0), at(1), at(2)];
 };
 
+/** Throw rings and a darker, sooted foot: tone the clay by height (one colour per vertex). */
+function clayTone(m: Mesh): Mesh {
+  const colors = new Float32Array(m.colors);
+  for (let v = 0; v < colors.length / 3; v++) {
+    const z = m.positions[v * 3 + 2] ?? 0;
+    const ring = 0.94 + 0.06 * Math.sin(z * 2 * Math.PI * 60);
+    const foot = Math.min(1, Math.max(0, (z - 0.015) / 0.035));
+    for (let c = 0; c < 3; c++)
+      colors[v * 3 + c] = ((FOOT[c] ?? 0) * (1 - foot) + (CLAY[c] ?? 0) * foot) * ring;
+  }
+  return { ...m, colors };
+}
+
 export const tune_demo = defineAsset({
   name: 'tune_demo',
   kind: 'prop',
@@ -89,18 +121,90 @@ export const tune_demo = defineAsset({
       [0.95 * H, v('neckR') * 0.96],
       [H, v('neckR') * v('lipFlare')],
     ]);
-    const rows = ctx.pick([44, 22, 9]);
+    const rows = ctx.pick([40, 20, 6]);
     const profile: Vec2[] = [[0, 0]];
     for (let i = 0; i <= rows; i++) {
       const z = (i / rows) * H;
       profile.push([r(z), z]);
     }
-    const inner = v('neckR') * 0.96 - WALL;
-    profile.push([v('neckR') * v('lipFlare') - WALL, H], [inner, H - 0.06], [0, H - 0.06]);
-    ctx.part(
-      'body',
-      lathe({ profile, segments: ctx.pick([36, 18, 8]), color: CLAY, strip: 'plain' }),
+    const lip = v('neckR') * v('lipFlare');
+    if (ctx.lod < 2) {
+      // Rolled lip: a bead turned over the rim, then down inside the neck to its floor.
+      profile.pop();
+      profile.push(
+        [lip, H - 0.012],
+        [lip + 0.005, H - 0.006],
+        [lip + 0.004, H],
+        [lip - 0.003, H + 0.004],
+        [lip - WALL, H],
+        [v('neckR') * 0.96 - WALL, H - 0.06],
+        [0, H - 0.06],
+      );
+    } else profile.push([0, H]); // LOD2 closes the mouth: the opening is a pixel at that range.
+    const body = clayTone(
+      lathe({
+        profile,
+        segments: ctx.pick([36, 18, 14]),
+        color: CLAY,
+        strip: 'concrete',
+        uv: 'metres',
+      }),
     );
+    // Use: chips on the lip bead and foot ring, oil-dark residue run down from the lip on the
+    // pouring side (+X), dust settled on the shoulder.
+    const worn = weather(
+      ctx,
+      { body },
+      {
+        name: 'amphora_wear',
+        seed: 3,
+        age: 0.7,
+        resolution: [0, 0, 0],
+        fasteners: [
+          { at: [lip + 0.004, 0.02, H - 0.004], radius: 0.03 },
+          { at: [lip + 0.002, -0.03, H - 0.004], radius: 0.025 },
+        ],
+        under: hex('#d9b08a'),
+        effects: {
+          chips: { where: 'convex-edges', amount: 0.12 },
+          ...(ctx.lod < 2
+            ? {
+                rust: {
+                  where: 'below-fasteners | fasteners',
+                  amount: 0.5,
+                  streaks: true,
+                  streakLength: 0.22,
+                  color: [0.06, 0.035, 0.025] as const,
+                  strength: 0.85,
+                },
+              }
+            : {}),
+          dust: { where: 'up-facing', amount: 0.3, strength: 0.3 },
+        },
+      },
+    );
+    const extras: Mesh[] = [worn.body];
+    if (ctx.lod === 0) {
+      // Potter's stamp on the shoulder (+X): a sunk cartouche with raised letters, tilted to lie
+      // on the sloping wall.
+      const zS = v('neckZ') * H - 0.06;
+      const slope = (r(zS + 0.005) - r(zS - 0.005)) / 0.01;
+      const tilt = { at: [r(zS) - 0.0008, 0, zS] as Vec3, pitch: Math.atan(slope) };
+      extras.push(
+        place(box({ size: [0.002, 0.042, 0.016], at: [0, 0, -0.008], color: STAMP }), tilt),
+        place(
+          text('LCF', {
+            origin: [0.001, 0, -0.004],
+            height: 0.008,
+            depth: 0.0012,
+            align: 'centre',
+            color: STAMP,
+          }),
+          tilt,
+        ),
+      );
+    }
+    ctx.part('body', merge(extras));
 
     // Loop handles at ±Y, neck → shoulder; ends sunk WALL into the vessel so they touch it.
     const zA = zN + v('handleTop') * (0.95 * H - zN);
@@ -117,16 +221,30 @@ export const tune_demo = defineAsset({
         [0, s * (r(zS) - WALL), zS],
       ];
       const steps = ctx.pick([16, 9, 4]);
-      ctx.part(
-        `handle_${side}`,
+      const loop: Mesh[] = [
         sweep({
           section: { radius: TUBE, segments: ctx.pick([10, 7, 4]) },
           path: Array.from({ length: steps + 1 }, (_, i) => cubic(ctrl, i / steps)),
           color: CLAY,
-          strip: 'plain',
+          strip: 'concrete',
           caps: true,
         }),
-      );
+      ];
+      // Attachment pads: the potter's thumb-pressed clay where each end joins the wall (LOD0/1).
+      if (ctx.lod < 2)
+        for (const z of [zA, zS])
+          loop.push(
+            cylinder({
+              radius: 0.018,
+              length: 0.008,
+              segments: ctx.pick([12, 8, 6]),
+              color: CLAY,
+              strip: 'concrete',
+              at: [0, s * (r(z) - 0.003), z],
+              axis: 'y',
+            }),
+          );
+      ctx.part(`handle_${side}`, merge(loop));
     }
   },
 });

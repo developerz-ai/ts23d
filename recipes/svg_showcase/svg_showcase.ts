@@ -2,23 +2,33 @@
 // object starts as an inline SVG string: a bevelled 12-tooth gear with a hub and lightening holes
 // (`extrudeSvg`, even-odd holes), a turned amphora from a half profile (`latheSvg`), a creature
 // head blocked out from front + side + top silhouettes (`visualHull`) and refined with ordinary
-// sculpt edits, and a bevelled star emblem on the plinth front. Curves flatten coarser per LOD
-// (`lod: ctx.lod`), the sculpt cell grows. Dossier: recipes/svg_showcase/README.md.
+// sculpt edits on a turned oak stand, and a bevelled star emblem on the plinth front. Each sits on a
+// real material strip (galvanised steel gear, clay amphora with throw rings, pored skin) and wears
+// its story through `weather()`: oil run down from the gear teeth, dust on the amphora shoulder and
+// a chipped lip. Curves flatten coarser per LOD (`lod: ctx.lod`), the sculpt cell grows.
+// Dossier: recipes/svg_showcase/README.md.
 
 import {
   box,
   defineAsset,
   extrudeSvg,
   hex,
+  lathe,
   latheSvg,
+  type Mesh,
   sculpt,
   type Vec3,
   visualHull,
+  weather,
 } from '@developerz.ai/ts23d';
 
-const PLINTH: Vec3 = [0.5, 1.8, 0.06];
+const PLINTH: Vec3 = [0.5, 1.8, 0.12];
 const TOP = PLINTH[2];
-const STEEL = hex('#8a9096');
+/** The head stands on a turned oak display stand this tall. */
+const STAND = 0.05;
+const BASE = TOP + STAND;
+const STEEL = hex('#c4c8cc');
+const OAK = hex('#c9a27a');
 const CLAY = hex('#b5643c');
 const SLATE = hex('#3b4048');
 const SKIN = hex('#6f8f4a');
@@ -40,7 +50,7 @@ const holes = [0, 1, 2, 3]
   .join('');
 const GEAR = `<svg viewBox="-50 -50 100 100">
   <path d="${Array.from({ length: TEETH }, (_, i) => tooth(i)).join(' ')} Z"/>
-  <circle r="12"/>${holes}
+  <path d="M-3 -11.62 L-3 -15.5 L3 -15.5 L3 -11.62 A12 12 0 1 1 -3 -11.62 Z"/>${holes}
 </svg>`;
 const GEAR_SCALE = 0.005;
 /** The bottom tooth's flat tip, below the gear centre. */
@@ -67,7 +77,7 @@ const HEAD_TOP = `<svg viewBox="-50 -70 100 140">
            C-48 16 -36 32 -16 36 L-12 68 L-2 38 L14 36 C36 30 46 14 50 0 Z"/>
 </svg>`;
 
-/** Five-point star emblem, 100 units = 0.05 m (fits the plinth face). */
+/** Five-point star emblem, 100 units = 0.09 m (fits the 0.12 m plinth face). */
 const STAR = `<svg viewBox="-50 -50 100 100"><polygon points="${Array.from(
   { length: 10 },
   (_, i) => {
@@ -76,6 +86,17 @@ const STAR = `<svg viewBox="-50 -50 100 100"><polygon points="${Array.from(
     return `${(r * Math.cos(a)).toFixed(3)},${(r * Math.sin(a)).toFixed(3)}`;
   },
 ).join(' ')}"/></svg>`;
+
+/** Throw rings: the potter's fingers leave faint horizontal bands; tone the clay by height. */
+function throwRings(m: Mesh, z0: number): Mesh {
+  const colors = new Float32Array(m.colors);
+  for (let v = 0; v < colors.length / 3; v++) {
+    const z = (m.positions[v * 3 + 2] ?? 0) - z0;
+    const k = 0.93 + 0.07 * Math.sin(z * 2 * Math.PI * 55) + (z > 0.42 ? 0.04 : 0);
+    for (let c = 0; c < 3; c++) colors[v * 3 + c] = (colors[v * 3 + c] ?? 0) * k;
+  }
+  return { ...m, colors };
+}
 
 export const svg_showcase = defineAsset({
   name: 'svg_showcase',
@@ -87,7 +108,7 @@ export const svg_showcase = defineAsset({
   sources: [
     'recipes/svg_showcase/README.md (design spec; the SVG drawings are inline in this file)',
   ],
-  budget: { triangles: [40000, 10500, 2000] },
+  budget: { triangles: [22000, 7000, 2000] },
   build(ctx) {
     const lod = ctx.lod;
     ctx.part('plinth', box({ size: PLINTH, at: [0, 0, 0], color: SLATE, bevel: 0.006 }));
@@ -102,19 +123,72 @@ export const svg_showcase = defineAsset({
       lod,
       at: [0, -0.55, TOP + GEAR_DROP],
       color: STEEL,
-      strip: 'steel_painted',
+      strip: 'steel_galvanised',
     });
-    ctx.part('gear', gear);
-
-    ctx.part(
-      'amphora',
+    const amphora = throwRings(
       latheSvg(AMPHORA, {
         scale: 0.005,
         segments: ctx.pick([40, 20, 10]),
         lod,
         at: [0, 0, TOP],
         color: CLAY,
-        strip: 'plain',
+        strip: 'concrete',
+        uv: 'metres',
+      }),
+      TOP,
+    );
+    // Workshop story: oil darkens the gear's tooth flanks and bore; the amphora has stood on a
+    // shelf (dust on the shoulder, a chipped lip, grime at the foot).
+    const oiled = weather(
+      ctx,
+      { gear },
+      {
+        name: 'gear_wear',
+        seed: 19,
+        age: 0.6,
+        resolution: [0.06, 0, 0],
+        effects: {
+          rust: { where: 'convex-edges', amount: 0.25, color: [0.03, 0.028, 0.024], strength: 0.6 },
+          dust: { where: 'up-facing', amount: 0.4, strength: 0.5 },
+        },
+      },
+    );
+    const shelved = weather(
+      ctx,
+      { amphora },
+      {
+        name: 'amphora_wear',
+        seed: 23,
+        age: 0.6,
+        resolution: [0.06, 0, 0],
+        sun: [0.2, 0.2, 1],
+        under: hex('#d9a27c'),
+        effects: {
+          chips: { where: 'convex-edges', amount: 0.15 },
+          dust: { where: 'up-facing', amount: 0.5, strength: 0.6 },
+          mud: { where: 'ground-near', amount: 0.25 },
+        },
+      },
+    );
+    ctx.part('gear', oiled.gear);
+    ctx.part('amphora', shelved.amphora);
+
+    ctx.part(
+      'stand',
+      lathe({
+        profile: [
+          [0, 0],
+          [0.1, 0],
+          [0.1, 0.012],
+          [0.085, 0.02],
+          [0.07, 0.04],
+          [0.075, STAND],
+          [0, STAND],
+        ],
+        segments: ctx.pick([32, 16, 8]),
+        color: OAK,
+        strip: 'oak',
+        at: [0, 0.55, TOP],
       }),
     );
 
@@ -127,9 +201,9 @@ export const svg_showcase = defineAsset({
       round: 0.02,
       tolerance: 0.001,
       lod,
-      at: [0, 0, TOP],
+      at: [0, 0, BASE],
     });
-    const z = (y: number): number => TOP + (105 - y) * s;
+    const z = (y: number): number => BASE + (105 - y) * s;
     const at = (x: number, y: number, zz: number): Vec3 => [x * s, y * s, z(zz)];
     ctx.part(
       'head',
@@ -154,10 +228,30 @@ export const svg_showcase = defineAsset({
             blend: 0.015,
             color: SKIN,
           },
+          // A short neck stump carries the head off the stand (sinks 5 mm into its top).
+          {
+            shape: 'capsule',
+            at: [-0.015, 0, BASE + 0.05],
+            to: [-0.01, 0, z(80)],
+            size: 0.055,
+            blend: 0.03,
+            color: SKIN,
+          },
           // Brow ridge and cheek pads soften the hull's planes.
           { shape: 'capsule', at: at(30, -14, 34), to: at(30, 14, 34), size: 5 * s, blend: 0.02 },
           { shape: 'ellipsoid', at: at(22, -24, 66), size: [12 * s, 10 * s, 10 * s], blend: 0.03 },
           { shape: 'ellipsoid', at: at(22, 24, 66), size: [12 * s, 10 * s, 10 * s], blend: 0.03 },
+          // Forehead wrinkles: three shallow grooves above the brow.
+          ...[22, 15, 8].map((zz) => ({
+            shape: 'capsule' as const,
+            at: at(30 - (34 - zz) * 0.4, -12, zz),
+            to: at(30 - (34 - zz) * 0.4, 12, zz),
+            size: 1.4 * s,
+            op: 'subtract' as const,
+            blend: 0.006,
+          })),
+          // A notch bitten out of each ear's trailing edge.
+          { shape: 'sphere', at: at(-6, 52, 44), size: 5 * s, op: 'subtract', blend: 0.004 },
           // Eye sockets, eyeballs, pupils.
           { shape: 'sphere', at: at(33, -14, 45), size: 9 * s, op: 'subtract', blend: 0.01 },
           { shape: 'sphere', at: at(33, 14, 45), size: 9 * s, op: 'subtract', blend: 0.01 },
@@ -214,17 +308,17 @@ export const svg_showcase = defineAsset({
             color: hex('#4f6a34'),
           },
         ],
-        resolution: ctx.pick([0.006, 0.012, 0.03]),
+        resolution: ctx.pick([0.009, 0.016, 0.034]),
         color: SKIN,
         mirror: 'y',
-        strip: 'plain',
+        strip: 'concrete',
       }),
       // Sculpted about y = 0 (mirror plane), then placed on the plinth.
       { at: [0, 0.55, 0] },
     );
 
     const emblem = extrudeSvg(STAR, {
-      size: 0.05,
+      size: 0.09,
       origin: 'centre',
       view: 'front',
       depth: 0.012,

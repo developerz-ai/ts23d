@@ -1,5 +1,6 @@
 // Pine bark finish: moves the tree kind's wood (classic `wood` strip) onto `bark_pine`, keeps the
-// kind's height gradient (grey-brown low → orange high) as a soft tint, greens the north (+Y),
+// kind's height gradient (grey-brown low → orange high) as a soft tint, optionally grades the low
+// bole darker (`grade`: the thick grey plates of an old pine's foot), greens the north (+Y),
 // shaded lower trunk with moss.
 //
 // Why not `_lib/finish/grove.ts`'s barkOf: a sweep's seam column (and its cap rims) sits at
@@ -19,7 +20,20 @@ export function inWoodBand(v: number): boolean {
   return v >= wood.v0 - 1e-7 && v <= wood.v1 + 1e-7;
 }
 
-export function pineBark(m: Mesh, bark: StripId, moss: number, noise: (p: Vec3) => number): Mesh {
+/** Bark darker low on the bole: × `tint` below `z0`, easing to × 1 at `z1` (m). */
+export interface BarkGrade {
+  readonly z0: number;
+  readonly z1: number;
+  readonly tint: Vec3;
+}
+
+export function pineBark(
+  m: Mesh,
+  bark: StripId,
+  moss: number,
+  noise: (p: Vec3) => number,
+  grade?: BarkGrade,
+): Mesh {
   const uvs = new Float32Array(m.uvs);
   const colors = new Float32Array(m.colors);
   const wood = stripRect('wood');
@@ -41,6 +55,15 @@ export function pineBark(m: Mesh, bark: StripId, moss: number, noise: (p: Vec3) 
       m.positions[i * 3 + 1] ?? 0,
       m.positions[i * 3 + 2] ?? 0,
     ];
+    if (grade) {
+      const t = Math.min(1, Math.max(0, (p[2] - grade.z0) / (grade.z1 - grade.z0)));
+      const k = t * t * (3 - 2 * t);
+      out = [
+        out[0] * (grade.tint[0] + (1 - grade.tint[0]) * k),
+        out[1] * (grade.tint[1] + (1 - grade.tint[1]) * k),
+        out[2] * (grade.tint[2] + (1 - grade.tint[2]) * k),
+      ];
+    }
     const north = m.normals[i * 3 + 1] ?? 0;
     const low = Math.max(0, 1 - p[2] / 4);
     const w = moss * Math.max(0, north) * low * (0.6 + 0.4 * noise(p));

@@ -9,7 +9,7 @@
 
 import { type Check, defineModelCharacter } from '@developerz.ai/ts23d';
 import { mannequin } from './mannequin.ts';
-import { STEPS } from './steps.ts';
+import { STEPS, TRIANGLES } from './steps.ts';
 import { HEIGHT, rangerModel } from './surface.ts';
 
 export { CONCEPT } from './concept.ts';
@@ -90,7 +90,7 @@ export const ranger = defineModelCharacter({
     ],
   },
   budget: {
-    triangles: [40000, 12000, 4000],
+    triangles: [...TRIANGLES],
     bones: 64,
     draws: 1,
     textureSets: { count: 1, size: 2048 },

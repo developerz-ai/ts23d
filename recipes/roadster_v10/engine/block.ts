@@ -141,7 +141,7 @@ export function block(lod: Lod): Mesh {
           [0.05, 0.065],
           [0, 0.065],
         ],
-        segments: lod === 0 ? 24 : 10,
+        segments: lod === 0 ? 16 : 8,
         axis: 'x',
         color: C.alloyCast,
         strip: 'aluminium',
@@ -155,7 +155,7 @@ export function block(lod: Lod): Mesh {
 
 /** Bellhousing, gearbox (T-56 class 6-speed), shifter tower, propshaft. */
 export function driveline(lod: Lod): Mesh {
-  const segs = lod === 0 ? 24 : 10;
+  const segs = lod === 0 ? 16 : 8;
   const x0 = BLOCK_REAR;
   const parts: Mesh[] = [
     shift(

@@ -4,7 +4,7 @@
 import { definePart, merge, sweep, type Vec3 } from '@developerz.ai/ts23d';
 import { flange } from './flange.ts';
 import { filletPath, inset, smoothPath } from './path.ts';
-import { alongAxis, PAINT_GREEN, RUBBER } from './shape.ts';
+import { alongAxis, NAT, PAINT_GREEN } from './shape.ts';
 
 export const pipe = definePart({
   name: 'pipe',
@@ -41,7 +41,9 @@ export const pipe = definePart({
       section: { radius: p.diameter / 2, segments: b.pick([16, 10, 6]) },
       path,
       caps: true,
-      color: hose ? RUBBER : PAINT_GREEN,
+      // The rubber strip carries its own measured colour: a dark tint on top of it left a
+      // near-black albedo that showed only its highlights, so the hose read glossy (D313).
+      color: hose ? NAT : PAINT_GREEN,
       strip: hose ? 'rubber' : 'steel_painted',
     });
     if (hose || !p.flanges) return tube;

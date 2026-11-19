@@ -145,9 +145,14 @@ recipe test; the items without a check above are **planned**, §9 there):
 ## Model tier: creature
 Quadruped on a model surface, our sourced skeleton and gait clips (kinds `modelChain` + `defineModelCreature`).
 Status (As of 2026-11): `recipes/wolf_hybrid` (idle, look, walk, trot), `recipes/bear_hybrid`
-(plantigrade; idle, look, walk) and `recipes/dragon_hybrid` (an invented drake with rigid wings;
-`register: 'joints'`, `take` with `'tail'`; idle, look, walk) ship on it, QA PASS. Planned: wing
-bones on a model body, gallop, jaw and blink.
+(plantigrade; idle, look, walk) and `recipes/dragon_hybrid` (an invented drake; `register: 'joints'`, `take` with `'tail'`; idle,
+look, walk, flap) ship on it, QA PASS. What the plan lacks (wings, fins, a second tail) is an
+`extra` chain: the recipe gives its joints along the mesh (kinds `tracePath` finds the centre
+line of a spar), the plan bone it hangs from, a limit per bone and a `motion` (a clip of its
+own, `flap`, plus a small part in idle and the gaits); Blender `bind` weights the skin to those
+bones with the rest, QA `deform` poses it at their limits, and a skin with a bone that is
+neither the plan's nor declared is refused (`T3D_MODEL_SKELETON`). Planned: gallop, jaw and
+blink on a model body, a wing that folds.
 
 | Stage | What to do | Why / check |
 |---|---|---|

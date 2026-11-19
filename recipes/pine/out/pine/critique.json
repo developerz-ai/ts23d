@@ -1,65 +1,64 @@
 {
   "asset": "pine",
   "reviewer": "agent",
-  "overall": 6,
+  "overall": 6.6,
   "scores": {
     "silhouette": {
       "score": 6,
-      "reason": "Tall clear bole with a high clumped crown; the crown is narrow, lopsided and starburst-spiky, closer to a holly than the flat umbrella of an old Scots pine.",
+      "reason": "A tall clear bole with a crown on top reads as a mature pine, but the crown is a lumpy cauliflower of round clumps, narrower than tall, not the flat-topped spreading crown of a Scots pine.",
       "fixes": [
         "flatter, wider crown top (branch length peaking near the top)",
-        "more even crown spread around the bole"
+        "branch-level pads with horizontal undersides"
       ]
     },
     "proportions": {
       "score": 7,
-      "reason": "25 m height, 9 m spread and 0.6 m DBH pass measures; crown depth at the deep end for a mature tree.",
+      "reason": "Height and clear bole ok; the crown spans only ~5 m of an 8.7 m bound.",
       "fixes": [
-        "shallower crown (~35 % of height)"
+        "widen the crown toward the declared spread"
       ]
     },
     "materials": {
-      "score": 5,
-      "reason": "Needle tufts are flat dark cards with no needle texture; sheet.png draws the bark/stem strip near-white while hero.png shows it brown, so the two images disagree on the trunk material.",
+      "score": 7,
+      "reason": "Needle cards with alpha and an orange upper bark over a darker base read as Scots pine.",
       "fixes": [
-        "needle foliage texture / alpha cards",
-        "bark strip that renders the same in sheet and hero"
+        "bark plates on the lower bole",
+        "a lighter blue-green needle tint"
       ]
     },
     "detail": {
       "score": 6,
-      "reason": "Needle tufts clumped on shoots; no cones, no dead lower stubs.",
+      "reason": "Needle clumps and branch stubs along the bole; no cones or visible branch structure in the crown.",
       "fixes": [
         "cones on outer shoots",
-        "dead branch stubs along the clear bole"
+        "visible limbs between needle pads"
       ]
     },
     "wear": {
-      "score": 5,
-      "reason": "Litter floor; otherwise clean.",
+      "score": 6,
+      "reason": "Dead stubs on the bole; no resin scars or dead branch in the crown.",
       "fixes": [
-        "resin scars and dead stubs on the bole",
+        "resin scars on the bole",
         "a dead branch in the crown"
       ]
     },
     "lod": {
-      "score": 5,
-      "reason": "FAR LOD2 is a cluster of pointed shard-like planes, a pagoda rather than needle pads; colour holds but shape pops.",
+      "score": 6,
+      "reason": "FAR LOD2 crown becomes sparse lighter streaks, thinner than LOD0.",
       "fixes": [
-        "blunter pad tops (a two-ring lens) at LOD2",
-        "clamp the plan/height aspect a fitted pad may take"
+        "denser LOD2 pad cards colour-matched to LOD0"
       ]
     },
     "technical": {
       "score": 8,
-      "reason": "QA clean; 24k / 5.8k / 306 tris, one material.",
+      "reason": "14.8k / 2.2k / 306 triangles, 3 draws.",
       "fixes": [
-        "cache or simplify the LOD2 silhouette fit"
+        "spend a few more LOD2 triangles on crown cards"
       ]
     }
   },
   "renders": {
-    "hero.png": "959bc54c6470888b36ab3849c6c33cf73a382041dd133910891ec713b33dbf29",
-    "sheet.png": "f16f86ba5d2a73dd19f0e3c550751a654be0f1f1e809daf3adeda9a16c22d73c"
+    "hero.png": "d3c41e9fbafe304fccd4dc7bb8649fbb49b87c7d24c59b128f61cd651e298d35",
+    "sheet.png": "bd28161526b1b6a45d20e21fa28a08a145bb2d3b40c9b87ac85f791dbcfc9b98"
   }
 }

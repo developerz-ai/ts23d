@@ -22,7 +22,22 @@ clustered under the frond bases**.
 | crown detail | https://commons.wikimedia.org/wiki/Category:Cocos_nucifera_leaves | V-folded leaflets |
 
 ## Parts the engine needs
-`trunk`, `roots` (root plate), `crown` (sway) › `branches` (rachises + coconuts), `leaves` (leaflets).
+`trunk` (ringed stem + crown shaft), `roots` (root plate), `crown` (sway) › `branches` (rachises,
+dead rachises + coconuts), `leaves` (leaflets, dead leaflets), plus `ground` (sand).
+
+## How it is built (LOD policy)
+- **Stem** (`stem.ts`): the kind's trunk (a ring every ~1.7 m) resampled with a leaf-scar ring every
+  0.22 m (LOD0: a 7 % groove, dark scar, pale band; LOD1: colour bands every 0.5 m), greyer low
+  down; the grooves cut inward only and the stem is rescaled to the kind's Y extent, so the DBH
+  measure holds. Crown shaft: tiers of fibrous frond boots wrap the top 1.1 m.
+- **Root ball**: the kind's buttress lobes widened × 1.3 about the stem axis.
+- **Coconuts**: 14 at ~0.3 m under the frond bases (LOD0).
+- **Wear** (`fronds.ts`): the oldest, lowest fronds brown toward their tips; three dead fronds
+  hang straw-brown below the crown (a skirt), leaflets collapsed.
+- **LOD2**: every LOD0 frond read back from the kind's leaflet mesh and redrawn as one bent
+  cutout card on the `foliage_palm` cell along its own rachis and leaflet tips (6 triangles), tinted
+  by the frond's own shade and browning: the far crown keeps its fronds and colour instead of a
+  few solid dark blades (silhouette IoU 0.72 / 0.61 / 0.78 vs 0.67 / 0.61 / 0.65 before).
 
 ## Open questions
 The stem bows (lean 12°, curving back by 24°) so the crown sits back over the base and the

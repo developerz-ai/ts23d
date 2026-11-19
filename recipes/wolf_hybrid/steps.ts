@@ -10,14 +10,13 @@
 //   uv, bake fresh UVs; the model's colour, relief and AO baked from the 900 k source
 //   bind     bone heat on the fitted skeleton (the pose the generator made)
 //   isolate  the tail's skin takes only the tail's bones and the rump none of them: bone heat
-//            reads nearness, and a tail on the hocks is as near the leg bones as its own
+//            reads nearness, and a tail on the hocks is as near the leg bones as its own. The
+//            generator also laid the tail against the thighs, fused: `contact` blends the weights
+//            over 4 cm round every edge that joins tail skin to thigh skin (CONTACT below)
 //   repose   pose the bound mesh to the straight, symmetric rest (the head turned 27° comes onto
 //            the sagittal plane with its own two sides; nothing is mirrored)
 //   lods     10 k and 5 k triangles from the 30 k (same UVs, maps and weights)
 //   export   one GLB: three LODs, albedo 2048², normal and ORM 1024², one skin
-// Known defect (README.md, "Known limits"): the generator laid the tail against the inner face of
-// the right thigh and these steps do not part them; cutting thighs from the tail in `unweb` and
-// moving `isolate`'s cut below the root were tried (2026-11-18) and baked tail fur onto the thigh.
 
 import type { BlenderStep, ModelRig } from '@developerz.ai/ts23d';
 
@@ -28,6 +27,13 @@ export const TRIANGLES = [30000, 10000, 5000] as const;
 /** Gap `unweb` leaves between the tail and the hocks, metres: over 1.5 voxels of the shell
  *  (5.5 mm), so the remesh cannot fuse them again. */
 const GAP = 0.02;
+
+/** Band `isolate` blends round the edges that join tail skin to thigh skin, metres. The tail
+ *  hangs fused to both thighs from 0.36 to 0.52 m up; with a hard tail / leg split those edges
+ *  stretched ×8–10 at the hip's limits (QA `deform` read ×5.7 on LOD 1). Measured on the
+ *  committed mesh: 3 cm gives ×2.6, 5 cm ×2.5, 8 cm ×2.5 but drops the stifle's volume to 0.73;
+ *  4 cm keeps the stifle at 0.85 and leaves the tail below the thighs on its own bones. */
+const CONTACT = 0.04;
 
 export const steps = (rig: ModelRig): readonly BlenderStep[] => {
   const h = rig.height;
@@ -47,7 +53,7 @@ export const steps = (rig: ModelRig): readonly BlenderStep[] => {
     { op: 'uv', kind: 'smart' },
     { op: 'bake', size: 2048, maps: ['albedo', 'normal', 'ao'] },
     { op: 'bind' },
-    ...(rig.tail ? [{ op: 'isolate', ...rig.tail } as const] : []),
+    ...(rig.tail ? [{ op: 'isolate', ...rig.tail, contact: CONTACT } as const] : []),
     ...(rig.target ? [{ op: 'repose', to: rig.target } as const] : []),
     { op: 'lods', triangles: [TRIANGLES[1], TRIANGLES[2]], focus },
     { op: 'export', normalSize: 1024, ormSize: 1024 },

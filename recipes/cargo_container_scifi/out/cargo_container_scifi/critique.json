@@ -5,61 +5,57 @@
   "scores": {
     "silhouette": {
       "score": 7,
-      "reason": "ISO 20 ft box with corner castings, armoured side bays, door end with four cam lock bars and status strip: reads as a container at once. The long side is a flat plane at grazing angles. The top line stays straight on purpose (stacking/twist-lock contract).",
+      "reason": "ISO-container box with corner castings, bay ribs, door bars and a glow strip; the long side is still a near-flat plane in the outline.",
       "fixes": [
-        "deeper bay relief (8–10 cm) or a trapezoidal rib between bays so the long-side outline is not a flat plane"
+        "deeper bay relief (8–10 cm) or trapezoidal ribs between bays so the long-side outline breaks"
       ]
     },
     "proportions": {
       "score": 8,
-      "reason": "Frame 6.058 × 2.438 × 2.591 m on ISO 668; castings and their centres pass the measures; doors fill the opening between the posts.",
+      "reason": "6.1 × 2.5 × 2.6 m, a 20 ft box; door bars and castings at the right size.",
       "fixes": [
-        "check the door-leaf hinge spacing against an ISO door photo (four hinges per leaf)"
+        "four hinges per door leaf as on an ISO door photo"
       ]
     },
     "materials": {
-      "score": 6,
-      "reason": "Painted steel shell and off-white frame, cast corner castings, galvanised lock bars, glow strip and keypad. But the weathering shows as large triangle-shaped grey/brown blotches on the roof and side bays in sheet.png (the vertex colour follows the triangulation), and in hero.png as soft smears rather than rust and bleaching.",
+      "score": 7,
+      "reason": "Teal paint, steel frame and orange stripe separate and the glow strip is clean. The sawtooth triangle stains are gone from hero.png (soft rust streaks now) and the roof is an even weathered grey instead of triangle camo, but faint triangle tints remain at the panel feet in the sheet SIDE view and the TOP roof mottle is blocky.",
       "fixes": [
-        "weather on a finer, regular vertex grid on the side and roof plates (or as a texture lane) so the colour stops following triangle shapes",
-        "roughness variation where hands touch (door handles, keypad)"
+        "finish moving the weathering off the triangulation: the SIDE view still shows triangle tints along the lower panel edges",
+        "roughness variation where hands touch (handles, keypad)"
       ]
     },
     "detail": {
       "score": 7,
-      "reason": "Bays with seams, vents, bolts, stencilled owner code, hazard bands, cam keepers and handles, hinge knuckles, forklift pockets. No gasket line or customs seal; roof is ribs over a plate.",
+      "reason": "Louvres, door bars, keypad, code text, forklift pockets and a rear vent hatch hold at 3/4.",
       "fixes": [
-        "door gasket line and customs seal on the right leaf",
-        "forklift pockets as real recesses with a lip",
-        "roof plate fasteners"
+        "door gasket line and customs seal on the right leaf; roof plate fasteners"
       ]
     },
     "wear": {
       "score": 7,
-      "reason": "Chipped edges, rust streaks from the bolts, dents, bleached roof and dirt at the sill tell a working life, but the triangle-shaped blotches undercut it and the doors are not weathered.",
+      "reason": "Rust and grime at the frame base, scraped paint at the corners, a weathered roof, and rust streaks now run below the louvres.",
       "fixes": [
-        "run the door leaves through weather() too (hinge space, separate call)",
-        "faded/scraped owner code"
+        "faded/scraped owner code and chalk or stencil marks on the doors"
       ]
     },
     "lod": {
-      "score": 7,
-      "reason": "LOD2 (736) keeps the orange band, lock bars, status strip and bay grid; the roof turns a lighter flat value split by one big diagonal shading seam.",
+      "score": 6,
+      "reason": "FAR LOD2 drops the louvres and the weathering: sides go clean teal and the roof flat grey. The softer LOD0 weathering makes the value shift smaller, but the louvres still vanish.",
       "fixes": [
-        "keep the roof ribs as quads at LOD2 so the roof value matches",
-        "split the LOD2 roof into a regular quad grid so the diagonal seam disappears"
+        "carry the average weathering tone onto the LOD2 roof and side faces; keep the louvres as dark quads"
       ]
     },
     "technical": {
       "score": 7,
-      "reason": "QA PASS incl. the weather gate; 22 914 / 8 342 / 736, one material, glow + light socket, doorArc check. LOD0 is heavy for a prop because weather() refinement splits every long bevel.",
+      "reason": "QA clean; 17k / 7k / 0.7k triangles over 5 draws; the triangle-shaped weathering suggests refinement spent on the bevelled frame rather than plates.",
       "fixes": [
-        "weather only the side/roof plates (not the bevelled frame) to halve the refinement cost"
+        "weather only the side/roof plates on a regular grid to halve refinement cost"
       ]
     }
   },
   "renders": {
-    "hero.png": "cc3eb203afde4b80e29257ed56812f443e1a18db5147e50df45e338cd2bff170",
-    "sheet.png": "b0eeb13f4bc67b282c5b7b2aef6153bb30f70b659180afda53e9bfa853bc041d"
+    "hero.png": "fbf2db743fdbe1ecbb3e451910e929d68608c6cfdf0b14828ee7b2aa347b956a",
+    "sheet.png": "5edd337e0dd2878a92987cace6829846694673879a74189a18cd45f26488b5fa"
   }
 }

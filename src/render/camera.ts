@@ -1,6 +1,7 @@
 // Perspective camera for beauty renders: orbit (azimuth/elevation about the asset), auto-framed so
 // the asset fills the frame, with an optional zoomed sub-window (a true high-res crop of the same
 // shot, used for detail close-ups). Z up, +X front; azimuth 0 looks at the front, −35° is a 3/4.
+// `lookAt` is the fixed viewpoint instead (an asset's `hero: { eye, target }`): no auto-framing.
 
 export interface PerspectiveCamera {
   readonly eye: readonly [number, number, number];
@@ -26,15 +27,43 @@ export interface Orbit {
 
 type V3 = [number, number, number];
 
+/** Right and up for the unit view direction `f`, horizon level (Z up). */
+function frame(f: V3): { r: V3; u: V3 } {
+  const rl = Math.hypot(f[1], f[0]) || 1;
+  const r: V3 = [f[1] / rl, -f[0] / rl, 0];
+  const u: V3 = [r[1] * f[2] - r[2] * f[1], r[2] * f[0] - r[0] * f[2], r[0] * f[1] - r[1] * f[0]];
+  return { r, u };
+}
+
 function basis(azDeg: number, elDeg: number): { dir: V3; r: V3; u: V3; f: V3 } {
   const az = (azDeg * Math.PI) / 180;
   const el = (elDeg * Math.PI) / 180;
   const dir: V3 = [Math.cos(el) * Math.cos(az), Math.cos(el) * Math.sin(az), Math.sin(el)];
   const f: V3 = [-dir[0], -dir[1], -dir[2]];
-  const rl = Math.hypot(f[1], f[0]) || 1;
-  const r: V3 = [f[1] / rl, -f[0] / rl, 0];
-  const u: V3 = [r[1] * f[2] - r[2] * f[1], r[2] * f[0] - r[0] * f[2], r[0] * f[1] - r[1] * f[0]];
-  return { dir, r, u, f };
+  return { dir, f, ...frame(f) };
+}
+
+/** A camera at `eye` looking at `target` (not vertical), vertical field of view `fovDeg`. */
+export function lookAt(
+  eye: readonly [number, number, number],
+  target: readonly [number, number, number],
+  fovDeg: number,
+  width: number,
+  height: number,
+): PerspectiveCamera {
+  const d: V3 = [target[0] - eye[0], target[1] - eye[1], target[2] - eye[2]];
+  const l = Math.hypot(d[0], d[1], d[2]) || 1;
+  const f: V3 = [d[0] / l, d[1] / l, d[2] / l];
+  return {
+    eye: [eye[0], eye[1], eye[2]],
+    ...frame(f),
+    f,
+    focal: height / 2 / Math.tan((fovDeg * Math.PI) / 360),
+    cx: width / 2,
+    cy: height / 2,
+    width,
+    height,
+  };
 }
 
 /** Project world xyz → [screen x, screen y, view depth]. Depth ≤ 0 means behind the eye. */

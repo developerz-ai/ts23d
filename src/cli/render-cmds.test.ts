@@ -1,5 +1,6 @@
 // `t3d review`: a skinned asset's pack gains poses.png (slice 10's pose strip at LOD1); a rigid
-// prop's does not (the strip would throw without a skeleton).
+// prop's does not (the strip would throw without a skeleton). `t3d hero`: an asset's own `hero`
+// view is the default camera and --az / --el / --fov still override it.
 
 import { afterAll, describe, expect, it } from 'bun:test';
 import { rm } from 'node:fs/promises';
@@ -9,7 +10,7 @@ import { DEFAULT_SHEET, paintTrimSheet } from '../material/index.ts';
 import { skinWeights, weightBonesOf } from '../passes/index.ts';
 import { box } from '../primitives/index.ts';
 import { parseArgs } from './args.ts';
-import { reviewOne } from './render-cmds.ts';
+import { heroOne, reviewOne } from './render-cmds.ts';
 
 const out = join(import.meta.dir, '../../tmp/render-cmds-test');
 afterAll(() => rm(out, { recursive: true, force: true }));
@@ -57,5 +58,32 @@ describe('review pack poses', () => {
   it('adds poses.png for a skinned asset', async () => {
     const r = await reviewOne(limb, 'x.ts', args, sheet);
     expect(r.files.map((f) => basename(f))).toContain('poses.png');
+  });
+});
+
+describe('t3d hero and the asset hero view', () => {
+  const crate = (name: string, hero?: { azDeg: number; elDeg: number }) =>
+    defineAsset({
+      name,
+      kind: 'prop',
+      budget: { triangles: [99, 99, 99] },
+      ...(hero ? { hero } : {}),
+      build: (ctx) => ctx.part('body', box({ size: [2, 1, 1], color: [0.5, 0.4, 0.3] })),
+    });
+  const shot = async (name: string, hero: Parameters<typeof crate>[1], flags: string[]) => {
+    const a = parseArgs(['hero', 'x.ts', '--out', out, '--size', '64x48', ...flags]);
+    const r = await heroOne(crate(name, hero), a, sheet);
+    return Buffer.from(await Bun.file(r.files[0] ?? '').arrayBuffer());
+  };
+
+  it('renders from the hinted view by default; flags win', async () => {
+    const plain = await shot('plain', undefined, []);
+    const hinted = await shot('hinted', { azDeg: 145, elDeg: 40 }, []);
+    expect(hinted.equals(plain)).toBe(false);
+    expect(hinted.equals(await shot('flagged', undefined, ['--az', '145', '--el', '40']))).toBe(
+      true,
+    );
+    const back = await shot('back', { azDeg: 145, elDeg: 40 }, ['--az', '-35', '--el', '18']);
+    expect(back.equals(plain)).toBe(true);
   });
 });

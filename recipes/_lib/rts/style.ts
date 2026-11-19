@@ -156,20 +156,22 @@ export function chevronPlan(
 export function fist(lod: Lod, handleR: number, color: Vec3): Mesh {
   const s = SEG(lod, 10, 6, 4);
   const around = SEG(lod, 14, 8, 4);
-  const tubeR = 0.026;
+  // RTS-chunky: 15% over a real gloved fist so the hand reads at strategy distance. The opening
+  // stays the handle's own size, so the grip joint still fits.
+  const tubeR = 0.03;
   const ring = handleR / Math.cos(Math.PI / around) + tubeR;
   const profile: Vec2[] = [];
   for (let i = 0; i <= s; i++) {
     const a = (i / s) * Math.PI * 2;
-    profile.push([ring + Math.cos(a) * tubeR, Math.sin(a) * 0.045]);
+    profile.push([ring + Math.cos(a) * tubeR, Math.sin(a) * 0.052]);
   }
   const wrap = lathe({ profile, segments: around, color });
   if (lod === 2) return wrap;
   const knuckles = box({
-    size: [0.05, 0.085, 0.075],
-    at: [-ring - 0.01, 0, -0.0375],
+    size: [0.058, 0.098, 0.086],
+    at: [-ring - 0.012, 0, -0.043],
     color,
-    bevel: 0.012,
+    bevel: 0.014,
   });
   return merge([wrap, knuckles]);
 }

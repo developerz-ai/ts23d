@@ -1,65 +1,121 @@
 {
   "asset": "water_tower",
   "reviewer": "agent",
-  "overall": 6.4,
+  "overall": 7.1,
   "scores": {
     "silhouette": {
       "score": 8,
-      "reason": "Railroad water tank: hipped roof with finial, round stave tank, trestle with X bracing on footings, swinging spout. Reads from every view.",
+      "reason": "Railroad water tank: eight-sided roof with finial, stave tank with hoops, X-braced trestle on footings, swinging spout, float-gauge board: reads from every view.",
       "fixes": [
-        "float-gauge board and pulley on the tank side"
+        "pulley and cable on the float gauge"
       ]
     },
     "proportions": {
       "score": 7,
-      "reason": "11.3 x 7.5 x 10.6 m including the spout; tank-to-trestle ratio matches the dossier. The roof is six-sided in the top view and the centre outlet core is very thick versus the posts.",
+      "reason": "11.3 x 7.5 x 10.6 m including the spout; tank-to-trestle ratio matches the dossier, roof now eight-sided; the central outlet core under the tank is still very thick (reads as a second tank).",
       "fixes": [
-        "an eight-sided roof over the round tank, and slim the centre outlet core ~30%"
+        "slim the centre outlet core ~30%"
       ]
     },
     "materials": {
-      "score": 5,
-      "reason": "The tank reads as horizontal boards (a tile grid running around the circumference) instead of vertical staves, and the iron hoops are lost against the wood; trestle, footings and roof read correctly.",
+      "score": 6,
+      "reason": "Tank wood and iron hoops read, but the many hoops at ~0.3 m spacing make the tank read as horizontal boards; the roof shows green-khaki camouflage blotches rather than moss in shade.",
       "fixes": [
-        "map the tank with U up the staves (vertical grain, one board per stave)",
-        "hoops as black iron_cast so they read against the wood"
+        "fewer, heavier hoops (6-8) so the vertical staves dominate",
+        "moss only on the shaded/north roof facets, soft-edged"
       ]
     },
     "detail": {
-      "score": 6,
-      "reason": "Staves, hoops, joists, cap ring, ladder, spout with counterweight and chain, finial; missing tie-rod turnbuckles and the float gauge, and the trestle joints have no bolts.",
+      "score": 7,
+      "reason": "Staves, hoops, joists, cap ring, ladder, float gauge, spout with counterweight and chain, finial.",
       "fixes": [
         "turnbuckles on the X rods",
-        "bolts at trestle joints",
-        "float-gauge board"
+        "bolts at trestle joints"
       ]
     },
     "wear": {
-      "score": 5,
-      "reason": "Silvered trestle timber and some splash on the footings; no water stains under the tank or spout, no moss.",
+      "score": 7,
+      "reason": "Moss on the roof, dark wet streaks down the staves and silvered trestle timber give a plausible history; footings clean.",
       "fixes": [
-        "dark wet streaks below the tank floor and the spout",
-        "moss on the shaded side of the footings"
+        "moss on the shaded side of the footings",
+        "wet stain below the spout"
       ]
     },
     "lod": {
-      "score": 6,
-      "reason": "FAR LOD2 keeps tank, roof, posts and spout but drops the X bracing, and the tank turns lighter and flat compared with LOD0.",
+      "score": 7,
+      "reason": "lods.png: LOD2 (568 tris) keeps tank, roof, trestle with X braces and spout; the tank switches from hooped boards to vertical planks and loses the gauge.",
       "fixes": [
-        "match the LOD2 tank colour/UV span to LOD0",
-        "keep two X braces per side as flat quads at LOD2"
+        "keep 2-3 hoops as dark bands at LOD2",
+        "keep the float-gauge board as one quad"
       ]
     },
     "technical": {
       "score": 8,
-      "reason": "QA PASS (rebuilt today): 7.48k / 3.08k / 488 tris, 2 / 2 / 2 draws: lean for a scene prop.",
+      "reason": "QA PASS: 7.6k / 3.2k / 568 tris, 2 / 2 / 2 draws: lean for a scene prop.",
       "fixes": [
-        "spend LOD0 triangles on stave edges instead of the roof facets"
+        "spend LOD0 triangles on stave edges rather than roof facets"
       ]
     }
   },
   "renders": {
-    "hero.png": "9ecc9b090959f41af9ec2b10da6f6c0e41070cb6e07ed959cc5eb5d526474e33",
-    "sheet.png": "deedb7f287a937d2754ab78fba054ebf9fc68ee4ddc02b28955d0f24263bccef"
+    "hero.png": "93a2a446812c7a13f6ebe925897fff0691b4853a7a2ae02ef4067bb97afead1a",
+    "sheet.png": "48c55b34e4a8cd371365564adc72102f6eb60b745fbff1ef8b9d3d91bf8bd704",
+    "raking.png": "a4a58be8f0d2c6efaa83038c3463f59f65b7d68402af7c139895898027f59c44",
+    "raking_detail.png": "8fe4cddbfe93eb1e6fdcc00625f90b9c47032676af1d4ebc3236e1c4214aa06a",
+    "lods.png": "0d898baba7771482396ed093ff608d518c73d80bcd728c4f312dd11bdee95b1c",
+    "silhouette.png": "ad991fe5d49bf9b5626e508834a754c7b5c5e37ceedcba49e831d655d7a48d29",
+    "value.png": "1f0e09d8ae869a97f29a47c49f4a442f09ae99d889a79a86e75967794f17d90a",
+    "detail.png": "8fa9d32952b701f7a8fd5dca5cb8e38dba07ce3c7b2a763ade1d74ef99a160dc"
+  },
+  "metrics": {
+    "silhouette": [
+      {
+        "view": "front",
+        "iou": 0.989
+      },
+      {
+        "view": "side",
+        "iou": 0.97
+      },
+      {
+        "view": "3/4",
+        "iou": 0.983
+      }
+    ],
+    "focal": {
+      "peakPart": "float_gauge",
+      "peak": [
+        371,
+        250
+      ],
+      "focalShare": 0,
+      "focalArea": 0,
+      "top": [
+        {
+          "part": "float_gauge",
+          "share": 0.361
+        },
+        {
+          "part": "trestle",
+          "share": 0.245
+        },
+        {
+          "part": "tank",
+          "share": 0.206
+        }
+      ],
+      "declared": []
+    },
+    "rest": {
+      "share": 0.408,
+      "spread": 0.67,
+      "min": 0.25
+    },
+    "shape": {
+      "acuteShare": 0.178,
+      "straightShare": 0.726,
+      "taper": -0.051,
+      "shape": "stable"
+    }
   }
 }

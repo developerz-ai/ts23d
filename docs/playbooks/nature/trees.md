@@ -66,7 +66,9 @@ side of trunks via vertex colour.
 ## LOD policy
 - LOD0: branches 4 levels deep, leaf cards per twig, root flare, bark relief. 15–60k.
 - LOD1: 2–3 branch levels, leaf cards clustered larger. 3–8k.
-- LOD2: trunk + a few crown masses or crossed billboards (impostors planned). 100–400.
+- LOD2: trunk + main limbs + the LOD0 crown as clumps of crossed cards (palms: one folded card per
+  frond), in LOD0's box and mean colour; the `tree` kind builds it, silhouette IoU ≥ 0.8 against
+  LOD0 (`src/kinds/vegetation-impostor.test.ts`). 100–400.
 
 ## QA
 ```ts

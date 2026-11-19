@@ -9,6 +9,8 @@ import {
   compile,
   quatRotate,
   runQa,
+  type StripId,
+  stripRect,
   type Vec3,
 } from '@developerz.ai/ts23d';
 import { clipPose, jointWorlds } from '../../src/qa/clip-pose.ts';
@@ -18,6 +20,8 @@ import { assetShells } from '../../src/qa/connections-shells.ts';
 import { DESIGN, HEAD_IDS, JAW_IDS, LEG_FEET, NECK_IDS, NECKS } from './anatomy.ts';
 import { HEAD_STYLES } from './head.ts';
 import { HYDRA_PLAN, hydra } from './hydra.ts';
+import { KERATIN, SCALES } from './material.ts';
+import { mudAt } from './skin.ts';
 
 const SLOW = 240_000;
 const lod0: CompiledAsset = compile(hydra, { lod: 0 });
@@ -220,6 +224,41 @@ describe('honest connections', () => {
   it('lets horns, teeth, claws and spines face the grown-appendage checks', () => {
     for (const name of ['horns', 'teeth', 'claws', 'spines'])
       expect(lod0.parts.find((p) => p.name === name)?.connect).toBeUndefined();
+  });
+});
+
+describe('surface and wear', () => {
+  const part = (name: string) => {
+    const m = lod0.parts.find((p) => p.name === name)?.mesh;
+    if (!m) throw new Error(`no part ${name}`);
+    return m;
+  };
+  const rowOf = (strip: StripId): [number, number] => {
+    const r = stripRect(strip);
+    return [r.v0, r.v1];
+  };
+  const onStrip = (name: string, strip: StripId): number => {
+    const m = part(name);
+    const [v0, v1] = rowOf(strip);
+    let n = 0;
+    for (let i = 1; i < m.uvs.length; i += 2)
+      if ((m.uvs[i] ?? 0) >= v0 && (m.uvs[i] ?? 0) <= v1) n++;
+    return n / (m.uvs.length / 2);
+  };
+  it('puts the skin on the scale strip and horns, claws, teeth on keratin', () => {
+    expect(onStrip('body', SCALES)).toBeGreaterThan(0.95);
+    for (const name of ['horns', 'claws', 'teeth', 'spines'])
+      expect(onStrip(name, KERATIN)).toBeGreaterThan(0.95);
+  });
+  it('cakes mud on the feet and leaves the back clean', () => {
+    expect(mudAt([1.2, 0.9, 0.05])).toBeGreaterThan(0.6);
+    expect(mudAt([0, 0, 1.6], 0)).toBe(0);
+  });
+  it('spends LOD0 on heads, not on rings: the body is under a third of the triangles', () => {
+    const tris = (name: string): number => part(name).indices.length / 3;
+    const all = lod0.parts.reduce((t, p) => t + (p.mesh?.indices.length ?? 0) / 3, 0);
+    expect(tris('body') / all).toBeLessThan(1 / 3);
+    expect(all).toBeLessThan(215_000);
   });
 });
 

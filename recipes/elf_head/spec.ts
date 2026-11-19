@@ -85,10 +85,14 @@ export const L = landmarks(SPEC);
 export const ELF_FACE: FaceSpec = {
   ...ELF_RACE,
   eyes: { spacing: 1.166, tilt: 0.02, open: 0.95, size: 1.15 },
+  // The mid-face 3 % shorter than the race preset's (it read long and older than intended).
+  face: ELF_RACE.face * 0.97,
   jaw: { width: 0.85, drop: 0.05 },
   zygoma: { width: 1.04, height: 0.02, forward: 0.008 },
-  ears: { length: 1.7, tip: [0.2, 0.05, 0.26], out: 8 },
-  body: { neck: 0.85, traps: -0.01, shoulders: 0.95 },
+  // (Held 13° out: the tips break the outline of the hair at three-quarter view.)
+  ears: { length: 1.7, tip: [0.2, 0.065, 0.26], out: 13 },
+  // (Shoulders ×0.78: the base mesh brings its own shoulder tops above the torso's.)
+  body: { neck: 0.85, traps: -0.01, shoulders: 0.78 },
 };
 
 /** The skull stage's character: a young adult elf, lean, symmetric. */
@@ -109,9 +113,10 @@ export const EYE: EyeSpec = {
   centre: SK.eye,
   r: SK.eyeR,
   iris: SK.eyeR * 0.52,
-  upper: 0.24,
+  // A thin upper lid, its crease high: a young eye.
+  upper: 0.2,
   lower: 0.1,
-  lid: 0.0021,
+  lid: 0.0018,
   tilt: 10,
   colours: { sclera: C.sclera, iris: C.iris, pupil: C.pupil, wet: C.wet, caruncle: C.caruncle },
 };
@@ -128,12 +133,16 @@ export const EAR: EarSpec = {
   lobe: 0.6,
 };
 
+// Slender sloping shoulders (0.15 m half-span, mass 0.12): at 0.175 / 0.3 the cloaked deltoids read
+// as two balloons 2.1 head widths apart.
 export const TORSO: TorsoSpec = {
-  shoulders: 0.175,
-  mass: 0.3,
+  shoulders: 0.15,
+  mass: 0.12,
   neck: 0.05,
   larynx: 0.3,
   cutZ: CUT_Z,
+  // Sawn through the shoulder point itself: a slender bust, no deltoid left to swell the cloak.
+  armCut: 0,
 };
 
 /** Declared neck stylisation (slender: neck 0.6–0.7 × head width (human 0.7–0.8)). */

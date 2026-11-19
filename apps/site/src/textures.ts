@@ -15,7 +15,7 @@ import {
   SRGBColorSpace,
   type Texture,
 } from 'three';
-import { type Sheet, trimSheet } from './compile.ts';
+import { type BuildRequest, type Sheet, trimSheet } from './compile.ts';
 import { isTextureSetMaterial, usesTrimSheet } from './texture-sets.ts';
 
 interface Maps {
@@ -24,7 +24,11 @@ interface Maps {
   readonly orm: Texture;
 }
 
-let maps: Maps | null = null;
+/** The textures of the sheet bound last: each asset has its own sheet (its materials' rows). */
+let bound: { readonly sheet: Sheet; readonly maps: Maps } | null = null;
+
+/** The build a loaded model came from: whose sheet `showSheet` asks the worker for. */
+export const sheetOwner = new WeakMap<Object3D, BuildRequest>();
 
 /** glTF sampler of the sheet: repeat along U (strips tile), clamp along V (rows never wrap). */
 function texture(sheet: Sheet, data: Uint8Array, srgb: boolean, anisotropy: number): Texture {
@@ -41,11 +45,14 @@ function texture(sheet: Sheet, data: Uint8Array, srgb: boolean, anisotropy: numb
 }
 
 function mapsFor(sheet: Sheet, anisotropy: number): Maps {
-  maps ??= {
+  if (bound?.sheet === sheet) return bound.maps;
+  for (const t of Object.values(bound?.maps ?? {})) t.dispose();
+  const maps = {
     albedo: texture(sheet, sheet.albedo, true, anisotropy),
     normal: texture(sheet, sheet.normal, false, anisotropy),
     orm: texture(sheet, sheet.orm, false, anisotropy),
   };
+  bound = { sheet, maps };
   return maps;
 }
 
@@ -100,7 +107,8 @@ export function applySheet(root: Object3D, sheet: Sheet | null, anisotropy = 1):
 }
 
 /**
- * The viewer's toggle: paint the sheet in the worker (once per size) and bind it, or unbind it.
+ * The viewer's toggle: paint the model's sheet in the worker (once per asset and size; whose it
+ * is: `sheetOwner`) and bind it, or unbind it.
  * A model with nothing for the sheet (every material a texture set's, which keep their own maps)
  * skips the paint and shows the toggle off and disabled. `wanted` says whether `model` is still
  * the one shown and wanted textured, now and once the paint lands.
@@ -121,7 +129,7 @@ export async function showSheet(
   ui.textures.checked = on && !ui.textures.disabled;
   if (!ui.textures.checked) return applySheet(model, null);
   ui.status.textContent = 'Painting the trim sheet…';
-  const sheet = await trimSheet(size);
+  const sheet = await trimSheet(size, sheetOwner.get(model));
   if (wanted()) applySheet(model, sheet, anisotropy);
   ui.status.textContent = wanted() ? 'Trim sheet bound.' : '';
 }

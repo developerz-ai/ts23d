@@ -1,8 +1,9 @@
 // Ultra-high-performance tyre, local frame: axle along Y, outer sidewall toward +Y, centre at
 // the origin. LOD0: a real directional tread band — four circumferential grooves plus raked
-// shoulder slots and centre-rib sipes — meshed on a sheared grid so every groove wall lands on a
-// vertex row (crisp walls, no aliasing), and a moulded sidewall with rim protector, bead and
-// raised rings. LOD1: grooves in the lathe profile. LOD2: a plain 10-sided drum.
+// shoulder slots and centre-rib notches — meshed on a sheared grid with vertex rows and columns
+// only on the groove and slot walls (crisp walls, flat lands as single quads), and a moulded
+// sidewall with rim protector, bead and raised rings. LOD1: a plain lathed casing. LOD2: a
+// 10-sided drum.
 
 import {
   type Lod,
@@ -29,6 +30,8 @@ const GROOVE_W = 0.011;
 const GROOVE_D = 0.007;
 const SLOT_D = 0.0055;
 const SIPE_D = 0.003;
+/** Tread pitches round the tyre (LOD0). */
+const PITCHES = 24;
 
 /** Section profile (radius, y) from the inner bead round the crown to the outer bead. */
 function casing(t: TyreSize, grooves: boolean): Vec2[] {
@@ -76,29 +79,30 @@ interface Band {
   readonly f: number[];
 }
 
-/** Column positions (fraction of half-width) with a vertex on each side of every groove wall. */
+/** Column positions (fraction of half-width): the band's edges and both sides of every groove
+ *  wall. The ribs between are flat, so they need no columns of their own. */
 function columns(): number[] {
-  const out = new Set<number>();
-  for (let k = 0; k <= 16; k++) out.add(-0.86 + (1.72 * k) / 16);
+  const out = new Set<number>([-0.86, 0.86]);
   for (const g of [-0.62, -0.24, 0.24, 0.62])
     for (const d of [-1, 1]) {
       const e = g + (d * GROOVE_W) / 2 / 0.1475;
       out.add(e - 0.004);
       out.add(e + 0.004);
     }
-  return [...out].filter((w) => w >= -0.86 && w <= 0.86).sort((a, b) => a - b);
+  return [...out].sort((a, b) => a - b);
 }
 
-/** Phase samples within one tread pitch: land, slot walls (0.70–0.80), sipe (0.32–0.35). */
-const PHASES = [0, 0.16, 0.315, 0.325, 0.345, 0.355, 0.52, 0.695, 0.705, 0.795, 0.805, 0.9];
+/** Phase samples within one tread pitch: only the slot walls (0.70–0.80). The land between two
+ *  slots is one chord (≈ 13° at 24 pitches: 2 mm of sagitta on a 0.32 m tyre). */
+const PHASES = [0.695, 0.705, 0.795, 0.805];
 
 function depth(w: number, f: number, hwm: number): number {
   const aw = Math.abs(w);
   const gw = GROOVE_W / 2 / hwm;
   for (const g of [0.62, 0.24]) if (Math.abs(aw - g) < gw) return GROOVE_D;
-  if (aw > 0.62 && f > 0.7 && f < 0.8) return SLOT_D; // shoulder slots
-  if (aw > 0.24 && aw < 0.62 && f > 0.32 && f < 0.35 && aw < 0.5) return SIPE_D; // sipes
-  if (aw < 0.24 && f > 0.7 && f < 0.8 && aw > 0.08) return SIPE_D; // centre-rib notches
+  const slot = f > 0.7 && f < 0.8;
+  if (aw > 0.62 && slot) return SLOT_D; // shoulder slots
+  if (aw < 0.24 && slot) return SIPE_D; // centre-rib notches
   return 0;
 }
 
@@ -181,10 +185,7 @@ function sidewallRings(t: TyreSize, segments: number): Mesh {
       strip: 'rubber',
       caps: false,
     });
-  return merge([
-    ringAt(t.rim + t.side * 0.52, 0.0015, 0.006),
-    ringAt(t.rim + t.side * 0.78, 0.0012, 0.004),
-  ]);
+  return ringAt(t.rim + t.side * 0.52, 0.0015, 0.006);
 }
 
 export function tyre(lod: Lod, t: TyreSize): Mesh {
@@ -204,9 +205,9 @@ export function tyre(lod: Lod, t: TyreSize): Mesh {
       strip: 'rubber',
       caps: false,
     });
-  if (lod === 1) return sidewalls(t, 28, true);
-  const segs = 144;
-  return merge([casingNoTread(t, segs), treadBand(t, 64), sidewallRings(t, segs)]);
+  if (lod === 1) return sidewalls(t, 20, false);
+  const segs = 64;
+  return merge([casingNoTread(t, segs), treadBand(t, PITCHES), sidewallRings(t, 48)]);
 }
 
 /** LOD0 casing: sidewalls and shoulders up to the tread band's edges. */

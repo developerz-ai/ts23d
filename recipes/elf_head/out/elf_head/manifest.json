@@ -20,14 +20,14 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    100140,
-    23440,
-    3352
+    70630,
+    18968,
+    3112
   ],
   "drawCalls": [
-    4,
-    4,
-    3
+    5,
+    5,
+    5
   ],
   "pivots": [
     {
@@ -45,6 +45,10 @@
     {
       "name": "face",
       "parent": null
+    },
+    {
+      "name": "face_finish_skin",
+      "parent": "face"
     }
   ],
   "emitters": [],
@@ -56,9 +60,9 @@
       "to": "head",
       "kind": "socket",
       "at": [
-        0.0721,
-        0.0321,
-        0.4304
+        0.0717,
+        0.0326,
+        0.43
       ]
     },
     {
@@ -67,9 +71,9 @@
       "to": "head",
       "kind": "socket",
       "at": [
-        0.0721,
-        -0.0321,
-        0.4304
+        0.0717,
+        -0.0326,
+        0.43
       ]
     }
   ],
@@ -98,15 +102,15 @@
     }
   ],
   "real": {
-    "length": 0.29,
-    "width": 0.491,
-    "height": 0.559
+    "length": 0.283,
+    "width": 0.316,
+    "height": 0.573
   },
   "measures": [
     {
       "label": "eye spacing (pupil to pupil)",
       "spec": 0.064,
-      "measured": 0.06407599989324808,
+      "measured": 0.06502692680805922,
       "source": "interpupil 0.278 H (human 0.265 × 1.05) × 0.23 m"
     }
   ],
@@ -114,6 +118,14 @@
     "recipes/elf_head/README.md (design dossier: proportions, exaggerations, palette)",
     "docs/research/head-analysis.md (human anchor ratios, Lee Perry-Smith scan, CC BY 3.0)"
   ],
+  "weather": {
+    "dust": {
+      "target": 0.3,
+      "actual": 0.3,
+      "eligible": "up-facing",
+      "area": 0.0686
+    }
+  },
   "qa": {
     "pass": true,
     "findings": []

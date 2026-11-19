@@ -5,6 +5,7 @@
 //   underline the deep chest (brisket at H − depth, the elbow level with it), rising to the tucked
 //             waist (`build.tuck` = abdomen depth ÷ chest depth) in front of the thigh
 //   legs      creature-quadruped-legs.ts; neck from the chest up-forward; tail from the croup
+//   hump      `build.topline`: masses raised over the back (a bear's shoulder hump)
 // Wings: a raised bat/dragon wing, planar, from the withers.
 
 import type { Vec3 } from '../core/index.ts';
@@ -50,7 +51,12 @@ export function quadrupedBones(s: CreatureSpec): Bones {
   const tailRoot: Vec3 = [xh - 0.1 * T, 0, tailZ];
   const r = z.limbR;
   const coat = s.coat ?? ((s.surface ?? 'fur') === 'fur' ? 0.02 : 0);
-  const frame: LegFrame = { xw, xh, T, H, D, y: W * 0.34, r, fur: coat };
+  const { hock, heel } = s.build ?? {};
+  const frame: LegFrame = {
+    ...{ xw, xh, T, H, D, y: W * (s.build?.track ?? 0.34), r, fur: coat },
+    ...(hock !== undefined ? { hock } : {}),
+    ...(heel !== undefined ? { heel } : {}),
+  };
   const legs = [
     foreLeg(z.stance, frame, footPlan(s, z.stance, 'fore')),
     hindLeg(z.stance, frame, footPlan(s, z.stance, 'hind')),
@@ -63,7 +69,7 @@ export function quadrupedBones(s: CreatureSpec): Bones {
   // Bones first (creature-muscles.ts lays the muscles over them): the ribcage a deep, narrow
   // superellipsoid (exponent 2.5: flat-sided like ribs under skin, not a barrel), the loin a
   // slimmer tucked ellipsoid, the pelvis a block under the croup. Tight blends (creature-body.ts).
-  const trunk = [
+  const trunk: Bones['trunk'][number][] = [
     // Ribcage: pitched so the sternum runs forward-down and the front-top stays clear for the
     // neck to rise out of.
     {
@@ -83,6 +89,22 @@ export function quadrupedBones(s: CreatureSpec): Bones {
       power: 2.2,
     },
   ];
+  // Raised masses on the back (`build.topline`): each stands `rise` over the plain topline at
+  // its place, sunk into the trunk under it, after the three bones so their indices hold.
+  const topAt = (x: number): number =>
+    x >= xw - 0.5 * T
+      ? dip + ((H - dip) * (x - (xw - 0.5 * T))) / (0.5 * T)
+      : croup + ((dip - croup) * (x - xh)) / (xw - 0.5 * T - xh);
+  for (const p of s.build?.topline ?? []) {
+    const x = xh + p.at * (xw - xh);
+    const rz = Math.max(2.2 * p.rise * H, 0.18 * D);
+    // Blended over its own rise: it flows into the back where the trunk's bones stay crisp.
+    trunk.push({
+      at: [x, 0, topAt(x) + p.rise * H - rz],
+      r: [((p.span ?? 0.3) * T) / 2, ((p.width ?? 0.6) * W) / 2, rz],
+      blend: 1.2 * p.rise * H,
+    });
+  }
   const neckEnd = head.atlas;
   const neck = tube(
     [

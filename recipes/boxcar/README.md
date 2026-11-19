@@ -76,3 +76,19 @@ and should be checked against the *Railroad Prototype Cyclopedia* vol. 17 or an 
 The model weighs 23.5 t: roof (3 mm sheet), underframe (12 mm channel/plate), framing (8 mm),
 truck castings (25 mm), wheels (30 mm web), reservoir/cylinder (6 mm) are hollow `shell`s; the
 sheathing is timber at 600 kg/m³.
+
+## Wear (`wear.ts`)
+Thirty years on the road, all of it in vertex colour plus a few thin decals, so every LOD and
+livery keeps it. The paint slot stores a tone (colour ÷ chip), so paint only loses value: the car
+is faded a step under the chip and a renewed board group (or single plank) is simply back at it.
+- Road grime rising from the rails: nearly opaque on the sill, ragged edge about a metre up.
+- Board groups (0.6 m bands) step lighter or darker; three renewed planks a side at the chip.
+- Rust at the post feet and along the sill; soot and seam rust on the roof; brown rail dust on
+  the trucks, underframe and brake gear.
+- Rust runs (LOD0/1): long ones down the door posts and under the top door guide, short ones
+  under the side plate, the bottom door track and the rivets.
+- LOD2 keeps the grime in the paint and carries the Howe-truss posts, diagonals and the door
+  frame as shadow-toned flat strips seated in the boards.
+The diagonal braces stand 30 mm proud of the boards (they were 65 mm): the road name stencilled
+across them broke up at three-quarter views. The posts keep their 70 mm, as on the car.
+Door hardware: handle, hasp with staple and seal pin, placard board with a car card.

@@ -23,16 +23,24 @@ M-type metal. The glowing crystals (`#3fe0d0`) are a game convention, not scienc
 `sdf({ field, resolution: ctx.pick([0.17, 0.38, 0.95]) })` over one field:
 1. An ellipsoid core plus three smooth-unioned ellipsoid lobes.
 2. `valueNoise` displacement: 0.65 m at a 2.8 m feature size, plus 0.12 m pitting at 0.8 m.
-3. Twelve fracture half-spaces, smooth-max'd (k = 0.12 m), which give the angular facets.
+3. Seven fracture half-spaces reaching 75–90 % of the body, smooth-max'd (k = 0.12 m): they facet
+   the lumps instead of squaring the sides. Lobes scale with the variant's size (variant c is an
+   elongated ~2:1 body). A fine 0.3 m grain octave at LOD0.
 4. Nine craters. Each is a radial rim bump that displaces the surface, then a smooth-subtracted
    bowl sphere. All shape draws come from `ctx.rng.fork('shape')`, so the shape is identical at
    every LOD.
-5. Colour per vertex: blended tone noise, dust where n·z > 0.55, ore veins where |noise| < 0.05
-   (teal near crystals), dark crater floors.
-6. `bakeAo` (16 / 8 rays at LOD0 / LOD1) for crevice darkening.
+   Boulders (ejecta that fell back) settle in the floors of the larger craters.
+5. Mining workings at each crystal site: three drill bores cut into the field and heaps of tailings.
+6. Colour per vertex over the project regolith strip (`regolith.ts`: cobbles, dusty matrix,
+   nickel-iron flecks, low contrast so the SDF's box-projected UVs never show their axis switches):
+   stony grey-brown one step above carbonaceous black (so craters read in the hero), dust where
+   n·z > 0.55, soft-edged ore veins wider than a cell (they blend across vertices; dropped at LOD2),
+   teal near crystals, paler tailings round the workings, dark old crater floors, and one fresh
+   crater with a bright floor and ejecta rays.
+7. `bakeAo` (16 / 8 rays at LOD0 / LOD1) for crevice darkening; LOD2 is darkened to match.
 
-The bottom is clipped flat at z = 0 by the SDF bounds, so the rock rests on the ground (or in a
-field). The core sits below every variant's z radius, so the clip always happens.
+A free body: no flat cut. Each LOD rests on its own lowest vertex, sunk 3 cm into z = 0. The SDF
+bounds follow the body's extent per axis (lobes included) instead of a cube.
 
 ## Parts the engine needs
 `rock` (the mass; also usable as a collider at LOD2), `ore_crystals` (glow), interact sockets

@@ -33,7 +33,8 @@ export const orc_head = defineAsset({
   real: {
     // 0.41 m: the anatomy push (muzzle 6 % H, chin 7.5 % H forward) and the full beard.
     length: 0.41,
-    width: 0.8,
+    // 0.73 m across the pauldrons, seated on the deltoids (0.8 m when they hung beside them).
+    width: 0.73,
     height: 0.62,
     measures: [
       {
@@ -45,10 +46,10 @@ export const orc_head = defineAsset({
       },
     ],
   },
-  // LOD0 is a hero bust: the skull-stage head (≈ 65k, its eyes and ears meshed finer), plates,
-  // spikes, fur, the knot and card hair all carry detail; LOD2 keeps the silhouette and tusks.
-  // +12k / +2k over the plain bust: the three-layer card beard and the brow cards.
-  budget: { triangles: [184000, 48000, 5000] },
+  // LOD0: the skull-stage head ≈ 37k (its eyes, ears and mouth meshed finer), the card beard and
+  // brows ≈ 17k, plates, spikes, fur and the knot ≈ 41k; LOD2 keeps the silhouette, the tusks and
+  // the pauldrons as closed shells. Draws: skin, face-node gear, corneas, hair cards.
+  budget: { triangles: [118000, 32000, 4400], draws: 4 },
   // Ember eyes: the whole eyeball glows (dark amber sclera, bright iris).
   glow: [{ parts: ['eye_*'], color: hex('#ff7a1a'), strength: 2.5 }],
   // Measured facial proportions against the declared orc bands (README "Proportions"), every LOD.
@@ -65,7 +66,11 @@ export const orc_head = defineAsset({
     }),
   ],
   // The eyeballs' cornea: a clear lacquer over the painted iris (KHR_materials_clearcoat).
-  finishes: { cornea: { clearcoat: 1, clearcoatRoughness: 0.04 } },
+  // The cornea's lacquer, and the hide: the pore strip's roughness under a dull green sheen.
+  finishes: {
+    cornea: { clearcoat: 1, clearcoatRoughness: 0.04 },
+    skin: { sheen: { colour: '#5c6a3c', roughness: 0.5 } },
+  },
   art: { focal: 'head' },
   // Intended creases (QA `connections` skips them): one small region per sculpted fold, from the
   // landmarks and geometry that sculpt it (creases.ts) — never an area.

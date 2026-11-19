@@ -5,7 +5,8 @@
 // into the Achilles tendon — plus the bony landmarks (elbow point, accessory carpal pad, stifle,
 // calcaneus). Digits per foot come from the family (creature-family.ts). Sizes are multiples of
 // the allometric limb radius `r`; `fur` thickens the masses that carry long hair (back of the
-// forearm, the thigh).
+// forearm, the thigh). `build.hock` sets the hind cannon's length, `build.heel` where the hock
+// stands behind the hip (0: a bear's heel under its hip).
 
 import type { Vec3 } from '../core/index.ts';
 import type { Limb, Muscle } from './creature-bones.ts';
@@ -54,6 +55,9 @@ export interface LegFrame {
   readonly r: number;
   /** Long hair over the masses, metres (0 for short coats). */
   readonly fur: number;
+  /** `build.hock` (hock height ÷ H) and `build.heel` (hock behind the hip ÷ T), when given. */
+  readonly hock?: number;
+  readonly heel?: number;
 }
 
 export function foreLeg(stance: Stance, f: LegFrame, digits: FootPlan): Limb {
@@ -99,7 +103,12 @@ export function hindLeg(stance: Stance, f: LegFrame, digits: FootPlan): Limb {
   const top = topK * H;
   const Hp: Vec3 = [xh + 0.03 * T, y, H - 0.38 * D];
   const K: Vec3 = [xh + 0.17 * T, y * 1.12, 0.5 * H];
-  const Hk: Vec3 = [xh - 0.1 * T, y, hockK * H];
+  // The hock stands 0.13 T behind the hip unless the build says where (`heel` 0: under the hip).
+  const Hk: Vec3 = [
+    f.heel === undefined ? xh - 0.1 * T : Hp[0] - f.heel * T,
+    y,
+    (f.hock ?? hockK) * H,
+  ];
   const [sx, sy] = footHalf(stance, r);
   const foot: Vec3 = [Hk[0] + (stance === 'plantigrade' ? 0.06 : 0.035) * T, y * 0.97, 0];
   const P: Vec3 = [foot[0] - sx * 0.3, foot[1], top];

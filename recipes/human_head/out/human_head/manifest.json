@@ -20,14 +20,14 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    100764,
-    28180,
-    3636
+    64994,
+    19460,
+    3044
   ],
   "drawCalls": [
-    4,
-    4,
-    3
+    5,
+    5,
+    5
   ],
   "pivots": [
     {
@@ -45,6 +45,10 @@
     {
       "name": "face",
       "parent": null
+    },
+    {
+      "name": "face_finish_skin",
+      "parent": "face"
     }
   ],
   "emitters": [],
@@ -99,14 +103,14 @@
   ],
   "real": {
     "length": 0.268,
-    "width": 0.558,
-    "height": 0.566
+    "width": 0.342,
+    "height": 0.581
   },
   "measures": [
     {
       "label": "eye spacing (pupil to pupil)",
       "spec": 0.063,
-      "measured": 0.0626023830845952,
+      "measured": 0.06260299310088158,
       "source": "adult interpupillary distance mean 63.4 mm (Dodgson 2004); ANSUR II male 64.6 mm"
     }
   ],
@@ -114,6 +118,14 @@
     "recipes/human_head/README.md (design dossier: proportions, palette, references)",
     "docs/research/head-analysis.md (human ratios measured on the Lee Perry-Smith scan, CC BY 3.0)"
   ],
+  "weather": {
+    "dust": {
+      "target": 0.3,
+      "actual": 0.3,
+      "eligible": "up-facing",
+      "area": 0.0581
+    }
+  },
   "qa": {
     "pass": true,
     "findings": []

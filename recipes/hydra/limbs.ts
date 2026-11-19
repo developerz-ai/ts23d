@@ -15,7 +15,8 @@ import {
 } from '@developerz.ai/ts23d';
 import { clawHorn, hornTube } from '../_lib/creature/horn.ts';
 import { NECK_IDS, neckTop } from './anatomy.ts';
-import { C, lerp, noise3 } from './skin.ts';
+import { pinKeratin } from './material.ts';
+import { C, lerp, muddy, noise3 } from './skin.ts';
 import { stamp } from './stamp.ts';
 
 type Kit = Parameters<NonNullable<BodyPlanDefinition['detail']>>[2];
@@ -30,16 +31,16 @@ interface FootDef {
 }
 
 const FEET: readonly FootDef[] = [
-  { chain: 'fore_l', bone: 'fore_l_2', at: [1.2, 1.05, 0], yaw: 0.28, size: 1.12 },
-  { chain: 'fore_r', bone: 'fore_r_2', at: [1.2, -1.05, 0], yaw: -0.28, size: 1.12 },
-  { chain: 'hind_l', bone: 'hind_l_2', at: [-0.92, 1.14, 0], yaw: 0.34, size: 1.26 },
-  { chain: 'hind_r', bone: 'hind_r_2', at: [-0.92, -1.14, 0], yaw: -0.34, size: 1.26 },
+  { chain: 'fore_l', bone: 'fore_l_2', at: [1.2, 0.89, 0], yaw: 0.24, size: 1.22 },
+  { chain: 'fore_r', bone: 'fore_r_2', at: [1.2, -0.89, 0], yaw: -0.24, size: 1.22 },
+  { chain: 'hind_l', bone: 'hind_l_2', at: [-0.92, 1.05, 0], yaw: 0.3, size: 1.34 },
+  { chain: 'hind_r', bone: 'hind_r_2', at: [-0.92, -1.05, 0], yaw: -0.3, size: 1.34 },
 ];
 
 const TOES = [-0.72, -0.34, 0.02, 0.36, 0.78];
 
 function footMesh(f: FootDef, lod: number): { foot: Mesh; claws: Mesh } {
-  const res = [0.016, 0.036, 0.08][lod] ?? 0.08;
+  const res = [0.018, 0.036, 0.08][lod] ?? 0.08;
   const skin = lerp(C.back, C.ochre, 0.45);
   const k = f.size;
   const dir = (a: number): Vec3 => [Math.cos(f.yaw + a), Math.sin(f.yaw + a), 0];
@@ -84,19 +85,27 @@ function footMesh(f: FootDef, lod: number): { foot: Mesh; claws: Mesh } {
         blend: 0.07,
       },
     );
+    const base: Vec3 = [tip[0] - d[0] * 0.03 * k, tip[1] - d[1] * 0.03 * k, 0.044 * k];
+    const claw = hornTube(
+      clawHorn({
+        base,
+        dir: [d[0], d[1], 0.3],
+        down: [0, 0, -1],
+        length: 0.2 * k,
+        radius: 0.027 * k,
+        segments: [8, 4, 2][lod] ?? 2,
+        curl: 58,
+        colors: [C.claw, C.horn, C.hornMid],
+      }),
+      [8, 5, 3][lod] ?? 3,
+    );
+    // Claws dig: mud packed at the root, the tips scraped back to bare keratin.
     clawParts.push(
-      hornTube(
-        clawHorn({
-          base: [tip[0] - d[0] * 0.03 * k, tip[1] - d[1] * 0.03 * k, 0.044 * k],
-          dir: [d[0], d[1], 0.3],
-          down: [0, 0, -1],
-          length: 0.2 * k,
-          radius: 0.027 * k,
-          segments: [8, 4, 2][lod] ?? 2,
-          curl: 58,
-          colors: [C.claw, C.horn, C.hornMid],
-        }),
-        [8, 5, 3][lod] ?? 3,
+      pinKeratin(
+        recolour(claw, (c, p) => muddy(c, [p[0], p[1], p[2] + 0.05], 0)),
+        base,
+        d,
+        0.2 * k,
       ),
     );
   });
@@ -110,9 +119,22 @@ function footMesh(f: FootDef, lod: number): { foot: Mesh; claws: Mesh } {
     blend: 0.03,
   });
   return {
-    foot: sculpt({ edits, resolution: res, color: skin }),
+    foot: recolour(sculpt({ edits, resolution: res, color: skin }), (c, p) => muddy(c, p, 0)),
     claws: merge(clawParts),
   };
+}
+
+/** A mesh with each vertex colour passed through `f` (colour, position). */
+function recolour(m: Mesh, f: (c: Vec3, p: Vec3) => Vec3): Mesh {
+  const colors = new Float32Array(m.colors);
+  for (let i = 0; i < colors.length / 3; i++) {
+    const c = f(
+      [m.colors[i * 3] ?? 0, m.colors[i * 3 + 1] ?? 0, m.colors[i * 3 + 2] ?? 0],
+      [m.positions[i * 3] ?? 0, m.positions[i * 3 + 1] ?? 0, m.positions[i * 3 + 2] ?? 0],
+    );
+    [colors[i * 3], colors[i * 3 + 1], colors[i * 3 + 2]] = c;
+  }
+  return { ...m, colors };
 }
 
 export function hydraFeet(ctx: BuildContext, kit: Kit): void {
@@ -131,33 +153,42 @@ export function hydraFeet(ctx: BuildContext, kit: Kit): void {
 const BASE_RADIUS = 1.75;
 
 const spikeUnit = (segments: number): Mesh =>
-  lathe({
-    profile: [
-      [1.3, -0.3],
-      [1.75, 0.02],
-      [1.5, 0.3],
-      [1.1, 0.6],
-      [0.7, 0.86],
-      [0.42, 1.16],
-      [0.13, 1.8],
-      [0, 2.15],
-    ],
-    segments,
-    color: C.spine,
-  });
+  keratinUnit(
+    lathe({
+      profile: [
+        [1.3, -0.3],
+        [1.75, 0.02],
+        [1.5, 0.3],
+        [1.1, 0.6],
+        [0.7, 0.86],
+        [0.42, 1.16],
+        [0.13, 1.8],
+        [0, 2.15],
+      ],
+      segments,
+      color: C.spine,
+    }),
+    2.15,
+  );
+
+/** A unit piece standing on +Z, keratin UVs from its root to its tip. */
+const keratinUnit = (m: Mesh, height: number): Mesh => pinKeratin(m, [0, 0, 0], [0, 0, 1], height);
 
 const scuteUnit = (segments: number): Mesh =>
-  lathe({
-    profile: [
-      [1.3, -0.4],
-      [1.35, 0],
-      [1.05, 0.3],
-      [0.6, 0.5],
-      [0, 0.62],
-    ],
-    segments,
-    color: lerp(C.saddle, C.back, 0.5),
-  });
+  keratinUnit(
+    lathe({
+      profile: [
+        [1.3, -0.4],
+        [1.35, 0],
+        [1.05, 0.3],
+        [0.6, 0.5],
+        [0, 0.62],
+      ],
+      segments,
+      color: lerp(C.saddle, C.back, 0.5),
+    }),
+    1.6,
+  );
 
 /** How far the real skin drops below a seat at the rim of its base: a fillet is not a round tube. */
 function sagUnderRim(kit: Kit, chain: string, q: SurfacePoint, rim: number): number {
@@ -213,9 +244,10 @@ function rowOn(
 export function hydraArmour(ctx: BuildContext, kit: Kit): void {
   const lod = ctx.lod;
   const spike = spikeUnit([8, 5, 3][lod] ?? 3);
-  const scute = scuteUnit([8, 5, 3][lod] ?? 3);
+  const scute = scuteUnit([6, 5, 3][lod] ?? 3);
   const pieces: (Mesh | null)[] = [];
-  const spikeSize = (r: number, u: number): number => (0.05 + r * 0.17) * (1 - 0.35 * u);
+  // Big dorsal spines: they carry the back's silhouette from the 3/4 view.
+  const spikeSize = (r: number, u: number): number => (0.065 + r * 0.2) * (1 - 0.35 * u);
   const dorsal = lod === 2 ? 0.26 : lod === 1 ? 0.09 : 0.048;
   pieces.push(
     rowOn(kit, 'body', spike, {
@@ -229,7 +261,7 @@ export function hydraArmour(ctx: BuildContext, kit: Kit): void {
   );
   pieces.push(
     rowOn(kit, 'tail', spike, {
-      from: 0.15,
+      from: 0.2,
       to: 0.8,
       step: dorsal * 0.95,
       angle: 0,
@@ -240,17 +272,17 @@ export function hydraArmour(ctx: BuildContext, kit: Kit): void {
   NECK_IDS.forEach((id, k) => {
     pieces.push(
       rowOn(kit, id, spike, {
-        from: 0.28,
+        from: 0.32,
         to: 0.96,
         step: dorsal * 1.45,
         angle: (u) => neckTop(k, u),
-        size: (r, u) => (0.03 + r * 0.17) * (1 - 0.3 * u),
+        size: (r, u) => (0.036 + r * 0.19) * (1 - 0.3 * u),
         sink: 0.24,
       }),
     );
   });
   if (lod === 0) {
-    const scuteSize = (r: number, u: number): number => (0.024 + r * 0.05) * (1 - 0.3 * u);
+    const scuteSize = (r: number, u: number): number => (0.03 + r * 0.065) * (1 - 0.3 * u);
     for (const angle of [0.42, 0.95]) {
       for (const a of [angle, Math.PI * 2 - angle]) {
         pieces.push(

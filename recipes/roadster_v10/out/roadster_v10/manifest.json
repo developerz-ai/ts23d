@@ -21,14 +21,9 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    908952,
-    77894,
-    5532
-  ],
-  "trianglesCompiled": [
-    909070,
-    77902,
-    5532
+    156754,
+    23140,
+    3030
   ],
   "drawCalls": [
     30,
@@ -308,13 +303,13 @@
     {
       "label": "body width (no mirrors)",
       "spec": 1.94,
-      "measured": 1.9434372186660767,
+      "measured": 1.943323016166687,
       "source": "README: class envelope 1.85–1.95 m"
     },
     {
       "label": "overall length",
       "spec": 4.46,
-      "measured": 4.451879978179932,
+      "measured": 4.4518537521362305,
       "source": "README"
     }
   ],

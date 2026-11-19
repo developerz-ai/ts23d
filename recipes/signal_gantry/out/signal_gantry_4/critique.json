@@ -1,63 +1,119 @@
 {
   "asset": "signal_gantry_4",
   "reviewer": "agent",
-  "overall": 7,
+  "overall": 7.4,
   "scores": {
     "silhouette": {
       "score": 8,
-      "reason": "Four-doll version of the lattice gantry spanning ~18 m: reads instantly; four dolls evenly spaced along the walkway.",
+      "reason": "Lattice gantry over four roads: latticed posts on footings, knee braces, timber walkway with galvanised handrail, dolls with lower-quadrant arms and spectacles; reads from every view.",
       "fixes": [
-        "ladder up one post so the access reads in silhouette"
+        "make the access ladder read in SIDE (it hides inside the post lattice): stand it 0.2 m off the post face"
       ]
     },
     "proportions": {
       "score": 8,
-      "reason": "1.1 x 17.9 x 13.1 m; span and post height pass the dossier measures.",
+      "reason": "Span, post height and arm sizes pass the dossier measures; walkway at a believable working height.",
       "fixes": [
-        "a central support or deeper girder: an 18 m span with this girder depth reads light against real four-track gantries"
+        "check doll height above the walkway against the dossier photos (they read slightly tall)"
       ]
     },
     "materials": {
-      "score": 6,
-      "reason": "Same as the two-doll gantry: near-uniform black lattice, timber walkway, red arms.",
+      "score": 7,
+      "reason": "Black lattice now carries rust-brown streaks and lighter worn edges, handrail is galvanised grey, walkway timber, arms red with white bands. The black paint is still one value across sun and shade faces.",
       "fixes": [
-        "sun-faded lighter tops on the lattice members",
-        "galvanised grey handrail"
+        "sun-faded, slightly lighter paint on the up-facing lattice members"
       ]
     },
     "detail": {
       "score": 7,
-      "reason": "Lattice webs, battens, knee braces, handrails, four dolls with spectacles and lamps.",
+      "reason": "Raking.png: lattice webs, battens, knee braces, handrails, finials, lamp cases, balance weights. No operating rods or wires running down to the ground.",
       "fixes": [
-        "operating rods/wires down the posts to the ground",
+        "operating rods/wires down the posts to ground level",
         "rivet heads at lattice nodes"
       ]
     },
     "wear": {
-      "score": 5,
-      "reason": "Clean at hero distance; no rust streaks or soot.",
+      "score": 6,
+      "reason": "Rust streaks on the posts and splash on the footings now read; no soot on the girder underside above the tracks, walkway boards unworn.",
       "fixes": [
-        "soot on the girder underside above each track",
-        "rust streaks below the lattice nodes"
+        "soot band on the girder underside above each road",
+        "worn, lighter tread path along the walkway boards"
       ]
     },
     "lod": {
-      "score": 7,
-      "reason": "FAR LOD2 keeps frame, walkway, dolls and arms; latticed posts become solid black boxes.",
+      "score": 8,
+      "reason": "FAR LOD2 keeps the posts as open frames (no longer solid boxes), the girder, walkway, dolls and arms; the switch is hard to see at game distance.",
       "fixes": [
-        "LOD2 posts as open frames instead of solid boxes"
+        "keep the handrail at LOD2 as one quad strip"
       ]
     },
     "technical": {
       "score": 8,
-      "reason": "QA PASS (rebuilt today): 12.3k / 5.54k / 1.34k tris, 10 / 10 / 10 draws (arms pivot).",
+      "reason": "QA PASS: 12.2k / 5.3k / 1.24k tris, 10 / 10 / 10 draws (arms pivot as moving parts).",
       "fixes": [
         "merge the static lattice and walkway into one draw"
       ]
     }
   },
   "renders": {
-    "hero.png": "0e50c3fa572c910c8a471f4c1b6a1525b3646b1efce93dc415a228ef634dfa9e",
-    "sheet.png": "fbe1910da292e448155b448983320a20a9f7ad6f52aa8ab57e90012417c757f5"
+    "hero.png": "54731ea832dc00b0f51ee5f3d82eae7b22a79a2d86d8301ae548d45f6e0750bb",
+    "sheet.png": "d9b0fcd0f67052d86c0908dd8300b219523077228a43952509eaeec307a80610",
+    "raking.png": "ddf491f23c7e1f38d0e39447bab85010d14f57d9b977a8b782b0eaa6e0d8a554",
+    "raking_detail.png": "d6a7278d87da33162687aadcd83d5793fcb525d6df7553690f838dfb34fe9968",
+    "lods.png": "561c3013f58516bc7b54e2591738f53137d1f017a99860d4338571dd07061157",
+    "silhouette.png": "f8cef45a57ff2258b2b83546ac1580ca1f357f8cd43d8f531e540032997bd8b7",
+    "value.png": "94c7d6066d050e1bf040c38e00f1b01395d369408675648069a3564b2a80ab89",
+    "detail.png": "d77fd8d6a2142f140775b22349ab18c094a16a9f9afbf326fed421caeeb5924d"
+  },
+  "metrics": {
+    "silhouette": [
+      {
+        "view": "front",
+        "iou": 0.729
+      },
+      {
+        "view": "side",
+        "iou": 0.832
+      },
+      {
+        "view": "3/4",
+        "iou": 0.909
+      }
+    ],
+    "focal": {
+      "peakPart": "walkway",
+      "peak": [
+        251,
+        200
+      ],
+      "focalShare": 0,
+      "focalArea": 0,
+      "top": [
+        {
+          "part": "walkway",
+          "share": 0.285
+        },
+        {
+          "part": "post_r",
+          "share": 0.215
+        },
+        {
+          "part": "footing_r",
+          "share": 0.169
+        }
+      ],
+      "declared": []
+    },
+    "rest": {
+      "share": 0.099,
+      "spread": 0.514,
+      "min": 0.25
+    },
+    "shape": {
+      "acuteShare": 0.382,
+      "straightShare": 0.825,
+      "taper": -0.014,
+      "shape": "stable"
+    }
   }
 }

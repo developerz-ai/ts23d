@@ -1,61 +1,119 @@
 {
   "asset": "rts_faction",
   "reviewer": "agent",
-  "overall": 6.6,
+  "overall": 7.4,
   "scores": {
     "silhouette": {
-      "score": 7,
-      "reason": "Barracks, a squad of soldiers, a tank and a crystal deposit on one ground plate: the roster reads as one faction (bone/team red/amber), and every unit is identifiable in the 3/4 views. As a composition it is a line-up, not a base layout.",
+      "score": 8,
+      "reason": "Barracks, a squad formed up at the gate, the tank parked on its path, the crystal deposit, a low perimeter wall, sandbags, crates and drums on one plate: reads as a faction compound from every view.",
       "fixes": [
-        "arrange the units with intent (squad in formation at the gate, tank parked on its path) and add a perimeter element such as a low wall or fence segment"
+        "a gate gap with two posts in the perimeter wall so the path leads somewhere"
       ]
     },
     "proportions": {
       "score": 8,
-      "reason": "30 x 25 x 11.2 m plate; all assets come in at true scale through ctx.use, soldiers fit the 3.5 m gate, tank ~3 soldiers long.",
+      "reason": "30 x 25 x 11.2 m; every asset at true scale through ctx.use, soldiers fit the 3.5 m gate, tank on a lane wide enough for it.",
       "fixes": [
-        "scale check against a real compound: a 30 x 25 m plate is tight for a barracks plus a tank park"
+        "widen the tank lane ~1 m so the track ruts do not touch the curb"
       ]
     },
     "materials": {
-      "score": 6,
-      "reason": "Each asset keeps its strips; the ground plate meant as salt-flat sand reads as light wood planks (straight grain stripes) in hero.png, and the two paths are barely distinguishable from it.",
+      "score": 7,
+      "reason": "Paving reads as stone flags, gravel paths contrast in value and roughness, the sub-assets keep their materials. The paving is flat with little tone variation and the wall caps are the same beige as the paving.",
       "fixes": [
-        "ground plate on a sand/soil strip (not one with straight grain) with gravel paths that contrast in value and roughness (rts_faction.ts)"
+        "per-flag value jitter on the paving",
+        "darker coping stone on the perimeter wall"
       ]
     },
     "detail": {
-      "score": 5,
-      "reason": "Hall, squad, tank and deposit on an empty plate with two paths; nothing ties them together (no crates, fuel drums, fences, signage, tyre tracks).",
+      "score": 7,
+      "reason": "Crates, fuel drums, sandbag lines, track ruts, perimeter wall; the composed assets carry their own detail. The open plate areas between them are still empty.",
       "fixes": [
-        "props between assets: crates, fuel drums, a sandbag line",
-        "tyre tracks from the tank park to the gate"
+        "a weapons rack or a signpost by the gate",
+        "a puddle and a drain grate on the paving"
       ]
     },
     "wear": {
-      "score": 6,
-      "reason": "Inherits each asset's weather(); the plate itself is clean, with no tracks, puddles or trampled ground around the gate.",
+      "score": 7,
+      "reason": "Track ruts on the tank lane, trampled darker gravel at the gate, the sub-assets weathered; the paving itself is clean.",
       "fixes": [
-        "grime() trampled darker ground at the gate and track ruts behind the tank"
+        "grime() dirt along the wall foot and oil stains under the tank"
       ]
     },
     "lod": {
-      "score": 7,
-      "reason": "FAR LOD2 (3.66k tris) keeps every asset, colour block and the team red; the tank loses its wheels to a belt slab and soldiers become blocky.",
+      "score": 8,
+      "reason": "lods.png: LOD2 (3.95k) keeps every asset, colour block, the paths, wall and props; the tank and soldiers simplify but hold outline and team red.",
       "fixes": [
-        "keep the tank wheel discs at LOD2 (rts_tank running.ts) so the parked tank does not change outline"
+        "keep the tank road wheels at LOD2 (rts_tank)"
       ]
     },
     "technical": {
       "score": 7,
-      "reason": "QA PASS (rebuilt today): 143k / 31.2k / 3.66k tris, 36 / 36 / 22 draws. Fine for a showcase, but 36 draws at LOD0 is heavy for a single placed asset.",
+      "reason": "QA PASS: 144k / 34.1k / 3.95k tris, 36 / 36 / 22 draws. Fine as a showcase, but 36 draws for one placed asset is heavy and was not reduced.",
       "fixes": [
         "merge static parts across the composed assets into one body per material so LOD0 drops well below 36 draws"
       ]
     }
   },
   "renders": {
-    "hero.png": "920d81c530c7754a0c679d2110f5cec47b9c987fb14b2b69286d90cdfcec4db7",
-    "sheet.png": "1d74e0da8c9e5e019af5c05e6126d0dfb3d8c632df0243c8b80573433224bea7"
+    "hero.png": "67eb1cd48d46fe164491819cbdd61e3ddb1699c704ba6fe9d6c3f8c51f67388d",
+    "sheet.png": "7670492097e51c7f30a5fc8b2f0ee3bc1db2351c6dc3e8255def93e869c48e8c",
+    "raking.png": "9adf81e7576ae8206c237470314c62369d4331217c788644a5cde2ab0f27e852",
+    "raking_detail.png": "870d8ae6ee82ca6c94dec59452c4cbceba2aae95ccb4c31eab2caab1c189e78e",
+    "lods.png": "f74bc4558fe2a5d28551caf7d2570705a96203989220a3d28f853e17c2ff066b",
+    "silhouette.png": "b436f4613169ed2affc56e7281821d0c262d1db44c429f014c32cc8bee7df49d",
+    "value.png": "f9df89a13c81e3d4cfe7c2a1bc359ec042e3c5ac3b1722a61d5e1d36604f9bc6",
+    "detail.png": "363d9510b51f2f76929bfe999fb04065071ea69e44c60c3e37664f21fc41c947"
+  },
+  "metrics": {
+    "silhouette": [
+      {
+        "view": "front",
+        "iou": 0.982
+      },
+      {
+        "view": "side",
+        "iou": 0.981
+      },
+      {
+        "view": "3/4",
+        "iou": 0.992
+      }
+    ],
+    "focal": {
+      "peakPart": "tank_hull_dress",
+      "peak": [
+        367,
+        306
+      ],
+      "focalShare": 0,
+      "focalArea": 0,
+      "top": [
+        {
+          "part": "ground",
+          "share": 0.285
+        },
+        {
+          "part": "tank_hull_dress",
+          "share": 0.119
+        },
+        {
+          "part": "tank_hull",
+          "share": 0.11
+        }
+      ],
+      "declared": []
+    },
+    "rest": {
+      "share": 0.406,
+      "spread": 0.785,
+      "min": 0.25
+    },
+    "shape": {
+      "acuteShare": 0.455,
+      "straightShare": 0.564,
+      "taper": 0.786,
+      "shape": "aggressive"
+    }
   }
 }

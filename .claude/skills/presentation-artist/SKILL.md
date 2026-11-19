@@ -17,16 +17,16 @@ image, or adding lamps/headlights to an asset.
 ## Workflow
 | # | Presentation stage | ts23d | Exit |
 |---|---|---|---|
-| 1 | Neutral look first: orthographic views on a metre grid | `bun run t3d shot recipes/x/x.ts --out renders` → READ `sheet.png` | silhouette right in six views |
+| 1 | Neutral look first: orthographic views on a metre grid | `bun run t3d shot recipes/x/x.ts --out renders` → READ `sheet.png` (flat-shaded in the hero's base colour: strip mean albedo × vertex colour, glass see-through, cutout leaf/fur cards alpha-tested to their real silhouette; no texture detail, shadows, AO or emission) | silhouette right in six views; base colours agree with `hero.png` |
 | 2 | Hero camera: 3/4 front, slightly above eye level | `bun run t3d hero … --az -35 --el 18 --fov 30 --size 1600x900` (defaults) | asset fills ~60–80 % of frame width *typical* |
-| 3 | Pick the view that sells the design | vary `--az` (front-left 3/4 default; rear 3/4 for engines/exhausts), `--el` low for heroic scale, high for top detail | focal part faces camera |
+| 3 | Pick the view that sells the design | vary `--az` (front-left 3/4 default; rear 3/4 for engines/exhausts), `--el` low for heroic scale, high for top detail; then record it in the recipe: `hero: { azDeg, elDeg, fovDeg }`, or for a place a fixed viewpoint `hero: { eye, target, fovDeg }` (metres, asset frame). `t3d hero`, `bun run shots`, `review` and `critique` then use it by default; flags still win | focal part faces camera; the committed hero is that view |
 | 2b | Judge under physical light | `bun run t3d hero … --quality path --spp 64` (path tracer: sun + sky, bounces, skin diffusion, strand lobes on fur/hair cards; same camera and studio) | fur, skin, metal read as themselves; committed heroes are path traced (960×540, 16 spp) |
 | 3b | Textured parts (model-built assets) | the raster beauty, the path tracer and `sheet.png` sample the part's own albedo, normal and ORM (ADR 016); READ them to judge baked light, blotches and seams that vertex colour never shows; `t3d blender review --views turnaround` shows the base colour under studio light before the build | no baked shadow in the albedo, no visible UV seam |
 | 4 | Check values: squint / greyscale | read `hero.png`; critique rubric `materials` | distinct value groups; focal part has max contrast |
 | 5 | Relief check under grazing light | `t3d critique` → `raking.png`, `raking_detail.png` | modelled detail casts shadow; painted detail stays flat |
 | 6 | Distance check | `review/` LOD strip (`lodStrip`), `sheet.png` FAR LOD2 cell, `thumbnail` | reads at thumbnail size |
 | 7 | Machine review | `t3d review` → `review.json` warnings (exposure, tiny-in-frame, LOD popping) | no warning you cannot explain |
-| 8 | Lights the asset carries | `ctx.socket('headlamp_l', { kind: 'light', dir, data: { light: 'spot', color, intensity, range, cone } })` → KHR_lights_punctual; `glow` for emissive parts | lamps light the scene in engines |
+| 8 | Lights the asset carries | `ctx.socket('headlamp_l', { kind: 'light', dir, data: { light: 'spot', color, intensity, range, cone } })` → KHR_lights_punctual; `glow` for emissive parts (both beauty renders show the emission: colour × strength added to the surface, seen through glass tinted by it; strength above ~1.5 on a large face clips to pale yellow-white, as in an engine without bloom) | lamps light the scene in engines; glowing parts keep their hue in `hero.png` |
 | 9 | Publish | `bun run shots <name>` (refreshes committed `out/<asset>/hero.png`, `sheet.png`, `thumb.png`) | recipes gate sees current images |
 
 ## Vocabulary → measurable
@@ -36,7 +36,8 @@ image, or adding lamps/headlights to an asset.
 | Fill | lifts shadows; key:fill ratio 2:1 commercial, 4:1 portrait, 8:1 dramatic | fixed studio rig; judge shadow detail |
 | Rim | back light separating silhouette from background | not separately controllable (gap) |
 | Raking light | light at ~80° incidence to show relief | `raking.png` in critique |
-| Azimuth / elevation / FOV | camera angle from front (+X), height angle, vertical field of view | `--az`, `--el`, `--fov` |
+| Azimuth / elevation / FOV | camera angle from front (+X), height angle, vertical field of view | `--az`, `--el`, `--fov`; per asset `hero: { azDeg, elDeg, fovDeg }` |
+| Viewpoint | a camera standing at a real place, looking at a landmark | `hero: { eye, target, fovDeg }` (no auto-framing; the raster drops triangles that cross the eye plane, the path tracer does not) |
 | Framing | subject size in frame; too small = `tiny-in-frame` warning | `review.json` |
 | Exposure | no clipped whites, no crushed blacks on the subject | `review.json` exposure warning |
 | Value grouping | 3–5 clear value masses; focal part highest contrast | **planned** focal check; judge by eye |
@@ -84,7 +85,11 @@ Shipped: `t3d shot | hero | review | critique | blueprint | gaps`, `contactSheet
 `thumbnail`, `lodStrip`, `reviewPack`, light sockets → KHR_lights_punctual, `glow`,
 `pathHero` / `t3d hero --quality path` (deterministic CPU path tracer, procedural sky IBL + sun),
 `skin` / `skin_*` finishes → KHR_materials_diffuse_transmission + volume in the GLB.
-Planned: HDRI environments, glow/emission and clearcoat-only parts in the path tracer (sheen,
+`glow` emission in both beauty renders (the path tracer also lets it light its neighbours, by
+BSDF sampling: noisy for a small bright emitter at 16 spp), per-asset `hero` view.
+See-through parts dim the sun on what they hold in the raster (one shade per render, no coloured
+shadow) and cast no shadow in the path tracer.
+Planned: HDRI environments, emitters sampled as lights and clearcoat-only parts in the path tracer (sheen,
 anisotropy, iridescence are raster-only today), custom light rigs (rim control),
 turntable/animated presentation, zebra reflection renders, `photoMatch` side-by-side with
 reference photos (stub throws `T3D_NOT_IMPLEMENTED`), greyscale focal-point check.

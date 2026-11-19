@@ -15,6 +15,7 @@ import {
 import { pieceMesh, placedMesh, placePiece } from './define-part-place.ts';
 import type { BuildContext } from './definition.ts';
 import { Ts23dError } from './errors.ts';
+import { type MaterialUse, noteMaterial, trackMaterials } from './material-use.ts';
 import { type Mesh, merge } from './mesh.ts';
 import type { Lod, Motion, PartOptions, Surface } from './part.ts';
 import { createRng, type Rng } from './rng.ts';
@@ -119,7 +120,9 @@ export function definePart<P extends object>(def: PartDefinition<P>): DefinedPar
     });
   checkDefaults(def.name, def.params);
   if (def.lod) checkLodPolicy(def.name, def.lod);
-  const cache = new Map<string, { pieces: readonly PartPiece[]; merged: Mesh }>();
+  // `uses`: the project materials the build mapped onto, noted again on every cache hit.
+  type Entry = { pieces: readonly PartPiece[]; merged: Mesh; uses: readonly MaterialUse[] };
+  const cache = new Map<string, Entry>();
   let builds = 0;
   let hits = 0;
   const params = (o?: Overrides<P>): Readonly<P> =>
@@ -135,14 +138,17 @@ export function definePart<P extends object>(def: PartDefinition<P>): DefinedPar
     const hit = cache.get(key);
     if (hit) {
       hits++;
+      for (const u of hit.uses) noteMaterial(u);
       return hit;
     }
     builds++;
-    const out = def.build(builder(lod, `${def.name}|${key}`), p);
+    const { value: out, uses } = trackMaterials(`part '${def.name}'`, () =>
+      def.build(builder(lod, `${def.name}|${key}`), p),
+    );
     const pieces: readonly PartPiece[] = isPieces(out)
       ? checkPieces(def.name, out)
       : [{ name: 'mesh', mesh: out }];
-    const entry = { pieces, merged: merge(pieces.flatMap(pieceMesh)) };
+    const entry = { pieces, merged: merge(pieces.flatMap(pieceMesh)), uses };
     if (cache.size >= CACHE_CAP) {
       const oldest = cache.keys().next().value;
       if (oldest !== undefined) cache.delete(oldest);

@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { compile, defineAsset } from '../core/index.ts';
 import { box } from '../primitives/index.ts';
 import { METRICS } from '../qa/index.ts';
-import { contactSheet } from '../render/index.ts';
+import { contactSheet, previewSheet } from '../render/index.ts';
 import { committedHashes, critiqueImages, measureVector, RAKING, sha256 } from './critique-cmd.ts';
 
 const crate = defineAsset({
@@ -34,7 +34,7 @@ it('renders the pack; sheet.png is byte-identical to the committed contact sheet
   const [lod0, , lod2] = lods;
   if (!lod0 || !lod2) throw new Error('three LODs expected');
   expect(sha256(images.get('sheet.png') ?? new Uint8Array())).toBe(
-    sha256(contactSheet(lod0, { far: lod2 })),
+    sha256(contactSheet(lod0, { far: lod2, sheet: previewSheet() })),
   );
   // The raking camera is not the hero camera: a different image.
   expect(RAKING.azDeg).not.toBe(-35);

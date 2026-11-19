@@ -37,23 +37,44 @@ const legs = (): Mesh => {
 };
 
 /** The legs as a model-built part (its own texture set) or as a code-built one. */
-const rigged = (mesh: Mesh, model = true): CompiledAsset =>
-  compile(
+const rigged = (mesh: Mesh, model = true, up = false): CompiledAsset => {
+  // `up`: the same limbs standing on their roots (wings raised off a back): z → 1 − z.
+  const z = (h: number): number => (up ? 1 - h : h);
+  return compile(
     defineAsset({
       name: 'legs',
       kind: 'creature',
       budget: { triangles: [9999, 9999, 9999], textureSets: { count: 1, size: 1024 } },
       build(ctx) {
         for (const [s, y] of SIDES) {
-          ctx.bone(`leg_${s}_0`, { head: [0, y, 1], tail: [0, y, 0.6] });
-          ctx.bone(`leg_${s}_1`, { parent: `leg_${s}_0`, head: [0, y, 0.6], tail: [0, y, 0.2] });
-          ctx.bone(`leg_${s}_2`, { parent: `leg_${s}_1`, head: [0, y, 0.2], tail: [0, y, 0] });
+          ctx.bone(`leg_${s}_0`, { head: [0, y, z(1)], tail: [0, y, z(0.6)] });
+          ctx.bone(`leg_${s}_1`, {
+            parent: `leg_${s}_0`,
+            head: [0, y, z(0.6)],
+            tail: [0, y, z(0.2)],
+          });
+          ctx.bone(`leg_${s}_2`, {
+            parent: `leg_${s}_1`,
+            head: [0, y, z(0.2)],
+            tail: [0, y, z(0)],
+          });
         }
         const albedo = encodePng(4, 4, new Uint8Array(64).fill(128));
         ctx.part('body', mesh, model ? { textures: { name: 'body', albedo } } : {});
       },
     }),
   );
+};
+
+/** `m` upside down about z = 0.5 (triangles turned over so they still face out). */
+const raised = (m: Mesh): Mesh => {
+  const positions = Float32Array.from(m.positions, (x, i) => (i % 3 === 2 ? 1 - x : x));
+  const normals = Float32Array.from(m.normals, (x, i) => (i % 3 === 2 ? -x : x));
+  const indices = Uint32Array.from(m.indices);
+  for (let t = 0; t < indices.length; t += 3)
+    [indices[t + 1], indices[t + 2]] = [indices[t + 2] ?? 0, indices[t + 1] ?? 0];
+  return { ...m, positions, normals, indices };
+};
 
 /** `m` with vertex `v` weighted half to its own side's bone, half to the other side's. */
 const crossed = (m: Mesh, v: number): Mesh => {
@@ -99,5 +120,17 @@ describe('QA skin: crossed limbs (D72)', () => {
     for (let v = 0; v < m.positions.length / 3; v++)
       if ((m.positions[v * 3 + 2] ?? 0) > (m.positions[top * 3 + 2] ?? 0)) top = v;
     expect(crossedLimbFindings(rigged(crossed(m, top)))).toEqual([]);
+  });
+
+  it('a raised pair (wings) is one side’s beyond the wrist, shared where it meets the back', () => {
+    const m = legs();
+    // Upside down, the old paw is the wing tip (top) and the old hip the shoulder (bottom).
+    const tip = crossedLimbFindings(rigged(raised(crossed(m, lowest(m))), true, true));
+    expect(tip.map((f) => f.code)).toEqual(['T3D_SKIN_CROSSED']);
+    expect(tip[0]?.message).toContain('1 vertices above 0.800 m');
+    let hip = 0;
+    for (let v = 0; v < m.positions.length / 3; v++)
+      if ((m.positions[v * 3 + 2] ?? 0) > (m.positions[hip * 3 + 2] ?? 0)) hip = v;
+    expect(crossedLimbFindings(rigged(raised(crossed(m, hip)), true, true))).toEqual([]);
   });
 });

@@ -28,16 +28,25 @@ export const ladder = definePart({
       });
     const meshes: Mesh[] = [rail(-(p.width + sw) / 2), rail((p.width + sw) / 2)];
     const n = Math.floor((p.height - 0.15) / p.pitch);
+    // Far, a 24 mm round rung drawn 4-sided is a diamond that breaks up into dashes and then
+    // vanishes: LOD2 draws it as a 30 mm square bar (same 12 triangles) so the rungs still read.
     const rung = (z: number): Mesh =>
-      cylinder({
-        radius: 0.012,
-        length: p.width + sw,
-        at: [0, 0, z],
-        axis: 'y',
-        segments: b.pick([10, 6, 4]),
-        color: PAINT_YELLOW,
-        strip: 'steel_painted',
-      });
+      b.lod === 2
+        ? box({
+            size: [0.03, p.width + sw, 0.03],
+            at: [0, 0, z - 0.015],
+            color: PAINT_YELLOW,
+            strip: 'steel_painted',
+          })
+        : cylinder({
+            radius: 0.012,
+            length: p.width + sw,
+            at: [0, 0, z],
+            axis: 'y',
+            segments: b.pick([10, 6, 4]),
+            color: PAINT_YELLOW,
+            strip: 'steel_painted',
+          });
     for (let i = 1; i <= n; i++) meshes.push(rung(i * p.pitch));
     return merge(meshes);
   },

@@ -11,7 +11,8 @@ import {
   type Lod,
   manifestOf,
   massProperties,
-  paintTrimSheet,
+  sheetFor,
+  sheetWith,
   toGlb,
   triangleCount,
 } from '@developerz.ai/ts23d';
@@ -108,17 +109,18 @@ async function manifest(name: string, file?: string): Promise<Manifest> {
   return rest;
 }
 
-const sheets = new Map<number, Sheet>();
-/** Paint once per size: UVs are sheet fractions, so any power-of-two size maps the same strips. */
-function painted(size: SheetSize | undefined): Sheet {
-  const key = size ?? 0;
-  const hit = sheets.get(key);
-  if (hit) return hit;
+/**
+ * The sheet of one asset (its own project materials on the custom rows), or the built-ins alone.
+ * The library keeps the built-in rows per size and paints only the asset's own; UVs are sheet
+ * fractions, so any power-of-two size maps the same strips.
+ */
+async function painted(size: SheetSize | undefined, of?: BuildRequest): Promise<Sheet> {
   // The house sheet is 4096² (~18 s); the browser paints 2048² unless a tier asks otherwise.
-  const s = paintTrimSheet({ ...DEFAULT_SHEET, size: size ?? 2048 });
-  const sheet = { size: s.size, albedo: s.albedo, normal: s.normal, orm: s.orm };
-  sheets.set(key, sheet);
-  return sheet;
+  const recipe = { ...DEFAULT_SHEET, size: size ?? 2048 };
+  if (!of) return sheetWith([], recipe);
+  const t = of.target;
+  const asset = await resolve(t);
+  return sheetFor(compiled0(asset, of.lod, t.kind === 'recipe' && Boolean(t.neural)), recipe);
 }
 
 const post = (msg: WorkerOut, transfer: Transferable[] = []): void =>
@@ -139,7 +141,7 @@ self.addEventListener('message', async (e: MessageEvent<WorkerIn>) => {
     } else if ('manifest' in e.data) answer = await manifest(e.data.manifest, e.data.file);
     else if ('sheet' in e.data) {
       // Copies, so the cached sheet survives the transfer.
-      const s = painted(e.data.size);
+      const s = await painted(e.data.size, e.data.of);
       const copy = {
         size: s.size,
         albedo: s.albedo.slice(),

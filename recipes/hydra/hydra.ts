@@ -14,13 +14,14 @@ import {
 } from './anatomy.ts';
 import { headCreases, hydraHeads } from './head.ts';
 import { hydraArmour, hydraFeet } from './limbs.ts';
+import { SCALES } from './material.ts';
 
 export const HYDRA_PLAN = bodyPlan(HYDRA_SPEC);
 
 export const hydra = defineBodyPlan({
   name: 'hydra',
   description:
-    'Original five-necked reptile on four legs: heavy monitor-lizard body, crocodilian belly scutes, five distinct horned heads with jaws and teeth.',
+    'Original five-necked reptile on four legs: heavy monitor-lizard body under big glossy scales with dark saddles, crocodilian belly scutes, five distinct horned heads with jaws, teeth and tongues; river mud up the legs, a claw-raked neck, a bitten flank and a broken horn.',
   tags: ['creature', 'fantasy', 'reptile', 'hydra', 'many-necked', 'body-plan'],
   sources: [
     'https://en.wikipedia.org/wiki/Komodo_dragon',
@@ -32,8 +33,10 @@ export const hydra = defineBodyPlan({
   real: { length: 7.71, width: 5.16, height: 4.24 },
   plan: HYDRA_PLAN,
   colours: { back: '#3a4230', belly: '#c9b98a' },
+  strip: SCALES,
   paint: { skin: [1, 1, 1] },
-  budget: { triangles: [400000, 46000, 7500] },
+  // LOD0 spends its triangles on heads and feet; the scales live in the strip, not the rings.
+  budget: { triangles: [215000, 46000, 7500] },
   creases: [...BODY_CREASES, ...Array.from({ length: NECKS }, (_, k) => headCreases(k)).flat()],
   clips: hydraClips(HYDRA_PLAN, {
     necks: NECK_IDS,

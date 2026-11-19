@@ -126,36 +126,44 @@ describe('wolf_hybrid, model tier (committed cache)', () => {
   );
 
   it(
-    'the tail is no more joined to the hind legs than the committed mesh (ratchet: ≤ 128 edges)',
+    'no edge joins tail-only skin to leg-only skin, and no joint limit declares a tolerance (D253)',
     async () => {
-      // Known defect, OPEN (README.md "Known limits"): the generator fused the tail to the inner
-      // face of the right thigh, and the skin between them webs at the hip's limits (declared
-      // `limitTolerances`). Each tail-only ↔ leg-only edge is counted once per triangle side; the
-      // committed mesh has 128 at LOD 0. A re-generated mesh should take it to 0: lower JOINED then.
-      const JOINED = 128;
+      // The generator fused the hanging tail to both thighs. With a hard tail / leg split in the
+      // weights, 128 edge sides had one end on the tail and the other on a leg and stretched
+      // ×8–10 at the hip's limits (QA `deform` ×5.7 on LOD 1, held by two `limitTolerances`).
+      // `isolate`'s `contact` (steps.ts) blends the weights round those edges: zero such edges on
+      // every LOD, and zero declared tolerances, so the gate's ×4 holds every joint.
       await cached();
-      const a = compile(wolf_hybrid, { lod: 0 });
-      const names = (a.skeleton?.bones ?? []).map((b) => b.name);
-      const m = textured(0)[0]?.mesh;
-      expect(m?.indices.length ?? 0).toBeGreaterThan(0);
-      const share = (v: number, re: RegExp): number => {
-        let s = 0;
-        for (let k = 0; k < 4; k++)
-          if (re.test(names[m?.joints?.[v * 4 + k] ?? 0] ?? '')) s += m?.weights?.[v * 4 + k] ?? 0;
-        return s;
-      };
-      const T = m?.indices ?? new Uint32Array();
-      const only = (v: number, re: RegExp) => share(v, re) >= 0.98;
-      let joined = 0;
-      for (let t = 0; t < T.length; t += 3)
-        for (const [p = 0, q = 0] of [
-          [T[t], T[t + 1]],
-          [T[t + 1], T[t + 2]],
-          [T[t + 2], T[t]],
-        ])
-          if ((only(p, /^tail_/) && only(q, /^hind_/)) || (only(q, /^tail_/) && only(p, /^hind_/)))
-            joined++;
-      expect(joined).toBeLessThanOrEqual(JOINED);
+      for (const lod of [0, 1, 2] as const) {
+        const a = compile(wolf_hybrid, { lod });
+        const bones = a.skeleton?.bones ?? [];
+        expect(bones.filter((b) => b.limit?.stretch !== undefined).map((b) => b.name)).toEqual([]);
+        const names = bones.map((b) => b.name);
+        const m = textured(lod)[0]?.mesh;
+        expect(m?.indices.length ?? 0).toBeGreaterThan(0);
+        const share = (v: number, re: RegExp): number => {
+          let s = 0;
+          for (let k = 0; k < 4; k++)
+            if (re.test(names[m?.joints?.[v * 4 + k] ?? 0] ?? ''))
+              s += m?.weights?.[v * 4 + k] ?? 0;
+          return s;
+        };
+        const T = m?.indices ?? new Uint32Array();
+        const only = (v: number, re: RegExp) => share(v, re) >= 0.98;
+        let joined = 0;
+        for (let t = 0; t < T.length; t += 3)
+          for (const [p = 0, q = 0] of [
+            [T[t], T[t + 1]],
+            [T[t + 1], T[t + 2]],
+            [T[t + 2], T[t]],
+          ])
+            if (
+              (only(p, /^tail_/) && only(q, /^hind_/)) ||
+              (only(q, /^tail_/) && only(p, /^hind_/))
+            )
+              joined++;
+        expect(joined).toBe(0);
+      }
     },
     SLOW,
   );

@@ -1,65 +1,121 @@
 {
   "asset": "rts_barracks_scaffold_rubble",
   "reviewer": "agent",
-  "overall": 5.7,
+  "overall": 6.9,
   "scores": {
     "silhouette": {
-      "score": 5,
-      "reason": "Low wall courses around a heap of cubes over red slabs, two tower stubs and the gate steps: reads as ruins, flat in front and side views; the scaffold is gone entirely.",
+      "score": 7,
+      "reason": "Standing wall stubs, a tower stub with a ragged crown and fallen scaffold poles (two crossed and leaning) read as a ruined build; the crossed poles read a little like an A-frame placed on purpose.",
       "fixes": [
-        "leave a few fallen scaffold poles and a leaning ledger in the ruin so it still reads as the scaffold stage"
+        "let the leaning poles rest on the wall top rather than meeting in mid-air"
       ]
     },
     "proportions": {
-      "score": 7,
-      "reason": "Same plinth and plan as the scaffold stage; rubble blocks match the wall blocks.",
+      "score": 8,
+      "reason": "14.6 x 19.0 x 4.1 m; poles at scaffold length, blocks vary.",
       "fixes": [
-        "vary rubble block sizes (0.3-1.0x)"
+        "course-sized crown blocks on the tower stub"
       ]
     },
     "materials": {
-      "score": 5,
-      "reason": "Stone and plinth read; fallen team slabs are clean red planes and tower tops show the radial sliced pattern.",
+      "score": 6,
+      "reason": "Stone stubs and timber poles read; the fallen team slates are clean saturated red, the floor the camouflage slab.",
       "fixes": [
-        "dusty, broken fallen slabs (fallenSlabs in site.ts)",
-        "tower stub tops as stepped broken blocks"
+        "char/dust on the fallen slates",
+        "floor strip with ash patches"
       ]
     },
     "detail": {
-      "score": 5,
-      "reason": "Wall stubs, block heaps and fallen slabs; no planks, poles or small debris from the scaffold.",
+      "score": 7,
+      "reason": "Wall stubs, crowned tower stub, fallen and leaning poles, planks, heaps of blocks and slates.",
       "fixes": [
-        "charred planks and poles from the scaffold in the heap",
-        "gravel and shards between blocks"
+        "gravel and shards between the heaps",
+        "splintered pole ends"
       ]
     },
     "wear": {
-      "score": 4,
-      "reason": "Every broken block is a clean bevelled cube with crisp arrises; no soot, scorch or ash on the floor, no dust over the fallen team slabs, which stay bright and unmarked. Nothing says fire or collapse beyond the arrangement.",
+      "score": 5,
+      "reason": "Raking.png and hero.png show crisp bevelled cube blocks, a little damp at the drum foot and no scorch, soot or ash anywhere; the fallen team slates are still bright saturated red, not dusty or charred. The collapse is told by arrangement only, not by surface.",
       "fixes": [
-        "grime() scorch zones on wall stub tops and the floor around the heaps (rubble() in site.ts)",
-        "dust coat on the fallen team slabs (fallenSlabs in site.ts) so the red reads as buried, not freshly laid",
-        "chip/break one or two edges per rubble block instead of whole cubes"
+        "scorch and soot on the broken wall tops and on the floor round the heap (rubble() in site.ts): dark, low-roughness patches that read at hero distance",
+        "dust/char coat on the fallen team slates (fallenSlabs) so the red reads buried, value down ~40%",
+        "chip one or two arrises per rubble block instead of whole clean cubes"
       ]
     },
     "lod": {
-      "score": 6,
-      "reason": "FAR LOD2 keeps the plinth, wall stubs and tower drums, but the tower drums turn into coarse octagons and the fallen team slabs merge into one flat red polygon, so the heap texture of LOD0 disappears at distance.",
+      "score": 7,
+      "reason": "FAR LOD2 (500 tris) keeps the walls, tower stubs, poles and a few slate shards; the heap thins and the tower crown flattens.",
       "fixes": [
-        "keep 10-12 sides on the tower stubs at LOD2 (a few dozen triangles)",
-        "keep 2-3 tilted heap blocks per bay at LOD2 instead of flattening the fallen slabs into one plane"
+        "keep 3-4 heap blocks and a stepped crown at LOD2"
       ]
     },
     "technical": {
       "score": 8,
-      "reason": "QA PASS on every gate (rebuilt today), tris 9.88k / 3.29k / 580, draws 2 / 2 / 2; deterministic, one trim material + team slot. Triangles mostly sit in the running-bond blocks, where they show.",
+      "reason": "QA PASS, tris 18.8k / 3.8k / 500, draws 2/2/2; one trim material + team slot, LOD2 well under 1k. Triangles mostly sit in the running-bond blocks and slates, where they show.",
       "fixes": [
-        "merge the per-block wall boxes into one course mesh per bay at LOD0 (shared inner faces removed) to cut the block-count triangles without losing the coursing"
+        "merge the per-block wall boxes into one course mesh per bay at LOD0 (shared inner faces removed) so the coursing costs fewer triangles"
       ]
     }
   },
   "renders": {
-    "hero.png": "46a9674f9a1e8dd268ff8ea7acae50cfcfc21dfdacdbd0585ad96a122154ac4a",
-    "sheet.png": "d7a45d8a827f808ef64374e75d0b6b190c5bb254a722bae5e8aba2a7b07b3d2e"
+    "hero.png": "3ad3f4e43a89373fcc42c64fc3c32c7c8425e15f72e6ac09266e6ef34843f647",
+    "sheet.png": "bece95400c475db6d508f25779bad09f3773c962717b1230828dacdd895bf3f4",
+    "raking.png": "b8b1682778b8d998f71f2cf2000372f2436f0563f15d8a6eaa151183fdf9b5d0",
+    "raking_detail.png": "261db878c3c9dbd95007638748f376a5f85708f3d6794d2abc91121cec584fa1",
+    "lods.png": "74890b04b9a502e7d1fbef74d398b8c5059b0978dd453bd21029b73b52877d7f",
+    "silhouette.png": "6c99c65ad6cadd99fc1ec16be68c80e21a02d2d108ded1f3dabe91573a551c1c",
+    "value.png": "d6562dbf6f4d1b56f3abcbd4a1c94f6b48e66f4d3be1b27a56aa2dea0d952a2c",
+    "detail.png": "afbfce6c3921b72716baac853cb609097066473753ac3643635b32a4a2f069d2"
+  },
+  "metrics": {
+    "silhouette": [
+      {
+        "view": "front",
+        "iou": 0.858
+      },
+      {
+        "view": "side",
+        "iou": 0.883
+      },
+      {
+        "view": "3/4",
+        "iou": 0.926
+      }
+    ],
+    "focal": {
+      "peakPart": "walls",
+      "peak": [
+        302,
+        168
+      ],
+      "focalShare": 0,
+      "focalArea": 0,
+      "top": [
+        {
+          "part": "walls",
+          "share": 0.391
+        },
+        {
+          "part": "tower_r",
+          "share": 0.227
+        },
+        {
+          "part": "plinth",
+          "share": 0.099
+        }
+      ],
+      "declared": []
+    },
+    "rest": {
+      "share": 0.411,
+      "spread": 0.72,
+      "min": 0.25
+    },
+    "shape": {
+      "acuteShare": 0.189,
+      "straightShare": 0.69,
+      "taper": 0.466,
+      "shape": "stable"
+    }
   }
 }

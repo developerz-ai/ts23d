@@ -1,50 +1,53 @@
-// The Saltmarch Accord sample faction as one scene: the Warden Hall with its garrison drawn up in
-// front (three Wardens, two Delvers, a Brinehound light tank) and a claimed sunstone deposit.
-// Every unit is the real asset via ctx.use, so the lineup is the roster's scale and colour check:
-// one team slot repaints the whole scene. Style guide: README.md; shared code: style.ts, figure.ts.
+// The Saltmarch Accord sample faction as one scene: the Warden Hall, its forecourt and what a
+// garrison leaves on it. A gravel road runs from the gate out through a gap in the perimeter wall
+// (sandbag posts either side of it), three Wardens stand a wedge on the road, the Brinehound is
+// parked on its hardstand with its track ruts leading back to the road, fuel drums and crates are
+// stacked by the park, two Delvers work the claimed sunstone deposit. Every unit is the real asset
+// via ctx.use, so the scene is the roster's scale and colour check: one team slot repaints all of
+// it. The ground, road, ruts, wall, sandbags and props are this recipe's own (ground.ts).
+// Style guide: README.md; shared code: ../_lib/rts.
 
-import { box, defineAsset, hex } from '@developerz.ai/ts23d';
+import { defineAsset } from '@developerz.ai/ts23d';
 import { TEAM_PAINT, TEAM_VARIANTS } from '../_lib/rts/style.ts';
 import { rts_barracks } from '../rts_barracks/rts_barracks.ts';
 import { rts_resource } from '../rts_resource/rts_resource.ts';
 import { rts_soldier } from '../rts_soldier/rts_soldier.ts';
 import { rts_tank } from '../rts_tank/rts_tank.ts';
 import { rts_worker } from '../rts_worker/rts_worker.ts';
-
-const SALT_FLAT = hex('#f2eee4');
-const TRODDEN = hex('#d8d2c4');
+import { forecourt, PARK, perimeter, stores } from './ground.ts';
 
 export const rts_faction = defineAsset({
   name: 'rts_faction',
   kind: 'scene',
   description:
-    'Saltmarch Accord sample RTS faction lineup: barracks, three soldiers, two workers, a light tank and a claimed sunstone deposit, all on one team slot (8 liveries).',
+    'Saltmarch Accord sample RTS faction as a compound: barracks, a wedge of three soldiers on the gate road, a light tank on its hardstand, two workers at a claimed sunstone deposit, perimeter wall, sandbags, stores; one team slot (8 liveries).',
   tags: ['rts', 'saltmarch', 'faction', 'scene', 'team-colour'],
-  sources: ['recipes/rts_faction/README.md (the style guide this lineup checks)'],
-  // Measured 145k / 32k / 3.6k: the sum of the weathered assets plus the ground.
+  sources: ['recipes/rts_faction/README.md (the style guide this scene checks)'],
+  // Measured 159k / 35k / 4.4k: the sum of the weathered assets plus the ground (true-scale salt
+  // flat, road and ruts), the perimeter and the stores.
   budget: { triangles: [160000, 36000, 4600] },
   paint: TEAM_PAINT,
   variants: TEAM_VARIANTS,
   build(ctx) {
-    // Salt-flat ground with two trodden gravel paths: hall gate → muster line, and → tank park.
-    ctx.part(
-      'ground',
-      box({ size: [30, 25, 0.1], at: [-1, 0.5, -0.1], color: SALT_FLAT, strip: 'sand' }),
-    );
-    ctx.part(
-      'paths',
-      box({ size: [5.2, 2.6, 0.1], at: [0.4, 0, -0.098], color: TRODDEN, strip: 'gravel' }),
-    );
-    ctx.part(
-      'paths_tank',
-      box({ size: [6.4, 1.2, 0.1], at: [5.8, -2.8, -0.097], color: TRODDEN, strip: 'gravel' }),
-    );
+    forecourt(ctx);
+    perimeter(ctx);
+    stores(ctx);
     ctx.use(rts_barracks, { prefix: 'hall', at: [-8, 0, 0] });
-    ctx.use(rts_tank, { prefix: 'tank', at: [6.5, -6.5, 0], yaw: 0.35 });
-    for (let i = 0; i < 3; i++)
-      ctx.use(rts_soldier, { prefix: `warden_${i}`, at: [5.2, -1.6 + i * 1.3, 0] });
+    // The Brinehound parked on its hardstand, nose to the road gate.
+    ctx.use(rts_tank, { prefix: 'tank', at: [PARK.x, PARK.y, 0] });
+    // Three Wardens in a wedge on the gate road, facing out.
+    for (const [i, [x, y]] of [
+      [6.2, 0],
+      [5.0, -1.15],
+      [5.0, 1.15],
+    ].entries())
+      ctx.use(rts_soldier, { prefix: `warden_${i}`, at: [x ?? 0, y ?? 0, 0] });
     for (let i = 0; i < 2; i++)
-      ctx.use(rts_worker, { prefix: `delver_${i}`, at: [3.6, 3.6 + i * 1.3, 0], yaw: 0.6 });
-    ctx.use(rts_resource, { prefix: 'deposit', at: [6, 7.5, 0], yaw: -0.8 });
+      ctx.use(rts_worker, {
+        prefix: `delver_${i}`,
+        at: [4.4 + i * 1.5, 5.4 + i * 0.5, 0],
+        yaw: 0.9,
+      });
+    ctx.use(rts_resource, { prefix: 'deposit', at: [7.2, 8.3, 0], yaw: -0.8 });
   },
 });

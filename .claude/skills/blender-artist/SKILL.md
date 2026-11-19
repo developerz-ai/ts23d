@@ -73,6 +73,7 @@ distance uneven: stroke after `voxelRemesh` or on the `retopo` shell when a raw 
 | A cage wider than the gap between parts | fingers bake each other: use `cageFit`, or lower `cage` and `maxRay` |
 | Voxel finer than a generator's tunnels | floods the inside into confetti: let `retopo` measure, or set `voxel` and `close` |
 | Bone heat on nearby limbs | it reads distance, not anatomy: `unweb` first, then `isolate` chains |
+| A chain generated fused to the body along its length (a tail lying on a thigh) | `unweb` cannot cut it and a hard `isolate` split stretches the joining edges: give `isolate` a `contact` distance (metres, start at 0.04) so the band shares the motion; check stifle volume does not drop |
 | Decimating code-built geometry | never; only imported or model-built meshes (ADR 011, ADR 016) |
 | GPU work | one job at a time on the shared GPU; `--software-gpu` reviews through lavapipe |
 

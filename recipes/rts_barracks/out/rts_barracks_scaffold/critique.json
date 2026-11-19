@@ -1,65 +1,121 @@
 {
   "asset": "rts_barracks_scaffold",
   "reviewer": "agent",
-  "overall": 6.4,
+  "overall": 7.3,
   "scores": {
     "silhouette": {
-      "score": 7,
-      "reason": "Half-height walls stepped at the top, tower drums without caps, a scaffold of poles, ledgers and pine plank decks, and two banners: reads clearly as a barracks under construction.",
+      "score": 8,
+      "reason": "Half-height walls, two drum stubs with courses being laid, a lashed pole scaffold with plank decks, a ladder and a gin-pole hoist with rope and weight: the build stage reads from far away.",
       "fixes": [
-        "a hoist or gin-pole with a rope on one tower so the build stage reads from far away"
+        "a second lift of standards rising above the deck on the tower side so the scaffold peaks above the walls"
       ]
     },
     "proportions": {
-      "score": 7,
-      "reason": "15.6 x 18.0 x 5.5 m; scaffold lifts at a believable ~3.2 m deck height; poles look slightly too thin for timber scaffold at this scale.",
+      "score": 8,
+      "reason": "15.6 x 18.7 x 5.5 m; poles ~0.1 m, decks at a working height below the top course, ladder at human scale.",
       "fixes": [
-        "scaffold poles ~0.12 m diameter (site.ts scaffold()) instead of the current thin tubes"
+        "ledgers at ~2 m lifts (they read ~2.5 m)"
       ]
     },
     "materials": {
-      "score": 6,
-      "reason": "Pine decks read as fresh wood, stone blocks as stone; poles read as grey metal tubes rather than weathered timber poles, and in sheet.png the plank decks render pale grey-white.",
+      "score": 7,
+      "reason": "Poles and decks read as weathered timber, walls as stone, banner as cloth; the floor slab is the blotchy camouflage pattern and the stone is uniform beige.",
       "fixes": [
-        "darker, grained wood_weathered poles with lashings at the nodes instead of the black clamp blocks",
-        "check the pine role on deck planks: pale grey in sheet.png while wood in hero.png"
+        "floor strip with readable joints",
+        "per-block value jitter on the walls"
       ]
     },
     "detail": {
-      "score": 6,
-      "reason": "Poles, ledgers, braces, plank decks, stepped wall tops and an inlay inside; no ladders, ropes, buckets or loose blocks on the decks.",
+      "score": 7,
+      "reason": "Lashed nodes, plank decks, ladder, gin-pole with rope and counterweight, a block on the deck, banners on the scaffold.",
       "fixes": [
-        "a ladder between deck and ground",
-        "blocks and a mortar bucket on the decks",
-        "rope lashings at pole nodes"
+        "a mortar bucket and stacked blocks on the decks",
+        "brace diagonals on the scaffold face"
       ]
     },
     "wear": {
-      "score": 5,
-      "reason": "Clean stone and fresh decks; no mortar drips down the walls, no mud at the pole feet.",
+      "score": 6,
+      "reason": "Some damp at the wall foot; no mortar drips below the top courses, no mud at pole feet, planks unstained.",
       "fixes": [
-        "mortar drips below the top courses and splash on the plinth",
-        "mud at pole feet"
+        "mortar drips below the laid courses and splash on the plinth",
+        "mud at the pole feet"
       ]
     },
     "lod": {
-      "score": 6,
-      "reason": "FAR LOD2 keeps walls, towers, poles and banners, but the plank decks disappear and the walls lose their coursing, so the scaffold reads as bare sticks.",
+      "score": 7,
+      "reason": "lods.png: LOD2 (528 tris) keeps walls, poles, decks and banners, but drops the ladder and gin-pole and the walls darken to a grey texture against the beige LOD0.",
       "fixes": [
-        "keep the plank decks as single quads at LOD2 (site.ts scaffold())",
-        "value stripes for coursing at LOD2"
+        "keep the gin-pole as two quads at LOD2",
+        "match the LOD2 wall value to LOD0"
       ]
     },
     "technical": {
       "score": 8,
-      "reason": "QA PASS on every gate (rebuilt today), tris 17.9k / 4.59k / 704, draws 2 / 2 / 2; deterministic, one trim material + team slot. Triangles mostly sit in the running-bond blocks, where they show.",
+      "reason": "QA PASS, tris 18.0k / 4.9k / 528, draws 2/2/2; one trim material + team slot, LOD2 well under 1k. Triangles mostly sit in the running-bond blocks and slates, where they show.",
       "fixes": [
-        "merge the per-block wall boxes into one course mesh per bay at LOD0 (shared inner faces removed) to cut the block-count triangles without losing the coursing"
+        "merge the per-block wall boxes into one course mesh per bay at LOD0 (shared inner faces removed) so the coursing costs fewer triangles"
       ]
     }
   },
   "renders": {
-    "hero.png": "f71898beceb9aea5a64f2e12e31d1bb98b733b6243eac8a196155662a91f0872",
-    "sheet.png": "60fa7bf0b44041f603e8911649b578047d3f2ca3549e5f17838d4a2b75bd6e8e"
+    "hero.png": "70f7033e9432a52fc53fb8c8e6a02fb3979a4a701c4eb2168248cd35967aec81",
+    "sheet.png": "fd9d4fa1b93b3a3620104979a2e0623fa5aa878dfdcad94e74aad08a85bf15b3",
+    "raking.png": "1b305e7e5ae2cdfd5dadfbe4702d78ed25df09e607f936bc20e1b86229c88138",
+    "raking_detail.png": "879d58112aa56a6a4a5800b65e5ccadebc4ff0d55d02d3a3d8a3ea37c3af88eb",
+    "lods.png": "61f9300c6ee60cb959bf22549ec612c9f980664110273833679d1b0ab5a99fa4",
+    "silhouette.png": "419798faef1a008fc1718d947477af4a9788313c0d092052d616cfd045ceb39b",
+    "value.png": "9c0f72c6ea229376ba30cde2c18428106ac0fefec292e4687315132aa337ab61",
+    "detail.png": "fbf8faaf876c6d19f3d8f3bc934f942f5ca5955214e18dac2e5336f431152ae6"
+  },
+  "metrics": {
+    "silhouette": [
+      {
+        "view": "front",
+        "iou": 0.816
+      },
+      {
+        "view": "side",
+        "iou": 0.821
+      },
+      {
+        "view": "3/4",
+        "iou": 0.949
+      }
+    ],
+    "focal": {
+      "peakPart": "scaffold_decks",
+      "peak": [
+        437,
+        205
+      ],
+      "focalShare": 0,
+      "focalArea": 0,
+      "top": [
+        {
+          "part": "scaffold_decks",
+          "share": 0.581
+        },
+        {
+          "part": "scaffold",
+          "share": 0.182
+        },
+        {
+          "part": "walls",
+          "share": 0.091
+        }
+      ],
+      "declared": []
+    },
+    "rest": {
+      "share": 0.442,
+      "spread": 0.807,
+      "min": 0.25
+    },
+    "shape": {
+      "acuteShare": 0.533,
+      "straightShare": 0.777,
+      "taper": 0.71,
+      "shape": "aggressive"
+    }
   }
 }

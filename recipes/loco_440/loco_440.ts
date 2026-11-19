@@ -14,6 +14,7 @@ import { buildFrame, buildRods, buildSplashers, gearOf } from './running-gear.ts
 import { GAUGE, HEAD, layoutOf, mirrored, whenBuilt } from './shared.ts';
 import { buildTender } from './tender.ts';
 import { buildTrack } from './track.ts';
+import { FINISHES, worn } from './wear.ts';
 
 interface Params {
   /** Whyte notation; the frame, boiler and rods are laid out from it. */
@@ -83,8 +84,9 @@ const americanFamily = defineFamily<Params>({
       },
     ],
   },
-  // Measured 46.5k / 18.6k / 1.4k: sixteen wheels, a 17 m tender + track, riveted smokebox and
-  // tender at LOD0; LOD1 keeps every wheel spoked and the rods; LOD2 is the silhouette.
+  // Measured 51.7k / 19.2k / 1.5k: sixteen wheels, a 17 m tender + track, riveted smokebox and
+  // tender at LOD0, the big plates split so soot, dust and lime have vertices to live on; LOD1
+  // keeps every wheel spoked and the rods; LOD2 is the silhouette with two-tone wheel discs.
   budget: { triangles: [54000, 20000, 1650] },
   checks: [
     clear('axle_*', 'boiler*'),
@@ -95,10 +97,13 @@ const americanFamily = defineFamily<Params>({
     whenBuilt('crosshead_l', touches('crosshead_l', 'guides')),
     mirrored,
   ],
+  finishes: FINISHES,
   defaults: { arrangement: '4-4-0', number: '60', name: 'JUPITER' },
-  build(ctx, p) {
-    const L = layoutOf(ctx, p.arrangement);
-    buildTrack(ctx, L);
+  build(raw, p) {
+    const L = layoutOf(raw, p.arrangement);
+    buildTrack(raw, L);
+    // Every engine and tender part passes through the wear on its way in (soot, oil, dust, lime).
+    const ctx = worn(raw, L);
 
     ctx.group('locomotive');
     const gear = gearOf(ctx);

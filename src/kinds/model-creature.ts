@@ -34,7 +34,10 @@ export interface ModelCreatureDefinition extends Omit<AssetDefinition, 'kind' | 
   readonly options?: CreatureOptions;
   /** The model for this build, or null: build the code creature. */
   readonly model: (ctx: BuildContext) => ImportedModel | ChainedModel | null;
-  readonly body?: Pick<ModelBodyOptions, 'name' | 'clips' | 'drop' | 'symmetric' | 'joints'>;
+  readonly body?: Pick<
+    ModelBodyOptions,
+    'name' | 'clips' | 'drop' | 'symmetric' | 'joints' | 'extra'
+  >;
   /** Extra clips on either body (must only name bones both have). */
   readonly clips?: readonly Clip[];
   /** Extra parts after the body; `info` says which one was built. */

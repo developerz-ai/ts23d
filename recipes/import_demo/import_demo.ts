@@ -21,9 +21,14 @@ export const import_demo = defineAsset({
     'recipes/import_demo/README.md (pipeline, licence, how to swap in a real CC0 scan)',
     `import: ${SCAN.author} — ${SCAN.license} — ${SCAN.url}`,
   ],
-  finishes: { cornea: { clearcoat: 1, clearcoatRoughness: 0.04 } },
-  // Head 12k / 4k / 1.2k (source.ts) + torso and outfit (human bust cells) + code eyes.
-  budget: { triangles: [64000, 20000, 4800] },
+  finishes: {
+    cornea: { clearcoat: 1, clearcoatRoughness: 0.04 },
+    // The scan's skin: the pore strip's own roughness under a soft grazing sheen.
+    skin: { sheen: { colour: '#8c7b72', roughness: 0.45 } },
+  },
+  // Inside the bust band (60k / 12k / 1.5k). Head 12k / 4k / 0.7k (source.ts) + torso and
+  // outfit 12k / 4k / 0.6k + code eyes, collar, brooches, plinth. Draws: skin, corneas, the rest.
+  budget: { triangles: [38000, 12000, 1500], draws: 3 },
   build(ctx) {
     buildImportDemo(ctx, 'sheet');
   },

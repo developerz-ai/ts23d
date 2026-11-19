@@ -21,10 +21,6 @@ export { CONCEPT } from './concept.ts';
 
 const FUR = defineMaterial(CREATURE_MATERIALS.fur_neutral);
 
-/** Why the hips may stretch past QA `deform`'s ×4 (one sentence, written into manifest.json). */
-const TAIL_FUSED =
-  'the image-to-3D mesh fused the tail to the inner face of the right thigh (and the back of the left), so the hip extremes web the skin between them; the fix is a re-generated mesh (GPU), tracked as a follow-up';
-
 /** The box of THIS stand, from the sourced numbers and the pose (README.md, "Scale"):
  *  length = head and body 1.15 + 0.09 of hanging tail brush behind the rump; height = withers
  *  0.82 + 0.13 of ears carried above them; width = the 0.22 chest + a 5 cm winter mane a side. */
@@ -109,12 +105,6 @@ export const wolf_hybrid = defineModelCreature({
     textureSets: { count: 1, size: 2048 },
   },
   checks: [sourced],
-  // Known defect, OPEN (README.md "Known limits"): measured worst ×5.66 (hind_r_0, LOD1) and
-  // ×4.19 (hind_l_0, LOD1); declared just above, the gate's default ×4 everywhere else.
-  limitTolerances: {
-    hind_r_0: { stretch: 5.7, why: TAIL_FUSED },
-    hind_l_0: { stretch: 4.3, why: TAIL_FUSED },
-  },
   art: { focal: 'head', shape: 'friendly', grounded: true },
   model: wolfModel,
 });

@@ -70,7 +70,7 @@ export function cover(
   strip: StripId,
   nu = 16,
 ): Mesh {
-  const rs = holeRows(h, nu <= 4 ? 4 : 20);
+  const rs = holeRows(h, nu <= 4 ? 4 : 8);
   const rowsIn = rs.filter((s) => holeG(h, s) > 0);
   return patch(S, {
     s0: rowsIn[0] ?? h.sc,

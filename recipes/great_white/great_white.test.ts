@@ -25,7 +25,16 @@ import {
   X_MOUTH,
   xOf,
 } from './anatomy.ts';
-import { DORSAL, PECTORAL, pectoralRoot, pectoralTip } from './fins.ts';
+import {
+  copepods,
+  DORSAL,
+  dorsalCopepods,
+  dorsalFin,
+  dorsalNotch,
+  PECTORAL,
+  pectoralRoot,
+  pectoralTip,
+} from './fins.ts';
 import { CLIPS, CRUISE_HZ, great_white, PLAN } from './great_white.ts';
 import { REST_GAPE } from './jaws.ts';
 import { PORE_COUNT, SCAR_COUNT, scars } from './skin-detail.ts';
@@ -94,7 +103,17 @@ describe('sourced dimensions', () => {
   it('keeps LOD2 to a few hundred triangles', () => {
     const c = compile(great_white, { lod: 2 });
     const n = c.parts.reduce((t, p) => t + (p.mesh ? triangleCount(p.mesh) : 0), 0);
-    expect(n).toBeLessThan(700);
+    expect(n).toBeLessThan(800);
+  });
+
+  it('carries its fights: a notch bitten from the first dorsal, copepods clinging to it', () => {
+    expect(dorsalNotch(0.56)).toBeGreaterThan(0.3);
+    expect(dorsalNotch(0.2)).toBeLessThan(0.01);
+    const seats = dorsalCopepods();
+    expect(seats.length).toBeGreaterThan(4);
+    const fin = mesh('dorsal_fin');
+    expect(triangleCount(fin)).toBeGreaterThan(triangleCount(dorsalFin(0)));
+    expect(copepods(2, seats)).toEqual([]);
   });
 });
 

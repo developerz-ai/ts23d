@@ -14,7 +14,7 @@ const SIZE: Record<string, readonly [number, number, number]> = {
   human: [0.282, 0.461, 0.512],
   orc: [0.316, 0.552, 0.565],
   elf: [0.283, 0.443, 0.517],
-  dwarf: [0.297, 0.519, 0.522],
+  dwarf: [0.317, 0.519, 0.526],
   goblin: [0.259, 0.372, 0.443],
 };
 
@@ -45,10 +45,17 @@ function faceBust(name: string, race: string, b: FaceBust, eyeSpacing: number): 
         },
       ],
     },
-    // LOD0 is one Catmull–Clark level over the 5.7k-quad base plus sculpted hair (the dwarf's
-    // beard is the heaviest); LOD1 the base topology itself; LOD2 a 1.4 cm re-mesh.
-    budget: { triangles: [160000, 66000, 13000] },
-    finishes: { cornea: { clearcoat: 1, clearcoatRoughness: 0.04 } },
+    // The skin is the imported base at 26k / 5.6k / 1k (base-lod.ts); the rest is hair (a coarse
+    // sculpted mass under strand cards: the dwarf's beard and the elf's long fall are the
+    // heaviest), eyes, teeth and the plinth. Draws: skin, strand cards, corneas, the rest.
+    budget: { triangles: [80000, 16500, 4400], draws: 4 },
+    finishes: {
+      cornea: { clearcoat: 1, clearcoatRoughness: 0.04 },
+      // Skin: the strip's own roughness (pores, oily crowns) under a soft grazing sheen, the
+      // way light catches the down and the oil on a cheek. (No finish on the hair: the cutout
+      // cards take none, and the mass under them is in their shade.)
+      skin: { sheen: { colour: '#8c7b72', roughness: 0.45 } },
+    },
     art: { focal: 'skin' },
     // Intended folds (lids, lips, ears, hair locks) from the same warped landmarks and lines.
     creases: faceCreases(b),

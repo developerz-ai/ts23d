@@ -1,65 +1,120 @@
 {
   "asset": "rts_barracks",
   "reviewer": "agent",
-  "overall": 6.6,
+  "overall": 7.4,
   "scores": {
     "silhouette": {
-      "score": 7,
-      "reason": "Gable hall, two coursed drum towers with conical red caps and finials, a porch and two banners: reads as a stylised RTS barracks from every sheet view. The porch roof is a thin slab that reads as a tilted plank in the hero, and the gate under it barely shows, so the front loses its focal entrance.",
+      "score": 8,
+      "reason": "Gable hall, two coned drum towers with finials, a pitched team porch over a recessed gate, banners: every sheet view names it; the porch roof is now a real two-slope roof and the gate reads dark under it.",
       "fixes": [
-        "give the porch a real pitched roof (two slopes + ridge) and deepen the gate recess in roof.ts porch()/gate() so the entrance reads in black"
+        "a ridge cresting or chimney on the hall roof to break the long ridge line from the side view"
       ]
     },
     "proportions": {
-      "score": 7,
-      "reason": "15.9 x 18.5 x 11.1 m, gate 3.5 m beside 1.8 m units; storey and door scale per the house playbook. Towers are tall versus the hall and the windows are narrow amber slits, which reads stylised but slightly toy-like.",
+      "score": 8,
+      "reason": "16.3 x 19.0 x 11.1 m, gate 3.5 m (measure passes), windows widened with sill and head; towers stylised-tall but consistent with the faction brief.",
       "fixes": [
-        "widen the window openings to ~0.8 m with a stone sill and head (walls.ts) so the bay rhythm matches a real hall"
+        "tower door steps read shallow beside the 3.5 m gate: two 0.18 m risers rather than one block"
       ]
     },
     "materials": {
-      "score": 6,
-      "reason": "Dressed-stone blocks read as stone, lime-plaster gables in an oak frame read, red team slate reads more like painted sheet metal panels (uniform value, no slate edge variation). In sheet.png the oak porch posts render pale grey-white, not brown.",
+      "score": 7,
+      "reason": "Slates now read as lapped slate courses with per-slate value, the stone has block joints and damp at the foot, oak posts are brown, framed amber windows glow without blowing out. The bone stone is still a smooth uniform beige plastic between joints and the team red is one saturated value on every slate edge.",
       "fixes": [
-        "per-slate value jitter and overlapping thickness on roofSlopes() so the roof reads as slate, not sheet panels",
-        "check the oak role on porch posts/timber: they read pale grey in sheet.png while brown in hero.png"
+        "stone strip with per-block value jitter (±8%) and a rougher face so walls read as dressed stone, not painted panels (walls.ts stack())",
+        "darken slate edges/undersides one step so each course shadows the next (roof.ts slate tone)"
       ]
     },
     "detail": {
-      "score": 6,
-      "reason": "Running-bond blocks, pilasters, timber gable frame, oculus, finials and banners exist; at hero distance the walls are flat between pilasters, windows have no frames or sills, and the towers have no openings or arrow slits.",
+      "score": 7,
+      "reason": "Raking.png: framed mullioned windows, tower door, arrow slits, slate courses, ridge roll, pilasters, porch lamp. Wall faces between pilasters are still flat blocks with no string course, quoins or plinth moulding; holds an RTS close zoom, not a third-person close-up.",
       "fixes": [
-        "window frames, sills and lintels (walls.ts)",
-        "arrow slits and a door on each tower (roof.ts tower())",
-        "a bracketed porch lamp and steps with nosings at the gate"
+        "string course at window-sill height and quoins on the hall corners (walls.ts)",
+        "eaves brackets or rafter tails under the roof overhang"
       ]
     },
     "wear": {
-      "score": 5,
-      "reason": "weather() is applied, but at hero distance the stone and plaster read clean; no visible moss at the wall foot, no streaks below windows, roof uniform red.",
+      "score": 6,
+      "reason": "Damp darkening at the wall foot and tower base, a darker drip course at the eaves, slight slate fading. At hero distance the hall still reads new: no streaks under sills, no moss on the plinth, porch and banners pristine.",
       "fixes": [
-        "raise weather() streak and damp coverage under eaves and sills so it shows at 3/4 hero distance",
-        "fade and dust the roof slates toward the ridge, darken the drip line along the eaves"
+        "streaks below each window sill and at the drum foot (weather() sources at sills)",
+        "moss/dirt band on the slate plinth and a faded, frayed lower edge on the banners"
       ]
     },
     "lod": {
-      "score": 7,
-      "reason": "FAR LOD2 keeps hall, towers, roof and banners in the same colour blocks; the stone coursing collapses to flat beige boxes per bay and the towers become coarse octagons, so the stone read is lost at distance.",
+      "score": 8,
+      "reason": "Sheet FAR LOD2 (668 tris) keeps hall, towers, roof colour, porch, banners and amber window blocks; coursing becomes a texture but the value stays. The switch is invisible at RTS distances.",
       "fixes": [
-        "bake the block coursing as value stripes in vertex colour at LOD2 (walls.ts stack())",
-        "12-sided towers at LOD2"
+        "keep the porch roof as two slopes (not a slab) at LOD2"
       ]
     },
     "technical": {
       "score": 8,
-      "reason": "QA PASS on every gate (rebuilt today), tris 41.6k / 8.25k / 896, draws 3 / 3 / 2; deterministic, one trim material + team slot. Triangles mostly sit in the running-bond blocks, where they show.",
+      "reason": "QA PASS, tris 39.0k / 7.8k / 668, draws 3/3/3; one trim material + team slot, LOD2 well under 1k. Triangles mostly sit in the running-bond blocks and slates, where they show.",
       "fixes": [
-        "merge the per-block wall boxes into one course mesh per bay at LOD0 (shared inner faces removed) to cut the block-count triangles without losing the coursing"
+        "merge the per-block wall boxes into one course mesh per bay at LOD0 (shared inner faces removed) so the coursing costs fewer triangles"
       ]
     }
   },
   "renders": {
-    "hero.png": "a712f93aadbf6aed84e8456bcd80cd6420deb6a95e40acbd36311d04899d24d8",
-    "sheet.png": "479f6478bc372278e0a0fa111fcbbfee6f20a3e5ea37f44ffd64030849f8e0a6"
+    "hero.png": "34ee5142e8baeffa6a531a9847882ea23a78328116143647ffc28b86490eccf2",
+    "sheet.png": "b5e2fe80de3e71f7b86e4d3d7e6ed97ab7e2b5c79d0bf6595233472de421eb83",
+    "raking.png": "7b5a04fb7f6840184a4e4fc2755b8418b19b2d67a6901f5b7250b9d35c915445",
+    "raking_detail.png": "7e0e669e123754a464286ba3687af25884bcd6f4e5fb2fa580b9d0b64c6208b6",
+    "lods.png": "e6f9e1b8b99a865f447be985bd869217978ae234dd59b191b7dfc37b96bf25d4",
+    "silhouette.png": "e219afc10e85ce187491af8d7b84c563d86b3588bc48ea755de0d41b0f9fa26f",
+    "value.png": "060c6f9c51d5e33815a599c21a04699a234db8f5e04993095ab9f2e0bc59ee3c",
+    "detail.png": "c54338119b6df7a4ee936d7f064a0820b2fd4162484c0fbaf9af1af467a54cf8"
+  },
+  "metrics": {
+    "silhouette": [
+      {
+        "view": "front",
+        "iou": 0.982
+      },
+      {
+        "view": "side",
+        "iou": 0.991
+      },
+      {
+        "view": "3/4",
+        "iou": 0.976
+      }
+    ],
+    "focal": {
+      "peakPart": "window_frames",
+      "peak": [
+        295,
+        292
+      ],
+      "focalShare": 0,
+      "focalArea": 0,
+      "top": [
+        {
+          "part": "window_frames",
+          "share": 0.394
+        },
+        {
+          "part": "windows",
+          "share": 0.354
+        },
+        {
+          "part": "pilasters",
+          "share": 0.073
+        }
+      ],
+      "declared": []
+    },
+    "rest": {
+      "share": 0.258,
+      "spread": 0.639,
+      "min": 0.25
+    },
+    "shape": {
+      "acuteShare": 0.206,
+      "straightShare": 0.742,
+      "taper": 0.835,
+      "shape": "stable"
+    }
   }
 }

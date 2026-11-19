@@ -3,15 +3,19 @@ import { encodePng, Ts23dError } from '../core/index.ts';
 import {
   defineMaterial,
   materialOf,
+  materialSnapshot,
   resetMaterials,
   stripCredits,
   textureSources,
 } from './define.ts';
 import { DEFAULT_SHEET, paintTrimSheet } from './generator.ts';
 import type { MaterialDef } from './material-def.ts';
-import { customIds, homeOwner } from './slots.ts';
+import { customIds } from './slots.ts';
 import { provideTextures } from './texture-source.ts';
 import { CUSTOM_STRIP_SLOTS, type StripId, stripRect } from './trim-sheet.ts';
+
+// Put back, last of all hooks, what other test files' recipes defined at import (D334).
+const restoreMaterials = materialSnapshot();
 
 function code(fn: () => unknown): string {
   try {
@@ -36,7 +40,7 @@ const png = encodePng(
 );
 const sha = new Bun.CryptoHasher('sha256').update(png).digest('hex');
 resetMaterials();
-afterAll(resetMaterials);
+afterAll(restoreMaterials);
 
 // Provided up front: registered materials are process-wide, and other test files paint them.
 provideTextures(new Map([[sha, png]]));
@@ -111,15 +115,20 @@ describe('defineMaterial: bad input', () => {
     );
   });
 
-  it('runs out of custom rows with T3D_SHEET_FULL', () => {
+  it('defines more materials than one sheet has custom rows (an asset holds 14 of them: D299)', () => {
     defineMaterial(imageDef);
     // v3 layout: 14 custom rows (56 strip rows − 42 built-ins).
     expect(CUSTOM_STRIP_SLOTS).toBe(14);
-    // A row comes from the id alone, so fill the sheet with ids whose rows are still free.
-    for (let k = 0; customIds().length < CUSTOM_STRIP_SLOTS; k++)
-      if (homeOwner(`test_fill${k}`, CUSTOM_STRIP_SLOTS) === undefined)
-        defineMaterial({ id: `test_fill${k}`, roughness: 0.5 });
-    expect(code(() => defineMaterial({ id: 'test_over', roughness: 0.5 }))).toBe('T3D_SHEET_FULL');
+    for (let k = 0; k < 2 * CUSTOM_STRIP_SLOTS; k++)
+      defineMaterial({ id: `test_fill${k}`, roughness: 0.5 });
+    expect(customIds().length).toBeGreaterThan(2 * CUSTOM_STRIP_SLOTS);
+    // All of them at once do not fit one sheet; a list that does, paints.
+    expect(code(() => paintTrimSheet({ ...DEFAULT_SHEET, size: SIZE }))).toBe(
+      'T3D_MATERIAL_CONFLICT',
+    );
+    expect(code(() => paintTrimSheet({ ...DEFAULT_SHEET, size: SIZE }, ['test_ghost']))).toBe(
+      'T3D_MATERIAL_UNKNOWN',
+    );
   });
 });
 
@@ -131,7 +140,7 @@ describe('defineMaterial: output', () => {
     expect(materialOf(teak).origin).toBe('defined');
     expect(materialOf('brass').origin).toBe('library');
     expect(materialOf('brick').origin).toBe('classic');
-    const sheet = paintTrimSheet({ ...DEFAULT_SHEET, size: SIZE });
+    const sheet = paintTrimSheet({ ...DEFAULT_SHEET, size: SIZE }, ['test_image', teak]);
     const y = rowMid('test_image' as StripId);
     expect([0, 1, 2].map((k) => at(sheet.albedo, 100, y, k))).toEqual([40, 100, 160]);
     expect(Math.abs(at(sheet.orm, 100, rowMid(teak), 1) - 0.6 * 255)).toBeLessThan(25);

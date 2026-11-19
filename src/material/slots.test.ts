@@ -2,12 +2,15 @@ import { afterAll, expect, it } from 'bun:test';
 import { Ts23dError } from '../core/index.ts';
 import { CC0_MATERIALS } from './cc0.ts';
 import { CREATURE_MATERIALS } from './creature.ts';
-import { defineMaterial, resetMaterials } from './define.ts';
+import { defineMaterial, materialSnapshot, resetMaterials } from './define.ts';
 import type { MaterialDef } from './material-def.ts';
-import { customIds, customIndex, homeSlot } from './slots.ts';
+import { customIds, customIndex, homeSlot, idsOnRow } from './slots.ts';
 import { CUSTOM_STRIP_SLOTS, type StripId, stripRect } from './trim-sheet.ts';
 
-afterAll(resetMaterials);
+// Put back, last of all hooks, what other test files' recipes defined at import (D334).
+const restoreMaterials = materialSnapshot();
+
+afterAll(restoreMaterials);
 
 function codeOf(fn: () => unknown): string {
   try {
@@ -32,7 +35,7 @@ it('keeps a custom strip row whatever the process registered before it', () => {
   expect(vOf(fur)).toBe(alone);
 });
 
-it('refuses a second id on a taken row whichever came first, and names a free id', () => {
+it('lets any number of ids hold one row, in either order, each on the row its definition gives', () => {
   const home = homeSlot('clash_a', CUSTOM_STRIP_SLOTS);
   let other = 'clash_b0';
   for (let k = 1; homeSlot(other, CUSTOM_STRIP_SLOTS) !== home; k++) other = `clash_b${k}`;
@@ -41,23 +44,13 @@ it('refuses a second id on a taken row whichever came first, and names a free id
     [other, 'clash_a'],
   ] as const) {
     resetMaterials();
+    // Refused before D299 (T3D_MATERIAL_CONFLICT): the rows belonged to the process.
     defineMaterial({ id: first, roughness: 0.5 });
-    const row = vOf(first);
-    let fix = '';
-    try {
-      defineMaterial({ id: second, roughness: 0.5 });
-    } catch (e) {
-      if (!(e instanceof Ts23dError)) throw e;
-      expect(e.code).toBe('T3D_MATERIAL_CONFLICT');
-      expect(e.message).toContain(first);
-      fix = e.fix ?? '';
-    }
-    // Probing gave the second id another row: the layout then depended on registration order.
-    expect(customIds()).toEqual([first]);
-    expect(vOf(first)).toBe(row);
-    const free = /'([a-z0-9_]+)'/.exec(fix)?.[1] ?? '';
-    expect(free.startsWith(second)).toBe(true);
-    expect(String(defineMaterial({ id: free, roughness: 0.5 }))).toBe(free);
+    defineMaterial({ id: second, roughness: 0.5 });
+    defineMaterial({ id: 'clash_placed', roughness: 0.5, row: home });
+    expect(customIds()).toEqual(['clash_a', other, 'clash_placed'].sort());
+    expect(idsOnRow(home)).toEqual([...customIds()]);
+    expect(vOf(first)).toBe(vOf(second));
   }
 });
 
@@ -66,32 +59,6 @@ it('rejects a row outside the custom rows', () => {
     expect(codeOf(() => defineMaterial({ id: 'bad_row', roughness: 0.5, row }))).toBe(
       'T3D_MATERIAL_INVALID',
     );
-});
-
-it('refuses an explicit row another id holds, in either order, and names the free rows', () => {
-  const home = homeSlot('row_hashed', CUSTOM_STRIP_SLOTS);
-  const hashed = { id: 'row_hashed', roughness: 0.5 };
-  const placed = { id: 'row_placed', roughness: 0.5, row: home };
-  for (const [first, second] of [
-    [hashed, placed],
-    [placed, hashed],
-  ] as const) {
-    resetMaterials();
-    defineMaterial(first);
-    let fix = '';
-    try {
-      defineMaterial(second);
-    } catch (e) {
-      if (!(e instanceof Ts23dError)) throw e;
-      expect(e.code).toBe('T3D_MATERIAL_CONFLICT');
-      fix = e.fix ?? '';
-    }
-    expect(customIds()).toEqual([first.id]);
-    const free = Number(/row: (\d+)/.exec(fix)?.[1] ?? Number.NaN);
-    expect(free).not.toBe(home);
-    defineMaterial({ ...second, row: free });
-    expect(customIndex(second.id)).toBe(free);
-  }
 });
 
 it('puts a material on the row it names, whatever was registered before', () => {

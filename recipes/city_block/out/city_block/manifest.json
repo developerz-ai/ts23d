@@ -22,9 +22,9 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    29538,
-    29538,
-    2928
+    59939,
+    29346,
+    5856
   ],
   "drawCalls": [
     1,
@@ -45,13 +45,13 @@
   "real": {
     "length": 148.86,
     "width": 120.04,
-    "height": 22.4
+    "height": 27.42
   },
   "measures": [
     {
       "label": "way 250474566 height (OSM height tag)",
       "spec": 22.2,
-      "measured": 22.200000762939453,
+      "measured": 22.211999893188477,
       "source": "https://www.openstreetmap.org/way/250474566"
     },
     {
@@ -69,7 +69,7 @@
     {
       "label": "way 250474569 height (OSM height tag)",
       "spec": 21.3,
-      "measured": 21.299999237060547,
+      "measured": 21.312000274658203,
       "source": "https://www.openstreetmap.org/way/250474569"
     }
   ],

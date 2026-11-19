@@ -118,7 +118,7 @@ JSON are in the glTF frame (Y up, +Z front, +X left), the same space turned: ass
 | `joint` | `bone`, `head?`, `tail?` (asset frame; before `bind`) | the bone in the skeleton JSON (or the source rig's edit bone) is moved |
 | `bind` | `from` ('skeleton' \| 'source'), `maxInfluences` (4), `proxyVoxel?` (1.2 % of the diagonal) | 'skeleton': armature from the skeleton JSON, automatic weights, proxy fallback. 'source': the input GLB's own armature, weights by Data Transfer from its skinned mesh, clips kept. Then limit / clean (< 0.01) / normalise |
 | `weights` | `kind` ('assign' \| 'smooth' \| 'scale'), `bone`, `mask`, `value` (1), `iterations` (2) (after `bind`) | one bone's vertex group edited inside the mask; the other bones rescaled so every vertex sums to 1; limited again |
-| `isolate` | `bones` (a free chain: the tail past the croup), `from` (its tip), `point` + `normal` (the cut across its root, normal along the chain), `r` (reach round the bones, m), `feather` (0.03 m), `maxShare` (0.25) (after `bind`) | The chain's skin = what connects to the vertex nearest `from`, within `r` of the bones and beyond the cut. There only `bones` keep weight (others fade out over `feather`; a vertex left with none takes its nearest chain bone); on the rest of the mesh `bones` lose theirs and those vertices are refilled from the body round them. Fails when the flood reaches over `maxShare` of the mesh (the chain is fused: `unweb` first) |
+| `isolate` | `bones` (a free chain: the tail past the croup), `from` (its tip), `point` + `normal` (the cut across its root, normal along the chain), `r` (reach round the bones, m), `feather` (0.03 m), `maxShare` (0.25), `contact?` (m; absent: off) (after `bind`) | The chain's skin = what connects to the vertex nearest `from`, within `r` of the bones and beyond the cut. There only `bones` keep weight (others fade out over `feather`; a vertex left with none takes its nearest chain bone); on the rest of the mesh `bones` lose theirs and those vertices are refilled from the body round them. Fails when the flood reaches over `maxShare` of the mesh (the chain is fused: `unweb` first). `contact`: weights within that distance (along edges) of an edge the chain's share jumps over 0.75 across are relaxed between the skin round them; the report's `contact` has the `edges` found and the `vertices` blended |
 | `script` | `python` (source text), `why` (required) | `exec` with `obj`, `source`, `arm`, `bpy`, `bmesh`, `mathutils`, `np`; must leave a mesh in `obj`; report keeps sha256, `why`, stdout tail |
 | `review` | `views` (['clay', 'wire']; also 'weights', 'poses', 'turnaround'), `size` (1024), `poses?` ([{ bone, axis, degrees }]) | Workbench sheets `review-<step>-<view>.png`, returned as PNG outputs after the report; changes nothing |
 | `lods` | `triangles: [lod1, lod2?]`, `focus?` | Decimate copies that keep UVs, material, weights and the Armature modifier; gated |
@@ -248,6 +248,18 @@ from the tail tip over the vertices within `r` of the tail's bones, stopped at t
 it needs the `unweb` gap between tail and hocks to have survived `retopo`); the body's vertices
 that lose the tail's weight are filled in from their neighbours (60 relaxation passes), not
 renormalised onto whichever bone was second.
+
+**A chain fused to the body along its length (`isolate` with `contact`).** A generated tail often
+hangs against the thighs as one surface with them, above where `unweb` can cut without baking tail
+fur onto the leg. `isolate` then leaves edges with one end on the tail's bones and the other on
+the leg's: at the hip's limits each stretches by the whole motion between the two (×8–10 on the
+profile wolf, QA `deform` ×5.7 on LOD 1 against its ×4). `contact: 0.04` finds those edges (89 on
+the wolf) and relaxes the weights of the 390 vertices within 4 cm of them, so the motion is shared
+by every edge across the band: ×2.2 on all three LODs; the worst single edge went ×10.7 → ×6.4
+(a 5 mm edge of LOD 0) and ×9.4 → ×4.0 on LOD 1. The step changes weights only: positions, UVs
+and maps are not touched. It does not free the chain: the skin still joins tail and thigh, and the
+tail's upper part follows the thigh a little. Wider is not better: 8 cm reached the stifle and
+dropped its volume at full flexion from 0.86 to 0.73. LODs made after it inherit the blend.
 
 **A source that arrives rigged (`bind` with `from: 'source'`, `steps/rig_source.py`).** When the
 input GLB has a skin (a Meshy humanoid), `load` keeps its armature and actions, drops the bone
@@ -423,4 +435,4 @@ on the CPU.
 - `tasks/common.py`: scene reset, GLB import/export, joins, evaluated copies
 - `tasks/cloth.py`, `tasks/rig.py`, `tasks/fracture.py`, `tasks/groom.py`, `tasks/vdm_extract.py`
 - `tasks/session.py` + `tasks/session_checkpoint.py`: the long-lived session loop and its checkpoints
-- `tasks/blender.py`: runs a step program; `tasks/steps/`: `state` (shared state, frames), `io` (load, export), `clean`, `remesh`, `retopo`, `build`, `deform`, `stroke` + `stroke_brush` (brushes), `shell` (the solid shell), `gates` (shared measures), `uv`, `bake` + `bake_source` + `bake_cage` + `fill`, `bind`, `rig_source` (a rigged source), `rigfix` (`joint`, `weights`), `script`, `review` + `review_sheet`, `lods`, `unweb`, `test_steps` + `test_gates` + `test_finish` + `test_limbs` + `test_stroke` + `test_session` (self-test)
+- `tasks/blender.py`: runs a step program; `tasks/steps/`: `state` (shared state, frames), `io` (load, export), `clean`, `remesh`, `retopo`, `build`, `deform`, `stroke` + `stroke_brush` (brushes), `shell` (the solid shell), `gates` (shared measures), `uv`, `bake` + `bake_source` + `bake_cage` + `fill`, `bind`, `rig_source` (a rigged source), `rigfix` (`joint`, `weights`, `isolate`), `script`, `review` + `review_sheet`, `lods`, `unweb`, `test_steps` + `test_gates` + `test_finish` + `test_limbs` + `test_stroke` + `test_session` (self-test)

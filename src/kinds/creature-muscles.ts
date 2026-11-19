@@ -119,6 +119,14 @@ export function seat(m: FibreMuscle, base: Field, definition: number): FibreMusc
   return m;
 }
 
+/**
+ * The tightest blend whose valley QA `connections` never reads as a seam, whatever the form
+ * beside it does: a blend of k leaves a fold of radius ≈ 0.8 k, and the gate calls a fold a seam
+ * under 2.5 cm (1.5 % of the shell on a small animal). The old floor (2.5 % of the shoulder
+ * height: 2 cm on a wolf) sat on that line, so 2 % more chest width flipped the gate.
+ */
+export const softBlend = (b: Bones): number => Math.min(0.032, b.height * 0.04);
+
 /** Every muscle of the body as sculpt edits, seated on the `base` masses (bones only when
  *  `build.muscle` is 0). */
 export function muscleEdits(b: Bones, s: CreatureSpec, base: readonly SculptEdit[]): SculptEdit[] {
@@ -127,5 +135,5 @@ export function muscleEdits(b: Bones, s: CreatureSpec, base: readonly SculptEdit
   if (ms.length === 0) return [];
   const f = sculptField(base, { color: [0, 0, 0] }).field;
   const fold: Field = (p) => f([p[0], Math.abs(p[1]), p[2]]);
-  return ms.map((m) => pairedEdit(seat(m, fold, k), k, b.height * 0.025));
+  return ms.map((m) => pairedEdit(seat(m, fold, k), k, softBlend(b)));
 }

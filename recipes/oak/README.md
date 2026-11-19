@@ -22,7 +22,26 @@ dense dark-green foliage in lobed clusters; a buttressed root flare.
 | leaves | https://commons.wikimedia.org/wiki/Category:Quercus_robur_leaves | lobed outline → `lobed` card |
 
 ## Parts the engine needs
-`trunk`, `roots` (flare), `crown` (sway group, 2° @ 0.4 Hz about X) › `branches`, `leaves`.
+`trunk` (with the snapped dead limb), `roots` (flare), `crown` (sway group, 2° @ 0.4 Hz about X) ›
+`branches`, `leaves` (cutout), plus `fallen_limb` and `ground` (leaf litter).
+
+## How it is built (LOD policy)
+- **Species preset `oak`** with this tree's overrides (`OAK` in `oak.ts`): crown base at 20% of
+  height, 11 long first-order limbs leaving almost level (74° → 42° up the bole) with an S-bend,
+  heavier limbs (ratio power 0.95), and many small `strand` cards. Skeleton seed 14: the most even
+  crown of seeds 0–29 (centroid 0.1 m off the bole), so the dome is not lopsided.
+- **Leaves** (`leaf-cards.ts`): every kind card becomes one hexagonal cutout twig card on the
+  `foliage_broadleaf` cell (painted serrated leaves), same root, length and baked crown shade; the
+  hexagon follows the painted cluster, so the empty cell corners are not drawn even where alpha is
+  not tested. Cards are shrunk about their root to stay inside the kind's fitted envelope (height
+  and spread measures) and 1.2 m over the ground (the crown's sway).
+- **LOD2**: the LOD0 cards clustered (k-means, `../pine/clumps.ts`) into 15 clumps of three crossed
+  twig cards (12 triangles each), ±2.4 standard deviations across, over LOD0's trunk resampled to a
+  pentagon and four limbs to the outermost low clumps: the bole stays visible. `oak.test.ts` holds
+  the 32 px silhouette IoU ≥ 0.85 from front, side and 3/4 (the kind's lathe blob fails it).
+- **Wear** (`wear.ts`): moss on the north foot, pale lichen blotches on sky-facing bark, a snapped
+  dead limb with a jagged break on the bole (merged into `trunk`, inside its Y extent so the DBH
+  measure holds), and a fallen forked limb in the litter.
 
 ## Open questions
 Sizes vary enormously with age and site (20–40 m). We model a ~150-year field oak at 22 × 22 m with

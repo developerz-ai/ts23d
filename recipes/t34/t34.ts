@@ -14,6 +14,7 @@ import {
   hex,
   type Lod,
   lathe,
+  loft,
   type Mesh,
   merge,
   noOverlap,
@@ -29,16 +30,24 @@ import {
   tread,
   type Vec2,
   type Vec3,
+  valueNoise,
+  weightedNormals,
 } from '@developerz.ai/ts23d';
+import { onGround, reproject, restrip, type StripRule, tessellate } from '../_lib/finish/finish.ts';
 import {
-  onGround,
-  reproject,
-  restrip,
-  type StripRule,
-  tessellate,
-  type WeatheringOptions,
-  weatherer,
-} from '../_lib/finish/finish.ts';
+  chipFlecks,
+  EARTH,
+  type FieldWear,
+  fieldWear,
+  paintOn,
+  rayHit,
+  SOOT,
+  sootPlume,
+  tint,
+  unitNoise,
+  WET_MUD,
+  wheelMud,
+} from './field.ts';
 
 const green = hex('#4e5a2c');
 const greenDark = hex('#3a4422');
@@ -48,6 +57,12 @@ const trackSteel = hex('#4a4139');
 const black = hex('#191919');
 const white = hex('#e6e4da');
 const rust = hex('#4a3426');
+/** Grouser faces the road keeps polished. */
+const bare = hex('#7d766c');
+/** Mud packed between the grousers. */
+const mudPack = hex('#6b5a44');
+/** Spare links: clean of mud, rusted dark all over. */
+const spareRust = hex('#5a3d2c');
 
 const TRACK_Y = 1.225;
 const TRACK_W = 0.55;
@@ -142,21 +157,34 @@ function beltLine(wheels: readonly Circle[], ends: readonly Circle[], sag: numbe
   });
 }
 
-/** Waffle-pattern cast link (X along the run, Z outward); every other one has a guide horn. */
-function trackLink(pitch: number, horn: boolean): Mesh {
+/**
+ * Waffle-pattern cast link (X along the run, Z outward); every other one has a guide horn. The
+ * plate is dark manganese steel, the two grouser bars are rubbed bright by the road, and dried mud
+ * packs the plate between them. A `spare` (hung on the glacis) is clean and rusted all over.
+ */
+function trackLink(pitch: number, horn: boolean, spare = false): Mesh {
+  const body = spare ? spareRust : trackSteel;
+  const face = spare ? spareRust : bare;
+  const bar = (x: number): Mesh =>
+    box({ size: [0.03, TRACK_W * 0.96, LINK_T * 0.5], at: [x, 0, 0], color: face });
   const parts = [
     box({
       size: [pitch * 0.88, TRACK_W, LINK_T * 0.6],
       at: [0, 0, -LINK_T * 0.3],
-      color: trackSteel,
+      color: body,
     }),
-    box({
-      size: [0.03, TRACK_W * 0.96, LINK_T * 0.4],
-      at: [-pitch * 0.2, 0, 0],
-      color: trackSteel,
-    }),
-    box({ size: [0.03, TRACK_W * 0.96, LINK_T * 0.4], at: [pitch * 0.2, 0, 0], color: trackSteel }),
+    bar(-pitch * 0.2),
+    bar(pitch * 0.2),
   ];
+  if (!spare)
+    parts.push(
+      box({
+        size: [pitch * 0.84, TRACK_W * 0.9, 0.007],
+        at: [0, 0, LINK_T * 0.3 - 0.001],
+        color: mudPack,
+        omit: ['bottom'],
+      }),
+    );
   if (horn)
     parts.push(
       box({ size: [pitch * 0.5, 0.06, 0.13], at: [0, 0, -LINK_T * 0.3 - 0.13], color: steel }),
@@ -164,13 +192,11 @@ function trackLink(pitch: number, horn: boolean): Mesh {
   // The hinge pin at the leading edge, reaching into the next link: links are a chain, not a
   // row of loose plates (each pin sits ~8 mm into both links on a straight run).
   parts.push(
-    cylinder({
-      radius: 0.018,
-      length: TRACK_W,
-      segments: 6,
-      axis: 'y',
-      at: [pitch / 2, 0, -LINK_T * 0.3],
+    box({
+      size: [0.032, TRACK_W, 0.032],
+      at: [pitch / 2, 0, -LINK_T * 0.3 - 0.016],
       color: steel,
+      omit: ['left', 'right'],
     }),
   );
   return merge(parts);
@@ -196,18 +222,31 @@ function treadPitch(lod: Lod, line: readonly Vec2[]): number {
 function trackMesh(lod: Lod, line: readonly Vec2[], y: number, finish: (link: Mesh) => Mesh): Mesh {
   const stations = stationsOf(lod, line);
   const len = stations[0]?.len ?? 0.172;
-  // The slab that stands for a link below LOD0, built only there (LOD0 lays two real links).
-  const band = (): Mesh =>
-    finish(
-      box({
-        size: [len * 1.04, TRACK_W, LINK_T],
-        at: [0, 0, -LINK_T / 2],
-        color: trackSteel,
-        // LOD2 drops only the edge that faces the hull ('left' = +Y, 'right' = −Y in `box`): the
-        // outboard edge is the 6 cm of track you see from the side, the ends show round the wheels.
-        ...(lod === 2 ? { omit: [y > 0 ? 'right' : 'left'] as const } : {}),
-      }),
+  // The slab that stands for a link below LOD0, built only there (LOD0 lays two real links):
+  // LOD1 keeps the mud pack on its road face, LOD2 is the bare slab with earth rubbed in.
+  const band = (): Mesh => {
+    const slab = box({
+      // LOD1: 4 mm thinner, so the mud pack's face is the belt's outer face (never below ground).
+      size: [len * 1.04, TRACK_W, lod === 2 ? LINK_T : LINK_T - 0.004],
+      at: [0, 0, -LINK_T / 2],
+      color: trackSteel,
+      // LOD2 drops only the edge that faces the hull ('left' = +Y, 'right' = −Y in `box`): the
+      // outboard edge is the 6 cm of track you see from the side, the ends show round the wheels.
+      ...(lod === 2 ? { omit: [y > 0 ? 'right' : 'left'] as const } : {}),
+    });
+    if (lod === 2) return finish(slab);
+    return finish(
+      merge([
+        slab,
+        box({
+          size: [len * 0.8, TRACK_W * 0.9, 0.0045],
+          at: [0, 0, LINK_T / 2 - 0.0045],
+          color: mudPack,
+          omit: ['bottom'],
+        }),
+      ]),
     );
+  };
   const even = lod === 0 ? finish(trackLink(len, true)) : band();
   const odd = lod === 0 ? finish(trackLink(len, false)) : even;
   return onGround(
@@ -225,8 +264,9 @@ function trackMesh(lod: Lod, line: readonly Vec2[], y: number, finish: (link: Me
 // ---------------------------------------------------------------- wheels
 
 /** One half of a Christie double wheel: rubber tyre + stamped dished disc. Axis Y, face +Y. */
-function wheelHalf(lod: Lod, r: number, w: number, ribs: number, paint: Vec3): Mesh {
-  const segs = [24, 12, 8][lod] ?? 8;
+function wheelHalf(lod: Lod, r: number, w: number, ribs: number, paint: Vec3, inner = false): Mesh {
+  // The inboard half hides behind the outboard one and the track: fewer sides, no ribs or bolts.
+  const segs = (inner ? [14, 10, 8] : [24, 12, 8])[lod] ?? 8;
   const h = w / 2;
   const tyre = lathe({
     profile: [
@@ -246,6 +286,8 @@ function wheelHalf(lod: Lod, r: number, w: number, ribs: number, paint: Vec3): M
       ? [
           [r - 0.07, h - 0.005],
           [r * 0.72, h - 0.04],
+          // A ring mid-dish: the mud thrown into the dish needs vertices to end raggedly on.
+          [r * 0.54, h - 0.045],
           [r * 0.36, h - 0.05],
           [r * 0.3, h - 0.01],
           [r * 0.2, h + 0.03],
@@ -263,7 +305,7 @@ function wheelHalf(lod: Lod, r: number, w: number, ribs: number, paint: Vec3): M
     tyre,
     lathe({ profile: [...back, ...face], segments: segs, axis: 'y', color: paint }),
   ];
-  if (lod === 0) {
+  if (lod === 0 && !inner) {
     // Stamped radial ribs and hub bolts.
     const rib = box({ size: [0.035, 0.025, r * 0.36], at: [0, 0, r * 0.33], color: paint });
     const bolt = box({ size: [0.03, 0.03, 0.03], at: [0, 0, -0.015], color: greenDark });
@@ -279,10 +321,9 @@ function wheelHalf(lod: Lod, r: number, w: number, ribs: number, paint: Vec3): M
 
 /** Double road wheel: two halves straddling the guide horns. */
 function christie(lod: Lod, r: number, ribs: number, paint: Vec3): Mesh {
-  const half = wheelHalf(lod, r, 0.17, ribs, paint);
   return merge([
-    translate(half, [0, 0.135, 0]),
-    translate(place(half, { yaw: Math.PI }), [0, -0.135, 0]),
+    translate(wheelHalf(lod, r, 0.17, ribs, paint), [0, 0.135, 0]),
+    translate(place(wheelHalf(lod, r, 0.17, ribs, paint, true), { yaw: Math.PI }), [0, -0.135, 0]),
   ]);
 }
 
@@ -431,35 +472,6 @@ function lettering(text: string, h: number): Vec2[][] {
   return out;
 }
 
-/** Where the ray from `o` along `d` first meets `m` (null: it misses). */
-function rayHit(m: Mesh, o: Vec3, d: Vec3): Vec3 | null {
-  const at = (i: number): Vec3 => [
-    m.positions[i * 3] ?? 0,
-    m.positions[i * 3 + 1] ?? 0,
-    m.positions[i * 3 + 2] ?? 0,
-  ];
-  const dot3 = (p: Vec3, q: Vec3): number => p[0] * q[0] + p[1] * q[1] + p[2] * q[2];
-  let best = Number.POSITIVE_INFINITY;
-  for (let k = 0; k < m.indices.length; k += 3) {
-    const p0 = at(m.indices[k] ?? 0);
-    const e1 = sub(at(m.indices[k + 1] ?? 0), p0);
-    const e2 = sub(at(m.indices[k + 2] ?? 0), p0);
-    const h = cross(d, e2);
-    const det = dot3(e1, h);
-    if (Math.abs(det) < 1e-12) continue;
-    const s = sub(o, p0);
-    const bu = dot3(s, h) / det;
-    const q = cross(s, e1);
-    const bv = dot3(d, q) / det;
-    if (bu < -1e-6 || bv < -1e-6 || bu + bv > 1 + 1e-6) continue;
-    const t = dot3(e2, q) / det;
-    if (t > 0 && t < best) best = t;
-  }
-  return Number.isFinite(best)
-    ? [o[0] + d[0] * best, o[1] + d[1] * best, o[2] + d[2] * best]
-    : null;
-}
-
 /**
  * Paint flat quads onto a plate of `onto`. `a` → `b` is the plate's bottom edge in the reading
  * direction, `up` a point higher on the plate. A four-cornered armour plate is rarely flat (the hex
@@ -543,6 +555,71 @@ function turretShell(kind: Params['turret']): Shell {
   return { bottom: ring(1, 0.92, 0, 0.98, -1.2), top: ring(0.92, 0.7, 0.66, 0.85, -1.08) };
 }
 
+/** Round a plan polygon's corners: each becomes an arc of `n` segments reaching `d` m along both
+ *  of its edges (a quadratic through the corner). n = 0 keeps the polygon. */
+function fillet(poly: readonly Vec3[], d: number, n: number): Vec3[] {
+  if (n === 0) return [...poly];
+  const out: Vec3[] = [];
+  poly.forEach((p, i) => {
+    const a = sub(poly[(i + poly.length - 1) % poly.length] as Vec3, p);
+    const b = sub(poly[(i + 1) % poly.length] as Vec3, p);
+    const la = Math.hypot(...a);
+    const lb = Math.hypot(...b);
+    const k = Math.min(d, 0.42 * la, 0.42 * lb);
+    for (let j = 0; j <= n; j++) {
+      const t = j / n;
+      const wa = ((1 - t) * (1 - t) * k) / la;
+      const wb = (t * t * k) / lb;
+      out.push([p[0] + a[0] * wa + b[0] * wb, p[1] + a[1] * wa + b[1] * wb, p[2]]);
+    }
+  });
+  return out;
+}
+
+/**
+ * The turret as a casting: the plan's corners are rounded and the wall rolls into the roof over a
+ * `c` m radius (LOD0: arcs; LOD1: one chamfer; LOD2: the sharp tapered solid). Flat plates keep
+ * flat shading (`weightedNormals`), only the radii bend the light.
+ */
+function castShell(shell: Shell, lod: Lod, color: Vec3): Mesh {
+  if (lod === 2) return taper(shell.bottom, shell.top, color);
+  const n = lod === 0 ? 3 : 1;
+  const c = 0.075;
+  const b = fillet(shell.bottom, 0.1, n);
+  const t = fillet(shell.top, 0.08, n);
+  const h = t[0]?.[2] ?? 0.7;
+  const cen: Vec3 = [
+    t.reduce((x, q) => x + q[0], 0) / t.length,
+    t.reduce((x, q) => x + q[1], 0) / t.length,
+    h,
+  ];
+  /** Wall point `c` below the roof edge, the edge itself, and the roof point `c` in from it. */
+  const wall = t.map((q, i): Vec3 => {
+    const f = c / h;
+    const p = b[i] as Vec3;
+    return [q[0] + (p[0] - q[0]) * f, q[1] + (p[1] - q[1]) * f, h - c];
+  });
+  const roof = t.map((q): Vec3 => {
+    const l = Math.hypot(q[0] - cen[0], q[1] - cen[1]) || 1;
+    return [q[0] + ((cen[0] - q[0]) * c) / l, q[1] + ((cen[1] - q[1]) * c) / l, h];
+  });
+  const arc = (u: number): Vec3[] =>
+    t.map((q, i): Vec3 => {
+      const s0 = wall[i] as Vec3;
+      const s1 = roof[i] as Vec3;
+      const w = [(1 - u) * (1 - u), 2 * u * (1 - u), u * u] as const;
+      return [
+        s0[0] * w[0] + q[0] * w[1] + s1[0] * w[2],
+        s0[1] * w[0] + q[1] * w[1] + s1[1] * w[2],
+        s0[2] * w[0] + q[2] * w[1] + s1[2] * w[2],
+      ];
+    });
+  const rings = lod === 0 ? [b, wall, arc(1 / 3), arc(2 / 3), roof] : [b, wall, roof];
+  return weightedNormals(loft({ rings, color, strip: 'iron', capStart: true, capEnd: true }), {
+    hardAngle: 38,
+  });
+}
+
 // ---------------------------------------------------------------- the family
 
 const t34Family = defineFamily<Params>({
@@ -558,6 +635,10 @@ const t34Family = defineFamily<Params>({
     length: 6.68,
     width: 3.0,
     height: 2.45,
+    // Combat weight of the T-34/76 Model 1941–43: 26.5 t (README). The mass gate weighs the
+    // model as steel walls of `physics.shell`.
+    mass: 26500,
+    massTolerance: 0.1,
     measures: [
       { label: 'road wheel diameter', axis: 'z', value: 0.83, parts: ['wheel_l_0'] },
       { label: 'track width', axis: 'y', value: 0.55, parts: ['track_l'] },
@@ -580,6 +661,9 @@ const t34Family = defineFamily<Params>({
   },
   // LOD2 keeps the five Christie wheels per side inside an open belt (no solid slab).
   budget: { triangles: [60000, 16000, 2000] },
+  // Walls, not solids: 45 mm is the T-34's hull and turret armour. The paint is a project strip
+  // (`custom`) over steel; tyres sit on the `concrete` strip here and are rubber.
+  physics: { shell: 0.045, density: { custom: 7850, concrete: 1100 } },
   gaps: [
     {
       parts: ['track_*'],
@@ -602,31 +686,34 @@ const t34Family = defineFamily<Params>({
     const segs = ctx.pick([20, 14, 8]);
     // Factory paint varies a little from tank to tank.
     const paint = ctx.rng.fork('paint').jitter(green, 0.04);
-    // 4BO green as painted steel (vertex colour = paint, chips show steel), rubber tyres, rusted
-    // manganese track, cast/forged steel fittings, rusted exhausts.
+    // 4BO green as matte armour paint (vertex colour = paint; `fieldWear` chips its edges),
+    // rubber tyres, dark manganese-steel track with road-polished grousers and packed mud,
+    // cast/forged steel fittings, rusted exhausts and spare links.
+    const paints = [paint, greenDark];
     const rules: readonly StripRule[] = [
-      { from: paint, strip: 'steel_painted' },
-      { from: greenDark, strip: 'steel_painted' },
-      { from: rubber, strip: 'rubber', color: hex('#d8d8d8') },
-      { from: trackSteel, strip: 'iron_rust', color: hex('#b8aea4') },
+      // Tyres on a rough greyscale strip, so the earth packed on them shows (`rubber` is near black).
+      { from: rubber, strip: 'concrete', color: hex('#2e2d2a') },
+      { from: trackSteel, strip: 'iron_cast', color: hex('#a89c90') },
+      { from: bare, strip: 'iron_cast', color: hex('#f4efe6') },
+      { from: mudPack, strip: 'soil', color: hex('#f0e6d2') },
       { from: rust, strip: 'iron_rust', color: hex('#c09a80') },
+      { from: spareRust, strip: 'iron_cast', color: hex('#c4b2a4') },
       { from: steel, strip: 'iron_cast', color: hex('#c8c4be') },
     ];
-    const weather = weatherer(ctx.rng.fork('weather'));
-    const soot = [1, -1].map((s) => ({
-      at: [-3.05, s * 0.55, 1.05] as Vec3,
-      radius: 0.6,
-      strength: 0.85,
-    }));
-    /** Materials at true scale, then dust on top plates, ragged mud from the ground, soot. */
-    const finish = (m: Mesh, at: Vec3 = [0, 0, 0], w: WeatheringOptions = {}): Mesh =>
-      weather(reproject(restrip(tessellate(m, ctx.pick([0.45, 0.8, 1.6])), rules)), {
-        at,
-        dust: 0.4,
-        mud: 0.85,
-        mudStrength: 0.85,
-        ...w,
-      });
+    const grain = unitNoise(valueNoise(ctx.rng.fork('weather'), { scale: 0.3, octaves: 3 }));
+    const fine = unitNoise(valueNoise(ctx.rng.fork('mud'), { scale: 0.09, octaves: 2 }));
+    /** Materials at true scale: library strips by authoring colour, the paint on its own strip. */
+    const dress = (m: Mesh): Mesh =>
+      // (the far LOD keeps its plates whole: the AFV band's 1.5k has no room for splits)
+      paintOn(reproject(restrip(tessellate(m, ctx.pick([0.45, 0.8, 10])), rules)), paints);
+    /** Chips and mud need vertices: 22 cm at LOD0, 50 cm at LOD1, the plain mesh at LOD2. */
+    const res: FieldWear['resolution'] = [0.22, 0.5, 0];
+    // Exhaust soot: two plumes up the rear plate from the pipe mouths.
+    const soot = (m: Mesh): Mesh =>
+      [1, -1].reduce(
+        (acc, s) => tint(acc, SOOT, sootPlume([-2.98, s * 0.55, 1.1], 0.8, 0.95, grain)),
+        m,
+      );
     const wheels: Circle[] = WHEELS_X.map((x) => ({ x, z: WHEEL_Z, r: WHEEL_R }));
     const line = beltLine(wheels, [IDLER, SPROCKET], 0.06);
 
@@ -638,13 +725,19 @@ const t34Family = defineFamily<Params>({
       const track = `track_${side}`;
       ctx.part(
         track,
-        // Each link is weathered as if it sat 0.72 m up, under the ragged top of the 1.2 m mud:
-        // packed mud with rusted steel showing through in places, the same on every link of a side
-        // (mean belt colour within 1% of the old by-height mud at LOD0).
+        // One link is finished in its own space (steel, polished grousers, mud pack, earth
+        // rubbed into the plate) and laid round the belt, so every link of a side is the same.
         trackMesh(lod, line, y, (link) =>
-          weather(restrip(link, rules), { at: [0, y, 0.72], mud: 1.2, mudStrength: 0.8 }),
+          tint(
+            reproject(restrip(tessellate(link, 10), rules)),
+            EARTH,
+            // Below LOD0 the slabs overlap at the bends: one even tone, so twins match exactly.
+            (p) => (lod === 0 ? 0.6 * fine([p[0] * 3, p[1], p[2] * 3]) : 0.3),
+          ),
         ),
-        { motion: tread(line, y, treadPitch(lod, line)) },
+        // Waffled manganese castings, hollowed between the ribs (the model's links are plain
+        // slabs): a quarter solid, ~1.15 t a side (README).
+        { motion: tread(line, y, treadPitch(lod, line)), density: 1950 },
       );
       // Idler crank and final-drive housing: what holds idler and sprocket to the hull side.
       stubs.push(
@@ -677,26 +770,30 @@ const t34Family = defineFamily<Params>({
           at: [0, (0.17 - inner) / 2, 0],
           color: paint,
         });
-      const gear = (m: Mesh, at: Vec3): Mesh => finish(m, at, { mud: 0.95 });
+      // Wheels spin: their mud is radial (rim and dish), never a height band.
+      const gear = (m: Mesh, r: number): Mesh =>
+        wheelMud(dress(m), r, fine, lod === 2 ? 0.45 : 0.85);
+      // Pressed steel discs and cast sprocket rings weigh as 12 mm walls, not as solids.
       const spin = (rps: number) => ({
         motion: { kind: 'spin', axis: [0, 1, 0], rps } as const,
         clearOf: [track],
+        shell: 0.012,
       });
       const wheel = lod === 2 ? far(WHEEL_R) : christie(lod, WHEEL_R, 8, paint);
       WHEELS_X.forEach((x, i) => {
-        ctx.part(`wheel_${side}_${i}`, gear(flip(wheel), [x, y, WHEEL_Z]), {
+        ctx.part(`wheel_${side}_${i}`, gear(flip(wheel), WHEEL_R), {
           at: [x, y, WHEEL_Z],
           ...spin(0.75),
         });
       });
       const idler = lod === 2 ? far(IDLER.r) : christie(lod, IDLER.r, 6, paint);
-      ctx.part(`idler_${side}`, gear(flip(idler), [IDLER.x, y, IDLER.z]), {
+      ctx.part(`idler_${side}`, gear(flip(idler), IDLER.r), {
         at: [IDLER.x, y, IDLER.z],
         ...spin(1.0),
       });
       // The sprocket's disc stops where its LOD0 hub does, on the final-drive housing's face.
       const drive = lod === 2 ? far(SPROCKET.r, 0.25) : sprocket(lod, SPROCKET.r, paint);
-      ctx.part(`sprocket_${side}`, gear(flip(drive), [SPROCKET.x, y, SPROCKET.z]), {
+      ctx.part(`sprocket_${side}`, gear(flip(drive), SPROCKET.r), {
         at: [SPROCKET.x, y, SPROCKET.z],
         ...spin(1.0),
       });
@@ -725,34 +822,32 @@ const t34Family = defineFamily<Params>({
     ];
     const lowX = glacisX(PANNIER_Z);
     const topX = glacisX(DECK);
-    ctx.part(
-      'hull',
-      finish(
-        merge([
-          prism({ profile: tub, depth: 1.84, plane: 'xz', color: paint, strip: 'iron' }),
-          taper(
-            [
-              [lowX, -1.5, PANNIER_Z],
-              [lowX, 1.5, PANNIER_Z],
-              [-HULL_HALF, 1.5, PANNIER_Z],
-              [-HULL_HALF, -1.5, PANNIER_Z],
-            ],
-            [
-              [topX, -1.12, DECK],
-              [topX, 1.12, DECK],
-              [-2.45, 1.12, DECK],
-              [-2.45, -1.12, DECK],
-            ],
-            paint,
-          ),
-          ...stubs,
-        ]),
-        [0, 0, 0],
-        { soot },
-      ),
+    const hullMesh = dress(
+      merge([
+        prism({ profile: tub, depth: 1.84, plane: 'xz', color: paint, strip: 'iron' }),
+        taper(
+          [
+            [lowX, -1.5, PANNIER_Z],
+            [lowX, 1.5, PANNIER_Z],
+            [-HULL_HALF, 1.5, PANNIER_Z],
+            [-HULL_HALF, -1.5, PANNIER_Z],
+          ],
+          [
+            [topX, -1.12, DECK],
+            [topX, 1.12, DECK],
+            [-2.45, 1.12, DECK],
+            [-2.45, -1.12, DECK],
+          ],
+          paint,
+        ),
+        ...stubs,
+      ]),
     );
 
     // ---- Hull dressing ----
+    /** Rider-rail stanchions per side (the right rail starts behind the stowage box). */
+    const railX = (s: number): number[] =>
+      s < 0 ? [0.4, -0.5, -1.35, -2.2] : [1.2, 0.0, -1.1, -2.2];
     const detail: Mesh[] = [];
     // Front mudguards: the inner edge tucks under the hull side (no slit to see through), and a
     // 15 cm tab runs on under the pannier floor where it is bolted (a face, not a hinge line).
@@ -869,9 +964,112 @@ const t34Family = defineFamily<Params>({
           );
       }
     }
+    if (lod === 2)
+      // The glacis spare links stay as two rust-dark slabs, so the far LOD keeps the front's read.
+      for (const y of [-0.45, 0.1])
+        detail.push(
+          onGlacis(
+            box({ size: [0.5, 0.38, 0.05], at: [0, 0, -0.01], color: spareRust, omit: ['bottom'] }),
+            y,
+            0.92,
+          ),
+        );
+    if (lod < 2)
+      // The rounded nose girder the glacis and the lower nose plate are welded to.
+      detail.push(
+        cylinder({
+          radius: 0.06,
+          length: 1.84,
+          segments: ctx.pick([12, 8, 6]),
+          axis: 'y',
+          at: [NOSE[0] - 0.015, 0, NOSE[1]],
+          color: paint,
+        }),
+      );
     if (lod === 0) {
+      // Weld beads where the plates meet: glacis to sides, sides and glacis to the roof, rear.
+      // Each bead is laid in ~12 cm runs: most painted, some rubbed to steel or rusted through,
+      // so the plate edges carry the chipping (crisp, where vertex colour could only smudge).
+      const beadRng = ctx.rng.fork('beads');
+      const bead = (from: Vec3, to: Vec3): Mesh => {
+        const n = Math.max(1, Math.round(Math.hypot(...sub(to, from)) / 0.12));
+        const at = (k: number): Vec3 => [
+          from[0] + ((to[0] - from[0]) * k) / n,
+          from[1] + ((to[1] - from[1]) * k) / n,
+          from[2] + ((to[2] - from[2]) * k) / n,
+        ];
+        return merge(
+          Array.from({ length: n }, (_, k) =>
+            beam({
+              from: at(k),
+              to: at(k + 1),
+              width: 0.024,
+              segments: 4,
+              color: beadRng.pick([greenDark, greenDark, greenDark, steel, spareRust]),
+            }),
+          ),
+        );
+      };
+      detail.push(
+        bead([topX, -1.12, DECK], [topX, 1.12, DECK]),
+        bead([-2.45, -1.12, DECK], [-2.45, 1.12, DECK]),
+      );
+      for (const s of [1, -1])
+        detail.push(
+          bead([lowX, s * 1.5, PANNIER_Z], [topX, s * 1.12, DECK]),
+          bead([topX, s * 1.12, DECK], [-2.45, s * 1.12, DECK]),
+          bead([-2.45, s * 1.12, DECK], [-HULL_HALF, s * 1.5, PANNIER_Z]),
+        );
+      // Paint chipped to primer along the plate edges: glacis, both side plates, the rear plate.
+      const plates: Vec3[][] = [
+        [
+          [lowX, -1.5, PANNIER_Z],
+          [lowX, 1.5, PANNIER_Z],
+          [topX, 1.12, DECK],
+          [topX, -1.12, DECK],
+        ],
+        [
+          [-HULL_HALF, -1.5, PANNIER_Z],
+          [-HULL_HALF, 1.5, PANNIER_Z],
+          [-2.45, 1.12, DECK],
+          [-2.45, -1.12, DECK],
+        ],
+        ...[1, -1].map((s): Vec3[] => [
+          [lowX, s * 1.5, PANNIER_Z],
+          [-HULL_HALF, s * 1.5, PANNIER_Z],
+          [-2.45, s * 1.12, DECK],
+          [topX, s * 1.12, DECK],
+        ]),
+      ];
+      detail.push(chipFlecks(ctx.rng.fork('chips'), plates, [0, 0, 1.1], 420, hullMesh));
+      // Stowage box strapped on the right side plate ahead of the turret (Model 1942/43 fit):
+      // a sheet-steel box lying on the 40° plate, sunk 1 cm so it is seated, two strap bands.
+      const sy = (z: number): number => 1.5 - ((z - PANNIER_Z) * 0.38) / (DECK - PANNIER_Z);
+      const up: Vec2 = [-0.645, 0.764];
+      const out: Vec2 = [0.764, 0.645];
+      const boxAt = (len: number, w: number, hgt: number, z0: number, c: Vec3): Mesh => {
+        const o: Vec2 = [sy(z0) - out[0] * 0.01, z0 - out[1] * 0.01];
+        // Profile in (y, z), mirrored onto the right (−Y) side plate.
+        const yz = (a: number, b: number): Vec2 => [
+          -(o[0] + out[0] * a + up[0] * b),
+          o[1] + out[1] * a + up[1] * b,
+        ];
+        return prism({
+          profile: [yz(0, 0), yz(0, w), yz(hgt, w), yz(hgt, 0)],
+          depth: len,
+          plane: 'yz',
+          centred: false,
+          color: c,
+        });
+      };
+      detail.push(translate(boxAt(0.62, 0.26, 0.16, 1.14, paint), [0.75, 0, 0]));
+      for (const x of [0.86, 1.22])
+        detail.push(translate(boxAt(0.04, 0.27, 0.17, 1.135, greenDark), [x, 0, 0]));
       // Tow hooks, spare links on the glacis, rear-plate bolts, side tow cables, rider rails.
       for (const s of [1, -1]) {
+        // The right side's cable and rail start behind the stowage box.
+        const fx = s < 0 ? 0.5 : 1.6;
+        const rail = railX(s);
         detail.push(
           beam({
             from: [2.85, s * 0.7, 0.72],
@@ -887,33 +1085,49 @@ const t34Family = defineFamily<Params>({
           }),
           cable(
             [
-              [1.6, s * 1.42, 1.1],
+              [fx, s * 1.42, 1.1],
               [-2.4, s * 1.42, 1.1],
               [-2.55, s * 1.4, 1.18],
               [-2.4, s * 1.36, 1.25],
-              [1.5, s * 1.36, 1.25],
-              [1.65, s * 1.4, 1.18],
+              [fx - 0.1, s * 1.36, 1.25],
+              [fx + 0.05, s * 1.4, 1.18],
             ],
             0.035,
             steel,
+          ),
+          // The cable's eyes, dropped over the lashing points at its front ends.
+          ...[
+            [fx + 0.06, 1.1],
+            [fx + 0.11, 1.18],
+          ].map(([x = 0, z = 0]) =>
+            lathe({
+              profile: Array.from({ length: 7 }, (_, i): Vec2 => {
+                const a = (i / 6) * Math.PI * 2;
+                return [0.05 + 0.016 * Math.cos(a), 0.016 * Math.sin(a)];
+              }),
+              segments: 10,
+              axis: 'y',
+              at: [x, s * 1.41, z],
+              color: steel,
+            }),
           ),
         );
         const railY = s * 1.2;
         detail.push(
           beam({
-            from: [1.2, railY, 1.38],
+            from: [rail[0] ?? 1.2, railY, 1.38],
             to: [-2.2, railY, 1.38],
             width: 0.025,
             segments: 5,
             color: steel,
           }),
         );
-        for (const x of [1.2, 0.0, -1.1, -2.2])
+        for (const x of rail)
           detail.push(
             beam({ from: [x, railY, 1.33], to: [x, railY, 1.38], width: 0.025, color: steel }),
           );
       }
-      const spare = place(trackLink(0.172, true), { yaw: Math.PI / 2 });
+      const spare = place(trackLink(0.172, true, true), { yaw: Math.PI / 2 });
       for (const y of [-0.55, -0.35, 0.0, 0.2])
         detail.push(onGlacis(translate(spare, [0, 0, LINK_T * 0.6]), y, 0.92));
       const bolt = box({ size: [0.035, 0.035, 0.03], color: greenDark });
@@ -957,7 +1171,63 @@ const t34Family = defineFamily<Params>({
               );
         }
     }
-    ctx.part('fittings', finish(merge(detail), [0, 0, 0], { soot }));
+    // Hull and fittings wear as one object: edges rubbed to steel, road dust on the deck and
+    // glacis, dried mud up the lower hull (heavier toward the rear, where the tracks throw it),
+    // rust running down from the rail stanchions and the exhaust flanges, soot above the pipes.
+    const hullWear: FieldWear = {
+      name: 't34_hull',
+      seed: 34,
+      resolution: res,
+      mud: 2.0,
+      mudAmount: 0.5,
+      dust: 0.24,
+      noise: grain,
+      chips: 0.4,
+    };
+    // Fittings are small: they carry the vertices wear needs already (no tessellation).
+    const kit = fieldWear(
+      ctx,
+      { fittings: dress(merge(detail)) },
+      {
+        name: 't34_fittings',
+        seed: 37,
+        resolution: [0, 0, 0],
+        dust: 0.3,
+        noise: grain,
+        chips: 0.3,
+      },
+    );
+    const worn = fieldWear(
+      ctx,
+      { hull: hullMesh },
+      {
+        ...hullWear,
+        rustFrom: [
+          ...[1, -1].flatMap((s) => [
+            ...railX(s).map((x) => ({
+              at: [x, s * 1.2, 1.33] as Vec3,
+              radius: 0.05,
+            })),
+            { at: [-2.83, s * 0.55, 1.2] as Vec3, radius: 0.14 },
+          ]),
+        ],
+      },
+    );
+    const splash = (m: Mesh): Mesh =>
+      tint(
+        m,
+        WET_MUD,
+        // Wet mud under the dried: the belly line, and climbing behind the last road wheel.
+        (p) =>
+          0.75 *
+          (1 - Math.min(1, Math.max(0, (p[2] - 0.38) / (p[0] < -1.5 ? 0.5 : 0.28)))) *
+          (0.35 + 0.65 * fine(p)),
+      );
+    // Mass: the hull's shells weigh as a 30 mm wall, which over this model's faces (the tub and
+    // the upper hull share one) comes to the ~16 t of armour, engine, gearbox, fuel and
+    // ammunition; fittings are sheet steel and bar.
+    ctx.part('hull', soot(splash(worn.hull)), { shell: 0.03 });
+    ctx.part('fittings', soot(splash(kit.fittings)), { shell: 0.004 });
     for (const [side, s] of [
       ['l', 1],
       ['r', -1],
@@ -982,7 +1252,7 @@ const t34Family = defineFamily<Params>({
     });
     const shell = turretShell(p.turret);
     const roofZ = shell.top[0]?.[2] ?? 0.7;
-    const armour = taper(shell.bottom, shell.top, paint);
+    const armour = castShell(shell, lod, paint);
     const turret: Mesh[] = [armour];
     if (p.cupola)
       turret.push(
@@ -1052,8 +1322,17 @@ const t34Family = defineFamily<Params>({
             0.025,
             steel,
           ),
-          box({ size: [0.12, 0.05, 0.06], at: [0.45, s * 0.6, roofZ - 0.01], color: greenDark }),
+          box({ size: [0.12, 0.05, 0.06], at: [0.45, s * 0.5, roofZ - 0.01], color: greenDark }),
         );
+    }
+    if (lod === 0) {
+      // Chipped paint along the turret's plate edges (wall plates of the sharp plan; the cast
+      // radii between them rub to steel through `fieldWear`).
+      const walls = shell.bottom.map((q, i): Vec3[] => {
+        const j = (i + 1) % shell.bottom.length;
+        return [q, shell.bottom[j] as Vec3, shell.top[j] as Vec3, shell.top[i] as Vec3];
+      });
+      turret.push(chipFlecks(ctx.rng.fork('turret-chips'), walls, [0, 0, 0.3], 170, armour));
     }
     if (p.slogan && lod < 2) {
       // White slogan on both rear side faces, read from outside, front to back.
@@ -1072,7 +1351,24 @@ const t34Family = defineFamily<Params>({
         turret.push(plateDecal(text, armour, [a, c, up], [(len - width) / 2, 0.24], white));
       }
     }
-    ctx.part('turret_body', finish(merge(turret), TURRET_AT, { dust: 0.5 }), { parent: 'turret' });
+    const turretWorn = fieldWear(
+      ctx,
+      { turret_body: dress(merge(turret)) },
+      {
+        name: 't34_turret',
+        seed: 35,
+        resolution: res,
+        dust: 0.28,
+        noise: grain,
+        at: TURRET_AT,
+        chips: 0.45,
+        rustFrom: [1, -1].flatMap((s) => [
+          { at: [0.3, s * 0.95, 0.18] as Vec3, radius: 0.05 },
+          { at: [-0.6, s * 0.8, 0.18] as Vec3, radius: 0.05 },
+        ]),
+      },
+    );
+    ctx.part('turret_body', turretWorn.turret_body, { parent: 'turret' });
 
     // ---- Gun: cast mantlet + cradle + F-34 barrel; elevation sways ----
     const gunZ = 0.32;
@@ -1099,14 +1395,15 @@ const t34Family = defineFamily<Params>({
       spreadDeg: 25,
       when: 'event',
     });
+    // The cast mantlet's back runs 6 cm into the turret front (whose corners are rounded now).
     const mantlet: Vec2[] = [
-      [0, -0.27],
+      [-0.06, -0.27],
       [0.16, -0.27],
       [0.25, -0.16],
       [0.28, 0],
       [0.25, 0.16],
       [0.16, 0.27],
-      [0, 0.27],
+      [-0.06, 0.27],
     ];
     const mParts = [prism({ profile: mantlet, depth: 0.78, plane: 'xz', color: paint })];
     if (lod === 0)
@@ -1114,50 +1411,62 @@ const t34Family = defineFamily<Params>({
         box({ size: [0.04, 0.07, 0.07], at: [0.26, 0.2, -0.03], color: black }),
         box({ size: [0.04, 0.06, 0.06], at: [0.25, -0.17, 0.1], color: black }),
       );
-    const gunAt: Vec3 = [TURRET_AT[0] + front, TURRET_AT[1], TURRET_AT[2] + gunZ];
-    ctx.part('gun_mantlet', finish(merge(mParts), gunAt), { parent: 'gun' });
+    const gunWear: FieldWear = {
+      name: 't34_gun',
+      seed: 36,
+      resolution: res,
+      dust: 0.2,
+      noise: grain,
+      chips: 0.4,
+    };
     const tip = 2.37;
     const breech = tip - 3.162;
+    const barrel = dress(
+      lathe({
+        profile:
+          lod === 0
+            ? [
+                [0.1, breech],
+                [0.14, 0.2],
+                [0.2, 0.26],
+                [0.2, 0.29],
+                [0.14, 0.3],
+                [0.14, 0.62],
+                [0.11, 0.66],
+                [0.075, 0.7],
+                [0.068, 1.3],
+                [0.058, 2.28],
+                [0.064, 2.3],
+                [0.064, tip],
+                [0.04, tip],
+                [0.04, 2.3],
+              ]
+            : [
+                [0.1, breech],
+                [0.14, 0.2],
+                [0.2, 0.26],
+                [0.2, 0.29],
+                [0.14, 0.3],
+                [0.14, 0.62],
+                [0.075, 0.7],
+                [0.06, tip],
+              ],
+        segments: ctx.pick([14, 10, 6]),
+        axis: 'x',
+        color: paint,
+        caps: true,
+      }),
+    );
+    const gunWorn = fieldWear(
+      ctx,
+      { gun_mantlet: dress(merge(mParts)), gun_barrel: barrel },
+      gunWear,
+    );
+    ctx.part('gun_mantlet', gunWorn.gun_mantlet, { parent: 'gun' });
+    // Muzzle blackened by firing.
     ctx.part(
       'gun_barrel',
-      finish(
-        lathe({
-          profile:
-            lod === 0
-              ? [
-                  [0.1, breech],
-                  [0.14, 0.2],
-                  [0.2, 0.26],
-                  [0.2, 0.29],
-                  [0.14, 0.3],
-                  [0.14, 0.62],
-                  [0.11, 0.66],
-                  [0.075, 0.7],
-                  [0.068, 1.3],
-                  [0.058, 2.28],
-                  [0.064, 2.3],
-                  [0.064, tip],
-                  [0.04, tip],
-                  [0.04, 2.3],
-                ]
-              : [
-                  [0.1, breech],
-                  [0.14, 0.2],
-                  [0.2, 0.26],
-                  [0.2, 0.29],
-                  [0.14, 0.3],
-                  [0.14, 0.62],
-                  [0.075, 0.7],
-                  [0.06, tip],
-                ],
-          segments: ctx.pick([14, 10, 6]),
-          axis: 'x',
-          color: paint,
-          caps: true,
-        }),
-        gunAt,
-        { soot: [{ at: [gunAt[0] + tip, 0, gunAt[2]], radius: 0.45, strength: 0.7 }] },
-      ),
+      tint(gunWorn.gun_barrel, SOOT, (p) => 0.8 * (1 - Math.min(1, Math.abs(p[0] - tip) / 0.4))),
       { parent: 'gun' },
     );
   },
@@ -1179,6 +1488,8 @@ export const t34_1941 = t34Family.variant({
     length: 6.68,
     width: 3.0,
     height: 2.4,
+    mass: 26500,
+    massTolerance: 0.1,
     measures: [
       { label: 'road wheel diameter', axis: 'z', value: 0.83, parts: ['wheel_l_0'] },
       { label: 'track width', axis: 'y', value: 0.55, parts: ['track_l'] },

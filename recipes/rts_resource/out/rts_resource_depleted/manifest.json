@@ -1,7 +1,7 @@
 {
   "name": "rts_resource_depleted",
   "kind": "prop",
-  "description": "Sunstone deposit, harvested: crystals sheared to stubs, the main cluster quarried out, spoil dust.",
+  "description": "Sunstone deposit, harvested: the main cluster quarried out to two snapped crystals, the rest sheared to stubs, drill holes and spoil.",
   "tags": [
     "rts",
     "saltmarch",
@@ -20,14 +20,14 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    12594,
-    2982,
-    474
+    10158,
+    2282,
+    338
   ],
   "drawCalls": [
-    2,
-    2,
-    2
+    3,
+    3,
+    3
   ],
   "pivots": [
     {
@@ -107,7 +107,7 @@
   },
   "real": {
     "length": 4.93,
-    "width": 3.78,
+    "width": 4.34,
     "height": 2.8
   },
   "measures": [],
@@ -120,13 +120,13 @@
       "target": 0.5,
       "actual": 0.5,
       "eligible": "ground-near",
-      "area": 12.9353
+      "area": 12.8056
     },
     "dust": {
-      "target": 0.3,
-      "actual": 0.3,
+      "target": 0.18,
+      "actual": 0.18,
       "eligible": "up-facing",
-      "area": 12.2806
+      "area": 12.7433
     }
   },
   "qa": {

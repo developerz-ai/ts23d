@@ -1,63 +1,120 @@
 {
   "asset": "rts_resource",
   "reviewer": "agent",
-  "overall": 6.3,
+  "overall": 6.9,
   "scores": {
     "silhouette": {
       "score": 7,
-      "reason": "Dark rounded outcrop with amber crystal clusters spiking out and a red claim flag: reads as a resource node at any distance. The rock itself is a smooth blob; the crystals stick out almost horizontally and look pinned on.",
+      "reason": "Dark outcrop with amber crystal clusters seated in pockets and angled up, the lead cluster tallest, a claim flag, loose shards and a spoil heap: reads as a resource node. The rock is still a smooth rounded blob with no ledges, so the outline is a dome with sticks.",
       "fixes": [
-        "grow the crystal clusters out of fracture pockets in the rock (seat them 20-30% deep) and angle them upward"
+        "two or three fracture planes and a ledge on the outcrop (SDF subtract planes) so the rock outline is angular"
       ]
     },
     "proportions": {
-      "score": 7,
-      "reason": "4.9 x 4.4 x 3.6 m: a crew-sized mining site beside 1.8 m workers. Crystals up to ~1.5 m are big but fit an RTS node.",
+      "score": 8,
+      "reason": "4.9 x 3.8 x 3.9 m; side clusters ~20% smaller than the lead one, crystals scaled for an RTS node beside 1.8 m workers.",
       "fixes": [
-        "shrink the side clusters ~20% so the top cluster leads the composition"
+        "seat the flag plate so it does not overhang the rock base"
       ]
     },
     "materials": {
-      "score": 5,
-      "reason": "Basalt reads dark, but the salt crust is blotchy white patches like camouflage, horizontal contour banding from the SDF UVs shows in the side views, and the crystals are flat amber plastic with no translucency, inner glow or facet sheen.",
+      "score": 6,
+      "reason": "Crystals glow amber without blowing to white, but in hero.png they are flat bright yellow with almost no facet shading, so they read as plastic; the rock in sheet.png is still blotchy salt camouflage patches over black.",
       "fixes": [
-        "texture-space rock strip that survives SDF UVs (triplanar-like box projection) to remove the contour banding",
-        "crystal material with emissive core and lighter facet edges instead of flat amber"
+        "lighter facet edges and a darker core on the crystals (or lower glow) so facets read under the key",
+        "salt in crevices and on top faces only, no blotches on the flanks"
       ]
     },
     "detail": {
-      "score": 5,
-      "reason": "Four crystal clusters, a claim stake with finial, pennant and a flat red ground plate; the rock has no visible fracture planes, ledges or strata at hero distance.",
+      "score": 6,
+      "reason": "Crystal pockets, shards at the base, spoil heap, flag with finial; the rock surface has no strata, cracks or pick marks at hero distance.",
       "fixes": [
-        "sharp fracture facets and a couple of ledges on the outcrop (SDF subtract planes)",
-        "small loose crystal shards at the base"
+        "strata lines and a crack or two on the outcrop",
+        "pick marks round the worked pocket"
       ]
     },
     "wear": {
-      "score": 5,
-      "reason": "Salt dust on top faces and brine mud at the base exist but read as random patches; no mining scars, pick marks or spoil.",
+      "score": 6,
+      "reason": "A spoil heap and scattered shards give some working story; salt and mud are random patches, not where water and boots would put them.",
       "fixes": [
-        "pick marks and a small spoil heap next to one cluster",
-        "salt dust concentrated in crevices rather than blotches"
+        "salt dust concentrated in crevices",
+        "trampled mud on the worked side"
       ]
     },
     "lod": {
       "score": 7,
-      "reason": "FAR LOD2 keeps the outcrop, all crystal clusters and the flag; salt patches become big flat facets.",
+      "reason": "lods.png: LOD2 (330 tris) keeps the rock, the flag and the lead cluster; the side clusters thin to single prisms and the shards and spoil vanish, a small but visible change at close RTS zoom.",
       "fixes": [
-        "lower-contrast salt at LOD2 so the facets do not flash"
+        "keep two prisms per side cluster at LOD2"
       ]
     },
     "technical": {
       "score": 8,
-      "reason": "QA PASS (rebuilt today): 12.3k / 2.96k / 486 tris, 3 / 3 / 3 draws; deterministic, one trim material + team slot. Most LOD0 triangles go to the smooth SDF rock.",
+      "reason": "QA PASS: 9.7k / 2.2k / 330 tris, 3 / 3 / 3 draws; fewer triangles than before for the same read.",
       "fixes": [
-        "coarser SDF cell on the rock body, finer on the crystal bases"
+        "coarser SDF cell on the smooth rock flanks"
       ]
     }
   },
   "renders": {
-    "hero.png": "4c91792a85bcbe4d4d72e2a0ba18b72e4362c905a9e17b931f8c89d56713fa87",
-    "sheet.png": "83468a77e0300a01feeb999d1a9d9411ea73966c00d811b2fee0768de178e32e"
+    "hero.png": "35cef65dd2f4d5448127ce6e40542502b8131d78f7bd5c0bc15b2ad79379130d",
+    "sheet.png": "4df79f003a387b3a6be25b3ea0d2bf10d8aae299d7fb633211486cc4c1771b31",
+    "raking.png": "1011060af70f98fead15f6329a15214e97630f245e4e7155f38b51327433e5ee",
+    "raking_detail.png": "ddfbd809071566ef94c1c688736f010c14493c7b8b9bb14eded7c3f091b1ab7a",
+    "lods.png": "bb8eef5474c35c9ae22ce5b4392485c97a2dccab4ecc602025a1aeb9e3216069",
+    "silhouette.png": "3f4faa9f33987428281b93a252ecc2a88c6a1f63a4264792b3059076037d2d07",
+    "value.png": "146ebe0a85dd286ff5b2de7f4db97c5e2f4c8f90b41a335519248a29e0f2f905",
+    "detail.png": "3e466988426aed8e6dc7410660359bbb56ab0e08e971314aad6b84770a866e5f"
+  },
+  "metrics": {
+    "silhouette": [
+      {
+        "view": "front",
+        "iou": 0.791
+      },
+      {
+        "view": "side",
+        "iou": 0.808
+      },
+      {
+        "view": "3/4",
+        "iou": 0.716
+      }
+    ],
+    "focal": {
+      "peakPart": "rock",
+      "peak": [
+        425,
+        178
+      ],
+      "focalShare": 0,
+      "focalArea": 0,
+      "top": [
+        {
+          "part": "crystals",
+          "share": 0.5
+        },
+        {
+          "part": "rock",
+          "share": 0.404
+        },
+        {
+          "part": "claim_pennant",
+          "share": 0.05
+        }
+      ],
+      "declared": []
+    },
+    "rest": {
+      "share": 0.44,
+      "spread": 0.696,
+      "min": 0.25
+    },
+    "shape": {
+      "acuteShare": 0.361,
+      "straightShare": 0.459,
+      "taper": 0.815,
+      "shape": "aggressive"
+    }
   }
 }

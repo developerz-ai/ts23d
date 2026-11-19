@@ -47,6 +47,17 @@ export interface PatchOptions {
   readonly cols?: (s: number) => number[];
   /** Columns (quad index j, between vertex j and j + 1) left open: holes. */
   readonly skip?: readonly number[];
+  /**
+   * Mesh the inner skin on every n-th row and column only (edges and hole sides always kept). The
+   * inner skin is the panel's hidden back: it keeps the panel a closed solid without paying for
+   * the outer skin's density twice. Default 1.
+   */
+  readonly innerStride?: number;
+  /** u where the flange direction of the lo / hi edge is read (default: the edge itself). */
+  readonly flangeU?: {
+    readonly lo?: (s: number) => number;
+    readonly hi?: (s: number) => number;
+  };
 }
 
 const fn = (v: number | ((s: number) => number)): ((s: number) => number) =>
@@ -77,6 +88,7 @@ export function patch(S: Surface, o: PatchOptions): Mesh {
   const lift = o.lift ?? 0;
   const P: Vec3[][] = [];
   const N: Vec3[][] = [];
+  const D: Vec3[][] = [];
   for (let i = 0; i <= ns; i++) {
     const s = sOf(i);
     const r = S.row(s);
@@ -84,17 +96,21 @@ export function patch(S: Surface, o: PatchOptions): Mesh {
     const b = hi(s);
     const prow: Vec3[] = [];
     const nrow: Vec3[] = [];
+    const drow: Vec3[] = [];
     const us = o.cols ? o.cols(s) : null;
     for (let j = 0; j <= nu; j++) {
       const u = us ? (us[j] ?? b) : a + ((b - a) * j) / nu;
       const n = normalAt(S, s, u);
       prow.push(lift ? add(r(u), mul(n, lift)) : r(u));
       nrow.push(n);
+      const fu = j === 0 ? o.flangeU?.lo : j === nu ? o.flangeU?.hi : undefined;
+      drow.push(fu ? normalAt(S, s, fu(s)) : n);
     }
     P.push(prow);
     N.push(nrow);
+    D.push(drow);
   }
-  return skin(P, N, o);
+  return skin(P, N, o.flangeU ? { ...o, inward: D } : o);
 }
 
 const get = (g: Vec3[][], i: number, j: number): Vec3 => g[i]?.[j] ?? [0, 0, 0];
@@ -103,7 +119,10 @@ const get = (g: Vec3[][], i: number, j: number): Vec3 => g[i]?.[j] ?? [0, 0, 0];
 export function skin(
   P: Vec3[][],
   N: Vec3[][],
-  o: Omit<PatchOptions, 'lo' | 'hi' | 's0' | 's1' | 'ns' | 'nu' | 'cols'>,
+  o: Omit<PatchOptions, 'lo' | 'hi' | 's0' | 's1' | 'ns' | 'nu' | 'cols' | 'flangeU'> & {
+    /** Direction the inner skin is offset along, per vertex (default: the normal). */
+    readonly inward?: Vec3[][];
+  },
 ): Mesh {
   const skip = new Set(o.skip ?? []);
   const ns = P.length - 1;
@@ -185,7 +204,7 @@ export function skin(
     const prow: Vec3[] = [];
     for (let j = 0; j <= nu; j++) {
       const n = get(N, i, j);
-      let p = sub(get(P, i, j), mul(n, t));
+      let p = sub(get(P, i, j), mul(o.inward?.[i]?.[j] ?? n, t));
       if (tuck > 0 && (i === 0 || i === ns || j === 0 || j === nu)) {
         const ci = Math.min(ns, Math.max(0, i === 0 ? 1 : i === ns ? ns - 1 : i));
         const cj = Math.min(nu, Math.max(0, j === 0 ? 1 : j === nu ? nu - 1 : j));
@@ -206,15 +225,44 @@ export function skin(
     inner.push(row);
     innerP.push(prow);
   }
-  for (let i = 0; i < ns; i++)
-    for (let j = 0; j < nu; j++)
-      if (!skip.has(j))
-        quad(
-          idx(inner, i, j),
-          idx(inner, i, j + 1),
-          idx(inner, i + 1, j + 1),
-          idx(inner, i + 1, j),
-        );
+  const stride = Math.max(1, Math.round(o.innerStride ?? 1));
+  const every = (n: number, keep: (k: number) => boolean): number[] => {
+    const out = [0];
+    for (let k = 1; k < n; k++) if (k % stride === 0 || keep(k)) out.push(k);
+    out.push(n);
+    return out;
+  };
+  const ri = every(ns, () => false);
+  const cj = every(nu, (j) => skip.has(j) || skip.has(j - 1));
+  // A coarse cell that lies on the panel's edge or beside a hole keeps every vertex of that side
+  // (the flange and the hole walls use them all), so the back stays watertight: the cell is a
+  // polygon, fanned from a corner away from its refined sides.
+  for (let a = 0; a + 1 < ri.length; a++)
+    for (let c = 0; c + 1 < cj.length; c++) {
+      const i0 = ri[a] ?? 0;
+      const i1 = ri[a + 1] ?? ns;
+      const j0 = cj[c] ?? 0;
+      const j1 = cj[c + 1] ?? nu;
+      if (skip.has(j0)) continue;
+      const fine = [i0 === 0, j1 === nu || skip.has(j1), i1 === ns, j0 === 0 || skip.has(j0 - 1)];
+      const poly: number[] = [];
+      const corners: number[] = [];
+      const side = (k: number, n: number, at: (t: number) => number): void => {
+        corners.push(poly.length);
+        const steps = fine[k] ? n : 1;
+        for (let t = 0; t < steps; t++) poly.push(at(fine[k] ? t : 0));
+      };
+      side(0, j1 - j0, (t) => idx(inner, i0, j0 + t));
+      side(1, i1 - i0, (t) => idx(inner, i0 + t, j1));
+      side(2, j1 - j0, (t) => idx(inner, i1, j1 - t));
+      side(3, i1 - i0, (t) => idx(inner, i1 - t, j0));
+      // Corner k starts side k; it is clear when neither side meeting there is refined.
+      const clear = [0, 1, 2, 3].find((k) => !fine[k] && !fine[(k + 3) % 4]) ?? 0;
+      const hub = corners[clear] ?? 0;
+      const m = poly.length;
+      for (let t = 1; t + 1 < m; t++)
+        tri(poly[hub] ?? 0, poly[(hub + t) % m] ?? 0, poly[(hub + t + 1) % m] ?? 0);
+    }
   // Hole walls: each skipped column's two sides join outer to inner.
   for (const j of skip) {
     for (let i = 0; i < ns; i++)

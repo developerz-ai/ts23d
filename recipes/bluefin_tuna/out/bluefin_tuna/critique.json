@@ -5,60 +5,58 @@
   "scores": {
     "silhouette": {
       "score": 8,
-      "reason": "Fusiform body, tall sickle second dorsal and anal fins, yellow finlet rows, short pectorals and a crescent tail: names a bluefin tuna in SIDE and TOP at once.",
+      "reason": "Torpedo body, sickle second dorsal and anal fin, lunate tail, yellow finlet rows: reads as a tuna from the side and top.",
       "fixes": [
-        "make the caudal keels visible as a ridge on the tail stock in SIDE/TOP (fins.ts)"
+        "a visible caudal keel ridge on the tail stock in SIDE/TOP"
       ]
     },
     "proportions": {
       "score": 8,
-      "reason": "2.1 × 0.6 × 1.1 m for a 2 m fork length; body depth, fin positions and finlet count look right beside the dossier photos.",
+      "reason": "Body depth, fin placement and pectoral length match a Thunnus thynnus side photo by eye.",
       "fixes": [
-        "check the pectoral length against a side photo (it reads slightly long for Thunnus thynnus)"
+        "raise the head slightly (blunter snout profile) to match the photo overlay"
       ]
     },
     "materials": {
       "score": 7,
-      "reason": "Metallic blue back with a strong highlight over a silver flank, yellow finlets and fin bases; the silver flank reads as flat grey paint rather than mirror-like scales.",
+      "reason": "The back now reads as a glossy metallic blue with a specular streak and the silver spots/bars show on the flank, but the lower flank and belly are a matte grey rather than mirror-silver and the fins are flat dark plastic.",
       "fixes": [
-        "raise metalness / lower roughness on the flank so it reflects like a fish side",
-        "iridescent band and faint silver spots/bars on the lower flank"
+        "lower roughness and raise metalness on the lower flank and belly so it reflects like a fish side",
+        "slight translucency/lighter tone at the fin margins"
       ]
     },
     "detail": {
       "score": 6,
-      "reason": "Operculum line, eye with ring, finlets, lateral bars; but the body is a smooth shell (no lateral line, no corselet scale patch) and the fins are flat plates with no rays.",
+      "reason": "Operculum line, eye ring, finlets and the first dorsal spines are present, but there are no fin rays, no lateral line, no corselet scale patch and no gill slit depth in the hero close-up.",
       "fixes": [
         "fin rays as shallow grooves on the dorsal, anal and caudal fins (fins.ts)",
-        "lateral line and corselet scale patch behind the head",
-        "gill slit depth at the operculum edge"
+        "lateral line and corselet scale patch behind the head in vertex colour/relief"
       ]
     },
     "wear": {
       "score": 5,
-      "reason": "Pristine: no frayed fin edges, no scratches, no slime sheen variation.",
+      "reason": "A pristine fish: no frayed fin margins, no scratches, no scale loss.",
       "fixes": [
-        "slightly frayed fin margins and a few scratches on the flank (seeded)"
+        "slightly frayed fin margins and a few seeded scratches/scale loss on the flank"
       ]
     },
     "lod": {
       "score": 7,
-      "reason": "LOD2 (476 tris) keeps the outline, fins and the blue-over-silver split, but the body is clearly faceted and the finlets thin out.",
+      "reason": "FAR LOD2 keeps the outline and the finlets as a yellow strip, but the body is faceted with visible light/dark triangle patches on the flank.",
       "fixes": [
-        "keep finlets at LOD2 as a single flat yellow strip per side",
-        "give LOD2 more rings around the body (~700 tris) so the faceting stops reading"
+        "a few more rings on the LOD2 body (~700 triangles) and smoothed normals so the flank stops faceting"
       ]
     },
     "technical": {
       "score": 8,
-      "reason": "QA PASS; 32k / 4k / 476 triangles, one draw.",
+      "reason": "QA clean; 39k / 7k / 0.6k triangles, 1 draw.",
       "fixes": [
-        "LOD1 at 4k drops a lot from 32k: add an intermediate ring count so the LOD0→LOD1 switch is softer"
+        "an intermediate ring count so the LOD0→LOD1 drop (39k→7k) is softer"
       ]
     }
   },
   "renders": {
-    "hero.png": "2f0b8329de398ba4750a6c207b6b63126ac61e98b998c372f19a702b04e5fdd4",
-    "sheet.png": "0133bf0e8f82acdbfbbe6c065824ad981901bd5ede3b72f76365749ab786d11b"
+    "hero.png": "e25c91592c28826b62013451bee2bc8adc9bc027ac0ecac522ced604e7fb1dd1",
+    "sheet.png": "072c10414585b269361c8c58bfee76b6742f65bd5652505a05af47c36d644d0a"
   }
 }

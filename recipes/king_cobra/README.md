@@ -26,8 +26,8 @@ the best-preserved large type available (see below).
 | tail and rear quarter | nearly black | darkens from 55 % of length | same |
 | raised part | "a third of its body" | 1.17 m of arc, head 0.75 m up in a curved stance | popular sources via [search](https://www.desertusa.com/animals/king-cobra.html); **no measured study opened** |
 
-**Estimated, not sourced:** hood width 1.7 × head width (104 mm), read off two front photos (about 1.5 on
-one, where the head is nearer the camera, and about 1.7 on [the other](https://commons.wikimedia.org/wiki/File:Ophiophagus_hannah2.jpg)).
+**Estimated, not sourced:** hood width 2.05 × head width (125 mm) at full spread, read off two front photos (about 1.5 on
+one, where the head is nearer the camera and the hood half spread, and about 1.7 to 2 on [the other](https://commons.wikimedia.org/wiki/File:Ophiophagus_hannah2.jpg)).
 The hood's length (about 0.35 m) and profile come from the same photos. No published hood width was found;
 [Young and Kardong 2010](https://doi.org/10.1242/jeb.034447) could not be opened. Scale length, tongue length
 and every colour value are read from photos.
@@ -70,3 +70,14 @@ One skinned part `body`, one draw. Bones `spine_0..31` (0 at the head), `hood_ri
   type was used because the neotype is an old specimen and the live-animal photos agree with it better.
 - Preserved widths are likely under a live snake's.
 - The real snake has a mobile jaw; this asset has none, so there is no gape or strike clip.
+
+## Surface and wear
+| Feature | How | Why |
+|---|---|---|
+| glossy dorsal scales | one strip (`material.ts`): each scale samples a rim-to-crown ramp, roughness 0.52 at the rim to 0.14 on the crown | live snake scales are polished keratin; a single roughness read as paint |
+| pale crossbands | chevrons pointing at the head, one straight arm per side, widening down the flank | photos above; the old W-shaped zigzag read as a viper |
+| pre-shed patch | a ragged patch on the top turn of the pile: milky blue-grey, dull row of the strip, scales a hair proud | the old skin clouds over before a shed |
+| healed scar | two parallel diagonal grooves across the back of the pile, flat pale scale tissue | a prey snake's bite; king cobras eat snakes |
+| scuffed tail scutes | greyed, rougher free edges from 2.6 m to the tip | dragged over rock |
+| far LOD | LOD2 takes the pattern's average over a band pitch (and the collar's over 12 cm), darkened to the LOD0 read | sampling single bands on six-sided rings made black and cream blocks |
+| girth | swells to 1.1 body widths at 1.5 to 1.9 m, tapers steadily to the vent and tail | heavy mid-body in side photos |

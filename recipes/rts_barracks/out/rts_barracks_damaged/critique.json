@@ -1,63 +1,120 @@
 {
   "asset": "rts_barracks_damaged",
   "reviewer": "agent",
-  "overall": 6.6,
+  "overall": 7.6,
   "scores": {
     "silhouette": {
-      "score": 7,
-      "reason": "Same hall with a roof hole showing rafters, one tower sheared to a flat stump, notched walls and a debris heap at the porch: reads as damaged from every view.",
+      "score": 8,
+      "reason": "Same hall with a broken tower crown, a roof hole with exposed rafters and a shell hole in the side, debris and planks at the porch: the damage reads in black from FRONT and SIDE.",
       "fixes": [
-        "jagged break line on the sheared tower (stepped blocks instead of a flat cut) so the damage reads in silhouette"
+        "let one roof slope sag along the hole (rafter ends dropped) so the side silhouette shows the damage, not only the top view"
       ]
     },
     "proportions": {
-      "score": 7,
-      "reason": "15.9 x 18.3 x 11.1 m, same plan as the complete hall; the roof hole and missing blocks sit within plausible bays.",
+      "score": 8,
+      "reason": "16.3 x 18.5 x 11.1 m; damage cells sit on the bay grid, debris blocks at true block size.",
       "fixes": [
-        "widen the window openings to ~0.8 m with sills (walls.ts) as on the complete hall"
+        "scatter some debris at half and quarter block size so the pile is not one block scale"
       ]
     },
     "materials": {
-      "score": 6,
-      "reason": "Stone, plaster and oak read as on the complete hall; the exposed rafters read as timber. Roof slate still reads as sheet panels, and the torn edges of the roof are clean straight cuts.",
+      "score": 7,
+      "reason": "Slates now read as lapped slate courses with per-slate value, the stone has block joints and damp at the foot, oak posts are brown, framed amber windows glow without blowing out. Exposed rafters read as oak. The bone stone is still a smooth uniform beige plastic between joints and the team red is one saturated value on every slate edge.",
       "fixes": [
-        "broken, offset slates along the edge of the roof hole (roofSlopes missing bays)",
-        "per-slate value jitter on the roof"
+        "stone strip with per-block value jitter (±8%) and a rougher face so walls read as dressed stone, not painted panels (walls.ts stack())",
+        "darken slate edges/undersides one step so each course shadows the next (roof.ts slate tone)"
       ]
     },
     "detail": {
-      "score": 6,
-      "reason": "Roof hole with rafters, notched wall courses, a debris heap and a sheared tower; damage is rectangular (whole blocks missing) and there are no splintered rafters or hanging slates.",
+      "score": 7,
+      "reason": "Broken slates sliding at the hole edge, exposed rafters, shell-hole blocks, fallen planks and a block pile; walls otherwise as the intact hall.",
       "fixes": [
-        "splintered rafter ends and 2-3 hanging slates at the roof hole",
-        "loose blocks on the wall tops next to each notch"
+        "splintered rafter ends and torn sarking boards at the roof hole",
+        "cracks radiating from the shell holes"
       ]
     },
     "wear": {
-      "score": 5,
-      "reason": "Notches and the debris heap tell the story, but there is no scorch, soot or dust around the damage and the walls are as clean as the undamaged hall.",
+      "score": 7,
+      "reason": "The damage tells a story (roof hole, shattered tower crown, debris at the door), with damp at the foot; but there is no scorch or soot round the holes, and the debris is clean.",
       "fixes": [
-        "grime() scorch above the roof hole and the sheared tower, soot streaks down the wall from the notches",
-        "dust spray around the debris heap"
+        "soot fans above the shell holes and round the roof hole",
+        "dust on the debris and the porch steps"
       ]
     },
     "lod": {
-      "score": 7,
-      "reason": "FAR LOD2 keeps the roof hole, the stump tower and the debris heap; coursing becomes flat beige boxes as on the complete hall.",
+      "score": 8,
+      "reason": "Sheet FAR LOD2 (860 tris) keeps the broken tower, roof hole as a dark gap, debris, porch and banners; matches LOD0.",
       "fixes": [
-        "bake the block coursing as value stripes in vertex colour at LOD2 (walls.ts stack())"
+        "keep two rafters across the roof hole at LOD2"
       ]
     },
     "technical": {
       "score": 8,
-      "reason": "QA PASS on every gate (rebuilt today), tris 38.4k / 8.16k / 866, draws 3 / 3 / 2; deterministic, one trim material + team slot. Triangles mostly sit in the running-bond blocks, where they show.",
+      "reason": "QA PASS, tris 35.8k / 8.1k / 860, draws 3/3/3; one trim material + team slot, LOD2 well under 1k. Triangles mostly sit in the running-bond blocks and slates, where they show.",
       "fixes": [
-        "merge the per-block wall boxes into one course mesh per bay at LOD0 (shared inner faces removed) to cut the block-count triangles without losing the coursing"
+        "merge the per-block wall boxes into one course mesh per bay at LOD0 (shared inner faces removed) so the coursing costs fewer triangles"
       ]
     }
   },
   "renders": {
-    "hero.png": "7e40ae545310aa93f75ebaf4c876858b1a86eed82ae419e35f23f6e10087d5a7",
-    "sheet.png": "764a82eab51d0c0aa15f62db624e710dfac082d2081918b1a0b9fcfa19568bea"
+    "hero.png": "02515f2198ef5b9fb1fdfccd8c1fb184efac05889be6eda33ce2b145510848f3",
+    "sheet.png": "ccdd659ced1e8f5a015800067d0a791287238ea983097930f58a68b877e2ade1",
+    "raking.png": "d7c93e4bf7149c27fcd5070278ca34866e954bfa19b03d23ada435e26bb7f8b0",
+    "raking_detail.png": "db017f18476b578a1639c0d9953972ee14c47c86c102af224008c0bc44db9ed6",
+    "lods.png": "29e9e72cbbbad801f30b5d33f5900d1c3cb3e7b466c8ba65d9a90e936b6311e2",
+    "silhouette.png": "380d31a032525cf1d30c75bca84086616c4616bc7d8074cf53869f5eda02a2db",
+    "value.png": "62de96d3b8f5de94d66ba207071cece47189c540079239f64bf2ebf52f148fea",
+    "detail.png": "752c2d3cf381f3dce007dced876d824be84b71ec17038e2286b403daf51942ee"
+  },
+  "metrics": {
+    "silhouette": [
+      {
+        "view": "front",
+        "iou": 0.962
+      },
+      {
+        "view": "side",
+        "iou": 0.953
+      },
+      {
+        "view": "3/4",
+        "iou": 0.965
+      }
+    ],
+    "focal": {
+      "peakPart": "window_frames",
+      "peak": [
+        347,
+        293
+      ],
+      "focalShare": 0,
+      "focalArea": 0,
+      "top": [
+        {
+          "part": "window_frames",
+          "share": 0.326
+        },
+        {
+          "part": "windows",
+          "share": 0.236
+        },
+        {
+          "part": "oculus",
+          "share": 0.11
+        }
+      ],
+      "declared": []
+    },
+    "rest": {
+      "share": 0.257,
+      "spread": 0.658,
+      "min": 0.25
+    },
+    "shape": {
+      "acuteShare": 0.278,
+      "straightShare": 0.686,
+      "taper": 0.852,
+      "shape": "stable"
+    }
   }
 }

@@ -29,6 +29,8 @@ import {
   type Vec3,
 } from '@developerz.ai/ts23d';
 import { restrip, type StripRule, weatherer } from '../_lib/finish/finish.ts';
+import { slateCourses } from './slates.ts';
+import { brickWear, canopyWear, platformWear, type Shade, shade } from './wear.ts';
 
 // ---------------------------------------------------------------- layout (metres)
 const PLAT_Z = 0.915; // 3 ft over rail
@@ -73,7 +75,8 @@ const ROOF: RoofMeshOptions = {
   footprint: [B_X1 - B_X0, 2 * B_Y],
   pitchDeg: 33,
   at: [(B_X0 + B_X1) / 2, 0, EAVE_Z],
-  color: slate,
+  // The slab's tone is the slate courses' mean: the far LOD (slab only) keeps the roof's value.
+  color: hex('#5c626b'),
   strip: 'slate',
   overhang: 0.45,
   rake: 0.35,
@@ -207,6 +210,17 @@ function nameBoard(name: string, lod: Lod): Mesh {
       }),
     );
   }
+  // Far: the lettering as one decal quad on the board face (the station still names itself).
+  else
+    out.push(
+      cell({
+        origin: [0.141, -2.3, 1.55],
+        u: [0, 4.6, 0],
+        v: [0, 0, 0.55],
+        color: white,
+        cell: 'sign',
+      }),
+    );
   return merge(out);
 }
 
@@ -259,19 +273,32 @@ export const station_halt = defineAsset({
     ],
   },
   budget: { triangles: [10500, 5800, 550] },
-  glow: [{ parts: ['lamp_*_glass'], color: [1, 0.82, 0.55], strength: 3 }],
+  // Gas lanterns: a warm glow in the glass that keeps its hue, never a white blob.
+  glow: [{ parts: ['lamp_*_glass'], color: [1, 0.82, 0.55], strength: 1 }],
   build(ctx) {
     const lod = ctx.lod;
     const bevel = ctx.pick([0.015, 0.008, 0]);
     const dirt = (m: Mesh): Mesh => grime(m, { ground: PLAT_Z + 0.7, groundStrength: 0.3 });
     const weather = weatherer(ctx.rng.fork('weather'));
-    /** Every part through the material library, then dust on top faces and ground splash. */
-    const part = (name: string, m: Mesh | null, o?: Parameters<typeof ctx.part>[2]): void =>
+    /** Every part through the material library, its own wear story, then dust on top faces and
+     *  ground splash. */
+    const part = (
+      name: string,
+      m: Mesh | null,
+      o?: Parameters<typeof ctx.part>[2],
+      wear?: Shade,
+    ): void => {
+      if (!m) {
+        ctx.part(name, null, o);
+        return;
+      }
+      const mat = restrip(m, RULES);
       ctx.part(
         name,
-        m && weather(restrip(m, RULES), { dust: 0.2, mud: 0.5, mudStrength: 0.45 }),
+        weather(wear ? shade(mat, wear) : mat, { dust: 0.2, mud: 0.5, mudStrength: 0.45 }),
         o,
       );
+    };
 
     // ---- platform: blue-brick faced fill, paving, pale stone coping over the track.
     const pf: Mesh[] = [
@@ -297,23 +324,40 @@ export const station_halt = defineAsset({
         u: [PLAT_EDGE - 0.25 - PLAT_X0, 0, 0],
         v: [0, 2 * PLAT_Y, 0],
         color: paving,
-        strip: lod === 2 ? 'plain' : 'stone',
+        strip: 'stone',
+        // Far: the same stone strip and tint (its value matches), stretched to one band.
         ...(lod === 2 ? { vMetres: 2 * PLAT_Y } : {}),
       }),
-      box({
-        size: [0.5, 2 * PLAT_Y, 0.1],
-        at: [PLAT_EDGE - 0.25, 0, PLAT_Z - 0.1],
-        color: coping,
-        strip: 'stone',
-        omit: ['bottom'],
-        ...(bevel ? { bevel } : {}),
-      }),
     ];
+    // Coping: 0.9 m stone slabs with 4 mm joints (LOD0), each its own tone; one run far away.
+    const slab = lod === 0 ? 0.9 : 2 * PLAT_Y;
+    const slabs = Math.round((2 * PLAT_Y) / slab);
+    const copeRng = ctx.rng.fork('coping');
+    for (let i = 0; i < slabs; i++) {
+      const len = (2 * PLAT_Y) / slabs;
+      const t = lod === 0 ? copeRng.range(0.9, 1.08) : 1;
+      pf.push(
+        box({
+          size: [0.5, len - (lod === 0 ? 0.004 : 0), 0.1],
+          at: [PLAT_EDGE - 0.25, -PLAT_Y + (i + 0.5) * len, PLAT_Z - 0.1],
+          color: [coping[0] * t, coping[1] * t, coping[2] * t],
+          strip: 'stone',
+          omit: ['bottom'],
+          // One arris bevel on the single far slab; near slabs read by their joints instead.
+          ...(bevel && lod > 0 ? { bevel } : {}),
+        }),
+      );
+    }
     if (lod < 2)
       pf.push(
         box({ size: [0.12, 2 * PLAT_Y, 0.004], at: [PLAT_EDGE - 0.12, 0, PLAT_Z], color: white }),
       ); // white edge line
-    part('platform', grime(merge(pf), { ground: 0.5, groundStrength: 0.35 }));
+    part(
+      'platform',
+      grime(merge(pf), { ground: 0.5, groundStrength: 0.35 }),
+      undefined,
+      platformWear(ctx.rng.fork('platform-wear'), { edgeX: PLAT_EDGE, top: PLAT_Z }),
+    );
 
     // ---- building: brick walls in true-scale courses, blue plinth, eaves band.
     const bw: Mesh[] = [
@@ -364,7 +408,12 @@ export const station_halt = defineAsset({
           }),
         );
     }
-    part('building', dirt(merge(bw)));
+    part(
+      'building',
+      dirt(merge(bw)),
+      undefined,
+      brickWear(ctx.rng.fork('brick-wear'), { floor: PLAT_Z, eave: EAVE_Z }),
+    );
 
     // ---- openings: sashes and panelled doors (chocolate doors, cream frames, stone sills/heads).
     type Op = { kind: 'window' | 'door'; side: OpeningSide; at: Vec3 };
@@ -413,6 +462,19 @@ export const station_halt = defineAsset({
 
     // ---- roof with stacks; smoke from both pots.
     const info = roof(ctx, { ...ROOF, name: 'roof' });
+    if (lod < 2)
+      part(
+        'roof_slates',
+        slateCourses(ctx.rng.fork('slates'), {
+          heightAt: info.heightAt,
+          ridgeX: ROOF.at[0] ?? 0,
+          eaves: [B_X1 + (ROOF.overhang ?? 0), B_X0 - (ROOF.overhang ?? 0)],
+          halfY: B_Y + (ROOF.rake ?? 0) - 0.02,
+          gauge: lod === 0 ? 0.24 : 0.48,
+          color: hex('#626872'),
+          runs: lod === 0 ? 3 : 1,
+        }),
+      );
     (ROOF.chimneys ?? []).forEach((c, i) => {
       const x = (ROOF.at[0] ?? 0) + c.at[0];
       const y = c.at[1];
@@ -452,10 +514,11 @@ export const station_halt = defineAsset({
         strip: 'iron',
       }),
     ];
-    // Fretted valance along the front and both ends: boards with a sawtooth bottom (LOD0).
+    // Fretted valance along the front and both ends: boards with a sawtooth bottom (coarser at
+    // LOD1, a plain board far away).
     const valance = (len: number): Mesh => {
       const top = 0.5;
-      if (lod > 0)
+      if (lod === 2)
         return prism({
           profile: [
             [-len / 2, 0.08],
@@ -468,7 +531,7 @@ export const station_halt = defineAsset({
           color: cream,
           strip: 'wood',
         });
-      const teeth = Math.round(len / 0.16);
+      const teeth = Math.round(len / (lod === 0 ? 0.16 : 0.32));
       const pts: Vec2[] = [
         [-len / 2, top],
         [-len / 2, 0.1],
@@ -507,7 +570,12 @@ export const station_halt = defineAsset({
             up: [0, 1, 0],
           }),
         );
-    part('canopy', merge(cn));
+    part(
+      'canopy',
+      merge(cn),
+      undefined,
+      canopyWear(ctx.rng.fork('canopy-wear'), { wallX: B_X1, edgeX: CAN_X1 }),
+    );
 
     const colTop = canZ(COL_X) - 0.24;
     const colSegs = ctx.pick([12, 8, 5]);
@@ -592,6 +660,20 @@ export const station_halt = defineAsset({
             color: chocolate,
           }),
         );
+        if (lod === 0)
+          // Rise-and-fall gutter brackets every 1.8 m: an iron strap from the fascia under the
+          // gutter, its tail 1 cm into the fascia board.
+          for (let y = -B_Y; y <= B_Y + 1e-6; y += 1.8)
+            rw.push(
+              beam({
+                from: [xe + Math.sign(xe) * 0.05, y, gz - 0.065],
+                to: [xe - Math.sign(xe) * 0.1, y, gz - 0.02],
+                width: 0.03,
+                height: 0.012,
+                color: iron,
+                strip: 'iron',
+              }),
+            );
         for (const y of [-B_Y + 0.25, B_Y - 0.25]) {
           rw.push(
             beam({

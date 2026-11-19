@@ -53,3 +53,17 @@ the lock bars of the right-hand leaf. Built with `text`.
   swing out clear of the posts; lock bars and hinge strips stand proud (overall length 6.13 m vs
   ISO 6.058 m; the `frame` measures hold the ISO numbers). The `gaps` QA gate keeps it closed.
 - The crates inside are visible only with the doors open.
+
+## Weathering on regular grids
+Vertex-colour stains take the shape of the triangles they live on. The read faces (roof, the 24
+bay armour panels, the blind end, the door armour panels) therefore carry a regular grid of quads
+1 mm proud of their plate (`sheet()`: 12.5 cm cells on the roof, 16 cm on the panels at LOD0;
+40 cm at LOD1), and `weather()` runs with `resolution: 0`: nothing is split blindly, the bevelled
+frame keeps only its own edges for chips. LOD0 fell from 22.9k to 16.9k triangles.
+- Door leaves weather in their own hinge space (separate `weather()` call per leaf): chipped
+  edges, rust runs, dirt at the sill, paint rubbed through round the cam handles (`touched`).
+- LOD2 has no per-vertex stains at all: on a two-triangle plate any variation is a diagonal seam.
+  It carries the near LODs' dust and dirt as their even average (`far()`).
+- Bays are 6 cm deep (side plate 9 cm inside the frame face; was 2 and 5), ribs run from the
+  plate to the frame face; roof ribs are bolted (four hex heads each); doors have a gasket lip
+  and the right leaf a customs bolt seal.

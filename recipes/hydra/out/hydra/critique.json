@@ -1,66 +1,64 @@
 {
   "asset": "hydra",
   "reviewer": "agent",
-  "overall": 5.9,
+  "overall": 6.9,
   "scores": {
     "silhouette": {
-      "score": 7,
-      "reason": "Five necks with spiked crests and horned heads on a sprawling four-legged body read as a hydra; one head hangs low in front of the chest in hero.png and muddles the leg silhouette.",
+      "score": 8,
+      "reason": "Five necks rise and separate above the shoulders with spiked crests and differently horned heads; the sprawling body and long tail read as a hydra in every view.",
       "fixes": [
-        "raise the lowest neck so all five heads separate above the shoulders in the 3/4 view",
-        "larger dorsal spines along the back"
+        "larger dorsal spines along the back so the spine line reads in SIDE"
       ]
     },
     "proportions": {
-      "score": 6,
-      "reason": "Legs are thin and splayed for a 7.7 m animal; the trunk is small against five long necks and a long tail, and the chest has a pendulous blob between the forelegs in FRONT.",
+      "score": 7,
+      "reason": "Legs are thicker and under the body; the trunk is a near-rectangular box in TOP and FRONT, with flat sides between the legs.",
       "fixes": [
-        "thicken the upper legs ~25 % and pull the feet under the body",
-        "flatten the chest bulge under the neck roots"
+        "round the torso plan into a barrel tapering into the tail and the neck root"
       ]
     },
     "materials": {
-      "score": 5,
-      "reason": "One olive skin with a lighter belly and paler belly scutes; horns, claws and teeth separate only by hue.",
+      "score": 6,
+      "reason": "Olive skin with darker dorsal saddles, pale horns and claws, a lighter belly; skin, horn and claw share one roughness and the scales are colour only.",
       "fixes": [
-        "scale strip (or normal) on the back and a separate keratin roughness for horns and claws",
-        "darker dorsal saddle pattern to break the uniform olive"
+        "scale normal on the back and necks",
+        "separate keratin roughness for horns and claws"
       ]
     },
     "detail": {
-      "score": 6,
-      "reason": "Crests, horns, claws, teeth and belly scutes read; the skin between is smooth and uniform.",
+      "score": 7,
+      "reason": "Crest spikes along every neck, open mouths with teeth, horns, claws and belly scutes hold at third person.",
       "fixes": [
-        "scale rows along the necks and plates on the back",
-        "gums and tongue in the open mouths"
+        "scale rows on the flanks",
+        "tongues and gums in the open mouths"
       ]
     },
     "wear": {
-      "score": 4,
-      "reason": "No scars, broken horns or grime.",
+      "score": 6,
+      "reason": "One pink scar patch on the flank; no chipped horns, mud or cauterised stump.",
       "fixes": [
-        "a stump (cauterised) or scarred neck, chipped horns",
-        "mud on the feet and belly"
+        "mud on the feet and lower belly",
+        "a chipped horn and a scarred neck"
       ]
     },
     "lod": {
-      "score": 7,
-      "reason": "FAR LOD2 keeps all five necks and the outline; heads simplify to wedges.",
+      "score": 8,
+      "reason": "FAR LOD2 keeps all five necks, horns and the outline; heads simplify without popping.",
       "fixes": [
-        "keep the horn pairs as cones at LOD2"
+        "keep the dorsal saddle colour bands at LOD2"
       ]
     },
     "technical": {
       "score": 6,
-      "reason": "QA clean; 348k / 39k / 7.2k tris: LOD0 is very heavy for an in-game creature and drops 9× to LOD1.",
+      "reason": "210k LOD0 triangles is still about double a hero creature budget, though down from 348k; 2 draws.",
       "fixes": [
-        "lower neck and tail ring counts at LOD0 to ~120k total",
-        "spend saved triangles on the heads"
+        "cut neck and tail ring counts so LOD0 lands near 120k",
+        "spend the saved triangles on the heads"
       ]
     }
   },
   "renders": {
-    "hero.png": "e8df0660073e47fb822658ca2e7772759a08d7fb52438d0fc9e6434b93d71241",
-    "sheet.png": "61c1cd270f117eef07b30aab78a173f86412bcaf9d633e0391d743030e1f5e91"
+    "hero.png": "684de5bff6f23102ed5d8425530b2a729c912cd0b676720a009ec453d9f76b83",
+    "sheet.png": "c09adf9ac34a52d89c061ccef17dc965e8f8481c77c7e3d78ffa89bfee39dd2e"
   }
 }

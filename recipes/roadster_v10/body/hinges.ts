@@ -1,5 +1,5 @@
 // Real hinges, so every opening panel hangs off something: forged gooseneck arms under the hood's
-// front corners (riding on the hood) turning on pivot brackets bolted to the radiator support,
+// rear corners (riding on the hood) turning on pivot brackets bolted to the firewall under the cowl,
 // two door hinges per side (leaf on the door, leaf and pin on the A-pillar jamb) and the trunk lid's
 // goosenecks into brackets on the deck's front bulkhead. Arms are authored in the car frame
 // (closed pose); body.ts moves them with their panel.
@@ -11,9 +11,8 @@ import { bx, rod, tube } from '../lib/geo.ts';
 import type { Surface } from '../lib/grid.ts';
 import type { Hinges } from './body.ts';
 import { inward } from './openings.ts';
-import { X_HOOD_FRONT, X_TRUNK_FRONT } from './panels.ts';
+import { X_HOOD_REAR, X_TRUNK_FRONT } from './panels.ts';
 import { uAtY } from './regions.ts';
-import { sAtX } from './shape.ts';
 
 const HOOD_Y = 0.42;
 const TRUNK_Y = 0.42;
@@ -56,16 +55,17 @@ export function hingeParts(S: Surface, lod: Lod, h: Hinges): HingeMeshes {
   const trunk: Mesh[] = [];
   const door: Mesh[] = [];
   const db: Mesh[] = [];
-  const sH = sAtX(X_HOOD_FRONT - 0.05, 0);
+  const sH = X_HOOD_REAR + 0.1;
   for (const s of [1, -1]) {
     const y = s * HOOD_Y;
-    // Hood: gooseneck from the underside of the hood front, curling down to the pin.
+    // Hood: gooseneck from the underside of the hood's rear, dipping under the cowl's front edge
+    // and back up to the pin behind it.
     // At the far LOD the hood is a coarse sheet: start the arm a little proud so it still meets it.
     const top = inward(S, sH, uAtY(S, sH, HOOD_Y), lod === 2 ? -0.01 : 0.006);
     const p: Vec3 = [h.hood[0], y, h.hood[2]];
     hood.push(
       tube(
-        [[top[0], y, top[2]], [top[0] - 0.01, y, top[2] - 0.06], [p[0] - 0.05, y, p[2] + 0.04], p],
+        [[top[0], y, top[2]], [top[0] - 0.02, y, top[2] - 0.05], [p[0] + 0.05, y, p[2] - 0.035], p],
         0.02,
         C.ironDark,
         'steel_painted',
@@ -73,16 +73,8 @@ export function hingeParts(S: Surface, lod: Lod, h: Hinges): HingeMeshes {
         3,
       ),
     );
+    // The pivot's cheek plates run down onto the firewall's top edge (x 0.42–0.44, z 0.8).
     br.push(pivot(lod, p, y, 0.12));
-    // Bracket foot down onto the radiator-support rail.
-    br.push(
-      bx(
-        [p[0] - 0.04, y - 0.025, 0.24],
-        [p[0] + 0.04, y + 0.025, p[2] - 0.11],
-        C.ironDark,
-        'steel_painted',
-      ),
-    );
     // Trunk: gooseneck from the lid's front underside to a pin on the deck bulkhead.
     const sT = X_TRUNK_FRONT - 0.04;
     const tt = inward(S, sT, uAtY(S, sT, TRUNK_Y), 0);

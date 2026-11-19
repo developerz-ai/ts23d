@@ -1,71 +1,67 @@
 {
   "asset": "amur_tiger",
   "reviewer": "agent",
-  "overall": 6.1,
+  "overall": 6.6,
   "scores": {
     "silhouette": {
       "score": 7,
-      "reason": "Reads as a big cat / tiger from the side and 3/4: level back, low head, deep chest, digitigrade legs, J-hanging tail with a black tip. The trunk is still long and tubular beside the Schönbrunn photos, the hind thigh shallow, and the ears read as thin cups: in hero.png the near ear is a pale disc and the far ear a black spike, so neither reads as a rounded tiger ear.",
+      "reason": "Reads as a big cat in SIDE and 3/4 (level back, low head, J tail, digitigrade legs), and the haunch is fuller. The ears are still wrong at 3/4: in hero.png and portrait.png the near ear is a flat ring/disc and the far ear a black horn-like spike, and the fur cards make the back outline bristly like quills.",
       "fixes": [
-        "shorten the trunk masses ~5% and deepen the brisket in torso.ts so the waist tuck reads in side view",
-        "thicken the ear shell and round its rim in ears.ts so it keeps a rounded outline edge-on (no disc / spike at 3/4)",
-        "enlarge the hamstring/quadriceps masses in legs.ts so the haunch reads as a powerful thigh"
+        "thicken the ear shell and round its rim in ears.ts so it keeps a rounded outline edge-on (no disc / horn at 3/4)",
+        "shorten and lay the back fur cards flatter along the hair flow so the topline stays smooth"
       ]
     },
     "proportions": {
       "score": 7,
-      "reason": "Sourced numbers hold in code (head+body ~1.96 m, tail ~0.99 m, withers ~1.0 m on the 2.2 × 0.5 × 1.0 m sheet). By eye beside photos the head is slightly small and low, the muzzle a touch long and the forearms thin for an Amur male.",
+      "reason": "Sourced numbers hold (2.2 × 0.5 × 1.0 m sheet). By eye the trunk is still long and tubular in SIDE and TOP (a waisted tube with no brisket depth), and the head reads small for an Amur male.",
       "fixes": [
-        "thicken the forearm masses ~10% in legs.ts",
-        "shorten the muzzle 1 cm and widen the whisker pads in face.ts"
+        "shorten the trunk masses ~5% and deepen the brisket in torso.ts",
+        "enlarge the head ~5% and widen the cheek ruff in head.ts"
       ]
     },
     "materials": {
-      "score": 5,
-      "reason": "Vertex colour on the plain strip: the coat reads as painted velvet, not fur. Stripes are crisp but their edges stair-step at the body cell; nose leather, eyes and claws separate by hue only, with no roughness split. No whiskers.",
+      "score": 6,
+      "reason": "Fur cards and whiskers now break light on the back and ruff, the nose is a pink leather and the eyes amber; but stripes printed on the cards read as black scratch strokes floating off the body, the chin/ruff cards read as grey straw, and the face is smooth matte plastic.",
       "fixes": [
-        "fur shells or cards along the hair flow on the back, ruff and tail (fur.ts) so the coat breaks light like fur",
-        "roughness split: wet nose leather and eyes glossy, coat fully rough",
-        "stripe colour on a finer head/body cell at LOD0 so stripe edges stop stair-stepping"
+        "colour each fur card from the skin under its root only (no stripe stamped across a card) so stripes stay painted on the coat",
+        "warmer, softer white on the ruff cards (cream, not grey) with alpha-tapered tips",
+        "short fur cards or a shell over the face so it stops reading as plastic"
       ]
     },
     "detail": {
-      "score": 6,
-      "reason": "Primary and secondary forms are there (scapula, haunch, hock point, toe beans, sheathed claws, lidded eyes, whisker-pad dots, ear ocelli, canines, belly fringe, ruff tufts), but in the portrait close-up there are no whiskers, no fur locks breaking the outline, and the face planes are soft.",
+      "score": 7,
+      "reason": "Whiskers, teeth, toe pads, claws, a nose scar and fur locks are present now and hold at the portrait distance; the face planes (brow, cheekbone) are still soft and the ear interior is a flat disc.",
       "fixes": [
-        "whisker strands as thin tubes from the pads (face.ts)",
-        "fur locks on the ruff, elbows and belly as cards",
-        "sharper cheekbone and brow planes in face.ts"
+        "sharper cheekbone and brow planes in face.ts",
+        "ear interior hair tufts and the white ocellus spot on the ear back"
       ]
     },
     "wear": {
-      "score": 4,
-      "reason": "A clean zoo animal: no mud on the paws, no scars, no matted or wet fur, no dust; only a ground-occlusion grade.",
+      "score": 5,
+      "reason": "Paws are darkened with soil and there is a pale scar on the nose bridge; nothing else: no ear notch, no damp lower legs, no matted belly fringe.",
       "fixes": [
-        "grime the paws and lower legs with soil colour (grime with the ground mask)",
-        "a few seeded scars on the face/shoulders and a notch in one ear",
-        "damp, darker fur on the lower legs and belly fringe"
+        "a notch in one ear and two scars on the shoulder",
+        "damp, darker, clumped fur on the lower legs and belly fringe"
       ]
     },
     "lod": {
       "score": 6,
-      "reason": "LOD2 (2.9k tris) keeps the outline and the orange/white blocks, but the far view in sheet.png is visibly faceted, the legs are tubes and the stripes become random dark triangles, so the pattern shifts at the switch.",
+      "reason": "FAR LOD2 (3k tris) keeps the outline but is heavily faceted, the stripes become random dark triangles and the white belly zone breaks into patches, so the switch shifts the pattern.",
       "fixes": [
         "paint LOD2 stripes as 6–8 broad authored bands instead of sampling the LOD0 pattern per triangle",
-        "build LOD2 lower legs from the sculpt with a gentle inflate instead of tubes"
+        "build LOD2 legs from the sculpt with a gentle inflate instead of tubes"
       ]
     },
     "technical": {
       "score": 8,
-      "reason": "QA PASS at every LOD; 136.9k / 27.2k / 2.9k triangles under the 150k / 30k / 3k budgets; 3 draws; one material; deterministic stripes.",
+      "reason": "QA clean; 143k / 29k / 3k triangles over 6 draws, with fur cards and whiskers where they show.",
       "fixes": [
-        "move LOD0 triangles from the ears and claws (dense for what they show) to the face",
-        "merge each eye with its lids into one part per side"
+        "trim LOD0 fur-card count on the hidden belly and inner legs and spend it on the face"
       ]
     }
   },
   "renders": {
-    "hero.png": "9c707fe4bb4dd30aab1c9d970778d5e284d7d967bd50236b73c4157b5adfb3ea",
-    "sheet.png": "d5d5027ec12f70e220ae851dc9a3351c8d588726f913e66682011dc87026230a"
+    "hero.png": "f631dd8a266c5a664823a2a2b29d846416c9d47cb870ca99fa114e9071538ecf",
+    "sheet.png": "c17ed85f400841a1581bae5f8bc47dd4c88050ce34d8f2b4f08fe96da97ccac5"
   }
 }

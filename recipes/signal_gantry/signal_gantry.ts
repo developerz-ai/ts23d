@@ -27,6 +27,7 @@ import {
   worldMeshes,
 } from '@developerz.ai/ts23d';
 import { restrip, type StripRule, weatherer } from '../_lib/finish/finish.ts';
+import { type Bleed, footWear, rustBleeds, type Shade, shade, steelWear } from './wear.ts';
 
 const FT = 0.3048;
 const TRACK_CENTRES = 13 * FT; // 3.962
@@ -57,7 +58,9 @@ const KNEE_FOOT_X = POST_D / 2 - 0.045; // knee foot on the post's corner chord,
 const mastR = (h: number): number =>
   h <= 0.4 ? 0.09 - (0.015 * h) / 0.4 : 0.075 - (0.01 * (h - 0.4)) / (MAST_H - 0.4);
 
-const steel = hex('#2d3033');
+const steel = hex('#383c40');
+/** Galvanised hand rail and its stanchions (renewed in the 1930s, as surviving bridges show). */
+const galv = hex('#a3a7a6');
 const steelDark = hex('#1f2123');
 const concrete = hex('#b5afa3');
 const plank = hex('#6d5a45');
@@ -69,6 +72,7 @@ const lens = hex('#ffcf7a');
  *  walkway, red/white painted signal arms; concrete keeps its classic strip. */
 const RULES: readonly StripRule[] = [
   { from: steel, strip: 'steel_painted' },
+  { from: galv, strip: 'steel_galvanised' },
   { from: steelDark, strip: 'iron_rust', color: hex('#7a6e66') },
   { from: plank, strip: 'wood_weathered', color: hex('#c8bba8') },
   { from: red, strip: 'wood_painted' },
@@ -278,6 +282,49 @@ function arm(kind: 'home' | 'distant', lod: Lod): { blade: Mesh; spectacle: Mesh
   return { blade: merge(blade), spectacle: merge(rg) };
 }
 
+/**
+ * Far post: an open frame (four corner angles, a mid-height batten on each X face and the cap
+ * plate) instead of a solid column, so the posts stay see-through at distance like the lattice
+ * they stand for.
+ */
+function farPost(y: number, top: number): Mesh {
+  // Cap plate across the head: the planar far girder lands on it, the deck bears on it.
+  const out: Mesh[] = [
+    box({
+      size: [POST_D + 0.09, POST_W + 0.09, DECK_Z - 0.05 - top],
+      at: [0, y, top],
+      color: steel,
+      omit: ['bottom'],
+    }),
+  ];
+  const c = 0.09;
+  for (const dx of [-1, 1])
+    for (const dy of [-1, 1])
+      out.push(
+        beam({
+          from: [(dx * POST_D) / 2, y + (dy * POST_W) / 2, FOOT_H],
+          to: [(dx * POST_D) / 2, y + (dy * POST_W) / 2, top],
+          width: c,
+          color: steel,
+          strip: 'iron',
+          caps: false,
+        }),
+      );
+  const z = FOOT_H + (top - FOOT_H) * 0.5;
+  for (const dx of [-1, 1])
+    out.push(
+      beam({
+        from: [(dx * POST_D) / 2, y - POST_W / 2, z],
+        to: [(dx * POST_D) / 2, y + POST_W / 2, z],
+        width: 0.07,
+        color: steel,
+        strip: 'iron',
+        caps: false,
+      }),
+    );
+  return merge(out);
+}
+
 interface Params {
   readonly tracks: number;
 }
@@ -323,16 +370,37 @@ const bridge = defineFamily({
     ],
   },
   budget: { triangles: [10000, 4400, 830] },
-  glow: [{ parts: ['lamp_*_lens'], color: [1, 0.78, 0.45], strength: 4 }],
+  // A paraffin signal lamp: a warm point behind the spectacle glass, lit but never white.
+  glow: [{ parts: ['lamp_*_lens'], color: [1, 0.78, 0.45], strength: 1.5 }],
   defaults: { tracks: 2 } as Params,
   build(ctx, p) {
     const lod = ctx.lod;
     const hs = halfSpan(p.tracks);
     const dirt = (m: Mesh): Mesh => grime(m, { ground: 1.2, groundStrength: 0.35 });
     const weather = weatherer(ctx.rng.fork('weather'));
-    /** Every part through the material library, then dust on top faces and ground splash. */
-    const part = (name: string, m: Mesh | null, o?: Parameters<typeof ctx.part>[2]): void =>
-      ctx.part(name, m && weather(restrip(m, RULES), { dust: 0.2, mud: 0.6, mudStrength: 0.5 }), o);
+    const sooty = steelWear(ctx.rng.fork('steel-wear'), {
+      tracks: trackYs(p.tracks),
+      girderZ: ZB - CHORD / 2,
+      deckZ: DECK_Z,
+    });
+    const footed = footWear(ctx.rng.fork('foot-wear'));
+    /** Every part through the material library, its wear story (painted steel fades and soots by
+     *  default), then dust on top faces and ground splash. */
+    const part = (
+      name: string,
+      m: Mesh | null,
+      o?: Parameters<typeof ctx.part>[2],
+      wear: Shade | null = sooty,
+    ): void => {
+      if (!m) {
+        ctx.part(name, null, o);
+        return;
+      }
+      const mat = restrip(m, RULES);
+      const worn = wear ? shade(mat, wear) : mat;
+      ctx.part(name, weather(worn, { dust: 0.2, mud: 0.6, mudStrength: 0.5 }), o);
+    };
+    const rusty = ctx.rng.fork('rust');
     const section = lod === 0 ? 'angle' : 'square';
 
     // ---- posts on footings: box lattice (LOD0/1), plain columns far away.
@@ -350,16 +418,13 @@ const bridge = defineFamily({
           strip: 'concrete',
           omit: ['bottom'],
         }),
+        undefined,
+        footed,
       );
       const top = ZB + GIRDER_D;
       const post =
         lod === 2
-          ? box({
-              size: [POST_D, POST_W, top - FOOT_H],
-              at: [0, y, FOOT_H],
-              color: steel,
-              strip: 'iron',
-            })
+          ? farPost(y, top)
           : lattice({
               from: [0, y, FOOT_H],
               to: [0, y, top],
@@ -374,8 +439,25 @@ const bridge = defineFamily({
               color: steel,
               strip: 'iron',
             });
-      const plate = box({ size: [0.75, 0.6, 0.04], at: [0, y, FOOT_H], color: steelDark });
-      part(`post_${side}`, dirt(merge([post, plate])));
+      const bleeds: Bleed[] = [];
+      if (lod === 0) {
+        // Rust bleeds from the riveted nodes down the broad outer face of the front corner
+        // angle. The lattice turns its angles round the box, so only the left post's front
+        // angle shows its broad face outward (+Y); the right post's angles show edges there.
+        const bays = 16;
+        if (s > 0)
+          for (let i = 1; i < bays; i++)
+            bleeds.push({
+              at: [POST_D / 2, y + POST_W / 2 + 0.045, FOOT_H + ((top - FOOT_H) * i) / bays],
+              s: 1,
+              axis: 'y',
+              floor: FOOT_H + 0.05,
+            });
+      }
+      // The 4 cm base plate is below a pixel far away: LOD2 stands the frame on the footing.
+      const plate =
+        lod < 2 ? [box({ size: [0.75, 0.6, 0.04], at: [0, y, FOOT_H], color: steelDark })] : [];
+      part(`post_${side}`, dirt(merge([post, ...plate, rustBleeds(rusty, bleeds)])));
       // Knee braces from the post into the girder soffit, front and back faces.
       const knees = kneeEnds(y, s, lod).map(([from, to]) =>
         beam({
@@ -417,7 +499,26 @@ const bridge = defineFamily({
             color: steel,
             strip: 'iron',
           });
-    part('girder', girder);
+    const gussets: Mesh[] = [];
+    if (lod === 0) {
+      // Riveted gusset plates on the front face at every chord node (the 1909 bridge's rhythm).
+      const bays = Math.round(hs * 1.4);
+      for (let i = 0; i <= bays; i++) {
+        const y = -hs + (2 * hs * i) / bays;
+        // Plates stand inward from each chord's outer edge: nothing drops into the clearance.
+        for (const z of [ZB - CHORD / 2, ZB + GIRDER_D + CHORD / 2 - 0.2])
+          gussets.push(
+            box({
+              size: [0.012, 0.24, 0.2],
+              at: [GIRDER_W / 2 + CHORD / 2 + 0.005, y, z],
+              color: steel,
+              strip: 'iron',
+              omit: ['back'], // against the chord
+            }),
+          );
+      }
+    }
+    part('girder', merge([girder, ...gussets]));
     const deck: Mesh[] = [
       box({
         size: [GIRDER_W + 0.1, 2 * hs + 0.45, 0.05],
@@ -429,14 +530,14 @@ const bridge = defineFamily({
     if (lod === 2)
       for (const y of [-hs, hs])
         deck.push(
-          box({ size: [0.05, 0.05, 1.02], at: [-GIRDER_W / 2 - 0.02, y, DECK_Z], color: steel }),
+          box({ size: [0.05, 0.05, 1.02], at: [-GIRDER_W / 2 - 0.02, y, DECK_Z], color: galv }),
         );
     if (lod === 2)
       deck.push(
         box({
           size: [0.05, 2 * hs, 0.05],
           at: [-GIRDER_W / 2 - 0.02, 0, DECK_Z + 0.97],
-          color: steel,
+          color: galv,
         }),
       );
     if (lod < 2) {
@@ -447,7 +548,7 @@ const bridge = defineFamily({
           to: [railX, hs, DECK_Z + 1.0],
           width: 0.045,
           segments: lod === 0 ? 6 : 0,
-          color: steel,
+          color: galv,
         }),
       );
       deck.push(
@@ -455,13 +556,13 @@ const bridge = defineFamily({
           from: [railX, -hs, DECK_Z + 0.5],
           to: [railX, hs, DECK_Z + 0.5],
           width: 0.035,
-          color: steel,
+          color: galv,
         }),
       );
       const n = Math.round((2 * hs) / 1.5);
       for (let i = 0; i <= n; i++) {
         const y = -hs + (2 * hs * i) / n;
-        deck.push(box({ size: [0.05, 0.05, 1.02], at: [railX, y, DECK_Z], color: steel }));
+        deck.push(box({ size: [0.05, 0.05, 1.02], at: [railX, y, DECK_Z], color: galv }));
       }
     }
     part('walkway', merge(deck));
@@ -474,20 +575,63 @@ const bridge = defineFamily({
         lad.push(box({ size: [0.05, 0.04, DECK_Z - FOOT_H], at: [x, ly, FOOT_H], color: steel }));
       for (let z = FOOT_H + 0.3; z < DECK_Z - 0.05; z += lod === 0 ? 0.3 : 0.6)
         lad.push(
-          cylinder({
-            radius: 0.012,
-            length: 0.4,
-            segments: lod === 0 ? 6 : 4,
-            axis: 'x',
-            at: [0, ly, z],
-            color: steel,
-          }),
-        );
+          box({ size: [0.4, 0.022, 0.022], at: [0, ly, z - 0.011], color: steel, strip: 'iron' }),
+        ); // square-bar rung
       for (const z of [FOOT_H + 1.5, ZB - 1, ZB + 0.6])
         for (const x of [-0.2, 0.2])
           lad.push(box({ size: [0.04, 0.12, 0.04], at: [x, ly + 0.08, z], color: steel })); // stand-off brackets
       part('ladder', merge(lad));
     }
+
+    // ---- operating rods: up-and-down rods from each arm's mechanism case to the deck, a crank
+    // and a rod along the walkway to the right post, down its back face to a crank on the
+    // footing (the lever frame's pipe line leaves from there). LOD0 only.
+    if (lod === 0)
+      trackYs(p.tracks).forEach((y, t) => {
+        const r: Mesh[] = [];
+        const rod = (from: Vec3, to: Vec3): Mesh =>
+          beam({ from, to, width: 0.025, color: steel, strip: 'iron', caps: false });
+        const caseZ = (kind: 'home' | 'distant'): number =>
+          DECK_Z + LOW_ARM + (kind === 'home' ? ARM_GAP : 0) - 0.2;
+        for (const [dy, kind] of [
+          [-0.075, 'home'],
+          [0.075, 'distant'],
+        ] as const)
+          r.push(rod([-0.16, y + dy, DECK_Z], [-0.16, y + dy, caseZ(kind) + 0.02]));
+        const rx = -0.42 + 0.045 * t;
+        const lie = DECK_Z + 0.0125;
+        // Crank box on the deck under the mast rods, the run to the post, the drop down it.
+        r.push(
+          box({
+            size: [0.3, 0.2, 0.06],
+            at: [(rx - 0.16) / 2, y, DECK_Z],
+            color: steelDark,
+            strip: 'iron',
+          }),
+        );
+        r.push(rod([rx, y, lie], [rx, -hs + 0.02 * t, lie]));
+        const py = -hs - 0.06 + 0.04 * t;
+        r.push(
+          box({
+            size: [0.16, 0.12, 0.06],
+            at: [rx + 0.06, py, DECK_Z],
+            color: steelDark,
+            strip: 'iron',
+          }),
+        );
+        const px = -POST_D / 2 - 0.045 - 0.0125;
+        r.push(rod([rx, py, DECK_Z], [px, py, DECK_Z - 0.3]));
+        r.push(rod([px, py, DECK_Z - 0.3], [px, py, FOOT_H + 0.06]));
+        r.push(
+          box({
+            size: [0.14, 0.1, 0.12],
+            at: [px + 0.02, py, FOOT_H],
+            color: steelDark,
+            strip: 'iron',
+          }),
+        );
+        part(`rods_${t}`, merge(r));
+      });
 
     // ---- masts, arms, spectacles and lamps: one mast per track.
     const segs = ctx.pick([10, 8, 5]);
@@ -545,15 +689,15 @@ const bridge = defineFamily({
           mast.push(box({ size: [0.22, 0.22, 0.32], at: [-0.16, y, pz - 0.2], color: steelDark }));
           // Bearing bracket (its own part, so only it is cleared for the spindle turning in it):
           // a clamp band round the pipe and the bored boss.
+          // Only the faces that show: the boss's root face sits inside the pipe and its bore is
+          // filled by the spindle; the clamp band's inner face is pressed into the pipe.
           const r = mastR(pz - DECK_Z);
           const brg: Mesh[] = [
             lathe({
               profile: [
-                [SPINDLE_R, 0.035],
                 [0.045, 0.035],
                 [0.045, BEARING_X1],
                 [SPINDLE_R, BEARING_X1],
-                [SPINDLE_R, 0.035],
               ],
               segments: lod === 0 ? 8 : 6,
               axis: 'x',
@@ -569,7 +713,6 @@ const bridge = defineFamily({
                   [r + 0.01, pz - 0.07],
                   [r + 0.01, pz + 0.07],
                   [r - 0.004, pz + 0.07],
-                  [r - 0.004, pz - 0.07],
                 ],
                 segments: segs,
                 color: steelDark,
@@ -583,20 +726,27 @@ const bridge = defineFamily({
         const lz = pz - 0.25;
         part(
           `lamp_${t}_${kind}`,
-          merge([
-            box({ size: [0.2, 0.24, 0.3], at: [-0.02, ly, lz - 0.15], color: steelDark }),
-            lathe({
-              profile: [
-                [0.07, lz + 0.15],
-                [0.05, lz + 0.26],
-                [0, lz + 0.29],
-              ],
-              segments: lod === 2 ? 3 : 6,
-              color: steelDark,
-              at: [-0.02, ly, 0],
-            }), // chimney
-            box({ size: [0.05, 0.12, 0.05], at: [-0.02, y - 0.09, lz - 0.05], color: steelDark }), // bracket to the mast
-          ]),
+          lod === 2
+            ? // Far: the lamp case alone, widened to bear on the mast (no chimney, no bracket).
+              box({ size: [0.2, 0.31, 0.3], at: [-0.02, y - 0.22, lz - 0.15], color: steelDark })
+            : merge([
+                box({ size: [0.2, 0.24, 0.3], at: [-0.02, ly, lz - 0.15], color: steelDark }),
+                lathe({
+                  profile: [
+                    [0.07, lz + 0.15],
+                    [0.05, lz + 0.26],
+                    [0, lz + 0.29],
+                  ],
+                  segments: 6,
+                  color: steelDark,
+                  at: [-0.02, ly, 0],
+                }), // chimney
+                box({
+                  size: [0.05, 0.12, 0.05],
+                  at: [-0.02, y - 0.09, lz - 0.05],
+                  color: steelDark,
+                }), // bracket to the mast
+              ]),
         );
         part(
           `lamp_${t}_${kind}_lens`,

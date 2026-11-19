@@ -1,7 +1,8 @@
 // The house sheet: every strip and cell. Classic strips stay near-greyscale and bright (vertex
 // colour carries hue); the material and nature library strips carry their own colour. Each strip reads at its
 // typical face height (`scaleMetres`). `HOUSE_STRIPS` is the one mutable table: defineMaterial()
-// adds project strips to it, so `DEFAULT_SHEET` always paints every strip the layout knows.
+// adds project strips to it by id, so `DEFAULT_SHEET` has the recipe of every strip a sheet may be
+// asked to hold (which project strips a sheet holds is per asset: asset-sheet.ts).
 
 import { MATERIAL_LIBRARY } from '../library.ts';
 import { toStripRecipe } from '../material-def.ts';

@@ -1,20 +1,21 @@
 // CPU rasteriser: orthographic, z-buffered, Lambert-shaded triangles plus depth-tested lines.
 // Slow by GPU standards and fast enough for 6 × 400² views of a game asset in well under a second.
+// One flat colour per triangle: vertex colour, times the trim sheet's mean albedo for the
+// triangle's strip when the caller passes `tones` (sheet-tones.ts), so a white-tinted oak plank is
+// brown as in the hero. With tones, see-through parts (glass, ice, liquid…) are drawn last as one
+// nearest layer blended over what is behind; without, the output is the form-only render it
+// always was. Cutout cards on the sheet (leaves, needles, fur) are alpha-tested per pixel against
+// the sheet's texels, so the panels show foliage's real silhouette (D300); that needs `tones` too.
 // Parts with their own texture set (ADR 016) are drawn per pixel by raster-textured.ts.
 
-import type { CompiledAsset, Mesh, TextureSet, Vec3 } from '../core/index.ts';
-import {
-  cross,
-  dot,
-  normalize,
-  rotateZ,
-  sub,
-  Ts23dError,
-  toWorld,
-  worldTransforms,
-} from '../core/index.ts';
+import type { CompiledAsset, Vec3 } from '../core/index.ts';
+import { cross, dot, normalize, sub } from '../core/index.ts';
 import { drawTextured } from './raster-textured.ts';
+import { cutAt, type SheetTones, toneAt } from './sheet-tones.ts';
 import { setTextures } from './texture-sets.ts';
+import { worldParts } from './world-parts.ts';
+
+export { worldParts } from './world-parts.ts';
 
 export interface View {
   readonly label: string;
@@ -49,72 +50,19 @@ export function orthoCamera(view: View, centre: Vec3, extent: number, size: numb
 
 const LIGHT = normalize([0.4, -0.6, 0.8]);
 
-/** Attribute arrays the rasteriser reads must match the vertex count (QA: `mesh-arrays`). */
-function checkArrays(m: Mesh, part: string): void {
-  const n = m.positions.length;
-  const wrong = [
-    n % 3 === 0 ? '' : `positions ${n}`,
-    m.normals.length === n ? '' : `normals ${m.normals.length}`,
-    m.colors.length === n ? '' : `colors ${m.colors.length}`,
-    m.uvs.length === (n / 3) * 2 ? '' : `uvs ${m.uvs.length}`,
-    m.indices.length % 3 === 0 ? '' : `indices ${m.indices.length}`,
-  ].filter((w) => w !== '');
-  if (wrong.length)
-    throw new Ts23dError('T3D_RECIPE_INVALID', {
-      cause: `part '${part}' (${Math.floor(n / 3)} vertices) has attribute arrays of the wrong length: ${wrong.join(', ')}`,
-      fix: 'run QA first (the mesh-arrays gate names it); a Mesh needs 3 normals, 2 uvs and 3 colours per vertex and 3 indices per triangle',
-    });
-}
+/** UVs of the triangle being drawn, read by `tri` when it alpha-tests: ua, va, ub, vb, uc, vc. */
+const UV = new Float32Array(6);
 
-export function worldParts(asset: CompiledAsset): {
-  positions: Float32Array;
-  normals: Float32Array;
-  colors: Float32Array;
-  indices: Uint32Array;
-  uvs: Float32Array;
-  /** The part's own texture set, its name (for errors) and whether it is alpha-tested. */
-  textured?: { set: TextureSet; part: string; cutout: boolean };
-}[] {
-  const xf = worldTransforms(asset.parts);
-  const out = [];
-  for (const p of asset.parts) {
-    const t = xf.get(p.name);
-    if (!p.mesh || !t) continue;
-    checkArrays(p.mesh, p.name);
-    const positions = new Float32Array(p.mesh.positions.length);
-    const normals = new Float32Array(p.mesh.normals.length);
-    for (let i = 0; i < positions.length; i += 3) {
-      positions.set(
-        toWorld(t, [
-          p.mesh.positions[i] ?? 0,
-          p.mesh.positions[i + 1] ?? 0,
-          p.mesh.positions[i + 2] ?? 0,
-        ]),
-        i,
-      );
-      normals.set(
-        rotateZ(
-          [p.mesh.normals[i] ?? 0, p.mesh.normals[i + 1] ?? 0, p.mesh.normals[i + 2] ?? 0],
-          t.yaw,
-        ),
-        i,
-      );
-    }
-    out.push({
-      positions,
-      normals,
-      colors: p.mesh.colors,
-      indices: p.mesh.indices,
-      uvs: p.mesh.uvs,
-      ...(p.textures
-        ? { textured: { set: p.textures, part: p.name, cutout: p.surface === 'cutout' } }
-        : {}),
-    });
-  }
-  return out;
-}
-
-function tri(t: Target, a: Vec3, b: Vec3, c: Vec3, rgb: Vec3): void {
+/** Fill one triangle; with `cut`, drop the pixels whose sheet texel (UV above) is cut away. */
+function tri(
+  t: Target,
+  a: Vec3,
+  b: Vec3,
+  c: Vec3,
+  rgb: Vec3,
+  alpha: number,
+  cut?: SheetTones,
+): void {
   const minX = Math.max(0, Math.floor(Math.min(a[0], b[0], c[0])));
   const maxX = Math.min(t.width - 1, Math.ceil(Math.max(a[0], b[0], c[0])));
   const minY = Math.max(0, Math.floor(Math.min(a[1], b[1], c[1])));
@@ -132,8 +80,21 @@ function tri(t: Target, a: Vec3, b: Vec3, c: Vec3, rgb: Vec3): void {
       const z = w0 * a[2] + w1 * b[2] + w2 * c[2];
       const i = y * t.width + x;
       if (z >= (t.depth[i] ?? Infinity)) continue;
+      if (
+        cut &&
+        cutAt(
+          cut,
+          w0 * (UV[0] ?? 0) + w1 * (UV[2] ?? 0) + w2 * (UV[4] ?? 0),
+          w0 * (UV[1] ?? 0) + w1 * (UV[3] ?? 0) + w2 * (UV[5] ?? 0),
+        )
+      )
+        continue;
       t.depth[i] = z;
-      t.px.set([rgb[0], rgb[1], rgb[2], 255], i * 4);
+      const o = i * 4;
+      t.px[o] = rgb[0];
+      t.px[o + 1] = rgb[1];
+      t.px[o + 2] = rgb[2];
+      t.px[o + 3] = alpha;
     }
   }
 }
@@ -141,38 +102,91 @@ function tri(t: Target, a: Vec3, b: Vec3, c: Vec3, rgb: Vec3): void {
 const toSrgb = (v: number): number =>
   Math.round(255 * Math.min(1, v <= 0.0031308 ? v * 12.92 : 1.055 * v ** (1 / 2.4) - 0.055));
 
-export function drawAsset(t: Target, cam: Camera, asset: CompiledAsset): void {
-  for (const m of worldParts(asset)) {
+type WorldPart = ReturnType<typeof worldParts>[number];
+const WHITE = new Float32Array([1, 1, 1]);
+const tone = new Float32Array(3);
+
+/** Flat-shaded triangles of one part; `alpha` is the byte written beside the colour. */
+function drawFlat(
+  t: Target,
+  cam: Camera,
+  m: WorldPart,
+  tones: SheetTones | undefined,
+  alpha: number,
+): void {
+  for (let i = 0; i < m.indices.length; i += 3) {
+    const ids = [m.indices[i] ?? 0, m.indices[i + 1] ?? 0, m.indices[i + 2] ?? 0];
+    const pts = ids.map((v) =>
+      cam.project([
+        m.positions[v * 3] ?? 0,
+        m.positions[v * 3 + 1] ?? 0,
+        m.positions[v * 3 + 2] ?? 0,
+      ]),
+    );
+    const v0 = ids[0] ?? 0;
+    const n: Vec3 = [
+      m.normals[v0 * 3] ?? 0,
+      m.normals[v0 * 3 + 1] ?? 0,
+      m.normals[v0 * 3 + 2] ?? 1,
+    ];
+    const shade = 0.35 + 0.65 * Math.max(0, dot(n, LIGHT));
+    if (tones) {
+      // The strip (or cell) under the triangle's UV centroid: one mean albedo per triangle.
+      let u = 0;
+      let v = 0;
+      ids.forEach((id, k) => {
+        UV[k * 2] = m.uvs[id * 2] ?? 0;
+        UV[k * 2 + 1] = m.uvs[id * 2 + 1] ?? 0;
+        u += (UV[k * 2] ?? 0) / 3;
+        v += (UV[k * 2 + 1] ?? 0) / 3;
+      });
+      toneAt(tones, u, v, tone);
+    }
+    const k = tones ? tone : WHITE;
+    const rgb: Vec3 = [
+      toSrgb((m.colors[v0 * 3] ?? 1) * (k[0] ?? 1) * shade),
+      toSrgb((m.colors[v0 * 3 + 1] ?? 1) * (k[1] ?? 1) * shade),
+      toSrgb((m.colors[v0 * 3 + 2] ?? 1) * (k[2] ?? 1) * shade),
+    ];
+    const [a, b, c] = pts;
+    if (a && b && c) tri(t, a, b, c, rgb, alpha, m.cutout ? tones : undefined);
+  }
+}
+
+/** Blend the pixels `layer` drew (alpha = opacity) over `t`, taking their depth. */
+function blendOver(t: Target, layer: Target): void {
+  for (let i = 0; i < layer.depth.length; i++) {
+    const o = i * 4;
+    const a = (layer.px[o + 3] ?? 0) / 255;
+    if (a === 0) continue;
+    const under = ((t.px[o + 3] ?? 0) / 255) * (1 - a);
+    const out = a + under;
+    for (let k = 0; k < 3; k++)
+      t.px[o + k] = Math.round(((layer.px[o + k] ?? 0) * a + (t.px[o + k] ?? 0) * under) / out);
+    t.px[o + 3] = Math.round(out * 255);
+    t.depth[i] = layer.depth[i] ?? Infinity;
+  }
+}
+
+/**
+ * Draw every part into `t`. `tones` (the trim sheet's mean albedo per strip) turns the form-only
+ * render into the base-colour one: albedo × vertex colour, and see-through parts blended.
+ */
+export function drawAsset(t: Target, cam: Camera, asset: CompiledAsset, tones?: SheetTones): void {
+  const parts = worldParts(asset);
+  const through = tones ? parts.filter((m) => m.opacity !== undefined && !m.textured) : [];
+  for (const m of parts) {
     if (m.textured) {
       const { set, part, cutout } = m.textured;
       drawTextured(t, cam, m, setTextures(set, part), cutout, LIGHT);
-      continue;
-    }
-    for (let i = 0; i < m.indices.length; i += 3) {
-      const ids = [m.indices[i] ?? 0, m.indices[i + 1] ?? 0, m.indices[i + 2] ?? 0];
-      const pts = ids.map((v) =>
-        cam.project([
-          m.positions[v * 3] ?? 0,
-          m.positions[v * 3 + 1] ?? 0,
-          m.positions[v * 3 + 2] ?? 0,
-        ]),
-      );
-      const v0 = ids[0] ?? 0;
-      const n: Vec3 = [
-        m.normals[v0 * 3] ?? 0,
-        m.normals[v0 * 3 + 1] ?? 0,
-        m.normals[v0 * 3 + 2] ?? 1,
-      ];
-      const shade = 0.35 + 0.65 * Math.max(0, dot(n, LIGHT));
-      const rgb: Vec3 = [
-        toSrgb((m.colors[v0 * 3] ?? 1) * shade),
-        toSrgb((m.colors[v0 * 3 + 1] ?? 1) * shade),
-        toSrgb((m.colors[v0 * 3 + 2] ?? 1) * shade),
-      ];
-      const [a, b, c] = pts;
-      if (a && b && c) tri(t, a, b, c, rgb);
-    }
+    } else if (!through.includes(m)) drawFlat(t, cam, m, tones, 255);
   }
+  if (through.length === 0) return;
+  // One nearest see-through layer in front of the opaque depth: independent of part order.
+  const layer: Target = { ...t, px: new Uint8Array(t.px.length), depth: t.depth.slice() };
+  for (const m of through)
+    drawFlat(layer, cam, m, tones, Math.max(1, Math.round((m.opacity ?? 1) * 255)));
+  blendOver(t, layer);
 }
 
 export function line(t: Target, a: Vec3, b: Vec3, rgb: Vec3): void {

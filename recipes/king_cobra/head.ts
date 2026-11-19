@@ -18,6 +18,7 @@ import {
   stations,
   TAU,
 } from '../_lib/body-plan-kit.ts';
+import { pinLoftUv, pinUv } from './material.ts';
 import { frameAt, HEAD, halfW, surfacePoint } from './shape.ts';
 import { COLOUR, SCALE_STRIP, sideOf } from './surface.ts';
 
@@ -108,14 +109,19 @@ export function headMesh(lod: Lod): Mesh {
           ...even(0.0008, 0.012, lod === 0 ? 12 : 4),
           ...even(0.012, end, lod === 0 ? 96 : 16),
         ]);
-  return loft({
+  const sides = lod === 0 ? 96 : lod === 1 ? 24 : 8;
+  const mesh = loft({
     us,
-    sides: lod === 0 ? 96 : lod === 1 ? 24 : 8,
+    sides,
     strip: SCALE_STRIP,
-    metres: [0.2, 0.15],
-    stripHeight: 0.2,
     point: (s, a) => headPoint(s, a, lod),
     color: (_p, _n, s, a) => headColour(s, a),
+  });
+  // The big head shields are polished keratin; their sutures and the lips are matte.
+  return pinLoftUv(mesh, us, sides, (s, a) => {
+    const u = s / HEAD.length;
+    const v = (Math.sin(a) * halfW(s)) / (HEAD.width / 2);
+    return [0.25 + 0.7 * smooth(0.004, 0.02, suture(u, v)) * (1 - smooth(1.7, 2.1, sideOf(a))), 0];
   });
 }
 
@@ -124,9 +130,12 @@ export function eyeMesh(side: 1 | -1, lod: Lod): Mesh {
   const f = frameAt(0.0355);
   const out = norm(add(scale(f.side, side), scale(f.d, 0.45)));
   const [rings, sides] = lod === 0 ? [10, 16] : lod === 1 ? [5, 8] : [2, 4];
-  return eyeball(add(c, scale(out, -0.0028)), 0.0052, out, rings, sides, (th) =>
-    th < 0.55 ? COLOUR.pupil : th < 1.0 ? COLOUR.iris : COLOUR.suture,
+  // Seated proud in the socket under the clear brille: the glossiest point on the snake, so the
+  // key light leaves a catchlight on it.
+  const eye = eyeball(add(c, scale(out, -0.0019)), 0.0054, out, rings, sides, (th) =>
+    th < 0.5 ? COLOUR.pupil : th < 0.95 ? COLOUR.iris : th < 1.15 ? COLOUR.lip : COLOUR.suture,
   );
+  return pinUv(eye, 1);
 }
 
 /** Forked tongue: two thin tips off a shared stem, out through the mouth notch. */
@@ -138,7 +147,7 @@ export function tongueMesh(path: readonly Vec3[], lod: Lod): Mesh[] {
 function tongueBlade(path: readonly Vec3[], fork: number, lod: Lod): Mesh {
   const c = curve3(path);
   const y = (u: number): number => fork * 0.0085 * smooth(0.62, 1, u) ** 1.4;
-  return loft({
+  const blade = loft({
     us: even(0, 0.985, lod === 0 ? 12 : 4),
     sides: lod === 0 ? 6 : 4,
     strip: SCALE_STRIP,
@@ -149,4 +158,5 @@ function tongueBlade(path: readonly Vec3[], fork: number, lod: Lod): Mesh {
     },
     color: () => COLOUR.tongue,
   });
+  return pinUv(blade, 0.75);
 }

@@ -10,6 +10,9 @@ import type { Stem } from './vegetation-skeleton.ts';
 
 type V = [number, number, number];
 
+/** Vertices per leaflet in `frondLeaflets`' mesh: [root−, root+, tip] on both faces. */
+export const LEAFLET_VERTS = 6;
+
 function tri(mb: MeshBuilder, a: Vec3, b: Vec3, c: Vec3, col: Vec3, tipCol: Vec3): void {
   const e1: V = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
   const e2: V = [c[0] - a[0], c[1] - a[1], c[2] - a[2]];
@@ -30,8 +33,8 @@ function tri(mb: MeshBuilder, a: Vec3, b: Vec3, c: Vec3, col: Vec3, tipCol: Vec3
 }
 
 /**
- * Leaflets along every frond (stem at `level`). `perSide` leaflets each side; `from` overrides
- * each frond's first rachis point (LOD2 roots them all on the trunk's top cap centre).
+ * Leaflets along every frond (stem at `level`). `perSide` leaflets each side, in stem order
+ * (the far LOD reads them back per frond: LEAFLET_VERTS).
  */
 export function frondLeaflets(
   stems: readonly Stem[],

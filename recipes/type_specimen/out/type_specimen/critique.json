@@ -1,70 +1,69 @@
 {
   "asset": "type_specimen",
   "reviewer": "agent",
-  "overall": 6.4,
+  "overall": 7.4,
   "scores": {
     "silhouette": {
-      "score": 7,
-      "reason": "Free-standing notice board on two posts with a capping rail: reads as a notice board; the outline is a generic rectangle.",
+      "score": 8,
+      "reason": "Notice board on two posts with a pitched hood on brackets: the cap breaks the plain rectangle and reads as a station notice board.",
       "fixes": [
-        "a small gabled hood or bracketed cap over the board"
+        "slightly heavier posts (0.12 m) for a 3.2 m board"
       ]
     },
     "proportions": {
       "score": 8,
-      "reason": "0.2 x 3.3 x 2.8 m; 3.2 x 1.9 m face at ~0.8 m off the ground, cap heights per README; lettering scale reads right.",
+      "reason": "0.4 x 3.5 x 2.9 m; board face at ~0.8 m off the ground, lettering scale right.",
       "fixes": [
-        "posts slightly heavier (0.12 m) for a 3.2 m board"
+        "posts ~0.12 m"
       ]
     },
     "materials": {
-      "score": 6,
-      "reason": "Dark green painted board with faint streaks, cream painted letters and brass raised letters separate well; the posts and frame are flat dark brown with no grain.",
+      "score": 7,
+      "reason": "Green painted board with boarded texture, cream painted and brass raised letters, wood posts with grain; brass faces have no polished highlight and the hood reads flat dark.",
       "fixes": [
-        "wood grain on posts and frame (wood_painted)",
-        "brass letters with a polished highlight on the faces"
+        "polished brass highlight on the raised letter faces",
+        "hood as tar-felt or slate with an edge trim"
       ]
     },
     "detail": {
-      "score": 6,
-      "reason": "Six faces twice (flat and raised), title, brass divider, labels; no fixings, bolts or a back panel structure.",
+      "score": 7,
+      "reason": "Six faces twice (flat and raised), title, brass divider, labels, hood brackets, back battens.",
       "fixes": [
-        "bolts at the post-to-board joint",
-        "cross battens on the board back"
+        "bolts at the post-to-board joint"
       ]
     },
     "wear": {
-      "score": 5,
-      "reason": "Faint vertical streaks on the green paint; no fading, no chipped letters, no damp at the post feet.",
+      "score": 6,
+      "reason": "Weathered post feet and a darker hood; letters and frame pristine, no fading band.",
       "fixes": [
         "sun-faded top band and chipped edges on the frame",
-        "damp/mud at the post feet"
+        "damp at the post feet"
       ]
     },
     "lod": {
-      "score": 6,
-      "reason": "FAR LOD2 drops the whole left (flat) column and its labels, so half the board content vanishes at distance; title and the raised column stay.",
+      "score": 8,
+      "reason": "lods.png: LOD2 (282 tris) keeps board, hood, posts and both columns as cream and brass bars in the right places; at the distance LOD2 shows, the value pattern matches.",
       "fixes": [
-        "keep the flat column at LOD2 at low segment count (text() segments) instead of dropping it"
+        "keep the title as two bars with a gap (word break) at LOD2"
       ]
     },
     "technical": {
-      "score": 7,
-      "reason": "QA clean (pack): 38.5k / 27.8k / 4.1k tris; LOD1 is barely lighter than LOD0, so lettering triangles are not stepped down.",
+      "score": 8,
+      "reason": "QA PASS: 30.0k / 8.5k / 282 tris (LOD1 now properly stepped), 1 draw.",
       "fixes": [
-        "lower text() segments at LOD1 (half of LOD0)"
+        "fewer text() segments on the flat column at LOD0"
       ]
     }
   },
   "renders": {
-    "hero.png": "5b7563f339529937d0863f0c11a016a716f9bbb00cfe2ea2fc55d763aab9b280",
-    "sheet.png": "b5408ba2c91374b1f4710330779ca26645ea41b71225e4e3ef28313749fa45cf",
-    "raking.png": "e68525b7e2fd24c5b07e98112b5d472b4c551a6274d51e108e2c9fcf7978c700",
-    "raking_detail.png": "d5071e8760f99fa2b95f61ae14a31e83f799d0314ed73a9647320129d6b0f26d",
-    "lods.png": "93d05a297a973fcb723351609937c3a661252e078c3a1b0bce9193e6a3d7da3b",
-    "silhouette.png": "493236aa38cdebe1f66ebb03f9eea5ee520a58b1aebf776f9ba403bc0e220923",
-    "value.png": "6d4e05dde58d23c613af963e26189d3930a42ad93779208130047f0706bf6ea4",
-    "detail.png": "0cd2abeae169a84436bc47662e58a22b7fa3cf5f09a8c63fd289878b2ec9923c"
+    "hero.png": "c322f718a033fd1694d272c99ad0a24300a3e0fc43d9d332fcba365a382cf832",
+    "sheet.png": "16d1745cc84d938247bc9fc61aed6269d11fd0c5e01cc797ae26b1d352f5d7cf",
+    "raking.png": "29efde1fd7263b133b993ff1b1b7a6f23d64aa011a05de34f11aedcdbf5962a8",
+    "raking_detail.png": "8b86ce2bac3bc720828e7a52dcb401e8a6e55fa217e7691e0f1cf2a61b1c052a",
+    "lods.png": "7db5f57a7601884a2bdee42bad9e60af3bff4c7f23072f43ac1dfc3a7b93ea5d",
+    "silhouette.png": "156b5e987ad808f7650101213abe9f503a8d0aa134a513f2f129dd6d76774fba",
+    "value.png": "8b973f436031de93c4ecd494e038a6a34fab65c200bf294db176b6c2dc3c005e",
+    "detail.png": "098609ac592acd6b539adc4fc0115b2052e4c21da4a430dc4f5e20f842a2cb92"
   },
   "metrics": {
     "silhouette": [
@@ -74,7 +73,7 @@
       },
       {
         "view": "side",
-        "iou": 1
+        "iou": 0.967
       },
       {
         "view": "3/4",
@@ -84,8 +83,8 @@
     "focal": {
       "peakPart": "board",
       "peak": [
-        296,
-        180
+        303,
+        210
       ],
       "focalShare": 0,
       "focalArea": 0,
@@ -98,13 +97,13 @@
       "declared": []
     },
     "rest": {
-      "share": 0.807,
-      "spread": 0.629,
+      "share": 0.816,
+      "spread": 0.618,
       "min": 0.25
     },
     "shape": {
-      "acuteShare": 0.042,
-      "straightShare": 0.947,
+      "acuteShare": 0.037,
+      "straightShare": 0.942,
       "taper": -0.757,
       "shape": "stable"
     }

@@ -18,7 +18,7 @@ export const BULKHEAD_X = -0.865;
 
 /** One wheel liner (left side): a half-drum round the arch, inner wall, open at the bottom. */
 function liner(lod: Lod, x: number, z: number, r: number, yIn: number, yOut: number): Mesh {
-  const segs = [40, 16, 8][lod] ?? 8;
+  const segs = [24, 12, 6][lod] ?? 6;
   const parts: Mesh[] = [];
   // Drum: profile in (radius, y) from the inner wall out to the skin, swept over the top 220°.
   const n = segs;
@@ -100,8 +100,10 @@ export function structure(lod: Lod): StructureMeshes {
     ),
     // Firewall: from the floor to the cowl, toe board sloped into the footwells.
     bx([X_FIREWALL, -0.74, FLOOR_Z], [X_FIREWALL + 0.02, 0.74, 0.8], C.frame, 'steel_painted'),
-    // Rear bulkhead behind the seats, up under the deck.
+    // Rear bulkhead behind the seats, up under the deck, with a top lip that runs 2.5 cm back
+    // past the deck's cockpit edge (x −0.9, between the wheel tubs) so no slit opens between them.
     bx([BULKHEAD_X - 0.02, -0.74, FLOOR_Z], [BULKHEAD_X, 0.74, 0.9], C.frame, 'steel_painted'),
+    bx([BULKHEAD_X - 0.06, -0.5, 0.86], [BULKHEAD_X - 0.02, 0.5, 0.9], C.frame, 'steel_painted'),
   ];
   // Cockpit side walls (inside the sills, under the door line).
   for (const s of [1, -1])
@@ -168,7 +170,7 @@ export function structure(lod: Lod): StructureMeshes {
             [0.05, 0],
             [0.0, 0.0],
           ],
-          segments: lod === 0 ? 24 : 10,
+          segments: lod === 0 ? 16 : 8,
           axis: 'z',
           color: bayC,
           strip: 'plastic',

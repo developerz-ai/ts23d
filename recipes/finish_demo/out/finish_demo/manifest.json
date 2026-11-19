@@ -1,7 +1,7 @@
 {
   "name": "finish_demo",
   "kind": "prop",
-  "description": "A EUR pallet with a wooden crate and an oak cask: plain code-built props for the AI finish layer (t3d finish) to weather",
+  "description": "A EUR pallet with a battened pine crate and an oak cask: code-built props with their own use wear, for the AI finish layer (t3d finish) to weather further",
   "tags": [
     "demo",
     "finish",
@@ -18,9 +18,9 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    3172,
-    1132,
-    284
+    4308,
+    1420,
+    272
   ],
   "drawCalls": [
     1,
@@ -67,6 +67,78 @@
     "https://en.wikipedia.org/wiki/EUR-pallet",
     "https://en.wikipedia.org/wiki/Barrel#Wine_barrels"
   ],
+  "weather": {
+    "chips": {
+      "target": 0.25,
+      "actual": 0.25,
+      "eligible": "convex-edges",
+      "area": 11.7622,
+      "by": {
+        "pallet_wear": {
+          "target": 0.25,
+          "actual": 0.25,
+          "area": 4.3586
+        },
+        "crate_wear": {
+          "target": 0.25,
+          "actual": 0.25,
+          "area": 7.4036
+        }
+      }
+    },
+    "mud": {
+      "target": 0.2885,
+      "actual": 0.2885,
+      "eligible": "ground-near & side-facing ; ground-near",
+      "area": 4.2758,
+      "by": {
+        "pallet_wear": {
+          "target": 0.4,
+          "actual": 0.4,
+          "area": 0.796
+        },
+        "crate_wear": {
+          "target": 0.25,
+          "actual": 0.25,
+          "area": 2.5769
+        },
+        "cask_wear": {
+          "target": 0.3,
+          "actual": 0.3,
+          "area": 0.9029
+        }
+      }
+    },
+    "dust": {
+      "target": 0.3423,
+      "actual": 0.3423,
+      "eligible": "up-facing",
+      "area": 3.0885,
+      "by": {
+        "pallet_wear": {
+          "target": 0.3,
+          "actual": 0.3,
+          "area": 1.7813
+        },
+        "crate_wear": {
+          "target": 0.4,
+          "actual": 0.4,
+          "area": 1.0737
+        },
+        "cask_wear": {
+          "target": 0.4,
+          "actual": 0.4,
+          "area": 0.2335
+        }
+      }
+    },
+    "rust": {
+      "target": 0.5,
+      "actual": 0.5,
+      "eligible": "below-fasteners | fasteners",
+      "area": 0.0148
+    }
+  },
   "qa": {
     "pass": true,
     "findings": []

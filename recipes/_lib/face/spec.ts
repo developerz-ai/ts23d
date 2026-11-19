@@ -71,6 +71,20 @@ export interface SkinTone {
   readonly cavity: Vec3;
 }
 
+/** What life has done to the skin (dials 0..1); the painter (paint.ts) reads it. */
+export interface Wear {
+  /** Sun-darkened forehead, nose, cheek tops and shoulders. */
+  readonly sun: number;
+  /** Freckles, moles, blotches. */
+  readonly freckles: number;
+  /** Dirt in the hollows and on the neck. */
+  readonly grime: number;
+  /** Shaven-beard shadow over the beardline. */
+  readonly stubble?: { readonly colour: Vec3; readonly amount: number };
+  /** Healed cuts as polylines of BASE points (landmarks ± a few mm), warped with the face. */
+  readonly scars?: readonly (readonly Vec3[])[];
+}
+
 export interface Character {
   readonly race: FaceSpec;
   /** 0 young adult … 1 old: sag, longer nose and ears, thinner lips, heavier lids. */
@@ -85,4 +99,5 @@ export interface Character {
   readonly mouth?: number;
   /** Tusks from the lower jaw (orc), length ΔH. */
   readonly tusks?: number;
+  readonly wear?: Wear;
 }

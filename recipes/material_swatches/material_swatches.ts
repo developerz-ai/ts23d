@@ -2,8 +2,10 @@
 // procedural material generator. Stepped plinths, rows of ≤ 34 m in sheet order: every one of the 42 strips is a panel exactly one repeat wide (`stripRect(id).metres`:
 // 4 m classic/library/bark, 16 m ground, 32 m rock) and as tall as its design height
 // (`DEFAULT_SHEET` scaleMetres), so one panel face = one strip rect at true scale; classic strips
-// tinted by a representative colour, the rest NATURAL. Back row: the decal and foliage cells, 1 m
-// each. Labels are block letters (3×5 font, merged pixel runs) on the plinth faces, LOD0 only.
+// tinted by a representative colour, the rest NATURAL. In front of each panel a ball in the same
+// strip shows how it shades on curvature (LOD0). Back row: the decal and foliage cells, 1 m each.
+// Labels: flush 5 × 7 letters sized to the panel (LOD0), one greeked quad each (LOD1). A 1.8 m
+// figure stands at the front row for scale; plinths darken toward the ground.
 // Export with `--sheet` (or `toGlb(a, { sheet: paintTrimSheet() })`) to see the textures; the
 // contact sheet is vertex colour only.
 
@@ -17,14 +19,19 @@ import {
   defineAsset,
   FOLIAGE_CELLS,
   hex,
+  type Lod,
+  lathe,
   MATERIAL_STRIPS,
   type Mesh,
   MeshBuilder,
+  measureText,
   merge,
   NATURAL,
   NATURE_STRIPS,
   type StripId,
   stripRect,
+  text as textMesh,
+  type Vec2,
   type Vec3,
 } from '@developerz.ai/ts23d';
 
@@ -41,70 +48,80 @@ const TINT: Readonly<Partial<Record<StripId, Vec3>>> = {
   concrete: hex('#a7a39b'),
 };
 
-// 3×5 glyphs, one 3-bit row per entry, top row first (bit 4 = left column).
-const FONT: Readonly<Record<string, readonly number[]>> = {
-  a: [2, 5, 7, 5, 5],
-  b: [6, 5, 6, 5, 6],
-  c: [3, 4, 4, 4, 3],
-  d: [6, 5, 5, 5, 6],
-  e: [7, 4, 6, 4, 7],
-  f: [7, 4, 6, 4, 4],
-  g: [3, 4, 5, 5, 3],
-  h: [5, 5, 7, 5, 5],
-  i: [7, 2, 2, 2, 7],
-  j: [1, 1, 1, 5, 2],
-  k: [5, 5, 6, 5, 5],
-  l: [4, 4, 4, 4, 7],
-  m: [5, 7, 7, 5, 5],
-  n: [6, 5, 5, 5, 5],
-  o: [2, 5, 5, 5, 2],
-  p: [6, 5, 6, 4, 4],
-  q: [2, 5, 5, 6, 3],
-  r: [6, 5, 6, 5, 5],
-  s: [3, 4, 2, 1, 6],
-  t: [7, 2, 2, 2, 2],
-  u: [5, 5, 5, 5, 7],
-  v: [5, 5, 5, 5, 2],
-  w: [5, 5, 7, 7, 5],
-  x: [5, 5, 2, 5, 5],
-  y: [5, 5, 2, 2, 2],
-  z: [7, 1, 2, 4, 7],
-};
+/** The label cap height for a panel w wide on a plinth face `face` tall: big enough to read. */
+const capOf = (w: number, face: number): number => Math.min(0.6 * face, 0.035 * w, 0.45);
 
 /**
- * Block-letter label on a +X-facing plane at x = `faceX`, centred on `y`, baseline at `z`,
- * reading along +Y (a viewer at +X). Horizontal pixel runs merge into one box each.
+ * Label on a +X-facing plinth face at x = `faceX`, centred on `y`, vertically centred on a face
+ * `face` tall. LOD0 sets it in flush 5 × 7 pixel letters; LOD1 greeks it to one dark quad as wide
+ * as the word (the row still reads as labelled); LOD2 drops it.
  */
-function label(text: string, faceX: number, y: number, z: number, px: number): Mesh {
-  const parts: Mesh[] = [];
-  const chars = [...text.replace(/_/g, ' ')];
-  const width = chars.length * 4 * px - px;
-  chars.forEach((ch, i) => {
-    const rows = FONT[ch];
-    if (!rows) return;
-    const left = y - width / 2 + i * 4 * px;
-    rows.forEach((bits, r) => {
-      let c = 0;
-      while (c < 3) {
-        if (!((bits >> (2 - c)) & 1)) {
-          c++;
-          continue;
-        }
-        let run = 0;
-        while (c + run < 3 && (bits >> (2 - c - run)) & 1) run++;
-        parts.push(
-          box({
-            size: [0.004, run * px, px],
-            at: [faceX + 0.002, left + (c + run / 2) * px, z + (4 - r) * px],
-            color: INK,
-            omit: ['back'],
-          }),
-        );
-        c += run;
-      }
-    });
+function label(
+  text: string,
+  faceX: number,
+  y: number,
+  face: number,
+  w: number,
+  lod: Lod,
+  span = w * 0.9,
+): Mesh[] {
+  if (lod === 2) return [];
+  const str = text.replace(/_/g, ' ').toUpperCase();
+  const height = capOf(w, face);
+  const z = (face - height) / 2;
+  if (lod === 1) {
+    const width = Math.min(measureText(str, { height, font: '5x7' }), span);
+    return [
+      box({
+        size: [0.002, width, height],
+        at: [faceX + 0.001, y, z],
+        color: INK,
+        omit: ['back', 'left', 'right', 'top', 'bottom'],
+      }),
+    ];
+  }
+  return [
+    textMesh(str, {
+      origin: [faceX, y, z],
+      height,
+      color: INK,
+      font: '5x7',
+      align: 'centre',
+      maxWidth: span,
+    }),
+  ];
+}
+
+/** Ground-contact occlusion: darken a mesh's vertices toward its base (one cause, no texture). */
+function occlude(m: Mesh, z0: number, reach: number, k = 0.55): Mesh {
+  const colors = new Float32Array(m.colors);
+  for (let v = 0; v < colors.length / 3; v++) {
+    const t = Math.min(1, Math.max(0, ((m.positions[v * 3 + 2] ?? 0) - z0) / reach));
+    const f = k + (1 - k) * t;
+    for (let c = 0; c < 3; c++) colors[v * 3 + c] = (colors[v * 3 + c] ?? 0) * f;
+  }
+  return { ...m, colors };
+}
+
+/** Profile of a sphere of radius r sitting on z = 0, `n` steps pole to pole. */
+const ball = (r: number, n: number): Vec2[] =>
+  Array.from({ length: n + 1 }, (_, i) => {
+    const a = (Math.PI * i) / n;
+    return [r * Math.sin(a), r - r * Math.cos(a)] as Vec2;
   });
-  return merge(parts);
+
+/** A 1.8 m standing figure for scale (feet at the origin, facing +X), plain grey. */
+function figure(): Mesh {
+  const g = hex('#8c8f93');
+  return merge([
+    box({ size: [0.14, 0.13, 0.86], at: [0, -0.09, 0], color: g }),
+    box({ size: [0.14, 0.13, 0.86], at: [0, 0.09, 0], color: g }),
+    box({ size: [0.24, 0.42, 0.62], at: [0, 0, 0.86], color: g }),
+    box({ size: [0.1, 0.09, 0.62], at: [0, -0.25, 0.84], color: g }),
+    box({ size: [0.1, 0.09, 0.62], at: [0, 0.25, 0.84], color: g }),
+    box({ size: [0.08, 0.08, 0.1], at: [0, 0, 1.47], color: g }),
+    lathe({ profile: ball(0.135, 6), segments: 10, color: g, at: [0, 0, 1.53] }),
+  ]);
 }
 
 /** A +X-facing quad mapping one cell rect: left→right = u0→u1 along +Y, bottom→top = v0→v1. */
@@ -167,7 +184,10 @@ export const material_swatches = defineAsset({
     ROWS.forEach((ids, k) => {
       const r = row(k);
       const span = rowSpan(ids) + 0.4;
-      ctx.part(`plinth_${k}`, box({ size: [1.2, span, r.top], at: [r.x, 0, 0], color: STONE }));
+      ctx.part(
+        `plinth_${k}`,
+        occlude(box({ size: [1.2, span, r.top], at: [r.x, 0, 0], color: STONE }), 0, r.top + 0.4),
+      );
       let y = -rowSpan(ids) / 2;
       for (const id of ids) {
         const w = widthOf(id);
@@ -179,15 +199,37 @@ export const material_swatches = defineAsset({
           color: TINT[id] ?? NATURAL,
           strip: id,
         });
-        ctx.part(`strip_${id}`, panel, id === 'glass' ? { surface: 'glass' } : {});
-        if (ctx.lod === 0) ctx.part(`label_${id}`, label(id, r.x + 0.6, c, r.top - 0.16, 0.024));
+        const glass = id === 'glass' ? ({ surface: 'glass' } as const) : {};
+        ctx.part(`strip_${id}`, panel, glass);
+        if (ctx.lod === 0)
+          // A ball in the strip, on the plinth in front of the panel's left end: the strip on
+          // curvature, under the same light (roughness, metal and normal read on its highlight).
+          ctx.part(
+            `ball_${id}`,
+            lathe({
+              profile: ball(0.18, 10),
+              segments: 20,
+              color: TINT[id] ?? NATURAL,
+              strip: id,
+              at: [r.x + 0.36, y + 0.3, r.top],
+            }),
+            { ...glass, connect: { as: 'rest', to: `plinth_${k}` } },
+          );
+        const words = label(id, r.x + 0.6, c, r.top, w, ctx.lod);
+        if (words.length) ctx.part(`label_${id}`, merge(words));
         y += w + GAP;
       }
     });
+    // Scale: a 1.8 m figure on the ground beside the front row's −Y end.
+    ctx.part('figure', figure(), { at: [0.9, -rowSpan(ROWS[0] ?? []) / 2 - 0.8, 0] });
     const back = row(ROWS.length);
     ctx.part(
       'plinth_cells',
-      box({ size: [REAR.depth, cellSpan + 0.4, back.top], at: [back.x, 0, 0], color: STONE }),
+      occlude(
+        box({ size: [REAR.depth, cellSpan + 0.4, back.top], at: [back.x, 0, 0], color: STONE }),
+        0,
+        back.top + 0.4,
+      ),
     );
     const rearFace = back.x + REAR.depth / 2;
 
@@ -210,11 +252,8 @@ export const material_swatches = defineAsset({
           merge([plate, cellQuad(id, back.x + 0.032, y, back.top, 1, TINT.plain ?? NATURAL)]),
         );
       }
-      if (ctx.lod === 0)
-        ctx.part(
-          `label_${id}`,
-          label(id.replace('foliage_', ''), rearFace, y, back.top - 0.12, 0.016),
-        );
+      const words = label(id.replace('foliage_', ''), rearFace, y, back.top, 2.5, ctx.lod, 1);
+      if (words.length) ctx.part(`label_${id}`, merge(words));
     });
   },
 });

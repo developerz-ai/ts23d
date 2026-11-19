@@ -1,12 +1,13 @@
 // The Saltmarch kit reads in an RTS: every asset's team colour is visible from the strategy
 // camera (58° down, 64 px, LOD2 — what thousands of units on screen actually draw), every asset
 // carries the eight team liveries, and the units pass the measured art checks (silhouette kept at
-// LOD2, focal point, shape language). Failure first: a buried team part must fail the check.
+// LOD2, focal point, shape language), and a unit's grip joint holds whichever way a scene turns
+// it. Failure first: a buried team part must fail the check.
 
 import { describe, expect, it } from 'bun:test';
 import { type Asset, box, compile, defineAsset, hex } from '@developerz.ai/ts23d';
 import { teamCoverage } from '@developerz.ai/ts23d/render';
-import { assertArt, silhouetteReads } from '@developerz.ai/ts23d/testing';
+import { assertArt, assertJointsFit, silhouetteReads } from '@developerz.ai/ts23d/testing';
 import { TEAMS } from '../_lib/rts/style.ts';
 import {
   rts_barracks,
@@ -79,4 +80,25 @@ describe('readability', () => {
       for (const v of silhouetteReads(a)) expect(v.iou).toBeGreaterThanOrEqual(0.85);
       assertArt(a);
     }, 60000);
+});
+
+/** `a` placed in a scene turned `yaw` about Z, as rts_faction places its units. */
+const turned = (a: Asset, yaw: number): Asset =>
+  defineAsset({
+    name: `${a.name}_yaw_${Math.round(yaw * 100)}`,
+    kind: 'scene',
+    budget: { triangles: [20000, 5000, 1000] },
+    build(ctx) {
+      ctx.use(a, { prefix: 'u', yaw });
+    },
+  });
+
+describe('grip joints at any heading', () => {
+  // The joint check measures a handle across world axes: a 4-sided LOD2 handle read Ø 2.5–3.6 cm
+  // by heading, so rts_faction (Delvers turned 0.9 rad) failed while rts_worker passed (D310).
+  for (const a of [rts_worker, rts_soldier])
+    for (const yaw of [0, 0.3, Math.PI / 4, 0.9, 1.3])
+      it(`${a.name} turned ${yaw.toFixed(2)} rad: the fist fits the handle at every LOD`, () => {
+        assertJointsFit(turned(a, yaw));
+      });
 });

@@ -1,0 +1,92 @@
+// Snow cover as a smooth 0..1 map over the terrain grid. Every input is read off a blurred copy of
+// the ground (slope, aspect, crest convexity over ±2–3 cells, ~20 m), and the cover itself is
+// blurred again, so a snow line or a scoured crest fades over several cells: a one-cell ridge never
+// switches to a bright seam (or a bare line) on its own. Snow lies above the snowline (lower on
+// north faces and in gullies, a little higher on south faces, broken up by noise), thins from ~35° to none at ~53° (it sloughs
+// off), and wind scours it off sharp convex crests: a knife ridge stays bare rock between its
+// flanks' snowfields instead of carrying a thin white line.
+
+import type { TerrainGrid } from '@developerz.ai/ts23d';
+
+/** Separable box blur of a per-point map, radius `r` points, clamped at the edges. */
+export function boxBlur(map: Float64Array, nx: number, ny: number, r: number): Float64Array {
+  const pass = (src: Float64Array, di: number, dj: number): Float64Array => {
+    const out = new Float64Array(src.length);
+    for (let j = 0; j < ny; j++)
+      for (let i = 0; i < nx; i++) {
+        let s = 0;
+        for (let k = -r; k <= r; k++) {
+          const a = Math.min(nx - 1, Math.max(0, i + k * di));
+          const b = Math.min(ny - 1, Math.max(0, j + k * dj));
+          s += src[b * nx + a] ?? 0;
+        }
+        out[j * nx + i] = s / (2 * r + 1);
+      }
+    return out;
+  };
+  return pass(pass(map, 1, 0), 0, 1);
+}
+
+/** Metres the snowline drops in a gully or couloir. */
+const HOLLOW = 120;
+
+const ramp = (a: number, b: number, x: number): number => {
+  const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
+  return t * t * (3 - 2 * t);
+};
+
+export interface SnowOptions {
+  /** Altitude (m) of z = 0. */
+  readonly datum: number;
+  /** Altitude where snow starts to lie on gentle ground, m. */
+  readonly snowline: number;
+  /** Metres the line drops on a full north face (ground falling toward +Y); a south face lifts
+   * it half as far (sun melts less snow off than shade keeps). */
+  readonly northShift: number;
+  /** Altitude jitter (m) at (x, y): breaks the line up. */
+  readonly jitter: (x: number, y: number) => number;
+}
+
+/** Snow cover 0..1 at every grid point (row-major, like `g.z`). */
+export function snowCover(g: TerrainGrid, o: SnowOptions): Float64Array {
+  const { nx, ny } = g;
+  const [x0, y0, x1, y1] = g.rect;
+  const sx = (x1 - x0) / (nx - 1);
+  const sy = (y1 - y0) / (ny - 1);
+  const soft = boxBlur(boxBlur(Float64Array.from(g.z), nx, ny, 1), nx, ny, 1);
+  const at = (i: number, j: number): number =>
+    soft[Math.min(ny - 1, Math.max(0, j)) * nx + Math.min(nx - 1, Math.max(0, i))] ?? 0;
+  const cover = new Float64Array(nx * ny);
+  for (let j = 0; j < ny; j++)
+    for (let i = 0; i < nx; i++) {
+      const gx = (at(i + 1, j) - at(i - 1, j)) / (2 * sx);
+      const gy = (at(i, j + 1) - at(i, j - 1)) / (2 * sy);
+      const slope = Math.hypot(gx, gy);
+      // Convexity across X and across Y, 3 points (~23 m) out each side, m: a crest stands over
+      // the ground on both its sides along one of them, a gully sinks under it.
+      const cx = at(i, j) - (at(i - 3, j) + at(i + 3, j)) / 2;
+      const cy = at(i, j) - (at(i, j - 3) + at(i, j + 3)) / 2;
+      const crest = Math.max(cx, cy);
+      const hollow = Math.max(-cx, -cy);
+      const north = Math.max(-1, Math.min(1, -gy * 1.6));
+      const x = x0 + i * sx;
+      const y = y0 + j * sy;
+      // Snow lingers in gullies and couloirs (concave, shaded, fed by slides): the line drops
+      // up to `HOLLOW` metres in them.
+      const alt =
+        (g.z[j * nx + i] ?? 0) +
+        o.datum +
+        o.northShift * (north > 0 ? north : 0.5 * north) +
+        HOLLOW * ramp(2, 10, hollow) +
+        o.jitter(x, y);
+      cover[j * nx + i] =
+        ramp(o.snowline - 60, o.snowline + 140, alt) *
+        (1 - ramp(0.7, 1.35, slope)) *
+        (1 - ramp(6, 16, crest));
+    }
+  // Snow needs a field round it: a strip a few cells wide (a rounded crest just under the slope
+  // limit) has little cover within ±5 points and fades out, while a snowfield keeps its own.
+  const field = boxBlur(cover, nx, ny, 5);
+  const kept = cover.map((c, k) => c * ramp(0.2, 0.55, field[k] ?? 0));
+  return boxBlur(kept, nx, ny, 1);
+}

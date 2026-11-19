@@ -18,14 +18,14 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    46460,
-    18636,
-    1400
+    51694,
+    19214,
+    1532
   ],
   "drawCalls": [
-    18,
-    18,
-    11
+    20,
+    20,
+    13
   ],
   "pivots": [
     {
@@ -38,6 +38,14 @@
     },
     {
       "name": "locomotive_glass",
+      "parent": "locomotive"
+    },
+    {
+      "name": "locomotive_finish_enamel",
+      "parent": "locomotive"
+    },
+    {
+      "name": "locomotive_finish_russia_iron",
       "parent": "locomotive"
     },
     {
@@ -93,6 +101,10 @@
     {
       "name": "tender",
       "parent": null
+    },
+    {
+      "name": "tender_finish_enamel",
+      "parent": "tender"
     },
     {
       "name": "axle_tender_0_0",

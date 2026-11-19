@@ -20,14 +20,14 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    180234,
-    46132,
-    4816
+    115898,
+    30244,
+    3992
   ],
   "drawCalls": [
     4,
     4,
-    3
+    4
   ],
   "pivots": [
     {
@@ -45,6 +45,10 @@
     {
       "name": "face",
       "parent": null
+    },
+    {
+      "name": "face_finish_skin",
+      "parent": "face"
     }
   ],
   "emitters": [],
@@ -77,36 +81,16 @@
     "cutout",
     "opaque"
   ],
-  "clips": [
-    {
-      "name": "blink",
-      "seconds": 4,
-      "loop": true,
-      "speed": 0
-    },
-    {
-      "name": "talk",
-      "seconds": 2.4,
-      "loop": true,
-      "speed": 0
-    },
-    {
-      "name": "breathe",
-      "seconds": 4,
-      "loop": true,
-      "speed": 0
-    }
-  ],
   "real": {
     "length": 0.41,
-    "width": 0.8,
+    "width": 0.73,
     "height": 0.62
   },
   "measures": [
     {
       "label": "eye spacing (pupil to pupil)",
       "spec": 0.076,
-      "measured": 0.07550460286438465,
+      "measured": 0.07548320014029741,
       "source": "spec.ts: the base IPD (0.26 H) at eyes.spacing 1.0 on the 0.30 m head"
     }
   ],
@@ -114,6 +98,20 @@
     "recipes/orc_head/README.md (design dossier: declared race deltas, proportion bands, palette)",
     "docs/research/face-base.md (CC0 MakeHuman base head and its landmarks)"
   ],
+  "weather": {
+    "mud": {
+      "target": 0.5,
+      "actual": 0.5,
+      "eligible": "ground-near",
+      "area": 0.0252
+    },
+    "dust": {
+      "target": 0.3,
+      "actual": 0.3,
+      "eligible": "up-facing",
+      "area": 0.0815
+    }
+  },
   "qa": {
     "pass": true,
     "findings": []

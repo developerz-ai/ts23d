@@ -1,7 +1,7 @@
 {
   "name": "bluefin_tuna",
   "kind": "creature",
-  "description": "Atlantic bluefin tuna, 2 m fork length: fusiform body, metallic blue back over silver flank, yellow finlets, short pectorals, crescent tail with caudal keels.",
+  "description": "Atlantic bluefin tuna, 2 m fork length: fusiform body, polished metallic blue back over silver flank with an iridescent band, lateral line and duller corselet, rayed fins, yellow finlets, short pectorals, crescent tail with caudal keels; frayed fin margins and a few net scratches.",
   "tags": [
     "creature",
     "fish",
@@ -21,9 +21,9 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    32332,
-    4000,
-    476
+    38564,
+    7088,
+    618
   ],
   "drawCalls": [
     1,
@@ -197,58 +197,64 @@
       "coverage": 1
     },
     {
+      "bone": "spine_14",
+      "radius": 0.006778,
+      "height": 0,
+      "coverage": 1
+    },
+    {
       "bone": "spine_15",
-      "radius": 0.05114,
-      "height": 0.037141,
-      "coverage": 0.9711
-    },
-    {
-      "bone": "caudal_upper_0",
-      "radius": 0.052905,
-      "height": 0.050059,
-      "coverage": 0.9706
-    },
-    {
-      "bone": "caudal_upper_1",
-      "radius": 0.111884,
-      "height": 0.108226,
+      "radius": 0.053041,
+      "height": 0.03524,
       "coverage": 0.9623
     },
     {
+      "bone": "caudal_upper_0",
+      "radius": 0.053323,
+      "height": 0.057374,
+      "coverage": 0.9691
+    },
+    {
+      "bone": "caudal_upper_1",
+      "radius": 0.106331,
+      "height": 0.11856,
+      "coverage": 0.9588
+    },
+    {
       "bone": "caudal_lower_0",
-      "radius": 0.052895,
-      "height": 0.050191,
-      "coverage": 0.9706
+      "radius": 0.050669,
+      "height": 0.06023,
+      "coverage": 0.9529
     },
     {
       "bone": "caudal_lower_1",
-      "radius": 0.109727,
-      "height": 0.109435,
-      "coverage": 0.9815
+      "radius": 0.10521,
+      "height": 0.113087,
+      "coverage": 0.9588
     },
     {
       "bone": "pectoral_l_0",
-      "radius": 0.067375,
-      "height": 0.099637,
-      "coverage": 0.9524
+      "radius": 0.070721,
+      "height": 0.089473,
+      "coverage": 0.9756
     },
     {
       "bone": "pectoral_l_1",
-      "radius": 0.039903,
-      "height": 0.122553,
-      "coverage": 0.9506
+      "radius": 0.038741,
+      "height": 0.109679,
+      "coverage": 0.9518
     },
     {
       "bone": "pectoral_r_0",
-      "radius": 0.067375,
-      "height": 0.099637,
-      "coverage": 0.9524
+      "radius": 0.070721,
+      "height": 0.089473,
+      "coverage": 0.9756
     },
     {
       "bone": "pectoral_r_1",
-      "radius": 0.039903,
-      "height": 0.122553,
-      "coverage": 0.9506
+      "radius": 0.038741,
+      "height": 0.109679,
+      "coverage": 0.9518
     }
   ],
   "real": {

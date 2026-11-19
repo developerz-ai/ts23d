@@ -120,3 +120,18 @@ export function lookTable(asset: CompiledAsset): { looks: Look[]; byPart: Map<st
   }
   return { looks, byPart };
 }
+
+/** Share of sunlight a see-through pane passes besides its transmission (two Fresnel faces). */
+const PANE = 0.85;
+
+/**
+ * Share of sunlight the densest see-through look in use stops (0 = none in use): clear glass
+ * about 0.15, a `translucent` shell about half. One number per render: a soft, tinted shadow.
+ */
+export function throughShade(looks: readonly Look[], used: Uint8Array): number {
+  let pass = 1;
+  looks.forEach((l, i) => {
+    if (l.transmission > 0 && used.includes(i)) pass = Math.min(pass, l.transmission * PANE);
+  });
+  return 1 - pass;
+}

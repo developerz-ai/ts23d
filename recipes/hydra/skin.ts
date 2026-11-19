@@ -1,5 +1,7 @@
 // Hydra skin as functions of the surface point: muscle and ridges as relief, crocodilian belly scutes,
-// bronze-green back with darker saddles, pale gular and belly plates. Deterministic value noise.
+// bronze-green back crossed by dark saddles, pale gular and belly plates. The scales themselves are
+// in the strip (material.ts). Wear tells where it lives and what it has fought: river mud caked up
+// the legs and under the belly, a neck raked by claws, a bite on the flank. Deterministic value noise.
 
 import type { ChainSpec, Vec3 } from '@developerz.ai/ts23d';
 import { hex } from '@developerz.ai/ts23d';
@@ -25,7 +27,11 @@ export function noise3(p: Vec3): number {
   );
 }
 
-const at = (p: Vec3, k: number, s = 0): Vec3 => [p[0] * k + s, p[1] * k - s, p[2] * k + s / 2];
+export const at = (p: Vec3, k: number, s = 0): Vec3 => [
+  p[0] * k + s,
+  p[1] * k - s,
+  p[2] * k + s / 2,
+];
 
 export const lerp = (a: Vec3, b: Vec3, t: number): Vec3 => {
   const k = clamp01(t);
@@ -50,45 +56,12 @@ export const C = {
   mouth: hex('#3a1517'),
   spine: hex('#2c2a20'),
   iris: hex('#d3a02c'),
+  mud: hex('#4a3d2b'),
+  dryMud: hex('#8a7a5c'),
+  scar: hex('#a68a78'),
+  scarDeep: hex('#5c3a32'),
+  tongue: hex('#7a3a44'),
 } as const;
-
-interface Scale {
-  /** 0 at a scale's edge, 1 on its crown. */
-  readonly crown: number;
-  /** 1 in the groove between scales. */
-  readonly groove: number;
-}
-
-/** Overlapping rows of hexagonal scales on the unrolled skin (arc along, radius × angle across). */
-export function scaleAt(s: number, across: number, size: number): Scale {
-  const h = size * 0.866;
-  const row = Math.round(across / h);
-  let best = Number.POSITIVE_INFINITY;
-  for (let j = row - 1; j <= row + 1; j++) {
-    const shift = j % 2 === 0 ? 0 : 0.5;
-    const i = Math.round(s / size - shift);
-    best = Math.min(best, Math.hypot(s - (i + shift) * size, across - j * h));
-  }
-  const d = best / size;
-  // A cosine crown: it meets the next scale with a level tangent, a valley and not a cut.
-  const crown = 0.5 + 0.5 * Math.cos(Math.PI * clamp01(d / 0.58));
-  return { crown, groove: smooth(clamp01((d - 0.42) / 0.14)) };
-}
-
-const sizeOn = (r: number, low: number): number => (0.028 + r * 0.095) * (1 - low * 0.35);
-
-/** Scale height as a share of its size: shallow enough that the valleys stay rounded. */
-const SCALE_RISE = 0.09;
-
-/** Scale relief for a surface point: graded by section radius, none on the belly plates, and
- *  faded out where the section is too thin to carry a scale (the tail tip). */
-const scaleLift = (q: { s: number; angle: number; radius: number }): number => {
-  const low = under(q.angle);
-  const size = sizeOn(q.radius, low);
-  const room = smooth(clamp01((q.radius - 0.03) / 0.07));
-  const bare = 1 - smooth(clamp01((low - 0.6) * 4));
-  return scaleAt(q.s, q.angle * q.radius, size).crown * size * SCALE_RISE * room * bare;
-};
 
 /** How far round toward the belly a point is: 0 on the back, 1 on the midline below. */
 const under = (angle: number): number => (1 - Math.cos(angle)) / 2;
@@ -104,37 +77,74 @@ const fromLine = (s: number, pitch: number): number => {
 const plates = (s: number, pitch: number, q: number): number =>
   -smooth(clamp01(q * 2 - 1)) * Math.exp(-((fromLine(s, pitch) / 0.16) ** 2));
 
-function baseColour(
-  p: Vec3,
-  angle: number,
-  s: number,
-  pitch: number,
-  tone: number,
-  radius = 0.3,
-  lod = 0,
-): Vec3 {
+/** River mud, 0..1: caked thick on the feet and shins, splashed up the legs, dusting the belly. */
+export function mudAt(p: Vec3, low = 0): number {
+  const ragged = 0.75 + 0.5 * noise3(at(p, 7, 9));
+  const legs = 1 - smooth(clamp01((p[2] - 0.12 * ragged) / (0.42 * ragged)));
+  const belly = smooth(clamp01((low - 0.78) * 5)) * 0.55 * ragged;
+  return clamp01(Math.max(legs, belly) * (0.8 + 0.4 * noise3(at(p, 3, 5))));
+}
+
+/** Mud over a colour: wet and dark low down, dried pale at its upper edge. */
+export function muddy(c: Vec3, p: Vec3, low = 0): Vec3 {
+  const m = mudAt(p, low);
+  const dried = smooth(clamp01((p[2] - 0.08) / 0.3));
+  return lerp(c, lerp(C.mud, C.dryMud, dried * 0.7), m * 0.82);
+}
+
+/** Healed claw rakes, 0..1: three parallel diagonal slashes across one neck's flank. */
+function rakeAt(s: number, angle: number, radius: number): number {
+  const across = (angle > Math.PI ? angle - Math.PI * 2 : angle) * radius;
+  let best = 0;
+  for (const k of [0, 1, 2]) {
+    const d = s - 0.95 - k * 0.1 - across * 0.9;
+    const lengthwise = Math.exp(-(((across + 0.05 + k * 0.02) / 0.2) ** 2));
+    best = Math.max(best, Math.exp(-((d / 0.024) ** 2)) * lengthwise);
+  }
+  return best;
+}
+
+/** A healed bite on the right flank behind the shoulder: a ring of tooth punctures, 0..1. */
+function biteAt(p: Vec3): number {
+  const c: Vec3 = [0.12, -0.5, 1.08];
+  const d = Math.hypot((p[0] - c[0]) / 1.4, p[1] - c[1], p[2] - c[2]);
+  const ring = Math.exp(-(((d - 0.2) / 0.035) ** 2));
+  const teeth = 0.5 + 0.5 * Math.cos(Math.atan2(p[2] - c[2], p[0] - c[0]) * 9);
+  return p[1] < -0.2 ? ring * (0.35 + 0.65 * teeth) : 0;
+}
+
+/** Scarred chain: neck 1 (toward the hero camera) carries the rakes; everything else heals clean. */
+const SCARRED_NECK = 1;
+
+function baseColour(p: Vec3, angle: number, s: number, pitch: number, tone: number, lod = 0): Vec3 {
   const low = under(angle);
-  // Far away a few vertices cannot hold blotches: broad back-to-belly colour only.
+  // Dark saddles across the back at a regular pitch (as a monitor's bands), edges broken by noise.
+  const band = 0.5 + 0.5 * Math.cos((p[0] / 0.62) * Math.PI * 2 + noise3(at(p, 1.2, 4)) * 2.4);
+  const saddle = smooth(clamp01((band - 0.42) * 3.2)) * (1 - smooth(clamp01((low - 0.3) * 4)));
+  // Far away a few vertices cannot hold blotches: broad back-to-belly colour, saddles averaged.
   if (lod === 2) {
     const far = lerp(
-      lerp(C.back, C.flank, 0.3 + tone),
+      lerp(
+        lerp(C.back, C.flank, 0.3 + tone),
+        C.saddle,
+        0.32 * (1 - smooth(clamp01((low - 0.3) * 4))),
+      ),
       C.ochre,
       smooth(clamp01((low - 0.42) * 3.2)),
     );
-    return lerp(far, C.belly, smooth(clamp01((low - 0.68) * 4)));
+    return muddy(lerp(far, C.belly, smooth(clamp01((low - 0.68) * 4))), p, low);
   }
-  const saddle = smooth(clamp01((noise3(at(p, 1.5, 4)) - 0.46) * 5));
   const dapple = noise3(at(p, 9, 2));
-  const top = lerp(lerp(C.back, C.flank, dapple * 0.8 + tone), C.saddle, saddle * 0.75);
+  const top = lerp(lerp(C.back, C.flank, dapple * 0.8 + tone), C.saddle, saddle * 0.85);
   const side = lerp(top, C.ochre, smooth(clamp01((low - 0.42) * 3.2)));
   const belly = lerp(side, C.belly, smooth(clamp01((low - 0.68) * 4)));
   const groove = low > 0.5 && fromLine(s, pitch) < 0.09 ? 0.55 : 0;
-  const plated = lerp(belly, C.plateLine, groove);
-  // Scale crowns catch light, the grooves between them hold shadow; none on the belly plates.
-  const cell = scaleAt(s, angle * radius, sizeOn(radius, low));
-  const k = (1 - smooth(clamp01((low - 0.6) * 4))) * 0.55;
-  return lerp(lerp(plated, C.saddle, cell.groove * k), C.flank, cell.crown * k * 0.25);
+  return muddy(lerp(belly, C.plateLine, groove), p, low);
 }
+
+/** Scar tissue over a colour: pale raised edges round a darker healed line. */
+const scarred = (c: Vec3, k: number): Vec3 =>
+  lerp(lerp(c, C.scar, Math.min(1, k * 1.6)), C.scarDeep, Math.max(0, k - 0.6) * 1.4);
 
 /** Trunk: shoulder and hip masses, the spine ridge, ribs along the flank, belly plates. */
 export const bodyRelief: Relief = (q) => {
@@ -145,44 +155,45 @@ export const bodyRelief: Relief = (q) => {
   const spine = 0.035 * up ** 10;
   const ribs = 0.006 * Math.sin(q.s * 21) * flank ** 2 * bump(q.u, 0.5, 0.26);
   const scute = plates(q.s, 0.17, under(q.angle)) * 0.008;
-  return shoulder + hip + spine + ribs + scute + scaleLift(q);
+  return shoulder + hip + spine + ribs + scute - 0.008 * biteAt(q.p);
 };
 
-export const bodyTint: Tint = (q) => baseColour(q.p, q.angle, q.s, 0.17, 0, q.radius, q.lod);
+export const bodyTint: Tint = (q) =>
+  scarred(baseColour(q.p, q.angle, q.s, 0.17, 0, q.lod), q.lod === 2 ? 0 : biteAt(q.p));
 
 export const tailRelief: Relief = (q) => {
   return (
     0.022 * (1 - q.u) * Math.max(0, Math.cos(q.angle)) ** 8 +
-    plates(q.s, 0.13, under(q.angle)) * 0.006 * (1 - q.u) +
-    scaleLift(q)
+    plates(q.s, 0.13, under(q.angle)) * 0.006 * (1 - q.u)
   );
 };
 
 export const tailTint: Tint = (q) => {
   const band = smooth(clamp01(Math.sin(q.s * 7.5) * 1.3 + 0.2));
-  const bands = q.lod === 2 ? 0 : band * 0.42 * (1 - under(q.angle));
-  return lerp(baseColour(q.p, q.angle, q.s, 0.13, 0, q.radius, q.lod), C.saddle, bands);
+  const bands = (q.lod === 2 ? 0.3 : band * 0.55) * (1 - under(q.angle));
+  return lerp(baseColour(q.p, q.angle, q.s, 0.13, 0, q.lod), C.saddle, bands);
 };
 
-/** Necks: a strap of muscle either side of the spine ridge, gular plates in front. */
-export const neckRelief: Relief = (q) => {
-  const up = Math.max(0, Math.cos(q.angle));
-  const strap = 0.014 * Math.abs(Math.sin(q.angle)) ** 3 * (1 - q.u * 0.5);
-  return strap + 0.012 * up ** 10 + plates(q.s, 0.11, under(q.angle)) * 0.005 + scaleLift(q);
-};
+/** Necks: a strap of muscle either side of the spine ridge, gular plates in front; one raked. */
+export const neckRelief =
+  (k: number): Relief =>
+  (q) => {
+    const up = Math.max(0, Math.cos(q.angle));
+    const strap = 0.014 * Math.abs(Math.sin(q.angle)) ** 3 * (1 - q.u * 0.5);
+    const rake = k === SCARRED_NECK ? rakeAt(q.s, q.angle, q.radius) : 0;
+    return strap + 0.012 * up ** 10 + plates(q.s, 0.11, under(q.angle)) * 0.005 - 0.012 * rake;
+  };
 
 export const neckTint =
-  (tone: number): Tint =>
-  (q) =>
-    baseColour(q.p, q.angle, q.s, 0.11, tone, q.radius, q.lod);
+  (tone: number, k: number): Tint =>
+  (q) => {
+    const c = baseColour(q.p, q.angle, q.s, 0.11, tone, q.lod);
+    return k === SCARRED_NECK && q.lod < 2 ? scarred(c, rakeAt(q.s, q.angle, q.radius)) : c;
+  };
 
 /** Legs: deltoid and thigh at the root, knobbed scales lower down. */
 export const legRelief: Relief = (q) => {
-  return (
-    0.03 * bump(q.u, 0.18, 0.2) +
-    0.016 * bump(q.u, 0.55, 0.12) * Math.abs(Math.cos(q.angle)) +
-    scaleLift(q)
-  );
+  return 0.03 * bump(q.u, 0.18, 0.2) + 0.016 * bump(q.u, 0.55, 0.12) * Math.abs(Math.cos(q.angle));
 };
 
-export const legTint: Tint = (q) => baseColour(q.p, q.angle + 0.7, q.s, 40, 0.06, q.radius, q.lod);
+export const legTint: Tint = (q) => baseColour(q.p, q.angle + 0.7, q.s, 40, 0.06, q.lod);

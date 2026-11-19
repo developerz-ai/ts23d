@@ -16,12 +16,17 @@ const zones = {
   crown: (p: Vec3) => Math.hypot(p[0] - (SK.occiput[0] + 0.05), p[1], p[2] - SK.crown[2]) - 0.05,
   nape: (p: Vec3) => Math.max(p[0] - (SK.occiput[0] + 0.035), p[2] - (SK.euryon[2] - 0.005)),
   part: (p: Vec3) => Math.abs(p[1] - PART) - 0.012 + Math.max(0, SK.euryon[2] + 0.02 - p[2]),
+  // The front lock: the first 4 cm behind the hairline over the forehead.
+  front: (p: Vec3) => Math.hypot(p[0] - (SK.glabella[0] - 0.03), p[1] * 0.7) - 0.045,
 };
 
 const ops: GroomOp[] = [
   { op: 'comb', toward: [-1, 0, -0.2], strength: 0.25 },
   { op: 'add', count: 80, region: 'part', seed: 4 },
   { op: 'puff', amount: 0.3, region: 'crown' },
+  // The front lock lifted off the forehead before it sweeps back: a stronger outline.
+  { op: 'puff', amount: 0.45, region: 'front' },
+  { op: 'grow', factor: 1.15, region: 'front' },
   { op: 'grow', factor: 1.1, region: 'crown' },
   { op: 'cut', length: 0.045, region: 'nape' },
   { op: 'smooth', iterations: 3 },

@@ -10,7 +10,15 @@ import {
   octopusClips,
   type Vec3,
 } from '@developerz.ai/ts23d';
-import { ARM_IDS, DORSAL_ARM, OCTOPUS_SPEC, REAL, RIB_NAMES } from './anatomy.ts';
+import {
+  ARM_IDS,
+  DORSAL_ARM,
+  OCTOPUS_SPEC,
+  REAL,
+  REGEN_ARM,
+  REGEN_LENGTH,
+  RIB_NAMES,
+} from './anatomy.ts';
 import { octopusDetail } from './detail.ts';
 
 export const OCTOPUS_PLAN = bodyPlan(OCTOPUS_SPEC);
@@ -58,7 +66,7 @@ const dorsal = (k: number): boolean => k === 0 || k === ARM_IDS.length - 1;
 export const common_octopus = defineBodyPlan({
   name: 'common_octopus',
   description:
-    'Common octopus (Octopus vulgaris), large adult female at true scale: warty mottled mantle, slit-pupil eyes, funnel, web, eight individually posed arms with double sucker rows.',
+    'Common octopus (Octopus vulgaris), large adult female at true scale: wet, warty mottled mantle, slit-pupil eyes, funnel, deep web, eight individually posed tapering arms with double sucker rows, papillae and skin folds, pale translucent tips; healed scars and one arm regrowing its lost tip.',
   tags: ['creature', 'animal', 'marine', 'cephalopod', 'octopus', 'body-plan'],
   sources: [
     'https://www.fao.org/4/ac479e/ac479e34.pdf',
@@ -69,12 +77,15 @@ export const common_octopus = defineBodyPlan({
   medium: 'water',
   // The box of this settled pose (a design value); the sourced lengths are held by `checks`,
   // along the bones, because `measures` only reads straight extents.
-  real: { length: 1.31, width: 1.36, height: 0.46 },
+  real: { length: 1.43, width: 1.28, height: 0.46 },
   plan: OCTOPUS_PLAN,
   parts: { mantle: ['mantle'] },
   colours: { back: '#8f5238', belly: '#d9a593', line: -0.2, soft: 0.3 },
+  // Wet skin: the satin built-in strip (roughness 0.35, neutral albedo) under the vertex colour.
+  strip: 'plastic',
   paint: { skin: [1, 1, 1] },
-  budget: { triangles: [160000, 16000, 2500] },
+  // LOD2 ~3 k: enough rings that the mantle stays round and the curled tips stay curves far away.
+  budget: { triangles: [160000, 18000, 3700] },
   creases: [
     {
       name: 'arm_crown_rear',
@@ -87,9 +98,11 @@ export const common_octopus = defineBodyPlan({
   checks: [
     arcCheck(
       'arm',
-      ARM_IDS.filter((_, k) => !dorsal(k)),
+      ARM_IDS.filter((_, k) => !dorsal(k) && k !== REGEN_ARM),
       REAL.arm,
     ),
+    // The regrowing arm holds its own design length (README), not the sourced one.
+    arcCheck('regenerating arm', [`arm_${REGEN_ARM}`], REGEN_LENGTH),
     arcCheck(
       'dorsal arm',
       ARM_IDS.filter((_, k) => dorsal(k)),

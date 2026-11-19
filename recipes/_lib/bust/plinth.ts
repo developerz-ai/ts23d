@@ -1,5 +1,6 @@
 // Turned plinth under a bust: a disc base, a cavetto waist and a top cap the bust's cut face sits
-// on, on z = 0. Sized by its base radius and height.
+// on, on z = 0. Sized by its base radius and height. The far LOD keeps the base, the waist and the
+// cap as six rings of eight sides (the mouldings between them are sub-pixel there).
 
 import { type BuildContext, lathe, type Mesh, type StripId, type V } from './deps.ts';
 
@@ -24,9 +25,18 @@ export function plinth(
     [r * 0.74, top],
     [0, top],
   ];
+  const far: Array<[number, number]> = [
+    [0, 0],
+    [r * 1.03, 0],
+    [r * 1.03, top * 0.16],
+    [r * 0.74, top * 0.31],
+    [r * 0.625, top - top * 0.14],
+    [r * 0.74, top],
+    [0, top],
+  ];
   return lathe({
-    profile,
-    segments: ctx.pick([64, 32, 10]),
+    profile: ctx.lod === 2 ? far : profile,
+    segments: ctx.pick([64, 32, 8]),
     color: o.color,
     strip: o.strip ?? 'stone',
   });

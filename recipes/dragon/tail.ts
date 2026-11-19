@@ -77,7 +77,8 @@ export function tailEdits(lod: number): SculptEdit[] {
 
 /** Far LOD: the tail as a swept tube with three flat-ish blades. */
 function tailLowpoly(): Mesh {
-  const path = resample(tailPath(), 9);
+  // Thirteen rings: with nine the far tail's S along the ground read as a kinked stick.
+  const path = resample(tailPath(), 13);
   const n = path.length - 1;
   return merge([
     skinTube(
@@ -102,7 +103,7 @@ export function tailMesh(lod: 0 | 1 | 2): Mesh {
   const scales = tailStamps(lod, sculptField(form, { color: C.flank }).field);
   const main = sculptPart({
     edits: [...form, ...scales.edits],
-    res: [0.035, 0.085][lod] ?? 0.085,
+    res: [0.052, 0.125][lod] ?? 0.125,
     color: C.flank,
     tone: { reach: 0.1, ground: 0.5 },
     paint: tailPaint(lod, scales.shade),

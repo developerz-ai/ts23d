@@ -1,0 +1,46 @@
+{
+  "adapter": "blender:blender",
+  "contract": "t3d-neural/1",
+  "key": "b66acdcb6e700eb5d1ba2cf13c49780357d5a8720c748fac3ef2790794e41552",
+  "model": {
+    "id": "blender-blender",
+    "licence": "own",
+    "task": "blender",
+    "tool": {
+      "licence": "GPL-2.0-or-later",
+      "name": "blender",
+      "scriptSha256": "3ce684461066b9f277b2be00963a7af82b15d2646254c226f843bb649d9be08e",
+      "version": "5.3.0"
+    },
+    "weightsSha256": "019a91d881f84f23a22f92721c7151cf36613c16396d390cd1cc227216b68e6a"
+  },
+  "outputs": [
+    {
+      "bytes": 10387184,
+      "file": "output-0.glb",
+      "mime": "model/gltf-binary",
+      "sha256": "492647faa142cf3ce649b2aa1fda7f0c9f2d18ca74479a84c121e44a2836f39f"
+    },
+    {
+      "bytes": 6255,
+      "file": "output-1.json",
+      "mime": "application/json",
+      "sha256": "e2df652ac63318b3d6e97ccbdf86b914d1b75da978945c6185e3e6a71820c239"
+    }
+  ],
+  "request": {
+    "maxTriangles": 30000,
+    "mesh": {
+      "mime": "model/gltf-binary",
+      "sha256": "0d8556521a302bbe6e1672bfe2ff87af27927c23438faee402e5b1d78ef7caaf"
+    },
+    "program": {
+      "mime": "application/json",
+      "sha256": "fa25a9662a2667fa306552ace2ce37cda6161a5173bc952f59c23e5daac299fd"
+    },
+    "seed": 1
+  },
+  "requestKey": "2533407804cfa3ac5c813656f361948c5b153fafc5730b098c476668fd91cffc",
+  "server": "blender 5.3.0",
+  "task": "blender"
+}

@@ -75,6 +75,8 @@ export function depthMap(
   size: number,
   frame: MapFrame = fitFrame(s, dir),
   alpha?: MapAlpha,
+  /** Triangles to leave out (non-zero): the see-through ones, or everything but them. */
+  skip?: Uint8Array,
 ): DepthMap {
   const { r, u } = mapAxes(dir);
   const k = size / (2 * frame.half);
@@ -96,6 +98,7 @@ export function depthMap(
   }
   const I = s.indices;
   for (let t = 0; t < s.triangles; t++) {
+    if (skip?.[t]) continue;
     const a = I[t * 3] ?? 0;
     const b = I[t * 3 + 1] ?? 0;
     const c = I[t * 3 + 2] ?? 0;

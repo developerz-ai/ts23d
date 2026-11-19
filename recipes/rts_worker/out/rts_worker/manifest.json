@@ -20,9 +20,9 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    10136,
-    1788,
-    312
+    11174,
+    2336,
+    360
   ],
   "drawCalls": [
     3,
@@ -109,26 +109,26 @@
   ],
   "weather": {
     "chips": {
-      "target": 0.14,
-      "actual": 0.14,
+      "target": 0.2,
+      "actual": 0.2,
       "eligible": "convex-edges",
-      "area": 2.225
+      "area": 2.4087
     },
     "mud": {
-      "target": 0.5164,
-      "actual": 0.5164,
+      "target": 0.75,
+      "actual": 0.75,
       "eligible": "ground-near",
-      "area": 1.3122,
+      "area": 1.6363,
       "by": {
         "delver": {
-          "target": 0.5,
-          "actual": 0.5,
+          "target": 0.75,
+          "actual": 0.75,
           "area": 0.8824
         },
         "delver_kit": {
-          "target": 0.55,
-          "actual": 0.55,
-          "area": 0.4298
+          "target": 0.75,
+          "actual": 0.75,
+          "area": 0.7539
         }
       }
     },
@@ -136,19 +136,25 @@
       "target": 0.3,
       "actual": 0.3,
       "eligible": "up-facing",
-      "area": 1.2129,
+      "area": 1.3869,
       "by": {
         "delver": {
           "target": 0.3,
           "actual": 0.3,
-          "area": 0.5157
+          "area": 0.5299
         },
         "delver_kit": {
           "target": 0.3,
           "actual": 0.3,
-          "area": 0.6972
+          "area": 0.857
         }
       }
+    },
+    "scratches": {
+      "target": 0.6,
+      "actual": 0.6,
+      "eligible": "touched",
+      "area": 0.1248
     }
   },
   "qa": {

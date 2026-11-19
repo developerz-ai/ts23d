@@ -4,13 +4,14 @@
 // the real numbers, budgets and the LOD policy. Stages, one module each:
 //   skeleton.ts landmarks → torso.ts + legs.ts + paws.ts masses → head.ts + face.ts + ruff.ts →
 //   ears.ts, eyes.ts, jaw.ts, teeth.ts → fur.ts clumps/relief → zones.ts + stripes.ts + coat.ts +
-//   mask.ts paint → tone (the shared painted-tone pass).
+//   mask.ts paint → tone (the shared painted-tone pass) → field.ts (wear, coat cards, whiskers).
 
 import { defineAsset, type Mesh, place, type Vec3 } from '@developerz.ai/ts23d';
 import { EFFECTIVE_DENSITY } from './biology.ts';
 import { bodyMesh } from './body.ts';
 import { EAR, earMesh } from './ears.ts';
 import { eyeMesh } from './eyes.ts';
+import { coat, HAIR, ruffCards, whiskerMesh, worn } from './field.ts';
 import { headMeshes } from './head.ts';
 import { jawMesh } from './jaw.ts';
 import { clawMesh, pawCreases } from './paws.ts';
@@ -152,6 +153,12 @@ export const amur_tiger = defineAsset({
   ],
   // The mesh is the coat's outer surface: fill it with flesh under a 2 cm hair shell (biology.ts).
   physics: { density: { plain: EFFECTIVE_DENSITY } },
+  // Roughness split: wet corneas under a clear coat; the coat's soft sheen against the light.
+  finishes: {
+    cornea: { clearcoat: 1, clearcoatRoughness: 0.04 },
+    // Faint: a strong sheen hazes the whole coat and flattens the stripes' contrast.
+    coat: { sheen: { colour: [0.14, 0.1, 0.07], roughness: 0.4 } },
+  },
   // LOD0 sculpt cells: body 1.05 cm, head 4.2 mm, ears 3.2 mm; LOD1 2.4 cm / 9.5 mm; LOD2 5.2 cm.
   budget: { triangles: [150000, 30000, 3000] },
   // Shape language as measured: rounded masses dominate a relaxed big cat's outline (claws and teeth
@@ -159,14 +166,28 @@ export const amur_tiger = defineAsset({
   art: { focal: 'head', shape: 'friendly', grounded: true },
   build(ctx) {
     const lod = ctx.lod;
-    ctx.part('body', bodyMesh(lod));
-    if (lod !== 2) ctx.part('claws', clawMesh(lod), { connect: { as: 'grown', to: 'body' } });
-    ctx.part('tail', tailMesh(lod), {
+    const body = worn(bodyMesh(lod));
+    ctx.part('body', body, { finish: 'coat' });
+    const fur = coat(body, lod, ctx.rng.fork('coat'));
+    if (fur) ctx.part('fur', fur, { surface: 'cutout', ...HAIR });
+    if (lod !== 2) ctx.part('claws', worn(clawMesh(lod)), { connect: { as: 'grown', to: 'body' } });
+    ctx.part('tail', worn(tailMesh(lod), TAIL_PIVOT), {
       at: TAIL_PIVOT,
       motion: { kind: 'sway', axis: [0, 0, 1], degrees: 6, hz: 0.2 },
       clearOf: ['body'],
     });
-    ctx.part('head', headMeshes(lod).mesh, { at: HEAD_PIVOT });
+    const head = worn(headMeshes(lod).mesh, HEAD_PIVOT);
+    ctx.part('head', head, { at: HEAD_PIVOT, finish: 'coat' });
+    const ruff = ruffCards(head, lod, ctx.rng.fork('ruff'));
+    if (ruff) ctx.part('head_fur', ruff, { at: HEAD_PIVOT, surface: 'cutout', ...HAIR });
+    const whiskers = whiskerMesh(lod, ctx.rng.fork('whiskers'));
+    if (whiskers)
+      ctx.part('whiskers', whiskers, {
+        at: HEAD_PIVOT,
+        // A hair in its follicle: a point contact, as the fur cards rest on the skin.
+        connect: { as: 'rest', to: 'head' },
+        ...HAIR,
+      });
     const hinge = headToWorld(HEAD.hinge);
     ctx.part('jaw', jawMesh(lod), {
       at: hinge,
@@ -176,14 +197,15 @@ export const amur_tiger = defineAsset({
     // Eyes: the far LOD's coarse skull closes the orbits, so LOD2 paints no balls.
     const eye = headToWorld(HEAD.eye);
     if (lod !== 2) {
-      ctx.part('eye_l', eyeMesh(lod, 1), { at: eye });
-      ctx.part('eye_r', eyeMesh(lod, -1), { at: flip(eye) });
+      ctx.part('eye_l', eyeMesh(lod, 1), { at: eye, finish: 'cornea' });
+      ctx.part('eye_r', eyeMesh(lod, -1), { at: flip(eye), finish: 'cornea' });
     }
     // Ears: authored about their base in the head frame, pitched with the head.
-    const ear = earMesh(lod);
+    // The left ear carries a healed notch (field.ts tells the rest of that story).
     const base = EAR.base;
-    const local = place(ear, { at: [-base[0], -base[1], -base[2]] });
-    ctx.part('ear_l', place(local, { pitch: HEAD_PITCH, scale: HEAD_SCALE }), {
+    const about = (m: Mesh): Mesh => place(m, { at: [-base[0], -base[1], -base[2]] });
+    const local = about(earMesh(lod));
+    ctx.part('ear_l', place(about(earMesh(lod, true)), { pitch: HEAD_PITCH, scale: HEAD_SCALE }), {
       at: headToWorld(base),
       connect: { as: 'grown', to: 'head' },
     });

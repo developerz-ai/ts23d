@@ -96,7 +96,7 @@ function fanBlades(lod: Lod, r: number): Mesh {
   for (let k = 0; k < n; k++) {
     const a0 = (k / n) * Math.PI * 2;
     const pts: Vec3[] = [];
-    const steps = lod === 0 ? 5 : 2;
+    const steps = lod === 0 ? 3 : 1;
     // Swept, twisted blade as a strip of quads from hub to tip.
     for (let i = 0; i <= steps; i++) {
       const t = i / steps;
@@ -145,7 +145,7 @@ function fans(lod: Lod): Mesh {
   );
   for (const y of [-0.19, 0.19]) {
     const c: Vec3 = [x - 0.06 - 0.12 * Math.tan(RAD.rake), y, (RAD.z0 + RAD.z1) / 2];
-    const segs = lod === 0 ? 40 : 14;
+    const segs = lod === 0 ? 16 : 8;
     parts.push(
       shift(
         lathe({
@@ -232,7 +232,7 @@ function accessoryDrive(lod: Lod): Mesh {
     { y: 0.2, z: Z_CRANK + 0.02, r: 0.06 }, // A/C compressor
     { y: -0.13, z: Z_CRANK + 0.37, r: 0.035 }, // idler
   ];
-  const segs = lod === 0 ? 28 : 12;
+  const segs = lod === 0 ? 16 : 8;
   const parts: Mesh[] = [];
   for (const p of ps)
     parts.push(
@@ -314,7 +314,7 @@ function accessoryDrive(lod: Lod): Mesh {
 }
 
 function hoses(lod: Lod): Mesh {
-  const segs = lod === 0 ? 12 : 6;
+  const segs = lod === 0 ? 8 : 5;
   const wp: Vec3 = [X_CRANK_FRONT + 0.05, 0.0, Z_CRANK + 0.28];
   const upperIn = radAt(RAD.y1 - 0.025, RAD.z1 - 0.06, -0.05);
   const lowerOut = radAt(RAD.y0 + 0.025, RAD.z0 + 0.05, -0.05);

@@ -51,7 +51,9 @@ export function facePlanes(): SculptEdit[] {
       rotate: [0, 12, 0],
       round: 0.02,
       op: 'subtract',
-      blend: 0.05,
+      // 3.8 cm: the forehead meets the brows and the temples in a readable break (5 cm melted
+      // the plane into one dome).
+      blend: 0.038,
     },
     // Cheek planes: the sides of the muzzle, shaved so the face reads as a wedge from above.
     {
@@ -60,7 +62,7 @@ export function facePlanes(): SculptEdit[] {
       size: [0.2, 0.08, 0.2],
       rotate: [0, 0, -14],
       op: 'subtract',
-      blend: 0.035,
+      blend: 0.026,
     },
   ];
 }
@@ -74,7 +76,7 @@ export function faceFeatures(lod: number): SculptEdit[] {
       at: [0.2, 0.016, 0.083],
       to: [0.296, 0.013, 0.045],
       size: 0.026,
-      blend: 0.045,
+      blend: 0.034,
     },
     // Whisker pads: two domes either side of the philtrum, the muzzle's signature shape.
     {
@@ -109,7 +111,8 @@ export function faceFeatures(lod: number): SculptEdit[] {
         { at: [E[0] + 0.002, E[1] + 0.002, E[2] + 0.03], r: 0.017 },
         { at: [E[0] - 0.03, E[1] + 0.022, E[2] + 0.024], r: 0.016 },
       ],
-      { blend: 0.022 },
+      // A shelf, not a swelling: blended at 1.6 cm so its underside shades the eye.
+      { blend: 0.016 },
     ),
     // Cheekbone (zygomatic arch): under and behind the eye toward the ear.
     skin(
@@ -118,7 +121,7 @@ export function faceFeatures(lod: number): SculptEdit[] {
         { at: [0.15, 0.092, 0.0], r: 0.024 },
         { at: [0.09, 0.098, 0.01], r: 0.024 },
       ],
-      { blend: 0.03 },
+      { blend: 0.022 },
     ),
     // Upper lip and flews: drape from the philtrum down and back to the mouth corner.
     skin(

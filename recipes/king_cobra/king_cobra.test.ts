@@ -8,6 +8,7 @@ import { clipPose, jointWorlds } from '../../src/qa/clip-pose.ts';
 import { posedMesh } from '../../src/render/pose-strip.ts';
 import { norm } from '../_lib/body-plan-kit.ts';
 import { CLIPS, king_cobra, PLAN, RIG } from './king_cobra.ts';
+import { scarAt, shedAt } from './material.ts';
 import {
   bellyHalf,
   COIL_TOP,
@@ -19,8 +20,7 @@ import {
   SVL,
   TOTAL,
 } from './shape.ts';
-
-import { scutes } from './surface.ts';
+import { dorsalAverage, dorsalColour, scaleSheet, scutes } from './surface.ts';
 
 const sk = { bones: PLAN.bones };
 const clip = (name: string) => {
@@ -105,6 +105,37 @@ describe('sourced proportions', () => {
   it('faces the belly forward on the raised neck, the back up on the ground', () => {
     expect(frameAt(0.5).d[2]).toBeLessThan(0.3);
     expect(frameAt(2.5).d[2]).toBeGreaterThan(0.95);
+  });
+});
+
+describe('surface', () => {
+  const luma = (c: readonly number[]): number =>
+    0.2126 * (c[0] ?? 0) + 0.7152 * (c[1] ?? 0) + 0.0722 * (c[2] ?? 0);
+  it('LOD2 shows the averaged pattern, not single bands', () => {
+    const sampled = Array.from({ length: 60 }, (_, i) =>
+      luma(dorsalColour(0.9 + i * 0.011, 0.6, 1)),
+    );
+    const averaged = Array.from({ length: 60 }, (_, i) =>
+      luma(dorsalAverage(0.9 + i * 0.011, 0.6)),
+    );
+    const spread = (v: number[]): number => Math.max(...v) - Math.min(...v);
+    expect(spread(sampled)).toBeGreaterThan(0.2);
+    expect(spread(averaged)).toBeLessThan(0.05);
+  });
+  it('gives every scale a rim-to-crown UV ramp (matte rim, glossy crown)', () => {
+    const m = scaleSheet();
+    const us = new Set<number>();
+    for (let i = 0; i < 300; i += 2) us.add(Math.round((m.uvs[i] ?? 0) * 100));
+    expect(us.size).toBeGreaterThan(1);
+  });
+  it('carries its story: a pre-shed patch and a healed scar', () => {
+    let [shed, scar] = [0, 0];
+    for (let s = 0.2; s < 3.4; s += 0.01) {
+      shed = Math.max(shed, shedAt(s, 0.3));
+      scar = Math.max(scar, scarAt(s, 0));
+    }
+    expect(shed).toBeGreaterThan(0.8);
+    expect(scar).toBeGreaterThan(0.8);
   });
 });
 

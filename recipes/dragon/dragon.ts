@@ -6,6 +6,9 @@
 //            scales.ts belly plates + paint
 //   head.ts  skull, horns.ts, teeth.ts · jaw.ts (bite pivot) · eyes.ts (aim pivots)
 //   wings.ts bones + membrane panels (flap pivots) · tail.ts (swish pivot)
+//   field.ts wear: ash, soot, cinder mud, scars, the snapped horn tip, the torn wing edge
+//   pose.ts  the bind skeleton's proportions (leg and neck length): every part, pivot, joint and
+//            crease is carried from the bind pose the modules sculpt in to the posed skeleton
 
 import {
   defineAsset,
@@ -18,15 +21,23 @@ import {
 import { bodyMesh, flankLine } from './body.ts';
 import { dragonCreases } from './creases.ts';
 import { eyeMesh, GAZE_YAW } from './eyes.ts';
+import { brokenTip, tornEdge, worn } from './field.ts';
 import { headMeshes, SOCKET_AXIS } from './head.ts';
 import { mainHornSocket } from './horns.ts';
 import { jawMesh } from './jaw.ts';
+import { type Family, poseMesh, posePoint } from './pose.ts';
 import { HUMERUS, JOINT } from './shoulder.ts';
 import { SK, TAIL_PIVOT } from './skeleton.ts';
 import { tailMesh } from './tail.ts';
 import { mirrorWing, wingMeshes } from './wings.ts';
 
 const flip = (p: Vec3): Vec3 => [p[0], -p[1], p[2]];
+
+/** A worn part's mesh and pivot carried from the bind pose to the posed skeleton (pose.ts). */
+const posed = (mesh: Mesh, family: Family, at?: Vec3): Mesh => poseMesh(worn(mesh, at), family, at);
+/** Which pose family a part belongs to, by name (crease regions name their part). */
+const familyOf = (part: string): Family =>
+  part === 'body' ? 'body' : /^(head|horn|eye|jaw)/.test(part) ? 'head' : 'rigid';
 
 export const dragon = defineAsset({
   name: 'dragon',
@@ -39,9 +50,9 @@ export const dragon = defineAsset({
     'recipes/dragon/README.md (design dossier: scale, shape language, palette, animal references)',
   ],
   real: {
-    length: 8.7,
+    length: 8.9,
     width: 7.9,
-    height: 4.7,
+    height: 4.9,
     tolerance: 0.05,
     measures: [
       {
@@ -53,20 +64,29 @@ export const dragon = defineAsset({
       },
     ],
   },
-  // Measured: LOD0 sculpt cells 4 cm body / 1.4 cm head; LOD1 8.5 / 4 cm with tube bones;
-  // LOD2 25 / 14 cm with tube limbs, wings and tail.
-  budget: { triangles: [200000, 45000, 4500] },
+  // Measured: LOD0 sculpt cells 5.7 cm body / 1.6 cm head / 3 cm jaw / 5.2 cm tail / 3.8 cm wing
+  // arm (149 k). The head stays at 1.6 cm: at 1.7 the horn collars and nostrils alias into seams;
+  // the body's serratus grooves (3.4 cm radius) hold to 5.8 cm, where the skull's rear edge
+  // shows past the coarser neck. LOD1 15 / 5.4 cm with tube bones; LOD2 25 / 16 cm with tube
+  // limbs, wings and tail. Every LOD sits inside the creature band (150 k / 30 k / 4 k).
+  budget: { triangles: [150000, 30000, 4000] },
   // Sculpted anatomy the connections seam check must not flag (creases.ts says why, per region).
-  creases: dragonCreases(),
+  creases: dragonCreases().map((c) => ({ ...c, at: posePoint(c.at, familyOf(c.part)) })),
   glow: [{ parts: ['eye_l', 'eye_r'], color: hex('#ffb020'), strength: 1.2 }],
+  // Roughness split: wet corneas; polished keratin on the main horns; the scaled hide stays
+  // rough, the wing membranes too.
+  finishes: {
+    cornea: { clearcoat: 1, clearcoatRoughness: 0.04 },
+    keratin: { clearcoat: 0.6, clearcoatRoughness: 0.22 },
+  },
   build(ctx) {
     const lod = ctx.lod;
     const { body, sockets } = bodyMesh(lod);
-    ctx.part('body', body);
-    ctx.part('shoulder_l', sockets[0]);
-    ctx.part('shoulder_r', sockets[1]);
+    ctx.part('body', posed(body, 'body'));
+    ctx.part('shoulder_l', posed(sockets[0], 'rigid'));
+    ctx.part('shoulder_r', posed(sockets[1], 'rigid'));
     const head = headMeshes(lod);
-    ctx.part('head', head.head);
+    ctx.part('head', posed(head.head, 'head'));
     // Main horns grow from bosses split off the skull; eyes sit in orbits split off the skull.
     for (const [s, side, i] of [
       ['l', 1, 0],
@@ -74,26 +94,34 @@ export const dragon = defineAsset({
     ] as const) {
       // The boss is a patch split off the skull sculpt (welded over the cut), not an appendage:
       // judged as grown, its 3 cm overlap plug read as 86 % buried (QA connections warning).
-      ctx.part(`horn_boss_${s}`, head.bosses[i], { connect: { as: 'welded', to: 'head' } });
-      ctx.part(`horn_${s}`, head.horns[i]);
+      ctx.part(`horn_boss_${s}`, posed(head.bosses[i], 'head'), {
+        connect: { as: 'welded', to: 'head' },
+      });
+      // The right horn lost its last fifth in a fight.
+      const horn =
+        side === -1 ? brokenTip(head.horns[i], mainHornSocket(side).at, 0.8) : head.horns[i];
+      ctx.part(`horn_${s}`, posed(horn, 'head'), { finish: 'keratin' });
+      const socket = mainHornSocket(side);
       ctx.joint(`horn_${s}_root`, {
         from: `horn_${s}`,
         to: `horn_boss_${s}`,
-        ...mainHornSocket(side),
+        ...socket,
+        at: posePoint(socket.at, 'head'),
         kind: 'socket',
         tolerance: 0.5,
         why: 'the 17 cm horn roots on a broader 27 cm bony boss (a raised base, not a peg in a hole)',
       });
-      ctx.part(`eye_socket_${s}`, head.sockets[i]);
+      ctx.part(`eye_socket_${s}`, posed(head.sockets[i], 'head'));
     }
-    ctx.part('jaw', jawMesh(lod).mesh, {
-      at: SK.head.hinge,
+    ctx.part('jaw', posed(jawMesh(lod).mesh, 'head', SK.head.hinge), {
+      at: posePoint(SK.head.hinge, 'head'),
       motion: { kind: 'sway', axis: [0, 1, 0], degrees: 10, hz: 0.4, oneWay: true },
       clearOf: ['head', 'body'],
     });
-    const eye = SK.head.eye;
-    ctx.part('eye_l', eyeMesh(lod, GAZE_YAW), { at: eye });
-    ctx.part('eye_r', eyeMesh(lod, -GAZE_YAW), { at: flip(eye) });
+    // The eyes ride the head rigidly: only their pivots move.
+    const eye = posePoint(SK.head.eye, 'head');
+    ctx.part('eye_l', eyeMesh(lod, GAZE_YAW), { at: eye, finish: 'cornea' });
+    ctx.part('eye_r', eyeMesh(lod, -GAZE_YAW), { at: flip(eye), finish: 'cornea' });
     for (const [s, side] of [
       ['l', 1],
       ['r', -1],
@@ -116,7 +144,8 @@ export const dragon = defineAsset({
       ['l', 1],
       ['r', -1],
     ] as const) {
-      const at: Vec3 = [JOINT[0], JOINT[1] * side, JOINT[2]];
+      const bind: Vec3 = [JOINT[0], JOINT[1] * side, JOINT[2]];
+      const at = posePoint(bind, 'rigid');
       const m = (x: Mesh): Mesh => (side === 1 ? x : mirrorWing(x));
       const axis: Vec3 = side === 1 ? hingeAxis : [-hingeAxis[0], hingeAxis[1], -hingeAxis[2]];
       ctx.group(`wing_${s}`, {
@@ -124,8 +153,10 @@ export const dragon = defineAsset({
         motion: { kind: 'sway', axis, degrees: 9, hz: 0.35 },
         clearOf: ['body', `shoulder_${s}`],
       });
-      ctx.part(`wing_${s}_arm`, m(wing.arm), { parent: `wing_${s}` });
-      ctx.part(`wing_${s}_membrane`, m(wing.membrane), { parent: `wing_${s}` });
+      ctx.part(`wing_${s}_arm`, posed(m(wing.arm), 'rigid', bind), { parent: `wing_${s}` });
+      // The right wing's trailing edge is torn between the second and third fingers.
+      const skin = side === -1 ? tornEdge(m(wing.membrane), side, 1, 0.55, 0.6) : m(wing.membrane);
+      ctx.part(`wing_${s}_membrane`, posed(skin, 'rigid', bind), { parent: `wing_${s}` });
       // The humerus leaves its socket here; axis from the wing into the body.
       ctx.joint(`wing_${s}_shoulder`, {
         from: `wing_${s}_arm`,
@@ -135,8 +166,8 @@ export const dragon = defineAsset({
         kind: 'flush',
       });
     }
-    ctx.part('tail', tailMesh(lod), {
-      at: TAIL_PIVOT,
+    ctx.part('tail', posed(tailMesh(lod), 'rigid', TAIL_PIVOT), {
+      at: posePoint(TAIL_PIVOT, 'rigid'),
       motion: { kind: 'sway', axis: [0, 0, 1], degrees: 5, hz: 0.25 },
       clearOf: ['body'],
     });

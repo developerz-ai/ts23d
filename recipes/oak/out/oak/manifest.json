@@ -18,13 +18,13 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    13950,
-    3024,
-    159
+    16240,
+    2666,
+    306
   ],
   "drawCalls": [
-    2,
-    2,
+    3,
+    3,
     2
   ],
   "pivots": [
@@ -36,11 +36,16 @@
       "name": "crown",
       "parent": null,
       "motion": "sway"
+    },
+    {
+      "name": "crown_cutout",
+      "parent": "crown"
     }
   ],
   "emitters": [],
   "sockets": [],
   "surfaces": [
+    "cutout",
     "opaque"
   ],
   "clips": [
@@ -60,13 +65,13 @@
     {
       "label": "trunk diameter at breast height",
       "spec": 1.3,
-      "measured": 1.2999999523162842,
+      "measured": 1.3000000715255737,
       "source": "recipes/oak/README.md"
     },
     {
       "label": "total height",
       "spec": 22,
-      "measured": 22,
+      "measured": 21.8824520111084,
       "source": "recipes/oak/README.md"
     }
   ],

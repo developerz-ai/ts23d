@@ -28,8 +28,8 @@ export const HEAD = { length: 0.072 * K, width: 0.0525 * K, depth: 0.03 * K } as
 export const PRESERVED_WIDTH = 0.0432 * K;
 /** Live body about 0.9 head widths across in the front photos (estimate, README). */
 export const BODY_WIDTH = 0.9 * HEAD.width;
-/** Hood about 1.7 head widths across, read off a front photo (README); no published value found. */
-export const HOOD_WIDTH = 1.7 * HEAD.width;
+/** Hood about 2 head widths across at full spread, read off front photos (README); no published value found. */
+export const HOOD_WIDTH = 2.05 * HEAD.width;
 export const RAISED = TOTAL / 3;
 
 const halfWidth = profile([
@@ -39,14 +39,16 @@ const halfWidth = profile([
   [0.034, 0.0265],
   [HEAD.length * 0.72, HEAD.width / 2],
   [HEAD.length, 0.0255],
-  [0.112, 0.0215],
-  [0.5, 0.0235],
-  [1.1, BODY_WIDTH * 0.47],
-  [1.75, BODY_WIDTH / 2],
-  [2.4, BODY_WIDTH * 0.47],
-  [SVL, BODY_WIDTH * 0.36],
-  [3.2, 0.0095],
-  [3.46, 0.0028],
+  [0.112, 0.022],
+  [0.5, 0.0238],
+  [0.9, BODY_WIDTH * 0.47],
+  [1.45, BODY_WIDTH * 0.55],
+  [1.85, BODY_WIDTH * 0.56],
+  [2.35, BODY_WIDTH * 0.47],
+  [SVL, BODY_WIDTH * 0.33],
+  [3.15, 0.0098],
+  [3.4, 0.0042],
+  [3.47, 0.0018],
   [TOTAL, 0.0006],
 ]);
 
@@ -92,7 +94,7 @@ const AXIS_ON_GROUND = 0.022;
 const coil = (i: number): Vec3 => {
   const k = i / COIL_POINTS;
   const a = (100 * Math.PI) / 180 + i * COIL_STEP;
-  const r = 0.195 + 0.09 * k + 0.05 * Math.max(0, k - 1);
+  const r = 0.19 + 0.085 * k + 0.02 * Math.max(0, k - 1);
   return faced(r * Math.cos(a), r * Math.sin(a), COIL_RISE + AXIS_ON_GROUND);
 };
 
@@ -178,7 +180,7 @@ export function sectionAt(s: number, a: number): { lateral: number; up: number }
   const hood = hoodShare(s);
   const w = halfW(s);
   const base = halfWidth(s);
-  const flat = mix(1, 0.5, hood);
+  const flat = mix(1, 0.38, hood);
   const narrowTop = 1 - 0.1 * Math.max(0, cs) * (1 - hood);
   const lateral = w * spow(sn, 0.85) * narrowTop;
   const up =

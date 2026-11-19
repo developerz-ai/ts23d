@@ -1,62 +1,119 @@
 {
   "asset": "rts_barracks_foundation_damaged",
   "reviewer": "agent",
-  "overall": 5.9,
+  "overall": 7.1,
   "scores": {
     "silhouette": {
-      "score": 5,
-      "reason": "The foundation slab with one pallet knocked over into a small debris heap; otherwise identical to the foundation, and the damage barely reads from the 3/4 hero.",
+      "score": 7,
+      "reason": "The foundation with a crushed slab corner, scattered planks, a broken pallet and a torn team tarp on the ground: the damage reads in the hero; FRONT/SIDE remain a flat strip.",
       "fixes": [
-        "knock a corner off the slab and tip a pallet over the edge so the damage reads in outline"
+        "a leaning or toppled stake/pole that breaks the strip outline in FRONT and SIDE"
       ]
     },
     "proportions": {
-      "score": 7,
-      "reason": "Same slab and footprint as the foundation; debris block sizes match the pallets.",
+      "score": 8,
+      "reason": "17.1 x 19.0 x 3.6 m; debris pieces at plank and block scale.",
       "fixes": [
-        "stack the timber to a believable 0.7-1.0 m height instead of two thin courses"
+        "a few smaller chunks round the crushed corner so the debris is not all one size"
       ]
     },
     "materials": {
-      "score": 5,
-      "reason": "As on the foundation: the timber stack renders pale blue-lilac and the tarps read as rigid red slabs.",
+      "score": 6,
+      "reason": "As the foundation: blotchy camouflage slab and a flat saturated team triangle; the crushed corner shows faceted dark triangles that read as a mesh artefact more than broken concrete.",
       "fixes": [
-        "fix the timber stack colour in site.ts materials(): it renders pale blue in hero.png, not WOOD/oak",
-        "canvas tarps with folds and draped edges"
+        "broken slab pieces as separate tilted slabs with a lighter fractured edge instead of a faceted dent",
+        "slab on a flagstone/rammed-earth strip"
       ]
     },
     "detail": {
-      "score": 5,
-      "reason": "Foundation detail plus a small debris pile by the front pallet; no cracked slab, no scattered blocks.",
+      "score": 7,
+      "reason": "Crushed corner, scattered planks, broken pallet, fallen tarp sheet, toppled block piles.",
       "fixes": [
-        "crack lines and a broken corner on the slab",
-        "scattered blocks between the pallets"
+        "rebar or timber formwork poking from the crushed corner",
+        "small chips round the impact"
       ]
     },
     "wear": {
-      "score": 4,
-      "reason": "Clean slab and blocks; no scorch or dust where the pallet was hit.",
+      "score": 7,
+      "reason": "A clear story: impact at one corner, the yard knocked over, the tarp blown off. No scorch or dust around the impact.",
       "fixes": [
-        "grime() scorch and dust around the debris pile and on the slab"
+        "scorch ring and dust fan round the crushed corner"
       ]
     },
     "lod": {
       "score": 7,
-      "reason": "FAR LOD2 keeps the slab, inlay, tower discs and piles; debris reduces to a block.",
+      "reason": "FAR LOD2 (738 tris) keeps the debris blocks and the fallen tarp; the crushed corner flattens and the slab pattern is lost.",
       "fixes": [
-        "keep two blocks per pile and the debris heap at LOD2"
+        "keep the crushed corner as two tilted quads at LOD2"
       ]
     },
     "technical": {
       "score": 8,
-      "reason": "QA PASS on every gate (rebuilt today), tris 5.25k / 1.95k / 476, draws 2 / 2 / 2; deterministic, one trim material + team slot. Triangles mostly sit in the running-bond blocks, where they show.",
+      "reason": "QA PASS, tris 14.0k / 4.3k / 738, draws 2/2/2; one trim material + team slot, LOD2 well under 1k. Triangles mostly sit in the running-bond blocks and slates, where they show.",
       "fixes": [
-        "merge the per-block wall boxes into one course mesh per bay at LOD0 (shared inner faces removed) to cut the block-count triangles without losing the coursing"
+        "merge the per-block wall boxes into one course mesh per bay at LOD0 (shared inner faces removed) so the coursing costs fewer triangles"
       ]
     }
   },
   "renders": {
-    "hero.png": "0499bdbff0f8edffc8d937121b102898359711a98455fdaa8740fa6eed7c450d",
-    "sheet.png": "e311a3eeeb022764f317e89597ab1880011c50b2f60c240b240b76149b88a826"
+    "hero.png": "66c1bfe3510d99acad05df144c1f322b7dda61ed6d0c7644616a6f8bbf169a11",
+    "sheet.png": "17b6fb2c6890278b1f256c885e374995303a0fe86a501325143386e27f4fa355",
+    "raking.png": "82084991e10ea1124bb1dae667544bb2601a47a02774188900639ff367535e85",
+    "raking_detail.png": "68f25c1d01b11b8fe529bfbf185f19c9a996a1e2b3b6073d982390d368bca478",
+    "lods.png": "c3a235f672c7b2f96635be23db268e67ff17a69d2622ff3bfbe472bf2f49d3d0",
+    "silhouette.png": "fed0bea94ca64f052108c7387958693e94134bb1a962788a55b02067e7d46b6f",
+    "value.png": "afeef9bdfd39ec243d983430235c7cf1b047a349e0d979cb13f85edb4c4c584d",
+    "detail.png": "39ae2e6b1b9b0f5e8faca29495926bed255c2aaee2e0a58416543a0dd8e54638"
+  },
+  "metrics": {
+    "silhouette": [
+      {
+        "view": "front",
+        "iou": 0.903
+      },
+      {
+        "view": "side",
+        "iou": 0.829
+      },
+      {
+        "view": "3/4",
+        "iou": 0.902
+      }
+    ],
+    "focal": {
+      "peakPart": "tower_r",
+      "peak": [
+        124,
+        163
+      ],
+      "focalShare": 0,
+      "focalArea": 0,
+      "top": [
+        {
+          "part": "materials",
+          "share": 0.301
+        },
+        {
+          "part": "tower_r",
+          "share": 0.218
+        },
+        {
+          "part": "plinth",
+          "share": 0.151
+        }
+      ],
+      "declared": []
+    },
+    "rest": {
+      "share": 0.662,
+      "spread": 0.728,
+      "min": 0.25
+    },
+    "shape": {
+      "acuteShare": 0.084,
+      "straightShare": 0.769,
+      "taper": 0.571,
+      "shape": "stable"
+    }
   }
 }

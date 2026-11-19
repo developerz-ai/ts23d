@@ -20,6 +20,7 @@ import {
 } from '@developerz.ai/ts23d';
 import { featureStrokes } from '../face/features.ts';
 import { type Forms, HERO_FORMS, muscleStrokes, planeStrokes } from '../face/planes.ts';
+import { tZone } from '../face/skin-strip.ts';
 import { skullEdit, skullLandmarks, skullOf } from '../face/skull.ts';
 import type { Character } from '../face/spec.ts';
 import { type Zones, zoneEdits } from '../face/zones.ts';
@@ -72,8 +73,57 @@ export interface BustRecipe {
   /** Where `head` and `bust` split (≤ 0 = bust), default the neck seam plane; a bust whose
    *  shoulders rise over that plane bends it up there, so the shoulders stay in `bust`. */
   readonly split?: Field;
-  /** Hard extras as their own parts (brooch, earrings…). */
+  /** Hard extras as their own parts (brooch, earrings…); `skin` is the full stage-2 anatomy
+   *  (a dressed bust's is the whole body, not the one cut away under its outfit: layers.ts). */
   readonly extras?: (ctx: BuildContext, skin: Surface) => Record<string, Mesh>;
+  /** Skin on the shared pore strip (../face/skin-strip.ts): pore relief and a roughness that
+   *  follows it, glossier on the T-zone of a skull-stage head. Default: the `plain` strip. */
+  readonly pores?: boolean;
+  /** The asset's finish for `head` and `bust` (a skin sheen declared in `finishes`). */
+  readonly finish?: string;
+  /** The bust's arm cut (torso.ts `armCut`; kept where ≤ 0), applied to the skull stage too: the
+   *  base mesh brings shoulders of its own, which would stand proud of a torso sawn inside them. */
+  readonly saw?: Field;
+  /** The colour of the sawn section (default SECTION: a dark neutral, as a cut through cloth
+   *  and body reads in shadow). */
+  readonly section?: V;
+}
+
+/** The sawn section of a bust: dark, as the cut faces of its cloth are. */
+export const SECTION: V = [0.1, 0.09, 0.085];
+
+/** Paints the last millimetres behind the saw cut the section's colour (after every skin edit:
+ *  the skull stage's sawn shoulders are skin-coloured otherwise). */
+function sectionPaint(b: BustRecipe): SculptEdit[] {
+  const saw = b.saw;
+  if (!saw) return [];
+  return [
+    {
+      field: (p) => -saw(p) - 0.0065,
+      bounds: [
+        [-0.5, -0.5, 0],
+        [0.5, 0.5, b.l.mz],
+      ],
+      op: 'paint',
+      blend: 0.001,
+      color: b.section ?? SECTION,
+    },
+  ];
+}
+
+/** The T-zone of a skull-stage head as the pore strip's oil mask. */
+export function oilOf(b: BustRecipe): Field | undefined {
+  if (!b.skull) return undefined;
+  const k = skullLandmarks(skullOf(b.skull, b.spec));
+  return tZone(
+    {
+      forehead: [k.glabella[0], 0, k.glabella[2] + 0.3 * b.spec.H],
+      glabella: k.glabella,
+      noseTip: k.pronasale,
+      chin: k.pogonion,
+    },
+    Math.abs(k.alare[1]),
+  );
 }
 
 /** The skull field's sample spacing per LOD, metres (and the face box's, LOD0). */
@@ -91,11 +141,33 @@ export function skullStage(b: BustRecipe, lod: number): SculptEdit[] {
     cut: { at: [0, 0, l.mz - 0.42 * l.H], normal: [-0.3, 0, -1] },
     color: b.spec.skin,
   });
-  return [{ ...e, blend: 0.08 * l.H }];
+  const saw = b.saw;
+  if (!saw) return [{ ...e, blend: 0.08 * l.H }];
+  return [
+    {
+      group: [
+        e,
+        {
+          // (4 mm short of the cut: a dressed bust's section face is a garment layer's. Below
+          // the chin only: a goblin's ears reach out past its shoulders.)
+          field: (p) => Math.min(saw(p) + 0.004, l.mz - p[2]),
+          bounds: [
+            [-2, -2, -1],
+            [2, 2, 3],
+          ],
+          op: 'intersect',
+          blend: 0.07 * l.H,
+        },
+      ],
+      blend: 0.08 * l.H,
+    },
+  ];
 }
 
 /** LOD0 detail boxes on a skull-stage head (sdf-detail.ts): the eyes and lids at a quarter cell,
- *  each ear (thin blade, pointed tip) at half. */
+ *  each ear (thin blade, pointed tip) and the mouth with the nose's base (lip line, nostrils) at
+ *  half. The rest of the head is broad form a 6 mm cell holds (measured: a 4.8 mm head and a
+ *  6.4 mm one render alike at 2.6 × the hero's distance, but for the lip corners). */
 export function faceDetail(b: BustRecipe): DetailRegion[] {
   if (!b.skull) return [];
   const k = skullLandmarks(skullOf(b.skull, b.spec));
@@ -112,7 +184,19 @@ export function faceDetail(b: BustRecipe): DetailRegion[] {
       factor: 4,
     },
     ...earBoxes(k, wy),
+    mouthBox(k),
   ];
+}
+
+function mouthBox(k: ReturnType<typeof skullLandmarks>): DetailRegion {
+  const w = Math.abs(k.cheilion[1]) + 0.012;
+  return {
+    bounds: [
+      [k.stomion[0] - 0.035, -w, k.stomion[2] - 0.025],
+      [k.pronasale[0] + 0.01, w, k.alare[2]],
+    ],
+    factor: 2,
+  };
 }
 
 /** A box round each ear (both sides), its inner wall kept clear of the eye box at `wy`. */
@@ -154,6 +238,7 @@ function anatomy(b: BustRecipe, stage: number, lod: number, s?: Surface): Sculpt
       ...(stage >= 3 ? muscleStrokes(k, H, f) : []),
       ...(stage >= 4 ? featureStrokes(k, H, f) : []),
       ...(stage >= 4 && b.zones ? zoneEdits(k, H, b.zones) : []),
+      ...sectionPaint(b),
     ];
   }
   return [
@@ -205,8 +290,13 @@ export function bustEdits(
 /** Hero tier (ADR 012): LOD0 head and bust cells grow by these; the field's detail is baked. */
 export const HERO_CELL = { head: 2.2, bust: 1.5 } as const;
 
-/** `hero`: a lighter LOD0 whose skin parts carry their field for the hero bake (finish/hero.ts). */
-export function buildBust(ctx: BuildContext, b: BustRecipe, o: { hero?: boolean } = {}): void {
+/** `hero`: a lighter LOD0 whose skin parts carry their field for the hero bake (finish/hero.ts).
+ *  `skin`: the anatomy handed to `extras` in place of the built one (layers.ts). */
+export function buildBust(
+  ctx: BuildContext,
+  b: BustRecipe,
+  o: { hero?: boolean; skin?: Surface } = {},
+): void {
   if (!b.skull) checkNeck(b.l, b.torso, b.neck);
   const lod = ctx.lod;
   const hero = o.hero === true && lod === 0;
@@ -217,10 +307,16 @@ export function buildBust(ctx: BuildContext, b: BustRecipe, o: { hero?: boolean 
   const lap = bustCell * 0.5;
   const rng = ctx.rng.fork('skin');
   const { l } = b;
-  const look = { tone: b.tone, ...b.paint, ...(b.scalp ? { scalp: b.scalp } : {}) };
+  const oil = b.pores ? oilOf(b) : undefined;
+  const look = {
+    tone: b.tone,
+    ...b.paint,
+    ...(b.scalp ? { scalp: b.scalp } : {}),
+    ...(b.pores ? { strip: oil ? { oil } : {} } : {}),
+  };
   const meshes: Record<string, Mesh> =
     lod === 2
-      ? { head: skinMesh(edits, cell, { rng, ...look }) }
+      ? { head: skinMesh(edits, cell, { rng, ...look, far: true }) }
       : {
           head: skinMesh(edits, cell, {
             rng,
@@ -242,7 +338,7 @@ export function buildBust(ctx: BuildContext, b: BustRecipe, o: { hero?: boolean 
               [0.4, 0.4, l.mz],
             ],
           }),
-          ...(b.extras ? b.extras(ctx, skin) : {}),
+          ...(b.extras ? b.extras(ctx, o.skin ?? skin) : {}),
         };
   meshes['plinth'] = plinth(ctx, {
     radius: b.plinth.radius,
@@ -259,10 +355,14 @@ export function buildBust(ctx: BuildContext, b: BustRecipe, o: { hero?: boolean 
     const face = name === 'head' || name === 'bust';
     const src = hero ? bakeSourceOf(m) : undefined;
     const part = withFace(name, lit, rig);
-    ctx.part(name, src ? withBakeSource(part, src) : part, face ? { parent: 'face' } : undefined);
+    ctx.part(
+      name,
+      src ? withBakeSource(part, src) : part,
+      face ? { parent: 'face', ...(b.finish ? { finish: b.finish } : {}) } : undefined,
+    );
   }
   eyes(ctx, b.eye, {
-    cell: ctx.pick([0.0016, 0.003, 0.008]),
+    cell: ctx.pick([0.002, 0.0036, 0.01]),
     finish: 'cornea',
     proud: lod === 0 ? 0 : cell * 0.3,
     // The orbit's seat resolves at LOD0 only (coarser cells close a 1 cm-radius hollow).

@@ -5,57 +5,58 @@
   "scores": {
     "silhouette": {
       "score": 8,
-      "reason": "Four boulders 0.6–2.4 m with fracture-cut faces and rounded weathered masses; each reads as a different rock in the row.",
+      "reason": "A set with three shape families now (round, angular, slab) and a pebble scatter; each outline reads as a boulder.",
       "fixes": [
-        "make one boulder flatter and slab-like so the set has a third shape family (round, angular, slab)"
+        "one taller, more angular split block so the set is not all low domes"
       ]
     },
     "proportions": {
       "score": 8,
-      "reason": "Sizes as declared on the 0.5 m grid; flattened, ground-seated bases.",
+      "reason": "Sizes from a 0.4 m cobble to a ~2 m boulder, bases sunk into soil patches as asked.",
       "fixes": [
-        "sink the bases 5–10 cm so they read embedded rather than placed"
+        "vary the burial depth so one boulder is half-buried"
       ]
     },
     "materials": {
       "score": 6,
-      "reason": "Granite cliff strip with joints and crystalline grain. In hero.png the third boulder shows jagged camouflage-like patches with hard pixel edges and the dark joint network reads as painted outlines; the triplanar seams show.",
+      "reason": "Granite with lichen blotches reads as stone at a distance, but in hero.png the albedo is soft and blurry, the soil patches are flat dark mats with hard polygon edges, and the pebbles are smooth white pills that read as plastic.",
       "fixes": [
-        "blend the triplanar projection seams on the SDF meshes",
-        "a dedicated boulder material without the lichen/joint layer that draws the outlines"
+        "feather the soil patch edges (alpha or vertex fade into the ground) instead of a hard polygon mat",
+        "pebbles in varied grey/brown values with a rough surface, not uniform white",
+        "sharper granite grain (feldspar/quartz flecks) in granite.ts"
       ]
     },
     "detail": {
       "score": 7,
-      "reason": "Fracture planes, pitting, smooth unions; 36k LOD0 triangles from surface nets.",
+      "reason": "Fracture planes on the angular boulder and the slab hold, but edges are rounded and soft in the hero and there is no crack or fissure detail.",
       "fixes": [
-        "sharper fracture edges (less smoothing on the cuts)"
+        "sharper fracture edges (less smoothing on the cuts) and a few cracks/fissures"
       ]
     },
     "wear": {
       "score": 7,
-      "reason": "Moss on the shaded faces and pale lichen on tops show in hero.png, but faintly; nothing at the base ties them to the ground.",
+      "reason": "Lichen, moss on the north faces, soil and pebbles at the bases tell where they lie.",
       "fixes": [
-        "stronger moss on the north faces and a few half-buried pebbles and soil at each base"
+        "darker damp band at the soil line and moss in the crevices, not only blotches on top"
       ]
     },
     "lod": {
       "score": 7,
-      "reason": "LOD2 (956) keeps all four masses; small fracture faces round off and the faceting shows.",
+      "reason": "FAR LOD2 keeps the shapes, but the soil patches become hard octagons and the big boulder's colour shifts darker.",
       "fixes": [
-        "keep the largest fracture plane per boulder at LOD2 (smax with a coarser cell) so the angular rocks stay angular"
+        "keep the LOD0 albedo average on LOD2 faces and round the soil patches with more sides"
       ]
     },
     "technical": {
       "score": 8,
-      "reason": "QA PASS, 36 260 / 6 684 / 956, one draw.",
+      "reason": "QA clean; 35k / 5k / 0.4k triangles, 1 draw for the set.",
       "fixes": [
-        "drop LOD0 resolution on the smallest boulder (it gets the same cell as the 2.4 m one)"
+        "coarser LOD0 cell on the smallest boulder"
       ]
     }
   },
   "renders": {
-    "hero.png": "fe4981a6534a647b8885506f0373367600619575fa834dcb528d6360d142e57e",
-    "sheet.png": "9011df587aac8619a96a2168f62172d231a6d5612c8d93437bd6325ecd5b07dd"
+    "hero.png": "ef8f89d8e922d1d676bea02bb9e7c75e4d158cdeebc116a7dd736de427149dcd",
+    "sheet.png": "599d0d31372b9ebbf8d17650ccc0c77bb403802098fe8441fbddae11f69d8195"
   }
 }

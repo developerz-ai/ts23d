@@ -31,7 +31,7 @@ import {
   type Vec2,
   type Vec3,
 } from '@developerz.ai/ts23d';
-import { DARK_STEEL, RUBBER, STEEL, ZINC } from './shape.ts';
+import { DARK_STEEL, NAT, STEEL, ZINC } from './shape.ts';
 
 /** A point on the tyre's crown/shoulder surface, (y, r), with its inward unit normal. */
 interface Surf {
@@ -153,7 +153,7 @@ export const wheel = definePart({
         profile: mirrorLoop(tyreHalf),
         segments: seg,
         axis: 'y',
-        color: RUBBER,
+        color: NAT,
         strip: 'rubber',
       }),
     ];
@@ -353,7 +353,7 @@ export const wheel = definePart({
           profile: section(s0, s1, k, neg),
           depth: len,
           plane: 'yz',
-          color: RUBBER,
+          color: NAT,
           strip: 'rubber',
         });
       const out: Mesh[] = [];
@@ -374,7 +374,7 @@ export const wheel = definePart({
           ],
           segments: seg,
           axis: 'y',
-          color: RUBBER,
+          color: NAT,
           strip: 'rubber',
         }),
       );

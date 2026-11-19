@@ -1,6 +1,6 @@
 // The code half of the model-tier dragon: an original fantasy drake on the creature kind's
 // `quadruped` body plan. The learned rigger gives the model a quadruped's skeleton and no wing
-// bones, so the plan has none: the wings ride with the chest, raised, and do not flap. It is
+// bones, so the plan has none: the model body's wing bones are extra chains (wings.ts). It is
 // invented, so there are no sourced measurements: the numbers are this recipe's design spec
 // (README.md), read off the concept the model is built from; the anatomy it borrows is named there.
 

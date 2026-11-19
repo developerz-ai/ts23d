@@ -1,63 +1,60 @@
 {
   "asset": "face_goblin",
   "reviewer": "agent",
-  "overall": 5.6,
+  "overall": 6.1,
   "scores": {
     "silhouette": {
       "score": 7,
-      "reason": "Big vault, long nose, receding chin and swung pointed ears read as a goblin from front and side; the cleanest silhouette of the five.",
+      "reason": "Bald head, long pointed ears and hooked nose read as a goblin from every view.",
       "fixes": [
-        "hook the nose tip more and notch the ear rims"
+        "notch the ear rims and push the brow ridge out"
       ]
     },
     "proportions": {
       "score": 7,
-      "reason": "Head, vault and nose projection hold; the eyes are human-sized, where goblins read better with larger eyes.",
+      "reason": "Large ears, long nose and slim neck read; the eyes are still small for a goblin.",
       "fixes": [
-        "eyeball ×1.3 with a matching socket landmark scale"
+        "eyeball ×1.3 with a matching socket"
       ]
     },
     "materials": {
-      "score": 4,
-      "reason": "Vertex colour on the plain strip: green skin zones separate by hue but not by roughness or subsurface; it reads as matte painted clay. No hair.",
+      "score": 5,
+      "reason": "Pale olive skin with brown blotches; matte everywhere, eyes and mouth not wet.",
       "fixes": [
-        "a skin strip with subsurface-like roughness/sheen",
-        "glossy eyes and wet lips"
+        "skin strip with subsurface-like sheen; glossy eyes and wet lips"
       ]
     },
     "detail": {
       "score": 5,
-      "reason": "Primary and secondary forms come from a real anatomical base (lids, nasolabial area, lips, ear helix, clavicles, sternocleidomastoid), but there is no tertiary layer (pores, wrinkles) and the hair is evenly spaced grooves.",
+      "reason": "Teeth and ears present, but the face is smooth: no wrinkles, pores or warts.",
       "fixes": [
-        "LOD0 wrinkle/pore displacement on the subdivided base driven by age",
-        "varied lock widths and a parting instead of evenly spaced grooves"
+        "LOD0 wrinkle/wart displacement on forehead, nose and cheeks"
       ]
     },
     "wear": {
-      "score": 3,
-      "reason": "Pristine: seeded asymmetry and age/weight knobs are the only story; no scars, stubble, blemishes, sun-darkened skin or dirt.",
+      "score": 5,
+      "reason": "Brown blotches and a pale scar on the cheek; reads as mottled skin rather than history.",
       "fixes": [
-        "seeded scar/blemish marks in vertex colour",
-        "stubble shadow on the jaw and age-driven darkening under the eyes"
+        "a torn ear notch and two clearer scars"
       ]
     },
     "lod": {
-      "score": 5,
-      "reason": "LOD2 loses most of each ear (thin sheets under the 1.4 cm cell) and the face goes blotchy: the silhouette changes at distance.",
+      "score": 6,
+      "reason": "FAR LOD2 keeps the ears and the nose; the face is faceted into flat patches.",
       "fixes": [
-        "authored LOD2 topology, or keep the ear shells from LOD1"
+        "authored LOD2 topology with smoothed colour"
       ]
     },
     "technical": {
       "score": 8,
-      "reason": "QA PASS at every LOD; 48.9k / 13k / 5.7k tris (no hair); 2 draws.",
+      "reason": "QA clean; 35k / 8k / 1.2k triangles over 3 draws.",
       "fixes": [
-        "drop the teeth at LOD1 (barely visible)"
+        "drop the teeth at LOD1"
       ]
     }
   },
   "renders": {
-    "hero.png": "c9f9319fedc7da46b3233cc80ad850f28f2eb00a5491a630021d5d4b54af84ad",
-    "sheet.png": "2fdad636f8fee476644842ea6fa7f185ded374f1ef9a0ea402af2a1facc44d18"
+    "hero.png": "5a631799c54bd9eb08a77e672be41d6203d13592fb5b634f5a6021e928d2989e",
+    "sheet.png": "21d3b43199def5a3df7ecec9fd67d98641e09fe329ceff5105e7cb47f6ac5471"
   }
 }

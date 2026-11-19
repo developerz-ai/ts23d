@@ -16,6 +16,8 @@ import { dragon } from './dragon.ts';
 import { headEdits } from './head.ts';
 import { bossRegion, mainHornRoot } from './horns.ts';
 import { C } from './palette.ts';
+import { PROPORTIONS, posePoint } from './pose.ts';
+import { SK } from './skeleton.ts';
 import { bodyStamps, hornCollars } from './stamps.ts';
 
 const SLOW = 180_000;
@@ -37,6 +39,31 @@ describe('biology', () => {
     expect(b.wingLoading).toBeGreaterThan(1000);
     // Overbuilt legs (stylised heavy limbs): at least strong enough for the mass.
     expect(b.limbSafety).toBeGreaterThanOrEqual(1);
+  });
+});
+
+describe('proportions over the bind skeleton (pose.ts)', () => {
+  it('paws stay on the ground, the trunk rises by the lift, the head rides the neck’s end', () => {
+    // The failure this guards: a pose that lifts the feet off z = 0 or tears the head off the neck.
+    expect(posePoint([1.1, 0.8, 0], 'body')[2]).toBe(0);
+    expect(posePoint(SK.hind.ball, 'body')[2]).toBeCloseTo(SK.hind.ball[2], 9);
+    const hip = posePoint(SK.hind.hip, 'body');
+    expect(hip[2] - SK.hind.hip[2]).toBeCloseTo(PROPORTIONS.lift, 9);
+    expect(hip[0]).toBeCloseTo(SK.hind.hip[0], 9);
+    // The neck's end as a body point and the head joint as a head point land on the same spot.
+    const end = posePoint(SK.head.joint, 'body');
+    const joint = posePoint(SK.head.joint, 'head');
+    for (let k = 0; k < 3; k++) expect(end[k] ?? 0).toBeCloseTo(joint[k] ?? 1, 9);
+    // The neck is `neck` × as long, base to end.
+    const base = SK.neck[0] ?? [0, 0, 0];
+    const len = (a: readonly number[], b: readonly number[]): number =>
+      Math.hypot((a[0] ?? 0) - (b[0] ?? 0), (a[2] ?? 0) - (b[2] ?? 0));
+    expect(len(end, posePoint(base, 'body')) / len(SK.head.joint, base)).toBeCloseTo(
+      PROPORTIONS.neck,
+      6,
+    );
+    // A wing is carried rigidly: lifted, not stretched along the neck.
+    expect(posePoint(SK.wing.wrist, 'rigid')[0]).toBe(SK.wing.wrist[0]);
   });
 });
 

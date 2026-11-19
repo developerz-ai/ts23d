@@ -1,67 +1,66 @@
 {
   "asset": "goblin_head",
   "reviewer": "agent",
-  "overall": 5.6,
+  "overall": 6.7,
   "scores": {
     "silhouette": {
-      "score": 7,
-      "reason": "Long pointed ears, hooked nose, bald dome with grey wisps and a thin neck read as a goblin in FRONT and SIDE; the shoulders are two round brown balloons with no garment shape, so the bust outline below the neck is generic.",
+      "score": 8,
+      "reason": "Leaf ears, hooked nose, wispy hair cards and now a cut vest with lapels and a hunched neck read as a goblin bust in FRONT, SIDE and hero.png; the inflated shoulder balloons are gone.",
       "fixes": [
-        "give the vest a cut shoulder seam and collar edge in the side profile instead of the inflated shoulder ellipsoids",
-        "a stronger forward hunch of the neck in the SIDE view"
+        "give the hood behind the neck a visible peak in SIDE so the back outline is not a smooth dome"
       ]
     },
     "proportions": {
-      "score": 6,
-      "reason": "Head, ears and nose sit well; the neck is long and pole-straight in SIDE, and the shoulder masses are oversized against the narrow skull (wider than the ear span).",
+      "score": 7,
+      "reason": "Shoulders are narrower and the grin shows a teeth row; the neck is still long and straight in SIDE, and the scarf sits as a thick ring high on the neck.",
       "fixes": [
-        "narrow the shoulder masses ~15 % and drop them 2 cm so the neck shortens",
-        "widen the grin and show the teeth row (mouth reads pursed)"
+        "shorten the neck ~1.5 cm and tilt it forward 10°",
+        "drop the scarf knot onto the collarbone"
       ]
     },
     "materials": {
-      "score": 5,
-      "reason": "Skin, vest, shirt and scarf separate by hue only; vest leather, linen shirt and wool scarf share one soft sheen; the scarf reads as red rubber tubing with a ball knot.",
+      "score": 6,
+      "reason": "Green skin, leather vest, linen shirt and red scarf separate by hue and the vest has grey patches; every surface shares one matte sheen and the scarf still reads as a red rubber tube.",
       "fixes": [
-        "leather strip with grain and edge darkening on the vest",
-        "wool/knit strip and fraying on the scarf; flatten its round-tube section into a folded band"
+        "a leather strip with lower roughness and darkened edges on the vest",
+        "a knit/wool strip and a flattened folded band section for the scarf"
       ]
     },
     "detail": {
-      "score": 6,
-      "reason": "Warts, brow creases, lids, ear notches and hair wisps hold at third person; vest and shirt are smooth masses with no seams, stitches or buttons.",
+      "score": 7,
+      "reason": "Warts, lids, ear notches, teeth, a toggle bar on the vest and stitched patches hold at third person; the shirt and vest back are smooth.",
       "fixes": [
-        "seams, hem stitching and a toggle on the vest",
-        "thicker ear rim at LOD0 so the cartilage edge reads"
+        "hem stitching and seam lines along the vest edges",
+        "a thicker ear rim so the cartilage edge reads in hero.png"
       ]
     },
     "wear": {
-      "score": 4,
-      "reason": "Some skin mottling and red ear tips; clothes are clean and unpatched.",
+      "score": 6,
+      "reason": "Patched vest, red ear tips and skin mottling tell a little history; the scarf and shirt are clean.",
       "fixes": [
-        "patches, grime and frayed edges on the vest",
-        "torn, dirty scarf ends"
+        "dirt and fraying on the scarf ends",
+        "grime along the shirt collar and vest hem"
       ]
     },
     "lod": {
-      "score": 4,
-      "reason": "FAR LOD2 in sheet.png loses both ears and the hair wisps: the head becomes a bald egg, so the goblin read pops away at distance.",
+      "score": 6,
+      "reason": "FAR LOD2 keeps the ears and hair; the vest's cream/brown checker is now coarser blotches, but cream shirt patches still scatter over the brown vest face by face, the scarf breaks into red flecks and the torso rounds into a ball.",
       "fixes": [
-        "keep the ears as a two-plane card (or a 6-segment cone) at LOD2",
-        "keep a single hair card at LOD2"
+        "average vertex colour per LOD2 face (or bake LOD2 from the LOD0 texture) so the vest stays one brown block over one cream shirt panel",
+        "keep the vest's lapel edge at LOD2 so the torso is not a ball"
       ]
     },
     "technical": {
       "score": 7,
-      "reason": "QA clean on all LODs; 84k / 17k / 3.6k tris, heavy for a bust and spent largely on the smooth shoulder masses.",
+      "reason": "54.7k / 14k / 2.6k triangles and 5 draws; still heavy for a bust, the eye/cutout/finish parts each cost a draw.",
       "fixes": [
-        "cut the shoulder balloons to ~5k tris and spend on ear rims",
-        "declare the warts from their seeded sizes instead of a 2× bound"
+        "merge the cornea and cutout parts into the body draw where the material allows",
+        "trim LOD0 toward ~40k on the plinth and shoulders"
       ]
     }
   },
   "renders": {
-    "hero.png": "09f1efa3b1f76db1583dc4f2f9a895031007d277e6ebae0ef80cf77348496b8b",
-    "sheet.png": "911334f7636d5e8234f385fb33ea78cd8b32c83f6c64f6f02eaf11699f5464b6"
+    "hero.png": "046599b07c921b13a4cb782ea576fe22559f0810ab503207932045a9a348581f",
+    "sheet.png": "83a56495651f8e0ad1ee0cec3c74a46ea827810f0b87d23a402cc6113eb2b603"
   }
 }

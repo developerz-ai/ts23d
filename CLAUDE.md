@@ -12,7 +12,7 @@ project that installed the package, read `node_modules/@developerz.ai/ts23d/CLAU
 - **Real units and references.** Metres, Z up, +X front. Vehicles/buildings declare `real` + `sources` + spec `measures`; gates: `proportions` ±5%, `measures` ±2%. Parts touch their supports (`floating-parts`); moving parts clear everything (`clashes`); no slit you can see light through (`gaps`; real openings declared with a `why`).
 - **LOD-gate, never decimate.** Recipes read `ctx.lod` and choose what to emit. Imported and model-built meshes (scans, CC0 base meshes, image-to-3D output) are the one exception: they have no recipe to gate, so `simplify` or the Blender `retopo`/`lods` steps may decimate them (gated: bbox, surface, tunnels, UV), never code-built geometry (ADR 011, 016).
 - **One material.** Shared trim sheet, vertex colour; one draw per moving pivot (plus one merged static body), capped by `budget.draws`. Exception (ADR 016): a model-built part may carry its own `TextureSet` (albedo, normal, ORM; on every LOD; no `paint`/`finish`); declare `budget.textureSets { count, size }`; one material per set.
-- **See the result.** Every asset has a contact sheet (`sheet.png`) and a beauty render (`hero.png`); every error and QA finding has a `T3D_*` code and a `fix:`.
+- **See the result.** Every asset has a contact sheet (`sheet.png`: six views in the hero's base colours, trim-sheet albedo × vertex colour) and a beauty render (`hero.png`); every error and QA finding has a `T3D_*` code and a `fix:`.
 - **Enforce rules.** A rule without a script in `bun run verify` is a suggestion. Every defect found once gets a row in `docs/architecture/defect-catalogue.md` and a check that fails on it before the fix.
 
 ## Project and stack

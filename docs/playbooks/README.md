@@ -106,6 +106,10 @@ pivot `ctx.group` at its hinge line, never at its centre.
 7. **Original design in the class.** Learn proportions and engineering from real products and
    standards; never copy a brand's logo, badge, grille shape or trade dress. Named historic or
    public-domain subjects (a 1943 tank, an 1868 locomotive) are fine.
+8. **The LOD policy's triangle ranges are gated.** The ceiling of each range is a row in
+   `scripts/lib/budget-bands.ts`; the `conventions` gate fails a committed asset over its class
+   band (`T3D_BUDGET_BAND`) unless its README has a `Budget why: <reason>` line. Change a band
+   only together with its playbook line, with the reason in the PR.
 
 ## Playbook template
 

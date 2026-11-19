@@ -1,63 +1,65 @@
 {
   "asset": "king_cobra",
   "reviewer": "agent",
-  "overall": 5.9,
+  "overall": 6.6,
   "scores": {
     "silhouette": {
       "score": 7,
-      "reason": "A raised forebody with a hood over a ground coil reads as a cobra; the hood is narrow and the coil loose.",
+      "reason": "Raised forebody with a narrow hood, ventral scutes and a single flat coil read as a cobra; the coil is one loose loop, not a stack supporting the raised body.",
       "fixes": [
-        "wider, flatter hood ribs at the raised neck",
-        "tighter coil stack under the raised forebody"
+        "stack one more coil under the raised forebody",
+        "widen the hood ribs a little at the neck"
       ]
     },
     "proportions": {
-      "score": 6,
-      "reason": "Raised height and coil size plausible for a 3–4 m snake; the body is near-constant girth with a thin tail and an abrupt neck.",
+      "score": 7,
+      "reason": "Girth now swells mid-body and tapers to the tail; the head is small against the hood in FRONT.",
       "fixes": [
-        "taper girth from mid-body to the tail and swell the mid-body"
+        "enlarge the head ~10 %"
       ]
     },
     "materials": {
-      "score": 6,
-      "reason": "Dark scales with pale chevrons and cream ventral scutes read as scales; the chevron zigzag is closer to a viper pattern than the king cobra crossbands.",
+      "score": 7,
+      "reason": "Ventral cream scutes and a dark dorsum; the dorsal pattern is now pale crossbands instead of rattlesnake zigzags, though their edges are serrated rather than clean chevrons pointing to the head, and the dorsum is matte apart from a blue-grey patch on the coil.",
       "fixes": [
-        "pale crossbands (chevrons pointing to the head) instead of zigzags",
-        "glossy scale roughness (low) on the dorsum"
+        "sharpen the crossbands into chevrons that point toward the head",
+        "low roughness on the dorsal scales"
       ]
     },
     "detail": {
-      "score": 6,
-      "reason": "Ventral scutes, head shields and tongue read; no eyes catchlight, no keeled scale normal.",
+      "score": 7,
+      "reason": "Ventral scutes, dorsal scale pattern, tongue and head shields read at hero distance.",
       "fixes": [
         "visible eyes with a brille",
-        "scale normal map on the flanks"
+        "scale normal on the flanks"
       ]
     },
     "wear": {
-      "score": 4,
-      "reason": "Clean; no shed remnants or scars.",
+      "score": 5,
+      "reason": "Nothing says this snake has lived anywhere: no shed patch, scar or dust.",
       "fixes": [
-        "a dull pre-shed patch or a healed scar"
+        "a dull pre-shed patch or a healed scar",
+        "dust on the lowest coil"
       ]
     },
     "lod": {
-      "score": 5,
-      "reason": "FAR LOD2 replaces the pattern with big black/cream blocks: the colour shifts at distance.",
+      "score": 6,
+      "reason": "FAR LOD2 now averages the pattern into an olive-dark coil, but two coil segments still turn blue-grey and the neck goes flat cream, so the colour still shifts at distance.",
       "fixes": [
-        "average the pattern to the dorsal grey-brown at LOD2 instead of sampling per band"
+        "average the blue-grey patch into the dorsal tone at LOD2",
+        "keep a darker dorsal band on the LOD2 neck"
       ]
     },
     "technical": {
       "score": 7,
-      "reason": "QA clean; 62k / 3.8k / 584 tris in one part; the LOD0→LOD1 drop is 16× (a visible pop risk).",
+      "reason": "61.9k / 9.2k / 584 triangles, one draw; LOD1 now holds, LOD0 spends uniform rings along the straight neck.",
       "fixes": [
-        "raise LOD1 to ~12k or lower LOD0 ring density along the straight neck"
+        "lower LOD0 ring density on the straight neck and tail"
       ]
     }
   },
   "renders": {
-    "hero.png": "60a9d78fe54a8af71c95a41b46d384fd62051e2d27bcff3909477abf117ed1e2",
-    "sheet.png": "7d67e9a54340e61f366c7dab159d3d375ce31aecddd337f21238c0c7f550c6fb"
+    "hero.png": "074be8bd6aea92b40900f4f29ad70f5d95c4c174e2dfa3b57815882db1e76cca",
+    "sheet.png": "c94f1e6f9d5a4689b9df88ab40f54542f6b790809c2150f81abc9930698700f6"
   }
 }

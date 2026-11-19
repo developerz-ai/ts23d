@@ -27,7 +27,7 @@ export interface DiscSize {
 
 /** Vented, cross-drilled disc with its hat; spins with the wheel. */
 export function disc(lod: Lod, d: DiscSize): Mesh {
-  const segs = [72, 32, 12][lod] ?? 12;
+  const segs = [32, 16, 12][lod] ?? 12;
   const plate = 0.009;
   const parts: Mesh[] = [];
   const ringProfile = (y0: number, y1: number): Vec2[] => [
@@ -39,7 +39,7 @@ export function disc(lod: Lod, d: DiscSize): Mesh {
     [d.inner, y1],
     [d.inner, y0],
   ];
-  if (lod === 2) {
+  if (lod > 0) {
     parts.push(
       lathe({
         profile: ringProfile(d.y - d.thick / 2, d.y + d.thick / 2),
@@ -68,7 +68,7 @@ export function disc(lod: Lod, d: DiscSize): Mesh {
       }),
     );
     // Curved vanes.
-    const vanes = lod === 0 ? 36 : 18;
+    const vanes = 8;
     const vaneH = d.thick - 2 * plate;
     for (let k = 0; k < vanes; k++) {
       const a0 = (k / vanes) * Math.PI * 2;
@@ -107,13 +107,13 @@ export function disc(lod: Lod, d: DiscSize): Mesh {
       const hole = cylinder({
         radius: 0.0032,
         length: d.thick + 0.0008,
-        segments: 8,
+        segments: 6,
         axis: 'y',
         color: [0.02, 0.02, 0.02],
         strip: 'iron_cast',
       });
-      const rows = [0.32, 0.55, 0.78];
-      const per = 24;
+      const rows = [0.36, 0.72];
+      const per = 9;
       for (let k = 0; k < per; k++)
         rows.forEach((f, j) => {
           const a = ((k + j / rows.length) / per) * Math.PI * 2;
@@ -196,10 +196,11 @@ export function caliper(lod: Lod, o: CaliperOptions): Mesh {
   const outR = d.r + 0.016;
   const inR = d.r - 0.052;
   const halfW = d.thick / 2 + 0.026;
-  const steps = lod === 0 ? 18 : lod === 1 ? 8 : 3;
+  const steps = lod === 0 ? 10 : lod === 1 ? 8 : 3;
   // Section (radial, axial) of the caliper body: a C round the disc, open toward the hub.
+  // Mid and far: a plain block (its end caps stay convex); near: the C with the slot for the disc.
   const sec: Vec2[] =
-    lod === 2
+    lod > 0
       ? [
           [inR, -halfW],
           [outR, -halfW],
