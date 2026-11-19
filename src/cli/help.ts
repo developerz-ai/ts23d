@@ -54,7 +54,7 @@ export const COMMAND_HELP: Readonly<Record<string, string>> = {
           (LOD0 normal/AO/height/ORM from the sculpt field onto its own atlas; ADR 012) → <out>/<asset>/hero/`,
   list: 'list    the assets each module exports',
   queue:
-    "queue   t3d queue status (--json): who runs and who waits per class (cpu tokens, blender, gpu), Blender sessions, GPU lease, load, RAM · clear --stale | --pid <n> | --all: drop tickets (ends no process) · run [--cpu <n|all>] [--blender] [--gpu] -- <command…>: queue any command, exit code is the command's · hold -- <command…>: wait for the machine to drain, then run alone",
+    "queue   t3d queue status (--json): who runs and who waits per class (cpu tokens, blender, gpu), Blender sessions, GPU lease, load, RAM · clear --stale | --pid <n> | --all: drop tickets (ends no process) · run [--cpu <n|all>] [--blender] [--gpu] -- <command…>: queue any command, exit code is the command's · hold -- <command…>: take every class whole (all cpu tokens, blender, gpu), so the machine drains, then run alone",
 };
 
 export const COMMANDS: readonly string[] = Object.keys(COMMAND_HELP);

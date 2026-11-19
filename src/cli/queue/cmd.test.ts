@@ -8,6 +8,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { run } from '../run.ts';
 import { acquire } from './acquire.ts';
+import { CLASSES } from './config.ts';
 import type { QueueStatus } from './status.ts';
 
 const KEYS = ['TS23D_HOME', 'T3D_QUEUE', 'T3D_QUEUE_MAX_WAIT', 'CI', 'T3D_QUEUE_TOKEN'] as const;
@@ -117,12 +118,12 @@ describe('a queued command', () => {
 describe('t3d queue', () => {
   test('a bad subcommand or flag is T3D_CLI_USAGE, exit 2', async () => {
     for (const argv of [
-      ['queue'],
-      ['queue', 'clear'],
-      ['queue', 'run', '--cpu', 'x', '--', 'true'],
-      ['queue', 'hold'],
+      ['queue', '--json'],
+      ['queue', 'clear', '--json'],
+      ['queue', 'run', '--cpu', 'x', '--json', '--', 'true'],
+      ['queue', 'hold', '--json'],
     ]) {
-      const r = await t3d([...argv, '--json']);
+      const r = await t3d(argv);
       expect(r.code).toBe(2);
       expect((JSON.parse(r.out[0] ?? '') as Envelope).error?.code).toBe('T3D_CLI_USAGE');
     }
@@ -173,5 +174,40 @@ describe('t3d queue', () => {
     expect(process.env['T3D_QUEUE_TOKEN']).toBeUndefined();
     const s = await status();
     expect([s.classes.cpu.inUse, s.classes.blender.inUse]).toEqual([0, 0]);
+  });
+
+  test('hold takes every class whole: a busy Blender refuses it, and nothing stays taken', async () => {
+    const holder = await other('blender', 1);
+    try {
+      const r = await t3d(['queue', 'hold', '--no-wait', '--json', '--', 'sh', '-c', 'exit 7']);
+      expect(r.code).toBe(1);
+      const env = JSON.parse(r.out[0] ?? '') as Envelope;
+      expect(env.error?.code).toBe('T3D_QUEUE_BUSY');
+      expect(env.error?.message).toContain('blender is full');
+      // The CPU it took on the way is given back.
+      const s = await status();
+      expect([s.classes.cpu.inUse, s.classes.blender.inUse]).toEqual([0, 1]);
+    } finally {
+      await holder.release();
+    }
+    const all = 'case "$T3D_QUEUE_TOKEN" in cpu:*,blender:1:*,gpu:1:*) exit 0;; *) exit 9;; esac';
+    expect((await t3d(['queue', 'hold', '--', 'sh', '-c', all])).code).toBe(0);
+    const s = await status();
+    expect(CLASSES.map((c) => s.classes[c].inUse)).toEqual([0, 0, 0]);
+  });
+
+  test('what follows `--` is the command’s: its --help, --json, --version and queue flags reach it', async () => {
+    const theirs = ['--help', '--json', '--version', '--no-wait', '--max-wait', '-h'];
+    const echo = `[ "$*" = "${theirs.join(' ')}" ] && exit 5; exit 9`;
+    for (const sub of ['run', 'hold']) {
+      const r = await t3d(['queue', sub, '--', 'sh', '-c', echo, 'sh', ...theirs]);
+      expect(r.code).toBe(5);
+      expect(r.out).toEqual([]);
+    }
+    // A --json after `--` does not turn t3d's own output into an envelope.
+    const bad = await t3d(['queue', 'hold', '--cpu', '2', '--', 'true', '--json']);
+    expect(bad.code).toBe(2);
+    expect(bad.out).toEqual([]);
+    expect(bad.err.join('\n')).toContain('T3D_CLI_USAGE');
   });
 });

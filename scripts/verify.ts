@@ -10,6 +10,7 @@
 //                                  (scripts/ci-changes.ts): no recipe input moved, `recipes` is skipped
 
 import { loadConfig, withQueue } from '../src/cli/queue/index.ts';
+import { isTs23dError } from '../src/core/index.ts';
 import { parseShard, type Shard } from './lib/shard.ts';
 
 export const STEPS = [
@@ -86,10 +87,19 @@ if (import.meta.main) {
   }
   // One place in the machine's queue for the whole gate (off in CI): several agents' gates take
   // turns instead of oversubscribing the cores. Steps inherit the grant through the environment.
-  const { weights } = await loadConfig(process.env);
-  const code = await withQueue('cpu', weights.verify, async () => runSteps(picked.steps), {
-    cmd: 'bun run verify',
-  });
+  let code = 1;
+  try {
+    const { weights } = await loadConfig(process.env);
+    code = await withQueue('cpu', weights.verify, async () => runSteps(picked.steps), {
+      cmd: 'bun run verify',
+    });
+  } catch (e) {
+    // A full queue under T3D_QUEUE=fail, a wait past its limit, a bad queue.json.
+    const fix = isTs23dError(e) && e.fix ? ` fix: ${e.fix}` : '';
+    const error = `${e instanceof Error ? e.message : String(e)}${fix}`;
+    if (json) console.log(JSON.stringify({ ok: false, error }));
+    else console.error(`✗ verify: ${error}`);
+  }
   process.exit(code);
 
   /** Runs the steps in order; the exit code (0, or 1 at the first failing step). */

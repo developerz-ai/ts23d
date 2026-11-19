@@ -76,8 +76,12 @@ function outside(e: unknown): Ts23dError {
   });
 }
 
+/** t3d's own part of the line: after a `--` come the words of the command `t3d queue` starts. */
+const own = (argv: readonly string[]): readonly string[] =>
+  argv.includes('--') ? argv.slice(0, argv.indexOf('--')) : argv;
+
 export async function run(argv: readonly string[]): Promise<number> {
-  const json = argv.includes('--json');
+  const json = own(argv).includes('--json');
   // Under --json stdout carries only the envelope: human lines (and recipes' logs) go to stderr.
   const restore = json ? jsonStdout() : () => {};
   try {
@@ -91,14 +95,15 @@ export async function run(argv: readonly string[]): Promise<number> {
 
 async function dispatch(argv: readonly string[], json: boolean): Promise<number> {
   if (argv[0] === 'mcp') return mcpMain(argv.slice(1));
-  if (argv[0] === 'init' && !argv.includes('--help')) return initMain(argv.slice(1), json);
-  if (argv[0] === 'concept' && !argv.includes('--help')) return conceptCli(argv.slice(1), json);
-  if (argv[0] === 'doctor' && !argv.includes('--help')) return doctorMain(argv.slice(1), json);
-  if (argv[0] === 'setup' && !argv.includes('--help')) return setupMain(argv.slice(1), json);
-  if (argv[0] === 'server' && !argv.includes('--help')) return serverMain(argv.slice(1), json);
-  if (argv[0] === 'plan' && !argv.includes('--help')) return planMain(argv.slice(1), json);
-  if (argv[0] === 'blender' && !argv.includes('--help')) return blenderMain(argv.slice(1), json);
-  if (argv[0] === 'queue' && !argv.includes('--help')) return queueMain(argv.slice(1), json);
+  const help = own(argv).includes('--help');
+  if (argv[0] === 'init' && !help) return initMain(argv.slice(1), json);
+  if (argv[0] === 'concept' && !help) return conceptCli(argv.slice(1), json);
+  if (argv[0] === 'doctor' && !help) return doctorMain(argv.slice(1), json);
+  if (argv[0] === 'setup' && !help) return setupMain(argv.slice(1), json);
+  if (argv[0] === 'server' && !help) return serverMain(argv.slice(1), json);
+  if (argv[0] === 'plan' && !help) return planMain(argv.slice(1), json);
+  if (argv[0] === 'blender' && !help) return blenderMain(argv.slice(1), json);
+  if (argv[0] === 'queue' && !help) return queueMain(argv.slice(1), json);
   if (argv[0] === 'build' && argv.includes('--watch')) return watchMain(argv);
   let args: Args;
   try {

@@ -62,3 +62,5 @@ limits how much computes at once.
   unqueued runs, never a deadlock.
 - Head-of-line blocking is accepted: a waiting 8-token hero holds back 1-token builds behind it.
 - Code: `src/cli/queue/`. Commands: `t3d queue status | clear | run | hold`.
+
+**Addendum (review of the first build).** Releasing a ticket also writes a `<seq>.released` file beside it, and readers treat a ticket with that file as released: a late write of a stale copy cannot bring a released ticket back. `t3d queue hold` takes every class whole (cpu, blender, gpu), not only the CPU tokens.

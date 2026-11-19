@@ -155,6 +155,8 @@ async function enqueue(
   const mine = seq;
   addHeld(env, { cls, weight: want, seq: mine, token });
   let released = false;
+  // One writer at a time on this ticket: each `addProc` runs after the one before it.
+  let listing: Promise<void> = Promise.resolve();
   return {
     cls,
     weight: want,
@@ -164,14 +166,19 @@ async function enqueue(
       if (released) return;
       released = true;
       removeHeld(env, token);
+      await listing; // a tool still being listed is written first, never after the release
       await drop(mine);
     },
-    addProc: async (pid) => {
-      try {
-        await addTicketProc(dir, mine, await procOf(pid));
-      } catch (e) {
-        failOpen(cfg.dir, e, log);
-      }
+    addProc: (pid) => {
+      if (released) return Promise.resolve();
+      listing = listing.then(async () => {
+        try {
+          await addTicketProc(dir, mine, token, await procOf(pid));
+        } catch (e) {
+          failOpen(cfg.dir, e, log);
+        }
+      });
+      return listing;
     },
   };
 }

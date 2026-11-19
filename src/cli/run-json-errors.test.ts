@@ -36,7 +36,10 @@ async function capture<T>(task: () => Promise<T>): Promise<{ result: T; stdout: 
 }
 
 const stdoutOf = async (argv: readonly string[]): Promise<{ code: number; stdout: string }> => {
-  const { result, stdout } = await capture(() => run([...argv, '--json']));
+  // Before a `--`: what follows one belongs to the command `t3d queue run` starts.
+  const at = argv.includes('--') ? argv.indexOf('--') : argv.length;
+  const line = [...argv.slice(0, at), '--json', ...argv.slice(at)];
+  const { result, stdout } = await capture(() => run(line));
   return { code: result, stdout };
 };
 

@@ -3,7 +3,8 @@
 //   status [--json]                         classes, tickets in order, sessions, lease, load, RAM
 //   clear --stale | --pid <n> | --all       drop tickets (it ends no process)
 //   run [--cpu <n|all>] [--blender] [--gpu] -- <cmd…>   queue any command; exit code = the command's
-//   hold -- <cmd…>                          run --cpu all: the machine drains, the command runs alone
+//   hold -- <cmd…>                          every class whole (all cpu, blender, gpu): the machine
+//                                           drains (Blender and GPU jobs too), the command runs alone
 
 import { constants } from 'node:os';
 import { join } from 'node:path';
@@ -104,7 +105,8 @@ function runArgs(argv: readonly string[], hold: boolean): RunArgs {
       want.set('cpu', n);
     } else throw bad(`t3d queue run does not know '${a}'`);
   }
-  if (hold) want.set('cpu', Number.POSITIVE_INFINITY);
+  // A hold is the whole machine: a running Blender or GPU job ends first, and none starts under it.
+  if (hold) for (const cls of CLASSES) want.set(cls, Number.POSITIVE_INFINITY);
   if (want.size === 0) want.set('cpu', 1);
   // Lowest class first: a process may take a higher class while holding a lower one.
   const needs = CLASSES.flatMap((cls) => {

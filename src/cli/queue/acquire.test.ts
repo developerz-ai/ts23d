@@ -9,6 +9,8 @@ import { isTs23dError } from '../../core/index.ts';
 import { nodeExec } from '../../neural/index.ts';
 import { acquire, withQueue } from './acquire.ts';
 import { fakeWorld, until } from './fake-world.ts';
+import type { Alive } from './lineup.ts';
+import { procAlive } from './liveness.ts';
 
 const coded = async (
   run: Promise<unknown>,
@@ -150,21 +152,55 @@ describe('release', () => {
     expect((await acquire('blender', 1, w.proc(200, { T3D_QUEUE: 'fail' }))).queued).toBe(true);
   });
 
-  test('a tool the task starts is listed on the ticket, so the place outlives the owner', async () => {
+  test('a tool the task started keeps the place after the owner dies, until the tool ends too', async () => {
     const w = await fakeWorld();
-    const procs = await withQueue(
+    // The owners are the fixture's pretend processes; the tool is a real one, with a real start time.
+    const pretend = w.proc(100).alive ?? procAlive;
+    const alive: Alive = (p) => (p.start?.startsWith('start-') ? pretend(p) : procAlive(p));
+    const on = (pid: number) => ({ ...w.proc(pid), alive });
+    const stop = join(w.home, 'stop');
+    let finish = (): void => {};
+    const ownerHangs = new Promise<void>((r) => {
+      finish = r;
+    });
+    let tool: Promise<unknown> = Promise.resolve();
+    const owner = withQueue(
       'blender',
       1,
       async () => {
-        await nodeExec('true', [], { timeoutMs: 10_000, maxBytes: 1024 });
-        const listed = async () => (await w.lineup('blender', 1)).live[0]?.ticket.procs ?? [];
-        await until(async () => (await listed()).length === 2, 'the tool is on the ticket');
-        return listed();
+        const loop = 'while [ ! -e "$0" ]; do sleep 0.05; done';
+        tool = nodeExec('sh', ['-c', loop, stop], { timeoutMs: 30_000, maxBytes: 1024 });
+        await tool;
+        await ownerHangs; // the grant is never released: only the tool's end can free the place
       },
-      w.proc(100),
+      on(100),
     );
-    expect(procs[0]).toEqual({ pid: 100, start: 'start-100' });
-    expect(procs[1]?.pid).toBeGreaterThan(1);
+    try {
+      const listed = async () => (await w.lineup('blender', 1)).entries[0]?.ticket?.procs ?? [];
+      await until(async () => (await listed()).length === 2, 'the tool is on the ticket');
+      expect((await listed())[0]).toEqual({ pid: 100, start: 'start-100' });
+      expect((await listed())[1]?.pid).toBeGreaterThan(1);
+      w.kill(100);
+      let admitted = false;
+      const contender = acquire('blender', 1, on(200)).then((g) => {
+        admitted = true;
+        return g;
+      });
+      for (let poll = 0; poll < 3; poll++) {
+        await until(() => w.sleeping() === 1, 'the contender waits behind the living tool');
+        expect(admitted).toBe(false);
+        w.wake();
+      }
+      await until(() => w.sleeping() === 1, 'the contender still waits');
+      await writeFile(stop, '');
+      await tool;
+      w.wake();
+      expect((await contender).queued).toBe(true);
+    } finally {
+      await writeFile(stop, '');
+      finish();
+      await owner;
+    }
   });
 
   test('release twice is one release', async () => {

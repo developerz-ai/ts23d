@@ -56,7 +56,9 @@ describe('order', () => {
     await first.release();
     w.wake();
     await Promise.all([heavy, light]);
-    expect(order).toEqual(['heavy', 'light']);
+    // Both fit now (8 + 1 of 12) and are admitted by the same wake: which returns first is not
+    // an order the queue keeps. The FIFO claim is the empty `order` above.
+    expect([...order].sort()).toEqual(['heavy', 'light']);
     expect((await w.lineup('cpu', 12)).inUse).toBe(9);
   });
 

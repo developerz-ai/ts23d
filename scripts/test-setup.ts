@@ -8,5 +8,6 @@ Math.random = () => {
 };
 
 // Tests never wait in the machine's resource queue (src/cli/queue): a test that calls the CLI
-// in-process must not block behind another agent's render. Queue tests set their own mode.
-process.env['T3D_QUEUE'] ??= 'off';
+// in-process must not block behind another agent's render, whatever the shell exports. Queue
+// tests set their own mode.
+process.env['T3D_QUEUE'] = 'off';

@@ -15,10 +15,9 @@ name: ci
 # measured cost (scripts/lib/recipe-costs.json; greedy longest-first, scripts/lib/shard.ts): one
 # folder's gate and its renders are separate units, renders take one process per folder
 # (scripts/shots-folder.ts); shard 1 also runs lint, types, build and pack.
-# Expected from local measurements (scaled to this run's per-folder times), not yet measured on
-# GitHub: about 5-6 minutes per shard and 6-7 minutes push → green, set by one unit: human_head's
-# renders (about 5.5-6.5 minutes alone, because each of shot / hero / blueprint / icon compiles
-# its LOD0 again, about 55 s each); about 83 runner-minutes. Under 5 minutes needs the four
+# Measured 2026-11-19 (run 44474402275): 6.6 minutes push → green, shards 2.6-6.4 minutes,
+# 76 runner-minutes. The floor is one unit: human_head's renders, because each of shot / hero /
+# blueprint / icon compiles its LOD0 again (about 55 s each). Under 5 minutes needs the four
 # renders to share one compile (a src/cli change; docs/maintenance.md "CI time"). When shards
 # drift: `bun run scripts/recipe-costs.ts --tests`, then `--plan` to pick the shard count.
 # Docs-only changes (scripts/ci-changes.ts: Markdown / docs/ outside recipes/) skip the recipe
