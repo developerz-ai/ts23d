@@ -6,7 +6,7 @@ All notable changes to `@developerz.ai/ts23d`. Format: [Keep a Changelog](https:
 
 ## [0.14.0] - 2026-11-19
 
-Several agents can share one machine through a resource queue, CI is balanced by measured cost, and the check that committed renders are fresh now works.
+Several agents can share one machine through a resource queue, the npm package shrinks from 40 MB to 4 MB, CI runs in under five minutes, and the check that committed renders are fresh now works.
 
 ### Added
 - Machine-wide resource queue (ADR 017): agents sharing a machine take turns at `cpu` tokens, `blender` and `gpu` through ticket files under `$TS23D_HOME/queue/`, first come, first served, no daemon. A dead or killed command frees its place; a queue that cannot be written warns once and the command runs unqueued.
