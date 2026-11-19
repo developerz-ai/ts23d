@@ -6,6 +6,7 @@ Every published version of `@developerz.ai/ts23d`, newest first: one page each w
 
 | Version | Date | Summary |
 |---|---|---|
+| [0.13.0](0.13.0.md) | 2026-11-19 | A correctness sweep across the library, CLI, gates, gallery and recipes: over a hundred and fifty defects fixed, stricter input validation and QA gates, track belts that move in any glTF reader, and PNG bytes that no longer depend on the runtime. |
 | [0.12.0](0.12.0.md) | 2026-11-18 | Swimming and many-limbed creatures with motion from published biomechanics, one open Blender session for chained work, and brushes for existing meshes. |
 | [0.11.0](0.11.0.md) | 2026-11-17 | Two more model-first creatures, a brown bear and a winged drake, and the library options and QA rules they needed. |
 | [0.10.0](0.10.0.md) | 2026-11-17 | Creatures and humanoids go model-first and Blender-first: an image-to-3D body, finished by an ordered list of headless Blender steps the recipe writes, kept whole with its own textures on every LOD, while code keeps real scale, skeleton, clips, budgets and QA. |
