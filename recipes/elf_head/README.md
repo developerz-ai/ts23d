@@ -46,17 +46,17 @@ with the chest. The skin under them is cut away (`hiddenBody`).
 
 | Layer | Part | Strip / finish | What it carries |
 |---|---|---|---|
-| tunic | `tunic` | `plain` + finish `silk` (roughness 0.42, pale green sheen) | silk tunic, neckline band, wrap panel, handled-dark blotches |
-| cloak | `clothes` | `canvas` | 8 mm wool, neck edge rolled 1.4 cm out from the tunic's, pipe folds, a darker felt shoulder cape with a leaf-cut hem, pale rubbed front edges, mud toward the base |
+| tunic | `tunic` | `bust_silk` (`SILK`, ../_lib/bust/cloth-strips.ts: fine weave, roughness 0.42), no finish | silk tunic, neckline band, wrap panel, handled-dark blotches |
+| cloak | `clothes` | `bust_wool` (`WOOL`: coarse twill, roughness 0.94), no finish | 8 mm wool, neck edge rolled 1.4 cm out from the tunic's, pipe folds, a darker felt shoulder cape with a leaf-cut hem, pale rubbed front edges, mud toward the base |
 | braid | `clothes` | `brass` | gold braid as raised geometry at a 4 mm cell (it stair-stepped as vertex paint): the wrap's edge with a row of beads, the cloak's front edges |
 | `clasp` | own part | `chrome` | silver leaf clasp |
 
 ## LODs and budget
 | LOD | Triangles | What changes |
 |---|---|---|
-| 0 | ≈ 101k (budget 104k) | head 4.8 mm (eyes ×4, ears ×2 finer), hair cards ≈ 15k, garments ≈ 26k |
-| 1 | ≈ 29k (30k) | head 8 mm, a quarter of the cards |
-| 2 | ≈ 3.4k (3.8k) | one coarse head; the long fair hair as wide cards in the LOD0 tones (`farHair`), combed over the LOD1 head; tunic and cloak in ONE sculpt on `canvas` with flat colour blocks |
+| 0 | ≈ 70.6k (budget 74k) | head 6.4 mm (finer boxes round the eyes, ears and mouth): head ≈ 28k, bust ≈ 2.7k, hair cards ≈ 15k, tunic ≈ 8.4k, cloak and braid ≈ 11k |
+| 1 | ≈ 19.0k (20k) | head 11 mm (≈ 5.2k), hair cards ≈ 1.4k; the same three garment layers (≈ 8.5k) |
+| 2 | ≈ 3.1k (3.4k) | head 22 mm; the long fair hair as wide cards in the LOD0 tones (`farHair`), combed over the LOD1 head; tunic and cloak in ONE sculpt on `canvas` at a 2.6 cm cell with flat colour blocks (no braid) |
 
 ## Palette (sRGB)
 | Role | Hex |
@@ -69,13 +69,13 @@ with the chest. The skin under them is cut away (`hiddenBody`).
 
 ## Known gaps
 The face is softer than a hero elf from a pro sculptor; the hair is strand cards (LOD0 ≈ 15k
-triangles) and still reads stringy at the temples; the skin is one roughness (the shared skin
-mesher puts it on the `plain` strip and takes no finish); the braid is a 4 mm-cell cord, lumpy up
-close; the cloak's hem lies below the bust's cut, so its fraying shows only as the ragged, muddy
+triangles) and still reads stringy at the temples; the skin's detail is the shared tiling pore strip
+(`pores: true`: matte cheeks, a glossier T-zone) under one soft `skin` sheen finish, not a
+per-face texture; the braid is a 4 mm-cell cord, lumpy up close; the cloak's hem lies below the bust's cut, so its fraying shows only as the ragged, muddy
 band at the base; the cut arms give the bust square shoulders under the cloak.
 
 ## Triangle budget (As of 2026-11-19)
-About 70k / 19k / 3.2k against the bust band of 60k / 12k / 1.5k (it was 100k / 29k / 3.4k). The head is one sculpt meshed at a 6.4 mm cell (4.8 mm before; the two render alike at 2.6 x the hero's distance), with finer boxes only round the eyes, ears and mouth; the garment cells grew by a fifth.
+About 70.6k / 19.0k / 3.1k (budget 74k / 20k / 3.4k) against the bust band of 60k / 12k / 1.5k (it was 100k / 29k / 3.4k). The head is one sculpt meshed at a 6.4 mm cell (4.8 mm before; the two render alike at 2.6 x the hero's distance), with finer boxes only round the eyes, ears and mouth; the garment cells grew by a fifth.
 
-Budget why: uniform-cell sculpt (an iso-surface cannot thin its flat areas) plus 14k of long hair cards and three closed garment layers; LOD2 below a 2.2 cm head cell folds the ears and nose.
+Budget why: uniform-cell sculpt (an iso-surface cannot thin its flat areas) plus 15k of long hair cards and three closed garment layers; LOD2 below a 2.2 cm head cell folds the ears and nose.
 

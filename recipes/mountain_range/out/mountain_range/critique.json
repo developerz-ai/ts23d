@@ -35,7 +35,7 @@
     },
     "wear": {
       "score": 7,
-      "reason": "Gully snow, a forest line and now a thin stream along the valley floor (TOP) tell a climate, but in hero.png the stream shows only as scattered blue specks through the trees and the rock carries no weathering.",
+      "reason": "The valley stream is now a continuous blue line along the floor in TOP (water at the water level, no longer broken specks), but in hero.png it is hidden under the forest canopy and the rock carries no weathering.",
       "fixes": [
         "widen the stream into a continuous water strip with a gravel bank so it reads in hero.png",
         "dark water streaks below the gullies on the rock faces"
@@ -57,7 +57,7 @@
     }
   },
   "renders": {
-    "hero.png": "a2d14aeea1151b9f4919a95fcd6988320e323b814740c9b22254f09fd232a0d5",
-    "sheet.png": "ebe647678c971b17d2e10b3f8a97b5326480fba4b583d5bdb43a2d23a8e9ef20"
+    "hero.png": "7f4c148070469c7b0a9a97738069825375b51f36ec46d54b13c8715f93a91b72",
+    "sheet.png": "54aa22f3f0556df330f641eb03363fb372fc2c12b981aa6a35bf49b5ff9eb158"
   }
 }

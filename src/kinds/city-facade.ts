@@ -8,7 +8,7 @@
 import { type Lod, type Mesh, merge, place, type Vec2, type Vec3 } from '../core/index.ts';
 import { split } from '../grammar/index.ts';
 import type { StripId } from '../material/index.ts';
-import { box, prism, tiled } from '../primitives/index.ts';
+import { box, planar, prism, tiled } from '../primitives/index.ts';
 import { CITY_BANDS, type CityBuildingPlan } from './city-plan.ts';
 
 export interface CityInstance {
@@ -156,8 +156,8 @@ function offsetRing(ring: readonly Vec2[], d: number): Vec2[] {
 
 /**
  * The body's walls from z = 0 up `height`: one face per edge, courses continuing round the
- * corners, plus the footprint as a floor (3 cm inside the walls) so a body lifted off the ground
- * is closed from below. `vMetres`: true scale at LOD0, a storey at LOD1, the whole wall at LOD2.
+ * corners, plus the footprint as a floor facing down, edge to edge with the walls, so a body lifted
+ * off the ground is closed from below. `vMetres`: true scale at LOD0, a storey at LOD1, the whole wall at LOD2.
  */
 export function cityWalls(p: CityBuildingPlan, height: number, strip: StripId, lod: Lod): Mesh {
   const faces: Mesh[] = [];
@@ -179,15 +179,14 @@ export function cityWalls(p: CityBuildingPlan, height: number, strip: StripId, l
     );
     run += len;
   });
-  faces.push(
-    prism({
-      profile: offsetRing(p.ring, -0.03),
-      depth: 0.02,
-      centred: false,
-      color: p.wall,
-      strip,
-    }),
-  );
+  // The footprint itself, facing down: its edge meets the walls' bottom edge (an inset floor left a
+  // slit round a lifted body, D344). Clockwise from above is counter-clockwise from below.
+  const area = p.ring.reduce((sum, a, i) => {
+    const b = p.ring[(i + 1) % p.ring.length] ?? a;
+    return sum + a[0] * b[1] - b[0] * a[1];
+  }, 0);
+  const down = area > 0 ? [...p.ring].reverse() : [...p.ring];
+  faces.push(planar({ points: down.map(([x, y]): Vec3 => [x, y, 0]), color: p.wall, strip }));
   return merge(faces);
 }
 

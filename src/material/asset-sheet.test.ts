@@ -200,6 +200,17 @@ describe('sheetFor', () => {
     expect(e.fix).toContain('sheetFor(');
   });
 
+  it('keeps a bounded cache of built-in sheets: a long run of seeds does not retain every atlas', () => {
+    resetMaterials();
+    const first = sheetWith([], { ...RECIPE, seed: 1 });
+    expect(sheetWith([], { ...RECIPE, seed: 1 })).toBe(first);
+    // More seeds than the cache keeps: the oldest is painted again, the newest stays cached.
+    for (let seed = 2; seed <= 6; seed++) sheetWith([], { ...RECIPE, seed });
+    expect(sheetWith([], { ...RECIPE, seed: 1 })).not.toBe(first);
+    const last = sheetWith([], { ...RECIPE, seed: 6 });
+    expect(sheetWith([], { ...RECIPE, seed: 6 })).toBe(last);
+  });
+
   it('refuses LODs that put different materials on one row: they share the sheet', () => {
     resetMaterials();
     const gated = defineAsset({

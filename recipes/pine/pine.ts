@@ -118,8 +118,11 @@ function grow(
     let out = mesh;
     let o = opts;
     if (name === 'trunk') cap.trunk = mesh;
-    if (out && /trunk|roots|branches/.test(name))
-      out = pineBark(out, 'bark_pine', MOSS, noise.moss, GRADE);
+    if (out && /trunk|roots|branches/.test(name)) {
+      // Branches hang under the crown pivot: grade them at their world height, not crown-local.
+      const origin = o?.parent === 'crown' ? cap.crown.at : undefined;
+      out = pineBark(out, 'bark_pine', MOSS, noise.moss, GRADE, origin);
+    }
     if (out && name === 'branches' && cap.trunk) out = merge([out, crownWear(cap, lod)]);
     if (out && name === 'leaves') {
       cap.tufts = out;
@@ -178,19 +181,28 @@ function far(ctx: BuildContext, noise: Noise): void {
   const at = near.crown.at ?? [0, 0, 0];
   const crown = clumpCards(cards, FAR.clumps, CARDS.cell, FAR.value, FAR.spread);
   const tip = topCentre(trunk);
-  let top: Vec3 = [tip[0] - at[0], tip[1] - at[1], tip[2] - at[2]];
+  const top = leaderClump(crown.centres, [tip[0] - at[0], tip[1] - at[1], tip[2] - at[2]]);
+  const apex: Vec3 = [top[0] + at[0], top[1] + at[1], Math.max(tip[2], top[2] + at[2])];
+  ctx.part('trunk', pineBark(lowTrunk(trunk, apex), 'bark_pine', MOSS, noise.moss, GRADE));
+  ctx.group('crown', { ...near.crown, clearOf: ['trunk'] });
+  ctx.part('leaves', crown.mesh, near.leavesOpts);
+}
+
+/**
+ * The clump the leader runs up into (crown frame): close in plan to the trunk tip `tip` and high,
+ * scored by plan distance minus half the clump's height. `tip` itself when there are no clumps.
+ */
+export function leaderClump(centres: readonly Vec3[], tip: Vec3): Vec3 {
+  let top: Vec3 = tip;
   let best = Infinity;
-  for (const c of crown.centres) {
-    const d = Math.hypot(c[0] - top[0], c[1] - top[1]) - 0.5 * c[2];
+  for (const c of centres) {
+    const d = Math.hypot(c[0] - tip[0], c[1] - tip[1]) - 0.5 * c[2];
     if (d < best) {
       best = d;
       top = c;
     }
   }
-  const apex: Vec3 = [top[0] + at[0], top[1] + at[1], Math.max(tip[2], top[2] + at[2])];
-  ctx.part('trunk', pineBark(lowTrunk(trunk, apex), 'bark_pine', MOSS, noise.moss, GRADE));
-  ctx.group('crown', { ...near.crown, clearOf: ['trunk'] });
-  ctx.part('leaves', crown.mesh, near.leavesOpts);
+  return top;
 }
 
 /** Centre of the highest ring of a trunk mesh (its top). */

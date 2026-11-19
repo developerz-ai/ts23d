@@ -103,6 +103,7 @@ describe('QA skin: crossed limbs (D72)', () => {
     expect(f[0]?.message).toContain('1 vertices below 0.200 m');
     expect(f[0]?.message).toContain('leg_l and leg_r');
     expect(f[0]?.fix).toContain("kind 'scale'");
+    expect(f[0]?.fix).toContain('below the wrist/hock');
   });
 
   it('passes legs that keep their own weights', () => {
@@ -128,6 +129,11 @@ describe('QA skin: crossed limbs (D72)', () => {
     const tip = crossedLimbFindings(rigged(raised(crossed(m, lowest(m))), true, true));
     expect(tip.map((f) => f.code)).toEqual(['T3D_SKIN_CROSSED']);
     expect(tip[0]?.message).toContain('1 vertices above 0.800 m');
+    // D347: the fix names the side the finding is on (beyond the wrist, not below it).
+    expect(tip[0]?.message).toContain('wing tips move with both');
+    expect(tip[0]?.fix).toContain('above the wrist');
+    expect(tip[0]?.fix).not.toContain('below the wrist');
+    expect(tip[0]?.fix).toContain('round each tip');
     let hip = 0;
     for (let v = 0; v < m.positions.length / 3; v++)
       if ((m.positions[v * 3 + 2] ?? 0) > (m.positions[hip * 3 + 2] ?? 0)) hip = v;

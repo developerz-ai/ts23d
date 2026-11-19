@@ -458,10 +458,12 @@ function sprocket(lod: Lod, r: number): Mesh {
 /**
  * LOD2 wheel: a shallow six-sided cone, rim toward the hull and hub 3 cm proud (6 triangles: the
  * interleave is sixteen of them a side, so each has to be this cheap for the AFV band's 1.5k).
- * `hub` reaches inboard to the axle stub.
+ * `hub` reaches inboard to the axle stub from y, and outboard up into the cone: its end stops
+ * where the cone's flattest facet passes over the hub's rim, so it touches without poking out.
  */
-const farDisc = (r: number, y: number, hub = 0): Mesh =>
-  merge([
+export const farDisc = (r: number, y: number, hub = 0): Mesh => {
+  const rise = 0.07 - (0.03 * 0.16) / (r * Math.cos(Math.PI / 6));
+  return merge([
     // Six sides about the axle: the lathe's first corner is straight down, on the track.
     lathe({
       profile: [
@@ -476,15 +478,16 @@ const farDisc = (r: number, y: number, hub = 0): Mesh =>
       ? [
           cylinder({
             radius: 0.16,
-            length: hub,
+            length: hub + rise,
             segments: 5,
             axis: 'y',
-            at: [0, y - hub / 2, 0],
+            at: [0, y + (rise - hub) / 2, 0],
             color: dunkelgelb,
           }),
         ]
       : []),
   ]);
+};
 
 /** Rear idler: a dished double disc straddling the horns, on a hub that reaches the axle stub. */
 const idler = (lod: Lod): Mesh =>

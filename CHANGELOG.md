@@ -18,6 +18,9 @@ Contact sheets show the hero's base colour, triangle budgets are checked against
 - Triangle bands per asset class: the `conventions` gate fails a committed asset whose triangles at any LOD exceed its class band from the playbooks (`T3D_BUDGET_BAND`, `scripts/lib/budget-bands.ts`), unless its README says `Budget why: <reason>`. The assets over band on 2026-11-19 are listed in `scripts/lib/budget-baseline.ts`; they warn until reduced or justified, new offenders fail now, and the list only shrinks.
 
 ### Fixed
+- `king_cobra`: `idle_ground` is a resting loose coil instead of a straight stick, `rear` lifts the front from a body that stays planted, and the coil rests on the ground instead of floating 2–7 cm above it.
+- Review of the quality wave: 58 of 60 findings fixed (D340–D396), among them open holes in `joint_demo`'s sword, scar discs painted at both ends of every creature scar, normals left stale after four deformations, river ribbons under flat terrain, a shared trim sheet repainted by a later build into the same folder, and nine tests that could not fail.
+- Gallery: `bear_hybrid`'s page shows the model-built bear. It has no CPU asset named `bear` to pair with, so the page used to compile the code creature instead.
 - Creature kind: far-LOD legs are 8-sided with a ring wherever the coat's colour turns, on rounded paws, so stockings and leg colour survive at LOD2; QA connections no longer flips on a 2–5 % change of chest width or limb thickness.
 - `tree` kind: LOD2 is the tree's own LOD0 crown as card clumps over a visible trunk and main limbs (palms: one folded card per frond); silhouette IoU ≥ 0.8 for oak, pine and palm (was 0.55–0.72). `impostor` takes `'clumps' | 'fronds'` (`'blob' | 'cards'` still accepted).
 - `cityBlock`: walls use `wallStrip` (default `brick`) at true scale; windows are LOD-gated (LOD1 about 0.2 × LOD0 triangles, LOD2 keeps window rows as dark bands); with `trim`, LOD0 gets a cornice, belt course and plinth.

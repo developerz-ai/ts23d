@@ -34,4 +34,23 @@ describe('tracePath', () => {
       /T3D_MODEL_SKELETON.*not joined/,
     );
   });
+
+  it('fails before D342: does not step across a gap narrower than a cell between two solids', () => {
+    // Two parallel tubes 5 mm apart (surface to surface), traced on a 2 cm grid.
+    const a = withLimb(EMPTY, [0, 0, 0], [0, 0, 0.5], 0.05);
+    const both = withLimb(a, [0, 0.105, 0], [0, 0.105, 0.5], 0.05);
+    expect(() => tracePath(both, [0, 0, 0.05], [0, 0.105, 0.45], { cell: 0.02 })).toThrow(
+      /T3D_MODEL_SKELETON.*not joined/,
+    );
+  });
+
+  it('fails before D343: refuses a grid too big to allocate, and a cell or pad that is not a size', () => {
+    const tooFine = () => tracePath(bent, [0, 0, 0], [0, 0.5, 0.5], { cell: 0.0005 });
+    expect(tooFine).toThrow(/T3D_MODEL_SKELETON.*cells/);
+    for (const o of [{ cell: 0 }, { cell: -0.02 }, { cell: Number.NaN }, { cell: 0.02, pad: -1 }])
+      expect(() => tracePath(bent, [0, 0, 0], [0, 0.5, 0.5], o)).toThrow(/T3D_MODEL_SKELETON/);
+    expect(() =>
+      tracePath(bent, [0, 0, 0], [0, 0.5, 0.5], { cell: 0.02, pad: Number.POSITIVE_INFINITY }),
+    ).toThrow(/T3D_MODEL_SKELETON/);
+  });
 });

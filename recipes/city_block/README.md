@@ -55,8 +55,10 @@ roofs in varied greys with patches. LOD0 ≈ 60k, LOD1 ≈ 29k (decal windows, n
 only on the fire escapes), LOD2 ≈ 6k (massing, window rows as bands, trees as cones).
 
 ## Open questions and known gaps
-- The city kind's own `cityBlock` still lays one plain strip per building and identical LOD0/1
-  windows; this recipe no longer uses it (it builds from `cityPlan` + `cityWindows`).
+- The city kind's own `cityBlock` (true-scale brick walls, glazed window boxes at LOD0, flat panes
+  at LOD1, bands at LOD2) has no street-front detection, shopfronts, stoops, fire escapes, sash
+  windows with sills, rooftop water tanks, varied roof finishes or wear; this recipe builds those
+  itself from `cityPlan` + `cityWindows` instead of calling `cityBlock`.
 - Ground is flat: the block's relief is a few metres at most; `cityPlan({ groundAt })` takes a
   DEM sampler (`terrainFromDEM`) when a site needs it.
 - Only West 10th and a stub of Bleecker Street fall inside the bbox; the other street edges show

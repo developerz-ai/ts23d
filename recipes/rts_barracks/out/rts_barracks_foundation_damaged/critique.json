@@ -57,13 +57,7 @@
   },
   "renders": {
     "hero.png": "66c1bfe3510d99acad05df144c1f322b7dda61ed6d0c7644616a6f8bbf169a11",
-    "sheet.png": "17b6fb2c6890278b1f256c885e374995303a0fe86a501325143386e27f4fa355",
-    "raking.png": "82084991e10ea1124bb1dae667544bb2601a47a02774188900639ff367535e85",
-    "raking_detail.png": "68f25c1d01b11b8fe529bfbf185f19c9a996a1e2b3b6073d982390d368bca478",
-    "lods.png": "c3a235f672c7b2f96635be23db268e67ff17a69d2622ff3bfbe472bf2f49d3d0",
-    "silhouette.png": "fed0bea94ca64f052108c7387958693e94134bb1a962788a55b02067e7d46b6f",
-    "value.png": "afeef9bdfd39ec243d983430235c7cf1b047a349e0d979cb13f85edb4c4c584d",
-    "detail.png": "39ae2e6b1b9b0f5e8faca29495926bed255c2aaee2e0a58416543a0dd8e54638"
+    "sheet.png": "ec57a381589388f58f51883578fa08a9ee47241f0901fdbe1549db5fe0786529"
   },
   "metrics": {
     "silhouette": [

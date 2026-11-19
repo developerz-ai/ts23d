@@ -129,20 +129,22 @@ it is not sourced, so the test only guards against gross errors (deer legs on a 
 
 ## Status / known gaps
 
-- No fur cards or shells (planned in M4): the coat is sculpted clumps + relief + vertex paint on
-  the `plain` strip (the library `fur` strip's brown albedo mutes the orange).
-- Whiskers are not modelled as strands; the whisker pads carry the dark spot rows.
+- Fur cards cover the trunk, legs, nape, belly fringe and cheek ruff only (see `field.ts` below):
+  the face in front of the eyes, the lips and the muzzle stay sculpted relief + vertex paint on
+  the `plain` strip (the library `fur` strip's brown albedo mutes the orange), with no fur shell.
+- Whiskers are tapered strands at LOD0/1; LOD2 has none (the pads keep the dark spot rows).
 - Stripe edges stair-step at the 1.2 cm body cell (vertex colour); LOD2 stripes are blotchy.
 - Face planes: forehead, cheek, bridge, brow and cheekbone blends tightened by about a quarter
   (2026-11-19); the change is slight at hero distance. LOD2 leg tubes are 8-sided; the far budget
   (3 000) leaves no room for colour rings or rounder paws.
-- No wear yet (muddy paws, scars, damp fur): critique `wear` 4.
+- Wear is vertex colour only (mud, damp, matting and scars in `field.ts`): no displaced mud
+  cake or puckered scar relief.
 - Eye sockets are checked by ray probes in the test (enclosure, open pupil, lid cover, gaze), not
   a `socket` joint: the joints gate compares the head's whole section with the 3 cm eye.
 - Anatomical folds (mouth, nostrils, eyelids, gape, armpits, carpus, hock, groin, flank fold,
   toe partings) are declared `creases` with reasons so QA `connections` skips them.
-- Critique (`out/amur_tiger/critique.json`): overall 6 — silhouette 7, proportions 7, materials
-  5, detail 6, wear 4, LOD 7, technical 8.
+- Critique (`out/amur_tiger/critique.json`): overall 6.6 — silhouette 7, proportions 7,
+  materials 6, detail 7, wear 5, LOD 6, technical 8.
 
 ## Field wear and coat cards (`field.ts`)
 - Wear (world-space layers from `recipes/_lib/creature/wild-paint.ts`, so body, tail, head and claws take

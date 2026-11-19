@@ -1,8 +1,8 @@
 // Elf outfit, tailored in layers over the skull stage's anatomy (../_lib/bust/cloth-*.ts), each
 // material its own closed solid on its own strip (`outfitLayers`): a green silk tunic 4 mm thick
-// (`plain`, the `silk` finish: its own part) with a band round the neck's real outline at the
+// (`SILK`, no finish: its own part) with a band round the neck's real outline at the
 // seam (hiding the head/bust split) and a wrap panel crossing the chest from the left shoulder;
-// a teal wool cloak 8 mm thick (`canvas`) over the shoulders and back, its neck edge rolled
+// a teal wool cloak 8 mm thick (`WOOL`) over the shoulders and back, its neck edge rolled
 // 1.4 cm out from the tunic's, closed at the throat by a silver leaf clasp and falling open below
 // it, pipe folds hanging down the back and arms, its front edges rubbed pale, mud toward the
 // base, road dust on the shoulders; over it a short shoulder cape of darker felt whose hem is cut
@@ -53,8 +53,8 @@ const CLASP: V = [L.gx - 0.12 * H, 0, SEAM.at[2] - 0.3 * (L.gx - 0.12 * H) - 0.0
 /** The neck's outline on the skin at the seam: every neckline is cut round it. */
 export const neckOf = (skin: Field): NeckSection => neckSection(skin, SEAM, 0.1);
 
-/** The strips' own albedo (src/material/library.ts): a layer's vertex colour is the tint that
- *  lands its real colour on the strip. */
+/** The cloth strips' near-white ground (../_lib/bust/cloth-strips.ts): a layer's vertex colour is
+ *  the tint that lands its real colour on the strip. */
 const CANVAS = CLOTH_ALBEDO;
 const BRASS = hex('#f5e5ae');
 const on = (strip: V, want: V): V => [

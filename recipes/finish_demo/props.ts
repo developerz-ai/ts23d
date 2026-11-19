@@ -211,22 +211,28 @@ export function caskMesh(lod: Lod, h: number, r: number, rb: number, rng: Rng): 
     }
   }
   const out: Mesh[] = [{ ...body, colors }];
-  // Iron hoops: two pairs, each a flat band hugging the staves.
+  // Iron hoops: two pairs, each a flat band driven onto the taper. Sized from the side the lathe
+  // emits (straight between rows), not the smooth curve: a coarse body sits inside that curve.
+  const rSide = (z: number): number => {
+    const k = Math.min(rows - 1, Math.max(0, Math.floor((z / h) * rows)));
+    const [r0, z0] = side[k] ?? [r, 0];
+    const [r1, z1] = side[k + 1] ?? [r, h];
+    return r0 + ((r1 - r0) * (z - z0)) / (z1 - z0);
+  };
   // LOD2 keeps the two inner hoops (the ones that read at distance).
   for (const f of lod === 2 ? [0.24, 0.76] : [0.07, 0.24, 0.76, 0.93]) {
     const z = f * h;
-    const hr = Math.max(rAt(z - 0.022), rAt(z + 0.022)) - 0.001;
     const ring: Vec2[] =
       lod === 2
         ? [
-            [hr + 0.004, z - 0.022],
-            [hr + 0.004, z + 0.022],
+            [rSide(z - 0.022) + 0.003, z - 0.022],
+            [rSide(z + 0.022) + 0.003, z + 0.022],
           ]
         : [
-            [hr - 0.002, z - 0.024],
-            [hr + 0.005, z - 0.02],
-            [hr + 0.005, z + 0.02],
-            [hr - 0.002, z + 0.024],
+            [rSide(z - 0.024) - 0.002, z - 0.024],
+            [rSide(z - 0.02) + 0.005, z - 0.02],
+            [rSide(z + 0.02) + 0.005, z + 0.02],
+            [rSide(z + 0.024) - 0.002, z + 0.024],
           ];
     out.push(
       lathe({ profile: ring, segments: staves, faceted: true, color: HOOP, strip: 'iron_rust' }),

@@ -1,8 +1,8 @@
 // Goblin outfit, tailored in layers over the skull stage's anatomy (../_lib/bust/cloth-*.ts), each
 // layer its own closed solid on its own material strip (`outfitLayers`): a rumpled linen shirt
-// (`canvas`) whose sleeves come out of the vest's armholes, creased in zigzags where it bunches
+// (`LINEN`) whose sleeves come out of the vest's armholes, creased in zigzags where it bunches
 // in the vest's opening, grimy down the placket and at the neck; a sleeveless leather vest
-// (`leather`) 6 mm thick, its rolled edges stitched and rubbed pale, a shoulder seam, sweat-dark
+// (`leather`) 9 mm thick, its rolled edges stitched and rubbed pale, a shoulder seam, sweat-dark
 // under the arms, a newer patch sewn on the chest and one on the back, closed by a horn toggle
 // on a thong; a wool hood worn down as a thick roll on the back of the neck, dusty on top; a
 // red scarf folded flat in two wraps round the neck seam (hiding the head/bust split), knotted
@@ -57,8 +57,8 @@ const on = (strip: V, want: V): V => [
   Math.min(1, want[1] / strip[1]),
   Math.min(1, want[2] / strip[2]),
 ];
-/** Layer colours as tints on their strips; `far` (LOD2: every layer in one sculpt on `canvas`)
- *  tints the leather's colours for that strip instead. */
+/** Layer colours as tints on their strips; `far` (LOD2: every layer in one sculpt on the wool
+ *  strip, whose ground is the cloth albedo) tints the leather's colours for that strip instead. */
 function tints(far: boolean) {
   const hide = far ? CANVAS : LEATHER;
   return {

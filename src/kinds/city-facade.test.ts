@@ -15,6 +15,7 @@ import {
 import { stripRect } from '../material/index.ts';
 import { runQa } from '../qa/index.ts';
 import { type CityOptions, cityBlock } from './city.ts';
+import { cityWalls } from './city-facade.ts';
 import { type CityFootprint, cityPlan } from './city-plan.ts';
 
 const W: Vec3[] = [
@@ -144,5 +145,39 @@ describe('cityBlock facade by LOD', () => {
       false,
     );
     for (const lod of [0, 1, 2] as Lod[]) expect(runQa(compile(trimmed, { lod }))).toEqual([]);
+  });
+});
+
+describe('cityWalls', () => {
+  /** Whether a downward triangle at z ≈ 0 covers (x, y): the body is closed from below there. */
+  const capped = (m: Mesh, x: number, y: number): boolean => {
+    const P = m.positions;
+    const v = (i: number): Vec3 => [P[i * 3] ?? 0, P[i * 3 + 1] ?? 0, P[i * 3 + 2] ?? 0];
+    for (let t = 0; t < m.indices.length; t += 3) {
+      const [a, b, c] = [0, 1, 2].map((k) => v(m.indices[t + k] ?? 0)) as [Vec3, Vec3, Vec3];
+      if (Math.max(Math.abs(a[2]), Math.abs(b[2]), Math.abs(c[2])) > 1e-6) continue;
+      const area = (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]);
+      if (area >= 0) continue; // facing up
+      const side = (p: Vec3, q: Vec3): number =>
+        (q[0] - p[0]) * (y - p[1]) - (q[1] - p[1]) * (x - p[0]);
+      if (side(a, b) <= 0 && side(b, c) <= 0 && side(c, a) <= 0) return true;
+    }
+    return false;
+  };
+
+  it('fails before D344: a lifted body is closed from below right up to its walls', () => {
+    const lifted = { id: 1, ring: rect(0, 0, 10, 10), height: 20, levels: null, minHeight: 10 };
+    const [p] = cityPlan([lifted], { walls: W, floorHeight: 3.2 });
+    if (!p) throw new Error('no plan');
+    const m = cityWalls(p, p.height, 'brick', 0);
+    // 1.5 cm inside each wall, and the middle.
+    for (const [x, y] of [
+      [0.015, 5],
+      [9.985, 5],
+      [5, 0.015],
+      [5, 9.985],
+      [5, 5],
+    ] as const)
+      expect([x, y, capped(m, x, y)]).toEqual([x, y, true]);
   });
 });

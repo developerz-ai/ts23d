@@ -171,7 +171,8 @@ describe('dragon_hybrid, model tier (committed cache)', () => {
       expect(green(0.02, 0.1)).toBeGreaterThan(green(0.5, 0.8) * 1.2);
       // One flat roughness (the bake's 0.8 = 204) has no spread; scales, plates, horn and dust do.
       const rough = sample(set.orm, () => true).map((c) => c[1] ?? 0);
-      const spread = Math.sqrt(mean(rough.map((r) => (r - mean(rough)) ** 2)));
+      const avg = mean(rough);
+      const spread = Math.sqrt(mean(rough.map((r) => (r - avg) ** 2)));
       expect(Math.sqrt(mean([204, 204].map((r) => (r - 204) ** 2)))).toBe(0);
       expect(spread).toBeGreaterThan(12);
     },

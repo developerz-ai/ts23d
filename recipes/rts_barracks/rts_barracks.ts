@@ -223,7 +223,8 @@ const hall = defineFamily({
     const zones = scorchZones(stage, damage);
     add('plinth', plinth(lod, stage === 'foundation' && damage === 'damaged'), {}, zones);
     const list = wallCells(stage, damage, ctx.rng.fork('walls'));
-    const w = walls(lod, list, ctx.rng.fork('blocks'));
+    // The roof stands on complete, unruined halls only (built below).
+    const w = walls(lod, list, ctx.rng.fork('blocks'), stage === 'complete' && !ruined);
     if (w.walls) add('walls', w.walls, {}, zones);
     if (w.trim) add('pilasters', w.trim, {}, zones);
     if (w.frames) add('window_frames', w.frames, {}, zones);

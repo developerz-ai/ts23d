@@ -69,7 +69,9 @@ const FLAGS = `flags:
   --quality path  hero: path traced (sun + sky, bounces, skin diffusion, strand lobes; deterministic,
                   slower) instead of the raster · --spp <n> samples per pixel, default 64
   --sheet <mode>  external (default): one shared trim_sheet_{albedo,normal,orm}.png in <out>/,
-                  referenced by every GLB · embed: self-contained GLBs · none: vertex colour only
+                  referenced by every GLB whose materials fit on it (rows recorded in
+                  trim_sheet_owners.json; an asset that does not fit gets its own in <out>/<asset>/)
+                  · embed: self-contained GLBs · none: vertex colour only
   --sheet-size n  512 | 1024 | 2048 (default, ~3 s) | 4096 (final exports, ~18 s)
   --lods <list>   which detail levels to build: 0,1,2 (default) · 0 = hero only · 0,2 = near + far
   --lods <mode>   how they are written: both (default) = lod0/1/2.glb + <asset>.glb · split = lodN.glb

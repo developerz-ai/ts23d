@@ -109,8 +109,16 @@ function grow(
   Object.defineProperty(wrapped, 'lod', { value: lod });
   wrapped.part = (name: string, mesh: Mesh | null, opts?: PartOptions) => {
     let out = mesh;
-    if (out && /trunk|roots|branches/.test(name))
-      out = lichen(pineBark(out, 'bark_oak', MOSS, noise.moss), noise.lichen, LICHEN);
+    if (out && /trunk|roots|branches/.test(name)) {
+      // Crown branches hang under the crown pivot: grade their bark and moss by world height,
+      // or low-trunk moss lands on them (the pine had the same defect, D382).
+      const origin = opts?.parent === 'crown' ? cap.crown.at : undefined;
+      out = lichen(
+        pineBark(out, 'bark_oak', MOSS, noise.moss, undefined, origin),
+        noise.lichen,
+        LICHEN,
+      );
+    }
     if (out && name === 'leaves') {
       // Keep every card 1.2 m over the ground: the crown's 2° sway dips its outer cards.
       const pivot = cap.crown.at ?? [0, 0, 0];

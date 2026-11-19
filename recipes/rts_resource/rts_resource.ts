@@ -31,6 +31,7 @@ import {
   type Vec3,
   valueNoise,
   weather,
+  weightedNormals,
 } from '@developerz.ai/ts23d';
 import { DUST, MUD } from '../_lib/rts/finish.ts';
 import {
@@ -76,14 +77,15 @@ const CLUSTERS: readonly { at: Vec3; lean: Vec3; n: number; k: number }[] = [
   { at: [-0.5, 0.95, 1.25], lean: [-0.25, 0.6, 0.9], n: 3, k: 0.8 },
 ];
 
-type CrystalState = 'whole' | 'stub' | 'broken';
+export type CrystalState = 'whole' | 'stub' | 'broken';
 
 /**
  * One faceted crystal along +Z, its root 25% of its length below z = 0 (seated in the rock): a
  * hexagonal prism with a pointed tip, sheared to a stub, or snapped half-way with a jagged top.
- * LOD0 has a vertex mid-face, so facet edges carry their own (brighter) colour.
+ * LOD0 has a vertex mid-face, so facet edges carry their own (brighter) colour; its normals are
+ * re-derived from the hexagon's faces so each face shades flat.
  */
-function crystal(lod: Lod, r: number, h: number, state: CrystalState): Mesh {
+export function crystal(lod: Lod, r: number, h: number, state: CrystalState): Mesh {
   const root = -h * 0.25;
   const profile: Vec2[] =
     state === 'stub'
@@ -133,7 +135,11 @@ function crystal(lod: Lod, r: number, h: number, state: CrystalState): Mesh {
     if (state !== 'whole' && z > top * 0.85 && Math.hypot(x, y) < r * 0.7) c = FRACTURE;
     colors.set(c, i);
   }
-  return { ...m, positions, colors };
+  // LOD0's reshaped hexagon keeps the lathe's twelve radial normals; re-derive them from the
+  // faces, hard at the six corners (60°) and at the profile creases the lathe split (20°).
+  return lod === 0
+    ? weightedNormals({ ...m, positions, colors }, { hardAngle: 20 })
+    : { ...m, positions, colors };
 }
 
 /** Yaw / pitch that tilt +Z onto direction d. */

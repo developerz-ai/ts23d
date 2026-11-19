@@ -35,7 +35,7 @@ nose → hanging tail, paw to paw, paws → ear tips. The sourced numbers above 
   (`build.depth 0.51`) so the elbow sits at the chest floor ≈ 0.40 m; a narrow chest
   (`width 0.54` × depth ≈ 0.22 m); the topline highest at the withers, a slight dip behind them,
   the croup a little lower, the tail root under it; the waist tucked up to ⅔ of the chest depth
-  (`build.tuck 0.73`, the winter coat filling it). The neck (0.25 m, 45° above level, estimate) rises from low between the
+  (`build.tuck 0.76`, the winter coat filling it). The neck (0.25 m, 42° above level, `pose.neck`; estimate) rises from low between the
   shoulders and carries the head forward of and above them, so the throat line reads from the
   jaw down to the brisket.
 - Legs: deltoid and triceps on the upper arm, forearm extensors/flexors over the top third of the

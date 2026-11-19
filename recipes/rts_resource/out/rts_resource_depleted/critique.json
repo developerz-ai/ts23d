@@ -19,9 +19,9 @@
     },
     "materials": {
       "score": 6,
-      "reason": "Stubs are amber crystal now (not wood), with pale fracture tops; but the side stubs read as rounded amber blobs, and the rock carries the same camouflage salt patches.",
+      "reason": "Stubs are amber crystal with pale fracture tops, and the side stubs now show flat facets instead of rounded blobs; but they are still lumpy polyhedra rather than cleanly sheared prisms, and the rock carries the same camouflage salt patches.",
       "fixes": [
-        "sharp sheared faces on the side stubs (flat cut planes)",
+        "sharp sheared faces on the side stubs (one flat cut plane across each prism)",
         "salt only in crevices"
       ]
     },
@@ -55,14 +55,8 @@
     }
   },
   "renders": {
-    "hero.png": "d7f72df1682475c530f93c0216f2c69f1f6d4e1bf297720f5cbe9fcf87d3d8b6",
-    "sheet.png": "7e13172b5fa920e815ae311f074190ae6437445ddae90e523fb4bd360b0f354c",
-    "raking.png": "a1b065530a17bd8afe67626211869fb25d309a9ae0af22d8c4fd126d5fd1bf80",
-    "raking_detail.png": "a14444d36cad227595756024f635c7f16643979ed7ae661784c3d19d8ff08a84",
-    "lods.png": "148c7f0382dcdbaf50d286dc32cba1bcfe2f239576141cd3ae0ffb4bbf7598ad",
-    "silhouette.png": "1d8f80302d7776e976039f78b14be27174dc80e429616ffe4110ec7f968c76fb",
-    "value.png": "a872a5e05df7852516d2ee69986404fa4577c01c68c4030200403defd85270d4",
-    "detail.png": "450ce3b68ca8098a02e2f35b3dae3c45734ee45463b236137f1cb5f982fd391c"
+    "hero.png": "0b2273629950e7ff7b42abf58b5537e9284e850f138b8075bcee867a2a8f3c31",
+    "sheet.png": "cf5aee81b33e63d363ffc371d406a4f1e8040f8557abc788b59b44b5eba7177a"
   },
   "metrics": {
     "silhouette": [

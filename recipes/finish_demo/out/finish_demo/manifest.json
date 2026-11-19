@@ -90,7 +90,7 @@
       "target": 0.2885,
       "actual": 0.2885,
       "eligible": "ground-near & side-facing ; ground-near",
-      "area": 4.2758,
+      "area": 4.2759,
       "by": {
         "pallet_wear": {
           "target": 0.4,
@@ -105,7 +105,7 @@
         "cask_wear": {
           "target": 0.3,
           "actual": 0.3,
-          "area": 0.9029
+          "area": 0.903
         }
       }
     },
@@ -113,7 +113,7 @@
       "target": 0.3423,
       "actual": 0.3423,
       "eligible": "up-facing",
-      "area": 3.0885,
+      "area": 3.0882,
       "by": {
         "pallet_wear": {
           "target": 0.3,
@@ -128,7 +128,7 @@
         "cask_wear": {
           "target": 0.4,
           "actual": 0.4,
-          "area": 0.2335
+          "area": 0.2332
         }
       }
     },

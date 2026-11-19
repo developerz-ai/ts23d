@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { mkdir, mkdtemp, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
@@ -117,47 +117,21 @@ describe('bandOf', () => {
   });
 });
 
-/** The offenders and counts recorded on 2026-11-19. The baseline may only shrink: an asset added
- *  to it, or a recorded count raised, fails here. Reduce or justify instead. */
+/** The offenders and counts in the baseline as it shipped on 2026-11-19 (after this PR's
+ *  reductions). The baseline may only shrink: an asset added back (hydra, fox, …) or a count
+ *  raised past these fails here (D349). When you lower or delete a baseline entry, lower or delete
+ *  its row here too, so the ratchet holds what you reached. */
 const RECORDED: Readonly<Record<string, readonly number[]>> = {
-  asteroid: [20164, 4260, 636],
-  asteroid_b: [18044, 3920, 548],
-  asteroid_c: [20392, 4324, 616],
-  boulders: [36260, 6684, 956],
-  boxcar: [25444, 9152, 1192],
-  boxcar_nw: [25620, 9332, 1336],
-  brown_bear: [160936, 29364, 1820],
-  cargo_container_scifi: [22914, 8342, 736],
-  dragon: [198636, 44248, 4056],
-  eiffel_tower: [187768, 21796, 1052],
-  elf_head: [100140, 23440, 3352],
-  face_dwarf: [144412, 60928, 11360],
-  face_elf: [126360, 51618, 8212],
-  face_goblin: [48946, 12990, 5716],
-  face_human: [96194, 36718, 8216],
-  face_orc: [83554, 29498, 8132],
-  fox: [152142, 27276, 2700],
-  goblin_head: [84284, 17260, 3636],
-  human_head: [100764, 28180, 3636],
-  hydra: [348404, 38821, 7162],
-  import_demo: [45980, 17551, 3251],
-  mountain_range: [133120, 33792, 8704],
-  mountain_range_b: [133120, 33792, 8704],
-  mountain_range_c: [133120, 33792, 8704],
-  orc_head: [180234, 46132, 4816],
-  ranger: [38998, 11798, 3898],
-  real_valley: [133120, 33792, 8704],
-  roadster_v10: [908952, 77894, 5532],
-  roadster_v10_open: [908952, 77894, 6348],
-  rts_barracks: [41590, 8248, 896],
-  rts_barracks_damaged: [38392, 8156, 866],
-  rts_resource: [12330, 2962, 486],
-  rts_resource_depleted: [12594, 2982, 474],
-  signal_gantry: [9096, 3980, 768],
-  signal_gantry_4: [12316, 5536, 1340],
-  t34: [48192, 10412, 1708],
-  t34_1941: [46626, 10010, 1678],
-  tiger_1: [68882, 17440, 3506],
+  asteroid: [18772, 2036, 360],
+  asteroid_b: [17768, 1980, 320],
+  asteroid_c: [19608, 2076, 356],
+  boxcar: [19098, 7500, 1112],
+  boxcar_nw: [19274, 7680, 1112],
+  cargo_container_scifi: [16862, 6950, 736],
+  rts_barracks: [39024, 7802, 668],
+  rts_barracks_damaged: [35810, 8056, 860],
+  rts_resource: [9730, 2158, 330],
+  rts_resource_depleted: [10158, 2282, 338],
 };
 
 describe('BUDGET_BASELINE', () => {
@@ -177,25 +151,29 @@ describe('BUDGET_BASELINE', () => {
 describe('readAssetTriangles', () => {
   it('reads committed manifests and the folder README reason', async () => {
     const root = await mkdtemp(join(tmpdir(), 't3d-bands-'));
-    await mkdir(join(root, 'recipes/car/out/car_open'), { recursive: true });
-    await writeFile(join(root, 'recipes/car/car.ts'), '// car\n');
-    await writeFile(
-      join(root, 'recipes/car/README.md'),
-      '# car\n\nBudget why: showroom hero car, close-up\n',
-    );
-    await writeFile(
-      join(root, 'recipes/car/out/car_open/manifest.json'),
-      JSON.stringify({ name: 'car_open', kind: 'vehicle', tags: ['car'], triangles: [3, 2, 1] }),
-    );
-    expect(await readAssetTriangles(root)).toEqual([
-      {
-        asset: 'car_open',
-        file: 'recipes/car/car.ts',
-        kind: 'vehicle',
-        tags: ['car'],
-        triangles: [3, 2, 1],
-        why: 'showroom hero car, close-up',
-      },
-    ]);
+    try {
+      await mkdir(join(root, 'recipes/car/out/car_open'), { recursive: true });
+      await writeFile(join(root, 'recipes/car/car.ts'), '// car\n');
+      await writeFile(
+        join(root, 'recipes/car/README.md'),
+        '# car\n\nBudget why: showroom hero car, close-up\n',
+      );
+      await writeFile(
+        join(root, 'recipes/car/out/car_open/manifest.json'),
+        JSON.stringify({ name: 'car_open', kind: 'vehicle', tags: ['car'], triangles: [3, 2, 1] }),
+      );
+      expect(await readAssetTriangles(root)).toEqual([
+        {
+          asset: 'car_open',
+          file: 'recipes/car/car.ts',
+          kind: 'vehicle',
+          tags: ['car'],
+          triangles: [3, 2, 1],
+          why: 'showroom hero car, close-up',
+        },
+      ]);
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
   });
 });

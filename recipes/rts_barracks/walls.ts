@@ -231,12 +231,28 @@ function columns(b: Bay): Mesh[] {
   return out;
 }
 
+/** Do the front/back wall cells at plan point `p` stand on every row r0..r1−1? */
+function standing(list: readonly Bay[], p: Vec3, r0: number, r1: number): boolean {
+  return list.some((b) => {
+    if (b.dir[0] !== 0) return false;
+    const [dx, dy] = [p[0] - b.origin[0], p[1] - b.origin[1]];
+    const t = dx * b.dir[0] + dy * b.dir[1];
+    const o = dx * b.out[0] + dy * b.out[1];
+    if (Math.abs(o) > WALL_T / 2 || t < -1e-6 || t > b.len + 1e-6) return false;
+    const c = Math.min(COLS - 1, Math.floor(t / (b.len / COLS)));
+    for (let r = r0; r < r1; r++) if (!has(b, r, c)) return false;
+    return true;
+  });
+}
+
 /**
  * LOD2: each side's courses as runs of present cells (bays on one side are contiguous and equal),
  * paired into 1 m bands, every other band 9% darker: the coursing reads as value stripes on the
- * far mesh. Inside faces and side-wall ends buried in the front and back walls are left out.
+ * far mesh. Left out: inside faces under a roof (`roofed`; a roofless stage shows them from
+ * above), tops under a standing course or a gable, and side-wall ends buried in a front or back
+ * wall still standing on those rows.
  */
-function courses(list: readonly Bay[]): Mesh[] {
+function courses(list: readonly Bay[], roofed: boolean): Mesh[] {
   const out: Mesh[] = [];
   const sides = new Map<string, Bay[]>();
   for (const b of list) {
@@ -250,8 +266,8 @@ function courses(list: readonly Bay[]): Mesh[] {
     const span: Bay = { ...first, len: first.len * bays.length };
     const cell = (r: number, i: number): boolean =>
       has(bays[Math.floor(i / COLS)] ?? first, r, i % COLS) && i < bays.length * COLS;
-    // The inside face is never seen at crowd distance; the outward face always is.
-    const inside = opposite(outward(first));
+    // Under a roof the inside face is never seen at crowd distance; the outward face always is.
+    const hidden: Face[] = roofed ? ['bottom', opposite(outward(first))] : ['bottom'];
     const side = first.dir[0] !== 0;
     const [start, end] = ends(first);
     const n = bays.length * COLS;
@@ -265,13 +281,20 @@ function courses(list: readonly Bay[]): Mesh[] {
         }
         const i0 = i;
         while (i < n && on(i)) i++;
-        // A run under a full course shows no top.
         let under = true;
         for (let j = i0; j < i; j++) under = under && cell(r1, j);
-        const omit: Face[] = under ? ['bottom', inside, 'top'] : ['bottom', inside];
-        // A side wall runs between the front and back walls: its ends there are buried.
-        if (side && i0 === 0) omit.push(start);
-        if (side && i === n) omit.push(end);
+        // A run under a full course shows no top; nor does the eaves course of a gable end (front
+        // and back) under a roof: the gable infill stands on it, full width.
+        const gabled = roofed && !side && r1 === first.cells.length;
+        const omit: Face[] = under || gabled ? [...hidden, 'top'] : [...hidden];
+        // A side wall runs between the front and back walls: its ends are buried where they stand.
+        const tip = (t: number): Vec3 => [
+          span.origin[0] + span.dir[0] * t,
+          span.origin[1] + span.dir[1] * t,
+          0,
+        ];
+        if (side && i0 === 0 && standing(list, tip(-WALL_T / 2), r0, r1)) omit.push(start);
+        if (side && i === n && standing(list, tip(n * w + WALL_T / 2), r0, r1)) omit.push(end);
         out.push(block(span, i0 * w, i * w, r0, r1, tone, 0, 'stone', omit));
       }
     };
@@ -369,14 +392,17 @@ function window(b: Bay, lod: Lod): { frame: Mesh; pane: Mesh; sill: Vec3 } {
   };
 }
 
-/** Walls, pilasters and windows for this LOD (the hall scorches them after restripping). */
-export function walls(lod: Lod, list: readonly Bay[], rng: Rng): WallMeshes {
+/**
+ * Walls, pilasters and windows for this LOD (the hall scorches them after restripping). `roofed`:
+ * a roof closes the hall over the walls, so the far mesh may drop their inside faces.
+ */
+export function walls(lod: Lod, list: readonly Bay[], rng: Rng, roofed: boolean): WallMeshes {
   const ms =
     lod === 0
       ? list.flatMap((b) => blocks(b, rng))
       : lod === 1
         ? list.flatMap(columns)
-        : courses(list);
+        : courses(list, roofed);
   const trim: Mesh[] = [];
   const frames: Mesh[] = [];
   const glow: Mesh[] = [];

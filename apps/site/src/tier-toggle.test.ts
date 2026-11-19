@@ -2,6 +2,7 @@ import { describe, expect, test } from 'bun:test';
 import {
   baseOf,
   gridItems,
+  modelOnly,
   pairOf,
   parseHash,
   payloadOf,
@@ -88,5 +89,20 @@ describe('selfTiered: one recipe that holds both tiers', () => {
     expect(showcaseItems(list, heavy).map((i) => i.name)).toEqual(['wolf', 'human_head']);
     const light = { human_head: [{ bytes: 224_319 }], ranger: [{ bytes: SHOWCASE_MODEL_BYTES }] };
     expect(showcaseItems(list, light).map((i) => i.name)).toEqual(['wolf', 'ranger', 'human_head']);
+  });
+});
+
+describe('modelOnly: a hybrid with no listed CPU asset is its own model tier (D339)', () => {
+  const LIST = [item('wolf'), item('wolf_hybrid'), item('brown_bear'), item('bear_hybrid')];
+  const HELD = { wolf_hybrid: [{ key: 'a' }], bear_hybrid: [{ key: 'b' }] };
+
+  test('bear_hybrid has no `bear` to pair with: it opens on its model outputs', () => {
+    expect(modelOnly(item('bear_hybrid'), LIST, HELD)).toBe(true);
+  });
+
+  test('a paired hybrid, a plain asset and a hybrid without records are not', () => {
+    expect(modelOnly(item('wolf_hybrid'), LIST, HELD)).toBe(false);
+    expect(modelOnly(item('brown_bear'), LIST, HELD)).toBe(false);
+    expect(modelOnly(item('bear_hybrid'), LIST, { bear_hybrid: [] })).toBe(false);
   });
 });

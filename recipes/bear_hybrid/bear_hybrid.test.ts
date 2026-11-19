@@ -139,7 +139,8 @@ describe('bear_hybrid, model tier (committed cache)', () => {
       expect(paws).toBeLessThan(back * 0.75);
       // One flat roughness (the bake's 0.8 = 204) has no spread; fur, mud, nose and claws do.
       const rough = texels(set.orm, mesh, () => true).map((c) => c[1]);
-      const spread = Math.sqrt(mean(rough.map((r) => (r - mean(rough)) ** 2)));
+      const avg = mean(rough);
+      const spread = Math.sqrt(mean(rough.map((r) => (r - avg) ** 2)));
       expect(Math.sqrt(mean([204, 204, 204].map((r) => (r - 204) ** 2)))).toBe(0);
       expect(spread).toBeGreaterThan(12);
       expect(mean(texels(set.orm, mesh, (_x, _y, z) => z < 0.04).map((c) => c[1]))).toBeLessThan(

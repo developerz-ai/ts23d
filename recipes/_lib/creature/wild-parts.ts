@@ -82,8 +82,9 @@ function pieces(m: Mesh): Int32Array {
     return r;
   };
   for (let t = 0; t < m.indices.length; t += 3) {
-    const a = find(m.indices[t] ?? 0);
     for (const k of [1, 2]) {
+      // Re-find the first corner's root each time: the previous union may have moved it.
+      const a = find(m.indices[t] ?? 0);
       const b = find(m.indices[t + k] ?? 0);
       if (a !== b) parent[Math.max(a, b)] = Math.min(a, b);
     }

@@ -37,7 +37,7 @@
     },
     "wear": {
       "score": 7,
-      "reason": "A stream line along the valley floor and forest; little weathering on the rock.",
+      "reason": "The valley stream is now a continuous blue line along the floor in TOP (water at the water level, no longer broken specks), and shows faintly through the trees in hero.png; little weathering on the rock.",
       "fixes": [
         "dark streaks below drainage lines on the cone"
       ]
@@ -58,7 +58,7 @@
     }
   },
   "renders": {
-    "hero.png": "4d2098d91e1d4c514305899a7cd0418ca7f6a0e9fde470fc7d43093e35036fe8",
-    "sheet.png": "df681e8b7abb496d7be2588ff50497a99640fceb3282d369f5f63bcd69f832cb"
+    "hero.png": "b83e727a5f245db93256c6ca91adf5cbef3fce2f90a4619b6dc0b0b629f691f9",
+    "sheet.png": "dcebd2b6ad2449e06d6c1dd1373debc3a574e1d58e432ab274822cb940bfe6bf"
   }
 }

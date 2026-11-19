@@ -19,7 +19,7 @@ import {
   sub,
 } from '../_lib/body-plan-kit.ts';
 import { marked, pinLoftUv, SCALE_STRIP, scaleUv, scarAt, scuffAt, shedAt } from './material.ts';
-import { frameAt, HEAD, hoodShare, SVL, surfacePoint, TOTAL } from './shape.ts';
+import { frameAt, HEAD, halfW, hoodShare, SVL, surfacePoint, TOTAL } from './shape.ts';
 
 export { SCALE_STRIP } from './material.ts';
 
@@ -129,7 +129,8 @@ export function trunkMesh(lod: Lod, joints: readonly number[]): Mesh {
     us,
     sides,
     strip: SCALE_STRIP,
-    point: (s, a) => surfacePoint(s, a, lod === 0 ? -0.0006 : 0),
+    // Sunk under the scales at LOD0, but never past the axis where the tail tip is thinner than that.
+    point: (s, a) => surfacePoint(s, a, lod === 0 ? -Math.min(0.0006, 0.4 * halfW(s)) : 0),
     color: (_p, _n, s, a) => {
       if (lod === 0) return COLOUR.skin;
       if (lod === 2) {

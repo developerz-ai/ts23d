@@ -79,13 +79,13 @@ interface Band {
   readonly f: number[];
 }
 
-/** Column positions (fraction of half-width): the band's edges and both sides of every groove
- *  wall. The ribs between are flat, so they need no columns of their own. */
-function columns(): number[] {
+/** Column positions (fraction of half-width `hw`, m): the band's edges and both sides of every
+ *  groove wall. The ribs between are flat, so they need no columns of their own. */
+function columns(hw: number): number[] {
   const out = new Set<number>([-0.86, 0.86]);
   for (const g of [-0.62, -0.24, 0.24, 0.62])
     for (const d of [-1, 1]) {
-      const e = g + (d * GROOVE_W) / 2 / 0.1475;
+      const e = g + (d * GROOVE_W) / 2 / hw;
       out.add(e - 0.004);
       out.add(e + 0.004);
     }
@@ -110,7 +110,7 @@ function depth(w: number, f: number, hwm: number): number {
 function treadBand(t: TyreSize, pitches: number): Mesh {
   const R = t.rim + t.side;
   const hw = t.width / 2;
-  const cols = columns();
+  const cols = columns(hw);
   const band: Band = { w: cols, f: PHASES };
   const rect = stripRect('rubber');
   const b = new MeshBuilder();

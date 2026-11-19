@@ -35,7 +35,7 @@
     },
     "wear": {
       "score": 7,
-      "reason": "A stream in the valley floor (TOP) and forest; little rock weathering.",
+      "reason": "The valley stream is now a continuous blue line along the floor in TOP (water at the water level, no longer broken specks), but hero.png looks over the ridge so it does not show; little rock weathering.",
       "fixes": [
         "water streaks below the couloirs"
       ]
@@ -56,7 +56,7 @@
     }
   },
   "renders": {
-    "hero.png": "b31fa8f51db97d58904dfab77174c3d03fc06e6112610773a04e67feab59d788",
-    "sheet.png": "046e63eedfecfbd1e9f08ca451979c8b7f84766269726fd1a89a35a0800d5862"
+    "hero.png": "e8126989662fc69c85aa0a5c7fd418d52f890e7cd798b23ad765e5df36147ece",
+    "sheet.png": "082a9bda74abd85a86a0f325abf43f1e2b142ae6fabef8ea8d4d0c6a5e949e69"
   }
 }

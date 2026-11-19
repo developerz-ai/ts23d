@@ -197,12 +197,18 @@ box({ size: [4, 2, 0.05], strip: teak, color: NATURAL });
   sheet that lacks one of the asset's materials. A mesh built outside any compile (a module-level
   constant) records nothing: its row is read from its UVs, which works while one defined material
   holds that row and is `T3D_MATERIAL_UNKNOWN` otherwise (build it inside `build()` or a
-  `definePart`).
+  `definePart`). Open gap: when the compile recorded a different material on that same row, the
+  module-level mesh is painted as the recorded one without an error (meshes carry no material
+  provenance yet), so never build a project-material mesh at module level.
 - **CLI.** `t3d build --sheet external` (default) writes `<out>/trim_sheet_*.png` holding the
   materials of every asset of the run while they fit on one sheet; an asset whose material sits on
   a row an earlier asset of the run holds gets `<out>/<asset>/trim_sheet_*.png` and its GLBs point
-  there (a line on stderr says so). `--sheet embed` puts each asset's own sheet in its GLBs: the
-  bytes then never depend on the run. A run of one recipe writes what it always wrote.
+  there (a line on stderr says so). `<out>/trim_sheet_owners.json` records which material each
+  row of the shared sheet shows, so a later run into the same `--out` treats those rows as held:
+  it never repaints a row an earlier run's GLBs still show, and an asset that would need the
+  shared sheet painted again with a material the later run does not define gets its own sheet too
+  (D340). `--sheet embed` puts each asset's own sheet in its GLBs: the bytes then never depend on
+  the run. A run of one recipe into a fresh `--out` writes what it always wrote.
 - `scripts/material-rows.test.ts` loads every library material and every recipe that defines a
   material or composes assets in one process, in both orders, compiles their assets and fails on a
   material conflict inside an asset or on any difference between the two orders. The library

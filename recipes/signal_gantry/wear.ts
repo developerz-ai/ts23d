@@ -8,12 +8,17 @@ import { box, type Mesh, merge, type Rng, type Vec3, valueNoise } from '@develop
 
 export type Shade = (p: Vec3, n: Vec3, c: Vec3) => Vec3;
 
-/** Run `f` over every vertex colour (meshes are in asset space). */
-export function shade(m: Mesh, f: Shade): Mesh {
+/** Run `f` over every vertex colour at its asset-space position: `origin` is where the mesh's
+ *  own frame sits (a part under a pivot group is modelled pivot-local). */
+export function shade(m: Mesh, f: Shade, origin: Vec3 = [0, 0, 0]): Mesh {
   const colors = new Float32Array(m.colors);
   for (let i = 0; i < m.positions.length / 3; i++) {
     const at = (a: Float32Array, k: number): number => a[i * 3 + k] ?? 0;
-    const p: Vec3 = [at(m.positions, 0), at(m.positions, 1), at(m.positions, 2)];
+    const p: Vec3 = [
+      at(m.positions, 0) + origin[0],
+      at(m.positions, 1) + origin[1],
+      at(m.positions, 2) + origin[2],
+    ];
     const n: Vec3 = [at(m.normals, 0), at(m.normals, 1), at(m.normals, 2)];
     colors.set(f(p, n, [at(colors, 0), at(colors, 1), at(colors, 2)]), i * 3);
   }

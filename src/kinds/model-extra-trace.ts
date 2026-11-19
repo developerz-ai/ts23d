@@ -3,8 +3,10 @@
 // mesh's solid from one point to another, on a grid of `cell` metres, where a step costs its
 // length over the squared depth under the skin. Deep flesh is cheap and a thin membrane dear, so
 // the path runs down the middle of the spars and never crosses air. Cells are tested as the
-// search reaches them (winding number, distance to the surface). Deterministic: fixed grid,
-// fixed neighbour order, ties broken by cell index.
+// search reaches them (winding number, distance to the surface). A step between two inside cells
+// is taken only when the segment stays inside (D342): the balls of their depths cover it, else it
+// is split and its midpoints tested, so a gap narrower than a cell between two solids is not
+// crossed. Deterministic: fixed grid, fixed neighbour order, ties broken by cell index.
 
 import { type Mesh, Ts23dError, type Vec3 } from '../core/index.ts';
 import { triBvh } from '../primitives/index.ts';
@@ -15,6 +17,11 @@ export interface TraceOptions {
   /** Margin round the box of the two ends the path may use, metres. Default 12 cells. */
   readonly pad?: number;
 }
+
+/** Grid cells one trace may hold: 16 bytes each (depth, cost, back), about 256 MiB (D343). */
+const MAX_CELLS = 2 ** 24;
+/** Segment pieces shorter than this many cells are not split further (gaps under it go unseen). */
+const FINEST = 1 / 32;
 
 const lost = (cause: string): Ts23dError =>
   new Ts23dError('T3D_MODEL_SKELETON', {
@@ -69,27 +76,47 @@ function heap(): { push(c: number, i: number): void; pop(): [number, number] | u
  * nearest inside cell within 6 cells stands in for it. No way through: T3D_MODEL_SKELETON.
  */
 export function tracePath(mesh: Mesh, from: Vec3, to: Vec3, o: TraceOptions): Vec3[] {
-  const bvh = triBvh(mesh);
   const pad = o.pad ?? o.cell * 12;
+  if (!(Number.isFinite(o.cell) && o.cell > 0) || !(Number.isFinite(pad) && pad >= 0))
+    throw new Ts23dError('T3D_MODEL_SKELETON', {
+      cause: `tracePath: cell ${o.cell} m and pad ${pad} m must be a finite size (cell > 0, pad ≥ 0)`,
+      fix: 'pass { cell: <under half the thinnest spar, metres> } and leave pad out or ≥ 0',
+    });
   const org = [0, 1, 2].map((k) => Math.min(from[k] ?? 0, to[k] ?? 0) - pad);
   const dim = [0, 1, 2].map(
     (k) => Math.ceil((Math.abs((from[k] ?? 0) - (to[k] ?? 0)) + 2 * pad) / o.cell) + 1,
   ) as [number, number, number];
   const [nx, ny, nz] = dim;
+  if (!(nx * ny * nz <= MAX_CELLS))
+    throw new Ts23dError('T3D_MODEL_SKELETON', {
+      cause: `tracePath: a ${nx}×${ny}×${nz} grid is ${(nx * ny * nz).toExponential(2)} cells, over the ${MAX_CELLS} one trace may allocate`,
+      fix: `use a coarser cell (about ${(o.cell * Math.cbrt((nx * ny * nz) / MAX_CELLS)).toPrecision(2)} m or more), a smaller pad, or trace the limb in pieces between closer points`,
+    });
+  const bvh = triBvh(mesh);
   const at = (i: number): Vec3 => [
     (org[0] ?? 0) + (i % nx) * o.cell,
     (org[1] ?? 0) + (Math.floor(i / nx) % ny) * o.cell,
     (org[2] ?? 0) + Math.floor(i / (nx * ny)) * o.cell,
   ];
-  // Depth under the skin per cell: 0 = not asked yet, < 0 = outside.
-  const depth = new Float32Array(nx * ny * nz);
   const q: [number, number, number] = [0, 0, 0];
+  /** Distance to the skin of an inside point; −1 outside. */
+  const inside = (p: Vec3): number => (bvh.winding(p) > 0.5 ? bvh.closest(p, q) : -1);
+  // Distance to the skin per cell: NaN = not asked yet, < 0 = outside.
+  const depth = new Float32Array(nx * ny * nz).fill(Number.NaN);
   const depthOf = (i: number): number => {
-    if (depth[i] === 0) {
-      const p = at(i);
-      depth[i] = bvh.winding(p) > 0.5 ? Math.max(bvh.closest(p, q), o.cell * 0.05) : -1;
-    }
+    if (Number.isNaN(depth[i] ?? 0)) depth[i] = inside(at(i));
     return depth[i] ?? -1;
+  };
+  /**
+   * Whether the segment a→b (inside points `da`, `db` from the skin) stays inside: no surface lies
+   * within `da` of a or `db` of b, so when they reach each other the balls cover it.
+   */
+  const through = (a: Vec3, da: number, b: Vec3, db: number, len: number): boolean => {
+    if (len <= da + db) return true;
+    if (len < o.cell * FINEST) return true;
+    const m: Vec3 = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2];
+    const dm = inside(m);
+    return dm >= 0 && through(a, da, m, dm, len / 2) && through(m, dm, b, db, len / 2);
   };
   const steps: [number, number, number][] = [];
   for (let dz = -1; dz <= 1; dz++)
@@ -107,7 +134,7 @@ export function tracePath(mesh: Mesh, from: Vec3, to: Vec3, o: TraceOptions): Ve
           const e = dx * dx + dy * dy + dz * dz;
           if (x < 0 || y < 0 || z < 0 || x >= nx || y >= ny || z >= nz || e >= d) continue;
           const i = x + nx * (y + ny * z);
-          if (depthOf(i) > 0) [best, d] = [i, e];
+          if (depthOf(i) >= 0) [best, d] = [i, e];
         }
     if (best < 0)
       throw lost(
@@ -131,8 +158,12 @@ export function tracePath(mesh: Mesh, from: Vec3, to: Vec3, o: TraceOptions): Ve
       if (u < 0 || v < 0 || w < 0 || u >= nx || v >= ny || w >= nz) continue;
       const j = u + nx * (v + ny * w);
       const d = depthOf(j);
-      if (d <= 0) continue;
-      const next = c + (Math.hypot(dx, dy, dz) * o.cell) / (d * d);
+      if (d < 0) continue;
+      const len = Math.hypot(dx, dy, dz) * o.cell;
+      const di = depth[i] ?? 0;
+      if (!through(at(i), di, at(j), d, len)) continue;
+      const deep = Math.max(d, o.cell * 0.05);
+      const next = c + len / (deep * deep);
       if (next < (cost[j] ?? Infinity)) {
         cost[j] = next;
         back[j] = i;

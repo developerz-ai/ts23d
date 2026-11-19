@@ -61,8 +61,11 @@ function partCrossings(
         gate: 'skin',
         code: 'T3D_SKIN_CROSSED',
         part: p.name,
-        message: `T3D_SKIN_CROSSED part '${p.name}': ${count} vertices ${raised ? 'above' : 'below'} ${below.toFixed(3)} m (the ${limb} joint 2) carry weight of both ${limb}_l and ${limb}_r (first: vertex ${first}); those paws move with both legs`,
-        fix: `give each ${limb} paw its own leg only below the wrist/hock: a Blender 'weights' step (kind 'scale', value 0) on the other side's ${limb} bones in a box round each paw, or keep the paws further apart before bind`,
+        message: `T3D_SKIN_CROSSED part '${p.name}': ${count} vertices ${raised ? 'above' : 'below'} ${below.toFixed(3)} m (the ${limb} joint 2) carry weight of both ${limb}_l and ${limb}_r (first: vertex ${first}); those ${raised ? 'wing tips move with both wings' : 'paws move with both legs'}`,
+        // A raised pair is read the other way up: the finding and its fix are above the wrist.
+        fix: raised
+          ? `give each ${limb} tip its own side only above the wrist: a Blender 'weights' step (kind 'scale', value 0) on the other side's ${limb} bones in a box round each tip, or keep the tips further apart before bind`
+          : `give each ${limb} paw its own leg only below the wrist/hock: a Blender 'weights' step (kind 'scale', value 0) on the other side's ${limb} bones in a box round each paw, or keep the paws further apart before bind`,
       },
     ];
   });

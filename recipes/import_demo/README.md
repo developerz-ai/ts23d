@@ -23,7 +23,7 @@ same bytes (hash-checked against `SCAN.sha256` in `source.ts`).
 | read GLB, bake node transforms, Y-up → Z-up | `importGlb` | metres, +X front, registered to the bust |
 | clean: weld, winding, holes, duplicates, specks | `cleanMesh` | 9 flipped, 7 duplicates, 1 hole filled, neck cut left open, 5 small shells dropped (3 specks + 2 cut fragments) |
 | albedo → vertex colour, UVs → the shared `face_skin` pore strip | `projectAlbedo`, `onSkin` (`recipes/_lib/face/skin-strip.ts`) | one skin material on the trim sheet, pores in its normal map, a `skin` sheen finish |
-| LODs | `simplify` (QEM) | head 12 000 / 4 000 / 1 800 triangles (the far head keeps its eye sockets) |
+| LODs | `simplify` (QEM) | head 12 000 / 4 000 / 680 triangles (`HEAD_TRIS`, `source.ts`; the far head keeps the brow ridge, nose and dark eye sockets as broad facets, the lids and socket rims are gone) |
 | joint | `ctx.joint('neck', socket)` | the scan's neck plugs into the leather collar, sized from the neck **measured on the mesh** |
 | own textures (opt-in) | `bun scripts/import.ts textured` | 1024² baked albedo + normal map (ears, lids, nostrils, lips), `head_own` material, +1 draw call |
 
@@ -36,8 +36,8 @@ vegetable-tanned leather collar roll whose centre line follows the neck's own ou
 on the mesh (48 sectors; an ellipse through the neck's bounding box stood off the flat back of the
 neck), an old-brass brooch, a turned plinth. Muted palette in `build.ts` (`DYED`).
 
-Materials: the garment on the `canvas` strip (weave, folds, water stains; dyes are divided by the
-strip's own colour so they land true), the collar on `leather`, the brooch on `brass`, the scan's
+Materials: the garment on the shared `bust_wool` strip (`../_lib/bust/cloth-strips.ts`: twill
+relief, matte, a near-white ground, so the dye is its vertex colour), the collar on `leather`, the brooch on `brass`, the scan's
 skin on `face_skin` with a `skin` sheen finish, the plinth on `stone`.
 
 Wear: the cloth sun-faded and dusty on the shoulders and soiled at the hem (`weather()`, coverage

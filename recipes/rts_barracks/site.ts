@@ -362,10 +362,13 @@ function pile(lod: Lod, at: Vec3, rng: Rng): { mesh: Mesh; top: number } {
 }
 
 /** The stickered oak stack: 4 layers of 4 baulks on cross battens, ~1 m high, along Y. */
-function timberStack(lod: Lod, at: Vec3, rng: Rng): Mesh {
+export function timberStack(lod: Lod, at: Vec3, rng: Rng): Mesh {
   const out: Mesh[] = [];
   const L = 4;
   const S = 0.22;
+  // Far: no stickers to bear the layers, so the stack is one block of its full height.
+  if (lod === 2)
+    return box({ size: [0.94, L, 4 * S + 3 * 0.04], at: [at[0], at[1], 0], color: WOOD });
   let z = 0;
   for (let layer = 0; layer < 4; layer++) {
     if (lod === 0) {
@@ -383,9 +386,8 @@ function timberStack(lod: Lod, at: Vec3, rng: Rng): Mesh {
     z += S;
     if (layer < 3) {
       // Stickers: thin battens across, so air gets between the layers.
-      if (lod < 2)
-        for (const y of [-1.6, 0, 1.6])
-          out.push(box({ size: [1.0, 0.06, 0.04], at: [at[0], at[1] + y, z], color: POLE }));
+      for (const y of [-1.6, 0, 1.6])
+        out.push(box({ size: [1.0, 0.06, 0.04], at: [at[0], at[1] + y, z], color: POLE }));
       z += 0.04;
     }
   }

@@ -305,8 +305,18 @@ const roadster = defineFamily({
     if (lod < 2) {
       ctx.part('fuel_door', fdOpen(shift(fd.flap, sub([0, 0, 0], fd.hinge))), {
         at: fd.hinge,
-        motion: { kind: 'sway', axis: fd.axis, degrees: FUEL_DEG, hz: 0.25, oneWay: true },
-        // The flap lies on its seat in the quarter; it only ever lifts away from it.
+        // Shut, the flap lies on its seat and only ever lifts away from it; baked open (the
+        // `_open` showcase) it swings back shut over the same sector, like the other panels.
+        motion:
+          p.open > 0
+            ? {
+                kind: 'sway',
+                axis: [-fd.axis[0], -fd.axis[1], -fd.axis[2]],
+                degrees: FUEL_DEG * p.open,
+                hz: 0.25,
+                oneWay: true,
+              }
+            : { kind: 'sway', axis: fd.axis, degrees: FUEL_DEG, hz: 0.25, oneWay: true },
         paint: 'body',
         // Its straps turn on the pin carried by the seal ring.
         connect: { as: 'hinge', to: 'fuel_door_seal' },

@@ -28,20 +28,25 @@ way a character artist starts from a base mesh and moves big forms before detail
 `skin` (head, neck, shoulders; chest and arm cuts capped), `eye_l` / `eye_r` (code eyeballs from
 `recipes/_lib/bust/eye.ts`, cornea finish), `hair` (the sculpted cap: volume, a parting, locks of
 uneven width; a long cut adds fall masses over the back and shoulders), `hair_strands` (cutout
-strand cards over the cap, LOD0/1: swept locks, lifted crown locks, wisps along the hairline,
+strand cards over the cap at every LOD: swept locks, lifted crown locks, wisps along the hairline,
 flyaways; falls for the long cut, a standing crest, a beard), `teeth` (only where the lips part),
 `tusk_l` / `tusk_r` (orc), `plinth`.
 
+Every LOD's skin is the painted, AO-baked base QEM-simplified to `SKIN_TRIS`
+(`recipes/_lib/face/base-lod.ts`; a CC0 base mesh, so ADR 011 allows it): ears, colour zones and
+the clean bust edge survive.
+
 | LOD | Skin | Hair |
 |---|---|---|
-| 0 | one Catmull–Clark level over the base | cap at 3.8 mm + cards |
-| 1 | the base topology | cap at 5 mm + a quarter of the cards, twice as wide |
-| 2 | the painted, AO-baked base mesh QEM-simplified to 5.2k triangles (a CC0 base mesh, so ADR 011 allows it): ears, colour zones and the clean bust edge survive | the cap alone at 12 mm |
+| 0 | one Catmull–Clark level over the base, simplified to 26k triangles | cap at 7.5 mm + dense cards (16k–32k) |
+| 1 | the base topology, simplified to 5.6k | cap at 12 mm + a quarter of the cards, twice as wide (1.1k–3.2k) |
+| 2 | the base topology, simplified to 1k | cap at 17 mm + a handful of wide cards (`farStyle`, 0.2k–0.6k), so the far head keeps a broken outline |
 
 ## Materials
 Skin sits on the shared `face_skin` strip (`recipes/_lib/face/skin-strip.ts`: pores, glossier
-crowns, its own roughness) under the `skin` finish (a soft grazing sheen); the sculpted cap takes
-the `hair` finish (anisotropic highlights); corneas a clearcoat. Tone is vertex colour: flush
+crowns, its own roughness) under the `skin` finish (a soft grazing sheen); corneas a clearcoat. The hair
+takes no finish: the cutout strand cards carry the strand read, and the sculpted cap under them
+is on the `plain` strip in their shade. Tone is vertex colour: flush
 (cheeks, nose, ears), lips, cool sockets and jaw underside, brows, hair-coloured scalp under the
 hairline, cavity darkening.
 

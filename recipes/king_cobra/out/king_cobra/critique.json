@@ -5,9 +5,9 @@
   "scores": {
     "silhouette": {
       "score": 7,
-      "reason": "Raised forebody with a narrow hood, ventral scutes and a single flat coil read as a cobra; the coil is one loose loop, not a stack supporting the raised body.",
+      "reason": "Raised forebody with a narrow hood and ventral scutes reads as a cobra, and the rest coil now lies on the ground instead of floating; but it is one flat, even ring (a hose loop in hero.png), not a pile of turns supporting the raised body, and a pale sliver shows under its near side.",
       "fixes": [
-        "stack one more coil under the raised forebody",
+        "stack one more, smaller turn on the ground ring under the raised forebody so the rest reads as a pile",
         "widen the hood ribs a little at the neck"
       ]
     },
@@ -59,7 +59,7 @@
     }
   },
   "renders": {
-    "hero.png": "074be8bd6aea92b40900f4f29ad70f5d95c4c174e2dfa3b57815882db1e76cca",
-    "sheet.png": "c94f1e6f9d5a4689b9df88ab40f54542f6b790809c2150f81abc9930698700f6"
+    "hero.png": "edf52b9752ec3085240f8e56bffafe5c99ff36fad079d2a5dec565fb65ad9b8b",
+    "sheet.png": "7ee0f88b11e67ccd4026a7635a78b74d715f0c128f41ad06d38f913dae17d88a"
   }
 }

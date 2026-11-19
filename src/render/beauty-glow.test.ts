@@ -81,9 +81,12 @@ describe('glow in the path-traced hero', () => {
     expect(inside).toBeLessThanOrEqual(bare + 0.02);
   });
 
-  it('lights what stands next to it', () => {
-    // A grey wall beside the core, on its shadow side: brighter when the core glows.
-    const scene = (glow: boolean): CompiledAsset =>
+  it('lights what stands next to it, measured on the wall alone (D348)', () => {
+    // A wall beside the core, on its shadow side: brighter when the core glows. The core itself is
+    // left out of the measure: its own emission alone must not pass this.
+    type Rgb = readonly [number, number, number];
+    const GREY: Rgb = [0.5, 0.5, 0.5];
+    const scene = (glow: boolean, wall: Rgb, core: Rgb = GREY): CompiledAsset =>
       compile(
         defineAsset({
           name: 'lamp',
@@ -91,25 +94,31 @@ describe('glow in the path-traced hero', () => {
           budget: { triangles: [99, 99, 99] },
           ...(glow ? { glow: [{ parts: ['core'], color: [1, 1, 1], strength: 8 }] } : {}),
           build: (ctx) => {
-            ctx.part(
-              'core',
-              box({ size: [0.6, 0.6, 0.6], at: [0, 0.6, 0.3], color: [0.5, 0.5, 0.5] }),
-            );
-            ctx.part(
-              'wall',
-              box({ size: [1.2, 0.1, 1.2], at: [0, 0, 0.6], color: [0.5, 0.5, 0.5] }),
-              {
-                parent: 'core',
-              },
-            );
+            ctx.part('core', box({ size: [0.6, 0.6, 0.6], at: [0, 0.6, 0.3], color: core }));
+            ctx.part('wall', box({ size: [1.2, 0.1, 1.2], at: [0, 0, 0.6], color: wall }), {
+              parent: 'core',
+            });
           },
         }),
       );
-    const sum = (a: CompiledAsset): number =>
-      renderPath(a, { width: 48, height: 48, spp: 32, azDeg: 90, elDeg: 5 }).linear.reduce(
-        (s, v) => s + v,
+    const view = { width: 48, height: 48, spp: 32, azDeg: 90, elDeg: 5 };
+    // The wall's pixels: where a green wall shows green and a red core does not show red (same
+    // geometry, same framing).
+    const green = renderPath(scene(false, [0.05, 0.6, 0.05]), view).linear;
+    const redCore = renderPath(scene(false, GREY, [0.9, 0.05, 0.05]), view).linear;
+    const tint = (l: Float32Array, i: number, a: number, b: number): boolean =>
+      (l[i * 3 + a] ?? 0) > 2 * (l[i * 3 + b] ?? 0) + 1e-4;
+    const wall: number[] = [];
+    for (let i = 0; i < green.length / 3; i++)
+      if (tint(green, i, 1, 0) && !tint(redCore, i, 0, 1)) wall.push(i);
+    expect(wall.length).toBeGreaterThan(48 * 48 * 0.05);
+    const onWall = (a: CompiledAsset): number => {
+      const lin = renderPath(a, view).linear;
+      return wall.reduce(
+        (s, i) => s + (lin[i * 3] ?? 0) + (lin[i * 3 + 1] ?? 0) + (lin[i * 3 + 2] ?? 0),
         0,
       );
-    expect(sum(scene(true))).toBeGreaterThan(sum(scene(false)) * 1.05);
+    };
+    expect(onWall(scene(true, GREY))).toBeGreaterThan(onWall(scene(false, GREY)) * 1.05);
   });
 });

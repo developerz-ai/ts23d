@@ -24,7 +24,32 @@ describe('faceBlocks', () => {
       const [a, b, c] = [0, 1, 2].map((k) => colourAt(out, out.indices[t + k] ?? 0));
       expect(a).toEqual(b as Vec3);
       expect(b).toEqual(c as Vec3);
+      expect(a).toEqual([1, 1, 1]);
     }
+  });
+
+  it('picks each triangle its own medoid, not a shared or neighbouring colour', () => {
+    const red: Vec3 = [1, 0, 0];
+    const blue: Vec3 = [0, 0, 1];
+    const grey = (g: number): Vec3 => [g, g, g];
+    // Two red-majority, blue-majority triangles sharing v0 and v2, and a three-grey triangle whose
+    // medoid is the middle grey (nearest the other two), neither its first nor its last corner.
+    const cols: Vec3[] = [red, red, blue, blue, grey(0), grey(0.4), grey(1)];
+    const m: Mesh = {
+      positions: new Float32Array(cols.length * 3).map((_, i) => i % 7),
+      normals: new Float32Array(cols.length * 3),
+      uvs: new Float32Array(cols.length * 2),
+      colors: Float32Array.from(cols.flat()),
+      indices: Uint32Array.from([0, 1, 2, 2, 3, 0, 4, 6, 5]),
+    };
+    const out = faceBlocks(m);
+    const expected = [red, blue, grey(0.4)];
+    expected.forEach((want, f) => {
+      for (let k = 0; k < 3; k++) {
+        const got = colourAt(out, out.indices[f * 3 + k] ?? 0);
+        for (let c = 0; c < 3; c++) expect(got[c]).toBeCloseTo(want[c] ?? -1, 5);
+      }
+    });
   });
 });
 

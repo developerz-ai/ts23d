@@ -396,12 +396,14 @@ function building(
       [-r, -r],
     ].every(([dx = 0, dy = 0]) => inPoly([q[0] + dx, q[1] + dy], p.ring)) &&
     edges.every((e) => distToLine(q, [e.a, e.b]) > r + 0.4);
+  // Patches are LOD0 only: their own stream, so later draws (cornice depth) match on every LOD.
+  const patchRng = rng.fork('roof_patches');
   if (lod === 0)
     for (let k = 0; k < 4; k++) {
-      const q: Vec2 = [c[0] + rng.range(-4, 4), c[1] + rng.range(-4, 4)];
-      const [w, d] = [rng.range(1.2, 3.5), rng.range(1.2, 3.5)];
+      const q: Vec2 = [c[0] + patchRng.range(-4, 4), c[1] + patchRng.range(-4, 4)];
+      const [w, d] = [patchRng.range(1.2, 3.5), patchRng.range(1.2, 3.5)];
       if (!fits(q, Math.max(w, d) / 2)) continue;
-      const g = rng.range(0.55, 1.4);
+      const g = patchRng.range(0.55, 1.4);
       roof.push(
         box({
           size: [w, d, 0.02],

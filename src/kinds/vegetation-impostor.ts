@@ -6,10 +6,13 @@
 // own rachis, rooted in the trunk top (palms). Everything is clamped into LOD0's crown box, so the
 // tree's fit (height, spread) is the same at both ends of the switch.
 
-import { type Bounds, type Mesh, MeshBuilder, merge, type Vec3 } from '../core/index.ts';
+import { type Mesh, MeshBuilder, merge, type Vec3 } from '../core/index.ts';
 import { sweep } from '../primitives/index.ts';
 import { type Clump, cluster, samples } from './vegetation-clumps.ts';
 import { LEAFLET_VERTS } from './vegetation-fronds.ts';
+
+export { fillBox } from './vegetation-fill.ts';
+
 import type { Stem } from './vegetation-skeleton.ts';
 
 /** Primary limbs kept under a clumped crown. */
@@ -246,23 +249,4 @@ export function frondCards(
     }
   });
   return mb.build();
-}
-
-/** Clamp `m` into `box` and pull its extreme vertex onto every face of the box it falls short of. */
-export function fillBox(m: Mesh, box: Bounds): Mesh {
-  const positions = new Float32Array(m.positions);
-  for (let k = 0; k < 3; k++) {
-    const [lo, hi] = [box.min[k] ?? 0, box.max[k] ?? 0];
-    let [iLo, iHi] = [-1, -1];
-    for (let i = k; i < positions.length; i += 3) {
-      const v = Math.min(hi, Math.max(lo, positions[i] ?? 0));
-      positions[i] = v;
-      if (iLo < 0 || v < (positions[iLo] ?? 0)) iLo = i;
-      // `>=`: on a mesh flat along this axis the two extremes are still two vertices.
-      if (iHi < 0 || v >= (positions[iHi] ?? 0)) iHi = i;
-    }
-    if (iLo >= 0) positions[iLo] = lo;
-    if (iHi >= 0) positions[iHi] = hi;
-  }
-  return { ...m, positions };
 }

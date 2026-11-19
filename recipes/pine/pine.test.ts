@@ -14,7 +14,7 @@ import {
 } from '@developerz.ai/ts23d';
 import { silhouetteReads } from '@developerz.ai/ts23d/testing';
 import { inWoodBand } from '../_lib/trees/bark.ts';
-import { pine } from './pine.ts';
+import { leaderClump, pine } from './pine.ts';
 
 const blobPine = defineAsset({
   name: 'pine_blob',
@@ -78,4 +78,43 @@ describe('pine bark', () => {
       expect(wood).toBeGreaterThan(0);
       expect(off).toBe(0);
     });
+});
+
+describe('pine bark grade', () => {
+  /** Mean bark-band brightness of a part's vertices at or above `zMin` m (world). */
+  const bright = (lod: 0 | 1, name: string, zMin: number): number => {
+    const c = compile(pine, { lod });
+    const part = c.parts.find((p) => p.name === name);
+    const parent = c.parts.find((p) => p.name === part?.parent);
+    const lift = (parent?.at[2] ?? 0) + (part?.at[2] ?? 0);
+    const m = part?.mesh;
+    const bark = stripRect('bark_pine');
+    let [sum, n] = [0, 0];
+    for (let i = 0; m && i < m.positions.length / 3; i++) {
+      const v = m.uvs[i * 2 + 1] ?? 0;
+      if (v < bark.v0 || v > bark.v1 || (m.positions[i * 3 + 2] ?? 0) + lift < zMin) continue;
+      sum += (m.colors[i * 3] ?? 0) + (m.colors[i * 3 + 1] ?? 0) + (m.colors[i * 3 + 2] ?? 0);
+      n++;
+    }
+    expect(n).toBeGreaterThan(10);
+    return sum / n / 3;
+  };
+  for (const lod of [0, 1] as const)
+    it(`LOD${lod}: crown branches (all above the 14 m grade) are not darkened like the low bole`, () => {
+      // Crown-local branch heights read as the foot of the tree would halve their brightness.
+      expect(bright(lod, 'branches', 0)).toBeGreaterThan(0.8 * bright(lod, 'trunk', 16));
+    });
+});
+
+describe('leaderClump', () => {
+  it('scores every clump against the trunk tip, not against the previous best', () => {
+    // A: 3 m off the tip, 2 m up (score 2). B: 1 m off the tip, 4 m from A, 1 m up (0.5).
+    // Measured from A once it wins, B would score 3.5 and lose; from the tip it wins.
+    const a: [number, number, number] = [3, 0, 2];
+    const b: [number, number, number] = [-1, 0, 1];
+    expect(leaderClump([a, b], [0, 0, 0])).toEqual(b);
+  });
+  it('keeps the tip when there are no clumps', () => {
+    expect(leaderClump([], [1, 2, 3])).toEqual([1, 2, 3]);
+  });
 });

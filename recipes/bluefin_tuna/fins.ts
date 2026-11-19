@@ -103,7 +103,51 @@ function rayRidges(m: Mesh, us: readonly number[], sides: number, rays: number):
     positions[i * 3 + 1] =
       y * (1 + 0.28 * fade * Math.cos(c * Math.PI * rays) * Math.sin(Math.PI * c));
   }
-  return { ...m, positions };
+  return { ...m, positions, normals: lensNormals(positions, m.indices, us.length, sides) };
+}
+
+/**
+ * Normals of a ridged lens plate, as `plate`/`loft` build them: area-weighted face normals (the
+ * winding is already outward), the seam column shared, and on the two sharp edges (sin a = 0) the
+ * normal laid in the plate (the midplane is y = 0, so its y part is dropped).
+ */
+function lensNormals(
+  P: Float32Array,
+  indices: Uint32Array,
+  rows: number,
+  sides: number,
+): Float32Array {
+  const ring = sides + 1;
+  const acc = new Float64Array(P.length);
+  const push = (v: number, f: readonly number[]): void => {
+    for (let k = 0; k < 3; k++) acc[v * 3 + k] = (acc[v * 3 + k] ?? 0) + (f[k] ?? 0);
+  };
+  for (let t = 0; t < indices.length; t += 3) {
+    const [a, b, c] = [indices[t] ?? 0, indices[t + 1] ?? 0, indices[t + 2] ?? 0];
+    const u = [0, 1, 2].map((k) => (P[b * 3 + k] ?? 0) - (P[a * 3 + k] ?? 0));
+    const v = [0, 1, 2].map((k) => (P[c * 3 + k] ?? 0) - (P[a * 3 + k] ?? 0));
+    const f = [
+      (u[1] ?? 0) * (v[2] ?? 0) - (u[2] ?? 0) * (v[1] ?? 0),
+      (u[2] ?? 0) * (v[0] ?? 0) - (u[0] ?? 0) * (v[2] ?? 0),
+      (u[0] ?? 0) * (v[1] ?? 0) - (u[1] ?? 0) * (v[0] ?? 0),
+    ];
+    for (const w of [a, b, c]) {
+      push(w, f);
+      // The seam column is one column twice: both copies share the normal.
+      const j = w < rows * ring ? w % ring : -1;
+      if (j === 0) push(w + sides, f);
+      if (j === sides) push(w - sides, f);
+    }
+  }
+  const out = new Float32Array(P.length);
+  for (let w = 0; w < P.length / 3; w++) {
+    const j = w % ring;
+    const edge = w < rows * ring && Math.abs(Math.sin((j / sides) * Math.PI * 2)) <= 1e-6;
+    const n = [acc[w * 3] ?? 0, edge ? 0 : (acc[w * 3 + 1] ?? 0), acc[w * 3 + 2] ?? 0];
+    const l = Math.hypot(n[0] ?? 0, n[1] ?? 0, n[2] ?? 0) || 1;
+    for (let k = 0; k < 3; k++) out[w * 3 + k] = (n[k] ?? 0) / l;
+  }
+  return out;
 }
 
 export const HEIGHT = { dorsal1: 0.22, dorsal2: 0.31, anal: 0.29, pectoral: 0.33 } as const;

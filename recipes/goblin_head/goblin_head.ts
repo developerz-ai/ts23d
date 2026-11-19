@@ -41,7 +41,7 @@ export const goblin_head = defineAsset({
       },
     ],
   },
-  // The head's skin ≈ 45k (eyes and ears meshed finer), the four garment layers ≈ 28k.
+  // LOD0: the head's skin ≈ 30k (eyes and ears meshed finer), the four garment layers ≈ 17k.
   // Draws: skin, face-node cloth, static fittings, corneas, hair cards.
   budget: { triangles: [58000, 14500, 2700], draws: 5 },
   // The cornea's lacquer, and the skin: the pore strip's roughness under a dull olive sheen.

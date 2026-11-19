@@ -36,29 +36,54 @@ const grow = (p: Vec3): Vec3 => [
   (p[2] - BASE[2]) * (PROPORTIONS.neck - 1),
 ];
 
-/** How far the neck's stretch moves a bind point of the body: that of the nearest point on the
- *  neck line (nothing behind its base, the full reach past its end). */
-function alongNeck(p: Vec3): Vec3 {
+/** The nearest point on the neck line to a bind point, and the segment it lies inside (null when
+ *  it is a segment's end: there the nearest point does not move with p). */
+function nearestOnNeck(p: Vec3): { at: Vec3; ab: Vec3 | null } {
   let best = Infinity;
   let at: Vec3 = BASE;
+  let along: Vec3 | null = null;
   for (let i = 0; i + 1 < NECK.length; i++) {
     const a = NECK[i] ?? BASE;
     const b = NECK[i + 1] ?? a;
     const ab: Vec3 = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
-    const t = Math.max(
-      0,
-      Math.min(
-        1,
-        ((p[0] - a[0]) * ab[0] + (p[1] - a[1]) * ab[1] + (p[2] - a[2]) * ab[2]) /
-          (ab[0] ** 2 + ab[1] ** 2 + ab[2] ** 2),
-      ),
-    );
+    const raw =
+      ((p[0] - a[0]) * ab[0] + (p[1] - a[1]) * ab[1] + (p[2] - a[2]) * ab[2]) /
+      (ab[0] ** 2 + ab[1] ** 2 + ab[2] ** 2);
+    const t = Math.max(0, Math.min(1, raw));
     const q: Vec3 = [a[0] + ab[0] * t, a[1] + ab[1] * t, a[2] + ab[2] * t];
     const d = Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2]);
-    if (d < best) [best, at] = [d, q];
+    if (d < best) [best, at, along] = [d, q, raw > 0 && raw < 1 ? ab : null];
   }
-  return grow(at);
+  return { at, ab: along };
 }
+
+/** How far the neck's stretch moves a bind point of the body: that of the nearest point on the
+ *  neck line (nothing behind its base, the full reach past its end). */
+const alongNeck = (p: Vec3): Vec3 => grow(nearestOnNeck(p).at);
+
+/**
+ * A bind normal carried through `posePoint`'s deformation: the inverse-transpose of its Jacobian
+ * J = D + u vᵀ, D the legs' vertical stretch (diag 1, 1, STRETCH in the band) and u vᵀ the neck's
+ * (u = grow(ab), v = ab / |ab|², non-zero only inside a neck segment), by Sherman–Morrison.
+ */
+function poseNormal(p: Vec3, n: Vec3, family: Family): Vec3 {
+  const dz = p[2] > Z0 && p[2] < Z1 ? STRETCH : 1;
+  const m: Vec3 = [n[0], n[1], n[2] / dz];
+  const ab = family === 'body' ? nearestOnNeck(p).ab : null;
+  if (!ab) return unit(m);
+  const u = grow([BASE[0] + ab[0], BASE[1] + ab[1], BASE[2] + ab[2]]);
+  const ll = ab[0] ** 2 + ab[1] ** 2 + ab[2] ** 2;
+  const v: Vec3 = [ab[0] / ll, ab[1] / ll, ab[2] / ll];
+  const k =
+    (u[0] * m[0] + u[1] * m[1] + u[2] * m[2]) /
+    (1 + v[0] * u[0] + v[1] * u[1] + (v[2] * u[2]) / dz);
+  return unit([m[0] - v[0] * k, m[1] - v[1] * k, m[2] - (v[2] / dz) * k]);
+}
+
+const unit = (m: Vec3): Vec3 => {
+  const l = Math.hypot(m[0], m[1], m[2]) || 1;
+  return [m[0] / l, m[1] / l, m[2] / l];
+};
 
 /** A bind-pose point (world) carried to the posed skeleton. */
 export function posePoint(p: Vec3, family: Family): Vec3 {
@@ -68,8 +93,9 @@ export function posePoint(p: Vec3, family: Family): Vec3 {
 
 /**
  * A part's mesh carried to the posed skeleton. `pivot` is the part's bind pivot (its vertices
- * are relative to it); the result is relative to the posed pivot `posePoint(pivot, family)`. Normals in
- * the stretched band lean back by the stretch (the inverse-transpose of a vertical scale).
+ * are relative to it); the result is relative to the posed pivot `posePoint(pivot, family)`. Normals
+ * follow the deformation (`poseNormal`): they lean back in the stretched leg band and along the
+ * stretched neck.
  */
 export function poseMesh(mesh: Mesh, family: Family, pivot?: Vec3): Mesh {
   const at = pivot ?? [0, 0, 0];
@@ -84,11 +110,10 @@ export function poseMesh(mesh: Mesh, family: Family, pivot?: Vec3): Mesh {
     positions[i] = q[0] - to[0];
     positions[i + 1] = q[1] - to[1];
     positions[i + 2] = q[2] - to[2];
-    if (w[2] > Z0 && w[2] < Z1) {
-      const n: Vec3 = [normals[i] ?? 0, normals[i + 1] ?? 0, (normals[i + 2] ?? 0) / STRETCH];
-      const l = Math.hypot(n[0], n[1], n[2]) || 1;
-      normals.set([n[0] / l, n[1] / l, n[2] / l], i);
-    }
+    normals.set(
+      poseNormal(w, [normals[i] ?? 0, normals[i + 1] ?? 0, normals[i + 2] ?? 0], family),
+      i,
+    );
   }
   return { ...mesh, positions, normals };
 }

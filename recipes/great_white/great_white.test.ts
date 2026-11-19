@@ -115,6 +115,34 @@ describe('sourced dimensions', () => {
     expect(triangleCount(fin)).toBeGreaterThan(triangleCount(dorsalFin(0)));
     expect(copepods(2, seats)).toEqual([]);
   });
+
+  it('cuts the notch into the generated trailing edge, not only into dorsalNotch', () => {
+    // dorsalFin(0) is a plate loft: 27 rings at u = 0.992 i / 26, 19 vertices each (trailing
+    // edge at j 0, leading edge at j 9), then two poles.
+    const fin = dorsalFin(0);
+    const P = fin.positions;
+    expect(P.length / 3).toBe(27 * 19 + 2);
+    const at = (i: number, j: number): [number, number] => [
+      P[(i * 19 + j) * 3] ?? 0,
+      P[(i * 19 + j) * 3 + 2] ?? 0,
+    ];
+    const u = (i: number) => (0.992 * i) / 26;
+    // The unnotched profile at ring 15 (u 0.57): the trailing edge between rings 12 and 18 (u 0.46,
+    // 0.69, where the notch is zero), measured along the chord toward the leading edge.
+    const pull = (i: number, lo: number, hi: number): number => {
+      const [a, b] = [at(lo, 0), at(hi, 0)];
+      const k = (u(i) - u(lo)) / (u(hi) - u(lo));
+      const t: [number, number] = [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k];
+      const lead = at(i, 9);
+      const c: [number, number] = [lead[0] - t[0], lead[1] - t[1]];
+      const p = at(i, 0);
+      return ((p[0] - t[0]) * c[0] + (p[1] - t[1]) * c[1]) / (c[0] ** 2 + c[1] ** 2);
+    };
+    // dorsalNotch(0.572) ≈ 0.37 of the chord; the profile's own bend is a few hundredths.
+    expect(pull(15, 12, 18)).toBeGreaterThan(0.25);
+    // Away from the notch the same measure finds no dip.
+    expect(Math.abs(pull(9, 6, 12))).toBeLessThan(0.05);
+  });
 });
 
 describe('close-up detail', () => {

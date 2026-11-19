@@ -19,7 +19,7 @@ fore claws, a short tail lost in the fur, coat from yellowish-brown to dark brow
 | Tail | 0.06–0.22 m | **0.12** | same |
 | Mass | 80–600 kg; Eurasian males average 350–500 kg | **400** declared, ±30 % | same; [Wikipedia: Eurasian brown bear](https://en.wikipedia.org/wiki/Eurasian_brown_bear) |
 | Mass (Wikidata) | 500 kg, no qualifier | cross-checked ±25 % (`MASS_CONFLICTS` empty) | [Wikidata Q36341](https://www.wikidata.org/wiki/Q36341) P2067, `data/wikidata-Q36341.json` |
-| Skull | males 315–455 mm long, zygomatic width 175–277 mm | head **0.48** incl. fur (a big male's 45 cm skull), furred width **0.66** × length, muzzle 0.31 of the head | Wikipedia: Brown bear |
+| Skull | males 315–455 mm long, zygomatic width 175–277 mm | head **0.48** incl. fur (a big male's 45 cm skull), furred width **0.72** × length, muzzle 0.31 of the head | Wikipedia: Brown bear |
 | Fore claws | 50–60 mm, 70–100 mm along the curve | kind default (pale keratin) | same |
 | Coated box | — | 2.30 × 0.70 × 1.25 m (measured off the posed model) | — |
 
@@ -55,6 +55,5 @@ fore claws, a short tail lost in the fur, coat from yellowish-brown to dark brow
 - Story: river clay drying pale to the elbows and hocks, wet fur above it and under the belly,
   the right shoulder rubbed pale on a marking tree, two rake scars under it and two across the
   muzzle, matted flanks and breeches.
-- Not done, and why: thicker forearms (`build.limbs` > 1 widens the stance past the 0.70 m
-  envelope); hind feet under the hips (the kind's plantigrade hind chain puts the heel 18 cm
-  behind the hip: a kind change).
+- Not done: the face between the cards is still smooth painted skin with a weak forehead step
+  (see known gaps above).

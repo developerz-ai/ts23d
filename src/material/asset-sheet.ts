@@ -7,6 +7,9 @@
 // bytes equal a whole `paintTrimSheet(recipe, ids)`.
 // A mesh built outside any compile (a module-level constant) records nothing: its custom rows are
 // then read from its UVs, which names the material only while one defined material holds the row.
+// Known gap (open): such a mesh on a row the compile DID record for another material is read as
+// the recorded one, silently; meshes carry no material provenance to tell them apart. Build every
+// mesh that maps onto a project material inside build() or a definePart.
 
 import { type CompiledAsset, type MaterialUse, Ts23dError } from '../core/index.ts';
 import { materialGeneration } from './define.ts';
@@ -86,7 +89,24 @@ interface Base {
   last?: { readonly look: readonly unknown[]; readonly sheet: PaintedSheet };
 }
 
+/**
+ * Least recently used first. Bounded: a 4096² base is 192 MiB (and its `last` as much again), so a
+ * long-lived worker painting many seeds or sizes must not keep them all. The newest always stays.
+ */
 const bases = new Map<string, Base>();
+const BASES_KEPT = 4;
+const BASES_BYTES = 256 * 1024 * 1024;
+const bytesOf = (s: PaintedSheet): number => s.albedo.length + s.normal.length + s.orm.length;
+
+function evictBases(): void {
+  let bytes = 0;
+  for (const b of bases.values()) bytes += bytesOf(b.sheet) + (b.last ? bytesOf(b.last.sheet) : 0);
+  for (const [key, b] of bases) {
+    if (bases.size <= 1 || (bases.size <= BASES_KEPT && bytes <= BASES_BYTES)) return;
+    bytes -= bytesOf(b.sheet) + (b.last ? bytesOf(b.last.sheet) : 0);
+    bases.delete(key);
+  }
+}
 const same = (a: readonly unknown[], b: readonly unknown[]): boolean =>
   a.length === b.length && a.every((x, i) => x === b[i]);
 const stripLook = (recipe: SheetRecipe, ids: readonly string[]): unknown[] =>
@@ -99,9 +119,14 @@ function baseOf(recipe: SheetRecipe): Base {
     ...CELLS.map((id) => recipe.cells?.[id] ?? DEFAULT_SHEET.cells?.[id]),
   ];
   const hit = bases.get(key);
-  if (hit && same(hit.look, look)) return hit;
+  bases.delete(key);
+  if (hit && same(hit.look, look)) {
+    bases.set(key, hit);
+    return hit;
+  }
   const base: Base = { look, sheet: paintTrimSheet(recipe, []) };
   bases.set(key, base);
+  evictBases();
   return base;
 }
 

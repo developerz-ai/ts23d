@@ -177,23 +177,26 @@ const BURIED = 0.003;
  * root ring (no wider than the knuckle leaves room for) is sunk from the tip `t` toward the
  * centre until all of it lies `BURIED` inside the knuckle's own ellipsoid, so it scales with the
  * toe: a fox's 2 cm paw buries its claws as surely as a bear's, at any chest width, limb
- * thickness or sculpt cell.
+ * thickness or sculpt cell. A knuckle thinner than 4 mm (semi-axis) buries three quarters of it
+ * instead, so the root keeps a positive radius (a negative one turned the claw inside out, D345).
  */
-function clawRoot(
+export function clawRoot(
   semi: Vec3,
   k: Vec3,
   t: Vec3,
   dir: Vec3,
   wide: number,
 ): { base: Vec3; radius: number; sunk: number } {
-  const radius = Math.min(wide, Math.min(semi[1], semi[2]) - BURIED);
+  const thin = Math.min(semi[1], semi[2]);
+  const bury = Math.min(BURIED, thin * 0.75);
+  const radius = Math.min(wide, thin - bury);
   const u = v3.norm(v3.cross(dir, [0, 0, 1]));
   const w = v3.cross(dir, u);
   const inside = (c: Vec3): boolean => {
     for (let j = 0; j < 8; j++) {
       const a = (j / 8) * Math.PI * 2;
       const p = v3.add(c, v3.add(v3.mul(u, radius * Math.cos(a)), v3.mul(w, radius * Math.sin(a))));
-      const q = [0, 1, 2].map((i) => ((p[i] ?? 0) - (k[i] ?? 0)) / ((semi[i] ?? 1) - BURIED));
+      const q = [0, 1, 2].map((i) => ((p[i] ?? 0) - (k[i] ?? 0)) / ((semi[i] ?? 1) - bury));
       if (Math.hypot(...q) > 1) return false;
     }
     return true;

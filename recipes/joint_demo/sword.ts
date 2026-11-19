@@ -59,9 +59,11 @@ interface Nick {
 }
 
 /** Faceted skin over rings that share a point count: one flat face per ring edge, smooth along
- *  the length (a blade's bevels stay crisp where a smooth loft would round them). */
+ *  the length (a blade's bevels stay crisp where a smooth loft would round them). Closed: the
+ *  first ring is capped flat, and each facet runs from the last ring to the `tip` point. */
 function facets(
   rings: readonly (readonly Vec3[])[],
+  tip: Vec3,
   color: (p: Vec3, k: number) => Vec3,
   strip: StripId,
   across: number,
@@ -73,12 +75,18 @@ function facets(
   // The strip's V runs across the blade, centred on its axis.
   const x0 = ((rings[0]?.[0]?.[0] ?? 0) + (rings[0]?.[n / 2]?.[0] ?? 0)) / 2;
   const pt = (i: number, k: number): Vec3 => rings[i]?.[k % n] as Vec3;
+  const uv = (p: Vec3): [number, number] => [
+    rect.u0 + ((p[2] - z0) / rect.metres) * (rect.u1 - rect.u0),
+    rect.v0 + (0.08 + 0.84 * (0.5 + (p[0] - x0) / across)) * (rect.v1 - rect.v0),
+  ];
+  const last = rings.length - 1;
   for (let k = 0; k < n; k++) {
     const idx: number[][] = [];
+    let tipN: Vec3 = [0, 0, 1];
     for (let i = 0; i < rings.length; i++) {
       const a = pt(i, k);
       const c = pt(i, k + 1);
-      const up = pt(Math.min(rings.length - 1, i + 1), k);
+      const up = i < last ? pt(i + 1, k) : tip;
       const dn = pt(Math.max(0, i - 1), k);
       const e: Vec3 = [c[0] - a[0], c[1] - a[1], c[2] - a[2]];
       const l: Vec3 = [up[0] - dn[0], up[1] - dn[1], up[2] - dn[2]];
@@ -87,25 +95,36 @@ function facets(
       let nz = e[0] * l[1] - e[1] * l[0];
       const len = Math.hypot(nx, ny, nz) || 1;
       [nx, ny, nz] = [nx / len, ny / len, nz / len];
+      tipN = [nx, ny, nz];
       const pair = [a, c].map((p, j) =>
         b.vertex({
           p,
           n: [nx, ny, nz],
-          uv: [
-            rect.u0 + ((p[2] - z0) / rect.metres) * (rect.u1 - rect.u0),
-            rect.v0 + (0.08 + 0.84 * (0.5 + (p[0] - x0) / across)) * (rect.v1 - rect.v0),
-          ],
+          uv: uv(p),
           color: color(p, k + j),
         }),
       );
       idx.push(pair);
     }
-    for (let i = 0; i < rings.length - 1; i++) {
+    for (let i = 0; i < last; i++) {
       const [a = 0, c = 0] = idx[i] ?? [];
       const [d = 0, e = 0] = idx[i + 1] ?? [];
       b.quad(a, c, e, d);
     }
+    // The point: this facet narrows from the last ring to one apex, on the facet's own normal.
+    const [a = 0, c = 0] = idx[last] ?? [];
+    const apex = b.vertex({
+      p: tip,
+      n: tipN,
+      uv: uv(tip),
+      color: color(tip, k),
+    });
+    b.tri(a, c, apex);
   }
+  // The shoulders' flat end (sunk in the cross): a fan over the first ring, facing down the blade.
+  const base = rings[0] ?? [];
+  const fan = base.map((p) => b.vertex({ p, n: [0, 0, -1], uv: uv(p), color: color(p, 0) }));
+  for (let k = 1; k < n - 1; k++) b.tri(fan[0] ?? 0, fan[k + 1] ?? 0, fan[k] ?? 0);
   return b.build();
 }
 
@@ -131,7 +150,8 @@ function blade(ctx: BuildContext, base: Vec3, length: number, rng: Rng): Mesh {
   if (ctx.lod < 2) for (const t of [0.87, 0.91, 0.945, 0.97, 0.988]) ts.add(t);
   for (const n of nicks)
     for (const d of [-1, 0, 1]) ts.add(Math.round((n.t + (d * n.half) / length) * 1e4) / 1e4);
-  const stations = [...ts].filter((t) => t >= 0 && t <= 1).sort((a, b) => a - b);
+  // Stations stop short of the point: the facets close on one apex at t = 1.
+  const stations = [...ts].filter((t) => t >= 0 && t < 1).sort((a, b) => a - b);
   const stain = valueNoise(rng.fork('patina'), { scale: 0.05, octaves: 3 });
   const bloom = valueNoise(rng.fork('rust'), { scale: 0.025, octaves: 2 });
   const rings = stations.map((t): Vec3[] => {
@@ -173,6 +193,7 @@ function blade(ctx: BuildContext, base: Vec3, length: number, rng: Rng): Mesh {
   });
   return facets(
     rings,
+    [x, y, z + length],
     (p) => {
       const t = (p[2] - z) / length;
       const w = halfWidth(t);

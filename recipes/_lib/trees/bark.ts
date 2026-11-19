@@ -33,6 +33,8 @@ export function pineBark(
   moss: number,
   noise: (p: Vec3) => number,
   grade?: BarkGrade,
+  /** World position of the mesh's frame (a part under a pivot, e.g. crown-local branches). */
+  origin: Vec3 = [0, 0, 0],
 ): Mesh {
   const uvs = new Float32Array(m.uvs);
   const colors = new Float32Array(m.colors);
@@ -50,10 +52,11 @@ export function pineBark(
       0.55 + 0.45 * (c[1] / top),
       0.55 + 0.45 * (c[2] / top),
     ];
+    // Height grade, low-trunk moss and their noise read world height, not the part's frame.
     const p: Vec3 = [
-      m.positions[i * 3] ?? 0,
-      m.positions[i * 3 + 1] ?? 0,
-      m.positions[i * 3 + 2] ?? 0,
+      (m.positions[i * 3] ?? 0) + origin[0],
+      (m.positions[i * 3 + 1] ?? 0) + origin[1],
+      (m.positions[i * 3 + 2] ?? 0) + origin[2],
     ];
     if (grade) {
       const t = Math.min(1, Math.max(0, (p[2] - grade.z0) / (grade.z1 - grade.z0)));

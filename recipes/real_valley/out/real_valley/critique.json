@@ -26,9 +26,9 @@
     },
     "detail": {
       "score": 7,
-      "reason": "Tree specks on the forest and the meadow pattern; the Merced is barely visible.",
+      "reason": "Tree specks on the forest and the meadow pattern; the Merced now runs as a continuous thin line through the valley in TOP, but it is a hairline, not a river channel, and does not read in hero.png.",
       "fixes": [
-        "carve and colour the Merced from an OSM centreline",
+        "widen the Merced to its real ~30-50 m channel with a gravel bank so it reads in hero.png",
         "tree impostors on the forest floor"
       ]
     },
@@ -55,7 +55,7 @@
     }
   },
   "renders": {
-    "hero.png": "d3deeb321b64231fa8e63f6baae1aa2c46937ab9d36a91ff4e81b570a10b35e4",
-    "sheet.png": "3be849ad91bdbcda10b80759950fcf4d780c5e352ec07186448d35ecbf830674"
+    "hero.png": "6b2db222b57f2e536255879d4f57c1961a7ef62ba09118b7601c8c1c3e6071fa",
+    "sheet.png": "b7eee65644e701218c4ed60d9b1230a5b7909060cb0108f50ea58dacbaf1384d"
   }
 }

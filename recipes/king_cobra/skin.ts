@@ -1,6 +1,7 @@
-// Cobra weights. Turns of the pile lie a body-width apart, so distance alone would tie one turn to the
-// next and tear the skin in every clip that unwinds it. Each vertex finds its nearest spine bone, then
-// blends only with that bone's neighbours along the body (and the hood ribs, on the neck).
+// Cobra weights. Turns of the pile touch, so distance alone would tie one turn to the next and tear
+// the skin in every clip that unwinds it. Each vertex finds the body section it lies on (`bodyArc`:
+// the centreline sample whose oval section it is nearest, scaled by that section's size), takes the
+// spine bone there, then blends only with that bone's neighbours (and the hood ribs, on the neck).
 
 import {
   type BodyPlan,
@@ -9,8 +10,36 @@ import {
   SKIN_INFLUENCES,
   type Vec3,
 } from '@developerz.ai/ts23d';
+import { frameAt, halfW, TOTAL } from './shape.ts';
 
 const STEPS = 255;
+/** Section heights over the half-width, as `shape.ts` builds them: back and belly. */
+const [TOP, BELLY] = [0.92, 0.7];
+const ARC_SAMPLES = Array.from({ length: 701 }, (_, i) => {
+  const s = (i / 700) * TOTAL;
+  // Scale plates stand a few millimetres proud: a thin tail must still own them.
+  return { s, f: frameAt(s), w: Math.max(0.01, halfW(s) + 0.002) };
+});
+
+/** Arc position of the section a rest-pose point with outward normal `n` belongs to: the smallest
+ *  offset from a centreline sample measured in that sample's own section radii (an oval, flatter
+ *  under the belly), among samples the normal faces away from. Where two turns touch, a skin point
+ *  sits on both surfaces; only its own axis lies behind it. */
+export function bodyArc(p: Vec3, n: Vec3): number {
+  let [best, at] = [Infinity, 0];
+  for (const { s, f, w } of ARC_SAMPLES) {
+    const o: Vec3 = [p[0] - f.p[0], p[1] - f.p[1], p[2] - f.p[2]];
+    if (Math.abs(o[0]) > 0.12 || Math.abs(o[1]) > 0.12 || Math.abs(o[2]) > 0.12) continue;
+    if (o[0] * n[0] + o[1] * n[1] + o[2] * n[2] < 0) continue;
+    const along = (o[0] * f.t[0] + o[1] * f.t[1] + o[2] * f.t[2]) / w;
+    const side = (o[0] * f.side[0] + o[1] * f.side[1] + o[2] * f.side[2]) / w;
+    const up = o[0] * f.d[0] + o[1] * f.d[1] + o[2] * f.d[2];
+    const lift = up / (w * (up >= 0 ? TOP : BELLY));
+    const e = along * along + side * side + lift * lift;
+    if (e < best) [best, at] = [e, s];
+  }
+  return at;
+}
 
 /** Largest-remainder 1/255 weights, heaviest first, summing to exactly 1. */
 function quantised(pairs: readonly (readonly [number, number])[]): [number, number][] {
@@ -35,6 +64,57 @@ export interface BodySkin {
   /** Neighbour links each side that may share a vertex. */
   readonly window: number;
   readonly blend: number;
+  /** Spine link a rest-pose vertex (position, normal) belongs to; nearest bone capsule when absent. */
+  readonly link?: (p: Vec3, n: Vec3) => number;
+}
+
+/** Vertices per piece at or below which a piece (one scale plate, one scute) is linked as a whole. */
+const PIECE = 64;
+
+/** Each vertex's link. A small separate piece takes the link of its centre and mean normal, so a
+ *  plate whose edge normals point sideways is never split between two turns of the pile. */
+function linksOf(mesh: Mesh, link: (p: Vec3, n: Vec3) => number): Int32Array {
+  const count = mesh.positions.length / 3;
+  const up = Int32Array.from({ length: count }, (_, i) => i);
+  const find = (i: number): number => {
+    let r = i;
+    while (up[r] !== r) r = up[r] ?? r;
+    for (let k = i; up[k] !== r; ) [k, up[k]] = [up[k] ?? r, r];
+    return r;
+  };
+  const I = mesh.indices;
+  for (let t = 0; t < I.length; t += 3)
+    for (let k = 1; k < 3; k++) up[find(I[t + k] ?? 0)] = find(I[t] ?? 0);
+  const groups = new Map<number, number[]>();
+  for (let v = 0; v < count; v++) {
+    const r = find(v);
+    const g = groups.get(r);
+    if (g) g.push(v);
+    else groups.set(r, [v]);
+  }
+  const P = mesh.positions;
+  const N = mesh.normals;
+  const out = new Int32Array(count);
+  const at = (v: number, A: ArrayLike<number>): Vec3 => [
+    A[v * 3] ?? 0,
+    A[v * 3 + 1] ?? 0,
+    A[v * 3 + 2] ?? 0,
+  ];
+  for (const g of groups.values()) {
+    if (g.length > PIECE) {
+      for (const v of g) out[v] = link(at(v, P), at(v, N));
+      continue;
+    }
+    const mean = (A: ArrayLike<number>): Vec3 => {
+      let [x, y, z] = [0, 0, 0];
+      for (const v of g)
+        [x, y, z] = [x + (A[v * 3] ?? 0), y + (A[v * 3 + 1] ?? 0), z + (A[v * 3 + 2] ?? 0)];
+      return [x / g.length, y / g.length, z / g.length];
+    };
+    const l = link(mean(P), mean(N));
+    for (const v of g) out[v] = l;
+  }
+  return out;
 }
 
 export function skinBody(mesh: Mesh, plan: BodyPlan, o: BodySkin): Mesh {
@@ -48,17 +128,19 @@ export function skinBody(mesh: Mesh, plan: BodyPlan, o: BodySkin): Mesh {
   const count = mesh.positions.length / 3;
   const joints = new Uint16Array(count * SKIN_INFLUENCES);
   const weights = new Float32Array(count * SKIN_INFLUENCES);
+  const links = o.link ? linksOf(mesh, o.link) : undefined;
   for (let v = 0; v < count; v++) {
     const p: Vec3 = [
       mesh.positions[v * 3] ?? 0,
       mesh.positions[v * 3 + 1] ?? 0,
       mesh.positions[v * 3 + 2] ?? 0,
     ];
-    let [near, best] = [0, Infinity];
-    spine.forEach((c, i) => {
-      const d = capsuleDistance(p, c);
-      if (d < best) [near, best] = [i, d];
-    });
+    let [near, best] = [links?.[v] ?? 0, Infinity];
+    if (!links)
+      spine.forEach((c, i) => {
+        const d = capsuleDistance(p, c);
+        if (d < best) [near, best] = [i, d];
+      });
     const found: [number, number][] = [];
     const lo = Math.max(0, near - o.window);
     const hi = Math.min(spine.length - 1, near + o.window);

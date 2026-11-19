@@ -22,7 +22,7 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    59939,
+    59891,
     29346,
     5856
   ],
@@ -63,7 +63,7 @@
     {
       "label": "211 West 10th Street height (OSM height tag)",
       "spec": 21.5,
-      "measured": 21.5,
+      "measured": 21.511999130249023,
       "source": "https://www.openstreetmap.org/way/250474576"
     },
     {

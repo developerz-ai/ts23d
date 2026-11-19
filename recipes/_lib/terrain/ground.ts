@@ -254,7 +254,7 @@ export function ribbon(
   const r = stripRect('water');
   const mb = new MeshBuilder();
   let run = 0;
-  const rows: [number, number][] = [];
+  const rows: [number, number, number][] = [];
   path.forEach((p, i) => {
     const a = path[Math.max(0, i - 1)] ?? p;
     const b = path[Math.min(path.length - 1, i + 1)] ?? p;
@@ -267,12 +267,14 @@ export function ribbon(
     const w = (width[0] + (width[1] - width[0]) * t) / 2;
     const side: [number, number] = [-dy / l, dx / l];
     const v = r.v0 + HALF + ((run % 40) / 40) * (r.v1 - r.v0 - 2 * HALF);
-    const ids = [-1, 1].map((s) => {
+    // The water level: `lift` over the bed's centre line. The centre row carries it; the banks
+    // sink into the ground so the surface meets the terrain along both shores (never climbing a
+    // valley wall), so on flat ground the surface still shows between them.
+    const level = height(p[0], p[1]) + lift;
+    const ids = [-1, 0, 1].map((s) => {
       const x = p[0] + side[0] * w * s;
       const y = p[1] + side[1] * w * s;
-      // The water level: `lift` over the bed's centre line, the banks sunk into the ground so
-      // the surface meets the terrain along both shores (never climbing a valley wall).
-      const z = Math.min(height(x, y) - 0.3, height(p[0], p[1]) + lift);
+      const z = s === 0 ? level : Math.min(height(x, y) - 0.3, level);
       return mb.vertex({
         p: [x, y, z],
         n: [0, 0, 1],
@@ -280,14 +282,16 @@ export function ribbon(
         color,
       });
     });
-    rows.push([ids[0] ?? 0, ids[1] ?? 0]);
+    rows.push([ids[0] ?? 0, ids[1] ?? 0, ids[2] ?? 0]);
   });
   for (let i = 0; i + 1 < rows.length; i++) {
-    const [a, b] = rows[i] ?? [0, 0];
-    const [c, d] = rows[i + 1] ?? [0, 0];
-    // Left bank a/c, right bank b/d: counter-clockwise seen from above.
-    mb.tri(a, d, b);
-    mb.tri(a, c, d);
+    const [a, m, b] = rows[i] ?? [0, 0, 0];
+    const [c, n, d] = rows[i + 1] ?? [0, 0, 0];
+    // Left bank a/c, centre m/n, right bank b/d: counter-clockwise seen from above.
+    mb.tri(a, n, m);
+    mb.tri(a, c, n);
+    mb.tri(m, d, b);
+    mb.tri(m, n, d);
   }
   return mb.build();
 }

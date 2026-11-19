@@ -66,8 +66,8 @@ export const BEAR: CreatureSpec = familyMember(WOLF, {
   pattern: { kind: 'agouti', scale: 0.02, coverage: 0.3, seed: 7 },
   overrides: {
     coat: 0.045,
-    // Zygomatic width 17.5–27.7 cm on a 31.5–45.5 cm skull (Wikipedia: Brown bear): ≈ 0.6, and
-    // the cheek fur adds ~1.5 cm a side: 0.66 of the furred head. The muzzle is under a third of the
+    // Zygomatic width 17.5–27.7 cm on a 31.5–45.5 cm skull (Wikipedia: Brown bear): ≈ 0.6 bare;
+    // a big male's 27.7 cm plus the cheek fur gives 0.72 of the furred head. The muzzle is under a third of the
     // head, short and blunt with a broad nose pad, under a dished forehead (a longer, narrower
     // one read as a wolverine).
     face: {

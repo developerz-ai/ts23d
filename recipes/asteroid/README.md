@@ -20,7 +20,7 @@ The base rock (`#3b3632`/`#4f4841`) is C-type dark. The ore veins (`#b78a45`) st
 M-type metal. The glowing crystals (`#3fe0d0`) are a game convention, not science.
 
 ## How it is built
-`sdf({ field, resolution: ctx.pick([0.17, 0.38, 0.95]) })` over one field:
+`sdf({ field, resolution: ctx.pick([0.2, 0.85, 1.5]) })` over one field:
 1. An ellipsoid core plus three smooth-unioned ellipsoid lobes.
 2. `valueNoise` displacement: 0.65 m at a 2.8 m feature size, plus 0.12 m pitting at 0.8 m.
 3. Seven fracture half-spaces reaching 75–90 % of the body, smooth-max'd (k = 0.12 m): they facet

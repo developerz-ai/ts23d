@@ -169,3 +169,16 @@ describe('defineMaterial: output', () => {
     );
   });
 });
+
+describe('materialSnapshot', () => {
+  it('puts back exactly what was defined at snapshot time, not what came after', () => {
+    defineMaterial({ id: 'snap_before', roughness: 0.4 });
+    const restore = materialSnapshot();
+    defineMaterial({ id: 'snap_after', roughness: 0.7 });
+    resetMaterials();
+    expect(code(() => materialOf('snap_before' as StripId))).toBe('T3D_MATERIAL_UNKNOWN');
+    restore();
+    expect(materialOf('snap_before' as StripId).origin).toBe('defined');
+    expect(code(() => materialOf('snap_after' as StripId))).toBe('T3D_MATERIAL_UNKNOWN');
+  });
+});

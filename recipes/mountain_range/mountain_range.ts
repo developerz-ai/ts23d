@@ -2,9 +2,11 @@
 //
 // Pipeline, all seeded from ctx.rng (three variants = three seeds, valley headings and windows):
 //   1. field (field.ts) — ridged multifractal over a U-shaped glacial trough, sampled at the
-//      variant's window (`offset`) of an endless field; eroded on one 256² grid shared by every
-//      LOD (hydraulic droplets, thermal 45° cap, needle clamp), erosion faded out at the cut so the
-//      tile's boundary is the raw field (neighbour tiles of the same field meet flush).
+//      variant's window (`offset`) of an endless field; eroded on one grid of the tile plus a
+//      250 m margin (hydraulic droplets, thermal 45° cap, needle clamp), then cropped to 256²
+//      shared by every LOD, so the border row is an interior, relaxed row of the erosion. Erosion
+//      is per tile and not faded at the cut: neighbour tiles share the raw field exactly but their
+//      eroded edges differ by metres (README: "The tile's edge", measured seam mismatch).
 //   2. colour — smooth per-vertex blends (ground.ts: no per-triangle strip switches, so no stripe
 //      banding): forest below the treeline, meadow above, rock on steep ground, scree on fans, damp
 //      torrent beds; north faces lose forest ~220 m lower, and the lines break up with noise. Snow

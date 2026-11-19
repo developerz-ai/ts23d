@@ -200,7 +200,9 @@ export function wearPaint(w: WearSpec): WearPaint {
       const { d, t } = toSegment(flat(p), flat(s.a), flat(s.b));
       if (d > s.width * 3) continue;
       // Tapered ends; a bare pale core with the parted fur darker either side of it.
-      const taper = Math.sin(Math.PI * Math.min(1, Math.max(0, t))) ** 0.5;
+      // At (and past) an end the stroke has tapered to nothing (and smooth(0, 0, d) is undefined).
+      if (t <= 0 || t >= 1) continue;
+      const taper = Math.sin(Math.PI * t) ** 0.5;
       const wobble = 0.75 + 0.5 * noise3(x / 0.01, y / 0.01, z / 0.01, salt + 51);
       const core = smooth(s.width * taper * wobble, s.width * 0.35 * taper, d);
       const rim = smooth(s.width * 3, s.width, d) * (1 - core) * taper;

@@ -27,8 +27,6 @@ import {
 } from './trim-sheet.ts';
 
 const defined = new Map<string, MaterialDef>();
-/** Every definition this process has seen, latest per id: what `materialSnapshot` restores from. */
-const seen = new Map<string, MaterialDef>();
 let generation = 0;
 
 /**
@@ -88,7 +86,6 @@ export function defineMaterial(def: MaterialDef): CustomStripId {
     });
   }
   defined.set(id, def);
-  seen.set(id, def);
   generation++;
   pushCustom(id, def.spanMetres ?? 4, def.row ?? homeSlot(id, CUSTOM_STRIP_SLOTS));
   (HOUSE_STRIPS as Record<string, StripRecipe>)[id] = recipe;
@@ -112,10 +109,12 @@ export function resetMaterials(): void {
 }
 
 /**
- * Remember what is defined now; the returned function puts that back, plus every material defined
- * since (a recipe module imported while the test file ran defines its materials once, at import,
- * and is never evaluated again). For tests that call `resetMaterials()`: without this, a later
- * test in the process that compiles such a recipe fails with T3D_MATERIAL_UNKNOWN (D334).
+ * Remember what is defined now; the returned function resets and puts exactly that back. Only
+ * definitions present at snapshot time survive: anything defined after it (a test's own fixture
+ * materials) is forgotten, so take the snapshot before the file imports a recipe whose materials
+ * later files need. For tests that call `resetMaterials()`: recipe modules define their materials
+ * once, at import, and are never evaluated again, so without this a later test in the process
+ * that compiles such a recipe fails with T3D_MATERIAL_UNKNOWN (D334).
  */
 export function materialSnapshot(): () => void {
   const saved = [...defined.values()];

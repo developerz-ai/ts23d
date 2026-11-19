@@ -78,6 +78,24 @@ export function worn(mesh: Mesh, at: Vec3 = [0, 0, 0]): Mesh {
     : m;
 }
 
+/** Per vertex, the sum of its triangles' unnormalised (area-weighted) winding normals. */
+function faceSums(P: Float32Array, indices: Uint32Array): Float64Array {
+  const acc = new Float64Array(P.length);
+  for (let t = 0; t < indices.length; t += 3) {
+    const [a, b, c] = [indices[t] ?? 0, indices[t + 1] ?? 0, indices[t + 2] ?? 0];
+    const u = [0, 1, 2].map((k) => (P[b * 3 + k] ?? 0) - (P[a * 3 + k] ?? 0));
+    const v = [0, 1, 2].map((k) => (P[c * 3 + k] ?? 0) - (P[a * 3 + k] ?? 0));
+    const f = [
+      (u[1] ?? 0) * (v[2] ?? 0) - (u[2] ?? 0) * (v[1] ?? 0),
+      (u[2] ?? 0) * (v[0] ?? 0) - (u[0] ?? 0) * (v[2] ?? 0),
+      (u[0] ?? 0) * (v[1] ?? 0) - (u[1] ?? 0) * (v[0] ?? 0),
+    ];
+    for (const w of [a, b, c])
+      for (let k = 0; k < 3; k++) acc[w * 3 + k] = (acc[w * 3 + k] ?? 0) + (f[k] ?? 0);
+  }
+  return acc;
+}
+
 /**
  * Snap a horn's tip off: everything beyond the break plane (at `keep` of the way from `root` to
  * the farthest vertex, tilted so the break is slanted) is pressed onto the plane and painted as
@@ -107,7 +125,9 @@ export function brokenTip(horn: Mesh, root: Vec3, keep: number): Mesh {
     root[2] + axis[2] * far * keep,
   ];
   const positions = new Float32Array(P);
+  const normals = new Float32Array(horn.normals);
   const colors = new Float32Array(horn.colors);
+  const moved: number[] = [];
   for (let i = 0; i < P.length; i += 3) {
     const h =
       ((P[i] ?? 0) - at[0]) * n[0] +
@@ -115,10 +135,19 @@ export function brokenTip(horn: Mesh, root: Vec3, keep: number): Mesh {
       ((P[i + 2] ?? 0) - at[2]) * n[2];
     if (h <= 0) continue;
     for (let k = 0; k < 3; k++) positions[i + k] = (P[i + k] ?? 0) - (n[k] ?? 0) * h;
+    moved.push(i / 3);
     const core = mix(C.horn, C.hornRoot, smooth(0, far * 0.04, h) * 0.55);
     colors.set(core, i);
   }
-  return { ...horn, positions, colors };
+  // A pressed vertex lies on the break face (or its rim): its normal is that of the faces it now
+  // touches, area-weighted by winding, so it looks out along the break and blends into the wall.
+  const faces = faceSums(positions, horn.indices);
+  for (const v of moved) {
+    const f: Vec3 = [faces[v * 3] ?? 0, faces[v * 3 + 1] ?? 0, faces[v * 3 + 2] ?? 0];
+    const l = Math.hypot(f[0], f[1], f[2]);
+    normals.set(l > 0 ? [f[0] / l, f[1] / l, f[2] / l] : n, v * 3);
+  }
+  return { ...horn, positions, normals, colors };
 }
 
 /**
@@ -157,12 +186,27 @@ export function tornEdge(
   }
   if (!rim) return membrane;
   const positions = new Float32Array(P);
+  const normals = new Float32Array(membrane.normals);
   const colors = new Float32Array(membrane.colors);
   for (let i = 0; i < P.length; i += 3) {
-    const d = Math.hypot((P[i] ?? 0) - rim[0], (P[i + 1] ?? 0) - rim[1], (P[i + 2] ?? 0) - rim[2]);
+    const r: Vec3 = [(P[i] ?? 0) - rim[0], (P[i + 1] ?? 0) - rim[1], (P[i + 2] ?? 0) - rim[2]];
+    const d = Math.hypot(r[0], r[1], r[2]);
     if (d >= radius) continue;
     const t = 1 - d / radius;
     for (let c = 0; c < 3; c++) positions[i + c] = (P[i + c] ?? 0) - (e[c] ?? 0) * depth * t * t;
+    // The pull is p − e·depth·t²: Jacobian J = I + e gᵀ, g = 2·depth·t·r / (radius·d). Normals
+    // go by its cofactor det(J)·J⁻ᵀ = (1 + e·g) I − g eᵀ, which keeps them on the side the
+    // triangles' winding faces. The rim vertex (d = 0) is the notch's apex and keeps its normal.
+    if (d > 0) {
+      const s = (2 * depth * t) / (radius * d);
+      const g: Vec3 = [r[0] * s, r[1] * s, r[2] * s];
+      const nv: Vec3 = [normals[i] ?? 0, normals[i + 1] ?? 0, normals[i + 2] ?? 0];
+      const en = e[0] * nv[0] + e[1] * nv[1] + e[2] * nv[2];
+      const det = 1 + e[0] * g[0] + e[1] * g[1] + e[2] * g[2];
+      const m: Vec3 = [nv[0] * det - g[0] * en, nv[1] * det - g[1] * en, nv[2] * det - g[2] * en];
+      const l = Math.hypot(m[0], m[1], m[2]) || 1;
+      normals.set([m[0] / l, m[1] / l, m[2] / l], i);
+    }
     const dark = mix(
       [colors[i] ?? 0, colors[i + 1] ?? 0, colors[i + 2] ?? 0],
       C.scaleSeam,
@@ -170,5 +214,5 @@ export function tornEdge(
     );
     colors.set(dark, i);
   }
-  return { ...membrane, positions, colors };
+  return { ...membrane, positions, normals, colors };
 }

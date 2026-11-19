@@ -7,7 +7,7 @@
       "score": 8,
       "reason": "Horns, open jaw with teeth, dorsal spines, membrane wings with fingers and a long tail: the dragon reads in black from every view.",
       "fixes": [
-        "a spade or ridge on the tail tip so the TOP view has a signature end"
+        "enlarge the tail spade (it reads in TOP only) so the tail end also reads in SIDE and 3/4"
       ]
     },
     "proportions": {
@@ -55,7 +55,7 @@
     }
   },
   "renders": {
-    "hero.png": "2e0bbd356296af7e1783dd3181b05f276196e74e765615564189c08fb11e60ab",
-    "sheet.png": "cbf1191ba51f73b6f6f624ccb95a185f0c03656b035c163b1c451b5bf87cea67"
+    "hero.png": "7df2e4d49d2b71f2b858605a1eaf5bc4ee33c80f2c3958c8a7d6802631b0f8c0",
+    "sheet.png": "e7581e1fc655f377d24e5bdef6dcaffde4cb9acdc46955e9ee952e4b0c927723"
   }
 }

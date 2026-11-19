@@ -1,10 +1,10 @@
 // Human outfit, tailored in layers over the skull stage's anatomy (../_lib/bust/cloth-*.ts), each
-// material its own closed solid on its own strip (`outfitLayers`): a linen shirt (`canvas`) whose
+// material its own closed solid on its own strip (`outfitLayers`): a linen shirt (`LINEN`) whose
 // band collar hugs the neck's real outline at the seam (hiding the head/bust split) and shows in
-// a V, grey with sweat round the collar; a blue wool tunic 5 mm thick (`canvas`), its V rolled
+// a V, grey with sweat round the collar; a blue wool tunic 5 mm thick (`WOOL`), its V rolled
 // and stitched, drag folds from each armpit, gravity folds under the chest, an old stain down
 // the front; an ochre braid round the V, raised and meshed fine so it never stair-steps; a red
-// wool mantle 9 mm thick (its own part: the `wool` sheen finish) over the shoulders and back, its
+// wool mantle 9 mm thick (its own part, on `WOOL`, no finish) over the shoulders and back, its
 // neck edge rolled, a shoulder seam from the neck to each shoulder point, a woven border band
 // down its front edges, those edges rubbed pale, pipe folds hanging from the shoulders and slung
 // between the shoulder blades, a darned patch on the left shoulder, road dust on top and mud
@@ -51,15 +51,15 @@ const CAP = 0.06;
 /** How far a layer runs on under the one above it, metres (no gap opens at a rolled edge). */
 const LAP = 0.016;
 
-/** The canvas strip's own albedo (src/material/library.ts): a layer's vertex colour is the tint
- *  that lands its real colour on the strip. */
+/** The cloth strips' near-white ground (../_lib/bust/cloth-strips.ts): a layer's vertex colour is
+ *  the tint that lands its real colour on the strip. */
 const CANVAS = CLOTH_ALBEDO;
 const on = (want: V): V => [
   Math.min(1, want[0] / CANVAS[0]),
   Math.min(1, want[1] / CANVAS[1]),
   Math.min(1, want[2] / CANVAS[2]),
 ];
-/** Layer colours as tints on `canvas`: undyed linen and its sweat-grey, the tunic's blue and its
+/** Layer colours as tints on the cloth strips: undyed linen and its sweat-grey, the tunic's blue and its
  *  stain, the ochre braid, the mantle's madder red, its sun- and rub-worn edge, its darker woven
  *  border, a darn in undyed thread, road dust and mud. */
 const K = {

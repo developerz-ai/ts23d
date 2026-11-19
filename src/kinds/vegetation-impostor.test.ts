@@ -74,6 +74,39 @@ describe('far crown (clumps)', () => {
   });
 });
 
+describe('fillBox on double-sided cards', () => {
+  /** Vertex `i` of `m` as text: position (rounded) for grouping copies. */
+  const key = (m: Mesh, i: number): string =>
+    [0, 1, 2].map((k) => (m.positions[i * 3 + k] ?? 0).toFixed(6)).join(',');
+
+  it('fails before D346: moves the front and back copies of a corner together, normals follow', () => {
+    // A double-sided card short of the box on every side: each pull lands on a shared corner.
+    const card = leaf([0, 0, 1], 0.5);
+    const out = fillBox(card, { min: [-2, -1, -1], max: [2, 1, 3] });
+    const n = card.positions.length / 3;
+    for (let i = 0; i < n; i++)
+      for (let j = i + 1; j < n; j++)
+        if (key(card, i) === key(card, j)) expect(key(out, i)).toBe(key(out, j));
+    // Every vertex normal leans the way its triangles now face.
+    const P = (i: number) => [0, 1, 2].map((k) => out.positions[i * 3 + k] ?? 0);
+    for (let t = 0; t < out.indices.length; t += 3) {
+      const [a, b, c] = [0, 1, 2].map((k) => P(out.indices[t + k] ?? 0));
+      if (!a || !b || !c) continue;
+      const [u, v] = [a.map((x, k) => (b[k] ?? 0) - x), a.map((x, k) => (c[k] ?? 0) - x)];
+      const f = [
+        (u[1] ?? 0) * (v[2] ?? 0) - (u[2] ?? 0) * (v[1] ?? 0),
+        (u[2] ?? 0) * (v[0] ?? 0) - (u[0] ?? 0) * (v[2] ?? 0),
+        (u[0] ?? 0) * (v[1] ?? 0) - (u[1] ?? 0) * (v[0] ?? 0),
+      ];
+      for (let k = 0; k < 3; k++) {
+        const i = out.indices[t + k] ?? 0;
+        const dot = [0, 1, 2].reduce((s, x) => s + (out.normals[i * 3 + x] ?? 0) * (f[x] ?? 0), 0);
+        expect(dot).toBeGreaterThan(0);
+      }
+    }
+  });
+});
+
 describe('far crown (fronds)', () => {
   it('a leaflet mesh too short for the fronds asked draws none', () => {
     const stem = {

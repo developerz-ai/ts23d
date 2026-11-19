@@ -21,6 +21,7 @@ import {
   type Mesh,
   merge,
   place,
+  pointTriangleDistance,
   prism,
   type Vec2,
   type Vec3,
@@ -53,6 +54,8 @@ const SPINDLE_X0 = 0.076;
 const POST_D = 0.6; // post depth along X (the girder is GIRDER_W deep)
 const POST_W = 0.45; // post width along Y
 const KNEE_FOOT_X = POST_D / 2 - 0.045; // knee foot on the post's corner chord, not beside the post
+const KNEE_Z = ZB - 0.9; // knee foot height on the post
+const KNEE_W = 0.1; // knee brace section
 
 /** Mast pipe radius at height h over the deck (the lathe profile below, linear between rings). */
 const mastR = (h: number): number =>
@@ -113,13 +116,35 @@ const clearanceEnvelope =
  *  face, head in the girder's bottom chord. LOD2 keeps one brace on the centre plane. */
 function kneeEnds(y: number, s: number, lod: Lod): readonly (readonly [Vec3, Vec3])[] {
   return (lod === 2 ? [0] : [-1, 1]).map((side) => [
-    [side * KNEE_FOOT_X, y - s * 0.22, ZB - 0.9],
+    [side * KNEE_FOOT_X, y - s * 0.22, KNEE_Z],
     [side * (GIRDER_W / 2 - 0.05), y - s * 1.0, ZB],
   ]);
 }
 
-/** Both ends of every knee brace land on what they brace: the foot on its post, the head on the
- *  girder. `floating-parts` passes a brace that touches at one end only (defect D41). */
+/** Distance from `p` to the nearest triangle of `m` (its actual surface, not its bounding box). */
+function surfaceGap(p: Vec3, m: Mesh): number {
+  const v = (i: number): Vec3 => [
+    m.positions[i * 3] ?? 0,
+    m.positions[i * 3 + 1] ?? 0,
+    m.positions[i * 3 + 2] ?? 0,
+  ];
+  let best = Infinity;
+  for (let t = 0; t < m.indices.length; t += 3)
+    best = Math.min(
+      best,
+      pointTriangleDistance(
+        p,
+        v(m.indices[t] ?? 0),
+        v(m.indices[t + 1] ?? 0),
+        v(m.indices[t + 2] ?? 0),
+      ),
+    );
+  return best;
+}
+
+/** Both ends of every knee brace land on what they brace: the foot on a member of its post (its
+ *  surface within the brace's half-width, so a foot in the air between a post's uprights fails),
+ *  the head on the girder. `floating-parts` passes a brace that touches at one end only (D41). */
 const kneesLand =
   (tracks: number): Check =>
   (asset) => {
@@ -131,41 +156,21 @@ const kneesLand =
       const out = (k: 0 | 1 | 2): number => Math.max(b.min[k] - p[k], 0, p[k] - b.max[k]);
       return Math.hypot(out(0), out(1), out(2));
     };
-    /** The post lattice's own section, not the part's box: the base plate is wider than the
-     *  lattice, and a foot over the plate's overhang would still be standing in the air. */
-    /** The lattice section intersected with the built post, so a post that moves away from
-     *  where its knees are drawn fails too (no overlap → no support). */
-    const postSection = (y: number, side: string): Bounds | undefined => {
-      const m = world.get(`post_${side}`);
-      if (!m) return undefined;
-      const built = boundsOf(m);
-      const min: Vec3 = [
-        Math.max(-POST_D / 2, built.min[0]),
-        Math.max(y - POST_W / 2, built.min[1]),
-        Math.max(FOOT_H, built.min[2]),
-      ];
-      const max: Vec3 = [
-        Math.min(POST_D / 2, built.max[0]),
-        Math.min(y + POST_W / 2, built.max[1]),
-        Math.min(ZB + GIRDER_D, built.max[2]),
-      ];
-      return min.every((v, k) => v <= (max[k] ?? -Infinity)) ? { min, max } : undefined;
-    };
     for (const [side, s] of [
       ['l', 1],
       ['r', -1],
     ] as const) {
       const y = s * halfSpan(tracks);
+      const post = world.get(`post_${side}`);
       for (const [foot, head] of kneeEnds(y, s, asset.lod)) {
-        for (const [end, support, b] of [
-          [foot, `post_${side}`, postSection(y, side)],
-          [head, 'girder', girder && boundsOf(girder)],
+        for (const [end, support, d, tol] of [
+          [foot, `post_${side}`, post ? surfaceGap(foot, post) : Infinity, KNEE_W / 2 + 0.01],
+          [head, 'girder', gap(head, girder && boundsOf(girder)), 0.02],
         ] as const) {
-          const d = gap(end, b);
-          if (d > 0.02)
+          if (d > tol)
             out.push({
               message: `'knee_${side}' end [${end.map((v) => v.toFixed(2)).join(', ')}] is ${d.toFixed(3)} m clear of '${support}'`,
-              fix: `move the brace end onto '${support}' (inside its section), not beside it`,
+              fix: `move the brace end onto a member of '${support}' (or give it one there)`,
               part: `knee_${side}`,
             });
         }
@@ -283,8 +288,8 @@ function arm(kind: 'home' | 'distant', lod: Lod): { blade: Mesh; spectacle: Mesh
 }
 
 /**
- * Far post: an open frame (four corner angles, a mid-height batten on each X face and the cap
- * plate) instead of a solid column, so the posts stay see-through at distance like the lattice
+ * Far post: an open frame (four corner angles, a batten across each Y face at the knee height and
+ * the cap plate) instead of a solid column, so the posts stay see-through at distance like the lattice
  * they stand for.
  */
 function farPost(y: number, top: number): Mesh {
@@ -310,12 +315,13 @@ function farPost(y: number, top: number): Mesh {
           caps: false,
         }),
       );
-  const z = FOOT_H + (top - FOOT_H) * 0.5;
-  for (const dx of [-1, 1])
+  // Two battens across the inner and outer faces at the knee height: the far knee's foot lands
+  // on the inner one (the uprights stand at the corners, clear of the brace's centre plane).
+  for (const dy of [-1, 1])
     out.push(
       beam({
-        from: [(dx * POST_D) / 2, y - POST_W / 2, z],
-        to: [(dx * POST_D) / 2, y + POST_W / 2, z],
+        from: [-POST_D / 2, y + (dy * POST_W) / 2, KNEE_Z],
+        to: [POST_D / 2, y + (dy * POST_W) / 2, KNEE_Z],
         width: 0.07,
         color: steel,
         strip: 'iron',
@@ -385,20 +391,22 @@ const bridge = defineFamily({
     });
     const footed = footWear(ctx.rng.fork('foot-wear'));
     /** Every part through the material library, its wear story (painted steel fades and soots by
-     *  default), then dust on top faces and ground splash. */
+     *  default), then dust on top faces and ground splash; all read at the asset-space position,
+     *  `origin` being where a pivot-local mesh's frame sits. */
     const part = (
       name: string,
       m: Mesh | null,
       o?: Parameters<typeof ctx.part>[2],
       wear: Shade | null = sooty,
+      origin: Vec3 = [0, 0, 0],
     ): void => {
       if (!m) {
         ctx.part(name, null, o);
         return;
       }
       const mat = restrip(m, RULES);
-      const worn = wear ? shade(mat, wear) : mat;
-      ctx.part(name, weather(worn, { dust: 0.2, mud: 0.6, mudStrength: 0.5 }), o);
+      const worn = wear ? shade(mat, wear, origin) : mat;
+      ctx.part(name, weather(worn, { dust: 0.2, mud: 0.6, mudStrength: 0.5, at: origin }), o);
     };
     const rusty = ctx.rng.fork('rust');
     const section = lod === 0 ? 'angle' : 'square';
@@ -463,8 +471,8 @@ const bridge = defineFamily({
         beam({
           from,
           to,
-          width: 0.1,
-          height: 0.1,
+          width: KNEE_W,
+          height: KNEE_W,
           color: steel,
           strip: 'iron',
         }),
@@ -767,8 +775,9 @@ const bridge = defineFamily({
         });
         const a = arm(kind, lod);
         const name = `arm_${t}_${kind}`;
+        const pivot: Vec3 = [0, y, pz];
         ctx.group(name, {
-          at: [0, y, pz],
+          at: pivot,
           // The spindle turns in the bearing's bore: that interlock is the pivot.
           ...(lod < 2 ? { clearOf: [`bearing_${t}_${kind}`] } : {}),
           // Lower quadrant: about −X the blade (+Y) drops; stop → 60° clear → stop.
@@ -780,12 +789,19 @@ const bridge = defineFamily({
             oneWay: true,
           },
         });
-        part(`${name}_spectacle`, a.spectacle, {
-          parent: name,
-          // Carried on its spindle in the mast bearing (LOD2 hub bears on the mast face).
-          connect: { as: 'hinge', to: lod < 2 ? `bearing_${t}_${kind}` : `mast_${t}` },
-        });
-        part(`${name}_blade`, a.blade, { parent: name });
+        // Pivot-local meshes: their wear is read at the pivot's rest position up the mast.
+        part(
+          `${name}_spectacle`,
+          a.spectacle,
+          {
+            parent: name,
+            // Carried on its spindle in the mast bearing (LOD2 hub bears on the mast face).
+            connect: { as: 'hinge', to: lod < 2 ? `bearing_${t}_${kind}` : `mast_${t}` },
+          },
+          sooty,
+          pivot,
+        );
+        part(`${name}_blade`, a.blade, { parent: name }, sooty, pivot);
       }
       part(`mast_${t}`, merge(mast));
     });
