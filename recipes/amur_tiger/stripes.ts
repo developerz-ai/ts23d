@@ -138,6 +138,25 @@ function lowerBound(x: number): number {
   return lo;
 }
 
+/**
+ * The far LOD's stripes: eight broad authored bands, shoulder to croup. The far mesh's cells are
+ * 8 cm, four times a real stripe's width: sampling the LOD0 pattern there gave random dark
+ * triangles that changed at the switch. Each band is as wide as a cell, so every one lands on
+ * vertices, leaning back as it descends like the stripes it stands for.
+ */
+const FAR_BANDS = [-0.78, -0.6, -0.42, -0.24, -0.05, 0.14, 0.33, 0.52] as const;
+
+function farStripe(x: number, s: number): number {
+  if (s > 1.05) return 0;
+  let c = 0;
+  for (const [k, x0] of FAR_BANDS.entries()) {
+    const centre = x0 + 0.05 * s - (x0 < -0.4 ? 0.08 * s * s : 0);
+    const w = 0.034 * (1 - 0.35 * smoothstep(0.55, 1.05, s)) * (0.85 + 0.3 * hash(700 + k, 1));
+    c = Math.max(c, cover(Math.abs(x - centre), w, 0.03));
+  }
+  return c * 0.85;
+}
+
 /** Trunk / neck stripes at a body point (0..1). */
 export function bodyStripe(p: Vec3, lod: number): number {
   const [x, y, z] = p;
@@ -148,6 +167,7 @@ export function bodyStripe(p: Vec3, lod: number): number {
   if (s < -0.1 || s > 1.3) return 0;
   // Legs below the trunk are leg stripes' business.
   if (z < 0.42) return 0;
+  if (lod === 2) return farStripe(x, Math.max(0, s));
   const side = y >= 0 ? 0 : 1;
   const aa = AA[lod as 0 | 1 | 2] ?? 0.02;
   const i = lowerBound(x);

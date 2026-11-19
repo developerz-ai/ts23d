@@ -4,7 +4,7 @@
 
 import type { BodyPlanSpec, ChainSpec, Vec3 } from '@developerz.ai/ts23d';
 import { bodyPlan, createRng } from '@developerz.ai/ts23d';
-import { armRelief, armTint, headRelief, mantleRelief, mantleTint } from './skin.ts';
+import { armRelief, armTint, headRelief, mantleRelief, mantleTint, regenTint } from './skin.ts';
 
 export const REAL = {
   /** FAO maximum for females. */
@@ -19,6 +19,15 @@ export const REAL = {
 
 /** "Dorsal pair of arms slightly shorter" (FAO); how much is a design value. */
 export const DORSAL_ARM = 0.86;
+/**
+ * Arm 6 lost its outer fifth (to a predator, a moray or a fish) and is regrowing it: a design
+ * value. Octopuses regrow lost arm tips; the new tip is thinner and paler than the stump it grows
+ * from (README: widely reported, no paper opened, so these lengths are design values).
+ */
+export const REGEN_ARM = 6;
+export const REGEN_LENGTH = 0.74;
+/** Where on the regenerating arm the old arm ends and the regrowth begins, arc fraction. */
+export const REGEN_FROM = 0.8;
 export const ARMS = 8;
 export const ARM_LINKS = 16;
 const ARM_BASE_RADIUS = 0.043;
@@ -100,7 +109,8 @@ function mantleChain(): ChainSpec {
       path: [...path].reverse().reverse(),
       radius: [0.02, 0.078, 0.106, 0.104, 0.078, 0.056],
       links: 4,
-      detail: { rings: [12, 4, 1], sides: [44, 16, 8] },
+      // The mantle is what the eye goes to: it gets the rings the hidden sucker undersides gave up.
+      detail: { rings: [14, 5, 3], sides: [48, 18, 10] },
       relief: mantleRelief,
       tint: mantleTint,
       weightWith: [...RIB_NAMES],
@@ -118,7 +128,7 @@ function headChain(): ChainSpec {
     radius: [0.042, 0.07, 0.058],
     links: 1,
     blend: 0.05,
-    detail: { rings: [26, 8, 3], sides: [44, 16, 8] },
+    detail: { rings: [26, 8, 3], sides: [48, 16, 10] },
     relief: headRelief,
     tint: mantleTint,
   };
@@ -134,24 +144,39 @@ interface ArmPose {
   /** Total upward curl of the tip, radians, and where along the arm it starts. */
   readonly curl: number;
   readonly from: number;
+  /** Sideways curl of the tip over the seabed, radians: a flat spiral seen from above. */
+  readonly twirl?: number;
 }
 
-/** Hand-set so the silhouette reads: two raised curls in front, a spiral each side, lazy rears. */
+/** Hand-set so the silhouette reads from every side: two raised curls in front, two tips coiled
+ *  flat under themselves on the seabed, one arm reaching out straight, lazy curls behind. */
 const POSES: readonly ArmPose[] = [
   { rise: 0.85, sway: 0.2, waves: 1.1, curl: 5.2, from: 0.36 },
   { rise: 0.2, sway: 0.34, waves: 1.5, curl: 3.4, from: 0.48 },
-  { rise: 0.04, sway: 0.28, waves: 1.05, curl: 6.2, from: 0.44 },
-  { rise: 0.1, sway: 0.38, waves: 1.8, curl: 2.4, from: 0.58 },
-  { rise: 0.04, sway: 0.3, waves: 1.25, curl: 4.6, from: 0.48 },
+  { rise: 0.04, sway: 0.18, waves: 0.8, curl: 0.9, from: 0.62, twirl: 7.2 },
+  { rise: 0.08, sway: 0.1, waves: 0.6, curl: 0.5, from: 0.86 },
+  { rise: 0.04, sway: 0.3, waves: 1.25, curl: 0.9, from: 0.5, twirl: -7.2 },
   { rise: 0.16, sway: 0.34, waves: 1.6, curl: 5.8, from: 0.4 },
   { rise: 0.05, sway: 0.26, waves: 1.35, curl: 3.0, from: 0.54 },
   { rise: 0.6, sway: 0.22, waves: 0.95, curl: 4.2, from: 0.42 },
 ];
 
 export const armAngle = (k: number): number => ((k + 0.5) * Math.PI * 2) / ARMS;
-const armLength = (k: number): number => (k === 0 || k === ARMS - 1 ? DORSAL_ARM : REAL.arm);
+export const armLength = (k: number): number =>
+  k === REGEN_ARM ? REGEN_LENGTH : k === 0 || k === ARMS - 1 ? DORSAL_ARM : REAL.arm;
+/** Arm half-width at arc fraction u: tapering all the way from the web to the tip. */
 export const armRadius = (u: number): number =>
-  ARM_TIP_RADIUS + (ARM_BASE_RADIUS - ARM_TIP_RADIUS) * (1 - u) ** 0.72;
+  ARM_TIP_RADIUS + (ARM_BASE_RADIUS - ARM_TIP_RADIUS) * (1 - u) ** 1.0;
+/** The regenerating arm: the old arm's taper to the break, then a thinner regrowth bud. */
+const regenRadius = (u: number): number => {
+  const old = armRadius((u * REGEN_LENGTH) / REAL.arm);
+  if (u <= REGEN_FROM) return old;
+  const k = (u - REGEN_FROM) / (1 - REGEN_FROM);
+  const at = armRadius((REGEN_FROM * REGEN_LENGTH) / REAL.arm);
+  return ARM_TIP_RADIUS + (at * 0.62 - ARM_TIP_RADIUS) * (1 - k) ** 0.9;
+};
+export const radiusOf = (k: number, u: number): number =>
+  k === REGEN_ARM ? regenRadius(u) : armRadius(u);
 
 /** The arm's centreline, integrated from its heading along the arc. */
 function armPath(k: number): Vec3[] {
@@ -174,18 +199,21 @@ function armPath(k: number): Vec3[] {
     const leave = -0.95 * Math.exp(-u / 0.075) + pose.rise * Math.exp(-(((u - 0.2) / 0.16) ** 2));
     const t = Math.max(0, (u - pose.from) / (1 - pose.from));
     const elevation = leave + pose.curl * t * t;
-    const yaw = flip * pose.sway * Math.sin(Math.PI * 2 * pose.waves * u + phase) * (0.4 + u);
+    const yaw =
+      flip * pose.sway * Math.sin(Math.PI * 2 * pose.waves * u + phase) * (0.4 + u) +
+      (pose.twirl ?? 0) * t * t;
     const dir: Vec3 = unit([
       Math.cos(elevation) * Math.cos(yaw) * out[0] + Math.cos(elevation) * Math.sin(yaw) * side[0],
       Math.cos(elevation) * Math.cos(yaw) * out[1] + Math.cos(elevation) * Math.sin(yaw) * side[1],
       Math.sin(elevation),
     ]);
     p = along(p, dir, ds);
-    const floor = armRadius(u) + 0.002;
+    const floor = radiusOf(k, u) + 0.002;
     if (p[2] < floor) p = [p[0], p[1], floor];
     pts.push(p);
   }
-  const stations = 15;
+  // A coiled tip needs more stations for the spline to follow the coil at its true length.
+  const stations = pose.twirl ? 29 : 15;
   return Array.from({ length: stations }, (_, i) => {
     const q = pts[Math.round((i / (stations - 1)) * steps)];
     return q ?? start;
@@ -196,7 +224,7 @@ const ARM_IDS_LOCAL: readonly string[] = Array.from({ length: ARMS }, (_, k) => 
 
 function armChain(k: number): ChainSpec {
   const stations = armPath(k);
-  const radius = stations.map((_, i) => armRadius(i / (stations.length - 1)));
+  const radius = stations.map((_, i) => radiusOf(k, i / (stations.length - 1)));
   return fitArc(
     {
       name: `arm_${k}`,
@@ -208,9 +236,10 @@ function armChain(k: number): ChainSpec {
       antiFold: true,
       blend: 0.034,
       blendWith: ARM_IDS_LOCAL,
-      detail: { rings: [6, 2, 1], sides: [20, 8, 5] },
+      // LOD2 keeps two rings a link so the curled tips stay curves, not segments.
+      detail: { rings: [6, 2, 2], sides: [20, 8, 5] },
       relief: armRelief,
-      tint: armTint,
+      tint: k === REGEN_ARM ? regenTint(REGEN_FROM) : armTint,
     },
     armLength(k),
   );

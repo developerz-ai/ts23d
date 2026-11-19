@@ -1,7 +1,8 @@
 // Per-pixel shading of the visibility buffer: reconstruct position, normal, UV and vertex colour
 // from (triangle, barycentrics), perturb by the trim sheet's normal map, read the sheet's ORM and
 // the part's look (finish / optics), find sun visibility (PCF shadow) and sky openness (multi-
-// direction AO), then hand the sample to shade-light.ts (glTF reference BRDF + KHR layers).
+// direction AO), then hand the sample to shade-light.ts (glTF reference BRDF + KHR layers). A part
+// under a `glow` rule adds its emitted radiance on top, as its emissive GLB material does.
 
 import type { PerspectiveCamera } from './camera.ts';
 import { type DepthMap, openness, visibility } from './depth-map.ts';
@@ -25,6 +26,11 @@ export interface ShadeContext {
   readonly reach: number;
   /** Opaque-only visibility buffer: what see-through surfaces show (absent: nothing transmits). */
   readonly behind?: VisBuffer;
+  /**
+   * The see-through surfaces' own sun map (same frame as `sunMap`, which then holds the opaque
+   * ones only) and the share of sunlight they stop: glass dims what it holds, never blacks it out.
+   */
+  readonly sunThru?: { readonly map: DepthMap; readonly shade: number };
 }
 
 const ONE_TAP = new Float32Array([0, 0]);
@@ -66,14 +72,14 @@ export function sunVisible(
 ): number {
   const m = c.sunMap;
   const off = 1.2 / m.k;
-  return visibility(
-    m,
-    (p[0] ?? 0) + (n[0] ?? 0) * off,
-    (p[1] ?? 0) + (n[1] ?? 0) * off,
-    (p[2] ?? 0) + (n[2] ?? 0) * off,
-    1.5 / m.k,
-    c.pcf[set & 3] ?? ONE_TAP,
-  );
+  const x = (p[0] ?? 0) + (n[0] ?? 0) * off;
+  const y = (p[1] ?? 0) + (n[1] ?? 0) * off;
+  const z = (p[2] ?? 0) + (n[2] ?? 0) * off;
+  const taps = c.pcf[set & 3] ?? ONE_TAP;
+  const lit = visibility(m, x, y, z, 1.5 / m.k, taps);
+  const t = c.sunThru;
+  if (!t || lit === 0) return lit;
+  return lit * (1 - t.shade * (1 - visibility(t.map, x, y, z, 1.5 / m.k, taps)));
 }
 
 const pos = [0, 0, 0];
@@ -227,4 +233,6 @@ export function shadeSample(
   view[1] = vy;
   view[2] = vz;
   lightSurf(S, look, r, c.cam, out, through);
+  const g = ((s.glow[t] ?? 0) - 1) * 3;
+  if (g >= 0) for (let k = 0; k < 3; k++) out[k] = (out[k] ?? 0) + (s.glows[g + k] ?? 0);
 }

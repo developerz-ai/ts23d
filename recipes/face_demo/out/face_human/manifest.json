@@ -21,14 +21,14 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    96194,
-    36718,
-    8216
+    59216,
+    11936,
+    2712
   ],
   "drawCalls": [
-    2,
-    2,
-    2
+    4,
+    4,
+    4
   ],
   "pivots": [
     {
@@ -36,13 +36,22 @@
       "parent": null
     },
     {
+      "name": "body_cutout",
+      "parent": null
+    },
+    {
       "name": "body_finish_cornea",
+      "parent": null
+    },
+    {
+      "name": "body_finish_skin",
       "parent": null
     }
   ],
   "emitters": [],
   "sockets": [],
   "surfaces": [
+    "cutout",
     "opaque"
   ],
   "real": {
@@ -54,7 +63,7 @@
     {
       "label": "eye spacing (pupil to pupil)",
       "spec": 0.0616,
-      "measured": 0.06120395194739103,
+      "measured": 0.06121663562953472,
       "source": "base IPD 61.6 mm (MakeHuman hm08) × race eye spacing × head scale"
     }
   ],
@@ -63,6 +72,26 @@
     "docs/research/face-base.md (base mesh licence, landmarks, race ratios)",
     "MakeHuman hm08 base mesh, CC0 1.0 (makehumancommunity/makehuman @3c701a8, sha256 8e761e66…)"
   ],
+  "weather": {
+    "chips": {
+      "target": 0.35,
+      "actual": 0.35,
+      "eligible": "convex-edges",
+      "area": 0.0493
+    },
+    "mud": {
+      "target": 0.4,
+      "actual": 0.4,
+      "eligible": "ground-near & side-facing",
+      "area": 0.0096
+    },
+    "dust": {
+      "target": 0.5,
+      "actual": 0.5,
+      "eligible": "up-facing",
+      "area": 0.0458
+    }
+  },
   "qa": {
     "pass": true,
     "findings": []

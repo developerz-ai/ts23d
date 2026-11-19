@@ -8,7 +8,7 @@
 // cheek, back of skull) with the brow folded in. Sockets, features and lines: face.ts.
 
 import { type SculptEdit, Ts23dError } from '@developerz.ai/ts23d';
-import { ball, ell, flipY, frameOf, k, local, rbox, scrape, type V } from './kit.ts';
+import { ball, ell, frameOf, k, local, rbox, scrape, type V } from './kit.ts';
 
 /** Landmarks as shares of H: heights from the menton (chin bottom) up; widths full (both sides);
  *  projections forward of the glabella. */
@@ -162,8 +162,9 @@ export function landmarks(s: HeadSpec) {
 
 export type Landmarks = ReturnType<typeof landmarks>;
 
+/** One plane off the midline, scraped on both sides (kit.ts `scrape` pairs it). */
 function pair(at: V, n: V, blend: number): SculptEdit[] {
-  return [scrape(at, n, 1, blend), scrape(flipY(at), flipY(n), 1, blend)];
+  return [scrape(at, n, 1, blend)];
 }
 
 /** Stage 1–2: the head block (one group, planes scraped in, brow folded in). */

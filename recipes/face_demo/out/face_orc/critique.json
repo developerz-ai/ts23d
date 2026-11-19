@@ -1,63 +1,60 @@
 {
   "asset": "face_orc",
   "reviewer": "agent",
-  "overall": 5.1,
+  "overall": 6,
   "scores": {
     "silhouette": {
-      "score": 6,
-      "reason": "Heavy jaw, brow shelf, thick neck, crest and tusks read as an orc from the front and 3/4; from behind it is a bald green human with a crest.",
+      "score": 7,
+      "reason": "Mohawk, tusks and heavy shoulders read as an orc; the head sits upright, not hunched.",
       "fixes": [
-        "push the trapezius higher and the head forward (hunched stance); bigger, wider-set tusks"
+        "push the trapezius higher and the head forward (hunched stance)"
       ]
     },
     "proportions": {
       "score": 6,
-      "reason": "Declared ratios hold (jaw, eye spacing); the mid-face still reads too human between the cheekbones.",
+      "reason": "The face underneath is a human face tinted green: narrow nose, no brow shelf.",
       "fixes": [
-        "flatten the nose bridge further and widen the nostril flare; lower the eyes under the brow shelf"
+        "flatten the nose bridge and widen the nostrils; heavy brow shelf over lowered eyes"
       ]
     },
     "materials": {
-      "score": 4,
-      "reason": "Vertex colour on the plain strip: green skin zones separate by hue but not by roughness or subsurface; the crest is the same material as the skin, so it reads as sculpted clay; tusks separate by hue only.",
+      "score": 5,
+      "reason": "Green matte skin, ivory tusks with some gradient, the mohawk is a dark slab that reads like a helmet crest more than hair.",
       "fixes": [
-        "a skin strip with subsurface-like roughness/sheen and a hair strip with anisotropic sheen for the crest",
-        "glossier, slightly yellowed ivory on the tusks with a darker root"
+        "skin strip with sheen; hair strip with anisotropic sheen and loose tips on the crest"
       ]
     },
     "detail": {
-      "score": 5,
-      "reason": "Primary and secondary forms come from a real anatomical base (lids, nasolabial area, lips, ear helix, clavicles, sternocleidomastoid), but there is no tertiary layer (pores, wrinkles) and the hair is evenly spaced grooves.",
+      "score": 6,
+      "reason": "Tusks, teeth, scar and crest; no skin wrinkles or pores.",
       "fixes": [
-        "LOD0 wrinkle/pore displacement on the subdivided base driven by age",
-        "varied lock widths and a parting instead of evenly spaced grooves"
+        "LOD0 wrinkle/pore displacement and a gum strip"
       ]
     },
     "wear": {
-      "score": 3,
-      "reason": "Pristine: seeded asymmetry and age/weight knobs are the only story; no scars, stubble, blemishes, sun-darkened skin or dirt.",
+      "score": 6,
+      "reason": "A clear cheek scar and blotchy skin tell some history.",
       "fixes": [
-        "seeded scar/blemish marks in vertex colour",
-        "stubble shadow on the jaw and age-driven darkening under the eyes"
+        "chipped tusk tip and a second scar"
       ]
     },
     "lod": {
       "score": 5,
-      "reason": "LOD2 keeps the crest, jaw and outline, but the face in sheet.png breaks into dark blotches around the eyes and mouth and the tusks fragment.",
+      "reason": "FAR LOD2 is a distance-field re-mesh: the face breaks into flat patches of different tone and the features smear. Tusks survive.",
       "fixes": [
-        "authored low-poly topology for LOD2; keep the tusks as separate cones at LOD2"
+        "LOD2 from an authored coarse topology (decimated quad base mesh) instead of the distance-field re-mesh, keeping vertex colour smooth"
       ]
     },
     "technical": {
       "score": 7,
-      "reason": "QA PASS at every LOD; 83.6k / 29.5k / 8.1k tris; teeth declared rest (no gums), tusks rooted in the jaw.",
+      "reason": "QA clean; 57k / 11k / 2.5k triangles over 4 draws.",
       "fixes": [
-        "model a gum strip so the teeth can be grown instead of rest"
+        "cheaper crest at LOD1"
       ]
     }
   },
   "renders": {
-    "hero.png": "98de887b11a02b38fb88ae0b7efac360a28182836b43a1eb958e89365c1b3140",
-    "sheet.png": "e12fd823b598a6be621839e1f9b65788eef59b2dc2a081831ab4198f9c353e8d"
+    "hero.png": "520430137f2121b63965ea5d0f7996eceef91fd2945247bccdbdf8539785940b",
+    "sheet.png": "3af5729ee22647a1c601d13ea35e87c57538bbaa6788537dcf702bff1def05d6"
   }
 }

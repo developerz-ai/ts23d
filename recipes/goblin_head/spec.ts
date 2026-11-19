@@ -45,6 +45,16 @@ export const C = {
   hood: hex('#4a5a34'),
   brass: hex('#c9a24a'),
   plinth: hex('#3a3634'),
+  /** Wear: grime in the linen, dark sweat-stained leather, a newer patch, pale waxed thread,
+   *  road dust, the scarf's sun-faded folds and its muddy ends, a horn toggle. */
+  grime: hex('#7d7052'),
+  vestSweat: hex('#2e1c10'),
+  patch: hex('#8a5a34'),
+  thread: hex('#d2c39a'),
+  dust: hex('#a8987a'),
+  scarfFaded: hex('#b4553c'),
+  scarfMud: hex('#4a2a1c'),
+  horn: hex('#cdbf9a'),
 };
 
 const R = {
@@ -85,6 +95,11 @@ export const SPEC: HeadSpec = {
 
 export const L = landmarks(SPEC);
 
+/** The landmarks the torso, the neck seam and the outfit are built from: the body sits 2.2 cm
+ *  higher under the head than the human anchor puts it (the goblin's stoop: its shoulders ride
+ *  up round a short neck, the head hangs forward of them). */
+export const LT = { ...L, mz: L.mz + 0.022 };
+
 /** The goblin's face on the CC0 base (race preset ../_lib/face/races.ts, pushed to the design):
  *  eyes ×1.45 (orbit, lids and ball), set
  *  ×1.28 wide (IPD 63 mm, human 0.265 H × 1.25), heavy lids; nose projection ×2.8 hooked 5 % H; mouth ×1.4 wide; chin receding,
@@ -94,7 +109,7 @@ export const GOBLIN_FACE: FaceSpec = {
   cranium: { width: 1.14, height: 1.12, depth: 1.08 },
   eyes: { spacing: 1.28, tilt: 0.006, open: 0.95, size: 1.45 },
   nose: { width: 1.1, projection: 2.8, length: 1.3, bridge: 0.02, hook: 0.05 },
-  mouth: { width: 1.4, lips: -0.002, underbite: 0 },
+  mouth: { width: 1.6, lips: -0.002, underbite: 0 },
   ears: { length: 2.6, tip: [0.04, 0.5, 0.1], out: 60 },
   body: { neck: 0.8, traps: -0.02, shoulders: 0.9 },
 };
@@ -107,7 +122,8 @@ export const CHARACTER: Character = {
   asym: 0,
   tone: { base: C.skin, flush: C.warm, lips: C.lips, cool: C.cool, cavity: C.cavity },
   eyes: { iris: C.iris },
-  mouth: 0,
+  // Lips parted on the grin: the teeth row shows.
+  mouth: 0.6,
 };
 
 /** The skull's own landmarks in the bust frame. */
@@ -142,9 +158,11 @@ export const EAR: EarSpec = {
   ],
 };
 
+// Narrow bony shoulders (0.102 m half-span, inside the ear span): at 0.12 the two deltoids read
+// as balloons wider than the skull.
 export const TORSO: TorsoSpec = {
-  shoulders: 0.12,
-  mass: 0.15,
+  shoulders: 0.102,
+  mass: 0.08,
   neck: 0.039,
   larynx: 0.7,
   cutZ: CUT_Z,

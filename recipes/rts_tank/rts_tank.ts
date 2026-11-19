@@ -19,9 +19,12 @@ import {
   symmetric,
   type Vec2,
   type Vec3,
+  valueNoise,
   weather,
 } from '@developerz.ai/ts23d';
-import { Kit, MUD, type Rule, restrip, role, SOOT_STAIN, wearOf } from '../_lib/rts/finish.ts';
+import { paintOn, smooth, tint, unitNoise, wheelMud } from '../_lib/finish/field.ts';
+import { tessellate } from '../_lib/finish/finish.ts';
+import { Kit, type Rule, restrip, role, SOOT_STAIN, wearOf } from '../_lib/rts/finish.ts';
 import {
   BONE,
   BONE_DARK,
@@ -35,30 +38,37 @@ import {
   RUBBER,
   SEG,
   SLATE,
+  SOOT,
   TEAM,
   TEAM_PAINT,
   TEAM_VARIANTS,
   teamShade,
   tube,
 } from '../_lib/rts/style.ts';
-import { hullDressing } from './dressing.ts';
-import { type Add, runningGear, TRACK_W, TRACK_Y } from './running.ts';
+import { hullDressing, turretBolts } from './dressing.ts';
+import { type Add, IDLER, ROAD_R, runningGear, SPROCKET, TRACK_W, TRACK_Y } from './running.ts';
 
 const DECK = 1.42; // hull roof height
 const TURRET_X = -0.25;
-const TURRET_TOP = 2.08;
-/** Turret plan scale. */
-const K = 1.12;
-const GUN_Z = 1.7;
+const TURRET_TOP = 2.2;
+/** Turret plan scale (RTS exaggeration: the turret is the unit's read from the strategy camera). */
+const K = 1.23;
+const GUN_Z = 1.78;
 /** Ash tool shafts (dressing.ts). */
 const SHAFT: Vec3 = [0.3, 0.2, 0.1];
 
-/** Materials: painted steel (bone, slate, team) whose chips show bare metal, cast-iron fittings,
- *  brass, rubber tyres, ash shafts; the track links keep their own rusted-iron strip. */
+/** Brine mud, half dried: darker than the bone paint, lighter and warmer than the slate. */
+const MUD: Vec3 = [0.19, 0.145, 0.09];
+/** Salt crust on the dark track links. */
+const CRUST: Vec3 = [0.8, 0.72, 0.56];
+/** The hull paints: bone and slate go onto the matte armour-paint strip at true scale (`paintOn`:
+ *  a few flakes; the edge chips are `weather()`'s). The library's `steel_painted` chips a fifth
+ *  of the film in dashes that read as wood grain on a big pale plate. */
+const PAINTS: readonly Vec3[] = [BONE, BONE_DARK, SLATE];
+/** Materials: team plates on painted steel (their strip carries the chips, they are never
+ *  weathered), cast-iron fittings, brass, rubber, ash shafts; the track links keep their own
+ *  rusted-iron strip. */
 const RULES: readonly Rule[] = [
-  role(BONE, 'steel_painted'),
-  role(BONE_DARK, 'steel_painted'),
-  role(SLATE, 'steel_painted'),
   role(TEAM, 'steel_painted'),
   role(teamShade(0.95), 'steel_painted'),
   role(IRON, 'iron_cast'),
@@ -66,12 +76,13 @@ const RULES: readonly Rule[] = [
   role(RUBBER, 'rubber'),
   role(SHAFT, 'oak'),
 ];
-/** Running gear: cast road-wheel discs, rubber tyres, brass hubs. */
+/** Running gear: slate-painted road-wheel discs (on the paint strip, so mud shows on them), cast
+ *  sprocket teeth, brass hubs; tyres on a rough greyscale strip (`rubber` is near black: no mud
+ *  would show). */
 const GEAR_RULES: readonly Rule[] = [
-  role(SLATE, 'iron_cast'),
   role(IRON, 'iron_cast'),
   role(BRASS, 'brass'),
-  role(RUBBER, 'rubber'),
+  { from: RUBBER, strip: 'concrete', color: [0.03, 0.03, 0.028] },
 ];
 const GEAR = /^(wheel|idler|sprocket)_/;
 /** The running belts: their links arrive finished (materials and wear per link, `wornLink`). */
@@ -147,6 +158,52 @@ function hull(add: Add, lod: Lod): void {
       chevronPlan([1.0, y, DECK - 0.042], 0.7, TRACK_W * 0.9, 0.22, 0.05, teamShade(0.95)),
       { paint: 'team' },
     );
+  // Side skirts: three plates a side hung from the hull edge over the track's top run, a hand's
+  // gap between them, the front one cut back. They break the long slab of the side profile.
+  // Far: one strip a side (its outer face and ends: 6 triangles).
+  const skirts: Mesh[] = [];
+  const sy = TRACK_Y + TRACK_W / 2 + 0.03;
+  for (const s of [1, -1]) {
+    if (lod === 2) {
+      skirts.push(
+        box({
+          size: [3.84, 0.035, 0.33],
+          at: [0, s * (sy + 0.0055), 0.62],
+          color: BONE_DARK,
+          omit: ['top', 'bottom', s > 0 ? 'right' : 'left'],
+        }),
+      );
+      continue;
+    }
+    [-1.3, 0, 1.3].forEach((x, i) => {
+      const plate = prism({
+        profile: [
+          [x - 0.62, 0.95],
+          [x - 0.62, 0.62],
+          [x + (i === 2 ? 0.3 : 0.62), 0.62],
+          [x + 0.62, i === 2 ? 0.8 : 0.62],
+          [x + 0.62, 0.95],
+        ],
+        depth: 0.035,
+        plane: 'xz',
+        centred: false,
+        color: BONE_DARK,
+      });
+      skirts.push(place(plate, { at: [0, s > 0 ? sy - 0.012 : -sy - 0.023, 0] }));
+      // Two hanger bolts a plate.
+      if (lod === 0)
+        for (const dx of [-0.4, 0.4])
+          skirts.push(
+            box({
+              size: [0.05, 0.02, 0.05],
+              at: [x + dx, s * (sy + 0.03), 0.86],
+              color: IRON,
+              bevel: 0.006,
+            }),
+          );
+    });
+  }
+  add('skirts', merge(skirts));
   if (lod === 2) return;
   const detail: Mesh[] = [];
   // Engine grille slats, stowage bins on the fenders, tow hooks, headlamps.
@@ -171,6 +228,7 @@ function hull(add: Add, lod: Lod): void {
     );
   }
   add('hull_kit', merge(detail));
+
   const lamp = cylinder({
     radius: 0.07,
     length: 0.08,
@@ -222,6 +280,13 @@ function turret(ctx: BuildContext, add: Add): void {
       paint: 'team',
     },
   );
+  // Bolt heads round the roof plate's edge (LOD0): what holds the team plate down.
+  const bolts = turretBolts(
+    lod,
+    TURRET_PLAN.map(([x, y]): Vec2 => [x * 0.77 * K, y * 0.77 * K]),
+    top,
+  );
+  if (bolts) add('turret_bolts', bolts, { parent: 'turret' });
   // Rear crest fin (the faction chevron) and commander hatch.
   add('turret_fin', chevron([-0.75, 0, top + 0.03], 0.7, 0.28, 0.08, BONE_DARK), {
     parent: 'turret',
@@ -236,13 +301,13 @@ function turret(ctx: BuildContext, add: Add): void {
     add(
       'sensor',
       merge([
-        pebble(lod, [0.26, 0.17, 0.2], [0.2, -0.995 * K, 0.08], SLATE),
+        pebble(lod, [0.26, 0.17, 0.2], [0.2, -(0.92 * K + 0.075), 0.08], SLATE),
         cylinder({
           radius: 0.06,
           length: 0.05,
           segments: SEG(lod, 14, 8, 4),
           axis: 'x',
-          at: [0.345, -0.995 * K, 0.18],
+          at: [0.345, -(0.92 * K + 0.075), 0.18],
           color: GLOW,
         }),
       ]),
@@ -250,7 +315,7 @@ function turret(ctx: BuildContext, add: Add): void {
     );
     add(
       'antenna',
-      tube(lod, [-0.9, -0.6, top - 0.02], [-0.95, -0.6, top + 1.1], 0.015, 0.008, IRON),
+      tube(lod, [-0.9, -0.6, top - 0.02], [-0.95, -0.6, top + 0.98], 0.015, 0.008, IRON),
       { parent: 'turret' },
     );
   }
@@ -273,11 +338,11 @@ function turret(ctx: BuildContext, add: Add): void {
       at: [0.17, 0, 0],
       color: BONE_DARK,
     }),
-    tube(lod, [0.3, 0, 0], [2.0, 0, 0], 0.085, 0.07, SLATE),
+    tube(lod, [0.3, 0, 0], [1.85, 0, 0], 0.085, 0.07, SLATE),
   ];
   if (lod < 2) {
-    gun.push(tube(lod, [1.95, 0, 0], [2.25, 0, 0], 0.11, 0.11, BRASS));
-    for (const x of [2.06, 2.16])
+    gun.push(tube(lod, [1.8, 0, 0], [2.1, 0, 0], 0.11, 0.11, BRASS));
+    for (const x of [1.91, 2.01])
       gun.push(box({ size: [0.04, 0.26, 0.06], at: [x, 0, -0.03], color: IRON }));
   }
   if (lod === 0) gun.push(tube(lod, [0.8, 0, 0], [1.2, 0, 0], 0.1, 0.1, IRON));
@@ -286,7 +351,7 @@ function turret(ctx: BuildContext, add: Add): void {
   ctx.emitter('muzzle', {
     kind: 'muzzle',
     parent: 'gun',
-    at: [2.28, 0, 0],
+    at: [2.13, 0, 0],
     dir: [1, 0, 0],
     rate: 200,
     life: 0.1,
@@ -328,7 +393,8 @@ export const rts_tank = defineAsset({
   budget: { triangles: [38000, 9500, 600] },
   paint: TEAM_PAINT,
   variants: TEAM_VARIANTS,
-  glow: [{ parts: ['headlamps', 'sensor'], color: GLOW, strength: 3 }],
+  // Saltmarch lamps glow at 1.2 across the RTS set: lit amber, not blown to white.
+  glow: [{ parts: ['headlamps', 'sensor'], color: GLOW, strength: 1.2 }],
   // Measured: the pebble hull's rounded taper reads 'friendly'; hull + gun hold the contrast.
   art: { focal: ['hull', 'gun_barrel', 'turret'], shape: 'friendly' },
   checks: [symmetric('wheel_l_', 'wheel_r_', 'y')],
@@ -338,12 +404,45 @@ export const rts_tank = defineAsset({
   build(ctx) {
     const lod = ctx.lod;
     const kit = new Kit();
-    const add: Add = (name, m, opts) =>
-      kit.add(
-        name,
-        m && (BELT.test(name) ? m : restrip(m, GEAR.test(name) ? GEAR_RULES : RULES)),
-        opts,
+    const grain = unitNoise(valueNoise(ctx.rng.fork('grime'), { scale: 0.3, octaves: 3 }));
+    const fine = unitNoise(valueNoise(ctx.rng.fork('mud'), { scale: 0.09, octaves: 2 }));
+    /** Radius of a running-gear part, for its radial mud. */
+    const gearR = (name: string): number =>
+      name.startsWith('wheel') ? ROAD_R : name.startsWith('idler') ? IDLER.r : SPROCKET.r;
+    /** Exhaust soot on the hull: a plume over each stack onto the rear deck, and a streak down
+     *  the rear plate under it. The hull is cut to 25 / 60 cm first, so the stain has vertices. */
+    const sooted = (m: Mesh): Mesh =>
+      [0.5, -0.5].reduce(
+        (acc, y) =>
+          tint(acc, SOOT, (p) => {
+            const d = Math.hypot((p[0] + 2.5) * 0.9, p[1] - y, (p[2] - 1.38) * 1.6) / 0.62;
+            const plume = d < 1 ? 0.9 * (1 - smooth(0.2, 1, d + 0.3 * (grain(p) - 0.5))) : 0;
+            const run =
+              p[0] < -2.55 && p[2] < 1.2
+                ? 0.75 * (1 - smooth(0.05, 0.2, Math.abs(p[1] - y))) * smooth(0.4, 1.1, p[2])
+                : 0;
+            return Math.max(plume, run * (0.6 + 0.4 * fine(p)));
+          }),
+        m,
       );
+    const dress = (name: string, m: Mesh): Mesh => {
+      if (BELT.test(name)) return m;
+      if (GEAR.test(name))
+        // Wheels spin: mud packed round the rim and into the dish, the same all the way round.
+        return wheelMud(
+          paintOn(tessellate(restrip(m, GEAR_RULES), 10), [SLATE]),
+          gearR(name),
+          fine,
+          lod === 2 ? 0.45 : 0.85,
+          MUD,
+        );
+      const painted = paintOn(
+        tessellate(restrip(m, RULES), name === 'hull' ? ([0.25, 0.6, 10][lod] ?? 10) : 10),
+        PAINTS,
+      );
+      return name === 'hull' ? sooted(painted) : painted;
+    };
+    const add: Add = (name, m, opts) => kit.add(name, m && dress(name, m), opts);
     // One track link, worn in its own space (chipped edges, brine mud over half of it; no dust:
     // no face of a running link stays up). Every link of both belts is this one, so the belt
     // looks the same one pitch on and the run clip wraps unseen.
@@ -357,7 +456,7 @@ export const rts_tank = defineAsset({
         groundBand: 0.9,
         effects: {
           chips: { where: 'convex-edges', amount: 0.13, strength: 0.75 },
-          mud: { where: 'ground-near', amount: 0.5, color: MUD, strength: 0.7 },
+          mud: { where: 'ground-near', amount: 0.55, color: CRUST, strength: 0.75 },
         },
       }).mesh;
     hull(add, lod);
@@ -392,35 +491,44 @@ export const rts_tank = defineAsset({
     // the wheels in their own pivots (mud), the turret and the gun (chips and dust, no mud).
     const exhaust = [0.5, -0.5].map((y) => ({ at: [-2.66, y, 1.3] as Vec3, radius: 0.16 }));
     const hullWear = wearOf('vehicle', 'brinehound_hull', 61);
+    const kitWear = wearOf('vehicle', 'brinehound_kit', 65);
+    // Heavier than the faction preset: brine mud up the lower hull and the skirts (four fifths
+    // of the 1.1 m splash band), salt dust on the deck.
+    const mud = {
+      // Not the belly: nobody sees it, and it would take the lowest (first-covered) share.
+      where: 'ground-near & !down-facing',
+      amount: 0.8,
+      color: MUD,
+      strength: 0.85,
+    } as const;
     kit.commit(ctx, [
       {
         wear: {
           ...hullWear,
           ground: 0,
+          groundBand: 1.1,
           fasteners: exhaust,
-          effects: { ...hullWear.effects, ...(lod < 2 ? { rust: SOOT_STAIN } : {}) },
+          effects: { ...hullWear.effects, mud, ...(lod < 2 ? { rust: SOOT_STAIN } : {}) },
         },
-        pick: (n) => /^(hull|prow|exhausts)$/.test(n),
+        // Far: the one skirt strip wears with the hull (alone it has no top face for the dust).
+        pick: (n) => /^(hull|prow|exhausts)$/.test(n) || (lod === 2 && n === 'skirts'),
       },
       {
         // Small parts already carry the vertices wear needs: no extra tessellation.
-        wear: { ...wearOf('vehicle', 'brinehound_kit', 65), ground: 0, resolution: [0, 0, 0] },
-        pick: (n) => /^(hull_kit|hull_dress|track_core_)/.test(n),
-      },
-      {
         wear: {
-          name: 'brinehound_wheels',
-          seed: 62,
+          ...kitWear,
+          ground: 0,
+          groundBand: 1.1,
           resolution: [0, 0, 0],
-          groundBand: 0.22,
-          effects: { mud: { where: 'ground-near', amount: 0.4, color: MUD, strength: 0.75 } },
+          effects: { ...kitWear.effects, mud },
         },
-        pick: (n) => GEAR.test(n),
+        pick: (n) => /^(hull_kit|hull_dress|skirts)/.test(n) && !(lod === 2 && n === 'skirts'),
       },
       {
         // Round, smooth-shaded shells: chips on their own corners only, or they ring the turret.
         wear: { ...wearOf('vehicle', 'brinehound_turret', 63, false), resolution: [0, 0, 0] },
-        pick: (n) => /^(turret_body|turret_fin|hatch|sensor|antenna|gun_barrel)$/.test(n),
+        pick: (n) =>
+          /^(turret_body|turret_fin|turret_bolts|hatch|sensor|antenna|gun_barrel)$/.test(n),
       },
     ]);
   },

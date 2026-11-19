@@ -1,66 +1,66 @@
 {
   "asset": "human_head",
   "reviewer": "agent",
-  "overall": 5.9,
+  "overall": 6.4,
   "scores": {
     "silhouette": {
       "score": 7,
-      "reason": "Swept hair, full beard and the profile nose read as a bearded man from FRONT and SIDE; the shoulders are two inflated red balloons that dominate the outline.",
+      "reason": "Swept hair, full beard and the profile nose read as a bearded man; the red mantle still forms two round sleeve-balloons that dominate the outline in FRONT and hero.png.",
       "fixes": [
-        "shape the mantle shoulders with a seam and a fold instead of round ellipsoids",
-        "lift the front lock at the crown for a stronger hair silhouette"
+        "cut the mantle with a seam and a draped fold over each shoulder instead of puffed ellipsoids"
       ]
     },
     "proportions": {
-      "score": 6,
-      "reason": "Face, beard and ears sit well; the shoulder masses are very wide and bulbous for the head (deltoid width ≈ 3.3 head widths) and the beard top edge is a hard horizontal line.",
+      "score": 7,
+      "reason": "Shoulders are narrower than before and the beard blends into the cheek; the mantle masses are still bulbous for the head and the face reads young and doll-like for the beard.",
       "fixes": [
-        "narrow and flatten the shoulder masses ~15 %",
-        "soften the beard top edge into the cheek over > 1.5 cm"
+        "flatten the shoulder masses ~10 % on top",
+        "deepen the eye sockets and cheek planes so the face ages with the beard"
       ]
     },
     "materials": {
-      "score": 5,
-      "reason": "Skin, hair, red mantle, purple tunic and brass studs separate by hue; mantle and tunic share skin-like roughness; brass studs read.",
+      "score": 6,
+      "reason": "Skin, hair, red wool, blue tunic, linen and a metallic brass collar separate by hue; mantle and tunic share one matte roughness and the skin is waxy.",
       "fixes": [
-        "wool strip on the mantle and linen on the tunic with their own roughness",
-        "brass finish (metal, low roughness) on the brooch"
+        "wool strip with fibre noise on the mantle and a linen strip on the tunic",
+        "skin roughness variation (oily T-zone, matte cheeks)"
       ]
     },
     "detail": {
       "score": 6,
-      "reason": "Lids, beard and hair locks, studs and a brooch hold up at third person; the mantle is a smooth balloon without folds or hem.",
+      "reason": "Lids, beard locks, hair cards, brass studs and a collar plate hold up; the mantle and tunic are smooth with no folds, hems or seams.",
       "fixes": [
         "fold lines and a hemmed edge on the mantle",
-        "nasolabial and lid folds at LOD0"
+        "stitching along the tunic neckline"
       ]
     },
     "wear": {
-      "score": 4,
-      "reason": "Clean garments; nothing says where he has been.",
+      "score": 6,
+      "reason": "Darker grime patches on the mantle and a soiled collar suggest use; the face and tunic are pristine.",
       "fixes": [
-        "grime at the mantle hem and collar",
-        "a scar or sun weathering on the face"
+        "sun weathering or a small scar on the face",
+        "dirt at the tunic hem"
       ]
     },
     "lod": {
-      "score": 7,
-      "reason": "FAR LOD2 keeps outline, beard and the colour blocks; the face flattens and the tunic colours break into blocks.",
+      "score": 6,
+      "reason": "FAR LOD2 keeps the outline and the beard, and the blue tunic now stays one block; but the brass collar becomes a jagged cream zigzag, hair colour bleeds onto the forehead and cheek, and the brow/nose mass flattens.",
       "fixes": [
-        "keep the brow/nose mass at LOD2"
+        "keep the brow/nose mass at LOD2",
+        "average per-face colour at LOD2 so the collar keeps its brass hue and the hair colour stays off the face"
       ]
     },
     "technical": {
-      "score": 6,
-      "reason": "QA clean; 101k / 28k / 3.6k tris for a bust, a third of it on featureless mantle shoulders.",
+      "score": 7,
+      "reason": "65k / 19.5k / 3k triangles, 5 draws: down from 100k, still heavy for a bust.",
       "fixes": [
-        "cap LOD0 near 60k: decimate the mantle shoulders at source (fewer rings)",
-        "eye socket joints at LOD1 need a coarser bore"
+        "trim LOD0 toward ~45k on the mantle and plinth",
+        "merge the cornea/cutout draws where possible"
       ]
     }
   },
   "renders": {
-    "hero.png": "65b6c79259fa32f3b0de585d01884ddf4ed5e294f96436498552caebe23cc031",
-    "sheet.png": "6f66b3808f49eb834e1d1f495722a9a7229bb30b6299c0fe9a00bf672ef7b5bc"
+    "hero.png": "9250a476964d08dcf7658833ed28c184b8c11529efd86712ce5123192d0d5881",
+    "sheet.png": "164ec6d3e5193221f0d7863ef4ea4647a7d6680c29b2ee9c3da8165cfd9e5466"
   }
 }

@@ -9,26 +9,29 @@ import { cutCreases, torsoCreases } from '../_lib/bust/anatomy-creases.ts';
 import { bustEdits, bustScalp } from '../_lib/bust/bust.ts';
 import { creaseAt, creaseCurve, edgeCreases, ringCreases } from '../_lib/bust/creases.ts';
 import { spline, surface, type V } from '../_lib/bust/kit.ts';
-import { torsoEdits } from '../_lib/bust/torso.ts';
 import { skullCreases } from '../_lib/face/skull-creases.ts';
 import { GOBLIN_BUST } from './build.ts';
 import {
+  BACK,
   hoodRegion,
   outfitCreases,
+  PARTS,
   scarfKnot,
   scarfRing,
   scarfTails,
   shirtCreases,
+  toggleLine,
   vestRegion,
 } from './clothes.ts';
 import { browLines, grinLine, WARTS } from './features.ts';
 import { WISPS, wispLine } from './hair.ts';
-import { H, L, SK, SPEC, TORSO } from './spec.ts';
+import { H, LT as L, SK, SPEC, TORSO } from './spec.ts';
+import { bodyEdits } from './torso.ts';
 
 function creases(): IntendedCrease[] {
   const { skin } = bustEdits(GOBLIN_BUST, 2, 0);
   const scalp = surface(bustScalp(GOBLIN_BUST, 0));
-  const body = sculptField(torsoEdits(L, TORSO, { neck: false }), {
+  const body = sculptField(bodyEdits(), {
     color: SPEC.skin,
     mirror: 'y',
   }).field;
@@ -46,7 +49,7 @@ function creases(): IntendedCrease[] {
       creaseCurve(`brow${i}`, 'head', l, 0.015, 'a worried-brow crease', true),
     ),
     ...WARTS.flatMap(([p, r], i) =>
-      creaseAt(`wart${i}`, 'head', p, Math.max(0.012, r * H * 2), 'a wart’s rim on the skin'),
+      creaseAt(`wart${i}`, 'head', p, Math.max(0.008, r * H * 1.6), 'a wart’s rim on the skin'),
     ),
     ...WISPS.flatMap(([dx, dy, len, lean], i) =>
       creaseCurve(
@@ -57,7 +60,7 @@ function creases(): IntendedCrease[] {
         'a hair wisp: its root in the scalp and the bends of the strand',
       ),
     ),
-    ...['head', 'bust'].flatMap((part) => [
+    ...PARTS.flatMap((part) => [
       ...ringCreases(`scarf_${part}`, part, scarfRing(skin.field), 0.025, 'the scarf band'),
       ...creaseAt(`scarf_knot_${part}`, part, scarfKnot(skin), 0.025, 'the scarf knot'),
       ...scarfTails(skin).flatMap((t, i) =>
@@ -65,12 +68,23 @@ function creases(): IntendedCrease[] {
       ),
     ]),
     ...shirtCreases().flatMap((l, i) =>
-      creaseCurve(`shirt${i}`, 'bust', l, 0.015, 'shirt crease at the vest opening', true),
+      creaseCurve(`shirt${i}`, 'clothes', l, 0.015, 'shirt crease at the vest opening', true),
     ),
-    ...['head', 'bust'].flatMap((part) => [
+    ...PARTS.flatMap((part) => [
       ...edgeCreases(`vest_edge_${part}`, part, body, vestRegion, box, 0.025, 'the vest’s edge'),
       ...edgeCreases(`hood_edge_${part}`, part, body, hoodRegion, box, 0.025, 'the hood’s edge'),
     ]),
+    // Where the stiff back panel, hanging clear of the body, ends at each armhole.
+    ...creaseAt(
+      'vest_back_corner',
+      'clothes',
+      [BACK.x, BACK.halfY, TORSO.cutZ + 0.012],
+      0.025,
+      'the hanging back panel’s corner at the armhole',
+      true,
+    ),
+    // The thong where it loops the horn toggle and bends over the vest's edges.
+    ...creaseCurve('toggle', 'toggle', toggleLine(skin), 0.012, 'the thong round the toggle'),
     ...cutCreases(body, TORSO.cutZ),
   ];
 }

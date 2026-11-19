@@ -52,7 +52,7 @@ glowing exhausts; an upswept tail boom with a V-tail and twin thrusters; a chin 
 | accent stripe | `#c8641c` |
 | hazard | `#d9a421` + `#17181a` |
 | glass | `#3f7598` (surface `glass`) |
-| thruster glow | `#6fd2ff` (glow strength 8) |
+| thruster glow | `#6fd2ff` (glow strength 3; nav lights 2, tail and cabin lamps 1.5) |
 
 ## Parts the engine needs
 | Name | What | Motion |
@@ -82,3 +82,17 @@ both fins (0.5 m); `NO STEP` on the wing walkway panels (LOD0). Built with `text
   `turret_ring` (turret in its ring), `turret` (gun housing in the ball), `wing_*` (nacelle shaft
   in its bearing).
 - No true-arc check for turret and gun beyond the clashes sector sweep.
+
+## Wear and far-LOD identity
+- Exhaust scorch: soot in each nacelle's bore and on the nozzle lip, burnt paint up the lowest
+  metre of the cowl with a heat-browned band above it; soot round the tail thrusters on the last
+  1.3 m of the boom. Applied after the finish pass, so it overrides paint, chips and dust.
+- Oil weeping from the gear-bay fasteners: dark runs down the sponson armour under the bolts by
+  the main gear, drawn aft; hydraulic lines down each strut (LOD0).
+- The nose is faired: three sections per design station span on a Catmull-Rom curve (the five
+  stations themselves unchanged). Straight spans made every nose panel a twisted quad that
+  shaded as two triangles; the canopy panes and frames follow the faired sections.
+- LOD1 and LOD2 keep the nacelle hazard rings (one stripe per cowl facet) and LOD2 keeps the
+  hull number on the sponsons: the strongest colour accents no longer vanish at distance.
+- Not done here: thinner paint chipping on the big plates needs a `steel_painted` variant in the
+  material library (the strip's chip density is fixed on the shared sheet).

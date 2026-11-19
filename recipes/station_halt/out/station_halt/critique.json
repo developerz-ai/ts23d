@@ -1,65 +1,122 @@
 {
   "asset": "station_halt",
   "reviewer": "agent",
-  "overall": 7,
+  "overall": 7.3,
   "scores": {
     "silhouette": {
       "score": 8,
-      "reason": "GWR country station: brick building with slate roof and two chimneys, long valanced platform canopy on cast-iron columns, lamps, name board, barrow and churns. Reads from every view.",
+      "reason": "GWR country station: brick building with slate roof and two chimneys, long valanced canopy on cast-iron columns, lamps, name board, barrow and churns on the platform; reads from every view.",
       "fixes": [
         "fretted canopy valance profile visible at LOD1"
       ]
     },
     "proportions": {
       "score": 8,
-      "reason": "11.6 x 30.1 x 8.3 m; door, window and canopy heights read at human scale; dossier measures pass.",
+      "reason": "11.6 x 30.1 x 8.3 m; door, window and canopy heights at human scale; dossier measures pass.",
       "fixes": [
-        "check chimney stack height against the Toddington photos (they read short)"
+        "chimney stacks read short against the Toddington photos"
       ]
     },
     "materials": {
-      "score": 6,
-      "reason": "Red brick, cream valance, chocolate columns and stone platform read; the slate roof and canopy read as flat grey sheets with no slate courses at hero distance, and the brick is a uniform red without course variation.",
+      "score": 7,
+      "reason": "Slate roof now shows courses with per-slate value and a greenish moss tint, platform reads as stone flags, brick red with darker plinth; the canopy is still a flat grey sheet and the brick is one red with no course variation.",
       "fixes": [
-        "slate courses with per-slate value jitter on the roof",
-        "brick colour variation per course and a blue-brick plinth"
+        "brick colour variation per course and a blue-brick plinth",
+        "canopy as ridged corrugated/boarded sheet with lighter ridges"
       ]
     },
     "detail": {
       "score": 7,
-      "reason": "Sash windows, doors, chimney pots, canopy valance, columns with brackets, lamps, name board, benches, barrow, churns.",
+      "reason": "Sash windows, doors, chimney pots, valance, columns with brackets, lamps, name board, benches, barrow, churns.",
       "fixes": [
         "platform edge coping slabs with joints",
         "gutter brackets and downpipes on the gable"
       ]
     },
     "wear": {
-      "score": 5,
-      "reason": "Clean at hero distance: no soot on the canopy underside, no moss on slates, no staining under the windows.",
+      "score": 6,
+      "reason": "Moss tint on the slates and darker brick at the plinth; no soot on the canopy underside, no staining under the windows, platform clean.",
       "fixes": [
         "soot streaks on the canopy underside",
-        "moss/lichen on north slates and the platform edge",
-        "damp at the brick plinth"
+        "damp/stain streaks below sills",
+        "dirt along the platform edge"
       ]
     },
     "lod": {
       "score": 7,
-      "reason": "FAR LOD2 (460) keeps building, roof, chimneys, canopy, columns and the board; the platform turns flat light grey and the board loses its lettering.",
+      "reason": "lods.png: LOD2 (462 tris) keeps building, roof, chimneys, canopy, columns and board; the flagstone platform turns into streaky planks and the name board loses its letters (blank white).",
       "fixes": [
-        "keep the platform strip at LOD2 so its value matches",
+        "keep the platform flag pattern at LOD2",
         "keep the name-board lettering as one quad strip"
       ]
     },
     "technical": {
       "score": 8,
-      "reason": "QA PASS (rebuilt today): 8.56k / 4.74k / 460 tris, 2 / 2 / 2 draws: lean for a building this size.",
+      "reason": "QA PASS: 10.0k / 5.5k / 462 tris, 2 / 2 / 2 draws: lean for a building this size.",
       "fixes": [
         "spend a few hundred more LOD0 triangles on the canopy valance fret"
       ]
     }
   },
   "renders": {
-    "hero.png": "0f1693cbf54f5743709f2e6d0f794c870c9a7b99c8496f70c3fc87ac169bfc39",
-    "sheet.png": "0601775cdeba7521f39999ec5e93a93150e0a9e917e56ee2bc252f7159872231"
+    "hero.png": "2d4513e1ca07931d57e9345dfafb66bb559237d7ffe34f1c5eed25d04b7df84f",
+    "sheet.png": "bad3347a15c5fa708b42fb069e0b510e11538a82383ad8fb0a398ad1cccd2ffb",
+    "raking.png": "917875798faa5d8c904adff11f18eba9d17015af7779b7c54c4c9bee7b0476e3",
+    "raking_detail.png": "ccf117228e4d11bd43a73e98ebc4e9668d721a0acc49b300485345d9f787945f",
+    "lods.png": "01095b5c3d073283ddb02ad9cc288cb4316d86124a5d431bb7932c8591775be3",
+    "silhouette.png": "e38b30cf693f915f8e8f674d1c6ad1e6b7392aa46589048823975b610de42738",
+    "value.png": "a98e095f6f434ff0977bc4b1fdf248582b91aaf4e6282e67438c7caeb692a120",
+    "detail.png": "17b1cc1fd343f242d0fc8fcdfd3b460e0ce11d155c617d780a47b0d552d5381b"
+  },
+  "metrics": {
+    "silhouette": [
+      {
+        "view": "front",
+        "iou": 0.949
+      },
+      {
+        "view": "side",
+        "iou": 0.959
+      },
+      {
+        "view": "3/4",
+        "iou": 0.97
+      }
+    ],
+    "focal": {
+      "peakPart": "platform",
+      "peak": [
+        338,
+        313
+      ],
+      "focalShare": 0,
+      "focalArea": 0,
+      "top": [
+        {
+          "part": "platform",
+          "share": 0.877
+        },
+        {
+          "part": "building",
+          "share": 0.031
+        },
+        {
+          "part": "lamp_0_glass",
+          "share": 0.024
+        }
+      ],
+      "declared": []
+    },
+    "rest": {
+      "share": 0.601,
+      "spread": 0.712,
+      "min": 0.25
+    },
+    "shape": {
+      "acuteShare": 0.3,
+      "straightShare": 0.761,
+      "taper": 0.643,
+      "shape": "stable"
+    }
   }
 }

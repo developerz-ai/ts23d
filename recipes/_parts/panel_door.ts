@@ -3,10 +3,39 @@
 // Origin = floor, centre of the opening; front face +X. Composes hinge and door_handle.
 // Real: 826 × 2040 × 40 mm leaf in a ~0.9 m opening; hinges at 150 mm / middle / 250 mm.
 
-import { box, definePart, type Mesh, merge, place } from '@developerz.ai/ts23d';
+import { box, defineMaterial, definePart, type Mesh, merge, place } from '@developerz.ai/ts23d';
 import { door_handle } from './door_handle.ts';
 import { hinge } from './hinge.ts';
 import { DOOR_GREEN, NAT } from './shape.ts';
+
+/**
+ * Painted joinery (vertex colour = paint). The library's `wood_painted` is weathered
+ * boarding: 14 cm planks with a third of the film chipped through in blotches, which on a door
+ * leaf reads as camouflage. A kept door is one smooth film over joined timber: the grain only
+ * telegraphs through it, and the paint wears through only along the arrises.
+ */
+export const JOINERY_PAINT = defineMaterial({
+  id: 'joinery_paint',
+  kind: 'planks',
+  scaleMetres: 0.6,
+  roughness: 0.84,
+  albedo: '#ededed',
+  albedo2: '#a08c74',
+  params: {
+    width: 0.6,
+    length: 2.4,
+    gap: 0.0005,
+    depth: 0.0003,
+    knots: 0,
+    paint: 1,
+    paintRough: 0.45,
+    chips: 0.02,
+    grain: 0.3,
+    film: 0.0003,
+  },
+  description: 'Painted joinery (doors, frames): one smooth film, grain faintly through it.',
+  sources: ['https://physicallybased.info (paint film roughness)'],
+});
 
 export const panel_door = definePart({
   name: 'panel_door',
@@ -30,7 +59,7 @@ export const panel_door = definePart({
       at: [number, number, number],
       bevel = bev,
       color = NAT,
-    ): Mesh => box({ size, at, color, strip: 'wood_painted', bevel });
+    ): Mesh => box({ size, at, color, strip: JOINERY_PAINT, bevel });
     const frame: Mesh[] = [
       wood([jd, j, p.height + j], [0, -(p.width + j) / 2, 0]),
       wood([jd, j, p.height + j], [0, (p.width + j) / 2, 0]),

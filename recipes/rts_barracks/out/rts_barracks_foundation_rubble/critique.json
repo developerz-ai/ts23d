@@ -1,65 +1,115 @@
 {
   "asset": "rts_barracks_foundation_rubble",
   "reviewer": "agent",
-  "overall": 5.7,
+  "overall": 6.6,
   "scores": {
     "silhouette": {
-      "score": 5,
-      "reason": "Slab with tower discs, scattered cubes and fallen red slabs: reads as a wrecked site but very flat; nothing breaks the outline above 1 m.",
+      "score": 6,
+      "reason": "A flat slab with low block heaps, ring footings with a stepped crown and the askew survey banner as the only vertical; from FRONT and SIDE it is a thin strip with a pole. It reads as \"something destroyed\" rather than \"the barracks site\".",
       "fixes": [
-        "one upright tipped pallet or a leaning timber stack so the ruin has a vertical"
+        "a leaning charred timber frame or a standing footing pier ~1.5 m on one corner so the strip outline breaks"
       ]
     },
     "proportions": {
-      "score": 7,
-      "reason": "Same slab as the foundation; scattered blocks match pallet block sizes.",
+      "score": 8,
+      "reason": "15.5 x 18.0 x 3.5 m; rubble blocks now vary in size, the banner pole stands askew at a believable height.",
       "fixes": [
-        "vary rubble block sizes (0.3-1.0x) so the scatter does not look like one repeated cube"
+        "lower the banner tilt so it reads deliberate (10-15 deg) rather than about to fall out of the box"
       ]
     },
     "materials": {
-      "score": 5,
-      "reason": "Stone blocks and the slab read; the fallen team slabs are clean saturated red planes and the tower discs show a radial sliced-log pattern on top.",
+      "score": 6,
+      "reason": "Fallen team slates are broken into pieces now, footing tops are stepped blocks; but the slab is the blotchy camouflage pattern and the slates are clean saturated red, so the ruin reads painted rather than burnt.",
       "fixes": [
-        "dusty, broken fallen slabs (fallenSlabs in site.ts)",
-        "tower footing tops as stone blocks, not a radial cap"
+        "char/dust on the fallen slates (value down, roughness up)",
+        "slab on a flagstone/rammed-earth strip with burnt patches"
       ]
     },
     "detail": {
-      "score": 5,
-      "reason": "Scattered blocks, two charred beams, fallen slabs; no small debris or splinters.",
+      "score": 6,
+      "reason": "Broken slates, charred beams with a few small shards, stepped footing crowns, block heaps; the heaps are sparse and the floor between is bare.",
       "fixes": [
-        "gravel and small shards around each block",
-        "splintered ends on the charred beams"
+        "gravel and small shards round each heap (lots of 5-10 cm pieces)",
+        "splintered beam ends"
       ]
     },
     "wear": {
-      "score": 4,
-      "reason": "Every broken block is a clean bevelled cube with crisp arrises; no soot, scorch or ash on the floor, no dust over the fallen team slabs, which stay bright and unmarked. Nothing says fire or collapse beyond the arrangement.",
+      "score": 5,
+      "reason": "Raking.png and hero.png show crisp bevelled cube blocks, a little damp at the drum foot and no scorch, soot or ash anywhere; the fallen team slates are still bright saturated red, not dusty or charred. The collapse is told by arrangement only, not by surface.",
       "fixes": [
-        "grime() scorch zones on wall stub tops and the floor around the heaps (rubble() in site.ts)",
-        "dust coat on the fallen team slabs (fallenSlabs in site.ts) so the red reads as buried, not freshly laid",
-        "chip/break one or two edges per rubble block instead of whole cubes"
+        "scorch and soot on the broken wall tops and on the floor round the heap (rubble() in site.ts): dark, low-roughness patches that read at hero distance",
+        "dust/char coat on the fallen team slates (fallenSlabs) so the red reads buried, value down ~40%",
+        "chip one or two arrises per rubble block instead of whole clean cubes"
       ]
     },
     "lod": {
-      "score": 6,
-      "reason": "FAR LOD2 keeps the plinth, wall stubs and tower drums, but the tower drums turn into coarse octagons and the fallen team slabs merge into one flat red polygon, so the heap texture of LOD0 disappears at distance.",
+      "score": 7,
+      "reason": "lods.png: LOD2 (362 tris) keeps footings, banner, heap blocks and a few tilted slates; the red slab pattern holds. Footings become octagons and the floor pattern flattens to grey.",
       "fixes": [
-        "keep 10-12 sides on the tower stubs at LOD2 (a few dozen triangles)",
-        "keep 2-3 tilted heap blocks per bay at LOD2 instead of flattening the fallen slabs into one plane"
+        "10-12 sides on the footing rings at LOD2"
       ]
     },
     "technical": {
       "score": 8,
-      "reason": "QA PASS on every gate (rebuilt today), tris 4.88k / 1.97k / 388, draws 2 / 2 / 2; deterministic, one trim material + team slot. Triangles mostly sit in the running-bond blocks, where they show.",
+      "reason": "QA PASS, tris 14.4k / 2.6k / 362, draws 2/2/2; one trim material + team slot, LOD2 well under 1k. Triangles mostly sit in the running-bond blocks and slates, where they show.",
       "fixes": [
-        "merge the per-block wall boxes into one course mesh per bay at LOD0 (shared inner faces removed) to cut the block-count triangles without losing the coursing"
+        "merge the per-block wall boxes into one course mesh per bay at LOD0 (shared inner faces removed) so the coursing costs fewer triangles"
       ]
     }
   },
   "renders": {
-    "hero.png": "b5c4590f3c2c616d5fcc2d18f79251ac66209bf82e5e7d58e3548fd35dbde787",
-    "sheet.png": "a4df8723f5e98f3706c6236385cca3d4c6fe4f8868f9e937ef37635c4f2e9319"
+    "hero.png": "384c369cd11281681103192b5a130d2530f230c87ffb6c14245c546b760c3ee1",
+    "sheet.png": "ac8ef9286ae972d490ba837d526777d4822297c632e2a2f09fde5244784242bc"
+  },
+  "metrics": {
+    "silhouette": [
+      {
+        "view": "front",
+        "iou": 0.825
+      },
+      {
+        "view": "side",
+        "iou": 0.752
+      },
+      {
+        "view": "3/4",
+        "iou": 0.954
+      }
+    ],
+    "focal": {
+      "peakPart": "tower_r",
+      "peak": [
+        123,
+        183
+      ],
+      "focalShare": 0,
+      "focalArea": 0,
+      "top": [
+        {
+          "part": "tower_r",
+          "share": 0.302
+        },
+        {
+          "part": "walls",
+          "share": 0.245
+        },
+        {
+          "part": "plinth",
+          "share": 0.141
+        }
+      ],
+      "declared": []
+    },
+    "rest": {
+      "share": 0.631,
+      "spread": 0.723,
+      "min": 0.25
+    },
+    "shape": {
+      "acuteShare": 0.359,
+      "straightShare": 0.769,
+      "taper": 0.726,
+      "shape": "stable"
+    }
   }
 }

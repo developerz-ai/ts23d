@@ -97,7 +97,9 @@ export const SK = {
     [-4.75, -0.2, 0.075],
   ] as Vec3[],
   /** Tail radii per node: the last spans rest on the ground (centre height = radius). */
-  tailR: [0.44, 0.36, 0.28, 0.22, 0.17, 0.13, 0.1, 0.075],
+  // The root is as thick as the hips it leaves (a thin root read as a rat's tail on this body).
+  // Thick through its first third (it thinned to a stick two metres behind the hips).
+  tailR: [0.5, 0.46, 0.38, 0.29, 0.2, 0.14, 0.1, 0.075],
 } as const;
 
 /** Pivot where the tail part hangs from the body (inside the stump). */

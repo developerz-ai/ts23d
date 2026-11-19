@@ -19,9 +19,9 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    68882,
-    17440,
-    3506
+    58578,
+    16404,
+    1382
   ],
   "drawCalls": [
     25,
@@ -202,7 +202,7 @@
     {
       "label": "hull length",
       "spec": 6.316,
-      "measured": 6.382832288742065,
+      "measured": 6.39783239364624,
       "source": "https://en.wikipedia.org/wiki/Tiger_I"
     },
     {

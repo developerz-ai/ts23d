@@ -2,7 +2,17 @@
 // lobes are separate pieces on their own bone chains. Dimensions come from anatomy and README.md.
 
 import type { Mesh, Vec3 } from '@developerz.ai/ts23d';
-import { add, curve3, even, mixRgb, plate, scale, smooth } from '../_lib/body-plan-kit.ts';
+import {
+  add,
+  curve3,
+  even,
+  gauss,
+  loft,
+  mixRgb,
+  plate,
+  scale,
+  smooth,
+} from '../_lib/body-plan-kit.ts';
 import {
   axisZ,
   COLOUR,
@@ -19,23 +29,39 @@ import { SKIN } from './material.ts';
 type Lod = 0 | 1 | 2;
 
 const spanRings = (lod: Lod, links: number): number[] =>
-  even(0, 0.992, lod === 0 ? 14 : lod === 1 ? 6 : links);
+  even(0, 0.992, lod === 0 ? 26 : lod === 1 ? 8 : links);
 const chordSides: readonly [number, number, number] = [18, 8, 4];
 
 export const DORSAL = { height: 0.478, length: 0.492, base: 0.39 } as const;
 export const PECTORAL = { margin: 0.836 } as const;
-export const CAUDAL = { upper: 0.994, lower: 0.82 } as const;
+export const CAUDAL = { upper: 0.994, lower: 0.9 } as const;
 
 const dorsalRoot: Vec3 = [xOf(T_DORSAL), 0, topZ(T_DORSAL) - 0.02];
 /** The apex stands the published height above the back directly under it. */
 export const DORSAL_TIP: Vec3 = [dorsalRoot[0] - 0.3, 0, topZ(T_DORSAL + 0.3 / L) + DORSAL.height];
 
+/** A torn notch in the first dorsal's trailing edge, 0..1 of the chord pulled back, at span u. */
+export const dorsalNotch = (u: number): number =>
+  0.42 * gauss((u - 0.56) / 0.035, 1) + 0.12 * gauss((u - 0.8) / 0.02, 1);
+
 export function dorsalFin(lod: Lod): Mesh {
   const [r, tip] = [dorsalRoot, DORSAL_TIP];
   const rear: Vec3 = [r[0] - DORSAL.length, 0, topZ(T_DORSAL + DORSAL.length / 4.5) - 0.012];
+  const lead = curve3([r, [r[0] - 0.115, 0, r[2] + 0.225], [r[0] - 0.225, 0, r[2] + 0.385], tip]);
+  const back = curve3([
+    rear,
+    [r[0] - 0.385, 0, r[2] + 0.115],
+    [r[0] - 0.335, 0, r[2] + 0.285],
+    tip,
+  ]);
+  // Up close the trailing edge carries a bitten notch, healed dark round its rim.
+  const notch = (u: number): number => (lod === 2 ? 0 : dorsalNotch(u));
   return plate({
-    lead: curve3([r, [r[0] - 0.115, 0, r[2] + 0.225], [r[0] - 0.225, 0, r[2] + 0.385], tip]),
-    trail: curve3([rear, [r[0] - 0.385, 0, r[2] + 0.115], [r[0] - 0.335, 0, r[2] + 0.285], tip]),
+    lead,
+    trail: (u) => {
+      const [a, b, k] = [lead(u), back(u), notch(u)];
+      return [b[0] + (a[0] - b[0]) * k, b[1], b[2] + (a[2] - b[2]) * k];
+    },
     thick: (u) => 0.036 * (1 - u) ** 0.8 + 0.0025,
     us: spanRings(lod, 2),
     sides: chordSides[lod],
@@ -45,10 +71,57 @@ export function dorsalFin(lod: Lod): Mesh {
       mixRgb(
         mixRgb(COLOUR.back, COLOUR.backDark, 0.45 + 0.4 * u),
         COLOUR.tip,
-        0.5 * smooth(0.82, 1, c),
+        Math.max(0.5 * smooth(0.82, 1, c), 0.6 * smooth(0.04, 0.2, notch(u)) * smooth(0.6, 0.9, c)),
       ),
   });
 }
+
+/**
+ * Parasitic copepods: small elongate brown bodies clinging in a cluster on the first dorsal's
+ * trailing edge and on the pectorals' upper face, head into the flow. LOD0 only.
+ */
+export function copepods(lod: Lod, at: readonly Vec3[]): Mesh[] {
+  if (lod !== 0) return [];
+  return at.map((p, i) =>
+    loft({
+      us: even(0, 1, 5),
+      sides: 6,
+      strip: SKIN,
+      point: (u, a) => {
+        const len = 0.022 + 0.006 * Math.sin(i * 2.3);
+        const r = 0.0055 * Math.sin(Math.PI * (0.08 + 0.84 * u)) ** 0.7;
+        return [p[0] - len * (u - 0.4), p[1] + r * Math.cos(a), p[2] + 0.6 * r * Math.sin(a)];
+      },
+      color: (_p, _n, u) => mixRgb(COLOUR.copepod, COLOUR.tip, 0.3 * u),
+    }),
+  );
+}
+
+/** Copepod seats on the dorsal fin: mid-plane points on its rear third, along the notch. */
+export const dorsalCopepods = (): Vec3[] =>
+  [0.26, 0.3, 0.34, 0.38, 0.43, 0.47, 0.66, 0.72].map((u, i) => {
+    const r = dorsalRoot;
+    const lead = curve3([
+      r,
+      [r[0] - 0.115, 0, r[2] + 0.225],
+      [r[0] - 0.225, 0, r[2] + 0.385],
+      DORSAL_TIP,
+    ]);
+    const rear: Vec3 = [r[0] - DORSAL.length, 0, topZ(T_DORSAL + DORSAL.length / 4.5) - 0.012];
+    const back = curve3([
+      rear,
+      [r[0] - 0.385, 0, r[2] + 0.115],
+      [r[0] - 0.335, 0, r[2] + 0.285],
+      DORSAL_TIP,
+    ]);
+    const [a, b] = [lead(u), back(u)];
+    const c = 0.72 + 0.06 * (i % 2);
+    // Seated on the skin of one face: the plate's half-thickness there, most on the camera side.
+    const face = 0.036 * (1 - u) ** 0.8 + 0.0025;
+    const lens = Math.sqrt(1 - (2 * c - 1) ** 2) * (1 - 0.65 * c);
+    const side = i % 3 === 2 ? 1 : -1;
+    return [a[0] + (b[0] - a[0]) * c, side * face * lens, a[2] + (b[2] - a[2]) * c];
+  });
 
 const pecRoot = (side: 1 | -1, t: number): Vec3 => {
   const p = plainPoint(t, 2.02);
@@ -69,14 +142,21 @@ export function pectoralFin(side: 1 | -1, lod: Lod): Mesh {
   return plate({
     lead: curve3([r, at(r, 0.34, 0.05, 0.012), at(r, 0.7, 0.045, 0.012), tip]),
     trail: curve3([back, at(back, 0.32, -0.05, 0.02), at(back, 0.68, -0.03, 0.014), tip]),
-    thick: (u) => 0.033 * (1 - u) ** 0.9 + 0.0025,
+    // A thick root (about 9 % of the chord) tapering to a thin, flexible trailing edge and tip.
+    thick: (u) => 0.048 * (1 - u) ** 0.75 + 0.004,
     us: spanRings(lod, 2),
     sides: chordSides[lod],
     strip: SKIN,
-    // Grey above, white below with the black underside tip of the species.
-    color: (_p, n, u) => {
+    // Grey above, white below with the black underside tip of the species; the upper face darkens
+    // toward its tip and along its trailing edge too.
+    color: (_p, n, u, c) => {
       const under = smooth(0.15, -0.25, n[2]);
-      const top = mixRgb(COLOUR.back, COLOUR.backDark, 0.35 + 0.4 * u);
+      const edge = Math.max(smooth(0.82, 0.97, u), 0.7 * smooth(0.8, 0.97, c));
+      const top = mixRgb(
+        mixRgb(COLOUR.back, COLOUR.backDark, 0.35 + 0.4 * u),
+        COLOUR.tip,
+        0.6 * edge,
+      );
       const low = mixRgb(COLOUR.belly, COLOUR.tip, smooth(0.8, 0.93, u));
       return mixRgb(top, low, under);
     },
@@ -86,7 +166,7 @@ export function pectoralFin(side: 1 | -1, lod: Lod): Mesh {
 export const CAUDAL_ROOT: Vec3 = [xOf(T_CAUDAL), 0, axisZ(T_CAUDAL)];
 const R = CAUDAL_ROOT;
 export const UPPER_TIP: Vec3 = [-2.25, 0, R[2] + 0.765];
-export const LOWER_TIP: Vec3 = [R[0] - 0.43, 0, R[2] - 0.7];
+export const LOWER_TIP: Vec3 = [R[0] - 0.5, 0, R[2] - 0.745];
 export const FORK: Vec3 = [R[0] - 0.4, 0, R[2] - 0.03];
 
 const lobeColour = (_p: Vec3, _n: Vec3, u: number, c: number): Vec3 =>

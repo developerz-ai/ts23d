@@ -43,6 +43,22 @@ export const selfTiered = (
   neural: Readonly<Record<string, readonly unknown[]>>,
 ): boolean => !baseOf(item.name) && (neural[item.folder]?.length ?? 0) > 0;
 
+/**
+ * True for a hybrid with committed records whose CPU asset is not listed (`bear_hybrid`: the CPU
+ * bear is `brown_bear`, so no `<name>` pairs with it). Its card and page are the model tier, with
+ * no switch: built without its model outputs it is not the asset its renders show.
+ */
+export const modelOnly = (
+  item: Named,
+  items: readonly Named[],
+  neural: Readonly<Record<string, readonly unknown[]>>,
+): boolean => {
+  const base = baseOf(item.name);
+  return (
+    base !== null && !items.some((i) => i.name === base) && (neural[item.folder]?.length ?? 0) > 0
+  );
+};
+
 /** `ranger@cpu` → `['ranger', 'cpu']`; any other hash names the asset on its default tier. */
 export const parseHash = (hash: string): readonly [name: string, tier: Tier | null] =>
   hash.endsWith(CPU_SUFFIX) ? [hash.slice(0, -CPU_SUFFIX.length), 'cpu'] : [hash, null];
@@ -63,7 +79,9 @@ export const showcaseItems = <T extends Named>(
   neural: Readonly<Record<string, readonly { readonly bytes: number }[]>>,
 ): T[] =>
   items.filter(
-    (i) => !selfTiered(i, neural) || payloadOf(neural[i.folder] ?? []) <= SHOWCASE_MODEL_BYTES,
+    (i) =>
+      !(selfTiered(i, neural) || modelOnly(i, items, neural)) ||
+      payloadOf(neural[i.folder] ?? []) <= SHOWCASE_MODEL_BYTES,
   );
 
 /** The grid's items: every hybrid whose CPU asset is listed is left out (the switch reaches it). */

@@ -7,21 +7,16 @@
 import { mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { Asset, CompiledAsset, Lod } from '../core/index.ts';
-import {
-  drawFindings,
-  exportLodGlb,
-  type SheetBinding,
-  soundFiles,
-  toGlb,
-} from '../export/index.ts';
-import type { PaintedSheet } from '../material/index.ts';
+import { drawFindings, exportLodGlb, soundFiles, toGlb } from '../export/index.ts';
+import { sheetFor } from '../material/index.ts';
 import { codeOf, type Finding, runLodQa, runQa } from '../qa/index.ts';
-import { beauty, contactSheet, thumbnail } from '../render/index.ts';
+import { beauty, contactSheet, previewSheet, thumbnail } from '../render/index.ts';
 import type { Args } from './args.ts';
 import { compileOnce } from './compile-cache.ts';
 import { type AssetManifest, manifestOf } from './manifest.ts';
 import { variantOf } from './render-cmds.ts';
 import { foldLods } from './report.ts';
+import type { RunSheets } from './run-sheets.ts';
 
 /** Per-LOD gates folded across LODs, then the LOD-chain gates and the draw-call budget. */
 export function qaOf(asset: Asset, lods: readonly CompiledAsset[]): Finding[] {
@@ -35,13 +30,15 @@ export function qaOf(asset: Asset, lods: readonly CompiledAsset[]): Finding[] {
 export async function buildOne(
   asset: Asset,
   args: Args,
-  texture: SheetBinding | undefined,
-  painted: PaintedSheet | undefined,
+  sheets?: RunSheets,
 ): Promise<AssetManifest> {
   const dir = join(args.out, asset.name);
   await mkdir(dir, { recursive: true });
   const lods = args.lods.map((lod: Lod) => compileOnce(asset, { lod }));
   const findings = qaOf(asset, lods);
+  // The asset's own sheet (its materials are known now); external mode writes its PNGs here.
+  const texture = await sheets?.bind(dir, lods);
+  const painted = sheets ? sheetFor(lods, sheets.recipe) : undefined;
   // Manifest paths are relative to `dir`; `write` returns the relative name.
   const write = async (name: string, bytes: Uint8Array | string): Promise<string> => {
     await Bun.write(join(dir, name), bytes);
@@ -100,11 +97,11 @@ export async function buildOne(
     );
   }
   if (args.cmd === 'shot' || args.shot) {
-    thumb = await write(png('thumb'), thumbnail(look(0, lods[0])));
-    sheet = await write(
-      png('sheet'),
-      contactSheet(look(0, lods[0]), { far: look(2, lods.at(-1)) }),
-    );
+    // Base colour as in the hero (D297): compile first, the preview sheet follows the materials.
+    const [top, far] = [look(0, lods[0]), look(2, lods.at(-1))];
+    const tones = previewSheet([top, far]);
+    thumb = await write(png('thumb'), thumbnail(top, { sheet: tones }));
+    sheet = await write(png('sheet'), contactSheet(top, { far, sheet: tones }));
   }
   const manifest = manifestOf(
     asset,

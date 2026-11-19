@@ -1,7 +1,9 @@
 // Project materials: `defineMaterial` validates a MaterialDef, gives it the custom strip row it
-// names (`row`) or its id hashes to (never another: slots.ts) and adds it to the house sheet, so
-// `DEFAULT_SHEET` paints it and primitives map onto it. Redefining an id with the same definition
-// is a no-op; a different one, or a second id on a taken row, is a conflict.
+// names (`row`) or its id hashes to (slots.ts) and adds its recipe to the house table, so a sheet
+// painted for an asset that maps onto it shows it (`sheetFor`). Any number of materials may be
+// defined, and many may name one row: rows are held per asset, and two on one row in the SAME
+// asset is the conflict (found while it compiles, core/material-use.ts). Redefining an id with
+// the same definition is a no-op; a different one is a conflict (ids are process-wide names).
 // `materialOf` answers what any strip is (built-in or defined) for docs, review and tests;
 // `textureSources` / `stripCredits` serve the CC0 image strips (fetch list, GLB credits).
 
@@ -12,16 +14,7 @@ import { NATURE_LIBRARY } from './nature.ts';
 import { HOUSE_STRIPS } from './paint/default-sheet.ts';
 import type { StripRecipe } from './paint/types.ts';
 import { rowsSampled } from './rows-sampled.ts';
-import {
-  clearCustom,
-  customIds,
-  customIndex,
-  freeId,
-  freeRows,
-  homeSlot,
-  pushCustom,
-  rowOwner,
-} from './slots.ts';
+import { clearCustom, customIndex, homeSlot, pushCustom } from './slots.ts';
 import { creditOf, type TextureSource } from './texture-source.ts';
 import {
   CLASSIC_STRIPS,
@@ -72,7 +65,9 @@ function same(a: MaterialDef, b: MaterialDef): boolean {
  * const teak = defineMaterial({ id: 'teak_deck', kind: 'planks', roughness: 0.6,
  *   albedo: '#8a5a32', albedo2: '#5a3a1e', params: { width: 0.12, rings: 0.5 } });
  * box({ size: [4, 2, 0.05], strip: teak, color: NATURAL });
- * The strip row is the id's hash, or `row` (0..13) when two ids a project loads hash to one row.
+ * The strip row is `row` (0..13), else the id's hash. An asset holds one material per row: when
+ * two materials of ONE asset share a row its compile throws T3D_MATERIAL_CONFLICT; give one a
+ * `row` the asset leaves free. Different assets may reuse any row.
  */
 export function defineMaterial(def: MaterialDef): CustomStripId {
   const recipe = toStripRecipe(def);
@@ -90,24 +85,9 @@ export function defineMaterial(def: MaterialDef): CustomStripId {
       fix: 'define each material once in a shared module and import it, or give the variant its own id',
     });
   }
-  if (customIds().length >= CUSTOM_STRIP_SLOTS)
-    throw new Ts23dError('T3D_SHEET_FULL', {
-      cause: `the trim sheet has ${CUSTOM_STRIP_SLOTS} custom strip rows, all taken (${customIds().join(', ')})`,
-      fix: 'reuse a built-in strip with a vertex colour, or restyle an unused built-in strip in your SheetRecipe',
-    });
-  const row = def.row ?? homeSlot(id, CUSTOM_STRIP_SLOTS);
-  const owner = rowOwner(row);
-  if (owner !== undefined) {
-    const free = def.row === undefined ? freeId(id, CUSTOM_STRIP_SLOTS) : undefined;
-    const how = def.row === undefined ? 'hashes to' : 'asks for';
-    throw new Ts23dError('T3D_MATERIAL_CONFLICT', {
-      cause: `material '${id}' ${how} custom strip row ${row}, which '${owner}' already holds; a row comes from the definition alone, so the layout never depends on which material was defined first`,
-      fix: `give it a free row (row: ${freeRows(CUSTOM_STRIP_SLOTS)[0]}; free now: ${freeRows(CUSTOM_STRIP_SLOTS).join(', ')})${free ? `, or rename it (e.g. '${free}', whose row is free)` : ''}, or drop a material this process does not need`,
-    });
-  }
   defined.set(id, def);
   generation++;
-  pushCustom(id, def.spanMetres ?? 4, row);
+  pushCustom(id, def.spanMetres ?? 4, def.row ?? homeSlot(id, CUSTOM_STRIP_SLOTS));
   (HOUSE_STRIPS as Record<string, StripRecipe>)[id] = recipe;
   return id as CustomStripId;
 }
@@ -126,6 +106,31 @@ export function resetMaterials(): void {
   defined.clear();
   clearCustom();
   generation++;
+}
+
+/**
+ * Remember what is defined now; the returned function resets and puts exactly that back. Only
+ * definitions present at snapshot time survive: anything defined after it (a test's own fixture
+ * materials) is forgotten, so take the snapshot before the file imports a recipe whose materials
+ * later files need. For tests that call `resetMaterials()`: recipe modules define their materials
+ * once, at import, and are never evaluated again, so without this a later test in the process
+ * that compiles such a recipe fails with T3D_MATERIAL_UNKNOWN (D334).
+ */
+export function materialSnapshot(): () => void {
+  const saved = [...defined.values()];
+  return () => {
+    resetMaterials();
+    // One material that cannot come back (its texture provider is gone) must not cost the rest.
+    const lost: unknown[] = [];
+    for (const def of saved) {
+      try {
+        defineMaterial(def);
+      } catch (e) {
+        lost.push(e);
+      }
+    }
+    if (lost.length > 0) throw lost[0];
+  };
 }
 
 export interface MaterialInfo {
@@ -171,13 +176,19 @@ export function textureSources(): readonly TextureSource[] {
 
 /**
  * Credit lines for the image strips a mesh samples (`vs`: one V per vertex; pass `indices` for an
- * exact, per-triangle answer: `rowsSampled`). Empty when no image strip is used (the GLB stays
- * byte-identical).
+ * exact, per-triangle answer: `rowsSampled`). `materials` narrows the answer to the ids one asset
+ * maps onto (`CompiledAsset.materials`): several defined materials may hold one row, and only the
+ * asset's own is on its sheet. Empty when no image strip is used (the GLB stays byte-identical).
  */
-export function stripCredits(vs: ArrayLike<number>, indices?: ArrayLike<number>): string[] {
+export function stripCredits(
+  vs: ArrayLike<number>,
+  indices?: ArrayLike<number>,
+  materials?: readonly string[],
+): string[] {
   const rows = rowsSampled(vs, indices);
   const out: string[] = [];
   for (const [id, d] of defined)
-    if (d.texture && rows.has(stripRow(id))) out.push(creditOf(d.texture));
+    if (d.texture && rows.has(stripRow(id)) && (materials?.includes(id) ?? true))
+      out.push(creditOf(d.texture));
   return out;
 }

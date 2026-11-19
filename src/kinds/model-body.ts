@@ -14,6 +14,7 @@ import { MID, midTriples, splitMid } from './creature-helpers.ts';
 import type { CreatureSpec } from './creature-spec.ts';
 import { bindModel, quantiseWeights } from './model-bind.ts';
 import type { ChainedModel } from './model-chain.ts';
+import type { ExtraChains } from './model-extra.ts';
 import { applyFit, type ModelFit } from './model-fit.ts';
 import { mirrorHalf, without } from './model-mirror.ts';
 import { type ModelRig, modelRig } from './model-rig.ts';
@@ -36,6 +37,8 @@ export interface ModelBodyOptions {
   readonly symmetric?: boolean | '+' | '-';
   /** One pass only: a rigger's armature for the model (its own frame), as the joint source. */
   readonly joints?: readonly Bone[];
+  /** One pass only: bone chains the plan lacks (wings, fins; model-extra.ts). */
+  readonly extra?: ExtraChains;
 }
 
 export interface ModelBodyInfo {
@@ -90,7 +93,12 @@ function ownsRig(mesh: Mesh, model: ImportedModel, rig: ModelRig): boolean {
   const byName = new Map(rig.bones.map((b) => [b.name, b]));
   const real = rig.bones.filter((b) => !b.name.endsWith(MID));
   if (!real.every((b) => from.some((f) => f.name === b.name))) return false;
-  if (!from.every((f) => byName.has(f.name))) return false;
+  const unknown = from.filter((f) => !byName.has(f.name)).map((f) => f.name);
+  if (unknown.length)
+    throw new Ts23dError('T3D_MODEL_SKELETON', {
+      cause: `modelBody: the Blender output's skin has ${unknown.length} bone(s) the fitted rig lacks: ${unknown.slice(0, 6).join(', ')}`,
+      fix: 'declare them as `extra` chains (modelChain({ extra }): joints, parent, limits), or bind to the skeleton the chain sends and nothing else',
+    });
   for (const f of from) {
     const b = byName.get(f.name) ?? f;
     const off = Math.hypot(f.head[0] - b.head[0], f.head[1] - b.head[1], f.head[2] - b.head[2]);
@@ -149,6 +157,7 @@ export function modelBody(ctx: BuildContext, o: ModelBodyOptions): ModelBodyInfo
       ...(o.drop ? { drop: o.drop } : {}),
       ...(o.symmetric ? { symmetric: o.symmetric } : {}),
       ...(o.joints ? { joints: o.joints } : {}),
+      ...(o.extra ? { extra: o.extra } : {}),
     });
   const once = <T>(memo: WeakMap<Float32Array, WeakMap<ModelRig, T>>, make: () => T): T => {
     const per = memo.get(source.positions) ?? new WeakMap<ModelRig, T>();

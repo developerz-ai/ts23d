@@ -1,6 +1,6 @@
 import { afterAll, describe, expect, it } from 'bun:test';
 import { Ts23dError } from '../core/index.ts';
-import { defineMaterial, materialOf, resetMaterials } from './define.ts';
+import { defineMaterial, materialOf, materialSnapshot, resetMaterials } from './define.ts';
 import { NATURE_LIBRARY } from './nature.ts';
 import { createCanvas } from './paint/canvas.ts';
 import { HOUSE_STRIPS } from './paint/default-sheet.ts';
@@ -20,9 +20,12 @@ import {
 } from './trim-sheet.ts';
 import { materialVariant, weathered } from './variant.ts';
 
+// Put back, last of all hooks, what other test files' recipes defined at import (D334).
+const restoreMaterials = materialSnapshot();
+
 // A row comes from the id alone: start from an empty table, whatever earlier files registered.
 resetMaterials();
-afterAll(resetMaterials);
+afterAll(restoreMaterials);
 
 const codeOf = (fn: () => unknown): string => {
   try {

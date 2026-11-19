@@ -31,10 +31,38 @@ against `GOBLIN_PROPORTIONS` — the human bands with each delta declared and ju
 above records the earlier primitive head.
 
 ## Built by
-`spec.ts`, `features.ts` (grin teeth, worried brow creases, seeded warts), `hair.ts` (wisps),
-`clothes.ts` (shirt, hemmed vest, soft hood roll, scarf) and `creases.ts` (the intended folds as
-≤ 3 cm regions from the same geometry) on the shared bust library `../_lib/bust/`. Eye `socket`
-joints as on every bust.
+`spec.ts`, `torso.ts` (the shared torso with the goblin's stoop: a hump behind the neck's root, a
+flat bony chest, the body sat 2.2 cm higher under the head, `LT`), `features.ts` (grin teeth
+along the parted lips, worried brow creases, six warts each its own size, the ear tips' cartilage
+edge, the far LOD's ear blades), `hair.ts` (wisps), `clothes.ts` (the outfit as layers) and
+`creases.ts` (the intended folds as ≤ 3 cm regions from the same geometry) on the shared bust
+library `../_lib/bust/`. Eye `socket` joints as on every bust.
+
+## Outfit: one closed solid per material (2026-11)
+The garments are no longer sculpted into the skin. `outfitLayers` (`clothes.ts`) returns each layer
+with its trim-sheet strip; `build.ts` meshes each on that strip, fairs it (`fair`: a cut edge a
+cell thick meshes as a saw-tooth), weathers it (`weather`: dust on what faces up, scuffs on convex
+edges) and merges them as the `clothes` part under the `face` node, so they breathe with the
+chest. The skin under them is cut away (`hiddenBody`), so no triangle is spent on a hidden chest.
+
+| Layer | Strip | What it carries |
+|---|---|---|
+| shirt | `bust_linen` (`LINEN`, ../_lib/bust/cloth-strips.ts: plain weave, roughness 0.82) | linen, sleeves out of the armholes, zigzag and sleeve folds, grime at neck and placket, old stains |
+| vest | `leather` | sleeveless 9 mm hide, rolled edges rubbed pale, shoulder seam, sweat-dark under the arms and down the back, two sewn patches |
+| hood | `bust_wool` (`WOOL`: coarse twill, roughness 0.94) | wool roll behind the neck, U folds, road dust on top |
+| scarf | `bust_wool` | three flat wraps (sun-faded outer fold), a flat knot, two ragged tails muddy at the ends |
+| `toggle` (own part, LOD0–1) | `plain` | a horn toggle on a thong across the vest's opening |
+
+No garment takes a finish: the cloth strips carry their own roughness. Vertex colours are tints:
+the strip's own albedo times the tint gives the colour in the table below (`on(strip, colour)`;
+the cloth strips' near-white ground is `CLOTH_ALBEDO`).
+
+## LODs and budget
+| LOD | Triangles | What changes |
+|---|---|---|
+| 0 | ≈ 54.7k (budget 58k) | head 6 mm, finer round the eyes, ears and mouth (head ≈ 28k, bust ≈ 2.1k); garment layers 6–10 mm (≈ 16.7k); hair cards ≈ 1.4k |
+| 1 | ≈ 14.0k (14.5k) | head 10 mm (≈ 3.9k), layers 10–16 mm (≈ 6.2k), a few hair cards (≈ 0.2k) |
+| 2 | ≈ 2.6k (2.7k) | head 21 mm; the ears as tapered blades that cell can hold (`farEars`); every garment layer in ONE sculpt on `bust_wool` at a 2.6 cm cell, coloured by the garment on top with flat colour blocks (`far`, ≈ 1.1k); no toggle; the crown wisps and ear tufts as a few wide cards |
 
 ## Palette (sRGB)
 | Role | Hex |
@@ -44,7 +72,17 @@ joints as on every bust.
 | teeth | `#e8dcae` |
 | hair root → tip | `#b0a890` → `#f0ece0` |
 | shirt / vest / hood / scarf | `#d8ccaa` / `#6a4428` / `#4a5a34` / `#9a3020` |
+| wear: linen grime / sweat-dark leather / patch / dust / faded scarf / scarf mud / horn | `#7d7052` / `#2e1c10` / `#8a5a34` / `#a8987a` / `#b4553c` / `#4a2a1c` / `#cdbf9a` |
 
 ## Known gaps
-The vest and shirt are sculpted onto the torso (paint + an offset layer); the vest's edge is a soft
-hem fillet, not sewn cloth; ears alias slightly along their thin rim at LOD0.
+The skin's detail is the shared tiling pore strip (`pores: true`) under one dull olive `skin`
+sheen finish, not a per-face texture; the vest's cut edges are ragged at the cell's scale even after fairing; stitches are a
+groove and a paler line, not thread (a 2 mm stitch is under the layer's cell); the neck is the
+base mesh's and stays straight (the stoop is carried by the raised shoulders and the hump); the
+mouth's grin is the base's parted lips widened ×1.6, not a re-sculpted smile.
+
+## Triangle budget (As of 2026-11-19)
+About 54.7k / 14.0k / 2.6k (budget 58k / 14.5k / 2.7k) against the bust band of 60k / 12k / 1.5k (it was 83k / 21k / 3.6k): LOD0 fits. The head is meshed at a 6 mm cell (4.6 mm before), finer only round the eyes, ears and mouth.
+
+Budget why: LOD1 carries four closed garment layers (shirt, vest, hood, scarf) and the long ears; LOD2 merges the garments into one far sculpt (`outfitLayers`' `far` layer, ≈ 1.1k) but keeps the ear blades, and a head cell over 2.1 cm folds them, and they name the race.
+

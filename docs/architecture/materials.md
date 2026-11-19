@@ -12,7 +12,7 @@ colour of a painted strip.
 | 0 – 0.125 | 8 **classic** strips: `plain brick stone slate iron wood glass concrete`. Greyscale, tinted by vertex colour. |
 | 0.125 – 0.375 | 16 **library** strips with their own colour (`MATERIAL_LIBRARY`, below) |
 | 0.375 – 0.656 | 18 **nature** strips painted from texture graphs (`NATURE_LIBRARY`, below) |
-| 0.656 – 0.875 | 14 **custom** rows for project materials (`defineMaterial`) |
+| 0.656 – 0.875 | 14 **custom** rows for project materials (`defineMaterial`): per asset, each asset's sheet holds its own (D299) |
 | 0.875 – 1 | 1/16 cells (256 px at 4096²): decals (row 0), foliage cards (from slot 8) |
 
 Each strip row is 1/64 of the sheet: 64 px at the 4096² house size. Each strip also spans its own
@@ -82,7 +82,8 @@ which uses glTF metal/rough conventions.
 Unverified: the wood albedos are chosen within the dielectric range and checked against photographs
 by eye. They are not spectrometer data, because no published wood-species albedo table was found.
 Emissive panels have no strip: glTF emission is a separate per-material slot, not ORM. Glowing parts
-use `glow` rules in export.
+use `glow` rules in export. Both beauty renders add the same emission (colour × strength, linear) to
+those parts, so `hero.png` shows the lamp lit; the contact sheet does not.
 
 **How to colour library strips.** Use `NATURAL` (white) as the vertex colour on library strips, so
 the measured albedo reads true. On painted strips (`wood_painted`, `steel_painted`, `plastic`) the
@@ -170,23 +171,50 @@ box({ size: [4, 2, 0.05], strip: teak, color: NATURAL });
 ```
 
 - It validates first: bad input throws `T3D_MATERIAL_INVALID`, an unknown id `T3D_MATERIAL_UNKNOWN`, a
-  built-in or differently redefined id `T3D_MATERIAL_CONFLICT`, and a fifteenth custom row
-  `T3D_SHEET_FULL`. Also: `graph` (a `tex` graph, see below), `spanMetres` (U repeat, default 4)
-  and the weathering dials `wet`, `wear`, `age`. A painter that writes NaN or ∞ fails the paint with `T3D_MATERIAL_INVALID`.
-- A row comes from the definition alone: a stable hash of the id picks one of the 14 custom rows
-  (`src/material/slots.ts`), or the material names it with `row: 0..13`. The row never depends on
-  what the process registered first, so the same program always produces the same bytes. A second
-  material on a taken row throws `T3D_MATERIAL_CONFLICT` and lists the free rows: give one of the
-  two a `row` (or a new id). Changing a material's row moves its UVs, so the assets that use it
-  change bytes once. A bad `row` is `T3D_MATERIAL_INVALID`. Still define materials in one shared
-  module. Redefining an id with the same definition (in any key order) is a no-op.
-- Every shipped material sits on its own row, so the gallery worker, `t3d build recipes/*/*.ts` and
-  the recipes gate can load all of them in one process: `scripts/material-rows.test.ts` loads every
-  recipe and library material in both orders and fails on a clash. Three ids carry a `row` because
-  their hash rows were taken (`fur` 2, `dragon_scales` 5, `tuna_metal` 10). 13 of the 14 rows are
-  in use (row 11 is free): the sheet has room for one more shipped material.
-- `DEFAULT_SHEET` paints defined materials automatically. To restyle a built-in for one project,
-  override its recipe: `paintTrimSheet({ ...DEFAULT_SHEET, strips: { ...DEFAULT_SHEET.strips, oak: {...} } })`.
+  built-in or differently redefined id `T3D_MATERIAL_CONFLICT`. Also: `graph` (a `tex` graph, see
+  below), `spanMetres` (U repeat, default 4) and the weathering dials `wet`, `wear`, `age`. A painter
+  that writes NaN or ∞ fails the paint with `T3D_MATERIAL_INVALID`.
+- **The 14 custom rows are per asset, not per process (D299).** Define as many materials as you
+  need; a recipe never coordinates row numbers with another recipe. A row comes from the definition
+  alone: the `row: 0..13` it names, else a stable hash of the id (`src/material/slots.ts`), so the
+  same program always gives the same UV bytes whatever else was loaded. Many materials may sit on
+  one row: `cobra_scale` and `boulder_granite` both hold row 4, in different assets.
+- **One asset, one sheet, one material per row.** While an asset compiles, every `strip:` that
+  names a project material is recorded (`CompiledAsset.materials`, `src/core/material-use.ts`;
+  parts cached by `definePart` record theirs again on a hit). Two of them on one row throw
+  `T3D_MATERIAL_CONFLICT` from `compile`, naming the asset, both ids and the rows that asset holds:
+  give one a `row` the asset leaves free. A fifteenth is `T3D_SHEET_FULL`. An asset placed with
+  `ctx.use` brings its materials to the parent (a scene has one sheet), so two children with
+  different materials on one row fail the parent the same way; this is an error, not a silent
+  re-rowing, because moving a material would change the child's UVs and so the bytes it has on
+  its own. Changing a `row` moves that material's UVs: the assets that use it change bytes once.
+- **Painting.** `sheetFor(compiled, recipe)` paints the asset's sheet: the built-ins plus exactly
+  its materials (pass every LOD you export together; they share the sheet). The built-in rows are
+  painted once per recipe seed and size and copied, so an asset costs only its own rows.
+  `paintTrimSheet(recipe)` with no list still paints every defined material and throws
+  `T3D_MATERIAL_CONFLICT` once two of them hold one row; `paintTrimSheet(recipe, ids)` paints a
+  list. The renderers default to `sheetFor(asset)` and `checkSheetFor(sheet, asset)` refuses a
+  sheet that lacks one of the asset's materials. A mesh built outside any compile (a module-level
+  constant) records nothing: its row is read from its UVs, which works while one defined material
+  holds that row and is `T3D_MATERIAL_UNKNOWN` otherwise (build it inside `build()` or a
+  `definePart`). Open gap: when the compile recorded a different material on that same row, the
+  module-level mesh is painted as the recorded one without an error (meshes carry no material
+  provenance yet), so never build a project-material mesh at module level.
+- **CLI.** `t3d build --sheet external` (default) writes `<out>/trim_sheet_*.png` holding the
+  materials of every asset of the run while they fit on one sheet; an asset whose material sits on
+  a row an earlier asset of the run holds gets `<out>/<asset>/trim_sheet_*.png` and its GLBs point
+  there (a line on stderr says so). `<out>/trim_sheet_owners.json` records which material each
+  row of the shared sheet shows, so a later run into the same `--out` treats those rows as held:
+  it never repaints a row an earlier run's GLBs still show, and an asset that would need the
+  shared sheet painted again with a material the later run does not define gets its own sheet too
+  (D340). `--sheet embed` puts each asset's own sheet in its GLBs: the bytes then never depend on
+  the run. A run of one recipe into a fresh `--out` writes what it always wrote.
+- `scripts/material-rows.test.ts` loads every library material and every recipe that defines a
+  material or composes assets in one process, in both orders, compiles their assets and fails on a
+  material conflict inside an asset or on any difference between the two orders. The library
+  materials (`CREATURE_MATERIALS`, CC0) keep distinct rows: creatures combine them.
+- To restyle a built-in for one project, override its recipe:
+  `sheetFor(compiled, { ...DEFAULT_SHEET, strips: { ...DEFAULT_SHEET.strips, oak: {...} } })`.
 - `materialOf(id)` returns the recipe, origin (classic/library/defined), description and sources.
   `resetMaterials()` is for tests and long-lived workers.
 

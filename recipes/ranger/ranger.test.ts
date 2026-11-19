@@ -2,7 +2,8 @@
 // clips, same real box). With the committed cache: 1.78 m ± 2 %, one skinned textured part on
 // every LOD inside the triangle budget, ≤ 64 bones, clips idle / walk / jog at the lengths the
 // rig service returned, joints at human landmark heights, boots on the floor through every clip,
-// and the same bytes twice. No test calls a model: the cache is read from disk.
+// the playbook's model-tier triangle band, the painted wear in the maps, and the same bytes
+// twice. No test calls a model: the cache is read from disk.
 
 import { afterEach, describe, expect, it } from 'bun:test';
 import { join } from 'node:path';
@@ -11,6 +12,7 @@ import {
   type Clip,
   clearNeuralSources,
   compile,
+  decodePng,
   runQa,
   toGlb,
 } from '@developerz.ai/ts23d';
@@ -19,6 +21,7 @@ import { provideRecipeNeural } from '../../src/cli/neural-store.ts';
 import { LANDMARKS, LIFT, PART, ranger } from './ranger.ts';
 import { TRIANGLES } from './steps.ts';
 import { HEIGHT } from './surface.ts';
+import { BANDS } from './wear.ts';
 
 const SLOW = 300_000;
 /** The rig service keys its library clips at 30 fps. */
@@ -100,6 +103,63 @@ describe('ranger, model tier (committed cache)', () => {
         // Not a decimated stub either: Blender was asked for TRIANGLES and lands within 1 %.
         expect(triangles).toBeGreaterThan(TRIANGLES[lod] * 0.99);
       }
+    },
+    SLOW,
+  );
+
+  it(
+    'inside the model-tier band (30 000 / 10 000 / 6 000), where 39 000 / 11 800 was not',
+    async () => {
+      await cached();
+      const band = [30000, 10000, 6000] as const;
+      expect([39000, 11800].some((t, lod) => t > (band[lod] ?? 0))).toBe(true);
+      for (const lod of [0, 1, 2] as const) {
+        expect(compile(ranger, { lod }).budget.triangles[lod]).toBeLessThanOrEqual(band[lod]);
+        expect(sizeOf(lod).mesh.indices.length / 3).toBeLessThanOrEqual(band[lod]);
+      }
+    },
+    SLOW,
+  );
+
+  it(
+    'the maps carry the paint: matt wool over waxed boots, mud on the feet',
+    async () => {
+      await cached();
+      const part = compile(ranger, { lod: 0 }).parts[0];
+      const [mesh, set] = [part?.mesh, part?.textures];
+      if (!mesh || !set?.orm) throw new Error('no textured body');
+      const sample = (png: Uint8Array, pick: (y: number, z: number) => boolean): number[][] => {
+        const image = decodePng(png);
+        const out: number[][] = [];
+        for (let v = 0; v < mesh.positions.length / 3; v++) {
+          if (!pick(mesh.positions[v * 3 + 1] ?? 0, mesh.positions[v * 3 + 2] ?? 0)) continue;
+          const px = Math.min(image.width - 1, Math.floor((mesh.uvs[v * 2] ?? 0) * image.width));
+          const py = Math.min(
+            image.height - 1,
+            Math.floor((mesh.uvs[v * 2 + 1] ?? 0) * image.height),
+          );
+          out.push([
+            ...image.data.subarray((py * image.width + px) * 4, (py * image.width + px) * 4 + 3),
+          ]);
+        }
+        return out;
+      };
+      const mean = (values: readonly number[]): number =>
+        values.reduce((s, v) => s + v, 0) / Math.max(values.length, 1);
+      const legs = (lo: number, hi: number) => (y: number, z: number) =>
+        Math.abs(y) < 0.3 && z > lo && z < hi;
+      // Roughness (ORM green, 0..255): wool trousers against the boot shafts above the mud.
+      const wool = mean(
+        sample(set.orm, legs(BANDS.boot + 0.06, BANDS.hem - 0.14)).map((c) => c[1] ?? 0),
+      );
+      const boots = mean(sample(set.orm, legs(0.3, BANDS.boot - 0.06)).map((c) => c[1] ?? 0));
+      expect(wool).toBeGreaterThan(0.9 * 255);
+      expect(wool - boots).toBeGreaterThan(0.2 * 255);
+      // Caked mud is paler than boot leather: the feet are lighter than the shafts.
+      const value = (c: readonly number[]) => mean(c);
+      const feet = mean(sample(set.albedo, legs(0.09, 0.14)).map(value));
+      const shafts = mean(sample(set.albedo, legs(0.34, 0.42)).map(value));
+      expect(feet).toBeGreaterThan(shafts * 1.15);
     },
     SLOW,
   );

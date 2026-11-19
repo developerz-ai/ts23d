@@ -2,10 +2,11 @@
 // mesh, finlet rows, and the swim numbers read off the baked clips. `bun test recipes/bluefin_tuna`.
 
 import { describe, expect, it } from 'bun:test';
-import { compile, type Mesh, swimFindings, triangleCount } from '@developerz.ai/ts23d';
+import { compile, type Mesh, stripRect, swimFindings, triangleCount } from '@developerz.ai/ts23d';
 import { bodyChain, measureWave } from '../../src/qa/chain-wave.ts';
 import { bluefin_tuna, CLIPS, PLAN } from './bluefin_tuna.ts';
-import { finlets, pectoralTip } from './fins.ts';
+import { finletStrips, finlets, pectoralTip } from './fins.ts';
+import { SKIN } from './material.ts';
 import { FL, plainPoint, topZ, xOf, Z0 } from './shape.ts';
 
 const lod0 = compile(bluefin_tuna, { lod: 0 });
@@ -132,14 +133,36 @@ describe('proportions, % of fork length (FAO synopsis 62)', () => {
   });
 });
 
+describe('materials', () => {
+  // Bands across the strip's V: corselet, flank (both metal), fin, frayed edge (dielectric).
+  const bandsOf = (m: Mesh): Set<number> => {
+    const r = stripRect(SKIN);
+    const out = new Set<number>();
+    for (let i = 1; i < m.uvs.length; i += 2)
+      out.add(Math.floor((((m.uvs[i] ?? 0) - r.v0) / (r.v1 - r.v0)) * 4));
+    return out;
+  };
+  it('keeps the trunk on the metal bands and every fin off them', () => {
+    for (const b of bandsOf(mesh('body'))) expect(b).toBeLessThan(2);
+    for (const name of ['fin_dorsal_2', 'fin_anal', 'caudal_fin', 'pectoral_fin_l'])
+      for (const b of bandsOf(mesh(name))) expect(b).toBeGreaterThanOrEqual(2);
+  });
+  it('frays the median fins: some of their trailing edge is on the rough margin band', () => {
+    expect(bandsOf(mesh('caudal_fin')).has(3)).toBe(true);
+    expect(bandsOf(mesh('fin_dorsal_2')).has(3)).toBe(true);
+  });
+});
+
 describe('detail by LOD', () => {
   it('has nine dorsal and eight anal finlets up close, none at LOD2', () => {
     expect(finlets(0).length).toBe(17);
     expect(finlets(2).length).toBe(0);
   });
-  it('keeps LOD2 to a few hundred triangles', () => {
+  it('keeps LOD2 to a few hundred triangles, finlets as one strip a side', () => {
     const c = compile(bluefin_tuna, { lod: 2 });
-    expect(c.parts.reduce((t, p) => t + (p.mesh ? triangleCount(p.mesh) : 0), 0)).toBeLessThan(560);
+    expect(c.parts.reduce((t, p) => t + (p.mesh ? triangleCount(p.mesh) : 0), 0)).toBeLessThan(800);
+    expect(finletStrips(2).length).toBe(2);
+    expect(finletStrips(0).length).toBe(0);
   });
 });
 

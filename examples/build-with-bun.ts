@@ -8,8 +8,8 @@ import {
   contactSheet,
   DEFAULT_SHEET,
   type Lod,
-  paintTrimSheet,
   runQa,
+  sheetFor,
   toGlb,
 } from '@developerz.ai/ts23d';
 import { tiger_1 } from '../recipes/tiger_1/tiger_1.ts';
@@ -17,26 +17,24 @@ import { tiger_1 } from '../recipes/tiger_1/tiger_1.ts';
 const out = process.argv[2] ?? 'out/example';
 const asset = tiger_1;
 const lods: Lod[] = [0, 2]; // near + far only — your call
+const compiled = lods.map((lod) => compile(asset, { lod }));
 
-// Textures are optional: paint once, embed (or pass { external: true } and ship the PNGs).
-const sheet = paintTrimSheet({ ...DEFAULT_SHEET, size: 512 });
+// Textures are optional. One sheet per asset: the built-in strips plus the project materials
+// this asset maps onto, painted once for every LOD you export (they share it).
+const sheet = sheetFor(compiled, { ...DEFAULT_SHEET, size: 512 });
 
-for (const lod of lods) {
-  const compiled = compile(asset, { lod });
-
+for (const c of compiled) {
   // QA is a function too: gate however your pipeline wants.
-  const findings = runQa(compiled);
+  const findings = runQa(c);
   if (findings.length > 0) {
-    for (const f of findings) console.error(`LOD${lod} ${f.gate}: ${f.message}\n  fix: ${f.fix}`);
+    for (const f of findings) console.error(`LOD${c.lod} ${f.gate}: ${f.message}\n  fix: ${f.fix}`);
     process.exit(1);
   }
 
-  await Bun.write(
-    `${out}/${asset.name}.lod${lod}.glb`,
-    toGlb(compiled, { sheet, animations: true }),
-  );
+  await Bun.write(`${out}/${asset.name}.lod${c.lod}.glb`, toGlb(c, { sheet, animations: true }));
 }
 
-// The six-view contact sheet, for you or your agent to look at.
-await Bun.write(`${out}/${asset.name}.png`, contactSheet(compile(asset, { lod: 0 })));
+// The six-view contact sheet (from LOD0, the first compiled), for you or your agent to look at.
+const near = compiled[0];
+if (near) await Bun.write(`${out}/${asset.name}.png`, contactSheet(near, { sheet }));
 console.log(`✔ ${asset.name}: LOD ${lods.join(', ')} + contact sheet → ${out}/`);

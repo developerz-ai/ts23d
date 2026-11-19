@@ -61,6 +61,33 @@ export function curvature(m: QuadMesh, n: Float64Array): Float64Array {
   return k;
 }
 
+/** What life has done to a skin, painted on top of its zones. All dials 0..1. */
+export interface SkinWear {
+  /** Sun on the skin that faces up and forward: darker, warmer forehead, nose, cheek tops,
+   *  shoulders; freckles gather there. */
+  readonly sun: number;
+  /** Freckles, moles and blemishes (seeded spots). */
+  readonly freckles: number;
+  /** Dirt in the hollows and on the neck. */
+  readonly grime: number;
+  /** Shaven-beard shadow: where the beard would grow, its colour, how strong. */
+  readonly stubble?: {
+    readonly region: (p: Vec3) => number;
+    readonly colour: Vec3;
+    readonly amount: number;
+  };
+  /** Healed cuts, as segments in bust space: a pale ridge with a darker rim. */
+  readonly scars?: readonly { readonly a: Vec3; readonly b: Vec3; readonly width: number }[];
+}
+
+/** Distance from p to the segment ab. */
+function segDist(p: Vec3, a: Vec3, b: Vec3): number {
+  const ab: Vec3 = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
+  const l2 = ab[0] ** 2 + ab[1] ** 2 + ab[2] ** 2 || 1;
+  const t = clamp(((p[0] - a[0]) * ab[0] + (p[1] - a[1]) * ab[1] + (p[2] - a[2]) * ab[2]) / l2);
+  return d(p, [a[0] + ab[0] * t, a[1] + ab[1] * t, a[2] + ab[2] * t]);
+}
+
 export interface PaintOptions {
   readonly tone: SkinTone;
   readonly brows: Vec3;
@@ -69,6 +96,9 @@ export interface PaintOptions {
    *  the hair grows out of a soft line instead of sitting on the skin like a cap. */
   readonly hairline?: (p: Vec3) => number;
   readonly hair?: Vec3;
+  /** 0 young … 1 old: darker under the eyes, forehead lines, deeper folds beside the mouth. */
+  readonly age?: number;
+  readonly wear?: SkinWear;
 }
 
 /** Colour per vertex of the (already warped and scaled) face mesh. */
@@ -92,6 +122,15 @@ export function paintSkin(m: QuadMesh, head: FaceHead, o: PaintOptions): (v: num
   const mottle = valueNoise(o.rng.fork('mottle'), { scale: 0.04 * s, octaves: 3 });
   const streak = valueNoise(o.rng.fork('brow'), { scale: 0.0025 * s, octaves: 2 });
   const T = o.tone;
+  const W = o.wear;
+  const age = o.age ?? 0;
+  const speck = valueNoise(o.rng.fork('freckle'), { scale: 0.0042 * s, octaves: 2 });
+  const patch = valueNoise(o.rng.fork('patch'), { scale: 0.02 * s, octaves: 2 });
+  const grit = valueNoise(o.rng.fork('grit'), { scale: 0.006 * s, octaves: 2 });
+  const fh = at(MIDLINE.forehead);
+  const alar = both(LEFT.alare);
+  const SCAR: Vec3 = mix(T.base, [0.92, 0.78, 0.76], 0.6);
+  const DIRT: Vec3 = [T.cavity[0] * 0.8, T.cavity[1] * 0.8, T.cavity[2] * 0.75];
   return (v) => {
     const p: Vec3 = [m.p[v * 3] ?? 0, m.p[v * 3 + 1] ?? 0, m.p[v * 3 + 2] ?? 0];
     const nz = n[v * 3 + 2] ?? 0;
@@ -129,14 +168,73 @@ export function paintSkin(m: QuadMesh, head: FaceHead, o: PaintOptions): (v: num
         a[1] + ab[1] * t,
         a[2] + ab[2] * t + 0.004 * s - 0.002 * s * t,
       ];
-      const w = (0.0065 - 0.0025 * t) * s;
+      const w = (0.0085 - 0.003 * t) * s;
       const band = clamp((1 - d(p, q) / w) * 2.5) * clamp((p[0] - q[0] + 0.012 * s) / (0.004 * s));
       const hair = 0.75 + 0.25 * streak([p[0] * 0.3, p[1] * 3, p[2] * 0.3]);
-      c = mix(c, o.brows, clamp(band * hair * 1.3));
+      c = mix(c, o.brows, clamp(band * hair * 1.7));
+    }
+    // Age: tired skin under the eyes, lines across the forehead, the folds beside the mouth.
+    const under = Math.max(
+      ...eye.map((e) => blob(p, [e[0] + 0.004 * s, e[1], e[2] - 0.015 * s], 0.017 * s)),
+    );
+    c = mix(c, mix(T.cool, T.cavity, 0.45), under * (0.12 + 0.5 * age));
+    if (age > 0.2) {
+      const brow = browIn[0] ?? nose;
+      for (const k of [0.3, 0.52, 0.74]) {
+        const z = brow[2] + (fh[2] - brow[2]) * k + Math.sin(p[1] * 60) * 0.0012 * s;
+        const line =
+          clamp(1 - Math.abs(p[2] - z) / (0.0022 * s)) *
+          clamp(1 - Math.abs(p[1]) / (0.05 * s)) *
+          clamp((p[0] - (fh[0] - 0.03 * s)) / (0.01 * s));
+        c = mix(c, T.cavity, line * 0.42 * age);
+      }
+      for (let i = 0; i < 2; i++) {
+        const a = alar[i] ?? nose;
+        const b = corner[i] ?? nose;
+        const fold = clamp(
+          1 -
+            segDist(p, [a[0], a[1] * 1.12, a[2]], [b[0], b[1] * 1.22, b[2] - 0.006 * s]) /
+              (0.0045 * s),
+        );
+        c = mix(c, T.cavity, fold * 0.45 * age);
+      }
+    }
+    if (W) {
+      // Sun: the skin that faces the sky and the front goes darker and warmer.
+      const sun = clamp(nz * 0.9 + Math.max(0, n[v * 3] ?? 0) * 0.3 - 0.12) * W.sun;
+      c = mix(c, [c[0] * 0.8, c[1] * 0.65, c[2] * 0.54], sun * 0.55);
+      // Blotches: uneven colour, redder patches and paler ones.
+      const pt = patch(p);
+      c = mix(c, pt > 0 ? T.flush : T.cool, Math.abs(pt) * 0.22 * (0.4 + W.freckles));
+      // Freckles and moles: where a fine noise peaks, thickest on the sunned skin.
+      const zone = clamp(0.35 + sun * 1.6 + blob(p, nose, 0.05 * s) * 0.5);
+      const spot = clamp((speck(p) - (0.52 - 0.3 * W.freckles * zone)) * 9);
+      // Only where the mesh is fine enough to hold a spot: the face and the neck (on the
+      // shoulders' wide quads a freckle would be a thumb-sized patch).
+      const fine = clamp((p[2] - (at(MIDLINE.menton)[2] - 0.035 * s)) / (0.03 * s));
+      c = mix(c, [c[0] * 0.62, c[1] * 0.5, c[2] * 0.42], spot * 0.7 * clamp(W.freckles * 2) * fine);
+      if (W.stubble) {
+        const k = clamp(-W.stubble.region(p) / (0.008 * s)) * (0.72 + 0.28 * grit(p));
+        c = mix(c, W.stubble.colour, k * W.stubble.amount);
+      }
+      for (const sc of W.scars ?? []) {
+        const dist = segDist(p, sc.a, sc.b);
+        c = mix(c, T.cavity, clamp(1 - Math.abs(dist - sc.width * 1.5) / sc.width) * 0.35);
+        c = mix(c, SCAR, clamp(1.3 - dist / sc.width) * 0.9);
+      }
+      // Grime: in the hollows, and a film on the neck and behind the jaw.
+      const neck = clamp((at(MIDLINE.menton)[2] - p[2]) / (0.05 * s));
+      c = mix(
+        c,
+        DIRT,
+        clamp(clamp(-(k[v] ?? 0) * 2.4) * 0.55 + neck * (0.2 + 0.25 * grit(p))) * W.grime,
+      );
     }
     if (o.hairline && o.hair) {
       const h = o.hairline(p);
-      c = mix(c, o.hair, clamp(1 - (h + 0.004 * s) / (0.01 * s)) * 0.85);
+      // (Inside the line only, and soft: at the base mesh's vertex spacing a strong tint past the
+      // line showed as a brown blotch on the forehead under the fringe.)
+      c = mix(c, o.hair, clamp(-h / (0.012 * s)) * 0.7);
     }
     // Curvature: crevices darker toward the cavity colour, ridges lifted.
     const kv = k[v] ?? 0;
@@ -144,6 +242,9 @@ export function paintSkin(m: QuadMesh, head: FaceHead, o: PaintOptions): (v: num
     const lift = 1 + clamp(kv * 2) * 0.12;
     const mt = mottle(p);
     c = mix(c, mt > 0 ? T.flush : T.cool, Math.abs(mt) * 0.18);
-    return [clamp(c[0] * lift), clamp(c[1] * lift), clamp(c[2] * lift)];
+    // A little more chroma than the mixes leave: blended zones drift toward grey.
+    const grey = (c[0] + c[1] + c[2]) / 3;
+    const sat = (x: number): number => clamp((grey + (x - grey) * 1.18) * lift);
+    return [sat(c[0]), sat(c[1]), sat(c[2])];
   };
 }

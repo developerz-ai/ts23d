@@ -1,8 +1,13 @@
-// The face bust assembly: one character's warped base (head + neck + shoulders, one skin part
-// with base topology at LOD1, a Catmull–Clark level more at LOD0, a coarse SDF re-mesh at LOD2),
-// sawn off at the chest and arms with flat caps, vertex-painted and AO-baked; code eyeballs from
-// the bust library in the warped sockets; teeth (and an orc's tusks); hair and beard from the
-// style; a turned plinth. Parts: skin, eye_l, eye_r, teeth, tusk_l/r, hair, plinth.
+// The face bust assembly: one character's warped base (head + neck + shoulders, one skin part:
+// the imported CC0 base painted at a Catmull–Clark level at LOD0 and at base topology below, then
+// brought to its LOD's triangle count by base-lod.ts, so the ears, the face's colour zones and
+// the clean bust edge survive at every distance), sawn off at the chest and arms with flat caps,
+// vertex-painted (zones, sun, freckles, stubble, scars, grime) and AO-baked on the shared skin
+// strip; code eyeballs from the bust library in the warped sockets; teeth (and an orc's tusks);
+// hair and beard as a sculpted mass (`hair`) under strand cards (`hair_strands`: dense at LOD0,
+// fewer and wider at LOD1, a handful of wide ones at LOD2 so the far head keeps a broken hair
+// outline); a turned, weathered stone plinth.
+// Finishes the asset may declare: `skin` (sheen), `cornea`. Draws: skin, cards, cornea, the rest.
 
 import {
   type BuildContext,
@@ -11,16 +16,21 @@ import {
   merge,
   translate,
   type Vec3,
+  weather,
 } from '@developerz.ai/ts23d';
 import { type EyeSpec, eyes } from '../bust/eye.ts';
 import { plinth } from '../bust/plinth.ts';
+import { baseLod } from './base-lod.ts';
 import { clipCap } from './clip.ts';
-import { type HairStyle, hairlineOf, hairMesh } from './hair.ts';
+import { beardlineOf, type HairStyle, hairlineOf, hairSculpt } from './hair.ts';
+import { cardHair } from './hair-cards.ts';
+import { faceCardStyle } from './hair-strands.ts';
 import { CUT_Z, type FaceHead, faceHead } from './head.ts';
-import { LEFT, MIDLINE } from './landmarks.ts';
-import { coarseSkin, type Fill } from './lod2.ts';
-import { paintSkin } from './paint.ts';
+import { LEFT } from './landmarks.ts';
+import { meshField } from './mesh-field.ts';
+import { paintSkin, type SkinWear } from './paint.ts';
 import { quadToMesh, stripUv, subdivide } from './quad.ts';
+import { onSkin } from './skin-strip.ts';
 import type { Character } from './spec.ts';
 import { teethRows, tusks } from './teeth.ts';
 
@@ -33,13 +43,57 @@ export interface FaceBust {
 /** Height of the plinth top (the chest cut sits on it). */
 export const PLINTH_TOP = 0.09;
 
+/** The character's wear in bust space: scars pushed through the warp, stubble on the beardline. */
+function wearOf(head: FaceHead, c: Character, hair: HairStyle): SkinWear | undefined {
+  const w = c.wear ?? (hair.beard === 'full' ? { sun: 0, freckles: 0, grime: 0 } : undefined);
+  if (!w) return undefined;
+  const s = head.scale;
+  const scars = (w.scars ?? []).flatMap((line) =>
+    line.slice(1).map((q, i) => ({
+      a: head.map(line[i] ?? q),
+      b: head.map(q),
+      width: 0.0026 * s,
+    })),
+  );
+  return {
+    sun: w.sun,
+    freckles: w.freckles,
+    grime: w.grime,
+    scars,
+    // Under a full beard the skin is hair-dark from the cheek line down (a soft, gritty edge):
+    // the cards grow out of it, with no slab of sculpted mass between them.
+    ...(hair.beard === 'full'
+      ? { stubble: { region: beardlineOf(head), colour: hair.root, amount: 0.82 } }
+      : w.stubble
+        ? {
+            stubble: {
+              region: beardlineOf(head),
+              colour: w.stubble.colour,
+              amount: w.stubble.amount,
+            },
+          }
+        : {}),
+  };
+}
+
 /** The skin, cut and capped, in bust space (chest cut at z = CUT_Z). */
 function skin(ctx: BuildContext, head: FaceHead, c: Character, hair: HairStyle): Mesh {
   const qm = ctx.lod === 0 ? subdivide(head.mesh) : head.mesh;
+  const wear = wearOf(head, c, hair);
   const paint = paintSkin(qm, head, {
     tone: c.tone,
-    brows: hair.root,
+    // A hairless head has no dark brows: the ridge keeps a shadow of the skin's own crevice tone.
+    brows:
+      hair.cut === 'none'
+        ? [
+            (c.tone.base[0] + c.tone.cavity[0]) / 2,
+            (c.tone.base[1] + c.tone.cavity[1]) / 2,
+            (c.tone.base[2] + c.tone.cavity[2]) / 2,
+          ]
+        : hair.root,
     hair: hair.root,
+    age: c.age,
+    ...(wear ? { wear } : {}),
     ...(hair.cut === 'none' ? {} : { hairline: hairlineOf(head, hair.cut) }),
     rng: ctx.rng.fork('paint'),
   });
@@ -56,57 +110,63 @@ function skin(ctx: BuildContext, head: FaceHead, c: Character, hair: HairStyle):
   );
 }
 
-/** What LOD2 fills before its coarse re-mesh: both eye sockets and the mouth. */
-function fills(head: FaceHead): Fill[] {
-  const s = head.scale;
-  // Sockets filled to 75 % of the eyeball: the coarse lids close in, the ball still shows.
-  const r = 0.0096 * head.sizeAt(LEFT.eye);
-  const eye = head.map(LEFT.eye);
-  const sup = head.map(MIDLINE.stomionSup);
-  const inf = head.map(MIDLINE.stomionInf);
-  const half = Math.abs(head.map(LEFT.cheilion)[1]);
-  return [
-    { at: eye, r: [r, r, r] },
-    { at: [eye[0], -eye[1], eye[2]], r: [r, r, r] },
-    {
-      at: [(sup[0] + inf[0]) / 2 - 0.008 * s, 0, (sup[2] + inf[2]) / 2],
-      r: [0.011 * s, half * 0.85, 0.007 * s],
-    },
-  ];
-}
-
 export function buildFaceBust(ctx: BuildContext, b: FaceBust): void {
   const c = b.character;
   const head = faceHead(c, ctx.rng.fork('face'));
+  const s = head.scale;
   const lift: Vec3 = [0, 0, PLINTH_TOP - CUT_Z];
   const up = (m: Mesh): Mesh => translate(m, lift);
-  let body = skin(ctx, head, c, b.hair);
-  if (ctx.lod === 2) body = coarseSkin(body, 0.014 * head.scale, fills(head), c.tone.base, CUT_Z);
-  const parts: Record<string, Mesh> = { skin: up(body) };
+  const body = skin(ctx, head, c, b.hair);
+  const parts: Record<string, Mesh> = { skin: body };
   // Teeth only where the lips part enough to show them (a closed mouth hides them).
   const shows = (c.mouth ?? 1) > 0.2 || (c.tusks ?? 0) > 0;
-  if (ctx.lod < 2 && shows) parts['teeth'] = up(teethRows(head, ctx.lod));
+  if (ctx.lod < 2 && shows) parts['teeth'] = teethRows(head, ctx.lod);
   if (c.tusks) {
     const t = tusks(head, c.tusks, ctx.lod);
-    parts['tusk_l'] = up(t.l);
-    parts['tusk_r'] = up(t.r);
+    parts['tusk_l'] = t.l;
+    parts['tusk_r'] = t.r;
   }
-  const hair = hairMesh(head, b.hair, ctx.lod);
-  if (hair) parts['hair'] = up(hair);
-  parts['plinth'] = plinth(ctx, { radius: 0.11 * head.scale, top: PLINTH_TOP, color: b.plinth });
+  const hair = hairSculpt(head, b.hair, ctx.lod);
+  if (hair) parts['hair'] = hair.mesh;
   const all = merge(Object.values(parts));
-  for (const [name, m] of Object.entries(parts))
-    ctx.part(
-      name,
-      ctx.lod < 2 && name !== 'plinth'
-        ? bakeAo(
-            m,
-            { samples: ctx.pick([12, 8, 6]), radius: 0.06 * head.scale, strength: 0.5 },
-            all,
-          )
-        : m,
-      name === 'teeth' ? { connect: { as: 'rest' as const, to: 'skin' } } : {},
-    );
+  const ao = (m: Mesh): Mesh =>
+    bakeAo(m, { samples: ctx.pick([12, 8, 6]), radius: 0.06 * s, strength: 0.5 }, all);
+  for (const [name, m] of Object.entries(parts)) {
+    let mesh = ao(m);
+    // The painted, shaded base at its LOD's triangle count, then onto the pore strip.
+    if (name === 'skin') mesh = onSkin(baseLod(mesh, ctx.lod));
+    ctx.part(name, up(mesh), {
+      ...(name === 'teeth' ? { connect: { as: 'rest' as const, to: 'skin' } } : {}),
+      ...(name === 'skin' ? { finish: name } : {}),
+    });
+  }
+  if (hair) {
+    // Long hair drapes over the shoulders: it needs the whole bust to fall round.
+    const solid = b.hair.cut === 'long' ? meshField(body, 0.006 * s, 3).field : hair.field;
+    const style = faceCardStyle(head, b.hair, hair, (p) => Math.min(hair.field(p), solid(p)));
+    if (style) cardHair(ctx, style, 'hair_strands', { move: up });
+  }
+  // The plinth: turned stone that has stood about (chipped arrises, dust on its ledges, damp
+  // creeping up from the floor).
+  const stone = plinth(ctx, { radius: 0.11 * s, top: PLINTH_TOP, color: b.plinth });
+  const aged = weather(
+    ctx,
+    { plinth: stone },
+    {
+      name: 'plinth',
+      seed: 5,
+      age: 0.6,
+      resolution: [0.03, 0.06, 0],
+      groundBand: 0.03,
+      under: [b.plinth[0] * 1.5, b.plinth[1] * 1.5, b.plinth[2] * 1.45],
+      effects: {
+        chips: { where: 'convex-edges', amount: 0.35 },
+        dust: { where: 'up-facing', amount: 0.5, strength: 0.3 },
+        mud: { where: 'ground-near & side-facing', amount: 0.4 },
+      },
+    },
+  );
+  ctx.part('plinth', aged.plinth);
   const centre = head.map(LEFT.eye);
   const eye: EyeSpec = {
     centre: [centre[0], centre[1], centre[2] + lift[2]],
@@ -124,5 +184,5 @@ export function buildFaceBust(ctx: BuildContext, b: FaceBust): void {
     },
     ...(c.eyes.pupil ? { pupil: c.eyes.pupil } : {}),
   };
-  eyes(ctx, eye, { cell: ctx.pick([0.0012, 0.0024, 0.006]), finish: 'cornea' });
+  eyes(ctx, eye, { cell: ctx.pick([0.0017, 0.0034, 0.009]), finish: 'cornea', host: 'skin' });
 }

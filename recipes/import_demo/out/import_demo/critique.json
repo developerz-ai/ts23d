@@ -1,63 +1,64 @@
 {
   "asset": "import_demo",
   "reviewer": "agent",
-  "overall": 5.9,
+  "overall": 6.3,
   "scores": {
     "silhouette": {
-      "score": 6,
-      "reason": "A cropped-hair head on a bust reads; the shoulders are lumpy balloons and the neck ring stands off the neck in SIDE.",
+      "score": 7,
+      "reason": "Scanned head on a code-built bust with a leather shoulder cape reads; the neck ring still sticks out behind the neck in SIDE and the bust truncation is a hard box in TOP.",
       "fixes": [
-        "seat the neck ring on the neck surface (it overhangs at the back in SIDE)",
-        "shape the bust shoulders with a garment edge instead of round lumps"
+        "seat the neck ring on the neck surface at the back",
+        "round the bust truncation at the arms"
       ]
     },
     "proportions": {
-      "score": 6,
-      "reason": "Head from the base mesh is human; the bust shoulders are very wide and the arms stumps bulge.",
+      "score": 7,
+      "reason": "Shoulders are narrower now and fit the head; the cape thickness is heavy against the torso in SIDE.",
       "fixes": [
-        "narrow the code-built bust shoulders ~15 %"
+        "thin the shoulder cape ~30 %"
       ]
     },
     "materials": {
-      "score": 5,
-      "reason": "Skin, hair, blue tunic and brown shoulder cloth separate by hue; tunic and skin share one roughness; brass studs read.",
+      "score": 6,
+      "reason": "Skin, blue tunic, leather cape with darker grain and brass studs separate; tunic and cape share one roughness and the skin is uniform.",
       "fixes": [
-        "give the tunic and the shoulder cloth their own cloth strips",
-        "roughness variation on the skin"
+        "leather roughness lower than the tunic cloth",
+        "skin roughness variation"
       ]
     },
     "detail": {
-      "score": 5,
-      "reason": "Scan face and brass studs; the bust has stains but no seams or folds.",
+      "score": 6,
+      "reason": "Scan face with lids and ears, studs and a neck ring; the tunic shows faint seams but no folds.",
       "fixes": [
-        "seams and folds on the bust",
-        "a pore normal visible at hero distance"
+        "folds under the cape and at the armpit",
+        "stitching on the cape edge"
       ]
     },
     "wear": {
-      "score": 5,
-      "reason": "Stains and darker patches on the tunic.",
+      "score": 6,
+      "reason": "The cape is scuffed and stained; the tunic and face are clean.",
       "fixes": [
-        "fray at the cloth edges and dirt in the folds"
+        "dirt in the tunic folds and fray at the cape edge"
       ]
     },
     "lod": {
-      "score": 7,
-      "reason": "FAR LOD2 keeps the head and colour blocks; the face becomes faceted.",
+      "score": 5,
+      "reason": "FAR LOD2 still turns the shoulders into a rounded blob and mixes tunic blue and cape brown into star-shaped per-face patches; the far-LOD colour fix does not show in sheet.png.",
       "fixes": [
-        "raise the LOD2 face budget a little and keep eye sockets"
+        "keep the boxed bust outline at LOD2",
+        "average per-face colour so the cape stays a brown block over blue"
       ]
     },
     "technical": {
       "score": 7,
-      "reason": "QA clean; 46k / 18k / 3.3k tris; imported head simplified per LOD.",
+      "reason": "35k / 11k / 1.4k triangles and 3 draws for a bust; the scan face carries most of it.",
       "fixes": [
-        "bake the scan pores to a normal map instead of vertex density"
+        "bake the scan pores to the normal map and lower the face density at LOD0"
       ]
     }
   },
   "renders": {
-    "hero.png": "50210e05f6ab300e08b776db69763159712d8025aebc54bffb4a47b38b710a60",
-    "sheet.png": "1ba2aaab62635b73aae582f32129e3c93c48a860b593348cab4d61ce4a417611"
+    "hero.png": "9eda9ec9f8aacb4bdf6527f5257d8fb60dd8aad9bdc373581334bb8a2c6aebe6",
+    "sheet.png": "14e66c34fbbc02d32d7bf2b900bb94fc3c422e38368e414b9b73cdb4e17c30ad"
   }
 }

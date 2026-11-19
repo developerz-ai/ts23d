@@ -47,17 +47,24 @@ A second fetch on 2026-11-07 gave the same heights hash.
   [Half Dome with Eastern Yosemite Valley, CC BY-SA 3.0](https://commons.wikimedia.org/wiki/File:Half_Dome_with_Eastern_Yosemite_Valley.jpg).
 
 ## Parts the engine needs
-`terrain` (one mesh, one draw call): the DEM grid as a heightfield + skirt to z = 0, nature strips
-per triangle (cliff on the walls, gravel on talus, moss under the forest, rock strata on the cut
-sides). LOD by density: 256 / 128 / 64 cells (133 120 / 33 792 / 8 704 triangles).
+`terrain` (the DEM grid as a heightfield + skirt to z = 0), `forest` (conifer impostors, 3-sided
+spires on the floor and gentle rims, 2 200 / 1 400 / 110) and `river` (the Merced): all static,
+one draw call. LOD by density: 256 / 128 / 38 cells (LOD2 inside the 4 k terrain band).
+
+Ground colour is smooth per-vertex blends on one stretched matte strip (`../mountain_range/
+ground.ts`): the library's per-triangle strips switched material at every triangle border and
+squeezed each triangle's V on its own, which rendered as diagonal stripe banding. Granite grey
+walls (not olive), pale talus, conifer floor, meadows on the flat floor, dark water streaks down
+the walls where the D8 flow over the survey gathers, rock strata on the cut sides (one band over
+the full wall height, so beds read as formations).
 
 ## Decisions and open questions
 - **No synthetic erosion.** Hydraulic droplets (40 k) and thermal relaxation were tried as "detail
   below the survey"; both rounded Half Dome's face and the valley walls. The survey as measured reads
   more like Yosemite.
-- **No water.** The floor falls ~12 m over 2 km: any flat water level floods meadows into a lake
-  instead of tracing the Merced (~30 m wide, below the survey's resolution). `terrainFromDEM`'s
-  `water` option suits lakes and sea level; a river needs a path (planned with OSM, see
-  `docs/idea/23-real-data.md`).
+- **No water plane.** The floor falls ~12 m over 2 km: any flat water level floods meadows into a
+  lake. The Merced is instead a ribbon along the least-cost path over the survey between the
+  valley's lowest border points (it keeps to the floor), banks sunk into the ground. An OSM
+  centreline would be exact (planned, see `docs/idea/23-real-data.md`).
 - **Colour is by slope and altitude only** (no land-cover data): the granite domes' 30–45° bare
   backs read partly as forest. Land cover from an open dataset is the fix.

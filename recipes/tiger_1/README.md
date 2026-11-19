@@ -77,6 +77,33 @@ Dunkelgelb / Rotbraun / Olivgrün patches seeded from `ctx.rng`.
 - Zimmerit on the lower hull sides behind the road wheels: not modelled (hidden by the wheels; no
   photo of this batch checked).
 
+## Finish and wear (Nov 2026 quality pass; `../_lib/finish/field.ts`)
+| What | How |
+|---|---|
+| Dunkelgelb and the camouflage | project material `armour_paint` (matte film, 8 % flakes) at true scale under the sprayed three-tone vertex colour; Zimmerit keeps its own strip |
+| mud | `fieldCoat`: dried dark earth from the ground to ~1.15 m (a third higher behind the tracks; fenders to 1.7 m), wet mud along its lowest part, on hull, Zimmerit, fenders, stowage |
+| dust | grey-brown haze on up-facing plates (0.3) |
+| wheels | plain Dunkelgelb with radial mud (`wheelMud`): tyre, rim and the outer dish; turns with the wheel |
+| track | dark manganese steel, road-polished grouser bar, mud packed either side of it; one link finished and laid round the belt (`treads` gate) |
+| soot | plumes from both exhaust mouths over the shrouds, the rear plate and the engine deck; muzzle brake |
+| chipping | the Zimmerit's flaked patches are real cuts to the primer (see Zimmerit); weld beads down the interlocked corners |
+
+## Length
+`real.length` 8.45 m is the gun-forward length; the model measures 8.70 m (+3 %, gate ±5 %). The
+front is exact: the muzzle is 2.13 m ahead of the 6.316 m hull (8.45 − 6.316). The extra is at the
+rear, where the exhaust shrouds (to x = −3.41) and the hinged mudguards (to −3.44) stand behind
+the rear plate at x = −3.158. Whether the published 6.316 m is the armoured hull or includes those
+fittings is not stated by the sources in Specs; the recipe keeps 6.316 m as the armoured hull
+(the `hull length` measure) and leaves the fittings where the rear photos put them.
+
+## Triangles
+58.6k / 16.4k / 1.35k (was 68.9k / 17.4k / 3.5k). LOD0: the hidden inboard discs of the
+interleave are a tyre band and a flat web with fewer sides, the outer discs are flat behind, the
+twin guide horns are one block. LOD2: wheels as shallow six-sided cones (6 triangles each),
+plates split at 4.2 m only, digits without outlines, a five-sided barrel and
+pipes, exhaust shrouds as one box each. LOD2 is now inside the AFV playbook band (≤ 1.5k), so
+the `tiger_1` row in `scripts/lib/budget-baseline.ts` can go.
+
 ## Rear (rebuilt Nov 2026)
 Variant: mid production Oct–Nov 1943, so **no Feifel air filters** (phased out during mid
 production) and **armoured exhaust covers** over the two tall vertical exhausts.

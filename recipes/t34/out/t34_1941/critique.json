@@ -1,119 +1,121 @@
 {
   "asset": "t34_1941",
   "reviewer": "agent",
-  "overall": 6.7,
+  "overall": 7,
   "scores": {
     "silhouette": {
       "score": 8,
-      "reason": "Early T-34: low flat-sided turret with a single big hatch, sloped hull, five road wheels with idler and sprocket, F-34 gun. Reads as a T-34 from every view.",
+      "reason": "Unmistakable T-34: sloped glacis and sides, five Christie wheels plus idler and sprocket, cast 1941 turret with the big hatch, F-34 gun, rear drums/exhausts. Reads from all six views and LOD2.",
       "fixes": [
-        "soften the turret edges and nose (cast radius) for the 1941 turret"
+        "soften the turret edges (cast radius) so it is not a sharp-edged box"
       ]
     },
     "proportions": {
       "score": 8,
-      "reason": "6.8 x 3.0 x 2.3 m against spec; measures pass.",
+      "reason": "Within the 6.68 x 3.00 x 2.45 m spec; wheel, track and barrel measures pass.",
       "fixes": [
         "check the turret ring position against a side elevation"
       ]
     },
     "materials": {
-      "score": 5,
-      "reason": "As on t34: wooden-looking brown track slats and uniform black chip dots over every plate.",
+      "score": 6,
+      "reason": "Track links now read as dark steel and the dot chips are gone. The hull carries a mottled khaki/green dust layer that in hero.png and the sheet TOP reads as a printed camouflage pattern (pixel-blocky in TOP) rather than dust settling on horizontal faces; road wheels are uniformly dust-tan including the hub caps.",
       "fixes": [
-        "dark steel track links with worn grouser faces",
-        "edge-biased chipping instead of uniform dots"
+        "dust only on up-facing plates and lower hull, fading with height (grime ground/up masks) instead of an all-over mottle",
+        "rubber tyres darker than the dusted wheel discs"
       ]
     },
     "detail": {
       "score": 7,
-      "reason": "Link track, dished wheels, grab rails, glacis spare links, hatches, MG ball, exhausts.",
+      "reason": "Raking.png: link track with horns, dished wheels with ribs, grab rails, spare links, hatches, MG ball, fuel drums with straps, exhausts, slogan; no weld beads at plate joints, no tow cable.",
       "fixes": [
         "weld beads at plate joints",
-        "tow cable along the hull side"
+        "tow cable along the hull side",
+        "tool box on the fender"
       ]
     },
     "wear": {
-      "score": 4,
-      "reason": "Only the dot chips; no visible mud on the running gear and lower hull, no exhaust soot.",
+      "score": 6,
+      "reason": "Dusty wheels and running gear and a weathered hull now give a field story; the dust is all-over rather than where it would settle, and the exhausts leave no soot on the rear plate.",
       "fixes": [
-        "grime({ ground }) mud on tracks, wheels and lower hull",
-        "exhaust soot on the rear plate"
+        "exhaust soot on the rear plate",
+        "mud heaviest on the lower hull and track run, lighter up the sides"
       ]
     },
     "lod": {
-      "score": 7,
-      "reason": "LOD2 keeps the outline, turret, wheels in an open belt and colour.",
+      "score": 6,
+      "reason": "lods.png: LOD2 keeps the outline and turret, but the dust-tan road wheels become green faceted slabs and the hull mottle goes flat green, so the running gear changes colour at the switch.",
       "fixes": [
-        "keep the glacis spare links as two dark quads at LOD2"
+        "keep the road-wheel discs dust-tan at LOD2 (same vertex/tile colour as LOD0)",
+        "bake the hull mottle into LOD2 colour or remove it from LOD0"
       ]
     },
     "technical": {
       "score": 8,
-      "reason": "QA clean (pack): 46.6k / 10.0k / 1.7k tris, one material.",
+      "reason": "QA PASS: 57.2k / 12.3k / 1.45k tris, 19 draws (one per moving pivot), one material.",
       "fixes": [
-        "declare real.mass (26.5 t) and a physics shell"
+        "declare real.mass (26.5 t) and a physics shell so the mass gate covers it"
       ]
     }
   },
   "renders": {
-    "hero.png": "40450037451d96c91c32b13f78361aed555a4c5809be8ebb84224c7ed0efee93",
-    "sheet.png": "2d7c16edfdb067b40c78acc91881e9305ec9dc2521a3d038e04bef0bd2234a2d",
-    "raking.png": "d1760a3c266695055ebff954677f8e53f48cc18b7c01a2e86522f704ee588761",
-    "raking_detail.png": "0c74e58be9fb3e88219c5068fad66e689b1a0003fca621540e3dbf9d69949c9a",
-    "lods.png": "08601d760f4eb22cc07959c9af4af743e0fd7ef53d71c79e21b364a59a672e42",
-    "silhouette.png": "be4d701c94242e7621c8462a2a36f7397e901d9825e0bafbfdf7493c68d2621c",
-    "value.png": "b7e88d50e9c2152aabdff6008a882465307c945a23d556cf7a83e4d469552ba0",
-    "detail.png": "ea22466a13fe24ed32d914c01ed54527ed52f1757e0306951705653d7ebf6622"
+    "hero.png": "8b73f0614a5443cf8df0ff86c4eaef63822a30ba000a08a740f7479eb7155654",
+    "sheet.png": "63d3fb19dab15ecb4796f45b6d3eb429ad6af4203c53914ea2f59f2584794cd0",
+    "raking.png": "fd8042aafe1d164ed05032a796c02ae85c0a4c07918cbfbdb061d1edaa4dcdce",
+    "raking_detail.png": "a61d62c2e195f2ae581cd33b5cda50d1aaade72be8009b93c9355e35ca40a3df",
+    "lods.png": "71a6a40ffee9880d943049042aa8ef042547c42ba502580ee567d87abf3548ff",
+    "silhouette.png": "e255a6a3623902e9ceefd33afcf25fbe9daf5f8cc993206f46f8eec85ffca9a9",
+    "value.png": "76771277097631c4f2c131c3b94108f604f61fa728355e78c794e9d3b54d4ad5",
+    "detail.png": "0125a23a2bb341fcfbad46471145aa47c5b9a638b6f2f1f67d330224a79fc4c8"
   },
   "metrics": {
     "silhouette": [
       {
         "view": "front",
-        "iou": 0.977
+        "iou": 0.965
       },
       {
         "view": "side",
-        "iou": 0.949
+        "iou": 0.93
       },
       {
         "view": "3/4",
-        "iou": 0.99
+        "iou": 0.987
       }
     ],
     "focal": {
-      "peakPart": "turret_body",
+      "peakPart": "hull",
       "peak": [
-        403,
-        54
+        128,
+        152
       ],
       "focalShare": 0,
       "focalArea": 0,
       "top": [
         {
-          "part": "turret_body",
-          "share": 0.587
-        },
-        {
-          "part": "fittings",
-          "share": 0.199
+          "part": "track_r",
+          "share": 0.314
         },
         {
           "part": "hull",
-          "share": 0.127
+          "share": 0.274
+        },
+        {
+          "part": "fittings",
+          "share": 0.213
         }
       ],
       "declared": []
     },
     "rest": {
-      "share": 0.479,
-      "spread": 0.815,
+      "share": 0.439,
+      "spread": 0.809,
       "min": 0.25
     },
     "shape": {
-      "acuteShare": 0.183,
-      "straightShare": 0.663,
-      "taper": 0.259,
+      "acuteShare": 0.292,
+      "straightShare": 0.629,
+      "taper": 0.234,
       "shape": "stable"
     }
   }

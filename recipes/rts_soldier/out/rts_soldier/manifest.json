@@ -20,9 +20,9 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    12120,
-    2596,
-    348
+    10600,
+    2932,
+    380
   ],
   "drawCalls": [
     3,
@@ -109,26 +109,32 @@
   ],
   "weather": {
     "chips": {
-      "target": 0.14,
-      "actual": 0.14,
+      "target": 0.15,
+      "actual": 0.15,
       "eligible": "convex-edges",
-      "area": 3.1636
+      "area": 3.5086
+    },
+    "scratches": {
+      "target": 0.3,
+      "actual": 0.3,
+      "eligible": "touched",
+      "area": 0.5595
     },
     "mud": {
-      "target": 0.5159,
-      "actual": 0.5159,
+      "target": 0.7,
+      "actual": 0.7,
       "eligible": "ground-near",
-      "area": 1.3539,
+      "area": 1.655,
       "by": {
         "warden": {
-          "target": 0.5,
-          "actual": 0.5,
-          "area": 0.9241
+          "target": 0.7,
+          "actual": 0.7,
+          "area": 0.9839
         },
         "warden_kit": {
-          "target": 0.55,
-          "actual": 0.55,
-          "area": 0.4298
+          "target": 0.7,
+          "actual": 0.7,
+          "area": 0.6711
         }
       }
     },
@@ -136,17 +142,17 @@
       "target": 0.3,
       "actual": 0.3,
       "eligible": "up-facing",
-      "area": 1.3273,
+      "area": 1.457,
       "by": {
         "warden": {
           "target": 0.3,
           "actual": 0.3,
-          "area": 0.8381
+          "area": 0.9061
         },
         "warden_kit": {
           "target": 0.3,
           "actual": 0.3,
-          "area": 0.4892
+          "area": 0.5509
         }
       }
     }

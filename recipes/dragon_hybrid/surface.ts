@@ -7,7 +7,8 @@
 //                                                 the model on and fits the skeleton into
 //   rig     UniRig on the proxy                 → its joints, committed: where hips, stifles,
 //                                                 elbows and the spine lie (mapped by topology)
-//   blender FINAL: transform(fit) + steps.ts    → the game mesh: three LODs, PNG maps, the skin;
+//   blender FINAL: transform(fit) + steps.ts    → the game mesh: three LODs, PNG maps, the skin
+//                                                 on the fitted bones and the wing bones (wings.ts);
 //                                                 committed, the only thing a build draws
 // The chain is `required`: the code creature of this spec fails QA (over 100 000 triangles at
 // LOD 0, off the sourced box), so `t3d build` with an output missing stops with one
@@ -24,6 +25,7 @@ import {
 import { CONCEPT, CONCEPT_MODEL } from './concept.ts';
 import { DRAKE } from './spec.ts';
 import { steps, TRIANGLES } from './steps.ts';
+import { wingChains } from './wings.ts';
 
 /** The mesh model (MIT): Pixal3D. */
 export const SURFACE_MODEL = 'pixal3d';
@@ -57,6 +59,7 @@ export const dragonModel = (ctx: BuildContext): ChainedModel | null =>
     register: 'joints',
     take: ['trunk', 'fore', 'hind', 'tail'],
     drop: DROPPED,
+    extra: wingChains,
     maxTriangles: TRIANGLES[0],
     models: { image: CONCEPT_MODEL, mesh: SURFACE_MODEL },
     license: 'MIT',

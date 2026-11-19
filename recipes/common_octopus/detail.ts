@@ -13,12 +13,13 @@ import {
   merge,
   type Vec3,
 } from '@developerz.ai/ts23d';
-import { ARM_IDS, ARMS, AXIS, armRadius, CROWN, NECK } from './anatomy.ts';
+import { ARM_IDS, ARMS, AXIS, armLength, CROWN, NECK, radiusOf } from './anatomy.ts';
 import { noise3, PAPILLA, SUCKER_CUP, SUCKER_RIM, WEB_TOP } from './skin.ts';
 import { stamp } from './stamp.ts';
 
 type Kit = Parameters<NonNullable<BodyPlanDefinition['detail']>>[2];
 
+/** How far down the arms the web reaches, metres: deep at the base, as in photos of a resting animal. */
 const WEB_REACH = 0.25;
 /** Sucker radius as a share of the arm radius there. */
 const SUCKER_SHARE = 0.46;
@@ -76,17 +77,18 @@ function tintCup(m: Mesh): Mesh {
 /** Oral side of the arm: the angle of the section facing away from `bend`, either side of it. */
 function suckers(kit: Kit, lod: number): Mesh | null {
   if (lod >= 2) return null;
-  const unit = tintCup(suckerUnit(lod === 0 ? 11 : 6));
+  // Eight segments: the cups face the seabed, so their triangles went to the mantle instead.
+  const unit = tintCup(suckerUnit(lod === 0 ? 8 : 6));
   const reach = lod === 0 ? 0.985 : 0.55;
   const pieces: Mesh[] = [];
   ARM_IDS.forEach((id, k) => {
     const out: Mesh[] = [];
-    const length = k === 0 || k === ARMS - 1 ? 0.86 : 0.9;
+    const length = armLength(k);
     let s = 0.03;
     let row = 0;
     while (s / length < reach) {
       const u = s / length;
-      const r = armRadius(u);
+      const r = radiusOf(k, u);
       // The largest suckers sit a little out from the base, as on the real arm.
       const size = SUCKER_SHARE * r * (0.72 + 0.34 * Math.min(1, u / 0.14));
       const side = row % 2 === 0 ? 1 : -1;
@@ -110,8 +112,7 @@ function webSector(
   flat: boolean,
 ): Mesh {
   const tb = new MeshBuilder();
-  const reachOf = (id: string): number =>
-    id === ARM_IDS[0] || id === ARM_IDS[ARMS - 1] ? 0.86 : 0.9;
+  const reachOf = (id: string): number => armLength(ARM_IDS.indexOf(id));
   const sideOf = (id: string, other: string, u: number): number => {
     const toOther = v.sub(kit.surface(other, u, 0).p, kit.surface(id, u, 0).p);
     // Across the section, not a normal: a normal on a fillet leans toward the neighbouring arm.
@@ -252,19 +253,27 @@ function papillae(kit: Kit, ctx: BuildContext): Mesh | null {
     color: PAPILLA,
   });
   const out: Mesh[] = [];
-  const scatter = (id: string, n: number, umin: number, umax: number, size: number): void => {
+  const scatter = (
+    id: string,
+    n: number,
+    umin: number,
+    umax: number,
+    size: number,
+    aboral = Math.PI,
+  ): void => {
     const here: Mesh[] = [];
     for (let i = 0; i < n; i++) {
-      const u = rng.range(umin, umax);
-      const q = kit.surface(id, u, rng.range(0, Math.PI * 2));
+      const u = umin + (umax - umin) * rng.range(0, 1) ** 1.6;
+      const q = kit.surface(id, u, rng.range(-aboral, aboral));
       const s = size * rng.range(0.55, 1.35);
       here.push(stamp(cone, q.p, q.n, s, rng.range(0, 6)));
     }
     if (here.length > 0) out.push(kit.bindPieces(merge(here), [id]));
   };
-  scatter('mantle', 260, 0.08, 0.9, 0.0042);
+  scatter('mantle', 300, 0.08, 0.9, 0.0042);
   scatter('head', 40, 0.1, 0.9, 0.0032);
-  for (const id of ARM_IDS) scatter(id, 22, 0.02, 0.3, 0.0024);
+  // Papillae ride the aboral face of the arms, thinning out toward the tips.
+  for (const id of ARM_IDS) scatter(id, 44, 0.02, 0.62, 0.0024, 0.9);
   return merge(out);
 }
 

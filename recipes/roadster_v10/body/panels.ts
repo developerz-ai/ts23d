@@ -17,7 +17,18 @@ import {
 } from '../dims.ts';
 import { clamp, len, sub } from '../lib/geo.ts';
 import { type ColorFn, patch, type Surface } from '../lib/grid.ts';
-import { archEdges, archU, cockpitU, cockpitY, GAP, rows, sPlus, uAtY, uPlus } from './regions.ts';
+import {
+  archEdges,
+  archU,
+  cockpitU,
+  cockpitY,
+  GAP,
+  PANEL_STEP,
+  rows,
+  sPlus,
+  uAtY,
+  uPlus,
+} from './regions.ts';
 import { S_MAX, S_MIN, sAtX, U, U_MAX } from './shape.ts';
 
 export const X_HOOD_REAR = 0.43;
@@ -43,6 +54,12 @@ export interface PanelSpec {
   readonly holes?: readonly Hole[];
   /** Offset along the normal (negative = under the skin: liners, pads). */
   readonly lift?: number;
+  /** Mesh the panel's back as finely as its face: it is seen when the panel opens (hood, trunk
+   *  lid), or an edge steps (the cowl) and coarse back cells would fold across the step. */
+  readonly fineInside?: boolean;
+  /** Rows spread evenly over this panel instead of on the body-wide grid (the nose and tail
+   *  caps, where s is no longer metres along the car). */
+  readonly ownRows?: boolean;
 }
 
 /**
@@ -90,12 +107,22 @@ export interface Quality {
   readonly color: ColorFn;
 }
 
+/**
+ * Mesh density per LOD. The skin carries analytic normals, so shading stays smooth at any step;
+ * the step only has to hold the silhouette: 5 cm chords on the body's 0.3 m+ radii at LOD0 (the
+ * sports-car playbook's 40–100k band), 10 cm at LOD1, 30 cm at LOD2.
+ */
 export const quality = (lod: Lod, color: ColorFn): Quality => ({
   lod,
-  step: [0.014, 0.05, 0.16][lod] ?? 0.16,
+  step: PANEL_STEP[lod] ?? 0.24,
   thickness: [0.01, 0, 0][lod] ?? 0,
   color,
 });
+
+/** Rows per half of a hole's rounded end, per LOD. */
+const HOLE_ROWS = [7, 3, 2] as const;
+/** Rows across each wheel arch, per LOD. */
+const ARCH_ROWS = [14, 8, 4] as const;
 
 /** Mesh one region with gaps applied in metres. */
 export function region(S: Surface, spec: PanelSpec, q: Quality): Mesh {
@@ -109,7 +136,8 @@ export function region(S: Surface, spec: PanelSpec, q: Quality): Mesh {
   const r = S.row((s0 + s1) / 2);
   const span = len(sub(S.row(s1)(mid), S.row(s0)(mid)));
   const sStep = (s1 - s0) / Math.max(1, Math.ceil(span / q.step));
-  const at = rows(s0, s1, Math.abs(sStep), spec.extra ?? []);
+  const lattice = spec.ownRows ? 0 : q.step;
+  const at = rows(s0, s1, Math.abs(sStep), spec.extra ?? [], lattice);
   let across = 0;
   const a = lo((s0 + s1) / 2);
   const b = hi((s0 + s1) / 2);
@@ -120,6 +148,9 @@ export function region(S: Surface, spec: PanelSpec, q: Quality): Mesh {
     prev = p;
   }
   const nu = spec.nu ?? clamp(Math.ceil(across / q.step), 2, 400);
+  // Both panels of a shut line turn their flange along the normal AT the line, not at their own
+  // inset edge: over a tight shoulder roll the two edge normals converge and the flanges cross.
+  const flangeU = { ...(g.lo ? { lo: spec.lo } : {}), ...(g.hi ? { hi: spec.hi } : {}) };
   const holes = [...(spec.holes ?? [])].sort((x, y) => x.uc - y.uc);
   if (holes.length === 0 || q.lod === 2)
     return patch(S, {
@@ -133,6 +164,8 @@ export function region(S: Surface, spec: PanelSpec, q: Quality): Mesh {
       color: q.color,
       strip: 'plastic',
       thickness: q.thickness,
+      innerStride: spec.fineInside ? 1 : 2,
+      flangeU,
       ...(spec.rims ? { rims: spec.rims } : {}),
       ...(spec.lift ? { lift: spec.lift } : {}),
     });
@@ -168,10 +201,13 @@ export function region(S: Surface, spec: PanelSpec, q: Quality): Mesh {
     });
     return out;
   };
-  const rowsAt = rows(s0, s1, Math.abs(sStep), [
-    ...(spec.extra ?? []),
-    ...holes.flatMap((h) => holeRows(h, q.lod === 0 ? 24 : 6)),
-  ]);
+  const rowsAt = rows(
+    s0,
+    s1,
+    Math.abs(sStep),
+    [...(spec.extra ?? []), ...holes.flatMap((h) => holeRows(h, HOLE_ROWS[q.lod] ?? 2))],
+    lattice,
+  );
   return patch(S, {
     s0,
     s1,
@@ -185,6 +221,8 @@ export function region(S: Surface, spec: PanelSpec, q: Quality): Mesh {
     color: q.color,
     strip: 'plastic',
     thickness: q.thickness,
+    innerStride: spec.fineInside ? 1 : 2,
+    flangeU,
     ...(spec.rims ? { rims: spec.rims } : {}),
   });
 }
@@ -223,7 +261,7 @@ export interface BodyPanels {
 
 /** Every outer panel, left half. */
 export function bodyPanels(S: Surface, q: Quality): BodyPanels {
-  const arches = archEdges(0.0015, q.lod === 0 ? 24 : 12);
+  const arches = archEdges(0.0015, ARCH_ROWS[q.lod] ?? 4);
   const sh = U.shoulder;
   const hood = region(
     S,
@@ -234,6 +272,7 @@ export function bodyPanels(S: Surface, q: Quality): BodyPanels {
       hi: () => sh,
       g: { s0: GAP, s1: GAP, hi: GAP },
       rims: { lo: false },
+      fineInside: true,
       holes: [HOOD_VENT],
     },
     q,
@@ -247,6 +286,9 @@ export function bodyPanels(S: Surface, q: Quality): BodyPanels {
       hi: () => sh,
       g: { s0: GAP, s1: GAP, hi: GAP },
       rims: { lo: false },
+      // The opening's front edge is a step in `lo`: two rows 7 mm apart keep it square.
+      extra: [X_COWL + 0.014, X_COWL + 0.021],
+      fineInside: true,
     },
     q,
   );
@@ -330,7 +372,8 @@ export function bodyPanels(S: Surface, q: Quality): BodyPanels {
       hi: () => U.valley,
       g: { s0: GAP },
       rims: { lo: true, hi: false },
-      extra: [X_COCKPIT_REAR],
+      // The cockpit's rear corners are 16 cm rounds: rows where the round turns fastest.
+      extra: [0, 0.0025, 0.012, 0.03, 0.06, 0.1].map((d) => X_COCKPIT_REAR + d),
     },
     q,
   );
@@ -343,6 +386,7 @@ export function bodyPanels(S: Surface, q: Quality): BodyPanels {
       hi: () => U.valley,
       g: { s0: GAP, s1: GAP, hi: GAP },
       rims: { lo: false },
+      fineInside: true,
     },
     q,
   );
@@ -355,6 +399,9 @@ export function bodyPanels(S: Surface, q: Quality): BodyPanels {
       hi: () => U_MAX,
       g: { s0: GAP },
       rims: { lo: false, s1: false },
+      ownRows: true,
+      // The hood valley runs concave into the nose: a coarse back would poke through the face.
+      fineInside: true,
       holes: [HEADLAMP, MOUTH],
     },
     q,
@@ -368,6 +415,7 @@ export function bodyPanels(S: Surface, q: Quality): BodyPanels {
       hi: () => U_MAX,
       g: { s1: GAP },
       rims: { lo: false, s0: false },
+      ownRows: true,
       holes: [TAILLAMP],
     },
     q,

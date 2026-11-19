@@ -17,6 +17,7 @@ import {
   dorsal1,
   dorsal2,
   dorsalSpines,
+  finletStrips,
   finlets,
   HEIGHT,
   LOWER_TIP,
@@ -98,7 +99,7 @@ export const bluefin_tuna = defineAsset({
   kind: 'creature',
   medium: 'water',
   description:
-    'Atlantic bluefin tuna, 2 m fork length: fusiform body, metallic blue back over silver flank, yellow finlets, short pectorals, crescent tail with caudal keels.',
+    'Atlantic bluefin tuna, 2 m fork length: fusiform body, polished metallic blue back over silver flank with an iridescent band, lateral line and duller corselet, rayed fins, yellow finlets, short pectorals, crescent tail with caudal keels; frayed fin margins and a few net scratches.',
   tags: ['creature', 'fish', 'tuna', 'marine', 'animated', 'swim'],
   sources: [
     'https://www.fao.org/4/ap889e/ap889e.pdf',
@@ -144,7 +145,8 @@ export const bluefin_tuna = defineAsset({
       },
     ],
   },
-  budget: { triangles: [38000, 4700, 560], bones: PLAN.bones.length },
+  // LOD1 ~8 k softens the switch from LOD0; LOD2 ~700 keeps the body round and the finlet strips.
+  budget: { triangles: [42000, 9500, 800], bones: PLAN.bones.length },
   art: { grounded: false },
   clips: CLIPS,
   build(ctx) {
@@ -165,7 +167,7 @@ export const bluefin_tuna = defineAsset({
     part('fin_dorsal_1', dorsal1(lod), spine);
     part('fin_dorsal_2', dorsal2(lod), spine);
     part('fin_anal', anal(lod), spine);
-    const small = [...finlets(lod), ...pelvics(lod), ...dorsalSpines(lod)];
+    const small = [...finlets(lod), ...finletStrips(lod), ...pelvics(lod), ...dorsalSpines(lod)];
     part('fins_small', merge(small), spine);
     for (const [s, sign] of [
       ['l', 1],

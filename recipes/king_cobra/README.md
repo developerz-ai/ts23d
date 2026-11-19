@@ -26,15 +26,17 @@ the best-preserved large type available (see below).
 | tail and rear quarter | nearly black | darkens from 55 % of length | same |
 | raised part | "a third of its body" | 1.17 m of arc, head 0.75 m up in a curved stance | popular sources via [search](https://www.desertusa.com/animals/king-cobra.html); **no measured study opened** |
 
-**Estimated, not sourced:** hood width 1.7 × head width (104 mm), read off two front photos (about 1.5 on
-one, where the head is nearer the camera, and about 1.7 on [the other](https://commons.wikimedia.org/wiki/File:Ophiophagus_hannah2.jpg)).
+**Estimated, not sourced:** hood width 2.05 × head width (125 mm) at full spread, read off two front photos (about 1.5 on
+one, where the head is nearer the camera and the hood half spread, and about 1.7 to 2 on [the other](https://commons.wikimedia.org/wiki/File:Ophiophagus_hannah2.jpg)).
 The hood's length (about 0.35 m) and profile come from the same photos. No published hood width was found;
 [Young and Kardong 2010](https://doi.org/10.1242/jeb.034447) could not be opened. Scale length, tongue length
 and every colour value are read from photos.
 
 **Staging (design):** the rest pose is a showcase stance. The hood faces 35° to the side, square to the 3/4
-camera, and the rear two thirds lie in a stacked pile. The overall box (0.56 × 0.55 × 0.78 m) is that pose;
-the 3.5 m is held by the recipe's test along the body.
+camera, and the rear two thirds lie in a pile: a spiral widening toward the tail, each turn about 4 cm
+inside the next. The pile's heights are settled, not drawn (`settleHeights` in `shape.ts`): every section
+rests on the ground or on the turn under it, so no turn hovers. The overall box (0.56 × 0.55 × 0.78 m) is
+that pose; the 3.5 m is held by the recipe's test along the body.
 
 ## Motion
 | Clip | How | Source |
@@ -42,16 +44,24 @@ the 3.5 m is held by the recipe's test along the body.
 | `slither` | `snakeClips` measured wave: 0.4 L wavelength, 0.1 L amplitude, 0.22 L per cycle | [J20], [H09] via the swim research doc |
 | `idle` | the reared stance, starting and looping on the rest pose: gentle sway, hood breathing, tongue | design |
 | `hood_up` | the same stance, more alert: wider sway and tongue flicks | design |
-| `idle_ground` | the kind's small serpenoid on the ground, hood folded (it starts flat, away from the rest pose) | design |
-| `rear` | from the front laid out over the pile, joints unwind neck first into the stance, hood spreading | design |
+| `idle_ground` | resting flat, 8 s loop: the rear two thirds in a loose coil round the rest pile's centre (tail inside, 0.22 m inner radius, turns 0.1 m apart), the front third in loose S-bends (0.75 m wavelength, 4.5 cm half-swing), hood folded; two slow breaths (the bends swell 6 %), then the head lifts 2 cm and turns about 9° with a tongue flick. Every joint stays within 0.85 m of the rest pile's centre | design: no measured resting posture was found |
+| `rear` | starts from the pile with the front third laid on the ground (draped over the pile turns it crosses), hood folded. The raised length grows from the head (`REAR.rise`); everything behind it stays where it lay and the pile never moves; the raised part keeps the laid track in plan and pitches up (`pitchAt` in `ground.ts`), then turns into the stance (`REAR.settle`), ending exactly on it with the hood spread | design |
 
 Undulation rate 1 Hz is the kind's design value: no opened source gives one for a snake this size. `sidewind`
 is not shipped: it misses its foot-lock target (about 4.1 mm per frame against 1 mm).
 
-The rest pose is the raised stance, so `snakeClips` runs on a straight flat copy of the spine and each key is
-re-solved on the real skeleton from joint targets. The root bone is at the head, so clips that keep the pile
+The rest pose is the raised stance, so `snakeClips` runs on a straight flat copy of the spine for `slither`
+and each key is re-solved on the real skeleton from joint targets. `slither` is a travelling gait laid out
+along X through the origin (head at x = +1.75 m on its first key), so it starts away from the rest
+footprint like any root-motion cycle; `idle_ground` (ground.ts) is the resting pose near it. `idle_ground`
+is not the start of `rear`: `rear` rises from the pile. Design joint limits held by the tests: the head on
+the neck bends under 75°, every other link under 60° (the rest pose's tightest is 55°), and no two parts of
+the body 0.35 m apart along it come closer than their sections allow. The folded hood swings its ribs back
+along the neck (they used to fold up over the back, which read as lumps on the ground clips). The root bone is at the head, so clips that keep the pile
 still pin its first joint and let the head absorb the small length error. Turns of the pile touch, so each
-vertex is weighted only to spine bones next to its nearest one (`skin.ts`).
+vertex is weighted only to spine bones next to the section it lies on (`bodyArc` in `skin.ts`: nearest
+centreline sample in that section's own radii, among those its normal faces away from; a scale plate or
+scute is linked as one piece).
 
 ## Photos (by view)
 | View | URL | Notes |
@@ -70,3 +80,14 @@ One skinned part `body`, one draw. Bones `spine_0..31` (0 at the head), `hood_ri
   type was used because the neotype is an old specimen and the live-animal photos agree with it better.
 - Preserved widths are likely under a live snake's.
 - The real snake has a mobile jaw; this asset has none, so there is no gape or strike clip.
+
+## Surface and wear
+| Feature | How | Why |
+|---|---|---|
+| glossy dorsal scales | one strip (`material.ts`): each scale samples a rim-to-crown ramp, roughness 0.52 at the rim to 0.14 on the crown | live snake scales are polished keratin; a single roughness read as paint |
+| pale crossbands | chevrons pointing at the head, one straight arm per side, widening down the flank | photos above; the old W-shaped zigzag read as a viper |
+| pre-shed patch | a ragged patch on the top turn of the pile: milky blue-grey, dull row of the strip, scales a hair proud | the old skin clouds over before a shed |
+| healed scar | two parallel diagonal grooves across the back of the pile, flat pale scale tissue | a prey snake's bite; king cobras eat snakes |
+| scuffed tail scutes | greyed, rougher free edges from 2.6 m to the tip | dragged over rock |
+| far LOD | LOD2 takes the pattern's average over a band pitch (and the collar's over 12 cm), darkened to the LOD0 read | sampling single bands on six-sided rings made black and cream blocks |
+| girth | swells to 1.1 body widths at 1.5 to 1.9 m, tapers steadily to the vent and tail | heavy mid-body in side photos |

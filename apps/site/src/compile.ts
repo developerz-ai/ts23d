@@ -4,6 +4,7 @@
 
 import type { AnimationClip, Object3D } from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { ByteCache } from './byte-cache.ts';
 import type {
   Ask,
   BuildRequest,
@@ -62,21 +63,22 @@ export function manifest(name: string, file?: string): Promise<Manifest> {
   return m;
 }
 
-const sheets = new Map<SheetSize, Promise<Sheet>>();
+/** Painted sheets kept for a revisit: a few 2048² ones (48 MiB each), least recent out (D341). */
+const sheets = new ByteCache<Sheet>(
+  160 * 1024 * 1024,
+  (s) => s.albedo.length + s.normal.length + s.orm.length,
+);
 
 /**
- * The painted trim sheet at `size` px (painted once per size, in the worker: about a second at
- * 1024², about four at 2048²).
+ * The painted trim sheet of `of`'s asset at `size` px: the built-in strips plus that asset's own
+ * project materials (painted in the worker: about a second at 1024², about four at 2048², once
+ * per asset and size while it stays cached). Without `of`, the built-ins only.
  */
-export const trimSheet = (size: SheetSize): Promise<Sheet> => {
-  let s = sheets.get(size);
-  if (!s) {
-    s = ask({ sheet: true, size }) as Promise<Sheet>;
-    sheets.set(size, s);
-    s.catch(() => sheets.delete(size));
-  }
-  return s;
-};
+export const trimSheet = (size: SheetSize, of?: BuildRequest): Promise<Sheet> =>
+  sheets.get(
+    `${size}|${of ? `${targetKey(of.target)}@${of.lod}` : ''}`,
+    () => ask({ sheet: true, size, ...(of ? { of } : {}) }) as Promise<Sheet>,
+  );
 
 /** Compile in the worker. Results are cached per request, so asking twice costs nothing. */
 export function build(request: BuildRequest): Promise<BuildResult> {

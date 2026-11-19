@@ -12,7 +12,7 @@ designs. `rts_faction` is the lineup scene; each asset has its own folder:
 | `rts_tank` | [`rts_tank/`](../rts_tank/README.md) | Brinehound: light tank |
 | `rts_barracks*` | [`rts_barracks/`](../rts_barracks/README.md) | Warden Hall: 3 build stages × 3 damage states |
 | `rts_resource*` | [`rts_resource/`](../rts_resource/README.md) | Sunstone deposit + harvested variant |
-| `rts_faction` | here | All of the above in one scene, one team slot |
+| `rts_faction` | here | All of the above in one compound (`rts_faction.ts` places the roster, `ground.ts` builds the forecourt, perimeter and stores), one team slot |
 
 Shared code: [`style.ts`](style.ts) (palette, team slot, shape helpers), [`finish.ts`](finish.ts)
 (materials per role colour, wear presets, the `Kit` that weathers parts together), [`figure.ts`](figure.ts)
@@ -26,12 +26,28 @@ Shared code: [`style.ts`](style.ts) (palette, team slot, shape helpers), [`finis
 | Team placement | large **top-facing** planes: roofs, pauldrons, crest, pack lid, turret roof, deck, banners, floor inlay, claim plaque | test: ≥ 8 % of the 64-px LOD2 silhouette from a 58° camera changes between red and blue (`teamCoverage`); `t3d icon` warns below it |
 | Neutral masses | bone ceramic `#cfc4a8` / slate `#4a5058` / gunmetal `#2c3034`: low saturation so team colour owns the chroma | review |
 | Accent | brass `#a87a2c` on edges and fittings; amber sunstone glow `#ffb13a` for lenses, windows, crystals (the focal accent) | `glow` sets |
-| Materials | every role colour on a real strip (`finish.ts` `restrip`): ceramic `plastic` armour, `canvas` suits and banners, `leather` boots/gloves, `steel_painted` hulls and team plates (chips show steel), `iron_cast` fittings, `brass`, `rubber`, `oak`/`pine` timber, dressed `concrete`/`stone` masonry, lime-plaster gables | review (`t3d critique`) |
+| Materials | every role colour on a real strip (`finish.ts` `restrip`): ceramic `plastic` armour, `canvas` suits and banners, `leather` boots/gloves, matte `armour_paint` on the tank's bone and slate plates (`../_lib/finish/field.ts`), `steel_painted` team plates (chips show steel), `iron_cast` fittings, `brass`, `rubber`, `oak`/`pine` timber, dressed `concrete`/`stone` masonry, lime-plaster gables | review (`t3d critique`) |
 | Wear | `weather()` presets in `finish.ts` (`wearOf`): convex-edge chips 10–14 %, dust on up-faces, mud from the ground on units and vehicles, moss and damp at the hall foot, rain streaks off the eaves and sills, exhaust soot; team parts are never weathered (their strip carries the chips), so the team share holds | QA `weather` (exact %, physically placed) |
 | Shape language | **pebbles** (bevelled, rounded masses) + **forward chevrons** (helmet crest, turret nose, prow, porch, roof marks) + **round lenses** | `chevron`, `chevronPlan`, `pebble` in `style.ts` |
 | Proportions | infantry ≈ 6 heads, chunky limbs, big hands and pauldrons (read at 64 px) | `figure.ts` |
 | LOD | LOD2 is brutal (crowds): infantry ≤ 380 tris, tank ≤ 600, hall ≤ 1 200; pivots kept at every LOD | `budget`, QA |
 | Readability | LOD2 keeps the LOD0 silhouette (IoU ≥ 0.85 front/side/¾); `assertArt` passes on the units | test |
+
+## The compound (`rts_faction`)
+A 30 × 25 m plate: the hall on the −X half, its forecourt on +X.
+
+| Element | What | Where |
+|---|---|---|
+| salt flat | pale pitted crust at true texture scale (0.5 m bands of the greyscale `concrete` strip under the salt colour, each band phased along U), mottled and trodden darker in vertex colour, five standing patches (gate, stores, Delvers' pitch, sandbag post) as their own skins | `ground.ts` `forecourt` |
+| road and hardstand | `gravel` at true scale, 3 mm proud: gate → gap in the wall; 7.8 × 4.6 m tank park with an oil stain | `forecourt` |
+| track ruts | two 0.46 m ribbons at 2.45 m centres from the hardstand round to the road (LOD0/1) | `forecourt` |
+| perimeter | low wall of dressed blocks with capstones on two edges, open where the road leaves; a sandbag post each side of the gap | `perimeter` |
+| stores | five fuel drums and four crates by the park (parts kit `barrel`, `crate`, one LOD below their own) | `stores` |
+| roster | hall; Brinehound on the hardstand, nose to the gate; three Wardens in a wedge on the road; two Delvers at the claimed deposit | `rts_faction.ts` |
+
+Triangles 159k / 35k / 4.4k, of which the scene's own ground and dressing are 9.3k / 2.2k / 0.5k;
+draws 36 / 36 / 22, all from the roster's moving pivots and team parts (the ground, perimeter and
+stores add none: they are static and on the trim sheet).
 
 ## Specs (design envelope — an invented faction: this brief is the source)
 

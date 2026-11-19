@@ -21,6 +21,11 @@ import {
 } from '@developerz.ai/ts23d';
 import { BRASS, IRON, RUBBER, SEG, SLATE } from '../_lib/rts/style.ts';
 
+/** Far LOD: the shadowed block inside the belt, and a road wheel's mean tone (slate disc, dark
+ *  tyre, brine mud) for the cone that stands for it. */
+export const CORE_SHADOW: Vec3 = [0.014, 0.014, 0.015];
+export const WHEEL_FAR: Vec3 = [0.115, 0.1, 0.08];
+
 export const TRACK_Y = 1.225;
 export const TRACK_W = 0.46;
 export const LINK_T = 0.08;
@@ -111,8 +116,8 @@ export function resample(path: readonly Vec2[], n: number): { p: Vec2; angle: nu
   return out;
 }
 
-/** Links round the belt per LOD: every link, coarse links, and 24 far slabs. */
-export const LINKS = [96, 44, 24] as const;
+/** Links round the belt per LOD: every link, coarse links, and 20 far slabs. */
+export const LINKS = [96, 44, 20] as const;
 
 /**
  * The length after which the belt repeats: loop length ÷ link count, measured along the centre
@@ -300,21 +305,40 @@ export function runningGear(add: Add, lod: Lod, finishLink: (link: Mesh) => Mesh
       motion: spin(0.97),
       clearOf: AXLE,
     });
-    if (lod === 2)
-      // Far: no wheels, so a solid block inside the belt (the wheels' outline, set back from the
-      // track's outer face) keeps the side closed; the belt itself still runs round it.
+    if (lod === 2) {
+      // Far: the wheel pivots stay empty, so a dark block inside the belt (the wheels' outline,
+      // set back from the track's outer face) closes the side, and each road wheel is a shallow
+      // six-sided cone on its face (rim on the block, hub 4 cm proud; 6 triangles): the side
+      // still reads as five wheels in a belt from the strategy camera. Static: one draw with the
+      // hull, where 14 spinning pivots would be 14.
+      const face = s * (TRACK_Y + TRACK_W / 2 - CORE_INSET);
+      const disc = lathe({
+        profile: [
+          [ROAD_R * 0.92, 0],
+          [0, 0.04],
+        ],
+        segments: 6,
+        axis: 'y',
+        color: WHEEL_FAR,
+      });
       add(
         `track_core_${side}`,
-        place(
-          prism({
-            profile: core,
-            depth: CORE_W,
-            plane: 'xz',
-            color: SLATE,
-          }),
-          { at: [0, s * (TRACK_Y + TRACK_W / 2 - CORE_INSET - CORE_W / 2), 0] },
-        ),
+        merge([
+          place(
+            prism({
+              profile: core,
+              depth: CORE_W,
+              plane: 'xz',
+              color: CORE_SHADOW,
+            }),
+            { at: [0, face - (s * CORE_W) / 2, 0] },
+          ),
+          ...ROAD_X.map((x) =>
+            place(disc, { at: [x, face, ROAD_Z], ...(s < 0 ? { yaw: Math.PI } : {}) }),
+          ),
+        ]),
       );
+    }
     const pitch = beltPitch(lod, belt);
     const one = finishLink(link(lod, pitch));
     // The belt runs counter-clockwise in XZ: pitch −angle lays local +X along the tangent, and a

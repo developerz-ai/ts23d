@@ -63,7 +63,12 @@ over the Whyte arrangement: frame, boiler and rods are laid out from `'4-4-0'`.
 ## Modules
 `loco_440.ts` (family, specs, checks) · `shared.ts` (constants, livery → strips, layout, helpers) ·
 `wheels.ts` · `running-gear.ts` · `boiler.ts` · `fittings.ts` (headlamp, boards, pilot, pipework) ·
-`cab.ts` · `tender.ts` · `track.ts`.
+`cab.ts` · `tender.ts` · `track.ts` · `wear.ts` (the engine in steam: soot falling back from the stack onto the
+smokebox, boiler crown, cab roof and tender; oil flung from hubs, crank pins and rods; track dust
+rising onto the running gear and pilot; lime runs down the jacket; brass kept bright. Vertex
+colour, applied to every engine and tender part on its way into the build, so LOD2 keeps it).
+Finishes: `enamel` (varnished coach paint, clearcoat with orange peel) on cab, tender, pilot,
+headlamp and domes; `russia_iron` (planished metal) on the jacket.
 
 ## Open questions
 - Overall length, width and height are photo estimates (±5% gate), not published figures.

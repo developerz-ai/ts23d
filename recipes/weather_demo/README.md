@@ -32,8 +32,15 @@ Sources:
 
 ## Parts the engine needs
 `<object>_slab` (labelled plinth), `<object>_new_*` and `<object>_old_*` (door: leaf, frame, hinges,
-handle · crate · block, anchors · drum: shell, bungs).
+handle · crate: crate, core (hidden inner box, not weathered) · block: block, anchors (lifting
+anchors and form-tie plugs) · drum: shell, bungs).
 
-## Open questions
-Weathering lives in vertex colour, so weathered meshes are tessellated (`resolution: [0.05, 0.12, 0]`):
-~95k triangles at LOD0. LOD2 keeps the plain mesh; its colours are the same masks at the corners only.
+## Budget
+Budget why: a teaching board of eight objects (four new/weathered pairs on slabs), not one game prop; each weathered copy needs a vertex grid for its colour.
+
+Weathering lives in vertex colour, so each weathered mesh is tessellated, with the resolution set per
+object and per LOD: the door leaf (where streaks run) at 0.1 m, the frame at 0.3 m, the crate boards at
+0.15 m, the block and drum at 0.1 m (LOD0). The crate's hidden inner core stays out of the pass. LOD2
+keeps a coarse weathered grid (0.4–0.9 m) so the new / weathered difference survives at distance and
+drops the labels, chimes, nails, corner irons, tie plugs and hinge bolts. About 21k / 6.5k / 2k
+triangles (was 95k / 22k / 3.8k).

@@ -90,6 +90,36 @@ const NOSE: readonly Station[] = [
   { x: 5.6, zb: 1.3, zw: 2.8, zt: 4.3, hw: 1.85 },
 ];
 const CABIN: Station = { x: 5.6, zb: 1.3, zw: 2.8, zt: 4.3, hw: 1.85 };
+
+/**
+ * The nose as a faired run of stations: `sub` sections per span of `NOSE`, on a Catmull-Rom curve
+ * through the design stations (which stay exactly where they are), running out flat into the
+ * cabin. Straight spans between five stations made every nose panel a twisted quad that shaded
+ * as two triangles; shorter spans on a curve keep each panel near planar.
+ */
+function noseStations(sub: number): Station[] {
+  const first = NOSE[0] ?? CABIN;
+  const second = NOSE[1] ?? CABIN;
+  const keys: (keyof Station)[] = ['x', 'zb', 'zw', 'zt', 'hw'];
+  const lead = Object.fromEntries(keys.map((k) => [k, 2 * first[k] - second[k]])) as Station;
+  const pts: Station[] = [lead, ...NOSE, { ...CABIN, x: 2 * CABIN.x - (NOSE[3]?.x ?? CABIN.x) }];
+  const out: Station[] = [];
+  for (let i = 1; i + 2 < pts.length; i++)
+    for (let j = 0; j < sub; j++) {
+      const t = j / sub;
+      const [p0, p1, p2, p3] = [pts[i - 1], pts[i], pts[i + 1], pts[i + 2]];
+      if (!p0 || !p1 || !p2 || !p3) continue;
+      const cr = (k: keyof Station): number =>
+        0.5 *
+        (2 * p1[k] +
+          (p2[k] - p0[k]) * t +
+          (2 * p0[k] - 5 * p1[k] + 4 * p2[k] - p3[k]) * t * t +
+          (3 * p1[k] - p0[k] - 3 * p2[k] + p3[k]) * t * t * t);
+      out.push({ x: cr('x'), zb: cr('zb'), zw: cr('zw'), zt: cr('zt'), hw: cr('hw') });
+    }
+  out.push(NOSE[NOSE.length - 1] ?? CABIN);
+  return out;
+}
 const CABIN_END = -4.3;
 const WALL = 0.08;
 const BOOM: readonly Station[] = [
@@ -201,6 +231,54 @@ function hazard(a: Vec3, b: Vec3, up: Vec3, stripes: number, off = DECAL): Mesh 
     ),
   );
 }
+
+const SOOT: Vec3 = [0.03, 0.028, 0.027];
+/** Oil weeping from a fastener: near-black with a brown cast. */
+const OIL = hex('#1b1611');
+const smooth = (a: number, b: number, x: number): number => {
+  const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
+  return t * t * (3 - 2 * t);
+};
+
+/** Map every vertex colour by position (mesh frame): scorch, soot, heat tint. */
+function tint(m: Mesh, f: (p: Vec3, c: Vec3) => Vec3): Mesh {
+  const colors = new Float32Array(m.colors);
+  for (let i = 0; i < m.positions.length / 3; i++) {
+    const p: Vec3 = [
+      m.positions[i * 3] ?? 0,
+      m.positions[i * 3 + 1] ?? 0,
+      m.positions[i * 3 + 2] ?? 0,
+    ];
+    const c: Vec3 = [colors[i * 3] ?? 0, colors[i * 3 + 1] ?? 0, colors[i * 3 + 2] ?? 0];
+    colors.set(f(p, c), i * 3);
+  }
+  return { ...m, colors };
+}
+const toward = (c: Vec3, to: Vec3, k: number): Vec3 => {
+  const t = Math.min(1, Math.max(0, k));
+  return [c[0] + (to[0] - c[0]) * t, c[1] + (to[1] - c[1]) * t, c[2] + (to[2] - c[2]) * t];
+};
+
+/**
+ * Exhaust scorch on a nacelle (its own frame: thrust leaves at z −2.1): soot black in the bore
+ * and on the nozzle lip, burnt paint up the lowest metre of the cowl, a heat-browned band above.
+ */
+const scorched = (m: Mesh): Mesh =>
+  tint(m, (p, c) => {
+    const rho = Math.hypot(p[0], p[1]);
+    const low = 1 - smooth(-2.1, -0.95, p[2]);
+    const bore = rho < 0.9 && p[2] < -1.2 ? 1 : 0;
+    const burnt = toward(
+      c,
+      [0.2, 0.15, 0.12],
+      0.5 * smooth(-1.4, -0.9, p[2]) * (1 - smooth(-0.9, -0.3, p[2])),
+    );
+    return toward(burnt, SOOT, Math.max(0.92 * bore, 0.85 * low ** 1.2));
+  });
+
+/** Soot round the tail thrusters: the last metre of the boom and the fin roots beside them. */
+const tailScorch = (m: Mesh): Mesh =>
+  tint(m, (p, c) => toward(c, SOOT, 0.8 * (1 - smooth(BOOM_END, BOOM_END + 1.3, p[0]))));
 
 const bevelled = (size: Vec3, color: Vec3, bevel: number, at: Vec3 = [0, 0, 0]): Mesh =>
   box({ size, color, at, bevel: bevel > 0 && bevel < Math.min(...size) / 2 ? bevel : 0 });
@@ -317,15 +395,17 @@ export const dropship = defineAsset({
       { label: 'ramp width', axis: 'y', value: 2.8, parts: ['ramp'], source: 'design spec' },
     ],
   },
-  // Measured 12558 / 4872 / 1792; headroom ≤ 17%.
+  // Measured 19.3k / 6.6k / 2.09k (faired nose, hazard rings and hull number at every LOD).
   // LOD0/1 include the per-triangle UV split that keeps hull textures at true scale.
   budget: { triangles: [19500, 6800, 2100] },
   checks: [symmetric('_l', '_r', 'y'), noOverlap('nacelle_*'), rampArc],
+  // Thrusters burn brightest, nav lights read red / green / white at their own hue: lit, not
+  // blown out (8 and 6 clipped them to white).
   glow: [
-    { parts: ['thruster_*'], color: GLOW, strength: 8 },
-    { parts: ['navlight_l'], color: hex('#ff2a20'), strength: 6 },
-    { parts: ['navlight_r'], color: hex('#22ff5a'), strength: 6 },
-    { parts: ['navlight_tail', 'cabin_lamp'], color: hex('#fff4e0'), strength: 5 },
+    { parts: ['thruster_*'], color: GLOW, strength: 3 },
+    { parts: ['navlight_l'], color: hex('#ff2a20'), strength: 2 },
+    { parts: ['navlight_r'], color: hex('#22ff5a'), strength: 2 },
+    { parts: ['navlight_tail', 'cabin_lamp'], color: hex('#fff4e0'), strength: 1.5 },
   ],
   build(ctx) {
     const lod = ctx.lod;
@@ -349,7 +429,9 @@ export const dropship = defineAsset({
       ctx.part(name, m && (o?.surface === 'glass' ? m : finish(m)), o);
 
     // ── fuselage: lofted nose + thick-walled cabin plates (a real hollow behind the ramp) ────
-    const fus: Mesh[] = [shell(NOSE.map(ringOf), hullColor)];
+    const noseSub = ctx.pick([3, 2, 1]);
+    const nose = noseStations(noseSub);
+    const fus: Mesh[] = [shell(nose.map(ringOf), hullColor)];
     const outer = section(CABIN);
     const inner = section(CABIN, WALL);
     for (let i = 0; i < outer.length; i++) {
@@ -446,6 +528,26 @@ export const dropship = defineAsset({
           });
           for (let i = 0; i < 18; i++)
             bits.push(place(bolt, { at: [2.8 - i * 0.33, s * (sp.y1 + 0.055), 2.32] }));
+          // Oil weeping from the gear-bay fasteners: dark runs down the armour under the bolts
+          // round the main gear, drawn aft by the slipstream, stopping above the hazard band.
+          for (const i of [7, 12, 13, 14, 15]) {
+            const x = 2.8 - i * 0.33;
+            const len = rng.range(0.16, 0.34);
+            const w = rng.range(0.035, 0.07);
+            const y = s * (sp.y1 + 0.045);
+            const lean = rng.range(0.03, 0.09);
+            bits.push(
+              quadOut(
+                [x - w / 2, y, 2.295],
+                [x + w / 2, y, 2.295],
+                [x + w * 0.2 - lean, y, 2.295 - len],
+                [x - w * 0.2 - lean, y, 2.295 - len],
+                OIL,
+                [x, 0, 2.2],
+                DECAL,
+              ),
+            );
+          }
           bits.push(
             hazard(
               s > 0 ? [-1.0, sp.y1 + 0.045, 1.76] : [-2.85, -sp.y1 - 0.045, 1.76],
@@ -456,17 +558,17 @@ export const dropship = defineAsset({
           );
         }
       }
-      if (lod < 2)
-        // Hull number on the forward armour plate, reading front → back on each side.
-        bits.push(
-          text(HULL_NO, {
-            origin: [1.95, s * (sp.y1 + 0.045), 1.82],
-            along: [-s, 0, 0],
-            height: 0.45,
-            align: 'centre',
-            color: STENCIL,
-          }),
-        );
+      // Hull number on the forward armour plate (far: on the sponson skin), reading front → back
+      // on each side.
+      bits.push(
+        text(HULL_NO, {
+          origin: [1.95, s * (sp.y1 + (lod < 2 ? 0.045 : 0)), 1.82],
+          along: [-s, 0, 0],
+          height: 0.45,
+          align: 'centre',
+          color: STENCIL,
+        }),
+      );
       solid(`sponson_${side}`, grime(merge(bits), { ground: 2, groundStrength: 0.3 }));
     }
 
@@ -620,22 +722,23 @@ export const dropship = defineAsset({
     // ── hull detail: canopy frames, portholes, crew door, nose sensor, greebles ──────────────
     const glass: Mesh[] = [];
     const detail: Mesh[] = [];
-    const rings = NOSE.map(ringOf);
-    for (const i of [1, 2]) {
-      const r0 = rings[i] ?? [];
-      const r1 = rings[i + 1] ?? [];
+    const rings = nose.map(ringOf);
+    // Panes follow the faired nose section by section; a hoop frames each design station.
+    for (let j = noseSub; j < 3 * noseSub; j++) {
+      const r0 = rings[j] ?? [];
+      const r1 = rings[j + 1] ?? [];
+      const front = j < 2 * noseSub;
       for (const k of [2, 3, 4, 5, 6]) {
-        if ((k === 2 || k === 6) && i === 1) continue;
+        if ((k === 2 || k === 6) && front) continue;
         const [a0, a1, b0, b1] = [r0[k], r0[k + 1], r1[k], r1[k + 1]];
         if (!a0 || !a1 || !b0 || !b1) continue;
         glass.push(quad(a0, a1, b1, b0, GLASS, 0.02));
-        if (lod === 0)
-          for (const [p, q] of [
-            [a0, b0],
-            [a1, b1],
-            [b0, b1],
-          ] as const)
-            detail.push(beam({ from: p, to: q, width: 0.07, color: DARK }));
+        if (lod === 0) {
+          detail.push(beam({ from: a0, to: b0, width: 0.07, color: DARK }));
+          detail.push(beam({ from: a1, to: b1, width: 0.07, color: DARK }));
+          if ((j + 1) % noseSub === 0)
+            detail.push(beam({ from: b0, to: b1, width: 0.07, color: DARK }));
+        }
       }
     }
     part('canopy', merge(glass), { surface: 'glass' });
@@ -653,14 +756,14 @@ export const dropship = defineAsset({
       for (const x of [5.45, -4.2]) seam(x, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
       // Nose: a seam ring at the windscreen station, lower faces only. The skin creases there,
       // so the line is two strips, each lying on its own loft face (2 cm either side).
-      const at = rings[3] ?? [];
+      const at = rings[3 * noseSub] ?? [];
       const toward = (other: readonly Vec3[], k: number): Vec3 => {
         const p = at[k] ?? [0, 0, 0];
         const q = other[k] ?? p;
         const t = 0.02 / Math.abs(q[0] - p[0]);
         return [p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t, p[2] + (q[2] - p[2]) * t];
       };
-      for (const side of [rings[2] ?? [], rings[4] ?? []])
+      for (const side of [rings[3 * noseSub - 1] ?? [], rings[3 * noseSub + 1] ?? []])
         for (const k of [0, 1, 7, 8, 9]) {
           const j = (k + 1) % 10;
           const [a, b] = [at[k], at[j]];
@@ -713,9 +816,14 @@ export const dropship = defineAsset({
         );
         // Blade masts: the root chord lies on the nose side wall (a vertical plane between the
         // two foremost stations), sunk 2 mm; the probe runs forward to x 10.1.
-        const [tip = CABIN, back = CABIN] = NOSE;
-        const wallY = (x: number): number =>
-          back.hw + ((tip.hw - back.hw) * (x - back.x)) / (tip.x - back.x) - DECAL;
+        const wallY = (x: number): number => {
+          const i = Math.max(
+            1,
+            nose.findIndex((st) => st.x <= x),
+          );
+          const [tip = CABIN, back = CABIN] = [nose[i - 1], nose[i]];
+          return back.hw + ((tip.hw - back.hw) * (x - back.x)) / (tip.x - back.x) - DECAL;
+        };
         for (const s of [-1, 1])
           detail.push(
             place(
@@ -895,23 +1003,7 @@ export const dropship = defineAsset({
             }),
           );
         if (lod === 0) {
-          // Hazard ring under the intake lip; exhaust vanes across the nozzle.
-          // One stripe per cowl facet (lathe rings start at −90°), so each lies on its face.
-          const facets = 24;
-          for (let k = 0; k < facets; k++) {
-            const a0 = -Math.PI / 2 + (k / facets) * Math.PI * 2;
-            const a1 = -Math.PI / 2 + ((k + 1) / facets) * Math.PI * 2;
-            const R = POD_R;
-            pod.push(
-              quad(
-                [R * Math.cos(a0), R * Math.sin(a0), 1.38],
-                [R * Math.cos(a1), R * Math.sin(a1), 1.38],
-                [R * Math.cos(a1), R * Math.sin(a1), 1.52],
-                [R * Math.cos(a0), R * Math.sin(a0), 1.52],
-                k % 2 ? BLACK : HAZARD,
-              ),
-            );
-          }
+          // Exhaust vanes across the nozzle.
           // Each vane spans the nozzle bore (r ≈ 0.76 m there) chord to chord, ends sunk 3 cm.
           for (let i = 0; i < 4; i++) {
             const x = -0.45 + i * 0.3;
@@ -920,15 +1012,31 @@ export const dropship = defineAsset({
           }
         }
       }
-      part(
-        `nacelle_${side}`,
-        grime(merge(pod), { zones: [{ at: [0, 0, -2.1], radius: 1.0, strength: 0.45 }] }),
-        {
-          at: [POD_X, s * POD_Y, WING_Z],
-          motion: { kind: 'sway', axis: [0, 1, 0], degrees: 30, hz: 0.1 },
-          clearOf: [`wing_${side}`],
-        },
-      );
+      {
+        // Hazard ring under the intake lip, at every LOD (the nacelles' identity at distance).
+        // One stripe per cowl facet (lathe rings start at −90°), so each lies on its face.
+        const facets = ctx.pick([24, 14, 8]);
+        for (let k = 0; k < facets; k++) {
+          const a0 = -Math.PI / 2 + (k / facets) * Math.PI * 2;
+          const a1 = -Math.PI / 2 + ((k + 1) / facets) * Math.PI * 2;
+          const R = POD_R;
+          pod.push(
+            quad(
+              [R * Math.cos(a0), R * Math.sin(a0), 1.38],
+              [R * Math.cos(a1), R * Math.sin(a1), 1.38],
+              [R * Math.cos(a1), R * Math.sin(a1), 1.52],
+              [R * Math.cos(a0), R * Math.sin(a0), 1.52],
+              k % 2 ? BLACK : HAZARD,
+            ),
+          );
+        }
+      }
+      // Scorched after the finish pass: the burn overrides paint, chips and dust alike.
+      ctx.part(`nacelle_${side}`, scorched(finish(merge(pod))), {
+        at: [POD_X, s * POD_Y, WING_Z],
+        motion: { kind: 'sway', axis: [0, 1, 0], degrees: 30, hz: 0.1 },
+        clearOf: [`wing_${side}`],
+      });
       if (lod < 2) {
         const blades = ctx.pick([16, 9, 0]);
         const blade = place(bevelled([0.62, 0.16, 0.025], METAL, 0), {
@@ -1103,6 +1211,20 @@ export const dropship = defineAsset({
           beam({ from: [0, 0, 0.6], to: [-0.55, 0, top - 0.02], width: 0.09, color: METAL }),
         );
         parts.push(bevelled([0.34, 0.34, 0.14], METAL, 0.01, [0, 0, pad[2]]));
+        if (lod === 0) {
+          // Hydraulic lines down the strut's front quarters, from the bay plate to the oleo
+          // gland, bedded 5 mm in the strut (a pair, so the leg stays mirror-symmetric).
+          for (const y of [-0.1, 0.1])
+            parts.push(
+              beam({
+                from: [0.105, y, top - 0.04],
+                to: [0.105, y, 0.66],
+                width: 0.035,
+                segments: 5,
+                color: DARK,
+              }),
+            );
+        }
         if (lod === 0)
           parts.push(
             hazard(
@@ -1196,12 +1318,12 @@ export const dropship = defineAsset({
 
     // ── baked AO across every static part (sponson tops, wing roots, gear bays darken) ───────
     const occluder = merge(statics.map(([, m]) => m));
-    for (const [name, mesh] of statics)
-      part(
-        name,
+    for (const [name, mesh] of statics) {
+      const baked =
         lod < 2
           ? bakeAo(mesh, { samples: ctx.pick([20, 10, 0]), radius: 1.2, strength: 0.5 }, occluder)
-          : mesh,
-      );
+          : mesh;
+      ctx.part(name, name === 'tail_boom' ? tailScorch(finish(baked)) : finish(baked));
+    }
   },
 });

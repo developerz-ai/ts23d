@@ -1,9 +1,12 @@
 // Mineable asteroid — a ~10 m rubble-pile rock for a mining game, in three seeded variants.
 // A signed-distance field meshed by `sdf`: a lumpy ellipsoid (smooth-union lobes), fractal
-// value-noise displacement, impact craters (smooth subtract + raised rims), then vertex colour:
-// carbonaceous dark rock (C-type albedo 0.03–0.09), dust on up-facing slopes, darker crater
-// floors, and nickel-iron ore veins (M-type). Glowing crystal clusters mark the mining points.
-// The bottom is clipped flat at z = 0 so it rests on (or in) the ground. +X front, Z up, metres.
+// value-noise displacement (a fine grain octave at LOD0), a few fracture facets, impact craters
+// (smooth subtract + raised rims) with boulders settled in their floors, and drill bores with
+// tailings at the mining sites; then vertex colour over the regolith strip (regolith.ts):
+// dark stony rock, dust on up-facing slopes, darker old crater floors, one fresh crater with
+// bright ejecta rays, and soft-edged nickel-iron ore veins (M-type). Glowing crystal clusters
+// mark the mining points. A free body: no flat cut — it rests on its own lowest point (sunk
+// 3 cm so it touches the ground plane). +X front, Z up, metres.
 //
 // Engine contract: `rock` (the collider-friendly mass), `ore_crystals` (glow), interact sockets
 // `mine_point_*` at each crystal cluster, `dust` emitter for mining debris.
@@ -12,6 +15,7 @@ import {
   type Asset,
   type BuildContext,
   bakeAo,
+  boundsOf,
   defineAsset,
   type Field,
   hex,
@@ -20,15 +24,21 @@ import {
   merge,
   place,
   sdf,
+  translate,
   type Vec3,
   valueNoise,
 } from '@developerz.ai/ts23d';
+import { REGOLITH } from './regolith.ts';
 
-const ROCK = hex('#3b3632');
-const ROCK_LIGHT = hex('#4f4841');
-const DUST = hex('#6a6157');
-const CRATER = hex('#26221f');
-const ORE = hex('#b78a45');
+// Over the near-white regolith strip: stony grey-brown (one step above carbonaceous black so the
+// relief reads), paler dust, dark old crater floors, bright fresh ejecta, ochre nickel-iron ore.
+const ROCK = hex('#544d46');
+const ROCK_LIGHT = hex('#6c635a');
+const DUST = hex('#867c70');
+const CRATER = hex('#3a3430');
+const EJECTA = hex('#b8ae9e');
+const TAILINGS = hex('#958b7e');
+const ORE = hex('#b98a48');
 const CRYSTAL = hex('#3fe0d0');
 const CRYSTAL_TINT = hex('#1f6f6a');
 
@@ -64,6 +74,8 @@ const ellipsoid = (p: Vec3, c: Vec3, r: Vec3): number => {
 interface Crater {
   readonly centre: V; // sphere centre (cuts the bowl)
   readonly r: number;
+  /** Outward surface normal where it struck. */
+  readonly n: V;
 }
 
 interface Shape {
@@ -72,22 +84,44 @@ interface Shape {
   readonly gradient: (p: Vec3) => V;
   /** Surface point along a ray from the core (bisection on the field). */
   readonly surface: (dir: Vec3) => V;
+  /** Half-extent of the body's bounds per axis about the core, metres. */
+  readonly extent: V;
 }
 
-// Below every variant's z radius, so the field always crosses z = 0 and the rock sits clipped flat.
-const CORE: V = [0, 0, 2.2];
+// The field is built about the origin; `lifted` raises it onto its own lowest point.
+const CORE: V = [0, 0, 0];
 
 /** The rock's field. Every draw comes from forks of `ctx.rng`, identical at every LOD. */
 function shape(ctx: BuildContext, size: V): Shape {
   const rng = ctx.rng.fork('shape');
   const big = valueNoise(rng.fork('big'), { scale: 2.8, octaves: 4 });
   const pits = valueNoise(rng.fork('pits'), { scale: 0.8, octaves: 2 });
+  // A fine grain octave where the cells can carry it (LOD0): cobble-scale lumps on the surface.
+  const fine = valueNoise(rng.fork('fine'), { scale: 0.3, octaves: 2 });
+  const grain = ctx.lod === 0 ? 0.05 : 0;
+  // Lobes scale with the body, so an elongated variant stays elongated.
   const lobes = Array.from({ length: 3 }, () => ({
-    c: [rng.range(-2.6, 2.6), rng.range(-1.8, 1.8), CORE[2] + rng.range(-0.6, 1.0)] as V,
-    r: [rng.range(1.8, 2.8), rng.range(1.6, 2.4), rng.range(1.4, 2.2)] as V,
+    c: [
+      rng.range(-0.52, 0.52) * size[0],
+      rng.range(-0.47, 0.47) * size[1],
+      CORE[2] + rng.range(-0.2, 0.33) * size[2],
+    ] as V,
+    r: [
+      rng.range(0.36, 0.56) * size[0],
+      rng.range(0.42, 0.63) * size[1],
+      rng.range(0.47, 0.73) * size[2],
+    ] as V,
   }));
-  // Fracture planes: half-spaces that chip flat, angular facets off the lumpy mass.
-  const chips = Array.from({ length: 12 }, () => {
+  const extent: V = [0, 1, 2].map(
+    (k) =>
+      Math.max(
+        size[k] ?? 0,
+        ...lobes.map((l) => Math.abs((l.c[k] ?? 0) - (CORE[k] ?? 0)) + (l.r[k] ?? 0)),
+      ) + 1.1,
+  ) as V;
+  // Fracture planes: a few half-spaces that facet the lumps (reaching far, so they chip rather
+  // than square off the sides).
+  const chips = Array.from({ length: 7 }, () => {
     const a = rng.range(0, Math.PI * 2);
     const up = rng.range(-0.2, 0.9);
     const m = norm([
@@ -96,12 +130,12 @@ function shape(ctx: BuildContext, size: V): Shape {
       up,
     ]);
     const reach = Math.abs(m[0]) * size[0] + Math.abs(m[1]) * size[1] + Math.abs(m[2]) * size[2];
-    return { m, c: reach * rng.range(0.62, 0.8) };
+    return { m, c: reach * rng.range(0.75, 0.9) };
   });
   const body = (p: Vec3): number => {
     let d = ellipsoid(p, CORE, size);
     for (const l of lobes) d = smin(d, ellipsoid(p, l.c, l.r), 1.0);
-    d += 0.65 * big(p) + 0.12 * pits(p);
+    d += 0.65 * big(p) + 0.12 * pits(p) + grain * fine(p);
     const x = p[0] - CORE[0];
     const y = p[1] - CORE[1];
     const z = p[2] - CORE[2];
@@ -124,7 +158,7 @@ function shape(ctx: BuildContext, size: V): Shape {
     (dir: Vec3): V => {
       const d = norm(dir);
       let lo = 0;
-      let hi = 9;
+      let hi = 16;
       for (let i = 0; i < 40; i++) {
         const t = (lo + hi) / 2;
         if (f([CORE[0] + d[0] * t, CORE[1] + d[1] * t, CORE[2] + d[2] * t]) < 0) lo = t;
@@ -147,7 +181,39 @@ function shape(ctx: BuildContext, size: V): Shape {
     return {
       centre: [s[0] + n[0] * r * 0.6, s[1] + n[1] * r * 0.6, s[2] + n[2] * r * 0.6],
       r,
+      n,
     };
+  });
+  // Boulders settled in the floors of the larger craters (ejecta that fell back).
+  const settled: { c: V; r: number }[] = [];
+  craters.forEach((cr, i) => {
+    if (cr.r < 0.8) return;
+    const t1 = norm(Math.abs(cr.n[2]) < 0.9 ? [-cr.n[1], cr.n[0], 0] : [1, 0, 0]);
+    const t2: V = [
+      cr.n[1] * t1[2] - cr.n[2] * t1[1],
+      cr.n[2] * t1[0] - cr.n[0] * t1[2],
+      cr.n[0] * t1[1] - cr.n[1] * t1[0],
+    ];
+    for (let k = 0; k < (i < 2 ? 5 : 3); k++) {
+      const a = rng.range(0, Math.PI * 2);
+      const u = rng.range(0, 0.55) * cr.r;
+      const q: V = [
+        cr.centre[0] - cr.n[0] * cr.r + (t1[0] * Math.cos(a) + t2[0] * Math.sin(a)) * u,
+        cr.centre[1] - cr.n[1] * cr.r + (t1[1] * Math.cos(a) + t2[1] * Math.sin(a)) * u,
+        cr.centre[2] - cr.n[2] * cr.r + (t1[2] * Math.cos(a) + t2[2] * Math.sin(a)) * u,
+      ];
+      // Onto the bowl (the crater sphere), then half its radius out into the crater.
+      const o = norm([q[0] - cr.centre[0], q[1] - cr.centre[1], q[2] - cr.centre[2]]);
+      const rb = rng.range(0.16, 0.42) * Math.min(1, cr.r);
+      settled.push({
+        c: [
+          cr.centre[0] + o[0] * (cr.r - rb * 0.45),
+          cr.centre[1] + o[1] * (cr.r - rb * 0.45),
+          cr.centre[2] + o[2] * (cr.r - rb * 0.45),
+        ],
+        r: rb,
+      });
+    }
   });
   const field: Field = (p) => {
     let d = body(p);
@@ -159,9 +225,13 @@ function shape(ctx: BuildContext, size: V): Shape {
       if (u > -3 && u < 3) d -= c.r * 0.16 * Math.exp(-u * u);
       d = smax(d, -(ds - c.r), c.r * 0.3);
     }
+    for (const b of settled) {
+      const db = len(p[0] - b.c[0], p[1] - b.c[1], p[2] - b.c[2]) - b.r + 0.06 * pits(p);
+      d = smin(d, db, 0.08);
+    }
     return d;
   };
-  return { field, craters, gradient: gradOf(field), surface: surfaceOf(field) };
+  return { field, craters, gradient: gradOf(field), surface: surfaceOf(field), extent };
 }
 
 /** One faceted crystal, base at the origin growing up +Z: hexagonal prism with a pointed tip. */
@@ -198,11 +268,13 @@ function asteroidVariant(
       'https://starlust.org/what-are-the-different-types-of-asteroids',
     ],
     budget: { triangles },
-    glow: [{ parts: ['ore_crystals'], color: CRYSTAL, strength: 5 }],
+    // Lit from inside but still cyan with readable facets (5 clipped them to flat white-cyan).
+    glow: [{ parts: ['ore_crystals'], color: CRYSTAL, strength: 0.8 }],
     build(ctx) {
       const s = shape(ctx, size);
       const veins = valueNoise(ctx.rng.fork('veins'), { scale: 1.9, octaves: 2 });
       const tone = valueNoise(ctx.rng.fork('tone'), { scale: 1.2, octaves: 3 });
+      const rays = valueNoise(ctx.rng.fork('rays'), { scale: 0.6, octaves: 2 });
       // Mining points: cluster sites on the upper half, away from the two big craters.
       const pick = ctx.rng.fork('clusters');
       const sites = Array.from({ length: 4 }, () => {
@@ -215,50 +287,68 @@ function asteroidVariant(
         ]);
         return { p, n: s.gradient(p) };
       });
+      const mine = workings(s, sites, ctx.rng.fork('drills'));
+      // The youngest impact: a mid-sized crater, its floor fresh and its ejecta rayed out.
+      const fresh = s.craters[2];
       const color = (p: Vec3, n: Vec3): Vec3 => {
         let near = 99;
         for (const site of sites)
           near = Math.min(near, len(p[0] - site.p[0], p[1] - site.p[1], p[2] - site.p[2]));
         let c = mix(ROCK, ROCK_LIGHT, step(-0.25, 0.35, tone(p)));
         c = mix(c, DUST, step(0.55, 0.85, n[2]) * 0.8);
-        const vein = 1 - step(0.018, 0.05, Math.abs(veins(p)));
-        c = mix(c, near < 2.4 ? CRYSTAL_TINT : ORE, vein);
+        // Veins: a soft core and halo wider than a cell, so they blend across vertices instead
+        // of stair-stepping; dropped at LOD2, where cells are wider than any vein.
+        if (ctx.lod < 2) {
+          // (Core and halo three LOD0 cells wide: one cell wide they stair-step cell by cell.)
+          const vein = (1 - step(0.02, 0.13, Math.abs(veins(p)))) * 0.8;
+          c = mix(c, near < 2.4 ? CRYSTAL_TINT : ORE, vein);
+        }
         c = mix(c, CRYSTAL_TINT, (1 - step(0.6, 1.6, near)) * 0.7);
+        // Tailings: crushed, paler regolith spread round each working.
+        c = mix(c, TAILINGS, (1 - step(1.2, 2.6, near)) * 0.55 * (0.6 + 0.4 * tone(p)));
         for (const cr of s.craters) {
+          if (cr === fresh) continue;
           const d = len(p[0] - cr.centre[0], p[1] - cr.centre[1], p[2] - cr.centre[2]);
           c = mix(c, CRATER, (1 - step(cr.r * 0.8, cr.r * 1.2, d)) * 0.85);
         }
-        // Tints over the asphalt strip's own dark grey: lift by ~2.4 so albedo × tint lands on the
-        // same dark carbonaceous values as the old plain strip.
-        return [Math.min(1, c[0] * 2.4), Math.min(1, c[1] * 2.4), Math.min(1, c[2] * 2.4)];
+        if (fresh) c = mix(c, EJECTA, ejecta(p, fresh, rays));
+        // LOD2 carries no baked AO: darken to LOD0's mean so the switch does not pop lighter.
+        return ctx.lod === 2 ? [c[0] * 0.84, c[1] * 0.84, c[2] * 0.84] : c;
       };
-      const ext = Math.max(...size) + 3.2;
-      const rock = sdf({
-        field: s.field,
+      const ext = s.extent;
+      const raw = sdf({
+        field: mine.field,
         bounds: [
-          [-ext, -ext, 0],
-          [ext, ext, CORE[2] + size[2] + 2.2],
+          [CORE[0] - ext[0], CORE[1] - ext[1], CORE[2] - ext[2]],
+          [CORE[0] + ext[0], CORE[1] + ext[1], CORE[2] + ext[2]],
         ],
-        resolution: ctx.pick([0.17, 0.38, 0.95]),
+        resolution: ctx.pick([0.2, 0.85, 1.5]),
         color,
         lipschitz: 2,
-        // Regolith: the asphalt strip's aggregate and hairline cracks read as dark gravelly rock.
-        strip: 'asphalt',
+        strip: REGOLITH,
       });
+      // A free body resting on its own lowest vertex at this LOD, sunk 3 cm into the ground plane.
+      const lift = -0.03 - boundsOf(raw).min[2];
+      const up = (p: Vec3): V => [p[0], p[1], p[2] + lift];
+      const rock = translate(merge([raw, ...(ctx.lod < 2 ? [mine.rubble(ctx.lod)] : [])]), [
+        0,
+        0,
+        lift,
+      ]);
       ctx.part(
         'rock',
         ctx.lod < 2
           ? bakeAo(rock, {
               samples: ctx.pick([16, 8, 0]),
               radius: 1.5,
-              strength: 0.55,
-              ground: true,
+              strength: 0.45,
+              ground: false,
             })
           : rock,
       );
 
-      // Crystal clusters: 7 / 4 / 1 shards per site, sunk 0.3 m into the rock along its normal.
-      const shards = ctx.pick([11, 5, 1]);
+      // Crystal clusters: 11 / 3 / 1 shards per site, sunk 0.3 m into the rock along its normal.
+      const shards = ctx.pick([11, 3, 1]);
       const seg = ctx.pick([6, 6, 4]);
       const grow = ctx.rng.fork('shards');
       const out: Mesh[] = [];
@@ -283,25 +373,22 @@ function asteroidVariant(
           const h = k === 0 ? 1.9 : grow.range(0.6, 1.4);
           out.push(
             place(crystal(r, h, seg), {
-              at: base,
+              at: up(base),
               yaw: Math.atan2(n[1], n[0]),
               pitch: Math.acos(Math.max(-1, Math.min(1, n[2]))),
             }),
           );
         }
+        const at = up(site.p);
         ctx.socket(`mine_point_${i}`, {
           kind: 'interact',
-          at: [
-            site.p[0] + site.n[0] * 0.8,
-            site.p[1] + site.n[1] * 0.8,
-            site.p[2] + site.n[2] * 0.8,
-          ],
+          at: [at[0] + site.n[0] * 0.8, at[1] + site.n[1] * 0.8, at[2] + site.n[2] * 0.8],
           dir: [-site.n[0], -site.n[1], -site.n[2]],
           data: { resource: 'crystal', yield: 120 },
         });
       });
       ctx.part('ore_crystals', merge(out));
-      const top = s.surface([0, 0, 1]);
+      const top = up(s.surface([0, 0, 1]));
       ctx.emitter('dust', {
         kind: 'dust',
         at: [top[0], top[1], top[2] + 0.2],
@@ -316,24 +403,127 @@ function asteroidVariant(
   });
 }
 
+/** Ejecta weight 0..1 round a fresh crater: a bright floor and rim, rays fading out to ~4 r. */
+function ejecta(p: Vec3, cr: Crater, rays: (p: Vec3) => number): number {
+  const v: V = [p[0] - cr.centre[0], p[1] - cr.centre[1], p[2] - cr.centre[2]];
+  const d = len(v[0], v[1], v[2]);
+  if (d > cr.r * 4.5) return 0;
+  const t1 = norm(Math.abs(cr.n[2]) < 0.9 ? [-cr.n[1], cr.n[0], 0] : [1, 0, 0]);
+  const t2: V = [
+    cr.n[1] * t1[2] - cr.n[2] * t1[1],
+    cr.n[2] * t1[0] - cr.n[0] * t1[2],
+    cr.n[0] * t1[1] - cr.n[1] * t1[0],
+  ];
+  const ang = Math.atan2(
+    v[0] * t2[0] + v[1] * t2[1] + v[2] * t2[2],
+    v[0] * t1[0] + v[1] * t1[1] + v[2] * t1[2],
+  );
+  const ray = Math.max(0, Math.cos(7 * ang + 1.6 * Math.sin(3 * ang) + 0.8 * rays(p))) ** 3;
+  const bowl = 1 - step(cr.r * 0.9, cr.r * 1.35, d);
+  const fade = 1 - step(cr.r * 1.2, cr.r * 4.5, d);
+  return Math.min(0.9, 0.75 * bowl + ray * fade);
+}
+
+/**
+ * The mining workings at each crystal site: three drill bores sunk into the rock beside it (cut
+ * from the field) and a heap of broken tailings lumps on the surface below them.
+ */
+function workings(
+  s: Shape,
+  sites: readonly { p: V; n: V }[],
+  rng: { range: (a: number, b: number) => number },
+): { field: Field; rubble: (lod: number) => Mesh } {
+  const bores: { a: V; b: V }[] = [];
+  const lumps: { c: V; r: number }[] = [];
+  for (const site of sites) {
+    const t1 = norm(Math.abs(site.n[2]) < 0.9 ? [-site.n[1], site.n[0], 0] : [1, 0, 0]);
+    for (let k = 0; k < 3; k++) {
+      const a = (k / 3) * Math.PI * 2 + rng.range(-0.4, 0.4);
+      const t2: V = [
+        site.n[1] * t1[2] - site.n[2] * t1[1],
+        site.n[2] * t1[0] - site.n[0] * t1[2],
+        site.n[0] * t1[1] - site.n[1] * t1[0],
+      ];
+      const off = rng.range(0.75, 1.1);
+      const q = s.surface([
+        site.p[0] + (t1[0] * Math.cos(a) + t2[0] * Math.sin(a)) * off - CORE[0],
+        site.p[1] + (t1[1] * Math.cos(a) + t2[1] * Math.sin(a)) * off - CORE[1],
+        site.p[2] + (t1[2] * Math.cos(a) + t2[2] * Math.sin(a)) * off - CORE[2],
+      ]);
+      const n = s.gradient(q);
+      bores.push({
+        a: [q[0] + n[0] * 0.4, q[1] + n[1] * 0.4, q[2] + n[2] * 0.4],
+        b: [q[0] - n[0] * 0.9, q[1] - n[1] * 0.9, q[2] - n[2] * 0.9],
+      });
+      // Tailings: lumps of spoil heaped on the surface just past each bore.
+      for (let j = 0; j < 3; j++) {
+        const g = s.surface([
+          q[0] + (t1[0] * Math.cos(a) + t2[0] * Math.sin(a)) * (0.5 + 0.25 * j) - CORE[0],
+          q[1] + (t1[1] * Math.cos(a) + t2[1] * Math.sin(a)) * (0.5 + 0.25 * j) - CORE[1],
+          q[2] + (t1[2] * Math.cos(a) + t2[2] * Math.sin(a)) * (0.5 + 0.25 * j) - CORE[2],
+        ]);
+        lumps.push({ c: g, r: rng.range(0.1, 0.2) });
+      }
+    }
+  }
+  const capsule = (p: Vec3, a: V, b: V): number => {
+    const ab: V = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
+    const ap: V = [p[0] - a[0], p[1] - a[1], p[2] - a[2]];
+    const t = Math.max(
+      0,
+      Math.min(
+        1,
+        (ap[0] * ab[0] + ap[1] * ab[1] + ap[2] * ab[2]) / (ab[0] ** 2 + ab[1] ** 2 + ab[2] ** 2),
+      ),
+    );
+    return len(ap[0] - ab[0] * t, ap[1] - ab[1] * t, ap[2] - ab[2] * t);
+  };
+  const field: Field = (p) => {
+    let d = s.field(p);
+    for (const b of bores) d = smax(d, -(capsule(p, b.a, b.b) - 0.14), 0.05);
+    return d;
+  };
+  const rubble = (lod: number): Mesh =>
+    merge(
+      lumps.map((l) =>
+        place(
+          lathe({
+            profile: [
+              [0.0001, -l.r * 0.5],
+              [l.r, -l.r * 0.15],
+              [l.r * 0.8, l.r * 0.45],
+              [0.0001, l.r * 0.7],
+            ],
+            segments: lod === 0 ? 5 : 4,
+            color: TAILINGS,
+            creaseDeg: 20,
+            strip: REGOLITH,
+          }),
+          { at: l.c, yaw: l.r * 40 },
+        ),
+      ),
+    );
+  return { field, rubble };
+}
+
 export const asteroid = asteroidVariant(
   'asteroid',
   1,
   [5.0, 3.8, 3.0],
   'Mineable ~10 m asteroid: SDF rock with craters, ore veins and glowing crystal clusters',
-  [24000, 5200, 760],
+  [21500, 3700, 420],
 );
 export const asteroid_b = asteroidVariant(
   'asteroid_b',
   2,
   [4.2, 4.0, 3.3],
   'Rounder asteroid variant (seed 2) with craters, ore veins and crystal clusters',
-  [21500, 4800, 670],
+  [20500, 3600, 380],
 );
 export const asteroid_c = asteroidVariant(
   'asteroid_c',
   3,
-  [5.6, 3.2, 2.6],
+  [6.6, 3.0, 2.5],
   'Elongated asteroid shard variant (seed 3) with craters, ore veins and crystal clusters',
-  [24500, 5300, 750],
+  [22500, 3750, 420],
 );

@@ -140,27 +140,51 @@ export function rearPlate(o: RearSpec): Mesh[] {
   const out: Mesh[] = [];
   for (const s of [1, -1]) {
     const e = exhaustAt(o, s);
+    // Elbow stub out of the plate (hidden inside the cover at the far LOD), then the tall
+    // vertical pipe with a flared mouth.
+    if (lod < 2)
+      out.push(
+        beam({
+          from: [o.rearX(e.stubZ) + 0.02, e.y, e.stubZ],
+          to: [e.x, e.y, e.stubZ],
+          width: 0.15,
+          segments: segs,
+          color: rust,
+        }),
+      );
     out.push(
-      // Elbow stub out of the plate, then the tall vertical pipe with a flared mouth.
-      beam({
-        from: [o.rearX(e.stubZ) + 0.02, e.y, e.stubZ],
-        to: [e.x, e.y, e.stubZ],
-        width: 0.15,
-        segments: segs,
-        color: rust,
-      }),
       lathe({
-        profile: [
-          [0.085, 0],
-          [0.085, e.top - e.stubZ - 0.05],
-          [0.1, e.top - e.stubZ],
-          [0.075, e.top - e.stubZ],
-        ],
-        segments: segs,
+        profile:
+          lod === 2
+            ? [
+                [0.09, 0.2],
+                [0.09, e.top - e.stubZ],
+              ]
+            : [
+                [0.085, 0],
+                [0.085, e.top - e.stubZ - 0.05],
+                [0.1, e.top - e.stubZ],
+                [0.075, e.top - e.stubZ],
+              ],
+        segments: lod === 2 ? 5 : segs,
         at: [e.x, e.y, e.stubZ - 0.08],
         color: rust,
       }),
     );
+    if (lod === 2) {
+      // Far: the armoured cover as one box from the plate round the pipe (the rear's two blocks).
+      const z0 = e.stubZ + 0.06;
+      const h = e.top - 0.06 - z0;
+      const back = o.rearX(z0 + h / 2);
+      out.push(
+        box({
+          size: [back - (e.x - 0.13), 0.3, h],
+          at: [(back + e.x - 0.13) / 2, e.y, z0],
+          color: paint,
+          omit: ['bottom'],
+        }),
+      );
+    }
     if (lod < 2) {
       // Armoured exhaust cover: a three-sided shroud from the plate round the pipe, open on top.
       const h = e.top - 0.06 - (e.stubZ + 0.06);

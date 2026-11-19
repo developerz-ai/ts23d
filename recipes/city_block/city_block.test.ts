@@ -89,6 +89,28 @@ describe('city_block from the pinned West Village extract', () => {
     }
   });
 
+  it('keeps each cornice the same depth from LOD0 to LOD1 (no LOD-only draw shifts the rng)', () => {
+    const c1 = compile(city_block, { lod: 1 });
+    const plan = (m: Mesh | null | undefined): number[] => {
+      const P = m?.positions ?? new Float32Array();
+      const b = [Infinity, Infinity, -Infinity, -Infinity];
+      for (let i = 0; i < P.length; i += 3) {
+        b[0] = Math.min(b[0] ?? 0, P[i] ?? 0);
+        b[1] = Math.min(b[1] ?? 0, P[i + 1] ?? 0);
+        b[2] = Math.max(b[2] ?? 0, P[i] ?? 0);
+        b[3] = Math.max(b[3] ?? 0, P[i + 1] ?? 0);
+      }
+      return b;
+    };
+    const cornices = c0.parts.filter((p) => p.name.endsWith('_cornice'));
+    expect(cornices.length).toBeGreaterThan(5);
+    for (const near of cornices) {
+      const far = c1.parts.find((p) => p.name === near.name);
+      const [a, b] = [plan(near.mesh), plan(far?.mesh)];
+      for (let k = 0; k < 4; k++) expect(b[k] ?? 0).toBeCloseTo(a[k] ?? 0, 3);
+    }
+  });
+
   it('two neighbours are never identical', () => {
     const plans = cityPlan(BUILDINGS, STYLE);
     const byId = new Map(plans.map((p) => [p.id, p]));

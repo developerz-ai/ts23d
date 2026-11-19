@@ -82,9 +82,16 @@ export {
 } from './errors.ts';
 export { defineFamily, type Family, type FamilyDefinition, type Variant } from './family.ts';
 export { formatCount } from './format-count.ts';
+export { HERO_RANGE, type HeroView, heroViewFault } from './hero-view.ts';
 export { type JointFit, type JointIssue, jointFit } from './joint-fit.ts';
 export * from './limb-pairs.ts';
 export * from './limit-tolerance.ts';
+export {
+  type MaterialUse,
+  materialsInUse,
+  noteMaterial,
+  trackMaterials,
+} from './material-use.ts';
 export {
   type Bounds,
   boundsOf,

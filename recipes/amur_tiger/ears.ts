@@ -25,7 +25,9 @@ export const EAR = (() => {
   // Orthonormalise: face ⟂ up, side = up × face.
   const face = v3.norm(v3.sub(face0, v3.mul(up, v3.dot(face0, up))));
   const side = v3.cross(up, face);
-  return { base, up, face, side, height: 0.076, width: 0.037, thick: 0.012 };
+  // Thick with fur and as wide as it is tall: a rounded ear from every side (a thin plate read
+  // as a disc face-on and a spike edge-on).
+  return { base, up, face, side, height: 0.076, width: 0.04, thick: 0.017 };
 })();
 
 /** Ear-local coordinates (face, side, up) of a head-local point, origin at the ear's centre. */
@@ -59,13 +61,13 @@ function earBlob(off: Vec3, r: Vec3, op: 'add' | 'subtract', blend: number): Scu
   };
 }
 
-export function earEdits(lod: number): SculptEdit[] {
+export function earEdits(lod: number, notch = false): SculptEdit[] {
   const h = EAR.height / 2;
   const out: SculptEdit[] = [
     // Pinna: a rounded plate, a little narrower toward the round tip.
     earBlob([0, 0, 0], [EAR.thick, EAR.width, h], 'add', 0),
     // Root: thickens into the crown and sinks below it.
-    earBlob([-0.006, 0, -h * 1.15], [0.026, EAR.width * 1.05, 0.036], 'add', 0.022),
+    earBlob([-0.006, 0, -h * 1.15], [0.03, EAR.width * 1.08, 0.038], 'add', 0.026),
   ];
   if (lod < 2)
     // The cup: hollow the front, leaving a thick rim.
@@ -81,6 +83,9 @@ export function earEdits(lod: number): SculptEdit[] {
   out.push(
     earBlob([EAR.thick * 0.35, 0, -h * 0.45], [0.008, EAR.width * 0.55, h * 0.4], 'add', 0.006),
   );
+  if (notch && lod < 2)
+    // A bite out of the outer rim, healed: the mark of an old fight.
+    out.push(earBlob([0, EAR.width * 0.98, h * 0.3], [0.03, 0.011, 0.012], 'subtract', 0.004));
   return out;
 }
 
@@ -96,17 +101,24 @@ export function earPaint(p: Vec3, _c: Vec3): Vec3 {
   // Inside: pale fur, the deep cup pinkish, a dark rim at the edge.
   const rim = smoothstep(0.78, 0.95, rr);
   const deep = smoothstep(0.004, -0.004, q[0] - EAR.thick * 0.2) * smoothstep(0.7, 0.3, rr);
-  const front = mixRgb(mixRgb(C.earInside, C.earSkin, deep * 0.6), C.earBack, rim);
+  // The pale furnishings fill the lower cup only; toward the rim the inside darkens to the
+  // back's black, so the ear never shows as one pale disc.
+  const inside = mixRgb(C.earInside, C.orange, smoothstep(-h * 0.1, h * 0.5, q[2]) * 0.55);
+  const front = mixRgb(
+    mixRgb(inside, C.earSkin, deep * 0.6),
+    C.earBack,
+    Math.max(rim, smoothstep(0.55, 0.95, rr) * 0.6),
+  );
   // The root shades into the crown's orange.
   const root = smoothstep(-h * 0.7, -h * 1.05, q[2]);
   const col = mixRgb(mixRgb(front, backCol, back), C.orange, root);
   return col;
 }
 
-export const EAR_RES = [0.0034, 0.009, 0.02] as const;
+export const EAR_RES = [0.0046, 0.009, 0.02] as const;
 
-/** Left ear in the head-local frame. */
-export function earMesh(lod: 0 | 1 | 2): Mesh {
+/** Left ear in the head-local frame; `notch` bites its outer rim (one ear only, by the caller). */
+export function earMesh(lod: 0 | 1 | 2, notch = false): Mesh {
   if (lod === 2) {
     // Far LOD: a flattened blob in the ear's frame (a coarse sculpt would tear the thin pinna).
     const c = v3.add(EAR.base, v3.mul(EAR.up, EAR.height * 0.3));
@@ -118,7 +130,7 @@ export function earMesh(lod: 0 | 1 | 2): Mesh {
     return applyAffine(m, frame(EAR.face, EAR.side, EAR.up, c));
   }
   return sculptPart({
-    edits: earEdits(lod),
+    edits: earEdits(lod, notch),
     res: EAR_RES[lod],
     color: C.earBack,
     paint: earPaint,

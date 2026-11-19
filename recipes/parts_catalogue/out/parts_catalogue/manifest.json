@@ -18,9 +18,9 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    41606,
-    19638,
-    11066
+    49882,
+    19746,
+    3440
   ],
   "drawCalls": [
     10,
@@ -84,6 +84,83 @@
   ],
   "measures": [],
   "sources": [],
+  "weather": {
+    "rust": {
+      "target": 0.2556,
+      "actual": 0.2556,
+      "eligible": "convex-edges ; convex-edges & !up-facing",
+      "area": 1.6772,
+      "by": {
+        "drum_wear": {
+          "target": 0.3,
+          "actual": 0.3,
+          "area": 1.1802
+        },
+        "beam_i_wear": {
+          "target": 0.15,
+          "actual": 0.15,
+          "area": 0.2584
+        },
+        "beam_c_wear": {
+          "target": 0.15,
+          "actual": 0.15,
+          "area": 0.2386
+        }
+      }
+    },
+    "mud": {
+      "target": 0.3373,
+      "actual": 0.3373,
+      "eligible": "ground-near & side-facing",
+      "area": 1.5609,
+      "by": {
+        "drum_wear": {
+          "target": 0.3,
+          "actual": 0.3,
+          "area": 0.3952
+        },
+        "crate_wear": {
+          "target": 0.35,
+          "actual": 0.35,
+          "area": 1.1657
+        }
+      }
+    },
+    "dust": {
+      "target": 0.3874,
+      "actual": 0.3874,
+      "eligible": "up-facing",
+      "area": 1.4116,
+      "by": {
+        "drum_wear": {
+          "target": 0.4,
+          "actual": 0.4,
+          "area": 0.2778
+        },
+        "crate_wear": {
+          "target": 0.4,
+          "actual": 0.4,
+          "area": 0.7769
+        },
+        "beam_i_wear": {
+          "target": 0.35,
+          "actual": 0.35,
+          "area": 0.2333
+        },
+        "beam_c_wear": {
+          "target": 0.35,
+          "actual": 0.35,
+          "area": 0.1236
+        }
+      }
+    },
+    "chips": {
+      "target": 0.25,
+      "actual": 0.25,
+      "eligible": "convex-edges",
+      "area": 3.3338
+    }
+  },
   "qa": {
     "pass": true,
     "findings": []

@@ -27,10 +27,11 @@ export const elf_head = defineAsset({
     'docs/research/head-analysis.md (human anchor ratios, Lee Perry-Smith scan, CC BY 3.0)',
   ],
   // Design spec (an invented character): overall size as built; the measure is the eye spacing.
+  // (Width is the cloaked shoulders, sawn off at the shoulder point; length nose tip → the hair's fall.)
   real: {
-    length: 0.29,
-    width: 0.491,
-    height: 0.559,
+    length: 0.283,
+    width: 0.316,
+    height: 0.573,
     measures: [
       {
         label: 'eye spacing (pupil to pupil)',
@@ -41,9 +42,17 @@ export const elf_head = defineAsset({
       },
     ],
   },
-  // LOD0 +6k (measured 2026-11): the brow cards (≈ 2k) and the denser beard / crown cover.
-  budget: { triangles: [106000, 32000, 4200] },
-  finishes: { cornea: { clearcoat: 1, clearcoatRoughness: 0.04 } },
+  // LOD0: the head's skin ≈ 31k (head 28k, bust 2.7k), the hair cards ≈ 15k, tunic, cloak and
+  // braid ≈ 20k.
+  // Draws: skin, face-node cloth, static fittings, corneas, hair cards.
+  budget: { triangles: [74000, 20000, 3400], draws: 5 },
+  // The eyeballs' cornea (a clear lacquer over the painted iris) and the skin: the pore strip's
+  // own roughness (matte cheeks, a glossier T-zone) under a soft grazing sheen. The silk and the
+  // wool are strips of their own (../_lib/bust/cloth-strips.ts): smooth against matte, no finish.
+  finishes: {
+    cornea: { clearcoat: 1, clearcoatRoughness: 0.04 },
+    skin: { sheen: { colour: '#a08c80', roughness: 0.45 } },
+  },
   art: { focal: 'head', shape: 'friendly' },
   // Intended creases (QA `connections` skips them): one small region per sculpted fold, from the
   // geometry that sculpts it (creases.ts) — never an area.

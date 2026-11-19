@@ -258,7 +258,7 @@ export function flankLine(bury: number): Vec3[] {
 }
 
 /** Sculpt cell per LOD (metres). */
-export const BODY_RES = [0.044, 0.085, 0.25] as const;
+export const BODY_RES = [0.057, 0.15, 0.25] as const;
 
 export interface BodyMeshes {
   readonly body: Mesh;

@@ -19,7 +19,7 @@ export function intake(lod: Lod): Mesh {
   if (!lb || !rb) return merge([]);
   const x0 = Math.min(headSpan(lb)[0], headSpan(rb)[0]) + 0.03;
   const x1 = Math.max(headSpan(lb)[1], headSpan(rb)[1]) - 0.01;
-  const segs = lod === 0 ? 14 : 7;
+  const segs = lod === 0 ? 10 : 6;
   const parts: Mesh[] = [
     bx(
       [x0, -0.075, PLENUM_Z - 0.03],
@@ -42,7 +42,7 @@ export function intake(lod: Lod): Mesh {
           [x, s * 0.17, port[2] + 0.03],
           port,
         ];
-        parts.push(tube(path, 0.044, C.alloyCast, 'aluminium', segs, lod === 0 ? 5 : 2));
+        parts.push(tube(path, 0.044, C.alloyCast, 'aluminium', segs, lod === 0 ? 3 : 1));
         if (lod === 0) {
           // Port flange where the runner bolts to the head.
           parts.push(

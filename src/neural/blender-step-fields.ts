@@ -137,6 +137,7 @@ const FIELDS: Readonly<Record<string, Readonly<Record<string, Field>>>> = {
     r: req(pos),
     feather: opt(pos, 0.03),
     maxShare: opt(num(0, 1, true), 0.25),
+    contact: opt(pos),
   },
   script: { python: req(text(65_536)), why: req(text(400)) },
   review: {

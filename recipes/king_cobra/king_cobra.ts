@@ -24,7 +24,7 @@ import {
 import { cobraClips } from './clips.ts';
 import { eyeMesh, eyePoint, headMesh, tongueMesh } from './head.ts';
 import { frameAt, halfW, surfacePoint, TOTAL } from './shape.ts';
-import { skinBody } from './skin.ts';
+import { bodyArc, skinBody } from './skin.ts';
 import type { CobraRig } from './solve.ts';
 import { HOOD_RINGS, scaleSheet, scutes, trunkMesh } from './surface.ts';
 
@@ -89,7 +89,7 @@ export const RIG: CobraRig = {
     if (!bone) return [];
     const i = Number(c.spec.split('_')[2]);
     const out = norm(sub(bone.tail, bone.head));
-    return [{ bone: bone.name, fold: norm(cross(out, frameAt(RIBS[i] ?? 0.2).d)) }];
+    return [{ bone: bone.name, fold: norm(cross(out, frameAt(RIBS[i] ?? 0.2).t)) }];
   }),
   tongue: bonesOf(PLAN, 'tongue'),
   tongueBack: mouth.t,
@@ -102,7 +102,7 @@ export const king_cobra = defineAsset({
   name: 'king_cobra',
   kind: 'creature',
   description:
-    'King cobra, 3.5 m, front third raised with the long narrow hood spread: 15-row scales with pale chevron bands, broad ventral scutes, head shields with the paired occipitals, forked tongue.',
+    'King cobra, 3.5 m, front third raised with the long hood spread: 15-row glossy scales with pale chevron crossbands, broad ventral scutes, head shields with the paired occipitals, forked tongue; a milky pre-shed patch, a healed bite scar and scuffed tail scutes.',
   tags: ['creature', 'reptile', 'snake', 'cobra', 'animated'],
   sources: [
     SOURCE,
@@ -110,7 +110,8 @@ export const king_cobra = defineAsset({
     'https://commons.wikimedia.org/wiki/File:King-Cobra.jpg',
   ],
   real: { length: 0.56, width: 0.55, height: 0.78 },
-  budget: { triangles: [72000, 4500, 640], bones: PLAN.bones.length },
+  // LOD1 holds ~9 k: enough rings that the bands still resolve and the switch from 62 k is no pop.
+  budget: { triangles: [72000, 11000, 640], bones: PLAN.bones.length },
   art: { grounded: false, focal: 'body' },
   creases: [
     // Local on purpose: the mouth line each side, and the shield sutures over the crown.
@@ -155,7 +156,14 @@ export const king_cobra = defineAsset({
     );
     const head = spine.slice(0, 2);
     const body = (m: Mesh): Mesh =>
-      skinBody(m, PLAN, { spine, ribs, hoodLinks: linkOf(0.5), window: 2, blend: 0.035 });
+      skinBody(m, PLAN, {
+        spine,
+        ribs,
+        hoodLinks: linkOf(0.5),
+        window: 2,
+        blend: 0.035,
+        link: (p, n) => linkOf(bodyArc(p, n)),
+      });
     const stiff = (m: Mesh): Mesh => skinTo(m, PLAN, head, 0.02);
     const tongueBones = bonesOf(PLAN, 'tongue');
     ctx.part(

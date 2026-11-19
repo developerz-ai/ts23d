@@ -1,64 +1,61 @@
 {
   "asset": "face_dwarf",
   "reviewer": "agent",
-  "overall": 5.1,
+  "overall": 5.9,
   "scores": {
     "silhouette": {
-      "score": 6,
-      "reason": "Spade beard, broad nose, wide jaw and thick neck read as a dwarf; the beard sides are slab-like and the locks tube-like; the hero reads closer to a ginger man than a dwarf.",
+      "score": 7,
+      "reason": "Tapered beard with locks and a full hair mass read as a dwarf in FRONT and 3/4; in SIDE a moustache strand sticks out from the face like a straw.",
       "fixes": [
-        "taper the beard sides and let locks overlap the mass edge; braid two front locks"
+        "curl the moustache ends down into the beard so no strand pokes forward in SIDE"
       ]
     },
     "proportions": {
       "score": 6,
-      "reason": "Short face, broad nose and wide jaw hold; eye spacing on spec. Older age shows only in nose and lobes.",
+      "reason": "The face reads young and smooth for a dwarf: no deep nasolabial folds, no lid sag, a narrow nose.",
       "fixes": [
-        "stronger age: deeper nasolabial folds and lid sag as displacement"
+        "stronger age: deeper nasolabial folds and lid sag as displacement; broader nose"
       ]
     },
     "materials": {
-      "score": 4,
-      "reason": "Vertex colour on the plain strip: skin zones (flush, lips, cool sockets) separate by hue but not by roughness or subsurface; the hair is the same material as the skin, so it reads as sculpted clay; there is a pale band of bare skin under the hair helmet edge at the hairline in hero.png.",
+      "score": 5,
+      "reason": "Skin reads as matte plastic with a uniform pink-beige and dark spot decals; no subsurface warmth at ears/nose, no wet eyes or lips. The beard and hair cards read as hair with some value variation.",
       "fixes": [
-        "a skin strip with subsurface-like roughness/sheen and a hair strip with anisotropic sheen",
-        "darker hair roots and per-lock value variation along each lock",
-        "close the hairline: extend the hair mass to the skin (or tint the scalp under it to the root colour) so no pale band shows"
+        "skin strip with sheen/lower roughness on the T-zone, red warmth at ears, nose and lips; glossy eyes and wet lip line",
+        "hair strip with anisotropic sheen and darker roots, per-card value variation"
       ]
     },
     "detail": {
-      "score": 5,
-      "reason": "Primary and secondary forms come from a real anatomical base (lids, nasolabial area, lips, ear helix, clavicles, sternocleidomastoid), but there is no tertiary layer (pores, wrinkles) and the hair is evenly spaced grooves.",
+      "score": 6,
+      "reason": "Beard and hair cards with varied locks; the face has no pores or wrinkles at the hero distance.",
       "fixes": [
-        "LOD0 wrinkle/pore displacement on the subdivided base driven by age",
-        "varied lock widths and a parting instead of evenly spaced grooves"
+        "LOD0 wrinkle/pore displacement on the face driven by age"
       ]
     },
     "wear": {
-      "score": 3,
-      "reason": "Pristine: seeded asymmetry and age/weight knobs are the only story; no scars, stubble, blemishes, sun-darkened skin or dirt.",
+      "score": 5,
+      "reason": "Freckle/blemish dots and red cheeks; no scars, no weathered skin.",
       "fixes": [
-        "seeded scar/blemish marks in vertex colour",
-        "stubble shadow on the jaw and age-driven darkening under the eyes"
+        "one seeded scar across the brow and wind-reddened, weathered skin"
       ]
     },
     "lod": {
       "score": 5,
-      "reason": "LOD2 keeps the beard and hair blocks, but the face breaks into blotchy patches around the eyes and the bottom edge of the bust turns ragged in sheet.png.",
+      "reason": "FAR LOD2 is a distance-field re-mesh: the face breaks into flat patches of different tone and the features smear. The beard holds as a mass.",
       "fixes": [
-        "LOD2 from an authored coarse topology instead of the distance-field re-mesh (it cuts the face colour into patches)"
+        "LOD2 from an authored coarse topology (decimated quad base mesh) instead of the distance-field re-mesh, keeping vertex colour smooth"
       ]
     },
     "technical": {
       "score": 7,
-      "reason": "QA PASS at every LOD; 144.4k / 60.9k / 11.4k tris (beard + hair are most of it); 2 draws.",
+      "reason": "QA clean; 77k / 15k / 4k triangles over 4 draws; heavy for a bust.",
       "fixes": [
-        "coarser beard sculpt cell at LOD1"
+        "coarser beard cell at LOD1 and fewer beard cards at LOD0"
       ]
     }
   },
   "renders": {
-    "hero.png": "02b691e3f5a66569815fadfeebf6dbf894bf4291b22e2ef33f6257c77f3565a5",
-    "sheet.png": "2b532e4f04b2341ea803a10ae2a4a121371012640b334b9879b6a9501e8dd744"
+    "hero.png": "2cbdbe41471d1f69bd6e1e98fb60277781c17dce5cb1f64579a42cd3d28661ab",
+    "sheet.png": "c939441eaf2f4bd0e3340cb47707165f75211242848c41dd84478b2975c191ce"
   }
 }

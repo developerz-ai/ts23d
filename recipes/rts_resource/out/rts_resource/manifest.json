@@ -20,9 +20,9 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    12330,
-    2962,
-    486
+    9730,
+    2158,
+    330
   ],
   "drawCalls": [
     3,
@@ -102,8 +102,8 @@
   },
   "real": {
     "length": 4.93,
-    "width": 4.36,
-    "height": 3.56
+    "width": 3.78,
+    "height": 3.9
   },
   "measures": [],
   "sources": [
@@ -115,13 +115,13 @@
       "target": 0.5,
       "actual": 0.5,
       "eligible": "ground-near",
-      "area": 12.9353
+      "area": 12.8056
     },
     "dust": {
-      "target": 0.3,
-      "actual": 0.3,
+      "target": 0.18,
+      "actual": 0.18,
       "eligible": "up-facing",
-      "area": 12.117
+      "area": 12.3132
     }
   },
   "qa": {

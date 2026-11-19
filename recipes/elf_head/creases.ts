@@ -8,17 +8,26 @@ import { cutCreases, torsoCreases } from '../_lib/bust/anatomy-creases.ts';
 import { bustEdits, bustScalp } from '../_lib/bust/bust.ts';
 import { creaseAt, creaseCurve, edgeCreases, ringCreases } from '../_lib/bust/creases.ts';
 import { spline, surface, type V } from '../_lib/bust/kit.ts';
-import { neckSeam, torsoEdits } from '../_lib/bust/torso.ts';
+import { neckSeam } from '../_lib/bust/torso.ts';
 import { skullCreases } from '../_lib/face/skull-creases.ts';
 import { ELF_BUST } from './build.ts';
-import { cloakRegion, collarRing, outfitCreases } from './clothes.ts';
+import {
+  capeRegion,
+  cloakRegion,
+  cloakSurface,
+  collarRing,
+  neckOf,
+  outfitCreases,
+  PARTS,
+} from './clothes.ts';
 import { frontLocks, hairline, longLocks } from './hair.ts';
 import { H, L, SK, SPEC, TORSO } from './spec.ts';
+import { bodyEdits } from './torso.ts';
 
 function creases(): IntendedCrease[] {
   const { skin } = bustEdits(ELF_BUST, 2, 0);
   const scalp = bustScalp(ELF_BUST, 0);
-  const body = sculptField(torsoEdits(L, TORSO, { neck: false }), {
+  const body = sculptField(bodyEdits(), {
     color: SPEC.skin,
     mirror: 'y',
   }).field;
@@ -66,7 +75,7 @@ function creases(): IntendedCrease[] {
       0.02,
       'edge of the hair mass',
     ),
-    ...['head', 'bust'].flatMap((part) => [
+    ...PARTS.flatMap((part) => [
       ...ringCreases(
         `collar_${part}`,
         part,
@@ -76,24 +85,39 @@ function creases(): IntendedCrease[] {
       ),
       ...ringCreases(`collar_top_${part}`, part, upper, 0.025, 'the collar’s upper roll'),
     ]),
+    ...['bust', 'clothes'].flatMap((part) =>
+      edgeCreases(
+        `cloak_edge_${part}`,
+        part,
+        body,
+        cloakRegion,
+        [
+          [-0.3, -0.35, 0.08],
+          [0.3, 0.35, L.mz],
+        ],
+        0.025,
+        'the cloak’s edge standing 12 mm off the tunic',
+      ),
+    ),
+    // The cape's leaf-cut hem where it lies on the hanging cloak, clear of the body.
     ...edgeCreases(
-      'cloak_edge',
-      'bust',
-      body,
-      cloakRegion,
+      'cape_on_cloak',
+      'clothes',
+      cloakSurface(skin),
+      capeRegion(neckOf(skin.field)),
       [
         [-0.3, -0.35, 0.08],
         [0.3, 0.35, L.mz],
       ],
       0.025,
-      'the cloak’s edge standing 12 mm off the tunic',
+      'the shoulder cape’s hem on the cloak',
     ),
     ...cutCreases(body, TORSO.cutZ),
     ...creaseAt(
       'clasp',
       'clasp',
       [L.gx - 0.12 * H, 0, seam.at[2] - 0.03],
-      0.02,
+      0.012,
       'the leaf clasp’s rim',
     ),
   ];

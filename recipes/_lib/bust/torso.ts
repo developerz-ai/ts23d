@@ -10,6 +10,11 @@ import { type Field, type SculptEdit, Ts23dError } from '@developerz.ai/ts23d';
 import type { Landmarks } from './head.ts';
 import { ball, chain, cone2, ell, scrape, spline, taper, type V } from './kit.ts';
 
+const EVERYWHERE: [V, V] = [
+  [-2, -2, -1],
+  [2, 2, 3],
+];
+
 export interface TorsoSpec {
   /** Shoulder half-span (acromion), metres. */
   readonly shoulders: number;
@@ -21,6 +26,23 @@ export interface TorsoSpec {
   readonly larynx?: number;
   /** Bust cut height (base of the bust, on the plinth), metres. */
   readonly cutZ: number;
+  /** Where the arms are sawn off, metres outside the shoulder point (default 0.012). */
+  readonly armCut?: number;
+}
+
+/**
+ * The carved bust's arm cut (≤ 0 = kept): each arm sawn off through the deltoid a finger outside
+ * the shoulder point, the saw leaning in toward the socle, leaving a flat oval face — how a stone
+ * or bronze bust ends. No arm stub hangs beside the chest for a cloak to balloon round, and the
+ * shoulder keeps its own roundness above the cut (a wide soft cut read as a box). Garments are
+ * sawn by the same field (layers.ts `cut`), so cloth and body share the face.
+ */
+export function armCut(l: Landmarks, t: TorsoSpec): Field {
+  const y0 = t.shoulders + (t.armCut ?? 0.012);
+  const z0 = l.mz - 0.5 * l.H;
+  const lean = 0.1;
+  const k = Math.hypot(1, lean);
+  return (p) => (Math.abs(p[1]) - y0 - lean * (p[2] - z0)) / k;
 }
 
 /** `neck: false` leaves the neck column, sternocleidomastoids and larynx out: a skull stage
@@ -70,19 +92,27 @@ export function torsoEdits(
     {
       // The base sits 4 mm into the plinth top: seated, and its rim folds out of sight.
       field: bustCut(baseZ(t), 0.3 * H, 0.26 * H),
-      bounds: [
-        [-2, -2, -1],
-        [2, 2, 3],
-      ],
+      bounds: EVERYWHERE,
       op: 'intersect',
       // Soft socle facets: the flanks roll onto the cut instead of folding at a knife edge.
       blend: 0.06 * H,
     },
   ];
   const out: SculptEdit[] = [{ group: body }];
+  // The arms sawn off, the trapezius' shoulder end with them (a two-sided field of its own: a
+  // mirrored plane cuts nothing).
+  const sawn = (edits: SculptEdit[]): SculptEdit[] => [
+    {
+      group: [
+        ...edits,
+        // (Rounded over about a bust cell: a knife edge there smooths its normals across the fold.)
+        { field: armCut(l, t), bounds: EVERYWHERE, op: 'intersect', blend: 0.07 * H },
+      ],
+    },
+  ];
   if (o.neck === false) {
     out.push(trapezius(l, t, chestZ, 0.18));
-    return out;
+    return sawn(out);
   }
   // Neck: a column leaning forward from the chest into the skull.
   out.push(cone2(neckBase, neckTop, t.neck, t.neck * NECK_TAPER, { blend: 0.12 * H }));
@@ -102,7 +132,7 @@ export function torsoEdits(
       }),
     );
   out.push(trapezius(l, t, chestZ));
-  return out;
+  return sawn(out);
 }
 
 /** Trapezius: from the skull base, sloping out over the neck to the shoulder; `skip` (× H) drops

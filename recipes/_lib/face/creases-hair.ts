@@ -5,7 +5,7 @@
 import type { IntendedCrease, Vec3 } from '@developerz.ai/ts23d';
 import type { FaceBust } from './bust.ts';
 import { centroidRegion, regionsOf } from './crease-regions.ts';
-import { beardlineOf, hairlineOf } from './hair.ts';
+import { beardlineOf, hairlineOf, LOCK_DEGS } from './hair.ts';
 import { beardLines, fallLines, hairCentre, moustacheLines, scalpLines } from './hair-lines.ts';
 import type { FaceHead } from './head.ts';
 import { type LEFT, MIDLINE } from './landmarks.ts';
@@ -32,14 +32,11 @@ export function hairCreases(b: FaceBust, c: CreaseCtx): IntendedCrease[] {
     c.fold(name, part, pts, r, why);
   };
   if (b.hair.cut !== 'none') {
-    const degs =
-      b.hair.cut === 'crest'
-        ? [-10, -5, 0, 5, 10]
-        : [-66, -55, -44, -33, -22, -11, 0, 11, 22, 33, 44, 55, 66];
+    const degs = b.hair.cut === 'crest' ? [-10, -5, 0, 5, 10] : LOCK_DEGS;
     const crest = b.hair.cut === 'crest';
     // Lock grooves lie on the hair surface: the skin line pushed out by the mass + lock.
     const c0 = hairCentre(head);
-    const lift = (crest ? 0.026 : b.hair.cut === 'long' ? 0.014 : 0.012) * s;
+    const lift = (crest ? 0.026 : b.hair.cut === 'long' ? 0.016 : 0.015) * s;
     const onHair = (p: Vec3): Vec3 => {
       const d = [p[0] - c0[0], p[1] - c0[1], p[2] - c0[2]];
       const l = Math.hypot(d[0] ?? 0, d[1] ?? 0, d[2] ?? 1) || 1;

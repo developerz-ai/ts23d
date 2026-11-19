@@ -18,7 +18,6 @@ import {
   Ts23dError,
   type Vec3,
 } from '../core/index.ts';
-import type { StripId } from '../material/index.ts';
 import { type Biology, balanced, biology, foreShareCheck } from './creature-biology.ts';
 import { bodyEdits } from './creature-body.ts';
 import { type Bones, headToWorld } from './creature-bones.ts';
@@ -30,8 +29,9 @@ import { detailBoxes, headDetail } from './creature-detail.ts';
 import { eyeball } from './creature-eye.ts';
 import { clawMesh } from './creature-feet.ts';
 import { creatureFur, furLie, headLie } from './creature-fur.ts';
-import { type HeadLayout, headEdits } from './creature-head.ts';
-import { creatureHeadFur } from './creature-head-fur.ts';
+import { headEdits } from './creature-head.ts';
+import { creatureHeadFur, type HeadBare } from './creature-head-fur.ts';
+import type { CreatureInfo, CreatureOptions } from './creature-info.ts';
 
 export { bodyRes } from './creature-lod.ts';
 
@@ -44,28 +44,7 @@ import { jawHinge } from './creature-skull.ts';
 import { type CreatureSpec, checkCreature } from './creature-spec.ts';
 import { relief } from './creature-surface.ts';
 
-export interface CreatureOptions {
-  /** Part-name prefix (`wolf_` → `wolf_body`, `wolf_head` …). Default none. */
-  readonly prefix?: string;
-  /** Trim-sheet strip of the skin/coat (e.g. a neutral fur strip registered by the recipe). */
-  readonly strip?: StripId;
-  /** Hero tier (ADR 012): lighter LOD0 tagged with its fine field (creature-hero.ts). */
-  readonly hero?: boolean;
-}
-
-export interface CreatureInfo {
-  readonly bones: Bones;
-  readonly head: HeadLayout;
-  readonly biology: Biology;
-  readonly parts: {
-    body: string;
-    head: string;
-    jaw: string;
-    eyeL: string;
-    eyeR: string;
-    claws: string | null;
-  };
-}
+export type { CreatureInfo, CreatureOptions } from './creature-info.ts';
 
 /** Cards weigh as a 0.2 mm keratin sheet (the coat's bulk is in the body's `coat` already) and
  *  never collide: open sheets have no volume to give the mass or the collider. */
@@ -95,7 +74,7 @@ export function creature(
   const p = o.prefix ?? '';
   const c = palette(spec.colours);
   const hero = o.hero === true && lod === 0;
-  const { res0, res, hres } = creatureCells(b, lod, hero);
+  const { res0, res, hres } = creatureCells(b, lod, hero, o.cells);
   const surface = spec.surface ?? 'fur';
   // Head layout first: the armature's jaw bone and the skin's blink read it (creature-rig.ts).
   const h = b.head;
@@ -147,6 +126,7 @@ export function creature(
       lod,
       rng: ctx.rng.fork('fur'),
       field: piece.field,
+      ...spec.fur,
     });
     if (fur)
       ctx.part(`${p}fur`, rig.pieces(fur.mesh, 'body', [0, 0, 0]), {
@@ -188,21 +168,22 @@ export function creature(
   const tagged = heroTag(headPart, hero, pitchedSource(headPiece, h.pitch, [0, 0, 0], headMesh));
   ctx.part(names.head, tagged, { at: h.atlas, density: bio.density });
   // Head fur in the head's own frame, turning with it (creature-head-fur.ts; bare nose, lips, eyes).
+  const bare: HeadBare = {
+    nose: l.nose,
+    noseR: l.rt,
+    eye: eyeC,
+    eyeR: l.eye.r,
+    lips: l.zm,
+    muzzle: l.lc,
+    ...(l.ear ? { ears: l.ear[2] - l.earHeight * 0.1 } : {}),
+  };
   if (spec.cards !== false) {
-    const hf = creatureHeadFur(
-      headMesh,
-      spec,
-      {
-        nose: l.nose,
-        noseR: l.rt,
-        eye: eyeC,
-        eyeR: l.eye.r,
-        lips: l.zm,
-        muzzle: l.lc,
-        ...(l.ear ? { ears: l.ear[2] - l.earHeight * 0.1 } : {}),
-      },
-      { lod, rng: ctx.rng.fork('head-fur'), field: headPiece.field },
-    );
+    const hf = creatureHeadFur(headMesh, spec, bare, {
+      lod,
+      rng: ctx.rng.fork('head-fur'),
+      field: headPiece.field,
+      ...spec.fur,
+    });
     if (hf)
       ctx.part(`${p}head_fur`, rig.pieces(place(hf, { pitch: h.pitch }), 'head', h.atlas), {
         parent: names.head,
@@ -267,7 +248,7 @@ export function creature(
       connect: { as: 'grown', to: names.body },
       density: 1300,
     });
-  return { bones: b, head: l, biology: bio, parts: { ...names, claws: clawName } };
+  return { bones: b, head: l, biology: bio, parts: { ...names, claws: clawName }, rig, bare };
 }
 
 /** A creature asset: defineAsset + kind, creases, biology checks and art defaults filled in. */

@@ -7,8 +7,16 @@ radius and height, lip flare, handle reach, top and rise) are `tune.params`. The
 reference is a hand-drawn front outline of a slim amphora (`target_front.svg`). `t3d tune` moves the
 params until the model's front silhouette matches the drawing, and commits the numbers to
 `tune.json`, which the recipe imports — every build (CLI, gallery, gate) reads the same values.
-Signature: high shoulders, a narrow stem foot, a tall neck with a flared lip, two loop handles from
-neck to shoulder.
+Signature: high shoulders, a narrow stem foot, a tall neck with a flared, rolled lip, two loop
+handles from neck to shoulder seated on thumb-pressed attachment pads, a potter's stamp (`LCF`
+cartouche) on the shoulder.
+
+Surface and wear: matte terracotta (concrete strip, true-scale UVs) with throw rings toned in by
+height and a darker, sooted foot; `weather()` chips the lip bead and foot ring, runs a dark residue
+down from the lip on the pouring side and settles dust on the shoulder.
+
+LOD: 40 / 20 / 6 profile stations and 36 / 18 / 14 sides; LOD2 closes the mouth, drops the rolled
+lip, pads and stamp (≈ 4.3k / 1.3k / 276 triangles, inside the prop band).
 
 ## Specs
 | Dimension | Value (m) | Source |
@@ -29,7 +37,8 @@ Sources:
 | front (handles in profile) | https://commons.wikimedia.org/wiki/Category:Amphorae | general form only; the target is an original drawing |
 
 ## Parts the engine needs
-`body` (turned vessel, closed base and neck floor), `handle_l`, `handle_r` (loops at ±Y).
+`body` (turned vessel, closed base and neck floor, stamp), `handle_l`, `handle_r` (loops at ±Y
+with their pads).
 
 ## Tuning
 - Reference: `target_front.svg` (front view, camera on +X: paper right = +Y, paper up = +Z).

@@ -13,7 +13,7 @@ import { type Corner, corner } from './points.ts';
 
 /** An A-arm: two tapered legs from the inner pivots to the ball joint, eyes at the pivots. */
 function aArm(lod: Lod, a: Vec3, b: Vec3, bj: Vec3, d: number): Mesh {
-  const segs = lod === 0 ? 10 : 6;
+  const segs = lod === 0 ? 8 : 5;
   const parts: Mesh[] = [
     tube([a, lerp3(a, bj, 0.5), bj], d, C.frame, 'steel_painted', segs, 2),
     tube([b, lerp3(b, bj, 0.5), bj], d, C.frame, 'steel_painted', segs, 2),
@@ -44,7 +44,7 @@ function aArm(lod: Lod, a: Vec3, b: Vec3, bj: Vec3, d: number): Mesh {
 export function coilover(lod: Lod, low: Vec3, top: Vec3): Mesh {
   const ax = unit(sub(top, low));
   const L = Math.hypot(...sub(top, low));
-  const segs = lod === 0 ? 16 : 8;
+  const segs = lod === 0 ? 8 : 5;
   // Author along +X then orient.
   const parts: Mesh[] = [
     lathe({
@@ -82,7 +82,7 @@ export function coilover(lod: Lod, low: Vec3, top: Vec3): Mesh {
     );
   if (lod < 2) {
     const turns = 6.5;
-    const n = lod === 0 ? 160 : 48;
+    const n = lod === 0 ? 64 : 24;
     const path: Vec3[] = [];
     for (let i = 0; i <= n; i++) {
       const t = i / n;
@@ -91,7 +91,7 @@ export function coilover(lod: Lod, low: Vec3, top: Vec3): Mesh {
     }
     parts.push(
       sweep({
-        section: { radius: 0.0065, segments: lod === 0 ? 8 : 5 },
+        section: { radius: 0.0065, segments: lod === 0 ? 5 : 3 },
         path,
         color: C.springRed,
         strip: 'plastic',
@@ -107,7 +107,7 @@ export function coilover(lod: Lod, low: Vec3, top: Vec3): Mesh {
 }
 
 function antiRollBar(lod: Lod, c: Corner, x: number, z: number, linkTo: (s: number) => Vec3): Mesh {
-  const segs = lod === 0 ? 10 : 6;
+  const segs = lod === 0 ? 8 : 5;
   const parts: Mesh[] = [];
   const pts: Vec3[] = [
     [x - 0.16, 0.42, z + 0.03],
@@ -164,7 +164,7 @@ export function suspension(lod: Lod): SuspensionMeshes {
   const cf = corner('fl');
   const cr = corner('rl');
   // Front: steering rack across the car with boots, ARB.
-  const segs = lod === 0 ? 12 : 6;
+  const segs = lod === 0 ? 8 : 5;
   const front: Mesh[] = [
     rod(
       [cf.tieIn[0], -0.3, cf.tieIn[2]],
@@ -207,7 +207,7 @@ export function suspension(lod: Lod): SuspensionMeshes {
           [0.06, 0.18],
           [0, 0.18],
         ],
-        segments: lod === 0 ? 24 : 10,
+        segments: lod === 0 ? 16 : 8,
         axis: 'y',
         color: C.alloyCast,
         strip: 'iron_cast',

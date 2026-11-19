@@ -1,7 +1,7 @@
 {
   "name": "pine",
   "kind": "vegetation",
-  "description": "Scots pine (Pinus sylvestris), mature: tall bare bole, orange upper bark, high layered crown of clumped needle pads",
+  "description": "Scots pine (Pinus sylvestris), mature: tall bare bole, orange upper bark, high flat-topped crown of clumped needle pads",
   "tags": [
     "vegetation",
     "tree",
@@ -18,13 +18,13 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    23652,
-    5764,
+    14764,
+    2208,
     306
   ],
   "drawCalls": [
-    2,
-    2,
+    3,
+    3,
     2
   ],
   "pivots": [
@@ -36,11 +36,16 @@
       "name": "crown",
       "parent": null,
       "motion": "sway"
+    },
+    {
+      "name": "crown_cutout",
+      "parent": "crown"
     }
   ],
   "emitters": [],
   "sockets": [],
   "surfaces": [
+    "cutout",
     "opaque"
   ],
   "clips": [
@@ -60,18 +65,18 @@
     {
       "label": "trunk diameter at breast height",
       "spec": 0.6,
-      "measured": 0.5999999642372131,
+      "measured": 0.6000000238418579,
       "source": "recipes/pine/README.md"
     },
     {
       "label": "total height",
       "spec": 25,
-      "measured": 25,
+      "measured": 24.86862564086914,
       "source": "recipes/pine/README.md"
     }
   ],
   "sources": [
-    "https://en.wikipedia.org/wiki/Pinus_sylvestris (up to 35 m tall, trunk up to 1 m diameter; orange upper bark)",
+    "https://en.wikipedia.org/wiki/Pinus_sylvestris (up to 35 m tall, trunk up to 1 m diameter; orange upper bark; cones 3–7.5 cm)",
     "https://www.woodlandtrust.org.uk/trees-woods-and-wildlife/british-trees/a-z-of-british-trees/scots-pine/ (mature 35 m; flat-topped crown in age)",
     "https://bbr.nefu.edu.cn/EN/Y2006/V26/I4/490 (P. sylvestris var. mongolica crown: branch angle ≈ 45–50°, smaller in the upper crown; ~3.8 primary branches per whorl)"
   ],

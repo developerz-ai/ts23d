@@ -32,6 +32,7 @@ import {
   CPU_SUFFIX,
   gridItems,
   HYBRID,
+  modelOnly,
   pairOf,
   parseHash,
   selfTiered,
@@ -67,6 +68,8 @@ const page = $('[data-view="asset"]');
 const pair = (item: Item): Item | null => pairOf(item, items, NEURAL);
 /** True when `item`'s own recipe holds both tiers (model-first, CPU fallback). */
 const self = (item: Item): boolean => selfTiered(item, NEURAL);
+/** True for a hybrid with no listed CPU asset: it is shown on its model outputs, with no switch. */
+const only = (item: Item): boolean => modelOnly(item, items, NEURAL);
 /** The card's switch: the hybrid and its credit line, when the asset has one. */
 const tiersOf = (item: Item) => {
   const hybrid = pair(item);
@@ -93,7 +96,10 @@ const webgl = hasWebGl(() => document.createElement('canvas'));
 const loading = loadingParts($('[data-loading]'));
 
 /** What the viewer needs to know about an item (the model tier also brings its model outputs). */
-const subjectOf = (item: Item, tier: Tier = self(item) ? 'models' : 'cpu'): Subject => {
+const subjectOf = (
+  item: Item,
+  tier: Tier = self(item) || only(item) ? 'models' : 'cpu',
+): Subject => {
   const neural = tier === 'models' ? (NEURAL[item.folder] ?? []) : [];
   return {
     name: item.name,
@@ -176,7 +182,7 @@ function openAsset(base: Item, tier: Tier | null = null): void {
   const hybrid = pair(base);
   // An asset with a model tier (one recipe holding both, or a `_hybrid` pair) opens on it;
   // `#<name>@cpu` opens the CPU tier.
-  const on: Tier = self(base) || hybrid ? (tier ?? 'models') : 'cpu';
+  const on: Tier = only(base) ? 'models' : self(base) || hybrid ? (tier ?? 'models') : 'cpu';
   const item = on === 'models' && hybrid ? hybrid : base;
   const same = current === base && currentTier === on;
   const sameAsset = current === base;

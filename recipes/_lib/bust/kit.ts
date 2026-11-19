@@ -232,14 +232,23 @@ export function clay(
 }
 
 /** Scrape: keep only the side of the plane through `at` that `n` points away from, with a
- *  fillet `blend`, over a cube of half-size `reach` (intersect inside a group = flatten only it). */
+ *  fillet `blend`, over a cube of half-size `reach` (intersect inside a group = flatten only it).
+ *  A plane off the midline (`at` or `n` with a Y part) scrapes BOTH sides: a mirrored sculpt
+ *  unions an edit with its mirror image, and the union of a half-space with its mirror cuts
+ *  nothing, so the field here is already the pair, each side by its own plane. */
 export function scrape(at: V, n: V, reach: number, blend: number): SculptEdit {
   const u = norm(n);
+  const side = at[1] !== 0 || u[1] !== 0;
+  const plane = (x: number, y: number, z: number): number =>
+    (x - at[0]) * u[0] + (y - at[1]) * u[1] + (z - at[2]) * u[2];
+  const y0 = side ? Math.abs(at[1]) : 0;
   return {
-    field: (p) => (p[0] - at[0]) * u[0] + (p[1] - at[1]) * u[1] + (p[2] - at[2]) * u[2],
+    field: side
+      ? (p) => Math.max(plane(p[0], p[1], p[2]), plane(p[0], -p[1], p[2]))
+      : (p) => plane(p[0], p[1], p[2]),
     bounds: [
-      [at[0] - reach, at[1] - reach, at[2] - reach],
-      [at[0] + reach, at[1] + reach, at[2] + reach],
+      [at[0] - reach, -y0 - reach, at[2] - reach],
+      [at[0] + reach, y0 + reach, at[2] + reach],
     ],
     op: 'intersect',
     blend,

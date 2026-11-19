@@ -67,3 +67,15 @@ skinned, one draw. Bones `spine_0..15`, `caudal_upper_*`, `caudal_lower_*`, `pec
   above.
 - The illustration's first dorsal is yellow; FishBase and the FAO text describe it as dusky. Kept dusky with
   a yellow cast.
+
+## Surface, wear and LOD (2026-11 quality pass)
+| Feature | How | Why |
+|---|---|---|
+| one strip, four bands | `tuna_skin` (`material.ts`): corselet (metal, 0.34), flank (metal, 0.2), fin membrane (0.42), frayed margin (0.68); replaces `tuna_metal` and `tuna_fin`, freeing a custom sheet row | the flank read as flat grey paint |
+| colour | an iridescent violet-blue band between back and silver, stronger pale bars and dots on the lower flank, a faint lateral line, a dark caudal keel | photos above |
+| corselet | the thick-scaled band round the pectoral base, duller than the polished flank | a signature of *Thunnus* |
+| fin rays | second dorsal, anal and caudal carry 12 to 16 low ray ridges up close (each face swells by a share of its own thickness, fading toward the tip) | flat plates |
+| wear | frayed nicks along the median fins' trailing edges (pale, on the rough band), five seeded net scratches on the blue flank | pristine |
+| gill cover | the operculum groove twice as deep | shallow line |
+| pectoral | 33 cm (16.5 % FL), inside the FAO 16 to 19 % and shorter than before | read long against photos |
+| LOD | LOD1 7 k (was 4 k): softer switch from 39 k; LOD2 9 sides and one flat yellow finlet strip a side | finlets vanished, body faceted |

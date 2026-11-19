@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test';
 import { compile, jointFit } from '@developerz.ai/ts23d';
-import { assertQaPass } from '@developerz.ai/ts23d/testing';
+import { ALL_LODS, assertClosed, assertManifold, assertQaPass } from '@developerz.ai/ts23d/testing';
 import { joint_demo, jointDemo } from './joint_demo.ts';
 
 const issues = (asset: ReturnType<typeof jointDemo>) => {
@@ -12,12 +12,19 @@ describe('joint_demo', () => {
   it('fails a hand twice the wrist with T3D_JOINT_MISMATCH and the scale fix', () => {
     const [f, ...rest] = issues(jointDemo(2, 'joint_demo_big_hand'));
     expect(rest).toEqual([]);
-    expect(f?.message).toMatch(/^T3D_JOINT_MISMATCH joint 'wrist'.*95% larger/);
-    expect(f?.fix).toContain('scale hand ×0.51');
+    expect(f?.message).toMatch(/^T3D_JOINT_MISMATCH joint 'wrist'.*105% larger/);
+    expect(f?.fix).toContain('scale hand ×0.49');
   });
 
   it('fits at every joint and passes QA', () => {
     expect(issues(joint_demo)).toEqual([]);
     expect(() => assertQaPass(joint_demo)).not.toThrow();
+  });
+
+  it('closes the blade at its point and its shoulders at every LOD (no hole at the tip)', () => {
+    for (const lod of ALL_LODS) {
+      assertClosed(joint_demo, { lod, parts: 'sword_blade' });
+      assertManifold(joint_demo, { lod, parts: 'sword_blade' });
+    }
   });
 });

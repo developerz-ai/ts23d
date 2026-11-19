@@ -22,18 +22,30 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    136924,
-    27224,
-    2900
+    142640,
+    29148,
+    2984
   ],
   "drawCalls": [
-    3,
-    3,
-    3
+    6,
+    6,
+    4
   ],
   "pivots": [
     {
       "name": "body",
+      "parent": null
+    },
+    {
+      "name": "body_cutout",
+      "parent": null
+    },
+    {
+      "name": "body_finish_coat",
+      "parent": null
+    },
+    {
+      "name": "body_finish_cornea",
       "parent": null
     },
     {
@@ -50,6 +62,7 @@
   "emitters": [],
   "sockets": [],
   "surfaces": [
+    "cutout",
     "opaque"
   ],
   "clips": [
@@ -69,7 +82,7 @@
     {
       "label": "shoulder height (withers, coat included)",
       "spec": 1,
-      "measured": 1.0121913973416667,
+      "measured": 1.0119865016022231,
       "source": "Wikipedia: Tiger — 0.8–1.1 m at the shoulder"
     }
   ],

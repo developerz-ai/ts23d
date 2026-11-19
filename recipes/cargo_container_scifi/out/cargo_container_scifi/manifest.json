@@ -20,8 +20,8 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    22914,
-    8342,
+    16862,
+    6950,
     736
   ],
   "drawCalls": [
@@ -134,42 +134,145 @@
     "https://hz-containers.com/en/technical-information/corner-castings-technical-documentation/"
   ],
   "weather": {
-    "dents": {
-      "target": 0.012,
-      "actual": 0.0022,
-      "eligible": "exposed-panels",
-      "area": 149.1776,
-      "count": 4
-    },
     "bleach": {
-      "target": 0.2,
-      "actual": 0.2,
-      "eligible": "up-facing",
-      "area": 33.4464
+      "target": 0.2017,
+      "actual": 0.2017,
+      "eligible": "up-facing | sunlit ; up-facing",
+      "area": 34.0019,
+      "by": {
+        "door_r": {
+          "target": 0.32,
+          "actual": 0.32,
+          "area": 0.2608
+        },
+        "door_l": {
+          "target": 0.32,
+          "actual": 0.32,
+          "area": 0.2301
+        },
+        "container": {
+          "target": 0.2,
+          "actual": 0.2,
+          "area": 33.511
+        }
+      }
     },
     "chips": {
       "target": 0.15,
       "actual": 0.15,
       "eligible": "convex-edges",
-      "area": 141.2919
+      "area": 199.5227,
+      "by": {
+        "door_r": {
+          "target": 0.15,
+          "actual": 0.15,
+          "area": 9.3178
+        },
+        "door_l": {
+          "target": 0.15,
+          "actual": 0.15,
+          "area": 9.3128
+        },
+        "container": {
+          "target": 0.15,
+          "actual": 0.15,
+          "area": 180.8921
+        }
+      }
+    },
+    "scratches": {
+      "target": 0.35,
+      "actual": 0.35,
+      "eligible": "touched",
+      "area": 5.6517,
+      "by": {
+        "door_r": {
+          "target": 0.35,
+          "actual": 0.35,
+          "area": 2.8284
+        },
+        "door_l": {
+          "target": 0.35,
+          "actual": 0.35,
+          "area": 2.8233
+        }
+      }
     },
     "rust": {
       "target": 0.08,
       "actual": 0.08,
       "eligible": "convex-edges & side-facing",
-      "area": 97.998
+      "area": 138.4398,
+      "by": {
+        "door_r": {
+          "target": 0.08,
+          "actual": 0.08,
+          "area": 8.9592
+        },
+        "door_l": {
+          "target": 0.08,
+          "actual": 0.08,
+          "area": 8.9549
+        },
+        "container": {
+          "target": 0.08,
+          "actual": 0.08,
+          "area": 120.5257
+        }
+      }
     },
     "mud": {
       "target": 0.25,
       "actual": 0.25,
       "eligible": "ground-near",
-      "area": 41.5315
+      "area": 51.0389,
+      "by": {
+        "door_r": {
+          "target": 0.25,
+          "actual": 0.25,
+          "area": 1.895
+        },
+        "door_l": {
+          "target": 0.25,
+          "actual": 0.25,
+          "area": 1.8998
+        },
+        "container": {
+          "target": 0.25,
+          "actual": 0.25,
+          "area": 47.2441
+        }
+      }
     },
     "dust": {
-      "target": 0.3,
-      "actual": 0.3,
+      "target": 0.3011,
+      "actual": 0.3011,
       "eligible": "up-facing",
-      "area": 33.4464
+      "area": 33.8692,
+      "by": {
+        "door_r": {
+          "target": 0.4,
+          "actual": 0.4,
+          "area": 0.1793
+        },
+        "door_l": {
+          "target": 0.4,
+          "actual": 0.4,
+          "area": 0.1789
+        },
+        "container": {
+          "target": 0.3,
+          "actual": 0.3,
+          "area": 33.511
+        }
+      }
+    },
+    "dents": {
+      "target": 0.012,
+      "actual": 0.0022,
+      "eligible": "exposed-panels",
+      "area": 151.6449,
+      "count": 4
     }
   },
   "qa": {

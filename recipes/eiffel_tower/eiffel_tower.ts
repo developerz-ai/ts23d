@@ -36,6 +36,8 @@ import {
   type Vec2,
   type Vec3,
 } from '@developerz.ai/ts23d';
+import { tessellate } from '../_lib/finish/finish.ts';
+import { deckWear, ironWear } from './wear.ts';
 
 // ── Colour: three graduated shades of Eiffel Tower Brown, darkest at the bottom ──────────────────
 const SHADES = [hex('#5e4834'), hex('#715a40'), hex('#87704f')] as const;
@@ -132,9 +134,9 @@ const QUAD: readonly Vec2[] = [
 const dist = (a: Vec3, b: Vec3): number => Math.hypot(...sub(b, a));
 const clamp = (v: number, lo: number, hi: number): number => Math.min(hi, Math.max(lo, v));
 
-function rod(out: Mesh[], a: Vec3, b: Vec3, width: number, color: Vec3 = IRON): void {
+function rod(out: Mesh[], a: Vec3, b: Vec3, width: number, color: Vec3 = IRON, caps = true): void {
   const d = normalize(sub(b, a));
-  out.push(beam({ from: sub(a, scale(d, OVER)), to: add(b, scale(d, OVER)), width, color }));
+  out.push(beam({ from: sub(a, scale(d, OVER)), to: add(b, scale(d, OVER)), width, color, caps }));
 }
 
 /** A box upright whose faces stay parallel to the tower faces (beam would roll it 45°). */
@@ -160,7 +162,8 @@ function girder(out: Mesh[], a: Vec3, b: Vec3, n: Vec3, depth: number): void {
   const k = Math.max(2, Math.round(len / (depth * 1.6)));
   for (let i = 0; i < k; i++) {
     const s = i % 2 === 0 ? 1 : -1;
-    rod(out, at(i / k, s), at((i + 1) / k, -s), Math.max(0.07, depth * 0.09));
+    // Web bars end inside the chords: their end caps are never seen (a third of a bar).
+    rod(out, at(i / k, s), at((i + 1) / k, -s), Math.max(0.07, depth * 0.09), IRON, false);
   }
 }
 
@@ -168,7 +171,8 @@ function girder(out: Mesh[], a: Vec3, b: Vec3, n: Vec3, depth: number): void {
 function member(out: Mesh[], a: Vec3, b: Vec3, n: Vec3, depth: number, lod: Lod): void {
   // Below ~0.5 m deep a lattice is sub-pixel even up close: a plain bar reads the same.
   if (lod === 0 && depth >= 0.5) girder(out, a, b, n, depth);
-  else rod(out, a, b, Math.max(0.3, depth * 0.5));
+  // Its ends land on panel corners inside the uprights: no end caps.
+  else rod(out, a, b, Math.max(0.3, depth * 0.5), IRON, false);
 }
 
 type Line = (z: number) => Vec3;
@@ -220,15 +224,25 @@ function shade(z: number): Vec3 {
   }) as unknown as Vec3;
 }
 /** Puddled wrought iron under "Eiffel Tower Brown": members move from the classic plain/iron rows
- *  onto steel_painted (the shade is the paint colour; chips show rusty iron underneath). */
+ *  onto steel_painted (the shade is the paint colour; chips show rusty iron underneath), then
+ *  take their wear (`ironWear`: rust runs and chalking low down, a fresh coat aloft). */
 const PAINTED = stripRect('steel_painted');
-function iron(meshes: readonly Mesh[], dirt = false): Mesh {
+function iron(meshes: readonly Mesh[], dirt = false, wear: typeof ironWear = ironWear): Mesh {
   const m = merge(meshes);
   const colors = new Float32Array(m.colors);
   const uvs = new Float32Array(m.uvs);
   for (let i = 0; i < m.positions.length / 3; i++) {
-    const s = shade(m.positions[i * 3 + 2] ?? 0);
-    for (let k = 0; k < 3; k++) colors[i * 3 + k] = (colors[i * 3 + k] ?? 1) * (s[k] ?? 0);
+    const at = (a: Float32Array, k: number): number => a[i * 3 + k] ?? 0;
+    const s = shade(at(m.positions, 2));
+    const c: Vec3 = [at(colors, 0) * s[0], at(colors, 1) * s[1], at(colors, 2) * s[2]];
+    colors.set(
+      wear(
+        [at(m.positions, 0), at(m.positions, 1), at(m.positions, 2)],
+        [at(m.normals, 0), at(m.normals, 1), at(m.normals, 2)],
+        c,
+      ),
+      i * 3,
+    );
     const v = m.uvs[i * 2 + 1] ?? 0;
     const row = stripAtV(v);
     if (row === 'plain' || row === 'iron') {
@@ -304,9 +318,9 @@ function leg(q: number, lod: Lod): Mesh {
 }
 
 // ── Arches (Sauvestre) between the legs, in the belt plane ──────────────────────────────────────
-const ARCH_SEGS: readonly number[] = [41, 25, 9];
+const ARCH_SEGS: readonly number[] = [41, 25, 7];
 function archTop(lod: Lod): number {
-  const n = ARCH_SEGS[lod] ?? 9;
+  const n = ARCH_SEGS[lod] ?? 7;
   const th0 = Math.asin(ARCH.cz / ARCH.r);
   const step = (Math.PI + 2 * th0) / n;
   const ro = ARCH.r + (lod === 2 ? 0 : ARCH.depth);
@@ -315,7 +329,7 @@ function archTop(lod: Lod): number {
 }
 function arch(lod: Lod): Mesh {
   const out: Mesh[] = [];
-  const n = ARCH_SEGS[lod] ?? 9;
+  const n = ARCH_SEGS[lod] ?? 7;
   const th0 = Math.asin(ARCH.cz / ARCH.r);
   const ang = (i: number): number => -th0 + (i * (Math.PI + 2 * th0)) / n;
   const pt = (r: number, i: number): Vec3 => [
@@ -326,8 +340,12 @@ function arch(lod: Lod): Mesh {
   const ri = ARCH.r;
   const ro = ARCH.r + (lod === 2 ? 0 : ARCH.depth);
   for (let i = 0; i < n; i++) {
-    rod(out, pt(ro, i), pt(ro, i + 1), lod === 2 ? 2.0 : ARCH.w);
-    if (lod === 2) continue;
+    if (lod === 2) {
+      // The far arch is one chain of bars, each end inside its neighbour or a leg: no caps.
+      rod(out, pt(ro, i), pt(ro, i + 1), 2.0, IRON, false);
+      continue;
+    }
+    rod(out, pt(ro, i), pt(ro, i + 1), ARCH.w);
     rod(out, pt(ri, i), pt(ri, i + 1), ARCH.w);
     rod(out, pt(ri, i), pt(ro, i + 1), 0.25);
     if (lod === 0) rod(out, pt(ro, i), pt(ri, i + 1), 0.25);
@@ -393,18 +411,18 @@ function deckRing(so: number, si: number, top: number): Mesh {
   return merge(parts);
 }
 
-/** Railing round a square: posts every `pitch` m, top and mid rail. */
+/** Railing round a square: square posts every `pitch` m, top rail and (near) a mid rail. */
 function railing(half: number, z: number, h: number, pitch: number, lod: Lod): Mesh {
   const out: Mesh[] = [];
   const s = half - 0.1;
   const n = Math.max(2, Math.round((2 * s) / (lod === 0 ? pitch : pitch * 4)));
   for (let i = 0; i < n; i++) {
     const y = -s + (2 * s * i) / n;
-    out.push(beam({ from: [s, y, z], to: [s, y, z + h], width: 0.08, color: IRON }));
+    // Square section with faces on the rail's axes, so the rails bear on a face, not an edge.
+    out.push(box({ size: [0.08, 0.08, h], at: [s, y, z], color: IRON }));
   }
   rod(out, [s, -s, z + h], [s, s, z + h], 0.08);
-  // No mid rail: a thin bar through the diamond-section posts only meets them along an edge
-  // (QA `connections`); the top rail and posts carry the read.
+  if (lod === 0) rod(out, [s, -s, z + h * 0.5], [s, s, z + h * 0.5], 0.05);
   return iron(ring4(merge(out)));
 }
 
@@ -597,7 +615,7 @@ function cabin(lod: Lod): Mesh {
 }
 
 // ── LOD2: silhouette shell ──────────────────────────────────────────────────────────────────────
-function frustum(lo: readonly Vec3[], hi: readonly Vec3[]): Mesh {
+function frustum(lo: readonly Vec3[], hi: readonly Vec3[], capLo = true, capHi = true): Mesh {
   const b = new MeshBuilder();
   const all = [...lo, ...hi];
   const c = scale(
@@ -619,8 +637,8 @@ function frustum(lo: readonly Vec3[], hi: readonly Vec3[]): Mesh {
     const j = (i + 1) % 4;
     quad([lo[i] ?? c, lo[j] ?? c, hi[j] ?? c, hi[i] ?? c]);
   }
-  quad(hi);
-  if ((lo[0]?.[2] ?? 0) > 0.01) quad(lo);
+  if (capHi) quad(hi);
+  if (capLo && (lo[0]?.[2] ?? 0) > 0.01) quad(lo);
   return b.build();
 }
 
@@ -642,13 +660,15 @@ function farLeg(q: number): Mesh {
     [DECK1, 84, Z11, DECK2 - SLAB],
   ];
   const out: Mesh[] = [];
+  // Stacked: only the band's own ends are capped, the joins between frustums are inside.
   for (const zs of bands)
-    for (let k = 0; k + 1 < zs.length; k++) out.push(frustum(sq(zs[k] ?? 0), sq(zs[k + 1] ?? 0)));
+    for (let k = 0; k + 1 < zs.length; k++)
+      out.push(frustum(sq(zs[k] ?? 0), sq(zs[k + 1] ?? 0), k === 0, k + 2 === zs.length));
   if (q === 0) {
     const zs = [DECK2, Z17, 215, 245, Z29, DECK3 - SLAB];
     const full = (z: number): Vec3[] => square(-halfW(z), halfW(z), -halfW(z), halfW(z), z);
     for (let k = 0; k + 1 < zs.length; k++)
-      out.push(frustum(full(zs[k] ?? 0), full(zs[k + 1] ?? 0)));
+      out.push(frustum(full(zs[k] ?? 0), full(zs[k + 1] ?? 0), k === 0, k + 2 === zs.length));
   }
   return iron(out, true);
 }
@@ -774,14 +794,15 @@ export const eiffel_tower = defineAsset({
     ctx.part('lift_0', liftLeg(0, lod));
     ctx.part('lift_2', liftLeg(2, lod));
     ctx.part('belt_1', belt1(lod));
-    ctx.part('platform_1', iron([deckRing(SIDE1, 15, DECK1)]));
+    const deck = (m: Mesh): Mesh => iron([tessellate(m, ctx.pick([6, 12, 12]))], false, deckWear);
+    ctx.part('platform_1', deck(deckRing(SIDE1, 15, DECK1)));
     ctx.part('railing_1', railing(SIDE1, DECK1, 1.3, 2.5, lod));
     ctx.part('pavilion_1', pavilions1(lod));
-    ctx.part('platform_2', iron([deckRing(SIDE2, 0, DECK2)]));
+    ctx.part('platform_2', deck(deckRing(SIDE2, 0, DECK2)));
     ctx.part('belt_2', belt2(lod));
     ctx.part('railing_2', railing(SIDE2, DECK2, 1.3, 2.0, lod));
     ctx.part('lift_top', liftTop(lod));
-    ctx.part('platform_3', iron([deckRing(SIDE3, 0, DECK3)]));
+    ctx.part('platform_3', deck(deckRing(SIDE3, 0, DECK3)));
     ctx.part('cabin_3', cabin(lod));
     ctx.part(
       'terrace_3',

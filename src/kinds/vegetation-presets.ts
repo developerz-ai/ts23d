@@ -36,7 +36,7 @@ export const oak: TreeParams = {
     colorVar: 0.16,
   },
   roots: 5,
-  impostor: 'blob',
+  impostor: 'clumps',
   typical: { height: 22, spread: 22, dbh: 1.3 },
 };
 
@@ -85,7 +85,7 @@ export const pine: TreeParams = {
     colorVar: 0.12,
   },
   roots: 4,
-  impostor: 'blob',
+  impostor: 'clumps',
   typical: { height: 25, spread: 9, dbh: 0.6 },
 };
 
@@ -121,7 +121,7 @@ export const palm: TreeParams = {
   },
   roots: 9,
   fruit: { count: 7, radius: 0.13, color: hex('#5f6a22') },
-  impostor: 'cards',
+  impostor: 'fronds',
   typical: { height: 20, spread: 9, dbh: 0.35 },
 };
 
@@ -154,7 +154,7 @@ export const birch: TreeParams = {
     color: hex('#6f9a32'),
     colorVar: 0.15,
   },
-  impostor: 'blob',
+  impostor: 'clumps',
   typical: { height: 18, spread: 8, dbh: 0.4 },
 };
 
@@ -188,7 +188,7 @@ export const willow: TreeParams = {
     hang: 0.92,
   },
   roots: 6,
-  impostor: 'blob',
+  impostor: 'clumps',
   typical: { height: 12, spread: 14, dbh: 0.8 },
 };
 

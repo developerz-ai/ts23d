@@ -78,3 +78,15 @@ draw. Bones: `spine_0..15` (0 at the snout), `caudal_upper_*`, `caudal_lower_*`,
 - The excerpt implies 583 cm depressed TL, the 2006 catalogue lists 589 cm for the same cast. 583 was used
   because the percentages were computed on it.
 - Gill rates and gape angle have no opened source; the 35° gape is the kind's design value.
+
+## Surface, wear and LOD (2026-11 quality pass)
+| Feature | How | Why |
+|---|---|---|
+| skin | `shark_skin` is a texture graph now: a head-to-tail denticle grain (micro-normal) and a broad roughness drift 0.5 to 0.68 for the patchy wet sheen | one uniform satin |
+| eye | a dark blue-grey iris ring round the black pupil, and a thick lid rim of skin | a glossy black ball |
+| snout | about 10 % blunter over the first 9 % of the length | read pointed |
+| pectorals | root half-thickness 5.2 cm (about 9 % of the chord) tapering to a thin edge; the upper face darkens at the tip and along the trailing edge | paper-thin, no dark edges |
+| caudal | lower lobe 0.9 m (was 0.82), nearly as long as the upper: a lunate tail (design value) | |
+| keel, lateral line | keel 5.8 cm proud and dark; a faint pale lateral line from the gills to the keel | missing |
+| wear | a bitten notch in the first dorsal's trailing edge, healed dark; parasitic copepods clustered on that fin (LOD0); the healed scars as before | |
+| LOD | LOD1 12.7 k (was 7 k); LOD2 has eight sides so one column bends onto the ragged colour line | the boundary went straight far away |

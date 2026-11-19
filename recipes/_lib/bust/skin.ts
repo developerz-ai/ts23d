@@ -17,6 +17,7 @@ import {
   valueNoise,
   withBakeSource,
 } from '@developerz.ai/ts23d';
+import { onSkin } from '../face/skin-strip.ts';
 import type { V } from './kit.ts';
 
 const clamp = (v: number): number => Math.min(Math.max(v, 0), 1);
@@ -65,6 +66,42 @@ export interface SkinOptions {
   readonly detail?: readonly DetailRegion[];
   /** Scalp (and beard) regions painted the hair's colour, edge broken over ±1.5 mm. */
   readonly scalp?: readonly ScalpPaint[];
+  /** Map the skin onto the shared pore strip (../face/skin-strip.ts) instead of `plain`: pore
+   *  relief in the normal map and a roughness that follows it; `oil` (0 … 1) marks the glossier
+   *  T-zone. The tone stays in vertex colour. */
+  readonly strip?: { readonly oil?: Field };
+  /** Far LOD: every vertex takes the mean of the paint at the centres of its faces, so one
+   *  sample in a crevice (a nostril, a lid line) no longer colours a whole 2 cm triangle. */
+  readonly far?: boolean;
+}
+
+/** `m` with each vertex coloured by the mean of `paint` over its faces' centres; a vertex inside
+ *  a `scalp` line keeps its own colour (the hair's: a mean with the skin past the hairline would
+ *  read as bare scalp, D57). */
+function faceAveraged(m: Mesh, paint: (p: V) => V, scalp: readonly ScalpPaint[]): Mesh {
+  const P = m.positions;
+  const sum = new Float64Array(m.colors.length);
+  const n = new Float64Array(P.length / 3);
+  for (let t = 0; t < m.indices.length; t += 3) {
+    const tri = [m.indices[t] ?? 0, m.indices[t + 1] ?? 0, m.indices[t + 2] ?? 0];
+    const c = paint([
+      tri.reduce((a, v) => a + (P[v * 3] ?? 0), 0) / 3,
+      tri.reduce((a, v) => a + (P[v * 3 + 1] ?? 0), 0) / 3,
+      tri.reduce((a, v) => a + (P[v * 3 + 2] ?? 0), 0) / 3,
+    ]);
+    for (const v of tri) {
+      for (let e = 0; e < 3; e++) sum[v * 3 + e] = (sum[v * 3 + e] ?? 0) + c[e as 0 | 1 | 2];
+      n[v] = (n[v] ?? 0) + 1;
+    }
+  }
+  const colors = new Float32Array(m.colors.length);
+  for (let v = 0; v < n.length; v++) {
+    const p: V = [P[v * 3] ?? 0, P[v * 3 + 1] ?? 0, P[v * 3 + 2] ?? 0];
+    const own = !n[v] || scalp.some((s) => s.line(p) < 0.004);
+    for (let e = 0; e < 3; e++)
+      colors[v * 3 + e] = own ? (m.colors[v * 3 + e] ?? 0) : (sum[v * 3 + e] ?? 0) / (n[v] ?? 1);
+  }
+  return { ...m, colors };
 }
 
 /** Hair albedo over the scalp: full 3 mm inside the line, a 1 mm soft edge outside it, the
@@ -186,6 +223,8 @@ export function skinMesh(edits: readonly SculptEdit[], cell: number, o: SkinOpti
     lipschitz,
     ...(o.detail ? { detail: o.detail } : {}),
   });
+  const toned = o.far ? faceAveraged(mesh, paint, o.scalp ?? []) : mesh;
+  const mapped = o.strip ? onSkin(toned, o.strip.oil) : toned;
   // The field it was meshed from, for the hero bake (ADR 012; bust.ts passes it on when opted in).
-  return withBakeSource(mesh, { field, lipschitz, color: paint });
+  return withBakeSource(mapped, { field, lipschitz, color: paint });
 }

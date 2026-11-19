@@ -5,8 +5,27 @@
 // amber window slits and oculus. Damage is the same plan with holes, scorch, smoke and fire;
 // rubble keeps wall stubs, heaps, charred beams and fallen team slabs, so ownership still reads.
 
-import { defineFamily, type GrimeZone, type Vec3 } from '@developerz.ai/ts23d';
-import { DUST, GRIME, Kit, type Rule, restrip, role, wearOf } from '../_lib/rts/finish.ts';
+import {
+  defineFamily,
+  type GrimeZone,
+  grime,
+  type Lod,
+  type Mesh,
+  merge,
+  place,
+  type Vec3,
+} from '@developerz.ai/ts23d';
+import {
+  DUST,
+  GRIME,
+  Kit,
+  MOSS,
+  MUD,
+  type Rule,
+  restrip,
+  role,
+  wearOf,
+} from '../_lib/rts/finish.ts';
 import {
   BONE,
   BONE_DARK,
@@ -20,6 +39,7 @@ import {
   teamShade,
 } from '../_lib/rts/style.ts';
 import {
+  COURSE,
   type Damage,
   EAVES,
   HALF_X,
@@ -27,6 +47,7 @@ import {
   HOLES,
   PLINTH,
   type Stage,
+  TOWER,
   WALL_T,
   wallCells,
 } from './plan.ts';
@@ -34,19 +55,41 @@ import {
   DOOR,
   gables,
   gate,
+  lamp,
+  OVERHANG,
   PLASTER,
   porch,
+  porchRoof,
+  RIDGE,
   rafters,
+  ridgeRoll,
   roofSlopes,
   TIMBER,
   tower,
   WOOD,
 } from './roof.ts';
-import { banner, FACE, fallenSlabs, materials, PLANK, POLE, rubble, scaffold } from './site.ts';
+import {
+  ASH,
+  BARROW,
+  banner,
+  bar,
+  FACE,
+  fallenSlabs,
+  GRIT,
+  MORTAR,
+  materials,
+  PLANK,
+  POLE,
+  ROPE,
+  rubble,
+  scaffold,
+  scaffoldWreck,
+} from './site.ts';
 import { plinth, walls } from './walls.ts';
 
 /** Materials: dressed stone, lime plaster, oak timber, tarred gate planks, weathered scaffold
- *  poles and pine planks, cast iron, brass; the team floor inlay is glazed ceramic. */
+ *  poles and pine planks, hemp rope, lime mortar, cast iron, brass; the team floor inlay is
+ *  glazed ceramic. */
 const RULES: readonly Rule[] = [
   role(BONE, 'concrete'),
   role(BONE_DARK, 'stone'),
@@ -54,39 +97,93 @@ const RULES: readonly Rule[] = [
   role(TIMBER, 'oak'),
   role(WOOD, 'oak'),
   role(DOOR, 'oak'),
+  role(ASH, 'oak'),
   role(POLE, 'wood_weathered'),
   role(PLANK, 'pine'),
+  role(ROPE, 'canvas'),
+  role(BARROW, 'steel_painted'),
+  role(MORTAR, 'concrete'),
+  role(GRIT, 'concrete'),
   role(IRON, 'iron_cast'),
   role(BRASS, 'brass'),
   role(TEAM, 'plastic'),
   role(teamShade(0.8), 'slate'),
 ];
 
+/** The right slope's shell hole (strips 1–2 of 5), as world x. */
+const ROOF_HOLE: readonly [number, number] = [
+  -HALF_X - OVERHANG + ((HALF_X + OVERHANG) * 2 * 1) / 5,
+  -HALF_X - OVERHANG + ((HALF_X + OVERHANG) * 2 * 3) / 5,
+];
+
 /** Rain drips: off the eaves along both long walls (complete hall), and below each sill. */
-function dripSpots(sills: readonly Vec3[], roofed: boolean): { at: Vec3; radius: number }[] {
+function dripSpots(
+  sills: readonly Vec3[],
+  roofed: boolean,
+  top: number | null,
+): { at: Vec3; radius: number }[] {
   const eaves: Vec3[] = [];
   if (roofed)
     for (const s of [1, -1])
-      for (let x = -HALF_X + 0.75; x < HALF_X; x += 1.5)
+      for (let x = -HALF_X + 0.75; x < HALF_X; x += 1.0)
         eaves.push([x, s * (HALF_Y + WALL_T / 2), EAVES - 0.06]);
-  return [...eaves, ...sills].map((at) => ({ at, radius: 0.18 }));
+  // A wall going up: mortar slopped off the top course runs down the faces the scaffold hides.
+  if (top !== null) {
+    for (let x = -HALF_X + 0.6; x < HALF_X; x += 1.3) eaves.push([x, -(HALF_Y + WALL_T / 2), top]);
+    for (let y = -HALF_Y + 0.6; y < HALF_Y; y += 1.3) eaves.push([HALF_X + WALL_T / 2, y, top]);
+  }
+  return [
+    ...eaves.map((at) => ({ at, radius: 0.3 })),
+    ...sills.map((at) => ({ at, radius: 0.24 })),
+  ];
 }
 
-/** Where each shell hole's scorch centres (outer wall face, ~row 4). */
+/** A soot streak below a burn: the scorch, then fading spots running down the wall. */
+const streak = (at: Vec3, r: number, k: number): GrimeZone[] => [
+  { at, radius: r, strength: k },
+  { at: [at[0], at[1], at[2] - r * 0.7], radius: r * 0.7, strength: k * 0.75 },
+  { at: [at[0], at[1], at[2] - r * 1.3], radius: r * 0.5, strength: k * 0.55 },
+];
+
+/** Scorch and soot: shell holes on the walls, blast marks on a raided site, burnt ruins. */
 function scorchZones(stage: Stage, damage: Damage): GrimeZone[] {
-  if (damage !== 'damaged') return [];
+  if (damage === 'intact')
+    // A working site still gets mud and mortar slopped round the pallets and the slab edge.
+    return stage === 'foundation'
+      ? [
+          { at: [HALF_X + 0.6, 4.2, PLINTH], radius: 1.4, strength: 0.35 },
+          { at: [-1, -HALF_Y - 0.4, PLINTH], radius: 1.5, strength: 0.35 },
+          { at: [HALF_X + 0.6, -4.5, PLINTH], radius: 1.3, strength: 0.3 },
+        ]
+      : [];
+  if (damage === 'rubble')
+    return [
+      // Burnt wall stubs: soot along the tops on the camera's faces, and the standing corner.
+      ...[-4.5, -1.5, 1.5, 4.5].map(
+        (y): GrimeZone => ({ at: [FACE.x, y, PLINTH + 0.9], radius: 2.4, strength: 0.92 }),
+      ),
+      ...[-3.5, 0, 3.5].map(
+        (x): GrimeZone => ({ at: [x, -FACE.y, PLINTH + 0.9], radius: 2.4, strength: 0.92 }),
+      ),
+      { at: [1, -2, PLINTH], radius: 2.6, strength: 0.75 },
+      { at: [-2, 3, PLINTH], radius: 2.2, strength: 0.7 },
+      { at: [HALF_X, -HALF_Y, PLINTH + 3.2], radius: 1.4, strength: 0.6 },
+      { at: [-HALF_X, 0, PLINTH + 1], radius: 2, strength: 0.6 },
+      { at: [0, HALF_Y, PLINTH + 1], radius: 1.8, strength: 0.55 },
+    ];
   // A raided building site: blast marks on the plinth by the material piles.
   if (stage === 'foundation')
     return [
       { at: [HALF_X - 1, -HALF_Y + 2.5, PLINTH], radius: 2.2, strength: 0.8 },
       { at: [-1.5, 2, PLINTH], radius: 1.8, strength: 0.7 },
+      { at: [HALF_X, -HALF_Y, PLINTH], radius: 1.6, strength: 0.6 },
     ];
   const at: Record<(typeof HOLES)[number], Vec3> = {
     front_1: [FACE.x, -HALF_Y + 3, PLINTH + 2.2],
     right_1: [HALF_X - 2.9, -FACE.y, PLINTH + 2.2],
     right_3: [HALF_X - 6.7, -FACE.y, PLINTH + 2.2],
   };
-  return HOLES.map((h) => ({ at: at[h], radius: 1.7, strength: 0.75 }));
+  return HOLES.flatMap((h) => streak(at[h], 2.1, 0.92));
 }
 
 const hall = defineFamily({
@@ -103,34 +200,55 @@ const hall = defineFamily({
   budget: { triangles: [52000, 9500, 1200] },
   paint: TEAM_PAINT,
   variants: TEAM_VARIANTS,
-  glow: [{ parts: ['windows', 'oculus', 'beacon_*'], color: GLOW, strength: 3 }],
+  // Saltmarch lamps glow at 1.2 across the RTS set: lit amber, not blown to white.
+  glow: [{ parts: ['windows', 'oculus', 'beacon_*', 'lamp_glow'], color: GLOW, strength: 1.2 }],
   defaults: { stage: 'complete' as Stage, damage: 'intact' as Damage },
   build(ctx, p) {
     const lod = ctx.lod;
     const { stage, damage } = p;
     const kit = new Kit();
-    const add = (name: string, m: Parameters<Kit['add']>[1], o?: Parameters<Kit['add']>[2]) =>
-      kit.add(name, m && restrip(m, RULES), o);
+    /** Restrip onto real materials, then scorch (so the scorch never hides a role colour). */
+    const add = (
+      name: string,
+      m: Mesh | null,
+      o?: Parameters<Kit['add']>[2],
+      burn: readonly GrimeZone[] = [],
+    ) => {
+      const r = m && restrip(m, RULES);
+      kit.add(name, r && burn.length ? grime(r, { zones: burn }) : r, o);
+    };
+    /** Loose wreckage lies where it fell: resting contact, not a seated joint. */
+    const LOOSE = { connect: { as: 'rest', why: 'loose rubble lies where it fell' } } as const;
     const ruined = damage === 'rubble';
-    add('plinth', plinth(lod, scorchZones(stage, damage)));
+    const zones = scorchZones(stage, damage);
+    add('plinth', plinth(lod, stage === 'foundation' && damage === 'damaged'), {}, zones);
     const list = wallCells(stage, damage, ctx.rng.fork('walls'));
-    const w = walls(lod, list, ctx.rng.fork('blocks'), scorchZones(stage, damage));
-    if (w.walls) add('walls', w.walls);
-    if (w.trim) add('pilasters', w.trim);
+    // The roof stands on complete, unruined halls only (built below).
+    const w = walls(lod, list, ctx.rng.fork('blocks'), stage === 'complete' && !ruined);
+    if (w.walls) add('walls', w.walls, {}, zones);
+    if (w.trim) add('pilasters', w.trim, {}, zones);
+    if (w.frames) add('window_frames', w.frames, {}, zones);
     if (w.windows) add('windows', w.windows);
     ctx.socket('rally', { kind: 'spawn', at: [HALF_X + 7, 0, 0], dir: [1, 0, 0] });
     ctx.socket('door', { kind: 'interact', at: [HALF_X + 0.4, 0, PLINTH] });
 
-    // Towers: full with team cones when complete; one broken when damaged; stubs in rubble.
+    // Towers: full with team cones when complete; one broken when damaged; stubs in rubble (the
+    // camera-side one left standing ~4 m with its broken crown, the ruin's vertical).
     for (const [s, side] of [
       [1, 'l'],
       [-1, 'r'],
     ] as const) {
       const full = stage === 'complete' ? 7.2 : stage === 'scaffold' ? 3.4 : 0.9;
       const broken = damage === 'damaged' && s === -1 && stage === 'complete';
-      const h = ruined ? Math.min(full, s === 1 ? 1.8 : 1.2) : broken ? 5.2 : full;
-      const t = tower(lod, s, h, stage === 'complete' && !ruined && !broken);
-      add(`tower_${side}`, t.drum);
+      const h = ruined ? Math.min(full, s === -1 ? 2.6 : 1.2) : broken ? 5.2 : full;
+      const capped = stage === 'complete' && !ruined && !broken;
+      const crown = ruined || broken ? 'broken' : 'laying';
+      const t = tower(lod, s, h, capped, crown, ctx.rng.fork(`tower_${side}`));
+      const scorched =
+        ruined || broken
+          ? [{ at: [TOWER.x, s * TOWER.y, h] as Vec3, radius: 1.6, strength: 0.7 }]
+          : [];
+      add(`tower_${side}`, t.drum, {}, scorched);
       if (t.cap) add(`tower_${side}_cap`, t.cap, { paint: 'team' });
       if (t.beacon) add(`beacon_${side}`, t.beacon);
       if (broken)
@@ -149,16 +267,34 @@ const hall = defineFamily({
       add('gables', g.walls);
       if (g.frame) add('gable_frame', g.frame);
       if (g.oculus) add('oculus', g.oculus);
-      const missing = damage === 'damaged' ? [1, 2] : [];
-      const left = roofSlopes(lod, 1, []);
-      const right = roofSlopes(lod, -1, missing);
+      const hit = damage === 'damaged';
+      const left = roofSlopes(lod, 1, [], ctx.rng.fork('roof_l'));
+      const right = roofSlopes(lod, -1, hit ? [1, 2] : [], ctx.rng.fork('roof_r'));
+      // Scorch round the roof hole: the slates there are burnt dark.
+      const burnt: GrimeZone[] = hit
+        ? [
+            {
+              at: [(ROOF_HOLE[0] + ROOF_HOLE[1]) / 2, -4, (EAVES + RIDGE) / 2],
+              radius: 4.4,
+              strength: 0.92,
+            },
+          ]
+        : [];
       if (left) add('roof_l', left, { paint: 'team' });
-      if (right) add('roof_r', right, { paint: 'team' });
-      const r = damage === 'damaged' ? rafters(lod) : null;
-      if (r) add('rafters', r);
-      add('porch', porch(lod, damage));
-      const d = gate(lod, stage);
-      if (d) add('gate', d);
+      if (right) add('roof_r', right, { paint: 'team' }, burnt);
+      add('roof_ridge', ridgeRoll(lod), { paint: 'team' });
+      const r = hit ? rafters(lod, ROOF_HOLE) : null;
+      if (r) add('rafters', r, {}, burnt);
+      add('porch', porch(lod));
+      add('porch_roof', porchRoof(lod, hit, ctx.rng.fork('porch')), { paint: 'team' });
+      const d = gate(lod);
+      add('gate', d.leaves);
+      if (d.surround) add('portal', d.surround);
+      const l = lamp(lod);
+      if (l) {
+        add('lamp', l.iron);
+        add('lamp_glow', l.glass);
+      }
     }
 
     // Banners: who owns this, in every state.
@@ -168,7 +304,7 @@ const hall = defineFamily({
         [1, 'l'],
         [-1, 'r'],
       ] as const) {
-        const b = banner(lod, [front, s * 3.6, 0], 6.2, damage === 'damaged' && s === 1);
+        const b = banner(lod, [front + 0.4, s * 3.6, 0], 6.2, damage === 'damaged' && s === 1);
         add(`banner_pole_${side}`, b.pole);
         add(`banner_${side}`, b.cloth, { paint: 'team' });
       }
@@ -176,6 +312,12 @@ const hall = defineFamily({
       const b = banner(lod, [front, -4.5, 0], stage === 'scaffold' ? 5.5 : 3.5);
       add('banner_pole_r', b.pole);
       add('banner_r', b.cloth, { paint: 'team' });
+    } else if (stage === 'foundation') {
+      // The survey banner survived the raid, knocked askew, its cloth torn: the ruin's vertical.
+      const b = banner(lod, [0, 0, 0], 3.5, true);
+      const lean = { at: [front, -4.5, 0] as Vec3, pitch: -0.2 };
+      add('banner_pole_r', place(b.pole, lean));
+      add('banner_r', place(b.cloth, lean), { paint: 'team' });
     }
 
     // No roof yet (or any more): the hall floor's team chevron inlay is what the RTS camera sees.
@@ -184,8 +326,9 @@ const hall = defineFamily({
         paint: 'team',
       });
     if (stage === 'scaffold' && !ruined) {
-      const sc = scaffold(lod, 4.6);
+      const sc = scaffold(lod, 4.6, ctx.rng.fork('scaffold'), damage === 'damaged');
       add('scaffold', sc.frame);
+      add('scaffold_decks', sc.decks);
       add('tarp', sc.tarp, { paint: 'team' });
       ctx.emitter('build_dust', {
         kind: 'dust',
@@ -197,25 +340,29 @@ const hall = defineFamily({
       });
     }
     if (stage === 'foundation' && !ruined) {
-      const m = materials(lod, ctx.rng.fork('materials'));
+      const m = materials(lod, ctx.rng.fork('materials'), damage === 'damaged');
       add('materials', m.piles);
       add('tarps', m.tarps, { paint: 'team' });
     }
 
     if (damage === 'damaged') {
       const heap = ctx.rng.fork('debris');
-      add(
-        'debris',
-        rubble(
-          lod,
-          heap,
-          [HALF_X + 1.3, -HALF_Y + 3, 0],
-          [0.6, 1.2, 0.5],
-          lod === 0 ? 14 : lod === 1 ? 6 : 3,
-          0,
-        ),
-      );
-      for (const [i, z] of scorchZones(stage, damage).entries())
+      const n = lod === 0 ? 16 : lod === 1 ? 7 : 2;
+      const debris = [rubble(lod, heap, [HALF_X + 1.3, -HALF_Y + 3, 0], [0.6, 1.2, 0.5], n, 0)];
+      if (stage === 'foundation')
+        // Blocks thrown across the yard between the pallets.
+        debris.push(
+          rubble(
+            lod,
+            heap.fork('scatter'),
+            [HALF_X + 2.6, 0, 0],
+            [0.8, 3, 0.3],
+            Math.max(2, n - 4),
+            0,
+          ),
+        );
+      add('debris', merge(debris), LOOSE, zones);
+      for (const [i, z] of zones.filter((_, k) => k % 3 === 0 || stage === 'foundation').entries())
         ctx.emitter(`smoke_${i}`, {
           kind: 'smoke',
           at: z.at,
@@ -245,11 +392,18 @@ const hall = defineFamily({
           heap,
           [0, 0, 0],
           [HALF_X - 1, HALF_Y - 1, 2.4 * n],
-          Math.round((lod === 0 ? 70 : lod === 1 ? 30 : 9) * n) + 2,
+          Math.round((lod === 0 ? 70 : lod === 1 ? 30 : 12) * n) + 2,
           PLINTH,
         ),
+        LOOSE,
+        zones,
       );
-      add('fallen_roof', fallenSlabs(lod, heap, PLINTH), { paint: 'team' });
+      const fallen = fallenSlabs(lod, heap, PLINTH, stage === 'foundation' ? 'tarp' : 'roof');
+      add('fallen_roof', fallen.slabs, { paint: 'team' });
+      if (fallen.grit) add('grit', fallen.grit, LOOSE);
+      if (stage === 'scaffold')
+        add('scaffold_wreck', scaffoldWreck(lod, heap.fork('wreck'), PLINTH + 5 * COURSE), LOOSE);
+      if (stage === 'foundation') add('wreck', leaningPallet(lod), LOOSE);
       for (const [i, at] of (
         [
           [1, -2, 1.5],
@@ -266,39 +420,88 @@ const hall = defineFamily({
           when: 'always',
         });
     }
-    // Measured wear: chipped arrises, moss and damp up the plinth and wall foot, salt dust on
-    // ledges, rain streaks off the eaves and under the sills; ruins and raids add rubble dust.
+    // Measured wear: chipped arrises, damp and moss up the plinth and wall foot, salt dust on
+    // ledges, rain streaks off the eaves and under the sills; ruins and raids add rubble dust; a
+    // building site has mud and mortar slopped round its foot.
     const hurt = damage !== 'intact';
+    const site = stage !== 'complete';
     const masonry = wearOf('masonry', 'hall_masonry', 71);
-    const drips = dripSpots(w.sills, stage === 'complete' && !ruined);
+    const drips = dripSpots(
+      w.sills,
+      stage === 'complete' && !ruined,
+      stage === 'scaffold' && !ruined ? PLINTH + 4 * COURSE - 0.1 : null,
+    );
+    const dust = {
+      dust: {
+        where: 'up-facing',
+        amount: hurt || site ? 0.55 : 0.35,
+        color: DUST,
+        strength: hurt || site ? 0.6 : 0.45,
+      },
+    };
     kit.commit(ctx, [
       {
         wear: {
           ...masonry,
           resolution: [0, 2.5, 0],
           ground: 0,
+          groundBand: 1.5,
           ...(lod < 2 && drips.length ? { fasteners: drips } : {}),
           effects: {
             ...masonry.effects,
-            ...(hurt
-              ? { dust: { where: 'up-facing', amount: 0.5, color: DUST, strength: 0.55 } }
-              : {}),
+            moss: {
+              where: 'ground-near & !down-facing',
+              amount: 0.45,
+              color: MOSS,
+              strength: 0.75,
+            },
+            mud: {
+              where: 'ground-near & !up-facing',
+              amount: site ? 0.55 : 0.3,
+              color: MUD,
+              strength: 0.6,
+            },
+            ...dust,
             ...(lod < 2 && drips.length
               ? {
                   rust: {
                     where: 'fasteners | below-fasteners',
-                    amount: 0.55,
+                    amount: 0.7,
                     color: GRIME,
-                    strength: 0.55,
+                    strength: 0.7,
                     streaks: true,
-                    streakLength: 1.6,
+                    streakLength: 2.2,
                   },
                 }
               : {}),
           },
         },
-        // Blocks and plinth already carry vertices at every arris: no extra tessellation at LOD0.
-        pick: (n) => /^(walls|pilasters|plinth)$/.test(n),
+        // Blocks already carry vertices at every arris: no extra tessellation at LOD0.
+        pick: (n) => /^(walls|pilasters|window_frames|portal)$/.test(n),
+      },
+      {
+        // The plinth is one big slab: tessellate it so damp, mud and dust have vertices.
+        wear: {
+          ...masonry,
+          name: 'hall_plinth',
+          seed: 75,
+          // Under a finished hall only the rim shows: no need to split the hidden top.
+          resolution: stage === 'complete' && !ruined ? [0, 0, 0] : [1.0, 2.0, 0],
+          ground: 0,
+          groundBand: 0.9,
+          effects: {
+            chips: { where: 'convex-edges', amount: 0.12, strength: 0.5 },
+            moss: { where: 'ground-near & side-facing', amount: 0.4, color: MOSS, strength: 0.7 },
+            mud: { where: 'ground-near & side-facing', amount: 0.5, color: MUD, strength: 0.7 },
+            dust: {
+              where: 'up-facing',
+              amount: site || hurt ? 0.5 : 0.3,
+              color: DUST,
+              strength: site || hurt ? 0.6 : 0.45,
+            },
+          },
+        },
+        pick: (n) => n === 'plinth',
       },
       {
         wear: {
@@ -307,11 +510,16 @@ const hall = defineFamily({
           seed: 74,
           resolution: [0.6, 2.0, 0],
           ground: 0,
+          groundBand: 1.5,
           effects: {
             ...masonry.effects,
-            ...(hurt
-              ? { dust: { where: 'up-facing', amount: 0.5, color: DUST, strength: 0.55 } }
-              : {}),
+            moss: {
+              where: 'ground-near & !down-facing',
+              amount: 0.45,
+              color: MOSS,
+              strength: 0.75,
+            },
+            ...dust,
           },
         },
         pick: (n) => /^(gables|tower_[lr]|porch)$/.test(n),
@@ -323,19 +531,39 @@ const hall = defineFamily({
           age: 0.8,
           resolution: [0, 0, 0],
           effects: {
-            chips: { where: 'convex-edges', amount: 0.12, strength: 0.5 },
-            dust: { where: 'up-facing', amount: 0.55, color: DUST, strength: 0.6 },
+            chips: { where: 'convex-edges', amount: 0.16, strength: 0.6 },
+            dust: { where: 'up-facing', amount: 0.45, color: DUST, strength: 0.55 },
           },
         },
-        pick: (n) => n === 'rubble' || n === 'debris',
+        pick: (n) => /^(rubble|debris)$/.test(n),
       },
       {
-        wear: { ...wearOf('cloth', 'hall_timber', 73), ground: 0, resolution: [0, 0, 0] },
-        pick: (n) => /^(gable_frame|rafters|gate|scaffold|materials|banner_pole_[lr])$/.test(n),
+        // Poles carry rings near their feet (site.ts pole()), so mud climbs them, not tints them whole.
+        wear: {
+          ...wearOf('cloth', 'hall_timber', 73),
+          ground: 0,
+          groundBand: 0.6,
+          resolution: [0, 0, 0],
+        },
+        pick: (n) =>
+          /^(gable_frame|rafters|gate|lamp|scaffold|scaffold_decks|scaffold_wreck|materials|wreck|banner_pole_[lr])$/.test(
+            n,
+          ),
       },
     ]);
   },
 });
+
+/** Foundation ruin's vertical: a pallet stood on edge against the −Y tower footing, baulks
+ *  leaning beside it. */
+function leaningPallet(lod: Lod): Mesh {
+  const x0 = TOWER.x + 2.0;
+  const y = -TOWER.y;
+  const parts: Mesh[] = [bar([x0 + 0.95, y, 0.07], [x0 + 0.05, y, 0.95], 1.1, 0.14, PLANK)];
+  for (const dy of lod === 2 ? [0.9] : [0.8, 1.05, -0.85])
+    parts.push(bar([x0 + 1.6, y + dy, 0.11], [x0 + 0.02, y + dy * 0.9, 0.82], 0.22, 0.22, WOOD));
+  return merge(parts);
+}
 
 /** Design envelopes (an invented building: the brief is the source) and the one human-scale spec:
  *  the gate clears 3.5 m, ×1.8 a 1.92 m Warden, so units walk in and out without clipping. */
@@ -359,7 +587,8 @@ export const rts_barracks_damaged = hall.variant({
 export const rts_barracks_rubble = hall.variant({
   name: 'rts_barracks_rubble',
   params: { damage: 'rubble' },
-  real: { length: 13.3, width: 18, height: 2.59 },
+  // The ruin keeps a 4.1 m corner and the camera-side tower stub standing (its vertical).
+  real: { length: 13.3, width: 18, height: 4.1 },
 });
 export const rts_barracks_scaffold = hall.variant({
   name: 'rts_barracks_scaffold',
@@ -374,7 +603,8 @@ export const rts_barracks_scaffold_damaged = hall.variant({
 export const rts_barracks_scaffold_rubble = hall.variant({
   name: 'rts_barracks_scaffold_rubble',
   params: { stage: 'scaffold', damage: 'rubble' },
-  real: { length: 13.3, width: 18, height: 2.23 },
+  // Standing corner and tower stub, the scaffold's fallen poles lying out round the walls.
+  real: { length: 14.6, width: 19.03, height: 4.13 },
 });
 export const rts_barracks_foundation = hall.variant({
   name: 'rts_barracks_foundation',
@@ -389,5 +619,6 @@ export const rts_barracks_foundation_damaged = hall.variant({
 export const rts_barracks_foundation_rubble = hall.variant({
   name: 'rts_barracks_foundation_rubble',
   params: { stage: 'foundation', damage: 'rubble' },
-  real: { length: 13.3, width: 18, height: 1.68 },
+  // The survey banner still stands askew at the front (the ruin's vertical).
+  real: { length: 15.47, width: 18, height: 3.46 },
 });

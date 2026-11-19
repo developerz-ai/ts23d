@@ -5,7 +5,7 @@
 
 import type { Lod, Mesh, Vec3 } from '@developerz.ai/ts23d';
 import { lathe, merge } from '@developerz.ai/ts23d';
-import { cockpitU, GAP, uPlus } from '../body/regions.ts';
+import { cockpitU, GAP, PANEL_STEP, rows, uPlus } from '../body/regions.ts';
 import { U } from '../body/shape.ts';
 import { BULKHEAD_X, FLOOR_Z, TUNNEL_TOP, TUNNEL_W } from '../chassis/structure.ts';
 import { X_DOOR_FRONT, X_DOOR_REAR, X_FIREWALL } from '../dims.ts';
@@ -125,15 +125,21 @@ export function doorCard(S: Surface, lod: Lod): Mesh {
   const s0 = X_DOOR_REAR + GAP;
   // The card stops short of the door's front edge so its inner corner clears the dash end.
   const s1 = X_DOOR_FRONT - 0.05;
-  const ns = [24, 8, 3][lod] ?? 3;
-  const nu = [12, 4, 2][lod] ?? 2;
+  // LOD0: the same stations as the door skin's rows, so the top roll meets the skin's chords.
+  const even = lod === 1 ? 5 : 3;
+  const at =
+    lod === 0
+      ? rows(s0, s1, PANEL_STEP[0], [], PANEL_STEP[0])
+      : Array.from({ length: even + 1 }, (_, i) => s0 + ((s1 - s0) * i) / even);
+  const ns = at.length - 1;
+  const nu = [9, 3, 2][lod] ?? 2;
   const P: Vec3[][] = [];
   const N: Vec3[][] = [];
   const cap: Vec3[][] = [];
   const capN: Vec3[][] = [];
   const skinLines: Vec3[][] = [];
   for (let i = 0; i <= ns; i++) {
-    const s = s0 + ((s1 - s0) * i) / ns;
+    const s = at[i] ?? s1;
     const uE = cockpitU(S, s, s);
     const e = S.row(s)(uE);
     const ne = normalAt(S, s, uE);
@@ -262,7 +268,7 @@ export function doorCard(S: Surface, lod: Lod): Mesh {
 
 /** Two roll hoops behind the seats, each with a rear brace into the deck. */
 export function rollHoops(lod: Lod, seatsY: number): Mesh {
-  const segs = [14, 7, 4][lod] ?? 4;
+  const segs = [10, 6, 3][lod] ?? 3;
   const x = BULKHEAD_X - 0.05;
   const parts: Mesh[] = [];
   for (const s of [1, -1]) {
@@ -278,7 +284,7 @@ export function rollHoops(lod: Lod, seatsY: number): Mesh {
       [x, yc + w, top - 0.1],
       [x, yc + w, 0.88],
     ];
-    parts.push(tube(pts, 0.045, C.natural, 'aluminium', segs, lod === 0 ? 6 : 2));
+    parts.push(tube(pts, 0.045, C.natural, 'aluminium', segs, [4, 2, 1][lod] ?? 1));
     parts.push(
       tube(
         [
@@ -290,7 +296,7 @@ export function rollHoops(lod: Lod, seatsY: number): Mesh {
         C.natural,
         'aluminium',
         segs,
-        2,
+        lod === 2 ? 1 : 2,
       ),
     );
     if (lod === 0) {

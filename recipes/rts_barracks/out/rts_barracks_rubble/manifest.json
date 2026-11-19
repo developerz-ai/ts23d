@@ -20,9 +20,9 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    10316,
-    3662,
-    592
+    19114,
+    3830,
+    574
   ],
   "drawCalls": [
     2,
@@ -98,7 +98,7 @@
   "real": {
     "length": 13.3,
     "width": 18,
-    "height": 2.59
+    "height": 4.1
   },
   "measures": [],
   "sources": [
@@ -107,66 +107,99 @@
   ],
   "weather": {
     "chips": {
-      "target": 0.1058,
-      "actual": 0.1058,
+      "target": 0.1249,
+      "actual": 0.1249,
       "eligible": "convex-edges",
-      "area": 656.275,
+      "area": 556.774,
       "by": {
         "hall_masonry": {
           "target": 0.1,
           "actual": 0.1,
-          "area": 391.3129
+          "area": 166.7305
+        },
+        "hall_plinth": {
+          "target": 0.12,
+          "actual": 0.12,
+          "area": 72.1043
         },
         "hall_render": {
           "target": 0.1,
           "actual": 0.1,
-          "area": 76.2595
+          "area": 110.7426
         },
         "hall_rubble": {
-          "target": 0.12,
-          "actual": 0.12,
-          "area": 188.7026
+          "target": 0.16,
+          "actual": 0.16,
+          "area": 207.1966
         }
       }
     },
     "moss": {
-      "target": 0.35,
-      "actual": 0.35,
-      "eligible": "ground-near & !down-facing",
-      "area": 251.9768,
+      "target": 0.4392,
+      "actual": 0.4392,
+      "eligible": "ground-near & !down-facing ; ground-near & side-facing",
+      "area": 146.1351,
       "by": {
         "hall_masonry": {
-          "target": 0.35,
-          "actual": 0.35,
-          "area": 231.7795
+          "target": 0.45,
+          "actual": 0.45,
+          "area": 77.9177
+        },
+        "hall_plinth": {
+          "target": 0.4,
+          "actual": 0.4,
+          "area": 31.4635
         },
         "hall_render": {
-          "target": 0.35,
-          "actual": 0.35,
-          "area": 20.1973
+          "target": 0.45,
+          "actual": 0.45,
+          "area": 36.7539
+        }
+      }
+    },
+    "mud": {
+      "target": 0.358,
+      "actual": 0.358,
+      "eligible": "ground-near & !up-facing ; ground-near & side-facing",
+      "area": 108.4045,
+      "by": {
+        "hall_masonry": {
+          "target": 0.3,
+          "actual": 0.3,
+          "area": 76.941
+        },
+        "hall_plinth": {
+          "target": 0.5,
+          "actual": 0.5,
+          "area": 31.4635
         }
       }
     },
     "dust": {
-      "target": 0.5087,
-      "actual": 0.5087,
+      "target": 0.5013,
+      "actual": 0.5013,
       "eligible": "up-facing",
-      "area": 287.0395,
+      "area": 274.2418,
       "by": {
         "hall_masonry": {
-          "target": 0.5,
-          "actual": 0.5,
-          "area": 208.1111
-        },
-        "hall_render": {
-          "target": 0.5,
-          "actual": 0.5,
-          "area": 28.9927
-        },
-        "hall_rubble": {
           "target": 0.55,
           "actual": 0.55,
-          "area": 49.9357
+          "area": 23.3429
+        },
+        "hall_plinth": {
+          "target": 0.5,
+          "actual": 0.5,
+          "area": 170.6948
+        },
+        "hall_render": {
+          "target": 0.55,
+          "actual": 0.55,
+          "area": 32.0409
+        },
+        "hall_rubble": {
+          "target": 0.45,
+          "actual": 0.45,
+          "area": 48.1632
         }
       }
     }

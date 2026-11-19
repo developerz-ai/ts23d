@@ -14,10 +14,10 @@ tubes, tone, probes).
 
 | Dimension | Value | Reasoning |
 |---|---|---|
-| Nose to tail tip (X) | 8.7 m | tail ≈ 45% of length like a monitor lizard, resting on the ground in an S |
+| Nose to tail tip (X) | 8.9 m | tail ≈ 45% of length like a monitor lizard, resting on the ground in an S; the neck 18 % longer than the bind skeleton's (`pose.ts`) |
 | Wing span in the pose (Y) | 7.9 m | raised and swept back 28° so both membranes show from 3/4 views |
-| Height to wing tips (Z) | 4.7 m | wings raised in a V over the back |
-| Shoulder height | ~2.0 m | front limbs heavier than hind (gorilla/lion stance = power read) |
+| Height to wing tips (Z) | 4.9 m | wings raised in a V over the back; the trunk stands 0.2 m higher on longer forearms and shanks (`pose.ts`) |
+| Shoulder height | ~2.2 m | front limbs heavier than hind (gorilla/lion stance = power read) |
 | Head length | 1.45 m | ~1/6 of body length: oversized for the stylised read; crocodilian muzzle |
 | Horn length (main pair) | ~1.1 m | sweeps back past the skull, the signature silhouette |
 
@@ -95,11 +95,31 @@ model and `dragon.test.ts` holds them (`bun test recipes/dragon`).
 
 | LOD | Sculpt cell (body / head) | Keeps | Drops |
 |---|---|---|---|
-| 0 | 4.4 cm / 1.6 cm | VDM scale stamps (graded by size, tips tailward, seams painted), horn-root collars, belly plate seams, horn rings, full tooth rows, membrane veins | — |
-| 1 | 8.5 cm / 4 cm | every mass, horns (tubes), spines, claws, every other tooth (larger); the big dorsal scale stamps and horn collars at reduced depth, scale paint | rings, small teeth, veins, small scale stamps |
-| 2 | 25 cm / 14 cm | silhouette: torso sculpt, tube legs / wing bones / tail, horns, fangs | all secondary forms |
+| 0 | 5.7 cm / 1.6 cm | VDM scale stamps (graded by size, tips tailward, seams painted), horn-root collars, belly plate seams, horn rings, full tooth rows, membrane veins | — |
+| 1 | 15 cm / 5.4 cm | every mass, horns (tubes), spines, claws, every other tooth (larger); the big dorsal scale stamps and horn collars at reduced depth, scale paint | rings, small teeth, veins, small scale stamps |
+| 2 | 25 cm / 16 cm | silhouette: torso sculpt, tube legs / wing bones / tail, horns, fangs | all secondary forms |
 
 Thin parts (horns, claws, teeth, finger bones) are tubes at every LOD — a sculpt would need
 sub-centimetre cells; the torso, head and jaw are sculpts.
 
-Budget (measured): 200k / 45k / 4.5k triangles; see `dragon.ts`.
+Budget: 150k / 30k / 4k triangles, the creature band (measured 148.9k / 27.7k / 4.0k); see
+`dragon.ts`. The wing-finger spur is a banded tube (it was a 6 mm sculpt: 3 k triangles a wing).
+
+## Proportions (`pose.ts`)
+Every module sculpts against the bind skeleton (`skeleton.ts`). `pose.ts` carries the finished
+parts, their pivots, joints and crease regions to the posed skeleton, as a rig carries a
+bind-pose mesh: the lower legs (paw top → elbow / knee height) stretch so the trunk stands 0.2 m
+higher, and the neck line scales 1.18 × about its base, the head riding its end. Change a
+proportion there; no module holds a posed coordinate.
+
+## Wear (`field.ts`)
+Ash from its own breath settled grey on the back and wing tops; soot baked round the nostrils
+and the corners of the mouth; cinder mud on the feet, belly edge and the dragging tail; three
+claw rakes healed across the right flank, a cut across the snout and one down the neck; the right
+main horn's last fifth snapped off on a slanted break; the right wing's trailing edge torn in a
+V between the second and third fingers (vertices pulled in, the membrane slab stays closed).
+
+Known gaps (2026-11-19): the pose stretches the lower legs' sculpt and scale stamps by 26 %
+rather than re-sculpting them longer, and it does not narrow them; the head cell cannot go past
+1.6 cm (horn collars and nostrils alias into seams at 1.7); no stamped scale rows on the neck
+and no raised membrane veins (painted only).

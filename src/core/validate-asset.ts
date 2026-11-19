@@ -4,6 +4,7 @@
 
 import type { AssetDefinition, Measure } from './definition.ts';
 import { Ts23dError } from './errors.ts';
+import { checkHeroView } from './hero-view.ts';
 import type { Mesh } from './mesh.ts';
 import type { Lod, Part, PartOptions } from './part.ts';
 import { checkSeed } from './rng.ts';
@@ -91,6 +92,7 @@ export function checkAsset(def: AssetDefinition): void {
     );
   checkTextureBudget(name, def.budget.textureSets);
   if (def.seed !== undefined) checkSeed(def.seed, `'${name}' seed`);
+  if (def.hero !== undefined) checkHeroView(name, def.hero);
   const real = def.real;
   if (!real) return;
   for (const axis of ['length', 'width', 'height'] as const)

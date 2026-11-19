@@ -1,33 +1,33 @@
 {
   "asset": "t34",
   "reviewer": "agent",
-  "overall": 6.7,
+  "overall": 7,
   "scores": {
     "silhouette": {
       "score": 8,
-      "reason": "Unmistakable T-34: sloped glacis and side plates, five Christie road wheels plus idler and sprocket, hex turret with twin cupola hatches, rear fuel drums, F-34 gun. Reads from all six views and LOD2.",
+      "reason": "Unmistakable T-34: sloped glacis and sides, five Christie wheels plus idler and sprocket, hex turret with twin cupola hatches, F-34 gun, rear drums/exhausts. Reads from all six views and LOD2.",
       "fixes": [
         "soften the turret edges (cast radius) so it is not a sharp-edged box"
       ]
     },
     "proportions": {
       "score": 8,
-      "reason": "6.8 x 3.1 x 2.5 m against the 6.68 x 3.00 x 2.45 m spec; wheel 830 mm, track 550 mm and barrel pass the measures.",
+      "reason": "Within the 6.68 x 3.00 x 2.45 m spec; wheel, track and barrel measures pass.",
       "fixes": [
-        "check the turret ring position against a side elevation (turret reads slightly far forward)"
+        "check the turret ring position against a side elevation"
       ]
     },
     "materials": {
-      "score": 5,
-      "reason": "Green paint reads, rubber tyres read, spare links read rust-red; but the track links read as brown wooden slats under raking light, and the chips are uniform black dots spread over every plate like spatter.",
+      "score": 6,
+      "reason": "Track links now read as dark steel and the dot chips are gone. The hull carries a mottled khaki/green dust layer that in hero.png and the sheet TOP reads as a printed camouflage pattern (pixel-blocky in TOP) rather than dust settling on horizontal faces; road wheels are uniformly dust-tan including the hub caps.",
       "fixes": [
-        "track links in a dark steel/iron_rust with a lighter worn grouser face instead of the brown wood-like strip",
-        "edge-biased chipping instead of uniform dots"
+        "dust only on up-facing plates and lower hull, fading with height (grime ground/up masks) instead of an all-over mottle",
+        "rubber tyres darker than the dusted wheel discs"
       ]
     },
     "detail": {
       "score": 7,
-      "reason": "Link track with horns, dished wheels with ribs, grab rails, glacis spare links, hatches, MG ball, fuel drums with straps, exhausts, slogan.",
+      "reason": "Raking.png: link track with horns, dished wheels with ribs, grab rails, spare links, hatches, MG ball, fuel drums with straps, exhausts, slogan; no weld beads at plate joints, no tow cable.",
       "fixes": [
         "weld beads at plate joints",
         "tow cable along the hull side",
@@ -35,87 +35,87 @@
       ]
     },
     "wear": {
-      "score": 4,
-      "reason": "Only the dot chips: in hero.png and raking.png the wheels, tracks and lower hull carry no visible mud or dust, the exhausts no soot on the rear plate.",
+      "score": 6,
+      "reason": "Dusty wheels and running gear and a weathered hull now give a field story; the dust is all-over rather than where it would settle, and the exhausts leave no soot on the rear plate.",
       "fixes": [
-        "grime({ ground }) mud on tracks, wheels and lower hull",
         "exhaust soot on the rear plate",
-        "dust on the deck"
+        "mud heaviest on the lower hull and track run, lighter up the sides"
       ]
     },
     "lod": {
-      "score": 7,
-      "reason": "lods.png: LOD2 (1.7k) keeps the outline, turret, wheels as discs in an open belt and colour; spare links and slogan drop.",
+      "score": 6,
+      "reason": "lods.png: LOD2 keeps the outline and turret, but the dust-tan road wheels become green faceted slabs and the hull mottle goes flat green, so the running gear changes colour at the switch.",
       "fixes": [
-        "keep the glacis spare links as two dark quads at LOD2"
+        "keep the road-wheel discs dust-tan at LOD2 (same vertex/tile colour as LOD0)",
+        "bake the hull mottle into LOD2 colour or remove it from LOD0"
       ]
     },
     "technical": {
       "score": 8,
-      "reason": "QA clean (pack): 48.2k / 10.4k / 1.7k tris, one material.",
+      "reason": "QA PASS: 58.1k / 12.6k / 1.49k tris, 19 draws (one per moving pivot), one material.",
       "fixes": [
         "declare real.mass (26.5 t) and a physics shell so the mass gate covers it"
       ]
     }
   },
   "renders": {
-    "hero.png": "fe265cbf198fc8d4f65057601b0622a2f96b9daeed7400f94f7b26fa1d4de177",
-    "sheet.png": "09459a8b40af00dd37aac94207d4a1b374d8dca8fdf6a4185968a89394abb2e5",
-    "raking.png": "5220ed096a7211add507eb057f74023902176081e3f4309d75ac053afc6e083d",
-    "raking_detail.png": "83af90b2cb9708c8b140348800fb85dcb64d22b72e49538c1fe8a3bca31c13ad",
-    "lods.png": "b773835030ec6b29aa7ded4d6a41a185b932ce274a80d252e16a6221cb281a9d",
-    "silhouette.png": "d063d4af0aced926df68cc493537ab3cfdd26255e69f7a855a4ab3e6caf7ce72",
-    "value.png": "61365a41474dd50b246aebc281be6efefff430db18cc002f0749ca6f76cbf97f",
-    "detail.png": "4c8acd18fda3f243e9572d984fa80f65cecb629756f8b014e2953fb5fb7d750e"
+    "hero.png": "647338916221c4810a4b82f6d4f11081c8f575d5b6ae394bcb963a3a47bbe495",
+    "sheet.png": "50bd5fa008fbe59edcd92de74bf5cebcefe55a0d78d9080900f32b5a04786e12",
+    "raking.png": "ba49732e8f76d75c82f1ba7c0ecbe60391856d4f45365bc7e422eab4a1585c5d",
+    "raking_detail.png": "169f6181e89ca3346ef3b7803195dfe031a58756f402c2f7a7dffd0c793dffdf",
+    "lods.png": "4d2ceffb29dbe410b39d3f9a8ac724dd3a271c0ac91d44e13ea1e2119afebd23",
+    "silhouette.png": "e9a92c5844cf4fc853b29098169ee4468390b2b8ee5164ef4189ef89cb1f01d2",
+    "value.png": "2dbaa55078a671207199d8c5d3e402816be00eae4f30a0daf4fa002784c908cb",
+    "detail.png": "6f7fd76501351df1d96e3f1389b0158904d568ce8d53075f65babfaab8b739d7"
   },
   "metrics": {
     "silhouette": [
       {
         "view": "front",
-        "iou": 0.934
+        "iou": 0.935
       },
       {
         "view": "side",
-        "iou": 0.906
+        "iou": 0.904
       },
       {
         "view": "3/4",
-        "iou": 0.982
+        "iou": 0.979
       }
     ],
     "focal": {
       "peakPart": "turret_body",
       "peak": [
-        397,
-        76
+        273,
+        124
       ],
       "focalShare": 0,
       "focalArea": 0,
       "top": [
         {
-          "part": "turret_body",
-          "share": 0.613
-        },
-        {
-          "part": "fittings",
-          "share": 0.262
+          "part": "track_r",
+          "share": 0.295
         },
         {
           "part": "hull",
-          "share": 0.063
+          "share": 0.254
+        },
+        {
+          "part": "turret_body",
+          "share": 0.164
         }
       ],
       "declared": []
     },
     "rest": {
-      "share": 0.465,
-      "spread": 0.819,
+      "share": 0.404,
+      "spread": 0.808,
       "min": 0.25
     },
     "shape": {
-      "acuteShare": 0.056,
-      "straightShare": 0.603,
-      "taper": 0.426,
+      "acuteShare": 0.152,
+      "straightShare": 0.579,
+      "taper": 0.41,
       "shape": "stable"
     }
   }

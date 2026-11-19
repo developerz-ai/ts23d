@@ -1,20 +1,27 @@
 // Finish passes for the Tiger: map flat authoring colours onto material-library strips, split
 // long triangles so vertex-colour camouflage has room, spray soft-edged three-tone camo, and
 // weather (dust on top plates, ragged mud from the ground, soot plumes, heat stain). Pure vertex
-// colour / UV work on finished meshes: shape stays in tiger_1.ts.
+// colour / UV work on finished meshes: shape stays in the recipe. Small per-vertex wear helpers
+// (shade, mix, mudFor) live in wear.ts.
 
 import {
   DEFAULT_SHEET,
   type Mesh,
   MeshBuilder,
+  materialOf,
+  materialsInUse,
   type Rng,
+  STRIP_H,
+  STRIPS,
   type StripId,
   stripAtV,
   stripRect,
+  Ts23dError,
   type Vec2,
   type Vec3,
   valueNoise,
 } from '@developerz.ai/ts23d';
+import { mudFor, smooth } from './wear.ts';
 
 /**
  * Rest a track belt on z = 0: links rounding the end wheels can dip a corner below the ground
@@ -68,10 +75,56 @@ export function restrip(m: Mesh, rules: readonly StripRule[]): Mesh {
 }
 
 /**
+ * The sheet row most of a triangle's vertices sit on. A vertex exactly on a row boundary (a
+ * strip's top edge is the next strip's bottom) counts half for each of the two rows, so a triangle
+ * filling its strip keeps it; ties go to the first vertex's row. A triangle whose vertices sit on
+ * different strips (one recoloured by `restrip`, another left plain, say) takes one of those
+ * strips, never the row between them that a mean of V picks (that drew tan wood triangles across
+ * a grey hull).
+ */
+export function triangleRow(vs: readonly number[]): number {
+  const eps = 1e-6;
+  const votes = new Map<number, number>();
+  const vote = (r: number, w: number): void => {
+    votes.set(r, (votes.get(r) ?? 0) + w);
+  };
+  for (const v of vs) {
+    const r = Math.floor(v / STRIP_H);
+    if (Math.abs(v - r * STRIP_H) < eps) {
+      vote(r, 0.5);
+      vote(r - 1, 0.5);
+    } else vote(r, 1);
+  }
+  let best = Math.floor((vs[0] ?? 0) / STRIP_H);
+  for (const [r, w] of votes) if (w > (votes.get(best) ?? 0) + eps) best = r;
+  return best;
+}
+
+/**
+ * The strip a triangle sits on (`triangleRow`): a built-in id, or the project material
+ * (defineMaterial) the running compile holds on that custom row; null for decal / foliage cells
+ * (left as authored).
+ */
+function stripOfTriangle(va: number, vb: number, vc: number): StripId | null {
+  const row = triangleRow([va, vb, vc]);
+  const id = stripAtV((row + 0.5) * STRIP_H);
+  if (id === 'cell') return null;
+  if (id !== 'custom') return id;
+  const held = materialsInUse()?.find((u) => u.row === row - STRIPS.length);
+  if (!held)
+    throw new Ts23dError('T3D_MATERIAL_UNKNOWN', {
+      cause: `reproject: a triangle sits on custom strip row ${row - STRIPS.length}, but no material of the running compile holds it`,
+      fix: 'call reproject inside build(), on meshes whose project materials were mapped there (stripRect / restrip)',
+    });
+  return held.id as StripId;
+}
+
+/**
  * Re-map UVs at true scale by box projection per triangle (the face normal's dominant axis). V
  * starts at the triangle's own lowest point and is squeezed only when the triangle is taller than
  * one band, so V never wraps or folds inside a triangle (which draws contour-line chevrons). Needs
- * unwelded triangles (as `tessellate` emits). Keeps each vertex's strip.
+ * unwelded triangles (as `tessellate` emits). Keeps each vertex's strip, built-in or a project
+ * material's custom row (at that material's own scale); decal and foliage cells stay as authored.
  */
 export function reproject(m: Mesh): Mesh {
   const uvs = new Float32Array(m.uvs);
@@ -90,10 +143,14 @@ export function reproject(m: Mesh): Mesh {
     ];
     const [nx = 0, ny = 0, nz = 0] = n;
     const [ku, kv] = nz >= Math.max(nx, ny) ? [0, 1] : nx >= ny ? [1, 2] : [0, 2];
-    const id = stripAtV(m.uvs[a * 2 + 1] ?? 0);
-    if (id === 'custom' || id === 'cell') continue;
+    const id = stripOfTriangle(m.uvs[a * 2 + 1] ?? 0, m.uvs[b * 2 + 1] ?? 0, m.uvs[c * 2 + 1] ?? 0);
+    if (!id) continue;
     const r = stripRect(id);
-    const vm = DEFAULT_SHEET.strips[id]?.scaleMetres ?? 1;
+    const vm =
+      (DEFAULT_SHEET.strips as Readonly<Record<string, { scaleMetres?: number }>>)[id]
+        ?.scaleMetres ??
+      materialOf(id).recipe.scaleMetres ??
+      1;
     const vs = ids.map((i) => at(i, kv));
     const lo = Math.min(...vs);
     const base = Math.floor(lo / vm) * vm;
@@ -157,11 +214,6 @@ export interface Blob {
   readonly color: Vec3;
 }
 
-const smooth = (a: number, b: number, x: number): number => {
-  const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
-  return t * t * (3 - 2 * t);
-};
-
 /**
  * Sprayed camouflage over the base paint only: ellipsoid blobs whose edge is a soft overspray
  * band, wobbled by noise so it does not read as a geometric ellipse.
@@ -210,11 +262,12 @@ export interface WeatheringOptions {
   /** Mud rises to this height (m), with a ragged edge. */
   readonly mud?: number;
   readonly mudStrength?: number;
+  /** Mud colour. Default: `mudFor` each vertex's own paint (earth that reads against it). */
+  readonly mudColor?: Vec3;
   readonly soot?: readonly Soot[];
 }
 
 const DUST: Vec3 = [0.5, 0.44, 0.33];
-const MUD: Vec3 = [0.028, 0.02, 0.012];
 const SOOT: Vec3 = [0.05, 0.045, 0.04];
 
 /** A weathering pass with its own seeded noise (scale ≈ 0.4 m blotches). */
@@ -241,7 +294,16 @@ export function weatherer(rng: Rng): (m: Mesh, o: WeatheringOptions) => Mesh {
         const edge = o.mud * (1 + 0.35 * nv) - p[2];
         // Rear splash runs higher (tracks throw mud backwards).
         const rear = p[0] < 0 ? 1 + Math.min(0.4, -p[0] * 0.08) : 1;
-        mix(MUD, (o.mudStrength ?? 0.7) * smooth(0, 0.35 * rear, edge * rear));
+        // Against the paint as authored (before dust), so one panel's mud is one earth tone.
+        const paint: Vec3 = [
+          m.colors[i * 3] ?? 0,
+          m.colors[i * 3 + 1] ?? 0,
+          m.colors[i * 3 + 2] ?? 0,
+        ];
+        mix(
+          o.mudColor ?? mudFor(paint),
+          (o.mudStrength ?? 0.7) * smooth(0, 0.35 * rear, edge * rear),
+        );
       }
       for (const s of o.soot ?? []) {
         const dx = (p[0] - s.at[0]) * (p[0] < s.at[0] ? 0.6 : 1.4);

@@ -1,62 +1,61 @@
 {
   "asset": "real_valley",
   "reviewer": "agent",
-  "overall": 7.3,
+  "overall": 7.6,
   "scores": {
     "silhouette": {
       "score": 8,
-      "reason": "Measured USGS relief: Half Dome and the north-rim walls over the flat floor read as Yosemite in the sheet views.",
+      "reason": "Half Dome's shaved face and the granite walls of the valley read in hero.png and FRONT.",
       "fixes": [
-        "frame the hero from the Glacier Point side so Half Dome is in the outline"
+        "frame the hero so El Capitan also shows"
       ]
     },
     "proportions": {
       "score": 9,
-      "reason": "True scale 4 × 4 km; summit heights match Wikidata within 1 %.",
+      "reason": "Real DEM relief; walls and domes at true height.",
       "fixes": [
         "a true-relief view from Glacier Point to compare 1:1"
       ]
     },
     "materials": {
-      "score": 5,
-      "reason": "Hero.png shows strong diagonal stripe banding on every slope and granite reads olive; sheet.png renders the terrain flat grey.",
+      "score": 7,
+      "reason": "Land cover now separates granite, forest, meadow on the valley floor and grass; the granite is a flat smooth grey.",
       "fixes": [
-        "land cover from an open dataset instead of slope-only colouring",
-        "blend strips across triangle borders"
+        "granite with vertical streaking and exfoliation tone variation"
       ]
     },
     "detail": {
       "score": 7,
-      "reason": "Survey detail only (talus, gullies, benches); no trees, boulders or river.",
+      "reason": "Tree specks on the forest and the meadow pattern; the Merced now runs as a continuous thin line through the valley in TOP, but it is a hairline, not a river channel, and does not read in hero.png.",
       "fixes": [
-        "tree impostors on the forest floor",
-        "the Merced carved from an OSM centreline"
+        "widen the Merced to its real ~30-50 m channel with a gravel bank so it reads in hero.png",
+        "tree impostors on the forest floor"
       ]
     },
     "wear": {
       "score": 6,
-      "reason": "Terrain shape carries the weathering; no water streaks on the granite.",
+      "reason": "No dark water streaks down the cliffs below drainage lines.",
       "fixes": [
-        "dark water streaks down the cliffs below drainage lines"
+        "dark water streaks below drainage lines on the granite walls"
       ]
     },
     "lod": {
       "score": 8,
-      "reason": "FAR LOD2 keeps silhouette and relief.",
+      "reason": "FAR LOD2 no longer breaks the land cover into blocky checker squares: forest, meadow and granite stay soft blocks; the faces still show faceted shading.",
       "fixes": [
-        "seat the dark slivers on LOD2 ridgelines"
+        "smooth the LOD2 normals so the faceting does not show at the switch"
       ]
     },
     "technical": {
       "score": 8,
-      "reason": "QA clean; 133k / 34k / 8.7k tris, one draw, DEM hash verified.",
+      "reason": "140k / 38k / 3.6k triangles, one draw.",
       "fixes": [
-        "a 512-cell z14 variant for hero use"
+        "a 512-cell variant for hero use"
       ]
     }
   },
   "renders": {
-    "hero.png": "44aa8b9bae95952c8db0eb7126b58ce2ff4eed9ae883a118e1112f8bf2eb0d31",
-    "sheet.png": "b77de0d3c7dd8658772996d1ce3f8964577f0f3264dafb315d51af9f2c7181ec"
+    "hero.png": "6b2db222b57f2e536255879d4f57c1961a7ef62ba09118b7601c8c1c3e6071fa",
+    "sheet.png": "b7eee65644e701218c4ed60d9b1230a5b7909060cb0108f50ea58dacbaf1384d"
   }
 }

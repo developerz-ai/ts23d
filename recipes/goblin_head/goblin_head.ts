@@ -29,7 +29,7 @@ export const goblin_head = defineAsset({
   // sculpted wisps stood 2 cm proud behind it (0.235 m).
   real: {
     length: 0.223,
-    width: 0.35,
+    width: 0.276,
     height: 0.482,
     measures: [
       {
@@ -41,8 +41,14 @@ export const goblin_head = defineAsset({
       },
     ],
   },
-  budget: { triangles: [90000, 30000, 4400] },
-  finishes: { cornea: { clearcoat: 1, clearcoatRoughness: 0.04 } },
+  // LOD0: the head's skin ≈ 30k (eyes and ears meshed finer), the four garment layers ≈ 17k.
+  // Draws: skin, face-node cloth, static fittings, corneas, hair cards.
+  budget: { triangles: [58000, 14500, 2700], draws: 5 },
+  // The cornea's lacquer, and the skin: the pore strip's roughness under a dull olive sheen.
+  finishes: {
+    cornea: { clearcoat: 1, clearcoatRoughness: 0.04 },
+    skin: { sheen: { colour: '#6c7440', roughness: 0.5 } },
+  },
   art: { focal: 'head', shape: 'aggressive' },
   // Intended creases (QA `connections` skips them): one small region per sculpted fold, from the
   // geometry that sculpts it (creases.ts) — never an area.

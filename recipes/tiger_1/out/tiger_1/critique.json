@@ -1,71 +1,65 @@
 {
   "asset": "tiger_1",
   "reviewer": "agent",
-  "overall": 6.7,
+  "overall": 7,
   "scores": {
     "silhouette": {
       "score": 8,
-      "reason": "Mid-production Tiger I: slab hull with panniers, interleaved running gear, horseshoe turret with low cupola, mantlet, long 88 with muzzle brake, rear exhaust covers. Reads from every view.",
+      "reason": "Mid-production Tiger I: slab hull with panniers, interleaved running gear, horseshoe turret with low cupola, mantlet, long 88 with muzzle brake, exhaust covers; reads from every view.",
       "fixes": [
         "round the mantlet top/bottom edges (cast radius)"
       ]
     },
     "proportions": {
-      "score": 7,
-      "reason": "8.7 x 3.6 x 3.0 m against the 8.45 x 3.56 x 3.00 m dossier; measures pass, length +3% from rear fittings.",
+      "score": 8,
+      "reason": "8.7 x 3.6 x 3.0 m against 8.45 x 3.56 x 3.00; the +3% is documented in the README (gun-forward figure, rear fittings).",
       "fixes": [
-        "document whether the 8.45 m figure includes the exhaust covers, or move the covers"
+        "none needed beyond the documented length; a rear elevation overlay to confirm the exhaust cover height"
       ]
     },
     "materials": {
       "score": 6,
-      "reason": "Dunkelgelb with red-brown and green blotches, Zimmerit reads as fine corrugation, rubber tyres; the camo blotches look printed over the Zimmerit rather than sprayed, chips are uniform dark dots, and the wheels read as bronze plastic.",
+      "reason": "Dunkelgelb with red-brown spots and green, Zimmerit as corrugation, dark tracks; the red-brown camo reads as small round \"measles\" spots with drip tails that look printed over the Zimmerit, and the road wheels share the hull paint with no rubber tyre value.",
       "fixes": [
-        "a matte Zimmerit project material",
-        "fewer, edge-biased chips",
-        "darker, rougher steel wheel discs"
+        "sprayed soft-edged camo bands following the plates (fewer, larger shapes)",
+        "dark rubber rims on the road wheels"
       ]
     },
     "detail": {
       "score": 7,
-      "reason": "Zimmerit relief, tow cables, tools, spare links on the turret, cupola periscopes, mantlet bolts, engine-deck grilles, exhaust shrouds, lights, number and cross.",
+      "reason": "Raking.png: Zimmerit relief, tow cables, tools, spare links on the turret, cupola, mantlet, deck grilles, exhaust covers, lights, number and cross.",
       "fixes": [
         "weld beads along interlocked hull corners",
         "fender support brackets"
       ]
     },
     "wear": {
-      "score": 5,
-      "reason": "Raking.png shows little mud on the running gear and none on the lower hull; the dot chips and blotches carry the read.",
+      "score": 6,
+      "reason": "Raking.png: dust/mud on the road wheels and running gear now reads; the hull sides and rear carry no mud, no exhaust soot.",
       "fixes": [
-        "grime({ ground }) mud on tracks, wheels and lower hull, heavier at the rear",
-        "exhaust soot on the deck"
+        "mud on the lower hull, heavier at the rear",
+        "exhaust soot on the deck and exhaust covers"
       ]
     },
     "lod": {
-      "score": 7,
-      "reason": "LOD2 (3.5k) keeps the turret, interleaved wheels as discs, crosses, number and camo blocks; Zimmerit and deck furniture drop.",
+      "score": 6,
+      "reason": "lods.png: LOD2 (1.38k) keeps turret, number and cross, but the camo turns into large hard-edged polygons unlike the LOD0 spots, and the interleaved wheels become separated octagon slabs with gaps.",
       "fixes": [
-        "keep the two exhaust covers as boxes at LOD2"
+        "same camo pattern at LOD2 (vertex-colour bake of the LOD0 spots)",
+        "keep the wheel rows as overlapping discs at LOD2"
       ]
     },
     "technical": {
-      "score": 7,
-      "reason": "QA clean (pack): 68.9k / 17.4k / 3.5k tris, one material; LOD0 above the ~60k a hero tank usually gets.",
+      "score": 8,
+      "reason": "QA PASS: 58.6k / 16.4k / 1.38k tris (LOD0 now under 60k), 25 draws (moving pivots), one material.",
       "fixes": [
-        "drop LOD0 below 60k: instance the track link as 2 boxes, merge Zimmerit bands"
+        "merge the static wheel pivots per side where they spin together"
       ]
     }
   },
   "renders": {
-    "hero.png": "ac18d9bf90623cd73bb6decafd7e488485b5553537127de93a184866ce86738b",
-    "sheet.png": "1498c8a40f3a497de31928a2f75d2ebfbeedbaf20e4f6c0f0b1f8048fe74af78",
-    "raking.png": "a25b652749ea53621b7083495dfc9496f4e703533f21a0c3afddfa09aaf05b86",
-    "raking_detail.png": "e47b41d9a43c283ce231f7b849d2bf530e67c66ce75d43c60e6cb924fde9f548",
-    "lods.png": "b6eb3571674c38e399c86f5dd7e9d730e1962196293a75cdcacf25093b9cea53",
-    "silhouette.png": "0fe13b3df9a3012fd2bca4305d67f77fcec5b8ba5b683812d25410808f7cd32e",
-    "value.png": "d39ed78c7b1884ae69b2f47d958f26fe3b4f9a8617da5d7a5ce6128915ceb2ce",
-    "detail.png": "0be24bb2c978eda7c2519f83b2ecf009f4dcf918bb3a738d51e6bab1f6017ae1"
+    "hero.png": "95131d1b3eb7b502d000e32eaa2dbe7c71b9c5126649ae484845fa671b8c0d9d",
+    "sheet.png": "e97894fc7d5e3933d61ef0a8d3a6a3c4894a3eb10fdbe822ab742a61093c6f2f"
   },
   "metrics": {
     "silhouette": [
@@ -75,46 +69,46 @@
       },
       {
         "view": "side",
-        "iou": 0.926
+        "iou": 0.927
       },
       {
         "view": "3/4",
-        "iou": 0.976
+        "iou": 0.983
       }
     ],
     "focal": {
-      "peakPart": "hull",
+      "peakPart": "turret_zimmerit",
       "peak": [
-        390,
-        192
+        213,
+        122
       ],
       "focalShare": 0,
       "focalArea": 0,
       "top": [
         {
-          "part": "turret_body",
-          "share": 0.193
+          "part": "hull_detail",
+          "share": 0.263
         },
         {
           "part": "hull",
-          "share": 0.19
+          "share": 0.223
         },
         {
-          "part": "hull_detail",
-          "share": 0.149
+          "part": "turret_body",
+          "share": 0.146
         }
       ],
       "declared": []
     },
     "rest": {
-      "share": 0.461,
-      "spread": 0.748,
+      "share": 0.447,
+      "spread": 0.754,
       "min": 0.25
     },
     "shape": {
-      "acuteShare": 0.178,
-      "straightShare": 0.651,
-      "taper": 0.179,
+      "acuteShare": 0.153,
+      "straightShare": 0.658,
+      "taper": 0.18,
       "shape": "stable"
     }
   }

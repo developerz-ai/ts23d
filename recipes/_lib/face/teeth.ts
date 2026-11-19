@@ -80,7 +80,7 @@ export function tusks(head: FaceHead, length: number, lod: number): { l: Mesh; r
       ]);
       scale.push(Math.max(0.08, 1 - t ** 1.4));
     }
-    return sweep({
+    const m = sweep({
       section: { radius: 0.0062 * s * Math.max(1, length / 0.12), segments: lod === 0 ? 12 : 6 },
       path,
       scale,
@@ -88,6 +88,16 @@ export function tusks(head: FaceHead, length: number, lod: number): { l: Mesh; r
       strip: 'plain',
       caps: true,
     });
+    // Old ivory: stained brown-yellow where it leaves the gum, worn pale toward the tip.
+    const colors = new Float32Array(m.colors.length);
+    for (let v = 0; v < m.positions.length / 3; v++) {
+      const t = Math.min(1, Math.max(0, ((m.positions[v * 3 + 2] ?? 0) - root[2]) / L));
+      const k = 0.48 + 0.6 * t ** 0.7;
+      colors[v * 3] = Math.min(1, TUSK[0] * k);
+      colors[v * 3 + 1] = Math.min(1, TUSK[1] * k * (0.86 + 0.14 * t));
+      colors[v * 3 + 2] = Math.min(1, TUSK[2] * k * (0.62 + 0.38 * t));
+    }
+    return { ...m, colors };
   };
   return { l: make(1), r: make(-1) };
 }

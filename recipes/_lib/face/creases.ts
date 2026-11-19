@@ -138,10 +138,10 @@ export function faceCreases(b: FaceBust): IntendedCrease[] {
           bp(v, 0) > 0.03 &&
           Math.abs(bp(v, 1)) < 0.03 &&
           bp(v, 2) > 0.625 &&
-          bp(v, 2) < 0.68,
+          bp(v, 2) < 0.715,
       ),
       0.025 * s,
-      'inside of the mouth behind the lips (never seen closed)',
+      'inside of the mouth and the nostrils, behind the lips and the nose wings (never seen)',
     ),
     ...regionsOf(
       'armpit',

@@ -1,67 +1,61 @@
 {
   "asset": "dragon",
   "reviewer": "agent",
-  "overall": 6,
+  "overall": 6.7,
   "scores": {
     "silhouette": {
-      "score": 7,
-      "reason": "Bat wings, ringed swept-back horns, dorsal spikes and spade tail: reads as a dragon at once. The body is lumpy and potato-like and the legs short and stubby, so the outline reads cartoon rather than powerful.",
+      "score": 8,
+      "reason": "Horns, open jaw with teeth, dorsal spines, membrane wings with fingers and a long tail: the dragon reads in black from every view.",
       "fixes": [
-        "smooth the muscle noise on the trunk (body.ts) so the outline follows big masses, not lumps",
-        "lengthen the legs ~15% and narrow the lower legs (legs.ts)"
+        "enlarge the tail spade (it reads in TOP only) so the tail end also reads in SIDE and 3/4"
       ]
     },
     "proportions": {
-      "score": 6,
-      "reason": "8.7 × 7.9 × 4.7 m: wings and head are in proportion, but the neck is short, the legs stubby and the tail thin compared with the body mass.",
+      "score": 7,
+      "reason": "Neck reads short and thick for the 8.9 m body, and the tail root is thinner than the hips in SIDE.",
       "fixes": [
-        "lengthen the neck chain by one vertebra (neck.ts)",
-        "thicken the tail root to match the hips (tail.ts)"
+        "lengthen the neck chain by one vertebra (neck.ts); thicken the tail root to match the hips (tail.ts)"
       ]
     },
     "materials": {
       "score": 6,
-      "reason": "Crimson vertex colour with cream belly plates and darker wing membrane; the surface noise reads as clay lumps rather than scales, all at one roughness; horns and teeth separate by hue only.",
+      "reason": "Red hide, pale belly and bone horns separate, membranes are slightly translucent-looking; but the hide is mostly flat red with no scale pattern except a stamped dot patch on the shoulder that reads as a decal.",
       "fixes": [
-        "a scale pattern on the back and flanks (scales.ts stamps at LOD0)",
+        "scale pattern across the back and flanks (not one patch) at LOD0",
         "roughness split: glossy eyes and teeth, rough membrane"
       ]
     },
     "detail": {
-      "score": 6,
-      "reason": "Teeth, horns with rings, dorsal spikes, wing fingers, claws; no individual scales, membrane veins only painted, belly plates soft.",
+      "score": 7,
+      "reason": "Teeth, spines, wing fingers and veins, claws and belly plates hold at the hero distance; the trunk surface is smooth between them.",
       "fixes": [
-        "stamped scale rows on the neck and back",
-        "raised veins on the wing membranes",
-        "crisper belly-plate edges"
+        "stamped scale rows on the neck and back; crisper belly-plate edges"
       ]
     },
     "wear": {
-      "score": 4,
-      "reason": "Pristine: no scars, no torn membrane, no chipped horns or soot.",
+      "score": 5,
+      "reason": "Ragged trailing edges on the membranes only; no scars, no chipped horn tips, no soot at the jaw.",
       "fixes": [
-        "a torn notch in one wing membrane and scars on the flank",
-        "chipped horn tips and soot around the jaw"
+        "scars on the flank, chipped horn tips and soot around the jaw"
       ]
     },
     "lod": {
-      "score": 6,
-      "reason": "LOD2 (4k) keeps the pose but the wings become flat triangles, the tail a thin stick and the body faceted.",
+      "score": 7,
+      "reason": "FAR LOD2 keeps wings, horns and colour blocks; the body faceting and a lighter flank patch show at the switch.",
       "fixes": [
-        "keep the wing finger bones at LOD2 as thin quads so the wing outline holds",
-        "more rings on the LOD2 tail"
+        "more rings on the LOD2 tail and neck; average the colour per face"
       ]
     },
     "technical": {
       "score": 7,
-      "reason": "QA PASS; 198.6k / 44.2k / 4.1k triangles, 6 draws. LOD0 is heavy for a game creature.",
+      "reason": "QA clean; 149k / 28k / 4k triangles over 7 draws: LOD0 is heavier than the detail it shows.",
       "fixes": [
         "cap LOD0 near 120k by coarsening the hidden belly and inner-leg sculpt cells"
       ]
     }
   },
   "renders": {
-    "hero.png": "6f53470be1a30b7d4410af268f477ed6e3166589822af2b6b45ca896a2366636",
-    "sheet.png": "b65d37486ed01258442fd51763c4cbcfa97da3c94fd964fdcd343ce833ca49ac"
+    "hero.png": "7df2e4d49d2b71f2b858605a1eaf5bc4ee33c80f2c3958c8a7d6802631b0f8c0",
+    "sheet.png": "e7581e1fc655f377d24e5bdef6dcaffde4cb9acdc46955e9ee952e4b0c927723"
   }
 }

@@ -3,12 +3,15 @@
 // (merged) and `leaves` (merged cards) — then fits it onto its real height (ground z = 0 to the
 // top), crown spread and DBH at every LOD (vegetation-fit.ts).
 // LOD policy: LOD0 every level and every leaf card; LOD1 one level fewer (trees with ≥ 3 levels),
-// halved path resolution, twigs replaced by cluster cards; LOD2 an impostor under 300 triangles.
+// halved path resolution, twigs replaced by cluster cards; LOD2 this tree's own LOD0 crown as clumps
+// of cards (or one kite per frond) over a coarse trunk and its longest limbs, under 300 triangles.
 
 import {
   BUDGETS,
   type BuildContext,
+  boundsOf,
   defineFamily,
+  type Lod,
   type Mesh,
   merge,
   type RealDimensions,
@@ -16,15 +19,18 @@ import {
   translate,
   triangleCount,
 } from '../core/index.ts';
-import { clampToGround, fitTree, liftCards, widen } from './vegetation-fit.ts';
+import { fitTree, liftCards, widen } from './vegetation-fit.ts';
 import { frondLeaflets, fruit } from './vegetation-fronds.ts';
-import { blob, frondCards } from './vegetation-impostor.ts';
+import { clumpCards, farLimbs, farTrunk, fillBox, frondCards } from './vegetation-impostor.ts';
 import { clusterCards, crownShade, leafCards } from './vegetation-leaves.ts';
 import { barkTint, radialSegments, rootsMesh, stemsMesh, trunkMesh } from './vegetation-mesh.ts';
 import { needleTufts } from './vegetation-needles.ts';
 import { OUTLINES, type TreeParams } from './vegetation-params.ts';
 import { SPECIES } from './vegetation-presets.ts';
 import { grow } from './vegetation-skeleton.ts';
+
+/** LOD2 triangles the kind aims at (BUDGETS.tree allows 300). */
+const FAR_TRIANGLES = 298;
 
 export interface TreeOptions {
   /** A preset name (`oak`, `pine`, `palm`, `birch`, `willow`) or a full parameter set. */
@@ -92,43 +98,47 @@ export function tree(ctx: BuildContext, o: TreeOptions): TreeInfo {
   // Double-sided cards: 2 × outline vertices each, the first one the card's root on the bark.
   const perCard = 2 * OUTLINES[p.leaves.shape === 'frond' ? 'oval' : p.leaves.shape].length;
   const cards = (m: Mesh): Mesh => liftCards(m, perCard, ground);
+  const wood = (hi: number, l: Lod): Mesh =>
+    barkTint(stemsMesh(stems, 1, hi, l, p.bark), p, top, rng.fork('bark:branches'));
+  const foliage = (hi: number, l: Lod): Mesh => {
+    const lr = rng.fork('leaves');
+    const shape = p.leaves.shape;
+    if (shape === 'frond') {
+      const perSide = l === 0 ? p.leaves.perStem : Math.ceil(p.leaves.perStem / 2);
+      return frondLeaflets(stems, deepest, p.leaves, perSide, shade, lr);
+    }
+    if (hi !== deepest) return cards(clusterCards(stems, deepest, p.leaves, shade, lr));
+    if (shape === 'needles') return needleTufts(stems, deepest, p.leaves, shade, lr);
+    return cards(leafCards(stems, deepest, radialSegments(deepest, l), p.leaves, shade, lr));
+  };
   let trunk: (r: number) => Mesh;
   let roots: ((r: number) => Mesh) | null = null;
   let branches: Mesh | null = null;
   let leaves: Mesh;
   if (lod === 2) {
-    const imp =
-      p.impostor === 'cards' ? frondCards(stems, p, 1) : blob(stems, p, rng.fork('impostor'));
-    // The impostor trunk is built once at the skeleton's radius: widen it like the real one.
-    trunk = (r) => barkTint(widen(imp.trunk, trunkStem, r), p, top, rng.fork('bark'));
-    leaves = p.impostor === 'cards' ? imp.leaves : clampToGround(imp.leaves, ground);
+    // The far crown is THIS tree's LOD0 crown, redrawn coarse inside the same box (same fit).
+    const near = foliage(deepest, 0);
+    const box = boundsOf(merge([near, wood(deepest, 0)]));
+    const kites = p.leaves.shape === 'frond' && p.impostor !== 'clumps' && p.impostor !== 'blob';
+    const coarse = farTrunk(trunkStem, p.bark);
+    trunk = (r) => barkTint(widen(coarse, trunkStem, r), p, top, rng.fork('bark'));
+    const limbs = kites ? null : farLimbs(stems, p.bark);
+    branches = limbs && barkTint(limbs, p, top, rng.fork('bark:branches'));
+    const spare = FAR_TRIANGLES - triangleCount(coarse) - (limbs ? triangleCount(limbs) : 0);
+    const fronds = stems.filter((s) => s.level === deepest);
+    leaves = fillBox(
+      kites ? frondCards(near, fronds, p.leaves.perStem, spare) : clumpCards(near, spare),
+      box,
+    );
   } else {
     const hi = lod === 0 || deepest < 2 ? deepest : deepest - 1;
     trunk = (r) => trunkMesh(trunkStem, p, lod, r, rng.fork('bark'));
     if (p.roots) roots = (r) => rootsMesh(trunkStem, p, lod, r, rng.fork('roots'));
-    const wood = [
-      barkTint(stemsMesh(stems, 1, hi, lod, p.bark), p, top, rng.fork('bark:branches')),
-    ];
+    const parts = [wood(hi, lod)];
     if (p.fruit && lod === 0)
-      wood.push(fruit(trunkStem, p.baseSize - 0.01, p.fruit, rng.fork('fruit')));
-    branches = merge(wood);
-    const lr = rng.fork('leaves');
-    const shape = p.leaves.shape;
-    leaves =
-      shape === 'frond'
-        ? frondLeaflets(
-            stems,
-            deepest,
-            p.leaves,
-            lod === 0 ? p.leaves.perStem : Math.ceil(p.leaves.perStem / 2),
-            shade,
-            lr,
-          )
-        : hi !== deepest
-          ? cards(clusterCards(stems, deepest, p.leaves, shade, lr))
-          : shape === 'needles'
-            ? needleTufts(stems, deepest, p.leaves, shade, lr)
-            : cards(leafCards(stems, deepest, radialSegments(deepest, lod), p.leaves, shade, lr));
+      parts.push(fruit(trunkStem, p.baseSize - 0.01, p.fruit, rng.fork('fruit')));
+    branches = merge(parts);
+    leaves = foliage(hi, lod);
   }
   const fitted = fitTree({
     trunk,

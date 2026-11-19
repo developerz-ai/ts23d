@@ -18,7 +18,14 @@ value below is a physical reference, not a measured part.
 | heat-tinted titanium exhaust | `KHR_materials_iridescence` (finish) | film IOR 2.2, 80–130 nm (TiO₂ oxide: straw → purple → blue) | [KHR_materials_iridescence](https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_materials_iridescence) |
 
 ## Parts
-One static board (`plinth`), a dark pedestal per exhibit, flat block-letter labels at LOD0.
+One static board (`plinth`, a dark charcoal slate slab so glass, ice and gloss highlights read
+against it), a turned, chamfered pedestal per exhibit (0.12 m, so each sample stands clear of the
+board in FRONT), flat labels at 0.06 m cap height (LOD0/1), and a 1 m black-and-white `ruler` along
+the front edge for scale. Sphere segments 40 / 20 / 12.
+
+## Budget
+Budget why: a material test board of eleven exhibits on pedestals, each a separate PBR extension sample; ≈ 14k / 4.8k / 1.5k.
+
 No moving parts.
 
 ## Open questions

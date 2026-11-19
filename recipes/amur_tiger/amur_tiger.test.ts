@@ -58,7 +58,10 @@ describe('real numbers', () => {
   it('the coat shell assumption holds: measured surface ÷ volume within 10% of AREA_PER_VOLUME', () => {
     const a = compile(amur_tiger, { lod: 1 });
     let area = 0;
-    for (const m of worldMeshes(a.parts).values()) {
+    // The skin: strand cards and whiskers are hair on it, not coat surface.
+    const hair = new Set(['fur', 'head_fur', 'whiskers']);
+    for (const [name, m] of worldMeshes(a.parts)) {
+      if (hair.has(name)) continue;
       const P = m.positions;
       const I = m.indices;
       for (let t = 0; t < I.length; t += 3) {

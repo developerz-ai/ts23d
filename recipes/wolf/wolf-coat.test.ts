@@ -10,7 +10,7 @@ import {
   compile,
   creaturePlan,
   DEFAULT_SHEET,
-  paintTrimSheet,
+  sheetFor,
   type Vec3,
   worldMeshes,
 } from '@developerz.ai/ts23d';
@@ -21,7 +21,7 @@ const SLOW = 120_000;
 /** Relative RMS of the strip texel's luminance along the muzzle (atlas → nose, 50–92 %). */
 function muzzleBanding(lod: 0 | 1): number {
   const a = compile(wolf, { lod });
-  const sheet = paintTrimSheet({ ...DEFAULT_SHEET, size: 1024 });
+  const sheet = sheetFor(a, { ...DEFAULT_SHEET, size: 1024 });
   const { bones } = creaturePlan(WOLF);
   const A = bones.head.atlas;
   const N = bones.nose;

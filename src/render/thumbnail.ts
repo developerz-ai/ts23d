@@ -3,13 +3,16 @@
 // Same zero-GPU rasteriser as the contact sheet — deterministic bytes, runs in CI.
 
 import { type CompiledAsset, encodePng } from '../core/index.ts';
+import type { PaintedSheet } from '../material/index.ts';
 import { drawAsset, orthoCamera, type Target, type View } from './raster.ts';
-import { bounds } from './sheet.ts';
+import { bounds, tonesFor } from './sheet.ts';
 
 export interface ThumbnailOptions {
   /** Output edge in pixels (square). Default 512. */
   readonly size?: number;
   readonly view?: View;
+  /** The painted trim sheet: base colour as in the contact sheet (`SheetOptions.sheet`). */
+  readonly sheet?: PaintedSheet;
 }
 
 const HERO: View = { label: 'HERO', dir: [-1, 0.75, -0.45], up: [0, 0, 1] };
@@ -24,7 +27,12 @@ export function thumbnail(asset: CompiledAsset, o: ThumbnailOptions = {}): Uint8
     height: big,
   };
   const b = bounds(asset);
-  drawAsset(t, orthoCamera(o.view ?? HERO, b.centre, b.extent * 0.92, big), asset);
+  drawAsset(
+    t,
+    orthoCamera(o.view ?? HERO, b.centre, b.extent * 0.92, big),
+    asset,
+    o.sheet ? tonesFor(o.sheet, [asset]) : undefined,
+  );
   // Crop to the drawn pixels (square, 6% margin) so every card is filled the same way.
   let x0 = big;
   let y0 = big;

@@ -20,7 +20,7 @@ upper limbs over **black paws**; vertical slit pupils.
 | Tail | 0.30–0.555 m, "longer than half the body length" | **0.42** | same |
 | Mass | 2.2–14 kg, vixens 15–20 % lighter | **6** declared, ±30 % (`real.mass`) | same |
 | Skull | males 129–167 mm | head **0.16** incl. fur | same |
-| Ears | 77–125 mm | **0.095** | same |
+| Ears | 77–125 mm | **0.11** | same |
 | Coated box | — | 1.11 × 0.16 × 0.52 m (nose → level brush, paws → ear tips; measured off the posed model) | — |
 
 ## Photos (by view)
@@ -41,3 +41,15 @@ upper limbs over **black paws**; vertical slit pupils.
 - The belly/throat zone is one colour: the white throat and the darker belly of the real fox
   share `belly` (a pale ginger compromise).
 - Sources disagree on shoulder height by region; Wikidata's single 0.425 m is used as given.
+
+## Field wear and colour blocks (`FOX_WILD`, through `recipes/_lib/creature/wild.ts`)
+- Colour blocks painted before wear, at every LOD: the hind thigh and upper arm red (the kind's
+  cream belly zone climbed over them); black stockings from just under the elbow and hock, the
+  same edge at LOD2 (the far leg tubes carry a ring where the colour turns).
+- Density set directly: body cell × 1.35, head × 1.15 (`options.cells`): 96 k triangles at LOD0
+  (was 147 k); the kind's fur at 2 600 undercoat / 170 guard cards per m² (`spec.fur`).
+- Winter story: snow dusted on the back and shoulders, thaw mud drying pale on the black paws,
+  wet fur under the belly, the right ear nicked, a healed bite on the left of the muzzle.
+- Coat: 5 200 short cards per m² over the trunk; the brush's fullness is 6 cm card fur standing
+  off the tail (a thicker tail chain weighs as flesh and pulls the fore share under 55 %).
+- Black whiskers, 12 a side.

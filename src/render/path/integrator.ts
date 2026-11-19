@@ -2,7 +2,8 @@
 // studio floor as a Lambert plane for bounce light and as a shadow catcher for camera rays, next-
 // event estimation + MIS at every vertex (nee.ts), lobe sampling by surface class (glTF PBR, hair,
 // foliage, thin see-through, skin with Burley diffusion), Russian roulette from a fixed depth with
-// the sampler's own dimension. Every random number comes from sampler.ts: same pixel, same bytes.
+// the sampler's own dimension. `glow` parts emit. Every random number comes from sampler.ts: same
+// pixel, same bytes.
 
 import { lambertLobes, MODE, newLobes, prepare, sampleBsdf } from './bsdf.ts';
 import { type Hit, newHit } from './bvh.ts';
@@ -126,6 +127,14 @@ export function traceSample(
       }
     } else {
       surfAt(w, hit, o, d, s);
+      // A `glow` part emits: seen directly, through see-through surfaces (tinted by `tp`), and as
+      // a light for its neighbours when a bounce lands on it (BSDF sampled, clamped like any
+      // indirect light; the sun and sky stay the only lights sampled directly).
+      const lit = ((w.scene.glow[hit.tri] ?? 0) - 1) * 3;
+      if (lit >= 0) {
+        for (let k = 0; k < 3; k++) add[k] = (tp[k] ?? 0) * (w.scene.glows[lit + k] ?? 0);
+        addClamped(a.rad, add, primary ? 0 : depth);
+      }
       if (depth === 0) {
         a.hitN++;
         for (let k = 0; k < 3; k++) {

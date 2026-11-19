@@ -7,14 +7,17 @@
 // no cache every request misses and this is the code bear of the creature kind.
 
 import {
+  type ChainedModel,
   type Check,
   type CheckFinding,
   CREATURE_MATERIALS,
   defineMaterial,
   defineModelCreature,
+  hex,
 } from '@developerz.ai/ts23d';
+import { type ClawOptions, clawMesh } from './claws.ts';
 import { BEAR, REAL } from './spec.ts';
-import { TRIANGLES } from './steps.ts';
+import { BUDGET } from './steps.ts';
 import { bearModel } from './surface.ts';
 
 export { CONCEPT } from './concept.ts';
@@ -34,6 +37,24 @@ export const SOURCED = {
   /** Tail 0.06–0.22: the free tail, past the croup (`tail_0` lies inside the body). */
   tail: [0.06, 0.22],
 } as const;
+
+/** The claws' part (LOD 0 and 1; the painted claws carry LOD 2). */
+export const CLAWS = 'claws';
+
+/** Brown bear claws: five per paw, non-retractile, fore 5–10 cm along the curve (a digger's),
+ *  hind about half that (Wikipedia: Brown bear, "claws"); horn dulled by mud. */
+export const CLAW: ClawOptions = {
+  height: BEAR.height,
+  toes: 5,
+  length: { fore: 0.06, hind: 0.035 },
+  radius: 0.0075,
+  curl: 55,
+  color: hex('#8f8168'),
+};
+
+/** The model this build drew: `extra` grows the claws on its mesh (set by `model`, read in the
+ *  same build, as the kind does with its clips). */
+let built: ChainedModel | null = null;
 
 /** What the model body measures, for the check below and the tests. */
 export function measured(a: Parameters<Check>[0]): {
@@ -99,11 +120,21 @@ export const bear_hybrid = defineModelCreature({
   options: { strip: FUR },
   real: { ...BOX, tolerance: 0.05, mass: REAL.mass, massTolerance: 0.25 },
   budget: {
-    triangles: [...TRIANGLES],
+    triangles: [...BUDGET],
     bones: 64,
     textureSets: { count: 1, size: 2048 },
   },
   checks: [sourced],
   art: { focal: 'head', shape: 'friendly', grounded: true },
-  model: bearModel,
+  model: (ctx) => {
+    built = bearModel(ctx);
+    return built;
+  },
+  extra: (ctx, info) => {
+    const body = built?.model.lods[Math.min(ctx.lod, built.model.lods.length - 1)];
+    if (!('model' in info) || !body) return;
+    const claws = clawMesh(ctx.lod, body, info.model.bones, CLAW);
+    if (claws)
+      ctx.part(CLAWS, claws, { connect: { as: 'grown', to: info.model.part }, density: 1300 });
+  },
 });

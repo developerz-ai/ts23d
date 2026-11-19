@@ -1,7 +1,7 @@
-// Cobra clips. The rest pose is the alert stance, so the published ground gaits are baked on a straight
+// Cobra clips. The rest pose is the alert stance, so the published `slither` is baked on a straight
 // flat copy of the spine by `snakeClips`, then every key is re-expressed on the real skeleton: the
-// target joint frames come from the flat clip, the local rotations from those frames. `idle`, `hood_up`
-// and `rear` are built the same way from joint targets, so the pile never slides.
+// target joint frames come from the flat clip, the local rotations from those frames. `idle`,
+// `hood_up`, `idle_ground` and `rear` are built from joint targets (ground poses: ground.ts).
 
 import {
   type BodyPlan,
@@ -14,24 +14,21 @@ import {
   type Track,
   type Vec3,
 } from '@developerz.ai/ts23d';
-import { add, dot, norm, scale, smooth, sub, TAU } from '../_lib/body-plan-kit.ts';
-import { bellyHalf, COIL_TOP, RAISED, seatHeight, TOTAL } from './shape.ts';
+import { add, scale, smooth, sub, TAU } from '../_lib/body-plan-kit.ts';
+import { GROUND_LIFT, jointArcs, laidFront, rearing, restingPose } from './ground.ts';
+import { bellyHalf, RAISED, seatHeight, TOTAL } from './shape.ts';
 import {
   bake,
   type CobraRig,
   type KeyOut,
   qaxis,
-  qconj,
   qmul,
-  qslerp,
   restPose,
   type SpinePose,
   solveSpine,
 } from './solve.ts';
 
 const SPREAD_FOLD = 1.25;
-/** Scutes stand this far proud of the tube: the joints ride up by it on the ground. */
-const GROUND_LIFT = 0.0024;
 
 const addHood = (rig: CobraRig, k: KeyOut, fold: number): KeyOut => {
   for (const r of rig.ribs) k.rot.set(r.bone, qaxis(scale(r.fold, fold * SPREAD_FOLD)));
@@ -54,8 +51,6 @@ interface StanceMotion {
   readonly breathe: number;
   readonly flick: number;
 }
-
-const _dist = (a: Vec3, b: Vec3): number => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
 
 /** A straight copy of the spine lying on the floor, head toward +X: what `snakeClips` accepts. */
 export function flatPlan(spec: BodyPlanSpec): BodyPlan {
@@ -115,6 +110,17 @@ function flatPose(flat: BodyPlan, clip: Clip, spine: readonly string[], k: numbe
   return { at: seated, dorsal };
 }
 
+/** The first joint of the pile, which stays planted while the front rears (`count` joints). */
+export const rearHinge = (count: number): number =>
+  Math.ceil(((RAISED + 0.1) / TOTAL) * (count - 1));
+
+/** `rear` timing (design): the share of the front off the ground, then the turn into the stance. */
+export const REAR = {
+  seconds: 1.6,
+  rise: (u: number): number => smooth(0.05, 0.8, u),
+  settle: (u: number): number => smooth(0.65, 1, u),
+} as const;
+
 export function cobraClips(
   rig: CobraRig,
   spec: BodyPlanSpec,
@@ -168,60 +174,45 @@ export function cobraClips(
     });
   };
 
-  /** From the front laid out on the ground, hood folded, up into the alert stance. The coil stays. */
-  const rear = (): Clip => {
-    const seconds = 1.6;
-    const count = rest.at.length;
-    const sOf = (i: number): number => (i / (count - 1)) * TOTAL;
-    const hinge = Math.ceil(((RAISED + 0.1) / TOTAL) * (count - 1));
-    const base = rest.at[hinge] as Vec3;
-    const back = rest.at[hinge + 1] as Vec3;
-    const ahead = norm([base[0] - back[0], base[1] - back[1], 0]);
-    const low = rest.at.map((p, i): Vec3 => {
-      if (i >= hinge) return p;
-      const q = add(base, scale(ahead, sOf(hinge) - sOf(i)));
-      // Laid out over the coil's first turn, so it never cuts through it.
-      const clear = (COIL_TOP + 0.03) * (1 - smooth(0.36, 0.62, Math.hypot(q[0], q[1])));
-      return [q[0], q[1], seatHeight(sOf(i)) + GROUND_LIFT + clear + 0.03 * (1 - i / hinge)];
-    });
-    // The laid-out pose, its back carried up the chain from the pile so no joint twists.
-    const lowDorsal = [...rest.dorsal];
-    for (let i = hinge - 1; i >= 0; i--) {
-      const t = norm(sub(low[i + 1] as Vec3, low[i] as Vec3));
-      const up = lowDorsal[i + 1] as Vec3;
-      lowDorsal[i] = norm(sub(up, scale(t, dot(up, t))));
-    }
-    const laid = solveSpine(rig, rest, { at: low, dorsal: lowDorsal }).rot;
-    const IDENTITY: Quat = [0, 0, 0, 1];
-    return bake(rig, 'rear', seconds, false, 48, (_k, time) => {
+  const arcs = jointArcs(rest);
+  const hinge = rearHinge(rest.at.length);
+
+  /** Lying flat in a loose coil, hood folded: slow breathing, then a head shift with a tongue flick. */
+  const idleGround = (): Clip => {
+    const seconds = 8;
+    return bake(rig, 'idle_ground', seconds, true, seconds * 30, (_k, time) => {
       const u = time / seconds;
-      // Joint angles unwind from the neck's base to the head. The chain's root is the head, so
-      // world rotations are built outward from the pile, which therefore never turns.
-      const rot = new Map<string, Quat>();
-      let world = IDENTITY;
-      let at = rest.at[hinge] as Vec3;
-      for (let i = hinge; i >= 0; i--) {
-        const name = rig.spine[i] ?? '';
-        const share = smooth(0, 1, u * 1.7 - 0.7 * (1 - i / hinge));
-        const local = qslerp(laid.get(name) ?? IDENTITY, IDENTITY, share);
-        if (i === 0) {
-          rot.set(name, world);
-          break;
-        }
-        rot.set(name, local);
-        world = qmul(world, qconj(local));
-        const seg = sub(rest.at[i] as Vec3, rest.at[i - 1] as Vec3);
-        at = sub(at, quatRotate(world, seg));
-      }
-      const root = sub(at, rest.at[0] as Vec3);
-      const key: KeyOut = { root, rot, offset: new Map() };
+      const breathe = Math.sin((TAU * 2 * time) / seconds) ** 2;
+      const window = Math.max(0, Math.min(1, (u - 0.55) / 0.3));
+      const shift = Math.sin(Math.PI * window) ** 2;
+      const burst =
+        Math.max(0, Math.sin(Math.PI * Math.max(0, Math.min(1, (u - 0.62) / 0.14)))) ** 2;
+      const key = solveSpine(rig, rest, restingPose(arcs, breathe, shift));
+      return addTongue(rig, addHood(rig, key, 1), 1 - burst, 0.5 * burst * Math.sin(time * 34));
+    });
+  };
+
+  /** From the pile with the front laid out on the ground, hood folded, up into the alert stance:
+   *  the raised length grows from the head; the body behind it never leaves the ground or the pile. */
+  const rear = (): Clip => {
+    const seconds = REAR.seconds;
+    const laid = laidFront(rest, arcs, hinge);
+    const H = arcs[hinge] ?? RAISED;
+    return bake(rig, 'rear', seconds, false, 96, (_k, time) => {
+      const u = time / seconds;
+      const key = solveSpine(
+        rig,
+        rest,
+        rearing(rest, laid, arcs, hinge, H * REAR.rise(u), REAR.settle(u)),
+        hinge,
+      );
       return addTongue(rig, addHood(rig, key, 1 - smooth(0.45, 0.95, u)), 1 - smooth(0.7, 1, u), 0);
     });
   };
 
   return [
     retarget(of('slither')),
-    retarget(of('idle'), 'idle_ground'),
+    idleGround(),
     stance('idle', 5, { sway: 0.55, breathe: 0.05, flick: 0.3 }),
     stance('hood_up', 4, { sway: 1, breathe: 0.1, flick: 0.55 }),
     rear(),

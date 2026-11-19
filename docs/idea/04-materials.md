@@ -69,7 +69,7 @@ Wind is crown `sway` motion in the GLB today; per-vertex wind weights are planne
 
 ## Procedural material generator
 
-`paintTrimSheet(recipe = DEFAULT_SHEET): PaintedSheet` paints the whole sheet from code at a fixed seed, so textures are as deterministic as meshes.
+`paintTrimSheet(recipe = DEFAULT_SHEET): PaintedSheet` paints the whole sheet from code at a fixed seed, so textures are as deterministic as meshes. `sheetFor(compiled, recipe)` paints one asset's sheet: the built-in strips and cells plus the project materials that asset maps onto. The 14 custom rows are per asset, so recipes define as many materials as they need without coordinating rows ([materials architecture](../architecture/materials.md)).
 
 | Output | Format |
 |---|---|

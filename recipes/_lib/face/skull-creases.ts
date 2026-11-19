@@ -35,6 +35,20 @@ export function skullCreases(k: SkullLandmarks, H: number, part = 'head'): Inten
       true,
     ),
     ...creaseAt('orbit', part, [ex - R * 0.5, ey, ez], R * 1.4, 'the orbit behind the ball', true),
+    // The lower lid's bag ends in a fold on the cheek (deep on a gaunt or old face): from the
+    // inner corner down and out along the orbit's rim, over the cheekbone.
+    ...creaseCurve(
+      'infraorbital',
+      part,
+      [
+        [k.endocanthion[0], k.endocanthion[1], k.endocanthion[2] - R * 0.9],
+        [k.cheek[0], k.cheek[1], (k.cheek[2] + ez - R) / 2],
+        [k.exocanthion[0] - R * 0.3, k.exocanthion[1], k.exocanthion[2] - R * 1.6],
+      ],
+      R * 1.2,
+      'the infraorbital fold: the lower lid bag against the cheek, along the orbit rim',
+      true,
+    ),
     ...creaseCurve(
       'alae',
       part,
@@ -91,6 +105,14 @@ export function skullCreases(k: SkullLandmarks, H: number, part = 'head'): Inten
       0.015,
       'the jaw angle and the jaw line from under the ear to under the chin',
       true,
+    ),
+    // Under the chin: the floor of the jaw turns down into the throat.
+    ...creaseCurve(
+      'submental',
+      part,
+      [k.menton, [(k.menton[0] + k.throat[0]) / 2, 0, (k.menton[2] + k.throat[2]) / 2], k.throat],
+      0.02,
+      'the angle under the chin where the floor of the jaw meets the throat',
     ),
     // The nape: the trapezius rising into the back of the neck below the skull.
     ...creaseCurve(

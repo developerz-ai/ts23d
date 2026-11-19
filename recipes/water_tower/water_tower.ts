@@ -15,10 +15,12 @@ import {
   merge,
   place,
   planar,
+  type Rng,
   tiled,
   type Vec3,
 } from '@developerz.ai/ts23d';
-import { restrip, type StripRule, weatherer } from '../_lib/finish/finish.ts';
+import { restrip, type StripRule, tessellate, weatherer } from '../_lib/finish/finish.ts';
+import { roofWear, type Shade, shade, tankWear, trestleWear } from './wear.ts';
 
 const FT = 0.3048;
 const TANK_R = (22 * FT) / 2; // 3.353
@@ -37,21 +39,70 @@ const SPOUT_L = 3.4;
 const SPOUT_REST = (25 * Math.PI) / 180;
 const PIVOT: Vec3 = [TANK_R + 0.32, 0, FLOOR_Z + 0.55];
 
-const cypress = hex('#7a5a3e');
 const timber = hex('#8c7b66');
 const timberDark = hex('#6b5d4d');
 const steel = hex('#2b2826');
 const concrete = hex('#b9b3a6');
 const shingle = hex('#4e463e');
+/** Oiled cypress staves on the pine strip (U up the stave: grain runs vertically). */
+const stave = hex('#a88a74');
+/** Black wrought-iron hoops and lugs: cast-iron strip, dark so they read against the wood. */
+const hoopIron = hex('#3c3734');
+/** Stave count per LOD (≈ 0.18 m staves at LOD0, as cypress tank staves of the period). */
+const STAVES = [120, 60, 16] as const;
+/** Hoop facets per LOD: a whole divisor of the stave count, so hoop corners sit on stave joints. */
+const HOOP_SEGS = [30, 30, 8] as const;
 
-/** Authoring colour → material: oiled cypress staves (pine grain, darkened), weathered fir trestle,
- *  rusted iron hoops and fittings; concrete and slate shingles keep their classic strips. */
+/** Authoring colour → material (the staves map themselves in `staveTub`): weathered fir trestle,
+ *  rusted iron fittings, black cast-iron hoops; concrete and slate shingles keep their classic
+ *  strips. */
 const RULES: readonly StripRule[] = [
-  { from: cypress, strip: 'pine', color: hex('#a88a74') },
   { from: timber, strip: 'wood_weathered', color: hex('#d8cfc2') },
   { from: timberDark, strip: 'wood_weathered', color: hex('#a89c8c') },
   { from: steel, strip: 'iron_rust', color: hex('#6e625a') },
+  { from: hoopIron, strip: 'iron_cast', color: hex('#4a4542') },
 ];
+
+/** How much the board texture is stretched up a stave: real staves are one 14 ft piece, so the
+ *  strip's butt joints (every ~1.2 m) must mostly fall off the stave. */
+const STAVE_STRETCH = 3;
+
+/**
+ * The stave tub: one tiled quad per stave, U up the stave (vertical grain, stretched so a stave
+ * is one long board), V scaled so each stave is exactly one board of the strip (the pine strip
+ * holds four boards per band), each stave its own value (±7 %), and `rows` vertex rows up the
+ * height so the weeps and the soaked bottom course have room. The far LOD keeps the same strip,
+ * the same mean colour and one band per facet.
+ */
+function staveTub(rng: Rng, n: number, rows: number, far: boolean): Mesh {
+  const out: Mesh[] = [];
+  const width = 2 * TANK_R * Math.sin(Math.PI / n);
+  for (let k = 0; k < n; k++) {
+    const a0 = (k / n) * Math.PI * 2;
+    const a1 = ((k + 1) / n) * Math.PI * 2;
+    const p0: Vec3 = [Math.cos(a0) * TANK_R, Math.sin(a0) * TANK_R, FLOOR_Z];
+    const p1: Vec3 = [Math.cos(a1) * TANK_R, Math.sin(a1) * TANK_R, FLOOR_Z];
+    const v = rng.range(0.93, 1.07);
+    const u0 = rng.range(0, 4);
+    const m = tiled({
+      origin: p1,
+      u: [0, 0, TANK_H],
+      v: [p0[0] - p1[0], p0[1] - p1[1], 0],
+      color: [stave[0] * v, stave[1] * v, stave[2] * v],
+      strip: 'pine',
+      segments: rows,
+      uOffset: u0,
+      vOffset: far ? 0 : (k % 4) * width,
+      vMetres: far ? width * 1.01 : 4 * width,
+    });
+    // Stretch U about the stave's foot (the sampler repeats U; the strip spans 4 m = 1 unit).
+    const uvs = new Float32Array(m.uvs);
+    const base = u0 / 4;
+    for (let i = 0; i < uvs.length; i += 2) uvs[i] = base + ((uvs[i] ?? 0) - base) / STAVE_STRETCH;
+    out.push({ ...m, uvs });
+  }
+  return merge(out);
+}
 
 /** Ring of `n` flat vertical facets (outward), boards running up: staves, the core's planking. */
 function staveRing(
@@ -80,6 +131,66 @@ function staveRing(
     );
   }
   return merge(out);
+}
+
+const GAUGE_A = -0.7;
+const gaugePaint = hex('#b9b2a4');
+const ink = hex('#1e1c1a');
+
+/**
+ * Float gauge on the −Y/+X quarter (seen from the track): a painted board standing on the hoops,
+ * tick bars every half metre, the target that rides up and down on its cable, and the pulley on
+ * an iron bracket near the rim that carries the cable over the staves to the float inside.
+ */
+function floatGauge(r0: number): Mesh {
+  const h = TANK_H - 0.35;
+  const z0 = FLOOR_Z + 0.15;
+  const g: Mesh[] = [
+    box({
+      size: [0.04, 0.26, h],
+      at: [r0 + 0.02, 0, z0],
+      color: gaugePaint,
+      strip: 'wood_painted',
+    }),
+  ];
+  for (let z = z0 + 0.4; z < z0 + h - 0.2; z += 0.5)
+    g.push(
+      box({ size: [0.006, 0.12, 0.025], at: [r0 + 0.043, 0.05, z], color: ink, strip: 'plain' }),
+    );
+  // Target 2.6 m up: the tank three-fifths full.
+  g.push(box({ size: [0.02, 0.36, 0.2], at: [r0 + 0.05, 0, z0 + 2.6], color: ink, strip: 'iron' }));
+  g.push(
+    box({
+      size: [0.004, 0.26, 0.06],
+      at: [r0 + 0.062, 0, z0 + 2.67],
+      color: gaugePaint,
+      strip: 'plain',
+    }),
+  );
+  // Bracket, pulley and the cable from the target up over it.
+  const zp = z0 + h - 0.1;
+  g.push(
+    box({ size: [0.12, 0.03, 0.05], at: [r0 + 0.08, 0, zp - 0.12], color: steel, strip: 'iron' }),
+  );
+  g.push(
+    cylinder({
+      radius: 0.07,
+      length: 0.03,
+      segments: 10,
+      axis: 'y',
+      at: [r0 + 0.12, 0, zp],
+      color: steel,
+    }),
+  );
+  g.push(
+    beam({
+      from: [r0 + 0.12 + 0.065, 0, zp],
+      to: [r0 + 0.06, 0, z0 + 2.8],
+      width: 0.008,
+      color: steel,
+    }),
+  );
+  return merge(g.map((m) => place(m, { yaw: GAUGE_A })));
 }
 
 /** Axis-aligned box from two corners. */
@@ -165,12 +276,23 @@ export const water_tower = defineAsset({
   build(ctx) {
     const lod = ctx.lod;
     const bevel = ctx.pick([0.02, 0.01, 0]);
-    const facets = ctx.pick([32, 20, 8]);
     const weather = weatherer(ctx.rng.fork('weather'));
-    /** Materials, then splash-back mud on the footings and posts, light dust on top faces. */
-    const dirt = (m: Mesh): Mesh => m;
-    const part = (name: string, m: Mesh, o?: Parameters<typeof ctx.part>[2]): void =>
-      ctx.part(name, weather(restrip(m, RULES), { dust: 0.25, mud: 0.7, mudStrength: 0.6 }), o);
+    const drips = trestleWear(ctx.rng.fork('trestle-wear'), {
+      floorZ: FLOOR_Z,
+      footH: FOOT_H,
+      sun: [-0.6, 0.8],
+    });
+    /** Materials, then the part's water story, splash-back mud low down and dust on top faces. */
+    const part = (
+      name: string,
+      m: Mesh,
+      wear?: Shade,
+      o?: Parameters<typeof ctx.part>[2],
+    ): void => {
+      const mat = restrip(m, RULES);
+      const worn = wear ? shade(mat, wear) : mat;
+      ctx.part(name, weather(worn, { dust: 0.25, mud: 0.7, mudStrength: 0.6 }), o);
+    };
 
     // ---- trestle: footings, eight posts, cap ring, X bracing, joists under the tank floor.
     const tr: Mesh[] = [];
@@ -178,22 +300,45 @@ export const water_tower = defineAsset({
       const a = (k / 8) * Math.PI * 2 + Math.PI / 8;
       return [Math.cos(a) * POST_R, Math.sin(a) * POST_R] as const;
     });
-    for (const [x, y] of postAt) {
-      tr.push(bx(x - 0.33, x + 0.33, y - 0.33, y + 0.33, 0, FOOT_H, concrete, 'concrete', bevel));
-      tr.push(
-        bx(
-          x - POST_W / 2,
-          x + POST_W / 2,
-          y - POST_W / 2,
-          y + POST_W / 2,
-          FOOT_H,
-          CAP_Z0,
-          timber,
-          'wood',
-          bevel / 2,
-        ),
+    // Posts and footings face the centre (one face out), so the strap plates sit flat on them.
+    const post = box({
+      size: [POST_W, POST_W, CAP_Z0 - FOOT_H],
+      at: [0, 0, 0],
+      color: timber,
+      strip: 'wood',
+      ...(lod < 2 ? { bevel: bevel / 2 } : {}),
+    });
+    const footing = box({
+      size: [0.66, 0.66, FOOT_H],
+      at: [0, 0, 0],
+      color: concrete,
+      strip: 'concrete',
+      ...(lod < 2 ? { bevel } : {}),
+    });
+    // Iron strap plate over the post head and the cap beam, two bolts through each.
+    const strap: Mesh[] = [
+      box({
+        size: [0.012, 0.2, 0.5],
+        at: [POST_W / 2 + 0.006, 0, CAP_Z0 - 0.25],
+        color: steel,
+        strip: 'iron',
+      }),
+    ];
+    for (const z of [CAP_Z0 - 0.15, CAP_Z0 + 0.13])
+      strap.push(
+        box({
+          size: [0.03, 0.05, 0.05],
+          at: [POST_W / 2 + 0.025, 0, z - 0.025],
+          color: steel,
+          strip: 'iron',
+        }),
       );
-    }
+    postAt.forEach(([x, y], k) => {
+      const yaw = (k / 8) * Math.PI * 2 + Math.PI / 8;
+      tr.push(place(footing, { at: [x, y, 0], yaw }));
+      tr.push(place(post, { at: [x, y, FOOT_H], yaw }));
+      if (lod === 0) tr.push(place(merge(strap), { at: [x, y, 0], yaw }));
+    });
     postAt.forEach(([x, y], k) => {
       const [nx, ny] = postAt[(k + 1) % 8] ?? [x, y];
       // Cap beam post → post (ring), sitting on the post tops.
@@ -208,13 +353,41 @@ export const water_tower = defineAsset({
           up: [0, 0, 1],
         }),
       );
+      // X brace on the outer face of the bay, foot of one post to the head of the next.
+      const mx = (x + nx) / 2;
+      const my = (y + ny) / 2;
+      const ml = Math.hypot(mx, my);
+      const off = 0.2 / ml;
+      const o = (px: number, py: number, z: number): Vec3 => [px + mx * off, py + my * off, z];
+      if (lod === 2) {
+        // Far: each brace one double-sided board quad, so the trestle keeps its X read.
+        for (const [from, to] of [
+          [o(x, y, FOOT_H + 0.25), o(nx, ny, CAP_Z0 - 0.1)],
+          [o(nx, ny, FOOT_H + 0.25), o(x, y, CAP_Z0 - 0.1)],
+        ] as const) {
+          const d: Vec3 = [to[0] - from[0], to[1] - from[1], to[2] - from[2]];
+          // Across the brace in the bay's plane: n × d, scaled to the 0.2 m board width.
+          const c: Vec3 = [
+            (my / ml) * d[2],
+            (-mx / ml) * d[2],
+            (mx / ml) * d[1] - (my / ml) * d[0],
+          ];
+          const cl = Math.hypot(c[0], c[1], c[2]);
+          const v: Vec3 = [(c[0] / cl) * 0.2, (c[1] / cl) * 0.2, (c[2] / cl) * 0.2];
+          tr.push(
+            tiled({
+              origin: [from[0] - v[0] / 2, from[1] - v[1] / 2, from[2] - v[2] / 2],
+              u: d,
+              v,
+              color: timber,
+              strip: 'wood',
+              vMetres: 1,
+              doubleSided: true,
+            }),
+          );
+        }
+      }
       if (lod < 2) {
-        // X brace on the outer face of the bay, foot of one post to the head of the next.
-        const mx = (x + nx) / 2;
-        const my = (y + ny) / 2;
-        const ml = Math.hypot(mx, my);
-        const off = 0.2 / ml;
-        const o = (px: number, py: number, z: number): Vec3 => [px + mx * off, py + my * off, z];
         tr.push(
           beam({
             from: o(x, y, FOOT_H + 0.25),
@@ -239,12 +412,12 @@ export const water_tower = defineAsset({
         );
         if (lod === 0) {
           // Through-bolt at the crossing and at each brace end.
-          const bolt = cylinder({
-            radius: 0.035,
-            length: 0.06,
-            segments: 6,
-            axis: 'x',
+          // Square nut and washer face, as period trestle bolts.
+          const bolt = box({
+            size: [0.06, 0.065, 0.065],
+            at: [0, 0, -0.0325],
             color: steel,
+            strip: 'iron',
           });
           const n = [mx / ml, my / ml];
           for (const [px, py, z] of [
@@ -275,7 +448,7 @@ export const water_tower = defineAsset({
       const half = Math.sqrt(Math.max(0, TANK_R * TANK_R - y * y)) + 0.15;
       tr.push(bx(-half, half, y - 0.1, y + 0.1, CAP_Z1, FLOOR_Z, timberDark, 'wood'));
     }
-    part('trestle', dirt(merge(tr)));
+    part('trestle', merge(tr), drips);
 
     // ---- central core: vertical planking round a 10 ft cylinder, with its access door.
     const coreN = ctx.pick([12, 12, 8]);
@@ -303,21 +476,32 @@ export const water_tower = defineAsset({
           core.push(bx(dx - 0.08, dx - 0.06, 0.05, 0.38, z, z + 0.05, steel, 'iron')); // strap hinges
       }
     }
-    part('core', dirt(merge(core)));
+    part('core', merge(core), drips);
 
-    // ---- tank: stave tub, hoops (closer near the bottom), lugs, chime overhang.
-    part('tank', staveRing(TANK_R, FLOOR_Z, TANK_H, facets, cypress, lod === 2 ? 'plain' : 'wood'));
+    // ---- tank: stave tub, hoops (closer near the bottom), lugs; weeping water stains.
+    const nStaves = STAVES[lod] ?? 16;
+    const wetTank = tankWear(ctx.rng.fork('tank-wear'), {
+      floorZ: FLOOR_Z,
+      topZ: TANK_TOP,
+      outletAngle: 0,
+      outletZ: PIVOT[2],
+    });
+    part(
+      'tank',
+      staveTub(ctx.rng.fork('staves'), nStaves, ctx.pick([6, 2, 1]), lod === 2),
+      wetTank,
+    );
     if (lod < 2) {
       const hoops: Mesh[] = [];
       const n = lod === 0 ? 14 : 7;
-      // Hoops are drawn tight onto the staves: the same facets and phase as the stave ring, a
-      // closed band whose inner face sits 1 mm into the staves (a face contact, not a ring of air).
-      const rr = TANK_R + 0.002;
-      /** Radius of the stave polygon's outer face at angle a. */
+      const segs = HOOP_SEGS[lod] ?? 30;
+      // Round iron rods drawn tight onto the staves: a half-round profile on `segs` facets whose
+      // chord midpoints bed 1 mm into the stave polygon (corners stand proud by the chord sag).
+      const rr = (TANK_R * Math.cos(Math.PI / nStaves)) / Math.cos(Math.PI / segs) - 0.001;
       const faceR = (a: number): number => {
-        const step = (Math.PI * 2) / facets;
+        const step = (Math.PI * 2) / segs;
         const off = (((a % step) + step) % step) - step / 2;
-        return (TANK_R * Math.cos(Math.PI / facets)) / Math.cos(off);
+        return (rr * Math.cos(Math.PI / segs)) / Math.cos(off);
       };
       for (let i = 0; i < n; i++) {
         // Spacing grows with height: pressure falls off toward the top.
@@ -326,14 +510,12 @@ export const water_tower = defineAsset({
         hoops.push(
           lathe({
             profile: [
-              [rr - 0.004, z],
-              [rr + 0.012, z + 0.004],
-              [rr + 0.012, z + 0.03],
-              [rr - 0.004, z + 0.034],
-              [rr - 0.004, z],
+              [rr, z],
+              [rr + 0.016, z + 0.012],
+              [rr, z + 0.024],
             ],
-            segments: facets,
-            color: steel,
+            segments: segs,
+            color: hoopIron,
             strip: 'iron',
           }),
         );
@@ -343,17 +525,39 @@ export const water_tower = defineAsset({
           const lr = faceR(a) + 0.012;
           hoops.push(
             place(
-              box({ size: [0.05, 0.16, 0.07], at: [0, 0, -0.02], color: steel, strip: 'iron' }),
+              box({ size: [0.05, 0.16, 0.07], at: [0, 0, -0.02], color: hoopIron, strip: 'iron' }),
               { at: [Math.cos(a) * lr, Math.sin(a) * lr, z], yaw: a },
             ),
           );
         }
       }
       part('tank_hoops', merge(hoops));
+      // The board's back sinks 6 mm into the hoops' rounded faces where it crosses them.
+      if (lod === 0) part('float_gauge', floatGauge(faceR(GAUGE_A) + 0.01));
     }
 
     // ---- roof: low six-sided pyramid of shingles, fascia, finial and lightning rod, hatch.
+    // Wall plate: a ring set into the stave tops that the rafters (and the soffit) bear on.
+    // Wall plate: a ring set on the stave tops that the rafters (and the soffit) bear on; its
+    // facets' chord midpoints sit 3 mm proud of the staves (near LODs; far, the soffit rests).
     const roofM: Mesh[] = [];
+    const slopes: Mesh[] = [];
+    if (lod < 2) {
+      const segs = HOOP_SEGS[lod] ?? 30;
+      const rp = (TANK_R * Math.cos(Math.PI / nStaves)) / Math.cos(Math.PI / segs) + 0.003;
+      roofM.push(
+        lathe({
+          profile: [
+            [rp, TANK_TOP - 0.1],
+            [rp, TANK_TOP],
+            [TANK_R - 0.15, TANK_TOP],
+          ],
+          segments: segs,
+          color: timberDark,
+          strip: 'wood',
+        }),
+      );
+    }
     const circ = ROOF_APOTHEM / Math.cos(Math.PI / 6);
     const eaveZ = TANK_TOP + 0.15;
     const apex: Vec3 = [0, 0, eaveZ + ROOF_RISE];
@@ -363,7 +567,7 @@ export const water_tower = defineAsset({
       z,
     ];
     for (let k = 0; k < 6; k++) {
-      roofM.push(
+      slopes.push(
         planar({
           points: [corner(k, eaveZ), corner(k + 1, eaveZ), apex],
           color: shingle,
@@ -431,7 +635,16 @@ export const water_tower = defineAsset({
         ),
       );
     }
-    part('roof', merge(roofM));
+    // Split the shingle planes (near LODs) so the lichen and run-off have vertices to live on.
+    const roofMesh = merge([
+      ...roofM,
+      lod < 2 ? tessellate(merge(slopes), ctx.pick([0.9, 1.8, 0])) : merge(slopes),
+    ]);
+    part(
+      'roof',
+      roofMesh,
+      roofWear(ctx.rng.fork('roof-wear'), { eaveZ, apexZ: apex[2], sun: [-0.6, 0.8] }),
+    );
 
     // ---- outlet + hinge on the track side; the spout swings on it.
     const outlet: Mesh[] = [
@@ -516,7 +729,7 @@ export const water_tower = defineAsset({
           }),
         );
     }
-    part('spout_body', merge(sp), { parent: 'spout' });
+    part('spout_body', merge(sp), undefined, { parent: 'spout' });
     ctx.socket('water_fill', {
       kind: 'interact',
       parent: 'spout',
@@ -547,7 +760,7 @@ export const water_tower = defineAsset({
         for (const y of [-0.22, 0.22]) {
           // A stay runs from inside its stile to 1.5 cm inside what it is spiked to: the stave
           // faces either side of the tank's −X corner, or the −X cap beam of the trestle.
-          const fa = Math.PI / facets;
+          const fa = Math.PI / nStaves;
           const r =
             z > FLOOR_Z
               ? TANK_R - Math.abs(y * 0.6) * Math.tan(fa) - 0.015 / Math.cos(fa)
@@ -563,7 +776,7 @@ export const water_tower = defineAsset({
             }),
           );
         }
-      part('ladder', dirt(merge(lad)));
+      part('ladder', merge(lad), drips);
     }
   },
 });

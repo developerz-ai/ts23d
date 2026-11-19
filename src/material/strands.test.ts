@@ -1,14 +1,18 @@
-import { afterEach, describe, expect, it } from 'bun:test';
+import { afterAll, afterEach, describe, expect, it } from 'bun:test';
 import { CREATURE_MATERIALS } from './creature.ts';
-import { defineMaterial, resetMaterials } from './define.ts';
+import { defineMaterial, materialSnapshot, resetMaterials } from './define.ts';
 import { createCanvas } from './paint/canvas.ts';
 import { paintKit } from './paint/kit.ts';
 import { STRAND_CELLS, STRAND_LAYOUT, strandCells, strandPainter } from './strands.ts';
 import { STRIP_H } from './trim-sheet.ts';
 
+// Put back, last of all hooks, what other test files' recipes defined at import (D334).
+const restoreMaterials = materialSnapshot();
+
 // A row comes from the id alone: start from an empty table, whatever earlier files registered.
 resetMaterials();
 afterEach(resetMaterials);
+afterAll(restoreMaterials);
 
 /** Paint one strand row at a 2048² sheet's row size (2048 × 32 px). */
 function paintRow(seed = 5) {

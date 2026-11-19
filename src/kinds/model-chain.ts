@@ -34,6 +34,7 @@ import {
   skeletonJson,
 } from '../neural/index.ts';
 import type { CreatureSpec } from './creature-spec.ts';
+import type { ExtraChains } from './model-extra.ts';
 import type { RigChains } from './model-joints.ts';
 import { type ModelRig, modelRig } from './model-rig.ts';
 
@@ -78,6 +79,9 @@ export interface ModelChainOptions {
   readonly nose?: boolean;
   /** Creature clips to leave out by name. */
   readonly drop?: readonly string[];
+  /** Bone chains the plan lacks (wings, fins): declared, or found on the proxy fit. Their bones
+   *  go to Blender with the fitted skeleton, so `bind` weights the skin to them (model-extra.ts). */
+  readonly extra?: ExtraChains;
   /** Triangles of the proxy pass. Default 6000. */
   readonly proxyTriangles?: number;
   /** Refuse a Blender LOD 0 above this (budget.triangles[0]). */
@@ -208,6 +212,7 @@ export function modelChain(ctx: BuildContext, o: ModelChainOptions): ChainedMode
     ...(o.repose ? { repose: true } : {}),
     ...(o.front === undefined ? {} : { front: o.front }),
     drop: o.drop ?? [],
+    ...(o.extra ? { extra: o.extra } : {}),
   });
   // Blender binds to the real bones; the half-angle helpers are split off in TS (model-body.ts).
   const sent = skeletonJson({ bones: [...rig.fitted] });

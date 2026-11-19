@@ -34,14 +34,19 @@ export interface FakeWorld {
 
 export const MACHINE = { host: 'box', boot: 'boot-1' } as const;
 
-/** Let pending file work and promise turns run until `done()`; fails after a bounded number. */
+/**
+ * Let pending file work and promise turns run until `done()`. Bounded by time, not by turns: the
+ * fixture's clock is fake but its ticket files are real, and 5000 event-loop turns can pass in
+ * 12 ms while one serialised ticket write is still on the disk (D338).
+ */
 export async function until(done: () => boolean | Promise<boolean>, what: string): Promise<void> {
-  for (let i = 0; i < 5000; i++) {
+  const deadline = performance.now() + 10_000;
+  while (performance.now() < deadline) {
     if (await done()) return;
     await new Promise<void>((r) => setImmediate(r));
   }
   throw new Ts23dError('T3D_ASSERT_INPUT', {
-    cause: `the queue fixture waited 5000 turns and it never happened: ${what}`,
+    cause: `the queue fixture waited 10 s and it never happened: ${what}`,
     fix: 'the waiter the test expects never slept, or the ticket files never changed: read the acquire loop',
   });
 }

@@ -2,11 +2,18 @@
 // Code, not JSON — loops, helpers and composition are the point (docs/decisions/002).
 
 import { type Clip, checkClips, useClip } from './clip.ts';
-import type { Asset, AssetDefinition, AssetMeta, CompiledAsset } from './definition.ts';
+import type {
+  Asset,
+  AssetDefinition,
+  AssetMeta,
+  BuildContext,
+  CompiledAsset,
+} from './definition.ts';
 import { Ts23dError } from './errors.ts';
 import { checkFinishedParts, finishesOf } from './finish.ts';
 import { jointOf, useJoint } from './joint.ts';
 import { withTolerances } from './limit-tolerance.ts';
+import { trackMaterials } from './material-use.ts';
 import type { Mesh } from './mesh.ts';
 import { checkMotion } from './motion-check.ts';
 import { neuralReader } from './neural-ctx.ts';
@@ -184,7 +191,7 @@ export function compile(asset: Asset, options: CompileOptions = {}): CompiledAss
     }
     for (const c of sub.clips ?? []) usedClips.push(useClip(c, o.prefix));
   };
-  asset.build({
+  const ctx: BuildContext = {
     lod,
     seed,
     rng: createRng(seed),
@@ -211,7 +218,8 @@ export function compile(asset: Asset, options: CompileOptions = {}): CompiledAss
     weathered: (coverage) => {
       weather.push(...coverage);
     },
-  });
+  };
+  const { uses } = trackMaterials(`asset '${asset.name}'`, () => asset.build(ctx));
   const built = [...parts.values()];
   checkPaintedParts(asset.name, built, paintSet);
   checkFinishedParts(asset.name, built, finishes);
@@ -247,6 +255,8 @@ export function compile(asset: Asset, options: CompileOptions = {}): CompiledAss
     ...(weather.length ? { weather } : {}),
     ...(skeleton ? { skeleton } : {}),
     ...(clips.length ? { clips } : {}),
+    ...(uses.length ? { materials: uses } : {}),
+    ...(asset.hero ? { hero: asset.hero } : {}),
   };
 }
 

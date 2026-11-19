@@ -8,7 +8,9 @@
 # the chain's bones follows them and the chain follows the body's. The chain's skin is found by
 # connection: a flood fill from its tip over the vertices within `r` of its bones, stopped at a
 # cut plane, so a hock that touches the tail but is not joined to it stays the leg's. Body skin
-# the chain's bones had reached is re-weighted from the body round it.
+# the chain's bones had reached is re-weighted from the body round it. Where the chain IS joined
+# to the body away from its root (a tail generated lying on a thigh), `contact` spreads that jump
+# in weight over a band of skin, so no edge has one end on the chain and the other on the limb.
 # Coordinates are in the asset frame (metres, Z up, +X front).
 
 import bpy
@@ -18,6 +20,10 @@ from mathutils import kdtree
 from tasks.steps import bind
 from tasks.steps import state as st
 from tasks.steps.deform import mask_weights
+
+# `isolate.contact`: the least jump in the chain's share of the weight across one edge that
+# counts as chain skin fused to body skin (the root's own blend is a `feather` wide, far gentler).
+CONTACT_JUMP = 0.75
 
 
 def to_gltf_point(p):
@@ -178,6 +184,33 @@ def inpaint(obj, w, holes, domain, iterations=60):
     return w
 
 
+def blend_contact(obj, w, co, share, width):
+    """Weights within `width` m (along edges) of a contact edge relaxed between the skin round them.
+
+    A contact edge is one the chain's share of the weight jumps over CONTACT_JUMP across: chain
+    skin fused to body skin. Posed, such an edge stretches by the whole motion between the two;
+    over a band the same motion is shared by every edge across it. Returns (w, edges, vertices)."""
+    edges = np.empty(len(obj.data.edges) * 2, dtype=np.int32)
+    obj.data.edges.foreach_get("vertices", edges)
+    a, b = edges.reshape(-1, 2).T
+    seam = np.abs(share[a] - share[b]) > CONTACT_JUMP
+    if not seam.any():
+        return w, 0, 0
+    length = np.linalg.norm(co[a] - co[b], axis=1)
+    far = np.full(len(co), np.inf)
+    far[a[seam]] = far[b[seam]] = 0
+    while True:
+        grown = far.copy()
+        np.minimum.at(grown, b, far[a] + length)
+        np.minimum.at(grown, a, far[b] + length)
+        grown[grown >= width] = np.inf
+        if np.array_equal(grown, far):
+            break
+        far = grown
+    band = far < width
+    return inpaint(obj, w, band, np.ones(len(co), dtype=bool)), int(seam.sum()), int(band.sum())
+
+
 def segment_distance(co, head, tail):
     axis = tail - head
     t = np.clip(((co - head) @ axis) / max(float(axis @ axis), 1e-12), 0, 1)
@@ -243,6 +276,10 @@ def isolate(state, step):
         for i in lost_out.tolist():
             w[i] = w[tree.find(co[i])[1]]
     w /= w.sum(axis=1)[:, None]
+    contact = {}
+    if step.get("contact"):
+        w, seams, band = blend_contact(obj, w, co, w[:, ~foreign].sum(axis=1), step["contact"])
+        contact = {"contact": {"edges": seams, "vertices": band}}
     changed = np.flatnonzero(np.abs(w - before).max(axis=1) > 1e-5)
     groups = [obj.vertex_groups[n] for n in names]
     for i in changed.tolist():
@@ -253,6 +290,7 @@ def isolate(state, step):
                 group.remove([i])
     bind.limit(obj, state.max_influences)
     return {
+        **contact,
         "bones": step["bones"],
         "inside": int(inside.sum()),
         "changed": int(len(changed)),

@@ -1,64 +1,61 @@
 {
   "asset": "face_human",
   "reviewer": "agent",
-  "overall": 5.3,
+  "overall": 6,
   "scores": {
     "silhouette": {
-      "score": 6,
-      "reason": "Reads as a human bust from front and side; the grooved helmet hair with a hard front edge is the weakest shape and nothing in the outline is characterful.",
+      "score": 7,
+      "reason": "Hair cards now give crown volume and a natural outline; reads as a young man bust.",
       "fixes": [
-        "volume over the crown and a few lifted locks; a softer, lower front hairline"
+        "fill the bare patch on the crown seen in TOP"
       ]
     },
     "proportions": {
       "score": 7,
-      "reason": "Measured human base (MakeHuman, CC0); eye spacing on spec, natural thirds; reads young and androgynous.",
+      "reason": "Head-to-neck and features read human by eye.",
       "fixes": [
-        "a masculine/feminine axis from MakeHuman's CC0 targets as a preset knob"
+        "a masculine/feminine axis knob from MakeHuman CC0 targets"
       ]
     },
     "materials": {
-      "score": 4,
-      "reason": "Vertex colour on the plain strip: skin zones (flush, lips, cool sockets) separate by hue but not by roughness or subsurface; the hair is the same material as the skin, so it reads as sculpted clay; there is a pale band of bare skin under the hair helmet edge at the hairline in hero.png.",
+      "score": 5,
+      "reason": "Skin reads as matte plastic with a uniform pink-beige and dark spot decals; no subsurface warmth at ears/nose, no wet eyes or lips. The hair cards read as brown hair with value variation.",
       "fixes": [
-        "a skin strip with subsurface-like roughness/sheen and a hair strip with anisotropic sheen",
-        "darker hair roots and per-lock value variation along each lock",
-        "close the hairline: extend the hair mass to the skin (or tint the scalp under it to the root colour) so no pale band shows"
+        "skin strip with sheen/lower roughness on the T-zone, red warmth at ears, nose and lips; glossy eyes and wet lip line",
+        "hair strip with anisotropic sheen and darker roots, per-card value variation"
       ]
     },
     "detail": {
-      "score": 5,
-      "reason": "Primary and secondary forms come from a real anatomical base (lids, nasolabial area, lips, ear helix, clavicles, sternocleidomastoid), but there is no tertiary layer (pores, wrinkles) and the hair is evenly spaced grooves.",
+      "score": 6,
+      "reason": "Hair locks and ear shape read; the face has no pores or creases at the hero distance.",
       "fixes": [
-        "LOD0 wrinkle/pore displacement on the subdivided base driven by age",
-        "varied lock widths and a parting instead of evenly spaced grooves"
+        "LOD0 pore/crease displacement on the face"
       ]
     },
     "wear": {
-      "score": 3,
-      "reason": "Pristine: seeded asymmetry and age/weight knobs are the only story; no scars, stubble, blemishes, sun-darkened skin or dirt.",
+      "score": 5,
+      "reason": "Blemish dots across the face read as a rash rather than character; no scar or stubble.",
       "fixes": [
-        "seeded scar/blemish marks in vertex colour",
-        "stubble shadow on the jaw and age-driven darkening under the eyes"
+        "fewer seeded marks plus stubble shadow on the jaw"
       ]
     },
     "lod": {
       "score": 5,
-      "reason": "LOD2 keeps the outline and colour blocks, but the face breaks into blotchy patches and the bust edge is ragged in sheet.png.",
+      "reason": "FAR LOD2 is a distance-field re-mesh: the face breaks into flat patches of different tone and the features smear. The hair holds.",
       "fixes": [
-        "LOD2 from a coarser authored topology (MakeHuman proxy) instead of a distance-field re-mesh"
+        "LOD2 from an authored coarse topology (decimated quad base mesh) instead of the distance-field re-mesh, keeping vertex colour smooth"
       ]
     },
     "technical": {
       "score": 7,
-      "reason": "QA PASS at every LOD; 96.2k / 36.7k / 8.2k tris; 2 draws; ~45% of LOD0 is SDF hair.",
+      "reason": "QA clean; 59k / 12k / 2.7k triangles over 4 draws.",
       "fixes": [
-        "cheaper hair (cards or a coarser sculpt cell)"
+        "cheaper hair cards at LOD1"
       ]
     }
   },
   "renders": {
-    "hero.png": "e55b0a4070fe1dabd881c3e6796923e7e37c887442fc6d715ba8b44e067ca991",
-    "sheet.png": "6e2d2c008d02a7543b82c73ebc7bb1e82d96430f28e1d106188248c45b420d77"
+    "hero.png": "750004ee77816562d0ab1b9f4f711b30bb4bcd450181815c0203569c38dd77ed",
+    "sheet.png": "db162967840c528476f8a5da3c23ad1726863e91b81557ff1ba50b335be5ad8e"
   }
 }

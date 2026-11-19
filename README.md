@@ -92,7 +92,7 @@ Each asset is a TypeScript module. `t3d build` compiles it, deterministically, t
 - **Code-level checks.** The recipe states its physical intent and QA enforces it at every LOD: `checks: [clear('track_*', 'hull_*'), noOverlap('road_wheel_l_*'), touches('turret_body', 'hull_top'), symmetric('_l', '_r', 'y')]`. "The track hits the frame" becomes a failing build.
 - **Textures from code.** A procedural albedo / normal / ORM trim sheet (bricks, planks, plates, slate, foliage), written once and shared by every GLB, plus three.js TSL and Godot shader sources.
 - **Spec-sheet fidelity.** Declare `real: { length, width, height, measures }` with `sources`. QA holds the overall size to ±5% and each named dimension (driver diameter, gauge, wheelbase) to ±2%. Fix the model, never the spec.
-- **A contact sheet.** One PNG, six labelled orthographic views on a metre grid, rendered on the CPU. A vision-capable agent reads it once, sees what's wrong and fixes it.
+- **A contact sheet.** One PNG, six labelled orthographic views on a metre grid, rendered on the CPU in the asset's base colours (trim-sheet albedo × vertex colour, glass see-through). A vision-capable agent reads it once, sees what's wrong and fixes it.
 - **A beauty render and an AI review pack.** `t3d hero` renders a textured, lit, soft-shadowed 3/4 product shot on the CPU (the images above). `t3d review` writes hero, sheet, close-ups, an LOD strip, a checklist prompt for a vision agent and image metrics: QA with pictures, no GPU.
 - **Organic modelling.** `sdf` (surface nets / marching cubes) with `sd.*` combinators and `sculpt`, an ordered add / subtract / paint edit list with smooth blends: busts, rocks, asteroids.
 - **Draw → 3D.** An agent writes SVG (drawing as text) and ts23d builds from it: `extrudeSvg` (holes, chamfered edges), `latheSvg` (half profile), and `visualHull`, a front + side (+ top) silhouette block-out you refine with sculpt edits ([`svg_showcase`](recipes/svg_showcase/)).
@@ -222,7 +222,7 @@ Draw calls column: static assets (the Eiffel Tower) are 1; vehicles are one per 
 | Optimisation | `passes/optimize`, `export` | Shipped: weld, degenerate removal, Forsyth vertex-cache + vertex-fetch order (ACMR reported), weighted normals, baked AO, u16 indices and colours, batching. Planned: opt-in `web` profile (quantisation + meshopt) | meshoptimizer / gltfpack |
 | LODs | `ctx.lod` | Shipped | Decimators |
 | QA | `qa` | Shipped: budget, surface-contact floating parts, motion clashes, names, proportions, spec measures, non-finite, winding, hidden parts, degenerate triangles, cross-LOD triangles; opt-in z-fighting, LOD silhouette and pivots. `/testing` helpers | Manual review |
-| Renders and photo match | `render` | Shipped: contact sheet, beauty `hero` render (raster, or `--quality path` CPU path tracing), `review` pack for a vision agent, `photoMatch` with a camera solve, `silhouetteIoU` gate | — |
+| Renders and photo match | `render` | Shipped: contact sheet (cutout cards alpha-tested), beauty `hero` render (raster, or `--quality path` CPU path tracing; `glow` parts emit), per-asset hero view (`hero: { azDeg, elDeg, fovDeg }` or `{ eye, target }` on `defineAsset`; `--az` / `--el` / `--fov` override), `review` pack for a vision agent, `photoMatch` with a camera solve, `silhouetteIoU` gate | — |
 | GLB export | `export` | Shipped: faces +Z, seamless loops, trim-sheet textures, punctual lights, emissive glow, XMP provenance, 0 glTF-Validator errors and warnings (tested) | — |
 | Engine import adapters | `threeMaterialSource` (TSL), `godotShaderSource` | Shipped: shader sources with wind, window glow, wear. Planned, M3: import settings and collision naming per engine, as hooks, not runtime | — |
 
@@ -305,7 +305,7 @@ bunx -p @developerz.ai/ts23d t3d --version                    # also: t3d <comma
 |---|---|
 | `--out <dir>` | Output directory (default `out`) |
 | `--no-shot` | `build` without rendering the contact sheet |
-| `--sheet external\|embed\|none` | Trim-sheet textures. `external` (default): `out/trim_sheet_{albedo,normal,orm}.png` written once, every GLB references `../trim_sheet_*.png`. `embed`: inside each GLB. `none`: vertex colour only |
+| `--sheet external\|embed\|none` | Trim-sheet textures. `external` (default): `out/trim_sheet_{albedo,normal,orm}.png` written once, every GLB references `../trim_sheet_*.png`; an asset whose material sits on a row the shared sheet already shows another material on (this run or an earlier one into the same `--out`, recorded in `trim_sheet_owners.json`) gets its own `out/<asset>/trim_sheet_*.png`. `embed`: inside each GLB. `none`: vertex colour only |
 | `--sheet-size 512\|1024\|2048` | Sheet resolution (default 1024) |
 | `--lods 0,1,2` | Which detail levels to build (default all three). `--lods 0` = hero mesh only, `--lods 0,2` = near + far. QA and the manifest cover exactly what was built |
 | `--no-animations` | Skip the baked `run` clip. `t3d build` bakes it by default so viewers (e.g. VS Code glTF Tools) show play controls |
@@ -339,18 +339,18 @@ compiles every recipe in a worker).
 
 ```ts
 // build.ts → bun build.ts
-import { compile, contactSheet, DEFAULT_SHEET, paintTrimSheet, runQa, toGlb } from '@developerz.ai/ts23d';
+import { compile, contactSheet, DEFAULT_SHEET, runQa, sheetFor, toGlb } from '@developerz.ai/ts23d';
 import { tiger_1 } from './recipes/tiger_1/tiger_1.ts';
 
-const sheet = paintTrimSheet({ ...DEFAULT_SHEET, size: 512 }); // textures are optional
+const lods = ([0, 2] as const).map((lod) => compile(tiger_1, { lod })); // only the detail levels you need
+const sheet = sheetFor(lods, { ...DEFAULT_SHEET, size: 512 });          // this asset's own trim sheet
 
-for (const lod of [0, 2] as const) {                // only the detail levels you need
-  const asset = compile(tiger_1, { lod });
+for (const asset of lods) {
   const findings = runQa(asset);                    // gate it your way, or skip it
   if (findings.length) throw new Error(findings.map((f) => `${f.message} — fix: ${f.fix}`).join('\n'));
-  await Bun.write(`out/tiger_1.lod${lod}.glb`, toGlb(asset, { sheet, animations: true }));
+  await Bun.write(`out/tiger_1.lod${asset.lod}.glb`, toGlb(asset, { sheet, animations: true }));
 }
-await Bun.write('out/tiger_1.png', contactSheet(compile(tiger_1, { lod: 0 }))); // for your agent's eyes
+await Bun.write('out/tiger_1.png', contactSheet(lods[0] ?? compile(tiger_1), { sheet })); // for your agent's eyes
 ```
 
 Runnable copy: [`examples/build-with-bun.ts`](examples/build-with-bun.ts) — executed in CI, so this path can't rot.
@@ -361,8 +361,8 @@ Runnable copy: [`examples/build-with-bun.ts`](examples/build-with-bun.ts) — ex
 | `runQa(compiled)` / single gates / `inspect(compiled)` | findings with fixes; geometry queries for your own checks |
 | `toGlb(compiled, { sheet, animations, keepParts })` | GLB bytes (`Uint8Array`) — write them anywhere |
 | `mergeToPivots(compiled)` | the batched part list the GLB uses (draw calls = movable parts) |
-| `contactSheet(compiled, { far, cell })` | six-view PNG bytes |
-| `paintTrimSheet(recipe)` + `sheetPngs(sheet)` | the texture set (albedo / normal / ORM) as RGBA or PNG |
+| `contactSheet(compiled, { far, cell, sheet })` | six-view PNG bytes; with `sheet` in the hero's base colours, without it vertex colour only |
+| `sheetFor(compiled, recipe)` + `sheetPngs(sheet)` | the asset's own texture set (albedo / normal / ORM) as RGBA or PNG |
 | `threeMaterialSource(hints)` / `godotShaderSource(hints)` | shader source strings for your engine |
 | `manifest` data | build it from `compiled.parts` (pivots, emitters, sockets) — see `src/cli/manifest.ts` |
 
@@ -503,7 +503,7 @@ As of 2026-10. Full matrix: [docs/idea/07-what-fits.md](docs/idea/07-what-fits.m
 | Fit | Asset categories |
 |---|---|
 | **Strong** | Hard-surface props, architecture (facades, towers), vehicles (tracked, wheeled, rail), modular kits, anything with real dimensions or repeated parts |
-| **Shipped, early** | Vegetation: Weber–Penn trees (oak, pine, palm, birch, willow); LOD2 impostors are crude |
+| **Shipped, early** | Vegetation: Weber–Penn trees (oak, pine, palm, birch, willow); LOD2 is the tree's own crown as card clumps over the trunk (oak, pine and palm hold 0.8 of the near silhouette; birch and willow less) |
 | **Shipped, early** | Stylised organic: `sculpt` busts, SDF rocks and asteroids, eroded terrain. Boats: lofted `hull` |
 | **Shipped, early** | Stylised creatures: `creature()` over a skeleton with per-family biology (`recipes/wolf`); [animal research](docs/research/animal-anatomy.md) |
 | **Shipped, early** | Model-first humanoids: [`recipes/ranger`](recipes/ranger/README.md), an image-to-3D body with the rig service's skin and clips, finished by Blender steps (As of 2026-11: QA PASS; no finger bones, no blink or jaw, hair as sculpted clumps) |

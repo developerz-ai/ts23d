@@ -66,3 +66,15 @@ act along X, Y and Z), `head_0`,
   The FAO female value is used; the female figure agrees across both.
 - Which side the mantle leans on when settled was reasoned from orientation (funnel ventral, so
   below and behind the head here), not measured from a photograph.
+
+## Surface, wear and LOD (2026-11 quality pass)
+| Feature | How | Why |
+|---|---|---|
+| wet skin | body on the built-in satin `plastic` strip (roughness 0.35) | matte |
+| arms | taper linearly from the web to the tip; suckers shrink with them; transverse skin folds and papillae along the aboral face, clear of the crown fillets | uniformly thick, smooth tubes |
+| tips | pale, rosy, translucent-looking over the last 28 % of every arm | |
+| poses | arms 2 and 4 coil their tips flat on the seabed, arm 3 reaches out nearly straight | the TOP view was a symmetric star |
+| regenerating arm | arm 6 is 0.74 m (design value): its old taper to a pale scar ring at 80 %, then a thinner, paler regrowth bud; the recipe's arc check holds it to its own length | octopuses regrow lost arm tips (widely reported; no paper opened for this recipe, so the lengths are design values) |
+| scars | two healed slashes on the mantle's camera-side flank, pale bands across arms 1 and 4 | pristine |
+| LOD | LOD2 3.6 k: two rings a link on the arms, rounder mantle and head; LOD0 sucker cups 8 segments (they face the seabed), the mantle got the rings | blocky mantle, segmented tips far away |
+| box | the settled pose's box is 1.43 × 1.28 × 0.46 m (design value; the sourced lengths are held along the bones) | the new poses |

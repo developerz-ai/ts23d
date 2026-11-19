@@ -1,64 +1,61 @@
 {
   "asset": "dropship",
   "reviewer": "agent",
-  "overall": 7.1,
+  "overall": 7.3,
   "scores": {
     "silhouette": {
       "score": 8,
-      "reason": "Original VTOL dropship: lofted nose with framed canopy, slab cabin with rear ramp, two tilting ducted nacelles on sponsons, swept tail and fin, landing gear. Distinct and readable from every view and at LOD2.",
+      "reason": "Tilt-nacelle dropship with canopy, tail fin, gear legs and antennae; reads in every view.",
       "fixes": [
-        "a deeper chin or sensor blister under the nose so the FRONT view is less of a plain oval"
+        "a chin sensor blister so FRONT is less of a plain oval"
       ]
     },
     "proportions": {
       "score": 8,
-      "reason": "Design dossier scale (cabin fits troops at 1.8 m, ramp at walking slope) and envelope pass; nacelles in proportion to the hull.",
+      "reason": "Nacelles, cabin and canopy are scaled for a 20 m craft; gear and windows at human scale.",
       "fixes": [
-        "shorten the tail boom ~0.5 m so the nacelles sit nearer the centre of mass in SIDE"
+        "shorten the tail boom ~0.5 m"
       ]
     },
     "materials": {
       "score": 6,
-      "reason": "Steel-painted hull with chips, aluminium mechanisms, glass canopy, glowing lights, hazard and accent paint. In hero.png the left canopy pane shows a patch of white speckle noise, the nose loft shows triangle faceting in the shading, and the chip pattern is uniform and dense on the large plates.",
+      "reason": "The large tan triangles are gone: the hull is now a scratched mid grey, and glass, hazard and orange stripes separate. The white speckle is still on the left canopy pane in hero.png, and the hull is one grey with little plate-to-plate variation.",
       "fixes": [
-        "find and remove the white speckle on the canopy pane (glass coplanar with the frame/interior, or grime on glass)",
-        "weighted normals on the nose loft",
-        "lower chip density on big plates (a defined steel_painted variant)"
+        "remove the canopy speckle (glass coplanar with the frame/interior, or grime on glass)",
+        "vary the tone of a few plates (replacement panels, darker access hatches) so the hull is not one grey"
       ]
     },
     "detail": {
       "score": 7,
-      "reason": "Plate seams, vents and louvres, greebles, antennae, hatches, stencils and tail number, gear with pads, nacelle hazard rings and louvres, cabin interior.",
+      "reason": "Panel seams, louvres, vents, antennae, gear struts and markings hold at the hero distance.",
       "fixes": [
-        "rivet/fastener rows along the plate seams",
-        "hydraulic lines on the gear legs"
+        "rivet/fastener rows along the plate seams; hydraulic lines on the gear legs"
       ]
     },
     "wear": {
       "score": 6,
-      "reason": "Chipped paint everywhere, dirt on gear and belly, dust on top. No exhaust scorch around the nacelles, no oil streaks, no faded stencils.",
+      "reason": "Scratches and chipped edges on the plates and some darkening on the nacelles; no scorch at the nacelle mouths, no oil streaks from the gear bays.",
       "fixes": [
-        "heat scorch inside and below the nacelle mouths",
-        "oil streaks from the gear bays"
+        "heat scorch inside and below the nacelle mouths; oil streaks from the gear bays"
       ]
     },
     "lod": {
-      "score": 7,
-      "reason": "LOD2 (2 000) keeps hull, canopy, nacelles, wings, tail and gear; the nacelle hazard rings, tail number and window row drop, so the strongest colour accents vanish at distance.",
+      "score": 8,
+      "reason": "FAR LOD2 keeps the nacelle hazard rings, the 07 and the canopy; with the camo gone the hull grey matches LOD0, so the switch is quiet.",
       "fixes": [
-        "keep the nacelle hazard rings and the 07 as flat quads at LOD2"
+        "keep the cabin window row at LOD2 (it thins out in the far view)"
       ]
     },
     "technical": {
       "score": 8,
-      "reason": "QA PASS, 18 766 / 6 458 / 2 002; glow rules, ramp arc check, moving nacelles and ramp clear; connections gate clean.",
+      "reason": "QA clean; 19k / 7k / 2k triangles, 15 draws for moving nacelles and gear.",
       "fixes": [
         "split only faces taller than one strip band in the UV pass"
       ]
     }
   },
   "renders": {
-    "hero.png": "7340ecfaecdba8fcd4422c5e8565762ef7ed49d6e6da640554ea621c96f288a0",
-    "sheet.png": "2ffd71cca1826548af99d6bc5e944de38a144f38c06054bde27d7459266f1efa"
+    "hero.png": "f8034fe0e5b1de89c615640e9f0653dceb3c195c79acc24bab6a830e56ae1fea",
+    "sheet.png": "56d154211fa4c5ec7be2e19db88af432a7bba9ff51f87db4cfc80959c37ea42a"
   }
 }

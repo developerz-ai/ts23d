@@ -57,7 +57,7 @@ function dashFaceX(z: number): number {
 }
 
 function dashBody(lod: Lod): Mesh {
-  const n = lod === 0 ? 36 : 12;
+  const n = lod === 0 ? 20 : 8;
   const rings: Vec3[][] = [];
   for (let i = 0; i <= n; i++) {
     const y = -0.66 + (1.32 * i) / n;
@@ -89,7 +89,7 @@ function dashBody(lod: Lod): Mesh {
 
 /** A round gauge: chrome bezel, recessed glowing face (separate), needle, glass. */
 function gauge(lod: Lod, r: number): { body: Mesh; face: Mesh } {
-  const segs = lod === 0 ? 28 : 10;
+  const segs = lod === 0 ? 16 : 8;
   const body = merge([
     lathe({
       profile: [
@@ -165,7 +165,7 @@ export function dashboard(lod: Lod): DashMeshes {
           [0.042, 0.005],
           [0.03, 0.006],
         ],
-        segments: lod === 0 ? 20 : 8,
+        segments: lod === 0 ? 12 : 6,
         axis: 'x',
         color: C.natural,
         strip: 'chrome',
@@ -197,7 +197,7 @@ export function dashboard(lod: Lod): DashMeshes {
         [0.042, 0.005],
         [0.03, 0.006],
       ],
-      segments: lod === 0 ? 20 : 8,
+      segments: lod === 0 ? 12 : 6,
       axis: 'x',
       color: C.natural,
       strip: 'chrome',
@@ -223,11 +223,11 @@ export function dashboard(lod: Lod): DashMeshes {
   const r = 0.185;
   const e1: Vec3 = [0, 1, 0];
   const e2 = unit(sub([0, 0, 1], mul(WHEEL_AXIS, WHEEL_AXIS[2])));
-  const segs = lod === 0 ? 48 : 16;
+  const segs = lod === 0 ? 28 : 12;
   const path = circle(WHEEL_C, e1, e2, r, segs);
   wheel.push(
     sweep({
-      section: { radius: lod === 0 ? 0.017 : 0.02, segments: lod === 0 ? 10 : 6 },
+      section: { radius: lod === 0 ? 0.017 : 0.02, segments: lod === 0 ? 8 : 5 },
       path: [...path, path[0] ?? WHEEL_C],
       color: C.leather,
       strip: 'leather',
@@ -250,7 +250,7 @@ export function dashboard(lod: Lod): DashMeshes {
           [0.04, -0.04],
           [0, -0.04],
         ],
-        segments: lod === 0 ? 24 : 10,
+        segments: lod === 0 ? 14 : 8,
         axis: 'x',
         color: C.leather,
         strip: 'leather',

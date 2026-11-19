@@ -1,7 +1,7 @@
 {
   "name": "joint_demo",
   "kind": "prop",
-  "description": "Teaching asset: an arm, a hand and a sword from separate modules, connected by checked joints",
+  "description": "Teaching asset: a sun-browned arm on a rusting iron stand, its fist closed round a nicked arming sword; arm, hand and sword come from separate modules, connected by checked joints",
   "tags": [
     "demo",
     "joints"
@@ -17,9 +17,9 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    1672,
-    816,
-    300
+    4826,
+    1484,
+    296
   ],
   "drawCalls": [
     1,
@@ -63,8 +63,8 @@
       "to": "sword",
       "kind": "grip",
       "at": [
-        0.655,
-        0,
+        0.63,
+        0.0325,
         1
       ]
     }
@@ -93,7 +93,7 @@
     {
       "label": "blade length",
       "spec": 0.76,
-      "measured": 0.7594999074935913,
+      "measured": 0.7599999904632568,
       "source": "arming sword"
     },
     {
@@ -107,6 +107,56 @@
     "https://msis.jsc.nasa.gov/sections/section03.htm",
     "https://en.wikipedia.org/wiki/Arming_sword"
   ],
+  "weather": {
+    "chips": {
+      "target": 0.4,
+      "actual": 0.4,
+      "eligible": "convex-edges",
+      "area": 0.2153,
+      "by": {
+        "stand_base": {
+          "target": 0.4,
+          "actual": 0.4,
+          "area": 0.1526
+        },
+        "stand_post": {
+          "target": 0.4,
+          "actual": 0.4,
+          "area": 0.0627
+        }
+      }
+    },
+    "scratches": {
+      "target": 0.12,
+      "actual": 0.12,
+      "eligible": "side-facing",
+      "area": 0.0273
+    },
+    "rust": {
+      "target": 0.3,
+      "actual": 0.3,
+      "eligible": "below-fasteners | fasteners ; ground-near",
+      "area": 0.0646,
+      "by": {
+        "stand_base": {
+          "target": 0.3,
+          "actual": 0.3,
+          "area": 0.0144
+        },
+        "stand_post": {
+          "target": 0.3,
+          "actual": 0.3,
+          "area": 0.0502
+        }
+      }
+    },
+    "dust": {
+      "target": 0.95,
+      "actual": 0.95,
+      "eligible": "up-facing",
+      "area": 0.1344
+    }
+  },
   "qa": {
     "pass": true,
     "findings": []

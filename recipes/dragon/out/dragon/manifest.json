@@ -21,23 +21,31 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    198636,
-    44248,
-    4056
+    148852,
+    27748,
+    3964
   ],
   "trianglesCompiled": [
-    198668,
-    44268,
-    4064
+    148884,
+    27768,
+    3972
   ],
   "drawCalls": [
-    6,
-    6,
-    6
+    7,
+    7,
+    7
   ],
   "pivots": [
     {
       "name": "body",
+      "parent": null
+    },
+    {
+      "name": "body_finish_cornea",
+      "parent": null
+    },
+    {
+      "name": "body_finish_keratin",
       "parent": null
     },
     {
@@ -70,9 +78,9 @@
       "to": "horn_boss_l",
       "kind": "socket",
       "at": [
-        2.44,
+        2.647,
         0.15,
-        3.55
+        3.9894
       ]
     },
     {
@@ -81,9 +89,9 @@
       "to": "horn_boss_r",
       "kind": "socket",
       "at": [
-        2.44,
+        2.647,
         -0.15,
-        3.55
+        3.9894
       ]
     },
     {
@@ -92,9 +100,9 @@
       "to": "eye_socket_l",
       "kind": "socket",
       "at": [
-        2.74,
+        2.947,
         0.205,
-        3.47
+        3.9094
       ]
     },
     {
@@ -103,9 +111,9 @@
       "to": "eye_socket_r",
       "kind": "socket",
       "at": [
-        2.74,
+        2.947,
         -0.205,
-        3.47
+        3.9094
       ]
     },
     {
@@ -116,7 +124,7 @@
       "at": [
         0.3134,
         0.459,
-        2.2677
+        2.4677
       ]
     },
     {
@@ -127,7 +135,7 @@
       "at": [
         0.3134,
         -0.459,
-        2.2677
+        2.4677
       ]
     }
   ],
@@ -143,9 +151,9 @@
     }
   ],
   "real": {
-    "length": 8.7,
+    "length": 8.9,
     "width": 7.9,
-    "height": 4.7
+    "height": 4.9
   },
   "measures": [
     {

@@ -3,16 +3,19 @@
 // checklist prompt) and review.json (model-free image metrics with threshold warnings).
 
 import { type Asset, compile, encodePng, type Lod } from '../core/index.ts';
-import type { PaintedSheet } from '../material/index.ts';
+import { type PaintedSheet, type SheetRecipe, sheetFor } from '../material/index.ts';
 import { type BeautyOptions, renderBeauty } from './beauty.ts';
 import { exportedTriangles, lodStrip } from './lod-strip.ts';
 import { exposure, maskIoU, maskStats, poolMask, silhouette, viewFrame } from './metrics.ts';
 import { reviewPrompt } from './review-prompt.ts';
 import { type ReviewMetrics, warningsOf } from './review-warnings.ts';
 import { contactSheet, VIEWS } from './sheet.ts';
+import { previewSheet } from './sheet-tones.ts';
 
 export interface ReviewOptions {
   readonly sheet?: PaintedSheet;
+  /** Paint the asset's own sheet from this recipe (its size); `sheet` wins when both are set. */
+  readonly sheetRecipe?: SheetRecipe;
   readonly width?: number;
   readonly height?: number;
   readonly azDeg?: number;
@@ -52,8 +55,9 @@ export function reviewPack(asset: Asset, o: ReviewOptions = {}): ReviewPack {
   const lods = ([0, 1, 2] as Lod[]).map((lod) => compile(asset, { lod }));
   const lod0 = lods[0] ?? compile(asset);
   const lod2 = lods[2] ?? lod0;
+  const sheet = o.sheet ?? (o.sheetRecipe ? sheetFor(lods, o.sheetRecipe) : undefined);
   const base: BeautyOptions = {
-    ...(o.sheet ? { sheet: o.sheet } : {}),
+    ...(sheet ? { sheet } : {}),
     ...(o.width ? { width: o.width } : {}),
     ...(o.height ? { height: o.height } : {}),
     ...(o.azDeg !== undefined ? { azDeg: o.azDeg } : {}),
@@ -63,7 +67,8 @@ export function reviewPack(asset: Asset, o: ReviewOptions = {}): ReviewPack {
   const files = new Map<string, Uint8Array | string>();
   const hero = renderBeauty(lod0, base);
   files.set('hero.png', encodePng(hero.width, hero.height, hero.rgba));
-  files.set('sheet.png', contactSheet(lod0, { far: lod2 }));
+  // The same preview sheet as `t3d shot`, whatever size the hero's sheet is: the same bytes.
+  files.set('sheet.png', contactSheet(lod0, { far: lod2, sheet: previewSheet([lod0, lod2]) }));
   detailWindows(hero.detail).forEach((w, i) => {
     const r = renderBeauty(lod0, { ...base, window: { ...w, zoom: 3 } });
     files.set(`detail_${i + 1}.png`, encodePng(r.width, r.height, r.rgba));

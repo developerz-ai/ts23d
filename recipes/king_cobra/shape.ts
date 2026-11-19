@@ -28,8 +28,8 @@ export const HEAD = { length: 0.072 * K, width: 0.0525 * K, depth: 0.03 * K } as
 export const PRESERVED_WIDTH = 0.0432 * K;
 /** Live body about 0.9 head widths across in the front photos (estimate, README). */
 export const BODY_WIDTH = 0.9 * HEAD.width;
-/** Hood about 1.7 head widths across, read off a front photo (README); no published value found. */
-export const HOOD_WIDTH = 1.7 * HEAD.width;
+/** Hood about 2 head widths across at full spread, read off front photos (README); no published value found. */
+export const HOOD_WIDTH = 2.05 * HEAD.width;
 export const RAISED = TOTAL / 3;
 
 const halfWidth = profile([
@@ -39,14 +39,16 @@ const halfWidth = profile([
   [0.034, 0.0265],
   [HEAD.length * 0.72, HEAD.width / 2],
   [HEAD.length, 0.0255],
-  [0.112, 0.0215],
-  [0.5, 0.0235],
-  [1.1, BODY_WIDTH * 0.47],
-  [1.75, BODY_WIDTH / 2],
-  [2.4, BODY_WIDTH * 0.47],
-  [SVL, BODY_WIDTH * 0.36],
-  [3.2, 0.0095],
-  [3.46, 0.0028],
+  [0.112, 0.022],
+  [0.5, 0.0238],
+  [0.9, BODY_WIDTH * 0.47],
+  [1.45, BODY_WIDTH * 0.55],
+  [1.85, BODY_WIDTH * 0.56],
+  [2.35, BODY_WIDTH * 0.47],
+  [SVL, BODY_WIDTH * 0.33],
+  [3.15, 0.0098],
+  [3.4, 0.0042],
+  [3.47, 0.0018],
   [TOTAL, 0.0006],
 ]);
 
@@ -80,20 +82,19 @@ const faced = (f: number, w: number, z: number): Vec3 => [
   z,
 ];
 
-/** Height of a pile turn's axis above its belly-on-ground height, per turn below the top. */
-const TURN_RISE = 0.045;
 const COIL_TURNS = 1.85;
-const COIL_RISE = TURN_RISE * COIL_TURNS;
 const COIL_STEP = 0.49;
 const COIL_POINTS = Math.round((COIL_TURNS * Math.PI * 2) / COIL_STEP);
-const AXIS_ON_GROUND = 0.022;
+/** Axis height the neck comes down to; the pile's own heights are settled (`settlePile`). */
+const PILE_ENTRY = 0.075;
 
-/** The pile: a tightening helix, each turn resting on the shoulder of the one below. */
+/** The pile's planform: a spiral widening toward the tail, one turn about 4 cm inside the next,
+ *  so each upper turn sits on the inner shoulder of the turn below (heights: `settlePile`). */
 const coil = (i: number): Vec3 => {
   const k = i / COIL_POINTS;
   const a = (100 * Math.PI) / 180 + i * COIL_STEP;
-  const r = 0.195 + 0.09 * k + 0.05 * Math.max(0, k - 1);
-  return faced(r * Math.cos(a), r * Math.sin(a), COIL_RISE + AXIS_ON_GROUND);
+  const r = 0.21 + 0.07 * k + 0.02 * Math.max(0, k - 1);
+  return faced(r * Math.cos(a), r * Math.sin(a), PILE_ENTRY);
 };
 
 /** Head level, the hood square to the viewer, an S down onto the top of the pile, then the pile. */
@@ -111,11 +112,63 @@ const CONTROL: readonly Vec3[] = [
   ...Array.from({ length: COIL_POINTS + 8 }, (_, i) => coil(i)),
 ];
 
-/** Top of the pile's axis: what the raised front leaves from. */
-export const COIL_TOP = COIL_RISE + AXIS_ON_GROUND;
+/** Steepest climb of the body along itself where it rises onto a turn (design). */
+const PILE_SLOPE = 0.35;
+/** The oval contact under-reads the real section's shoulder: pad it so turns never cut in. */
+const CONTACT_PAD = 1.15;
+/** Half-length of the body over which a climb onto a turn is rounded. */
+const SMOOTH = 0.1;
+/** Arc distance below which two body samples are neighbours, not turns over turns. */
+const TURN_GAP = 0.4;
 
-/** Share of the pile's height still under the body at s: the last half metre lies on the ground. */
-const pileShare = (s: number): number => Math.max(0, Math.min(1, 1 - (s - 1) / 2));
+/** Axis height where the section, sitting on the turn below, touches its top: both sections are
+ *  flat-bellied ovals (BELLY under, TOP over the half-width), lateral offset `dh`. */
+const restsOn = (hwUp: number, hwLow: number, dh: number): number => {
+  const reach = hwUp + hwLow;
+  return dh >= reach ? 0 : (BELLY * hwUp + TOP * hwLow) * Math.sqrt(1 - (dh / reach) ** 2);
+};
+
+/**
+ * Axis heights of a body lying on the floor and on itself: every sample rests on the ground or on
+ * the turn under it, never in the air. Lower turns lie further along the body (the tail is laid
+ * first), so heights settle from the tail toward the head; a slope cap and a light smoothing keep
+ * the climb onto a turn a curve. Exported for the clip poses that lie on the ground.
+ */
+export function settleHeights(
+  xy: readonly (readonly [number, number])[],
+  s: readonly number[],
+): number[] {
+  const n = xy.length;
+  const hw = s.map((v) => halfWidth(Math.min(v, TOTAL)));
+  const need = s.map((_, i) => bellyHalf(Math.min(s[i] ?? 0, TOTAL)));
+  const z = [...need];
+  for (let pass = 0; pass < 3; pass++) {
+    for (let i = n - 1; i >= 0; i--) {
+      const [x, y] = xy[i] ?? [0, 0];
+      for (let j = i + 1; j < n; j++) {
+        if ((s[j] ?? 0) - (s[i] ?? 0) < TURN_GAP) continue;
+        const [u, v] = xy[j] ?? [0, 0];
+        const r = restsOn(hw[i] ?? 0, hw[j] ?? 0, Math.hypot(u - x, v - y));
+        if (r > 0) z[i] = Math.max(z[i] ?? 0, (z[j] ?? 0) + r * CONTACT_PAD + 0.003);
+      }
+      need[i] = z[i] ?? 0;
+      if (i < n - 1)
+        z[i] = Math.max(z[i] ?? 0, (z[i + 1] ?? 0) - PILE_SLOPE * ((s[i + 1] ?? 0) - (s[i] ?? 0)));
+    }
+    for (let i = 1; i < n; i++)
+      z[i] = Math.max(z[i] ?? 0, (z[i - 1] ?? 0) - PILE_SLOPE * ((s[i] ?? 0) - (s[i - 1] ?? 0)));
+  }
+  // Round the climbs over about 20 cm of body; never below what holds the section up.
+  const out = z.map((_, i) => {
+    let [sum, count] = [0, 0];
+    for (let j = i; j >= 0 && (s[i] ?? 0) - (s[j] ?? 0) < SMOOTH; j--)
+      [sum, count] = [sum + (z[j] ?? 0), count + 1];
+    for (let j = i + 1; j < n && (s[j] ?? 0) - (s[i] ?? 0) < SMOOTH; j++)
+      [sum, count] = [sum + (z[j] ?? 0), count + 1];
+    return Math.max(sum / count, need[i] ?? 0);
+  });
+  return out;
+}
 
 interface Sample {
   readonly s: number;
@@ -124,28 +177,49 @@ interface Sample {
   readonly d: Vec3;
 }
 
-function buildSamples(): Sample[] {
+const arcsOf = (pts: readonly Vec3[]): number[] => {
+  const arcs = [0];
+  for (let i = 1; i < pts.length; i++) {
+    const [a, b] = [pts[i - 1] ?? [0, 0, 0], pts[i] ?? [0, 0, 0]];
+    arcs.push((arcs[i - 1] ?? 0) + Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]));
+  }
+  return arcs;
+};
+
+/** The control curve with the pile's heights settled; twice, since settling changes the arc length. */
+function settledCurve(): { pts: Vec3[]; arcs: number[]; onGround: number[] } {
   const c = curve3(CONTROL);
   const N = 1400;
   const raw = Array.from({ length: N + 1 }, (_, i) => c(i / N));
-  const arcs = [0];
-  for (let i = 1; i <= N; i++) {
-    const [a, b] = [raw[i - 1] ?? [0, 0, 0], raw[i] ?? [0, 0, 0]];
-    arcs.push((arcs[i - 1] ?? 0) + Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]));
+  let pts = raw;
+  let arcs = arcsOf(raw);
+  for (let pass = 0; pass < 2; pass++) {
+    // In the pile each turn's axis rests on the ground or on the turn below it.
+    const first = arcs.findIndex((s) => s >= 0.75);
+    const rested = settleHeights(
+      raw.slice(first).map((q): [number, number] => [q[0], q[1]]),
+      arcs.slice(first),
+    );
+    pts = raw.map((q, i): Vec3 => {
+      const z = i >= first ? (rested[i - first] ?? q[2]) : q[2];
+      return [q[0], q[1], mix(q[2], z, smooth(0.8, 0.95, arcs[i] ?? 0))];
+    });
+    arcs = arcsOf(pts);
   }
+  return { pts, arcs, onGround: arcs.map((s) => smooth(0.8, 0.95, s)) };
+}
+
+function buildSamples(): Sample[] {
+  const { pts, arcs, onGround } = settledCurve();
   const out: Sample[] = [];
   let d: Vec3 = [0, 0, 1];
-  raw.forEach((q, i) => {
+  pts.forEach((p, i) => {
     const s = arcs[i] ?? 0;
-    // In the pile each turn's axis rides at its belly's own height over the turn below.
-    const onGround = smooth(0.8, 0.95, s);
-    const seat = bellyHalf(Math.min(s, TOTAL)) - AXIS_ON_GROUND - COIL_RISE * (1 - pileShare(s));
-    const p: Vec3 = [q[0], q[1], q[2] + onGround * seat];
-    const next = raw[Math.min(N, i + 1)] ?? q;
-    const prev = raw[Math.max(0, i - 1)] ?? q;
+    const next = pts[Math.min(pts.length - 1, i + 1)] ?? p;
+    const prev = pts[Math.max(0, i - 1)] ?? p;
     const t = norm(sub(next, prev));
     // On the ground the back settles to face straight up; the raised part keeps its transport.
-    d = add(d, [0, 0, 0.05 * onGround]);
+    d = add(d, [0, 0, 0.05 * (onGround[i] ?? 0)]);
     d = norm(sub(d, scale(t, dot(d, t))));
     out.push({ s, p, t, d });
   });
@@ -154,6 +228,8 @@ function buildSamples(): Sample[] {
 
 const SAMPLES = buildSamples();
 export const CURVE_LENGTH = SAMPLES.at(-1)?.s ?? 0;
+/** Top of the pile's axis: what the raised front leaves from. */
+export const COIL_TOP = Math.max(...SAMPLES.filter((x) => x.s >= RAISED).map((x) => x.p[2]));
 
 /** Centreline point, tangent (toward the tail) and dorsal direction at s. */
 export function frameAt(s: number): { p: Vec3; t: Vec3; d: Vec3; side: Vec3 } {
@@ -178,7 +254,7 @@ export function sectionAt(s: number, a: number): { lateral: number; up: number }
   const hood = hoodShare(s);
   const w = halfW(s);
   const base = halfWidth(s);
-  const flat = mix(1, 0.5, hood);
+  const flat = mix(1, 0.38, hood);
   const narrowTop = 1 - 0.1 * Math.max(0, cs) * (1 - hood);
   const lateral = w * spow(sn, 0.85) * narrowTop;
   const up =

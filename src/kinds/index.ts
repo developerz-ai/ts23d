@@ -84,7 +84,10 @@ export {
   furChains,
   furZones,
 } from './creature-fur.ts';
+export { creatureHeadFur, type HeadBare } from './creature-head-fur.ts';
 export { rigBones } from './creature-limits.ts';
+export type { CreatureCellOptions, CreatureCellScale } from './creature-lod.ts';
+export type { CreatureRig } from './creature-rig.ts';
 export {
   type CreatureColours,
   type CreaturePattern,
@@ -189,6 +192,16 @@ export { type RiggedChainOptions, riggedChain } from './model-character-chain.ts
 export { liftClip } from './model-character-clips.ts';
 export { FUSED_HEAD_DROPS, type ModelClips, modelClips } from './model-clips.ts';
 export { defineModelCreature, type ModelCreatureDefinition } from './model-creature.ts';
+export {
+  type ExtraChain,
+  type ExtraChains,
+  type ExtraFit,
+  type ExtraMotion,
+  extraBones,
+  resolveExtra,
+} from './model-extra.ts';
+export { extraClips, strokeWave } from './model-extra-clips.ts';
+export { type TraceOptions, tracePath } from './model-extra-trace.ts';
 export { applyFit, FIT_LIMIT, type ModelFit, modelFit } from './model-fit.ts';
 export { mapJoints, type RigTopology, rigTopology } from './model-joints.ts';
 export { MIRROR_LIMIT, type MirrorResidual, mirrorResidual } from './model-mirror.ts';

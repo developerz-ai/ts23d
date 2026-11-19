@@ -31,10 +31,32 @@ point, eyes ×1.15 set ×1.166 (IPD 64 mm), almond tilt +2 % H, cheekbones +2 % 
 slender neck 0.5–0.75 × head breadth). The table above records the earlier primitive head.
 
 ## Built by
-`spec.ts`, `hair.ts` (parted mass + long locks + two flat ribbon locks in front — three strands
-side by side, 14 → 7 mm wide), `clothes.ts` (tunic, one tall blended collar, a hemmed cloak, clasp)
-and `creases.ts` (the intended folds as ≤ 3 cm regions from the same geometry) on the shared bust
-library `../_lib/bust/`. Eye `socket` joints as on every bust.
+`spec.ts` (2026-11: the mid-face 3 % shorter, a thinner upper lid, ears held 13° out so the tips
+break the hair's outline, shoulders ×0.78 of the base's and 0.15 m half-span), `torso.ts` (the
+shared torso, its arms cut a finger outside the shoulder point as a classical bust's are),
+`hair.ts` (card hair: parted cap, long locks, crown and outline layers; `farHair` for LOD2),
+`clothes.ts` (the outfit as layers) and `creases.ts` (the intended folds as ≤ 3 cm regions from
+the same geometry) on the shared bust library `../_lib/bust/`. Eye `socket` joints as on every bust.
+
+## Outfit: one closed solid per material (2026-11)
+The garments are no longer sculpted into the skin. `outfitLayers` (`clothes.ts`) returns each layer
+with its trim-sheet strip; `build.ts` meshes each on that strip, fairs it, weathers the wool
+(`weather`: dust on the shoulders) and merges them per part under the `face` node, so they breathe
+with the chest. The skin under them is cut away (`hiddenBody`).
+
+| Layer | Part | Strip / finish | What it carries |
+|---|---|---|---|
+| tunic | `tunic` | `bust_silk` (`SILK`, ../_lib/bust/cloth-strips.ts: fine weave, roughness 0.42), no finish | silk tunic, neckline band, wrap panel, handled-dark blotches |
+| cloak | `clothes` | `bust_wool` (`WOOL`: coarse twill, roughness 0.94), no finish | 8 mm wool, neck edge rolled 1.4 cm out from the tunic's, pipe folds, a darker felt shoulder cape with a leaf-cut hem, pale rubbed front edges, mud toward the base |
+| braid | `clothes` | `brass` | gold braid as raised geometry at a 4 mm cell (it stair-stepped as vertex paint): the wrap's edge with a row of beads, the cloak's front edges |
+| `clasp` | own part | `chrome` | silver leaf clasp |
+
+## LODs and budget
+| LOD | Triangles | What changes |
+|---|---|---|
+| 0 | ≈ 70.6k (budget 74k) | head 6.4 mm (finer boxes round the eyes, ears and mouth): head ≈ 28k, bust ≈ 2.7k, hair cards ≈ 15k, tunic ≈ 8.4k, cloak and braid ≈ 11k |
+| 1 | ≈ 19.0k (20k) | head 11 mm (≈ 5.2k), hair cards ≈ 1.4k; the same three garment layers (≈ 8.5k) |
+| 2 | ≈ 3.1k (3.4k) | head 22 mm; the long fair hair as wide cards in the LOD0 tones (`farHair`), combed over the LOD1 head; tunic and cloak in ONE sculpt on `canvas` at a 2.6 cm cell with flat colour blocks (no braid) |
 
 ## Palette (sRGB)
 | Role | Hex |
@@ -42,8 +64,18 @@ library `../_lib/bust/`. Eye `socket` joints as on every bust.
 | skin / warm / cool / crevice / lips | `#e8c4a4` / `#f2d0ae` / `#b8a0a4` / `#7a4a44` / `#c47a76` |
 | eyes: sclera / iris | `#f0ece6` / `#3a8a6a` |
 | hair root → tip | `#9a7038` → `#f0d890` |
-| tunic / cloak / trim / clasp (`chrome`) | `#2f5a3a` / `#2a4a5a` / `#c8a858` / `#d8dce0` |
+| tunic / cloak / cape / braid (`brass`) / clasp (`chrome`) | `#2f5a3a` / `#3f7a6a` / `#1f3f3a` / `#e8c878` / `#d8dce0` |
+| wear: frayed wool / mud | `#8aa39a` / `#4a4a3a` |
 
 ## Known gaps
-The face is softer and longer than a hero elf from a pro sculptor; the long hair is a handful of
-locks rather than a full fall; the cloak is a sculpted offset layer, not draped cloth.
+The face is softer than a hero elf from a pro sculptor; the hair is strand cards (LOD0 ≈ 15k
+triangles) and still reads stringy at the temples; the skin's detail is the shared tiling pore strip
+(`pores: true`: matte cheeks, a glossier T-zone) under one soft `skin` sheen finish, not a
+per-face texture; the braid is a 4 mm-cell cord, lumpy up close; the cloak's hem lies below the bust's cut, so its fraying shows only as the ragged, muddy
+band at the base; the cut arms give the bust square shoulders under the cloak.
+
+## Triangle budget (As of 2026-11-19)
+About 70.6k / 19.0k / 3.1k (budget 74k / 20k / 3.4k) against the bust band of 60k / 12k / 1.5k (it was 100k / 29k / 3.4k). The head is one sculpt meshed at a 6.4 mm cell (4.8 mm before; the two render alike at 2.6 x the hero's distance), with finer boxes only round the eyes, ears and mouth; the garment cells grew by a fifth.
+
+Budget why: uniform-cell sculpt (an iso-surface cannot thin its flat areas) plus 15k of long hair cards and three closed garment layers; LOD2 below a 2.2 cm head cell folds the ears and nose.
+

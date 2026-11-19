@@ -4,11 +4,13 @@
 // get no change, so their bytes stay identical.
 
 import { type CompiledAsset, textureSetsOf } from '../core/index.ts';
-import { stripCredits } from '../material/index.ts';
+import { materialsOf, stripCredits } from '../material/index.ts';
 import type { GlbMeta } from './metadata.ts';
 
 export function creditsOf(asset: CompiledAsset): string[] {
   const out = new Set<string>();
+  // Several defined materials may hold one row: only this asset's own is on its sheet (D299).
+  const own = materialsOf(asset);
   for (const set of textureSetsOf(asset.parts)) if (set.credit) out.add(set.credit);
   for (const p of asset.parts) {
     // A textured part's UVs address its own set, not a strip of the sheet.
@@ -16,7 +18,7 @@ export function creditsOf(asset: CompiledAsset): string[] {
     if (!uv) continue;
     const v = new Float32Array(uv.length >> 1);
     for (let i = 0; i < v.length; i++) v[i] = uv[i * 2 + 1] ?? 0;
-    for (const c of stripCredits(v, p.mesh?.indices)) out.add(c);
+    for (const c of stripCredits(v, p.mesh?.indices, own)) out.add(c);
   }
   return [...out].sort();
 }

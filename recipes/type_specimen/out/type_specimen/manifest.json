@@ -1,7 +1,7 @@
 {
   "name": "type_specimen",
   "kind": "prop",
-  "description": "Type specimen notice board: every text() face (5x7 pixel, block, Hershey sans, serif, script, gothic) as flush painted decals and raised brass letters.",
+  "description": "Type specimen notice board: every text() face (5x7 pixel, block, Hershey sans, serif, script, gothic) as flush painted decals and raised brass letters, under a gabled hood.",
   "tags": [
     "text",
     "typography",
@@ -20,14 +20,14 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    38450,
-    27804,
-    4121
+    29964,
+    8467,
+    282
   ],
   "trianglesCompiled": [
-    38476,
-    27806,
-    4138
+    29966,
+    8496,
+    282
   ],
   "drawCalls": [
     1,
@@ -47,6 +47,32 @@
   ],
   "measures": [],
   "sources": [],
+  "weather": {
+    "bleach": {
+      "target": 0.4,
+      "actual": 0.4,
+      "eligible": "up-facing",
+      "area": 2.6847
+    },
+    "chips": {
+      "target": 0.25,
+      "actual": 0.25,
+      "eligible": "convex-edges",
+      "area": 10.8951
+    },
+    "moss": {
+      "target": 0.2,
+      "actual": 0.2,
+      "eligible": "shaded & wet & !down-facing",
+      "area": 1.041
+    },
+    "mud": {
+      "target": 0.45,
+      "actual": 0.45,
+      "eligible": "ground-near",
+      "area": 0.1938
+    }
+  },
   "qa": {
     "pass": true,
     "findings": []

@@ -7,10 +7,10 @@
 
 import { type CompiledAsset, encodePng, Ts23dError } from '../../core/index.ts';
 import type { PaintedSheet } from '../../material/index.ts';
-import { checkSheetFor, DEFAULT_SHEET, liveSheet } from '../../material/index.ts';
+import { checkSheetFor, DEFAULT_SHEET, sheetFor } from '../../material/index.ts';
 import { type BeautyOptions, cameraFor } from '../beauty.ts';
 import { studioRig, tone, toSrgb8 } from '../lighting.ts';
-import { checkBeautyOptions } from '../options.ts';
+import { checkBeautyOptions, withHeroView } from '../options.ts';
 import { sheetTextures } from '../texture.ts';
 import { denoise, denoiseShadow } from './denoise.ts';
 import { compose, type Film, newFilm } from './film.ts';
@@ -51,7 +51,7 @@ export interface PathRender {
  */
 export const HERO_PATH = { width: 960, height: 540, spp: 16 } as const;
 
-const defaultSheet = liveSheet({ ...DEFAULT_SHEET, size: 2048 });
+const DEFAULT_2048 = { ...DEFAULT_SHEET, size: 2048 } as const;
 
 function whole(name: string, v: number, lo: number, hi: number, fix: string): number {
   if (!(Number.isInteger(v) && v >= lo && v <= hi))
@@ -63,13 +63,13 @@ function whole(name: string, v: number, lo: number, hi: number, fix: string): nu
 }
 
 /** Everything a render needs before tracing: validated options, camera, world data, film. */
-function setup(asset: CompiledAsset, o: PathOptions) {
+function setup(asset: CompiledAsset, opts: PathOptions) {
+  const o = withHeroView(asset.hero, opts);
   const v = checkBeautyOptions(o);
   const spp = whole('spp', o.spp ?? 64, 1, 4096, 'pass --spp 64 (16 drafts, 256 finals)');
   const maxDepth = whole('maxDepth', o.maxDepth ?? 6, 1, 32, 'use maxDepth: 6');
-  const sheet: PaintedSheet = o.sheet ?? defaultSheet.current().sheet;
-  for (const p of asset.parts)
-    if (p.mesh && !p.textures) checkSheetFor(sheet, p.mesh.uvs, p.mesh.indices);
+  const sheet: PaintedSheet = o.sheet ?? sheetFor(asset, DEFAULT_2048);
+  checkSheetFor(sheet, asset);
   const cam = cameraFor(asset, o);
   const rig = studioRig(v.azDeg);
   // The raster rig's numbers are irradiance ÷ π (its pixel = albedo × light): × π for radiometry.

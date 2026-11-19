@@ -1,14 +1,18 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # Self-test cases for the limb ops (run by test_steps.py's `selftest`): `unweb` on two posts fused
 # by a remesh, `amputate` on one end of the blob, `repose` turning the blob's head bone (with and
-# without the gated mirror), and their refusals.
+# without the gated mirror), `isolate` with `contact` on a chain fused to the body along its
+# length, and their refusals.
 
 import math
+import os
 
 import bpy
+import numpy as np
 
 from tasks import common
 from tasks.steps.test_finish import BIND
+from tasks.steps.rigfix import CONTACT_JUMP
 from tasks.steps.test_steps import CLEAN, EXPORT, SKELETON, blob, expect, export_bytes, retopo, run, step_of
 
 
@@ -63,6 +67,52 @@ def case_amputate():
     refused([{"op": "amputate", "limbs": [[{"head": [0, 0, 0.5], "tail": [0, 0, 0.5], "r": 5}]]}, EXPORT], blob("none"), "step 0 (amputate)", "no faces")
 
 
+def case_contact():
+    # One fused post is the body, the other a chain hanging against it (asset y = ∓0.045; the
+    # skeleton is in the glTF frame: asset (x, y, z) = glTF (y, z, x)).
+    skeleton = {
+        "contract": "t3d-skeleton/1",
+        "frame": "gltf",
+        "bones": [
+            {"name": "body", "parent": None, "head": [0.045, 0.6, 0], "tail": [0.045, 0, 0]},
+            {"name": "tail_0", "parent": "body", "head": [-0.045, 0.6, 0], "tail": [-0.045, 0.3, 0]},
+            {"name": "tail_1", "parent": "tail_0", "head": [-0.045, 0.3, 0], "tail": [-0.045, 0, 0]},
+        ],
+    }
+    chain = {"op": "isolate", "bones": ["tail_0", "tail_1"], "from": [0, -0.045, 0], "point": [0, -0.045, 0.55], "normal": [0, 0, -1], "r": 0.06, "feather": 0.03, "maxShare": 0.9}
+    r, work = run([CLEAN, BIND, chain, EXPORT], posts(), skeleton)
+    expect("contact" not in step_of(r, "isolate"), "without `contact` the chain's weights stop at a hard edge, as before")
+    hard = chain_jumps(work, ["tail_0", "tail_1"])
+    expect(hard[1] > 0, f"unblended, chain skin meets body skin across a hard edge: {hard}")
+    r, work = run([CLEAN, BIND, {**chain, "contact": 0.03}, EXPORT], posts(), skeleton)
+    c = step_of(r, "isolate")["contact"]
+    expect(c["edges"] > 0 and c["vertices"] > c["edges"], f"edges joining chain skin to body skin are found and a band round them blended: {c}")
+    expect(r["glb"]["skins"] == 1, "the skin is kept")
+    # The exported skin, not the step's report: the blend must actually soften the jump (D350).
+    soft = chain_jumps(work, ["tail_0", "tail_1"])
+    expect(soft[1] < hard[1] / 2 and soft[0] < hard[0], f"contact softens the chain-weight jump on the exported mesh: largest, edges over {CONTACT_JUMP}: {hard} → {soft}")
+
+
+def chain_jumps(work, bones):
+    """(largest jump, edges jumping over CONTACT_JUMP) of the chain's weight share across the
+    edges of the exported mesh (output-0.glb in `work`)."""
+    common.reset_scene()
+    objs = [o for o in common.meshes(common.import_glb(os.path.join(work, "output-0.glb"))) if set(bones) <= {g.name for g in o.vertex_groups}]
+    expect(len(objs) == 1, f"one mesh skinned to {bones} exported: {[o.name for o in objs]}")
+    obj = objs[0]
+    index = {g.index: g.name for g in obj.vertex_groups}
+    share = np.zeros(len(obj.data.vertices))
+    for v in obj.data.vertices:
+        total = sum(g.weight for g in v.groups)
+        chain = sum(g.weight for g in v.groups if index[g.group] in bones)
+        share[v.index] = chain / total if total > 0 else 0
+    edges = np.empty(len(obj.data.edges) * 2, dtype=np.int32)
+    obj.data.edges.foreach_get("vertices", edges)
+    a, b = edges.reshape(-1, 2).T
+    jump = np.abs(share[a] - share[b])
+    return round(float(jump.max()), 4), int((jump > CONTACT_JUMP).sum())
+
+
 def target(yaw):
     """SKELETON in the asset frame, the head bone yawed `yaw` degrees to the animal's left."""
     a = math.radians(yaw)
@@ -91,4 +141,4 @@ def case_repose():
     refused([retopo(3000, "decimate"), BIND, {"op": "repose", "to": target(0)[:2]}, EXPORT], blob("none"), "step 2 (repose)", "no target", skeleton=SKELETON)
 
 
-CASES = (case_unweb, case_amputate, case_repose)
+CASES = (case_unweb, case_amputate, case_contact, case_repose)

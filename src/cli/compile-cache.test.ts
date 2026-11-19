@@ -169,7 +169,7 @@ it('shot, hero, blueprint and icon share one compile per LOD and leave it untouc
     const before = [fingerprint(lod0), fingerprint(lod2)];
     builds = 0;
     const size = ['--size', '96x54'];
-    await buildOne(a, parseArgs(['shot', 'x.ts', '--out', out]), undefined, undefined);
+    await buildOne(a, parseArgs(['shot', 'x.ts', '--out', out]));
     await heroOne(a, parseArgs(['hero', 'x.ts', '--out', out, ...size]), sheet);
     await heroOne(
       a,

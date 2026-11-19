@@ -1,17 +1,22 @@
-// Warden Hall upper works: the team-colour gable roof (strips along the ridge, so damage can drop
-// some and show the rafters), gable ends with an amber oculus, the rear drum towers with team
-// cone caps and beacons, the chevron porch canopy and the gate. Each piece takes the stage and
-// damage it is built for.
+// Warden Hall upper works: the team-colour slate roof (a dark sarking deck, then courses of
+// lapped slates, each its own value: sun-faded toward the ridge, a dark drip course at the eaves,
+// odd replaced slates), a ridge roll, gable ends with an amber oculus, the pitched porch on oak
+// posts, the recessed gate in its stone surround with a bracket lamp, and the rear drum towers
+// (arrow slits, a door up two steps, team cones and beacons; a laid or broken block crown when
+// they have no cone). Each piece takes the stage and damage it is built for.
 
 import {
+  applyAffine,
   box,
   cylinder,
+  frame,
   type Lod,
   lathe,
   type Mesh,
   merge,
   place,
   prism,
+  type Rng,
   type Vec2,
   type Vec3,
 } from '@developerz.ai/ts23d';
@@ -24,18 +29,19 @@ import {
   IRON,
   pebble,
   SEG,
+  SOOT,
   TEAM,
   teamShade,
+  tube,
 } from '../_lib/rts/style.ts';
 import {
   COURSE,
-  type Damage,
   DOOR_ROWS,
   EAVES,
+  GATE_HALF,
   HALF_X,
   HALF_Y,
   PLINTH,
-  type Stage,
   TOWER,
   WALL_T,
 } from './plan.ts';
@@ -45,10 +51,9 @@ export const OVERHANG = 0.6;
 const SLOPE_W = (HALF_Y + OVERHANG) / Math.cos(PITCH);
 export const RIDGE = EAVES + HALF_Y * Math.tan(PITCH);
 const STRIPS = 5;
-const ROOF_T = 0.22;
-/** Roof-strip lap and the odd strips' lift over their neighbours. */
-const LAP = 0.08;
-const LIFT = 0.05;
+/** Sarking deck under the slates; slate courses (exposed length, slate size, thickness). */
+const DECK = 0.1;
+const SLATE = { exposed: 0.42, length: 0.68, width: 0.5, t: 0.035 } as const;
 /** Oak timber (rafters, gable frame, porch posts) and the gate's tarred planks. */
 export const WOOD: Vec3 = [0.23, 0.14, 0.08];
 export const TIMBER: Vec3 = [0.3, 0.19, 0.1];
@@ -56,59 +61,242 @@ export const DOOR: Vec3 = [0.12, 0.08, 0.05];
 /** Lime plaster on the gables. */
 export const PLASTER: Vec3 = [0.74, 0.69, 0.57];
 
-/** Roof slope strips (team) on side s (+1 = +Y), minus the `missing` ones. */
-export function roofSlopes(lod: Lod, s: 1 | -1, missing: readonly number[]): Mesh | null {
-  const len = (HALF_X + OVERHANG) * 2;
-  const strip = len / STRIPS;
+const add = (a: Vec3, b: Vec3, k = 1): Vec3 => [a[0] + b[0] * k, a[1] + b[1] * k, a[2] + b[2] * k];
+const scale = (a: Vec3, k: number): Vec3 => [a[0] * k, a[1] * k, a[2] * k];
+
+/** A roof plane: `o` on the underside at the ridge, `u` along the ridge, `d` down the slope, `n`
+ *  out of the roof; `ul` × `vl` metres. */
+interface Plane {
+  readonly o: Vec3;
+  readonly u: Vec3;
+  readonly d: Vec3;
+  readonly n: Vec3;
+  readonly ul: number;
+  readonly vl: number;
+}
+
+/** A plane falling to side s (+1 = +Y) from a ridge at `o`, pitch `p`. */
+const plane = (o: Vec3, s: 1 | -1, p: number, ul: number, vl: number): Plane => ({
+  o,
+  u: [1, 0, 0],
+  d: [0, s * Math.cos(p), -Math.sin(p)],
+  n: [0, s * Math.sin(p), Math.cos(p)],
+  ul,
+  vl,
+});
+
+/** A local box (`size`, centred on the origin) carried to (u, v, w) on plane `pl`, tilted `tilt`
+ *  about the u axis (its down-slope end rises). */
+function onPlane(pl: Plane, m: Mesh, u: number, v: number, w: number, tilt = 0): Mesh {
+  const c = Math.cos(tilt);
+  const s = Math.sin(tilt);
+  const d = add(scale(pl.d, c), pl.n, s);
+  const n = add(scale(pl.n, c), pl.d, -s);
+  const at = add(add(add(pl.o, pl.u, u), pl.d, v), pl.n, w);
+  return applyAffine(m, frame(pl.u, d, n, at));
+}
+
+/** The deck between u0..u1 (a slab DECK thick, its underside on the plane). */
+const deck = (pl: Plane, u0: number, u1: number, v0: number, v1: number, k: number): Mesh =>
+  onPlane(
+    pl,
+    box({ size: [u1 - u0, v1 - v0, DECK], at: [0, 0, 0], color: teamShade(k), strip: 'slate' }),
+    (u0 + u1) / 2,
+    (v0 + v1) / 2,
+    0,
+  );
+
+/** Slate value: sun-faded toward the ridge, darker toward the eaves, each slate its own. */
+function slateTone(rng: Rng, v: number, vl: number, eave: boolean): number {
+  const fade = 0.96 - 0.16 * (v / vl);
+  let k = fade * rng.range(0.9, 1.04);
+  if (rng.next() < 0.06) k *= 0.78; // a replaced, still-dark slate
+  if (eave) k *= 0.8; // the drip course: rain off the roof darkens the last slates
+  return Math.min(1, k);
+}
+
+interface SlateOptions {
+  /** u ranges with no deck and no slates (a shell hole). */
+  readonly holes?: readonly (readonly [number, number])[];
+  /** Fraction of slates gone (a raid stripped them). */
+  readonly loss?: number;
+}
+
+/**
+ * Slates in lapped courses over one plane. LOD0: every slate (staggered, tilted so each rides
+ * on the course below, its tone jittered; slates along a hole's edge broken, skewed or hanging
+ * over it). LOD1: one strip per course. LOD2: none (the deck carries a two-band value).
+ */
+function slates(lod: Lod, pl: Plane, rng: Rng, o: SlateOptions = {}): Mesh[] {
   const out: Mesh[] = [];
-  // Slope centre: halfway from ridge to the overhang's edge, lifted so the underside meets the wall top.
-  const midY = (s * (HALF_Y + OVERHANG)) / 2;
-  const midZ = RIDGE - (Math.tan(PITCH) * (HALF_Y + OVERHANG)) / 2 + ROOF_T / 2 / Math.cos(PITCH);
-  for (let i = 0; i < STRIPS; i++) {
-    if (missing.includes(i)) continue;
-    const x = -HALF_X - OVERHANG + strip * (i + 0.5);
-    // Lapped like real roof sheets: every strip overlaps its neighbours by LAP, and the odd
-    // strips ride LIFT higher, so each lap is a real contact face, not an edge.
-    const lift = i % 2 === 1 ? LIFT : 0;
-    const slab = box({
-      size: [strip + (i > 0 && i < STRIPS - 1 ? LAP * 2 : LAP), SLOPE_W, ROOF_T],
-      at: [i === 0 ? LAP / 2 : i === STRIPS - 1 ? -LAP / 2 : 0, 0, -ROOF_T / 2 + lift],
-      color: TEAM,
-      strip: 'slate',
-      bevel: lod === 0 ? 0.03 : 0,
-    });
-    out.push(place(slab, { at: [x, midY, midZ], roll: -s * PITCH }));
-    if (lod === 0)
-      // Tile battens down the slope: shadow lines that read as a tiled roof.
-      for (let k = 1; k < 8; k++) {
-        const v = -SLOPE_W / 2 + (k / 8) * SLOPE_W;
-        const bat = box({
-          size: [strip - 0.06, 0.08, 0.05],
-          at: [0, v, ROOF_T / 2 - 0.01 + lift],
-          color: teamShade(0.8),
-        });
-        out.push(place(bat, { at: [x, midY, midZ], roll: -s * PITCH }));
-      }
+  const holes = o.holes ?? [];
+  const inHole = (u: number): boolean => holes.some(([a, b]) => u > a && u < b);
+  const nearHole = (u0: number, u1: number): boolean =>
+    holes.some(([a, b]) => (u1 > a - 0.15 && u0 < a + 0.25) || (u1 > b - 0.25 && u0 < b + 0.15));
+  const L = SLATE.length;
+  const n = Math.ceil(pl.vl / SLATE.exposed);
+  // Present u runs (between holes) for the per-course strips.
+  const cuts = [0, ...holes.flat(), pl.ul];
+  const runs: [number, number][] = [];
+  for (let i = 0; i + 1 < cuts.length; i += 2) runs.push([cuts[i] ?? 0, cuts[i + 1] ?? 0]);
+  for (let k = 0; k < n; k++) {
+    const v1 = pl.vl - k * SLATE.exposed;
+    const v0 = Math.max(0, v1 - L);
+    const len = v1 - v0;
+    const tl = Math.asin(Math.min(0.2, (SLATE.t + 0.006) / Math.max(len, 0.2)));
+    const w = SLATE.t / 2 - 0.003 + DECK;
+    if (lod === 1) {
+      const kk = slateTone(rng, v1, pl.vl, k === 0);
+      for (const [a, b] of runs)
+        out.push(
+          onPlane(
+            pl,
+            box({
+              size: [b - a, len, SLATE.t],
+              at: [0, 0, -SLATE.t / 2],
+              color: teamShade(kk),
+              strip: 'slate',
+              omit: ['bottom'],
+            }),
+            (a + b) / 2,
+            (v0 + v1) / 2,
+            w,
+            k === n - 1 ? 0 : tl,
+          ),
+        );
+      continue;
+    }
+    if (lod === 2) continue;
+    const shift = k % 2 === 0 ? 0 : SLATE.width / 2;
+    for (let u0 = -shift; u0 < pl.ul; u0 += SLATE.width) {
+      const a = Math.max(0, u0);
+      const b = Math.min(pl.ul, u0 + SLATE.width);
+      if (b - a < 0.08) continue;
+      const mid = (a + b) / 2;
+      if (inHole(mid) || (o.loss && rng.next() < o.loss)) continue;
+      const broken = nearHole(a, b);
+      if (broken && rng.next() < 0.3) continue;
+      const tone = teamShade(slateTone(rng, v1, pl.vl, k === 0) * (broken ? 0.82 : 1));
+      // Broken edge slates: shorter, skewed on their nail, sliding toward the hole.
+      const short = broken ? rng.range(0.55, 0.95) : 1;
+      const slate = box({
+        size: [b - a - 0.02, len * short, SLATE.t],
+        at: [0, 0, -SLATE.t / 2],
+        color: tone,
+        strip: 'slate',
+        omit: ['bottom'],
+      });
+      const skewed = broken ? place(slate, { yaw: rng.range(-0.25, 0.25) }) : slate;
+      out.push(
+        onPlane(
+          pl,
+          skewed,
+          mid,
+          v1 - (len * short) / 2,
+          w,
+          k === n - 1 ? 0 : tl * (short < 1 ? 1.4 : 1),
+        ),
+      );
+    }
   }
+  return out;
+}
+
+/** Roof slope (team) on side s (+1 = +Y), minus the `missing` strips (a shell hole). */
+export function roofSlopes(lod: Lod, s: 1 | -1, missing: readonly number[], rng: Rng): Mesh | null {
+  const ul = (HALF_X + OVERHANG) * 2;
+  const pl = plane([-HALF_X - OVERHANG, 0, RIDGE], s, PITCH, ul, SLOPE_W);
+  const strip = ul / STRIPS;
+  const holes: [number, number][] = [];
+  for (let i = 0; i < STRIPS; i++)
+    if (missing.includes(i)) {
+      const last = holes[holes.length - 1];
+      if (last && Math.abs(last[1] - i * strip) < 1e-6) last[1] = (i + 1) * strip;
+      else holes.push([i * strip, (i + 1) * strip]);
+    }
+  const cuts = [0, ...holes.flat(), ul];
+  const out: Mesh[] = [];
+  for (let i = 0; i + 1 < cuts.length; i += 2) {
+    const a = cuts[i] ?? 0;
+    const b = cuts[i + 1] ?? 0;
+    if (b - a < 1e-6) continue;
+    // LOD2: the deck alone, in two value bands (faded upper, darker lower).
+    if (lod === 2) {
+      out.push(
+        deck(pl, a, b, 0, SLOPE_W * 0.55, 0.93),
+        deck(pl, a, b, SLOPE_W * 0.55, SLOPE_W, 0.78),
+      );
+    } else out.push(deck(pl, a, b, 0, SLOPE_W, 0.45));
+  }
+  out.push(...slates(lod, pl, rng, { holes }));
+  if (lod === 0 && holes.length)
+    // Two or three slates hang off the hole's top edge on their last nail.
+    for (const [a] of holes)
+      for (let i = 0; i < 3; i++) {
+        const v = 1.2 + i * 2.1;
+        out.push(
+          onPlane(
+            pl,
+            box({
+              size: [0.46, SLATE.length, SLATE.t],
+              at: [0, 0, -SLATE.t / 2],
+              color: teamShade(0.7),
+              strip: 'slate',
+            }),
+            a - 0.1,
+            v + 0.25,
+            -0.05,
+            -0.9 - i * 0.2,
+          ),
+        );
+      }
   return out.length ? merge(out) : null;
 }
 
-/** Rafters under the roof, every 1.2 m: visible through missing strips and while building. */
-export function rafters(lod: Lod, every = 1): Mesh | null {
+/** The ridge roll capping both slopes (team, a shade darker). */
+export function ridgeRoll(lod: Lod): Mesh {
+  const x = HALF_X + OVERHANG + 0.05;
+  const z = RIDGE + DECK / Math.cos(PITCH) + 0.02;
+  return tube(lod, [-x, 0, z], [x, 0, z], 0.15, 0.15, teamShade(0.66));
+}
+
+/** Rafters under the roof, every 1.1 m; those under the hole snapped, with splintered ends. */
+export function rafters(lod: Lod, broken: readonly [number, number] = [0, 0]): Mesh | null {
   if (lod === 2) return null;
   const out: Mesh[] = [];
   const n = 9;
-  for (let i = 0; i < n; i += every) {
+  for (let i = 0; i < n; i++) {
     const x = -HALF_X + 0.6 + (i * (HALF_X * 2 - 1.2)) / (n - 1);
     for (const s of [1, -1] as const) {
-      const r = box({
-        size: [0.16, SLOPE_W * 0.92, 0.22],
-        at: [0, 0, -0.11],
-        color: WOOD,
-      });
+      const snapped = s === -1 && x > broken[0] && x < broken[1];
+      const len = SLOPE_W * (snapped ? 0.45 + 0.08 * (i % 3) : 0.92);
+      // Rafter top on the underside plane, from the ridge down.
+      const pl = plane([x, 0, RIDGE], s, PITCH, 0, SLOPE_W);
       out.push(
-        place(r, { at: [x, (s * HALF_Y) / 2, (EAVES + RIDGE) / 2 - 0.12], roll: -s * PITCH }),
+        onPlane(
+          pl,
+          box({ size: [0.16, len, 0.22], at: [0, 0, -0.22], color: WOOD }),
+          0,
+          len / 2 + 0.1,
+          0,
+        ),
       );
+      if (snapped && lod === 0)
+        // Splinters: thin shards standing out of the broken end.
+        for (const [dy, dz, h] of [
+          [-0.05, -0.04, 0.32],
+          [0.04, -0.15, 0.22],
+        ] as const)
+          out.push(
+            onPlane(
+              pl,
+              box({ size: [0.05, h, 0.06], at: [dy, 0, dz], color: SOOT }),
+              0,
+              len + 0.1 + h / 2 - 0.04,
+              0,
+              0.25,
+            ),
+          );
     }
   }
   out.push(box({ size: [HALF_X * 2, 0.24, 0.3], at: [0, 0, RIDGE - 0.3], color: WOOD }));
@@ -125,7 +313,7 @@ export function gables(lod: Lod): { walls: Mesh; frame: Mesh | null; oculus: Mes
   ];
   const g = prism({ profile: tri, depth: WALL_T, plane: 'yz', color: PLASTER });
   const walls = merge([place(g, { at: [HALF_X, 0, 0] }), place(g, { at: [-HALF_X, 0, 0] })]);
-  let frame: Mesh | null = null;
+  let frm: Mesh | null = null;
   if (lod < 2) {
     const beams: Mesh[] = [];
     // Beams stand 6 cm proud of the plaster and sink 6 cm into it: face contact.
@@ -138,10 +326,7 @@ export function gables(lod: Lod): { walls: Mesh; frame: Mesh | null; oculus: Mes
         color: TIMBER,
         bevel: lod === 0 ? 0.02 : 0,
       });
-      return place(m, {
-        at: [x, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2],
-        roll,
-      });
+      return place(m, { at: [x, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2], roll });
     };
     for (const sx of [1, -1]) {
       const x = sx * (HALF_X + WALL_T / 2);
@@ -153,7 +338,7 @@ export function gables(lod: Lod): { walls: Mesh; frame: Mesh | null; oculus: Mes
         beam(x, [0, HALF_Y * 0.55, EAVES + 0.14], [0, 0.12, EAVES + h * 0.62]),
       );
     }
-    frame = merge(beams);
+    frm = merge(beams);
   }
   const oculus =
     lod < 2
@@ -176,38 +361,181 @@ export function gables(lod: Lod): { walls: Mesh; frame: Mesh | null; oculus: Mes
           }),
         ])
       : null;
-  return { walls, frame, oculus };
+  return { walls, frame: frm, oculus };
 }
 
-/** A rear drum tower of `height` (m above ground) at side s; capped with a team cone if `cap`. */
+export type Crown = 'none' | 'laying' | 'broken';
+
+/** A ring of blocks on a capless drum's wall top: a course being laid, or a broken stepped top. */
+function crown(lod: Lod, at: Vec3, r: number, height: number, kind: Crown, rng: Rng): Mesh[] {
+  // A low footing breaks to one course at most; a standing stub keeps up to three.
+  const maxRows = height < 1.5 ? 1 : 3;
+  if (kind === 'none' || lod === 2) return [];
+  const n = SEG(lod, 16, 12, 0);
+  const mid = r - 0.22;
+  const arc = ((2 * Math.PI * mid) / n) * 0.93;
+  const phase = rng.range(0, Math.PI * 2);
+  const out: Mesh[] = [];
+  for (let i = 0; i < n; i++) {
+    const a = (i / n) * Math.PI * 2;
+    // Broken: sheared on a slant, tallest on one side and stepping down to nothing on the other,
+    // a block or two missing from each step; laying: one course part-way round.
+    const slant = 0.5 + 0.5 * Math.cos(a - phase);
+    const rows =
+      kind === 'laying'
+        ? i < n * 0.6
+          ? 1
+          : 0
+        : Math.min(
+            maxRows,
+            Math.max(0, Math.floor(slant * (maxRows + 0.9) + rng.range(-0.6, 0.5))),
+          );
+    for (let k = 0; k < rows; k++) {
+      const top = k === rows - 1;
+      if (kind === 'broken' && top && k > 0 && rng.next() < 0.3) continue;
+      const loose = kind === 'broken' && top;
+      const k2 = rng.range(0.82, 1.02);
+      // Running bond round the drum: odd courses offset half a block.
+      const ak = a + (k % 2 === 1 ? Math.PI / n : 0);
+      const b = pebble(
+        lod,
+        [0.44, arc * (loose ? rng.range(0.45, 0.9) : 1), COURSE * (loose ? rng.range(0.6, 1) : 1)],
+        [0, 0, 0],
+        [BONE[0] * k2, BONE[1] * k2, BONE[2] * k2],
+        'concrete',
+      );
+      out.push(
+        place(b, {
+          at: [at[0] + Math.cos(ak) * mid, at[1] + Math.sin(ak) * mid, height + k * COURSE - 0.01],
+          yaw: ak + (loose ? rng.range(-0.25, 0.25) : 0),
+          roll: loose ? rng.range(-0.08, 0.08) : 0,
+        }),
+      );
+    }
+  }
+  return out;
+}
+
+/** An outward-facing feature on the drum at angle `a`: a local box (x out of the wall). */
+const onDrum = (m: Mesh, at: Vec3, r: number, a: number, z: number): Mesh =>
+  place(m, { at: [at[0] + Math.cos(a) * r, at[1] + Math.sin(a) * r, z], yaw: a });
+
+/** Arrow slits and the door (up two steps) on a finished drum, facing outward. */
+function drumDetail(lod: Lod, at: Vec3, s: 1 | -1, height: number): Mesh[] {
+  const r = TOWER.r;
+  const out: Mesh[] = [];
+  const side = (s * Math.PI) / 2;
+  // Slits: stone surround, a black slot set into it (rear, outer side, between them).
+  for (const a of [Math.PI, side, (s * 3 * Math.PI) / 4])
+    for (const z of [3.4, 5.4]) {
+      if (z + 1 > height - 0.6) continue;
+      out.push(
+        onDrum(
+          box({ size: [0.12, 0.38, 1.1], at: [0, 0, 0], color: BONE_DARK }),
+          at,
+          r - 0.04,
+          a,
+          z,
+        ),
+        onDrum(
+          box({ size: [0.06, 0.12, 0.85], at: [0, 0, 0.12], color: SOOT }),
+          at,
+          r + 0.03,
+          a,
+          z,
+        ),
+      );
+    }
+  // Door on the outer side, up two steps from the ground.
+  // Turned 20° toward the rear so its steps stay inside the cone's eaves line.
+  const d = s * (Math.PI / 2 + 0.35);
+  out.push(
+    onDrum(box({ size: [0.14, 1.0, 2.1], at: [0, 0, 0], color: DOOR }), at, r - 0.04, d, 0.95),
+    onDrum(
+      box({ size: [0.16, 0.18, 2.3], at: [0, -0.59, 0], color: BONE_DARK }),
+      at,
+      r - 0.03,
+      d,
+      0.95,
+    ),
+    onDrum(
+      box({ size: [0.16, 0.18, 2.3], at: [0, 0.59, 0], color: BONE_DARK }),
+      at,
+      r - 0.03,
+      d,
+      0.95,
+    ),
+    onDrum(
+      box({ size: [0.18, 1.4, 0.26], at: [0, 0, 0], color: BONE_DARK }),
+      at,
+      r - 0.03,
+      d,
+      3.05,
+    ),
+    onDrum(box({ size: [0.4, 1.3, 0.9], at: [0, 0, 0], color: BONE_DARK }), at, r + 0.16, d, 0),
+    onDrum(box({ size: [0.3, 1.3, 0.45], at: [0, 0, 0], color: BONE_DARK }), at, r + 0.5, d, 0),
+  );
+  if (lod === 0)
+    for (const z of [1.4, 2.5])
+      out.push(
+        onDrum(box({ size: [0.04, 0.9, 0.08], at: [0, 0, 0], color: IRON }), at, r + 0.04, d, z),
+      );
+  return out;
+}
+
+/**
+ * A rear drum tower of `height` (m above ground) at side s; capped with a team cone if `cap`.
+ * Without a cone its top is a hollow wall ring crowned per `crowned` (a course being laid, or
+ * broken blocks) instead of a flat disc.
+ */
 export function tower(
   lod: Lod,
   s: 1 | -1,
   height: number,
   cap: boolean,
+  crowned: Crown,
+  rng: Rng,
 ): { drum: Mesh; cap: Mesh | null; beacon: Mesh | null } {
   const at: Vec3 = [TOWER.x, s * TOWER.y, 0];
-  const segs = SEG(lod, 28, 14, 7);
+  // LOD2: an octagon; at crowd distance the drum and its team cone are a few pixels across.
+  const segs = SEG(lod, 28, 14, 8);
   const r = TOWER.r;
   // Coursed masonry in the profile itself: every 0.5 m course is chamfered back 2.5 cm at its
   // bed joint (LOD0/1), so the drum reads as laid blocks under raking light, not a pipe.
   const courses: Vec2[] = [];
-  const top = height - 0.4;
+  const top = cap ? height - 0.4 : height;
   if (lod < 2)
     for (let z = 1.5; z < top - 0.2; z += 0.5)
       courses.push([r, z - 0.03], [r - 0.025, z], [r, z + 0.02]);
-  const profile: Vec2[] = [
-    [0.001, 0],
-    [r + 0.2, 0],
-    [r + 0.2, 0.9],
-    [r, 1.0],
-    ...courses,
-    [r, top],
-    [r + 0.15, height - 0.35],
-    [r + 0.15, height],
-    [0.001, height],
-  ];
-  const drum = lathe({ profile, segments: segs, at, color: BONE, strip: 'concrete' });
+  const head: Vec2[] = cap
+    ? [
+        [r, top],
+        [r + 0.15, height - 0.35],
+        [r + 0.15, height],
+        // LOD2: no top disc, the cone's own base closes the drum.
+        ...(lod === 2 ? [] : ([[0.001, height]] as Vec2[])),
+      ]
+    : [
+        [r, height],
+        [r - 0.45, height],
+        [r - 0.45, height - 0.45],
+        [0.001, height - 0.45],
+      ];
+  // LOD2: no hidden bottom disc, the plinth ring as one taper.
+  const profile: Vec2[] =
+    lod === 2
+      ? [[r + 0.2, 0], ...(height > 1.2 ? ([[r, 1.0]] as Vec2[]) : []), ...head]
+      : [
+          [0.001, 0],
+          [r + 0.2, 0],
+          [r + 0.2, Math.min(0.9, height - 0.1)],
+          ...(height > 1.2 ? ([[r, 1.0]] as Vec2[]) : []),
+          ...courses,
+          ...head,
+        ];
+  const ring = lathe({ profile, segments: segs, at, color: BONE, strip: 'concrete' });
+  const detail = cap && lod < 2 ? drumDetail(lod, at, s, height) : [];
+  const drum = merge([ring, ...detail, ...(cap ? [] : crown(lod, at, r, height, crowned, rng))]);
   if (!cap) return { drum, cap: null, beacon: null };
   const cone = lathe({
     profile: [
@@ -255,38 +583,170 @@ export function tower(
   return { drum, cap: cone, beacon };
 }
 
-/** The chevron porch canopy on two pillars (complete stage). */
-export function porch(lod: Lod, damage: Damage): Mesh {
-  const z = PLINTH + DOOR_ROWS * COURSE;
-  const pillars = [1, -1].map((s) =>
+/** Porch: eaves on the posts, ridge along X, from the gable wall to its own front pediment. */
+const PORCH = {
+  back: HALF_X + WALL_T / 2,
+  front: HALF_X + 3.4,
+  post: 2.1,
+  eave: PLINTH + DOOR_ROWS * COURSE,
+  pitch: (30 * Math.PI) / 180,
+} as const;
+const PORCH_RIDGE = PORCH.eave + PORCH.post * Math.tan(PORCH.pitch);
+
+/** The porch's oak posts, tie beam and plastered pediment (complete stage). */
+export function porch(lod: Lod): Mesh {
+  const postH = PORCH.eave - 0.25;
+  const x = HALF_X + 2.0;
+  const parts: Mesh[] = [1, -1].map((s) =>
     cylinder({
-      radius: 0.28,
-      length: z,
-      segments: SEG(lod, 16, 8, 5),
-      at: [HALF_X + 2.0, s * 2.1, z / 2],
+      radius: 0.24,
+      length: postH,
+      segments: SEG(lod, 16, 8, 4),
+      at: [x, s * PORCH.post, postH / 2],
       color: TIMBER,
     }),
   );
-  const tilt = damage === 'damaged' ? 0.06 : 0;
-  const canopy = place(chevronPlan([0, 0, 0], 3.4, 6.4, 1.7, 0.3, BONE_DARK), {
-    at: [HALF_X + 1.6, 0, z],
-    roll: tilt,
-  });
-  return merge([...pillars, canopy]);
+  // Tie beam across the post heads, under the roof.
+  parts.push(
+    box({
+      size: [0.3, PORCH.post * 2 + 0.3, 0.25],
+      at: [x, 0, postH],
+      color: TIMBER,
+      bevel: lod === 0 ? 0.02 : 0,
+      // LOD2: its top is pressed against the porch roof.
+      omit: lod === 2 ? ['top'] : [],
+    }),
+  );
+  // Front pediment: plaster triangle under the roof's front edge, an oak king post.
+  const fx = PORCH.front - 0.25;
+  const tri: Vec2[] = [
+    [-PORCH.post, PORCH.eave],
+    [PORCH.post, PORCH.eave],
+    [0, PORCH_RIDGE - 0.02],
+  ];
+  parts.push(
+    place(prism({ profile: tri, depth: 0.2, plane: 'yz', color: PLASTER }), { at: [fx, 0, 0] }),
+  );
+  parts.push(
+    box({
+      size: [0.36, PORCH.post * 2 + 0.2, 0.22],
+      at: [fx, 0, PORCH.eave - 0.22],
+      color: TIMBER,
+      omit: lod === 2 ? ['top'] : [],
+    }),
+  );
+  if (lod < 2)
+    parts.push(
+      box({
+        size: [0.08, 0.18, PORCH_RIDGE - PORCH.eave - 0.1],
+        at: [fx + 0.12, 0, PORCH.eave],
+        color: TIMBER,
+      }),
+    );
+  return merge(parts);
 }
 
-/** The double gate filling the door opening (two bays wide, DOOR_ROWS courses tall). */
-export function gate(lod: Lod, stage: Stage): Mesh | null {
-  if (stage !== 'complete') return null;
-  const h = DOOR_ROWS * COURSE;
-  const leaf = (s: 1 | -1): Mesh =>
-    pebble(lod, [0.18, 1.98, h], [HALF_X - 0.05, s * 1.0, PLINTH], DOOR);
-  const out: Mesh[] = [leaf(1), leaf(-1)];
-  if (lod === 0)
-    for (const s of [1, -1])
-      for (const z of [0.8, 1.9, 3.0])
-        out.push(
-          box({ size: [0.06, 1.7, 0.12], at: [HALF_X + 0.06, s * 1.0, PLINTH + z], color: IRON }),
-        );
+/** The porch roof (team): two slate slopes, a ridge roll, the chevron on the pediment. */
+export function porchRoof(lod: Lod, damaged: boolean, rng: Rng): Mesh {
+  const ul = PORCH.front - PORCH.back + 0.25;
+  const vl = (PORCH.post + 0.45) / Math.cos(PORCH.pitch);
+  const out: Mesh[] = [];
+  for (const s of [1, -1] as const) {
+    const pl = plane([PORCH.back, 0, PORCH_RIDGE], s, PORCH.pitch, ul, vl);
+    if (lod === 2) out.push(deck(pl, 0, ul, 0, vl, 0.86));
+    else {
+      out.push(deck(pl, 0, ul, 0, vl, 0.45));
+      out.push(...slates(lod, pl, rng, { loss: damaged && s === 1 ? 0.3 : 0 }));
+    }
+  }
+  const z = PORCH_RIDGE + DECK / Math.cos(PORCH.pitch) + 0.02;
+  out.push(tube(lod, [PORCH.back, 0, z], [PORCH.front + 0.25, 0, z], 0.1, 0.1, teamShade(0.66)));
+  out.push(
+    place(chevronPlan([0, 0, 0], 0.7, 1.2, 0.3, 0.04, TEAM), {
+      at: [PORCH.front - 0.14, 0, PORCH.eave + 0.6],
+      pitch: -Math.PI / 2,
+    }),
+  );
   return merge(out);
+}
+
+/** The double gate, recessed in the 4 m opening, and its stone surround with a keystone. */
+export function gate(lod: Lod): { leaves: Mesh; surround: Mesh | null } {
+  const h = DOOR_ROWS * COURSE;
+  const x = HALF_X - 0.08;
+  const leaves: Mesh[] = [1, -1].map((s) =>
+    box({ size: [0.14, GATE_HALF, h], at: [x, (s * GATE_HALF) / 2, PLINTH], color: DOOR }),
+  );
+  if (lod === 0)
+    for (const s of [1, -1]) {
+      for (const z of [0.6, 1.75, 2.9])
+        leaves.push(
+          box({
+            size: [0.04, GATE_HALF - 0.2, 0.12],
+            at: [x + 0.08, (s * GATE_HALF) / 2, PLINTH + z],
+            color: IRON,
+          }),
+        );
+      // Ring pull.
+      leaves.push(
+        place(
+          lathe({
+            profile: [
+              [0.07, -0.015],
+              [0.09, 0],
+              [0.07, 0.015],
+            ],
+            segments: 10,
+            color: BRASS,
+          }),
+          {
+            at: [x + 0.1, s * 0.3, PLINTH + 1.7],
+            pitch: Math.PI / 2,
+          },
+        ),
+      );
+    }
+  const face = HALF_X + WALL_T / 2;
+  const surround: Mesh[] = [
+    ...[-1, 1].map((s) =>
+      box({
+        size: [0.16, 0.4, h],
+        at: [face + 0.06, s * (GATE_HALF + 0.2), PLINTH],
+        color: BONE_DARK,
+        bevel: lod === 0 ? 0.03 : 0,
+      }),
+    ),
+    box({
+      size: [0.18, GATE_HALF * 2 + 0.9, 0.36],
+      at: [face + 0.07, 0, PLINTH + h],
+      color: BONE_DARK,
+      bevel: lod === 0 ? 0.03 : 0,
+    }),
+  ];
+  if (lod < 2)
+    surround.push(
+      box({
+        size: [0.24, 0.5, 0.46],
+        at: [face + 0.1, 0, PLINTH + h - 0.04],
+        color: BONE_DARK,
+        bevel: lod === 0 ? 0.03 : 0,
+      }),
+    );
+  return { leaves: merge(leaves), surround: lod === 2 ? null : merge(surround) };
+}
+
+/** A bracket lamp on the wall beside the gate: iron arm, lantern frame, amber glass. */
+export function lamp(lod: Lod): { iron: Mesh; glass: Mesh } | null {
+  if (lod === 2) return null;
+  const face = HALF_X + WALL_T / 2;
+  const y = -(GATE_HALF + 0.75);
+  const z = PLINTH + 2.7;
+  const iron = merge([
+    box({ size: [0.04, 0.16, 0.3], at: [face + 0.02, y, z], color: IRON }),
+    box({ size: [0.42, 0.04, 0.04], at: [face + 0.21, y, z + 0.22], color: IRON }),
+    box({ size: [0.24, 0.24, 0.05], at: [face + 0.4, y, z + 0.18], color: IRON }),
+    box({ size: [0.22, 0.22, 0.04], at: [face + 0.4, y, z - 0.18], color: IRON }),
+  ]);
+  const glass = box({ size: [0.18, 0.18, 0.32], at: [face + 0.4, y, z - 0.14], color: GLOW });
+  return { iron, glass };
 }

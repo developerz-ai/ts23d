@@ -1,62 +1,133 @@
 {
   "asset": "rts_worker",
   "reviewer": "agent",
-  "overall": 6.6,
+  "overall": 7.3,
   "scores": {
     "silhouette": {
       "score": 7,
-      "reason": "Red hard hat with goggles, big pack with a red lid and a pick held upright: reads \"builder\" from the 3/4 views; the pose is stiff with arms straight down.",
+      "reason": "Red hard hat with goggles, big pack with red lid and shovel, pick: reads \"builder\". The pick is still held upright beside the body, so FRONT is a plain figure.",
       "fixes": [
-        "carry the pick over the shoulder so it reads in silhouette from the front"
+        "carry the pick over the shoulder so it breaks the outline in FRONT"
       ]
     },
     "proportions": {
-      "score": 7,
-      "reason": "1.1 x 0.8 x 1.8 m, chunky 6-head figure; pack big for the RTS read; hands small.",
+      "score": 8,
+      "reason": "1.1 x 0.8 x 1.8 m chunky RTS figure; hands bigger now and read at 64 px.",
       "fixes": [
-        "hands ~15% bigger for the 64 px read"
+        "pack ~10% smaller so the figure does not read top-heavy from the rear"
       ]
     },
     "materials": {
-      "score": 6,
-      "reason": "Olive canvas suit, brown leather gloves and boots, red ceramic hat, grey steel pack separate in hero.png; the face is a plain smooth tan surface with no features, and in sheet.png boots render pale blue-grey.",
+      "score": 7,
+      "reason": "Olive canvas, brown leather gloves and boots, red hat, steel pack, and the face has nose, brow and moustache; canvas and leather share one roughness.",
       "fixes": [
-        "face planes (brow, nose, cheek) or a simple face decal",
-        "stitched seams on the suit (normal detail)"
+        "rougher canvas than leather (roughness contrast)"
       ]
     },
     "detail": {
-      "score": 6,
-      "reason": "Tool belt, pouch, cable coil, canister, goggles, pick; no knee pads or pocket flaps visible, the suit is smooth tubes.",
+      "score": 7,
+      "reason": "Knee pads, chest pocket flaps, tool belt, pouch, cable coil, canister, goggles, shovel on the pack, frayed hems.",
       "fixes": [
-        "knee pads and chest pocket flaps",
-        "a rolled tarp on the pack"
+        "stitched seams on the suit (normal detail)",
+        "a rolled tarp on the pack top"
       ]
     },
     "wear": {
-      "score": 5,
-      "reason": "weather() is measured, but the figure reads clean at hero distance; boots and knees carry no visible dirt.",
+      "score": 6,
+      "reason": "Darker frayed trouser hems and a dirty lower leg give some story; the hat, pack and gloves are clean.",
       "fixes": [
-        "stronger knee and boot dirt, a worn hat brim"
+        "scuffed hat brim and dented pack corners",
+        "dust on the shoulders"
       ]
     },
     "lod": {
-      "score": 7,
-      "reason": "FAR LOD2 (312 tris) keeps hat, pack and pick; boots become grey blocks.",
+      "score": 8,
+      "reason": "FAR LOD2 (360 tris) keeps hat, pack, pick and boot colour; the switch is invisible at RTS zoom.",
       "fixes": [
-        "keep boot colour consistent between LODs"
+        "keep the shovel on the pack at LOD2"
       ]
     },
     "technical": {
       "score": 8,
-      "reason": "QA PASS (rebuilt today): 10.1k / 1.79k / 312 tris, 3 / 3 / 2 draws.",
+      "reason": "QA PASS: 11.2k / 2.3k / 360 tris, 3 / 3 / 2 draws.",
       "fixes": [
-        "spend LOD0 triangles on the face and hands rather than the pack box edges"
+        "spend fewer LOD0 triangles on the pack box edges"
       ]
     }
   },
   "renders": {
-    "hero.png": "1edb59bc7d4c345c59178127595ce6df2b26add2309a67ca0fa7dc305096c86f",
-    "sheet.png": "1b8b0b83d19f2b761146715eecd870c47af4f8fefd6ce4cba33a8618afdcd3fe"
+    "hero.png": "3f53dadf5d6ae8e0d819271ed4c0678d3f2e581486b84cbd6031b58267ff304c",
+    "sheet.png": "cb93df639912629b1a41649bd98d8fe22ff0d43b95f799ecda2c98ff4903d587",
+    "raking.png": "eec46e406915d506cf8f9ef9aeec20494d56e34a820d759684d104e5e09eb0ea",
+    "raking_detail.png": "ee4000fe704c820720f3891f27f8075eec4e993492249cef72b93628ae1b7aa2",
+    "lods.png": "b80d7827b30e3718512ab9d6f437bc308179e5b32cb37d3d3eacdb3572a8ef18",
+    "silhouette.png": "b2dae6c7241e170547a9855cc77ae89613451cc4fe038aa4139f56c8fadf1f5a",
+    "value.png": "63b3841f368cbb2fe5f82d37ac014a65332f89715eba308c937f85ee86d0dfb1",
+    "detail.png": "94c3cc8713138b87343d0ca719910aa1f06b321c8776242b03e9409fa1c9185e"
+  },
+  "metrics": {
+    "silhouette": [
+      {
+        "view": "front",
+        "iou": 0.938
+      },
+      {
+        "view": "side",
+        "iou": 0.871
+      },
+      {
+        "view": "3/4",
+        "iou": 0.894
+      }
+    ],
+    "focal": {
+      "peakPart": "cap",
+      "peak": [
+        425,
+        79
+      ],
+      "focalShare": 0.448,
+      "focalArea": 0.044,
+      "top": [
+        {
+          "part": "cap",
+          "share": 0.32
+        },
+        {
+          "part": "tool_head",
+          "share": 0.137
+        },
+        {
+          "part": "goggles",
+          "share": 0.128
+        }
+      ],
+      "declared": [
+        "cap",
+        "goggles"
+      ]
+    },
+    "rest": {
+      "share": 0.204,
+      "spread": 0.552,
+      "min": 0.2
+    },
+    "grounded": {
+      "rise": 0.167,
+      "bands": [
+        0.178,
+        0.218,
+        0.246,
+        0.258,
+        0.325
+      ]
+    },
+    "shape": {
+      "acuteShare": 0.119,
+      "straightShare": 0.623,
+      "taper": -0.172,
+      "shape": "stable",
+      "declared": "stable"
+    }
   }
 }

@@ -72,8 +72,6 @@ it('lists no clips in the manifest when --no-animations writes GLBs without any'
       buildOne(
         spinner,
         parseArgs(['build', 'spinner.ts', '--no-shot', '--lods', '0', '--out', out, ...flags]),
-        undefined,
-        undefined,
       );
     expect((await build([])).clips?.map((c) => c.name)).toEqual(['run']);
     const still = await build(['--no-animations']);

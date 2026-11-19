@@ -178,9 +178,6 @@ it('t3d blueprint writes <out>/<asset>/blueprint.png only', async () => {
 it('writes materials a recipe defines inside build() into the external sheet (D47)', async () => {
   const fixture = join(out, 'late.ts');
   const lib = join(import.meta.dir, '../index.ts');
-  // An empty registry: the fixture's row must not depend on what earlier test files defined.
-  const { DEFAULT_SHEET, paintTrimSheet, resetMaterials } = await import('../material/index.ts');
-  resetMaterials();
   await Bun.write(
     fixture,
     `import { box, defineAsset, defineMaterial } from '${lib}';
@@ -190,24 +187,27 @@ export const late = defineAsset({ name: 'late', kind: 'prop', budget: { triangle
     ctx.part('body', box({ size: [1, 1, 1], color: [1, 1, 1], strip: m }));
   } });`,
   );
-  const log = console.log;
-  console.log = () => {};
-  const dir = join(out, 'late-out');
-  const code = await run([
-    'build',
-    fixture,
-    '--out',
-    dir,
-    '--sheet-size',
-    '512',
-    '--size',
-    '160x90',
-  ]);
-  console.log = log;
-  expect(code).toBe(0);
+  const { DEFAULT_SHEET, materialSnapshot, paintTrimSheet, resetMaterials } = await import(
+    '../material/index.ts'
+  );
   const { sheetFileName, sheetPngs } = await import('../export/index.ts');
-  const expected = sheetPngs(paintTrimSheet({ ...DEFAULT_SHEET, size: 512 })).orm;
-  resetMaterials();
+  const dir = join(out, 'late-out');
+  const log = console.log;
+  // Put back afterwards, even when the build throws, what other test files' recipes defined.
+  const restoreMaterials = materialSnapshot();
+  let code: number;
+  let expected: Uint8Array;
+  try {
+    // An empty registry: the fixture's row must not depend on what earlier test files defined.
+    resetMaterials();
+    console.log = () => {};
+    code = await run(['build', fixture, '--out', dir, '--sheet-size', '512', '--size', '160x90']);
+    expected = sheetPngs(paintTrimSheet({ ...DEFAULT_SHEET, size: 512 })).orm;
+  } finally {
+    console.log = log;
+    restoreMaterials();
+  }
+  expect(code).toBe(0);
   const written = new Uint8Array(await Bun.file(join(dir, sheetFileName('orm'))).arrayBuffer());
   expect(Bun.hash(written)).toBe(Bun.hash(expected));
 });

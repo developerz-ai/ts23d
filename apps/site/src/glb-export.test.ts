@@ -54,7 +54,8 @@ describe('nodeParts', () => {
   test('a skinned asset lists its mesh, not its bones', () => {
     const w = compile(wolf, { lod: 2 });
     const listed = nodeParts(toGlb(w, exportOptions({})), []).map((p) => p.name);
-    expect(listed).toContain('body');
+    // The coat's finish splits the skin into `body` or `body_finish_<name>` nodes.
+    expect(listed.some((n) => n === 'body' || n.startsWith('body_finish_'))).toBe(true);
     expect(listed).not.toContain('spine_0');
   });
 });

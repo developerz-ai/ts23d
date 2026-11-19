@@ -15,7 +15,7 @@ import type { SculptEdit } from '../primitives/index.ts';
 import type { Bones, Wing } from './creature-bones.ts';
 import { v3 } from './creature-curve.ts';
 import { legEdits } from './creature-limbs.ts';
-import { muscleEdits } from './creature-muscles.ts';
+import { muscleEdits, softBlend } from './creature-muscles.ts';
 import { separations } from './creature-separations.ts';
 import { blade, blob, type SkinNode, skin } from './creature-skin.ts';
 import type { CreatureSpec } from './creature-spec.ts';
@@ -57,7 +57,12 @@ export function blockOut(b: Bones): SculptEdit[] {
     at: m.at,
     size: m.r,
     blend:
-      i === 0 ? 0 : mammal(b) ? ((m.r[0] + m.r[1] + m.r[2]) / 3) * k : Math.min(m.r[1], m.r[2]) * k,
+      m.blend ??
+      (i === 0
+        ? 0
+        : mammal(b)
+          ? ((m.r[0] + m.r[1] + m.r[2]) / 3) * k
+          : Math.min(m.r[1], m.r[2]) * k),
     ...(m.power ? { power: m.power } : {}),
     ...(m.rotate ? { rotate: m.rotate } : {}),
     ...(mammal(b) ? { kernel: 'cubic' as const } : {}),
@@ -101,6 +106,8 @@ function trunkFeatures(
     );
   const ruff = s.build?.ruff ?? 0;
   if (ruff > 0 && b.neck.length > 1) {
+    // A thin ruff (a fox's 1.6 cm) would blend into the brisket tighter than a seam: floored.
+    const soft = softBlend(b);
     // Ruff: long guard hair on the nape, round the throat and down the chest.
     out.push(
       skin(
@@ -113,14 +120,14 @@ function trunkFeatures(
               ? n.r * 0.25 + ruff * 0.3
               : n.r * 0.55 + ruff * (1 - (0.7 * i) / Math.max(1, all.length - 1)),
         })),
-        { blend: ruff * 2 },
+        { blend: Math.max(ruff * 2, soft) },
       ),
       // The throat ruff hangs low at the base of the neck, over the brisket; the throat under
       // the jaw stays clear so the neck reads.
       blob(
         v3.add(b.neck[1]?.at ?? chest.at, [0, 0, -(b.neck[1]?.r ?? 0) * 0.9]),
         [ruff * 2, (b.neck[1]?.r ?? 0) * 0.8, ruff * 2.2],
-        ruff * 1.5,
+        Math.max(ruff * 1.5, soft),
       ),
     );
   }
@@ -208,7 +215,12 @@ export function bodyEdits(
   const out: SculptEdit[] = [
     ...masses,
     ...planes(b),
-    ...trunkFeatures(b, s, lod, [...masses, ...legs]),
+    // Muscles seat on the three bones, the neck and the legs, not on a raised topline mass: the
+    // withers ridge laid over a hump stood a second hump on it.
+    ...trunkFeatures(b, s, lod, [
+      ...masses.filter((_, i) => i < 3 || i >= b.trunk.length),
+      ...legs,
+    ]),
     ...legs,
   ];
   // Separations between the muscles, pressed into the finished masses (LOD0: finer than LOD1's cell).

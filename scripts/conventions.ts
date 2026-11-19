@@ -4,6 +4,7 @@
 // silently, and a stale entry (nothing left to excuse) is itself a violation.
 
 import { existsSync } from 'node:fs';
+import { budgetBandChecks, warnBands } from './budget-bands.ts';
 import { drift, readPages } from './changelog.ts';
 import { brandChecks } from './conventions-brand.ts';
 import { report, tsFiles, type Violation } from './lib/files.ts';
@@ -62,7 +63,10 @@ export const ENV_NAMES: ReadonlySet<string> = new Set([
 ]);
 
 /** Codes documented before the code that raises them lands. Owner + reason per entry. */
-export const PENDING_CODES: Readonly<Record<string, string>> = {};
+export const PENDING_CODES: Readonly<Record<string, string>> = {
+  T3D_BUDGET_BAND:
+    'raised by scripts/budget-bands.ts (a gate, not src/). Owner: core (add it to the ErrorCode union in src/core/errors.ts)',
+};
 
 const CODE = /T3D_[A-Z0-9]+(?:_[A-Z0-9]+)*(?![A-Z0-9_*])/g;
 const QUOTED = /['"`](T3D_[A-Z0-9]+(?:_[A-Z0-9]+)*)['"`]/g;
@@ -273,6 +277,8 @@ if (import.meta.main) {
     if (dir.startsWith('_') || s.file.includes('/out/')) continue;
     folders.set(dir, [...(folders.get(dir) ?? []), s]);
   }
+  const bands = await budgetBandChecks();
+  warnBands(bands.warned);
   const violations = [
     ...src.flatMap(bareErrors),
     ...brandChecks([...src, ...scripts]),
@@ -284,6 +290,7 @@ if (import.meta.main) {
     ...defectRows(await read('docs/architecture/defect-catalogue.md')),
     ...changelogDocs(await read('CHANGELOG.md'), await readPages()),
     ...(await scopedSources()).flatMap(unscopedBunx),
+    ...bands.enforced,
   ];
   process.exitCode = report('conventions', violations, process.argv.includes('--json'));
 }

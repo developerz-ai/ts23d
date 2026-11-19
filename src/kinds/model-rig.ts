@@ -5,7 +5,8 @@
 // `symmetric` is for a model made from an exact side-profile concept: its far side is invented,
 // so the half nearer the plan is mirrored across y = 0 before the skeleton is fitted, and the
 // joints are then forced exactly left/right symmetric (centre chains on y = 0). `side` says which
-// half that was: the Blender `symmetrize` step takes it. Memoised per mesh and options.
+// half that was: the Blender `symmetrize` step takes it. `extra` chains (model-extra.ts: wings,
+// fins) are appended to the fitted bones. Memoised per mesh and options.
 
 import {
   type Bone,
@@ -21,6 +22,7 @@ import type { Bones } from './creature-bones.ts';
 import { MID, midBones } from './creature-helpers.ts';
 import type { CreatureSpec } from './creature-spec.ts';
 import { modelClips } from './model-clips.ts';
+import { type ExtraChain, type ExtraChains, extraBones, resolveExtra } from './model-extra.ts';
 import { applyFit, FIT_LIMIT, type ModelFit, modelFit, shiftFit } from './model-fit.ts';
 import { jointsFit } from './model-fit-joints.ts';
 import { mapJoints, type RigChains } from './model-joints.ts';
@@ -64,6 +66,9 @@ export interface ModelRigOptions {
   /** End the head bone at the nose (where it leaves the mesh) instead of at the plan's head
    *  length from the rigger's joint: for a model whose head is shorter than the spec's. */
   readonly nose?: boolean;
+  /** Bone chains the plan lacks (wings, fins, a second tail), declared or found on the fit:
+   *  appended to the fitted skeleton, bound, reposed and animated with it (model-extra.ts). */
+  readonly extra?: ExtraChains;
 }
 
 export interface ModelRig {
@@ -76,6 +81,8 @@ export interface ModelRig {
   readonly skeleton: FittedSkeleton;
   /** The bones as fitted into the generated mesh (no helpers): the `skeleton` Blender binds to. */
   readonly fitted: readonly Bone[];
+  /** The extra chains whose bones close `fitted` (after the plan's). */
+  readonly extra: readonly ExtraChain[];
   /** With `repose`: the target rest (the `repose` step's `to`) and how far each bone turns. */
   readonly target?: readonly { readonly name: string; readonly head: Vec3; readonly tail: Vec3 }[];
   readonly turns?: readonly { readonly bone: string; readonly degrees: number }[];
@@ -120,7 +127,7 @@ const memo = new WeakMap<Float32Array, Map<string, ModelRig>>();
 
 export function modelRig(source: Mesh, spec: CreatureSpec, o: ModelRigOptions = {}): ModelRig {
   const prefix = o.prefix ?? '';
-  const key = `${o.joints ? idOf(o.joints) : ''}|${(o.take ?? []).join('+')}|${prefix}|${o.symmetric ?? false}|${o.repose === true}|${o.nose === true}|${o.register ?? 'surface'}|${o.front}|${(o.drop ?? []).join(',')}|${JSON.stringify(spec)}`;
+  const key = `${o.joints ? idOf(o.joints) : ''}|${(o.take ?? []).join('+')}|${prefix}|${o.symmetric ?? false}|${o.repose === true}|${o.nose === true}|${o.register ?? 'surface'}|${o.front}|${o.extra ? idOf(o.extra) : ''}|${(o.drop ?? []).join(',')}|${JSON.stringify(spec)}`;
   const seen = memo.get(source.positions)?.get(key);
   if (seen) return seen;
   if (o.register === 'joints' && !o.joints)
@@ -218,12 +225,15 @@ export function modelRig(source: Mesh, spec: CreatureSpec, o: ModelRigOptions = 
       notices.push(`${e.message}: the geometric skeleton fit is used instead`);
     }
   }
+  const joints = fitted === geometric ? 'fit' : 'rig';
+  const extra = resolveExtra(o.extra, { mesh, fitted, height: plan.height, prefix });
+  fitted = [...fitted, ...extraBones(extra, fitted, prefix)];
   const skeleton: FittedSkeleton = { ...found, bones: [...fitted, ...midBones(fitted, prefix)] };
   // Repose: the bones and clips the asset declares are the target rest's (model-repose.ts);
   // Blender binds in the fitted rest and poses the mesh to the target.
   const target = o.repose ? reposeTarget(fitted) : null;
   const rest = target ? [...target.bones, ...midBones(target.bones, prefix)] : skeleton.bones;
-  const rig = modelClips(rest, prefix, o.drop);
+  const rig = modelClips(rest, prefix, o.drop, extra);
   const heads = new Map(fitted.map((b) => [b.name, b.head]));
   const tail = tailOf(fitted, found.tailRadius, prefix);
   const out: ModelRig = {
@@ -233,6 +243,7 @@ export function modelRig(source: Mesh, spec: CreatureSpec, o: ModelRigOptions = 
     mesh,
     skeleton,
     fitted,
+    extra,
     ...(target
       ? { target: target.bones.map((b) => ({ name: b.name, head: b.head, tail: b.tail })) }
       : {}),
@@ -242,7 +253,7 @@ export function modelRig(source: Mesh, spec: CreatureSpec, o: ModelRigOptions = 
     dropped: rig.dropped,
     side,
     symmetric: mirrored,
-    joints: fitted === geometric ? 'fit' : 'rig',
+    joints,
     notices,
     ...(residual ? { mirror: residual } : {}),
     limbs: limbsOf(skeleton, prefix),

@@ -20,9 +20,9 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    4064,
-    1180,
-    272
+    4306,
+    1344,
+    276
   ],
   "drawCalls": [
     1,
@@ -42,6 +42,26 @@
   ],
   "measures": [],
   "sources": [],
+  "weather": {
+    "chips": {
+      "target": 0.12,
+      "actual": 0.12,
+      "eligible": "convex-edges",
+      "area": 0.0662
+    },
+    "rust": {
+      "target": 0.5,
+      "actual": 0.5,
+      "eligible": "below-fasteners | fasteners",
+      "area": 0.0129
+    },
+    "dust": {
+      "target": 0.3,
+      "actual": 0.3,
+      "eligible": "up-facing",
+      "area": 0.0713
+    }
+  },
   "qa": {
     "pass": true,
     "findings": []

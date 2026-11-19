@@ -9,11 +9,13 @@
 
 import {
   type BuildContext,
+  createRng,
   type Mesh,
   merge,
   type Rng,
   type SculptEdit,
   sculpt,
+  valueNoise,
 } from '@developerz.ai/ts23d';
 import { stitches, strap } from '../_lib/bust/cloth-strap.ts';
 import {
@@ -35,21 +37,39 @@ import { BALDRIC, cap, capPoint, SPIKES } from './fittings.ts';
 import { L } from './landmarks.ts';
 import { C } from './palette.ts';
 
+/** The strap's grime mask: seeded world-space noise (the same blotches at every LOD). */
+const GRIME = valueNoise(createRng(0x0c01), { scale: 0.03, octaves: 3 });
+
+/** The top lame's inner radius: the arm stub (6.2 cm, torso.ts) plus a 6 mm arming pad. */
+const LAME_R = 0.068;
+
+/**
+ * The lames' axis (s = +1 left, −1 right): down the arm stub's own axis (torso.ts: deltoid to
+ * [−0.012, 0.262, 0.15]), so the bands wrap the arm. Round an axis tilted the other way and 2 cm
+ * wider than the arm they hung beside the shoulder with daylight between them and the body.
+ */
+function lameAxis(s: number): { at: V; axis: V } {
+  const [dx, dy] = L.deltoid;
+  return { at: [dx - 0.012, (dy + 0.023) * s, 0], axis: norm([0.06, -0.07 * s, 1]) };
+}
+
 /** One pauldron (s = +1 left, −1 right): plate meshes, rivet + collar edits, spike edits. */
 function pauldron(
   s: number,
   lod: number,
   rng: Rng,
 ): { plates: Mesh[]; iron: SculptEdit[]; bone: SculptEdit[] } {
-  const [dx, dy] = L.deltoid;
-  const steps = [36, 22, 8][lod] ?? 8;
+  // (36 steps round the dome at LOD0: its dents are 2-4 cm wide and its rust runs 2.5 cm long, so
+  // the 2.6 cm spacing of 26 steps left the plate reading factory clean.)
+  const steps = [36, 16, 8][lod] ?? 8;
   const plates: Mesh[] = [];
   const iron: SculptEdit[] = [];
   const bone: SculptEdit[] = [];
+  if (lod === 2) return { plates: [farShell(s)], iron, bone: spikeEdits(s) };
   // Cap: a dome revolved about an axis tilted out over the shoulder, its lip flaring at the rim.
   const { at: capAt, axis: capAxis, R, H } = cap(s);
   const meridian: Array<readonly [number, number]> = [];
-  const nm = [12, 8, 5][lod] ?? 5;
+  const nm = [12, 6, 5][lod] ?? 5;
   for (let i = 0; i <= nm; i++) {
     const phi = ((8 + (84 * i) / nm) * Math.PI) / 180;
     meridian.push([R * Math.sin(phi), H * Math.cos(phi)]);
@@ -57,15 +77,15 @@ function pauldron(
   meridian.push([R * 1.07, -0.016]);
   const arc = lod < 2 ? 5 : 2;
   const capProfile = plateProfile(meridian, 0.009, arc);
-  // Battle damage (LOD0): 3 dents on the exposed dome (2–3.5 mm deep, 12–20 mm wide); the lip's
-  // paint chipped to bare iron on ~15 % of its length; rust running 25 mm below each rivet.
+  // Battle damage (LOD0): 4 dents on the exposed dome (2.5–4.5 mm deep, 12–20 mm wide); the lip's
+  // paint chipped to bare iron on ~25 % of its length; rust running 40 mm below each rivet.
   const dents = (n: number, h0: number, h1: number, from: number, to: number) =>
     lod === 0
       ? Array.from({ length: n }, () => ({
           theta: from + (to - from) * rng.next(),
           h: h0 + (h1 - h0) * rng.next(),
           radius: 0.012 + rng.next() * 0.008,
-          depth: 0.002 + rng.next() * 0.0015,
+          depth: 0.0025 + rng.next() * 0.002,
         }))
       : [];
   const wear = (from: number, to: number, drip: Array<{ theta: number; h: number }>) => ({
@@ -74,10 +94,10 @@ function pauldron(
     to,
     edge: C.plateRim,
     bare: C.bareIron,
-    chip: 0.15,
+    chip: 0.25,
     rust: C.rust,
     drip: lod === 0 ? drip : [],
-    length: 0.025,
+    length: 0.04,
   });
   // Hammer peening (LOD0): the forging's shallow facets over the whole dome, 0.6–1.2 mm deep,
   // 9–15 mm wide — raking light reads beaten iron, not a pressed bowl.
@@ -104,10 +124,10 @@ function pauldron(
       from: 0,
       to: 360,
       steps,
-      dents: [...dents(3, 0.02, 0.06, 0, 360), ...peen],
+      dents: [...dents(4, 0.02, 0.06, 0, 360), ...peen],
       // The lip rolled over a wire like the lames' (a forged edge, not a cut one).
       ...(lod < 2
-        ? { bead: { r: 0.006, segments: 8, color: C.plateRim, at: meridian.length - 1 } }
+        ? { bead: { r: 0.006, segments: 6, color: C.plateRim, at: meridian.length - 1 } }
         : {}),
       wear: wear(
         meridian.length - 1,
@@ -120,11 +140,10 @@ function pauldron(
   // Boss over the crown of the dome, where the central spike roots.
   iron.push({ shape: 'sphere', at: onCap(12, 90 * s, -0.004), size: 0.022, color: C.plateRim });
   // Lames: three overlapping bands down the outer arm, each flaring wider than the one above.
-  const armAt: V = [dx - 0.006, (dy + 0.012) * s, 0];
-  const armAxis = norm([0, 0.14 * s, 1]);
+  const { at: armAt, axis: armAxis } = lameAxis(s);
   for (let i = 0; i < (lod === 2 ? 2 : 3); i++) {
     const top = 0.232 - i * 0.037;
-    const r0 = 0.086 + i * 0.007;
+    const r0 = LAME_R + i * 0.007;
     const outer: Array<readonly [number, number]> = [
       [r0, top],
       [r0 + 0.006, top - 0.024],
@@ -133,7 +152,7 @@ function pauldron(
     plates.push(
       revolvePlate(plateProfile(outer, 0.007, arc), {
         ...(lod < 2
-          ? { bead: { r: 0.0055, segments: 8, color: C.plateRim, at: outer.length - 1 } }
+          ? { bead: { r: 0.0055, segments: 6, color: C.plateRim, at: outer.length - 1 } }
           : {}),
         at: armAt,
         axis: armAxis,
@@ -178,9 +197,16 @@ function pauldron(
         color: C.rivet,
       });
     }
-  // Bone spikes: one big through the boss, a smaller one raked forward, each in a flared collar.
+  bone.push(...spikeEdits(s));
+  return { plates, iron, bone };
+}
+
+/** Bone spikes: one big through the boss, a smaller one raked forward, each in a flared collar. */
+function spikeEdits(s: number): SculptEdit[] {
+  const { at: capAt, axis: capAxis } = cap(s);
+  const bone: SculptEdit[] = [];
   for (const [phi, theta, len, r] of SPIKES) {
-    const root = onCap(phi, theta * s, -0.004);
+    const root = capPoint(s, phi, theta * s, -0.004);
     const out = norm(sub(root, capAt));
     const dir = norm(add(mul(out, 0.6), mul(capAxis, 0.8)));
     // The collar flares onto the plate (a ~35° skirt, not a step) and the spike is filleted
@@ -192,7 +218,64 @@ function pauldron(
       cone2(add(root, mul(dir, 0.004)), add(root, mul(dir, len)), r, 0.002, { blend: 0.004 }),
     );
   }
-  return { plates, iron, bone };
+  return bone;
+}
+
+/** The far LOD's pauldron (s = +1 left, −1 right): the dome and the lames as closed solids (a
+ *  cap of a sphere, and the outer half of a sleeve round the arm), not plates one cell thick,
+ *  which read as hollow slabs at that distance. */
+function farShell(s: number): Mesh {
+  const { at, axis, R, H } = cap(s);
+  const { at: armAt, axis: armAxis } = lameAxis(s);
+  const everywhere: [V, V] = [
+    [-1, -1, -1],
+    [1, 1, 2],
+  ];
+  // A sphere through the dome's crown and rim (radius from its chord), cut at the rim's plane.
+  const rs = (R * R + H * H) / (2 * H);
+  const centre = add(at, mul(axis, H - rs));
+  const along = (p: V, o: V, n: V): number => dot(sub(p, o), n);
+  return sculpt({
+    edits: [
+      {
+        group: [
+          { shape: 'sphere', at: centre, size: rs },
+          {
+            field: (p) => -along(p, at, axis) - 0.012,
+            bounds: everywhere,
+            op: 'intersect',
+            blend: 0,
+          },
+        ],
+      },
+      {
+        // (Filleted onto the dome: a knife crease between two far-LOD solids shades inside out.)
+        blend: 0.02,
+        group: [
+          cone2(
+            add(armAt, mul(armAxis, 0.225)),
+            add(armAt, mul(armAxis, 0.13)),
+            LAME_R + 0.006,
+            LAME_R + 0.022,
+          ),
+          {
+            field: (p) =>
+              Math.max(
+                0.118 - along(p, armAt, armAxis),
+                along(p, armAt, armAxis) - 0.236,
+                -(p[1] - armAt[1]) * s - 0.02,
+              ),
+            bounds: everywhere,
+            op: 'intersect',
+            blend: 0.012,
+          },
+        ],
+      },
+    ],
+    resolution: 0.032,
+    color: C.plate,
+    strip: 'steel_painted',
+  });
 }
 
 export interface ArmourParts {
@@ -206,16 +289,22 @@ export function armour(ctx: BuildContext, body: Surface): ArmourParts {
   const rng = ctx.rng.fork('armour');
   const l = pauldron(1, lod, rng.fork('l'));
   const r = pauldron(-1, lod, rng.fork('r'));
-  const fittings = sculpt({
-    edits: [...l.iron, ...r.iron],
-    resolution: ctx.pick([0.0022, 0.004, 0.016]),
-    color: C.plateRim,
-    strip: 'steel_painted',
-  });
-  const pauldrons = merge([...l.plates, ...r.plates, fittings]);
+  // Rivets, bosses and collars (near LODs; the far shells carry none).
+  const iron = [...l.iron, ...r.iron];
+  const fittings = iron.length
+    ? [
+        sculpt({
+          edits: iron,
+          resolution: ctx.pick([0.003, 0.006, 0.016]),
+          color: C.plateRim,
+          strip: 'steel_painted',
+        }),
+      ]
+    : [];
+  const pauldrons = merge([...l.plates, ...r.plates, ...fittings]);
   const spikes = sculpt({
     edits: [...l.bone, ...r.bone],
-    resolution: ctx.pick([0.004, 0.0055, 0.017]),
+    resolution: ctx.pick([0.0062, 0.0085, 0.017]),
     color: C.bone,
   });
   // Baldric: from under the left pauldron across the chest to the right flank.
@@ -224,6 +313,18 @@ export function armour(ctx: BuildContext, body: Surface): ArmourParts {
     edits: [
       ...strap(body, ctrl, 0.042, 0.007),
       ...(lod === 0 ? stitches(body, ctrl, 0.042, 0.007, C.thread) : []),
+      // Years of sweat and grease: the strap near black where it crosses the chest and rubs
+      // the fur, blotched along its length.
+      {
+        field: (p) => 0.012 - 0.035 * GRIME(p),
+        bounds: [
+          [-0.3, -0.4, 0],
+          [0.3, 0.4, 0.5],
+        ],
+        op: 'paint',
+        color: C.strapGrime,
+        blend: 0.014,
+      },
     ],
     resolution: ctx.pick([0.0048, 0.0055, 0.014]),
     color: C.strap,

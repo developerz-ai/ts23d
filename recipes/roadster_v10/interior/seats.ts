@@ -35,8 +35,8 @@ function rrect(
 
 /** Cushion: a slab along X from the back (x0) to the front lip, thicker bolsters at ±y. */
 function cushion(lod: Lod): Mesh {
-  const per = lod === 0 ? 5 : 2;
-  const n = lod === 0 ? 10 : 4;
+  const per = lod === 0 ? 3 : 2;
+  const n = lod === 0 ? 7 : 4;
   const rings: Vec3[][] = [];
   for (let i = 0; i <= n; i++) {
     const t = i / n;
@@ -94,8 +94,8 @@ function cushion(lod: Lod): Mesh {
 
 /** Backrest: sections along its own axis (tilted back ~24°), with bolsters and headrest. */
 function backrest(lod: Lod): Mesh {
-  const per = lod === 0 ? 5 : 2;
-  const n = lod === 0 ? 14 : 5;
+  const per = lod === 0 ? 3 : 2;
+  const n = lod === 0 ? 9 : 5;
   const rings: Vec3[][] = [];
   const parts: Mesh[] = [];
   for (let i = 0; i <= n; i++) {

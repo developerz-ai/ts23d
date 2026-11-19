@@ -1,7 +1,7 @@
 // Atlantic bluefin proportions and trunk surface. t is the fraction of fork length from the snout.
 // Fin and depth numbers are percentages of fork length: README.md.
 
-import { defineMaterial, hex, type Mesh, type Vec3 } from '@developerz.ai/ts23d';
+import { hex, type Mesh, type Vec3 } from '@developerz.ai/ts23d';
 import {
   add,
   clamp,
@@ -20,6 +20,9 @@ import {
   stations,
   sub,
 } from '../_lib/body-plan-kit.ts';
+import { SKIN, toBand } from './material.ts';
+
+export { SKIN } from './material.ts';
 
 type Lod = 0 | 1 | 2;
 
@@ -30,28 +33,6 @@ export const xOf = (t: number): number => X0 - t * FL;
 export const tOf = (x: number): number => (X0 - x) / FL;
 export const T_TAIL = 0.955;
 export const T_HEAD = 0.245;
-
-/** Metal skin: the vertex colour is the reflectance, blue above and silver below. */
-export const METAL = defineMaterial({
-  id: 'tuna_metal',
-  row: 10, // its hash row (0) is the Tiger's `zimmerit`
-  kind: 'noise',
-  scaleMetres: 1.5,
-  roughness: 0.3,
-  metalness: 1,
-  albedo: '#f2f2f2',
-  params: { tone: 0.97, mottle: 0.03, relief: 0.00008 },
-  description: 'Tuna skin: fine scales over guanine, a coloured metal under vertex tint.',
-});
-export const FIN = defineMaterial({
-  id: 'tuna_fin',
-  kind: 'noise',
-  scaleMetres: 1,
-  roughness: 0.5,
-  albedo: '#ededed',
-  params: { tone: 0.96, mottle: 0.05, relief: 0.0001 },
-  description: 'Tuna fin membrane (vertex colour tints).',
-});
 
 export const COLOUR = {
   back: hex('#0b1f3f'),
@@ -68,6 +49,10 @@ export const COLOUR = {
   edge: hex('#14161c'),
   iris: hex('#c8b070'),
   pupil: hex('#050608'),
+  iridescent: hex('#8fa6d8'),
+  lateral: hex('#3a4a5c'),
+  scratch: hex('#f4f2ec'),
+  keel: hex('#3a3418'),
 } as const;
 
 const halfWidth = profile([
@@ -180,16 +165,50 @@ function trunkPoint(t: number, a: number, lod: Lod): Vec3 {
     const m = marks(t, a, share(p, t));
     const e = eyeCentre(y >= 0 ? 1 : -1);
     const dent = gauss(Math.hypot(p[0] - e[0], p[1] - e[1], p[2] - e[2]), 0.05);
-    const push = -0.009 * m.mouth - 0.004 * m.cover - 0.006 * dent;
+    const push = -0.009 * m.mouth - 0.009 * m.cover - 0.006 * dent;
     y += (y / r) * push;
     z += (z / r) * push;
   }
   // The median caudal keel, with two small keels behind it on the fin base.
-  const keel =
-    0.034 * smooth(0.875, 0.915, t) * (1 - smooth(0.945, 0.975, t)) +
-    0.014 * gauss((t - 0.962) * FL, 0.022);
+  const keel = keelAt(t);
   y += Math.sign(y) * keel * gauss(z, 0.009 + 0.012 * smooth(0.96, 0.9, t));
   return [p[0], y, Z0 + z];
+}
+
+/** Lateral reach of the median caudal keel and the two small keels behind it, metres. */
+export const keelAt = (t: number): number =>
+  0.046 * smooth(0.865, 0.91, t) * (1 - smooth(0.945, 0.975, t)) +
+  0.016 * gauss((t - 0.962) * FL, 0.022);
+
+/** Height share of the lateral line: high behind the head, dipping down over the corselet. */
+const lateralLine = (t: number): number =>
+  0.42 - 0.3 * smooth(0.22, 0.6, t) + 0.04 * Math.sin(t * 9);
+
+/** The corselet: thick, larger scales round the pectoral base, tapering back along the line. */
+export function corseletAt(t: number, h: number): number {
+  const along = smooth(0.235, 0.26, t) * (1 - smooth(0.36 + 0.12 * smooth(-0.2, 0.3, h), 0.48, t));
+  return along * smooth(-0.55, -0.3, h) * (1 - smooth(0.5, 0.7, h));
+}
+
+/** Seeded scratches on the flank (net, rock, a rival's jaw): pale thin lines, 0..1. */
+const SCRATCHES: readonly (readonly [number, number, number, number])[] = [
+  // t0, h0, t1, h1: the first four on the -Y side the hero camera sees (the third on both), the last on +Y.
+  [0.47, 0.42, 0.58, 0.16],
+  [0.5, 0.44, 0.6, 0.2],
+  [0.62, 0.36, 0.7, 0.12],
+  [0.36, 0.5, 0.41, 0.3],
+  [0.44, 0.3, 0.55, 0.22],
+];
+function scratchAt(t: number, h: number, side: number): number {
+  let best = 0;
+  SCRATCHES.forEach(([t0, h0, t1, h1], i) => {
+    if ((i < 4 ? -1 : 1) !== side && i !== 2) return;
+    const [dt, dh] = [t1 - t0, h1 - h0];
+    const k = Math.max(0, Math.min(1, ((t - t0) * dt + (h - h0) * dh) / (dt * dt + dh * dh)));
+    const d = Math.hypot((t - t0 - k * dt) * FL, (h - h0 - k * dh) * 0.45);
+    best = Math.max(best, gauss(d, 0.011) * (0.65 + 0.35 * Math.sin(k * 9 + i)));
+  });
+  return best;
 }
 
 function trunkColour(p: Vec3, t: number, a: number, lod: Lod): Vec3 {
@@ -202,10 +221,20 @@ function trunkColour(p: Vec3, t: number, a: number, lod: Lod): Vec3 {
   c = mixRgb(c, COLOUR.back, smooth(0.34, 0.72, h + wave * 0.6));
   // The gold shimmer along the top of the silver, the bluefin's coruscation.
   c = mixRgb(c, COLOUR.gold, 0.32 * gauss(h + wave - 0.02, 0.11) * smooth(0.2, 0.3, t));
-  // Pale broken bars on the lower flank behind the pectoral.
+  // The iridescent violet-blue band between the blue back and the silver, strongest over the body.
+  c = mixRgb(c, COLOUR.iridescent, 0.3 * gauss(h + wave - 0.16, 0.15) * smooth(0.22, 0.32, t));
+  // Pale broken bars and dots on the lower flank behind the pectoral.
   const bar = Math.sin(t * 150 + fbm(t * 12, a * 3, 8) * 5);
-  const barBand = smooth(-0.62, -0.42, h) * (1 - smooth(-0.02, 0.16, h)) * smooth(0.3, 0.38, t);
-  if (lod < 2 && bar > 0.55 && fine > 0.34) c = mixRgb(c, COLOUR.belly, 0.75 * barBand);
+  const barBand = smooth(-0.66, -0.42, h) * (1 - smooth(0.0, 0.18, h)) * smooth(0.3, 0.38, t);
+  if (lod < 2 && bar > 0.45 && fine > 0.3) c = mixRgb(c, COLOUR.belly, 0.9 * barBand);
+  if (lod < 2) {
+    // The lateral line: a thin darker line of pored scales; scratches cut pale through the sheen.
+    const line =
+      gauss(h - lateralLine(t), 0.018) * smooth(0.24, 0.3, t) * (1 - smooth(0.85, 0.9, t));
+    c = mixRgb(c, COLOUR.lateral, 0.32 * line);
+    c = mixRgb(c, COLOUR.scratch, 0.85 * scratchAt(t, h, Math.sign(p[1]) || 1));
+  }
+  c = mixRgb(c, COLOUR.keel, 0.75 * smooth(0.25, 0.8, keelAt(t) / 0.046) * gauss(h, 0.35));
   if (t < T_HEAD) {
     const cheek = smooth(0.32, -0.05, h) * (1 - smooth(-0.75, -0.55, h) * 0.2);
     c = mixRgb(c, COLOUR.cheek, 0.45 * cheek);
@@ -229,28 +258,37 @@ export function eye(side: 1 | -1, lod: Lod): Mesh {
   );
 }
 
-const SIDES: readonly [number, number, number] = [72, 28, 7];
+const SIDES: readonly [number, number, number] = [72, 36, 9];
 
 export function trunk(joints: readonly number[], lod: Lod): Mesh {
   const end = 0.985;
   const us =
     lod === 2
-      ? stations([0.006, 0.03, ...joints.filter((t) => t > 0.04), end])
+      ? stations([0.006, 0.03, 0.07, 0.15, ...joints.filter((t) => t > 0.04), 0.9, end])
       : stations(
           [
-            ...even(0.004, 0.13, lod === 0 ? 36 : 12),
-            ...even(0.13, 0.3, lod === 0 ? 44 : 10),
-            ...even(0.3, end, lod === 0 ? 110 : 26),
+            ...even(0.004, 0.13, lod === 0 ? 36 : 18),
+            ...even(0.13, 0.3, lod === 0 ? 44 : 16),
+            ...even(0.3, end, lod === 0 ? 110 : 46),
           ],
           2e-3,
         );
-  return loft({
+  const sides = SIDES[lod];
+  const mesh = loft({
     us,
-    sides: SIDES[lod],
-    strip: METAL,
+    sides,
+    strip: SKIN,
     metres: [FL, 1.4],
-    stripHeight: 1.5,
+    stripHeight: 1,
     point: (t, a) => trunkPoint(t, a, lod),
     color: (p, _n, t, a) => trunkColour(p, clamp(t), a, lod),
+  });
+  // The corselet's thicker scales are duller than the polished flank round them.
+  const ring = sides + 1;
+  return toBand(mesh, (i) => {
+    const r = Math.min(us.length - 1, Math.floor(i / ring));
+    const t = clamp(us[r] ?? 0);
+    const p = plainPoint(t, ((i % ring) / sides) * Math.PI * 2);
+    return ['flank', 'corselet', i >= us.length * ring ? 0 : corseletAt(t, share(p, t))];
   });
 }

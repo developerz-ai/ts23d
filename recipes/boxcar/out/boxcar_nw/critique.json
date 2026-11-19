@@ -5,62 +5,59 @@
   "scores": {
     "silhouette": {
       "score": 8,
-      "reason": "Single-sheathed USRA boxcar from every side: Howe-truss bracing, running board with laterals, sliding door on its track, Andrews-style trucks, brake staff and wheel at the B end.",
+      "reason": "Wood boxcar with outside bracing, running board, brake wheel, arch-bar trucks: the type reads in SIDE and 3/4.",
       "fixes": [
         "thicker brake staff and a spoked brake wheel so the B end reads in the FRONT view"
       ]
     },
     "proportions": {
       "score": 8,
-      "reason": "13.4 × 3.0 × 4.1 m; body length, wheel size, wheelbase, door width and wheel spacing pass the ±2% measures; panel count each side of the door matches the builder photo.",
+      "reason": "13.4 × 3.0 × 4.1 m, door and brace spacing match a builder photo by eye.",
       "fixes": [
         "check truck side-frame spacing against the FRONT view of the builder photo"
       ]
     },
     "materials": {
       "score": 7,
-      "reason": "Painted wood siding, steel framing and ends, weathered-wood running board, cast-iron trucks. The road name (NORFOLK & WESTERN) is still broken by the diagonal braces' parallax at 3/4 in hero.png, and the running board renders near-white in sheet.png.",
+      "reason": "Painted boards, a weathered grey running board and dark iron separate well; but the road-name lettering is chopped into pieces by the diagonal braces at 3/4 (it reads as broken text in hero.png).",
       "fixes": [
-        "flush-mount the stencil pieces or taper the brace faces so the road name reads at 3/4",
-        "darken the running-board wood to a grey-brown weathered value",
-        "planar-map the wheel faces instead of lathe UVs"
+        "paint the lettering onto the brace faces too (or flush-mount it) so the road name reads unbroken at 3/4"
       ]
     },
     "detail": {
       "score": 7,
-      "reason": "Board-level siding, bolted bracing, door straps and handle, door track, couplers with uncoupling lever and air hose, ladders and stirrups, brake rigging. Missing journal-box lids, door hasp/seal pin, roof seam caps.",
+      "reason": "Board seams, braces, door track, grab irons and trucks are there; the end wall's scattered dark slots are now regular rows of grab irons, but there is no door hasp/seal, no journal-box lids and no roof seam caps.",
       "fixes": [
-        "journal boxes with hinged lids",
-        "door hasp, seal pin and door stops",
-        "roof seam caps"
+        "door hasp, seal pin and door stops; journal-box lids",
+        "roof seam caps over the board joints"
       ]
     },
     "wear": {
       "score": 6,
-      "reason": "The hero reads as a freshly painted car: the siding red is even, the grime gradient from the rails and the rust streaks under the rivets are too faint to see at hero distance; only the underframe is dark.",
+      "reason": "Faded paint and light grime at the sill only; no rust streaks, no replaced boards, no chalk marks.",
       "fixes": [
-        "stronger road grime rising from the sill (double the grime strength below 1 m)",
-        "a few replaced boards in fresher paint and chalk car-card marks by the door",
-        "longer, wider rust streaks under the door track"
+        "road grime rising from the sill (double strength below 1 m) and rust streaks under the door track and bolts",
+        "a few replaced boards in fresher paint and chalk car-card marks by the door"
       ]
     },
     "lod": {
       "score": 7,
-      "reason": "LOD2 (1.3k) keeps the box, roof walk, trucks and the road name, but drops all the Howe-truss bracing and the door outline, which are the biggest graphic marks on the side at mid distance.",
+      "reason": "FAR LOD2 keeps the box and brace pattern; the lettering is now a dull pink stencil block instead of a bright white bar, but it still reads as one smeared stripe across the braces, and the roof boards vanish.",
       "fixes": [
-        "bake the brace pattern and the door outline into LOD2 vertex colour"
+        "darken the LOD2 stencil block toward the lettering's average over the red so it stops reading as a stripe",
+        "keep the roof board seams as darker per-face stripes at LOD2"
       ]
     },
     "technical": {
       "score": 8,
-      "reason": "QA PASS; ~25.5k / ~9.2k / 1.2–1.3k triangles; one material; 13 / 11 / 11 draws for the moving pivots; switchable liveries via paint slots.",
+      "reason": "QA clean; 19k / 7.5k / 1.1k triangles; 13 draws for moving trucks/doors is reasonable.",
       "fixes": [
-        "trim LOD0 by sharing one tessellated board panel per side"
+        "merge static stencil pieces into the body to cut LOD0 draws"
       ]
     }
   },
   "renders": {
-    "hero.png": "dbfc00a3a2260a15cc29232e2ac64fa21a40e1adea57782672edc93ead2e40a1",
-    "sheet.png": "ae39d30356a96f338fb6dbea7a63d95f75ca88ef1fe35b389b0fb1e99b09e49e"
+    "hero.png": "4174bfeedc6ec4d449a78e21c7a4856b92d293a9dd1a5e46ba22f3ab27741125",
+    "sheet.png": "38e11e47210539743d3edcc927d17677decfef3ad36dd352973903a7d7d6d993"
   }
 }

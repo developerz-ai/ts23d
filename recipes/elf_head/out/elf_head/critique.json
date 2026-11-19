@@ -1,65 +1,64 @@
 {
   "asset": "elf_head",
   "reviewer": "agent",
-  "overall": 5.4,
+  "overall": 5.7,
   "scores": {
     "silhouette": {
-      "score": 7,
-      "reason": "Pointed ears and long fair hair over a cloaked bust read as an elf in FRONT and SIDE. In hero.png the hair is sparse strands splaying outward from the head like wet string, and the ears hide behind it at 3/4.",
+      "score": 6,
+      "reason": "Bust with long blond hair and a green tunic; the hair hangs as separate stringy strands rather than a mass, and the elf ear tips do not break the outline in any view, so it reads as a human woman.",
       "fixes": [
-        "more hair volume over the crown and denser locks (hair.ts) so the hair reads as a mass, not strands",
-        "part the hair behind the ears so the ear tips break the outline at 3/4"
+        "more hair volume over the crown and denser, wider locks (hair.ts) so the hair reads as a mass",
+        "part the hair behind the ears so the long ear tips break the outline at 3/4 and FRONT"
       ]
     },
     "proportions": {
       "score": 6,
-      "reason": "Full cheeks, straight profile, slim neck; the face is still long and the orbit area reads older than intended.",
+      "reason": "Face is doll-like: mid-face long, eyes small and set high, neck thin against broad puffed shoulders.",
       "fixes": [
-        "shorten the mid-face 3% (spec.ts)",
-        "raise the lid crease and thin the upper lid"
+        "shorten the mid-face 3% and enlarge the eyes slightly (spec.ts)",
+        "slimmer, less puffed shoulders on the tunic (torso.ts)"
       ]
     },
     "materials": {
       "score": 5,
-      "reason": "Hair, skin, tunic, cloak and trim separate by hue, with no roughness split; the hair strands read as thin plastic; the tunic trim stair-steps at the vertex cell in FRONT/SIDE.",
+      "reason": "The tunic is a blotchy green with grey smears, not cloth; skin is flat pink with rouge circles; the gold trim and clasp read as metal.",
       "fixes": [
-        "silk/wool strips for tunic and cloak and a metal finish on the clasp",
-        "trim colour on a finer cell (or as geometry) so it stops stair-stepping"
+        "a silk/wool strip for tunic and cloak with even colour and soft sheen, no grey blotches",
+        "skin strip with subsurface-like warmth instead of rouge circles"
       ]
     },
     "detail": {
       "score": 6,
-      "reason": "Ear structure, lids, strand locks, tall collar, hemmed cloak and trim, clasp; no embroidery, no strand detail over the crown.",
+      "reason": "Clasp, gold trim and collar exist, but the face lacks lid/lip definition and the hair has no strand grooves over the crown.",
       "fixes": [
-        "strand grooves over the crown",
+        "strand grooves over the crown; defined lids and lip line",
         "embroidery on the trim"
       ]
     },
     "wear": {
-      "score": 3,
-      "reason": "Pristine.",
+      "score": 4,
+      "reason": "Grey smears on the tunic could be dust, but they read as texture noise; no fray, no soiled hems.",
       "fixes": [
-        "dust on the cloak shoulders and fray at the hems"
+        "dust on the cloak shoulders and fray at the hems as authored, not noise"
       ]
     },
     "lod": {
-      "score": 4,
-      "reason": "LOD2 in sheet.png is a different character: the long blond strands are replaced by a short brown cap, the face turns blotchy and the cloak trim breaks up. The switch would visibly pop.",
+      "score": 6,
+      "reason": "LOD2 now keeps blond hair cards in the LOD0 colour, but they become blocky slabs and the face is faceted with dark eye holes.",
       "fixes": [
-        "keep the long hair at LOD2 as a few flat blond cards (hair.ts lod === 2 path) in the LOD0 colour",
-        "carry the LOD0 hair and trim colours to LOD2 instead of the brown base cap"
+        "thinner, more numerous LOD2 hair cards and smoothed face colour"
       ]
     },
     "technical": {
       "score": 7,
-      "reason": "QA PASS; 100.1k / 23.4k / 3.4k triangles; 4 / 4 / 3 draws.",
+      "reason": "QA clean; 71k / 19k / 3k triangles over 5 draws; many strand cards spent where they read as noise.",
       "fixes": [
-        "merge duplicate head/bust crease spheres and drop hidden scalp under the hair at LOD0"
+        "fewer, wider hair cards at LOD0 and drop hidden scalp under the hair"
       ]
     }
   },
   "renders": {
-    "hero.png": "62462d89dcb42c5bc840afbb90508ec3c5f7c31e0f6da0032c0da0d14c791c01",
-    "sheet.png": "06725f5fcef779107bd515759b9f332699e5640295e028c84d8055d734dcc452"
+    "hero.png": "5c92c707c8323d113e28eeb3b6936a897f99ab9054bdd637bbc796ef504260c6",
+    "sheet.png": "168fd787b2d1beb4711f4e2228bed8b3b3dca49c9262f9f53a719682cf0482b2"
   }
 }

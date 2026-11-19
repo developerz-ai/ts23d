@@ -3,11 +3,21 @@
 // `bun test recipes/king_cobra`.
 
 import { describe, expect, it } from 'bun:test';
-import { compile, type Mesh, triangleCount, type Vec3 } from '@developerz.ai/ts23d';
+import {
+  type Clip,
+  compile,
+  type Mesh,
+  quatRotate,
+  triangleCount,
+  type Vec3,
+} from '@developerz.ai/ts23d';
 import { clipPose, jointWorlds } from '../../src/qa/clip-pose.ts';
 import { posedMesh } from '../../src/render/pose-strip.ts';
 import { norm } from '../_lib/body-plan-kit.ts';
+import { REAR, rearHinge } from './clips.ts';
+import { IDLE_GROUND, jointArcs } from './ground.ts';
 import { CLIPS, king_cobra, PLAN, RIG } from './king_cobra.ts';
+import { scarAt, shedAt } from './material.ts';
 import {
   bellyHalf,
   COIL_TOP,
@@ -17,10 +27,12 @@ import {
   halfW,
   RAISED,
   SVL,
+  seatHeight,
+  surfacePoint,
   TOTAL,
 } from './shape.ts';
-
-import { scutes } from './surface.ts';
+import { bodyArc } from './skin.ts';
+import { dorsalAverage, dorsalColour, scaleSheet, scutes } from './surface.ts';
 
 const sk = { bones: PLAN.bones };
 const clip = (name: string) => {
@@ -34,12 +46,98 @@ const heads = (name: string, u: number): Vec3[] => {
   const w = jointWorlds(sk, clipPose(c, u * c.seconds));
   return RIG.spine.map((b) => w.get(b)?.head ?? [0, 0, 0]);
 };
-const restHeads = RIG.spine.map((n) => PLAN.bones.find((b) => b.name === n)?.head ?? [0, 0, 0]);
+const restHeads: Vec3[] = RIG.spine.map(
+  (n) => PLAN.bones.find((b) => b.name === n)?.head ?? ([0, 0, 0] as Vec3),
+);
 const body = (lod: 0 | 1 | 2): Mesh => {
   const m = compile(king_cobra, { lod }).parts.find((p) => p.name === 'body')?.mesh;
   if (!m) throw new Error('no body');
   return m;
 };
+
+/** Spine joint heads plus the tail tip, and each link's dorsal direction, at clip time u (0..1). */
+const spineAt = (c: Clip, u: number): { at: Vec3[]; dorsal: Vec3[] } => {
+  const w = jointWorlds(sk, clipPose(c, u * c.seconds));
+  const at: Vec3[] = [];
+  const dorsal: Vec3[] = [];
+  RIG.spine.forEach((name, i) => {
+    const f = w.get(name);
+    const b = PLAN.bones.find((x) => x.name === name);
+    if (!f || !b) throw new Error(`no joint ${name}`);
+    at.push(f.head);
+    dorsal.push(quatRotate(f.rot, frameAt(((i + 0.5) / RIG.spine.length) * TOTAL).d));
+    if (i === RIG.spine.length - 1)
+      at.push(
+        add3(
+          f.head,
+          quatRotate(f.rot, [b.tail[0] - b.head[0], b.tail[1] - b.head[1], b.tail[2] - b.head[2]]),
+        ),
+      );
+  });
+  return { at, dorsal };
+};
+const add3 = (a: Vec3, b: Vec3): Vec3 => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
+const ARCS = jointArcs({
+  at: [
+    ...restHeads,
+    PLAN.bones.find((b) => b.name === RIG.spine.at(-1))?.tail ?? ([0, 0, 0] as Vec3),
+  ],
+  dorsal: [],
+});
+/** Section radius toward unit `dir` (side, back or belly) of the link with dorsal `d` at arc s. */
+const radiusToward = (s: number, d: Vec3, along: Vec3, dir: Vec3): number => {
+  const w = bellyHalf(s) / 0.7;
+  const side = cross3(d, along);
+  const a = dot3(dir, side);
+  const b = dot3(dir, d);
+  const v = b >= 0 ? 0.92 * w : 0.7 * w;
+  // Along the body the tube reads as round: the lateral radius.
+  const c = dot3(dir, along);
+  return 1 / Math.sqrt((a / w) ** 2 + (b / v) ** 2 + (c / w) ** 2);
+};
+const dot3 = (a: Vec3, b: Vec3): number => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+const cross3 = (a: Vec3, b: Vec3): Vec3 => [
+  a[1] * b[2] - a[2] * b[1],
+  a[2] * b[0] - a[0] * b[2],
+  a[0] * b[1] - a[1] * b[0],
+];
+/** Smallest gap between two joints at least 0.35 m apart along the body (negative: they overlap). */
+function selfClearance(c: Clip, u: number): number {
+  const { at, dorsal } = spineAt(c, u);
+  const n = at.length - 1;
+  let low = Infinity;
+  for (let i = 1; i < n; i++)
+    for (let j = i + 1; j < n; j++) {
+      if ((ARCS[j] ?? 0) - (ARCS[i] ?? 0) < 0.35) continue;
+      const [p, q] = [at[i] as Vec3, at[j] as Vec3];
+      const v: Vec3 = [q[0] - p[0], q[1] - p[1], q[2] - p[2]];
+      const l = Math.hypot(v[0], v[1], v[2]);
+      const u1: Vec3 = [v[0] / l, v[1] / l, v[2] / l];
+      const ti = norm([
+        (at[i + 1] as Vec3)[0] - p[0],
+        (at[i + 1] as Vec3)[1] - p[1],
+        (at[i + 1] as Vec3)[2] - p[2],
+      ]);
+      const tj = norm([
+        (at[j + 1] as Vec3)[0] - q[0],
+        (at[j + 1] as Vec3)[1] - q[1],
+        (at[j + 1] as Vec3)[2] - q[2],
+      ]);
+      const need =
+        radiusToward(ARCS[i] ?? 0, dorsal[i] as Vec3, ti, u1) +
+        radiusToward(ARCS[j] ?? 0, dorsal[j] as Vec3, tj, [-u1[0], -u1[1], -u1[2]]);
+      low = Math.min(low, l - need);
+    }
+  return low;
+}
+/** Angle (degrees) between consecutive links at every inner joint. */
+const bends = (at: readonly Vec3[]): number[] =>
+  at.slice(1, -1).map((p, k) => {
+    const [a, b] = [at[k] as Vec3, at[k + 2] as Vec3];
+    const u: Vec3 = norm([p[0] - a[0], p[1] - a[1], p[2] - a[2]]);
+    const v: Vec3 = norm([b[0] - p[0], b[1] - p[1], b[2] - p[2]]);
+    return (Math.acos(Math.min(1, dot3(u, v))) * 180) / Math.PI;
+  });
 
 describe('ventral scutes', () => {
   it('continue past the 241 body plates onto the tail', () => {
@@ -83,12 +181,44 @@ describe('sourced proportions', () => {
     // Its face tips up toward a camera above the horizon, never down at the ground.
     expect(-d[2]).toBeGreaterThan(0);
   });
-  it('stacks the coil: turns lie over turns', () => {
+  it('rests every turn of the pile on the ground or on the turn under it, none in the air', () => {
+    const n = 500;
+    const S = Array.from(
+      { length: n + 1 },
+      (_, i) => RAISED + 0.1 + (i / n) * (TOTAL - RAISED - 0.1),
+    );
+    const F = S.map((s) => frameAt(s).p);
+    let worst = 0;
+    S.forEach((s, i) => {
+      const p = F[i] as Vec3;
+      let under = 0;
+      S.forEach((s2, j) => {
+        const q = F[j] as Vec3;
+        const reach = halfW(s) + halfW(s2);
+        if (Math.abs(s2 - s) < 0.4 || q[2] >= p[2] || Math.hypot(q[0] - p[0], q[1] - p[1]) > reach)
+          return;
+        under = Math.max(under, q[2] + 0.92 * halfW(s2));
+      });
+      worst = Math.max(worst, p[2] - bellyHalf(s) - under);
+    });
+    expect(worst).toBeLessThan(0.006);
+    // Still a pile, not a puddle: the top turn rides on the tail, and the coil stays compact.
     const pile = restHeads.filter((_, i) => (i / restHeads.length) * TOTAL > RAISED);
-    expect(Math.max(...pile.map((p) => p[2]))).toBeGreaterThan(0.08);
-    expect(Math.min(...pile.map((p) => p[2]))).toBeLessThan(0.03);
-    const reach = Math.max(...pile.map((p) => Math.hypot(p[0], p[1])));
-    expect(reach).toBeLessThan(0.42);
+    expect(Math.max(...pile.map((p, i) => p[2] - seatHeight(RAISED + i * 0.109)))).toBeGreaterThan(
+      0.01,
+    );
+    expect(Math.max(...pile.map((p) => Math.hypot(p[0], p[1])))).toBeLessThan(0.42);
+  });
+  it('keeps every skin point on its own turn, never inside the turn it touches', () => {
+    let foreign = 0;
+    for (let s = 0.05; s < TOTAL - 0.02; s += 0.01)
+      for (let k = 0; k < 16; k++) {
+        const a = (k / 16) * Math.PI * 2;
+        const [p, q] = [surfacePoint(s, a), surfacePoint(s, a, 0.001)];
+        const n: Vec3 = [(q[0] - p[0]) / 0.001, (q[1] - p[1]) / 0.001, (q[2] - p[2]) / 0.001];
+        if (Math.abs(bodyArc(p, n) - s) > 0.15) foreign++;
+      }
+    expect(foreign).toBe(0);
   });
   it('spreads the hood wider than the head and the neck below it', () => {
     expect(2 * halfW(0.205)).toBeCloseTo(HOOD_WIDTH, 3);
@@ -105,6 +235,37 @@ describe('sourced proportions', () => {
   it('faces the belly forward on the raised neck, the back up on the ground', () => {
     expect(frameAt(0.5).d[2]).toBeLessThan(0.3);
     expect(frameAt(2.5).d[2]).toBeGreaterThan(0.95);
+  });
+});
+
+describe('surface', () => {
+  const luma = (c: readonly number[]): number =>
+    0.2126 * (c[0] ?? 0) + 0.7152 * (c[1] ?? 0) + 0.0722 * (c[2] ?? 0);
+  it('LOD2 shows the averaged pattern, not single bands', () => {
+    const sampled = Array.from({ length: 60 }, (_, i) =>
+      luma(dorsalColour(0.9 + i * 0.011, 0.6, 1)),
+    );
+    const averaged = Array.from({ length: 60 }, (_, i) =>
+      luma(dorsalAverage(0.9 + i * 0.011, 0.6)),
+    );
+    const spread = (v: number[]): number => Math.max(...v) - Math.min(...v);
+    expect(spread(sampled)).toBeGreaterThan(0.2);
+    expect(spread(averaged)).toBeLessThan(0.05);
+  });
+  it('gives every scale a rim-to-crown UV ramp (matte rim, glossy crown)', () => {
+    const m = scaleSheet();
+    const us = new Set<number>();
+    for (let i = 0; i < 300; i += 2) us.add(Math.round((m.uvs[i] ?? 0) * 100));
+    expect(us.size).toBeGreaterThan(1);
+  });
+  it('carries its story: a pre-shed patch and a healed scar', () => {
+    let [shed, scar] = [0, 0];
+    for (let s = 0.2; s < 3.4; s += 0.01) {
+      shed = Math.max(shed, shedAt(s, 0.3));
+      scar = Math.max(scar, scarAt(s, 0));
+    }
+    expect(shed).toBeGreaterThan(0.8);
+    expect(scar).toBeGreaterThan(0.8);
   });
 });
 
@@ -219,6 +380,89 @@ describe('clips', () => {
         for (let v = 2; v < m.positions.length; v += 3) low = Math.min(low, m.positions[v] ?? 0);
         expect(low).toBeGreaterThan(-0.003);
       }
+  });
+
+  /** Per spine bone, the lowest posed skin of the vertices it carries most: its belly. */
+  const bellies = (() => {
+    const part = compile(king_cobra, { lod: 1 }).parts.find((p) => p.name === 'body')?.mesh;
+    if (!part?.joints) throw new Error('no skinned body');
+    const rest = PLAN.bones.map((b) => b.head);
+    const spineIndex = new Set(RIG.spine.map((n) => PLAN.bones.findIndex((b) => b.name === n)));
+    return (name: string, u: number): number[] => {
+      const w = jointWorlds(sk, clipPose(clip(name), u * clip(name).seconds));
+      const frames = PLAN.bones.map(
+        (b) => w.get(b.name) ?? { head: b.head, rot: [0, 0, 0, 1] as const },
+      );
+      const m = posedMesh(part, rest, frames);
+      const low = new Map<number, number>();
+      for (let v = 0; v < m.positions.length / 3; v++) {
+        const j = part.joints?.[v * 4] ?? 0;
+        if (!spineIndex.has(j)) continue;
+        low.set(j, Math.min(low.get(j) ?? Infinity, m.positions[v * 3 + 2] ?? 0));
+      }
+      return [...low.values()];
+    };
+  })();
+
+  for (const name of ['idle_ground', 'slither'])
+    it(`${name} lies with its belly on the ground the whole way along, every frame`, () => {
+      for (let i = 0; i <= 12; i++) {
+        const lows = bellies(name, i / 12);
+        expect(Math.min(...lows)).toBeGreaterThan(-0.003);
+        expect(lows.filter((z) => z < 0.01).length / lows.length).toBeGreaterThanOrEqual(0.95);
+      }
+    });
+
+  it('idle_ground rests in loose curves near the coil, not as a straight stick', () => {
+    for (let i = 0; i <= 12; i++) {
+      const at = heads('idle_ground', i / 12);
+      const span = (k: 0 | 1): number =>
+        Math.max(...at.map((p) => p[k])) - Math.min(...at.map((p) => p[k]));
+      expect(Math.min(span(0), span(1))).toBeGreaterThan(0.5);
+      for (const p of at) expect(Math.hypot(p[0], p[1])).toBeLessThan(IDLE_GROUND.footprint);
+    }
+  });
+
+  it('idle_ground breathes, shifts its head and flicks its tongue', () => {
+    const head = (u: number): Vec3 => heads('idle_ground', u)[0] as Vec3;
+    expect(dist(head(0), head(0.7))).toBeGreaterThan(0.01);
+    const t = RIG.tongue[0] ?? '';
+    const out = (u: number): number => {
+      const v = clipPose(clip('idle_ground'), u * 8).translation.get(t) ?? [0, 0, 0];
+      return Math.hypot(v[0], v[1], v[2]);
+    };
+    expect(out(0.69)).toBeLessThan(out(0.2) - 0.02);
+  });
+
+  for (const name of ['slither', 'idle_ground', 'idle', 'hood_up', 'rear'])
+    it(`${name} never passes the body through itself, nor folds a joint past its limit`, () => {
+      for (let i = 0; i <= 12; i++) {
+        expect(selfClearance(clip(name), i / 12)).toBeGreaterThan(-0.006);
+        const b = bends(spineAt(clip(name), i / 12).at);
+        // Design limits: the head on the neck 75°, any other link 60° (the rest pose's tightest is 55°).
+        expect(b[0] ?? 0).toBeLessThan(75);
+        expect(Math.max(...b.slice(1))).toBeLessThan(60);
+      }
+    });
+
+  it('rears from the ground: the body behind the raised length stays down, the pile stays put', () => {
+    const hinge = rearHinge(restHeads.length + 1);
+    const start = heads('rear', 0);
+    const H = ARCS[hinge] ?? RAISED;
+    // It starts laid out: the head on the ground, the neck no higher than the pile under it.
+    expect((start[0] as Vec3)[2]).toBeLessThan(seatHeight(0) + 0.01);
+    for (let i = 0; i < hinge; i++) expect((start[i] as Vec3)[2]).toBeLessThan(COIL_TOP + 0.03);
+    const top = Math.max(...restHeads.map((p) => p[2]));
+    for (let f = 0; f <= 12; f++) {
+      const u = f / 12;
+      const now = heads('rear', u);
+      const raised = H * REAR.rise(u);
+      now.forEach((p, i) => {
+        if (i >= hinge) expect(dist(p, restHeads[i] as Vec3)).toBeLessThan(0.005);
+        else if ((ARCS[i] ?? 0) >= raised) expect(p[2]).toBeLessThan((start[i] as Vec3)[2] + 0.01);
+        expect(p[2]).toBeLessThan(top + 0.02);
+      });
+    }
   });
 
   it('closes every loop', () => {

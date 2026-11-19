@@ -121,12 +121,13 @@ export function familyMember(base: CreatureSpec, m: FamilyMember): CreatureSpec 
   const face = same ? { ...base.face } : { ...p.face };
   const build = same ? { ...base.build } : { ...p.build };
   // Base fields that belong to the base species, not the member: dropped, then re-derived.
-  const { tail: _t, pattern: _p, digits, foreShare, hoof, ...rest } = base;
+  const { tail: _t, pattern: _p, digits, foreShare, hoof, fur, ...rest } = base;
   const spec: CreatureSpec = {
     ...rest,
     ...(same && digits ? { digits } : {}),
     ...(same && foreShare ? { foreShare } : {}),
     ...(same && hoof ? { hoof } : {}),
+    ...(same && fur ? { fur } : {}),
     family: m.family,
     stance: same ? (base.stance ?? p.stance) : p.stance,
     mass: m.mass,

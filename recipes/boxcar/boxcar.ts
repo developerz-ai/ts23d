@@ -11,15 +11,16 @@ import {
   clear,
   cylinder,
   defineFamily,
+  defineMaterial,
   hex,
   type Lod,
   lathe,
   type Mesh,
   materialVariant,
   merge,
-  NATURAL,
   noOverlap,
   place,
+  planar,
   prism,
   type StripId,
   symmetric,
@@ -27,14 +28,9 @@ import {
   tiled,
   type Vec3,
 } from '@developerz.ai/ts23d';
-import {
-  ager,
-  brakeRigging,
-  rustStreaks,
-  type StreakSource,
-  truckBrakes,
-} from '../_lib/finish/aging.ts';
+import { brakeRigging, truckBrakes } from '../_lib/finish/aging.ts';
 import { tessellate } from '../_lib/finish/finish.ts';
+import { BAND, type Run, rustRuns, wearOf } from './wear.ts';
 
 // ---------------------------------------------------------------- dimensions (metres)
 const GAUGE = 1.435;
@@ -57,16 +53,37 @@ const DOOR_W = 1.83;
 const DOOR_Z0 = 1.15;
 const DOOR_Z1 = 3.64;
 const JOURNAL_Y = 0.925; // axle end = journal box inner face
+const BRACE = 0.03; // diagonal brace relief over the boards
+const CARD: Vec3 = [0.72, 0.68, 0.55]; // a sun-yellowed car card
 
 const steel = hex('#a59f97'); // tints iron_cast: dark, sand-cast trucks and gear
 const iron = hex('#a8a29c'); // tints iron_rust: weathered hardware
 const wheelC = hex('#948f8a');
-const walk = NATURAL; // wood_weathered carries its own silver-grey
+// Running-board planks: wood_weathered's silver-grey, pulled down to the grey-brown of boards
+// that have had thirty years of soot and boots.
+const walk: Vec3 = [0.62, 0.56, 0.5];
 
 // Paint chips (sRGB). Mineral red as built (NARA photo), N&W's darker oxide (Rapido N&W 42574).
 const MINERAL_RED = '#84402d';
 const OXIDE_RED = '#74382a';
 const LETTER_WHITE = '#e8e2d2';
+
+/**
+ * The steel ends' paint: the library's painted steel with its chips cut to a fifth and its tile
+ * stretched to 1.5 m. At 0.2 chips on a 0.5 m tile the 2.9 m end wall read as rows of scattered
+ * dark slots; a pressed steel end is one sheet, its wear the grime and rust in vertex colour.
+ */
+const END_STEEL = defineMaterial({
+  id: 'boxcar_end_steel',
+  kind: 'metal',
+  scaleMetres: 1.5,
+  roughness: 0.45,
+  metalness: 1,
+  albedo: '#eeeeee',
+  albedo2: '#5a3b2a',
+  params: { paint: 1, paintRough: 0.5, chips: 0.04, streaks: 0.25, grime: 0.25, relief: 1 },
+  description: 'Boxcar steel end sheet: painted steel, few chips (vertex colour = paint).',
+});
 
 interface Params {
   /** Large road name left of the door. */
@@ -106,6 +123,34 @@ function bx(
 
 const rod = (from: Vec3, to: Vec3, w: number, color: Vec3 = iron, segments = 0): Mesh =>
   beam({ from, to, width: w, color, strip: 'iron_rust', ...(segments ? { segments } : {}) });
+
+/**
+ * LOD2 lettering: a word's glyphs (100+ triangles a word) as one painted bar on the sheathing,
+ * two triangles, 60% of the letter height so it keeps the stencil's weight at distance.
+ */
+function greeked(word: Mesh, s: number, color: Vec3): Mesh {
+  let x0 = Infinity;
+  let x1 = -Infinity;
+  let z0 = Infinity;
+  let z1 = -Infinity;
+  for (let i = 0; i < word.positions.length; i += 3) {
+    const x = word.positions[i] ?? 0;
+    const z = word.positions[i + 2] ?? 0;
+    x0 = Math.min(x0, x);
+    x1 = Math.max(x1, x);
+    z0 = Math.min(z0, z);
+    z1 = Math.max(z1, z);
+  }
+  const h = (z1 - z0) * 0.6;
+  const faces = ['top', 'bottom', 'front', 'back', 'left', 'right'] as const;
+  const keep = s > 0 ? 'left' : 'right';
+  return box({
+    size: [x1 - x0, 0.004, h],
+    at: [(x0 + x1) / 2, s * (SHEATH_Y + 0.002), (z0 + z1 - h) / 2],
+    color,
+    omit: faces.filter((f) => f !== keep),
+  });
+}
 
 // ---------------------------------------------------------------- running gear
 /** One wheel's tread disc (exactly 33 in) at lateral y, outer face toward ±y. */
@@ -463,9 +508,10 @@ const usra = defineFamily({
       },
     ],
   },
-  // LOD0 spends the extra on brake rigging and split boards for the grime gradient; LOD2 keeps the
-  // road name.
-  budget: { triangles: [26000, 9600, 1500] },
+  // Measured 19.3k / 7.7k / 1.11k (boxcar_nw, the longer road name). LOD0 spends on brake rigging,
+  // the outer boards split for the grime gradient and the rust runs; LOD2 keeps the road name (as
+  // a greeked bar), the Howe-truss bracing and the door frame as flat strips.
+  budget: { triangles: [21000, 8400, 1500] },
   // Truck bolster clears the body bolster: they bear only at the centre plate and side bearings.
   gaps: [
     {
@@ -490,10 +536,10 @@ const usra = defineFamily({
     const bevel = ctx.pick([0.012, 0.006, 0]);
     const paint = p.paint;
     const paintDark: Vec3 = [paint[0] * 0.78, paint[1] * 0.78, paint[2] * 0.78];
-    const age = ager(ctx.rng.fork('age'));
-    /** Road grime from the rails up (darkest at the sill), blotchy fade. */
-    const dirt = (m: Mesh): Mesh => age(m, { ground: 2.4, strength: 0.55 });
-    const streaks: StreakSource[] = [];
+    const wear = wearOf(ctx.rng.fork('age'), paint, XB);
+    /** Painted steel and boards: fade, grime from the rails (darkest at the sill), rust low. */
+    const dirt = (m: Mesh): Mesh => wear.painted(m);
+    const runs: Run[] = [];
 
     // Trucks and spinning axles.
     for (const [t, x] of [
@@ -503,7 +549,7 @@ const usra = defineFamily({
       ctx.group(`truck_${t}`, { at: [x, 0, 0] });
       ctx.part(
         `truck_${t}_frame`,
-        dirt(merge([truckFrame(lod, bevel), truckBrakes(lod, WB, WHEEL_R, WHEEL_Y, steel)])),
+        wear.gear(merge([truckFrame(lod, bevel), truckBrakes(lod, WB, WHEEL_R, WHEEL_Y, steel)])),
         // Cast side frames and bolster are I/U sections (≈ 25 mm), not solid blocks.
         { parent: `truck_${t}`, shell: 0.025 },
       );
@@ -552,10 +598,11 @@ const usra = defineFamily({
           uf.push(bx(d * x - 0.08, d * x + 0.08, -1.3, 1.3, 0.8, 1.1, steel)); // crossbearers
     }
     // Rolled channels and plate (≈ 12 mm), not solid bars: weighed as hollow shells.
-    ctx.part('underframe', dirt(merge(uf)), { shell: 0.012 });
+    ctx.part('underframe', wear.gear(merge(uf)), { shell: 0.012 });
 
     // Body: vertical boards between steel frame members; steel ends.
     const bodyM: Mesh[] = [];
+    const innerM: Mesh[] = [];
     const boardsZ0 = 1.18;
     for (const s of [-1, 1]) {
       // Boards face out: u = up, v = along (planks run along U → vertical boards).
@@ -568,11 +615,11 @@ const usra = defineFamily({
           color: paint,
           // Same strip at every LOD (no colour pop); each side reads different boards.
           strip: materialVariant('wood_painted', s < 0 ? 3 : 7),
-          vMetres: lod === 2 ? 2.6 : 0.6,
+          vMetres: lod === 2 ? 2.6 : BAND,
         }),
       );
       // Inner sheathing face (the boards have thickness at the door and ends).
-      bodyM.push(
+      innerM.push(
         bx(
           -XB,
           XB,
@@ -586,16 +633,63 @@ const usra = defineFamily({
       );
     }
     for (const d of [-1, 1])
-      bodyM.push(
-        bx(d * (XB - 0.05), d * XB, -SHEATH_Y, SHEATH_Y, 1.0, EAVE_Z, paint, 'steel_painted'),
-      );
-    // Split the full-height boards so the grime gradient has vertices to live on.
+      bodyM.push(bx(d * (XB - 0.05), d * XB, -SHEATH_Y, SHEATH_Y, 1.0, EAVE_Z, paint, END_STEEL));
+    // Split the full-height boards so the grime gradient has vertices to live on (the outside
+    // only: the inner faces are seen through an open door at most).
     const bodyMesh = lod === 2 ? merge(bodyM) : tessellate(merge(bodyM), lod === 0 ? 0.45 : 0.9);
+    // Renewed boards: single planks back at the paint chip, 5 mm proud of their faded neighbours
+    // (behind the braces), where a car man let a new board in.
+    const planks: Mesh[] = [];
+    const plankRng = ctx.rng.fork('planks');
+    for (const s of [-1, 1])
+      for (let k = 0; k < (lod === 2 ? 0 : 3); k++) {
+        const d = plankRng.next() < 0.5 ? -1 : 1;
+        const x = d * plankRng.range(DOOR_W / 2 + 0.35, XB - 0.35);
+        planks.push(
+          box({
+            size: [0.135, 0.005, EAVE_Z - 0.2 - boardsZ0],
+            at: [x, s * (SHEATH_Y + 0.0025), boardsZ0],
+            color: paint,
+            strip: 'wood_painted',
+            omit: ['top', 'bottom'],
+          }),
+        );
+      }
     // Boards and their inner face are sheathing timber (≈ 600 kg/m³), not untyped paint.
-    ctx.part('body', dirt(bodyMesh), { paint: 'body', density: 600 });
+    ctx.part(
+      'body',
+      merge([wear.painted(bodyMesh, { bands: true }), dirt(merge(innerM)), ...planks]),
+      { paint: 'body', density: 600 },
+    );
 
     // Outside steel framing: posts, diagonal braces leaning toward the door, top plate, end ribs.
     const fr: Mesh[] = [];
+    const far: Vec3 = [paint[0] * 0.6, paint[1] * 0.6, paint[2] * 0.6];
+    /** A flat strip on a side's boards from (x, z) to (x, z), `w` wide, tilted so one long edge
+     *  sits 2 mm in the boards and the other 10 mm proud: seated, never a hovering decal. */
+    const flat = (
+      a: [number, number],
+      b: [number, number],
+      w: number,
+      s: number,
+      color: Vec3,
+    ): Mesh => {
+      const l = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1;
+      const px = (-(b[1] - a[1]) / l) * (w / 2);
+      const pz = ((b[0] - a[0]) / l) * (w / 2);
+      const lo = s * (SHEATH_Y - 0.002);
+      const hi = s * (SHEATH_Y + 0.01);
+      const pts: Vec3[] = [
+        [a[0] - px, lo, a[1] - pz],
+        [b[0] - px, lo, b[1] - pz],
+        [b[0] + px, hi, b[1] + pz],
+        [a[0] + px, hi, a[1] + pz],
+      ];
+      // planar wants its points counter-clockwise seen from the outside (±Y).
+      const e1 = [b[0] - a[0], b[1] - a[1]];
+      const out = (e1[1] ?? 0) * px - (e1[0] ?? 0) * pz; // (e1 × perp)·ŷ up to sign
+      return planar({ points: out * s > 0 ? pts : pts.reverse(), color, strip: 'steel_painted' });
+    };
     const panel = (XB - DOOR_W / 2 - 0.08) / 4;
     const posts = [0, 1, 2, 3, 4].map((i) => XB - i * panel);
     const postW = 0.09;
@@ -603,9 +697,12 @@ const usra = defineFamily({
       const y0 = s * SHEATH_Y;
       const y1 = s * FRAME_Y;
       for (const d of [-1, 1]) {
-        for (const px of lod === 2 ? [] : posts) {
+        for (const px of posts) {
           const x = d * px;
-          fr.push(bx(x - postW / 2, x + postW / 2, y0, y1, 1.0, EAVE_Z, paint, 'steel_painted'));
+          if (lod < 2)
+            fr.push(bx(x - postW / 2, x + postW / 2, y0, y1, 1.0, EAVE_Z, paint, 'steel_painted'));
+          // Far: the post as a shadow-toned strip on the boards, so the frame still reads.
+          else fr.push(flat([x, boardsZ0], [x, EAVE_Z - 0.16], postW, s, far));
         }
         // Door posts.
         fr.push(
@@ -620,23 +717,27 @@ const usra = defineFamily({
             'steel_painted',
           ),
         );
-        if (lod < 2)
-          for (let i = 0; i < 4; i++) {
-            const xa = d * ((posts[i] ?? 0) - postW / 2);
-            const xb = d * ((posts[i + 1] ?? DOOR_W / 2) + postW / 2);
-            const ym = s * (SHEATH_Y + 0.035);
+        for (let i = 0; i < 4; i++) {
+          const xa = d * ((posts[i] ?? 0) - postW / 2);
+          const xb = d * ((posts[i + 1] ?? DOOR_W / 2) + postW / 2);
+          // Pressed hat-section braces, BRACE proud of the boards: low enough that the road
+          // name stencilled across them still reads from a three-quarter view.
+          const ym = s * (SHEATH_Y + 0.004 + BRACE / 2);
+          if (lod < 2)
             fr.push(
               beam({
                 from: [xa, ym, 1.22],
                 to: [xb, ym, EAVE_Z - 0.12],
                 width: 0.075,
-                height: 0.06,
+                height: BRACE,
                 color: paint,
                 strip: 'steel_painted',
                 up: [0, s, 0],
               }),
             );
-          }
+          // Far: the Howe-truss diagonals as shadow-toned strips (the side's biggest graphic).
+          else fr.push(flat([xa, 1.22], [xb, EAVE_Z - 0.12], 0.09, s, far));
+        }
       }
       fr.push(
         bx(-XB, XB, y0, s * (FRAME_Y + 0.01), EAVE_Z - 0.16, EAVE_Z, paint, 'steel_painted', bevel),
@@ -656,8 +757,16 @@ const usra = defineFamily({
             for (const z of [1.08, 1.26, EAVE_Z - 0.2, EAVE_Z - 0.08])
               pts.push([d * px, s * (FRAME_Y + 0.003), z]);
         fr.push(merge(pts.map((at) => place(rivet, { at }))));
+        const rivetRng = ctx.rng.fork(`rivet_runs_${s}`);
         for (const at of pts)
-          if (at[2] > 3) streaks.push({ at: [at[0], s * FRAME_Y, at[2] - 0.02], s });
+          if (at[2] > 3 && rivetRng.next() < 0.5)
+            runs.push({
+              at: [at[0], s * FRAME_Y, at[2] - 0.02],
+              s,
+              floor: 1.25,
+              reach: 0.9,
+              width: 0.07,
+            });
       }
     }
     // Ends: corner angles, pressed ribs (LOD0/1).
@@ -729,7 +838,7 @@ const usra = defineFamily({
     }
     // Locomotive smoke settles on the roof: darker, blotchy, heaviest toward the eaves.
     // Pressed-steel roof sheets (≈ 3 mm) over the carlines: a hollow shell, not a solid gable.
-    ctx.part('roof', age(merge(roofM), { ground: 0.1, strength: 0, soot: 0.35 }), {
+    ctx.part('roof', wear.roof(merge(roofM)), {
       paint: 'body',
       shell: 0.004,
     });
@@ -819,6 +928,23 @@ const usra = defineFamily({
             bx(x - 0.06, x + 0.06, ya, yb, DOOR_Z0 - 0.028, DOOR_Z0 + 0.1, paint, 'steel_painted'),
           );
         }
+      } else {
+        // Far: the door's steel frame as four shadow-toned strips, so the door still reads.
+        const dark: Vec3 = [paint[0] * 0.6, paint[1] * 0.6, paint[2] * 0.6];
+        const strip = (x0: number, x1: number, z0: number, z1: number): Mesh =>
+          box({
+            size: [x1 - x0, 0.012, z1 - z0],
+            at: [(x0 + x1) / 2, y1 + s * 0.004, z0],
+            color: dark,
+            strip: 'steel_painted',
+            omit: ['front', 'back', 'top', 'bottom'],
+          });
+        dm.push(
+          strip(-DOOR_W / 2, DOOR_W / 2, DOOR_Z0, DOOR_Z0 + 0.12),
+          strip(-DOOR_W / 2, DOOR_W / 2, DOOR_Z1 - 0.12, DOOR_Z1),
+          strip(-DOOR_W / 2, -DOOR_W / 2 + 0.1, DOOR_Z0 + 0.12, DOOR_Z1 - 0.12),
+          strip(DOOR_W / 2 - 0.1, DOOR_W / 2, DOOR_Z0 + 0.12, DOOR_Z1 - 0.12),
+        );
       }
       ctx.part(`door_${side}`, dirt(merge(dm)), {
         motion: { kind: 'slide', offset: [-(DOOR_W + 0.05), 0, 0], hz: 0.25, oneWay: true },
@@ -829,7 +955,40 @@ const usra = defineFamily({
         ctx.part(
           `door_${side}_handle`,
           // Bolted through the boards: bedded 4 mm into the door, not hovering at strap depth.
-          bx(-0.75, -0.65, y1 - s * 0.004, y1 + s * 0.06, 2.0, 2.2, iron),
+          merge([
+            bx(-0.75, -0.65, y1 - s * 0.004, y1 + s * 0.06, 2.0, 2.2, iron),
+            // Hasp on the closing edge, its staple and the seal pin hanging through it.
+            bx(
+              DOOR_W / 2 - 0.2,
+              DOOR_W / 2 - 0.02,
+              y1 - s * 0.004,
+              y1 + s * 0.022,
+              2.06,
+              2.11,
+              iron,
+            ),
+            bx(
+              DOOR_W / 2 - 0.07,
+              DOOR_W / 2 - 0.04,
+              y1 + s * 0.02,
+              y1 + s * 0.05,
+              2.04,
+              2.13,
+              iron,
+            ),
+            bx(
+              DOOR_W / 2 - 0.063,
+              DOOR_W / 2 - 0.047,
+              y1 + s * 0.028,
+              y1 + s * 0.044,
+              1.96,
+              2.17,
+              steel,
+            ),
+            // Placard board with the last car card still tacked to it, bedded 4 mm in the boards.
+            bx(0.2, 0.56, y1 - s * 0.004, y1 + s * 0.02, 2.3, 2.62, walk, 'wood_weathered'),
+            bx(0.26, 0.5, y1 + s * 0.019, y1 + s * 0.023, 2.38, 2.56, CARD, 'plain'),
+          ]),
           { parent: `door_${side}` },
         );
       // Track below the door, guide above, long enough for its one-way travel toward −X.
@@ -857,12 +1016,52 @@ const usra = defineFamily({
       );
     }
     if (lod < 2) ctx.part('door_track', merge(doorTrack), { shell: 0.01 });
-    // Rust bleeding from the door track ends and the rivets onto the sides (LOD0 decals).
-    if (lod === 0) {
-      for (const s of [-1, 1])
+    // Rust bleeding down the sides: from the door posts' track ends, under the top door guide
+    // (long runs, the car's dirtiest two metres), under the side plate, off the bottom track onto
+    // the sill, and from the rivets. LOD1 keeps the long runs; LOD2 keeps the grime in the paint.
+    if (lod < 2) {
+      const pick = ctx.rng.fork('runs');
+      const long: Run[] = [];
+      for (const s of [-1, 1]) {
         for (const x of [-(DOOR_W / 2 + 0.055), DOOR_W / 2 + 0.055])
-          streaks.push({ at: [x, s * FRAME_Y, DOOR_Z1 - 0.01], s });
-      ctx.part('rust_streaks', rustStreaks(ctx.rng.fork('streaks'), streaks, hex('#c9a48c')));
+          long.push({
+            at: [x, s * FRAME_Y, DOOR_Z1 - 0.01],
+            s,
+            floor: 1.25,
+            reach: 1.8,
+            width: 0.06,
+          });
+        // Under the guide where the open door stands: on the boards, between the posts.
+        for (let x = -(DOOR_W * 1.5); x < -(DOOR_W / 2 + 0.2); x += 0.3) {
+          const at = x + pick.range(-0.06, 0.06);
+          if (posts.some((q) => Math.abs(Math.abs(at) - q) < postW / 2 + 0.06)) continue;
+          long.push({ at: [at, s * SHEATH_Y, DOOR_Z1 + 0.03], s, floor: 1.3, reach: 1.7 });
+        }
+        if (lod > 0) continue;
+        // Under the side plate, away from the door.
+        for (let x = -XB + 0.4; x < XB - 0.3; x += 0.75) {
+          const at = x + pick.range(-0.2, 0.2);
+          if (Math.abs(at) < DOOR_W * 1.6 && at < DOOR_W / 2 + 0.2) continue;
+          if (posts.some((q) => Math.abs(Math.abs(at) - q) < postW / 2 + 0.06)) continue;
+          runs.push({ at: [at, s * SHEATH_Y, EAVE_Z - 0.16], s, floor: 1.4, reach: 0.9 });
+        }
+        // Off the bottom door track onto the side sill.
+        for (let x = -(DOOR_W * 1.5); x < DOOR_W / 2; x += 0.45)
+          runs.push({
+            at: [x + pick.range(-0.1, 0.1), s * (FRAME_Y - 0.01), 1.08],
+            s,
+            floor: 0.96,
+            reach: 0.3,
+          });
+      }
+      const tint = hex('#c9a48c');
+      ctx.part(
+        'rust_streaks',
+        merge([
+          rustRuns(ctx.rng.fork('streaks_long'), long, tint, true),
+          rustRuns(ctx.rng.fork('streaks'), runs, tint, false),
+        ]),
+      );
     }
 
     // Knuckle couplers on the centre sill, MCB height.
@@ -960,7 +1159,7 @@ const usra = defineFamily({
       rod(
         [-(XB + 0.13), -0.85, 0.85],
         [-(XB + 0.13), -0.85, WALK_TOP - 0.06],
-        0.035,
+        0.05,
         iron,
         lod === 2 ? 0 : 6,
       ),
@@ -1030,11 +1229,11 @@ const usra = defineFamily({
         ab.push(bx(x - 0.03, x + 0.03, 0.2, 0.33, 0.82, 1.1, iron));
       ab.push(brakeRigging(lod, TC, WB, WHEEL_R, iron));
       // Reservoir and cylinder are hollow vessels (≈ 6 mm wall).
-      ctx.part('air_brake', dirt(merge(ab)), { shell: 0.006 });
+      ctx.part('air_brake', wear.gear(merge(ab)), { shell: 0.006 });
     }
 
     // Livery: road name left of the door, marks + number under it (both sides, read left→right).
-    // LOD2 keeps the big road name so the white block does not vanish at distance.
+    // LOD2 keeps the road name as one greeked bar in a dull stencil tone (it does not vanish).
     {
       const lm: Mesh[] = [];
       /** |y| of the painted surface at x on a side: post faces or boards. A stencil pixel that
@@ -1054,28 +1253,34 @@ const usra = defineFamily({
             const xb = (posts[i + 1] ?? DOOR_W / 2) + postW / 2;
             const xc = xa + (xb - xa) * t;
             const hw = (0.0375 * Math.hypot(xb - xa, braceZ1 - braceZ0)) / (braceZ1 - braceZ0);
-            if (Math.abs(ax - xc) <= hw - graze) return SHEATH_Y + 0.065;
+            if (Math.abs(ax - xc) <= hw - graze) return SHEATH_Y + 0.004 + BRACE;
           }
         return SHEATH_Y;
       };
+      // Far: the road name as a dull stencil block, the letter colour 70 % into the body's (a
+      // full-white bar was the brightest thing on the far car and read as a smear).
+      const faint: Vec3 = [
+        p.letter[0] + (paint[0] - p.letter[0]) * 0.7,
+        p.letter[1] + (paint[1] - p.letter[1]) * 0.7,
+        p.letter[2] + (paint[2] - p.letter[2]) * 0.7,
+      ];
       for (const s of [-1, 1]) {
         const dirX = s < 0 ? 1 : -1; // read left → right for a viewer on that side
         const xl = -dirX * (XB + DOOR_W / 2) * 0.5; // centre of the left half
         const put = (str: string, cx: number, base: number, h: number, maxWidth?: number): void => {
-          lm.push(
-            text(str, {
-              origin: [cx, s * SHEATH_Y, base],
-              along: [dirX, 0, 0],
-              up: [0, 0, 1],
-              height: h,
-              color: p.letter,
-              align: 'centre',
-              font: 'block',
-              ...(maxWidth ? { maxWidth } : {}),
-              // Painted over the proud posts and braces as on the real car.
-              surface: (u, v) => face(cx + dirX * u, base + v, (h / 7) * 0.15) - SHEATH_Y,
-            }),
-          );
+          const m = text(str, {
+            origin: [cx, s * SHEATH_Y, base],
+            along: [dirX, 0, 0],
+            up: [0, 0, 1],
+            height: h,
+            color: p.letter,
+            align: 'centre',
+            font: 'block',
+            ...(maxWidth ? { maxWidth } : {}),
+            // Painted over the proud posts and braces as on the real car.
+            surface: (u, v) => face(cx + dirX * u, base + v, (h / 7) * 0.15) - SHEATH_Y,
+          });
+          lm.push(lod === 2 ? greeked(m, s, faint) : m);
         };
         put(p.road, xl, 3.0, 0.42, XB - DOOR_W / 2 - 0.5);
         if (lod === 2) continue;

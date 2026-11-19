@@ -16,8 +16,10 @@ import {
   sculptField,
   type Vec3,
 } from '@developerz.ai/ts23d';
+import { loft } from '../_lib/body-plan-kit.ts';
 import { sculptPart } from '../_lib/creature/sculpt-part.ts';
 import { HYDRA_SPEC, headFrame, JAW_HINGE, JAW_REST, NECKS } from './anatomy.ts';
+import { pinKeratinAt } from './material.ts';
 import {
   bossEdit,
   hornMeshes,
@@ -242,7 +244,8 @@ function teeth(
   const s = style(k);
   const open = JAW_REST[k] ?? 0.1;
   const unit = toothUnit(lod === 0 ? 6 : 4);
-  const step = lod === 0 ? 0.031 : 0.062;
+  // LOD1: a tooth every 8 cm, enough to read a toothed mouth at mid range.
+  const step = lod === 0 ? 0.031 : 0.08;
   const [up, low]: [Mesh[], Mesh[]] = [[], []];
   // Teeth shorten toward the hinge, where the open mouth leaves them less room.
   const room = (x: number): number => (0.3 * (x - JAW_HINGE[0]) * Math.sin(open) + 0.012) / 3;
@@ -262,7 +265,31 @@ function teeth(
         );
     }
   }
-  return { upper: merge(up), lower: merge(low) };
+  return { upper: pinKeratinAt(merge(up), 0.9), lower: pinKeratinAt(merge(low), 0.9) };
+}
+
+/** The forked tongue lying in the floor of the lower jaw, its root sunk in the mouth floor. */
+function tongue(s: HeadStyle, lod: number): Mesh {
+  const end = 0.1 + s.snout * 0.9 - 0.07;
+  const fork = 0.78;
+  const prong = (side: number): Mesh =>
+    loft({
+      us: Array.from({ length: lod === 0 ? 14 : 6 }, (_, i) => i / ((lod === 0 ? 14 : 6) - 1)),
+      sides: lod === 0 ? 10 : 6,
+      point: (u, a) => {
+        const x = 0.13 + (end - 0.13) * u;
+        const split = Math.max(0, (u - fork) / (1 - fork));
+        const w = (0.026 - 0.012 * u) * (1 - 0.55 * split);
+        const h = 0.011 * (1 - 0.5 * u);
+        return [
+          x,
+          side * split * 0.016 + Math.cos(a) * w * (1 - 0.5 * split),
+          -0.083 - 0.014 * u + Math.sin(a) * h,
+        ];
+      },
+      color: (_p, _n, u) => lerp(C.tongue, C.mouth, 0.25 * (1 - u)),
+    });
+  return merge([prong(1), prong(-1)]);
 }
 
 /** The slit-pupil eye, poles on its look axis (+Z). */
@@ -352,8 +379,10 @@ function buildHead(k: number, lod: number): HeadMeshes {
       Math.max(0, fine - 0.58) * 0.9,
     );
   };
-  const part = (edits: readonly SculptEdit[]): Mesh =>
-    sculptPart({ edits, res, color: s.tone, mirror: true, paint: mottle }).mesh;
+  const part = (edits: readonly SculptEdit[], cell = res): Mesh =>
+    sculptPart({ edits, res: cell, color: s.tone, mirror: true, paint: mottle }).mesh;
+  // The jaw has no ornament to hold: a coarser cell up close keeps its triangles for the skulls.
+  const jawRes = lod === 0 ? 0.0135 : res;
   const plain = skullEdits(s, neckComesFrom(k), lip);
   const bare = foldedField(plain, s.tone);
   const horns: SeatedHorn[] = hornSpecs(s.ornament, s.snout, lod).map((h) => seat(h, bare));
@@ -379,15 +408,25 @@ function buildHead(k: number, lod: number): HeadMeshes {
     foldedField(skullForm, s.tone),
     foldedField(jawForm, s.tone),
   );
-  const eye = eyeUnit(lod === 0 ? 24 : 10, lod === 0 ? 16 : 6);
+  const eye = eyeUnit(lod === 0 ? 18 : 8, lod === 0 ? 12 : lod === 1 ? 6 : 4);
   const eyes = [1, -1].map((side) =>
     stamp(eye, [0.225, side * 0.092 * s.width, 0.07], [0.3, side * 0.9, 0.16], 0.031),
   );
   return {
     skull: put(part(skullForm)),
-    jaw: put(rotateAboutY(part(jawForm), JAW_HINGE, open)),
+    jaw: put(
+      rotateAboutY(
+        lod < 2 ? merge([part(jawForm, jawRes), tongue(s, lod)]) : part(jawForm, jawRes),
+        JAW_HINGE,
+        open,
+      ),
+    ),
     eyes: put(merge(eyes)),
-    horns: set.length > 0 ? put(merge(set.flatMap((h) => hornMeshes(h, lod)))) : null,
+    // Head 0 lost the tip of its camera-side swept horn in a fight.
+    horns:
+      set.length > 0
+        ? put(merge(set.flatMap((h, i) => hornMeshes(h, lod, k === 0 && i === 0))))
+        : null,
     upperTeeth: upper ? put(upper) : null,
     lowerTeeth: lower ? put(rotateAboutY(lower, JAW_HINGE, open)) : null,
   };

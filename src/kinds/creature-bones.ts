@@ -68,8 +68,9 @@ export interface Bones {
   readonly height: number;
   /** Upper-limb flesh radius (allometric × build.limbs). */
   readonly limbR: number;
-  /** Trunk masses (centred on y = 0): ellipsoids, or superellipsoids of exponent `power`. */
-  readonly trunk: readonly { at: Vec3; r: Vec3; rotate?: Vec3; power?: number }[];
+  /** Trunk masses (centred on y = 0): ellipsoids, or superellipsoids of exponent `power`.
+   *  `blend` overrides the trunk's own (a hump flows into the back; ribs and pelvis stay crisp). */
+  readonly trunk: readonly { at: Vec3; r: Vec3; rotate?: Vec3; power?: number; blend?: number }[];
   /** Round body chain (serpent) or none. */
   readonly chain: readonly SkinNode[];
   /** Dorsal top line, rear → front: colour zones read the back from it. */

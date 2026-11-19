@@ -169,6 +169,43 @@ export function footEdits(b: Bones, l: Limb, lod: number, hoof: Vec3): SculptEdi
   return out;
 }
 
+/** QA `connections` wants a grown piece's root ring buried this deep all round, metres. */
+const BURIED = 0.003;
+
+/**
+ * Where a claw roots in its toe or dewclaw knob (an ellipsoid at `k` with semi-axes `semi`): the
+ * root ring (no wider than the knuckle leaves room for) is sunk from the tip `t` toward the
+ * centre until all of it lies `BURIED` inside the knuckle's own ellipsoid, so it scales with the
+ * toe: a fox's 2 cm paw buries its claws as surely as a bear's, at any chest width, limb
+ * thickness or sculpt cell. A knuckle thinner than 4 mm (semi-axis) buries three quarters of it
+ * instead, so the root keeps a positive radius (a negative one turned the claw inside out, D345).
+ */
+export function clawRoot(
+  semi: Vec3,
+  k: Vec3,
+  t: Vec3,
+  dir: Vec3,
+  wide: number,
+): { base: Vec3; radius: number; sunk: number } {
+  const thin = Math.min(semi[1], semi[2]);
+  const bury = Math.min(BURIED, thin * 0.75);
+  const radius = Math.min(wide, thin - bury);
+  const u = v3.norm(v3.cross(dir, [0, 0, 1]));
+  const w = v3.cross(dir, u);
+  const inside = (c: Vec3): boolean => {
+    for (let j = 0; j < 8; j++) {
+      const a = (j / 8) * Math.PI * 2;
+      const p = v3.add(c, v3.add(v3.mul(u, radius * Math.cos(a)), v3.mul(w, radius * Math.sin(a))));
+      const q = [0, 1, 2].map((i) => ((p[i] ?? 0) - (k[i] ?? 0)) / ((semi[i] ?? 1) - bury));
+      if (Math.hypot(...q) > 1) return false;
+    }
+    return true;
+  };
+  let base = t;
+  for (let s = 0.05; s <= 1 && !inside(base); s += 0.05) base = v3.lerp(t, k, s);
+  return { base, radius, sunk: v3.len(v3.sub(base, t)) };
+}
+
 /** Claws (paws, dewclaws included) or talons (bird), both sides; none for hooves or LOD2. */
 export function clawMesh(
   b: Bones,
@@ -180,43 +217,45 @@ export function clawMesh(
   const shape = { segments: lod === 0 ? 5 : 3, sides: lod === 0 ? 7 : 5, colors };
   for (const l of b.legs) {
     if (l.hoof) continue;
-    const [, , sz] = l.footSize;
+    const [sx, sy, sz] = l.footSize;
     const bird = b.skeleton === 'bird';
-    // Small paws (a fox's ≈ 2.3 cm toe height): the claw root sits ~0.1 × sz in the toe, too
-    // shallow to stay buried all round, so sink it ≈ 4.6 mm deeper (0 from wolf-sized paws, sz ≥ 4.3 cm, up).
-    const sink = Math.max(0, 0.0099 - 0.225 * sz);
-    for (const t of toes(b, l)) {
+    // The toe knuckles' semi-axes, as footEdits sculpts them.
+    const semi: Vec3 = [sx * 0.32, sy * 0.27 * (4 / Math.max(4, l.toes)), sz * 0.45];
+    const ks = knuckles(l);
+    toes(b, l).forEach((t, i) => {
       const out = v3.norm([t[0] - l.foot[0], t[1] - l.foot[1], 0]);
       const dir: Vec3 = v3.norm([out[0], out[1], bird ? -0.35 : -0.9]);
+      const root = bird ? null : clawRoot(semi, ks[i] ?? t, t, dir, sz * 0.17);
       parts.push(
         keratin({
-          base: bird ? v3.add(t, v3.mul(out, -sz * 0.1)) : v3.add(t, v3.mul(dir, -sink)),
+          base: root ? root.base : v3.add(t, v3.mul(out, -sz * 0.1)),
           dir,
           down: [0, 0, -1],
-          length: sz * (bird ? 1.9 : 0.45),
-          radius: sz * (bird ? 0.26 : 0.17),
+          // What the root sinks into the toe the claw gains in length: the same claw shows.
+          length: sz * (bird ? 1.9 : 0.45) + (root?.sunk ?? 0),
+          radius: root ? root.radius : sz * 0.26,
           curl: bird ? 80 : 35,
           ...shape,
         }),
       );
-    }
+    });
     // Dewclaw: a short claw from the knob, down and a little forward, curling back to the leg.
-    for (const d of dewclaws(l))
+    for (const d of dewclaws(l)) {
+      const dir = v3.norm([0.4, -0.25, -1]);
+      const tip = v3.add(d.at, [d.r * 0.05, -d.r * 0.12, -d.r * 0.22]);
+      const root = clawRoot([d.r * 0.42, d.r * 0.42, d.r * 0.6], d.at, tip, dir, sz * 0.16);
       parts.push(
         keratin({
-          base: v3.add(v3.add(d.at, [d.r * 0.05, -d.r * 0.12, -d.r * 0.22]), [
-            -0.4 * sink,
-            0.25 * sink,
-            sink,
-          ]),
-          dir: v3.norm([0.4, -0.25, -1]),
+          base: root.base,
+          dir,
           down: [-1, 0.4, 0],
-          length: sz * 0.6,
-          radius: sz * 0.16,
+          length: sz * 0.6 + root.sunk,
+          radius: root.radius,
           curl: 40,
           ...shape,
         }),
       );
+    }
   }
   if (parts.length === 0) return null;
   const left = merge(parts);

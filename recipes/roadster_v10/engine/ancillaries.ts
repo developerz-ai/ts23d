@@ -11,7 +11,7 @@ import { C } from '../lib/colors.ts';
 import { bx, rod, shift, tube } from '../lib/geo.ts';
 
 function booster(lod: Lod): Mesh {
-  const segs = lod === 0 ? 32 : 12;
+  const segs = lod === 0 ? 20 : 10;
   const c: Vec3 = [X_FIREWALL + 0.02, 0.42, 0.6];
   const parts: Mesh[] = [
     shift(

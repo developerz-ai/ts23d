@@ -1,62 +1,60 @@
 {
   "asset": "finish_demo",
   "reviewer": "agent",
-  "overall": 6.1,
+  "overall": 7.1,
   "scores": {
     "silhouette": {
-      "score": 7,
-      "reason": "EUR pallet with its blocks, a framed crate with a diagonal brace and a bulging cask with hoops: each prop names itself. The cask bulge is visibly faceted (12–16 sides) in sheet.png.",
+      "score": 8,
+      "reason": "Round barrel with bulge and hoops, braced crate and a block pallet read clearly.",
       "fixes": [
-        "raise the cask segment count at LOD0 (24+) so the bulge reads round"
+        "a chime lip at the barrel heads"
       ]
     },
     "proportions": {
       "score": 8,
-      "reason": "1.2 × 0.8 m EUR pallet at 144 mm high; crate and cask sizes plausible against the 0.1 m grid.",
+      "reason": "Barrel ~0.9 m like a 225 l barrique, crate and pallet at EUR scale.",
       "fixes": [
-        "check the cask against a 225 l barrique (≈ 0.95 m tall, 0.7 m belly)"
+        "check the pallet board spacing against an EUR pallet photo"
       ]
     },
     "materials": {
-      "score": 5,
-      "reason": "hero.png shows wood and rusted hoops, but the crate and cask textures are low-resolution and blurry (blocky pixels on the crate panels); sheet.png renders the crate and cask as untextured white, so the sheet does not show what the hero shows.",
+      "score": 7,
+      "reason": "Wood reads as wood (grain, stave tones), iron hoops are dark with rust; the barrel wood is uniform orange-brown and slightly plastic in sheen.",
       "fixes": [
-        "give the crate and cask a wood colour in vertex paint (not white) so they read in every render path",
-        "higher-resolution finish albedo (or the trim sheet's wood strips) for the crate and cask"
+        "rougher, less saturated barrel wood with per-stave value variation"
       ]
     },
     "detail": {
-      "score": 5,
-      "reason": "3.2k LOD0 triangles: pallet boards and blocks, crate frame and brace, cask hoops. No nails, no stave seams as geometry, no bung hole, no crate lid boards.",
+      "score": 7,
+      "reason": "Stave seams, bung, hoops, crate slats and corner nails, pallet blocks hold in the hero.",
       "fixes": [
-        "stave seams and a bung on the cask",
-        "nail heads on the pallet deck boards and crate frame"
+        "nail heads on the pallet deck boards; hoop rivets"
       ]
     },
     "wear": {
       "score": 6,
-      "reason": "The finish layer adds rust on the hoops and stains; the pallet deck is clean and the code-built props carry no wear of their own.",
+      "reason": "Rusty hoops and some grime; the pallet and crate are fairly clean.",
       "fixes": [
-        "grime and scuffs on the pallet deck and block faces"
+        "scuffs and dirt on the pallet deck and block faces; dented crate corner"
       ]
     },
     "lod": {
-      "score": 5,
-      "reason": "LOD2 (284) turns the pallet into a solid slab with no gaps and the crate into a plain box: the outline changes at the switch.",
+      "score": 6,
+      "reason": "FAR LOD2 keeps the pallet blocks but the crate turns into a light flat tan box without its dark frame, and the barrel becomes an octagon: a visible value pop.",
       "fixes": [
-        "keep the pallet's three bearer blocks and the gaps under the deck at LOD2"
+        "keep the crate frame colour at LOD2 (dark edge quads) and 12 sides on the barrel"
       ]
     },
     "technical": {
-      "score": 7,
-      "reason": "QA PASS; 3 172 / 1 132 / 284, one draw. Tiny and cheap, but the sheet and hero disagree on the materials.",
+      "score": 8,
+      "reason": "QA clean; 4.3k / 1.4k / 0.3k triangles, 1 draw.",
       "fixes": [
-        "make the contact sheet render the finished textures (or the vertex colour carry them) so both views agree"
+        "spend a little more LOD0 on the barrel bulge rings"
       ]
     }
   },
   "renders": {
-    "hero.png": "ea71927d5d4f1cd40a8ee53ea1d41f56cfbd3c37a6bfa01119710dcd57490cb7",
-    "sheet.png": "480db2b0bf05ee55f850aadfc3c58d811527a9fd57e8006dba3fdd12a5e4e17c"
+    "hero.png": "b8fff8b5169b5754ed09d63c405e65d0cc92c5c336b6407da12802e6679e4b48",
+    "sheet.png": "5b1eec9ef8be677e19e5d3949cf5aba63b6d59d82f5b59e0ba7b4547fdd8e51f"
   }
 }

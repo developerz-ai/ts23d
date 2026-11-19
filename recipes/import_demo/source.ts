@@ -22,7 +22,7 @@ export const SCAN: ImportSource = {
 };
 
 /** Triangle budget of the imported head per LOD. */
-export const HEAD_TRIS = [12000, 4000, 1200] as const;
+export const HEAD_TRIS = [12000, 4000, 680] as const;
 
 let imported: ImportedMesh | null = null;
 const lods: Mesh[] = [];

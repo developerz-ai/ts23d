@@ -1,63 +1,61 @@
 {
   "asset": "common_octopus",
   "reviewer": "agent",
-  "overall": 6.7,
+  "overall": 7,
   "scores": {
     "silhouette": {
       "score": 8,
-      "reason": "Eight individually posed arms with curled tips, bulbous warty mantle and the funnel: unmistakably an octopus from every view.",
+      "reason": "Mantle, eyes, eight curling arms with sucker rows: unmistakable; arm poses vary more now.",
       "fixes": [
-        "vary the arm poses more (two arms curled under, one extended) so the TOP view is less like a symmetric star"
+        "two arms curled under the body so TOP is less of a symmetric star"
       ]
     },
     "proportions": {
       "score": 7,
-      "reason": "1.3 × 1.4 × 0.5 m for a large adult female; arms are roughly 3× mantle length as in photos, but they stay uniformly thick for most of their length and taper late.",
+      "reason": "Arms taper and the web is visible, but a cylindrical neck collar with a seam separates the head from the arm crown in hero.png, which a real octopus does not show.",
       "fixes": [
-        "taper the arms continuously from the web to the tip (anatomy.ts)",
+        "blend the head into the arm crown (remove the collar ring) in anatomy.ts",
         "enlarge the inter-arm web toward the base"
       ]
     },
     "materials": {
-      "score": 6,
-      "reason": "Mottled red-brown skin and pale suckers read, but the whole surface is matte: no wet sheen, no translucency at the thin arm tips.",
+      "score": 7,
+      "reason": "Wet sheen on the skin and pale sucker rims read well; the papillae are uniform pale dots that read like studs.",
       "fixes": [
-        "lower roughness for a wet skin sheen (skin.ts)",
-        "pale, slightly translucent tint at the arm tips and sucker rims"
+        "papillae in skin colour with only a slight value lift, varied size"
       ]
     },
     "detail": {
       "score": 7,
-      "reason": "Double sucker rows along every arm, mantle warts, slit-pupil eye; the arms themselves are smooth tubes with no skin folds or papillae.",
+      "reason": "Suckers sized down toward the tips, papillae, eye with a slit pupil; the arm tops are smooth with no skin folds.",
       "fixes": [
-        "papillae and skin folds along the arm tops (detail.ts)",
-        "sucker size decreasing toward the tips"
+        "skin folds and wrinkles along the arm tops and around the eye"
       ]
     },
     "wear": {
       "score": 5,
-      "reason": "Pristine: no missing arm tip, no scars, no colour change across the body.",
+      "reason": "Pristine: no regenerating arm tip, no healed scars.",
       "fixes": [
-        "one regenerating shorter arm tip and a few healed scars (seeded)"
+        "one shorter regenerating arm tip and a few healed scars (seeded)"
       ]
     },
     "lod": {
-      "score": 6,
-      "reason": "LOD2 (2.1k) keeps the eight arms but the mantle turns blocky and the arm tips break into segments in the far view.",
+      "score": 7,
+      "reason": "FAR LOD2 keeps all eight arms and the curls; the mantle and arm colour break into blocky patches.",
       "fixes": [
-        "more rings on the LOD2 mantle and arm tips (~3k total)"
+        "smooth the LOD2 colour per face (average of LOD0) and add rings to the mantle"
       ]
     },
     "technical": {
       "score": 8,
-      "reason": "QA PASS; 133.7k / 13.4k / 2.1k triangles; 2 draws.",
+      "reason": "QA clean; 138k / 14k / 3.6k triangles, 2 draws.",
       "fixes": [
         "move LOD0 triangles from sucker rims on the hidden underside to the mantle"
       ]
     }
   },
   "renders": {
-    "hero.png": "9f66d0eae35da43d211d07b1057d256a39048977ca846be06e7293a03945a34b",
-    "sheet.png": "777fb13f95be373a7db979ac4a0d8f836d64c1fc33b366f70f907b901e99bb56"
+    "hero.png": "4cd6c681bb3b65b688cb81ba2311a9fb7bacd264677f918825c279b949a8457f",
+    "sheet.png": "fe8f189b159162b9d6f23bdf70f0d557c55312f272a3332b20fd7757916a0f44"
   }
 }

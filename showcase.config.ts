@@ -61,7 +61,7 @@ export const SHOWCASE: Readonly<
   human_head: {
     groom: {
       model: 'blender-groom',
-      adapter: 'blender (Blender 5.2.4 LTS, bpy, headless)',
+      adapter: 'blender (Blender 5.3.0, bpy, headless)',
       licence: 'own',
     },
   },

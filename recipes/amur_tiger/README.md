@@ -112,7 +112,7 @@ mask against black stripes and amber eyes).
 | Body union volume (voxelised field, no double count) | 0.272 m³ | — | test: × density inside 180–306 kg |
 | Limb allometry (Campione & Evans 2012) | humerus + femur ≈ 236 mm → 264 kg | 243 kg | test 0.6–1.6 × |
 | Compile time (this machine) | LOD0 7.9 s · LOD1 1.6 s · LOD2 0.2 s | — | — |
-| Triangles | 136.9k / 27.2k / 2.9k | budget 150k / 30k / 3k | QA |
+| Triangles | 142.5k / 29.2k / 2.9k | budget 150k / 30k / 3k | QA |
 
 **Density.** The sculpted surface is the coat, not the skin. The gate fills the mesh with
 `EFFECTIVE_DENSITY` = 1050 − (1050 − 100) × 0.02 m × 14.5 m⁻¹ ≈ 775 kg/m³: mammal flesh
@@ -129,14 +129,35 @@ it is not sourced, so the test only guards against gross errors (deer legs on a 
 
 ## Status / known gaps
 
-- No fur cards or shells (planned in M4): the coat is sculpted clumps + relief + vertex paint on
-  the `plain` strip (the library `fur` strip's brown albedo mutes the orange).
-- Whiskers are not modelled as strands; the whisker pads carry the dark spot rows.
+- Fur cards cover the trunk, legs, nape, belly fringe and cheek ruff only (see `field.ts` below):
+  the face in front of the eyes, the lips and the muzzle stay sculpted relief + vertex paint on
+  the `plain` strip (the library `fur` strip's brown albedo mutes the orange), with no fur shell.
+- Whiskers are tapered strands at LOD0/1; LOD2 has none (the pads keep the dark spot rows).
 - Stripe edges stair-step at the 1.2 cm body cell (vertex colour); LOD2 stripes are blotchy.
-- No wear yet (muddy paws, scars, damp fur): critique `wear` 4.
+- Face planes: forehead, cheek, bridge, brow and cheekbone blends tightened by about a quarter
+  (2026-11-19); the change is slight at hero distance. LOD2 leg tubes are 8-sided; the far budget
+  (3 000) leaves no room for colour rings or rounder paws.
+- Wear is vertex colour only (mud, damp, matting and scars in `field.ts`): no displaced mud
+  cake or puckered scar relief.
 - Eye sockets are checked by ray probes in the test (enclosure, open pupil, lid cover, gaze), not
   a `socket` joint: the joints gate compares the head's whole section with the 3 cm eye.
 - Anatomical folds (mouth, nostrils, eyelids, gape, armpits, carpus, hock, groin, flank fold,
   toe partings) are declared `creases` with reasons so QA `connections` skips them.
-- Critique (`out/amur_tiger/critique.json`): overall 6 — silhouette 7, proportions 7, materials
-  5, detail 6, wear 4, LOD 7, technical 8.
+- Critique (`out/amur_tiger/critique.json`): overall 6.6 — silhouette 7, proportions 7,
+  materials 6, detail 7, wear 5, LOD 6, technical 8.
+
+## Field wear and coat cards (`field.ts`)
+- Wear (world-space layers from `recipes/_lib/creature/wild-paint.ts`, so body, tail, head and claws take
+  the same stain): thaw mud on the paws and lower legs, wet fur to the hocks and along the belly
+  fringe, matted flank and breeches, three claw rakes healed across the right shoulder, a cut
+  across the bridge of the nose and one over the left brow; the left ear carries a notch
+  (`earEdits(lod, true)`: a bite subtracted from the outer rim).
+- Coat: strand cards over the painted sculpt (`fur` part, cutout): a short undercoat on the trunk
+  and upper legs, clumped guard hair on the nape, throat, chest, belly fringe, elbows and
+  breeches; the cheek ruff's locks and crown fur on the head (`head_fur`). Cards take the skin
+  colour under their root, so the stripes run on through the fur.
+- Whiskers: one tapered strand from each follicle spot on the pads, three over each brow.
+- LOD2 stripes are eight broad authored bands (`farStripe`): the far mesh's 8 cm cells cannot
+  carry 2 cm stripes, and sampling them gave random dark triangles.
+- Ears: 1.7 cm thick with a rounded rim and a darker inner rim, so the ear keeps a rounded
+  outline edge-on and never shows as one pale disc.

@@ -3,6 +3,9 @@
 
 import type { Clip } from './clip.ts';
 import type { Finishes, ResolvedFinish } from './finish.ts';
+import type { HeroView } from './hero-view.ts';
+import type { IntendedCrease, IntendedGap } from './intended.ts';
+import type { MaterialUse } from './material-use.ts';
 import type { Mesh } from './mesh.ts';
 import type { NeuralReader } from './neural-ctx.ts';
 import type { ResolvedSurfaceOptics, SurfaceOptics } from './optics.ts';
@@ -22,8 +25,10 @@ import type { Rng } from './rng.ts';
 import type { Armature, BoneOptions, LimitTolerance } from './skeleton.ts';
 import type { TextureBudget } from './texture-set.ts';
 import type { TuneSpec } from './tune.ts';
-import type { Vec3 } from './vec.ts';
 import type { WeatherCoverage } from './weather-coverage.ts';
+
+export type { HeroView } from './hero-view.ts';
+export type { IntendedCrease, IntendedGap } from './intended.ts';
 
 export interface BuildContext {
   readonly lod: Lod;
@@ -160,29 +165,6 @@ export interface AssetMeta {
   readonly creators?: readonly string[];
 }
 
-/**
- * An opening the `gaps` QA gate must not flag: a vent, a door seam, running clearance. Declared
- * with a reason, so a reviewer can tell a designed slot from a modelling miss.
- */
-export interface IntendedGap {
-  /** One or two part names/globs on the slot's rims; one selector = any slot it borders. */
-  readonly parts: readonly [string] | readonly [string, string];
-  readonly why: string;
-}
-
-/**
- * A crease the `connections` seam check must not flag (organic kinds): an eyelid fold, the
- * nasolabial fold, the mouth line — a sphere region in the asset's frame on matching parts.
- */
-export interface IntendedCrease {
-  readonly name: string;
-  /** Part name or glob the crease is on ('head', 'head_*'). */
-  readonly part: string;
-  readonly at: Vec3;
-  readonly radius: number;
-  readonly why?: string;
-}
-
 export interface AssetDefinition {
   readonly name: string;
   readonly kind: string;
@@ -254,6 +236,8 @@ export interface AssetDefinition {
   readonly tune?: TuneSpec;
   /** Named baked keyframe clips on bones or parts (`walk`, `idle`); `run` is the parts' Motion. */
   readonly clips?: readonly Clip[];
+  /** Default beauty camera (hero, review, critique): `{ azDeg, elDeg, fovDeg }` or `{ eye, target }`. */
+  readonly hero?: HeroView;
   build(ctx: BuildContext): void;
 }
 
@@ -296,4 +280,8 @@ export interface CompiledAsset {
   readonly skeleton?: Armature;
   /** Declared clips (and used children's, prefixed), validated; absent when none. */
   readonly clips?: readonly Clip[];
+  /** Project materials the build mapped onto, one per custom sheet row; absent when none. */
+  readonly materials?: readonly MaterialUse[];
+  /** The definition's default beauty camera (absent when the recipe declares none). */
+  readonly hero?: HeroView;
 }

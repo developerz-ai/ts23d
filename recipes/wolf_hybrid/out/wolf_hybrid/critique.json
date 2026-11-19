@@ -1,63 +1,126 @@
 {
   "asset": "wolf_hybrid",
   "reviewer": "agent",
-  "overall": 7.0,
+  "overall": 7.3,
   "scores": {
     "silhouette": {
       "score": 8,
-      "reason": "Reads as a grey wolf from every view: long muzzle, pricked ears, deep chest, tucked belly, long straight legs and a hanging brush tail; the SIDE view in sheet.png gives the standing-wolf outline at once.",
+      "reason": "Reads as a grey wolf from every view: long muzzle, pricked ears, deep chest, tucked belly, straight legs, hanging brush tail now standing clear of the hocks in SIDE; rest pose intact.",
       "fixes": [
-        "give the neck ruff a broken, tufted outline (a short shell or card pass) so the head does not join the shoulders in one smooth curve"
+        "a broken, tufted ruff outline so the head does not join the shoulders in one smooth curve"
       ]
     },
     "proportions": {
       "score": 8,
-      "reason": "1.2 × 0.3 × 0.9 m on the grid sits inside the sourced adult range; leg length, chest depth and head size look right beside photos. The tail hangs to the hocks, at the long end of the range.",
+      "reason": "1.2 x 0.3 x 0.9 m inside the sourced adult range; leg length, chest depth and head size right beside photos; tail to the hocks.",
       "fixes": [
-        "shorten the tail a few centimetres in a Blender step so it ends above the hock, as on most reference photos"
+        "tail a few cm shorter so it ends above the hock"
       ]
     },
     "materials": {
       "score": 7,
-      "reason": "The image-to-3D texture reads as a grizzled grey coat with a pale chest and legs, and the face markings hold. Lighting is baked into the albedo (bright back, saturated orange flank and ear patches) and the fur has one uniform roughness.",
+      "reason": "Grizzled grey coat with pale chest and legs and face markings; lighting still baked into the albedo (bright back, saturated orange on flank, ear and tail) and one uniform roughness.",
       "fixes": [
-        "de-light the albedo before import (a bake step that divides out the baked sun and AO)",
-        "pull the orange patches on the flank, ears and tail toward the coat's tawny grey"
+        "de-light the albedo before import",
+        "pull the orange patches toward the coat's tawny grey"
       ]
     },
     "detail": {
       "score": 7,
-      "reason": "Fur breakup, eyes, nose and toes come from the texture and hold at third-person distance. Geometry is smooth: no fur clumps on the outline, and the flank shows rib-like ridges in SIDE that read as a starved animal rather than a coat.",
+      "reason": "Fur breakup, eyes, nose and toes from the texture; geometry smooth. Raking.png: the flank still shows rib-like ridges that read as a starved animal, and there is a small ragged notch on the front of the right thigh and inside the hock where the tail was separated.",
       "fixes": [
-        "smooth the ridges on the flank in a Blender sculpt step",
-        "a strand or shell pass on the ruff, back and tail so the outline breaks into fur clumps"
+        "smooth the flank ridges in a Blender sculpt step",
+        "close the ragged notch at the right stifle/hock left by the tail separation (fill + re-bake there)",
+        "strand or shell pass on ruff, back and tail"
       ]
     },
     "wear": {
       "score": 5,
-      "reason": "A clean animal: the darker back gives a little story, but there is no mud on the paws or lower legs, no wet or matted fur, no scars.",
+      "reason": "Clean animal: paws and lower legs bright white, no mud, matting or scars.",
       "fixes": [
-        "mud on the paws and lower legs (grime with the ground mask over the textured part)",
-        "a seeded scar on the muzzle or a nicked ear"
+        "mud on paws and lower legs (grime ground mask over the textured part)",
+        "a seeded muzzle scar or nicked ear"
       ]
     },
     "lod": {
       "score": 8,
-      "reason": "FAR LOD2 keeps the outline, the pale chest and the dark back; at the sheet's far distance it is hard to tell from LOD0.",
+      "reason": "FAR LOD2 keeps outline, pale chest and dark back; hard to tell from LOD0 at the far distance.",
       "fixes": [
-        "lower the LOD2 triangle count: the far view does not need its current budget for a 1.2 m animal"
+        "LOD2 at 5k is heavy for a 1.2 m animal; drop it once the hip loops hold deform at 2.5k"
       ]
     },
     "technical": {
-      "score": 6,
-      "reason": "QA PASS and one draw per LOD, with idle, look and walk clips, but only with a declared deform tolerance: the skin webs between the tail root and the thighs at the hip's extremes (stretch up to ×5.7 against a limit of ×4, defect D253, still open).",
+      "score": 8,
+      "reason": "QA PASS with no declared deform tolerance (D253 closed by the tail/thigh weight blend), 1 draw per LOD, 30k / 10k / 5k tris, idle/look/walk clips.",
       "fixes": [
-        "close D253: a per-bone reach or blend at the tail root in the `isolate` Blender step, or a regenerated mesh from a concept with one raised tail, then remove `limitTolerances`"
+        "LOD ratio 30k/10k/5k is shallow: LOD2 ~2.5k once the haunch holds ×4"
       ]
     }
   },
   "renders": {
-    "hero.png": "74112f24b1c1bf6117f3dc336b607f9e3465e088338ef3690e9db710c13772b0",
-    "sheet.png": "00f3f340f30370bb375acdeb36ceca17dba6ec4a5b3182a3ce266ef4d8a3035f"
+    "hero.png": "bfbebdcb3c7d53fafa3e8fa1ce9f187187d945a8cb767c3ceca68545bd6de261",
+    "sheet.png": "677ea5cdba7e75905c7e008b93ee24879df78fa5d5b7e4bf75ba3ad6d8166e24",
+    "raking.png": "1a2b148c44254e0981ed50732f93e0e5bcb6e5293612c5c052fbe2b1b34a2fc7",
+    "raking_detail.png": "64066748f9ebceac486a011a333be9b1124de0a3a313b78f8475f1221e4fafeb",
+    "lods.png": "6687e71866927274323cdd5890f15fbdafd7f67e6cdf8b8afb8622b2a5394918",
+    "silhouette.png": "294455409bd98a93144ba81b6ef240e42bc4d5e30845e19ae69ef747fc3ac0bf",
+    "value.png": "6005fed3d5a9bf1ebffd6e1e240964c9c30746430ae3f523457b76c4a43be998",
+    "detail.png": "0c68792835a56c4392074d1d5e58a31bf5efd9e3823349fac6e2dc5ac2f6cfc4"
+  },
+  "metrics": {
+    "silhouette": [
+      {
+        "view": "front",
+        "iou": 0.995
+      },
+      {
+        "view": "side",
+        "iou": 0.996
+      },
+      {
+        "view": "3/4",
+        "iou": 0.993
+      }
+    ],
+    "focal": {
+      "peakPart": "body_fur",
+      "peak": [
+        501,
+        164
+      ],
+      "focalShare": 0,
+      "focalArea": 0,
+      "top": [
+        {
+          "part": "body_fur",
+          "share": 1
+        }
+      ],
+      "declared": [
+        "head"
+      ]
+    },
+    "rest": {
+      "share": 0.321,
+      "spread": 0.546,
+      "min": 0.25
+    },
+    "grounded": {
+      "rise": -0.039,
+      "bands": [
+        0.53,
+        0.32,
+        0.386,
+        0.434,
+        0.433
+      ]
+    },
+    "shape": {
+      "acuteShare": 0.166,
+      "straightShare": 0.532,
+      "taper": -0.405,
+      "shape": "stable",
+      "declared": "friendly"
+    }
   }
 }

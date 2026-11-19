@@ -8,6 +8,9 @@ import { clamp, len, sub } from '../lib/geo.ts';
 import type { Surface } from '../lib/grid.ts';
 import { sAtX, U, U_MAX } from './shape.ts';
 
+/** Target edge length of the body skin per LOD, metres (also the body-wide row grid). */
+export const PANEL_STEP = [0.05, 0.1, 0.24] as const;
+
 /** Panel shut line, metres (each side gives half). */
 export const GAP = 0.0045;
 
@@ -122,17 +125,31 @@ export function cockpitU(S: Surface, s: number, x: number): number {
   return y > 0 ? uAtY(S, s, y) : 0;
 }
 
-/** Uniform rows s0..s1 at ≈step metres, plus the given extra s values (sorted, unique). */
+/**
+ * Rows s0..s1 at ≈step, plus the given extra s values (sorted, unique). With `lattice`, the rows
+ * sit on the body-wide grid k × lattice instead of being spread evenly over this panel: panels
+ * that share a shut line then sample it at the same stations, so their two edges stay a gap apart
+ * however coarse the LOD (independent rows let one panel's chord cut the other's corner).
+ */
 export function rows(
   s0: number,
   s1: number,
   step: number,
   extra: readonly number[] = [],
+  lattice = 0,
 ): number[] {
-  const n = Math.max(1, Math.ceil(Math.abs(s1 - s0) / step));
-  const out = new Set<number>();
-  for (let i = 0; i <= n; i++) out.add(s0 + ((s1 - s0) * i) / n);
-  for (const e of extra) if (e > Math.min(s0, s1) && e < Math.max(s0, s1)) out.add(e);
+  const lo = Math.min(s0, s1);
+  const hi = Math.max(s0, s1);
+  const out = new Set<number>([s0, s1]);
+  if (lattice > 0) {
+    // Lattice rows closer than a quarter step to an end would only add slivers.
+    for (let k = Math.ceil((lo + lattice / 4) / lattice); k * lattice < hi - lattice / 4; k++)
+      out.add(k * lattice);
+  } else {
+    const n = Math.max(1, Math.ceil(Math.abs(s1 - s0) / step));
+    for (let i = 1; i < n; i++) out.add(s0 + ((s1 - s0) * i) / n);
+  }
+  for (const e of extra) if (e > lo && e < hi) out.add(e);
   return [...out].sort((a, b) => a - b);
 }
 

@@ -174,6 +174,9 @@ export interface EyesOptions {
   readonly cell: number;
   /** Finish name for the glossy cornea (declare it in `defineAsset({ finishes })`). */
   readonly finish?: string;
+  /** The part whose orbit seats the eyeballs (their `socket`). Default: the part each touches
+   *  most, which strand cards crossing a lid can win; name the skin when the head has cards. */
+  readonly host?: string;
   /** Push the balls forward by this much at coarse LODs (the coarse socket closes in). */
   readonly proud?: number;
   /** The part holding the eyes: emits a `socket` joint per eye (`eye_l_orbit`, `eye_r_orbit`)
@@ -195,7 +198,12 @@ export function eyes(ctx: BuildContext, e: EyeSpec, o: EyesOptions): void {
     const at: V = [ex + (o.proud ?? 0), ey * s, ez];
     const yaw = Math.atan2(gaze[1] - at[1], gaze[0] - at[0]);
     const name = `eye_${side}`;
-    ctx.part(name, ball, { at, yaw, ...(o.finish ? { finish: o.finish } : {}) });
+    ctx.part(name, ball, {
+      at,
+      yaw,
+      ...(o.finish ? { finish: o.finish } : {}),
+      ...(o.host ? { connect: { as: 'socket' as const, to: o.host } } : {}),
+    });
     // The joint plane sits a third of a radius behind the ball's equator, inside the orbit's
     // bore (in front of the equator the lids wrap the ball and the orbit is open by design).
     const back: V = [-Math.cos(yaw), -Math.sin(yaw), 0];

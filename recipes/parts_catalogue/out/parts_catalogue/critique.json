@@ -1,63 +1,62 @@
 {
   "asset": "parts_catalogue",
   "reviewer": "agent",
-  "overall": 6.7,
+  "overall": 7.3,
   "scores": {
     "silhouette": {
       "score": 7,
-      "reason": "Each catalogue item (door, window, drum, cask, crate, chair, stool, bench, ladder, lamp, wheel, beams, pipe, hose) reads on its own; the board as a whole is a layout.",
+      "reason": "Each part reads on its own, but in FRONT the drum overlaps the door and the stool/chair/bench overlap each other.",
       "fixes": [
-        "group items by family with spacing so no two outlines overlap in FRONT"
+        "space the items so no two outlines overlap in FRONT"
       ]
     },
     "proportions": {
       "score": 8,
-      "reason": "Door, chair, drum and wheel sit at real sizes against the 0.5 m grid.",
+      "reason": "Door, ladder, drum, cask, chair and bench sit at believable real sizes.",
       "fixes": [
-        "check the stool seat height (looks ~5 cm high for a bar stool)"
+        "check the stool seat height against a bar stool"
       ]
     },
     "materials": {
       "score": 7,
-      "reason": "In hero.png wood, steel, rubber, glass and paint separate; in sheet.png wood (cask, crate, chairs) renders near-white.",
+      "reason": "Wood strips now render in both images; rust on the drum, rubber tyre, glass window; the floor reads as worn boards.",
       "fixes": [
-        "make the wood strips render in the sheet renderer too",
-        "rubber roughness on the hose (reads glossy)"
+        "matte rubber roughness on the hose",
+        "a painted-steel finish on the crane post"
       ]
     },
     "detail": {
-      "score": 6,
-      "reason": "Barrel hoops, crate battens, tyre tread, lamp shade and tools on the bench; labels unreadable.",
+      "score": 7,
+      "reason": "Labels are readable on the floor, bench tools, lamp, bolts on the crane, a tread on the tyre; two labels are hidden under the drum and crate.",
       "fixes": [
-        "bigger floor labels",
+        "move the PANEL DOOR and CRATE labels out from under their items",
         "bolt heads on the beams and pipe flanges"
       ]
     },
     "wear": {
-      "score": 5,
-      "reason": "Drum has holes and the floor is worn; the rest is clean.",
+      "score": 6,
+      "reason": "Rust on the drum and scuffed floor boards; the crate, beams and door are clean.",
       "fixes": [
-        "rust on the drum and beams, scuffs on the crate"
+        "rust on the beams, scuffs on the crate corners"
       ]
     },
     "lod": {
-      "score": 7,
-      "reason": "FAR LOD2 keeps every item and colour; wood turns white like LOD0 in the sheet.",
+      "score": 8,
+      "reason": "FAR LOD2 keeps every item, the hose and the ladder rungs; labels drop.",
       "fixes": [
-        "keep the hose and ladder rungs at LOD2"
+        "keep the floor labels as one quad each at LOD1"
       ]
     },
     "technical": {
-      "score": 7,
-      "reason": "QA clean; 42k / 20k / 11k tris over 75 parts: LOD2 keeps a quarter of LOD0. SIDE -Y in sheet.png shows only four items.",
+      "score": 8,
+      "reason": "49.9k / 19.7k / 3.4k triangles and 10 draws for a catalogue of 15 parts.",
       "fixes": [
-        "cut LOD2 to ~4k (drop labels, tools on the bench)",
-        "check the SIDE -Y sheet view (door, window, ladder absent)"
+        "merge static parts into fewer draws"
       ]
     }
   },
   "renders": {
-    "hero.png": "faf35820d289f377f586c4af85d03e9497f4d01124095d11bfbdf63d93303ff7",
-    "sheet.png": "a09359f35f457c44590ca1459b23a08622e2a4bff195c9fa1ea58502d30af213"
+    "hero.png": "0a92b4fd3d8c9576e3053e45e958527ad28e31b15e6a0eacd029e39fde7d7723",
+    "sheet.png": "7368b3f918c9a7eb46691497407fe857025948ccc05fa5d59b977428f9e67104"
   }
 }

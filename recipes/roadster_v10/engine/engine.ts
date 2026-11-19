@@ -3,15 +3,19 @@
 // bay ancillaries and the driveline (bellhousing, gearbox, propshaft). Plus the engine sockets
 // and the exhaust emitters game code binds to.
 
-import type { BuildContext } from '@developerz.ai/ts23d';
+import type { BuildContext, Mesh } from '@developerz.ai/ts23d';
 import { merge } from '@developerz.ai/ts23d';
 import { X_CRANK_FRONT, Z_CRANK } from '../dims.ts';
+import { bayGrime } from '../lib/wear.ts';
 import { ancillaries } from './ancillaries.ts';
 import { block, driveline, mounts } from './block.ts';
 import { cooling } from './cooling.ts';
 import { exhaust, PIPE_TIP } from './exhaust.ts';
 import { topEnd } from './heads.ts';
 import { intake } from './intake.ts';
+
+/** Oil mist and road dust: black low on the block and sump, clean by the valve covers. */
+const oily = (m: Mesh): Mesh => bayGrime(m, 0.15, 0.6);
 
 export const ENGINE_PARTS = [
   'engine_block',
@@ -23,7 +27,12 @@ export const ENGINE_PARTS = [
   'driveline',
 ] as const;
 
-export function powertrain(ctx: BuildContext): void {
+/**
+ * `open` > 0: the hood is up, so the mid LOD keeps the dressed engine. Under a shut hood the mid
+ * LOD carries what shows from outside (block through the vents, side pipes) and the far LOD
+ * only the side pipes.
+ */
+export function powertrain(ctx: BuildContext, open: number): void {
   const lod = ctx.lod;
   ctx.socket('engine_audio', {
     kind: 'audio',
@@ -47,17 +56,17 @@ export function powertrain(ctx: BuildContext): void {
     });
     ctx.socket(`exhaust_audio_${side}`, { kind: 'audio', at, data: { clip: 'v10_exhaust' } });
   }
-  if (lod === 2) {
-    // Far: the hood is shut; keep the block (seen through the mouth) and the side pipes.
-    ctx.part('engine_block', merge([block(lod), mounts(lod)]));
-    ctx.part('exhaust', exhaust(lod));
+  const dressed = lod === 0 || (lod === 1 && open > 0);
+  if (!dressed) {
+    if (lod === 1 || open > 0) ctx.part('engine_block', oily(merge([block(lod), mounts(lod)])));
+    ctx.part('exhaust', exhaust(lod, false));
     return;
   }
-  ctx.part('engine_block', merge([block(lod), mounts(lod)]));
+  ctx.part('engine_block', oily(merge([block(lod), mounts(lod)])));
   ctx.part('engine_heads', topEnd(lod));
   ctx.part('engine_intake', intake(lod));
-  ctx.part('exhaust', exhaust(lod));
-  ctx.part('cooling', cooling(lod));
-  ctx.part('bay_ancillaries', ancillaries(lod));
-  ctx.part('driveline', driveline(lod));
+  ctx.part('exhaust', exhaust(lod, true));
+  ctx.part('cooling', oily(cooling(lod)));
+  ctx.part('bay_ancillaries', bayGrime(ancillaries(lod), 0.3, 0.6, 0.35));
+  ctx.part('driveline', oily(driveline(lod)));
 }

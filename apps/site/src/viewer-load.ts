@@ -9,6 +9,7 @@ import { type Hooks, readHooks } from './scenarios/hooks.ts';
 import { pickScenario } from './scenarios/pick.ts';
 import type { ScenarioDef } from './scenarios/types.ts';
 import { disposeTree } from './stage.ts';
+import { sheetOwner } from './textures.ts';
 
 /**
  * What the viewer shows: an asset by name, its recipe entry file, its committed weights and, for
@@ -35,6 +36,8 @@ export async function loadStaged(
   scene: boolean,
 ): Promise<Staged> {
   const loaded = await loadBuilt(request);
+  // Whose trim sheet the textures toggle binds: each asset has its own (its materials' rows).
+  sheetOwner.set(loaded.scene, request);
   const clip = loaded.animations.find((c) => c.name === 'run') ?? null;
   const hooks = readHooks(loaded.scene, asset.kind, clip, loaded.animations, loaded.built.medium);
   const def = pickScenario(hooks);

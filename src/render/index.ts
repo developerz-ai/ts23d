@@ -77,6 +77,7 @@ export {
   type ViewMetrics,
 } from './review-warnings.ts';
 export { contactSheet, type SheetOptions, VIEWS } from './sheet.ts';
+export { previewSheet } from './sheet-tones.ts';
 export {
   type SilhouetteScore,
   type SilhouetteSheet,

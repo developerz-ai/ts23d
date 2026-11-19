@@ -1,64 +1,114 @@
 {
   "asset": "rts_barracks_foundation",
   "reviewer": "agent",
-  "overall": 5.9,
+  "overall": 7,
   "scores": {
     "silhouette": {
-      "score": 5,
-      "reason": "Flat slab with a team triangle inlay, two tower footprint discs, low block courses and three red-topped piles: reads as a build site, but the piles read as small tables with red tops rather than tarped pallets, and nothing stands up except one banner.",
+      "score": 7,
+      "reason": "Slab with two ring footings, draped team tarps over block piles, a standing banner, setting-out posts with string lines, a timber stack, mortar tub and wheelbarrow: reads as a building site. From FRONT/SIDE it is still a flat strip with three red boxes; the vertical interest is thin.",
       "fixes": [
-        "drape the tarps over the block piles (sagging edges hanging down the sides) in site.ts materials()",
-        "add corner setting-out stakes with string lines or a wheelbarrow so the site has verticals"
+        "a gin-pole or sheer-legs over one footing (2.5-3 m) so the stage has a strong vertical from every view"
       ]
     },
     "proportions": {
-      "score": 7,
-      "reason": "Slab and tower discs match the finished hall footprint; block piles at 1.4 m are plausible pallets.",
+      "score": 8,
+      "reason": "17.1 x 19.0 x 3.5 m; block piles, timber stack (~0.8 m) and footings at true scale beside 1.8 m units.",
       "fixes": [
-        "stack the timber to a believable 0.7-1.0 m height instead of two thin courses"
+        "the 10 m team triangle painted on the slab dominates the top view: halve it or make it a chalked outline"
       ]
     },
     "materials": {
-      "score": 5,
-      "reason": "Slab reads as dark concrete, blocks as stone; the timber stack behind the slab renders pale blue-lilac in hero.png instead of oak, and the tarps read as rigid red slabs, not canvas.",
+      "score": 6,
+      "reason": "Timber stack is brown oak now, tarps are team red cloth, footings bone stone. The slab is a blotchy grey/black camouflage pattern (sheet TOP) that reads neither as concrete nor flagstone, and the giant team triangle is a flat saturated decal with no paint texture.",
       "fixes": [
-        "fix the timber stack colour in site.ts materials(): it renders pale blue in hero.png, not WOOD/oak",
-        "canvas tarps with folds and draped edges instead of 6 cm boxes"
+        "slab on a flagstone or rammed-earth strip with readable joints at true scale (site.ts)",
+        "team triangle as worn chalk/paint with value break-up and lower saturation"
       ]
     },
     "detail": {
-      "score": 5,
-      "reason": "Inlay, footing courses, three pallets, a timber stack and a banner. No tools, mortar tubs, ropes or setting-out lines; the slab is otherwise empty.",
+      "score": 7,
+      "reason": "Tarps on piles, string lines between stakes, wheelbarrow, mortar tub, timber stack, block courses on the footings, steps. Tarps are boxes with folds rather than draped cloth; no tools on the slab.",
       "fixes": [
-        "mortar tub, shovel and a wheelbarrow beside one pile",
-        "string lines between corner stakes along the wall lines"
+        "tarp edges hanging down the pile sides with a sag (site.ts materials())",
+        "a shovel and a hod leaning on one pile"
       ]
     },
     "wear": {
-      "score": 4,
-      "reason": "The slab and blocks are clean; no mud, footprints, spilled mortar or dust around the piles.",
+      "score": 6,
+      "reason": "Slab mottling reads as dirt and there is a dusty band on the footings, but no mud at pile feet, no mortar splash, no tracks from the wheelbarrow.",
       "fixes": [
-        "grime() mud and mortar splash around the pallets and along the slab edge",
-        "dust on the slab top"
+        "mud and mortar splash round the pallets and the tub",
+        "wheel ruts from the barrow to the timber stack"
       ]
     },
     "lod": {
       "score": 7,
-      "reason": "FAR LOD2 keeps the slab, inlay, tower discs, piles and banner in the same colours; piles become single blocks.",
+      "reason": "lods/FAR LOD2 (626 tris) keeps slab, footings, piles, tarps, banner and triangle; the slab turns a uniform dark grey (pattern lost) and the string lines vanish.",
       "fixes": [
-        "keep two blocks per pile at LOD2 so the piles keep their stepped outline"
+        "keep the slab value pattern as two or three vertex-colour tones at LOD2"
       ]
     },
     "technical": {
       "score": 8,
-      "reason": "QA PASS on every gate (rebuilt today), tris 5.03k / 1.77k / 500, draws 2 / 2 / 2; deterministic, one trim material + team slot. Triangles mostly sit in the running-bond blocks, where they show.",
+      "reason": "QA PASS, tris 10.8k / 3.5k / 626, draws 2/2/2; one trim material + team slot, LOD2 well under 1k. Triangles mostly sit in the running-bond blocks and slates, where they show.",
       "fixes": [
-        "merge the per-block wall boxes into one course mesh per bay at LOD0 (shared inner faces removed) to cut the block-count triangles without losing the coursing"
+        "merge the per-block wall boxes into one course mesh per bay at LOD0 (shared inner faces removed) so the coursing costs fewer triangles"
       ]
     }
   },
   "renders": {
-    "hero.png": "65ba603374226d24fcf742f1a830336894434f50864600084086c280e6c2402d",
-    "sheet.png": "480a421a46a0ce72847f9334aabe2227f2c8d7893a42c7332ee5f174c2773b27"
+    "hero.png": "430ac23f56a001bea240fbc9c433086493738e622aeea7b7a1bab130a0e0c886",
+    "sheet.png": "bb28e684c0ce72887c184a2925533d0b808b9a9b6da629dc0b399a7615cd5eee"
+  },
+  "metrics": {
+    "silhouette": [
+      {
+        "view": "front",
+        "iou": 0.921
+      },
+      {
+        "view": "side",
+        "iou": 0.774
+      },
+      {
+        "view": "3/4",
+        "iou": 0.92
+      }
+    ],
+    "focal": {
+      "peakPart": "tower_r",
+      "peak": [
+        123,
+        193
+      ],
+      "focalShare": 0,
+      "focalArea": 0,
+      "top": [
+        {
+          "part": "materials",
+          "share": 0.275
+        },
+        {
+          "part": "tower_r",
+          "share": 0.269
+        },
+        {
+          "part": "walls",
+          "share": 0.193
+        }
+      ],
+      "declared": []
+    },
+    "rest": {
+      "share": 0.641,
+      "spread": 0.758,
+      "min": 0.25
+    },
+    "shape": {
+      "acuteShare": 0.129,
+      "straightShare": 0.736,
+      "taper": 0.742,
+      "shape": "stable"
+    }
   }
 }

@@ -1,79 +1,78 @@
 {
   "asset": "weather_demo",
   "reviewer": "agent",
-  "overall": 6.1,
+  "overall": 7.1,
   "scores": {
     "silhouette": {
       "score": 6,
-      "reason": "Four new/weathered pairs on labelled slabs (door, crate, concrete block, drum): readable, but all simple boxes and cylinders; the weathered copies do not differ in outline (no sag or dents visible).",
+      "reason": "Four new/weathered pairs on labelled slabs; the weathered copies still match the new ones in outline: no crate sag, no drum dent visible.",
       "fixes": [
-        "stronger crate board sag and a visible dent on the weathered drum so the pairs differ in silhouette"
+        "visible dent and a dropped lid edge on the weathered drum, board sag and a sprung board on the weathered crate"
       ]
     },
     "proportions": {
-      "score": 7,
-      "reason": "Door 0.91 x 2.03 m, drum 0.572 x 0.851 m, crate 0.8 m, block 0.6 x 0.8 x 0.6 m per README.",
+      "score": 8,
+      "reason": "Door 0.91 x 2.03 m, drum 0.572 x 0.851 m, crate 0.8 m, block 0.6 x 0.8 x 0.6 m per README; labels now readable.",
       "fixes": [
-        "label text bigger on the slabs (it is unreadable in hero.png)"
+        "labels centred under each item"
       ]
     },
     "materials": {
-      "score": 6,
-      "reason": "Painted steel door, pine crate, concrete and blue drum read; the drum reads as plastic (uniform gloss), the concrete as clean plaster.",
+      "score": 7,
+      "reason": "Painted steel door, pine crate, concrete with form-tie holes, steel drum; the new drum is still a uniform glossy blue that reads plastic.",
       "fixes": [
-        "steel_painted drum with lower gloss and rolled-edge highlights",
-        "concrete with aggregate and form-tie holes"
+        "steel_painted drum with lower gloss and rolled-edge highlights"
       ]
     },
     "detail": {
-      "score": 5,
-      "reason": "Door with frame, hinges and handle, crate boards, block lifting anchors, drum hoops; otherwise plain.",
+      "score": 6,
+      "reason": "Door with frame, hinges and handle, crate boards, block anchors and tie holes, drum hoops; no bung caps, nails or corner irons.",
       "fixes": [
         "bung caps on the drum lid",
         "nails and corner irons on the crate"
       ]
     },
     "wear": {
-      "score": 7,
-      "reason": "The weathered copies clearly carry rust streaks on the door, rust and dents on the drum, moss and anchor rust bleed on the block, bleached boards and moss on the crate; but the door rust runs as vertical stripes over the whole leaf rather than from the hinge bolts, and the drum rust is blotchy.",
+      "score": 8,
+      "reason": "The weathered copies clearly carry rust along the door bottom and hinge side, rust and flaking on the drum, moss and anchor rust bleed on the block, bleached boards on the crate; each tells a plausible history.",
       "fixes": [
-        "tie the door rust streaks to the hinge bolts and the bottom edge (weather() sources) instead of full-leaf stripes"
+        "tie the door rust closer to the hinge bolts and the bottom rail; it still runs a little as full-leaf streaks"
       ]
     },
     "lod": {
-      "score": 5,
-      "reason": "lods.png: at LOD2 the weathered door loses its rust and the concrete block loses its moss, so the new/weathered difference, the point of the demo, mostly vanishes at distance.",
+      "score": 7,
+      "reason": "lods.png: LOD2 (2.0k) keeps the new/weathered differences on crate, drum and block; the door rust fades to a faint stain and the block moss lightens, and in sheet.png FAR LOD2 the door weathering turns into hard-edged triangles.",
       "fixes": [
-        "bake the weather() colours into LOD2 vertex colour so the weathered copies stay distinct"
+        "bake LOD2 weather colour per vertex from the LOD0 mask with smoother tessellation on the door leaf"
       ]
     },
     "technical": {
-      "score": 7,
-      "reason": "QA clean (pack): 95.4k / 21.8k / 3.8k tris for four simple props: weather() tessellation spends most of LOD0.",
+      "score": 8,
+      "reason": "QA PASS: 20.8k / 6.5k / 2.0k tris (from 95k), 1 draw.",
       "fixes": [
-        "coarser weather() tessellation on flat faces at LOD0"
+        "LOD2 at 2k is high for eight box props"
       ]
     }
   },
   "renders": {
-    "hero.png": "ab612970c5fb24d5ea28fd99d6704926ef981b5724df364e090a0b450e1aa1af",
-    "sheet.png": "64e4474175e56f9ce155765e8a59beac00157c28f525ee082afdb89f390268b5",
-    "raking.png": "aaa75be6d27e0489fbe11390e09f149af9ebb8c96d7b9641acb907af267b7b03",
-    "raking_detail.png": "cda41618415217ef94cf727aef261731cf33e385f9079b3ff2737fa33fed5d7b",
-    "lods.png": "4eb077217897dcdd1cde34f857d5602fe00ed4a046f07b4034e5596a13fdb949",
-    "silhouette.png": "b7bbb9640ecc1eebe49e5d997740ef32324189aa2c03ae5643d2fb30226f77a5",
-    "value.png": "721503176686760349f81e5aa914875adee46d40ca0c52f92034516071eb32b7",
-    "detail.png": "2b69109c08b8386239eaab6c5af3028015e1f5a1de856f4a67e94780c1d54609"
+    "hero.png": "9e71da0723bb6102bd3ce094dadb355e32989d4226427cd3c052ee1995a71073",
+    "sheet.png": "57dc66dd3aca16f15714a3945b2f4c900c4a04bf71f85981028f0f2df7fbd7b0",
+    "raking.png": "d66df5b2d5dc470b38cea274179d51934d6074c5d499ff75952653d0dbc9fc4c",
+    "raking_detail.png": "2013d7fd68edabb961ed27f105cc85753c1feb0cad06dd7edf71d569061baff6",
+    "lods.png": "91aa2d51dc3c632f955dbc81f5a8789319bcc194ec080e39df1c83c5697bbe7b",
+    "silhouette.png": "8b9edf6caad1c0960efa428e4313d3cb30c04734e345e5bd40fd60af88add8bd",
+    "value.png": "baeae587f858816e7b034ddfa14686b555b7e30ea9475eaf2cc8c2f69ca69526",
+    "detail.png": "26bc99e0cb2886d8642016bc663458976a79fc6b20bc12d53f3f12e9952e688c"
   },
   "metrics": {
     "silhouette": [
       {
         "view": "front",
-        "iou": 1
+        "iou": 0.999
       },
       {
         "view": "side",
-        "iou": 1
+        "iou": 0.99
       },
       {
         "view": "3/4",
@@ -83,35 +82,35 @@
     "focal": {
       "peakPart": "door_slab",
       "peak": [
-        334,
-        254
+        338,
+        256
       ],
       "focalShare": 0,
       "focalArea": 0,
       "top": [
         {
           "part": "door_slab",
-          "share": 0.223
-        },
-        {
-          "part": "block_old_block",
-          "share": 0.136
+          "share": 0.235
         },
         {
           "part": "block_slab",
-          "share": 0.122
+          "share": 0.18
+        },
+        {
+          "part": "drum_slab",
+          "share": 0.127
         }
       ],
       "declared": []
     },
     "rest": {
-      "share": 0.8,
-      "spread": 0.574,
+      "share": 0.796,
+      "spread": 0.595,
       "min": 0.25
     },
     "shape": {
       "acuteShare": 0.164,
-      "straightShare": 0.896,
+      "straightShare": 0.889,
       "taper": 0.617,
       "shape": "stable"
     }

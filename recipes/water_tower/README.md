@@ -34,6 +34,20 @@ period type Berg describes).
 `spout` (pivot at the tank outlet, `sway` about Y: lowered over a tender) · `socket` `water_fill`
 (interact) at the spout mouth · `tank`, `trestle`, `core`, `roof`.
 
+## Modelling notes (2026-11 quality pass)
+- Staves are modelled one by one (120 at LOD0, 60 at LOD1, 16 far), grain running up the stave,
+  each its own board of the pine strip and its own tone; the strip is stretched 3× along the
+  stave so a 14 ft stave mostly reads as one piece (the strip's butt joints show on a few).
+- The roof stays **six-sided** and the core stays **10 ft**: both are what NRHP 93000843 §7
+  records ("six-sided" roof, 10 ft × 14 ft core). A reviewer asked for an eight-sided roof and a
+  slimmer core; that would contradict the nomination, so the sourced numbers win.
+- Wear tells the water story: the chime course soaked dark and green, weeps down single staves,
+  a heavy run under the outlet, drips staining the joists, cap ring and post heads, moss on the
+  shaded faces of the footings, lichen and engine soot on the shingles.
+- Detail added: float gauge (painted board, tick bars, target, pulley and cable), iron strap
+  plates with square nuts at every post head, square-nut brace bolts, a wall plate under the
+  rafters. LOD2 keeps the X bracing as one board quad per brace.
+
 ## Open questions
 - The current Beaumont trestle (heavy timbers, concrete footings) is a 20th-century replacement; the
   nomination says the original bracing was lighter. The current one is modelled (it is in the photo).

@@ -2,6 +2,7 @@
 // painter, the material + nature libraries, `defineMaterial` for project materials, the texture
 // graph DSL (`tex`), variants and weathering, palettes and engine shader sources.
 
+export { checkSheetFor, materialsOf, sheetFor, sheetWith } from './asset-sheet.ts';
 export { CC0_MATERIALS, CC0_WOOD_PLANKS_GREY } from './cc0.ts';
 export { CREATURE_MATERIALS } from './creature.ts';
 export {
@@ -9,6 +10,7 @@ export {
   type MaterialInfo,
   materialGeneration,
   materialOf,
+  materialSnapshot,
   resetMaterials,
   stripCredits,
   textureSources,
@@ -26,7 +28,7 @@ export {
   type StripRecipe,
 } from './generator.ts';
 export { MATERIAL_LIBRARY } from './library.ts';
-export { checkSheetFor, type LiveSheet, liveSheet } from './live-sheet.ts';
+export { type LiveSheet, liveSheet } from './live-sheet.ts';
 export type { MaterialDef } from './material-def.ts';
 export { NATURE_LIBRARY } from './nature.ts';
 export { decodePng, type PngFailure, type Rgba } from './paint/decode-png.ts';

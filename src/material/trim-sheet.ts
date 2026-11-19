@@ -3,13 +3,15 @@
 // sampler; cells are fixed decals. Layout is data here (fractions of the sheet, so any painted
 // size maps the same UVs); `paintTrimSheet` (generator.ts) paints it. V grows with world up.
 // V 0–0.875: 56 strip rows of 1/64 (64 px at the 4096² house size): 8 classic, 16 library,
-// 18 nature, then 14 slots for project materials (`defineMaterial`; the row comes from the id,
-// slots.ts). V 0.875–1: 1/16 cells, decals then foliage. Each strip spans its own world metres
+// 18 nature, then 14 rows for project materials (`defineMaterial`; the row comes from the
+// definition, slots.ts). Those 14 rows are per ASSET: each asset's sheet holds the materials that
+// asset maps onto (`sheetFor`), so `stripRect` tells the running compile which custom strip it
+// was asked for (core/material-use.ts). V 0.875–1: 1/16 cells, decals then foliage. Each strip spans its own world metres
 // along U (`spanOf`): 4 m for the classic and library strips (≈1 mm texels at 4096², as v2 had at
 // 2048²), longer for isotropic nature strips so their texels are near square. `id~n` is a
 // U-shifted variant of a strip.
 
-import { Ts23dError } from '../core/index.ts';
+import { materialsInUse, noteMaterial, Ts23dError } from '../core/index.ts';
 import { customIndex, customSpan } from './slots.ts';
 import {
   type BuiltinStripId,
@@ -106,7 +108,28 @@ export function spanOf(id: string): number {
   );
 }
 
+/** Tell the running compile it maps onto custom strip `base` (one material per row per asset). */
+function claim(base: string, row: number): void {
+  const held = materialsInUse();
+  if (held && held.length >= CUSTOM_STRIP_SLOTS && !held.some((u) => u.id === base))
+    throw new Ts23dError('T3D_SHEET_FULL', {
+      cause: `this asset already maps onto ${CUSTOM_STRIP_SLOTS} project materials (${held.map((u) => u.id).join(', ')}), one per custom strip row of its trim sheet; '${base}' would be one more`,
+      fix: 'reuse a built-in strip with a vertex colour, share one material between parts, or split the scene into assets (each asset has its own 14 rows)',
+    });
+  noteMaterial({ id: base, row });
+}
+
+/**
+ * The UV rectangle of a strip. Inside `build()` this also records that the asset uses the strip
+ * (`CompiledAsset.materials`); `rectOf` is the same rectangle without the record.
+ */
 export function stripRect(id: StripId): UvRect {
+  const row = stripRow(id);
+  if (row >= STRIPS.length) claim(variantOf(id).base, row - STRIPS.length);
+  return rectOf(id);
+}
+
+export function rectOf(id: StripId): UvRect {
   const i = stripRow(id);
   if (i < 0)
     throw new Ts23dError('T3D_MATERIAL_UNKNOWN', {

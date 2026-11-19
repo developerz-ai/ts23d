@@ -138,10 +138,12 @@ const trunk: ChainSpec = {
     [-1.05, 0, 0.95],
     [-1.48, 0, 0.87],
   ],
-  radius: [0.12, 0.48, 0.56, 0.54, 0.48, 0.3],
+  radius: [0.12, 0.5, 0.6, 0.58, 0.5, 0.3],
   links: 6,
   flatten: 0.92,
-  detail: { rings: [28, 5, 2], sides: [170, 22, 12] },
+  // Scales are in the strip's normal map now, not the mesh: the rings only carry muscle and plates.
+  detail: { rings: [14, 5, 2], sides: [88, 22, 12] },
+  uvBands: 10,
   relief: bodyRelief,
   tint: bodyTint,
 };
@@ -151,18 +153,19 @@ const tail: ChainSpec = {
   parent: { chain: 'body', link: 5 },
   path: [
     [-1.32, 0, 0.9],
-    [-2.0, 0.08, 0.62],
-    [-2.75, -0.1, 0.42],
-    [-3.45, 0.14, 0.24],
-    [-4.0, -0.04, 0.11],
-    [-4.36, 0.1, 0.07],
+    [-2.0, 0.1, 0.62],
+    [-2.72, 0.16, 0.42],
+    [-3.38, 0.42, 0.24],
+    [-3.92, 0.74, 0.11],
+    [-4.26, 1.02, 0.07],
   ],
-  radius: [0.27, 0.2, 0.14, 0.085, 0.04, 0.008],
+  radius: [0.29, 0.21, 0.145, 0.088, 0.042, 0.008],
   links: 12,
   bias: 1.15,
   flatten: 1.25,
   blend: 0.14,
-  detail: { rings: [13, 3, 1], sides: [60, 12, 7] },
+  detail: { rings: [8, 3, 1], sides: [40, 12, 7] },
+  uvBands: 5,
   relief: tailRelief,
   tint: tailTint,
 };
@@ -175,16 +178,17 @@ const fore: ChainSpec = aimed(
     ...rounded(
       [
         [0.92, 0.26, 1.04],
-        [0.84, 0.88, 0.72],
-        [0.98, 1.04, 0.32],
-        [1.3, 1.08, 0.08],
+        [0.84, 0.8, 0.72],
+        [0.98, 0.9, 0.32],
+        [1.3, 0.92, 0.08],
       ],
-      [0.32, 0.21, 0.14, 0.1],
+      [0.4, 0.27, 0.175, 0.118],
     ),
     links: 3,
     antiFold: true,
     blend: 0.16,
-    detail: { rings: [22, 5, 2], sides: [52, 12, 7] },
+    detail: { rings: [12, 5, 2], sides: [40, 12, 7] },
+    uvBands: 5,
     relief: legRelief,
     tint: legTint,
   },
@@ -199,16 +203,17 @@ const hind: ChainSpec = aimed(
     ...rounded(
       [
         [-1.02, 0.27, 0.98],
-        [-0.92, 0.92, 0.68],
-        [-1.02, 1.1, 0.32],
-        [-0.84, 1.16, 0.085],
+        [-0.92, 0.9, 0.68],
+        [-1.02, 1.04, 0.32],
+        [-0.84, 1.07, 0.085],
       ],
-      [0.38, 0.22, 0.145, 0.105],
+      [0.47, 0.23, 0.165, 0.118],
     ),
     links: 3,
     antiFold: true,
     blend: 0.18,
-    detail: { rings: [22, 5, 2], sides: [52, 12, 7] },
+    detail: { rings: [12, 5, 2], sides: [40, 12, 7] },
+    uvBands: 5,
     relief: legRelief,
     tint: legTint,
   },
@@ -225,11 +230,11 @@ export interface NeckPose {
 }
 
 export const NECK_POSES: readonly NeckPose[] = [
-  { tip: [2.66, -2.14, 2.0], bulge: 0.19, look: [0.86, -0.46, -0.2], tone: 0.0 },
-  { tip: [2.3, -1.2, 3.16], bulge: 0.22, look: [0.92, -0.2, -0.34], tone: 0.1 },
+  { tip: [2.42, -2.26, 2.78], bulge: 0.19, look: [0.86, -0.46, -0.2], tone: 0.0 },
+  { tip: [2.3, -1.24, 3.3], bulge: 0.22, look: [0.92, -0.2, -0.34], tone: 0.1 },
   { tip: [2.16, 0.06, 3.8], bulge: 0.17, look: [0.97, 0.02, -0.24], tone: 0.04 },
   { tip: [2.46, 1.34, 2.92], bulge: 0.2, look: [0.9, 0.3, -0.06], tone: 0.12 },
-  { tip: [2.72, 2.2, 1.84], bulge: 0.18, look: [0.82, 0.54, -0.26], tone: 0.02 },
+  { tip: [2.66, 2.14, 2.3], bulge: 0.18, look: [0.82, 0.54, -0.26], tone: 0.02 },
 ];
 
 export const NECK_IDS = NECK_POSES.map((_, k) => `neck_${k}`);
@@ -280,9 +285,10 @@ function neckSpec(k: number, pose: NeckPose): ChainSpec {
     antiFold: true,
     blend: 0.15,
     blendWith: NECK_POSES.map((_, j) => `neck_${j}`).filter((_, j) => j !== k),
-    detail: { rings: [12, 3, 1], sides: [60, 12, 7] },
-    relief: neckRelief,
-    tint: neckTint(pose.tone),
+    detail: { rings: [5, 3, 1], sides: [40, 12, 7] },
+    uvBands: 4,
+    relief: neckRelief(k),
+    tint: neckTint(pose.tone, k),
   };
 }
 
@@ -362,13 +368,29 @@ export const LEG_FEET = ['fore_l', 'fore_r', 'hind_l', 'hind_r'] as const;
 /** Folds of the body that are meant: behind each bent hind knee, and where a neck's first bend
  *  leaves the shoulder. Each is one fold, in a region a fraction of the limb it sits on. */
 export const BODY_CREASES: readonly IntendedCrease[] = [
-  ...([1, -1] as const).map((side) => ({
-    name: `knee_back_${side > 0 ? 'l' : 'r'}`,
-    part: 'body',
-    at: [-1.035, side * 0.915, 0.515] as Vec3,
-    radius: 0.13,
-    why: 'the fold of skin behind a bent hind knee',
-  })),
+  ...([1, -1] as const).flatMap((side) => [
+    {
+      name: `knee_back_${side > 0 ? 'l' : 'r'}`,
+      part: 'body',
+      at: [-1.04, side * 0.9, 0.53] as Vec3,
+      radius: 0.14,
+      why: 'the fold of skin behind a bent hind knee',
+    },
+    {
+      name: `hock_${side > 0 ? 'l' : 'r'}`,
+      part: 'body',
+      at: [-0.88, side * 1.05, 0.45] as Vec3,
+      radius: 0.14,
+      why: 'the fold in front of the hock, where the heavy shin turns down into the foot',
+    },
+    {
+      name: `elbow_${side > 0 ? 'l' : 'r'}`,
+      part: 'body',
+      at: [0.89, side * 0.71, 0.53] as Vec3,
+      radius: 0.14,
+      why: 'the fold of skin inside a bent elbow, under the thick upper arm',
+    },
+  ]),
   {
     name: 'hip_top',
     part: 'body',

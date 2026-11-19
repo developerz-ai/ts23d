@@ -18,9 +18,9 @@ muzzle and cheeks, the shoulder/neck mane, black tail tip.
 | Tail | 0.29–0.50 | **0.42** along the curve (test ±5 %) | same |
 | Shoulder height | 0.80–0.85 | withers 0.84 incl. mane (test: 0.80–0.86) | same |
 | Mass | European mean 38.5, North American 36; females 2.3–4.5 lighter | **40** declared, ±25 % (`real.mass`); model 30–60 (test) | same |
-| Skull | 0.23–0.28 long, 0.13–0.15 wide | head **0.265** long, width 0.55 × length | same |
+| Skull | 0.23–0.28 long, 0.13–0.15 wide | head **0.275** long (a large male's 0.265 skull + fur), furred width 0.64 × length (skull 0.55 + ~1.2 cm of coat a side), muzzle 0.41 of the head with a blunt 0.128 tip (a slimmer one read as a coyote) | same |
 | Coat | winter guard hairs 60–70 mm mid-back; shoulders usually ≤ 90 mm, up to 110–130 mm (the mane/"cape"); dense short underfur | fur cards by zone; coated outline width **0.29** vs body 0.27–0.28 (`real.width` is the coated box) | same, "Description" (fur) |
-| Ears | 0.09–0.11 high, "relatively small and triangular" | **0.10**, erect blades with a pale cup | same |
+| Ears | 0.09–0.11 high, "relatively small and triangular" | **0.09**, erect blades with a pale cup | same |
 | Winter fur | back 60–70 mm; shoulders ≤ 90, up to 110–130 (a crest on the neck) | coat shell 3 cm (mass gate), mane 4 cm (`build.ruff`) | same |
 
 Overall box (`real` length/width/height 1.31 × 0.27 × 0.90 m) is measured off the posed skeleton:
@@ -29,12 +29,13 @@ nose → hanging tail, paw to paw, paws → ear tips. The sourced numbers above 
 ## Skeleton and stance
 
 - **Digitigrade** (`stance: 'digitigrade'`): wrist and hock clear of the ground; the hock at
-  ~0.28 × shoulder height; elbow back at the bottom of the chest, stifle forward at the belly.
+  0.25 × shoulder height (`build.hock`; the kind's 0.28 gave a long hind cannon), standing 0.07
+  of the trunk behind the hip (`build.heel`); elbow back at the bottom of the chest, stifle forward at the belly.
 - Side view (kind defaults for quadrupeds, wolf numbers): chest depth ½ the withers
-  (`build.depth 0.5`) so the elbow sits at the chest floor ≈ 0.40 m; a narrow chest
-  (`width 0.55` × depth ≈ 0.22 m); the topline highest at the withers, a slight dip behind them,
+  (`build.depth 0.51`) so the elbow sits at the chest floor ≈ 0.40 m; a narrow chest
+  (`width 0.54` × depth ≈ 0.22 m); the topline highest at the withers, a slight dip behind them,
   the croup a little lower, the tail root under it; the waist tucked up to ⅔ of the chest depth
-  (`build.tuck 0.66`). The neck (0.28 m, 40° above level, estimate) rises from low between the
+  (`build.tuck 0.76`, the winter coat filling it). The neck (0.25 m, 42° above level, `pose.neck`; estimate) rises from low between the
   shoulders and carries the head forward of and above them, so the throat line reads from the
   jaw down to the brisket.
 - Legs: deltoid and triceps on the upper arm, forearm extensors/flexors over the top third of the
@@ -105,3 +106,20 @@ Weaker than a game-ready wolf up close:
 - the head part is lighter than the neck and its cheek lobe still shows a rim from behind (coat
   paint and fur cards are separate work);
 - LOD2 legs are 6-sided tubes; paws are rounded spindles — the outline holds.
+
+## Field wear (what makes it a wild wolf, not a zoo one)
+`wolf.ts` builds through `defineWildCreature` (`recipes/_lib/creature/wild.ts`, shared with the fox and the bear); the
+story is `WOLF_WILD`:
+
+| Mark | Where | How |
+|---|---|---|
+| Thaw mud | caked on the paws, patchy to 16 cm, flecks to 26 cm | `recipes/_lib/creature/wild-paint.ts` mud layer, world-space hash noise; `grime` ground grade under it |
+| Wet fur | darker to the hocks and under the belly | damp layer |
+| Matted coat | flank, breeches, behind the shoulder | dark clumped streaks along gravity |
+| Scars | two bite lines across the right shoulder, a claw line down the right of the muzzle | pale bare core, parted darker fur either side |
+| Nicked ear | left ear, rear rim | rim vertices pulled into the pinna (no triangle cut) |
+| Whiskers | 12 a side in rows of 4, 2 brow whiskers | tapered three-sided strands, `whiskers` part on the head bone |
+| Coat layer | 2 300 short cards per m² over flanks, shoulders and haunches | merged into the kind's `fur` part, each card on the skin vertex under its root |
+
+Every layer is a function of the world point, so all three LODs carry the same stains. LOD2 also
+gets two authored colour blocks the coarse mesh lost: the dark saddle and tawny leg tubes.

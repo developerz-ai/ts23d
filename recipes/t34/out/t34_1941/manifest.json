@@ -18,9 +18,9 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    46626,
-    10010,
-    1678
+    57221,
+    12288,
+    1448
   ],
   "drawCalls": [
     19,
@@ -200,6 +200,60 @@
     "Zaloga & Grandsen, T-34 in Action (Squadron/Signal 1981): 830 mm road wheels, 550 mm track, plate angles",
     "https://commons.wikimedia.org/wiki/File:Tank_Lidice,_čs._armáda_v_SSSR.png («LIDICE» slogan, Model 1943 with cupola and side drums)"
   ],
+  "weather": {
+    "chips": {
+      "target": 0.3754,
+      "actual": 0.3754,
+      "eligible": "convex-edges",
+      "area": 39.9062,
+      "by": {
+        "t34_fittings": {
+          "target": 0.3,
+          "actual": 0.3,
+          "area": 12.3
+        },
+        "t34_hull": {
+          "target": 0.4,
+          "actual": 0.4,
+          "area": 20.4101
+        },
+        "t34_turret": {
+          "target": 0.45,
+          "actual": 0.45,
+          "area": 4.9604
+        },
+        "t34_gun": {
+          "target": 0.4,
+          "actual": 0.4,
+          "area": 2.2357
+        }
+      }
+    },
+    "rust": {
+      "target": 0.5,
+      "actual": 0.5,
+      "eligible": "fasteners | below-fasteners",
+      "area": 0.333,
+      "by": {
+        "t34_hull": {
+          "target": 0.5,
+          "actual": 0.5,
+          "area": 0.2658
+        },
+        "t34_turret": {
+          "target": 0.5,
+          "actual": 0.5,
+          "area": 0.0672
+        }
+      }
+    },
+    "mud": {
+      "target": 0.5,
+      "actual": 0.5,
+      "eligible": "ground-near",
+      "area": 66.347
+    }
+  },
   "qa": {
     "pass": true,
     "findings": []

@@ -24,10 +24,10 @@ import {
   httpFinish,
   mockFinish,
 } from '../finish/index.ts';
-import type { PaintedSheet } from '../material/index.ts';
 import type { ReviewWarning } from '../render/index.ts';
 import type { Args } from './args.ts';
 import type { RenderResult } from './render-cmds.ts';
+import { type SheetSource, sheetOf } from './run-sheets.ts';
 
 /** Default request for the mock (an http model needs the user's own prompt). */
 export const MOCK_PROMPT = 'weathered, grime in the creases, light rust streaks, worn edges';
@@ -49,7 +49,7 @@ function modelOf(args: Args): FinishModel {
 export async function finishOne(
   asset: Asset,
   args: Args,
-  sheet: PaintedSheet,
+  look: SheetSource,
   store = fileStore(),
 ): Promise<RenderResult> {
   const f = args.finish ?? { model: 'mock' as const, force: false };
@@ -61,7 +61,9 @@ export async function finishOne(
   const dir = join(args.out, asset.name, 'finish');
   await mkdir(dir, { recursive: true });
   const model = modelOf(args);
-  const r = await finishAsset(compile(asset, { lod: 0 }), {
+  const lod0 = compile(asset, { lod: 0 });
+  const sheet = sheetOf(look, lod0);
+  const r = await finishAsset(lod0, {
     model,
     prompt: f.prompt ?? MOCK_PROMPT,
     ...(f.negative !== undefined ? { negative: f.negative } : {}),
@@ -134,7 +136,7 @@ export function finishWarnings(r: Pick<FinishResult, 'findings' | 'qa'>): Review
 export async function heroFinishOne(
   asset: Asset,
   args: Args,
-  sheet: PaintedSheet,
+  look: SheetSource,
 ): Promise<RenderResult> {
   const declared = asset.budget.heroTextures;
   const atlas = declared?.size ?? args.finish?.atlas ?? 2048;
@@ -145,7 +147,9 @@ export async function heroFinishOne(
     });
   const dir = join(args.out, asset.name, 'hero');
   await mkdir(dir, { recursive: true });
-  const r = heroTier(compile(asset, { lod: 0 }), {
+  const lod0 = compile(asset, { lod: 0 });
+  const sheet = sheetOf(look, lod0);
+  const r = heroTier(lod0, {
     size: atlas,
     sheet,
     ...(declared?.cell !== undefined ? { cell: declared.cell } : {}),

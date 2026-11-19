@@ -22,17 +22,27 @@ same bytes (hash-checked against `SCAN.sha256` in `source.ts`).
 | licence gate (CC0 / CC-BY / own; NC refused) | `importGlb` | CC0 accepted, credit line in `sources` |
 | read GLB, bake node transforms, Y-up → Z-up | `importGlb` | metres, +X front, registered to the bust |
 | clean: weld, winding, holes, duplicates, specks | `cleanMesh` | 9 flipped, 7 duplicates, 1 hole filled, neck cut left open, 5 small shells dropped (3 specks + 2 cut fragments) |
-| albedo → vertex colour, UVs → `plain` strip | `projectAlbedo`, `onSheet` | one skin material on the trim sheet |
-| LODs | `simplify` (QEM) | head 12 000 / 4 000 / 1 200 triangles |
+| albedo → vertex colour, UVs → the shared `face_skin` pore strip | `projectAlbedo`, `onSkin` (`recipes/_lib/face/skin-strip.ts`) | one skin material on the trim sheet, pores in its normal map, a `skin` sheen finish |
+| LODs | `simplify` (QEM) | head 12 000 / 4 000 / 680 triangles (`HEAD_TRIS`, `source.ts`; the far head keeps the brow ridge, nose and dark eye sockets as broad facets, the lids and socket rims are gone) |
 | joint | `ctx.joint('neck', socket)` | the scan's neck plugs into the leather collar, sized from the neck **measured on the mesh** |
 | own textures (opt-in) | `bun scripts/import.ts textured` | 1024² baked albedo + normal map (ears, lids, nostrils, lips), `head_own` material, +1 draw call |
 
 ## Code-built half
 Eyeballs from the bust library seated in the scan's sockets (placed by hm08 landmarks); the human
-bust's torso, leaner (`mass` 0.3) with its neck matched to the scan's, under the collar plane:
-slate dyed-wool tunic with folds, a slim russet shoulder mantle with a loosely folded hem, a
-vegetable-tanned leather collar roll (an elliptical torus round the measured neck), an old-brass
-brooch, a turned plinth. Muted palette in `build.ts` (`DYED`).
+bust's torso, leaner (`mass` 0.22, shoulders 16 cm half-span) with its neck matched to the scan's,
+under the collar plane and sawn flat through each shoulder like a carved bust (no arm stubs):
+slate dyed tunic with folds, a slim russet shoulder mantle with a loosely folded hem, a
+vegetable-tanned leather collar roll whose centre line follows the neck's own outline as measured
+on the mesh (48 sectors; an ellipse through the neck's bounding box stood off the flat back of the
+neck), an old-brass brooch, a turned plinth. Muted palette in `build.ts` (`DYED`).
+
+Materials: the garment on the shared `bust_wool` strip (`../_lib/bust/cloth-strips.ts`: twill
+relief, matte, a near-white ground, so the dye is its vertex colour), the collar on `leather`, the brooch on `brass`, the scan's
+skin on `face_skin` with a `skin` sheen finish, the plinth on `stone`.
+
+Wear: the cloth sun-faded and dusty on the shoulders and soiled at the hem (`weather()`, coverage
+in the manifest), the mantle's edge frayed to pale thread, the collar rubbed pale on top and dark
+in its groove, the plinth chipped and dusty.
 
 ## Swap in a real scan (MakeHuman / MPFB, CC0)
 1. Export a head from MakeHuman 1.x or MPFB 2 (Blender) as `.glb` (no Draco compression). Their
@@ -47,6 +57,6 @@ brooch, a turned plinth. Muted palette in `build.ts` (`DYED`).
    Rebuild until QA PASS, `bun run shots import_demo`.
 
 ## Open questions
-The hair is paint on the scan (as a scanner records a short cut), not geometry. The torso's arm
-stubs are the shared bust library's. The own-texture GLB is validated by the Khronos validator in
+The hair is paint on the scan (as a scanner records a short cut), not geometry. The torso ends in
+the shared bust library's arm cut (sawn through the deltoid, no stubs). The own-texture GLB is validated by the Khronos validator in
 tests but not rendered by ts23d's CPU renderer (it shows the trim-sheet path).

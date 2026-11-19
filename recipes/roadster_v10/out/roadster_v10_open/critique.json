@@ -1,62 +1,62 @@
 {
   "asset": "roadster_v10_open",
   "reviewer": "agent",
-  "overall": 6.1,
+  "overall": 7.1,
   "scores": {
     "silhouette": {
-      "score": 7,
-      "reason": "Doors, bonnet and boot open: reads as the roadster with everything open; the raised bonnet is a huge slab that hides the front end.",
+      "score": 8,
+      "reason": "Doors, bonnet and boot open with the nose still visible; the V10 bay reads.",
       "fixes": [
-        "hinge the bonnet at the rear (or check the front-hinge angle) so the nose stays visible"
+        "open the boot less so the tail line still reads in SIDE"
       ]
     },
     "proportions": {
       "score": 7,
-      "reason": "Same body as the closed car; the open bonnet looks larger than its opening.",
+      "reason": "Bonnet fits its opening and hinges at the rear; the nose is high and blunt like the closed car.",
       "fixes": [
-        "fit the bonnet panel to the opening outline"
+        "lower the nose 3–4 cm"
       ]
     },
     "materials": {
       "score": 7,
-      "reason": "Same paint, glass and mesh; the open bonnet surface is visibly lumpy/warped in hero.png.",
+      "reason": "Clearcoat red, black bay, chrome strut brace and side pipes with heat tint; the headlamp glow is thinner than before but still draws a white rim round the top and outer edge of each lamp in hero.png.",
       "fixes": [
-        "smooth the bonnet panel surface (warped shading)",
-        "clearcoat finish on the paint"
+        "soften the DRL glow",
+        "heat discolouration on the exhaust headers in the bay"
       ]
     },
     "detail": {
-      "score": 7,
-      "reason": "Engine bay with V10 heads, intake, reservoirs; door cards and hinges.",
+      "score": 8,
+      "reason": "V10 heads and intake runners, strut brace, bonnet underside bracing, door cards and hinges.",
       "fixes": [
-        "door hinges and latches at the shut faces",
-        "underside of the bonnet with bracing"
+        "latches on the door shut faces"
       ]
     },
     "wear": {
-      "score": 4,
-      "reason": "Showroom clean; the engine bay has no grime.",
+      "score": 6,
+      "reason": "Sill chips and heat tint on the side pipes; the bay is clean.",
       "fixes": [
-        "heat discolouration on the exhaust headers and grime in the bay"
+        "grime and oil in the engine bay",
+        "brake dust on the wheels"
       ]
     },
     "lod": {
-      "score": 6,
-      "reason": "FAR LOD2 keeps the open panels; tyres turn light grey with the rims.",
+      "score": 7,
+      "reason": "FAR LOD2 keeps the open panels and colours; wheels lose tyre/rim contrast.",
       "fixes": [
         "keep a black tyre ring separate from the rim at LOD2"
       ]
     },
     "technical": {
-      "score": 5,
-      "reason": "QA clean but 909k / 78k / 6.3k tris over 91 parts, same over-budget LOD0 as the closed car.",
+      "score": 7,
+      "reason": "155k / 28.8k / 4.5k triangles (from 909k), 30 draws.",
       "fixes": [
-        "gate engine-bay and grille mesh density by ctx.lod to bring LOD0 under ~150k"
+        "merge static body draws"
       ]
     }
   },
   "renders": {
-    "hero.png": "bf3cc03da4cd25289d260fe726656f3f32ff381595748e571de373b6df683a50",
-    "sheet.png": "9b6fd40c87c02e1b7b3e9c6ed4c30cf1dc05ff3f3fb7a63ca8c99b11070f9ad7"
+    "hero.png": "0ffa00e37037dc6a9f551a80cdd694ee8440f4329c0bd0895eccea54fcaee572",
+    "sheet.png": "389ec5ebce6b0f9fb0cd671ebb78a227afa86fb56b5b3705d67cd9d6c8666a6f"
   }
 }

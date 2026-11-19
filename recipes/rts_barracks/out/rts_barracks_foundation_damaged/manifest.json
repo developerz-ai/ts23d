@@ -20,9 +20,9 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    5246,
-    1954,
-    476
+    14036,
+    4278,
+    708
   ],
   "drawCalls": [
     2,
@@ -47,6 +47,11 @@
     },
     {
       "name": "smoke_1",
+      "kind": "smoke",
+      "when": "always"
+    },
+    {
+      "name": "smoke_2",
       "kind": "smoke",
       "when": "always"
     },
@@ -112,79 +117,111 @@
   ],
   "weather": {
     "chips": {
-      "target": 0.1026,
-      "actual": 0.1026,
+      "target": 0.1253,
+      "actual": 0.1253,
       "eligible": "convex-edges",
-      "area": 348.2972,
+      "area": 315.5471,
       "by": {
         "hall_masonry": {
           "target": 0.1,
           "actual": 0.1,
-          "area": 222.717
+          "area": 10.2844
+        },
+        "hall_plinth": {
+          "target": 0.12,
+          "actual": 0.12,
+          "area": 130.0716
         },
         "hall_render": {
           "target": 0.1,
           "actual": 0.1,
-          "area": 80.7739
+          "area": 85.4808
         },
         "hall_rubble": {
-          "target": 0.12,
-          "actual": 0.12,
-          "area": 44.8063
+          "target": 0.16,
+          "actual": 0.16,
+          "area": 89.7103
         }
       }
     },
     "moss": {
-      "target": 0.35,
-      "actual": 0.35,
-      "eligible": "ground-near & !down-facing",
-      "area": 233.3045,
+      "target": 0.4327,
+      "actual": 0.4327,
+      "eligible": "ground-near & !down-facing ; ground-near & side-facing",
+      "area": 107.732,
       "by": {
         "hall_masonry": {
-          "target": 0.35,
-          "actual": 0.35,
-          "area": 204.5722
+          "target": 0.45,
+          "actual": 0.45,
+          "area": 10.0027
+        },
+        "hall_plinth": {
+          "target": 0.4,
+          "actual": 0.4,
+          "area": 37.364
         },
         "hall_render": {
-          "target": 0.35,
-          "actual": 0.35,
-          "area": 28.7323
-        }
-      }
-    },
-    "dust": {
-      "target": 0.4859,
-      "actual": 0.4859,
-      "eligible": "up-facing",
-      "area": 232.774,
-      "by": {
-        "hall_masonry": {
-          "target": 0.5,
-          "actual": 0.5,
-          "area": 173.1383
-        },
-        "hall_render": {
-          "target": 0.5,
-          "actual": 0.5,
-          "area": 28.9927
-        },
-        "hall_rubble": {
-          "target": 0.55,
-          "actual": 0.55,
-          "area": 11.3532
-        },
-        "hall_timber": {
-          "target": 0.3,
-          "actual": 0.3,
-          "area": 19.2898
+          "target": 0.45,
+          "actual": 0.45,
+          "area": 60.3653
         }
       }
     },
     "mud": {
-      "target": 0.55,
-      "actual": 0.55,
-      "eligible": "ground-near",
-      "area": 34.1305
+      "target": 0.5306,
+      "actual": 0.5306,
+      "eligible": "ground-near & !up-facing ; ground-near & side-facing ; ground-near",
+      "area": 96.0758,
+      "by": {
+        "hall_masonry": {
+          "target": 0.55,
+          "actual": 0.55,
+          "area": 7.2592
+        },
+        "hall_plinth": {
+          "target": 0.5,
+          "actual": 0.5,
+          "area": 37.364
+        },
+        "hall_timber": {
+          "target": 0.55,
+          "actual": 0.55,
+          "area": 51.4526
+        }
+      }
+    },
+    "dust": {
+      "target": 0.481,
+      "actual": 0.481,
+      "eligible": "up-facing",
+      "area": 249.8895,
+      "by": {
+        "hall_masonry": {
+          "target": 0.55,
+          "actual": 0.55,
+          "area": 3.0251
+        },
+        "hall_plinth": {
+          "target": 0.5,
+          "actual": 0.5,
+          "area": 167.4562
+        },
+        "hall_render": {
+          "target": 0.55,
+          "actual": 0.55,
+          "area": 31.2997
+        },
+        "hall_rubble": {
+          "target": 0.45,
+          "actual": 0.45,
+          "area": 21.0466
+        },
+        "hall_timber": {
+          "target": 0.3,
+          "actual": 0.3,
+          "area": 27.0619
+        }
+      }
     }
   },
   "qa": {

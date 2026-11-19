@@ -1,60 +1,60 @@
 {
   "asset": "material_swatches",
   "reviewer": "agent",
-  "overall": 7.9,
+  "overall": 8,
   "scores": {
     "silhouette": {
       "score": 8,
-      "reason": "A stepped test-card stand: rows of strip panels rising to the back, decal and foliage cells on top; every panel visible from the 3/4 view.",
+      "reason": "Stepped rows separated by gaps read in SIDE; the board reads as a material library.",
       "fixes": [
-        "separate the rows by a thin gap so the steps read in the SIDE view"
+        "a sample sphere per strip on the top row too, so the silhouette varies"
       ]
     },
     "proportions": {
       "score": 9,
-      "reason": "Each strip one true-scale repeat wide, so texel density is judged directly.",
+      "reason": "Rows at true scale with a 1.8 m figure at the front.",
       "fixes": [
-        "add a 1.8 m figure at the front row as a scale reference"
+        "a ruler along the front edge"
       ]
     },
     "materials": {
       "score": 8,
-      "reason": "In hero.png the strips render with their own albedo/normal/ORM: wood grain, cobbles, cliff, grass, glass; in sheet.png most strips render flat grey.",
+      "reason": "The base colour and textures (brick, stone, grass, wood, metal) now render in both images, each strip with a sample sphere.",
       "fixes": [
-        "add a sphere per strip at LOD0 for curvature/roughness reading"
+        "an HDR band so metal and glass strips show reflections"
       ]
     },
     "detail": {
       "score": 7,
-      "reason": "Labels on every plinth face; at hero distance the labels are unreadable.",
+      "reason": "Strips and spheres read; the labels are a few pixels high and unreadable in hero.png.",
       "fixes": [
-        "scale label pixel size with the row panel width"
+        "scale label size with the row panel width"
       ]
     },
     "wear": {
       "score": 8,
-      "reason": "A test card is clean by design; weathering variants live in weather_demo.",
+      "reason": "Strips carry their own grime where the material has it.",
       "fixes": [
-        "a worn variant row showing each strip with its grime pass"
+        "a worn variant row with each strip after its grime pass"
       ]
     },
     "lod": {
-      "score": 7,
-      "reason": "LOD2 keeps every panel but drops labels.",
+      "score": 8,
+      "reason": "FAR LOD2 keeps every row and colour; labels and spheres drop at LOD1 without shifting the board.",
       "fixes": [
         "keep row labels as one quad per label at LOD1"
       ]
     },
     "technical": {
       "score": 8,
-      "reason": "QA clean; 27k / 778 / 778 tris (labels are the LOD0 cost), 132 parts.",
+      "reason": "20k / 1.1k / 950 triangles, 3 draws.",
       "fixes": [
-        "merge label pixel runs per word to cut LOD0 triangles"
+        "merge label pixel runs per word"
       ]
     }
   },
   "renders": {
-    "hero.png": "578d0df2543cd61f6c51535190715a4bede445429bcee70a310e9c5d00cc6824",
-    "sheet.png": "c7f2c4ed35885c119fb73372ff5a95ac8a63939b99361522193431cb5e766074"
+    "hero.png": "c6c9d9e72ba3d5b3c5751835b8720c3e5d4566a1cff84375060640b7140b6850",
+    "sheet.png": "d487f459509468b36fe01c1752540416ff312a5f10c7c2725259c4067d81df6c"
   }
 }

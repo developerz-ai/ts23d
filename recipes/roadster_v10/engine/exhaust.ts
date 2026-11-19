@@ -7,6 +7,7 @@ import type { Lod, Mesh, Vec3 } from '@developerz.ai/ts23d';
 import { lathe, merge } from '@developerz.ai/ts23d';
 import { C } from '../lib/colors.ts';
 import { bx, rod, shift, tube } from '../lib/geo.ts';
+import { heatScale, heatTint } from '../lib/wear.ts';
 import { BANKS, type Bank, bp, cylX, H_DECK } from './frame.ts';
 
 /** Side pipe run (left; the right mirrors y). */
@@ -20,7 +21,7 @@ export const PIPE = {
 
 function primaries(lod: Lod, b: Bank): Mesh {
   const s = b.s;
-  const segs = lod === 0 ? 10 : 6;
+  const segs = lod === 0 ? 8 : 5;
   const collector: Vec3 = [0.66, s * 0.47, 0.25];
   const parts: Mesh[] = [];
   for (let i = 0; i < 5; i++) {
@@ -36,7 +37,7 @@ function primaries(lod: Lod, b: Bank): Mesh {
       [collector[0] + 0.12, s * (0.44 + 0.006 * (i - 2)), 0.26 + 0.008 * (i - 2)],
       [collector[0] + 0.04, collector[1] + s * 0.004 * (i - 2), collector[2] + 0.004 * (i - 2)],
     ];
-    parts.push(tube(path, 0.042, C.exhaust, 'iron_rust', segs, lod === 0 ? 5 : 2));
+    parts.push(tube(path, 0.042, C.exhaust, 'iron_rust', segs, lod === 0 ? 2 : 1));
     if (lod === 0)
       parts.push(
         rod(
@@ -65,33 +66,49 @@ function primaries(lod: Lod, b: Bank): Mesh {
       4,
     ),
   );
-  return merge(parts);
+  // Cast headers: brown heat scale, darker toward the collector.
+  return heatScale(merge(parts), 0.62, 0.2);
 }
 
 function sidePipe(lod: Lod, s: 1 | -1): Mesh {
-  const segs = [24, 10, 6][lod] ?? 6;
+  const segs = [16, 8, 6][lod] ?? 6;
   const len = PIPE.x0 - PIPE.x1;
   const parts: Mesh[] = [
-    shift(
-      lathe({
-        // From the open, rolled tip at x1 (rear) forward to the closed front cap at x0.
-        profile: [
-          [PIPE.r * 0.6, 0.04],
-          [PIPE.r * 0.62, 0],
-          [PIPE.r * 0.82, 0],
-          [PIPE.r * 0.84, 0.02],
-          [PIPE.r, 0.1],
-          [PIPE.r, len - 0.06],
-          [PIPE.r * 0.7, len],
-          [0, len],
-        ],
-        segments: segs,
-        axis: 'x',
-        color: C.natural,
-        strip: 'chrome',
-        caps: false,
-      }),
-      [PIPE.x1, s * PIPE.y, PIPE.z],
+    // Bright steel that has run hot: blue at the collector end, straw by mid-length, soot in
+    // the tip.
+    heatTint(
+      shift(
+        lathe({
+          // From the open, rolled tip at x1 (rear) forward to the closed front cap at x0.
+          profile:
+            lod === 2
+              ? [
+                  [PIPE.r * 0.6, 0],
+                  [PIPE.r, 0.06],
+                  [PIPE.r, len - 0.06],
+                  [0, len],
+                ]
+              : [
+                  [PIPE.r * 0.6, 0.04],
+                  [PIPE.r * 0.62, 0],
+                  [PIPE.r * 0.82, 0],
+                  [PIPE.r * 0.84, 0.02],
+                  [PIPE.r, 0.1],
+                  [PIPE.r, len - 0.06],
+                  [PIPE.r * 0.7, len],
+                  [0, len],
+                ],
+          segments: segs,
+          axis: 'x',
+          color: C.natural,
+          strip: 'chrome',
+          caps: false,
+        }),
+        [PIPE.x1, s * PIPE.y, PIPE.z],
+      ),
+      PIPE.x0,
+      PIPE.x0 - len * 0.8,
+      PIPE.x1,
     ),
   ];
   if (lod < 2) {
@@ -110,10 +127,10 @@ function sidePipe(lod: Lod, s: 1 | -1): Mesh {
     });
     parts.push(shift(shield, [PIPE.x1 + len * 0.16, s * PIPE.y, PIPE.z]));
     if (lod === 0) {
-      const hole = rod([0, 0, 0], [0, 0.002, 0], 0.008, [0.03, 0.03, 0.03], 'plastic', 6);
-      for (let k = 0; k < 34; k++)
+      const hole = rod([0, 0, 0], [0, 0.002, 0], 0.008, [0.03, 0.03, 0.03], 'plastic', 4);
+      for (let k = 0; k < 22; k++)
         for (let j = 0; j < 3; j++) {
-          const x = PIPE.x1 + len * 0.18 + k * ((len * 0.68) / 33);
+          const x = PIPE.x1 + len * 0.18 + k * ((len * 0.68) / 21);
           const a = (j - 1) * 0.35;
           parts.push(shift(hole, [x, s * (PIPE.y + r * Math.cos(a)), PIPE.z + r * Math.sin(a)]));
         }
@@ -151,10 +168,11 @@ function sidePipe(lod: Lod, s: 1 | -1): Mesh {
   return merge(parts);
 }
 
-export function exhaust(lod: Lod): Mesh {
+/** `primary`: the manifolds from the heads to the side pipes (only where the heads are built). */
+export function exhaust(lod: Lod, primary: boolean): Mesh {
   const parts: Mesh[] = [];
   for (const b of BANKS) {
-    if (lod < 2) parts.push(primaries(lod, b));
+    if (primary) parts.push(primaries(lod, b));
     parts.push(sidePipe(lod, b.s));
   }
   return merge(parts);

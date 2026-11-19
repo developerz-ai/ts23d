@@ -1,9 +1,11 @@
 // Weathering demo: four everyday objects, each as a pristine / weathered pair on a labelled slab —
-// a painted steel door in its frame (rust streaks under the hinge bolts, chipped edges, polish on
-// the handle, dents), a wooden crate (sun-bleached, sagging boards, moss low on the shaded side),
-// a precast concrete block (rust bleeding from its lifting anchors, moss, mud splash) and a
-// 55-gallon steel drum (rusty chimes and hoops, dents, dusty lid). Same geometry both sides: only
-// `weather(ctx, …)` differs, and its measured coverage lands in the manifest and QA `weather`.
+// a painted steel door in its frame (rust streaks under the hinge bolts and along the bottom rail,
+// chipped edges, polish on the handle, dents), a wooden crate (sun-bleached, sagging lid boards,
+// moss low on the shaded side), a precast concrete block (rust bleeding from its lifting anchors,
+// moss, mud splash) and a 55-gallon steel drum (rusty chimes and hoops, deep dents, dusty lid).
+// Same geometry both sides: only `weather(ctx, …)` differs, and its measured coverage lands in the
+// manifest and QA `weather`. Tessellation is set per object and per LOD so flat faces stay cheap,
+// and LOD2 keeps a coarse weathered grid so the new / weathered difference survives at distance.
 // Numbers: ./README.md.
 
 import {
@@ -27,20 +29,34 @@ const INK = hex('#1d1d1d');
 const DOOR_PAINT = hex('#4d6150');
 const STEEL = hex('#6f6f6c');
 const WOOD = hex('#9a6c40');
+const CORE = hex('#3a2a1a');
 const CONCRETE = hex('#a29e95');
+const TIE = hex('#3b3935');
 const DRUM_PAINT = hex('#2f4d7a');
+
+type Triple = readonly [number, number, number];
 
 interface Obj {
   readonly meshes: Readonly<Record<string, Mesh>>;
+  /** Hidden structure kept out of the weathering (never seen, so never tessellated). */
+  readonly plain?: Readonly<Record<string, Mesh>>;
   readonly fasteners: readonly { at: Vec3; radius: number }[];
   readonly touched?: readonly string[];
   readonly under: Vec3;
   readonly effects: WeatherEffects;
   readonly seed: number;
+  /** Longest edge after tessellation per LOD (m): fine where streaks run, coarse on flat faces. */
+  readonly resolution: Triple;
+  /** A second, coarser weathering pass for surrounding structure (the door frame). */
+  readonly rest?: {
+    readonly meshes: Readonly<Record<string, Mesh>>;
+    readonly resolution: Triple;
+    readonly effects: WeatherEffects;
+  };
 }
 
 /** Steel door 0.91 × 2.03 m (36 × 80 in) in a 0.1 m frame, three hinges with two bolts each. */
-function door(): Obj {
+function door(lod: number): Obj {
   const leaf = box({ size: [0.045, 0.91, 2.03], at: [0, 0, 0], color: DOOR_PAINT, strip: 'iron' });
   const jamb = (y: number): Mesh =>
     box({ size: [0.12, 0.08, 2.11], at: [0, y, 0], color: STEEL, strip: 'iron' });
@@ -57,9 +73,10 @@ function door(): Obj {
     );
     for (const dz of [0.025, 0.095]) {
       const at: Vec3 = [0.0315, -0.41, z + dz];
-      hinges.push(
-        cylinder({ radius: 0.009, length: 0.006, segments: 8, color: STEEL, at, axis: 'x' }),
-      );
+      if (lod < 2)
+        hinges.push(
+          cylinder({ radius: 0.009, length: 0.006, segments: 8, color: STEEL, at, axis: 'x' }),
+        );
       fasteners.push({ at, radius: 0.012 });
     }
   }
@@ -69,74 +86,117 @@ function door(): Obj {
     box({ size: [0.03, 0.022, 0.022], at: [0.0475, 0.39, 1.02], color: STEEL, strip: 'iron' }),
   ]);
   return {
-    meshes: { leaf, frame, hinges: merge(hinges), handle },
+    meshes: { leaf, hinges: merge(hinges), handle },
     fasteners,
     touched: ['handle'],
     under: hex('#8d8c88'),
     seed: 11,
+    // The leaf carries the streaks, so it is tessellated finer than the frame.
+    resolution: [0.1, 0.25, 0.5],
+    rest: {
+      meshes: { frame },
+      resolution: [0.3, 0.5, 0.9],
+      effects: {
+        bleach: { where: 'side-facing | up-facing', amount: 0.4, strength: 0.45 },
+        chips: { where: 'convex-edges', amount: 0.35 },
+        rust: { where: 'ground-near', amount: 0.3, streaks: false },
+        dust: { where: 'up-facing', amount: 0.6 },
+      },
+    },
     effects: {
       bleach: { where: 'side-facing | up-facing', amount: 0.45, strength: 0.45 },
       chips: { where: 'convex-edges', amount: 0.35 },
       scratches: { where: 'touched', amount: 0.5 },
+      // Rust starts at the hinge bolts and runs down; the bottom rail rusts from standing water.
       rust: {
-        where: 'below-fasteners | fasteners | (convex-edges & up-facing)',
-        amount: 0.35,
+        where: 'below-fasteners | fasteners | ground-near',
+        amount: 0.4,
         streaks: true,
-        streakLength: 0.7,
+        streakLength: 0.9,
+        strength: 0.9,
       },
       mud: { where: 'ground-near & side-facing', amount: 0.45 },
       dust: { where: 'up-facing', amount: 0.6 },
-      dents: { where: 'exposed-panels', count: [2, 4], depth: 0.008, radius: 0.09 },
+      dents: { where: 'exposed-panels', count: [2, 4], depth: 0.015, radius: 0.12 },
     },
   };
 }
 
 /** Shipping crate 0.8 × 0.8 × 0.62 m: corner posts, three boards a side, four on the lid. */
-function crate(): Obj {
-  // Inner core rises 2 mm past the post tops (0.6) so every lid board rests on it, not just the
-  // two outer boards that reach the posts.
-  const parts: Mesh[] = [
-    box({ size: [0.72, 0.72, 0.592], at: [0, 0, 0.01], color: hex('#3a2a1a'), strip: 'wood' }),
-  ];
+function crate(lod: number): Obj {
+  const parts: Mesh[] = [];
   for (const [x, y] of [
     [-1, -1],
     [-1, 1],
     [1, -1],
     [1, 1],
-  ] as const)
+  ] as const) {
     parts.push(
       box({ size: [0.06, 0.06, 0.6], at: [x * 0.37, y * 0.37, 0], color: WOOD, strip: 'wood' }),
     );
+    // Folded steel corner irons over the post, top and bottom (LOD0/1).
+    if (lod < 2)
+      for (const z of [0.02, 0.5])
+        parts.push(
+          box({
+            size: [0.072, 0.072, 0.08],
+            at: [x * 0.37 + x * 0.001, y * 0.37 + y * 0.001, z],
+            color: STEEL,
+            strip: 'iron',
+          }),
+        );
+  }
   for (let i = 0; i < 3; i++) {
     const z = 0.01 + i * 0.2;
     parts.push(box({ size: [0.02, 0.68, 0.18], at: [0.39, 0, z], color: WOOD, strip: 'wood' }));
     parts.push(box({ size: [0.02, 0.68, 0.18], at: [-0.39, 0, z], color: WOOD, strip: 'wood' }));
     parts.push(box({ size: [0.68, 0.02, 0.18], at: [0, 0.39, z], color: WOOD, strip: 'wood' }));
     parts.push(box({ size: [0.68, 0.02, 0.18], at: [0, -0.39, z], color: WOOD, strip: 'wood' }));
+    // Two nail heads at each board end, into the posts (LOD0 only).
+    if (lod === 0)
+      for (const s of [-1, 1])
+        for (const dz of [0.05, 0.13]) {
+          const nail = (at: Vec3, axis: 'x' | 'y'): Mesh =>
+            cylinder({ radius: 0.006, length: 0.003, segments: 6, color: STEEL, at, axis });
+          parts.push(nail([0.4, s * 0.31, z + dz], 'x'));
+          parts.push(nail([-0.4 - 0.003, s * 0.31, z + dz], 'x'));
+          parts.push(nail([s * 0.31, 0.4, z + dz], 'y'));
+          parts.push(nail([s * 0.31, -0.4 - 0.003, z + dz], 'y'));
+        }
   }
   for (let i = 0; i < 4; i++)
     parts.push(
       box({ size: [0.8, 0.18, 0.022], at: [0, -0.3 + i * 0.2, 0.6], color: WOOD, strip: 'wood' }),
     );
+  // Inner core rises 2 mm past the post tops (0.6) so every lid board rests on it. It is hidden by
+  // the boards, so it stays out of the weathering (no tessellation spent where nobody looks).
+  const core = box({ size: [0.72, 0.72, 0.592], at: [0, 0, 0.01], color: CORE, strip: 'wood' });
   return {
     meshes: { crate: merge(parts) },
+    plain: { core },
     fasteners: [],
     under: hex('#c9a273'),
     seed: 23,
+    resolution: [0.15, 0.35, 0.85],
     effects: {
-      bleach: { where: 'up-facing | sunlit', amount: 0.6, strength: 0.75 },
+      bleach: {
+        where: 'up-facing | side-facing',
+        amount: 0.7,
+        strength: 0.85,
+        color: [0.42, 0.4, 0.36],
+      },
       chips: { where: 'convex-edges', amount: 0.3 },
-      moss: { where: 'shaded & wet & !down-facing', amount: 0.3 },
-      mud: { where: 'ground-near & side-facing', amount: 0.35 },
+      moss: { where: 'shaded & wet & !down-facing', amount: 0.35 },
+      mud: { where: 'ground-near & side-facing', amount: 0.45 },
       dust: { where: 'up-facing', amount: 0.4 },
-      sag: { where: 'long-spans', max: 0.006 },
-      warp: { where: 'long-spans', max: 0.004 },
+      sag: { where: 'long-spans', max: 0.022 },
+      warp: { where: 'long-spans', max: 0.01 },
     },
   };
 }
 
 /** Precast concrete block 0.8 × 0.6 × 0.6 m with two cast-in lifting anchors on its face. */
-function block(): Obj {
+function block(lod: number): Obj {
   const body = box({ size: [0.6, 0.8, 0.6], color: CONCRETE, strip: 'concrete', bevel: 0.015 });
   const anchors: Mesh[] = [];
   const fasteners: { at: Vec3; radius: number }[] = [];
@@ -146,11 +206,27 @@ function block(): Obj {
     );
     fasteners.push({ at: [0.31, y, 0.49], radius: 0.035 });
   }
+  // Form-tie holes: a grid of plugged tie holes left by the shuttering on both long faces.
+  if (lod < 2)
+    for (const side of [-1, 1])
+      for (const x of [-0.15, 0.15])
+        for (const z of [0.15, 0.45])
+          anchors.push(
+            cylinder({
+              radius: 0.014,
+              length: 0.003,
+              segments: 6,
+              color: TIE,
+              at: [x, side * 0.4 + (side < 0 ? -0.003 : 0), z],
+              axis: 'y',
+            }),
+          );
   return {
     meshes: { block: body, anchors: merge(anchors) },
     fasteners,
     under: hex('#c4bfb4'),
     seed: 37,
+    resolution: [0.1, 0.25, 0.4],
     effects: {
       rust: { where: 'below-fasteners | fasteners', amount: 0.6, streaks: true, streakLength: 0.4 },
       chips: { where: 'convex-edges', amount: 0.3 },
@@ -162,14 +238,16 @@ function block(): Obj {
 }
 
 /** 55 US gal drum: 0.572 m × 0.851 m, rolled chimes and two rolling hoops, two bungs on the lid. */
-function drum(): Obj {
+function drum(lod: number): Obj {
   const r = 0.286;
   const hoop = (z: number): [number, number][] => [
     [r, z - 0.012],
     [r + 0.009, z],
     [r, z + 0.012],
   ];
-  const profile: [number, number][] = [
+  // LOD2 keeps the two rolling hoops (the drum's identity) and drops the rolled chimes.
+  const far: [number, number][] = [[r, 0], ...hoop(0.284), ...hoop(0.567), [r, 0.851]];
+  const near: [number, number][] = [
     [r - 0.004, 0],
     [r + 0.004, 0.006],
     [r + 0.004, 0.02],
@@ -182,8 +260,8 @@ function drum(): Obj {
     [r - 0.004, 0.851],
   ];
   const shell = lathe({
-    profile,
-    segments: 32,
+    profile: lod < 2 ? near : far,
+    segments: [32, 20, 14][lod] ?? 14,
     color: DRUM_PAINT,
     strip: 'iron',
     caps: true,
@@ -195,9 +273,21 @@ function drum(): Obj {
     [0.17, 0.08, 0.03],
     [-0.17, 0.08, 0.016],
   ] as const) {
+    const seg = [12, 8, 6][lod] ?? 6;
     bungs.push(
-      cylinder({ radius: rr, length: 0.012, segments: 12, color: STEEL, at: [x, y, 0.857] }),
+      cylinder({ radius: rr, length: 0.012, segments: seg, color: STEEL, at: [x, y, 0.857] }),
     );
+    // The cap's raised hex boss (LOD0/1).
+    if (lod < 2)
+      bungs.push(
+        cylinder({
+          radius: rr * 0.55,
+          length: 0.008,
+          segments: 6,
+          color: STEEL,
+          at: [x, y, 0.866],
+        }),
+      );
     fasteners.push({ at: [x, y, 0.857], radius: rr });
   }
   return {
@@ -205,45 +295,64 @@ function drum(): Obj {
     fasteners,
     under: hex('#8d8c88'),
     seed: 41,
+    resolution: [0.1, 0.2, 0.4],
     effects: {
       rust: { where: 'convex-edges | fasteners', amount: 0.15, streaks: true, streakLength: 0.25 },
       chips: { where: 'convex-edges', amount: 0.3 },
       dust: { where: 'up-facing', amount: 0.5 },
       mud: { where: 'ground-near & side-facing', amount: 0.35 },
       bleach: { where: 'sunlit', amount: 0.3 },
-      dents: { where: 'exposed-panels & side-facing', count: [1, 3], depth: 0.01, radius: 0.1 },
+      dents: { where: 'exposed-panels & side-facing', count: [2, 3], depth: 0.03, radius: 0.08 },
     },
   };
 }
 
 /** One labelled slab with the pristine object on the left (−Y) and the weathered one on the right. */
-function pair(ctx: BuildContext, name: string, make: () => Obj, at: Vec3, gap: number): void {
+function pair(
+  ctx: BuildContext,
+  name: string,
+  make: (lod: number) => Obj,
+  at: Vec3,
+  gap: number,
+): void {
   const len = 2 * gap + 1.2;
+  // Labels are read up close only; LOD2 drops them (the slab is a plain plinth at distance).
   const label = (s: string, y: number): Mesh =>
-    text(s, { origin: [0.6, y, 0.03], height: 0.06, color: INK, align: 'centre' });
+    text(s, { origin: [0.6, y, 0.03], height: 0.09, color: INK, align: 'centre', maxWidth: 0.9 });
   const slab = merge([
     box({ size: [1.2, len, SLAB_H], color: SLAB, strip: 'concrete' }),
-    label('NEW', -gap / 2 - 0.3),
-    label('WEATHERED', gap / 2 + 0.3),
+    ...(ctx.lod < 2 ? [label('NEW', -gap / 2 - 0.3), label('WEATHERED', gap / 2 + 0.3)] : []),
   ]);
   ctx.part(`${name}_slab`, slab, { at });
   const top: Vec3 = [at[0], at[1], at[2] + SLAB_H];
-  const fresh = make();
-  for (const [k, m] of Object.entries(fresh.meshes))
-    ctx.part(`${name}_new_${k}`, m, { at: [top[0], top[1] - gap / 2 - 0.3, top[2]] });
-  const old = make();
+  const newAt: Vec3 = [top[0], top[1] - gap / 2 - 0.3, top[2]];
+  const oldAt: Vec3 = [top[0], top[1] + gap / 2 + 0.3, top[2]];
+  const fresh = make(ctx.lod);
+  for (const [k, m] of Object.entries({ ...fresh.plain, ...fresh.meshes, ...fresh.rest?.meshes }))
+    ctx.part(`${name}_new_${k}`, m, { at: newAt });
+  const old = make(ctx.lod);
   const aged = weather(ctx, old.meshes, {
     name: `${name}_old`,
     seed: old.seed,
     age: 0.8,
-    resolution: [0.05, 0.12, 0],
+    resolution: old.resolution,
     fasteners: old.fasteners,
     ...(old.touched ? { touched: old.touched } : {}),
     under: old.under,
     effects: old.effects,
   });
-  for (const [k, m] of Object.entries(aged))
-    ctx.part(`${name}_old_${k}`, m, { at: [top[0], top[1] + gap / 2 + 0.3, top[2]] });
+  const rest = old.rest
+    ? weather(ctx, old.rest.meshes, {
+        name: `${name}_old_rest`,
+        seed: old.seed + 1,
+        age: 0.8,
+        resolution: old.rest.resolution,
+        under: old.under,
+        effects: old.rest.effects,
+      })
+    : {};
+  for (const [k, m] of Object.entries({ ...old.plain, ...aged, ...rest }))
+    ctx.part(`${name}_old_${k}`, m, { at: oldAt });
 }
 
 export const weather_demo = defineAsset({
@@ -256,7 +365,7 @@ export const weather_demo = defineAsset({
     'https://en.wikipedia.org/wiki/Drum_(container)',
     'https://www.wbdg.org/guides-specifications/building-envelope-design-guide/fenestration-systems/doors',
   ],
-  budget: { triangles: [110000, 24000, 4000] },
+  budget: { triangles: [24000, 7000, 2000] },
   build(ctx) {
     pair(ctx, 'door', door, [-1.2, -1.45, 0], 0.9);
     pair(ctx, 'crate', crate, [-1.2, 1.55, 0], 0.6);

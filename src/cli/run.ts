@@ -9,17 +9,9 @@
 //   <out>/<asset>/review/… (t3d review) · <out>/index.json — every asset built into <out>, by name,
 //   with its QA verdict (merged with the index already there)
 
-import { mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { type Asset, isTs23dError, Ts23dError } from '../core/index.ts';
-import { SHEET_MAPS, type SheetBinding, sheetFileName, sheetPngs } from '../export/index.ts';
-import {
-  DEFAULT_SHEET,
-  type LiveSheet,
-  liveSheet,
-  type PaintedSheet,
-  provideTextures,
-} from '../material/index.ts';
+import { provideTextures, type SheetRecipe } from '../material/index.ts';
 import { provideImports } from '../neural/index.ts';
 import { type Args, parseArgs } from './args.ts';
 import { blenderMain } from './blender-review-cmd.ts';
@@ -59,6 +51,7 @@ import {
   printManifest,
   qaFailed,
 } from './report.ts';
+import { type RunSheets, runSheets } from './run-sheets.ts';
 import { serverMain } from './server-cmd.ts';
 import { setupMain } from './setup-cmd.ts';
 import { loadTextureCache } from './texture-cache.ts';
@@ -133,30 +126,8 @@ async function dispatch(argv: readonly string[], json: boolean): Promise<number>
       yesSpend: args.yesSpend,
     });
   const renders = RENDERS.includes(args.cmd);
-  const live = await prepareSheet(args, renders);
-  let painted = live?.current().sheet;
-  let texture = await sheetBinding(args, painted);
-  // Recipes may define materials while loading or compiling; repaint (and rewrite the external
-  // sheet) whenever the set moved, and redo the asset that moved it (D47).
-  const fresh = async (): Promise<boolean> => {
-    const now = live?.current();
-    if (!now?.repainted) return false;
-    painted = now.sheet;
-    texture = await sheetBinding(args, painted);
-    return true;
-  };
-  // Run once; when compiling moved the material set, the stale sheet's render is redone — or,
-  // if the renderer refused it (`checkSheetFor`), retried — with the repainted sheet.
-  const twice = async <T>(run: () => Promise<T>): Promise<T> => {
-    let r: T;
-    try {
-      r = await run();
-    } catch (e) {
-      if (await fresh()) return run();
-      throw e;
-    }
-    return (await fresh()) ? run() : r;
-  };
+  // Each asset is painted its own sheet after it compiles (its materials are known then: D299).
+  const sheets = await prepareSheet(args, renders);
   const built: AssetManifest[] = [];
   const rendered: RenderResult[] = [];
   const listed: { asset: string; file: string }[] = [];
@@ -188,15 +159,9 @@ async function dispatch(argv: readonly string[], json: boolean): Promise<number>
         if (args.cmd === 'list') listed.push({ asset: asset.name, file });
         else if (args.cmd === 'blueprint') rendered.push(await blueprintOne(asset, args));
         else if (args.cmd === 'gaps') rendered.push(await gapsOne(asset, args));
-        else if (renders && live) {
-          await fresh();
-          rendered.push(
-            await twice(() => renderOne(asset, file, args, painted ?? live.current().sheet)),
-          );
-        } else {
-          await fresh();
-          built.push(await twice(() => buildOne(asset, args, texture, painted)));
-        }
+        else if (renders && sheets)
+          rendered.push(await renderOne(asset, file, args, sheets.recipe));
+        else built.push(await buildOne(asset, args, sheets));
       } catch (e) {
         const error = recipeThrew(e, file, `${asset.name}'s build()`).toJSON();
         failed.push({ file, asset: asset.name, error });
@@ -245,37 +210,23 @@ function renderOne(
   asset: Asset,
   file: string,
   args: Args,
-  painted: PaintedSheet,
+  look: SheetRecipe,
 ): Promise<RenderResult> {
-  if (args.cmd === 'hero') return heroOne(asset, args, painted);
-  if (args.cmd === 'icon') return iconOne(asset, args, painted);
+  if (args.cmd === 'hero') return heroOne(asset, args, look);
+  if (args.cmd === 'icon') return iconOne(asset, args, look);
   if (args.cmd === 'finish')
-    return args.finish?.hero
-      ? heroFinishOne(asset, args, painted)
-      : finishOne(asset, args, painted);
-  if (args.cmd === 'critique') return critiqueOne(asset, file, args, painted);
-  return reviewOne(asset, file, args, painted);
+    return args.finish?.hero ? heroFinishOne(asset, args, look) : finishOne(asset, args, look);
+  if (args.cmd === 'critique') return critiqueOne(asset, file, args, look);
+  return reviewOne(asset, file, args, look);
 }
 
-/** Paint the trim sheet once per run (~3 s at 2048²); the beauty renders sample it too. */
-async function prepareSheet(args: Args, renders: boolean): Promise<LiveSheet | undefined> {
+/** Load the caches a paint reads; the run's sheets when the command writes or renders one. */
+async function prepareSheet(args: Args, renders: boolean): Promise<RunSheets | undefined> {
   const wantsSheet = (args.cmd === 'build' && args.sheet !== 'none') || renders;
-  if (wantsSheet) provideTextures(await loadTextureCache());
+  // `shot` paints no full sheet, but its sheet.png reads the 512² preview sheet (D297).
+  if (wantsSheet || args.cmd === 'shot') provideTextures(await loadTextureCache());
   provideImports(await loadImportCache());
-  return wantsSheet ? liveSheet({ ...DEFAULT_SHEET, size: args.sheetSize }) : undefined;
-}
-
-/** External mode writes the sheet once into <out>/; every GLB references ../trim_sheet_*.png. */
-async function sheetBinding(
-  args: Args,
-  painted: PaintedSheet | undefined,
-): Promise<SheetBinding | undefined> {
-  if (args.cmd !== 'build' || args.sheet === 'none' || !painted) return undefined;
-  if (args.sheet === 'embed') return painted;
-  const pngs = sheetPngs(painted);
-  await mkdir(args.out, { recursive: true });
-  for (const map of SHEET_MAPS) await Bun.write(join(args.out, sheetFileName(map)), pngs[map]);
-  return { external: true, prefix: '../trim_sheet' };
+  return wantsSheet ? runSheets(args) : undefined;
 }
 
 async function tuneAll(args: Args): Promise<number> {

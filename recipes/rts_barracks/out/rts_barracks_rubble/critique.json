@@ -1,65 +1,116 @@
 {
   "asset": "rts_barracks_rubble",
   "reviewer": "agent",
-  "overall": 5.7,
+  "overall": 6.9,
   "scores": {
     "silhouette": {
-      "score": 5,
-      "reason": "A flat plinth with knee-high wall stubs, tower drum stubs and a heap of cubes over red roof slabs: reads as generic ruins; only the two drum stubs hint that it was this barracks. Front and side views are a low flat strip.",
+      "score": 8,
+      "reason": "A 4 m standing corner with a stepped broken top and a tower stub with a ragged crown now give the ruin verticals; FRONT and SIDE read as a ruined hall, not a slab.",
       "fixes": [
-        "leave one gable corner or a tower stub standing 3-4 m high (plan.ts wallCells for rubble) so the ruin keeps a recognisable vertical"
+        "one leaning rafter or a door frame left standing in the gate so the entrance still reads"
       ]
     },
     "proportions": {
-      "score": 7,
-      "reason": "13.3 x 18.0 x 2.6 m on the same plinth and plan as the hall; block sizes match the standing walls.",
+      "score": 8,
+      "reason": "13.3 x 18.0 x 4.1 m; wall stubs and blocks on the coursing grid, block sizes vary.",
       "fixes": [
-        "vary rubble block sizes (0.3-1.0x) so the heap does not look like one repeated cube"
+        "the tower crown blocks (~0.6 m cubes) are bigger than the drum courses; use course-sized blocks"
       ]
     },
     "materials": {
-      "score": 5,
-      "reason": "Stone blocks read as stone, but the fallen roof slabs are clean saturated red sheets and the tower stub tops show a radial cut pattern that reads as a sliced log, not broken masonry.",
+      "score": 6,
+      "reason": "Stone blocks and wall stubs read as stone with damp streaks; the fallen team slates are bright clean red and the floor is the blotchy camouflage slab, so nothing reads burnt or dusty.",
       "fixes": [
-        "break the fallen slabs into several pieces with darkened, dusty undersides (fallenSlabs in site.ts)",
-        "give tower stub tops a broken block surface (stepped, missing blocks) instead of the flat radial cap"
+        "char/dust on the fallen slates (value down ~40%)",
+        "floor strip with ash and burnt patches"
       ]
     },
     "detail": {
-      "score": 5,
-      "reason": "Wall stubs, block heaps, two charred beams and fallen slabs; blocks are near-identical bevelled cubes and there is no small debris (gravel, splinters, shards) between them.",
+      "score": 7,
+      "reason": "Raking.png: stepped wall stubs, tower stub with loose crown blocks, a leaning beam, heaped blocks and slates. No gravel or small fragments between the heaps.",
       "fixes": [
-        "scatter small debris and gravel around the heaps",
-        "more charred beams, some leaning on the wall stubs"
+        "gravel and shards round the heaps",
+        "charred beam ends with split grain"
       ]
     },
     "wear": {
-      "score": 4,
-      "reason": "Every broken block is a clean bevelled cube with crisp arrises; no soot, scorch or ash on the floor, no dust over the fallen team slabs, which stay bright and unmarked. Nothing says fire or collapse beyond the arrangement.",
+      "score": 5,
+      "reason": "Raking.png and hero.png show crisp bevelled cube blocks, a little damp at the drum foot and no scorch, soot or ash anywhere; the fallen team slates are still bright saturated red, not dusty or charred. The collapse is told by arrangement only, not by surface.",
       "fixes": [
-        "grime() scorch zones on wall stub tops and the floor around the heaps (rubble() in site.ts)",
-        "dust coat on the fallen team slabs (fallenSlabs in site.ts) so the red reads as buried, not freshly laid",
-        "chip/break one or two edges per rubble block instead of whole cubes"
+        "scorch and soot on the broken wall tops and on the floor round the heap (rubble() in site.ts): dark, low-roughness patches that read at hero distance",
+        "dust/char coat on the fallen team slates (fallenSlabs) so the red reads buried, value down ~40%",
+        "chip one or two arrises per rubble block instead of whole clean cubes"
       ]
     },
     "lod": {
       "score": 6,
-      "reason": "FAR LOD2 keeps the plinth, wall stubs and tower drums, but the tower drums turn into coarse octagons and the fallen team slabs merge into one flat red polygon, so the heap texture of LOD0 disappears at distance.",
+      "reason": "lods.png: LOD2 (528 tris) keeps the corner wall and tower stub, but the heap collapses to one flat red quad with two blocks and the crown blocks vanish, so the ruin flattens visibly at distance.",
       "fixes": [
-        "keep 10-12 sides on the tower stubs at LOD2 (a few dozen triangles)",
-        "keep 2-3 tilted heap blocks per bay at LOD2 instead of flattening the fallen slabs into one plane"
+        "keep 3-4 tilted heap blocks and 3 slate shards at LOD2",
+        "keep a stepped crown (4-6 blocks) on the tower stub at LOD2"
       ]
     },
     "technical": {
       "score": 8,
-      "reason": "QA PASS on every gate (rebuilt today), tris 10.3k / 3.66k / 592, draws 2 / 2 / 2; deterministic, one trim material + team slot. Triangles mostly sit in the running-bond blocks, where they show.",
+      "reason": "QA PASS, tris 19.1k / 3.8k / 528, draws 2/2/2; one trim material + team slot, LOD2 well under 1k. Triangles mostly sit in the running-bond blocks and slates, where they show.",
       "fixes": [
-        "merge the per-block wall boxes into one course mesh per bay at LOD0 (shared inner faces removed) to cut the block-count triangles without losing the coursing"
+        "merge the per-block wall boxes into one course mesh per bay at LOD0 (shared inner faces removed) so the coursing costs fewer triangles"
       ]
     }
   },
   "renders": {
-    "hero.png": "2dc3a96e1c0effffe10e1ee87c65c80a372ef08ef246e663588a1f29a49f9973",
-    "sheet.png": "16f96b33047d909ec0d00bf97240b27c71d729ffadff5ddb056fcba8f930d1c0"
+    "hero.png": "86ebd755c61b81690d70999b7adda1e5017bf8bbe7ea2aa2da6aaf6c105cd191",
+    "sheet.png": "81e0069aeb8d16d163cf611b6591e4b05e5393259b6939ebe15e803a59c8e157"
+  },
+  "metrics": {
+    "silhouette": [
+      {
+        "view": "front",
+        "iou": 0.886
+      },
+      {
+        "view": "side",
+        "iou": 0.817
+      },
+      {
+        "view": "3/4",
+        "iou": 0.931
+      }
+    ],
+    "focal": {
+      "peakPart": "tower_l",
+      "peak": [
+        455,
+        156
+      ],
+      "focalShare": 0,
+      "focalArea": 0,
+      "top": [
+        {
+          "part": "walls",
+          "share": 0.384
+        },
+        {
+          "part": "tower_r",
+          "share": 0.223
+        },
+        {
+          "part": "tower_l",
+          "share": 0.104
+        }
+      ],
+      "declared": []
+    },
+    "rest": {
+      "share": 0.459,
+      "spread": 0.709,
+      "min": 0.25
+    },
+    "shape": {
+      "acuteShare": 0.021,
+      "straightShare": 0.745,
+      "taper": 0.498,
+      "shape": "stable"
+    }
   }
 }

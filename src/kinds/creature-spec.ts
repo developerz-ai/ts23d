@@ -3,6 +3,7 @@
 // validation that refuses impossible specs with T3D_RECIPE_INVALID before any sculpting happens.
 
 import { Ts23dError, type Vec3 } from '../core/index.ts';
+import { type CreatureBuild, checkBuild } from './creature-build.ts';
 import { FAMILIES, FAMILY_NAMES, type Family, type Hoof } from './creature-family.ts';
 
 export type Skeleton = 'quadruped' | 'biped' | 'bird' | 'fish' | 'serpent' | 'winged';
@@ -89,23 +90,8 @@ export interface CreatureSpec {
   /** Allowed share of standing weight on the forelegs (quadrupeds; QA `fore share`). Default per
    *  family, else 0.55–0.66 (dog 0.604, horse 0.57–0.60). */
   readonly foreShare?: readonly [number, number];
-  readonly build?: {
-    /** Chest depth ÷ shoulder height (default 0.45). */
-    readonly depth?: number;
-    /** Chest width ÷ chest depth (default 0.62). */
-    readonly width?: number;
-    /** Limb thickness × the allometric default (1 = Campione & Evans for the mass). */
-    readonly limbs?: number;
-    /** Tail girth × the default (a bushy wolf tail ≈ 1.6). */
-    readonly tailGirth?: number;
-    /** Long fur on the nape, throat and chest (a ruff), metres (default 0). */
-    readonly ruff?: number;
-    /** Abdomen depth at the flank ÷ chest depth: the waist tuck-up (default 0.72; greyhound ≈ 0.4). */
-    readonly tuck?: number;
-    /** Muscle definition 0..1: scales the fibre muscles' bellies (creature-muscles.ts; default per
-     *  family, lean canid 0.85). 0 = smooth masses only. */
-    readonly muscle?: number;
-  };
+  /** Body build: chest, limbs, stance knobs, the topline (creature-build.ts). */
+  readonly build?: CreatureBuild;
   readonly face?: {
     /** Head family; its numbers are defaults the fields below override (default: `family`'s). */
     readonly preset?: HeadPreset;
@@ -134,6 +120,10 @@ export interface CreatureSpec {
   readonly coat?: number;
   /** Strand cards over a fur coat (creature-fur.ts; default true). false = the sculpted shell only. */
   readonly cards?: boolean;
+  /** Card counts of the kind's fur per m² at LOD0: `density` the undercoat (default 1800),
+   *  `guard` the guard hairs (default 520). A big animal halves them; a small dense coat raises
+   *  them. Species numbers: `familyMember` does not hand them to another family. */
+  readonly fur?: { readonly density?: number; readonly guard?: number };
   readonly colours: CreatureColours;
   readonly pattern?: CreaturePattern;
   readonly pose?: {
@@ -246,12 +236,7 @@ export function checkCreature(s: CreatureSpec): CreatureSpec {
       `foreShare is [${s.foreShare.join(', ')}]`,
       'give [low, high] with 0 < low < high < 1 (quadruped mammals ≈ [0.55, 0.66])',
     );
-  ratio(s.build?.depth, 0.2, 0.8, 'build.depth');
-  ratio(s.build?.width, 0.3, 1.5, 'build.width');
-  ratio(s.build?.limbs, 0.2, 4, 'build.limbs');
-  ratio(s.build?.tailGirth, 0.2, 4, 'build.tailGirth');
-  ratio(s.build?.tuck, 0.3, 1, 'build.tuck');
-  ratio(s.build?.muscle, 0, 1, 'build.muscle');
+  checkBuild(s.build);
   if (s.face?.preset && !(s.face.preset in HEAD_PRESETS))
     bad(
       `unknown face.preset '${String(s.face.preset)}'`,
@@ -260,6 +245,8 @@ export function checkCreature(s: CreatureSpec): CreatureSpec {
   ratio(s.pose?.head, -30, 70, 'pose.head');
   ratio(s.pose?.neck, -10, 85, 'pose.neck');
   positive(s.coat, 'coat', 'coat thickness in metres (0.01–0.05 for fur)');
+  positive(s.fur?.density, 'fur.density', 'undercoat cards per m² at LOD0, > 0 (default 1800)');
+  positive(s.fur?.guard, 'fur.guard', 'guard hairs per m² at LOD0, > 0 (default 520)');
   positive(s.wingspan, 'wingspan', 'wingspan in metres, > 0');
   if (s.wingspan !== undefined && s.skeleton !== 'winged' && s.skeleton !== 'bird')
     bad(`a ${s.skeleton} has no wings`, "use skeleton 'winged' or 'bird', or drop `wingspan`");

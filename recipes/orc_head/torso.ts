@@ -40,10 +40,11 @@ export function torsoEdits(stage: number, s?: Surface): SculptEdit[] {
   body.push(ell([-0.07, 0, 0.27], [0.085, 0.17, 0.11], { blend: 0.05 }));
   // Pectorals: heavy slabs hanging from the clavicles, lower border lifting to the armpit.
   body.push(ell(L.pec, [0.05, 0.095, 0.06], { blend: 0.04, rotate: [-12, 8, -8] }));
-  // Deltoids: round caps on the shoulder (mostly under the pauldrons).
-  body.push(ball(L.deltoid, 0.072, { blend: 0.04 }));
+  // Deltoids: round caps on the shoulder, under the pauldrons (8 mm smaller than the cap seated
+  // on them: the outer bulge stays inside the dome's rim).
+  body.push(ball(L.deltoid, 0.064, { blend: 0.04 }));
   // Arm stubs below the deltoid, so the cut reads as a bust, not a barrel.
-  body.push(cone2(L.deltoid, [-0.012, 0.268, 0.15], 0.068, 0.06, { blend: 0.03 }));
+  body.push(cone2(L.deltoid, [-0.012, 0.262, 0.15], 0.062, 0.055, { blend: 0.03 }));
   if (stage >= 2) {
     // The back: a broad flat plane, the scapulae standing off it either side of the spine.
     body.push(scrape([-0.118, 0, 0.25], [-1, 0, 0.12], 0.4, 0.04));

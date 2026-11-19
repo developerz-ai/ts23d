@@ -1,63 +1,64 @@
 {
   "asset": "mountain_range_b",
   "reviewer": "agent",
-  "overall": 6.9,
+  "overall": 7.1,
   "scores": {
     "silhouette": {
       "score": 7,
-      "reason": "A deep valley between peaks reads; the right summit is an isolated needle spike and the long slopes are smooth, so it reads less alpine than seed A.",
+      "reason": "Massif and valley read and the rim no longer rolls down; the big right cone is now inside the tile with a snow cap, but it is still one smooth mass, and where the right cut crosses its ridge the skirt top shows thin knife teeth at the corner (hero.png).",
       "fixes": [
-        "clamp single-cell spikes (needle peak at the right edge)",
-        "more ridge branching on the long slopes"
+        "erode the right cone into ridges and couloirs",
+        "shift the window or soften the ridge where the right/back cut crosses it so the corner does not end in two thin teeth"
       ]
     },
     "proportions": {
       "score": 7,
-      "reason": "About 1 060 m relief on 2 × 2 km; the needle peak is steeper than real rock holds.",
+      "reason": "The right cone is too steep and uniform for its height.",
       "fixes": [
         "limit max slope to ~60° outside cliff cells"
       ]
     },
     "materials": {
-      "score": 6,
-      "reason": "Hero shows strong moiré banding on the long slopes and almost no snow; meadow green only in the valley.",
+      "score": 7,
+      "reason": "Blended rock, grass, forest and snow; the grey TOP frame is gone and the cone now carries a snow cap that reads in hero.png and TOP, but the cap shows faint contour-line banding, the cone has no rock strata, and the cut walls carry fine vertical streaks in hero.png (the strata texture stretched down the wall).",
       "fixes": [
-        "blend strips across triangle borders",
-        "lower the snow line for this seed or add snow on north faces"
+        "rock strata bands on the steep faces of the cone",
+        "remove the contour banding in the snow cap (smooth the cover map or add break-up noise)",
+        "map the skirt strata in planar U along the wall and V by height so it stops streaking vertically"
       ]
     },
     "detail": {
       "score": 6,
-      "reason": "Gullies on the left ridge; the large right slope is smooth.",
+      "reason": "Forest in the valley and a stream in TOP; the big slopes are smooth.",
       "fixes": [
         "more erosion iterations on the smooth slopes",
-        "scree fans at the slope feet"
+        "scree fans at slope feet"
       ]
     },
     "wear": {
-      "score": 6,
-      "reason": "Erosion only; no streams or avalanche tracks.",
+      "score": 7,
+      "reason": "The valley stream is now a continuous blue line along the floor in TOP (water at the water level, no longer broken specks), and shows faintly through the trees in hero.png; little weathering on the rock.",
       "fixes": [
-        "a stream along the valley floor (water strip)"
+        "dark streaks below drainage lines on the cone"
       ]
     },
     "lod": {
       "score": 8,
-      "reason": "FAR LOD2 holds outline and colour.",
+      "reason": "FAR LOD2 now keeps the snow line and forest edge as soft blocks instead of blocky white squares; the faces still show faceted diamond shading.",
       "fixes": [
-        "keep the needle peak from popping lower at LOD2"
+        "smooth the LOD2 normals so the faceted diamonds do not show at the switch"
       ]
     },
     "technical": {
       "score": 8,
-      "reason": "QA clean; 133k / 34k / 8.7k tris, one draw.",
+      "reason": "One draw, ~137k / 37k / 3.5k triangles for a 2 km tile with a skirt; QA clean. The edge calming is gone: the tile edge is the untouched field, TOP shows no frame and the skirt top follows the border row without a step, so neighbours cut from the same field meet flush.",
       "fixes": [
-        "drop skirt triangles that are never seen from above"
+        "drop skirt triangles that are never seen from above (the skirt is a flat wall at every LOD)"
       ]
     }
   },
   "renders": {
-    "hero.png": "e64f065f0c31942ae161cf21ab7a0a93c0101e8e72ee0a5c4e2ceedd071cc7a5",
-    "sheet.png": "2f2a9210bcad1bd0985ba8a69bfcf87734452d75f8090153bd9fbf12a518b4a3"
+    "hero.png": "b83e727a5f245db93256c6ca91adf5cbef3fce2f90a4619b6dc0b0b629f691f9",
+    "sheet.png": "dcebd2b6ad2449e06d6c1dd1373debc3a574e1d58e432ab274822cb940bfe6bf"
   }
 }

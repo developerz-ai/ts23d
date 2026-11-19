@@ -3,13 +3,19 @@
 ## Identity
 A teaching asset for `/audio` and `KHR_audio_emitter`, not a scene: each exhibit carries a sound
 synthesised from what it is made of and how big it is, written as `<clip>.wav` beside the GLB.
-- **Door in its frame** — a small painted-pine panel door; its leaf creaks while it swings
+- **Door in its frame** — a small painted-pine panel door (`exhibits.ts`: four raised, chamfered
+  fields a face, a brass lever, butt-hinge knuckles, bare wood where hands wear through the paint
+  around the lever and along the lock edge) in a stained oak frame; its leaf creaks while it swings
   (`sound: { onMotion }` on the moving part, `sound.mechanism({ kind: 'creak' })`).
-- **Steel bell on a yoke** — a 300 mm cast-steel bell that swings and rings
-  (`sound.impact({ material: 'steel', shape: 'hollow', size: 0.3 })`, modal synthesis).
-- **Wooden crate** — the kit crate, with a positional knock for game code to fire
-  (`ctx.emitter('crate_knock', { kind: 'sound', when: 'event' })`, pine plate modes).
-- **V10 engine block** — a 90° V10 long block on timber bearers, idling in a seamless loop
+- **Steel bell on a yoke** — a 300 mm cast-steel bell hung from an oak headstock on an axle, with a
+  clapper (rod and ball) inside, between two sturdy posts with a cross-tie; it swings and rings
+  (`sound.impact({ material: 'steel', shape: 'hollow', size: 0.3 })`, modal synthesis). Rust
+  blooms on the lip and runs down from the crown.
+- **Wooden crate** — a battened pine crate (`exhibits.ts`: plank faces over a dark core, lid boards,
+  edge battens, nail heads; LOD2 keeps the four corner battens), with a positional knock for game
+  code to fire (`ctx.emitter('crate_knock', { kind: 'sound', when: 'event' })`, pine plate modes).
+- **V10 engine block** — a 90° V10 long block on timber bearers with exhaust stubs and collectors,
+  intake runners and plug leads, an oil stain on the deck under it, idling in a seamless loop
   (`sound.engine({ cylinders: 10, rpm: 800, firingOrder })`, `when: 'always'` → autoPlay).
 
 ## Specs
@@ -18,7 +24,7 @@ synthesised from what it is made of and how big it is, written as `<clip>.wav` b
 | door clear opening (w × h) | 0.60 × 1.60 | small cupboard / shed door; the kit `panel_door` minimums |
 | bell mouth diameter | 0.30 | chosen; a ship's / school bell size |
 | bell lip (sound-bow) thickness | ≈ D/13 = 0.023 | Rossing, *The Science of Sound*, ch. 13 (bell profiles); https://en.wikipedia.org/wiki/Strike_tone |
-| crate (L × W × H) | 0.80 × 0.60 × 0.60 | kit `crate` defaults |
+| crate (L × W × H) | 0.80 × 0.60 × 0.60 | a Euro-pallet-width crate (the kit `crate` defaults) |
 | V10 bore / cylinder spacing | 0.1016 / ≈ 0.114 | production 8.0 L 90° V10 (published engine data), https://en.wikipedia.org/wiki/Chrysler_LA_engine#Viper_V10 |
 | V10 block length (estimate) | ≈ 0.70 | 5 × 0.114 m bore spacing + end walls; estimate, not a drawing |
 
@@ -32,7 +38,11 @@ synthesised from what it is made of and how big it is, written as `<clip>.wav` b
 
 ## Parts the engine needs
 `door_leaf` (sway, creak), `bell` (sway, strike), `crate` + `crate_knock` (sound emitter),
-`engine` + `engine_idle` (looping sound emitter, autoplay).
+`engine` + `engine_idle` (looping sound emitter, autoplay), `oil_stain` (flat decal under the
+engine).
+
+## Budget
+Budget why: a display deck of four sound exhibits (door, bell, crate, engine), not one game prop; ≈ 5.3k / 2.4k / 550 (was 5.3k / 2.9k / 1.1k).
 
 ## Open questions
 - Production 8 L V10 idle speed: sources quote 650–900 rpm; 800 chosen.

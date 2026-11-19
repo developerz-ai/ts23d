@@ -81,7 +81,9 @@ function blockOut(l: Block, coarse = false): SculptEdit[] {
     );
   return [
     ...extra,
-    blob([0.5 * lc, 0, 0.08 * H], [0.55 * lc, 0.5 * W, 0.48 * H], 0),
+    // The braincase joins the preset's forms (stop, cheek fur, flews) through a blend: a hard
+    // union left the stop's crown a fold against the skull whenever it stood just proud of it.
+    blob([0.5 * lc, 0, 0.08 * H], [0.55 * lc, 0.5 * W, 0.48 * H], extra.length > 0 ? 0.06 * L : 0),
     blob([0.14 * lc, 0, 0.02 * H], [0.34 * lc, 0.4 * W, 0.4 * H], 0.1 * L),
     blob([0.78 * lc, 0.3 * W, -0.1 * H], [0.28 * lc, 0.2 * W, 0.24 * H], 0.12 * L),
     // Muzzle: from under the stop to the nose, the bridge lifted mid-way.

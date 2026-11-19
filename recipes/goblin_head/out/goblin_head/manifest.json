@@ -20,14 +20,14 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    84284,
-    17260,
-    3636
+    54678,
+    14016,
+    2594
   ],
   "drawCalls": [
-    4,
-    4,
-    3
+    5,
+    5,
+    5
   ],
   "pivots": [
     {
@@ -45,6 +45,10 @@
     {
       "name": "face",
       "parent": null
+    },
+    {
+      "name": "face_finish_skin",
+      "parent": "face"
     }
   ],
   "emitters": [],
@@ -99,14 +103,14 @@
   ],
   "real": {
     "length": 0.223,
-    "width": 0.35,
+    "width": 0.276,
     "height": 0.482
   },
   "measures": [
     {
       "label": "eye spacing (pupil to pupil)",
       "spec": 0.063,
-      "measured": 0.06298208981752396,
+      "measured": 0.06297360081225634,
       "source": "interpupil 0.331 H (human 0.265 × 1.25) × 0.19 m"
     }
   ],
@@ -114,6 +118,20 @@
     "recipes/goblin_head/README.md (design dossier: proportions, exaggerations, palette)",
     "docs/research/head-analysis.md (human anchor ratios, Lee Perry-Smith scan, CC BY 3.0)"
   ],
+  "weather": {
+    "chips": {
+      "target": 0.04,
+      "actual": 0.04,
+      "eligible": "convex-edges",
+      "area": 0.1374
+    },
+    "dust": {
+      "target": 0.25,
+      "actual": 0.25,
+      "eligible": "up-facing",
+      "area": 0.0721
+    }
+  },
   "qa": {
     "pass": true,
     "findings": []

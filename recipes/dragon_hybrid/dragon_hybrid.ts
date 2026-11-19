@@ -1,8 +1,9 @@
 // Emberwing, an original fantasy drake, model-first (plan 2026/11/16/101 slice 11). The surface
 // is an image-to-3D model's dragon, whole, with its own textures on all three LODs: body, horns,
 // claws and both membrane wings. Code keeps the animal: the design scale (spec.ts), a quadruped
-// skeleton, the walk, the mass, the LOD budgets and QA. The wings carry no bones (the learned
-// rigger gives none): they ride with the chest, raised, and do not flap. The chain (surface.ts):
+// skeleton, the walk, the mass, the LOD budgets and QA. The learned rigger gives no wing bones:
+// wings.ts finds three a side on the mesh (shoulder, wrist, finger) and the wings beat in the
+// `flap` clip, settle in idle and are carried in the walk. The chain (surface.ts):
 // concept image → Pixal3D mesh → Blender proxy → UniRig joints → Blender steps (steps.ts) →
 // importModel. With no cache every request misses and this is a code-built quadruped of the
 // creature kind at the same scale, without wings.
@@ -23,8 +24,10 @@ export { CONCEPT } from './concept.ts';
 const SCALES = defineMaterial(CREATURE_MATERIALS.fur_neutral);
 
 /** The box of THIS pose, from the design spec (README.md, "Scale"): nose to tail tip, the wings
- *  raised in a V, the wing tips. */
-export const BOX = { length: 5.0, width: 2.8, height: 3.3 } as const;
+ *  raised in a V, the wing tips. The wings are the generator's × 1.25 (steps.ts WING_SCALE): the
+ *  V was 2.8 m wide and 3.3 m high, and is 3.4 m and 3.7 m (3.35 m and 3.60 m once `repose` has
+ *  made the two wings' bones mirror images). */
+export const BOX = { length: 5.0, width: 3.4, height: 3.7 } as const;
 
 /** The design spec read on the model body (README.md table), metres. */
 export const SOURCED = {
@@ -47,15 +50,18 @@ export function measured(a: Parameters<Check>[0]): {
   const bones = a.skeleton?.bones ?? [];
   const shoulder = bones.find((b) => b.name === 'fore_l_0')?.head;
   if (!mesh || !shoulder) return null;
+  const croup = bones.find((b) => b.name === 'tail_1')?.head[2] ?? 0.775 * DRAKE.height;
   const P = mesh.positions;
   let [withers, nose, rump] = [0, Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY];
   for (let i = 0; i < P.length; i += 3) {
     const [x = 0, y = 0, z = 0] = [P[i], P[i + 1], P[i + 2]];
-    // The back's top over the shoulder joints; the nose; the rump above the hanging tail.
+    // The back's top over the shoulder joints; the nose; the rump: the midline skin down to the
+    // height of the first free tail joint (where croup becomes tail). Midline, because the wings'
+    // trailing membranes reach further back than the croup at any height.
     if (Math.abs(y) < 0.06 && x > shoulder[0] - 0.1 && x < shoulder[0] + 0.02)
       withers = Math.max(withers, z);
     nose = Math.max(nose, x);
-    if (z > 0.775 * DRAKE.height) rump = Math.min(rump, x);
+    if (z > croup && Math.abs(y) < 0.06) rump = Math.min(rump, x);
   }
   const tail = bones
     .filter((b) => /^tail_[1-9]\d*$/.test(b.name))
@@ -89,7 +95,7 @@ const sourced: Check = (a) => {
 export const dragon_hybrid = defineModelCreature({
   name: 'dragon_hybrid',
   description:
-    'Emberwing, an original fantasy drake standing on all fours, wings raised: 3.2 m nose to rump, 1.6 m at the shoulder, 5.0 m with the tail, 600 kg. Model tier: an image-to-3D surface (Pixal3D, MIT) with its own textures on three LODs, skinned to a quadruped skeleton (joints from UniRig) with idle, look and walk clips; the wings ride with the chest and do not flap. Without the neural cache: a code-built wingless quadruped at the same scale',
+    'Emberwing, an original fantasy drake standing on all fours, wings raised: 3.2 m nose to rump, 1.6 m at the shoulder, 5.0 m with the tail, 600 kg. Model tier: an image-to-3D surface (Pixal3D, MIT) with its own textures on three LODs, skinned to a quadruped skeleton (joints from UniRig) and three bones a wing, with idle, look, walk and flap clips. Without the neural cache: a code-built wingless quadruped at the same scale',
   tags: ['creature', 'fantasy', 'dragon', 'skinned', 'neural', 'model-first'],
   license: 'CC0-1.0',
   sources: [

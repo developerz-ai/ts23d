@@ -1,7 +1,7 @@
 {
   "name": "boulders",
   "kind": "prop",
-  "description": "Four weathered granite boulders (0.6–2.4 m): SDF masses, fracture cuts, pitting, north-side moss, lichen.",
+  "description": "Four weathered granite boulders (0.6–2.4 m), rounded, angular and slab: SDF masses, crisp fracture faces, pitting, sunk in soil with pebbles, north-side moss, lichen.",
   "tags": [
     "rock",
     "boulder",
@@ -20,9 +20,9 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    36260,
-    6684,
-    956
+    35239,
+    5114,
+    432
   ],
   "drawCalls": [
     1,
