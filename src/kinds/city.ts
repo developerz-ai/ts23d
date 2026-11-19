@@ -1,8 +1,8 @@
 // A city block from real footprints: each building is its footprint extruded to its height
 // (`prism`, so the massing is the survey's polygon, not a box), a roof band in the roof colour,
 // and windows laid along every street-facing edge by a split-grammar line per storey
-// (`pier:~ | {wall | win | wall}* | pier:~`, bay width by the building's seed); party walls get
-// none. Streets are flat ribbons on a ground slab. Windows are one repeated mesh: the block
+// (`pier:~ | {wall | win | wall}* | pier:~`, bay width by the building's seed); a slot on a
+// stretch shared with a neighbour gets none. Streets are flat ribbons clipped to the ground slab. Windows are one repeated mesh: the block
 // returns their transforms so a scene can export them as GPU instances (EXT_mesh_gpu_instancing)
 // while the asset merges them per building. LOD2 keeps massing and roofs only.
 
@@ -15,6 +15,7 @@ import {
   type CityPlanOptions,
   cityPlan,
 } from './city-plan.ts';
+import { area2, clipPoly } from './faces.ts';
 
 export interface CityStreet {
   readonly highway: string;
@@ -35,6 +36,7 @@ export interface CityOptions extends CityPlanOptions {
 }
 
 export interface CityInstance {
+  /** Bottom centre of the window on the wall plane (the unit window's origin). */
   readonly at: Vec3;
   readonly yaw: number;
   readonly scale: Vec3;
@@ -62,7 +64,8 @@ const ROOF_BAND = 0.3;
 const CORNICE = 0.45;
 const WINDOW_DEPTH = 0.08;
 
-/** The unit window: 1 m wide, 1 m tall, centred on the wall plane, facing +X. */
+/** The unit window: 1 m wide, 1 m tall from z = 0 up (the sill), centred on the wall plane in X
+ *  and Y, facing +X. */
 export const cityWindow = (glass: Vec3): Mesh =>
   box({ size: [WINDOW_DEPTH, 1, 1], at: [0, 0, 0], color: glass, strip: 'glass', omit: ['back'] });
 
@@ -75,6 +78,7 @@ export function cityWindows(p: CityBuildingPlan): CityInstance[] {
   const line = `pier:~ | {wall:${pier.toFixed(2)} | win:${w.toFixed(2)} | wall:${pier.toFixed(2)}}* | pier:~`;
   for (let i = 0; i < n; i++) {
     if (p.party[i]) continue;
+    const taken = p.shared[i] ?? [];
     const a = p.ring[i] ?? [0, 0];
     const b = p.ring[(i + 1) % n] ?? a;
     const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
@@ -82,10 +86,14 @@ export function cityWindows(p: CityBuildingPlan): CityInstance[] {
     const [ux, uy] = [(b[0] - a[0]) / len, (b[1] - a[1]) / len];
     // Counter-clockwise ring: the outward normal is the edge turned clockwise.
     const yaw = Math.atan2(-ux, uy);
-    const slots = split(line, len).filter((s) => s.symbol === 'win');
+    // A window needs open wall: not on a stretch a neighbour stands against.
+    const slots = split(line, len).filter(
+      (s) => s.symbol === 'win' && !taken.some(([lo, hi]) => s.start < hi && s.start + s.size > lo),
+    );
     for (let f = 0; f < p.floors; f++) {
+      // Sill at 26% of the storey, head at 82%: the top row stays under the cornice.
       const h = p.floorHeight * 0.56;
-      const z = p.base + f * p.floorHeight + p.floorHeight * 0.26 + h / 2;
+      const z = p.base + f * p.floorHeight + p.floorHeight * 0.26;
       for (const s of slots) {
         const t = s.start + s.size / 2;
         out.push({ at: [a[0] + ux * t, a[1] + uy * t, z], yaw, scale: [1, s.size, h] });
@@ -95,48 +103,33 @@ export function cityWindows(p: CityBuildingPlan): CityInstance[] {
   return out;
 }
 
-/** A street segment as a flat ribbon prism (0.04 m, from the ground up), clipped to the slab. */
-function ribbon(a: Vec2, b: Vec2, width: number, color: Vec3): Mesh | null {
+/** A street segment as a flat ribbon prism (0.04 m, from the ground up): the widened ribbon,
+ *  not just its centre line, is clipped to the slab `e`. */
+function ribbon(
+  a: Vec2,
+  b: Vec2,
+  width: number,
+  e: readonly [number, number, number, number],
+  color: Vec3,
+): Mesh | null {
   const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
   if (len < 0.05) return null;
   const [nx, ny] = [(-(b[1] - a[1]) / len) * (width / 2), ((b[0] - a[0]) / len) * (width / 2)];
-  return prism({
-    profile: [
-      [a[0] - nx, a[1] - ny],
-      [b[0] - nx, b[1] - ny],
-      [b[0] + nx, b[1] + ny],
-      [a[0] + nx, a[1] + ny],
-    ],
-    depth: 0.04,
-    centred: false,
-    color,
-    strip: 'asphalt',
-  });
-}
-
-/** Liang–Barsky: the part of segment a→b inside the box, or null. */
-function clip(a: Vec2, b: Vec2, e: readonly [number, number, number, number]): [Vec2, Vec2] | null {
-  let [t0, t1] = [0, 1];
-  const d: Vec2 = [b[0] - a[0], b[1] - a[1]];
-  for (const [p, q] of [
-    [-d[0], a[0] - e[0]],
-    [d[0], e[2] - a[0]],
-    [-d[1], a[1] - e[1]],
-    [d[1], e[3] - a[1]],
-  ] as const) {
-    if (p === 0) {
-      if (q < 0) return null;
-      continue;
-    }
-    const r = q / p;
-    if (p < 0) t0 = Math.max(t0, r);
-    else t1 = Math.min(t1, r);
-  }
-  if (t0 >= t1) return null;
-  return [
-    [a[0] + d[0] * t0, a[1] + d[1] * t0],
-    [a[0] + d[0] * t1, a[1] + d[1] * t1],
+  let profile: Vec2[] = [
+    [a[0] - nx, a[1] - ny],
+    [b[0] - nx, b[1] - ny],
+    [b[0] + nx, b[1] + ny],
+    [a[0] + nx, a[1] + ny],
   ];
+  for (const inside of [
+    (p: Vec2) => e[0] - p[0],
+    (p: Vec2) => p[0] - e[2],
+    (p: Vec2) => e[1] - p[1],
+    (p: Vec2) => p[1] - e[3],
+  ])
+    profile = clipPoly(profile, inside);
+  if (profile.length < 3 || Math.abs(area2(profile)) < 1e-4) return null;
+  return prism({ profile, depth: 0.04, centred: false, color, strip: 'asphalt' });
 }
 
 export function cityBlock(
@@ -168,8 +161,7 @@ export function cityBlock(
     const width = ROAD_WIDTH[s.highway];
     if (!width) continue;
     for (let i = 0; i + 1 < s.line.length; i++) {
-      const seg = clip(s.line[i] ?? [0, 0], s.line[i + 1] ?? [0, 0], extent);
-      const m = seg && ribbon(seg[0], seg[1], width, o.road);
+      const m = ribbon(s.line[i] ?? [0, 0], s.line[i + 1] ?? [0, 0], width, extent, o.road);
       if (m) roads.push(m);
     }
   }

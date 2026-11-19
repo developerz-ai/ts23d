@@ -23,6 +23,13 @@ const head = { name: 'head', head: [0, 0, 0.9] as Vec3, tail: [0, 0, 1.1] as Vec
 describe('hairRig (model hair cards → chains + springs)', () => {
   const rig = hairRig(cardsMesh(3), { parent: 'head', scalp, segments: 3 });
 
+  it('refuses segments that are not a whole number of bones in 1..12', () => {
+    for (const segments of [0, -2, 1.5, 13, Number.NaN])
+      expect(() => hairRig(cardsMesh(1), { parent: 'head', scalp, segments })).toThrow(
+        /T3D_RECIPE_INVALID.*segments/,
+      );
+  });
+
   it('one chain of `segments` bones per card, rooted at the scalp end whatever the winding', () => {
     expect(rig.bones.length).toBe(9);
     for (const b of rig.bones.filter((x) => x.name.endsWith('_0')))

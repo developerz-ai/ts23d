@@ -1,9 +1,9 @@
 // Running gear for the Saltmarch light tank: five road wheels, a front idler and a toothed rear
 // sprocket per side (all spinning about Y), and a track belt laid round them: the belt is the
 // convex hull of the wheel circles offset by half a link, so it hugs every wheel at every LOD.
-// LOD0 places individual links with guide horns; LOD1 coarse links; LOD2 a solid side slab and
-// keeps the wheel pivots (empty) so engine code driving them never breaks. Each belt is a `tread`
-// motion part, so engines run the links round the loop.
+// LOD0 places individual links with grousers; LOD1 coarse links; LOD2 24 slabs round a solid core
+// and keeps the wheel pivots (empty) so engine code driving them never breaks. Each belt is a
+// `tread` motion part whose pitch is loop length ÷ link count, so the run clip moves it at every LOD.
 
 import {
   box,
@@ -76,17 +76,24 @@ export function beltPath(grow = LINK_T / 2): Vec2[] {
   return [...lower.slice(0, -1), ...upper.slice(0, -1)];
 }
 
-/** `n` evenly spaced points (and tangent angles) round a closed polyline. */
-export function resample(path: readonly Vec2[], n: number): { p: Vec2; angle: number }[] {
-  const seg: number[] = [];
+/** Length of a closed polyline, metres. */
+export function perimeter(path: readonly Vec2[]): number {
   let total = 0;
   for (let i = 0; i < path.length; i++) {
     const a = path[i] ?? [0, 0];
     const b = path[(i + 1) % path.length] ?? a;
-    const d = Math.hypot(b[0] - a[0], b[1] - a[1]);
-    seg.push(d);
-    total += d;
+    total += Math.hypot(b[0] - a[0], b[1] - a[1]);
   }
+  return total;
+}
+
+/** `n` evenly spaced points (and tangent angles) round a closed polyline. */
+export function resample(path: readonly Vec2[], n: number): { p: Vec2; angle: number }[] {
+  const seg = path.map((a, i) => {
+    const b = path[(i + 1) % path.length] ?? a;
+    return Math.hypot(b[0] - a[0], b[1] - a[1]);
+  });
+  const total = perimeter(path);
   const out: { p: Vec2; angle: number }[] = [];
   let i = 0;
   let walked = 0;
@@ -104,8 +111,31 @@ export function resample(path: readonly Vec2[], n: number): { p: Vec2; angle: nu
   return out;
 }
 
-/** One link (local: along +X, outer face +Z) with a grouser bar at LOD0. */
+/** Links round the belt per LOD: every link, coarse links, and 24 far slabs. */
+export const LINKS = [96, 44, 24] as const;
+
+/**
+ * The length after which the belt repeats: loop length ÷ link count, measured along the centre
+ * line (the stations `resample` lays the links on are exactly this far apart along it).
+ */
+export function beltPitch(lod: Lod, path: readonly Vec2[] = beltPath()): number {
+  return perimeter(path) / LINKS[lod];
+}
+
+/**
+ * One link (local: along +X, outer face +Z) with a grouser bar at LOD0. The far slab is longer
+ * than its pitch and open at both ends, so the slabs close round the end wheels (48° a slab), and
+ * open on the wheel side, which the core block hides: 6 triangles a slab.
+ */
 function link(lod: Lod, len: number): Mesh {
+  if (lod === 2)
+    return box({
+      size: [len * 1.15, TRACK_W, LINK_T],
+      at: [0, 0, -LINK_T / 2],
+      color: IRON,
+      strip: 'iron_rust',
+      omit: ['front', 'back', 'bottom'],
+    });
   const plate = box({
     size: [len * 0.92, TRACK_W, LINK_T],
     at: [0, 0, -LINK_T / 2],
@@ -203,72 +233,90 @@ function sprocket(lod: Lod, r: number): Mesh {
   ]);
 }
 
+/**
+ * A dense hull outline cut down to its corners: both ends of every straight run, plus the middle
+ * of every arc longer than 60° (the sprocket and idler ends). About ten points.
+ */
+function corners(path: readonly Vec2[]): Vec2[] {
+  const n = path.length;
+  const at = (k: number): Vec2 => path[((k % n) + n) % n] ?? [0, 0];
+  const straight = (k: number): boolean =>
+    Math.hypot(at(k + 1)[0] - at(k)[0], at(k + 1)[1] - at(k)[1]) > 0.1;
+  const starts = path.map((_, k) => k).filter(straight);
+  const out: Vec2[] = [];
+  starts.forEach((k, i) => {
+    // The run k → k + 1, then the arc from k + 1 to the next run's start.
+    const next = (starts[(i + 1) % starts.length] ?? k) + (i + 1 === starts.length ? n : 0);
+    out.push(at(k));
+    if (next > k + 1) out.push(at(k + 1));
+    if (next - (k + 1) > 20) out.push(at(Math.round((k + 1 + next) / 2)));
+  });
+  return out;
+}
+
 /** Registers a part (the tank's Kit: materials and wear happen there). */
 export type Add = (name: string, m: Mesh | null, opts?: PartOptions) => void;
 
 /** The hubs run on stub axles into the lower hull (their bearings): allowed to pass through it. */
 const AXLE = ['hull'] as const;
 
+/** The far-LOD block inside the belt: how deep it is, how far behind the track's outer face, and
+ *  how far inside the wheels' outline (clear of the running belt). */
+const CORE_W = 0.4;
+const CORE_INSET = 0.095;
+const CORE_GAP = 0.02;
+
 export function runningGear(add: Add, lod: Lod): void {
   const belt = beltPath();
+  const core = lod === 2 ? corners(beltPath(-CORE_GAP)) : [];
   for (const [side, s] of [
     ['l', 1],
     ['r', -1],
   ] as const) {
     const y = s * TRACK_Y;
+    // +rps about +Y rolls the wheel tops forward (+X): the tank drives forward and the belt's
+    // ground run moves back (−X). All three rims run at the same 1.70 m/s.
     const spin = (rps: number) => ({ kind: 'spin' as const, axis: [0, 1, 0] as Vec3, rps });
     ROAD_X.forEach((x, i) => {
       add(`wheel_${side}_${i}`, lod < 2 ? wheel(lod, ROAD_R, TRACK_W * 0.8) : null, {
         at: [x, y, ROAD_Z],
-        motion: spin(-0.9),
+        motion: spin(0.9),
         clearOf: AXLE,
       });
     });
     add(`idler_${side}`, lod < 2 ? wheel(lod, IDLER.r, TRACK_W * 0.7) : null, {
       at: [IDLER.x, y, IDLER.z],
-      motion: spin(-1.04),
+      motion: spin(1.04),
       clearOf: AXLE,
     });
     add(`sprocket_${side}`, lod < 2 ? sprocket(lod, SPROCKET.r) : null, {
       at: [SPROCKET.x, y, SPROCKET.z],
-      motion: spin(-0.97),
+      motion: spin(0.97),
       clearOf: AXLE,
     });
-    if (lod === 2) {
-      // Far: the track and wheels are one solid side block in the belt's outline.
+    if (lod === 2)
+      // Far: no wheels, so a solid block inside the belt (the wheels' outline, set back from the
+      // track's outer face) keeps the side closed; the belt itself still runs round it.
       add(
-        `track_${side}`,
+        `track_core_${side}`,
         place(
           prism({
-            profile: beltPath(LINK_T)
-              .filter((_, k) => k % 6 === 0)
-              .map(([px, pz]): Vec2 => [px, pz]),
-            depth: TRACK_W,
+            profile: core,
+            depth: CORE_W,
             plane: 'xz',
-            color: IRON,
+            color: SLATE,
           }),
-          { at: [0, y, 0] },
+          { at: [0, s * (TRACK_Y + TRACK_W / 2 - CORE_INSET - CORE_W / 2), 0] },
         ),
-        // The slab's outline is the belt grown outward: sliding it round keeps the same block.
-        { motion: tread(belt, y, 0.1) },
       );
-      continue;
-    }
-    const n = lod === 0 ? 96 : 44;
-    const pts = resample(belt, n);
-    const len =
-      (pts.length > 1
-        ? Math.hypot(
-            (pts[1]?.p[0] ?? 0) - (pts[0]?.p[0] ?? 0),
-            (pts[1]?.p[1] ?? 0) - (pts[0]?.p[1] ?? 0),
-          )
-        : 0.15) * 1.0;
-    const one = link(lod, len);
+    const pitch = beltPitch(lod, belt);
+    const one = link(lod, pitch);
     // The belt runs counter-clockwise in XZ: pitch −angle lays local +X along the tangent, and a
-    // half roll turns local +Z (the grouser face) outward, away from the wheels.
-    const links = pts.map(({ p, angle }) =>
+    // half roll turns local +Z (the grouser face) outward, away from the wheels. Stations are one
+    // pitch apart along the line at every LOD, so the belt repeats and the run clip can move it.
+    const links = resample(belt, LINKS[lod]).map(({ p, angle }) =>
       place(one, { at: [p[0], y, p[1]], pitch: -angle, roll: Math.PI }),
     );
-    add(`track_${side}`, merge(links), { motion: tread(belt, y, len) });
+    add(`track_${side}`, merge(links), { motion: tread(belt, y, pitch) });
   }
 }

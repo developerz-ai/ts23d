@@ -1,7 +1,7 @@
 // The .d.ts specifier rewrite: every relative `.ts` the published types name must become `.js`.
 
 import { expect, it } from 'bun:test';
-import { rewriteDtsSpecifiers } from './build.ts';
+import { buildEntrypoints, rewriteDtsSpecifiers } from './build.ts';
 
 it('rewrites an inline import("../index.ts") type, which the static-only rewrite missed', () => {
   const dts =
@@ -21,4 +21,9 @@ it('rewrites static from specifiers in either quote style', () => {
 it('leaves bare package specifiers and non-.ts paths alone', () => {
   const dts = `import type { X } from 'gltf-validator';\nexport * from './a.js';\ntype T = import("node:fs").Stats;`;
   expect(rewriteDtsSpecifiers(dts)).toBe(dts);
+});
+
+it('emits the CLI and the path-tracer worker, which code loads by URL, as entrypoints', () => {
+  expect(buildEntrypoints()).toContain('src/cli/bin.ts');
+  expect(buildEntrypoints()).toContain('src/render/path/worker.ts');
 });

@@ -3,6 +3,7 @@
 // switches), and every pivot the engine binds to (groups, moving parts) survives at every LOD.
 
 import { type Bounds, boundsOf, type CompiledAsset, worldMeshes } from '../core/index.ts';
+import { checkSelectors } from './check-selectors.ts';
 import type { Finding } from './types.ts';
 
 /** A gate over the whole LOD chain, index = LOD. */
@@ -90,7 +91,7 @@ export const lodPivots: LodGate = (lods) => {
 
 /** Default chain gates: only what every gallery recipe passes today. `lodSilhouette` and
  *  `lodPivots` are opt-in until the recipes they flag are fixed (see their findings). */
-export const DEFAULT_LOD_GATES: readonly LodGate[] = [lodTriangles];
+export const DEFAULT_LOD_GATES: readonly LodGate[] = [lodTriangles, checkSelectors];
 
 export function runLodQa(
   lods: readonly CompiledAsset[],

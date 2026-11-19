@@ -16,13 +16,21 @@ import { skinWeights, weightBonesOf } from '../passes/index.ts';
 import { box, cylinder } from '../primitives/index.ts';
 import { chainCross } from './chain-cross.ts';
 import { radial, rigged, swimmer, swing } from './chain-fixtures.ts';
+import { checkSelectors } from './check-selectors.ts';
 import { clashes } from './clash.ts';
 import { connections } from './connections.ts';
 import { deform } from './deform.ts';
 import { floatingParts } from './floating.ts';
 import { gait } from './gait.ts';
 import { gaps } from './gaps.ts';
-import { DEFAULT_GATES, partNames, proportions, recipeChecks, triangleBudget } from './gates.ts';
+import {
+  DEFAULT_GATES,
+  emptyAsset,
+  partNames,
+  proportions,
+  recipeChecks,
+  triangleBudget,
+} from './gates.ts';
 import { joints } from './joints.ts';
 import { DEFAULT_LOD_GATES, lodTriangles } from './lods.ts';
 import { mass } from './mass.ts';
@@ -30,7 +38,13 @@ import { measures } from './measures.ts';
 import { model } from './model.ts';
 import { arm, rig, smooth, walk } from './motion-fixtures.ts';
 import { hiddenParts } from './occlusion.ts';
-import { degenerateTriangles, nonFinite, normalsMatchWinding, vertexColors } from './sanity.ts';
+import {
+  degenerateTriangles,
+  meshArrays,
+  nonFinite,
+  normalsMatchWinding,
+  vertexColors,
+} from './sanity.ts';
 import { skin } from './skin.ts';
 import { swim } from './swim.ts';
 import { treads } from './treads.ts';
@@ -133,7 +147,14 @@ const FAILING: ReadonlyArray<readonly [Gate, () => CompiledAsset]> = [
       ]),
   ],
   [treads, () => build([['track_l', cube]])],
-  [partNames, () => build([['BadName', cube]])],
+  [
+    partNames,
+    () => {
+      // Core refuses the name at compile time now; the gate still guards hand-built assets.
+      const a = build([['good_name', cube]]);
+      return { ...a, parts: a.parts.map((p) => ({ ...p, name: 'BadName' })) };
+    },
+  ],
   [proportions, () => build([['body', cube]], { real: { length: 2, width: 1, height: 1 } })],
   [
     measures,
@@ -230,6 +251,8 @@ const FAILING: ReadonlyArray<readonly [Gate, () => CompiledAsset]> = [
         }),
       ),
   ],
+  [emptyAsset, () => build([])],
+  [meshArrays, () => build([['body', { ...cube, normals: cube.normals.slice(0, 3) }]])],
 ];
 
 const CODE = /^T3D_[A-Z_]+$/;
@@ -256,8 +279,8 @@ describe('finding codes', () => {
     expect(floatingParts(FAILING[1]?.[1]() ?? build([]))[0]?.code).toBe('T3D_QA_FLOATING_PARTS');
   });
 
-  it('lod gates: lod-triangles', () => {
-    expect(DEFAULT_LOD_GATES).toEqual([lodTriangles]);
+  it('lod gates: lod-triangles, check selectors', () => {
+    expect(DEFAULT_LOD_GATES).toEqual([lodTriangles, checkSelectors]);
     const growing: Asset = defineAsset({
       name: 'growing',
       kind: 'prop',

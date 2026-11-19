@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { MeshBuilder } from './mesh.ts';
+import { type Mesh, MeshBuilder } from './mesh.ts';
 import { applyAffine, frame, place } from './transform.ts';
 
 // One triangle in the XY plane, counter-clockwise seen from +Z, normal +Z.
@@ -74,5 +74,24 @@ describe('applyAffine normals', () => {
   test('rotation + uniform scale stays exact', () => {
     const r = place(slanted(), { scale: 2.5, yaw: 1.1, pitch: 0.2 });
     expect(errorDeg(r)).toBeLessThan(0.05);
+  });
+});
+
+describe('applyAffine morph targets', () => {
+  const morphed = () => ({
+    ...tri(),
+    morphs: [{ name: 'lift', positions: new Float32Array([1, 0, 0, 0, 2, 0, 0, 0, 3]) }],
+  });
+  const delta = (m: Mesh): number[] =>
+    [...(m.morphs?.[0]?.positions ?? [])].map((x) => Math.round(x * 1e5) / 1e5 + 0);
+
+  test('rotates and scales the deltas with the mesh, without the translation', () => {
+    const m = place(morphed(), { at: [5, 6, 7], yaw: Math.PI / 2, scale: 2 });
+    expect(delta(m)).toEqual([0, 2, 0, -4, 0, 0, 0, 0, 6]);
+  });
+
+  test('mirrors the deltas through a mirror frame too', () => {
+    const m = applyAffine(morphed(), frame([1, 0, 0], [0, -1, 0], [0, 0, 1], [9, 9, 9]));
+    expect(delta(m)).toEqual([1, 0, 0, 0, -2, 0, 0, 0, 3]);
   });
 });

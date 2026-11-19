@@ -1,11 +1,13 @@
 // QA `deform` (ADR 013, plan 101 slice 10): a skinned body keeps its shape at every joint limit.
 // For each bone with a `limit`, the rest pose is turned to `min` and to `max` about the limit axis
 // (a `<bone>_mid` helper to half) and every opaque skinned part is linear-blend skinned on the CPU
-// (what every engine evaluates). Round the joint, the blend band (vertices it moves 2–98 %):
+// (what every engine evaluates). Round the joint, the blend band (triangles whose vertices straddle
+// the 2–98 % share the bone moves: a smooth blend's ring, or the seam of a hard 0/1 split):
 //   volume  — Σ signed tetrahedra (band triangle + joint centre) posed ÷ rest ≥ 0.6
 //             (T3D_DEFORM_VOLUME; a rigid split or an unhelped 120° fold drops below ½)
 //   stretch — the 99th-percentile band edge posed ÷ rest ≤ 4 (T3D_DEFORM_STRETCH; a vertex on the
-//             wrong bone tears 10×+, a smooth blend smears ≤ 3.5× at a limb root)
+//             wrong bone tears 10×+, a smooth blend smears ≤ 3.5× at a limb root), or ≤ the
+//             limit's declared `stretch` (core limit-tolerance.ts: ≤ ×6, with a `why`)
 //   surface — triangles within 1.5 band radii of the joint that newly cross ≤ 6 % of them
 //             (T3D_DEFORM_INTERSECT; a limb swung through the body crosses far more)
 // Thresholds were set on the wolf's working range (worst: shoulder 0.63, hip ×3.5, hip 5 % at
@@ -19,6 +21,7 @@ import {
   type Quat,
   quatFromAxisAngle,
   SKIN_INFLUENCES,
+  STRETCH_TOLERANCE,
   toWorld,
   type Vec3,
   worldTransforms,
@@ -32,7 +35,7 @@ import type { Finding, Gate } from './types.ts';
 export const VOLUME_MIN = 0.6;
 /** Least |Σ signed| ÷ Σ |tetrahedra| for the band's volume to be read at all. */
 export const READABLE = 0.25;
-export const STRETCH_MAX = 4;
+export const STRETCH_MAX = STRETCH_TOLERANCE.default;
 /** Which band edge the stretch is read at (sorted by stretch). */
 export const STRETCH_PERCENTILE = 0.99;
 export const INTERSECT_SHARE = 0.06;
@@ -44,6 +47,9 @@ export interface RomPose {
   readonly label: string;
   readonly degrees: number;
   readonly rotation: ReadonlyMap<string, Quat>;
+  /** The limit's stretch tolerance, and its `why` when it was raised. */
+  readonly stretch: number;
+  readonly why?: string;
 }
 
 export { MID_SUFFIX };
@@ -59,7 +65,15 @@ export function romPoses(sk: Armature): RomPose[] {
       const rad = (d * Math.PI) / 180;
       const rotation = new Map([[b.name, quatFromAxisAngle(axis, rad)]]);
       if (names.has(mid)) rotation.set(mid, quatFromAxisAngle(axis, rad / 2));
-      return { bone: b.name, label, degrees: d, rotation };
+      const why = (l.stretch ?? STRETCH_MAX) > STRETCH_MAX ? { why: l.why ?? '' } : {};
+      return {
+        bone: b.name,
+        label,
+        degrees: d,
+        rotation,
+        stretch: l.stretch ?? STRETCH_MAX,
+        ...why,
+      };
     };
     const sign = (d: number): string => `${d > 0 ? '+' : ''}${d}°`;
     const hinge = [l.min, l.max]
@@ -133,7 +147,6 @@ export function poseDeform(
   const centre = sk.bones.find((b) => b.name === pose.bone)?.head ?? [0, 0, 0];
   const R = m.positions;
   const posed = skinPositions(m, poseJoints(sk, pose.rotation), inverseBind(sk));
-  const band = (v: number): boolean => (w[v] ?? 0) > BAND[0] && (w[v] ?? 0) < BAND[1];
   const T = m.indices;
   let rest = 0;
   let now = 0;
@@ -142,7 +155,12 @@ export function poseDeform(
   let reach = 0;
   for (let t = 0; t < T.length; t += 3) {
     const [a, b, c] = [T[t] ?? 0, T[t + 1] ?? 0, T[t + 2] ?? 0];
-    if (!band(a) && !band(b) && !band(c)) continue;
+    // Straddles the band: also the seam triangle of a hard 0/1 split, which has no vertex in it.
+    const [lo, hi] = [
+      Math.min(w[a] ?? 0, w[b] ?? 0, w[c] ?? 0),
+      Math.max(w[a] ?? 0, w[b] ?? 0, w[c] ?? 0),
+    ];
+    if (!(lo < BAND[1] && hi > BAND[0])) continue;
     const t0 = tet(R, a, b, c, centre);
     rest += t0;
     gross += Math.abs(t0);
@@ -160,7 +178,9 @@ export function poseDeform(
       );
     }
   }
-  if (Math.abs(rest) < 1e-9) return null;
+  // No triangle joins what the bone moves to what it leaves: nothing deforms (shells it moves
+  // whole are rigid; whether they clear each other is the clip gates' question).
+  if (ratios.length === 0) return null;
   // A band that wraps the joint centre (a single ring round a coarse tube's knee) has a signed
   // volume made of cancelling halves: its ratio says nothing. Read volume only where the band
   // encloses at least a quarter of its gross volume.
@@ -220,10 +240,10 @@ export function deformFindings(asset: CompiledAsset): Finding[] {
           `the joint keeps ${(d.volume * 100).toFixed(0)} % of its volume (≥ ${VOLUME_MIN * 100} %)`,
           'add a helper (half-angle) bone at the joint, or move the pivot to the anatomical centre of rotation',
         );
-      if (d.stretch > STRETCH_MAX)
+      if (d.stretch > pose.stretch)
         add(
           'T3D_DEFORM_STRETCH',
-          `an edge stretches ×${d.stretch.toFixed(2)} (≤ ×${STRETCH_MAX})`,
+          `an edge stretches ×${d.stretch.toFixed(2)} (≤ ×${pose.stretch}${pose.why ? `, declared: ${pose.why}` : ''})`,
           'add a helper bone or edge loops across the joint, or move the pivot',
         );
       if (d.crossings > Math.max(4, d.zone * INTERSECT_SHARE))

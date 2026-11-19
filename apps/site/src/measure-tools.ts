@@ -17,7 +17,7 @@ import {
   Vector3,
 } from 'three';
 import { manifest } from './compile.ts';
-import { dimensions, humanFigure, measureLine, metres } from './measure-overlay.ts';
+import { clearOverlay, dimensions, humanFigure, measureLine, metres } from './measure-overlay.ts';
 import type { Stage } from './stage.ts';
 import { token } from './theme.ts';
 
@@ -109,7 +109,7 @@ export class MeasureTools {
   }
 
   private refresh(): void {
-    this.layer.clear();
+    clearOverlay(this.layer);
     const model = this.model;
     if (!model) return;
     this.stage.showGrid(this.on.get('grid') ?? false);
@@ -188,7 +188,7 @@ export class MeasureTools {
   }
 
   private clearRuler(): void {
-    this.ruler.clear();
+    clearOverlay(this.ruler);
     this.syncTags();
     this.points = [];
     if (this.readout) this.readout.hidden = !this.on.get('ruler');

@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'bun:test';
-import { createRng } from '../core/index.ts';
+import { createRng, Ts23dError } from '../core/index.ts';
 import {
   billow,
+  type FractalOptions,
   fbm,
   gradientNoise2,
   type Noise2,
@@ -57,6 +58,35 @@ describe('noise', () => {
     const w = fbm(gradientNoise2(createRng(4)), { scale: 2 });
     expect(grid(warp(base, w, w, 0))).toEqual(grid(base));
     expect(grid(warp(base, w, w, 1))).not.toEqual(grid(base));
+  });
+
+  it('refuses octaves 0 (a NaN height), a fractional count and a scale, gain or offset that divides by zero', () => {
+    const n = gradientNoise2(createRng(1));
+    const bad: FractalOptions[] = [
+      { octaves: 0 },
+      { octaves: 2.5 },
+      { octaves: Number.NaN },
+      { octaves: 99 },
+      { scale: 0 },
+      { scale: -3 },
+      { scale: Number.NaN },
+      { lacunarity: 0 },
+      { gain: -0.5 },
+      { gain: Number.POSITIVE_INFINITY },
+    ];
+    for (const make of [fbm, billow, ridged])
+      for (const o of bad) expect(() => make(n, o), JSON.stringify(o)).toThrow(Ts23dError);
+    expect(() => ridged(n, { offset: 0 })).toThrow(/offset/);
+    expect(Number.isFinite(fbm(n, { octaves: 1, gain: 0 })(0.3, 0.4))).toBe(true);
+  });
+
+  it('terrace treads are flat for the `sharpness` share of a step, then a riser', () => {
+    // Step 10 m, half tread: 10..15 m sits flat at 10, 15..20 rises to 20.
+    for (const h of [10, 11, 12.5, 14.99]) expect(terrace(h, 10, 0.5)).toBe(10);
+    expect(terrace(17.5, 10, 0.5)).toBeCloseTo(15, 9);
+    expect(terrace(15.01, 10, 0.5)).toBeGreaterThan(10);
+    expect(terrace(19.99, 10, 0.5)).toBeLessThan(20);
+    for (const h of [-7, 0.5, 3, 9.9]) expect(terrace(h, 1, 0)).toBeCloseTo(h, 9);
   });
 
   it('terrace snaps toward steps by sharpness', () => {

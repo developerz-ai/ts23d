@@ -1,11 +1,11 @@
 // Tools for the parts that fill a panel opening: the hole's outline on the surface, a recessed
-// pocket (tub) behind it, a surface-following cover (lamp lens), and a bar grille spanning it.
+// pocket (tub) behind it, a surface-following cover (lamp lens), and a bar grille across a duct.
 // All in the left half; callers mirror. Points sit a few mm behind the skin so they never poke
 // through the panel, and pockets close against the panel's flange.
 
 import type { Mesh, StripId, Vec3 } from '@developerz.ai/ts23d';
 import { loft, merge } from '@developerz.ai/ts23d';
-import { add, beamBetween, lerp3, mul, sub } from '../lib/geo.ts';
+import { add, beamBetween, len, lerp3, mul, sub, unit } from '../lib/geo.ts';
 import { type ColorFn, normalAt, patch, type Surface } from '../lib/grid.ts';
 import { type Hole, holeG, holeRows, holeUc } from './panels.ts';
 
@@ -87,39 +87,56 @@ export function cover(
   });
 }
 
-/** Crossed bars spanning a hole at depth d: `nu` bars along s, `ns` bars along u. */
+/** Point at fractional row `t` (0 … rows − 1) and fraction `f` across, on the ruled sheet
+ *  between two edge lines sampled at the same rows. */
+function between(top: readonly Vec3[], bottom: readonly Vec3[], t: number, f: number): Vec3 {
+  const i = Math.min(top.length - 2, Math.max(0, Math.floor(t)));
+  const k = t - i;
+  const a = lerp3(top[i] ?? [0, 0, 0], top[i + 1] ?? [0, 0, 0], k);
+  const b = lerp3(bottom[i] ?? [0, 0, 0], bottom[i + 1] ?? [0, 0, 0], k);
+  return lerp3(a, b, f);
+}
+
+/**
+ * Crossed bars on the sheet ruled between a duct's two walls (`top` and `bottom`: the same rows
+ * of each wall at the grille's depth): `nu − 1` bars along the duct and `ns + 1` across it. Both
+ * sets lie in the one sheet, so every crossing is a real joint, and the cross bars run `into`
+ * metres past the sheet's edges into the walls that carry them.
+ */
 export function grille(
-  S: Surface,
-  h: Hole,
-  d: number,
+  top: readonly Vec3[],
+  bottom: readonly Vec3[],
   ns: number,
   nu: number,
   w: number,
   color: Vec3,
+  into = 0.003,
 ): Mesh {
   const bars: Mesh[] = [];
-  const s0 = h.sc - h.hs;
-  const s1 = h.open === 'end' ? h.sc + h.hs : h.sc + h.hs;
+  const last = top.length - 1;
+  const open = (i: number): boolean =>
+    len(sub(top[i] ?? [0, 0, 0], bottom[i] ?? [0, 0, 0])) > 8 * w;
   for (let k = 1; k < nu; k++) {
     const f = k / nu;
-    const pts: Vec3[] = [];
-    for (let i = 0; i <= 16; i++) {
-      const s = s0 + ((s1 - s0) * i) / 16;
-      const g = holeG(h, s);
-      if (g <= 0.02) continue;
-      pts.push(inward(S, s, holeUc(h, s) - h.hu * g + 2 * h.hu * g * f, d));
-    }
-    for (let i = 0; i + 1 < pts.length; i++)
-      bars.push(beamBetween(pts[i] ?? [0, 0, 0], pts[i + 1] ?? [0, 0, 0], w, w * 1.6, color));
+    for (let i = 0; i < last; i++)
+      if (open(i) && open(i + 1))
+        bars.push(
+          beamBetween(
+            between(top, bottom, i, f),
+            between(top, bottom, i + 1, f),
+            w,
+            w * 1.6,
+            color,
+          ),
+        );
   }
   for (let k = 0; k <= ns; k++) {
-    const s = s0 + ((s1 - s0) * (k + 0.5)) / (ns + 1);
-    const g = holeG(h, s);
-    if (g <= 0.05) continue;
-    const c = holeUc(h, s);
-    const a = inward(S, s, c - h.hu * g, d + 0.004);
-    const b = inward(S, s, c + h.hu * g, d + 0.004);
-    bars.push(beamBetween(a, b, w, w * 1.6, color));
+    const t = (last * (k + 0.5)) / (ns + 1);
+    const a = between(top, bottom, t, 0);
+    const b = between(top, bottom, t, 1);
+    if (len(sub(a, b)) <= 8 * w) continue;
+    const out = mul(unit(sub(a, b)), into);
+    bars.push(beamBetween(add(a, out), sub(b, out), w, w * 1.6, color));
   }
   return merge(bars);
 }

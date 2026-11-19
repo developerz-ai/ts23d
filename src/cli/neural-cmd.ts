@@ -5,28 +5,22 @@
 // recipes/<name>/neural/<key>/. Requests
 // with no adapter stay missing (notice); with --require-neural any left missing is an error.
 // A request fed by a local output that is not on this machine is never sent (neural-local.ts).
-// Paid adapters (Meshy) are estimated first: above 50 credits a run needs --yes-spend
-// (neural-spend.ts). The only command that talks to a model; builds never do (ADR 014).
+// Mesh input images pass the input-image rules first (neural-input.ts). Paid adapters (Meshy,
+// Kubeez) are priced first: above 50 credits, or a job they cannot price, a run needs --yes-spend
+// (neural-spend.ts). A chain longer than ROUNDS stops there and lists what it did not reach as
+// missing. The only command that talks to a model; builds never do (ADR 014).
 
-import {
-  compile,
-  type Lod,
-  type NeuralRequests,
-  type NeuralTask,
-  Ts23dError,
-} from '../core/index.ts';
-import { decodePng } from '../material/index.ts';
+import { compile, isTs23dError, type Lod, type NeuralTask, Ts23dError } from '../core/index.ts';
 import {
   type NeuralEntry,
-  type NeuralJob,
   neuralCache,
   provideNeural,
   publishable,
   type RecipeNeuralCache,
 } from '../neural/index.ts';
-import { checkInputImage } from '../render/index.ts';
 import { type LoadedConfig, loadConfig } from './config.ts';
 import { loadAssets } from './load.ts';
+import { checkMeshInputs } from './neural-input.ts';
 import { absentInputNotice, absentInputs } from './neural-local.ts';
 import { type SpendGuard, spendGuard } from './neural-spend.ts';
 import { loadNeuralEntries, neuralDirOf, saveNeuralEntry } from './neural-store.ts';
@@ -94,45 +88,6 @@ function filledOf(entry: NeuralEntry, dir: string, cached: boolean): NeuralFille
   };
 }
 
-const CLEAN_FIX =
-  'generate a clean concept: t3d concept <recipe> (plain background, ¾ view, full frame), or strip the background with an image/segment model';
-
-/**
- * Input-image rules (render/input-image.ts) on a `mesh` request's image, BEFORE anything is sent:
- * a failing image is T3D_NEURAL_INPUT (D55: cluttered photos make broken AI meshes). With
- * `allowBadInput` the findings come back instead, to print and to record in record.json.
- */
-export function checkMeshInputs(recipe: string, job: NeuralJob, allowBadInput = false): string[] {
-  if (job.task !== 'mesh') return [];
-  const image = (job.request as NeuralRequests['mesh']).image;
-  if (!image) return [];
-  const bytes = job.inputs?.get(image.sha256);
-  const where = `${recipe}: mesh input ${image.sha256.slice(0, 12)}…`;
-  const fail = (findings: readonly string[]): string[] => {
-    if (allowBadInput) return findings.map((f) => `${where}: ${f} (allowed: --allow-bad-input)`);
-    throw new Ts23dError('T3D_NEURAL_INPUT', {
-      cause: `${where}: ${findings.join('; ')}`,
-      fix: CLEAN_FIX,
-    });
-  };
-  if (!bytes) return [];
-  if (image.mime !== 'image/png') return fail([`is ${image.mime}: only PNG inputs can be checked`]);
-  let png: { data: Uint8Array; width: number; height: number } | null = null;
-  try {
-    png = decodePng(bytes, (cause) => {
-      throw new Ts23dError('T3D_NEURAL_INPUT', {
-        cause: `${where}: ${cause}`,
-        fix: 'pass an 8-bit PNG',
-      });
-    });
-  } catch (e) {
-    if (!(e instanceof Ts23dError)) throw e;
-    return fail([e.message]);
-  }
-  const { findings } = checkInputImage(png.data, png.width, png.height);
-  return findings.length ? fail(findings.map((f) => `${f.rule}: ${f.message}`)) : [];
-}
-
 /** Rounds of compile → fill: an output can name the next request's input. The longest chain is
  *  a model body's: image → mesh → Blender proxy → rig → Blender final (kinds `modelChain`). */
 export const ROUNDS = 5;
@@ -159,7 +114,10 @@ export async function neuralRun(
     o.spend ?? spendGuard({ yesSpend: o.yesSpend === true, ...(o.log ? { log: o.log } : {}) });
   const spentBefore = spend.total();
   let missing: { message: string; fix: string }[] = [];
-  for (let round = 0; round < ROUNDS; round++) {
+  let capped = 0;
+  // ROUNDS fill rounds, plus one compile-only pass when the last round still filled something:
+  // a request that only appears after it is listed as missing, never silently dropped.
+  for (let round = 0; round <= ROUNDS; round++) {
     const cache = neuralCache({ recipe, entries: await loadNeuralEntries(dir) });
     // Requests already answered by the committed cache: reported as `=` lines, so a full hit does
     // not read as "asks for nothing".
@@ -190,6 +148,16 @@ export async function neuralRun(
       else if (!config.neural.has(job.task) && n) missing.push({ message: n.message, fix: n.fix });
       return shas.length === 0;
     });
+    if (round === ROUNDS) {
+      const late = jobs.filter((job) => config.neural.has(job.task));
+      capped = late.length;
+      for (const job of late)
+        missing.push({
+          message: `${recipe}: ${job.task} request not sent: it first appeared after ${ROUNDS} rounds of compile → fill (a longer chain than one run follows)`,
+          fix: `run t3d neural run ${file} again: each run follows ${ROUNDS} more links`,
+        });
+      break;
+    }
     await spend.check(
       recipe,
       jobs.flatMap((job) => {
@@ -222,7 +190,7 @@ export async function neuralRun(
   const filled = [...filledBy.values()];
   if (requireNeural && missing.length > 0)
     throw new Ts23dError('T3D_NEURAL_MISSING', {
-      cause: `${recipe}: ${missing.length} neural request(s) have no output and could not be sent`,
+      cause: `${recipe}: ${missing.length} neural request(s) have no output and could not be sent${capped ? ` (${capped} first appeared after ${ROUNDS} rounds, the cap of one run)` : ''}`,
       fix: missing[0]?.fix ?? 'configure the adapters in t3d.config.ts',
     });
   return { file, recipe, filled, missing, notices, estimatedCredits: spend.total() - spentBefore };
@@ -287,7 +255,7 @@ export async function neuralMain(
       }
     return 0;
   } catch (e) {
-    if (e instanceof Ts23dError) return printError(e, o.json);
+    if (isTs23dError(e)) return printError(e, o.json);
     throw e;
   }
 }

@@ -42,6 +42,9 @@ import {
 } from '../_lib/rts/style.ts';
 
 const HANDLE_R = 0.019;
+/** Pack centre: its 0.14 m depth puts the front face at -0.15, 5 mm inside the torso's back
+ *  (-0.155 at the shoulder-blade rings, z 1.24-1.36). */
+const PACK_X = -0.22;
 
 /** Materials: ceramic armour and team plates, painted gunmetal, leather, aged brass. */
 const RULES: readonly Rule[] = [
@@ -258,14 +261,19 @@ export const rts_soldier = defineAsset({
       spreadDeg: 12,
       when: 'event',
     });
-    // Back: a power pack with vents and a whip antenna; team flap on top (top-visible).
-    const pack: Mesh[] = [pebble(lod, [0.14, 0.3, 0.34], [-0.24, 0, 1.06], SLATE)];
-    if (lod < 2) pack.push(tube(lod, [-0.3, 0.1, 1.38], [-0.32, 0.1, 1.95], 0.008, 0.005, IRON));
+    // Back: a power pack with vents and a whip antenna; team flap on top (top-visible). Its front
+    // face sits 5 mm into the torso's back at the shoulder blades, where the harness pulls it.
+    const px = PACK_X;
+    const pack: Mesh[] = [pebble(lod, [0.14, 0.3, 0.34], [px, 0, 1.06], SLATE)];
+    if (lod < 2)
+      pack.push(tube(lod, [px - 0.06, 0.1, 1.38], [px - 0.08, 0.1, 1.95], 0.008, 0.005, IRON));
     if (lod === 0)
       for (let i = 0; i < 4; i++)
-        pack.push(box({ size: [0.03, 0.22, 0.02], at: [-0.31, 0, 1.12 + i * 0.05], color: IRON }));
+        pack.push(
+          box({ size: [0.03, 0.22, 0.02], at: [px - 0.07, 0, 1.12 + i * 0.05], color: IRON }),
+        );
     add('pack', merge(pack));
-    add('pack_flap', pebble(lod, [0.17, 0.33, 0.06], [-0.24, 0, 1.38], TEAM), {
+    add('pack_flap', pebble(lod, [0.17, 0.33, 0.06], [px, 0, 1.38], TEAM), {
       paint: 'team',
     });
     // Measured wear on everything but skin, lenses and team plates: chipped ceramic edges,

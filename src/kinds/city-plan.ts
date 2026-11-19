@@ -1,18 +1,24 @@
 // The plan of a city block from real footprints (OpenStreetMap or any survey): per building its
-// height (the `height` tag, else levels × floor height, else a default — and which one it used),
-// floor count, a seed hashed from its id (so the same building is the same in every build and
-// every block it appears in), a wall colour that differs from every neighbour's (greedy colouring
-// over shared walls), a window bay, and which edges are party walls (shared with a neighbour, no
-// windows). Also the footprint IoU used to prove the built massing matches the source.
+// height (the `height` tag, else levels × floor height, else a default — and which one it used;
+// all three run from the ground, so `minHeight` comes off the extruded body), floor count, a seed
+// hashed from its id (so the same building is the same in every build and every block it appears
+// in), a wall colour that differs from every neighbour's (greedy colouring over shared walls), a
+// window bay, and per edge the stretches shared with a neighbour (no windows there). Also the
+// footprint IoU used to prove the built massing matches the source.
 
 import { Ts23dError, type Vec2, type Vec3 } from '../core/index.ts';
+import { EPS, edgeLength, mergeSpans, type Span, sharedSpans } from './city-shared.ts';
+
+export type { Span } from './city-shared.ts';
 
 export interface CityFootprint {
   readonly id: number;
   /** Counter-clockwise ring, metres, no closing duplicate. */
   readonly ring: readonly Vec2[];
+  /** Ground to top, metres (OSM `height`). */
   readonly height: number | null;
   readonly levels: number | null;
+  /** Ground to the underside of the body, metres (OSM `min_height`); default 0. */
   readonly minHeight?: number;
 }
 
@@ -31,8 +37,9 @@ export interface CityPlanOptions {
 export interface CityBuildingPlan {
   readonly id: number;
   readonly ring: readonly Vec2[];
-  /** Ground under the footprint (lowest corner), metres. */
+  /** Underside of the body: ground under the footprint (lowest corner) + `minHeight`, metres. */
   readonly base: number;
+  /** Extruded height, metres: the top is `base + height`. */
   readonly height: number;
   readonly heightSource: 'height' | 'levels' | 'default';
   readonly floors: number;
@@ -41,8 +48,10 @@ export interface CityBuildingPlan {
   readonly wall: Vec3;
   /** Window bay width, metres (2.2–3.0 by seed). */
   readonly bay: number;
-  /** Per edge i (ring[i] → ring[i+1]): shared with a neighbour. */
+  /** Per edge i (ring[i] → ring[i+1]): shared with neighbours along its whole length. */
   readonly party: readonly boolean[];
+  /** Per edge i: the stretches [from, to] (metres from ring[i]) that run along a neighbour. */
+  readonly shared: readonly (readonly Span[])[];
   readonly neighbours: readonly number[];
 }
 
@@ -52,30 +61,6 @@ export function hashId(id: number): number {
   h = Math.imul(h ^ (h >>> 16), 0x85ebca6b) >>> 0;
   h = Math.imul(h ^ (h >>> 13), 0xc2b2ae35) >>> 0;
   return (h ^ (h >>> 16)) >>> 0;
-}
-
-const segDist = (p: Vec2, a: Vec2, b: Vec2): number => {
-  const [dx, dy] = [b[0] - a[0], b[1] - a[1]];
-  const l2 = dx * dx + dy * dy || 1e-12;
-  const t = Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / l2));
-  return Math.hypot(p[0] - a[0] - t * dx, p[1] - a[1] - t * dy);
-};
-
-/** Edge i of `ring` lies along some edge of `other` (its midpoint and both thirds within eps). */
-function sharedEdge(
-  ring: readonly Vec2[],
-  i: number,
-  other: readonly Vec2[],
-  eps: number,
-): boolean {
-  const a = ring[i] ?? [0, 0];
-  const b = ring[(i + 1) % ring.length] ?? a;
-  const probes = [1 / 3, 1 / 2, 2 / 3].map(
-    (t): Vec2 => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t],
-  );
-  return probes.every((p) =>
-    other.some((c, j) => segDist(p, c, other[(j + 1) % other.length] ?? c) < eps),
-  );
 }
 
 export function cityPlan(
@@ -88,20 +73,16 @@ export function cityPlan(
       fix: 'give at least 2 wall colours (4 always lets neighbours differ)',
     });
   const fh = o.floorHeight ?? 3.2;
-  const eps = 0.3;
   const sorted = [...buildings].sort((a, b) => a.id - b.id);
-  const party = sorted.map((b) =>
-    b.ring.map((_, i) => sorted.some((n) => n !== b && sharedEdge(b.ring, i, n.ring, eps))),
+  const touches = (b: CityFootprint, n: CityFootprint): boolean =>
+    b.ring.some((_, i) => mergeSpans(sharedSpans(b.ring, i, n.ring)).length > 0);
+  const shared = sorted.map((b) =>
+    b.ring.map((_, i) =>
+      mergeSpans(sorted.flatMap((n) => (n === b ? [] : sharedSpans(b.ring, i, n.ring)))),
+    ),
   );
   const near = sorted.map((b) =>
-    sorted
-      .filter(
-        (n) =>
-          n !== b &&
-          (b.ring.some((_, i) => sharedEdge(b.ring, i, n.ring, eps)) ||
-            n.ring.some((_, j) => sharedEdge(n.ring, j, b.ring, eps))),
-      )
-      .map((n) => n.id),
+    sorted.filter((n) => n !== b && (touches(b, n) || touches(n, b))).map((n) => n.id),
   );
   const colour = new Map<number, number>();
   return sorted.map((b, k) => {
@@ -115,14 +96,21 @@ export function cityPlan(
     let c = seed % o.walls.length;
     for (let t = 0; t < o.walls.length && used.has(c); t++) c = (c + 1) % o.walls.length;
     colour.set(b.id, c);
-    const [height, heightSource] =
+    const [total, heightSource] =
       b.height !== null
         ? [b.height, 'height' as const]
         : b.levels !== null
           ? [b.levels * fh + 0.6, 'levels' as const]
           : [o.defaultHeight ?? 3 * fh, 'default' as const];
+    const lift = b.minHeight ?? 0;
+    const height = total - lift;
+    if (!(lift >= 0) || !(height > 0))
+      throw new Ts23dError('T3D_RECIPE_INVALID', {
+        cause: `city: building ${b.id} is ${total} m tall from the ground with minHeight ${lift} m`,
+        fix: 'height (ground to top) must be above minHeight (ground to the underside), and minHeight ≥ 0',
+      });
     const floors = Math.max(1, Math.round((height - 0.6) / fh));
-    const base = Math.min(...b.ring.map((p) => o.groundAt?.(p[0], p[1]) ?? 0)) + (b.minHeight ?? 0);
+    const base = Math.min(...b.ring.map((p) => o.groundAt?.(p[0], p[1]) ?? 0)) + lift;
     return {
       id: b.id,
       ring: b.ring,
@@ -134,7 +122,11 @@ export function cityPlan(
       seed,
       wall: o.walls[c] ?? o.walls[0] ?? [0.5, 0.5, 0.5],
       bay: 2.2 + ((seed >>> 8) % 9) * 0.1,
-      party: party[k] ?? [],
+      party: b.ring.map((_, i) => {
+        const [only, more] = shared[k]?.[i] ?? [];
+        return !!only && !more && only[0] <= EPS && only[1] >= edgeLength(b.ring, i) - EPS;
+      }),
+      shared: shared[k] ?? [],
       neighbours: near[k] ?? [],
     };
   });

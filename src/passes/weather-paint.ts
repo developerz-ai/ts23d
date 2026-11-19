@@ -95,11 +95,9 @@ export function paintEffect(
     if (name === 'bleach') {
       const c: Vec3 = [colors[v * 3] ?? 0, colors[v * 3 + 1] ?? 0, colors[v * 3 + 2] ?? 0];
       const l = lum(c);
-      mix(
-        v,
-        [(c[0] * 0.3 + l * 0.7) * 1.3, (c[1] * 0.3 + l * 0.7) * 1.3, (c[2] * 0.3 + l * 0.7) * 1.3],
-        k,
-      );
+      // Faded = desaturated and 30 % lighter, capped at white: pale paint would leave linear 1.
+      const fade = (x: number): number => Math.min(1, (x * 0.3 + l * 0.7) * 1.3);
+      mix(v, [fade(c[0]), fade(c[1]), fade(c[2])], k);
     } else mix(v, target, k);
   }
   const res: PaintResult = {

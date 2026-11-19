@@ -67,6 +67,11 @@ export function sceneManifest(s: InstancedScene): SceneManifest {
 }
 
 function checkScene(s: InstancedScene): void {
+  if (s.sets.length === 0 && (!s.base || tris(s.base) === 0))
+    throw new Ts23dError('T3D_RECIPE_INVALID', {
+      cause: `instanced scene '${s.name}' has nothing to draw: no base geometry and no instance sets`,
+      fix: 'pass a base mesh with triangles or at least one instance set',
+    });
   const names = new Set<string>();
   for (const set of s.sets) {
     const fail = (cause: string, fix: string): never => {
@@ -138,8 +143,10 @@ export function toInstancedGlb(s: InstancedScene): Uint8Array {
       up: 'Z (rotated to glTF Y-up at the root)',
       manifest: sceneManifest(s),
     },
-    extensionsUsed: [GPU_INSTANCING],
-    extensionsRequired: [GPU_INSTANCING],
+    // Declared only when a node uses it: a required extension nobody uses blocks some loaders.
+    ...(s.sets.length
+      ? { extensionsUsed: [GPU_INSTANCING], extensionsRequired: [GPU_INSTANCING] }
+      : {}),
     scene: 0,
     scenes: [{ name: s.name, nodes: [0] }],
     nodes,

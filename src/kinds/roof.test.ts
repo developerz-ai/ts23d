@@ -13,7 +13,7 @@ import { stripRect } from '../material/index.ts';
 import { box } from '../primitives/index.ts';
 import { runQa } from '../qa/index.ts';
 import { type RoofMeshOptions, roof, roofInfo, roofMesh } from './roof.ts';
-import { type RoofType, ridgeHeight } from './roof-shape.ts';
+import { type RoofType, ridgeHeight, roofShape } from './roof-shape.ts';
 
 const RAD = Math.PI / 180;
 const base: RoofMeshOptions = {
@@ -54,6 +54,59 @@ function volume(m: Mesh): number {
 }
 
 describe('roof', () => {
+  it('names the rake when the rake is wrong, and refuses a chimney off the walls or below the slope', () => {
+    for (const rake of [-1, Number.NaN, 5]) {
+      const e = invalid(() => roofMesh({ ...base, rake }));
+      expect(e.code).toBe('T3D_RECIPE_INVALID');
+      expect(e.message).toContain('roof rake');
+      expect(e.message).not.toContain('overhang is');
+    }
+    expect(invalid(() => roofMesh({ ...base, overhang: -1 })).message).toContain('roof overhang');
+    const stack = { color: [0.6, 0.3, 0.2] as const };
+    // 9 × 6.5 m footprint: x = 10 is past the gable wall, y = 3.1 straddles the eave wall.
+    for (const at of [
+      [10, 0.5],
+      [0, 3.1],
+      [-4.2, 0],
+    ] as const) {
+      const e = invalid(() => roofMesh({ ...base, chimneys: [{ ...stack, at }] }));
+      expect(e.code).toBe('T3D_RECIPE_INVALID');
+      expect(e.fix).toContain('inside the wall line');
+    }
+    for (const bad of [
+      { height: -5 },
+      { height: 0 },
+      { height: Number.NaN },
+      { size: [0, 0.5] },
+    ] as const) {
+      const e = invalid(() =>
+        roofMesh({ ...base, chimneys: [{ ...stack, at: [1, 0.5], ...bad }] }),
+      );
+      expect(e.code).toBe('T3D_RECIPE_INVALID');
+      expect(e.fix).toContain('0.3–10 m');
+    }
+  });
+
+  it('gambrel: the knee is a share of the half-span across the ridge, whichever way it runs', () => {
+    for (const ridge of ['x', 'y'] as const) {
+      const o = {
+        ...base,
+        type: 'gambrel' as const,
+        footprint: [8, 6] as const,
+        pitchDeg: 65,
+        knee: 0.45,
+        ridge,
+      };
+      const s = roofShape(o);
+      expect(s.D).toBe(ridge === 'x' ? 3 : 4);
+      // Where lower and upper slope meet: the lower one has run knee × D in from the wall line.
+      const [lower, , upper] = s.under;
+      if (!lower || !upper) throw new Error('gambrel has four planes');
+      const b = (upper.c - lower.c) / (upper.gb - lower.gb);
+      expect(s.D - Math.abs(b)).toBeCloseTo(0.45 * s.D, 9);
+    }
+  });
+
   it('rejects impossible pitches, footprints and mansard slopes with a fix', () => {
     for (const pitchDeg of [0, 2, 89, Number.NaN]) {
       const e = invalid(() => roofMesh({ ...base, pitchDeg }));

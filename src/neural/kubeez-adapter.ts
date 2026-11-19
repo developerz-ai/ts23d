@@ -6,7 +6,8 @@
 // `failed`; download each PNG (WITHOUT the API key: the CDN is another host) and fit it to the
 // asked width × height. HTTP 429 backs off within the job deadline. The key is the caller's
 // (`apiKey`: pass process.env.KUBEEZ_API_KEY in t3d.config.ts); it goes only into request headers,
-// never into records, caches, logs or errors. Outputs: "you retain the rights to outputs generated
+// never into records, caches, logs or errors. Paid: `estimate` is the model's listed
+// cost_per_generation, so `t3d neural run` prices jobs before sending them. Outputs: "you retain the rights to outputs generated
 // using your prompts, subject to third-party rights" (Kubeez terms) → licence 'own' + terms URL.
 
 import type { NeuralOutput } from '../core/index.ts';
@@ -141,6 +142,10 @@ export function kubeezAdapter(o: KubeezOptions): NeuralAdapter {
     id: 'kubeez',
     tasks: ['image'],
     models,
+    paid: true,
+    // The model's listed cost_per_generation (a free call); NaN when it lists none.
+    estimate: async (job) =>
+      pickModel('kubeez', await models(), job.task, job.model).cost ?? Number.NaN,
     async run(job) {
       const model = pickModel('kubeez', await models(), job.task, job.model);
       const r = fieldsOf(job.request);

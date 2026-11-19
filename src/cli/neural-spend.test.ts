@@ -14,6 +14,49 @@ const lib = join(import.meta.dir, '../index.ts');
 const quiet = { json: true } as const;
 
 describe('t3d neural run: the spend guard', () => {
+  /** One image request; any adapter. */
+  const ONE = (name: string) => `import { box, defineAsset } from '${lib}';
+export const ${name} = defineAsset({
+  name: '${name}',
+  kind: 'prop',
+  budget: { triangles: [12, 12, 12] },
+  build: (ctx) => {
+    const a = ctx.neural('image', { seed: 3, prompt: '${name}', width: 4, height: 4 });
+    ctx.part('body', box({ size: [1, 1, a ? 1 : 0.5], color: [0.5, 0.5, 0.5] }));
+  },
+});
+`;
+
+  it('a paid adapter that cannot price a job (no estimate, NaN, Infinity) sends nothing without --yes-spend', async () => {
+    const cases = [
+      ['nopr', {}],
+      ['nanp', { estimate: () => Number.NaN }],
+      ['infp', { estimate: () => Number.POSITIVE_INFINITY }],
+    ] as const;
+    for (const [name, extra] of cases) {
+      const f = join(dir, name, `${name}.ts`);
+      await Bun.write(f, ONE(name));
+      const mock = mockAdapter();
+      const config = resolveConfig({ neural: { image: { ...mock, paid: true, ...extra } } });
+      const lines: string[] = [];
+      await expect(neuralRun(f, config, false, { log: (l) => void lines.push(l) })).rejects.toThrow(
+        /T3D_CLI_USAGE: .*cannot be priced.*image on mock/,
+      );
+      expect([mock.calls(), lines]).toEqual([0, [`~ ${name} image on mock: about ? credits`]]);
+      const r = await neuralRun(f, config, false, { yesSpend: true });
+      expect([r.filled.length, r.estimatedCredits, mock.calls()]).toEqual([1, 0, 1]);
+    }
+  });
+
+  it('a free adapter (no paid flag, no estimate) is never priced', async () => {
+    const f = join(dir, 'free', 'free.ts');
+    await Bun.write(f, ONE('free'));
+    const lines: string[] = [];
+    const config = resolveConfig({ neural: { image: mockAdapter() } });
+    const r = await neuralRun(f, config, false, { log: (l) => void lines.push(l) });
+    expect([r.filled.length, r.estimatedCredits, lines]).toEqual([1, 0, []]);
+  });
+
   /** Two image requests on a paid adapter (30 credits each): 60 > the 50-credit limit. */
   const PAID = `import { box, defineAsset } from '${lib}';
 export const coin = defineAsset({

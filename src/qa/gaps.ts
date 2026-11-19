@@ -2,7 +2,8 @@
 // narrow openings that drop far behind the surface on both sides — a door short of its header,
 // a panel that misses its frame, light through a seam. `floating-parts` passes these (the parts
 // touch somewhere); a viewer still sees the dark line. Intended openings are declared on the
-// asset (`gaps: [{ parts: [...], why }]`); running clearance around spinning parts is exempt.
+// asset (`gaps: [{ parts: [...], why }]`); running clearance around spinning parts and the rim of
+// an alpha-cut (`cutout`) card are exempt.
 
 import {
   type Bounds,
@@ -90,10 +91,10 @@ function allowance(asset: CompiledAsset, a: string, b: string): string | undefin
       : s0.test(a) || s0.test(b);
     if (hit) return `declared: ${g.why}`;
   }
-  const cut = asset.parts.find(
-    (p) => (p.name === a || p.name === b) && p.surface && p.surface !== 'opaque',
-  );
-  if (cut) return `'${cut.name}' is ${cut.surface}: its look is not its geometry`;
+  // Only an alpha-cut card looks unlike its geometry (the texture draws its real edge). Glass,
+  // ice, liquid and the rest are seen where their triangles are: a slit beside a pane is a slit.
+  const cut = asset.parts.find((p) => (p.name === a || p.name === b) && p.surface === 'cutout');
+  if (cut) return `'${cut.name}' is a cutout: its look is not its geometry`;
   const spin = spinning(asset);
   const sa = spin.get(a);
   const sb = spin.get(b);

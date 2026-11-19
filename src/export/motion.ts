@@ -3,8 +3,9 @@
 // Seamless by construction: every motion is rounded to a WHOLE number of cycles over the clip,
 // so the last key equals the first (a 0.8 rps wheel over 4 s = 3 turns, not 3.2 — no jump at
 // the loop point). Spins get ≥ 12 keys per turn so LINEAR quaternion interpolation never takes
-// the short way round. Time arrays are shared between channels of equal key count. A tread has
-// no channel (glTF cannot slide vertices round a loop): `treadExtras` hands its belt to engines.
+// the short way round. Time arrays are shared between channels of equal key count. A tread is not
+// a node transform: its belt runs on morph targets (tread-morphs.ts), and `treadExtras` hands the
+// belt line to engines that would rather drive the links themselves.
 // A rest yaw (a moving pivot re-parented past a merged, yawed parent) is kept: rotation keys are
 // yaw ∘ motion, translation offsets turn by yaw, because axes and vectors are in the part's own frame.
 

@@ -78,6 +78,12 @@ describe('texture assertions — failure cases first', () => {
     expect(r).toContain('half-metal');
     expect(r).toContain('point into the surface');
   });
+
+  it('assertValueRange refuses an unknown strip id instead of counting it as checked', () => {
+    const r = run(() => assertValueRange(sheet(), { strips: ['rubber', 'rubbr'] }));
+    expect(r).toContain('T3D_ASSERT_INPUT');
+    expect(r).toContain("'rubbr'");
+  });
 });
 
 describe('texture assertions — passing cases', () => {
@@ -85,5 +91,6 @@ describe('texture assertions — passing cases', () => {
     expect(assertTileable(strip(true))).toBeLessThan(3);
     expect(run(() => assertNoBleed(sheet()))).toBe('passed');
     expect(assertValueRange(sheet())).toBeGreaterThan(20);
+    expect(assertValueRange(sheet(), { strips: ['rubber', 'rubber'] })).toBe(2);
   });
 });

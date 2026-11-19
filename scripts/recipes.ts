@@ -39,8 +39,13 @@ export async function staleOutputs(
     return [
       { file, line: 1, message: `${name}: no committed ${missing.join(' + ')} in ${out}/`, fix },
     ];
-  const committed =
-    ((await Bun.file(`${out}/manifest.json`).json()) as { triangles?: number[] }).triangles ?? [];
+  // `triangles` is what the GLB holds; a manifest whose compiled count differs (the exporter
+  // dropped degenerate triangles) says so in `trianglesCompiled`, and the recipe compiles to that.
+  const manifest = (await Bun.file(`${out}/manifest.json`).json()) as {
+    triangles?: number[];
+    trianglesCompiled?: number[];
+  };
+  const committed = manifest.trianglesCompiled ?? manifest.triangles ?? [];
   return committed.join('/') === triangles.join('/')
     ? []
     : [

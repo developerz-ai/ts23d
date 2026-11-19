@@ -173,11 +173,18 @@ box({ size: [4, 2, 0.05], strip: teak, color: NATURAL });
   built-in or differently redefined id `T3D_MATERIAL_CONFLICT`, and a fifteenth custom row
   `T3D_SHEET_FULL`. Also: `graph` (a `tex` graph, see below), `spanMetres` (U repeat, default 4)
   and the weathering dials `wet`, `wear`, `age`. A painter that writes NaN or ∞ fails the paint with `T3D_MATERIAL_INVALID`.
-- A row comes from the id: a stable hash picks the home row and a taken home probes to the next free
-  one (`src/material/slots.ts`). The row never depends on how many materials the process registered
-  first, so the same program always produces the same bytes; only a hash clash between two ids makes
-  the later one probe (the shipped creature and CC0 ids have none). A row never moves once given out.
-  Still define materials in one shared module. Redefining an id with the identical definition is a no-op.
+- A row comes from the definition alone: a stable hash of the id picks one of the 14 custom rows
+  (`src/material/slots.ts`), or the material names it with `row: 0..13`. The row never depends on
+  what the process registered first, so the same program always produces the same bytes. A second
+  material on a taken row throws `T3D_MATERIAL_CONFLICT` and lists the free rows: give one of the
+  two a `row` (or a new id). Changing a material's row moves its UVs, so the assets that use it
+  change bytes once. A bad `row` is `T3D_MATERIAL_INVALID`. Still define materials in one shared
+  module. Redefining an id with the same definition (in any key order) is a no-op.
+- Every shipped material sits on its own row, so the gallery worker, `t3d build recipes/*/*.ts` and
+  the recipes gate can load all of them in one process: `scripts/material-rows.test.ts` loads every
+  recipe and library material in both orders and fails on a clash. Three ids carry a `row` because
+  their hash rows were taken (`fur` 2, `dragon_scales` 5, `tuna_metal` 10). 13 of the 14 rows are
+  in use (row 11 is free): the sheet has room for one more shipped material.
 - `DEFAULT_SHEET` paints defined materials automatically. To restyle a built-in for one project,
   override its recipe: `paintTrimSheet({ ...DEFAULT_SHEET, strips: { ...DEFAULT_SHEET.strips, oak: {...} } })`.
 - `materialOf(id)` returns the recipe, origin (classic/library/defined), description and sources.

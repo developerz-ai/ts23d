@@ -33,6 +33,93 @@ function drifting(): Uint8Array {
   );
 }
 
+const reply = (o: { root?: unknown; hips?: unknown; fps?: number }): Uint8Array =>
+  new TextEncoder().encode(
+    JSON.stringify({
+      fps: o.fps ?? 30,
+      root: o.root ?? [
+        [0, 0, 0],
+        [0, 0, 0],
+      ],
+      bones: {
+        pelvis: o.hips ?? [
+          [0, 0, 0, 1],
+          [0, 0, 0, 1],
+        ],
+      },
+    }),
+  );
+
+describe('neural motion refuses keys it would have to guess at', () => {
+  const refused: readonly (readonly [string, Parameters<typeof reply>[0], RegExp])[] = [
+    [
+      'a 3-number rotation (Euler angles)',
+      {
+        hips: [
+          [0.1, 0.2, 0.3],
+          [0, 0, 0, 1],
+        ],
+      },
+      /pelvis.*4 numbers/,
+    ],
+    [
+      'a zero quaternion',
+      {
+        hips: [
+          [0, 0, 0, 0],
+          [0, 0, 0, 1],
+        ],
+      },
+      /pelvis.*unit/,
+    ],
+    [
+      'a quaternion that is not unit',
+      {
+        hips: [
+          [0, 0, 0, 1.1],
+          [0, 0, 0, 1],
+        ],
+      },
+      /pelvis.*unit/,
+    ],
+    [
+      'a 2-number root offset',
+      {
+        root: [
+          [0, 0],
+          [0.1, 0],
+        ],
+      },
+      /root.*3 numbers/,
+    ],
+  ];
+  for (const [what, o, message] of refused)
+    it(what, () => {
+      expect(() => parseMotion(reply(o), bones)).toThrow('T3D_NEURAL_OUTPUT_INVALID');
+      expect(() => parseMotion(reply(o), bones)).toThrow(message);
+    });
+
+  it('a motion shorter than one cycle (it would be padded with frozen frames)', () => {
+    const short = parseMotion(reply({}), bones); // 2 frames at 30 fps
+    expect(() => resampleCycles(short, 1)).toThrow('T3D_NEURAL_OUTPUT_INVALID');
+    expect(() => resampleCycles(short, 1)).toThrow(/shorter than one 1 s cycle/);
+    expect(resampleCycles(short, 1 / 30).root.length).toBe(2);
+  });
+
+  it('normalises keys within 1e-3 of unit', () => {
+    const m = parseMotion(
+      reply({
+        hips: [
+          [0, 0, 0, 1.0005],
+          [0, 0, 0, 1],
+        ],
+      }),
+      bones,
+    );
+    expect(m.rotations.get('pelvis')?.[0]).toEqual([0, 0, 0, 1]);
+  });
+});
+
 describe('neural motion → clip', () => {
   it('a drifting root slides the planted feet (the failure the lock exists for)', () => {
     const m = resampleCycles(parseMotion(drifting(), bones), 1);

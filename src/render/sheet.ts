@@ -1,9 +1,19 @@
 // Contact sheet: ONE PNG, six labelled orthographic views on a metre grid. Built for an agent's
 // eyes — one image read shows proportions from every side, so it fixes the right thing first.
 //   row 1: 3/4 FRONT · FRONT (+X) · SIDE (-Y)
-//   row 2: TOP · 3/4 REAR · FAR LOD (LOD2, 3/4 front)
+//   row 2: TOP · 3/4 REAR · FAR LOD (`far`, else the asset itself; labelled with the LOD drawn)
+// Axis views share one scale (the largest span); a 3/4 view widens to its projected bounds so a
+// cube's corners are not cut off.
 
-import { type CompiledAsset, encodePng, type Vec3 } from '../core/index.ts';
+import {
+  type CompiledAsset,
+  cross,
+  dot,
+  encodePng,
+  normalize,
+  sub,
+  type Vec3,
+} from '../core/index.ts';
 import { drawText } from './font.ts';
 import { drawAsset, line, orthoCamera, type Target, type View, worldParts } from './raster.ts';
 
@@ -44,6 +54,22 @@ export function bounds(asset: CompiledAsset): {
   };
 }
 
+/** Extent for `view`: the shared largest span, or the projected bounds when that is wider. */
+function viewExtent(view: View, b: ReturnType<typeof bounds>): number {
+  const f = normalize(view.dir);
+  const r = normalize(cross(f, view.up));
+  const u = cross(r, f);
+  let span = 0;
+  for (let i = 0; i < 8; i++) {
+    const d = sub(
+      [i & 1 ? b.max[0] : b.min[0], i & 2 ? b.max[1] : b.min[1], i & 4 ? b.max[2] : b.min[2]],
+      b.centre,
+    );
+    span = Math.max(span, 2 * Math.abs(dot(d, r)), 2 * Math.abs(dot(d, u)));
+  }
+  return Math.max(b.extent, span);
+}
+
 const gridStep = (extent: number): number =>
   [0.1, 0.5, 1, 5, 10, 50, 100].find((s) => extent / s <= 24) ?? 100;
 
@@ -53,6 +79,11 @@ export interface SheetOptions {
   readonly far?: CompiledAsset;
 }
 
+/** The six cell labels; the sixth names the LOD actually drawn there. */
+export function sheetLabels(asset: CompiledAsset, o: SheetOptions = {}): string[] {
+  return VIEWS.map((v, i) => (i === 5 ? `FAR LOD${(o.far ?? asset).lod}` : v.label));
+}
+
 export function contactSheet(asset: CompiledAsset, o: SheetOptions = {}): Uint8Array {
   const cell = o.cell ?? 400;
   const width = cell * 3;
@@ -60,6 +91,7 @@ export function contactSheet(asset: CompiledAsset, o: SheetOptions = {}): Uint8A
   const px = new Uint8Array(width * height * 4).fill(255);
   const b = bounds(asset);
   const step = gridStep(b.extent);
+  const labels = sheetLabels(asset, o);
   VIEWS.forEach((view, i) => {
     const t: Target = {
       px: new Uint8Array(cell * cell * 4),
@@ -68,7 +100,7 @@ export function contactSheet(asset: CompiledAsset, o: SheetOptions = {}): Uint8A
       height: cell,
     };
     for (let k = 0; k < cell * cell; k++) t.px.set([238, 240, 243, 255], k * 4);
-    const cam = orthoCamera(view, b.centre, b.extent, cell);
+    const cam = orthoCamera(view, b.centre, viewExtent(view, b), cell);
     drawAsset(t, cam, i === 5 && o.far ? o.far : asset);
     const g0 = Math.floor(Math.min(b.min[0], b.min[1]) / step - 1) * step;
     const g1 = Math.ceil(Math.max(b.max[0], b.max[1]) / step + 1) * step;
@@ -80,7 +112,7 @@ export function contactSheet(asset: CompiledAsset, o: SheetOptions = {}): Uint8A
     const oy = 40 + Math.floor(i / 3) * cell;
     for (let y = 0; y < cell; y++)
       px.set(t.px.subarray(y * cell * 4, (y + 1) * cell * 4), ((oy + y) * width + ox) * 4);
-    drawText(px, width, ox + 8, oy + 8, view.label, 3, [40, 44, 52]);
+    drawText(px, width, ox + 8, oy + 8, labels[i] ?? view.label, 3, [40, 44, 52]);
   });
   const dims = `${asset.name}  ${(b.max[0] - b.min[0]).toFixed(1)}X${(b.max[1] - b.min[1]).toFixed(1)}X${(b.max[2] - b.min[2]).toFixed(1)}M  GRID ${step}M  LOD${asset.lod}`;
   drawText(px, width, 10, 10, dims, 4, [20, 22, 26]);

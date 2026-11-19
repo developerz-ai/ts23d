@@ -117,11 +117,22 @@ export interface WatchDeps {
   readonly debounceMs: number;
 }
 
+/**
+ * The CLI entry a rebuild runs: `bin.ts` beside this file (source), `bin.js` (the published
+ * dist/cli/), `cli/bin.js` (dist/ when bundled into a chunk), else the script Bun started with.
+ */
+export function cliEntry(dir: string = import.meta.dir, main: string = Bun.main): string {
+  return (
+    [join(dir, 'bin.ts'), join(dir, 'bin.js'), join(dir, 'cli', 'bin.js')].find((f) =>
+      existsSync(f),
+    ) ?? main
+  );
+}
+
 const childBuild =
   (flags: readonly string[]) =>
   async (files: readonly string[]): Promise<number> => {
-    const bin = join(import.meta.dir, 'bin.ts');
-    const p = Bun.spawn([process.execPath, bin, 'build', ...files, ...flags], {
+    const p = Bun.spawn([process.execPath, cliEntry(), 'build', ...files, ...flags], {
       stdio: ['ignore', 'inherit', 'inherit'],
     });
     return p.exited;

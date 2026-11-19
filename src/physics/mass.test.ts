@@ -97,6 +97,20 @@ describe('massProperties', () => {
     expect(p.inertia[2][2]).toBeCloseTo(100 * 0.25 * 0.5, 0);
   });
 
+  it('a declared mass on a flat part with no volume is kept, spread as a sheet', () => {
+    // One 1 × 1 m face, no `shell`: computed mass 0 used to win and export as infinite mass.
+    const box = boxMesh([1, 1, 0.01], [0, 0, 0.5]);
+    const face: Mesh = { ...box, indices: box.indices.slice(24, 30) };
+    const p = massProperties(asset([part('sign', face)], { physics: { mass: 5 } }));
+    expect(p.computedMass).toBe(0);
+    expect(p.mass).toBeCloseTo(5, 6);
+    expect(p.centerOfMass[2]).toBeCloseTo(0.505, 6);
+    // Thin square plate: m·a²/12 in its plane, m·a²/6 about its normal.
+    expect(p.inertia[0][0]).toBeCloseTo(5 / 12, 6);
+    expect(p.inertia[1][1]).toBeCloseTo(5 / 12, 6);
+    expect(p.inertia[2][2]).toBeCloseTo(5 / 6, 6);
+  });
+
   it('is deterministic', () => {
     const a = asset([part('c', cylinderMesh(0.3, 1)), part('b', boxMesh([1, 2, 3], [2, 0, 0]))]);
     expect(JSON.stringify(massProperties(a))).toBe(JSON.stringify(massProperties(a)));

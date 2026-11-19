@@ -1,6 +1,7 @@
 // Riveted iron plates (kind 'plates'): lapped plates (each overlaps its left neighbour by a
 // step), domed rivet rows along every seam, hammered surface, rust streaks running down from
-// rivets, chipped paint showing bare metal on edges.
+// rivets, chipped paint showing bare metal on edges. On a strip the rivet pitch along U snaps to a
+// whole number of rivets over the strip length, so no half rivet sits on the tiling seam.
 // params: width 1.0 · height 0.5 · lap 0.003 · rivet 0.014 (radius) · pitch 0.09 · inset 0.05
 //         rust 0.4 · chips 0.3
 
@@ -21,6 +22,7 @@ export function paintPlates(c: Canvas, r: StripRecipe, seed: number): void {
   const lap = param(p, 'lap', 0.003);
   const rivet = param(p, 'rivet', 0.014);
   const pitch = param(p, 'pitch', 0.09);
+  const pitchU = c.wrapU ? c.metresU / Math.max(1, Math.round(c.metresU / pitch)) : pitch;
   const inset = param(p, 'inset', 0.05);
   const chips = param(p, 'chips', 0.3);
   const metal = r.metalness ?? 0;
@@ -52,7 +54,7 @@ export function paintPlates(c: Canvas, r: StripRecipe, seed: number): void {
       const ry = Math.abs(dy - inset);
       const rx = Math.abs(dx - inset);
       const d1 = Math.sqrt(rx * rx + along(ym - plates.y0, pitch) ** 2);
-      const d2 = Math.sqrt(ry * ry + along(xm, pitch) ** 2);
+      const d2 = Math.sqrt(ry * ry + along(xm, pitchU) ** 2);
       const d = Math.min(dx > inset * 2 ? 1 : d1, dy > inset * 2 ? 1 : d2);
       const dome = d < rivet ? Math.sqrt(1 - (d / rivet) ** 2) : 0;
       h += dome * rivet * 0.5;

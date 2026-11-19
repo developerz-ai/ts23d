@@ -112,6 +112,14 @@ function cardFaceY(S: Surface, s: number, z: number): number {
   return e[1] - 0.014 - 0.018 * Math.sin(f * Math.PI) - 0.01 * (1 - f);
 }
 
+/** Crown of the card's top roll at station s: midway between the card and the skin's inner edge. */
+function capCrown(S: Surface, s: number): Vec3 {
+  const uE = cockpitU(S, s, s);
+  const e = S.row(s)(uE);
+  const inner = sub(e, mul(normalAt(S, s, uE), 0.011));
+  return [e[0], (e[1] - 0.014 + inner[1]) / 2, Math.max(e[2] - 0.035, inner[2]) + 0.012];
+}
+
 /** Door card on the left door's inner side (car frame), with its top roll back to the skin. */
 export function doorCard(S: Surface, lod: Lod): Mesh {
   const s0 = X_DOOR_REAR + GAP;
@@ -148,8 +156,7 @@ export function doorCard(S: Surface, lod: Lod): Mesh {
     N.push(nrow);
     // Top roll: card top → crown → the skin's inner edge.
     const inner = sub(e, mul(ne, 0.011));
-    const crown: Vec3 = [e[0], (yC + inner[1]) / 2, Math.max(zTop, inner[2]) + 0.012];
-    cap.push([row[nu] ?? e, crown, inner]);
+    cap.push([row[nu] ?? e, capCrown(S, s), inner]);
     capN.push([
       [0, 0, 1],
       [0, 0, 1],
@@ -205,7 +212,18 @@ export function doorCard(S: Surface, lod: Lod): Mesh {
           ),
         );
       // Speaker grille low on the card, lock knob, stitch line.
-      const sp = add(a(mid + 0.28), [0, 0.005, -0.16]);
+      // The grille lies on the card's face, tilted with it (the card leans and bows: set on the
+      // armrest line it stood 1 cm clear), its rim sunk 1.5 mm into the leather.
+      const ss = mid + 0.28;
+      const sz = 0.42;
+      const e = 0.01;
+      const lean: Vec3 = [
+        (cardFaceY(S, ss + e, sz) - cardFaceY(S, ss - e, sz)) / (2 * e),
+        -1,
+        (cardFaceY(S, ss, sz + e) - cardFaceY(S, ss, sz - e)) / (2 * e),
+      ];
+      const faceN = mul(lean, 1 / Math.hypot(lean[0], lean[1], lean[2]));
+      const sp = sub([ss, cardFaceY(S, ss, sz), sz], mul(faceN, 0.0015));
       parts.push(
         along(
           lathe({
@@ -221,18 +239,13 @@ export function doorCard(S: Surface, lod: Lod): Mesh {
             caps: false,
           }),
           sp,
-          [0, -1, 0],
+          faceN,
         ),
       );
+      // Lock knob: a pin standing out of the rolled top cap at the door's rear.
+      const crown = capCrown(S, X_DOOR_REAR + 0.15);
       parts.push(
-        rod(
-          add(a(X_DOOR_REAR + 0.15), [0, 0.0, 0.17]),
-          add(a(X_DOOR_REAR + 0.15), [0, 0.0, 0.2]),
-          0.012,
-          C.natural,
-          'chrome',
-          8,
-        ),
+        rod(add(crown, [0, 0, -0.008]), add(crown, [0, 0, 0.022]), 0.012, C.natural, 'chrome', 8),
       );
       // Stitch line along the card face (it bows with the door, so short runs follow it).
       const zs = 0.67;

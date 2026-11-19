@@ -40,3 +40,36 @@ describe('subdivideTo', () => {
     expect(s.groups - edges + f.indices.length / 3).toBe(2);
   });
 });
+
+describe('subdivideTo on a skinned, morphed mesh', () => {
+  it('interpolates weights (still summing to 1 on the 1/255 grid) and morph deltas', () => {
+    const tri = {
+      positions: new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]),
+      normals: new Float32Array([0, 0, 1, 0, 0, 1, 0, 0, 1]),
+      uvs: new Float32Array(6),
+      colors: new Float32Array(9).fill(1),
+      indices: new Uint32Array([0, 1, 2]),
+      joints: new Uint16Array([0, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0]),
+      weights: new Float32Array([1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0]),
+      morphs: [{ name: 'lift', positions: new Float32Array([0, 0, 0, 0, 0, 2, 0, 0, 4]) }],
+    };
+    const f = subdivideTo(tri, 0.3);
+    const verts = f.positions.length / 3;
+    expect(verts).toBeGreaterThan(3);
+    expect(f.joints?.length).toBe(verts * 4);
+    expect(f.weights?.length).toBe(verts * 4);
+    expect(f.morphs?.[0]?.positions.length).toBe(verts * 3);
+    for (let v = 0; v < verts; v++) {
+      const w = [0, 1, 2, 3].map((s) => f.weights?.[v * 4 + s] ?? 0);
+      expect(w.reduce((s, x) => s + Math.round(x * 255), 0)).toBe(255);
+      for (const x of w) expect(Math.abs(x * 255 - Math.round(x * 255))).toBeLessThan(1e-4);
+      // Barycentric by construction: bone 1 follows x, bone 2 follows y; the lift is 2x + 4y.
+      const [x = 0, y = 0] = [f.positions[v * 3], f.positions[v * 3 + 1]];
+      const of = (bone: number): number =>
+        [0, 1, 2, 3].reduce((s, k) => s + (f.joints?.[v * 4 + k] === bone ? (w[k] ?? 0) : 0), 0);
+      expect(Math.abs(of(1) - x)).toBeLessThan(0.02);
+      expect(Math.abs(of(2) - y)).toBeLessThan(0.02);
+      expect(f.morphs?.[0]?.positions[v * 3 + 2]).toBeCloseTo(2 * x + 4 * y, 5);
+    }
+  });
+});

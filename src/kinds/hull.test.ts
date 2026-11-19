@@ -53,6 +53,34 @@ describe('hull', () => {
     }
   });
 
+  it('rejects a boot-top, camber or deadrise that would fold the shell', () => {
+    for (const [bad, word] of [
+      [{ bootTop: -1 }, 'bootTop'],
+      [{ bootTop: 0 }, 'bootTop'],
+      [{ bootTop: 5 }, 'bootTop'],
+      [{ camber: Number.NaN }, 'beam / 4'],
+      [{ camber: -0.2 }, 'beam / 4'],
+      [{ deadriseDeg: 89 }, 'deadrise'],
+      [{ deadriseDeg: -5 }, 'deadrise'],
+      [{ deadriseDeg: 40, draft: 1, freeboard: 1.2 }, 'draft + freeboard'],
+    ] as const) {
+      try {
+        hullMesh({ ...tug, ...bad });
+        throw new Error(`expected a throw for ${JSON.stringify(bad)}`);
+      } catch (e) {
+        expect(e).toBeInstanceOf(Ts23dError);
+        expect((e as Ts23dError).code).toBe('T3D_RECIPE_INVALID');
+        expect((e as Ts23dError).fix).toContain(word);
+      }
+    }
+    // A dinghy's 0.2 m freeboard is under the 0.3 m default: the band takes half of it instead.
+    const low = hullMesh({ ...tug, length: 3, beam: 1.2, draft: 0.2, freeboard: 0.2 });
+    expect(low.shell.positions.every(Number.isFinite)).toBe(true);
+    expect(
+      hullMesh({ ...tug, camber: 0, deadriseDeg: 20, bootTop: 0.5 }).deck.indices.length,
+    ).toBeGreaterThan(0);
+  });
+
   it('meets length, beam, draft and freeboard exactly', () => {
     const { shell, lines } = hullMesh(tug);
     const b = boundsOf(shell);

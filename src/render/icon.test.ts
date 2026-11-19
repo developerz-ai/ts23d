@@ -2,7 +2,8 @@ import { describe, expect, it } from 'bun:test';
 import { type CompiledAsset, compile, defineAsset, Ts23dError } from '../core/index.ts';
 import { DEFAULT_SHEET, hex, paintTrimSheet } from '../material/index.ts';
 import { box } from '../primitives/index.ts';
-import { icon, portrait, renderIcon, renderPortrait } from './icon.ts';
+import { renderBeauty } from './beauty.ts';
+import { ICON_CAMERA, icon, portrait, renderIcon, renderPortrait } from './icon.ts';
 import { rtsView, teamCoverage } from './icon-rts.ts';
 
 /** A grey block with a team-painted roof slab, or with the slab hidden inside the block. */
@@ -92,6 +93,51 @@ describe('icon', () => {
       if (Math.abs((a.rgba[i] ?? 0) - (b.rgba[i] ?? 0)) > 24) changed++;
     expect(changed).toBeGreaterThan(48 * 48 * 0.05);
     expect(a.rgba[3]).toBe(0);
+  });
+
+  it('a transparent icon carries the asset colour to its edge, not a halo of the studio backdrop', () => {
+    // Near-black block: any backdrop blended into a partly covered pixel shows as a light rim.
+    const dark = compile(
+      defineAsset({
+        name: 'dark',
+        kind: 'prop',
+        budget: { triangles: [12, 12, 12] },
+        build(ctx) {
+          ctx.part('b', box({ size: [1, 1, 1], at: [0, 0, 0.5], color: [0.01, 0.01, 0.01] }));
+        },
+      }),
+    );
+    const r = renderIcon(dark, { size: 64, backdrop: 'transparent', sheet });
+    const mean = (pick: (a: number) => boolean): number => {
+      let sum = 0;
+      let n = 0;
+      for (let i = 0; i < r.mask.length; i++) {
+        if (!pick(r.rgba[i * 4 + 3] ?? 0)) continue;
+        sum += ((r.rgba[i * 4] ?? 0) + (r.rgba[i * 4 + 1] ?? 0) + (r.rgba[i * 4 + 2] ?? 0)) / 3;
+        n++;
+      }
+      expect(n).toBeGreaterThan(20);
+      return sum / n;
+    };
+    const inside = mean((a) => a === 255);
+    const rim = mean((a) => a > 0 && a < 128);
+    expect(rim).toBeLessThan(inside + 40);
+    // Alpha is the coverage mask, and a pixel the asset never touches is fully clear.
+    for (let i = 0; i < r.mask.length; i++) expect(r.rgba[i * 4 + 3]).toBe(r.mask[i] ?? -1);
+    expect([...r.rgba.subarray(0, 4)]).toEqual([0, 0, 0, 0]);
+  });
+
+  it('a studio icon is the beauty render byte for byte, with the same silhouette as the cut-out', () => {
+    const studio = renderIcon(red, { size: 48, sheet });
+    const shot = { ...ICON_CAMERA, width: 48, height: 48, supersample: 3, sheet };
+    const b = renderBeauty(red, { ...shot, window: { x: 0.5, y: 0.5, zoom: 1.06 } });
+    expect(Bun.hash(studio.rgba)).toBe(Bun.hash(b.rgba));
+    expect(Bun.hash(renderIcon(red, { size: 48, sheet, backdrop: 'studio' }).rgba)).toBe(
+      Bun.hash(b.rgba),
+    );
+    expect(Bun.hash(renderIcon(red, { size: 48, sheet, backdrop: 'transparent' }).mask)).toBe(
+      Bun.hash(studio.mask),
+    );
   });
 
   it('portrait zooms in: the focus fills more of the frame than in the icon', () => {

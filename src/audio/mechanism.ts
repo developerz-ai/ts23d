@@ -118,10 +118,13 @@ export function mechanism(o: MechanismOptions): SoundClip {
     const ring = strike(a, 'bar', 0.3, 0.02, 0.5, 0.5, rng).modes[0]?.freq ?? 900;
     out = biquad(biquad(noise(n, seed), 'bandpass', centre, 0.7), 'highpass', 400, 0.7);
     out = biquad(out, 'peak', ring, 6, 5);
-    if (!loop)
+    if (!loop) {
+      // A clip shorter than twice the release gives it half its length, so the hold stays positive.
+      const release = Math.min(0.25, seconds / 2);
       shape(out, (u) =>
-        adsrAt({ attack: 0.04, decay: 0.1, sustain: 0.8, release: 0.25 }, u, seconds - 0.25),
+        adsrAt({ attack: 0.04, decay: 0.1, sustain: 0.8, release }, u, seconds - release),
       );
+    }
   } else {
     // clunk: the latch tongue clicks home, then the leaf / lid lands ~40 ms later.
     const click = strike(a, 'block', 0.02, 0.006, 0.05, 0.9, rng);

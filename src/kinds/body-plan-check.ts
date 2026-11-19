@@ -123,6 +123,13 @@ function checkParent(c: ChainSpec, earlier: readonly ChainSpec[]): void {
       `${at} hangs from link ${p.link} of '${p.chain}', which has ${host.links}`,
       `use a link in 0..${host.links - 1}`,
     );
+  // A mirror pair is one chain per side: both copies under one side's copy is never what is meant,
+  // and guessing the other side from a suffix would hide the mistake.
+  if (!named && host.repeat?.kind === 'mirror' && c.repeat?.kind === 'mirror')
+    fail(
+      `${at} is mirrored but hangs from one copy '${p.chain}' of mirrored chain '${host.name}': both of its copies would hang from that side`,
+      `name the chain, parent: { chain: '${host.name}' }: each copy then hangs from the copy on its own side`,
+    );
   if (named?.repeat && !sameRepeat(named.repeat, c.repeat))
     fail(
       `${at} hangs from repeated chain '${p.chain}' but is not repeated the same way`,

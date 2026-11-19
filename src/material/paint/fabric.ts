@@ -4,7 +4,8 @@
 // is handled (smoother, a little lighter, darker in the creases). `relief` (0..1) rebuilds the
 // height so the normal map carries it: weave ribs one pitch wide along U (V texels are too coarse
 // for weft, so each row shifts a quarter pitch: a twill that survives the Sobel), and leather
-// pebbles as cellular domes with dark crevices between them.
+// pebbles as cellular domes with dark crevices between them. Weave pitch along U snaps to an even
+// thread count over a strip's length so the lattice tiles.
 // params (weave): pitch 0.004 · folds 0.6 · stains 0.3 · relief 0
 // params (leather): pebble 0.004 · creases 0.5 · wear 0.4 · relief 0
 
@@ -16,8 +17,15 @@ export function paintWeave(c: Canvas, r: StripRecipe, seed: number): void {
   const p = r.params;
   const pu = c.metresU / c.w;
   const pv = c.metresV / c.h;
-  // Threads below ~2 texels alias into moiré: keep the lattice resolvable on both axes.
-  const pitchU = Math.max(param(p, 'pitch', 0.004), 2 * pu);
+  // Threads below ~2 texels alias into moiré: keep the lattice resolvable on both axes. On a strip
+  // an even number of threads spans U (the over-under parity must match across the tiling seam),
+  // never more than one per 2 texels.
+  const rawU = Math.max(param(p, 'pitch', 0.004), 2 * pu);
+  const threads = Math.min(
+    2 * Math.max(1, Math.round(c.metresU / (2 * rawU))),
+    2 * Math.max(1, Math.floor(c.w / 4)),
+  );
+  const pitchU = c.wrapU ? c.metresU / threads : rawU;
   const pitchV = Math.max(param(p, 'pitch', 0.004), 2 * pv);
   const folds = param(p, 'folds', 0.6);
   const stains = param(p, 'stains', 0.3);

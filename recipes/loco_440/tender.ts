@@ -99,7 +99,9 @@ export function buildTender(ctx: BuildContext, L: Layout, gear: Gear, name: stri
       if (lod === 0) {
         m.push(
           text(name, {
-            origin: [cx - 0.1, face + s * 0.018, zb + 0.4],
+            // On the red field (face + 16 mm): the decal's 2 mm lift is the whole gap (QA
+            // connections: letters 4 mm off the field).
+            origin: [cx - 0.1, face + s * 0.016, zb + 0.4],
             along: [-s, 0, 0],
             height: 0.36,
             align: 'centre',
@@ -107,7 +109,9 @@ export function buildTender(ctx: BuildContext, L: Layout, gear: Gear, name: stri
             ...F.brass,
           }),
           text('C.P.R.R.', {
-            origin: [cx + 0.05, s * (BODY_W / 2 + 0.048), zt + 0.1],
+            // On the red coping band's outer face at this height (it stood 1.6 mm out from it,
+            // plus the 2 mm decal lift).
+            origin: [cx + 0.05, s * (BODY_W / 2 + 0.046), zt + 0.1],
             along: [-s, 0, 0],
             up: [0, s * 0.37, 0.93],
             height: 0.13,

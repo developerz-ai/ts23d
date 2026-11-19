@@ -113,7 +113,9 @@ export function buildCab(ctx: BuildContext, L: Layout, name: string): void {
       if (lod === 0)
         m.push(
           text(name, {
-            origin: [px, face + s * 0.02, z + 0.45],
+            // On the blue field (face + 18 mm): the decal's 2 mm lift is the whole gap (QA
+            // connections: letters 4 mm off the field).
+            origin: [px, face + s * 0.018, z + 0.45],
             along: [-s, 0, 0],
             height: 0.2,
             align: 'centre',

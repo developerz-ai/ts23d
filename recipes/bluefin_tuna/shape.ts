@@ -34,6 +34,7 @@ export const T_HEAD = 0.245;
 /** Metal skin: the vertex colour is the reflectance, blue above and silver below. */
 export const METAL = defineMaterial({
   id: 'tuna_metal',
+  row: 10, // its hash row (0) is the Tiger's `zimmerit`
   kind: 'noise',
   scaleMetres: 1.5,
   roughness: 0.3,

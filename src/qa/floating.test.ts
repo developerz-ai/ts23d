@@ -65,3 +65,106 @@ describe('floating-parts in water', () => {
     }
   });
 });
+
+/** Parts by name on the ground plane's asset. */
+const built = (parts: readonly (readonly [string, Vec3, Vec3])[]): CompiledAsset =>
+  compile(
+    defineAsset({
+      name: 'yard',
+      kind: 'prop',
+      budget: { triangles: [999, 999, 999] },
+      build(ctx) {
+        for (const [name, size, at] of parts) ctx.part(name, box({ size, color: c }), { at });
+      },
+    }),
+  );
+
+describe('floating-parts: contact the sparse samples miss', () => {
+  it('still fails a post hovering 3 cm over its base, with the true gap', () => {
+    const [f] = floatingParts(
+      built([
+        ['base', [1, 1, 0.5], [0, 0, 0]],
+        ['post', [0.1, 0.1, 0.3], [0.2, 0.1, 0.53]],
+      ]),
+    );
+    expect(f?.part).toBe('post');
+    expect(f?.gap ?? 0).toBeCloseTo(0.03, 3);
+  });
+
+  it('holds a post sunk 3, 5 and 15 cm into its base (no sample is within 2 cm of the skin)', () => {
+    for (const sink of [0.03, 0.05, 0.15])
+      expect(
+        floatingParts(
+          built([
+            ['base', [1, 1, 0.5], [0, 0, 0]],
+            ['post', [0.1, 0.1, 0.3], [0.2, 0.1, 0.5 - sink]],
+          ]),
+        ),
+      ).toEqual([]);
+  });
+
+  it('holds a 3 m rail passing through two 4 cm posts, wherever it crosses them', () => {
+    for (const z of [0.37, 0.48, 0.61])
+      expect(
+        floatingParts(
+          built([
+            ['post_a', [0.04, 0.04, 1], [-1, 0, 0]],
+            ['post_b', [0.04, 0.04, 1], [1, 0, 0]],
+            ['rail', [3, 0.04, 0.04], [0, 0, z]],
+          ]),
+        ),
+      ).toEqual([]);
+  });
+
+  it('reports the true gap of a rail that misses its posts by 3 cm', () => {
+    const [f, ...rest] = floatingParts(
+      built([
+        ['post_a', [0.04, 0.04, 1], [-1, 0, 0]],
+        ['post_b', [0.04, 0.04, 1], [1, 0, 0]],
+        ['rail', [3, 0.04, 0.04], [0, 0.07, 0.37]],
+      ]),
+    );
+    expect(rest).toEqual([]);
+    expect(f?.part).toBe('rail');
+    expect(f?.gap ?? 0).toBeCloseTo(0.03, 3);
+  });
+
+  it('still fails a part hanging inside a closed part, clear of its walls: it crosses nothing', () => {
+    const found = floatingParts(
+      built([
+        ['tank', [1, 1, 1], [0, 0, 0]],
+        ['bubble', [0.1, 0.1, 0.1], [0, 0, 0.45]],
+      ]),
+    );
+    expect(found.map((f) => f.part)).toEqual(['bubble']);
+  });
+});
+
+describe('floating-parts: fix text an agent can follow', () => {
+  it('states each primitive anchor as 02-dsl.md does (a cylinder is centred, not base-anchored)', () => {
+    const [f] = floatingParts(built([['crate', [1, 1, 1], [0, 0, 0.5]]]));
+    expect(f?.fix).toContain('`box`: `at.z` is the bottom');
+    expect(f?.fix).toContain('`cylinder`: centred on `at`');
+    expect(f?.fix).not.toContain('box and cylinder anchor at their base');
+  });
+
+  it('names the root of a floating chain first and tells its children to fix it, not to move', () => {
+    const found = floatingParts(
+      built([
+        ['lamp', [0.2, 0.2, 0.2], [0, 0, 1.45]],
+        ['arm', [0.5, 0.05, 0.05], [0.25, 0, 1.4]],
+        ['pole', [0.1, 0.1, 1.2], [0, 0, 0.25]],
+        ['base', [0.6, 0.6, 0.1], [0, 0, 0.15]],
+      ]),
+    );
+    expect(found.map((f) => f.part)).toEqual(['base', 'pole', 'lamp', 'arm']);
+    const [root, pole, lamp, arm] = found;
+    expect(root?.fix).toContain('move it 15.0 cm onto the ground');
+    expect(pole?.message).toContain("touches 'base', which is itself floating");
+    expect(pole?.fix).toContain("fix 'base' first");
+    expect(pole?.fix).not.toContain('move it');
+    expect(pole?.gap).toBeUndefined();
+    expect(lamp?.message).toContain("touches 'pole', which is itself floating");
+    expect(arm?.fix).toContain("fix 'base' first");
+  });
+});

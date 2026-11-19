@@ -38,6 +38,16 @@ describe('realFrom / crossCheck', () => {
     expect(() => quantity(TOWER, 'gauge')).toThrow('T3D_DATA_PROPERTY');
   });
 
+  test('an item-valued fact (track gauge) is refused by name: it has no metres to give', () => {
+    const loco: WikidataRecord = {
+      ...TOWER,
+      items: { gauge: { qid: 'Q1395', label: 'standard gauge' } },
+    };
+    const from = { from: 'gauge', label: 'gauge', axis: 'y' } as const;
+    expect(() => realFrom(loco, { map: {}, measures: [from] })).toThrow('T3D_DATA_PROPERTY');
+    expect(() => realFrom(loco, { map: {}, measures: [from] })).toThrow(/item \(standard gauge/);
+  });
+
   test('maps quantities onto real axes, measures and a citation', () => {
     const r = realFrom(TOWER, {
       map: { length: 'length', height: 'height', mass: 'mass' },

@@ -5,13 +5,13 @@
 // result with isError and the T3D_* code + fix, never a stack; the server stays up.
 
 import { join, relative } from 'node:path';
-import { Ts23dError } from '../../core/index.ts';
+import { isTs23dError, Ts23dError } from '../../core/index.ts';
 import type { AssetManifest } from '../manifest.ts';
 import type { ErrorJson, Failed } from '../report.ts';
 import { explain } from './explain.ts';
 import { type ImageBlock, imageBlocks } from './images.ts';
 import { invoke } from './invoke.ts';
-import { confine, type Sandbox } from './sandbox.ts';
+import { confine, confineRecipes, type Sandbox } from './sandbox.ts';
 import { TOOLS } from './schemas.ts';
 
 export interface TextBlock {
@@ -68,9 +68,9 @@ const itemsOf = (data: unknown): unknown[] => (Array.isArray(data) ? data : []);
 
 /** argv for a recipe command: `<cmd> <recipe> --out <out> [flag value…]`. */
 function argvOf(box: Sandbox, cmd: string, args: ArgMap, flags: Record<string, string>): string[] {
-  const recipe = confine(box, String(args['recipe']), 'recipe', [box.root]);
+  const recipes = confineRecipes(box, String(args['recipe']));
   const out = confine(box, typeof args['out'] === 'string' ? args['out'] : box.out, 'out');
-  const argv = [cmd, recipe, '--out', out];
+  const argv = [cmd, ...recipes, '--out', out];
   for (const [key, flag] of Object.entries(flags))
     if (args[key] !== undefined) argv.push(flag, String(args[key]));
   return argv;
@@ -108,7 +108,7 @@ function manifestSummary(box: Sandbox, out: string, m: AssetManifest) {
 
 /** build / shot: manifests (+ the contact sheets for shot). */
 async function built(box: Sandbox, argv: string[], look: boolean): Promise<ToolResult> {
-  const out = argv[3] ?? box.out;
+  const out = argv[argv.indexOf('--out') + 1] ?? box.out;
   const { envelope } = await invoke(argv);
   const assets = itemsOf(envelope.data).filter((x): x is AssetManifest => !isFailed(x));
   const failed = itemsOf(envelope.data).filter(isFailed);
@@ -123,7 +123,10 @@ async function built(box: Sandbox, argv: string[], look: boolean): Promise<ToolR
     ...(failed.length ? { failed } : {}),
     ...(imgs.listed.length ? { notShown: imgs.listed } : {}),
   };
-  return { content: [text(summary), ...imgs.blocks], ...(envelope.error ? { isError: true } : {}) };
+  return {
+    content: [text(summary), ...imgs.blocks],
+    ...(envelope.error && envelope.error.code !== 'T3D_QA_FAILED' ? { isError: true } : {}),
+  };
 }
 
 interface Rendered {
@@ -150,7 +153,10 @@ async function rendered(box: Sandbox, argv: string[], look: boolean): Promise<To
     ...(items.some(isFailed) ? { failed: items.filter(isFailed) } : {}),
     ...(imgs.listed.length ? { notShown: imgs.listed } : {}),
   };
-  return { content: [text(summary), ...imgs.blocks], ...(envelope.error ? { isError: true } : {}) };
+  return {
+    content: [text(summary), ...imgs.blocks],
+    ...(envelope.error && envelope.error.code !== 'T3D_QA_FAILED' ? { isError: true } : {}),
+  };
 }
 
 const DEFAULT_GLOBS = ['recipes/*/*.ts', 'assets/**/*.ts'];
@@ -199,7 +205,7 @@ export async function callTool(box: Sandbox, name: string, raw: unknown): Promis
     if (name === 'list_recipes') return await listRecipes(box, args);
     return { content: [text({ explained: await explain(String(args['code'])) })] };
   } catch (e) {
-    if (e instanceof Ts23dError) return failure(e.toJSON());
+    if (isTs23dError(e)) return failure(e.toJSON());
     throw e;
   }
 }

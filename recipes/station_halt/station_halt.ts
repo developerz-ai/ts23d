@@ -481,7 +481,8 @@ export const station_halt = defineAsset({
       pts.push([len / 2, top]);
       return prism({ profile: pts, depth: 0.03, plane: 'yz', color: cream, strip: 'wood' });
     };
-    cn.push(place(valance(2 * CAN_Y + 0.04), { at: [CAN_X1 + 0.02, 0, CAN_Z_FRONT - 0.5 + 0.06] }));
+    // Front valance nailed to the deck's front edge: its back face 5 mm into the deck fascia.
+    cn.push(place(valance(2 * CAN_Y + 0.04), { at: [CAN_X1 + 0.01, 0, CAN_Z_FRONT - 0.5 + 0.06] }));
     for (const s of [-1, 1]) {
       const len = CAN_X1 - B_X1;
       cn.push(
@@ -699,6 +700,10 @@ export const station_halt = defineAsset({
           at: [0.3, 0, 0.15],
           color: iron,
         }),
+        // Axle hangers: iron straps from the tray's underside (1 cm into it) round the axle,
+        // which is what carries the tray at the wheel end.
+        box({ size: [0.06, 0.04, 0.2], at: [0.3, 0.27, 0.13], color: iron }),
+        box({ size: [0.06, 0.04, 0.2], at: [0.3, -0.27, 0.13], color: iron }),
         box({ size: [0.05, 0.05, 0.32], at: [-0.6, 0.27, 0], color: iron }),
         box({ size: [0.05, 0.05, 0.32], at: [-0.6, -0.27, 0], color: iron }),
         beam({ from: [-0.65, 0.27, 0.34], to: [-1.0, 0.27, 0.5], width: 0.04, color: chocolate }),

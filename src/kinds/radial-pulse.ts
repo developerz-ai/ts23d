@@ -64,6 +64,13 @@ function checkPulse(p: PulseSpec): void {
   const { inflate, contract, coast } = p.timing;
   if (!(inflate >= 0 && contract > 0 && coast >= 0 && inflate + contract + coast < 1))
     invalid('pulse timing shares do not fit in one cycle', 'leave part of the cycle for refill');
+  // The cycle starts and ends at rest: an inflation with no time to happen in would start it at
+  // `inflate` and pop back to rest at the loop seam.
+  if (p.inflate > 0 && inflate === 0)
+    invalid(
+      `pulse inflates by ${p.inflate} but timing.inflate gives it no share of the cycle`,
+      'give timing.inflate a share above 0, or set inflate: 0 (a jellyfish only contracts)',
+    );
 }
 
 /** Which coordinate axis the ring turns about; a tilted axis has no scale-key form. */

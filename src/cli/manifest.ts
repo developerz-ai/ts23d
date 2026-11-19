@@ -6,6 +6,8 @@
 // Location-independent: every path in `files` is relative to the manifest's own folder
 // (<out>/<asset>/), so two builds into two --out dirs write the same bytes. Per-LOD arrays
 // (triangles, drawCalls, lodCoverage) are indexed like `lods`, the levels actually built.
+// Triangles, draw calls and the `run` clip are what the GLB holds (export's `glbContents`), not
+// what the recipe compiled to: the writer merges, drops dead triangles and skips empty meshes.
 
 import {
   type Asset,
@@ -14,12 +16,22 @@ import {
   type Lod,
   linearToHex,
   pngHeader,
+  STRETCH_TOLERANCE,
   TEXTURE_MAPS,
   textureSetsOf,
-  type WeatherCoverage,
 } from '../core/index.ts';
-import { clipSummary, fitHitboxes, mergeToPivots, skeletonOf, soundUses } from '../export/index.ts';
+import {
+  clipSummary,
+  fitHitboxes,
+  glbContents,
+  mergeToPivots,
+  skeletonOf,
+  soundUses,
+} from '../export/index.ts';
 import { type Finding, measure } from '../qa/index.ts';
+import { type WeatherSummary, weatherOf } from './manifest-weather.ts';
+
+export type { WeatherSummary } from './manifest-weather.ts';
 
 export interface AssetManifest {
   readonly name: string;
@@ -39,7 +51,13 @@ export interface AssetManifest {
     /** `<clip>.wav` files the GLBs' KHR_audio_emitter entries reference. */
     readonly sounds?: readonly string[];
   };
+  /** Triangles in each LOD's GLB (after the optimiser dropped degenerate and duplicate ones). */
   readonly triangles: readonly number[];
+  /**
+   * Triangles the recipe compiled to, which `budget.triangles` is checked against; present only
+   * when the optimiser dropped some, so it differs from `triangles`.
+   */
+  readonly trianglesCompiled?: readonly number[];
   /** MSFT_screencoverage written into `files.single`: where each LOD hands over (last = cull). */
   readonly lodCoverage?: readonly number[];
   readonly drawCalls: readonly number[];
@@ -76,6 +94,8 @@ export interface AssetManifest {
   }[];
   /** Bones in joint order (skinned assets); absent when none. */
   readonly skeleton?: readonly { name: string; parent: string | null }[];
+  /** Joint limits whose QA `deform` stretch tolerance was raised, with the declared why. */
+  readonly deformTolerances?: readonly { bone: string; stretch: number; why: string }[];
   /** glTF animations after `rest`: name, seconds, loop, root ground speed m/s; absent when none. */
   readonly clips?: readonly { name: string; seconds: number; loop: boolean; speed: number }[];
   /** Per-bone capsule triggers (written with `--physics`): bone, radius, cap distance, coverage. */
@@ -104,15 +124,7 @@ export interface AssetManifest {
 const tris = (a: CompiledAsset): number =>
   a.parts.reduce((s, p) => s + (p.mesh ? p.mesh.indices.length / 3 : 0), 0);
 
-/**
- * One draw per merged mesh, glowing parts in their own emissive layer and every texture set in
- * its own (as the GLB writes them): a set costs one more draw on each pivot that uses it.
- */
-export const drawCallsOf = (l: CompiledAsset): number =>
-  mergeToPivots(
-    l,
-    (l.glow ?? []).map((g) => g.parts),
-  ).parts.filter((p) => p.mesh).length;
+export { drawCallsOf } from '../export/index.ts';
 
 export function manifestOf(
   asset: Asset,
@@ -123,6 +135,8 @@ export function manifestOf(
 ): AssetManifest {
   const top = lods[0];
   const merged = top ? mergeToPivots(top) : null;
+  const held = lods.map(glbContents);
+  const compiled = lods.map(tris);
   return {
     name: asset.name,
     kind: asset.kind,
@@ -130,9 +144,10 @@ export function manifestOf(
     tags: asset.tags ?? [],
     lods: lods.map((l) => l.lod),
     files,
-    triangles: lods.map(tris),
+    triangles: held.map((h) => h.triangles),
+    ...(compiled.some((n, i) => n !== held[i]?.triangles) ? { trianglesCompiled: compiled } : {}),
     ...(lodCoverage?.length ? { lodCoverage } : {}),
-    drawCalls: lods.map(drawCallsOf),
+    drawCalls: held.map((h) => h.draws),
     pivots: (merged?.parts ?? [])
       .filter((p) => !p.emitter && !p.socket && !p.audio)
       .map((p) => ({
@@ -161,7 +176,10 @@ export function manifestOf(
       : {}),
     surfaces: [...new Set((top?.parts ?? []).map((p) => p.surface ?? 'opaque'))].sort(),
     ...textureSetsIn(lods),
-    ...rigOf(top),
+    ...rigOf(
+      top,
+      held.some((h) => h.run),
+    ),
     ...paintOf(top),
     ...(asset.real
       ? { real: { length: asset.real.length, width: asset.real.width, height: asset.real.height } }
@@ -201,11 +219,12 @@ function textureSetsIn(lods: readonly CompiledAsset[]): Pick<AssetManifest, 'tex
   };
 }
 
+/** `run`: whether the GLBs get the baked `run` clip (a belt alone runs too, by morph targets). */
 function rigOf(
   top: CompiledAsset | undefined,
-): Pick<AssetManifest, 'skeleton' | 'clips' | 'hitboxes'> {
+  run: boolean,
+): Pick<AssetManifest, 'skeleton' | 'deformTolerances' | 'clips' | 'hitboxes'> {
   if (!top) return {};
-  const run = top.parts.some((p) => p.motion && p.motion.kind !== 'tread');
   const clips = clipSummary(top.clips ?? [], run, LOOP_SECONDS);
   const hitboxes = fitHitboxes(top).map(({ bone, radius, height, coverage }) => ({
     bone,
@@ -213,8 +232,14 @@ function rigOf(
     height,
     coverage,
   }));
+  const raised = (top.skeleton?.bones ?? []).flatMap((b) =>
+    b.limit?.stretch !== undefined && b.limit.stretch > STRETCH_TOLERANCE.default
+      ? [{ bone: b.name, stretch: b.limit.stretch, why: b.limit.why ?? '' }]
+      : [],
+  );
   return {
     ...(top.skeleton ? { skeleton: skeletonOf(top) } : {}),
+    ...(raised.length ? { deformTolerances: raised } : {}),
     ...(clips.length ? { clips } : {}),
     ...(hitboxes.length ? { hitboxes } : {}),
   };
@@ -248,48 +273,4 @@ function paintOf(top: CompiledAsset | undefined): Pick<AssetManifest, 'paint' | 
       ? { variants: Object.fromEntries(variants.map(([v, slots]) => [v, hexes(slots)])) }
       : {}),
   };
-}
-
-export interface WeatherSummary {
-  readonly target: number;
-  readonly actual: number;
-  readonly eligible: string;
-  readonly area: number;
-  readonly count?: number;
-  readonly by?: Readonly<Record<string, { target: number; actual: number; area: number }>>;
-}
-
-const r4 = (x: number): number => Math.round(x * 1e4) / 1e4;
-
-/** Coverage effects aggregate area-weighted; shape effects (dents, sag, warp) take the max. */
-function weatherOf(top: CompiledAsset | undefined): { weather?: Record<string, WeatherSummary> } {
-  const all = top?.weather ?? [];
-  if (!all.length) return {};
-  const byEffect = new Map<string, WeatherCoverage[]>();
-  for (const w of all) byEffect.set(w.effect, [...(byEffect.get(w.effect) ?? []), w]);
-  const out: Record<string, WeatherSummary> = {};
-  for (const [effect, ws] of byEffect) {
-    const area = ws.reduce((t, w) => t + w.area, 0);
-    const shape = effect === 'dents' || effect === 'sag' || effect === 'warp';
-    const mean = (k: 'amount' | 'actual'): number =>
-      area > 0 ? ws.reduce((t, w) => t + w[k] * w.area, 0) / area : 0;
-    out[effect] = {
-      target: r4(shape ? Math.max(...ws.map((w) => w.amount)) : mean('amount')),
-      actual: r4(shape ? Math.max(...ws.map((w) => w.actual)) : mean('actual')),
-      eligible: [...new Set(ws.map((w) => w.where))].join(' ; '),
-      area: r4(area),
-      ...(effect === 'dents' ? { count: ws.reduce((t, w) => t + (w.count ?? 0), 0) } : {}),
-      ...(ws.length > 1
-        ? {
-            by: Object.fromEntries(
-              ws.map((w) => [
-                w.target,
-                { target: w.amount, actual: r4(w.actual), area: r4(w.area) },
-              ]),
-            ),
-          }
-        : {}),
-    };
-  }
-  return { weather: out };
 }

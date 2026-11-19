@@ -96,6 +96,15 @@ describe('bodyPlan refuses', () => {
       /not repeated the same way/,
     ],
     [
+      'a mirrored child naming one copy of a mirrored chain (both hands on the left arm)',
+      plan([
+        trunk,
+        { ...fin, repeat: { kind: 'mirror' } },
+        { ...fin, name: 'barb', repeat: { kind: 'mirror' }, parent: { chain: 'fin_l', link: 1 } },
+      ]),
+      /one copy 'fin_l' of mirrored chain 'fin'/,
+    ],
+    [
       'names that collide as bones',
       plan([trunk, { ...fin, repeat: { kind: 'mirror' } }, { ...fin, name: 'fin_l' }]),
       /two chains make bone 'fin_l_0'/,

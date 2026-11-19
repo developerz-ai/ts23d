@@ -3,6 +3,8 @@
 // first compile lands. A model-first asset compiles with its committed model outputs (`neuralOf`),
 // so it shows what its card shows; main.ts leaves the heavy ones out of this list. A water asset
 // has no floor: the stage turns to deep water and the animal swims on the spot while it orbits.
+// A compile that fails moves on to the next asset after a pause, until a whole cycle has failed
+// (`retry.ts`): the poster, or the last asset that worked, stays.
 
 import { formatCount } from '@developerz.ai/ts23d/core';
 import { type AnimationClip, AnimationMixer, type Object3D, Vector3 } from 'three';
@@ -11,6 +13,7 @@ import type { Item } from './items.ts';
 import { startLod } from './lod-policy.ts';
 import { lookFor } from './look.ts';
 import { qualityTier } from './quality.ts';
+import { retryAfter } from './retry.ts';
 import { inPlace, swimClip } from './scenarios/clips.ts';
 import { disposeTree, Stage } from './stage.ts';
 import { studioRenderer } from './studio.ts';
@@ -30,6 +33,8 @@ export class Showcase {
   private model: Object3D | null = null;
   private mixer: AnimationMixer | null = null;
   private busy = false;
+  /** Compiles failed in a row; while above zero the retry timer, not the frame loop, advances. */
+  private failures = 0;
 
   constructor(
     private readonly root: HTMLElement,
@@ -94,6 +99,7 @@ export class Showcase {
       this.stage.syncShadow();
       if (!water) this.stage.bakeContact(this.renderer);
       this.index = index;
+      this.failures = 0;
       this.shown = -1;
       this.setLabel(item);
       this.root.classList.add('live');
@@ -101,6 +107,9 @@ export class Showcase {
     } catch (error) {
       console.warn(`ts23d: showcase skipped ${item?.name}`, error);
       this.index = index;
+      const wait = retryAfter(++this.failures, this.featured.length);
+      // `busy` is cleared below, long before the timer fires.
+      if (wait !== null) setTimeout(() => void this.next(), wait);
     } finally {
       this.busy = false;
     }
@@ -141,8 +150,8 @@ export class Showcase {
       this.center.z + Math.cos(this.angle) * d * Math.cos(elev),
     );
     c.lookAt(this.center);
-    if (this.model && t - this.shown > HOLD && this.featured.length > 1 && !reducedMotion())
-      void this.next();
+    const due = this.model && this.failures === 0 && t - this.shown > HOLD;
+    if (due && this.featured.length > 1 && !reducedMotion()) void this.next();
     this.renderer.render(this.stage.scene, c);
   }
 }

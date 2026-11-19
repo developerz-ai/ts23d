@@ -6,7 +6,7 @@
 // closed (or fully open) panel is clearance, not a clash, however long the panel.
 
 import type { Mesh, Vec3 } from '../core/index.ts';
-import { axisBasis, axisFrame, type Volume } from './clash-sweep.ts';
+import { axisBasis, axisFrame, dot, shave, type Volume } from './clash-sweep.ts';
 import { CLASH_EPS } from './types.ts';
 
 const TAU = Math.PI * 2;
@@ -148,12 +148,15 @@ export function sectorVolume(
   };
   const [from, to] = range;
   const reach = rMax + Math.max(Math.abs(lo), Math.abs(hi));
+  const ea = shave(hi - lo);
+  const at = dot(pivot, u);
   return {
     min: [pivot[0] - reach, pivot[1] - reach, pivot[2] - reach],
     max: [pivot[0] + reach, pivot[1] + reach, pivot[2] + reach],
+    band: { dir: u, lo: at + lo + ea, hi: at + hi - ea },
     inside: (p) => {
       const [a, r, phi] = coords(p);
-      if (a < lo + CLASH_EPS || a > hi - CLASH_EPS || r < CLASH_EPS) return false;
+      if (a < lo + ea || a > hi - ea || r < CLASH_EPS) return false;
       // Rest angles φ − θ for θ ∈ [from, to] land on p; shrink the run by CLASH_EPS of arc.
       const tol = CLASH_EPS / r;
       const j0 = Math.floor((phi - to + tol) / W);

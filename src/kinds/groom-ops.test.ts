@@ -53,6 +53,8 @@ describe('groom ops: validation (failure first)', () => {
     [{ op: 'comb', toward: [0, 0, 0], strength: 1 }, /non-zero direction/],
     [{ op: 'puff', amount: 2 }, /amount is 0..1/],
     [{ op: 'cut' }, /length .*or by a plane/],
+    [{ op: 'cut', plane: { at: [0, 0, 0.05], normal: [Number.NaN, 0, 1] } }, /finite non-zero/],
+    [{ op: 'cut', plane: { at: [0, 0, 0.05], normal: [0, 0, Infinity] } }, /finite non-zero/],
     [{ op: 'grow', factor: 0.5 }, /grow by a factor/],
     [{ op: 'shrink', factor: 2 }, /shrink by a factor/],
     [{ op: 'clump', locks: 0, strength: 1 }, /locks is a whole number/],
@@ -84,6 +86,19 @@ describe('groom ops: validation (failure first)', () => {
       checkGroomOps([{ op: 'puff', amount: 0.5, region: 'crown' }], { crown: ball }),
     ).not.toThrow();
     expect(() => checkGroomOps([])).not.toThrow();
+  });
+});
+
+describe('opMask', () => {
+  test('a 4 mm ramp centred on the region boundary: 1 at 2 mm inside, ½ on it, 0 at 2 mm out', () => {
+    const at = (d: number): number | undefined =>
+      opMask({ op: 'puff', amount: 1, region: () => d }, [
+        { normal: [0, 0, 1], points: [[0, 0, 0]] },
+      ])[0];
+    expect(at(-0.002)).toBe(1);
+    expect(at(0)).toBe(0.5);
+    expect(at(0.001)).toBeCloseTo(0.25, 9);
+    expect(at(0.002)).toBe(0);
   });
 });
 

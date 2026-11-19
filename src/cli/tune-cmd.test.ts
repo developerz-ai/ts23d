@@ -44,6 +44,15 @@ describe('t3d tune', () => {
     expect(existsSync('recipes/boulders/tune.json')).toBe(false); // no stray file left behind
   });
 
+  it('a failed tune removes the placeholder tune.json it created', async () => {
+    const dir = resolve('tmp/tune-cmd-fail');
+    rmSync(dir, { recursive: true, force: true });
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(join(dir, 'slab.ts'), FIXTURE); // no front.svg: loading the mask fails
+    expect(await run(['tune', join(dir, 'slab.ts'), '--evals', '4'])).toBe(1);
+    expect(existsSync(join(dir, 'tune.json'))).toBe(false);
+  });
+
   it('writes tune.json, the report and the strip; same seed → same bytes', async () => {
     const dir = resolve('tmp/tune-cmd-test');
     rmSync(dir, { recursive: true, force: true });

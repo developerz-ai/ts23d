@@ -9,7 +9,7 @@
 
 import { type Mesh, MeshBuilder, type Vec2, type Vec3 } from '../core/index.ts';
 import { type StripId, stripRect } from '../material/index.ts';
-import { count, invalid, positive, profileOf } from './check.ts';
+import { colorOf, count, invalid, positive, profileOf } from './check.ts';
 import { facets } from './lathe-facets.ts';
 import { mirroredV, stripU, stripVMetres } from './strip-uv.ts';
 
@@ -48,8 +48,22 @@ function distinct(profile: readonly Vec2[]): Vec2[] {
   });
 }
 
+const KEYS: Record<keyof LatheOptions, true> = {
+  profile: true,
+  segments: true,
+  color: true,
+  strip: true,
+  axis: true,
+  at: true,
+  caps: true,
+  creaseDeg: true,
+  uv: true,
+  faceted: true,
+};
+
 /** Rejects inputs that would emit NaN, empty or inside-out rings. */
 function checkLathe(o: LatheOptions): void {
+  colorOf('lathe', o, KEYS);
   count('lathe segments', o.segments, 3, 1024);
   profileOf('lathe profile', o.profile, 2);
   if (distinct(o.profile).length < 2)
@@ -199,6 +213,8 @@ export function lathe(opts: LatheOptions): Mesh {
 export const cylinder = (
   o: Omit<LatheOptions, 'profile' | 'caps'> & { radius: number; length: number },
 ): Mesh => {
+  const { profile: _p, caps: _c, ...rest } = KEYS;
+  colorOf('cylinder', o, { ...rest, radius: true, length: true });
   positive('cylinder radius', o.radius, 'radius: 0.3');
   positive('cylinder length', o.length, 'length: 1');
   return lathe({

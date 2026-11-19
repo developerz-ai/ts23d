@@ -6,6 +6,7 @@ import type { Asset, AssetDefinition, AssetMeta, CompiledAsset } from './definit
 import { Ts23dError } from './errors.ts';
 import { checkFinishedParts, finishesOf } from './finish.ts';
 import { jointOf, useJoint } from './joint.ts';
+import { withTolerances } from './limit-tolerance.ts';
 import type { Mesh } from './mesh.ts';
 import { checkMotion } from './motion-check.ts';
 import { neuralReader } from './neural-ctx.ts';
@@ -15,11 +16,13 @@ import type { Connect, Joint, Lod, Part, PartOptions, UseOptions } from './part.
 import { checkSeed, createRng, forkSeed } from './rng.ts';
 import { type Bone, boneOf, checkBoneBudget, checkSkeleton, useBone } from './skeleton.ts';
 import { checkTune, type TunedValues, tunedReader } from './tune.ts';
+import { rebaseJoints, useSocket } from './use-skin.ts';
 import {
   checkAsset,
   checkCompileOptions,
-  checkPivotName,
+  checkPart,
   checkTexturedParts,
+  checkUsePrefix,
 } from './validate-asset.ts';
 import type { WeatherCoverage } from './weather-coverage.ts';
 import { worldTransforms } from './world.ts';
@@ -97,7 +100,7 @@ export function compile(asset: Asset, options: CompileOptions = {}): CompiledAss
         fix: 'add the parent (ctx.group or ctx.part) before its children',
       });
     }
-    checkPivotName(asset.name, name, mesh, o);
+    checkPart(asset.name, name, mesh, o);
     if (o.motion && o.yaw) {
       throw new Ts23dError('T3D_RECIPE_INVALID', {
         cause: `part '${name}' sets both yaw and motion`,
@@ -125,6 +128,7 @@ export function compile(asset: Asset, options: CompileOptions = {}): CompiledAss
     });
   };
   const use = (child: Asset, o: UseOptions): void => {
+    checkUsePrefix(asset.name, o.prefix);
     if (o.seed !== undefined) checkSeed(o.seed, `ctx.use('${o.prefix}') seed`);
     // Own seed, else the child's, else a stream forked by prefix: siblings and parent never share.
     const sub = compile(child, { lod, seed: o.seed ?? child.seed ?? forkSeed(seed, o.prefix) });
@@ -133,8 +137,10 @@ export function compile(asset: Asset, options: CompileOptions = {}): CompiledAss
       yaw: o.yaw ?? 0,
       ...(o.parent ? { parent: o.parent } : {}),
     });
+    // The child's bones follow the ones already declared: its joint indices move up by that many.
+    const base = sub.skeleton ? bones.size : 0;
     for (const p of sub.parts) {
-      add(`${o.prefix}_${p.name}`, p.mesh, {
+      add(`${o.prefix}_${p.name}`, rebaseJoints(p.mesh, base), {
         at: p.at,
         yaw: p.yaw,
         parent: p.parent ? `${o.prefix}_${p.parent}` : o.prefix,
@@ -142,8 +148,10 @@ export function compile(asset: Asset, options: CompileOptions = {}): CompiledAss
         ...(p.surface ? { surface: p.surface } : {}),
         ...(p.clearOf ? { clearOf: p.clearOf.map((c) => `${o.prefix}_${c}`) } : {}),
         // A child's slot carries over only if this asset declares it too (else: plain colour).
-        ...(p.paint && paintSet?.paint[p.paint] ? { paint: p.paint } : {}),
-        ...(p.finish && finishes?.[p.finish] ? { finish: p.finish } : {}),
+        ...(p.paint && paintSet && Object.hasOwn(paintSet.paint, p.paint)
+          ? { paint: p.paint }
+          : {}),
+        ...(p.finish && finishes && Object.hasOwn(finishes, p.finish) ? { finish: p.finish } : {}),
         ...(p.collider ? { collider: p.collider } : {}),
         ...(p.density !== undefined ? { density: p.density } : {}),
         ...(p.shell !== undefined ? { shell: p.shell } : {}),
@@ -164,7 +172,7 @@ export function compile(asset: Asset, options: CompileOptions = {}): CompiledAss
           ...named,
           ...(p.emitter ? { emitter: p.emitter } : {}),
           ...(p.audio ? { audio: p.audio } : {}),
-          ...(p.socket ? { socket: p.socket } : {}),
+          ...(p.socket ? { socket: useSocket(p.socket, o.prefix) } : {}),
         });
       }
     }
@@ -208,7 +216,8 @@ export function compile(asset: Asset, options: CompileOptions = {}): CompiledAss
   checkPaintedParts(asset.name, built, paintSet);
   checkFinishedParts(asset.name, built, finishes);
   checkTexturedParts(asset.name, built, asset.budget.textureSets);
-  const skeleton = bones.size ? checkSkeleton(asset.name, { bones: [...bones.values()] }) : null;
+  const declared = withTolerances(asset.name, [...bones.values()], asset.limitTolerances);
+  const skeleton = bones.size ? checkSkeleton(asset.name, { bones: declared }) : null;
   if (skeleton) checkBoneBudget(asset.name, skeleton.bones.length, asset.budget.bones);
   const clips = checkClips(asset.name, [...(asset.clips ?? []), ...usedClips], {
     bone: (n) => bones.has(n),

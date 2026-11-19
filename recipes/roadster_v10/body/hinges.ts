@@ -1,6 +1,6 @@
 // Real hinges, so every opening panel hangs off something: forged gooseneck arms under the hood's
 // front corners (riding on the hood) turning on pivot brackets bolted to the radiator support,
-// two door hinges per side (leaf on the door, knuckle on the A-pillar jamb) and the trunk lid's
+// two door hinges per side (leaf on the door, leaf and pin on the A-pillar jamb) and the trunk lid's
 // goosenecks into brackets on the deck's front bulkhead. Arms are authored in the car frame
 // (closed pose); body.ts moves them with their panel.
 
@@ -99,22 +99,24 @@ export function hingeParts(S: Surface, lod: Lod, h: Hinges): HingeMeshes {
     );
     br.push(pivot(lod, tp, s * TRUNK_Y, 0.06));
   }
-  // Door hinges (left; mirrored by the caller): concealed leaves either side of the hinge line,
-  // on the door's front shut face and on the jamb (the pin is the motion axis itself).
+  // Door hinges (left; mirrored by the caller): a leaf on the jamb and a leaf on the door's front
+  // shut face, both wrapped round one pin that stands on the door's motion axis. The pin belongs
+  // to the jamb; the door's leaf stays on it through the whole swing.
   for (const z of [0.42, 0.68]) {
     const k: Vec3 = [h.door[0], h.door[1], z];
     db.push(
       bx(
         [k[0] + 0.002, k[1] - 0.12, z - 0.03],
-        [k[0] + 0.012, k[1] - 0.004, z + 0.03],
+        [k[0] + 0.012, k[1], z + 0.03],
         C.ironDark,
         'steel_painted',
       ),
     );
+    db.push(rod([k[0], k[1], z - 0.033], [k[0], k[1], z + 0.033], 0.01, C.natural, 'chrome', segs));
     door.push(
       bx(
         [k[0] - 0.012, k[1] - 0.12, z - 0.028],
-        [k[0] - 0.002, k[1] - 0.004, z + 0.028],
+        [k[0] - 0.002, k[1], z + 0.028],
         C.ironDark,
         'steel_painted',
       ),

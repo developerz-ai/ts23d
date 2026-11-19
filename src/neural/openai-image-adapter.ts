@@ -31,6 +31,9 @@ export interface OpenAiImageOptions {
   readonly licence?: string;
   /** e.g. { authorization: `Bearer ${key}` }. */
   readonly headers?: Readonly<Record<string, string>>;
+  /** Set for a billed endpoint: `t3d neural run` then asks for --yes-spend, since this API lists
+   *  no price. Default false (a local server). */
+  readonly paid?: boolean;
   /** Whole request, ms. Default 300 000. */
   readonly timeoutMs?: number;
   readonly maxBytes?: number;
@@ -57,6 +60,7 @@ export function openaiImageAdapter(o: OpenAiImageOptions): NeuralAdapter {
   return {
     id,
     tasks: ['image'],
+    ...(o.paid ? { paid: true } : {}),
     models: () => Promise.resolve([model]),
     async run(job) {
       pickModel(id, [model], job.task, job.model);

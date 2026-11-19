@@ -110,16 +110,30 @@ export function applyAffine(mesh: Mesh, a: Affine): Mesh {
     normals[i + 1] = ry / l;
     normals[i + 2] = rz / l;
   }
+  // Morph deltas are displacements: they turn and scale with the mesh but do not translate.
+  const morphs = mesh.morphs?.map((target) => {
+    const d = new Float32Array(target.positions.length);
+    for (let i = 0; i < d.length; i += 3) {
+      const x = target.positions[i] ?? 0;
+      const y = target.positions[i + 1] ?? 0;
+      const z = target.positions[i + 2] ?? 0;
+      d[i] = m[0] * x + m[1] * y + m[2] * z;
+      d[i + 1] = m[3] * x + m[4] * y + m[5] * z;
+      d[i + 2] = m[6] * x + m[7] * y + m[8] * z;
+    }
+    return { ...target, positions: d };
+  });
+  const moved = { ...mesh, positions, normals, ...(morphs ? { morphs } : {}) };
   // A mirror (det < 0) turns counter-clockwise triangles clockwise: flip each one back, or
   // engines cull the outside and draw the inside.
-  if (determinant(m) >= 0) return { ...mesh, positions, normals };
+  if (determinant(m) >= 0) return moved;
   const indices = mesh.indices.slice();
   for (let t = 0; t + 2 < indices.length; t += 3) {
     const b = indices[t + 1] ?? 0;
     indices[t + 1] = indices[t + 2] ?? 0;
     indices[t + 2] = b;
   }
-  return { ...mesh, positions, normals, indices };
+  return { ...moved, indices };
 }
 
 export const place = (mesh: Mesh, p: Placement): Mesh => applyAffine(mesh, affine(p));

@@ -4,6 +4,7 @@
 //   it('has its pivots', () => assertParts(tiger_1, ['turret', 'gun', 'wheel_l_*']));
 
 import { type Asset, type Lod, type Measure, TOLERANCE } from '../core/index.ts';
+import { drawFindings } from '../export/index.ts';
 import {
   clashes,
   DEFAULT_GATES,
@@ -24,14 +25,16 @@ export interface QaOptions extends LodOptions {
   readonly lodGates?: readonly LodGate[];
 }
 
-/** The same gate `t3d build` runs: every LOD passes QA, plus the LOD-chain gates. */
+/** The same gate `t3d build` runs: every LOD passes QA, plus the LOD-chain gates and the
+ *  draw-call budget (`budget.draws`, counted on the merged pivots the GLB is written from). */
 export function assertQaPass(asset: Asset, o: QaOptions = {}): void {
   const lods = compileLods(asset, o);
   const found = lods.flatMap((a) =>
     runQa(a, o.gates ?? DEFAULT_GATES).map((finding) => ({ finding, lod: a.lod })),
   );
   const chain = lods.length > 1 ? runLodQa(lods, o.lodGates ?? DEFAULT_LOD_GATES) : [];
-  failOn(`${asset.name} QA`, [...found, ...chain.map((finding) => ({ finding }))]);
+  const whole = [...chain, ...drawFindings(asset, lods)];
+  failOn(`${asset.name} QA`, [...found, ...whole.map((finding) => ({ finding }))]);
 }
 
 /** Triangles per LOD at or under `caps` (default: the asset's own budget). */

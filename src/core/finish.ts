@@ -67,6 +67,11 @@ export function lin(where: string, c: Colour): Vec3 {
       v / 255 <= 0.04045 ? v / 255 / 12.92 : ((v / 255 + 0.055) / 1.055) ** 2.4;
     return [f((n >> 16) & 255), f((n >> 8) & 255), f(n & 255)];
   }
+  if (!(Array.isArray(c) && c.length === 3))
+    throw fail(
+      `${where} is ${JSON.stringify(c)}: a colour is three channels`,
+      "use '#rrggbb' or linear [r, g, b], each 0..1",
+    );
   if (c.some((v) => !(v >= 0 && v <= 1)))
     throw fail(
       `${where} is [${c.join(', ')}]: channels must be 0..1`,
@@ -98,6 +103,12 @@ export function resolveFinish(where: string, f: Finish): ResolvedFinish {
   u('anisotropy.strength', f.anisotropy?.strength);
   u('iridescence.factor', f.iridescence?.factor);
   u('specular.factor', f.specular?.factor);
+  const rot = f.anisotropy?.rotation;
+  if (rot !== undefined && !Number.isFinite(rot))
+    throw fail(
+      `${where}.anisotropy.rotation is ${rot}`,
+      'give the brush direction in radians from +U, a finite number (0 = along U)',
+    );
   range(
     `${where}.iridescence.ior`,
     f.iridescence?.ior,
@@ -172,7 +183,7 @@ export function checkFinishedParts(
 ): void {
   for (const p of parts) {
     if (p.finish === undefined) continue;
-    if (!f || !(p.finish in f))
+    if (!f || !Object.hasOwn(f, p.finish))
       throw fail(
         `part '${p.name}' in '${asset}' uses finish '${p.finish}', which the asset does not declare`,
         `add it to defineAsset({ finishes: { ${p.finish}: { … } } })${f ? ` or use one of: ${Object.keys(f).join(', ')}` : ''}`,

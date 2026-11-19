@@ -82,7 +82,10 @@ export interface ImageCloseOptions {
 
 /**
  * Compare with the golden PNG at `goldenPath`. A missing golden is written (first run) and
- * passes; a mismatch writes `<golden>.diff.png` and throws T3D_QA_FAILED. Returns the off fraction.
+ * passes, except on CI (env `CI` set) without `update`/T3D_UPDATE_GOLDEN=1: there it throws
+ * T3D_ASSERT_INPUT, since a golden written on the runner is never committed and the test would
+ * compare nothing. A mismatch writes `<golden>.diff.png` and throws T3D_QA_FAILED. Returns the
+ * off fraction.
  */
 export function expectImageClose(
   actual: Uint8Array | Image,
@@ -91,7 +94,13 @@ export function expectImageClose(
 ): number {
   const img = imageOf(actual);
   const update = o.update ?? process.env['T3D_UPDATE_GOLDEN'] === '1';
-  if (update || !existsSync(goldenPath)) {
+  const missing = !existsSync(goldenPath);
+  if (missing && !update && process.env['CI'])
+    throw new Ts23dError('T3D_ASSERT_INPUT', {
+      cause: `golden ${goldenPath} is missing on CI: writing it here would pass without comparing`,
+      fix: 'run the test locally (the first run writes the golden), Read the PNG, commit it',
+    });
+  if (update || missing) {
     mkdirSync(dirname(goldenPath), { recursive: true });
     writeFileSync(goldenPath, encodePng(img.width, img.height, img.data));
     return 0;

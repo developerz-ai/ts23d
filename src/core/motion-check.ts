@@ -3,11 +3,23 @@
 // axle). Bad input throws T3D_RECIPE_INVALID with a fix, never a NaN keyframe in the GLB.
 
 import { Ts23dError } from './errors.ts';
-import type { Motion } from './motion.ts';
+import type { Motion, Tread } from './motion.ts';
 import { across } from './motion-pose.ts';
 import { cross, dot, length, normalize, sub, type Vec3 } from './vec.ts';
 
 const EPS = 1e-6;
+
+/** Every Motion kind; the Record makes tsc fail when the union gains or loses one. */
+const KINDS: Record<Motion['kind'], true> = {
+  spin: true,
+  slide: true,
+  sway: true,
+  orbit: true,
+  crank: true,
+  piston: true,
+  tread: true,
+};
+export const MOTION_KINDS = Object.keys(KINDS) as readonly Motion['kind'][];
 
 function fail(part: string, cause: string, fix: string): never {
   throw new Ts23dError('T3D_RECIPE_INVALID', { cause: `part '${part}' motion: ${cause}`, fix });
@@ -26,9 +38,39 @@ function axisOf(part: string, v: Vec3, what = 'axis'): Vec3 {
   return normalize(v);
 }
 
+/** A belt needs a loop to ride (≥ 3 finite points) and a positive link pitch. */
+function checkTread(part: string, m: Tread): void {
+  const path: readonly (readonly number[])[] = Array.isArray(m.path) ? m.path : [];
+  if (path.length < 3)
+    fail(
+      part,
+      `tread path has ${path.length} point(s)`,
+      "give the belt's closed centre line in the part's space: at least 3 points",
+    );
+  const bad = path.findIndex((p) => !(p.length === 3 && p.every(Number.isFinite)));
+  if (bad >= 0)
+    fail(part, `tread path point ${bad} is [${path[bad]?.join(', ')}]`, 'give three finite metres');
+  if (!(Number.isFinite(m.pitch) && m.pitch > 0))
+    fail(
+      part,
+      `tread pitch ${m.pitch} is not a length > 0`,
+      'pitch is the link pitch in metres (× 2 for alternating links), e.g. 0.15',
+    );
+}
+
 /** Throws T3D_RECIPE_INVALID when `m` cannot be baked into a clean, closed loop. */
 export function checkMotion(part: string, m: Motion): void {
-  if (m.kind === 'tread') return;
+  const kind: unknown = (m as { kind?: unknown } | null)?.kind;
+  if (typeof kind !== 'string' || !Object.hasOwn(KINDS, kind))
+    fail(
+      part,
+      `unknown kind ${typeof kind === 'string' ? `'${kind}'` : String(kind)}`,
+      `kind is one of ${MOTION_KINDS.map((k) => `'${k}'`).join(', ')} (a hinge swing is kind: 'sway' with oneWay: true)`,
+    );
+  if (m.kind === 'tread') {
+    checkTread(part, m);
+    return;
+  }
   finite(part, m.kind === 'spin' ? 'rps' : 'hz', m.kind === 'spin' ? m.rps : m.hz);
   switch (m.kind) {
     case 'spin':

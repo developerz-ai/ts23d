@@ -7,7 +7,7 @@
 // Every command takes --name and --json. Environment (read here only): T3D_BLENDER_SCRIPTS (the
 // scripts directory), T3D_BLENDER_SOFTWARE_GPU=1, T3D_BLENDER_SESSIONS (where sessions live).
 
-import { formatCount, Ts23dError } from '../core/index.ts';
+import { formatCount, isTs23dError } from '../core/index.ts';
 import {
   type BlenderStep,
   blenderSessionStatus,
@@ -178,7 +178,7 @@ export async function blenderSessionMain(argv: readonly string[], json: boolean)
     else human(argv[0] ?? '', r);
     return 0;
   } catch (e) {
-    if (e instanceof Ts23dError) return printError(e, json);
+    if (isTs23dError(e)) return printError(e, json);
     throw e;
   }
 }

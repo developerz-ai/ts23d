@@ -1,14 +1,23 @@
 // Guard: imports inside src/ only go DOWN the tier table (scripts/lib/tiers.ts). Also refuses
 // cross-module deep imports — another module is reached only through its index.ts.
 
+import { posix } from 'node:path';
 import { report, tsFiles, type Violation } from './lib/files.ts';
 import { ROOT_TIER, TIERS } from './lib/tiers.ts';
 
-const IMPORT = /^\s*(?:import|export)[^'"]*from\s+'(\.[^']+)'/;
+const ROOT = 'src/index.ts';
+// Every relative specifier in the file, wherever the statement wraps: `… from '…'` (import and
+// re-export), `import('…')` and the side-effect `import '…'`, in either quote style.
+/**
+ * Deep imports allowed by name, each with its reason. `cli` is the binary's entry point and has no
+ * index.ts to re-export through; the root barrel publishes the manifest type and reader from it.
+ */
+const DEEP_ALLOWED: ReadonlySet<string> = new Set(['src/index.ts -> src/cli/manifest.ts']);
+const IMPORT = /\b(?:from|import)\s*\(?\s*(?:'(\.[^'\n]*)'|"(\.[^"\n]*)")/g;
 
 export function checkFile(file: string, source: string): Violation[] {
   const [, mod = ''] = file.split('/');
-  const isRoot = file === 'src/index.ts';
+  const isRoot = file === ROOT;
   const tier = isRoot ? ROOT_TIER : TIERS[mod];
   if (tier === undefined) {
     return [
@@ -21,29 +30,38 @@ export function checkFile(file: string, source: string): Violation[] {
     ];
   }
   const out: Violation[] = [];
-  source.split('\n').forEach((text, i) => {
-    const spec = IMPORT.exec(text)?.[1];
-    if (!spec || spec.startsWith('./')) return;
-    const target = isRoot ? spec.split('/')[1] : spec.split('/')[1];
-    const targetTier = target ? TIERS[target] : undefined;
-    if (targetTier === undefined) return;
-    if (!spec.endsWith('/index.ts')) {
+  const up = 'imports only go down a tier: move the shared code lower, or invert the dependency';
+  for (const m of source.matchAll(IMPORT)) {
+    const spec = m[1] ?? m[2] ?? '';
+    // Where the specifier lands, so a file in a nested folder is judged by its real target.
+    const resolved = posix.join(posix.dirname(file), spec);
+    const line = source.slice(0, m.index).split('\n').length;
+    if (resolved === ROOT) {
+      if (!isRoot)
+        out.push({ file, line, message: `'${mod}' imports the root barrel '${spec}'`, fix: up });
+      continue;
+    }
+    const [top, target = ''] = resolved.split('/');
+    const targetTier = top === 'src' ? TIERS[target] : undefined;
+    if (targetTier === undefined || (!isRoot && target === mod)) continue;
+    if (resolved !== `src/${target}/index.ts` && !DEEP_ALLOWED.has(`${file} -> ${resolved}`)) {
+      const index = posix.relative(posix.dirname(file), `src/${target}/index.ts`);
       out.push({
         file,
-        line: i + 1,
+        line,
         message: `deep import '${spec}'`,
-        fix: `import from '../${target}/index.ts' and export what you need there`,
+        fix: `import from '${index.startsWith('.') ? index : `./${index}`}' and export what you need there`,
       });
     }
     if (targetTier >= tier) {
       out.push({
         file,
-        line: i + 1,
-        message: `'${mod || 'index'}' (tier ${tier}) imports '${target}' (tier ${targetTier})`,
-        fix: 'imports only go down a tier: move the shared code lower, or invert the dependency',
+        line,
+        message: `'${mod}' (tier ${tier}) imports '${target}' (tier ${targetTier})`,
+        fix: up,
       });
     }
-  });
+  }
   return out;
 }
 

@@ -12,7 +12,9 @@
 // A pivot whose static parent merged away is re-parented to its nearest surviving pivot ancestor
 // (or the root), with `at` / `yaw` re-expressed so its world transform is exactly what QA measured.
 // Unskinned meshes merging into a skinned one, or into another material layer of its pivot, bind
-// rigidly to their nearest bone.
+// rigidly to their nearest bone. Bones live in the asset frame, so a skinned mesh must sit at the
+// root: a group that never moves (no motion up to the root, no clip keying it; a `ctx.use` prefix
+// group) hands its geometry to the root, baked into world space, once any of it is skinned.
 
 import {
   type CompiledAsset,
@@ -23,6 +25,7 @@ import {
   rotateZ,
   type Surface,
   type TextureSet,
+  Ts23dError,
   textureSetsOf,
   toWorld,
   type Vec3,
@@ -55,10 +58,20 @@ interface Layer {
 const texLayer = (set: TextureSet, cutout: boolean): string =>
   `${cutout ? 'cutout_' : ''}tex_${set.name}`;
 
-/** Re-express a part's mesh in its pivot's local space. */
+/** Re-express a part's mesh in its pivot's local space (morph deltas turn, they do not shift). */
 function intoPivot(mesh: Mesh, part: WorldTransform, pivot: WorldTransform): Mesh {
   const positions = new Float32Array(mesh.positions.length);
   const normals = new Float32Array(mesh.normals.length);
+  const turn = part.yaw - pivot.yaw;
+  const morphs = mesh.morphs?.map((t) => {
+    const deltas = new Float32Array(t.positions.length);
+    for (let i = 0; i < deltas.length; i += 3)
+      deltas.set(
+        rotateZ([t.positions[i] ?? 0, t.positions[i + 1] ?? 0, t.positions[i + 2] ?? 0], turn),
+        i,
+      );
+    return { ...t, positions: deltas };
+  });
   for (let i = 0; i < positions.length; i += 3) {
     const w = toWorld(part, [
       mesh.positions[i] ?? 0,
@@ -80,7 +93,7 @@ function intoPivot(mesh: Mesh, part: WorldTransform, pivot: WorldTransform): Mes
       i,
     );
   }
-  return { ...mesh, positions, normals };
+  return { ...mesh, positions, normals, ...(morphs ? { morphs } : {}) };
 }
 
 export function mergeToPivots(
@@ -124,6 +137,22 @@ export function mergeToPivots(
     if (mesh.joints) skinned.add(pivot);
     extra.set(k, [...(extra.get(k) ?? []), mesh]);
   };
+  // Pivots that never move (no motion up to the root, no clip keys them) and hold skinned
+  // geometry: all of it goes to the root, where the bones are.
+  const keyed = new Set(
+    (asset.clips ?? []).flatMap((c) => c.tracks.flatMap((t) => ('part' in t ? [t.part] : []))),
+  );
+  const still = (name: string): boolean => {
+    for (let q = byName.get(name); q; q = q.parent ? byName.get(q.parent) : undefined)
+      if (q.motion !== null || keyed.has(q.name)) return false;
+    return true;
+  };
+  const lifted = new Set(
+    asset.parts
+      .filter((p) => p.mesh?.joints && !isPivot(p))
+      .map(pivotOf)
+      .filter((pivot) => pivot !== ROOT && still(pivot)),
+  );
   for (const p of asset.parts) {
     if (!p.mesh) continue;
     const layer = layerOf(p, glowOf(p.name));
@@ -131,7 +160,8 @@ export function mergeToPivots(
       bucket(p.name, layer, p.mesh);
       continue;
     }
-    const pivot = pivotOf(p);
+    const under = pivotOf(p);
+    const pivot = lifted.has(under) ? ROOT : under;
     const t = xf.get(p.name) ?? identity;
     const pt = pivot === ROOT ? identity : (xf.get(pivot) ?? identity);
     bucket(pivot, layer, intoPivot(p.mesh, t, pt));
@@ -214,5 +244,20 @@ export function mergeToPivots(
     parts.push({ ...rest, ...reparented(p), mesh: meshOf(p.name, own), ...own?.props });
     layers(p.name, p.name, own);
   }
-  return { ...asset, parts };
+  return { ...asset, parts: unique(parts) };
+}
+
+/** A generated `<pivot>_<layer>` node named like a recipe pivot: clips and engines would bind to
+ *  whichever comes first, so refuse it. */
+function unique(parts: readonly Part[]): Part[] {
+  const seen = new Set<string>();
+  for (const p of parts) {
+    if (seen.has(p.name))
+      throw new Ts23dError('T3D_RECIPE_INVALID', {
+        cause: `merging made two nodes named '${p.name}': a pivot of the recipe and a generated '<pivot>_<surface|glow_i|paint_x|finish_x|tex_x>' layer`,
+        fix: `rename the pivot '${p.name}' (e.g. '${p.name}_pivot'): '<pivot>_glass', '<pivot>_paint_<slot>' and the like are generated names`,
+      });
+    seen.add(p.name);
+  }
+  return [...parts];
 }

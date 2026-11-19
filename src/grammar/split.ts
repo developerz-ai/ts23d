@@ -88,9 +88,10 @@ export function layoutSplit(terms: readonly SplitTerm[], length: number): Slot[]
       fix: 'shrink a fixed term, or turn one into a stretch (`sym:~`)',
     });
   }
-  const copies = unit > 0 ? Math.floor((length - fixed) / unit) : 0;
+  // Same slack as the overflow test: 3 × 1.1 m must fit 3.3 m, whatever the division rounds to.
+  const copies = unit > 0 ? Math.floor((length - fixed) / unit + 1e-9) : 0;
   const weights = terms.reduce((s, t) => s + (t.kind === 'stretch' ? t.weight : 0), 0);
-  const leftover = length - fixed - copies * unit;
+  const leftover = Math.max(0, length - fixed - copies * unit);
   if (weights === 0 && copies === 0 && leftover > 1e-9)
     throw new Ts23dError('T3D_GRAMMAR_UNDERFILL', {
       cause: `the terms fill ${fixed} m of a ${length} m strip and nothing absorbs the other ${leftover} m${unit > 0 ? ` (one repeat copy needs ${unit} m)` : ''}`,

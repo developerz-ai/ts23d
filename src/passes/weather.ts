@@ -8,11 +8,11 @@ import {
   type BuildContext,
   type Lod,
   type Mesh,
-  merge,
   Ts23dError,
   type WeatherCoverage,
 } from '../core/index.ts';
 import { deform } from './imperfect.ts';
+import { mergeGeometry } from './merge-geometry.ts';
 import { BARE_STEEL, paintEffect } from './weather-paint.ts';
 import { sceneOf } from './weather-scene.ts';
 import { subdivideTo } from './weather-subdivide.ts';
@@ -42,11 +42,16 @@ function check(o: WeatheringOptions): void {
       fix: 'use 0 (new) .. 1 (decades outdoors), e.g. age: 0.6',
     });
   for (const [k, e] of Object.entries(o.effects ?? {})) {
-    const amount = (e as { amount?: number }).amount;
+    const { amount, strength } = e as { amount?: number; strength?: number };
     if (amount !== undefined && !(amount >= 0 && amount <= 1))
       throw new Ts23dError('T3D_RECIPE_INVALID', {
         cause: `weather ${k}.amount ${amount} is outside 0..1`,
         fix: `amount is the covered fraction of the eligible surface: ${k}: { amount: 0.15 }`,
+      });
+    if (strength !== undefined && !(strength >= 0 && strength <= 1))
+      throw new Ts23dError('T3D_RECIPE_INVALID', {
+        cause: `weather ${k}.strength ${strength} is outside 0..1`,
+        fix: `strength is how far the colour moves toward the effect's: ${k}: { strength: 0.6 }`,
       });
   }
 }
@@ -62,7 +67,8 @@ function run(
   const name = o.name ?? 'weather';
   const res = resolutionOf(o, lod);
   const fine = meshes.map(([, m]) => subdivideTo(m, res));
-  const union = merge(fine);
+  // Geometry only: the meshes may mix skinned and rigid; `split` hands each its own skin back.
+  const union = mergeGeometry(fine);
   const spots = (
     list: readonly (Spot | string)[] | undefined,
   ): { spots: Spot[]; mask: Uint8Array } => {
@@ -161,7 +167,10 @@ function spotOf(m: Mesh): Spot {
   return { at: [c(0), c(1), c(2)], radius: r };
 }
 
-/** Cut the processed union back into the input meshes (same vertex/index ranges). */
+/**
+ * Cut the processed union back into the input meshes (same vertex/index ranges). Each keeps its
+ * own skin and morph targets: weathering moves colours and (dents) positions, never the binding.
+ */
 function split(done: Mesh, parts: readonly Mesh[]): Mesh[] {
   let v = 0;
   let ix = 0;
@@ -173,6 +182,8 @@ function split(done: Mesh, parts: readonly Mesh[]): Mesh[] {
       uvs: done.uvs.slice(v * 2, (v + n) * 2),
       colors: done.colors.slice(v * 3, (v + n) * 3),
       indices: Uint32Array.from(done.indices.subarray(ix, ix + m.indices.length), (i) => i - v),
+      ...(m.joints && m.weights ? { joints: m.joints, weights: m.weights } : {}),
+      ...(m.morphs ? { morphs: m.morphs } : {}),
     };
     v += n;
     ix += m.indices.length;

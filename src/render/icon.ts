@@ -2,12 +2,15 @@
 // parts, default the top of the asset: head, turret, roof), both from ONE fixed 3/4 high camera
 // and the studio rig, so a whole roster of icons is lit and framed alike. Zero-GPU beauty
 // renderer underneath; deterministic bytes. Backdrop: the neutral studio floor (with the contact
-// shadow) or transparent (alpha = coverage) for engines that draw their own button frame.
+// shadow) or transparent for engines that draw their own button frame: straight alpha, so the
+// colour of an edge pixel is the asset's alone (never the studio backdrop's) and alpha its coverage.
 
 import { type CompiledAsset, encodePng, Ts23dError, worldMeshes } from '../core/index.ts';
 import type { PaintedSheet } from '../material/index.ts';
-import { type BeautyOptions, cameraFor, renderBeauty } from './beauty.ts';
+import { type BeautyOptions, type BeautyRender, cameraFor, renderBeauty } from './beauty.ts';
 import { project } from './camera.ts';
+import { toSrgb8 } from './lighting.ts';
+import { checkBeautyOptions } from './options.ts';
 
 /** The house icon camera: front-left 3/4, high, a long-ish lens (little perspective distortion). */
 export const ICON_CAMERA = { azDeg: -35, elDeg: 32, fovDeg: 24 } as const;
@@ -15,7 +18,7 @@ export const ICON_CAMERA = { azDeg: -35, elDeg: 32, fovDeg: 24 } as const;
 export interface IconOptions {
   /** Edge in pixels (square). Icon default 256, portrait default 512. */
   readonly size?: number;
-  /** 'studio' (default): the neutral studio floor + contact shadow · 'transparent': alpha = coverage. */
+  /** 'studio' (default): the neutral studio floor + contact shadow · 'transparent': straight alpha = coverage. */
   readonly backdrop?: 'studio' | 'transparent';
   /** The painted trim sheet (the CLI passes its own; default paints one per process). */
   readonly sheet?: PaintedSheet;
@@ -32,7 +35,7 @@ export interface PortraitOptions extends IconOptions {
 
 export interface IconImage {
   readonly size: number;
-  /** RGBA8 sRGB; alpha 255 on a studio backdrop, coverage on a transparent one. */
+  /** RGBA8 sRGB; alpha 255 on a studio backdrop; asset-only colour + coverage on a transparent one. */
   readonly rgba: Uint8Array;
   /** Asset coverage per pixel, 0–255. */
   readonly mask: Uint8Array;
@@ -48,19 +51,34 @@ function sizeOf(o: IconOptions, fallback: number): number {
   return s;
 }
 
-function shoot(asset: CompiledAsset, size: number, o: IconOptions, bo: BeautyOptions): IconImage {
-  const r = renderBeauty(asset, {
-    ...ICON_CAMERA,
-    width: size,
-    height: size,
-    supersample: o.supersample ?? 3,
-    ...(o.sheet ? { sheet: o.sheet } : {}),
-    ...bo,
-  });
-  if (o.backdrop !== 'transparent') return { size, rgba: r.rgba, mask: r.mask };
-  const rgba = new Uint8Array(r.rgba);
-  for (let i = 0; i < r.mask.length; i++) rgba[i * 4 + 3] = r.mask[i] ?? 0;
+/**
+ * The asset cut out of the studio: per pixel the mean of its ASSET samples only (the resolve step
+ * hands them over from the same render), with alpha = their share. Blending the backdrop into the
+ * colour and also writing coverage to alpha would count the backdrop twice: a light halo round a
+ * dark asset on any button frame.
+ */
+function cutOut(r: BeautyRender, size: number): IconImage {
+  const asset = r.assetSum && r.hits ? { assetSum: r.assetSum, hits: r.hits } : undefined;
+  if (!asset)
+    throw new Ts23dError('T3D_RENDER_OPTIONS', {
+      cause: 'a transparent icon needs the asset-only colour, and this beauty render carries none',
+      fix: 'render it with renderBeauty (the rasteriser), or use backdrop: "studio"',
+    });
+  const rgba = new Uint8Array(size * size * 4);
+  for (let i = 0; i < size * size; i++) {
+    const hits = asset.hits[i] ?? 0;
+    if (!hits) continue;
+    for (let k = 0; k < 3; k++) rgba[i * 4 + k] = toSrgb8((asset.assetSum[i * 3 + k] ?? 0) / hits);
+    rgba[i * 4 + 3] = r.mask[i] ?? 0;
+  }
   return { size, rgba, mask: r.mask };
+}
+
+function shoot(asset: CompiledAsset, size: number, o: IconOptions, bo: BeautyOptions): IconImage {
+  const { supersample } = checkBeautyOptions({ supersample: o.supersample ?? 3 });
+  const shot: BeautyOptions = { ...ICON_CAMERA, ...(o.sheet ? { sheet: o.sheet } : {}), ...bo };
+  const r = renderBeauty(asset, { ...shot, width: size, height: size, supersample });
+  return o.backdrop === 'transparent' ? cutOut(r, size) : { size, rgba: r.rgba, mask: r.mask };
 }
 
 /** Unit icon pixels: the whole asset, filling ~85% of the square. */

@@ -103,8 +103,8 @@ it('fails a bad --size with a coded error, before writing anything', async () =>
     '--json',
   ]);
   console.log = log;
-  expect(code).toBe(1);
-  expect(JSON.parse(printed).error.code).toBe('T3D_RENDER_OPTIONS');
+  expect(code).toBe(2);
+  expect(JSON.parse(printed).error.code).toBe('T3D_CLI_USAGE');
   expect(await Bun.file(join(out, 'bad', 'crate', 'hero.png')).exists()).toBe(false);
 });
 
@@ -178,12 +178,15 @@ it('t3d blueprint writes <out>/<asset>/blueprint.png only', async () => {
 it('writes materials a recipe defines inside build() into the external sheet (D47)', async () => {
   const fixture = join(out, 'late.ts');
   const lib = join(import.meta.dir, '../index.ts');
+  // An empty registry: the fixture's row must not depend on what earlier test files defined.
+  const { DEFAULT_SHEET, paintTrimSheet, resetMaterials } = await import('../material/index.ts');
+  resetMaterials();
   await Bun.write(
     fixture,
     `import { box, defineAsset, defineMaterial } from '${lib}';
 export const late = defineAsset({ name: 'late', kind: 'prop', budget: { triangles: [12, 12, 12] },
   build: (ctx) => {
-    const m = defineMaterial({ id: 'cli_late_matte', roughness: 0.95 });
+    const m = defineMaterial({ id: 'cli_late_material', roughness: 0.95 });
     ctx.part('body', box({ size: [1, 1, 1], color: [1, 1, 1], strip: m }));
   } });`,
   );
@@ -202,9 +205,9 @@ export const late = defineAsset({ name: 'late', kind: 'prop', budget: { triangle
   ]);
   console.log = log;
   expect(code).toBe(0);
-  const { DEFAULT_SHEET, paintTrimSheet } = await import('../material/index.ts');
   const { sheetFileName, sheetPngs } = await import('../export/index.ts');
   const expected = sheetPngs(paintTrimSheet({ ...DEFAULT_SHEET, size: 512 })).orm;
+  resetMaterials();
   const written = new Uint8Array(await Bun.file(join(dir, sheetFileName('orm'))).arrayBuffer());
   expect(Bun.hash(written)).toBe(Bun.hash(expected));
 });

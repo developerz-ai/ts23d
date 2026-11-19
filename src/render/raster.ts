@@ -2,8 +2,17 @@
 // Slow by GPU standards and fast enough for 6 × 400² views of a game asset in well under a second.
 // Parts with their own texture set (ADR 016) are drawn per pixel by raster-textured.ts.
 
-import type { CompiledAsset, TextureSet, Vec3 } from '../core/index.ts';
-import { cross, dot, normalize, rotateZ, sub, toWorld, worldTransforms } from '../core/index.ts';
+import type { CompiledAsset, Mesh, TextureSet, Vec3 } from '../core/index.ts';
+import {
+  cross,
+  dot,
+  normalize,
+  rotateZ,
+  sub,
+  Ts23dError,
+  toWorld,
+  worldTransforms,
+} from '../core/index.ts';
 import { drawTextured } from './raster-textured.ts';
 import { setTextures } from './texture-sets.ts';
 
@@ -40,6 +49,23 @@ export function orthoCamera(view: View, centre: Vec3, extent: number, size: numb
 
 const LIGHT = normalize([0.4, -0.6, 0.8]);
 
+/** Attribute arrays the rasteriser reads must match the vertex count (QA: `mesh-arrays`). */
+function checkArrays(m: Mesh, part: string): void {
+  const n = m.positions.length;
+  const wrong = [
+    n % 3 === 0 ? '' : `positions ${n}`,
+    m.normals.length === n ? '' : `normals ${m.normals.length}`,
+    m.colors.length === n ? '' : `colors ${m.colors.length}`,
+    m.uvs.length === (n / 3) * 2 ? '' : `uvs ${m.uvs.length}`,
+    m.indices.length % 3 === 0 ? '' : `indices ${m.indices.length}`,
+  ].filter((w) => w !== '');
+  if (wrong.length)
+    throw new Ts23dError('T3D_RECIPE_INVALID', {
+      cause: `part '${part}' (${Math.floor(n / 3)} vertices) has attribute arrays of the wrong length: ${wrong.join(', ')}`,
+      fix: 'run QA first (the mesh-arrays gate names it); a Mesh needs 3 normals, 2 uvs and 3 colours per vertex and 3 indices per triangle',
+    });
+}
+
 export function worldParts(asset: CompiledAsset): {
   positions: Float32Array;
   normals: Float32Array;
@@ -54,6 +80,7 @@ export function worldParts(asset: CompiledAsset): {
   for (const p of asset.parts) {
     const t = xf.get(p.name);
     if (!p.mesh || !t) continue;
+    checkArrays(p.mesh, p.name);
     const positions = new Float32Array(p.mesh.positions.length);
     const normals = new Float32Array(p.mesh.normals.length);
     for (let i = 0; i < positions.length; i += 3) {

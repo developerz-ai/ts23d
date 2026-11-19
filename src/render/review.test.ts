@@ -1,5 +1,5 @@
 import { expect, it } from 'bun:test';
-import { defineAsset } from '../core/index.ts';
+import { defineAsset, MeshBuilder } from '../core/index.ts';
 import { box } from '../primitives/index.ts';
 import { detailWindows, reviewPack } from './review.ts';
 import { warningsOf } from './review-warnings.ts';
@@ -31,7 +31,11 @@ it('warns on LOD popping and bad exposure, and stays quiet on a healthy asset', 
     hero: { ...hero, mean: 0.05, nearBlack: 0.5 },
     views: [view(0.5)],
   }).map((w) => w.code);
-  expect(bad).toEqual(['lod-popping', 'too-dark', 'crushed-blacks']);
+  expect(bad).toEqual([
+    'T3D_REVIEW_LOD_POPPING',
+    'T3D_REVIEW_TOO_DARK',
+    'T3D_REVIEW_CRUSHED_BLACKS',
+  ]);
   expect(warningsOf({ asset: 'x', triangles: [1, 1, 1], hero, views: [view(0.95)] })).toEqual([]);
 });
 
@@ -49,4 +53,24 @@ it('builds the full pack: images, prompt and metrics', () => {
   const md = String(pack.files.get('review.md'));
   expect(md).toContain('recipes/crate/README.md');
   expect(md).toContain('VERDICT');
+});
+
+it('counts the triangles a GLB of each LOD would hold, not the dead ones the recipe emitted', () => {
+  const sloppy = defineAsset({
+    name: 'sloppy',
+    kind: 'prop',
+    budget: { triangles: [12, 12, 12] },
+    build(ctx) {
+      const b = new MeshBuilder();
+      const at = (x: number, z: number) =>
+        b.vertex({ p: [x, 0, z], n: [0, -1, 0], uv: [x, z], color: [1, 1, 1] });
+      const [p, q, r, s] = [at(0, 0), at(1, 0), at(1, 1), at(0, 1)];
+      // LOD0 carries a collapsed triangle and a copy of a good one; export drops both.
+      const sheet = b.quad(p, q, r, s);
+      ctx.part('sheet', (ctx.lod === 0 ? sheet.tri(p, q, q).tri(p, q, r) : sheet).build());
+    },
+  });
+  const pack = reviewPack(sloppy, { width: 96, height: 54 });
+  expect(pack.metrics.triangles).toEqual([2, 2, 2]);
+  expect(String(pack.files.get('review.md'))).toContain('Triangles per LOD: 2 / 2 / 2');
 });

@@ -50,6 +50,11 @@ export interface BeautyRender {
   readonly mask: Uint8Array;
   /** Distinct triangles visible per cell of a 16 × 9 grid — where the detail is. */
   readonly detail: Uint32Array;
+  /** Tone-mapped linear colour summed over the asset's samples only, 3 per pixel (rasterised
+   *  renders; absent from a path-traced one). Transparent icons divide it by `hits`. */
+  readonly assetSum?: Float32Array;
+  /** Asset samples per pixel, beside `assetSum`. */
+  readonly hits?: Uint8Array;
 }
 
 // Repaints when a recipe defined materials since the last render (D47).
@@ -73,7 +78,8 @@ export function renderBeauty(asset: CompiledAsset, o: BeautyOptions = {}): Beaut
   const scene = sceneOf(asset);
   const sheet = sheetOf(o);
   // Textured parts (ADR 016) address their own set, not the sheet's rows.
-  for (const p of asset.parts) if (p.mesh && !p.textures) checkSheetFor(sheet, p.mesh.uvs);
+  for (const p of asset.parts)
+    if (p.mesh && !p.textures) checkSheetFor(sheet, p.mesh.uvs, p.mesh.indices);
   const tex = sheetTextures(sheet);
   const rig = studioRig(v.azDeg);
   const texel = new Float32Array(4);

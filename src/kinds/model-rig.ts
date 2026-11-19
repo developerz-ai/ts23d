@@ -7,7 +7,14 @@
 // joints are then forced exactly left/right symmetric (centre chains on y = 0). `side` says which
 // half that was: the Blender `symmetrize` step takes it. Memoised per mesh and options.
 
-import { type Bone, type Clip, type Mesh, Ts23dError, type Vec3 } from '../core/index.ts';
+import {
+  type Bone,
+  type Clip,
+  isTs23dError,
+  type Mesh,
+  Ts23dError,
+  type Vec3,
+} from '../core/index.ts';
 import { applySimilarity, triBvh } from '../primitives/index.ts';
 import { creaturePlan } from './creature.ts';
 import type { Bones } from './creature-bones.ts';
@@ -17,9 +24,7 @@ import { modelClips } from './model-clips.ts';
 import { applyFit, FIT_LIMIT, type ModelFit, modelFit, shiftFit } from './model-fit.ts';
 import { jointsFit } from './model-fit-joints.ts';
 import { mapJoints, type RigChains } from './model-joints.ts';
-import type { LegTrace } from './model-legs.ts';
 import {
-  type Capsule,
   MIRROR_LIMIT,
   type MirrorResidual,
   mirrorBones,
@@ -32,6 +37,7 @@ import {
   without,
 } from './model-mirror.ts';
 import { reposeTarget } from './model-repose.ts';
+import { legCapsules, limbsOf, type RigTail, tailOf } from './model-rig-limbs.ts';
 import { type FittedSkeleton, fitSkeleton } from './model-skeleton.ts';
 
 export { mirrorBones, mirrorHalf } from './model-mirror.ts';
@@ -90,13 +96,7 @@ export interface ModelRig {
   /** The tail as the Blender `isolate` step's fields, in the fitted rest (the one Blender binds
    *  in): its bones past the croup, its tip, the cut across its root and its reach. Absent when
    *  the plan has no tail or none was traced. Use after `bind`: `{ op: 'isolate', ...rig.tail }`. */
-  readonly tail?: {
-    readonly bones: readonly string[];
-    readonly from: Vec3;
-    readonly point: Vec3;
-    readonly normal: Vec3;
-    readonly r: number;
-  };
+  readonly tail?: RigTail;
   /** Symmetric only: the far side's free legs (the half that is thrown away), found on the
    *  unmirrored mesh. They may sit on the mirror plane: the Blender `amputate` step takes them
    *  off before `symmetrize`, as TS does before it mirrors. Empty when they could not be traced. */
@@ -107,48 +107,6 @@ export interface ModelRig {
   readonly notices: readonly string[];
   /** A FITTED bone's head by unprefixed name (`head`, `fore_l_3`), for focus spheres and masks. */
   at(bone: string): Vec3;
-}
-
-/** Inscribed radius → the radius a limb's capsule claims (fur and oval sections reach further). */
-const LIMB_GIRTH = 1.5;
-
-/** A traced free leg as capsules along its centre line. */
-function legCapsules(t: LegTrace): Capsule[] {
-  const pts = t.line.filter((_, i) => i % 3 === 0 || i === t.line.length - 1);
-  return pts.slice(1).map((b, i) => {
-    const a = pts[i] ?? b;
-    return {
-      head: [a[1], a[2], a[0]] as Vec3,
-      tail: [b[1], b[2], b[0]] as Vec3,
-      r: Math.max(a[3], b[3]) * LIMB_GIRTH,
-    };
-  });
-}
-
-function limbsOf(sk: FittedSkeleton, prefix: string): Capsule[][] {
-  const legs = Object.values(sk.legs).map(legCapsules);
-  // The tail from its second bone: the first is inside the croup.
-  const tail = sk.bones
-    .filter((b) => /^tail_[1-9]\d*$/.test(b.name.slice(prefix.length)))
-    .map((b) => ({ head: b.head, tail: b.tail, r: sk.tailRadius * LIMB_GIRTH }));
-  return [...legs, ...(tail.length && sk.tailRadius > 0 ? [tail] : [])].filter((l) => l.length);
-}
-
-function tailOf(fitted: readonly Bone[], radius: number, prefix: string): ModelRig['tail'] {
-  const bones = fitted.filter((b) => /^tail_[1-9]\d*$/.test(b.name.slice(prefix.length)));
-  const [first, last] = [bones[0], bones[bones.length - 1]];
-  if (!first || !last || !(radius > 0)) return undefined;
-  return {
-    bones: bones.map((b) => b.name),
-    from: last.tail,
-    point: first.head,
-    normal: [
-      first.tail[0] - first.head[0],
-      first.tail[1] - first.head[1],
-      first.tail[2] - first.head[2],
-    ],
-    r: radius * LIMB_GIRTH,
-  };
 }
 
 const ids = new WeakMap<object, number>();
@@ -165,6 +123,12 @@ export function modelRig(source: Mesh, spec: CreatureSpec, o: ModelRigOptions = 
   const key = `${o.joints ? idOf(o.joints) : ''}|${(o.take ?? []).join('+')}|${prefix}|${o.symmetric ?? false}|${o.repose === true}|${o.nose === true}|${o.register ?? 'surface'}|${o.front}|${(o.drop ?? []).join(',')}|${JSON.stringify(spec)}`;
   const seen = memo.get(source.positions)?.get(key);
   if (seen) return seen;
+  if (o.register === 'joints' && !o.joints)
+    throw new Ts23dError('T3D_RECIPE_INVALID', {
+      cause:
+        "modelRig: register: 'joints' registers the model from a rigger's armature, but no `joints` were given",
+      fix: "pass the rigger's armature as `joints` (its bones in the mesh's own frame), or drop register: 'joints' to register on the surface",
+    });
   const { bones: plan } = creaturePlan(spec);
   const byJoints = o.register === 'joints' && o.joints;
   const first = byJoints
@@ -228,6 +192,10 @@ export function modelRig(source: Mesh, spec: CreatureSpec, o: ModelRigOptions = 
   // A rigger's joints (o.joints: its armature in the source mesh's frame) replace the geometric
   // ones where its topology reads as this animal; else the geometric fit stands, with a notice.
   const notices: string[] = [];
+  if (o.joints && mirrored)
+    notices.push(
+      "modelRig: the rigger's joints are not mapped onto a mirrored (symmetric) fit, whose joints are forced left/right symmetric: the geometric skeleton fit is used instead",
+    );
   let fitted = geometric;
   if (o.joints && !mirrored) {
     const bvh = triBvh(mesh);
@@ -246,7 +214,7 @@ export function modelRig(source: Mesh, spec: CreatureSpec, o: ModelRigOptions = 
         o.nose === true,
       );
     } catch (e) {
-      if (!(e instanceof Ts23dError) || e.code !== 'T3D_MODEL_SKELETON') throw e;
+      if (!isTs23dError(e) || e.code !== 'T3D_MODEL_SKELETON') throw e;
       notices.push(`${e.message}: the geometric skeleton fit is used instead`);
     }
   }

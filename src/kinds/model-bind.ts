@@ -96,10 +96,20 @@ function relax(mesh: Mesh, bones: number, rounds: number): Mesh {
         links[b]?.add(a);
       }
     }
+  // Each welded vertex starts at the mean of its copies' weights. An empty slot (joint 0, weight
+  // 0) adds nothing, so it never wipes a real weight on bone 0.
   let field = new Float32Array(m * bones);
-  for (let v = 0; v < n; v++)
-    for (let s = 0; s < SKIN_INFLUENCES; s++)
-      field[(id[v] ?? 0) * bones + (J[v * 4 + s] ?? 0)] = W[v * 4 + s] ?? 0;
+  const copies = new Uint32Array(m);
+  for (let v = 0; v < n; v++) {
+    const row = (id[v] ?? 0) * bones;
+    copies[id[v] ?? 0] = (copies[id[v] ?? 0] ?? 0) + 1;
+    for (let s = 0; s < SKIN_INFLUENCES; s++) {
+      const w = W[v * 4 + s] ?? 0;
+      if (w > 0) field[row + (J[v * 4 + s] ?? 0)] = (field[row + (J[v * 4 + s] ?? 0)] ?? 0) + w;
+    }
+  }
+  for (let i = 0; i < field.length; i++)
+    field[i] = (field[i] ?? 0) / Math.max(copies[Math.floor(i / bones)] ?? 1, 1);
   for (let r = 0; r < rounds; r++) {
     const next = new Float32Array(field.length);
     for (let v = 0; v < m; v++) {

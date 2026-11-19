@@ -77,7 +77,35 @@ const code = (f: () => unknown): string => {
   return 'passed';
 };
 
+// Two spinning rotors on a base need three draws; the budget allows one.
+const fan = (draws: number) =>
+  defineAsset({
+    name: 'fan',
+    kind: 'prop',
+    budget: { triangles: [999, 999, 999], draws },
+    build: (ctx) => {
+      ctx.part('base', box({ size: [1, 1, 0.5], color: c }));
+      for (const [name, x] of [
+        ['rotor_a', 0.3],
+        ['rotor_b', -0.3],
+      ] as const)
+        ctx.part(name, box({ size: [0.3, 0.3, 0.1], color: c }), {
+          at: [x, 0, 0.5],
+          motion: { kind: 'spin', axis: [0, 0, 1], rps: 1 },
+        });
+    },
+  });
+
 describe('testing assertions', () => {
+  it('assertQaPass fails budget.draws like `t3d build` does', () => {
+    const qa = code(() => assertQaPass(fan(1)));
+    expect(qa).toContain('T3D_QA_FAILED');
+    expect(qa).toContain(
+      'T3D_QA_DRAW_CALLS draw-calls: LOD0 needs 3 draw calls, budget.draws is 1',
+    );
+    expect(code(() => assertQaPass(fan(3)))).toBe('passed');
+  });
+
   it('throw T3D_QA_FAILED with every finding when the asset is wrong', () => {
     const qa = code(() => assertQaPass(floating));
     expect(qa).toContain('T3D_QA_FAILED');

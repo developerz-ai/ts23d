@@ -3,7 +3,7 @@ import { rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { decodePng } from '../../material/index.ts';
 import { sandboxOf } from './sandbox.ts';
-import { createServer, PROTOCOL } from './server.ts';
+import { createServer, mcpMain, PROTOCOL } from './server.ts';
 
 const root = join(import.meta.dir, '../../../tmp/mcp-server-test');
 const server = () => createServer(sandboxOf(root), '0.0.0-test');
@@ -20,6 +20,7 @@ beforeAll(() =>
   Bun.write(
     join(root, 'recipes/crate/crate.ts'),
     `import { box, defineAsset } from '${join(import.meta.dir, '../../index.ts')}';
+process.stdout.write('a recipe writing to stdout directly\\n');
 export const crate = defineAsset({ name: 'crate', kind: 'prop', budget: { triangles: [12, 12, 12] },
   build: (ctx) => ctx.part('body', box({ size: [1, 1, 1], color: [1, 1, 1] })) });
 export const thrower = defineAsset({ name: 'thrower', kind: 'prop', budget: { triangles: [12, 12, 12] },
@@ -53,6 +54,23 @@ it('stays silent on notifications and negotiates the protocol version', async ()
 });
 
 /** One stdio session against a real `t3d mcp` process: lines in, lines out. */
+it('--json: a bad argument comes back as the T3D_CLI_USAGE envelope on stdout', async () => {
+  const lines: string[] = [];
+  const { log, error } = console;
+  console.log = (l: string) => void lines.push(l);
+  console.error = () => undefined;
+  try {
+    expect(await mcpMain(['--bogus', '--json'])).toBe(2);
+  } finally {
+    Object.assign(console, { log, error });
+  }
+  expect(lines).toHaveLength(1);
+  expect(JSON.parse(lines[0] ?? '{}')).toMatchObject({
+    ok: false,
+    error: { code: 'T3D_CLI_USAGE' },
+  });
+});
+
 it('serves a session over stdio: initialize, tools/list, build, shot image, error, ping', async () => {
   const entry = join(import.meta.dir, 'server.ts');
   const proc = Bun.spawn(

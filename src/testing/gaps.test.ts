@@ -53,6 +53,22 @@ describe('gap assertions', () => {
     );
   });
 
+  it('fails per part: one door touching does not cover a door that hangs loose', () => {
+    const doors = defineAsset({
+      name: 'doors',
+      kind: 'prop',
+      budget: { triangles: [999, 999, 999] },
+      build: (ctx) => {
+        ctx.part('frame', box({ size: [0.2, 2, 0.2], at: [0, 0, 1], color: grey }));
+        ctx.part('door_a', box({ size: [0.05, 0.9, 0.9], at: [0, 0.5, 0.1], color: grey }));
+        ctx.part('door_b', box({ size: [0.05, 0.9, 0.85], at: [0, -0.5, 0.1], color: grey }));
+      },
+    });
+    const out = run(() => assertTouches(doors, 'door_*', 'frame', { lods: [0] }));
+    expect(out).toContain("'door_b' is 5.0 cm from 'frame'");
+    expect(out).not.toContain("'door_a'");
+  });
+
   it('pass when the panel fills its frame, level with it', () => {
     const good = framed(0, 0);
     expect(run(() => assertNoGaps(good))).toBe('passed');

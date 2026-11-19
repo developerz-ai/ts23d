@@ -113,3 +113,12 @@ describe('paint slots and variants', () => {
     for (const h of ['#84402d', '#e8e2d2', '#060606']) expect(linearToHex(srgbToLinear(h))).toBe(h);
   });
 });
+
+describe('paint slots named like Object.prototype members', () => {
+  it('refuses an undeclared slot called constructor with a recipe error, not a TypeError', () => {
+    expect(() => compile(car({}, 'constructor'))).toThrow(/slot 'constructor'.*does not declare/);
+    expect(() => compile(car({ variants: { x: { constructor: '#112233' } } }))).toThrow(
+      /slot 'constructor'/,
+    );
+  });
+});

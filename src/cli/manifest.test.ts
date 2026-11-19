@@ -1,5 +1,14 @@
 import { expect, it } from 'bun:test';
-import { box, compile, defineAsset, encodePng, MeshBuilder } from '../index.ts';
+import {
+  box,
+  compile,
+  defineAsset,
+  encodePng,
+  MeshBuilder,
+  merge,
+  place,
+  toGlb,
+} from '../index.ts';
 import { drawCallsOf, manifestOf } from './manifest.ts';
 
 const kiosk = defineAsset({
@@ -74,4 +83,84 @@ it('lists texture sets with map sizes and bytes, and counts their material as a 
   ]);
   expect(m.drawCalls).toEqual([2, 2]);
   expect(m.pivots.map((p) => p.name)).toEqual(['body', 'body_tex_hide']);
+});
+
+interface Gltf {
+  meshes?: { primitives: { indices: number }[] }[];
+  accessors?: { count: number }[];
+  animations?: { name: string }[];
+}
+const gltf = (glb: Uint8Array): Gltf => {
+  const len = new DataView(glb.buffer, glb.byteOffset).getUint32(12, true);
+  return JSON.parse(new TextDecoder().decode(glb.subarray(20, 20 + len))) as Gltf;
+};
+
+it('reports the triangles in the file, and the compiled count beside it when they differ', () => {
+  const sloppy = defineAsset({
+    name: 'sloppy',
+    kind: 'prop',
+    budget: { triangles: [24, 24, 24] },
+    build(ctx) {
+      const b = new MeshBuilder();
+      const at = (x: number, z: number) =>
+        b.vertex({ p: [x, 0, z], n: [0, -1, 0], uv: [x, z], color: [1, 1, 1] });
+      const [p, q, r, s] = [at(0, 0), at(1, 0), at(1, 1), at(0, 1)];
+      // LOD0 carries a collapsed triangle and a copy of a good one; the optimiser drops both.
+      const sheet = b.quad(p, q, r, s);
+      ctx.part('sheet', (ctx.lod === 0 ? sheet.tri(p, q, q).tri(p, q, r) : sheet).build());
+    },
+  });
+  const lods = [compile(sloppy, { lod: 0 }), compile(sloppy, { lod: 2 })];
+  const inFile = lods.map((l) => {
+    const g = gltf(toGlb(l));
+    const prims = (g.meshes ?? []).flatMap((m) => m.primitives);
+    return prims.reduce((n, pr) => n + (g.accessors?.[pr.indices]?.count ?? 0), 0) / 3;
+  });
+  const m = manifestOf(sloppy, lods, { lods: ['lod0.glb', 'lod2.glb'] }, []);
+  expect(m.triangles).toEqual(inFile);
+  expect(m.triangles).toEqual([2, 2]);
+  expect(m.trianglesCompiled).toEqual([4, 2]);
+  // Nothing dropped: one number, no second field.
+  expect(
+    'trianglesCompiled' in manifestOf(kiosk, [compile(kiosk, { lod: 0 })], { lods: [] }, []),
+  ).toBe(false);
+});
+
+it('lists the run clip of an asset whose only motion is a belt, as its GLB has it', () => {
+  const ring = (moving: boolean) =>
+    defineAsset({
+      name: 'ring',
+      kind: 'prop',
+      budget: { triangles: [999, 999, 999] },
+      build(ctx) {
+        const [r, links] = [0.5, 16];
+        const path = Array.from({ length: 64 }, (_, i) => {
+          const a = (i / 64) * 2 * Math.PI;
+          return [r * Math.cos(a), 0, r * Math.sin(a)] as const;
+        });
+        const pitch = (64 * 2 * r * Math.sin(Math.PI / 64)) / links;
+        const link = box({ size: [pitch * 0.8, 0.3, 0.03], color: [1, 1, 1] });
+        const belt = merge(
+          Array.from({ length: links }, (_, k) => {
+            const a = (k / links) * 2 * Math.PI;
+            return place(link, {
+              at: [r * Math.cos(a), 0, r * Math.sin(a)],
+              pitch: -(a + Math.PI / 2),
+            });
+          }),
+        );
+        ctx.part('belt', belt, moving ? { motion: { kind: 'tread', path, pitch } } : {});
+      },
+    });
+  const names = (moving: boolean) => {
+    const lod = compile(ring(moving), { lod: 0 });
+    const file = (gltf(toGlb(lod, { animations: true })).animations ?? []).map((a) => a.name);
+    const listed = (manifestOf(ring(moving), [lod], { lods: [] }, []).clips ?? []).map(
+      (c) => c.name,
+    );
+    return { file, listed };
+  };
+  expect(names(true).file).toEqual(['rest', 'run']);
+  expect(names(true).listed).toEqual(['run']);
+  expect(names(false)).toEqual({ file: [], listed: [] });
 });

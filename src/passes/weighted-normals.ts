@@ -4,6 +4,7 @@
 // dead-flat sides while its bevels bend the light into soft highlights — no normal map needed.
 
 import type { Mesh, Vec3 } from '../core/index.ts';
+import { carrySkin } from './skin-carry.ts';
 
 export interface WeightedNormalsOptions {
   /** Faces meeting at more than this many degrees keep a hard edge. Default 40. */
@@ -97,6 +98,7 @@ function splitByNormal(m: Mesh, cornerNormals: Float32Array): Mesh {
   const n: number[] = [];
   const uv: number[] = [];
   const col: number[] = [];
+  const src: number[] = [];
   const idx = new Uint32Array(m.indices.length);
   for (let c = 0; c < m.indices.length; c++) {
     const v = m.indices[c] ?? 0;
@@ -108,6 +110,7 @@ function splitByNormal(m: Mesh, cornerNormals: Float32Array): Mesh {
     if (out === undefined) {
       out = p.length / 3;
       seen.set(key, out);
+      src.push(v);
       p.push(m.positions[v * 3] ?? 0, m.positions[v * 3 + 1] ?? 0, m.positions[v * 3 + 2] ?? 0);
       n.push(nx, ny, nz);
       uv.push(m.uvs[v * 2] ?? 0, m.uvs[v * 2 + 1] ?? 0);
@@ -121,5 +124,6 @@ function splitByNormal(m: Mesh, cornerNormals: Float32Array): Mesh {
     uvs: new Float32Array(uv),
     colors: new Float32Array(col),
     indices: idx,
+    ...carrySkin(m, src),
   };
 }

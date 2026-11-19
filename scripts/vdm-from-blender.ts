@@ -11,7 +11,7 @@
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { basename, join, resolve } from 'node:path';
-import { Ts23dError } from '../src/core/index.ts';
+import { isTs23dError, Ts23dError } from '../src/core/index.ts';
 import { decodePng } from '../src/material/index.ts';
 import {
   blenderJobArgs,
@@ -63,7 +63,7 @@ export function creditOf(
       };
     return { credit, line: v.credit };
   } catch (e) {
-    return { refused: e instanceof Ts23dError ? `${e.message} (fix: ${e.fix})` : String(e) };
+    return { refused: isTs23dError(e) ? `${e.message} (fix: ${e.fix})` : String(e) };
   }
 }
 

@@ -1,10 +1,11 @@
 import { afterAll, beforeAll, expect, it } from 'bun:test';
-import { rm } from 'node:fs/promises';
+import { mkdir, rm, symlink } from 'node:fs/promises';
 import { join } from 'node:path';
 import { sandboxOf } from './sandbox.ts';
 import { callTool, type ToolResult } from './tools.ts';
 
 const root = join(import.meta.dir, '../../../tmp/mcp-tools-test');
+const outside = join(import.meta.dir, '../../../tmp/mcp-tools-outside');
 const lib = join(import.meta.dir, '../../index.ts');
 const box = () => sandboxOf(root);
 
@@ -24,7 +25,10 @@ export const broken = defineAsset({ name: 'broken', kind: 'prop', budget: { tria
   await Bun.write(join(root, 'recipes/crate/helper.ts'), 'export const size = 1;');
   await Bun.write(join(root, 'recipes/_lib/part.ts'), 'export const x = 1;');
 });
-afterAll(() => rm(root, { recursive: true, force: true }));
+afterAll(async () => {
+  await rm(root, { recursive: true, force: true });
+  await rm(outside, { recursive: true, force: true });
+});
 
 const json = (r: ToolResult): Record<string, unknown> => {
   const first = r.content[0];
@@ -48,6 +52,24 @@ it('refuses a recipe or an out directory outside the project', async () => {
   const o = await callTool(box(), 'shot', { recipe: 'recipes/crate/crate.ts', out: '/tmp' });
   expect(errorCode(o)).toBe('T3D_CLI_USAGE');
 });
+
+it('refuses a directory whose entry links outside the project, before importing anything', async () => {
+  const marker = join(outside, 'ran.txt');
+  await Bun.write(
+    join(outside, 'evil.ts'),
+    `import { writeFileSync } from 'node:fs';\nwriteFileSync(${JSON.stringify(marker)}, 'ran');\n`,
+  );
+  await mkdir(join(root, 'assets'), { recursive: true });
+  await symlink(join(outside, 'evil.ts'), join(root, 'assets/link.ts'));
+  try {
+    const r = await callTool(box(), 'build', { recipe: 'assets' });
+    expect(errorCode(r)).toBe('T3D_CLI_USAGE');
+    expect(JSON.stringify(json(r))).toContain('link.ts');
+    expect(await Bun.file(marker).exists()).toBe(false);
+  } finally {
+    await rm(join(root, 'assets'), { recursive: true, force: true });
+  }
+}, 30_000);
 
 it('returns T3D_RECIPE_THREW when the recipe throws', async () => {
   const r = await callTool(box(), 'build', { recipe: 'recipes/broken/broken.ts', sheetSize: 512 });

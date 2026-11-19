@@ -20,6 +20,7 @@ import {
   bx,
   DECK_Z,
   F,
+  jacketRadius,
   type Layout,
   lath,
   pipe,
@@ -222,14 +223,19 @@ export function buildBoards(ctx: BuildContext, L: Layout): void {
           lod === 0 ? 8 : 5,
         ),
       );
+    // Stanchions: foot 1 cm into the jacket at its true radius there (wagon-top taper, smokebox),
+    // knob on the handrail line (QA connections: feet set at the full barrel radius on the
+    // equator stood clear of the jacket 27 cm up, knobs off the sloping rail).
     if (lod === 0)
       for (let i = 0; i < 5; i++) {
         const x = cabFront + 0.3 + ((smokeFront - 0.25 - cabFront - 0.3) * i) / 4;
-        const r = x > barrelFront ? SMOKEBOX_R : BOILER_R;
+        const foot = Math.sqrt(jacketRadius(L, x) ** 2 - 0.27 ** 2) - 0.01;
+        const t = (x - (cabFront - 0.02)) / (smokeFront - 0.2 - (cabFront - 0.02));
+        const rail = BOILER_R + 0.1 + (SMOKEBOX_R - BOILER_R) * t;
         m.push(
           beam({
-            from: [x, s * (r - 0.02), BOILER_Z + 0.27],
-            to: [x, s * (r + 0.11), BOILER_Z + 0.3],
+            from: [x, s * foot, BOILER_Z + 0.27],
+            to: [x, s * rail, BOILER_Z + 0.3],
             width: 0.022,
             segments: 6,
             ...F.brass,
@@ -242,7 +248,7 @@ export function buildBoards(ctx: BuildContext, L: Layout): void {
             ],
             segments: 8,
             axis: 'y',
-            at: [x, s * (r + 0.08), BOILER_Z + 0.3],
+            at: [x, s * rail, BOILER_Z + 0.3],
             ...F.brass,
           }),
         );

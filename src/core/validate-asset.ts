@@ -56,11 +56,20 @@ function checkMeasure(asset: string, m: Measure): void {
   if (!positive(m.value))
     invalid(`${where} value ${m.value} is not a positive length`, 'give the spec value in metres');
   checkTolerance(m.tolerance, TOLERANCE.measure, m.why, where);
+  const fix = "between: ['a', 'b'] — exactly two parts, centre to centre";
+  const between: unknown = m.between;
+  if ((m.parts === undefined) === (between === undefined))
+    invalid(
+      `${where} has ${m.parts ? 'both parts and between' : 'neither parts nor between'}`,
+      `${fix}; or parts: ['a', …] for the extent of those parts, never both`,
+    );
+  if (between !== undefined && !(Array.isArray(between) && between.length === 2))
+    invalid(`${where} between is ${JSON.stringify(between)}, not two part names`, fix);
 }
 
 /** Every definition-time check: name, budget, seed, real dimensions and measures. */
 export function checkAsset(def: AssetDefinition): void {
-  if (typeof def.name !== 'string' || !/^[a-z][a-z0-9_]*$/.test(def.name))
+  if (typeof def.name !== 'string' || !NAME.test(def.name))
     invalid(
       `asset name '${def.name}' is not snake_case`,
       'rename it to [a-z][a-z0-9_]* — it becomes the GLB file name and the root node',
@@ -101,17 +110,40 @@ export function checkCompileOptions(name: string, lod: number, seed: number): as
   checkSeed(seed, `compile('${name}') seed`);
 }
 
-/** `body` names the merged static root: a pivot (group, moving part, emitter…) may not take it. */
-export function checkPivotName(
-  asset: string,
-  name: string,
-  mesh: Mesh | null,
-  o: PartOptions,
-): void {
+const NAME = /^[a-z][a-z0-9_]*$/;
+
+/**
+ * A part, group, socket or emitter as it enters the scene: a snake_case name (it becomes the GLB
+ * node name and what measures, joints, clips and `clearOf` select), a finite pivot and yaw, and
+ * not `body` for a pivot (group, moving part, emitter…): that names the merged static root.
+ */
+export function checkPart(asset: string, name: string, mesh: Mesh | null, o: PartOptions): void {
+  if (typeof name !== 'string' || !NAME.test(name))
+    invalid(
+      `part '${name}' in '${asset}' is not snake_case`,
+      'rename it to [a-z][a-z0-9_]* (wheel_0, door_left): it becomes the GLB node name',
+    );
+  const at: readonly number[] | undefined = o.at;
+  if (at !== undefined && !(at.length === 3 && at.every(Number.isFinite)))
+    invalid(
+      `part '${name}' in '${asset}' has at [${at.join(', ')}]`,
+      'give the pivot three finite metres: at: [x, y, z]',
+    );
+  if (o.yaw !== undefined && !Number.isFinite(o.yaw))
+    invalid(`part '${name}' in '${asset}' has yaw ${o.yaw}`, 'give the yaw in radians');
   if (name === ROOT_PART && (mesh === null || o.motion))
     invalid(
       `'${asset}' declares a pivot named '${ROOT_PART}'`,
       `rename the group; \`${ROOT_PART}\` is the merged static root`,
+    );
+}
+
+/** `ctx.use(child, { prefix })`: the prefix names the instance's group and starts every part. */
+export function checkUsePrefix(asset: string, prefix: string): void {
+  if (typeof prefix !== 'string' || !NAME.test(prefix))
+    invalid(
+      `ctx.use in '${asset}' has prefix '${prefix}', which is not snake_case`,
+      "give each instance its own prefix: { prefix: 'house_3' } → house_3_roof, house_3_door_0",
     );
 }
 

@@ -155,3 +155,31 @@ describe('simplify', () => {
     expect(simplify(m, { targetTris: 10000 }).mesh).toBe(m);
   });
 });
+
+describe('simplify on a skinned, morphed mesh', () => {
+  test('surviving vertices keep their joints, weights and morph deltas (they were dropped)', () => {
+    const base = blob(8);
+    const n = base.positions.length / 3;
+    const joints = new Uint16Array(n * 4);
+    const weights = new Float32Array(n * 4);
+    const swell = new Float32Array(n * 3);
+    for (let v = 0; v < n; v++) {
+      joints[v * 4] = (base.positions[v * 3] ?? 0) > 0 ? 1 : 0;
+      weights[v * 4] = 1;
+      swell[v * 3] = (base.positions[v * 3] ?? 0) * 2;
+    }
+    const morphs = [{ name: 'swell', positions: swell }];
+    const { mesh } = simplify({ ...base, joints, weights, morphs }, { targetTris: 200 });
+    const k = mesh.positions.length / 3;
+    expect(k).toBeLessThan(n);
+    expect(mesh.joints?.length).toBe(k * 4);
+    expect(mesh.weights?.length).toBe(k * 4);
+    expect(mesh.morphs?.[0]?.positions.length).toBe(k * 3);
+    for (let v = 0; v < k; v++) {
+      const x = mesh.positions[v * 3] ?? 0;
+      expect(mesh.joints?.[v * 4]).toBe(x > 0 ? 1 : 0);
+      expect(mesh.weights?.[v * 4]).toBe(1);
+      expect(mesh.morphs?.[0]?.positions[v * 3]).toBe(Math.fround(x * 2));
+    }
+  });
+});

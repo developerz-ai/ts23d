@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { compile, defineAsset, type Vec2, type Vec3 } from '../core/index.ts';
+import { boundsOf, compile, defineAsset, Ts23dError, type Vec2, type Vec3 } from '../core/index.ts';
 import { cityBlock, cityWindows } from './city.ts';
 import { type CityFootprint, cityPlan, footprintIoU, hashId } from './city-plan.ts';
 
@@ -23,6 +23,9 @@ const ROW: CityFootprint[] = [
   { id: 104, ring: rect(18, 0, 6, 15), height: 17, levels: 5 },
   { id: 200, ring: rect(40, 0, 10, 10), height: 9, levels: null },
 ];
+const never = (): never => {
+  throw new Error('missing plan');
+};
 const OPT = {
   walls: W,
   glass: [0.1, 0.12, 0.15] as Vec3,
@@ -50,6 +53,54 @@ describe('cityPlan', () => {
         { walls: W },
       ),
     ).toThrow('footprint points');
+  });
+
+  it('minHeight comes off the extruded body, and a body with no height is refused', () => {
+    const lifted = { id: 1, ring: rect(0, 0, 10, 10), height: 20, levels: null, minHeight: 10 };
+    const [p] = cityPlan([lifted], { walls: W, floorHeight: 3.2 });
+    expect(p?.base).toBe(10);
+    expect(p?.height).toBe(10);
+    expect((p?.base ?? 0) + (p?.height ?? 0)).toBe(20);
+    expect(p?.floors).toBe(3);
+    const refuse = (minHeight: number): Ts23dError => {
+      try {
+        cityPlan([{ ...lifted, minHeight }], { walls: W });
+      } catch (e) {
+        if (e instanceof Ts23dError) return e;
+      }
+      throw new Error('expected a Ts23dError');
+    };
+    expect(refuse(20).code).toBe('T3D_RECIPE_INVALID');
+    expect(refuse(25).fix).toContain('above minHeight');
+    expect(refuse(-1).fix).toContain('minHeight ≥ 0');
+  });
+
+  it('a wall is shared only where the neighbour stands: windows fill the rest', () => {
+    // A 30 m hall with a 6 m annexe on its north wall (x 10–16).
+    const hall = { id: 1, ring: rect(0, 0, 30, 10), height: 12, levels: null };
+    const plans = cityPlan([hall, { id: 2, ring: rect(10, 10, 6, 8), height: 6, levels: null }], {
+      walls: W,
+    });
+    expect(plans[0]?.party).toEqual([false, false, false, false]);
+    expect(plans[0]?.shared[2]).toEqual([[14, 20]]);
+    expect(plans[1]?.party).toEqual([true, false, false, false]);
+    expect(plans[0]?.neighbours).toEqual([2]);
+    const north = cityWindows(plans[0] ?? never()).filter((w) => Math.abs(w.at[1] - 10) < 1e-6);
+    expect(north.length).toBeGreaterThan(0);
+    for (const w of north)
+      expect(w.at[0] + w.scale[1] / 2 <= 10 || w.at[0] - w.scale[1] / 2 >= 16).toBe(true);
+    // Three 2 m sheds under the old probe points (1/3, 1/2, 2/3) must not blank the whole wall.
+    const sheds = [10, 15, 20].map((x, k) => ({
+      id: 10 + k,
+      ring: rect(x - 1, 10, 2, 3),
+      height: 3,
+      levels: null,
+    }));
+    const [alone] = cityPlan([hall, ...sheds], { walls: W });
+    expect(alone?.party[2]).toBe(false);
+    expect(
+      cityWindows(alone ?? never()).filter((w) => Math.abs(w.at[1] - 10) < 1e-6).length,
+    ).toBeGreaterThan(0);
   });
 
   it('two neighbours are never identical: shared walls get different colours', () => {
@@ -84,6 +135,62 @@ describe('cityPlan', () => {
 });
 
 describe('cityBlock', () => {
+  it('window rows stand on their sill and stay under the cornice; roads stay on the slab', () => {
+    const trim: Vec3 = [0.8, 0.8, 0.8];
+    const extent = [-10, -10, 20, 20] as const;
+    const a = defineAsset({
+      name: 'one',
+      kind: 'scene',
+      budget: { triangles: [20000, 20000, 2000] },
+      build: (ctx) =>
+        void cityBlock(ctx, [{ id: 1, ring: rect(0, 0, 10, 10), height: 12.4, levels: null }], {
+          ...OPT,
+          trim,
+          extent,
+          streets: [
+            {
+              highway: 'primary',
+              line: [
+                [-50, -8],
+                [50, -8],
+              ],
+            },
+            {
+              highway: 'residential',
+              line: [
+                [-50, -50],
+                [50, 60],
+              ],
+            },
+            {
+              highway: 'service',
+              line: [
+                [-50, -40],
+                [50, -40],
+              ],
+            },
+          ],
+        }),
+    });
+    const c = compile(a, { lod: 0 });
+    const part = (n: string) => {
+      const p = c.parts.find((q) => q.name === n);
+      if (!p?.mesh) throw new Error(`no ${n}`);
+      return { b: boundsOf(p.mesh), z: p.at[2] };
+    };
+    const [p] = cityPlan([{ id: 1, ring: rect(0, 0, 10, 10), height: 12.4, levels: null }], OPT);
+    const win = part('b1_windows');
+    expect(win.b.min[2]).toBeCloseTo((p?.floorHeight ?? 0) * 0.26, 5);
+    expect(win.b.max[2]).toBeLessThan(part('b1_cornice').z + part('b1_cornice').b.min[2]);
+    const road = part('streets').b;
+    expect(road.min[0]).toBeGreaterThanOrEqual(extent[0] - 1e-6);
+    expect(road.min[1]).toBeGreaterThanOrEqual(extent[1] - 1e-6);
+    expect(road.max[0]).toBeLessThanOrEqual(extent[2] + 1e-6);
+    expect(road.max[1]).toBeLessThanOrEqual(extent[3] + 1e-6);
+    // The primary road (14 m wide, centre 2 m inside the slab edge) keeps its inside half.
+    expect(road.min[1]).toBeCloseTo(-10, 6);
+  });
+
   const block = defineAsset({
     name: 'row',
     kind: 'scene',

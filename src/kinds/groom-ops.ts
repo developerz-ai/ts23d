@@ -90,8 +90,14 @@ export function checkGroomOps(
           no('neither length nor plane', 'cut to a length (metres) or by a plane { at, normal }');
         if (o.length !== undefined && !inRange(o.length, 1e-3, 2))
           no(`length ${o.length}`, 'length is 1 mm..2 m');
-        if (o.plane && (!finite(o.plane.at) || Math.hypot(...o.plane.normal) < 1e-9))
-          no('plane has no normal', 'give the plane a point and a non-zero normal (kept side < 0)');
+        if (
+          o.plane &&
+          (!finite(o.plane.at) || !finite(o.plane.normal) || Math.hypot(...o.plane.normal) < 1e-9)
+        )
+          no(
+            `plane at [${o.plane.at}], normal [${o.plane.normal}]`,
+            'give the plane a finite point and a finite non-zero normal (kept side < 0)',
+          );
         return;
       case 'grow':
         if (!inRange(o.factor, 1, 10)) no(`factor ${o.factor}`, 'grow by a factor 1..10');
@@ -138,10 +144,12 @@ export function checkGroomOps(
   });
 }
 
-/** Soft edge of a region mask, metres: weight 1 inside, 0 this far outside. */
+/** Width of a region mask's soft edge, metres, centred on the boundary: weight 1 from half of it
+ *  inside, ½ on the boundary, 0 from half of it outside. */
 const SOFT = 0.004;
 
-/** The op's weight per guide (0..1) from its region at each root; 1 everywhere without one. */
+/** The op's weight per guide (0..1) from its region at each root: 1 at 2 mm or more inside, ½
+ *  on the boundary, 0 at 2 mm or more outside (linear between); 1 everywhere without a region. */
 export function opMask(
   op: GroomOp,
   guides: readonly GroomGuide[],

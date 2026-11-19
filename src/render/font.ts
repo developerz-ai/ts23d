@@ -1,5 +1,7 @@
 // A 3×5 bitmap font for view labels on contact sheets, so an agent reading the PNG knows which
-// view is which and what the grid step is. Uppercase, digits and a few marks only.
+// view is which and what the grid step is. Uppercase, digits and a few marks only. Text is clipped
+// to the canvas on both axes: a pixel past the right edge is dropped, never wrapped onto the next
+// row's left side.
 
 const GLYPHS: Readonly<Record<string, string>> = {
   A: '010101111101101',
@@ -60,6 +62,13 @@ const GLYPHS: Readonly<Record<string, string>> = {
 /** Pixel width of `text` at `scale` (4 columns per glyph, the last one blank). */
 export const textWidth = (text: string, scale: number): number => text.length * 4 * scale - scale;
 
+/** Largest whole scale ≤ `scale` (never below 1) at which `text` is at most `room` pixels wide. */
+export function fitScale(text: string, scale: number, room: number): number {
+  let s = Math.max(1, Math.floor(scale));
+  while (s > 1 && textWidth(text, s) > room) s--;
+  return s;
+}
+
 export function drawText(
   px: Uint8Array,
   width: number,
@@ -69,6 +78,7 @@ export function drawText(
   scale: number,
   rgb: readonly [number, number, number],
 ): void {
+  const height = Math.floor(px.length / (width * 4));
   let cx = x;
   for (const ch of text.toUpperCase()) {
     const g = GLYPHS[ch] ?? GLYPHS[' '] ?? '';
@@ -78,8 +88,10 @@ export function drawText(
       const gy = y + Math.floor(i / 3) * scale;
       for (let dy = 0; dy < scale; dy++) {
         for (let dx = 0; dx < scale; dx++) {
-          const o = ((gy + dy) * width + gx + dx) * 4;
-          if (o >= 0 && o + 3 < px.length) px.set([...rgb, 255], o);
+          const X = gx + dx;
+          const Y = gy + dy;
+          if (X < 0 || X >= width || Y < 0 || Y >= height) continue;
+          px.set([...rgb, 255], (Y * width + X) * 4);
         }
       }
     }

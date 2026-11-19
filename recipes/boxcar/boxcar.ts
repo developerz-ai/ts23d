@@ -809,6 +809,16 @@ const usra = defineFamily({
           ); // steel straps
         for (const x of [-DOOR_W / 2, DOOR_W / 2 - 0.08])
           dm.push(bx(x, x + 0.08, y1, y1 + s * 0.015, DOOR_Z0, DOOR_Z1, paint, 'steel_painted'));
+        // What carries the door: roller hangers up to the top rail and guide shoes down onto the
+        // bottom track, bedded in the door frame and bearing 3 mm into the rails they run on.
+        for (const x of [-0.6, 0.6]) {
+          const ya = s * (FRAME_Y + 0.012);
+          const yb = y1 + s * 0.02;
+          dm.push(
+            bx(x - 0.06, x + 0.06, ya, yb, DOOR_Z1 - 0.1, DOOR_Z1 + 0.028, paint, 'steel_painted'),
+            bx(x - 0.06, x + 0.06, ya, yb, DOOR_Z0 - 0.028, DOOR_Z0 + 0.1, paint, 'steel_painted'),
+          );
+        }
       }
       ctx.part(`door_${side}`, dirt(merge(dm)), {
         motion: { kind: 'slide', offset: [-(DOOR_W + 0.05), 0, 0], hz: 0.25, oneWay: true },
@@ -818,7 +828,8 @@ const usra = defineFamily({
       if (lod === 0)
         ctx.part(
           `door_${side}_handle`,
-          bx(-0.75, -0.65, y1 + s * 0.015, y1 + s * 0.06, 2.0, 2.2, iron),
+          // Bolted through the boards: bedded 4 mm into the door, not hovering at strap depth.
+          bx(-0.75, -0.65, y1 - s * 0.004, y1 + s * 0.06, 2.0, 2.2, iron),
           { parent: `door_${side}` },
         );
       // Track below the door, guide above, long enough for its one-way travel toward −X.
@@ -893,6 +904,13 @@ const usra = defineFamily({
             0.025,
           ),
         );
+        // Two brackets on the end sill carry the lever (bedded 6 mm in the sill face).
+        for (const y of [-0.45, -1.15]) {
+          const z = COUPLER_Z + 0.12 + (0.08 * (-y - 0.08)) / 1.22;
+          cm.push(
+            bx(d * (XB + 0.044), d * (XB + 0.1), y - 0.015, y + 0.015, z - 0.03, z + 0.03, iron),
+          );
+        }
         // Train line out of the centre sill to the angle cock, then the hose hanging from it.
         cm.push(rod([d * (XB + 0.01), 0.15, 0.81], [d * (XB + 0.1), 0.3, 0.8], 0.04, iron, 6));
         cm.push(rod([d * (XB + 0.1), 0.3, 0.8], [d * (XB + 0.22), 0.3, 0.55], 0.05, iron, 6));
@@ -1019,10 +1037,12 @@ const usra = defineFamily({
     // LOD2 keeps the big road name so the white block does not vanish at distance.
     {
       const lm: Mesh[] = [];
-      /** |y| of the painted surface at x on a side: post faces or boards. */
+      /** |y| of the painted surface at x on a side: post faces or boards. A stencil pixel that
+       *  only grazes a brace (by less than `graze`) stays on the boards with its corner behind
+       *  the brace, instead of being lifted 65 mm off them to hang on the brace's edge. */
       const braceZ0 = 1.22;
       const braceZ1 = EAVE_Z - 0.12;
-      const face = (x: number, z: number): number => {
+      const face = (x: number, z: number, graze: number): number => {
         const ax = Math.abs(x);
         if (lod < 2 && posts.some((q) => Math.abs(ax - q) <= postW / 2)) return FRAME_Y;
         if (ax >= DOOR_W / 2 + 0.01 && ax <= DOOR_W / 2 + 0.1) return FRAME_Y;
@@ -1034,7 +1054,7 @@ const usra = defineFamily({
             const xb = (posts[i + 1] ?? DOOR_W / 2) + postW / 2;
             const xc = xa + (xb - xa) * t;
             const hw = (0.0375 * Math.hypot(xb - xa, braceZ1 - braceZ0)) / (braceZ1 - braceZ0);
-            if (Math.abs(ax - xc) <= hw) return SHEATH_Y + 0.065;
+            if (Math.abs(ax - xc) <= hw - graze) return SHEATH_Y + 0.065;
           }
         return SHEATH_Y;
       };
@@ -1053,7 +1073,7 @@ const usra = defineFamily({
               font: 'block',
               ...(maxWidth ? { maxWidth } : {}),
               // Painted over the proud posts and braces as on the real car.
-              surface: (u, v) => face(cx + dirX * u, base + v) - SHEATH_Y,
+              surface: (u, v) => face(cx + dirX * u, base + v, (h / 7) * 0.15) - SHEATH_Y,
             }),
           );
         };

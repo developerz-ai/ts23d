@@ -127,10 +127,16 @@ export function cellRect(id: CellId): UvRect {
 
 /**
  * What the sheet holds at a V coordinate: a built-in strip id, 'custom' (a defineMaterial row),
- * 'cell' (decals and foliage) or 'plain' below the sheet. Physics and QA classify triangles by it.
+ * 'cell' (decals and foliage) or 'plain' below the sheet. A V exactly on the edge two rows share
+ * (a box top at `rect.v1` is the next row's `v0`) reads as the upper row, so classify a triangle
+ * by all three of its V values: `stripAtV(va, vb, vc)` answers for their mean.
  */
-export function stripAtV(v: number): BuiltinStripId | 'custom' | 'cell' {
-  const row = Math.floor(v / STRIP_H);
+export function stripAtV(
+  v: number,
+  ...rest: readonly number[]
+): BuiltinStripId | 'custom' | 'cell' {
+  const mean = rest.reduce((s, x) => s + x, v) / (rest.length + 1);
+  const row = Math.floor(mean / STRIP_H);
   if (row < 0) return 'plain';
   if (row < STRIPS.length) return STRIPS[row] ?? 'plain';
   return row < STRIP_ROWS ? 'custom' : 'cell';

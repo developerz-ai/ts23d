@@ -62,6 +62,15 @@ describe('head', () => {
     expect(fails(() => headParams({ params: { wrinkles: -1 } })).fix).toContain('wrinkles');
   });
 
+  it('refuses a partial override of a field the preset leaves null, naming what is missing', () => {
+    const e = fails(() => headParams({ race: 'human', params: { tusks: { length: 0.2 } } }));
+    expect(e.code).toBe('T3D_RECIPE_INVALID');
+    expect(e.message).toMatch(/tusks.*radius, spread, flare/);
+    expect(e.fix).toContain('length, radius, spread, flare');
+    const whole = { length: 0.2, radius: 0.05, spread: 0.15, flare: 0.3 };
+    expect(headParams({ race: 'human', params: { tusks: whole } }).tusks).toEqual(whole);
+  });
+
   it('merges overrides one level deep and keeps the preset untouched', () => {
     const p = headParams({ race: 'orc', params: { jaw: { underbite: 0.2 }, tusks: null } });
     expect(p.jaw.underbite).toBe(0.2);

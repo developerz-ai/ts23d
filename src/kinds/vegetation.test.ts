@@ -7,9 +7,11 @@ import {
   type Lod,
   Ts23dError,
   triangleCount,
+  worldMeshes,
 } from '../core/index.ts';
-import { runQa } from '../qa/index.ts';
+import { measures, runQa } from '../qa/index.ts';
 import { type TreeOptions, tree, treeReal, trees } from './vegetation.ts';
+import { rootsMesh } from './vegetation-mesh.ts';
 import { oak, SPECIES } from './vegetation-presets.ts';
 import { grow } from './vegetation-skeleton.ts';
 
@@ -88,12 +90,63 @@ describe('tree', () => {
     });
   }
 
-  it('fits the real envelope and keeps DBH exact across Y', () => {
-    const c = compile(asset({ species: 'oak', height: 20, spread: 18, dbh: 1.1 }));
-    const trunk = c.parts.find((p) => p.name === 'trunk')?.mesh;
-    expect(trunk).toBeDefined();
-    const b = trunk ? boundsOf(trunk) : null;
-    expect((b?.max[1] ?? 0) - (b?.min[1] ?? 0)).toBeCloseTo(1.1, 2);
+  it('treeReal measures only parts that carry a mesh for every species (D-measures)', () => {
+    const real = treeReal({ height: 18, spread: 8, dbh: 0.4, prefix: 'b' });
+    expect(real.measures?.[1]?.parts).toEqual(['b_trunk', 'b_branches', 'b_leaves']);
+    // Birch has no root flare and `crown` is a group: neither may be a selector.
+    const a = defineAsset({
+      name: 'birch',
+      kind: 'vegetation',
+      budget: { triangles: [25000, 6000, 300] },
+      real: treeReal(SPECIES.birch.typical),
+      build: (ctx) => {
+        tree(ctx, { species: 'birch', ...SPECIES.birch.typical });
+      },
+    });
+    expect(measures(compile(a, { lod: 0 }))).toEqual([]);
+  });
+
+  for (const lod of [0, 1, 2] as Lod[]) {
+    it(`LOD${lod}: trunk Y extent is the DBH, also at a narrow spread`, () => {
+      for (const o of [
+        { species: 'oak', height: 20, spread: 18, dbh: 1.1 },
+        { species: 'oak', height: 22, spread: 10, dbh: 1.3 },
+        { species: 'birch', height: 20, dbh: 0.44 },
+      ]) {
+        const trunk = compile(asset(o), { lod }).parts.find((p) => p.name === 'trunk')?.mesh;
+        const b = trunk ? boundsOf(trunk) : null;
+        expect((b?.max[1] ?? 0) - (b?.min[1] ?? 0)).toBeCloseTo(o.dbh, 3);
+      }
+    });
+
+    it(`LOD${lod}: stands on z = 0, no leaf underground, height from the ground up`, () => {
+      for (const o of [
+        { species: 'willow', height: 12 },
+        { species: 'oak', height: 6 },
+      ]) {
+        const meshes = worldMeshes(compile(asset(o), { lod }).parts);
+        const z = (n: string) => {
+          const m = meshes.get(n);
+          return m ? [boundsOf(m).min[2], boundsOf(m).max[2]] : [Infinity, -Infinity];
+        };
+        expect(z('trunk')[0]).toBeCloseTo(0, 4);
+        expect(z('leaves')[0]).toBeGreaterThanOrEqual(0);
+        const top = Math.max(z('trunk')[1] ?? 0, z('branches')[1] ?? 0, z('leaves')[1] ?? 0);
+        expect(top).toBeCloseTo(o.height, 3);
+      }
+    });
+  }
+
+  it('root flare height comes from the real trunk radius, not the DBH correction', () => {
+    const stems = grow(oak, { height: 22, dbh: 1.3 }, createRng(7));
+    const trunk = stems[0];
+    if (!trunk) throw new Error('no trunk');
+    const top = (r: number) => boundsOf(rootsMesh(trunk, oak, 0, r, createRng(1))).max[2];
+    expect(top(3)).toBeCloseTo(top(1), 6);
+    expect(top(1)).toBeCloseTo(2.4 * 0.65, 6);
+    const wide = boundsOf(rootsMesh(trunk, oak, 0, 3, createRng(1)));
+    const thin = boundsOf(rootsMesh(trunk, oak, 0, 1, createRng(1)));
+    expect(wide.max[0] - wide.min[0]).toBeCloseTo(3 * (thin.max[0] - thin.min[0]), 4);
   });
 
   it('is deterministic per seed, and a new seed grows a different tree', () => {

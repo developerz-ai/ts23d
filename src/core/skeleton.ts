@@ -3,6 +3,7 @@
 // imported rigs, neural `rig` output); re-frames a child's bones under `ctx.use` (ADR 013).
 
 import { Ts23dError } from './errors.ts';
+import { checkStretch } from './limit-tolerance.ts';
 import type { Vec3 } from './vec.ts';
 import { toWorld, type WorldTransform } from './world.ts';
 
@@ -18,6 +19,16 @@ export interface JointLimit {
   readonly min: number;
   readonly max: number;
   readonly twist?: number;
+  /** QA `deform` edge-stretch tolerance at this limit (default ×4, cap ×6; limit-tolerance.ts). */
+  readonly stretch?: number;
+  /** Required when `stretch` is above the default: what makes the excess real and its fix. */
+  readonly why?: string;
+}
+
+/** A raised stretch tolerance declared by bone name for a limit a kind generated. */
+export interface LimitTolerance {
+  readonly stretch: number;
+  readonly why: string;
 }
 
 export interface Bone {
@@ -76,6 +87,7 @@ function checkLimit(where: string, l: JointLimit): void {
     );
   if (l.twist !== undefined && !(ok(l.twist) && l.twist >= 0))
     invalid(where, `limit twist ${l.twist}° is not in 0..180`, 'give twist as ± degrees, e.g. 20');
+  checkStretch(where, l);
 }
 
 /**

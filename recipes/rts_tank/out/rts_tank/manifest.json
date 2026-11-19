@@ -22,7 +22,7 @@
   "triangles": [
     32158,
     8520,
-    374
+    574
   ],
   "drawCalls": [
     23,
@@ -229,7 +229,7 @@
       "target": 0.13,
       "actual": 0.13,
       "eligible": "convex-edges",
-      "area": 97.273,
+      "area": 97.3894,
       "by": {
         "brinehound_hull": {
           "target": 0.13,
@@ -239,7 +239,7 @@
         "brinehound_kit": {
           "target": 0.13,
           "actual": 0.13,
-          "area": 59.3223
+          "area": 59.4387
         },
         "brinehound_turret": {
           "target": 0.13,
@@ -258,7 +258,7 @@
       "target": 0.4808,
       "actual": 0.4808,
       "eligible": "ground-near",
-      "area": 49.6063,
+      "area": 49.6684,
       "by": {
         "brinehound_hull": {
           "target": 0.5,
@@ -268,7 +268,7 @@
         "brinehound_kit": {
           "target": 0.5,
           "actual": 0.5,
-          "area": 25.239
+          "area": 25.3011
         },
         "brinehound_wheels": {
           "target": 0.4,
@@ -281,7 +281,7 @@
       "target": 0.3,
       "actual": 0.3,
       "eligible": "up-facing",
-      "area": 50.5002,
+      "area": 50.5472,
       "by": {
         "brinehound_hull": {
           "target": 0.3,
@@ -291,7 +291,7 @@
         "brinehound_kit": {
           "target": 0.3,
           "actual": 0.3,
-          "area": 17.6305
+          "area": 17.6775
         },
         "brinehound_turret": {
           "target": 0.3,

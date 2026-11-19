@@ -9,7 +9,10 @@ import type { WikidataRecord } from './wikidata.ts';
 type Axis = 'x' | 'y' | 'z';
 
 export interface MeasureFrom {
-  /** Quantity name in the record ('gauge', 'diameter', 'wheelbase', …). */
+  /**
+   * Quantity name in the record ('diameter', 'wheelbase', 'wingspan', …). Item-valued facts
+   * (`items`: track 'gauge', 'wheelArrangement') carry a label, not metres: type those by hand.
+   */
   readonly from: string;
   readonly label: string;
   readonly axis: Axis;
@@ -53,6 +56,12 @@ export const citeWikidata = (r: WikidataRecord): string =>
 
 export function quantity(r: WikidataRecord, name: string): number {
   const q = r.quantities[name];
+  const item = r.items[name];
+  if (!q && item)
+    throw new Ts23dError('T3D_DATA_PROPERTY', {
+      cause: `Wikidata ${r.qid} (${r.label}) records '${name}' as an item (${item.label}, ${item.qid}), not a quantity in metres or kilograms`,
+      fix: `look up what ${item.label} measures, declare that value in SI units by hand and cite its source in sources`,
+    });
   if (!q)
     throw new Ts23dError('T3D_DATA_PROPERTY', {
       cause: `Wikidata ${r.qid} (${r.label}) has no '${name}' — it has: ${Object.keys(r.quantities).join(', ') || 'no quantities'}`,

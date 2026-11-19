@@ -48,6 +48,7 @@ import {
   rearPlate,
   sideExtensions,
 } from './rear.ts';
+import { COLUMN, type Coating, coatFaces, coating, TURRET_PITCH } from './zimmerit.ts';
 
 const dunkelgelb = hex('#b89d63');
 const rotbraun = hex('#6e3b2a');
@@ -61,6 +62,10 @@ const white = hex('#e8e6dc');
 const wood = hex('#7a5a3a');
 const rust = hex('#5a3a2a');
 const bare = hex('#7d766c');
+/** Raw Zimmerit paste where the coat broke (barium sulphate, ochre, sawdust: grey-ochre). */
+const paste = hex('#b0a588');
+/** Red-oxide primer under factory Zimmerit (README "Zimmerit"). */
+const primer = hex('#a2573a');
 
 /** Authoring colour → material: painted steel takes the paint as vertex colour (chips show the
  *  steel), rubber tyres, rusted manganese-steel track, cast/forged tool heads, ash handles. */
@@ -72,6 +77,7 @@ const STRIP_RULES: readonly StripRule[] = [
   { from: rust, strip: 'iron_rust', color: hex('#c09a80') },
   { from: steel, strip: 'iron_cast', color: hex('#c8c4be') },
   { from: bare, strip: 'aluminium', color: hex('#9a948a') },
+  { from: primer, strip: 'steel_painted' },
   { from: wood, strip: 'oak', color: hex('#e0d0bc') },
 ];
 
@@ -107,6 +113,29 @@ const GLACIS_TOP: Vec2 = [HULL_FRONT - 0.1 * TAN81, 1.3];
 /** Driver's front plate: 100 mm at 9°. */
 const frontX = (z: number): number => GLACIS_TOP[0] - (z - GLACIS_TOP[1]) * TAN9;
 const TURRET_AT: Vec3 = [0.15, 0, DECK + RING];
+/** Shifts the flake field: ≈ 10 % of the coat broken off, more at plate edges (README). */
+const FLAKE_BIAS = -0.05;
+/** The coating weighs as a 6 mm skin of paste, not as the volume its curve encloses. */
+const ZIM_MASS = { density: 1600, shell: 0.006 } as const;
+
+/** LOD1/2 plates that carry Zimmerit (triangle centre and normal, hull space). */
+const onHullPlates = (c: Vec3, n: Vec3): boolean =>
+  (Math.abs(n[1]) > 0.95 && Math.abs(c[1]) > SIDE_Y - 0.01 && c[2] > PANNIER_Z && c[2] < DECK) ||
+  (n[0] > 0.9 && n[2] > 0.1 && c[2] > 1.3 && c[2] < DECK) ||
+  (n[0] > 0.85 && n[2] < -0.3 && c[2] > 0.9 && c[2] < 1.2) ||
+  (n[0] < -0.95 && c[2] > PANNIER_Z && c[2] < DECK);
+
+/** LOD1/2 mantlet face and curled ends (gun space): not the back, collar, coax or roof. */
+const onMantletFace = (c: Vec3, n: Vec3): boolean =>
+  Math.abs(n[2]) < 0.3 && n[0] > -0.5 && c[0] < 0.222 && Math.abs(c[2]) < 0.35;
+
+/** LOD1/2 turret walls (turret space): horseshoe, cheeks and front plate; not bin or cupola. */
+const onTurretWall = (c: Vec3, n: Vec3): boolean =>
+  Math.abs(n[2]) < 0.3 &&
+  c[2] > 0.02 &&
+  c[2] < 0.84 &&
+  Math.hypot(c[0] + 0.2, c[1]) > 1.1 &&
+  !(c[0] < -1.53 && Math.abs(c[1]) < 0.8);
 
 type Circle = { readonly x: number; readonly z: number; readonly r: number };
 type Station = { readonly p: Vec2; readonly pitch: number; readonly len: number };
@@ -220,7 +249,8 @@ function trackMesh(lod: Lod, line: readonly Vec2[], y: number): Mesh {
           size: [len * 1.04, TRACK_W, LINK_T],
           at: [0, 0, -LINK_T / 2],
           color: trackSteel,
-          ...(lod === 2 ? { omit: ['left', 'right'] as const } : {}),
+          // LOD2 drops only the hull-facing edge: the outboard edge is what a side view shows.
+          ...(lod === 2 ? { omit: [y > 0 ? 'right' : 'left'] as const } : {}),
         });
   return merge(stations.map((s) => place(unit, { at: [s.p[0], y, s.p[1]], pitch: s.pitch })));
 }
@@ -399,64 +429,17 @@ function camoBlobs(rng: Rng): Blob[] {
   return out;
 }
 
-type WallPoint = { readonly p: Vec2; readonly n: Vec2 };
-
-/**
- * Factory Zimmerit: bands of vertical ridges along a wall given in plan (point + outward normal).
- * LOD0 geometry only; becomes a trim-sheet strip once the material generator lands.
- */
-function zimmerit(
-  path: readonly WallPoint[],
-  z0: number,
-  z1: number,
-  lean = 0,
-  chipped: (p: Vec3) => boolean = () => false,
-  pitch = 0.045,
-): Mesh {
-  const band = 0.16;
-  const ridges: Mesh[] = [];
-  const bands = Math.max(1, Math.floor((z1 - z0) / band));
-  const bh = (z1 - z0) / bands;
-  // Troweled on, not stood off: each ridge sinks 4 mm into the plate it coats (16 mm proud).
-  const ridge = box({
-    size: [0.02, 0.016, bh - 0.025],
-    at: [0.006, 0, 0],
-    color: dunkelgelb,
-    omit: ['back', 'bottom'],
-  });
-  for (let i = 0; i + 1 < path.length; i++) {
-    const a = path[i] as WallPoint;
-    const b = path[i + 1] as WallPoint;
-    const len = Math.hypot(b.p[0] - a.p[0], b.p[1] - a.p[1]);
-    const count = Math.max(1, Math.floor(len / pitch));
-    for (let k = 0; k < count; k++) {
-      const t = (k + 0.5) / count;
-      const x = a.p[0] + (b.p[0] - a.p[0]) * t;
-      const y = a.p[1] + (b.p[1] - a.p[1]) * t;
-      const yaw = Math.atan2(a.n[1] + (b.n[1] - a.n[1]) * t, a.n[0] + (b.n[0] - a.n[0]) * t);
-      for (let j = 0; j < bands; j++) {
-        // Sloped plates lean inward by `lean` m per m of height; ridges tilt with them.
-        const zb = z0 + j * bh + 0.0125;
-        const inward = lean * (zb - z0);
-        // Chipped Zimmerit: knocked-off patches where crew climb and branches scrape.
-        if (chipped([x, y, zb])) continue;
-        ridges.push(
-          place(ridge, {
-            at: [x - Math.cos(yaw) * inward, y - Math.sin(yaw) * inward, zb],
-            yaw,
-            pitch: -Math.atan(lean),
-          }),
-        );
-      }
-    }
-  }
-  return merge(ridges);
+/** Flaked Zimmerit: a world-space field, > 0.5 where the coat has broken off to the primer.
+ *  Markings were painted on intact coat, so flakes stay out of their `keep` boxes. */
+function flakes(
+  noise: (p: Vec3) => number,
+  keep: readonly (readonly [Vec3, Vec3])[],
+): (p: Vec3) => number {
+  return (p) =>
+    keep.some(([lo, hi]) => p.every((v, k) => v >= (lo[k] ?? 0) && v <= (hi[k] ?? 0)))
+      ? 0
+      : noise(p) + FLAKE_BIAS;
 }
-
-const straight = (a: Vec2, b: Vec2, n: Vec2): WallPoint[] => [
-  { p: a, n },
-  { p: b, n },
-];
 
 // ---------------------------------------------------------------- small details
 
@@ -557,6 +540,7 @@ export const tiger_1 = defineAsset({
     'https://tankmuseum.org/tiger-wheels/ (800 mm steel wheels with solid rubber tyres, 24 per side)',
     'https://tamiyausa.com/shop/135-military-miniature/german-tiger-i-mid-production (mid production Jul 1943–Jan 1944: new cupola, single headlight, Zimmerit from Sep 1943)',
     'Jentz & Doyle, Germany’s Tiger Tanks: D.W. to Tiger I (Schiffer 2000), stowage and tool layout',
+    'https://tankmuseum.org/article/zimmerit (Zimmerit 6 mm: 2 mm + 4 mm patterned) · https://panzerworld.com/zimmerit (Tiger: vertical columns of horizontal ridges, 200 kg)',
   ],
   real: {
     length: 8.45,
@@ -611,7 +595,10 @@ export const tiger_1 = defineAsset({
     ],
   },
   // LOD2 keeps the interleaved wheels, open belt, camo and markings (critique: no popping).
-  budget: { triangles: [76000, 19000, 3500] },
+  // Measured 68.9k / 17.4k / 3.41k: the Zimmerit is a strip now (11.1k tris of coating slab
+  // with flake cuts at LOD0, none at LOD1/2), not 14.4k tris of ridge boxes.
+  // LOD2: 3506 measured; the 96 triangles over the old 3500 are the tracks' outboard edges.
+  budget: { triangles: [74000, 19000, 3600] },
   // Armour 25–120 mm (top 25, sides 60–80, front 100–120): a 60 mm mean wall approximates the
   // hollow hull and turret for mass; an approximation, not a per-plate model.
   physics: { shell: 0.06 },
@@ -653,8 +640,24 @@ export const tiger_1 = defineAsset({
     };
     const wobble = valueNoise(ctx.rng.fork('overspray'), { scale: 0.45, octaves: 2 });
     const weather = weatherer(ctx.rng.fork('weather'));
-    const chipNoise = valueNoise(ctx.rng.fork('zimmerit'), { scale: 0.18, octaves: 2 });
-    const chipped = (p: Vec3): boolean => chipNoise(p) > 0.5;
+    // Flaked patches 10–40 cm across with a ragged break (the fine field roughens the outline).
+    const chipBody = valueNoise(ctx.rng.fork('zimmerit'), { scale: 0.22, octaves: 2 });
+    const chipEdge = valueNoise(ctx.rng.fork('zimmerit-edge'), { scale: 0.045, octaves: 1 });
+    const chipNoise = (p: Vec3): number => chipBody(p) + 0.12 * chipEdge(p);
+    const coatGrid = {
+      // Flake edges cut on a 4.3 × 3.5 cm grid (LOD0 only: LOD1/2 plates take the strip).
+      ds: COLUMN / 3,
+      dt: 0.035,
+      paint: dunkelgelb,
+      paste,
+      primer,
+    };
+    /** The coating's two layers: painted paste (camo over it) and flaked floors on the primer. */
+    const coatJob = (c: Coating, at: Vec3, w: WeatheringOptions = {}): Mesh => {
+      const o = { at, dust: 0.35, mud: 0.95, mudStrength: 0.9, ...w };
+      const sprayed = camo(tessellate(c.coat, 0.4), dunkelgelb, blobs, wobble, at);
+      return merge([weather(sprayed, o), weather(reproject(restrip(c.bare, STRIP_RULES)), o)]);
+    };
     // Exhaust soot plumes on the rear plate and deck behind the engine.
     const soot = [1, -1].map((s) => ({
       at: [exhaustAt(rearSpec, s).x, s * 0.55, exhaustAt(rearSpec, s).top] as Vec3,
@@ -765,7 +768,6 @@ export const tiger_1 = defineAsset({
       [frontX(DECK), DECK],
       [rearX(DECK), DECK],
     ];
-    const zim: Mesh[] = [];
     const hull: Mesh[] = [
       prism({ profile: tub, depth: 2.0, plane: 'xz', color: dunkelgelb, strip: 'iron' }),
       prism({ profile: upper, depth: SIDE_Y * 2, plane: 'xz', color: dunkelgelb, strip: 'iron' }),
@@ -831,7 +833,9 @@ export const tiger_1 = defineAsset({
             at: [HULL_FRONT - 0.05, s * 1.57, 1.17],
             color: dunkelgelb,
           }),
-          box({ size: [0.16, 0.07, 0.14], at: [HULL_FRONT - 0.08, s * 0.85, 0.72], color: steel }),
+          // Front tow shackle lug: welded into the sloped lower nose plate (it used to stand
+          // 1.2 cm off it), same face 8 cm behind the hull front.
+          box({ size: [0.28, 0.07, 0.14], at: [HULL_FRONT - 0.218, s * 0.85, 0.72], color: steel }),
           box({ size: [0.16, 0.07, 0.14], at: [HULL_REAR + 0.04, s * 0.85, 0.82], color: steel }),
           lathe({
             profile: [
@@ -862,38 +866,80 @@ export const tiger_1 = defineAsset({
           box({ size: [0.1, 0.16, 0.07], at: [2.28, s * 0.72, DECK], color: black }),
         );
       }
-      // Zimmerit on the pannier sides, front plate, nose and rear plate.
-      zim.push(
-        zimmerit(straight([2.35, SIDE_Y], [-2.95, SIDE_Y], [0, 1]), PANNIER_Z, DECK, 0, chipped),
-        zimmerit(straight([-2.95, -SIDE_Y], [2.35, -SIDE_Y], [0, -1]), PANNIER_Z, DECK, 0, chipped),
-        zimmerit(
-          straight([frontX(1.32), -1.55], [frontX(1.32), 1.55], [1, 0]),
-          1.32,
-          1.78,
-          TAN9,
-          chipped,
-        ),
-        zimmerit(
-          straight([noseAt(0.92), -0.98], [noseAt(0.92), 0.98], [1, 0]),
-          0.92,
-          1.18,
-          -TAN25,
-          chipped,
-        ),
-        zimmerit(
-          straight([rearX(1.2), 1.55], [rearX(1.2), -1.55], [-1, 0]),
-          1.2,
-          1.78,
-          TAN9,
-          chipped,
-        ),
-      );
     }
-    // Balkenkreuz on both pannier sides (white edges, black cross), kept to LOD2.
+    // Zimmerit on the pannier sides, driver's plate, nose and rear plate (README "Zimmerit"):
+    // a 6 mm coating slab with flaked patches at LOD0; at LOD1/2 the plates take the strip.
+    const hullCoat =
+      lod === 0
+        ? coating(
+            [
+              {
+                path: [
+                  [2.42, SIDE_Y],
+                  [-3.0, SIDE_Y],
+                ],
+                z0: PANNIER_Z,
+                z1: DECK - 0.004,
+                wear: 1,
+              },
+              {
+                path: [
+                  [-3.0, -SIDE_Y],
+                  [2.42, -SIDE_Y],
+                ],
+                z0: PANNIER_Z,
+                z1: DECK - 0.004,
+                wear: 1,
+              },
+              {
+                path: [
+                  [frontX(1.31), -1.58],
+                  [frontX(1.31), 1.58],
+                ],
+                z0: 1.31,
+                z1: DECK - 0.004,
+                lean: TAN9,
+                wear: 1,
+              },
+              {
+                path: [
+                  [noseAt(0.92), -0.98],
+                  [noseAt(0.92), 0.98],
+                ],
+                z0: 0.92,
+                z1: 1.19,
+                lean: -TAN25,
+                wear: 0.5,
+              },
+              {
+                path: [
+                  [rearX(1.2), 1.55],
+                  [rearX(1.2), -1.55],
+                ],
+                z0: 1.2,
+                z1: DECK - 0.004,
+                lean: TAN9,
+              },
+            ],
+            {
+              ...coatGrid,
+              // Balkenkreuz on both pannier sides: painted on intact coat.
+              flake: flakes(chipNoise, [
+                [
+                  [-1.25, -2, 1.15],
+                  [-0.55, 2, 1.8],
+                ],
+              ]),
+              rng: ctx.rng.fork('zimmerit-hull'),
+            },
+          )
+        : null;
+    // Balkenkreuz on both pannier sides (white edges, black cross), kept to LOD2; painted on the
+    // 6 mm Zimmerit, so it stands just proud of the coat face.
     for (const s of [1, -1]) {
       hull.push(
-        sideDecal(cross(0.26, 0.1), s, -0.9, s * (SIDE_Y + 0.016), 1.48, white),
-        sideDecal(cross(0.23, 0.06), s, -0.9, s * (SIDE_Y + 0.02), 1.48, black),
+        sideDecal(cross(0.26, 0.1), s, -0.9, s * (SIDE_Y + 0.008), 1.48, white),
+        sideDecal(cross(0.23, 0.06), s, -0.9, s * (SIDE_Y + 0.0095), 1.48, black),
       );
     }
     // Structure (closed plates + drive housings) vs dressing (Zimmerit, decals, fittings): the
@@ -901,12 +947,11 @@ export const tiger_1 = defineAsset({
     const structure = 2 + stubs.length;
     // Hull wall: 45 mm is the area-weighted mean of the armour table in README.md (25 mm deck,
     // belly and pannier floors; 60–80 mm sides; 80–100 mm front and rear).
-    ctx.part('hull', paintJob(merge(hull.slice(0, structure)), [0, 0, 0], { soot }), {
-      shell: 0.045,
-    });
-    // Zimmerit is a 5–6 mm cement-like paste, not armour: weighed as paste (unverified, ~1600 kg/m³).
-    if (zim.length > 0)
-      ctx.part('zimmerit', paintJob(merge(zim), [0, 0, 0], { soot }), { density: 1600 });
+    const hullMesh = paintJob(merge(hull.slice(0, structure)), [0, 0, 0], { soot });
+    ctx.part('hull', lod > 0 ? coatFaces(hullMesh, onHullPlates) : hullMesh, { shell: 0.045 });
+    // Zimmerit is a 6 mm cement-like paste, not armour: weighed as a 6 mm skin of paste
+    // (~1600 kg/m³, unverified), ≈ 200 kg over the tank as in the 29 Dec 1943 allotment.
+    if (hullCoat) ctx.part('zimmerit', coatJob(hullCoat, [0, 0, 0], { soot }), ZIM_MASS);
     if (hull.length > structure)
       ctx.part('hull_detail', paintJob(merge(hull.slice(structure)), [0, 0, 0], { soot }));
 
@@ -1119,7 +1164,6 @@ export const tiger_1 = defineAsset({
       const a = ((70 + (220 * i) / arc) * Math.PI) / 180;
       plan.push([-0.2 + 1.33 * Math.cos(a), 1.33 * Math.sin(a)]);
     }
-    const turretZim: Mesh[] = [];
     const turret: Mesh[] = [
       // Turret ring collar (1.79 m ring) standing on the deck.
       lathe({
@@ -1253,20 +1297,22 @@ export const tiger_1 = defineAsset({
           at: [-0.4, 1.3, 0.42],
           color: paintDark,
         }),
+        // The flat hatch on the 1.33 m wall: its base sinks 2.5 cm at the centre so the rim
+        // (2.3 cm sagitta out at its sides) still seats in the wall; it stands 5.5 cm proud.
         place(
           lathe({
             profile: [
               [0.25, 0],
-              [0.25, 0.03],
-              [0.2, 0.05],
-              [0, 0.05],
+              [0.25, 0.06],
+              [0.2, 0.08],
+              [0, 0.08],
             ],
             segments: segs,
             axis: 'x',
             color: paintDark,
           }),
           {
-            at: [-0.2 + 1.33 * Math.cos(hatchA) - 0.01, 1.33 * Math.sin(hatchA), 0.42],
+            at: [-0.2 + 1.305 * Math.cos(hatchA), 1.305 * Math.sin(hatchA), 0.42],
             yaw: hatchA,
           },
         ),
@@ -1290,23 +1336,33 @@ export const tiger_1 = defineAsset({
           );
         }
       }
-      // Zimmerit round the turret walls.
-      const wall: WallPoint[] = plan.map((p, i) => {
-        const q = plan[(i + 1) % plan.length] as Vec2;
-        const o = plan[(i + plan.length - 1) % plan.length] as Vec2;
-        const tx = q[0] - o[0];
-        const ty = q[1] - o[1];
-        const l = Math.hypot(tx, ty) || 1;
-        return { p, n: [ty / l, -tx / l] };
-      });
-      turretZim.push(zimmerit([...wall.slice(1), wall[0] as WallPoint], 0.05, 0.82, 0, chipped));
     }
     // Turret number "332", outlined digits (Bundesarchiv Bild 101I-277-0846-08), both sides,
-    // reading front-to-back on the left and back-to-front on the right.
+    // reading front-to-back on the left and back-to-front on the right. Painted on the Zimmerit:
+    // each digit lies in the tangent plane of the wall facet under its centre (a supporting
+    // plane of the convex plan, so the wall never pokes through), just proud of the 6 mm coat.
+    const onWall = (poly: readonly Vec2[], s: number, x: number, off: number, c: Vec3): Mesh => {
+      const xc = x - s * 0.075;
+      const k = plan.findIndex((p, j) => {
+        const q = plan[(j + 1) % plan.length] as Vec2;
+        return p[1] * s > 0 && q[1] * s > 0 && (p[0] - xc) * (q[0] - xc) <= 0;
+      });
+      const p = plan[k] as Vec2;
+      const q = plan[(k + 1) % plan.length] as Vec2;
+      const l = Math.hypot(q[0] - p[0], q[1] - p[1]);
+      const t: Vec2 = [(q[0] - p[0]) / l, (q[1] - p[1]) / l];
+      const f = (xc - p[0]) / (q[0] - p[0]);
+      const w: Vec2 = [xc + t[1] * off, p[1] + (q[1] - p[1]) * f - t[0] * off];
+      return planar({
+        points: poly.map(
+          ([u, v]): Vec3 => [w[0] + t[0] * (u - 0.075), w[1] + t[1] * (u - 0.075), 0.3 + v],
+        ),
+        color: c,
+      });
+    };
     for (const s of [1, -1])
       [3, 3, 2].forEach((d, i) => {
         const x = s > 0 ? 0.05 - i * 0.22 : -0.39 + i * 0.22;
-        const y = s * (Math.sqrt(1.33 ** 2 - (x + 0.2) ** 2) + 0.022);
         for (const rect of digitRects(d, 0.3)) {
           const grow = rect.map(
             ([u, v], k): Vec2 => [
@@ -1314,21 +1370,52 @@ export const tiger_1 = defineAsset({
               v + (k < 2 ? -0.012 : 0.012),
             ],
           );
-          turret.push(sideDecal(grow, s, x, y - s * 0.004, 0.3, black));
-          turret.push(sideDecal(rect, s, x, y, 0.3, white));
+          turret.push(onWall(grow, s, x, 0.0075, black));
+          turret.push(onWall(rect, s, x, 0.0085, white));
         }
       });
     // Turret wall: 80 mm sides, 25 mm roof and an open bottom (the closed prism's floor is not
     // real armour): ~45 mm area-weighted over the closed solid.
-    ctx.part('turret_body', paintJob(merge(turret), TURRET_AT, { dust: 0.4 }), {
-      parent: 'turret',
-      shell: 0.045,
-    });
-    if (turretZim.length > 0)
-      ctx.part('turret_zimmerit', paintJob(merge(turretZim), TURRET_AT), {
+    const turretMesh = paintJob(merge(turret), TURRET_AT, { dust: 0.4 });
+    ctx.part(
+      'turret_body',
+      lod > 0 ? coatFaces(turretMesh, onTurretWall, TURRET_PITCH) : turretMesh,
+      { parent: 'turret', shell: 0.045 },
+    );
+    // Zimmerit round the turret walls (Wegmann's coarser ridges), from the flat cheeks behind the
+    // front plate round the horseshoe to the other cheek, plus the front plate the mantlet leaves.
+    if (lod === 0) {
+      const turretCoat = coating(
+        [
+          { path: [...plan.slice(1), plan[0] as Vec2], z0: 0.03, z1: 0.83, pitch: TURRET_PITCH },
+          // Front plate beside the mantlet's curled ends (clear of its elevation sweep).
+          ...[-1, 1].map((s) => ({
+            path: [
+              [1.0, s < 0 ? -1.15 : 0.98],
+              [1.0, s < 0 ? -0.98 : 1.15],
+            ] as Vec2[],
+            z0: 0.03,
+            z1: 0.83,
+            pitch: TURRET_PITCH,
+          })),
+        ],
+        {
+          ...coatGrid,
+          // Turret number on both sides: painted on intact coat.
+          flake: flakes(chipNoise, [
+            [
+              [-0.6, -2, 0.24],
+              [0.24, 2, 0.68],
+            ],
+          ]),
+          rng: ctx.rng.fork('zimmerit-turret'),
+        },
+      );
+      ctx.part('turret_zimmerit', coatJob(turretCoat, TURRET_AT), {
         parent: 'turret',
-        density: 1600,
+        ...ZIM_MASS,
       });
+    }
 
     // ---- Gun: curved mantlet with coax and sight ports; KwK 36 L/56 with muzzle brake ----
     // The elevation sweep is checked as a full turn about the trunnion, so it necessarily passes
@@ -1412,7 +1499,24 @@ export const tiger_1 = defineAsset({
       }
     }
     const gunAt: Vec3 = [TURRET_AT[0] + 1.0, 0, TURRET_AT[2] + 0.42];
-    ctx.part('gun_mantlet', paintJob(merge(mParts), gunAt), { parent: 'gun' });
+    const mantlet = paintJob(merge(mParts), gunAt);
+    ctx.part('gun_mantlet', lod > 0 ? coatFaces(mantlet, onMantletFace) : mantlet, {
+      parent: 'gun',
+    });
+    // Zimmerit on the mantlet face and its curled ends (both reference photos show it coated).
+    if (lod === 0)
+      ctx.part(
+        'gun_zimmerit',
+        coatJob(
+          coating([{ path: plate, z0: -0.34, z1: 0.34, pitch: TURRET_PITCH, wear: 0.5 }], {
+            ...coatGrid,
+            flake: flakes(chipNoise, []),
+            rng: ctx.rng.fork('zimmerit-mantlet'),
+          }),
+          gunAt,
+        ),
+        { parent: 'gun', ...ZIM_MASS },
+      );
     const breech = 4.14 - 4.928;
     ctx.part(
       'gun_barrel',

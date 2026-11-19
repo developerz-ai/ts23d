@@ -34,7 +34,8 @@ export interface TouchOptions extends LodOptions {
   readonly eps?: number;
 }
 
-/** Parts matching `a` come within `eps` of parts matching `b` (names or globs), every LOD. */
+/** Every part matching `a` comes within `eps` of parts matching `b` (names or globs), every LOD:
+ *  one finding per part beyond `eps`. Returns the worst part's distance. */
 export function assertTouches(asset: Asset, a: string, b: string, o: TouchOptions = {}): number {
   const eps = o.eps ?? 0.002;
   let worst = 0;
@@ -54,22 +55,24 @@ export function assertTouches(asset: Asset, a: string, b: string, o: TouchOption
             },
           },
         ];
-      const d = q.distance(a, b, 1);
-      worst = Math.max(worst, d);
-      return d <= eps
-        ? []
-        : [
-            {
-              lod: c.lod,
-              finding: {
-                gate: 'touches',
-                code: 'T3D_QA_TOUCHES',
-                part: a,
-                message: `'${a}' is ${cm(d)} from '${b}', must be within ${cm(eps)}`,
-                fix: `move or extend '${a}' onto '${b}' — a visible slot reads as a modelling error`,
+      return q.parts(a).flatMap((part) => {
+        const d = q.distance(part, b, 1);
+        worst = Math.max(worst, d);
+        return d <= eps
+          ? []
+          : [
+              {
+                lod: c.lod,
+                finding: {
+                  gate: 'touches',
+                  code: 'T3D_QA_TOUCHES',
+                  part,
+                  message: `'${part}' is ${cm(d)} from '${b}', must be within ${cm(eps)}`,
+                  fix: `move or extend '${part}' onto '${b}' — a visible slot reads as a modelling error`,
+                },
               },
-            },
-          ];
+            ];
+      });
     }),
   );
   return worst;

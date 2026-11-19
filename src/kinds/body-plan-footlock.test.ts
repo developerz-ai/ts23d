@@ -6,6 +6,7 @@ import { type Clip, quatRotate, type Vec3 } from '../core/index.ts';
 import { clipPose, jointWorlds } from '../qa/clip-pose.ts';
 import { bodyPlan } from './body-plan.ts';
 import { HYDRA } from './body-plan-fixtures.ts';
+import { lockFeet } from './body-plan-footlock.ts';
 import type { BodyPlan } from './body-plan-types.ts';
 import { hydraClips } from './neck-clips.ts';
 
@@ -50,6 +51,33 @@ describe('foot lock', () => {
   it('holds every foot on its rest point when legs are named', () => {
     const c = strike({ legs });
     for (const l of legs) expect(worstSlide(c, `${l}_2`)).toBeLessThan(0.0015);
+  });
+
+  it('keeps each key in the hemisphere of the one before, through turns near 180°', () => {
+    // The root circles 1 m wide: the leg swings past 180°, where the sign of w alone says nothing.
+    const leg = plan.chains.filter((c) => c.id === 'fore_l');
+    const n = 13;
+    const times = Float32Array.from({ length: n }, (_, i) => i / 30);
+    const values = new Float32Array(n * 3);
+    for (let k = 0; k < n; k++) {
+      const a = (k / (n - 1)) * 2 * Math.PI;
+      values.set([0, Math.sin(a), 1 - Math.cos(a)], k * 3);
+    }
+    const circling: Clip = {
+      name: 'circle',
+      seconds: (n - 1) / 30,
+      loop: true,
+      tracks: [{ bone: 'body_0', path: 'translation', times, values }],
+    };
+    const turned = lockFeet(circling, 'body_0', leg).tracks.filter((t) => t.path === 'rotation');
+    expect(turned.length).toBe(3);
+    for (const t of turned)
+      for (let k = 1; k < n; k++) {
+        let dot = 0;
+        for (let j = 0; j < 4; j++)
+          dot += (t.values[k * 4 + j] ?? 0) * (t.values[(k - 1) * 4 + j] ?? 0);
+        expect(dot).toBeGreaterThanOrEqual(0);
+      }
   });
 
   it('refuses a leg it cannot solve', () => {

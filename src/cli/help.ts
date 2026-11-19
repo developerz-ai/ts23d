@@ -1,11 +1,12 @@
 // `t3d` help text: the command list, one block per command (`t3d <cmd> --help`), the flags, and
-// the closest-name suggestion for a typo. The CLI requires Bun (`bunx t3d …`); the library runs
-// under Node too.
+// the closest-name suggestion for a typo. The CLI requires Bun (`bunx -p @developerz.ai/ts23d t3d …`);
+// the library runs under Node too.
 
 import { join } from 'node:path';
 import { Ts23dError } from '../core/index.ts';
 
-const USAGE = 'usage: t3d <command> <recipe.ts…> [flags]   (requires Bun: bunx t3d …)';
+const USAGE =
+  'usage: t3d <command> <recipe.ts…> [flags]   (requires Bun: bunx -p @developerz.ai/ts23d t3d …)';
 
 /** Every command, with its help block (first line = the summary). */
 export const COMMAND_HELP: Readonly<Record<string, string>> = {
@@ -25,7 +26,7 @@ export const COMMAND_HELP: Readonly<Record<string, string>> = {
   blender:
     "blender t3d blender review <recipe.ts> --out <dir> (the module's BLENDER_REVIEW = { mesh, steps, skeleton? }) or --mesh <glb> --program <json> [--skeleton <json>]: runs the Blender step program with a review step and writes clay / wire / weights / poses / turnaround PNG sheets + review.md; --views a,b --size px --pose bone:axis:degrees --scripts <dir> --software-gpu; needs Blender (t3d setup tools); never cached. t3d blender session start --mesh <glb> [--skeleton <json>] [--name n] [--idle min] [--software-gpu] · run <batch.json> · undo · status · finish --out <program.json> · stop (--json): one open Blender for chained work; finish writes a program, assets come from replaying it with t3d neural run",
   neural:
-    'neural  t3d neural ls (models from t3d.config.ts adapters) · t3d neural run <recipe.ts…> fills recipes/<name>/neural/<key>/; --require-neural: a miss is an error; paid adapters print estimated credits and need --yes-spend above 50',
+    'neural  t3d neural ls (models from t3d.config.ts adapters) · t3d neural run <recipe.ts…> fills recipes/<name>/neural/<key>/; --require-neural: a miss is an error; paid adapters (Meshy, Kubeez) print estimated credits and need --yes-spend above 50 or for a job they cannot price',
   mcp: 'mcp     stdio MCP server for agents (build, shot, hero, blueprint, review, critique, list_recipes, explain_error); optional — the CLI with --json does the same',
   hero: 'hero    beauty render only → <out>/<asset>/hero.png (3/4 product shot, textured, shadowed)',
   review:
@@ -79,8 +80,10 @@ const FLAGS = `flags:
                   web (one MSFT_lod file, 2048 sheet). Explicit --lods/--sheet-size win
   --physics       rigid body + fitted colliders + mass (KHR_physics_rigid_bodies / KHR_implicit_shapes, Khronos drafts)
   --no-sounds     skip <clip>.wav files and KHR_audio_emitter for assets with sounds (default: written beside the GLB)
-  --json          one JSON envelope on stdout: { ok, data } or { ok: false, error: { code, message, fix } };
-                  human text goes to stderr
+  --json          one JSON envelope on stdout: { ok: true, data } · { ok: false, error: { code, message, fix } }
+                  · { ok: false, error, data } (some assets failed; only QA failed: a summary error, the
+                  findings in data[].qa.findings); error is always there when ok is false. build items:
+                  manifest + dir (the folder its relative files are in). Human text goes to stderr
   --help, -h      this text · t3d <command> --help: that command only · --version: the package version
 exit: 0 ok · 1 QA findings or a coded error (T3D_*, with fix:) · 2 usage error (T3D_CLI_USAGE)`;
 
@@ -113,6 +116,11 @@ function distance(a: string, b: string): number {
 
 /** The candidate nearest to `word` (ties: first listed). */
 export function closest(word: string, candidates: readonly string[]): string {
+  // `-o` is a short flag t3d does not have: the long flag with that letter beats edit distance
+  // (which would pick `-h`).
+  const short = /^-([a-z])$/i.exec(word)?.[1];
+  const long = short && candidates.find((c) => c.startsWith(`--${short}`));
+  if (long) return long;
   let best = candidates[0] ?? '';
   for (const c of candidates) if (distance(word, c) < distance(word, best)) best = c;
   return best;

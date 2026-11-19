@@ -1,7 +1,7 @@
 // Measuring overlays for the viewer, as three.js objects: L × W × H dimension lines with arrow
 // heads and metre labels (anchors the tools pin HTML tags to) round the model's box, and a 1.8 m
 // figure for scale. The ruler reuses `measureLine`. Builders only: the tools module decides
-// when they show.
+// when they show, and frees what it built with `clearOverlay`.
 
 import {
   type Box3,
@@ -19,6 +19,20 @@ import {
   SphereGeometry,
   Vector3,
 } from 'three';
+
+/**
+ * Empty an overlay group and free the GPU buffers and programs of everything in it. Every builder
+ * here makes its own geometries and materials (nothing is shared with the model or with another
+ * overlay), so all of them go; a geometry two arrow heads share is simply disposed twice.
+ */
+export function clearOverlay(group: Group): void {
+  group.traverse((o) => {
+    if (!(o instanceof Mesh) && !(o instanceof Line)) return;
+    o.geometry.dispose();
+    for (const m of [o.material].flat()) m.dispose();
+  });
+  group.clear();
+}
 
 export const metres = (m: number): string =>
   m >= 10 ? `${m.toFixed(1)} m` : m >= 1 ? `${m.toFixed(2)} m` : `${(m * 100).toFixed(1)} cm`;

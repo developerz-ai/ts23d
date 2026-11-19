@@ -2,7 +2,8 @@
 // clip closes its seam (last key = first; a root's horizontal travel excepted). For clips that
 // move the root, each foot (a leaf bone reaching the ground) is sampled at 30 fps with the root
 // motion applied, i.e. at the manifest's root speed: a planted foot (its toe within 3 mm of its
-// lowest point) may slide < 1 mm per frame (T3D_GAIT_FOOT_SLIDE) and no foot sinks more than
+// lowest point; a foot that never lifts 3 mm is planted throughout) may slide < 1 mm per frame
+// and must be planted over some frame pair (T3D_GAIT_FOOT_SLIDE), and no foot sinks more than
 // 2 mm below its rest height. Clips that stay in place have no ground speed to slide against;
 // there the SKIN of each foot may not dip more than 3 mm under the floor (gait-skin.ts). A foot
 // ends a limb (chain-bones.ts): a serpent's tail or a tentacle's tip lying low is not one, and a
@@ -23,6 +24,9 @@ export const CONTACT_BAND = 0.003;
 /** …or within this share of its step height, when smaller: a fox's 4 cm step peels off the toe
  *  2.7 mm up at lift-off, which is swing, not a planted foot sliding. */
 export const CONTACT_SHARE = 0.05;
+/** …but never under this: a band of microns (a foot that barely lifts) would call every frame
+ *  swing and measure no slide at all. */
+export const CONTACT_FLOOR = 0.001;
 /** How far a foot may dip under its rest height, metres. */
 export const SINK_LIMIT = 0.002;
 /** Seam tolerance: first and last key may differ by this (quaternion components, metres). */
@@ -112,16 +116,31 @@ function footFindings(sk: Armature, c: Clip, feet: readonly Bone[]): Finding[] {
     const b = feet[i];
     if (!b || path.length < 2) return;
     const low = Math.min(...path.map((p) => p[2]));
-    const band = Math.min(CONTACT_BAND, CONTACT_SHARE * (Math.max(...path.map((p) => p[2])) - low));
+    const lift = Math.max(...path.map((p) => p[2])) - low;
+    // A foot that never leaves the contact band is on the ground the whole clip.
+    const band =
+      lift < CONTACT_BAND
+        ? CONTACT_BAND
+        : Math.max(CONTACT_FLOOR, Math.min(CONTACT_BAND, CONTACT_SHARE * lift));
     let worst = 0;
     let at = 0;
+    let planted = 0;
     for (let f = 1; f < path.length; f++) {
       const p = path[f] ?? [0, 0, 0];
       const q = path[f - 1] ?? [0, 0, 0];
       if (p[2] > low + band || q[2] > low + band) continue;
+      planted++;
       const d = Math.hypot(p[0] - q[0], p[1] - q[1]);
       if (d > worst) [worst, at] = [d, f];
     }
+    if (planted === 0)
+      out.push(
+        finding(
+          'T3D_GAIT_FOOT_SLIDE',
+          `clip '${c.name}' foot '${b.name}' is never planted: no two frames in a row within ${(band * 1000).toFixed(1)} mm of its lowest point (${GAIT_FPS} fps), so its slide cannot be measured`,
+          'hold the foot at ground height for at least two frames of its stance (lock it with IK baked to keys), or bake the clip in place (no root travel) if nothing walks',
+        ),
+      );
     if (worst > SLIDE_LIMIT)
       out.push(
         finding(

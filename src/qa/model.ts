@@ -8,7 +8,7 @@
 //              better fit; a wrong scale or place leaves joints outside: `skeleton`)
 //   doubled  — one head outline, one leg outline per foot (model-doubled.ts; T3D_MODEL_DOUBLED)
 //   ground   — each foot bone's skin reaches the ground: its lowest vertex within GROUND of
-//              z = 0 (T3D_MODEL_FIT)
+//              z = 0 (T3D_MODEL_FIT); a water asset (`medium: 'water'`) has no ground and no feet
 // Thresholds were measured on the Pixal3D wolf (model.test.ts has the numbers).
 
 import type { Armature, Bone, CompiledAsset, Mesh, Part, Vec3 } from '../core/index.ts';
@@ -106,7 +106,7 @@ export function lowestSkin(
 const ZERO: Vec3 = [0, 0, 0];
 
 /** `mesh` is the part's WORLD mesh (its whole parent chain applied): bones are asset-frame. */
-function partFindings(p: Part, mesh: Mesh, sk: Armature | undefined): Finding[] {
+function partFindings(p: Part, mesh: Mesh, sk: Armature | undefined, water: boolean): Finding[] {
   const out: Finding[] = [];
   const std = p.textures ? albedoSpread(p.textures.albedo, mesh) : 0;
   if (!(std >= TEXTURE_STD))
@@ -155,7 +155,7 @@ function partFindings(p: Part, mesh: Mesh, sk: Armature | undefined): Finding[] 
         'register the model first (kinds `modelFit`: yaw, scale and place), then fit the skeleton; a model facing sideways or at another scale lands here',
       ),
     );
-  for (const d of doubledFeatures(mesh, ZERO, sk))
+  for (const d of doubledFeatures(mesh, ZERO, sk, water ? 'water' : undefined))
     out.push(
       finding(
         'T3D_MODEL_DOUBLED',
@@ -164,7 +164,8 @@ function partFindings(p: Part, mesh: Mesh, sk: Armature | undefined): Finding[] 
         'the mesh was mirrored across a plane that is not its sagittal plane (two muzzles), or a far-side limb was left on it: repose the model before mirroring (kinds modelRig `repose`), drop `symmetric`, or re-roll the concept as an exact side profile',
       ),
     );
-  const feet = feetOf(sk);
+  // A swimmer has no ground to stand on (as in `gait`): its low leaf bones are not feet.
+  const feet = water ? [] : feetOf(sk);
   // 1 cm on a wolf-sized body, the same share of a larger one (a 2 m dragon: 2.4 cm).
   const height = Math.max(...sk.bones.map((b) => Math.max(b.head[2], b.tail[2])));
   const ground = Math.max(GROUND, height * GROUND_SHARE);
@@ -190,6 +191,8 @@ export const model: Gate = (asset: CompiledAsset) => {
   const world = worldMeshes(asset.parts);
   return asset.parts.flatMap((p) => {
     const mesh = world.get(p.name);
-    return p.textures && mesh ? partFindings(p, mesh, asset.skeleton) : [];
+    return p.textures && mesh
+      ? partFindings(p, mesh, asset.skeleton, asset.medium === 'water')
+      : [];
   });
 };

@@ -247,4 +247,36 @@ describe('neural run rounds', () => {
     // One round fills one link; fewer rounds would leave a model body's last ask unfilled.
     expect(ROUNDS).toBeGreaterThanOrEqual(5);
   });
+
+  it('a chain longer than ROUNDS: the request after the last round is missing, not dropped', async () => {
+    const f = join(dir, 'ladder', 'ladder.ts');
+    await rm(join(dir, 'ladder'), { recursive: true, force: true });
+    // Each request appears only once the one before it has an output: ROUNDS + 1 links.
+    await Bun.write(
+      f,
+      `import { box, defineAsset } from '${lib}';
+export const ladder = defineAsset({
+  name: 'ladder',
+  kind: 'prop',
+  budget: { triangles: [12, 12, 12] },
+  build: (ctx) => {
+    for (let i = 0; i < ${ROUNDS + 1}; i++)
+      if (!ctx.neural('image', { seed: i, prompt: 'rung', width: 4, height: 4 })) break;
+    ctx.part('body', box({ size: [1, 1, 1], color: [0.5, 0.5, 0.5] }));
+  },
+});
+`,
+    );
+    const config = resolveConfig({ neural: { image: mockAdapter() } });
+    const r = await neuralRun(f, config, false);
+    expect([r.filled.length, r.missing.length]).toEqual([ROUNDS, 1]);
+    expect(r.missing[0]?.message).toMatch(new RegExp(`after ${ROUNDS} rounds`));
+    await rm(join(dir, 'ladder', 'neural'), { recursive: true, force: true });
+    await expect(neuralRun(f, config, true)).rejects.toThrow(
+      new RegExp(`T3D_NEURAL_MISSING: .*${ROUNDS} rounds`),
+    );
+    // The rerun fills the last link; then the chain is complete.
+    const done = await neuralRun(f, config, true);
+    expect([done.filled.length, done.missing.length]).toEqual([ROUNDS + 1, 0]);
+  });
 });

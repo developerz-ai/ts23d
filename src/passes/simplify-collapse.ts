@@ -1,10 +1,12 @@
 // One half-edge collapse a → b, judged and applied by `simplify`: the faces it removes, the link
 // condition (the points both a and b see must be exactly the apexes of those faces, so no edge
 // becomes non-manifold and closed stays closed), the fold-over test (no remaining face around a
-// turns by more than ~78° when a moves onto b), and the final compaction to a Mesh.
+// turns by more than ~78° when a moves onto b), and the final compaction to a Mesh (skin and
+// morph targets ride along: a surviving vertex keeps its exact attributes).
 
 import type { Mesh } from '../core/index.ts';
 import type { Topology } from './simplify-topology.ts';
+import { carrySkin } from './skin-carry.ts';
 
 /** Live neighbour points of p, ascending. */
 export function neighbours(T: Topology, alive: Uint8Array, p: number): number[] {
@@ -116,5 +118,6 @@ export function compact(m: Mesh, T: Topology, alive: Uint8Array): Mesh {
     uvs: pick(m.uvs, 2),
     colors: pick(m.colors, 3),
     indices: Uint32Array.from(idx),
+    ...carrySkin(m, order),
   };
 }

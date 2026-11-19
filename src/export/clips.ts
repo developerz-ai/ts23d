@@ -3,8 +3,9 @@
 // part's baked Motion, hierarchy.ts) and every declared `Clip` (ADR 013). A clip's track keys a
 // bone (its joint node in every LOD tree) or a part (its node, when the GLB still has it as a
 // pivot). Keys are relative to rest: rotation turns from the rest pose, translation offsets the
-// rest position, scale is absolute, `weights` drives the node's morph targets. Samplers are
-// shared by every LOD, so a clip is stored once in a single-file GLB.
+// rest position, scale is absolute, `weights` drives the node's morph targets. LOD trees share a
+// sampler when their node's rest pose (or morph count) is the same, so a clip is stored once per
+// distinct rest in a single-file GLB; a LOD without the part's morph targets gets no weights key.
 
 import { type Clip, RUN_CLIP, type Track, Ts23dError } from '../core/index.ts';
 import type { BinWriter, Json } from './bin-writer.ts';
@@ -72,18 +73,25 @@ function morphCount(doc: GltfDoc, node: number): number {
   return ((m?.['weights'] as number[] | undefined) ?? []).length;
 }
 
+/** What a track's absolute keys depend on at `node`: two LOD trees share a sampler only when equal. */
+function restKey(doc: GltfDoc, node: number, t: Track): string {
+  const n = doc.nodes[node] ?? {};
+  if (t.path === 'translation') return JSON.stringify(n['translation'] ?? null);
+  if (t.path === 'rotation') return JSON.stringify(n['rotation'] ?? null);
+  return t.path === 'weights' ? String(morphCount(doc, node)) : '';
+}
+
 function clipJson(doc: GltfDoc, c: Clip, trees: readonly ClipTree[]): Json {
   const samplers: Json[] = [];
   const channels: Json[] = [];
   for (const t of c.tracks) {
     const isBone = 'bone' in t;
     const name = isBone ? t.bone : t.part;
-    const nodes = trees.flatMap((tr) => {
+    const found = trees.flatMap((tr) => {
       const id = isBone ? tr.joints.get(name) : tr.parts.get(name);
       return id === undefined ? [] : [id];
     });
-    const first = nodes[0];
-    if (first === undefined)
+    if (found.length === 0)
       return unknown(
         c.name,
         `${isBone ? 'bone' : 'part'} '${name}', which has no node in the GLB`,
@@ -91,25 +99,40 @@ function clipJson(doc: GltfDoc, c: Clip, trees: readonly ClipTree[]): Json {
           ? 'key a bone of the skeleton'
           : 'make the part a pivot (ctx.group or a motion) so merging keeps its node',
       );
+    let nodes = found;
     if (t.path === 'weights') {
       const stride = t.values.length / t.times.length;
-      if (isBone || morphCount(doc, first) !== stride)
+      // A LOD that dropped the part's morphs (LOD-gated) gets no weights channel on it.
+      nodes = isBone ? [] : found.filter((n) => morphCount(doc, n) > 0);
+      const off = isBone ? found[0] : nodes.find((n) => morphCount(doc, n) !== stride);
+      if (off !== undefined)
         unknown(
           c.name,
-          `${stride} morph weights on '${name}', whose mesh has ${isBone ? 0 : morphCount(doc, first)} targets`,
+          `${stride} morph weights on '${name}', whose mesh has ${isBone ? 0 : morphCount(doc, off)} targets`,
           'give one weight per morph target of that part, in Mesh.morphs order',
         );
     }
-    samplers.push({
-      input: doc.bin.accessor(t.times, 'SCALAR', undefined, true),
-      output: doc.bin.accessor(
-        valuesOf(doc, first, t),
-        t.path === 'rotation' ? 'VEC4' : t.path === 'weights' ? 'SCALAR' : 'VEC3',
-      ),
-      interpolation: 'LINEAR',
-    });
-    for (const node of nodes)
-      channels.push({ sampler: samplers.length - 1, target: { node, path: t.path } });
+    if (nodes.length === 0) continue;
+    // One sampler per distinct rest pose: a pivot placed differently per LOD keys from its own.
+    const input = doc.bin.accessor(t.times, 'SCALAR', undefined, true);
+    const byRest = new Map<string, number>();
+    for (const node of nodes) {
+      const key = restKey(doc, node, t);
+      let sampler = byRest.get(key);
+      if (sampler === undefined) {
+        samplers.push({
+          input,
+          output: doc.bin.accessor(
+            valuesOf(doc, node, t),
+            t.path === 'rotation' ? 'VEC4' : t.path === 'weights' ? 'SCALAR' : 'VEC3',
+          ),
+          interpolation: 'LINEAR',
+        });
+        sampler = samplers.length - 1;
+        byRest.set(key, sampler);
+      }
+      channels.push({ sampler, target: { node, path: t.path } });
+    }
   }
   return { name: c.name, samplers, channels, extras: { seconds: c.seconds, loop: c.loop } };
 }
@@ -124,7 +147,11 @@ export function animationsOf(
   const run = doc.channels.length
     ? [{ name: RUN_CLIP, samplers: doc.samplers, channels: doc.channels }]
     : [];
-  const named = clips.map((c) => clipJson(doc, c, trees));
+  // A clip that keys nothing in this file (only morphs this LOD dropped) is left out: glTF
+  // needs at least one channel per animation.
+  const named = clips
+    .map((c) => clipJson(doc, c, trees))
+    .filter((a) => (a['channels'] as Json[]).length > 0);
   return run.length || named.length ? [restClip(doc.bin, roots), ...run, ...named] : [];
 }
 

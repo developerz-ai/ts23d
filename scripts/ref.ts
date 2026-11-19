@@ -202,10 +202,12 @@ export async function refCommand(name: string, o: RefOptions = {}): Promise<stri
   const old: RefFile | null = existsSync(out) ? checkRefFile(await Bun.file(out).json()) : null;
   const views: Partial<Record<RefViewName, RefView>> = {};
   const lines: string[] = [];
+  const skipped: string[] = [];
   const get = o.get ?? fetch;
   for (const link of links) {
     const info = await imageInfo(link.file, o.width ?? 512, get);
     if (!FREE.test(info.licence)) {
+      skipped.push(`${link.view}: ${link.file} (licence '${info.licence}')`);
       lines.push(`· ${link.view}: skipped ${link.file} (licence '${info.licence}' is not CC/PD)`);
       continue;
     }
@@ -224,6 +226,12 @@ export async function refCommand(name: string, o: RefOptions = {}): Promise<stri
     );
     lines.push(`✓ ${link.view}: ${link.file} (${info.licence})`);
   }
+  // A ref.json with no view compares against nothing; checkRefFile refuses it on the next run.
+  if (Object.keys(views).length === 0)
+    throw new Ts23dError('T3D_RECIPE_INVALID', {
+      cause: `ref: every photo in ${readme} was skipped, none is CC or public domain: ${skipped.join('; ')}`,
+      fix: 'link at least one view to a Commons photo licensed CC0, CC BY, CC BY-SA or public domain (the licence is on its Commons page); ref.json was not written',
+    });
   await writeJson(out, { views });
   return [...lines, `wrote ${out}`];
 }

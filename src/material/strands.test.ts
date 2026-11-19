@@ -6,6 +6,8 @@ import { paintKit } from './paint/kit.ts';
 import { STRAND_CELLS, STRAND_LAYOUT, strandCells, strandPainter } from './strands.ts';
 import { STRIP_H } from './trim-sheet.ts';
 
+// A row comes from the id alone: start from an empty table, whatever earlier files registered.
+resetMaterials();
 afterEach(resetMaterials);
 
 /** Paint one strand row at a 2048² sheet's row size (2048 × 32 px). */

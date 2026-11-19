@@ -1,19 +1,20 @@
 // Gate: everything is attached. A part is grounded if some surface of it lies within CONTACT_EPS of
 // z = 0 (or it straddles z = 0) or its SURFACE comes within CONTACT_EPS of a grounded part's
-// surface, transitively. Bounding boxes are only the prefilter. A part wholly below the ground is
+// surface, transitively, or its edges cross into a closed grounded part (floating-contact.ts: a
+// post sunk into its base, a rail through its posts). Bounding boxes are only the prefilter. A part wholly below the ground is
 // its own finding: sunk geometry is invisible and was counted as grounded before (D36). A water
 // asset (`medium: 'water'`) has no ground: its largest connected body, by surface area, holds the
-// rest, and nothing is ever "sunk".
+// rest, and nothing is ever "sunk". Text and order of the findings: floating-findings.ts.
 
 import { type Bounds, type CompiledAsset, type Mesh, worldMeshes } from '../core/index.ts';
+import { edgeGap, edgesTouch } from './floating-contact.ts';
+import { floatingFindings } from './floating-findings.ts';
 import { surfaceSamples, type TriangleGrid } from './geometry.ts';
 import { meshBounds, triangleGrid } from './geometry-cache.ts';
 import { CONTACT_EPS, type Finding, type Gate } from './types.ts';
 
-const CODE = 'T3D_QA_FLOATING_PARTS';
 /** Below this box distance the reported gap is the exact surface distance; beyond, the box's. */
 const EXACT_GAP = 0.3;
-const ANCHOR = 'box and cylinder anchor at their base: `at.z` is the bottom, not the centre';
 
 const near = (a: Bounds, b: Bounds, eps: number): boolean =>
   [0, 1, 2].every(
@@ -27,13 +28,31 @@ const boxGap = (a: Bounds, b: Bounds): number =>
     ),
   );
 
-export function touching(a: Mesh, b: Mesh, grid: TriangleGrid, eps = CONTACT_EPS): boolean {
+/** A sparse sample of `a` (vertices, a few points an edge, centroids) within `eps` of `b`. */
+function sampleTouch(a: Mesh, b: Mesh, grid: TriangleGrid, eps: number): boolean {
   const bb = meshBounds(b);
   for (const p of surfaceSamples(a, 0.1, 4)) {
     if (!near({ min: p, max: p }, bb, eps)) continue;
     if (grid.nearest(p, eps) <= eps) return true;
   }
   return false;
+}
+
+/** `a` reaches `b`: a sample or an edge of `a` within `eps` of `b`'s surface, or an edge of `a`
+ *  crossing into a closed `b` (`grid` is `b`'s). */
+export function touching(a: Mesh, b: Mesh, grid: TriangleGrid, eps = CONTACT_EPS): boolean {
+  return sampleTouch(a, b, grid, eps) || edgesTouch(a, b, eps);
+}
+
+/** Either reaches the other; the cheap sparse samples both ways before the edge walks. */
+function meet(a: Mesh, b: Mesh): boolean {
+  const [ga, gb] = [triangleGrid(a), triangleGrid(b)];
+  return (
+    sampleTouch(a, b, gb, CONTACT_EPS) ||
+    sampleTouch(b, a, ga, CONTACT_EPS) ||
+    edgesTouch(a, b, CONTACT_EPS) ||
+    edgesTouch(b, a, CONTACT_EPS)
+  );
 }
 
 /** Surface distance a → b: exact (sampled) when the boxes are within EXACT_GAP, else the box gap. */
@@ -43,6 +62,8 @@ function gapBetween(a: Mesh, b: Mesh): number {
   let best = EXACT_GAP;
   const grid = triangleGrid(b);
   for (const p of surfaceSamples(a, 0.1, 4)) best = Math.min(best, grid.nearest(p, best));
+  // The sparse samples overstate it (a rail's four points an edge miss the post it passes).
+  best = Math.min(best, edgeGap(a, b, best));
   if (best < EXACT_GAP) return Math.max(box, best);
   // Every sample is past the search radius: the boxes nearly touch but the surfaces don't (a
   // diagonal strut's box against a post). Measure again out to the span of both boxes, which
@@ -79,8 +100,6 @@ function closest(
 
 type Named = readonly [string, Mesh];
 
-const cm = (m: number): string => `${(m * 100).toFixed(1)} cm`;
-
 /** Grows `held` by every part touching it, transitively (`sunk` parts hold nothing). */
 function spread(
   meshes: readonly Named[],
@@ -97,7 +116,7 @@ function spread(
     for (const [n, m] of meshes) {
       const b = bounds.get(n);
       if (held.has(n) || sunk.has(n) || !b || !near(b, gb, CONTACT_EPS)) continue;
-      if (touching(m, gm, triangleGrid(gm)) || touching(gm, m, triangleGrid(m))) {
+      if (meet(m, gm)) {
         held.add(n);
         frontier.push(n);
       }
@@ -158,34 +177,19 @@ export const floatingParts: Gate = (asset: CompiledAsset): Finding[] => {
       );
   if (!water) spread(meshes, bounds, grounded, sunk);
   const holders = meshes.filter(([n]) => grounded.has(n));
-  return meshes.flatMap(([n, m]): Finding[] => {
-    if (sunk.has(n)) {
-      const depth = -(bounds.get(n)?.min[2] ?? 0);
-      return [
-        {
-          gate: 'floating-parts',
-          code: CODE,
-          part: n,
-          gap: depth,
-          message: `'${n}' is wholly below ground: its base is ${depth.toFixed(2)} m under z = 0`,
-          fix: `raise it ${depth.toFixed(2)} m onto the ground or what holds it, or drop it (nobody sees buried geometry); ${ANCHOR}`,
-        },
-      ];
-    }
-    if (grounded.has(n)) return [];
-    const c = closest(m, holders, !water);
-    const onto = c.nearest ? `'${c.nearest}'` : 'the ground';
-    const held = water ? 'the main body' : 'anything attached to the ground';
-    return [
-      {
-        gate: 'floating-parts',
-        code: CODE,
-        part: n,
-        gap: c.gap,
-        ...(c.nearest ? { nearest: c.nearest } : {}),
-        message: `'${n}' has no surface within ${cm(CONTACT_EPS)} of ${held}; nearest support ${onto} is ${cm(c.gap)} away`,
-        fix: `move it ${cm(c.gap)} onto ${onto} (check \`at\`, parent and the LOD-gated detail around it) — bounding boxes touching is not enough; ${ANCHOR}`,
-      },
-    ];
+  const byName = new Map(meshes);
+  const touch = (a: string, b: string): boolean => {
+    const [ma, mb, ba, bb] = [byName.get(a), byName.get(b), bounds.get(a), bounds.get(b)];
+    return !!ma && !!mb && !!ba && !!bb && near(ba, bb, CONTACT_EPS) && meet(ma, mb);
+  };
+  return floatingFindings({
+    floating: meshes.filter(([n]) => !sunk.has(n) && !grounded.has(n)).map(([n]) => n),
+    sunk: meshes.filter(([n]) => sunk.has(n)).map(([n]) => [n, -(bounds.get(n)?.min[2] ?? 0)]),
+    water,
+    touch,
+    closest: (n) => {
+      const m = byName.get(n);
+      return m ? closest(m, holders, !water) : { gap: 0 };
+    },
   });
 };

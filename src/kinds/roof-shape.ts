@@ -7,6 +7,7 @@
 import { Ts23dError, type Vec2, type Vec3 } from '../core/index.ts';
 import type { StripId } from '../material/index.ts';
 import { area2, clipPoly } from './faces.ts';
+import type { RoofChimney } from './roof-chimney.ts';
 
 export type RoofType = 'gable' | 'hip' | 'pyramid' | 'mansard' | 'gambrel' | 'shed';
 export type RoofSide = 'front' | 'back' | 'left' | 'right';
@@ -34,8 +35,14 @@ export interface RoofOptions {
   readonly low?: RoofSide;
   /** Mansard / gambrel upper slope, degrees. Default 20 (mansard), 30 (gambrel). */
   readonly upperPitchDeg?: number;
-  /** Mansard / gambrel: share of the half-span the lower slope covers in plan. Default 0.3 / 0.45. */
+  /**
+   * Share of the half-span the lower slope covers in plan. Gambrel: of the half-span across the
+   * ridge (default 0.45). Mansard: of the shorter half-span, the same run on all four sides
+   * (default 0.3).
+   */
   readonly knee?: number;
+  /** Stacks `roofMesh` builds; each must stand inside the wall line (checked here). */
+  readonly chimneys?: readonly RoofChimney[];
 }
 
 export interface Plane {
@@ -80,6 +87,9 @@ const FRAMES: Record<RoofSide, [Vec2, Vec2]> = {
   ],
 };
 
+/** Default chimney stack [width X, depth Y], metres. */
+export const CHIMNEY_SIZE: readonly [number, number] = [0.9, 0.6];
+
 const bad = (cause: string, fix: string): Ts23dError =>
   new Ts23dError('T3D_RECIPE_INVALID', { cause, fix });
 
@@ -100,8 +110,20 @@ export function validateRoof(o: RoofOptions): void {
   if (!(t > 0 && t < 1))
     throw bad(`roof thickness is ${t}`, 'use 0.1–0.3 m (rafter + battens + slate)');
   const ov = o.overhang ?? 0.35;
-  if (!(ov >= 0 && ov < 3) || !((o.rake ?? ov) >= 0))
+  if (!(ov >= 0 && ov < 3))
     throw bad(`roof overhang is ${ov}`, 'use 0–1.5 m past the wall line (0 for a party wall)');
+  const rake = o.rake ?? ov;
+  if (!(rake >= 0 && rake < 3))
+    throw bad(`roof rake is ${rake}`, 'use 0–1.5 m past the gable wall (0 for a flush verge)');
+  for (const c of o.chimneys ?? []) {
+    const [cw, cd] = c.size ?? CHIMNEY_SIZE;
+    // The shaft starts on the wall plate inside the attic: outside the walls it would hang in air.
+    if (!(Math.abs(c.at[0]) + cw / 2 <= w / 2 && Math.abs(c.at[1]) + cd / 2 <= d / 2))
+      throw bad(
+        `chimney at [${c.at.join(', ')}] (${cw} × ${cd} m) leaves the ${w} × ${d} m roof footprint`,
+        '`at` is the offset from the roof centre: keep the whole stack inside the wall line',
+      );
+  }
   if (o.type === 'mansard' || o.type === 'gambrel') {
     const up = o.upperPitchDeg ?? (o.type === 'mansard' ? 20 : 30);
     if (!(up > 0 && up < o.pitchDeg))
@@ -140,7 +162,10 @@ function underPlanes(o: RoofOptions, L: number, D: number): Plane[] {
     case 'gambrel':
     case 'mansard': {
       const t2 = Math.tan((o.upperPitchDeg ?? (o.type === 'mansard' ? 20 : 30)) * RAD);
-      const r = (o.knee ?? (o.type === 'mansard' ? 0.3 : 0.45)) * Math.min(L, D);
+      // Gambrel: the knee is a share of the half-span across the ridge, whichever way it runs.
+      const r =
+        (o.knee ?? (o.type === 'mansard' ? 0.3 : 0.45)) *
+        (o.type === 'mansard' ? Math.min(L, D) : D);
       // Upper plane: z = r·tp + (D − r − |b|)·t2 → c = r·tp + (D − r)·t2 with slope t2.
       const upper = (half: number): number => r * tp + (half - r) * t2 - half * t2;
       const lower = [...side(tp), ...(o.type === 'mansard' ? ends(tp) : [])];

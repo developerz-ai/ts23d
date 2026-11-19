@@ -43,10 +43,13 @@ export function heightfield(o: HeightfieldOptions): Mesh {
       const x = x0 + i * dx;
       const y = y0 + j * dy;
       const z = o.height(x, y);
+      // Central differences: n ∝ [(hL − hR) / dx, (hD − hU) / dy, 2]. Scaled by min(dx, dy) so a
+      // square grid multiplies by exactly 1 (D-normal on rectangular cells, same bytes on square).
+      const m = Math.min(dx, dy);
       const n = normalize([
-        o.height(x - dx, y) - o.height(x + dx, y),
-        o.height(x, y - dy) - o.height(x, y + dy),
-        2 * Math.min(dx, dy),
+        (o.height(x - dx, y) - o.height(x + dx, y)) * (m / dx),
+        (o.height(x, y - dy) - o.height(x, y + dy)) * (m / dy),
+        2 * m,
       ]);
       const color = typeof o.color === 'function' ? o.color(x, y, z) : o.color;
       const u = (x - x0) / rect.metres;
@@ -83,11 +86,13 @@ function skirt(b: MeshBuilder, o: HeightfieldOptions, rect: ReturnType<typeof st
   ];
   const col = (x: number, y: number, z: number): Vec3 =>
     o.skirtColor ?? (typeof o.color === 'function' ? o.color(x, y, z) : o.color);
-  const v = (x: number, y: number, z: number, n: Vec3, u: number, color: Vec3): number =>
+  // `top`: the upper end of the wall (V = v1). Terrain above the base is the top; terrain below it
+  // is the bottom, and the base line the top, so V never collapses and the wall still faces out.
+  const v = (p: Vec3, n: Vec3, u: number, color: Vec3, top: boolean): number =>
     b.vertex({
-      p: [x, y, z],
+      p,
       n,
-      uv: [rect.u0 + (u / rect.metres) * (rect.u1 - rect.u0), z > base ? rect.v1 : rect.v0],
+      uv: [rect.u0 + (u / rect.metres) * (rect.u1 - rect.u0), top ? rect.v1 : rect.v0],
       color,
     });
   let run = 0;
@@ -99,9 +104,24 @@ function skirt(b: MeshBuilder, o: HeightfieldOptions, rect: ReturnType<typeof st
       const bz = o.height(bx, by);
       const ca = col(ax, ay, az);
       const cb = col(bx, by, bz);
-      const ta = v(ax, ay, az, nrm, run, ca);
-      const tb = v(bx, by, bz, nrm, run + step, cb);
-      b.quad(v(ax, ay, base, nrm, run, ca), v(bx, by, base, nrm, run + step, cb), tb, ta);
+      const [sa, sb] = [Math.sign(az - base), Math.sign(bz - base)];
+      const ta = v([ax, ay, az], nrm, run, ca, sa > 0);
+      const tb = v([bx, by, bz], nrm, run + step, cb, sb > 0);
+      const ba = v([ax, ay, base], nrm, run, ca, sa < 0);
+      const bb = v([bx, by, base], nrm, run + step, cb, sb < 0);
+      if (sa * sb >= 0) {
+        if (sa + sb >= 0) b.quad(ba, bb, tb, ta);
+        else b.quad(ta, tb, bb, ba);
+      } else {
+        // The terrain crosses the base inside this cell: one triangle each side of the crossing.
+        const t = (base - az) / (bz - az);
+        const x: Vec3 = [ax + (bx - ax) * t, ay + (by - ay) * t, base];
+        const cx = col(x[0], x[1], base);
+        const lo = v(x, nrm, run + step * t, cx, false);
+        const hi = v(x, nrm, run + step * t, cx, true);
+        if (sa > 0) b.tri(ba, lo, ta).tri(hi, tb, bb);
+        else b.tri(ta, hi, ba).tri(lo, bb, tb);
+      }
       run += step;
     }
   }

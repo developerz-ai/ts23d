@@ -61,11 +61,10 @@ const ORTHO: Readonly<Record<RefViewName, ArtView>> = {
 /** Views a photographer may shoot facing either way: compare mirrored too. */
 const MIRROR: ReadonlySet<RefViewName> = new Set(['side', 'threeQuarter']);
 
-const bad = (cause: string): never => {
-  throw new Ts23dError('T3D_RECIPE_INVALID', {
-    cause: `ref.json: ${cause}`,
-    fix: 're-generate it with `bun run ref <recipe>`; never hand-edit the derived numbers',
-  });
+const REGENERATE =
+  're-generate it with `bun run ref <recipe>`; never hand-edit the derived numbers';
+const bad = (cause: string, fix = REGENERATE): never => {
+  throw new Ts23dError('T3D_RECIPE_INVALID', { cause: `ref.json: ${cause}`, fix });
 };
 
 function base64(bytes: Uint8Array): string {
@@ -99,9 +98,17 @@ export function maskOfRefPng(png: Uint8Array): { mask: Uint8Array; width: number
 export function checkRefFile(json: unknown): RefFile {
   const views = (json as { views?: unknown } | null)?.views;
   if (typeof views !== 'object' || views === null) return bad('no `views` object');
-  for (const [name, v] of Object.entries(views as Record<string, unknown>)) {
+  const entries = Object.entries(views as Record<string, unknown>);
+  // No view at all: every reference check would pass with nothing compared.
+  if (entries.length === 0)
+    bad(
+      `\`views\` is empty: there is no reference to compare against (${REF_VIEWS.join(', ')})`,
+      'list at least one CC/PD photo under "Photos per view" in the recipe README and run `bun run ref <recipe>`, or delete ref.json',
+    );
+  for (const [name, v] of entries) {
     if (!REF_VIEWS.includes(name as RefViewName))
       bad(`unknown view '${name}' (${REF_VIEWS.join(', ')})`);
+    if (typeof v !== 'object' || v === null) bad(`view '${name}' must be an object`);
     const r = v as Partial<RefView>;
     const nums = (k: 'lab' | 'spectrum' | 'edges', n: number): void => {
       const a = r[k];

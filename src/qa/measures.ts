@@ -23,14 +23,22 @@ function union(bounds: readonly Bounds[]): Bounds | null {
   };
 }
 
+/** A selector names a part exactly or as a prefix (`wheel` → wheel_l, wheel_r). */
+const matches = (name: string, selector: string): boolean =>
+  name === selector || name.startsWith(`${selector}_`);
+
+/** The selectors of `m` that match no mesh part (the blueprint keeps its own copy: same tier). */
+export function unmatchedSelectors(asset: CompiledAsset, m: Measure): string[] {
+  const names = [...worldMeshes(asset.parts).keys()];
+  return [...(m.parts ?? []), ...(m.between ?? [])].filter(
+    (s) => !names.some((n) => matches(n, s)),
+  );
+}
+
 export function measure(asset: CompiledAsset, m: Measure): number | null {
   const meshes = worldMeshes(asset.parts);
   const of = (prefix: string): Bounds | null =>
-    union(
-      [...meshes]
-        .filter(([n]) => n === prefix || n.startsWith(`${prefix}_`))
-        .map(([, mesh]) => boundsOf(mesh)),
-    );
+    union([...meshes].filter(([n]) => matches(n, prefix)).map(([, mesh]) => boundsOf(mesh)));
   const k = AXIS[m.axis];
   if (m.between) {
     const [a, b] = [of(m.between[0]), of(m.between[1])];
@@ -44,14 +52,17 @@ export function measure(asset: CompiledAsset, m: Measure): number | null {
 export const measures: Gate = (asset): Finding[] => {
   if (asset.lod !== 0 || !asset.real?.measures) return [];
   return asset.real.measures.flatMap((m): Finding[] => {
+    // Every selector must match: a typo ('wheel_rr') would otherwise drop out of the union.
+    const missing = unmatchedSelectors(asset, m);
     const got = measure(asset, m);
     const tol = m.tolerance ?? TOLERANCE.measure;
-    if (got === null) {
+    if (missing.length > 0 || got === null) {
+      const named = missing.length ? missing : [...(m.parts ?? m.between ?? [])];
       return [
         {
           gate: 'measures',
           code: 'T3D_QA_MEASURES',
-          message: `'${m.label}': no part matches ${JSON.stringify(m.parts ?? m.between)}`,
+          message: `'${m.label}': no part matches ${named.map((s) => `'${s}'`).join(', ')}`,
           fix: 'name the parts the measure refers to, or fix the names in the measure',
         },
       ];

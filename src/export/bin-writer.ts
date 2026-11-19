@@ -1,4 +1,7 @@
 // Packs typed arrays into one 4-byte-aligned glTF buffer and records bufferViews + accessors.
+// Float data must be finite: JSON writes NaN as null and engines read garbage.
+
+import { Ts23dError } from '../core/index.ts';
 
 export const ARRAY_BUFFER = 34962;
 export const ELEMENT_ARRAY_BUFFER = 34963;
@@ -46,6 +49,7 @@ export class BinWriter {
     /** Integer data read as 0..1 (vertex colour as normalised unsigned short). */
     normalized = false,
   ): number {
+    if (data instanceof Float32Array) finite(data, type);
     const view = this.push(new Uint8Array(data.buffer, data.byteOffset, data.byteLength), target);
     const width = { SCALAR: 1, VEC2: 2, VEC3: 3, VEC4: 4, MAT4: 16 }[type];
     const acc: Json = {
@@ -81,4 +85,13 @@ export class BinWriter {
     }
     return out;
   }
+}
+
+function finite(data: Float32Array, type: string): void {
+  for (let i = 0; i < data.length; i++)
+    if (!Number.isFinite(data[i] ?? 0))
+      throw new Ts23dError('T3D_RECIPE_INVALID', {
+        cause: `a ${type} accessor holds a non-finite value (${data[i]}) at element ${i}`,
+        fix: 'run QA first (the non-finite gate names the part); look for a zero-length normalize or a divide by zero',
+      });
 }

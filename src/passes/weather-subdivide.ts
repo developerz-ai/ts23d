@@ -2,20 +2,28 @@
 // have vertices to live on. Red-green refinement: every edge longer than the limit is split at its
 // midpoint (shared through an edge table), triangles split 1→2, 1→3 or 1→4 by how many of their
 // edges split. The split decision depends only on edge length, so co-located hard edges of two
-// faces split identically: no cracks, no T-junctions. Attributes interpolate linearly.
+// faces split identically: no cracks, no T-junctions. Attributes interpolate linearly; skin
+// weights of a midpoint are the mean of its two ends, back on the 1/255 grid (top 4, sum 1).
 
-import type { Mesh } from '../core/index.ts';
+import { type Mesh, SKIN_INFLUENCES } from '../core/index.ts';
+import { quantise, WEIGHT_STEP } from './skin-weights.ts';
 
 class Grow {
   p: number[];
   n: number[];
   uv: number[];
   c: number[];
+  /** Skin (joints, weights), when the mesh has one. */
+  skin: { readonly j: number[]; readonly w: number[] } | null;
+  morphs: number[][];
   constructor(m: Mesh) {
     this.p = Array.from(m.positions);
     this.n = Array.from(m.normals);
     this.uv = Array.from(m.uvs);
     this.c = Array.from(m.colors);
+    this.skin =
+      m.joints && m.weights ? { j: Array.from(m.joints), w: Array.from(m.weights) } : null;
+    this.morphs = (m.morphs ?? []).map((t) => Array.from(t.positions));
   }
   get count(): number {
     return this.p.length / 3;
@@ -39,7 +47,24 @@ class Grow {
     const nz = ((this.n[a * 3 + 2] ?? 0) + (this.n[b * 3 + 2] ?? 0)) / 2;
     const l = Math.hypot(nx, ny, nz) || 1;
     this.n.push(nx / l, ny / l, nz / l);
+    for (const d of this.morphs) lerp(d, 3);
+    if (this.skin) this.blend(this.skin, a, b);
     return this.count - 1;
+  }
+  /** The mean of two vertices' influences: merged per bone, top 4, re-quantised to sum 1. */
+  private blend(skin: { readonly j: number[]; readonly w: number[] }, a: number, b: number): void {
+    const sum = new Map<number, number>();
+    for (const v of [a, b])
+      for (let s = 0; s < SKIN_INFLUENCES; s++) {
+        const w = skin.w[v * SKIN_INFLUENCES + s] ?? 0;
+        const bone = skin.j[v * SKIN_INFLUENCES + s] ?? 0;
+        if (w > 0) sum.set(bone, (sum.get(bone) ?? 0) + w);
+      }
+    const q = quantise([...sum]);
+    for (let s = 0; s < SKIN_INFLUENCES; s++) {
+      skin.j.push(q[s]?.[0] ?? 0);
+      skin.w.push((q[s]?.[1] ?? 0) * WEIGHT_STEP);
+    }
   }
 }
 
@@ -119,5 +144,14 @@ export function subdivideTo(mesh: Mesh, maxEdge: number, rounds = 10): Mesh {
     uvs: new Float32Array(g.uv),
     colors: new Float32Array(g.c),
     indices: new Uint32Array(idx),
+    ...(g.skin ? { joints: new Uint16Array(g.skin.j), weights: new Float32Array(g.skin.w) } : {}),
+    ...(mesh.morphs
+      ? {
+          morphs: mesh.morphs.map((t, i) => ({
+            name: t.name,
+            positions: new Float32Array(g.morphs[i] ?? []),
+          })),
+        }
+      : {}),
   };
 }

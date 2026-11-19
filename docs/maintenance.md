@@ -38,6 +38,7 @@ gate; a red gate is fixed at the root cause.
 | Docs | claims drift from code; links and badges rot | `conventions` gate (error codes, defect rows); `cleanup` rows `links`, `docs-drift` | rewrite the claim to match the code |
 | Plans and roadmap | plans left `in_progress`, roadmap ticks that lie | `cleanup` row `plans`; `improve` row `claims` | resume, or mark `superseded` with the reason |
 | Repo and package weight | renders and PNGs pile up | `cleanup` row `weight` (compared month to month) | `files` exclusions, smaller PNGs; history rewrite only by a human |
+| CI time | recipes and tests grow; the push → green target is under 5 minutes. Measured 2026-11-18: 9–13 minutes, set by the slowest `shots` shard (the head recipes land together and each of four `t3d` processes re-imports them) and by gate shard 1 (`test` plus its share of recipes) | nothing automatic yet: the target lives in `ci.yml`'s header; `improve` should compare the median `ci` run time on `main` month to month | split shards by measured time (`scripts/lib/shard.ts`), render a recipe's outputs in one process (`scripts/shots.ts`), move recipes off gate shard 1, run test files in parallel; never by dropping a check |
 | Gallery | three.js / Vite majors break the viewer | Dependabot + the `site` CI job; `health` row `pages-deployed` | port the viewer; the site stays a gallery, never a game |
 | The policy itself | schema changes on developerz.ai | the platform validates `maintainer.yml` on ingest | update the file to the published schema |
 

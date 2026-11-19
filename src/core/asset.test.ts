@@ -139,3 +139,74 @@ describe('ctx.use seeds', () => {
     expect(() => compile(host)).toThrow(/T3D_RECIPE_INVALID/);
   });
 });
+
+describe('part, group and use names and placement', () => {
+  const built = (build: Parameters<typeof defineAsset>[0]['build']) =>
+    defineAsset({ name: 'rig', kind: 'prop', budget, build });
+  const codeOf = (fn: () => unknown): string => {
+    try {
+      fn();
+    } catch (e) {
+      if (e instanceof Ts23dError) return e.code;
+      throw e;
+    }
+    return 'no error';
+  };
+
+  it('refuses part and group names that are not snake_case (they became node names)', () => {
+    for (const name of ['Bad Name!', '', '9lives', 'door-left', 'tür'])
+      for (const add of [
+        built((ctx) => ctx.part(name, null)),
+        built((ctx) => ctx.group(name)),
+        built((ctx) => ctx.socket(name, { kind: 'attach' } as never)),
+      ])
+        expect(codeOf(() => compile(add))).toBe('T3D_RECIPE_INVALID');
+    expect(() => compile(built((ctx) => ctx.group('Bad Name!')))).toThrow(/snake_case/);
+  });
+
+  it('refuses a pivot or yaw that is not finite', () => {
+    const bad: readonly Parameters<typeof defineAsset>[0]['build'][] = [
+      (ctx) => ctx.group('g', { at: [Number.NaN, 0, 0] }),
+      (ctx) => ctx.part('p', null, { at: [0, Number.POSITIVE_INFINITY, 0] }),
+      (ctx) => ctx.group('g', { at: [0, 0] as never }),
+      (ctx) => ctx.group('g', { yaw: Number.NaN }),
+    ];
+    for (const build of bad) expect(codeOf(() => compile(built(build)))).toBe('T3D_RECIPE_INVALID');
+  });
+
+  it('refuses an empty or non-snake_case ctx.use prefix, and a bad instance pivot', () => {
+    const child = built((ctx) => ctx.group('leaf'));
+    const using = (
+      o: Parameters<Parameters<Parameters<typeof defineAsset>[0]['build']>[0]['use']>[1],
+    ) => defineAsset({ name: 'town', kind: 'prop', budget, build: (ctx) => ctx.use(child, o) });
+    for (const o of [
+      { prefix: '' },
+      { prefix: 'Bad Prefix' },
+      { prefix: 'ok', at: [0, Number.NaN, 0] as const },
+      { prefix: 'ok', yaw: Number.NaN },
+    ])
+      expect(codeOf(() => compile(using(o)))).toBe('T3D_RECIPE_INVALID');
+    expect(compile(using({ prefix: 'house_3' })).parts.map((p) => p.name)).toEqual([
+      'house_3',
+      'house_3_leaf',
+    ]);
+  });
+
+  it("drops a child's paint slot named like an Object.prototype member the parent lacks", () => {
+    const child = defineAsset({
+      name: 'child',
+      kind: 'prop',
+      budget,
+      paint: { constructor: '#808080' },
+      build: (ctx) => ctx.part('shell', null, { paint: 'constructor' }),
+    });
+    const parent = defineAsset({
+      name: 'parent',
+      kind: 'prop',
+      budget,
+      paint: { body: '#808080' },
+      build: (ctx) => ctx.use(child, { prefix: 'c' }),
+    });
+    expect(compile(parent).parts.find((p) => p.name === 'c_shell')?.paint).toBeUndefined();
+  });
+});

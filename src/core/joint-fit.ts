@@ -87,12 +87,21 @@ function span(m: Mesh, j: Joint): [number, number] {
   return [lo, hi];
 }
 
+const bare = ({ positions, normals, uvs, colors, indices }: Mesh): Mesh => ({
+  positions,
+  normals,
+  uvs,
+  colors,
+  indices,
+});
+
 /** Measure and judge one joint on a compiled asset. */
 export function jointFit(asset: CompiledAsset, j: Joint): JointFit {
   const world = worldMeshes(asset.parts);
   const pick = (sel: string): Mesh | null => {
     const ms = [...world].filter(([n]) => picks(sel, n)).map(([, m]) => m);
-    return ms.length ? merge(ms) : null;
+    // Geometry only: a selector may span a skinned body and a rigid prop (merge refuses that mix).
+    return ms.length ? merge(ms.map(bare)) : null;
   };
   const tol = j.tolerance ?? TOLERANCE.joint;
   const kind = j.kind ?? 'flush';

@@ -1,15 +1,18 @@
 // Skeleton → wood meshes: stems as tapered sweeps (LOD sets radial and path resolution), the
-// trunk with a bark gradient and marks, the buttressed root flare as a lobed `loft`. Plus the
-// fit that scales the finished tree onto its real height and crown spread.
+// trunk with a bark gradient and marks, the buttressed root flare as a lobed `loft`. The fit onto
+// the real height, spread and DBH lives in vegetation-fit.ts.
 
-import { boundsOf, type Mesh, merge, type Rng, type Vec3 } from '../core/index.ts';
+import { type Mesh, merge, type Rng, type Vec3 } from '../core/index.ts';
 import { loft, ringXY, sweep } from '../primitives/index.ts';
 import type { TreeParams } from './vegetation-params.ts';
 import type { Stem } from './vegetation-skeleton.ts';
 
-/** Radial segments per [level][lod]. The trunk's 8 keeps ring vertices on ±Y (exact DBH). */
+/**
+ * Radial segments per [level][lod]. The trunk's 8 (LOD0 and LOD1) keeps ring vertices on ±Y, so
+ * its Y extent is the diameter; 6 would have flats there and read 0.866 × DBH.
+ */
 const RADIAL = [
-  [8, 6, 5],
+  [8, 8, 5],
   [6, 4, 4],
   [4, 3, 3],
   [3, 3, 3],
@@ -80,7 +83,7 @@ export function barkTint(m: Mesh, p: TreeParams, top: number, rng: Rng): Mesh {
   return m;
 }
 
-/** The trunk, radius scaled by `radiusScale` (the fit's 1/sy keeps DBH exact after scaling). */
+/** The trunk, radius scaled by `radiusScale` (the fit picks it so DBH is exact after scaling). */
 export function trunkMesh(
   trunk: Stem,
   p: TreeParams,
@@ -101,7 +104,7 @@ export function trunkMesh(
 }
 
 /** Trunk axis point at height z (linear between path points). */
-function axisAt(trunk: Stem, z: number): Vec3 {
+export function axisAt(trunk: Stem, z: number): Vec3 {
   for (let i = 1; i < trunk.pts.length; i++) {
     const a = trunk.pts[i - 1] ?? [0, 0, 0];
     const b = trunk.pts[i] ?? a;
@@ -113,7 +116,10 @@ function axisAt(trunk: Stem, z: number): Vec3 {
   return [0, 0, z];
 }
 
-/** Buttressed flare: `p.roots` lobes, wide at the ground, melting into the trunk by ~2·DBH. */
+/**
+ * Buttressed flare: `p.roots` lobes, wide at the ground, melting into the trunk by ~1.2·DBH.
+ * `radiusScale` widens the rings only: the flare's height comes from the real trunk radius.
+ */
 export function rootsMesh(
   trunk: Stem,
   p: TreeParams,
@@ -121,7 +127,8 @@ export function rootsMesh(
   radiusScale: number,
   rng: Rng,
 ): Mesh {
-  const r0 = (trunk.radii[0] ?? 0.2) * radiusScale;
+  const r0 = trunk.radii[0] ?? 0.2;
+  const rr = r0 * radiusScale;
   const lobes = p.roots ?? 0;
   const phase = rng.range(0, Math.PI * 2);
   const levels = [
@@ -134,43 +141,8 @@ export function rootsMesh(
   const rings = levels.map(({ z, k, amp }) => {
     const c = axisAt(trunk, z);
     const lobe = (a: number): number => 1 + amp * Math.max(0, Math.cos(lobes * (a - phase))) ** 2;
-    return ringXY(c, r0 * k, r0 * k, segs, lobe);
+    return ringXY(c, rr * k, rr * k, segs, lobe);
   });
   const m = loft({ rings, color: p.bark, strip: 'wood' });
   return barkTint(m, p, trunk.pts[trunk.pts.length - 1]?.[2] ?? 1, rng);
-}
-
-/** Per-axis factors that bring the union of `meshes` to `target` = [X, Y, Z] spans. */
-export function fitFactors(meshes: readonly Mesh[], target: Vec3): Vec3 {
-  const lo = [Infinity, Infinity, Infinity];
-  const hi = [-Infinity, -Infinity, -Infinity];
-  for (const m of meshes) {
-    if (m.indices.length === 0) continue;
-    const b = boundsOf(m);
-    for (let k = 0; k < 3; k++) {
-      lo[k] = Math.min(lo[k] ?? 0, b.min[k] ?? 0);
-      hi[k] = Math.max(hi[k] ?? 0, b.max[k] ?? 0);
-    }
-  }
-  const f = (k: 0 | 1 | 2): number => target[k] / Math.max(1e-6, (hi[k] ?? 1) - (lo[k] ?? 0));
-  return [f(0), f(1), f(2)];
-}
-
-/** Non-uniform scale about the origin; normals by the inverse transpose, renormalised. */
-export function scaleMesh(m: Mesh, s: Vec3): Mesh {
-  const positions = new Float32Array(m.positions.length);
-  const normals = new Float32Array(m.normals.length);
-  for (let i = 0; i < positions.length; i += 3) {
-    positions[i] = (m.positions[i] ?? 0) * s[0];
-    positions[i + 1] = (m.positions[i + 1] ?? 0) * s[1];
-    positions[i + 2] = (m.positions[i + 2] ?? 0) * s[2];
-    const nx = (m.normals[i] ?? 0) / s[0];
-    const ny = (m.normals[i + 1] ?? 0) / s[1];
-    const nz = (m.normals[i + 2] ?? 0) / s[2];
-    const l = Math.hypot(nx, ny, nz) || 1;
-    normals[i] = nx / l;
-    normals[i + 1] = ny / l;
-    normals[i + 2] = nz / l;
-  }
-  return { ...m, positions, normals };
 }

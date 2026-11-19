@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test';
 import { box, cylinder, lathe } from '../primitives/index.ts';
-import { compile, defineAsset, jointFit } from './index.ts';
+import { compile, defineAsset, jointFit, type Mesh } from './index.ts';
 
 const C: [number, number, number] = [0.8, 0.7, 0.6];
 
@@ -92,5 +92,34 @@ describe('local joint sections', () => {
     const f = fit(wristWithFarPiece());
     expect(f.findings).toEqual([]);
     expect(f.to?.width ?? 0).toBeCloseTo(0.08, 2);
+  });
+});
+
+describe('joints on a skinned asset', () => {
+  it('measures a side made of a skinned mesh and a rigid one (geometry only, no skin merge)', () => {
+    const skinned = (m: Mesh): Mesh => {
+      const n = m.positions.length / 3;
+      const weights = Float32Array.from({ length: n * 4 }, (_, i) => (i % 4 === 0 ? 1 : 0));
+      return { ...m, joints: new Uint16Array(n * 4), weights };
+    };
+    const horse = defineAsset({
+      name: 'horse',
+      kind: 'prop',
+      budget: { triangles: [9999, 9999, 9999] },
+      build(ctx) {
+        ctx.bone('spine', { head: [0, 0, 0.5], tail: [0.5, 0, 0.5] });
+        ctx.part('body', skinned(box({ size: [1, 0.4, 1], color: C })));
+        ctx.part('body_saddle', box({ size: [0.3, 0.42, 0.1], at: [0, 0, 1], color: C }));
+        ctx.part('rider', box({ size: [0.2, 0.2, 0.5], at: [0, 0, 1.1], color: C }));
+        // `body` selects body + body_saddle: one skinned, one rigid.
+        ctx.joint('seat', { from: 'body', to: 'rider', at: [0, 0, 1.1], axis: [0, 0, 1] });
+      },
+    });
+    const c = compile(horse);
+    const seat = c.joints?.[0];
+    if (!seat) throw new Error('the fixture declares a joint');
+    const fit = jointFit(c, seat);
+    expect(fit.from).not.toBeNull();
+    expect(fit.to).not.toBeNull();
   });
 });

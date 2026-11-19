@@ -39,6 +39,19 @@ describe('defineAsset validation', () => {
     expect(thrown(define({ seed: Number.NaN }))).toMatch(invalid);
   });
 
+  it('refuses a between that is not exactly two parts, and both or neither of parts/between', () => {
+    const only = (m: Partial<Measure>) =>
+      define({ real: { ...real, measures: [{ label: 'arm', value: 1, axis: 'x', ...m }] } });
+    const between = /^T3D_RECIPE_INVALID\|between: \['a', 'b'\] — exactly two parts/;
+    expect(thrown(only({ between: ['arm'] as never }))).toMatch(between);
+    expect(thrown(only({ between: ['a', 'b', 'c'] as never }))).toMatch(between);
+    expect(thrown(only({ between: 'arm' as never }))).toMatch(between);
+    expect(thrown(only({ parts: ['a'], between: ['a', 'b'] }))).toMatch(between);
+    expect(thrown(only({}))).toMatch(between);
+    expect(thrown(only({ between: ['a', 'b'] }))).toBe('none');
+    expect(thrown(only({ parts: ['a'] }))).toBe('none');
+  });
+
   it('refuses a measure value of 0 and a tolerance outside (0, 0.5]', () => {
     const withMeasure = (m: Partial<Measure>) =>
       define({ real: { ...real, measures: [{ ...measure, ...m }] } });

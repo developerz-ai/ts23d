@@ -120,6 +120,24 @@ export class Ts23dError extends Error {
   }
 }
 
+/**
+ * True for a Ts23dError from ANY copy of the library. A recipe and the CLI can load different
+ * copies (a `bunx -p` CLI over a project's node_modules), and `instanceof` is false across copies,
+ * which would turn a coded error into an uncoded one. Brand: name, a `T3D_*` code, fix, toJSON.
+ */
+export function isTs23dError(e: unknown): e is Ts23dError {
+  if (e instanceof Ts23dError) return true;
+  if (!(e instanceof Error)) return false;
+  const c = e as Error & { code?: unknown; fix?: unknown; toJSON?: unknown };
+  return (
+    c.name === 'Ts23dError' &&
+    typeof c.code === 'string' &&
+    c.code.startsWith('T3D_') &&
+    typeof c.fix === 'string' &&
+    typeof c.toJSON === 'function'
+  );
+}
+
 /** Placeholder for a planned seam. Names the plan so the agent knows where the work is tracked. */
 export function notImplemented(what: string, plan = 'docs/plans/roadmap.md'): never {
   throw new Ts23dError('T3D_NOT_IMPLEMENTED', {

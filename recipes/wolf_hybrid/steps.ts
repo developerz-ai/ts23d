@@ -15,6 +15,9 @@
 //            the sagittal plane with its own two sides; nothing is mirrored)
 //   lods     10 k and 5 k triangles from the 30 k (same UVs, maps and weights)
 //   export   one GLB: three LODs, albedo 2048², normal and ORM 1024², one skin
+// Known defect (README.md, "Known limits"): the generator laid the tail against the inner face of
+// the right thigh and these steps do not part them; cutting thighs from the tail in `unweb` and
+// moving `isolate`'s cut below the root were tried (2026-11-18) and baked tail fur onto the thigh.
 
 import type { BlenderStep, ModelRig } from '@developerz.ai/ts23d';
 

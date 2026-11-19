@@ -12,6 +12,7 @@ import { type Asset, compile, Ts23dError } from '../core/index.ts';
 import {
   exportControlMaps,
   type FinishModel,
+  type FinishResult,
   fileStore,
   finishAsset,
   finishCompare,
@@ -24,6 +25,7 @@ import {
   mockFinish,
 } from '../finish/index.ts';
 import type { PaintedSheet } from '../material/index.ts';
+import type { ReviewWarning } from '../render/index.ts';
 import type { Args } from './args.ts';
 import type { RenderResult } from './render-cmds.ts';
 
@@ -104,19 +106,24 @@ export async function finishOne(
   return {
     name: `${asset.name} (finish ${model.id}, cache ${r.cache}, seen ${(r.stats.seen * 100).toFixed(0)}%)`,
     files: shown,
-    warnings: [
-      ...r.findings.map((x) => ({
-        code: x.code,
-        message: `${x.part ?? x.view ?? ''}: ${x.message}`,
-        fix: x.fix,
-      })),
-      ...r.qa.map((q) => ({
-        code: `QA_${q.gate}`,
-        message: `${q.part ?? ''} ${q.message}`.trim(),
-        fix: q.fix,
-      })),
-    ],
+    warnings: finishWarnings(r),
   };
+}
+
+/** Finish findings and the re-run QA as warnings; each keeps its own stable `T3D_*` code. */
+export function finishWarnings(r: Pick<FinishResult, 'findings' | 'qa'>): ReviewWarning[] {
+  return [
+    ...r.findings.map((x) => ({
+      code: x.code,
+      message: `${x.part ?? x.view ?? ''}: ${x.message}`,
+      fix: x.fix,
+    })),
+    ...r.qa.map((q) => ({
+      code: q.code,
+      message: `${q.part ?? ''} ${q.message}`.trim(),
+      fix: q.fix,
+    })),
+  ];
 }
 
 /**

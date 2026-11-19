@@ -90,12 +90,12 @@ Human names a thing → research specs + real photos into `recipes/<name>/README
 ## Coordination and CI
 - **Finish the job:** fix, test, document, run the gate. Decide and state decisions rather than asking what code/docs answer. Ask only before irreversible/outward-facing acts.
 - **Hive** (big tasks: `/feature`): one checkout, never git worktrees; only the top-level agent spawns; exclusive file sets, no git for agents; max 4 parallel; coordinator runs the full gate once at the end.
-- **CI:** free GitHub runners, < 5 min. `ci.yml`: `gate` (12 shards, `T3D_SHARD=k/12`: shard 1 runs every step, shards 2..n only `recipes` on their slice), `shots` (12 shards; fails on any change under `recipes/*/out`; uploads contact sheets), `site`, and the aggregate `verify`, the one required check. `pages.yml`: gallery to developerz-ai.github.io/ts23d. `release-tag.yml` (idempotent) + `release.yml` (runs the full gate; refuses a tag not on a green `main` commit): release PR merge → tag → npm via OIDC (no tokens). Every action SHA-pinned; Dependabot moves pins.
+- **CI:** free GitHub runners; target < 5 min (As of 2026-11: 9–13 min, see `docs/maintenance.md`). `ci.yml`: `gate` (12 shards, `T3D_SHARD=k/12`: shard 1 runs every step, shards 2..n only `recipes` on their slice), `shots` (12 shards; fails on any change under `recipes/*/out`; uploads contact sheets when it fails), `site`, and the aggregate `verify`, the one required check. `pages.yml`: gallery to developerz-ai.github.io/ts23d. `release-tag.yml` (idempotent) + `release.yml` (runs the full gate; refuses a tag not on a green `main` commit): release PR merge → tag → npm via OIDC (no tokens). Every action SHA-pinned; Dependabot moves pins.
 - **AI-maintained, for years untouched:** `.dz/maintainer/maintainer.yml` sets the developerz.ai lanes (review + merge on green for every author, triage, daily `health` and `security-release`, weekly `release-due` which cuts releases, monthly `improve` and `cleanup` which also moves the Bun pin and runs a January yearly review). [`docs/maintenance.md`](docs/maintenance.md) maps what decays over a decade to the lane that catches it; keep it true when a lane changes. Only owner settings (rulesets, npm trusted publisher, 1.0.0) stay human.
 
 ## Using the library in another project
-`bun add @developerz.ai/ts23d`, write `assets/<name>.ts` exporting `defineAsset({...})`, then
-`bunx -p @developerz.ai/ts23d t3d build assets/<name>.ts --out out` (GLB × 3 LODs + QA, exit 1 on a finding) and
+`bun add @developerz.ai/ts23d`, write `assets/<name>/<name>.ts` exporting `defineAsset({...})`, then
+`bunx -p @developerz.ai/ts23d t3d build assets/<name>/<name>.ts --out out` (GLB × 3 LODs + QA, exit 1 on a finding) and
 `bunx -p @developerz.ai/ts23d t3d shot` / `hero` / `review` to look. Fix what QA prints (every finding has a `fix:`) and what
 you see. No CLI needed: the same steps are functions (`compile`, `runQa`, `toGlb`, `contactSheet`,
 `beauty`), see `examples/build-with-bun.ts`; test helpers in `@developerz.ai/ts23d/testing`.

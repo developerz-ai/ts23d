@@ -6,7 +6,7 @@
 // plane shows there BEFORE anything is mirrored (mirroring it gives two muzzles): modelRig
 // refuses to mirror above MIRROR_LIMIT.
 
-import { type Bone, type Mesh, Ts23dError, type Vec3 } from '../core/index.ts';
+import { type Bone, isTs23dError, type Mesh, type Vec3 } from '../core/index.ts';
 import { capsuleDistance } from '../passes/index.ts';
 import { triBvh } from '../primitives/index.ts';
 import type { Bones } from './creature-bones.ts';
@@ -133,7 +133,7 @@ export function tracedSkeleton(mesh: Mesh, plan: Bones, prefix: string): FittedS
   try {
     return fitSkeleton(mesh, plan, prefix, false);
   } catch (e) {
-    if (e instanceof Ts23dError && e.code === 'T3D_MODEL_SKELETON') return null;
+    if (isTs23dError(e) && e.code === 'T3D_MODEL_SKELETON') return null;
     throw e;
   }
 }

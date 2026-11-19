@@ -247,12 +247,14 @@ export const handcart = defineAsset({
     for (const [i, x] of [0.8, -0.8].entries()) {
       axle(ctx, { name: `axle_${i}`, at: [x, 0, 0.35], radius: 0.35, gauge: 1.2,
                   width: 0.08, color: iron, rps: 1 }); // wheels spin in the baked clip
+      // a fixed beam between the wheels (1 cm running clearance each side) carries the bed
+      ctx.part(`beam_${i}`, box({ size: [0.08, 1.1, 0.08], at: [x, 0, 0.31], color: iron }));
     }
-    ctx.part('bed', box({ size: [2.4, 1.3, 0.12], at: [0, 0, 0.62], color: trim, strip: 'wood' }));
+    ctx.part('bed', box({ size: [2.4, 1, 0.12], at: [0, 0, 0.39], color: trim, strip: 'wood' }));
     const posts = ctx.lod === 2 ? 2 : 6; // LOD drops detail; it never decimates
     for (let i = 0; i < posts; i++) {
       const x = -1.1 + (2.2 * i) / (posts - 1);
-      ctx.part(`post_${i}`, box({ size: [0.08, 0.08, 0.5], at: [x, 0.6, 0.74], color: paint }));
+      ctx.part(`post_${i}`, box({ size: [0.08, 0.08, 0.5], at: [x, 0.46, 0.51], color: paint }));
     }
   },
 });
@@ -285,16 +287,16 @@ pull a CC0 photo set from Poly Haven with `bun run textures` (hash-pinned, credi
 
 ## Quickstart
 
-Needs Bun ≥ 1.4.4: the CLI (`t3d`) runs on Bun. The library (`compile`, `runQa`, `toGlb`, …) also imports under Node ≥ 22 (As of 2026-11; the pack smoke test proves both). Write assets in your project, e.g. `assets/<name>.ts`.
+Needs Bun ≥ 1.4.4: the CLI (`t3d`) runs on Bun. The library (`compile`, `runQa`, `toGlb`, …) also imports under Node ≥ 22 (As of 2026-11; the pack smoke test proves both). Write assets in your project, e.g. `assets/<name>/<name>.ts`.
 
 ```sh
 bun add @developerz.ai/ts23d
-bunx -p @developerz.ai/ts23d t3d build assets/<name>.ts       # GLB × 3 LODs + sheet + manifest per asset; exit 1 on a QA finding
-bunx -p @developerz.ai/ts23d t3d shot  assets/<name>.ts       # sheet + manifest only: the fast look
-bunx -p @developerz.ai/ts23d t3d hero  assets/<name>.ts       # beauty render: textured, lit, soft shadows (1600×900)
-bunx -p @developerz.ai/ts23d t3d review assets/<name>.ts      # AI review pack: hero, sheet, close-ups, LOD strip, review.md
-bunx -p @developerz.ai/ts23d t3d tune assets/<name>.ts --evals 400   # fit tune.params to objectives → tune.json, tune-report.md, tune-strip.png
-bunx -p @developerz.ai/ts23d t3d finish assets/<name>.ts --endpoint URL --prompt "…"   # optional AI texture layer on LOD0
+bunx -p @developerz.ai/ts23d t3d build assets/<name>/<name>.ts       # GLB × 3 LODs + sheet + manifest per asset; exit 1 on a QA finding
+bunx -p @developerz.ai/ts23d t3d shot  assets/<name>/<name>.ts       # sheet + manifest only: the fast look
+bunx -p @developerz.ai/ts23d t3d hero  assets/<name>/<name>.ts       # beauty render: textured, lit, soft shadows (1600×900)
+bunx -p @developerz.ai/ts23d t3d review assets/<name>/<name>.ts      # AI review pack: hero, sheet, close-ups, LOD strip, review.md
+bunx -p @developerz.ai/ts23d t3d tune assets/<name>/<name>.ts --evals 400   # fit tune.params to objectives → tune.json, tune-report.md, tune-strip.png
+bunx -p @developerz.ai/ts23d t3d finish assets/<name>/<name>.ts --endpoint URL --prompt "…"   # optional AI texture layer on LOD0
 bunx -p @developerz.ai/ts23d t3d list  assets/*.ts --json     # the assets each module exports (one JSON envelope)
 bunx -p @developerz.ai/ts23d t3d --version                    # also: t3d <command> --help
 ```
@@ -402,8 +404,8 @@ Stop when two consecutive shots show nothing worth fixing. Never use Math.random
 
 **The CLI with `--json` is the interface; everything else is optional.** Each step is one command that prints one JSON envelope (`{ ok, data }` or `{ ok: false, error: { code, message, fix } }`) and writes PNGs your agent opens:
 
-1. Write `assets/<name>.ts` exporting `defineAsset({...})`: real sizes in metres, Z up, +X front.
-2. `bunx -p @developerz.ai/ts23d t3d build assets/<name>.ts --json`: fix every finding (each has a `fix:`) until QA PASS.
+1. Write `assets/<name>/<name>.ts` exporting `defineAsset({...})`: real sizes in metres, Z up, +X front.
+2. `bunx -p @developerz.ai/ts23d t3d build assets/<name>/<name>.ts --json`: fix every finding (each has a `fix:`) until QA PASS.
 3. `bunx -p @developerz.ai/ts23d t3d shot …`: read `out/<name>/sheet.png`, name the single worst error, fix it, rebuild.
 4. `bunx -p @developerz.ai/ts23d t3d hero …` / `blueprint …`: the textured look and the measured drawing.
 5. `bunx -p @developerz.ai/ts23d t3d review …`: read `review/*.png`, follow `review.md`. Then `bunx -p @developerz.ai/ts23d t3d critique …`.
@@ -418,7 +420,7 @@ bun add @developerz.ai/ts23d
 claude mcp add ts23d -- bunx -p @developerz.ai/ts23d t3d mcp      # Claude Code, from the project root
 ```
 
-Other MCP clients (Claude Desktop, Cursor, …): command `bunx`, args `["-p", "@developerz.ai/ts23d", "t3d", "mcp", "--root", "/path/to/project"]`. Use `-p`: a bare `bunx -p @developerz.ai/ts23d t3d` outside a project with the package installed fetches an unrelated npm package named `t3d`.
+Other MCP clients (Claude Desktop, Cursor, …): command `bunx`, args `["-p", "@developerz.ai/ts23d", "t3d", "mcp", "--root", "/path/to/project"]`. Use `-p`: a bare `bunx t3d` outside a project with the package installed fetches an unrelated npm package named `t3d`.
 
 ## Bring your own model
 
@@ -429,7 +431,7 @@ import { defineConfig, http } from '@developerz.ai/ts23d';
 export const config = defineConfig({ neural: { mesh: http('http://gpu:8190', 'pixal3d') } });
 ```
 
-`t3d neural ls` lists the models; `t3d neural run recipes/oak/oak.ts` runs what the recipe asks for and commits the outputs to `recipes/oak/neural/<key>/` with a `record.json` (model, licence, weights hash, request, output hashes; 12 MB of committed bytes per recipe, big intermediates kept local with `{ keep: 'local' }`: git-ignored, only their sha256 is committed, so a fresh clone still resolves the chain). A chain (image, mesh, rig, Blender) fills over up to 5 rounds of `t3d neural run`. Builds and CI never call a model: a hit replays the committed bytes, a miss falls back to the CPU path with a `T3D_NEURAL_MISSING` notice (an error with `--require-neural`). Every output is validated before use. Licences are recorded, never gated for your builds.
+`t3d neural ls` lists the models; `t3d neural run recipes/oak/oak.ts` runs what the recipe asks for and commits the outputs to `recipes/oak/neural/<key>/` with a `record.json` (model, licence, weights hash, request, output hashes; 12 MB of committed bytes per recipe, big intermediates kept local with `{ keep: 'local' }`: git-ignored, only their sha256 is committed, so a fresh clone still resolves the chain). A chain (image, mesh, rig, Blender) fills over up to 5 rounds of `t3d neural run`; a request that only appears after the fifth is listed as `T3D_NEURAL_MISSING` (run again to go on). Builds and CI never call a model: a hit replays the committed bytes, a miss falls back to the CPU path with a `T3D_NEURAL_MISSING` notice (an error with `--require-neural`). Every output is validated before use. Licences are recorded, never gated for your builds.
 
 **No GPU?** For the `image` task, ts23d ships an adapter for [kubeez.com](https://kubeez.com), a hosted image-generation service. Disclosure: we work with Kubeez as a partner; any other adapter works the same way.
 
@@ -438,7 +440,7 @@ import { defineConfig, kubeezAdapter } from '@developerz.ai/ts23d';
 export const config = defineConfig({ neural: { image: kubeezAdapter({ apiKey: process.env.KUBEEZ_API_KEY }) } });
 ```
 
-The key stays in your environment: it is sent only as a request header, never written to `record.json`, the cache, logs or errors. Outputs are recorded with licence `own` and the [Kubeez terms](https://kubeez.com/legal/terms).
+The key stays in your environment: it is sent only as a request header, never written to `record.json`, the cache, logs or errors. Outputs are recorded with licence `own` and the [Kubeez terms](https://kubeez.com/legal/terms). Kubeez is billed per image: `t3d neural run` prices each job at the model's listed cost and refuses a run above 50 credits, or one it cannot price, without `--yes-spend`.
 
 For the `mesh` task without a GPU, `meshyAdapter({ apiKey: process.env.MESHY_API_KEY })` runs image-to-3D (or text-to-3D from a prompt) on [meshy.ai](https://www.meshy.ai), a hosted service billed in credits; the key is handled the same way. The same adapter runs the `rig` task (rigging, plus library animation clips by name) and the `texture` task (retexture); `t3d neural run` prints the credit balance and an estimate per request and refuses a run estimated above 50 credits without `--yes-spend`. The ranger's chain cost 44 credits (30 mesh, 14 rig and three clips; measured 2026-11-16). API keys come only with paid plans, whose outputs you own: records carry licence `own`, the [Meshy terms](https://www.meshy.ai/terms-of-use) and the credits Meshy charged. A created task id is kept in `$TS23D_HOME/meshy/pending.json` until its GLB is downloaded, so a rerun after a timeout resumes the same task instead of paying again.
 

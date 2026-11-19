@@ -1,8 +1,9 @@
 // Head morphs and clips (plan 101 slice 10): `blink` (both upper lids turned down over the balls
 // about each eye's lateral axis), `talk` (the lower face opened about the jaw hinge, faded above
 // the lip line and down the throat) and `breathe` (the chest and shoulders rise and swell along
-// their normals), always all three in that order, so meshes that merge keep one target list. The
-// clips key all three weights on the part that carries them: `blink` (two blinks in 4 s), `talk`
+// their normals), always all three first and in that order (a mesh's own morphs follow), so meshes
+// that merge keep one target list. The clips key every target's weight on the part that carries
+// them (`headClips(part, names)` for a mesh with morphs of its own): `blink` (two blinks in 4 s), `talk`
 // (syllables in 2.4 s), `breathe` (one breath in 4 s); every loop's last key = its first.
 // Procedural shapes from landmarks; MakeHuman (MPFB2, CC0) expression targets are planned.
 
@@ -87,7 +88,8 @@ function breathe(mesh: Mesh, c: FaceRig['chest']): Morph {
   return { name: 'breathe', positions: out };
 }
 
-/** The mesh with `blink`, `talk` and `breathe` (in that order, replacing any of those names). */
+/** The mesh with `blink`, `talk` and `breathe` first (in that order, replacing any of those names),
+ *  then its own other morphs. */
 export function faceMorphs(mesh: Mesh, rig: FaceRig): Mesh {
   if (!(rig.eye.r > 0 && rig.eye.lid > 0 && rig.chest.r > 0 && rig.jaw.hinge[2] > rig.jaw.chin[2]))
     throw new Ts23dError('T3D_RECIPE_INVALID', {
@@ -99,20 +101,29 @@ export function faceMorphs(mesh: Mesh, rig: FaceRig): Mesh {
   );
   return {
     ...mesh,
-    morphs: [...keep, blink(mesh, rig.eye), talk(mesh, rig.jaw), breathe(mesh, rig.chest)],
+    morphs: [blink(mesh, rig.eye), talk(mesh, rig.jaw), breathe(mesh, rig.chest), ...keep],
   };
 }
 
-/** Morph weights [blink, talk, breathe] per key → one looping clip on `part`. */
+/** Morph weights [blink, talk, breathe] per key, placed at `slots` of a `stride`-long weight row
+ *  (every other target 0) → one looping clip on `part`. */
 function weightsClip(
   part: string,
   name: string,
   seconds: number,
   n: number,
   at: (u: number) => readonly number[],
+  slots: readonly number[],
+  stride: number,
 ): Clip {
   const times = Float32Array.from({ length: n + 1 }, (_, i) => (i * seconds) / n);
-  const keys = Array.from({ length: n + 1 }, (_, i) => at((i % n) / n));
+  const keys = Array.from({ length: n + 1 }, (_, i) => {
+    const row = new Array<number>(stride).fill(0);
+    at((i % n) / n).forEach((w, k) => {
+      row[slots[k] ?? 0] = w;
+    });
+    return row;
+  });
   return {
     name,
     seconds,
@@ -124,8 +135,18 @@ function weightsClip(
 const pulse = (u: number, at: number, w: number): number =>
   Math.abs(u - at) < w ? 0.5 * (1 + Math.cos((Math.PI * (u - at)) / w)) : 0;
 
-/** `blink`, `talk` and `breathe` on the part carrying `faceMorphs` (a pivot node in the GLB). */
-export function headClips(part: string): Clip[] {
+/** `blink`, `talk` and `breathe` on the part carrying `faceMorphs` (a pivot node in the GLB).
+ *  `morphs`: that part's target names in order (default the three head morphs alone); each clip
+ *  keys a weight for every target, so a mesh with morphs of its own keeps the export's stride. */
+export function headClips(part: string, morphs: readonly string[] = HEAD_MORPHS): Clip[] {
+  const slots = HEAD_MORPHS.map((m) => morphs.indexOf(m));
+  if (slots.some((i) => i < 0) || new Set(morphs).size !== morphs.length)
+    throw new Ts23dError('T3D_RECIPE_INVALID', {
+      cause: `headClips: morph targets [${morphs.join(', ')}] must name ${HEAD_MORPHS.join(', ')} once each`,
+      fix: "pass the part's morph names after faceMorphs: faceMorphs(mesh, rig).morphs.map((m) => m.name)",
+    });
+  const clip = (name: string, seconds: number, n: number, at: (u: number) => readonly number[]) =>
+    weightsClip(part, name, seconds, n, at, slots, morphs.length);
   // Syllables: open-close pulses of varied height, a pause, the jaw shut at the seam.
   const syllables: readonly [number, number][] = [
     [0.1, 0.8],
@@ -136,16 +157,12 @@ export function headClips(part: string): Clip[] {
     [0.82, 0.4],
   ];
   return [
-    weightsClip(part, 'blink', 4, 48, (u) => [
-      Math.max(pulse(u, 0.3, 0.04), pulse(u, 0.82, 0.04)),
-      0,
-      0,
-    ]),
-    weightsClip(part, 'talk', 2.4, 48, (u) => [
+    clip('blink', 4, 48, (u) => [Math.max(pulse(u, 0.3, 0.04), pulse(u, 0.82, 0.04)), 0, 0]),
+    clip('talk', 2.4, 48, (u) => [
       0,
       Math.max(0, ...syllables.map(([at, h]) => h * pulse(u, at, 0.055))),
       0,
     ]),
-    weightsClip(part, 'breathe', 4, 32, (u) => [0, 0, 0.5 * (1 - Math.cos(2 * Math.PI * u))]),
+    clip('breathe', 4, 32, (u) => [0, 0, 0.5 * (1 - Math.cos(2 * Math.PI * u))]),
   ];
 }

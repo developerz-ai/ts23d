@@ -8,7 +8,7 @@
 import { spawn } from 'node:child_process';
 import { closeSync, mkdirSync, openSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
-import { Ts23dError } from '../core/index.ts';
+import { isTs23dError, Ts23dError } from '../core/index.ts';
 import { oneOf, usage } from './flags.ts';
 import { envelope, printError } from './report.ts';
 import {
@@ -285,7 +285,7 @@ export async function serverMain(
     else console.log(`${'already' in s && s.already ? 'already ' : ''}${line(s)}`);
     return 0;
   } catch (e) {
-    if (e instanceof Ts23dError) return printError(e, json);
+    if (isTs23dError(e)) return printError(e, json);
     throw e;
   }
 }

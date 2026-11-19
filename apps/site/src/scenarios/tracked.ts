@@ -3,6 +3,8 @@
 // returns the turret and drives on. Hooks: `turret`, `gun`, optional `gun_barrel`, running gear
 // (`wheel_*`, `road_wheel_*`, `sprocket_*`, `idler_*`), track belts (nodes carrying
 // `extras.ts23d.tread`: the links run round the loop at the same speed), emitters.
+// The GLB's `run` clip moves the same belts with morph targets at one fixed speed; this show
+// changes speed, so it never plays that clip and poses the belt vertices itself: one mover only.
 
 import { Box3, type BufferAttribute, MathUtils, Mesh, type Object3D, Vector3 } from 'three';
 import { around, Dolly, ease, phase } from './cinema.ts';
@@ -43,6 +45,8 @@ function belts(root: Object3D): Belt[] {
       if (!(m instanceof Mesh)) return;
       // Own the buffers: the compiled geometry may be cached and shown again elsewhere.
       m.geometry = m.geometry.clone();
+      // The baked tread morph targets stay at rest here: this show moves the vertices.
+      m.morphTargetInfluences?.fill(0);
       const position = m.geometry.getAttribute('position') as BufferAttribute;
       const normal = m.geometry.getAttribute('normal') as BufferAttribute;
       if (!position || !normal) return;

@@ -3,7 +3,6 @@
 
 export * from './audio/index.ts';
 export { type AssetManifest, manifestOf } from './cli/manifest.ts';
-export * from './core/define-part.ts';
 export * from './core/index.ts';
 export * from './export/index.ts';
 export * from './grammar/index.ts';

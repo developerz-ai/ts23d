@@ -11,9 +11,9 @@ The npm package ships the docs, skills, recipe sources and examples, versioned w
 
 ## For agents: the loop in ten lines
 The CLI with `--json` is the baseline interface (one envelope on stdout; every error a `T3D_*` code + `fix`). `t3d mcp` is an optional stdio MCP server with the same steps as tools, renders returned as images.
-1. Write `assets/<name>.ts` exporting `defineAsset({...})` (real sizes in metres, Z up, +X front).
-2. `bunx -p @developerz.ai/ts23d t3d build assets/<name>.ts --json` (MCP `build`) — QA verdict, findings with `fix`.
-3. Fix every finding (`explain_error` / docs/architecture/errors.md for a code); rebuild until QA PASS.
+1. Write `assets/<name>/<name>.ts` (the layout `t3d init` sets up) exporting `defineAsset({...})` (real sizes in metres, Z up, +X front).
+2. `bunx -p @developerz.ai/ts23d t3d build assets/<name>/<name>.ts --json --no-shot --sheet none` (MCP `build`) — QA verdict, findings with `fix`; the two flags skip the contact sheet, hero and trim-sheet paint (same QA, a few seconds instead of ~10 s) while you clear findings.
+3. Fix every finding (`explain_error` / docs/architecture/errors.md for a code); rebuild until QA PASS, then build once without `--no-shot --sheet none` for the full output.
 4. `bunx -p @developerz.ai/ts23d t3d shot …` (MCP `shot`) — READ `out/<name>/sheet.png`; name the single worst error.
 5. Fix it, rebuild. `t3d hero` / `t3d blueprint` (MCP `hero`, `blueprint`) for the textured look and measures.
 6. `t3d review` (MCP `review`) — read `review/*.png`, follow `review.md`.
@@ -23,7 +23,7 @@ The CLI with `--json` is the baseline interface (one envelope on stdout; every e
 10. MCP setup (optional): `claude mcp add ts23d -- bunx -p @developerz.ai/ts23d t3d mcp` (any MCP client: command `bunx`, args `-p @developerz.ai/ts23d t3d mcp`, run in the project root). Tools only touch the project root and `--out`.
 
 ## The workflow
-The human names a thing ("Tiger I, mid-production 1943"). The agent researches specs and real photos into `recipes/<name>/README.md` (every number sourced), writes `recipes/<name>/<name>.ts` (in your project: `assets/<name>.ts`) with `sources` + `real.measures` from that dossier, compiles until QA PASS (budget, surface contact, clashes, proportions ±5%, measures ±2%), renders the six-view contact sheet, looks at it, adds LOD-gated detail, and iterates.
+The human names a thing ("Tiger I, mid-production 1943"). The agent researches specs and real photos into `recipes/<name>/README.md` (every number sourced), writes `recipes/<name>/<name>.ts` (in your project: `assets/<name>/<name>.ts`) with `sources` + `real.measures` from that dossier, compiles until QA PASS (budget, surface contact, clashes, proportions ±5%, measures ±2%), renders the six-view contact sheet, looks at it, adds LOD-gated detail, and iterates.
 
 ## Programmatic (no CLI)
 `t3d` is optional: `compile` → `runQa` → `toGlb` / `contactSheet` / `paintTrimSheet` are plain functions returning bytes. Runnable script: `examples/build-with-bun.ts` (also in the npm package).

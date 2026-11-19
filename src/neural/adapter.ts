@@ -7,6 +7,7 @@
 import {
   checkNeuralInput,
   checkNeuralResult,
+  isTs23dError,
   type NeuralInput,
   type NeuralOutput,
   type NeuralRequest,
@@ -70,6 +71,13 @@ export interface NeuralAdapter {
   readonly tasks: readonly NeuralTask[];
   models(): Promise<readonly NeuralModelInfo[]>;
   run<T extends NeuralTask>(job: NeuralJob<T>): Promise<NeuralRun<T>>;
+  /** A paid service: `t3d neural run` prices each job first and, without --yes-spend, refuses
+   *  one it cannot price (no `estimate`, or not a finite number). Unset = free (local, mock). */
+  readonly paid?: boolean;
+  /** Credits `job` is expected to cost; nothing is sent. NaN = this job cannot be priced. */
+  estimate?(job: Pick<NeuralJob, 'task' | 'request' | 'model'>): number | Promise<number>;
+  /** Credits left on the account (a free call). */
+  balance?(): Promise<{ readonly balance: number }>;
 }
 
 const round = (n: number): number => {
@@ -178,7 +186,7 @@ export async function runJob<T extends NeuralTask>(
   try {
     run = await adapter.run(job);
   } catch (e) {
-    if (e instanceof Ts23dError) throw e;
+    if (isTs23dError(e)) throw e;
     throw new Ts23dError('T3D_NEURAL_FAILED', {
       cause: `${adapter.id} ${job.task}: ${e instanceof Error ? e.message : String(e)}`,
       fix: `check the ${adapter.id} adapter and its server log`,

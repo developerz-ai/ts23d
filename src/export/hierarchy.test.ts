@@ -19,14 +19,27 @@ const options = { materialOf: () => 0, withSheet: false, animations: false };
 
 it('throws T3D_PART_UNKNOWN on a parent with no node instead of hanging it off the root', () => {
   const dangling = { ...asset, parts: asset.parts.map((p) => ({ ...p, parent: 'ghost' })) };
-  const write = (): number => writeHierarchy(newDoc(new BinWriter()), dangling, 'root', options);
+  const write = () => writeHierarchy(newDoc(new BinWriter()), dangling, 'root', options);
   expect(write).toThrow(Ts23dError);
   expect(write).toThrow(/T3D_PART_UNKNOWN.*'ghost'/);
 });
 
 it('hangs a child under its parent node', () => {
   const doc = newDoc(new BinWriter());
-  const root = writeHierarchy(doc, asset, 'root', options);
+  const { root, index } = writeHierarchy(doc, asset, 'root', options);
   expect(doc.nodes[root]?.['children']).toEqual([1]);
   expect(doc.nodes[1]?.['children']).toEqual([2]);
+  expect([...index]).toEqual([
+    ['lid', 1],
+    ['lid_plate', 2],
+  ]);
+});
+
+it('refuses a non-finite at or yaw instead of writing null', () => {
+  for (const bad of [{ at: [Number.NaN, 0, 0] as const }, { yaw: Number.POSITIVE_INFINITY }]) {
+    const broken = { ...asset, parts: asset.parts.map((p) => ({ ...p, ...bad })) };
+    expect(() => writeHierarchy(newDoc(new BinWriter()), broken, 'root', options)).toThrow(
+      /T3D_RECIPE_INVALID.*non-finite transform/,
+    );
+  }
 });

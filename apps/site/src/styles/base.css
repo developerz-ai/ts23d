@@ -151,6 +151,11 @@ pre {
   top: 1rem;
 }
 
+/* The skip link's target takes focus so the next Tab starts in the content; it is not a control. */
+main:focus {
+  outline: none;
+}
+
 .eyebrow {
   margin: 0 0 0.5rem;
   font: 600 0.75rem var(--font-mono);

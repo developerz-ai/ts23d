@@ -113,6 +113,9 @@ const SPONSON = { x0: 3.8, x1: -3.8, zb: 1.45, zt: 2.78, y0: 1.8, y1: 2.3 };
 const MAIN_GEAR: Vec3 = [-1.4, 2.05, 0];
 const NOSE_GEAR: Vec3 = [7.1, 0, 0];
 const DEG = Math.PI / 180;
+/** Paint, stencils and seam lines stand this far off the skin they are on (QA `connections`
+ *  counts a sheet as seated within 3 mm). */
+const DECAL = 0.002;
 const SIDES = [
   [1, 'l'],
   [-1, 'r'],
@@ -162,7 +165,7 @@ function shell(rings: readonly (readonly Vec3[])[], color: (p: Vec3) => Vec3, ha
 const hullColor = (p: Vec3): Vec3 => (p[2] < 1.75 ? BELLY : p[2] > 3.95 ? HULL_LIGHT : HULL);
 
 /** A flat quad lifted `off` metres along its normal (CCW seen from the side it faces). */
-function quad(a: Vec3, b: Vec3, c: Vec3, d: Vec3, color: Vec3, off = 0.015): Mesh {
+function quad(a: Vec3, b: Vec3, c: Vec3, d: Vec3, color: Vec3, off = DECAL): Mesh {
   const u: Vec3 = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
   const v: Vec3 = [d[0] - a[0], d[1] - a[1], d[2] - a[2]];
   const n: Vec3 = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
@@ -185,7 +188,7 @@ function quadOut(a: Vec3, b: Vec3, c: Vec3, d: Vec3, color: Vec3, centre: Vec3, 
 }
 
 /** Yellow/black stripe band: `stripes` cells from a→b, each `up` tall (CCW: (b−a) × up = out). */
-function hazard(a: Vec3, b: Vec3, up: Vec3, stripes: number, off = 0.012): Mesh {
+function hazard(a: Vec3, b: Vec3, up: Vec3, stripes: number, off = DECAL): Mesh {
   const step = [0, 1, 2].map((k) => ((b[k] ?? 0) - (a[k] ?? 0)) / stripes);
   const at = (k: number, t: number): Vec3 => [
     a[0] + (step[0] ?? 0) * k + up[0] * t,
@@ -445,11 +448,10 @@ export const dropship = defineAsset({
             bits.push(place(bolt, { at: [2.8 - i * 0.33, s * (sp.y1 + 0.055), 2.32] }));
           bits.push(
             hazard(
-              s > 0 ? [-1.0, sp.y1 + 0.046, 1.76] : [-2.85, -sp.y1 - 0.046, 1.76],
-              s > 0 ? [-2.85, sp.y1 + 0.046, 1.76] : [-1.0, -sp.y1 - 0.046, 1.76],
+              s > 0 ? [-1.0, sp.y1 + 0.045, 1.76] : [-2.85, -sp.y1 - 0.045, 1.76],
+              s > 0 ? [-2.85, sp.y1 + 0.045, 1.76] : [-1.0, -sp.y1 - 0.045, 1.76],
               [0, 0, 0.16],
               10,
-              0.002,
             ),
           );
         }
@@ -559,8 +561,9 @@ export const dropship = defineAsset({
         tail.push(
           place(
             merge([
-              hazard([-9.02, 0.09, 1.98], [-10.15, 0.09, 1.98], [0, 0, 0.18], 6, 0.004),
-              hazard([-10.15, -0.09, 1.98], [-9.02, -0.09, 1.98], [0, 0, 0.18], 6, 0.004),
+              // Inside the fin's outline: its trailing edge is at x −10.12 at this height.
+              hazard([-9.02, 0.09, 1.98], [-10.1, 0.09, 1.98], [0, 0, 0.18], 6),
+              hazard([-10.1, -0.09, 1.98], [-9.02, -0.09, 1.98], [0, 0, 0.18], 6),
             ]),
             { at: [0, s * 0.3, 4.2], roll: s * -35 * DEG },
           ),
@@ -643,18 +646,27 @@ export const dropship = defineAsset({
         const r1 = ringOf({ ...CABIN, x: x - 0.015 });
         for (const k of faces) {
           const [a, b, c, d] = [r0[k], r0[(k + 1) % 10], r1[(k + 1) % 10], r1[k]];
-          if (a && b && c && d) detail.push(quadOut(a, b, c, d, SEAM, [x, 0, 2.8], 0.004));
+          if (a && b && c && d) detail.push(quadOut(a, b, c, d, SEAM, [x, 0, 2.8], DECAL));
         }
       };
       for (const x of [5.0, 2.95, 0.95, -0.95, -2.95]) seam(x, [2, 3, 4, 5, 6, 7]);
       for (const x of [5.45, -4.2]) seam(x, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
-      // Nose: a seam ring at the windscreen station, lower faces only.
-      const nr = ringOf({ ...(NOSE[3] ?? CABIN), x: 6.98 });
-      const nq = ringOf({ ...(NOSE[3] ?? CABIN), x: 7.02 });
-      for (const k of [0, 1, 7, 8, 9]) {
-        const [a, b, c, d] = [nr[k], nr[(k + 1) % 10], nq[(k + 1) % 10], nq[k]];
-        if (a && b && c && d) detail.push(quadOut(a, b, c, d, SEAM, [7, 0, 2.7], 0.01));
-      }
+      // Nose: a seam ring at the windscreen station, lower faces only. The skin creases there,
+      // so the line is two strips, each lying on its own loft face (2 cm either side).
+      const at = rings[3] ?? [];
+      const toward = (other: readonly Vec3[], k: number): Vec3 => {
+        const p = at[k] ?? [0, 0, 0];
+        const q = other[k] ?? p;
+        const t = 0.02 / Math.abs(q[0] - p[0]);
+        return [p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t, p[2] + (q[2] - p[2]) * t];
+      };
+      for (const side of [rings[2] ?? [], rings[4] ?? []])
+        for (const k of [0, 1, 7, 8, 9]) {
+          const j = (k + 1) % 10;
+          const [a, b] = [at[k], at[j]];
+          if (a && b)
+            detail.push(quadOut(a, b, toward(side, j), toward(side, k), SEAM, [7, 0, 2.7], DECAL));
+        }
     }
     if (lod < 2) {
       // Portholes on the tumblehome (scale cue: a 2 m tall cabin, 0.32 m windows).
@@ -665,7 +677,7 @@ export const dropship = defineAsset({
           const x = 3.2 - i * 0.95;
           const w = 0.34 * s;
           const P = (px: number, z: number): Vec3 => [px, s * skinY(z), z];
-          detail.push(quad(P(x, z0), P(x - w, z0), P(x - w, z1), P(x, z1), GLASS, 0.012));
+          detail.push(quad(P(x, z0), P(x - w, z0), P(x - w, z1), P(x, z1), GLASS, 2 * DECAL));
           if (lod === 0)
             detail.push(
               quad(
@@ -674,7 +686,6 @@ export const dropship = defineAsset({
                 P(x - w - 0.05 * s, z1 + 0.05),
                 P(x + 0.05 * s, z1 + 0.05),
                 DARK,
-                0.006,
               ),
             );
         }
@@ -684,13 +695,7 @@ export const dropship = defineAsset({
         detail.push(bevelled([0.5, 0.03, 0.4], GLASS, 0, [4.75, CABIN.hw + 0.045, 2.95 - 0.6]));
         detail.push(bevelled([0.3, 0.06, 0.07], METAL, 0, [4.4, CABIN.hw + 0.05, 2.2]));
         detail.push(
-          hazard(
-            [5.35, CABIN.hw + 0.042, 1.6],
-            [4.15, CABIN.hw + 0.042, 1.6],
-            [0, 0, 0.12],
-            8,
-            0.002,
-          ),
+          hazard([5.3, CABIN.hw + 0.04, 1.6], [4.2, CABIN.hw + 0.04, 1.6], [0, 0, 0.12], 8),
         );
         // Nose sensor turret and pitot probes.
         detail.push(
@@ -706,14 +711,28 @@ export const dropship = defineAsset({
             at: [9.72, 0, 2.15],
           }),
         );
+        // Blade masts: the root chord lies on the nose side wall (a vertical plane between the
+        // two foremost stations), sunk 2 mm; the probe runs forward to x 10.1.
+        const [tip = CABIN, back = CABIN] = NOSE;
+        const wallY = (x: number): number =>
+          back.hw + ((tip.hw - back.hw) * (x - back.x)) / (tip.x - back.x) - DECAL;
         for (const s of [-1, 1])
           detail.push(
-            beam({
-              from: [9.3, s * 0.7, 2.3],
-              to: [10.1, s * 0.75, 2.3],
-              width: 0.03,
-              color: METAL,
-            }),
+            place(
+              prism({
+                plane: 'xy',
+                depth: 0.03,
+                profile: [
+                  [9.44, s * wallY(9.44)],
+                  [9.56, s * wallY(9.56)],
+                  [9.62, s * 0.735],
+                  [10.1, s * 0.735],
+                  [10.1, s * 0.765],
+                ],
+                color: METAL,
+              }),
+              { at: [0, 0, 2.3] },
+            ),
           );
         // Roof greebles on the chamfers, seeded.
         for (const s of [-1, 1])
@@ -890,7 +909,6 @@ export const dropship = defineAsset({
                 [R * Math.cos(a1), R * Math.sin(a1), 1.52],
                 [R * Math.cos(a0), R * Math.sin(a0), 1.52],
                 k % 2 ? BLACK : HAZARD,
-                0.006,
               ),
             );
           }
@@ -1046,8 +1064,8 @@ export const dropship = defineAsset({
         for (let i = 0; i < 12; i++) rampPlate.push(place(rib, { at: [-0.35 - i * 0.22, 0, 0] }));
         rampPlate.push(
           hazard(
-            [-RAMP_LEN + 0.3, -RAMP_HW + 0.12, 0.002],
-            [-RAMP_LEN + 0.3, RAMP_HW - 0.12, 0.002],
+            [-RAMP_LEN + 0.3, -RAMP_HW + 0.12, 0],
+            [-RAMP_LEN + 0.3, RAMP_HW - 0.12, 0],
             [-0.28, 0, 0],
             14,
           ),
@@ -1092,7 +1110,6 @@ export const dropship = defineAsset({
               [pad[0] / 2 - 0.05, -pad[1] / 2, 0.04],
               [0, 0, 0.1],
               8,
-              0.004,
             ),
           );
       }

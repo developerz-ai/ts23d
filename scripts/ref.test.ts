@@ -96,4 +96,24 @@ describe('refCommand', () => {
     await refCommand('thing', { root, get, cache, width: 60 });
     expect(calls.filter((u) => u.startsWith('https://upload')).length).toBe(downloads);
   });
+
+  it('refuses to write a ref.json with no views when every photo is skipped for its licence', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'ref-'));
+    await Bun.write(join(root, 'thing', 'README.md'), README);
+    const shut = 'All rights reserved';
+    const { get } = fakeCommons({ 'A_(b).jpg': shut, 'B.png': shut, 'C.jpg': shut });
+    const err = await refCommand('thing', {
+      root,
+      get,
+      cache: join(root, 'cache'),
+      width: 60,
+    }).then(
+      () => null,
+      (e: unknown) => e as { code?: string; message?: string; fix?: string },
+    );
+    expect(err?.code).toBe('T3D_RECIPE_INVALID');
+    expect(err?.message).toContain("File:B.png (licence 'All rights reserved')");
+    expect(err?.fix).toContain('CC BY');
+    expect(await Bun.file(join(root, 'thing', 'ref.json')).exists()).toBe(false);
+  });
 });

@@ -93,8 +93,10 @@ function door(): Obj {
 
 /** Shipping crate 0.8 × 0.8 × 0.62 m: corner posts, three boards a side, four on the lid. */
 function crate(): Obj {
+  // Inner core rises 2 mm past the post tops (0.6) so every lid board rests on it, not just the
+  // two outer boards that reach the posts.
   const parts: Mesh[] = [
-    box({ size: [0.72, 0.72, 0.58], at: [0, 0, 0.01], color: hex('#3a2a1a'), strip: 'wood' }),
+    box({ size: [0.72, 0.72, 0.592], at: [0, 0, 0.01], color: hex('#3a2a1a'), strip: 'wood' }),
   ];
   for (const [x, y] of [
     [-1, -1],

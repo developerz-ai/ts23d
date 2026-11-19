@@ -75,7 +75,8 @@ export function engine(o: EngineOptions): SoundClip {
       const at = Math.round(c * cycleLen + ((k + j.dt) * cycleLen) / cyl);
       const a = (bank[k] ?? 1) * j.amp;
       for (let i = 0; i < width; i++) {
-        const t = (at + i) % pulses.length;
+        // A first pulse jittered early starts before sample 0: its head wraps to the loop's end.
+        const t = (((at + i) % pulses.length) + pulses.length) % pulses.length;
         pulses[t] = (pulses[t] ?? 0) + a * 0.5 * (1 - Math.cos((2 * Math.PI * i) / width));
       }
     }

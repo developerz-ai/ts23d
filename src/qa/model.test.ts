@@ -189,6 +189,12 @@ describe('QA model', () => {
     expect(ground.every((x) => x.code === 'T3D_MODEL_FIT' && /z = 0/.test(x.fix))).toBe(true);
   });
 
+  it('has no ground rule for a water asset: a swimmer does not stand on z = 0', () => {
+    const lifted = asset({ name: 'swimmer', mesh: table(GROUND * 3) });
+    const ground = (a: CompiledAsset) => model(a).filter((x) => /ground/.test(x.message)).length;
+    expect([ground(lifted), ground({ ...lifted, medium: 'water' })]).toEqual([4, 0]);
+  });
+
   it('one paw 3 cm in the air is caught by ITS foot, though the next paw 14 cm away is down', () => {
     const one = merge([
       box({ size: [1, 0.18, 0.08], at: [0, 0, 0.41], color: [1, 1, 1] }),

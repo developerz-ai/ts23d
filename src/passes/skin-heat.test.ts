@@ -35,6 +35,26 @@ describe('heatWeights', () => {
     expect(() => heatWeights(legs, bones, { blend: 0, cell: 0.01 })).toThrow(Ts23dError);
   });
 
+  it('refuses a cell or voxel cap that would hang or size a NaN grid', async () => {
+    // Off the main thread with a deadline: a regression (cell 0 never coarsens) fails, not hangs.
+    const probe = `
+      import { heatWeights } from ${JSON.stringify(new URL('./skin-heat.ts', import.meta.url).pathname)};
+      import { box } from ${JSON.stringify(new URL('../primitives/index.ts', import.meta.url).pathname)};
+      const m = box({ size: [1, 1, 1], color: [1, 1, 1] });
+      const bones = [{ a: [0, 0, 0], b: [0, 0, 1] }];
+      const bad = [{ cell: 0 }, { cell: NaN }, { cell: -0.1 }, { cell: Infinity },
+        { cell: 0.1, maxVoxels: 26 }, { cell: 0.1, maxVoxels: 1000.5 }, { cell: 0.1, maxVoxels: NaN }];
+      const codes = bad.map((o) => {
+        try { heatWeights(m, bones, { blend: 0.05, ...o }); return 'ok'; }
+        catch (e) { return e.code ?? e.constructor.name; }
+      });
+      console.log(JSON.stringify(codes));`;
+    const run = Bun.spawn(['bun', '-e', probe], { stdout: 'pipe', stderr: 'pipe', timeout: 30000 });
+    const [out, exit] = await Promise.all([new Response(run.stdout).text(), run.exited]);
+    expect(exit).toBe(0);
+    expect(JSON.parse(out)).toEqual(Array.from({ length: 7 }, () => 'T3D_SKIN_INVALID'));
+  }, 60000);
+
   it('straight-line weights bleed across the leg gap; geodesic heat does not', () => {
     const k = 0.06;
     expect(innerWeight(skinWeights(legs, bones, { blend: k }), 1)).toBeGreaterThan(0.1);

@@ -121,6 +121,32 @@ describe('tpsWarp / warpTPS', () => {
     }
   });
 
+  it('keeps the skin and carries morph targets through the warp (a rigged head stays rigged)', () => {
+    const m = box({ size: [2, 2, 2], color: [0.5, 0.5, 0.5] });
+    const n = m.positions.length / 3;
+    const joints = Uint16Array.from({ length: n * 4 }, (_, i) => (i % 4 === 0 ? 3 : 0));
+    const weights = Float32Array.from({ length: n * 4 }, (_, i) => (i % 4 === 0 ? 1 : 0));
+    // A morph lifting every vertex 0.1 m in x and 0.2 m in z.
+    const delta = Float32Array.from({ length: n * 3 }, (_, i) => [0.1, 0, 0.2][i % 3] ?? 0);
+    const rigged = { ...m, joints, weights, morphs: [{ name: 'open', positions: delta }] };
+    // x doubles and shears by z: the delta (0.1, 0, 0.2) becomes (0.2 + 0.1, 0, 0.2).
+    const out = warpTPS(
+      rigged,
+      CUBE,
+      CUBE.map((p): Vec3 => [2 * p[0] + 0.5 * p[2], p[1], p[2]]),
+    );
+    expect(out.joints).toEqual(joints);
+    expect(out.weights).toEqual(weights);
+    expect(out.morphs?.map((t) => t.name)).toEqual(['open']);
+    const d = out.morphs?.[0]?.positions ?? new Float32Array();
+    expect(d).toHaveLength(n * 3);
+    for (let v = 0; v < n; v++)
+      expect(near([d[v * 3] ?? 0, d[v * 3 + 1] ?? 0, d[v * 3 + 2] ?? 0], [0.3, 0, 0.2], 1e-5)).toBe(
+        true,
+      );
+    expect(delta[0]).toBeCloseTo(0.1, 6); // the input morph is not written through
+  });
+
   it('warps a mesh: positions move, normals turn with the warp, topology kept, deterministic', () => {
     const m = box({ size: [2, 2, 2], color: [0.5, 0.5, 0.5] });
     const shear = (p: Vec3): Vec3 => [p[0] + 0.5 * p[2], p[1], p[2]];

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test';
 import { compile, defineAsset } from '../core/index.ts';
-import { cylinder } from '../primitives/index.ts';
+import { box, cylinder } from '../primitives/index.ts';
 import { proportions } from './gates.ts';
 import { measures } from './measures.ts';
 
@@ -63,5 +63,65 @@ describe('measures gate', () => {
     expect(proportions({ ...a, real: { ...real, length: Number.NaN } }).map((f) => f.code)).toEqual(
       ['T3D_QA_PROPORTIONS'],
     );
+  });
+});
+
+// A 2 m drum turned 45° about Z is still 2 m across: the old gate rotated the local box's corners
+// and measured 2.83 m.
+const drum = (real: number) =>
+  defineAsset({
+    name: 'drum',
+    kind: 'prop',
+    budget: { triangles: [999, 999, 999] },
+    real: { length: real, width: real, height: 1 },
+    build(ctx) {
+      ctx.part(
+        'drum',
+        cylinder({ radius: 1, length: 1, segments: 64, axis: 'z', color: [1, 1, 1] }),
+        {
+          yaw: Math.PI / 4,
+        },
+      );
+    },
+  });
+
+describe('proportions gate on yawed parts', () => {
+  it('fails a yawed 2 m drum declared 2.83 m, passes it declared 2 m', () => {
+    expect(proportions(compile(drum(2.83))).map((f) => f.code)).toEqual([
+      'T3D_QA_PROPORTIONS',
+      'T3D_QA_PROPORTIONS',
+    ]);
+    expect(proportions(compile(drum(2)))).toEqual([]);
+  });
+});
+
+// A selector that matches no part is a finding of its own, not silently dropped from the union.
+const cart = (parts: readonly string[]) =>
+  defineAsset({
+    name: 'cart',
+    kind: 'prop',
+    budget: { triangles: [999, 999, 999] },
+    real: {
+      length: 0.2,
+      width: 1.2,
+      height: 0.2,
+      measures: [{ label: 'track', parts: [...parts], axis: 'y', value: 1.2 }],
+    },
+    build(ctx) {
+      ctx.part('wheel_l', box({ size: [0.2, 0.2, 0.2], at: [0, 0.5, 0], color: [1, 1, 1] }));
+      ctx.part('wheel_r', box({ size: [0.2, 0.2, 0.2], at: [0, -0.5, 0], color: [1, 1, 1] }));
+    },
+  });
+
+describe('measures gate selectors', () => {
+  it("names each selector that matched nothing ('wheel_rr' typo)", () => {
+    const f = measures(compile(cart(['wheel_l', 'wheel_rr'])));
+    expect(f.map((x) => x.code)).toEqual(['T3D_QA_MEASURES']);
+    expect(f[0]?.message).toContain("'wheel_rr'");
+    expect(f[0]?.message).not.toContain("'wheel_l'");
+  });
+
+  it('passes when every selector matches', () => {
+    expect(measures(compile(cart(['wheel_l', 'wheel_r'])))).toEqual([]);
   });
 });

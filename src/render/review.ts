@@ -2,10 +2,10 @@
 // contact sheet, two detail close-ups (where the triangles are), the LOD strip, review.md (the
 // checklist prompt) and review.json (model-free image metrics with threshold warnings).
 
-import { type Asset, type CompiledAsset, compile, encodePng, type Lod } from '../core/index.ts';
+import { type Asset, compile, encodePng, type Lod } from '../core/index.ts';
 import type { PaintedSheet } from '../material/index.ts';
 import { type BeautyOptions, renderBeauty } from './beauty.ts';
-import { lodStrip } from './lod-strip.ts';
+import { exportedTriangles, lodStrip } from './lod-strip.ts';
 import { exposure, maskIoU, maskStats, poolMask, silhouette, viewFrame } from './metrics.ts';
 import { reviewPrompt } from './review-prompt.ts';
 import { type ReviewMetrics, warningsOf } from './review-warnings.ts';
@@ -27,9 +27,6 @@ export interface ReviewPack {
   readonly files: ReadonlyMap<string, Uint8Array | string>;
   readonly metrics: ReviewMetrics;
 }
-
-const tris = (a: CompiledAsset): number =>
-  a.parts.reduce((s, p) => s + (p.mesh ? p.mesh.indices.length / 3 : 0), 0);
 
 /** Two zoom windows centred on the densest cells of the hero's 16 × 9 detail grid, ≥ 4 cells apart. */
 export function detailWindows(detail: Uint32Array): { x: number; y: number }[] {
@@ -92,7 +89,8 @@ export function reviewPack(asset: Asset, o: ReviewOptions = {}): ReviewPack {
   });
   const partial = {
     asset: asset.name,
-    triangles: lods.map(tris),
+    // What the GLBs hold (as the manifest reports), not the compiled count.
+    triangles: lods.map(exportedTriangles),
     hero: exposure(hero.rgba, hero.mask, hero.width),
     views,
   };

@@ -34,6 +34,25 @@ describe('sound.engine', () => {
     expect(durationOf(e)).toBeCloseTo(2, 2);
   });
 
+  it('closes the loop for every seed and roughness (a pulse that starts before sample 0 wraps)', () => {
+    // Seed 6 jitters the first pulse early; its head was dropped instead of ending the loop.
+    expect(seamJump(engine({ cylinders: 4, rpm: 900, seed: 6 }))).toBeLessThan(1);
+    // A click is a step across the seam larger than any step inside the loop.
+    for (let seed = 1; seed <= 12; seed++)
+      for (const roughness of [0, 0.3, 1]) {
+        const x = engine({ cylinders: 4, rpm: 900, roughness, seed }).samples;
+        let inside = 0;
+        for (let i = 1; i < x.length; i++)
+          inside = Math.max(inside, Math.abs((x[i] ?? 0) - (x[i - 1] ?? 0)));
+        const seam = Math.abs((x[0] ?? 0) - (x[x.length - 1] ?? 0));
+        expect({ seed, roughness, click: seam > inside }).toEqual({
+          seed,
+          roughness,
+          click: false,
+        });
+      }
+  });
+
   it('is deterministic', () => {
     const a = encodeWav(engine({ cylinders: 6, rpm: 2000, seed: 4 }));
     const b = encodeWav(engine({ cylinders: 6, rpm: 2000, seed: 4 }));

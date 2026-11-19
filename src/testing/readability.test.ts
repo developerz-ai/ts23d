@@ -177,6 +177,15 @@ describe('shapeLanguage — failure case first', () => {
   });
 });
 
+describe('artMetrics cache', () => {
+  it('measures again when any render option changes (e.g. elevation)', () => {
+    const t = tower(false);
+    const low = artMetrics(t, { render: { elDeg: 5 } });
+    expect(artMetrics(t, { render: { elDeg: 60 } })).not.toBe(low);
+    expect(artMetrics(t, { render: { elDeg: 5 } })).toBe(low);
+  }, 30_000);
+});
+
 describe('assertArt', () => {
   it('throws the first T3D_ART_* code and lists every finding with value and limit', () => {
     const r = code(() => assertArt(tower(true), { art: { shape: 'friendly' } }));

@@ -27,6 +27,7 @@ import type {
   WorkerOut,
 } from './compile-protocol.ts';
 import { dioramaFor } from './diorama.ts';
+import { exportOptions, nodeParts } from './glb-export.ts';
 import { provideFor, withdrawFor } from './neural-load.ts';
 import { type Discovered, discover, importFile } from './recipe-modules.ts';
 
@@ -70,18 +71,17 @@ async function build(request: BuildRequest): Promise<BuildResult> {
   const t0 = performance.now();
   const t = request.target;
   const c = compiled0(asset, request.lod, t.kind === 'recipe' && Boolean(t.neural));
-  const glb = toGlb(c, {
-    animations: request.animations ?? true,
-    keepParts: request.keepParts ?? false,
-  });
-  const parts = c.parts.map((p) => ({
-    name: p.name,
-    parent: p.parent,
-    triangles: p.mesh ? triangleCount(p.mesh) : 0,
-    motion: p.motion?.kind ?? null,
-    emitter: p.emitter?.kind ?? null,
-  }));
-  const triangles = parts.reduce((n, p) => n + p.triangles, 0);
+  const glb = toGlb(c, exportOptions(request));
+  // The parts list names the GLB's nodes, not the compile parts (static ones merge into pivots).
+  const parts = nodeParts(
+    glb,
+    c.parts.map((p) => ({
+      name: p.name,
+      motion: p.motion?.kind ?? null,
+      emitter: p.emitter?.kind ?? null,
+    })),
+  );
+  const triangles = c.parts.reduce((n, p) => n + (p.mesh ? triangleCount(p.mesh) : 0), 0);
   const mp = c.physics ? massProperties(c) : null;
   return {
     glb,

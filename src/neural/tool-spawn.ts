@@ -1,13 +1,15 @@
 // The process plumbing every tool adapter shares (Blender, Godot, basisu, gltfpack): spawn one
 // executable with a deadline and an output cap, in a throwaway work directory, and turn every way
 // it can go wrong into T3D_NEURAL_FAILED with a fix — a missing tool names `t3d setup tools`, a
-// crash carries the last 40 lines of stderr. Node built-ins are imported lazily, inside the calls,
-// so the library stays importable in a browser (the gallery) where no tool can run. Tool models
-// carry the tool's version and script hash in `weightsSha256`: an upgrade is a cache miss.
+// crash carries the last 40 lines of stderr; Ctrl-C on t3d ends running tools (tool-reap.ts).
+// Node built-ins are imported lazily, inside the calls, so the library stays importable in a
+// browser (the gallery) where no tool can run. Tool models carry the tool's version and script
+// hash in `weightsSha256`: an upgrade is a cache miss.
 
 import type { NeuralTask } from '../core/index.ts';
 import { canonicalJson, type NeuralModelInfo, type NeuralToolInfo } from './adapter.ts';
 import { sha256Hex } from './sha256.ts';
+import { trackChild } from './tool-reap.ts';
 import { failed } from './wire.ts';
 
 export interface ToolProc {
@@ -47,12 +49,14 @@ export const nodeExec: ToolExec = async (exe, args, o) => {
     };
     let timedOut = false;
     let missing = false;
-    // Own process group, so a timeout kills the tool's children too (they hold the pipes open).
+    // Own process group, so a timeout kills the tool's children too (they hold the pipes open);
+    // tracked, so Ctrl-C on t3d kills that group too (tool-reap.ts).
     const child = spawn(exe, [...args], {
       ...(o.cwd ? { cwd: o.cwd } : {}),
       stdio: ['ignore', 'pipe', 'pipe'],
       detached: process.platform !== 'win32',
     });
+    const untrack = child.pid === undefined ? () => {} : trackChild(child.pid);
     const timer = setTimeout(() => {
       timedOut = true;
       try {
@@ -71,6 +75,7 @@ export const nodeExec: ToolExec = async (exe, args, o) => {
     });
     child.on('close', (code) => {
       clearTimeout(timer);
+      untrack();
       resolve({
         code,
         stdout: Buffer.concat(out).toString('utf8'),

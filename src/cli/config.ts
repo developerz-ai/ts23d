@@ -8,7 +8,7 @@
 import { existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { isNeuralTask, type NeuralTask, Ts23dError } from '../core/index.ts';
+import { isNeuralTask, isTs23dError, type NeuralTask, Ts23dError } from '../core/index.ts';
 import type { NeuralAdapter, NeuralBinding, T3dConfig } from '../neural/index.ts';
 
 export const CONFIG_FILE = 't3d.config.ts';
@@ -81,7 +81,7 @@ export async function loadConfig(dir = process.cwd()): Promise<LoadedConfig> {
   try {
     mod = (await import(pathToFileURL(file).href)) as Record<string, unknown>;
   } catch (e) {
-    if (e instanceof Ts23dError) throw e;
+    if (isTs23dError(e)) throw e;
     throw new Ts23dError('T3D_RECIPE_THREW', {
       cause: `${CONFIG_FILE} failed to load: ${e instanceof Error ? e.message : String(e)}`,
       fix: `fix ${file} so it imports and runs (bun ${CONFIG_FILE})`,

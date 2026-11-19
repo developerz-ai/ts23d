@@ -1,6 +1,7 @@
-// Project materials: `defineMaterial` validates a MaterialDef, gives it one of the sheet's custom
-// strip rows (picked from its id, not from registration order: slots.ts) and adds it to the house
-// sheet, so `DEFAULT_SHEET` paints it and primitives map onto it. Redefining an id with the same definition is a no-op; a different one is a conflict.
+// Project materials: `defineMaterial` validates a MaterialDef, gives it the custom strip row it
+// names (`row`) or its id hashes to (never another: slots.ts) and adds it to the house sheet, so
+// `DEFAULT_SHEET` paints it and primitives map onto it. Redefining an id with the same definition
+// is a no-op; a different one, or a second id on a taken row, is a conflict.
 // `materialOf` answers what any strip is (built-in or defined) for docs, review and tests;
 // `textureSources` / `stripCredits` serve the CC0 image strips (fetch list, GLB credits).
 
@@ -10,7 +11,17 @@ import { type MaterialDef, toStripRecipe } from './material-def.ts';
 import { NATURE_LIBRARY } from './nature.ts';
 import { HOUSE_STRIPS } from './paint/default-sheet.ts';
 import type { StripRecipe } from './paint/types.ts';
-import { clearCustom, customIds, customIndex, pushCustom } from './slots.ts';
+import { rowsSampled } from './rows-sampled.ts';
+import {
+  clearCustom,
+  customIds,
+  customIndex,
+  freeId,
+  freeRows,
+  homeSlot,
+  pushCustom,
+  rowOwner,
+} from './slots.ts';
 import { creditOf, type TextureSource } from './texture-source.ts';
 import {
   CLASSIC_STRIPS,
@@ -18,7 +29,6 @@ import {
   type CustomStripId,
   STRIPS,
   type StripId,
-  stripRect,
   stripRow,
   variantOf,
 } from './trim-sheet.ts';
@@ -34,10 +44,23 @@ export function materialGeneration(): number {
   return generation;
 }
 
-/** The same definition, field by field (painters by identity, colours and params by value). */
+/** JSON with every object's keys sorted and undefined dropped: equal values, equal text. */
+function canonical(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map(canonical).join(',')}]`;
+  if (typeof value !== 'object' || value === null) return JSON.stringify(value) ?? 'null';
+  const fields = Object.entries(value)
+    .filter(([, v]) => v !== undefined)
+    .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
+  return `{${fields.map(([k, v]) => `${JSON.stringify(k)}:${canonical(v)}`).join(',')}}`;
+}
+
+/**
+ * The same definition, field by field, whatever order its keys were written in (painters and
+ * graphs by identity, colours and params by value).
+ */
 function same(a: MaterialDef, b: MaterialDef): boolean {
   return (
-    JSON.stringify({ ...a, paint: 0, graph: 0 }) === JSON.stringify({ ...b, paint: 0, graph: 0 }) &&
+    canonical({ ...a, paint: 0, graph: 0 }) === canonical({ ...b, paint: 0, graph: 0 }) &&
     a.paint === b.paint &&
     a.graph === b.graph
   );
@@ -49,6 +72,7 @@ function same(a: MaterialDef, b: MaterialDef): boolean {
  * const teak = defineMaterial({ id: 'teak_deck', kind: 'planks', roughness: 0.6,
  *   albedo: '#8a5a32', albedo2: '#5a3a1e', params: { width: 0.12, rings: 0.5 } });
  * box({ size: [4, 2, 0.05], strip: teak, color: NATURAL });
+ * The strip row is the id's hash, or `row` (0..13) when two ids a project loads hash to one row.
  */
 export function defineMaterial(def: MaterialDef): CustomStripId {
   const recipe = toStripRecipe(def);
@@ -71,9 +95,19 @@ export function defineMaterial(def: MaterialDef): CustomStripId {
       cause: `the trim sheet has ${CUSTOM_STRIP_SLOTS} custom strip rows, all taken (${customIds().join(', ')})`,
       fix: 'reuse a built-in strip with a vertex colour, or restyle an unused built-in strip in your SheetRecipe',
     });
+  const row = def.row ?? homeSlot(id, CUSTOM_STRIP_SLOTS);
+  const owner = rowOwner(row);
+  if (owner !== undefined) {
+    const free = def.row === undefined ? freeId(id, CUSTOM_STRIP_SLOTS) : undefined;
+    const how = def.row === undefined ? 'hashes to' : 'asks for';
+    throw new Ts23dError('T3D_MATERIAL_CONFLICT', {
+      cause: `material '${id}' ${how} custom strip row ${row}, which '${owner}' already holds; a row comes from the definition alone, so the layout never depends on which material was defined first`,
+      fix: `give it a free row (row: ${freeRows(CUSTOM_STRIP_SLOTS)[0]}; free now: ${freeRows(CUSTOM_STRIP_SLOTS).join(', ')})${free ? `, or rename it (e.g. '${free}', whose row is free)` : ''}, or drop a material this process does not need`,
+    });
+  }
   defined.set(id, def);
   generation++;
-  pushCustom(id, def.spanMetres ?? 4, CUSTOM_STRIP_SLOTS);
+  pushCustom(id, def.spanMetres ?? 4, row);
   (HOUSE_STRIPS as Record<string, StripRecipe>)[id] = recipe;
   return id as CustomStripId;
 }
@@ -136,21 +170,14 @@ export function textureSources(): readonly TextureSource[] {
 }
 
 /**
- * Credit lines for the image strips a mesh samples: any V coordinate inside such a strip's row
- * counts. Empty when no image strip is used (the GLB stays byte-identical).
+ * Credit lines for the image strips a mesh samples (`vs`: one V per vertex; pass `indices` for an
+ * exact, per-triangle answer: `rowsSampled`). Empty when no image strip is used (the GLB stays
+ * byte-identical).
  */
-export function stripCredits(vs: ArrayLike<number>): string[] {
+export function stripCredits(vs: ArrayLike<number>, indices?: ArrayLike<number>): string[] {
+  const rows = rowsSampled(vs, indices);
   const out: string[] = [];
-  for (const [id, d] of defined) {
-    if (!d.texture) continue;
-    const r = stripRect(id as StripId);
-    for (let i = 0; i < vs.length; i++) {
-      const v = vs[i] ?? -1;
-      if (v >= r.v0 && v <= r.v1) {
-        out.push(creditOf(d.texture));
-        break;
-      }
-    }
-  }
+  for (const [id, d] of defined)
+    if (d.texture && rows.has(stripRow(id))) out.push(creditOf(d.texture));
   return out;
 }

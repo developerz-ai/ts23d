@@ -5,17 +5,36 @@
 // A Noise2 takes metres (x, y) and returns roughly [−1, 1] (ridged: [0, 1]).
 
 import type { Rng } from '../core/index.ts';
+import { count, invalid, positive } from './check.ts';
 
 export type Noise2 = (x: number, y: number) => number;
 
 export interface FractalOptions {
-  /** Metres per base feature (the first octave's wavelength). Default 1. */
+  /** Metres per base feature (the first octave's wavelength), > 0. Default 1. */
   readonly scale?: number;
+  /** Whole number 1..32 (fbm, billow default 5; ridged 6). */
   readonly octaves?: number;
-  /** Frequency multiplier per octave. Default 2. */
+  /** Frequency multiplier per octave, > 0. Default 2. */
   readonly lacunarity?: number;
-  /** Amplitude multiplier per octave (persistence). Default 0.5. */
+  /** Amplitude multiplier per octave (persistence), ≥ 0. Default 0.5. */
   readonly gain?: number;
+}
+
+/** Checked fractal knobs: no octaves or a zero scale would divide by zero into a NaN height. */
+function knobs(
+  what: string,
+  o: FractalOptions,
+  octaves: number,
+): { s: number; octaves: number; lac: number; gain: number } {
+  const gain = o.gain ?? 0.5;
+  if (!(Number.isFinite(gain) && gain >= 0))
+    invalid(`${what} gain is ${gain}`, 'use a finite persistence ≥ 0, e.g. gain: 0.5');
+  return {
+    s: 1 / positive(`${what} scale`, o.scale ?? 1, 'scale: 700'),
+    octaves: count(`${what} octaves`, o.octaves ?? octaves, 1, 32),
+    lac: positive(`${what} lacunarity`, o.lacunarity ?? 2, 'lacunarity: 2'),
+    gain,
+  };
 }
 
 const R = Math.SQRT1_2;
@@ -79,11 +98,8 @@ export function valueNoise2(rng: Rng): Noise2 {
 }
 
 /** Sum octaves of `shape(n(x·f, y·f))`, normalised by the amplitude sum. */
-function fractal(n: Noise2, o: FractalOptions, shape: (v: number) => number): Noise2 {
-  const s = 1 / (o.scale ?? 1);
-  const octaves = o.octaves ?? 5;
-  const lac = o.lacunarity ?? 2;
-  const gain = o.gain ?? 0.5;
+function fractal(what: string, n: Noise2, o: FractalOptions, shape: (v: number) => number): Noise2 {
+  const { s, octaves, lac, gain } = knobs(what, o, 5);
   return (x, y) => {
     let sum = 0;
     let amp = 1;
@@ -101,22 +117,19 @@ function fractal(n: Noise2, o: FractalOptions, shape: (v: number) => number): No
 }
 
 /** Fractal Brownian motion: the default rolling-hills / rough-surface noise, ≈ [−1, 1]. */
-export const fbm = (n: Noise2, o: FractalOptions = {}): Noise2 => fractal(n, o, (v) => v);
+export const fbm = (n: Noise2, o: FractalOptions = {}): Noise2 => fractal('fbm', n, o, (v) => v);
 
 /** Billow: |noise| octaves, rounded domes and sharp creases (hills, clouds), [−1, 1]. */
 export const billow = (n: Noise2, o: FractalOptions = {}): Noise2 =>
-  fractal(n, o, (v) => 2 * Math.abs(v) - 1);
+  fractal('billow', n, o, (v) => 2 * Math.abs(v) - 1);
 
 /**
  * Ridged multifractal (Musgrave): inverted |noise| squared, each octave weighted by the last, so
  * detail piles up on the ridgelines and valleys stay smooth. [0, 1].
  */
 export function ridged(n: Noise2, o: FractalOptions & { readonly offset?: number } = {}): Noise2 {
-  const s = 1 / (o.scale ?? 1);
-  const octaves = o.octaves ?? 6;
-  const lac = o.lacunarity ?? 2;
-  const gain = o.gain ?? 0.5;
-  const offset = o.offset ?? 1;
+  const { s, octaves, lac, gain } = knobs('ridged', o, 6);
+  const offset = positive('ridged offset', o.offset ?? 1, 'offset: 1');
   return (x, y) => {
     let sum = 0;
     let norm = 0;
@@ -144,14 +157,14 @@ export const warp =
 
 /**
  * Terraces: snap a height to steps of `step` metres. `sharpness` is the share of each step that is
- * a flat tread (0 = no terracing, 1 = flat treads and vertical risers); the rest is a smooth riser.
- * Strata, rice paddies, open-pit benches.
+ * a flat tread (0 = no terracing, 1 = flat treads and vertical risers); the rest is the riser,
+ * straight at 0 and eased (smoothstep) as sharpness grows. Strata, rice paddies, open-pit benches.
  */
 export function terrace(h: number, step: number, sharpness = 0.5): number {
   const k = Math.floor(h / step);
   const t = h / step - k;
   const s = Math.min(1, Math.max(0, sharpness));
+  // 0 on the tread (t ≤ s), then 0 → 1 up the riser.
   const u = s >= 1 ? 0 : Math.min(1, Math.max(0, (t - s) / (1 - s)));
-  const riser = u * u * (3 - 2 * u);
-  return (k + t + (riser - t) * s) * step;
+  return (k + u + (u * u * (3 - 2 * u) - u) * s) * step;
 }

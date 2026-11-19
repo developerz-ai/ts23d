@@ -39,6 +39,7 @@ const server = Bun.serve({
             generation_types: ['text-to-image', 'image-to-image'],
             cost_per_generation: 2,
           },
+          { model_id: 'flux', generation_types: ['text-to-image'] },
           { model_id: 'veo', generation_types: ['text-to-video'] },
         ],
       });
@@ -117,7 +118,10 @@ describe('kubeezAdapter: the API', () => {
     script.generate = [429, 429, 200];
     script.polls = [{ status: 'pending' }, done(null), done(`${server.url.origin}/cdn/out.png`)];
     const a = kubeezAdapter(opts);
-    expect((await a.models()).map((m) => [m.id, m.cost])).toEqual([['nano', 2]]);
+    expect((await a.models()).map((m) => [m.id, m.cost])).toEqual([
+      ['nano', 2],
+      ['flux', undefined],
+    ]);
     const cache = neuralCache({ recipe: 'street' });
     const { entry } = await cache.fill(a, { task: 'image', request: REQ });
     const png = readPng(entry.outputs[0]?.bytes ?? new Uint8Array(), 'out');
@@ -162,6 +166,15 @@ describe('kubeezAdapter: the API', () => {
       aspect_ratio: '16:9',
       source_media_urls: [`${server.url.origin}/cdn/src.png`],
     });
+  });
+
+  test('paid: estimate is the listed cost_per_generation, NaN when the model lists none', async () => {
+    const a = kubeezAdapter(opts);
+    expect(a.paid).toBe(true);
+    const job = { task: 'image' as const, request: REQ };
+    expect(await a.estimate?.(job)).toBe(2);
+    expect(await a.estimate?.({ ...job, model: 'flux' })).toBeNaN();
+    expect(seen.some((s) => s.path === '/v1/generate/media')).toBe(false);
   });
 
   test('aspectOf picks the closest listed ratio', () => {

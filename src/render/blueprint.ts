@@ -22,7 +22,7 @@ import {
   orthoPanel,
   PAPER,
 } from './blueprint-panel.ts';
-import { drawText } from './font.ts';
+import { drawText, fitScale } from './font.ts';
 import { drawAsset, line, orthoCamera, type Target } from './raster.ts';
 import { bounds } from './sheet.ts';
 
@@ -70,7 +70,11 @@ export function blueprintImage(asset: CompiledAsset, o: BlueprintOptions = {}): 
     return { name: j.name, at: j.at, rgb: v ? OK : BAD };
   });
   const width = pw * 2;
-  const foot = legendHeight(ms.length, marks.length, width);
+  const foot = legendHeight(
+    ms.length,
+    marks.map((m) => m.name),
+    width,
+  );
   const height = head + ph * 2 + foot;
   const px = new Uint8Array(width * height * 4);
   const sheet: Canvas = { px, width, height };
@@ -105,7 +109,8 @@ export function blueprintImage(asset: CompiledAsset, o: BlueprintOptions = {}): 
   }
   for (let y = head; y < head + ph * 2; y++) px.set([...INK, 255], (y * width + pw) * 4);
   const title = `${asset.name}  BLUEPRINT  L ${fmtM(sb.max[0] - sb.min[0])} X W ${fmtM(sb.max[1] - sb.min[1])} X H ${fmtM(sb.max[2] - sb.min[2])} M  LOD${asset.lod}${figure ? '  FIGURE 1.8 M' : ''}`;
-  drawText(px, width, 12, 14, title, 4, INK);
+  // A long name or a narrow sheet: shrink the title until it fits rather than run off the edge.
+  drawText(px, width, 12, 14, title, fitScale(title, 4, width - 24), INK);
   legend(sheet, head + ph * 2, ms, marks);
   return sheet;
 }

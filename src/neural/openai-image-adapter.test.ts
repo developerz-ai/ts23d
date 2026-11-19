@@ -26,6 +26,11 @@ afterAll(() => {
 const opts = { url: `${server.url.href}v1`, model: 'sdxl', headers: { authorization: 'Bearer k' } };
 
 describe('openaiImageAdapter', () => {
+  test('paid is off unless the options say the endpoint is billed', () => {
+    expect(openaiImageAdapter(opts).paid).toBeUndefined();
+    expect(openaiImageAdapter({ ...opts, paid: true }).paid).toBe(true);
+  });
+
   test('no b64_json, missing key → T3D_NEURAL_FAILED; non-PNG bytes → T3D_NEURAL_OUTPUT_INVALID', async () => {
     const code = (p: Promise<unknown>) =>
       p.then(

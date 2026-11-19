@@ -12,6 +12,19 @@ it('refuses elided and stubbed code', () => {
     '// similar for the remaining axles',
     '// TODO: implement',
     '// omitted for brevity',
+    '// ... existing code ...',
+    '  // … unchanged …',
+    '// rest of the function stays the same',
+    '// rest of function unchanged',
+    '// TODO: fill in',
+    '// TODO write the solver',
+    '// remaining cases omitted',
+    '// existing code',
+    '// unchanged',
+    '/* existing methods unchanged */',
+    'const a = 1; // ...',
+    '/* ... existing methods ... */',
+    '{/* ... */}',
   ])
     expect(checkSource('a.ts', line)).toHaveLength(1);
 });
@@ -35,6 +48,12 @@ it('allows spreads, rest params and planned stubs', () => {
     '// …and the track belts run round them at the same speed',
     '// ...then take exactly the faces it sees',
     '// TODO(#12): tune the boiler taper once refs land',
+    'const [head, ...rest] = parts; // rest of the chain hangs off head',
+    '// the rest of the hull stays below the deck line',
+    '// leaves the existing code path for LOD2 alone',
+    '// values are unchanged when the seed is 0',
+    "const label = 'loading...';",
+    '// the remaining wheels share the axle',
   ])
     expect(checkSource('a.ts', line)).toEqual([]);
 });

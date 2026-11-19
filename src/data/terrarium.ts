@@ -76,10 +76,18 @@ export function tilesFor(b: DemBox): { x: number; y: number }[] {
   const [w, h] = b.size;
   const [ax, ay] = lonLatToPixel(...localToLonLat(b.centre, -w / 2, h / 2), b.zoom);
   const [bx, by] = lonLatToPixel(...localToLonLat(b.centre, w / 2, -h / 2), b.zoom);
+  // The world is 2^zoom tiles round: x wraps across ±180°, y stops at the Web-Mercator edge.
+  const n = 2 ** b.zoom;
   const out: { x: number; y: number }[] = [];
-  for (let y = Math.floor((ay - 1) / TILE); y <= Math.floor((by + 1) / TILE); y++)
-    for (let x = Math.floor((ax - 1) / TILE); x <= Math.floor((bx + 1) / TILE); x++)
+  const seen = new Set<number>();
+  const y1 = Math.min(n - 1, Math.floor((by + 1) / TILE));
+  for (let y = Math.max(0, Math.floor((ay - 1) / TILE)); y <= y1; y++)
+    for (let i = Math.floor((ax - 1) / TILE); i <= Math.floor((bx + 1) / TILE); i++) {
+      const x = ((i % n) + n) % n;
+      if (seen.has(y * n + x)) continue;
+      seen.add(y * n + x);
       out.push({ x, y });
+    }
   return out;
 }
 
@@ -101,7 +109,11 @@ export function resampleTerrarium(
   checkBox(b);
   const n = b.cells;
   const [w, h] = b.size;
-  const at = (px: number, py: number): number => {
+  const world = TILE * 2 ** b.zoom;
+  const at = (gx: number, gy: number): number => {
+    // Same wrap and clamp as `tilesFor`: a pixel east of +180° is the first pixel west of −180°.
+    const px = ((gx % world) + world) % world;
+    const py = Math.min(world - 1, Math.max(0, gy));
     const tx = Math.floor(px / TILE);
     const ty = Math.floor(py / TILE);
     const img = tile(tx, ty);

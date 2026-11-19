@@ -8,7 +8,7 @@
 
 import { statfsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
-import { Ts23dError } from '../core/index.ts';
+import { isTs23dError } from '../core/index.ts';
 import { gpuChecks } from './doctor-gpu.ts';
 import { usage } from './flags.ts';
 import { envelope, printError } from './report.ts';
@@ -278,7 +278,7 @@ export async function doctorMain(
     else printDoctor(r);
     return 0;
   } catch (e) {
-    if (e instanceof Ts23dError) return printError(e, json);
+    if (isTs23dError(e)) return printError(e, json);
     throw e;
   }
 }

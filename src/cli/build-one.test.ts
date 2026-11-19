@@ -1,6 +1,6 @@
 import { expect, it } from 'bun:test';
 import { compile, cylinder, defineAsset } from '../index.ts';
-import { drawFindings, qaOf } from './build-one.ts';
+import { qaOf } from './build-one.ts';
 
 /** LOD2 with more segments than LOD0: per-LOD gates pass, the chain does not. */
 const inverted = defineAsset({
@@ -25,8 +25,8 @@ it('fails a LOD chain whose triangles grow, with lod-triangles findings', () => 
   expect(qaOf(inverted, lods.slice(0, 1)).some((f) => f.gate === 'lod-triangles')).toBe(false);
 });
 
-it('fails budget.draws when a LOD needs more draw calls', () => {
-  expect(drawFindings(inverted, lods)).toEqual([]);
+it('fails budget.draws when a LOD needs more draw calls, after the chain findings', () => {
+  expect(qaOf(inverted, lods).some((f) => f.gate === 'draw-calls')).toBe(false);
   const two = defineAsset({
     name: 'two',
     kind: 'prop',
@@ -36,12 +36,16 @@ it('fails budget.draws when a LOD needs more draw calls', () => {
       ctx.part('base', cylinder({ radius: 0.3, length: 1, segments: 8, color: [1, 1, 1] }));
       ctx.part(
         'cap',
-        cylinder({ radius: 0.3, length: 0.1, segments: 8, at: [0, 0, 0.55], color: [1, 1, 1] }),
+        cylinder({ radius: 0.3, length: 0.1, segments: 8, at: [0, 0, 1], color: [1, 1, 1] }),
         { parent: 'lid' },
       );
     },
   });
-  const found = drawFindings(two, [compile(two, { lod: 0 })]);
-  expect(found.map((f) => f.code)).toEqual(['T3D_QA_DRAW_CALLS']);
-  expect(found[0]?.message).toContain('budget.draws is 1');
+  const found = qaOf(two, [compile(two, { lod: 0 })]);
+  expect(found.at(-1)).toEqual({
+    gate: 'draw-calls',
+    code: 'T3D_QA_DRAW_CALLS',
+    message: 'LOD0 needs 2 draw calls, budget.draws is 1',
+    fix: 'give parts that move together one pivot (ctx.group) and share paint slots, so the export merges them; or raise budget.draws',
+  });
 });

@@ -2,13 +2,11 @@
 // error (exit 1), not a warning — an agent iterates until it prints PASS.
 
 import {
-  type Bounds,
   boundsOf,
   type CompiledAsset,
   TOLERANCE,
-  toWorld,
   triangleCount,
-  worldTransforms,
+  worldMeshes,
 } from '../core/index.ts';
 import { chainCross } from './chain-cross.ts';
 import { runChecks } from './checks.ts';
@@ -23,36 +21,18 @@ import { mass } from './mass.ts';
 import { measures } from './measures.ts';
 import { model } from './model.ts';
 import { hiddenParts } from './occlusion.ts';
-import { degenerateTriangles, nonFinite, normalsMatchWinding, vertexColors } from './sanity.ts';
+import {
+  degenerateTriangles,
+  meshArrays,
+  nonFinite,
+  normalsMatchWinding,
+  vertexColors,
+} from './sanity.ts';
 import { skin } from './skin.ts';
 import { swim } from './swim.ts';
 import { treads } from './treads.ts';
 import type { Finding, Gate } from './types.ts';
 import { weatherGate } from './weather.ts';
-
-const worldBounds = (asset: CompiledAsset): Map<string, Bounds> => {
-  const xf = worldTransforms(asset.parts);
-  const out = new Map<string, Bounds>();
-  for (const p of asset.parts) {
-    const t = xf.get(p.name);
-    if (!t || !p.mesh || p.mesh.indices.length === 0) continue;
-    const b = boundsOf(p.mesh);
-    const corners = [0, 1, 2, 3, 4, 5, 6, 7].map((i) =>
-      toWorld(t, [
-        i & 1 ? b.max[0] : b.min[0],
-        i & 2 ? b.max[1] : b.min[1],
-        i & 4 ? b.max[2] : b.min[2],
-      ]),
-    );
-    const axis = (k: 0 | 1 | 2, f: (...v: number[]) => number): number =>
-      f(...corners.map((c) => c[k]));
-    out.set(p.name, {
-      min: [axis(0, Math.min), axis(1, Math.min), axis(2, Math.min)],
-      max: [axis(0, Math.max), axis(1, Math.max), axis(2, Math.max)],
-    });
-  }
-  return out;
-};
 
 export const triangleBudget: Gate = (asset) => {
   const tris = asset.parts.reduce((s, p) => s + (p.mesh ? triangleCount(p.mesh) : 0), 0);
@@ -69,6 +49,19 @@ export const triangleBudget: Gate = (asset) => {
     : [];
 };
 
+/** A LOD with no triangles exports a GLB with no meshes: some viewers reject it, all show nothing. */
+export const emptyAsset: Gate = (asset) =>
+  asset.parts.some((p) => p.mesh && p.mesh.indices.length >= 3)
+    ? []
+    : [
+        {
+          gate: 'empty',
+          code: 'T3D_QA_EMPTY',
+          message: `LOD${asset.lod} has no triangles: every mesh is empty or behind a ctx.lod test`,
+          fix: 'keep the main masses at every LOD (gate detail on ctx.lod, never the body); a LOD2 of a few hundred triangles is enough',
+        },
+      ];
+
 export const partNames: Gate = (asset) =>
   asset.parts
     .filter((p) => !/^[a-z][a-z0-9_]*$/.test(p.name))
@@ -80,11 +73,32 @@ export const partNames: Gate = (asset) =>
       fix: 'rename it — engines bind to node names like axle_0, door_l',
     }));
 
+const UNITS = [
+  [1000, 'millimetres'],
+  [100, 'centimetres'],
+] as const;
+const near = (ratio: number, to: number): boolean => Math.abs(ratio / to - 1) <= 0.1;
+
+/** The fix for a size miss, naming a units slip when the ratio is ~10^2 or ~10^3 either way. */
+function sizeFix(axis: string, got: number, want: number): string {
+  const plain = `rescale along ${axis} — re-derive the lengths from the sources, don't fudge the tolerance`;
+  for (const [f, unit] of UNITS) {
+    if (near(want / got, f))
+      return `\`real\` is in metres; ${want} looks like ${unit} → ${+(want / f).toPrecision(6)}: declare it in metres (or ${plain})`;
+    if (near(got / want, f))
+      return `the model is ~${f}× \`real\` along ${axis}: the geometry looks like ${unit}; build in metres (or ${plain})`;
+  }
+  return plain;
+}
+
 /** Overall bounding box vs the recipe's `real` dimensions: catches a 6 m tank modelled at 7.4 m. */
 export const proportions: Gate = (asset) => {
   const real = asset.real;
   if (!real || asset.lod !== 0) return [];
-  const boxes = [...worldBounds(asset).values()];
+  // Bounds of the real world-space vertices: a yawed part's rotated local box over-measures it.
+  const boxes = [...worldMeshes(asset.parts).values()]
+    .filter((m) => m.indices.length > 0)
+    .map(boundsOf);
   const span = (k: 0 | 1 | 2): number =>
     Math.max(...boxes.map((b) => b.max[k])) - Math.min(...boxes.map((b) => b.min[k]));
   const tol = real.tolerance ?? TOLERANCE.proportions;
@@ -103,7 +117,7 @@ export const proportions: Gate = (asset) => {
             gate: 'proportions',
             code: 'T3D_QA_PROPORTIONS',
             message: `${axis} ${got.toFixed(2)} m vs real ${want} m (±${tol * 100}%)`,
-            fix: `rescale along ${'XYZ'[k]} — re-derive the lengths from the sources, don't fudge the tolerance`,
+            fix: sizeFix('XYZ'[k] ?? 'X', got, want),
           },
         ]
       : [];
@@ -123,6 +137,7 @@ export const recipeChecks: Gate = (asset) =>
   }));
 
 export const DEFAULT_GATES: readonly Gate[] = [
+  emptyAsset,
   triangleBudget,
   floatingParts,
   connections,
@@ -149,6 +164,9 @@ export const DEFAULT_GATES: readonly Gate[] = [
   model,
 ];
 
+/** Malformed attribute arrays come back alone: every other gate would read past their end. */
 export function runQa(asset: CompiledAsset, gates: readonly Gate[] = DEFAULT_GATES): Finding[] {
+  const malformed = meshArrays(asset);
+  if (malformed.length > 0) return malformed;
   return gates.flatMap((g) => g(asset));
 }

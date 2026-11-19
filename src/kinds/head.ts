@@ -60,12 +60,27 @@ export function headParams(o: Pick<HeadOptions, 'race' | 'params'> = {}): HeadPa
   const out: Record<string, unknown> = { ...base };
   for (const [k, v] of Object.entries(o.params ?? {})) {
     const was = out[k];
+    if (was === null && v && typeof v === 'object') refuseIncomplete(k, v);
     out[k] =
       v && typeof v === 'object' && !Array.isArray(v) && was && typeof was === 'object'
         ? { ...was, ...v }
         : v;
   }
   return checkHead(out as unknown as HeadParams);
+}
+
+/** An override of a field the base leaves out (`tusks: null`) has nothing to merge into: it must
+ *  be whole, with every field a preset that has it gives. */
+function refuseIncomplete(key: string, v: object): void {
+  const shape = Object.values(HEADS)
+    .map((h) => (h as unknown as Record<string, unknown>)[key])
+    .find((x): x is object => x !== null && typeof x === 'object');
+  const missing = Object.keys(shape ?? {}).filter((f) => !(f in v));
+  if (missing.length)
+    throw new Ts23dError('T3D_RECIPE_INVALID', {
+      cause: `head param ${key}: the base has none (null), so the override cannot merge into it and lacks ${missing.join(', ')}`,
+      fix: `give ${key} whole: { ${Object.keys(shape ?? {}).join(', ')} } (head units), e.g. the orc preset's`,
+    });
 }
 
 /** Moves the eyes forward/back so they sit in the face surface: probe the brain case + face

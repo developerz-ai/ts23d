@@ -1,10 +1,22 @@
 // The three.js TSL emitter behind `threeMaterialSource`: prints a self-contained TypeScript module
-// for three r18x (`three/webgpu` + `three/tsl`). Values come pre-validated from shader.ts.
+// for three r18x (`three/webgpu` + `three/tsl`). Values come pre-validated from shader.ts. The glow
+// colour is printed as an sRGB hex (`color(0xrrggbb)`): three converts hex from sRGB to its linear
+// working space, matching Godot's `source_color`; `color(r, g, b)` would be taken as linear.
 
 import type { ShaderParams } from './shader.ts';
 import type { UvRect } from './trim-sheet.ts';
 
 const f = (n: number): string => (Number.isInteger(n) ? `${n}.0` : `${+n.toFixed(6)}`);
+
+/** sRGB 0..1 triple → `0xrrggbb`. */
+const hex = (c: readonly [number, number, number]): string =>
+  `0x${c
+    .map((v) =>
+      Math.round(v * 255)
+        .toString(16)
+        .padStart(2, '0'),
+    )
+    .join('')}`;
 
 const rectNode = (r: UvRect): string => `inRect(${f(r.u0)}, ${f(r.v0)}, ${f(r.u1)}, ${f(r.v1)})`;
 
@@ -34,7 +46,7 @@ export const uniforms = {
   windStrength: uniform(${f(p.windStrength)}),
   windHeight: uniform(${f(p.windHeight)}),
   windHz: uniform(${f(p.windHz)}),
-  glowColor: uniform(color(${f(p.glow[0])}, ${f(p.glow[1])}, ${f(p.glow[2])})),
+  glowColor: uniform(color(${hex(p.glow)})),
   glowRatio: uniform(${f(p.glowRatio)}),
   glowIntensity: uniform(${f(p.glowIntensity)}),
   wear: uniform(${f(p.wear)}),
