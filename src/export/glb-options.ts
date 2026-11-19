@@ -9,11 +9,18 @@ import type { PhysicsOptions, PhysicsReport } from './physics.ts';
 import type { ExportProfile } from './profile.ts';
 import type { SheetBinding } from './textures.ts';
 
+/**
+ * `GlbOptions.animations` when the caller leaves it out. The one default: the writer (glb.ts) and
+ * the manifest (`manifestOf`) both read it, so a manifest lists the clips a default export holds.
+ */
+export const GLB_ANIMATIONS_DEFAULT = false;
+
 export interface GlbOptions {
   /** Keep every part as its own node (debugging, per-part picking). Default merges to pivots. */
   readonly keepParts?: boolean;
   /**
-   * Bake each part's `motion` into a looping `run` clip. Off by default: glTF has no autoplay
+   * Bake each part's `motion` into a looping `run` clip. Off by default
+   * (`GLB_ANIMATIONS_DEFAULT`): glTF has no autoplay
    * flag and most viewers play the first clip, while engines usually drive the named pivots
    * from game code. Turn it on for previews, cutscenes and ambient props.
    */

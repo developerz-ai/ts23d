@@ -3,7 +3,8 @@
 // and the studio rig, so a whole roster of icons is lit and framed alike. Zero-GPU beauty
 // renderer underneath; deterministic bytes. Backdrop: the neutral studio floor (with the contact
 // shadow) or transparent for engines that draw their own button frame: straight alpha, so the
-// colour of an edge pixel is the asset's alone (never the studio backdrop's) and alpha its coverage.
+// colour of an edge pixel is the asset's alone (never the studio backdrop's) and alpha its coverage
+// × opacity (see-through glass is partly transparent, not glass over a baked studio grey).
 
 import { type CompiledAsset, encodePng, Ts23dError, worldMeshes } from '../core/index.ts';
 import type { PaintedSheet } from '../material/index.ts';
@@ -18,7 +19,8 @@ export const ICON_CAMERA = { azDeg: -35, elDeg: 32, fovDeg: 24 } as const;
 export interface IconOptions {
   /** Edge in pixels (square). Icon default 256, portrait default 512. */
   readonly size?: number;
-  /** 'studio' (default): the neutral studio floor + contact shadow · 'transparent': straight alpha = coverage. */
+  /** 'studio' (default): the neutral studio floor + contact shadow · 'transparent': straight
+   *  alpha = coverage × opacity. */
   readonly backdrop?: 'studio' | 'transparent';
   /** The painted trim sheet (the CLI passes its own; default paints one per process). */
   readonly sheet?: PaintedSheet;
@@ -35,7 +37,8 @@ export interface PortraitOptions extends IconOptions {
 
 export interface IconImage {
   readonly size: number;
-  /** RGBA8 sRGB; alpha 255 on a studio backdrop; asset-only colour + coverage on a transparent one. */
+  /** RGBA8 sRGB; alpha 255 on a studio backdrop; asset-only colour + coverage × opacity on a
+   *  transparent one. */
   readonly rgba: Uint8Array;
   /** Asset coverage per pixel, 0–255. */
   readonly mask: Uint8Array;
@@ -53,23 +56,27 @@ function sizeOf(o: IconOptions, fallback: number): number {
 
 /**
  * The asset cut out of the studio: per pixel the mean of its ASSET samples only (the resolve step
- * hands them over from the same render), with alpha = their share. Blending the backdrop into the
- * colour and also writing coverage to alpha would count the backdrop twice: a light halo round a
- * dark asset on any button frame.
+ * hands them over from the same render), with alpha = their share × their opacity. Blending the
+ * backdrop into the colour and also writing coverage to alpha would count the backdrop twice: a
+ * light halo round a dark asset on any button frame. Glass, water and other see-through surfaces
+ * with only backdrop behind them keep their own surface light and get alpha below coverage
+ * (1 − mean transmitted tint), so the frame shows through; a coloured tint of what lies behind is
+ * not carried (one alpha per pixel). Glass in front of the asset's own opaque parts stays opaque.
  */
 function cutOut(r: BeautyRender, size: number): IconImage {
-  const asset = r.assetSum && r.hits ? { assetSum: r.assetSum, hits: r.hits } : undefined;
-  if (!asset)
+  const { assetSum, hits, opacity } = r;
+  if (!assetSum || !hits || !opacity)
     throw new Ts23dError('T3D_RENDER_OPTIONS', {
       cause: 'a transparent icon needs the asset-only colour, and this beauty render carries none',
       fix: 'render it with renderBeauty (the rasteriser), or use backdrop: "studio"',
     });
   const rgba = new Uint8Array(size * size * 4);
   for (let i = 0; i < size * size; i++) {
-    const hits = asset.hits[i] ?? 0;
-    if (!hits) continue;
-    for (let k = 0; k < 3; k++) rgba[i * 4 + k] = toSrgb8((asset.assetSum[i * 3 + k] ?? 0) / hits);
-    rgba[i * 4 + 3] = r.mask[i] ?? 0;
+    const n = hits[i] ?? 0;
+    const o = opacity[i] ?? 0;
+    if (!n || !o) continue;
+    for (let k = 0; k < 3; k++) rgba[i * 4 + k] = toSrgb8((assetSum[i * 3 + k] ?? 0) / o);
+    rgba[i * 4 + 3] = Math.round(((r.mask[i] ?? 0) * o) / n);
   }
   return { size, rgba, mask: r.mask };
 }

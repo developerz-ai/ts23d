@@ -229,7 +229,7 @@
       "target": 0.13,
       "actual": 0.13,
       "eligible": "convex-edges",
-      "area": 97.3894,
+      "area": 50.0792,
       "by": {
         "brinehound_hull": {
           "target": 0.13,
@@ -239,7 +239,7 @@
         "brinehound_kit": {
           "target": 0.13,
           "actual": 0.13,
-          "area": 59.4387
+          "area": 12.1285
         },
         "brinehound_turret": {
           "target": 0.13,
@@ -255,10 +255,10 @@
       "area": 0.2618
     },
     "mud": {
-      "target": 0.4808,
-      "actual": 0.4808,
+      "target": 0.461,
+      "actual": 0.461,
       "eligible": "ground-near",
-      "area": 49.6684,
+      "area": 24.4411,
       "by": {
         "brinehound_hull": {
           "target": 0.5,
@@ -268,7 +268,7 @@
         "brinehound_kit": {
           "target": 0.5,
           "actual": 0.5,
-          "area": 25.3011
+          "area": 0.0738
         },
         "brinehound_wheels": {
           "target": 0.4,
@@ -281,7 +281,7 @@
       "target": 0.3,
       "actual": 0.3,
       "eligible": "up-facing",
-      "area": 50.5472,
+      "area": 37.2881,
       "by": {
         "brinehound_hull": {
           "target": 0.3,
@@ -291,7 +291,7 @@
         "brinehound_kit": {
           "target": 0.3,
           "actual": 0.3,
-          "area": 17.6775
+          "area": 4.4184
         },
         "brinehound_turret": {
           "target": 0.3,

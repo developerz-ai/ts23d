@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import { type Part, type Socket, Ts23dError } from '../core/index.ts';
-import { DEFAULT_LAMP_LUMENS, DEFAULT_SUN_LUX, lightOf } from './lights.ts';
+import { DEFAULT_LAMP_LUMENS, DEFAULT_SUN_LUX, lightOf, MIN_CONE } from './lights.ts';
 
 const socket = (data: Socket['data']): Part =>
   ({ name: 's', socket: { kind: 'light', data } }) as Part;
@@ -32,6 +32,21 @@ describe('light numbers a file cannot carry are refused', () => {
     expect(refusal({ light: 'spot', cone: 120 })).toMatch(/cone 120 .*at most 89/);
     expect(refusal({ light: 'spot', cone: Number.NaN })).toMatch(/cone NaN/);
   });
+  test('a spot narrower than MIN_CONE is refused: its default candela would be absurd or infinite', () => {
+    // cos(1e-8 °) rounds to 1: the old 2π(1 − cos θ) gave 0 sr and Infinity cd, written as null.
+    expect(refusal({ light: 'spot', cone: 1e-8 })).toMatch(
+      new RegExp(`^T3D_RECIPE_INVALID\\|.*cone 1e-8 is not a number at least ${MIN_CONE} `),
+    );
+    expect(refusal({ light: 'spot', cone: 0.001 })).toMatch(/cone 0\.001 /);
+    expect(refusal({ light: 'spot', cone: MIN_CONE })).toBe('accepted');
+  });
+  test('the narrowest default spot stays a finite, bounded candela', () => {
+    const cd = intensity({ light: 'spot', cone: MIN_CONE });
+    expect(Number.isFinite(cd)).toBe(true);
+    // A 1000 lm lamp into a 1° beam: about 4.2 Mcd, a searchlight's order, not 1e12.
+    expect(cd).toBeGreaterThan(4e6);
+    expect(cd).toBeLessThan(5e6);
+  });
   test('a negative or non-finite intensity, range or inner cone is refused', () => {
     expect(refusal({ light: 'point', intensity: -5 })).toMatch(/T3D_RECIPE_INVALID.*intensity -5/);
     expect(refusal({ light: 'spot', intensity: Infinity })).toMatch(/intensity Infinity/);
@@ -41,7 +56,7 @@ describe('light numbers a file cannot carry are refused', () => {
   });
   test('every accepted spot has a finite intensity and 0 ≤ inner < outer < π/2', () => {
     for (const data of [
-      { cone: 0.001 },
+      { cone: MIN_CONE },
       { cone: 89 },
       { cone: 22, inner: 12 },
       { cone: 20, inner: 20 },

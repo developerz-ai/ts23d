@@ -128,7 +128,7 @@ Also exported: `glob(pattern) → RegExp`, `insideSolid`. Once you know the inte
 
 ## Output an agent reads
 
-`out/<asset>/manifest.json` answers most questions without opening a GLB: triangles and draw calls per LOD as the GLB holds them (`triangles` counts what is in the file, after the exporter dropped degenerate and duplicate triangles; `trianglesCompiled` appears beside it only when that differs from what the recipe compiled to, the number `budget.triangles` is checked against; `drawCalls` counts primitives, so a pivot left with no triangles is none), pivots (the names engine code binds to), emitters, sockets, surfaces, `real` and each measure with its **measured** value, sources, QA findings. `out/index.json` lists every asset in the run with its verdict.
+`out/<asset>/manifest.json` answers most questions without opening a GLB: triangles and draw calls per LOD as the GLB holds them (`triangles` counts what is in the file, after the exporter dropped degenerate and duplicate triangles; `trianglesCompiled` appears beside it only when that differs from what the recipe compiled to, the number `budget.triangles` is checked against; `drawCalls` counts primitives, so a pivot left with no triangles is none), pivots (the names engine code binds to), emitters, sockets, surfaces, `clips` as the GLBs hold them (a clip is listed when at least one built LOD's file keeps a channel of it, so a weights-only clip on morphs LOD2 dropped is gone from a LOD2-only build; none with `--no-animations`), `real` and each measure with its **measured** value, sources, QA findings. `out/index.json` lists every asset in the run with its verdict.
 
 ## Machine-readable output
 

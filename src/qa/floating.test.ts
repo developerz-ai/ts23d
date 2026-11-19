@@ -148,7 +148,7 @@ describe('floating-parts: fix text an agent can follow', () => {
     expect(f?.fix).not.toContain('box and cylinder anchor at their base');
   });
 
-  it('names the root of a floating chain first and tells its children to fix it, not to move', () => {
+  it('names the root of a floating chain first and tells its children to move with it', () => {
     const found = floatingParts(
       built([
         ['lamp', [0.2, 0.2, 0.2], [0, 0, 1.45]],
@@ -162,9 +162,27 @@ describe('floating-parts: fix text an agent can follow', () => {
     expect(root?.fix).toContain('move it 15.0 cm onto the ground');
     expect(pole?.message).toContain("touches 'base', which is itself floating");
     expect(pole?.fix).toContain("fix 'base' first");
-    expect(pole?.fix).not.toContain('move it');
+    // Each part here is placed on its own: lowering only the base leaves the pole 15 cm above it.
+    expect(pole?.fix).not.toContain('do not move');
+    expect(pole?.fix).toContain("move 'pole' by the same distance and direction as 'base'");
+    expect(pole?.fix).toContain('ctx.group');
+    expect(root?.fix).toContain('move the 3 part(s) that hang from it by the same distance');
     expect(pole?.gap).toBeUndefined();
     expect(lamp?.message).toContain("touches 'pole', which is itself floating");
     expect(arm?.fix).toContain("fix 'base' first");
+  });
+});
+
+describe('floating-parts: following the chain fix', () => {
+  const lamp = (drop: number, all: boolean): CompiledAsset =>
+    built([
+      ['pole', [0.1, 0.1, 1.2], [0, 0, all ? 0.25 - drop : 0.25]],
+      ['base', [0.6, 0.6, 0.1], [0, 0, 0.15 - drop]],
+    ]);
+
+  it('moving only the root leaves its member floating; moving the assembly together passes', () => {
+    expect(floatingParts(lamp(0, true)).map((f) => f.part)).toEqual(['base', 'pole']);
+    expect(floatingParts(lamp(0.15, false)).map((f) => f.part)).toEqual(['pole']);
+    expect(floatingParts(lamp(0.15, true))).toEqual([]);
   });
 });

@@ -1,10 +1,12 @@
 // Which atlas rows a mesh samples, from its V coordinates. Primitives put vertices exactly on a
 // row's top edge (`rect.v1`), which is the next row's `v0`: a test of one V against a row's range
 // then blames the neighbour too (a credit for a texture the asset never shows, a refused sheet).
-// With `indices` the answer is exact: a triangle samples the row its mean V lies in. Without them,
-// a V strictly inside a row counts for it, and a V on a shared edge only for a row the mesh spans
-// edge to edge (both edges present, as a box does) and has not already been explained by V values
-// inside the rows on both sides of it.
+// With `indices` the answer is exact: a triangle samples the row its mean V lies in. Without them
+// it errs toward keeping a row: a V strictly inside a row counts for it, and a V on a shared edge
+// for every row the mesh spans edge to edge (both edges present, as a box does). Two such edges
+// may belong to the rows either side (lathes on rows 41 and 43 that reach 42 and 43), but a box
+// on the row between looks the same, and a row wrongly dropped is a blank strip or a missing
+// credit; a lone edge V still blames no neighbour. Callers with a mesh pass its indices.
 
 import { STRIP_H } from './trim-sheet.ts';
 
@@ -28,9 +30,6 @@ export function rowsSampled(vs: ArrayLike<number>, indices?: ArrayLike<number>):
     if (Number.isInteger(row)) edges.add(row);
     else rows.add(Math.floor(row));
   }
-  const inside = new Set(rows);
-  for (const k of edges)
-    if (edges.has(k + 1) && !inside.has(k) && !(inside.has(k - 1) && inside.has(k + 1)))
-      rows.add(k);
+  for (const k of edges) if (edges.has(k + 1)) rows.add(k);
   return rows;
 }

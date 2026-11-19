@@ -266,7 +266,13 @@ const CORE_W = 0.4;
 const CORE_INSET = 0.095;
 const CORE_GAP = 0.02;
 
-export function runningGear(add: Add, lod: Lod): void {
+/**
+ * `finishLink` puts ONE track link on its material and wears it before it is laid round the loop:
+ * every link then looks the same, so the run clip can put each in its neighbour's place unseen
+ * (the `treads` gate checks colour and UV one pitch on). Wear laid over the placed belt would stay
+ * where it is while the links run through it, and jump at every wrap.
+ */
+export function runningGear(add: Add, lod: Lod, finishLink: (link: Mesh) => Mesh): void {
   const belt = beltPath();
   const core = lod === 2 ? corners(beltPath(-CORE_GAP)) : [];
   for (const [side, s] of [
@@ -310,7 +316,7 @@ export function runningGear(add: Add, lod: Lod): void {
         ),
       );
     const pitch = beltPitch(lod, belt);
-    const one = link(lod, pitch);
+    const one = finishLink(link(lod, pitch));
     // The belt runs counter-clockwise in XZ: pitch −angle lays local +X along the tangent, and a
     // half roll turns local +Z (the grouser face) outward, away from the wheels. Stations are one
     // pitch apart along the line at every LOD, so the belt repeats and the run clip can move it.

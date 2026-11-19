@@ -113,6 +113,27 @@ describe('track belt in the run clip', () => {
     ).toBeGreaterThan(0);
   });
 
+  it('builds one belt mesh anew for reversed wheels and for another LOD tolerance', () => {
+    const asset = lod(0);
+    const part = asset.parts.find((p) => p.name === 'track_l');
+    if (!part) throw new Error('no track_l part');
+    const reversed = asset.parts.map((p) =>
+      p.motion?.kind === 'spin' ? { ...p, motion: { ...p.motion, rps: -p.motion.rps } } : p,
+    );
+    const forward = treadMorphs(asset.parts, part, 0);
+    const back = treadMorphs(reversed, part, 0);
+    if (!forward || !back) throw new Error('no belt morphs');
+    // Wheels rolling forward run the ground run back along this path's winding.
+    expect(forward.speed).toBeLessThan(0);
+    expect(back.speed).toBe(-forward.speed);
+    // The same mesh at a coarser LOD is held to that LOD's tolerance, not the first caller's.
+    const far = treadMorphs(asset.parts, part, 2);
+    expect(far?.still).toBeCloseTo(TREAD_TOLERANCE[2] * 0.1, 9);
+    expect(forward.still).toBeCloseTo(TREAD_TOLERANCE[0] * 0.1, 9);
+    // Equal inputs are still built once.
+    expect(treadMorphs(asset.parts, part, 0)).toBe(forward);
+  });
+
   it('writes no morph targets without animations', () => {
     const still = belt(toGlb(lod(0), {}));
     expect(still.targets).toEqual([]);

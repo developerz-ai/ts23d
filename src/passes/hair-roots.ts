@@ -57,13 +57,15 @@ export const overCap = (count: number | string, cap: number): Ts23dError =>
 
 /**
  * Poisson-disk roots of one zone: oversampled darts, shuffled, kept when no neighbour is closer.
- * Throws the card-cap refusal as soon as more than `cap` roots are kept.
+ * Throws the card-cap refusal as soon as more than `cap` kept roots grow a card (`grows`; default
+ * every root): a root that grows none is kept, for the spacing, and costs nothing.
  */
 export function poissonRoots(
   m: Mesh,
   density: (p: Vec3, n: Vec3) => number,
   rng: Rng,
   cap = Number.POSITIVE_INFINITY,
+  grows: (r: Root) => boolean = () => true,
 ): Root[] {
   const darts: Root[] = [];
   for (let t = 0; t < m.indices.length / 3; t++) {
@@ -102,6 +104,7 @@ export function poissonRoots(
   const grid = new Map<string, Root[]>();
   const key = (x: number, y: number, z: number): string => `${x},${y},${z}`;
   const kept: Root[] = [];
+  let cards = 0;
   for (const d of darts) {
     const g = d.p.map((v) => Math.floor(v / cell));
     let free = true;
@@ -117,7 +120,7 @@ export function poissonRoots(
             }
     if (!free) continue;
     kept.push(d);
-    if (kept.length > cap) throw overCap(`more than ${cap}`, cap);
+    if (grows(d) && ++cards > cap) throw overCap(`more than ${cap}`, cap);
     const k = key(g[0] ?? 0, g[1] ?? 0, g[2] ?? 0);
     grid.set(k, [...(grid.get(k) ?? []), d]);
   }

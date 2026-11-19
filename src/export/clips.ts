@@ -5,10 +5,12 @@
 // pivot). Keys are relative to rest: rotation turns from the rest pose, translation offsets the
 // rest position, scale is absolute, `weights` drives the node's morph targets. LOD trees share a
 // sampler when their node's rest pose (or morph count) is the same, so a clip is stored once per
-// distinct rest in a single-file GLB; a LOD without the part's morph targets gets no weights key.
+// distinct rest in a single-file GLB; a LOD without the part's morph targets gets no weights key
+// (clip-channels.ts: the rule the manifest's `clips` follows too).
 
 import { type Clip, RUN_CLIP, type Track, Ts23dError } from '../core/index.ts';
 import type { BinWriter, Json } from './bin-writer.ts';
+import { keysNode } from './clip-channels.ts';
 import type { GltfDoc } from './hierarchy.ts';
 
 /** Authoring frame Z up, +X front → glTF Y up, +Z front: maps +X→+Z, +Z→+Y, +Y→+X. */
@@ -103,7 +105,7 @@ function clipJson(doc: GltfDoc, c: Clip, trees: readonly ClipTree[]): Json {
     if (t.path === 'weights') {
       const stride = t.values.length / t.times.length;
       // A LOD that dropped the part's morphs (LOD-gated) gets no weights channel on it.
-      nodes = isBone ? [] : found.filter((n) => morphCount(doc, n) > 0);
+      nodes = found.filter((n) => keysNode(t, morphCount(doc, n)));
       const off = isBone ? found[0] : nodes.find((n) => morphCount(doc, n) !== stride);
       if (off !== undefined)
         unknown(

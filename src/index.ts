@@ -2,7 +2,7 @@
 // tree-shaking and for reading one layer at a time.
 
 export * from './audio/index.ts';
-export { type AssetManifest, manifestOf } from './cli/manifest.ts';
+export { type AssetManifest, type ManifestOptions, manifestOf } from './cli/manifest.ts';
 export * from './core/index.ts';
 export * from './export/index.ts';
 export * from './grammar/index.ts';

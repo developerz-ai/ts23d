@@ -28,8 +28,10 @@ export function deltaAccessor(bin: BinWriter, delta: Float32Array, o: DeltaOptio
   const still = o.still ?? STILL;
   const count = delta.length / 3;
   const moved: number[] = [];
-  const min = [0, 0, 0];
-  const max = [0, 0, 0];
+  // glTF: min / max are the extrema of the values the accessor holds. A still vertex holds 0
+  // (written dense, or left at a sparse accessor's zero base); when every vertex moves, none does.
+  const min = [Infinity, Infinity, Infinity];
+  const max = [-Infinity, -Infinity, -Infinity];
   for (let v = 0; v < count; v++) {
     let any = false;
     for (let k = 0; k < 3; k++) {
@@ -44,10 +46,17 @@ export function deltaAccessor(bin: BinWriter, delta: Float32Array, o: DeltaOptio
       if (d > (max[k] ?? 0)) max[k] = d;
     }
   }
-  const bounds = o.bounds === false ? {} : { min, max };
+  const zero = moved.length < count || count === 0;
+  const bounds =
+    o.bounds === false
+      ? {}
+      : {
+          min: min.map((m) => (zero ? Math.min(m, 0) : m)),
+          max: max.map((m) => (zero ? Math.max(m, 0) : m)),
+        };
   const wide = count > 65535;
   if (o.dense && moved.length * (wide ? 16 : 14) > count * 12) {
-    // Still vertices are written as exact zeros, so `min` / `max` above hold.
+    // Still vertices are written as exact zeros, the zero `bounds` above counts.
     const all = new Float32Array(delta.length);
     for (const v of moved) all.set(delta.subarray(v * 3, v * 3 + 3), v * 3);
     const dense = bin.accessor(all, 'VEC3', ARRAY_BUFFER);

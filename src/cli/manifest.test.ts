@@ -1,9 +1,13 @@
 import { expect, it } from 'bun:test';
 import {
   box,
+  type Clip,
   compile,
   defineAsset,
   encodePng,
+  GLB_ANIMATIONS_DEFAULT,
+  type Lod,
+  type Mesh,
   MeshBuilder,
   merge,
   place,
@@ -155,12 +159,84 @@ it('lists the run clip of an asset whose only motion is a belt, as its GLB has i
   const names = (moving: boolean) => {
     const lod = compile(ring(moving), { lod: 0 });
     const file = (gltf(toGlb(lod, { animations: true })).animations ?? []).map((a) => a.name);
-    const listed = (manifestOf(ring(moving), [lod], { lods: [] }, []).clips ?? []).map(
-      (c) => c.name,
-    );
+    const listed = (
+      manifestOf(ring(moving), [lod], { lods: [] }, [], [], { animations: true }).clips ?? []
+    ).map((c) => c.name);
     return { file, listed };
   };
   expect(names(true).file).toEqual(['rest', 'run']);
   expect(names(true).listed).toEqual(['run']);
   expect(names(false)).toEqual({ file: [], listed: [] });
+  // `--no-animations`: the GLB has no run clip, so neither does the manifest.
+  const still = manifestOf(ring(true), [compile(ring(true), { lod: 0 })], { lods: [] }, [], [], {
+    animations: false,
+  });
+  expect(still.clips).toBeUndefined();
+});
+
+const unit: [number, number, number] = [1, 1, 1];
+const keys = new Float32Array([0, 1]);
+const blink: Clip = {
+  name: 'blink',
+  seconds: 1,
+  loop: true,
+  tracks: [{ part: 'lid', path: 'weights', times: keys, values: new Float32Array([0, 1]) }],
+};
+const nod: Clip = {
+  name: 'nod',
+  seconds: 1,
+  loop: false,
+  tracks: [{ part: 'lid', path: 'translation', times: keys, values: new Float32Array(6) }],
+};
+/** A lid whose morph target is LOD-gated away at LOD2, keyed by a weights-only clip. */
+const face = (clips: readonly Clip[]) =>
+  defineAsset({
+    name: 'face',
+    kind: 'prop',
+    budget: { triangles: [999, 999, 999] },
+    clips,
+    build(ctx) {
+      ctx.part('head', box({ size: [1, 1, 1], color: unit }));
+      const m = box({ size: [0.2, 0.2, 0.2], color: unit });
+      const d = new Float32Array(m.positions.length);
+      d[2] = 0.05;
+      const lid: Mesh = ctx.lod === 2 ? m : { ...m, morphs: [{ name: 'close', positions: d }] };
+      ctx.part('lid', lid, {
+        at: [0, 0, 1],
+        motion: { kind: 'sway', axis: [0, 1, 0], degrees: 5, hz: 1 },
+      });
+    },
+  });
+const listed = (clips: readonly Clip[], lods: readonly Lod[], animations = true): string[] => {
+  const built = lods.map((lod) => compile(face(clips), { lod }));
+  return (manifestOf(face(clips), built, { lods: [] }, [], [], { animations }).clips ?? []).map(
+    (c) => c.name,
+  );
+};
+
+it('lists no clip by default, as `toGlb` writes none by default (one shared default)', () => {
+  const lod = compile(face([nod]), { lod: 0 });
+  // The library path: export with defaults, then describe the file with defaults.
+  expect(gltf(toGlb(lod)).animations).toBeUndefined();
+  expect(manifestOf(face([nod]), [lod], { lods: [] }, []).clips).toBeUndefined();
+  expect(GLB_ANIMATIONS_DEFAULT).toBe(false);
+  // Asked for on both sides, both hold the same clips.
+  const baked = (gltf(toGlb(lod, { animations: true })).animations ?? []).map((a) => a.name);
+  expect(baked).toEqual(['rest', 'run', 'nod']);
+  expect(listed([nod], [0])).toEqual(['run', 'nod']);
+});
+
+it('lists a clip only when a requested LOD file keeps a channel of it, as the exporter does', () => {
+  // The LOD2 file drops `blink` (its lid has no morph targets): the manifest must too.
+  expect(listed([blink], [2])).toEqual(['run']);
+  const lod2 = toGlb(compile(face([blink]), { lod: 2 }), { animations: true });
+  expect((gltf(lod2).animations ?? []).map((a) => a.name)).toEqual(['rest', 'run']);
+  expect(listed([blink], [0, 1, 2])).toEqual(['run', 'blink']);
+  // A clip keying something the morph-less LOD still has (the lid's node) survives there.
+  expect(listed([blink, nod], [2])).toEqual(['run', 'nod']);
+});
+
+it('lists no clip at all when the GLBs are written without animations', () => {
+  expect(listed([blink, nod], [0, 1, 2], false)).toEqual([]);
+  expect(listed([blink, nod], [0, 1, 2], true)).toEqual(['run', 'blink', 'nod']);
 });

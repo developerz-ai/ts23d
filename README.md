@@ -297,7 +297,7 @@ bunx -p @developerz.ai/ts23d t3d hero  assets/<name>/<name>.ts       # beauty re
 bunx -p @developerz.ai/ts23d t3d review assets/<name>/<name>.ts      # AI review pack: hero, sheet, close-ups, LOD strip, review.md
 bunx -p @developerz.ai/ts23d t3d tune assets/<name>/<name>.ts --evals 400   # fit tune.params to objectives → tune.json, tune-report.md, tune-strip.png
 bunx -p @developerz.ai/ts23d t3d finish assets/<name>/<name>.ts --endpoint URL --prompt "…"   # optional AI texture layer on LOD0
-bunx -p @developerz.ai/ts23d t3d list  assets/*.ts --json     # the assets each module exports (one JSON envelope)
+bunx -p @developerz.ai/ts23d t3d list  assets/*/*.ts --json     # the assets each module exports (one JSON envelope)
 bunx -p @developerz.ai/ts23d t3d --version                    # also: t3d <command> --help
 ```
 
@@ -326,7 +326,7 @@ out/
                             with measured values; sources; QA
 ```
 
-Library calls differ on one default: `toGlb(asset)` exports no animation unless `{ animations: true }`.
+Library calls differ on one default: `toGlb(asset)` exports no animation unless `{ animations: true }`. `manifestOf` shares that default: pass `{ animations: true }` as its last argument when the GLBs were exported with it.
 
 Every exported asset in a module is built (`defineAsset` or `family.variant`). Every CLI error (missing file, throwing recipe, unknown flag, duplicate asset name) prints a stable `T3D_*` code and its `fix:`; exit 0 = ok, 1 = QA finding or build error, 2 = usage error ([errors](docs/architecture/errors.md)).
 

@@ -239,10 +239,16 @@ function stationsOf(lod: Lod, line: readonly Vec2[]): Station[] {
   return resample(line, lod === 2 ? 24 : Math.round(perimeter / (lod === 0 ? 0.13 : 0.32)));
 }
 
-function trackMesh(lod: Lod, line: readonly Vec2[], y: number): Mesh {
+/**
+ * The belt: one link laid round `line`. `finish` colours that ONE link (steel, mud) before it is
+ * placed, so every link looks the same and the run clip can put each in its neighbour's place
+ * unseen (the `treads` gate checks colour and UV one pitch on). Mud laid over the placed belt by
+ * its height above the ground would stay put while the links run through it, and jump at each wrap.
+ */
+function trackMesh(lod: Lod, line: readonly Vec2[], y: number, finish: (link: Mesh) => Mesh): Mesh {
   const stations = stationsOf(lod, line);
   const len = stations[0]?.len ?? 0.13;
-  const unit =
+  const unit = finish(
     lod === 0
       ? trackLink(len)
       : box({
@@ -251,7 +257,8 @@ function trackMesh(lod: Lod, line: readonly Vec2[], y: number): Mesh {
           color: trackSteel,
           // LOD2 drops only the hull-facing edge: the outboard edge is what a side view shows.
           ...(lod === 2 ? { omit: [y > 0 ? 'right' : 'left'] as const } : {}),
-        });
+        }),
+  );
   return merge(stations.map((s) => place(unit, { at: [s.p[0], y, s.p[1]], pitch: s.pitch })));
 }
 
@@ -696,7 +703,14 @@ export const tiger_1 = defineAsset({
       const track = `track_${side}`;
       ctx.part(
         track,
-        finish(onGround(trackMesh(lod, line, ty)), [0, 0, 0], { mud: 1.4, mudStrength: 0.85 }),
+        // Each link is weathered as if it sat 0.9 m up, under the ragged top of the 1.4 m mud:
+        // packed mud with steel showing through in places, the same on every link of a side
+        // (no dust: a link has no upward face for longer than half a turn of the belt).
+        onGround(
+          trackMesh(lod, line, ty, (link) =>
+            finish(link, [0, ty, 0.9], { dust: 0, mud: 1.4, mudStrength: 0.85 }),
+          ),
+        ),
         { motion: tread(line, ty, stationsOf(lod, line)[0]?.len ?? 0.13) },
       );
       // Final-drive housing and idler axle stub: what holds sprocket and idler to the hull.
@@ -1500,7 +1514,7 @@ export const tiger_1 = defineAsset({
     }
     const gunAt: Vec3 = [TURRET_AT[0] + 1.0, 0, TURRET_AT[2] + 0.42];
     const mantlet = paintJob(merge(mParts), gunAt);
-    ctx.part('gun_mantlet', lod > 0 ? coatFaces(mantlet, onMantletFace) : mantlet, {
+    ctx.part('gun_mantlet', lod > 0 ? coatFaces(mantlet, onMantletFace, TURRET_PITCH) : mantlet, {
       parent: 'gun',
     });
     // Zimmerit on the mantlet face and its curled ends (both reference photos show it coated).

@@ -1,15 +1,13 @@
-// The viewer: a compiled asset in one of two modes. Studio (default) is a product shot: the
-// category's look (image-based light, key shadow, contact shadow, backdrop; AO + MSAA on the high
-// tier), orbit controls with a slow turntable, and Play runs the picked baked clip.
-// Scene stages the asset on a diorama in a looping scenario picked from its named parts (driving,
-// wind, a day on the turntable); a water asset swims with no diorama, and its Studio has no floor.
-// Studio picks any baked clip and shows a skinned asset's skeleton (viewer-motion.ts). Also switches
-// LOD, wireframe and the trim sheet, lists the parts and offers a GLB per LOD. Heavy assets open at
-// LOD1 with a button for LOD0; a progress bar runs while the worker compiles (a failure ends it in a
-// visible message), and leaving cancels the compile.
+// The viewer: a compiled asset in one of two modes. Studio (default) is a product shot (category
+// look; AO + MSAA on the high tier), orbit with a slow turntable, any baked clip on Play and a
+// skinned asset's skeleton (viewer-motion.ts). Scene runs a looping scenario on a diorama picked
+// from the named parts; a water asset swims with no diorama or floor. Playback rules: autoplay.ts.
+// Also LOD, wireframe and trim-sheet toggles, the parts list, a GLB per LOD; heavy assets open at
+// LOD1 with a LOD0 button, and a progress bar runs while the worker compiles (failure: a message).
 
 import { AnimationMixer, Box3, Group, type Object3D, Timer, Vector3 } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { playingOnArrival } from './autoplay.ts';
 import { backdrop } from './backdrop.ts';
 import { categoryOf } from './categories.ts';
 import { type BuildRequest, cancelBuild, type Lod, recipe } from './compile.ts';
@@ -222,9 +220,11 @@ export class Viewer {
     const emitters = this.particles.attach(loaded.scene, (e) =>
       (e.when ?? 'always') === 'moving' ? (scenario ? scenario.moving() : 1) : 1,
     );
+    const { mode, playing } = this;
+    const swims = water && this.motion.has;
+    this.playing = playingOnArrival({ fresh, mode, playing, swims, reduced: reducedMotion() });
     if (fresh) {
       renderDownloads(this.ui.downloads, asset);
-      this.playing = water && this.motion.has && !reducedMotion();
       this.onSize?.(new Box3().setFromObject(loaded.scene).getSize(new Vector3()));
     }
     this.onModel?.(scenic ? null : loaded.scene);

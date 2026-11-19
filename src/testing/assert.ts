@@ -25,14 +25,16 @@ export interface QaOptions extends LodOptions {
   readonly lodGates?: readonly LodGate[];
 }
 
-/** The same gate `t3d build` runs: every LOD passes QA, plus the LOD-chain gates and the
- *  draw-call budget (`budget.draws`, counted on the merged pivots the GLB is written from). */
+/** The same gate `t3d build` runs: every LOD passes QA, plus the LOD-chain gates (over whichever
+ *  LODs were asked for, a single one included) and the draw-call budget (`budget.draws`, counted
+ *  on the merged pivots the GLB is written from). */
 export function assertQaPass(asset: Asset, o: QaOptions = {}): void {
   const lods = compileLods(asset, o);
   const found = lods.flatMap((a) =>
     runQa(a, o.gates ?? DEFAULT_GATES).map((finding) => ({ finding, lod: a.lod })),
   );
-  const chain = lods.length > 1 ? runLodQa(lods, o.lodGates ?? DEFAULT_LOD_GATES) : [];
+  // On one LOD too, as `t3d build --lods 0` does: each chain gate knows what it needs to judge.
+  const chain = runLodQa(lods, o.lodGates ?? DEFAULT_LOD_GATES);
   const whole = [...chain, ...drawFindings(asset, lods)];
   failOn(`${asset.name} QA`, [...found, ...whole.map((finding) => ({ finding }))]);
 }

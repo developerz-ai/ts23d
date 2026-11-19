@@ -19,6 +19,7 @@ import {
   symmetric,
   type Vec2,
   type Vec3,
+  weather,
 } from '@developerz.ai/ts23d';
 import { Kit, MUD, type Rule, restrip, role, SOOT_STAIN, wearOf } from '../_lib/rts/finish.ts';
 import {
@@ -73,6 +74,8 @@ const GEAR_RULES: readonly Rule[] = [
   role(RUBBER, 'rubber'),
 ];
 const GEAR = /^(wheel|idler|sprocket)_/;
+/** The running belts: their links arrive finished (materials and wear per link, `wornLink`). */
+const BELT = /^track_[lr]$/;
 
 /** Plan outline of the turret: chevron nose forward (+X), squared bustle behind. */
 const TURRET_PLAN: readonly Vec2[] = [
@@ -336,9 +339,29 @@ export const rts_tank = defineAsset({
     const lod = ctx.lod;
     const kit = new Kit();
     const add: Add = (name, m, opts) =>
-      kit.add(name, m && restrip(m, GEAR.test(name) ? GEAR_RULES : RULES), opts);
+      kit.add(
+        name,
+        m && (BELT.test(name) ? m : restrip(m, GEAR.test(name) ? GEAR_RULES : RULES)),
+        opts,
+      );
+    // One track link, worn in its own space (chipped edges, brine mud over half of it; no dust:
+    // no face of a running link stays up). Every link of both belts is this one, so the belt
+    // looks the same one pitch on and the run clip wraps unseen.
+    const wornLink = (link: Mesh): Mesh =>
+      weather(restrip(link, RULES), {
+        name: 'brinehound_track',
+        seed: 66,
+        age: 0.6,
+        lod,
+        resolution: [0, 0, 0],
+        groundBand: 0.9,
+        effects: {
+          chips: { where: 'convex-edges', amount: 0.13, strength: 0.75 },
+          mud: { where: 'ground-near', amount: 0.5, color: MUD, strength: 0.7 },
+        },
+      }).mesh;
     hull(add, lod);
-    runningGear(add, lod);
+    runningGear(add, lod, wornLink);
     turret(ctx, add);
     for (const [s, y] of [
       ['l', 0.5],
@@ -363,8 +386,9 @@ export const rts_tank = defineAsset({
         when: 'moving',
       });
     }
-    // Measured wear, one weather() per space: the hull and tracks (chips on plate edges, salt dust
-    // on the deck, brine mud up the tracks and lower hull, soot streaking down from the exhausts),
+    // Measured wear, one weather() per space: the hull (chips on plate edges, salt dust on the
+    // deck, brine mud up the lower hull, soot streaking down from the exhausts; the track links
+    // carry their own, see `wornLink`),
     // the wheels in their own pivots (mud), the turret and the gun (chips and dust, no mud).
     const exhaust = [0.5, -0.5].map((y) => ({ at: [-2.66, y, 1.3] as Vec3, radius: 0.16 }));
     const hullWear = wearOf('vehicle', 'brinehound_hull', 61);
@@ -381,7 +405,7 @@ export const rts_tank = defineAsset({
       {
         // Small parts already carry the vertices wear needs: no extra tessellation.
         wear: { ...wearOf('vehicle', 'brinehound_kit', 65), ground: 0, resolution: [0, 0, 0] },
-        pick: (n) => /^(hull_kit|hull_dress|track_)/.test(n),
+        pick: (n) => /^(hull_kit|hull_dress|track_core_)/.test(n),
       },
       {
         wear: {

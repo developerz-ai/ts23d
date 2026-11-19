@@ -73,6 +73,34 @@ describe('treads gate', () => {
     expect(treads(tank(slab, PITCH))[0]?.message).toContain('does not repeat');
   });
 
+  it('fails a belt whose links differ in colour or UV from the link one pitch on', () => {
+    const even = links();
+    // Mud by height, painted over the placed belt: dark on the ground run, clean on the top run.
+    const colors = even.colors.map((v, i) =>
+      (even.positions[Math.floor(i / 3) * 3 + 2] ?? 0) < 0.1 ? v * 0.5 : v,
+    );
+    const muddy = treads(tank({ ...even, colors }, PITCH));
+    expect(muddy.map((x) => x.code)).toEqual(['T3D_QA_TREADS']);
+    expect(muddy[0]?.message).toContain('does not look the same one pitch on');
+    expect(muddy[0]?.message).toContain('colour by up to 0.150');
+    expect(muddy[0]?.fix).toContain('per link');
+    // One link (24 vertices) mapped to another place on the sheet.
+    const uvs = even.uvs.map((v, i) => (i < 48 ? v + 0.25 : v));
+    const moved = treads(tank({ ...even, uvs }, PITCH));
+    expect(moved[0]?.message).toContain('UV by up to 0.2500');
+    // A shade under the tolerance (float noise of a per-link pass) is not a finding.
+    const faint = even.colors.map((v, i) => (i < 72 ? v + 0.004 : v));
+    expect(treads(tank({ ...even, colors: faint }, PITCH))).toEqual([]);
+  });
+
+  it('reads a UV seam (two vertices on one point, one normal) as one place', () => {
+    // Every plate twice on the same spot, the copy mapped elsewhere: a twin search lands on
+    // either copy, and each has a twin that looks the same.
+    const plate = links();
+    const copy = { ...plate, uvs: plate.uvs.map((v) => v + 0.5) };
+    expect(treads(tank(merge([plate, copy]), PITCH))).toEqual([]);
+  });
+
   it('passes a belt of links one pitch apart and ignores other track_* names', () => {
     expect(treads(tank(links(), PITCH))).toEqual([]);
   });

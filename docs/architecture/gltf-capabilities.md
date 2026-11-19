@@ -40,10 +40,12 @@ code: morph targets and a `weights` channel are core glTF 2.0, played the way an
 | Step | What happens |
 |---|---|
 | Bodies | every connected piece of the belt mesh no longer than a pitch is one rigid body (a plate, a horn, a grouser); a longer piece (a rubber band) bends vertex by vertex |
-| Twins | each body is paired with the congruent body one pitch on (turn read from its normals; a link pressed flat by `onGround` still pairs and eases into that shape). No twin = the belt does not repeat: no targets are written and the `treads` gate fails |
+| Twins | each body is paired with the congruent body one pitch on (turn read from its normals; a link pressed flat by `onGround` still pairs and eases into that shape; candidates come from a grid of body centres, half a pitch a cell). No twin = the belt does not repeat: no targets are written and the `treads` gate fails. A body without a twin stays at rest in `pose(f)` |
+| Look | morph targets move positions and normals, never colour or UV, so at the wrap each link shows its neighbour's paint. The `treads` gate therefore also fails a belt whose vertices differ from their twin by more than 0.01 in a colour channel (linear) or 1/512 in U or V (`T3D_QA_TREADS`, "does not look the same one pitch on"). Weather ONE link (or the links of one pitch) and then place it; never run a position-reading pass (mud by height, noise, dust on upward faces) over the placed belt. Vertices eased onto their twin (over 1 mm, `onGround`) are not compared |
 | Targets | target 0 `tread` is the whole pitch (every vertex onto its twin). Then refinements, coarse to fine: `tread_1_2`, `tread_1_4`, `tread_3_4`, `tread_1_8` …, each the pose at that phase minus the mean of its two neighbours, zero on straight runs, so sparse. POSITION and NORMAL (a link turns up to 60° going round a sprocket; without NORMAL its shading would jump at every wrap) |
 | K | 2, 4 or 8 phases per pitch: the smallest that keeps a vertex halfway between two keys within 3 mm (LOD0), 6 mm (LOD1), 20 mm (LOD2) of its true pose (`TREAD_TOLERANCE`); refinements under a tenth of that are dropped |
 | Keys | LINEAR `weights`, K + 1 keys per pitch, each target weighted by a hat round its phase. One float32 step (under 0.5 µs) after the last key the weights are back at 0: the same picture, so the wrap is not seen |
+| Cache | targets are built once per belt mesh, centre line, pitch, wheel rim speed (with its sign) and LOD tolerance: one mesh under reversed wheels or at another LOD is built anew |
 | Speed | the median rim speed of the spinning parts whose axle is the belt's normal and whose pivot is inside the loop (whole turns per loop × rim circumference), rounded to whole pitches per 4 s loop so the clip closes; the sign follows the wheels. No wheel: 1 m/s along the path's winding |
 | Shared data | left and right belts with equal deltas share one set of accessors; belts and LOD trees with the same K and pitch count share one sampler; each LOD tree of a single-file GLB has its own targets and channel |
 | Off | `--no-animations` (`animations: false`) writes no targets. A belt mesh with `Mesh.morphs` of its own keeps those and stands still |
@@ -54,6 +56,11 @@ Measured (worst deviation halfway between two keys; bytes added to the GLB by bo
 |---|---|---|---|
 | `t34` (two link shapes alternate, pitch 0.343 m) | K 8, 2.7 mm, +588 KB | K 4, 4.7 mm, +65 KB | K 2, 17.6 mm, +28 KB |
 | `tiger_1` (pitch 0.130 m) | K 2, 1.5 mm, +191 KB | K 4, 2.6 mm, +41 KB | K 4, 8.1 mm, +28 KB |
+
+Measured before the look check (2026-11, vertex and twin, linear colour): `t34` up to 0.43 (mean
+0.04, a third of the vertices over 0.02), `tiger_1` up to 0.39, `rts_tank` up to 0.23; UV equal on
+all three. Their mud was laid over the placed belt by height, so it stood still while the links ran
+through it and jumped at each wrap. All three now weather one link and measure 0.
 
 Limits. A reader that keeps the keys (three.js does) never shows the wrap; an importer that
 re-samples the clip at a fixed frame rate and blends across the wrap shows one in-between frame
@@ -350,7 +357,7 @@ callbacks, three.js `userData`).
 - Dreams SDF sculpting: Alex Evans, SIGGRAPH 2015, https://advances.realtimerendering.com/s2015/AlexEvans_SIGGRAPH-2015-sml.pdf
 
 ## Light units and tangents
-**Light units.** `KHR_lights_punctual` intensities are physical: directional in lux, point/spot in candela. Sockets without `intensity` export a clear-sky sun (100 000 lx) or a ~1000 lm lamp (point 79.6 cd; spot = 1000 lm ÷ its cone's solid angle). three.js ≥ r155, Babylon, Godot (physical light units) and Unreal read these directly; viewers with legacy units need exposure.
+**Light units.** `KHR_lights_punctual` intensities are physical: directional in lux, point/spot in candela. Sockets without `intensity` export a clear-sky sun (100 000 lx) or a ~1000 lm lamp (point 79.6 cd; spot = 1000 lm ÷ its cone's solid angle). A spot's `cone` (half-angle, degrees) must lie in 0.5–89 and its `inner` below it; a negative or non-finite `intensity` or `range` is refused (`T3D_RECIPE_INVALID`), so the extension never carries `null` or equal cone angles. three.js ≥ r155, Babylon, Godot (physical light units) and Unreal read these directly; viewers with legacy units need exposure.
 **Tangents.** TANGENT is written whenever the normal map is bound: without it glTF-Validator warns `MESH_PRIMITIVE_GENERATED_TANGENT_SPACE` and engines fall back to their own tangents. Ours are Lengyel + Gram-Schmidt per vertex: equal to MikkTSpace on flat-shaded trim, close on curved parts. A part's own normal map (ADR 016) was baked by Blender / Cycles in MikkTSpace, so its primitives get `mikkTangents` (`src/export/tangents.ts`) instead: per triangle the unit dP/du, flattened into each vertex normal's plane, weighted by the corner angle, summed and normalised; w = +1 where the UV map keeps orientation, −1 where it is mirrored; bitangent toward decreasing v (green up). Limit: MikkTSpace splits a vertex whose triangles disagree in orientation, we keep the vertex count (such a vertex takes the angle-weighted majority), and results equal the reference to float rounding, not bit for bit; verified by unit tests and an F3D render, not against a Blender round trip.
 
 ## Sound
