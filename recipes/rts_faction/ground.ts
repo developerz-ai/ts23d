@@ -24,9 +24,9 @@ import {
   type Vec3,
   valueNoise,
 } from '@developerz.ai/ts23d';
+import { smooth, tint, unitNoise } from '../_lib/finish/field.ts';
 import { pebble } from '../_lib/rts/style.ts';
 import { barrel, crate } from '../_parts/index.ts';
-import { smooth, tint, unitNoise } from '../t34/field.ts';
 
 // Below white on purpose: a salt flat at full albedo clips in the beauty light and hides the wear.
 const SALT_FLAT = hex('#aaa497');

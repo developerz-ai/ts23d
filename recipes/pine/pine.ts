@@ -30,11 +30,11 @@ import {
   valueNoise,
 } from '@developerz.ai/ts23d';
 import { reproject, tessellate } from '../_lib/finish/finish.ts';
-import { type CutoutOptions, clumpCards, NEEDLE, toCutout } from '../oak/leaf-cards.ts';
-import { trunkAt } from '../oak/wear.ts';
-import { type BarkGrade, pineBark } from './bark.ts';
+import { type BarkGrade, pineBark } from '../_lib/trees/bark.ts';
+import { type CutoutOptions, clumpCards, NEEDLE, toCutout } from '../_lib/trees/leaf-cards.ts';
+import { lowTrunk } from '../_lib/trees/trunk.ts';
+import { trunkAt } from '../_lib/trees/wear.ts';
 import { thinTufts } from './lod1.ts';
-import { lowTrunk } from './trunk.ts';
 import { boleStubs, cones, deadBranch } from './wear.ts';
 
 const size = { height: 25, spread: 9, dbh: 0.6 };

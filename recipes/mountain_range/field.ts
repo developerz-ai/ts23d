@@ -18,7 +18,7 @@ import {
   thermalErosion,
   warp,
 } from '@developerz.ai/ts23d';
-import { despike } from './ground.ts';
+import { despike } from '../_lib/terrain/ground.ts';
 
 /** Altitude (m above sea level) of z = 0. */
 export const DATUM = 1650;

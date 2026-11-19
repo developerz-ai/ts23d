@@ -35,7 +35,7 @@ between them**, not a solid cone and not a bare frame.
   6 needle tufts per shoot. Skeleton seed 5: the most even crown of seeds 0–29.
 - **Needles**: every kind needle brush becomes one hexagonal cutout card on the `foliage_needles`
   cell (painted pine needle sprays), same root, length and baked crown shade
-  (`../oak/leaf-cards.ts`). LOD1 keeps one LOD0 tuft per shoot grown × 2.1 (`lod1.ts`).
+  (`../_lib/trees/leaf-cards.ts`). LOD1 keeps one LOD0 tuft per shoot grown × 2.1 (`lod1.ts`).
 - **LOD2**: the LOD0 needle cards clustered (k-means, `clumps.ts`) into 20 clumps of three crossed
   needle cards (12 triangles each, hexagonal: blunt pad tops, no shards), ±3.6 standard deviations
   across, over LOD0's trunk resampled to a pentagon (`trunk.ts`) whose leader runs into the top

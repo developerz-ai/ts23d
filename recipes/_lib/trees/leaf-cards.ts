@@ -17,7 +17,7 @@ import {
   type Vec2,
   type Vec3,
 } from '@developerz.ai/ts23d';
-import { cluster, samples } from '../pine/clumps.ts';
+import { cluster, samples } from './clumps.ts';
 
 /** Where a kind card's frame sits in its vertices: card size, root, tip and the two across. */
 export interface CardLayout {

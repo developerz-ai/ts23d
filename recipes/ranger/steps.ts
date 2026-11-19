@@ -7,7 +7,7 @@
 // (feet on z = 0, 1.78 m, a-pose). Every number here is in the cache key.
 
 import type { BlenderStep } from '@developerz.ai/ts23d';
-import { paintStep } from '../bear_hybrid/paint.ts';
+import { paintStep } from '../_lib/creature/texture-paint.ts';
 import { rangerPaint } from './wear.ts';
 
 /** LOD triangles asked of Blender: budget.triangles (ranger.ts), the playbook's model-tier band

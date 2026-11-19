@@ -19,7 +19,7 @@
 //   export   one GLB: three LODs, albedo 2048², normal and ORM 1024², one skin
 
 import type { BlenderStep, ModelRig } from '@developerz.ai/ts23d';
-import { paintStep, py } from './paint.ts';
+import { paintStep, py } from '../_lib/creature/texture-paint.ts';
 import { bearPaint } from './wear.ts';
 
 /** The asset's budget (bear_hybrid.ts): the playbook's model-tier band. */

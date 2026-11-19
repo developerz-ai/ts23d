@@ -29,6 +29,7 @@ import {
   type Vec3,
   valueNoise,
 } from '@developerz.ai/ts23d';
+import { type Coat, fieldCoat, paintOn, tint, unitNoise, wheelMud } from '../_lib/finish/field.ts';
 import {
   type Blob,
   camo,
@@ -38,7 +39,6 @@ import {
   type StripRule,
   tessellate,
 } from '../_lib/finish/finish.ts';
-import { type Coat, fieldCoat, paintOn, tint, unitNoise, wheelMud } from '../t34/field.ts';
 import {
   engineDeck,
   exhaustAt,

@@ -7,7 +7,7 @@
 // the wing leather scuffed pale where the fingers fold it.
 
 import type { Vec3 } from '@developerz.ai/ts23d';
-import { offset, py, rgb } from '../bear_hybrid/paint.ts';
+import { offset, py, rgb } from '../_lib/creature/texture-paint.ts';
 
 export interface RestBone {
   readonly head: Vec3;

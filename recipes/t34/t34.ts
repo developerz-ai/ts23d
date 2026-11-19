@@ -33,7 +33,6 @@ import {
   valueNoise,
   weightedNormals,
 } from '@developerz.ai/ts23d';
-import { onGround, reproject, restrip, type StripRule, tessellate } from '../_lib/finish/finish.ts';
 import {
   chipFlecks,
   EARTH,
@@ -47,7 +46,8 @@ import {
   unitNoise,
   WET_MUD,
   wheelMud,
-} from './field.ts';
+} from '../_lib/finish/field.ts';
+import { onGround, reproject, restrip, type StripRule, tessellate } from '../_lib/finish/finish.ts';
 
 const green = hex('#4e5a2c');
 const greenDark = hex('#3a4422');

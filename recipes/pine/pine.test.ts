@@ -13,7 +13,7 @@ import {
   treeReal,
 } from '@developerz.ai/ts23d';
 import { silhouetteReads } from '@developerz.ai/ts23d/testing';
-import { inWoodBand } from './bark.ts';
+import { inWoodBand } from '../_lib/trees/bark.ts';
 import { pine } from './pine.ts';
 
 const blobPine = defineAsset({

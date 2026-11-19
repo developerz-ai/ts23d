@@ -35,7 +35,7 @@ dense dark-green foliage in lobed clusters; a buttressed root flare.
   hexagon follows the painted cluster, so the empty cell corners are not drawn even where alpha is
   not tested. Cards are shrunk about their root to stay inside the kind's fitted envelope (height
   and spread measures) and 1.2 m over the ground (the crown's sway).
-- **LOD2**: the LOD0 cards clustered (k-means, `../pine/clumps.ts`) into 15 clumps of three crossed
+- **LOD2**: the LOD0 cards clustered (k-means, `../_lib/trees/clumps.ts`) into 15 clumps of three crossed
   twig cards (12 triangles each), ±2.4 standard deviations across, over LOD0's trunk resampled to a
   pentagon and four limbs to the outermost low clumps: the bole stays visible. `oak.test.ts` holds
   the 32 px silhouette IoU ≥ 0.85 from front, side and 3/4 (the kind's lathe blob fails it).

@@ -20,7 +20,7 @@ sprocket per side, link-by-link tracks.
 ## Finish and wear (Nov 2026 quality pass)
 | What | How |
 |---|---|
-| bone and slate paint | project material `armour_paint` (`../t34/field.ts`: matte film, 8 % flakes) at true scale; the library `steel_painted` chipped a fifth of the film in dashes that read as wood grain. Team plates stay on `steel_painted` and are never weathered |
+| bone and slate paint | project material `armour_paint` (`../_lib/finish/field.ts`: matte film, 8 % flakes) at true scale; the library `steel_painted` chipped a fifth of the film in dashes that read as wood grain. Team plates stay on `steel_painted` and are never weathered |
 | edge chips, salt dust, brine mud | `weather()` per space (`Kit.commit`): hull mud covers 80 % of the 1.1 m splash band (belly excluded), manifest `weather` |
 | wheels | slate-painted discs with radial mud (`wheelMud`), tyres on a rough greyscale strip so the mud shows |
 | track | one link worn in its own space (chips, pale salt crust), laid round the belt (`treads` gate) |

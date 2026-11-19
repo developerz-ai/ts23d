@@ -77,7 +77,7 @@ Dunkelgelb / Rotbraun / Olivgrün patches seeded from `ctx.rng`.
 - Zimmerit on the lower hull sides behind the road wheels: not modelled (hidden by the wheels; no
   photo of this batch checked).
 
-## Finish and wear (Nov 2026 quality pass; `../t34/field.ts`)
+## Finish and wear (Nov 2026 quality pass; `../_lib/finish/field.ts`)
 | What | How |
 |---|---|
 | Dunkelgelb and the camouflage | project material `armour_paint` (matte film, 8 % flakes) at true scale under the sprayed three-tone vertex colour; Zimmerit keeps its own strip |

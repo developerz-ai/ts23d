@@ -7,7 +7,7 @@
 // trouser legs; dust on the jerkin's hem; the belt and baldric scuffed pale where hands, buckle
 // and scabbard rub; the jerkin's leather rubbed matt on the elbows and the shoulder capes.
 
-import { py, rgb } from '../bear_hybrid/paint.ts';
+import { py, rgb } from '../_lib/creature/texture-paint.ts';
 
 /** Seeds of the noise fields: change one and that effect re-rolls. */
 const SEED = { mud: 19, splash: 31, scuff: 47, rub: 61, dust: 73 } as const;

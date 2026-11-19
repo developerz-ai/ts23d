@@ -74,7 +74,7 @@ vertex unweighted) → `script` (the wear and the roughness contrast painted int
 
 ## Paint and wear (`wear.ts`)
 
-One `script` step after the bind, run by [bear_hybrid/paint.ts](../bear_hybrid/paint.ts): the
+One `script` step after the bind, run by [_lib/creature/texture-paint.ts](../_lib/creature/texture-paint.ts): the
 shell's triangles are rasterised in UV space, so every texel knows where it stands on the figure.
 Masks are height bands and balls in metres, materials are told by colour (the jerkin is the only
 green, belts and boots the only saturated brown), edges are broken by seeded noise. A textured part

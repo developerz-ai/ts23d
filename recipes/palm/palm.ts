@@ -23,8 +23,8 @@ import {
   valueNoise,
 } from '@developerz.ai/ts23d';
 import { reproject, tessellate } from '../_lib/finish/finish.ts';
-import { pineBark } from '../pine/bark.ts';
-import { lowTrunk } from '../pine/trunk.ts';
+import { pineBark } from '../_lib/trees/bark.ts';
+import { lowTrunk } from '../_lib/trees/trunk.ts';
 import { deadFrond, dryLowFronds, frondCards, frondsOf } from './fronds.ts';
 import { boots, ringedStem } from './stem.ts';
 

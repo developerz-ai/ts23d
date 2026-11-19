@@ -24,7 +24,6 @@ import {
   terrainColor,
   type Vec3,
 } from '@developerz.ai/ts23d';
-import { DATUM, type FieldParams, RECT, tileField } from './field.ts';
 import {
   conifers,
   d8Flow,
@@ -35,7 +34,8 @@ import {
   sideTint,
   smoothPath,
   valleyPath,
-} from './ground.ts';
+} from '../_lib/terrain/ground.ts';
+import { DATUM, type FieldParams, RECT, tileField } from './field.ts';
 import { withSkirt } from './skirt.ts';
 import { snowCover } from './snow.ts';
 

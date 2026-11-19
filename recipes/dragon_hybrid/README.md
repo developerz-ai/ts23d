@@ -14,7 +14,7 @@ The pattern is [wolf_hybrid](../wolf_hybrid/README.md)'s and [bear_hybrid](../be
 | `surface.ts` | The five-request chain, the mesh request, the clips dropped |
 | `steps.ts` | The Blender program, built from the fitted rig; every step with its reason |
 | `wings.ts` | The wing bones, found on the proxy mesh (shoulder, wrist, finger, tip), their limits and the `flap` design values |
-| `wear.ts` | What the maps get after the bake: light out, keratin horns, roughness, soot, dust, scars, scuffed wing leather (run by [bear_hybrid/paint.ts](../bear_hybrid/paint.ts)) |
+| `wear.ts` | What the maps get after the bake: light out, keratin horns, roughness, soot, dust, scars, scuffed wing leather (run by [_lib/creature/texture-paint.ts](../_lib/creature/texture-paint.ts)) |
 | `dragon_hybrid.ts` | `defineModelCreature`: box, budget, the design-measures check |
 | `neural/<key>/` | Model and Blender outputs + `record.json`; the raw mesh is `local-0.glb` (git-ignored) |
 

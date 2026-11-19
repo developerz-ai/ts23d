@@ -39,7 +39,7 @@ import {
   sideTint,
   smoothPath,
   valleyPath,
-} from '../mountain_range/ground.ts';
+} from '../_lib/terrain/ground.ts';
 import demJson from './data/dem-yosemite_valley.json';
 import halfDomeJson from './data/wikidata-Q925252.json';
 

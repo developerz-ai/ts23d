@@ -22,7 +22,7 @@
 //   export   one GLB: three LODs, albedo 2048², normal and ORM 1024², one skin
 
 import type { BlenderStep, Bone, ModelRig } from '@developerz.ai/ts23d';
-import { paintStep, py } from '../bear_hybrid/paint.ts';
+import { paintStep, py } from '../_lib/creature/texture-paint.ts';
 import { drakePaint } from './wear.ts';
 import { findWings, TRUNK, WING_SCALE, type Wing } from './wings.ts';
 

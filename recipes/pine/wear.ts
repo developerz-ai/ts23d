@@ -3,7 +3,7 @@
 // on in the lower crown; cones (3–7.5 cm) hang in twos and threes under the outer shoots.
 
 import { type Mesh, merge, sweep, type Vec3 } from '@developerz.ai/ts23d';
-import { brokenLimb, trunkAt } from '../oak/wear.ts';
+import { brokenLimb, trunkAt } from '../_lib/trees/wear.ts';
 
 /** Cone brown under vertex colour on the plain strip. */
 const CONE: Vec3 = [0.36, 0.25, 0.15];

@@ -22,6 +22,7 @@ import {
   valueNoise,
   weather,
 } from '@developerz.ai/ts23d';
+import { paintOn, smooth, tint, unitNoise, wheelMud } from '../_lib/finish/field.ts';
 import { tessellate } from '../_lib/finish/finish.ts';
 import { Kit, type Rule, restrip, role, SOOT_STAIN, wearOf } from '../_lib/rts/finish.ts';
 import {
@@ -44,7 +45,6 @@ import {
   teamShade,
   tube,
 } from '../_lib/rts/style.ts';
-import { paintOn, smooth, tint, unitNoise, wheelMud } from '../t34/field.ts';
 import { hullDressing, turretBolts } from './dressing.ts';
 import { type Add, IDLER, ROAD_R, runningGear, SPROCKET, TRACK_W, TRACK_Y } from './running.ts';
 

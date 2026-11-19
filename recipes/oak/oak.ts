@@ -28,10 +28,10 @@ import {
   valueNoise,
 } from '@developerz.ai/ts23d';
 import { reproject, tessellate } from '../_lib/finish/finish.ts';
-import { pineBark } from '../pine/bark.ts';
-import { lowTrunk } from '../pine/trunk.ts';
-import { type CutoutOptions, clumpCards, STRAND, toCutout } from './leaf-cards.ts';
-import { deadLimb, fallenLimb, lichen } from './wear.ts';
+import { pineBark } from '../_lib/trees/bark.ts';
+import { type CutoutOptions, clumpCards, STRAND, toCutout } from '../_lib/trees/leaf-cards.ts';
+import { lowTrunk } from '../_lib/trees/trunk.ts';
+import { deadLimb, fallenLimb, lichen } from '../_lib/trees/wear.ts';
 
 const size = { height: 22, spread: 22, dbh: 1.3 };
 const FLOOR_R = 8;

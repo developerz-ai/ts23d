@@ -7,7 +7,7 @@
 // where it scratches against trees.
 
 import type { Vec3 } from '@developerz.ai/ts23d';
-import { offset, py, rgb } from './paint.ts';
+import { offset, py, rgb } from '../_lib/creature/texture-paint.ts';
 
 export interface RestBone {
   readonly head: Vec3;
