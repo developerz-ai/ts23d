@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test';
 import { resolve } from 'node:path';
-import { STEPS, selectSteps } from './verify.ts';
+import { commandOf, STEPS, selectSteps, TEST_TIMINGS } from './verify.ts';
 
 const VERIFY = resolve(import.meta.dir, 'verify.ts');
 
@@ -56,9 +56,36 @@ describe('verify sharding', () => {
     }
   });
 
-  it('runs only recipes on shards 2..n', () => {
+  it('runs only the sharded test and recipes steps on shards 2..n', () => {
     const r = selectSteps([], { k: 3, n: 12 });
-    expect('steps' in r && r.steps.map((s) => s.name)).toEqual(['recipes']);
+    expect('steps' in r && r.steps.map((s) => s.name)).toEqual(['test', 'recipes']);
+  });
+
+  it('skips only recipes on a docs-only change, sharded or not', () => {
+    const one = selectSteps([], { k: 1, n: 8 }, true);
+    expect('steps' in one && one.steps.map((s) => s.name)).not.toContain('recipes');
+    expect('steps' in one && one.steps.length).toBe(STEPS.length - 1);
+    const two = selectSteps([], { k: 2, n: 8 }, true);
+    expect('steps' in two && two.steps.map((s) => s.name)).toEqual(['test']);
+  });
+
+  it('gives the test step its bun --shard slice, balanced by the committed timings', () => {
+    const test = STEPS.find((s) => s.name === 'test');
+    const lint = STEPS.find((s) => s.name === 'lint');
+    if (!test || !lint) throw new Error('STEPS lost test or lint');
+    expect(commandOf(test, { k: 3, n: 8 })).toEqual([
+      ...test.cmd,
+      '--shard=3/8',
+      `--timings=${TEST_TIMINGS}`,
+    ]);
+    expect(commandOf(test, undefined)).toEqual([...test.cmd]);
+    expect(commandOf(lint, { k: 1, n: 8 })).toEqual([...lint.cmd]);
+  });
+
+  it('commits a bun test timings file in the format bun reads', async () => {
+    const t = (await Bun.file(TEST_TIMINGS).json()) as { version: number; files: object };
+    expect(t.version).toBe(1);
+    expect(Object.keys(t.files).length).toBeGreaterThan(100);
   });
 
   it('refuses a selection that leaves nothing to run on this shard', () => {

@@ -4,6 +4,26 @@ All notable changes to `@developerz.ai/ts23d`. Format: [Keep a Changelog](https:
 
 ## [Unreleased]
 
+Several agents can share one machine through a resource queue, CI is balanced by measured cost, and the check that committed renders are fresh now works.
+
+### Added
+- Machine-wide resource queue (ADR 017): agents sharing a machine take turns at `cpu` tokens, `blender` and `gpu` through ticket files under `$TS23D_HOME/queue/`, first come, first served, no daemon. A dead or killed command frees its place; a queue that cannot be written warns once and the command runs unqueued.
+- `t3d queue status` (`--json`), `t3d queue clear --stale | --pid <n> | --all`, `t3d queue run [--cpu <n|all>] [--blender] [--gpu] -- <command…>`, `t3d queue hold -- <command…>`.
+- `--no-wait` and `--max-wait <s>` on every command; `T3D_QUEUE=wait|fail|off`, `T3D_QUEUE_MAX_WAIT`; machine settings in `$TS23D_HOME/queue.json`. Off when `CI` is set.
+- Error codes `T3D_QUEUE_BUSY` and `T3D_QUEUE_TIMEOUT`, each naming the holder and the fix.
+- `t3d doctor` has a `queue` group; `onToolChild` in `/neural` reports each tool as it starts.
+- `bun run scripts/recipe-costs.ts [--tests] [--plan]` re-measures the per-recipe and per-test costs CI shards by; `bun run recipes <name…>` checks only the named folders.
+
+### Changed
+- `build`, `shot`, `hero`, `review`, `critique`, `blueprint`, `icon`, `gaps`, `tune`, `finish`, `concept` and `neural run` take one CPU token; `hero --quality path` takes 8 and traces on the threads granted (same bytes). `blender review` and `blender session start|run|finish` take `blender`; Blender adapter jobs and jobs sent to a loopback model URL take `blender` / `gpu` while they run. A waiting command prints one `t3d queue: waiting …` line on stderr.
+- `bun run verify` holds one place in the queue for the whole gate; tests run with the queue off.
+- CI: `gate` and `shots` are one 16-shard `gate` job (26 jobs → 18) balanced by measured cost (`scripts/lib/recipe-costs.json`, `scripts/lib/test-timings.json`); `bun test` is split across the shards; docs-only changes skip the recipe gate and the renders. `verify` stays the single required check.
+- `bun run shots` renders each folder's sheet, hero, blueprint and icon in one process, byte-identical to the four separate commands.
+
+### Fixed
+- CI's "committed renders match a fresh render" check never failed: its pathspec `recipes/*/out` matches no file under `out/`. It now uses `:(glob)recipes/*/out/**`, and a test proves the pathspec lists the committed outputs (D286).
+- `rts_faction`: committed renders refreshed; they still showed the tank's old belt weathering, which the broken check let through.
+
 ## [0.13.0] - 2026-11-19
 
 A correctness sweep across the library, CLI, gates, gallery and recipes: over a hundred and fifty defects fixed, stricter input validation and QA gates, track belts that move in any glTF reader, and PNG bytes that no longer depend on the runtime.

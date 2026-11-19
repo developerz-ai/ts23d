@@ -40,6 +40,7 @@ import { mcpMain } from './mcp/server.ts';
 import { neuralMain } from './neural-cmd.ts';
 import { provideRecipeNeural } from './neural-store.ts';
 import { planMain } from './plan-cmd.ts';
+import { queued, queueMain } from './queue/index.ts';
 import {
   blueprintOne,
   heroOne,
@@ -80,7 +81,7 @@ export async function run(argv: readonly string[]): Promise<number> {
   // Under --json stdout carries only the envelope: human lines (and recipes' logs) go to stderr.
   const restore = json ? jsonStdout() : () => {};
   try {
-    return await dispatch(argv, json);
+    return await queued(argv, (rest) => dispatch(rest, json));
   } catch (e) {
     return printError(outside(e), json);
   } finally {
@@ -97,6 +98,7 @@ async function dispatch(argv: readonly string[], json: boolean): Promise<number>
   if (argv[0] === 'server' && !argv.includes('--help')) return serverMain(argv.slice(1), json);
   if (argv[0] === 'plan' && !argv.includes('--help')) return planMain(argv.slice(1), json);
   if (argv[0] === 'blender' && !argv.includes('--help')) return blenderMain(argv.slice(1), json);
+  if (argv[0] === 'queue' && !argv.includes('--help')) return queueMain(argv.slice(1), json);
   if (argv[0] === 'build' && argv.includes('--watch')) return watchMain(argv);
   let args: Args;
   try {

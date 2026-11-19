@@ -18,6 +18,7 @@ import {
   reviewPack,
 } from '../render/index.ts';
 import type { Args } from './args.ts';
+import { grantedCpu } from './queue/index.ts';
 
 export interface RenderResult {
   readonly name: string;
@@ -51,6 +52,8 @@ export async function heroOne(
   const variant = variantOf(asset, args);
   const path = join(dir, variant ? `hero_${variant}.png` : 'hero.png');
   const lod0 = compile(asset, { lod: 0, ...(variant ? { variant } : {}) });
+  // Under the queue the tracer uses the CPU tokens it was granted (same bytes at any count).
+  const threads = grantedCpu();
   await Bun.write(
     path,
     args.quality === 'path'
@@ -58,6 +61,7 @@ export async function heroOne(
           ...args.render,
           sheet,
           ...(args.spp !== undefined ? { spp: args.spp } : {}),
+          ...(threads !== undefined ? { threads } : {}),
         })
       : beauty(lod0, { ...args.render, sheet }),
   );

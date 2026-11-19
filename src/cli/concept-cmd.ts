@@ -30,6 +30,7 @@ import { renderBeauty, silhouetteSheet } from '../render/index.ts';
 import { type LoadedConfig, loadConfig } from './config.ts';
 import { loadAssets } from './load.ts';
 import { loadNeuralEntries, neuralDirOf, saveNeuralEntry } from './neural-store.ts';
+import { queuedAdapter } from './queue/index.ts';
 import { envelope, printError } from './report.ts';
 
 export const RENDER_MODEL: NeuralModelInfo = {
@@ -180,7 +181,7 @@ export async function concept(
     const cache = neuralCache({ recipe, entries: await loadNeuralEntries(ndir) });
     for (const request of Object.values(mod).filter(isImageRequest)) {
       const job = { task: 'image' as const, request, ...(model ? { model } : {}) };
-      const { entry, cached } = await cache.fill(binding.adapter, job);
+      const { entry, cached } = await cache.fill(queuedAdapter(binding.adapter), job);
       const at = cached ? join(ndir, entry.record.key) : await saveNeuralEntry(ndir, entry);
       images.push({ key: entry.record.key, cached, dir: at });
     }

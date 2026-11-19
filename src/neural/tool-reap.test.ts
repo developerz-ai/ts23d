@@ -2,9 +2,11 @@
 // process group, so without the handler a SIGINT/SIGTERM left them running. A child Bun process
 // starts a harmless `sleep` through nodeExec; we signal it and check both are gone. With a host
 // SIGINT handler that keeps the process alive, every later SIGINT still reaps the tools.
+// `onToolChild` listeners hear each tool's pid as it starts (the CLI queue lists it on its ticket).
 
 import { describe, expect, it } from 'bun:test';
 import { join } from 'node:path';
+import { onToolChild, trackChild } from './tool-reap.ts';
 
 const spawnLib = join(import.meta.dir, 'tool-spawn.ts');
 const START = `import { nodeExec } from ${JSON.stringify(spawnLib)};
@@ -114,4 +116,16 @@ describe.skipIf(process.platform === 'win32')('nodeExec children and signals', (
         expect(proc.exitCode).toBeNull();
       }
     }));
+});
+
+describe('onToolChild', () => {
+  it('a removed listener hears nothing more; a live one hears every tool as it starts', () => {
+    const heard: number[] = [];
+    const off = onToolChild((pid) => heard.push(pid));
+    const untrack = [trackChild(4_000_001), trackChild(4_000_002)];
+    off();
+    untrack.push(trackChild(4_000_003));
+    for (const u of untrack) u();
+    expect(heard).toEqual([4_000_001, 4_000_002]);
+  });
 });

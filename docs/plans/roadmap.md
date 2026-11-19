@@ -161,6 +161,8 @@ Exit bar: a 4-4-0 with tender matching [`docs/reference/loco-photo-match.png`](h
 - [x] Readability checks from artists' rules ([reading list](../research/reading-list.md)): thumbnail silhouette test, greyscale value-contrast focus, detail-density rest areas
 - [x] Offline tuning ([20-tuning](../idea/20-tuning.md)): `tune: { params, objectives }` + `ctx.tuned`; `t3d tune` runs deterministic CMA-ES (or coordinate search) against silhouette masks, measures, art metrics, budget or a custom function and commits `tune.json` + a before/after report; `tune_demo` fits an amphora to a drawn outline (front IoU 0.643 → 0.940)
 - [ ] Parallel tuning (Bun workers, results in submission order) and restarts (IPOP-CMA-ES) for > 10 knobs
+- [x] Machine-wide resource queue ([ADR 017](../decisions/017-machine-resource-queue.md)): agents sharing a machine take turns at CPU tokens, Blender and the GPU; `t3d queue status | clear | run | hold`, `T3D_QUEUE=wait|fail|off`, coded `T3D_QUEUE_BUSY` / `T3D_QUEUE_TIMEOUT`; off under CI
+- [ ] Queue follow-ups: `bun run verify` and `bun run recipes` take their CPU tokens themselves; the test preload turns the queue off inside tests; a `ps`-based start time for hosts without `/proc`
 
 ## Test helpers: agents catch errors with code
 

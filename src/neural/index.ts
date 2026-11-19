@@ -198,6 +198,7 @@ export {
   gltfpackArgs,
   type ToolAdapterOptions,
 } from './tool-adapters.ts';
+export { onToolChild } from './tool-reap.ts';
 export {
   nodeExec,
   runTool,

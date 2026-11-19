@@ -1,5 +1,5 @@
 // `t3d <command> <bad argument> --json`: every command, including the ones that parse their own
-// flags (concept, doctor, setup, server, plan, blender, init), leaves exactly one envelope on
+// flags (concept, doctor, setup, server, plan, blender, init, queue), leaves exactly one envelope on
 // stdout with ok:false and an error carrying code and fix; nothing else goes to stdout, by any
 // route (console.log / info / debug with any number of arguments, or `process.stdout.write`).
 
@@ -79,6 +79,11 @@ const CASES: readonly (readonly string[])[] = [
   ['finish', '--nope'],
   ['icon', '--nope'],
   ['build', '--nope'],
+  ['queue'],
+  ['queue', 'nope'],
+  ['queue', 'clear', '--pid', 'x'],
+  ['queue', 'run', '--cpu', '0', '--', 'true'],
+  ['build', 'a.ts', '--max-wait', 'soon'],
   ['nope'],
 ];
 

@@ -413,6 +413,20 @@ Stop when two consecutive shots show nothing worth fixing. Never use Math.random
 
 **Skills ship in the package as plain markdown**: `node_modules/@developerz.ai/ts23d/.claude/skills/<skill>/SKILL.md`: `author-recipe` (the loop) and the artist workflows (`creature-artist`, `character-artist`, `hard-surface-artist`, `architect`, `prop-artist`, `rigger-animator`, `technical-artist`, `blender-artist`, …). Read them in place, or copy one into your agent's skills folder.
 
+**Several agents on one machine take turns.** Heavy commands queue machine-wide through ticket files under `$TS23D_HOME/queue/` (default `~/.ts23d`; no daemon): `cpu` is weighted tokens (three quarters of the cores; a build takes 1, `hero --quality path` takes 8), `blender` and `gpu` run one job at a time, first come, first served. A waiting command prints `t3d queue: waiting for cpu … · running: pid 4242 "t3d hero …"` on stderr and then runs; that line is not a failure, so give queued commands a long timeout instead of wrapping them in `sleep` loops.
+
+| Do | Command |
+|---|---|
+| See who runs and who waits (per class, plus Blender sessions, GPU lease, load, RAM) | `t3d queue status` (`--json`) |
+| Queue any other command | `t3d queue run [--cpu <n\|all>] [--blender] [--gpu] -- <command…>` (exit code = the command's) |
+| Run alone once the machine has drained | `t3d queue hold -- <command…>` |
+| Drop tickets (ends no process) | `t3d queue clear --stale \| --pid <n> \| --all` |
+| Refuse instead of waiting | `--no-wait` or `T3D_QUEUE=fail` → `T3D_QUEUE_BUSY` (the machine is busy; the code is not wrong) |
+| Wait at most `<s>` seconds (default 1800) | `--max-wait <s>` or `T3D_QUEUE_MAX_WAIT=<s>` → `T3D_QUEUE_TIMEOUT`, naming who is ahead |
+| Switch it off | `T3D_QUEUE=off` (it is off whenever `CI` is set) |
+
+A dead or killed command frees its place by itself; a queue that cannot be written prints one warning and the command runs unqueued. Machine settings: `$TS23D_HOME/queue.json`, e.g. `{"capacity":{"cpu":12},"weights":{"pathHero":4}}`. `t3d doctor` has a `queue` group. Why it works this way: [ADR 017](docs/decisions/017-machine-resource-queue.md).
+
 **Optional: MCP server.** `t3d mcp` serves the same steps over stdio (MCP 2025-06-18) as tools: `build`, `shot`, `hero`, `blueprint`, `review`, `critique`, `list_recipes`, `explain_error`. Renders come back as images the agent sees inline (downscaled to 1024 px; extra review images listed by path). Tools read and write only inside the project root and its output folder (`--root`, `--out`); errors come back as `T3D_*` code + fix and the server stays up.
 
 ```sh

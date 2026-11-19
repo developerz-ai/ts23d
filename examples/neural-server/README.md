@@ -130,6 +130,14 @@ engines and other apps share the card and the RAM). While it waits, the job stay
 the job fails naming the holder), `idle_release_s` (120; an idle model is unloaded so others get
 their turn), `vram_margin_gb` (1), `ram_margin_gb` (4).
 
+**Lease and `t3d` queue.** The lease is the server's own rule and is always on. The `t3d` CLI adds
+a queue in front of it (ADR 017 in the ts23d repo, `docs/decisions/017-machine-resource-queue.md`):
+a job that `t3d neural run`, `t3d concept` or `t3d finish --model http` sends to a loopback URL
+first takes the machine-wide `gpu` class, first come, first served, so clients line up before they
+post and their wait does not eat the job deadline. `t3d queue status` shows that line and the
+lease holder (`pid <n> <model>`, read from `machine.lock`). The queue never replaces the lease: a
+lab script or a second server still meets it here.
+
 ```python
 from gpu import gpu_lease  # lab scripts: same line, same lock
 

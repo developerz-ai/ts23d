@@ -5,9 +5,19 @@
 // conventional status (130 / 143). When the host has its own handler for that signal, the signal
 // is left to it and the reaper stays armed for every later signal. Long-lived processes started
 // on purpose (a Blender session, a model server) are not tracked: they are meant to outlive t3d.
+// `onToolChild` tells a listener about each tool as it starts.
 
 const live = new Set<number>();
+const listeners = new Set<(pid: number) => void>();
 let installed = false;
+
+/** Hear of every tool as it starts (the CLI's queue lists it on its ticket); returns the undo. */
+export function onToolChild(listener: (pid: number) => void): () => void {
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
+}
 
 /** SIGKILL the process group of every tracked tool (the process alone on Windows). */
 function reap(): void {
@@ -40,6 +50,7 @@ function install(): void {
 export function trackChild(pid: number): () => void {
   install();
   live.add(pid);
+  for (const listener of listeners) listener(pid);
   return () => {
     live.delete(pid);
   };

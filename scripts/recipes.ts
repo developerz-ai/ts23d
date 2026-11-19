@@ -2,8 +2,10 @@
 // one hash); every asset lives in recipes/<name>/<name>.ts with a README.md dossier, and its
 // committed out/<asset>/ (hero.png, sheet.png, manifest.json) matches a fresh compile, and carries
 // a fresh critique.json scored ≥ CRITIQUE_MIN_SCORE (warn-only until ENFORCE_FROM). Then the
-// shard's recipe tests (recipes/<name>/**/*.test.ts; recipes/_*/ on shard 1) run. "The gallery is
-// green".
+// shard's recipe tests (recipes/<name>/**/*.test.ts, plus its balanced share of the shared
+// recipes/_*/ tests) run. "The gallery is green".
+//   bun run recipes               every folder (T3D_SHARD=k/n: this shard's, scripts/lib/shard.ts)
+//   bun run recipes t34 wolf      only these folders and their own tests (no shared tests)
 
 import { loadAssets } from '../src/cli/load.ts';
 import { provideRecipeNeural } from '../src/cli/neural-store.ts';
@@ -21,7 +23,7 @@ import { recipeFolders, report, tsFiles, type Violation } from './lib/files.ts';
 import { neuralCacheViolations } from './lib/neural-cache.ts';
 import { neuralLicenceViolations } from './lib/neural-licence.ts';
 import { crossRecipeImports } from './lib/recipe-imports.ts';
-import { CURRENT_SHARD, inShard, type Shard } from './lib/shard.ts';
+import { CURRENT_SHARD, recipeShard } from './lib/shard.ts';
 
 /** The committed out/<asset>/ must exist and describe what the recipe compiles to today. */
 export async function staleOutputs(
@@ -58,20 +60,27 @@ export async function staleOutputs(
       ];
 }
 
+/** The test files of the shared `recipes/_<name>` folders (never generated outputs under out/). */
+export function sharedRecipeTests(tests: readonly string[]): string[] {
+  return tests.filter((t) => {
+    const [, dir, sub] = t.split('/');
+    return t.endsWith('.test.ts') && sub !== 'out' && !!dir?.startsWith('_');
+  });
+}
+
 /**
- * The recipe tests this shard runs: those inside its asset folders, plus the shared `recipes/_*`
- * folders' tests on shard 1 (or unsharded). Never generated outputs under out/.
+ * The recipe tests a shard runs: those inside its asset folders, plus the shared tests it owns
+ * (`recipeShard` balances them across shards). Never generated outputs under out/.
  */
 export function recipeTests(
   tests: readonly string[],
   dirs: readonly string[],
-  shard: Shard | undefined,
+  shared: readonly string[],
 ): string[] {
-  const shared = !shard || shard.k === 1;
   return tests.filter((t) => {
     const [, dir, sub] = t.split('/');
     if (!t.endsWith('.test.ts') || sub === 'out' || !dir) return false;
-    return dir.startsWith('_') ? shared : dirs.includes(`recipes/${dir}`);
+    return dir.startsWith('_') ? shared.includes(t) : dirs.includes(`recipes/${dir}`);
   });
 }
 
@@ -81,6 +90,7 @@ function runTests(files: readonly string[], json: boolean): Violation[] {
   const p = Bun.spawnSync(['bun', 'test', '--timeout', '120000', ...files.map((f) => `./${f}`)], {
     stdout: 'pipe',
     stderr: 'pipe',
+    env: process.env,
   });
   const output = `${p.stdout}${p.stderr}`;
   if (!json) console.error(output);
@@ -114,7 +124,18 @@ async function main(): Promise<void> {
     });
   const all = await tsFiles('recipes');
   for (const f of all) violations.push(...crossRecipeImports(f, await Bun.file(f).text()));
-  const mine = inShard(folders, CURRENT_SHARD);
+  const only = process.argv.slice(2).filter((a) => !a.startsWith('--'));
+  const shard = recipeShard(folders, sharedRecipeTests(all), CURRENT_SHARD);
+  const mine = only.length
+    ? shard.gate.filter((f) => only.some((o) => f.dir === `recipes/${o}`))
+    : shard.gate;
+  for (const o of only.filter((o) => !folders.some((f) => f.dir === `recipes/${o}`)))
+    violations.push({
+      file: `recipes/${o}`,
+      line: 1,
+      message: `no recipe folder recipes/${o}/${o}.ts`,
+      fix: 'name folders as `ls recipes` lists them: bun run recipes t34 wolf',
+    });
   for (const { dir, file } of mine) {
     violations.push(...(await neuralLicenceViolations(dir)));
     // A broken cache would throw from the loader below: report it and skip this recipe's build.
@@ -178,7 +199,7 @@ async function main(): Promise<void> {
   const tests = recipeTests(
     all,
     mine.map((f) => f.dir),
-    CURRENT_SHARD,
+    only.length ? [] : shard.sharedTests,
   );
   violations.push(...runTests(tests, json));
   if (critiqueMode() === 'enforce') violations.push(...critiques);

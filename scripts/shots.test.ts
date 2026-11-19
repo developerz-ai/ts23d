@@ -3,17 +3,19 @@ import { existsSync } from 'node:fs';
 import { mkdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { HERO_FLAGS, type Runner, refresh } from './shots.ts';
+import { type Cli, renderArgv, renderFolder } from './shots-folder.ts';
 
 const root = join(import.meta.dir, '../tmp/shots-test');
 afterAll(() => rm(root, { recursive: true, force: true }));
 
-/** A fake t3d: writes <out>/a/<cmd>.png, fails on `fail`. */
+/** A fake renderer: writes <tmp>/a/{shot,hero,blueprint}.png + manifest, or fails half-way. */
 const fake =
-  (fail?: string): Runner =>
-  async ([cmd, , , out]) => {
-    if (cmd === fail) return false;
-    await Bun.write(join(out ?? '', 'a', `${cmd}.png`), 'x');
-    await Bun.write(join(out ?? '', 'a', 'manifest.json'), '{"sheet":"sheet.png"}');
+  (fail = false): Runner =>
+  async (_file, tmp) => {
+    await Bun.write(join(tmp, 'a', 'shot.png'), 'x');
+    if (fail) return false;
+    for (const f of ['hero', 'blueprint']) await Bun.write(join(tmp, 'a', `${f}.png`), 'x');
+    await Bun.write(join(tmp, 'a', 'manifest.json'), '{"sheet":"sheet.png"}');
     return true;
   };
 
@@ -22,7 +24,7 @@ describe('shots refresh', () => {
     const dir = join(root, 'keep');
     await mkdir(join(dir, 'out', 'a'), { recursive: true });
     await Bun.write(join(dir, 'out', 'a', 'old.png'), 'old');
-    expect(await refresh(dir, 'x.ts', fake('blueprint'))).toBe(false);
+    expect(await refresh(dir, 'x.ts', fake(true))).toBe(false);
     expect(await Bun.file(join(dir, 'out', 'a', 'old.png')).exists()).toBe(true);
     expect(existsSync(join(dir, '.out-tmp'))).toBe(false);
   });
@@ -41,16 +43,29 @@ describe('shots refresh', () => {
     expect(existsSync(join(dir, '.out-tmp'))).toBe(false);
   });
 
-  it('path traces the committed hero at the measured CI size and sample count', async () => {
-    const seen: string[][] = [];
-    const record: Runner = async (cmd) => {
-      seen.push([...cmd]);
-      return fake()(cmd);
-    };
-    expect(await refresh(join(root, 'flags'), 'x.ts', record)).toBe(true);
-    const hero = seen.find((c) => c[0] === 'hero') ?? [];
-    expect(hero.slice(4)).toEqual([...HERO_FLAGS]);
+  it('path traces the committed hero at the measured CI size and sample count', () => {
     expect(HERO_FLAGS).toEqual(['--quality', 'path', '--size', '960x540', '--spp', '16']);
-    expect(seen.find((c) => c[0] === 'shot')?.length).toBe(4);
+  });
+});
+
+describe('shots in one process per folder', () => {
+  it('renders shot, path-traced hero, blueprint and icon from one recipe file, in order', () => {
+    expect(renderArgv('r/x.ts', 'r/.out-tmp')).toEqual([
+      ['shot', 'r/x.ts', '--out', 'r/.out-tmp'],
+      ['hero', 'r/x.ts', '--out', 'r/.out-tmp', ...HERO_FLAGS],
+      ['blueprint', 'r/x.ts', '--out', 'r/.out-tmp'],
+      ['icon', 'r/x.ts', '--out', 'r/.out-tmp'],
+    ]);
+  });
+
+  it('stops at the first failing render and returns its exit code', async () => {
+    const seen: string[] = [];
+    const cli: Cli = async ([cmd]) => {
+      seen.push(cmd ?? '');
+      return cmd === 'hero' ? 1 : 0;
+    };
+    expect(await renderFolder('x.ts', 'o', cli)).toBe(1);
+    expect(seen).toEqual(['shot', 'hero']);
+    expect(await renderFolder('x.ts', 'o', async () => 0)).toBe(0);
   });
 });
