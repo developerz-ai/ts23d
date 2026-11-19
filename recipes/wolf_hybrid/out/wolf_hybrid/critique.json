@@ -1,0 +1,63 @@
+{
+  "asset": "wolf_hybrid",
+  "reviewer": "agent",
+  "overall": 7.0,
+  "scores": {
+    "silhouette": {
+      "score": 8,
+      "reason": "Reads as a grey wolf from every view: long muzzle, pricked ears, deep chest, tucked belly, long straight legs and a hanging brush tail; the SIDE view in sheet.png gives the standing-wolf outline at once.",
+      "fixes": [
+        "give the neck ruff a broken, tufted outline (a short shell or card pass) so the head does not join the shoulders in one smooth curve"
+      ]
+    },
+    "proportions": {
+      "score": 8,
+      "reason": "1.2 × 0.3 × 0.9 m on the grid sits inside the sourced adult range; leg length, chest depth and head size look right beside photos. The tail hangs to the hocks, at the long end of the range.",
+      "fixes": [
+        "shorten the tail a few centimetres in a Blender step so it ends above the hock, as on most reference photos"
+      ]
+    },
+    "materials": {
+      "score": 7,
+      "reason": "The image-to-3D texture reads as a grizzled grey coat with a pale chest and legs, and the face markings hold. Lighting is baked into the albedo (bright back, saturated orange flank and ear patches) and the fur has one uniform roughness.",
+      "fixes": [
+        "de-light the albedo before import (a bake step that divides out the baked sun and AO)",
+        "pull the orange patches on the flank, ears and tail toward the coat's tawny grey"
+      ]
+    },
+    "detail": {
+      "score": 7,
+      "reason": "Fur breakup, eyes, nose and toes come from the texture and hold at third-person distance. Geometry is smooth: no fur clumps on the outline, and the flank shows rib-like ridges in SIDE that read as a starved animal rather than a coat.",
+      "fixes": [
+        "smooth the ridges on the flank in a Blender sculpt step",
+        "a strand or shell pass on the ruff, back and tail so the outline breaks into fur clumps"
+      ]
+    },
+    "wear": {
+      "score": 5,
+      "reason": "A clean animal: the darker back gives a little story, but there is no mud on the paws or lower legs, no wet or matted fur, no scars.",
+      "fixes": [
+        "mud on the paws and lower legs (grime with the ground mask over the textured part)",
+        "a seeded scar on the muzzle or a nicked ear"
+      ]
+    },
+    "lod": {
+      "score": 8,
+      "reason": "FAR LOD2 keeps the outline, the pale chest and the dark back; at the sheet's far distance it is hard to tell from LOD0.",
+      "fixes": [
+        "lower the LOD2 triangle count: the far view does not need its current budget for a 1.2 m animal"
+      ]
+    },
+    "technical": {
+      "score": 6,
+      "reason": "QA PASS and one draw per LOD, with idle, look and walk clips, but only with a declared deform tolerance: the skin webs between the tail root and the thighs at the hip's extremes (stretch up to ×5.7 against a limit of ×4, defect D253, still open).",
+      "fixes": [
+        "close D253: a per-bone reach or blend at the tail root in the `isolate` Blender step, or a regenerated mesh from a concept with one raised tail, then remove `limitTolerances`"
+      ]
+    }
+  },
+  "renders": {
+    "hero.png": "74112f24b1c1bf6117f3dc336b607f9e3465e088338ef3690e9db710c13772b0",
+    "sheet.png": "00f3f340f30370bb375acdeb36ceca17dba6ec4a5b3182a3ce266ef4d8a3035f"
+  }
+}
