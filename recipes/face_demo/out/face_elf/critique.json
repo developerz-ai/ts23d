@@ -1,11 +1,11 @@
 {
   "asset": "face_elf",
   "reviewer": "agent",
-  "overall": 5,
+  "overall": 5.1,
   "scores": {
     "silhouette": {
       "score": 6,
-      "reason": "Long refined face and pointed back-swept ears read as an elf; the long hair falls behind the ears in ribbons. The hair cap is too tight and helmet-like for long hair.",
+      "reason": "Long refined face and pointed ears read as an elf; the hair is a tight grooved helmet with two flat ribbons behind the ears.",
       "fixes": [
         "fuller hair volume over the crown and ribbons that fan over the shoulders",
         "lengthen the ear tip another 1–2 cm"
@@ -13,122 +13,53 @@
     },
     "proportions": {
       "score": 7,
-      "reason": "Jaw ×0.85, face ×1.08, high zygoma and refined nose read as declared; eye spacing 63.7 vs 64.1 mm.",
+      "reason": "Narrow jaw, long face, high zygoma and refined nose read as declared; eye spacing on spec.",
       "fixes": [
-        "stronger almond tilt of the eyes (tilt 0.03 H)"
+        "stronger almond tilt of the eyes"
       ]
     },
     "materials": {
       "score": 4,
-      "reason": "Vertex colour on the plain strip: skin zones (flush, lips, cool sockets, curvature cavity, mottle) separate by hue but not by roughness or SSS; hair is the same material as skin, so it reads as sculpted clay; eyes are the only glossy part (cornea clearcoat).",
+      "reason": "Vertex colour on the plain strip: skin zones (flush, lips, cool sockets) separate by hue but not by roughness or subsurface; the hair is the same material as the skin, so it reads as sculpted clay; there is a pale band of bare skin under the hair helmet edge at the hairline in hero.png.",
       "fixes": [
-        "a skin strip with subsurface-like roughness/sheen and a hair strip with anisotropic sheen (material-artist)",
-        "darker hair roots and per-lock value variation along the lock (root → tip colour is set but too subtle)"
+        "a skin strip with subsurface-like roughness/sheen and a hair strip with anisotropic sheen",
+        "darker hair roots and per-lock value variation along each lock",
+        "close the hairline: extend the hair mass to the skin (or tint the scalp under it to the root colour) so no pale band shows"
       ]
     },
     "detail": {
       "score": 5,
-      "reason": "Primary and secondary forms come from a real anatomical base (eyelids, nasolabial area, lips, ear helix/antihelix/concha, clavicles, sternocleidomastoid) and read cleanly under the raking light, but there is no tertiary detail: no pores, wrinkles, lid creases or brow hairs (brows are painted bands), and the SDF hair locks are uniform grooves.",
+      "reason": "Primary and secondary forms come from a real anatomical base (lids, nasolabial area, lips, ear helix, clavicles, sternocleidomastoid), but there is no tertiary layer (pores, wrinkles) and the hair is evenly spaced grooves.",
       "fixes": [
-        "LOD0 normal-scale wrinkle/pore displacement on the subdivided base driven by age",
-        "hair: varied lock widths and a parting instead of evenly spaced grooves; hair cards (planned)"
+        "LOD0 wrinkle/pore displacement on the subdivided base driven by age",
+        "varied lock widths and a parting instead of evenly spaced grooves"
       ]
     },
     "wear": {
       "score": 3,
       "reason": "Pristine: seeded asymmetry and age/weight knobs are the only story; no scars, stubble, blemishes, sun-darkened skin or dirt.",
       "fixes": [
-        "seeded scars/blemish decals in vertex colour (orc, dwarf)",
-        "stubble shadow on the human/dwarf jaw",
-        "age-driven darkening under the eyes"
+        "seeded scar/blemish marks in vertex colour",
+        "stubble shadow on the jaw and age-driven darkening under the eyes"
       ]
     },
     "lod": {
-      "score": 5,
-      "reason": "LOD2 keeps the outline but the thin ear tips and ribbons erode at the 1.4 cm cell.",
+      "score": 4,
+      "reason": "LOD2 in sheet.png loses the ear tips and the hair ribbons entirely, the mouth area turns into dark patches and the bust edge is ragged: the elf no longer reads as an elf at distance.",
       "fixes": [
-        "keep ears from the LOD1 mesh at LOD2 (authored topology) or thicken thin parts before the re-mesh"
+        "keep the ears and ribbons from the LOD1 mesh at LOD2, or thicken thin parts before the re-mesh"
       ]
     },
     "technical": {
       "score": 7,
-      "reason": "QA PASS at every LOD; 126k/52k/8.6k tris (hair ribbons are the bulk); 2 draws.",
+      "reason": "QA PASS at every LOD; 126.4k / 51.6k / 8.2k tris (hair ribbons are the bulk); 2 draws.",
       "fixes": [
         "hair cards for the ribbons"
       ]
     }
   },
   "renders": {
-    "hero.png": "8a9c16c6dd5f50c55309b65a9037b88c52d95d43a87a13120c44ec80f5edb1ad",
-    "sheet.png": "526f8cda813ceb9a4c7983cd0a1bddf1033cbafc56e05793d132839a49296da4",
-    "raking.png": "f7aa18e74ff205feedeabe21baf8d7ea952d7bbc7625999b6e2ecc9d6018d0be",
-    "raking_detail.png": "de183823c3228a52a9b526f9d7ba2ee914692ae3cab3cdc7801fd07f3f4411c4",
-    "lods.png": "6b7eb34321c70c297c602e2c99305d3a750a66ff7c04cd49534a54c6f35ad137",
-    "silhouette.png": "25e73964f5d2e2581628bdec5ddc6c8d1fde52551ceb7f12e96b1acfb2a3c7df",
-    "value.png": "0acb967cfeab57593e2bc433a959b0484be162f27306bcb7d64ec261b1cfeabe",
-    "detail.png": "83cd9a9d49cc65089508b7ffadee9b8a0dbbd7e18ec175f79fb4804996a43448"
-  },
-  "metrics": {
-    "silhouette": [
-      {
-        "view": "front",
-        "iou": 0.885
-      },
-      {
-        "view": "side",
-        "iou": 0.906
-      },
-      {
-        "view": "3/4",
-        "iou": 0.911
-      }
-    ],
-    "focal": {
-      "peakPart": "hair",
-      "peak": [
-        379,
-        101
-      ],
-      "focalShare": 0.473,
-      "focalArea": 0.659,
-      "top": [
-        {
-          "part": "skin",
-          "share": 0.473
-        },
-        {
-          "part": "hair",
-          "share": 0.334
-        },
-        {
-          "part": "plinth",
-          "share": 0.193
-        }
-      ],
-      "declared": [
-        "skin"
-      ]
-    },
-    "rest": {
-      "share": 0.59,
-      "spread": 0.657,
-      "min": 0.25
-    },
-    "grounded": {
-      "rise": 0.252,
-      "bands": [
-        0.366,
-        0.654,
-        0.571,
-        0.58,
-        0.655
-      ]
-    },
-    "shape": {
-      "acuteShare": 0.111,
-      "straightShare": 0.578,
-      "taper": 0.213,
-      "shape": "stable"
-    }
+    "hero.png": "1b5068144ca238385628a8affed826cbf1e55c0db1446c2e7750da0789e77231",
+    "sheet.png": "f5e27519d87697763e7e8898864decbeb389b5cbdc3220a488409cd2195837a7"
   }
 }

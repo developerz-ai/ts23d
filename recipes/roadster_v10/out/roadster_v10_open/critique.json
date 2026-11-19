@@ -1,0 +1,62 @@
+{
+  "asset": "roadster_v10_open",
+  "reviewer": "agent",
+  "overall": 6.1,
+  "scores": {
+    "silhouette": {
+      "score": 7,
+      "reason": "Doors, bonnet and boot open: reads as the roadster with everything open; the raised bonnet is a huge slab that hides the front end.",
+      "fixes": [
+        "hinge the bonnet at the rear (or check the front-hinge angle) so the nose stays visible"
+      ]
+    },
+    "proportions": {
+      "score": 7,
+      "reason": "Same body as the closed car; the open bonnet looks larger than its opening.",
+      "fixes": [
+        "fit the bonnet panel to the opening outline"
+      ]
+    },
+    "materials": {
+      "score": 7,
+      "reason": "Same paint, glass and mesh; the open bonnet surface is visibly lumpy/warped in hero.png.",
+      "fixes": [
+        "smooth the bonnet panel surface (warped shading)",
+        "clearcoat finish on the paint"
+      ]
+    },
+    "detail": {
+      "score": 7,
+      "reason": "Engine bay with V10 heads, intake, reservoirs; door cards and hinges.",
+      "fixes": [
+        "door hinges and latches at the shut faces",
+        "underside of the bonnet with bracing"
+      ]
+    },
+    "wear": {
+      "score": 4,
+      "reason": "Showroom clean; the engine bay has no grime.",
+      "fixes": [
+        "heat discolouration on the exhaust headers and grime in the bay"
+      ]
+    },
+    "lod": {
+      "score": 6,
+      "reason": "FAR LOD2 keeps the open panels; tyres turn light grey with the rims.",
+      "fixes": [
+        "keep a black tyre ring separate from the rim at LOD2"
+      ]
+    },
+    "technical": {
+      "score": 5,
+      "reason": "QA clean but 909k / 78k / 6.3k tris over 91 parts, same over-budget LOD0 as the closed car.",
+      "fixes": [
+        "gate engine-bay and grille mesh density by ctx.lod to bring LOD0 under ~150k"
+      ]
+    }
+  },
+  "renders": {
+    "hero.png": "bf3cc03da4cd25289d260fe726656f3f32ff381595748e571de373b6df683a50",
+    "sheet.png": "9b6fd40c87c02e1b7b3e9c6ed4c30cf1dc05ff3f3fb7a63ca8c99b11070f9ad7"
+  }
+}

@@ -10,16 +10,21 @@ name: ci
 # Before this layout (run 44460876935, 2026-11-19): 9 minutes wall, 26 jobs, 87.5 runner-minutes;
 # gate shard 1 took 8 minutes (all 474 test files plus a recipe slice) and shots shards up to
 # 8.3 minutes (four `t3d` processes per folder, each re-importing and recompiling the recipe).
-# Now: 16 shards (T3D_SHARD=k/16, CI_SHARDS in scripts/lib/shard.ts). Each runs its `bun test --shard`
-# slice (balanced by scripts/lib/test-timings.json) and its units of recipe work, split by
-# measured cost (scripts/lib/recipe-costs.json; greedy longest-first, scripts/lib/shard.ts): one
-# folder's gate and its renders are separate units, renders take one process per folder
+# Now: 18 shards (T3D_SHARD=k/18, CI_SHARDS in scripts/lib/shard.ts; with `site` that is 19 jobs,
+# under the 20 a free account runs at once). Each runs its `bun test --shard` slice (balanced by
+# scripts/lib/test-timings.json) and its units of recipe work, split by measured cost
+# (scripts/lib/recipe-costs.json; greedy longest-first, scripts/lib/shard.ts): one folder's gate
+# and its renders are separate units, renders take one process per folder
 # (scripts/shots-folder.ts); shard 1 also runs lint, types, build and pack.
-# Measured 2026-11-19 (run 44474402275): 6.6 minutes push → green, shards 2.6-6.4 minutes,
-# 76 runner-minutes. The floor is one unit: human_head's renders, because each of shot / hero /
-# blueprint / icon compiles its LOD0 again (about 55 s each). Under 5 minutes needs the four
-# renders to share one compile (a src/cli change; docs/maintenance.md "CI time"). When shards
-# drift: `bun run scripts/recipe-costs.ts --tests`, then `--plan` to pick the shard count.
+# Measured 2026-11-19 with 16 shards (run 44474402275): 6.6 minutes push → green, shards
+# 2.6-6.4 minutes, 76 runner-minutes; the floor was human_head's renders, where each of shot /
+# hero / blueprint / icon compiled LOD0 again (about 55 s each). Since then the four renders share
+# one compile (src/cli/compile-cache.ts; human_head's renders 242 s → 88 s on the dev machine).
+# Expected, not yet measured on GitHub: slowest shard about 4 minutes (206 s of work from
+# `recipe-costs.ts --plan`, plus checkout and setup), about 4.3 minutes push → green, about
+# 74 runner-minutes; the floor is now face_demo's recipe gate (about 175 s). Replace this
+# paragraph with the first measured run. When shards drift: `bun run scripts/recipe-costs.ts
+# --tests`, then `--plan` to pick the shard count.
 # Docs-only changes (scripts/ci-changes.ts: Markdown / docs/ outside recipes/) skip the recipe
 # gate and the renders; lint, types and every test still run, and `verify` still reports.
 
@@ -43,9 +48,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
+        shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
     env:
-      T3D_SHARD: ${{ matrix.shard }}/16
+      T3D_SHARD: ${{ matrix.shard }}/18
     steps:
       # Full history without old file contents (blob:none): enough for `git diff --name-only`.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

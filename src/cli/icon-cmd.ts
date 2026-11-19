@@ -5,10 +5,11 @@
 
 import { mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
-import { type Asset, compile, type ErrorCode, type Lod } from '../core/index.ts';
+import type { Asset, ErrorCode, Lod } from '../core/index.ts';
 import type { PaintedSheet } from '../material/index.ts';
 import { icon, portrait, type ReviewWarning, rtsView, teamCoverage } from '../render/index.ts';
 import type { Args } from './args.ts';
+import { compileOnce } from './compile-cache.ts';
 import { type RenderResult, variantOf } from './render-cmds.ts';
 
 /** Team colour must cover at least this share of the 64-px RTS silhouette. */
@@ -40,7 +41,7 @@ export async function iconOne(
   await mkdir(dir, { recursive: true });
   const variant = variantOf(asset, args);
   const lod: Lod = 0;
-  const lod0 = compile(asset, { lod, ...(variant ? { variant } : {}) });
+  const lod0 = compileOnce(asset, { lod, ...(variant ? { variant } : {}) });
   const png = (n: string): string => join(dir, variant ? `${n}_${variant}.png` : `${n}.png`);
   const focus = focusOf(asset);
   const files: [string, Uint8Array][] = [
@@ -53,8 +54,8 @@ export async function iconOne(
   const pair = teamPair(asset);
   if (pair) {
     const c = teamCoverage(
-      compile(asset, { lod: 2, variant: pair[0] }),
-      compile(asset, { lod: 2, variant: pair[1] }),
+      compileOnce(asset, { lod: 2, variant: pair[0] }),
+      compileOnce(asset, { lod: 2, variant: pair[1] }),
       { sheet },
     );
     if (c.share < MIN_TEAM_SHARE)

@@ -1,0 +1,66 @@
+{
+  "asset": "hydra",
+  "reviewer": "agent",
+  "overall": 5.9,
+  "scores": {
+    "silhouette": {
+      "score": 7,
+      "reason": "Five necks with spiked crests and horned heads on a sprawling four-legged body read as a hydra; one head hangs low in front of the chest in hero.png and muddles the leg silhouette.",
+      "fixes": [
+        "raise the lowest neck so all five heads separate above the shoulders in the 3/4 view",
+        "larger dorsal spines along the back"
+      ]
+    },
+    "proportions": {
+      "score": 6,
+      "reason": "Legs are thin and splayed for a 7.7 m animal; the trunk is small against five long necks and a long tail, and the chest has a pendulous blob between the forelegs in FRONT.",
+      "fixes": [
+        "thicken the upper legs ~25 % and pull the feet under the body",
+        "flatten the chest bulge under the neck roots"
+      ]
+    },
+    "materials": {
+      "score": 5,
+      "reason": "One olive skin with a lighter belly and paler belly scutes; horns, claws and teeth separate only by hue.",
+      "fixes": [
+        "scale strip (or normal) on the back and a separate keratin roughness for horns and claws",
+        "darker dorsal saddle pattern to break the uniform olive"
+      ]
+    },
+    "detail": {
+      "score": 6,
+      "reason": "Crests, horns, claws, teeth and belly scutes read; the skin between is smooth and uniform.",
+      "fixes": [
+        "scale rows along the necks and plates on the back",
+        "gums and tongue in the open mouths"
+      ]
+    },
+    "wear": {
+      "score": 4,
+      "reason": "No scars, broken horns or grime.",
+      "fixes": [
+        "a stump (cauterised) or scarred neck, chipped horns",
+        "mud on the feet and belly"
+      ]
+    },
+    "lod": {
+      "score": 7,
+      "reason": "FAR LOD2 keeps all five necks and the outline; heads simplify to wedges.",
+      "fixes": [
+        "keep the horn pairs as cones at LOD2"
+      ]
+    },
+    "technical": {
+      "score": 6,
+      "reason": "QA clean; 348k / 39k / 7.2k tris: LOD0 is very heavy for an in-game creature and drops 9× to LOD1.",
+      "fixes": [
+        "lower neck and tail ring counts at LOD0 to ~120k total",
+        "spend saved triangles on the heads"
+      ]
+    }
+  },
+  "renders": {
+    "hero.png": "e8df0660073e47fb822658ca2e7772759a08d7fb52438d0fc9e6434b93d71241",
+    "sheet.png": "61c1cd270f117eef07b30aab78a173f86412bcaf9d633e0391d743030e1f5e91"
+  }
+}

@@ -368,7 +368,7 @@ Runnable copy: [`examples/build-with-bun.ts`](examples/build-with-bun.ts) — ex
 
 ## Use it with any agent
 
-**The docs ship inside the package, versioned with the code, readable offline.** After `bun add`, everything an agent needs is at `node_modules/@developerz.ai/ts23d/`: `CLAUDE.md` (the agent brain; the repo's `AGENTS.md` is a symlink to it and is not in the tarball), `llms.txt`, `docs/`, `recipes/` (worked examples), `CHANGELOG.md` and `.claude/{skills,agents,commands}`.
+**The docs ship inside the package, versioned with the code, readable offline.** After `bun add`, everything an agent needs is at `node_modules/@developerz.ai/ts23d/`: `CLAUDE.md` (the agent brain; the repo's `AGENTS.md` is a symlink to it and is not in the tarball), `llms.txt`, `docs/`, `recipes/` (worked examples; the model recipes' `neural/` outputs stay in git: from the package `ranger` and `human_head` build their CPU tier, and `bear_hybrid`, `wolf_hybrid` and `dragon_hybrid`, which have no CPU build, stop with `T3D_NEURAL_MISSING` and a `fix:` that says to clone the repo), `CHANGELOG.md` and `.claude/{skills,agents,commands}`.
 
 Point your agent at them. Add to your project's `CLAUDE.md` or `AGENTS.md`:
 

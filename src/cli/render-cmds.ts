@@ -6,7 +6,7 @@
 
 import { mkdir } from 'node:fs/promises';
 import { dirname, join, relative, resolve } from 'node:path';
-import { type Asset, compile, Ts23dError } from '../core/index.ts';
+import { type Asset, Ts23dError } from '../core/index.ts';
 import type { PaintedSheet } from '../material/index.ts';
 import { poseFrames } from '../qa/index.ts';
 import {
@@ -18,6 +18,7 @@ import {
   reviewPack,
 } from '../render/index.ts';
 import type { Args } from './args.ts';
+import { compileOnce } from './compile-cache.ts';
 import { grantedCpu } from './queue/index.ts';
 
 export interface RenderResult {
@@ -51,7 +52,7 @@ export async function heroOne(
   await mkdir(dir, { recursive: true });
   const variant = variantOf(asset, args);
   const path = join(dir, variant ? `hero_${variant}.png` : 'hero.png');
-  const lod0 = compile(asset, { lod: 0, ...(variant ? { variant } : {}) });
+  const lod0 = compileOnce(asset, { lod: 0, ...(variant ? { variant } : {}) });
   // Under the queue the tracer uses the CPU tokens it was granted (same bytes at any count).
   const threads = grantedCpu();
   await Bun.write(
@@ -73,7 +74,7 @@ export async function blueprintOne(asset: Asset, args: Args): Promise<RenderResu
   const dir = join(args.out, asset.name);
   await mkdir(dir, { recursive: true });
   const variant = variantOf(asset, args);
-  const lod0 = compile(asset, { lod: 0, ...(variant ? { variant } : {}) });
+  const lod0 = compileOnce(asset, { lod: 0, ...(variant ? { variant } : {}) });
   const path = join(dir, variant ? `blueprint_${variant}.png` : 'blueprint.png');
   await Bun.write(path, blueprint(lod0));
   return { name: asset.name, files: [path], warnings: [] };
@@ -101,7 +102,7 @@ export async function reviewOne(
   const refs = await refsFor(asset.name, recipe);
   const pack = reviewPack(asset, { ...args.render, sheet, ...(refs ? { refs } : {}) });
   // Skinned assets: ROM extremes + gait frames at LOD1, so deformation is judged too (slice 10).
-  const lod1 = compile(asset, { lod: 1 });
+  const lod1 = compileOnce(asset, { lod: 1 });
   const frames = lod1.skeleton ? poseFrames(lod1) : [];
   const out = new Map(pack.files);
   if (frames.length > 0) out.set('poses.png', poseStrip(lod1, frames));

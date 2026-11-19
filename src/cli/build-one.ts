@@ -6,7 +6,7 @@
 
 import { mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
-import { type Asset, type CompiledAsset, compile, type Lod } from '../core/index.ts';
+import type { Asset, CompiledAsset, Lod } from '../core/index.ts';
 import {
   drawFindings,
   exportLodGlb,
@@ -18,6 +18,7 @@ import type { PaintedSheet } from '../material/index.ts';
 import { codeOf, type Finding, runLodQa, runQa } from '../qa/index.ts';
 import { beauty, contactSheet, thumbnail } from '../render/index.ts';
 import type { Args } from './args.ts';
+import { compileOnce } from './compile-cache.ts';
 import { type AssetManifest, manifestOf } from './manifest.ts';
 import { variantOf } from './render-cmds.ts';
 import { foldLods } from './report.ts';
@@ -39,7 +40,7 @@ export async function buildOne(
 ): Promise<AssetManifest> {
   const dir = join(args.out, asset.name);
   await mkdir(dir, { recursive: true });
-  const lods = args.lods.map((lod: Lod) => compile(asset, { lod }));
+  const lods = args.lods.map((lod: Lod) => compileOnce(asset, { lod }));
   const findings = qaOf(asset, lods);
   // Manifest paths are relative to `dir`; `write` returns the relative name.
   const write = async (name: string, bytes: Uint8Array | string): Promise<string> => {
@@ -86,7 +87,7 @@ export async function buildOne(
   // Images show the chosen livery; the GLBs above carry every variant regardless.
   const variant = variantOf(asset, args);
   const look = (lod: Lod, compiled?: CompiledAsset): CompiledAsset =>
-    variant ? compile(asset, { lod, variant }) : (compiled ?? compile(asset, { lod }));
+    variant ? compileOnce(asset, { lod, variant }) : (compiled ?? compileOnce(asset, { lod }));
   const png = (name: string): string => (variant ? `${name}_${variant}.png` : `${name}.png`);
   let hero: string | undefined;
   let thumb: string | undefined;

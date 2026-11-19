@@ -3,8 +3,8 @@
 // the asset frame):
 //   limbs — the four leaf chains of four or more bones that end on the ground; their last four
 //           bones are hip / shoulder → toe, a fifth above them is the scapula (UniRig gives a
-//           wolf's fore legs five). The pair hanging from further along the trunk is the fore
-//           pair, +y is left
+//           wolf's fore legs five). A terminal stub is dropped first (STUB_SHARE). The pair
+//           hanging from further along the trunk is the fore pair, +y is left
 //   head  — the front-most leaf that is not a limb, or its parent when that leaf is one of a
 //           cluster of leaves (ears and jaw hanging from the skull bone)
 //   trunk — the path from the root to the head bone; the plan's spine and neck joints are laid on
@@ -33,6 +33,21 @@ export const RIG_CHAINS: readonly RigChains[] = ['trunk', 'fore', 'hind'];
 
 /** Share of the rig's height a limb's last bone must end within, from the lowest point. */
 const GROUND_SHARE = 0.1;
+
+/** A limb's last bone shorter than this share of the mean length of the chain's other bones is a
+ *  rigger's stub, not a toe (UniRig: a 6 mm fifth bone on a hind leg, which put the hip on the
+ *  stifle; 6 mm is 4–9 % of that mean on the committed rigs' legs). Their shortest real toe is
+ *  14 % (bear_hybrid), and 26 % among chains with a bone to spare (dragon_hybrid). */
+const STUB_SHARE = 0.1;
+
+const long = (b: Bone): number => v3.len(v3.sub(b.tail, b.head));
+
+/** A limb chain without terminal stubs; a chain of four is kept whole (no bone to spare). */
+const unstubbed = (c: Bone[]): Bone[] => {
+  const [rest, last] = [c.slice(0, -1), c[c.length - 1]];
+  const mean = rest.reduce((t, b) => t + long(b), 0) / rest.length;
+  return c.length > 4 && last && long(last) < mean * STUB_SHARE ? unstubbed(rest) : c;
+};
 
 export interface RigTopology {
   /** Root → head bone's parent. */
@@ -81,7 +96,9 @@ export function rigTopology(source: readonly Bone[]): RigTopology {
     fail(
       `${full.length} four-bone limb chain(s) reaching the ground found, a quadruped has 4 (leaf chains: ${chains.map((c) => c.length).join(', ')})`,
     );
+  // The stubs stay in `inLeg`: a dropped one is still no head and no tail.
   const inLeg = new Set(full.flat().map((b) => b.name));
+  const legs = full.map(unstubbed);
   const front = leaves.filter((b) => !inLeg.has(b.name)).sort((p, q) => q.tail[0] - p.tail[0])[0];
   if (!front) return fail('no head bone: every leaf belongs to a limb');
   // A leaf among leaves (ears, jaw) hangs from the skull bone: that one is the head.
@@ -92,8 +109,8 @@ export function rigTopology(source: readonly Bone[]): RigTopology {
   const trunk: Bone[] = [];
   for (let p = byName.get(head.parent ?? ''); p; p = byName.get(p.parent ?? '')) trunk.unshift(p);
   const at = (c: readonly Bone[]): number => trunk.findIndex((b) => b.name === c[0]?.parent);
-  if (full.some((c) => at(c) < 0)) fail('a limb does not hang from the trunk (root → head path)');
-  const ordered = [...full].sort(
+  if (legs.some((c) => at(c) < 0)) fail('a limb does not hang from the trunk (root → head path)');
+  const ordered = [...legs].sort(
     (p, q) => at(p) - at(q) || (q[0]?.head[0] ?? 0) - (p[0]?.head[0] ?? 0),
   );
   const [h1, h2, f1, f2] = ordered;

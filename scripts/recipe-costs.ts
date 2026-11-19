@@ -4,12 +4,17 @@
 //                                              renders (`bun run shots`, which rewrites out/),
 //                                              every shared recipes/_*/ test and shard 1's checks
 //   bun run scripts/recipe-costs.ts t34 wolf   only these folders, merged into the file
+//   bun run scripts/recipe-costs.ts --renders  only every folder's renders (after a change to the
+//                                              render path), merged into the file
 //   bun run scripts/recipe-costs.ts --tests    also refresh scripts/lib/test-timings.json, which
 //                                              balances the sharded `test` step (bun test --shard)
 //   bun run scripts/recipe-costs.ts --plan     measure nothing: print the predicted seconds per
 //                                              shard for 4..20 shards from the committed files
-// Seconds are this machine's; only their ratios matter for balance. Exit 1 when a measured command
-// failed (its time is still recorded: a red recipe costs what it costs).
+// Seconds are what a unit adds to a GitHub shard job: this machine's wall seconds, with renders
+// times CI_RENDER_FACTOR (the path tracer and rasteriser have 4 slower cores there; gates and tests
+// run at about this machine's speed). `--plan` therefore prints predicted GitHub seconds per shard,
+// before the roughly 35 s of checkout and setup every job also pays. Exit 1 when a measured
+// command failed (its time is still recorded: a red recipe costs what it costs).
 
 import { recipeFolders, tsFiles } from './lib/files.ts';
 import { CI_SHARDS, COSTS, type Costs, gateKey, shardLoads, shotsKey } from './lib/shard.ts';
@@ -17,6 +22,12 @@ import { sharedRecipeTests } from './recipes.ts';
 import { SHARDED, STEPS, TEST_TIMINGS as TEST_TIMINGS_FILE } from './verify.ts';
 
 export const COSTS_FILE = 'scripts/lib/recipe-costs.json';
+
+/**
+ * A folder's renders on a 4-vCPU GitHub runner over the same renders here (16 threads). From run
+ * 44474402275 (2026-11-19): the shard with human_head's renders took 384 s for 239 s measured here.
+ */
+export const CI_RENDER_FACTOR = 1.4;
 
 /** The steps only shard 1 runs: every gate step except the sharded `test` and `recipes`. */
 export const SHARD1_STEPS: readonly string[] = STEPS.map((s) => s.name).filter(
@@ -97,18 +108,23 @@ async function main(): Promise<number> {
   const picked = names.length
     ? folders.filter((f) => names.some((n) => f.dir === `recipes/${n}`))
     : folders;
+  const rendersOnly = args.includes('--renders');
   const measured: Record<string, number> = {};
   let failed = 0;
   for (const { dir } of picked) {
     const name = dir.slice('recipes/'.length);
-    const gate = timed(['bun', 'run', 'scripts/recipes.ts', name]);
+    if (!rendersOnly) {
+      const gate = timed(['bun', 'run', 'scripts/recipes.ts', name]);
+      measured[gateKey(dir)] = gate.s;
+      failed += Number(!gate.ok);
+    }
     const shots = timed(['bun', 'run', 'scripts/shots.ts', name]);
-    measured[gateKey(dir)] = gate.s;
-    measured[shotsKey(dir)] = shots.s;
-    failed += Number(!gate.ok) + Number(!shots.ok);
+    measured[shotsKey(dir)] = shots.s * CI_RENDER_FACTOR;
+    failed += Number(!shots.ok);
   }
+  const partial = names.length > 0 || rendersOnly;
   let shard1: number | undefined;
-  if (!names.length) {
+  if (!partial) {
     for (const t of shared) {
       const r = timed(['bun', 'test', '--timeout', '120000', `./${t}`]);
       measured[t] = r.s;
@@ -120,7 +136,7 @@ async function main(): Promise<number> {
   }
   const file = Bun.file(COSTS_FILE);
   const old: Costs = (await file.exists()) ? await file.json() : { shard1: 0, seconds: {} };
-  const all = names.length ? undefined : units;
+  const all = partial ? undefined : units;
   await Bun.write(
     COSTS_FILE,
     `${JSON.stringify(mergeCosts(old, measured, shard1, all), null, 2)}\n`,

@@ -76,6 +76,35 @@ describe('recipe cache: misses (failure first)', () => {
     const e = await c.fill(mockAdapter(), job('mesh')).catch((x: unknown) => x);
     expect(e instanceof Ts23dError && e.code).toBe('T3D_NEURAL_MISSING');
   });
+  test('missingFix replaces the checkout fix in the notice and in the error', () => {
+    const fix = 'the npm package does not ship model outputs';
+    const c = neuralCache({ recipe: 'oak', offline: true, missingFix: fix });
+    const r = c.get('image', REQ.image);
+    expect(r.fallback && r.notice.fix).toBe(fix);
+    const strict = neuralCache({
+      recipe: 'oak',
+      offline: true,
+      requireNeural: true,
+      missingFix: fix,
+    });
+    const e = (() => {
+      try {
+        return strict.get('image', REQ.image);
+      } catch (x) {
+        return x;
+      }
+    })();
+    expect(e instanceof Ts23dError && [e.code, e.fix]).toEqual(['T3D_NEURAL_MISSING', fix]);
+  });
+  test('a required ask: a build (offline) throws on its miss, a filling cache lists it', () => {
+    const build = neuralCache({ recipe: 'bear', offline: true });
+    expect(() => build.get('image', REQ.image, { required: true })).toThrow('T3D_NEURAL_MISSING');
+    expect(() => build.get('image', REQ.image, { required: true })).not.toThrow('CPU path');
+    expect(build.notices()).toEqual([]);
+    const fill = neuralCache({ recipe: 'bear' });
+    expect(fill.get('image', REQ.image, { required: true }).fallback).toBe(true);
+    expect(fill.misses()).toEqual([{ task: 'image', request: REQ.image }]);
+  });
   test('over the cap (12 MB default) → T3D_NEURAL_FAILED, nothing stored', async () => {
     const c = neuralCache({ recipe: 'big', capBytes: 64 });
     const e = await c.fill(mockAdapter(), job('image')).catch((x: unknown) => x);

@@ -1,0 +1,62 @@
+{
+  "asset": "finish_demo",
+  "reviewer": "agent",
+  "overall": 6.1,
+  "scores": {
+    "silhouette": {
+      "score": 7,
+      "reason": "EUR pallet with its blocks, a framed crate with a diagonal brace and a bulging cask with hoops: each prop names itself. The cask bulge is visibly faceted (12–16 sides) in sheet.png.",
+      "fixes": [
+        "raise the cask segment count at LOD0 (24+) so the bulge reads round"
+      ]
+    },
+    "proportions": {
+      "score": 8,
+      "reason": "1.2 × 0.8 m EUR pallet at 144 mm high; crate and cask sizes plausible against the 0.1 m grid.",
+      "fixes": [
+        "check the cask against a 225 l barrique (≈ 0.95 m tall, 0.7 m belly)"
+      ]
+    },
+    "materials": {
+      "score": 5,
+      "reason": "hero.png shows wood and rusted hoops, but the crate and cask textures are low-resolution and blurry (blocky pixels on the crate panels); sheet.png renders the crate and cask as untextured white, so the sheet does not show what the hero shows.",
+      "fixes": [
+        "give the crate and cask a wood colour in vertex paint (not white) so they read in every render path",
+        "higher-resolution finish albedo (or the trim sheet's wood strips) for the crate and cask"
+      ]
+    },
+    "detail": {
+      "score": 5,
+      "reason": "3.2k LOD0 triangles: pallet boards and blocks, crate frame and brace, cask hoops. No nails, no stave seams as geometry, no bung hole, no crate lid boards.",
+      "fixes": [
+        "stave seams and a bung on the cask",
+        "nail heads on the pallet deck boards and crate frame"
+      ]
+    },
+    "wear": {
+      "score": 6,
+      "reason": "The finish layer adds rust on the hoops and stains; the pallet deck is clean and the code-built props carry no wear of their own.",
+      "fixes": [
+        "grime and scuffs on the pallet deck and block faces"
+      ]
+    },
+    "lod": {
+      "score": 5,
+      "reason": "LOD2 (284) turns the pallet into a solid slab with no gaps and the crate into a plain box: the outline changes at the switch.",
+      "fixes": [
+        "keep the pallet's three bearer blocks and the gaps under the deck at LOD2"
+      ]
+    },
+    "technical": {
+      "score": 7,
+      "reason": "QA PASS; 3 172 / 1 132 / 284, one draw. Tiny and cheap, but the sheet and hero disagree on the materials.",
+      "fixes": [
+        "make the contact sheet render the finished textures (or the vertex colour carry them) so both views agree"
+      ]
+    }
+  },
+  "renders": {
+    "hero.png": "ea71927d5d4f1cd40a8ee53ea1d41f56cfbd3c37a6bfa01119710dcd57490cb7",
+    "sheet.png": "480db2b0bf05ee55f850aadfc3c58d811527a9fd57e8006dba3fdd12a5e4e17c"
+  }
+}

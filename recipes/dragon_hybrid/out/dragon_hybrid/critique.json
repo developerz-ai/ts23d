@@ -1,0 +1,63 @@
+{
+  "asset": "dragon_hybrid",
+  "reviewer": "agent",
+  "overall": 7.1,
+  "scores": {
+    "silhouette": {
+      "score": 8,
+      "reason": "Raised bat wings with finger bones, horned head, long neck and spiked tail on four legs: reads as a dragon from every view.",
+      "fixes": [
+        "longer wing fingers so the wings read clearly as a flying surface in FRONT"
+      ]
+    },
+    "proportions": {
+      "score": 7,
+      "reason": "4.9 × 2.8 × 3.3 m with the tail; the body and neck sit well, but the wings are small for a 600 kg flyer and the legs a little thin for the mass.",
+      "fixes": [
+        "scale the wings ~25% in a Blender step so the span is plausible for the body",
+        "thicken the legs ~10%"
+      ]
+    },
+    "materials": {
+      "score": 7,
+      "reason": "Image-to-3D texture reads as scales with cream belly plates and a lighter wing membrane; the horns are flat chalky grey and lighting is baked in.",
+      "fixes": [
+        "repaint the horns with a keratin gradient (dark base to pale tip)",
+        "de-light the albedo before import"
+      ]
+    },
+    "detail": {
+      "score": 7,
+      "reason": "Scale texture, belly plates, claws and wing bones hold at third-person distance; the horns are blobby and the claws painted rather than modelled.",
+      "fixes": [
+        "replace the horns with code-built ringed cones on the head bone",
+        "model claws on each foot"
+      ]
+    },
+    "wear": {
+      "score": 6,
+      "reason": "Some colour variation; no torn membrane, no scars or chipped horns.",
+      "fixes": [
+        "a torn notch in one wing membrane and scars on the flank (seeded)"
+      ]
+    },
+    "lod": {
+      "score": 8,
+      "reason": "LOD2 (5k) is almost identical to LOD0 at the far view.",
+      "fixes": [
+        "drop LOD2 to ~3k: the far view does not need 5k"
+      ]
+    },
+    "technical": {
+      "score": 7,
+      "reason": "QA PASS; 30k / 10k / 5k triangles, one draw per LOD; idle/look/walk clips, but the wings ride with the chest and never flap.",
+      "fixes": [
+        "add a wing bone chain and a flap clip so the wings move"
+      ]
+    }
+  },
+  "renders": {
+    "hero.png": "3d9df4a7dbb6765e6a87c479258f9aac1a2f3bce0077b32dae31df879cc66397",
+    "sheet.png": "0877376dd51f1bef9de5a117762aadfcfee8f063babf8d43558acda28880f27f"
+  }
+}

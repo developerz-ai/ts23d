@@ -12,7 +12,9 @@
 // are on this machine, so `t3d neural run` can send them (one round per ask: five with a rigger). The fit is
 // recomputed from the committed proxy at every build, by the same code that produced the
 // program. A plain `steps` array skips the proxy: one pass, registered in TS on the output (for
-// rigged models, `clips: 'model'`). Any miss returns null: the CPU creature.
+// rigged models, `clips: 'model'`). Any miss returns null: the CPU creature. With `required`, a
+// miss in a build is T3D_NEURAL_MISSING (the cache throws it): for a recipe whose CPU creature is
+// not an asset it would ship.
 
 import {
   type Bone,
@@ -89,6 +91,12 @@ export interface ModelChainOptions {
   /** Seed of the Blender request. Default: the surface request's. */
   readonly seed?: number;
   readonly import?: ImportModelOptions;
+  /**
+   * The model is the asset: `t3d build` with a missing output stops with one T3D_NEURAL_MISSING
+   * instead of building the code creature. Default off (a miss returns null). A compile with no
+   * cache provided (a test, the gallery's CPU tier) still returns null.
+   */
+  readonly required?: boolean;
 }
 
 /** The output's content hash: the cache's, else of the bytes in hand; null when neither. */
@@ -116,7 +124,10 @@ export interface ChainedModel {
 
 /** The imported Blender-steps model, or null on any cache miss (build the code creature). */
 export function modelChain(ctx: BuildContext, o: ModelChainOptions): ChainedModel | null {
-  const pin = (model: string | undefined) => (model === undefined ? {} : { model });
+  const pin = (model: string | undefined) => ({
+    ...(model === undefined ? {} : { model }),
+    ...(o.required ? { required: true } : {}),
+  });
   const png = ctx.neural('image', o.concept, pin(o.models?.image))?.outputs[0];
   const image = hashOf(png);
   if (!image) return null;
@@ -182,7 +193,7 @@ export function modelChain(ctx: BuildContext, o: ModelChainOptions): ChainedMode
     const rigged = ctx.neural(
       'rig',
       { seed, mesh: { sha256: sha, mime: 'model/gltf-binary' } },
-      { model: o.rig, inputs: new Map([[sha, proxy]]) },
+      { ...pin(o.rig), inputs: new Map([[sha, proxy]]) },
     )?.outputs[0];
     if (!present(rigged)) return null;
     joints = importModel(source(rigged.bytes, 'rig'), { place: 'origin' }).armature?.bones;

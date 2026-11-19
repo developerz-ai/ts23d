@@ -7,7 +7,7 @@
 
 import { mkdir } from 'node:fs/promises';
 import { dirname, join, relative, resolve } from 'node:path';
-import { type Asset, type CompiledAsset, compile, encodePng, type Lod } from '../core/index.ts';
+import { type Asset, type CompiledAsset, encodePng, type Lod } from '../core/index.ts';
 import { DEFAULT_SHEET, type PaintedSheet, paintTrimSheet } from '../material/index.ts';
 import {
   ART_RENDER,
@@ -48,6 +48,7 @@ import {
   renderBeauty,
 } from '../render/index.ts';
 import type { Args } from './args.ts';
+import { compileOnce } from './compile-cache.ts';
 import type { RenderResult } from './render-cmds.ts';
 
 export const sha256 = (b: Uint8Array): string =>
@@ -96,8 +97,8 @@ export function critiqueImages(
   asset: Asset,
   o: BeautyOptions,
 ): { images: Map<string, Uint8Array>; lods: CompiledAsset[]; metrics: ArtMetrics } {
-  const lods = ([0, 1, 2] as Lod[]).map((lod) => compile(asset, { lod }));
-  const lod0 = lods[0] ?? compile(asset);
+  const lods = ([0, 1, 2] as Lod[]).map((lod) => compileOnce(asset, { lod }));
+  const lod0 = lods[0] ?? compileOnce(asset);
   const lod2 = lods[2] ?? lod0;
   const images = new Map<string, Uint8Array>();
   const hero = renderBeauty(lod0, o);
@@ -218,7 +219,7 @@ export async function critiqueOne(
   const dir = join(args.out, asset.name, 'critique');
   await mkdir(dir, { recursive: true });
   const { images, lods, metrics } = critiqueImages(asset, { ...args.render, sheet });
-  const lod0 = lods[0] ?? compile(asset);
+  const lod0 = lods[0] ?? compileOnce(asset);
   // The bound hero is the committed one: path traced at the shots setting (render/path/).
   images.set('hero.png', await pathHeroThreaded(lod0, { ...args.render, ...HERO_PATH, sheet }));
   const renders = Object.fromEntries([...images].map(([n, b]) => [n, sha256(b)]));

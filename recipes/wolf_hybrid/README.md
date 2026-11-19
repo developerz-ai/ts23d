@@ -35,6 +35,12 @@ The check reads LOD 0, like `real.measures`: a decimated far LOD loses a millime
 Five cached requests, each naming the previous output by sha256 (kinds `modelChain`). A build
 never calls a model or Blender; `t3d neural run` does.
 
+The chain is `required: true`. The code wolf this spec would give without the model is not this
+asset (over 100 000 triangles at LOD 0 against a 30 000 budget, off the sourced box), so `t3d build`
+with an output missing stops with one `T3D_NEURAL_MISSING` and builds nothing. The npm package does
+not ship `neural/`: clone the repository to build this recipe, or copy the folder into your project
+and run `t3d neural run` on the copy (GPU and Blender, below).
+
 | # | Task | Tool (licence) | Output | In git | Time (RTX 3090) |
 |---|---|---|---|---|---|
 | 1 | `image` | Z-Image-Turbo (Apache-2.0), seed 9, 1024² | concept PNG, 0.96 MB | yes | 1 min 58 s (41 s of it loading the model) |
@@ -129,7 +135,7 @@ leg (GPU). Then lower the ratchet to 0 and drop both tolerances.
 | Surface | code body moved ≤ 12 mm toward the model, colour by closest point | the model's own mesh, retopologised |
 | Texture | vertex colour | baked albedo, normal, ORM |
 | Joints | plan | UniRig, mapped to the plan |
-| Fallback | code wolf | code wolf (unchanged) |
+| Without the cache | code wolf | `T3D_NEURAL_MISSING` in a build (the chain is required) |
 
 ## Re-roll
 

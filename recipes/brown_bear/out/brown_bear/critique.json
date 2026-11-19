@@ -1,0 +1,66 @@
+{
+  "asset": "brown_bear",
+  "reviewer": "agent",
+  "overall": 5.9,
+  "scores": {
+    "silhouette": {
+      "score": 6,
+      "reason": "Reads as a big furry quadruped, but the long narrow snout, small head and long low trunk read wolverine/badger or canid more than bear in hero.png and SIDE; the shoulder hump is weak.",
+      "fixes": [
+        "shorten and widen the muzzle and enlarge the head ~15% so the dished bear face reads",
+        "raise the shoulder hump mass and shorten the trunk so the back slopes from hump to rump"
+      ]
+    },
+    "proportions": {
+      "score": 6,
+      "reason": "2.3 × 0.7 × 1.2 m matches the declared adult male envelope, but within it the neck is long, the head small and the hind legs stretched back like a dog's stance.",
+      "fixes": [
+        "shorten the neck chain and bring the hind feet under the hips (plantigrade stance)",
+        "thicken the forearms ~15%"
+      ]
+    },
+    "materials": {
+      "score": 6,
+      "reason": "Fur cards on the back and a dark-leg gradient read as fur at distance; the face and lower body are smooth painted vertex colour with one roughness.",
+      "fixes": [
+        "extend the fur cards over the flanks and face edge so the coat is continuous",
+        "roughness split: glossy nose and eyes, rough coat"
+      ]
+    },
+    "detail": {
+      "score": 6,
+      "reason": "Claws, nose, eyes, fur fringe on the spine; no fur clumps on the belly or legs, ear and face planes soft.",
+      "fixes": [
+        "longer fur fringe on the belly and back of the forelegs",
+        "sharper brow and cheek planes; thicker, rounder ears"
+      ]
+    },
+    "wear": {
+      "score": 4,
+      "reason": "Clean: no mud, no wet fur, no scars.",
+      "fixes": [
+        "mud on the paws and lower legs (grime with the ground mask)",
+        "seeded scars and a rubbed patch on the shoulder"
+      ]
+    },
+    "lod": {
+      "score": 6,
+      "reason": "LOD2 (1.8k) keeps the outline but is heavily faceted, loses the fur fringe and the legs become thin tubes.",
+      "fixes": [
+        "keep a coarse fur fringe on the back at LOD2 (a few cards)",
+        "LOD2 legs from the sculpt with an inflate instead of tubes"
+      ]
+    },
+    "technical": {
+      "score": 7,
+      "reason": "QA PASS; 160.9k / 29.4k / 1.8k triangles; 2 draws. LOD0 is heavy for a game creature and much of it is fur cards on the back.",
+      "fixes": [
+        "cap LOD0 near 100k by coarsening the fur-card density on the back"
+      ]
+    }
+  },
+  "renders": {
+    "hero.png": "6e995cad47762adf4aabdb71d3fa0dd2960dfa4c97d37eab3a102d393ae936ab",
+    "sheet.png": "71351a341262a42b2023e6b948ce8f85a3600492a471aa29e51326f6fc4e70ed"
+  }
+}

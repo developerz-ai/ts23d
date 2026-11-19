@@ -2,6 +2,8 @@ import { afterAll, describe, expect, it } from 'bun:test';
 import { existsSync } from 'node:fs';
 import { mkdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
+import { compileOnce } from '../src/cli/compile-cache.ts';
+import { box, defineAsset } from '../src/index.ts';
 import { HERO_FLAGS, type Runner, refresh } from './shots.ts';
 import { type Cli, renderArgv, renderFolder } from './shots-folder.ts';
 
@@ -67,5 +69,28 @@ describe('shots in one process per folder', () => {
     expect(await renderFolder('x.ts', 'o', cli)).toBe(1);
     expect(seen).toEqual(['shot', 'hero']);
     expect(await renderFolder('x.ts', 'o', async () => 0)).toBe(0);
+  });
+
+  it('shares one compile between the renders, and none once the folder is done', async () => {
+    let builds = 0;
+    const asset = defineAsset({
+      name: 'shared_by_shots',
+      kind: 'prop',
+      budget: { triangles: [100, 100, 100], draws: 1 },
+      build(ctx) {
+        builds++;
+        ctx.part('b', box({ size: [1, 1, 1], color: [1, 1, 1] }));
+      },
+    });
+    const cli: Cli = async ([cmd]) => {
+      compileOnce(asset, { lod: 0 });
+      return cmd === 'blueprint' ? 1 : 0;
+    };
+    expect(await renderFolder('x.ts', 'o', cli)).toBe(1);
+    expect(builds).toBe(1);
+    // Off again, also after a failed render: every call compiles.
+    compileOnce(asset, { lod: 0 });
+    compileOnce(asset, { lod: 0 });
+    expect(builds).toBe(3);
   });
 });

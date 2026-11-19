@@ -33,7 +33,7 @@ bun run verify --json                # for agents: { ok, failed, results, output
 | `test` | The `test` script in `package.json` (`src`, `scripts`, `examples`, `apps/site/src`; one 120 s per-test timeout) | `bun run test` |
 | `recipes` | Every recipe compiles at 3 LODs, passes QA, builds byte-identically twice, has `hero.png` + `sheet.png` + `manifest.json`; also runs each recipe's own `*.test.ts` | `bun run recipes` |
 | `build` | `dist/` JS + `.d.ts` | `bun run build` |
-| `pack` | Packs the tarball, installs it in an empty project, imports every `exports` subpath under Bun and Node, runs `t3d build` | `bun run scripts/pack-smoke.ts` |
+| `pack` | Packs the tarball, installs it in an empty project, imports every `exports` subpath under Bun and Node, runs `t3d build`, holds the tarball to the size budget in `scripts/pack-budget.ts` | `bun run scripts/pack-smoke.ts` |
 
 11 steps, in this order (`STEPS` in `scripts/verify.ts`). An unknown `--only` name exits 2. In CI every shard runs its slice of `test` and `recipes`; the other steps run once, on shard 1.
 

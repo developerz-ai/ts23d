@@ -1,71 +1,72 @@
 {
   "asset": "t34",
   "reviewer": "agent",
-  "overall": 7.4,
+  "overall": 6.7,
   "scores": {
     "silhouette": {
       "score": 8,
-      "reason": "Unmistakable T-34/76: 60\u00b0 glacis, 40\u00b0 side plates, five big Christie wheels per side, rear sprocket, hex 'nut' turret with cupola (1941 variant: cast turret, big hatch), side fuel drums, F-34 gun. Reads from all six views and from LOD2.",
+      "reason": "Unmistakable T-34: sloped glacis and side plates, five Christie road wheels plus idler and sprocket, hex turret with twin cupola hatches, rear fuel drums, F-34 gun. Reads from all six views and LOD2.",
       "fixes": [
-        "round the cast-turret variant's edges (cast radius) rather than faceted rings"
+        "soften the turret edges (cast radius) so it is not a sharp-edged box"
       ]
     },
     "proportions": {
       "score": 8,
-      "reason": "Overall 6.7 \u00d7 3.0 \u00d7 2.45 m against the 6.68 \u00d7 3.00 \u00d7 2.45 m spec; wheel 830 mm, track 550 mm, track centres, hull 5.92 m and barrel 3.162 m pass the \u00b12% measures. Tracks rest on z = 0 at every LOD (test added).",
+      "reason": "6.8 x 3.1 x 2.5 m against the 6.68 x 3.00 x 2.45 m spec; wheel 830 mm, track 550 mm and barrel pass the measures.",
       "fixes": [
-        "check turret ring position against a side elevation drawing (turret slightly far forward by eye)"
+        "check the turret ring position against a side elevation (turret reads slightly far forward)"
       ]
     },
     "materials": {
-      "score": 7,
-      "reason": "4BO green as steel_painted with per-tank jitter, rubber tyres, rusted manganese track, cast-iron fittings, rusted exhausts, all at true scale with per-triangle box projection. Chips are uniform dark dots rather than edge-led; spare track links on the glacis read rust-red, which is right.",
+      "score": 5,
+      "reason": "Green paint reads, rubber tyres read, spare links read rust-red; but the track links read as brown wooden slats under raking light, and the chips are uniform black dots spread over every plate like spatter.",
       "fixes": [
-        "edge-biased chipping instead of the strip's uniform chip pattern",
-        "slightly glossier worn paint on hatch rims"
+        "track links in a dark steel/iron_rust with a lighter worn grouser face instead of the brown wood-like strip",
+        "edge-biased chipping instead of uniform dots"
       ]
     },
     "detail": {
       "score": 7,
-      "reason": "Link-by-link track with guide horns, dished Christie wheels with ribs and bolts, grab rails, glacis spare links, drivers' hatch with periscopes, MG ball, fuel drums with straps, exhausts, slogan. Missing weld beads, tow cable, tool boxes; LOD0 at 45.7k is well spent.",
+      "reason": "Link track with horns, dished wheels with ribs, grab rails, glacis spare links, hatches, MG ball, fuel drums with straps, exhausts, slogan.",
       "fixes": [
-        "weld beads at the glacis/side-plate joints",
-        "tow cable along the hull side with eyes",
+        "weld beads at plate joints",
+        "tow cable along the hull side",
         "tool box on the fender"
       ]
     },
     "wear": {
-      "score": 7,
-      "reason": "Ragged mud on tracks, wheels and lower hull, dust lift on the deck and turret roof, exhaust soot on the rear plate, soot-stained muzzle, chipped paint. Paint is still uniform across panels; no scratches or rust streaks.",
+      "score": 4,
+      "reason": "Only the dot chips: in hero.png and raking.png the wheels, tracks and lower hull carry no visible mud or dust, the exhausts no soot on the rear plate.",
       "fixes": [
-        "rust streaks below the exhausts and grab rails",
-        "scuffed bare steel where crew climb onto the glacis"
+        "grime({ ground }) mud on tracks, wheels and lower hull",
+        "exhaust soot on the rear plate",
+        "dust on the deck"
       ]
     },
     "lod": {
       "score": 7,
-      "reason": "LOD2 (1.6k) now keeps the five Christie wheels per side as discs inside an open belt instead of a solid slab; outline and colour match LOD0; slogan and fuel drums drop.",
+      "reason": "lods.png: LOD2 (1.7k) keeps the outline, turret, wheels as discs in an open belt and colour; spare links and slogan drop.",
       "fixes": [
-        "keep the fuel drums and slogan at LOD2 (a handful of triangles)"
+        "keep the glacis spare links as two dark quads at LOD2"
       ]
     },
     "technical": {
       "score": 8,
-      "reason": "QA PASS both variants: 45 750 / 11 084 / 1 588 (t34), 44 124 / 10 640 / 1 542 (t34_1941), one material, rests on the ground at every LOD (assertUprightOnGround test). Now 49 502 / 11 092 / 1 596. Connections gate clean (was 23 findings per variant): track links are a pinned chain (hinge pin at each link's leading edge, ~8 mm into both links), front mudguards run a 15 cm tab under the pannier floor, headlight sits on the glacis, turret grab-handle feet run into the side plate.",
+      "reason": "QA clean (pack): 48.2k / 10.4k / 1.7k tris, one material.",
       "fixes": [
-        "declare `real.mass` (26.5 t) and a physics shell so the mass gate covers it"
+        "declare real.mass (26.5 t) and a physics shell so the mass gate covers it"
       ]
     }
   },
   "renders": {
-    "hero.png": "849fe12bfade2cd2e290b1595837f3fc2fee75bd56a69288ec5c1a87ee736898",
-    "sheet.png": "f5ebf51253b09a830796170b08827038a1264857d0654f6e96dd25271e21a421",
-    "raking.png": "de9fffbb345e9c199b288a5e75323f7a4a306337799d9310e65455adff8a0e8c",
-    "raking_detail.png": "ecd99ff15a1cf883e49075a58fe92f672d14dd002621ffef5501214be02ba147",
-    "lods.png": "d360c46f471292eb9c6156565d9be55d73c7442917387e8b94aa946f251ac848",
-    "silhouette.png": "7332b23d121d786462ede866c35fa3ffc70018e380e54a2b12f5e0bfa0b26658",
-    "value.png": "96b27bd2392191786aaa00207430fed4adeefd7df26dcb1a71fb3a818c37ede4",
-    "detail.png": "efa5c8b341f65f70c5f5898b128d236fac3558b3358c35141b4510b4f3c1f728"
+    "hero.png": "fe265cbf198fc8d4f65057601b0622a2f96b9daeed7400f94f7b26fa1d4de177",
+    "sheet.png": "09459a8b40af00dd37aac94207d4a1b374d8dca8fdf6a4185968a89394abb2e5",
+    "raking.png": "5220ed096a7211add507eb057f74023902176081e3f4309d75ac053afc6e083d",
+    "raking_detail.png": "83af90b2cb9708c8b140348800fb85dcb64d22b72e49538c1fe8a3bca31c13ad",
+    "lods.png": "b773835030ec6b29aa7ded4d6a41a185b932ce274a80d252e16a6221cb281a9d",
+    "silhouette.png": "d063d4af0aced926df68cc493537ab3cfdd26255e69f7a855a4ab3e6caf7ce72",
+    "value.png": "61365a41474dd50b246aebc281be6efefff430db18cc002f0749ca6f76cbf97f",
+    "detail.png": "4c8acd18fda3f243e9572d984fa80f65cecb629756f8b014e2953fb5fb7d750e"
   },
   "metrics": {
     "silhouette": [
@@ -75,7 +76,7 @@
       },
       {
         "view": "side",
-        "iou": 0.9
+        "iou": 0.906
       },
       {
         "view": "3/4",
@@ -86,29 +87,29 @@
       "peakPart": "turret_body",
       "peak": [
         397,
-        77
+        76
       ],
       "focalShare": 0,
       "focalArea": 0,
       "top": [
         {
           "part": "turret_body",
-          "share": 0.616
+          "share": 0.613
         },
         {
           "part": "fittings",
-          "share": 0.259
+          "share": 0.262
         },
         {
           "part": "hull",
-          "share": 0.068
+          "share": 0.063
         }
       ],
       "declared": []
     },
     "rest": {
-      "share": 0.464,
-      "spread": 0.817,
+      "share": 0.465,
+      "spread": 0.819,
       "min": 0.25
     },
     "shape": {

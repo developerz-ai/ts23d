@@ -7,7 +7,14 @@
 
 import { afterEach, describe, expect, it } from 'bun:test';
 import { join } from 'node:path';
-import { clearNeuralSources, compile, runQa, toGlb } from '@developerz.ai/ts23d';
+import {
+  clearNeuralSources,
+  compile,
+  neuralCache,
+  provideNeural,
+  runQa,
+  toGlb,
+} from '@developerz.ai/ts23d';
 import { compileLods } from '@developerz.ai/ts23d/testing';
 import { provideRecipeNeural } from '../../src/cli/neural-store.ts';
 import { dragon_hybrid, measured, SOURCED } from './dragon_hybrid.ts';
@@ -40,6 +47,12 @@ describe('dragon_hybrid, CPU tier (no neural cache)', () => {
 });
 
 describe('dragon_hybrid, model tier (committed cache)', () => {
+  it('a build with an empty cache (the npm package) stops with T3D_NEURAL_MISSING, no CPU stand-in', () => {
+    clearNeuralSources();
+    provideNeural(neuralCache({ recipe: 'dragon_hybrid', offline: true }));
+    expect(() => compile(dragon_hybrid, { lod: 2 })).toThrow('T3D_NEURAL_MISSING');
+  });
+
   it(
     'a missing cache is not mistaken for the model: the textured body appears only with it',
     async () => {

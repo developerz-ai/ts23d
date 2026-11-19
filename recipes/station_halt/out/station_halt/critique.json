@@ -1,47 +1,50 @@
 {
   "asset": "station_halt",
   "reviewer": "agent",
-  "overall": 7.3,
+  "overall": 7,
   "scores": {
     "silhouette": {
       "score": 8,
-      "reason": "GWR country station (Toddington): brick building with slate roof and chimneys, long valanced platform canopy on cast-iron columns, lamps, name board, barrow and churns on the platform. Reads from every view.",
+      "reason": "GWR country station: brick building with slate roof and two chimneys, long valanced platform canopy on cast-iron columns, lamps, name board, barrow and churns. Reads from every view.",
       "fixes": [
-        "fretted canopy valance profile at LOD1"
+        "fretted canopy valance profile visible at LOD1"
       ]
     },
     "proportions": {
       "score": 8,
-      "reason": "Overall box and the dossier measures pass; door, window and canopy heights read at human scale against the 1.8 m figure.",
-      "fixes": []
+      "reason": "11.6 x 30.1 x 8.3 m; door, window and canopy heights read at human scale; dossier measures pass.",
+      "fixes": [
+        "check chimney stack height against the Toddington photos (they read short)"
+      ]
     },
     "materials": {
-      "score": 7,
-      "reason": "Chocolate-and-cream timber now wood_painted (grain and chips through the paint), cast-iron columns/brackets as iron_cast, brick, slate, stone, glass from the classic strips. Brick and slate are still the greyscale classic strips tinted, flatter than the library strips.",
+      "score": 6,
+      "reason": "Red brick, cream valance, chocolate columns and stone platform read; the slate roof and canopy read as flat grey sheets with no slate courses at hero distance, and the brick is a uniform red without course variation.",
       "fixes": [
-        "blue-brick plinth and red brick as distinct project materials (brick colour variation per course)",
-        "slate with materialVariant per roof slope"
+        "slate courses with per-slate value jitter on the roof",
+        "brick colour variation per course and a blue-brick plinth"
       ]
     },
     "detail": {
       "score": 7,
-      "reason": "Recessed sash windows, doors, chimney pots, ridge/coping, canopy valance, columns with brackets, lamps with glass, name board, room boards, clock, rainwater goods, benches, barrow, churns.",
+      "reason": "Sash windows, doors, chimney pots, canopy valance, columns with brackets, lamps, name board, benches, barrow, churns.",
       "fixes": [
         "platform edge coping slabs with joints",
-        "gutter brackets"
+        "gutter brackets and downpipes on the gable"
       ]
     },
     "wear": {
-      "score": 6,
-      "reason": "Ground splash along the platform and building base, dust on top faces, AO. No soot on the canopy underside, no moss on the slates or green algae on the north wall, paint not faded.",
+      "score": 5,
+      "reason": "Clean at hero distance: no soot on the canopy underside, no moss on slates, no staining under the windows.",
       "fixes": [
-        "soot streaks on the canopy underside from locomotives",
-        "moss/lichen on north-facing slates and the platform edge"
+        "soot streaks on the canopy underside",
+        "moss/lichen on north slates and the platform edge",
+        "damp at the brick plinth"
       ]
     },
     "lod": {
       "score": 7,
-      "reason": "LOD2 (460) keeps building, roof, chimneys, canopy, columns, lamps and the board shape; the paved platform turns flat light grey and the name board loses its text.",
+      "reason": "FAR LOD2 (460) keeps building, roof, chimneys, canopy, columns and the board; the platform turns flat light grey and the board loses its lettering.",
       "fixes": [
         "keep the platform strip at LOD2 so its value matches",
         "keep the name-board lettering as one quad strip"
@@ -49,69 +52,14 @@
     },
     "technical": {
       "score": 8,
-      "reason": "QA PASS, 8 770 / 4 850 / 460, two draws (opaque + glass). Now 8 802 / 4 882 / 460. Connections gate clean (was 1 finding): the eaves band is four closed brick courses bearing on the walls (inner face 2 mm off, 3 cm proud) instead of an open ring hovering 3 cm out.",
-      "fixes": []
+      "reason": "QA PASS (rebuilt today): 8.56k / 4.74k / 460 tris, 2 / 2 / 2 draws: lean for a building this size.",
+      "fixes": [
+        "spend a few hundred more LOD0 triangles on the canopy valance fret"
+      ]
     }
   },
   "renders": {
-    "hero.png": "aff0e5d3d5554a8fe1f0678731c946bf7b4db9187107236ad490ed0f0fdce82b",
-    "sheet.png": "9aa6273894cc9cf331356b625acc2282027e4b11397d3c221ce97e729b559cf8",
-    "raking.png": "35b400b2dbde20d9d3ab5889148f34bc3fb41e6821d24aef95eef966a3119085",
-    "raking_detail.png": "3ff0486a04445022513874b2f77fa1047228a648804339652f8a9f97886b43be",
-    "lods.png": "5bd1616e4cb1c2164c520454cf90712364ba76435246127f69fd74d0ebf4b581",
-    "silhouette.png": "a7cd756bdac9e58254293dc3cdcbc844d74dfba7c8314d8e20e224cda804e7cc",
-    "value.png": "6d09a2b01d6459c50c1ffd6b131a86775b078ed9fb12671edb70756ba379e0e6",
-    "detail.png": "1891f6dad10b99c8a01444d2e1b98ee71bf1f1f0ab81d46a64c2a6feb6d633a8"
-  },
-  "metrics": {
-    "silhouette": [
-      {
-        "view": "front",
-        "iou": 0.949
-      },
-      {
-        "view": "side",
-        "iou": 0.96
-      },
-      {
-        "view": "3/4",
-        "iou": 0.97
-      }
-    ],
-    "focal": {
-      "peakPart": "platform",
-      "peak": [
-        483,
-        272
-      ],
-      "focalShare": 0,
-      "focalArea": 0,
-      "top": [
-        {
-          "part": "platform",
-          "share": 0.968
-        },
-        {
-          "part": "roof",
-          "share": 0.015
-        },
-        {
-          "part": "lamp_1_glass",
-          "share": 0.007
-        }
-      ],
-      "declared": []
-    },
-    "rest": {
-      "share": 0.753,
-      "spread": 0.739,
-      "min": 0.25
-    },
-    "shape": {
-      "acuteShare": 0.3,
-      "straightShare": 0.759,
-      "taper": 0.643,
-      "shape": "stable"
-    }
+    "hero.png": "0f1693cbf54f5743709f2e6d0f794c870c9a7b99c8496f70c3fc87ac169bfc39",
+    "sheet.png": "0601775cdeba7521f39999ec5e93a93150e0a9e917e56ee2bc252f7159872231"
   }
 }

@@ -1,0 +1,115 @@
+{
+  "asset": "tune_demo",
+  "reviewer": "agent",
+  "overall": 6,
+  "scores": {
+    "silhouette": {
+      "score": 8,
+      "reason": "Slim two-handled amphora with a stem foot, high shoulders, tall neck and flared lip; the outline matches the tuned drawing from the front.",
+      "fixes": [
+        "slight lip thickening (rolled rim) so the top edge reads in silhouette"
+      ]
+    },
+    "proportions": {
+      "score": 8,
+      "reason": "0.3 x 0.3 x 0.6 m, tuned to target_front.svg: belly, neck and handle reach read as a real storage amphora.",
+      "fixes": [
+        "fit the side silhouette as well (handles are thin from the side)"
+      ]
+    },
+    "materials": {
+      "score": 5,
+      "reason": "One flat terracotta colour with a soft sheen; no clay texture, throw rings or colour variation.",
+      "fixes": [
+        "terracotta strip with throw-ring relief and a slightly darker, rougher foot"
+      ]
+    },
+    "detail": {
+      "score": 4,
+      "reason": "Body, foot, lip and two handles; nothing else (no stamp, seam, handle attachment pads).",
+      "fixes": [
+        "handle attachment pads where the handles meet the neck and shoulder",
+        "a potter's stamp on the shoulder"
+      ]
+    },
+    "wear": {
+      "score": 3,
+      "reason": "Pristine: no chips on the lip, no dirt in the foot, no stains.",
+      "fixes": [
+        "chipped lip and worn foot ring",
+        "dark residue stain below the lip"
+      ]
+    },
+    "lod": {
+      "score": 6,
+      "reason": "FAR LOD2 (272 tris) keeps the outline but the body becomes visibly 12-sided and the handles become angular polylines.",
+      "fixes": [
+        "16 sides at LOD2 within the 272-triangle budget by fewer profile stations"
+      ]
+    },
+    "technical": {
+      "score": 8,
+      "reason": "QA clean (pack): 4.1k / 1.2k / 272 tris; tune.json params read by every build.",
+      "fixes": [
+        "fewer LOD0 profile stations on the straight neck"
+      ]
+    }
+  },
+  "renders": {
+    "hero.png": "e60676ac44025bd1c0aa4428d7a499b7539e934f9fc5d5743785904f16b3d149",
+    "sheet.png": "5c57651ca55b3193d26154d8aee153c149d2a525e132c51e4769cdf5ffcf9c25",
+    "raking.png": "94c59969cd9d316fd35dd3c1dbb7fa032815a8f25b4046bbf72310ece667d47a",
+    "raking_detail.png": "7bbf0182d78ff9c63fbf3f07e3aa3a898ebce17def1c3df2f626ddf5b6ff39d8",
+    "lods.png": "5fc5342d99248392c927e4498143d7578a9f53c17eb1eec10dc64faa4ef72454",
+    "silhouette.png": "9777359d8d7b2315f3e1b0a61dcabae8fc2a74434bd5e17d94f0545310df7de7",
+    "value.png": "a79553ffbb9861e913df08c1e1181a066a3e548be778777b40fed25282148a21",
+    "detail.png": "3249dfed1ca0bb8b49b4a41169615ba1507bc2a509a2be1313a33ab183c8fa50"
+  },
+  "metrics": {
+    "silhouette": [
+      {
+        "view": "front",
+        "iou": 0.968
+      },
+      {
+        "view": "side",
+        "iou": 0.968
+      },
+      {
+        "view": "3/4",
+        "iou": 0.956
+      }
+    ],
+    "focal": {
+      "peakPart": "body",
+      "peak": [
+        352,
+        151
+      ],
+      "focalShare": 0,
+      "focalArea": 0,
+      "top": [
+        {
+          "part": "body",
+          "share": 0.769
+        },
+        {
+          "part": "handle_r",
+          "share": 0.231
+        }
+      ],
+      "declared": []
+    },
+    "rest": {
+      "share": 0.848,
+      "spread": 0.533,
+      "min": 0.25
+    },
+    "shape": {
+      "acuteShare": 0.599,
+      "straightShare": 0.496,
+      "taper": -0.27,
+      "shape": "aggressive"
+    }
+  }
+}

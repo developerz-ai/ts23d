@@ -1,0 +1,64 @@
+{
+  "asset": "great_white",
+  "reviewer": "agent",
+  "overall": 6.7,
+  "scores": {
+    "silhouette": {
+      "score": 8,
+      "reason": "Torpedo body, tall first dorsal, crescent caudal, pectorals and five gill slits read as a great white from every view.",
+      "fixes": [
+        "a more lunate caudal with the lower lobe nearly as long as the upper"
+      ]
+    },
+    "proportions": {
+      "score": 7,
+      "reason": "4.5 m TL with the sourced girth and dorsal position; the pectoral fins are paper-thin plates (a line in FRONT) and the snout is slightly pointed for a white shark.",
+      "fixes": [
+        "give the pectorals a root thickness (~6 % of chord) tapering to the edge",
+        "blunt the snout cone ~10 %"
+      ]
+    },
+    "materials": {
+      "score": 6,
+      "reason": "Countershading grey over white with a ragged boundary reads; skin is one uniform satin with fine speckle; the eye is a glossy black ball with no rim.",
+      "fixes": [
+        "denticle micro-normal and slight sheen variation over the flank",
+        "an eyelid rim and darker pupil ring around the eye"
+      ]
+    },
+    "detail": {
+      "score": 6,
+      "reason": "Gill slits, teeth row, pores on the snout, pelvic and second dorsal fins; no lateral line, claspers or fin-edge darkening.",
+      "fixes": [
+        "dark pectoral tips and trailing edges",
+        "the lateral line and caudal keels"
+      ]
+    },
+    "wear": {
+      "score": 6,
+      "reason": "Pink scratch scars on the back tell a fighting history.",
+      "fixes": [
+        "a torn notch in the first dorsal",
+        "parasitic copepods on the fins"
+      ]
+    },
+    "lod": {
+      "score": 7,
+      "reason": "FAR LOD2 keeps outline and countershading; the white boundary straightens to a hard edge.",
+      "fixes": [
+        "keep the boundary wave at LOD2 by colouring along a jagged vertex row"
+      ]
+    },
+    "technical": {
+      "score": 7,
+      "reason": "QA clean; 61k / 7k / 680 tris across 7 parts; the LOD1 step is steep (8.7×).",
+      "fixes": [
+        "raise LOD1 to ~15k so the fins and gills survive the first switch"
+      ]
+    }
+  },
+  "renders": {
+    "hero.png": "34c7eca6469d52f85a074d99337971da7ab0c381d01320f98ffb12e85c835a06",
+    "sheet.png": "1dcbd70ce508d33a809d0016a27f61a976cad8ccbcbc754987fd6f924f53d959"
+  }
+}

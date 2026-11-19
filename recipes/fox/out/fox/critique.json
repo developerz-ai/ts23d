@@ -1,0 +1,64 @@
+{
+  "asset": "fox",
+  "reviewer": "agent",
+  "overall": 6,
+  "scores": {
+    "silhouette": {
+      "score": 7,
+      "reason": "Pointed ears, long muzzle, black stockings and a white-tipped brush read as a red fox. In hero.png the body is deep and the legs long, so it reads closer to a coyote; the brush looks short from the 3/4.",
+      "fixes": [
+        "make the brush fuller (larger radius) so it reads as a fox tail from every view",
+        "shorten the legs ~8% and slim the chest"
+      ]
+    },
+    "proportions": {
+      "score": 6,
+      "reason": "1.1 × 0.2 × 0.5 m holds the sourced head-body, tail and shoulder height, but the trunk is deep, the ears smallish and the hind thighs pale like the belly.",
+      "fixes": [
+        "enlarge the ears ~15%",
+        "colour the hind thighs red; the cream belly zone climbs too high"
+      ]
+    },
+    "materials": {
+      "score": 6,
+      "reason": "Orange coat, cream belly and black stockings separate; the coat reads as painted vertex colour with sparse fur strands sticking out rather than a dense coat.",
+      "fixes": [
+        "denser, shorter fur cards on the body so stray strands stop reading as hairs on a smooth skin",
+        "glossy nose leather and eyes"
+      ]
+    },
+    "detail": {
+      "score": 6,
+      "reason": "Eyes, nose, toes, ruff and brush tip; face planes soft, no whiskers.",
+      "fixes": [
+        "whiskers as thin tubes",
+        "sharper cheek and brow planes"
+      ]
+    },
+    "wear": {
+      "score": 4,
+      "reason": "Clean: no mud, no wet fur, no snow on the coat.",
+      "fixes": [
+        "mud on the paws and snow dusting on the back (grime with the ground mask)"
+      ]
+    },
+    "lod": {
+      "score": 6,
+      "reason": "LOD2 (2.7k) keeps the outline but the legs become beige tubes with black only at the feet, so the stocking colour block shifts at distance.",
+      "fixes": [
+        "paint the LOD2 legs black from the elbow down to match LOD0"
+      ]
+    },
+    "technical": {
+      "score": 7,
+      "reason": "QA PASS; 152.1k / 27.3k / 2.7k triangles; 2 draws. LOD0 is heavy for a 6 kg animal.",
+      "fixes": [
+        "cap LOD0 near 80k by coarsening the fur-card density"
+      ]
+    }
+  },
+  "renders": {
+    "hero.png": "7ccd43bf8754fb8d7e8d04fffcd01b5aa03201fb45c9da72c4c46da28af724ca",
+    "sheet.png": "36df86d87dbf72e97537cc71506e97cfd3934904cb780b1a284d8e5badbcca9c"
+  }
+}

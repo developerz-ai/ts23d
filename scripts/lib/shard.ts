@@ -23,7 +23,7 @@ export interface Costs {
 export const COSTS: Costs = costsJson;
 
 /** CI's shard count (.github/workflows/ci.yml's gate matrix; scripts/ci-parity.test.ts holds them together). */
-export const CI_SHARDS = 16;
+export const CI_SHARDS = 18;
 
 /** Parse `k/n`; undefined when unset, a thrown message (with the fix) when malformed. */
 export function parseShard(raw: string | undefined): Shard | undefined {

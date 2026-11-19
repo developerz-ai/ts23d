@@ -36,6 +36,54 @@ describe('rigTopology', () => {
     expect(t.limbs.hind_l[0]?.head).toEqual([-0.28, 0.08, 0.5]);
   });
 
+  // D293: UniRig may end a leg in a millimetre-long stub bone past the toe.
+  /** The fixture's hind legs (its last eight bones), each with one more bone `long` metres long. */
+  const withHindEnds = (long: number): Bone[] => {
+    const rig = riggerBones();
+    for (const leaf of [rig[rig.length - 5], rig[rig.length - 1]])
+      if (leaf)
+        rig.push({
+          name: `bone_${rig.length}`,
+          head: leaf.tail,
+          tail: [leaf.tail[0] + long, leaf.tail[1], leaf.tail[2]],
+          parent: leaf.name,
+        });
+    return rig;
+  };
+
+  it('drops a 6 mm terminal stub from a five-bone hind leg: hip → toe are the four real bones', () => {
+    const t = rigTopology(withHindEnds(0.006));
+    const real = rigTopology(riggerBones());
+    expect(t.limbs.hind_l.map((b) => b.name)).toEqual(real.limbs.hind_l.map((b) => b.name));
+    expect(t.limbs.hind_r.map((b) => b.name)).toEqual(real.limbs.hind_r.map((b) => b.name));
+    expect(t.limbs.hind_l[0]?.head).toEqual([-0.28, 0.08, 0.5]);
+    // The stub is still part of the leg: it is not taken for the head or a tail.
+    expect(t.head.name).toBe(real.head.name);
+    expect(t.tail).toBeUndefined();
+    const mapped = mapJoints(plan, withHindEnds(0.006), () => true);
+    expect(mapped.find((b) => b.name === 'hind_l_0')?.head).toEqual([-0.28, 0.08, 0.5]);
+    expect(mapped.find((b) => b.name === 'hind_r_3')?.tail).toEqual([-0.2, -0.08, 0.01]);
+  });
+
+  it('keeps a four-bone leg whole even when its last bone is 6 mm: there is no bone to spare', () => {
+    const rig = riggerBones();
+    const leaf = rig[rig.length - 1];
+    if (leaf) rig[rig.length - 1] = { ...leaf, tail: [leaf.head[0] + 0.006, -0.08, leaf.head[2]] };
+    const t = rigTopology(rig);
+    expect(t.limbs.hind_r.map((b) => b.name)).toEqual(rig.slice(-4).map((b) => b.name));
+    expect(t.limbs.hind_r[0]?.head).toEqual([-0.28, -0.08, 0.5]);
+  });
+
+  it('keeps a short real toe: 0.139 × the mean of the other bones, the shortest in the committed rigs', () => {
+    // The fixture's four leg bones average 0.133 m: 0.0185 m is the bear's toe-to-leg ratio.
+    const rig = withHindEnds(0.0185);
+    const t = rigTopology(rig);
+    // rig ends: … hind_l ×4, hind_r ×4, left toe, right toe. The last four of each five stay.
+    const names = (at: number[]): string[] => at.map((k) => rig[rig.length + k]?.name ?? '');
+    expect(t.limbs.hind_l.map((b) => b.name)).toEqual(names([-9, -8, -7, -2]));
+    expect(t.limbs.hind_r.map((b) => b.name)).toEqual(names([-5, -4, -3, -1]));
+  });
+
   it('finds the trunk, the head and the four limbs by shape, not by name', () => {
     const t = rigTopology(riggerBones());
     expect(t.trunk.map((b) => b.name)).toEqual([

@@ -1,0 +1,67 @@
+{
+  "asset": "dragon",
+  "reviewer": "agent",
+  "overall": 6,
+  "scores": {
+    "silhouette": {
+      "score": 7,
+      "reason": "Bat wings, ringed swept-back horns, dorsal spikes and spade tail: reads as a dragon at once. The body is lumpy and potato-like and the legs short and stubby, so the outline reads cartoon rather than powerful.",
+      "fixes": [
+        "smooth the muscle noise on the trunk (body.ts) so the outline follows big masses, not lumps",
+        "lengthen the legs ~15% and narrow the lower legs (legs.ts)"
+      ]
+    },
+    "proportions": {
+      "score": 6,
+      "reason": "8.7 × 7.9 × 4.7 m: wings and head are in proportion, but the neck is short, the legs stubby and the tail thin compared with the body mass.",
+      "fixes": [
+        "lengthen the neck chain by one vertebra (neck.ts)",
+        "thicken the tail root to match the hips (tail.ts)"
+      ]
+    },
+    "materials": {
+      "score": 6,
+      "reason": "Crimson vertex colour with cream belly plates and darker wing membrane; the surface noise reads as clay lumps rather than scales, all at one roughness; horns and teeth separate by hue only.",
+      "fixes": [
+        "a scale pattern on the back and flanks (scales.ts stamps at LOD0)",
+        "roughness split: glossy eyes and teeth, rough membrane"
+      ]
+    },
+    "detail": {
+      "score": 6,
+      "reason": "Teeth, horns with rings, dorsal spikes, wing fingers, claws; no individual scales, membrane veins only painted, belly plates soft.",
+      "fixes": [
+        "stamped scale rows on the neck and back",
+        "raised veins on the wing membranes",
+        "crisper belly-plate edges"
+      ]
+    },
+    "wear": {
+      "score": 4,
+      "reason": "Pristine: no scars, no torn membrane, no chipped horns or soot.",
+      "fixes": [
+        "a torn notch in one wing membrane and scars on the flank",
+        "chipped horn tips and soot around the jaw"
+      ]
+    },
+    "lod": {
+      "score": 6,
+      "reason": "LOD2 (4k) keeps the pose but the wings become flat triangles, the tail a thin stick and the body faceted.",
+      "fixes": [
+        "keep the wing finger bones at LOD2 as thin quads so the wing outline holds",
+        "more rings on the LOD2 tail"
+      ]
+    },
+    "technical": {
+      "score": 7,
+      "reason": "QA PASS; 198.6k / 44.2k / 4.1k triangles, 6 draws. LOD0 is heavy for a game creature.",
+      "fixes": [
+        "cap LOD0 near 120k by coarsening the hidden belly and inner-leg sculpt cells"
+      ]
+    }
+  },
+  "renders": {
+    "hero.png": "6f53470be1a30b7d4410af268f477ed6e3166589822af2b6b45ca896a2366636",
+    "sheet.png": "b65d37486ed01258442fd51763c4cbcfa97da3c94fd964fdcd343ce833ca49ac"
+  }
+}

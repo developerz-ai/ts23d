@@ -95,7 +95,7 @@ recipes/<name>/neural/<key>/output-0.png
 | Lookup in a build | By request (`requestKey`), optionally pinned to a model; lowest key wins when several models answered |
 | Cap | 12 MB of committed outputs per recipe; `fill` and this repo's recipes gate refuse past it (`T3D_NEURAL_FAILED`). Local outputs do not count |
 | Hit | No GPU, no network. Files and record are re-hashed and re-validated on load |
-| Miss | `{ fallback: true }` + a `T3D_NEURAL_MISSING` notice naming `t3d neural run`; the recipe takes its CPU path |
+| Miss | `{ fallback: true }` + a `T3D_NEURAL_MISSING` notice naming `t3d neural run`; the recipe takes its CPU path. An ask with `required: true` (a model-first asset with no CPU build) is a `T3D_NEURAL_MISSING` error in a build instead; `t3d neural run` still lists it as a request to fill |
 | `--require-neural` | A miss is an error |
 | Fill | `t3d neural run <recipe.ts>`: compiles LOD 0-2, collects the misses, runs each through the task's configured adapter, writes the key directory |
 | Licence | Recorded in `record.json` and the credits, never gated for your builds. This repository's recipes gate refuses committed outputs whose licence does not allow publishing (`publishable`, ADR 015) |
