@@ -68,4 +68,33 @@ describe('morph targets in the GLB', () => {
     expect(few.sparse?.count).toBe(1);
     expect(few.min).toBeUndefined();
   });
+
+  it('declares min / max as the extrema of the values the accessor holds', () => {
+    const bin = new BinWriter();
+    const bounds = (delta: Float32Array, dense: boolean) => {
+      const a = bin.accessors[deltaAccessor(bin, delta, { dense })] as Acc & { max?: number[] };
+      return { sparse: a.sparse !== undefined, min: a.min, max: a.max };
+    };
+    // Every vertex moves by +0.5: no zero is stored, dense or sparse.
+    const all = new Float32Array(30).fill(0.5);
+    expect(bounds(all, true)).toEqual({
+      sparse: false,
+      min: [0.5, 0.5, 0.5],
+      max: [0.5, 0.5, 0.5],
+    });
+    expect(bounds(all, false)).toEqual({
+      sparse: true,
+      min: [0.5, 0.5, 0.5],
+      max: [0.5, 0.5, 0.5],
+    });
+    // A still vertex is a real zero in both: dense writes it, sparse leaves it at the base value.
+    const most = new Float32Array(30).fill(-0.5);
+    most.fill(0, 0, 3);
+    expect(bounds(most, true)).toEqual({ sparse: false, min: [-0.5, -0.5, -0.5], max: [0, 0, 0] });
+    expect(bounds(most, false)).toEqual({ sparse: true, min: [-0.5, -0.5, -0.5], max: [0, 0, 0] });
+    // A moving vertex's own zero component counts too.
+    const flat = new Float32Array(30);
+    for (let v = 0; v < 10; v++) flat[v * 3] = 0.25;
+    expect(bounds(flat, true)).toEqual({ sparse: false, min: [0.25, 0, 0], max: [0.25, 0, 0] });
+  });
 });

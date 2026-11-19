@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test';
 import { type CompiledAsset, compile, defineAsset, Ts23dError } from '../core/index.ts';
 import { DEFAULT_SHEET, hex, paintTrimSheet } from '../material/index.ts';
-import { box } from '../primitives/index.ts';
+import { box, lathe } from '../primitives/index.ts';
 import { renderBeauty } from './beauty.ts';
 import { ICON_CAMERA, icon, portrait, renderIcon, renderPortrait } from './icon.ts';
 import { rtsView, teamCoverage } from './icon-rts.ts';
@@ -125,6 +125,38 @@ describe('icon', () => {
     // Alpha is the coverage mask, and a pixel the asset never touches is fully clear.
     for (let i = 0; i < r.mask.length; i++) expect(r.rgba[i * 4 + 3]).toBe(r.mask[i] ?? -1);
     expect([...r.rgba.subarray(0, 4)]).toEqual([0, 0, 0, 0]);
+  });
+
+  it('a transparent icon of glass does not bake in the studio backdrop: alpha says how see-through', () => {
+    // A glass ball alone: everything behind it is backdrop. With and without the studio floor
+    // (`medium: 'water'` drops it) the studio icons differ, the cut-outs must not.
+    const ring = Array.from({ length: 9 }, (_, k): [number, number] => {
+      const a = (k / 8) * Math.PI;
+      return [Math.sin(a) * 0.5, 0.5 - Math.cos(a) * 0.5];
+    });
+    const ball = compile(
+      defineAsset({
+        name: 'ball',
+        kind: 'prop',
+        budget: { triangles: [400, 400, 400] },
+        build(ctx) {
+          ctx.part('glass', lathe({ profile: ring, segments: 16, color: [0.9, 0.95, 1] }), {
+            surface: 'glass',
+          });
+        },
+      }),
+    );
+    const o = { size: 48, sheet } as const;
+    const floorless = { ...ball, medium: 'water' } as const;
+    expect(Bun.hash(renderIcon(ball, o).rgba)).not.toBe(Bun.hash(renderIcon(floorless, o).rgba));
+    const a = renderIcon(ball, { ...o, backdrop: 'transparent' });
+    const b = renderIcon(floorless, { ...o, backdrop: 'transparent' });
+    expect(Bun.hash(a.rgba)).toBe(Bun.hash(b.rgba));
+    // Covered but see-through: alpha below coverage inside the ball, still clear outside it.
+    const inside = [...a.mask.keys()].filter((i) => a.mask[i] === 255);
+    expect(inside.length).toBeGreaterThan(100);
+    expect(inside.every((i) => (a.rgba[i * 4 + 3] ?? 255) < 255)).toBe(true);
+    expect([...a.rgba.subarray(0, 4)]).toEqual([0, 0, 0, 0]);
   });
 
   it('a studio icon is the beauty render byte for byte, with the same silhouette as the cut-out', () => {

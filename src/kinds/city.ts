@@ -10,6 +10,7 @@ import { type BuildContext, type Mesh, merge, place, type Vec2, type Vec3 } from
 import { split } from '../grammar/index.ts';
 import { box, prism } from '../primitives/index.ts';
 import {
+  CITY_BANDS,
   type CityBuildingPlan,
   type CityFootprint,
   type CityPlanOptions,
@@ -60,8 +61,7 @@ export const ROAD_WIDTH: Readonly<Record<string, number>> = {
   service: 5,
 };
 
-const ROOF_BAND = 0.3;
-const CORNICE = 0.45;
+const { roof: ROOF_BAND, cornice: CORNICE } = CITY_BANDS;
 const WINDOW_DEPTH = 0.08;
 
 /** The unit window: 1 m wide, 1 m tall from z = 0 up (the sill), centred on the wall plane in X

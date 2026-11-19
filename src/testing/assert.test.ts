@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'bun:test';
 import { defineAsset, Ts23dError } from '../core/index.ts';
 import { box } from '../primitives/index.ts';
+import { touches } from '../qa/index.ts';
 import {
   assertBudget,
   assertDeterministic,
@@ -97,6 +98,25 @@ const fan = (draws: number) =>
   });
 
 describe('testing assertions', () => {
+  it('assertQaPass runs the LOD-chain gates on one LOD too: a check selector typo fails at LOD0', () => {
+    const lamp = defineAsset({
+      name: 'lamp',
+      kind: 'prop',
+      budget: { triangles: [99, 99, 99] },
+      checks: [touches('lanturn', 'pole')],
+      build: (ctx) => {
+        ctx.part('pole', box({ size: [0.1, 0.1, 2], color: c }));
+        ctx.part('lantern', box({ size: [0.3, 0.3, 0.2], at: [0, 0, 2], color: c }));
+      },
+    });
+    for (const lods of [undefined, [0] as const]) {
+      const qa = code(() => assertQaPass(lamp, lods ? { lods } : {}));
+      expect(qa).toContain("T3D_QA_CHECK check: check selector 'lanturn' matches no part");
+    }
+    // Without LOD0 the selector gate has too little to judge by, and says nothing.
+    expect(code(() => assertQaPass(lamp, { lods: [1] }))).toBe('passed');
+  });
+
   it('assertQaPass fails budget.draws like `t3d build` does', () => {
     const qa = code(() => assertQaPass(fan(1)));
     expect(qa).toContain('T3D_QA_FAILED');

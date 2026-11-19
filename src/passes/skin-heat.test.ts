@@ -55,6 +55,29 @@ describe('heatWeights', () => {
     expect(JSON.parse(out)).toEqual(Array.from({ length: 7 }, () => 'T3D_SKIN_INVALID'));
   }, 60000);
 
+  it('refuses a voxel cap under the smallest grid the mesh fits, naming that minimum', () => {
+    const cube = box({ size: [1, 1, 1], color: [1, 1, 1] });
+    const up: WeightBone[] = [{ a: [0, 0, 0], b: [0, 0, 1] }];
+    const tried = (m: Mesh, maxVoxels: number): string => {
+      try {
+        heatWeights(m, up, { blend: 0.05, cell: 0.1, maxVoxels });
+      } catch (e) {
+        return e instanceof Ts23dError ? `${e.code} ${e.message} ${e.fix}` : String(e);
+      }
+      return 'ok';
+    };
+    // A solid needs a cell of flesh and one of air each side on every axis it spans: 4 × 4 × 4.
+    for (const cap of [27, 48, 63]) {
+      expect(tried(cube, cap)).toContain('T3D_SKIN_INVALID');
+      expect(tried(cube, cap)).toContain('maxVoxels: 64');
+    }
+    expect(tried(cube, 64)).toBe('ok');
+    // A flat sheet spans two axes: 4 × 4 × 3.
+    const sheet: Mesh = { ...cube, positions: cube.positions.map((v, i) => (i % 3 === 2 ? 0 : v)) };
+    expect(tried(sheet, 47)).toContain('maxVoxels: 48');
+    expect(tried(sheet, 48)).toBe('ok');
+  });
+
   it('straight-line weights bleed across the leg gap; geodesic heat does not', () => {
     const k = 0.06;
     expect(innerWeight(skinWeights(legs, bones, { blend: k }), 1)).toBeGreaterThan(0.1);

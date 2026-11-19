@@ -1,6 +1,10 @@
 import { expect, it } from 'bun:test';
-import { compile, cylinder, defineAsset } from '../index.ts';
-import { qaOf } from './build-one.ts';
+import { mkdtemp, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { compile, cylinder, defineAsset, readGlbChunks } from '../index.ts';
+import { parseArgs } from './args.ts';
+import { buildOne, qaOf } from './build-one.ts';
 
 /** LOD2 with more segments than LOD0: per-LOD gates pass, the chain does not. */
 const inverted = defineAsset({
@@ -48,4 +52,35 @@ it('fails budget.draws when a LOD needs more draw calls, after the chain finding
     message: 'LOD0 needs 2 draw calls, budget.draws is 1',
     fix: 'give parts that move together one pivot (ctx.group) and share paint slots, so the export merges them; or raise budget.draws',
   });
+});
+
+it('lists no clips in the manifest when --no-animations writes GLBs without any', async () => {
+  const spinner = defineAsset({
+    name: 'spinner',
+    kind: 'prop',
+    budget: { triangles: [2000, 2000, 2000] },
+    build(ctx) {
+      ctx.group('rotor', { motion: { kind: 'spin', axis: [0, 0, 1], rps: 1 } });
+      ctx.part('blade', cylinder({ radius: 0.3, length: 0.1, segments: 8, color: [1, 1, 1] }), {
+        parent: 'rotor',
+      });
+    },
+  });
+  const out = await mkdtemp(join(tmpdir(), 't3d-build-one-'));
+  try {
+    const build = (flags: string[]) =>
+      buildOne(
+        spinner,
+        parseArgs(['build', 'spinner.ts', '--no-shot', '--lods', '0', '--out', out, ...flags]),
+        undefined,
+        undefined,
+      );
+    expect((await build([])).clips?.map((c) => c.name)).toEqual(['run']);
+    const still = await build(['--no-animations']);
+    const glb = new Uint8Array(await Bun.file(join(out, 'spinner', 'lod0.glb')).arrayBuffer());
+    expect(readGlbChunks(glb).json['animations']).toBeUndefined();
+    expect(still.clips).toBeUndefined();
+  } finally {
+    await rm(out, { recursive: true, force: true });
+  }
 });

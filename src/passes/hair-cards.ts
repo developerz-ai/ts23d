@@ -258,7 +258,9 @@ export function hairCards(o: HairCardOptions): HairCards {
         cause: `hairCards: zone '${z.name}' has ${z.cells.length} atlas cells, width ${z.width}`,
         fix: 'give each zone strandCells(strip, kind) and a card width > 0 (metres)',
       });
-    const roots = poissonRoots(o.surface, z.density, o.rng.fork(`roots:${z.name}`), cap);
+    // The cap is on cards: a root too short to grow one (hair-length.ts) does not count.
+    const grows = (r: Root): boolean => grown(o.surface, z, [r]).list.length > 0;
+    const roots = poissonRoots(o.surface, z.density, o.rng.fork(`roots:${z.name}`), cap, grows);
     return { z, ...grown(o.surface, z, roots) };
   });
   const total = picked.reduce((s, x) => s + x.list.length, 0);

@@ -46,7 +46,10 @@ export interface TreadMorphs {
   readonly still: number;
 }
 
-const cache = new WeakMap<Mesh, TreadMorphs | null>();
+// Built once per belt mesh AND everything else a build reads: the centre line, the pitch, the
+// wheels' rim speed (its sign is the direction) and the LOD's tolerance. One mesh under reversed
+// wheels or at another LOD is another belt.
+const cache = new WeakMap<Mesh, Map<string, TreadMorphs | null>>();
 
 /**
  * The morph targets that run `belt` (a part with a `tread` motion and a mesh) in the `run` clip;
@@ -56,24 +59,29 @@ const cache = new WeakMap<Mesh, TreadMorphs | null>();
 export function treadMorphs(parts: readonly Part[], belt: Part, lod: number): TreadMorphs | null {
   const mesh = belt.mesh;
   if (belt.motion?.kind !== 'tread' || !mesh || mesh.indices.length === 0) return null;
-  const known = cache.get(mesh);
+  if (mesh.morphs?.length) return null;
+  const { path, pitch } = belt.motion;
+  const wheels = beltSpeed(parts, belt, new BeltLoop(path));
+  const tolerance = TREAD_TOLERANCE[Math.min(Math.max(0, lod), 2)] ?? TREAD_TOLERANCE[0];
+  const key = `${tolerance}|${pitch}|${wheels}|${path.map((p) => p.join(',')).join(';')}`;
+  const built = cache.get(mesh) ?? new Map<string, TreadMorphs | null>();
+  cache.set(mesh, built);
+  const known = built.get(key);
   if (known !== undefined) return known;
-  const made = mesh.morphs?.length ? null : build(parts, belt, mesh, belt.motion.pitch, lod);
-  cache.set(mesh, made);
+  const made = build(path, pitch, mesh, wheels, tolerance);
+  built.set(key, made);
   return made;
 }
 
 function build(
-  parts: readonly Part[],
-  belt: Part,
-  mesh: Mesh,
+  path: readonly (readonly number[])[],
   pitch: number,
-  lod: number,
+  mesh: Mesh,
+  wheels: number,
+  tolerance: number,
 ): TreadMorphs | null {
-  if (belt.motion?.kind !== 'tread') return null;
-  const wheels = beltSpeed(parts, belt, new BeltLoop(belt.motion.path));
   const dir = wheels < 0 ? -1 : 1;
-  const run = beltRun(belt.motion.path, dir * pitch, mesh);
+  const run = beltRun(path, dir * pitch, mesh);
   if (run.unmatched > 0) return null;
   const cycles = Math.max(1, Math.round((Math.abs(wheels) * LOOP_SECONDS) / pitch));
   const size = mesh.positions.length;
@@ -104,7 +112,6 @@ function build(
     }
     return Math.sqrt(worst);
   };
-  const tolerance = TREAD_TOLERANCE[Math.min(Math.max(0, lod), 2)] ?? TREAD_TOLERANCE[0];
   let phases: number = PHASES[0];
   let error = Infinity;
   for (const k of PHASES) {

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test';
 import { boundsOf, compile, defineAsset, Ts23dError, type Vec2, type Vec3 } from '../core/index.ts';
 import { cityBlock, cityWindows } from './city.ts';
-import { type CityFootprint, cityPlan, footprintIoU, hashId } from './city-plan.ts';
+import { CITY_BANDS, type CityFootprint, cityPlan, footprintIoU, hashId } from './city-plan.ts';
 
 const W: Vec3[] = [
   [0.5, 0.2, 0.1],
@@ -73,6 +73,46 @@ describe('cityPlan', () => {
     expect(refuse(20).code).toBe('T3D_RECIPE_INVALID');
     expect(refuse(25).fix).toContain('above minHeight');
     expect(refuse(-1).fix).toContain('minHeight ≥ 0');
+  });
+
+  it('refuses a body too short for the roof band and cornice, naming the minimum', () => {
+    const slab = (height: number, minHeight: number): CityFootprint => ({
+      id: 7,
+      ring: rect(0, 0, 10, 10),
+      height,
+      levels: null,
+      minHeight,
+    });
+    const tried = (f: CityFootprint): string => {
+      try {
+        cityPlan([f], { walls: W });
+      } catch (e) {
+        return e instanceof Ts23dError ? `${e.code} ${e.message} ${e.fix}` : String(e);
+      }
+      return 'ok';
+    };
+    // 0.2 m of body under a 0.3 m roof band: a −0.4 m storey and a wall extruded downwards.
+    for (const f of [slab(20, 19.8), slab(0.5, 0), slab(0.99, 0)]) {
+      expect(tried(f)).toContain('T3D_RECIPE_INVALID');
+      expect(tried(f)).toContain(`at least ${CITY_BANDS.minBody} m`);
+    }
+    expect(CITY_BANDS.minBody).toBeGreaterThan(CITY_BANDS.roof + CITY_BANDS.cornice);
+    expect(tried(slab(20, 19))).toBe('ok');
+    // The shortest body allowed builds with every band and storey right way up, cornice on.
+    const low = defineAsset({
+      name: 'kiosk',
+      kind: 'scene',
+      budget: { triangles: [999, 999, 999] },
+      build(ctx) {
+        cityBlock(ctx, [slab(20, 20 - CITY_BANDS.minBody)], { ...OPT, trim: [0.8, 0.8, 0.8] });
+      },
+    });
+    const [p] = cityPlan([slab(20, 20 - CITY_BANDS.minBody)], { walls: W });
+    expect(p?.floorHeight).toBeGreaterThan(0);
+    const wall = compile(low, { lod: 0 }).parts.find((x) => x.name === 'b7')?.mesh;
+    const zs = Array.from(wall?.positions ?? [], (v, i) => (i % 3 === 2 ? v : 0));
+    expect(Math.max(...zs)).toBeCloseTo(CITY_BANDS.minBody - CITY_BANDS.roof - CITY_BANDS.cornice);
+    expect(Math.min(...zs)).toBe(0);
   });
 
   it('a wall is shared only where the neighbour stands: windows fill the rest', () => {

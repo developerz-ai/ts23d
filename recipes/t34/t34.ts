@@ -187,22 +187,30 @@ function treadPitch(lod: Lod, line: readonly Vec2[]): number {
   return (stationsOf(lod, line)[0]?.len ?? 0.172) * (lod === 0 ? 2 : 1);
 }
 
-function trackMesh(lod: Lod, line: readonly Vec2[], y: number): Mesh {
+/**
+ * The belt: links laid round `line`. `finish` colours ONE link (rust, mud) before it is placed, so
+ * every link looks the same and the run clip can put each in its neighbour's place unseen (the
+ * `treads` gate checks colour and UV one pitch on). Mud laid over the placed belt by its height
+ * above the ground would stay put while the links run through it and jump at every wrap.
+ */
+function trackMesh(lod: Lod, line: readonly Vec2[], y: number, finish: (link: Mesh) => Mesh): Mesh {
   const stations = stationsOf(lod, line);
   const len = stations[0]?.len ?? 0.172;
-  const band = box({
-    size: [len * 1.04, TRACK_W, LINK_T],
-    at: [0, 0, -LINK_T / 2],
-    color: trackSteel,
-    // LOD2 drops only the edge that faces the hull ('left' = +Y, 'right' = −Y in `box`): the
-    // outboard edge is the 6 cm of track you see from the side, the ends show round the wheels.
-    ...(lod === 2 ? { omit: [y > 0 ? 'right' : 'left'] as const } : {}),
-  });
-  const links = [trackLink(len, true), trackLink(len, false)];
+  const band = finish(
+    box({
+      size: [len * 1.04, TRACK_W, LINK_T],
+      at: [0, 0, -LINK_T / 2],
+      color: trackSteel,
+      // LOD2 drops only the edge that faces the hull ('left' = +Y, 'right' = −Y in `box`): the
+      // outboard edge is the 6 cm of track you see from the side, the ends show round the wheels.
+      ...(lod === 2 ? { omit: [y > 0 ? 'right' : 'left'] as const } : {}),
+    }),
+  );
+  const links = lod === 0 ? [trackLink(len, true), trackLink(len, false)].map(finish) : [];
   return onGround(
     merge(
       stations.map((s, i) =>
-        place(lod === 0 ? (links[i % 2] as Mesh) : band, {
+        place(links[i % 2] ?? band, {
           at: [s.p[0], y, s.p[1]],
           pitch: s.pitch,
         }),
@@ -627,7 +635,12 @@ const t34Family = defineFamily<Params>({
       const track = `track_${side}`;
       ctx.part(
         track,
-        weather(restrip(trackMesh(lod, line, y), rules), { mud: 1.2, mudStrength: 0.8 }),
+        // Each link is weathered as if it sat 0.72 m up, under the ragged top of the 1.2 m mud:
+        // packed mud with rusted steel showing through in places, the same on every link of a side
+        // (mean belt colour within 1% of the old by-height mud at LOD0).
+        trackMesh(lod, line, y, (link) =>
+          weather(restrip(link, rules), { at: [0, y, 0.72], mud: 1.2, mudStrength: 0.8 }),
+        ),
         { motion: tread(line, y, treadPitch(lod, line)) },
       );
       // Idler crank and final-drive housing: what holds idler and sprocket to the hull side.

@@ -51,10 +51,13 @@ export interface BeautyRender {
   /** Distinct triangles visible per cell of a 16 × 9 grid — where the detail is. */
   readonly detail: Uint32Array;
   /** Tone-mapped linear colour summed over the asset's samples only, 3 per pixel (rasterised
-   *  renders; absent from a path-traced one). Transparent icons divide it by `hits`. */
+   *  renders; absent from a path-traced one), each sample weighted by its opacity. Transparent
+   *  icons divide it by `opacity`. */
   readonly assetSum?: Float32Array;
   /** Asset samples per pixel, beside `assetSum`. */
   readonly hits?: Uint8Array;
+  /** Summed opacity of those samples (`hits` unless see-through surfaces show the backdrop). */
+  readonly opacity?: Float32Array;
 }
 
 // Repaints when a recipe defined materials since the last render (D47).

@@ -2,6 +2,7 @@
 
 export { AUDIO_EMITTER } from './audio.ts';
 export { type SoundFile, type SoundUse, soundFiles, soundUses } from './audio-files.ts';
+export { type ClipTargets, clipPlays } from './clip-channels.ts';
 export { animationsOf, type ClipTree, clipSummary, Z_UP_TO_Y_UP } from './clips.ts';
 export {
   type DrawFinding,

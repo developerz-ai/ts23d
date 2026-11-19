@@ -27,6 +27,15 @@ describe('rowsSampled', () => {
     expect([...rowsSampled([row(3), row(3.5), row(4)])]).toEqual([3]);
   });
 
+  it('without indices keeps a row spanned edge to edge between two rows with V inside them', () => {
+    // A box on row 42 between lathes on rows 41 and 43: nothing says the box is not there.
+    const vs = [row(41.5), row(42), row(43), row(43.5)];
+    expect([...rowsSampled(vs)].sort()).toEqual([41, 42, 43]);
+    // With indices the answer is exact either way: the box's triangles, or none on row 42.
+    expect([...rowsSampled(vs, [0, 0, 1, 1, 1, 2, 2, 3, 3])].sort()).toEqual([41, 42, 43]);
+    expect([...rowsSampled(vs, [0, 0, 1, 2, 3, 3])].sort()).toEqual([41, 43]);
+  });
+
   it('counts a row spanned edge to edge when it has no V strictly inside', () => {
     expect([...rowsSampled([row(7), row(8)])]).toEqual([7]);
     expect([...rowsSampled([row(7), row(8), row(9)])].sort()).toEqual([7, 8]);

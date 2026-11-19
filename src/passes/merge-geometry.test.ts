@@ -47,10 +47,18 @@ describe('geometry-only merge of skinned + rigid meshes', () => {
   });
 
   it('bakeAoAsset shades a skinned body under its rigid saddle and keeps the skin', () => {
-    const baked = bakeAoAsset(compile(horse), { samples: 16 });
+    const raw = compile(horse);
+    const before = raw.parts.find((p) => p.name === 'body')?.mesh?.colors ?? new Float32Array();
+    // The unbaked body already holds channels under hide[0]: only its own values prove a bake.
+    expect(Math.min(...before)).toBeLessThan(hide[0]);
+    const baked = bakeAoAsset(raw, { samples: 16 });
     const b = baked.parts.find((p) => p.name === 'body')?.mesh;
     expect(b?.joints).toEqual(body().joints);
-    expect(Math.min(...(b?.colors ?? [1]))).toBeLessThan(hide[0]);
+    const after = b?.colors ?? new Float32Array();
+    expect(after).toHaveLength(before.length);
+    const change = Array.from(after, (v, i) => v - (before[i] ?? 0));
+    expect(Math.max(...change)).toBeLessThanOrEqual(0);
+    expect(Math.min(...change)).toBeLessThan(-0.01);
   });
 
   it('jointFit measures a joint between a skinned and a rigid part', () => {

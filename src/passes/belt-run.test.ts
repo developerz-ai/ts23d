@@ -79,11 +79,31 @@ describe('beltRun', () => {
     expect(beltRun(stadium(), pitch * 1.4, links(36).mesh).unmatched).toBeGreaterThan(0);
   });
 
+  it('leaves a body with no twin where it is while the paired ones travel', () => {
+    const { mesh, pitch } = links(36, 5);
+    const run = beltRun(stadium(), pitch, mesh);
+    const lone = [...run.twins.keys()].filter((v) => (run.twins[v] ?? -1) < 0);
+    expect(lone.length).toBe(run.unmatched);
+    const p = new Float64Array(run.vertices * 3);
+    const n = new Float64Array(p.length);
+    run.pose(0.5, p, n);
+    const moved = (v: number): number =>
+      Math.hypot(...[0, 1, 2].map((k) => (p[v * 3 + k] ?? 0) - (mesh.positions[v * 3 + k] ?? 0)));
+    expect(Math.max(...lone.map(moved))).toBe(0);
+    for (const v of lone)
+      for (let k = 0; k < 3; k++) expect(n[v * 3 + k]).toBe(mesh.normals[v * 3 + k] ?? 0);
+    // Link 3, on the ground run and paired, is half a pitch on.
+    expect(moved(3 * 48)).toBeCloseTo(pitch / 2, 5);
+  });
+
   it('carries every link onto the next one: the pose after one pitch covers the rest pose', () => {
     const { mesh, pitch } = links(36);
     for (const dir of [1, -1]) {
       const run = beltRun(stadium(), dir * pitch, mesh);
       expect(run.unmatched).toBe(0);
+      // Each of the 48 vertices of a link lands on the same vertex of the link one pitch on.
+      const n = run.vertices;
+      expect([...run.twins]).toEqual(Array.from({ length: n }, (_, v) => (v + dir * 48 + n) % n));
       expect(apart(posed(run, 0), mesh.positions)).toBeLessThan(1e-9);
       expect(apart(posed(run, 1), mesh.positions)).toBeLessThan(1e-6);
       expect(apart(mesh.positions, posed(run, 1))).toBeLessThan(1e-6);
@@ -126,6 +146,14 @@ describe('beltRun', () => {
     expect(run.residual).toBeGreaterThan(0.007);
     expect(run.residual).toBeLessThan(0.009);
     expect(apart(posed(run, 1), positions)).toBeLessThan(1e-6);
+    // Look: one vertex painted apart from its twin is seen from both sides (it and the vertex
+    // that lands on it), but not on the eased corner, whose twin is only the nearest vertex.
+    const limits = { colour: 0.01, uv: 1 / 512 };
+    const painted = (v: number): Float32Array =>
+      mesh.colors.map((c, i) => (Math.floor(i / 3) === v ? 0.9 : c));
+    expect(run.look(mesh.colors, mesh.uvs, limits).off).toBe(0);
+    expect(run.look(painted(5 * 48), mesh.uvs, limits)).toMatchObject({ off: 2 });
+    expect(run.look(painted(3 * 48), mesh.uvs, limits).off).toBe(0);
   });
 
   it('bends a continuous band vertex by vertex', () => {

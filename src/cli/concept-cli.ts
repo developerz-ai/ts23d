@@ -3,6 +3,7 @@
 
 import { isTs23dError, Ts23dError } from '../core/index.ts';
 import { conceptMain } from './concept-cmd.ts';
+import { printError } from './report.ts';
 
 export interface ConceptArgs {
   readonly files: readonly string[];
@@ -47,17 +48,15 @@ export function parseConceptArgs(argv: readonly string[]): ConceptArgs {
   };
 }
 
-/** Parses, then runs `t3d concept`; a usage error prints its code and fix and exits 2. */
+/** Parses, then runs `t3d concept`; a usage error prints its code and fix (the one --json
+ *  envelope on stdout) and exits 2. */
 export async function conceptCli(argv: readonly string[], json: boolean): Promise<number> {
   let args: ConceptArgs;
   try {
     args = parseConceptArgs(argv);
   } catch (e) {
     if (!isTs23dError(e)) throw e;
-    if (json)
-      console.log(JSON.stringify({ ok: false, error: { code: e.code, message: e.message } }));
-    else console.error(e.message);
-    return 2;
+    return printError(e, json);
   }
   return conceptMain(args.files, { json, ...args });
 }

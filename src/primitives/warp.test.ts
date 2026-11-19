@@ -147,6 +147,19 @@ describe('tpsWarp / warpTPS', () => {
     expect(delta[0]).toBeCloseTo(0.1, 6); // the input morph is not written through
   });
 
+  it('adds no motion to a still morph far from the origin (deltas are taken before rounding)', () => {
+    const m = box({ size: [2, 2, 2], color: [0.5, 0.5, 0.5] });
+    const n = m.positions.length;
+    const still = { name: 'still', positions: new Float32Array(n) };
+    const open = { name: 'open', positions: new Float32Array(n).fill(0.25) };
+    // A pure translation to where a Float32 holds 1/16 m steps: 1000000.03 stores as 1000000.
+    const far = CUBE.map((p): Vec3 => [p[0] + 1000000.03, p[1], p[2]]);
+    const out = warpTPS({ ...m, morphs: [still, open] }, CUBE, far);
+    const [a, b] = out.morphs ?? [];
+    expect(Math.max(...Array.from(a?.positions ?? [1], Math.abs))).toBeLessThan(1e-6);
+    for (const d of b?.positions ?? [0]) expect(d).toBeCloseTo(0.25, 6);
+  });
+
   it('warps a mesh: positions move, normals turn with the warp, topology kept, deterministic', () => {
     const m = box({ size: [2, 2, 2], color: [0.5, 0.5, 0.5] });
     const shear = (p: Vec3): Vec3 => [p[0] + 0.5 * p[2], p[1], p[2]];

@@ -297,7 +297,7 @@ bunx -p @developerz.ai/ts23d t3d hero  assets/<name>/<name>.ts       # beauty re
 bunx -p @developerz.ai/ts23d t3d review assets/<name>/<name>.ts      # AI review pack: hero, sheet, close-ups, LOD strip, review.md
 bunx -p @developerz.ai/ts23d t3d tune assets/<name>/<name>.ts --evals 400   # fit tune.params to objectives → tune.json, tune-report.md, tune-strip.png
 bunx -p @developerz.ai/ts23d t3d finish assets/<name>/<name>.ts --endpoint URL --prompt "…"   # optional AI texture layer on LOD0
-bunx -p @developerz.ai/ts23d t3d list  assets/*.ts --json     # the assets each module exports (one JSON envelope)
+bunx -p @developerz.ai/ts23d t3d list  assets/*/*.ts --json     # the assets each module exports (one JSON envelope)
 bunx -p @developerz.ai/ts23d t3d --version                    # also: t3d <command> --help
 ```
 

@@ -19,7 +19,7 @@ const v3 = (f: (k: number) => number): Vec3 => [f(0), f(1), f(2)];
 export interface HeatOptions extends SkinWeightOptions {
   /** Voxel edge, metres, finite and > 0; coarsened so the grid stays under `maxVoxels`. */
   readonly cell: number;
-  /** A whole number ≥ 27. Default 2^21. */
+  /** A whole number ≥ 27, and ≥ 4 per axis the mesh spans (64 for a solid). Default 2^21. */
   readonly maxVoxels?: number;
 }
 
@@ -69,6 +69,16 @@ function voxelise(mesh: Mesh, o: HeatOptions): Grid {
   let cell = o.cell;
   const dims = (c: number): [number, number, number] =>
     v3((k) => Math.ceil(span(k) / c) + 3) as [number, number, number];
+  // The padding stays (the outside flood needs a ring of air round the solid), so an axis the
+  // mesh spans never gets under 4 cells: a cap below that product would coarsen `cell` to
+  // Infinity, leave no solid and weight every vertex by straight-line distance, silently.
+  const least = [0, 1, 2].map((k) => (span(k) > 0 ? 4 : 3));
+  const floor = least.reduce((a, b) => a * b, 1);
+  if (cap < floor)
+    throw new Ts23dError('T3D_SKIN_INVALID', {
+      cause: `heat maxVoxels ${cap} is under the coarsest grid this mesh fits: ${least.join(' × ')} = ${floor} voxels (a cell of solid plus the padding on every axis it spans)`,
+      fix: `drop maxVoxels (default 2^21) or pass at least maxVoxels: ${floor}; that floor is one voxel of flesh, so give it thousands for weights that follow the limbs`,
+    });
   while (dims(cell).reduce((a, b) => a * b, 1) > cap) cell *= 1.25;
   const n = dims(cell);
   const origin = v3((k) => (lo[k] ?? 0) - cell);

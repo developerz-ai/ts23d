@@ -19,6 +19,25 @@ describe('poissonRoots at high density', () => {
     expect((caught as Ts23dError).message).toMatch(/cap 5000/);
   }, 60000);
 
+  test('roots that grow no card do not count against the cap, and are still returned', () => {
+    const small = box({ size: [1, 1, 1], color: [1, 1, 1] });
+    const free = poissonRoots(small, () => 300, createRng(1));
+    const top = free.filter((r) => r.p[2] > 0.999).length;
+    expect(top).toBeGreaterThan(50);
+    const onTop = (r: { p: readonly number[] }): boolean => (r.p[2] ?? 0) > 0.999;
+    expect(poissonRoots(small, () => 300, createRng(1), top, onTop)).toEqual(free);
+    expect(() => poissonRoots(small, () => 300, createRng(1), top - 1, onTop)).toThrow(/cap/);
+    expect(
+      poissonRoots(
+        small,
+        () => 300,
+        createRng(1),
+        0,
+        () => false,
+      ),
+    ).toEqual(free);
+  });
+
   test('the cap leaves a zone under it untouched', () => {
     const small = box({ size: [1, 1, 1], color: [1, 1, 1] });
     const free = poissonRoots(small, () => 300, createRng(1));

@@ -54,7 +54,8 @@ export function withTolerances(
     checkStretch(`'${asset}' limitTolerances.${name}`, t);
   }
   return bones.map((b) => {
-    const t = tolerances[b.name];
+    // Own properties only: a bone named 'constructor' is not Object.prototype's.
+    const t = Object.hasOwn(tolerances, b.name) ? tolerances[b.name] : undefined;
     return t && b.limit ? { ...b, limit: { ...b.limit, stretch: t.stretch, why: t.why } } : b;
   });
 }

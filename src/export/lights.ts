@@ -17,8 +17,11 @@ export const LIGHTS = 'KHR_lights_punctual';
  */
 export const DEFAULT_SUN_LUX = 100_000;
 export const DEFAULT_LAMP_LUMENS = 1000;
-/** Solid angle of a cone with half-angle `outer` (radians), steradians. */
-const coneSr = (outer: number): number => 2 * Math.PI * (1 - Math.cos(outer));
+/**
+ * Solid angle of a cone with half-angle `outer` (radians), steradians: 2π(1 − cos θ) written as
+ * 4π sin²(θ/2), which keeps its precision for narrow beams where cos θ rounds to 1.
+ */
+const coneSr = (outer: number): number => 4 * Math.PI * Math.sin(outer / 2) ** 2;
 
 /** Shortest rotation taking unit `a` onto unit `b`. */
 function between(a: Vec3, b: Vec3): Quat {
@@ -34,6 +37,12 @@ type Data = NonNullable<NonNullable<Part['socket']>['data']>;
 
 /** Widest spot half-angle, degrees: glTF needs outerConeAngle < π/2. */
 const MAX_CONE = 89;
+/**
+ * Narrowest spot half-angle, degrees: a 1° beam, about the tightest real searchlight or pin-spot
+ * optics. A default 1000 lm lamp in it is ~4.2 Mcd; narrower cones only push the default toward
+ * absurd (and, below ~1e-6°, infinite) candela, which a file writes as `null`.
+ */
+export const MIN_CONE = 0.5;
 
 /**
  * `data[key]` as a number in [min, max], or `fallback` when the key is absent. Anything else
@@ -44,14 +53,14 @@ function num(
   data: Data,
   key: string,
   fallback: number,
-  range: { min: number; max?: number; open?: boolean; unit: string; eg: number },
+  range: { min: number; max?: number; unit: string; eg: number },
 ): number {
   const v = data[key];
   if (v === undefined) return fallback;
   const max = range.max ?? Infinity;
-  const low = typeof v === 'number' && (range.open ? v > range.min : v >= range.min);
+  const low = typeof v === 'number' && v >= range.min;
   if (typeof v === 'number' && Number.isFinite(v) && low && v <= max) return v;
-  const span = `${range.open ? 'above' : 'at least'} ${range.min}${range.max === undefined ? '' : ` and at most ${max}`}`;
+  const span = `at least ${range.min}${range.max === undefined ? '' : ` and at most ${max}`}`;
   throw new Ts23dError('T3D_RECIPE_INVALID', {
     cause: `light socket '${part}': ${key} ${String(v)} is not a number ${span} (${range.unit})`,
     fix: `pass data: { ${key}: ${range.eg} } on the socket, or drop '${key}' for the default`,
@@ -68,9 +77,9 @@ export function lightOf(part: Part): { light: Json; rotation: Quat } | null {
   const dir = s.dir ?? [1, 0, 0];
   const len = Math.hypot(...dir) || 1;
   const spot = type === 'spot';
-  const cone = { min: 0, max: MAX_CONE, unit: 'degrees, the half-angle of the beam' };
-  const outerDeg = spot ? num(part.name, d, 'cone', 30, { ...cone, open: true, eg: 25 }) : 30;
-  const innerDeg = spot ? num(part.name, d, 'inner', 0, { ...cone, eg: 12 }) : 0;
+  const cone = { max: MAX_CONE, unit: 'degrees, the half-angle of the beam' };
+  const outerDeg = spot ? num(part.name, d, 'cone', 30, { ...cone, min: MIN_CONE, eg: 25 }) : 30;
+  const innerDeg = spot ? num(part.name, d, 'inner', 0, { ...cone, min: 0, eg: 12 }) : 0;
   const outer = (outerDeg * Math.PI) / 180;
   // glTF requires inner < outer: an inner cone as wide as the beam stops just inside it.
   const inner = Math.min(outer * 0.999, (innerDeg * Math.PI) / 180);

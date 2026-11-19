@@ -41,3 +41,28 @@ it('checks the root barrel and refuses a module importing it', () => {
   expect(checkFile('src/index.ts', "export { x } from './cli/build.ts';")).toHaveLength(1);
   expect(checkFile('src/kinds/a.ts', "import { x } from '../index.ts';")).toHaveLength(1);
 });
+
+it('ignores imports written in comments and inside strings, and still sees the code around them', () => {
+  const quiet = [
+    "// import '../qa/index.ts';",
+    "/* import { x } from '../qa/index.ts'; */",
+    "/**\n * e.g. `import { x } from '../qa/index.ts'`\n */",
+    'const fix = "write import { x } from \'../qa/index.ts\'";',
+    "const fix = `import('../qa/index.ts')`;",
+    "const url = 'http://x'; // from '../qa/index.ts'",
+  ];
+  for (const source of quiet) expect(checkFile('src/core/a.ts', source)).toEqual([]);
+  // A comment marker inside a string, or a quote inside a comment, hides nothing after it.
+  const loud = [
+    "const a = '//'; import { x } from '../qa/index.ts';",
+    "// don't\nimport { x } from '../qa/index.ts';",
+    "const a = '/*'; import '../qa/index.ts'; const b = '*/';",
+    // Code inside a template's placeholder ('$' apart, so this stays a plain string here).
+    `const s = \`$${"{await import('../qa/index.ts')}"}\`;`,
+    "import { x } /* why */ from /* here */ '../qa/index.ts';",
+  ];
+  for (const source of loud) expect(checkFile('src/core/a.ts', source)).toHaveLength(1);
+  expect(checkFile('src/core/a.ts', "/* a\n b */\n\nimport '../qa/index.ts';")).toEqual([
+    expect.objectContaining({ line: 4 }),
+  ]);
+});

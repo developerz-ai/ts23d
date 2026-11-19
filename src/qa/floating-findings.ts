@@ -1,7 +1,9 @@
 // floating-parts findings: the text and the order. Parts that float together form a chain; its
 // root (the member nearest a support) gets the "move it" fix and is listed first, and every
-// other member is told to fix the root rather than move itself by a distance that only holds
-// once the root is fixed. One finding per floating part, so the count stays honest.
+// other member is told to travel with the root (same distance and direction, or one `ctx.group`
+// parent that carries them all) rather than close its own gap to the ground: moved alone, the
+// root leaves the parts placed on it behind. One finding per floating part, so the count stays
+// honest.
 
 import { CONTACT_EPS, type Finding } from './types.ts';
 
@@ -79,7 +81,11 @@ export function floatingFindings(input: FloatingInput): Finding[] {
       if (via === undefined) {
         const c = near.get(n) ?? { gap: 0 };
         const onto = c.nearest ? `'${c.nearest}'` : 'the ground';
-        const rest = members.length > 1 ? `; ${members.length - 1} part(s) hang from it` : '';
+        const hung = members.length - 1;
+        const rest = hung ? `; ${hung} part(s) hang from it` : '';
+        const together = hung
+          ? `; move the ${hung} part(s) that hang from it by the same distance and direction, unless they are placed relative to it (a shared \`ctx.group\` parent carries them: move that)`
+          : '';
         out.push({
           gate: 'floating-parts',
           code: CODE,
@@ -87,7 +93,7 @@ export function floatingFindings(input: FloatingInput): Finding[] {
           gap: c.gap,
           ...(c.nearest ? { nearest: c.nearest } : {}),
           message: `'${n}' has no surface within ${cm(CONTACT_EPS)} of ${held}; nearest support ${onto} is ${cm(c.gap)} away${rest}`,
-          fix: `move it ${cm(c.gap)} onto ${onto} (check \`at\`, parent and the LOD-gated detail around it) — bounding boxes touching is not enough; ${ANCHOR}`,
+          fix: `move it ${cm(c.gap)} onto ${onto} (check \`at\`, parent and the LOD-gated detail around it)${together} — bounding boxes touching is not enough; ${ANCHOR}`,
         });
         continue;
       }
@@ -96,7 +102,7 @@ export function floatingFindings(input: FloatingInput): Finding[] {
         code: CODE,
         part: n,
         message: `'${n}' touches '${via}', which is itself floating (root of the chain: '${root}')`,
-        fix: `fix '${root}' first (its finding is listed above), then rebuild: '${n}' is held through it; do not move '${n}'`,
+        fix: `fix '${root}' first (its finding is listed above): '${n}' is held through it, so move '${n}' by the same distance and direction as '${root}' — nothing to do when a \`ctx.group\` parent that was moved already carries both; closing '${n}''s own gap to the ground is the wrong distance`,
       });
     }
   }

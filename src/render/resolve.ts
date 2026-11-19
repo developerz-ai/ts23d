@@ -3,7 +3,9 @@
 // edges get ss² coverage samples while interiors cost one shade. Background samples show the
 // studio backdrop × the floor's shadow light. See-through samples add what lies behind them (the
 // opaque-only buffer, refraction-offset) × their transmitted tint. Also yields the coverage mask,
-// a detail grid and, for cut-outs, the asset-only colour sum + hit count (no backdrop in them).
+// a detail grid and, for cut-outs, the asset-only colour sum, hit count and opacity: a see-through
+// sample with only backdrop behind it adds its own surface light, weighted by its opacity
+// (1 − mean transmitted tint), never the backdrop it lets through.
 
 import type { FloorGrid } from './ground.ts';
 import { floorLight } from './ground.ts';
@@ -17,10 +19,14 @@ export interface Resolved {
   readonly rgba: Uint8Array;
   readonly mask: Uint8Array;
   readonly detail: Uint32Array;
-  /** Per pixel × 3: tone-mapped linear colour summed over the ASSET samples only (no backdrop). */
+  /** Per pixel × 3: tone-mapped linear colour summed over the ASSET samples only (no backdrop),
+   *  each weighted by its opacity (premultiplied). */
   readonly assetSum: Float32Array;
-  /** Per pixel: how many of its ss² samples hit the asset. `assetSum / hits` = straight colour. */
+  /** Per pixel: how many of its ss² samples hit the asset (the coverage behind `mask`). */
   readonly hits: Uint8Array;
+  /** Per pixel: the asset samples' summed opacity, `hits` where nothing see-through shows the
+   *  backdrop. `assetSum / opacity` = straight colour, `mask × opacity / hits` = cut-out alpha. */
+  readonly opacity: Float32Array;
 }
 
 /** Backdrop colour (linear) at normalised screen (nx, ny): soft radial falloff below centre. */
@@ -33,7 +39,10 @@ function backdrop(nx: number, ny: number, out: Float32Array): void {
   out[2] = fromSrgb(0.94 - 0.12 * fall);
 }
 
-/** Linear radiance behind supersampled pixel (X, Y): the opaque buffer, else backdrop × floor. */
+/**
+ * Linear radiance behind supersampled pixel (X, Y): the opaque buffer, else backdrop × floor.
+ * True when it is the asset's own opaque surface.
+ */
 function behindAt(
   ctx: ShadeContext,
   floor: FloorGrid,
@@ -41,7 +50,7 @@ function behindAt(
   Y: number,
   out: Float32Array,
   bg: Float32Array,
-): void {
+): boolean {
   const b = ctx.behind;
   const W = ctx.cam.width;
   const H = ctx.cam.height;
@@ -51,13 +60,14 @@ function behindAt(
   const t = b?.tri[i] ?? -1;
   if (b && t >= 0) {
     shadeSample(ctx, t, b.b1[i] ?? 0, b.b2[i] ?? 0, b.mip[t] ?? 0, x + y * 2, out);
-    return;
+    return true;
   }
   backdrop(x / W, y / H, bg);
   const l = floorLight(floor, ctx.cam, x + 0.5, y + 0.5);
   out[0] = (bg[0] ?? 0) * l;
   out[1] = (bg[1] ?? 0) * l;
   out[2] = (bg[2] ?? 0) * l;
+  return false;
 }
 
 export function resolve(
@@ -72,6 +82,7 @@ export function resolve(
   const mask = new Uint8Array(width * height);
   const assetSum = new Float32Array(width * height * 3);
   const hitCount = new Uint8Array(width * height);
+  const opacity = new Float32Array(width * height);
   // Last detail cell each triangle was counted in: ≈ distinct triangles per cell, no hash set.
   const counted = new Int32Array(ctx.scene.triangles).fill(-1);
   const detail = new Uint32Array(16 * 9);
@@ -80,6 +91,7 @@ export function resolve(
   const thru = new Float32Array(5);
   const back = new Float32Array(3);
   const bg2 = new Float32Array(3);
+  const surf = new Float32Array(3);
   const n = ss * ss;
   const ids = new Int32Array(n);
   const cnt = new Int32Array(n);
@@ -99,6 +111,7 @@ export function resolve(
       let ar = 0;
       let ag = 0;
       let ab = 0;
+      let ao = 0;
       for (let sy = 0; sy < ss; sy++)
         for (let sx = 0; sx < ss; sx++) {
           const X = x * ss + sx;
@@ -147,8 +160,11 @@ export function resolve(
           lin,
           see ? thru : undefined,
         );
+        // The asset's own light before what it transmits; its opacity when only backdrop is behind.
+        let own = 1;
         if (see) {
-          behindAt(
+          own = 1 - ((thru[0] ?? 0) + (thru[1] ?? 0) + (thru[2] ?? 0)) / 3;
+          const asset = behindAt(
             ctx,
             floor,
             (x + 0.5) * ss + (thru[3] ?? 0),
@@ -156,6 +172,8 @@ export function resolve(
             back,
             bg2,
           );
+          if (asset) own = 1;
+          else for (let q = 0; q < 3; q++) surf[q] = tone(lin[q] ?? 0);
           for (let q = 0; q < 3; q++) lin[q] = (lin[q] ?? 0) + (thru[q] ?? 0) * (back[q] ?? 0);
         }
         const tr = tone(lin[0] ?? 0) * c;
@@ -164,9 +182,18 @@ export function resolve(
         r += tr;
         g += tg;
         b += tb;
-        ar += tr;
-        ag += tg;
-        ab += tb;
+        if (own === 1) {
+          ar += tr;
+          ag += tg;
+          ab += tb;
+          ao += c;
+        } else {
+          // Premultiplied: the surface's own light IS colour × opacity (no backdrop term).
+          ar += (surf[0] ?? 0) * c;
+          ag += (surf[1] ?? 0) * c;
+          ab += (surf[2] ?? 0) * c;
+          ao += Math.min(1, Math.max(0, own)) * c;
+        }
       }
       const o = (y * width + x) * 4;
       rgba[o] = toSrgb8(r * inv);
@@ -179,7 +206,8 @@ export function resolve(
       assetSum[p * 3 + 1] = ag;
       assetSum[p * 3 + 2] = ab;
       hitCount[p] = hits;
+      opacity[p] = ao;
     }
   }
-  return { width, height, rgba, mask, detail, assetSum, hits: hitCount };
+  return { width, height, rgba, mask, detail, assetSum, hits: hitCount, opacity };
 }

@@ -1,9 +1,12 @@
 import { expect, it } from 'bun:test';
 import {
   box,
+  type Clip,
   compile,
   defineAsset,
   encodePng,
+  type Lod,
+  type Mesh,
   MeshBuilder,
   merge,
   place,
@@ -163,4 +166,65 @@ it('lists the run clip of an asset whose only motion is a belt, as its GLB has i
   expect(names(true).file).toEqual(['rest', 'run']);
   expect(names(true).listed).toEqual(['run']);
   expect(names(false)).toEqual({ file: [], listed: [] });
+  // `--no-animations`: the GLB has no run clip, so neither does the manifest.
+  const still = manifestOf(ring(true), [compile(ring(true), { lod: 0 })], { lods: [] }, [], [], {
+    animations: false,
+  });
+  expect(still.clips).toBeUndefined();
+});
+
+const unit: [number, number, number] = [1, 1, 1];
+const keys = new Float32Array([0, 1]);
+const blink: Clip = {
+  name: 'blink',
+  seconds: 1,
+  loop: true,
+  tracks: [{ part: 'lid', path: 'weights', times: keys, values: new Float32Array([0, 1]) }],
+};
+const nod: Clip = {
+  name: 'nod',
+  seconds: 1,
+  loop: false,
+  tracks: [{ part: 'lid', path: 'translation', times: keys, values: new Float32Array(6) }],
+};
+/** A lid whose morph target is LOD-gated away at LOD2, keyed by a weights-only clip. */
+const face = (clips: readonly Clip[]) =>
+  defineAsset({
+    name: 'face',
+    kind: 'prop',
+    budget: { triangles: [999, 999, 999] },
+    clips,
+    build(ctx) {
+      ctx.part('head', box({ size: [1, 1, 1], color: unit }));
+      const m = box({ size: [0.2, 0.2, 0.2], color: unit });
+      const d = new Float32Array(m.positions.length);
+      d[2] = 0.05;
+      const lid: Mesh = ctx.lod === 2 ? m : { ...m, morphs: [{ name: 'close', positions: d }] };
+      ctx.part('lid', lid, {
+        at: [0, 0, 1],
+        motion: { kind: 'sway', axis: [0, 1, 0], degrees: 5, hz: 1 },
+      });
+    },
+  });
+const listed = (clips: readonly Clip[], lods: readonly Lod[], animations?: boolean): string[] => {
+  const built = lods.map((lod) => compile(face(clips), { lod }));
+  const opts = animations === undefined ? {} : { animations };
+  return (manifestOf(face(clips), built, { lods: [] }, [], [], opts).clips ?? []).map(
+    (c) => c.name,
+  );
+};
+
+it('lists a clip only when a requested LOD file keeps a channel of it, as the exporter does', () => {
+  // The LOD2 file drops `blink` (its lid has no morph targets): the manifest must too.
+  expect(listed([blink], [2])).toEqual(['run']);
+  const lod2 = toGlb(compile(face([blink]), { lod: 2 }), { animations: true });
+  expect((gltf(lod2).animations ?? []).map((a) => a.name)).toEqual(['rest', 'run']);
+  expect(listed([blink], [0, 1, 2])).toEqual(['run', 'blink']);
+  // A clip keying something the morph-less LOD still has (the lid's node) survives there.
+  expect(listed([blink, nod], [2])).toEqual(['run', 'nod']);
+});
+
+it('lists no clip at all when the GLBs are written without animations', () => {
+  expect(listed([blink, nod], [0, 1, 2], false)).toEqual([]);
+  expect(listed([blink, nod], [0, 1, 2], true)).toEqual(['run', 'blink', 'nod']);
 });

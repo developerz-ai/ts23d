@@ -118,6 +118,7 @@ export async function buildOne(
     },
     findings,
     coverage,
+    { animations: args.animations },
   );
   await write('manifest.json', `${JSON.stringify(manifest, null, 2)}\n`);
   return manifest;

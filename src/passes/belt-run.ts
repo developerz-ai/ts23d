@@ -3,10 +3,12 @@
 // each body rigidly from its own place (f = 0) onto its twin's (f = 1): the centre follows the
 // loop, the turn about the axle direction grows linearly, so at f = 1 the belt covers its rest
 // shape point for point and a looping clip can jump back to f = 0 unseen. A body with no twin
-// (a belt that does not repeat every pitch) is reported and left where it is.
+// (a belt that does not repeat every pitch) is reported and left where it is: `pose` writes its
+// rest positions and normals at every f.
 
 import { type BeltBody, type BeltMesh, beltBodies, VertexGrid } from './belt-bodies.ts';
 import { BeltLoop } from './belt-loop.ts';
+import { type BeltSeam, beltSeam, type SeamLimits } from './belt-seam.ts';
 
 type V3 = readonly [number, number, number];
 
@@ -20,6 +22,11 @@ export interface BeltRun {
   readonly turn: number;
   /** Length of the centre line, metres. */
   readonly length: number;
+  /** Per vertex, the rest vertex it lands on after one pitch; −1 for a vertex with no twin. */
+  readonly twins: Int32Array;
+  /** How far the mesh's colours and UVs are from repeating every pitch (belt-seam.ts); a vertex
+   *  eased onto its twin (see `residual`) is not compared. */
+  look(colors: ArrayLike<number>, uvs: ArrayLike<number>, limits: SeamLimits): BeltSeam;
   /** Positions and normals after `f` pitches of travel, 0..1, written into the given arrays. */
   pose(f: number, positions: { [i: number]: number }, normals: { [i: number]: number }): void;
 }
@@ -53,6 +60,8 @@ interface Bound {
   /** Turn about the belt normal and centre correction that put it on its twin at f = 1. */
   turn: number;
   shift: V3;
+  /** False until a twin is found: such a body does not travel. */
+  paired: boolean;
 }
 
 /**
@@ -117,7 +126,7 @@ export function beltRun(
     const t: V3 = [f6[3] ?? 0, f6[4] ?? 0, f6[5] ?? 0];
     const arm = sub(body.centre, [f6[0] ?? 0, f6[1] ?? 0, f6[2] ?? 0]);
     const off: V3 = [dot(arm, t), dot(arm, cross(b, t)), dot(arm, b)];
-    return { body, s, arm, off, turn: 0, shift: [0, 0, 0] };
+    return { body, s, arm, off, turn: 0, shift: [0, 0, 0], paired: false };
   });
   const reach = Math.min(REACH * Math.abs(pitch), REACH_MAX);
   const grid = new VertexGrid(pos, Math.max(reach, BEND));
@@ -131,8 +140,15 @@ export function beltRun(
     return best;
   };
   const flat = (r: V3): number => Math.sqrt(Math.max(0, dot(r, r) - dot(r, b) ** 2));
+  // Rigid centres by cell of half a pitch: a body's twin is looked up among its neighbours there,
+  // not among every body of the belt.
   const rigid = bound.filter((x) => x.body.rigid);
+  const half = Math.abs(pitch) / 2;
+  // A hair wider than half a pitch: the exact `< half` test below decides, not the grid's rounding.
+  const wide = half * 1.001;
+  const centres = new VertexGrid(Float64Array.from(rigid.flatMap((x) => x.body.centre)), wide);
   const fix = new Float64Array(count * 3);
+  const twinOf = new Int32Array(count).fill(-1);
   let unmatched = 0;
   let turn = 0;
   let residual = 0;
@@ -145,6 +161,8 @@ export function beltRun(
       const twin = twinAt(landed, turned(at(nrm, v), guess), BEND);
       if (twin < 0) unmatched++;
       else {
+        twinOf[v] = twin;
+        x.paired = true;
         x.turn = guess;
         x.shift = sub(at(pos, twin), landed);
         turn = Math.max(turn, Math.abs(guess));
@@ -157,9 +175,17 @@ export function beltRun(
     for (const v of body.verts) if (flat(at(nrm, v)) > flat(at(nrm, probe))) probe = v;
     const facing = at(nrm, probe);
     const hub = point(x.s + pitch);
-    const near = rigid
-      .map((y) => ({ y, d: Math.hypot(...sub(y.body.centre, add(hub, turned(x.arm, guess)))) }))
-      .filter((c) => c.y !== x && c.d < Math.abs(pitch) / 2)
+    const lands = add(hub, turned(x.arm, guess));
+    const close: number[] = [];
+    centres.near(lands[0], lands[1], lands[2], wide, (i) => close.push(i));
+    // In mesh order before the stable sort by distance: the order ties were always broken in.
+    const near = close
+      .sort((p, q) => p - q)
+      .flatMap((i) => {
+        const y = rigid[i];
+        return y ? [{ y, d: Math.hypot(...sub(y.body.centre, lands)) }] : [];
+      })
+      .filter((c) => c.y !== x && c.d < half)
       .sort((p, q) => p.d - q.d)
       .slice(0, TRIES);
     const paired = near.some(({ y }) => {
@@ -194,11 +220,13 @@ export function beltRun(
         x.shift = shift;
         for (const w of twins) {
           fix.set(w.off, w.v * 3);
+          twinOf[w.v] = w.twin;
           residual = Math.max(residual, Math.hypot(...w.off));
         }
         return true;
       });
     });
+    x.paired = paired;
     if (!paired) unmatched += body.verts.length;
     turn = Math.max(turn, Math.abs(x.turn));
   }
@@ -209,8 +237,25 @@ export function beltRun(
     residual,
     turn,
     length: loop.length,
+    twins: twinOf,
+    look(colors, uvs, limits): BeltSeam {
+      // A vertex eased onto its twin (a corner `onGround` pressed flat) lands on whichever rest
+      // vertex is nearest, not always its own counterpart: its shape already differs, skip it.
+      const exact = twinOf.map((t, v) =>
+        Math.hypot(fix[v * 3] ?? 0, fix[v * 3 + 1] ?? 0, fix[v * 3 + 2] ?? 0) > BEND ? -1 : t,
+      );
+      return beltSeam({ positions: pos, normals: nrm, colors, uvs }, exact, grid, BEND, limits);
+    },
     pose(f, positions, normals): void {
       for (const x of bound) {
+        if (!x.paired) {
+          for (const v of x.body.verts)
+            for (let k = 0; k < 3; k++) {
+              positions[v * 3 + k] = pos[v * 3 + k] ?? 0;
+              normals[v * 3 + k] = nrm[v * 3 + k] ?? 0;
+            }
+          continue;
+        }
         const a = f * x.turn;
         const c = x.body.rigid
           ? add(point(x.s + f * pitch), turned(x.arm, a))

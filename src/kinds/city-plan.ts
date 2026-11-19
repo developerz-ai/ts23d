@@ -55,6 +55,13 @@ export interface CityBuildingPlan {
   readonly neighbours: readonly number[];
 }
 
+/**
+ * Fixed bands `cityBlock` takes off the top of every body, metres, and the shortest body that
+ * leaves a wall under them: roof + cornice (0.75 m) plus a quarter metre of wall. Below it the
+ * wall prism has a negative depth and the storey under the 0.6 m roof allowance a negative height.
+ */
+export const CITY_BANDS = { roof: 0.3, cornice: 0.45, minBody: 1 } as const;
+
 /** 32-bit integer hash (splitmix-style finaliser): an OSM id → a stable seed. */
 export function hashId(id: number): number {
   let h = (Math.floor(id) ^ (Math.floor(id / 2 ** 32) * 0x9e3779b1)) >>> 0;
@@ -108,6 +115,11 @@ export function cityPlan(
       throw new Ts23dError('T3D_RECIPE_INVALID', {
         cause: `city: building ${b.id} is ${total} m tall from the ground with minHeight ${lift} m`,
         fix: 'height (ground to top) must be above minHeight (ground to the underside), and minHeight ≥ 0',
+      });
+    if (height < CITY_BANDS.minBody)
+      throw new Ts23dError('T3D_RECIPE_INVALID', {
+        cause: `city: building ${b.id} has a ${+height.toFixed(3)} m body (${total} m tall, minHeight ${lift} m), under the ${CITY_BANDS.roof} m roof band and ${CITY_BANDS.cornice} m cornice every building gets`,
+        fix: `a body is at least ${CITY_BANDS.minBody} m (height − minHeight): correct the height or minHeight, or leave the footprint out (a kerb, a slab or a canopy edge is not a building)`,
       });
     const floors = Math.max(1, Math.round((height - 0.6) / fh));
     const base = Math.min(...b.ring.map((p) => o.groundAt?.(p[0], p[1]) ?? 0)) + lift;

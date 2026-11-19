@@ -6,8 +6,10 @@
 // Location-independent: every path in `files` is relative to the manifest's own folder
 // (<out>/<asset>/), so two builds into two --out dirs write the same bytes. Per-LOD arrays
 // (triangles, drawCalls, lodCoverage) are indexed like `lods`, the levels actually built.
-// Triangles, draw calls and the `run` clip are what the GLB holds (export's `glbContents`), not
-// what the recipe compiled to: the writer merges, drops dead triangles and skips empty meshes.
+// Triangles, draw calls and `clips` are what the GLBs hold (export's `glbContents`), not what the
+// recipe compiled to: the writer merges, drops dead triangles and skips empty meshes; a clip is
+// listed when at least one built LOD's file keeps a channel of it (clip-channels.ts), and none is
+// when the GLBs are written without animations (`--no-animations`).
 
 import {
   type Asset,
@@ -21,8 +23,10 @@ import {
   textureSetsOf,
 } from '../core/index.ts';
 import {
+  clipPlays,
   clipSummary,
   fitHitboxes,
+  type GlbContents,
   glbContents,
   mergeToPivots,
   skeletonOf,
@@ -126,12 +130,18 @@ const tris = (a: CompiledAsset): number =>
 
 export { drawCallsOf } from '../export/index.ts';
 
+export interface ManifestOptions {
+  /** The GLBs carry animations (`GlbOptions.animations`, `--no-animations`); default true. */
+  readonly animations?: boolean;
+}
+
 export function manifestOf(
   asset: Asset,
   lods: readonly CompiledAsset[],
   files: AssetManifest['files'],
   findings: readonly Finding[],
   lodCoverage?: readonly number[],
+  options: ManifestOptions = {},
 ): AssetManifest {
   const top = lods[0];
   const merged = top ? mergeToPivots(top) : null;
@@ -176,10 +186,7 @@ export function manifestOf(
       : {}),
     surfaces: [...new Set((top?.parts ?? []).map((p) => p.surface ?? 'opaque'))].sort(),
     ...textureSetsIn(lods),
-    ...rigOf(
-      top,
-      held.some((h) => h.run),
-    ),
+    ...rigOf(top, options.animations === false ? [] : held),
     ...paintOf(top),
     ...(asset.real
       ? { real: { length: asset.real.length, width: asset.real.width, height: asset.real.height } }
@@ -219,13 +226,20 @@ function textureSetsIn(lods: readonly CompiledAsset[]): Pick<AssetManifest, 'tex
   };
 }
 
-/** `run`: whether the GLBs get the baked `run` clip (a belt alone runs too, by morph targets). */
+/**
+ * `files`: what each animated LOD file holds ([] without animations). The baked `run` clip when
+ * one has it (a belt alone runs too, by morph targets); a declared clip when one keeps a channel.
+ */
 function rigOf(
   top: CompiledAsset | undefined,
-  run: boolean,
+  files: readonly GlbContents[],
 ): Pick<AssetManifest, 'skeleton' | 'deformTolerances' | 'clips' | 'hitboxes'> {
   if (!top) return {};
-  const clips = clipSummary(top.clips ?? [], run, LOOP_SECONDS);
+  const clips = clipSummary(
+    (top.clips ?? []).filter((c) => files.some((f) => clipPlays(c, f.clipTargets))),
+    files.some((f) => f.run),
+    LOOP_SECONDS,
+  );
   const hitboxes = fitHitboxes(top).map(({ bone, radius, height, coverage }) => ({
     bone,
     radius,

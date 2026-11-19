@@ -52,6 +52,10 @@ A correctness sweep across the library, CLI, gates, gallery and recipes: over a 
 - Manifest `triangles` and `drawCalls` are what the GLB holds (degenerate and duplicate triangles dropped, no draw for a pivot left without triangles); the LOD strip and review pack show the same numbers. The manifest lists `run` for an asset whose only motion is a track belt.
 - The library materials `fur` and `dragon_scales` sit on explicit rows (2 and 5), so every shipped material fits one process in any load order; assets using them change UV bytes once. 13 of the 14 custom sheet rows are in use.
 - Reproducibility across runtimes: bytes are reproducible under the pinned Bun. Under Node the same source gives the same PNG encoding and the same geometry within float rounding, because the two engines' `Math` functions differ in the last bits.
+- The `treads` gate fails a belt whose colour or UV does not repeat every pitch (`T3D_QA_TREADS`: weather one link, then place it). `t34`, `tiger_1` and `rts_tank` weather their belts per link, so their mud no longer jumps when the run clip wraps.
+- `heatWeights`: a `maxVoxels` below the coarsest grid the mesh fits (64 for a solid) is refused with `T3D_SKIN_INVALID` instead of silently falling back to straight-line weights.
+- `cityPlan`: a body under 1 m (height − minHeight) is refused with `T3D_RECIPE_INVALID` instead of building a wall of negative depth.
+- `assertQaPass` runs the LOD-chain gates for a single LOD too, matching `t3d build`: a check selector that matches no part fails at `{ lods: [0] }`.
 
 ### Fixed
 - `t3d build --watch` and `t3d hero --quality path` work from the installed package (the CLI entry and the path-tracer worker that ship are the ones spawned).
@@ -81,6 +85,22 @@ A correctness sweep across the library, CLI, gates, gallery and recipes: over a 
   - `t34`: the turret slogan follows the real turret shell; the LOD2 track keeps its outboard edge. `rts_tank`: belt pitch is loop ÷ links, the LOD2 belt loops, and the `run` clip drives forward.
   - Parts seated on what carries them: `boxcar` (door hangers and guide shoes, handles, uncoupling lever brackets), `roadster_v10` (grille, splitter air dam, hinge pins, interior and lamp fittings), `loco_440` (lettering, rivets, bands, stanchions, dome rings on the real boiler facets and taper), `dropship` (decal lift, seam strips, pitot masts), `signal_gantry` (arms on a modelled bearing), `station_halt`, `water_tower` (chain, ladder stays, `clear` checks that tested nothing), `cargo_container_scifi`, `weather_demo`, `pbr_showcase`, `rts_soldier` (pack).
 - `wolf_hybrid`: the hip web between the tail and the right thigh is a mesh defect that is still open (D253). It is now declared (`limitTolerances`, with the cause as the `why`) instead of passing unmeasured, and a ratchet test keeps it from getting worse. The fix needs a re-generated mesh (GPU).
+- Review follow-up to the sweep (D255–D277): `t3d concept --json` prints its usage error as the one stdout envelope with `error.fix`; a table test holds every command to that contract.
+- Ctrl-C reaps running tools on every signal when the host handles SIGINT itself, not only the first time.
+- Gallery: switching an asset's tier while its Scene plays keeps the scenario playing.
+- Transparent icons: see-through surfaces (glass, ice, water) keep their own surface light and their alpha is coverage × opacity, so the studio backdrop no longer shows inside the glass.
+- `manifest.json` `clips` lists only what the GLBs hold: none with `--no-animations`, and a clip only when a built LOD keeps a channel of it. `manifestOf` takes `{ animations }` as an optional sixth argument.
+- A spot light's `cone` must be at least 0.5° (`MIN_CONE`): narrower beams gave an absurd or infinite default candela (written as `null`).
+- Morph-target accessors declare the real min/max of their values (Khronos `ACCESSOR_MIN_MISMATCH`).
+- A track belt mesh reused with reversed wheels, another wheel speed or another LOD no longer runs at the first export's speed, direction and tolerance; belt binding looks for twins in a grid instead of all pairs.
+- `beltRun().pose(f)` leaves a body with no twin at rest, as documented; `BeltRun` gains `twins` and `look()`.
+- `limitTolerances`: a bone named like an `Object.prototype` member (`constructor`, `toString`) keeps its own stretch tolerance.
+- `hairCards`: `maxCards` counts cards, not roots; a zone whose length is zero no longer hits the cap.
+- `applyWarp` / `warpTPS`: morph deltas are taken before Float32 rounding, so a still morph stays still far from the origin.
+- `rowsSampled` without indices keeps every row spanned edge to edge, so `checkSheetFor` and `stripCredits` no longer miss a material between two others.
+- `floating-parts`: the fix for a floating chain says to move the hanging parts with the root (or their shared `ctx.group`).
+- `bun run boundaries` ignores imports written in comments and message strings.
+- `tiger_1`: the mantlet's Zimmerit uses the turret's ridge pitch.
 
 ## [0.12.0] - 2026-11-18
 

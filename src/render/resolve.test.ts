@@ -44,6 +44,8 @@ describe('resolve asset-only output', () => {
     for (let i = 0; i < r.mask.length; i++) {
       const hits = a.hits[i] ?? -1;
       expect(r.mask[i]).toBe(Math.round((hits / n) * 255));
+      // Nothing see-through: every asset sample is fully opaque.
+      expect(r.opacity?.[i]).toBe(hits);
       if (hits === 0) expect([...a.assetSum.subarray(i * 3, i * 3 + 3)]).toEqual([0, 0, 0]);
       if (hits > 0 && hits < n) partial++;
     }

@@ -17,6 +17,28 @@ describe('hairCards', () => {
     expect(() => run({ zones: [zone({ length: (p) => p[0] - 0.5 })] })).toThrow(/length/);
   });
 
+  test('the card cap counts cards, not roots that grow none', () => {
+    // 400 roots/m² on 0.63 m² is far over 10 roots, but a zero length emits no card at all.
+    const none = run({ zones: [zone({ length: 0 })], maxCards: 10 });
+    expect(none.roots).toHaveLength(0);
+    const fade = (maxCards?: number) =>
+      run({
+        zones: [zone({ length: (p) => (p[0] > 0.9 ? 0.05 : 0) })],
+        ...(maxCards ? { maxCards } : {}),
+      });
+    const cards = fade().roots.length;
+    expect(cards).toBeGreaterThan(5);
+    expect(cards).toBeLessThan(run().roots.length / 5);
+    // Exactly at the cap passes with the same cards; one under it is refused.
+    expect(fade(cards).mesh.positions).toEqual(fade().mesh.positions);
+    expect(() => fade(cards - 1)).toThrow(new RegExp(`cap ${cards - 1}`));
+    // Two zones share the cap: each under it, together over.
+    const two = (maxCards: number) =>
+      run({ zones: [zone({ name: 'a' }), zone({ name: 'b' })], maxCards });
+    const each = run().roots.length;
+    expect(() => two(each + 5)).toThrow(/cap/);
+  });
+
   test('a length under a tenth of the width grows no card: no specks, counts match roots', () => {
     const none = run({ zones: [zone({ length: 0 })] });
     expect(none.roots).toHaveLength(0);

@@ -34,9 +34,13 @@ export function applyWarp(mesh: Mesh, w: Tps): Mesh {
   const N = mesh.normals;
   const positions = new Float32Array(P.length);
   const normals = new Float32Array(N.length);
+  // w(p) before its Float32 rounding: a morph delta taken from the rounded position carries the
+  // rounding error as motion (3 cm at 1,000 km out, on a morph that does not move at all).
+  const exact = new Float64Array(mesh.morphs?.length ? P.length : 0);
   for (let v = 0; v < P.length; v += 3) {
     const p: Vec3 = [P[v] ?? 0, P[v + 1] ?? 0, P[v + 2] ?? 0];
     const q = w.map(p);
+    if (exact.length) exact.set(q, v);
     positions[v] = q[0];
     positions[v + 1] = q[1];
     positions[v + 2] = q[2];
@@ -53,9 +57,9 @@ export function applyWarp(mesh: Mesh, w: Tps): Mesh {
         (P[v + 1] ?? 0) + (t.positions[v + 1] ?? 0),
         (P[v + 2] ?? 0) + (t.positions[v + 2] ?? 0),
       ]);
-      out[v] = q[0] - (positions[v] ?? 0);
-      out[v + 1] = q[1] - (positions[v + 1] ?? 0);
-      out[v + 2] = q[2] - (positions[v + 2] ?? 0);
+      out[v] = q[0] - (exact[v] ?? 0);
+      out[v + 1] = q[1] - (exact[v + 1] ?? 0);
+      out[v + 2] = q[2] - (exact[v + 2] ?? 0);
     }
     return { ...t, positions: out };
   });

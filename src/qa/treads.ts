@@ -2,7 +2,9 @@
 // a `tread` motion: without one the belt merges into the static body and only the wheels turn
 // (defect D25). And every belt with a `tread` motion must be able to loop: the baked `run` clip
 // moves it one link pitch and starts again (export/tread-morphs.ts), which only looks right when
-// the loop is a whole number of pitches long and the mesh one pitch on is the same mesh.
+// the loop is a whole number of pitches long and the mesh one pitch on is the same mesh: the same
+// shape AND the same colour and UV, since the clip puts every link in its neighbour's place without
+// moving its paint (weathering laid over the placed belt would jump at every wrap).
 
 import { BeltLoop, beltRun } from '../passes/index.ts';
 import type { Finding, Gate } from './types.ts';
@@ -10,6 +12,11 @@ import type { Finding, Gate } from './types.ts';
 const BELT = /^track_[lr]$/;
 /** The loop may miss a whole number of pitches by this share of one pitch. */
 const WHOLE = 0.05;
+
+/** A vertex and its twin one pitch on may differ by this much in a colour channel (linear) … */
+const SAME_COLOUR = 0.01;
+/** … and in U or V (the trim sheet is 1 wide: 1/512 is a texel or two). */
+const SAME_UV = 1 / 512;
 
 const finding = (part: string, message: string, fix: string): Finding => ({
   gate: 'treads',
@@ -55,6 +62,17 @@ export const treads: Gate = (asset) => {
           'build the belt from one link placed at stations one pitch apart round the whole loop (a plain band: outline points one pitch apart), and pass the length after which the shape repeats as pitch',
         ),
       );
+    else {
+      const look = run.look(mesh.colors, mesh.uvs, { colour: SAME_COLOUR, uv: SAME_UV });
+      if (look.off > 0)
+        out.push(
+          finding(
+            p.name,
+            `track belt '${p.name}' does not look the same one pitch on: ${look.off} of ${run.vertices} vertices differ from their twin in colour by up to ${look.colour.toFixed(3)} (limit ${SAME_COLOUR}) or in UV by up to ${look.uv.toFixed(4)} (limit ${SAME_UV.toFixed(4)}), so its paint jumps every time the run clip wraps`,
+            'colour and weather the belt per link, the same on every link: finish one link (or the links of one pitch) and then place it round the loop. Do not run a pass that reads position (mud by height, noise, dust on upward faces) over the placed belt',
+          ),
+        );
+    }
   }
   return out;
 };
