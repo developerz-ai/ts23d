@@ -28,7 +28,7 @@ export const realHost = (): Host => ({
 /** One line of `t3d doctor`: every status but ok carries the exact fix. */
 export interface Check {
   readonly id: string;
-  readonly group: 'cpu' | 'tools' | 'gpu' | 'models' | 'server' | 'hosted';
+  readonly group: 'cpu' | 'tools' | 'gpu' | 'models' | 'server' | 'hosted' | 'queue';
   /** ok · missing (needed for its tier) · warn (works, degraded) · info (optional, a hint) */
   readonly status: 'ok' | 'missing' | 'warn' | 'info';
   readonly detail: string;

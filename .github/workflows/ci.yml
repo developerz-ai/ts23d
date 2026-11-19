@@ -1,16 +1,27 @@
 name: ci
 
-# The gate. `gate` runs exactly `bun run verify` — the command a contributor (human or agent)
-# runs locally; scripts/ci-parity.test.ts fails if this file stops calling it. `shots` renders a
-# contact sheet per recipe so reviewers (and review agents) can SEE what a PR changed, and fails
-# when the committed recipes/*/out differ from a fresh render (run `bun run shots <name>`).
+# The gate. Every `gate` shard runs exactly `bun run verify` — the command a contributor (human or
+# agent) runs locally; scripts/ci-parity.test.ts fails if this file stops calling it — then
+# `bun run shots`, which renders its recipe folders and fails when the committed recipes/*/out
+# differ from a fresh render (run `bun run shots <name>`), so reviewers SEE what a PR changed.
 # `site` builds the gallery. `verify` is the one required status check: it passes only when every
-# other job succeeded, so branch protection names one check instead of 25 shard checks.
-# Free GitHub-hosted runners only. Target: push → green in under 5 minutes (measured 2026-11-18:
-# 9-13 minutes, set by the slowest shots shard and gate shard 1; docs/maintenance.md tracks the
-# work to get back under it), so gate and shots run
-# as 12 parallel shards (T3D_SHARD=k/12, scripts/lib/shard.ts): shard 1 also runs lint, types,
-# tests and build; every shard compiles, QA-checks and renders its slice of the recipe folders.
+# other job succeeded, so branch protection names one check instead of one per shard.
+# Free GitHub-hosted runners only. Target: push → green in under 5 minutes.
+# Before this layout (run 44460876935, 2026-11-19): 9 minutes wall, 26 jobs, 87.5 runner-minutes;
+# gate shard 1 took 8 minutes (all 474 test files plus a recipe slice) and shots shards up to
+# 8.3 minutes (four `t3d` processes per folder, each re-importing and recompiling the recipe).
+# Now: 16 shards (T3D_SHARD=k/16, CI_SHARDS in scripts/lib/shard.ts). Each runs its `bun test --shard`
+# slice (balanced by scripts/lib/test-timings.json) and its units of recipe work, split by
+# measured cost (scripts/lib/recipe-costs.json; greedy longest-first, scripts/lib/shard.ts): one
+# folder's gate and its renders are separate units, renders take one process per folder
+# (scripts/shots-folder.ts); shard 1 also runs lint, types, build and pack.
+# Measured 2026-11-19 (run 44474402275): 6.6 minutes push → green, shards 2.6-6.4 minutes,
+# 76 runner-minutes. The floor is one unit: human_head's renders, because each of shot / hero /
+# blueprint / icon compiles its LOD0 again (about 55 s each). Under 5 minutes needs the four
+# renders to share one compile (a src/cli change; docs/maintenance.md "CI time"). When shards
+# drift: `bun run scripts/recipe-costs.ts --tests`, then `--plan` to pick the shard count.
+# Docs-only changes (scripts/ci-changes.ts: Markdown / docs/ outside recipes/) skip the recipe
+# gate and the renders; lint, types and every test still run, and `verify` still reports.
 
 on:
   push:
@@ -32,41 +43,52 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+        shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
     env:
-      T3D_SHARD: ${{ matrix.shard }}/12
+      T3D_SHARD: ${{ matrix.shard }}/16
     steps:
+      # Full history without old file contents (blob:none): enough for `git diff --name-only`.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          fetch-depth: 0
+          filter: blob:none
       - uses: ./.github/actions/setup
-      - run: bun run verify
-
-  shots:
-    runs-on: ubuntu-latest
-    timeout-minutes: 20 # the slowest shard has reached 13.4 minutes (heads land together)
-    strategy:
-      fail-fast: false
-      matrix:
-        shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
-    env:
-      T3D_SHARD: ${{ matrix.shard }}/12
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: ./.github/actions/setup
-      - run: bun run shots
-      - name: committed renders match a fresh render
+      - name: what changed (docs only → T3D_DOCS_ONLY=1)
+        id: changes
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
           set -euo pipefail
-          if [ -n "$(git status --porcelain -- 'recipes/*/out')" ]; then
-            git status --short -- 'recipes/*/out'
+          # Unknown base (workflow_dispatch, a new branch, a force push) = run everything.
+          files=""
+          if [ "$EVENT" != workflow_dispatch ] && [ -n "$BASE" ] \
+            && git cat-file -e "$BASE^{commit}" 2>/dev/null; then
+            if [ "$EVENT" = pull_request ]; then files="$(git diff --name-only "$BASE...$HEAD")"
+            else files="$(git diff --name-only "$BASE" "$HEAD")"; fi
+          fi
+          out="$(printf '%s\n' "$files" | bun run scripts/ci-changes.ts)"
+          echo "$out" | tee -a "$GITHUB_OUTPUT"
+          if [ "$out" = recipes=false ]; then echo T3D_DOCS_ONLY=1 >> "$GITHUB_ENV"; fi
+      - run: bun run verify
+      # Renders even when verify failed, so a red PR still shows what changed.
+      - id: shots
+        if: ${{ !cancelled() && steps.changes.outputs.recipes == 'true' }}
+        run: bun run shots
+      - name: committed renders match a fresh render
+        if: ${{ !cancelled() && steps.shots.outcome == 'success' }}
+        run: |
+          set -euo pipefail
+          # ':(glob)…/**': a bare 'recipes/*/out' matches no file under out/, so nothing was ever stale (D286).
+          if [ -n "$(git status --porcelain -- ':(glob)recipes/*/out/**')" ]; then
+            git status --short -- ':(glob)recipes/*/out/**'
             echo "::error::recipes/*/out is stale. fix: bun run shots <name> for the folders listed, commit recipes/<name>/out"
             exit 1
           fi
       # Only on failure: a green shard's renders equal the committed PNGs, which the PR already shows.
-      - if: failure()
+      - if: ${{ failure() && steps.shots.outcome != 'skipped' }}
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: contact-sheets-${{ matrix.shard }}
@@ -86,7 +108,7 @@ jobs:
       - run: bun run site:build
 
   verify:
-    needs: [gate, shots, site]
+    needs: [gate, site]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -98,7 +120,7 @@ jobs:
           set -euo pipefail
           for r in $RESULTS; do
             if [ "$r" != success ]; then
-              echo "::error::a required job ended '$r' (results: $RESULTS). fix: open the failed gate / shots / site job and fix what it printed"
+              echo "::error::a required job ended '$r' (results: $RESULTS). fix: open the failed gate / site job and fix what it printed"
               exit 1
             fi
           done

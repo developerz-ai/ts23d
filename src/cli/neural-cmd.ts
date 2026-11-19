@@ -24,6 +24,7 @@ import { checkMeshInputs } from './neural-input.ts';
 import { absentInputNotice, absentInputs } from './neural-local.ts';
 import { type SpendGuard, spendGuard } from './neural-spend.ts';
 import { loadNeuralEntries, neuralDirOf, saveNeuralEntry } from './neural-store.ts';
+import { queuedAdapter } from './queue/index.ts';
 import { envelope, printError } from './report.ts';
 
 export interface ListedModel {
@@ -174,7 +175,8 @@ export async function neuralRun(
       const overrides = checkMeshInputs(recipe, job, o.allowBadInput);
       notices.push(...overrides);
       const model = job.model ?? b.model;
-      const filled = await cache.fill(b.adapter, model ? { ...job, model } : job);
+      // One Blender, one local model at a time on this machine: a job that runs queues for it.
+      const filled = await cache.fill(queuedAdapter(b.adapter), model ? { ...job, model } : job);
       const { cached } = filled;
       // An allowed bad input is part of the output's history: record.json says so.
       const entry =

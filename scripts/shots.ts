@@ -4,22 +4,25 @@
 //   bun run shots                 every recipe folder
 //   bun run shots t34 tiger_1     only these folders
 // Each folder renders into a sibling temp dir first and replaces out/ only when every step
-// succeeded: a failure (a half-edited shared module) keeps the old outputs.
+// succeeded: a failure (a half-edited shared module) keeps the old outputs. One `bun` process per
+// folder (scripts/shots-folder.ts) runs all four renders from a single import of the recipe.
+// T3D_SHARD=k/n renders only this shard's folders (scripts/lib/shard.ts, balanced by measured cost).
 
 import { readdir, rename, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { HERO_PATH } from '../src/render/index.ts';
 import { keepCritiques } from './lib/critique.ts';
-import { recipeFolders } from './lib/files.ts';
-import { CURRENT_SHARD, inShard } from './lib/shard.ts';
+import { recipeFolders, tsFiles } from './lib/files.ts';
+import { CURRENT_SHARD, recipeShard } from './lib/shard.ts';
+import { sharedRecipeTests } from './recipes.ts';
 
 /**
  * The committed hero is what critiques judge, so it is path traced (src/render/path/): 960 × 540
  * at 16 samples per pixel + denoise. Measured on 4 threads: wolf (138k tris) 6.7 s of tracing,
  * human_head 6 s, roadster_v10 (900k tris) 13 s; a 4-vCPU CI runner ≈ 1.5× that. Tracing is not
- * what makes the shots job slow: each of the four `t3d` processes below re-imports and recompiles
- * the recipe, and the head recipes take minutes to import (measured 2026-11-18: the slowest of the
- * 12 shards runs 11-13 minutes). Raise spp only with a fresh measurement.
+ * what makes the shots job slow: each of the four renders compiles the asset again (CI run
+ * 44460876935: human_head 436 s for its four renders; face_demo's five LOD0 compiles take about
+ * 50 s each time). Raise spp only with a fresh measurement.
  */
 export const HERO_FLAGS: readonly string[] = [
   '--quality',
@@ -30,35 +33,30 @@ export const HERO_FLAGS: readonly string[] = [
   String(HERO_PATH.spp),
 ];
 
-/** Each refresh step: a `t3d` command and its extra flags after `<file> --out <tmp>`. */
-const STEPS: readonly (readonly [string, ...string[]])[] = [
-  ['shot'],
-  ['hero', ...HERO_FLAGS],
-  ['blueprint'],
-  ['icon'],
-];
+/** Renders every output of `file` into `tmp`; resolves true when all of them succeeded. */
+export type Runner = (file: string, tmp: string) => Promise<boolean>;
 
-/** Runs one `t3d` command; resolves true on exit 0. */
-export type Runner = (cmd: readonly string[]) => Promise<boolean>;
-
-const t3d: Runner = async (cmd) => {
-  const p = Bun.spawn(['bun', 'run', 'src/cli/bin.ts', ...cmd], {
+const oneProcess: Runner = async (file, tmp) => {
+  const p = Bun.spawn(['bun', 'run', 'scripts/shots-folder.ts', file, tmp], {
     stdout: 'inherit',
     stderr: 'inherit',
+    env: process.env,
   });
   return (await p.exited) === 0;
 };
 
 /** Render one folder's outputs atomically: temp dir → out/ on success, old out/ kept on failure. */
-export async function refresh(dir: string, file: string, run: Runner = t3d): Promise<boolean> {
+export async function refresh(
+  dir: string,
+  file: string,
+  run: Runner = oneProcess,
+): Promise<boolean> {
   const out = join(dir, 'out');
   const tmp = join(dir, '.out-tmp');
   await rm(tmp, { recursive: true, force: true });
-  for (const [cmd, ...flags] of STEPS) {
-    if (!(await run([cmd, file, '--out', tmp, ...flags]))) {
-      await rm(tmp, { recursive: true, force: true });
-      return false;
-    }
+  if (!(await run(file, tmp))) {
+    await rm(tmp, { recursive: true, force: true });
+    return false;
   }
   await rm(join(tmp, 'index.json'), { force: true });
   for (const f of await readdir(tmp)) if (f.startsWith('trim_sheet_')) await rm(join(tmp, f));
@@ -73,11 +71,18 @@ export async function refresh(dir: string, file: string, run: Runner = t3d): Pro
 if (import.meta.main) {
   const only = process.argv.slice(2);
   let failed = 0;
-  for (const { dir, file } of inShard((await recipeFolders()).folders, CURRENT_SHARD)) {
+  // The split the recipes gate computes too; this shard renders its `shots` units.
+  const shared = sharedRecipeTests(await tsFiles('recipes'));
+  const { shots } = recipeShard((await recipeFolders()).folders, shared, CURRENT_SHARD);
+  for (const { dir, file } of shots) {
     if (only.length && !only.some((o) => dir.endsWith(`/${o}`))) continue;
-    if (!(await refresh(dir, file))) {
+    const t0 = Bun.nanoseconds();
+    const ok = await refresh(dir, file);
+    const s = ((Bun.nanoseconds() - t0) / 1e9).toFixed(1);
+    if (ok) console.log(`✔ ${dir} ${s}s`);
+    else {
       failed++;
-      console.error(`✘ ${dir}: render failed — kept the previous out/`);
+      console.error(`✘ ${dir}: render failed after ${s}s — kept the previous out/`);
     }
   }
   process.exitCode = failed ? 1 : 0;

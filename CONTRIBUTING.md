@@ -35,7 +35,7 @@ bun run verify --json                # for agents: { ok, failed, results, output
 | `build` | `dist/` JS + `.d.ts` | `bun run build` |
 | `pack` | Packs the tarball, installs it in an empty project, imports every `exports` subpath under Bun and Node, runs `t3d build` | `bun run scripts/pack-smoke.ts` |
 
-11 steps, in this order (`STEPS` in `scripts/verify.ts`). An unknown `--only` name exits 2. CI shards 2..n run only `recipes`.
+11 steps, in this order (`STEPS` in `scripts/verify.ts`). An unknown `--only` name exits 2. In CI every shard runs its slice of `test` and `recipes`; the other steps run once, on shard 1.
 
 Hooks: pre-commit runs Biome on staged files; pre-push runs only the fast steps (lint, typecheck, boundaries, determinism, filesize, placeholders, conventions); the full gate is CI's `verify` check.
 

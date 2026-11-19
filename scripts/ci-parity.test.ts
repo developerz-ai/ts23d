@@ -5,6 +5,7 @@ import { chmodSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
+import { CI_SHARDS } from './lib/shard.ts';
 import { alive, eventually, finished, fixture, ready } from './lib/wrapper-fixture.ts';
 import { STEPS } from './verify.ts';
 
@@ -30,25 +31,30 @@ it('STEPS is the documented gate order', () => {
   ]);
 });
 
-it('ci.yml: 12 gate shards run verify; the verify job aggregates gate, shots and site', async () => {
+it('ci.yml: CI_SHARDS gate shards run verify then shots; verify aggregates gate and site', async () => {
   type Job = {
-    needs?: string[];
+    needs?: string | string[];
     if?: string;
     env?: Record<string, string>;
     strategy?: { matrix?: { shard?: number[] } };
-    steps?: { run?: string }[];
+    steps?: { run?: string; if?: string }[];
   };
   const ci = Bun.YAML.parse(await Bun.file('.github/workflows/ci.yml').text()) as {
     jobs: Record<string, Job>;
   };
-  expect(Object.keys(ci.jobs).sort()).toEqual(['gate', 'shots', 'site', 'verify']);
-  const shards = Array.from({ length: 12 }, (_, i) => i + 1);
-  for (const name of ['gate', 'shots']) {
-    expect(ci.jobs[name]?.strategy?.matrix?.shard).toEqual(shards);
-    expect(ci.jobs[name]?.env?.['T3D_SHARD']).toBe(`\${{ matrix.shard }}/12`);
-  }
-  expect(ci.jobs['gate']?.steps?.map((s) => s.run).filter(Boolean)).toEqual(['bun run verify']);
-  expect(ci.jobs['verify']?.needs).toEqual(['gate', 'shots', 'site']);
+  expect(Object.keys(ci.jobs).sort()).toEqual(['gate', 'site', 'verify']);
+  const gate = ci.jobs['gate'];
+  expect(gate?.strategy?.matrix?.shard).toEqual(Array.from({ length: CI_SHARDS }, (_, i) => i + 1));
+  expect(gate?.env?.['T3D_SHARD']).toBe(`\${{ matrix.shard }}/${CI_SHARDS}`);
+  expect(gate?.steps?.map((s) => s.run?.split('\n')[0]).filter(Boolean)).toEqual([
+    'set -euo pipefail',
+    'bun run verify',
+    'bun run shots',
+    'set -euo pipefail',
+  ]);
+  // verify runs unconditionally; only the renders depend on what changed.
+  expect(gate?.steps?.find((s) => s.run === 'bun run verify')?.if).toBeUndefined();
+  expect(ci.jobs['verify']?.needs).toEqual(['gate', 'site']);
   expect(ci.jobs['verify']?.if).toBe('always()');
 });
 
@@ -257,5 +263,20 @@ it('stale identities never signal unrelated live PIDs, and allow a new start', a
     await eventually(async () => (await Promise.all(pids.map(alive))).every((x) => !x));
   } finally {
     await f.dispose();
+  }
+});
+
+it('ci.yml: the stale-render check uses a pathspec that matches the committed outputs', async () => {
+  const ci = await Bun.file('.github/workflows/ci.yml').text();
+  const specs = [...ci.matchAll(/git status --(?:porcelain|short) -- '([^']+)'/g)].map((m) => m[1]);
+  expect(specs.length).toBe(2);
+  for (const spec of specs) {
+    // The failure this guards: 'recipes/*/out' lists nothing, so `git status` on it is always empty.
+    const bare = Bun.spawnSync(['git', 'ls-files', '--', 'recipes/*/out']);
+    expect(bare.stdout.toString().trim()).toBe('');
+    const listed = Bun.spawnSync(['git', 'ls-files', '--', spec ?? '']);
+    const files = listed.stdout.toString().trim().split('\n');
+    expect(files.length).toBeGreaterThan(100);
+    expect(files.every((f) => /^recipes\/[^/]+\/out\//.test(f))).toBe(true);
   }
 });

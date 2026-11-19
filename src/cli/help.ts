@@ -53,6 +53,8 @@ export const COMMAND_HELP: Readonly<Record<string, string>> = {
           --force; results cached in .ts23d/finish/. --hero: bake the hero texture tier instead
           (LOD0 normal/AO/height/ORM from the sculpt field onto its own atlas; ADR 012) → <out>/<asset>/hero/`,
   list: 'list    the assets each module exports',
+  queue:
+    "queue   t3d queue status (--json): who runs and who waits per class (cpu tokens, blender, gpu), Blender sessions, GPU lease, load, RAM · clear --stale | --pid <n> | --all: drop tickets (ends no process) · run [--cpu <n|all>] [--blender] [--gpu] -- <command…>: queue any command, exit code is the command's · hold -- <command…>: take every class whole (all cpu tokens, blender, gpu), so the machine drains, then run alone",
 };
 
 export const COMMANDS: readonly string[] = Object.keys(COMMAND_HELP);
@@ -80,6 +82,10 @@ const FLAGS = `flags:
                   web (one MSFT_lod file, 2048 sheet). Explicit --lods/--sheet-size win
   --physics       rigid body + fitted colliders + mass (KHR_physics_rigid_bodies / KHR_implicit_shapes, Khronos drafts)
   --no-sounds     skip <clip>.wav files and KHR_audio_emitter for assets with sounds (default: written beside the GLB)
+  --no-wait       heavy commands queue machine-wide (cpu tokens, blender, gpu), so agents sharing a
+                  machine take turns; a wait line on stderr is not a failure. --no-wait refuses a
+                  busy machine with a coded error instead · --max-wait <s> gives up after s seconds
+                  (default 1800) · off under CI · t3d queue status shows the line
   --json          one JSON envelope on stdout: { ok: true, data } · { ok: false, error: { code, message, fix } }
                   · { ok: false, error, data } (some assets failed; only QA failed: a summary error, the
                   findings in data[].qa.findings); error is always there when ok is false. build items:

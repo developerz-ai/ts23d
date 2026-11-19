@@ -54,6 +54,9 @@ export const ENV_NAMES: ReadonlySet<string> = new Set([
   'T3D_BLENDER_SCRIPTS',
   'T3D_BLENDER_SESSIONS',
   'T3D_BLENDER_SOFTWARE_GPU',
+  'T3D_QUEUE',
+  'T3D_QUEUE_MAX_WAIT',
+  'T3D_QUEUE_TOKEN',
   'T3D_SHARD',
   'T3D_UPDATE_GOLDEN',
 ]);

@@ -4,13 +4,15 @@
 // setup venv or a `blender` executable; the `blender` step task and its bake device), Godot,
 // basisu, gltfpack, Material Maker · GPU tier
 // (doctor-gpu.ts) · the reference server (found, answering) · no GPU → kubeez.com for `image`
-// (partner, disclosed in docs/idea/08), meshy.ai for `mesh` (MESHY_API_KEY set?). Read-only: it never installs or writes.
+// (partner, disclosed in docs/idea/08), meshy.ai for `mesh` (MESHY_API_KEY set?) · the machine-wide
+// queue (queue/doctor.ts). Read-only: it never installs or writes.
 
 import { statfsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { isTs23dError } from '../core/index.ts';
 import { gpuChecks } from './doctor-gpu.ts';
 import { usage } from './flags.ts';
+import { queueChecks } from './queue/index.ts';
 import { envelope, printError } from './report.ts';
 import { serverStatus } from './server-cmd.ts';
 import {
@@ -210,10 +212,11 @@ export async function doctor(host: Host = realHost()): Promise<DoctorReport> {
         : {}),
     },
   ];
-  const [tools, gpuTier, server] = await Promise.all([
+  const [tools, gpuTier, server, queue] = await Promise.all([
     toolChecks(host, p, gpu),
     gpuChecks(host, p, gpu),
     serverChecks(host, p),
+    queueChecks(host.env),
   ]);
   const profiles = {} as Record<SetupProfile, { fits: boolean; reason?: string }>;
   for (const name of Object.keys(PROFILES) as SetupProfile[]) {
@@ -222,7 +225,7 @@ export async function doctor(host: Host = realHost()): Promise<DoctorReport> {
   }
   return {
     home: p.home,
-    checks: [...cpu, ...tools, ...gpuTier, ...server, ...hostedChecks(host, gpu)],
+    checks: [...cpu, ...tools, ...gpuTier, ...server, ...hostedChecks(host, gpu), ...queue],
     profiles,
   };
 }
@@ -234,6 +237,7 @@ const TITLES: Readonly<Record<Check['group'], string>> = {
   models: 'Models',
   server: 'Server (t3d server start)',
   hosted: 'Hosted',
+  queue: 'Queue (t3d queue status)',
 };
 const MARK: Readonly<Record<Check['status'], string>> = {
   ok: '✔',

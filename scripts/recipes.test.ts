@@ -2,7 +2,7 @@ import { describe, expect, it } from 'bun:test';
 import { mkdir, mkdtemp, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { recipeTests, staleOutputs } from './recipes.ts';
+import { recipeTests, sharedRecipeTests, staleOutputs } from './recipes.ts';
 
 async function outputs(files: readonly string[], tris = [12, 8, 4]): Promise<string> {
   const dir = join(await mkdtemp(join(tmpdir(), 'ts23d-recipes-')), 'crate');
@@ -54,20 +54,26 @@ describe('recipeTests', () => {
     'recipes/wolf/wolf.ts',
   ];
 
-  it("runs the shard's folders' tests, shared tests only on shard 1", () => {
-    expect(recipeTests(tests, ['recipes/t34'], { k: 3, n: 12 })).toEqual([
+  it("runs the shard's folders' tests plus only the shared tests it owns", () => {
+    expect(recipeTests(tests, ['recipes/t34'], [])).toEqual([
       'recipes/t34/t34.test.ts',
       'recipes/t34/turret/turret.test.ts',
     ]);
-    expect(recipeTests(tests, ['recipes/wolf'], { k: 1, n: 12 })).toEqual([
-      'recipes/_lib/bust/head.test.ts',
+    expect(recipeTests(tests, ['recipes/wolf'], ['recipes/_parts/wheel.test.ts'])).toEqual([
       'recipes/_parts/wheel.test.ts',
       'recipes/wolf/wolf.test.ts',
     ]);
   });
 
-  it('runs every recipe test unsharded, and none from a shard with no folders', () => {
-    expect(recipeTests(tests, ['recipes/t34', 'recipes/wolf'], undefined)).toHaveLength(5);
-    expect(recipeTests(tests, [], { k: 2, n: 12 })).toEqual([]);
+  it('runs every recipe test when it owns everything, and none from an empty shard', () => {
+    const all = recipeTests(tests, ['recipes/t34', 'recipes/wolf'], sharedRecipeTests(tests));
+    expect(all).toHaveLength(5);
+    expect(recipeTests(tests, [], [])).toEqual([]);
+  });
+
+  it('lists the shared recipes/_*/ tests, never outputs or non-tests', () => {
+    expect(
+      sharedRecipeTests([...tests, 'recipes/_lib/out/x.test.ts', 'recipes/_lib/a.ts']),
+    ).toEqual(['recipes/_lib/bust/head.test.ts', 'recipes/_parts/wheel.test.ts']);
   });
 });

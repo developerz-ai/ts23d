@@ -3,9 +3,14 @@
 //   bun run verify                 every step, stops on the first red
 //   bun run verify --only a,b      a subset (the inner loop); --json for agents. A name that is not
 //                                  a step, or --only with no names, exits 2: a typo never goes green
-//   T3D_SHARD=k/n bun run verify   CI's parallel split: shard 1 runs every step on its slice of the
-//                                  recipes; shards 2..n run only `recipes` on theirs
+//   T3D_SHARD=k/n bun run verify   CI's parallel split: every shard runs `test` (bun test --shard,
+//                                  balanced by scripts/lib/test-timings.json) and `recipes` on its
+//                                  slice (scripts/lib/shard.ts); shard 1 also runs every other step
+//   T3D_DOCS_ONLY=1                CI's `changes` job found only docs outside recipes/
+//                                  (scripts/ci-changes.ts): no recipe input moved, `recipes` is skipped
 
+import { loadConfig, withQueue } from '../src/cli/queue/index.ts';
+import { isTs23dError } from '../src/core/index.ts';
 import { parseShard, type Shard } from './lib/shard.ts';
 
 export const STEPS = [
@@ -31,6 +36,7 @@ export type StepName = Step['name'];
 export function selectSteps(
   argv: readonly string[],
   shard: Shard | undefined,
+  docsOnly = false,
 ): { steps: Step[] } | { error: string } {
   const valid = STEPS.map((s) => s.name).join(',');
   let steps: Step[] = [...STEPS];
@@ -49,48 +55,84 @@ export function selectSteps(
       };
     steps = STEPS.filter((s) => names.includes(s.name));
   }
-  if (shard && shard.k !== 1) steps = steps.filter((s) => s.name === 'recipes');
+  if (shard && shard.k !== 1) steps = steps.filter((s) => SHARDED.includes(s.name));
+  if (docsOnly) steps = steps.filter((s) => s.name !== 'recipes');
   if (steps.length === 0)
     return {
-      error: `nothing to run on shard ${shard?.k}/${shard?.n}: shards 2..n run only 'recipes'. fix: unset T3D_SHARD, or add recipes to --only`,
+      error: `nothing to run on shard ${shard?.k}/${shard?.n}: shards 2..n run only ${SHARDED.join(' and ')}. fix: unset T3D_SHARD, or add test or recipes to --only`,
     };
   return { steps };
 }
 
+/** The steps every shard runs on its own slice; the rest run once, on shard 1. */
+export const SHARDED: readonly StepName[] = ['test', 'recipes'];
+
+/** Per-file durations `bun test --shard` balances by (refresh: bun run scripts/recipe-costs.ts --tests). */
+export const TEST_TIMINGS = 'scripts/lib/test-timings.json';
+
+/** The command a step runs on this shard: `test` takes its slice of the test files. */
+export function commandOf(step: Step, shard: Shard | undefined): string[] {
+  if (step.name !== 'test' || !shard) return [...step.cmd];
+  return [...step.cmd, `--shard=${shard.k}/${shard.n}`, `--timings=${TEST_TIMINGS}`];
+}
+
 if (import.meta.main) {
   const json = process.argv.includes('--json');
-  const picked = selectSteps(process.argv.slice(2), parseShard(process.env['T3D_SHARD']));
+  const shard = parseShard(process.env['T3D_SHARD']);
+  const picked = selectSteps(process.argv.slice(2), shard, process.env['T3D_DOCS_ONLY'] === '1');
   if ('error' in picked) {
     if (json) console.log(JSON.stringify({ ok: false, error: picked.error }));
     else console.error(`✗ verify: ${picked.error}`);
     process.exit(2);
   }
-  const results: { step: string; ok: boolean; ms: number }[] = [];
-  for (const step of picked.steps) {
-    const t0 = Bun.nanoseconds();
-    const p = Bun.spawnSync([...step.cmd], {
-      stdout: json ? 'pipe' : 'inherit',
-      stderr: json ? 'pipe' : 'inherit',
+  // One place in the machine's queue for the whole gate (off in CI): several agents' gates take
+  // turns instead of oversubscribing the cores. Steps inherit the grant through the environment.
+  let code = 1;
+  try {
+    const { weights } = await loadConfig(process.env);
+    code = await withQueue('cpu', weights.verify, async () => runSteps(picked.steps), {
+      cmd: 'bun run verify',
     });
-    const ok = p.exitCode === 0;
-    results.push({ step: step.name, ok, ms: Math.round((Bun.nanoseconds() - t0) / 1e6) });
-    if (!ok) {
-      if (json)
-        console.log(
-          JSON.stringify({
-            ok: false,
-            failed: step.name,
-            results,
-            output: `${p.stdout}${p.stderr}`.slice(-4000),
-          }),
-        );
-      else
-        console.error(
-          `\n✗ verify failed at '${step.name}'. Re-run just it: bun run verify --only ${step.name}`,
-        );
-      process.exit(1);
-    }
+  } catch (e) {
+    // A full queue under T3D_QUEUE=fail, a wait past its limit, a bad queue.json.
+    const fix = isTs23dError(e) && e.fix ? ` fix: ${e.fix}` : '';
+    const error = `${e instanceof Error ? e.message : String(e)}${fix}`;
+    if (json) console.log(JSON.stringify({ ok: false, error }));
+    else console.error(`✗ verify: ${error}`);
   }
-  if (json) console.log(JSON.stringify({ ok: true, results }));
-  else console.log(`\n✔ verify: ${results.map((r) => `${r.step} ${r.ms}ms`).join(' · ')}`);
+  process.exit(code);
+
+  /** Runs the steps in order; the exit code (0, or 1 at the first failing step). */
+  function runSteps(steps: readonly Step[]): number {
+    const results: { step: string; ok: boolean; ms: number }[] = [];
+    for (const step of steps) {
+      const t0 = Bun.nanoseconds();
+      const p = Bun.spawnSync(commandOf(step, shard), {
+        stdout: json ? 'pipe' : 'inherit',
+        stderr: json ? 'pipe' : 'inherit',
+        env: process.env, // explicit: the queue grant was added after start-up
+      });
+      const ok = p.exitCode === 0;
+      results.push({ step: step.name, ok, ms: Math.round((Bun.nanoseconds() - t0) / 1e6) });
+      if (!ok) {
+        if (json)
+          console.log(
+            JSON.stringify({
+              ok: false,
+              failed: step.name,
+              results,
+              output: `${p.stdout}${p.stderr}`.slice(-4000),
+            }),
+          );
+        else
+          console.error(
+            `\n✗ verify failed at '${step.name}'. Re-run just it: bun run verify --only ${step.name}`,
+          );
+        return 1;
+      }
+    }
+    if (json) console.log(JSON.stringify({ ok: true, results }));
+    else console.log(`\n✔ verify: ${results.map((r) => `${r.step} ${r.ms}ms`).join(' · ')}`);
+    return 0;
+  }
 }

@@ -415,10 +415,10 @@
   ],
   "weather": {
     "chips": {
-      "target": 0.1019,
-      "actual": 0.1019,
+      "target": 0.1012,
+      "actual": 0.1012,
       "eligible": "convex-edges",
-      "area": 1793.3809,
+      "area": 1746.0707,
       "by": {
         "hall_hall_masonry": {
           "target": 0.1,
@@ -438,7 +438,7 @@
         "tank_brinehound_kit": {
           "target": 0.13,
           "actual": 0.13,
-          "area": 59.4387
+          "area": 12.1285
         },
         "tank_brinehound_turret": {
           "target": 0.13,
@@ -509,10 +509,10 @@
       }
     },
     "dust": {
-      "target": 0.2571,
-      "actual": 0.2571,
+      "target": 0.256,
+      "actual": 0.256,
       "eligible": "up-facing",
-      "area": 540.7401,
+      "area": 527.481,
       "by": {
         "hall_hall_masonry": {
           "target": 0.25,
@@ -537,7 +537,7 @@
         "tank_brinehound_kit": {
           "target": 0.3,
           "actual": 0.3,
-          "area": 17.6775
+          "area": 4.4184
         },
         "tank_brinehound_turret": {
           "target": 0.3,
@@ -602,10 +602,10 @@
       }
     },
     "mud": {
-      "target": 0.4901,
-      "actual": 0.4901,
+      "target": 0.4847,
+      "actual": 0.4847,
       "eligible": "ground-near",
-      "area": 72.0992,
+      "area": 46.8719,
       "by": {
         "hall_hall_timber": {
           "target": 0.55,
@@ -620,7 +620,7 @@
         "tank_brinehound_kit": {
           "target": 0.5,
           "actual": 0.5,
-          "area": 25.3011
+          "area": 0.0738
         },
         "tank_brinehound_wheels": {
           "target": 0.4,
