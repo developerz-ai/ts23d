@@ -28,6 +28,12 @@ export interface NeuralCtxAsk {
    * the hit's outputs are `absent`: for raw meshes too big to commit that only feed a next request.
    */
   readonly keep?: 'local';
+  /**
+   * The asset has no CPU path worth building (a model-first body): in a build, a miss of this ask
+   * stops with T3D_NEURAL_MISSING, not `null`. `t3d neural run` still lists it as a request to
+   * fill, and a compile with no cache provided at all still gets `null`.
+   */
+  readonly required?: boolean;
 }
 
 /** Where cached outputs come from (/neural's recipe cache implements it). */

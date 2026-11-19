@@ -2,8 +2,9 @@
 // serves is what the gate tested: (1) `bunx t3d build` a two-box recipe to QA PASS; (2) import
 // every `exports` subpath under Bun and under Node (skipped with a notice when `node` is not on
 // PATH); (3) `tsc` a file importing every subpath with `skipLibCheck: false` and no DOM lib;
-// (4) the tarball ships no tests, maps or demo PNGs, ships CLAUDE.md, NOTICE, every exports target and
-// the files code loads by path at run time (the CLI bin, the path-tracer worker); (5) `t3d hero
+// (4) the tarball ships no tests, maps, demo PNGs or recipes/*/neural/ model outputs, stays inside
+// PACK_BUDGET (scripts/pack-budget.ts: packed, unpacked and per-file bytes), ships CLAUDE.md, NOTICE,
+// every exports target and the files code loads by path at run time (the CLI bin, the path-tracer worker); (5) `t3d hero
 // --quality path` traces on worker threads from the installed package; (6) `t3d build --watch`
 // does its first rebuild through the installed CLI entry (then is killed); (7) a PNG and a contact
 // sheet hash the same under Bun and Node (with (2), skipped when `node` is not on PATH).
@@ -17,6 +18,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { isTs23dError, Ts23dError } from '../src/core/index.ts';
 import { TIERS } from './lib/tiers.ts';
+import { budgetProblems, PACK_BUDGET, tarEntries } from './pack-budget.ts';
 
 const NAME = '@developerz.ai/ts23d';
 const ROOT = resolve(import.meta.dir, '..');
@@ -198,14 +200,19 @@ async function smoke(): Promise<void> {
     const keys = Object.keys(pkg.exports);
     if (keys.join() !== expectedExports().join())
       fail('4 tarball', `exports keys ${keys.join(', ')} ≠ ${expectedExports().join(', ')}`);
-    const listing = sh('4 tarball', ['tar', 'tzf', tarball], work)
-      .trim()
-      .split('\n')
-      .map((l) => l.replace(/^package\//, ''));
-    const problems = tarballProblems(listing, exportTargets(pkg.exports));
+    const bytes = new Uint8Array(await Bun.file(tarball).arrayBuffer());
+    const entries = tarEntries(bytes);
+    const problems = [
+      ...tarballProblems(
+        entries.map((e) => e.path),
+        exportTargets(pkg.exports),
+      ),
+      ...budgetProblems(entries, bytes.length),
+    ];
     if (problems.length > 0) fail('4 tarball', problems.join('\n'));
+    const unpacked = entries.reduce((s, e) => s + e.size, 0);
     console.log(
-      `✔ (4) tarball: ${listing.length} files, no tests/maps/demo PNGs, CLAUDE.md, NOTICE, bin + worker`,
+      `✔ (4) tarball: ${entries.length} files, ${(bytes.length / 1e6).toFixed(2)} MB packed / ${(unpacked / 1e6).toFixed(2)} MB unpacked (budget ${PACK_BUDGET.packedBytes / 1e6} / ${PACK_BUDGET.unpackedBytes / 1e6} MB), no neural outputs/tests/maps/demo PNGs, CLAUDE.md, NOTICE, bin + worker`,
     );
 
     await Bun.write(

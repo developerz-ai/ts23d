@@ -1,34 +1,35 @@
 {
   "asset": "elf_head",
   "reviewer": "agent",
-  "overall": 5.9,
+  "overall": 5.4,
   "scores": {
     "silhouette": {
       "score": 7,
-      "reason": "Pointed ears and long locks name an elf from any side; LOD2 IoU high.",
+      "reason": "Pointed ears and long fair hair over a cloaked bust read as an elf in FRONT and SIDE. In hero.png the hair is sparse strands splaying outward from the head like wet string, and the ears hide behind it at 3/4.",
       "fixes": [
-        "more hair volume at the back of the head (the cap reads as a helmet)"
+        "more hair volume over the crown and denser locks (hair.ts) so the hair reads as a mass, not strands",
+        "part the hair behind the ears so the ear tips break the outline at 3/4"
       ]
     },
     "proportions": {
       "score": 6,
-      "reason": "Jaw no longer double-narrowed, full cheeks, lips back in a straight profile, ribbons clear of the face; the face is still long and the brow/orbit area reads older than intended.",
+      "reason": "Full cheeks, straight profile, slim neck; the face is still long and the orbit area reads older than intended.",
       "fixes": [
-        "shorten the mid-face 3 %",
+        "shorten the mid-face 3% (spec.ts)",
         "raise the lid crease and thin the upper lid"
       ]
     },
     "materials": {
       "score": 5,
-      "reason": "Hair, skin, tunic, cloak and trim separate by hue; no roughness split.",
+      "reason": "Hair, skin, tunic, cloak and trim separate by hue, with no roughness split; the hair strands read as thin plastic; the tunic trim stair-steps at the vertex cell in FRONT/SIDE.",
       "fixes": [
-        "silk/wool strips for tunic and cloak",
-        "metal finish on the clasp"
+        "silk/wool strips for tunic and cloak and a metal finish on the clasp",
+        "trim colour on a finer cell (or as geometry) so it stops stair-stepping"
       ]
     },
     "detail": {
       "score": 6,
-      "reason": "Ear structure, lids, ribbon locks with strand grooves, tall blended collar, hemmed cloak; hair cap lacks strand detail.",
+      "reason": "Ear structure, lids, strand locks, tall collar, hemmed cloak and trim, clasp; no embroidery, no strand detail over the crown.",
       "fixes": [
         "strand grooves over the crown",
         "embroidery on the trim"
@@ -38,93 +39,27 @@
       "score": 3,
       "reason": "Pristine.",
       "fixes": [
-        "dust on the cloak shoulders",
-        "fray at the hems"
+        "dust on the cloak shoulders and fray at the hems"
       ]
     },
     "lod": {
-      "score": 7,
-      "reason": "Outline and blocks hold at LOD2.",
+      "score": 4,
+      "reason": "LOD2 in sheet.png is a different character: the long blond strands are replaced by a short brown cap, the face turns blotchy and the cloak trim breaks up. The switch would visibly pop.",
       "fixes": [
-        "keep the ribbons at LOD2 as a flat strip"
+        "keep the long hair at LOD2 as a few flat blond cards (hair.ts lod === 2 path) in the LOD0 colour",
+        "carry the LOD0 hair and trim colours to LOD2 instead of the brown base cap"
       ]
     },
     "technical": {
       "score": 7,
-      "reason": "QA PASS honestly with 987 small crease regions (≤ 2.5 cm, from the geometry); socket joints pass; 79k / 24k / 3.8k tris.",
+      "reason": "QA PASS; 100.1k / 23.4k / 3.4k triangles; 4 / 4 / 3 draws.",
       "fixes": [
-        "merge duplicate head/bust crease spheres"
+        "merge duplicate head/bust crease spheres and drop hidden scalp under the hair at LOD0"
       ]
     }
   },
   "renders": {
-    "hero.png": "95eb8e90c2adcc9a81e30f2f574ea0584d6267520d33a0444098cca2849cfd32",
-    "sheet.png": "5111bbacda8598350a63ed57fb44d2019d9a4db426a8e3aa095143785b6c29fb",
-    "raking.png": "521ecbae8f3d9e4f6f79915c094ee03bd7944b754476899b516f4d50d91301ca",
-    "raking_detail.png": "1f82a6e63e660c179f84bd0e6f6073e49d5fd855ccd8706f2595d39833aa58a2",
-    "lods.png": "943af0590ad689e4cf4ae736c5cf0f4786c9ae98a5e2587ddc92a18640f29172",
-    "silhouette.png": "0fedab9f8aedc86670b9a73b9b4186dd77d3e03ea4dc7de1aec9947aeac1404b",
-    "value.png": "3a50082dc881ac7369eb6f082310ee57c7a2d790f398fe8493abec388c7997de",
-    "detail.png": "295fec6b59167a254eff9dff4f5e052de64ddc2793c032eca2899cf7059b70cc"
-  },
-  "metrics": {
-    "silhouette": [
-      {
-        "view": "front",
-        "iou": 0.93
-      },
-      {
-        "view": "side",
-        "iou": 0.946
-      },
-      {
-        "view": "3/4",
-        "iou": 0.92
-      }
-    ],
-    "focal": {
-      "peakPart": "head",
-      "peak": [
-        424,
-        126
-      ],
-      "focalShare": 0.987,
-      "focalArea": 0.529,
-      "top": [
-        {
-          "part": "head",
-          "share": 0.987
-        },
-        {
-          "part": "eye_r",
-          "share": 0.013
-        }
-      ],
-      "declared": [
-        "head"
-      ]
-    },
-    "rest": {
-      "share": 0.434,
-      "spread": 0.608,
-      "min": 0.25
-    },
-    "grounded": {
-      "rise": 0.39,
-      "bands": [
-        0.154,
-        0.274,
-        0.38,
-        0.453,
-        0.455
-      ]
-    },
-    "shape": {
-      "acuteShare": 0.126,
-      "straightShare": 0.459,
-      "taper": 0.151,
-      "shape": "friendly",
-      "declared": "friendly"
-    }
+    "hero.png": "62462d89dcb42c5bc840afbb90508ec3c5f7c31e0f6da0032c0da0d14c791c01",
+    "sheet.png": "06725f5fcef779107bd515759b9f332699e5640295e028c84d8055d734dcc452"
   }
 }

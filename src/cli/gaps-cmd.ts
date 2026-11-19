@@ -6,7 +6,7 @@
 
 import { mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
-import { type Asset, compile } from '../core/index.ts';
+import type { Asset } from '../core/index.ts';
 import {
   describeGap,
   gapFinding,
@@ -16,6 +16,7 @@ import {
   worstPerPair,
 } from '../qa/index.ts';
 import type { Args } from './args.ts';
+import { compileOnce } from './compile-cache.ts';
 import type { RenderResult } from './render-cmds.ts';
 
 const ZOOMS = 6;
@@ -23,7 +24,7 @@ const ZOOMS = 6;
 export async function gapsOne(asset: Asset, args: Pick<Args, 'out'>): Promise<RenderResult> {
   const dir = join(args.out, asset.name, 'gaps');
   await mkdir(dir, { recursive: true });
-  const scan = scanGaps(compile(asset, { lod: 0 }), { includeAllowed: true, overlayAll: true });
+  const scan = scanGaps(compileOnce(asset, { lod: 0 }), { includeAllowed: true, overlayAll: true });
   const files = [join(dir, 'overlay.png')];
   await Bun.write(files[0] ?? '', gapOverlay(scan, 500));
   const open = worstPerPair(scan.gaps.filter((g) => !g.allowed));

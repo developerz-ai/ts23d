@@ -9,7 +9,10 @@
 //                                                 elbows and the spine lie (mapped by topology)
 //   blender FINAL: transform(fit) + steps.ts    → the game mesh: three LODs, PNG maps, the skin;
 //                                                 committed, the only thing a build draws
-// A miss anywhere returns null: the code bear (bear_hybrid.ts). Nothing here calls a model;
+// The chain is `required`: the code creature of this spec fails QA (over 100 000 triangles at
+// LOD 0, off the sourced box), so `t3d build` with an output missing stops with one
+// T3D_NEURAL_MISSING and never ships it. A compile with no cache provided at all (a test, the
+// gallery's CPU tier) still gets null: the code bear (bear_hybrid.ts). Nothing here calls a model;
 // `t3d neural run` does, on a machine with a GPU and Blender (README.md).
 
 import {
@@ -39,7 +42,9 @@ export const SURFACE: Omit<NeuralRequests['mesh'], 'image'> = {
  *  plantigrade wrist 84° back, and a thick furred paw passes through the forearm there. */
 export const DROPPED: readonly string[] = ['trot', 'gallop'];
 
-/** The imported game mesh with the rig it was built for, or null on any cache miss. */
+/** The imported game mesh with the rig it was built for; null with no cache provided
+ *  and while `t3d neural run` is still filling the cache; an offline (build) cache throws
+ *  `T3D_NEURAL_MISSING` on a miss instead. */
 export const bearModel = (ctx: BuildContext): ChainedModel | null =>
   modelChain(ctx, {
     concept: CONCEPT,
@@ -53,6 +58,7 @@ export const bearModel = (ctx: BuildContext): ChainedModel | null =>
     maxTriangles: TRIANGLES[0],
     models: { image: CONCEPT_MODEL, mesh: SURFACE_MODEL },
     license: 'MIT',
+    required: true,
     author:
       'ts23d bear_hybrid recipe (Z-Image concept, Pixal3D mesh, UniRig joints, Blender steps)',
   });

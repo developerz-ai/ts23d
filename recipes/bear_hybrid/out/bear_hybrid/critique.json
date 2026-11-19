@@ -1,0 +1,63 @@
+{
+  "asset": "bear_hybrid",
+  "reviewer": "agent",
+  "overall": 7.4,
+  "scores": {
+    "silhouette": {
+      "score": 8,
+      "reason": "Unmistakably a brown bear from every view: shoulder hump, dished face, round ears, heavy plantigrade forelegs, short tail; the side view in sheet.png matches the classic standing-bear outline.",
+      "fixes": [
+        "raise the shoulder hump 3–4 cm in the concept/mesh chain so it reads more sharply against the back line in SIDE"
+      ]
+    },
+    "proportions": {
+      "score": 8,
+      "reason": "1.7 × 0.6 × 1.0 m on the grid matches the sourced average adult (1.7 m head and body, 1.0 m shoulder). Head-to-body and leg lengths look right beside photos; the ears are slightly large.",
+      "fixes": [
+        "scale the ears ~15% down in a Blender step (steps.ts) — they read cub-sized against the head"
+      ]
+    },
+    "materials": {
+      "score": 7,
+      "reason": "The image-to-3D texture reads as fur with darker legs and a grizzled back; claws separate. But lighting is baked into the albedo (a bright shoulder patch, white-capped ears that look sunlit from every angle) and the fur has one uniform roughness.",
+      "fixes": [
+        "de-light the albedo before import (a Blender bake step that divides out the baked AO/sun)",
+        "repaint the ear tips to the body brown; they read as white caps"
+      ]
+    },
+    "detail": {
+      "score": 7,
+      "reason": "Fur breakup, face features and claws come from the texture and hold at third-person distance; geometry is smooth (no fur clumps on the outline, claws painted rather than modelled).",
+      "fixes": [
+        "a strand/shell pass on the back and belly fringe so the outline breaks into fur clumps",
+        "model claws as short curved cones on each paw (code parts on the paw bones)"
+      ]
+    },
+    "wear": {
+      "score": 6,
+      "reason": "Darker, dirtier legs and a grizzled back give some story, but there is no mud, no wet fur, no scars or rubbed patches.",
+      "fixes": [
+        "mud on the paws and lower legs (grime with the ground mask over the textured part)",
+        "a few seeded scars and a rubbed patch on the shoulder"
+      ]
+    },
+    "lod": {
+      "score": 8,
+      "reason": "LOD2 (5k) is nearly indistinguishable from LOD0 at the sheet's far distance: same outline and colour blocks.",
+      "fixes": [
+        "drop LOD2 to ~3k: the far view does not need 5k for a 1.7 m animal, which would pay for detail at LOD0"
+      ]
+    },
+    "technical": {
+      "score": 8,
+      "reason": "QA PASS; 30k / 10k / 5k triangles; one draw per LOD; skinned to the sourced skeleton with idle, look and walk clips.",
+      "fixes": [
+        "spend the LOD2 savings on the face at LOD0 (eye sockets, lips) where the hero looks"
+      ]
+    }
+  },
+  "renders": {
+    "hero.png": "390997cbafdde821d60b6ff7ae4324d9d6518d2f88a64854c99a6eee0122d995",
+    "sheet.png": "7fa1c5744f374d332b1c9ac9176d36b99bc6b0be325fc114d2b4542819d8256c"
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "asset": "ranger",
+  "reviewer": "agent",
+  "overall": 7.6,
+  "scores": {
+    "silhouette": {
+      "score": 8,
+      "reason": "Hip-length jerkin with shoulder capes, baldric, belt with knife, knee boots in an A-pose: a ranger reads from every view.",
+      "fixes": [
+        "a hood or cloak edge for a stronger back silhouette"
+      ]
+    },
+    "proportions": {
+      "score": 8,
+      "reason": "1.78 m with sourced segment heights; head, hands and feet look right.",
+      "fixes": [
+        "slightly larger hands (they read small in FRONT)"
+      ]
+    },
+    "materials": {
+      "score": 8,
+      "reason": "Textured set: leather jerkin, wool trousers, leather boots and belt, metal buckles, skin and hair read as themselves.",
+      "fixes": [
+        "higher roughness contrast between wool trousers and leather boots"
+      ]
+    },
+    "detail": {
+      "score": 7,
+      "reason": "Studs, buckles, baldric hardware, collar and bracer laces; hands are simple.",
+      "fixes": [
+        "finger separation and knuckles at LOD0",
+        "visible stitching at the jerkin seams"
+      ]
+    },
+    "wear": {
+      "score": 6,
+      "reason": "Texture has some leather scuffing; boots and hem are clean.",
+      "fixes": [
+        "mud on the boots and trouser hem",
+        "scuffed leather on the belt"
+      ]
+    },
+    "lod": {
+      "score": 8,
+      "reason": "FAR LOD2 keeps outline, colour and face read.",
+      "fixes": [
+        "keep the knife hilt at LOD2"
+      ]
+    },
+    "technical": {
+      "score": 8,
+      "reason": "QA clean; 39k / 12k / 3.9k tris, one textured part.",
+      "fixes": [
+        "verify the texture set size against budget.textureSets"
+      ]
+    }
+  },
+  "renders": {
+    "hero.png": "998f9a70746d4b00687fa50979492360ead2d1296b4faf78a7912567aa55f991",
+    "sheet.png": "28423d5400a53fcbe2fa880dd9ad41430676cc16316c79c0e21ed776fa192ad2"
+  }
+}

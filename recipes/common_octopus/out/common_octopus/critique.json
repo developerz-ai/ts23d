@@ -1,0 +1,63 @@
+{
+  "asset": "common_octopus",
+  "reviewer": "agent",
+  "overall": 6.7,
+  "scores": {
+    "silhouette": {
+      "score": 8,
+      "reason": "Eight individually posed arms with curled tips, bulbous warty mantle and the funnel: unmistakably an octopus from every view.",
+      "fixes": [
+        "vary the arm poses more (two arms curled under, one extended) so the TOP view is less like a symmetric star"
+      ]
+    },
+    "proportions": {
+      "score": 7,
+      "reason": "1.3 × 1.4 × 0.5 m for a large adult female; arms are roughly 3× mantle length as in photos, but they stay uniformly thick for most of their length and taper late.",
+      "fixes": [
+        "taper the arms continuously from the web to the tip (anatomy.ts)",
+        "enlarge the inter-arm web toward the base"
+      ]
+    },
+    "materials": {
+      "score": 6,
+      "reason": "Mottled red-brown skin and pale suckers read, but the whole surface is matte: no wet sheen, no translucency at the thin arm tips.",
+      "fixes": [
+        "lower roughness for a wet skin sheen (skin.ts)",
+        "pale, slightly translucent tint at the arm tips and sucker rims"
+      ]
+    },
+    "detail": {
+      "score": 7,
+      "reason": "Double sucker rows along every arm, mantle warts, slit-pupil eye; the arms themselves are smooth tubes with no skin folds or papillae.",
+      "fixes": [
+        "papillae and skin folds along the arm tops (detail.ts)",
+        "sucker size decreasing toward the tips"
+      ]
+    },
+    "wear": {
+      "score": 5,
+      "reason": "Pristine: no missing arm tip, no scars, no colour change across the body.",
+      "fixes": [
+        "one regenerating shorter arm tip and a few healed scars (seeded)"
+      ]
+    },
+    "lod": {
+      "score": 6,
+      "reason": "LOD2 (2.1k) keeps the eight arms but the mantle turns blocky and the arm tips break into segments in the far view.",
+      "fixes": [
+        "more rings on the LOD2 mantle and arm tips (~3k total)"
+      ]
+    },
+    "technical": {
+      "score": 8,
+      "reason": "QA PASS; 133.7k / 13.4k / 2.1k triangles; 2 draws.",
+      "fixes": [
+        "move LOD0 triangles from sucker rims on the hidden underside to the mantle"
+      ]
+    }
+  },
+  "renders": {
+    "hero.png": "9f66d0eae35da43d211d07b1057d256a39048977ca846be06e7293a03945a34b",
+    "sheet.png": "777fb13f95be373a7db979ac4a0d8f836d64c1fc33b366f70f907b901e99bb56"
+  }
+}

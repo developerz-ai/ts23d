@@ -10,16 +10,32 @@ name: ci
 # Before this layout (run 44460876935, 2026-11-19): 9 minutes wall, 26 jobs, 87.5 runner-minutes;
 # gate shard 1 took 8 minutes (all 474 test files plus a recipe slice) and shots shards up to
 # 8.3 minutes (four `t3d` processes per folder, each re-importing and recompiling the recipe).
-# Now: 16 shards (T3D_SHARD=k/16, CI_SHARDS in scripts/lib/shard.ts). Each runs its `bun test --shard`
-# slice (balanced by scripts/lib/test-timings.json) and its units of recipe work, split by
-# measured cost (scripts/lib/recipe-costs.json; greedy longest-first, scripts/lib/shard.ts): one
-# folder's gate and its renders are separate units, renders take one process per folder
+# Now: 18 shards (T3D_SHARD=k/18, CI_SHARDS in scripts/lib/shard.ts; with `site` that is 19 jobs,
+# under the 20 a free account runs at once). Each runs its `bun test --shard` slice (balanced by
+# scripts/lib/test-timings.json) and its units of recipe work, split by measured cost
+# (scripts/lib/recipe-costs.json; greedy longest-first, scripts/lib/shard.ts): one folder's gate
+# and its renders are separate units, renders take one process per folder
 # (scripts/shots-folder.ts); shard 1 also runs lint, types, build and pack.
-# Measured 2026-11-19 (run 44474402275): 6.6 minutes push → green, shards 2.6-6.4 minutes,
-# 76 runner-minutes. The floor is one unit: human_head's renders, because each of shot / hero /
-# blueprint / icon compiles its LOD0 again (about 55 s each). Under 5 minutes needs the four
-# renders to share one compile (a src/cli change; docs/maintenance.md "CI time"). When shards
-# drift: `bun run scripts/recipe-costs.ts --tests`, then `--plan` to pick the shard count.
+# Measured 2026-11-19 with 16 shards (run 44474402275): 6.6 minutes push → green, shards
+# 2.6-6.4 minutes, 76 runner-minutes; the floor was human_head's renders, where each of shot /
+# hero / blueprint / icon compiled LOD0 again. Since then the four renders share one compile
+# (src/cli/compile-cache.ts).
+# Measured 2026-11-19 with 18 shards (run 44492321426): 5.5 minutes push → green, 18 gate jobs of
+# 155-299 s (mean 222 s), about 67 runner-minutes. The work was already small enough; the split
+# was off by up to 35%, because the costs were dev-machine seconds with one guessed factor for
+# renders (real factors: 0.9 to 2.3 per folder). Slowest shard 299 s: shard 8, whose rts_barracks
+# renders took 153 s against 94 s in the costs.
+# The costs are now that run's own GitHub seconds (`bun run scripts/recipe-costs.ts --from-run
+# 44492321426`; scripts/recipe-costs-run.ts says what is measured and what is derived), with
+# 16 s of overhead per job (checkout, setup, the stale check) and 26 s of shard 1's own steps.
+# Measured after rebalancing (run 44494826233, 2026-11-19): 4.6 minutes push → green, slowest job 269 s.
+# The plan it ran on: still 18 shards (the fewest whose worst job fits 240 s), every job
+# about 222 s (`--plan`: 221-223 s; up to 237 s where the heaviest recipe shard also draws the
+# 30 s test file src/kinds/creature-family.test.ts), about 4.3 minutes push → green (the slowest
+# job plus about 30 s of queueing and the `verify` job), the same 67 runner-minutes. No single
+# unit is the floor: the largest are face_demo's renders (171 s) and gate (166 s). Replace this
+# paragraph with the next measured run. When shards drift: `--from-run <id>` on the commit a
+# green run built, then `--plan` to pick the shard count (★).
 # Docs-only changes (scripts/ci-changes.ts: Markdown / docs/ outside recipes/) skip the recipe
 # gate and the renders; lint, types and every test still run, and `verify` still reports.
 
@@ -43,9 +59,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
+        shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
     env:
-      T3D_SHARD: ${{ matrix.shard }}/16
+      T3D_SHARD: ${{ matrix.shard }}/18
     steps:
       # Full history without old file contents (blob:none): enough for `git diff --name-only`.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

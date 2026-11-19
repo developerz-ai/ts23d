@@ -5,7 +5,8 @@
 //   bun run shots t34 tiger_1     only these folders
 // Each folder renders into a sibling temp dir first and replaces out/ only when every step
 // succeeded: a failure (a half-edited shared module) keeps the old outputs. One `bun` process per
-// folder (scripts/shots-folder.ts) runs all four renders from a single import of the recipe.
+// folder (scripts/shots-folder.ts) runs all four renders from a single import of the recipe and
+// one compile per asset and LOD.
 // T3D_SHARD=k/n renders only this shard's folders (scripts/lib/shard.ts, balanced by measured cost).
 
 import { readdir, rename, rm } from 'node:fs/promises';
@@ -19,10 +20,10 @@ import { sharedRecipeTests } from './recipes.ts';
 /**
  * The committed hero is what critiques judge, so it is path traced (src/render/path/): 960 × 540
  * at 16 samples per pixel + denoise. Measured on 4 threads: wolf (138k tris) 6.7 s of tracing,
- * human_head 6 s, roadster_v10 (900k tris) 13 s; a 4-vCPU CI runner ≈ 1.5× that. Tracing is not
- * what makes the shots job slow: each of the four renders compiles the asset again (CI run
- * 44460876935: human_head 436 s for its four renders; face_demo's five LOD0 compiles take about
- * 50 s each time). Raise spp only with a fresh measurement.
+ * human_head 6 s, roadster_v10 (900k tris) 13 s; a 4-vCPU CI runner ≈ 1.5× that. Tracing was never
+ * what made the shots job slow: each of the four renders used to compile the asset again (CI run
+ * 44460876935: human_head 436 s for its four renders); they now share one compile
+ * (src/cli/compile-cache.ts). Raise spp only with a fresh measurement.
  */
 export const HERO_FLAGS: readonly string[] = [
   '--quality',

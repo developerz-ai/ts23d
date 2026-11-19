@@ -1,0 +1,119 @@
+{
+  "asset": "weather_demo",
+  "reviewer": "agent",
+  "overall": 6.1,
+  "scores": {
+    "silhouette": {
+      "score": 6,
+      "reason": "Four new/weathered pairs on labelled slabs (door, crate, concrete block, drum): readable, but all simple boxes and cylinders; the weathered copies do not differ in outline (no sag or dents visible).",
+      "fixes": [
+        "stronger crate board sag and a visible dent on the weathered drum so the pairs differ in silhouette"
+      ]
+    },
+    "proportions": {
+      "score": 7,
+      "reason": "Door 0.91 x 2.03 m, drum 0.572 x 0.851 m, crate 0.8 m, block 0.6 x 0.8 x 0.6 m per README.",
+      "fixes": [
+        "label text bigger on the slabs (it is unreadable in hero.png)"
+      ]
+    },
+    "materials": {
+      "score": 6,
+      "reason": "Painted steel door, pine crate, concrete and blue drum read; the drum reads as plastic (uniform gloss), the concrete as clean plaster.",
+      "fixes": [
+        "steel_painted drum with lower gloss and rolled-edge highlights",
+        "concrete with aggregate and form-tie holes"
+      ]
+    },
+    "detail": {
+      "score": 5,
+      "reason": "Door with frame, hinges and handle, crate boards, block lifting anchors, drum hoops; otherwise plain.",
+      "fixes": [
+        "bung caps on the drum lid",
+        "nails and corner irons on the crate"
+      ]
+    },
+    "wear": {
+      "score": 7,
+      "reason": "The weathered copies clearly carry rust streaks on the door, rust and dents on the drum, moss and anchor rust bleed on the block, bleached boards and moss on the crate; but the door rust runs as vertical stripes over the whole leaf rather than from the hinge bolts, and the drum rust is blotchy.",
+      "fixes": [
+        "tie the door rust streaks to the hinge bolts and the bottom edge (weather() sources) instead of full-leaf stripes"
+      ]
+    },
+    "lod": {
+      "score": 5,
+      "reason": "lods.png: at LOD2 the weathered door loses its rust and the concrete block loses its moss, so the new/weathered difference, the point of the demo, mostly vanishes at distance.",
+      "fixes": [
+        "bake the weather() colours into LOD2 vertex colour so the weathered copies stay distinct"
+      ]
+    },
+    "technical": {
+      "score": 7,
+      "reason": "QA clean (pack): 95.4k / 21.8k / 3.8k tris for four simple props: weather() tessellation spends most of LOD0.",
+      "fixes": [
+        "coarser weather() tessellation on flat faces at LOD0"
+      ]
+    }
+  },
+  "renders": {
+    "hero.png": "ab612970c5fb24d5ea28fd99d6704926ef981b5724df364e090a0b450e1aa1af",
+    "sheet.png": "64e4474175e56f9ce155765e8a59beac00157c28f525ee082afdb89f390268b5",
+    "raking.png": "aaa75be6d27e0489fbe11390e09f149af9ebb8c96d7b9641acb907af267b7b03",
+    "raking_detail.png": "cda41618415217ef94cf727aef261731cf33e385f9079b3ff2737fa33fed5d7b",
+    "lods.png": "4eb077217897dcdd1cde34f857d5602fe00ed4a046f07b4034e5596a13fdb949",
+    "silhouette.png": "b7bbb9640ecc1eebe49e5d997740ef32324189aa2c03ae5643d2fb30226f77a5",
+    "value.png": "721503176686760349f81e5aa914875adee46d40ca0c52f92034516071eb32b7",
+    "detail.png": "2b69109c08b8386239eaab6c5af3028015e1f5a1de856f4a67e94780c1d54609"
+  },
+  "metrics": {
+    "silhouette": [
+      {
+        "view": "front",
+        "iou": 1
+      },
+      {
+        "view": "side",
+        "iou": 1
+      },
+      {
+        "view": "3/4",
+        "iou": 1
+      }
+    ],
+    "focal": {
+      "peakPart": "door_slab",
+      "peak": [
+        334,
+        254
+      ],
+      "focalShare": 0,
+      "focalArea": 0,
+      "top": [
+        {
+          "part": "door_slab",
+          "share": 0.223
+        },
+        {
+          "part": "block_old_block",
+          "share": 0.136
+        },
+        {
+          "part": "block_slab",
+          "share": 0.122
+        }
+      ],
+      "declared": []
+    },
+    "rest": {
+      "share": 0.8,
+      "spread": 0.574,
+      "min": 0.25
+    },
+    "shape": {
+      "acuteShare": 0.164,
+      "straightShare": 0.896,
+      "taper": 0.617,
+      "shape": "stable"
+    }
+  }
+}

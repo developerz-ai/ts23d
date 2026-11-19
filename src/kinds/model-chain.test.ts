@@ -50,7 +50,11 @@ function fake(outputs: Partial<Record<NeuralTask, NeuralOutput>>): {
   return { source, seen };
 }
 
-function run(name: string, source: NeuralSource): ImportedModel | null | undefined {
+function run(
+  name: string,
+  source: NeuralSource,
+  required = false,
+): ImportedModel | null | undefined {
   let got: ChainedModel | null | undefined;
   const asset = defineAsset({
     name,
@@ -65,6 +69,7 @@ function run(name: string, source: NeuralSource): ImportedModel | null | undefin
         models: { mesh: 'pixal3d' },
         license: 'MIT',
         author: 'fixture',
+        ...(required ? { required } : {}),
       });
     },
   });
@@ -95,6 +100,19 @@ describe('modelChain', () => {
     const noBlend = fake({ image, mesh: absentMesh });
     expect(run('chain_no_blend', noBlend.source)).toBeNull();
     expect(noBlend.seen.map((s) => s.task)).toEqual(['image', 'mesh', 'blender']);
+  });
+
+  it('required: every ask says so (a build cache then stops at the first miss); default: none', () => {
+    const plain = fake({ image, mesh: absentMesh, blender });
+    run('chain_optional', plain.source);
+    expect(plain.seen.map((s) => s.ask?.required)).toEqual([undefined, undefined, undefined]);
+    const f = fake({ image, mesh: absentMesh, blender });
+    run('chain_required', f.source, true);
+    expect(f.seen.map((s) => [s.task, s.ask?.required])).toEqual([
+      ['image', true],
+      ['mesh', true],
+      ['blender', true],
+    ]);
   });
 
   it('returns null when the Blender output itself is absent (bytes are needed to import)', () => {

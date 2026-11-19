@@ -3,8 +3,8 @@
 // synchronous on the read side, like the import cache: the CLI loads the directory (src/cli/
 // neural-store.ts) and hands it over with `provideNeural`; a compile asks `providedNeural(recipe)
 // .get(task, request)`. A miss returns `{ fallback: true }` plus a T3D_NEURAL_MISSING notice so the
-// recipe takes its CPU path — an error only with `requireNeural`. `fill` runs an adapter (never in
-// a build) and validates before anything is stored. `provideNeural` also serves `ctx.neural`.
+// recipe takes its CPU path — an error with `requireNeural`, or for a `required` ask in a build
+// (offline). `fill` runs an adapter (never in a build) and validates before anything is stored. `provideNeural` also serves `ctx.neural`.
 // A `keep: 'local'` ask stores **local** outputs (`local-<i>.*`, git-ignored, outside the cap): a
 // machine without the file still gets a hit, its outputs `absent` with only their sha256, so a
 // chain (image → raw mesh → blender) reaches the committed downstream output.
@@ -55,6 +55,8 @@ export interface NeuralAsk {
   readonly inputs?: ReadonlyMap<string, Uint8Array>;
   /** Storage policy of a fill, never part of the key: outputs stay on this machine. */
   readonly keep?: 'local';
+  /** No CPU path for this ask: its miss is an error in an offline (build) cache. */
+  readonly required?: boolean;
 }
 
 /** A job plus where its outputs are kept. */
@@ -131,6 +133,8 @@ export function neuralCache(o: {
   readonly offline?: boolean;
   /** Bytes allowed across all committed outputs; default NEURAL_CAP_BYTES (ADR 014). */
   readonly capBytes?: number;
+  /** The `fix:` of a miss where "run it, then commit" does not apply (an installed package). */
+  readonly missingFix?: string;
 }): RecipeNeuralCache {
   const cap = o.capBytes ?? NEURAL_CAP_BYTES;
   const byKey = new Map<string, NeuralEntry>();
@@ -139,11 +143,20 @@ export function neuralCache(o: {
   const run = `t3d neural run recipes/${o.recipe}/${o.recipe}.ts`;
   const total = (): number => [...byKey.values()].reduce((s, e) => s + size(e), 0);
 
-  const miss = (job: NeuralCacheJob, rk: string): NeuralNotice => {
+  const miss = (job: NeuralCacheJob, rk: string, required: boolean): NeuralNotice => {
     const { task, model } = job;
-    const message = `${o.recipe}: no cached ${task} output for request ${rk.slice(0, 12)}…${model ? ` (model ${model})` : ''}; using the CPU path`;
-    const fix = `run \`${run}\` on a machine with a ${task} adapter (t3d.config.ts), then commit recipes/${o.recipe}/neural/`;
-    if (o.requireNeural) throw new Ts23dError('T3D_NEURAL_MISSING', { cause: message, fix });
+    const what = `${o.recipe}: no cached ${task} output for request ${rk.slice(0, 12)}…${model ? ` (model ${model})` : ''}`;
+    const fix =
+      o.missingFix ??
+      `run \`${run}\` on a machine with a ${task} adapter (t3d.config.ts), then commit recipes/${o.recipe}/neural/`;
+    if (o.requireNeural) throw new Ts23dError('T3D_NEURAL_MISSING', { cause: what, fix });
+    // A model-first asset in a build: one error, not its CPU stand-in's QA findings.
+    if (required && o.offline)
+      throw new Ts23dError('T3D_NEURAL_MISSING', {
+        cause: `${what}, and the asset is model-first: it has no CPU build`,
+        fix,
+      });
+    const message = `${what}; using the CPU path`;
     const notice: NeuralNotice = { code: 'T3D_NEURAL_MISSING', message, fix };
     notices.set(`${rk}:${model ?? ''}`, { notice, job });
     return notice;
@@ -168,7 +181,7 @@ export function neuralCache(o: {
       ...(ask.inputs ? { inputs: ask.inputs } : {}),
       ...(ask.keep ? { keep: ask.keep } : {}),
     };
-    return { fallback: true, notice: miss(job, rk) };
+    return { fallback: true, notice: miss(job, rk, ask.required === true) };
   };
 
   return {

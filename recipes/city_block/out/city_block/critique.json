@@ -1,0 +1,67 @@
+{
+  "asset": "city_block",
+  "reviewer": "agent",
+  "overall": 5.6,
+  "scores": {
+    "silhouette": {
+      "score": 6,
+      "reason": "Reads as a dense block of brick walk-ups with flat roofs and streets from the 3/4 views. Nothing West Village-specific reaches the outline: no cornices, stoops, fire escapes, rooftop water tanks or street trees; FRONT/SIDE are a flat skyline strip.",
+      "fixes": [
+        "projecting cornices on each building (seeded depth 0.3–0.6 m)",
+        "rooftop water tanks and bulkheads on the taller buildings",
+        "street trees along the sidewalks"
+      ]
+    },
+    "proportions": {
+      "score": 7,
+      "reason": "Footprints and heights come from the pinned OSM extract (148.9 × 120 × 22.4 m), so masses are surveyed; storey heights and window sizes look right against the 10 m grid.",
+      "fixes": [
+        "vary storey heights between buildings from their tagged levels so the window rows stop lining up across neighbours"
+      ]
+    },
+    "materials": {
+      "score": 6,
+      "reason": "Brick reds, buff and brown facades and dark roofs separate by hue; windows are flat dark rectangles with no glass reflection, and the ground plane shows a fine stripe pattern.",
+      "fixes": [
+        "a glass value on windows (glossy, slightly lighter at the top)",
+        "a brick strip on the facades so the walls read as brick up close",
+        "replace the ground stripe pattern with sidewalk slabs and asphalt"
+      ]
+    },
+    "detail": {
+      "score": 4,
+      "reason": "Windows only: no doors, storefronts, stoops, fire escapes, sills/lintels or roof parapets.",
+      "fixes": [
+        "ground-floor storefronts and doors on street-facing facades",
+        "stoops on the row houses and fire escapes on the walk-ups",
+        "window sills and lintels as shallow boxes at LOD0"
+      ]
+    },
+    "wear": {
+      "score": 3,
+      "reason": "Pristine: no grime, staining, graffiti, roof patching or street dirt.",
+      "fixes": [
+        "grime gradient at street level and soot streaks below cornices",
+        "patched roof membranes in varied greys"
+      ]
+    },
+    "lod": {
+      "score": 7,
+      "reason": "LOD2 (2.9k) keeps every mass and its colour; windows vanish, which is acceptable at that distance.",
+      "fixes": [
+        "bake the window grid into LOD2 vertex colour so facades do not go blank"
+      ]
+    },
+    "technical": {
+      "score": 6,
+      "reason": "QA PASS; one draw; but LOD0 and LOD1 are identical (29 538 / 29 538 / 2 928): the LOD1 level saves nothing.",
+      "fixes": [
+        "make LOD1 drop window frames/insets (ctx.lod gate) so it sits near 10k"
+      ]
+    }
+  },
+  "renders": {
+    "hero.png": "d4d87b72b20c2986c65e9ff1f23650e2fac32876c062393d25b070ce2ed7bbe3",
+    "sheet.png": "a0aacdc3cec24a6e25fd57463d54eb698132063f169d3a17fd603dfee5d8461b"
+  }
+}

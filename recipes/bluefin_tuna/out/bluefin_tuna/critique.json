@@ -1,0 +1,64 @@
+{
+  "asset": "bluefin_tuna",
+  "reviewer": "agent",
+  "overall": 7,
+  "scores": {
+    "silhouette": {
+      "score": 8,
+      "reason": "Fusiform body, tall sickle second dorsal and anal fins, yellow finlet rows, short pectorals and a crescent tail: names a bluefin tuna in SIDE and TOP at once.",
+      "fixes": [
+        "make the caudal keels visible as a ridge on the tail stock in SIDE/TOP (fins.ts)"
+      ]
+    },
+    "proportions": {
+      "score": 8,
+      "reason": "2.1 × 0.6 × 1.1 m for a 2 m fork length; body depth, fin positions and finlet count look right beside the dossier photos.",
+      "fixes": [
+        "check the pectoral length against a side photo (it reads slightly long for Thunnus thynnus)"
+      ]
+    },
+    "materials": {
+      "score": 7,
+      "reason": "Metallic blue back with a strong highlight over a silver flank, yellow finlets and fin bases; the silver flank reads as flat grey paint rather than mirror-like scales.",
+      "fixes": [
+        "raise metalness / lower roughness on the flank so it reflects like a fish side",
+        "iridescent band and faint silver spots/bars on the lower flank"
+      ]
+    },
+    "detail": {
+      "score": 6,
+      "reason": "Operculum line, eye with ring, finlets, lateral bars; but the body is a smooth shell (no lateral line, no corselet scale patch) and the fins are flat plates with no rays.",
+      "fixes": [
+        "fin rays as shallow grooves on the dorsal, anal and caudal fins (fins.ts)",
+        "lateral line and corselet scale patch behind the head",
+        "gill slit depth at the operculum edge"
+      ]
+    },
+    "wear": {
+      "score": 5,
+      "reason": "Pristine: no frayed fin edges, no scratches, no slime sheen variation.",
+      "fixes": [
+        "slightly frayed fin margins and a few scratches on the flank (seeded)"
+      ]
+    },
+    "lod": {
+      "score": 7,
+      "reason": "LOD2 (476 tris) keeps the outline, fins and the blue-over-silver split, but the body is clearly faceted and the finlets thin out.",
+      "fixes": [
+        "keep finlets at LOD2 as a single flat yellow strip per side",
+        "give LOD2 more rings around the body (~700 tris) so the faceting stops reading"
+      ]
+    },
+    "technical": {
+      "score": 8,
+      "reason": "QA PASS; 32k / 4k / 476 triangles, one draw.",
+      "fixes": [
+        "LOD1 at 4k drops a lot from 32k: add an intermediate ring count so the LOD0→LOD1 switch is softer"
+      ]
+    }
+  },
+  "renders": {
+    "hero.png": "2f0b8329de398ba4750a6c207b6b63126ac61e98b998c372f19a702b04e5fdd4",
+    "sheet.png": "0133bf0e8f82acdbfbbe6c065824ad981901bd5ede3b72f76365749ab786d11b"
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "asset": "joint_demo",
+  "reviewer": "agent",
+  "overall": 5.3,
+  "scores": {
+    "silhouette": {
+      "score": 6,
+      "reason": "An arm on a stand holding a sword reads as a joint demo; the blade is a needle-thin spike that vanishes edge-on in SIDE.",
+      "fixes": [
+        "give the blade a real width (~4 cm) and fuller so it reads as a sword from the side"
+      ]
+    },
+    "proportions": {
+      "score": 5,
+      "reason": "Arm length plausible; the hand is a featureless block fist and the blade is far too thin for its length.",
+      "fixes": [
+        "model a hand with four finger rolls wrapped round the grip",
+        "blade width and taper from a real arming sword"
+      ]
+    },
+    "materials": {
+      "score": 5,
+      "reason": "Skin-tone arm, grey steel blade, brass guard and pommel, black stand separate by hue; the blade does not read as polished metal.",
+      "fixes": [
+        "metal finish with low roughness on the blade",
+        "leather wrap on the grip"
+      ]
+    },
+    "detail": {
+      "score": 3,
+      "reason": "No knuckles, nails, wrist or elbow anatomy; plain guard and pommel.",
+      "fixes": [
+        "elbow and wrist landmarks on the arm",
+        "a wrapped grip and shaped guard"
+      ]
+    },
+    "wear": {
+      "score": 2,
+      "reason": "Spotless.",
+      "fixes": [
+        "nicks along the blade edge and a worn grip"
+      ]
+    },
+    "lod": {
+      "score": 8,
+      "reason": "FAR LOD2 is indistinguishable from LOD0 at that distance.",
+      "fixes": [
+        "keep the guard bar at LOD2"
+      ]
+    },
+    "technical": {
+      "score": 8,
+      "reason": "QA clean; 1.7k / 816 / 300 tris over 13 parts; joints check.",
+      "fixes": [
+        "merge the static stand parts into one draw"
+      ]
+    }
+  },
+  "renders": {
+    "hero.png": "f01b8fb9a57a33826057cf8cb62dc6f0b7ded30794923a0f27355017c14add47",
+    "sheet.png": "97e73b6c621b6ad0abb2c47e81737ffc9ce738acbdad3bfd3a2c63c1b42ca733"
+  }
+}

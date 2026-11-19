@@ -6,30 +6,34 @@
     "silhouette": {
       "score": 9,
       "reason": "Unmistakable: four lattice legs on masonry piers, the first-floor arches, three decks, the tapering upper shaft, campanile lantern and antenna. Reads in pure black.",
-      "fixes": []
+      "fixes": [
+        "open the lattice between the upper-shaft corner posts a little more so the shaft reads see-through against the sky as in photos"
+      ]
     },
     "proportions": {
       "score": 8,
-      "reason": "Height to the antenna, base span and deck heights pass the sourced measures (fr.wikipedia, Eiffel's plates).",
-      "fixes": []
+      "reason": "Height to the antenna, base span and deck heights pass the sourced measures (124.9 × 125 × 330.6 m).",
+      "fixes": [
+        "check the second-deck height and width against the elevation plate by overlay"
+      ]
     },
     "materials": {
       "score": 7,
-      "reason": "Lattice now painted wrought iron (steel_painted under the three-tone Eiffel Tower Brown gradient by height, chips showing rusty iron), stone piers, glazed pavilions. The paint film reads uniform at hero distance.",
+      "reason": "Painted wrought iron under the three-tone brown gradient, stone piers, glazed pavilions; the paint film reads uniform at hero distance.",
       "fixes": [
         "slightly glossier, fresher paint on the upper shaft (repainted most often)"
       ]
     },
     "detail": {
       "score": 8,
-      "reason": "188k LOD0 triangles: lattice girders with zig-zag webs, arches, decks with railings, pavilions, lift housings, campanile ribs and side arches (base ring now wide enough to carry the rib feet).",
+      "reason": "188k LOD0 triangles: lattice girders with zig-zag webs, arches, decks with railings, pavilions, lift housings, campanile ribs.",
       "fixes": [
-        "mid rails on the deck railings with square posts (dropped: diamond posts only met them along an edge)"
+        "mid rails on the deck railings with square posts"
       ]
     },
     "wear": {
       "score": 6,
-      "reason": "Grime at the feet, paint chips from the strip; no rust bleeding at rivet lines or pigeon streaks on the decks.",
+      "reason": "Grime at the feet, paint chips; no rust bleeding at rivet lines or streaks on the decks.",
       "fixes": [
         "weather() rust streaks below the lattice nodes on the lower legs",
         "dirt on the deck tops"
@@ -37,74 +41,21 @@
     },
     "lod": {
       "score": 7,
-      "reason": "LOD2 (1 062) keeps the silhouette shell and decks; the lattice becomes solid frustums.",
-      "fixes": []
+      "reason": "LOD2 (1 052) keeps the silhouette shell and decks, but the lattice becomes solid brown frustums: the far view reads as a solid sculpture, not a see-through tower.",
+      "fixes": [
+        "an alpha-cutout lattice strip on the LOD2 frustums so it stays see-through at distance"
+      ]
     },
     "technical": {
       "score": 8,
-      "reason": "QA PASS incl. the new connections gate (campanile ribs now stand on their ring; railing mid rails removed): 187 872 / 21 860 / 1 062, one draw.",
-      "fixes": []
+      "reason": "QA PASS incl. connections; 187 768 / 21 796 / 1 052, one draw.",
+      "fixes": [
+        "instance the repeated lattice panels (EXT_mesh_gpu_instancing) to cut LOD0 file size"
+      ]
     }
   },
   "renders": {
-    "hero.png": "1f8175fae00248e1e5807e26abab217872847627def92317efd86d39ba7e8593",
-    "sheet.png": "90526542b5dfd0f5543632478f5844b2a1455f0d481ac021385ef11223c5a642",
-    "raking.png": "4adf7a39d497759c939295a1d5a92c2e98ff96c48066fc1d6fe21abfb8afa5df",
-    "raking_detail.png": "7b41ec742ef223d59b12370ed3cbca854ab077f9e51a4f36a1138b46909ef341",
-    "lods.png": "5ceb1b6088b89b3e6f37a0840b2dbbe3e80dc1067816a12675d35a6236f1674f",
-    "silhouette.png": "835054d2d96de0c194eac8501fda8e02417cebf1dd06b429edb5b6086441414c",
-    "value.png": "6257d7458d87e8abf8bd3adc280370fd3f9e3f36ce4b10a7d153a4e0dce312ef",
-    "detail.png": "dfaeadf7e429e772cef3756a80d4c4d9225086ba76b73667903de31921a37a92"
-  },
-  "metrics": {
-    "silhouette": [
-      {
-        "view": "front",
-        "iou": 0.44
-      },
-      {
-        "view": "side",
-        "iou": 0.379
-      },
-      {
-        "view": "3/4",
-        "iou": 0.845
-      }
-    ],
-    "focal": {
-      "peakPart": "campanile",
-      "peak": [
-        398,
-        94
-      ],
-      "focalShare": 0,
-      "focalArea": 0,
-      "top": [
-        {
-          "part": "leg_2",
-          "share": 0.195
-        },
-        {
-          "part": "pavilion_1",
-          "share": 0.182
-        },
-        {
-          "part": "leg_3",
-          "share": 0.139
-        }
-      ],
-      "declared": []
-    },
-    "rest": {
-      "share": 0,
-      "spread": 0.041,
-      "min": 0.25
-    },
-    "shape": {
-      "acuteShare": 1,
-      "straightShare": 1,
-      "taper": 0.851,
-      "shape": "aggressive"
-    }
+    "hero.png": "fb28196fd72b6c84719c9d07a23eb94ba22cfb55a9d7f0b8aebaead4bf6e9ff7",
+    "sheet.png": "9e5577e97ab0cdc3b535c01fad0cf49e5d5456184f981f0a6498d3a513d628df"
   }
 }

@@ -1,0 +1,65 @@
+{
+  "asset": "loco_440",
+  "reviewer": "agent",
+  "overall": 6.3,
+  "scores": {
+    "silhouette": {
+      "score": 8,
+      "reason": "Diamond-less tall stack, domes, bell, headlamp, cowcatcher, cab and tender read as an 1880s 4-4-0 in every view.",
+      "fixes": [
+        "flared balloon stack top a touch wider"
+      ]
+    },
+    "proportions": {
+      "score": 7,
+      "reason": "4-4-0 wheel arrangement, drivers and boiler length read right; the tender is a plain box and the cab roof overhang is generous.",
+      "fixes": [
+        "tender sides with flare and coping",
+        "check the cab roof overhang against the Jupiter replica photos"
+      ]
+    },
+    "materials": {
+      "score": 6,
+      "reason": "Paint, brass, black iron and wood separate; the blue is a flat saturated plastic and the brass and black boiler share one sheen.",
+      "fixes": [
+        "clearcoat paint with orange-peel roughness on the blue",
+        "polished brass (metal, low roughness) on the domes and bands"
+      ]
+    },
+    "detail": {
+      "score": 7,
+      "reason": "Spoked drivers, rods, crossheads, bell, sand and steam domes, piping, lettered panels and sleepers; no rivets on the smokebox, no lining on the cab.",
+      "fixes": [
+        "rivet rows on smokebox and firebox",
+        "pin-striping on the cab and tender panels"
+      ]
+    },
+    "wear": {
+      "score": 3,
+      "reason": "Showroom-clean: no soot on the stack, no oil on the motion, no rust.",
+      "fixes": [
+        "soot down the stack and smokebox front",
+        "oil and grime on the motion and wheels"
+      ]
+    },
+    "lod": {
+      "score": 6,
+      "reason": "FAR LOD2 turns the spoked drivers into solid red blocks and the track into a white slab: colour and shape pop.",
+      "fixes": [
+        "keep wheels as 8-sided discs with a dark hub at LOD2",
+        "keep the track colour (wood/steel) at LOD2"
+      ]
+    },
+    "technical": {
+      "score": 7,
+      "reason": "QA clean; 46k / 19k / 1.4k tris over 84 parts.",
+      "fixes": [
+        "merge static body parts to cut draws; keep pivots only on wheels and rods"
+      ]
+    }
+  },
+  "renders": {
+    "hero.png": "6eccdaedb5d39535800e6426da4d601325a86f766c8ada9f8c42b688e67ba1d7",
+    "sheet.png": "9742c51f21ec65c1d2237145fcc51e9f1705372c27760e134c785a2aa8261946"
+  }
+}

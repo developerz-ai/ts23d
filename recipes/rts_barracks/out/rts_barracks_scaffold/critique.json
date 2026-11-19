@@ -1,105 +1,65 @@
 {
   "asset": "rts_barracks_scaffold",
   "reviewer": "agent",
-  "overall": 7.1,
+  "overall": 6.4,
   "scores": {
     "silhouette": {
       "score": 7,
-      "reason": "Half-built walls inside a scaffold; team tarp and banner carry the read.",
-      "fixes": []
+      "reason": "Half-height walls stepped at the top, tower drums without caps, a scaffold of poles, ledgers and pine plank decks, and two banners: reads clearly as a barracks under construction.",
+      "fixes": [
+        "a hoist or gin-pole with a rope on one tower so the build stage reads from far away"
+      ]
     },
     "proportions": {
       "score": 7,
-      "reason": "10 x 14 m hall, 5.1 m eaves, 3.5 m gate (measures gate) = 1.8 x a Warden; storey and door scale per the house playbook.",
-      "fixes": []
+      "reason": "15.6 x 18.0 x 5.5 m; scaffold lifts at a believable ~3.2 m deck height; poles look slightly too thin for timber scaffold at this scale.",
+      "fixes": [
+        "scaffold poles ~0.12 m diameter (site.ts scaffold()) instead of the current thin tubes"
+      ]
     },
     "materials": {
-      "score": 7,
-      "reason": "Dressed-stone blocks (concrete grain at LOD0, the stone strip's coursing at LOD1/2), coursed drum towers (chamfered bed joints in the profile), lime-plaster gables in an oak frame, oak porch posts and rafters, tarred oak gate, team slate roof lapped like real sheets, iron fittings, brass.",
+      "score": 6,
+      "reason": "Pine decks read as fresh wood, stone blocks as stone; poles read as grey metal tubes rather than weathered timber poles, and in sheet.png the plank decks render pale grey-white.",
       "fixes": [
-        "window reveals / sills as their own stone"
+        "darker, grained wood_weathered poles with lashings at the nodes instead of the black clamp blocks",
+        "check the pine role on deck planks: pale grey in sheet.png while wood in hero.png"
       ]
     },
     "detail": {
-      "score": 7,
-      "reason": "Poles, ledgers with steel couplers at every crossing, pine plank decks, team tarp, build dust.",
-      "fixes": []
+      "score": 6,
+      "reason": "Poles, ledgers, braces, plank decks, stepped wall tops and an inlay inside; no ladders, ropes, buckets or loose blocks on the decks.",
+      "fixes": [
+        "a ladder between deck and ground",
+        "blocks and a mortar bucket on the decks",
+        "rope lashings at pole nodes"
+      ]
     },
     "wear": {
-      "score": 6,
-      "reason": "weather(): chipped arrises 10%, moss + damp on 35% of the 1.1 m wall foot, salt dust on ledges, grime streaks running 1.6 m down from eaves drips and window sills (gravity-traced); timber dusty/muddy.",
-      "fixes": []
+      "score": 5,
+      "reason": "Clean stone and fresh decks; no mortar drips down the walls, no mud at the pole feet.",
+      "fixes": [
+        "mortar drips below the top courses and splash on the plinth",
+        "mud at pole feet"
+      ]
     },
     "lod": {
-      "score": 8,
-      "reason": "LOD2 one box per bay from the same cell plan, so stages and damage agree at every LOD; <= 900 tris.",
-      "fixes": []
+      "score": 6,
+      "reason": "FAR LOD2 keeps walls, towers, poles and banners, but the plank decks disappear and the walls lose their coursing, so the scaffold reads as bare sticks.",
+      "fixes": [
+        "keep the plank decks as single quads at LOD2 (site.ts scaffold())",
+        "value stripes for coursing at LOD2"
+      ]
     },
     "technical": {
       "score": 8,
-      "reason": "QA PASS on every gate incl. connections and weather (exact coverage). Deterministic, one trim material + team slot, 8 liveries; `bun test recipes/rts_faction` 18/18. Banners hang from a sewn sleeve on a bracketed crossbar; rubble stacks block-on-block.",
-      "fixes": []
+      "reason": "QA PASS on every gate (rebuilt today), tris 17.9k / 4.59k / 704, draws 2 / 2 / 2; deterministic, one trim material + team slot. Triangles mostly sit in the running-bond blocks, where they show.",
+      "fixes": [
+        "merge the per-block wall boxes into one course mesh per bay at LOD0 (shared inner faces removed) to cut the block-count triangles without losing the coursing"
+      ]
     }
   },
   "renders": {
-    "hero.png": "89cea2458f17fbfec6cd4d855b5b325b9a0255159b1a5710244bb32f5f445248",
-    "sheet.png": "b5c6a81e566a6fac97d7b96c4a83c7439a77a04b916f32e79540376f3638e852",
-    "raking.png": "077d9d650b706ae7603f31be6ef6318a7ddeb52a2f99294a8c700f8e443218a3",
-    "raking_detail.png": "4f27219d2033bda16726654fa48adb715eb006d53f0e8de1a5e70ae1fea19599",
-    "lods.png": "8c2c63ff1c621ca765a4e43afe5b90aa1bd78f142d94c016fbc179eb5d6552ad",
-    "silhouette.png": "e54fa297180170ad62c2b38496c1f3d40b955c694c9b0ce51f9615099141000a",
-    "value.png": "0d59bbedd4b4aa887fb398063bc54213c1c0d26ed8cc34ee2af87646a5a409b2",
-    "detail.png": "1340de824e10e62844e350b38bdc008fcfa44f2d31eb98f4fb33ff60144644a8"
-  },
-  "metrics": {
-    "silhouette": [
-      {
-        "view": "front",
-        "iou": 0.761
-      },
-      {
-        "view": "side",
-        "iou": 0.848
-      },
-      {
-        "view": "3/4",
-        "iou": 0.974
-      }
-    ],
-    "focal": {
-      "peakPart": "tower_r",
-      "peak": [
-        179,
-        133
-      ],
-      "focalShare": 0,
-      "focalArea": 0,
-      "top": [
-        {
-          "part": "scaffold",
-          "share": 0.351
-        },
-        {
-          "part": "walls",
-          "share": 0.157
-        },
-        {
-          "part": "banner_r",
-          "share": 0.151
-        }
-      ],
-      "declared": []
-    },
-    "rest": {
-      "share": 0.396,
-      "spread": 0.787,
-      "min": 0.25
-    },
-    "shape": {
-      "acuteShare": 0.441,
-      "straightShare": 0.781,
-      "taper": 0.693,
-      "shape": "stable"
-    }
+    "hero.png": "f71898beceb9aea5a64f2e12e31d1bb98b733b6243eac8a196155662a91f0872",
+    "sheet.png": "60fa7bf0b44041f603e8911649b578047d3f2ca3549e5f17838d4a2b75bd6e8e"
   }
 }

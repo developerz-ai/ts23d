@@ -1,105 +1,65 @@
 {
   "asset": "rts_barracks_rubble",
   "reviewer": "agent",
-  "overall": 7.0,
+  "overall": 5.7,
   "scores": {
     "silhouette": {
-      "score": 7,
-      "reason": "Wall stubs, stacked rubble heaps and fallen team slabs; ownership still reads (18.5% team share).",
-      "fixes": []
+      "score": 5,
+      "reason": "A flat plinth with knee-high wall stubs, tower drum stubs and a heap of cubes over red roof slabs: reads as generic ruins; only the two drum stubs hint that it was this barracks. Front and side views are a low flat strip.",
+      "fixes": [
+        "leave one gable corner or a tower stub standing 3-4 m high (plan.ts wallCells for rubble) so the ruin keeps a recognisable vertical"
+      ]
     },
     "proportions": {
       "score": 7,
-      "reason": "10 x 14 m hall, 5.1 m eaves, 3.5 m gate (measures gate) = 1.8 x a Warden; storey and door scale per the house playbook.",
-      "fixes": []
+      "reason": "13.3 x 18.0 x 2.6 m on the same plinth and plan as the hall; block sizes match the standing walls.",
+      "fixes": [
+        "vary rubble block sizes (0.3-1.0x) so the heap does not look like one repeated cube"
+      ]
     },
     "materials": {
-      "score": 7,
-      "reason": "Dressed-stone blocks (concrete grain at LOD0, the stone strip's coursing at LOD1/2), coursed drum towers (chamfered bed joints in the profile), lime-plaster gables in an oak frame, oak porch posts and rafters, tarred oak gate, team slate roof lapped like real sheets, iron fittings, brass.",
+      "score": 5,
+      "reason": "Stone blocks read as stone, but the fallen roof slabs are clean saturated red sheets and the tower stub tops show a radial cut pattern that reads as a sliced log, not broken masonry.",
       "fixes": [
-        "window reveals / sills as their own stone"
+        "break the fallen slabs into several pieces with darkened, dusty undersides (fallenSlabs in site.ts)",
+        "give tower stub tops a broken block surface (stepped, missing blocks) instead of the flat radial cap"
       ]
     },
     "detail": {
-      "score": 6,
-      "reason": "Seeded block heaps stacked on face contacts, charred beams, fallen roof slabs, smoke.",
-      "fixes": []
+      "score": 5,
+      "reason": "Wall stubs, block heaps, two charred beams and fallen slabs; blocks are near-identical bevelled cubes and there is no small debris (gravel, splinters, shards) between them.",
+      "fixes": [
+        "scatter small debris and gravel around the heaps",
+        "more charred beams, some leaning on the wall stubs"
+      ]
     },
     "wear": {
-      "score": 6,
-      "reason": "weather(): chipped arrises 10%, moss + damp on 35% of the 1.1 m wall foot, salt dust on ledges, grime streaks running 1.6 m down from eaves drips and window sills (gravity-traced); timber dusty/muddy. Rubble dust and chips on the heaps.",
-      "fixes": []
+      "score": 4,
+      "reason": "Every broken block is a clean bevelled cube with crisp arrises; no soot, scorch or ash on the floor, no dust over the fallen team slabs, which stay bright and unmarked. Nothing says fire or collapse beyond the arrangement.",
+      "fixes": [
+        "grime() scorch zones on wall stub tops and the floor around the heaps (rubble() in site.ts)",
+        "dust coat on the fallen team slabs (fallenSlabs in site.ts) so the red reads as buried, not freshly laid",
+        "chip/break one or two edges per rubble block instead of whole cubes"
+      ]
     },
     "lod": {
-      "score": 8,
-      "reason": "LOD2 one box per bay from the same cell plan, so stages and damage agree at every LOD; <= 900 tris.",
-      "fixes": []
+      "score": 6,
+      "reason": "FAR LOD2 keeps the plinth, wall stubs and tower drums, but the tower drums turn into coarse octagons and the fallen team slabs merge into one flat red polygon, so the heap texture of LOD0 disappears at distance.",
+      "fixes": [
+        "keep 10-12 sides on the tower stubs at LOD2 (a few dozen triangles)",
+        "keep 2-3 tilted heap blocks per bay at LOD2 instead of flattening the fallen slabs into one plane"
+      ]
     },
     "technical": {
       "score": 8,
-      "reason": "QA PASS on every gate incl. connections and weather (exact coverage). Deterministic, one trim material + team slot, 8 liveries; `bun test recipes/rts_faction` 18/18. Banners hang from a sewn sleeve on a bracketed crossbar; rubble stacks block-on-block.",
-      "fixes": []
+      "reason": "QA PASS on every gate (rebuilt today), tris 10.3k / 3.66k / 592, draws 2 / 2 / 2; deterministic, one trim material + team slot. Triangles mostly sit in the running-bond blocks, where they show.",
+      "fixes": [
+        "merge the per-block wall boxes into one course mesh per bay at LOD0 (shared inner faces removed) to cut the block-count triangles without losing the coursing"
+      ]
     }
   },
   "renders": {
-    "hero.png": "61d261cc9576a9daf292e86a290939199b3f831a192025e17a0bdb1594365444",
-    "sheet.png": "327fce9f8103b9c5e72d8b043d52e44b531dcd5ad5c64742928c9ce29f27c71f",
-    "raking.png": "2cfec438a3611c8e67a7b4ed4b9fa08284037bb56065ec8e72344515975e10a6",
-    "raking_detail.png": "ae4a1e9be7cae5fcb05cffc48c565e7a30cd8b0ab217040bebc3f090665b4520",
-    "lods.png": "e3336c592ae3173db6797c3956fd237ad79c3c81c2d2083a0d9a53a10e3f3e7c",
-    "silhouette.png": "f2923d25c75bead08b098e1c34487fde0efef810acc7a76ca50673871ad78f03",
-    "value.png": "b6f1248e77d88a0b3e1873c8791616f65280c44dbfc8412e9c8033a1d3d324bd",
-    "detail.png": "bbd330561fc8b2cdf31697a9121aa0d6050c7498b34e82daa9fc18610bb69105"
-  },
-  "metrics": {
-    "silhouette": [
-      {
-        "view": "front",
-        "iou": 0.878
-      },
-      {
-        "view": "side",
-        "iou": 0.843
-      },
-      {
-        "view": "3/4",
-        "iou": 0.953
-      }
-    ],
-    "focal": {
-      "peakPart": "walls",
-      "peak": [
-        209,
-        216
-      ],
-      "focalShare": 0,
-      "focalArea": 0,
-      "top": [
-        {
-          "part": "walls",
-          "share": 0.453
-        },
-        {
-          "part": "rubble",
-          "share": 0.197
-        },
-        {
-          "part": "plinth",
-          "share": 0.164
-        }
-      ],
-      "declared": []
-    },
-    "rest": {
-      "share": 0.472,
-      "spread": 0.739,
-      "min": 0.25
-    },
-    "shape": {
-      "acuteShare": 0.026,
-      "straightShare": 0.729,
-      "taper": 0.627,
-      "shape": "stable"
-    }
+    "hero.png": "2dc3a96e1c0effffe10e1ee87c65c80a372ef08ef246e663588a1f29a49f9973",
+    "sheet.png": "16f96b33047d909ec0d00bf97240b27c71d729ffadff5ddb056fcba8f930d1c0"
   }
 }

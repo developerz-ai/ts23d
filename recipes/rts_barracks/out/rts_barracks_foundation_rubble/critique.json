@@ -1,105 +1,65 @@
 {
   "asset": "rts_barracks_foundation_rubble",
   "reviewer": "agent",
-  "overall": 6.9,
+  "overall": 5.7,
   "scores": {
     "silhouette": {
-      "score": 6,
-      "reason": "Flattened site.",
-      "fixes": []
+      "score": 5,
+      "reason": "Slab with tower discs, scattered cubes and fallen red slabs: reads as a wrecked site but very flat; nothing breaks the outline above 1 m.",
+      "fixes": [
+        "one upright tipped pallet or a leaning timber stack so the ruin has a vertical"
+      ]
     },
     "proportions": {
       "score": 7,
-      "reason": "10 x 14 m hall, 5.1 m eaves, 3.5 m gate (measures gate) = 1.8 x a Warden; storey and door scale per the house playbook.",
-      "fixes": []
+      "reason": "Same slab as the foundation; scattered blocks match pallet block sizes.",
+      "fixes": [
+        "vary rubble block sizes (0.3-1.0x) so the scatter does not look like one repeated cube"
+      ]
     },
     "materials": {
-      "score": 7,
-      "reason": "Dressed-stone blocks (concrete grain at LOD0, the stone strip's coursing at LOD1/2), coursed drum towers (chamfered bed joints in the profile), lime-plaster gables in an oak frame, oak porch posts and rafters, tarred oak gate, team slate roof lapped like real sheets, iron fittings, brass.",
+      "score": 5,
+      "reason": "Stone blocks and the slab read; the fallen team slabs are clean saturated red planes and the tower discs show a radial sliced-log pattern on top.",
       "fixes": [
-        "window reveals / sills as their own stone"
+        "dusty, broken fallen slabs (fallenSlabs in site.ts)",
+        "tower footing tops as stone blocks, not a radial cap"
       ]
     },
     "detail": {
-      "score": 6,
-      "reason": "Low stacked rubble, slabs, beams.",
-      "fixes": []
+      "score": 5,
+      "reason": "Scattered blocks, two charred beams, fallen slabs; no small debris or splinters.",
+      "fixes": [
+        "gravel and small shards around each block",
+        "splintered ends on the charred beams"
+      ]
     },
     "wear": {
-      "score": 6,
-      "reason": "weather(): chipped arrises 10%, moss + damp on 35% of the 1.1 m wall foot, salt dust on ledges, grime streaks running 1.6 m down from eaves drips and window sills (gravity-traced); timber dusty/muddy. Rubble dust.",
-      "fixes": []
+      "score": 4,
+      "reason": "Every broken block is a clean bevelled cube with crisp arrises; no soot, scorch or ash on the floor, no dust over the fallen team slabs, which stay bright and unmarked. Nothing says fire or collapse beyond the arrangement.",
+      "fixes": [
+        "grime() scorch zones on wall stub tops and the floor around the heaps (rubble() in site.ts)",
+        "dust coat on the fallen team slabs (fallenSlabs in site.ts) so the red reads as buried, not freshly laid",
+        "chip/break one or two edges per rubble block instead of whole cubes"
+      ]
     },
     "lod": {
-      "score": 8,
-      "reason": "LOD2 one box per bay from the same cell plan, so stages and damage agree at every LOD; <= 900 tris.",
-      "fixes": []
+      "score": 6,
+      "reason": "FAR LOD2 keeps the plinth, wall stubs and tower drums, but the tower drums turn into coarse octagons and the fallen team slabs merge into one flat red polygon, so the heap texture of LOD0 disappears at distance.",
+      "fixes": [
+        "keep 10-12 sides on the tower stubs at LOD2 (a few dozen triangles)",
+        "keep 2-3 tilted heap blocks per bay at LOD2 instead of flattening the fallen slabs into one plane"
+      ]
     },
     "technical": {
       "score": 8,
-      "reason": "QA PASS on every gate incl. connections and weather (exact coverage). Deterministic, one trim material + team slot, 8 liveries; `bun test recipes/rts_faction` 18/18. Banners hang from a sewn sleeve on a bracketed crossbar; rubble stacks block-on-block.",
-      "fixes": []
+      "reason": "QA PASS on every gate (rebuilt today), tris 4.88k / 1.97k / 388, draws 2 / 2 / 2; deterministic, one trim material + team slot. Triangles mostly sit in the running-bond blocks, where they show.",
+      "fixes": [
+        "merge the per-block wall boxes into one course mesh per bay at LOD0 (shared inner faces removed) to cut the block-count triangles without losing the coursing"
+      ]
     }
   },
   "renders": {
-    "hero.png": "452436bcd4a4084ca4cda0593e424f0072039280ff2142bab426842857bbf57a",
-    "sheet.png": "aedee4b2b3710e1b9d74ea9cb92e902b572306aa663c3e710e641cf22908f3d8",
-    "raking.png": "ee2d171ed1c33fdc82503024dc13a969ec466efe48479b351649a43984cb1155",
-    "raking_detail.png": "ecc58265b7e9347004913c2a5a4251db6df1ddef511572962b65902189344013",
-    "lods.png": "9e51f4190e4b830b532b6724b9f3db0ad244acb59e3d6414a2e77077d66cc808",
-    "silhouette.png": "1e20a2c9c871eff64fa7c0e8901fa64fedb2c8af70d12fc5ad83559947ca978e",
-    "value.png": "1086332be214360820b1a7fe3736838e5d2a59f948aeba236366de68478ae85e",
-    "detail.png": "9681d484ef01dee93953c7e9fa9071d51be55c03d035ca0d79922113dc03b44b"
-  },
-  "metrics": {
-    "silhouette": [
-      {
-        "view": "front",
-        "iou": 0.89
-      },
-      {
-        "view": "side",
-        "iou": 0.829
-      },
-      {
-        "view": "3/4",
-        "iou": 0.969
-      }
-    ],
-    "focal": {
-      "peakPart": "walls",
-      "peak": [
-        350,
-        250
-      ],
-      "focalShare": 0,
-      "focalArea": 0,
-      "top": [
-        {
-          "part": "walls",
-          "share": 0.456
-        },
-        {
-          "part": "plinth",
-          "share": 0.291
-        },
-        {
-          "part": "tower_r",
-          "share": 0.219
-        }
-      ],
-      "declared": []
-    },
-    "rest": {
-      "share": 0.662,
-      "spread": 0.721,
-      "min": 0.25
-    },
-    "shape": {
-      "acuteShare": 0.048,
-      "straightShare": 0.771,
-      "taper": 0.668,
-      "shape": "stable"
-    }
+    "hero.png": "b5c4590f3c2c616d5fcc2d18f79251ac66209bf82e5e7d58e3548fd35dbde787",
+    "sheet.png": "a4df8723f5e98f3706c6236385cca3d4c6fe4f8868f9e937ef37635c4f2e9319"
   }
 }

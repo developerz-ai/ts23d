@@ -46,6 +46,12 @@ Measured on the build: shoulder 1.71 m, head and body 3.24 m, tail bones 2.20 m.
 Five cached requests, each naming the previous output by sha256 (kinds `modelChain`). A build
 never calls a model or Blender; `t3d neural run` does.
 
+The chain is `required: true`. The code quadruped this spec would give without the model is not this
+asset (over 100 000 triangles at LOD 0 against a 30 000 budget, off the sourced box), so `t3d build`
+with an output missing stops with one `T3D_NEURAL_MISSING` and builds nothing. The npm package does
+not ship `neural/`: clone the repository to build this recipe, or copy the folder into your project
+and run `t3d neural run` on the copy (GPU and Blender, below).
+
 | # | Task | Tool (licence) | Output | In git |
 |---|---|---|---|---|
 | 1 | `image` | Z-Image-Turbo (Apache-2.0), seed 9, 1024² | concept PNG, 0.66 MB | yes |

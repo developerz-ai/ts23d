@@ -1,0 +1,63 @@
+{
+  "asset": "king_cobra",
+  "reviewer": "agent",
+  "overall": 5.9,
+  "scores": {
+    "silhouette": {
+      "score": 7,
+      "reason": "A raised forebody with a hood over a ground coil reads as a cobra; the hood is narrow and the coil loose.",
+      "fixes": [
+        "wider, flatter hood ribs at the raised neck",
+        "tighter coil stack under the raised forebody"
+      ]
+    },
+    "proportions": {
+      "score": 6,
+      "reason": "Raised height and coil size plausible for a 3–4 m snake; the body is near-constant girth with a thin tail and an abrupt neck.",
+      "fixes": [
+        "taper girth from mid-body to the tail and swell the mid-body"
+      ]
+    },
+    "materials": {
+      "score": 6,
+      "reason": "Dark scales with pale chevrons and cream ventral scutes read as scales; the chevron zigzag is closer to a viper pattern than the king cobra crossbands.",
+      "fixes": [
+        "pale crossbands (chevrons pointing to the head) instead of zigzags",
+        "glossy scale roughness (low) on the dorsum"
+      ]
+    },
+    "detail": {
+      "score": 6,
+      "reason": "Ventral scutes, head shields and tongue read; no eyes catchlight, no keeled scale normal.",
+      "fixes": [
+        "visible eyes with a brille",
+        "scale normal map on the flanks"
+      ]
+    },
+    "wear": {
+      "score": 4,
+      "reason": "Clean; no shed remnants or scars.",
+      "fixes": [
+        "a dull pre-shed patch or a healed scar"
+      ]
+    },
+    "lod": {
+      "score": 5,
+      "reason": "FAR LOD2 replaces the pattern with big black/cream blocks: the colour shifts at distance.",
+      "fixes": [
+        "average the pattern to the dorsal grey-brown at LOD2 instead of sampling per band"
+      ]
+    },
+    "technical": {
+      "score": 7,
+      "reason": "QA clean; 62k / 3.8k / 584 tris in one part; the LOD0→LOD1 drop is 16× (a visible pop risk).",
+      "fixes": [
+        "raise LOD1 to ~12k or lower LOD0 ring density along the straight neck"
+      ]
+    }
+  },
+  "renders": {
+    "hero.png": "60a9d78fe54a8af71c95a41b46d384fd62051e2d27bcff3909477abf117ed1e2",
+    "sheet.png": "7d67e9a54340e61f366c7dab159d3d375ce31aecddd337f21238c0c7f550c6fb"
+  }
+}

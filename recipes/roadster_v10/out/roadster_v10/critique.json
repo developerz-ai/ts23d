@@ -1,0 +1,63 @@
+{
+  "asset": "roadster_v10",
+  "reviewer": "agent",
+  "overall": 6.3,
+  "scores": {
+    "silhouette": {
+      "score": 8,
+      "reason": "Long bonnet, cab-rearward roadster with roll hoops, raked screen and side exhaust reads as a front-engined V10 roadster.",
+      "fixes": [
+        "a more pronounced rear haunch over the rear wheel"
+      ]
+    },
+    "proportions": {
+      "score": 7,
+      "reason": "4.5 m long, 1.3 m high; wheels and overhangs look right; the front is tall and blunt in FRONT.",
+      "fixes": [
+        "lower the nose 3–4 cm and sharpen the front overhang plan shape"
+      ]
+    },
+    "materials": {
+      "score": 7,
+      "reason": "Red paint, black grille mesh, alloy wheels, rubber, glass and chrome exhaust separate; the paint reads satin without clearcoat reflections; the windscreen renders opaque light grey in sheet.png.",
+      "fixes": [
+        "clearcoat finish with sharp reflections on the body paint",
+        "consistent transparent glass in both renderers"
+      ]
+    },
+    "detail": {
+      "score": 7,
+      "reason": "Bonnet vents, side gills, grille mesh, headlamp internals, mirrors, calipers, side exhaust, interior.",
+      "fixes": [
+        "shut-lines for doors and bonnet",
+        "badges and fuel filler"
+      ]
+    },
+    "wear": {
+      "score": 4,
+      "reason": "Showroom-clean apart from a light dust speckle.",
+      "fixes": [
+        "brake dust on the wheels and road grime on the sills"
+      ]
+    },
+    "lod": {
+      "score": 6,
+      "reason": "FAR LOD2 turns the tyres light grey with the wheels: the black rubber disappears and the wheels read as white discs.",
+      "fixes": [
+        "keep a black tyre ring separate from the rim at LOD2"
+      ]
+    },
+    "technical": {
+      "score": 5,
+      "reason": "QA clean but 909k / 78k / 5.5k tris: LOD0 is roughly 5–10× a hero car budget and drops 12× to LOD1.",
+      "fixes": [
+        "gate wheel spokes, grille mesh and interior ring counts by ctx.lod to bring LOD0 under ~150k",
+        "merge static body draws (91 parts)"
+      ]
+    }
+  },
+  "renders": {
+    "hero.png": "985611e643917323773d1fcfef8505365978152a852d9f4661ee8df3964d7a11",
+    "sheet.png": "6159d4f047c5988a09884ff18864db92442bffe98bb83295c710c4138c5ef6d7"
+  }
+}

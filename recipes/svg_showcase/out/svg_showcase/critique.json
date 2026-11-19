@@ -1,0 +1,120 @@
+{
+  "asset": "svg_showcase",
+  "reviewer": "agent",
+  "overall": 5.7,
+  "scores": {
+    "silhouette": {
+      "score": 7,
+      "reason": "Gear, amphora and goblin head on a plinth: each reads from front and 3/4 views; the star emblem is a speck on the plinth edge.",
+      "fixes": [
+        "a bigger star emblem (0.10 m) so it reads in the hero"
+      ]
+    },
+    "proportions": {
+      "score": 7,
+      "reason": "Design spec, desk-diorama scale: 0.5 x 1.8 x 0.6 m; objects match the README sizes and sit well on the plinth.",
+      "fixes": [
+        "set the head on a short neck stump so it does not sit chin-down on the plinth"
+      ]
+    },
+    "materials": {
+      "score": 4,
+      "reason": "Flat untextured colours: the gear is grey plastic, the amphora smooth orange, the head smooth green; nothing reads as metal, fired clay or skin.",
+      "fixes": [
+        "gear on a steel strip with metalness and machined roughness",
+        "amphora on a terracotta strip with throw rings",
+        "skin strip with roughness variation on the head"
+      ]
+    },
+    "detail": {
+      "score": 5,
+      "reason": "Gear teeth with chamfers, lightening holes, amphora rim and foot, sculpted eyes, brow, nostrils and tusks; surfaces between are bare.",
+      "fixes": [
+        "bevelled gear bore with a keyway",
+        "skin wrinkles and ear notches on the head"
+      ]
+    },
+    "wear": {
+      "score": 3,
+      "reason": "None: everything is pristine and uniform.",
+      "fixes": [
+        "grime() oil on the gear teeth and dust on the amphora shoulder"
+      ]
+    },
+    "lod": {
+      "score": 7,
+      "reason": "FAR LOD2 keeps all three objects, outlines and colours; the head becomes faceted.",
+      "fixes": [
+        "a slightly finer sculpt cell on the head at LOD2"
+      ]
+    },
+    "technical": {
+      "score": 7,
+      "reason": "QA clean (pack): 38.7k / 10.2k / 1.9k tris; most of LOD0 goes to the sculpted head on a desk prop.",
+      "fixes": [
+        "coarser sculpt cell on the head at LOD0 (the smooth areas do not need it)"
+      ]
+    }
+  },
+  "renders": {
+    "hero.png": "54578ff672cff6d71421adc6f0846bb8bb411a6e47d387a36814e2dfbd31ea29",
+    "sheet.png": "c8c6c5294dfae696b112e40d81b9a55882d82c7d4f80a7bb0913962676f534b0",
+    "raking.png": "359a4dac93250d6df93c773f6ed2bdefed8f13eb9a27b058dc5ae6976a58ab09",
+    "raking_detail.png": "2bd9c3f7d1eb1bd1f51f7d56116662e6d4ab8ebbab5292e9899a5d6e88abf35c",
+    "lods.png": "4f3e7a47b8f0d2a9d4abe07715f3a5be060091583657a77ea44fff72e29f4010",
+    "silhouette.png": "577471fe7e48930351616208623c2bbdd531b9e1f154de6aa78863f73e8b50ae",
+    "value.png": "a297ab94a4c5693831110c0bd1ebf445b35c0c526af5e427c593865e68839ba5",
+    "detail.png": "8aa9ca3e8339b7a695293a719f34d5013f35683e519e080482ab21f044598418"
+  },
+  "metrics": {
+    "silhouette": [
+      {
+        "view": "front",
+        "iou": 0.978
+      },
+      {
+        "view": "side",
+        "iou": 0.956
+      },
+      {
+        "view": "3/4",
+        "iou": 0.982
+      }
+    ],
+    "focal": {
+      "peakPart": "head",
+      "peak": [
+        620,
+        141
+      ],
+      "focalShare": 0,
+      "focalArea": 0,
+      "top": [
+        {
+          "part": "gear",
+          "share": 0.568
+        },
+        {
+          "part": "head",
+          "share": 0.246
+        },
+        {
+          "part": "amphora",
+          "share": 0.108
+        }
+      ],
+      "declared": []
+    },
+    "rest": {
+      "share": 0.75,
+      "spread": 0.663,
+      "min": 0.25
+    },
+    "shape": {
+      "acuteShare": 0.13,
+      "straightShare": 0.593,
+      "taper": 0.568,
+      "shape": "stable"
+    }
+  }
+}

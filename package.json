@@ -130,6 +130,7 @@
     "!recipes/**/*.test.ts",
     "!recipes/**/*.png",
     "!recipes/*/out",
+    "!recipes/*/neural",
     "!docs/media",
     "examples",
     "!examples/neural-server",

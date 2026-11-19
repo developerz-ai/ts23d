@@ -1,29 +1,34 @@
 {
   "asset": "dropship",
   "reviewer": "agent",
-  "overall": 7.3,
+  "overall": 7.1,
   "scores": {
     "silhouette": {
       "score": 8,
-      "reason": "Original VTOL dropship: lofted nose with framed canopy, slab cabin with rear ramp, two tilting ducted nacelles on sponsons, swept tail and fin, landing gear, chin gun. Distinct and readable from every view and at LOD2.",
-      "fixes": []
+      "reason": "Original VTOL dropship: lofted nose with framed canopy, slab cabin with rear ramp, two tilting ducted nacelles on sponsons, swept tail and fin, landing gear. Distinct and readable from every view and at LOD2.",
+      "fixes": [
+        "a deeper chin or sensor blister under the nose so the FRONT view is less of a plain oval"
+      ]
     },
     "proportions": {
       "score": 8,
       "reason": "Design dossier scale (cabin fits troops at 1.8 m, ramp at walking slope) and envelope pass; nacelles in proportion to the hull.",
-      "fixes": []
+      "fixes": [
+        "shorten the tail boom ~0.5 m so the nacelles sit nearer the centre of mass in SIDE"
+      ]
     },
     "materials": {
-      "score": 7,
-      "reason": "Hull plates now steel_painted (chips to bare metal), aluminium mechanisms, cast fittings, glass canopy, glowing thrusters and navigation lights, hazard and accent paint. The chip pattern is uniform and too dense on the large plates; the nose loft shows triangle faceting in the shading.",
+      "score": 6,
+      "reason": "Steel-painted hull with chips, aluminium mechanisms, glass canopy, glowing lights, hazard and accent paint. In hero.png the left canopy pane shows a patch of white speckle noise, the nose loft shows triangle faceting in the shading, and the chip pattern is uniform and dense on the large plates.",
       "fixes": [
-        "lower chip density on big plates (a defined steel_painted variant)",
-        "weighted normals on the nose loft"
+        "find and remove the white speckle on the canopy pane (glass coplanar with the frame/interior, or grime on glass)",
+        "weighted normals on the nose loft",
+        "lower chip density on big plates (a defined steel_painted variant)"
       ]
     },
     "detail": {
       "score": 7,
-      "reason": "Plate seams, vents and louvres, greebles, antennae, hatches, stencils and tail number, gear with pads, nacelle hazard rings and louvres, cabin interior and lamp behind the ramp.",
+      "reason": "Plate seams, vents and louvres, greebles, antennae, hatches, stencils and tail number, gear with pads, nacelle hazard rings and louvres, cabin interior.",
       "fixes": [
         "rivet/fastener rows along the plate seams",
         "hydraulic lines on the gear legs"
@@ -31,9 +36,9 @@
     },
     "wear": {
       "score": 6,
-      "reason": "Chipped paint everywhere, landing-pad dirt on gear and belly, dust on top. No exhaust scorch around the nacelles, no oil streaks, no faded stencils.",
+      "reason": "Chipped paint everywhere, dirt on gear and belly, dust on top. No exhaust scorch around the nacelles, no oil streaks, no faded stencils.",
       "fixes": [
-        "heat scorch inside and below the nacelle mouths (soot zones)",
+        "heat scorch inside and below the nacelle mouths",
         "oil streaks from the gear bays"
       ]
     },
@@ -46,71 +51,14 @@
     },
     "technical": {
       "score": 8,
-      "reason": "QA PASS, 18 810 / 6 460 / 2 000, glow rules, ramp arc check, moving nacelles and ramp clear. The UV split for true-scale textures cost ~4k LOD0 triangles. Now 18 970 / 6 516 / 2 032. Connections gate clean (was 30 findings): troop-seat backrests sit in their pans and against the wall panels; the nacelle bore runs on to key the fan's stator disc; exhaust vanes span the nozzle bore chord to chord.",
+      "reason": "QA PASS, 18 766 / 6 458 / 2 002; glow rules, ramp arc check, moving nacelles and ramp clear; connections gate clean.",
       "fixes": [
-        "split only faces taller than one strip band"
+        "split only faces taller than one strip band in the UV pass"
       ]
     }
   },
   "renders": {
-    "hero.png": "3bb66d286761cefd38ad4efb1a5b2539c7b1977d37e174c6291e26c57efec0d2",
-    "sheet.png": "54fcf281d1c4cc15afb2c0822a43396155d06a041d6a231ddf3b67e17d803f54",
-    "raking.png": "18aaf7373ef2bd85de23a7566ff61eabd0b1b4032e55aa6fc76c21e889f76532",
-    "raking_detail.png": "bbba2f69e244aad48a5e7b2ebcae67b650f330bf01902a87406f2142657e56c5",
-    "lods.png": "c48e939f228d876a5fc3a6e782c2bc92cb50f66f24f2290b71d0d2f12ca9362e",
-    "silhouette.png": "92605fe555be2802ea6c330e6e85199d48a0a7e7649a4b3ae2f36798bd5b2f14",
-    "value.png": "ded60cbfb28dce6e1060fabdb2a2ac5c1d296eae038d1a9d0b55eaeef4721556",
-    "detail.png": "44103d5c4d444df75c440d697add34ed8fbad32c40de29ccacab940476545b8b"
-  },
-  "metrics": {
-    "silhouette": [
-      {
-        "view": "front",
-        "iou": 0.985
-      },
-      {
-        "view": "side",
-        "iou": 0.984
-      },
-      {
-        "view": "3/4",
-        "iou": 0.987
-      }
-    ],
-    "focal": {
-      "peakPart": "canopy",
-      "peak": [
-        537,
-        261
-      ],
-      "focalShare": 0,
-      "focalArea": 0,
-      "top": [
-        {
-          "part": "canopy",
-          "share": 0.406
-        },
-        {
-          "part": "dorsal",
-          "share": 0.195
-        },
-        {
-          "part": "hull_detail",
-          "share": 0.167
-        }
-      ],
-      "declared": []
-    },
-    "rest": {
-      "share": 0.624,
-      "spread": 0.704,
-      "min": 0.25
-    },
-    "shape": {
-      "acuteShare": 0.475,
-      "straightShare": 0.572,
-      "taper": -0.195,
-      "shape": "aggressive"
-    }
+    "hero.png": "7340ecfaecdba8fcd4422c5e8565762ef7ed49d6e6da640554ea621c96f288a0",
+    "sheet.png": "2ffd71cca1826548af99d6bc5e944de38a144f38c06054bde27d7459266f1efa"
   }
 }
