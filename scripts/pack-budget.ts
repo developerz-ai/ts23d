@@ -1,6 +1,6 @@
 // What the npm tarball may weigh and carry: a packed and unpacked size budget, a per-file limit and
-// no `recipes/*/neural/` model outputs (they stay in git; the shipped model recipes build their CPU
-// tier without them). `tarEntries` reads paths and sizes straight from the .tgz bytes (ustar, GNU
+// no `recipes/*/neural/` model outputs (they stay in git; without them `ranger` and `human_head`
+// build their CPU tier, and the model-first hybrids stop with T3D_NEURAL_MISSING). `tarEntries` reads paths and sizes straight from the .tgz bytes (ustar, GNU
 // long names, pax paths), so the check needs no `tar` flavour. Used by scripts/pack-smoke.ts.
 
 import { gunzipSync } from 'node:zlib';

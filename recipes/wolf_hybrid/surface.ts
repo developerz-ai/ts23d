@@ -42,7 +42,9 @@ export const SURFACE: Omit<NeuralRequests['mesh'], 'image'> = {
  *  behind, and this model's tail was generated lying on the rump and hocks. */
 export const DROPPED: readonly string[] = ['gallop'];
 
-/** The imported game mesh with the rig it was built for; null only with no cache provided. */
+/** The imported game mesh with the rig it was built for; null with no cache provided
+ *  and while `t3d neural run` is still filling the cache; an offline (build) cache throws
+ *  `T3D_NEURAL_MISSING` on a miss instead. */
 export const wolfModel = (ctx: BuildContext): ChainedModel | null =>
   modelChain(ctx, {
     concept: CONCEPT,

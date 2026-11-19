@@ -70,7 +70,7 @@ Repository → Settings → Environments → **New environment** `npm-publish`. 
 
 ### 2b. Repository rules
 
-- Ruleset on `main`: require a pull request and the `verify` status check (the `ci` aggregate job; one check, not the 25 shard jobs).
+- Ruleset on `main`: require a pull request and the `verify` status check (the `ci` aggregate job; one check, not one per job: 18 `gate` shards and `site`).
 - Tag ruleset on `v*`: restrict creation to maintainers and the release workflow, so nobody else can mint a release tag.
 
 ### 3. Trusted publisher on npmjs.com

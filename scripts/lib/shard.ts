@@ -1,9 +1,9 @@
 // CI splits the slow per-recipe work across parallel jobs: T3D_SHARD=k/n (1-based) owns one of n
 // slices. Unset = everything, so `bun run verify` locally is the whole gate. The slices are
-// balanced by measured cost (recipe-costs.json: seconds each folder's gate, each folder's renders
-// and each shared recipe test add to a CI shard job; refresh with `bun run scripts/recipe-costs.ts`):
-// greedy, longest first,
-// into the least-loaded shard, with shard 1 preloaded by the once-only checks it also runs.
+// balanced by measured cost (recipe-costs.json: the GitHub seconds each folder's gate, each folder's
+// renders and each shared recipe test add to a CI shard job; refresh from a green run with
+// `bun run scripts/recipe-costs.ts --from-run <id>`): greedy, longest first, into the least-loaded
+// shard, with shard 1 preloaded by the once-only checks it also runs.
 // Deterministic: the same keys and costs give the same split on every runner.
 
 import costsJson from './recipe-costs.json' with { type: 'json' };
@@ -17,6 +17,8 @@ export interface Shard {
 export interface Costs {
   /** Seconds shard 1 spends on the steps only it runs (lint, typecheck, build, pack…). */
   readonly shard1: number;
+  /** Seconds every job spends outside its units: checkout, setup, what changed, the stale check. */
+  readonly overhead?: number;
   readonly seconds: Readonly<Record<string, number>>;
 }
 

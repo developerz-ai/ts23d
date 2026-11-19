@@ -18,13 +18,23 @@ name: ci
 # (scripts/shots-folder.ts); shard 1 also runs lint, types, build and pack.
 # Measured 2026-11-19 with 16 shards (run 44474402275): 6.6 minutes push → green, shards
 # 2.6-6.4 minutes, 76 runner-minutes; the floor was human_head's renders, where each of shot /
-# hero / blueprint / icon compiled LOD0 again (about 55 s each). Since then the four renders share
-# one compile (src/cli/compile-cache.ts; human_head's renders 242 s → 88 s on the dev machine).
-# Expected, not yet measured on GitHub: slowest shard about 4 minutes (206 s of work from
-# `recipe-costs.ts --plan`, plus checkout and setup), about 4.3 minutes push → green, about
-# 74 runner-minutes; the floor is now face_demo's recipe gate (about 175 s). Replace this
-# paragraph with the first measured run. When shards drift: `bun run scripts/recipe-costs.ts
-# --tests`, then `--plan` to pick the shard count.
+# hero / blueprint / icon compiled LOD0 again. Since then the four renders share one compile
+# (src/cli/compile-cache.ts).
+# Measured 2026-11-19 with 18 shards (run 44492321426): 5.5 minutes push → green, 18 gate jobs of
+# 155-299 s (mean 222 s), about 67 runner-minutes. The work was already small enough; the split
+# was off by up to 35%, because the costs were dev-machine seconds with one guessed factor for
+# renders (real factors: 0.9 to 2.3 per folder). Slowest shard 299 s: shard 8, whose rts_barracks
+# renders took 153 s against 94 s in the costs.
+# The costs are now that run's own GitHub seconds (`bun run scripts/recipe-costs.ts --from-run
+# 44492321426`; scripts/recipe-costs-run.ts says what is measured and what is derived), with
+# 16 s of overhead per job (checkout, setup, the stale check) and 26 s of shard 1's own steps.
+# Expected, not yet measured: still 18 shards (the fewest whose worst job fits 240 s), every job
+# about 222 s (`--plan`: 221-223 s; up to 237 s where the heaviest recipe shard also draws the
+# 30 s test file src/kinds/creature-family.test.ts), about 4.3 minutes push → green (the slowest
+# job plus about 30 s of queueing and the `verify` job), the same 67 runner-minutes. No single
+# unit is the floor: the largest are face_demo's renders (171 s) and gate (166 s). Replace this
+# paragraph with the next measured run. When shards drift: `--from-run <id>` on the commit a
+# green run built, then `--plan` to pick the shard count (★).
 # Docs-only changes (scripts/ci-changes.ts: Markdown / docs/ outside recipes/) skip the recipe
 # gate and the renders; lint, types and every test still run, and `verify` still reports.
 

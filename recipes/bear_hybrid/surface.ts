@@ -42,7 +42,9 @@ export const SURFACE: Omit<NeuralRequests['mesh'], 'image'> = {
  *  plantigrade wrist 84° back, and a thick furred paw passes through the forearm there. */
 export const DROPPED: readonly string[] = ['trot', 'gallop'];
 
-/** The imported game mesh with the rig it was built for; null only with no cache provided. */
+/** The imported game mesh with the rig it was built for; null with no cache provided
+ *  and while `t3d neural run` is still filling the cache; an offline (build) cache throws
+ *  `T3D_NEURAL_MISSING` on a miss instead. */
 export const bearModel = (ctx: BuildContext): ChainedModel | null =>
   modelChain(ctx, {
     concept: CONCEPT,
