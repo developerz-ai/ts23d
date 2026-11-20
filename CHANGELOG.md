@@ -4,6 +4,8 @@ All notable changes to `@developerz.ai/ts23d`. Format: [Keep a Changelog](https:
 
 ## [Unreleased]
 
+## [0.16.0] - 2026-11-20
+
 Meshes carry which project materials they were mapped with, so a mesh built outside an asset's build can no longer be painted as the wrong material. A third pass over every asset, re-judged independently: criteria below the pass mark of 8 fell from 352 to 296, and three assets now pass on all seven.
 
 ### Added
@@ -558,7 +560,8 @@ The first published version: the asset DSL with primitives, organic sculpting, t
 - Animations: `toGlb()` exports none unless `{ animations: true }` (glTF has no autoplay flag; engines drive named pivots from code). `t3d build` bakes the `run` clip by default so viewers show play controls; `--no-animations` skips it.
 - CLI output is one folder per asset: `out/<asset>/{lod0,lod1,lod2}.glb`, `sheet.png`, `manifest.json`, plus `out/index.json`. `t3d build` renders the sheet too (`--no-shot` to skip); `t3d shot` writes sheet + manifest only.
 
-[Unreleased]: https://github.com/developerz-ai/ts23d/compare/v0.15.0...HEAD
+[Unreleased]: https://github.com/developerz-ai/ts23d/compare/v0.16.0...HEAD
+[0.16.0]: https://github.com/developerz-ai/ts23d/compare/v0.15.0...v0.16.0
 [0.15.0]: https://github.com/developerz-ai/ts23d/compare/v0.14.0...v0.15.0
 [0.14.0]: https://github.com/developerz-ai/ts23d/compare/v0.13.0...v0.14.0
 [0.13.0]: https://github.com/developerz-ai/ts23d/compare/v0.12.0...v0.13.0

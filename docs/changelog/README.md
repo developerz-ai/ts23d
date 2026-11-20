@@ -6,6 +6,7 @@ Every published version of `@developerz.ai/ts23d`, newest first: one page each w
 
 | Version | Date | Summary |
 |---|---|---|
+| [0.16.0](0.16.0.md) | 2026-11-20 | Meshes carry which project materials they were mapped with, so a mesh built outside an asset's build can no longer be painted as the wrong material. A third pass over every asset, re-judged independently: criteria below the pass mark of 8 fell from 352 to 296, and three assets now pass on all seven. |
 | [0.15.0](0.15.0.md) | 2026-11-19 | Contact sheets show the hero's base colour, triangle budgets are checked against the playbook bands, custom materials are per asset, and every committed asset was reworked and independently re-judged: criteria below the pass mark of 8 fell from 416 to 352, and two assets now pass on all seven. |
 | [0.14.0](0.14.0.md) | 2026-11-19 | Several agents can share one machine through a resource queue, the npm package shrinks from 40 MB to 4 MB, CI runs in under five minutes, and the check that committed renders are fresh now works. |
 | [0.13.0](0.13.0.md) | 2026-11-19 | A correctness sweep across the library, CLI, gates, gallery and recipes: over a hundred and fifty defects fixed, stricter input validation and QA gates, track belts that move in any glTF reader, and PNG bytes that no longer depend on the runtime. |
