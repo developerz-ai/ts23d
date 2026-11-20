@@ -5,10 +5,11 @@
 import { afterAll, describe, expect, it } from 'bun:test';
 import { rm } from 'node:fs/promises';
 import { basename, join } from 'node:path';
-import { type Bone, defineAsset, merge } from '../core/index.ts';
+import { type Bone, compile, defineAsset, merge } from '../core/index.ts';
 import { DEFAULT_SHEET, paintTrimSheet } from '../material/index.ts';
 import { skinWeights, weightBonesOf } from '../passes/index.ts';
 import { box } from '../primitives/index.ts';
+import { pathHeroThreaded } from '../render/index.ts';
 import { parseArgs } from './args.ts';
 import { heroOne, reviewOne } from './render-cmds.ts';
 
@@ -85,5 +86,32 @@ describe('t3d hero and the asset hero view', () => {
     );
     const back = await shot('back', { azDeg: 145, elDeg: 40 }, ['--az', '-35', '--el', '18']);
     expect(back.equals(plain)).toBe(true);
+  });
+
+  it('uses one canonical path worker for a committed hero PNG', async () => {
+    const asset = crate('path_worker');
+    const args = parseArgs([
+      'hero',
+      'x.ts',
+      '--out',
+      out,
+      '--size',
+      '64x48',
+      '--quality',
+      'path',
+      '--spp',
+      '1',
+    ]);
+    const r = await heroOne(asset, args, sheet);
+    const expected = await pathHeroThreaded(compile(asset), {
+      width: 64,
+      height: 48,
+      spp: 1,
+      sheet,
+      threads: 1,
+    });
+    expect(
+      Buffer.from(await Bun.file(r.files[0] ?? '').arrayBuffer()).equals(Buffer.from(expected)),
+    ).toBe(true);
   });
 });
