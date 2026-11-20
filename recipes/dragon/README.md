@@ -74,7 +74,7 @@ model and `dragon.test.ts` holds them (`bun test recipes/dragon`).
 | Horns, claws, spines | `#e8d9b8` ivory → `#3a2a22` tip | dark at the root ring, ivory middle, charcoal tip |
 | Teeth | `#f1e6cc` | slightly darker at the gum |
 | Mouth, tongue | `#5a1414` / `#b2384a` | |
-| Wing membrane | `#c4502a` | translucent-looking orange; veins darker; scalloped rim darker |
+| Wing membrane | `#dc6a32` | translucent-looking orange, paler and hotter than the hide; veins darker; scalloped rim `#4e140c` |
 | Eyes | `#ffcc33` glowing, slit pupil | `glow` emissive |
 
 ## Parts (the engine contract)
@@ -119,14 +119,16 @@ pale wood ash lying in drifts on the back, crest and wing tops; soot baked black
 nostrils and the corners of the mouth and blown back in a fan down the throat and the cream
 chest plates; an old burn scorched matt black on the right flank; cinder mud wet and black on
 the claws and the dragging tail, a grey ash crust with a ragged edge up the shanks, splashed to
-the knees; three claw rakes healed pale across the right flank (11 → 8 cm of scale-less skin,
-0.9 m long), a cut across the snout and one down the right of the neck; the right main horn's
-last two fifths snapped off on a slanted break; the right wing's trailing edge torn in a V
+the knees; five old bites and claw marks healed across the right flank as short slashes at odd
+angles (6 → 8 cm of scale-less skin, 0.2–0.3 m long: three long parallel rakes read as exposed
+ribs), a cut across the snout and one down the right of the neck; the right main horn's last half
+snapped off on a slanted break and the left one's tip chipped (its last sixth); the right wing's trailing edge torn in a V
 between the second and third fingers and the left wing's in two (vertices pulled in, the
 membrane slab stays closed). The far mesh takes only the broad layers (`worn(…, far)`).
 
-Scales: the stamped scales' paint is `stampTint` (scales.ts): the seam between two scales
-near-black, the keeled crown lit toward ember, over the whole back, flanks, neck, legs and tail
+Scales: the stamped scales' paint is `stampTint` (scales.ts): plates, not spots — a narrow
+near-black gap where two scales meet and each plate one even colour lifting only slightly toward
+its keel (a wide seam fading to an ember crown read as round leopard spots), over the whole back, flanks, neck, legs and tail
 (the earlier ±14 % tint left the hide one flat red at the hero's distance). The tail root is as
 thick as the hips (`tailR` 0.52 → 0.5 → 0.43) and the spade 1.6 × its earlier span (blade
 0.95 m, flukes 0.8 m), so the tail's end reads from the side and 3/4, not only from above.

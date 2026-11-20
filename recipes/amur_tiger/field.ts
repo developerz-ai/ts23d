@@ -12,6 +12,7 @@
 
 import {
   CREATURE_MATERIALS,
+  cardWear,
   chainSeed,
   defineMaterial,
   dmath,
@@ -25,12 +26,13 @@ import {
   type Vec3,
 } from '@developerz.ai/ts23d';
 import { recolour } from '../_lib/creature/wild.ts';
+import { wearKeep } from '../_lib/creature/wild-marks.ts';
 import { lockPaint, mix, smooth, type WearSpec, wearPaint } from '../_lib/creature/wild-paint.ts';
 import { type GroomLayer, groom, strands } from '../_lib/creature/wild-parts.ts';
 import { bodyPaint } from './coat.ts';
 import { whiskerSpots } from './face.ts';
 import { C } from './palette.ts';
-import { HEAD, HEAD_PITCH, HEAD_SCALE, headToWorld, SK } from './skeleton.ts';
+import { HEAD, HEAD_PITCH, HEAD_PIVOT, HEAD_SCALE, headToWorld, SK } from './skeleton.ts';
 import { bodyStripe, legStripe } from './stripes.ts';
 import { FORE_CHAIN, HIND_CHAIN } from './zones.ts';
 
@@ -47,10 +49,11 @@ const sh = SK.fore.shoulder;
 
 export const WEAR: WearSpec = {
   seed: 1931,
-  // Thaw mud: wet and dark on the paws, a grey-brown crust drying at its ragged edge up the
-  // cannons, splashed over the white of the inner legs and the belly fringe.
-  mud: { top: 0.3, colour: [0.2, 0.155, 0.11], strength: 0.92 },
-  damp: { top: 0.44, belly: 0.56, strength: 0.42 },
+  // Thaw mud: wet and dark on the paws, drying up the toes and pasterns, splashed to the wrists
+  // and hocks (to 0.3 m the legs read as grey socks, not as a tiger that walked through mud).
+  mud: { top: 0.18, colour: [0.2, 0.155, 0.11], strength: 0.92 },
+  // Wet fur up the legs and along the belly fringe: the orange deepened, not greyed.
+  damp: { top: 0.4, belly: 0.56, strength: 0.38 },
   matted: {
     zones: [
       { at: [-0.3, 0.15, 0.56], radius: 0.22 },
@@ -91,6 +94,10 @@ export const WEAR: WearSpec = {
 };
 
 const wear = wearPaint(WEAR);
+/** The cards carry the wear (they take their colour from the worn skin under their roots):
+ *  clotted short in the mud, parted along the rakes and cuts. Matted cards stay full length:
+ *  shortened, they stood off the coat as dark stubs. */
+const keep = wearKeep(WEAR, { mud: 0.55, scar: 0.12 });
 /** The far mesh's wear: the broad layers only (flecks and scars alias on 8 cm cells). */
 const wearFar = wearPaint(WEAR, true);
 
@@ -200,7 +207,8 @@ export function coat(body: Mesh, lod: Lod, rng: Rng): Mesh | null {
   ];
   const flow = hairFlow(body, LIE);
   // The dossier's box: 0.47 m ruff to ruff; no lock past 0.235 m off the midline.
-  return groom(body, flow, layers, rng, { y: 0.232, z: 1.03 });
+  const cards = groom(body, flow, layers, rng, { y: 0.232, z: 1.03 });
+  return cards && cardWear(cards, { keep });
 }
 
 /** Head part frame (pitched, scaled, about the atlas) → head-local. */
@@ -297,7 +305,8 @@ export function ruffCards(head: Mesh, lod: Lod, rng: Rng): Mesh | null {
     return [c * d[0] + s * d[2], d[1], -s * d[0] + c * d[2]];
   });
   // The dossier's 0.47 m ruff to ruff holds on the scaled head: no lock past 0.238 m.
-  return groom(head, flow, layers, rng, { y: 0.238 });
+  const cards = groom(head, flow, layers, rng, { y: 0.238 });
+  return cards && cardWear(cards, { keep }, HEAD_PIVOT);
 }
 
 /** Whiskers in the head part's frame: one from each follicle spot on the pads, the rear and

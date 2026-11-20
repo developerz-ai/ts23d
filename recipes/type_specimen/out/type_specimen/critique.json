@@ -19,8 +19,9 @@
     },
     "materials": {
       "score": 8,
-      "reason": "Green painted boarded face, cream painted and brass raised letters with a polished highlight on their faces, the hood now weathered tar-felt with an edge trim, posts with wood grain.",
+      "reason": "The green face is now vertical boards with grain running up each board and staggered butt joints (sheet FRONT, hero.png); the brick courses and dark blotches are gone and the four dark squares are the fixing bolts. Cream painted and brass raised letters, felted hood and grained posts read. Dark vertical bands at the top of a few boards under the hood look like stains.",
       "fixes": [
+        "even out the dark board tops under the hood or make them clear rain streaks",
         "a faint brass tarnish in the letter recesses"
       ]
     },
@@ -54,7 +55,7 @@
     }
   },
   "renders": {
-    "hero.png": "85fd54a8001f6a0f8612f655de45fd0a056b14fbb5e3e3fd29c311c9d6ae93e2",
-    "sheet.png": "28728ab94cef6e56d2959faf678ed27426b1f1ded6f956bdb0785d4b7e92caf7"
+    "hero.png": "04b34cfc662d29e4177bea8ede0726b731fc51ebfee5795281eb1f2862a76fe5",
+    "sheet.png": "d210b50e42737db281130930bdbe0b5ad08a4295933d97daa474bf4c42b09ed2"
   }
 }

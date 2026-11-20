@@ -1,7 +1,7 @@
 // The path tracer's film: renders the image tile by tile (32 × 32, fixed row-major order; every
 // pixel owns its seed and its slot, so tiles can run anywhere and merge by index), jitters each
 // sample inside its pixel with the sampler's first dimensions, and stores two layers per pixel:
-// the asset's radiance (with its albedo / normal guides for the denoiser) and the studio floor's
+// the asset's radiance (with its albedo / normal guides and luminance variance for the denoiser) and the studio floor's
 // shadow-catcher ratio with the shares of samples that saw floor and backdrop. compose() puts
 // them together: asset + backdrop × (floor share × shadow + backdrop share).
 
@@ -22,6 +22,13 @@ export interface Film {
   /** Mean albedo and normal of the asset samples (0 where none hit), 3 per pixel. */
   readonly albedo: Float32Array;
   readonly normal: Float32Array;
+  /**
+   * Variance of the pixel's mean asset luminance (sample variance ÷ samples): how much of what
+   * the pixel shows is noise. The denoiser smooths differences below it and keeps those above.
+   * An upper bound: the Owen-scrambled Sobol mean moves less than this i.i.d. estimate says.
+   * 0 at 1 sample per pixel (one sample has no spread): `spatialVariance` stands in there.
+   */
+  readonly variance: Float32Array;
   /** Floor shadow-catcher ratio (1 = unshadowed), and the floor / backdrop sample shares. */
   readonly shadow: Float32Array;
   readonly floor: Float32Array;
@@ -45,6 +52,7 @@ export const newFilm = (width: number, height: number): Film => ({
   color: new Float32Array(width * height * 3),
   albedo: new Float32Array(width * height * 3),
   normal: new Float32Array(width * height * 3),
+  variance: new Float32Array(width * height),
   shadow: new Float32Array(width * height),
   floor: new Float32Array(width * height),
   back: new Float32Array(width * height),
@@ -64,6 +72,42 @@ export function compose(f: Film, color: Float32Array, shadow: Float32Array): Flo
     }
   return out;
 }
+
+/**
+ * Per-pixel variance for a 1-sample film, where no pixel can measure its own: the luminance
+ * spread over its 3 × 3 neighbourhood of asset pixels (each one an independent sample of nearly
+ * the same surface; SVGF's spatial estimate). Real detail in the window counts as noise too, so it
+ * errs toward smoothing, as one sample must. 0 where the asset is absent or alone.
+ */
+export function spatialVariance(f: Film): Float32Array {
+  const { width: W, height: Hh } = f;
+  const out = new Float32Array(W * Hh);
+  const l = (q: number): number =>
+    0.2126 * (f.color[q * 3] ?? 0) +
+    0.7152 * (f.color[q * 3 + 1] ?? 0) +
+    0.0722 * (f.color[q * 3 + 2] ?? 0);
+  for (let y = 0; y < Hh; y++)
+    for (let x = 0; x < W; x++) {
+      if (!f.mask[y * W + x]) continue;
+      let n = 0;
+      let s = 0;
+      let s2 = 0;
+      for (let j = Math.max(0, y - 1); j <= Math.min(Hh - 1, y + 1); j++)
+        for (let k = Math.max(0, x - 1); k <= Math.min(W - 1, x + 1); k++) {
+          const q = j * W + k;
+          if (!f.mask[q]) continue;
+          const v = l(q);
+          n++;
+          s += v;
+          s2 += v * v;
+        }
+      if (n > 1) out[y * W + x] = Math.max(0, (s2 - (s * s) / n) / (n - 1));
+    }
+  return out;
+}
+
+const lum = (c: Float64Array): number =>
+  0.2126 * (c[0] ?? 0) + 0.7152 * (c[1] ?? 0) + 0.0722 * (c[2] ?? 0);
 
 const acc: Accum = {
   rad: new Float64Array(3),
@@ -118,6 +162,8 @@ function renderPixel(
   acc.hitN = 0;
   backdrop(x / film.width, y / film.height, bg);
   const seed = pixelSeed(x, y, film.width, salt);
+  let before = 0;
+  let m2 = 0;
   for (let i = 0; i < spp; i++) {
     sample4(seed, 0, i, jit);
     const sx = (x + (jit[0] ?? 0.5) - cam.cx) / cam.focal;
@@ -127,6 +173,9 @@ function renderPixel(
     const l = dmath.hypot(dir[0] ?? 0, dir[1] ?? 0, dir[2] ?? 0);
     for (let k = 0; k < 3; k++) dir[k] = (dir[k] ?? 0) / l;
     traceSample(w, cam.eye, dir, seed, i, p, bg, acc);
+    const after = lum(acc.rad);
+    m2 += (after - before) * (after - before);
+    before = after;
   }
   const i = y * film.width + x;
   film.shadow[i] =
@@ -139,5 +188,7 @@ function renderPixel(
     film.albedo[i * 3 + k] = (acc.albedo[k] ?? 0) / hits;
     film.normal[i * 3 + k] = (acc.normal[k] ?? 0) / hits;
   }
+  const mean = before / spp;
+  film.variance[i] = spp > 1 ? Math.max(0, (m2 - spp * mean * mean) / (spp - 1)) / spp : 0;
   film.mask[i] = Math.round((acc.hitN / spp) * 255);
 }

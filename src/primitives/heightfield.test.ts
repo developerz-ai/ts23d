@@ -1,5 +1,5 @@
 import { expect, it } from 'bun:test';
-import { boundsOf, triangleCount } from '../core/index.ts';
+import { boundsOf, dmath, triangleCount } from '../core/index.ts';
 import { heightfield } from './heightfield.ts';
 
 it('samples the height function on a grid with upward normals', () => {
@@ -70,4 +70,43 @@ it('winds skirt walls outward with a real V span where the terrain dips below th
   // Crossing the base inside a cell: one triangle each side of the crossing, both facing out.
   expect(wallsFaceOut(heightfield({ ...base, height: (x) => x - 1, skirt: 0 }))).toBe(16);
   expect(wallsFaceOut(heightfield({ ...base, height: () => 1, skirt: 0 }))).toBe(16);
+});
+
+it('fails before D458: the skirt tops are the rim vertices to the bit', () => {
+  // Walking an edge back from the far corner put a wall top 6e-14 m off the rim vertex at x = 0.
+  for (const [rect, cells] of [
+    [
+      [-43.1, -43.1, 301.7, 301.7],
+      [80, 80],
+    ],
+    [
+      [-1.8, -1.8, 35.4, 35.4],
+      [62, 62],
+    ],
+    [
+      [-3, -2, 5, 7],
+      [7, 9],
+    ],
+  ] as const) {
+    const m = heightfield({
+      rect,
+      cells,
+      height: (x, y) => 2 + dmath.sin(x * 7) * 0.5 + y * 0.01,
+      color: [1, 1, 1],
+      skirt: 0,
+    });
+    const [cx, cy] = cells;
+    const key = (v: number): string => [0, 1, 2].map((k) => m.positions[v * 3 + k]).join(',');
+    const rim = new Set<string>();
+    for (let j = 0; j <= cy; j++)
+      for (let i = 0; i <= cx; i++)
+        if (i === 0 || j === 0 || i === cx || j === cy) rim.add(key(j * (cx + 1) + i));
+    let tops = 0;
+    for (let v = (cx + 1) * (cy + 1); v < m.positions.length / 3; v++) {
+      if (m.positions[v * 3 + 2] === 0) continue;
+      tops++;
+      expect(rim.has(key(v))).toBe(true);
+    }
+    expect(tops).toBe(4 * (cx + cy));
+  }
 });

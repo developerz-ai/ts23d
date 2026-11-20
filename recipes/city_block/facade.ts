@@ -31,10 +31,18 @@ const DOOR = [hex('#2a1d16'), hex('#1d2a22'), hex('#3b1612')] as const;
  * standing 1.5 cm proud of the wall with its reveal 1.5 cm into it (LOD0); far, the decal alone,
  * 1 cm proud. A stone sill under it and a stone lintel over it at LOD0 when `sill`.
  */
-export function sashWindow(w: number, h: number, trim: Vec3, lod: Lod, sill: boolean): Mesh {
-  if (lod > 0)
+export function sashWindow(
+  w: number,
+  h: number,
+  trim: Vec3,
+  lod: Lod,
+  sill: boolean,
+  flat = false,
+): Mesh {
+  if (lod > 0 || flat)
     return cell({
-      origin: [0.01, -w / 2, 0],
+      // Up close (a side or rear wall at LOD0) the decal sits 2 mm proud, seated on the brick.
+      origin: [flat && lod === 0 ? 0.002 : 0.01, -w / 2, 0],
       u: [0, w, 0],
       v: [0, 0, h],
       color: trim,

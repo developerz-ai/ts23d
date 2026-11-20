@@ -131,8 +131,11 @@ export function lidEdits(e: EyeSpec): SculptEdit[] {
   return out;
 }
 
-/** The eyeball mesh about its own centre, gazing +X: sclera, limbus, iris, pupil, cornea bulge. */
-export function eyeball(e: EyeSpec, cell: number): Mesh {
+/** The eyeball mesh about its own centre, gazing +X: sclera, limbus, iris, pupil, cornea bulge.
+ *  `lidShadow` (0 … 1) darkens the ball's upper half the way the upper lid and its lashes shade
+ *  it: a painter's must on a game eye, without which the white and the iris read as lit stickers
+ *  (a dead stare); 0 (default) keeps the ball evenly lit. */
+export function eyeball(e: EyeSpec, cell: number, lidShadow = 0): Mesh {
   const r = e.r;
   const { a } = irisOf(e);
   const c = e.colours;
@@ -151,23 +154,33 @@ export function eyeball(e: EyeSpec, cell: number): Mesh {
       [r * 1.3, r * 1.3, r * 1.3],
     ],
     resolution: cell,
-    color: (q) => {
-      const cos = q[0] / (dmath.hypot(q[0], q[1], q[2]) || 1);
-      const slit = e.pupil === 'slit' && Math.abs(q[1]) < r * 0.09 && cos > dmath.cos(a * 0.85);
-      if (slit || (e.pupil !== 'slit' && cos > cosPupil)) return c.pupil;
-      if (cos > cosIris) {
-        // Iris: darker toward its rim, lighter round the pupil, with radial fibres (stroma).
-        const t = (cos - cosIris) / (1 - cosIris);
-        const phi = dmath.atan2(q[2], q[1]);
-        const k = (0.7 + 0.5 * t) * (0.88 + 0.12 * dmath.sin(37 * phi) * dmath.sin(11 * phi + 1));
-        return [Math.min(1, c.iris[0] * k), Math.min(1, c.iris[1] * k), Math.min(1, c.iris[2] * k)];
-      }
-      if (cos > cosLimb) return limbus;
-      // Sclera: a touch darker toward the back (it sits in shadow inside the socket).
-      const k = 0.75 + 0.25 * Math.max(0, cos);
-      return [c.sclera[0] * k, c.sclera[1] * k, c.sclera[2] * k];
-    },
+    color: (q) => shaded(eyeColour(q), q[2] / r, lidShadow),
   });
+  function eyeColour(q: V): V {
+    const cos = q[0] / (dmath.hypot(q[0], q[1], q[2]) || 1);
+    const slit = e.pupil === 'slit' && Math.abs(q[1]) < r * 0.09 && cos > dmath.cos(a * 0.85);
+    if (slit || (e.pupil !== 'slit' && cos > cosPupil)) return c.pupil;
+    if (cos > cosIris) {
+      // Iris: darker toward its rim, lighter round the pupil, with radial fibres (stroma).
+      const t = (cos - cosIris) / (1 - cosIris);
+      const phi = dmath.atan2(q[2], q[1]);
+      const k = (0.7 + 0.5 * t) * (0.88 + 0.12 * dmath.sin(37 * phi) * dmath.sin(11 * phi + 1));
+      return [Math.min(1, c.iris[0] * k), Math.min(1, c.iris[1] * k), Math.min(1, c.iris[2] * k)];
+    }
+    if (cos > cosLimb) return limbus;
+    // Sclera: a touch darker toward the back (it sits in shadow inside the socket).
+    const k = 0.75 + 0.25 * Math.max(0, cos);
+    return [c.sclera[0] * k, c.sclera[1] * k, c.sclera[2] * k];
+  }
+}
+
+/** `c` darkened by the upper lid's shadow at height `h` (−1 … 1 of the radius) on the ball: none
+ *  below the iris's centre line, full a third of a radius up, where the lid's margin sits. */
+function shaded(c: V, h: number, k: number): V {
+  if (k <= 0) return c;
+  const t = Math.min(1, Math.max(0, (h + 0.05) / 0.4));
+  const f = 1 - k * t * t * (3 - 2 * t);
+  return [c[0] * f, c[1] * f, c[2] * f];
 }
 
 export interface EyesOptions {
@@ -182,13 +195,15 @@ export interface EyesOptions {
   /** The part holding the eyes: emits a `socket` joint per eye (`eye_l_orbit`, `eye_r_orbit`)
    *  from the ball into its orbit, so QA `joints` checks the seat matches the ball. */
   readonly socketIn?: string;
+  /** The upper lid's shadow on the ball (`eyeball`), 0 … 1; default 0. */
+  readonly lidShadow?: number;
 }
 
 /** Emits `eye_l` / `eye_r` (pivot at the ball centre, yawed to converge on the gaze point) and,
  *  with `socketIn`, a `socket` joint per eye along the gaze, ball → orbit (the joints gate
  *  compares the ball with the LOCAL orbit section, not the whole head's). */
 export function eyes(ctx: BuildContext, e: EyeSpec, o: EyesOptions): void {
-  const ball = eyeball(e, o.cell);
+  const ball = eyeball(e, o.cell, o.lidShadow ?? 0);
   const [ex, ey, ez] = e.centre;
   const gaze = e.gaze ?? [ex + 1.5, 0, ez];
   for (const [side, s] of [

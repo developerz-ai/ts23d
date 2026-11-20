@@ -127,8 +127,8 @@
   ],
   "weather": {
     "chips": {
-      "target": 0.1088,
-      "actual": 0.1088,
+      "target": 0.1217,
+      "actual": 0.1217,
       "eligible": "convex-edges",
       "area": 586.384,
       "by": {
@@ -148,8 +148,8 @@
           "area": 148.8683
         },
         "hall_rubble": {
-          "target": 0.16,
-          "actual": 0.16,
+          "target": 0.32,
+          "actual": 0.32,
           "area": 47.1082
         }
       }

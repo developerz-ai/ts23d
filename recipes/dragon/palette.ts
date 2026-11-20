@@ -21,8 +21,9 @@ export const C = {
   gum: hex('#5a1414'),
   tongue: hex('#b2384a'),
   mouth: hex('#3a0a0c'),
-  membrane: hex('#c4502a'),
-  membraneEdge: hex('#6a1c12'),
+  // Thin and lit through: hotter and paler than the hide, dark at the bones and rim.
+  membrane: hex('#dc6a32'),
+  membraneEdge: hex('#4e140c'),
   vein: hex('#8a2a18'),
   eye: hex('#ffcc33'),
   iris: hex('#ff8a1a'),

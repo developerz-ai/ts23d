@@ -151,9 +151,11 @@ const FAR_BANDS = [-0.74, -0.48, -0.22, 0.04, 0.3, 0.54] as const;
 function farStripe(x: number, s: number): number {
   if (s > 1.1) return 0;
   let c = 0;
-  for (const x0 of FAR_BANDS) c = Math.max(c, cover(Math.abs(x - x0), 0.05, 0.045));
-  // Thinning into the white belly, as the stripes they stand for do.
-  return c * 0.8 * smoothstep(1.1, 0.75, s);
+  for (const x0 of FAR_BANDS) c = Math.max(c, cover(Math.abs(x - x0), 0.06, 0.045));
+  // Thinning into the white belly, as the stripes they stand for do. Full strength: at 0.8 over
+  // an edge a cell soft, the vertices read orange-brown on orange, not the near coat's black
+  // (D480).
+  return c * smoothstep(1.1, 0.8, s);
 }
 
 /** Trunk / neck stripes at a body point (0..1). */

@@ -19,7 +19,7 @@
     },
     "materials": {
       "score": 7,
-      "reason": "Blue paint, black boiler, polished brass domes and bands, red drivers and wooden ties separate; the paint has no clearcoat sheen.",
+      "reason": "Blue paint, black boiler, polished brass domes and bands, red drivers and wooden ties separate; the sheet now shows the tender wood load grain and a light texture on the tender panels; the paint still has no clearcoat sheen in hero.png.",
       "fixes": [
         "clearcoat with orange-peel roughness on the blue panels"
       ]
@@ -56,7 +56,7 @@
     }
   },
   "renders": {
-    "hero.png": "6cfa08f037789a1f3abab8e38e7f39996aa662e01e747fa293a0f4075d4d339b",
-    "sheet.png": "0fb74289faf51c81fd89b5b3840e64aece96cb9afe2e08a6da1bbee77f639325"
+    "hero.png": "7100ed189f9d28b92ebf261a6b6f6ad2002b634d2bb3c21e83b1c7e8f3503910",
+    "sheet.png": "36f2330b376da98030ffe1e67113820be5dee1bd51ae6fd647a4ced4cf0a0eb1"
   }
 }

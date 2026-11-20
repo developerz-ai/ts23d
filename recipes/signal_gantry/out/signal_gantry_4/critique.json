@@ -19,7 +19,7 @@
     },
     "materials": {
       "score": 8,
-      "reason": "The lattice is now a lighter worn steel grey with lighter up-facing flanges and darker shade faces (hero.png, sheet), galvanised handrail, timber deck, arms red with white bands.",
+      "reason": "Worn steel-grey lattice with lighter flanges and darker shade faces, rust tints on the posts (now also visible on the LOD2 posts in the sheet), galvanised handrail, timber deck with plank grain in TOP, arms red with white bands.",
       "fixes": [
         "a little more rust bloom at the lattice nodes and feet so the lighter steel does not read clean"
       ]
@@ -56,7 +56,7 @@
     }
   },
   "renders": {
-    "hero.png": "ef05d4954216ce0842726b0439be51363430532c1cad2f1639a187bf818a19e5",
-    "sheet.png": "978c9002aea5553a77fb1dbb0a4d36004912f1e7aab45b809dcffbb07892e366"
+    "hero.png": "b404afbdc298ea37903ceb22d9c05bceb12b5028e9dd924eb3967a2548a1e06d",
+    "sheet.png": "60081c7f202a821a82157ab6cf9fcc395f383db40637a2ef19e73ba70cf50813"
   }
 }

@@ -18,7 +18,7 @@ import type { Mesh } from './mesh.ts';
 import { checkMotion } from './motion-check.ts';
 import { neuralReader } from './neural-ctx.ts';
 import { opticsOf } from './optics.ts';
-import { checkPaintedParts, paintSetOf, repaint } from './paint.ts';
+import { checkPaintedParts, paintSetOf, repaint, settlePaintWear } from './paint.ts';
 import type { Connect, Joint, Lod, Part, PartOptions, UseOptions } from './part.ts';
 import { checkSeed, createRng, forkSeed } from './rng.ts';
 import { type Bone, boneOf, checkBoneBudget, checkSkeleton, useBone } from './skeleton.ts';
@@ -222,7 +222,7 @@ export function compile(asset: Asset, options: CompileOptions = {}): CompiledAss
     },
   };
   const { uses } = trackMaterials(`asset '${asset.name}'`, () => asset.build(ctx));
-  const built = [...parts.values()];
+  const built = settlePaintWear([...parts.values()], paintSet);
   checkPaintedParts(asset.name, built, paintSet);
   checkFinishedParts(asset.name, built, finishes);
   checkTexturedParts(asset.name, built, asset.budget.textureSets);

@@ -4,7 +4,7 @@
 // the edges to a base height: a solid map tile / diorama block that stands on z = 0.
 //   triangles = 2 · cx · cy + (skirt ? 4 · (cx + cy) : 0)
 
-import { dmath, type Mesh, MeshBuilder, normalize, type Vec3 } from '../core/index.ts';
+import { type Mesh, MeshBuilder, normalize, type Vec3 } from '../core/index.ts';
 import { mappedOnto, type StripId, stripRect } from '../material/index.ts';
 import { count, invalid } from './check.ts';
 import { mirroredV, stripVMetres } from './strip-uv.ts';
@@ -38,6 +38,8 @@ export function heightfield(o: HeightfieldOptions): Mesh {
   const vm = stripVMetres(o.strip ?? 'plain');
   const b = new MeshBuilder();
   const ids: number[] = [];
+  /** Each grid point's position and colour, row-major: the skirt reuses the rim's (D458). */
+  const grid: { p: Vec3; color: Vec3 }[] = [];
   for (let j = 0; j <= ny; j++) {
     for (let i = 0; i <= nx; i++) {
       const x = x0 + i * dx;
@@ -53,6 +55,7 @@ export function heightfield(o: HeightfieldOptions): Mesh {
       ]);
       const color = typeof o.color === 'function' ? o.color(x, y, z) : o.color;
       const u = (x - x0) / rect.metres;
+      grid.push({ p: [x, y, z], color });
       ids.push(
         b.vertex({
           p: [x, y, z],
@@ -67,22 +70,31 @@ export function heightfield(o: HeightfieldOptions): Mesh {
   const at = (i: number, j: number): number => ids[j * (nx + 1) + i] ?? 0;
   for (let j = 0; j < ny; j++)
     for (let i = 0; i < nx; i++) b.quad(at(i, j), at(i + 1, j), at(i + 1, j + 1), at(i, j + 1));
-  if (o.skirt !== undefined) skirt(b, o, rect);
+  if (o.skirt !== undefined) skirt(b, o, rect, (i, j) => grid[j * (nx + 1) + i] ?? grid[0]);
   return mappedOnto(b.build(), o.strip ?? 'plain');
 }
 
-/** Four walls from the edge vertices down to `o.skirt`, each quad CCW seen from outside. */
-function skirt(b: MeshBuilder, o: HeightfieldOptions, rect: ReturnType<typeof stripRect>): void {
+/**
+ * Four walls from the edge vertices down to `o.skirt`, each quad CCW seen from outside. Wall tops
+ * are the rim's own grid points (`at`), never re-sampled: walking an edge back from the far
+ * corner put them up to 1e-13 m off the surface's edge (D458).
+ */
+function skirt(
+  b: MeshBuilder,
+  o: HeightfieldOptions,
+  rect: ReturnType<typeof stripRect>,
+  at: (i: number, j: number) => { p: Vec3; color: Vec3 } | undefined,
+): void {
   const [x0, y0, x1, y1] = o.rect;
   const [nx, ny] = o.cells;
   const base = o.skirt ?? 0;
-  // Edge: start corner, step per cell, cell count, outward normal. Walking CCW seen from above,
-  // outside is on the right, so (top a, top b, base b, base a) reversed is CCW from outside.
-  const edges: [number, number, number, number, number, Vec3][] = [
-    [x0, y0, (x1 - x0) / nx, 0, nx, [0, -1, 0]],
-    [x1, y0, 0, (y1 - y0) / ny, ny, [1, 0, 0]],
-    [x1, y1, -(x1 - x0) / nx, 0, nx, [0, 1, 0]],
-    [x0, y1, 0, -(y1 - y0) / ny, ny, [-1, 0, 0]],
+  // Edge: grid point k of n, step length, outward normal. Walking CCW seen from above, outside is
+  // on the right, so (top a, top b, base b, base a) reversed is CCW from outside.
+  const edges: [(k: number) => [number, number], number, number, Vec3][] = [
+    [(k) => [k, 0], nx, (x1 - x0) / nx, [0, -1, 0]],
+    [(k) => [nx, k], ny, (y1 - y0) / ny, [1, 0, 0]],
+    [(k) => [nx - k, ny], nx, (x1 - x0) / nx, [0, 1, 0]],
+    [(k) => [0, ny - k], ny, (y1 - y0) / ny, [-1, 0, 0]],
   ];
   const col = (x: number, y: number, z: number): Vec3 =>
     o.skirtColor ?? (typeof o.color === 'function' ? o.color(x, y, z) : o.color);
@@ -95,15 +107,16 @@ function skirt(b: MeshBuilder, o: HeightfieldOptions, rect: ReturnType<typeof st
       uv: [rect.u0 + (u / rect.metres) * (rect.u1 - rect.u0), top ? rect.v1 : rect.v0],
       color,
     });
+  const zero: Vec3 = [0, 0, 0];
   let run = 0;
-  for (const [sx, sy, dx, dy, n, nrm] of edges) {
-    const step = dmath.hypot(dx, dy);
+  for (const [ij, n, step, nrm] of edges) {
     for (let k = 0; k < n; k++) {
-      const [ax, ay, bx, by] = [sx + dx * k, sy + dy * k, sx + dx * (k + 1), sy + dy * (k + 1)];
-      const az = o.height(ax, ay);
-      const bz = o.height(bx, by);
-      const ca = col(ax, ay, az);
-      const cb = col(bx, by, bz);
+      const a = at(...ij(k));
+      const c = at(...ij(k + 1));
+      const [ax, ay, az] = a?.p ?? zero;
+      const [bx, by, bz] = c?.p ?? zero;
+      const ca = o.skirtColor ?? a?.color ?? zero;
+      const cb = o.skirtColor ?? c?.color ?? zero;
       const [sa, sb] = [Math.sign(az - base), Math.sign(bz - base)];
       const ta = v([ax, ay, az], nrm, run, ca, sa > 0);
       const tb = v([bx, by, bz], nrm, run + step, cb, sb > 0);

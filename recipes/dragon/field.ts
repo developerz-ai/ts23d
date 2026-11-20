@@ -61,11 +61,20 @@ export const WEAR: WearSpec = {
   // Healed scale-less skin: a dull rose a few steps above the crimson, not white.
   scarColour: [0.72, 0.42, 0.36],
   scars: [
-    // Claw rakes across the right flank (projected along Y onto the ribs).
-    ...[0, 1, 2].map((k) => ({
-      a: [0.62 - k * 0.24, -0.7, 2.08 - k * 0.03] as Vec3,
-      b: [0.12 - k * 0.24, -0.7, 1.3 + k * 0.05] as Vec3,
-      width: 0.055 - k * 0.008,
+    // Old bites and claw marks on the right flank: short slashes at odd angles, each a hand or
+    // two long (three long parallel rakes read as exposed ribs).
+    ...(
+      [
+        [0.55, 1.95, 0.24, -0.16, 0.04],
+        [0.2, 1.72, 0.2, 0.12, 0.034],
+        [0.42, 1.5, 0.26, -0.06, 0.036],
+        [-0.1, 1.9, 0.18, -0.2, 0.03],
+        [-0.2, 1.55, 0.22, 0.1, 0.032],
+      ] as const
+    ).map(([x, z, dx, dz, width]) => ({
+      a: [x, -0.7, z] as Vec3,
+      b: [x - dx, -0.7, z + dz] as Vec3,
+      width,
       axis: 1 as const,
       reach: 0.45,
     })),

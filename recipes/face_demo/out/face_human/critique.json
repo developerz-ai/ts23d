@@ -1,11 +1,11 @@
 {
   "asset": "face_human",
   "reviewer": "agent",
-  "overall": 6.3,
+  "overall": 6.6,
   "scores": {
     "silhouette": {
       "score": 7,
-      "reason": "Hair cards give crown volume and the TOP crown is filled; reads as a young man bust.",
+      "reason": "The new locks give crown volume with a dark under-layer and a few flyaways at the nape; reads as a young man in a shirt.",
       "fixes": [
         "a few loose strands at the hairline so the outline is less of a cap"
       ]
@@ -18,45 +18,47 @@
       ]
     },
     "materials": {
-      "score": 6,
-      "reason": "Blemish decals are gone; the skin has sheen, warmth at the nose and lips; but the chest and shoulders are shiny plastic.",
+      "score": 7,
+      "reason": "Collar is a real band with a clean hem; skin is a sheen with a warm nose; the stubble is back but renders as a grey-violet speckled wash that reads as grime in hero.png, and the cheeks are still pink patches in FRONT.",
       "fixes": [
-        "rougher skin away from the T-zone",
-        "hair strip with anisotropic sheen and darker roots"
+        "stubble as fine dark brown dots on a skin base, not a grey wash",
+        "move the cheek warmth onto the cheekbone with lower contrast",
+        "a linen strip with slub noise on the shirt"
       ]
     },
     "detail": {
       "score": 6,
-      "reason": "Hair locks and ear shape read; the face has no pores or creases at the hero distance.",
+      "reason": "Hair locks, ear shape, a collared shirt and eyes shadowed under the upper lid with a lash line in hero.png; no pores or creases at the portrait distance.",
       "fixes": [
         "LOD0 pore/crease displacement on the face"
       ]
     },
     "wear": {
       "score": 6,
-      "reason": "Stubble shadow now darkens the jaw; it reads as grainy grey noise rather than hair stubble.",
+      "reason": "Stubble now covers the jaw and collar grime and sun-faded shoulders now show on the tunic; the claimed chin scar is not visible in FRONT or hero.png, and the stubble reads as dirt more than hair.",
       "fixes": [
-        "stubble as fine dark dots in a soft-edged beard zone, not a grey noise wash",
-        "one small seeded scar"
+        "make the chin scar visible at FRONT distance (a pale line through the stubble)",
+        "finer, darker stubble dots"
       ]
     },
     "lod": {
-      "score": 5,
-      "reason": "FAR LOD2 is still a distance-field re-mesh: the face breaks into flat patches of different tone and the features smear.",
+      "score": 6,
+      "reason": "FAR LOD2 face is smooth, the eyes and nose hold; the stubble vanishes at LOD2 so the far face is clean-shaven while LOD0 is stubbled, and the hair is a plain smooth cap.",
       "fixes": [
-        "LOD2 from an authored coarse topology (decimated quad base mesh) instead of the distance-field re-mesh, keeping vertex colour smooth"
+        "average the stubble tone into the LOD2 jaw colour",
+        "keep a few locks on the LOD2 hair cap"
       ]
     },
     "technical": {
       "score": 7,
-      "reason": "QA clean; 59k / 12k / 2.7k triangles over 4 draws.",
+      "reason": "QA clean; 54.2k / 11.5k / 2.8k tris, 4 / 4 / 3 draws.",
       "fixes": [
         "cheaper hair cards at LOD1"
       ]
     }
   },
   "renders": {
-    "hero.png": "20d926cbb2f8947a6b1a562d7dcb6804977359474daad14e975b003103f2e16f",
-    "sheet.png": "7b4f8299c2a426ed7d4e324d0e16c4f4dbee873528a6b12713b79d2d578d1bb2"
+    "hero.png": "5f4e655ea8cdfb26021590291498368c52f87eeb848d7bd45cc79c28f1377345",
+    "sheet.png": "e18ae560aabc2af02c85a85c2e93b2b12928bba8c245aff9f90910a8c1a59f4e"
   }
 }

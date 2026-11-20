@@ -52,9 +52,12 @@ export function farStyle(
   };
 }
 
+/** A style without the lock style: today's cards. */
+const plain = ({ locks: _locks, ...st }: CardHairStyle): CardHairStyle => st;
+
 /** Emit `part` (default 'hair') as cutout strand cards rooted on the style's cap. `scalpCards`
  *  has no far level (it returns null at LOD2), so the far LOD runs its LOD1 rule on the thinned
- *  `far` style. */
+ *  `far` style; a lock-style hairdo (`locks`) has no far cards. */
 export function cardHair(
   ctx: BuildContext,
   style: CardHairStyle,
@@ -62,8 +65,11 @@ export function cardHair(
   o: CardHairOptions = {},
 ): void {
   const far = ctx.lod === 2;
-  if (far && o.far === false) return;
-  const st = far ? (o.far ? o.far(style) : farStyle(style)) : style;
+  // The lock style (`style.locks`) keeps the far head's hair as the sculpted mass and its
+  // hairline (a few wide far cards over it read as chips), unless the recipe asks for far cards
+  // (`far`: a long fall the far mass lacks); those are plain wide cards.
+  if (far && (o.far === false || (style.locks && !o.far))) return;
+  const st = far ? plain(o.far ? o.far(style) : farStyle(style)) : style;
   if (st.layers.length === 0) return;
   const mesh = scalpCards({ ...st, lod: Math.min(ctx.lod, 1), rng: ctx.rng.fork(part) });
   if (mesh) ctx.part(part, o.move ? o.move(mesh) : mesh, { surface: 'cutout' });

@@ -9,6 +9,7 @@ import { defineAsset, headClips } from '@developerz.ai/ts23d';
 import { bustEdits } from '../_lib/bust/bust.ts';
 import { portrait } from '../_lib/bust/hero.ts';
 import { proportionCheck } from '../_lib/face/proportions.ts';
+import { skinFinish } from '../_lib/face/skin-strip.ts';
 import { buildGoblin, GOBLIN_BUST } from './build.ts';
 import { GOBLIN_CREASES } from './creases.ts';
 import { GOBLIN_PROPORTIONS, SK } from './spec.ts';
@@ -47,14 +48,10 @@ export const goblin_head = defineAsset({
   budget: { triangles: [58000, 14500, 2700], draws: 5 },
   // The cornea's lacquer, and the skin: the pore strip's roughness under a dull olive sheen.
   // A portrait: the bust fills the frame (the default orbit leaves the face a thumbnail).
-  hero: portrait(0.482, { at: 0.48, fill: 0.86 }),
+  hero: portrait(0.482, { fill: 1.4, at: 0.7 }),
   finishes: {
     cornea: { clearcoat: 1, clearcoatRoughness: 0.04 },
-    skin: {
-      sheen: { colour: '#6c7440', roughness: 0.5 },
-      clearcoat: 0.3,
-      clearcoatRoughness: 0.28,
-    },
+    skin: skinFinish('#6c7440'),
   },
   art: { focal: 'head', shape: 'aggressive' },
   // Intended creases (QA `connections` skips them): one small region per sculpted fold, from the

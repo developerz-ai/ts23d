@@ -138,7 +138,9 @@ it is not sourced, so the test only guards against gross errors (deer legs on a 
   bands, not the stripes (its faces are 8 cm).
 - Face planes: forehead, cheek, bridge, brow and cheekbone blends tightened by about a quarter
   (2026-11-19); the change is slight at hero distance. LOD2 leg tubes are 8-sided; the far budget
-  (3 000) leaves no room for colour rings or rounder paws; every tube vertex takes the coat at
+  (3 000) leaves no room for colour rings or rounder paws; each tube's top node (shoulder, hip)
+  is 0.7 of the limb's radius, tucked inside the trunk (at full width the flat top stood proud of
+  the far body as a pale slab on the shoulder and hip); every tube vertex takes the coat at
   its own point (white inner faces), where one colour per ring painted whole segments dark.
 - Wear is vertex colour only (mud, damp, matting and scars in `field.ts`): no displaced mud
   cake or puckered scar relief.
@@ -149,12 +151,15 @@ it is not sourced, so the test only guards against gross errors (deer legs on a 
 - Critique: `out/amur_tiger/critique.json` (an independent reviewer's, re-judged after each round).
 
 ## Field wear and coat cards (`field.ts`)
+- The cards carry the wear: grown off the worn skin (each takes the colour under its root), they
+  keep 0.55 of their length in the mud and 0.12 on the rakes and cuts (matted cards stay full length: shortened, they stood as dark stubs),
+  parted to the pale healed skin (`cardWear` with `wearKeep`, body coat and head ruff alike).
 - Wear (world-space layers from `recipes/_lib/creature/wild-paint.ts`, so body, tail, head and claws take
-  the same stain): thaw mud wet and dark on the paws, drying to a grey-brown crust with a ragged
-  edge up the cannons (to ≈ 0.2 m) and splashed in flecks to the elbows and the belly fringe, wet
-  fur to 0.44 m and along the belly, matted flank and breeches, three claw rakes healed across
+  the same stain): thaw mud caked wet and dark on the paws, graded up the toes and pasterns to
+  ≈ 0.15 m and splashed in flecks to the wrists and hocks (to 0.3 m the legs read as grey socks),
+  wet fur, the orange deepened, to 0.4 m and along the belly, matted flank and breeches, three claw rakes healed across
   the right shoulder (2.2 → 1.6 cm of pale hairless skin, 25 cm long), a cut across the bridge of
-  the nose and one over the left brow; the left ear carries a notch (`earEdits(lod, true)`: a
+  the nose and one over the left brow; the right ear (the hero's side) carries a notch (`earEdits(lod, true)`: a
   bite 3.4 cm across subtracted from the outer rim). The far mesh takes only the broad layers
   (`worn(…, far)`): flecks and scars alias on 8 cm cells.
 - Coat: strand cards over the painted sculpt (`fur` part, cutout): a short undercoat on the trunk
@@ -166,11 +171,15 @@ it is not sourced, so the test only guards against gross errors (deer legs on a 
   carry a stripe (`color` hooks: `bodyPaint(lod, false)`), so the stripes stay painted on the coat.
   The ruff's cards are cream (they read as grey straw at the skin's shaded value).
 - Whiskers: one tapered strand from each follicle spot on the pads, three over each brow.
-- LOD2 stripes are six soft, vertical, authored bands (`farStripe`), each two cells wide with an
+- LOD2 stripes are six soft, vertical, authored bands (`farStripe`), at full strength in the
+  stripe's near-black (at 0.8 they read orange-brown on orange), each two cells wide with an
   edge a cell soft: the far mesh's 8 cm cells cannot carry 2 cm stripes, sampling them gave
   random dark triangles, and so did eight slanted bands a cell wide. No leg bands at LOD2.
 - Ears: a lobe 5.4 cm deep and 8 cm wide opening forward and a little out, a shallow hollow,
   orange fur round the pale furnishings and black only at the very edge: both ears read as
   rounded ears from a 3/4 camera (the 3.4 cm plate was a disc face-on and a spike edge-on).
-- Proportions: brisket ≈ 1.5 cm deeper and 3 cm longer (`torso.ts`), head × 1.13.
-- Hero camera `{ azDeg: -50, elDeg: 11 }`: the raked right shoulder and the muddy legs to the lens.
+- Proportions: brisket ≈ 3 cm deeper and 3 cm longer, its keel moved 2 cm back so the side outline
+  drops behind the elbow (`torso.ts`), head × 1.13. The white beard is tucked back under the
+  mandible and the chin 1 cm shorter (`jaw.ts`): forward to the chin it read as a pale plate.
+- Hero camera `{ azDeg: -48, elDeg: 15 }`: the raked right shoulder, the notched ear and the
+  muddy legs to the lens, from a little above the head (lower, it looked up under the white chin).

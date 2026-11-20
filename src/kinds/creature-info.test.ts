@@ -166,3 +166,45 @@ describe('options.head: a recipe sculpts its own forms on the head', () => {
     expect(crown(true)).toBeGreaterThan(plain + 0.3);
   });
 });
+
+describe('options.body: a recipe sculpts its own forms on the body', () => {
+  /** Widest |y| of the body mesh within 3 cm of the left stifle's height and x. */
+  const atStifle = (bump: boolean, lods: number[] = []): { left: number; right: number } => {
+    const spec: CreatureSpec = { ...WOLF, cards: false };
+    const asset = defineCreature({
+      name: 'landmarked',
+      spec,
+      options: bump
+        ? {
+            body: (b, lod) => {
+              lods.push(lod);
+              const K = b.legs.find((l) => l.name === 'hind')?.joints[1] ?? [0, 0, 0];
+              // A patella knob proud of the outer stifle, left side (the sculpt mirrors it).
+              return [{ shape: 'sphere', at: [K[0], K[1] + 0.05, K[2]], size: 0.03, blend: 0.01 }];
+            },
+          }
+        : {},
+    });
+    const body = compile(asset, { lod: 1 }).parts.find((p) => p.name === 'body')?.mesh;
+    const K = bonesOf(checkCreature(spec)).legs.find((l) => l.name === 'hind')?.joints[1];
+    if (!body || !K) throw new Error('no body or stifle');
+    let [left, right] = [0, 0];
+    const P = body.positions;
+    for (let i = 0; i < P.length; i += 3)
+      if (Math.abs((P[i] ?? 0) - K[0]) < 0.03 && Math.abs((P[i + 2] ?? 0) - K[2]) < 0.03) {
+        left = Math.max(left, P[i + 1] ?? 0);
+        right = Math.max(right, -(P[i + 1] ?? 0));
+      }
+    return { left, right };
+  };
+
+  it('a knob on the stifle stands proud on both sides; without the hook the body is the kind’s', () => {
+    const lods: number[] = [];
+    const plain = atStifle(false);
+    const knob = atStifle(true, lods);
+    expect(knob.left).toBeGreaterThan(plain.left + 0.02);
+    expect(knob.right).toBeGreaterThan(plain.right + 0.02);
+    // The hook is told the LOD: the far legs are tubes outside the sculpt.
+    expect(lods).toEqual([1]);
+  }, 120_000);
+});

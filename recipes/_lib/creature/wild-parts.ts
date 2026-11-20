@@ -418,7 +418,7 @@ export function whiskers(l: Head, h: Frame, lod: Lod, rng: Rng, o: WhiskerOption
  * A healed nick in one ear's rear rim: the rim vertices near the notch are pulled forward into
  * the ear (no triangle is cut, so the shell stays closed). `side` 1 = left (+Y), −1 = right.
  */
-export function earNick(head: Mesh, l: Head, h: Frame, side: 1 | -1, depth = 0.22): Mesh {
+export function earNick(head: Mesh, l: Head, h: Frame, side: 1 | -1, depth = 0.32): Mesh {
   if (!l.ear || l.earHeight <= 0) return head;
   const n = head.positions.length / 3;
   const at = (v: number): Vec3 =>

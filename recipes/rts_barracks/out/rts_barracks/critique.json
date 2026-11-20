@@ -19,9 +19,10 @@
     },
     "materials": {
       "score": 8,
-      "reason": "Walls now read as dressed stone: per-block value jitter, darker joints, damp at the foot; slates are lapped courses with per-slate value, oak posts brown, windows amber without blowing out. The team red is still one saturated value on every slate.",
+      "reason": "Walls read as dressed stone with per-block value, darker joints and damp at the foot; slates are lapped courses with per-slate value, oak posts brown, windows amber. Roof wear is now whole slates: grey missing-slate gaps, darker aged slates and slightly slipped ones (hero.png), no more half-slate triangles. The grey gaps are a little too light and are spread evenly over every slope (sheet TOP), which reads as a sprinkle rather than weather.",
       "fixes": [
-        "darken slate edges/undersides one step so each course shadows the next"
+        "darken the missing-slate gaps toward the dark underlay/batten value",
+        "cluster missing and aged slates near the eaves, verges and below the chimney instead of an even sprinkle"
       ]
     },
     "detail": {
@@ -34,10 +35,11 @@
     },
     "wear": {
       "score": 7,
-      "reason": "Hero.png now shows dark streaks running down from each window sill, a dark damp plinth and a darker drip course at the eaves; the porch, steps and banners are still pristine and there is no moss.",
+      "reason": "Dark streaks under each window sill, a damp plinth, a darker eaves drip course, frayed banner hems, and the roof now ages per whole slate (missing, slipped and darker slates). The roof wear is evenly distributed, and the porch, steps and plinth still have no moss or tread wear.",
       "fixes": [
         "moss/dirt band on the plinth on the shaded side",
-        "faded, frayed lower edge on the porch banners and worn tread on the gate steps"
+        "worn tread on the gate steps",
+        "concentrate roof wear where water runs (eaves, verges, valleys by the towers)"
       ]
     },
     "lod": {
@@ -49,14 +51,14 @@
     },
     "technical": {
       "score": 8,
-      "reason": "QA PASS: 36.8k / 7.8k / 664 tris, 3 / 3 / 3 draws; one trim material + team slot, LOD2 well under 1k. LOD0 dropped ~2k triangles for the same read.",
+      "reason": "QA PASS: 36.5k / 7.8k / 664 tris, 3 / 3 / 3 draws; one trim material + team slot, LOD2 well under 1k.",
       "fixes": [
-        "spend some of the LOD0 savings on the fixes above (quoins, string course, gravel) instead of more blocks"
+        "spend some of the LOD0 budget on quoins, a string course and eaves brackets instead of more blocks"
       ]
     }
   },
   "renders": {
-    "hero.png": "5b2bfff5c0f0b84b89d78ed10d78c625701d2f924eaa965df4a31c8977f6aa76",
-    "sheet.png": "845db5213880c163525d797d48bb9febfef23f462cc4c11f663cdd293ff56f13"
+    "hero.png": "8b641a7d8b06299319546d7a2f6e9c2b27c05f8dd102ad1522ffc9a2efb99a01",
+    "sheet.png": "e887b6fb27a53ebfaf80e89eee5a618bffaa92e8a957325d510e836437854ccd"
   }
 }

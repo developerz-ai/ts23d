@@ -113,8 +113,9 @@ export const king_cobra = defineAsset({
   // LOD1 holds ~9 k: enough rings that the bands still resolve and the switch from 62 k is no pop.
   budget: { triangles: [72000, 11000, 640], bones: PLAN.bones.length },
   art: { grounded: false, focal: 'body' },
-  // A little higher than the default 18°: the top turn and the pile's wear face the lens.
-  hero: { elDeg: 24 },
+  // Higher than the default 18°: the top turn and the pile's wear (the shed patch, the scar, the
+  // dusty bottom turn) face the lens, and the coil fills more of the frame under the raised hood.
+  hero: { elDeg: 32 },
   creases: [
     // Local on purpose: the mouth line each side, and the shield sutures over the crown.
     ...[0.012, 0.036, 0.06].flatMap((at) =>

@@ -12,6 +12,7 @@ import { PLINTH_TOP } from './bust.ts';
 import { regionsOf } from './crease-regions.ts';
 import { hairCreases } from './creases-hair.ts';
 import { earMask } from './ears.ts';
+import { collarCorner } from './garment.ts';
 import { CUT_Z, faceHead } from './head.ts';
 import { LEFT, MIDLINE, mirrorY } from './landmarks.ts';
 
@@ -27,6 +28,14 @@ export function faceCreases(b: FaceBust): IntendedCrease[] {
   const fold = (name: string, part: string, pts: Vec3[], r: number, why: string): void => {
     out.push(...creaseCurve(name, part, pts, r * s, why));
   };
+  if (b.garment)
+    out.push({
+      name: 'collar_corner',
+      part: 'collar',
+      at: up(collarCorner(head, b.garment)),
+      radius: 0.02 * s,
+      why: "the collar's mitred corner at the bottom of its V",
+    });
   for (const [side, P] of [
     ['l', L],
     ['r', R],

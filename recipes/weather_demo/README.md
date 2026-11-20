@@ -46,7 +46,10 @@ Budget why: a teaching board of eight objects (four new/weathered pairs on slabs
 Weathering lives in vertex colour, so each weathered mesh is tessellated, with the resolution set per
 object and per LOD: the door leaf (where streaks run) at 0.1 m, the frame at 0.3 m, the crate boards at
 0.15 m, the block at 0.1 m (LOD0); the weathered drum's LOD0 shell is built on its own 4 cm × 40-gore
-grid (for the dent) and is not tessellated further. The crate's hidden inner core stays out of the
+grid (for the dent) and is not tessellated further; its lid is a flat disc on the shell's rim
+points, tessellated (7 cm LOD0, 15 cm LOD1) and mapped planar at true scale, so rust and dust lie
+in patches round the rim and bungs (the lathe's cap was a fan from the centre: wear on its rim
+vertices drew a radial star). The crate's hidden inner core stays out of the
 pass. LOD2 keeps a coarse weathered grid (0.4–0.9 m) for the crate and drum; the weathered door and
 block are painted at LOD2 as clean colour blocks instead (a rust band on the bottom rail and a run
 under each hinge; rust under each anchor and a damp band round the foot), which read at distance where

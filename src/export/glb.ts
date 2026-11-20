@@ -35,6 +35,7 @@ import { type GlowRule, glowMaterial, materialsFor } from './materials.ts';
 import { globRe, glowLayer, mergeToPivots } from './merge-pivots.ts';
 import { metadata } from './metadata.ts';
 import { optimizeParts, summarize } from './optimize-parts.ts';
+import { splitWornParts } from './paint-wear.ts';
 import { materialExtensions } from './pbr.ts';
 import { finishPlan } from './pbr-plan.ts';
 import { writePhysics } from './physics.ts';
@@ -87,7 +88,7 @@ function prepareUncached(input: CompiledAsset, o: GlbOptions, glow: readonly Glo
     }
   const opt = o.optimize === false ? false : o.optimize === true ? {} : (o.optimize ?? {});
   const merged = o.keepParts
-    ? input
+    ? splitWornParts(input)
     : mergeToPivots(
         input,
         glow.map((g) => g.parts),

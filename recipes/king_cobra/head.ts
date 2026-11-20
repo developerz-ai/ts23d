@@ -133,7 +133,7 @@ export function eyeMesh(side: 1 | -1, lod: Lod): Mesh {
   const [rings, sides] = lod === 0 ? [10, 16] : lod === 1 ? [5, 8] : [2, 4];
   // Seated proud in the socket under the clear brille: the glossiest point on the snake, so the
   // key light leaves a catchlight on it.
-  const eye = eyeball(add(c, scale(out, -0.0022)), 0.0064, out, rings, sides, (th) =>
+  const eye = eyeball(add(c, scale(out, -0.0022)), 0.0068, out, rings, sides, (th) =>
     th < 0.5 ? COLOUR.pupil : th < 0.95 ? COLOUR.iris : th < 1.15 ? COLOUR.lip : COLOUR.suture,
   );
   return pinUv(eye, 1);

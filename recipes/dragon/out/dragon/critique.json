@@ -1,7 +1,7 @@
 {
   "asset": "dragon",
   "reviewer": "agent",
-  "overall": 7,
+  "overall": 7.1,
   "scores": {
     "silhouette": {
       "score": 8,
@@ -19,9 +19,9 @@
     },
     "materials": {
       "score": 7,
-      "reason": "A scale pattern now covers the back, flanks and neck instead of one decal patch, and eyes/teeth separate; but the scales are large round orange spots that read as leopard/blister spots, not overlapping scales.",
+      "reason": "The scales are now plates with darker gaps between them over back, flanks and legs, so they read less as leopard spots; they are still large rounded blobs that look like cobbles, and membrane and hide share one sheen.",
       "fixes": [
-        "overlapping scale shapes (rows of rounded plates with a darker gap) instead of round spots",
+        "smaller overlapping plates with a clear down-slope overlap on the neck and flanks",
         "rougher membrane than hide"
       ]
     },
@@ -34,30 +34,31 @@
       ]
     },
     "wear": {
-      "score": 6,
-      "reason": "Ragged membrane edges, a sooty dark snout and pale scars on the shoulder now show; the shoulder scars read as exposed white ribs and the horn tips are intact.",
+      "score": 7,
+      "reason": "Ragged membrane edges and a sooty snout remain, and the white rib-like shoulder stripes became short dark slash scars (hero.png, shoulder); the slashes are faint at hero distance and the horn tips are intact.",
       "fixes": [
-        "scars as short diagonal raised marks, not parallel white rib-like stripes",
+        "slash scars a little lighter and raised so they read at hero distance",
         "chipped horn tips"
       ]
     },
     "lod": {
       "score": 7,
-      "reason": "FAR LOD2 keeps wings, horns and colour blocks; the body faceting and a lighter flank patch show at the switch.",
+      "reason": "FAR LOD2 keeps wings, horns and colour blocks and now shades smoothly; but its even red-orange body is lighter than the dark plated LOD0, so the value pops at the switch.",
       "fixes": [
-        "more rings on the LOD2 tail and neck; average the colour per face"
+        "darken the LOD2 body vertex colour to the LOD0 plate average",
+        "more rings on the LOD2 tail and neck"
       ]
     },
     "technical": {
       "score": 7,
-      "reason": "QA clean; 149k / 28k / 4k triangles over 7 draws: LOD0 is heavier than the detail it shows.",
+      "reason": "QA clean; 149.0k / 28.0k / 4.0k tris, 7 / 7 / 7 draws: LOD0 is heavier than the detail it shows.",
       "fixes": [
         "cap LOD0 near 120k by coarsening the hidden belly and inner-leg sculpt cells"
       ]
     }
   },
   "renders": {
-    "hero.png": "44e1a31921f0ab1876ab33a9f714be08ffd3ecff7e36d8413b5c5923f33a42d5",
-    "sheet.png": "86ec71a8570f29df9d8beaf3123fc04a38dcc34ca8222e802af21b0f4550e74a"
+    "hero.png": "0aa1b5ade2aa8a3f6a5bdefccca0dafcd07752b9c51916f95e8c3dd7c0d94998",
+    "sheet.png": "f865a2d1c11be250b82b6b7b7b4771ede0838f0f204026e8da70da9bbc99d9dc"
   }
 }

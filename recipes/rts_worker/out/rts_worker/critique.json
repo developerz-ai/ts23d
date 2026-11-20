@@ -34,9 +34,10 @@
     },
     "wear": {
       "score": 7,
-      "reason": "Pale caked mud to the knees and darker soles read in hero.png; the hat and pack corners still look new.",
+      "reason": "Pale mud to the knees and darker soles still read. The hard hat blotches are gone from the dome face: the scuffs now sit along the lower rim and brim in hero.png, but sheet TOP still shows one pale blotch on the crown and the fine scratches do not read at hero distance; the pack corners are still sharp and clean.",
       "fixes": [
-        "scuffed hat brim and dented pack corners that read at hero distance"
+        "replace the crown blotch (sheet TOP) with a thin worn ridge line; make the brim scratches darker so they read in hero.png",
+        "dented, darker scuffed pack corners that read at hero distance"
       ]
     },
     "lod": {
@@ -48,14 +49,14 @@
     },
     "technical": {
       "score": 8,
-      "reason": "QA PASS: 11.2k / 2.4k / 368 tris, 3 / 3 / 2 draws.",
+      "reason": "QA PASS: 11.5k / 2.6k / 368 tris, 3 / 3 / 2 draws.",
       "fixes": [
         "spend fewer LOD0 triangles on the pack box edges"
       ]
     }
   },
   "renders": {
-    "hero.png": "ed5cd306cf66d877e9654a5bc8f72382c225702e1e04731f5ee28678c4e39a89",
-    "sheet.png": "94491c6a1d92db49db998893b42f506b7372400c175eb6c043735127b40d6ac3"
+    "hero.png": "fd8f6b8e7acc641d77acc48866c46461c56ffd035d2086754fbb32b8f132fbc9",
+    "sheet.png": "e139653a58693f23135e11ba786c9ade1c5159055cb357357fd65a212f217514"
   }
 }

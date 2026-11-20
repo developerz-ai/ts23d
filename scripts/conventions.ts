@@ -7,6 +7,7 @@ import { existsSync } from 'node:fs';
 import { budgetBandChecks, warnBands } from './budget-bands.ts';
 import { drift, readPages } from './changelog.ts';
 import { brandChecks } from './conventions-brand.ts';
+import { citationSources, defectCitations } from './conventions-defects.ts';
 import { report, tsFiles, type Violation } from './lib/files.ts';
 
 export interface Source {
@@ -277,6 +278,7 @@ if (import.meta.main) {
     if (dir.startsWith('_') || s.file.includes('/out/')) continue;
     folders.set(dir, [...(folders.get(dir) ?? []), s]);
   }
+  const catalogue = await read('docs/architecture/defect-catalogue.md');
   const bands = await budgetBandChecks();
   warnBands(bands.warned);
   const violations = [
@@ -287,7 +289,8 @@ if (import.meta.main) {
     ...[...recipes, ...src.filter((s) => s.file.startsWith('src/kinds/'))].flatMap(decimatesCode),
     ...kindsDrift(await read('src/kinds/index.ts')),
     ...[...folders.values()].flatMap(realSources),
-    ...defectRows(await read('docs/architecture/defect-catalogue.md')),
+    ...defectRows(catalogue),
+    ...defectCitations(await citationSources(), catalogue),
     ...changelogDocs(await read('CHANGELOG.md'), await readPages()),
     ...(await scopedSources()).flatMap(unscopedBunx),
     ...bands.enforced,

@@ -4,8 +4,9 @@
 // Erosion runs on the tile plus a `MARGIN` all round and the tile is cropped out of it: every
 // tile point, the border row included, is an interior point of the erosion. (Eroding the tile
 // alone left its border row the one row thermal erosion never relaxes: the droplets' 8 m gouges
-// stood there as a saw-tooth along the skirt's top.) Nothing then touches the boundary: no
-// lowering, blur or pinning, the mesh's edge is the eroded field itself.
+// stood there as a saw-tooth along the skirt's top.) By default nothing then touches the boundary:
+// the mesh's edge is the eroded field itself; `edgeSoften` lowers thin crests at the cut for a
+// window whose cut runs along a knife ridge.
 
 import {
   dmath,
@@ -20,6 +21,7 @@ import {
   warp,
 } from '@developerz.ai/ts23d';
 import { despike } from '../_lib/terrain/ground.ts';
+import { boxBlur } from './snow.ts';
 
 /** Altitude (m above sea level) of z = 0. */
 export const DATUM = 1650;
@@ -39,6 +41,12 @@ export interface FieldParams {
   readonly offset: readonly [number, number];
   /** Hydraulic droplets on the 257² grid (~2 per point carves strongly). */
   readonly droplets: number;
+  /**
+   * Cells (~7.8 m) in from the cut over which thin crests are lowered toward their blurred
+   * height (0: the border is the eroded field untouched). For a window whose cut runs along a
+   * knife crest: those crests stood on the skirt's top as thin teeth.
+   */
+  readonly edgeSoften?: number;
 }
 
 /**
@@ -110,5 +118,26 @@ export function tileField(rng: Rng, p: Readonly<FieldParams>): TerrainGrid {
   let g = hydraulicErosion(wide, rng.fork('erosion'), { droplets });
   g = thermalErosion(g, { talus: 1, iterations: 25 });
   g = despike(despike(g, 8), 8);
-  return crop(g, MARGIN);
+  const tile = crop(g, MARGIN);
+  return p.edgeSoften ? softenEdges(tile, p.edgeSoften) : tile;
+}
+
+/**
+ * Crests near the cut lowered toward their ±4-cell blur, fully at the border and fading out
+ * `band` cells in. Only lowers (min of the two), so a valley crossing the cut keeps its floor and
+ * the skirt top stays a smooth profile instead of knife teeth.
+ */
+export function softenEdges(g: TerrainGrid, band: number): TerrainGrid {
+  const soft = boxBlur(boxBlur(g.z, g.nx, g.ny, 4), g.nx, g.ny, 4);
+  const z = new Float64Array(g.z);
+  for (let j = 0; j < g.ny; j++)
+    for (let i = 0; i < g.nx; i++) {
+      const d = Math.min(i, j, g.nx - 1 - i, g.ny - 1 - j);
+      if (d >= band) continue;
+      const t = 1 - d / band;
+      const k = j * g.nx + i;
+      const h = z[k] ?? 0;
+      z[k] = h + (Math.min(h, soft[k] ?? h) - h) * t * t * (3 - 2 * t);
+    }
+  return { ...g, z };
 }

@@ -16,7 +16,6 @@ import {
   type Mesh,
   merge,
   type PartOptions,
-  type Rng,
   sweep,
   symmetric,
   type Vec3,
@@ -31,6 +30,7 @@ import {
   type Rule,
   restrip,
   role,
+  teamWearOf,
   topDust,
   wearOf,
 } from '../_lib/rts/finish.ts';
@@ -50,7 +50,7 @@ import {
   pebble,
   SLATE,
   TEAM,
-  TEAM_PAINT,
+  TEAM_PAINT_WORN,
   TEAM_VARIANTS,
   teamShade,
   tube,
@@ -335,42 +335,6 @@ function harness(add: Add, lod: Lod, pts: FigurePoints): void {
     );
 }
 
-/**
- * Chips knocked out of both pauldrons' team paint, round the lower rim where they knock on doors
- * and rifles: thin flakes of bone primer lying on the dome (its outward normal), 3-6 cm across.
- */
-function pauldronChips(shoulder: Vec3, rng: Rng): Mesh {
-  const c: Vec3 = [shoulder[0], shoulder[1] + 0.02, shoulder[2] - 0.04];
-  const r: Vec3 = [0.13, 0.12, 0.12];
-  const out: Mesh[] = [];
-  for (const side of [1, -1])
-    for (let i = 0; i < 7; i++) {
-      const az = rng.range(-1.9, 1.9);
-      const el = rng.range(0.12, 0.5);
-      const d: Vec3 = [dmath.cos(el) * dmath.cos(az), dmath.cos(el) * dmath.sin(az), dmath.sin(el)];
-      const p: Vec3 = [c[0] + r[0] * d[0], side * (c[1] + r[1] * d[1]), c[2] + r[2] * d[2]];
-      const n0: Vec3 = [d[0] / r[0], (side * d[1]) / r[1], d[2] / r[2]];
-      const nl = dmath.norm(n0);
-      const n: Vec3 = [n0[0] / nl, n0[1] / nl, n0[2] / nl];
-      const t0: Vec3 = [-n[1], n[0], 0];
-      const tl = dmath.norm(t0) || 1;
-      const t: Vec3 = [t0[0] / tl, t0[1] / tl, 0];
-      const b: Vec3 = [
-        n[1] * t[2] - n[2] * t[1],
-        n[2] * t[0] - n[0] * t[2],
-        n[0] * t[1] - n[1] * t[0],
-      ];
-      const s = rng.range(0.03, 0.06);
-      out.push(
-        applyAffine(
-          box({ size: [s, s * rng.range(0.5, 0.8), 0.008], at: [0, 0, -0.004], color: BONE_DARK }),
-          frame(t, b, n, p),
-        ),
-      );
-    }
-  return merge(out);
-}
-
 export const rts_soldier = defineAsset({
   name: 'rts_soldier',
   kind: 'character',
@@ -400,7 +364,7 @@ export const rts_soldier = defineAsset({
   ],
   // LOD0 measured 12.7k: weather() splits edges past 16 cm so chips, dust and mud have vertices.
   budget: { triangles: [14000, 3000, 380] },
-  paint: TEAM_PAINT,
+  paint: TEAM_PAINT_WORN,
   variants: TEAM_VARIANTS,
   // Saltmarch lamps glow at 1.2 across the RTS set: lit amber, not blown to white.
   glow: [{ parts: ['visor', 'rifle_cell'], color: GLOW, strength: 1.2 }],
@@ -479,8 +443,6 @@ export const rts_soldier = defineAsset({
     add('pack_flap', pebble(lod, [0.17, 0.33, 0.06], [px, 0, 1.38], TEAM), {
       paint: 'team',
     });
-    // Chipped team paint on the pauldrons' rims: bone primer showing through (LOD0).
-    if (lod === 0) add('pauldron_chips', pauldronChips(pts.shoulder, ctx.rng.fork('chips')));
     // Caked brine mud up the boots and shins, splashes on the knee guards; salt dust on the
     // shoulders, helmet and pack tops (after weathering, so nothing paints over them).
     kit.post(
@@ -497,6 +459,11 @@ export const rts_soldier = defineAsset({
       (n) => /^(torso|helmet|helmet_trim|pack|chest_plates|webbing)$/.test(n),
       (m) => topDust(m, 1.2, DUST, 0.55),
     );
+    // Grime where he goes prone: brine mud smeared up the belly plates and the pack's foot.
+    kit.post(
+      (n) => /^(torso|chest_plates|pack)$/.test(n),
+      (m) => band(m, { top: 1.42, full: 1.12, color: MUD, k: 0.5 }, 0.08),
+    );
     // Measured wear on everything but skin, lenses and team plates: chipped ceramic edges,
     // salt dust on the tops, brine mud up the boots.
     const bare = new Set(['head', 'neck', 'visor', 'rifle_cell']);
@@ -506,6 +473,21 @@ export const rts_soldier = defineAsset({
     const unit = wearOf('unit', 'warden', 41);
     const cloth = wearOf('cloth', 'warden_kit', 42);
     kit.commit(ctx, [
+      {
+        // Team plates (wear slot): pauldron rims and the crest knocked to bare steel where they
+        // hit doors and rifles, salt dust on the tops; kept in every livery.
+        painted: true,
+        // Near only: on LOD1's coarse plates the chips' cut borders cost more triangles than
+        // the mid-distance view can show.
+        wear: teamWearOf('warden_team', 43, [0.12, 0, 0], { chips: 0.4, dust: 0.3 }),
+        pick: (n) => lod === 0 && /^(pauldron_[lr]|pack_flap)$/.test(n),
+      },
+      {
+        // The crest and chest stripe are the team read: a few chips, no dust.
+        painted: true,
+        wear: teamWearOf('warden_crest', 44, [0, 0, 0], { chips: 0.15, dust: 0 }),
+        pick: (n) => lod < 2 && /^(crest|chest_stripe)$/.test(n),
+      },
       {
         wear: {
           ...unit,

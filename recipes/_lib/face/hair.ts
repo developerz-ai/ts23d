@@ -1,7 +1,7 @@
 // Hair and beard for the face busts, sculpted against the warped scalp: the head is turned into a
 // distance field (mesh-field.ts), a hair mass grows out of it inside a hairline that eases to zero
 // thickness (no cap edge), and locks flow over it along hair-lines.ts — overlapping clumps on the
-// scalp, flat ribbons falling to the shoulders, beard locks and a moustache. One `hair` part.
+// scalp, a curtain mass under a long fall, beard locks and a moustache. One `hair` part.
 
 import {
   dmath,
@@ -12,10 +12,10 @@ import {
   sculptField,
   type Vec3,
 } from '@developerz.ai/ts23d';
-import { flowLocks, hairMass, ribbon } from '../bust/hair.ts';
+import { flowLocks, hairMass } from '../bust/hair.ts';
 import { surface } from '../bust/kit.ts';
 import { beardBody } from './hair-beard.ts';
-import { fallLines, type HairStyle, scalpLines } from './hair-lines.ts';
+import { type HairStyle, scalpLines } from './hair-lines.ts';
 import type { FaceHead } from './head.ts';
 import { LEFT, MIDLINE } from './landmarks.ts';
 import { keepLarge } from './lod2.ts';
@@ -100,11 +100,13 @@ export function beardlineOf(head: FaceHead): Field {
     const hole = dmath.hypot((p[0] - mouth[0]) * 1.3, p[1], (p[2] - mouth[2]) * 2) - 0.022 * s;
     const front = tragion[0] - 0.006 * s - p[0];
     const throat = menton[2] - 0.035 * s - p[2];
-    // Never inside the mouth cavity (the skin's field is positive in there too).
+    // Never inside the mouth cavity (the skin's field is positive in there too). (Down to the
+    // lower lip's base only: reaching the menton it also took the chin, which sits behind the
+    // lips' front, and left a bare pale patch between the lip and the beard.)
     const cavity = Math.min(
       mouth[0] - 0.006 * s - p[0],
       0.032 * s - Math.abs(p[1]),
-      p[2] - (menton[2] + 0.012 * s),
+      p[2] - (mouth[2] - 0.011 * s),
       sub[2] - p[2],
     );
     return Math.max(p[2] - cheekZ, front, -hole, throat, cavity);
@@ -151,8 +153,12 @@ function fallMass(head: FaceHead, root: Vec3): SculptEdit[] {
   ];
 }
 
-/** The sculpted mass's tone against the hair's root colour. */
-const SHADE = 0.62;
+/** The sculpted mass's tone against the hair's mid colour: close to the cards' own, so the hair
+ *  reads as one mass with locks over it (at 0.62 of the root the gaps between cards were dark
+ *  holes, and the cards read as chopped straw on a dark cap). */
+const SHADE = 0.8;
+/** The mass's tone against the hair's root colour under the lock-style cards (LOD0/1). */
+const DEEP = 0.55;
 
 export interface HairSculpt {
   readonly mesh: Mesh;
@@ -175,7 +181,16 @@ export function hairSculpt(head: FaceHead, st: HairStyle, lod: number): HairScul
   const { tip } = st;
   // The mass is hair in the shade of the locks over it: a gap between cards reads as depth, not
   // as a flat patch of the root colour.
-  const root: Vec3 = [st.root[0] * SHADE, st.root[1] * SHADE, st.root[2] * SHADE];
+  const mid: Vec3 = [
+    st.root[0] + (tip[0] - st.root[0]) * 0.35,
+    st.root[1] + (tip[1] - st.root[1]) * 0.35,
+    st.root[2] + (tip[2] - st.root[2]) * 0.35,
+  ];
+  const far: Vec3 = [mid[0] * SHADE, mid[1] * SHADE, mid[2] * SHADE];
+  // Under the lock-style cards (LOD0/1) the mass is the root colour in shadow: the gaps between
+  // locks read as depth. At 0.8 of the mid tone it showed through them as pale flat chips, and
+  // its lock relief (toned toward the tip) as light patches. The far LOD keeps the mid tone.
+  const root: Vec3 = lod < 2 ? [st.root[0] * DEEP, st.root[1] * DEEP, st.root[2] * DEEP] : far;
   const edits: SculptEdit[] = [];
   if (st.cut !== 'none') {
     // Thicker over the crown than a cap: the volume a head of hair has.
@@ -200,7 +215,7 @@ export function hairSculpt(head: FaceHead, st: HairStyle, lod: number): HairScul
   const massField = sculptField([...edits, { field: scalp, bounds: box }], { color: root }).field;
   if (lod < 2) {
     const hair = surface(massField);
-    const m = { root, tip, mirror: false };
+    const m = { root, tip: far, mirror: false };
     // Locks only where the hair grows (a line's start may be under the hairline).
     const line = hairlineOf(head, st.cut);
     const inside = (ls: Vec3[][]): Vec3[][] =>
@@ -212,16 +227,8 @@ export function hairSculpt(head: FaceHead, st: HairStyle, lod: number): HairScul
       edits.push(
         ...flowLocks(hair, inside(scalpLines(head, [-10, -5, 0, 5, 10], 20, 200)), 0.011 * s, m),
       );
-    if (st.cut === 'long')
-      for (const f of fallLines(head)) {
-        const pts = f.pts;
-        edits.push(
-          ...ribbon(pts, f.facing, [0.026 * s, 0.016 * s], [0.0075 * s, 0.0042 * s], root, tip, {
-            strands: 3,
-            mirror: false,
-          }),
-        );
-      }
+    // (No sculpted ribbons down a long fall: at portrait distance they read as one flat slab
+    // behind the ear; the fall is strand cards over the curtain mass.)
   }
   // Drop crumbs (a sliver cut off by the clearance round an ear tip).
   const mesh = keepLarge(

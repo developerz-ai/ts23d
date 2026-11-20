@@ -1,7 +1,7 @@
 {
   "asset": "rts_tank",
   "reviewer": "agent",
-  "overall": 7.4,
+  "overall": 7.7,
   "scores": {
     "silhouette": {
       "score": 8,
@@ -18,11 +18,11 @@
       ]
     },
     "materials": {
-      "score": 7,
-      "reason": "The wood-grain dash chips are gone, road-wheel tyres are dark rubber round brass hubs, headlamps have dark rims with a contained amber glow; the large bone plates are now clean flat paint with a dust gradient but no metal break-up.",
+      "score": 8,
+      "reason": "Rubber tyres, brass hubs, gunmetal barrel and amber lamps stay distinct and the mud is a smooth gradient. The team roof chips are now ragged, mixed-size bites through to the bone undercoat with no sawtooth on the rim (hero.png) and no stair-steps in sheet TOP / 3/4 REAR, so they read as chipped paint. Some interior patches in TOP are large and blotchy, and the big bone plates are still clean flat paint.",
       "fixes": [
-        "a few round, edge-biased chips on the plate edges (steel showing)",
-        "subtle roughness variation across the big bone plates"
+        "keep roof chips nearer the rim and hatch edges; shrink the few large interior blotches in sheet TOP",
+        "a few edge-biased chips and subtle roughness variation on the large bone hull plates"
       ]
     },
     "detail": {
@@ -34,10 +34,11 @@
       ]
     },
     "wear": {
-      "score": 7,
-      "reason": "Heavy rusty mud on the tracks and lower hull sides fading up the plates reads in hero and SIDE; no exhaust soot on the rear plate.",
+      "score": 8,
+      "reason": "Black exhaust soot fans over the rear plate (sheet 3/4 REAR, TOP), rusty mud climbs the tracks and lower hull, the team roof and deck chevrons are chipped raggedly to the undercoat and fine scratches mark the turret sides (hero.png): the vehicle has a history from every angle.",
       "fixes": [
-        "soot streaks on the rear plate"
+        "dust in the deck recesses round the turret ring",
+        "chips on the bone hull edges (glacis, fender lips)"
       ]
     },
     "lod": {
@@ -49,14 +50,14 @@
     },
     "technical": {
       "score": 7,
-      "reason": "QA PASS: 35.2k / 9.2k / 590 tris, 23 / 9 / 7 draws. LOD1 merged to 9 draws, but LOD0 still costs 23 draws for an RTS unit.",
+      "reason": "QA PASS: 37.5k / 9.4k / 590 tris, 23 / 9 / 7 draws. LOD1 merged to 9 draws, but LOD0 still costs 23 draws for an RTS unit.",
       "fixes": [
         "merge the static road-wheel pivots into one draw per side at LOD0 as well"
       ]
     }
   },
   "renders": {
-    "hero.png": "b86efb29c9f4c43bf71a5fe03f7b6efffa1046701c3a6218921152b7f41aeb6f",
-    "sheet.png": "1e02b034468975d773559e4672892692ad1c14c4017a186ac1d412644c923f9c"
+    "hero.png": "5bf6582f9ae3bffc6d9b90f7fb7c5ebe2ea478c31a77352f25dcc2deae85d415",
+    "sheet.png": "d69c4e295aa836f443616b455b0386577930ca87b93d8ea469bab6a58769e980"
   }
 }

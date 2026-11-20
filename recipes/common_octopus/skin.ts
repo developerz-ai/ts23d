@@ -63,7 +63,7 @@ function mottle(p: Vec3, far = false): Vec3 {
   return lerp(warm, INK, Math.max(0, fleck - 0.58) * 1.7);
 }
 
-const SCAR = hex('#d8b4a4');
+const SCAR = hex('#ead2c4');
 
 /** The mantle flank toward the hero camera, where two healed slashes run (a moray's teeth). */
 const SCAR_SIDE: Vec3 = [0.19, -0.97, 0.15];
@@ -75,11 +75,11 @@ const SCAR_SIDE: Vec3 = [0.19, -0.97, 0.15];
 export function scarAt(q: Q): number {
   if (q.chain === 'mantle') {
     const face = q.n[0] * SCAR_SIDE[0] + q.n[1] * SCAR_SIDE[1] + q.n[2] * SCAR_SIDE[2];
-    const patch = Math.max(0, Math.min(1, (face - 0.35) / 0.25));
+    const patch = Math.max(0, Math.min(1, (face - 0.15) / 0.25));
     const w = q.n[2] - 0.15;
     const slash = (k: number): number =>
-      dmath.exp(-dmath.pow((q.u - 0.42 - k - 0.5 * w) / 0.026, 2));
-    return patch * Math.max(slash(0), 0.8 * slash(0.07));
+      dmath.exp(-dmath.pow((q.u - 0.42 - k - 0.5 * w) / 0.04, 2));
+    return patch * Math.max(slash(0), 0.8 * slash(0.12));
   }
   if (q.chain === 'arm_1' || q.chain === 'arm_4') {
     const aboral = Math.max(0, dmath.cos(q.angle));
@@ -98,10 +98,11 @@ export const mantleTint: Tint = (q) => {
   return lerp(warty, SCAR, scarAt(q) * 0.95);
 };
 
-/** A papilla takes the skin colour under it, a shade lighter: raised skin, not a stud. */
+/** A papilla takes the skin colour under it, a touch darker (its wet crown already catches the
+ *  light): raised skin, not a pale stud. */
 export const papillaColour = (p: Vec3): Vec3 => {
   const c = mottle(p);
-  return lerp([c[0] * 1.1, c[1] * 1.1, c[2] * 1.1], SAND, 0.04);
+  return lerp([c[0] * 0.96, c[1] * 0.96, c[2] * 0.96], SAND, 0.03);
 };
 
 /** Mantle: soft lobes, warts, and folds running round it near the opening. */
@@ -147,7 +148,8 @@ export const armTint: Tint = (q, base) => {
   const top = lerp(mottle(q.p, q.lod === 2), SAND, Math.max(0, warts(q.p, 95, 0.62) - 0.25) * 0.35);
   const under = lerp(ROSE, PALE, 0.35 + q.u * 0.4);
   const c = lerp(under, top, smooth(Math.min(1, aboral * 1.5)));
-  const tipped = lerp(c, TIP, smooth(Math.min(1, Math.max(0, (q.u - 0.72) / 0.28))) * 0.7);
+  // Toward the tips a little paler only, so the one regrowing arm's pale bud stands out.
+  const tipped = lerp(c, TIP, smooth(Math.min(1, Math.max(0, (q.u - 0.8) / 0.2))) * 0.35);
   const scarred = q.lod === 2 ? tipped : lerp(tipped, SCAR, scarAt(q) * 0.8);
   return lerp(scarred, base, 0.04);
 };

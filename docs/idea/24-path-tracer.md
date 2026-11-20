@@ -21,7 +21,7 @@ iteration, contact sheets, review close-ups and the calibrated metric vector.
 | Textured parts | `../texture-sets.ts`, `../set-shade.ts` | a part's own texture set (ADR 016): albedo × vertex colour, ORM or the set's factors, normal map in the exporter's per-vertex tangent frame (glTF: green up, v down); shared with the raster and the contact sheet |
 | Fur / hair | `hair.ts` | diffuse + R / TT / TRT lobes about the strand; cutout cards alpha-tested on the coverage-preserving mips |
 | Skin | `sss.ts`, `classes.ts` | Burley normalised diffusion, disk-probe exit points; skin = `skin*` finish, or plain parts of characters/creatures |
-| Image | `film.ts`, `denoise.ts` | 32 px tiles merged by index; asset layer + floor shadow-catcher layer, each à-trous denoised |
+| Image | `film.ts`, `denoise.ts` | 32 px tiles merged by index; asset layer + floor shadow-catcher layer; the asset layer variance-guided à-trous denoised (SVGF-style, using the film's per-pixel variance), the shadow layer à-trous |
 | Threads | `parallel.ts`, `worker.ts` | shared arrays, atomic tile counter; same bytes on 1 or N threads |
 
 **Textured parts.** A model-built part keeps its own albedo / normal / ORM on every LOD (ADR 016),

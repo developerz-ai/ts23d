@@ -7,7 +7,10 @@ goggles, a **tool backpack** (team lid with a rolled tarp across it, brass canis
 spare pick head, a shovel slung across it) and a **sunstone pick** carried across the body in both
 hands, its head out past the left shoulder. From the RTS camera the pack + cap say "worker". Wear:
 pale caked mud to the knees (mud shell on its own grey strip), dented pack corners, salt dust on
-the shoulders, pack and tarp.
+the shoulders, pack and tarp; the team hard hat and pack lid scuffed to bare shell round the rim
+and visor, with a few fine scratches (`teamWearOf` with `read: 'close'`: chips sized for the part,
+not blotches sized for the hero framing; slot `TEAM_PAINT_WORN`: that wear keeps its colour in every
+livery; LOD0/1 only, the far cap stays a solid team block).
 
 ## Specs
 | Dimension | Value (m) | Source |

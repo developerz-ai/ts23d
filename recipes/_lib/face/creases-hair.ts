@@ -1,5 +1,5 @@
 // The hair's intended creases (QA `connections`), from the same lines and regions that sculpt
-// the hair: each lock's groove on the hair surface, the hairline and nape edges, ribbons, beard
+// the hair: each lock's groove on the hair surface, the hairline and nape edges, beard
 // locks, the moustache, the beard rim, and the centroids QA judges long groove chains by.
 
 import type { IntendedCrease, Vec3 } from '@developerz.ai/ts23d';
@@ -7,7 +7,7 @@ import { dmath } from '@developerz.ai/ts23d';
 import type { FaceBust } from './bust.ts';
 import { centroidRegion, regionsOf } from './crease-regions.ts';
 import { beardlineOf, hairlineOf, LOCK_DEGS } from './hair.ts';
-import { beardLines, fallLines, hairCentre, moustacheLines, scalpLines } from './hair-lines.ts';
+import { beardLines, hairCentre, moustacheLines, scalpLines } from './hair-lines.ts';
 import type { FaceHead } from './head.ts';
 import { type LEFT, MIDLINE } from './landmarks.ts';
 
@@ -67,10 +67,6 @@ export function hairCreases(b: FaceBust, c: CreaseCtx): IntendedCrease[] {
       'edge of the hair at the nape',
     );
   }
-  if (b.hair.cut === 'long')
-    fallLines(head).forEach((f, i) => {
-      fold(`ribbon${i}`, 'hair', f.pts.map(up), 0.025, 'strand grooves of a falling ribbon');
-    });
   if (b.hair.beard === 'full') {
     beardLines(head).forEach((l, i) => {
       fold(`beard_lock${i}`, 'hair', l.map(up), 0.02, 'groove beside a beard lock');
@@ -91,19 +87,6 @@ export function hairCreases(b: FaceBust, c: CreaseCtx): IntendedCrease[] {
           scalpLines(head, [44 * sign, 55 * sign, 66 * sign]).map((l) => l.map(up)),
           0.03,
           'side locks meeting the mass above the ear',
-        ),
-      );
-    if (b.hair.cut === 'long')
-      out.push(
-        ...centroidRegion(
-          `ribbons_${tag}`,
-          'hair',
-          sideOf(
-            fallLines(head).map((f) => f.pts),
-            sign,
-          ).map((l) => l.map(up)),
-          0.03,
-          'ribbons leaving the head behind the ear',
         ),
       );
     if (b.hair.beard === 'full')

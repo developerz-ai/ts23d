@@ -116,6 +116,34 @@ describe('strandPainter', () => {
     });
   });
 
+  it('fails if a transparent texel is lighter than the strands beside it (D460: specks at card edges)', () => {
+    // Filtering (our bilinear, any engine's) mixes an edge texel's colour with its transparent
+    // neighbour's: a light fill there outlines every dark strand in pale specks.
+    for (const id of ['fur_clumps', 'hair_clumps'] as const) {
+      const c = createCanvas(2048, 32, 4, 0.05, true);
+      strandPainter(STRAND_LAYOUT[id])(c, paintKit(c, 9));
+      const rgba = c.rgba ?? new Uint8Array(0);
+      let edges = 0;
+      for (let y = 1; y < 31; y++)
+        for (let x = 1; x < 2047; x++) {
+          if (alphaAt(rgba, 2048, x, y) > 0) continue;
+          let hi = -1;
+          for (const [dx, dy] of [
+            [1, 0],
+            [-1, 0],
+            [0, 1],
+            [0, -1],
+          ] as const)
+            if (alphaAt(rgba, 2048, x + dx, y + dy) > 0)
+              hi = Math.max(hi, rgba[((y + dy) * 2048 + x + dx) * 4] ?? 0);
+          if (hi < 0) continue;
+          edges++;
+          expect(rgba[(y * 2048 + x) * 4] ?? 0).toBeLessThanOrEqual(hi + 24);
+        }
+      expect(edges).toBeGreaterThan(100);
+    }
+  });
+
   it('is deterministic per seed and varies with it', () => {
     const a = paintRow(5).rgba ?? new Uint8Array(0);
     const b = paintRow(5).rgba ?? new Uint8Array(0);
@@ -125,7 +153,7 @@ describe('strandPainter', () => {
   });
 
   it('fails if a card is an opaque ribbon: alpha coverage ≤ 55 % in every cell, gaps between strands', () => {
-    for (const id of ['fur_clumps', 'hair_clumps'] as const) {
+    for (const id of ['fur_clumps', 'hair_clumps', 'hair_locks'] as const) {
       const c = createCanvas(4096, 64, 4, 0.05, true);
       strandPainter(STRAND_LAYOUT[id])(c, paintKit(c, 9));
       const rgba = c.rgba ?? new Uint8Array(0);
@@ -137,7 +165,8 @@ describe('strandPainter', () => {
             n += alphaAt(rgba, 4096, x, y) >= 0.5 ? 1 : 0;
         expect(n / t).toBeLessThanOrEqual(0.55);
         // Wisps are a few stray strands by design; every other clump still hides what it covers.
-        expect(n / t).toBeGreaterThan(STRAND_LAYOUT[id][cell] === 'wisp' ? 0.06 : 0.2);
+        const sparse = STRAND_LAYOUT[id][cell] === 'wisp' || STRAND_LAYOUT[id][cell] === 'fly';
+        expect(n / t).toBeGreaterThan(sparse ? 0.03 : 0.2);
       }
     }
   });
@@ -183,5 +212,30 @@ describe('strandPainter', () => {
       expect(tips).toBeGreaterThan(0.05);
       expect(tips).toBeLessThan(cover(cell, 0.3, 0.4) * 0.6);
     });
+  });
+
+  it('fails if a lock-style lock is not dark at the root and light by the tip (D461)', () => {
+    const c = createCanvas(2048, 32, 4, 0.05, true);
+    strandPainter(STRAND_LAYOUT.hair_locks)(c, paintKit(c, 9));
+    const rgba = c.rgba ?? new Uint8Array(0);
+    const grey = (cell: number, a: number, b: number): number => {
+      let g = 0;
+      let n = 0;
+      for (let y = 4; y < 28; y++)
+        for (let x = Math.round(cell * 256 + a * 256); x < cell * 256 + b * 256; x++)
+          if (alphaAt(rgba, 2048, x, y) >= 0.5) {
+            g += rgba[(y * 2048 + x) * 4] ?? 0;
+            n++;
+          }
+      return n > 0 ? g / n : 0;
+    };
+    STRAND_LAYOUT.hair_locks.forEach((kind, cell) => {
+      if (kind !== 'lock') return;
+      expect(grey(cell, 0.6, 0.8)).toBeGreaterThan(grey(cell, 0.03, 0.12) + 30);
+    });
+    // The under-layer mass stays darker than the locks over it.
+    const mass = STRAND_LAYOUT.hair_locks.indexOf('mass');
+    const lock = STRAND_LAYOUT.hair_locks.indexOf('lock');
+    expect(grey(mass, 0.3, 0.8)).toBeLessThan(grey(lock, 0.3, 0.8));
   });
 });

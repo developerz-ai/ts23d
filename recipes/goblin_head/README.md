@@ -76,7 +76,7 @@ the cloth strips' near-white ground is `CLOTH_ALBEDO`).
 
 ## Known gaps
 The skin's detail is the shared tiling pore strip (`pores: true`) under one olive `skin`
-finish (a soft sheen plus a thin oily coat, clearcoat 0.3 at roughness 0.28), not a per-face texture; the hero is a portrait camera (`../_lib/bust/hero.ts`); the vest's cut edges are ragged at the cell's scale even after fairing; stitches are a
+finish (the shared `skinFinish`: a soft grazing sheen, no clear coat, so cheeks and shoulders stay matte and only the oily strip's T-zone (up to a tenth of the head over the glabella) shines; the scalp above it and behind the ears is on the matte strip, `face_skin_matte`, so a bald or shaven dome has no wet hot spots), not a per-face texture; the hero is a portrait camera (`../_lib/bust/hero.ts`); the vest's cut edges are ragged at the cell's scale even after fairing; stitches are a
 groove and a paler line, not thread (a 2 mm stitch is under the layer's cell); the neck is the
 base mesh's and stays straight (the stoop is carried by the raised shoulders and the hump); the
 mouth's grin is the base's parted lips widened ×1.6, not a re-sculpted smile.

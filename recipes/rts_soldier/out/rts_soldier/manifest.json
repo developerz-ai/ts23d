@@ -20,8 +20,13 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    10588,
-    2944,
+    11380,
+    2970,
+    380
+  ],
+  "trianglesCompiled": [
+    11390,
+    2970,
     380
   ],
   "drawCalls": [
@@ -116,10 +121,50 @@
   ],
   "weather": {
     "chips": {
-      "target": 0.15,
-      "actual": 0.15,
+      "target": 0.173,
+      "actual": 0.173,
       "eligible": "convex-edges",
-      "area": 3.4307
+      "area": 4.0183,
+      "by": {
+        "warden_team": {
+          "target": 0.4,
+          "actual": 0.4,
+          "area": 0.3697
+        },
+        "warden_crest": {
+          "target": 0.15,
+          "actual": 0.15,
+          "area": 0.2179
+        },
+        "warden": {
+          "target": 0.15,
+          "actual": 0.15,
+          "area": 3.4307
+        }
+      }
+    },
+    "dust": {
+      "target": 0.3,
+      "actual": 0.3,
+      "eligible": "up-facing",
+      "area": 1.8103,
+      "by": {
+        "warden_team": {
+          "target": 0.3,
+          "actual": 0.3,
+          "area": 0.1684
+        },
+        "warden": {
+          "target": 0.3,
+          "actual": 0.3,
+          "area": 0.9318
+        },
+        "warden_kit": {
+          "target": 0.3,
+          "actual": 0.3,
+          "area": 0.7101
+        }
+      }
     },
     "scratches": {
       "target": 0.3,
@@ -142,24 +187,6 @@
           "target": 0.7,
           "actual": 0.7,
           "area": 1.0462
-        }
-      }
-    },
-    "dust": {
-      "target": 0.3,
-      "actual": 0.3,
-      "eligible": "up-facing",
-      "area": 1.647,
-      "by": {
-        "warden": {
-          "target": 0.3,
-          "actual": 0.3,
-          "area": 0.9318
-        },
-        "warden_kit": {
-          "target": 0.3,
-          "actual": 0.3,
-          "area": 0.7152
         }
       }
     }

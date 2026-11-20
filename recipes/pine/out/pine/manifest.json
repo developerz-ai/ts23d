@@ -18,7 +18,7 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    20780,
+    20700,
     2550,
     306
   ],
@@ -57,21 +57,21 @@
     }
   ],
   "real": {
-    "length": 10.5,
-    "width": 10.5,
-    "height": 25
+    "length": 11.5,
+    "width": 11.5,
+    "height": 22
   },
   "measures": [
     {
       "label": "trunk diameter at breast height",
-      "spec": 0.6,
-      "measured": 0.6,
+      "spec": 0.9,
+      "measured": 0.904434,
       "source": "recipes/pine/README.md"
     },
     {
       "label": "total height",
-      "spec": 25,
-      "measured": 24.971416,
+      "spec": 22,
+      "measured": 21.972534,
       "source": "recipes/pine/README.md"
     }
   ],

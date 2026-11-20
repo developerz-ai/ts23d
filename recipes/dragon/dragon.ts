@@ -101,9 +101,8 @@ export const dragon = defineAsset({
       ctx.part(`horn_boss_${s}`, posed(head.bosses[i], 'head', far), {
         connect: { as: 'welded', to: 'head' },
       });
-      // The right horn lost its last two fifths in a fight.
-      const horn =
-        side === -1 ? brokenTip(head.horns[i], mainHornSocket(side).at, 0.62) : head.horns[i];
+      // The right horn lost its last half in a fight; the left one is chipped at the tip.
+      const horn = brokenTip(head.horns[i], mainHornSocket(side).at, side === -1 ? 0.5 : 0.84);
       ctx.part(`horn_${s}`, posed(horn, 'head', far), { finish: 'keratin' });
       const socket = mainHornSocket(side);
       ctx.joint(`horn_${s}_root`, {

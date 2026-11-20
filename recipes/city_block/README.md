@@ -36,7 +36,8 @@ lots with rear yards (the light wells in the footprints), party walls without wi
 
 ## Parts the engine needs
 `b<osm id>` (walls, true-scale brick / brownstone / stucco per face, soot runs), `b<id>_cornice`
-(LOD0/1), `b<id>_roof` (roof band and membrane patches), `b<id>_windows` (framed sashes LOD0;
+(LOD0/1), `b<id>_roof` (roof band and membrane patches), `b<id>_windows` (framed sashes on street faces and flat sash decals on side and rear faces at
+LOD0, each upper window with its grime streak;
 decals on street faces and window-row bands elsewhere at LOD1; bands on every open face LOD2),
 `b<id>_street` (shopfronts with doors and awnings, stoops, fire escapes), `rooftop_<id>` (stair
 bulkheads, water tanks, vents: not part of the tagged height), `trees`, `streets` (asphalt,
@@ -51,23 +52,33 @@ front when 3 m in front of it is open ground near a mapped carriageway or near t
 framed sash windows with stone sills and lintels, a projecting cornice (0.45–0.8 m) with frieze
 and brackets, and by seed a shopfront (glazing, mullions, a panelled shop door, sign band, canvas
 awning on three in four), a brownstone stoop up to a panelled door (row houses) or a fire escape
-(walk-ups of 4+ storeys). Rear-yard faces get framed windows only. Water tanks stand on two in
-three of the buildings over 14 m; `real.height` includes the tallest tank. Streets: asphalt,
-granite kerbs on both edges and a dashed centre line plus parking lines, all cut at the
-crossings; the slab is 5 ft concrete flags (`materials.ts`). Street trees are 8–11 m, a dome
-and a seeded side lobe. Wear (`wear.ts`): street grime blackening the first storey to ~3.5 m,
-a broad soot band under the roof line and soot runs 0.5–1.3 m wide down the street faces, per-
+(walk-ups of 4+ storeys). Rear-yard faces get flat sash decals 2 mm proud (their triangles
+pay for the streaks). Water tanks stand on two in
+three of the buildings over 14 m; `real.height` includes the tallest tank. Streets: worn asphalt
+(`city_asphalt_worn`, `materials.ts`: a 4 m band with utility-cut patches in their own greys and
+oil blots 1–2 m across, mapped per face at true scale by `../_lib/terrain/strip-inset.ts`; the
+prism squeezed a whole carriageway onto one band), gutter-stained granite kerbs on both edges and
+a dashed centre line plus parking lines in greyed paint, each dash its own fade and one in five
+worn away, all cut at the crossings; the slab is 5 ft concrete flags with stained flags. Street trees are 8–11 m on a 0.54 m
+bole, a smooth 7-sided dome and a seeded side lobe, the crowns mapped planar per face onto the
+isotropic `moss` strip magnified 12× (leaf clumps ~0.3 m; `grass` on the lathe's U drew wood-grain
+streaks). Wear (`wear.ts`): street grime blackening the first storey to ~3.5 m,
+a broad soot band under the roof line and soot runs 0.5–1.3 m wide down the street faces, a soot
+streak run down the wall from three upper windows in four at LOD0, each its own: 0.6–3.2 m long,
+0.35–0.9 × the window wide under the sill tapering to a quarter at its foot, 60–97 % dark under
+the sill, still dark a third of the way down and gone into the wall at its foot (two tapered
+quads 2 mm proud), per-
 building age, membrane patches (fresh tar or silver coat) and vents on every roof. Side and
 rear walls (and LOD1) use the same bonds painted over 2.7 m bands (`city_brick_far`,
 `city_stone_far`), so they take a third of the bands without stretched courses. A face of one
 band (every face at LOD2, side and rear walls at LOD1) has vertex rows only at its foot and top,
 so it takes the wall's mean wear rather than the black of its grime and soot bands: far, each
 building keeps its brick, brownstone or stucco colour (tested).
-Budget 60k / 15k / 6k: LOD0 ≈ 59.6k, LOD1 ≈ 13.3k (street faces in 2.7 m bands, other faces one
+Budget 60k / 15k / 6k: LOD0 ≈ 50.5k, LOD1 ≈ 13.3k (street faces in 2.7 m bands, other faces one
 band with window rows as bands, decal windows, no stoops or fire escapes, single-dome trees),
 LOD2 ≈ 5.6k (massing, window rows as bands on every open face, trees as cones). The hero is a
-fixed street view down West 10th Street (`hero.eye`/`target`), so the storefronts, kerbs, lane
-paint and wear fill the frame.
+fixed street view down West 10th Street (`hero.eye`/`target`, ~75 m from the corner), so the
+facades' sill streaks and cornice soot, the storefronts, kerbs and lane paint fill the frame.
 
 ## Open questions and known gaps
 - The city kind's own `cityBlock` (true-scale brick walls, glazed window boxes at LOD0, flat panes

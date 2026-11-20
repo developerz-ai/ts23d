@@ -4,7 +4,7 @@
 // (smooth subtract + raised rims) with boulders settled in their floors, and drill bores with
 // tailings at the mining sites; then vertex colour over the regolith strip (regolith.ts):
 // dark stony rock, dust on up-facing slopes, darker old crater floors, one fresh crater with
-// bright ejecta rays, and soft-edged nickel-iron ore veins (M-type). Glowing crystal clusters
+// bright ejecta rays, and nickel-iron ore veins filling a fracture network (M-type). Glowing crystal clusters
 // mark the mining points. A free body: no flat cut — it rests on its own lowest point (sunk
 // 3 cm so it touches the ground plane). +X front, Z up, metres.
 //
@@ -29,7 +29,9 @@ import {
   type Vec3,
   valueNoise,
 } from '@developerz.ai/ts23d';
+import { insetStripV, projectStripUV } from '../_lib/terrain/strip-inset.ts';
 import { REGOLITH } from './regolith.ts';
+import { fractureVeins } from './veins.ts';
 
 // Over the near-white regolith strip: stony grey-brown (one step above carbonaceous black so the
 // relief reads), paler dust, dark old crater floors, bright fresh ejecta, ochre nickel-iron ore.
@@ -39,8 +41,11 @@ const ROCK_LIGHT = hex('#6c635a');
 const WEATHERED = hex('#3e3833');
 const DUST = hex('#867c70');
 const CRATER = hex('#2e2a27');
-const EJECTA = hex('#c4bba9');
+/** Fresh ejecta: a step above the rock, not white (pale-white rays read as marbled paint). */
+const EJECTA = hex('#9a9183');
 const TAILINGS = hex('#a89e90');
+/** A big crater's raised rim at LOD2: the pale ring that keeps the crater when the bowl is gone. */
+const RIM = hex('#aaa192');
 /** Drill scars: the bore's scorched, ground-down rim. */
 const SCORCH = hex('#24201e');
 const ORE = hex('#b98a48');
@@ -82,6 +87,8 @@ interface Crater {
   readonly r: number;
   /** Outward surface normal where it struck. */
   readonly n: V;
+  /** Where it struck (on the uncratered body). */
+  readonly at: V;
 }
 
 interface Shape {
@@ -105,6 +112,7 @@ function shape(ctx: BuildContext, size: V): Shape {
   // A fine grain octave where the cells can carry it (LOD0): cobble-scale lumps on the surface.
   const fine = valueNoise(rng.fork('fine'), { scale: 0.3, octaves: 2 });
   const grain = ctx.lod === 0 ? 0.05 : 0;
+  const far = ctx.lod === 2;
   // Lobes scale with the body, so an elongated variant stays elongated.
   const lobes = Array.from({ length: 3 }, () => ({
     c: [
@@ -127,7 +135,7 @@ function shape(ctx: BuildContext, size: V): Shape {
   ) as V;
   // Fracture planes: a few half-spaces that facet the lumps (reaching far, so they chip rather
   // than square off the sides).
-  const chips = Array.from({ length: 7 }, () => {
+  const chips = Array.from({ length: 10 }, () => {
     const a = rng.range(0, Math.PI * 2);
     const up = rng.range(-0.2, 0.9);
     const m = norm([
@@ -136,7 +144,7 @@ function shape(ctx: BuildContext, size: V): Shape {
       up,
     ]);
     const reach = Math.abs(m[0]) * size[0] + Math.abs(m[1]) * size[1] + Math.abs(m[2]) * size[2];
-    return { m, c: reach * rng.range(0.75, 0.9) };
+    return { m, c: reach * rng.range(0.8, 0.93) };
   });
   const body = (p: Vec3): number => {
     let d = ellipsoid(p, CORE, size);
@@ -146,7 +154,7 @@ function shape(ctx: BuildContext, size: V): Shape {
     const y = p[1] - CORE[1];
     const z = p[2] - CORE[2];
     for (const c of chips)
-      d = smax(d, x * c.m[0] + y * c.m[1] + z * c.m[2] - c.c + 0.08 * pits(p), 0.12);
+      d = smax(d, x * c.m[0] + y * c.m[1] + z * c.m[2] - c.c + 0.08 * pits(p), 0.06);
     return d;
   };
   const gradOf =
@@ -188,6 +196,7 @@ function shape(ctx: BuildContext, size: V): Shape {
       centre: [s[0] + n[0] * r * 0.6, s[1] + n[1] * r * 0.6, s[2] + n[2] * r * 0.6],
       r,
       n,
+      at: s,
     };
   });
   // Boulders settled in the floors of the larger craters (ejecta that fell back).
@@ -224,12 +233,30 @@ function shape(ctx: BuildContext, size: V): Shape {
   const field: Field = (p) => {
     let d = body(p);
     for (const c of craters) {
-      // Raised rim: a radial bump that displaces the surface itself (a torus in the tangent
-      // plane floats off convex slopes), then the bowl: a smooth-subtracted sphere.
+      if (far && c.r > 1.2) {
+        // LOD2's 1.5 m cells cannot cut a 3 m bowl: the big craters become a wider, equally deep
+        // dish the cells do catch, so the dent (and its dark floor and pale ring) survives.
+        const R = c.r * 1.7;
+        const o: V = [
+          c.at[0] + c.n[0] * R * 0.76,
+          c.at[1] + c.n[1] * R * 0.76,
+          c.at[2] + c.n[2] * R * 0.76,
+        ];
+        d = smax(d, -(len(p[0] - o[0], p[1] - o[1], p[2] - o[2]) - R), 0.3);
+        continue;
+      }
+      // Raised rim: a ring bump that lifts the surface along the strike normal, a function of the
+      // distance from the crater's axis only (a heightfield ring, no overhang). A bump on the
+      // distance from the bowl's sphere centre was a shell hovering over the slope round the rim:
+      // thin sliver flaps sticking out beside the crystals.
       const ds = len(p[0] - c.centre[0], p[1] - c.centre[1], p[2] - c.centre[2]);
-      const u = (ds - c.r * 1.05) / (c.r * 0.28);
-      if (u > -3 && u < 3) d -= c.r * 0.16 * dmath.exp(-u * u);
-      d = smax(d, -(ds - c.r), c.r * 0.3);
+      const q: V = [p[0] - c.at[0], p[1] - c.at[1], p[2] - c.at[2]];
+      const ax = q[0] * c.n[0] + q[1] * c.n[1] + q[2] * c.n[2];
+      const rho = Math.sqrt(Math.max(0, q[0] * q[0] + q[1] * q[1] + q[2] * q[2] - ax * ax));
+      const u = (rho - c.r * 0.85) / (c.r * 0.22);
+      if (u > -3 && u < 3 && Math.abs(ax) < c.r * 1.5)
+        d -= c.r * 0.2 * dmath.exp(-u * u) * (1 - step(c.r * 0.5, c.r * 1.5, Math.abs(ax)));
+      d = smax(d, -(ds - c.r), c.r * 0.14);
     }
     for (const b of settled) {
       const db = len(p[0] - b.c[0], p[1] - b.c[1], p[2] - b.c[2]) - b.r + 0.06 * pits(p);
@@ -278,44 +305,16 @@ function asteroidVariant(
     glow: [{ parts: ['ore_crystals'], color: CRYSTAL, strength: 0.8 }],
     build(ctx) {
       const s = shape(ctx, size);
-      const veins = valueNoise(ctx.rng.fork('veins'), { scale: 1.9, octaves: 2 });
-      // Ore veins are fault fillings: a few sheets through the body, bent by noise, so they run
-      // straight across craters (an iso-line of 3D noise rings every crater bowl it meets).
-      const vr = ctx.rng.fork('vein-planes');
-      // The first sheet contains the hero camera's line of sight (az −35°, el 18°), so it runs
-      // across the face the lens sees instead of round the limb.
-      const lens: V = norm([0.78, -0.55, 0.31]);
-      const e1 = norm([-lens[1], lens[0], 0]);
-      const e2: V = [
-        lens[1] * e1[2] - lens[2] * e1[1],
-        lens[2] * e1[0] - lens[0] * e1[2],
-        lens[0] * e1[1] - lens[1] * e1[0],
-      ];
-      const sheets = Array.from({ length: 4 }, (_, i) => {
-        const a = vr.range(0, Math.PI * 2);
-        const up = vr.range(-0.6, 0.6);
-        const m: V =
-          i === 0
-            ? norm([
-                e1[0] * dmath.cos(a) + e2[0] * dmath.sin(a),
-                e1[1] * dmath.cos(a) + e2[1] * dmath.sin(a),
-                e1[2] * dmath.cos(a) + e2[2] * dmath.sin(a),
-              ])
-            : norm([
-                dmath.cos(a) * Math.sqrt(1 - up * up),
-                dmath.sin(a) * Math.sqrt(1 - up * up),
-                up,
-              ]);
-        return { m, o: vr.range(-0.35, 0.35) * Math.min(size[0], size[1], size[2]) };
+      // Ore veins fill a fracture network (veins.ts): branching, swelling and pinching, never a
+      // great-circle stripe. LOD2's 1.5 m cells get a wider halo so the veins survive as blocks.
+      const veinAt = fractureVeins(ctx.rng.fork('veins'), {
+        cell: 2.4,
+        fill: 0.5,
+        width: ctx.lod === 2 ? 0.16 : 0.06,
+        halo: ctx.lod === 2 ? 0.3 : 0.16,
       });
-      const veinDist = (p: Vec3): number => {
-        // One bend for every sheet at this point: the noise is the costly part.
-        const bend = 0.55 * veins(p);
-        let d = 99;
-        for (const v of sheets)
-          d = Math.min(d, Math.abs(p[0] * v.m[0] + p[1] * v.m[1] + p[2] * v.m[2] - v.o + bend));
-        return d;
-      };
+      // The hero camera's line of sight (az −35°, el 18°): the youngest crater faces it.
+      const lens: V = norm([0.78, -0.55, 0.31]);
       const tone = valueNoise(ctx.rng.fork('tone'), { scale: 1.2, octaves: 3 });
       const rays = valueNoise(ctx.rng.fork('rays'), { scale: 0.6, octaves: 2 });
       // Mining points: cluster sites on the upper half, away from the two big craters.
@@ -337,6 +336,28 @@ function asteroidVariant(
       const fresh = s.craters
         .filter((c) => c.r < 1.2)
         .reduce<Crater | undefined>((a, c) => (!a || facing(c) > facing(a) ? c : a), undefined);
+      // LOD2 draws one colour per ~1.5 m vertex: a point sample hits or misses a vein (isolated
+      // blotches). There the ore weight is the mean over the vertex's cell, boosted, so the
+      // network survives as continuous darker-ochre streaks.
+      const veinMean = (p: Vec3, n: Vec3): number => {
+        const t1 = norm(Math.abs(n[2]) < 0.9 ? [-n[1], n[0], 0] : [1, 0, 0]);
+        const t2: V = [
+          n[1] * t1[2] - n[2] * t1[1],
+          n[2] * t1[0] - n[0] * t1[2],
+          n[0] * t1[1] - n[1] * t1[0],
+        ];
+        let sum = veinAt(p);
+        for (let k = 0; k < 8; k++) {
+          const a = dmath.cos((k * Math.PI) / 4) * 0.7;
+          const b = dmath.sin((k * Math.PI) / 4) * 0.7;
+          sum += veinAt([
+            p[0] + t1[0] * a + t2[0] * b,
+            p[1] + t1[1] * a + t2[1] * b,
+            p[2] + t1[2] * a + t2[2] * b,
+          ]);
+        }
+        return Math.min(0.45, (sum / 9) * 1.3);
+      };
       const color = (p: Vec3, n: Vec3): Vec3 => {
         let near = 99;
         for (const site of sites)
@@ -348,13 +369,11 @@ function asteroidVariant(
         let c = mix(ROCK, ROCK_LIGHT, step(-0.25, 0.35, t));
         // Old surfaces space-weather dark; only near the fresh impact is the rock still bright.
         const young = fresh ? 1 - step(fresh.r * 1.6, fresh.r * 4, dist(p, fresh.centre)) : 0;
-        c = mix(c, WEATHERED, (1 - young) * (far ? 0.45 : step(-0.4, 0.5, -t) * 0.8));
+        c = mix(c, WEATHERED, (1 - young) * (far ? 0.6 : 0.4 + step(-0.4, 0.5, -t) * 0.55));
         c = mix(c, DUST, step(0.55, 0.85, n[2]) * 0.8);
-        // Veins: a core with a halo three to four LOD0 cells wide (the contact sheet draws one
-        // flat colour per triangle, so a hard band edge stair-steps along the cell grid). LOD2
-        // keeps the bands as soft blocks over its 1.5 m cells, so the colour read survives.
-        const vd = veinDist(p);
-        const vein = !far ? (1 - step(0.1, 0.8, vd)) * 0.85 : (1 - step(0.3, 1.0, vd)) * 0.5;
+        // Veins: a core with a halo one to two LOD0 cells wide (the contact sheet draws one flat
+        // colour per triangle, so a hard edge stair-steps along the cell grid).
+        const vein = far ? veinMean(p, n) : veinAt(p) * 0.9;
         c = mix(c, near < 2.4 ? CRYSTAL_TINT : ORE, vein);
         // Cyan deposit round each crystal site: a crusted patch with an edge, not a haze.
         c = mix(c, CRYSTAL_TINT, (1 - step(0.95, 1.35, near + (far ? 0 : 0.35 * rays(p)))) * 0.85);
@@ -363,8 +382,16 @@ function asteroidVariant(
         // Drill scars: a scorched ring round every bore.
         c = mix(c, SCORCH, (1 - step(0.2, 0.45, mine.scar(p))) * 0.9);
         for (const cr of s.craters) {
+          const d = dist(p, cr.centre);
+          // LOD2's cells are too coarse to cut the bowls: the big craters stay as a pale rim
+          // ring round a dark floor (colour blocks), so the body is not a plain potato.
+          if (far && cr.r > 1.2) {
+            c = mix(c, SCORCH, 1 - step(cr.r * 0.9, cr.r * 1.1, d));
+            c = mix(c, RIM, 1 - step(0.15, 0.35, Math.abs(d / cr.r - 1.3)));
+            continue;
+          }
           if (cr === fresh) continue;
-          c = mix(c, CRATER, (1 - step(cr.r * 0.8, cr.r * 1.2, dist(p, cr.centre))) * 0.9);
+          c = mix(c, CRATER, (1 - step(cr.r * 0.8, cr.r * 1.2, d)) * 0.9);
         }
         if (fresh) c = mix(c, EJECTA, ejecta(p, fresh, rays, far));
         // LOD2 carries no baked AO: darken to LOD0's mean so the switch does not pop lighter.
@@ -377,19 +404,24 @@ function asteroidVariant(
           [CORE[0] - ext[0], CORE[1] - ext[1], CORE[2] - ext[2]],
           [CORE[0] + ext[0], CORE[1] + ext[1], CORE[2] + ext[2]],
         ],
-        resolution: ctx.pick([0.2, 0.85, 1.5]),
+        resolution: ctx.pick([0.206, 0.86, 1.53]),
         color,
         lipschitz: 2,
-        strip: REGOLITH,
+        // LOD2: flat paint, colour blocks only (the regolith grain on 1.5 m faces smears into
+        // streaks, and nothing of it reads at that distance).
+        strip: ctx.lod === 2 ? 'plain' : REGOLITH,
       });
       // A free body resting on its own lowest vertex at this LOD, sunk 3 cm into the ground plane.
       const lift = -0.03 - boundsOf(raw).min[2];
       const up = (p: Vec3): V => [p[0], p[1], p[2] + lift];
-      const rock = translate(merge([raw, ...(ctx.lod < 2 ? [mine.rubble(ctx.lod)] : [])]), [
-        0,
-        0,
-        lift,
-      ]);
+      // V kept off the strip's padded edge rows (the stacked contour rings in the hero).
+      const rock = translate(
+        merge([
+          ctx.lod === 2 ? raw : projectStripUV(raw, REGOLITH, 1),
+          ...(ctx.lod === 0 ? [insetStripV(mine.rubble(ctx.lod), REGOLITH)] : []),
+        ]),
+        [0, 0, lift],
+      );
       ctx.part(
         'rock',
         ctx.lod < 2
@@ -462,7 +494,7 @@ function asteroidVariant(
 function ejecta(p: Vec3, cr: Crater, rays: (p: Vec3) => number, far: boolean): number {
   const v: V = [p[0] - cr.centre[0], p[1] - cr.centre[1], p[2] - cr.centre[2]];
   const d = len(v[0], v[1], v[2]);
-  if (d > cr.r * 6) return 0;
+  if (d > cr.r * 7) return 0;
   const t1 = norm(Math.abs(cr.n[2]) < 0.9 ? [-cr.n[1], cr.n[0], 0] : [1, 0, 0]);
   const t2: V = [
     cr.n[1] * t1[2] - cr.n[2] * t1[1],
@@ -473,16 +505,17 @@ function ejecta(p: Vec3, cr: Crater, rays: (p: Vec3) => number, far: boolean): n
     v[0] * t2[0] + v[1] * t2[1] + v[2] * t2[2],
     v[0] * t1[0] + v[1] * t1[1] + v[2] * t1[2],
   );
+  // Narrow rays (cos⁴), so the ejecta reads as streaks radiating from the bowl, not swirls.
   const ray = dmath.pow(
     Math.max(0, dmath.cos(7 * ang + 1.6 * dmath.sin(3 * ang) + 0.8 * rays(p))),
-    2,
+    4,
   );
   const bowl = 1 - step(cr.r * 0.9, cr.r * 1.5, d);
   // A bright blanket out to ~2 r, then rays fading out to ~6 r.
   const blanket = 1 - step(cr.r * 1.2, cr.r * 1.9, d);
-  const fade = 1 - step(cr.r * 1.2, cr.r * 6, d);
+  const fade = 1 - step(cr.r * 1.2, cr.r * 4.5, d);
   // Far LOD: bowl and blanket only (rays one flat triangle wide would checker).
-  return Math.min(0.95, 0.9 * bowl + 0.45 * blanket + (far ? 0 : ray * fade * 0.8));
+  return Math.min(0.9, 0.8 * bowl + 0.4 * blanket + (far ? 0 : 0.7 * ray * fade));
 }
 
 /**
@@ -530,11 +563,15 @@ function workings(
             dmath.sin(g[0] * 12.9898 + g[1] * 78.233 + g[2] * 37.719 + k * 4.1) * 43758.5453;
           return x - Math.floor(x);
         };
+        // Sunk a third of a lump toward the core: seated in the spoil, not perched on a rim.
+        const gl = len(g[0], g[1], g[2]) || 1;
+        const sink = 1 - 0.07 / gl;
         lumps.push({
-          c: g,
+          c: [g[0] * sink, g[1] * sink, g[2] * sink],
           r: rng.range(0.1, 0.2) * 1.15,
           turn: [h(1) * 6.3, h(2) * 6.3, h(3) * 6.3],
-          stretch: [0.7 + 0.7 * h(4), 0.6 + 0.6 * h(5), 0.5 + 0.5 * h(6)],
+          // Chunky, never blade-thin: a flat stretch put sliver edges on the outline.
+          stretch: [0.85 + 0.35 * h(4), 0.8 + 0.3 * h(5), 0.75 + 0.25 * h(6)],
         });
       }
     }
@@ -563,18 +600,20 @@ function workings(
     for (const b of bores) d = Math.min(d, capsule(p, b.a, b.b));
     return d;
   };
-  // Spoil chips: an off-centre, lopsided double cone turned at random and stretched per axis, so
-  // each reads as an irregular broken chip, not a little block (5 / 4 sides, hard creases).
+  // Spoil chips: a squat, lopsided lump turned at random and stretched per axis, so each reads
+  // as an irregular broken chip, not a little block (5 / 4 sides, hard creases).
   const rubble = (lod: number): Mesh =>
     merge(
       lumps.map((l) =>
         place(
           lathe({
+            // Blunt both ends (a squat lump), so no tip pokes out of the spoil as a shard.
             profile: [
-              [0.0001, -l.r * 0.45],
-              [l.r, -l.r * 0.05],
-              [l.r * 0.55, l.r * 0.35],
-              [0.0001, l.r * 0.55],
+              [0.0001, -l.r * 0.3],
+              [l.r * 0.85, -l.r * 0.22],
+              [l.r, l.r * 0.05],
+              [l.r * 0.5, l.r * 0.32],
+              [0.0001, l.r * 0.36],
             ],
             segments: lod === 0 ? 5 : 4,
             color: TAILINGS,

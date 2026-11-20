@@ -38,7 +38,7 @@ neck), an old-brass brooch, a turned plinth. Muted palette in `build.ts` (`DYED`
 
 Materials: the garment on the shared `bust_wool` strip (`../_lib/bust/cloth-strips.ts`: twill
 relief, matte, a near-white ground, so the dye is its vertex colour), the collar on `leather`, the brooch on `brass`, the scan's
-skin on `face_skin` with a `skin` finish (a soft sheen plus a thin oily coat, clearcoat 0.3 at roughness 0.28), the plinth on `stone`. The hero is a portrait camera (`../_lib/bust/hero.ts`).
+skin on `face_skin` with a `skin` finish (the shared `skinFinish`: a soft grazing sheen, no clear coat, so cheeks and shoulders stay matte and only the oily strip's T-zone shines), the plinth on `stone`. The hero is a portrait camera (`../_lib/bust/hero.ts`).
 
 Wear: the cloth sun-faded and dusty on the shoulders and soiled at the hem (`weather()`, coverage
 in the manifest), the mantle's edge frayed to pale thread, the collar rubbed pale on top and dark
@@ -57,6 +57,6 @@ in its groove, the plinth chipped and dusty.
    Rebuild until QA PASS, `bun run shots import_demo`.
 
 ## Open questions
-The hair is paint on the scan (as a scanner records a short cut), not geometry. The torso ends in
+The hair is paint on the scan (as a scanner records a short cut), not geometry; the build repaints it above the scan's hairline as a hair mass (`hair.ts`: a dark warm brown combed back in streaks, lighter where the crown faces the sky, a soft wandering hairline) and splits it into its own `hair` part on the matte skin strip with no sheen finish (under the skin's sheen the dark crop rendered as a plain grey scalp); it batches with the cloth, so the draws stay at 3. The torso ends in
 the shared bust library's arm cut (sawn through the deltoid, no stubs). The own-texture GLB is validated by the Khronos validator in
 tests but not rendered by ts23d's CPU renderer (it shows the trim-sheet path).

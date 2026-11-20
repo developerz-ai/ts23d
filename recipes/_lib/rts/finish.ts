@@ -2,8 +2,8 @@
 // colours (BONE, CLOTH, IRON…); `restrip` moves each role onto a real library strip (ceramic,
 // canvas, leather, painted or cast steel, brass, oak, stone) with the vertex colour that strip wants,
 // and `wearOf` turns a short preset (unit, vehicle, masonry) into measured `weather()` effects.
-// Team parts stay off `weather()`: their wear comes from the painted strip's own chips, so the
-// team colour keeps its share of the 64-px strategy view.
+// Team parts stay off `weather()` unless a group opts in (`painted: true`, with the asset on
+// `TEAM_PAINT_WORN`): its chips, dust and mud then stay bare in every livery while the paint swaps.
 
 import {
   type BuildContext,
@@ -184,6 +184,54 @@ export function wearOf(
   };
 }
 
+/** Bare steel (or the shell under a hat's paint) where team paint is chipped off. */
+export const TEAM_UNDER: Vec3 = [0.2, 0.2, 0.21];
+/** Salt dust lying on team paint: a value under `DUST`, so it reads on red and on white. */
+export const TEAM_DUST: Vec3 = [0.42, 0.37, 0.28];
+
+/**
+ * The one wear vocabulary for team-painted parts across the faction (a `painted: true` group in
+ * `Kit.commit`, asset on `TEAM_PAINT_WORN`): chips to dark bare steel on the convex edges, a
+ * little salt dust on what faces up, optional fine scratches. Bare vertices keep their colour in
+ * every livery; the chip's border is cut inside the triangles (core paint-wear), so `resolution`
+ * sets how much of the mask is sampled, not a lattice the chips follow. `read: 'hero'` (default)
+ * sizes the patches for a hero framing of a vehicle or building; a small part (a hat) takes
+ * 'close' so its chips stay scuffs, not blotches. Pick team parts at LOD0/1 only: far, they stay
+ * whole colour blocks (the RTS camera's team read).
+ */
+export function teamWearOf(
+  name: string,
+  seed: number,
+  resolution: readonly [number, number, number],
+  o: {
+    readonly chips?: number;
+    readonly dust?: number;
+    readonly scratches?: number;
+    readonly read?: 'hero' | 'close';
+  } = {},
+): WeatheringOptions {
+  const dust = o.dust ?? 0.1;
+  const scratches = o.scratches ?? 0;
+  return {
+    name,
+    seed,
+    age: 0.8,
+    read: o.read ?? 'hero',
+    resolution,
+    tessellation: 'exact',
+    under: TEAM_UNDER,
+    effects: {
+      chips: { where: 'convex-edges', amount: o.chips ?? 0.3, strength: 1 },
+      ...(dust > 0
+        ? { dust: { where: 'up-facing', amount: dust, color: TEAM_DUST, strength: 0.85 } }
+        : {}),
+      ...(scratches > 0
+        ? { scratches: { where: 'up-facing | side-facing', amount: scratches, strength: 1 } }
+        : {}),
+    },
+  };
+}
+
 /** A part waiting to be registered: weathered together with its neighbours first. */
 interface Pending {
   readonly name: string;
@@ -213,11 +261,14 @@ export class Kit {
   /**
    * Weather each group's parts in one `weather()` call (`pick` chooses them; parts in one group
    * must share a space), apply each part's `after` (wear that weathering must not paint over),
-   * then `ctx.part` everything. Team-painted parts are never weathered.
+   * then `ctx.part` everything. Team-painted parts are weathered only by a `painted` group (the
+   * asset's team slot must then be a wear slot: `TEAM_PAINT_WORN`).
    */
   commit(
     ctx: BuildContext,
     groups: readonly {
+      /** Weather team-painted parts too (only those `pick` names). */
+      readonly painted?: boolean;
       readonly wear: WeatheringOptions;
       readonly pick: (name: string, opts: PartOptions | undefined) => boolean;
     }[],
@@ -226,7 +277,12 @@ export class Kit {
     for (const g of groups) {
       const set: Record<string, Mesh> = {};
       for (const p of this.list)
-        if (p.mesh && !done.has(p.name) && p.opts?.paint === undefined && g.pick(p.name, p.opts))
+        if (
+          p.mesh &&
+          !done.has(p.name) &&
+          (g.painted || p.opts?.paint === undefined) &&
+          g.pick(p.name, p.opts)
+        )
           set[p.name] = p.mesh;
       if (Object.keys(set).length === 0) continue;
       const out = weather(ctx, set, g.wear);

@@ -19,7 +19,7 @@
     },
     "materials": {
       "score": 7,
-      "reason": "Wood strips, rust on the drum and beam, rubber tyre and a frosted glass window read; the floor is now a flat grey with faint grain.",
+      "reason": "Wood strips, rust on the drum and beam, rubber tyre and a frosted window read; the sheet now shows wood grain on the floor and crate and the window is see-through; the crane post is still a plain dark green and the floor tone barely varies.",
       "fixes": [
         "a painted-steel finish on the crane post",
         "more tone variation on the floor boards"
@@ -55,7 +55,7 @@
     }
   },
   "renders": {
-    "hero.png": "375f78fc126cb684776edaec6ca14fd9a20d0ee2a9e9b3aa24a747231956150a",
-    "sheet.png": "66b67876c855352e41b1d9f9e7dbe4ce636be03dcd7268ac015f2a603133b317"
+    "hero.png": "4e9d08e322891fcfa142e2b9af483df14a18a0ae81984c80b6a8762a0d5cc18b",
+    "sheet.png": "727f54639ee864645b1ecb042284617c7ffbf089f6c1360b511693a66173bce1"
   }
 }

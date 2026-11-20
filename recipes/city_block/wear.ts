@@ -8,7 +8,9 @@ import {
   box,
   dmath,
   type Mesh,
+  merge,
   place,
+  planar,
   type Rng,
   type StripId,
   type Vec3,
@@ -125,4 +127,40 @@ export function sootRuns(
 export function roofWear(rng: Rng): Shade {
   const blot = valueNoise(rng.fork('roof'), { scale: 25, octaves: 2 });
   return (p, n, c) => (n[2] > 0.5 ? mix(c, GRIME, 0.35 * smooth(-0.2, 0.6, blot(p))) : c);
+}
+
+/**
+ * A grime streak run down the brick from a window sill (window frame: wall face at x = 0, +X
+ * out, the sill's foot at z = 0, centred on y = 0), 6 mm proud on the wall's own strip and tint:
+ * `w` wide under the sill tapering to a quarter of that at its foot `len` below, darkest
+ * (`strength` of the way to soot) under the sill, mostly gone a third of the way down and fading
+ * into the wall at its foot. Water off every sill carries soot down the face: the classic New
+ * York facade stain, each one its own length, width and darkness.
+ */
+export function sillStreak(
+  w: number,
+  len: number,
+  o: { wall: Vec3; strip: StripId; strength?: number },
+): Mesh {
+  const k = o.strength ?? 0.95;
+  const mid = -len * 0.3;
+  const band = (z0: number, z1: number, w0: number, w1: number): Mesh =>
+    planar({
+      points: [
+        [0.006, -w0 / 2, z0],
+        [0.006, w0 / 2, z0],
+        [0.006, w1 / 2, z1],
+        [0.006, -w1 / 2, z1],
+      ],
+      color: o.wall,
+      strip: o.strip,
+    });
+  const q = merge([band(mid, 0, w * 0.7, w), band(-len, mid, w * 0.25, w * 0.7)]);
+  const colors = new Float32Array(q.colors);
+  for (let i = 0; i < q.positions.length / 3; i++) {
+    const z = q.positions[i * 3 + 2] ?? 0;
+    const f = z >= 0 ? 1 : z >= mid ? 0.8 : 0;
+    colors.set(mix(o.wall, SOOT, k * f), i * 3);
+  }
+  return { ...q, colors };
 }

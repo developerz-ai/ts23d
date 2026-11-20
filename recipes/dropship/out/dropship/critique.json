@@ -19,7 +19,7 @@
     },
     "materials": {
       "score": 7,
-      "reason": "The canopy speckle is gone (clean dark glass), a few darker access plates break the hull grey, and hazard and orange stripes separate; the dark scratch dashes are a uniform noise spread evenly over every plate.",
+      "reason": "Clean dark canopy glass (now transparent in the sheet), a few darker access plates on the hull grey, hazard and orange stripes; the sheet now shows the scratch dashes too, and they are an even noise over every plate in both images.",
       "fixes": [
         "concentrate the scratches on edges, hatches and walkways instead of an even dash noise",
         "a slight roughness change between replacement panels and the base hull"
@@ -27,9 +27,10 @@
     },
     "detail": {
       "score": 7,
-      "reason": "Panel seams, louvres, vents, antennae, gear struts and markings hold at the hero distance.",
+      "reason": "Panel seams, louvres, vents, antennae, gear struts and markings hold at the hero distance. Sheet TOP now shows two pilot seats and a console with blue screens under the see-through canopy (the glass reflection hides them in hero.png, which is fine). No fastener rows or gear hydraulics yet.",
       "fixes": [
-        "rivet/fastener rows along the plate seams; hydraulic lines on the gear legs"
+        "rivet/fastener rows along the plate seams",
+        "hydraulic lines on the gear legs"
       ]
     },
     "wear": {
@@ -49,14 +50,14 @@
     },
     "technical": {
       "score": 8,
-      "reason": "QA clean; 19k / 7k / 2k triangles, 15 draws for moving nacelles and gear.",
+      "reason": "QA clean: 19.3k / 6.8k / 2.1k tris, 15 / 15 / 12 draws; draws are the moving nacelles and gear.",
       "fixes": [
         "split only faces taller than one strip band in the UV pass"
       ]
     }
   },
   "renders": {
-    "hero.png": "517439fa8743666494198d28953dddffd03e2ff1a73090316a091cb1e8a376c6",
-    "sheet.png": "83a09c7ae5da01c5e673f31decc79966d88789ffe66301cd0b565cde807900dc"
+    "hero.png": "10933a3b060f03af528f4b75f838cb37d520840617413c8b227204aa880e845f",
+    "sheet.png": "c742e73b41c7cd757722877afe321a9e5dd38df0ecdf3e0cfacaec51b035e89e"
   }
 }

@@ -122,7 +122,7 @@ function shadowEdges(m: Mesh): Mesh {
   const colors = new Float32Array(m.colors);
   for (let i = 0; i < colors.length; i += 3)
     if ((m.normals[i + 2] ?? 0) < 0.5)
-      for (let c = 0; c < 3; c++) colors[i + c] = (colors[i + c] ?? 0) * 0.55;
+      for (let c = 0; c < 3; c++) colors[i + c] = (colors[i + c] ?? 0) * 0.4;
   return { ...m, colors };
 }
 
@@ -134,6 +134,18 @@ interface SlateOptions {
   /** Where slates within 0.8 m of a hole's edge go: burnt black, no team paint left (LOD0). */
   readonly charred?: Mesh[];
 }
+
+/** Share of slates the wind took (dark sarking shows) and of old weathered ones (LOD0). */
+const LOST = 0.035;
+const AGED = 0.05;
+/** Old slates, a value under the red so they read as weathered, not as pale patches: grey-brown
+ *  slate showing through, lichened green-grey, rain-blackened. Bare colours, so they stay
+ *  themselves in every livery (wear slot). */
+const AGED_SLATE: readonly Vec3[] = [
+  [0.27, 0.24, 0.21],
+  [0.24, 0.26, 0.19],
+  [0.13, 0.12, 0.11],
+];
 
 /** A slate burnt through by the fire round a shell hole. */
 export const CHARRED_SLATE: Vec3 = [0.04, 0.037, 0.034];
@@ -197,6 +209,11 @@ function slates(lod: Lod, pl: Plane, rng: Rng, o: SlateOptions = {}): Mesh[] {
       const broken = nearHole(a, b);
       if (broken && rng.next() < 0.3) continue;
       const char = o.charred !== undefined && (broken || (burnt(a, b) && rng.next() < 0.8));
+      // Weather is per slate, never per triangle: a slate lost to the wind shows the dark
+      // sarking; an old one, salt-bleached or lichened, is a whole slate slipped on its nail.
+      const fate = rng.next();
+      if (!char && !broken && k > 0 && fate < LOST) continue;
+      const aged = !char && !broken && fate < LOST + AGED;
       const kk = slateTone(rng, v1, pl.vl, k === 0) * (broken ? 0.82 : 1);
       const tone: Vec3 = char
         ? [
@@ -204,9 +221,12 @@ function slates(lod: Lod, pl: Plane, rng: Rng, o: SlateOptions = {}): Mesh[] {
             CHARRED_SLATE[1] * (0.7 + kk * 0.4),
             CHARRED_SLATE[2] * (0.7 + kk * 0.4),
           ]
-        : teamShade(kk);
-      // Broken edge slates: shorter, skewed on their nail, sliding toward the hole.
-      const short = broken ? rng.range(0.55, 0.95) : 1;
+        : aged
+          ? rng.pick(AGED_SLATE)
+          : teamShade(kk);
+      // Broken edge slates: shorter, skewed on their nail, sliding toward the hole; an aged one
+      // has slipped a few centimetres.
+      const short = broken ? rng.range(0.55, 0.95) : aged ? rng.range(0.86, 0.94) : 1;
       const slate = shadowEdges(
         box({
           size: [b - a - 0.02, len * short, SLATE.t],
@@ -216,7 +236,11 @@ function slates(lod: Lod, pl: Plane, rng: Rng, o: SlateOptions = {}): Mesh[] {
           omit: ['bottom'],
         }),
       );
-      const skewed = broken ? place(slate, { yaw: rng.range(-0.25, 0.25) }) : slate;
+      const skewed = broken
+        ? place(slate, { yaw: rng.range(-0.25, 0.25) })
+        : aged
+          ? place(slate, { yaw: rng.range(-0.07, 0.07) })
+          : slate;
       (char && o.charred ? o.charred : out).push(
         onPlane(
           pl,

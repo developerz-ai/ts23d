@@ -24,15 +24,24 @@ import {
   type Rng,
   ROAD_WIDTH,
   type StripId,
+  stripRect,
   tiled,
   type Vec2,
   type Vec3,
 } from '@developerz.ai/ts23d';
 import type { OsmBuilding, OsmRoad } from '@developerz.ai/ts23d/data';
+import { projectStripUV } from '../_lib/terrain/strip-inset.ts';
 import { along, distToLine, type Edge, edgesOf } from './edges.ts';
 import { fireEscape, IRON_BLACK, sashWindow, shopfront, stoop } from './facade.ts';
-import { FAR_BAND, FAR_BRICK, FAR_STONE, SIDEWALK, SIDEWALK_BAND } from './materials.ts';
-import { facadeWear, roofWear, shade, sootRuns, streetWear } from './wear.ts';
+import {
+  FAR_BAND,
+  FAR_BRICK,
+  FAR_STONE,
+  SIDEWALK,
+  SIDEWALK_BAND,
+  STREET_ASPHALT,
+} from './materials.ts';
+import { facadeWear, roofWear, shade, sillStreak, sootRuns, streetWear } from './wear.ts';
 
 export interface BlockStyle {
   readonly walls: readonly Vec3[];
@@ -150,9 +159,21 @@ interface Site {
   readonly roads: readonly OsmRoad[];
 }
 
-/** Granite kerb and road paint (linear RGB): worn white lane paint, pale kerb stone. */
-const KERB = hex('#a7a49c');
-const PAINT: Vec3 = [0.78, 0.77, 0.72];
+/** Granite kerb, stained by the gutter, and road paint (linear RGB): worn, greyed lane paint. */
+const KERB = hex('#8a867e');
+const PAINT: Vec3 = [0.6, 0.59, 0.55];
+/** 0..1 hash of a dash's place on the street (no draws: the plan's rng stays put). */
+const dashHash = (x: number, y: number): number => {
+  const v = dmath.sin(x * 12.9898 + y * 78.233) * 43758.5453;
+  return v - Math.floor(v);
+};
+/** Paint worn by traffic: each dash its own fade toward the asphalt, one in five gone. */
+const fadedPaint = (x: number, y: number): Vec3 | null => {
+  const h = dashHash(x, y);
+  if (h < 0.2) return null;
+  const k = 0.55 + 0.45 * h;
+  return [PAINT[0] * k, PAINT[1] * k, PAINT[2] * k];
+};
 
 /** The t-interval of a→b (metres from a) inside the rectangle shrunk by `pad`, or null. */
 function inside(a: Vec2, b: Vec2, ext: Site['extent'], pad: number): [number, number] | null {
@@ -302,13 +323,19 @@ function streets(ctx: BuildContext, s: Site, style: BlockStyle): void {
         poly = clip(poly, f);
       if (poly.length >= 3)
         roads.push(
-          prism({
-            profile: poly,
-            depth: 0.04,
-            centred: false,
-            color: style.road,
-            strip: 'asphalt',
-          }),
+          // Planar UVs at true scale (V mirrored every 4 m band): the prism squeezed the whole
+          // carriageway onto one band, smearing the oil blots and patches into streaks.
+          projectStripUV(
+            prism({
+              profile: poly,
+              depth: 0.04,
+              centred: false,
+              color: style.road,
+              strip: STREET_ASPHALT,
+            }),
+            STREET_ASPHALT,
+            4,
+          ),
         );
       if (ctx.lod === 2) continue;
       for (const side of [-1, 1]) {
@@ -334,10 +361,14 @@ function streets(ctx: BuildContext, s: Site, style: BlockStyle): void {
       const span = inside(a, b, s.extent, 0.5);
       if (!span) continue;
       for (const [r0, r1] of runs(a, b, span, 0, clear))
-        for (let t = r0; t + 3 <= r1; t += 9)
-          marks.push(
-            runStrip(a, b, [t, t + 3], { off: 0, w: 0.12, h: 0.004, z: 0.039, color: PAINT }),
+        for (let t = r0; t + 3 <= r1; t += 9) {
+          const color = fadedPaint(
+            a[0] + (b[0] - a[0]) * (t / len),
+            a[1] + (b[1] - a[1]) * (t / len),
           );
+          if (color)
+            marks.push(runStrip(a, b, [t, t + 3], { off: 0, w: 0.12, h: 0.004, z: 0.039, color }));
+        }
     }
   }
   if (roads.length) ctx.part('streets', merge([...roads, ...marks]));
@@ -351,11 +382,12 @@ function streets(ctx: BuildContext, s: Site, style: BlockStyle): void {
 function trees(ctx: BuildContext, s: Site): void {
   const rng = ctx.rng.fork('trees');
   const lod = ctx.lod;
-  const seg = ctx.pick([5, 4, 3]);
+  const seg = ctx.pick([7, 4, 3]);
+  // A street plane's bole: ~0.5 m across at the root flare, 0.36 m at the crown.
   const trunk = lathe({
     profile: [
-      [0.2, 0],
-      [0.13, 3.4],
+      [0.27, 0],
+      [0.18, 3.4],
       [0, 3.4],
     ],
     segments: ctx.pick([5, 4, 3]),
@@ -380,8 +412,16 @@ function trees(ctx: BuildContext, s: Site): void {
             ],
       segments: seg,
       color: green,
-      strip: 'grass',
+      // Smooth (no facet creases) and mapped planar per face onto the isotropic `moss` strip at
+      // true scale: a clumped leaf mass. `grass` on the lathe's around-the-axis U drew blade
+      // streaks like wood grain.
+      creaseDeg: 89,
+      strip: 'moss',
     });
+  // Magnified 12× (square texels on 2–3 m faces, a 3 m band): the strip's moss cushions become
+  // leaf clumps ~0.3 m across.
+  const leafy = (m: Mesh): Mesh =>
+    projectStripUV(m, 'moss', (stripRect('moss').metres / 64) * 12, 12);
   const out: Mesh[] = [];
   const [x0, y0, x1, y1] = s.extent;
   const rings = s.plans.map((p) => p.ring);
@@ -433,11 +473,11 @@ function trees(ctx: BuildContext, s: Site): void {
     // Every LOD draws the lobe's dice, so the next tree is the same tree at every LOD.
     const lobed = rng.next() < 0.6;
     const d = rr * rng.range(0.3, 0.5);
-    const parts = [trunk, crown(rr, hh, 3.0, green)];
+    const parts = [trunk, leafy(crown(rr, hh, 3.0, green))];
     if (lod === 0 && lobed) {
       // Side lobe: a smaller dome pushed out and up, so no two crowns share an outline.
       parts.push(
-        place(crown(rr * 0.65, hh * 0.6, 3.0 + hh * 0.3, green), {
+        place(leafy(crown(rr * 0.65, hh * 0.6, 3.0 + hh * 0.3, green)), {
           at: [dmath.cos(lobe) * d, dmath.sin(lobe) * d, 0],
         }),
       );
@@ -795,6 +835,7 @@ function building(
   // and the rows as dark bands on the others. Far, every open face keeps its rows as bands.
   const fh = p.floorHeight;
   const wins: Mesh[] = [];
+  const streakRng = rng.fork('streaks');
   /** One face's window rows as dark glass bands, one quad 1 cm proud (the grid still reads).
    *  Only past LOD0: up close every face has its framed sashes (see `banded`). */
   const rows = (e: Edge): void => {
@@ -832,12 +873,37 @@ function building(
       }
       const ww = w.scale[1];
       const onFront = !!e && street.has(e.i);
-      wins.push(
-        place(sashWindow(ww, w.scale[2], trim, lod, lod === 0 && onFront && !floor0), {
-          at: [w.at[0], w.at[1], w.at[2] - p.base],
-          yaw: w.yaw,
-        }),
-      );
+      const sill = lod === 0 && onFront && !floor0;
+      // Every upper window up close streaks the wall under it (side and rear faces too: the
+      // hero corner looks at walls on the slab's rim, which no mapped street runs past).
+      const streak = lod === 0 && !floor0;
+      // Side and rear walls take the flat sash decal (as at LOD1): their triangles pay for the
+      // sill streaks on the street faces, where the wear reads.
+      const at = { at: [w.at[0], w.at[1], w.at[2] - p.base] as Vec3, yaw: w.yaw };
+      wins.push(place(sashWindow(ww, w.scale[2], trim, lod, sill, !onFront), at));
+      if (streak) {
+        // Each sill its own stain: a quarter stay clean (a sound sill, a recent wash), the rest
+        // vary in width, length, darkness and offset; every window draws all five dice.
+        const clean = streakRng.next() < 0.25;
+        const sw = ww * streakRng.range(0.35, 0.9);
+        const sl = streakRng.range(0.6, 3.2);
+        const strength = streakRng.range(0.6, 0.97);
+        const dy = streakRng.range(-0.15, 0.15) * ww;
+        if (!clean)
+          wins.push(
+            place(
+              place(
+                sillStreak(sw, sl, {
+                  wall: p.wall,
+                  strip: onFront ? strip.near : strip.far,
+                  strength,
+                }),
+                { at: [-0.004, dy, -0.06] },
+              ),
+              at,
+            ),
+          );
+      }
     }
   }
   if (wins.length) ctx.part(`${name}_windows`, merge(wins), { at: [0, 0, p.base] });

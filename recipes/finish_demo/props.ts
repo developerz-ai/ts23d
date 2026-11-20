@@ -14,9 +14,11 @@ import {
   merge,
   place,
   type Rng,
+  stripRect,
   text,
   type Vec2,
 } from '@developerz.ai/ts23d';
+import { STRIP_INSET } from '../_lib/terrain/strip-inset.ts';
 
 const PLANK = hex('#a8783f');
 const BATTEN = hex('#7d5a34');
@@ -302,7 +304,7 @@ export function caskMesh(lod: Lod, h: number, r: number, rb: number, rng: Rng): 
       colors[v * 3 + 2] = base[2] * k;
     }
   }
-  const out: Mesh[] = [{ ...body, colors }];
+  const out: Mesh[] = [headBoards({ ...body, colors })];
   // Iron hoops: two pairs, each a flat band driven onto the taper. Sized from the side the lathe
   // emits (straight between rows), not the smooth curve: a coarse body sits inside that curve.
   const rSide = (z: number): number => {
@@ -341,6 +343,20 @@ export function caskMesh(lod: Lod, h: number, r: number, rb: number, rng: Rng): 
           }),
         );
   }
+  if (lod < 2)
+    // The top head is four boards: three dark joints across it (along Y, the boards' grain).
+    for (const x of [-0.25, 0, 0.25].map((f) => f * (r - chime) * 2)) {
+      const chord = 2 * Math.sqrt((r - chime) * (r - chime) - x * x);
+      out.push(
+        box({
+          size: [0.005, chord, 0.001],
+          at: [x, 0, h - croze],
+          color: [HEAD[0] * 0.4, HEAD[1] * 0.4, HEAD[2] * 0.4],
+          strip: 'oak',
+          omit: ['front', 'back', 'left', 'right', 'bottom'],
+        }),
+      );
+    }
   if (lod < 2) {
     // The bung: an oak plug in the bilge stave, facing the viewer (−Y).
     out.push(
@@ -356,6 +372,75 @@ export function caskMesh(lod: Lod, h: number, r: number, rb: number, rng: Rng): 
     );
   }
   return merge(out);
+}
+
+/**
+ * The heads and chime rings (every triangle flat in z) mapped planar onto the oak strip: U along
+ * the head boards (Y) at true metres, V across them (X) over the strip's painted interior, so a
+ * 0.5 m head shows three or four straight boards. The lathe's U runs round the axis, which drew
+ * the strip's grain as a swirl on the disc. Corners shared with a stave are split first.
+ */
+function headBoards(m: Mesh): Mesh {
+  const r = stripRect('oak');
+  const lo = Math.min(r.v0, r.v1);
+  const hi = Math.max(r.v0, r.v1);
+  const n = m.positions.length / 3;
+  const z = (v: number): number => m.positions[v * 3 + 2] ?? 0;
+  const flat = (t: number): boolean => {
+    const zs = [0, 1, 2].map((k) => z(m.indices[t + k] ?? 0));
+    return Math.max(...zs) - Math.min(...zs) < 1e-6;
+  };
+  // Which vertices flat and sloped triangles use; a vertex both use gets a copy for the flat one.
+  const use = new Uint8Array(n);
+  for (let t = 0; t < m.indices.length; t += 3)
+    for (let k = 0; k < 3; k++) {
+      const v = m.indices[t + k] ?? 0;
+      use[v] = (use[v] ?? 0) | (flat(t) ? 1 : 2);
+    }
+  const src: number[] = Array.from({ length: n }, (_, i) => i);
+  const copy = new Int32Array(n).fill(-1);
+  const indices = new Uint32Array(m.indices);
+  for (let t = 0; t < indices.length; t += 3) {
+    if (!flat(t)) continue;
+    for (let k = 0; k < 3; k++) {
+      const v = indices[t + k] ?? 0;
+      if (use[v] !== 3) continue;
+      if ((copy[v] ?? -1) < 0) {
+        copy[v] = src.length;
+        src.push(v);
+      }
+      indices[t + k] = copy[v] ?? v;
+    }
+  }
+  const planar = new Uint8Array(src.length);
+  for (let t = 0; t < indices.length; t += 3)
+    if (flat(t)) for (let k = 0; k < 3; k++) planar[indices[t + k] ?? 0] = 1;
+  const take = (a: Float32Array, w: number): Float32Array => {
+    const out = new Float32Array(src.length * w);
+    src.forEach((v, i) => {
+      for (let k = 0; k < w; k++) out[i * w + k] = a[v * w + k] ?? 0;
+    });
+    return out;
+  };
+  const positions = take(m.positions, 3);
+  const uvs = take(m.uvs, 2);
+  const span = Math.max(1e-6, ...src.map((v) => Math.abs(m.positions[v * 3] ?? 0))) * 2;
+  for (let i = 0; i < src.length; i++) {
+    if (!planar[i]) continue;
+    const x = positions[i * 3] ?? 0;
+    const y = positions[i * 3 + 1] ?? 0;
+    // Centred on a 0.64 m stretch of the strip with no butt joint across any of its boards.
+    uvs[i * 2] = r.u0 + ((y + 1.1) / r.metres) * (r.u1 - r.u0);
+    uvs[i * 2 + 1] = lo + (hi - lo) * (STRIP_INSET + (0.5 + x / span) * (1 - 2 * STRIP_INSET));
+  }
+  return {
+    ...m,
+    positions,
+    normals: take(m.normals, 3),
+    colors: take(m.colors, 3),
+    uvs,
+    indices,
+  };
 }
 
 /** Where the bung sits, in the cask's frame: the wine weeps down from here. */

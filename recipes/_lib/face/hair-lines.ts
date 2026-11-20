@@ -1,6 +1,6 @@
 // Where the hair goes, as lines: base points pushed through the face's warp, so one style fits
-// every race. Scalp flow lines (hairline → crown → occiput), ribbons falling behind the ears to
-// the shoulders, beard locks down the jaw and the moustache. hair.ts sculpts along them; the
+// every race. Scalp flow lines (hairline → crown → occiput), beard locks down the jaw and the
+// moustache. hair.ts sculpts along them; the
 // recipes declare their grooves as intended creases from the same lines.
 
 import type { Vec3 } from '@developerz.ai/ts23d';
@@ -40,36 +40,6 @@ export function scalpLines(head: FaceHead, degs: readonly number[], from = 34, t
     }
     return pts;
   });
-}
-
-/** Ribbons falling from behind the ears and the back of the head to the shoulders. */
-export function fallLines(head: FaceHead): { pts: Vec3[]; facing: Vec3 }[] {
-  const out: { pts: Vec3[]; facing: Vec3 }[] = [];
-  const s = head.scale;
-  for (const side of [1, -1])
-    for (let i = 0; i < 4; i++) {
-      const t = i / 3;
-      // Round the head from just behind the ear (t = 0) toward the back (t = 1).
-      const a = head.map([
-        LEFT.earBack[0] - 0.022 - t * 0.045,
-        side * (LEFT.euryon[1] + 0.004 - t * t * 0.045),
-        LEFT.earTop[2] - 0.004 - t * 0.008,
-      ]);
-      const out1: Vec3 = [a[0] - 0.012 * s, a[1] * 1.12, a[2] - 0.07 * s];
-      out.push({
-        pts: spline(
-          [
-            a,
-            out1,
-            [a[0] - 0.016 * s, a[1] * 1.18, a[2] - 0.15 * s],
-            [a[0] - 0.006 * s, a[1] * 1.3, a[2] - 0.22 * s],
-          ],
-          12,
-        ),
-        facing: [-0.4 * t, side * (1 - t), 0],
-      });
-    }
-  return out;
 }
 
 /** Beard locks hanging from the jaw and chin. */

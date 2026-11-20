@@ -19,7 +19,7 @@
     },
     "materials": {
       "score": 7,
-      "reason": "Camo is soft-edged sprayed bands of green and red-brown over Dunkelgelb, now carried down the barrel as olive and red-brown sleeves sitting on the tube (hero.png, sheet SIDE); Zimmerit corrugation reads; a scatter of small red-brown chip spots remains on turret and hull, and the road wheels are still pale paint with only a faint darker rim.",
+      "reason": "Camo is soft-edged sprayed bands of green and red-brown over Dunkelgelb, and the per-pixel sheet now shows the same soft bands as hero.png instead of blocky patches; Zimmerit corrugation reads; a scatter of small red-brown chip spots remains on turret and hull, and the road wheels are still pale paint with only a faint darker rim.",
       "fixes": [
         "dark rubber rims on the road wheels that read in SIDE",
         "drop the small red-brown spot scatter (it fights the bands)"
@@ -42,7 +42,7 @@
     },
     "lod": {
       "score": 7,
-      "reason": "FAR LOD2 carries the same soft camo bands, number and cross; the interleaved wheels still become a single row of separated discs.",
+      "reason": "FAR LOD2 now shows the same soft camo bands as LOD0 in the sheet, with number and cross; the interleaved wheels still become a single row of separated discs.",
       "fixes": [
         "keep the wheel rows as overlapping discs at LOD2"
       ]
@@ -56,7 +56,7 @@
     }
   },
   "renders": {
-    "hero.png": "edd8e82c766f4e6f4a15abac129988b990da8e9067099ebea1db8a2268138b99",
-    "sheet.png": "f6626240f108aff950771ca56914b6b9d785c91dbb8ab2472241effef84590b2"
+    "hero.png": "c6481228c1135c4d595d7c75e9793ec05eb771966b566e63b68dbd2a43c3f5fc",
+    "sheet.png": "7162e62754ab7fc85053d3bad34dad31f8e89a1510bd3bc0be5c7b812d35869a"
   }
 }

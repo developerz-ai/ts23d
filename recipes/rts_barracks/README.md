@@ -14,7 +14,8 @@ tub, wheelbarrow, a hod, sheer-legs over the −Y footing with a stone on its ro
 
 Surfaces carry the story at hero distance (`surface.ts`, `yard.ts`): roofless stages stand on a
 **flagstone floor** (1 m flags, each its own tone, 4 cm joints) stained per stage (trodden mud and
-mortar splash on a site, scorch and ash in a ruin) with the **team chevron painted on the flags**
+mortar splash on a site, scorch, pale ash and a pale masonry-dust fan blown out of the collapse
+toward the front-left in a ruin) with the **team chevron painted on the flags**
 (worn: every flag's piece its own shade, some flaked off); walls are dressed blocks with ±12% value
 and warmth jitter, rising damp at the foot, rain streaks under the sills (finished hall: front-corner
 quoins and a string course at sill level), lime mortar runs below a wall going up. Damage and ruin
@@ -22,7 +23,24 @@ soot goes on after weathering (`soot()`): near-black patches on broken wall tops
 crowns; slates round the roof hole burnt black (`roof_burnt`, no team paint); fallen roof pieces
 charred, every other one burnt through, ash lying on them; a charred door frame stands in a ruined
 gate, a burnt shed frame on a ruined site. A raided site has its slab corner broken into tilted
-pieces (pale fresh fractures, snapped formwork) with a scorch on the ground round it.
+pieces (pale fresh fractures, snapped formwork) with a scorch on the ground round it; its torn
+plinth is on the rough `cliff` strip, split into ~1.4 m triangles (LOD0) and projected per face at
+true scale, so the bare rim where the flags stop reads as fractured stone (the prism's 10 m fan had
+smeared the strip and the wear into a stretched grey there).
+
+**Team paint wears too** (the slot is `TEAM_PAINT_WORN`: wear triangles export unpainted, so every
+livery recolours the paint and keeps the wear; `teamWearOf` in `../_lib/rts/finish.ts`, the same
+vocabulary as the units). Roofs weather per slate, never per triangle (`roof.ts`, LOD0): 3.5 %
+of the slates are gone (the dark sarking shows) and 5 % are old ones slipped a few centimetres on
+their nails, salt-bleached grey-brown, lichened or rain-blackened (bare colours, kept in every
+livery); each slate's edges sit a step darker so every course shadows the next. Fallen roof pieces
+and a raided site's torn tarps lie under ash and dust (cut to 30 cm), and a ruin's floor chevron
+is buried flag piece by flag piece. Far (LOD2) the fallen pieces keep that value: two burnt, two
+ash-grey with a red fleck each, and a ruin's chevron at the mean tone its near pieces show, so
+nothing pops to clean red at the switch (`rts_faction.test.ts` holds the far ruin's team share
+within 4 points of the near one). Banners hang frayed into tongues
+30 cm deep (50 cm torn), their lower half darkened by rain splash and road dirt. Rubble blocks
+show fresh pale stone on a third of their knocked arrises.
 
 | | intact | damaged | rubble |
 |---|---|---|---|

@@ -7,8 +7,11 @@ with an **amber slit**, big **team pauldrons**, team chest stripe and pack flap,
 **sunlance carbine** (cooling rings, brass muzzle collar, amber cell) carried at **port arms**:
 diagonal across the chest, grip by the right hip, the left glove under the shroud, so the front view
 reads the whole weapon. Wear that reads at hero distance: pale caked brine mud up the boots and
-shins (a mud shell on its own grey strip, wet and dark at the soles), chips of bone primer on the
-pauldrons' rims, salt dust on the shoulders and helmet; trousers bloused over the boots.
+shins (a mud shell on its own grey strip, wet and dark at the soles), brine mud smeared up the
+belly plates and pack, salt dust on the shoulders and helmet; the team pauldrons and pack flap
+chipped to bare steel round their rims and salt-dusted on top, crest and chest stripe lightly
+chipped (`teamWearOf`, slot `TEAM_PAINT_WORN`: that wear keeps its colour in every livery;
+pauldrons and flap LOD0 only, crest and stripe LOD0/1); trousers bloused over the boots.
 
 ## Specs
 | Dimension | Value (m) | Source |

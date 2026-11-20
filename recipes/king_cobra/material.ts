@@ -82,13 +82,21 @@ export function pinUv(mesh: Mesh, t: number): Mesh {
 }
 
 /** Milky, papery grey of old skin lifting off the new one: the pattern ghosts through it. */
-const SHED_TINT: Vec3 = hex('#cdc7b8');
+const SHED_TINT: Vec3 = hex('#dcd9cf');
 /** The lifted old skin's torn rim casts a thin dark line round the patch. */
 const SHED_RIM: Vec3 = hex('#1a1813');
 /** Healed scar tissue: pale, pinkish grey, no pattern. */
-const SCAR_TINT: Vec3 = hex('#d4c0a8');
+const SCAR_TINT: Vec3 = hex('#e6d2bc');
 /** Dry loam the lowest turn has lain in. */
-export const DUST: Vec3 = hex('#a08f6e');
+export const DUST: Vec3 = hex('#b4a27c');
+/**
+ * Share of the dust the far tube takes. Its 6-sided rings put most vertices on the coil's flanks,
+ * where the dust lies: at 0.9 the whole far coil went pale tan and the LOD switch popped from
+ * the dark olive pile (D480). The far coil keeps the olive and a hint of the loam.
+ */
+export const FAR_DUST = 0.2;
+/** Share of the dust the near (LOD0/1) coil and its ventral scutes take. */
+export const NEAR_DUST = 0.75;
 
 /**
  * Pre-shed patch on the outer flank of the top turn of the pile, where the hero camera looks: 0..1.
@@ -98,15 +106,17 @@ export const shedAt = (s: number, a: number): number => shedOf(shedField(s, a));
 /** The patch's raw field (0 off it); `shedOf` and `rimOf` read it, so `marked` derives it once. */
 const shedField = (s: number, a: number): number => {
   const fromRidge = Math.abs(dmath.atan2(dmath.sin(a), dmath.cos(a)));
-  const along = gauss(s - SHED_AT, 0.11);
+  // 9 cm either way: at 13 cm the milky patch covered the whole near half of the top turn and
+  // took its crossbands with it (D480).
+  const along = gauss(s - SHED_AT, 0.09);
   const ragged = 0.75 + 0.25 * dmath.sin(s * 61 + a * 7) * dmath.sin(s * 23 - a * 5);
-  return along * ragged * (1 - smooth(1.5, 2.0, fromRidge));
+  return along * ragged * (1 - smooth(2, 2.5, fromRidge));
 };
 const shedOf = (f: number): number => smooth(0.35, 0.6, f);
 /** The torn rim of the lifted skin, just outside the patch: 0..1. */
 const rimOf = (f: number): number => gauss(f - 0.31, 0.035) * smooth(0.15, 0.25, f);
 /** Centre of the pre-shed patch along the body, metres from the snout: the top turn's near side. */
-export const SHED_AT = 1.5;
+export const SHED_AT = 1.56;
 
 /**
  * A healed bite scar across the back of the raised neck's base: two parallel diagonal grooves
@@ -114,9 +124,9 @@ export const SHED_AT = 1.5;
  */
 export function scarAt(s: number, a: number): number {
   const across = dmath.atan2(dmath.sin(a), dmath.cos(a));
-  const line = (k: number): number => gauss(s - SCAR_AT - k - across * 0.05, 0.015);
+  const line = (k: number): number => gauss(s - SCAR_AT - k - across * 0.12, 0.026);
   const reach = 1 - smooth(1.1, 1.7, Math.abs(across));
-  return Math.min(1, Math.max(line(0), 0.85 * line(0.038))) * reach;
+  return Math.min(1, Math.max(line(0), 0.85 * line(0.06))) * reach;
 }
 /** Where the scar crosses the dorsal ridge, metres from the snout: the top turn, in the hero's view. */
 export const SCAR_AT = 1.84;
@@ -134,19 +144,25 @@ const TAIL_WEAR = 2.6;
 export function dustAt(s: number, a: number): number {
   const onGround = smooth(0.9, 1.25, s);
   if (onGround === 0) return 0;
-  const low = 1 - smooth(0.024, 0.05, frameAt(s).p[2]);
+  const low = 1 - smooth(0.03, 0.06, frameAt(s).p[2]);
   const flank = smooth(1.05, 1.95, Math.abs(dmath.atan2(dmath.sin(a), dmath.cos(a))));
   const patchy = 0.45 + 0.55 * fbm(s * 13, a * 2.3, 3);
   return Math.min(1, onGround * (0.45 * low + flank * (0.5 + 0.5 * low)) * patchy * 1.6);
 }
 
+/** Colour under the ground's dust alone, at a share of `dustAt` (NEAR_DUST or FAR_DUST). */
+export const dusted = (c: Vec3, s: number, a: number, share: number): Vec3 =>
+  mixRgb(c, DUST, dustAt(s, a) * share);
+
 /** Colour after the story marks: pre-shed clouding with its torn rim, the scar, then dust. `far`
- *  (LOD2) keeps only the dust: a small mark sampled on a coarse ring paints a whole segment. */
+ *  (LOD2) keeps only the dust, at the far share: a small mark sampled on a coarse ring paints a
+ *  whole segment. Dust without marks at the near share (the LOD0 scutes) is `dusted`. */
 export function marked(c: Vec3, s: number, a: number, far = false): Vec3 {
-  const dusty = (v: Vec3): Vec3 => mixRgb(v, DUST, dustAt(s, a) * 0.9);
-  if (far) return dusty(c);
+  if (far) return dusted(c, s, a, FAR_DUST);
+  const dusty = (v: Vec3): Vec3 => dusted(v, s, a, NEAR_DUST);
   const f = shedField(s, a);
-  const clouded = mixRgb(c, mixRgb(SHED_TINT, c, 0.18), shedOf(f) * 0.92);
+  // The bands ghost through the milky old skin (at 0.18 the patch hid the near turn's bands).
+  const clouded = mixRgb(c, mixRgb(SHED_TINT, c, 0.45), shedOf(f) * 0.92);
   const rimmed = mixRgb(clouded, SHED_RIM, rimOf(f) * 0.8);
   return dusty(mixRgb(rimmed, SCAR_TINT, scarAt(s, a) * 0.9));
 }

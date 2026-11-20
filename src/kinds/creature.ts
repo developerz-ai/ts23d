@@ -98,7 +98,7 @@ export function creature(
   // Strand streaks in the painted tone only on fur, along the coat's lie (D60; scales carry none).
   const [strands, lie] = [surface === 'fur' ? {} : { strands: 0 }, furLie(b, spec.family).dir];
   const piece = sculptPiece({
-    edits: bodyEdits(b, spec, lod, res, c.keratin, mixRgb(c.back, c.tip, 0.3)),
+    edits: bodyEdits(b, spec, lod, res, c.keratin, mixRgb(c.back, c.tip, 0.3), o.body?.(b, lod)),
     res,
     color: spec.colours.coat,
     mirror: b.mirror,

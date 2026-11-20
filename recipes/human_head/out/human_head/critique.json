@@ -20,11 +20,11 @@
     },
     "materials": {
       "score": 6,
-      "reason": "Skin, hair, red wool, blue tunic, linen and a metallic brass collar separate by hue; mantle and tunic share one matte roughness, the skin is waxy, and the hair cards show white fringe specks at the crown in hero.png.",
+      "reason": "Skin, hair, red wool, blue tunic, linen and brass collar separate by hue, and the brighter strand shading reads as hair in hero.png; mantle and tunic share one matte roughness, the cheeks carry a pink smudge under the eyes, and a grey-violet wash under the beard on the neck reads as a bruise in hero.png.",
       "fixes": [
         "wool strip with fibre noise on the mantle and a linen strip on the tunic",
-        "skin roughness variation (oily T-zone, matte cheeks)",
-        "premultiply / darken the hair card alpha fringe so no white specks show"
+        "fade the beard edge into skin tone, not a grey-violet wash on the neck",
+        "skin roughness variation (oily T-zone, matte cheeks)"
       ]
     },
     "detail": {
@@ -45,10 +45,10 @@
     },
     "lod": {
       "score": 6,
-      "reason": "FAR LOD2 keeps the outline and the beard, and the blue tunic now stays one block; but the brass collar becomes a jagged cream zigzag, hair colour bleeds onto the forehead and cheek, and the brow/nose mass flattens.",
+      "reason": "FAR LOD2 keeps the outline and the beard and the face is smoother; the brass collar is lost and the linen shows as a jagged white star over the blue tunic, and the brow/nose mass flattens.",
       "fixes": [
         "keep the brow/nose mass at LOD2",
-        "average per-face colour at LOD2 so the collar keeps its brass hue and the hair colour stays off the face"
+        "average per-face colour at LOD2 so the linen and brass collar keep a clean band"
       ]
     },
     "technical": {
@@ -61,7 +61,7 @@
     }
   },
   "renders": {
-    "hero.png": "8490eb94a689c3b29d3b966260ed89b608c32d40ae03d1a55d4f7348d93ebab9",
-    "sheet.png": "375e6e21f741fbd18dff962578276008a44d11b6187850940961c987012fe5bd"
+    "hero.png": "3b80c71045ea46ecaa27263223a8b7c183e4b17280dd24075963ceacd7bf0642",
+    "sheet.png": "65300041d2a76a46054ed436c6d1fc8438e75f9ef5a333348fec5f68ae50df2d"
   }
 }

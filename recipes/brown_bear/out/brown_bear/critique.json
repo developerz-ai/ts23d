@@ -1,7 +1,7 @@
 {
   "asset": "brown_bear",
   "reviewer": "agent",
-  "overall": 6.6,
+  "overall": 7,
   "scores": {
     "silhouette": {
       "score": 7,
@@ -20,47 +20,48 @@
       ]
     },
     "materials": {
-      "score": 6,
-      "reason": "Fur cards cover the body, but the face is smooth tan plastic with a hard seam to the fur, the lower legs carry pale chalky blotches, and the paws are grey socks.",
+      "score": 7,
+      "reason": "The even dark dashes are gone: fur cards now shade as tan-brown strands over the hump and flank (hero.png), so the coat reads as brown fur with sun-bleached tips, and the legs darken smoothly to wet paws. At close range the flank cards are still sparse over a smooth hide, the face is a smooth matte plane and the nose is dull.",
       "fixes": [
-        "extend fur cards onto the face edge and cheeks; darker brown muzzle",
-        "remove the pale chalky blotches on the lower legs",
-        "dark leathery paw pads; glossy nose and eyes"
+        "denser, longer cards over the flank and shoulder so the hide does not show between them",
+        "glossy nose and wet eye highlight",
+        "short fur cards on the face and cheeks"
       ]
     },
     "detail": {
       "score": 7,
-      "reason": "Small claws now show on the paws and the ears are rounder; the face still has no brow or cheek planes.",
+      "reason": "Paws now split into toes with claws, and a brow ridge and cheek mass shape the head in hero.png; the claws are short for a brown bear and the muzzle side is a smooth plane.",
       "fixes": [
-        "sharper brow and cheek planes",
-        "longer, darker claws on the forepaws (brown bears have 5-10 cm claws)"
+        "longer, darker claws on the forepaws (5-10 cm)",
+        "muzzle-side and lip planes"
       ]
     },
     "wear": {
-      "score": 6,
-      "reason": "Claw scars on the chest, a scar on the face and mud-darkened paws tell a life outdoors; the pale rubbed patch on the shoulder reads as a texture hole rather than wear.",
+      "score": 7,
+      "reason": "Claw scars on the chest and a face scar remain, mud now grades wet and dark from the toes, and the texture-hole patch on the shoulder is gone; the fur cards shorten over the scars. The chest scars still read as pale painted bars and the belly fringe is clean.",
       "fixes": [
-        "blend the rubbed shoulder patch into the coat (shorter, lighter tips) instead of a flat pale disc",
+        "scars as darker parted-fur lines, not pale bars",
         "matted wet fur on the belly fringe"
       ]
     },
     "lod": {
-      "score": 6,
-      "reason": "FAR LOD2 keeps the outline but the legs become straight tubes and the coat breaks into angular light/dark patches.",
+      "score": 7,
+      "reason": "FAR LOD2 now shades smoothly with an even brown coat and dark paws (no angular light/dark patches), and keeps the back fur clumps; the legs are still straight tubes.",
       "fixes": [
-        "LOD2 legs from the sculpt with an inflate instead of tubes; average the coat colour per face"
+        "LOD2 legs from the sculpt with an inflate instead of tubes",
+        "darker LOD2 coat to match the LOD0 value"
       ]
     },
     "technical": {
       "score": 8,
-      "reason": "QA clean; 108k / 26k / 2.8k triangles over 4 draws: LOD0 trimmed toward the fur-card budget.",
+      "reason": "QA clean; 109.4k / 26.6k / 2.8k tris, 4 / 4 / 2 draws: LOD0 trimmed from ~120k back to ~109k with the split toes and fur kept.",
       "fixes": [
         "spend the remaining back fur-card budget on the face"
       ]
     }
   },
   "renders": {
-    "hero.png": "8e26b501d233b20633dfe730d3e08dd4a36da6db7eeaed6e352af656e91eeb9b",
-    "sheet.png": "e8b6044863d6c16ec68bb48dc38de3570f50ffe2e155b92e6fce83ff3dbace64"
+    "hero.png": "4ece0592b762fda0f94e2e5bd60cd4f5d0609011c307be939ac45ba52c941fcd",
+    "sheet.png": "5fa734308e9923eabb646a9401a0d80903449dbe2c26956be044df161199bc49"
   }
 }

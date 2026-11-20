@@ -1,50 +1,50 @@
 {
   "asset": "pine",
   "reviewer": "agent",
-  "overall": 6.7,
+  "overall": 6.9,
   "scores": {
     "silhouette": {
       "score": 7,
-      "reason": "The crown is now a flat-topped pad wider than tall on a long clear bole, the Scots pine shape; but the pad is thin and the bole is a pencil-thin pole, so hero.png reads as a lollipop.",
+      "reason": "Now a flatter, wider crown on a long clear bole, the umbrella of an old Scots pine; but in hero.png the crown is a near-rectangular block (flat top, flat bottom, straight sides) on straight horizontal rod limbs, so it reads as a box hedge on a pole rather than separate flat pads.",
       "fixes": [
-        "thicken the bole toward a real DBH (~0.5 m) with taper",
-        "add a second lower tier of branch pads under the crown"
+        "break the crown into 2–3 separate flat pads with sky gaps between them",
+        "limbs that kink and turn up toward their tips instead of straight horizontal rods"
       ]
     },
     "proportions": {
-      "score": 7,
-      "reason": "Crown now spans the declared ~10 m; the bole is far too thin for a 25 m tree.",
+      "score": 8,
+      "reason": "22 m tall with a ~0.9 m bole and an 11.5 m crown: the bole now reads as a trunk, not a pencil, and the crown depth fits an old Scots pine.",
       "fixes": [
-        "bole base ~0.5–0.6 m diameter with a gentle taper"
+        "a visible taper from the root flare to the crown base"
       ]
     },
     "materials": {
       "score": 7,
-      "reason": "Orange upper bark over a darker base reads as Scots pine; the needle cards read as dark broadleaf clumps in hero.png.",
+      "reason": "Needle cards now read feathery and conifer-like at hero distance but stay a dark green; the bark is the orange upper-bole tone right down to the base, where a Scots pine turns grey-brown and plated.",
       "fixes": [
-        "a needle-tuft card texture with a lighter blue-green tint",
-        "bark plates on the lower bole"
+        "grey-brown plated bark on the lower third of the bole, orange only above",
+        "a lighter blue-green tint on the outer needle tufts"
       ]
     },
     "detail": {
       "score": 6,
-      "reason": "Orange limbs show inside the crown and stubs along the bole; no cones.",
+      "reason": "Orange limbs show inside the crown and stubs along the bole; no cones, and the limbs are uniform straight rods.",
       "fixes": [
         "cones on outer shoots",
-        "more visible limbs between needle pads"
+        "branch forks and taper on the limbs"
       ]
     },
     "wear": {
       "score": 6,
-      "reason": "Dead stubs and one bare dead branch on the bole; no resin scars.",
+      "reason": "Dead stubs and a pale peeled strip down the lower bole (hero.png) that reads as a flat ribbon more than a scar; no resin.",
       "fixes": [
-        "resin scars on the bole",
+        "give the pale strip raised bark lips and resin at its edges",
         "a dead branch inside the crown"
       ]
     },
     "lod": {
       "score": 6,
-      "reason": "FAR LOD2 crown is still sparser and lighter streaks than the LOD0 pad.",
+      "reason": "FAR LOD2 crown is still sparser, lighter and more see-through than the LOD0 crown, with the leader exposed above it.",
       "fixes": [
         "denser LOD2 pad cards colour-matched to LOD0"
       ]
@@ -58,7 +58,7 @@
     }
   },
   "renders": {
-    "hero.png": "59c81cb549fd6ef7467ab6b523cf15cecaa0e500f0f2bdefc90f3a0885ebba05",
-    "sheet.png": "8ca91a69d7cf3a9d692a2cc754b2fafd38575903ded2631d927471ff01f2f88f"
+    "hero.png": "96ba8601dec751997ced0f8c35621f18a72cbf9b31fec0f1744c53110da0fa18",
+    "sheet.png": "d72f81342ab508a6b323997a932f6b4a69bc0707a6aa89339542a298c3c2b50d"
   }
 }

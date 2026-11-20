@@ -20,9 +20,14 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    143780,
-    35038,
-    3914
+    147936,
+    35382,
+    3894
+  ],
+  "trianglesCompiled": [
+    147966,
+    35382,
+    3894
   ],
   "drawCalls": [
     36,
@@ -415,10 +420,10 @@
   ],
   "weather": {
     "chips": {
-      "target": 0.1017,
-      "actual": 0.1017,
+      "target": 0.1027,
+      "actual": 0.1027,
       "eligible": "convex-edges",
-      "area": 1463.076,
+      "area": 1471.2028,
       "by": {
         "hall_hall_masonry": {
           "target": 0.1,
@@ -450,25 +455,70 @@
           "actual": 0.05,
           "area": 20.8468
         },
+        "tank_brinehound_team": {
+          "target": 0.3,
+          "actual": 0.3,
+          "area": 5.3832
+        },
+        "warden_0_warden_team": {
+          "target": 0.4,
+          "actual": 0.4,
+          "area": 0.3697
+        },
+        "warden_0_warden_crest": {
+          "target": 0.15,
+          "actual": 0.15,
+          "area": 0.2179
+        },
         "warden_0_warden": {
           "target": 0.15,
           "actual": 0.15,
           "area": 3.4307
+        },
+        "warden_1_warden_team": {
+          "target": 0.4,
+          "actual": 0.4,
+          "area": 0.3697
+        },
+        "warden_1_warden_crest": {
+          "target": 0.15,
+          "actual": 0.15,
+          "area": 0.2179
         },
         "warden_1_warden": {
           "target": 0.15,
           "actual": 0.15,
           "area": 3.4307
         },
+        "warden_2_warden_team": {
+          "target": 0.4,
+          "actual": 0.4,
+          "area": 0.3697
+        },
+        "warden_2_warden_crest": {
+          "target": 0.15,
+          "actual": 0.15,
+          "area": 0.2179
+        },
         "warden_2_warden": {
           "target": 0.15,
           "actual": 0.15,
           "area": 3.4307
         },
+        "delver_0_delver_team": {
+          "target": 0.16,
+          "actual": 0.16,
+          "area": 0.4904
+        },
         "delver_0_delver": {
           "target": 0.28,
           "actual": 0.28,
           "area": 2.2077
+        },
+        "delver_1_delver_team": {
+          "target": 0.16,
+          "actual": 0.16,
+          "area": 0.4904
         },
         "delver_1_delver": {
           "target": 0.28,
@@ -519,10 +569,10 @@
       }
     },
     "mud": {
-      "target": 0.3688,
-      "actual": 0.3688,
+      "target": 0.3676,
+      "actual": 0.3676,
       "eligible": "ground-near & !up-facing ; ground-near & side-facing ; ground-near",
-      "area": 212.5668,
+      "area": 211.5016,
       "by": {
         "hall_hall_masonry": {
           "target": 0.3,
@@ -592,15 +642,15 @@
         "deposit_outcrop": {
           "target": 0.6,
           "actual": 0.6,
-          "area": 11.9516
+          "area": 10.8864
         }
       }
     },
     "dust": {
-      "target": 0.3206,
-      "actual": 0.3206,
+      "target": 0.3175,
+      "actual": 0.3175,
       "eligible": "up-facing",
-      "area": 317.3669,
+      "area": 322.3396,
       "by": {
         "hall_hall_masonry": {
           "target": 0.35,
@@ -622,6 +672,16 @@
           "actual": 0.3,
           "area": 7.5884
         },
+        "tank_brinehound_team": {
+          "target": 0.1,
+          "actual": 0.1,
+          "area": 4.4923
+        },
+        "warden_0_warden_team": {
+          "target": 0.3,
+          "actual": 0.3,
+          "area": 0.1684
+        },
         "warden_0_warden": {
           "target": 0.3,
           "actual": 0.3,
@@ -630,7 +690,12 @@
         "warden_0_warden_kit": {
           "target": 0.3,
           "actual": 0.3,
-          "area": 0.7213
+          "area": 0.7101
+        },
+        "warden_1_warden_team": {
+          "target": 0.3,
+          "actual": 0.3,
+          "area": 0.1684
         },
         "warden_1_warden": {
           "target": 0.3,
@@ -640,7 +705,12 @@
         "warden_1_warden_kit": {
           "target": 0.3,
           "actual": 0.3,
-          "area": 0.7185
+          "area": 0.7101
+        },
+        "warden_2_warden_team": {
+          "target": 0.3,
+          "actual": 0.3,
+          "area": 0.1684
         },
         "warden_2_warden": {
           "target": 0.3,
@@ -650,7 +720,7 @@
         "warden_2_warden_kit": {
           "target": 0.3,
           "actual": 0.3,
-          "area": 0.7153
+          "area": 0.7101
         },
         "delver_0_delver": {
           "target": 0.3,
@@ -675,10 +745,10 @@
       }
     },
     "scratches": {
-      "target": 0.3411,
-      "actual": 0.3411,
-      "eligible": "touched",
-      "area": 1.8158,
+      "target": 0.2718,
+      "actual": 0.2718,
+      "eligible": "touched ; up-facing | side-facing",
+      "area": 2.4714,
       "by": {
         "warden_0_warden": {
           "target": 0.3,
@@ -695,10 +765,20 @@
           "actual": 0.3,
           "area": 0.5224
         },
+        "delver_0_delver_team": {
+          "target": 0.08,
+          "actual": 0.08,
+          "area": 0.3278
+        },
         "delver_0_delver_kit": {
           "target": 0.6,
           "actual": 0.6,
           "area": 0.1243
+        },
+        "delver_1_delver_team": {
+          "target": 0.08,
+          "actual": 0.08,
+          "area": 0.3278
         },
         "delver_1_delver_kit": {
           "target": 0.6,

@@ -41,6 +41,10 @@ export function bearGroom(
 } {
   const b = info.bones;
   const H = b.height;
+  // Every LOD0/1 layer maps the `fur` cells (pale toward the tip: a brown bear's grizzle). The
+  // `guard` cells are agouti, dark-tipped (tip ≈ 0.45 of the coat): over this brown coat each lock
+  // ended in a near-black dash, and the flank and hump read as a hide stippled with dashes (D481).
+  // Only the far locks keep them: at LOD2 a darker fringe is the coat's value, not a mark.
   const fur = strandCells('fur_clumps', 'fur');
   const guard = strandCells('fur_clumps', 'guard');
   const withers = b.spine[b.spine.length - 1] ?? [0.65, 0, H];
@@ -114,7 +118,7 @@ export function bearGroom(
   const body: GroomLayer[] = [
     {
       name: 'undercoat',
-      density: (p) => 850 * k * sole(p),
+      density: (p) => 640 * k * sole(p),
       length: (p) => 0.022 + 0.022 * leg(p),
       width: 0.016 * wide,
       lift: 0.28,
@@ -136,13 +140,14 @@ export function bearGroom(
         (0.8 + 1.4 * Math.max(breeches(p), feather(p), under(n) * 0.8)),
       length: guardLength,
       width: 0.022 * wide,
-      lift: 0.3,
+      // Lying back along the body: stood off at 0.3 the topline bristled in profile.
+      lift: 0.25,
       bend: 0.6,
       droop: 0.14,
       roll: 0.8,
       clump: 4,
       fold: lod === 0 ? 0.6 : 0,
-      cells: guard,
+      cells: fur,
       tone: [0.95, 1.28],
       sink: 0.003,
       segments: lod === 0 ? 3 : 2,
@@ -154,13 +159,13 @@ export function bearGroom(
       length: (p) => 0.08 + 0.05 * onHump(p),
       width: 0.022 * wide,
       // A mound that lies back over the shoulders: stood any straighter the locks read as quills.
-      lift: 0.42,
+      lift: 0.36,
       bend: 0.75,
       droop: 0.2,
       roll: 0.7,
       clump: 5,
       fold: lod === 0 ? 0.6 : 0,
-      cells: guard,
+      cells: fur,
       tone: [0.9, 1.45],
       sink: 0.004,
       segments: lod === 0 ? 3 : 2,
@@ -186,9 +191,11 @@ export function bearGroom(
   const head: GroomLayer[] = [
     {
       name: 'face',
-      density: (p) => (bare(p) ? 0 : 2600 * k * (1 + 0.8 * ear(p))),
+      // Dense enough that the face reads as fur from the hero's distance, not as a tan mask (the
+      // lifted cards, `cardLift`, carry the coat's value, so 4 000 reads as 6 000 did; D484).
+      density: (p) => (bare(p) ? 0 : 4000 * k * (1 + 0.8 * ear(p))),
       // Velvet on the muzzle, thickening over the forehead and crown.
-      length: (p) => (0.016 + 0.026 * smooth(l.lc * 1.05, l.lc * 0.5, p[0])) * (1 - 0.3 * ear(p)),
+      length: (p) => (0.022 + 0.03 * smooth(l.lc * 1.05, l.lc * 0.5, p[0])) * (1 - 0.3 * ear(p)),
       width: 0.009 * wide,
       lift: 0.34,
       bend: 0.6,
@@ -210,7 +217,7 @@ export function bearGroom(
       roll: 0.7,
       clump: 4,
       fold: lod === 0 ? 0.6 : 0,
-      cells: guard,
+      cells: fur,
       tone: [0.95, 1.28],
       sink: 0.003,
       segments: lod === 0 ? 3 : 2,

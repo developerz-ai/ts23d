@@ -19,9 +19,10 @@
     },
     "materials": {
       "score": 8,
-      "reason": "Walls now read as dressed stone: per-block value jitter, darker joints, damp at the foot; slates are lapped courses with per-slate value, oak posts brown, windows amber without blowing out. Exposed rafters read as oak and the slates round the hole are charred dark.",
+      "reason": "Walls read as dressed stone; exposed rafters read as oak and the slates round the hole are charred black slate by slate. The intact slopes now age per whole slate (grey gaps, darker slates) instead of pale triangles, so the roof reads consistently with the charring; the grey gaps are a touch light and evenly scattered (sheet TOP).",
       "fixes": [
-        "darken slate edges/undersides one step so each course shadows the next"
+        "darken the missing-slate gaps toward the underlay value",
+        "cluster the intact-slope wear near the eaves and the damage instead of an even sprinkle"
       ]
     },
     "detail": {
@@ -49,14 +50,14 @@
     },
     "technical": {
       "score": 8,
-      "reason": "QA PASS: 33.7k / 8.0k / 852 tris, 3 / 3 / 3 draws; one trim material + team slot, LOD2 well under 1k. LOD0 down ~2k for the same read.",
+      "reason": "QA PASS: 33.4k / 8.0k / 852 tris, 3 / 3 / 3 draws; one trim material + team slot, LOD2 well under 1k.",
       "fixes": [
-        "spend some of the LOD0 savings on the fixes above (quoins, string course, gravel) instead of more blocks"
+        "spend some of the LOD0 budget on the fixes above (chipped arrises, gravel, splintered ends) instead of more blocks"
       ]
     }
   },
   "renders": {
-    "hero.png": "ad45ab756b0877a51d1b268d7b629f9f5a7808796e519c98a5b14b45b0e4b9bb",
-    "sheet.png": "97c19e7808a7e909d40000d13726402ffa3911491a2020c569c67573527a1dbd"
+    "hero.png": "95cab5f68a5aeb491f9424ff799d7ef96c4b7426185914c8ebcf82921ed6066b",
+    "sheet.png": "6eae98dd10430c62da3890f608d0e68fcf612390e14b0fbd616085f004a6afcb"
   }
 }

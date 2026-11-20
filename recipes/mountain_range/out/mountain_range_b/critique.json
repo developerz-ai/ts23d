@@ -1,13 +1,13 @@
 {
   "asset": "mountain_range_b",
   "reviewer": "agent",
-  "overall": 7.1,
+  "overall": 7.3,
   "scores": {
     "silhouette": {
       "score": 7,
-      "reason": "Massif, cone and forested valley read along the new hero, which no longer shows the back-right corner; the knife teeth on the skirt top are only hidden by the angle: they still show along the cut in sheet 3/4 REAR, FRONT and FAR LOD2, and a thin snow sliver stands on the left cut in hero.png. The right cone is still one smooth mass.",
+      "reason": "Massif, cone and forested valley read along the hero; the skirt top is smoother along FRONT, but small dark teeth still show on the cut at the right of 3/4 REAR, a thin snow sliver stands on the left cut in hero.png, and the right cone is still one smooth mass.",
       "fixes": [
-        "shift the window or soften the ridges where the cut crosses them so the skirt top has no thin teeth (sheet 3/4 REAR)",
+        "soften the ridges where the cut crosses them so the skirt top has no teeth (sheet 3/4 REAR right)",
         "erode the right cone into ridges and couloirs"
       ]
     },
@@ -20,10 +20,10 @@
     },
     "materials": {
       "score": 7,
-      "reason": "Blended rock, grass, forest and snow, and the skirt streaking is mostly gone; the right cone face shows faint concentric contour rings in hero.png and has no strata.",
+      "reason": "The contour rings on the cone are gone; the cone rock is now a mottled grey, but in hero.png it is soft and smeared, with no strata, and the snow line on the right peak is a blurry edge.",
       "fixes": [
-        "remove the contour banding on the cone (break-up noise on the cover/shading)",
-        "rock strata bands on the steep faces of the cone"
+        "rock strata bands on the steep faces of the cone",
+        "crisper rock break-up and snow edge on the cone in hero.png"
       ]
     },
     "detail": {
@@ -42,10 +42,10 @@
       ]
     },
     "lod": {
-      "score": 7,
-      "reason": "FAR LOD2 keeps the forest and the cone, and the snow cover now blends softly at LOD2 instead of stepping into blocky white squares; the faces still show strong faceted diamond shading on the cone.",
+      "score": 8,
+      "reason": "FAR LOD2 is now smooth-shaded (the diamond faceting on the cone is gone) and keeps the cone, the forest band and the soft snow; the stream thins to a broken dark line.",
       "fixes": [
-        "smooth the LOD2 normals so the faceting on the cone does not show"
+        "keep the stream as a continuous strip at LOD2"
       ]
     },
     "technical": {
@@ -57,7 +57,7 @@
     }
   },
   "renders": {
-    "hero.png": "ec79e4797ca751814664d22e6eb2b73262d2eccbfa8aa9e0b0003ea7af84e6b2",
-    "sheet.png": "77ccc73446b335a22c175a41264d5f4111f26335cd34c8f978b8a05b6eca956f"
+    "hero.png": "0263721489707aafa27cfe31f8ec06926724e2b236b1449daccde5ba455cefa9",
+    "sheet.png": "ad8ce752214bb81bac31503ad3db83f97b33c7a41e51382f04cd4fc336abee7b"
   }
 }

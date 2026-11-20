@@ -22,7 +22,7 @@ All values are general alpine figures cited from prior knowledge, **not re-fetch
 | summit altitude (in a 2 km tile around such a valley) | 2500–3200 m | measured 2683 / 2605 / 2733 m; highest cut point 2560 / 2488 / 2659 m | unsourced, approximate |
 | local relief valley → ridge over ~1 km | 700–1200 m | ~950 m | unsourced; more than ~1000 m/km makes mean slopes > 45° |
 | treeline (Alps, conifers: spruce, larch, Swiss pine) | 1800–2200 m | 2000 m | unsourced, approximate |
-| climatic snowline (Alps, summer; lower on north faces, early season) | 2600–3200 m; patches to ~2300 m in June | 2420 m (early-summer look; b 2350 m, c 2250 m) | unsourced, approximate |
+| climatic snowline (Alps, summer; lower on north faces, early season) | 2600–3200 m; patches to ~2300 m in June | 2420 m (early-summer look; b 2350 m, c 2150 m) | unsourced, approximate |
 | angle of repose of scree / talus | 30–40° (≈ 34° typical) | thermal `talus` 1.0 (45°) caps cliffs, scree colour on 11–24° deposit fans | unsourced, approximate |
 | slope where bare rock dominates | > ~40° | `rockSlope` 0.85 (40°) | unsourced, approximate |
 | slope above which snow rarely holds | ~50–55° | snow thins from 35° to none at 53° (`snow.ts`) | unsourced, approximate |
@@ -45,8 +45,11 @@ and `stream` (the valley's water ribbon): all static, one draw call. LOD by grid
   seed, offset ± 2000 m) samples the same raw function along the shared cut.
 - Erosion runs on the tile plus 250 m all round and the tile is cropped out, so the border row is
   an interior row of the erosion (eroding the tile alone left that row unrelaxed by thermal
-  erosion: an 8 m saw-tooth along the skirt's top). Nothing then edits the boundary: the mesh's
-  edge is the eroded field (tested at every LOD). Erosion is per tile, so a neighbour's eroded
+  erosion: an 8 m saw-tooth along the skirt's top). By default nothing then edits the boundary:
+  the mesh's edge is the eroded field (tested at every LOD). Variant b sets `edgeSoften: 14`: its
+  window's cut runs along a knife crest, so within 14 cells (~110 m) of the cut crests are lowered
+  toward their ±4-cell blur (only lowered, fully at the border), and the skirt top is a smooth
+  profile instead of thin teeth. Erosion is per tile, so a neighbour's eroded
   edge matches only where both erosions agree; the raw field matches exactly.
 - The skirt walls are built from the surface's border vertices (positions copied), not by
   re-sampling the height, so the skirt's top is the surface's edge to the bit at every LOD.
@@ -54,7 +57,9 @@ and `stream` (the valley's water ribbon): all static, one draw call. LOD by grid
   as they do on any map tile.
 
 ## How the ground is finished (`ground.ts`, shared with `real_valley`)
-- Smooth per-vertex colour on one matte strip stretched to macro scale: the old per-triangle strips
+- Smooth per-vertex colour on one matte strip at macro scale (eight mirrored bands across the
+  tile, U at the same scale; one band with U × 3 stretched the pattern ~50× along +Y into thin
+  streaks that read as contour lines on the cones): the old per-triangle strips
   switched material at every triangle border and squeezed V per triangle (diagonal stripe banding).
 - Aspect: north faces lose forest ~220 m lower; noise breaks the lines; ±12 % value breakup over
   rock and turf; damp, darker torrent beds where the D8 flow gathers.
@@ -72,12 +77,20 @@ and `stream` (the valley's water ribbon): all static, one draw call. LOD by grid
   looks from the north-east (az 35°, el 25°) to see the snowy faces; variant b from the east (az
   10°, el 28°), square to its stream and cone, its north cut edge-on (the field's own crest runs
   along that cut for ~200 m, two 830 m tops with the ground falling inward: two thin teeth on the
-  skirt seen at 35°; the border stays the untouched field); variant c looks down its NW → SE
+  skirt seen at 35°, now softened by `edgeSoften`); variant c looks down its NW → SE
   valley from the north-west end (az 127°, el 32°), so the floor and both peaks' north faces show
-  instead of a cut wall.
-- Rock wear (`../_lib/terrain/cliff.ts`): on ground steeper than ~35°, dark water streaks (a plan
-  noise ~14 m across barely changes down a steep face, so its bands run down the fall line) and
-  ±12 % bedding bands 38 m thick, wobbled in plan; none under snow.
+  instead of a cut wall. Variant c's snow follows the ground (`snow` params): it slides off
+  ribs from ~33° (none above ~45°, caps 1.4 × as steep), with a crisp edge ramp (±0.04 instead of
+  ±0.12) and a fine ragged jitter on the threshold, so white couloirs and ledges sit between bare
+  rock ribs instead of a white blanket holed by soft blobs; and bare holes up to ~80 m across
+  inside a snowfield are filled (`fill: 40`, a morphological closing of the final cover), so the
+  left snowfield is clean snow, not a field of soft dark blobs. The closing also fills bare bays
+  narrower than ~80 m that open onto the field's edge, so the outer line keeps its broken shape
+  only at larger scales: its jitter and ragged threshold, not its narrow notches.
+- Rock wear (`../_lib/terrain/cliff.ts`): fading in from ~27° to ~44°, dark water streaks (a plan
+  noise ~20 m across barely changes down a steep face, so its bands run down the fall line),
+  ±22 % bedding bands 30 m thick, wobbled in plan, and pale/dark exfoliation patches ~150 m
+  across; none under snow.
 - The cut sides carry `rock_strata` with one band over the full 1 200 m wall, mapped at the same
   texel scale along the wall as up it (U squeezed harder than V drew tall thin texels: vertical
   streaks): beds read as formations tens of metres thick, darkening toward the base.
@@ -89,7 +102,7 @@ and `stream` (the valley's water ribbon): all static, one draw call. LOD by grid
 
 ## Open questions
 - Snowline: a summer climatic snowline (~2800 m) would leave these summits bare; we chose an
-  early-summer look (2420 m; b 2350 m, c 2250 m: its summits stand only ~2730 m) so the tile shows the snow band. Raise `snowline` for late summer.
+  early-summer look (2420 m; b 2350 m, c 2150 m: its summits stand only ~2730 m) so the tile shows the snow band. Raise `snowline` for late summer.
 - Neighbour tiles: the raw field matches along a shared cut exactly, the eroded one only roughly
   (each tile erodes its own window; `mountain_range` and its east neighbour differ along the cut
   by median 2.4 m, p90 7 m, max 22 m). Seamless eroded tiling would need erosion anchored to world

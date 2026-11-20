@@ -121,14 +121,15 @@ function scaleTint(c: Vec3, dome: number, id: number, k: number): Vec3 {
 }
 
 /**
- * The stamped scales' own paint (LOD0): the seam between two scales near-black, the keeled
- * crown lit toward ember. The subtle tint above left the hide one flat red at the hero's
- * distance: a scale is 20 px there and needs a seam it can show.
+ * The stamped scales' own paint (LOD0): plates, not spots. A narrow near-black gap where two
+ * scales meet, each plate one even colour lifting only slightly toward its keel. The subtle tint
+ * before left the hide one flat red at the hero's distance; a wide seam fading to an ember crown
+ * then read as round leopard spots. A scale is 20 px there: the gap is what draws it.
  */
 function stampTint(c: Vec3, h: number, k: number): Vec3 {
-  const seam = (1 - smoothstep(0.08, 0.5, h)) * k;
-  const crown = smoothstep(0.55, 0.95, h) * k;
-  return mixRgb(mixRgb(c, C.scaleSeam, seam * 0.62), C.ember, crown * 0.3);
+  const seam = (1 - smoothstep(0.06, 0.24, h)) * k;
+  const crown = smoothstep(0.3, 0.95, h) * k;
+  return mixRgb(mixRgb(c, C.ember, crown * 0.12), C.scaleSeam, seam * 0.85);
 }
 
 /** How much of the top of the body a point is on: torso back and the neck's crest side. */

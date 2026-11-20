@@ -27,6 +27,7 @@ import {
   restrip,
   role,
   soot,
+  teamWearOf,
   wearOf,
 } from '../_lib/rts/finish.ts';
 import {
@@ -36,7 +37,7 @@ import {
   GLOW,
   IRON,
   TEAM,
-  TEAM_PAINT,
+  TEAM_PAINT_WORN,
   TEAM_VARIANTS,
   teamShade,
 } from '../_lib/rts/style.ts';
@@ -126,6 +127,8 @@ const RULES: readonly Rule[] = [
   role(teamShade(0.8), 'slate'),
 ];
 
+/** Fresh fracture of the dressed stone: what a knocked rubble arris shows. */
+const FRESH_STONE: Vec3 = [0.62, 0.57, 0.46];
 /** Rising damp and lichen at a wall foot: dark olive-grey. */
 const DAMP: Vec3 = [0.24, 0.25, 0.19];
 
@@ -261,9 +264,17 @@ function floorStains(stage: Stage, damage: Damage): Stain[] {
       scorch(3.2, 4, 2.2, 0.8),
       scorch(-3, -4.5, 2.4, 0.85),
       scorch(HALF_X - 0.5, -1, 2, 0.75),
-      ash(0.2, 0.4, 2.2),
-      ash(-1.4, -4.6, 1.6, 0.45),
-      ash(2.6, 1.8, 1.4, 0.4),
+      ash(0.2, 0.4, 2.2, 0.6),
+      ash(-1.4, -4.6, 1.6, 0.55),
+      ash(2.6, 1.8, 1.4, 0.5),
+      // A pale dust fan blown out of the collapse toward the front-left (the hero's side),
+      // widening and thinning as it spreads across the flags.
+      ...[0, 1, 2, 3, 4].map((i) => ({
+        at: [1.2 + 1.3 * i, -0.8 - 1.1 * i] as const,
+        radius: 1.4 + 0.45 * i,
+        color: STAIN.dust,
+        k: 0.75 - 0.1 * i,
+      })),
     ];
   const site: Stain[] =
     stage === 'foundation'
@@ -307,7 +318,7 @@ const hall = defineFamily({
   // LOD0/1 measured ≤ 49k / 8.6k: weather() tessellates the gables, towers and porch (60 cm /
   // 2 m) so moss, chips and streaks have vertices. LOD2 stays at the crowd budget.
   budget: { triangles: [52000, 9500, 1200] },
-  paint: TEAM_PAINT,
+  paint: TEAM_PAINT_WORN,
   variants: TEAM_VARIANTS,
   // Saltmarch lamps glow at 1.2 across the RTS set: lit amber, not blown to white.
   glow: [{ parts: ['windows', 'oculus', 'beacon_*', 'lamp_glow'], color: GLOW, strength: 1.2 }],
@@ -476,13 +487,16 @@ const hall = defineFamily({
       const f = floor(lod, ctx.rng.fork('floor'), stains, raidedSite ? BROKEN_PLINTH : undefined);
       kit.add('floor', f.mesh);
       // Soot dims the paint where the floor burnt.
+      // Far, a ruin's chevron takes the mean its near pieces show (each 0.6-0.92, a share of
+      // them under ash): no brighter red popping in at the switch.
+      const far = ruined && lod === 2 ? 0.62 : 1;
       const dim = (x: number, y: number): number =>
         stains
           .filter((st) => st.color === STAIN.scorch)
           .reduce((k, st) => {
             const d = dmath.hypot(x - st.at[0], y - st.at[1]) / st.radius;
             return d < 1 ? k * (1 - st.k * 0.6 * (1 - d)) : k;
-          }, 1);
+          }, far);
       kit.add(
         'floor_emblem',
         emblem(
@@ -720,8 +734,10 @@ const hall = defineFamily({
           seed: 72,
           age: 0.8,
           resolution: [0, 0, 0],
+          // Knocked arrises show fresh pale stone, not old masonry.
+          under: FRESH_STONE,
           effects: {
-            chips: { where: 'convex-edges', amount: 0.16, strength: 0.6 },
+            chips: { where: 'convex-edges', amount: 0.32, strength: 0.85 },
             dust: { where: 'up-facing', amount: 0.45, color: DUST, strength: 0.55 },
           },
         },
@@ -739,6 +755,22 @@ const hall = defineFamily({
           /^(gable_frame|rafters|gate|lamp|scaffold|scaffold_decks|scaffold_wreck|materials|wreck|banner_pole_[lr]|sheer_legs|hod)$/.test(
             n,
           ),
+      },
+      // Team paint (wear slot: worn bits stay their own colour in every livery). The roofs
+      // weather per slate as they are laid (roof.ts: lost and aged slates), never per triangle.
+      {
+        // Fallen roof pieces and torn tarps lie in the ash and dust of the collapse.
+        painted: true,
+        wear: teamWearOf('hall_team_fallen', 77, [0.3, 0.6, 0], { chips: 0.35, dust: 0.6 }),
+        // Far: the team pieces stay whole colour blocks (the strategy camera's read of who owned it).
+        pick: (n) => lod < 2 && (n === 'fallen_roof' || (hurt && n === 'tarps')),
+      },
+      {
+        // A ruin's painted floor chevron under the ash: whole flag pieces buried (each piece is
+        // its own few triangles, so no new ones), the rest soot-dimmed.
+        painted: true,
+        wear: teamWearOf('hall_team_floor', 78, [0, 0, 0], { chips: 0.1, dust: 0.45 }),
+        pick: (n) => lod < 2 && ruined && n === 'floor_emblem',
       },
     ]);
   },

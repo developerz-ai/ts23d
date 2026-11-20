@@ -41,7 +41,7 @@ import {
 } from '../_lib/terrain/ground.ts';
 import { DATUM, type FieldParams, RECT, tileField } from './field.ts';
 import { withSkirt } from './skirt.ts';
-import { boxBlur, snowCover } from './snow.ts';
+import { boxBlur, type SnowOptions, snowCover } from './snow.ts';
 
 const PALETTE = {
   forest: hex('#2c3f26'),
@@ -63,6 +63,8 @@ const STREAM = { width: [14, 28] as [number, number], bank: 14 };
 interface Params extends FieldParams {
   readonly treeline: number;
   readonly snowline: number;
+  /** Snow-cover shape overrides (snow.ts): slope limits, edge crispness, ragged line. */
+  readonly snow?: Pick<SnowOptions, 'slope' | 'edge' | 'ragged' | 'fill'>;
 }
 
 /** Lowest tile altitude the skirt walls start from (z = 0), and the wall height used by strata. */
@@ -92,6 +94,7 @@ function build(ctx: BuildContext, p: Readonly<Params>): void {
     snowline: p.snowline,
     northShift: NORTH_SHIFT,
     jitter: (x, y) => 70 * jitter(x, y) + 45 * jitter(x * 2.3, y * 2.3),
+    ...p.snow,
   });
   // Snow round each point (±4 points, ~30 m): rock standing in a snowfield is a frost-shattered
   // outcrop, paler and unstreaked (meltwater streaks there drew dark smudges that read as holes).
@@ -109,9 +112,12 @@ function build(ctx: BuildContext, p: Readonly<Params>): void {
   // Rock weathering: water streaks down every face, bedding bands on the steep ground.
   const wear: CliffWear = {
     noise: fbm(gradientNoise2(rng.fork('streaks')), { scale: 1, octaves: 2 }),
-    steep: [0.7, 1.15],
-    streak: { color: hex('#3c3a36'), width: 14, amount: 0.65 },
-    strata: { thickness: 38, amount: 0.12 },
+    steep: [0.5, 0.95],
+    streak: { color: hex('#34322e'), width: 20, amount: 0.85 },
+    // Bedding a face's height apart reads as strata in the hero (0.12 drew faint rings).
+    strata: { thickness: 30, amount: 0.22 },
+    // Exfoliation: pale fresh scars and dark weathered rock in ~150 m patches.
+    tone: { pale: hex('#9d968b'), dark: hex('#45413c'), size: 150 },
   };
   const color = (x: number, y: number, z: number): Vec3 => {
     const shift = NORTH_SHIFT * northness(x, y) + 45 * jitter(x * 2.3, y * 2.3);
@@ -225,11 +231,19 @@ export const VARIANTS = {
   mountain_range: { seed: 1, params: { offset: [100, -300] } },
   mountain_range_b: {
     seed: 2,
-    params: { valley: [0.8, 0.6], offset: [400, 500], snowline: 2350 },
+    params: { valley: [0.8, 0.6], offset: [400, 500], snowline: 2350, edgeSoften: 14 },
   },
   mountain_range_c: {
     seed: 3,
-    params: { valley: [0.6, -0.8], relief: 1050, offset: [300, -400], snowline: 2250 },
+    params: {
+      valley: [0.6, -0.8],
+      relief: 1050,
+      offset: [300, -400],
+      snowline: 2150,
+      // Snow that follows the ground: it slides off ribs steeper than ~45° (bare rock between
+      // white couloirs and ledges), with a crisp, ragged line instead of soft blobs.
+      snow: { slope: { from: 0.65, to: 1.0, caps: 0.4 }, edge: 0.04, ragged: 0.12, fill: 40 },
+    },
   },
 } as const satisfies Record<string, { seed: number; params: Partial<Params> }>;
 

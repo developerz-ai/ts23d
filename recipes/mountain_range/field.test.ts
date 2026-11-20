@@ -4,7 +4,7 @@
 
 import { describe, expect, it } from 'bun:test';
 import { createRng, dmath, type TerrainGrid, terrainGrid } from '@developerz.ai/ts23d';
-import { crop, fieldHeight, RECT, tileField } from './field.ts';
+import { crop, fieldHeight, RECT, softenEdges, tileField } from './field.ts';
 import { mountainRange, VARIANTS } from './mountain_range.ts';
 
 const params = { ...mountainRange.defaults, ...VARIANTS.mountain_range.params };
@@ -72,5 +72,26 @@ describe('crop', () => {
     expect(Array.from(g.z)).toEqual([-11, -1, 9, -10, 0, 10, -9, 1, 11]);
     expect(Array.from(g.flow ?? [])).toEqual([16, 17, 18, 23, 24, 25, 30, 31, 32]);
     expect(g.deposit).toBeUndefined();
+  });
+});
+
+describe('softenEdges', () => {
+  // A flat 33² grid with a one-cell knife crest standing 100 m on the cut and one deep inside.
+  const spiky = (): TerrainGrid => {
+    const g = terrainGrid({ rect: [0, 0, 32, 32], cells: 32, height: () => 0 });
+    const z = new Float64Array(g.z);
+    z[16] = 100;
+    z[16 * g.nx + 16] = 100;
+    return { ...g, z };
+  };
+  it('lowers a thin crest on the cut and leaves the interior alone', () => {
+    const g = softenEdges(spiky(), 6);
+    expect(g.z[16] ?? 0).toBeLessThan(20);
+    expect(g.z[16 * g.nx + 16]).toBe(100);
+  });
+  it('never raises the ground (a valley on the cut keeps its floor)', () => {
+    const base = spiky();
+    const g = softenEdges(base, 6);
+    for (let k = 0; k < g.z.length; k++) expect(g.z[k] ?? 0).toBeLessThanOrEqual(base.z[k] ?? 0);
   });
 });

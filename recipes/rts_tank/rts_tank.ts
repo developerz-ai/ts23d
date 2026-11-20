@@ -30,7 +30,15 @@ import {
 import { fieldGrade, meanDishMud, wheelDirt } from '../_lib/finish/afv.ts';
 import { paintOn, unitNoise } from '../_lib/finish/field.ts';
 import { tessellate } from '../_lib/finish/finish.ts';
-import { Kit, type Rule, restrip, role, SOOT_STAIN, wearOf } from '../_lib/rts/finish.ts';
+import {
+  Kit,
+  type Rule,
+  restrip,
+  role,
+  SOOT_STAIN,
+  teamWearOf,
+  wearOf,
+} from '../_lib/rts/finish.ts';
 import {
   BONE,
   BONE_DARK,
@@ -45,7 +53,7 @@ import {
   SEG,
   SLATE,
   TEAM,
-  TEAM_PAINT,
+  TEAM_PAINT_WORN,
   TEAM_VARIANTS,
   teamShade,
   tube,
@@ -513,10 +521,10 @@ export const rts_tank = defineAsset({
     'recipes/rts_faction/README.md (original design brief)',
     'docs/playbooks/vehicles/afv.md (light-tank ranges)',
   ],
-  // LOD0/1 measured 35.2k / 9.2k: hull dressing plus the 25 / 60 cm cut of the plates near the
-  // ground, so chips, mud and soot have vertices. LOD2 (590) stays at the crowd budget.
+  // LOD0/1 measured 37.8k / 9.5k: hull dressing plus the 25 / 60 cm cut of the plates near the
+  // ground, so chips, mud and soot have vertices, and the team plates cut for their wear. LOD2 (590) stays at the crowd budget.
   budget: { triangles: [38000, 9500, 600] },
-  paint: TEAM_PAINT,
+  paint: TEAM_PAINT_WORN,
   variants: TEAM_VARIANTS,
   // Saltmarch lamps glow at 1.2 across the RTS set: lit amber, not blown to white.
   glow: [{ parts: ['headlamps', 'sensor'], color: GLOW, strength: 1.2 }],
@@ -535,9 +543,10 @@ export const rts_tank = defineAsset({
     // (over the rear plate at the tail), wet mud lowest, salt dust only on the deck and the
     // turret roof's rim, soot fanning from the two stacks over the rear plate and deck.
     const grade = fieldGrade(grain, fine, { earth: MUD, wet: MUD_WET, dust: DECK_DUST });
+    // Soot fans from the two stacks: over the rear plate, up the rear deck to the team panel.
     const soot = [0.5, -0.5].map((y) => ({
-      at: [-2.5, y, 1.25] as Vec3,
-      radius: 0.8,
+      at: [-2.55, y, 1.3] as Vec3,
+      radius: 1.15,
       strength: 1,
     }));
     const dress = (name: string, m: Mesh, opts?: PartOptions): Mesh => {
@@ -556,7 +565,9 @@ export const rts_tank = defineAsset({
         PAINTS,
         ENAMEL,
       );
-      // Team plates keep the slot colour clean; lenses glow.
+      // The engine-deck team panel takes the stacks' soot (a darkening the slot keeps; full soot
+      // is bare and stays black in every livery); lenses glow; other team plates stay clean here.
+      if (name === 'deck_panel') return grade(painted, { soot });
       if (opts?.paint !== undefined || name === 'headlamps' || name === 'sensor') return painted;
       if (HULL_SPACE.test(name))
         return grade(painted, {
@@ -662,6 +673,13 @@ export const rts_tank = defineAsset({
         wear: { ...base('brinehound_turret', 63), resolution: [0, 0, 0], effects: { chips } },
         pick: (n) =>
           /^(turret_body|turret_fin|turret_bolts|hatch|sensor_housing|antenna|gun_barrel)$/.test(n),
+      },
+      {
+        // Team plates (wear slot): chips to bare steel round their edges and salt dust on top,
+        // which keep their own colour in every livery while the red recolours.
+        painted: true,
+        wear: { ...teamWearOf('brinehound_team', 67, [0.18, 1.2, 0]), ground: 0 },
+        pick: (n) => lod < 2 && /^(deck_panel|turret_roof)$/.test(n),
       },
     ]);
   },

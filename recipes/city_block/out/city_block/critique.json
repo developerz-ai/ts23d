@@ -1,44 +1,45 @@
 {
   "asset": "city_block",
   "reviewer": "agent",
-  "overall": 7,
+  "overall": 7.3,
   "scores": {
     "silhouette": {
       "score": 7,
-      "reason": "From the new street-level hero the block reads as dense brick tenements: water tanks, bulkheads, fire escapes and cornices break the roofline; the cornices are thin and parapets mostly level.",
+      "reason": "The closer street-level hero shows dense brick tenements with water tanks, bulkheads and fire escapes breaking the roofline; cornices are thin and parapets mostly level.",
       "fixes": [
         "deeper projecting cornices (0.4–0.6 m) and parapets of varied height on each building"
       ]
     },
     "proportions": {
       "score": 7,
-      "reason": "Storey heights vary between buildings and the street trees are taller now; roofs within each row are still the same slab height in FRONT/SIDE, and the trees are thin-trunked faceted crowns.",
+      "reason": "Storey heights vary between buildings; roofs within each row are still the same slab height in FRONT/SIDE. The street trees are now rounder crowns but still faceted polyhedra on thin trunks that barely show below the crown (hero.png foreground).",
       "fixes": [
         "vary roof heights within each row",
-        "street trees with spreading irregular crowns and thicker trunks"
+        "street trees with spreading irregular crowns and a visible trunk of ~0.3 m with a clear stem below the crown"
       ]
     },
     "materials": {
       "score": 8,
-      "reason": "Brick tones vary per building, windows read as framed grids, the asphalt has centre dashes and edge lines, and the sidewalk is laid in slabs; the tree crowns now carry faint lighter leaf streaks but stay faceted single masses, and the roofs remain one flat colour each.",
+      "reason": "Brick tones vary per building, windows read as framed grids, the asphalt has dashes, edge lines and worn patches, the sidewalk is laid in slabs; the tree crowns now carry a mottled leaf-clump texture instead of the streaky grain, though the faceted crown shapes still read as solid gumdrops; roofs remain one flat colour each.",
       "fixes": [
         "patches, gravel and vents on each roof membrane",
-        "leaf-clump variation in the tree crowns"
+        "break the tree crown outline with alpha leaf cards or several overlapping clumps so the facets do not read"
       ]
     },
     "detail": {
       "score": 7,
-      "reason": "Fire escapes, water tanks, green cornice trims, window sills and storefront awnings now show at street level; many ground floors are still dark blank bands without doors or shop windows.",
+      "reason": "Fire escapes, water tanks, cornice trims, sills, awnings and storefront doors now show at street level; some ground floors are still dark blank bands.",
       "fixes": [
         "storefront glazing and doors on every street-facing ground floor",
         "lintels over the windows"
       ]
     },
     "wear": {
-      "score": 5,
-      "reason": "Faint darker patches in the asphalt and some tone variation, but the facades are clean: no grime gradient at street level, no soot under cornices, no patched roofs.",
+      "score": 7,
+      "reason": "Sill streaks now vary in length per window, taper and some windows are clean (hero.png, the pale building right), but they are hard-edged geometric wedges rather than soft drips; still no grime gradient at street level or soot under the cornices.",
       "fixes": [
-        "grime gradient at street level and soot streaks below cornices",
+        "soften the streak edges and break them into 2–3 thin runs instead of one wedge",
+        "grime gradient at street level and soot below cornices",
         "patched roof membranes in varied greys"
       ]
     },
@@ -58,7 +59,7 @@
     }
   },
   "renders": {
-    "hero.png": "e12d7faa28cffe354f7a0f3456118a049f4c07fa0c7670aa07937c8ad6f03693",
-    "sheet.png": "961151d81bc3b663408c4d4729cecdc2f5dc617da4101b2c79dbada9858e77ad"
+    "hero.png": "995cc368bdf41d73bf8dacd63a3dd27608db83103cccafdbb1d3b6ffb88839cc",
+    "sheet.png": "ace9467f02c0687deefcc3d038b2aa597b0d72b0345c38306aff41f3c266f4db"
   }
 }

@@ -3,7 +3,7 @@
 // are keratin over skin: glossier crowns, darker overlapped roots; hair is keratin strands with
 // per-strand tone. Painted from texture graphs (`tex.scales`, `tex.strands`). Tinted coats use
 // `fur_neutral` (near-white albedo, D24) so the vertex colour, not the strip, sets the hue.
-// `fur_clumps` / `hair_clumps` are the cutout strand atlases (strands.ts) the card passes map into:
+// `fur_clumps` / `hair_clumps` / `hair_locks` are the cutout strand atlases (strands.ts) the card passes map into:
 // parts on them use `surface: 'cutout'` (ADR 008), one draw per body.
 
 import type { MaterialDef } from './material-def.ts';
@@ -28,11 +28,13 @@ type Creature =
   | 'fur'
   | 'fur_neutral'
   | 'fur_clumps'
-  | 'hair_clumps';
+  | 'hair_clumps'
+  | 'hair_locks';
 
 /** Painters are compared by identity on redefinition: one per strip, made once. */
 const FUR_CLUMPS = strandPainter(STRAND_LAYOUT.fur_clumps);
 const HAIR_CLUMPS = strandPainter(STRAND_LAYOUT.hair_clumps);
+const HAIR_LOCKS = strandPainter(STRAND_LAYOUT.hair_locks);
 
 export const CREATURE_MATERIALS: Readonly<Record<Creature, MaterialDef>> = {
   dragon_scales: {
@@ -157,6 +159,17 @@ export const CREATURE_MATERIALS: Readonly<Record<Creature, MaterialDef>> = {
     paint: HAIR_CLUMPS,
     description:
       'Cutout scalp-hair and beard clumps for strand cards (alpha = strands, grey: vertex colour tints).',
+    sources: [KERATIN],
+  },
+  hair_locks: {
+    id: 'hair_locks',
+    row: 4, // its hash row (3) is `fur_neutral`'s
+    kind: 'flat',
+    scaleMetres: 0.05,
+    roughness: 0.45,
+    paint: HAIR_LOCKS,
+    description:
+      'Cutout hair locks for the opt-in lock card style: dark under-layer mass, pointed streaked locks, strays, coarse strands.',
     sources: [KERATIN],
   },
 };

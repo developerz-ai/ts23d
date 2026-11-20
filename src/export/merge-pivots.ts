@@ -6,6 +6,7 @@
 // glowing parts (GlbOptions.glow) into `<pivot>_glow_<i>` children with their emissive material,
 // and painted parts (`paint: slot`) into `<pivot>_paint_<slot>` children with the slot's material,
 // and finished parts (`finish: name`) into `<pivot>_finish_<name>` children with the finish's.
+// Wear-slot parts first give up their bare triangles to the pivot's own mesh (paint-wear.ts).
 // Parts with their own texture set (ADR 016) never mix with trim-sheet geometry: a pivot whose own
 // geometry is all ONE set carries that set itself; otherwise each set in use splits into a
 // `<pivot>_tex_<set>` child (`<pivot>_cutout_tex_<set>` for its cutout parts).
@@ -32,6 +33,7 @@ import {
   type WorldTransform,
   worldTransforms,
 } from '../core/index.ts';
+import { splitWornParts } from './paint-wear.ts';
 import { bindLoose } from './skin.ts';
 
 const isPivot = (p: Part): boolean => p.mesh === null || p.motion !== null;
@@ -97,9 +99,10 @@ function intoPivot(mesh: Mesh, part: WorldTransform, pivot: WorldTransform): Mes
 }
 
 export function mergeToPivots(
-  asset: CompiledAsset,
+  compiled: CompiledAsset,
   glow: readonly (readonly string[])[] = [],
 ): CompiledAsset {
+  const asset = splitWornParts(compiled);
   // A recipe's rigid prop merging into a skinned body binds to its nearest bone (skin.ts).
   // The body's layers are separate meshes: a rigid prop rides its bone in whichever it lands.
   const skinned = new Set<string>();

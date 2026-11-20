@@ -20,12 +20,13 @@ sprocket per side, link-by-link tracks.
 ## Finish and wear (Nov 2026 quality pass)
 | What | How |
 |---|---|
-| bone and slate paint | project material `brine_enamel` (defined in `rts_tank.ts`: smooth matte film, 1.5 % flakes, no rust runs) at true scale; the runs and dashes of `steel_painted` and of the field tanks' `armour_paint` read as wood grain on the big pale plates. Team plates stay on `steel_painted` and are never weathered |
+| bone and slate paint | project material `brine_enamel` (defined in `rts_tank.ts`: smooth matte film, 1.5 % flakes, no rust runs) at true scale; the runs and dashes of `steel_painted` and of the field tanks' `armour_paint` read as wood grain on the big pale plates. Team plates stay on `steel_painted` |
+| team-paint wear | the `team` slot is a wear slot (`TEAM_PAINT_WORN`, `../_lib/rts/style.ts`): the turret roof and engine-deck team plates are weathered in their own group (`painted: true`, sampled every 18 cm at LOD0, 1.2 m at LOD1): 30 % of the edges chipped to dark bare steel, 10 % salt dust on top, and the stacks' soot over the deck plate's tail. Each chip's border is cut inside the triangles at a ragged point of every mixed edge (`settleWear`, core paint-wear), so chips come out irregular, not a sawtooth of lattice triangles. The bare pieces export unpainted, so every livery recolours the paint and keeps the wear. The small fender chevrons stay clean (their concave prism tessellates badly) |
 | brine mud, salt dust | `fieldGrade` (`../_lib/finish/afv.ts`): red-brown clay mud opaque up to ~0.9 m and gone at 1.22 m with a ragged edge (over the rear plate at the tail), wet mud lowest, on lower hull, prow and skirts (cut to 25 cm at LOD0 so the edge has vertices); dust (0.5) only on the deck and what faces the sky on the turret |
 | edge chips | `weather()` per space (`Kit.commit`): 5 % of the convex edges (more smeared dashes along the tessellation), manifest `weather` |
 | wheels | a dished slate disc out to the rim seat and the rubber tyre as its own band round it (the old solid tyre cylinder's cap covered the dish and showed pale); `wheelDirt`: dark tyre, mud in the outer dish, brass hub clean |
 | track | one link worn in its own space (chips, pale salt crust), laid round the belt (`treads` gate) |
-| exhaust | a soot fan (0.8 m) from each stack over the rear plate and the deck's tail (vertex colour on a 25 cm hull), plus the measured soot stain |
+| exhaust | a soot fan (1.15 m) from each stack over the rear plate and the deck's tail (vertex colour on a 25 cm hull), plus the measured soot stain |
 | lamps | headlamps: a slate bucket sunk into the glacis, an iron bezel ring and a small domed amber lens set back in it; the turret sensor likewise (housing and bezel plain, only the lenses glow at 1.2) |
 | detail | bolt rows on the glacis applique plates and round the turret roof plate, a tow cable on two hooks on the rear plate, three skirt plates a side with hanger bolts |
 
@@ -34,7 +35,7 @@ shorter so the overall length holds: the gun stands 2.1 m ahead of the trunnion 
 (0.40), inside the light-tank range of the AFV playbook examples.
 
 ## LOD and draws
-35.2k / 9.2k / 590 triangles. LOD2 is an open belt of 18 slabs a side with all seven wheels in
+37.5k / 9.4k / 590 triangles (the team-plate wear and its cut chip borders cost ~2.3k / 0.2k). LOD2 is an open belt of 18 slabs a side with all seven wheels in
 it as two-polygon discs (dark eight-sided tyre, six-sided slate disc with the near dish's mean
 mud: 10 triangles), a skirt strip a side and two amber hexagons where the headlamps are (plain
 amber, drawn with the body).

@@ -1,7 +1,7 @@
 {
   "asset": "import_demo",
   "reviewer": "agent",
-  "overall": 6.3,
+  "overall": 6.4,
   "scores": {
     "silhouette": {
       "score": 7,
@@ -19,12 +19,11 @@
       ]
     },
     "materials": {
-      "score": 6,
-      "reason": "Skin, blue tunic, leather cape with darker grain and brass studs separate; tunic and cape share one roughness, the skin is uniform and mannequin-smooth in the closer hero.png, and the hair renders as a grey scalp in hero.png but textured hair in sheet.png.",
+      "score": 7,
+      "reason": "The hair now renders as a dark combed hair mass in hero.png that matches sheet.png; skin, blue tunic, leather cape and brass studs separate, but tunic and cape share one roughness and the skin is uniform and mannequin-smooth in the portrait.",
       "fixes": [
         "leather roughness lower than the tunic cloth",
-        "skin roughness variation",
-        "make the hair texture render in the beauty renderer as it does in sheet.png"
+        "skin roughness and colour variation"
       ]
     },
     "detail": {
@@ -44,7 +43,7 @@
     },
     "lod": {
       "score": 5,
-      "reason": "FAR LOD2 still turns the shoulders into a rounded blob and mixes tunic blue and cape brown into star-shaped per-face patches; the far-LOD colour fix does not show in sheet.png.",
+      "reason": "FAR LOD2 colour is smoother now, but the shoulders are still a rounded blob and the tunic blue and cape brown mix into zigzag patches.",
       "fixes": [
         "keep the boxed bust outline at LOD2",
         "average per-face colour so the cape stays a brown block over blue"
@@ -59,7 +58,7 @@
     }
   },
   "renders": {
-    "hero.png": "bb7af45545428cfd856f6a4f6379665f6dcd11d36dee762483e5e1d27acaca08",
-    "sheet.png": "14e66c34fbbc02d32d7bf2b900bb94fc3c422e38368e414b9b73cdb4e17c30ad"
+    "hero.png": "1541de7560417cf917c87e7c233aed478b8aa1568d23e2e67caf59c6b291899f",
+    "sheet.png": "78eecc2a276a2d71a6aada21e708e1e6d7ce2edc2f00dbab6ce9c46e8e0b38b8"
   }
 }

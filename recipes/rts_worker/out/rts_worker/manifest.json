@@ -20,8 +20,8 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    11238,
-    2424,
+    11484,
+    2558,
     368
   ],
   "drawCalls": [
@@ -116,10 +116,40 @@
   ],
   "weather": {
     "chips": {
-      "target": 0.28,
-      "actual": 0.28,
+      "target": 0.2582,
+      "actual": 0.2582,
       "eligible": "convex-edges",
-      "area": 2.2077
+      "area": 2.6981,
+      "by": {
+        "delver_team": {
+          "target": 0.16,
+          "actual": 0.16,
+          "area": 0.4904
+        },
+        "delver": {
+          "target": 0.28,
+          "actual": 0.28,
+          "area": 2.2077
+        }
+      }
+    },
+    "scratches": {
+      "target": 0.223,
+      "actual": 0.223,
+      "eligible": "up-facing | side-facing ; touched",
+      "area": 0.4521,
+      "by": {
+        "delver_team": {
+          "target": 0.08,
+          "actual": 0.08,
+          "area": 0.3278
+        },
+        "delver_kit": {
+          "target": 0.6,
+          "actual": 0.6,
+          "area": 0.1243
+        }
+      }
     },
     "mud": {
       "target": 0.75,
@@ -156,12 +186,6 @@
           "area": 1.1057
         }
       }
-    },
-    "scratches": {
-      "target": 0.6,
-      "actual": 0.6,
-      "eligible": "touched",
-      "area": 0.1243
     }
   },
   "qa": {

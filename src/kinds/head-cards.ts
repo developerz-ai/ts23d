@@ -7,12 +7,14 @@ import type { Mesh, Rng, Vec3 } from '../core/index.ts';
 import { CREATURE_MATERIALS, defineMaterial, strandCells } from '../material/index.ts';
 import { type CardZone, type FlowSeed, hairCards, hairFlow } from '../passes/index.ts';
 import { sdf } from '../primitives/index.ts';
+import { type HairLocks, LOCK_CELLS, lockLayers } from './head-locks.ts';
 
 /** One card layer of a hairstyle or beard: where it grows, how dense, how long, how it lies. */
 export interface CardLayer {
   readonly name: string;
-  /** Atlas cells: hair (locks), wisp (stray strands: flyaways, outline), beard (wiry). */
-  readonly kind: 'hair' | 'wisp' | 'beard';
+  /** Atlas cells: hair (locks), wisp (stray strands: flyaways, outline), beard (wiry), mass (an
+   *  under-layer: the lock style's dark `mass` cells, the hair cells otherwise). */
+  readonly kind: 'hair' | 'wisp' | 'beard' | 'mass';
   /** Negative where the layer grows (a hairline or beardline field). */
   readonly region: (p: Vec3) => number;
   /** Cards per m² at LOD0. */
@@ -33,6 +35,9 @@ export interface CardLayer {
   readonly tint?: Vec3;
   /** How hard the layer lies on the head where it holds the hair up (`CardZone.hug`; default 0.6). */
   readonly hug?: number;
+  /** Lock style only (`ScalpCardOptions.locks`): this hair layer's under-layer and flyaway shares. */
+  readonly under?: number;
+  readonly fly?: number;
 }
 
 export interface ScalpCardOptions {
@@ -51,6 +56,9 @@ export interface ScalpCardOptions {
   readonly collide?: (p: Vec3) => number;
   /** Quads along each card at LOD0 (default 4; long hair 6–8 to drape); LOD1 uses half. */
   readonly segments?: number;
+  /** Opt-in lock style (head-locks.ts): narrower, denser, clumped cards over a dark under-layer,
+   *  flyaways on top, on the `hair_locks` strip. Omitted: today's cards on `hair_clumps`. */
+  readonly locks?: HairLocks;
 }
 
 /** A field sampled on a lazy `cell` lattice and blended trilinearly: a whole-bust sculpt is far
@@ -83,15 +91,18 @@ function lattice(f: (p: Vec3) => number, cell: number): (p: Vec3) => number {
   };
 }
 
-/** Strand cards for every layer on the `hair_clumps` strip (surface 'cutout'); null at LOD2. */
+/** Strand cards for every layer on the `hair_clumps` strip, or `hair_locks` in the lock style
+ *  (surface 'cutout'); null at LOD2. */
 export function scalpCards(o: ScalpCardOptions): Mesh | null {
   if (o.lod >= 2) return null;
-  defineMaterial(CREATURE_MATERIALS.hair_clumps);
+  const strip = o.locks ? 'hair_locks' : 'hair_clumps';
+  defineMaterial(CREATURE_MATERIALS[strip]);
+  const layers = o.locks ? lockLayers(o.layers, o.locks, o.lod) : o.layers;
   const root = sdf({ field: o.field, bounds: o.bounds, resolution: o.cell, color: () => o.color });
   const k = o.lod === 0 ? 1 : 0.25;
   const wide = o.lod === 0 ? 1 : 2;
   // A margin (half a card width, ≤ 4 mm) inside the region keeps roots off the hairline edge.
-  const zones: CardZone[] = o.layers.map((l) => ({
+  const zones: CardZone[] = layers.map((l) => ({
     name: l.name,
     density: (p) => (l.region(p) < -Math.min(l.width * 0.5, 0.004) ? l.density * k : 0),
     length: l.length,
@@ -101,7 +112,7 @@ export function scalpCards(o: ScalpCardOptions): Mesh | null {
     droop: l.droop ?? 0.25,
     roll: l.roll ?? 0.5,
     sink: 0.003,
-    cells: strandCells('hair_clumps', l.kind),
+    cells: strandCells(strip, o.locks ? LOCK_CELLS[l.kind] : l.kind === 'mass' ? 'hair' : l.kind),
     tone: l.tone ?? [0.7, 1.15],
     // LOD1's cards are twice as wide and few: flat (half the triangles, no folded half turned away).
     fold: o.lod === 0 ? (l.fold ?? 0.5) : 0,

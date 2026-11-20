@@ -195,6 +195,8 @@ export interface AssetDefinition {
    * Paint slots with their default colours: `{ body: '#84402d' }`. Parts join one with
    * `{ paint: 'body' }`; the GLB gives each slot its own material (baseColorFactor = the colour,
    * COLOR_0 = the part's colour ÷ it, so grime and wear survive). One extra draw per slot per pivot.
+   * `{ team: { colour, wear: true } }`: bare steel, primer, rust and dust on its parts keep their
+   * colour in every livery (core/paint-wear.ts).
    */
   readonly paint?: PaintSlots;
   /**

@@ -28,7 +28,7 @@ export function jawEdits(lod: number): SculptEdit[] {
       { blend: 0.02 },
     ),
     // Chin: square and deep, joining both halves.
-    { shape: 'ellipsoid', at: [0.282, 0, M - 0.032], size: [0.03, 0.038, 0.03], blend: 0.02 },
+    { shape: 'ellipsoid', at: [0.272, 0, M - 0.03], size: [0.028, 0.036, 0.028], blend: 0.02 },
     // Lower lip: black rim along the mandible's top edge.
     skin(
       [
@@ -48,13 +48,14 @@ export function jawEdits(lod: number): SculptEdit[] {
       blend: 0.008,
       color: C.mouth,
     },
-    // Chin fur and the beard hanging under the jaw (white, winter-long).
+    // Chin fur and the beard hanging under the jaw (white, winter-long), tucked back under the
+    // mandible: forward to the chin it read as a pale plate jutting under the muzzle.
     {
       shape: 'ellipsoid',
-      at: [0.21, 0, M - 0.06],
-      size: [0.085, 0.045, 0.026],
+      at: [0.19, 0, M - 0.052],
+      size: [0.065, 0.04, 0.022],
       rotate: [0, -8, 0],
-      blend: 0.032,
+      blend: 0.03,
     },
   ];
   // Tongue: only where the mouth can be seen into.
@@ -79,7 +80,7 @@ function jawPaint(p: readonly [number, number, number], c: readonly [number, num
   const fur = mixRgb(C.white, C.stripe, spot * 0.9);
   return lipish
     ? mixRgb(fur, [c[0], c[1], c[2]], 0.9)
-    : mixRgb(fur, C.whiteShade, smoothstep(M - 0.04, M - 0.09, p[2]) * 0.4);
+    : mixRgb(fur, C.whiteShade, smoothstep(M - 0.02, M - 0.07, p[2]) * 0.7);
 }
 
 export const JAW_RES = [0.006, 0.013, 0.03] as const;

@@ -2,8 +2,12 @@
 
 *Canis lupus lupus* (Eurasian wolf). The proof recipe of the `creature` kind
 ([roadmap M4](../../docs/plans/roadmap.md#m4-creatures), [09-kinds](../../docs/idea/09-kinds.md)):
-`wolf.ts` is the dossier below as one `CreatureSpec` (≈ 95 lines) plus `head.ts` (the wolf's own
-ear cones and deep muzzle over the kind's head, through `options.head`); skeleton landmarks, digitigrade
+`recipes/_lib/creature/wolf-spec.ts` is the dossier below as one `CreatureSpec` (≈ 95 lines; shared:
+the fox and the bear derive from it), `wolf.ts` the asset, `wild.ts` the season outdoors, `head.ts` the
+wolf's own ear cones and deep muzzle over the kind's head (`options.head`), and
+`recipes/_lib/creature/limb-marks.ts` the leg landmarks (`options.body`: elbow point, carpal pad and
+broad carpus, patella, the hock's point, Achilles cord and the hollow before it, grooves splitting
+the toes; LOD0/1, none on the far tubes); skeleton landmarks, digitigrade
 legs, allometric limb thickness, the head with seated eyes and grown ears, coat zones, creases,
 densities and the balance check all come from the kind.
 
@@ -19,7 +23,7 @@ muzzle and cheeks, the shoulder/neck mane, black tail tip.
 | Tail | 0.29–0.50 | **0.42** along the curve (test ±5 %) | same |
 | Shoulder height | 0.80–0.85 | withers 0.84 incl. mane (test: 0.80–0.86) | same |
 | Mass | European mean 38.5, North American 36; females 2.3–4.5 lighter | **40** declared, ±25 % (`real.mass`); model 30–60 (test) | same |
-| Skull | 0.23–0.28 long, 0.13–0.15 wide | head **0.29** long (a large male's 0.28 skull + fur), furred width 0.66 × length (skull 0.55 + ~1.5 cm of coat a side), muzzle 0.39 of the head with a blunt 0.15 tip and a deep muzzle cone under it (`head.ts`; a slimmer one read as a coyote) | same |
+| Skull | 0.23–0.28 long, 0.13–0.15 wide | head **0.29** long (a large male's 0.28 skull + fur), furred width 0.72 × length (skull 0.55 + ~2.3 cm of winter coat a side), muzzle 0.36 of the head (shorter and deeper: a longer, thinner one read as a coyote) with a blunt 0.15 tip and a deep muzzle cone under it (`head.ts`; a slimmer one read as a coyote) | same |
 | Coat | winter guard hairs 60–70 mm mid-back; shoulders usually ≤ 90 mm, up to 110–130 mm (the mane/"cape"); dense short underfur | fur cards by zone; coated outline width **0.29** vs body 0.27–0.28 (`real.width` is the coated box) | same, "Description" (fur) |
 | Ears | 0.09–0.11 high, "relatively small and triangular" | **0.09**, broad-based (`face.earWidth 1.4`): a pale-cupped blade backed by a furred cone (`head.ts`), so the ear holds a triangle from every side | same |
 | Winter fur | back 60–70 mm; shoulders ≤ 90, up to 110–130 (a crest on the neck) | coat shell 3 cm (mass gate), mane 5 cm (`build.ruff 0.052`) | same |
@@ -36,9 +40,10 @@ paws → ear tips. The sourced numbers above are what the tests hold.
   the weight on the forelegs); elbow back at the bottom of the chest, stifle forward at the belly.
 - Side view (kind defaults for quadrupeds, wolf numbers): chest depth over ½ the withers
   (`build.depth 0.54`: a wolf is deeper through the chest than a coyote) so the elbow sits at the
-  chest floor ≈ 0.37 m; a narrow chest (`width 0.5` × depth ≈ 0.22 m); sturdy legs (`limbs 1.14`
-  × the allometric limb, set a little closer: `track 0.31`); the topline highest at the withers, a slight dip behind them,
-  the croup a little lower, the tail root under it; the waist tucked up to ⅔ of the chest depth
+  chest floor ≈ 0.37 m; a narrow chest (`width 0.5` × depth ≈ 0.22 m); sturdy legs (`limbs 1.15`
+  × the allometric limb, set a little closer: `track 0.31`); a level back: the croup's muscle mass
+  raised by `build.topline` (0.08 H at 0.18 of the way from croup to withers; without it the back
+  fell 6 cm from shoulder to hip, a hyena's line), the tail root under it; the waist tucked up to ⅔ of the chest depth
   (`build.tuck 0.78`, the winter coat filling it). The neck (0.23 m, 44° above level, `pose.neck`; estimate) rises from low between the
   shoulders and carries the head forward of and above them, so the throat line reads from the
   jaw down to the brisket.
@@ -113,23 +118,33 @@ Weaker than a game-ready wolf up close:
 
 ## Field wear (what makes it a wild wolf, not a zoo one)
 `wolf.ts` builds through `defineWildCreature` (`recipes/_lib/creature/wild.ts`, shared with the fox and the bear); the
-story is `WOLF_WILD`:
+story is `WOLF_WILD` (`wild.ts`). With `cardWear` the fur cards carry it too: each card takes the wear from
+the skin under its root (not from where its tip hangs) and keeps 0.55 of its length over caked mud and
+0.3 on a scar (a matted streak darkens whole cards; shortened as well, they stood as dark stubs):
 
 | Mark | Where | How |
 |---|---|---|
-| Thaw mud | wet and dark on the paws, a grey-brown crust with a ragged edge to the elbows and hocks (≈ 0.37 m), splashed in flecks over the belly and lower flank | `recipes/_lib/creature/wild-paint.ts` mud layer, world-space hash noise; `grime` ground grade under it |
-| Wet fur | darker to 0.40 m and under the belly | damp layer |
-| Dried clay | pale patches on the right haunch and the point of the right shoulder | `patches` |
+| Thaw mud | caked wet and near-black on the paws, graded up the legs in runs narrower than the leg to ≈ 0.26 m, splashed in flecks to the elbows | `recipes/_lib/creature/wild-paint.ts` mud layer (graded from the toes, never paler than the clay), world-space hash noise; `grime` ground grade under it |
+| Wet fur | darker to the wrists and hocks (0.26 m) and under the belly | damp layer |
+| Dried and wet clay | a grey-brown crust on the right haunch and the point of the right shoulder; wet dark mud on the right lower flank and brisket where it lay down, each a hand or two across | `patches` |
 | Matted coat | flank, breeches, behind the shoulder | dark clumped streaks 2 cm wide along gravity |
-| Scars | two bite lines across the right shoulder (2.2 and 1.6 cm of bare pink-grey skin), a claw line down the right of the muzzle | pale bare core, parted darker fur either side |
-| Nicked ear | left ear, rear rim | rim vertices pulled into the pinna (no triangle cut) |
+| Scars | two bite lines across the right shoulder (3.2 and 1.6 cm), a claw line down the right of the muzzle | the hair grown back a shade paler and greyer than the coat round it (`scarColour` as a function of the coat) and a third as long, a darker parting either side (a pink core, then a fixed pale `#b4a991` core, read as paint strokes; a dark one vanished into the grizzle) |
+| Nicked ear | right ear (the hero's side), rear rim | rim vertices pulled into the pinna (no triangle cut) |
 | Whiskers | 12 a side in rows of 4, 2 brow whiskers | tapered three-sided strands, `whiskers` part on the head bone |
 | Locks | the whole coat, 3.2 cm across and 6× as long, along the hair's lie | `locks`: tone painted on the skin and the cards (`lockTone`), LOD0/1 |
-| Coat layer | 4 200 short cards per m² (tone 0.78 → 1.3 root to tip) and 520 clumped pale-tipped guard locks per m² over flanks, shoulders, haunches and upper legs | merged into the kind's `fur` part, each card on the skin vertex under its root |
+| Face | brow shelf, cheekbone and the hollow under each eye; a dark lid rim; a velvet of short cards (9 000 per m², 1.6–3.2 cm) over the face off the bare nose, lips and eye rims | `recipes/_lib/creature/wild-head.ts`: `facePlanes` (via `head.ts`), `faceFur` (`groom` head layer joined into the kind's `head_fur`) |
+| Coat layer | 3 300 short cards per m² (tone 0.78 → 1.3 root to tip) and 520 clumped pale-tipped guard locks per m² over flanks, shoulders, haunches and upper legs | merged into the kind's `fur` part, each card on the skin vertex under its root |
 
 The hero camera (`hero: { azDeg: -52, elDeg: 10 }`) turns the scarred, mud-splashed right side to the
-lens. LOD2 (3.6 k triangles, finer cells than the kind's default) is painted as the animal's colour
-blocks — dark saddle, tawny flank, cream underside and chest, tawny legs — instead of the sculpt's
-per-vertex grizzle (checkers on 6 cm cells), keeps a fringe of ≈ 60 locks down the mane, back and
-tail, and carries only the broad wear layers (mud band, damp): flecks, streaks and scars alias there.
-Triangles: 106 k / 29 k / 3.6 k (band 150 k / 30 k / 4 k).
+lens. LOD2 (3.9 k triangles, finer cells than the kind's default) is painted as the animal's colour
+blocks at the value the near coat reads at under its cards — the dark grizzled saddle (back × 0.5)
+over the back and halfway down the flanks, shaded tawny lower flanks and thighs (coat × 0.38),
+a shaded cream underside and a half-strength cream chest forward of the shoulders only, the brush in
+the saddle's grizzle, legs tawny below the elbow and stifle and darkening toward the paws — instead
+of the sculpt's per-vertex grizzle (checkers on 6 cm cells; a plain `coat` colour read pale tan at
+the switch; the chest cream on every front-facing cell and the pale dried-clay patches lit the far
+thigh tube and shoulder as flat pale slabs, D482), keeps a fringe of locks down the mane, back and
+brush (no flank shag: flat 3 cm cards there read as slabs too), and carries only the broad wear
+layers (mud band, damp; the pale clay patches are `far: false`): flecks, streaks and scars alias there.
+Triangles: 107 k / 29 k / 3.9 k (band 150 k / 30 k / 4 k; body cell × 1.6 at LOD0 — 14 mm — and
+× 1.05 at LOD1 to stay inside it; at × 1.45 with the split toes LOD0 reached 120 k).

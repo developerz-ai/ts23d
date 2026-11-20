@@ -98,7 +98,9 @@ export function frontLocks(on: Surface): Array<{ ctrl: V[]; y: number }> {
   }));
 }
 
-export const CAP: V = mix(mix(C.hairRoot, C.hairTip, 0.35), [0, 0, 0], 0.3);
+// The cap is the hair's root colour in shade: at the mid gold it read through the crown's
+// gaps in the portrait as a pale scalp patch under the whorl.
+export const CAP: V = mix(C.hairRoot, [0, 0, 0], 0.45);
 
 /** Lock lines over the cap (left half, mirrored): meridians from the brow over the crown and
  *  down the back, fanning from the centre parting; kept where the hair grows. */
@@ -126,7 +128,8 @@ export const hairBaseEdits = (scalp: Field, lod: number): SculptEdit[] => {
     [L.gx + 0.06, 0.15, L.crown + 0.05],
   ];
   // The cap under the cards: a shadowed gold (hair in shade), so a parting or a gap between locks
-  // reads as depth, not as an orange scalp.
+  // reads as depth, not as an orange scalp (half the mid tone: under the lock style's darker
+  // cards, at 0.7 it showed through the parting as a pale flat disc).
   const mass: SculptEdit = {
     // 6 mm inside the hairline: the cap's edge lies under the cards.
     ...hairMass(scalp, 0.007, (p) => hairline(p) + 0.006, box, CAP, 0.03),
@@ -134,10 +137,18 @@ export const hairBaseEdits = (scalp: Field, lod: number): SculptEdit[] => {
   };
   if (lod === 2) return [mass];
   const hair = surface(sculptField([{ field: scalp, bounds: box }, mass], { color: CAP }).field);
-  // (Toned between the cap and the cards' gold: lighter ridges, the cap's shade between them.)
-  const tone = { root: CAP, tip: mix(C.hairRoot, C.hairTip, 0.25) };
+  // (Toned from the cap toward the root colour: gold ridges at the crown lit up as a pale whorl.)
+  const tone = { root: CAP, tip: mix(CAP, C.hairRoot, 0.6) };
   return [mass, ...flowLocks(hair, capLines(hair), 0.0058, tone)];
 };
+
+/** The pole the cap's lock lines fan out from (capLines' centre, 30° up from straight ahead):
+ *  the cap shows there as a dark disc between the cards' roots unless a layer covers it. */
+const WHORL: V = [
+  (SK.glabella[0] + SK.occiput[0]) / 2 + 0.1 * dmath.cos(Math.PI / 6),
+  0,
+  SK.euryon[2] + 0.1 * dmath.sin(Math.PI / 6),
+];
 
 const clamp01 = (v: number): number => Math.min(1, Math.max(0, v));
 
@@ -194,11 +205,13 @@ export function elfCardHair(b: BustRecipe, lod: number): CardHairStyle {
     collide,
     segments: 8,
     color: mix(C.hairRoot, C.hairTip, 0.45),
+    // The lock style (D461): narrow, clumped locks on the base layer's dark mass cards.
+    locks: {},
     layers: [
-      // Base: dark clumps flat on the painted cap, hiding the scalp.
+      // Base: dark clumps flat on the painted cap, hiding the scalp (the lock style's mass).
       {
         name: 'hair_base',
-        kind: 'hair',
+        kind: 'mass',
         region: hairline,
         density: 5000,
         length: (p: Vec3) => long(p) * 0.55,
@@ -232,6 +245,8 @@ export function elfCardHair(b: BustRecipe, lod: number): CardHairStyle {
         tone: [0.8, 1.04],
         tint: pale,
         hug: 0.8,
+        under: 0,
+        fly: 0.01,
       },
       // Outer locks over the crown and back: the volume and the silhouette.
       {
@@ -250,6 +265,8 @@ export function elfCardHair(b: BustRecipe, lod: number): CardHairStyle {
         tone: [0.9, 1.1],
         tint: pale,
         hug: 0.6,
+        under: 0,
+        fly: 0.02,
       },
       // Crown: flat locks combed back over the parting's front, where the sideways comb opened
       // a bald-looking disc of cap (D57).
@@ -257,18 +274,46 @@ export function elfCardHair(b: BustRecipe, lod: number): CardHairStyle {
         name: 'hair_crown',
         kind: 'hair',
         region: (p: Vec3) =>
-          Math.max(hairline(p), Math.abs(p[1]) - 0.03, SK.euryon[2] + 0.01 - p[2]),
-        density: 3200,
+          Math.max(hairline(p), Math.abs(p[1]) - 0.042, SK.euryon[2] + 0.005 - p[2]),
+        // (Dense and a little wider: at 3 200 the crown's gaps showed the cap as a bald whorl.)
+        density: 5600,
         length: 0.07,
-        width: 0.02,
+        width: 0.022,
         lift: 0.05,
         bend: 0.9,
         droop: 0.3,
         roll: 0.15,
         fold: 0.4,
-        tone: [0.82, 1.04],
+        // Darker toward the root: the crown lies in its own shade, not straw-bright.
+        tone: [0.7, 1],
         tint: pale,
         hug: 1,
+        under: 0,
+        fly: 0,
+      },
+      // The whorl: short locks over the cap lines' pole above the forehead, where every other
+      // layer's comb leads away, so no disc of the cap shows there at portrait distance.
+      {
+        name: 'hair_whorl',
+        kind: 'hair',
+        region: (p: Vec3) =>
+          Math.max(
+            hairline(p),
+            dmath.hypot(p[0] - WHORL[0], p[1] - WHORL[1], p[2] - WHORL[2]) - 0.045,
+          ),
+        density: 6000,
+        length: 0.055,
+        width: 0.024,
+        lift: 0.03,
+        bend: 0.9,
+        droop: 0.3,
+        roll: 0.12,
+        fold: 0.4,
+        tone: [0.72, 1],
+        tint: pale,
+        hug: 1,
+        under: 0,
+        fly: 0,
       },
       // Hairline: short strands rooted on the edge band, over the cap's edge.
       {

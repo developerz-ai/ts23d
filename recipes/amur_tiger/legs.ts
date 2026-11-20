@@ -138,7 +138,9 @@ export function legEdits(lod: number): SculptEdit[] {
 export function legsLowpoly(paint: (p: Vec3, c: Vec3) => Vec3): Mesh {
   const tube = (nodes: SkinNode[]): Mesh =>
     tubeMesh(
-      nodes.map((n) => ({ at: n.at, r: n.r * 1.12 })),
+      // The top node (shoulder, hip) tucked inside the trunk: at full width the tube's flat top
+      // stood proud of the far body as a pale slab on the shoulder and hip (D480).
+      nodes.map((n, i) => ({ at: n.at, r: n.r * (i === 0 ? 0.7 : 1.12) })),
       {
         // Eight sides: six read as a faceted stick beside the sculpted trunk.
         sides: 8,

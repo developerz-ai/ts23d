@@ -121,7 +121,7 @@ flat base, hanging locks, wiry strays) over a hair-painted chin, coarse brow car
 shelf (both root on the finished head, not the stage-2 skin); pores are `poreField` stamps on the
 nose, cheeks and forehead (LOD0); the tusks are rigid parts, so the `talk` clip's jaw morph opens
 the lips round them without moving them; the plates' dents are smooth radial pushes (no hammer
-facets); the skin is the shared tiling pore strip (matte cheeks, a glossier brow, nose and chin: `../_lib/face/skin-strip.ts`) under one `skin` finish (sheen plus a thin oily coat, clearcoat 0.3 at roughness 0.28), not a per-face texture; the
+facets); the skin is the shared tiling pore strip (matte cheeks, a glossier brow, nose and chin: `../_lib/face/skin-strip.ts`) under one `skin` finish (the shared `skinFinish`: a soft grazing sheen, no clear coat, so cheeks and shoulders stay matte and only the oily strip's T-zone (up to a tenth of the head over the glabella) shines; the scalp above it and behind the ears is on the matte strip, `face_skin_matte`, so a bald or shaven dome has no wet hot spots), not a per-face texture; the
 tail's locks are sculpted, not strand cards. Rig: `head` and `bust` carry the blink / talk / breathe morphs under the `face` node
 (`headClips('face')`).
 

@@ -19,9 +19,9 @@
     },
     "materials": {
       "score": 8,
-      "reason": "Rock, grass, forest and snow blend; snowfields now have crisp edges in TOP and hero.png, and the skirt shows horizontal strata instead of vertical streaks; the rock faces carry a slightly smeared vertical streak texture.",
+      "reason": "Rock, grass, forest and snow blend; the rock faces now carry a mottled break-up instead of the smeared vertical streaks (hero.png left massif) and the skirt shows strata in the sheet too; no strata bands on the steep faces.",
       "fixes": [
-        "sharpen the rock streak texture (less vertical smear) and add strata bands on steep faces"
+        "strata bands or ledges on the steep rock faces"
       ]
     },
     "detail": {
@@ -41,11 +41,10 @@
     },
     "lod": {
       "score": 7,
-      "reason": "FAR LOD2: the snow cover now blends softly at LOD2 instead of stepping into blocky white squares; but the blend washes a pale grey-white over much of the grass, the forest band shrinks to a few dark specks, and the faces still show faceted diamond shading.",
+      "reason": "FAR LOD2 is now smooth-shaded (the diamond faceting is gone); but the snow blend still washes pale grey-white over much of the grass, and the forest band shrinks to a few dark specks.",
       "fixes": [
         "keep the forest as a dark cover block at LOD2 (it shrinks to specks)",
-        "keep the snow threshold tight at LOD2 so it does not wash pale over the grass",
-        "smooth the LOD2 normals"
+        "keep the snow threshold tight at LOD2 so it does not wash pale over the grass"
       ]
     },
     "technical": {
@@ -57,7 +56,7 @@
     }
   },
   "renders": {
-    "hero.png": "303bf2bca4fc7a42cdf80f2a657d75ae09f008fb0f3c9dd72776e44454ffd043",
-    "sheet.png": "be14e513dcaefc55f78a8e99e790b9319ba15e489e5ab29e8bf5029cf078e857"
+    "hero.png": "f9e62f4ec01e001f0f009e41ac758aebb6298b82e5193bde99c2e56fc2648f6b",
+    "sheet.png": "d136d22dd0d212c1282ff22dab56212406391d2684a61815666fac3e1d8dbe94"
   }
 }

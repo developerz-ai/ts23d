@@ -1,7 +1,7 @@
 // Type specimen: a free-standing notice board that shows every `text()` face, each row set twice,
 // as flush painted decals (left column, cream) and as raised cast letters (right column, brass).
 // Faces: the built-in 5 × 7 pixel font ('5x7', 'block') and the Hershey stroke fonts ('sans',
-// 'serif', 'script', 'gothic'). The board is eight tongue-and-groove planks under a felted, gabled
+// 'serif', 'script', 'gothic'). The board is twenty vertical tongue-and-groove boards under a felted, gabled
 // hood on two bracketed posts, bolted through back battens; the paint fades up the board, rain
 // streaks run from the capping, the frame is chipped, the post feet damp. LOD policy: LOD0 raised
 // polished brass at 2 curve steps (flush rows 1); LOD1 every row flush at 1 step; LOD2 sets each
@@ -19,6 +19,7 @@ import {
   merge,
   place,
   prism,
+  stripRect,
   type TextFont,
   text,
   type Vec3,
@@ -47,7 +48,7 @@ const CAP = 0.1; // specimen cap height
 const DEPTH = 0.012; // raised letters
 const POST_Y = 1.35;
 const POST_W = 0.12;
-const PLANKS = 8;
+const PLANKS = 20; // vertical boards, 0.16 m
 
 /** Curve steps per Hershey segment, per LOD (LOD2 does not set letters at all). */
 const SEGMENTS: Readonly<Record<Lod, number>> = { 0: 2, 1: 1, 2: 1 };
@@ -123,35 +124,81 @@ function line(str: string, l: Line, lod: Lod): Mesh[] {
   ];
 }
 
-/**
- * Eight horizontal planks. The sun reaches the upper board under the short hood: paint fades
- * toward a chalky grey green up the top four planks, continuously (each plank's upper corners
- * paler than its lower); damp darkens the bottom plank. Seams by tone.
- */
 /** Sun-faded paint at height z: green below mid-board, 90 % toward the faded tone at the top. */
 function paintAt(z: number): Vec3 {
   const f = 0.9 * Math.min(1, Math.max(0, (z - BOTTOM - 0.45 * HEIGHT) / (0.5 * HEIGHT)));
   return [0, 1, 2].map((k) => (GREEN[k] ?? 0) * (1 - f) + (FADED[k] ?? 0) * f) as unknown as Vec3;
 }
 
-function planks(): Mesh[] {
-  const h = HEIGHT / PLANKS;
-  return Array.from({ length: PLANKS }, (_, i) => {
-    const tone = i % 2 === 0 ? 1 : 0.92;
-    const plank = box({
-      size: [0.05, WIDTH, h],
-      at: [0.075, 0, BOTTOM + i * h],
+/**
+ * One vertical board's texture: grain up the board (U = height at true metres, shifted per board
+ * so the butt joints never line up), V inside ONE board of the pale `wood` strip (rows 6–15 of
+ * its 32, between two seams), so each board shows one board, not four squeezed courses. The paint
+ * is the vertex colour; `wood_painted`'s chip marks read as dark blotches under a dark green.
+ */
+function boardUV(m: Mesh, y0: number, width: number, shift: number): Mesh {
+  const r = stripRect('wood');
+  const uvs = new Float32Array(m.uvs);
+  for (let v = 0; v < uvs.length / 2; v++) {
+    const y = m.positions[v * 3 + 1] ?? 0;
+    const z = m.positions[v * 3 + 2] ?? 0;
+    const across = Math.min(1, Math.max(0, (y - y0) / width));
+    uvs[v * 2] = r.u0 + ((z - BOTTOM + shift) / r.metres) * (r.u1 - r.u0);
+    uvs[v * 2 + 1] = r.v0 + (0.2 + 0.26 * across) * (r.v1 - r.v0);
+  }
+  return { ...m, uvs };
+}
+
+/**
+ * Vertical tongue-and-groove boards, each in two lifts (the seam is hidden: U runs on), so the
+ * paint stays green to mid-board and fades above it, and damp darkens the foot. LOD2: one box in
+ * flat paint (the same fade), no texture to alias at distance.
+ */
+function planks(lod: Lod): Mesh[] {
+  if (lod === 2) {
+    const slab = box({
+      size: [0.05, WIDTH, HEIGHT],
+      at: [0.075, 0, BOTTOM],
       color: GREEN,
-      strip: 'wood_painted',
+      strip: 'plain',
     });
-    const colors = new Float32Array(plank.colors);
-    for (let v = 0; v < colors.length / 3; v++) {
-      const c = paintAt(plank.positions[v * 3 + 2] ?? 0);
-      const damp = i === 0 ? 0.72 : 1;
-      for (let k = 0; k < 3; k++) colors[v * 3 + k] = (c[k] ?? 0) * tone * damp;
+    return [{ ...slab, colors: paintColors(slab, 0) }];
+  }
+  const bw = WIDTH / PLANKS;
+  const lift = 0.45 * HEIGHT;
+  const out: Mesh[] = [];
+  for (let i = 0; i < PLANKS; i++) {
+    const y0 = -WIDTH / 2 + i * bw;
+    const tone = i % 2 === 0 ? 1 : 0.94;
+    const shift = (i * 0.618 * 4) % 4;
+    for (const [z, h, omit] of [
+      [BOTTOM, lift, 'top'],
+      [BOTTOM + lift, HEIGHT - lift, 'bottom'],
+    ] as const) {
+      const b = box({
+        size: [0.05, bw, h],
+        at: [0.075, y0 + bw / 2, z],
+        color: GREEN,
+        strip: 'wood',
+        omit: [omit],
+      });
+      const m = boardUV(b, y0, bw, shift);
+      out.push({ ...m, colors: paintColors(m, 1 - tone) });
     }
-    return { ...plank, colors };
-  });
+  }
+  return out;
+}
+
+/** Faded paint by height, darkened by `shade`, damp at the foot (dark at the bottom edge). */
+function paintColors(m: Mesh, shade: number): Float32Array {
+  const colors = new Float32Array(m.colors);
+  for (let v = 0; v < colors.length / 3; v++) {
+    const z = m.positions[v * 3 + 2] ?? 0;
+    const c = paintAt(z);
+    const damp = z < BOTTOM + 0.01 ? 0.72 : 1;
+    for (let k = 0; k < 3; k++) colors[v * 3 + k] = (c[k] ?? 0) * (1 - shade) * damp;
+  }
+  return colors;
 }
 
 /**
@@ -331,7 +378,7 @@ export const type_specimen = defineAsset({
       },
     );
     ctx.part('posts', worn.posts);
-    const parts: Mesh[] = [worn.joinery, ...planks(), ...(lod < 2 ? faceWear() : [])];
+    const parts: Mesh[] = [worn.joinery, ...planks(lod), ...(lod < 2 ? faceWear() : [])];
     parts.push(
       box({
         size: [0.006, 0.02, 1.36],

@@ -50,7 +50,10 @@ benches against the wall, oil/gas lamps and a black running-in name board.
   coping in 0.9 m slabs with 12 mm joints, each its own tone (LOD0); rise-and-fall gutter
   brackets; valance fret kept at LOD1.
 - LOD2: the platform flags stay at true scale (a single stretched band read as planks); the name
-  board keeps its lettering as one quad of `station_board_name`.
+  board keeps its lettering as one quad of `station_board_name`. The brick walls and the two gables
+  keep their courses at true scale too (`far.ts`: the walls' LOD1 banded faces, the gable infill of
+  the LOD1 roof on LOD2's bare slopes); one stretched band read as vertical red timber planks. The
+  far windows and doors keep only their face, 3 mm off the brick, which pays for it (436 tris).
 - Hero: the default 3/4 orbit at 12° elevation, low enough to see under the canopy.
 - Triangles: 10.0k / 5.5k / 528 (budget 10.5k / 5.8k / 550).
 

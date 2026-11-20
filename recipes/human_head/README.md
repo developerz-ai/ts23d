@@ -83,7 +83,7 @@ the cards are painted a shaded hair brown (`scalp`), held by `scalpCoverCheck` (
 
 ## Known gaps
 The skin's detail is the shared tiling pore strip (`pores: true`: matte cheeks, a glossier
-T-zone) under one `skin` finish (a soft sheen plus a thin oily coat, clearcoat 0.3 at roughness 0.28), not a per-face texture; the hero is a portrait camera (`../_lib/bust/hero.ts`); the cloth takes no finish (the
+T-zone) under one `skin` finish (the shared `skinFinish`: a soft grazing sheen, no clear coat, so cheeks and shoulders stay matte and only the oily strip's T-zone (up to a tenth of the head over the glabella) shines; the scalp above it and behind the ears is on the matte strip, `face_skin_matte`, so a bald or shaven dome has no wet hot spots), not a per-face texture; the hero is a portrait camera (`../_lib/bust/hero.ts`); the cloth takes no finish (the
 linen and wool strips carry their own roughness); the mantle covers the shoulders and back only, so from the front it reads close to
 sleeves; the braid is a 4 mm-cell cord, lumpy up close; eyelashes are a painted lash line (cards
 at the lid margin need a finer root mesh than the 4 mm card surface); the face's planes are softer

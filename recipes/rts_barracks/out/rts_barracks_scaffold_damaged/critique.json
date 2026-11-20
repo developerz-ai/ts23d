@@ -33,7 +33,7 @@
     },
     "wear": {
       "score": 7,
-      "reason": "A black scorch patch on the wall and the knocked-down scaffold tell the story; no dust fan round the toppled pile.",
+      "reason": "A black scorch patch on the wall, frayed banner hems and the knocked-down scaffold tell the story (hero.png); no dust fan round the toppled pile.",
       "fixes": [
         "pale dust fan across the flags from the toppled pile"
       ]
@@ -54,7 +54,7 @@
     }
   },
   "renders": {
-    "hero.png": "d74ad3d7162c05b90c403129f1bd522729e7d34418ae5de2f6eb125a369fe52c",
-    "sheet.png": "291e97929e7027d0cb906885b61c713d113c313035f0e0fd99537f27633e3c46"
+    "hero.png": "6c9265cc12bc4d67dcb9f7f3e51b7d0444c68f0f48cffe6c3becf1ada7f75ae6",
+    "sheet.png": "b53a49a25b83fc72076c96ac1ffb380795fcf12c94bcf68f277fed3286766c10"
   }
 }

@@ -1,6 +1,7 @@
 // The five demo characters: one measured base, five race presets (recipes/_lib/face/races.ts),
 // each with its own age, weight, seeded asymmetry, skin palette, eyes, hair and the marks life left
-// (sun, freckles, stubble, scars, grime). The presets are pushed a little further here than the
+// (sun, freckles, stubble, scars, grime). Tones are linear albedo in skin's measured range (a
+// fair cheek ≈ 0.6 / 0.4 / 0.3; above 0.8 the hero's sky washes a face to porcelain). The presets are pushed a little further here than the
 // shared table: longer elf ears and a stronger almond tilt, bigger goblin eyes and a hookier nose,
 // a higher orc trapezius with a flatter, wider nose. Original designs.
 
@@ -23,11 +24,11 @@ export const CHARACTERS: Record<'human' | 'orc' | 'elf' | 'dwarf' | 'goblin', Fa
       weight: 0,
       asym: 0.3,
       tone: {
-        base: [0.78, 0.58, 0.47],
-        flush: [0.8, 0.46, 0.4],
-        lips: [0.72, 0.44, 0.4],
-        cool: [0.6, 0.5, 0.52],
-        cavity: [0.38, 0.24, 0.2],
+        base: [0.66, 0.45, 0.33],
+        flush: [0.74, 0.38, 0.31],
+        lips: [0.6, 0.3, 0.27],
+        cool: [0.52, 0.42, 0.42],
+        cavity: [0.3, 0.17, 0.13],
       },
       eyes: { iris: [0.3, 0.42, 0.55] },
       mouth: 0,
@@ -36,12 +37,22 @@ export const CHARACTERS: Record<'human' | 'orc' | 'elf' | 'dwarf' | 'goblin', Fa
         sun: 0.55,
         freckles: 0.5,
         grime: 0.25,
-        stubble: { colour: [0.26, 0.22, 0.22], amount: 0.72 },
-        scars: [[off(LEFT.brow, [0.003, 0.012, 0.014]), off(LEFT.brow, [0.004, 0.017, -0.004])]],
+        wind: 0.35,
+        stubble: { colour: [0.15, 0.12, 0.12], amount: 0.8 },
+        scars: [
+          [off(LEFT.brow, [0.003, 0.012, 0.014]), off(LEFT.brow, [0.004, 0.017, -0.004])],
+          // A split healed white on the chin, off the midline.
+          [
+            mirrorY(off(MIDLINE.pogonion, [0.002, 0.004, 0.008])),
+            mirrorY(off(MIDLINE.pogonion, [0, 0.014, -0.004])),
+          ],
+        ],
       },
     },
     hair: { cut: 'short', root: [0.16, 0.1, 0.06], tip: [0.32, 0.21, 0.12] },
     plinth: STONE,
+    // Undyed wool with a leather-bound collar: a working man's tunic.
+    garment: { cloth: [0.3, 0.24, 0.17], trim: [0.16, 0.1, 0.06], dust: 0.5 },
   },
   orc: {
     character: {
@@ -59,11 +70,11 @@ export const CHARACTERS: Record<'human' | 'orc' | 'elf' | 'dwarf' | 'goblin', Fa
       weight: 0.3,
       asym: 0.8,
       tone: {
-        base: [0.36, 0.48, 0.26],
-        flush: [0.42, 0.44, 0.24],
-        lips: [0.3, 0.3, 0.2],
-        cool: [0.28, 0.36, 0.28],
-        cavity: [0.14, 0.18, 0.1],
+        base: [0.27, 0.37, 0.17],
+        flush: [0.38, 0.34, 0.16],
+        lips: [0.24, 0.22, 0.14],
+        cool: [0.2, 0.28, 0.22],
+        cavity: [0.09, 0.12, 0.06],
       },
       eyes: { iris: [0.62, 0.4, 0.08], sclera: [0.82, 0.78, 0.6] },
       tusks: 0.16,
@@ -88,6 +99,8 @@ export const CHARACTERS: Record<'human' | 'orc' | 'elf' | 'dwarf' | 'goblin', Fa
     },
     hair: { cut: 'crest', root: [0.06, 0.05, 0.04], tip: [0.14, 0.12, 0.1] },
     plinth: STONE,
+    // Rust-dyed hide-cloth under an iron-grey collar band, camp-dusty.
+    garment: { cloth: [0.28, 0.12, 0.07], trim: [0.17, 0.17, 0.18], dust: 0.6, vee: 0.02 },
   },
   elf: {
     character: {
@@ -100,19 +113,30 @@ export const CHARACTERS: Record<'human' | 'orc' | 'elf' | 'dwarf' | 'goblin', Fa
       weight: -0.4,
       asym: 0.3,
       tone: {
-        base: [0.86, 0.72, 0.62],
-        flush: [0.86, 0.6, 0.56],
-        lips: [0.74, 0.48, 0.48],
-        cool: [0.7, 0.66, 0.7],
-        cavity: [0.46, 0.34, 0.32],
+        base: [0.76, 0.58, 0.47],
+        flush: [0.8, 0.47, 0.43],
+        lips: [0.66, 0.34, 0.35],
+        cool: [0.6, 0.52, 0.57],
+        cavity: [0.38, 0.25, 0.23],
       },
       eyes: { iris: [0.22, 0.52, 0.42] },
       mouth: 0,
-      // Ageless but not porcelain: a dusting of freckles and a little sun.
-      wear: { sun: 0.3, freckles: 0.2, grime: 0.08 },
+      // Ageless but not porcelain: freckles, a little sun and wind, and a ranger's thin old cut
+      // along the cheekbone.
+      wear: {
+        sun: 0.3,
+        freckles: 0.45,
+        grime: 0.08,
+        wind: 0.2,
+        scars: [
+          [off(LEFT.zygion, [0.03, -0.004, -0.004]), off(LEFT.cheek, [-0.012, 0.006, 0.008])],
+        ],
+      },
     },
     hair: { cut: 'long', root: [0.52, 0.36, 0.15], tip: [0.84, 0.66, 0.34] },
     plinth: STONE,
+    // Forest-green wool, a gold braid at the collar, a deeper V; barely travel-dusted.
+    garment: { cloth: [0.06, 0.2, 0.12], trim: [0.62, 0.46, 0.16], dust: 0.35, vee: 0.035 },
   },
   dwarf: {
     character: {
@@ -126,11 +150,11 @@ export const CHARACTERS: Record<'human' | 'orc' | 'elf' | 'dwarf' | 'goblin', Fa
       weight: 0.5,
       asym: 0.6,
       tone: {
-        base: [0.76, 0.54, 0.42],
-        flush: [0.82, 0.42, 0.34],
-        lips: [0.62, 0.32, 0.3],
-        cool: [0.58, 0.48, 0.46],
-        cavity: [0.34, 0.2, 0.15],
+        base: [0.64, 0.42, 0.29],
+        flush: [0.76, 0.33, 0.24],
+        lips: [0.54, 0.25, 0.22],
+        cool: [0.5, 0.39, 0.37],
+        cavity: [0.27, 0.14, 0.09],
       },
       eyes: { iris: [0.36, 0.26, 0.14] },
       mouth: 0,
@@ -140,6 +164,7 @@ export const CHARACTERS: Record<'human' | 'orc' | 'elf' | 'dwarf' | 'goblin', Fa
         sun: 0.75,
         freckles: 0.55,
         grime: 0.55,
+        wind: 0.85,
         scars: [
           [off(MIDLINE.rhinion, [0, -0.012, 0.004]), off(MIDLINE.rhinion, [0.001, 0.012, -0.003])],
           [off(MIDLINE.forehead, [0, 0.02, -0.03]), off(MIDLINE.forehead, [0, 0.036, -0.012])],
@@ -148,6 +173,8 @@ export const CHARACTERS: Record<'human' | 'orc' | 'elf' | 'dwarf' | 'goblin', Fa
     },
     hair: { cut: 'short', beard: 'full', root: [0.36, 0.16, 0.06], tip: [0.62, 0.34, 0.14] },
     plinth: STONE,
+    // A smith's madder-red wool under a brass-studded leather collar, ash on the shoulders.
+    garment: { cloth: [0.36, 0.09, 0.05], trim: [0.42, 0.28, 0.1], dust: 0.6 },
   },
   goblin: {
     character: {
@@ -162,11 +189,11 @@ export const CHARACTERS: Record<'human' | 'orc' | 'elf' | 'dwarf' | 'goblin', Fa
       weight: -0.3,
       asym: 1,
       tone: {
-        base: [0.52, 0.56, 0.26],
-        flush: [0.62, 0.5, 0.26],
-        lips: [0.42, 0.34, 0.2],
-        cool: [0.4, 0.44, 0.3],
-        cavity: [0.2, 0.22, 0.08],
+        base: [0.33, 0.4, 0.13],
+        flush: [0.48, 0.33, 0.13],
+        lips: [0.3, 0.2, 0.11],
+        cool: [0.25, 0.31, 0.18],
+        cavity: [0.1, 0.12, 0.04],
       },
       eyes: { iris: [0.85, 0.62, 0.1], pupil: 'slit', sclera: [0.84, 0.8, 0.56] },
       mouth: 0.4,
@@ -190,5 +217,7 @@ export const CHARACTERS: Record<'human' | 'orc' | 'elf' | 'dwarf' | 'goblin', Fa
     },
     hair: { cut: 'none', root: [0.1, 0.1, 0.08], tip: [0.2, 0.2, 0.16] },
     plinth: STONE,
+    // Sackcloth with a rope collar, filthy.
+    garment: { cloth: [0.33, 0.28, 0.17], trim: [0.22, 0.17, 0.1], dust: 0.8, vee: 0.015 },
   },
 };

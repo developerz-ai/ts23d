@@ -69,8 +69,8 @@ export interface SkinOptions {
   readonly scalp?: readonly ScalpPaint[];
   /** Map the skin onto the shared pore strip (../face/skin-strip.ts) instead of `plain`: pore
    *  relief in the normal map and a roughness that follows it; `oil` (0 … 1) marks the glossier
-   *  T-zone. The tone stays in vertex colour. */
-  readonly strip?: { readonly oil?: Field };
+   *  T-zone, `matte` (0 … 1) the dry scalp. The tone stays in vertex colour. */
+  readonly strip?: { readonly oil?: Field; readonly matte?: Field };
   /** Far LOD: every vertex takes the mean of the paint at the centres of its faces, so one
    *  sample in a crevice (a nostril, a lid line) no longer colours a whole 2 cm triangle. */
   readonly far?: boolean;
@@ -188,7 +188,8 @@ export function skinMesh(edits: readonly SculptEdit[], cell: number, o: SkinOpti
       const warm = mix(c, T.warm, clamp(up * 0.55 + Math.max(0, curv) * 0.6) * isSkin);
       c = mix(warm, T.cool, clamp(-up * 0.6) * isSkin);
       const m = mottle(p);
-      c = mix(c, m > 0 ? T.warm : T.cool, Math.abs(m) * 0.35 * isSkin);
+      // (Soft: at 0.35 it read as grey camouflage blotches on a pale face at portrait distance.)
+      c = mix(c, m > 0 ? T.warm : T.cool, Math.abs(m) * 0.2 * isSkin);
       if (speckle > 0) {
         const k = speck(p);
         c = mix(c, k > 0 ? T.warm : T.cavity, Math.min(1, Math.abs(k) * 1.4) * speckle * isSkin);
@@ -225,7 +226,7 @@ export function skinMesh(edits: readonly SculptEdit[], cell: number, o: SkinOpti
     ...(o.detail ? { detail: o.detail } : {}),
   });
   const toned = o.far ? faceAveraged(mesh, paint, o.scalp ?? []) : mesh;
-  const mapped = o.strip ? onSkin(toned, o.strip.oil) : toned;
+  const mapped = o.strip ? onSkin(toned, o.strip.oil, undefined, undefined, o.strip.matte) : toned;
   // The field it was meshed from, for the hero bake (ADR 012; bust.ts passes it on when opted in).
   return withBakeSource(mapped, { field, lipschitz, color: paint });
 }

@@ -112,17 +112,18 @@ export function zoneEdits(k: SkullLandmarks, H: number, z: Zones): SculptEdit[] 
     ),
   );
   if (z.lashes) {
-    // Lash line: small dabs on an arc over the front of the ball, inner → outer corner.
+    // Lash line: overlapping dabs on an arc over the front of the ball, inner → outer corner,
+    // thick enough to read as a dark margin at portrait distance.
     const R = k.eyeR * 1.1;
-    for (let i = 0; i <= 6; i++) {
-      const a = (-0.55 + (1.1 * i) / 6) * 1.2;
+    for (let i = 0; i <= 8; i++) {
+      const a = (-0.55 + (1.1 * i) / 8) * 1.2;
       const at: Vec3 = add(
         k.eye,
         R * dmath.cos(a) * 0.86,
         R * dmath.sin(a),
         R * 0.48 * dmath.cos(a),
       );
-      out.push(paint(at, [k.eyeR * 0.12, k.eyeR * 0.22, k.eyeR * 0.08], z.lashes, k.eyeR * 0.06));
+      out.push(paint(at, [k.eyeR * 0.14, k.eyeR * 0.24, k.eyeR * 0.12], z.lashes, k.eyeR * 0.06));
     }
   }
   if (z.brows) {

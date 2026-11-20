@@ -1,7 +1,7 @@
 {
   "asset": "fox",
   "reviewer": "agent",
-  "overall": 7.1,
+  "overall": 7.4,
   "scores": {
     "silhouette": {
       "score": 8,
@@ -19,44 +19,46 @@
     },
     "materials": {
       "score": 7,
-      "reason": "Orange coat, cream chest, black stockings and a furred brush separate, and the snow is now fine flecks; a pale streak crosses the shoulder like a seam and the face is smooth.",
+      "reason": "The near-black peppering is gone: card ends now shade orange-brown and the coat reads as fur (hero.png, flank and back), with cream chest, black stockings and a furred brush; the ear tip is no longer a flat grey card. The ear backs are orange where a red fox has black ones, the inner ear is a flat grey cup, and the face is a smooth plane.",
       "fixes": [
-        "remove the pale diagonal streak on the shoulder",
-        "short fur cards on the face and ears"
+        "black ear backs and a furred inner ear instead of a flat grey cup",
+        "short fur cards on the face",
+        "fewer snow flecks on the back in the sheet views so the topline does not look frosted grey"
       ]
     },
     "detail": {
-      "score": 6,
-      "reason": "Whiskers and brush fur present; face planes soft, no visible claws.",
+      "score": 7,
+      "reason": "Whiskers and brush fur; the paws now split into toes with small dark claws and a brow ridge sits over the eye; the cheek planes are still soft.",
       "fixes": [
-        "sharper cheek and brow planes; small dark claws"
+        "sharper cheekbone and muzzle-side planes",
+        "thin dark lip line and ear-edge fringe"
       ]
     },
     "wear": {
-      "score": 6,
-      "reason": "Snow now lies as fine flecks along the topline and the paws are muddy; no damp fur on the legs.",
+      "score": 7,
+      "reason": "Mud is graded from dark toes up the stockings, snow lies as flecks along the topline, in the brush and now on the ear tip (hero.png), so the coat reads lived-in; the legs show no damp clumping.",
       "fixes": [
         "damp clumped fur on the lower legs",
-        "snow caught in the brush and ear tips"
+        "a few matted locks on the belly fringe"
       ]
     },
     "lod": {
       "score": 8,
-      "reason": "FAR LOD2 holds the outline, black legs and a smooth even coat colour; the switch is quiet.",
+      "reason": "FAR LOD2 holds the outline, black legs, smooth even coat colour and the white tail tip; the switch is quiet. Small dark flecks remain on the LOD2 back and two pale slash marks show on the flank and shoulder.",
       "fixes": [
-        "keep a hint of the white tail tip at LOD2"
+        "drop the dark speck flecks and pale slashes from the LOD2 coat"
       ]
     },
     "technical": {
       "score": 8,
-      "reason": "QA clean; 84k / 28k / 4k triangles over 4 draws: LOD0 trimmed to the fur-card budget.",
+      "reason": "QA clean; 86.6k / 27.8k / 3.9k tris, 4 / 4 / 2 draws: LOD0 within the fur-card budget.",
       "fixes": [
         "drop LOD1 toward 20k by thinning fur cards on the belly"
       ]
     }
   },
   "renders": {
-    "hero.png": "49a7e3fde9a1c147fd62d080a0cef6507701109d449a6e337fc9c1cb55c163a1",
-    "sheet.png": "6211e5c12481e4df4b460f92731677447c3079e49848ef54ba03ea009044d962"
+    "hero.png": "5c67e71645f3de8fd2ee25cd45434c1c8caae174c87cbf02cea47f3aeafc0148",
+    "sheet.png": "e072e50a9a6a916c2328ff7a3ffe2cd15f1f56f199082d1769644f1e3687f9bd"
   }
 }

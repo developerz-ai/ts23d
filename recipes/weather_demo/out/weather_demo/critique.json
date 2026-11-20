@@ -1,14 +1,13 @@
 {
   "asset": "weather_demo",
   "reviewer": "agent",
-  "overall": 7.4,
+  "overall": 7.6,
   "scores": {
     "silhouette": {
       "score": 7,
-      "reason": "The weathered copies now differ in outline: the door leaf sags out of its frame, a crate board springs loose and the drum lid is dented; the weathered block still matches the new one exactly.",
+      "reason": "The weathered copies differ in outline: the door leaf sags, a crate board springs loose, the weathered drum now has a side dent (hero.png); the weathered block still matches the new one exactly.",
       "fixes": [
-        "a spalled corner on the weathered block",
-        "a side dent on the weathered drum that reads in FRONT"
+        "a spalled corner on the weathered block"
       ]
     },
     "proportions": {
@@ -19,17 +18,16 @@
       ]
     },
     "materials": {
-      "score": 7,
-      "reason": "Painted steel door, pine crate, concrete with form-tie holes, steel drum; the new drum is still a uniform glossy blue that reads plastic.",
+      "score": 8,
+      "reason": "Painted steel door, pine crate, concrete with form-tie holes; the weathered drum lid now wears in patches of bare steel and rust round the rim and bungs (TOP) with no radial star, and the drums show rolled hoops with highlights. The new drum is still a very even blue.",
       "fixes": [
-        "steel_painted drum with lower gloss and rolled-edge highlights"
+        "slight gloss variation and edge highlights on the new drum paint"
       ]
     },
     "detail": {
       "score": 7,
-      "reason": "Door with frame, hinges and handle, crate boards with metal corner irons, block anchors and tie holes, drum hoops; no bung caps on the drums, no nails on the crates.",
+      "reason": "Door with frame, hinges and handle, crate boards with metal corner irons, block anchors and tie holes, drum hoops and now bung caps on both lids; no nails on the crates.",
       "fixes": [
-        "bung caps on the drum lids",
         "nail heads on the crate boards"
       ]
     },
@@ -42,9 +40,9 @@
     },
     "lod": {
       "score": 7,
-      "reason": "lods.png: LOD2 (2.0k) keeps the new/weathered differences on crate, drum and block; the door rust fades to a faint stain and the block moss lightens, and in sheet.png FAR LOD2 the door weathering turns into hard-edged triangles.",
+      "reason": "LOD2 keeps the new/weathered differences on crate, drum and block; in the sheet FAR LOD2 the door rust is now a soft band along the bottom rather than hard triangles, but the streaks up the leaf and the block moss fade out.",
       "fixes": [
-        "bake LOD2 weather colour per vertex from the LOD0 mask with smoother tessellation on the door leaf"
+        "bake LOD2 weather colour per vertex from the LOD0 mask with a few more vertices on the door leaf"
       ]
     },
     "technical": {
@@ -56,7 +54,7 @@
     }
   },
   "renders": {
-    "hero.png": "80c705d89fbfb2e78ea052867595a173ce5efeeb1b120e4aab33fb442a479be9",
-    "sheet.png": "d7cfd656a6a49df0dce8b6df072a513614516153b280611569b0c3c15d3d7213"
+    "hero.png": "4e3f83b718d4dd160c43d6ef49a2304746e73bb8c70c098fc4bd0137ab287e32",
+    "sheet.png": "dee5d98d315ac9b0bd8977ae59ed21f2840b901f1e22da64675c97b451bc1d3b"
   }
 }

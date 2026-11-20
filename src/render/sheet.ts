@@ -2,8 +2,9 @@
 // eyes — one image read shows proportions from every side, so it fixes the right thing first.
 //   row 1: 3/4 FRONT · FRONT (+X) · SIDE (-Y)
 //   row 2: TOP · 3/4 REAR · FAR LOD (`far`, else the asset itself; labelled with the LOD drawn)
-// Colour is flat Lambert over vertex colour; pass `sheet` for the hero's base colour (trim-sheet
-// albedo × vertex colour, see-through glass). Axis views share one scale (the largest span); a
+// Colour is Lambert over vertex colour, interpolated per pixel with the smooth normal; pass
+// `sheet` for the hero's base colour (trim-sheet albedo sampled per pixel × vertex colour,
+// see-through glass). Axis views share one scale (the largest span); a
 // 3/4 view widens to its projected bounds so a cube's corners are not cut off.
 
 import { type CompiledAsset, cross, dot, encodePng, sub, type Vec3 } from '../core/index.ts';

@@ -23,12 +23,15 @@ import {
   type RoofMeshOptions,
   ridgeHeight,
   roof,
+  roofInfo,
   text,
   tiled,
+  translate,
   type Vec2,
   type Vec3,
 } from '@developerz.ai/ts23d';
 import { restrip, type StripRule, weatherer } from '../_lib/finish/finish.ts';
+import { faceOnly, farRoof } from './far.ts';
 import { BOARD, BOARD_SPAN, BRICK, CANOPY } from './materials.ts';
 import { slateCourses } from './slates.ts';
 import { brickWear, canopyWear, platformWear, type Shade, shade } from './wear.ts';
@@ -163,12 +166,20 @@ function lampPost(lod: Lod): { post: Mesh; glass: Mesh } {
     strip: 'glass',
   });
   if (lod === 2)
+    // Far: the post's ends sit on the platform and in the lantern, the lantern's top under its
+    // cap: no faces there.
     return {
       post: merge([
-        box({ size: [0.12, 0.12, 2.7], color: chocolate }),
+        box({ size: [0.12, 0.12, 2.7], color: chocolate, omit: ['bottom', 'top'] }),
         box({ size: [0.4, 0.4, 0.2], at: [0, 0, 3.14], color: chocolate }),
       ]),
-      glass: glassM,
+      glass: box({
+        size: [0.32, 0.32, 0.4],
+        at: [0, 0, 2.74],
+        color: hex('#f3d79a'),
+        strip: 'glass',
+        omit: ['top', 'bottom'],
+      }),
     };
   const segs = [10, 8, 6][lod] ?? 6;
   const post: Mesh[] = [
@@ -441,7 +452,8 @@ export const station_halt = defineAsset({
           omit: ['bottom', 'top'],
           courseOrigin: PLAT_Z,
         },
-        lod,
+        // Far too: the courses at true scale (far.ts), not one band stretched up the wall.
+        lod === 2 ? 1 : lod,
       ),
     ];
     if (lod < 2) {
@@ -506,25 +518,40 @@ export const station_halt = defineAsset({
       ['right', -B_Y],
     ] as const)
       ops.push({ kind: 'window', side, at: [-0.4, y, PLAT_Z + 0.85] });
+    const OUT: Record<OpeningSide, Vec3> = {
+      front: [1, 0, 0],
+      back: [-1, 0, 0],
+      left: [0, 1, 0],
+      right: [0, -1, 0],
+    };
     ops.forEach((o, i) => {
       const isDoor = o.kind === 'door';
+      // Far: the plate's face alone, set back to 3 mm off the brick (glass 2 cm, a door 5 cm).
+      const back = (isDoor ? 0.05 : 0.02) - 0.003;
+      const out = OUT[o.side];
+      const plate = (m: Mesh): Mesh =>
+        lod === 2
+          ? translate(faceOnly(m, out), [-out[0] * back, -out[1] * back, -out[2] * back])
+          : m;
       part(
         `${isDoor ? 'door' : 'window'}_${o.side}_${i}`,
-        opening(
-          {
-            kind: o.kind,
-            width: isDoor ? 1.0 : 1.05,
-            height: isDoor ? 2.35 : 1.85,
-            at: o.at,
-            facing: o.side,
-            glass,
-            frame: isDoor ? chocolate : cream,
-            wall: brick,
-            wallStrip: BRICK,
-            trim: coping,
-            panes: [2, 3],
-          },
-          lod,
+        plate(
+          opening(
+            {
+              kind: o.kind,
+              width: isDoor ? 1.0 : 1.05,
+              height: isDoor ? 2.35 : 1.85,
+              at: o.at,
+              facing: o.side,
+              glass,
+              frame: isDoor ? chocolate : cream,
+              wall: brick,
+              wallStrip: BRICK,
+              trim: coping,
+              panes: [2, 3],
+            },
+            lod,
+          ),
         ),
       );
       if (isDoor && o.side === 'front')
@@ -536,7 +563,9 @@ export const station_halt = defineAsset({
     });
 
     // ---- roof with stacks; smoke from both pots.
-    const info = roof(ctx, { ...ROOF, name: 'roof' });
+    // Far: the bare slopes with the gables' brick at true scale (far.ts).
+    if (lod === 2) ctx.part('roof', farRoof(ROOF, B_Y));
+    const info = lod === 2 ? roofInfo(ROOF) : roof(ctx, { ...ROOF, name: 'roof' });
     if (lod < 2)
       part(
         'roof_slates',
@@ -656,7 +685,8 @@ export const station_halt = defineAsset({
     const colSegs = ctx.pick([12, 8, 5]);
     const column =
       lod === 2
-        ? box({ size: [0.18, 0.18, colTop - PLAT_Z], color: chocolate })
+        ? // Far: no end caps (on the platform, under the canopy).
+          box({ size: [0.18, 0.18, colTop - PLAT_Z], color: chocolate, omit: ['bottom', 'top'] })
         : lathe({
             profile: [
               [0, 0],

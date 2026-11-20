@@ -25,11 +25,19 @@ way a character artist starts from a base mesh and moves big forms before detail
 - Overall size: as built (L × W × H in `face_demo.ts`), a design spec of an invented character.
 
 ## Parts and LODs
-`skin` (head, neck, shoulders; chest and arm cuts capped), `eye_l` / `eye_r` (code eyeballs from
+`skin` (head, neck, shoulders; chest and arm cuts capped; below a neckline round the neck's base
+the shoulders and chest are painted as a dyed wool tunic and mapped onto the `bust_wool` strip,
+`recipes/_lib/face/garment.ts`: the bust ends dressed, not as a sawn mannequin), `collar` (the
+tunic's binding as geometry: the neckline found where it crosses the skin's edges, binned round
+the neck, smoothed and swept as a flattened roll a third sunk into the skin, `collar.ts`: painted,
+its edge stair-stepped between vertices, D477; 128 / 72 / 40 samples × 8 / 6 / 5 sides; its V's
+mitred corner is a declared crease), `eye_l` / `eye_r` (code eyeballs from
 `recipes/_lib/bust/eye.ts`, cornea finish), `hair` (the sculpted cap: volume, a parting, locks of
-uneven width; a long cut adds fall masses over the back and shoulders), `hair_strands` (cutout
-strand cards over the cap at every LOD: swept locks, lifted crown locks, wisps along the hairline,
-flyaways; falls for the long cut, a standing crest, a beard), `teeth` (only where the lips part),
+uneven width; a long cut adds a curtain mass behind the neck under its fall cards), `hair_strands` (cutout
+strand cards over the cap at LOD0/1 in the lock style (`locks`, D461, `hair_locks` strip): dark
+mass cards under narrow clumped locks, swept crown locks hugging the cap (kept 7 cm off the ears: one pushed out by an ear stood straight
+out of the temple, D478), short wisps along the hairline and a few 2.6 cm strays lying close; falls and curtain locks for the long cut, a standing crest, a beard with a moustache
+lying on its own sculpted locks over the upper lip), `teeth` (only where the lips part),
 `tusk_l` / `tusk_r` (orc), `plinth`.
 
 Every LOD's skin is the painted, AO-baked base QEM-simplified to `SKIN_TRIS`
@@ -40,37 +48,52 @@ the clean bust edge survive.
 |---|---|---|
 | 0 | one Catmull–Clark level over the base, relief strokes (folds, brow shelf, warts, scar furrows: `relief.ts`), simplified to 25.3k triangles | cap at 7.5 mm + dense cards (16k–32k) |
 | 1 | the base topology (strokes ≥ 8 mm only: the brow shelf), simplified to 5.4k | cap at 12 mm + a quarter of the cards, twice as wide (1.1k–3.2k) |
-| 2 | the base topology, painted with the zones only (no mottle, blotches, marks or curvature tint: on 900 triangles they are a patchwork), AO from 24 rays at 0.3, simplified to 0.9k | cap at 17 mm + a handful of wide cards (`farStyle`, 0.2k–0.6k), so the far head keeps a broken outline |
+| 2 | the base topology, painted with the zones only (no mottle, blotches, marks or curvature tint: on a far mesh they are a patchwork), AO from 24 rays at 0.3, simplified to 1.5k (at 0.9k the face broke into a handful of flat plates of different tone) | cap at 17 mm with its painted hairline and no cards (the lock style's far rule: a handful of wide cards over it read as chips); a beard is a spade: a dark root mass along the jaw, a tapering body and three lock tips with open notches between them, a darker moustache mass standing proud of the lip (D478) |
 
 ## Materials
-Skin sits on three strips of `recipes/_lib/face/skin-strip.ts`, one draw: `face_skin` (pores,
-glossier crowns, roughness 0.38–0.58), `face_skin_oily` on the T-zone (forehead centre, nose,
-chin: 0.2–0.42) and `face_skin_wet` on the lips (0.12–0.2), all under the `skin` finish (a soft
-grazing sheen plus a thin oily coat, clearcoat 0.3 at roughness 0.28: the tight second highlight
-on brow, nose and shoulder; the path-traced hero adds subsurface diffusion to any `skin` finish);
-corneas a clearcoat. The hair
-takes no finish: the cutout strand cards carry the strand read, and the sculpted cap under them
-is on the `plain` strip in their shade. Tone is vertex colour: flush
-(cheeks, nose, ears), lips, cool sockets and jaw underside, brows, hair-coloured scalp under the
-hairline, a dark lash line on each upper lid, cavity darkening. The hairline sits a brow's height
-above the brows (forehead and eyebrows show); card tones stay within 0.68–1.12 of the hair colour
-so the hair reads as one mass, and a long cut's scalp cards are short shingles (its length is the
-fall behind the ears).
+Skin sits on four strips of `recipes/_lib/face/skin-strip.ts` plus the tunic's wool, one draw:
+`face_skin` (pores: roughness 0.5–0.68, cheeks and shoulders), `face_skin_oily` on the T-zone
+(the lower half of the forehead's centre, nose, chin: satin, 0.34–0.5), `face_skin_matte` on the
+scalp (above the forehead's middle and behind the ears: 0.76–0.9, so a bald or shaven dome has a
+broad soft sheen, not wet hot spots, D479) and `face_skin_wet` on the lips (0.12–0.2),
+all under the shared `skin` finish (`skinFinish`: a soft grazing sheen and a dielectric
+reflectance of 0.8, no clear coat: one coat over the whole part lit head and shoulders alike as wet
+latex; the path-traced hero adds subsurface diffusion to any `skin` finish); corneas a clearcoat.
+The hair takes no finish: the cutout strand cards carry the strand read, and the sculpted cap
+under them is on the `plain` strip in two tones by LOD. At LOD0/1, under the lock cards, it is
+0.55 of the root colour (`DEEP` in `_lib/face/hair.ts`): the gaps between locks read as depth (at
+0.8 of the mid tone it showed through them as pale flat chips). At LOD2, where the cap is the whole
+hair, it is 0.8 of the mid tone (`SHADE`), close to the cards' own, so the hair reads as one mass. Tone is vertex colour (`paint.ts`), in the portrait painter's bands: the
+forehead lightest, a faint, broad flush along the cheekbone to the nose's wing (a path, not a
+round blob: discs read as rouge, D486), the nose and ears warm, the jaw and chin cooler, the sockets cool and
+dark; lips, brows, hair-coloured scalp under the hairline, the lid's fold in shadow above a dark
+lash line 3 mm wide on each upper lid, cavity darkening. Skin tones are linear albedo in skin's
+measured range. The eyeballs carry the upper lid's shadow (`lidShadow`), so the white and the iris
+do not read as lit stickers. Card tones run dark at the root to light at the tip (0.42–1.18 of the
+hair colour) with the cards laid along the comb; a long cut's scalp cards are short shingles (its
+length is the fall cards behind the ears).
 
-The hero is a portrait (`recipes/_lib/bust/hero.ts`): a fixed camera that fills 86 % of the frame
-height with the bust.
+The hero is a portrait (`recipes/_lib/bust/hero.ts`): a fixed front-left 3/4 camera just above eye
+level framing the head and shoulders (crown to upper chest), the face filling the frame.
 
 ## Wear (per character, `characters.ts` → `Character.wear`)
 | Asset | Story | Marks |
 |---|---|---|
-| `face_human` | works outdoors | sun, four moles, a day's stubble on the jaw, a nick through one brow |
+| `face_human` | works outdoors | sun and wind, four moles, a day's stubble (dark dots in a soft-edged beard zone) on jaw, chin and upper lip, a nick through one brow, a split on the chin |
 | `face_orc` | a fighter | a cut from forehead through brow to cheek, one along the jaw, a split lip; camp dirt; stained tusks |
-| `face_elf` | ageless, not porcelain | three moles, a little sun |
-| `face_dwarf` | an old smith | forge-reddened skin, a burn line over the nose, a forehead cut, soot, forehead lines, crow's feet, eye bags and deep folds as relief (age 0.9), a heavy brow |
+| `face_elf` | ageless, not porcelain | freckle blotches and moles, a little sun and wind, a thin old cut along the cheekbone |
+| `face_dwarf` | an old smith | forge-reddened skin (`wind`: a broad raw redness over the cheekbones and nose), a burn line over the nose, a forehead cut, soot, forehead lines, crow's feet, eye bags and deep folds as relief (age 0.9), a heavy brow |
 | `face_goblin` | a scavenger | seven warts (raised), blotched skin, grime, claw marks over the bald vault |
 
+Each tunic (`characters.ts` → `garment`) carries wear at hero scale: dust settled on the shoulder
+tops (a coarse blot breaks it up), the shoulder seams' tops sun-faded paler and greyer, a broad
+band of collar grime under the binding, grime darkening toward the chest cut and fold streaks a
+hand wide running down from the collar: human undyed wool with a leather collar, orc rust hide-cloth
+under an iron band, elf forest green with a gold braid and a deeper V, dwarf madder red under a
+brass-studded collar with ash on the shoulders, goblin filthy sackcloth with a rope collar.
+
 Marks are few on purpose: 3–5 seeded moles per face (`molesOf`), never a noise-driven rash;
-scars are a pale ridge with a dark rim in a shallow furrow. Every bust also gets the folds beside
+scars are a pale ridge with a dark rim in a shallow furrow, paler and greyer than the skin round them (relative to its own value: a fixed near-white read as a wet hot spot on green skin). Every bust also gets the folds beside
 the mouth as relief, age-driven shadows under the eyes, and stands on a weathered stone plinth
 (chipped arrises, dust on the ledges, damp at the foot: `weather()`, coverage in the manifest).
 
@@ -79,8 +102,8 @@ Anatomy and proportions: `docs/research/head-analysis.md` (measured scan ratios)
 `docs/research/stylised-creatures.md` (race conventions), the owner's sculpting notes (block-out →
 planes → features; raking light to judge forms).
 
-## Triangle budget (As of 2026-11-19)
-Human 54k / 11k / 2.4k, orc 53k / 10.6k / 2.2k, goblin 34.5k / 8.0k / 1.2k, elf 63k / 13k / 3.1k, dwarf 71k / 14k / 3.7k against the bust band of 60k / 12k / 1.5k (they were 95k–148k / 14k–51k / 5.7k–11k). The skin is the imported base at 25.3k / 5.4k / 0.9k (`recipes/_lib/face/base-lod.ts`); the hair mass under the cards is coarse; eyes and plinth lost their sub-pixel density. Human, orc and goblin fit LOD0 and LOD1; the goblin fits every LOD.
+## Triangle budget (As of 2026-11-20)
+Human 56k / 12.3k / 3.2k, orc 56.3k / 12.3k / 3.0k, goblin 36.6k / 8.9k / 2.2k, elf 65.8k / 14.4k / 3.8k, dwarf 78.3k / 16.3k / 3.8k against the bust band of 60k / 12k / 1.5k (they were 95k–148k / 14k–51k / 5.7k–11k). The skin is the imported base at 25.3k / 5.4k / 1.5k (`recipes/_lib/face/base-lod.ts`; LOD2 raised from 0.9k because the far face is shaded per facet); the tunic is paint on the same skin, its collar a 2k / 0.9k / 0.4k swept roll; the hair mass under the cards is coarse; eyes and plinth lost their sub-pixel density. Goblin fits LOD0 and LOD1.
 
-Budget why: elf and dwarf carry the long fall and the full beard as strand cards (24k–32k at LOD0); at LOD2 the sculpted hair mass folds below a 1.7 cm cell, so 1–2.5k of it stays under the far cards.
+Budget why: elf and dwarf carry the long fall and the full beard as strand cards (23k–34k at LOD0); at LOD2 the sculpted hair mass folds below a 1.7 cm cell, so 1–2.5k of it stays as the far hair, and the far skin keeps 1.5k triangles so the face is not a few flat plates.
 

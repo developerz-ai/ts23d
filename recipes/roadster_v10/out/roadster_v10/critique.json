@@ -26,14 +26,14 @@
     },
     "detail": {
       "score": 8,
-      "reason": "Vents, louvres, badges, mirrors, wipers, shut-lines, a plate and brake callipers hold at third person.",
+      "reason": "Vents, louvres, badges, mirrors, wipers, shut-lines, a plate and brake callipers hold at third person; the sharper hero.png denoise makes the bonnet shut-lines crisper.",
       "fixes": [
         "fuel filler and door handles recessed into the panels"
       ]
     },
     "wear": {
       "score": 7,
-      "reason": "Stone chips cluster on the sill behind the front wheel and now also fleck the lower nose round the grille and under the near headlamp (hero.png); the flecks are pale sand blobs rather than primer-grey chips, and there is still no brake dust.",
+      "reason": "Stone chips cluster on the sill behind the front wheel and fleck the lower nose round the grille and under the near headlamp; the crisper hero.png shows them as distinct flecks, but they are still pale sand blobs rather than primer-grey chips, and the wheels have no brake dust.",
       "fixes": [
         "brake dust on the wheels",
         "smaller, darker primer-grey chips on the nose instead of pale sand blobs"
@@ -55,7 +55,7 @@
     }
   },
   "renders": {
-    "hero.png": "25df15e02a223d400b2fc24763e751dfbc1a12669bc206cad6a917768869f76e",
-    "sheet.png": "34c22a8c13499eeed864a0bd5ed922c7553b9c2950f9b7633e1544adcfabb3e1"
+    "hero.png": "b9e369d0a45f066d3b959a22e479a841b0a3dfc0cc99c70e8e8cf8a997ed4d3b",
+    "sheet.png": "f8c78f14e91dd6da4fd9ffa87340e93ca2711645bcc6b5a2348dd25c8560aa59"
   }
 }

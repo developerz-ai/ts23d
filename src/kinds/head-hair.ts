@@ -195,3 +195,4 @@ const capOf = (l: HeadLayout, h: Vec3): SculptEdit => ({
 });
 
 export { type CardLayer, type ScalpCardOptions, scalpCards } from './head-cards.ts';
+export type { HairLocks } from './head-locks.ts';

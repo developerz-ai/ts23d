@@ -42,9 +42,10 @@ export interface TextOptions {
   /** Offset (m, along the facing normal) of the surface under a letter piece. `u` = metres along
    *  `along` from `origin` (negative left of a centre/right anchor), `v` = metres up from it. */
   readonly surface?: (u: number, v: number) => number;
-  /** Pixel fonts with `surface`: also paint the step between letter pieces that sit at different
-   *  offsets, so lettering wraps a proud post or brace instead of showing its bare side at 3/4
-   *  (2 triangles per step). Default false. Vector fonts ignore it. */
+  /** Pixel fonts with `surface`: sit each pixel on the surface under it and also paint the step
+   *  between letter pieces that sit at different offsets, so lettering wraps a proud post or
+   *  brace instead of showing its bare side at 3/4 (2 triangles per run of step; ≈ 1.2× the
+   *  triangles across a boxcar side). Default false. Vector fonts ignore it. */
   readonly wrap?: boolean;
   readonly strip?: StripId;
   /** Vector fonts: stroke width as a fraction of the cap height, (0, 0.4]. Default per face:

@@ -1,7 +1,7 @@
 {
   "asset": "asteroid_c",
   "reviewer": "agent",
-  "overall": 6.9,
+  "overall": 7.1,
   "scores": {
     "silhouette": {
       "score": 7,
@@ -18,34 +18,35 @@
       ]
     },
     "materials": {
-      "score": 6,
-      "reason": "Crystals are crisp cyan and the ore veins are now broad orange bands, but the bands read as painted stripes (a tennis-ball seam in hero.png) rather than veins, the hero regolith shows contour-line rings (iso-line banding) across the grey, and every sheet.png view still stair-steps the colour edges in square blocks.",
+      "score": 7,
+      "reason": "The marbled pale-white swirls round the big crater are gone; the ejecta is now grey regolith and the sheet shows thin branching veins. In hero.png the veins become broad soft orange patches (one ring round the crater, blobs on the flank) rather than cracks.",
       "fixes": [
-        "break the orange bands into branching veins of varying width that follow fractures, not great circles",
-        "remove the contour-line banding in the regolith (smooth the quantised colour/height field that draws iso-rings in hero.png)",
-        "carry the per-pixel colour into the vertex colour (or sample per pixel in every renderer) so the sheet views stop stair-stepping"
+        "keep the vein lines crisp at hero distance instead of broad orange patches",
+        "a fine regolith grain in the albedo"
       ]
     },
     "detail": {
-      "score": 6,
-      "reason": "A rimmed pit with chips and dark lumps now sits at the crystal site in hero.png; the long body is still a smooth sausage with soft dents.",
+      "score": 7,
+      "reason": "The sliver faces on the top crater rim are gone; the big crater with a nested crater, smaller pits and chips round the crystals hold in hero.png and TOP. The rest of the long body is still smooth.",
       "fixes": [
-        "a finer secondary noise octave at LOD0 for rock grain",
-        "sharper crater rims elsewhere on the body (raised lip, steeper inner wall)"
+        "a finer secondary noise octave at LOD0 for rock grain"
       ]
     },
     "wear": {
       "score": 6,
-      "reason": "Chips and dark tailings lumps on the pit rim beside the crystals and the cyan stain read as a mining site; no ejecta rays and no darker space-weathered old surfaces.",
+      "reason": "Pits with loose chips mark the crystal site; with the ejecta toned to grey the big crater no longer separates as a fresh impact from older ones (only a slightly lighter rim), so the surface tells less about age than before.",
       "fixes": [
-        "bright fresh ejecta rays round the youngest crater, darker space-weathered older surfaces"
+        "ray-shaped lighter-grey ejecta streaks round the youngest crater (not a halo, not white)",
+        "darker space-weathered tone on the older shallow craters",
+        "a tailings pile at the crystal pits"
       ]
     },
     "lod": {
       "score": 7,
-      "reason": "FAR LOD2 now keeps the orange vein colour as per-face patches and the crystals, so the colour read survives the switch; but the faces are large and flat-shaded, giving a harsher light/dark patchwork than LOD0.",
+      "reason": "FAR LOD2 is smooth-shaded and keeps the crystals; the big crater survives only as a faint crease, the veins as brown blotches, so the elongated body reads as a plain potato at the switch.",
       "fixes": [
-        "smooth the LOD2 normals and add ~30% more faces so the patchwork softens at the switch"
+        "keep the big crater as a dark bowl with a pale rim at LOD2",
+        "bake the vein lines into the LOD2 vertex colour as orange streaks rather than blotches"
       ]
     },
     "technical": {
@@ -57,7 +58,7 @@
     }
   },
   "renders": {
-    "hero.png": "f3aa7fd5afafd4c9e5e4586de32a27a51ac8b95b948024cd4a720f15462e0b9b",
-    "sheet.png": "9a718ec091fcffae4a0d81bd4901cce837523cd4a89c91615c9410456636e822"
+    "hero.png": "b627f0fb8fb0e5c60de6e2085e3e935a26b76db26092e30308cd16ad4b5cb1ca",
+    "sheet.png": "6bb462a6c2ee89ed003e92767cbad2f590efe812b342bf066f16b17a00712b4b"
   }
 }

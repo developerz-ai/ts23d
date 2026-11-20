@@ -107,7 +107,10 @@ function mantleChain(): ChainSpec {
     {
       name: 'mantle',
       path: [...path].reverse().reverse(),
-      radius: [0.02, 0.078, 0.106, 0.1, 0.068, 0.046],
+      // The neck end nearly as wide as the head that grows out of it: at 0.046 under a 0.07 head
+      // the head read as a separate collar band under the eyes (wider still folds into a seam
+      // against the arm roots: QA connections).
+      radius: [0.02, 0.078, 0.106, 0.096, 0.062, 0.049],
       links: 4,
       // The mantle is what the eye goes to: it gets the rings the hidden sucker undersides gave up.
       detail: { rings: [14, 5, 3], sides: [48, 18, 10] },
@@ -124,8 +127,16 @@ function headChain(): ChainSpec {
   return {
     name: 'head',
     parent: { chain: 'mantle', link: 3 },
-    path: [along(NECK, AXIS, 0.012), along(CROWN, AXIS, 0.028), along(CROWN, AXIS, -0.012)],
-    radius: [0.042, 0.07, 0.058],
+    path: [
+      along(NECK, AXIS, 0.012),
+      along(CROWN, AXIS, 0.028),
+      along(CROWN, AXIS, 0.004),
+      along(CROWN, AXIS, -0.05),
+    ],
+    // From the mantle's neck, swelling less where the eyes sit (a 0.07 bulge was the collar),
+    // then flaring a little at the crown into the arm roots instead of running straight down as
+    // a cylinder under the eyes (the band, D487).
+    radius: [0.051, 0.064, 0.066, 0.045],
     links: 1,
     blend: 0.05,
     detail: { rings: [26, 8, 3], sides: [48, 16, 10] },
