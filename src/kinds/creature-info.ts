@@ -4,6 +4,7 @@
 // the kind's skinning and the kind's head fur).
 
 import type { StripId } from '../material/index.ts';
+import type { SculptEdit } from '../primitives/index.ts';
 import type { Biology } from './creature-biology.ts';
 import type { Bones } from './creature-bones.ts';
 import type { HeadLayout } from './creature-head.ts';
@@ -20,6 +21,13 @@ export interface CreatureOptions {
   readonly hero?: boolean;
   /** Sculpt cell multipliers for the body and the head (creature-lod.ts): density set directly. */
   readonly cells?: CreatureCellOptions;
+  /**
+   * A recipe's own forms on the head, head-local (+X to the nose, origin at the atlas, left = +Y;
+   * the sculpt mirrors them): a domed forehead, fuller ears, brow and cheek planes over the kind's
+   * block-out. Laid before the features, so the eye sockets, lids and mouth line still cut
+   * through them. Default none.
+   */
+  readonly head?: (l: HeadLayout) => readonly SculptEdit[];
 }
 
 export interface CreatureInfo {

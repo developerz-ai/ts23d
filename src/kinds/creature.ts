@@ -12,6 +12,7 @@ import {
   type Budget,
   type BuildContext,
   defineAsset,
+  dmath,
   type Mesh,
   merge,
   place,
@@ -78,7 +79,7 @@ export function creature(
   const surface = spec.surface ?? 'fur';
   // Head layout first: the armature's jaw bone and the skin's blink read it (creature-rig.ts).
   const h = b.head;
-  const he = headEdits(b, spec, lod, hres);
+  const he = headEdits(b, spec, lod, hres, o.head);
   const l = he.layout;
   const [hx, , hz] = jawHinge(l);
   const hinge: Vec3 = [hx, 0, hz];
@@ -230,7 +231,7 @@ export function creature(
       // The layout's gaze is the left eye's; the right eye looks at its mirror image.
       const g = l.eye.gaze ?? [eyeC[0] + 2, 0, eyeC[2]];
       const gaze: Vec3 = [g[0], g[1] * side, g[2]];
-      const yaw = Math.atan2(gaze[1] - at[1], gaze[0] - at[0]);
+      const yaw = dmath.atan2(gaze[1] - at[1], gaze[0] - at[0]);
       ctx.part(name, rig.rigid(place(place(ball, { yaw }), { pitch: h.pitch }), 'head'), {
         at: headToWorld(h, at),
         density: 1000,

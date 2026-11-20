@@ -1,4 +1,5 @@
 import { expect, it } from 'bun:test';
+import { dmath } from '../core/index.ts';
 import {
   box,
   type Clip,
@@ -140,15 +141,15 @@ it('lists the run clip of an asset whose only motion is a belt, as its GLB has i
         const [r, links] = [0.5, 16];
         const path = Array.from({ length: 64 }, (_, i) => {
           const a = (i / 64) * 2 * Math.PI;
-          return [r * Math.cos(a), 0, r * Math.sin(a)] as const;
+          return [r * dmath.cos(a), 0, r * dmath.sin(a)] as const;
         });
-        const pitch = (64 * 2 * r * Math.sin(Math.PI / 64)) / links;
+        const pitch = (64 * 2 * r * dmath.sin(Math.PI / 64)) / links;
         const link = box({ size: [pitch * 0.8, 0.3, 0.03], color: [1, 1, 1] });
         const belt = merge(
           Array.from({ length: links }, (_, k) => {
             const a = (k / links) * 2 * Math.PI;
             return place(link, {
-              at: [r * Math.cos(a), 0, r * Math.sin(a)],
+              at: [r * dmath.cos(a), 0, r * dmath.sin(a)],
               pitch: -(a + Math.PI / 2),
             });
           }),
@@ -239,4 +240,28 @@ it('lists a clip only when a requested LOD file keeps a channel of it, as the ex
 it('lists no clip at all when the GLBs are written without animations', () => {
   expect(listed([blink, nod], [0, 1, 2], false)).toEqual([]);
   expect(listed([blink, nod], [0, 1, 2], true)).toEqual(['run', 'blink', 'nod']);
+});
+
+it('writes every number at 6 decimals: no float32 or float64 noise digits', () => {
+  const third = defineAsset({
+    name: 'third',
+    kind: 'prop',
+    budget: { triangles: [12, 12, 12] },
+    real: {
+      length: 1 / 3,
+      width: 0.1 + 0.2,
+      height: 1,
+      measures: [{ label: 'length', value: 0.333, parts: ['body'], axis: 'x' }],
+    },
+    sources: ['test'],
+    build(ctx) {
+      ctx.part('body', box({ size: [1 / 3, 0.1 + 0.2, 1], at: [0, 0, 0.5], color: [1, 1, 1] }));
+    },
+  });
+  const m = manifestOf(third, [compile(third, { lod: 0 })], { lods: [] }, []);
+  expect(m.real).toEqual({ length: 0.333333, width: 0.3, height: 1 });
+  expect(m.measures[0]?.measured).toBe(0.333333); // the float32 extent 0.3333333432674408
+  const numbers = JSON.stringify(m).match(/-?\d+\.\d+(?:e-?\d+)?/g) ?? [];
+  expect(numbers.length).toBeGreaterThan(3);
+  for (const n of numbers) expect([n, (n.split('.')[1] ?? '').length <= 6]).toEqual([n, true]);
 });

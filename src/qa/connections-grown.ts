@@ -9,6 +9,7 @@
 //   T3D_CONNECT_BURIED — (warning) most of it is hidden inside the parent: wasted triangles
 
 import type { Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import { APPENDAGE, type ConnectIssue, cm, fmt } from './connections-declare.ts';
 import {
   basis,
@@ -54,7 +55,7 @@ export function grownIssues(
   const q = probeOf(parent);
   // Fine samples: the root ring is a narrow band on long lathe/sweep triangles.
   const S = samplesIn(s, null, 0, Math.max(0.001, stepOf(s) / 3), 6000, 24);
-  const size = Math.hypot(...([0, 1, 2] as const).map((k) => s.bounds.max[k] - s.bounds.min[k]));
+  const size = dmath.norm(([0, 1, 2] as const).map((k) => s.bounds.max[k] - s.bounds.min[k]));
   const R = Math.max(0.05, size);
   const eps = epsOf(s);
   const depth = new Float64Array(S.count);
@@ -109,7 +110,7 @@ export function grownIssues(
   for (let i = 0; i < S.count; i++)
     if (Math.abs(depth[i] ?? 0) <= band) {
       const d = sub(at(i), cin);
-      radial.push(Math.hypot(dot(d, u), dot(d, v)));
+      radial.push(dmath.hypot(dot(d, u), dot(d, v)));
     }
   radial.sort((a, b) => a - b);
   const rho = radial[radial.length >> 1] ?? size / 4;
@@ -120,10 +121,10 @@ export function grownIssues(
     const d = sub(at(i), cin);
     const x = dot(d, u);
     const y = dot(d, v);
-    if (Math.hypot(x, y) < 0.3 * rho) continue;
+    if (dmath.hypot(x, y) < 0.3 * rho) continue;
     const k = Math.min(
       SECTORS - 1,
-      Math.floor(((Math.atan2(y, x) + Math.PI) / (2 * Math.PI)) * SECTORS),
+      Math.floor(((dmath.atan2(y, x) + Math.PI) / (2 * Math.PI)) * SECTORS),
     );
     deepest[k] = Math.max(deepest[k] ?? -Infinity, depth[i] ?? 0);
   }
@@ -190,11 +191,11 @@ function crease(
     const d = depth[i] ?? 0;
     if (d > -0.0005 || d < -band * 2) continue;
     const r = sub(at(i), cin);
-    if (Math.hypot(dot(r, u), dot(r, v)) < 0.5 * rho) continue;
+    if (dmath.hypot(dot(r, u), dot(r, v)) < 0.5 * rho) continue;
     const np = q.normalAt(at(i), Math.max(0.0003, -d / 2), band * 4);
     if (!np) continue;
     const ns: Vec3 = [S.n[i * 3] ?? 0, S.n[i * 3 + 1] ?? 0, S.n[i * 3 + 2] ?? 0];
-    angles.push((Math.acos(Math.max(-1, Math.min(1, dot(ns, np)))) * 180) / Math.PI);
+    angles.push((dmath.acos(Math.max(-1, Math.min(1, dot(ns, np)))) * 180) / Math.PI);
   }
   if (angles.length < 6) return null;
   angles.sort((a, b) => a - b);

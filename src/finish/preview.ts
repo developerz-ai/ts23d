@@ -3,7 +3,7 @@
 // under one simple key + sky light, side by side. Same shader for both halves, so the difference is
 // the finish alone. Unfinished parts (glass, painted, glow) show vertex colour. Deterministic.
 
-import { encodePng, worldMeshes } from '../core/index.ts';
+import { dmath, encodePng, worldMeshes } from '../core/index.ts';
 import { cameraFor } from '../render/index.ts';
 import { linToSrgb, sampleMap, srgbToLin } from './colour.ts';
 import type { FinishResult } from './finish.ts';
@@ -18,7 +18,7 @@ export interface PreviewOptions {
 
 const KEY = (() => {
   const v = [0.45, -0.55, 0.7];
-  const l = Math.hypot(v[0] ?? 0, v[1] ?? 0, v[2] ?? 0);
+  const l = dmath.hypot(v[0] ?? 0, v[1] ?? 0, v[2] ?? 0);
   return v.map((x) => x / l);
 })();
 
@@ -47,7 +47,7 @@ export function previewImage(r: FinishResult, map: Uint8Array, o: PreviewOptions
     const at = (arr: Float32Array, k: number, j: number): number =>
       (arr[a * k + j] ?? 0) * b0 + (arr[b * k + j] ?? 0) * b1 + (arr[c * k + j] ?? 0) * b2;
     const n = [at(m.normals, 3, 0), at(m.normals, 3, 1), at(m.normals, 3, 2)];
-    const nl = Math.hypot(n[0] ?? 0, n[1] ?? 0, n[2] ?? 0) || 1;
+    const nl = dmath.hypot(n[0] ?? 0, n[1] ?? 0, n[2] ?? 0) || 1;
     const ndl = Math.max(
       0,
       n.reduce((s, x, k) => s + (x / nl) * (KEY[k] ?? 0), 0),

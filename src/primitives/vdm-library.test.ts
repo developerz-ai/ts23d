@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { Ts23dError } from '../core/index.ts';
+import { dmath, Ts23dError } from '../core/index.ts';
 import { sampleStamp, stampSlope, type VdmStamp } from './vdm.ts';
 import {
   furrow,
@@ -30,7 +30,7 @@ const sampledSlope = (s: VdmStamp): number => {
       const zu = out[2] ?? 0;
       sampleStamp(s, u, v + h, out);
       const zv = out[2] ?? 0;
-      worst = Math.max(worst, Math.hypot(zu - z, zv - z) / h);
+      worst = Math.max(worst, dmath.hypot(zu - z, zv - z) / h);
     }
   return worst;
 };

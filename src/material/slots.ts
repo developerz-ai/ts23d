@@ -5,9 +5,12 @@
 // may hold the same row: the rows of a painted sheet belong to ONE asset, which holds one material
 // per row (core/material-use.ts finds two on a row while the asset compiles; D299). The table is
 // only id → row, so what a recipe compiles to never depends on what else the process imported.
+// It also lists the ids a mesh was mapped onto outside every compile (a module-level constant
+// mesh): the materials a mesh can show without the compile that uses it having asked (D354).
 
 const rows = new Map<string, number>();
 const spans = new Map<string, number>();
+const outside = new Set<string>();
 
 /** FNV-1a over UTF-16 units, then murmur3's finaliser so short ids spread across few rows. */
 function hash(id: string): number {
@@ -39,6 +42,19 @@ export const idsOnRow = (row: number): string[] => customIds().filter((id) => ro
 /** U span (metres) a custom strip was registered with, or undefined. */
 export const customSpan = (id: string): number | undefined => spans.get(id);
 
+/** Note that a mesh was mapped onto `id` while no compile was running. */
+export const noteOutside = (id: string): void => void outside.add(id);
+
+/** Every id a mesh was mapped onto outside a compile (what a material snapshot puts back). */
+export const outsideIds = (): string[] => [...outside];
+
+/** How many ids meshes were mapped onto outside a compile so far (a cache key). */
+export const outsideCount = (): number => outside.size;
+
+/** The ids on custom row `row` that a mesh was mapped onto outside a compile, by name. */
+export const outsideOnRow = (row: number): string[] =>
+  [...outside].filter((id) => rows.get(id) === row).sort();
+
 export function pushCustom(id: string, spanMetres: number, row: number): void {
   rows.set(id, row);
   spans.set(id, spanMetres);
@@ -47,4 +63,5 @@ export function pushCustom(id: string, spanMetres: number, row: number): void {
 export function clearCustom(): void {
   rows.clear();
   spans.clear();
+  outside.clear();
 }

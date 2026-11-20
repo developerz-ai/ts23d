@@ -7,6 +7,7 @@
 // The model tier's whole-surface exemption (ADR 016) is the one declared exception.
 
 import type { CompiledAsset, IntendedCrease, Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import { type ConnectIssue, cm, fmt } from './connections-declare.ts';
 import type { Shell } from './connections-shells.ts';
 import { glob } from './inspect.ts';
@@ -21,7 +22,7 @@ export const MODEL_SURFACE = 'model_surface';
 const SAMPLES = 2000;
 
 const diagonal = (s: Shell): number =>
-  Math.hypot(
+  dmath.hypot(
     s.bounds.max[0] - s.bounds.min[0],
     s.bounds.max[1] - s.bounds.min[1],
     s.bounds.max[2] - s.bounds.min[2],
@@ -39,7 +40,7 @@ function coveredShare(s: Shell, c: IntendedCrease): number {
     const [a, b, d] = [at(0), at(3), at(6)];
     const u: Vec3 = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
     const v: Vec3 = [d[0] - a[0], d[1] - a[1], d[2] - a[2]];
-    const area = Math.hypot(
+    const area = dmath.hypot(
       u[1] * v[2] - u[2] * v[1],
       u[2] * v[0] - u[0] * v[2],
       u[0] * v[1] - u[1] * v[0],
@@ -50,7 +51,7 @@ function coveredShare(s: Shell, c: IntendedCrease): number {
       (a[1] + b[1] + d[1]) / 3 - c.at[1],
       (a[2] + b[2] + d[2]) / 3 - c.at[2],
     ];
-    if (Math.hypot(m[0], m[1], m[2]) <= c.radius) inside += area;
+    if (dmath.hypot(m[0], m[1], m[2]) <= c.radius) inside += area;
   }
   return total > 0 ? inside / total : 0;
 }

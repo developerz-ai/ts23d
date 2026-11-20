@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { createRng, type Mesh, MeshBuilder, Ts23dError, type Vec3 } from '../core/index.ts';
+import { createRng, dmath, type Mesh, MeshBuilder, Ts23dError, type Vec3 } from '../core/index.ts';
 import { fair } from './fair.ts';
 
 /** Lat-long sphere with shared vertices, radius jittered by ±`ripple` (voxel-like noise). */
@@ -8,7 +8,7 @@ function bumpySphere(ripple: number, rings = 24, segs = 48): Mesh {
   const rng = createRng(3);
   const v = (p: Vec3): number => {
     const r = 1 + rng.range(-ripple, ripple);
-    const l = Math.hypot(...p);
+    const l = dmath.norm(p);
     return b.vertex({
       p: [(p[0] * r) / l, (p[1] * r) / l, (p[2] * r) / l],
       n: [p[0] / l, p[1] / l, p[2] / l],
@@ -23,7 +23,7 @@ function bumpySphere(ripple: number, rings = 24, segs = 48): Mesh {
     ring.push(
       Array.from({ length: segs }, (_, j) => {
         const ph = (2 * Math.PI * j) / segs;
-        return v([Math.cos(th) * Math.cos(ph), Math.cos(th) * Math.sin(ph), Math.sin(th)]);
+        return v([dmath.cos(th) * dmath.cos(ph), dmath.cos(th) * dmath.sin(ph), dmath.sin(th)]);
       }),
     );
   }
@@ -90,9 +90,9 @@ function volume(m: Mesh): number {
 function ripple(m: Mesh): number {
   const r: number[] = [];
   for (let i = 0; i < m.positions.length; i += 3)
-    r.push(Math.hypot(m.positions[i] ?? 0, m.positions[i + 1] ?? 0, m.positions[i + 2] ?? 0));
+    r.push(dmath.hypot(m.positions[i] ?? 0, m.positions[i + 1] ?? 0, m.positions[i + 2] ?? 0));
   const mean = r.reduce((s, x) => s + x, 0) / r.length;
-  return Math.sqrt(r.reduce((s, x) => s + (x - mean) ** 2, 0) / r.length);
+  return Math.sqrt(r.reduce((s, x) => s + dmath.pow(x - mean, 2), 0) / r.length);
 }
 
 describe('fair', () => {

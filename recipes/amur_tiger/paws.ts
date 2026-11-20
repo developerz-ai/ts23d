@@ -5,7 +5,7 @@
 // are their own part: only the tips show where they leave the toe fur.
 
 import type { IntendedCrease, Mesh, SculptEdit, Vec3 } from '@developerz.ai/ts23d';
-import { merge, place } from '@developerz.ai/ts23d';
+import { dmath, merge, place } from '@developerz.ai/ts23d';
 import { v3 } from '../_lib/creature/curve.ts';
 import { clawHorn, hornTube } from '../_lib/creature/horn.ts';
 import { CLAW } from './palette.ts';
@@ -52,7 +52,7 @@ const HIND: PawSpec = {
 
 function toesOf(p: PawSpec): Toe[] {
   return p.toes.map((t) => {
-    const dir: Vec3 = [Math.cos(t.yaw), Math.sin(t.yaw), 0];
+    const dir: Vec3 = [dmath.cos(t.yaw), dmath.sin(t.yaw), 0];
     return {
       at: [p.centre[0] + dir[0] * t.reach, p.centre[1] + dir[1] * t.reach, t.r * 1.05],
       dir,
@@ -75,7 +75,7 @@ function paw(p: PawSpec, lod: number): SculptEdit[] {
       shape: 'ellipsoid',
       at: t.at,
       size: [t.r * 1.15, t.r, t.r * 1.05],
-      rotate: [0, 0, (Math.atan2(t.dir[1], t.dir[0]) * 180) / Math.PI],
+      rotate: [0, 0, (dmath.atan2(t.dir[1], t.dir[0]) * 180) / Math.PI],
       blend: 0.018,
     });
   if (lod < 2) {

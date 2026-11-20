@@ -3,15 +3,18 @@
 // commits the numbers to `tune.json`, imported below, so every build reads the same values
 // (docs/idea/20-tuning.md). Body: a lathe through a monotone cubic profile (no overshoot between
 // stations), closed at the base and inside the neck. Handles: tubes swept along a cubic from the
-// neck to the shoulder, both ends sunk into the wall, seated on attachment pads. Surface: matte
-// terracotta with throw rings toned in by height, a darker, rougher foot, a potter's stamp on the
-// shoulder; wear from `weather()`: a chipped rolled lip and foot ring, dark residue run down from
-// the lip, dust on the shoulder. Dossier: recipes/tune_demo/README.md.
+// neck to the shoulder, both ends sunk into the wall, seated on attachment pads. Surface: a
+// recipe material (terracotta.ts: throw-ring relief, grit, matte) under vertex-colour story: a
+// darker foot, burial soil caked to a ragged tide line, a wine-dark ring under the lip with runs
+// down the neck toward the hero lens, a red-ochre titulus pictus and a potter's stamp on the
+// shoulder; `weather()` chips the rolled lip and foot ring and dusts the shoulder. LOD2 keeps one
+// profile station per feature (foot flare, belly, shoulder, lip roll) and colour only by height.
+// Dossier: recipes/tune_demo/README.md.
 
 import {
-  box,
   cylinder,
   defineAsset,
+  dmath,
   hex,
   lathe,
   type Mesh,
@@ -23,12 +26,18 @@ import {
   type Vec3,
   weather,
 } from '@developerz.ai/ts23d';
+import { mix } from '../_lib/finish/wear.ts';
+import { TERRACOTTA } from './terracotta.ts';
 import saved from './tune.json';
 
 const H = 0.6;
 const CLAY = hex('#c27a52');
 const FOOT = hex('#8a5236');
-const STAMP = hex('#9a5a3a');
+/** The stamp's letters: the jar's own clay, a shade darker where the die pressed it. */
+const STAMP: Vec3 = [CLAY[0] * 0.85, CLAY[1] * 0.85, CLAY[2] * 0.85];
+const SOIL = hex('#a39582');
+const RESIDUE = hex('#241a15');
+const OCHRE = hex('#8e2b18');
 const WALL = 0.012;
 const TUBE = 0.013;
 
@@ -71,15 +80,64 @@ const cubic = (p: readonly Vec3[], t: number): Vec3 => {
   return [at(0), at(1), at(2)];
 };
 
-/** Throw rings and a darker, sooted foot: tone the clay by height (one colour per vertex). */
-function clayTone(m: Mesh): Mesh {
+/** One residue run from the lip: angle (rad, about Z from +X), half-width (m), length (m). */
+interface Run {
+  readonly a: number;
+  readonly w: number;
+  readonly len: number;
+}
+/** Wine-dark residue runs from the pouring side, turned toward the hero lens (az −35°). */
+const RUNS: readonly Run[] = [
+  { a: -0.62, w: 0.014, len: 0.22 },
+  { a: -0.38, w: 0.009, len: 0.14 },
+  { a: -0.86, w: 0.011, len: 0.27 },
+  { a: -1.15, w: 0.008, len: 0.11 },
+  { a: -0.12, w: 0.01, len: 0.17 },
+  { a: 0.2, w: 0.007, len: 0.08 },
+  { a: -1.45, w: 0.009, len: 0.19 },
+];
+
+const band = (x: number, lo: number, hi: number): number =>
+  Math.min(1, Math.max(0, (x - lo) / (hi - lo)));
+
+/**
+ * The jar's colour story, one colour per vertex: a darker, rougher-looking foot; soil caked in the
+ * foot ring with a ragged tide line; a residue ring under the lip and, when `runs`, broad dark runs
+ * down the neck onto the shoulder on the pouring side. Far LOD passes runs = false: only bands by
+ * height, so a coarse mesh gets clean colour blocks instead of per-vertex checkers.
+ */
+function clayTone(m: Mesh, runs: boolean): Mesh {
   const colors = new Float32Array(m.colors);
   for (let v = 0; v < colors.length / 3; v++) {
+    const x = m.positions[v * 3] ?? 0;
+    const y = m.positions[v * 3 + 1] ?? 0;
     const z = m.positions[v * 3 + 2] ?? 0;
-    const ring = 0.94 + 0.06 * Math.sin(z * 2 * Math.PI * 60);
-    const foot = Math.min(1, Math.max(0, (z - 0.015) / 0.035));
-    for (let c = 0; c < 3; c++)
-      colors[v * 3 + c] = ((FOOT[c] ?? 0) * (1 - foot) + (CLAY[c] ?? 0) * foot) * ring;
+    const ang = dmath.atan2(y, x);
+    const rad = dmath.hypot(x, y);
+    let c = mix(FOOT, CLAY, band(z, 0.012, 0.045));
+    // Burial soil caked on the foot and lower body: grey-buff against the orange clay, up to a
+    // ragged tide line 8–18 cm high, thinning over its top 6 cm (four body stations) into the
+    // clay: a graded dirt edge, not a staircase cut at one station.
+    const tide =
+      0.13 +
+      0.035 * dmath.sin(ang * 3 + 0.7) +
+      0.015 * dmath.sin(ang * 7 + 2) +
+      0.008 * dmath.sin(ang * 13 + 4.1);
+    const caked = 1 - band(z, tide - 0.045, tide + 0.015);
+    c = mix(c, SOIL, 0.8 * caked * caked * (3 - 2 * caked));
+    // Residue ring: the lip and the first 3 cm of neck, darkest at the rim.
+    c = mix(c, RESIDUE, 0.8 * band(z, H - 0.03, H - 0.012));
+    if (runs)
+      for (const run of RUNS) {
+        let d = ang - run.a;
+        d = dmath.atan2(dmath.sin(d), dmath.cos(d));
+        const across = Math.abs(d) * rad;
+        const down = H - z;
+        if (across > run.w || down > run.len) continue;
+        const fade = 1 - down / run.len;
+        c = mix(c, RESIDUE, 0.92 * (1 - dmath.pow(across / run.w, 4)) * (0.6 + 0.4 * fade));
+      }
+    colors.set(c, v * 3);
   }
   return { ...m, colors };
 }
@@ -121,14 +179,14 @@ export const tune_demo = defineAsset({
       [0.95 * H, v('neckR') * 0.96],
       [H, v('neckR') * v('lipFlare')],
     ]);
-    const rows = ctx.pick([40, 20, 6]);
-    const profile: Vec2[] = [[0, 0]];
-    for (let i = 0; i <= rows; i++) {
-      const z = (i / rows) * H;
-      profile.push([r(z), z]);
-    }
     const lip = v('neckR') * v('lipFlare');
+    const profile: Vec2[] = [[0, 0]];
     if (ctx.lod < 2) {
+      const rows = ctx.pick([40, 20, 20]);
+      for (let i = 0; i <= rows; i++) {
+        const z = (i / rows) * H;
+        profile.push([r(z), z]);
+      }
       // Rolled lip: a bead turned over the rim, then down inside the neck to its floor.
       profile.pop();
       profile.push(
@@ -140,18 +198,30 @@ export const tune_demo = defineAsset({
         [v('neckR') * 0.96 - WALL, H - 0.06],
         [0, H - 0.06],
       );
-    } else profile.push([0, H]); // LOD2 closes the mouth: the opening is a pixel at that range.
+    } else {
+      // LOD2: one station per feature, so the foot flare, belly, shoulder and the lip roll
+      // survive at 14 sides inside the 300-triangle prop band; the mouth closes (the opening is a
+      // pixel at that range).
+      // Sorted and deduplicated: a low belly (bellyZ 0.25 puts it at 0.15 m) would otherwise come
+      // after the 0.18 m lower-body station and fold the wall back on itself.
+      const stations = [...new Set([0, 0.03, 0.3 * H, zB, (zB + zN) / 2, zN])].sort(
+        (a, b) => a - b,
+      );
+      for (const z of stations) profile.push([r(z), z]);
+      profile.push([lip, H - 0.012], [lip + 0.005, H - 0.004], [0, H]);
+    }
     const body = clayTone(
       lathe({
         profile,
         segments: ctx.pick([36, 18, 14]),
         color: CLAY,
-        strip: 'concrete',
+        strip: TERRACOTTA,
         uv: 'metres',
       }),
+      ctx.lod < 2,
     );
-    // Use: chips on the lip bead and foot ring, oil-dark residue run down from the lip on the
-    // pouring side (+X), dust settled on the shoulder.
+    // Use: chips on the lip bead and foot ring (LOD0/1: on a coarse ring they would be checkers),
+    // dust settled on the shoulder.
     const worn = weather(
       ctx,
       { body },
@@ -160,47 +230,49 @@ export const tune_demo = defineAsset({
         seed: 3,
         age: 0.7,
         resolution: [0, 0, 0],
-        fasteners: [
-          { at: [lip + 0.004, 0.02, H - 0.004], radius: 0.03 },
-          { at: [lip + 0.002, -0.03, H - 0.004], radius: 0.025 },
-        ],
         under: hex('#d9b08a'),
         effects: {
-          chips: { where: 'convex-edges', amount: 0.12 },
-          ...(ctx.lod < 2
-            ? {
-                rust: {
-                  where: 'below-fasteners | fasteners',
-                  amount: 0.5,
-                  streaks: true,
-                  streakLength: 0.22,
-                  color: [0.06, 0.035, 0.025] as const,
-                  strength: 0.85,
-                },
-              }
-            : {}),
+          ...(ctx.lod < 2 ? { chips: { where: 'convex-edges', amount: 0.12 } } : {}),
           dust: { where: 'up-facing', amount: 0.3, strength: 0.3 },
         },
       },
     );
     const extras: Mesh[] = [worn.body];
     if (ctx.lod === 0) {
-      // Potter's stamp on the shoulder (+X): a sunk cartouche with raised letters, tilted to lie
-      // on the sloping wall.
+      // Potter's stamp on the shoulder (+X): the maker's letters pressed in relief in the jar's
+      // own clay and strip, bent to the wall's curve so every stroke sits on it (a flat cartouche
+      // plate stood off the curved shoulder and read as a pale label).
       const zS = v('neckZ') * H - 0.06;
-      const slope = (r(zS + 0.005) - r(zS - 0.005)) / 0.01;
-      const tilt = { at: [r(zS) - 0.0008, 0, zS] as Vec3, pitch: Math.atan(slope) };
+      const rS = r(zS);
       extras.push(
-        place(box({ size: [0.002, 0.042, 0.016], at: [0, 0, -0.008], color: STAMP }), tilt),
         place(
           text('LCF', {
-            origin: [0.001, 0, -0.004],
-            height: 0.008,
-            depth: 0.0012,
+            origin: [rS - 0.0004, 0, 0],
+            height: 0.01,
+            depth: 0.0014,
             align: 'centre',
             color: STAMP,
+            strip: TERRACOTTA,
+            surface: (u, w) => Math.sqrt(Math.max(0, dmath.pow(r(zS + w), 2) - u * u)) - rS,
           }),
-          tilt,
+          { at: [0, 0, zS] },
+        ),
+      );
+      // Titulus pictus: the merchant's red-ochre brush note on the shoulder, turned toward the
+      // hero lens and bent to the wall's curve so every stroke sits on the clay.
+      const zT = zN - 0.1;
+      const rT = r(zT);
+      extras.push(
+        place(
+          text('VIN XII', {
+            origin: [rT - 0.0003, 0, 0],
+            height: 0.014,
+            depth: 0.0006,
+            align: 'centre',
+            color: OCHRE,
+            surface: (u, w) => Math.sqrt(Math.max(0, dmath.pow(r(zT + w), 2) - u * u)) - rT,
+          }),
+          { at: [0, 0, zT], yaw: -0.3 },
         ),
       );
     }
@@ -220,13 +292,13 @@ export const tune_demo = defineAsset({
         [0, s * (r(zS) + reach + 0.04), zS + 0.06],
         [0, s * (r(zS) - WALL), zS],
       ];
-      const steps = ctx.pick([16, 9, 4]);
+      const steps = ctx.pick([16, 9, 3]);
       const loop: Mesh[] = [
         sweep({
           section: { radius: TUBE, segments: ctx.pick([10, 7, 4]) },
           path: Array.from({ length: steps + 1 }, (_, i) => cubic(ctrl, i / steps)),
           color: CLAY,
-          strip: 'concrete',
+          strip: TERRACOTTA,
           caps: true,
         }),
       ];
@@ -239,7 +311,7 @@ export const tune_demo = defineAsset({
               length: 0.008,
               segments: ctx.pick([12, 8, 6]),
               color: CLAY,
-              strip: 'concrete',
+              strip: TERRACOTTA,
               at: [0, s * (r(z) - 0.003), z],
               axis: 'y',
             }),

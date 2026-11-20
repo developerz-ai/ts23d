@@ -1,13 +1,13 @@
 {
   "asset": "signal_gantry",
   "reviewer": "agent",
-  "overall": 7.4,
+  "overall": 7.7,
   "scores": {
     "silhouette": {
       "score": 8,
-      "reason": "Lattice gantry over two roads: latticed posts on footings, knee braces, timber walkway with galvanised handrail, dolls with lower-quadrant arms and spectacles; reads from every view.",
+      "reason": "Lattice gantry over two roads with knee braces, walkway and handrail, dolls with lower-quadrant arms; the access ladder now stands clear of the post and reads in SIDE and hero.png.",
       "fixes": [
-        "make the access ladder read in SIDE (it hides inside the post lattice): stand it 0.2 m off the post face"
+        "finials on the doll tops a little larger so they read against the sky"
       ]
     },
     "proportions": {
@@ -18,26 +18,26 @@
       ]
     },
     "materials": {
-      "score": 7,
-      "reason": "Black lattice now carries rust-brown streaks and lighter worn edges, handrail is galvanised grey, walkway timber, arms red with white bands. The black paint is still one value across sun and shade faces.",
+      "score": 8,
+      "reason": "The lattice is now a lighter worn steel grey with lighter up-facing flanges and darker shade faces, rust-brown tints on the posts, galvanised handrail, timber deck, arms red with white bands.",
       "fixes": [
-        "sun-faded, slightly lighter paint on the up-facing lattice members"
+        "a little more rust bloom at the lattice nodes and feet so the lighter steel does not read clean"
       ]
     },
     "detail": {
       "score": 7,
-      "reason": "Raking.png: lattice webs, battens, knee braces, handrails, finials, lamp cases, balance weights. No operating rods or wires running down to the ground.",
+      "reason": "Lattice webs, battens, knee braces, handrails, ladder on stand-off brackets, lamp cases, balance weights; the new operating rods are too thin to read in hero.png or the sheet, and no rivet heads show at the nodes.",
       "fixes": [
-        "operating rods/wires down the posts to ground level",
+        "operating rods at least 4 cm and pale enough to read against the black post",
         "rivet heads at lattice nodes"
       ]
     },
     "wear": {
-      "score": 6,
-      "reason": "Rust streaks on the posts and splash on the footings now read; no soot on the girder underside above the tracks, walkway boards unworn.",
+      "score": 7,
+      "reason": "The closer, lower hero now sees the girder underside: the deck soffit reads darker with sooty patches over the warm timber, and rust tints show on the posts; the worn tread path on the walkway still does not show.",
       "fixes": [
-        "soot band on the girder underside above each road",
-        "worn, lighter tread path along the walkway boards"
+        "a lighter tread path along the walkway readable from 3/4",
+        "stronger soot directly above the track centrelines so it separates from shadow"
       ]
     },
     "lod": {
@@ -49,65 +49,14 @@
     },
     "technical": {
       "score": 8,
-      "reason": "QA PASS: 8.9k / 3.8k / 752 tris, 6 / 6 / 6 draws (arms pivot as moving parts).",
+      "reason": "QA PASS: 9.0k / 3.9k / 752 tris, 6 / 6 / 6 draws (arms pivot as moving parts).",
       "fixes": [
         "merge the static lattice and walkway into one draw"
       ]
     }
   },
   "renders": {
-    "hero.png": "d681af88916df25e5ded0022b75cf58af0f4b65992e68eeaf4f5375a390ca453",
-    "sheet.png": "67f6c3074fcf64942417db810eeb729eb3be822ea9f5039116ef74ca72e833da"
-  },
-  "metrics": {
-    "silhouette": [
-      {
-        "view": "front",
-        "iou": 0.991
-      },
-      {
-        "view": "side",
-        "iou": 0.832
-      },
-      {
-        "view": "3/4",
-        "iou": 0.917
-      }
-    ],
-    "focal": {
-      "peakPart": "footing_r",
-      "peak": [
-        300,
-        379
-      ],
-      "focalShare": 0,
-      "focalArea": 0,
-      "top": [
-        {
-          "part": "footing_r",
-          "share": 0.269
-        },
-        {
-          "part": "post_r",
-          "share": 0.256
-        },
-        {
-          "part": "walkway",
-          "share": 0.22
-        }
-      ],
-      "declared": []
-    },
-    "rest": {
-      "share": 0.104,
-      "spread": 0.535,
-      "min": 0.25
-    },
-    "shape": {
-      "acuteShare": 0.273,
-      "straightShare": 0.858,
-      "taper": 0.385,
-      "shape": "stable"
-    }
+    "hero.png": "450f357622c5f3c04caef4034d6b08ef57cbe6fd5e5421c51ac3a7df2d51e977",
+    "sheet.png": "c883b6e2c6081960b584b68e0db54c4b151b0396fdd3a073a17e7a035ea6c8f0"
   }
 }

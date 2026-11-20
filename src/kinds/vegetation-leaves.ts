@@ -3,13 +3,13 @@
 // card on an exact twig vertex (`transportFrames` = the sweep's own frames); LOD1 replaces each
 // twig by one bigger cluster card rooted on its parent's bark.
 
-import { type Mesh, merge, type Rng, type Vec3 } from '../core/index.ts';
+import { dmath, type Mesh, merge, type Rng, type Vec3 } from '../core/index.ts';
 import { planar, transportFrames } from '../primitives/index.ts';
 import { type LeafParams, OUTLINES } from './vegetation-params.ts';
 import type { Stem } from './vegetation-skeleton.ts';
 
 const unit = (a: Vec3): Vec3 => {
-  const l = Math.hypot(a[0], a[1], a[2]) || 1;
+  const l = dmath.hypot(a[0], a[1], a[2]) || 1;
   return [a[0] / l, a[1] / l, a[2] / l];
 };
 
@@ -30,7 +30,7 @@ export function crownShade(stems: readonly Stem[], level: number): CrownShade {
   for (const s of stems) {
     if (s.level < level) continue;
     for (const p of s.pts) {
-      r = Math.max(r, Math.hypot(p[0] - c[0], p[1] - c[1]));
+      r = Math.max(r, dmath.hypot(p[0] - c[0], p[1] - c[1]));
       z0 = Math.min(z0, p[2]);
       z1 = Math.max(z1, p[2]);
     }
@@ -59,9 +59,9 @@ export function card(
   const m = planar({ points, color: leaf.color, doubleSided: true });
   const k = 1 + rng.range(-leaf.colorVar, leaf.colorVar);
   const hue = rng.range(-leaf.colorVar, leaf.colorVar) * 0.6;
-  const radial = Math.hypot(base[0] - shade.centre[0], base[1] - shade.centre[1]) / shade.radius;
+  const radial = dmath.hypot(base[0] - shade.centre[0], base[1] - shade.centre[1]) / shade.radius;
   const up = (base[2] - shade.zMin) / (shade.zMax - shade.zMin);
-  const ao = 0.5 + 0.35 * Math.min(1, radial) ** 0.8 + 0.2 * Math.max(0, Math.min(1, up));
+  const ao = 0.5 + 0.35 * dmath.pow(Math.min(1, radial), 0.8) + 0.2 * Math.max(0, Math.min(1, up));
   const [r, g, b] = leaf.color;
   for (let i = 0; i < m.colors.length / 3; i++) {
     const u = outline[i % outline.length]?.[0] ?? 0;
@@ -91,7 +91,7 @@ function aim(radial: Vec3, along: Vec3, leaf: LeafParams, rng: Rng): { dir: Vec3
     dir[2] * radial[0] - dir[0] * radial[2],
     dir[0] * radial[1] - dir[1] * radial[0],
   ]);
-  const s0 = Math.hypot(...s1) < 0.5 ? level : s1;
+  const s0 = dmath.norm(s1) < 0.5 ? level : s1;
   // Flat cards (pine pads) lie level: side goes horizontal, roll fades out.
   const side = unit([
     s0[0] + (level[0] - s0[0]) * flat,
@@ -104,8 +104,8 @@ function aim(radial: Vec3, along: Vec3, leaf: LeafParams, rng: Rng): { dir: Vec3
     dir[2] * side[0] - dir[0] * side[2],
     dir[0] * side[1] - dir[1] * side[0],
   ];
-  const c = Math.cos(roll);
-  const s = Math.sin(roll);
+  const c = dmath.cos(roll);
+  const s = dmath.sin(roll);
   return { dir, side: [side[0] * c + t[0] * s, side[1] * c + t[1] * s, side[2] * c + t[2] * s] };
 }
 
@@ -132,9 +132,9 @@ export function leafCards(
       if (!f || !c) continue;
       const a = (rng.int(0, ringSegments - 1) / ringSegments) * Math.PI * 2;
       const radial: Vec3 = [
-        Math.cos(a) * f.n[0] + Math.sin(a) * f.b[0],
-        Math.cos(a) * f.n[1] + Math.sin(a) * f.b[1],
-        Math.cos(a) * f.n[2] + Math.sin(a) * f.b[2],
+        dmath.cos(a) * f.n[0] + dmath.sin(a) * f.b[0],
+        dmath.cos(a) * f.n[1] + dmath.sin(a) * f.b[1],
+        dmath.cos(a) * f.n[2] + dmath.sin(a) * f.b[2],
       ];
       const r = st.radii[j] ?? 0;
       const base: Vec3 = [c[0] + radial[0] * r, c[1] + radial[1] * r, c[2] + radial[2] * r];

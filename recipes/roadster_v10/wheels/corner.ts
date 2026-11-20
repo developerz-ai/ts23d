@@ -4,21 +4,21 @@
 // outer face +Y) and mirrored for the right side so the outer face always points outboard.
 
 import type { BuildContext, Lod, Mesh, Rng, Vec3 } from '@developerz.ai/ts23d';
-import { merge } from '@developerz.ai/ts23d';
+import { dmath, merge } from '@developerz.ai/ts23d';
 import type { Corner } from '../chassis/points.ts';
 import { C } from '../lib/colors.ts';
 import { mirrorY, rod, shift, sub, tube } from '../lib/geo.ts';
-import { brakeDust, tyreDust } from '../lib/wear.ts';
+import { brakeDust, tinted, tyreDust } from '../lib/wear.ts';
 import { caliper, caliperBracket, disc } from './brakes.ts';
 import { rim } from './rim.ts';
 import { tyre } from './tyre.ts';
 
-/** Wheel + disc in the local wheel frame (left-hand: outer face +Y). */
-/** Tyre + disc in the local wheel frame (left-hand: outer face +Y). The rim is its own child
- *  part so it can carry the brushed-alloy finish without making the rubber metallic. */
+/** Tyre + disc in the local wheel frame (left-hand: outer face +Y). The rim is a named child
+ *  part that merges into the wheel's draw (one draw per spinning wheel). */
 export function wheelMesh(lod: Lod, c: Corner): Mesh {
   const rubber = tyreDust(tyre(lod, c.tyre), c.tyre.rim, c.tyre.rim + c.tyre.side);
-  if (lod === 2) return rubber;
+  // Far: the ten-sided tyre is flat-lit, so it is baked near black to stay a ring round the rim.
+  if (lod === 2) return tinted(rubber, (_p, k) => [k[0] * 0.4, k[1] * 0.4, k[2] * 0.4]);
   return merge([rubber, disc(lod, c.disc)]);
 }
 
@@ -28,7 +28,8 @@ export const rimMesh = (lod: Lod, c: Corner, rng: Rng): Mesh =>
   brakeDust(
     rim(lod, { r: c.tyre.rim, width: c.rimWidth }),
     c.tyre.rim,
-    c.front ? 0.95 : 0.7,
+    // Far, the rim is one dished disc: lighter dust keeps it apart from the black tyre.
+    (c.front ? 0.95 : 0.7) * (lod === 2 ? 0.45 : 1),
     rng.fork(c.front ? 'brake_dust_front' : 'brake_dust_rear'),
   );
 
@@ -117,9 +118,9 @@ export function uprightMesh(lod: Lod, c: Corner): Mesh {
     // Brake hose from the caliper up the knuckle.
     const a = c.caliperAt;
     const cp: Vec3 = [
-      (c.disc.r - 0.03) * Math.cos(a),
+      (c.disc.r - 0.03) * dmath.cos(a),
       c.disc.y - c.disc.thick / 2 - 0.03,
-      (c.disc.r - 0.03) * Math.sin(a),
+      (c.disc.r - 0.03) * dmath.sin(a),
     ];
     parts.push(
       tube(
@@ -169,10 +170,7 @@ export function addCorner(
       motion: { kind: 'spin', axis: [0, 1, 0], rps: opts.spinRps },
       clearOf: [uprName, ...opts.clearOf],
     });
-    ctx.part(`rim_${c.id}`, sideOf(c, rimMesh(lod, c, ctx.rng)), {
-      parent: wheelName,
-      finish: 'brushed',
-    });
+    ctx.part(`rim_${c.id}`, sideOf(c, rimMesh(lod, c, ctx.rng)), { parent: wheelName });
   } else {
     if (lod < 2) ctx.part(uprName, sideOf(c, uprightMesh(lod, c)), { at: c.wheel });
     ctx.part(wheelName, sideOf(c, wheelMesh(lod, c)), {
@@ -180,9 +178,6 @@ export function addCorner(
       motion: { kind: 'spin', axis: [0, 1, 0], rps: opts.spinRps },
       clearOf: [uprName, ...opts.clearOf],
     });
-    ctx.part(`rim_${c.id}`, sideOf(c, rimMesh(lod, c, ctx.rng)), {
-      parent: wheelName,
-      finish: 'brushed',
-    });
+    ctx.part(`rim_${c.id}`, sideOf(c, rimMesh(lod, c, ctx.rng)), { parent: wheelName });
   }
 }

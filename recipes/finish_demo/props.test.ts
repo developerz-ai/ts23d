@@ -2,7 +2,7 @@
 // a hoop sized from the smooth bilge curve floats off a coarse three-row LOD2 body.
 
 import { describe, expect, it } from 'bun:test';
-import { createRng, hex, type Mesh } from '@developerz.ai/ts23d';
+import { createRng, dmath, hex, type Mesh } from '@developerz.ai/ts23d';
 import { caskMesh } from './props.ts';
 
 const R = 0.24; // head radius
@@ -14,7 +14,7 @@ function hoopStandOff(m: Mesh): number[] {
   const at = (i: number) => {
     const x = m.positions[i * 3] ?? 0;
     const y = m.positions[i * 3 + 1] ?? 0;
-    return { a: Math.atan2(y, x), r: Math.hypot(x, y), z: m.positions[i * 3 + 2] ?? 0 };
+    return { a: dmath.atan2(y, x), r: dmath.hypot(x, y), z: m.positions[i * 3 + 2] ?? 0 };
   };
   const isHoop = (i: number) =>
     [0, 1, 2].every((c) => Math.abs((m.colors[i * 3 + c] ?? 0) - (HOOP[c] ?? 0)) < 1e-4);
@@ -28,7 +28,7 @@ function hoopStandOff(m: Mesh): number[] {
       if (isHoop(j)) continue;
       const b = at(j);
       // The side never comes inside the head radius (R); the chime and head rings do.
-      if (b.r < R - 1e-3 || Math.abs(Math.sin(b.a - h.a)) > 1e-3 || Math.cos(b.a - h.a) < 0)
+      if (b.r < R - 1e-3 || Math.abs(dmath.sin(b.a - h.a)) > 1e-3 || dmath.cos(b.a - h.a) < 0)
         continue;
       const z = Math.round(b.z * 1e5) / 1e5;
       side.set(z, Math.max(side.get(z) ?? 0, b.r));

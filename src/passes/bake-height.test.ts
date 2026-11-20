@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { type Mesh, MeshBuilder, type Vec3 } from '../core/index.ts';
+import { dmath, type Mesh, MeshBuilder, type Vec3 } from '../core/index.ts';
 import { bakeHeight, fieldHit } from './bake-height.ts';
 import { bakeNormals } from './bake-normals.ts';
 
@@ -7,7 +7,7 @@ import { bakeNormals } from './bake-normals.ts';
 const C: Vec3 = [0.5, 0.5, -0.15];
 const R = 0.2;
 const field = (p: Vec3): number =>
-  Math.min(p[2], Math.hypot(p[0] - C[0], p[1] - C[1], p[2] - C[2]) - R);
+  Math.min(p[2], dmath.hypot(p[0] - C[0], p[1] - C[1], p[2] - C[2]) - R);
 
 /** The flat low: two triangles, UV = XY. */
 function flat(): Mesh {
@@ -22,11 +22,11 @@ const S = 64;
 const decode = (n: Uint8Array, x: number, y: number): Vec3 => {
   const t = (y * S + x) * 4;
   const v = [0, 1, 2].map((k) => ((n[t + k] ?? 0) / 255) * 2 - 1);
-  const l = Math.hypot(v[0] ?? 0, v[1] ?? 0, v[2] ?? 0);
+  const l = dmath.hypot(v[0] ?? 0, v[1] ?? 0, v[2] ?? 0);
   return [(v[0] ?? 0) / l, (v[1] ?? 0) / l, (v[2] ?? 0) / l];
 };
 const deg = (a: Vec3, b: Vec3): number =>
-  (Math.acos(Math.min(1, a[0] * b[0] + a[1] * b[1] + a[2] * b[2])) * 180) / Math.PI;
+  (dmath.acos(Math.min(1, a[0] * b[0] + a[1] * b[1] + a[2] * b[2])) * 180) / Math.PI;
 
 describe('fieldHit', () => {
   test('finds no crossing outside the cage, the exact one inside', () => {
@@ -58,7 +58,7 @@ describe('bakeHeight', () => {
       for (let x = 0; x < S; x++) {
         const px = (x + 0.5) / S;
         const py = (y + 0.5) / S;
-        const d = Math.hypot(px - C[0], py - C[1]);
+        const d = dmath.hypot(px - C[0], py - C[1]);
         // The bump meets the plane at d = √(R² − C.z²) ≈ 0.132: skip the crease ring.
         if (d > 0.12 && d < 0.145) continue;
         const z = d < 0.132 ? C[2] + Math.sqrt(R * R - d * d) : 0;
@@ -98,7 +98,7 @@ describe('bakeNormals from a field', () => {
     const m = decode(r.normal, x, 32);
     const px = (x + 0.5) / S;
     const py = 32.5 / S;
-    const z = C[2] + Math.sqrt(R * R - (px - C[0]) ** 2 - (py - C[1]) ** 2);
+    const z = C[2] + Math.sqrt(R * R - dmath.pow(px - C[0], 2) - dmath.pow(py - C[1], 2));
     expect(
       deg([m[0], -m[1], m[2]], [(px - C[0]) / R, (py - C[1]) / R, (z - C[2]) / R]),
     ).toBeLessThan(2);

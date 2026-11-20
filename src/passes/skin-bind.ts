@@ -6,6 +6,7 @@
 import {
   type Armature,
   type Bone,
+  dmath,
   type Mesh,
   type Quat,
   quatRotate,
@@ -113,7 +114,7 @@ export function bindPoseError(mesh: Mesh, sk: Armature, ibm = inverseBind(sk)): 
   for (let i = 0; i < posed.length; i += 3)
     worst = Math.max(
       worst,
-      Math.hypot(
+      dmath.hypot(
         (posed[i] ?? 0) - (mesh.positions[i] ?? 0),
         (posed[i + 1] ?? 0) - (mesh.positions[i + 1] ?? 0),
         (posed[i + 2] ?? 0) - (mesh.positions[i + 2] ?? 0),

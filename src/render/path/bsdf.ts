@@ -4,6 +4,7 @@
 // GGX lobes, cosine for diffuse), evaluate all, weight = f·cos ÷ mixture pdf. Two-sided foliage
 // (diffuse reflection + diffuse transmission) lives here too; hair is hair.ts.
 
+import { dmath } from '../../core/index.ts';
 import { ggxD, schlick, smithV } from '../brdf.ts';
 import { basis, dot3, fromLocal, toLocal } from './frame.ts';
 import { ggxAlbedo } from './ggx-table.ts';
@@ -65,13 +66,14 @@ export function prepare(s: Surf, wo: ArrayLike<number>, mode: number, trans: num
   l.a = Math.max(s.rough * s.rough, 1e-3);
   l.f90 = look.specular + (1 - look.specular) * metal;
   l.cc = mode === MODE.lambert || mode === MODE.foliage ? 0 : look.clearcoat;
-  l.ca = Math.max(look.clearcoatRoughness ** 2, 1e-3);
+  l.ca = Math.max(look.clearcoatRoughness * look.clearcoatRoughness, 1e-3);
   l.kt = 0;
   ggxAlbedo(s.rough, ndv, ab);
   const A = ab[0] ?? 1;
   const B = ab[1] ?? 0;
   const fc = l.cc * schlick(0.04, 1, ndv);
-  const f0i = ((look.ior - 1) / (look.ior + 1)) ** 2;
+  const rIor = (look.ior - 1) / (look.ior + 1);
+  const f0i = rIor * rIor;
   let es = 0;
   let ed = 0;
   for (let k = 0; k < 3; k++) {
@@ -136,7 +138,7 @@ export function evalBsdf(
   let pdf = pd * cosPdf;
   if (l.ps <= 0 && l.pc <= 0) return pdf;
   for (let k = 0; k < 3; k++) h[k] = (wo[k] ?? 0) + (wi[k] ?? 0);
-  const hl = Math.hypot(h[0] ?? 0, h[1] ?? 0, h[2] ?? 0) || 1;
+  const hl = dmath.hypot(h[0] ?? 0, h[1] ?? 0, h[2] ?? 0) || 1;
   const ndh = Math.max(0, dot3(s.n, h) / hl);
   const vdh = Math.max(0, dot3(wo, h) / hl);
   if (l.ps > 0) {
@@ -162,7 +164,7 @@ function vndf(vx: number, vy: number, vz: number, a: number, u1: number, u2: num
   let hx = a * vx;
   let hy = a * vy;
   let hz = vz;
-  const hl = Math.hypot(hx, hy, hz) || 1;
+  const hl = dmath.hypot(hx, hy, hz) || 1;
   hx /= hl;
   hy /= hl;
   hz /= hl;
@@ -174,9 +176,9 @@ function vndf(vx: number, vy: number, vz: number, a: number, u1: number, u2: num
   const t2z = hx * t1y - hy * t1x;
   const r = Math.sqrt(u1);
   const phi = 2 * Math.PI * u2;
-  const p1 = r * Math.cos(phi);
+  const p1 = r * dmath.cos(phi);
   const s = 0.5 * (1 + hz);
-  const p2 = (1 - s) * Math.sqrt(1 - p1 * p1) + s * r * Math.sin(phi);
+  const p2 = (1 - s) * Math.sqrt(1 - p1 * p1) + s * r * dmath.sin(phi);
   const p3 = Math.sqrt(Math.max(0, 1 - p1 * p1 - p2 * p2));
   const nx = p1 * t1x + p2 * t2x + p3 * hx;
   const ny = p1 * t1y + p2 * t2y + p3 * hy;
@@ -184,7 +186,7 @@ function vndf(vx: number, vy: number, vz: number, a: number, u1: number, u2: num
   const x = a * nx;
   const y = a * ny;
   const z = Math.max(1e-6, nz);
-  const l = Math.hypot(x, y, z);
+  const l = dmath.hypot(x, y, z);
   m[0] = x / l;
   m[1] = y / l;
   m[2] = z / l;
@@ -204,8 +206,8 @@ export function sampleBsdf(
   basis(s.n);
   if (l.mode === MODE.foliage) {
     const r = Math.sqrt(u1);
-    loc[0] = r * Math.cos(2 * Math.PI * u2);
-    loc[1] = r * Math.sin(2 * Math.PI * u2);
+    loc[0] = r * dmath.cos(2 * Math.PI * u2);
+    loc[1] = r * dmath.sin(2 * Math.PI * u2);
     loc[2] = Math.sqrt(Math.max(0, 1 - u1)) * (u0 < l.kt ? -1 : 1);
     fromLocal(loc, wi);
   } else {
@@ -218,8 +220,8 @@ export function sampleBsdf(
       for (let k = 0; k < 3; k++) loc[k] = d * (m[k] ?? 0) - (loc[k] ?? 0);
     } else {
       const r = Math.sqrt(u1);
-      loc[0] = r * Math.cos(2 * Math.PI * u2);
-      loc[1] = r * Math.sin(2 * Math.PI * u2);
+      loc[0] = r * dmath.cos(2 * Math.PI * u2);
+      loc[1] = r * dmath.sin(2 * Math.PI * u2);
       loc[2] = Math.sqrt(Math.max(0, 1 - u1));
     }
     fromLocal(loc, wi);

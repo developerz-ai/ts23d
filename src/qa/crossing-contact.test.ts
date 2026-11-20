@@ -3,7 +3,14 @@
 // that stops short of it is not.
 
 import { describe, expect, it } from 'bun:test';
-import { type CompiledAsset, compile, defineAsset, type Mesh, type Vec3 } from '../core/index.ts';
+import {
+  type CompiledAsset,
+  compile,
+  defineAsset,
+  dmath,
+  type Mesh,
+  type Vec3,
+} from '../core/index.ts';
 import { beam, planar } from '../primitives/index.ts';
 import { connectionReport } from './connections.ts';
 import { edgeContact } from './connections-crossing.ts';
@@ -89,7 +96,7 @@ describe('a rod and an open sheet', () => {
     const pieces = [sheet('sheet'), rod(3.7)];
     const hit = contact(pieces, 'rod', 'sheet');
     expect(hit?.gap).toBe(0);
-    expect(Math.hypot(...(hit?.at ?? [9, 9, 9]).map((v, k) => v - (C[k] ?? 0)))).toBeLessThan(0.03);
+    expect(dmath.norm((hit?.at ?? [9, 9, 9]).map((v, k) => v - (C[k] ?? 0)))).toBeLessThan(0.03);
     // The sheet's own edges (its four sides and one diagonal) pass nowhere near the rod.
     expect(contact(pieces, 'sheet', 'rod')).toBeNull();
   });

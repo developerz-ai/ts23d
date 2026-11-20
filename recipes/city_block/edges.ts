@@ -4,6 +4,7 @@
 // its start, z up) and `place`d. Also how far an edge is from the nearest street centreline.
 
 import type { Vec2 } from '@developerz.ai/ts23d';
+import { dmath } from '@developerz.ai/ts23d';
 
 export interface Edge {
   readonly i: number;
@@ -23,10 +24,10 @@ export function edgesOf(ring: readonly Vec2[]): Edge[] {
   for (let i = 0; i < ring.length; i++) {
     const a = ring[i] ?? [0, 0];
     const b = ring[(i + 1) % ring.length] ?? a;
-    const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+    const len = dmath.hypot(b[0] - a[0], b[1] - a[1]);
     if (len < 1e-6) continue;
     const u: Vec2 = [(b[0] - a[0]) / len, (b[1] - a[1]) / len];
-    out.push({ i, a, b, u, n: [u[1], -u[0]], len, yaw: Math.atan2(-u[0], u[1]) });
+    out.push({ i, a, b, u, n: [u[1], -u[0]], len, yaw: dmath.atan2(-u[0], u[1]) });
   }
   return out;
 }
@@ -47,7 +48,7 @@ export function distToLine(p: Vec2, line: readonly Vec2[]): number {
     const ey = b[1] - a[1];
     const l2 = ex * ex + ey * ey || 1;
     const t = Math.max(0, Math.min(1, ((p[0] - a[0]) * ex + (p[1] - a[1]) * ey) / l2));
-    best = Math.min(best, Math.hypot(a[0] + ex * t - p[0], a[1] + ey * t - p[1]));
+    best = Math.min(best, dmath.hypot(a[0] + ex * t - p[0], a[1] + ey * t - p[1]));
   }
   return best;
 }

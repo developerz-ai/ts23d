@@ -5,6 +5,7 @@
 // stay out: they swing the whole body through a full circle, which no in-place fade can hide.
 // Hooks: medium, clips. Reduced motion keeps the camera and body still and skips the burst.
 
+import { dmath } from '@developerz.ai/ts23d/core';
 import { type AnimationAction, MathUtils, type Vector3 } from 'three';
 import { around, ease, phase } from './cinema.ts';
 import { burstClip, inPlace, swimClip } from './clips.ts';
@@ -42,7 +43,7 @@ export function burstWeight(t: number, duration: number): number {
 
 /** Camera distance that keeps the body whole at any drift angle, in either screen orientation. */
 export function fitDistance(size: Vector3, fovDeg: number, aspect: number): number {
-  const tall = Math.tan(MathUtils.degToRad(fovDeg) / 2);
+  const tall = dmath.tan(MathUtils.degToRad(fovDeg) / 2);
   const across = Math.max(size.x, size.z) / (2 * tall * aspect);
   return Math.max(across, size.y / (2 * tall)) * MARGIN + Math.min(size.x, size.z) / 2;
 }
@@ -73,13 +74,13 @@ class Swim implements Scenario {
     this.pose(poseTime(t, reducedMotion));
     mixer?.update(0);
     const turn = reducedMotion ? 0 : (TAU * t) / this.duration;
-    carrier.position.y = Math.sin(turn * 2) * h.size.z * BOB;
-    const r = fitDistance(h.size, camera.fov, camera.aspect) * (1 + 0.05 * Math.cos(turn));
+    carrier.position.y = dmath.sin(turn * 2) * h.size.z * BOB;
+    const r = fitDistance(h.size, camera.fov, camera.aspect) * (1 + 0.05 * dmath.cos(turn));
     const eye = around(
       h.center,
       r,
-      r * (0.2 + 0.04 * Math.sin(turn)),
-      VIEW_ANGLE + VIEW_DRIFT * Math.sin(turn),
+      r * (0.2 + 0.04 * dmath.sin(turn)),
+      VIEW_ANGLE + VIEW_DRIFT * dmath.sin(turn),
     );
     camera.position.copy(eye);
     camera.lookAt(h.center);

@@ -21,14 +21,14 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    148852,
-    27748,
-    3964
+    149044,
+    27956,
+    3960
   ],
   "trianglesCompiled": [
-    148884,
-    27768,
-    3972
+    149076,
+    27976,
+    3968
   ],
   "drawCalls": [
     7,
@@ -78,9 +78,9 @@
       "to": "horn_boss_l",
       "kind": "socket",
       "at": [
-        2.647,
+        2.7505,
         0.15,
-        3.9894
+        4.1091
       ]
     },
     {
@@ -89,9 +89,9 @@
       "to": "horn_boss_r",
       "kind": "socket",
       "at": [
-        2.647,
+        2.7505,
         -0.15,
-        3.9894
+        4.1091
       ]
     },
     {
@@ -100,9 +100,9 @@
       "to": "eye_socket_l",
       "kind": "socket",
       "at": [
-        2.947,
+        3.0505,
         0.205,
-        3.9094
+        4.0291
       ]
     },
     {
@@ -111,9 +111,9 @@
       "to": "eye_socket_r",
       "kind": "socket",
       "at": [
-        2.947,
+        3.0505,
         -0.205,
-        3.9094
+        4.0291
       ]
     },
     {
@@ -151,7 +151,7 @@
     }
   ],
   "real": {
-    "length": 8.9,
+    "length": 9.2,
     "width": 7.9,
     "height": 4.9
   },
@@ -159,7 +159,7 @@
     {
       "label": "eye spacing (centre to centre)",
       "spec": 0.41,
-      "measured": 0.4099942073225975,
+      "measured": 0.409994,
       "source": "README.md design spec"
     }
   ],

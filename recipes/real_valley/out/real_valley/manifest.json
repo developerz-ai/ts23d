@@ -21,9 +21,9 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    140012,
-    38168,
-    3586
+    140736,
+    38600,
+    3774
   ],
   "drawCalls": [
     1,
@@ -50,7 +50,7 @@
     {
       "label": "Half Dome summit above the datum (Wikidata elevation)",
       "spec": 1525,
-      "measured": 1524.8499755859375,
+      "measured": 1524.849976,
       "source": "Wikidata Q925252 \"Half Dome\" (CC0-1.0, fetched 2026-11-07) https://www.wikidata.org/wiki/Special:EntityData/Q925252.json?revision=2503502462"
     }
   ],

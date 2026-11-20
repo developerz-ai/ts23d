@@ -1,112 +1,60 @@
 {
   "asset": "rts_barracks_scaffold_damaged",
   "reviewer": "agent",
-  "overall": 7.4,
+  "overall": 7.7,
   "scores": {
     "silhouette": {
       "score": 8,
-      "reason": "The scaffold stage with fallen poles, a knocked-over block pile and broken planks at the front: damage reads in the hero while the build stage still reads.",
+      "reason": "The scaffold stage with a deck section hanging at an angle off the front, fallen poles and a toppled pile: damage reads in FRONT and the hero while the build stage still reads.",
       "fixes": [
-        "one deck section hanging at an angle so the damage shows in FRONT"
+        "let one standard lean out past the deck line so the damage breaks the top outline"
       ]
     },
     "proportions": {
       "score": 8,
-      "reason": "15.6 x 18.5 x 5.5 m; fallen poles at scaffold length.",
+      "reason": "15.6 x 18.7 x 5.6 m; fallen poles at scaffold length; the toppled pile now mixes block sizes.",
       "fixes": [
-        "vary debris block sizes"
+        "a few quarter-block chips"
       ]
     },
     "materials": {
-      "score": 7,
-      "reason": "As the scaffold: timber, stone and cloth separate; slab camouflage pattern and uniform beige stone.",
+      "score": 8,
+      "reason": "The floor is now a flagstone strip with readable joints and per-flag value (sheet TOP), no longer the camouflage slab. Walls carry per-block jitter; timber, stone and cloth stay distinct.",
       "fixes": [
-        "floor strip with readable joints",
-        "per-block value jitter on the walls"
+        "pale fresh mortar in the joints of the top course"
       ]
     },
     "detail": {
-      "score": 7,
-      "reason": "Fallen poles, broken planks, toppled block pile, ladder, hoist.",
+      "score": 8,
+      "reason": "Hanging deck section, fallen and snapped poles, toppled pile, a scorched hole in the wall, braces, ladder and hoist.",
       "fixes": [
-        "snapped pole ends and dangling lashings"
+        "dangling lashings on the snapped standards"
       ]
     },
     "wear": {
       "score": 7,
-      "reason": "Fallen scaffolding and the toppled pile tell a story; no scorch or dust round the impact.",
+      "reason": "A black scorch patch on the wall and the knocked-down scaffold tell the story; no dust fan round the toppled pile.",
       "fixes": [
-        "dust fan and scorch at the impact point"
+        "pale dust fan across the flags from the toppled pile"
       ]
     },
     "lod": {
       "score": 7,
-      "reason": "FAR LOD2 (568 tris) keeps the fallen poles and walls; ladder and hoist drop and the wall value shifts darker.",
+      "reason": "FAR LOD2 keeps walls (value now matched), poles, the hanging deck and the scorch; the fallen poles and debris pile drop, so the damage thins at distance.",
       "fixes": [
-        "keep the gin-pole at LOD2 and match wall value"
+        "keep two fallen poles and 3 debris blocks at LOD2"
       ]
     },
     "technical": {
       "score": 8,
-      "reason": "QA PASS, tris 18.2k / 5.1k / 568, draws 2/2/2; one trim material + team slot, LOD2 well under 1k. Triangles mostly sit in the running-bond blocks and slates, where they show.",
+      "reason": "QA PASS: 17.2k / 4.6k / 662 tris, 2 / 2 / 2 draws; one trim material + team slot, LOD2 well under 1k. LOD0 down ~1k.",
       "fixes": [
-        "merge the per-block wall boxes into one course mesh per bay at LOD0 (shared inner faces removed) so the coursing costs fewer triangles"
+        "spend some of the LOD0 savings on the fixes above (quoins, string course, gravel) instead of more blocks"
       ]
     }
   },
   "renders": {
-    "hero.png": "21200e3ff5b28e0d8bced080738359bd893ec49e4e968479929e8cb4d7d5a499",
-    "sheet.png": "ac15ecee79e3c84e6d27b9e63b0bba809e483fcf7b25d4f80a24bb42f8c79bcb"
-  },
-  "metrics": {
-    "silhouette": [
-      {
-        "view": "front",
-        "iou": 0.81
-      },
-      {
-        "view": "side",
-        "iou": 0.874
-      },
-      {
-        "view": "3/4",
-        "iou": 0.937
-      }
-    ],
-    "focal": {
-      "peakPart": "scaffold_decks",
-      "peak": [
-        437,
-        178
-      ],
-      "focalShare": 0,
-      "focalArea": 0,
-      "top": [
-        {
-          "part": "scaffold_decks",
-          "share": 0.485
-        },
-        {
-          "part": "scaffold",
-          "share": 0.155
-        },
-        {
-          "part": "banner_r",
-          "share": 0.124
-        }
-      ],
-      "declared": []
-    },
-    "rest": {
-      "share": 0.456,
-      "spread": 0.797,
-      "min": 0.25
-    },
-    "shape": {
-      "acuteShare": 0.308,
-      "straightShare": 0.723,
-      "taper": 0.728,
-      "shape": "stable"
-    }
+    "hero.png": "d74ad3d7162c05b90c403129f1bd522729e7d34418ae5de2f6eb125a369fe52c",
+    "sheet.png": "291e97929e7027d0cb906885b61c713d113c313035f0e0fd99537f27633e3c46"
   }
 }

@@ -5,6 +5,7 @@
 // same stain where they meet and every LOD keeps the read. Hash noise only: no randomness.
 
 import type { Vec3 } from '@developerz.ai/ts23d';
+import { dmath } from '@developerz.ai/ts23d';
 
 export interface Scar {
   /** World ends of the healed cut (on the skin; the stroke reaches `width` × 3 into the coat). */
@@ -23,7 +24,8 @@ export interface Scar {
 
 export interface WearSpec {
   readonly seed?: number;
-  /** Mud: caked below `top` × ⅓, patchy up to `top`, flecks to 1.6 × `top` (metres above ground). */
+  /** Mud: caked to a ragged edge about `top` × ⅔ (metres above ground), splashed in flecks to
+   *  2 × `top`. `colour` is the dried crust; where it lies thick it is wet, half as bright. */
   readonly mud?: { readonly top: number; readonly colour: Vec3; readonly strength?: number };
   /** Wet fur: darker below `top` and on the underside below `belly` (metres). */
   readonly damp?: { readonly top: number; readonly belly?: number; readonly strength?: number };
@@ -104,7 +106,7 @@ function toSegment(p: Vec3, a: Vec3, b: Vec3): { d: number; t: number } {
     Math.max(0, ((p[0] - a[0]) * ab[0] + (p[1] - a[1]) * ab[1] + (p[2] - a[2]) * ab[2]) / ll),
   );
   return {
-    d: Math.hypot(p[0] - a[0] - ab[0] * t, p[1] - a[1] - ab[1] * t, p[2] - a[2] - ab[2] * t),
+    d: dmath.hypot(p[0] - a[0] - ab[0] * t, p[1] - a[1] - ab[1] * t, p[2] - a[2] - ab[2] * t),
     t,
   };
 }
@@ -129,26 +131,30 @@ export function nearChain(points: readonly Vec3[], radius: number): (p: Vec3) =>
   };
 }
 
-/** The wear layers as one colour function: settle → matted → damp → mud → patches → scars. */
-export function wearPaint(w: WearSpec): WearPaint {
+/**
+ * The wear layers as one colour function: settle → matted → damp → mud → patches → scars.
+ * `coarse` (a far mesh, cells wider than a streak): only the broad layers, with smooth edges —
+ * flecks, streaks and scars sampled on 5 cm cells land as stray light and dark triangles.
+ */
+export function wearPaint(w: WearSpec, coarse = false): WearPaint {
   const salt = w.seed ?? 1;
   const scarColour = w.scarColour ?? [0.36, 0.27, 0.25];
   return (p, n, c0) => {
     let c = c0;
     const [x, y, z] = p;
-    if (w.settle && z > w.settle.above) {
+    if (w.settle && z > w.settle.above && !coarse) {
       const size = w.settle.patch ?? 0.06;
       const patch = noise3(x / size, y / size, z / size, salt + 11);
       const fine = noise3(x / (size * 0.2), y / (size * 0.2), z / (size * 0.2), salt + 12);
       const k = smooth(0.35, 0.85, n[2]) * smooth(0.3, 0.62, patch * 0.7 + fine * 0.3);
       c = mix(c, w.settle.colour, k * w.settle.strength * (w.settle.mask?.(p) ?? 1));
     }
-    if (w.matted) {
+    if (w.matted && !coarse) {
       const width = w.matted.width ?? 0.012;
       let inside = 0;
       for (const zone of w.matted.zones) {
-        const d = Math.hypot(x - zone.at[0], Math.abs(y) - Math.abs(zone.at[1]), z - zone.at[2]);
-        inside = Math.max(inside, 1 - (d / zone.radius) ** 2);
+        const d = dmath.hypot(x - zone.at[0], Math.abs(y) - Math.abs(zone.at[1]), z - zone.at[2]);
+        inside = Math.max(inside, 1 - dmath.pow(d / zone.radius, 2));
       }
       if (inside > 0) {
         // Clumps hang with gravity: narrow across (x), long down (z).
@@ -173,23 +179,32 @@ export function wearPaint(w: WearSpec): WearPaint {
         (c[2] + (c[2] - g) * 0.25 * k) * (1 - k),
       ];
     }
-    if (w.mud && z < w.mud.top * 1.6) {
+    if (w.mud && z < w.mud.top * 2.2) {
       const top = w.mud.top;
-      const blot = noise3(x / (top * 0.3), y / (top * 0.3), z / (top * 0.45), salt + 41);
-      const caked = smooth(1, 0.2, z / top + (blot - 0.5) * 0.9);
-      const fleck = noise3(x / (top * 0.07), y / (top * 0.07), z / (top * 0.07), salt + 42);
-      const splash = smooth(0.74, 0.86, fleck) * smooth(top * 1.6, top * 0.6, z) * 0.8;
-      // Drying mud is paler at its thin upper edge than where it is caked and still wet.
-      const dry = mix(w.mud.colour, [0.32, 0.27, 0.2], smooth(0.3, 0.9, z / top) * 0.45);
-      c = mix(c, dry, Math.max(caked, splash) * (w.mud.strength ?? 0.85));
+      // A ragged hard edge, not a gradient: blots as wide as a paw carry the line up and down,
+      // a finer octave frays it, so the band reads as caked mud and not as a darker sock.
+      const blot = noise3(x / (top * 0.34), y / (top * 0.34), z / (top * 0.5), salt + 41);
+      const fray = noise3(x / (top * 0.09), y / (top * 0.09), z / (top * 0.09), salt + 43);
+      const level = coarse ? z / top : z / top + (blot - 0.5) * 1.1 + (fray - 0.5) * 0.3;
+      const caked = smooth(0.66, coarse ? 0.4 : 0.52, level);
+      // Splashes thrown up the leg: blobs a toe wide, thinning with height.
+      const fleck = noise3(x / (top * 0.12), y / (top * 0.12), z / (top * 0.12), salt + 42);
+      const splash = coarse
+        ? 0
+        : smooth(0.7, 0.76, fleck - 0.16 * (z / top)) * smooth(top * 2.2, top, z);
+      // Wet and dark where it is thick, drying to a paler crust at its edge and in the flecks.
+      const wet: Vec3 = [w.mud.colour[0] * 0.5, w.mud.colour[1] * 0.48, w.mud.colour[2] * 0.46];
+      const dry = smooth(0.3, 0.62, level);
+      const k = Math.max(caked, splash * 0.9) * (w.mud.strength ?? 0.85);
+      c = mix(c, mix(wet, w.mud.colour, Math.max(dry, splash)), k);
     }
     for (const patch of w.patches ?? []) {
-      const d = Math.hypot(x - patch.at[0], y - patch.at[1], z - patch.at[2]) / patch.radius;
+      const d = dmath.hypot(x - patch.at[0], y - patch.at[1], z - patch.at[2]) / patch.radius;
       if (d >= 1.3) continue;
       const ragged = noise3(x / 0.02, y / 0.02, z / 0.02, salt + 61) * 0.5;
       c = mix(c, patch.colour, smooth(1, 0.45, d + ragged - 0.25) * patch.strength);
     }
-    for (const s of w.scars ?? []) {
+    for (const s of coarse ? [] : (w.scars ?? [])) {
       const k = s.axis;
       const flat = (q: Vec3): Vec3 =>
         k === undefined ? q : [k === 0 ? 0 : q[0], k === 1 ? 0 : q[1], k === 2 ? 0 : q[2]];
@@ -202,7 +217,7 @@ export function wearPaint(w: WearSpec): WearPaint {
       // Tapered ends; a bare pale core with the parted fur darker either side of it.
       // At (and past) an end the stroke has tapered to nothing (and smooth(0, 0, d) is undefined).
       if (t <= 0 || t >= 1) continue;
-      const taper = Math.sin(Math.PI * t) ** 0.5;
+      const taper = Math.sqrt(dmath.sin(Math.PI * t));
       const wobble = 0.75 + 0.5 * noise3(x / 0.01, y / 0.01, z / 0.01, salt + 51);
       const core = smooth(s.width * taper * wobble, s.width * 0.35 * taper, d);
       const rim = smooth(s.width * 3, s.width, d) * (1 - core) * taper;
@@ -211,4 +226,54 @@ export function wearPaint(w: WearSpec): WearPaint {
     }
     return c;
   };
+}
+
+export interface Locks {
+  /** Width of one lock across the coat's lie, metres (≥ 2.5 sculpt cells, or it aliases). */
+  readonly size: number;
+  /** Tone swing 0..1 `lockPaint` shades with: lit locks × (1 + ½ s), the partings × (1 − s). */
+  readonly strength: number;
+  /** Lock length ÷ width (default 6). */
+  readonly stretch?: number;
+  readonly seed?: number;
+}
+
+/**
+ * Clumped locks as tone, −1 (the shadowed parting between two locks) … +1 (a lit lock): value
+ * noise stretched along the coat's lie `dir`, a coarse octave for the clumps and a finer one for
+ * the strands in them. Painted on the skin under the cards, so the coat between the cards reads
+ * as fur lying along the body and not as a smooth painted shell. The tone only: `lockPaint` applies
+ * it at `o.strength`.
+ */
+export function lockTone(dir: (p: Vec3) => Vec3, o: Locks): (p: Vec3) => number {
+  const salt = (o.seed ?? 1) + 71;
+  const squash = 1 / (o.stretch ?? 6) - 1;
+  return (p) => {
+    const d = dir(p);
+    const ll = d[0] * d[0] + d[1] * d[1] + d[2] * d[2] || 1;
+    // The point with its component along the lie shrunk: noise cells become long along it.
+    const k = (squash * (p[0] * d[0] + p[1] * d[1] + p[2] * d[2])) / ll;
+    const q: Vec3 = [
+      (p[0] + d[0] * k) / o.size,
+      (p[1] + d[1] * k) / o.size,
+      (p[2] + d[2] * k) / o.size,
+    ];
+    const clump = noise3(q[0], q[1], q[2], salt);
+    const strand = noise3(q[0] * 2.3, q[1] * 2.3, q[2] * 2.3, salt + 1);
+    return smooth(0.3, 0.7, clump * 0.65 + strand * 0.35) * 2 - 1;
+  };
+}
+
+/** The locks painted: a colour shaded by `lockTone` at the swing its `Locks` carry (`strength`). */
+export function lockPaint(dir: (p: Vec3) => Vec3, o: Locks): (p: Vec3, c: Vec3) => Vec3 {
+  const tone = lockTone(dir, o);
+  return (p, c) => lockShade(c, tone(p), o.strength);
+}
+
+/** A colour under the lock tone `t` (−1..1): partings darker and a touch richer, locks paler. */
+export function lockShade(c: Vec3, t: number, strength: number): Vec3 {
+  const k = t < 0 ? 1 + t * strength : 1 + t * strength * 0.5;
+  const g = (c[0] + c[1] + c[2]) / 3;
+  const sat = t < 0 ? 1 - t * strength * 0.25 : 1;
+  return [(g + (c[0] - g) * sat) * k, (g + (c[1] - g) * sat) * k, (g + (c[2] - g) * sat) * k];
 }

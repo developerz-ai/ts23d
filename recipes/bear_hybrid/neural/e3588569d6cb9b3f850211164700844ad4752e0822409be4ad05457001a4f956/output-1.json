@@ -1,0 +1,407 @@
+{
+  "bbox": {
+    "frame": "gltf",
+    "max": [
+      0.313509,
+      1.025107,
+      1.149288
+    ],
+    "min": [
+      -0.325215,
+      -0.001566,
+      -0.525119
+    ]
+  },
+  "bind": {
+    "bones": 29,
+    "filled": 0,
+    "heatUnweighted": 0.0,
+    "maxInfluences": 4,
+    "method": "bone-heat",
+    "unusedBones": [],
+    "weightSum": [
+      1.0,
+      1.0
+    ]
+  },
+  "blender": "5.3.0",
+  "contract": "t3d-blender-report/1",
+  "glb": {
+    "animations": [],
+    "images": [
+      {
+        "channels": 3,
+        "mime": "image/png",
+        "name": "tex-normal"
+      },
+      {
+        "channels": 3,
+        "mime": "image/png",
+        "name": "tex-orm"
+      },
+      {
+        "channels": 3,
+        "mime": "image/png",
+        "name": "tex-albedo"
+      }
+    ],
+    "joints": [
+      "spine_0",
+      "hind_l_0",
+      "hind_l_1",
+      "hind_l_2",
+      "hind_l_3",
+      "hind_r_0",
+      "hind_r_1",
+      "hind_r_2",
+      "hind_r_3",
+      "spine_1",
+      "spine_2",
+      "neck_0",
+      "neck_1",
+      "head",
+      "scapula_l",
+      "fore_l_0",
+      "fore_l_1",
+      "fore_l_2",
+      "fore_l_3",
+      "scapula_r",
+      "fore_r_0",
+      "fore_r_1",
+      "fore_r_2",
+      "fore_r_3",
+      "tail_0",
+      "tail_1",
+      "tail_2",
+      "tail_3",
+      "tail_4"
+    ],
+    "materials": [
+      {
+        "name": "body",
+        "textures": [
+          "baseColorTexture",
+          "metallicRoughnessTexture",
+          "normalTexture",
+          "occlusionTexture"
+        ]
+      }
+    ],
+    "meshNodes": [
+      "lod0",
+      "lod1",
+      "lod2"
+    ],
+    "skins": 1,
+    "uvOrigin": "top-left (glTF)"
+  },
+  "lods": [
+    28798,
+    9498,
+    4998
+  ],
+  "seconds": 147.82,
+  "source": {
+    "materials": 1,
+    "textures": 2,
+    "triangles": 941691,
+    "uvLayers": 1,
+    "vertexColours": 0
+  },
+  "steps": [
+    {
+      "determinant": 4.6491,
+      "op": "transform",
+      "seconds": 0.07,
+      "triangles": 941691
+    },
+    {
+      "holeFaces": 0,
+      "nonManifoldEdges": 3234,
+      "op": "clean",
+      "seconds": 13.8,
+      "shells": 3638,
+      "shellsDropped": 3637,
+      "triangles": 892702,
+      "welded": 397125
+    },
+    {
+      "moved": 0.013518,
+      "op": "script",
+      "seconds": 0.14,
+      "sha256": "e0d8a69298ac88d18f75ea75010e2ba9024c259bd20fdd938074bbecc5912ca6",
+      "stdout": [
+        "ear tip 0.9486 0.0569 1.043 vertices 3427",
+        "ear tip 0.7808 0.2493 1.0043 vertices 5937"
+      ],
+      "triangles": 892702,
+      "vertices": [
+        441696,
+        441696
+      ],
+      "why": "the generator's ears are a cub's: scaled to 85 % about their roots (bear_hybrid critique: ears ~15 % too large)"
+    },
+    {
+      "capFaces": 647,
+      "clearance": 0.018633,
+      "gap": 0.02,
+      "limbVertices": [
+        28574,
+        22583,
+        24856,
+        23005,
+        39512
+      ],
+      "moved": 2749,
+      "op": "unweb",
+      "pairs": {
+        "2 + 4": 187,
+        "3 + 4": 487
+      },
+      "seconds": 16.84,
+      "triangles": 892675,
+      "webFaces": 674
+    },
+    {
+      "moved": 0.118247,
+      "op": "script",
+      "seconds": 0.69,
+      "sha256": "26c593fffe19e4963fc3dbedc8f8d99201009e4660fa748b8796c97c00aa004e",
+      "stdout": [
+        "tufts up vertices 23343 highest 0.045",
+        "tufts up vertices 696 highest 0.022",
+        "tufts down vertices 21514 highest 0.045",
+        "tufts down vertices 155692 highest 0.06",
+        "tufts back vertices 8855 highest 0.035",
+        "tufts back vertices 16585 highest 0.035",
+        "tufts back vertices 11355 highest 0.035",
+        "tufts back vertices 6858 highest 0.035",
+        "tufts back vertices 12830 highest 0.035"
+      ],
+      "triangles": 892675,
+      "vertices": [
+        441700,
+        441700
+      ],
+      "why": "the outline was a smooth hull (bear_hybrid critique: no fur clumps break it on the back, belly fringe or legs): locks of coat raised on the source, so the shell and the bake carry them"
+    },
+    {
+      "boundaryEdges": 0,
+      "focusVertexShare": 0.6053,
+      "from": 892675,
+      "op": "retopo",
+      "reduce": "decimate",
+      "seconds": 25.33,
+      "shell": {
+        "bboxDrift": 0.00884,
+        "bboxSide": "-y (right)",
+        "close": 1,
+        "components": 1,
+        "handles": 0,
+        "largestShare": 1.0,
+        "lost": {
+          "centre": [
+            0.1985,
+            0.003,
+            0.3767
+          ],
+          "share": 0.0003,
+          "tolerance": 0.01704,
+          "where": "-z (bottom)"
+        },
+        "skin": 0.0,
+        "tried": [
+          [
+            0,
+            0.0,
+            0.8267,
+            20
+          ],
+          [
+            1,
+            0.0,
+            0.0003,
+            0
+          ]
+        ],
+        "volume": 0.385634,
+        "volumeRef": 0.401493
+      },
+      "shellTriangles": 91644,
+      "strategy": "shell",
+      "triangles": 28798,
+      "voxel": 0.01136
+    },
+    {
+      "islands": 146,
+      "kind": "smart",
+      "op": "uv",
+      "seconds": 10.91,
+      "triangles": 28798,
+      "uvDegenerate": 0.0
+    },
+    {
+      "albedoFrom": "texture",
+      "albedoMean": 0.2918,
+      "albedoUnfilled": 0.0,
+      "cage": 0.040556,
+      "device": "OPTIX: NVIDIA GeForce RTX 3090",
+      "hitRate": 0.9866,
+      "maps": [
+        "albedo",
+        "normal",
+        "ao"
+      ],
+      "op": "bake",
+      "seconds": 25.96,
+      "size": 2048,
+      "triangles": 28798,
+      "uvCoverage": 0.6746
+    },
+    {
+      "bones": 29,
+      "filled": 0,
+      "heatUnweighted": 0.0,
+      "maxInfluences": 4,
+      "method": "bone-heat",
+      "op": "bind",
+      "seconds": 0.74,
+      "triangles": 28798,
+      "unusedBones": [],
+      "weightSum": [
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "bodyRefilled": 1183,
+      "bones": [
+        "tail_1",
+        "tail_2",
+        "tail_3",
+        "tail_4"
+      ],
+      "changed": 1390,
+      "foreignBefore": 0.4186,
+      "inside": 212,
+      "op": "isolate",
+      "reassigned": [
+        0,
+        0
+      ],
+      "seconds": 0.26,
+      "triangles": 28798
+    },
+    {
+      "bone": "fore_l_2",
+      "changed": 617,
+      "kind": "smooth",
+      "masked": 679,
+      "meanAfter": 0.2921,
+      "meanBefore": 0.2937,
+      "op": "weights",
+      "seconds": 0.08,
+      "triangles": 28798
+    },
+    {
+      "bone": "fore_r_2",
+      "changed": 605,
+      "kind": "smooth",
+      "masked": 666,
+      "meanAfter": 0.3308,
+      "meanBefore": 0.333,
+      "op": "weights",
+      "seconds": 0.08,
+      "triangles": 28798
+    },
+    {
+      "at": "tail_1",
+      "bones": 29,
+      "largestTurn": 40.89,
+      "offTarget": 1e-07,
+      "op": "repose",
+      "seconds": 0.03,
+      "triangles": 28798
+    },
+    {
+      "moved": 0.0,
+      "op": "script",
+      "seconds": 51.35,
+      "sha256": "3c1eb079d5247f34a628f60ae7012e07da74ae4fa1840f72ff58593a73d6b5d3",
+      "stdout": [
+        "delight 0.2792874590158243",
+        "top light 0.027027491197771616",
+        "healed 0.009149656452985619",
+        "ear (0.8195232266859055, 0.12934287455475257, 0.9975054640572111) 0.005942660710344027",
+        "ear (0.9558563943557675, -0.06803737091995231, 1.0253848965967511) 0.005267250719028069",
+        "mud 0.3705094967554974",
+        "wet 0.1343880654956058",
+        "soaked 0.053754381029948214",
+        "rake 0.002417253059367065",
+        "rake 0.0017431272960054158",
+        "rake 0.001553094335423356",
+        "flank 0.0011818953814597502",
+        "scar 3.0043866698485912e-05",
+        "rub 0.027341190616949878",
+        "bare 0.008834546360981245"
+      ],
+      "triangles": 28798,
+      "vertices": [
+        14401,
+        14401
+      ],
+      "why": "the generator's baked light, white ear caps and bake holes leave the albedo; the coat's locks, roughness, mud, scars and rubbed coat go into the maps (a textured part takes no grime pass)"
+    },
+    {
+      "lod0": {
+        "boundaryEdges": 0,
+        "handles": 0,
+        "maxFaceShare": 0.0005,
+        "uvDegenerate": 0.0
+      },
+      "lods": [
+        {
+          "bboxDrift": 0.00059,
+          "bboxSide": "-x (back)",
+          "boundaryEdges": 0,
+          "handles": 0,
+          "lost": {
+            "share": 0.0,
+            "tolerance": 0.020653
+          },
+          "maxFaceShare": 0.0013,
+          "triangles": 9498,
+          "uvDegenerate": 0.0003
+        },
+        {
+          "bboxDrift": 0.00085,
+          "bboxSide": "-y (right)",
+          "boundaryEdges": 0,
+          "handles": 0,
+          "lost": {
+            "share": 0.0,
+            "tolerance": 0.03098
+          },
+          "maxFaceShare": 0.0017,
+          "triangles": 4998,
+          "uvDegenerate": 0.0002
+        }
+      ],
+      "op": "lods",
+      "seconds": 0.72,
+      "triangles": 28798
+    },
+    {
+      "bytes": 10634956,
+      "images": {
+        "albedo": 2048,
+        "normal": 1024,
+        "orm": 1024
+      },
+      "op": "export",
+      "seconds": 0.82,
+      "triangles": 28798
+    }
+  ],
+  "threads": 1
+}

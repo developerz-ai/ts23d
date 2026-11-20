@@ -55,7 +55,7 @@ File titles were read from the Commons category listing; the images themselves w
 the agent, so which file best shows which feature is unverified.
 
 ## Parts the engine needs
-`body` (arms, head, funnel), `mantle`, `web`, `suckers`, `papillae`, `eyes`. Bones: `mantle_*`,
+`body` (mantle, head, funnel, arms: one surface, so no seam collar between mantle and head), `web`, `suckers`, `papillae`, `eyes`. Bones: `mantle_*`,
 `rib_<i>_0` (leaf joints inside the mantle: `mantle_pulse` scales them across world Z, the coordinate
 axis nearest the mantle axis, which is 34 degrees off it; an approximation, because scale keys only
 act along X, Y and Z), `head_0`,
@@ -74,7 +74,11 @@ act along X, Y and Z), `head_0`,
 | arms | taper linearly from the web to the tip; suckers shrink with them; transverse skin folds and papillae along the aboral face, clear of the crown fillets | uniformly thick, smooth tubes |
 | tips | pale, rosy, translucent-looking over the last 28 % of every arm | |
 | poses | arms 2 and 4 coil their tips flat on the seabed, arm 3 reaches out nearly straight | the TOP view was a symmetric star |
-| regenerating arm | arm 6 is 0.74 m (design value): its old taper to a pale scar ring at 80 %, then a thinner, paler regrowth bud; the recipe's arc check holds it to its own length | octopuses regrow lost arm tips (widely reported; no paper opened for this recipe, so the lengths are design values) |
-| scars | two healed slashes on the mantle's camera-side flank, pale bands across arms 1 and 4 | pristine |
+| regenerating arm | arm 6 is 0.74 m (design value): its old taper to a dark healed ring at 80 %, then a thinner, pale regrowth bud; the recipe's arc check holds it to its own length | octopuses regrow lost arm tips (widely reported; no paper opened for this recipe, so the lengths are design values) |
+| scars | two healed slashes on the mantle's camera-side flank, pale bands across arms 1 and 4, all wider than before | pristine |
+| head and mantle | the mantle is in the `body` part with the head, and its base tapers (6.8 to 4.6 cm) into the head instead of overhanging it | a cylindrical neck collar with a seam |
+| papillae | each takes the skin colour under it, a shade lighter; sizes 0.4 to 1.9 × with a few big cirri; mantle warts tint only slightly | pale uniform dots read as studs |
+| folds | aboral arm folds twice as deep; concentric folds round each eye turret | smooth arm tops |
+| far colour | LOD2 takes only the broad mottle | blocky patches far away |
 | LOD | LOD2 3.6 k: two rings a link on the arms, rounder mantle and head; LOD0 sucker cups 8 segments (they face the seabed), the mantle got the rings | blocky mantle, segmented tips far away |
 | box | the settled pose's box is 1.43 × 1.28 × 0.46 m (design value; the sourced lengths are held along the bones) | the new poses |

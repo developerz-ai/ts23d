@@ -5,6 +5,7 @@
 // hanging between two anchors — a cowl, a cloak slung across the back). Each returns `Fold`s for
 // `foldField`, lifted `lift` metres off the surface (the cloth's thickness).
 
+import { dmath } from '@developerz.ai/ts23d';
 import type { Fold } from './cloth-folds.ts';
 import { add, dot, lerp, mul, norm, type Surface, sub, type V } from './kit.ts';
 
@@ -38,7 +39,7 @@ export function walk(
     const n = s.normal(p);
     const d = dir(p);
     const t = sub(d, mul(n, dot(d, n)));
-    if (Math.hypot(t[0], t[1], t[2]) < 1e-6) break;
+    if (dmath.hypot(t[0], t[1], t[2]) < 1e-6) break;
     raw.push(s.on(add(p, mul(norm(t), h))));
   }
   return raw.map((p) => add(p, mul(s.normal(p), lift)));
@@ -94,7 +95,7 @@ export function hang(
  *  dying out before the anchor. */
 export function drag(s: Surface, from: V, to: readonly V[], look: FoldLook): Fold[] {
   return to.map((target, i) => {
-    const len = Math.hypot(...sub(target, from));
+    const len = dmath.norm(sub(target, from));
     const steps = Math.max(4, Math.ceil(len / (look.width * 0.8)));
     const path = walk(s, from, (p) => sub(target, p), len, steps, look.lift);
     const valley = i % 2 === 1;
@@ -123,7 +124,7 @@ export function zigzag(
     const k = i % 2 === 0 ? 1 : -1;
     const p0 = add(lerp(a, b, i / count), mul(u, swing * k));
     const p1 = add(lerp(a, b, (i + 1) / count), mul(u, -swing * k));
-    const len = Math.hypot(...sub(p1, p0));
+    const len = dmath.norm(sub(p1, p0));
     const path = walk(s, p0, (p) => sub(p1, p), len, 5, look.lift);
     const valley = i % 2 === 1;
     return {
@@ -150,7 +151,7 @@ export function sag(
     const d = (depth * (k + 1)) / count;
     const path = Array.from({ length: 13 }, (_, i): V => {
       const t = i / 12;
-      const p = s.on(add(lerp(left, right, t), mul(down, d * Math.sin(Math.PI * t))));
+      const p = s.on(add(lerp(left, right, t), mul(down, d * dmath.sin(Math.PI * t))));
       return add(p, mul(s.normal(p), look.lift));
     });
     const valley = k % 2 === 1;

@@ -7,7 +7,7 @@
 // ears, comb out from the centre parting, sweep back past the ears and fall behind them to the
 // shoulders, colliding with the whole bust so no lock crosses the face or an ear.
 
-import { type Field, type SculptEdit, sculptField, type Vec3 } from '@developerz.ai/ts23d';
+import { dmath, type Field, type SculptEdit, sculptField, type Vec3 } from '@developerz.ai/ts23d';
 import type { BustRecipe } from '../_lib/bust/bust.ts';
 import { flowLocks, hairMass, lock, mix, ribbon } from '../_lib/bust/hair.ts';
 import { type Surface, spline, surface, type V } from '../_lib/bust/kit.ts';
@@ -110,7 +110,7 @@ function capLines(hair: Surface): V[][] {
       const pts: V[] = [];
       for (let i = 0; i <= 9; i++) {
         const e = ((30 + (175 * i) / 9) * Math.PI) / 180;
-        const d: V = [Math.cos(e), Math.sin(e) * Math.sin(phi), Math.sin(e) * Math.cos(phi)];
+        const d: V = [dmath.cos(e), dmath.sin(e) * dmath.sin(phi), dmath.sin(e) * dmath.cos(phi)];
         pts.push(hair.on([c[0] + d[0] * 0.1, c[1] + d[1] * 0.1, c[2] + d[2] * 0.1]));
       }
       return pts.filter((p) => hairline(p) < -0.012);
@@ -154,7 +154,7 @@ const comb = (p: Vec3, n: Vec3): Vec3 => {
   // 0 at the forehead, 1 at the back of the skull.
   const t = clamp01((SK.glabella[0] - p[0]) / (SK.glabella[0] - SK.occiput[0]));
   // Near the ear (above and in front of its root): back, not down.
-  const ear = clamp01(1 - Math.hypot(p[0] - SK.earTop[0], p[2] - SK.earTop[2] - 0.03) / 0.06);
+  const ear = clamp01(1 - dmath.hypot(p[0] - SK.earTop[0], p[2] - SK.earTop[2] - 0.03) / 0.06);
   return [
     -(1.1 - 0.7 * t) - 1.2 * ear,
     // Off the parting: sideways only once past the crown's front, so the front stays covered.
@@ -167,7 +167,7 @@ const comb = (p: Vec3, n: Vec3): Vec3 => {
  *  sweeps back over the top. */
 const long = (p: Vec3): number => {
   const t = clamp01((SK.glabella[0] - p[0]) / (SK.glabella[0] - SK.occiput[0]));
-  return 0.12 + 0.17 * clamp01((t - 0.15) / 0.5);
+  return 0.12 + 0.125 * clamp01((t - 0.15) / 0.5);
 };
 
 /** Card hairstyle for `cardHair` (recipes/_lib/face/hair-cards.ts) on the elf bust `b`: long,
@@ -185,7 +185,7 @@ export function elfCardHair(b: BustRecipe, lod: number): CardHairStyle {
     [L.back - 0.05, -0.15, L.mz - 0.05],
     [L.gx + 0.06, 0.15, L.crown + 0.05],
   ];
-  const pale: Vec3 = [1.12, 1.08, 0.92];
+  const pale: Vec3 = [1.08, 1.04, 0.9];
   return {
     field: skin,
     bounds,
@@ -206,9 +206,11 @@ export function elfCardHair(b: BustRecipe, lod: number): CardHairStyle {
         lift: 0.03,
         bend: 0.95,
         droop: 0.3,
-        roll: 0.2,
+        roll: 0.1,
         fold: 0,
-        tone: [0.5, 0.75],
+        // (Tones close together across the layers: a wide spread between neighbouring cards
+        // reads as straw, not as one head of hair.)
+        tone: [0.64, 0.84],
         hug: 0.9,
       },
       // Long locks: clumped, curved across, falling to the shoulders, paler toward the tips.
@@ -216,36 +218,38 @@ export function elfCardHair(b: BustRecipe, lod: number): CardHairStyle {
         name: 'hair_long',
         kind: 'hair',
         region: hairline,
-        density: 4000,
+        // Wide locks lying on one another: fewer and half again as wide as strands would be,
+        // so the fall reads as a mass with a few breaks, not as separate strings.
+        density: 3000,
         length: long,
-        width: 0.024,
-        lift: 0.07,
+        width: 0.036,
+        lift: 0.05,
         bend: 0.95,
-        droop: 0.6,
-        roll: 0.3,
-        fold: 0.55,
+        droop: 0.8,
+        roll: 0.12,
+        fold: 0.45,
         clump: 4,
-        tone: [0.75, 1.1],
+        tone: [0.8, 1.04],
         tint: pale,
-        hug: 0.7,
+        hug: 0.8,
       },
       // Outer locks over the crown and back: the volume and the silhouette.
       {
         name: 'hair_top',
         kind: 'hair',
         region: (p: Vec3) => Math.max(hairline(p), SK.euryon[2] - p[2]),
-        density: 2000,
-        length: (p: Vec3) => long(p) * 1.05,
-        width: 0.02,
-        lift: 0.12,
+        density: 1500,
+        length: (p: Vec3) => long(p) * 0.95,
+        width: 0.03,
+        lift: 0.07,
         bend: 0.9,
-        droop: 0.6,
-        roll: 0.35,
-        fold: 0.6,
-        clump: 2,
-        tone: [0.9, 1.2],
+        droop: 0.8,
+        roll: 0.16,
+        fold: 0.5,
+        clump: 3,
+        tone: [0.9, 1.1],
         tint: pale,
-        hug: 0.4,
+        hug: 0.6,
       },
       // Crown: flat locks combed back over the parting's front, where the sideways comb opened
       // a bald-looking disc of cap (D57).
@@ -254,15 +258,15 @@ export function elfCardHair(b: BustRecipe, lod: number): CardHairStyle {
         kind: 'hair',
         region: (p: Vec3) =>
           Math.max(hairline(p), Math.abs(p[1]) - 0.03, SK.euryon[2] + 0.01 - p[2]),
-        density: 4000,
+        density: 3200,
         length: 0.07,
-        width: 0.014,
+        width: 0.02,
         lift: 0.05,
         bend: 0.9,
         droop: 0.3,
-        roll: 0.3,
+        roll: 0.15,
         fold: 0.4,
-        tone: [0.8, 1.1],
+        tone: [0.82, 1.04],
         tint: pale,
         hug: 1,
       },

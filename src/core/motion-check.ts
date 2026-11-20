@@ -2,6 +2,7 @@
 // actually turn (a rod longer than its crank's reach off the slide line, a slide line across the
 // axle). Bad input throws T3D_RECIPE_INVALID with a fix, never a NaN keyframe in the GLB.
 
+import * as dmath from './dmath.ts';
 import { Ts23dError } from './errors.ts';
 import type { Motion, Tread } from './motion.ts';
 import { across } from './motion-pose.ts';
@@ -122,7 +123,7 @@ export function checkMotion(part: string, m: Motion): void {
         );
       // Off the line: the axial offset is fixed; across it the pin swings ± r about the centre.
       const w = cross(u, l);
-      const reach = Math.hypot(dot(m.pin, u), Math.abs(dot(sub(m.pin, arm), w)) + r);
+      const reach = dmath.hypot(dot(m.pin, u), Math.abs(dot(sub(m.pin, arm), w)) + r);
       if (reach >= length(m.pin) - EPS)
         fail(
           part,

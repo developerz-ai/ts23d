@@ -4,7 +4,7 @@
 // heat shield on stand-off brackets, exiting just ahead of the rear wheel. Heat-browned steel.
 
 import type { Lod, Mesh, Vec3 } from '@developerz.ai/ts23d';
-import { lathe, merge } from '@developerz.ai/ts23d';
+import { dmath, lathe, merge } from '@developerz.ai/ts23d';
 import { C } from '../lib/colors.ts';
 import { bx, rod, shift, tube } from '../lib/geo.ts';
 import { heatScale, heatTint } from '../lib/wear.ts';
@@ -132,7 +132,7 @@ function sidePipe(lod: Lod, s: 1 | -1): Mesh {
         for (let j = 0; j < 3; j++) {
           const x = PIPE.x1 + len * 0.18 + k * ((len * 0.68) / 21);
           const a = (j - 1) * 0.35;
-          parts.push(shift(hole, [x, s * (PIPE.y + r * Math.cos(a)), PIPE.z + r * Math.sin(a)]));
+          parts.push(shift(hole, [x, s * (PIPE.y + r * dmath.cos(a)), PIPE.z + r * dmath.sin(a)]));
         }
       for (const f of [0.2, 0.5, 0.82]) {
         const x = PIPE.x1 + len * f;

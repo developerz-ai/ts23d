@@ -12,6 +12,7 @@ import {
   boundsOf,
   box,
   cylinder,
+  dmath,
   frame,
   type Lod,
   type Mesh,
@@ -52,10 +53,14 @@ export const BARROW: Vec3 = [0.22, 0.3, 0.24];
 /** Grit and dust drifted over the ruin (pale salt-flat dust). */
 export const GRIT: Vec3 = [0.36, 0.33, 0.27];
 const CHAR: Vec3 = [0.05, 0.04, 0.035];
+/** Wood ash over a burnt ruin: pale grey, cooler than the salt grit. */
+export const ASH_GREY: Vec3 = [0.3, 0.29, 0.27];
+/** A roof piece burnt through: charred slate, no team paint left. */
+export const CHAR_SLATE: Vec3 = [0.07, 0.065, 0.06];
 const OFF = 1.25; // scaffold line outside the wall face
 const sub = (a: Vec3, b: Vec3): Vec3 => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
 const unit = (a: Vec3): Vec3 => {
-  const l = Math.hypot(a[0], a[1], a[2]) || 1;
+  const l = dmath.hypot(a[0], a[1], a[2]) || 1;
   return [a[0] / l, a[1] / l, a[2] / l];
 };
 const cross = (a: Vec3, b: Vec3): Vec3 => [
@@ -70,7 +75,7 @@ const settle = (m: Mesh, floor: number): Mesh => translate(m, [0, 0, floor - bou
 /** A square-section bar (board, beam, rail) from a to b, `w` wide and `h` deep, faces kept level. */
 export function bar(a: Vec3, b: Vec3, w: number, h: number, color: Vec3, extra = 0): Mesh {
   const d = sub(b, a);
-  const len = Math.hypot(d[0], d[1], d[2]);
+  const len = dmath.hypot(d[0], d[1], d[2]);
   const x = unit(d);
   const up: Vec3 = Math.abs(x[2]) > 0.95 ? [1, 0, 0] : [0, 0, 1];
   const y = unit(cross(up, x));
@@ -91,7 +96,7 @@ function pole(lod: Lod, a: Vec3, b: Vec3, r: number, color: Vec3): Mesh {
     a[1] + (b[1] - a[1]) * t,
     a[2] + (b[2] - a[2]) * t,
   ];
-  const len = Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]);
+  const len = dmath.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]);
   const feet = lod === 0 && len > 1.5 ? [0.25, 0.6, 1.0].map((m) => m / len) : [];
   return sweep({
     section: { radius: r, segments: lod === 0 ? 10 : 6 },
@@ -125,8 +130,18 @@ export function scaffold(lod: Lod, height: number, rng: Rng, damaged = false): S
   const sy = -(HALF_Y + PLINTH_OUT + OFF - 0.5);
   const R = 0.065;
   const poles: Vec3[] = [...ys.map((y): Vec3 => [fx, y, 0]), ...xs.map((x): Vec3 => [x, sy, 0])];
-  for (const p of poles) out.push(pole(lod, p, [p[0], p[1], height], R, POLE));
+  // The two standards nearest the hoist run a lift higher (to 5.4 m): the scaffold peaks there.
+  const tall = (p: Vec3): boolean => p[1] < 0 && p[0] <= -2 && Math.abs(p[1] - sy) < 1e-6;
+  for (const p of poles) out.push(pole(lod, p, [p[0], p[1], tall(p) ? 5.4 : height], R, POLE));
   const levels = [1.6, 3.2, height - 0.25];
+  if (lod < 2) {
+    // Top ledger on the tall pair, and a diagonal brace across each scaffold face.
+    out.push(pole(lod, [-4, sy - R - 0.05, 5.2], [-2, sy - R - 0.05, 5.2], 0.05, POLE));
+    if (lod === 0) out.push(lashing([-4, sy, 5.2]), lashing([-2, sy, 5.2]));
+    out.push(pole(lod, [fx + R + 0.05, -6, 0.3], [fx + R + 0.05, -2, 3.0], 0.045, POLE));
+    out.push(pole(lod, [fx + R + 0.05, 2, 0.3], [fx + R + 0.05, 6, 3.0], 0.045, POLE));
+    out.push(pole(lod, [-4, sy - R - 0.05, 0.3], [0, sy - R - 0.05, 3.0], 0.045, POLE));
+  }
   const deckZ = 3.2 + 0.05;
   if (lod < 2) {
     for (const z of levels) {
@@ -240,7 +255,7 @@ export function scaffold(lod: Lod, height: number, rng: Rng, damaged = false): S
       }),
     );
     out.push(...hoist(lod));
-  }
+  } else out.push(bar([-2.8, -9.6, 0], [-4.0, -8.2, 5.3], 0.16, 0.16, POLE));
   if (damaged && lod < 2) {
     // The collapsed bay: a top ledger down on the ground, a plank hanging off the deck end, a pole
     // leaning on the wall by the breach, and a split plank on the ground.
@@ -249,6 +264,16 @@ export function scaffold(lod: Lod, height: number, rng: Rng, damaged = false): S
     out.push(pole(lod, [2.6, sy - 0.9, 0], [2.1, -(HALF_Y + WALL_T / 2) - 0.07, 2.4], R, POLE));
     decks.push(bar([2.0, sy - 0.9, 0.025], [4.0, sy - 1.3, 0.025], 0.12, 0.05, PLANK));
     decks.push(bar([2.1, sy - 0.75, 0.025], [3.5, sy - 1.0, 0.025], 0.1, 0.05, PLANK));
+    // A front deck section torn loose at its −Y end, hanging down the face (reads from the front).
+    decks.push(bar([fx - 0.1, -6.2, deckZ], [fx + 0.55, -6.85, deckZ - 2.3], 0.9, 0.05, PLANK));
+    // The lost standard's stump, snapped and splintered, and a lashing dangling off the ledger.
+    out.push(pole(lod, [2, sy, 0], [2, sy, 1.3], R, POLE));
+    if (lod === 0)
+      out.push(
+        bar([2, sy, 1.25], [2.04, sy + 0.03, 1.62], 0.05, 0.04, POLE),
+        bar([1.98, sy - 0.02, 1.25], [1.95, sy - 0.04, 1.5], 0.04, 0.03, POLE),
+        tube(lod, [0.05, sy - R - 0.05, 3.2], [0.12, sy - R - 0.1, 2.45], 0.012, 0.012, ROPE),
+      );
   }
   // Team tarp hung from the top side ledger, its rolled head over the ledger.
   const tarp = merge([
@@ -300,7 +325,7 @@ function tarp(lod: Lod, at: Vec3, w: number, d: number, z: number, rng: Rng): Me
     const prof: Vec2[] = [[-len / 2, 0.02]];
     for (let i = 0; i <= n; i++) {
       const t = i / n;
-      const sag = Math.sin(t * Math.PI) * 0.15 + (i % 2 === 0 ? 0 : rng.range(0.06, 0.16));
+      const sag = dmath.sin(t * Math.PI) * 0.15 + (i % 2 === 0 ? 0 : rng.range(0.06, 0.16));
       prof.push([-len / 2 + t * len, -drop - sag]);
     }
     prof.push([len / 2, 0.02]);
@@ -315,7 +340,7 @@ function tarp(lod: Lod, at: Vec3, w: number, d: number, z: number, rng: Rng): Me
     const off = (side % 2 === 0 ? d : w) / 2 + 0.06;
     out.push(
       place(place(skirt, { roll: -0.12 }), {
-        at: [at[0] - Math.sin(yaw) * off, at[1] + Math.cos(yaw) * off, z + 0.02],
+        at: [at[0] - dmath.sin(yaw) * off, at[1] + dmath.cos(yaw) * off, z + 0.02],
         yaw,
       }),
     );
@@ -575,7 +600,9 @@ export function banner(lod: Lod, at: Vec3, h: number, torn = false): { pole: Mes
     ...(lod < 2
       ? [box({ size: [0.12, 1.5, 0.14], at: [bx, at[1], bz - 0.07], color: TEAM, strip: 'canvas' })]
       : []),
-    box({ size: [0.05, 1.5, len], at: [bx, at[1], bz - len], color: TEAM, strip: 'canvas' }),
+    lod === 0
+      ? hangingCloth([bx, at[1], bz], 1.5, len, torn)
+      : box({ size: [0.05, 1.5, len], at: [bx, at[1], bz - len], color: TEAM, strip: 'canvas' }),
   ];
   if (lod === 0 && !torn)
     cloth.push(
@@ -585,6 +612,32 @@ export function banner(lod: Lod, at: Vec3, h: number, torn = false): { pole: Mes
       }),
     );
   return { pole: p, cloth: merge(cloth) };
+}
+
+/**
+ * A banner cloth `w` wide hanging `len` from its top centre `top`, 5 cm thick: the hem frayed
+ * into tongues (deeper when `torn`), the lower third darkened by rain splash and road dirt.
+ */
+function hangingCloth(top: Vec3, w: number, len: number, torn: boolean): Mesh {
+  const n = 7;
+  const prof: Vec2[] = [
+    [-w / 2, 0],
+    [w / 2, 0],
+  ];
+  for (let i = 0; i <= n * 2; i++) {
+    const y = w / 2 - (i / (n * 2)) * w;
+    const deep = i % 2 === 0 ? 0 : torn ? 0.32 : 0.16;
+    // Irregular tongues: every third one hangs a little lower.
+    prof.push([y, -len + deep - (i % 6 === 2 ? 0.08 : 0)]);
+  }
+  const cloth = prism({ profile: prof, depth: 0.05, plane: 'yz', color: TEAM, strip: 'canvas' });
+  const colors = new Float32Array(cloth.colors.length);
+  for (let i = 0; i < colors.length; i += 3) {
+    const z = cloth.positions[i + 2] ?? 0;
+    const t = Math.max(0, Math.min(1, (-z - len * 0.6) / (len * 0.4)));
+    colors.set(teamShade(1 - 0.45 * t), i);
+  }
+  return translate({ ...cloth, colors }, top);
 }
 
 /** A loose piece already laid: its plan centre, size and top, for the next piece to rest on. */
@@ -635,7 +688,10 @@ export function rubble(
   const out: Mesh[] = [];
   const laid: Laid[] = [];
   for (let i = 0; i < n; i++) {
-    const s = 1.1 * rng.range(0.3, 1.0) ** 0.8;
+    // LOD2 keeps only the big pieces: a far heap reads by its largest blocks.
+    // Near, every third piece is a half or quarter block: a heap is not one block size.
+    const small = lod < 2 && i % 3 === 2 ? rng.range(0.25, 0.5) : 1;
+    const s = 1.1 * dmath.pow(rng.range(lod === 2 ? 0.65 : 0.3, 1.0), 0.8) * small;
     const k = rng.range(0.6, 1.0);
     const h = s * rng.range(0.4, 0.8);
     const chunk = shard(lod, rng, s, s * rng.range(0.6, 1.1), h, [
@@ -681,8 +737,8 @@ export function rubble(
             }),
             {
               at: [
-                lim(centre[0] + Math.cos(a) * spread[0] * r, HALF_X + PLINTH_OUT - 0.3),
-                lim(centre[1] + Math.sin(a) * spread[1] * r, HALF_Y + PLINTH_OUT - 0.3),
+                lim(centre[0] + dmath.cos(a) * spread[0] * r, HALF_X + PLINTH_OUT - 0.3),
+                lim(centre[1] + dmath.sin(a) * spread[1] * r, HALF_Y + PLINTH_OUT - 0.3),
                 0,
               ],
               yaw: rng.range(0, Math.PI),
@@ -740,8 +796,9 @@ function undersides(m: Mesh, top: number, under: number): Mesh {
 
 /**
  * Fallen team roof: broken pieces (deck with its slates still on), tilted where they slid off
- * the heap, darker on every face but the top, LOD2 keeps three tilted pieces. Grit drifts that
- * half bury them go in `grit` (not team-painted).
+ * the heap, darker on every face but the top, LOD2 keeps four tilted pieces. Near, every other
+ * piece is burnt black, ash lies on the rest and grit drifts at their foot: all of that goes in
+ * `grit` (not team-painted).
  */
 export function fallenSlabs(
   lod: Lod,
@@ -752,48 +809,56 @@ export function fallenSlabs(
 ): { slabs: Mesh; grit: Mesh | null } {
   const out: Mesh[] = [];
   const grit: Mesh[] = [];
-  const n = lod === 2 ? 3 : 6;
+  const n = lod === 2 ? 4 : 6;
+  const tarp = kind === 'tarp';
   for (let i = 0; i < n; i++) {
     const w = rng.range(1.0, 1.9);
     const d = rng.range(1.2, 2.4);
-    const tarp = kind === 'tarp';
-    const slab = undersides(
-      box({
-        size: tarp ? [w * 0.9, d * 0.8, 0.04] : [w, d, 0.16],
-        at: [0, 0, tarp ? -0.02 : -0.08],
-        color: TEAM,
-        strip: tarp ? 'canvas' : 'slate',
-      }),
-      rng.range(0.55, 0.78),
-      0.32,
-    );
-    const at: Vec3 = [rng.range(-3, 3), rng.range(-4.5, 4.5), 0];
-    const yaw = rng.range(0, Math.PI);
-    const placed = settle(
-      place(slab, {
-        at,
-        yaw,
-        roll: rng.range(0.08, tarp ? 0.15 : 0.3),
-        pitch: rng.range(-0.1, 0.1),
-      }),
-      floor - 0.05,
-    );
-    out.push(placed);
-    if (lod === 0)
-      // Grit drifted over the low edge: a flat mound of the pale ruin dust.
-      for (let g = 0; g < 2; g++) {
-        const b = boundsOf(placed);
-        const gx = b.min[0] + (b.max[0] - b.min[0]) * rng.range(0.25, 0.75);
-        const gy = b.min[1] + (b.max[1] - b.min[1]) * rng.range(0.25, 0.75);
-        grit.push(
-          ellipsoid(
-            lod,
-            [gx, gy, floor + 0.02],
-            [rng.range(0.5, 0.9), rng.range(0.4, 0.7), rng.range(0.05, 0.09)],
-            GRIT,
-          ),
-        );
-      }
+    // Near: every other roof piece burnt through to black (not team any more); the rest charred
+    // and dust-coated so the red reads buried, not painted (top 35-50%, edges 22%).
+    const burnt = lod < 2 && i % 2 === 1;
+    const piece = box({
+      size: tarp ? [w * 0.9, d * 0.8, 0.04] : [w, d, 0.16],
+      at: [0, 0, tarp ? -0.02 : -0.08],
+      color: burnt ? CHAR_SLATE : TEAM,
+      strip: tarp ? 'canvas' : 'slate',
+    });
+    const slab = burnt ? piece : undersides(piece, rng.range(0.3, 0.45), 0.2);
+    const pose = {
+      at: [rng.range(-3, 3), rng.range(-4.5, 4.5), 0] as Vec3,
+      yaw: rng.range(0, Math.PI),
+      roll: rng.range(0.08, tarp ? 0.15 : 0.3),
+      pitch: rng.range(-0.1, 0.1),
+    };
+    const turned = place(slab, pose);
+    const dz = floor - 0.05 - boundsOf(turned).min[2];
+    const placed = translate(turned, [0, 0, dz]);
+    (burnt ? grit : out).push(placed);
+    if (lod === 0) {
+      // Ash lying on a roof piece itself (its upper half), and a drift of grit at its low edge.
+      const top = 0.08;
+      const ash = box({
+        size: [w * rng.range(0.5, 0.8), d * rng.range(0.4, 0.6), 0.03],
+        at: [w * rng.range(-0.1, 0.1), d * 0.2, top - 0.005],
+        color: ASH_GREY,
+        strip: 'concrete',
+      });
+      if (!tarp) grit.push(translate(place(ash, pose), [0, 0, dz]));
+      const b = boundsOf(placed);
+      grit.push(
+        // A low mound needs no more than the mid-res ellipsoid's 120 triangles.
+        ellipsoid(
+          1,
+          [
+            b.min[0] + (b.max[0] - b.min[0]) * rng.range(0.3, 0.7),
+            b.min[1] + (b.max[1] - b.min[1]) * rng.range(0.3, 0.7),
+            floor + 0.02,
+          ],
+          [rng.range(0.6, 1.1), rng.range(0.5, 0.85), rng.range(0.07, 0.13)],
+          GRIT,
+        ),
+      );
+    }
   }
   return { slabs: merge(out), grit: grit.length ? merge(grit) : null };
 }
@@ -801,17 +866,18 @@ export function fallenSlabs(
 /** The scaffold's wreck in a ruin: fallen poles and charred planks round the walls, a pole and a
  *  ledger leaning on the standing corner. */
 export function scaffoldWreck(lod: Lod, rng: Rng, cornerTop: number): Mesh {
+  const FACE_Y = HALF_Y + WALL_T / 2;
   const out: Mesh[] = [];
   const face = HALF_X + WALL_T / 2;
-  out.push(pole(lod, [face + 2.3, -5.6, 0], [face + 0.07, -6.5, cornerTop - 0.3], 0.065, POLE));
-  out.push(
-    pole(lod, [face + 1.6, -9.3, 0], [face + 0.06, -6.1, Math.max(1, cornerTop - 0.9)], 0.05, POLE),
-  );
+  // One pole fell against the standing corner's front face, one against the side wall's stub:
+  // each rests its head on a wall, never meeting the other in mid-air.
+  out.push(pole(lod, [face + 2.4, -4.4, 0], [face + 0.07, -5.4, cornerTop - 0.4], 0.065, POLE));
+  out.push(pole(lod, [4.3, -(FACE_Y + 2.2), 0], [3.6, -(FACE_Y + 0.06), 2.3], 0.05, POLE));
   for (let i = 0; i < (lod === 2 ? 2 : 6); i++) {
     const a: Vec3 = [rng.range(-4, 4), -(HALF_Y + PLINTH_OUT + rng.range(0.5, 2.4)), 0];
     const yaw = rng.range(-0.5, 0.5);
     const len = rng.range(2.5, 4.5);
-    const b: Vec3 = [a[0] + Math.cos(yaw) * len, a[1] + Math.sin(yaw) * len * 0.3, 0];
+    const b: Vec3 = [a[0] + dmath.cos(yaw) * len, a[1] + dmath.sin(yaw) * len * 0.3, 0];
     const charred = i % 2 === 1;
     out.push(
       settle(
@@ -827,3 +893,36 @@ export function scaffoldWreck(lod: Lod, rng: Rng, cornerTop: number): Mesh {
 
 /** The wall's outer face distance from the hall centre along X / Y. */
 export const FACE = { x: HALF_X + WALL_T / 2, y: HALF_Y + WALL_T / 2, z: PLINTH } as const;
+
+/**
+ * A charred timber frame still standing in a ruin, its vertical: `gate`, the gate's door frame
+ * (one post whole, one snapped, the lintel sagging from one to the other); `yard`, a site's
+ * timber shed frame burnt to two posts and a slanting beam. Feet on `floor`.
+ */
+export function charredFrame(lod: Lod, kind: 'gate' | 'yard', floor: number): Mesh {
+  const s = 0.24;
+  const post = (x: number, y: number, h: number): Mesh =>
+    box({ size: [s, s, h], at: [x, y, floor - 0.02], color: CHAR });
+  if (kind === 'gate') {
+    // Posts stand 30 cm in from the opening's stone jambs (a frame, not a slit against them).
+    const x = HALF_X + 0.05;
+    const y = 1.6;
+    const out: Mesh[] = [post(x, -y, 3.4), post(x, y, 2.3)];
+    // The lintel rests on the whole post's top and drops onto the snapped one.
+    out.push(bar([x, -y - s / 2, floor + 3.38], [x, y + s / 2, floor + 2.28], s, s, CHAR, 0.1));
+    if (lod === 0)
+      // Splintered tip on the snapped post.
+      out.push(
+        bar([x, y, floor + 2.25], [x + 0.05, y + 0.05, floor + 2.6], 0.08, 0.06, CHAR),
+        bar([x, y - 0.05, floor + 2.25], [x - 0.04, y - 0.07, floor + 2.48], 0.06, 0.05, CHAR),
+      );
+    return merge(out);
+  }
+  const x = HALF_X - 1.6;
+  const y = HALF_Y - 1.4;
+  return merge([
+    post(x, y, 2.4),
+    post(x - 2.2, y, 1.5),
+    bar([x + s / 2, y, floor + 2.38], [x - 2.2 - s / 2, y, floor + 1.48], s, s, CHAR, 0.05),
+  ]);
+}

@@ -3,14 +3,14 @@
 // (through its wood, so the brush is attached along a line, not hung off a point), turned up a
 // little at the tips like a Scots pine shoot. Crossed cards keep the tuft full from any angle.
 
-import { type Mesh, merge, type Rng, type Vec3 } from '../core/index.ts';
+import { dmath, type Mesh, merge, type Rng, type Vec3 } from '../core/index.ts';
 import { transportFrames } from '../primitives/index.ts';
 import { type CrownShade, card } from './vegetation-leaves.ts';
 import type { LeafParams } from './vegetation-params.ts';
 import type { Stem } from './vegetation-skeleton.ts';
 
 const unit = (a: Vec3): Vec3 => {
-  const l = Math.hypot(a[0], a[1], a[2]) || 1;
+  const l = dmath.hypot(a[0], a[1], a[2]) || 1;
   return [a[0] / l, a[1] / l, a[2] / l];
 };
 const cross = (a: Vec3, b: Vec3): Vec3 => [
@@ -62,9 +62,9 @@ export function needleTufts(
       const n = unit(cross(dir, Math.abs(dir[2]) > 0.9 ? [1, 0, 0] : [0, 0, 1]));
       const b = cross(dir, n);
       const side: Vec3 = [
-        n[0] * Math.cos(a) + b[0] * Math.sin(a),
-        n[1] * Math.cos(a) + b[1] * Math.sin(a),
-        n[2] * Math.cos(a) + b[2] * Math.sin(a),
+        n[0] * dmath.cos(a) + b[0] * dmath.sin(a),
+        n[1] * dmath.cos(a) + b[1] * dmath.sin(a),
+        n[2] * dmath.cos(a) + b[2] * dmath.sin(a),
       ];
       const len = leaf.size * rng.range(0.8, 1.2);
       const base: Vec3 = [

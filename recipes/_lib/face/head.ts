@@ -4,7 +4,7 @@
 // warped quad mesh (base topology: edge loops kept) and a mapper for any base point (eye centres,
 // hair and tusk roots follow the same warp).
 
-import { type Rng, type Tps, Ts23dError, tpsWarp, type Vec3 } from '@developerz.ai/ts23d';
+import { dmath, type Rng, type Tps, Ts23dError, tpsWarp, type Vec3 } from '@developerz.ai/ts23d';
 import { faceBase, type QuadMesh } from './base.ts';
 import { earMask, shapeEars } from './ears.ts';
 import { LEFT, mirrorY } from './landmarks.ts';
@@ -104,7 +104,7 @@ export function faceHead(c: Character, rng: Rng): FaceHead {
   const sizeAt = (q: Vec3): number => {
     const [a = 1, b = 0, cc = 0, d = 0, e = 1, f = 0, g = 0, h = 0, i = 1] = tps.jacobian(q);
     const det = a * (e * i - f * h) - b * (d * i - f * g) + cc * (d * h - e * g);
-    return Math.cbrt(Math.max(1e-3, det)) * s;
+    return dmath.cbrt(Math.max(1e-3, det)) * s;
   };
   return {
     mesh: { p, q: base.q },

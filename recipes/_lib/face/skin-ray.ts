@@ -4,6 +4,7 @@
 // whatever the race did to the cranium.
 
 import type { Vec3 } from '@developerz.ai/ts23d';
+import { dmath } from '@developerz.ai/ts23d';
 import type { QuadMesh } from './base.ts';
 
 function hit(o: Vec3, d: Vec3, p: Float64Array, a: number, b: number, c: number): number {
@@ -37,7 +38,7 @@ function hit(o: Vec3, d: Vec3, p: Float64Array, a: number, b: number, c: number)
 
 /** The farthest skin crossing from `o` along `dir` (or `o` itself when the ray misses). */
 export function skinPoint(m: QuadMesh, o: Vec3, dir: Vec3): Vec3 {
-  const l = Math.hypot(...dir) || 1;
+  const l = dmath.norm(dir) || 1;
   const d: Vec3 = [dir[0] / l, dir[1] / l, dir[2] / l];
   let best = -1;
   for (let f = 0; f < m.q.length; f += 4) {

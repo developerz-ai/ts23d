@@ -9,6 +9,7 @@ import {
   applyAffine,
   box,
   cylinder,
+  dmath,
   frame,
   type Lod,
   lathe,
@@ -48,8 +49,8 @@ import {
 
 export const PITCH = (26 * Math.PI) / 180;
 export const OVERHANG = 0.6;
-const SLOPE_W = (HALF_Y + OVERHANG) / Math.cos(PITCH);
-export const RIDGE = EAVES + HALF_Y * Math.tan(PITCH);
+const SLOPE_W = (HALF_Y + OVERHANG) / dmath.cos(PITCH);
+export const RIDGE = EAVES + HALF_Y * dmath.tan(PITCH);
 const STRIPS = 5;
 /** Sarking deck under the slates; slate courses (exposed length, slate size, thickness). */
 const DECK = 0.1;
@@ -79,8 +80,8 @@ interface Plane {
 const plane = (o: Vec3, s: 1 | -1, p: number, ul: number, vl: number): Plane => ({
   o,
   u: [1, 0, 0],
-  d: [0, s * Math.cos(p), -Math.sin(p)],
-  n: [0, s * Math.sin(p), Math.cos(p)],
+  d: [0, s * dmath.cos(p), -dmath.sin(p)],
+  n: [0, s * dmath.sin(p), dmath.cos(p)],
   ul,
   vl,
 });
@@ -88,8 +89,8 @@ const plane = (o: Vec3, s: 1 | -1, p: number, ul: number, vl: number): Plane => 
 /** A local box (`size`, centred on the origin) carried to (u, v, w) on plane `pl`, tilted `tilt`
  *  about the u axis (its down-slope end rises). */
 function onPlane(pl: Plane, m: Mesh, u: number, v: number, w: number, tilt = 0): Mesh {
-  const c = Math.cos(tilt);
-  const s = Math.sin(tilt);
+  const c = dmath.cos(tilt);
+  const s = dmath.sin(tilt);
   const d = add(scale(pl.d, c), pl.n, s);
   const n = add(scale(pl.n, c), pl.d, -s);
   const at = add(add(add(pl.o, pl.u, u), pl.d, v), pl.n, w);
@@ -115,12 +116,27 @@ function slateTone(rng: Rng, v: number, vl: number, eave: boolean): number {
   return Math.min(1, k);
 }
 
+/** A slate's edges a step darker than its face (local frame, face up): each course's butt
+ *  edge reads as the shadow line over the next. */
+function shadowEdges(m: Mesh): Mesh {
+  const colors = new Float32Array(m.colors);
+  for (let i = 0; i < colors.length; i += 3)
+    if ((m.normals[i + 2] ?? 0) < 0.5)
+      for (let c = 0; c < 3; c++) colors[i + c] = (colors[i + c] ?? 0) * 0.55;
+  return { ...m, colors };
+}
+
 interface SlateOptions {
   /** u ranges with no deck and no slates (a shell hole). */
   readonly holes?: readonly (readonly [number, number])[];
   /** Fraction of slates gone (a raid stripped them). */
   readonly loss?: number;
+  /** Where slates within 0.8 m of a hole's edge go: burnt black, no team paint left (LOD0). */
+  readonly charred?: Mesh[];
 }
+
+/** A slate burnt through by the fire round a shell hole. */
+export const CHARRED_SLATE: Vec3 = [0.04, 0.037, 0.034];
 
 /**
  * Slates in lapped courses over one plane. LOD0: every slate (staggered, tilted so each rides
@@ -133,6 +149,8 @@ function slates(lod: Lod, pl: Plane, rng: Rng, o: SlateOptions = {}): Mesh[] {
   const inHole = (u: number): boolean => holes.some(([a, b]) => u > a && u < b);
   const nearHole = (u0: number, u1: number): boolean =>
     holes.some(([a, b]) => (u1 > a - 0.15 && u0 < a + 0.25) || (u1 > b - 0.25 && u0 < b + 0.15));
+  const burnt = (u0: number, u1: number): boolean =>
+    holes.some(([a, b]) => (u1 > a - 0.8 && u0 < a) || (u1 > b && u0 < b + 0.8));
   const L = SLATE.length;
   const n = Math.ceil(pl.vl / SLATE.exposed);
   // Present u runs (between holes) for the per-course strips.
@@ -143,7 +161,7 @@ function slates(lod: Lod, pl: Plane, rng: Rng, o: SlateOptions = {}): Mesh[] {
     const v1 = pl.vl - k * SLATE.exposed;
     const v0 = Math.max(0, v1 - L);
     const len = v1 - v0;
-    const tl = Math.asin(Math.min(0.2, (SLATE.t + 0.006) / Math.max(len, 0.2)));
+    const tl = dmath.asin(Math.min(0.2, (SLATE.t + 0.006) / Math.max(len, 0.2)));
     const w = SLATE.t / 2 - 0.003 + DECK;
     if (lod === 1) {
       const kk = slateTone(rng, v1, pl.vl, k === 0);
@@ -151,13 +169,15 @@ function slates(lod: Lod, pl: Plane, rng: Rng, o: SlateOptions = {}): Mesh[] {
         out.push(
           onPlane(
             pl,
-            box({
-              size: [b - a, len, SLATE.t],
-              at: [0, 0, -SLATE.t / 2],
-              color: teamShade(kk),
-              strip: 'slate',
-              omit: ['bottom'],
-            }),
+            shadowEdges(
+              box({
+                size: [b - a, len, SLATE.t],
+                at: [0, 0, -SLATE.t / 2],
+                color: teamShade(kk),
+                strip: 'slate',
+                omit: ['bottom'],
+              }),
+            ),
             (a + b) / 2,
             (v0 + v1) / 2,
             w,
@@ -176,18 +196,28 @@ function slates(lod: Lod, pl: Plane, rng: Rng, o: SlateOptions = {}): Mesh[] {
       if (inHole(mid) || (o.loss && rng.next() < o.loss)) continue;
       const broken = nearHole(a, b);
       if (broken && rng.next() < 0.3) continue;
-      const tone = teamShade(slateTone(rng, v1, pl.vl, k === 0) * (broken ? 0.82 : 1));
+      const char = o.charred !== undefined && (broken || (burnt(a, b) && rng.next() < 0.8));
+      const kk = slateTone(rng, v1, pl.vl, k === 0) * (broken ? 0.82 : 1);
+      const tone: Vec3 = char
+        ? [
+            CHARRED_SLATE[0] * (0.7 + kk * 0.4),
+            CHARRED_SLATE[1] * (0.7 + kk * 0.4),
+            CHARRED_SLATE[2] * (0.7 + kk * 0.4),
+          ]
+        : teamShade(kk);
       // Broken edge slates: shorter, skewed on their nail, sliding toward the hole.
       const short = broken ? rng.range(0.55, 0.95) : 1;
-      const slate = box({
-        size: [b - a - 0.02, len * short, SLATE.t],
-        at: [0, 0, -SLATE.t / 2],
-        color: tone,
-        strip: 'slate',
-        omit: ['bottom'],
-      });
+      const slate = shadowEdges(
+        box({
+          size: [b - a - 0.02, len * short, SLATE.t],
+          at: [0, 0, -SLATE.t / 2],
+          color: tone,
+          strip: 'slate',
+          omit: ['bottom'],
+        }),
+      );
       const skewed = broken ? place(slate, { yaw: rng.range(-0.25, 0.25) }) : slate;
-      out.push(
+      (char && o.charred ? o.charred : out).push(
         onPlane(
           pl,
           skewed,
@@ -203,7 +233,14 @@ function slates(lod: Lod, pl: Plane, rng: Rng, o: SlateOptions = {}): Mesh[] {
 }
 
 /** Roof slope (team) on side s (+1 = +Y), minus the `missing` strips (a shell hole). */
-export function roofSlopes(lod: Lod, s: 1 | -1, missing: readonly number[], rng: Rng): Mesh | null {
+export function roofSlopes(
+  lod: Lod,
+  s: 1 | -1,
+  missing: readonly number[],
+  rng: Rng,
+  /** Collects the burnt slates round a hole (not team-painted any more). */
+  charred?: Mesh[],
+): Mesh | null {
   const ul = (HALF_X + OVERHANG) * 2;
   const pl = plane([-HALF_X - OVERHANG, 0, RIDGE], s, PITCH, ul, SLOPE_W);
   const strip = ul / STRIPS;
@@ -228,7 +265,7 @@ export function roofSlopes(lod: Lod, s: 1 | -1, missing: readonly number[], rng:
       );
     } else out.push(deck(pl, a, b, 0, SLOPE_W, 0.45));
   }
-  out.push(...slates(lod, pl, rng, { holes }));
+  out.push(...slates(lod, pl, rng, { holes, ...(charred ? { charred } : {}) }));
   if (lod === 0 && holes.length)
     // Two or three slates hang off the hole's top edge on their last nail.
     for (const [a] of holes)
@@ -256,7 +293,7 @@ export function roofSlopes(lod: Lod, s: 1 | -1, missing: readonly number[], rng:
 /** The ridge roll capping both slopes (team, a shade darker). */
 export function ridgeRoll(lod: Lod): Mesh {
   const x = HALF_X + OVERHANG + 0.05;
-  const z = RIDGE + DECK / Math.cos(PITCH) + 0.02;
+  const z = RIDGE + DECK / dmath.cos(PITCH) + 0.02;
   return tube(lod, [-x, 0, z], [x, 0, z], 0.15, 0.15, teamShade(0.66));
 }
 
@@ -318,8 +355,8 @@ export function gables(lod: Lod): { walls: Mesh; frame: Mesh | null; oculus: Mes
     const beams: Mesh[] = [];
     // Beams stand 6 cm proud of the plaster and sink 6 cm into it: face contact.
     const beam = (x: number, a: Vec3, b: Vec3): Mesh => {
-      const len = Math.hypot(b[1] - a[1], b[2] - a[2]);
-      const roll = Math.atan2(b[2] - a[2], b[1] - a[1]);
+      const len = dmath.hypot(b[1] - a[1], b[2] - a[2]);
+      const roll = dmath.atan2(b[2] - a[2], b[1] - a[1]);
       const m = box({
         size: [0.12, len, 0.26],
         at: [0, 0, -0.13],
@@ -370,8 +407,13 @@ export type Crown = 'none' | 'laying' | 'broken';
 function crown(lod: Lod, at: Vec3, r: number, height: number, kind: Crown, rng: Rng): Mesh[] {
   // A low footing breaks to one course at most; a standing stub keeps up to three.
   const maxRows = height < 1.5 ? 1 : 3;
-  if (kind === 'none' || lod === 2) return [];
-  const n = SEG(lod, 16, 12, 0);
+  if (kind === 'none') return [];
+  // LOD2: a ruin's standing stub (under 3 m) keeps a stepped crown of five plain blocks on its
+  // high side (the far ruin's broken top); a low footing, a course being laid, none.
+  if (lod === 2)
+    return kind === 'broken' && height >= 1.5 && height < 3 ? farCrown(at, r, height, rng) : [];
+  // Course-sized blocks on a standing stub (22 round, ~0.42 m); a low footing keeps 16.
+  const n = SEG(lod, maxRows > 1 ? 22 : 16, 12, 0);
   const mid = r - 0.22;
   const arc = ((2 * Math.PI * mid) / n) * 0.93;
   const phase = rng.range(0, Math.PI * 2);
@@ -380,7 +422,7 @@ function crown(lod: Lod, at: Vec3, r: number, height: number, kind: Crown, rng: 
     const a = (i / n) * Math.PI * 2;
     // Broken: sheared on a slant, tallest on one side and stepping down to nothing on the other,
     // a block or two missing from each step; laying: one course part-way round.
-    const slant = 0.5 + 0.5 * Math.cos(a - phase);
+    const slant = 0.5 + 0.5 * dmath.cos(a - phase);
     const rows =
       kind === 'laying'
         ? i < n * 0.6
@@ -395,8 +437,10 @@ function crown(lod: Lod, at: Vec3, r: number, height: number, kind: Crown, rng: 
       if (kind === 'broken' && top && k > 0 && rng.next() < 0.3) continue;
       const loose = kind === 'broken' && top;
       const k2 = rng.range(0.82, 1.02);
-      // Running bond round the drum: odd courses offset half a block.
-      const ak = a + (k % 2 === 1 ? Math.PI / n : 0);
+      // Running bond round the drum: odd courses offset half a block; a loose top block sits
+      // square on the block of its own column below it, not across a joint.
+      const bond = (row: number): number => (row % 2 === 1 ? Math.PI / n : 0);
+      const ak = a + (loose && k > 0 ? bond(k - 1) : bond(k));
       const b = pebble(
         lod,
         [0.44, arc * (loose ? rng.range(0.45, 0.9) : 1), COURSE * (loose ? rng.range(0.6, 1) : 1)],
@@ -406,9 +450,13 @@ function crown(lod: Lod, at: Vec3, r: number, height: number, kind: Crown, rng: 
       );
       out.push(
         place(b, {
-          at: [at[0] + Math.cos(ak) * mid, at[1] + Math.sin(ak) * mid, height + k * COURSE - 0.01],
+          at: [
+            at[0] + dmath.cos(ak) * mid,
+            at[1] + dmath.sin(ak) * mid,
+            height + k * COURSE - 0.01,
+          ],
           yaw: ak + (loose ? rng.range(-0.25, 0.25) : 0),
-          roll: loose ? rng.range(-0.08, 0.08) : 0,
+          roll: loose ? rng.range(-0.04, 0.04) : 0,
         }),
       );
     }
@@ -416,9 +464,28 @@ function crown(lod: Lod, at: Vec3, r: number, height: number, kind: Crown, rng: 
   return out;
 }
 
+/** The far crown: five blocks round the high side, stepping 3-2-2-1-1 courses down. */
+function farCrown(at: Vec3, r: number, height: number, rng: Rng): Mesh[] {
+  const mid = r - 0.22;
+  const phase = rng.range(0, Math.PI * 2);
+  return [3, 2, 2, 1, 1].map((rows, i) => {
+    const a = phase + (i - 2) * 0.55;
+    return place(
+      box({
+        size: [0.44, 0.8, COURSE * rows],
+        at: [0, 0, 0],
+        color: BONE,
+        strip: 'concrete',
+        omit: ['bottom'],
+      }),
+      { at: [at[0] + dmath.cos(a) * mid, at[1] + dmath.sin(a) * mid, height - 0.01], yaw: a },
+    );
+  });
+}
+
 /** An outward-facing feature on the drum at angle `a`: a local box (x out of the wall). */
 const onDrum = (m: Mesh, at: Vec3, r: number, a: number, z: number): Mesh =>
-  place(m, { at: [at[0] + Math.cos(a) * r, at[1] + Math.sin(a) * r, z], yaw: a });
+  place(m, { at: [at[0] + dmath.cos(a) * r, at[1] + dmath.sin(a) * r, z], yaw: a });
 
 /** Arrow slits and the door (up two steps) on a finished drum, facing outward. */
 function drumDetail(lod: Lod, at: Vec3, s: 1 | -1, height: number): Mesh[] {
@@ -591,7 +658,7 @@ const PORCH = {
   eave: PLINTH + DOOR_ROWS * COURSE,
   pitch: (30 * Math.PI) / 180,
 } as const;
-const PORCH_RIDGE = PORCH.eave + PORCH.post * Math.tan(PORCH.pitch);
+const PORCH_RIDGE = PORCH.eave + PORCH.post * dmath.tan(PORCH.pitch);
 
 /** The porch's oak posts, tie beam and plastered pediment (complete stage). */
 export function porch(lod: Lod): Mesh {
@@ -649,7 +716,7 @@ export function porch(lod: Lod): Mesh {
 /** The porch roof (team): two slate slopes, a ridge roll, the chevron on the pediment. */
 export function porchRoof(lod: Lod, damaged: boolean, rng: Rng): Mesh {
   const ul = PORCH.front - PORCH.back + 0.25;
-  const vl = (PORCH.post + 0.45) / Math.cos(PORCH.pitch);
+  const vl = (PORCH.post + 0.45) / dmath.cos(PORCH.pitch);
   const out: Mesh[] = [];
   for (const s of [1, -1] as const) {
     const pl = plane([PORCH.back, 0, PORCH_RIDGE], s, PORCH.pitch, ul, vl);
@@ -659,7 +726,7 @@ export function porchRoof(lod: Lod, damaged: boolean, rng: Rng): Mesh {
       out.push(...slates(lod, pl, rng, { loss: damaged && s === 1 ? 0.3 : 0 }));
     }
   }
-  const z = PORCH_RIDGE + DECK / Math.cos(PORCH.pitch) + 0.02;
+  const z = PORCH_RIDGE + DECK / dmath.cos(PORCH.pitch) + 0.02;
   out.push(tube(lod, [PORCH.back, 0, z], [PORCH.front + 0.25, 0, z], 0.1, 0.1, teamShade(0.66)));
   out.push(
     place(chevronPlan([0, 0, 0], 0.7, 1.2, 0.3, 0.04, TEAM), {

@@ -1,7 +1,7 @@
 // The skin of an imported model: too many influences are cut with a warning, a corrupt skin is one
 // T3D_IMPORT_GLB, and the armature is valid ts23d (snake_case names, parents first, real tails).
 import { describe, expect, test } from 'bun:test';
-import { type Armature, checkSkeleton, type Mesh, Ts23dError } from '../core/index.ts';
+import { type Armature, checkSkeleton, dmath, type Mesh, Ts23dError } from '../core/index.ts';
 import { type GltfJson, readGlb } from './glb-read.ts';
 import { packGlb } from './glb-write.ts';
 import { riggedGlb } from './import-fixture.ts';
@@ -94,10 +94,10 @@ describe('importModel skin: armature and weights', () => {
     const toFlesh = v6.map((x, k) => x - (arm?.head[k] ?? 0));
     const cos =
       along.reduce((t, x, k) => t + x * (toFlesh[k] ?? 0), 0) /
-      (Math.hypot(...along) * Math.hypot(...toFlesh));
+      (dmath.norm(along) * dmath.norm(toFlesh));
     expect(cos).toBeGreaterThan(0.7);
     for (const b of sk.bones)
-      expect(Math.hypot(...b.tail.map((x, k) => x - (b.head[k] ?? 0)))).toBeGreaterThan(1e-3);
+      expect(dmath.norm(b.tail.map((x, k) => x - (b.head[k] ?? 0)))).toBeGreaterThan(1e-3);
   });
   test('weights survive by bone name and sum to 1 on every LOD', () => {
     const lod0 = m.lods[0] as Mesh;

@@ -42,7 +42,7 @@ export function cockpit(ctx: BuildContext): void {
     );
     const d = dashboard(2);
     ctx.part('dashboard', d.dash);
-    ctx.part('roll_hoops', rollHoops(2, DRIVER_Y), { finish: 'brushed' });
+    ctx.part('roll_hoops', rollHoops(2, DRIVER_Y));
     return;
   }
   ctx.part(
@@ -57,6 +57,6 @@ export function cockpit(ctx: BuildContext): void {
   ctx.part('gauge_faces', d.gaugeFaces);
   ctx.part('steering_wheel', d.wheel);
   ctx.part('controls', d.controls);
-  ctx.part('carpet', carpet(lod), { finish: 'carpet' });
-  ctx.part('roll_hoops', rollHoops(lod, DRIVER_Y), { finish: 'brushed' });
+  ctx.part('carpet', carpet(lod));
+  ctx.part('roll_hoops', rollHoops(lod, DRIVER_Y));
 }

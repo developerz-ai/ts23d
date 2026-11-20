@@ -1,7 +1,7 @@
 // One sculpt edit → its distance field (rotated, optionally mirrored across Y) and its bounds.
 // Rotation is precomputed into a 3×3 matrix; evaluation is scalar maths, no allocation.
 
-import type { Vec3 } from '../core/index.ts';
+import { dmath, type Vec3 } from '../core/index.ts';
 import { invalid } from './check.ts';
 import { type SculptStroke, strokeBounds } from './sculpt-stroke.ts';
 import { type BlendKernel, type Field, shapes } from './sdf-ops.ts';
@@ -107,12 +107,12 @@ export function sculptShape(e: SculptShapeEdit, i: number, mirrorAll: boolean): 
     invalid(`${where}: power is ${power}`, 'use power ≥ 2 (2 = ellipsoid, 4 = rounded box)');
   const [rx, ry, rz] = (e.rotate ?? [0, 0, 0]).map((d) => (d * Math.PI) / 180);
   const [cx, sx, cy, sy, cz, sz] = [
-    Math.cos(rx ?? 0),
-    Math.sin(rx ?? 0),
-    Math.cos(ry ?? 0),
-    Math.sin(ry ?? 0),
-    Math.cos(rz ?? 0),
-    Math.sin(rz ?? 0),
+    dmath.cos(rx ?? 0),
+    dmath.sin(rx ?? 0),
+    dmath.cos(ry ?? 0),
+    dmath.sin(ry ?? 0),
+    dmath.cos(rz ?? 0),
+    dmath.sin(rz ?? 0),
   ];
   // R = Rz · Ry · Rx; local = Rᵀ (p − at).
   const m = [
@@ -166,7 +166,11 @@ export function sculptShape(e: SculptShapeEdit, i: number, mirrorAll: boolean): 
             const wz = pz - oz;
             const t =
               len > 0 ? Math.min(1, Math.max(0, (wx * dx + wy * dy + wz * dz) / (len * len))) : 0;
-            return Math.sqrt((wx - dx * t) ** 2 + (wy - dy * t) ** 2 + (wz - dz * t) ** 2) - a;
+            return (
+              Math.sqrt(
+                dmath.pow(wx - dx * t, 2) + dmath.pow(wy - dy * t, 2) + dmath.pow(wz - dz * t, 2),
+              ) - a
+            );
           }
         : rotated
           ? (px: number, py: number, pz: number): number => {
@@ -192,8 +196,8 @@ export function sculptShape(e: SculptShapeEdit, i: number, mirrorAll: boolean): 
   return (p) => {
     const dx0 = p[0] - sc[0];
     const dz0 = p[2] - sc[2];
-    const near = Math.sqrt(dx0 * dx0 + (p[1] - sc[1]) ** 2 + dz0 * dz0);
-    const far = Math.sqrt(dx0 * dx0 + (p[1] + sc[1]) ** 2 + dz0 * dz0);
+    const near = Math.sqrt(dx0 * dx0 + dmath.pow(p[1] - sc[1], 2) + dz0 * dz0);
+    const far = Math.sqrt(dx0 * dx0 + dmath.pow(p[1] + sc[1], 2) + dz0 * dz0);
     // Scalar branches (no [first, second, bound] tuple per evaluation).
     const nearer = near <= far;
     const first = nearer ? p[1] : -p[1];
@@ -225,16 +229,16 @@ export function shapeSphere(e: SculptShapeEdit): {
       : e.shape === 'ellipsoid'
         ? Math.max(a, b, c)
         : e.shape === 'superellipsoid'
-          ? Math.hypot(a, b, c)
+          ? dmath.hypot(a, b, c)
           : e.shape === 'roundCone'
-            ? Math.hypot(to[0] - e.at[0], to[1] - e.at[1], to[2] - e.at[2]) / 2 + Math.max(a, b)
+            ? dmath.hypot(to[0] - e.at[0], to[1] - e.at[1], to[2] - e.at[2]) / 2 + Math.max(a, b)
             : e.shape === 'roundBox'
-              ? Math.hypot(a, b, c) / 2
+              ? dmath.hypot(a, b, c) / 2
               : e.shape === 'cone'
                 ? c + Math.max(a, b) // loose but unchanged: it also sets the grid bounds
                 : e.shape === 'torus'
                   ? a + b
-                  : a + Math.hypot(to[0] - e.at[0], to[1] - e.at[1], to[2] - e.at[2]) / 2;
+                  : a + dmath.hypot(to[0] - e.at[0], to[1] - e.at[1], to[2] - e.at[2]) / 2;
   // Superellipsoid: on a ray from the centre the field grows by min(a,b,c) per unit of gauge, so
   // v ≥ (min / r) · (|p − c| − r) outside the sphere (the surface lies within it, |x| ≤ hypot).
   const ell = e.shape === 'ellipsoid';
@@ -243,7 +247,7 @@ export function shapeSphere(e: SculptShapeEdit): {
   return {
     c: centre,
     r,
-    scale: ell ? (lo / r) ** 2 : sup ? lo / r : 1,
+    scale: ell ? dmath.pow(lo / r, 2) : sup ? lo / r : 1,
     inside: !ell && !sup,
   };
 }

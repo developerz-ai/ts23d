@@ -168,7 +168,7 @@ function addInterval(
   const A = g.hx * g.hy;
   const dm = rho * A * (z1 - z0);
   const fz = (rho * A * (z1 * z1 - z0 * z0)) / 2;
-  const sz = (rho * A * (z1 ** 3 - z0 ** 3)) / 3;
+  const sz = (rho * A * (z1 * z1 * z1 - z0 * z0 * z0)) / 3;
   m.mass += dm;
   m.first[0] += x * dm;
   m.first[1] += y * dm;

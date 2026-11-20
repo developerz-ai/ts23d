@@ -23,11 +23,13 @@ const BULKHEAD = hex('#3a302a');
 const CANVAS = [hex('#7a1f1f'), hex('#1f4a33'), hex('#23324d'), hex('#5a4a2a')] as const;
 const SIGN = [hex('#1d1d1d'), hex('#5c1a14'), hex('#163a2c'), hex('#c8b98f')] as const;
 const BROWNSTONE = hex('#6b4a3c');
+const LINTEL = hex('#bdb3a2');
+const DOOR = [hex('#2a1d16'), hex('#1d2a22'), hex('#3b1612')] as const;
 
 /**
  * One sash window, `w` × `h`, bottom centre at the local origin: the window_sash decal on a frame
  * standing 1.5 cm proud of the wall with its reveal 1.5 cm into it (LOD0); far, the decal alone,
- * 1 cm proud. A stone sill under it at LOD0 when `sill`.
+ * 1 cm proud. A stone sill under it and a stone lintel over it at LOD0 when `sill`.
  */
 export function sashWindow(w: number, h: number, trim: Vec3, lod: Lod, sill: boolean): Mesh {
   if (lod > 0)
@@ -54,16 +56,26 @@ export function sashWindow(w: number, h: number, trim: Vec3, lod: Lod, sill: boo
       box({
         size: [0.1, w + 0.14, 0.06],
         at: [0.03, 0, -0.06],
-        color: hex('#bdb3a2'),
+        color: LINTEL,
         strip: 'stone',
         // Top and nose only: its 6 cm ends are lost against the reveal.
+        omit: ['back', 'bottom', 'left', 'right'],
+      }),
+      // Lintel: a 15 cm stone (or brownstone) head 8 cm proud, its ends lost against the wall.
+      box({
+        size: [0.08, w + 0.2, 0.15],
+        at: [0.025, 0, h],
+        color: LINTEL,
+        strip: 'stone',
+        // Top and face: the soffit is seen only from the sidewalk, against the dark glass.
         omit: ['back', 'bottom', 'left', 'right'],
       }),
     );
   return merge(out);
 }
 
-/** Shopfront along [0, len] of a storey `fh` tall: bulkhead, glazing, mullions, sign, awning. */
+/** Shopfront along [0, len] of a storey `fh` tall: bulkhead, glazing, mullions, a panelled shop
+ *  door at LOD0, the sign band and (three in four) a canvas awning. */
 export function shopfront(len: number, fh: number, pick: number, lod: Lod): Mesh {
   const mid = len / 2;
   const glassTop = Math.min(2.8, fh - 0.75);
@@ -94,7 +106,20 @@ export function shopfront(len: number, fh: number, pick: number, lod: Lod): Mesh
         }),
       );
   }
-  if (pick % 2 === 0) {
+  if (lod === 0 && len > 2.4) {
+    // Shop door: a panelled leaf over the bulkhead and glazing, a third of the way along.
+    const y = Math.max(0.7, len * 0.3);
+    out.push(
+      cell({
+        origin: [0.085, y - 0.55, 0],
+        u: [0, 1.1, 0],
+        v: [0, 0, Math.min(2.3, glassTop - 0.05)],
+        color: DOOR[pick % DOOR.length] ?? BULKHEAD,
+        cell: 'door_panel',
+      }),
+    );
+  }
+  if (pick % 4 !== 3) {
     // Canvas awning: a sloped slab from the sign band with a short valance at its front.
     const top = glassTop + 0.3;
     out.push(
@@ -133,6 +158,8 @@ export function stoop(trim: Vec3, lod: Lod): Mesh {
         at: [d / 2 - 0.01, 0, k * rise],
         color: BROWNSTONE,
         strip: 'stone',
+        // Each step's back and underside sit in the wall and on the step below.
+        omit: ['back', 'bottom'],
       }),
     );
   }
@@ -197,12 +224,13 @@ export function stoop(trim: Vec3, lod: Lod): Mesh {
 /** Fire escape `w` wide centred on y = 0, a platform at every floor above the first. */
 export function fireEscape(w: number, floors: number, fh: number, lod: Lod): Mesh {
   const out: Mesh[] = [];
-  const iron = (size: Vec3, at: Vec3, omit: readonly ('top' | 'bottom')[] = []): void => {
+  const iron = (size: Vec3, at: Vec3, omit: readonly ('top' | 'bottom' | 'back')[] = []): void => {
     out.push(box({ size, at, color: IRON_BLACK, strip: 'steel_painted', omit }));
   };
   for (let f = 1; f < floors; f++) {
     const z = f * fh;
-    iron([0.852, w, 0.05], [0.424, 0, z - 0.05]); // grating, its back face 2 mm behind the wall face
+    iron([0.852, w, 0.05], [0.424, 0, z - 0.05], ['back']); // grating, its back 2 mm behind the wall face
+    // Rails keep their undersides: the street looks up at them between the posts.
     iron([0.03, w, 0.03], [0.835, 0, z + 0.87]); // top rail
     for (const s of [-1, 1]) {
       iron([0.03, 0.03, 0.9], [0.835, s * (w / 2 - 0.015), z], ['top', 'bottom']); // corner posts (ends buried)

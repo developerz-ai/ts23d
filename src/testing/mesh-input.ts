@@ -6,6 +6,7 @@ import {
   type Asset,
   type CompiledAsset,
   compile,
+  dmath,
   isAsset,
   type Lod,
   type Mesh,
@@ -96,7 +97,7 @@ export const dot3 = (a: Vec3, b: Vec3): number => a[0] * b[0] + a[1] * b[1] + a[
 /** Unit face normal by winding (b − a) × (c − a); zero for a degenerate triangle. */
 export function faceNormal(tri: readonly [Vec3, Vec3, Vec3]): Vec3 {
   const n = cross3(sub3(tri[1], tri[0]), sub3(tri[2], tri[0]));
-  const l = Math.hypot(n[0], n[1], n[2]);
+  const l = dmath.hypot(n[0], n[1], n[2]);
   return l > 0 ? [n[0] / l, n[1] / l, n[2] / l] : [0, 0, 0];
 }
 

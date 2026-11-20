@@ -18,9 +18,9 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    20760,
+    20328,
     6544,
-    2000
+    1526
   ],
   "drawCalls": [
     1,
@@ -45,29 +45,17 @@
   ],
   "weather": {
     "dents": {
-      "target": 0.03,
-      "actual": 0.0262,
-      "eligible": "exposed-panels ; exposed-panels & side-facing",
-      "area": 4.643,
-      "count": 5,
-      "by": {
-        "door_old": {
-          "target": 0.015,
-          "actual": 0.0093,
-          "area": 3.8773
-        },
-        "drum_old": {
-          "target": 0.03,
-          "actual": 0.0262,
-          "area": 0.7657
-        }
-      }
+      "target": 0.015,
+      "actual": 0.0093,
+      "eligible": "exposed-panels",
+      "area": 3.8773,
+      "count": 2
     },
     "bleach": {
-      "target": 0.5406,
-      "actual": 0.5406,
+      "target": 0.5402,
+      "actual": 0.5402,
       "eligible": "side-facing | up-facing ; up-facing | side-facing ; sunlit",
-      "area": 11.2795,
+      "area": 11.2993,
       "by": {
         "door_old": {
           "target": 0.45,
@@ -82,20 +70,20 @@
         "crate_old": {
           "target": 0.7,
           "actual": 0.7,
-          "area": 4.7648
+          "area": 4.7643
         },
         "drum_old": {
           "target": 0.3,
           "actual": 0.3,
-          "area": 0.4503
+          "area": 0.4706
         }
       }
     },
     "chips": {
-      "target": 0.3151,
-      "actual": 0.3151,
+      "target": 0.315,
+      "actual": 0.315,
       "eligible": "convex-edges",
-      "area": 11.014,
+      "area": 11.026,
       "by": {
         "door_old": {
           "target": 0.35,
@@ -110,7 +98,7 @@
         "crate_old": {
           "target": 0.3,
           "actual": 0.3,
-          "area": 5.263
+          "area": 5.2624
         },
         "block_old": {
           "target": 0.3,
@@ -120,7 +108,7 @@
         "drum_old": {
           "target": 0.3,
           "actual": 0.3,
-          "area": 0.9131
+          "area": 0.9257
         }
       }
     },
@@ -131,10 +119,10 @@
       "area": 0.0804
     },
     "rust": {
-      "target": 0.2669,
-      "actual": 0.2669,
+      "target": 0.2661,
+      "actual": 0.2661,
       "eligible": "below-fasteners | fasteners | ground-near ; ground-near ; below-fasteners | fasteners ; convex-edges | fasteners",
-      "area": 1.9116,
+      "area": 1.9242,
       "by": {
         "door_old": {
           "target": 0.4,
@@ -154,7 +142,7 @@
         "drum_old": {
           "target": 0.15,
           "actual": 0.15,
-          "area": 0.9131
+          "area": 0.9257
         }
       }
     },
@@ -162,7 +150,7 @@
       "target": 0.4253,
       "actual": 0.4253,
       "eligible": "ground-near & side-facing",
-      "area": 3.4691,
+      "area": 3.4679,
       "by": {
         "door_old": {
           "target": 0.45,
@@ -182,7 +170,7 @@
         "drum_old": {
           "target": 0.35,
           "actual": 0.35,
-          "area": 0.4949
+          "area": 0.4937
         }
       }
     },
@@ -190,7 +178,7 @@
       "target": 0.4528,
       "actual": 0.4528,
       "eligible": "up-facing",
-      "area": 1.7942,
+      "area": 1.7945,
       "by": {
         "door_old": {
           "target": 0.6,
@@ -205,7 +193,7 @@
         "crate_old": {
           "target": 0.4,
           "actual": 0.4,
-          "area": 0.7973
+          "area": 0.7972
         },
         "block_old": {
           "target": 0.45,
@@ -215,7 +203,7 @@
         "drum_old": {
           "target": 0.5,
           "actual": 0.5,
-          "area": 0.2982
+          "area": 0.2986
         }
       }
     },
@@ -223,24 +211,24 @@
       "target": 0.022,
       "actual": 0.0027,
       "eligible": "long-spans",
-      "area": 3.5581
+      "area": 3.227
     },
     "warp": {
       "target": 0.01,
-      "actual": 0.0026,
+      "actual": 0.0023,
       "eligible": "long-spans",
-      "area": 3.5581
+      "area": 3.227
     },
     "moss": {
-      "target": 0.3292,
-      "actual": 0.3292,
+      "target": 0.3291,
+      "actual": 0.3291,
       "eligible": "shaded & wet & !down-facing",
-      "area": 2.7401,
+      "area": 2.738,
       "by": {
         "crate_old": {
           "target": 0.35,
           "actual": 0.35,
-          "area": 2.1688
+          "area": 2.1667
         },
         "block_old": {
           "target": 0.25,

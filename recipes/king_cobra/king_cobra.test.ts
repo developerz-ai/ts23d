@@ -6,6 +6,7 @@ import { describe, expect, it } from 'bun:test';
 import {
   type Clip,
   compile,
+  dmath,
   type Mesh,
   quatRotate,
   triangleCount,
@@ -13,11 +14,11 @@ import {
 } from '@developerz.ai/ts23d';
 import { clipPose, jointWorlds } from '../../src/qa/clip-pose.ts';
 import { posedMesh } from '../../src/render/pose-strip.ts';
-import { norm } from '../_lib/body-plan-kit.ts';
+import { mixRgb, norm } from '../_lib/body-plan-kit.ts';
 import { REAR, rearHinge } from './clips.ts';
 import { IDLE_GROUND, jointArcs } from './ground.ts';
 import { CLIPS, king_cobra, PLAN, RIG } from './king_cobra.ts';
-import { scarAt, shedAt } from './material.ts';
+import { DUST, dustAt, marked, SCAR_AT, SHED_AT, scarAt, shedAt } from './material.ts';
 import {
   bellyHalf,
   COIL_TOP,
@@ -40,7 +41,7 @@ const clip = (name: string) => {
   if (!c) throw new Error(`no clip ${name}`);
   return c;
 };
-const dist = (a: Vec3, b: Vec3): number => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+const dist = (a: Vec3, b: Vec3): number => dmath.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
 const heads = (name: string, u: number): Vec3[] => {
   const c = clip(name);
   const w = jointWorlds(sk, clipPose(c, u * c.seconds));
@@ -93,7 +94,7 @@ const radiusToward = (s: number, d: Vec3, along: Vec3, dir: Vec3): number => {
   const v = b >= 0 ? 0.92 * w : 0.7 * w;
   // Along the body the tube reads as round: the lateral radius.
   const c = dot3(dir, along);
-  return 1 / Math.sqrt((a / w) ** 2 + (b / v) ** 2 + (c / w) ** 2);
+  return 1 / Math.sqrt(dmath.pow(a / w, 2) + dmath.pow(b / v, 2) + dmath.pow(c / w, 2));
 };
 const dot3 = (a: Vec3, b: Vec3): number => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
 const cross3 = (a: Vec3, b: Vec3): Vec3 => [
@@ -111,7 +112,7 @@ function selfClearance(c: Clip, u: number): number {
       if ((ARCS[j] ?? 0) - (ARCS[i] ?? 0) < 0.35) continue;
       const [p, q] = [at[i] as Vec3, at[j] as Vec3];
       const v: Vec3 = [q[0] - p[0], q[1] - p[1], q[2] - p[2]];
-      const l = Math.hypot(v[0], v[1], v[2]);
+      const l = dmath.hypot(v[0], v[1], v[2]);
       const u1: Vec3 = [v[0] / l, v[1] / l, v[2] / l];
       const ti = norm([
         (at[i + 1] as Vec3)[0] - p[0],
@@ -136,7 +137,7 @@ const bends = (at: readonly Vec3[]): number[] =>
     const [a, b] = [at[k] as Vec3, at[k + 2] as Vec3];
     const u: Vec3 = norm([p[0] - a[0], p[1] - a[1], p[2] - a[2]]);
     const v: Vec3 = norm([b[0] - p[0], b[1] - p[1], b[2] - p[2]]);
-    return (Math.acos(Math.min(1, dot3(u, v))) * 180) / Math.PI;
+    return (dmath.acos(Math.min(1, dot3(u, v))) * 180) / Math.PI;
   });
 
 describe('ventral scutes', () => {
@@ -177,7 +178,7 @@ describe('sourced proportions', () => {
     const d = frameAt(0.26).d;
     const front = norm([-d[0], -d[1], 0]);
     const yaw = (-35 * Math.PI) / 180;
-    expect(front[0] * Math.cos(yaw) + front[1] * Math.sin(yaw)).toBeGreaterThan(0.95);
+    expect(front[0] * dmath.cos(yaw) + front[1] * dmath.sin(yaw)).toBeGreaterThan(0.95);
     // Its face tips up toward a camera above the horizon, never down at the ground.
     expect(-d[2]).toBeGreaterThan(0);
   });
@@ -195,7 +196,7 @@ describe('sourced proportions', () => {
       S.forEach((s2, j) => {
         const q = F[j] as Vec3;
         const reach = halfW(s) + halfW(s2);
-        if (Math.abs(s2 - s) < 0.4 || q[2] >= p[2] || Math.hypot(q[0] - p[0], q[1] - p[1]) > reach)
+        if (Math.abs(s2 - s) < 0.4 || q[2] >= p[2] || dmath.hypot(q[0] - p[0], q[1] - p[1]) > reach)
           return;
         under = Math.max(under, q[2] + 0.92 * halfW(s2));
       });
@@ -207,7 +208,9 @@ describe('sourced proportions', () => {
     expect(Math.max(...pile.map((p, i) => p[2] - seatHeight(RAISED + i * 0.109)))).toBeGreaterThan(
       0.01,
     );
-    expect(Math.max(...pile.map((p) => Math.hypot(p[0], p[1])))).toBeLessThan(0.42);
+    expect(Math.max(...pile.map((p) => dmath.hypot(p[0], p[1])))).toBeLessThan(0.42);
+    // Two turns, not one flat ring: the smaller top turn rides a body depth above the ground ring.
+    expect(COIL_TOP).toBeGreaterThan(0.06);
   });
   it('keeps every skin point on its own turn, never inside the turn it touches', () => {
     let foreign = 0;
@@ -266,6 +269,23 @@ describe('surface', () => {
     }
     expect(shed).toBeGreaterThan(0.8);
     expect(scar).toBeGreaterThan(0.8);
+    // Dust coats the turn lying on the ground, broad enough to read from the hero camera; the raised
+    // front stays clean.
+    expect(dustAt(2.9, Math.PI * 0.7)).toBeGreaterThan(0.5);
+    expect(dustAt(0.5, Math.PI * 0.7)).toBe(0);
+  });
+});
+
+describe('story marks by LOD', () => {
+  const c: Vec3 = [0.3, 0.32, 0.22];
+  it('drops the shed patch and the scar at LOD2: dust only (a coarse ring painted a segment)', () => {
+    for (const [s, a] of [
+      [SHED_AT, 0.3],
+      [SCAR_AT, 0],
+    ] as const) {
+      expect(marked(c, s, a)).not.toEqual(marked(c, s, a, true));
+      expect(marked(c, s, a, true)).toEqual(mixRgb(c, DUST, dustAt(s, a) * 0.9));
+    }
   });
 });
 
@@ -296,11 +316,11 @@ describe('clips', () => {
         const pose = clipPose(clip(name), u * clip(name).seconds);
         for (const { bone } of RIG.ribs) {
           const q = pose.rotation.get(bone) ?? [0, 0, 0, 1];
-          expect(Math.hypot(q[0], q[1], q[2])).toBeLessThan(0.005);
+          expect(dmath.hypot(q[0], q[1], q[2])).toBeLessThan(0.005);
         }
         for (const bone of RIG.tongue) {
           const t = pose.translation.get(bone) ?? [0, 0, 0];
-          expect(Math.hypot(t[0], t[1], t[2])).toBeLessThan(0.001);
+          expect(dmath.hypot(t[0], t[1], t[2])).toBeLessThan(0.001);
         }
       }
     });
@@ -351,7 +371,7 @@ describe('clips', () => {
     const rib = RIG.ribs[1]?.bone ?? '';
     const turn = (name: string): number => {
       const q = clipPose(clip(name), 0.2).rotation.get(rib) ?? [0, 0, 0, 1];
-      return 2 * Math.atan2(Math.hypot(q[0], q[1], q[2]), Math.abs(q[3]));
+      return 2 * dmath.atan2(dmath.hypot(q[0], q[1], q[2]), Math.abs(q[3]));
     };
     expect(turn('slither')).toBeGreaterThan(1);
     expect(turn('hood_up')).toBeLessThan(0.3);
@@ -419,7 +439,7 @@ describe('clips', () => {
       const span = (k: 0 | 1): number =>
         Math.max(...at.map((p) => p[k])) - Math.min(...at.map((p) => p[k]));
       expect(Math.min(span(0), span(1))).toBeGreaterThan(0.5);
-      for (const p of at) expect(Math.hypot(p[0], p[1])).toBeLessThan(IDLE_GROUND.footprint);
+      for (const p of at) expect(dmath.hypot(p[0], p[1])).toBeLessThan(IDLE_GROUND.footprint);
     }
   });
 
@@ -429,7 +449,7 @@ describe('clips', () => {
     const t = RIG.tongue[0] ?? '';
     const out = (u: number): number => {
       const v = clipPose(clip('idle_ground'), u * 8).translation.get(t) ?? [0, 0, 0];
-      return Math.hypot(v[0], v[1], v[2]);
+      return dmath.hypot(v[0], v[1], v[2]);
     };
     expect(out(0.69)).toBeLessThan(out(0.2) - 0.02);
   });

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { createRng, type Mesh, type Vec3 } from '../core/index.ts';
+import { createRng, dmath, type Mesh, type Vec3 } from '../core/index.ts';
 import { sculpt } from './sculpt.ts';
 import { meshDetail } from './sculpt-mesh-detail.ts';
 import { meshBrick, meshField } from './sculpt-mesh-field.ts';
@@ -9,7 +9,7 @@ import { similarityFit } from './similarity-fit.ts';
 const R = 0.5;
 const sphereMesh = (r = R, at: Vec3 = [0, 0, 0]): Mesh =>
   sdf({
-    field: (p) => Math.hypot(p[0] - at[0], p[1] - at[1], p[2] - at[2]) - r,
+    field: (p) => dmath.hypot(p[0] - at[0], p[1] - at[1], p[2] - at[2]) - r,
     bounds: [
       [at[0] - r - 0.05, at[1] - r - 0.05, at[2] - r - 0.05],
       [at[0] + r + 0.05, at[1] + r + 0.05, at[2] + r + 0.05],
@@ -39,7 +39,7 @@ describe('meshBrick (mesh → sculpt field)', () => {
     let worst = 0;
     for (let i = 0; i < 2000; i++) {
       const dir: Vec3 = [rng.range(-1, 1), rng.range(-1, 1), rng.range(-1, 1)];
-      const l = Math.hypot(...dir) || 1;
+      const l = dmath.norm(dir) || 1;
       const rad = R + rng.range(-0.06, 0.06);
       const p: Vec3 = [(dir[0] / l) * rad, (dir[1] / l) * rad, (dir[2] / l) * rad];
       worst = Math.max(worst, Math.abs(b.field(p) - (rad - R)));
@@ -103,7 +103,7 @@ describe('meshBrick (mesh → sculpt field)', () => {
       worst = Math.max(
         worst,
         Math.abs(
-          Math.hypot(m.positions[i] ?? 0, m.positions[i + 1] ?? 0, m.positions[i + 2] ?? 0) - R,
+          dmath.hypot(m.positions[i] ?? 0, m.positions[i + 1] ?? 0, m.positions[i + 2] ?? 0) - R,
         ),
       );
     expect(worst).toBeLessThan(cell);
@@ -129,7 +129,7 @@ describe('meshDetail (high-pass relief)', () => {
 
   it('a bump narrower than sigma passes, clamped under amp', () => {
     const bumped: Mesh = sdf({
-      field: (p) => Math.min(Math.hypot(...p) - R, Math.hypot(p[0] - R, p[1], p[2]) - 0.025),
+      field: (p) => Math.min(dmath.norm(p) - R, dmath.hypot(p[0] - R, p[1], p[2]) - 0.025),
       bounds: [
         [-0.6, -0.6, -0.6],
         [0.6, 0.6, 0.6],

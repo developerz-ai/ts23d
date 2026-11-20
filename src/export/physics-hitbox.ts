@@ -6,6 +6,7 @@
 
 import {
   type CompiledAsset,
+  dmath,
   type Quat,
   SKIN_INFLUENCES,
   toWorld,
@@ -38,7 +39,7 @@ function yTo(u: Vec3): Quat {
   const w = 1 + u[1];
   if (w < 1e-9) return [1, 0, 0, 0];
   const q: Quat = [u[2], 0, -u[0], w];
-  const l = Math.hypot(...q);
+  const l = dmath.norm(q);
   return [q[0] / l, q[1] / l, q[2] / l, q[3] / l];
 }
 
@@ -72,7 +73,7 @@ export function fitHitboxes(asset: CompiledAsset): Hitbox[] {
     const ps = pts[i] ?? [];
     if (ps.length < 4) return [];
     const d: Vec3 = [b.tail[0] - b.head[0], b.tail[1] - b.head[1], b.tail[2] - b.head[2]];
-    const len = Math.hypot(...d);
+    const len = dmath.norm(d);
     const u: Vec3 = [d[0] / len, d[1] / len, d[2] / len];
     // The axis runs along the bone through the flesh's centroid (a spine bone lies on the back's
     // top line; its flesh hangs below it).
@@ -81,7 +82,7 @@ export function fitHitboxes(asset: CompiledAsset): Hitbox[] {
     const along = ps.map((p) => (p[0] - c[0]) * u[0] + (p[1] - c[1]) * u[1] + (p[2] - c[2]) * u[2]);
     const radial = ps.map((p, k) => {
       const t = along[k] ?? 0;
-      return Math.hypot(p[0] - c[0] - u[0] * t, p[1] - c[1] - u[1] * t, p[2] - c[2] - u[2] * t);
+      return dmath.hypot(p[0] - c[0] - u[0] * t, p[1] - c[1] - u[1] * t, p[2] - c[2] - u[2] * t);
     });
     let r = Math.max(1e-3, percentile(radial, HITBOX_COVERAGE));
     const lo = percentile(along, 0.01);
@@ -94,7 +95,7 @@ export function fitHitboxes(asset: CompiledAsset): Hitbox[] {
       z = Math.max(hi - r / 2, (lo + hi) / 2);
       const inside = ps.filter((_, j) => {
         const t = Math.min(z, Math.max(a, along[j] ?? 0));
-        return Math.hypot((along[j] ?? 0) - t, radial[j] ?? 0) <= r + 1e-9;
+        return dmath.hypot((along[j] ?? 0) - t, radial[j] ?? 0) <= r + 1e-9;
       }).length;
       coverage = inside / ps.length;
       if (coverage >= HITBOX_COVERAGE) break;

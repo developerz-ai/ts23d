@@ -3,7 +3,7 @@
 // orc the tusks — curved tapered cones rooted in the lower jaw behind the lip corners, rising
 // outside the upper lip. Positions come from the face's warp, so they follow every race.
 
-import { type Mesh, merge, sweep, type Vec3 } from '@developerz.ai/ts23d';
+import { dmath, type Mesh, merge, sweep, type Vec3 } from '@developerz.ai/ts23d';
 import type { FaceHead } from './head.ts';
 import { LEFT, MIDLINE } from './landmarks.ts';
 
@@ -78,7 +78,7 @@ export function tusks(head: FaceHead, length: number, lod: number): { l: Mesh; r
         root[1] + side * L * 0.22 * t * t,
         root[2] + L * t,
       ]);
-      scale.push(Math.max(0.08, 1 - t ** 1.4));
+      scale.push(Math.max(0.08, 1 - dmath.pow(t, 1.4)));
     }
     const m = sweep({
       section: { radius: 0.0062 * s * Math.max(1, length / 0.12), segments: lod === 0 ? 12 : 6 },
@@ -92,7 +92,7 @@ export function tusks(head: FaceHead, length: number, lod: number): { l: Mesh; r
     const colors = new Float32Array(m.colors.length);
     for (let v = 0; v < m.positions.length / 3; v++) {
       const t = Math.min(1, Math.max(0, ((m.positions[v * 3 + 2] ?? 0) - root[2]) / L));
-      const k = 0.48 + 0.6 * t ** 0.7;
+      const k = 0.48 + 0.6 * dmath.pow(t, 0.7);
       colors[v * 3] = Math.min(1, TUSK[0] * k);
       colors[v * 3 + 1] = Math.min(1, TUSK[1] * k * (0.86 + 0.14 * t));
       colors[v * 3 + 2] = Math.min(1, TUSK[2] * k * (0.62 + 0.38 * t));

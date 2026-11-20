@@ -3,6 +3,7 @@
 // (highest sample first). Pure arithmetic, no rng: the same cards give the same clumps.
 
 import type { Mesh, Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 
 export interface Sample {
   readonly p: Vec3;
@@ -33,7 +34,7 @@ export function samples(m: Mesh): Sample[] {
     const e2: Vec3 = [c[0] - a[0], c[1] - a[1], c[2] - a[2]];
     const w =
       0.5 *
-      Math.hypot(
+      dmath.hypot(
         e1[1] * e2[2] - e1[2] * e2[1],
         e1[2] * e2[0] - e1[0] * e2[2],
         e1[0] * e2[1] - e1[1] * e2[0],
@@ -50,7 +51,7 @@ export function samples(m: Mesh): Sample[] {
 }
 
 const d2 = (a: Vec3, b: Vec3): number =>
-  (a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2 + (a[2] - b[2]) ** 2;
+  dmath.pow(a[0] - b[0], 2) + dmath.pow(a[1] - b[1], 2) + dmath.pow(a[2] - b[2], 2);
 
 /** Farthest-point seeds starting from the highest sample: deterministic, spread over the crown. */
 function seeds(s: readonly Sample[], k: number): Vec3[] {

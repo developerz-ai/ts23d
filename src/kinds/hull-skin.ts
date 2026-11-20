@@ -5,6 +5,7 @@
 // waterline) keep only the half of each quad that has area: no zero-area slivers.
 
 import type { MeshBuilder, Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import { stripRect } from '../material/index.ts';
 
 export type Grid = Vec3[][];
@@ -16,7 +17,7 @@ const cross3 = (a: Vec3, b: Vec3): Vec3 => [
 ];
 
 /** Twice the area of triangle a-b-c. */
-const area2 = (a: Vec3, b: Vec3, c: Vec3): number => Math.hypot(...cross3(sub3(b, a), sub3(c, a)));
+const area2 = (a: Vec3, b: Vec3, c: Vec3): number => dmath.norm(cross3(sub3(b, a), sub3(c, a)));
 
 /** Quad a-b-c-d (ids and positions) as its two triangles, each only if it has area. */
 export function skinQuad(
@@ -37,7 +38,7 @@ export function normalsOf(g: Grid): Grid {
       const ti = sub3(r(i + 1)[j] ?? p, r(i - 1)[j] ?? p);
       const tj = sub3(row[Math.min(row.length - 1, j + 1)] ?? p, row[Math.max(0, j - 1)] ?? p);
       const n = cross3(tj, ti);
-      const l = Math.hypot(...n);
+      const l = dmath.norm(n);
       return l < 1e-9 ? ([0, 0, 0] as Vec3) : ([n[0] / l, n[1] / l, n[2] / l] as Vec3);
     }),
   );

@@ -1,31 +1,31 @@
 {
   "asset": "amur_tiger",
   "reviewer": "agent",
-  "overall": 6.6,
+  "overall": 6.9,
   "scores": {
     "silhouette": {
       "score": 7,
-      "reason": "Reads as a big cat in SIDE and 3/4 (level back, low head, J tail, digitigrade legs), and the haunch is fuller. The ears are still wrong at 3/4: in hero.png and portrait.png the near ear is a flat ring/disc and the far ear a black horn-like spike, and the fur cards make the back outline bristly like quills.",
+      "reason": "The ears now keep a rounded shell outline at 3/4 (no disc or horn) and the back topline is smooth; but the open lower jaw is a pale plate jutting forward below the muzzle in hero.png, which breaks the head outline, and the trunk is still a long even tube in SIDE.",
       "fixes": [
-        "thicken the ear shell and round its rim in ears.ts so it keeps a rounded outline edge-on (no disc / horn at 3/4)",
-        "shorten and lay the back fur cards flatter along the hair flow so the topline stays smooth"
+        "close the jaw or shape the lower jaw as a narrow mandible with lip and chin fur, not a pale plate",
+        "deepen the brisket and tuck the waist so the SIDE outline is not a tube"
       ]
     },
     "proportions": {
       "score": 7,
-      "reason": "Sourced numbers hold (2.2 × 0.5 × 1.0 m sheet). By eye the trunk is still long and tubular in SIDE and TOP (a waisted tube with no brisket depth), and the head reads small for an Amur male.",
+      "reason": "Sourced numbers hold (2.2 × 0.5 × 1.0 m sheet). By eye the trunk is still long and tubular in SIDE and TOP with little brisket depth, and the head reads small against the body for an Amur male.",
       "fixes": [
         "shorten the trunk masses ~5% and deepen the brisket in torso.ts",
         "enlarge the head ~5% and widen the cheek ruff in head.ts"
       ]
     },
     "materials": {
-      "score": 6,
-      "reason": "Fur cards and whiskers now break light on the back and ruff, the nose is a pink leather and the eyes amber; but stripes printed on the cards read as black scratch strokes floating off the body, the chin/ruff cards read as grey straw, and the face is smooth matte plastic.",
+      "score": 7,
+      "reason": "Stripes are now painted on the coat and read as stripes (no floating card strokes), and the ruff is cleaner white; but the face is still smooth matte plastic, the lower legs are a flat grey sock, and the jaw is a uniform pale plastic.",
       "fixes": [
-        "colour each fur card from the skin under its root only (no stripe stamped across a card) so stripes stay painted on the coat",
-        "warmer, softer white on the ruff cards (cream, not grey) with alpha-tapered tips",
-        "short fur cards or a shell over the face so it stops reading as plastic"
+        "short fur cards or a shell over the face so it stops reading as plastic",
+        "keep the damp lower legs in a darkened orange, not desaturated grey",
+        "gum, lip and tooth colour separation in the open mouth"
       ]
     },
     "detail": {
@@ -37,16 +37,16 @@
       ]
     },
     "wear": {
-      "score": 5,
-      "reason": "Paws are darkened with soil and there is a pale scar on the nose bridge; nothing else: no ear notch, no damp lower legs, no matted belly fringe.",
+      "score": 6,
+      "reason": "White healed claw scars now show on the shoulder in hero.png and the lower legs are darkened; but the dark legs read as grey socks rather than damp fur, and no ear notch is visible.",
       "fixes": [
-        "a notch in one ear and two scars on the shoulder",
-        "damp, darker, clumped fur on the lower legs and belly fringe"
+        "a notch in one ear",
+        "damp, clumped fur on the lower legs and belly fringe in a darker orange, not grey"
       ]
     },
     "lod": {
       "score": 6,
-      "reason": "FAR LOD2 (3k tris) keeps the outline but is heavily faceted, the stripes become random dark triangles and the white belly zone breaks into patches, so the switch shifts the pattern.",
+      "reason": "FAR LOD2 (3k tris) keeps the outline but is heavily faceted; the stripes still become random dark triangles and the white belly breaks into patches, so the switch shifts the pattern.",
       "fixes": [
         "paint LOD2 stripes as 6–8 broad authored bands instead of sampling the LOD0 pattern per triangle",
         "build LOD2 legs from the sculpt with a gentle inflate instead of tubes"
@@ -61,7 +61,7 @@
     }
   },
   "renders": {
-    "hero.png": "847deb8c1753fad79c6b924dd45a169551ee8ac408fb6f2db186f90b27be87d9",
-    "sheet.png": "07c7f07f3df7ace21ded0c043faee0acc9da35ea0e16d228e8a9eef9f974932b"
+    "hero.png": "c191a745a837318960f3e2f44e566b471017b69c330d2b34190f6270a0faa9da",
+    "sheet.png": "b93050a4947bed0a05cbf91ed2e3c2699ab3f5cc323cb9e26623c95d052d97ed"
   }
 }

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test';
+import { dmath } from '../core/index.ts';
 import { compareFingerprints, fingerprint, srgbToLab } from './ref-fingerprint.ts';
 
 type Paint = (x: number, y: number) => [number, number, number] | null;
@@ -22,7 +23,7 @@ const noise = (x: number, y: number): number => {
 };
 
 const inEllipse = (x: number, y: number, cx: number, cy: number, rx: number, ry: number): boolean =>
-  ((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2 <= 1;
+  dmath.pow((x - cx) / rx, 2) + dmath.pow((y - cy) / ry, 2) <= 1;
 
 describe('fingerprint', () => {
   it('refuses bytes that match neither RGBA nor a mask of the size', () => {

@@ -6,6 +6,7 @@
 import {
   cylinder,
   definePart,
+  dmath,
   lathe,
   type Mesh,
   merge,
@@ -122,8 +123,8 @@ export const lamp = definePart({
         const n = b.pick([10, 6, 4]);
         const path = Array.from({ length: n + 1 }, (_, k): [number, number, number] => {
           const t = (k / n) * Math.PI;
-          const l = R * 1.02 * Math.cos(t);
-          return [0.02 + R * 0.72 * Math.sin(t), l * Math.cos(a), l * Math.sin(a)];
+          const l = R * 1.02 * dmath.cos(t);
+          return [0.02 + R * 0.72 * dmath.sin(t), l * dmath.cos(a), l * dmath.sin(a)];
         });
         cage.push(
           sweep({

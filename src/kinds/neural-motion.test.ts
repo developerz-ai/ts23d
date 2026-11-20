@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test';
 import type { Bone, Quat, Vec3 } from '../core/index.ts';
-import { checkClip } from '../core/index.ts';
+import { checkClip, dmath } from '../core/index.ts';
 import {
   footLock,
   neuralMotionClip,
@@ -14,7 +14,7 @@ const bones: Bone[] = [
   { name: 'leg_l', parent: 'pelvis', head: [0, 0.1, 0.5], tail: [0, 0.1, 0] },
   { name: 'leg_r', parent: 'pelvis', head: [0, -0.1, 0.5], tail: [0, -0.1, 0] },
 ];
-const swing = (a: number): Quat => [0, Math.sin(a / 2), 0, Math.cos(a / 2)];
+const swing = (a: number): Quat => [0, dmath.sin(a / 2), 0, dmath.cos(a / 2)];
 
 /** 1.2 s at 24 fps: the root drifts 9 cm/s forward while both feet stay planted, the right leg
  *  lifts (swings) in the middle third — what a text-to-motion model hands back. */

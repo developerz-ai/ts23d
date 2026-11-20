@@ -7,6 +7,7 @@
 // is gated: Sander L2 stretch < STRETCH_MAX, no flipped triangle, no self-overlap (raster test).
 
 import type { Mesh } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import { cg } from './lscm-cg.ts';
 import { cross, dot, overlaps, stretchL2, sub, type V3 } from './lscm-gate.ts';
 
@@ -34,7 +35,7 @@ export interface LscmOptions {
 }
 
 const norm = (a: V3): V3 => {
-  const l = Math.hypot(a[0], a[1], a[2]) || 1;
+  const l = dmath.hypot(a[0], a[1], a[2]) || 1;
   return [a[0] / l, a[1] / l, a[2] / l];
 };
 
@@ -78,8 +79,8 @@ type Topo = ReturnType<typeof topology>;
 
 /** Greedy region growing in triangle order; deterministic. */
 function segment(g: Topo, o: LscmOptions, coneDeg: number, only: readonly number[]): number[][] {
-  const ridge = Math.cos(((o.ridge ?? 50) * Math.PI) / 180);
-  const cone = Math.cos((coneDeg * Math.PI) / 180);
+  const ridge = dmath.cos(((o.ridge ?? 50) * Math.PI) / 180);
+  const cone = dmath.cos((coneDeg * Math.PI) / 180);
   const cap = o.maxTris ?? 3000;
   // −2 = not in this pass; −1 = free.
   const owner = new Int32Array(g.nt).fill(-2);
@@ -201,7 +202,7 @@ function finish(
     const [p1, p2, p3] = [uvAt(t, 0), uvAt(t, 1), uvAt(t, 2)];
     const s = ((p2[0] - p1[0]) * (p3[1] - p1[1]) - (p3[0] - p1[0]) * (p2[1] - p1[1])) / 2;
     const [q1, q2, q3] = tri3[i] as V3[];
-    const area3 = Math.hypot(...cross(sub(q2 as V3, q1 as V3), sub(q3 as V3, q1 as V3))) / 2;
+    const area3 = dmath.norm(cross(sub(q2 as V3, q1 as V3), sub(q3 as V3, q1 as V3))) / 2;
     if (s <= 0 && area3 > 1e-14) flips++;
     a2 += Math.abs(s);
     a3 += area3;

@@ -1,7 +1,7 @@
 {
   "asset": "bluefin_tuna",
   "reviewer": "agent",
-  "overall": 7,
+  "overall": 7.1,
   "scores": {
     "silhouette": {
       "score": 8,
@@ -18,16 +18,16 @@
       ]
     },
     "materials": {
-      "score": 7,
-      "reason": "The back now reads as a glossy metallic blue with a specular streak and the silver spots/bars show on the flank, but the lower flank and belly are a matte grey rather than mirror-silver and the fins are flat dark plastic.",
+      "score": 8,
+      "reason": "The lower flank and belly are now mirror-silver and the back a glossy metallic blue, and the fin margins lighten toward yellow; the silver spots are blurry blocky squares and the pectoral fin is a flat dark plastic.",
       "fixes": [
-        "lower roughness and raise metalness on the lower flank and belly so it reflects like a fish side",
-        "slight translucency/lighter tone at the fin margins"
+        "sharper, rounder silver spots/bars on the flank (no blocky squares)",
+        "slight translucency at the pectoral fin margin"
       ]
     },
     "detail": {
       "score": 6,
-      "reason": "Operculum line, eye ring, finlets and the first dorsal spines are present, but there are no fin rays, no lateral line, no corselet scale patch and no gill slit depth in the hero close-up.",
+      "reason": "Operculum line, eye ring, finlets and the first dorsal spines are present, but in the hero close-up there are still no fin rays, no lateral line and no corselet scale patch.",
       "fixes": [
         "fin rays as shallow grooves on the dorsal, anal and caudal fins (fins.ts)",
         "lateral line and corselet scale patch behind the head in vertex colour/relief"
@@ -35,14 +35,14 @@
     },
     "wear": {
       "score": 5,
-      "reason": "A pristine fish: no frayed fin margins, no scratches, no scale loss.",
+      "reason": "A pristine fish in hero.png: clean fin margins, no scratches, no scale loss.",
       "fixes": [
         "slightly frayed fin margins and a few seeded scratches/scale loss on the flank"
       ]
     },
     "lod": {
       "score": 7,
-      "reason": "FAR LOD2 keeps the outline and the finlets as a yellow strip, but the body is faceted with visible light/dark triangle patches on the flank.",
+      "reason": "FAR LOD2 keeps the outline and the finlets as a yellow strip, but the body is faceted with flat light/dark triangle patches on the flank.",
       "fixes": [
         "a few more rings on the LOD2 body (~700 triangles) and smoothed normals so the flank stops faceting"
       ]
@@ -56,7 +56,7 @@
     }
   },
   "renders": {
-    "hero.png": "a26549637ff2c3202992a6bf53b851aa452381dbf96aabf673c29faf730f9f41",
-    "sheet.png": "b4203d18d39d7c9d95b705876f8d7a699c4451d068f9c07a9c36407659f4fed9"
+    "hero.png": "660b254f26f953a176f6ef129132d1424497d2b58458548a2cf3adfc3ecae33f",
+    "sheet.png": "3f5494000d634023ab7ecb491dfdb9ee0dcb7b2c19319f3dcc92c65316120f00"
   }
 }

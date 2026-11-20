@@ -7,6 +7,7 @@
 
 import { defineAsset, headClips } from '@developerz.ai/ts23d';
 import { bustEdits } from '../_lib/bust/bust.ts';
+import { portrait } from '../_lib/bust/hero.ts';
 import { proportionCheck } from '../_lib/face/proportions.ts';
 import { scalpCoverCheck } from '../_lib/face/scalp-check.ts';
 import { buildElf, ELF_BUST, SCALP } from './build.ts';
@@ -51,8 +52,16 @@ export const elf_head = defineAsset({
   // wool are strips of their own (../_lib/bust/cloth-strips.ts): smooth against matte, no finish.
   finishes: {
     cornea: { clearcoat: 1, clearcoatRoughness: 0.04 },
-    skin: { sheen: { colour: '#a08c80', roughness: 0.45 } },
+    // … and a thin oily coat: the tighter second highlight of living skin (brow, nose,
+    // cheekbone), without which the diffusion alone reads as wax.
+    skin: {
+      sheen: { colour: '#a08c80', roughness: 0.45 },
+      clearcoat: 0.3,
+      clearcoatRoughness: 0.28,
+    },
   },
+  // A portrait: the bust fills the frame (the default orbit leaves the face a thumbnail).
+  hero: portrait(0.573, { at: 0.48, fill: 0.86 }),
   art: { focal: 'head', shape: 'friendly' },
   // Intended creases (QA `connections` skips them): one small region per sculpted fold, from the
   // geometry that sculpts it (creases.ts) — never an area.

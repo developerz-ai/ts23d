@@ -1,27 +1,27 @@
 {
   "asset": "oak",
   "reviewer": "agent",
-  "overall": 6.9,
+  "overall": 7.3,
   "scores": {
     "silhouette": {
-      "score": 7,
-      "reason": "Alpha leaf cards now give a broken broadleaf crown on a forked bole in every view; in hero.png the crown is upright and ovoid rather than the broad low dome of an open-grown oak.",
+      "score": 8,
+      "reason": "Heavy low limbs now spread the crown into a broad dome wider than tall in FRONT and SIDE; alpha leaf cards give a broken broadleaf outline.",
       "fixes": [
-        "longer, lower first-order limbs so the crown is wider than tall"
+        "let one or two low limbs dip toward the ground on the open side"
       ]
     },
     "proportions": {
-      "score": 7,
-      "reason": "Bole and limbs thicker than before; the crown base is high for an oak.",
+      "score": 8,
+      "reason": "Thick bole, low crown base and heavy first-order limbs fit an open-grown oak.",
       "fixes": [
-        "drop the crown base ~1.5 m with heavier low limbs"
+        "a broader buttressed root flare"
       ]
     },
     "materials": {
       "score": 7,
-      "reason": "Leaf cards sample the foliage texture with alpha and the bark renders the same in both images; the ground disc reads as planked wood rather than soil.",
+      "reason": "Leaf cards sample the foliage texture with alpha and bark reads; the ground disc is now grass with soil patches but carries straight brown stripes in hero.png, and the leaves are one green.",
       "fixes": [
-        "a soil/leaf-litter strip on the ground disc",
+        "remove the stripe pattern on the ground disc (soil/leaf-litter noise instead)",
         "two-tone leaf colour (sun / shade)"
       ]
     },
@@ -42,22 +42,22 @@
       ]
     },
     "lod": {
-      "score": 6,
-      "reason": "FAR LOD2 keeps the trunk but the crown becomes sparse vertical streaky cards, lighter and thinner than LOD0.",
+      "score": 7,
+      "reason": "FAR LOD2 now has a dense card crown fitted to the LOD0 outline instead of sparse streaks; its cards are blocky and lighter than LOD0.",
       "fixes": [
-        "denser LOD2 card crown fitted to the LOD0 silhouette, colour matched to the LOD0 mean"
+        "colour-match the LOD2 crown cards to the LOD0 mean"
       ]
     },
     "technical": {
       "score": 8,
-      "reason": "16.2k / 2.7k / 306 triangles, 3 draws (cutout leaves).",
+      "reason": "16.7k / 2.9k / 306 triangles, 3 draws (cutout leaves).",
       "fixes": [
         "spend LOD2 above 306 tris on more crown cards"
       ]
     }
   },
   "renders": {
-    "hero.png": "90a43a0ea062fb72e97488335d3b53bc316f3c0bba79052f8850da5622d81abe",
-    "sheet.png": "37ad7e4dfefd0d4767a5616105a3adeac6843f237767cc4177f5ecd4239cd303"
+    "hero.png": "c334b428872eeac65f3f2cead6dfdf4a3b569d776d2987f7bd350e883cd45205",
+    "sheet.png": "1e427f9a2df8456e1e902c3ab44740fc7cb3471530d1b8cb92eb7da8c3a48a2f"
   }
 }

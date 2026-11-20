@@ -2,6 +2,7 @@
 // it (Douglas–Peucker), and measure its corners — acute spikes (aggressive), long straight edges
 // (stable), or neither: soft rounds (friendly). Plus the taper of the outline.
 
+import { dmath } from '../core/index.ts';
 import { type Mask, taper } from './critique-mask.ts';
 
 export type ShapeClass = 'aggressive' | 'friendly' | 'stable';
@@ -66,9 +67,9 @@ export function contour(m: Mask): P[] {
 const segDist = (p: P, a: P, b: P): number => {
   const dx = b[0] - a[0];
   const dy = b[1] - a[1];
-  const l = Math.hypot(dx, dy);
+  const l = dmath.hypot(dx, dy);
   return l < 1e-9
-    ? Math.hypot(p[0] - a[0], p[1] - a[1])
+    ? dmath.hypot(p[0] - a[0], p[1] - a[1])
     : Math.abs(dx * (a[1] - p[1]) - dy * (a[0] - p[0])) / l;
 };
 
@@ -97,8 +98,8 @@ export function simplify(pts: readonly P[], eps: number): P[] {
   let far = 0;
   pts.forEach((p, k) => {
     if (
-      Math.hypot(p[0] - p0[0], p[1] - p0[1]) >
-      Math.hypot((pts[far] ?? p0)[0] - p0[0], (pts[far] ?? p0)[1] - p0[1])
+      dmath.hypot(p[0] - p0[0], p[1] - p0[1]) >
+      dmath.hypot((pts[far] ?? p0)[0] - p0[0], (pts[far] ?? p0)[1] - p0[1])
     )
       far = k;
   });
@@ -121,8 +122,8 @@ function straightShare(poly: readonly P[]): number {
   for (let k = 0; k < poly.length; k++) {
     const a = poly[k] ?? [0, 0];
     const b = poly[(k + 1) % poly.length] ?? [0, 0];
-    const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
-    const deg = ((Math.atan2(b[1] - a[1], b[0] - a[0]) * 180) / Math.PI + 360) % 180;
+    const len = dmath.hypot(b[0] - a[0], b[1] - a[1]);
+    const deg = ((dmath.atan2(b[1] - a[1], b[0] - a[0]) * 180) / Math.PI + 360) % 180;
     const i = Math.min(35, Math.floor(deg / 5));
     bins[i] = (bins[i] ?? 0) + len;
     total += len;
@@ -151,7 +152,7 @@ export function shapeStats(m: Mask): Omit<ShapeStats, 'shape'> {
     const q = poly[(k + 1) % n] ?? [0, 0];
     const e1: P = [c[0] - p[0], c[1] - p[1]];
     const e2: P = [q[0] - c[0], q[1] - c[1]];
-    const turn = Math.atan2(e1[0] * e2[1] - e1[1] * e2[0], e1[0] * e2[0] + e1[1] * e2[1]);
+    const turn = dmath.atan2(e1[0] * e2[1] - e1[1] * e2[0], e1[0] * e2[0] + e1[1] * e2[1]);
     const deg = (Math.abs(turn) * 180) / Math.PI;
     if (deg >= 45 && Math.sign(turn) === orient) corners++;
     if (deg > 110 && Math.sign(turn) === orient) acute++;

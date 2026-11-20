@@ -14,7 +14,7 @@ import { heroOne, reviewOne } from './render-cmds.ts';
 
 const out = join(import.meta.dir, '../../tmp/render-cmds-test');
 afterAll(() => rm(out, { recursive: true, force: true }));
-const sheet = paintTrimSheet({ ...DEFAULT_SHEET, size: 512 });
+const sheet = paintTrimSheet({ ...DEFAULT_SHEET, size: 512 }, []);
 const args = parseArgs(['review', 'x.ts', '--out', out, '--size', '64x48']);
 
 /** A two-bone limb whose elbow has a range of motion (so qa poseFrames has ROM extremes). */

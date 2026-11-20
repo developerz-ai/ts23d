@@ -111,6 +111,25 @@ describe('city_block from the pinned West Village extract', () => {
     }
   });
 
+  it('far, every wall keeps its own colour (mean wear, not its blackened foot and top)', () => {
+    const c2 = compile(city_block, { lod: 2 });
+    const lum = (c: readonly number[]): number =>
+      0.2126 * (c[0] ?? 0) + 0.7152 * (c[1] ?? 0) + 0.0722 * (c[2] ?? 0);
+    let walls = 0;
+    for (const p of cityPlan(BUILDINGS, STYLE)) {
+      const C = c2.parts.find((q) => q.name === `b${p.id}`)?.mesh?.colors;
+      if (!C?.length) continue;
+      const mean = [0, 1, 2].map((k) => {
+        let s = 0;
+        for (let i = k; i < C.length; i += 3) s += C[i] ?? 0;
+        return s / (C.length / 3);
+      });
+      expect(lum(mean) / lum(p.wall)).toBeGreaterThan(0.6);
+      walls++;
+    }
+    expect(walls).toBeGreaterThan(30);
+  });
+
   it('two neighbours are never identical', () => {
     const plans = cityPlan(BUILDINGS, STYLE);
     const byId = new Map(plans.map((p) => [p.id, p]));
@@ -131,5 +150,33 @@ describe('city_block from the pinned West Village extract', () => {
     const report = await validate(toInstancedGlb(s));
     const msgs = (report.issues as { messages: { severity: number; code: string }[] }).messages;
     expect(msgs.filter((x) => x.severity <= 1).map((x) => x.code)).toEqual([]);
+  });
+});
+
+describe('street trees across LODs', () => {
+  // Failure first: LOD0 drew a side lobe's dice from the shared tree stream and LOD1 did not, so
+  // every tree after the first lobed one changed height and crown between LOD0 and LOD1.
+  /** Each tree's crown apex height, keyed by its axis: the trunk's top (z 3.4) and the crown's
+   *  apex both lie exactly on it. */
+  const apexes = (lod: 0 | 1): string[] => {
+    const m = compile(city_block, { lod }).parts.find((p) => p.name === 'trees')?.mesh;
+    const P = m?.positions ?? new Float32Array();
+    const n = P.length / 3;
+    const out = new Map<string, number>();
+    for (let i = 0; i < n; i++) {
+      if (Math.abs((P[i * 3 + 2] ?? 0) - 3.4) > 1e-5) continue;
+      const [x, y] = [P[i * 3] ?? 0, P[i * 3 + 1] ?? 0];
+      let top = 0;
+      for (let j = 0; j < n; j++)
+        if (Math.abs((P[j * 3] ?? 0) - x) < 1e-4 && Math.abs((P[j * 3 + 1] ?? 0) - y) < 1e-4)
+          top = Math.max(top, P[j * 3 + 2] ?? 0);
+      if (top > 3.5) out.set(`${x.toFixed(3)},${y.toFixed(3)}`, top);
+    }
+    return [...out].map(([k, z]) => `${k}:${z.toFixed(3)}`).sort();
+  };
+  it('every tree keeps its place and height from LOD0 to LOD1', () => {
+    const a = apexes(0);
+    expect(a.length).toBeGreaterThan(3);
+    expect(apexes(1)).toEqual(a);
   });
 });

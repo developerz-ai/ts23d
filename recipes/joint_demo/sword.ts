@@ -7,6 +7,7 @@
 
 import {
   type BuildContext,
+  dmath,
   lathe,
   loft,
   type Mesh,
@@ -27,7 +28,7 @@ const RUST: Vec3 = [0.52, 0.33, 0.2];
 const BRASS: Vec3 = [0.95, 0.92, 0.86];
 const TARNISH: Vec3 = [0.5, 0.42, 0.3];
 const LEATHER: Vec3 = [0.8, 0.74, 0.68];
-const SWEAT: Vec3 = [0.36, 0.3, 0.26];
+const SWEAT: Vec3 = [0.24, 0.19, 0.16];
 const RUBBED: Vec3 = [1, 0.95, 0.88];
 
 export interface SwordOptions {
@@ -93,7 +94,7 @@ function facets(
       let nx = e[1] * l[2] - e[2] * l[1];
       let ny = e[2] * l[0] - e[0] * l[2];
       let nz = e[0] * l[1] - e[1] * l[0];
-      const len = Math.hypot(nx, ny, nz) || 1;
+      const len = dmath.hypot(nx, ny, nz) || 1;
       [nx, ny, nz] = [nx / len, ny / len, nz / len];
       tipN = [nx, ny, nz];
       const pair = [a, c].map((p, j) =>
@@ -138,14 +139,15 @@ function blade(ctx: BuildContext, base: Vec3, length: number, rng: Rng): Mesh {
           (_, i): Nick => ({
             t: 0.2 + 0.09 * i + r.range(-0.03, 0.03),
             side: i % 3 === 1 ? -1 : 1,
-            depth: r.range(0.0018, 0.0042),
-            half: r.range(0.003, 0.006),
+            // (Thumbnail-sized bites: at 2-4 mm they were under a pixel in the hero.)
+            depth: r.range(0.004, 0.0085),
+            half: r.range(0.006, 0.012),
           }),
         )
       : [];
   const count = ctx.pick([8, 3, 3]);
   const ts = new Set<number>();
-  for (let i = 0; i <= count; i++) ts.add(Math.round((i / count) ** 0.9 * 1e4) / 1e4);
+  for (let i = 0; i <= count; i++) ts.add(Math.round(dmath.pow(i / count, 0.9) * 1e4) / 1e4);
   // The point's curve wants more stations than the straight taper.
   if (ctx.lod < 2) for (const t of [0.87, 0.91, 0.945, 0.97, 0.988]) ts.add(t);
   for (const n of nicks)
@@ -217,8 +219,8 @@ function blade(ctx: BuildContext, base: Vec3, length: number, rng: Rng): Mesh {
 const bar = (x: number, y: number, ry: number, rz: number, z: number, n: number): Vec3[] =>
   Array.from({ length: n }, (_, k): Vec3 => {
     const a = ((k + 0.5) / n) * Math.PI * 2;
-    const sq = (v: number): number => Math.sign(v) * Math.abs(v) ** 0.6;
-    return [x, y + ry * sq(Math.cos(a)), z + rz * sq(Math.sin(a))];
+    const sq = (v: number): number => Math.sign(v) * dmath.pow(Math.abs(v), 0.6);
+    return [x, y + ry * sq(dmath.cos(a)), z + rz * sq(dmath.sin(a))];
   });
 
 export function sword(ctx: BuildContext, o: SwordOptions): void {
@@ -232,14 +234,14 @@ export function sword(ctx: BuildContext, o: SwordOptions): void {
   // barrel so the middle fills the palm. The hand's sweat darkens it; the ends are rubbed pale.
   const turns = ctx.pick([5, 0, 0]);
   const profile: [number, number][] = [[R * 0.6, -half]];
-  const barrel = (t: number): number => R * (0.9 + 0.1 * Math.sin(Math.PI * t));
+  const barrel = (t: number): number => R * (0.9 + 0.1 * dmath.sin(Math.PI * t));
   // (The far grip is the bare barrel: its end risers are a millimetre and a half.)
   const riser = ctx.lod === 2 ? 0 : 0.0016;
   if (riser) profile.push([barrel(0) + riser, -half], [barrel(0) + riser, -half + 0.006]);
   const steps = ctx.lod === 2 ? 1 : Math.max(3, turns * 2);
   for (let i = 0; i <= steps; i++) {
     const t = i / steps;
-    const ridge = turns > 0 && i % 2 === 1 ? 0.0007 : 0;
+    const ridge = turns > 0 && i % 2 === 1 ? 0.0018 : 0;
     profile.push([barrel(t) + ridge, -half + 0.007 + (o.gripLength - 0.014) * t]);
   }
   if (riser) profile.push([barrel(1) + riser, half - 0.006], [barrel(1) + riser, half]);
@@ -256,7 +258,14 @@ export function sword(ctx: BuildContext, o: SwordOptions): void {
       }),
       (p) => {
         const d = Math.abs(p[2] - z) / half;
-        return mix(mix(SWEAT, LEATHER, Math.min(1, d * 0.9)), RUBBED, Math.max(0, d - 0.82) * 2.5);
+        // Sweat-dark where the fist holds it; the cord binding's turns stand paler, rubbed.
+        const cord = Math.max(0, dmath.hypot(p[0] - x, p[1] - y) - barrel(0.5) - 0.0002) / 0.0016;
+        const held = mix(SWEAT, LEATHER, Math.min(1, d * d * 0.8));
+        return mix(
+          mix(held, RUBBED, Math.min(1, cord) * 0.45),
+          RUBBED,
+          Math.max(0, d - 0.86) * 2.5,
+        );
       },
     ),
   );
@@ -274,7 +283,13 @@ export function sword(ctx: BuildContext, o: SwordOptions): void {
     [0.2, 0.0105, 0.0088, 0],
     [0, 0.012, 0.009, 0],
   ];
-  const picked = ctx.lod > 0 ? cross.filter((_, i) => i % 2 === 0 || i === 5) : cross;
+  // (Far: tip, waist and centre only; the triangles saved keep the arm's belly rings.)
+  const picked =
+    ctx.lod === 2
+      ? cross.filter((_, i) => i === 0 || i === 2 || i === 5)
+      : ctx.lod > 0
+        ? cross.filter((_, i) => i % 2 === 0 || i === 5)
+        : cross;
   const sides = ctx.pick([8, 5, 4]);
   const stations = [
     ...picked.map(([t, ry, rz, lift]) => bar(x - span * t, y, ry, rz, gz + lift, sides)),

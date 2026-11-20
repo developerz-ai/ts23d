@@ -3,6 +3,7 @@
 // sideways or up, until it runs `length` metres, reaches a flat top, or drips off an underside.
 // Intensity fades along the path. Every step is checked: `upward` counts any rising segment (0).
 
+import { dmath } from '../core/index.ts';
 import type { Surface } from './weather-surface.ts';
 
 export interface Streaks {
@@ -52,7 +53,7 @@ export function traceStreaks(
         for (const q of cells.get(cellOf(x + dx * CELL, y + dy * CELL)) ?? []) {
           const zq = z(q);
           if (s.piece[q] === s.piece[from] || zq >= zf - 1e-4 || zq < zf - 0.1) continue;
-          if (Math.hypot((s.gp[q * 3] ?? 0) - x, (s.gp[q * 3 + 1] ?? 0) - y) > CELL) continue;
+          if (dmath.hypot((s.gp[q * 3] ?? 0) - x, (s.gp[q * 3 + 1] ?? 0) - y) > CELL) continue;
           if (zq > bestZ) {
             bestZ = zq;
             best = q;
@@ -73,7 +74,7 @@ export function traceStreaks(
         const q = s.nbr[i] ?? 0;
         const dz = z(q) - z(cur);
         if (dz >= -1e-6) continue;
-        const d = Math.hypot(
+        const d = dmath.hypot(
           (s.gp[q * 3] ?? 0) - (s.gp[cur * 3] ?? 0),
           (s.gp[q * 3 + 1] ?? 0) - (s.gp[cur * 3 + 1] ?? 0),
           dz,
@@ -89,12 +90,12 @@ export function traceStreaks(
       const dz = z(best) - z(cur);
       if (dz > 0) upward++;
       segments++;
-      run += Math.hypot(
+      run += dmath.hypot(
         (s.gp[best * 3] ?? 0) - (s.gp[cur * 3] ?? 0),
         (s.gp[best * 3 + 1] ?? 0) - (s.gp[cur * 3 + 1] ?? 0),
         dz,
       );
-      const fadeOut = Math.max(0, 1 - run / length) ** 0.7;
+      const fadeOut = dmath.pow(Math.max(0, 1 - run / length), 0.7);
       level[best] = Math.max(level[best] ?? 0, fadeOut);
       cur = best;
     }

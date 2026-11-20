@@ -1,7 +1,7 @@
 {
   "asset": "rts_resource",
   "reviewer": "agent",
-  "overall": 6.9,
+  "overall": 7.3,
   "scores": {
     "silhouette": {
       "score": 7,
@@ -18,18 +18,18 @@
       ]
     },
     "materials": {
-      "score": 6,
-      "reason": "Crystals glow amber without blowing to white, but in hero.png they are flat bright yellow with almost no facet shading, so they read as plastic; the rock in sheet.png is still blotchy salt camouflage patches over black.",
+      "score": 8,
+      "reason": "The stitch-line veins are gone: the rock carries irregular horizontal grey strata (sheet FRONT, SIDE) and a mottled dark-grey surface in hero.png; crystals shade by facet in warm orange.",
       "fixes": [
-        "lighter facet edges and a darker core on the crystals (or lower glow) so facets read under the key",
-        "salt in crevices and on top faces only, no blotches on the flanks"
+        "let the strata follow fracture planes once the outcrop has them",
+        "salt only in crevices"
       ]
     },
     "detail": {
       "score": 6,
-      "reason": "Crystal pockets, shards at the base, spoil heap, flag with finial; the rock surface has no strata, cracks or pick marks at hero distance.",
+      "reason": "Crystal pockets, shards, spoil heap with blocks, flag; the outcrop has pale banding but no cracks, ledges or pick marks.",
       "fixes": [
-        "strata lines and a crack or two on the outcrop",
+        "a crack or two and a ledge on the outcrop",
         "pick marks round the worked pocket"
       ]
     },
@@ -42,73 +42,22 @@
       ]
     },
     "lod": {
-      "score": 7,
-      "reason": "lods.png: LOD2 (330 tris) keeps the rock, the flag and the lead cluster; the side clusters thin to single prisms and the shards and spoil vanish, a small but visible change at close RTS zoom.",
+      "score": 8,
+      "reason": "FAR LOD2 rock is now near-black like LOD0, so the value pop is gone; clusters and flag hold. The spoil heap drops to one small grey block (LOD0: brown mud with blocks).",
       "fixes": [
-        "keep two prisms per side cluster at LOD2"
+        "keep the spoil as one low brown mound at LOD2"
       ]
     },
     "technical": {
       "score": 8,
-      "reason": "QA PASS: 9.7k / 2.2k / 330 tris, 3 / 3 / 3 draws; fewer triangles than before for the same read.",
+      "reason": "QA PASS: 8.2k / 1.9k / 282 tris, 3 / 3 / 3 draws; lighter again for the same read.",
       "fixes": [
         "coarser SDF cell on the smooth rock flanks"
       ]
     }
   },
   "renders": {
-    "hero.png": "5cd67ceb2d27d2bccb669360f76f601fbc15d4214a9baa7773524e4655a982fa",
-    "sheet.png": "9008b4226b47c66922b4da4df4ec13126ecc20d10078411cb4379e475e79a7c4"
-  },
-  "metrics": {
-    "silhouette": [
-      {
-        "view": "front",
-        "iou": 0.791
-      },
-      {
-        "view": "side",
-        "iou": 0.808
-      },
-      {
-        "view": "3/4",
-        "iou": 0.716
-      }
-    ],
-    "focal": {
-      "peakPart": "rock",
-      "peak": [
-        425,
-        178
-      ],
-      "focalShare": 0,
-      "focalArea": 0,
-      "top": [
-        {
-          "part": "crystals",
-          "share": 0.5
-        },
-        {
-          "part": "rock",
-          "share": 0.404
-        },
-        {
-          "part": "claim_pennant",
-          "share": 0.05
-        }
-      ],
-      "declared": []
-    },
-    "rest": {
-      "share": 0.44,
-      "spread": 0.696,
-      "min": 0.25
-    },
-    "shape": {
-      "acuteShare": 0.361,
-      "straightShare": 0.459,
-      "taper": 0.815,
-      "shape": "aggressive"
-    }
+    "hero.png": "7d89d3acbdf5011b2dffd6e65f699b5698c995368ee0694cdf5d39fa004d7770",
+    "sheet.png": "6fca6c12ec061fa889d2c4723df85a4e5d95835d137bdd0110d50969d3bd97bc"
   }
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { boundsOf, createRng, Ts23dError, triangleCount, type Vec3 } from '../core/index.ts';
+import { boundsOf, createRng, dmath, Ts23dError, triangleCount, type Vec3 } from '../core/index.ts';
 import { windingFlips } from './closed.ts';
 import { hydraulicErosion } from './erosion.ts';
 import { heightfield } from './heightfield.ts';
@@ -18,7 +18,7 @@ const hill = (): TerrainGrid =>
   terrainGrid({
     rect: RECT,
     cells: 64,
-    height: (x, y) => Math.max(0, 300 - Math.hypot(x - 320, y - 320) * 0.94),
+    height: (x, y) => Math.max(0, 300 - dmath.hypot(x - 320, y - 320) * 0.94),
   });
 const maxSlope = (g: TerrainGrid): number => Math.max(...slopeMap(g));
 

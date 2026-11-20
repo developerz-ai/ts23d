@@ -18,6 +18,7 @@
 import {
   type BuildContext,
   defineFamily,
+  dmath,
   fbm,
   gradientNoise2,
   heightfield,
@@ -26,6 +27,7 @@ import {
   terrainColor,
   type Vec3,
 } from '@developerz.ai/ts23d';
+import { banks, type CliffWear, cliffWear, pathDistance } from '../_lib/terrain/cliff.ts';
 import {
   conifers,
   d8Flow,
@@ -39,7 +41,7 @@ import {
 } from '../_lib/terrain/ground.ts';
 import { DATUM, type FieldParams, RECT, tileField } from './field.ts';
 import { withSkirt } from './skirt.ts';
-import { snowCover } from './snow.ts';
+import { boxBlur, snowCover } from './snow.ts';
 
 const PALETTE = {
   forest: hex('#2c3f26'),
@@ -50,7 +52,13 @@ const PALETTE = {
   wet: hex('#4a4a3c'),
 };
 const STRATA = hex('#b8a894');
+/** Frost-shattered rock standing in a snowfield: paler than the weathered faces below. */
+const OUTCROP = hex('#a19a90');
 const WATER = hex('#5a7a88');
+/** River gravel: the pale washed bank either side of the stream. */
+const GRAVEL = hex('#a8a296');
+/** Stream width at its source and mouth, m, and the gravel bank either side of it. */
+const STREAM = { width: [14, 28] as [number, number], bank: 14 };
 
 interface Params extends FieldParams {
   readonly treeline: number;
@@ -85,6 +93,9 @@ function build(ctx: BuildContext, p: Readonly<Params>): void {
     northShift: NORTH_SHIFT,
     jitter: (x, y) => 70 * jitter(x, y) + 45 * jitter(x * 2.3, y * 2.3),
   });
+  // Snow round each point (±4 points, ~30 m): rock standing in a snowfield is a frost-shattered
+  // outcrop, paler and unstreaked (meltwater streaks there drew dark smudges that read as holes).
+  const snowNear = boxBlur(snow, grid.nx, grid.ny, 4);
   // Aspect: north faces (+Y) lose the forest sooner; the line breaks up.
   const northness = (x: number, y: number): number => {
     const e = 8;
@@ -92,10 +103,21 @@ function build(ctx: BuildContext, p: Readonly<Params>): void {
     // Ground falling toward +Y faces north.
     return Math.max(-1, Math.min(1, -dy * 1.6));
   };
+  // The valley stream: along the floor between the lowest points where the valley leaves the tile.
+  const course = smoothPath(valleyPath(grid, 1200), ctx.pick([3, 5, 14]));
+  const fromStream = pathDistance(course);
+  // Rock weathering: water streaks down every face, bedding bands on the steep ground.
+  const wear: CliffWear = {
+    noise: fbm(gradientNoise2(rng.fork('streaks')), { scale: 1, octaves: 2 }),
+    steep: [0.7, 1.15],
+    streak: { color: hex('#3c3a36'), width: 14, amount: 0.65 },
+    strata: { thickness: 38, amount: 0.12 },
+  };
   const color = (x: number, y: number, z: number): Vec3 => {
     const shift = NORTH_SHIFT * northness(x, y) + 45 * jitter(x * 2.3, y * 2.3);
     const land = base(x, y, z + shift);
     const s = mapAt(grid, snow, x, y);
+    const outcrop = (1 - s) * Math.min(1, 1.5 * mapAt(grid, snowNear, x, y));
     // Torrent beds: damp, darker gravel where water gathers below the snow.
     const wet = Math.max(0, Math.min(1, (mapAt(grid, flow, x, y) - 0.55) / 0.2)) * (1 - s);
     // Value breakup (±12 %, ~60 m patches): lichen-dark and fresh-pale rock, thin and thick turf.
@@ -103,20 +125,35 @@ function build(ctx: BuildContext, p: Readonly<Params>): void {
     const k = (c: number, w: number): number =>
       Math.min(
         1,
-        ((land[c] ?? 0) + ((PALETTE.snow[c] ?? 0) - (land[c] ?? 0)) * s) * v * (1 - w * wet),
+        ((land[c] ?? 0) +
+          ((OUTCROP[c] ?? 0) - (land[c] ?? 0)) * outcrop +
+          ((PALETTE.snow[c] ?? 0) - (land[c] ?? 0)) * s) *
+          v *
+          (1 - w * wet),
       );
-    return [k(0, 0.25), k(1, 0.22), k(2, 0.15)];
+    const c = cliffWear(
+      [k(0, 0.25), k(1, 0.22), k(2, 0.15)],
+      x,
+      y,
+      z,
+      slopeAt(height, x, y),
+      (1 - s) * (1 - Math.min(1, outcrop * 1.5)),
+      wear,
+    );
+    const half = (STREAM.width[0] + STREAM.width[1]) / 4;
+    return banks(c, fromStream(x, y), half, STREAM.bank, GRAVEL);
   };
   // LOD2 at 38 cells keeps the far tile inside the terrain band (4 k triangles, terrain.md).
   const cells = ctx.pick([256, 128, 38]);
-  // Each vertex carries the mean colour of the ground it stands for (±0.75 cell): smooth snow
-  // and forest edges at the far LOD, no one-cell snow seam on a crest at the near ones.
+  // Each vertex carries the mean colour of the ground it stands for, snow cover included: ±0.75
+  // cell near (no one-cell snow seam on a crest), ±2 cells far, where a snowfield edge crossing
+  // 53 m cells otherwise steps from one vertex to the next (white squares along the edge).
   const step = (RECT[2] - RECT[0]) / cells;
   const surface = heightfield({
     rect: RECT,
     cells: [cells, cells],
     height,
-    color: footprint(color, height, 0.75 * step, ctx.pick([3, 3, 5])),
+    color: footprint(color, height, ctx.pick([0.75, 0.75, 2]) * step, ctx.pick([3, 3, 9])),
   });
   // A solid tile down to z = 0, its walls topped by the surface's own border vertices.
   const block = withSkirt(surface, [cells, cells], 0);
@@ -141,9 +178,7 @@ function build(ctx: BuildContext, p: Readonly<Params>): void {
     PALETTE.forest,
     ctx.rng.fork('trees'),
   );
-  // The valley stream: along the floor between the lowest points where the valley leaves the tile.
-  const course = smoothPath(valleyPath(grid, 1200), ctx.pick([3, 5, 14]));
-  const stream = ribbon(course, [6, 16], height, 0.6, WATER);
+  const stream = ribbon(course, STREAM.width, height, 0.6, WATER);
   ctx.part('terrain', ground);
   // Static like the ground, so they share its one draw; each spire and the water rest on it.
   ctx.part('forest', trees, {
@@ -157,7 +192,7 @@ function build(ctx: BuildContext, p: Readonly<Params>): void {
 /** Rise over run at (x, y) from central differences on the height. */
 function slopeAt(h: (x: number, y: number) => number, x: number, y: number): number {
   const e = 8;
-  return Math.hypot(h(x + e, y) - h(x - e, y), h(x, y + e) - h(x, y - e)) / (2 * e);
+  return dmath.hypot(h(x + e, y) - h(x - e, y), h(x, y + e) - h(x, y - e)) / (2 * e);
 }
 
 export const mountainRange = defineFamily<Params>({
@@ -194,7 +229,7 @@ export const VARIANTS = {
   },
   mountain_range_c: {
     seed: 3,
-    params: { valley: [0.6, -0.8], relief: 1050, offset: [300, -400], snowline: 2470 },
+    params: { valley: [0.6, -0.8], relief: 1050, offset: [300, -400], snowline: 2250 },
   },
 } as const satisfies Record<string, { seed: number; params: Partial<Params> }>;
 
@@ -205,8 +240,16 @@ export const mountain_range = mountainRange.variant({
 export const mountain_range_b = mountainRange.variant({
   name: 'mountain_range_b',
   ...VARIANTS.mountain_range_b,
+  // From the east, nearly square to the east cut: the stream, the forest and the snow-capped cone
+  // face the lens, and the north cut is seen edge-on. Seen at 35° its far end showed two thin
+  // teeth: the field's own crest runs along that cut for ~200 m (two 830 m tops, ground falling
+  // inward behind them), and the border stays the untouched field so neighbours meet flush.
+  hero: { azDeg: 10, elDeg: 28 },
 });
 export const mountain_range_c = mountainRange.variant({
   name: 'mountain_range_c',
   ...VARIANTS.mountain_range_c,
+  // Down the valley (it runs NW → SE) from its north-west end, so the forested floor and the
+  // snowy north faces of both peaks face the lens instead of the near ridge's cut wall.
+  hero: { azDeg: 127, elDeg: 32 },
 });

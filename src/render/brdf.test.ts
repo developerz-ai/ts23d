@@ -3,6 +3,7 @@
 // within its bound, refraction reports total internal reflection, thin films interfere.
 
 import { describe, expect, it } from 'bun:test';
+import { dmath } from '../core/index.ts';
 import { charlieD, envBrdf, ggxAnisoD, ggxD, refract, smithV, thinFilm } from './brdf.ts';
 
 /** ∫ f(cosθ) cosθ dω over the hemisphere (θ midpoint rule, φ analytic). */
@@ -10,7 +11,7 @@ const integrate = (f: (c: number) => number, n = 20000): number => {
   let s = 0;
   for (let i = 0; i < n; i++) {
     const t = ((i + 0.5) / n) * (Math.PI / 2);
-    s += f(Math.cos(t)) * Math.cos(t) * Math.sin(t) * (Math.PI / 2 / n) * 2 * Math.PI;
+    s += f(dmath.cos(t)) * dmath.cos(t) * dmath.sin(t) * (Math.PI / 2 / n) * 2 * Math.PI;
   }
   return s;
 };
@@ -18,8 +19,8 @@ const integrate = (f: (c: number) => number, n = 20000): number => {
 describe('BRDF: failure cases first', () => {
   it('refraction from dense to thin past the critical angle reports false (TIR)', () => {
     const out = [0, 0, 0];
-    const s = Math.sin((60 * Math.PI) / 180);
-    expect(refract([s, 0, -Math.cos((60 * Math.PI) / 180)], [0, 0, 1], 1.5, out)).toBe(false);
+    const s = dmath.sin((60 * Math.PI) / 180);
+    expect(refract([s, 0, -dmath.cos((60 * Math.PI) / 180)], [0, 0, 1], 1.5, out)).toBe(false);
     expect(refract([0, 0, -1], [0, 0, 1], 1 / 1.5, out)).toBe(true);
     expect(out[2]).toBeCloseTo(-1, 6);
   });

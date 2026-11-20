@@ -15,6 +15,7 @@ import {
   type BuildContext,
   boundsOf,
   defineAsset,
+  dmath,
   hex,
   type Mesh,
   materialVariant,
@@ -32,22 +33,27 @@ import {
 import { reproject, tessellate } from '../_lib/finish/finish.ts';
 import { type BarkGrade, pineBark } from '../_lib/trees/bark.ts';
 import { type CutoutOptions, clumpCards, NEEDLE, toCutout } from '../_lib/trees/leaf-cards.ts';
+import { squash } from '../_lib/trees/squash.ts';
 import { lowTrunk } from '../_lib/trees/trunk.ts';
 import { trunkAt } from '../_lib/trees/wear.ts';
 import { thinTufts } from './lod1.ts';
-import { boleStubs, cones, deadBranch } from './wear.ts';
+import { boleStubs, cones, deadBranch, resinScar } from './wear.ts';
 
-const size = { height: 25, spread: 9, dbh: 0.6 };
+const size = { height: 25, spread: 10.5, dbh: 0.6 };
+/** Crown depth kept by `squash`: the kind's ball crown → an old tree's shallow flat top. */
+const CROWN_SQUASH = 0.6;
 /** Needle-litter floor radius around the stem foot, m (inside the 9 m crown: `proportions`). */
 const FLOOR_R = 3;
 /** LOD2: clumps of needle cards (three crossed cards, 12 triangles each) and their value. */
-export const FAR = { clumps: 20, value: 0.85, spread: 3.6 } as const;
+export const FAR = { clumps: 20, value: 0.78, spread: 2.7 } as const;
 /** LOD1: one LOD0 tuft per twig (of perStem = 6), grown to keep the crown's coverage. */
 export const LOD1_TUFTS = { every: 6, scale: 2.1 };
 /** Moss on the north side of the lower trunk, 0..1. */
 const MOSS = 0.35;
 /** Thick grey-brown plates on the low bole, orange flakes from ~13 m (Wikipedia: upper bark). */
 const GRADE: BarkGrade = { z0: 6, z1: 14, tint: [0.42, 0.42, 0.56] };
+/** Resin scar on the bole, facing the hero camera (az −35°): a lightning strip 0.6–8 m, ±34° of the girth. */
+const SCAR = { azDeg: -35, z0: 0.6, z1: 8, half: 0.6 } as const;
 /** Skeleton seed: the most even crown of seeds 0–29 (centroid and spread centred on the bole). */
 const SEED = 5;
 
@@ -59,20 +65,21 @@ const SEED = 5;
 export const PINE: TreeParams = {
   ...pinePreset,
   shape: 'cylindrical',
-  baseSize: 0.68,
+  baseSize: 0.72,
+  ratioPower: 0.95,
   levels: [
     pinePreset.levels[0] ?? { branches: 0, length: 0.95, downAngle: 0, segments: 10 },
     {
-      branches: 16,
-      length: 0.15,
-      lengthVar: 0.3,
-      downAngle: 86,
-      downAngleV: -12,
-      curve: 12,
-      curveVar: 12,
+      branches: 18,
+      length: 0.22,
+      lengthVar: 0.15,
+      downAngle: 90,
+      downAngleV: -4,
+      curve: 16,
+      curveVar: 8,
       segments: 5,
     },
-    { branches: 6, length: 0.5, downAngle: 55, curve: 14, curveVar: 16, start: 0.4, segments: 2 },
+    { branches: 7, length: 0.45, downAngle: 62, curve: 10, curveVar: 12, start: 0.35, segments: 2 },
   ],
   leaves: { ...pinePreset.leaves, perStem: 6, size: 1.7 },
 };
@@ -81,7 +88,7 @@ const CARDS: CutoutOptions = {
   cell: 'foliage_needles',
   layout: NEEDLE,
   leaf: PINE.leaves.color,
-  tint: [0.78, 0.86, 0.8],
+  tint: [0.95, 1.1, 1.12],
   grow: 1.05,
   aspect: 0.9,
 };
@@ -118,10 +125,15 @@ function grow(
     let out = mesh;
     let o = opts;
     if (name === 'trunk') cap.trunk = mesh;
+    // The crown pulled up into a shallow umbrella under the same top (crown frame).
+    if (out && o?.parent === 'crown')
+      out = squash(out, size.height - (cap.crown.at?.[2] ?? 0), CROWN_SQUASH);
     if (out && /trunk|roots|branches/.test(name)) {
       // Branches hang under the crown pivot: grade them at their world height, not crown-local.
       const origin = o?.parent === 'crown' ? cap.crown.at : undefined;
       out = pineBark(out, 'bark_pine', MOSS, noise.moss, GRADE, origin);
+      if (name === 'trunk')
+        out = merge([out, resinScar(out, SCAR.azDeg, SCAR.z0, SCAR.z1, SCAR.half, lod)]);
     }
     if (out && name === 'branches' && cap.trunk) out = merge([out, crownWear(cap, lod)]);
     if (out && name === 'leaves') {
@@ -183,6 +195,7 @@ function far(ctx: BuildContext, noise: Noise): void {
   const tip = topCentre(trunk);
   const top = leaderClump(crown.centres, [tip[0] - at[0], tip[1] - at[1], tip[2] - at[2]]);
   const apex: Vec3 = [top[0] + at[0], top[1] + at[1], Math.max(tip[2], top[2] + at[2])];
+  // No resin scar at LOD2: a half-metre wound is under a pixel at the switch distance.
   ctx.part('trunk', pineBark(lowTrunk(trunk, apex), 'bark_pine', MOSS, noise.moss, GRADE));
   ctx.group('crown', { ...near.crown, clearOf: ['trunk'] });
   ctx.part('leaves', crown.mesh, near.leavesOpts);
@@ -196,7 +209,7 @@ export function leaderClump(centres: readonly Vec3[], tip: Vec3): Vec3 {
   let top: Vec3 = tip;
   let best = Infinity;
   for (const c of centres) {
-    const d = Math.hypot(c[0] - tip[0], c[1] - tip[1]) - 0.5 * c[2];
+    const d = dmath.hypot(c[0] - tip[0], c[1] - tip[1]) - 0.5 * c[2];
     if (d < best) {
       best = d;
       top = c;
@@ -231,6 +244,8 @@ export const pine = defineAsset({
     'https://bbr.nefu.edu.cn/EN/Y2006/V26/I4/490 (P. sylvestris var. mongolica crown: branch angle ≈ 45–50°, smaller in the upper crown; ~3.8 primary branches per whorl)',
   ],
   real: treeReal({ ...size, source: 'recipes/pine/README.md' }),
+  // Low, so the flat crown's underside, its limbs and the scarred bole face the lens.
+  hero: { elDeg: 8 },
   // The kind's tree budget plus the ground patch (≤ 400 / 200 / 16 triangles).
   budget: {
     triangles: [
@@ -264,11 +279,11 @@ export const pine = defineAsset({
     // true scale (a cylinder cap or planar UV would wrap V inside a triangle).
     const n = ctx.pick([16, 10, 8]);
     // Same area at every LOD (a coarser polygon is pushed out), so the far silhouette keeps it.
-    const r = FLOOR_R * Math.sqrt((Math.PI * 2) / (n * Math.sin((Math.PI * 2) / n)));
+    const r = FLOOR_R * Math.sqrt((Math.PI * 2) / (n * dmath.sin((Math.PI * 2) / n)));
     const disc = planar({
       points: Array.from({ length: n }, (_, k): Vec3 => {
         const a = (k / n) * Math.PI * 2;
-        return [Math.cos(a) * r, Math.sin(a) * r, 0.005];
+        return [dmath.cos(a) * r, dmath.sin(a) * r, 0.005];
       }),
       color: hex('#a08670'),
       strip: materialVariant('leaf_litter', 5),

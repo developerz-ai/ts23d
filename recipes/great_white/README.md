@@ -83,10 +83,11 @@ draw. Bones: `spine_0..15` (0 at the snout), `caudal_upper_*`, `caudal_lower_*`,
 | Feature | How | Why |
 |---|---|---|
 | skin | `shark_skin` is a texture graph now: a head-to-tail denticle grain (micro-normal) and a broad roughness drift 0.5 to 0.68 for the patchy wet sheen | one uniform satin |
-| eye | a dark blue-grey iris ring round the black pupil, and a thick lid rim of skin | a glossy black ball |
-| snout | about 10 % blunter over the first 9 % of the length | read pointed |
-| pectorals | root half-thickness 5.2 cm (about 9 % of the chord) tapering to a thin edge; the upper face darkens at the tip and along the trailing edge | paper-thin, no dark edges |
+| eye | the black pupil, a thin pale ring round it, a blue-grey iris, and a skin-grey lid rim | a glossy black ball |
+| snout | about 10 % blunter: wider and higher over the first 9 % of the length (a second pass on top of the first) | still read a touch pointed |
+| pectorals | root half-thickness 8.4 cm (about 17 cm through the root) tapering fast to a thin edge; the upper face darkens strongly at the tip and along the trailing edge | paper-thin, no dark edges |
 | caudal | lower lobe 0.9 m (was 0.82), nearly as long as the upper: a lunate tail (design value) | |
-| keel, lateral line | keel 5.8 cm proud and dark; a faint pale lateral line from the gills to the keel | missing |
-| wear | a bitten notch in the first dorsal's trailing edge, healed dark; parasitic copepods clustered on that fin (LOD0); the healed scars as before | |
+| keel, lateral line | keel 8.5 cm proud and dark; a pale lateral line from the gills to the keel | missing |
+| fin edges | dorsal and caudal trailing margins dark over their last third | grey to the edge |
+| wear | a bitten notch in the first dorsal's trailing edge, healed dark; parasitic copepods clustered on that fin (LOD0), 3 to 4 cm long; a healed bite on the camera-side pectoral (`biteAt`: a crescent of pale tooth scars); the healed scars as before | |
 | LOD | LOD1 12.7 k (was 7 k); LOD2 has eight sides so one column bends onto the ragged colour line | the boundary went straight far away |

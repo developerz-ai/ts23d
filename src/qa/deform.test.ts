@@ -6,6 +6,7 @@ import {
   type Bone,
   compile,
   defineAsset,
+  dmath,
   type JointLimit,
   type LimitTolerance,
   type Mesh,
@@ -125,7 +126,7 @@ describe('deform', () => {
     const p = romPoses(sk);
     expect(p.map((x) => x.label)).toEqual(['lower +90°']);
     const q = p[0]?.rotation.get(`lower${MID_SUFFIX}`) ?? [0, 0, 0, 1];
-    expect((2 * Math.acos(q[3]) * 180) / Math.PI).toBeCloseTo(45, 6);
+    expect((2 * dmath.acos(q[3]) * 180) / Math.PI).toBeCloseTo(45, 6);
   });
 
   it('a smooth 90° bend keeps most of its band volume and no new crossings', () => {

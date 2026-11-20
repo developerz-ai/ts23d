@@ -32,7 +32,7 @@ describe('t3d finish', () => {
     expect(() => parseArgs(['finish', 'a.ts', '--model', 'dalle'])).toThrow('T3D_FINISH_INVALID');
     expect(() => parseArgs(['finish', 'a.ts', '--views', '99'])).toThrow('T3D_FINISH_INVALID');
     const args = parseArgs(['finish', 'a.ts', '--model', 'http', '--prompt', 'rust']);
-    const sheet = paintTrimSheet({ ...DEFAULT_SHEET, size: 512 });
+    const sheet = paintTrimSheet({ ...DEFAULT_SHEET, size: 512 }, []);
     await expect(finishOne(cart, args, sheet, memoryStore())).rejects.toThrow('T3D_FINISH_INVALID');
   });
 
@@ -41,7 +41,7 @@ describe('t3d finish', () => {
     try {
       const args = parseArgs(['finish', 'a.ts', '--out', out, '--views', '4', '--atlas', '256']);
       expect(args.finish).toEqual({ model: 'mock', force: false, views: 4, atlas: 256 });
-      const sheet = paintTrimSheet({ ...DEFAULT_SHEET, size: 512 });
+      const sheet = paintTrimSheet({ ...DEFAULT_SHEET, size: 512 }, []);
       const r = await finishOne(cart, args, sheet, memoryStore());
       expect(r.warnings).toEqual([]);
       const dir = join(out, 'cart', 'finish');
@@ -68,7 +68,7 @@ describe('t3d finish', () => {
   it('hero: a bad atlas fails, an asset without a field warns, the folder is written', async () => {
     const out = await mkdtemp(join(tmpdir(), 't3d-hero-'));
     try {
-      const sheet = paintTrimSheet({ ...DEFAULT_SHEET, size: 512 });
+      const sheet = paintTrimSheet({ ...DEFAULT_SHEET, size: 512 }, []);
       const bad = parseArgs(['finish', 'a.ts', '--out', out, '--atlas', '256']);
       await expect(heroFinishOne(cart, bad, sheet)).rejects.toThrow('T3D_BAKE_INVALID');
       const args = parseArgs(['finish', 'a.ts', '--out', out, '--atlas', '1024']);

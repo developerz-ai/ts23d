@@ -110,7 +110,7 @@
     {
       "label": "eye spacing (pupil to pupil)",
       "spec": 0.063,
-      "measured": 0.06260299310088158,
+      "measured": 0.062603,
       "source": "adult interpupillary distance mean 63.4 mm (Dodgson 2004); ANSUR II male 64.6 mm"
     }
   ],

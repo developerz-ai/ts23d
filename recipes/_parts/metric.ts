@@ -1,6 +1,8 @@
 // ISO metric fastener sizes, millimetres → metres: hex bolt head (ISO 4017), hex nut (ISO 4032),
 // plain washer (ISO 7089). One table so bolt, nut, washer and flange agree on every size.
 
+import { dmath } from '@developerz.ai/ts23d';
+
 export type MetricSize = 'M6' | 'M8' | 'M10' | 'M12' | 'M16' | 'M20' | 'M24';
 
 export interface MetricSpec {
@@ -39,6 +41,6 @@ export const METRIC: Readonly<Record<MetricSize, MetricSpec>> = {
 export const METRIC_SIZES: readonly MetricSize[] = ['M6', 'M8', 'M10', 'M12', 'M16', 'M20', 'M24'];
 
 /** Hex across corners from across flats. */
-export const corners = (s: number): number => s / Math.cos(Math.PI / 6);
+export const corners = (s: number): number => s / dmath.cos(Math.PI / 6);
 
 export const METRIC_SOURCE = 'ISO 4017 / ISO 4032 / ISO 7089 dimension tables';

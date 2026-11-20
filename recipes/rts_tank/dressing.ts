@@ -4,13 +4,22 @@
 // with bolt rows, pioneer tools (shovel, crowbar) in clamps and a jerry-can rack on the hull
 // sides — everything on the deck stays outside the turret's and mantlet's swept circles.
 
-import { box, type Lod, type Mesh, merge, place, type Vec2, type Vec3 } from '@developerz.ai/ts23d';
+import {
+  box,
+  dmath,
+  type Lod,
+  type Mesh,
+  merge,
+  place,
+  type Vec2,
+  type Vec3,
+} from '@developerz.ai/ts23d';
 import { BONE, BRASS, IRON, SLATE, tube } from '../_lib/rts/style.ts';
 
 /** Glacis line in XZ: front foot (2.62, 0.93) → deck crease (1.55, 1.42). */
 const FOOT = { x: 2.62, z: 0.93 } as const;
 const CREASE = { x: 1.55, z: 1.42 } as const;
-const GLACIS = Math.atan2(CREASE.z - FOOT.z, FOOT.x - CREASE.x);
+const GLACIS = dmath.atan2(CREASE.z - FOOT.z, FOOT.x - CREASE.x);
 const HALF_W = 1.485;
 /** Ash tool shafts. */
 const SHAFT: Vec3 = [0.3, 0.2, 0.1];
@@ -45,7 +54,7 @@ function bolts(n: number, x0: number, x1: number, y: number, z: number): Mesh[] 
 export function hullDressing(lod: Lod, deck: number): Mesh | null {
   if (lod === 2) return null;
   const out: Mesh[] = [];
-  const slope = Math.hypot(FOOT.x - CREASE.x, FOOT.z - CREASE.z);
+  const slope = dmath.hypot(FOOT.x - CREASE.x, FOOT.z - CREASE.z);
   // Two applique plates, a 6 cm shut-line between them down the centre.
   for (const s of [1, -1])
     out.push(onGlacis(0.42, s * 0.72, [slope * 0.72, 1.38, 0.045], BONE, lod === 0 ? 0.012 : 0));
@@ -94,7 +103,7 @@ export function hullDressing(lod: Lod, deck: number): Mesh | null {
     out.push(
       place(box({ size: [0.07, 0.09, 0.05], at: [0, 0, -0.012], color: IRON, bevel: 0.008 }), {
         at: rear(0.3, y),
-        pitch: -Math.atan2(0.3, 0.32),
+        pitch: -dmath.atan2(0.3, 0.32),
       }),
     );
   // Pioneer tools on the left hull side (clear of the turret and mantlet sweep): shovel and

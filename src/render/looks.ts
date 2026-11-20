@@ -4,6 +4,7 @@
 
 import {
   type CompiledAsset,
+  dmath,
   OPTICS,
   type Part,
   type ResolvedFinish,
@@ -78,7 +79,7 @@ function finishLook(f: ResolvedFinish): Look {
 function opticsLook(asset: CompiledAsset, s: TransmissiveSurface): Look {
   const o = asset.optics?.[s] ?? OPTICS[s];
   const d = o.attenuationDistance;
-  const sigma = (c: number): number => (d > 0 ? -Math.log(Math.max(1e-4, c)) / d : 0);
+  const sigma = (c: number): number => (d > 0 ? -dmath.log(Math.max(1e-4, c)) / d : 0);
   return {
     ...OPAQUE,
     transmission: o.transmission,

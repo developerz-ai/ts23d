@@ -4,6 +4,7 @@
 // by min, so crossing folds never stack into a lump — with a declared Lipschitz bound, so the
 // garment that adds h to its thickness can normalise its field and stay safe for the mesher.
 
+import { dmath } from '@developerz.ai/ts23d';
 import type { V } from './kit.ts';
 
 export interface Fold {
@@ -29,10 +30,10 @@ export interface FoldField {
 }
 
 /** Ridge profile (1 − s²)²: round-topped; max |φ'| = 8 / (3√3) ≈ 1.54. */
-const ridge = (s: number): number => (1 - s * s) ** 2;
+const ridge = (s: number): number => dmath.pow(1 - s * s, 2);
 /** Valley profile (1 − s²)³: tighter than a ridge where the cloth tucks in, yet round at the
  *  bottom (a V-groove reads as a cut, and QA `connections` as a seam); max |φ'| ≈ 1.72. */
-const valley = (s: number): number => (1 - s * s) ** 3;
+const valley = (s: number): number => dmath.pow(1 - s * s, 3);
 const smooth = (t: number): number => (t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t));
 
 interface Compiled {
@@ -62,7 +63,7 @@ function compile(f: Fold): Compiled | null {
     const a = pts[i] ?? [0, 0, 0];
     const b = pts[i + 1] ?? a;
     const d: V = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
-    const l = Math.hypot(d[0], d[1], d[2]) || 1e-9;
+    const l = dmath.hypot(d[0], d[1], d[2]) || 1e-9;
     const reach = l / 2 + wmax;
     const mid = [a[0] + d[0] / 2, a[1] + d[1] / 2, a[2] + d[2] / 2];
     seg.set(
@@ -80,7 +81,7 @@ function compile(f: Fold): Compiled | null {
   const [x1 = 0, y1 = 0, z1 = 0] = hi;
   const c: V = [(x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2];
   const widen = f.widen ?? 1;
-  const r = Math.hypot(x1 - c[0], y1 - c[1], z1 - c[2]) + f.width * Math.max(1, widen);
+  const r = dmath.hypot(x1 - c[0], y1 - c[1], z1 - c[2]) + f.width * Math.max(1, widen);
   const [fi, fo] = f.fade ?? [0.25, 0.35];
   const dw = (f.width * (widen - 1)) / total;
   return { seg, total, c, r, width: f.width, dw, amp: f.amp, fin: fi * total, fout: fo * total };
@@ -88,7 +89,7 @@ function compile(f: Fold): Compiled | null {
 
 /** Weight in [0, 1] of one fold at p (profile across × fade along). */
 function weight(f: Compiled, x: number, y: number, z: number): number {
-  if (Math.hypot(x - f.c[0], y - f.c[1], z - f.c[2]) >= f.r) return 0;
+  if (dmath.hypot(x - f.c[0], y - f.c[1], z - f.c[2]) >= f.r) return 0;
   let best = Infinity;
   let at = 0;
   const s = f.seg;

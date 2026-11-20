@@ -4,7 +4,7 @@
 // canids deep and narrow) and the neck running into the skull.
 
 import { describe, expect, it } from 'bun:test';
-import { Ts23dError, type Vec3 } from '../core/index.ts';
+import { dmath, Ts23dError, type Vec3 } from '../core/index.ts';
 import { sculptField } from '../primitives/index.ts';
 import { trunkFindings } from './creature-biology.ts';
 import { bodyPaint, locator } from './creature-coat.ts';
@@ -158,7 +158,7 @@ describe('coat helpers', () => {
       if (!n0 || !n1) continue;
       // The segment's outer (dorsal) side in XZ: up-back of a drooping, back of a hanging tail.
       const d: Vec3 = [n1.at[0] - n0.at[0], 0, n1.at[2] - n0.at[2]];
-      const len = Math.hypot(d[0], d[2]) || 1;
+      const len = dmath.hypot(d[0], d[2]) || 1;
       const up: Vec3 = [d[2] / len, 0, -d[0] / len];
       for (const t of [0.1, 0.5, 0.9]) {
         const r = (n0.r + (n1.r - n0.r) * t) * 0.9;

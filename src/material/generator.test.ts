@@ -7,7 +7,7 @@ import { CELLS, cellRect, FOLIAGE_CELLS, STRIPS, stripRect } from './trim-sheet.
 const SIZE = 512;
 let sheet: PaintedSheet;
 beforeAll(() => {
-  sheet = paintTrimSheet({ ...DEFAULT_SHEET, size: SIZE });
+  sheet = paintTrimSheet({ ...DEFAULT_SHEET, size: SIZE }, []);
 });
 
 const px = (map: Uint8Array, x: number, y: number, k = 0): number =>
@@ -25,44 +25,50 @@ function invalid(fn: () => unknown): Ts23dError {
 
 describe('paintTrimSheet: bad input', () => {
   it('rejects a size that is not 512/1024/2048/4096, with a fix', () => {
-    const e = invalid(() => paintTrimSheet({ ...DEFAULT_SHEET, size: 300 as 512 }));
+    const e = invalid(() => paintTrimSheet({ ...DEFAULT_SHEET, size: 300 as 512 }, []));
     expect(e.code).toBe('T3D_RECIPE_INVALID');
     expect(e.fix).toContain('512, 1024, 2048 or 4096');
   });
   it('rejects a non-positive scaleMetres and an out-of-range roughness', () => {
     const flat = { kind: 'flat', roughness: 0.5 } as const;
     expect(
-      invalid(() => paintTrimSheet({ seed: 1, strips: { brick: { ...flat, scaleMetres: 0 } } }))
+      invalid(() => paintTrimSheet({ seed: 1, strips: { brick: { ...flat, scaleMetres: 0 } } }, []))
         .fix,
     ).toContain('> 0');
     expect(
       invalid(() =>
-        paintTrimSheet({ seed: 1, strips: { brick: { ...flat, scaleMetres: 1, roughness: 2 } } }),
+        paintTrimSheet(
+          { seed: 1, strips: { brick: { ...flat, scaleMetres: 1, roughness: 2 } } },
+          [],
+        ),
       ).code,
     ).toBe('T3D_RECIPE_INVALID');
   });
   it('rejects unknown strips, cells and kinds', () => {
     const r = { kind: 'flat', scaleMetres: 1, roughness: 0.5 } as const;
     expect(
-      invalid(() => paintTrimSheet({ seed: 1, strips: { marble: r } as never })).fix,
+      invalid(() => paintTrimSheet({ seed: 1, strips: { marble: r } as never }, [])).fix,
     ).toContain('brick');
     expect(
-      invalid(() => paintTrimSheet({ seed: 1, strips: {}, cells: { mural: r } as never })).code,
+      invalid(() => paintTrimSheet({ seed: 1, strips: {}, cells: { mural: r } as never }, [])).code,
     ).toBe('T3D_RECIPE_INVALID');
     expect(
       invalid(() =>
-        paintTrimSheet({ seed: 1, strips: { brick: { ...r, kind: 'tiles' as 'flat' } } }),
+        paintTrimSheet({ seed: 1, strips: { brick: { ...r, kind: 'tiles' as 'flat' } } }, []),
       ).fix,
     ).toContain('bond');
   });
   it('rejects cell image bytes that are not a PNG', () => {
     const e = invalid(() =>
-      paintTrimSheet({
-        seed: 1,
-        size: 512,
-        strips: {},
-        cells: { sign: { image: new Uint8Array(40) } },
-      }),
+      paintTrimSheet(
+        {
+          seed: 1,
+          size: 512,
+          strips: {},
+          cells: { sign: { image: new Uint8Array(40) } },
+        },
+        [],
+      ),
     );
     expect(e.fix).toContain('PNG');
   });
@@ -75,10 +81,10 @@ describe('paintTrimSheet: output', () => {
   });
 
   it('is deterministic per seed and changes with the seed', () => {
-    const again = paintTrimSheet({ ...DEFAULT_SHEET, size: SIZE });
+    const again = paintTrimSheet({ ...DEFAULT_SHEET, size: SIZE }, []);
     expect(Bun.hash(again.albedo)).toBe(Bun.hash(sheet.albedo));
     expect(Bun.hash(again.normal)).toBe(Bun.hash(sheet.normal));
-    const other = paintTrimSheet({ ...DEFAULT_SHEET, size: SIZE, seed: 2 });
+    const other = paintTrimSheet({ ...DEFAULT_SHEET, size: SIZE, seed: 2 }, []);
     expect(Bun.hash(other.albedo)).not.toBe(Bun.hash(sheet.albedo));
   });
 
@@ -161,12 +167,15 @@ describe('paintTrimSheet: output', () => {
   it('stamps a supplied PNG into a cell, top row at world-up (high V)', () => {
     const img = new Uint8Array(4 * 4 * 4);
     for (let i = 0; i < 16; i++) img.set(i < 8 ? [255, 0, 0, 255] : [0, 0, 255, 255], i * 4);
-    const s = paintTrimSheet({
-      seed: 1,
-      size: 512,
-      strips: {},
-      cells: { sign: { image: encodePng(4, 4, img) } },
-    });
+    const s = paintTrimSheet(
+      {
+        seed: 1,
+        size: 512,
+        strips: {},
+        cells: { sign: { image: encodePng(4, 4, img) } },
+      },
+      [],
+    );
     const r = cellRect('sign');
     const x = Math.round(((r.u0 + r.u1) / 2) * 512);
     const top = Math.round(r.v1 * 512) - 8;

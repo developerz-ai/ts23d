@@ -6,6 +6,7 @@
 // keeps no keys.
 
 import type { Bone, Quat } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import type { Foot } from './gait.ts';
 import { type LegBones, solvePlanted } from './gait-ik.ts';
 import { forward, IDENTITY, tailOf } from './pose.ts';
@@ -44,7 +45,7 @@ export function plantLegs(
     const pawWorld = world.get(paw.name);
     if (!root || !pawWorld) continue;
     const toe = tailOf(paw, pawWorld);
-    if (Math.hypot(toe[0] - paw.tail[0], toe[1] - paw.tail[1], toe[2] - paw.tail[2]) < STILL)
+    if (dmath.hypot(toe[0] - paw.tail[0], toe[1] - paw.tail[1], toe[2] - paw.tail[2]) < STILL)
       continue;
     const parent = upper.parent === undefined ? undefined : world.get(upper.parent);
     const solve = solvePlanted(leg, root.head, parent?.rot ?? IDENTITY);

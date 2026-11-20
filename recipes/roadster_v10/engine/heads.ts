@@ -4,7 +4,7 @@
 // injectors and the pressure regulator on the valley side.
 
 import type { Lod, Mesh, Vec3 } from '@developerz.ai/ts23d';
-import { lathe, merge, text } from '@developerz.ai/ts23d';
+import { dmath, lathe, merge, text } from '@developerz.ai/ts23d';
 import { C } from '../lib/colors.ts';
 import { bx, rod, shift, tube } from '../lib/geo.ts';
 import { BANKS, type Bank, bp, cylX, H_COVER, H_DECK, H_HEAD, inBank } from './frame.ts';
@@ -199,7 +199,7 @@ function coils(lod: Lod, b: Bank): Mesh {
     const [x0, x1] = headSpan(b);
     for (let k = 0; k <= 8; k++) {
       const x = x1 - 0.01 - ((x1 - x0 + 0.08) * k) / 8;
-      run.push(bp(b, x, h0 + 0.015, 0.1 + 0.004 * Math.sin(k * 1.7)));
+      run.push(bp(b, x, h0 + 0.015, 0.1 + 0.004 * dmath.sin(k * 1.7)));
     }
     parts.push(tube(run, 0.018, C.wireBlack, 'rubber', lod === 0 ? 8 : 5, 3));
     if (lod === 0)

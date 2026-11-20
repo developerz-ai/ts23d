@@ -1,7 +1,7 @@
 {
   "name": "sound_demo",
   "kind": "prop",
-  "description": "Teaching asset for /audio: a creaking door, a ringing steel bell, a knocking crate and a V10 idle loop, as KHR_audio_emitter + WAV",
+  "description": "Teaching asset for /audio: a creaking door, a ringing bronze bell, a knocking crate and a V10 idle loop, as KHR_audio_emitter + WAV",
   "tags": [
     "demo",
     "sound"
@@ -23,8 +23,8 @@
     ]
   },
   "triangles": [
-    5322,
-    2454,
+    5094,
+    2450,
     546
   ],
   "drawCalls": [
@@ -71,7 +71,7 @@
       "clip": "bell_strike",
       "trigger": "motion",
       "loop": false,
-      "seconds": 2.897
+      "seconds": 3
     },
     {
       "node": "crate_knock",
@@ -108,13 +108,13 @@
     {
       "label": "bell mouth diameter",
       "spec": 0.3,
-      "measured": 0.30000001192092896,
+      "measured": 0.3,
       "source": "README"
     },
     {
       "label": "crate length",
       "spec": 0.8,
-      "measured": 0.8059999942779541,
+      "measured": 0.806,
       "source": "README"
     }
   ],
@@ -129,7 +129,7 @@
       "target": 0.2,
       "actual": 0.2,
       "eligible": "convex-edges",
-      "area": 10.0013,
+      "area": 10.0744,
       "by": {
         "door_frame_wear": {
           "target": 0.2,
@@ -139,48 +139,48 @@
         "belfry_wear": {
           "target": 0.2,
           "actual": 0.2,
-          "area": 1.0167
+          "area": 1.0904
         },
         "crate_wear": {
           "target": 0.2,
           "actual": 0.2,
-          "area": 7.4188
+          "area": 7.4182
         }
       }
     },
     "rust": {
-      "target": 0.2738,
-      "actual": 0.2738,
+      "target": 0.35,
+      "actual": 0.35,
       "eligible": "ground-near ; below-fasteners | convex-edges",
-      "area": 0.5279,
+      "area": 0.5436,
       "by": {
         "belfry_wear": {
-          "target": 0.25,
-          "actual": 0.25,
+          "target": 0.35,
+          "actual": 0.35,
           "area": 0.2761
         },
         "bell_wear": {
-          "target": 0.3,
-          "actual": 0.3,
-          "area": 0.2518
+          "target": 0.35,
+          "actual": 0.35,
+          "area": 0.2675
         }
       }
     },
     "dust": {
-      "target": 0.3473,
-      "actual": 0.3473,
+      "target": 0.3472,
+      "actual": 0.3472,
       "eligible": "up-facing",
-      "area": 1.1338,
+      "area": 1.1345,
       "by": {
         "bell_wear": {
           "target": 0.3,
           "actual": 0.3,
-          "area": 0.0616
+          "area": 0.0626
         },
         "crate_wear": {
           "target": 0.35,
           "actual": 0.35,
-          "area": 1.0722
+          "area": 1.0719
         }
       }
     },
@@ -188,7 +188,7 @@
       "target": 0.3,
       "actual": 0.3,
       "eligible": "ground-near & side-facing",
-      "area": 2.593
+      "area": 2.9288
     }
   },
   "qa": {

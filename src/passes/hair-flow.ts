@@ -4,7 +4,7 @@
 // vertex graph, so the comb flows without kinks across seams. `flowAt` interpolates it inside a
 // triangle; `flowDivergence` measures sources/sinks (a combed coat is close to divergence-free).
 
-import { type Mesh, Ts23dError, type Vec3 } from '../core/index.ts';
+import { dmath, type Mesh, Ts23dError, type Vec3 } from '../core/index.ts';
 
 /** Preferred hair direction at a surface point (any length; length = confidence). */
 export type FlowSeed = (p: Vec3, n: Vec3) => Vec3;
@@ -33,13 +33,13 @@ const at3 = (a: ArrayLike<number>, i: number): Vec3 => [
 export function tangentOf(v: Vec3, n: Vec3): Vec3 {
   const d = v[0] * n[0] + v[1] * n[1] + v[2] * n[2];
   let t: Vec3 = [v[0] - n[0] * d, v[1] - n[1] * d, v[2] - n[2] * d];
-  let l = Math.hypot(t[0], t[1], t[2]);
+  let l = dmath.hypot(t[0], t[1], t[2]);
   if (l < 1e-9) {
     // Deterministic fallback: the world axis least aligned with n, made tangent.
     const ax: Vec3 = Math.abs(n[2]) < 0.9 ? [0, 0, -1] : [-1, 0, 0];
     const e = ax[0] * n[0] + ax[1] * n[1] + ax[2] * n[2];
     t = [ax[0] - n[0] * e, ax[1] - n[1] * e, ax[2] - n[2] * e];
-    l = Math.hypot(t[0], t[1], t[2]) || 1;
+    l = dmath.hypot(t[0], t[1], t[2]) || 1;
   }
   return [t[0] / l, t[1] / l, t[2] / l];
 }
@@ -91,7 +91,7 @@ export function hairFlow(m: Mesh, seed: FlowSeed, o: FlowOptions = {}): Float32A
   const S: Vec3[] = [];
   for (let g = 0; g < nodes; g++) {
     const v = at3(nrm, g);
-    const l = Math.hypot(v[0], v[1], v[2]) || 1;
+    const l = dmath.hypot(v[0], v[1], v[2]) || 1;
     const n: Vec3 = [v[0] / l, v[1] / l, v[2] / l];
     N.push(n);
     const s = seed(at3(pos, g), n);
@@ -106,7 +106,7 @@ export function hairFlow(m: Mesh, seed: FlowSeed, o: FlowOptions = {}): Float32A
   for (let it = 0; it < iterations; it++) {
     cur = cur.map((d, g) => {
       const s = S[g] ?? d;
-      const sl = Math.hypot(s[0], s[1], s[2]) || 1;
+      const sl = dmath.hypot(s[0], s[1], s[2]) || 1;
       const acc = [(s[0] / sl) * keep, (s[1] / sl) * keep, (s[2] / sl) * keep];
       const nb = adj[g] ?? [];
       const w = nb.length > 0 ? (1 - keep) / nb.length : 0;
@@ -133,7 +133,7 @@ export function flowAt(m: Mesh, flow: Float32Array, t: number, b1: number, b2: n
     const v = m.indices[t * 3 + k] ?? 0;
     for (let c = 0; c < 3; c++) d[c] = (d[c] ?? 0) + (flow[v * 3 + c] ?? 0) * (w[k] ?? 0);
   }
-  const l = Math.hypot(d[0] ?? 0, d[1] ?? 0, d[2] ?? 0) || 1;
+  const l = dmath.hypot(d[0] ?? 0, d[1] ?? 0, d[2] ?? 0) || 1;
   return [(d[0] ?? 0) / l, (d[1] ?? 0) / l, (d[2] ?? 0) / l];
 }
 
@@ -144,14 +144,14 @@ export function chainSeed(
 ): FlowSeed {
   const g = o.gravity ?? 0;
   // Blend width (metres): 0 = the nearest chain wins sharply; larger = smoother hand-overs.
-  const e = Math.max(1e-4, o.blend ?? 0) ** 2;
+  const e = dmath.pow(Math.max(1e-4, o.blend ?? 0), 2);
   const segs: { a: Vec3; d: Vec3; len: number; w: number }[] = [];
   for (const c of chains)
     for (let i = 0; i + 1 < c.points.length; i++) {
       const a = c.points[i] ?? [0, 0, 0];
       const b = c.points[i + 1] ?? a;
       const d: Vec3 = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
-      const len = Math.hypot(d[0], d[1], d[2]);
+      const len = dmath.hypot(d[0], d[1], d[2]);
       if (len > 1e-9)
         segs.push({ a, d: [d[0] / len, d[1] / len, d[2] / len], len, w: c.weight ?? 1 });
     }
@@ -168,8 +168,8 @@ export function chainSeed(
       const r: Vec3 = [p[0] - s.a[0], p[1] - s.a[1], p[2] - s.a[2]];
       const u = Math.max(0, Math.min(s.len, r[0] * s.d[0] + r[1] * s.d[1] + r[2] * s.d[2]));
       const q = [r[0] - s.d[0] * u, r[1] - s.d[1] * u, r[2] - s.d[2] * u];
-      const dd = (q[0] ?? 0) ** 2 + (q[1] ?? 0) ** 2 + (q[2] ?? 0) ** 2;
-      const w = s.w / (dd + e) ** 2;
+      const dd = dmath.pow(q[0] ?? 0, 2) + dmath.pow(q[1] ?? 0, 2) + dmath.pow(q[2] ?? 0, 2);
+      const w = s.w / dmath.pow(dd + e, 2);
       total += w;
       for (let k = 0; k < 3; k++) acc[k] = (acc[k] ?? 0) + (s.d[k] ?? 0) * w;
     }
@@ -194,7 +194,7 @@ export function flowDivergence(m: Mesh, flow: Float32Array): number {
       e1[2] * e2[0] - e1[0] * e2[2],
       e1[0] * e2[1] - e1[1] * e2[0],
     ];
-    const a2 = Math.hypot(n[0], n[1], n[2]);
+    const a2 = dmath.hypot(n[0], n[1], n[2]);
     if (a2 < 1e-14) continue;
     // ∇λ_k = (n × e_k) / 2A with e_k the edge opposite vertex k; div = Σ F_k · ∇λ_k.
     let div = 0;

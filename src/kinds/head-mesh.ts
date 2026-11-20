@@ -4,6 +4,7 @@
 // Eyeballs are their own spheres: sclera, iris, pupil by angle from the +X gaze.
 
 import type { Mesh, Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import { type Field, type SculptEdit, sculptField, sd, sdf } from '../primitives/index.ts';
 import type { HeadLayout } from './head-layout.ts';
 import type { HeadParams } from './head-params.ts';
@@ -151,7 +152,7 @@ function onCut(cut: Field, q: Vec3, n: Vec3, res: number): boolean {
     cut([q[0], q[1] + e, q[2]]) - cut([q[0], q[1] - e, q[2]]),
     cut([q[0], q[1], q[2] + e]) - cut([q[0], q[1], q[2] - e]),
   ];
-  const l = Math.hypot(g[0], g[1], g[2]) || 1;
+  const l = dmath.hypot(g[0], g[1], g[2]) || 1;
   return (g[0] * n[0] + g[1] * n[1] + g[2] * n[2]) / l > 0.85;
 }
 
@@ -174,18 +175,18 @@ export function bustMesh(p: HeadParams, set: HeadEditSet, res: number): Mesh {
 /** Eyeball of radius `r` centred on the origin, gazing +X. */
 export function eyeMesh(p: HeadParams, r: number, res: number): Mesh {
   const c = p.colors;
-  const iris = Math.cos(0.62);
-  const limbus = Math.cos(0.7);
-  const pupil = Math.cos(0.3);
+  const iris = dmath.cos(0.62);
+  const limbus = dmath.cos(0.7);
+  const pupil = dmath.cos(0.3);
   return sdf({
-    field: (q) => Math.hypot(q[0], q[1], q[2]) - r,
+    field: (q) => dmath.hypot(q[0], q[1], q[2]) - r,
     bounds: [
       [-r * 1.3, -r * 1.3, -r * 1.3],
       [r * 1.3, r * 1.3, r * 1.3],
     ],
     resolution: res,
     color: (q) => {
-      const cos = q[0] / (Math.hypot(q[0], q[1], q[2]) || 1);
+      const cos = q[0] / (dmath.hypot(q[0], q[1], q[2]) || 1);
       if (cos > pupil) return c.pupil;
       if (cos > iris) return c.iris;
       if (cos > limbus) return [c.iris[0] * 0.45, c.iris[1] * 0.45, c.iris[2] * 0.45];

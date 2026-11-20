@@ -3,6 +3,7 @@
 // no per-member Mesh or merge; the section and its cap triangulation are computed once.
 
 import type { MeshBuilder, Vec2, Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import type { UvRect } from '../material/index.ts';
 import { stripU, stripV } from './strip-uv.ts';
 import { triangulate } from './triangulate.ts';
@@ -41,7 +42,7 @@ export function section(kind: SectionKind, w: number): Section {
         ];
   const lens = ring.map((a, i) => {
     const b = ring[(i + 1) % ring.length] ?? a;
-    return Math.hypot(b[0] - a[0], b[1] - a[1]);
+    return dmath.hypot(b[0] - a[0], b[1] - a[1]);
   });
   const total = lens.reduce((s, l) => s + l, 0);
   let acc = 0;
@@ -93,7 +94,7 @@ export function emitMember(
     const q = s.ring[(i + 1) % n] ?? p;
     const ex = q[0] - p[0];
     const ey = q[1] - p[1];
-    const el = Math.hypot(ex, ey);
+    const el = dmath.hypot(ex, ey);
     // Outward 2D normal of a CCW edge is (ey, −ex).
     const nx = ey / el;
     const ny = -ex / el;

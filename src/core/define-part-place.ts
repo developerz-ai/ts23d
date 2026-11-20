@@ -3,6 +3,7 @@
 // side still swings about its pin.
 
 import type { PartPiece } from './define-part.ts';
+import * as dmath from './dmath.ts';
 import type { Mesh } from './mesh.ts';
 import type { Motion } from './part.ts';
 import { type Affine, affine, applyAffine } from './transform.ts';
@@ -43,7 +44,7 @@ function rotateMotion(m: Motion, a: Affine): Motion {
   const v = (p: Vec3): Vec3 => linear(a, p);
   const axis = (p: Vec3): Vec3 => {
     const w = v(p);
-    const k = Math.sign(det(a)) / (Math.hypot(...w) || 1);
+    const k = Math.sign(det(a)) / (dmath.norm(w) || 1);
     // + 0 turns -0 into 0, so a mirrored [0, 0, 1] reads [0, 0, -1] in manifests.
     return [w[0] * k + 0, w[1] * k + 0, w[2] * k + 0];
   };

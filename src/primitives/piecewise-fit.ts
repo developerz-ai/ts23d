@@ -8,6 +8,7 @@
 // regions). Code keeps the skeleton; the model's surface is bent onto it.
 
 import type { Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import { invalid } from './check.ts';
 import {
   applySimilarity,
@@ -27,7 +28,7 @@ export interface PiecewiseFit {
 }
 
 const d2 = (a: Vec3, b: Vec3): number =>
-  (a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2 + (a[2] - b[2]) ** 2;
+  dmath.pow(a[0] - b[0], 2) + dmath.pow(a[1] - b[1], 2) + dmath.pow(a[2] - b[2], 2);
 
 export function fitPiecewise(
   points: readonly Vec3[],
@@ -77,7 +78,7 @@ export function fitPiecewise(
     let w = 0;
     const out: [number, number, number] = [0, 0, 0];
     for (const r of regions) {
-      const wi = Math.exp(-d2(p, r.centre) / (2 * sigma * sigma));
+      const wi = dmath.exp(-d2(p, r.centre) / (2 * sigma * sigma));
       if (wi < 1e-6) continue;
       const q = applySimilarity(r.fit, p);
       out[0] += wi * q[0];

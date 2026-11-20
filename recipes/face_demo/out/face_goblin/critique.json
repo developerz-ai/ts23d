@@ -1,7 +1,7 @@
 {
   "asset": "face_goblin",
   "reviewer": "agent",
-  "overall": 6.1,
+  "overall": 6.3,
   "scores": {
     "silhouette": {
       "score": 7,
@@ -18,10 +18,10 @@
       ]
     },
     "materials": {
-      "score": 5,
-      "reason": "Pale olive skin with brown blotches; matte everywhere, eyes and mouth not wet.",
+      "score": 6,
+      "reason": "Skin now has sheen and the eyes are glossy, but the sheen is uniform over head and shoulders, so it reads as wet latex.",
       "fixes": [
-        "skin strip with subsurface-like sheen; glossy eyes and wet lips"
+        "vary roughness: rougher on the scalp and shoulders, sheen only on nose, brow and lips"
       ]
     },
     "detail": {
@@ -54,7 +54,7 @@
     }
   },
   "renders": {
-    "hero.png": "5a631799c54bd9eb08a77e672be41d6203d13592fb5b634f5a6021e928d2989e",
-    "sheet.png": "21d3b43199def5a3df7ecec9fd67d98641e09fe329ceff5105e7cb47f6ac5471"
+    "hero.png": "7c170d7060eec55cef7b1afad192e875b7699d48026efb97a856671ef9e2b775",
+    "sheet.png": "4f2b13a044748da8564116a6ca451429dcd15ee72a99d8c3b3d30d84ec6ec7c0"
   }
 }

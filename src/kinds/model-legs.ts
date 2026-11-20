@@ -6,7 +6,7 @@
 // line: joints go on it at the plan's heights. Fewer islands than feet, a left leg right of its
 // partner, or two legs that meet below mid-shank fail with T3D_MODEL_SKELETON.
 
-import { Ts23dError, type Vec3 } from '../core/index.ts';
+import { dmath, Ts23dError, type Vec3 } from '../core/index.ts';
 import type { TriBvh } from '../primitives/index.ts';
 import { components, type Levels, medial, near, sectionOf } from './model-sections.ts';
 
@@ -48,7 +48,7 @@ function pair(feet: readonly Vec3[], centres: readonly (readonly number[])[]): n
       if (used.has(k)) return;
       used.add(k);
       pick.push(k);
-      go(i + 1, sum + Math.hypot((c[0] ?? 0) - f[0], (c[1] ?? 0) - f[1]));
+      go(i + 1, sum + dmath.hypot((c[0] ?? 0) - f[0], (c[1] ?? 0) - f[1]));
       pick.pop();
       used.delete(k);
     });
@@ -128,7 +128,7 @@ export function traceLegs(
           j !== i &&
           !!o &&
           o[0] === a[0] &&
-          Math.hypot(a[1] - o[1], a[2] - o[2]) < (a[3] + o[3]) * 0.6
+          dmath.hypot(a[1] - o[1], a[2] - o[2]) < (a[3] + o[3]) * 0.6
         );
       });
     });
@@ -148,7 +148,7 @@ export function traceLegs(
     const [sx, sy] = sole.size ? sectionOf(sole, lv.cell) : [line[0]?.[1] ?? 0, line[0]?.[2] ?? 0];
     const ankle = line[Math.min(2, line.length - 1)] ?? [0, sx, sy, 0];
     const d: [number, number] = [sx - ankle[1], sy - ankle[2]];
-    const l = Math.hypot(d[0], d[1]);
+    const l = dmath.hypot(d[0], d[1]);
     return {
       line,
       paw: centres[chosen[i] ?? 0]?.[2] ?? 0,

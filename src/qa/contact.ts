@@ -3,6 +3,7 @@
 // patch area says whether two pieces are joined over a face or only kiss at a point or an edge.
 
 import type { Bounds, Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import type { Shell } from './connections-shells.ts';
 import { probeOf } from './contact-probe.ts';
 import { CONTACT_EPS } from './types.ts';
@@ -23,8 +24,8 @@ export const thickness = (s: Shell): number =>
   s.solid && s.area > 0 ? (4 * s.volume) / s.area : Math.sqrt(s.area) / 10;
 
 export const boxGap = (a: Shell, b: Shell): number =>
-  Math.hypot(
-    ...([0, 1, 2] as const).map((k) =>
+  dmath.norm(
+    ([0, 1, 2] as const).map((k) =>
       Math.max(0, a.bounds.min[k] - b.bounds.max[k], b.bounds.min[k] - a.bounds.max[k]),
     ),
   );
@@ -76,12 +77,12 @@ export function samplesIn(
       u[2] * v[0] - u[0] * v[2],
       u[0] * v[1] - u[1] * v[0],
     ];
-    const len = Math.hypot(x[0], x[1], x[2]);
+    const len = dmath.hypot(x[0], x[1], x[2]);
     if (len < 1e-14) continue;
     const longest = Math.max(
-      Math.hypot(...u),
-      Math.hypot(...v),
-      Math.hypot(b[0] - c[0], b[1] - c[1], b[2] - c[2]),
+      dmath.norm(u),
+      dmath.norm(v),
+      dmath.hypot(b[0] - c[0], b[1] - c[1], b[2] - c[2]),
     );
     const k = Math.min(maxSplit, Math.max(1, Math.ceil(longest / step)));
     const w = len / 2 / (k * k);
@@ -216,7 +217,7 @@ export function patch(a: Shell, b: Shell, eps: number, step: number, stopAt = In
       ) || 1;
     for (let k = 0; k < 3; k++) n0[k] = (n0[k] ?? 0) + (S.n[i * 3 + k] ?? 0) * (S.w[i] ?? 0) * sign;
   }
-  const nl = Math.hypot(n0[0] ?? 0, n0[1] ?? 0, n0[2] ?? 0) || 1;
+  const nl = dmath.hypot(n0[0] ?? 0, n0[1] ?? 0, n0[2] ?? 0) || 1;
   let tight = 0;
   let loose = 0;
   for (let i = 0; i < S.count; i++) {

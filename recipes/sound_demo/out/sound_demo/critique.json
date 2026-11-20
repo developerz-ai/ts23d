@@ -1,13 +1,13 @@
 {
   "asset": "sound_demo",
   "reviewer": "agent",
-  "overall": 6.7,
+  "overall": 7.6,
   "scores": {
     "silhouette": {
-      "score": 7,
-      "reason": "Door in a frame, a bell on a shorter steel yoke with a cross-tie, a crate and a V10 on a deck: each exhibit reads; the bell has no visible clapper or headstock so it reads as a hanging cup.",
+      "score": 8,
+      "reason": "Door in a frame, a bell hung from a headstock between a steel yoke with a cross-tie, a crate and a V10 on a deck: every exhibit reads in FRONT and the hero.",
       "fixes": [
-        "visible clapper and a headstock with gudgeons on the yoke"
+        "let the clapper hang a few cm below the bell lip so it reads in FRONT"
       ]
     },
     "proportions": {
@@ -18,27 +18,25 @@
       ]
     },
     "materials": {
-      "score": 6,
-      "reason": "Pine crate, oak deck and frame, brass handle read; the green door leaf shows dark pixel-blocky rectangles that read as patches rather than panel mouldings, the bell is streaky brown (reads as wood under raking), and the steel yoke is flat grey.",
+      "score": 8,
+      "reason": "The door now has clean raised panel mouldings on green paint, the bell reads bronze with metallic response and green patina, crate pine, deck weathered oak, brass handle; only the steel yoke is still a flat dark grey.",
       "fixes": [
-        "panel mouldings as geometry or clean value bevels on the door instead of dark rectangles",
-        "bronze bell with a metallic, lower-roughness response"
+        "satin steel response with edge highlights on the yoke"
       ]
     },
     "detail": {
-      "score": 6,
-      "reason": "Door with handle, hinges and panels, bell, crate with battens and corner irons, V10 with heads, pulleys and valve covers; no manifolds, plug leads or bell clapper.",
+      "score": 7,
+      "reason": "Door with mouldings, hinges and lock plate, bell headstock, crate battens and corner irons, V10 with heads, pulleys and covers; still no manifolds or plug leads on the engine and no visible clapper.",
       "fixes": [
         "intake and exhaust manifolds on the V10",
-        "bell clapper and headstock"
+        "a clapper below the bell lip"
       ]
     },
     "wear": {
-      "score": 5,
-      "reason": "Deck boards have some grain streaks and the crate edges are slightly darker; no oil under the engine, no worn paint at the door handle, nothing that says use.",
+      "score": 7,
+      "reason": "An oil stain spreads under the engine, the brass plate round the door handle is worn, deck boards are grained and edge-darkened; the crate and yoke are clean.",
       "fixes": [
-        "oil stain under the engine bearers",
-        "worn paint round the door handle and lock edge"
+        "scuffed crate corners and rust at the yoke feet"
       ]
     },
     "lod": {
@@ -50,71 +48,14 @@
     },
     "technical": {
       "score": 8,
-      "reason": "QA PASS: 5.3k / 2.5k / 546 tris, 5 draws (moving pivots), audio emitters exported.",
+      "reason": "QA PASS: 5.1k / 2.5k / 546 tris, 5 / 5 / 5 draws (moving pivots), audio emitters exported.",
       "fixes": [
         "drop the engine pulleys at LOD2"
       ]
     }
   },
   "renders": {
-    "hero.png": "eb6fd46edbf8424bb256ad481f35089fa62c1acf2478fab773c429a415e0ea70",
-    "sheet.png": "9ecb55a32df326f8e498c015da2ba405e656e0c488f6ac7f8de9e34589ec76ef",
-    "raking.png": "b8a0b5058ea3feb64e502fc84fd322c42e2016529fcaa9df2219718317852e13",
-    "raking_detail.png": "66609db4caab37505952cb3265c49a2d283e70d6447892822d2f4ed6eb31f30d",
-    "lods.png": "02f26858d8e0baf15dab8521eec9e915565bf6ba0db751d5916783871c63791e",
-    "silhouette.png": "7a0b15a34bc246e9c454ae767ada4e59b41099fcb4b5462b21e4f3321848a638",
-    "value.png": "b3c46ccc88b7eaf531e9f19d9d016ffa7bb732de5825e3fb1f09f387c721cb46",
-    "detail.png": "6b07a675f4504dcc5768f25b64086c88fd2a12b308a168f398daaf642208f295"
-  },
-  "metrics": {
-    "silhouette": [
-      {
-        "view": "front",
-        "iou": 0.996
-      },
-      {
-        "view": "side",
-        "iou": 0.998
-      },
-      {
-        "view": "3/4",
-        "iou": 0.992
-      }
-    ],
-    "focal": {
-      "peakPart": "engine_block",
-      "peak": [
-        580,
-        186
-      ],
-      "focalShare": 0,
-      "focalArea": 0,
-      "top": [
-        {
-          "part": "engine_block",
-          "share": 0.478
-        },
-        {
-          "part": "crate",
-          "share": 0.306
-        },
-        {
-          "part": "door_frame",
-          "share": 0.188
-        }
-      ],
-      "declared": []
-    },
-    "rest": {
-      "share": 0.641,
-      "spread": 0.734,
-      "min": 0.25
-    },
-    "shape": {
-      "acuteShare": 0.039,
-      "straightShare": 0.848,
-      "taper": 0.725,
-      "shape": "stable"
-    }
+    "hero.png": "e59536d9a3935907175edf6f4dc217810b840cce3ac31cee7645ffdcfca7d047",
+    "sheet.png": "e6db320f6d8d5bd1c10768903788082ed0d0cc90e4b184272895d1959552ec1c"
   }
 }

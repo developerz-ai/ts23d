@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { Ts23dError, type Vec3 } from '../core/index.ts';
+import { dmath, Ts23dError, type Vec3 } from '../core/index.ts';
 import { beam } from './beam.ts';
 
 const C: Vec3 = [1, 1, 1];
@@ -50,7 +50,7 @@ describe('beam', () => {
     for (const m of [beam({ ...ok, up: [0, 1, 0] }), beam({ ...ok, to: [0, 0, 3], segments: 6 })])
       for (let i = 0; i < m.normals.length; i += 3)
         expect(
-          Math.hypot(m.normals[i] ?? 0, m.normals[i + 1] ?? 0, m.normals[i + 2] ?? 0),
+          dmath.hypot(m.normals[i] ?? 0, m.normals[i + 1] ?? 0, m.normals[i + 2] ?? 0),
         ).toBeCloseTo(1, 5);
   });
 });

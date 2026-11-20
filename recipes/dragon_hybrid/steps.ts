@@ -3,10 +3,11 @@
 // and the spheres, capsules and bones come from the rig TS fitted on the committed proxy (kinds
 // `modelRig`). Every number is in the cache key. Each step and what it is for:
 //   clean    weld the generator's duplicate vertices, drop its loose shells
-//   script   BUILD: the wings scaled ×1.25 about their roots (the generator's were small for
-//            the body), the upper and lower legs 10 % thicker, a torn notch cut out of the left
-//            wing's trailing edge, a knuckle raised over each fore toe joint (they lay outside
-//            the thin paws); on the source, so the shell and the bake carry all of it
+//   script   BUILD: the wings scaled ×1.4 about their roots and lowered 22° (the generator's
+//            were small for the body and raised in a narrow V), the upper and lower legs 10 %
+//            thicker, a torn notch cut out of each wing's trailing edge (the right one, which
+//            the hero shot shows, the deeper), a knuckle raised over each fore toe joint (they
+//            lay outside the thin paws); on the source, so the shell and the bake carry all of it
 //   unweb    the fore feet stand toe to toe: cut the bridges, 3.2 cm apart
 //   retopo   closed voxel shell at 1.4 cm (the cut toes stay apart) → 30 k triangles, three
 //            times the density on the head and round the hips, twice on the feet; the wing
@@ -16,17 +17,25 @@
 //            follows its own shoulder, wrist and finger
 //   weights  the paw bone's weights smoothed round each wrist: the walk folds it 146°
 //   repose   pose the bound mesh to the straight, symmetric rest (nothing is mirrored)
-//   script   PAINT (wear.ts, bear_hybrid/paint.ts): the generator's light out of the albedo,
-//            keratin horns, a roughness map, soot, dust, scars and scuffed wing leather
+//   script   PAINT (wear.ts): the generator's light out of the albedo (the wings' dapple too),
+//            keratin horns, a roughness map, soot, dust, scars on hide and membrane
 //   lods     10 k and 5 k triangles from the 30 k (same UVs, maps and weights)
 //   export   one GLB: three LODs, albedo 2048², normal and ORM 1024², one skin
 
 import type { BlenderStep, Bone, ModelRig } from '@developerz.ai/ts23d';
-import { paintStep, py } from '../_lib/creature/texture-paint.ts';
+import { py, reliefStep } from '../_lib/creature/texture-paint.ts';
 import { drakePaint } from './wear.ts';
-import { findWings, TRUNK, WING_SCALE, type Wing } from './wings.ts';
+import { findWings, TRUNK, WING_SCALE, WING_TILT, type Wing } from './wings.ts';
 
-export { WING_SCALE } from './wings.ts';
+export { WING_SCALE, WING_TILT } from './wings.ts';
+
+/** The torn notches, one a wing: [side (−1 right), where along the wing's length the tear
+ *  starts (quantile of x), its length and its width at the hem as shares of the shoulder
+ *  height]. The right wing faces the hero camera and carries the deep one. */
+const TEARS = [
+  [-1, 0.42, 0.62, 0.2],
+  [1, 0.3, 0.36, 0.11],
+] as const;
 
 /** LOD triangles asked of Blender: budget.triangles (dragon_hybrid.ts). LOD 2 keeps 5 000, as the
  *  wolf's and the bear's. */
@@ -60,7 +69,7 @@ const build = (bones: readonly Bone[], h: number, wings: readonly Wing[]): Blend
   };
   return {
     op: 'script',
-    why: `wings ×${WING_SCALE} about their roots, legs ×${LEG_SCALE} thick, one torn notch in the left wing (dragon_hybrid critique: wings small for the body, legs thin, no torn membrane)`,
+    why: `wings ×${WING_SCALE} about their roots and lowered ${WING_TILT}°, legs ×${LEG_SCALE} thick, a torn notch in each wing (dragon_hybrid critique: span small for the body, legs thin, no torn membrane visible)`,
     python: `
 me = obj.data
 co = np.empty(len(me.vertices) * 3, np.float32); me.vertices.foreach_get('co', co)
@@ -106,28 +115,35 @@ for J in [${knuckles.map(py).join(', ')}]:
     print('knuckle', np.round(J, 3), 'skin at', round(float(d[k]), 4), 'joint above it', round(above, 4), 'raised', round(lift, 4))
 for side, root in [${wings.map((w) => `(${w.side}, np.array(${py(w.root)}))`).join(', ')}]:
     m = wing * (P[:, 1] * side > 0)
-    P = root + (P - root) * (1 + ${(WING_SCALE - 1).toFixed(3)} * m)[:, None]
+    v = (P - root) * (1 + ${(WING_SCALE - 1).toFixed(3)} * m)[:, None]
+    turn = -side * ${((WING_TILT * Math.PI) / 180).toFixed(5)} * m
+    c, s = np.cos(turn), np.sin(turn)
+    P = root + np.stack([v[:, 0], v[:, 1] * c - v[:, 2] * s, v[:, 1] * s + v[:, 2] * c], axis=1)
     print('wing', side, 'root', np.round(root, 3), 'vertices', int((m > 0.5).sum()))
 co[:, 0], co[:, 1], co[:, 2] = P[:, 1], -P[:, 0], P[:, 2]
 me.vertices.foreach_set('co', co.astype(np.float32).ravel())
-# The tear: a notch up from the trailing edge of the left wing, between two fingers.
-left = (wing > 0.9) & (P[:, 1] > 0)
-xs = P[left, 0]
-x0 = float(np.quantile(xs, 0.3))
-band = left & (np.abs(P[:, 0] - x0) < 0.04 * h)
-k = int(np.argmin(np.where(band, P[:, 2], 1e9)))
-edge = P[k]
-centre = P[left].mean(axis=0)
-up = centre - edge; up = up / np.linalg.norm(up)
-rel = P - edge
-t = rel @ up
-d = np.linalg.norm(rel - t[:, None] * up, axis=1)
-length, width = 0.34 * h, 0.075 * h
-gone = left & (t > -0.05 * h) & (t < length) & (d < width * (1 - np.clip(t / length, 0, 1)) + 0.012 * h)
+# The tears: a ragged notch up from each wing's trailing edge, between two fingers.
+gone = np.zeros(len(P), bool)
+for side, q, length, width in [${TEARS.map((t) => `(${t.join(', ')})`).join(', ')}]:
+    mine = (wing > 0.9) & (P[:, 1] * side > 0)
+    x0 = float(np.quantile(P[mine, 0], q))
+    band = mine & (np.abs(P[:, 0] - x0) < 0.04 * h)
+    k = int(np.argmin(np.where(band, P[:, 2], 1e9)))
+    edge = P[k]
+    centre = P[mine].mean(axis=0)
+    up = centre - edge; up = up / np.linalg.norm(up)
+    rel = P - edge
+    t = rel @ up
+    d = np.linalg.norm(rel - t[:, None] * up, axis=1)
+    ragged = 1 + 0.35 * np.sin(t / (0.045 * h)) * np.sin(t / (0.017 * h) + 1.3)
+    taper = (1 - np.clip(t / (length * h), 0, 1)) ** 0.7
+    torn = mine & (t > -0.08 * h) & (t < length * h) & (d < 0.5 * width * h * taper * ragged + 0.012 * h)
+    print('tear', side, 'at', np.round(edge, 3), 'vertices', int(torn.sum()))
+    gone |= torn
 bm = bmesh.new(); bm.from_mesh(me)
 bm.verts.ensure_lookup_table()
 dead = [f for f in bm.faces if all(gone[v.index] for v in f.verts)]
-print('tear at', np.round(edge, 3), 'faces', len(dead))
+print('torn faces', len(dead))
 bmesh.ops.delete(bm, geom=dead, context='FACES')
 bm.to_mesh(me); bm.free()
 me.update()
@@ -172,9 +188,9 @@ export const steps = (rig: ModelRig): readonly BlenderStep[] => {
       }),
     ),
     ...(rig.target ? [{ op: 'repose', to: rig.target } as const] : []),
-    paintStep(
+    reliefStep(
       drakePaint(bone, h),
-      "the generator's baked light and chalk-grey horns leave the albedo; roughness, soot, dust, scars and scuffed wing leather go into the maps (a textured part takes no grime pass)",
+      "the generator's baked light, the wings' dapple and chalk-grey horns leave the albedo; roughness, soot, dust and scars on hide and membrane go into the maps (a textured part takes no grime pass)",
     ),
     { op: 'lods', triangles: [TRIANGLES[1], TRIANGLES[2]], focus },
     { op: 'export', normalSize: 1024, ormSize: 1024 },

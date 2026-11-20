@@ -5,7 +5,7 @@
 // lower lid, the caruncle (tear duct) at the inner corner. Both eyes converge on one gaze point;
 // `eyes()` emits the parts with their yaw and finish.
 
-import { type BuildContext, type Mesh, type SculptEdit, sdf } from '@developerz.ai/ts23d';
+import { type BuildContext, dmath, type Mesh, type SculptEdit, sdf } from '@developerz.ai/ts23d';
 import { add, mul, norm, type V } from './kit.ts';
 
 export interface EyeColours {
@@ -46,8 +46,8 @@ const deg = Math.PI / 180;
 
 /** Half-height of the iris on the ball's front, and its angular radius. */
 function irisOf(e: EyeSpec): { h: number; a: number } {
-  const a = Math.asin(Math.min(0.95, e.iris / e.r));
-  return { h: e.r * Math.sin(a), a };
+  const a = dmath.asin(Math.min(0.95, e.iris / e.r));
+  return { h: e.r * dmath.sin(a), a };
 }
 
 /** A cap of the ball (grown by `t`) on one side of a tilted lid plane, front half only. */
@@ -59,13 +59,13 @@ function lidShell(e: EyeSpec, upper: boolean): SculptEdit {
   const scowl = (upper ? (e.scowl ?? 0) : 0) * deg;
   // Lid plane: through the lid edge, its normal tilted about the gaze (X) axis so the outer
   // corner (+Y) rises by `tilt` and a scowl drops the inner end.
-  const ny = Math.sin(-tilt + scowl);
-  const nz = Math.cos(-tilt + scowl);
+  const ny = dmath.sin(-tilt + scowl);
+  const nz = dmath.cos(-tilt + scowl);
   const n: V = upper ? [0, ny, -nz] : [0, -ny, nz];
   const at: V = [ex, ey, ez + edge];
   const r = e.r + e.lid;
   const plane = (p: V): number =>
-    ((p[0] - at[0]) * n[0] + (p[1] - at[1]) * n[1] + (p[2] - at[2]) * n[2]) / Math.hypot(...n);
+    ((p[0] - at[0]) * n[0] + (p[1] - at[1]) * n[1] + (p[2] - at[2]) * n[2]) / dmath.norm(n);
   const pad = r + 0.01;
   return {
     group: [
@@ -107,9 +107,9 @@ export function lidEdits(e: EyeSpec): SculptEdit[] {
   const pad = R + 0.004;
   out.push({
     field: (p) => {
-      const d = Math.hypot(p[0] - ex, p[1] - ey, p[2] - ez) - R;
+      const d = dmath.hypot(p[0] - ex, p[1] - ey, p[2] - ez) - R;
       const front = Math.max(0, ex + e.r * 0.2 - p[0]);
-      return Math.hypot(d, p[2] - z) - e.lid * 0.45 + front;
+      return dmath.hypot(d, p[2] - z) - e.lid * 0.45 + front;
     },
     bounds: [
       [ex - pad, ey - pad, ez - pad],
@@ -120,7 +120,7 @@ export function lidEdits(e: EyeSpec): SculptEdit[] {
     color: e.colours.wet,
   });
   // Caruncle: the pink knot at the inner corner, tucked against the ball.
-  const inner = norm([Math.cos(58 * deg), -Math.sin(58 * deg), -0.08]);
+  const inner = norm([dmath.cos(58 * deg), -dmath.sin(58 * deg), -0.08]);
   out.push({
     shape: 'ellipsoid',
     at: add(e.centre, mul(inner, e.r * 0.93)),
@@ -137,29 +137,29 @@ export function eyeball(e: EyeSpec, cell: number): Mesh {
   const { a } = irisOf(e);
   const c = e.colours;
   const limbus = c.limbus ?? [c.iris[0] * 0.35, c.iris[1] * 0.35, c.iris[2] * 0.35];
-  const cosIris = Math.cos(a);
-  const cosLimb = Math.cos(a * 1.12);
-  const cosPupil = Math.cos(a * 0.42);
+  const cosIris = dmath.cos(a);
+  const cosLimb = dmath.cos(a * 1.12);
+  const cosPupil = dmath.cos(a * 0.42);
   // Cornea: a slightly smaller-radius cap over the iris, standing a little proud of the ball.
   const cr = r * 0.78;
   const cx = r - cr + r * 0.06;
   return sdf({
     field: (q) =>
-      Math.min(Math.hypot(q[0], q[1], q[2]) - r, Math.hypot(q[0] - cx, q[1], q[2]) - cr),
+      Math.min(dmath.hypot(q[0], q[1], q[2]) - r, dmath.hypot(q[0] - cx, q[1], q[2]) - cr),
     bounds: [
       [-r * 1.3, -r * 1.3, -r * 1.3],
       [r * 1.3, r * 1.3, r * 1.3],
     ],
     resolution: cell,
     color: (q) => {
-      const cos = q[0] / (Math.hypot(q[0], q[1], q[2]) || 1);
-      const slit = e.pupil === 'slit' && Math.abs(q[1]) < r * 0.09 && cos > Math.cos(a * 0.85);
+      const cos = q[0] / (dmath.hypot(q[0], q[1], q[2]) || 1);
+      const slit = e.pupil === 'slit' && Math.abs(q[1]) < r * 0.09 && cos > dmath.cos(a * 0.85);
       if (slit || (e.pupil !== 'slit' && cos > cosPupil)) return c.pupil;
       if (cos > cosIris) {
         // Iris: darker toward its rim, lighter round the pupil, with radial fibres (stroma).
         const t = (cos - cosIris) / (1 - cosIris);
-        const phi = Math.atan2(q[2], q[1]);
-        const k = (0.7 + 0.5 * t) * (0.88 + 0.12 * Math.sin(37 * phi) * Math.sin(11 * phi + 1));
+        const phi = dmath.atan2(q[2], q[1]);
+        const k = (0.7 + 0.5 * t) * (0.88 + 0.12 * dmath.sin(37 * phi) * dmath.sin(11 * phi + 1));
         return [Math.min(1, c.iris[0] * k), Math.min(1, c.iris[1] * k), Math.min(1, c.iris[2] * k)];
       }
       if (cos > cosLimb) return limbus;
@@ -196,7 +196,7 @@ export function eyes(ctx: BuildContext, e: EyeSpec, o: EyesOptions): void {
     ['r', -1],
   ] as const) {
     const at: V = [ex + (o.proud ?? 0), ey * s, ez];
-    const yaw = Math.atan2(gaze[1] - at[1], gaze[0] - at[0]);
+    const yaw = dmath.atan2(gaze[1] - at[1], gaze[0] - at[0]);
     const name = `eye_${side}`;
     ctx.part(name, ball, {
       at,
@@ -206,7 +206,7 @@ export function eyes(ctx: BuildContext, e: EyeSpec, o: EyesOptions): void {
     });
     // The joint plane sits a third of a radius behind the ball's equator, inside the orbit's
     // bore (in front of the equator the lids wrap the ball and the orbit is open by design).
-    const back: V = [-Math.cos(yaw), -Math.sin(yaw), 0];
+    const back: V = [-dmath.cos(yaw), -dmath.sin(yaw), 0];
     if (o.socketIn)
       ctx.joint(`${name}_orbit`, {
         from: name,

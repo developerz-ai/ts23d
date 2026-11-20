@@ -22,9 +22,9 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    59891,
-    29346,
-    5856
+    59758,
+    13285,
+    5591
   ],
   "drawCalls": [
     1,
@@ -51,25 +51,25 @@
     {
       "label": "way 250474566 height (OSM height tag)",
       "spec": 22.2,
-      "measured": 22.211999893188477,
+      "measured": 22.212,
       "source": "https://www.openstreetmap.org/way/250474566"
     },
     {
       "label": "207 West 10th Street height (OSM height tag)",
       "spec": 21.5,
-      "measured": 21.5,
+      "measured": 21.511999,
       "source": "https://www.openstreetmap.org/way/250474574"
     },
     {
       "label": "211 West 10th Street height (OSM height tag)",
       "spec": 21.5,
-      "measured": 21.511999130249023,
+      "measured": 21.511999,
       "source": "https://www.openstreetmap.org/way/250474576"
     },
     {
       "label": "way 250474569 height (OSM height tag)",
       "spec": 21.3,
-      "measured": 21.312000274658203,
+      "measured": 21.312,
       "source": "https://www.openstreetmap.org/way/250474569"
     }
   ],

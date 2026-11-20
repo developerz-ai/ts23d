@@ -51,7 +51,9 @@ glowing exhausts; an upswept tail boom with a V-tail and twin thrusters; a chin 
 | seams, dark metal | `#1f2326`, `#222528` |
 | accent stripe | `#c8641c` |
 | hazard | `#d9a421` + `#17181a` |
-| glass | `#3f7598` (surface `glass`) |
+| portholes | `#3f7598` |
+| canopy glazing | `#1c3649` smoked (surface `glass`, `optics.glass`: transmission 0.3, roughness 0.1); `#101d28` opaque at LOD2 |
+| cockpit shade behind the canopy | `#0d0f12` (`canopy_shade`, LOD0–1) |
 | thruster glow | `#6fd2ff` (glow strength 3; nav lights 2, tail and cabin lamps 1.5) |
 
 ## Parts the engine needs
@@ -62,7 +64,8 @@ glowing exhausts; an upswept tail boom with a V-tail and twin thrusters; a chin 
 | `thruster_l`, `thruster_r`, `thruster_tail_l/_r` | exhaust discs | glow |
 | `ramp` | rear loading ramp, pivot on the hinge line | rests closed (40°); one-way sway 62.5° about −Y down to the ground (−22.5°) |
 | `turret` › `gun` | chin turret, twin guns | turret sway ±50° about Z, gun ±12° about Y |
-| `canopy` | windscreen + side glass | surface `glass` |
+| `canopy` | windscreen + side glass | surface `glass` at LOD0–1, opaque colour at LOD2 |
+| `canopy_shade` | matt cockpit shadow on the nose skin under the panes (LOD0–1) | static |
 | sockets | `nav_l` red (port = +Y), `nav_r` green, `nav_tail` white strobe, `landing_light` spot, `cabin_light`, `muzzle_gun` mount | KHR_lights_punctual |
 | emitters | `thrust_l/_r` (always), `thrust_tail_l/_r` (moving), `downwash_l/_r` dust (moving), `muzzle` (event) | |
 
@@ -84,11 +87,24 @@ both fins (0.5 m); `NO STEP` on the wing walkway panels (LOD0). Built with `text
 - No true-arc check for turret and gun beyond the clashes sector sweep.
 
 ## Wear and far-LOD identity
-- Exhaust scorch: soot in each nacelle's bore and on the nozzle lip, burnt paint up the lowest
-  metre of the cowl with a heat-browned band above it; soot round the tail thrusters on the last
-  1.3 m of the boom. Applied after the finish pass, so it overrides paint, chips and dust.
-- Oil weeping from the gear-bay fasteners: dark runs down the sponson armour under the bolts by
-  the main gear, drawn aft; hydraulic lines down each strut (LOD0).
+- Exhaust scorch: soot in each nacelle's bore, on the nozzle lip and up the cowl to the lower
+  armour ring, burnt brown paint above it, clean again 1.5 m up (the cowl has two extra rings at
+  LOD0–1 to carry the gradient); soot round the tail thrusters on the last 1.3 m of the boom.
+  Applied after the finish pass, so it overrides paint, chips and dust.
+- Oil weeping from the gear-bay fasteners: dark runs 9–17 cm wide down the sponson armour under
+  the bolts by the main gear, drawn aft; hydraulic lines down each strut (LOD0).
+- Plates (LOD0–1): two replaced roof panels in the lighter grey, two older roof panels, the
+  tumblehome ahead of the first porthole and the nose access hatches a tone darker, each on one
+  skin face between two frame stations.
+- Canopy: the white speckle on one pane was the beauty render's noise, not geometry: clear
+  glass (transmission 1) reflects 4 % face-on, the path tracer picks that lobe for 4 % of its 16
+  samples and weights it 25×, so the pane that mirrors the key light came back as scattered
+  white pixels (it moved to another pane when the camera moved). The glazing is now smoked
+  (transmission 0.3), which samples the reflection two times in three, and a matt shade sheet
+  covers the chipped hull paint that showed through the panes. A fix in the renderer would
+  be to add the reflected sun at every thin-surface vertex instead of choosing the lobe.
+- Hero camera: `hero: { azDeg: -38, elDeg: 11 }`, low enough to see the scorched cowls, the
+  sponson flank and the gear.
 - The nose is faired: three sections per design station span on a Catmull-Rom curve (the five
   stations themselves unchanged). Straight spans made every nose panel a twisted quad that
   shaded as two triangles; the canopy panes and frames follow the faired sections.

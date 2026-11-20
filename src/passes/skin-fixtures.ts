@@ -2,6 +2,7 @@
 // and the signed volume of a closed mesh. Not exported publicly.
 
 import type { Mesh } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 
 /** A closed tube along +X, `rings` rings of `seg` vertices, fan caps. */
 export function tube(length: number, radius: number, rings = 41, seg = 16): Mesh {
@@ -10,7 +11,7 @@ export function tube(length: number, radius: number, rings = 41, seg = 16): Mesh
   for (let r = 0; r < rings; r++)
     for (let s = 0; s < seg; s++) {
       const a = (s / seg) * Math.PI * 2;
-      pos.push((r / (rings - 1)) * length, Math.cos(a) * radius, Math.sin(a) * radius);
+      pos.push((r / (rings - 1)) * length, dmath.cos(a) * radius, dmath.sin(a) * radius);
     }
   for (let r = 0; r + 1 < rings; r++)
     for (let s = 0; s < seg; s++) {
@@ -64,7 +65,7 @@ export function ball(rings = 12, seg = 16): Mesh {
     for (let s = 0; s <= seg; s++) {
       const th = (r / rings) * Math.PI;
       const ph = (s / seg) * Math.PI * 2;
-      pos.push(Math.sin(th) * Math.cos(ph), Math.sin(th) * Math.sin(ph), Math.cos(th));
+      pos.push(dmath.sin(th) * dmath.cos(ph), dmath.sin(th) * dmath.sin(ph), dmath.cos(th));
     }
   for (let r = 0; r < rings; r++)
     for (let s = 0; s < seg; s++) {

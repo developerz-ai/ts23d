@@ -6,6 +6,7 @@
 // locks. Every region ≤ 3 cm.
 
 import type { IntendedCrease } from '@developerz.ai/ts23d';
+import { dmath } from '@developerz.ai/ts23d';
 import { creaseAt, creaseCurve, ringCreases } from '../_lib/bust/creases.ts';
 import { add, cross, mul, norm, spline, sub, type V } from '../_lib/bust/kit.ts';
 import { skullCreases } from '../_lib/face/skull-creases.ts';
@@ -238,7 +239,7 @@ function gear(): IntendedCrease[] {
 function bunRing(): V[] {
   return Array.from({ length: 12 }, (_, i): V => {
     const a = (i / 12) * Math.PI * 2;
-    return add(KNOT, [0.0145 * Math.cos(a), 0.0145 * Math.sin(a), 0.009]);
+    return add(KNOT, [0.0145 * dmath.cos(a), 0.0145 * dmath.sin(a), 0.009]);
   });
 }
 

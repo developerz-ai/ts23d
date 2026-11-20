@@ -1,6 +1,8 @@
 // Symmetric eigendecomposition by cyclic Jacobi rotations — what CMA-ES needs to sample from its
 // covariance. Small n (a recipe has a handful of knobs), fixed sweep order: deterministic.
 
+import { dmath } from '../core/index.ts';
+
 export interface Eigen {
   /** Eigenvalues (≥ 0 after clamping tiny negatives from round-off). */
   readonly values: number[];
@@ -21,7 +23,7 @@ export function symmetricEigen(a: readonly (readonly number[])[]): Eigen {
   };
   for (let sweep = 0; sweep < 64; sweep++) {
     let off = 0;
-    for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) off += at(m, i, j) ** 2;
+    for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) off += dmath.pow(at(m, i, j), 2);
     if (off < 1e-30) break;
     for (let p = 0; p < n; p++)
       for (let q = p + 1; q < n; q++) {

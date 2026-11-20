@@ -33,17 +33,25 @@ Each arm's spectacle carries a spindle turning in `bearing_<track>_<arm>` (clamp
 on the mast, LOD0/1): `connect: { as: 'hinge' }` to the bearing, and the arm lists the bearing in
 `clearOf` (the spindle runs in its bore). LOD2 drops the bearing; the hub bears on the mast face.
 
-## Modelling notes (2026-11 quality pass)
-- Wear (`wear.ts`): sun-faded charcoal on up-facing faces of the black paint, rust breaking through
-  in patches (worst on up faces and low down), soot over each track on the girder soffit, rust
-  bleeds down the left post's outer corner angle, moss and splash on the footings.
-- Detail: up-and-down rods from each mechanism case, cranks, a rod run along the walkway and down
-  the right post to a ground crank; riveted gusset plates at the girder's front nodes; galvanised
-  hand rail; square-bar ladder rungs. LOD2 posts are open frames (corner angles, battens, cap).
+## Modelling notes (2026-11 quality passes)
+- Paint: century-old black weathered to a dark charcoal (#4f5254), so the soot reads on it.
+- Wear (`wear.ts`): up-facing faces sun-faded toward a dusty grey and side faces to a mid charcoal
+  (black on black never read), rust breaking through in patches (worst on up faces and low down),
+  soot over each track from the knee braces up through the girder's lower metre, thinning to the
+  deck (1.3 m either side of the track centre, clean steel between the tracks) and black soot plates on
+  the plank soffit over each track, a pale worn tread path down the middle of the walkway, rust
+  bleeds down the left post's outer corner angle, moss and splash on the footings. The walkway
+  timber and galvanised rail take no paint wear.
+- Detail: up-and-down rods from each mechanism case, cranks, a rod run along the walkway, then
+  galvanised 1 in pipe rods down the front of the right post's outer face to a crank on the
+  footing; riveted gusset plates at the girder's front nodes; galvanised hand rail; the ladder
+  stands a quarter metre off the right post on stand-off brackets, its stiles to the ground;
+  square-bar rungs. LOD2 posts are open frames (corner angles, battens, cap).
+- Hero: a fixed low, close front-left view looking up (`hero.eye`/`target`): the girder's front
+  lattice and lower chord with their soot, the knee braces, ladder and rods fill the frame.
 - The static steel already merges into one draw; the remaining draws are the moving arm pivots
   (one each) and the lamp glow, which cannot merge.
-- Triangles (2026-11-19 integration pass): 8.95k / 3.83k / 752 (two tracks) and 12.2k / 5.29k /
-  1.24k (four tracks). Bearing bosses and clamp bands keep only their visible faces (root face
+- Triangles: 8.98k / 3.87k / 752 (two tracks) and 12.3k / 5.35k / 1.24k (four tracks). Bearing bosses and clamp bands keep only their visible faces (root face
   and bore are inside the pipe and round the spindle), gusset plates drop the face against the
   chord, LOD2 posts drop the 4 cm base plate, the foot batten and the cap's underside.
 - Lamp glow: strength 1.5, a paraffin lamp lit warm behind the spectacle, not a white bloom.

@@ -5,6 +5,7 @@
 
 import {
   DEFAULT_SHEET,
+  dmath,
   type Mesh,
   MeshBuilder,
   type StripId,
@@ -43,12 +44,12 @@ function surface(o: MembraneOptions, u: number, v: number): Vec3 {
   const pb = pointAt(o.b, v);
   let p = v3.lerp(pa, pb, u);
   // Free edge: the chord between the two ends, pulled toward the root — a scallop.
-  const bow = Math.sin(Math.PI * u);
+  const bow = dmath.sin(Math.PI * u);
   const root = v3.lerp(pointAt(o.a, 0), pointAt(o.b, 0), u);
-  const pull = o.scallop * bow * v ** 3;
+  const pull = o.scallop * bow * (v * v * v);
   p = v3.add(p, v3.mul(v3.norm(v3.sub(root, p)), pull));
-  const ripple = o.ripples ? (o.rippleDepth ?? 0.01) * Math.sin(u * Math.PI * o.ripples) * v : 0;
-  const sag = o.sag * bow * Math.sin(Math.PI * Math.min(1, v * 1.1)) + ripple;
+  const ripple = o.ripples ? (o.rippleDepth ?? 0.01) * dmath.sin(u * Math.PI * o.ripples) * v : 0;
+  const sag = o.sag * bow * dmath.sin(Math.PI * Math.min(1, v * 1.1)) + ripple;
   return v3.add(p, v3.mul(v3.norm(o.sagDir), sag));
 }
 

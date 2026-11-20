@@ -4,7 +4,7 @@
 // and real thickness at a few hundred triangles — what reads as forged plate, where a sculpt at
 // a coarse cell reads as a blob.
 
-import { loft, type Mesh, merge, type Rng, type StripId, sweep } from '@developerz.ai/ts23d';
+import { dmath, loft, type Mesh, merge, type Rng, type StripId, sweep } from '@developerz.ai/ts23d';
 import { add, cross, mul, norm, sub, type V } from './kit.ts';
 
 type P2 = readonly [number, number];
@@ -20,7 +20,7 @@ export function plateProfile(outer: readonly P2[], t: number, round = 5): P2[] {
     const b = outer[Math.min(n - 1, i + 1)] ?? [0, 0];
     const dx = b[0] - a[0];
     const dz = b[1] - a[1];
-    const l = Math.hypot(dx, dz) || 1;
+    const l = dmath.hypot(dx, dz) || 1;
     // The profile runs top → bottom with r growing outward, so (dz, −dx) points toward the axis.
     return [dz / l, -dx / l];
   };
@@ -32,14 +32,14 @@ export function plateProfile(outer: readonly P2[], t: number, round = 5): P2[] {
   const edge = (from: P2, to: P2, bulge: P2): P2[] => {
     // A half-round from `from` to `to`, bulging along `bulge`.
     const c: P2 = [(from[0] + to[0]) / 2, (from[1] + to[1]) / 2];
-    const r = Math.hypot(from[0] - c[0], from[1] - c[1]);
+    const r = dmath.hypot(from[0] - c[0], from[1] - c[1]);
     const u: P2 = [(from[0] - c[0]) / (r || 1), (from[1] - c[1]) / (r || 1)];
     const pts: P2[] = [];
     for (let k = 1; k < round; k++) {
       const a = (k / round) * Math.PI;
       pts.push([
-        c[0] + r * (u[0] * Math.cos(a) + bulge[0] * Math.sin(a)),
-        c[1] + r * (u[1] * Math.cos(a) + bulge[1] * Math.sin(a)),
+        c[0] + r * (u[0] * dmath.cos(a) + bulge[0] * dmath.sin(a)),
+        c[1] + r * (u[1] * dmath.cos(a) + bulge[1] * dmath.sin(a)),
       ]);
     }
     return pts;
@@ -109,13 +109,13 @@ export function revolvePlate(profile: readonly P2[], o: Revolve): Mesh {
   for (let i = 0; i <= o.steps; i++) {
     const deg = o.from + ((o.to - o.from) * i) / o.steps;
     const a = (deg * Math.PI) / 180;
-    const dir = add(mul(x0, Math.cos(a)), mul(y0, Math.sin(a) * (o.squash ?? 1)));
+    const dir = add(mul(x0, dmath.cos(a)), mul(y0, dmath.sin(a) * (o.squash ?? 1)));
     rings.push(
       profile.map(([r, h]) => {
         let dr = 0;
         for (const d of o.dents ?? []) {
           const s = (((deg - d.theta) * Math.PI) / 180) * r;
-          dr += d.depth * Math.exp(-(s * s + (h - d.h) ** 2) / (d.radius * d.radius));
+          dr += d.depth * dmath.exp(-(s * s + dmath.pow(h - d.h, 2)) / (d.radius * d.radius));
         }
         return add(add(o.at, mul(dir, r - dr)), mul(z, h));
       }),

@@ -8,7 +8,7 @@
 // distinct rest in a single-file GLB; a LOD without the part's morph targets gets no weights key
 // (clip-channels.ts: the rule the manifest's `clips` follows too).
 
-import { type Clip, RUN_CLIP, type Track, Ts23dError } from '../core/index.ts';
+import { type Clip, dmath, RUN_CLIP, type Track, Ts23dError } from '../core/index.ts';
 import type { BinWriter, Json } from './bin-writer.ts';
 import { keysNode } from './clip-channels.ts';
 import type { GltfDoc } from './hierarchy.ts';
@@ -171,8 +171,8 @@ export function clipSummary(
       const n = root ? root.times.length : 0;
       const d =
         root && n > 1
-          ? Math.hypot(
-              ...[0, 1].map((k) => (root.values[(n - 1) * 3 + k] ?? 0) - (root.values[k] ?? 0)),
+          ? dmath.norm(
+              [0, 1].map((k) => (root.values[(n - 1) * 3 + k] ?? 0) - (root.values[k] ?? 0)),
             )
           : 0;
       return { name: c.name, seconds: c.seconds, loop: c.loop, speed: r4(d / c.seconds) };

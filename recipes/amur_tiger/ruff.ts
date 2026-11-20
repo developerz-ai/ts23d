@@ -5,6 +5,7 @@
 // sized big → medium → small so the edge breaks into locks rather than a smooth shell.
 
 import type { SculptEdit, Vec3 } from '@developerz.ai/ts23d';
+import { dmath } from '@developerz.ai/ts23d';
 import { hash } from './stripes.ts';
 
 /** A tuft cone from `at` along `dir` (need not be unit). */
@@ -15,8 +16,8 @@ export function tuftEdit(at: Vec3, dir: Vec3, len: number, r: number, blend: num
     size: [r, r * 0.12, len],
     rotate: [
       0,
-      (Math.atan2(Math.hypot(dir[0], dir[1]), dir[2]) * 180) / Math.PI,
-      (Math.atan2(dir[1], dir[0]) * 180) / Math.PI,
+      (dmath.atan2(dmath.hypot(dir[0], dir[1]), dir[2]) * 180) / Math.PI,
+      (dmath.atan2(dir[1], dir[0]) * 180) / Math.PI,
     ],
     blend,
   };
@@ -50,9 +51,9 @@ export function ruffTufts(lod: number): SculptEdit[] {
     // Along an arc from below the ear (top) round the cheek to under the jaw (bottom).
     const a = (-70 + t * 150) * (Math.PI / 180);
     const at: Vec3 = [
-      0.07 - 0.05 * Math.cos(a) + 0.01,
-      0.13 - 0.012 * Math.abs(Math.sin(a)),
-      0.05 * Math.sin(-a) - 0.03,
+      0.07 - 0.05 * dmath.cos(a) + 0.01,
+      0.13 - 0.012 * Math.abs(dmath.sin(a)),
+      0.05 * dmath.sin(-a) - 0.03,
     ];
     const dir: Vec3 = [-0.55 + 0.25 * t, 0.75, -0.25 - 0.55 * t];
     // Big → small rhythm: every third tuft long, others medium/short.

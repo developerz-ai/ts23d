@@ -4,6 +4,7 @@ import {
   compile,
   createRng,
   defineAsset,
+  dmath,
   type Lod,
   Ts23dError,
   triangleCount,
@@ -194,10 +195,10 @@ describe('grow (skeleton)', () => {
             ((p0[0] - a[0]) * (ab[0] ?? 0) +
               (p0[1] - a[1]) * (ab[1] ?? 0) +
               (p0[2] - a[2]) * (ab[2] ?? 0)) /
-              ((ab[0] ?? 0) ** 2 + (ab[1] ?? 0) ** 2 + (ab[2] ?? 0) ** 2 || 1),
+              (dmath.pow(ab[0] ?? 0, 2) + dmath.pow(ab[1] ?? 0, 2) + dmath.pow(ab[2] ?? 0, 2) || 1),
           ),
         );
-        const d = Math.hypot(
+        const d = dmath.hypot(
           p0[0] - a[0] - t * (ab[0] ?? 0),
           p0[1] - a[1] - t * (ab[1] ?? 0),
           p0[2] - a[2] - t * (ab[2] ?? 0),

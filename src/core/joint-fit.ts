@@ -13,6 +13,7 @@
 // blueprint colours joints by them.
 
 import type { CompiledAsset } from './definition.ts';
+import * as dmath from './dmath.ts';
 import { type Mesh, merge } from './mesh.ts';
 import type { Joint } from './part.ts';
 import { innerRadius, opening, picks, planeAxes, type Section, section, wrap } from './section.ts';
@@ -182,7 +183,7 @@ export function jointFit(asset: CompiledAsset, j: Joint): JointFit {
     );
     break;
   }
-  const dc = Math.hypot(
+  const dc = dmath.hypot(
     dot(
       [
         to.centroid[0] - from.centroid[0],

@@ -5,6 +5,7 @@
 
 import {
   box,
+  dmath,
   hex,
   type Lod,
   lathe,
@@ -93,7 +94,7 @@ export function ellipsoid(lod: Lod, at: Vec3, r: Vec3, color: Vec3): Mesh {
   const profile: Vec2[] = [];
   for (let i = 0; i <= rings; i++) {
     const t = -Math.PI / 2 + (i / rings) * Math.PI;
-    profile.push([Math.cos(t), Math.sin(t)]);
+    profile.push([dmath.cos(t), dmath.sin(t)]);
   }
   const unit = lathe({ profile, segments: SEG(lod, 20, 10, 4), color });
   return place(unit, { at, scale: r });
@@ -105,7 +106,7 @@ export function dome(lod: Lod, at: Vec3, r: Vec3, color: Vec3, flat = 0): Mesh {
   const profile: Vec2[] = [[1, 0]];
   for (let i = 1; i <= rings; i++) {
     const t = (i / rings) * (Math.PI / 2);
-    profile.push([Math.cos(t) * (i === rings ? flat : 1), Math.sin(t)]);
+    profile.push([dmath.cos(t) * (i === rings ? flat : 1), dmath.sin(t)]);
   }
   if (flat > 0) profile.push([0, 1]);
   return place(lathe({ profile, segments: SEG(lod, 20, 10, 4), color, caps: true }), {
@@ -159,11 +160,11 @@ export function fist(lod: Lod, handleR: number, color: Vec3): Mesh {
   // RTS-chunky: 15% over a real gloved fist so the hand reads at strategy distance. The opening
   // stays the handle's own size, so the grip joint still fits.
   const tubeR = 0.03;
-  const ring = handleR / Math.cos(Math.PI / around) + tubeR;
+  const ring = handleR / dmath.cos(Math.PI / around) + tubeR;
   const profile: Vec2[] = [];
   for (let i = 0; i <= s; i++) {
     const a = (i / s) * Math.PI * 2;
-    profile.push([ring + Math.cos(a) * tubeR, Math.sin(a) * 0.052]);
+    profile.push([ring + dmath.cos(a) * tubeR, dmath.sin(a) * 0.052]);
   }
   const wrap = lathe({ profile, segments: around, color });
   if (lod === 2) return wrap;

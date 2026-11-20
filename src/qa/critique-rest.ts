@@ -2,6 +2,7 @@
 // normal turning) and triangle density — and the share of visible surface that stays calm, plus
 // how unevenly detail is spread (uniform detail, everywhere or nowhere, reads as noise or blank).
 
+import { dmath } from '../core/index.ts';
 import type { PartBuffer } from './critique-raster.ts';
 
 export interface RestStats {
@@ -26,7 +27,7 @@ export const REST_LIMITS = {
   crease: 0.15,
   bend: 0.05,
   density: 1,
-  creaseCos: Math.cos((25 * Math.PI) / 180),
+  creaseCos: dmath.cos((25 * Math.PI) / 180),
 } as const;
 
 /** Per pixel: 1 = a crease to the right/lower neighbour, else the normal turn there (radians). */
@@ -89,6 +90,8 @@ export function restStats(buf: PartBuffer): RestStats {
       ds.push(Math.min(2, d));
     }
   const mean = ds.reduce((s, v) => s + v, 0) / Math.max(1, ds.length);
-  const spread = Math.sqrt(ds.reduce((s, v) => s + (v - mean) ** 2, 0) / Math.max(1, ds.length));
+  const spread = Math.sqrt(
+    ds.reduce((s, v) => s + dmath.pow(v - mean, 2), 0) / Math.max(1, ds.length),
+  );
   return { share: total ? calm / total : 0, spread, cell, cols, rows, detail };
 }

@@ -20,8 +20,8 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    10600,
-    2932,
+    10588,
+    2944,
     380
   ],
   "drawCalls": [
@@ -60,9 +60,9 @@
       "to": "rifle_grip",
       "kind": "grip",
       "at": [
-        0.3,
-        -0.265,
-        1.06
+        0.31,
+        -0.24,
+        1
       ]
     }
   ],
@@ -99,11 +99,18 @@
     }
   },
   "real": {
-    "length": 1.36,
-    "width": 0.82,
+    "length": 0.72,
+    "width": 0.97,
     "height": 1.95
   },
-  "measures": [],
+  "measures": [
+    {
+      "label": "pauldron span (infantry shoulders 0.75–0.82 m, design brief)",
+      "spec": 0.82,
+      "measured": 0.82,
+      "source": "recipes/rts_faction/README.md (original design brief)"
+    }
+  ],
   "sources": [
     "recipes/rts_faction/README.md (original design brief: proportions, shape language, palette)"
   ],
@@ -112,29 +119,29 @@
       "target": 0.15,
       "actual": 0.15,
       "eligible": "convex-edges",
-      "area": 3.5086
+      "area": 3.4307
     },
     "scratches": {
       "target": 0.3,
       "actual": 0.3,
       "eligible": "touched",
-      "area": 0.5595
+      "area": 0.5224
     },
     "mud": {
       "target": 0.7,
       "actual": 0.7,
       "eligible": "ground-near",
-      "area": 1.655,
+      "area": 1.9762,
       "by": {
         "warden": {
           "target": 0.7,
           "actual": 0.7,
-          "area": 0.9839
+          "area": 0.93
         },
         "warden_kit": {
           "target": 0.7,
           "actual": 0.7,
-          "area": 0.6711
+          "area": 1.0462
         }
       }
     },
@@ -142,17 +149,17 @@
       "target": 0.3,
       "actual": 0.3,
       "eligible": "up-facing",
-      "area": 1.457,
+      "area": 1.647,
       "by": {
         "warden": {
           "target": 0.3,
           "actual": 0.3,
-          "area": 0.9061
+          "area": 0.9318
         },
         "warden_kit": {
           "target": 0.3,
           "actual": 0.3,
-          "area": 0.5509
+          "area": 0.7152
         }
       }
     }

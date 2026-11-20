@@ -9,6 +9,7 @@
 //         rings 0 · rays 0 · checks 0 · paint 0 · paintRough 0.5 · chips 0.3 · film 0.0002 (m)
 //         grain 0 (relief, 0..1)
 
+import { dmath } from '../../core/index.ts';
 import { type Canvas, noiseAt, param, smooth } from './canvas.ts';
 import { Courses } from './courses.ts';
 import { hash2 } from './noise.ts';
@@ -48,7 +49,7 @@ export function paintPlanks(c: Canvas, r: StripRecipe, seed: number): void {
       const edge = smooth(gap * 0.5, gap * 1.5, d);
       // Grain: rings warped by a long, thin noise; the board's own seed shifts its figure.
       const warp = noiseAt(c, xm, ym, 0.4, 0.05, seed + id * 31 + k * 7, 3);
-      const ring = Math.sin((vy * 9 + warp * 3 + h * 6) * Math.PI * 2);
+      const ring = dmath.sin((vy * 9 + warp * 3 + h * 6) * Math.PI * 2);
       const fibre = noiseAt(c, xm, ym, 0.08, 0.002, seed + 17, 2);
       let knot = 0;
       const nk = Math.floor(knots * length * h * 2);
@@ -58,7 +59,7 @@ export function paintPlanks(c: Canvas, r: StripRecipe, seed: number): void {
           boards.y0 + (0.25 + 0.5 * hash2(k, id * 5 + q, seed + 43)) * (boards.y1 - boards.y0);
         let ddx = Math.abs(xm - kx);
         if (c.wrapU) ddx = Math.min(ddx, c.metresU - ddx);
-        const rr = Math.sqrt((ddx / 2.2) ** 2 + (ym - ky) ** 2) / (width * 0.12);
+        const rr = Math.sqrt(dmath.pow(ddx / 2.2, 2) + dmath.pow(ym - ky, 2)) / (width * 0.12);
         if (rr < 1) knot = Math.max(knot, 1 - rr);
       }
       let height = -depth * (1 - edge) + 0.0004 * ring * edge + 0.0003 * fibre - 0.0008 * knot;
@@ -69,7 +70,7 @@ export function paintPlanks(c: Canvas, r: StripRecipe, seed: number): void {
         (0.5 + 0.5 * edge);
       let rough = r.roughness + 0.05 * fibre + 0.1 * (1 - edge);
       // Colour rings at a frequency the strip's V texels can hold (≥ ~4 texels per ring).
-      const ring2 = Math.sin((vy * ringsN + warp * 2.5 + h * 6) * Math.PI * 2);
+      const ring2 = dmath.sin((vy * ringsN + warp * 2.5 + h * 6) * Math.PI * 2);
       const late = smooth(0.1, 0.8, ring2) * (0.75 + 0.25 * fibre);
       let mix = rings * Math.max(late, knot);
       if (grain > 0) {

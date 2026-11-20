@@ -4,6 +4,7 @@
 // and moss/bleach plausibility. Rays are fixed directions: no randomness, same bytes every run.
 
 import type { Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import { RayGrid } from './ray-grid.ts';
 import type { Surface } from './weather-surface.ts';
 
@@ -11,7 +12,7 @@ const GOLDEN = Math.PI * (3 - Math.sqrt(5));
 
 export const DEFAULT_SUN: Vec3 = (() => {
   const v: Vec3 = [-0.45, 0.55, 0.7];
-  const l = Math.hypot(...v);
+  const l = dmath.norm(v);
   return [v[0] / l, v[1] / l, v[2] / l];
 })();
 
@@ -20,14 +21,14 @@ export function exposure(s: Surface, sun: Vec3, samples: number, ground: number)
   const grid = new RayGrid(m);
   const out = new Float32Array(s.vertices);
   const memo = new Map<string, number>();
-  const sl = Math.hypot(...sun) || 1;
+  const sl = dmath.norm(sun) || 1;
   const su: Vec3 = [sun[0] / sl, sun[1] / sl, sun[2] / sl];
   const reach = Math.max(1, (s.maxZ - s.minZ) * 2);
   for (let v = 0; v < s.vertices; v++) {
     let nx = m.normals[v * 3] ?? 0;
     let ny = m.normals[v * 3 + 1] ?? 0;
     let nz = m.normals[v * 3 + 2] ?? 1;
-    const l = Math.hypot(nx, ny, nz) || 1;
+    const l = dmath.hypot(nx, ny, nz) || 1;
     nx /= l;
     ny /= l;
     nz /= l;
@@ -51,8 +52,8 @@ export function exposure(s: Surface, sun: Vec3, samples: number, ground: number)
     for (let i = 0; i < samples; i++) {
       const r = Math.sqrt((i + 0.5) / samples);
       const phi = i * GOLDEN;
-      const d0 = r * Math.cos(phi);
-      const d1 = r * Math.sin(phi);
+      const d0 = r * dmath.cos(phi);
+      const d1 = r * dmath.sin(phi);
       const d2 = Math.sqrt(Math.max(0, 1 - r * r));
       const wx = t[0] * d0 + bt[0] * d1 + nx * d2;
       const wy = t[1] * d0 + bt[1] * d1 + ny * d2;

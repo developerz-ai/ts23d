@@ -3,6 +3,7 @@
 
 import { describe, expect, it } from 'bun:test';
 import type { Quat } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import { creaturePlan } from './creature.ts';
 import { quadrupedRig } from './creature-clips.ts';
 import { rigBones } from './creature-limits.ts';
@@ -54,7 +55,7 @@ describe('gait timing (Froude, Alexander & Jayes 1983)', () => {
     const [w, t, g] = (['walk', 'trot', 'gallop'] as const).map((n) => gaitTiming(GAITS[n], hip));
     expect(w?.speed ?? 0).toBeLessThan(t?.speed ?? 0);
     expect(t?.speed ?? 0).toBeLessThan(g?.speed ?? 0);
-    expect(w?.stride).toBeCloseTo(2.3 * 0.2 ** 0.3 * hip, 9);
+    expect(w?.stride).toBeCloseTo(2.3 * dmath.pow(0.2, 0.3) * hip, 9);
     expect(GAITS.walk.duty).toBeGreaterThan(0.5);
     expect(GAITS.gallop.duty).toBeLessThan(0.5);
   });

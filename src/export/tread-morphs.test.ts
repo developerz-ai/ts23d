@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { type CompiledAsset, compile, LOOP_SECONDS } from '../core/index.ts';
+import { type CompiledAsset, compile, dmath, LOOP_SECONDS } from '../core/index.ts';
 import { beltRun } from '../passes/index.ts';
 import { exportLodGlb, toGlb } from './glb.ts';
 import { mergeToPivots } from './merge-pivots.ts';
@@ -22,9 +22,9 @@ function apart(a: ArrayLike<number>, b: ArrayLike<number>): number {
     for (let j = 0; j < b.length; j += 3)
       near = Math.min(
         near,
-        ((a[i] ?? 0) - (b[j] ?? 0)) ** 2 +
-          ((a[i + 1] ?? 0) - (b[j + 1] ?? 0)) ** 2 +
-          ((a[i + 2] ?? 0) - (b[j + 2] ?? 0)) ** 2,
+        dmath.pow((a[i] ?? 0) - (b[j] ?? 0), 2) +
+          dmath.pow((a[i + 1] ?? 0) - (b[j + 1] ?? 0), 2) +
+          dmath.pow((a[i + 2] ?? 0) - (b[j + 2] ?? 0), 2),
       );
     worst = Math.max(worst, near);
   }
@@ -44,7 +44,7 @@ describe('track belt in the run clip', () => {
     for (let i = 0; i < half.length; i += 3)
       moved = Math.max(
         moved,
-        Math.hypot(...[0, 1, 2].map((k) => (half[i + k] ?? 0) - (b.positions[i + k] ?? 0))),
+        dmath.norm([0, 1, 2].map((k) => (half[i + k] ?? 0) - (b.positions[i + k] ?? 0))),
       );
     // Half a pitch of travel: 40 links round a 5.885 m loop.
     expect(moved).toBeGreaterThan(0.06);
@@ -64,7 +64,7 @@ describe('track belt in the run clip', () => {
       for (let i = 0; i < truth.length; i += 3)
         worst = Math.max(
           worst,
-          Math.hypot(...[0, 1, 2].map((k) => (shown[i + k] ?? 0) - (truth[i + k] ?? 0))),
+          dmath.norm([0, 1, 2].map((k) => (shown[i + k] ?? 0) - (truth[i + k] ?? 0))),
         );
     }
     expect(worst).toBeLessThanOrEqual(TREAD_TOLERANCE[0] + morphs.still + 1e-6);

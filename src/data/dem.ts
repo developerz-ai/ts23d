@@ -3,7 +3,7 @@
 // provenance (source, tiles, licence, attribution). `decodeDem` verifies the hash and returns a
 // TerrainGrid in a local metric frame — a compile reads this file, never the network.
 
-import { Ts23dError } from '../core/index.ts';
+import { dmath, Ts23dError } from '../core/index.ts';
 import type { TerrainGrid } from '../primitives/index.ts';
 import { sha256, verifyPin } from './sha256.ts';
 import type { DemBox } from './terrarium.ts';
@@ -86,7 +86,7 @@ export function encodeDem(
   heights: Float64Array,
   meta: { name: string; source: DemSource; license: string; attribution: string; step?: number },
 ): DemRecord {
-  const points = (box.cells + 1) ** 2;
+  const points = dmath.pow(box.cells + 1, 2);
   if (heights.length !== points)
     throw new Ts23dError('T3D_DATA_DEM', {
       cause: `${heights.length} heights for a ${box.cells}-cell box (needs ${points})`,
@@ -139,7 +139,7 @@ export function decodeDem(r: DemRecord): TerrainGrid {
       fix: "re-pin it with `bun run data dem …` (format 'ts23d-dem/1', encoding 'u16le-base64')",
     });
   const bytes = fromBase64(r.heights);
-  const points = (r.cells + 1) ** 2;
+  const points = dmath.pow(r.cells + 1, 2);
   if (bytes.length !== points * 2)
     throw new Ts23dError('T3D_DATA_DEM', {
       cause: `DEM '${r.name}' holds ${bytes.length / 2} heights, a ${r.cells}-cell grid needs ${points}`,

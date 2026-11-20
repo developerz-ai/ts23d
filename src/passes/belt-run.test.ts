@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { type Mesh, merge, place } from '../core/index.ts';
+import { dmath, type Mesh, merge, place } from '../core/index.ts';
 import { box } from '../primitives/index.ts';
 import { BeltLoop } from './belt-loop.ts';
 import { beltRun } from './belt-run.ts';
@@ -13,12 +13,12 @@ function stadium(): [number, number, number][] {
   for (let i = 0; i < 40; i++) pts.push([-1 + (2 * i) / 40, 0, 0]);
   for (let i = 0; i < 90; i++) {
     const a = -Math.PI / 2 + (Math.PI * i) / 90;
-    pts.push([1 + R * Math.cos(a), 0, R + R * Math.sin(a)]);
+    pts.push([1 + R * dmath.cos(a), 0, R + R * dmath.sin(a)]);
   }
   for (let i = 0; i < 40; i++) pts.push([1 - (2 * i) / 40, 0, 2 * R]);
   for (let i = 0; i < 90; i++) {
     const a = Math.PI / 2 + (Math.PI * i) / 90;
-    pts.push([-1 + R * Math.cos(a), 0, R + R * Math.sin(a)]);
+    pts.push([-1 + R * dmath.cos(a), 0, R + R * dmath.sin(a)]);
   }
   return pts;
 }
@@ -39,7 +39,7 @@ function links(n: number, skip = -1): { mesh: Mesh; pitch: number } {
     placed.push(
       place(link, {
         at: [f[0] ?? 0, f[1] ?? 0, f[2] ?? 0],
-        pitch: Math.atan2(-(f[5] ?? 0), f[3] ?? 1),
+        pitch: dmath.atan2(-(f[5] ?? 0), f[3] ?? 1),
       }),
     );
   }
@@ -60,7 +60,7 @@ function apart(a: ArrayLike<number>, b: ArrayLike<number>): number {
     for (let j = 0; j < b.length; j += 3)
       near = Math.min(
         near,
-        Math.hypot(
+        dmath.hypot(
           (a[i] ?? 0) - (b[j] ?? 0),
           (a[i + 1] ?? 0) - (b[j + 1] ?? 0),
           (a[i + 2] ?? 0) - (b[j + 2] ?? 0),
@@ -88,7 +88,7 @@ describe('beltRun', () => {
     const n = new Float64Array(p.length);
     run.pose(0.5, p, n);
     const moved = (v: number): number =>
-      Math.hypot(...[0, 1, 2].map((k) => (p[v * 3 + k] ?? 0) - (mesh.positions[v * 3 + k] ?? 0)));
+      dmath.norm([0, 1, 2].map((k) => (p[v * 3 + k] ?? 0) - (mesh.positions[v * 3 + k] ?? 0)));
     expect(Math.max(...lone.map(moved))).toBe(0);
     for (const v of lone)
       for (let k = 0; k < 3; k++) expect(n[v * 3 + k]).toBe(mesh.normals[v * 3 + k] ?? 0);
@@ -126,7 +126,7 @@ describe('beltRun', () => {
     const { mesh, pitch } = links(36);
     const mid = posed(beltRun(stadium(), pitch, mesh), 0.37);
     const len = (p: ArrayLike<number>, a: number, b: number): number =>
-      Math.hypot(...[0, 1, 2].map((k) => (p[a * 3 + k] ?? 0) - (p[b * 3 + k] ?? 0)));
+      dmath.norm([0, 1, 2].map((k) => (p[a * 3 + k] ?? 0) - (p[b * 3 + k] ?? 0)));
     let worst = 0;
     for (let i = 0; i < mesh.indices.length; i += 3) {
       const [a, b] = [mesh.indices[i] ?? 0, mesh.indices[i + 1] ?? 0];

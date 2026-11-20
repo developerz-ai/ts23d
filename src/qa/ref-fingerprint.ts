@@ -4,7 +4,7 @@
 // share of luminance power in 8 radial FFT bands (detail frequency), and Sobel edge density on an
 // 8×8 grid of the interior. Framing-agnostic, deterministic, zero dependencies.
 
-import { Ts23dError } from '../core/index.ts';
+import { dmath, Ts23dError } from '../core/index.ts';
 import { edges, FP_SIZE, GRID, spectrum } from './ref-features.ts';
 
 export { FP_SIZE } from './ref-features.ts';
@@ -35,10 +35,10 @@ export interface FingerprintDistance {
 
 const lin = (c: number): number => {
   const v = c / 255;
-  return v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+  return v <= 0.04045 ? v / 12.92 : dmath.pow((v + 0.055) / 1.055, 2.4);
 };
 const labF = (t: number): number =>
-  t > 216 / 24389 ? Math.cbrt(t) : (24389 / 27 / 116) * t + 4 / 29;
+  t > 216 / 24389 ? dmath.cbrt(t) : (24389 / 27 / 116) * t + 4 / 29;
 
 /** sRGB 8-bit → CIE Lab (D65). */
 export function srgbToLab(r: number, g: number, b: number): [number, number, number] {

@@ -20,9 +20,9 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    14438,
-    2582,
-    376
+    7508,
+    2046,
+    452
   ],
   "drawCalls": [
     2,
@@ -107,10 +107,10 @@
   ],
   "weather": {
     "chips": {
-      "target": 0.1215,
-      "actual": 0.1215,
+      "target": 0.1203,
+      "actual": 0.1203,
       "eligible": "convex-edges",
-      "area": 223.1996,
+      "area": 266.2601,
       "by": {
         "hall_masonry": {
           "target": 0.1,
@@ -120,17 +120,17 @@
         "hall_plinth": {
           "target": 0.12,
           "actual": 0.12,
-          "area": 72.1043
+          "area": 118.0064
         },
         "hall_render": {
           "target": 0.1,
           "actual": 0.1,
-          "area": 71.3051
+          "area": 73.4331
         },
         "hall_rubble": {
           "target": 0.16,
           "actual": 0.16,
-          "area": 55.8929
+          "area": 50.9233
         }
       }
     },
@@ -181,10 +181,10 @@
       }
     },
     "dust": {
-      "target": 0.5025,
-      "actual": 0.5025,
+      "target": 0.5028,
+      "actual": 0.5028,
       "eligible": "up-facing",
-      "area": 221.7895,
+      "area": 220.5106,
       "by": {
         "hall_masonry": {
           "target": 0.55,
@@ -204,7 +204,7 @@
         "hall_rubble": {
           "target": 0.45,
           "actual": 0.45,
-          "area": 12.8471
+          "area": 11.5682
         },
         "hall_timber": {
           "target": 0.3,

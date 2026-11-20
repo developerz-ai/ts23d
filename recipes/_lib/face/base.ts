@@ -3,6 +3,7 @@
 // each vertex's mirror partner across y = 0, so warps and paint can stay symmetric on purpose.
 // Decoded once per process and shared (callers copy before they move anything).
 
+import { dmath } from '@developerz.ai/ts23d';
 import { HM08_BUST } from './base/hm08-bust.ts';
 
 export interface QuadMesh {
@@ -55,7 +56,7 @@ function decode(): { mesh: QuadMesh; mirror: Uint32Array } {
       for (let j = -1; j <= 1; j++)
         for (let k = -1; k <= 1; k++)
           for (const u of grid.get(`${cx + i},${cy + j},${cz + k}`) ?? []) {
-            const d = Math.hypot(
+            const d = dmath.hypot(
               (p[u * 3] ?? 0) - x,
               (p[u * 3 + 1] ?? 0) - y,
               (p[u * 3 + 2] ?? 0) - z,

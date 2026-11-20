@@ -53,6 +53,9 @@ export interface GarmentOptions {
   readonly wear?: {
     readonly layers?: readonly string[];
     readonly options: WeatheringOptions;
+    /** Settle the dust as that even tint at every LOD (no weather pass): on a small garment the
+     *  pass's patches read as camouflage blotches, not as a season's dust on the shoulders. */
+    readonly even?: boolean;
   };
   /** Kept where ≤ 0: every layer is sawn off by it (the torso's arm cut; a dressed bust's
    *  default is its recipe's `saw`), its face painted the layer's colour in shadow. */
@@ -217,7 +220,7 @@ export function garmentParts(
     if (Object.keys(picked).length > 0)
       worn = {
         ...meshes,
-        ...(lod < 2
+        ...(lod < 2 && !o.wear.even
           ? weather(ctx, picked, o.wear.options)
           : dust
             ? Object.fromEntries(

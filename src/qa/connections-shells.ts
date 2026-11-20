@@ -3,7 +3,7 @@
 // bounds, area, closedness, enclosed volume and a sub-mesh the spatial indices are built on.
 // Vertices weld by position (0.1 mm), so flat-shaded faces that own their vertices stay one shell.
 
-import { type Bounds, type CompiledAsset, type Mesh, worldMeshes } from '../core/index.ts';
+import { type Bounds, type CompiledAsset, dmath, type Mesh, worldMeshes } from '../core/index.ts';
 
 export interface Shell {
   /** Stable id: `part#index` (index in first-triangle order). */
@@ -112,7 +112,7 @@ function describe(part: string, index: number, m: Mesh, open: number, edges: num
     const vx = cx - ax;
     const vy = cy - ay;
     const vz = cz - az;
-    const a = Math.hypot(uy * vz - uz * vy, uz * vx - ux * vz, ux * vy - uy * vx) / 2;
+    const a = dmath.hypot(uy * vz - uz * vy, uz * vx - ux * vz, ux * vy - uy * vx) / 2;
     area += a;
     c[0] += (a * (ax + bx + cx)) / 3;
     c[1] += (a * (ay + by + cy)) / 3;

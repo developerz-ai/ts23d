@@ -51,12 +51,22 @@ A second fetch on 2026-11-07 gave the same heights hash.
 spires on the floor and gentle rims, 2 200 / 1 400 / 110) and `river` (the Merced): all static,
 one draw call. LOD by density: 256 / 128 / 38 cells (LOD2 inside the 4 k terrain band).
 
-Ground colour is smooth per-vertex blends on one stretched matte strip (`../mountain_range/
+Ground colour is smooth per-vertex blends on one stretched matte strip (`../_lib/terrain/
 ground.ts`): the library's per-triangle strips switched material at every triangle border and
 squeezed each triangle's V on its own, which rendered as diagonal stripe banding. Granite grey
 walls (not olive), pale talus, conifer floor, meadows on the flat floor, dark water streaks down
 the walls where the D8 flow over the survey gathers, rock strata on the cut sides (one band over
-the full wall height, so beds read as formations).
+the full wall height at the same texel scale along the wall as up it, so beds read as formations
+and the walls do not streak). On the steep granite (`../_lib/terrain/cliff.ts`): pale fresh
+exfoliation scars and darker weathered sheets in ~150 m patches, and black water streaks (a plan
+noise ~18 m across, whose bands run down the fall line of a steep face). The Merced is 32 → 46 m
+wide (its real 30–50 m summer channel), clear green water, its width breathing ±30 % (pools and
+riffles), swung into meanders (up to ~55 m off the floor path, a bend every ~460 m,
+`../_lib/terrain/river.ts`) where the floor is flat and straight in the canyon above it, with
+patchy gravel and sand bars (point bars up to 19 m, not a continuous kerb) painted into the
+ground. The hero looks up the valley from the west (az 200°, el 30°), as in "Half Dome with
+Eastern Yosemite Valley": Half Dome central with its sheared north-west face to the lens, Tenaya
+Canyon to its left, the Merced meandering through the meadows in the foreground.
 
 ## Decisions and open questions
 - **No synthetic erosion.** Hydraulic droplets (40 k) and thermal relaxation were tried as "detail
@@ -64,7 +74,8 @@ the full wall height, so beds read as formations).
   more like Yosemite.
 - **No water plane.** The floor falls ~12 m over 2 km: any flat water level floods meadows into a
   lake. The Merced is instead a ribbon along the least-cost path over the survey between the
-  valley's lowest border points (it keeps to the floor), banks sunk into the ground. An OSM
+  valley's lowest border points (it keeps to the floor), meandered on the flat floor (the
+  meanders are drawn, not surveyed), banks sunk into the ground. An OSM
   centreline would be exact (planned, see `docs/idea/23-real-data.md`).
 - **Colour is by slope and altitude only** (no land-cover data): the granite domes' 30–45° bare
   backs read partly as forest. Land cover from an open dataset is the fix.

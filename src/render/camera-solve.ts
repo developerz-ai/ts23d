@@ -4,7 +4,7 @@
 // each seed is refined by Levenberg–Marquardt on reprojection error and the best one wins.
 // Deterministic: fixed seeds and iteration order, no randomness.
 
-import { Ts23dError, type Vec3 } from '../core/index.ts';
+import { dmath, Ts23dError, type Vec3 } from '../core/index.ts';
 import { type PerspectiveCamera, project } from './camera.ts';
 import { smallestEigenvector, solveLinear } from './camera-linalg.ts';
 
@@ -34,8 +34,11 @@ const crossV = (a: readonly number[], b: readonly number[]): V3 => [
   (a[2] ?? 0) * (b[0] ?? 0) - (a[0] ?? 0) * (b[2] ?? 0),
   (a[0] ?? 0) * (b[1] ?? 0) - (a[1] ?? 0) * (b[0] ?? 0),
 ];
+/** Distance between two points given as arrays. */
+const gap = (a: readonly number[], b: readonly number[]): number =>
+  dmath.hypot((a[0] ?? 0) - (b[0] ?? 0), (a[1] ?? 0) - (b[1] ?? 0), (a[2] ?? 0) - (b[2] ?? 0));
 const unit = (v: readonly number[]): V3 => {
-  const l = Math.hypot(v[0] ?? 0, v[1] ?? 0, v[2] ?? 0) || 1;
+  const l = dmath.hypot(v[0] ?? 0, v[1] ?? 0, v[2] ?? 0) || 1;
   return [(v[0] ?? 0) / l, (v[1] ?? 0) / l, (v[2] ?? 0) / l];
 };
 
@@ -43,13 +46,13 @@ const unit = (v: readonly number[]): V3 => {
 export function perspectiveOf(c: PhotoCamera, width: number, height: number): PerspectiveCamera {
   const f = unit([c.target[0] - c.eye[0], c.target[1] - c.eye[1], c.target[2] - c.eye[2]]);
   const side = crossV(f, [0, 0, 1]);
-  const r = Math.hypot(...side) < 1e-9 ? ([0, -1, 0] as V3) : unit(side);
+  const r = dmath.hypot(...side) < 1e-9 ? ([0, -1, 0] as V3) : unit(side);
   return {
     eye: [c.eye[0], c.eye[1], c.eye[2]],
     r,
     u: crossV(r, f),
     f,
-    focal: height / 2 / Math.tan((c.fovDeg * Math.PI) / 360),
+    focal: height / 2 / dmath.tan((c.fovDeg * Math.PI) / 360),
     cx: width / 2,
     cy: height / 2,
     width,
@@ -64,12 +67,9 @@ export function dltCentre(marks: readonly Mark[]): V3 | null {
   const c3 = [0, 1, 2].map((k) => marks.reduce((s, m) => s + (m.world[k] ?? 0), 0) / n);
   const s2 =
     Math.SQRT2 /
-    (marks.reduce((s, m) => s + Math.hypot(m.px[0] - (c2[0] ?? 0), m.px[1] - (c2[1] ?? 0)), 0) /
+    (marks.reduce((s, m) => s + dmath.hypot(m.px[0] - (c2[0] ?? 0), m.px[1] - (c2[1] ?? 0)), 0) /
       n || 1);
-  const s3 =
-    Math.sqrt(3) /
-    (marks.reduce((s, m) => s + Math.hypot(...m.world.map((v, k) => v - (c3[k] ?? 0))), 0) / n ||
-      1);
+  const s3 = Math.sqrt(3) / (marks.reduce((s, m) => s + gap(m.world, c3), 0) / n || 1);
   const S = Array.from({ length: 12 }, () => new Array<number>(12).fill(0));
   for (const m of marks) {
     const X = [...m.world.map((v, k) => (v - (c3[k] ?? 0)) * s3), 1];
@@ -96,9 +96,9 @@ export function dltCentre(marks: readonly Mark[]): V3 | null {
 }
 
 const dirOf = (az: number, el: number): V3 => [
-  Math.cos(el) * Math.cos(az),
-  Math.cos(el) * Math.sin(az),
-  Math.sin(el),
+  dmath.cos(el) * dmath.cos(az),
+  dmath.cos(el) * dmath.sin(az),
+  dmath.sin(el),
 ];
 const raw = (p: readonly number[], w: number, h: number): PerspectiveCamera => {
   const eye: V3 = [p[0] ?? 0, p[1] ?? 0, p[2] ?? 0];
@@ -108,7 +108,7 @@ const raw = (p: readonly number[], w: number, h: number): PerspectiveCamera => {
     w,
     h,
   );
-  return { ...cam, focal: Math.exp(p[5] ?? 0) };
+  return { ...cam, focal: dmath.exp(p[5] ?? 0) };
 };
 
 function residuals(p: readonly number[], marks: readonly Mark[], w: number, h: number): number[] {
@@ -185,18 +185,16 @@ export function solveCamera(marks: readonly Mark[], width: number, height: numbe
   if (!(width > 0 && height > 0)) fail(`image ${width}×${height}`);
   const n = marks.length;
   const c: V3 = [0, 1, 2].map((k) => marks.reduce((s, m) => s + (m.world[k] ?? 0), 0) / n) as V3;
-  const radius = Math.max(
-    ...marks.map((m) => Math.hypot(...m.world.map((v, k) => v - (c[k] ?? 0)))),
-  );
+  const radius = Math.max(...marks.map((m) => gap(m.world, c)));
   if (!(radius > 1e-9)) fail('all marks sit on one 3D point');
   const seeds: number[][] = [];
   const seed = (eye: V3, f: V3): void => {
-    const p = [...eye, Math.atan2(f[1], f[0]), Math.asin(Math.max(-1, Math.min(1, f[2])))];
-    seeds.push([...p, Math.log(focalFor(p, marks, width, height))]);
+    const p = [...eye, dmath.atan2(f[1], f[0]), dmath.asin(Math.max(-1, Math.min(1, f[2])))];
+    seeds.push([...p, dmath.log(focalFor(p, marks, width, height))]);
   };
   const centre = n >= 6 ? dltCentre(marks) : null;
   if (centre) seed(centre, unit([c[0] - centre[0], c[1] - centre[1], c[2] - centre[2]]));
-  const d = (radius / Math.tan((20 * Math.PI) / 180)) * 1.6;
+  const d = (radius / dmath.tan((20 * Math.PI) / 180)) * 1.6;
   for (let az = 0; az < 360; az += 30)
     for (const el of [-10, 15, 45, 80]) {
       const dir = dirOf((az * Math.PI) / 180, (el * Math.PI) / 180);
@@ -222,7 +220,7 @@ export function solveCamera(marks: readonly Mark[], width: number, height: numbe
         cam.eye[1] + cam.f[1] * along,
         cam.eye[2] + cam.f[2] * along,
       ],
-      fovDeg: (2 * Math.atan(height / 2 / cam.focal) * 180) / Math.PI,
+      fovDeg: (2 * dmath.atan(height / 2 / cam.focal) * 180) / Math.PI,
     },
     rmsPx: Math.sqrt(best.e / (2 * n)),
   };

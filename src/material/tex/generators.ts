@@ -4,6 +4,7 @@
 // repeats exactly every `ctx.tileU`: tileable by construction. Features are clamped to ≥ 1.5
 // texels per axis (strip texels are anisotropic) so nothing aliases. All outputs are 0..1.
 
+import { dmath } from '../../core/index.ts';
 import { fbm, hash2 } from '../paint/noise.ts';
 import { type TexContext, TexField } from './field.ts';
 
@@ -29,7 +30,7 @@ export function lattice(
 }
 
 /** Smallest feature (m) an fBm's top octave may reach on an axis of `texel` metres. */
-const finest = (texel: number, octaves: number): number => 1.5 * texel * 2 ** (octaves - 1);
+const finest = (texel: number, octaves: number): number => 1.5 * texel * dmath.pow(2, octaves - 1);
 
 /** Visit every texel centre in metres. */
 export function eachTexel(ctx: TexContext, fn: (i: number, xm: number, ym: number) => void): void {
@@ -59,7 +60,7 @@ export const noise = (o: NoiseOptions): TexField => fbmField(o, (v) => 0.5 + 0.5
 
 /** Ridged noise, 0..1: sharp crests where the fBm crosses zero (cracks, veins, rock ridges). */
 export const ridged = (o: NoiseOptions): TexField =>
-  fbmField(o, (v) => (1 - Math.min(1, Math.abs(v) * 1.6)) ** 2, 'ridged');
+  fbmField(o, (v) => dmath.pow(1 - Math.min(1, Math.abs(v) * 1.6), 2), 'ridged');
 
 export interface CellsOptions {
   /** Mean cell size, metres. */
@@ -91,7 +92,7 @@ export function worleyAt(
       const lx = (((gx + i) % n) + n) % n;
       const px = gx + i + 0.5 + jitter * (hash2(lx, gy + j, seed) - 0.5);
       const py = gy + j + 0.5 + jitter * (hash2(lx, gy + j, seed + 1) - 0.5);
-      const d = (u - px) ** 2 + (v - py) ** 2;
+      const d = dmath.pow(u - px, 2) + dmath.pow(v - py, 2);
       if (d < f1) {
         f2 = f1;
         f1 = d;

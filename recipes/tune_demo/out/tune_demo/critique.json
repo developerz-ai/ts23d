@@ -1,7 +1,7 @@
 {
   "asset": "tune_demo",
   "reviewer": "agent",
-  "overall": 6.7,
+  "overall": 7.6,
   "scores": {
     "silhouette": {
       "score": 8,
@@ -18,98 +18,46 @@
       ]
     },
     "materials": {
-      "score": 6,
-      "reason": "Terracotta with a little slip variation and pale chips at lip and foot; still one smooth satin colour with no clay grain or throw rings.",
+      "score": 7,
+      "reason": "Terracotta shows throw-ring relief, darker residue below the lip and a soil/salt band on the foot that now fades softly in hero.png; in the sheet (FRONT, SIDE) the band edge and the residue streaks still step in square vertex-colour blocks, and the body is one smooth satin.",
       "fixes": [
-        "terracotta strip with throw-ring relief and a rougher, darker foot"
+        "finer colour resolution on the body (more stations or a texture mask) so the band and streaks do not step in the sheet",
+        "rougher, matte clay response"
       ]
     },
     "detail": {
-      "score": 6,
-      "reason": "A potter's stamp on the shoulder, attachment pads at the handles, rolled lip; nothing else.",
+      "score": 8,
+      "reason": "Throw rings, a VIN XII inscription, the potter's stamp now as small raised same-colour letters instead of a pale sticker, handle attachment pads and a rolled lip; the stamp is tiny at hero distance.",
       "fixes": [
-        "throw rings on the body",
-        "a seam or two at the handle roots"
+        "a framed stamp cartouche ~1.5x larger so it reads at hero distance"
       ]
     },
     "wear": {
-      "score": 6,
-      "reason": "Chips on the lip and foot ring now show; no residue staining or dirt in the foot.",
+      "score": 8,
+      "reason": "Dark residue streaks run down from the lip and the soil band climbs from the foot with a soft, graded upper edge in hero.png; in the sheet that edge still steps.",
       "fixes": [
-        "dark residue stain below the lip and soil in the foot ring"
+        "ragged, uneven height on the soil band edge round the circumference"
       ]
     },
     "lod": {
-      "score": 5,
-      "reason": "lods.png: LOD2 (276 tris) pops: the rolled lip becomes a flat-topped cone, the flared foot a straight pale cylinder, the body visibly 10-12 sided and the handles angular.",
+      "score": 6,
+      "reason": "LOD2 keeps the foot flare and the soil band, but the lip is a flat dark disc, the body visibly 12-sided and the handles angular hexagon loops: still a visible pop.",
       "fixes": [
-        "keep the lip roll and foot flare as one profile station each at LOD2",
-        "16 sides at LOD2 within budget by fewer body stations"
+        "keep the lip roll as one profile station at LOD2",
+        "16 sides at LOD2 with fewer body stations",
+        "smooth handle arcs (6+ segments) at LOD2"
       ]
     },
     "technical": {
       "score": 8,
-      "reason": "QA PASS: 4.3k / 1.3k / 276 tris, 1 draw; tune.json params read by every build.",
+      "reason": "QA PASS: 4.7k / 1.3k / 288 tris, 1 / 1 / 1 draws; tune.json params read by every build.",
       "fixes": [
         "fewer LOD0 stations on the straight neck"
       ]
     }
   },
   "renders": {
-    "hero.png": "c4faedd2a610868189f82ad29b053b84371fdd22dff1d1e82b42947c0f89930d",
-    "sheet.png": "795bd1ffd970d11b7a14be63b351d4dd8e36574c79e967338ff657c0aa8d235f",
-    "raking.png": "c6bb1fa38c3d93746a2d0484ed6c7a2cb25b5a0f0c762fecb3d539ffc62c22cd",
-    "raking_detail.png": "db48225e790217900b276449e18f64b4e1c9f802b86eb0d3a1334b9e6b9ab32e",
-    "lods.png": "ae8bbeaada894c1d5fc54b906ef784da83bc2bd19cbd2d7662b672bb9c909345",
-    "silhouette.png": "5d4774745cfafcd5398fae94993d95ac81c37dd893a93d27fbc63c5a07fae0c9",
-    "value.png": "86d0df7a104732bd09f6825ec6c24e699e0e9462ab98fbe04b85786782b43903",
-    "detail.png": "aa1ffc3710a54211693eedb816274daf1b998e1d71d4875f92f2db5691eade81"
-  },
-  "metrics": {
-    "silhouette": [
-      {
-        "view": "front",
-        "iou": 0.946
-      },
-      {
-        "view": "side",
-        "iou": 0.936
-      },
-      {
-        "view": "3/4",
-        "iou": 0.948
-      }
-    ],
-    "focal": {
-      "peakPart": "body",
-      "peak": [
-        352,
-        152
-      ],
-      "focalShare": 0,
-      "focalArea": 0,
-      "top": [
-        {
-          "part": "body",
-          "share": 0.829
-        },
-        {
-          "part": "handle_r",
-          "share": 0.171
-        }
-      ],
-      "declared": []
-    },
-    "rest": {
-      "share": 0.837,
-      "spread": 0.555,
-      "min": 0.25
-    },
-    "shape": {
-      "acuteShare": 0.5,
-      "straightShare": 0.499,
-      "taper": -0.271,
-      "shape": "aggressive"
-    }
+    "hero.png": "63d3dfb58e8fa2f1ab81822b73887c44d58d20784188e51d712b58509a9032a9",
+    "sheet.png": "1de8b093440ff4fa38781a24e5f23c4bd7c90ed1db961c7a35525bdca840ed73"
   }
 }

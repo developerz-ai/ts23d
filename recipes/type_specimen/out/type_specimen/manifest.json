@@ -20,13 +20,13 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    29964,
-    8467,
+    27565,
+    8459,
     282
   ],
   "trianglesCompiled": [
-    29966,
-    8496,
+    27578,
+    8488,
     282
   ],
   "drawCalls": [
@@ -52,19 +52,19 @@
       "target": 0.4,
       "actual": 0.4,
       "eligible": "up-facing",
-      "area": 2.6847
+      "area": 2.8255
     },
     "chips": {
       "target": 0.25,
       "actual": 0.25,
       "eligible": "convex-edges",
-      "area": 10.8951
+      "area": 11.8847
     },
     "moss": {
       "target": 0.2,
       "actual": 0.2,
       "eligible": "shaded & wet & !down-facing",
-      "area": 1.041
+      "area": 1.4876
     },
     "mud": {
       "target": 0.45,

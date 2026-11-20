@@ -7,6 +7,7 @@
 import {
   beam,
   box,
+  dmath,
   type Lod,
   type Mesh,
   merge,
@@ -31,7 +32,7 @@ export function ager(
       ];
       const n = noise(p);
       const h = Math.max(0, Math.min(1, (p[2] - 0.3) / g + 0.2 * n));
-      let f = 1 - (o.strength ?? 0.5) * (1 - h) ** 1.6;
+      let f = 1 - (o.strength ?? 0.5) * dmath.pow(1 - h, 1.6);
       f *= 1 - 0.08 * (0.5 + 0.5 * n); // uneven fade / patch repaint
       if (o.soot && (m.normals[i * 3 + 2] ?? 0) > 0.3) f *= 1 - o.soot * (0.6 + 0.4 * n);
       for (let k = 0; k < 3; k++) colors[i * 3 + k] = (colors[i * 3 + k] ?? 0) * f;

@@ -13,6 +13,7 @@ import {
   CREATURE_MATERIALS,
   defineMaterial,
   defineModelCreature,
+  dmath,
   hex,
 } from '@developerz.ai/ts23d';
 import { type ClawOptions, clawMesh } from './claws.ts';
@@ -79,7 +80,8 @@ export function measured(a: Parameters<Check>[0]): {
   const tail = bones
     .filter((b) => /^tail_[1-9]\d*$/.test(b.name))
     .reduce(
-      (s, b) => s + Math.hypot(b.tail[0] - b.head[0], b.tail[1] - b.head[1], b.tail[2] - b.head[2]),
+      (s, b) =>
+        s + dmath.hypot(b.tail[0] - b.head[0], b.tail[1] - b.head[1], b.tail[2] - b.head[2]),
       0,
     );
   return { withers, headBody: nose - rump, tail };
@@ -126,6 +128,9 @@ export const bear_hybrid = defineModelCreature({
   },
   checks: [sourced],
   art: { focal: 'head', shape: 'friendly', grounded: true },
+  // The right side carries the claw scars and the rubbed flank (wear.ts); low enough to show
+  // the belly's fringe and the mud on the legs.
+  hero: { azDeg: -50, elDeg: 12 },
   model: (ctx) => {
     built = bearModel(ctx);
     return built;

@@ -15,6 +15,7 @@
 import {
   type BuildContext,
   defineAsset,
+  dmath,
   fbm,
   gradientNoise2,
   hex,
@@ -29,6 +30,7 @@ import {
   readWikidata,
   terrainFromDEM,
 } from '@developerz.ai/ts23d/data';
+import { banks, type CliffWear, cliffWear, pathDistance } from '../_lib/terrain/cliff.ts';
 import {
   conifers,
   d8Flow,
@@ -40,6 +42,7 @@ import {
   smoothPath,
   valleyPath,
 } from '../_lib/terrain/ground.ts';
+import { meander } from '../_lib/terrain/river.ts';
 import demJson from './data/dem-yosemite_valley.json';
 import halfDomeJson from './data/wikidata-Q925252.json';
 
@@ -64,7 +67,15 @@ const MEADOW = hex('#8f8a52');
 /** Water streaks (desert varnish and algae) on the granite below drainage lines. */
 const STREAK = hex('#4a4640');
 const STRATA = hex('#c4b8a8');
-const WATER = hex('#5a7a84');
+/** The Merced's clear green water over a dark granite-sand bed. */
+const WATER = hex('#2e5a52');
+/**
+ * Merced river: 30–50 m channel (USGS: ~40 m at Happy Isles in summer), its gravel and sand bars
+ * up to `bank` m wide (patchy: point bars, not a kerb), and meanders where the floor is flat
+ * (`swing` m either side, a bend every ~`wavelength` m across the meadows).
+ */
+const RIVER = { width: [32, 46] as [number, number], bank: 16, swing: 55, wavelength: 460 };
+const GRAVEL = hex('#a39b86');
 /** Cut-side wall height for the strata band, m (the tile's relief above the datum). */
 const WALL = 1800;
 
@@ -89,12 +100,36 @@ function build(ctx: BuildContext): void {
   const slope = (x: number, y: number): number => {
     const e = 12;
     return (
-      Math.hypot(t.height(x + e, y) - t.height(x - e, y), t.height(x, y + e) - t.height(x, y - e)) /
+      dmath.hypot(
+        t.height(x + e, y) - t.height(x - e, y),
+        t.height(x, y + e) - t.height(x, y - e),
+      ) /
       (2 * e)
     );
   };
   const mottle = fbm(gradientNoise2(ctx.rng.fork('meadow')), { scale: 160, octaves: 3 });
   const floor = DEM.min - DATUM + 25;
+  // The Merced: the least-cost path along the floor between the valley's lowest border points,
+  // swung into meanders where the floor is flat (none in the canyon above it), its width
+  // breathing ±30 % (pools and riffles) and its bars patchy.
+  const course = meander(smoothPath(valleyPath(g, 2000), ctx.pick([3, 5, 14])), {
+    amplitude: (x, y) => RIVER.swing * Math.max(0, Math.min(1, (floor + 10 - t.height(x, y)) / 20)),
+    wavelength: RIVER.wavelength,
+    step: ctx.pick([15, 25, 60]),
+  });
+  const fromRiver = pathDistance(course);
+  const riverNoise = fbm(gradientNoise2(ctx.rng.fork('river')), { scale: 220, octaves: 2 });
+  const breathe = (x: number, y: number): number => 1 + 0.3 * riverNoise(x, y);
+  const bar = (x: number, y: number): number =>
+    Math.max(0, Math.min(1, riverNoise(x * 1.9 + 400, y * 1.9 - 250) * 1.6 + 0.4));
+  // Granite: pale fresh exfoliation scars and darker weathered sheets in patches ~150 m across,
+  // and black water streaks (algae, desert varnish) down every steep face.
+  const wear: CliffWear = {
+    noise: fbm(gradientNoise2(ctx.rng.fork('granite')), { scale: 1, octaves: 2 }),
+    steep: [0.8, 1.3],
+    streak: { color: STREAK, width: 18, amount: 0.7 },
+    tone: { pale: hex('#cfcbc2'), dark: hex('#6e6a63'), size: 150 },
+  };
   const story = (x: number, y: number, z: number, c: Vec3): Vec3 => {
     const s = slope(x, y);
     const wet = mapAt(g, flow, x, y);
@@ -106,7 +141,10 @@ function build(ctx: BuildContext): void {
     // Dark streaks down the granite walls wherever water runs over them.
     const streak =
       Math.max(0, Math.min(1, (s - 0.9) / 0.5)) * Math.max(0, Math.min(1, (wet - 0.32) / 0.18));
-    return mixC(out, STREAK, 0.75 * streak);
+    out = cliffWear(mixC(out, STREAK, 0.75 * streak), x, y, z, s, 1, wear);
+    // Gravel and sand bars along the river, in patches (point bars), not a continuous kerb.
+    const half = ((RIVER.width[0] + RIVER.width[1]) / 4) * breathe(x, y);
+    return banks(out, fromRiver(x, y), half, 3 + RIVER.bank * bar(x, y), GRAVEL);
   };
   // Far: each vertex the mean of the ground it stands for (±0.75 of a 105 m cell), so walls,
   // talus, forest and meadow fade across the far cells instead of switching cell by cell. The
@@ -151,9 +189,7 @@ function build(ctx: BuildContext): void {
     ),
     { connect: { as: 'rest', why: 'impostor spires stand in the ground on their base ring' } },
   );
-  // The Merced: the least-cost path along the floor between the valley's lowest border points.
-  const course = smoothPath(valleyPath(g, 2000), ctx.pick([3, 5, 14]));
-  ctx.part('river', ribbon(course, [12, 24], t.height, 0.8, WATER), {
+  ctx.part('river', ribbon(course, RIVER.width, t.height, 0.8, WATER, breathe), {
     connect: { as: 'rest', why: 'the water surface lies in its bed, banks sunk into the ground' },
   });
 }
@@ -205,5 +241,9 @@ export const real_valley = defineAsset({
     ],
   },
   budget: { triangles: [150000, 42000, 11000] },
+  // From the west up the valley, as in "Half Dome with Eastern Yosemite Valley": Half Dome stands
+  // central with its sheared north-west face to the lens, Tenaya Canyon to its left, the Merced
+  // meandering through the meadows in the foreground.
+  hero: { azDeg: 200, elDeg: 30 },
   build,
 });

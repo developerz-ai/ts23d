@@ -18,7 +18,7 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    49882,
+    60666,
     19746,
     3440
   ],
@@ -85,34 +85,67 @@
   "measures": [],
   "sources": [],
   "weather": {
-    "rust": {
-      "target": 0.2556,
-      "actual": 0.2556,
-      "eligible": "convex-edges ; convex-edges & !up-facing",
-      "area": 1.6772,
+    "chips": {
+      "target": 0.4549,
+      "actual": 0.4549,
+      "eligible": "convex-edges",
+      "area": 4.4464,
       "by": {
+        "gallows_post_wear": {
+          "target": 0.3,
+          "actual": 0.3,
+          "area": 1.2521
+        },
+        "crate_wear": {
+          "target": 0.55,
+          "actual": 0.55,
+          "area": 2.4614
+        },
+        "beam_i_wear": {
+          "target": 0.4,
+          "actual": 0.4,
+          "area": 0.4114
+        },
+        "beam_c_wear": {
+          "target": 0.4,
+          "actual": 0.4,
+          "area": 0.3215
+        }
+      }
+    },
+    "rust": {
+      "target": 0.4348,
+      "actual": 0.4348,
+      "eligible": "ground-near ; convex-edges ; side-facing | convex-edges",
+      "area": 2.662,
+      "by": {
+        "gallows_post_wear": {
+          "target": 0.5,
+          "actual": 0.5,
+          "area": 0.233
+        },
         "drum_wear": {
           "target": 0.3,
           "actual": 0.3,
           "area": 1.1802
         },
         "beam_i_wear": {
-          "target": 0.15,
-          "actual": 0.15,
-          "area": 0.2584
+          "target": 0.55,
+          "actual": 0.55,
+          "area": 0.7915
         },
         "beam_c_wear": {
-          "target": 0.15,
-          "actual": 0.15,
-          "area": 0.2386
+          "target": 0.55,
+          "actual": 0.55,
+          "area": 0.4573
         }
       }
     },
     "mud": {
-      "target": 0.3373,
-      "actual": 0.3373,
+      "target": 0.5278,
+      "actual": 0.5278,
       "eligible": "ground-near & side-facing",
-      "area": 1.5609,
+      "area": 1.6417,
       "by": {
         "drum_wear": {
           "target": 0.3,
@@ -120,17 +153,17 @@
           "area": 0.3952
         },
         "crate_wear": {
-          "target": 0.35,
-          "actual": 0.35,
-          "area": 1.1657
+          "target": 0.6,
+          "actual": 0.6,
+          "area": 1.2465
         }
       }
     },
     "dust": {
-      "target": 0.3874,
-      "actual": 0.3874,
+      "target": 0.4542,
+      "actual": 0.4542,
       "eligible": "up-facing",
-      "area": 1.4116,
+      "area": 1.4792,
       "by": {
         "drum_wear": {
           "target": 0.4,
@@ -138,9 +171,14 @@
           "area": 0.2778
         },
         "crate_wear": {
-          "target": 0.4,
-          "actual": 0.4,
+          "target": 0.5,
+          "actual": 0.5,
           "area": 0.7769
+        },
+        "hose_wear": {
+          "target": 0.7,
+          "actual": 0.7,
+          "area": 0.0676
         },
         "beam_i_wear": {
           "target": 0.35,
@@ -153,12 +191,6 @@
           "area": 0.1236
         }
       }
-    },
-    "chips": {
-      "target": 0.25,
-      "actual": 0.25,
-      "eligible": "convex-edges",
-      "area": 3.3338
     }
   },
   "qa": {

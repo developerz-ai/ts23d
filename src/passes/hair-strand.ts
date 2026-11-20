@@ -4,7 +4,7 @@
 // segment lengths from the root → out of the skin and the collision solid) so push-outs and
 // clump pulls leave no kink and nothing penetrates.
 
-import { sub, normalize as unit, type Vec3 } from '../core/index.ts';
+import { dmath, sub, normalize as unit, type Vec3 } from '../core/index.ts';
 import { clear, gradient, mad } from './hair-roots.ts';
 
 type Field = (p: Vec3) => number;
@@ -19,7 +19,7 @@ export function settle(
   h: number,
 ): Vec3[] {
   const n = line.length - 1;
-  const lens = line.map((p, k) => (k === 0 ? 0 : Math.hypot(...sub(p, line[k - 1] ?? p))));
+  const lens = line.map((p, k) => (k === 0 ? 0 : dmath.norm(sub(p, line[k - 1] ?? p))));
   const pts = line.map((p): Vec3 => [p[0], p[1], p[2]]);
   for (let it = 0; it < 4; it++) {
     for (let k = 2; k < n; k++) {
@@ -38,7 +38,7 @@ export function settle(
       const len = lens[k] ?? 0;
       // A point that collapsed onto its parent keeps the parent segment's direction.
       const v = sub(p, a);
-      const dir = Math.hypot(v[0], v[1], v[2]) > len * 0.05 ? v : sub(a, pts[k - 2] ?? a);
+      const dir = dmath.hypot(v[0], v[1], v[2]) > len * 0.05 ? v : sub(a, pts[k - 2] ?? a);
       let q = mad(a, unit(dir), len);
       const d = f ? f(q) : floor;
       if (f && d < floor) q = mad(q, gradient(f, q, h), floor - d);
@@ -48,8 +48,11 @@ export function settle(
   return pts;
 }
 
-/** Pull a step toward the skin where the skin holds it up (support 1 facing up, 0.6 sideways,
- *  0 facing 35° below the horizon), keeping the step's length. */
+/** How far skin of normal `n` holds hair up: 1 facing up, 0.6 sideways, 0 from 35° under. The one
+ *  curve `lie` here and `hold`/`hang` (hair-hold.ts) read, so they agree on what is a shelf. */
+export const support = (n: Vec3): number => Math.min(1, Math.max(0, 0.6 + n[2]));
+
+/** Pull a step toward the skin where the skin holds it up (`support`), keeping its length. */
 export function lie(
   f: Field,
   p: Vec3,
@@ -60,10 +63,10 @@ export function lie(
   h: number,
 ): Vec3 {
   const n = gradient(f, q, h);
-  const support = Math.min(1, Math.max(0, 0.6 + n[2]));
+  const s = support(n);
   const over = f(q) - floor;
-  if (over <= 0 || support <= 0) return q;
-  return mad(p, unit(sub(mad(q, n, -over * hug * support), p)), step);
+  if (over <= 0 || s <= 0) return q;
+  return mad(p, unit(sub(mad(q, n, -over * hug * s), p)), step);
 }
 
 /** Bend a clump member's free length toward its leader's tip (s² falloff from the root). */
@@ -71,5 +74,5 @@ export function gather(line: readonly Vec3[], lead: readonly Vec3[], pull: numbe
   const n = line.length - 1;
   const a = line[n] ?? [0, 0, 0];
   const b = lead[n] ?? a;
-  return line.map((p, k) => (k === 0 ? p : mad(p, sub(b, a), pull * (k / n) ** 2)));
+  return line.map((p, k) => (k === 0 ? p : mad(p, sub(b, a), pull * dmath.pow(k / n, 2))));
 }

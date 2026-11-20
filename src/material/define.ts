@@ -14,7 +14,14 @@ import { NATURE_LIBRARY } from './nature.ts';
 import { HOUSE_STRIPS } from './paint/default-sheet.ts';
 import type { StripRecipe } from './paint/types.ts';
 import { rowsSampled } from './rows-sampled.ts';
-import { clearCustom, customIndex, homeSlot, pushCustom } from './slots.ts';
+import {
+  clearCustom,
+  customIndex,
+  homeSlot,
+  noteOutside,
+  outsideIds,
+  pushCustom,
+} from './slots.ts';
 import { creditOf, type TextureSource } from './texture-source.ts';
 import {
   CLASSIC_STRIPS,
@@ -118,8 +125,11 @@ export function resetMaterials(): void {
  */
 export function materialSnapshot(): () => void {
   const saved = [...defined.values()];
+  const outside = outsideIds();
   return () => {
     resetMaterials();
+    // Module-level meshes are not built again either: what they were mapped onto stays known.
+    for (const id of outside) noteOutside(id);
     // One material that cannot come back (its texture provider is gone) must not cost the rest.
     const lost: unknown[] = [];
     for (const def of saved) {

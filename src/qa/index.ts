@@ -104,6 +104,7 @@ export {
   VECTOR_RENDER,
   type VectorImage,
 } from './critique-vector.ts';
+export { WEAR_PATCHES, type WearMetrics, wearMetrics, wearOf } from './critique-wear.ts';
 export { deform, deformFindings, romPoses } from './deform.ts';
 export {
   type DepthView,

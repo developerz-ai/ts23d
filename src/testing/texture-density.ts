@@ -5,6 +5,7 @@
 //   it('texel density is even', () => assertTexelDensity(tank, [256, 2048]));
 
 import type { Asset, Mesh } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import { TRIM_SHEET_SIZE } from '../material/index.ts';
 import { compileLods, failOn, type LodOptions } from './compiled.ts';
 import type { Range } from './measure.ts';
@@ -21,7 +22,7 @@ export function texelDensity(m: Mesh, sheet = TRIM_SHEET_SIZE): number | null {
   let texels = 0;
   for (let t = 0; t < m.indices.length / 3; t++) {
     const [a, b, c] = corners(m, t);
-    const area = Math.hypot(...cross3(sub3(b, a), sub3(c, a))) / 2;
+    const area = dmath.norm(cross3(sub3(b, a), sub3(c, a))) / 2;
     const uv = (k: number, j: number): number => m.uvs[(m.indices[t * 3 + k] ?? 0) * 2 + j] ?? 0;
     const uvArea =
       Math.abs(

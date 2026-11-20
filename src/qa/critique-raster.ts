@@ -3,7 +3,7 @@
 // silhouettes) and keep, per pixel, the owning part, the global triangle id, the interpolated
 // shading normal and the world height. Pure CPU, deterministic (fixed order, strict depth test).
 
-import { type CompiledAsset, worldMeshes } from '../core/index.ts';
+import { type CompiledAsset, dmath, worldMeshes } from '../core/index.ts';
 
 type V3 = readonly [number, number, number];
 
@@ -131,7 +131,7 @@ export function partBuffer(asset: CompiledAsset, cam: ViewCamera): PartBuffer {
       nz += w * (m.normals[v * 3 + 2] ?? 0);
       wz += w * (m.positions[v * 3 + 2] ?? 0);
     }
-    const l = Math.hypot(nx, ny, nz) || 1;
+    const l = dmath.hypot(nx, ny, nz) || 1;
     normal[i * 3] = nx / l;
     normal[i * 3 + 1] = ny / l;
     normal[i * 3 + 2] = nz / l;
@@ -150,8 +150,8 @@ export function orthoCamera(
 ): ViewCamera {
   const az = (azDeg * Math.PI) / 180;
   const el = (elDeg * Math.PI) / 180;
-  const f: V3 = [-Math.cos(el) * Math.cos(az), -Math.cos(el) * Math.sin(az), -Math.sin(el)];
-  const rl = Math.hypot(f[1], f[0]) || 1;
+  const f: V3 = [-dmath.cos(el) * dmath.cos(az), -dmath.cos(el) * dmath.sin(az), -dmath.sin(el)];
+  const rl = dmath.hypot(f[1], f[0]) || 1;
   const r: V3 = [f[1] / rl, -f[0] / rl, 0];
   const u: V3 = [r[1] * f[2] - r[2] * f[1], r[2] * f[0] - r[0] * f[2], r[0] * f[1] - r[1] * f[0]];
   let s0 = Infinity;

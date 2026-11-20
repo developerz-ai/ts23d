@@ -5,6 +5,7 @@
 // clean edge loops round eyes and mouth and have no blob seams. Dossier: recipes/face_demo/README.md.
 
 import { type Asset, defineAsset } from '@developerz.ai/ts23d';
+import { portrait } from '../_lib/bust/hero.ts';
 import { buildFaceBust, type FaceBust } from '../_lib/face/bust.ts';
 import { faceCreases } from '../_lib/face/creases.ts';
 import { CHARACTERS } from './characters.ts';
@@ -12,7 +13,7 @@ import { CHARACTERS } from './characters.ts';
 /** Overall size as built (L × W × H, metres): an invented character's design spec. */
 const SIZE: Record<string, readonly [number, number, number]> = {
   human: [0.282, 0.461, 0.512],
-  orc: [0.316, 0.552, 0.565],
+  orc: [0.336, 0.552, 0.565],
   elf: [0.283, 0.443, 0.517],
   dwarf: [0.317, 0.519, 0.526],
   goblin: [0.259, 0.372, 0.443],
@@ -45,7 +46,7 @@ function faceBust(name: string, race: string, b: FaceBust, eyeSpacing: number): 
         },
       ],
     },
-    // The skin is the imported base at 26k / 5.6k / 1k (base-lod.ts); the rest is hair (a coarse
+    // The skin is the imported base at 25.3k / 5.4k / 0.9k (base-lod.ts); the rest is hair (a coarse
     // sculpted mass under strand cards: the dwarf's beard and the elf's long fall are the
     // heaviest), eyes, teeth and the plinth. Draws: skin, strand cards, corneas, the rest.
     budget: { triangles: [80000, 16500, 4400], draws: 4 },
@@ -54,9 +55,17 @@ function faceBust(name: string, race: string, b: FaceBust, eyeSpacing: number): 
       // Skin: the strip's own roughness (pores, oily crowns) under a soft grazing sheen, the
       // way light catches the down and the oil on a cheek. (No finish on the hair: the cutout
       // cards take none, and the mass under them is in their shade.)
-      skin: { sheen: { colour: '#8c7b72', roughness: 0.45 } },
+      // A thin oily coat over it: the second, tighter highlight of living skin (nose, brow,
+      // cheekbone, shoulder), without which the diffusion alone reads as wax.
+      skin: {
+        sheen: { colour: '#8c7b72', roughness: 0.45 },
+        clearcoat: 0.3,
+        clearcoatRoughness: 0.28,
+      },
     },
     art: { focal: 'skin' },
+    // A portrait: the bust fills the frame (the default orbit leaves the face a thumbnail).
+    hero: portrait(height, { at: 0.47, fill: 0.86 }),
     // Intended folds (lids, lips, ears, hair locks) from the same warped landmarks and lines.
     creases: faceCreases(b),
     build(ctx) {

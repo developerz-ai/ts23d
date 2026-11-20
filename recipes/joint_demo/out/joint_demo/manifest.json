@@ -17,9 +17,9 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    4826,
+    4718,
     1484,
-    296
+    300
   ],
   "drawCalls": [
     1,
@@ -81,25 +81,25 @@
     {
       "label": "forearm length",
       "spec": 0.26,
-      "measured": 0.25999999046325684,
+      "measured": 0.26,
       "source": "NASA MSIS"
     },
     {
       "label": "grip length",
       "spec": 0.14,
-      "measured": 0.14000004529953003,
+      "measured": 0.14,
       "source": "arming sword"
     },
     {
       "label": "blade length",
       "spec": 0.76,
-      "measured": 0.7599999904632568,
+      "measured": 0.76,
       "source": "arming sword"
     },
     {
       "label": "guard span",
       "spec": 0.18,
-      "measured": 0.18000000715255737,
+      "measured": 0.18,
       "source": "arming sword"
     }
   ],
@@ -109,14 +109,14 @@
   ],
   "weather": {
     "chips": {
-      "target": 0.4,
-      "actual": 0.4,
+      "target": 0.1165,
+      "actual": 0.1165,
       "eligible": "convex-edges",
       "area": 0.2153,
       "by": {
         "stand_base": {
-          "target": 0.4,
-          "actual": 0.4,
+          "target": 0,
+          "actual": 0,
           "area": 0.1526
         },
         "stand_post": {
@@ -135,7 +135,7 @@
     "rust": {
       "target": 0.3,
       "actual": 0.3,
-      "eligible": "below-fasteners | fasteners ; ground-near",
+      "eligible": "fasteners ; ground-near",
       "area": 0.0646,
       "by": {
         "stand_base": {
@@ -151,8 +151,8 @@
       }
     },
     "dust": {
-      "target": 0.95,
-      "actual": 0.95,
+      "target": 1,
+      "actual": 1,
       "eligible": "up-facing",
       "area": 0.1344
     }

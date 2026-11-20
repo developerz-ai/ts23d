@@ -73,6 +73,7 @@ export {
 } from './asset.ts';
 export * from './clip.ts';
 export * from './define-part.ts';
+export * as dmath from './dmath.ts';
 export {
   type ErrorCode,
   type ErrorDetails,
@@ -84,13 +85,25 @@ export { defineFamily, type Family, type FamilyDefinition, type Variant } from '
 export { formatCount } from './format-count.ts';
 export { HERO_RANGE, type HeroView, heroViewFault } from './hero-view.ts';
 export { type JointFit, type JointIssue, jointFit } from './joint-fit.ts';
+export {
+  GLTF_ROUNDING,
+  gltfText,
+  MANIFEST_ROUNDING,
+  type Rounding,
+  roundJson,
+  roundNumber,
+} from './json-round.ts';
 export * from './limb-pairs.ts';
 export * from './limit-tolerance.ts';
 export {
+  type MappedMaterial,
   type MaterialUse,
+  mappedOf,
+  materialOnRow,
   materialsInUse,
   noteMaterial,
   trackMaterials,
+  withMapped,
 } from './material-use.ts';
 export {
   type Bounds,

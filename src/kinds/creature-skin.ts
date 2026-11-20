@@ -5,6 +5,7 @@
 // `blade` presses a chain flat (fins, tail flukes, feather fans); `tube` samples radii on a path.
 
 import type { Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import type { Field, SculptEdit } from '../primitives/index.ts';
 import { arcT, v3 } from './creature-curve.ts';
 
@@ -23,7 +24,7 @@ export function roundCone(a: Vec3, b: Vec3, r1: number, r2: number): Field {
   // One sphere swallows the other: the bigger sphere is the shape.
   if (a2 <= 0 || l2 === 0) {
     const [c, r] = r1 >= r2 ? [a, r1] : [b, r2];
-    return (p) => Math.hypot(p[0] - c[0], p[1] - c[1], p[2] - c[2]) - r;
+    return (p) => dmath.hypot(p[0] - c[0], p[1] - c[1], p[2] - c[2]) - r;
   }
   return (p) => {
     const pax = p[0] - a[0];

@@ -6,6 +6,7 @@
 // any recipe in any set is measured the same way, without a render.
 
 import type { CompiledAsset, Mesh, Style, Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import { hex, TRIM_SHEET_SIZE } from '../material/index.ts';
 import { ciede2000, type Lab, labOfLinear, lightnessOf } from './coherence-colour.ts';
 
@@ -37,7 +38,7 @@ const cross = (a: Vec3, b: Vec3): Vec3 => [
   a[2] * b[0] - a[0] * b[2],
   a[0] * b[1] - a[1] * b[0],
 ];
-const len = (a: Vec3): number => Math.hypot(a[0], a[1], a[2]);
+const len = (a: Vec3): number => dmath.hypot(a[0], a[1], a[2]);
 
 function weightedMedian(pairs: [number, number][]): number {
   if (!pairs.length) return 0;
@@ -127,8 +128,8 @@ export function styleMetrics(asset: CompiledAsset, style: Style): StyleMetrics {
     if (t.uvArea > 0) density.push([Math.sqrt(t.uvArea / t.area) * TRIM_SHEET_SIZE, t.area]);
   }
   const chamfers: [number, number][] = [];
-  const cosLo = Math.cos((CREASE[1] * Math.PI) / 180);
-  const cosHi = Math.cos((CREASE[0] * Math.PI) / 180);
+  const cosLo = dmath.cos((CREASE[1] * Math.PI) / 180);
+  const cosHi = dmath.cos((CREASE[0] * Math.PI) / 180);
   const isChamfer = new Set<number>();
   for (const list of edges.values()) {
     if (list.length !== 2) continue;

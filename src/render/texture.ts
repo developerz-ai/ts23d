@@ -3,6 +3,7 @@
 // (rows never bleed). The mip level is chosen per triangle by the caller (texel ÷ pixel footprint).
 // Albedo mips are cutout-safe (alpha-mips.ts): thin strands stay strands instead of eroding away.
 
+import { dmath } from '../core/index.ts';
 import type { PaintedSheet } from '../material/index.ts';
 import { keepCoverage, weighted } from './alpha-mips.ts';
 
@@ -23,7 +24,7 @@ export interface SheetTextures {
 /** sRGB byte → linear. */
 export const SRGB = new Float32Array(256).map((_, i) => {
   const v = i / 255;
-  return v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+  return v <= 0.04045 ? v / 12.92 : dmath.pow((v + 0.055) / 1.055, 2.4);
 });
 
 /** RGBA8 → box-filtered float mips down to 4²; `cutout` keeps alpha-tested coverage. */

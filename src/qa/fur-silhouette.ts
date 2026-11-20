@@ -9,6 +9,7 @@ import {
   type Check,
   type CheckFinding,
   type CompiledAsset,
+  dmath,
   type Mesh,
   toWorld,
   type Vec3,
@@ -41,7 +42,7 @@ const N = 160;
 function basis(d: Vec3): [Vec3, Vec3] {
   const a: Vec3 = Math.abs(d[2]) > 0.9 ? [1, 0, 0] : [0, 0, 1];
   const u: Vec3 = [a[1] * d[2] - a[2] * d[1], a[2] * d[0] - a[0] * d[2], a[0] * d[1] - a[1] * d[0]];
-  const l = Math.hypot(u[0], u[1], u[2]);
+  const l = dmath.hypot(u[0], u[1], u[2]);
   const un: Vec3 = [u[0] / l, u[1] / l, u[2] / l];
   return [
     un,
@@ -93,7 +94,7 @@ function outline(mask: Uint8Array): number {
   const r = N / 2 / 1.3;
   for (let y = 0; y < N - 1; y++)
     for (let x = 0; x < N - 1; x++) {
-      if (Math.hypot(x + 0.5 - N / 2, y + 0.5 - N / 2) > r) continue;
+      if (dmath.hypot(x + 0.5 - N / 2, y + 0.5 - N / 2) > r) continue;
       const m = mask[y * N + x] ?? 0;
       if (m !== (mask[y * N + x + 1] ?? 0)) n++;
       if (m !== (mask[(y + 1) * N + x] ?? 0)) n++;
@@ -121,7 +122,7 @@ function worldTris(
         m.positions[v * 3 + 2] ?? 0,
       ]);
     });
-    if (ps.every((p) => Math.hypot(p[0] - c[0], p[1] - c[1], p[2] - c[2]) > reach)) continue;
+    if (ps.every((p) => dmath.hypot(p[0] - c[0], p[1] - c[1], p[2] - c[2]) > reach)) continue;
     for (const p of ps) out.push(p[0], p[1], p[2]);
   }
   return new Float64Array(out);

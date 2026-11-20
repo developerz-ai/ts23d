@@ -3,19 +3,24 @@
 ## Identity
 A teaching asset for `/audio` and `KHR_audio_emitter`, not a scene: each exhibit carries a sound
 synthesised from what it is made of and how big it is, written as `<clip>.wav` beside the GLB.
-- **Door in its frame** — a small painted-pine panel door (`exhibits.ts`: four raised, chamfered
-  fields a face, a brass lever, butt-hinge knuckles, bare wood where hands wear through the paint
-  around the lever and along the lock edge) in a stained oak frame; its leaf creaks while it swings
+- **Door in its frame** — a small painted-pine panel door (`exhibits.ts`: four raised, bevelled
+  fields a face, a shade lighter than the stiles, each in a dark sunk margin; LOD2 keeps them as
+  shadowed quads; a brass lever, butt-hinge knuckles, bare wood where hands wear through the paint
+  around the lever and along the lock edge, boot scuffs on the bottom rail) in a stained oak frame; its leaf creaks while it swings
   (`sound: { onMotion }` on the moving part, `sound.mechanism({ kind: 'creak' })`).
-- **Steel bell on a yoke** — a 300 mm cast-steel bell hung from an oak headstock on an axle, with a
-  clapper (rod and ball) inside, between two sturdy posts with a cross-tie; it swings and rings
-  (`sound.impact({ material: 'steel', shape: 'hollow', size: 0.3 })`, modal synthesis). Rust
-  blooms on the lip and runs down from the crown.
+- **Bronze bell on a yoke** — a 300 mm bronze bell (`bronze.ts`: brown-gold metal under matte
+  verdigris blotches) hung from an oak headstock with canon straps and iron gudgeons, turning on an
+  axle in plummer blocks between two painted-steel posts with a cross-tie; its clapper ball hangs
+  just below the lip. It swings and rings (`sound.impact({ material: 'brass', shape: 'hollow',
+  size: 0.3 })`, modal synthesis; brass is the table's nearest copper alloy). Verdigris runs wash
+  down from the crown and bloom along the lip.
 - **Wooden crate** — a battened pine crate (`exhibits.ts`: plank faces over a dark core, lid boards,
-  edge battens, nail heads; LOD2 keeps the four corner battens), with a positional knock for game
+  edge battens, nail heads, mud splashed up the lower boards; LOD2 keeps the corner battens and
+  the top and bottom battens as darker quads), with a positional knock for game
   code to fire (`ctx.emitter('crate_knock', { kind: 'sound', when: 'event' })`, pine plate modes).
 - **V10 engine block** — a 90° V10 long block on timber bearers with exhaust stubs and collectors,
-  intake runners and plug leads, an oil stain on the deck under it, idling in a seamless loop
+  intake runners and plug leads, an oil pool spreading from under it across the weathered deck
+  boards toward the front edge, idling in a seamless loop
   (`sound.engine({ cylinders: 10, rpm: 800, firingOrder })`, `when: 'always'` → autoPlay).
 
 ## Specs
@@ -31,7 +36,7 @@ synthesised from what it is made of and how big it is, written as `<clip>.wav` b
 ## Sound specs
 | Clip | Physics | Source |
 |---|---|---|
-| bell_strike | bell partials hum 0.5 · prime 1 · tierce 1.2 · quint 1.5 · nominal 2 …; steel E = 200 GPa, ρ = 7850 kg/m³ | Rossing, *The Science of Sound*; https://www.engineeringtoolbox.com/young-modulus-d_417.html |
+| bell_strike | bell partials hum 0.5 · prime 1 · tierce 1.2 · quint 1.5 · nominal 2 …; brass E = 100 GPa, ρ = 8500 kg/m³ (bell bronze ≈ 105 GPa, 8700 kg/m³) | Rossing, *The Science of Sound*; https://www.engineeringtoolbox.com/young-modulus-d_417.html |
 | crate_knock | free square plate modes (Leissa λ = 13.47, 19.6, 24.3 …), pine E ≈ 9 GPa, ρ ≈ 500 kg/m³, η ≈ 0.016 | Leissa, *Vibration of Plates* (NASA SP-160); https://www.engineeringtoolbox.com/wood-density-d_40.html |
 | door_creak | stick-slip: slip rate follows the swing, each slip rings the leaf's plate modes | Akay, "Acoustics of friction", JASA 111 (2002) |
 | engine_v10_idle | firing frequency rpm/60 × 10/2 = 66.7 Hz at 800 rpm; firing order 1-10-9-4-3-6-5-8-7-2; quarter-wave exhaust | https://en.wikipedia.org/wiki/Firing_order ; production V10 service data (secondary sources) |
@@ -42,9 +47,8 @@ synthesised from what it is made of and how big it is, written as `<clip>.wav` b
 engine).
 
 ## Budget
-Budget why: a display deck of four sound exhibits (door, bell, crate, engine), not one game prop; ≈ 5.3k / 2.4k / 550 (was 5.3k / 2.9k / 1.1k).
+Budget why: a display deck of four sound exhibits (door, bell, crate, engine), not one game prop; ≈ 5.1k / 2.45k / 546 (was 5.3k / 2.9k / 1.1k).
 
 ## Open questions
 - Production 8 L V10 idle speed: sources quote 650–900 rpm; 800 chosen.
-- Real cast-steel bells are rarer than bronze ones; steel was asked for (and rings a little higher
-  than bronze of the same size: √(E/ρ) 5050 vs ≈ 3600 m/s).
+- The acoustic table has no bell bronze; brass (√(E/ρ) ≈ 3430 m/s) stands in for it (≈ 3470 m/s).

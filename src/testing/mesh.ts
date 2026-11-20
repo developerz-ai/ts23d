@@ -5,6 +5,7 @@
 //   it('no inside-out faces', () => assertOutward(tank, { parts: ['hull', 'turret'] }));
 
 import type { Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import type { Finding } from '../qa/index.ts';
 import { failOn } from './compiled.ts';
 import { type MeshInput, type MeshScope, meshesOf } from './mesh-input.ts';
@@ -93,7 +94,7 @@ export function assertOutward(input: MeshInput, o: OutwardOptions = {}): number 
         const n = p.normal;
         const votes = TILTS.filter((d) => {
           const v: Vec3 = [n[0] + d[0], n[1] + d[1], n[2] + d[2]];
-          const l = Math.hypot(...v);
+          const l = dmath.norm(v);
           return p.grid.cast(p.centre, [v[0] / l, v[1] / l, v[2] / l], p.tri).length % 2 === 1;
         }).length;
         if (votes >= 2) {

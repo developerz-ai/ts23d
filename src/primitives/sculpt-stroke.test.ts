@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { createRng, type Mesh, Ts23dError, type Vec3 } from '../core/index.ts';
+import { createRng, dmath, type Mesh, Ts23dError, type Vec3 } from '../core/index.ts';
 import { openEdges } from './closed.ts';
 import { type SculptEdit, sculpt, sculptField } from './sculpt.ts';
 import {
@@ -20,7 +20,7 @@ const BOUNDS: [Vec3, Vec3] = [
 /** An arc on the ball's surface, tapered: the stroke every brush is tested on. */
 const ARC: Vec3[] = [0, 1, 2, 3, 4].map((i) => {
   const a = -0.6 + 0.3 * i;
-  return [0.1 * Math.cos(a), 0.1 * Math.sin(a), 0.01 * i] as Vec3;
+  return [0.1 * dmath.cos(a), 0.1 * dmath.sin(a), 0.01 * i] as Vec3;
 });
 const stroke = (brush: StrokeBrush, depth = 0.01): SculptStroke => ({
   stroke: brush,
@@ -46,8 +46,8 @@ const pushAt = (m: Mesh, q: Vec3, r: number): number => {
   let best = 0;
   for (let i = 0; i < m.positions.length; i += 3) {
     const p: Vec3 = [m.positions[i] ?? 0, m.positions[i + 1] ?? 0, m.positions[i + 2] ?? 0];
-    if (Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2]) > r) continue;
-    const d = Math.hypot(...p) - 0.1;
+    if (dmath.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2]) > r) continue;
+    const d = dmath.norm(p) - 0.1;
     if (Math.abs(d) > Math.abs(best)) best = d;
   }
   return best;
@@ -78,7 +78,7 @@ describe('sculpt strokes', () => {
     const rng = createRng(2);
     for (let i = 0; i < 2000; i++) {
       const p: Vec3 = [rng.range(-1, 1), rng.range(-1, 1), rng.range(-1, 1)];
-      if (Math.hypot(p[0] - s.c[0], p[1] - s.c[1], p[2] - s.c[2]) <= s.r) continue;
+      if (dmath.hypot(p[0] - s.c[0], p[1] - s.c[1], p[2] - s.c[2]) <= s.r) continue;
       const d = rng.range(-1, 1);
       expect(s.apply(p, d)).toBe(d);
     }

@@ -3,6 +3,7 @@
 // region — world-down is low V — plus soft vertical rain streaks). Rust also pushes `mix` toward
 // albedo2, which only shows on material strips that carry a colour pair.
 
+import { dmath } from '../../core/index.ts';
 import { type Canvas, noiseAt, smooth } from './canvas.ts';
 
 export function rustStreaks(c: Canvas, amount: number, seed: number): void {
@@ -33,7 +34,7 @@ export function grime(c: Canvas, amount: number, seed: number): void {
   const pv = c.metresV / c.h;
   for (let y = 0; y < c.h; y++) {
     const ym = (y + 0.5) * pv;
-    const low = (1 - ym / c.metresV) ** 2;
+    const low = dmath.pow(1 - ym / c.metresV, 2);
     for (let x = 0; x < c.w; x++) {
       const xm = (x + 0.5) * pu;
       const streak = smooth(0, 0.7, noiseAt(c, xm, ym, 0.05, 0.5, seed, 3));

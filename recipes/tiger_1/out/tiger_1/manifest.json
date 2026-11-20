@@ -19,9 +19,9 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    58578,
+    54878,
     16404,
-    1382
+    1440
   ],
   "drawCalls": [
     25,
@@ -202,37 +202,37 @@
     {
       "label": "hull length",
       "spec": 6.316,
-      "measured": 6.39783239364624,
+      "measured": 6.405332,
       "source": "https://en.wikipedia.org/wiki/Tiger_I"
     },
     {
       "label": "road wheel diameter",
       "spec": 0.8,
-      "measured": 0.8000000193715096,
+      "measured": 0.8,
       "source": "https://tankmuseum.org/tiger-wheels/"
     },
     {
       "label": "track width",
       "spec": 0.725,
-      "measured": 0.7250000238418579,
+      "measured": 0.725,
       "source": "https://tiger1.info/EN/RoadWheelSpacing.html"
     },
     {
       "label": "track centres",
       "spec": 2.835,
-      "measured": 2.834999918937683,
+      "measured": 2.835,
       "source": "3.56 m overall − 0.725 m track"
     },
     {
       "label": "8.8 cm KwK 36 L/56 barrel length",
       "spec": 4.928,
-      "measured": 4.927999943494797,
+      "measured": 4.928,
       "source": "56 calibres × 88 mm"
     },
     {
       "label": "wheel station pitch × 7",
       "spec": 3.605,
-      "measured": 3.605000138282776,
+      "measured": 3.605,
       "source": "https://tiger1.info/EN/RoadWheelSpacing.html"
     }
   ],

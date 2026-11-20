@@ -5,6 +5,7 @@ import { describe, expect, it } from 'bun:test';
 import {
   compile,
   createRng,
+  dmath,
   type Mesh,
   merge,
   swimFindings,
@@ -14,6 +15,7 @@ import { bodyChain, measureWave } from '../../src/qa/chain-wave.ts';
 import { clipPose, jointWorlds } from '../../src/qa/clip-pose.ts';
 import {
   arcX,
+  COLOUR,
   GILLS,
   gillField,
   L,
@@ -26,6 +28,7 @@ import {
   xOf,
 } from './anatomy.ts';
 import {
+  biteAt,
   copepods,
   DORSAL,
   dorsalCopepods,
@@ -38,7 +41,7 @@ import {
 import { CLIPS, CRUISE_HZ, great_white, PLAN } from './great_white.ts';
 import { REST_GAPE } from './jaws.ts';
 import { PORE_COUNT, SCAR_COUNT, scars } from './skin-detail.ts';
-import { faceDetail } from './trunk.ts';
+import { eyeMesh, faceDetail } from './trunk.ts';
 
 const lod0 = compile(great_white, { lod: 0 });
 const mesh = (name: string): Mesh => {
@@ -85,7 +88,7 @@ describe('sourced dimensions', () => {
 
   it('gives the pectoral its leading-edge length', () => {
     const [a, b] = [pectoralRoot(1, T_PECTORAL), pectoralTip(1)];
-    near(Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]), PECTORAL.margin, 0.05);
+    near(dmath.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]), PECTORAL.margin, 0.05);
   });
 
   it('cuts exactly five gill slits into the flank', () => {
@@ -116,6 +119,14 @@ describe('sourced dimensions', () => {
     expect(copepods(2, seats)).toEqual([]);
   });
 
+  it('carries a healed bite across a pectoral: a crescent of tooth scars, clear of the root', () => {
+    let peak = 0;
+    for (let u = 0; u <= 1; u += 0.01)
+      for (let c = 0; c <= 1; c += 0.01) peak = Math.max(peak, biteAt(u, c));
+    expect(peak).toBeGreaterThan(0.8);
+    expect(biteAt(0.02, 0.1)).toBeLessThan(0.05);
+  });
+
   it('cuts the notch into the generated trailing edge, not only into dorsalNotch', () => {
     // dorsalFin(0) is a plate loft: 27 rings at u = 0.992 i / 26, 19 vertices each (trailing
     // edge at j 0, leading edge at j 9), then two poles.
@@ -136,7 +147,7 @@ describe('sourced dimensions', () => {
       const lead = at(i, 9);
       const c: [number, number] = [lead[0] - t[0], lead[1] - t[1]];
       const p = at(i, 0);
-      return ((p[0] - t[0]) * c[0] + (p[1] - t[1]) * c[1]) / (c[0] ** 2 + c[1] ** 2);
+      return ((p[0] - t[0]) * c[0] + (p[1] - t[1]) * c[1]) / (c[0] * c[0] + c[1] * c[1]);
     };
     // dorsalNotch(0.572) ≈ 0.37 of the chord; the profile's own bend is a few hundredths.
     expect(pull(15, 12, 18)).toBeGreaterThan(0.25);
@@ -163,6 +174,20 @@ describe('close-up detail', () => {
     const c = merge(faceDetail(0, rng()));
     const d = merge(faceDetail(0, rng()));
     expect([...c.positions]).toEqual([...d.positions]);
+  });
+
+  it('rings the pupil with its pale band at LOD0 (no ring of the eye fell inside it)', () => {
+    const c = eyeMesh(1, 0).colors;
+    const [r, g, b] = COLOUR.pupilRing;
+    let ring = 0;
+    for (let i = 0; i < c.length; i += 3)
+      if (
+        Math.abs((c[i] ?? 0) - r) < 1e-6 &&
+        Math.abs((c[i + 1] ?? 0) - g) < 1e-6 &&
+        Math.abs((c[i + 2] ?? 0) - b) < 1e-6
+      )
+        ring++;
+    expect(ring).toBeGreaterThan(0);
   });
 
   it('shows the upper teeth below the lip with the mouth at rest', () => {
@@ -220,7 +245,7 @@ describe('bite', () => {
     const [jaw, head] = [w.get('jaw_lower_0'), w.get('spine_0')];
     if (!jaw || !head) throw new Error('missing joints');
     const q = jaw.rot;
-    return 2 * Math.atan2(Math.hypot(q[0], q[1], q[2]), Math.abs(q[3]));
+    return 2 * dmath.atan2(dmath.hypot(q[0], q[1], q[2]), Math.abs(q[3]));
   };
   const slide = (t: number): number => clipPose(c, t).translation.get('jaw_upper_0')?.[0] ?? 0;
 

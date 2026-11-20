@@ -1,7 +1,7 @@
 {
   "asset": "rts_barracks_damaged",
   "reviewer": "agent",
-  "overall": 7.6,
+  "overall": 7.9,
   "scores": {
     "silhouette": {
       "score": 8,
@@ -12,17 +12,16 @@
     },
     "proportions": {
       "score": 8,
-      "reason": "16.3 x 18.5 x 11.1 m; damage cells sit on the bay grid, debris blocks at true block size.",
+      "reason": "16.3 x 18.5 x 11.1 m; damage on the bay grid; the porch debris now mixes block and half-block pieces with planks.",
       "fixes": [
-        "scatter some debris at half and quarter block size so the pile is not one block scale"
+        "a few quarter-block chips round the pile"
       ]
     },
     "materials": {
-      "score": 7,
-      "reason": "Slates now read as lapped slate courses with per-slate value, the stone has block joints and damp at the foot, oak posts are brown, framed amber windows glow without blowing out. Exposed rafters read as oak. The bone stone is still a smooth uniform beige plastic between joints and the team red is one saturated value on every slate edge.",
+      "score": 8,
+      "reason": "Walls now read as dressed stone: per-block value jitter, darker joints, damp at the foot; slates are lapped courses with per-slate value, oak posts brown, windows amber without blowing out. Exposed rafters read as oak and the slates round the hole are charred dark.",
       "fixes": [
-        "stone strip with per-block value jitter (±8%) and a rougher face so walls read as dressed stone, not painted panels (walls.ts stack())",
-        "darken slate edges/undersides one step so each course shadows the next (roof.ts slate tone)"
+        "darken slate edges/undersides one step so each course shadows the next"
       ]
     },
     "detail": {
@@ -34,11 +33,11 @@
       ]
     },
     "wear": {
-      "score": 7,
-      "reason": "The damage tells a story (roof hole, shattered tower crown, debris at the door), with damp at the foot; but there is no scorch or soot round the holes, and the debris is clean.",
+      "score": 8,
+      "reason": "The roof hole is ringed with charred black slates, the tower crown is shattered, streaks run under the sills, a banner hangs frayed and a mixed-size debris pile lies at the porch: the damage and its history read at hero distance.",
       "fixes": [
-        "soot fans above the shell holes and round the roof hole",
-        "dust on the debris and the porch steps"
+        "soot fans above the side shell holes as well as the roof hole",
+        "dust on the debris and porch steps"
       ]
     },
     "lod": {
@@ -50,65 +49,14 @@
     },
     "technical": {
       "score": 8,
-      "reason": "QA PASS, tris 35.8k / 8.1k / 860, draws 3/3/3; one trim material + team slot, LOD2 well under 1k. Triangles mostly sit in the running-bond blocks and slates, where they show.",
+      "reason": "QA PASS: 33.7k / 8.0k / 852 tris, 3 / 3 / 3 draws; one trim material + team slot, LOD2 well under 1k. LOD0 down ~2k for the same read.",
       "fixes": [
-        "merge the per-block wall boxes into one course mesh per bay at LOD0 (shared inner faces removed) so the coursing costs fewer triangles"
+        "spend some of the LOD0 savings on the fixes above (quoins, string course, gravel) instead of more blocks"
       ]
     }
   },
   "renders": {
-    "hero.png": "02515f2198ef5b9fb1fdfccd8c1fb184efac05889be6eda33ce2b145510848f3",
-    "sheet.png": "be6287ad8ad4aa522dcbe44741545e8dd3872ba15bc6350a14fc9e0e86abb74f"
-  },
-  "metrics": {
-    "silhouette": [
-      {
-        "view": "front",
-        "iou": 0.962
-      },
-      {
-        "view": "side",
-        "iou": 0.953
-      },
-      {
-        "view": "3/4",
-        "iou": 0.965
-      }
-    ],
-    "focal": {
-      "peakPart": "window_frames",
-      "peak": [
-        347,
-        293
-      ],
-      "focalShare": 0,
-      "focalArea": 0,
-      "top": [
-        {
-          "part": "window_frames",
-          "share": 0.326
-        },
-        {
-          "part": "windows",
-          "share": 0.236
-        },
-        {
-          "part": "oculus",
-          "share": 0.11
-        }
-      ],
-      "declared": []
-    },
-    "rest": {
-      "share": 0.257,
-      "spread": 0.658,
-      "min": 0.25
-    },
-    "shape": {
-      "acuteShare": 0.278,
-      "straightShare": 0.686,
-      "taper": 0.852,
-      "shape": "stable"
-    }
+    "hero.png": "ad45ab756b0877a51d1b268d7b629f9f5a7808796e519c98a5b14b45b0e4b9bb",
+    "sheet.png": "97c19e7808a7e909d40000d13726402ffa3911491a2020c569c67573527a1dbd"
   }
 }

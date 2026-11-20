@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { createRng, Ts23dError, type Vec3 } from '../core/index.ts';
+import { createRng, dmath, Ts23dError, type Vec3 } from '../core/index.ts';
 import { sculptField } from './sculpt.ts';
 import { shapes } from './sdf-ops.ts';
 import { compileVdm } from './vdm.ts';
@@ -31,8 +31,8 @@ describe('vdm scatter', () => {
     expect(a.length).toBeGreaterThan(150);
     expect(JSON.stringify(run())).toBe(JSON.stringify(a));
     for (const q of a) {
-      expect(Math.abs(Math.hypot(...q.at) - R)).toBeLessThan(0.001);
-      const r = Math.hypot(...q.at);
+      expect(Math.abs(dmath.norm(q.at) - R)).toBeLessThan(0.001);
+      const r = dmath.norm(q.at);
       expect(
         q.normal[0] * (q.at[0] / r) + q.normal[1] * (q.at[1] / r) + q.normal[2] * (q.at[2] / r),
       ).toBeGreaterThan(0.999);
@@ -42,7 +42,7 @@ describe('vdm scatter', () => {
       for (let j = i + 1; j < a.length; j++) {
         const p = a[i]?.at ?? [0, 0, 0];
         const q = a[j]?.at ?? [0, 0, 0];
-        close = Math.min(close, Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2]));
+        close = Math.min(close, dmath.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2]));
       }
     expect(close).toBeGreaterThanOrEqual(0.8 * 0.12);
   });
@@ -85,7 +85,7 @@ describe('vdm scatter', () => {
       // from the anchor is larger than the same distance against it (root low, tip high).
       const c = compileVdm({ vdm: s, places: [q] }, 't', false);
       const f = swirl(q.at);
-      const fl = Math.hypot(...f);
+      const fl = dmath.norm(f);
       const step = (k: number): Vec3 => [
         q.at[0] + (f[0] / fl) * k,
         q.at[1] + (f[1] / fl) * k,

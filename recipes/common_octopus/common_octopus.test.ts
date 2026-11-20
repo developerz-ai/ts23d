@@ -6,6 +6,7 @@ import {
   type Clip,
   type CompiledAsset,
   compile,
+  dmath,
   quatRotate,
   runQa,
   type Vec3,
@@ -25,7 +26,7 @@ import {
   radiusOf,
 } from './anatomy.ts';
 import { common_octopus, OCTOPUS_PLAN } from './common_octopus.ts';
-import { scarAt } from './skin.ts';
+import { mantleTint, papillaColour, scarAt } from './skin.ts';
 
 const SLOW = 180_000;
 const lod0: CompiledAsset = compile(common_octopus, { lod: 0 });
@@ -50,7 +51,7 @@ function tip(c: Clip, bone: string, t: number): Vec3 {
   ]);
   return [w.head[0] + o[0], w.head[1] + o[1], w.head[2] + o[2]];
 }
-const gap = (a: Vec3, b: Vec3): number => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+const gap = (a: Vec3, b: Vec3): number => dmath.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
 const within = (v: number, want: number, tol: number): void => {
   expect(Math.abs(v - want) / want).toBeLessThanOrEqual(tol);
 };
@@ -112,7 +113,7 @@ describe('sourced anatomy', () => {
       const b = c?.links.at(-1)?.bone;
       const h = c?.links[0]?.bone.head;
       if (!b || !h) throw new Error(id);
-      return Math.hypot(b.tail[0] - h[0], b.tail[1] - h[1]) + b.tail[2];
+      return dmath.hypot(b.tail[0] - h[0], b.tail[1] - h[1]) + b.tail[2];
     });
     expect(new Set(ends.map((e) => e.toFixed(2))).size).toBe(ends.length);
   });
@@ -147,8 +148,28 @@ describe('surface detail', () => {
 });
 
 describe('mantle', () => {
+  it('colours papillae as raised skin, a shade off the mantle under them, not pale studs', () => {
+    const luma = (c: readonly number[]): number =>
+      0.2126 * (c[0] ?? 0) + 0.7152 * (c[1] ?? 0) + 0.0722 * (c[2] ?? 0);
+    for (const p of [
+      [-0.1, 0.05, 0.3],
+      [-0.15, -0.08, 0.32],
+      [-0.2, 0, 0.36],
+    ] as Vec3[]) {
+      const skin = mantleTint(
+        { u: 0.5, angle: 0, s: 0.1, radius: 0.1, chain: 'mantle', lod: 0, p, n: [0, 0, 1] },
+        [1, 1, 1],
+      );
+      expect(luma(papillaColour(p)) / luma(skin)).toBeLessThan(1.45);
+    }
+  });
+
+  it('is one surface with the head: no separate mantle part to leave a seam collar', () => {
+    expect(lod0.parts.some((p) => p.name === 'mantle')).toBe(false);
+  });
+
   it('lets the rib joints carry the mantle skin, so the pulse moves it', () => {
-    const m = lod0.parts.find((p) => p.name === 'mantle')?.mesh;
+    const m = lod0.parts.find((p) => p.name === 'body')?.mesh;
     const names = lod0.skeleton?.bones.map((b) => b.name) ?? [];
     let carried = 0;
     (m?.joints ?? []).forEach((j, i) => {

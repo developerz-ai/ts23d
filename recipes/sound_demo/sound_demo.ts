@@ -1,9 +1,10 @@
 // Sound demo: a display deck with four things that make a noise — a small panel door that creaks
-// as it swings, a 300 mm steel bell that rings as it swings, a pine crate with a knock for game
+// as it swings, a 300 mm bronze bell that rings as it swings, a pine crate with a knock for game
 // code to fire, and a V10 long block idling in a seamless loop. Every clip is synthesised from
 // material + size (/audio) and exported as KHR_audio_emitter + <clip>.wav. Each exhibit wears its
-// use (`weather()`): paint worn through at the door handle, a rusted bell lip, a scuffed crate, an
-// oil stain under the engine. Origin = deck floor centre; exhibits in a row along Y.
+// use: paint worn through round the door handle and boot scuffs on its bottom rail, verdigris runs
+// on the bell, mud splashed up the crate, an oil pool spreading from under the engine across a
+// weathered deck. Origin = deck floor centre; exhibits in a row along Y.
 // Numbers: ./README.md.
 
 import {
@@ -11,25 +12,32 @@ import {
   box,
   cylinder,
   defineAsset,
+  dmath,
   hex,
   lathe,
   type Mesh,
   merge,
   place,
   sound,
+  type Vec3,
   weather,
 } from '@developerz.ai/ts23d';
+import { BRONZE } from './bronze.ts';
 import { crateMesh, DOOR, doorFrame, doorLeaf } from './exhibits.ts';
 
-const DECK = hex('#9a8a74');
+const DECK = hex('#d8d2c6');
 const STEEL = hex('#5d6266');
-const BELL = hex('#b4aa98');
+const FRAME_PAINT = hex('#2e3b45');
+const BELL = hex('#e6dccd');
+const PATINA = hex('#3f7a62');
 const OAK = hex('#7a5a3a');
 const BLOCK = hex('#b9bcbe');
 const RED = hex('#9a2a22');
 const RUST = hex('#5a3a2a');
 const OIL = hex('#14110e');
+const SOAK = hex('#3a2c1e');
 const LEAD = hex('#1c1c1e');
+const IRON = hex('#2c2b29');
 const T = 0.1; // deck top
 
 // The clips: pure functions of their options, rendered once at module load.
@@ -40,8 +48,9 @@ const creak = sound.mechanism({
   duration: 2,
   name: 'door_creak',
 });
+// Bell bronze (E ≈ 105 GPa, ρ ≈ 8700 kg/m³) is nearest the table's brass.
 const bell = sound.impact({
-  material: 'steel',
+  material: 'brass',
   shape: 'hollow',
   size: 0.3,
   force: 0.8,
@@ -127,9 +136,30 @@ const BELL_FAR: readonly (readonly [number, number])[] = [
   [0.128, 0],
 ];
 
+/**
+ * Outdoor bronze: verdigris washed down from the crown in runs (every third gore, the rain's
+ * paths), pooled heaviest on the shoulder, and a green bloom along the lip; the struck sound-bow
+ * between the runs stays bronze.
+ */
+function patina(m: Mesh): Mesh {
+  const colors = new Float32Array(m.colors);
+  for (let v = 0; v < colors.length / 3; v++) {
+    const x = m.positions[v * 3] ?? 0;
+    const y = m.positions[v * 3 + 1] ?? 0;
+    const z = (m.positions[v * 3 + 2] ?? 0) + 0.275; // 0 at the lip, 0.25 at the crown
+    const run = dmath.pow(Math.max(0, dmath.cos(3 * dmath.atan2(y, x) + 0.4)), 3);
+    const shoulder = Math.min(1, Math.max(0, (z - 0.12) / 0.08));
+    const lip = Math.max(0, 1 - z / 0.03);
+    const t = Math.min(0.9, run * (0.35 + 0.55 * shoulder) + 0.35 * shoulder + 0.7 * lip);
+    for (let c = 0; c < 3; c++)
+      colors[v * 3 + c] = (colors[v * 3 + c] ?? 0) * (1 - t) + (PATINA[c] ?? 0) * t;
+  }
+  return { ...m, colors };
+}
+
 /** Two sturdy posts with a cross-tie; the bell hangs from a wooden headstock on an axle. */
 function bellStand(ctx: BuildContext, y: number): void {
-  const seg = ctx.pick([32, 14, 10]);
+  const seg = ctx.pick([24, 14, 10]);
   const bev = ctx.pick([0.004, 0.002, 0]);
   const pivot = 1.0;
   const posts: Mesh[] = [];
@@ -138,14 +168,14 @@ function bellStand(ctx: BuildContext, y: number): void {
       box({
         size: [0.28, 0.1, 0.04],
         at: [0, s * 0.25, 0],
-        color: STEEL,
+        color: FRAME_PAINT,
         strip: 'steel_painted',
         bevel: bev,
       }),
       box({
         size: [0.09, 0.09, pivot + 0.08],
         at: [0, s * 0.25, 0.04],
-        color: STEEL,
+        color: FRAME_PAINT,
         strip: 'steel_painted',
         bevel: bev,
       }),
@@ -153,7 +183,7 @@ function bellStand(ctx: BuildContext, y: number): void {
   }
   // Cross-tie between the posts, low, so the yoke cannot rack.
   posts.push(
-    box({ size: [0.06, 0.41, 0.06], at: [0, 0, 0.3], color: STEEL, strip: 'steel_painted' }),
+    box({ size: [0.06, 0.41, 0.06], at: [0, 0, 0.3], color: FRAME_PAINT, strip: 'steel_painted' }),
     // The axle is fixed in the bearing posts; the bell turns on it.
     cylinder({
       radius: 0.015,
@@ -165,6 +195,18 @@ function bellStand(ctx: BuildContext, y: number): void {
       at: [0, 0, pivot + 0.04],
     }),
   );
+  // Plummer blocks on the inner post faces carry the axle (LOD0/1).
+  if (ctx.lod < 2)
+    for (const s of [-1, 1])
+      posts.push(
+        box({
+          size: [0.12, 0.05, 0.08],
+          at: [0, s * 0.18, pivot],
+          color: STEEL,
+          strip: 'steel_painted',
+          bevel: ctx.lod === 0 ? bev : 0,
+        }),
+      );
   const yoke = weather(
     ctx,
     { belfry: merge(posts) },
@@ -176,49 +218,73 @@ function bellStand(ctx: BuildContext, y: number): void {
       under: hex('#9a9690'),
       effects: {
         chips: { where: 'convex-edges', amount: 0.2 },
-        rust: { where: 'ground-near', amount: 0.25, streaks: false },
+        rust: { where: 'ground-near', amount: 0.35, streaks: false, strength: 0.9 },
       },
     },
   );
   ctx.part('belfry', yoke.belfry, { at: [0, y, T] });
   const profile = ctx.lod === 2 ? BELL_FAR : BELL_PROFILE;
-  const shell = lathe({
-    profile: profile.map(([r, z]) => [r, z - 0.275] as const),
-    segments: seg,
-    color: BELL,
-    strip: 'iron_cast',
-  });
+  const shell = patina(
+    lathe({
+      profile: profile.map(([r, z]) => [r, z - 0.275] as const),
+      segments: seg,
+      color: BELL,
+      strip: BRONZE,
+    }),
+  );
   const swinging: Mesh[] = [
     shell,
     // Wooden headstock clamped on the axle, the bell's crown bolted under it.
-    box({ size: [0.08, 0.28, 0.07], at: [0, 0, -0.035], color: OAK, strip: 'oak', bevel: bev }),
+    box({ size: [0.08, 0.24, 0.07], at: [0, 0, -0.035], color: OAK, strip: 'oak', bevel: bev }),
   ];
+  if (ctx.lod === 0)
+    // Canon straps: two iron bars from the headstock down onto the crown, bolted through.
+    for (const s of [-1, 1])
+      swinging.push(
+        box({ size: [0.012, 0.03, 0.06], at: [0, s * 0.065, -0.085], color: IRON, strip: 'iron' }),
+      );
+  if (ctx.lod === 0)
+    // Gudgeons: the iron journals at each end of the headstock, turning in the plummer blocks.
+    for (const s of [-1, 1])
+      swinging.push(
+        cylinder({
+          radius: 0.028,
+          length: 0.03,
+          segments: 10,
+          axis: 'y',
+          color: IRON,
+          strip: 'iron',
+          at: [0, s * 0.135, 0],
+        }),
+      );
   if (ctx.lod < 2)
-    // Clapper: a rod from the crown staple and a ball inside the sound-bow.
+    // Clapper: a rod from the crown staple and a ball whose flight reaches the lip, so it shows
+    // under the mouth from a standing eye.
     swinging.push(
       cylinder({
-        radius: 0.006,
-        length: 0.17,
+        radius: 0.007,
+        length: 0.21,
         segments: 6,
-        color: STEEL,
+        color: IRON,
         strip: 'iron',
-        at: [0, 0, -0.11],
+        at: [0, 0, -0.155],
       }),
       lathe({
         profile: [
-          [0.001, -0.025],
-          [0.018, -0.018],
-          [0.025, 0],
-          [0.018, 0.018],
-          [0.001, 0.025],
+          [0.001, -0.028],
+          [0.02, -0.02],
+          [0.028, 0],
+          [0.02, 0.02],
+          [0.001, 0.028],
         ],
         segments: ctx.pick([12, 8, 6]),
-        color: STEEL,
+        color: IRON,
         strip: 'iron',
-        at: [0, 0, -0.215],
+        at: [0, 0, -0.285],
       }),
     );
-  // A steel bell outdoors: rust bloom on the lip and down from the crown bolts, dust on the crown.
+  // A bronze bell outdoors: verdigris bloom on the lip and running down from the crown bolts,
+  // dust on the crown.
   const aged = weather(
     ctx,
     { bell: merge(swinging) },
@@ -231,9 +297,11 @@ function bellStand(ctx: BuildContext, y: number): void {
       effects: {
         rust: {
           where: 'below-fasteners | convex-edges',
-          amount: 0.3,
+          amount: 0.35,
           streaks: true,
-          streakLength: 0.15,
+          streakLength: 0.2,
+          color: PATINA,
+          strength: 0.85,
         },
         dust: { where: 'up-facing', amount: 0.3 },
       },
@@ -381,31 +449,36 @@ function engine(ctx: BuildContext, y: number): void {
           );
   }
   ctx.part('engine_block', merge(block), { parent: 'engine' });
-  // Oil weeps from the sump onto the deck between the bearers: a flat stain, a few mm thick.
+  // Oil weeps from the sump onto the deck and has spread out past the bearers toward the
+  // front edge: a dark pool, a paler soaked halo round it and a drip trail, each a flat disc a
+  // millimetre above the last so they never z-fight.
+  const disc = (
+    r: number,
+    at: [number, number, number],
+    scale: [number, number, number],
+    color: Vec3,
+  ): Mesh =>
+    place(
+      lathe({
+        profile: [
+          [r, 0],
+          [0, 0],
+        ],
+        segments: ctx.pick([18, 10, 8]),
+        color,
+        strip: 'plain',
+      }),
+      { at, scale },
+    );
   ctx.part(
     'oil_stain',
     merge([
-      place(
-        cylinder({
-          radius: 0.2,
-          length: 0.002,
-          segments: ctx.pick([16, 10, 8]),
-          color: OIL,
-          strip: 'plain',
-        }),
-        {
-          at: [0.04, 0.02, 0],
-          scale: [1.3, 0.8, 1],
-        },
-      ),
+      disc(0.34, [0.12, 0.02, 0.001], [1.25, 0.95, 1], SOAK),
+      disc(0.24, [0.08, 0.0, 0.002], [1.3, 0.85, 1], OIL),
       ...(ctx.lod < 2
         ? [
-            place(
-              cylinder({ radius: 0.06, length: 0.002, segments: 8, color: OIL, strip: 'plain' }),
-              {
-                at: [0.3, -0.18, 0],
-              },
-            ),
+            disc(0.07, [0.46, -0.2, 0.002], [1, 0.8, 1], OIL),
+            disc(0.035, [0.55, -0.26, 0.002], [1, 1, 1], OIL),
           ]
         : []),
     ]),
@@ -425,7 +498,7 @@ export const sound_demo = defineAsset({
   name: 'sound_demo',
   kind: 'prop',
   description:
-    'Teaching asset for /audio: a creaking door, a ringing steel bell, a knocking crate and a V10 idle loop, as KHR_audio_emitter + WAV',
+    'Teaching asset for /audio: a creaking door, a ringing bronze bell, a knocking crate and a V10 idle loop, as KHR_audio_emitter + WAV',
   sources: [
     'https://en.wikipedia.org/wiki/Strike_tone',
     'https://www.engineeringtoolbox.com/young-modulus-d_417.html',
@@ -442,6 +515,9 @@ export const sound_demo = defineAsset({
     ],
   },
   tags: ['demo', 'sound'],
+  // A little higher than the default 18°, so the deck top (the oil spread, the scuffed boards)
+  // shows between the exhibits.
+  hero: { azDeg: -32, elDeg: 27 },
   budget: { triangles: [8000, 3000, 1200] },
   build(ctx) {
     ctx.part(
@@ -449,7 +525,7 @@ export const sound_demo = defineAsset({
       box({
         size: [1.2, 3.4, T],
         color: DECK,
-        strip: 'oak',
+        strip: 'wood_weathered',
         bevel: ctx.pick([0.01, 0.005, 0]),
       }),
     );
@@ -465,8 +541,9 @@ export const sound_demo = defineAsset({
         age: 0.5,
         resolution: [0, 0, 0],
         under: hex('#d7bb8e'),
+        // Far, the frame is flat quads whose every edge is convex: chips would bleach it.
         effects: {
-          chips: { where: 'convex-edges', amount: 0.2 },
+          ...(ctx.lod < 2 ? { chips: { where: 'convex-edges', amount: 0.2 } } : {}),
           dust: { where: 'up-facing', amount: 0.35 },
           mud: { where: 'ground-near & side-facing', amount: 0.3 },
         },

@@ -3,6 +3,7 @@
 // the horn rises out of bone instead of being stood on it.
 
 import type { Field, Mesh, SculptEdit, Vec3 } from '@developerz.ai/ts23d';
+import { dmath } from '@developerz.ai/ts23d';
 import { type HornOptions, horn, hornBand, hornNodes } from '../_lib/creature/horn.ts';
 import { tubeMesh } from '../_lib/creature/lowpoly.ts';
 import { pinKeratin } from './material.ts';
@@ -23,7 +24,7 @@ export interface HornSpec {
 }
 
 const unit = (v: Vec3): Vec3 => {
-  const l = Math.hypot(v[0], v[1], v[2]) || 1;
+  const l = dmath.hypot(v[0], v[1], v[2]) || 1;
   return [v[0] / l, v[1] / l, v[2] / l];
 };
 const along = (o: Vec3, d: Vec3, k: number): Vec3 => [
@@ -94,8 +95,8 @@ export function hornSpecs(ornament: Ornament, snout: number, lod: number): HornS
       return row(lod === 2 ? 2 : 4, (t) => {
         const a = 0.2 + t * 1.25;
         return {
-          base: [-0.02, 0.09 + Math.cos(a) * 0.035, 0.04 + Math.sin(a) * 0.09],
-          dir: [-0.75, Math.cos(a) * 0.72, Math.sin(a) * 0.62 + 0.1],
+          base: [-0.02, 0.09 + dmath.cos(a) * 0.035, 0.04 + dmath.sin(a) * 0.09],
+          dir: [-0.75, dmath.cos(a) * 0.72, dmath.sin(a) * 0.62 + 0.1],
           length: 0.3 - t * 0.05,
           radius: 0.026,
           axis: [0, 0, 1],
@@ -188,7 +189,7 @@ function flaredTube(o: HornOptions, surfaceAt: number, sides: number, keep = 1):
   const band = hornBand(o.colors);
   const flared = nodes.map((node, i) => {
     const d = ((i / n) * o.length - surfaceAt) / (o.radius * 1.5);
-    return { ...node, r: node.r * (1 + 0.7 * Math.exp(-d * d)) };
+    return { ...node, r: node.r * (1 + 0.7 * dmath.exp(-d * d)) };
   });
   // A chipped horn ends in a blunt break, the fresh keratin there paler than the weathered sheath.
   const last = Math.max(2, Math.round(n * keep));

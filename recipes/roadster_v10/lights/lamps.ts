@@ -6,7 +6,7 @@
 
 import type { BuildContext, Lod, Mesh, Vec3 } from '@developerz.ai/ts23d';
 import { lathe, merge } from '@developerz.ai/ts23d';
-import { cover, holeCentre, inward, outline, pocket } from '../body/openings.ts';
+import { cover, holeCentre, inward, pocket } from '../body/openings.ts';
 import { HEADLAMP, type Hole, holeG, holeUc, TAILLAMP } from '../body/panels.ts';
 
 const shrink = (h: Hole, k: number): Hole => ({ ...h, hs: h.hs * k, hu: h.hu * k });
@@ -97,41 +97,23 @@ export function lamps(S: Surface, lod: Lod): LampMeshes {
       const s = h.sc - h.hs * 0.88 + (h.hs * 1.76 * i) / 14;
       const g = holeG(h, s);
       const c = holeUc(h, s);
-      top.push(inward(S, s, c - h.hu * g * 0.82, 0.012));
+      // The daytime strip: a thin light guide a third of the way down the pocket, well inside the
+      // lens. (A halo round the lip, and a strip hard under it, both drew a white rim round the
+      // lamp in the beauty render.)
+      top.push(inward(S, s, c - h.hu * g * 0.5, 0.02));
       bot.push(inward(S, s, c + h.hu * g * 0.78, 0.014));
     }
-    // Halo light-guide round the lens: visible through any glass, reads at every distance.
-    // Set 8 mm into the pocket, 10 % inside its lip, on 20 rows near: on 10 rows 4 mm down its
-    // straight chords stood proud of the curved opening and the lit ring drew a hard white
-    // outline round the lamp.
-    const halo = outline(S, h, 0.008, lod === 0 ? 20 : 4, 0.9);
-    drl.push(
-      tube(
-        [...halo, halo[0] ?? [0, 0, 0]],
-        0.008,
-        C.lampGlow,
-        'plastic',
-        lod === 0 ? 6 : 4,
-        1,
-        false,
-      ),
-    );
-    // The light guide's two ends turn outward and plug into the pocket's top wall, which carries
-    // it (it used to hang 5 mm under the lens, touching nothing).
-    const plug = (i: number): Vec3 => {
+    // One lit line; two dark posts carry it off the pocket floor (plugged into the pocket's top
+    // wall, its glowing ends drew a bracket shape).
+    const guide = top.slice(3, 12);
+    drl.push(tube(guide, 0.005, C.lampGlow, 'plastic', lod === 0 ? 6 : 4, 1));
+    for (const i of [4, 10]) {
       const s = h.sc - h.hs * 0.88 + (h.hs * 1.76 * i) / 14;
-      return inward(S, s, holeUc(h, s) - h.hu * holeG(h, s) * 1.04, 0.014);
-    };
-    drl.push(
-      tube(
-        [plug(1), ...top.slice(2, 13), plug(13)],
-        0.006,
-        C.lampGlow,
-        'plastic',
-        lod === 0 ? 6 : 4,
-        1,
-      ),
-    );
+      const u = holeUc(h, s) - h.hu * holeG(h, s) * 0.5;
+      headBody.push(
+        rod(inward(S, s, u, 0.02), inward(S, s, u, 0.09), 0.004, C.black, 'plastic', 4),
+      );
+    }
     // Amber indicator segment along the bottom edge.
     headBody.push(tube(bot.slice(2, 12), 0.012, C.lensAmber, 'plastic', lod === 0 ? 6 : 4, 1));
     // Tail: black pocket, three LED bars, reverse light inboard.
@@ -176,8 +158,12 @@ export function lamps(S: Surface, lod: Lod): LampMeshes {
       ),
     );
   } else {
-    // LOD2: lens decals lifted off the skin (no pockets).
-    drl.push(cover(S, h, -0.002, C.lampGlow, 'plastic', 4));
+    // LOD2: lens decals lifted off the skin (no pockets): a smoked lens with the lit strip across
+    // its upper third, so the lamp reads as a lamp and not as a cream blob.
+    headBody.push(cover(S, h, -0.002, dim(C.lensClear, 0.22), 'plastic', 4));
+    drl.push(
+      cover(S, { ...h, hu: h.hu * 0.22, uc: h.uc - h.hu * 0.4 }, -0.004, C.lampGlow, 'plastic', 2),
+    );
     tailLed.push(cover(S, t, -0.002, C.tailGlow, 'plastic', 4));
   }
   const headLens =

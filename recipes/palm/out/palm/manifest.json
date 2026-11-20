@@ -18,9 +18,9 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    8892,
-    3416,
-    196
+    10668,
+    3992,
+    240
   ],
   "drawCalls": [
     2,
@@ -60,13 +60,13 @@
     {
       "label": "trunk diameter at breast height",
       "spec": 0.35,
-      "measured": 0.3499999940395355,
+      "measured": 0.354277,
       "source": "recipes/palm/README.md"
     },
     {
       "label": "total height",
       "spec": 20,
-      "measured": 20.00095485104248,
+      "measured": 20.000955,
       "source": "recipes/palm/README.md"
     }
   ],

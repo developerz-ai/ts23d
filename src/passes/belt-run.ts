@@ -6,6 +6,7 @@
 // (a belt that does not repeat every pitch) is reported and left where it is: `pose` writes its
 // rest positions and normals at every f.
 
+import { dmath } from '../core/index.ts';
 import { type BeltBody, type BeltMesh, beltBodies, VertexGrid } from './belt-bodies.ts';
 import { BeltLoop } from './belt-loop.ts';
 import { type BeltSeam, beltSeam, type SeamLimits } from './belt-seam.ts';
@@ -45,7 +46,7 @@ const cross = (a: V3, b: V3): V3 => [
   a[2] * b[0] - a[0] * b[2],
   a[0] * b[1] - a[1] * b[0],
 ];
-const wrap = (a: number): number => Math.atan2(Math.sin(a), Math.cos(a));
+const wrap = (a: number): number => dmath.atan2(dmath.sin(a), dmath.cos(a));
 const ZERO: V3 = [0, 0, 0];
 const median = (of: readonly { readonly off: V3 }[], k: 0 | 1 | 2): number =>
   of.map((w) => w.off[k]).sort((p, q) => p - q)[Math.floor(of.length / 2)] ?? 0;
@@ -97,14 +98,14 @@ export function beltRun(
   loop.frame(0, f6);
   const e2 = cross(b, [f6[3] ?? 0, f6[4] ?? 0, f6[5] ?? 0]);
   const e1 = cross(e2, b);
-  const angle = (r: V3): number => Math.atan2(dot(r, e2), dot(r, e1));
+  const angle = (r: V3): number => dmath.atan2(dot(r, e2), dot(r, e1));
   const heading = (s: number): number => {
     loop.frame(s, f6);
     return angle([f6[3] ?? 0, f6[4] ?? 0, f6[5] ?? 0]);
   };
   const turned = (r: V3, a: number): V3 => {
-    const c = Math.cos(a);
-    const s = Math.sin(a);
+    const c = dmath.cos(a);
+    const s = dmath.sin(a);
     const x = cross(b, r);
     const along = dot(b, r) * (1 - c);
     return [
@@ -139,7 +140,7 @@ export function beltRun(
     });
     return best;
   };
-  const flat = (r: V3): number => Math.sqrt(Math.max(0, dot(r, r) - dot(r, b) ** 2));
+  const flat = (r: V3): number => Math.sqrt(Math.max(0, dot(r, r) - dmath.pow(dot(r, b), 2)));
   // Rigid centres by cell of half a pitch: a body's twin is looked up among its neighbours there,
   // not among every body of the belt.
   const rigid = bound.filter((x) => x.body.rigid);
@@ -184,7 +185,7 @@ export function beltRun(
       .sort((p, q) => p - q)
       .flatMap((i) => {
         const y = rigid[i];
-        return y ? [{ y, d: Math.hypot(...sub(y.body.centre, lands)) }] : [];
+        return y ? [{ y, d: dmath.norm(sub(y.body.centre, lands)) }] : [];
       })
       .filter((c) => c.y !== x && c.d < half)
       .sort((p, q) => p.d - q.d)
@@ -216,13 +217,13 @@ export function beltRun(
         const twins = pair(centre);
         const shift = sub(centre, add(hub, turned(x.arm, a)));
         // A true twin lies one pitch on: a neighbour further off means the pitch is wrong.
-        if (Math.hypot(...shift) > reach || twins.some((w) => w.twin < 0)) return false;
+        if (dmath.norm(shift) > reach || twins.some((w) => w.twin < 0)) return false;
         x.turn = a;
         x.shift = shift;
         for (const w of twins) {
           fix.set(w.off, w.v * 3);
           twinOf[w.v] = w.twin;
-          residual = Math.max(residual, Math.hypot(...w.off));
+          residual = Math.max(residual, dmath.norm(w.off));
         }
         return true;
       });
@@ -243,7 +244,7 @@ export function beltRun(
       // A vertex eased onto its twin (a corner `onGround` pressed flat) lands on whichever rest
       // vertex is nearest, not always its own counterpart: its shape already differs, skip it.
       const exact = twinOf.map((t, v) =>
-        Math.hypot(fix[v * 3] ?? 0, fix[v * 3 + 1] ?? 0, fix[v * 3 + 2] ?? 0) > BEND ? -1 : t,
+        dmath.hypot(fix[v * 3] ?? 0, fix[v * 3 + 1] ?? 0, fix[v * 3 + 2] ?? 0) > BEND ? -1 : t,
       );
       return beltSeam({ positions: pos, normals: nrm, colors, uvs }, exact, grid, BEND, limits);
     },

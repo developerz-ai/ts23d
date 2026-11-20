@@ -10,6 +10,7 @@
 // params: brush 0 · cast 0 · spangle 0 · oxide 0 · paint 0 · paintRough 0.45 · chips 0.25
 //         crystal 0.03 (spangle size, m) · streaks 0 · relief 0 · film 0.0002 (m)
 
+import { dmath } from '../../core/index.ts';
 import { type Canvas, noiseAt, param, smooth } from './canvas.ts';
 import { rustStreaks } from './masks.ts';
 import { hash2 } from './noise.ts';
@@ -28,7 +29,7 @@ function crystal(xm: number, ym: number, size: number, cellsU: number, seed: num
       const cx = (((gx + i) % cellsU) + cellsU) % cellsU;
       const px = (gx + i + hash2(cx, gy + j, seed)) * size;
       const py = (gy + j + hash2(cx, gy + j, seed + 1)) * size;
-      const d = (xm - px) ** 2 + (ym - py) ** 2;
+      const d = dmath.pow(xm - px, 2) + dmath.pow(ym - py, 2);
       if (d < best) {
         best = d;
         id = hash2(cx, gy + j, seed + 2) * 1e6;

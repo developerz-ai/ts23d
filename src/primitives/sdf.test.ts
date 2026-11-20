@@ -2,6 +2,7 @@ import { describe, expect, it } from 'bun:test';
 import {
   boundsOf,
   createRng,
+  dmath,
   type Mesh,
   Ts23dError,
   triangleCount,
@@ -83,7 +84,7 @@ describe('sdf', () => {
       expect([mesher, windingFlips(m)]).toEqual([mesher, 0]);
       for (let i = 0; i < m.positions.length; i += 3) {
         const p = [m.positions[i] ?? 0, m.positions[i + 1] ?? 0, m.positions[i + 2] ?? 0];
-        const r = Math.hypot(...p);
+        const r = dmath.norm(p);
         expect(p.reduce((s, x, k) => s + (x / r) * (m.normals[i + k] ?? 0), 0)).toBeGreaterThan(
           0.98,
         );

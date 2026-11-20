@@ -4,7 +4,7 @@
 // single resulting loop with the shared robust ear clipper (triangulate.ts), whose ear test
 // ignores points that coincide with the ear's corners (bridge seams repeat positions).
 
-import { orient2d, type Vec2 } from '../core/index.ts';
+import { dmath, orient2d, type Vec2 } from '../core/index.ts';
 import { earClip, inTriangle } from './triangulate.ts';
 
 export { earClip } from './triangulate.ts';
@@ -115,7 +115,7 @@ function visible(loop: readonly Vec2[], m: Vec2): number {
     const next = loop[(i + 1) % loop.length] ?? q;
     if (cross(prev, q, next) > 0) continue;
     if (!inTriangle(q, m, hit, p) && !inTriangle(q, m, p, hit)) continue;
-    const a = Math.abs(Math.atan2(q[1] - m[1], q[0] - m[0]));
+    const a = Math.abs(dmath.atan2(q[1] - m[1], q[0] - m[0]));
     if (a < ang) {
       ang = a;
       pick = i;

@@ -7,6 +7,7 @@
 // textured`. Dossier: ./README.md · design: docs/idea/21-import.md · ADR 011.
 
 import { defineAsset } from '@developerz.ai/ts23d';
+import { portrait } from '../_lib/bust/hero.ts';
 import { buildImportDemo } from './build.ts';
 import { SCAN } from './source.ts';
 
@@ -21,10 +22,16 @@ export const import_demo = defineAsset({
     'recipes/import_demo/README.md (pipeline, licence, how to swap in a real CC0 scan)',
     `import: ${SCAN.author} — ${SCAN.license} — ${SCAN.url}`,
   ],
+  // A portrait: the bust fills the frame (the default orbit leaves the face a thumbnail).
+  hero: portrait(0.554, { at: 0.48, fill: 0.86 }),
   finishes: {
     cornea: { clearcoat: 1, clearcoatRoughness: 0.04 },
     // The scan's skin: the pore strip's own roughness under a soft grazing sheen.
-    skin: { sheen: { colour: '#8c7b72', roughness: 0.45 } },
+    skin: {
+      sheen: { colour: '#8c7b72', roughness: 0.45 },
+      clearcoat: 0.3,
+      clearcoatRoughness: 0.28,
+    },
   },
   // Inside the bust band (60k / 12k / 1.5k). Head 12k / 4k / 0.7k (source.ts) + torso and
   // outfit 12k / 4k / 0.6k + code eyes, collar, brooches, plinth. Draws: skin, corneas, the rest.

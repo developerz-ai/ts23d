@@ -2,6 +2,7 @@
 // extreme vertex onto every face of the box the crown falls short of, so LOD2 fills LOD0's bounds.
 
 import type { Bounds, Mesh, Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 
 type V3 = [number, number, number];
 const sub = (a: Vec3, b: Vec3): V3 => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
@@ -70,7 +71,7 @@ function renormal(m: Mesh, positions: Float32Array): Float32Array {
     }
   }
   for (const [i, s] of sum) {
-    const l = Math.hypot(...s);
+    const l = dmath.norm(s);
     if (l > 0) for (let k = 0; k < 3; k++) normals[i * 3 + k] = (s[k] ?? 0) / l;
   }
   return normals;

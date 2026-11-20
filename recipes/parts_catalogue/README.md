@@ -12,10 +12,18 @@ It is also the composition test: `flange` carries `hex_nut`, `pipe` carries `fla
 `panel_door` carries `hinge` (split across frame and leaf) and `door_handle`; the gallows post
 stands on a base plate held by four `hex_nut`s.
 
-Layout: the flat back-row pieces (door, window, ladder) stand turned 26° and each row is staggered
-in x, so every item reads in the FRONT and SIDE views, not edge-on or behind its neighbour.
-Wear (`weather()`): the drum rusts from its chimes and hoops, the crate is scuffed and dirty along
-the bottom, the stock beams have rust on their flange edges; all three carry a little dust.
+Layout: every standing item has its own slot along the plinth (back and mid rows interleaved:
+door, drum, window, cask, ladder, crate, gallows, chair, stool, railing, bench), so no two outlines
+overlap in the FRONT view (the window is set 0.9 m wide and the railing 0.9 m long to fit their
+slots); the flat back-row pieces (door, window, ladder) stand turned 26° so they
+also read in SIDE. Their labels lie in a lane in front of the mid row, alternating between two
+depths slot by slot, so no standing item hides one from the 3/4 hero. The floor pieces (pipe with a
+short riser, hose, wheel, beams) lie at the front, labelled at the plinth's front edge; the bench
+hardware is labelled on the bench.
+Wear (`weather()`): the drum rusts from its chimes and hoops; the crate's corners and edges are
+knocked through to bare wood, with dust on the lid and mud along the bottom; the stock beams have
+their paint gone at every edge and rust run over the webs; the gallows post is chipped with rust
+creeping up from its base plate; the hose carries a film of grey dust that takes the shine off.
 
 ## Specs
 A display piece, not a real object. Each part's own numbers and their sources are in its header
@@ -23,7 +31,7 @@ comment; the main ones:
 
 | Part / dimension | Value | Source |
 |---|---|---|
-| plinth (L × W × H) | 5.0 × 7.0 × 0.1 m | design |
+| plinth (L × W × H) | 5.0 × 10.0 × 0.1 m | design |
 | workbench top height / size | 0.90 m / 0.8 × 2.3 m | design (typical bench height) |
 | hex bolt, nut, washer | ISO 4017 / 4032 / 7089 tables (M8–M24) | `_parts/metric.ts` |
 | panel door leaf | 0.85 × 2.03 × 0.04 m in a 0.86 × 2.04 m opening | common internal door, 826 × 2040 × 40 mm |

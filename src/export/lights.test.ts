@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { type Part, type Socket, Ts23dError } from '../core/index.ts';
+import { dmath, type Part, type Socket, Ts23dError } from '../core/index.ts';
 import { DEFAULT_LAMP_LUMENS, DEFAULT_SUN_LUX, lightOf, MIN_CONE } from './lights.ts';
 
 const socket = (data: Socket['data']): Part =>
@@ -86,7 +86,7 @@ describe('light defaults are physical units (KHR_lights_punctual: cd / lux)', ()
   test('a default spot puts the same lumens into its cone: narrower cone, more candela', () => {
     const wide = intensity({ light: 'spot', cone: 60 });
     const narrow = intensity({ light: 'spot', cone: 15 });
-    const cone = (deg: number): number => 2 * Math.PI * (1 - Math.cos((deg * Math.PI) / 180));
+    const cone = (deg: number): number => 2 * Math.PI * (1 - dmath.cos((deg * Math.PI) / 180));
     expect(wide).toBeCloseTo(DEFAULT_LAMP_LUMENS / cone(60), 6);
     expect(narrow).toBeGreaterThan(wide);
   });

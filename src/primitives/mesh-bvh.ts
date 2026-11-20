@@ -6,6 +6,7 @@
 // gracefully over holes and flipped patches where ray parity fails. Median split, leaves ≤ 4.
 
 import type { Mesh, Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import { invalid } from './check.ts';
 import { pointTriangle, solidAngle } from './triangle-queries.ts';
 
@@ -87,7 +88,7 @@ export function triBvh(mesh: Mesh): TriBvh {
     AN[i * 3] = (y1 * z2 - z1 * y2) / 2;
     AN[i * 3 + 1] = (z1 * x2 - x1 * z2) / 2;
     AN[i * 3 + 2] = (x1 * y2 - y1 * x2) / 2;
-    AR[i] = Math.hypot(AN[i * 3] ?? 0, AN[i * 3 + 1] ?? 0, AN[i * 3 + 2] ?? 0);
+    AR[i] = dmath.hypot(AN[i * 3] ?? 0, AN[i * 3 + 1] ?? 0, AN[i * 3 + 2] ?? 0);
   }
   // Node arrays: box (6), dipole (normal·area 3, centroid 3, radius, area), children or leaf range.
   const box: number[] = [];
@@ -119,7 +120,7 @@ export function triBvh(mesh: Mesh): TriBvh {
       for (let v = 0; v < 9; v += 3)
         r = Math.max(
           r,
-          Math.hypot(
+          dmath.hypot(
             (tri[o + v] ?? 0) - (d[3] ?? 0),
             (tri[o + v + 1] ?? 0) - (d[4] ?? 0),
             (tri[o + v + 2] ?? 0) - (d[5] ?? 0),
@@ -145,7 +146,7 @@ export function triBvh(mesh: Mesh): TriBvh {
         : ((box[id * 6 + a] ?? 0) + (box[id * 6 + a + 3] ?? 0)) / 2,
     );
     const reach = (k: number): number =>
-      Math.hypot(
+      dmath.hypot(
         (dip[k * 8 + 3] ?? 0) - (c[0] ?? 0),
         (dip[k * 8 + 4] ?? 0) - (c[1] ?? 0),
         (dip[k * 8 + 5] ?? 0) - (c[2] ?? 0),
@@ -241,7 +242,8 @@ export function triBvh(mesh: Mesh): TriBvh {
       const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
       if (dist > BETA * (D[o + 6] ?? 0)) {
         w +=
-          ((D[o] ?? 0) * dx + (D[o + 1] ?? 0) * dy + (D[o + 2] ?? 0) * dz) / (FOUR_PI * dist ** 3);
+          ((D[o] ?? 0) * dx + (D[o + 1] ?? 0) * dy + (D[o + 2] ?? 0) * dz) /
+          (FOUR_PI * (dist * dist * dist));
         continue;
       }
       const a = K[id * 2] ?? 0;

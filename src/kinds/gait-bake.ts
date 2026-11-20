@@ -4,7 +4,7 @@
 // between the lift-off and touch-down solutions, the carpus folding and the hock flexing on the
 // way (`solveSwing`), so stance and swing meet without a pop. Then the looping root-motion clip.
 
-import { type Clip, type Quat, quatRotate, type Track, type Vec3 } from '../core/index.ts';
+import { type Clip, dmath, type Quat, quatRotate, type Track, type Vec3 } from '../core/index.ts';
 import {
   bodyPose,
   FEET,
@@ -64,7 +64,7 @@ function bodyAt(g: GaitSpec, t: GaitTiming, rig: QuadrupedRig, phi: number, hip:
     // The scapula turns with the leg's line (shoulder → toe) by SCAPULA_SHARE, protracting with
     // the toe ahead; it also slides on the thorax, so the shoulder joint keeps the glide path
     // (the slide cancels the arc's rise): the humerus is left the rest of the swing.
-    const line = Math.atan2(dx, leg0.head[2]);
+    const line = dmath.atan2(dx, leg0.head[2]);
     const lim = bone.limit;
     const deg = Math.max(
       lim?.min ?? -90,
@@ -139,13 +139,13 @@ export function gaitPose(
       const lo = stanceSolve(g, t, rig, foot, 1, hip);
       const td = stanceSolve(g, t, rig, foot, 0, hip);
       const M = (s: number): Vec3 => {
-        const c = s - Math.sin(TAU * s) / TAU;
+        const c = s - dmath.sin(TAU * s) / TAU;
         return [
           swingAlong(g, t, s, lo.M[0] ?? 0, td.M[0] ?? 0),
           (lo.M[1] ?? 0) + ((td.M[1] ?? 0) - (lo.M[1] ?? 0)) * c,
           (lo.M[2] ?? 0) +
             ((td.M[2] ?? 0) - (lo.M[2] ?? 0)) * c +
-            g.lift * hip * 0.5 * (1 - Math.cos(TAU * s)),
+            g.lift * hip * 0.5 * (1 - dmath.cos(TAU * s)),
         ];
       };
       const local = swingLeg(leg, A, parent, f.s, {

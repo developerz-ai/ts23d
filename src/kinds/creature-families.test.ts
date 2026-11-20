@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test';
+import { dmath } from '../core/index.ts';
 import { hex } from '../material/index.ts';
 import { creaturePlan } from './creature.ts';
 import {
@@ -82,7 +83,7 @@ describe('familyMember', () => {
   it('both members plan on the wolf skeleton (same landmarks, own numbers)', () => {
     for (const m of [FOX, BEAR]) {
       const { bones } = creaturePlan(familyMember(WOLF, m));
-      const len = Math.hypot(
+      const len = dmath.hypot(
         bones.nose[0] - bones.tailRoot[0],
         bones.nose[1] - bones.tailRoot[1],
         bones.nose[2] - bones.tailRoot[2],

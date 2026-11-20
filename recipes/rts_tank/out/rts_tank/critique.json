@@ -1,7 +1,7 @@
 {
   "asset": "rts_tank",
   "reviewer": "agent",
-  "overall": 6.9,
+  "overall": 7.4,
   "scores": {
     "silhouette": {
       "score": 8,
@@ -18,12 +18,11 @@
       ]
     },
     "materials": {
-      "score": 6,
-      "reason": "Chips are smaller and fewer, but on the large bone plates they still read as wood-grain dashes; the glowing headlamps are flat yellow octagons that read as stickers, and the rubber tyres look like wood.",
+      "score": 7,
+      "reason": "The wood-grain dash chips are gone, road-wheel tyres are dark rubber round brass hubs, headlamps have dark rims with a contained amber glow; the large bone plates are now clean flat paint with a dust gradient but no metal break-up.",
       "fixes": [
-        "round, edge-biased chips on a steel_painted variant",
-        "lamp lenses with a rim and a lower glow strength",
-        "dark rubber on the road-wheel tyres"
+        "a few round, edge-biased chips on the plate edges (steel showing)",
+        "subtle roughness variation across the big bone plates"
       ]
     },
     "detail": {
@@ -35,92 +34,29 @@
       ]
     },
     "wear": {
-      "score": 6,
-      "reason": "Rusty mud on the tracks and a dusty lower hull; the uniform dash chips still read as a texture rather than history, and there is no exhaust soot.",
+      "score": 7,
+      "reason": "Heavy rusty mud on the tracks and lower hull sides fading up the plates reads in hero and SIDE; no exhaust soot on the rear plate.",
       "fixes": [
-        "soot streaks on the rear plate",
-        "heavier mud on the lower hull sides"
+        "soot streaks on the rear plate"
       ]
     },
     "lod": {
-      "score": 6,
-      "reason": "lods.png: LOD2 (598 tris) replaces the running gear with a solid belt slab, the road wheels vanish and the lamps go, so the side outline changes at RTS zoom. This was asked last round and not done.",
+      "score": 8,
+      "reason": "FAR LOD2 now shows six road-wheel discs per side inside an open track, turret, team roof and gun: the side outline holds at the switch.",
       "fixes": [
-        "keep 6 road-wheel discs per side inside an open belt at LOD2 (running.ts)"
+        "keep the headlamp dots at LOD2"
       ]
     },
     "technical": {
       "score": 7,
-      "reason": "QA PASS: 32.1k / 8.3k / 598 tris; 23 / 23 / 7 draws at LOD0/1 is heavy for an RTS unit.",
+      "reason": "QA PASS: 35.2k / 9.2k / 590 tris, 23 / 9 / 7 draws. LOD1 merged to 9 draws, but LOD0 still costs 23 draws for an RTS unit.",
       "fixes": [
-        "merge the static road-wheel pivots into one draw per side"
+        "merge the static road-wheel pivots into one draw per side at LOD0 as well"
       ]
     }
   },
   "renders": {
-    "hero.png": "84d1b2e1b1f6f1402857222820940dcd9b01d2083bc944180374e8823b448aef",
-    "sheet.png": "3568db54679e607299bf137fc9878f392827f39f82e96b24c2fda6e20cb2acaa",
-    "raking.png": "97910111d394075d432bacdc94d36dff6d1056b287d1de1e3b6b8b267c4f2684",
-    "raking_detail.png": "49217a4782079c2e33b9810e78bafde1fefcc4c999c4335b129a4e648c8b759a",
-    "lods.png": "91d482bc228c997efab064569b3b2d7b2c1e772255fd9ca326ba77f240cc1469",
-    "silhouette.png": "38677ab3b1294b4854e47dd0b98c39567cd9d54f5a880e26e7cd45333d867e07",
-    "value.png": "6eddc9a26d6e5a0e9e5d7c0e1c7ea06eb8394b4baa1589234979d5372e0e8b5e",
-    "detail.png": "3ecce0575fdeca5e51e9b69c4543fe94a122dda488b32f9f70bcf9a631dba64a"
-  },
-  "metrics": {
-    "silhouette": [
-      {
-        "view": "front",
-        "iou": 0.946
-      },
-      {
-        "view": "side",
-        "iou": 0.948
-      },
-      {
-        "view": "3/4",
-        "iou": 0.981
-      }
-    ],
-    "focal": {
-      "peakPart": "gun_barrel",
-      "peak": [
-        516,
-        227
-      ],
-      "focalShare": 0.881,
-      "focalArea": 0.706,
-      "top": [
-        {
-          "part": "hull_dress",
-          "share": 0.371
-        },
-        {
-          "part": "hull",
-          "share": 0.273
-        },
-        {
-          "part": "gun_barrel",
-          "share": 0.116
-        }
-      ],
-      "declared": [
-        "hull",
-        "gun_barrel",
-        "turret"
-      ]
-    },
-    "rest": {
-      "share": 0.573,
-      "spread": 0.799,
-      "min": 0.25
-    },
-    "shape": {
-      "acuteShare": 0.058,
-      "straightShare": 0.394,
-      "taper": 0.829,
-      "shape": "friendly",
-      "declared": "friendly"
-    }
+    "hero.png": "b86efb29c9f4c43bf71a5fe03f7b6efffa1046701c3a6218921152b7f41aeb6f",
+    "sheet.png": "1e02b034468975d773559e4672892692ad1c14c4017a186ac1d412644c923f9c"
   }
 }

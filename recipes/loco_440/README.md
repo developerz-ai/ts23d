@@ -30,7 +30,7 @@ over the Whyte arrangement: frame, boiler and rods are laid out from `'4-4-0'`.
 ## Livery → material library
 | Surface | Strip | Vertex colour | Evidence |
 |---|---|---|---|
-| boiler jacket (Russia iron) | `chrome` | `#6a717c` (dark blue-grey) | planished iron: dark, glossy, horizon highlights in every photo |
+| boiler jacket (Russia iron) | `steel_painted` under the `enamel` clear coat | `#5d6a7c` (blue-grey) | planished iron, oiled and lacquered: glossy, horizon highlights in every photo |
 | smokebox, stack | `iron_cast` | `#5a5a5c` + soot grime | graphite-black, sooted lip |
 | domes, bell, whistle, bands, cylinders, steam chests, handrails, lining, lettering | `brass` | `#f2cf86` (warm tint) | polished brass; tinted because the measured albedo reads cream in the studio render |
 | cab, pilot, headlamp case, tender frame | `wood_painted` | Caledonian blue `#2a44b8` | wooden cab and pilot slats |
@@ -63,12 +63,22 @@ over the Whyte arrangement: frame, boiler and rods are laid out from `'4-4-0'`.
 ## Modules
 `loco_440.ts` (family, specs, checks) · `shared.ts` (constants, livery → strips, layout, helpers) ·
 `wheels.ts` · `running-gear.ts` · `boiler.ts` · `fittings.ts` (headlamp, boards, pilot, pipework) ·
-`cab.ts` · `tender.ts` · `track.ts` · `wear.ts` (the engine in steam: soot falling back from the stack onto the
-smokebox, boiler crown, cab roof and tender; oil flung from hubs, crank pins and rods; track dust
-rising onto the running gear and pilot; lime runs down the jacket; brass kept bright. Vertex
-colour, applied to every engine and tender part on its way into the build, so LOD2 keeps it).
-Finishes: `enamel` (varnished coach paint, clearcoat with orange peel) on cab, tender, pilot,
-headlamp and domes; `russia_iron` (planished metal) on the jacket.
+`cab.ts` · `tender.ts` (tank, mitred flared coping, trucks) · `track.ts` · `wear.ts` (the engine
+in steam: soot falling back from the stack onto the smokebox, headlamp, boiler crown, cab roof and
+tender; oil flung from hubs, crank pins and rods; track dust rising onto the running gear, trucks
+and pilot; lime runs a hand wide down the jacket; water slopped down the tank sides; brass kept
+bright. Vertex colour, applied to every engine and tender part on its way into the build, so LOD2
+keeps it) · `soot.ts` (`boiler_soot`, `cab_soot`: matt soot blankets 2 mm over the lacquered
+jacket crown and the cab roof at LOD0 and LOD1; a clear coat mirrors the sky however dark the
+paint under it is, so the soot that must read is laid on without a finish).
+Finish: `enamel` (varnished coach paint and the lacquered Russia-iron jacket: full clear coat,
+roughness 0.1) on cab, tender, pilot, headlamp, domes and jacket.
+Draws: 19 / 19 / 12. One per moving pivot (eight wheelsets, four rods, two crossheads), the
+track, the tender (all of it under the `enamel` finish) and three on the engine body: opaque,
+glass (cab windows, headlamp lens) and `enamel`. The jacket shares the `enamel` layer (it had a
+`russia_iron` finish and a draw of its own).
+Hero camera: `hero: { azDeg: -52, elDeg: 13 }`, lower and more side-on than the default, so the
+17 m train fills the frame.
 
 ## Open questions
 - Overall length, width and height are photo estimates (±5% gate), not published figures.

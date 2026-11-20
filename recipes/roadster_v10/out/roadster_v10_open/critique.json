@@ -1,7 +1,7 @@
 {
   "asset": "roadster_v10_open",
   "reviewer": "agent",
-  "overall": 7.1,
+  "overall": 7.4,
   "scores": {
     "silhouette": {
       "score": 8,
@@ -18,10 +18,9 @@
       ]
     },
     "materials": {
-      "score": 7,
-      "reason": "Clearcoat red, black bay, chrome strut brace and side pipes with heat tint; the headlamp glow is thinner than before but still draws a white rim round the top and outer edge of each lamp in hero.png.",
+      "score": 8,
+      "reason": "Clearcoat red, black bay, chrome strut brace and side pipes; the headlamp glow is now a thin DRL strip; the exhaust headers show no heat tint.",
       "fixes": [
-        "soften the DRL glow",
         "heat discolouration on the exhaust headers in the bay"
       ]
     },
@@ -34,29 +33,29 @@
     },
     "wear": {
       "score": 6,
-      "reason": "Sill chips and heat tint on the side pipes; the bay is clean.",
+      "reason": "Chips cluster behind the front wheel and now fleck the lower nose; the engine bay has only a few dark specks on the intake plenum and is otherwise clean in hero.png.",
       "fixes": [
         "grime and oil in the engine bay",
         "brake dust on the wheels"
       ]
     },
     "lod": {
-      "score": 7,
-      "reason": "FAR LOD2 keeps the open panels and colours; wheels lose tyre/rim contrast.",
+      "score": 8,
+      "reason": "FAR LOD2 keeps the open panels and colours, and the tyres keep a dark ring round the rim.",
       "fixes": [
-        "keep a black tyre ring separate from the rim at LOD2"
+        "keep the V10 cam covers as a block at LOD2"
       ]
     },
     "technical": {
       "score": 7,
-      "reason": "155k / 28.8k / 4.5k triangles (from 909k), 30 draws.",
+      "reason": "154k / 28.3k / 4.5k triangles, 24 draws.",
       "fixes": [
         "merge static body draws"
       ]
     }
   },
   "renders": {
-    "hero.png": "0ffa00e37037dc6a9f551a80cdd694ee8440f4329c0bd0895eccea54fcaee572",
-    "sheet.png": "389ec5ebce6b0f9fb0cd671ebb78a227afa86fb56b5b3705d67cd9d6c8666a6f"
+    "hero.png": "3151a1a2f119b16ea723e2dee9711387a70ecc450a3c40bbdd46babca7a4c720",
+    "sheet.png": "bab01fd75fbcfa0977766690697ef98dfe1ffb4ac5ac4ddca4ca2dc3c1cac103"
   }
 }

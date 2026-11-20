@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test';
+import { dmath } from '../core/index.ts';
 import { fillHoles, iou, type Mask, taper } from './critique-mask.ts';
 import { contour, shapeLanguageOf, shapeStats, simplify } from './critique-shape.ts';
 
@@ -27,11 +28,11 @@ const star = (n: number, r0: number, r1: number) =>
     Array.from({ length: n * 2 }, (_, k) => {
       const a = (k * Math.PI) / n - Math.PI / 2;
       const r = k % 2 ? r1 : r0;
-      return [0.5 + r * Math.cos(a), 0.5 + r * Math.sin(a)] as const;
+      return [0.5 + r * dmath.cos(a), 0.5 + r * dmath.sin(a)] as const;
     }),
   );
 const square = draw((x, y) => x > 0.2 && x < 0.8 && y > 0.2 && y < 0.8);
-const disk = draw((x, y) => Math.hypot(x - 0.5, y - 0.5) < 0.35);
+const disk = draw((x, y) => dmath.hypot(x - 0.5, y - 0.5) < 0.35);
 const spiky = draw(star(6, 0.45, 0.15));
 const pyramid = draw(
   inPoly([
@@ -99,7 +100,7 @@ describe('masks', () => {
   });
   it('fills enclosed holes but not open bays', () => {
     const ring = draw((x, y) => {
-      const r = Math.hypot(x - 0.5, y - 0.5);
+      const r = dmath.hypot(x - 0.5, y - 0.5);
       return r < 0.4 && r > 0.2;
     });
     const filled = fillHoles(ring);

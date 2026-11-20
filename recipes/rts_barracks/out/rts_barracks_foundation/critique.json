@@ -1,28 +1,28 @@
 {
   "asset": "rts_barracks_foundation",
   "reviewer": "agent",
-  "overall": 7,
+  "overall": 7.6,
   "scores": {
     "silhouette": {
-      "score": 7,
-      "reason": "Slab with two ring footings, draped team tarps over block piles, a standing banner, setting-out posts with string lines, a timber stack, mortar tub and wheelbarrow: reads as a building site. From FRONT/SIDE it is still a flat strip with three red boxes; the vertical interest is thin.",
+      "score": 8,
+      "reason": "Slab with ring footings, a sheer-legs hoist over one footing, tarped block piles, standing banner, setting-out posts with lines, timber stack and barrow: the sheer-legs now give FRONT and SIDE a strong vertical, so the build site reads from every view.",
       "fixes": [
-        "a gin-pole or sheer-legs over one footing (2.5-3 m) so the stage has a strong vertical from every view"
+        "a second, lower vertical (stacked pallets or a ladder) on the opposite corner to balance the FRONT outline"
       ]
     },
     "proportions": {
       "score": 8,
-      "reason": "17.1 x 19.0 x 3.5 m; block piles, timber stack (~0.8 m) and footings at true scale beside 1.8 m units.",
+      "reason": "17.2 x 19.4 x 3.6 m; piles, timber stack and footings at true scale; the team chevron is now laid as individual painted flags, smaller in TOP.",
       "fixes": [
-        "the 10 m team triangle painted on the slab dominates the top view: halve it or make it a chalked outline"
+        "shrink the chevron another ~30% so it reads as a site mark, not a helipad"
       ]
     },
     "materials": {
-      "score": 6,
-      "reason": "Timber stack is brown oak now, tarps are team red cloth, footings bone stone. The slab is a blotchy grey/black camouflage pattern (sheet TOP) that reads neither as concrete nor flagstone, and the giant team triangle is a flat saturated decal with no paint texture.",
+      "score": 7,
+      "reason": "The floor is now a flagstone strip with readable joints and per-flag value (sheet TOP), no longer the camouflage slab. The chevron is broken up flag by flag. Tarps are still flat saturated red boxes with a white stripe, not cloth.",
       "fixes": [
-        "slab on a flagstone or rammed-earth strip with readable joints at true scale (site.ts)",
-        "team triangle as worn chalk/paint with value break-up and lower saturation"
+        "tarp cloth with value folds and lower saturation where it is sun-bleached",
+        "a rougher, dusty face on the footing blocks"
       ]
     },
     "detail": {
@@ -34,81 +34,29 @@
       ]
     },
     "wear": {
-      "score": 6,
-      "reason": "Slab mottling reads as dirt and there is a dusty band on the footings, but no mud at pile feet, no mortar splash, no tracks from the wheelbarrow.",
+      "score": 7,
+      "reason": "Dark mud pads under every pile and the tub, and pale barrow tracks across the yard now tell a working site; the slab itself carries no mortar splash.",
       "fixes": [
-        "mud and mortar splash round the pallets and the tub",
-        "wheel ruts from the barrow to the timber stack"
+        "mortar splash on the flags round the footings and the tub"
       ]
     },
     "lod": {
-      "score": 7,
-      "reason": "lods/FAR LOD2 (626 tris) keeps slab, footings, piles, tarps, banner and triangle; the slab turns a uniform dark grey (pattern lost) and the string lines vanish.",
+      "score": 8,
+      "reason": "FAR LOD2 keeps slab tone, footings, sheer-legs, piles, tarps, banner, timber and chevron; only the flag joints and string lines go, invisible at RTS distance.",
       "fixes": [
-        "keep the slab value pattern as two or three vertex-colour tones at LOD2"
+        "keep the string lines as one thin quad each at LOD2"
       ]
     },
     "technical": {
       "score": 8,
-      "reason": "QA PASS, tris 10.8k / 3.5k / 626, draws 2/2/2; one trim material + team slot, LOD2 well under 1k. Triangles mostly sit in the running-bond blocks and slates, where they show.",
+      "reason": "QA PASS: 8.9k / 3.1k / 656 tris, 2 / 2 / 2 draws; one trim material + team slot, LOD2 well under 1k. LOD0 down ~2k.",
       "fixes": [
-        "merge the per-block wall boxes into one course mesh per bay at LOD0 (shared inner faces removed) so the coursing costs fewer triangles"
+        "spend some of the LOD0 savings on the fixes above (quoins, string course, gravel) instead of more blocks"
       ]
     }
   },
   "renders": {
-    "hero.png": "430ac23f56a001bea240fbc9c433086493738e622aeea7b7a1bab130a0e0c886",
-    "sheet.png": "bb28e684c0ce72887c184a2925533d0b808b9a9b6da629dc0b399a7615cd5eee"
-  },
-  "metrics": {
-    "silhouette": [
-      {
-        "view": "front",
-        "iou": 0.921
-      },
-      {
-        "view": "side",
-        "iou": 0.774
-      },
-      {
-        "view": "3/4",
-        "iou": 0.92
-      }
-    ],
-    "focal": {
-      "peakPart": "tower_r",
-      "peak": [
-        123,
-        193
-      ],
-      "focalShare": 0,
-      "focalArea": 0,
-      "top": [
-        {
-          "part": "materials",
-          "share": 0.275
-        },
-        {
-          "part": "tower_r",
-          "share": 0.269
-        },
-        {
-          "part": "walls",
-          "share": 0.193
-        }
-      ],
-      "declared": []
-    },
-    "rest": {
-      "share": 0.641,
-      "spread": 0.758,
-      "min": 0.25
-    },
-    "shape": {
-      "acuteShare": 0.129,
-      "straightShare": 0.736,
-      "taper": 0.742,
-      "shape": "stable"
-    }
+    "hero.png": "90bd6c4ea3263e2f784afe007a26cef98479a8407ede35d4b65d31c92285298c",
+    "sheet.png": "4deb37b9181faa8fcde5c4a8183271eb381251903020b3753d07dd5426ac1e17"
   }
 }

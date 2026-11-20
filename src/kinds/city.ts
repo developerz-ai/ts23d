@@ -9,7 +9,15 @@
 // with `trim`, an oversailing cornice, belt course and plinth; LOD1 flat panes, a band a storey
 // and a flush cornice; LOD2 massing, roofs and the window rows as dark bands.
 
-import { type BuildContext, type Mesh, merge, place, type Vec2, type Vec3 } from '../core/index.ts';
+import {
+  type BuildContext,
+  dmath,
+  type Mesh,
+  merge,
+  place,
+  type Vec2,
+  type Vec3,
+} from '../core/index.ts';
 import type { StripId } from '../material/index.ts';
 import { box, prism } from '../primitives/index.ts';
 import {
@@ -88,7 +96,7 @@ function ribbon(
   e: readonly [number, number, number, number],
   color: Vec3,
 ): Mesh | null {
-  const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+  const len = dmath.hypot(b[0] - a[0], b[1] - a[1]);
   if (len < 0.05) return null;
   const [nx, ny] = [(-(b[1] - a[1]) / len) * (width / 2), ((b[0] - a[0]) / len) * (width / 2)];
   let profile: Vec2[] = [

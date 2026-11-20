@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test';
+import { dmath } from '@developerz.ai/ts23d';
 import { foldField } from './cloth-folds.ts';
 import { clothField, edgeBand, memo, smax, thickness } from './cloth-garment.ts';
 import { collarBand, neckline, neckSection, outsideNeck } from './cloth-neck.ts';
@@ -8,7 +9,7 @@ import { surface, type V } from './kit.ts';
 const ball =
   (r: number): ((p: V) => number) =>
   (p) =>
-    Math.hypot(p[0], p[1], p[2]) - r;
+    dmath.hypot(p[0], p[1], p[2]) - r;
 const line: V[] = [
   [0, 0, 0.1],
   [0, 0, -0.1],
@@ -47,7 +48,7 @@ describe('cloth folds', () => {
       for (let z = -0.1; z <= 0.1; z += 0.0071) {
         const g = (f.h([x + e, 0, z]) - f.h([x - e, 0, z])) / (2 * e);
         const gz = (f.h([x, 0, z + e]) - f.h([x, 0, z - e])) / (2 * e);
-        worst = Math.max(worst, Math.hypot(g, gz));
+        worst = Math.max(worst, dmath.hypot(g, gz));
       }
     expect(worst).toBeGreaterThan(0.1);
     expect(worst).toBeLessThanOrEqual(f.lipschitz);
@@ -86,7 +87,7 @@ describe('cloth garment', () => {
     expect(t([-0.04, 0, 0.09])).toBeCloseTo(0.0097, 6);
   });
   it('drapes straight: below the top it stands off a hollow back on the plane', () => {
-    const waist = (p: V): number => Math.hypot(p[0], p[1]) - (0.05 + Math.max(0, p[2]) * 0.5);
+    const waist = (p: V): number => dmath.hypot(p[0], p[1]) - (0.05 + Math.max(0, p[2]) * 0.5);
     const free = clothField({ body: waist, thick: 0.005, region: () => -1 });
     const hung = clothField({
       body: waist,
@@ -122,7 +123,7 @@ describe('cloth garment', () => {
 
 describe('fold paths walk on the body', () => {
   const s = surface(ball(0.1));
-  const on = (p: V, lift: number): number => Math.abs(Math.hypot(p[0], p[1], p[2]) - 0.1 - lift);
+  const on = (p: V, lift: number): number => Math.abs(dmath.hypot(p[0], p[1], p[2]) - 0.1 - lift);
   it('hangs pipe folds down under gravity, a valley between each pair, lifted off the skin', () => {
     const folds = hang(
       s,
@@ -143,7 +144,7 @@ describe('fold paths walk on the body', () => {
   it('drags tension folds toward each anchor; zigzags and sags alternate ridge and valley', () => {
     const d = drag(s, [0.1, 0, 0], [[0, 0.1, 0]], { amp: 0.003, width: 0.01, lift: 0 });
     const end = d[0]?.path[d[0].path.length - 1] ?? [0, 0, 0];
-    expect(Math.hypot(end[0], end[1] - 0.1, end[2])).toBeLessThan(0.02);
+    expect(dmath.hypot(end[0], end[1] - 0.1, end[2])).toBeLessThan(0.02);
     const z = zigzag(s, [0.1, 0, 0.02], [0.1, 0, -0.02], [0, 1, 0], 4, 0.01, {
       amp: 0.002,
       width: 0.01,
@@ -165,7 +166,7 @@ describe('fold paths walk on the body', () => {
 
 describe('cloth at the neck', () => {
   // A neck: a vertical cylinder r = 4 cm; seam: the plane z = 0.
-  const neck = (p: V): number => Math.hypot(p[0], p[1]) - 0.04;
+  const neck = (p: V): number => dmath.hypot(p[0], p[1]) - 0.04;
   const seam = { field: (p: V) => p[2], at: [0, 0, 0] as V, n: [0, 0, 1] as V };
   const n = neckSection(neck, seam, 0.06);
   it('finds the neck outline on the skin at the seam', () => {

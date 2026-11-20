@@ -12,33 +12,32 @@
     },
     "proportions": {
       "score": 8,
-      "reason": "11.6 x 30.1 x 8.3 m; door, window and canopy heights at human scale; dossier measures pass.",
+      "reason": "11.6 x 30.1 x 8.8 m; chimney stacks now taller; door, window and canopy heights at human scale; dossier measures pass.",
       "fixes": [
-        "chimney stacks read short against the Toddington photos"
+        "compare the canopy depth with the Toddington photos (it reads slightly shallow)"
       ]
     },
     "materials": {
       "score": 7,
-      "reason": "Slate roof now shows courses with per-slate value and a greenish moss tint, platform reads as stone flags, brick red with darker plinth; the canopy is still a flat grey sheet and the brick is one red with no course variation.",
+      "reason": "Slates with per-slate value and moss, brick now with per-course value variation and a dark plinth, platform coping as a pale edge; the canopy is still a flat grey sheet and the platform surface a plain grey.",
       "fixes": [
-        "brick colour variation per course and a blue-brick plinth",
-        "canopy as ridged corrugated/boarded sheet with lighter ridges"
+        "canopy as ridged corrugated/boarded sheet with lighter ridges",
+        "platform flags with joints and per-flag value"
       ]
     },
     "detail": {
       "score": 7,
-      "reason": "Sash windows, doors, chimney pots, valance, columns with brackets, lamps, name board, benches, barrow, churns.",
+      "reason": "Sash windows, doors, chimney pots, fretted valance, columns with brackets, lit lamps, name board, benches, barrow, churns, pale coping along the edge; no gutters or downpipes.",
       "fixes": [
-        "platform edge coping slabs with joints",
-        "gutter brackets and downpipes on the gable"
+        "gutter brackets and downpipes on the gable and front"
       ]
     },
     "wear": {
       "score": 6,
-      "reason": "Moss tint on the slates and darker brick at the plinth; no soot on the canopy underside, no staining under the windows, platform clean.",
+      "reason": "Moss on the slates and a darker plinth; still no soot on the canopy underside, no streaks below the sills, and the platform is clean.",
       "fixes": [
         "soot streaks on the canopy underside",
-        "damp/stain streaks below sills",
+        "damp streaks below sills",
         "dirt along the platform edge"
       ]
     },
@@ -52,71 +51,14 @@
     },
     "technical": {
       "score": 8,
-      "reason": "QA PASS: 10.0k / 5.5k / 462 tris, 2 / 2 / 2 draws: lean for a building this size.",
+      "reason": "QA PASS: 10.0k / 5.5k / 528 tris, 2 / 2 / 2 draws: lean for a building this size.",
       "fixes": [
         "spend a few hundred more LOD0 triangles on the canopy valance fret"
       ]
     }
   },
   "renders": {
-    "hero.png": "2d4513e1ca07931d57e9345dfafb66bb559237d7ffe34f1c5eed25d04b7df84f",
-    "sheet.png": "bad3347a15c5fa708b42fb069e0b510e11538a82383ad8fb0a398ad1cccd2ffb",
-    "raking.png": "917875798faa5d8c904adff11f18eba9d17015af7779b7c54c4c9bee7b0476e3",
-    "raking_detail.png": "ccf117228e4d11bd43a73e98ebc4e9668d721a0acc49b300485345d9f787945f",
-    "lods.png": "01095b5c3d073283ddb02ad9cc288cb4316d86124a5d431bb7932c8591775be3",
-    "silhouette.png": "e38b30cf693f915f8e8f674d1c6ad1e6b7392aa46589048823975b610de42738",
-    "value.png": "a98e095f6f434ff0977bc4b1fdf248582b91aaf4e6282e67438c7caeb692a120",
-    "detail.png": "17b1cc1fd343f242d0fc8fcdfd3b460e0ce11d155c617d780a47b0d552d5381b"
-  },
-  "metrics": {
-    "silhouette": [
-      {
-        "view": "front",
-        "iou": 0.949
-      },
-      {
-        "view": "side",
-        "iou": 0.959
-      },
-      {
-        "view": "3/4",
-        "iou": 0.97
-      }
-    ],
-    "focal": {
-      "peakPart": "platform",
-      "peak": [
-        338,
-        313
-      ],
-      "focalShare": 0,
-      "focalArea": 0,
-      "top": [
-        {
-          "part": "platform",
-          "share": 0.877
-        },
-        {
-          "part": "building",
-          "share": 0.031
-        },
-        {
-          "part": "lamp_0_glass",
-          "share": 0.024
-        }
-      ],
-      "declared": []
-    },
-    "rest": {
-      "share": 0.601,
-      "spread": 0.712,
-      "min": 0.25
-    },
-    "shape": {
-      "acuteShare": 0.3,
-      "straightShare": 0.761,
-      "taper": 0.643,
-      "shape": "stable"
-    }
+    "hero.png": "a107f370d5155a1201a7bc6eadc0b52b7c449c66060748297d42c738e74db3ca",
+    "sheet.png": "cf4d7cce3b77de44fa9968d187d757f303c676eb17a73a65a1d24407a9dfb7ed"
   }
 }

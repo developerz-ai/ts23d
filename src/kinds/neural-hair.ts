@@ -6,7 +6,7 @@
 // inside), so cards may come in either winding or order.
 
 import type { Bone, Mesh, Vec3 } from '../core/index.ts';
-import { Ts23dError } from '../core/index.ts';
+import { dmath, Ts23dError } from '../core/index.ts';
 import type { SpringBone } from './springs.ts';
 
 export interface HairRigOptions {
@@ -96,8 +96,7 @@ export function hairRig(m: Mesh, o: HairRigOptions): HairRig {
     // The card's long axis: the farthest pair from the first vertex, then from that one.
     const far = (from: Vec3): number =>
       verts.reduce(
-        (best, v) =>
-          Math.hypot(...sub(at(v), from)) > Math.hypot(...sub(at(best), from)) ? v : best,
+        (best, v) => (dmath.norm(sub(at(v), from)) > dmath.norm(sub(at(best), from)) ? v : best),
         verts[0] ?? 0,
       );
     const a = far(at(verts[0] ?? 0));
@@ -105,7 +104,7 @@ export function hairRig(m: Mesh, o: HairRigOptions): HairRig {
     const [root, tip] =
       Math.abs(o.scalp(at(a))) <= Math.abs(o.scalp(at(b))) ? [at(a), at(b)] : [at(b), at(a)];
     const axis = sub(tip, root);
-    const len2 = axis[0] ** 2 + axis[1] ** 2 + axis[2] ** 2 || 1;
+    const len2 = axis[0] * axis[0] + axis[1] * axis[1] + axis[2] * axis[2] || 1;
     const first = bones.length;
     for (let s = 0; s < seg; s++) {
       const name = `${prefix}${c}_${s}`;

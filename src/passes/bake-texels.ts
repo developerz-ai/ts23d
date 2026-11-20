@@ -5,6 +5,7 @@
 // One frame object is reused: copy what you keep. Deterministic: fixed texel and triangle order.
 
 import type { Mesh } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 
 export interface TexelFrame {
   /** Texel index (y · size + x). */
@@ -28,7 +29,7 @@ function lerp(a: Float32Array, k: number, c: Int32Array, w: Float64Array, out: F
 }
 
 function unit(v: Float64Array): void {
-  const l = Math.hypot(v[0] ?? 0, v[1] ?? 0, v[2] ?? 0) || 1;
+  const l = dmath.hypot(v[0] ?? 0, v[1] ?? 0, v[2] ?? 0) || 1;
   v[0] = (v[0] ?? 0) / l;
   v[1] = (v[1] ?? 0) / l;
   v[2] = (v[2] ?? 0) / l;

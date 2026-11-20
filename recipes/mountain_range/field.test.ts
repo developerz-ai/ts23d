@@ -3,7 +3,7 @@
 // must be one function of world position, so a neighbour tile meets this one along the cut.
 
 import { describe, expect, it } from 'bun:test';
-import { createRng, type TerrainGrid, terrainGrid } from '@developerz.ai/ts23d';
+import { createRng, dmath, type TerrainGrid, terrainGrid } from '@developerz.ai/ts23d';
 import { crop, fieldHeight, RECT, tileField } from './field.ts';
 import { mountainRange, VARIANTS } from './mountain_range.ts';
 
@@ -22,7 +22,7 @@ function roughness(g: TerrainGrid, r: number): number {
       [z(r, i - 1), z(r, i), z(r, i + 1)],
       [z(far, i - 1), z(far, i), z(far, i + 1)],
     ] as const) {
-      s += (a - 2 * b + c) ** 2;
+      s += dmath.pow(a - 2 * b + c, 2);
       n++;
     }
   return Math.sqrt(s / n);

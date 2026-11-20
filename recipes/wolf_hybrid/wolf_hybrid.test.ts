@@ -2,14 +2,17 @@
 // (several trim-sheet parts, no texture set). With the committed cache: one skinned textured body
 // on every LOD inside the triangle budget, the sourced withers height, head-and-body length and
 // tail length, ≤ 64 bones, clips idle / look / walk / trot (gallop dropped, bite and blink
-// impossible on a fused head), QA PASS on every LOD and the same bytes twice. No test calls a
-// model or Blender: the cache is read from disk.
+// impossible on a fused head), QA PASS on every LOD and the same bytes twice. The maps carry
+// what the step program painted (the generator's orange cast gone, muddy legs, a roughness that
+// varies). No test calls a model or Blender: the cache is read from disk.
 
 import { afterEach, describe, expect, it } from 'bun:test';
 import { join } from 'node:path';
 import {
   clearNeuralSources,
   compile,
+  decodePng,
+  dmath,
   neuralCache,
   provideNeural,
   runQa,
@@ -87,6 +90,62 @@ describe('wolf_hybrid, model tier (committed cache)', () => {
         // Blender was asked for TRIANGLES and lands within 1 %.
         expect(triangles).toBeGreaterThan(TRIANGLES[lod] * 0.99);
       }
+    },
+    SLOW,
+  );
+
+  it(
+    'the maps carry the paint: no orange cast, mud to the wrists and hocks, a roughness that varies',
+    async () => {
+      await cached();
+      const body = textured(0)[0];
+      const [mesh, set] = [body?.mesh, body?.textures];
+      expect(mesh && set?.orm).toBeTruthy();
+      if (!mesh || !set?.orm) return;
+      // Each map decoded once (the albedo is 2048²), then sampled per band.
+      const [albedo, orm] = [decodePng(set.albedo), decodePng(set.orm)];
+      /** A map's texels under the vertices between two heights (metres): RGB 0..255. */
+      const texels = (image: typeof albedo, z0: number, z1: number): number[][] => {
+        const out: number[][] = [];
+        for (let v = 0; v < mesh.positions.length / 3; v++) {
+          const z = mesh.positions[v * 3 + 2] ?? 0;
+          if (z < z0 || z >= z1) continue;
+          const px = Math.min(image.width - 1, Math.floor((mesh.uvs[v * 2] ?? 0) * image.width));
+          const py = Math.min(
+            image.height - 1,
+            Math.floor((mesh.uvs[v * 2 + 1] ?? 0) * image.height),
+          );
+          const at = (py * image.width + px) * 4;
+          out.push([image.data[at] ?? 0, image.data[at + 1] ?? 0, image.data[at + 2] ?? 0]);
+        }
+        return out;
+      };
+      const mean = (values: readonly number[]): number =>
+        values.reduce((s, v) => s + v, 0) / Math.max(values.length, 1);
+      const all = texels(albedo, -1, 9);
+      expect(all.length).toBeGreaterThan(10_000);
+      // The generator's orange (flank, ears, tail root): texels whose chroma passes 0.45 were
+      // 8.2 % of the unpainted bake (18.6 % on the flank band), and are 0.4 % painted.
+      const strong = (c: readonly number[]): number =>
+        (Math.max(...c) - Math.min(...c)) / Math.max(...c, 1) > 0.45 ? 1 : 0;
+      expect(mean(all.map(strong))).toBeLessThan(0.03);
+      // Wet mud: the paws were as light as the flank (value 387 against 401 of 765); they are
+      // a quarter of it, and the pasterns under half.
+      const value = (c: readonly number[]): number => (c[0] ?? 0) + (c[1] ?? 0) + (c[2] ?? 0);
+      const [flankBand, paws, pasterns] = [
+        texels(albedo, 0.38, 0.57),
+        texels(albedo, 0, 0.04),
+        texels(albedo, 0.04, 0.11),
+      ];
+      // An empty band means 0 and would pass the mud checks unread.
+      for (const band of [flankBand, paws, pasterns]) expect(band.length).toBeGreaterThan(50);
+      const flank = mean(flankBand.map(value));
+      expect(mean(paws.map(value))).toBeLessThan(flank * 0.5);
+      expect(mean(pasterns.map(value))).toBeLessThan(flank * 0.7);
+      // One flat roughness (the bake's 0.8 = 204) has no spread; coat, mud, nose and scars do.
+      const rough = texels(orm, -1, 9).map((c) => c[1] ?? 0);
+      const avg = mean(rough);
+      expect(Math.sqrt(mean(rough.map((r) => dmath.pow(r - avg, 2))))).toBeGreaterThan(12);
     },
     SLOW,
   );

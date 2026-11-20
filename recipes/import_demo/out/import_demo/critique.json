@@ -20,10 +20,11 @@
     },
     "materials": {
       "score": 6,
-      "reason": "Skin, blue tunic, leather cape with darker grain and brass studs separate; tunic and cape share one roughness and the skin is uniform.",
+      "reason": "Skin, blue tunic, leather cape with darker grain and brass studs separate; tunic and cape share one roughness, the skin is uniform and mannequin-smooth in the closer hero.png, and the hair renders as a grey scalp in hero.png but textured hair in sheet.png.",
       "fixes": [
         "leather roughness lower than the tunic cloth",
-        "skin roughness variation"
+        "skin roughness variation",
+        "make the hair texture render in the beauty renderer as it does in sheet.png"
       ]
     },
     "detail": {
@@ -58,7 +59,7 @@
     }
   },
   "renders": {
-    "hero.png": "9eda9ec9f8aacb4bdf6527f5257d8fb60dd8aad9bdc373581334bb8a2c6aebe6",
+    "hero.png": "bb7af45545428cfd856f6a4f6379665f6dcd11d36dee762483e5e1d27acaca08",
     "sheet.png": "14e66c34fbbc02d32d7bf2b900bb94fc3c422e38368e414b9b73cdb4e17c30ad"
   }
 }

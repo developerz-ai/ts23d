@@ -86,3 +86,12 @@ describe('merge with skin and morphs', () => {
     expect(checkMeshAttributes(out, 'merged')).toBe(out);
   });
 });
+
+describe('merge of very many meshes', () => {
+  it('fails before D406: a million meshes merge without spreading them into a call', () => {
+    const one = { ...tri(), mapped: [{ id: 'm_rock', row: 2, v0: 0.5, v1: 0.6 }] };
+    const out = merge(new Array(1_000_000).fill(tri()).concat([one]));
+    expect(out.positions.length).toBe(1_000_001 * 9);
+    expect(out.mapped).toEqual(one.mapped);
+  });
+});

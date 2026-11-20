@@ -20,9 +20,9 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    10158,
-    2282,
-    338
+    8698,
+    2026,
+    286
   ],
   "drawCalls": [
     3,
@@ -117,16 +117,10 @@
   ],
   "weather": {
     "mud": {
-      "target": 0.5,
-      "actual": 0.5,
+      "target": 0.6,
+      "actual": 0.6,
       "eligible": "ground-near",
-      "area": 12.8056
-    },
-    "dust": {
-      "target": 0.18,
-      "actual": 0.18,
-      "eligible": "up-facing",
-      "area": 12.7433
+      "area": 11.9527
     }
   },
   "qa": {

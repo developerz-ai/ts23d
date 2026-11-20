@@ -3,7 +3,7 @@
 // scutes across the belly and up the hood's front. LOD1 paints the same bands on the tube; LOD2 is
 // too coarse to sample a band, so it takes the pattern's average per stretch of body instead.
 
-import { hex, type Mesh, MeshBuilder, type Vec3 } from '@developerz.ai/ts23d';
+import { dmath, hex, type Mesh, MeshBuilder, type Vec3 } from '@developerz.ai/ts23d';
 import {
   add,
   cross,
@@ -18,7 +18,16 @@ import {
   stations,
   sub,
 } from '../_lib/body-plan-kit.ts';
-import { marked, pinLoftUv, SCALE_STRIP, scaleUv, scarAt, scuffAt, shedAt } from './material.ts';
+import {
+  dustAt,
+  marked,
+  pinLoftUv,
+  SCALE_STRIP,
+  scaleUv,
+  scarAt,
+  scuffAt,
+  shedAt,
+} from './material.ts';
 import { frameAt, HEAD, halfW, hoodShare, SVL, surfacePoint, TOTAL } from './shape.ts';
 
 export { SCALE_STRIP } from './material.ts';
@@ -51,16 +60,16 @@ function bandAt(s: number, a: number): number {
   if (s < 0.14) return 0;
   // 0 on the dorsal ridge to 1 low on the flank: one straight arm of the chevron per side, its
   // point on the ridge toward the head, the band widening as it runs down the flank. The arm
-  // sweeps back a third of a pitch, so each band stays a crossband of its own; swept a whole
+  // sweeps back 0.45 of a pitch, so each band stays a crossband of its own; swept a whole
   // pitch (as before) the arms lined up with the next band into a viper's zigzag.
   const w = Math.min(1, sideOf(a) / 1.9);
-  const k = (s - 0.35 * BAND_PITCH * w ** 1.15) / BAND_PITCH;
+  const k = (s - 0.45 * BAND_PITCH * w) / BAND_PITCH;
   const d = Math.abs(k - Math.round(k)) * BAND_PITCH;
   const fade = 1 - smooth(TOTAL * 0.62, TOTAL * 0.8, s) * 0.85;
   // Narrow pale bands (one or two scale rows) on a wide olive ground, a thin dark rim only.
-  const half = 0.0065 + 0.0045 * w;
+  const half = 0.0075 + 0.005 * w;
   if (d < half) return fade;
-  return d < half + 0.003 ? -0.5 * fade : 0;
+  return d < half + 0.0035 ? -0.5 * fade : 0;
 }
 
 export function dorsalColour(s: number, a: number, seed: number): Vec3 {
@@ -100,7 +109,8 @@ export function ventralColour(s: number, across = 0): Vec3 {
   // The dark throat band low on the hood's front, as in front photos.
   const collar = Math.max(gauss(s - 0.47, 0.024), 0.7 * gauss(s - 0.58, 0.016));
   const c = mixRgb(
-    mixRgb(COLOUR.belly, COLOUR.bellyDark, smooth(TOTAL * 0.45, TOTAL * 0.8, s)),
+    // Cream under the raised front; greyed under the pile, where only its edge ever shows.
+    mixRgb(COLOUR.belly, COLOUR.bellyDark, smooth(0.9, 1.25, s)),
     COLOUR.throat,
     throat,
   );
@@ -119,8 +129,9 @@ export function trunkMesh(lod: Lod, joints: readonly number[]): Mesh {
       ? stations([start, ...HOOD_RINGS, ...joints.filter((s) => s > start), TOTAL - 0.004], 0.01)
       : stations(
           [
-            ...even(start, 0.8, lod === 0 ? 70 : 64),
-            ...even(0.8, TOTAL - 0.004, lod === 0 ? 210 : 220),
+            // LOD0's tube lies under the scales: rings only where the body curves.
+            ...even(start, 0.8, lod === 0 ? 56 : 64),
+            ...even(0.8, TOTAL - 0.004, lod === 0 ? 150 : 220),
           ],
           0.002,
         );
@@ -134,11 +145,17 @@ export function trunkMesh(lod: Lod, joints: readonly number[]): Mesh {
     color: (_p, _n, s, a) => {
       if (lod === 0) return COLOUR.skin;
       if (lod === 2) {
-        // Six sides: only the bottom vertex is belly; averaged so no band or collar lands whole.
-        if (sideOf(a) > 2.5) return ventralAverage(s);
-        // The story marks only as a faint tint: a 7 mm scar line or the shed patch's edge,
-        // sampled on a ring 20 cm long, paints a whole grey segment.
-        return mixRgb(dorsalAverage(s, a), marked(dorsalAverage(s, a), s, a), 0.35);
+        // Six sides: only the bottom vertex is belly; averaged so no band lands whole, but the
+        // dark throat collar stays as a band across the raised neck.
+        if (sideOf(a) > 2.5)
+          return marked(
+            mixRgb(ventralAverage(s), COLOUR.hoodSpot, 0.7 * gauss(s - 0.5, 0.07)),
+            s,
+            a,
+            true,
+          );
+        // Small story marks would paint a whole segment of a 20 cm ring: only the broad dust stays.
+        return marked(dorsalAverage(s, a), s, a, true);
       }
       if (sideOf(a) > 2.04) return ventralColour(s, (Math.PI - sideOf(a)) / 1.1);
       const c = dorsalColour(s, a, 1);
@@ -151,12 +168,21 @@ export function trunkMesh(lod: Lod, joints: readonly number[]): Mesh {
   );
 }
 
-/** A low pyramid per scale, corners on the lattice so neighbours share positions. */
-function diamond(b: MeshBuilder, q: readonly Vec3[], peak: Vec3, color: Vec3, dull: number): void {
+/** A low pyramid per scale, corners on the lattice so neighbours share positions. Each corner
+ *  carries the pattern's colour at its own point, so band edges run clean across the scales. */
+function diamond(
+  b: MeshBuilder,
+  q: readonly Vec3[],
+  peak: Vec3,
+  colors: readonly Vec3[],
+  crownColor: Vec3,
+  dull: number,
+): void {
   const [rim, crown] = [scaleUv(0.06, dull), scaleUv(0.92, dull)];
   const n = q.length;
   for (let i = 0; i < n; i++) {
     const [p0, p1] = [q[i] as Vec3, q[(i + 1) % n] as Vec3];
+    const [c0, c1] = [colors[i] as Vec3, colors[(i + 1) % n] as Vec3];
     const f = norm(cross(sub(p1, p0), sub(peak, p0)));
     const up = norm(
       sub(peak, scale(add(add(q[0] as Vec3, q[1] as Vec3), add(q[2] as Vec3, q[3] as Vec3)), 0.25)),
@@ -165,9 +191,10 @@ function diamond(b: MeshBuilder, q: readonly Vec3[], peak: Vec3, color: Vec3, du
     const fn = flip ? scale(f, -1) : f;
     const shade = norm(add(scale(fn, 0.55), scale(up, 0.45)));
     const [a, c] = flip ? [p1, p0] : [p0, p1];
-    const i0 = b.vertex({ p: a, n: shade, uv: rim, color });
-    const i1 = b.vertex({ p: c, n: shade, uv: rim, color });
-    const i2 = b.vertex({ p: peak, n: up, uv: crown, color: scale(color, 1.14) });
+    const [ca, cc] = flip ? [c1, c0] : [c0, c1];
+    const i0 = b.vertex({ p: a, n: shade, uv: rim, color: ca });
+    const i1 = b.vertex({ p: c, n: shade, uv: rim, color: cc });
+    const i2 = b.vertex({ p: peak, n: up, uv: crown, color: scale(crownColor, 1.14) });
     b.tri(i0, i1, i2);
   }
 }
@@ -196,6 +223,7 @@ export function scaleSheet(): Mesh {
       // Scar tissue heals flat and slightly sunken; lifted pre-shed skin stands a hair proud.
       const scar = scarAt(s, a);
       const shed = shedAt(s, a);
+      const dull = Math.max(shed, dustAt(s, a));
       const raise = 0.0013 * fade * (1 - 0.85 * scar) + 0.0003 * shed - 0.0006 * scar;
       const q = [
         point(i, j, -0.0003),
@@ -211,12 +239,19 @@ export function scaleSheet(): Mesh {
         mid(q[2] as Vec3, q[3] as Vec3),
         mid(q[3] as Vec3, q[0] as Vec3),
       ];
+      // Corner (row, column) on the lattice, in half rows and columns from this cell's origin.
+      const seed = i * 37 + j * 11;
+      const at = (di: number, dj: number): Vec3 => {
+        const [cs, ca] = [start + ((i + di) * ROW_LENGTH) / 2, ((j + dj) / across) * COVER];
+        return marked(dorsalColour(cs, ca, seed), cs, ca);
+      };
       diamond(
         b,
         d,
         surfacePoint(s + ROW_LENGTH * 0.12, a, raise),
-        marked(dorsalColour(s, a, i * 37 + j * 11), s, a),
-        shed,
+        [at(0, 0.5), at(1, 1), at(2, 0.5), at(1, 0)],
+        marked(dorsalColour(s, a, seed), s, a),
+        dull,
       );
     }
   return b.build();
@@ -252,7 +287,13 @@ export function scutes(): Mesh {
       const across = (2 * (k + 0.5)) / segs - 1;
       // Tail scutes dragged over rock are scuffed matte and greyed at the free edge.
       const scuff = scuffAt(s0, k);
-      const color = mixRgb(scale(ventralColour(s0, across), tone), [0.3, 0.29, 0.26], scuff * 0.5);
+      const a = Math.PI + ((k + 0.5) / segs - 0.5) * 2 * reach;
+      const color = marked(
+        mixRgb(scale(ventralColour(s0, across), tone), [0.3, 0.29, 0.26], scuff * 0.5),
+        s0,
+        a,
+        true,
+      );
       const ids = q.map((p, v) =>
         b.vertex({
           p,
@@ -271,4 +312,4 @@ export function scutes(): Mesh {
 
 const dot3 = (a: Vec3, b: Vec3): number => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
 
-export const sideOf = (a: number): number => Math.abs(Math.atan2(Math.sin(a), Math.cos(a)));
+export const sideOf = (a: number): number => Math.abs(dmath.atan2(dmath.sin(a), dmath.cos(a)));

@@ -2,7 +2,7 @@
 // lever points to −Y: put the rose on the free edge so the lever points at the hinges.
 // Real: rose Ø 50–55 mm, lever 120–140 mm at ~60 mm projection, knob Ø 55–60 mm.
 
-import { definePart, lathe, merge, sweep, type Vec2 } from '@developerz.ai/ts23d';
+import { definePart, dmath, lathe, merge, sweep, type Vec2 } from '@developerz.ai/ts23d';
 import { ZINC } from './shape.ts';
 
 export const door_handle = definePart({
@@ -57,7 +57,7 @@ export const door_handle = definePart({
     const path: [number, number, number][] = [[0.008, 0, 0]];
     for (let i = 0; i <= bend; i++) {
       const t = (i / bend) * (Math.PI / 2);
-      path.push([0.045 + 0.018 * Math.sin(t), -0.018 * (1 - Math.cos(t)), 0]);
+      path.push([0.045 + 0.018 * dmath.sin(t), -0.018 * (1 - dmath.cos(t)), 0]);
     }
     path.push([0.063, -p.length + r, 0]);
     const lever = sweep({

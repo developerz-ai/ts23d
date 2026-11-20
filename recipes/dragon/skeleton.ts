@@ -99,7 +99,7 @@ export const SK = {
   /** Tail radii per node: the last spans rest on the ground (centre height = radius). */
   // The root is as thick as the hips it leaves (a thin root read as a rat's tail on this body).
   // Thick through its first third (it thinned to a stick two metres behind the hips).
-  tailR: [0.5, 0.46, 0.38, 0.29, 0.2, 0.14, 0.1, 0.075],
+  tailR: [0.52, 0.5, 0.43, 0.32, 0.21, 0.14, 0.1, 0.075],
 } as const;
 
 /** Pivot where the tail part hangs from the body (inside the stump). */

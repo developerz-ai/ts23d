@@ -1,12 +1,12 @@
 import { describe, expect, test } from 'bun:test';
 import { Glob } from 'bun';
-import { createRng } from '../core/index.ts';
+import { createRng, dmath } from '../core/index.ts';
 import { encodeDem } from './dem.ts';
 import { terrainFromDEM } from './terrain-from-dem.ts';
 
 // A 1 × 1 km bowl: 1000 m in the middle, rising to ~1400 m at the corners.
 const N = 16;
-const heights = Float64Array.from({ length: (N + 1) ** 2 }, (_, k) => {
+const heights = Float64Array.from({ length: dmath.pow(N + 1, 2) }, (_, k) => {
   const x = (k % (N + 1)) / N - 0.5;
   const y = Math.floor(k / (N + 1)) / N - 0.5;
   return 1000 + 800 * (x * x + y * y);

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { createRng, Ts23dError, type Vec3 } from '../core/index.ts';
+import { createRng, dmath, Ts23dError, type Vec3 } from '../core/index.ts';
 import { openEdges } from './closed.ts';
 import { type SculptEdit, sculpt, sculptField } from './sculpt.ts';
 import { probeLipschitz } from './sculpt-stroke.ts';
@@ -94,7 +94,7 @@ describe('vdm stamps', () => {
     for (let i = 0; i < 3000; i++) {
       const p: Vec3 = [rng.range(-0.15, 0.15), rng.range(-0.15, 0.15), rng.range(-0.15, 0.15)];
       // Outside the footprint (half-diagonal 0.06 / √2) in the stamp's tangent plane.
-      if (Math.hypot(p[0], p[1]) <= 0.0425) continue;
+      if (dmath.hypot(p[0], p[1]) <= 0.0425) continue;
       expect(f(p)).toBe(ball(p));
       checked++;
     }
@@ -104,7 +104,7 @@ describe('vdm stamps', () => {
   it('the sparse fold is bit-identical to the dense one with stamps', () => {
     const places = [0, 1, 2, 3, 4, 5].map((i) => {
       const a = i * 0.9;
-      const n: Vec3 = [Math.cos(a) * 0.8, Math.sin(a) * 0.8, 0.6];
+      const n: Vec3 = [dmath.cos(a) * 0.8, dmath.sin(a) * 0.8, 0.6];
       return { at: [n[0] * 0.1, n[1] * 0.1, n[2] * 0.1] as Vec3, normal: n, scale: 0.05 };
     });
     const nodes = compile([BALL, { vdm: scalePatch({ seed: 2 }), places }], SKIN, true);

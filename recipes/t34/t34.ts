@@ -11,6 +11,7 @@ import {
   cross,
   cylinder,
   defineFamily,
+  dmath,
   hex,
   type Lod,
   lathe,
@@ -33,6 +34,7 @@ import {
   valueNoise,
   weightedNormals,
 } from '@developerz.ai/ts23d';
+import { fieldGrade, meanDishMud, wheelDirt } from '../_lib/finish/afv.ts';
 import {
   chipFlecks,
   EARTH,
@@ -41,16 +43,18 @@ import {
   paintOn,
   rayHit,
   SOOT,
-  sootPlume,
   tint,
   unitNoise,
   WET_MUD,
-  wheelMud,
 } from '../_lib/finish/field.ts';
 import { onGround, reproject, restrip, type StripRule, tessellate } from '../_lib/finish/finish.ts';
 
 const green = hex('#4e5a2c');
 const greenDark = hex('#3a4422');
+/** Weld beads and strap bands: paint lying in a groove, a value darker than the plates. */
+const weldDark = hex('#262c16');
+/** The tyres' vertex colour on their strip (see the rules in `build`). */
+const tyreTone = hex('#2e2d2a');
 const rubber = hex('#252523');
 const steel = hex('#45443f');
 const trackSteel = hex('#4a4139');
@@ -77,10 +81,10 @@ const PANNIER_Z = 1.0;
 const DECK = 1.45;
 const HULL_HALF = 2.96;
 const NOSE: Vec2 = [HULL_HALF, 0.78];
-const TAN60 = Math.tan(Math.PI / 3);
+const TAN60 = dmath.tan(Math.PI / 3);
 /** x of the glacis at height z (60° from vertical). */
 const glacisX = (z: number): number => NOSE[0] - (z - NOSE[1]) * TAN60;
-const REAR_PITCH = Math.atan2(-0.66, 0.75);
+const REAR_PITCH = dmath.atan2(-0.66, 0.75);
 const TURRET_AT: Vec3 = [0.45, 0, DECK];
 
 type Circle = { readonly x: number; readonly z: number; readonly r: number };
@@ -109,7 +113,7 @@ function hullCw(pts: Vec2[]): Vec2[] {
 function resample(poly: readonly Vec2[], n: number): Station[] {
   const seg = poly.map((a, i) => {
     const b = poly[(i + 1) % poly.length] as Vec2;
-    return Math.hypot(b[0] - a[0], b[1] - a[1]);
+    return dmath.hypot(b[0] - a[0], b[1] - a[1]);
   });
   const total = seg.reduce((s, l) => s + l, 0);
   const out: Station[] = [];
@@ -123,7 +127,7 @@ function resample(poly: readonly Vec2[], n: number): Station[] {
     const t = (d - acc) / (seg[i] || 1);
     out.push({
       p: [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t],
-      pitch: Math.atan2(-(b[1] - a[1]), b[0] - a[0]),
+      pitch: dmath.atan2(-(b[1] - a[1]), b[0] - a[0]),
       len: total / n,
     });
   }
@@ -137,7 +141,7 @@ function beltLine(wheels: readonly Circle[], ends: readonly Circle[], sag: numbe
   for (const c of [...wheels, ...ends])
     for (let i = 0; i < 72; i++) {
       const t = (i / 72) * Math.PI * 2;
-      pts.push([c.x + (c.r + off) * Math.cos(t), c.z + (c.r + off) * Math.sin(t)]);
+      pts.push([c.x + (c.r + off) * dmath.cos(t), c.z + (c.r + off) * dmath.sin(t)]);
     }
   const dense = resample(hullCw(pts), 600);
   const x0 = Math.min(...ends.map((c) => c.x));
@@ -146,13 +150,15 @@ function beltLine(wheels: readonly Circle[], ends: readonly Circle[], sag: numbe
     Math.max(
       0,
       ...wheels.map((w) =>
-        Math.abs(x - w.x) < w.r + off ? w.z + Math.sqrt((w.r + off) ** 2 - (x - w.x) ** 2) : 0,
+        Math.abs(x - w.x) < w.r + off
+          ? w.z + Math.sqrt(dmath.pow(w.r + off, 2) - dmath.pow(x - w.x, 2))
+          : 0,
       ),
     );
   return dense.map(({ p, pitch }) => {
-    const topRun = Math.cos(pitch) > 0.8 && p[1] > WHEEL_Z;
+    const topRun = dmath.cos(pitch) > 0.8 && p[1] > WHEEL_Z;
     if (!topRun || p[0] <= x0 || p[0] >= x1) return p;
-    const drop = sag * Math.sin((Math.PI * (p[0] - x0)) / (x1 - x0));
+    const drop = sag * dmath.sin((Math.PI * (p[0] - x0)) / (x1 - x0));
     return [p[0], Math.max(env(p[0]), p[1] - drop)];
   });
 }
@@ -313,7 +319,9 @@ function wheelHalf(lod: Lod, r: number, w: number, ribs: number, paint: Vec3, in
       const a = (i / ribs) * Math.PI * 2;
       parts.push(place(rib, { at: [0, h - 0.035, 0], pitch: a }));
       const b = a + Math.PI / ribs;
-      parts.push(place(bolt, { at: [Math.sin(b) * r * 0.16, h + 0.045, Math.cos(b) * r * 0.16] }));
+      parts.push(
+        place(bolt, { at: [dmath.sin(b) * r * 0.16, h + 0.045, dmath.cos(b) * r * 0.16] }),
+      );
     }
   }
   return merge(parts);
@@ -366,7 +374,7 @@ function sprocket(lod: Lod, r: number, paint: Vec3): Mesh {
           length: 0.2,
           segments: 8,
           axis: 'y',
-          at: [Math.cos(a) * (r - 0.06), 0, Math.sin(a) * (r - 0.06)],
+          at: [dmath.cos(a) * (r - 0.06), 0, dmath.sin(a) * (r - 0.06)],
           color: steel,
         }),
       );
@@ -458,7 +466,7 @@ function lettering(text: string, h: number): Vec2[][] {
     for (const [x0, y0, x1, y1] of GLYPHS[ch] ?? []) {
       const a: Vec2 = [(x0 + i * 5.5) * k, y0 * k];
       const b: Vec2 = [(x1 + i * 5.5) * k, y1 * k];
-      const l = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1;
+      const l = dmath.hypot(b[0] - a[0], b[1] - a[1]) || 1;
       const d: Vec2 = [((b[0] - a[0]) / l) * (t / 2), ((b[1] - a[1]) / l) * (t / 2)];
       const n: Vec2 = [-d[1], d[0]];
       out.push([
@@ -563,8 +571,8 @@ function fillet(poly: readonly Vec3[], d: number, n: number): Vec3[] {
   poly.forEach((p, i) => {
     const a = sub(poly[(i + poly.length - 1) % poly.length] as Vec3, p);
     const b = sub(poly[(i + 1) % poly.length] as Vec3, p);
-    const la = Math.hypot(...a);
-    const lb = Math.hypot(...b);
+    const la = dmath.norm(a);
+    const lb = dmath.norm(b);
     const k = Math.min(d, 0.42 * la, 0.42 * lb);
     for (let j = 0; j <= n; j++) {
       const t = j / n;
@@ -600,7 +608,7 @@ function castShell(shell: Shell, lod: Lod, color: Vec3): Mesh {
     return [q[0] + (p[0] - q[0]) * f, q[1] + (p[1] - q[1]) * f, h - c];
   });
   const roof = t.map((q): Vec3 => {
-    const l = Math.hypot(q[0] - cen[0], q[1] - cen[1]) || 1;
+    const l = dmath.hypot(q[0] - cen[0], q[1] - cen[1]) || 1;
     return [q[0] + ((cen[0] - q[0]) * c) / l, q[1] + ((cen[1] - q[1]) * c) / l, h];
   });
   const arc = (u: number): Vec3[] =>
@@ -689,10 +697,10 @@ const t34Family = defineFamily<Params>({
     // 4BO green as matte armour paint (vertex colour = paint; `fieldWear` chips its edges),
     // rubber tyres, dark manganese-steel track with road-polished grousers and packed mud,
     // cast/forged steel fittings, rusted exhausts and spare links.
-    const paints = [paint, greenDark];
+    const paints = [paint, greenDark, weldDark];
     const rules: readonly StripRule[] = [
       // Tyres on a rough greyscale strip, so the earth packed on them shows (`rubber` is near black).
-      { from: rubber, strip: 'concrete', color: hex('#2e2d2a') },
+      { from: rubber, strip: 'concrete', color: tyreTone },
       { from: trackSteel, strip: 'iron_cast', color: hex('#a89c90') },
       { from: bare, strip: 'iron_cast', color: hex('#f4efe6') },
       { from: mudPack, strip: 'soil', color: hex('#f0e6d2') },
@@ -708,12 +716,19 @@ const t34Family = defineFamily<Params>({
       paintOn(reproject(restrip(tessellate(m, ctx.pick([0.45, 0.8, 10])), rules)), paints);
     /** Chips and mud need vertices: 22 cm at LOD0, 50 cm at LOD1, the plain mesh at LOD2. */
     const res: FieldWear['resolution'] = [0.22, 0.5, 0];
-    // Exhaust soot: two plumes up the rear plate from the pipe mouths.
-    const soot = (m: Mesh): Mesh =>
-      [1, -1].reduce(
-        (acc, s) => tint(acc, SOOT, sootPlume([-2.98, s * 0.55, 1.1], 0.8, 0.95, grain)),
-        m,
-      );
+    // Field dirt, graded: dried mud from the ground up (gone by mid side plate at the nose, the
+    // whole plate at the tail), wet mud under it, dust only on the plates that face the sky,
+    // soot fanning up the rear plate and over the deck's tail from the two pipe mouths.
+    const grade = fieldGrade(grain, fine, { earth: EARTH, wet: WET_MUD, dust: EARTH });
+    const soot = [1, -1].map((s) => ({
+      // Inside the sloped rear plate behind each pipe, so the fan lies on the plate itself. Wide
+      // and at 0.75: a soft grey-black fan whose edge fades over half a metre. At full strength the
+      // core went solid black on every vertex near the pipes and the fan's noisy edge read as
+      // blocky black pixels on the 22 cm wear grid.
+      at: [-2.6, s * 0.55, 1.05] as Vec3,
+      radius: 1.25,
+      strength: 0.75,
+    }));
     const wheels: Circle[] = WHEELS_X.map((x) => ({ x, z: WHEEL_Z, r: WHEEL_R }));
     const line = beltLine(wheels, [IDLER, SPROCKET], 0.06);
 
@@ -759,20 +774,47 @@ const t34Family = defineFamily<Params>({
         }),
       );
       const flip = (m: Mesh): Mesh => (s > 0 ? m : place(m, { yaw: Math.PI }));
-      /** LOD2: an 8-sided disc per wheel (32 triangles) instead of nothing, from `inner` m
-       *  inboard to 0.17 m outboard. */
-      const far = (r: number, inner = 0.28): Mesh =>
-        cylinder({
-          radius: r,
-          length: inner + 0.17,
-          segments: 8,
-          axis: 'y',
-          at: [0, (0.17 - inner) / 2, 0],
-          color: paint,
-        });
-      // Wheels spin: their mud is radial (rim and dish), never a height band.
+      /** LOD2: an 8-sided wheel (28 triangles) from `inner` m inboard to 0.17 m outboard: a
+       *  rubber tread wall and tyre face, and the painted disc as one polygon 5 mm proud of it,
+       *  so the far wheel keeps the near one's blocks (dark tyre, dusty disc). */
+      const far = (r: number, inner = 0.28, back = false): Mesh => {
+        const gon = (rr: number, y: number, color: Vec3): Mesh =>
+          planar({
+            points: Array.from({ length: 8 }, (_, i): Vec3 => {
+              const a = -((i + 0.5) / 8) * Math.PI * 2;
+              return [dmath.cos(a) * rr, y, dmath.sin(a) * rr];
+            }),
+            color,
+          });
+        return merge([
+          place(
+            lathe({
+              profile: [
+                [r, -inner],
+                [r, 0.17],
+              ],
+              segments: 8,
+              axis: 'y',
+              color: rubber,
+            }),
+            { pitch: Math.PI / 8 },
+          ),
+          gon(r, 0.17, rubber),
+          gon(r * 0.8, 0.175, paint),
+          // Idler and sprocket: the inboard face that seats on the crank / final-drive housing.
+          ...(back ? [place(gon(r, inner, paint), { yaw: Math.PI })] : []),
+        ]);
+      };
+      // Wheels spin: their dirt is radial (dark tyre, mud in the outer dish, clean hub), never a
+      // height band. Far: the disc takes the near dish's mean mud as one flat block.
       const gear = (m: Mesh, r: number): Mesh =>
-        wheelMud(dress(m), r, fine, lod === 2 ? 0.45 : 0.85);
+        wheelDirt(dress(m), {
+          r,
+          tyre: tyreTone,
+          earth: EARTH,
+          noise: fine,
+          ...(lod === 2 ? { flat: meanDishMud(0.8) } : {}),
+        });
       // Pressed steel discs and cast sprocket rings weigh as 12 mm walls, not as solids.
       const spin = (rps: number) => ({
         motion: { kind: 'spin', axis: [0, 1, 0], rps } as const,
@@ -786,13 +828,13 @@ const t34Family = defineFamily<Params>({
           ...spin(0.75),
         });
       });
-      const idler = lod === 2 ? far(IDLER.r) : christie(lod, IDLER.r, 6, paint);
+      const idler = lod === 2 ? far(IDLER.r, 0.28, true) : christie(lod, IDLER.r, 6, paint);
       ctx.part(`idler_${side}`, gear(flip(idler), IDLER.r), {
         at: [IDLER.x, y, IDLER.z],
         ...spin(1.0),
       });
       // The sprocket's disc stops where its LOD0 hub does, on the final-drive housing's face.
-      const drive = lod === 2 ? far(SPROCKET.r, 0.25) : sprocket(lod, SPROCKET.r, paint);
+      const drive = lod === 2 ? far(SPROCKET.r, 0.25, true) : sprocket(lod, SPROCKET.r, paint);
       ctx.part(`sprocket_${side}`, gear(flip(drive), SPROCKET.r), {
         at: [SPROCKET.x, y, SPROCKET.z],
         ...spin(1.0),
@@ -992,7 +1034,7 @@ const t34Family = defineFamily<Params>({
       // so the plate edges carry the chipping (crisp, where vertex colour could only smudge).
       const beadRng = ctx.rng.fork('beads');
       const bead = (from: Vec3, to: Vec3): Mesh => {
-        const n = Math.max(1, Math.round(Math.hypot(...sub(to, from)) / 0.12));
+        const n = Math.max(1, Math.round(dmath.norm(sub(to, from)) / 0.12));
         const at = (k: number): Vec3 => [
           from[0] + ((to[0] - from[0]) * k) / n,
           from[1] + ((to[1] - from[1]) * k) / n,
@@ -1003,9 +1045,9 @@ const t34Family = defineFamily<Params>({
             beam({
               from: at(k),
               to: at(k + 1),
-              width: 0.024,
+              width: 0.036,
               segments: 4,
-              color: beadRng.pick([greenDark, greenDark, greenDark, steel, spareRust]),
+              color: beadRng.pick([weldDark, weldDark, weldDark, steel, spareRust]),
             }),
           ),
         );
@@ -1041,7 +1083,7 @@ const t34Family = defineFamily<Params>({
           [topX, s * 1.12, DECK],
         ]),
       ];
-      detail.push(chipFlecks(ctx.rng.fork('chips'), plates, [0, 0, 1.1], 420, hullMesh));
+      detail.push(chipFlecks(ctx.rng.fork('chips'), plates, [0, 0, 1.1], 300, hullMesh));
       // Stowage box strapped on the right side plate ahead of the turret (Model 1942/43 fit):
       // a sheet-steel box lying on the 40° plate, sunk 1 cm so it is seated, two strap bands.
       const sy = (z: number): number => 1.5 - ((z - PANNIER_Z) * 0.38) / (DECK - PANNIER_Z);
@@ -1062,9 +1104,16 @@ const t34Family = defineFamily<Params>({
           color: c,
         });
       };
-      detail.push(translate(boxAt(0.62, 0.26, 0.16, 1.14, paint), [0.75, 0, 0]));
-      for (const x of [0.86, 1.22])
-        detail.push(translate(boxAt(0.04, 0.27, 0.17, 1.135, greenDark), [x, 0, 0]));
+      detail.push(
+        translate(boxAt(0.7, 0.3, 0.2, 1.1, paint), [0.72, 0, 0]),
+        // The lid's lip: a dark band round the box a hand below its top face.
+        translate(boxAt(0.72, 0.31, 0.03, 1.095, weldDark), [0.71, 0, 0]),
+      );
+      // Two strap bands over it and a steel hasp on each.
+      for (const x of [0.85, 1.25]) {
+        detail.push(translate(boxAt(0.045, 0.32, 0.21, 1.092, weldDark), [x, 0, 0]));
+        detail.push(translate(boxAt(0.06, 0.07, 0.225, 1.2, steel), [x - 0.0075, 0, 0]));
+      }
       // Tow hooks, spare links on the glacis, rear-plate bolts, side tow cables, rider rails.
       for (const s of [1, -1]) {
         // The right side's cable and rail start behind the stowage box.
@@ -1092,8 +1141,8 @@ const t34Family = defineFamily<Params>({
               [fx - 0.1, s * 1.36, 1.25],
               [fx + 0.05, s * 1.4, 1.18],
             ],
-            0.035,
-            steel,
+            0.042,
+            rust,
           ),
           // The cable's eyes, dropped over the lashing points at its front ends.
           ...[
@@ -1103,7 +1152,7 @@ const t34Family = defineFamily<Params>({
             lathe({
               profile: Array.from({ length: 7 }, (_, i): Vec2 => {
                 const a = (i / 6) * Math.PI * 2;
-                return [0.05 + 0.016 * Math.cos(a), 0.016 * Math.sin(a)];
+                return [0.05 + 0.016 * dmath.cos(a), 0.016 * dmath.sin(a)];
               }),
               segments: 10,
               axis: 'y',
@@ -1174,16 +1223,7 @@ const t34Family = defineFamily<Params>({
     // Hull and fittings wear as one object: edges rubbed to steel, road dust on the deck and
     // glacis, dried mud up the lower hull (heavier toward the rear, where the tracks throw it),
     // rust running down from the rail stanchions and the exhaust flanges, soot above the pipes.
-    const hullWear: FieldWear = {
-      name: 't34_hull',
-      seed: 34,
-      resolution: res,
-      mud: 2.0,
-      mudAmount: 0.5,
-      dust: 0.24,
-      noise: grain,
-      chips: 0.4,
-    };
+    const hullWear: FieldWear = { name: 't34_hull', seed: 34, resolution: res, chips: 0.08 };
     // Fittings are small: they carry the vertices wear needs already (no tessellation).
     const kit = fieldWear(
       ctx,
@@ -1192,9 +1232,7 @@ const t34Family = defineFamily<Params>({
         name: 't34_fittings',
         seed: 37,
         resolution: [0, 0, 0],
-        dust: 0.3,
-        noise: grain,
-        chips: 0.3,
+        chips: 0.12,
       },
     );
     const worn = fieldWear(
@@ -1213,21 +1251,12 @@ const t34Family = defineFamily<Params>({
         ],
       },
     );
-    const splash = (m: Mesh): Mesh =>
-      tint(
-        m,
-        WET_MUD,
-        // Wet mud under the dried: the belly line, and climbing behind the last road wheel.
-        (p) =>
-          0.75 *
-          (1 - Math.min(1, Math.max(0, (p[2] - 0.38) / (p[0] < -1.5 ? 0.5 : 0.28)))) *
-          (0.35 + 0.65 * fine(p)),
-      );
+    const dirt = (m: Mesh): Mesh => grade(m, { mud: 1.75, dust: 0.45, soot });
     // Mass: the hull's shells weigh as a 30 mm wall, which over this model's faces (the tub and
     // the upper hull share one) comes to the ~16 t of armour, engine, gearbox, fuel and
     // ammunition; fittings are sheet steel and bar.
-    ctx.part('hull', soot(splash(worn.hull)), { shell: 0.03 });
-    ctx.part('fittings', soot(splash(kit.fittings)), { shell: 0.004 });
+    ctx.part('hull', dirt(worn.hull), { shell: 0.03 });
+    ctx.part('fittings', dirt(kit.fittings), { shell: 0.004 });
     for (const [side, s] of [
       ['l', 1],
       ['r', -1],
@@ -1301,7 +1330,7 @@ const t34Family = defineFamily<Params>({
           turret.push(
             box({
               size: [0.09, 0.09, 0.07],
-              at: [-0.4 + Math.cos(a) * 0.33, 0.38 + Math.sin(a) * 0.33, roofZ + 0.12],
+              at: [-0.4 + dmath.cos(a) * 0.33, 0.38 + dmath.sin(a) * 0.33, roofZ + 0.12],
               color: black,
             }),
           );
@@ -1347,7 +1376,7 @@ const t34Family = defineFamily<Params>({
         const a = b[i0] as Vec3;
         const c = b[i1] as Vec3;
         const up = t[i0] as Vec3;
-        const len = Math.hypot(c[0] - a[0], c[1] - a[1]);
+        const len = dmath.hypot(c[0] - a[0], c[1] - a[1]);
         turret.push(plateDecal(text, armour, [a, c, up], [(len - width) / 2, 0.24], white));
       }
     }
@@ -1358,17 +1387,16 @@ const t34Family = defineFamily<Params>({
         name: 't34_turret',
         seed: 35,
         resolution: res,
-        dust: 0.28,
-        noise: grain,
-        at: TURRET_AT,
-        chips: 0.45,
+        chips: 0.08,
         rustFrom: [1, -1].flatMap((s) => [
           { at: [0.3, s * 0.95, 0.18] as Vec3, radius: 0.05 },
           { at: [-0.6, s * 0.8, 0.18] as Vec3, radius: 0.05 },
         ]),
       },
     );
-    ctx.part('turret_body', turretWorn.turret_body, { parent: 'turret' });
+    ctx.part('turret_body', grade(turretWorn.turret_body, { at: TURRET_AT, dust: 0.45 }), {
+      parent: 'turret',
+    });
 
     // ---- Gun: cast mantlet + cradle + F-34 barrel; elevation sways ----
     const gunZ = 0.32;
@@ -1415,10 +1443,9 @@ const t34Family = defineFamily<Params>({
       name: 't34_gun',
       seed: 36,
       resolution: res,
-      dust: 0.2,
-      noise: grain,
-      chips: 0.4,
+      chips: 0.08,
     };
+    const gunAt: Vec3 = [TURRET_AT[0] + front, 0, TURRET_AT[2] + gunZ];
     const tip = 2.37;
     const breech = tip - 3.162;
     const barrel = dress(
@@ -1462,11 +1489,17 @@ const t34Family = defineFamily<Params>({
       { gun_mantlet: dress(merge(mParts)), gun_barrel: barrel },
       gunWear,
     );
-    ctx.part('gun_mantlet', gunWorn.gun_mantlet, { parent: 'gun' });
+    ctx.part('gun_mantlet', grade(gunWorn.gun_mantlet, { at: gunAt, dust: 0.35 }), {
+      parent: 'gun',
+    });
     // Muzzle blackened by firing.
     ctx.part(
       'gun_barrel',
-      tint(gunWorn.gun_barrel, SOOT, (p) => 0.8 * (1 - Math.min(1, Math.abs(p[0] - tip) / 0.4))),
+      tint(
+        grade(gunWorn.gun_barrel, { at: gunAt, dust: 0.35 }),
+        SOOT,
+        (p) => 0.8 * (1 - Math.min(1, Math.abs(p[0] - tip) / 0.4)),
+      ),
       { parent: 'gun' },
     );
   },

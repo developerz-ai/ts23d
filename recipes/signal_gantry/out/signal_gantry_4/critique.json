@@ -1,13 +1,13 @@
 {
   "asset": "signal_gantry_4",
   "reviewer": "agent",
-  "overall": 7.4,
+  "overall": 7.6,
   "scores": {
     "silhouette": {
       "score": 8,
-      "reason": "Lattice gantry over four roads: latticed posts on footings, knee braces, timber walkway with galvanised handrail, dolls with lower-quadrant arms and spectacles; reads from every view.",
+      "reason": "Lattice gantry over four roads with knee braces, walkway and handrail, four dolls with arms; the ladder now stands off the post and reads in hero.png.",
       "fixes": [
-        "make the access ladder read in SIDE (it hides inside the post lattice): stand it 0.2 m off the post face"
+        "finials on the doll tops a little larger so they read against the sky"
       ]
     },
     "proportions": {
@@ -18,26 +18,26 @@
       ]
     },
     "materials": {
-      "score": 7,
-      "reason": "Black lattice now carries rust-brown streaks and lighter worn edges, handrail is galvanised grey, walkway timber, arms red with white bands. The black paint is still one value across sun and shade faces.",
+      "score": 8,
+      "reason": "The lattice is now a lighter worn steel grey with lighter up-facing flanges and darker shade faces (hero.png, sheet), galvanised handrail, timber deck, arms red with white bands.",
       "fixes": [
-        "sun-faded, slightly lighter paint on the up-facing lattice members"
+        "a little more rust bloom at the lattice nodes and feet so the lighter steel does not read clean"
       ]
     },
     "detail": {
       "score": 7,
-      "reason": "Raking.png: lattice webs, battens, knee braces, handrails, finials, lamp cases, balance weights. No operating rods or wires running down to the ground.",
+      "reason": "Lattice webs, battens, knee braces, handrails, ladder on stand-off brackets, lamp cases, balance weights; the operating rods are too thin to read and no rivet heads show at the nodes.",
       "fixes": [
-        "operating rods/wires down the posts to ground level",
+        "operating rods at least 4 cm and pale enough to read against the black post",
         "rivet heads at lattice nodes"
       ]
     },
     "wear": {
       "score": 6,
-      "reason": "Rust streaks on the posts and splash on the footings now read; no soot on the girder underside above the tracks, walkway boards unworn.",
+      "reason": "Rust tints on the posts and splash on the footings read; the hero is lower, but over the long span the girder underside is only a thin sliver, so the soffit soot still does not read, nor the tread path.",
       "fixes": [
-        "soot band on the girder underside above each road",
-        "worn, lighter tread path along the walkway boards"
+        "move the hero camera closer under the girder (or frame it from below one end) so the soffit soot reads",
+        "a lighter tread path on the walkway visible from 3/4"
       ]
     },
     "lod": {
@@ -49,65 +49,14 @@
     },
     "technical": {
       "score": 8,
-      "reason": "QA PASS: 12.2k / 5.3k / 1.24k tris, 10 / 10 / 10 draws (arms pivot as moving parts).",
+      "reason": "QA PASS: 12.3k / 5.4k / 1.2k tris, 10 / 10 / 10 draws (arms pivot as moving parts).",
       "fixes": [
         "merge the static lattice and walkway into one draw"
       ]
     }
   },
   "renders": {
-    "hero.png": "bda85cc689432a4fbcad264b3b5d1512f8b800717e747cd96c84431441b2d58f",
-    "sheet.png": "6d9bf870b7a49b72b8e2b3fa319a2d5497a7e100a9b71536d1f9a1943c3d2d01"
-  },
-  "metrics": {
-    "silhouette": [
-      {
-        "view": "front",
-        "iou": 0.729
-      },
-      {
-        "view": "side",
-        "iou": 0.832
-      },
-      {
-        "view": "3/4",
-        "iou": 0.909
-      }
-    ],
-    "focal": {
-      "peakPart": "walkway",
-      "peak": [
-        251,
-        200
-      ],
-      "focalShare": 0,
-      "focalArea": 0,
-      "top": [
-        {
-          "part": "walkway",
-          "share": 0.285
-        },
-        {
-          "part": "post_r",
-          "share": 0.215
-        },
-        {
-          "part": "footing_r",
-          "share": 0.169
-        }
-      ],
-      "declared": []
-    },
-    "rest": {
-      "share": 0.099,
-      "spread": 0.514,
-      "min": 0.25
-    },
-    "shape": {
-      "acuteShare": 0.382,
-      "straightShare": 0.825,
-      "taper": -0.014,
-      "shape": "stable"
-    }
+    "hero.png": "ef05d4954216ce0842726b0439be51363430532c1cad2f1639a187bf818a19e5",
+    "sheet.png": "978c9002aea5553a77fb1dbb0a4d36004912f1e7aab45b809dcffbb07892e366"
   }
 }

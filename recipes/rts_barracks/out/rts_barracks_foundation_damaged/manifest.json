@@ -20,9 +20,9 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    14036,
-    4278,
-    708
+    10356,
+    3180,
+    782
   ],
   "drawCalls": [
     2,
@@ -117,10 +117,10 @@
   ],
   "weather": {
     "chips": {
-      "target": 0.1253,
-      "actual": 0.1253,
+      "target": 0.1238,
+      "actual": 0.1238,
       "eligible": "convex-edges",
-      "area": 315.5471,
+      "area": 389.9223,
       "by": {
         "hall_masonry": {
           "target": 0.1,
@@ -130,17 +130,17 @@
         "hall_plinth": {
           "target": 0.12,
           "actual": 0.12,
-          "area": 130.0716
+          "area": 205.6255
         },
         "hall_render": {
           "target": 0.1,
           "actual": 0.1,
-          "area": 85.4808
+          "area": 87.6088
         },
         "hall_rubble": {
           "target": 0.16,
           "actual": 0.16,
-          "area": 89.7103
+          "area": 86.4036
         }
       }
     },
@@ -168,10 +168,10 @@
       }
     },
     "mud": {
-      "target": 0.5306,
-      "actual": 0.5306,
+      "target": 0.5312,
+      "actual": 0.5312,
       "eligible": "ground-near & !up-facing ; ground-near & side-facing ; ground-near",
-      "area": 96.0758,
+      "area": 99.4941,
       "by": {
         "hall_masonry": {
           "target": 0.55,
@@ -186,15 +186,15 @@
         "hall_timber": {
           "target": 0.55,
           "actual": 0.55,
-          "area": 51.4526
+          "area": 54.8709
         }
       }
     },
     "dust": {
-      "target": 0.481,
-      "actual": 0.481,
+      "target": 0.48,
+      "actual": 0.48,
       "eligible": "up-facing",
-      "area": 249.8895,
+      "area": 250.8903,
       "by": {
         "hall_masonry": {
           "target": 0.55,
@@ -214,12 +214,12 @@
         "hall_rubble": {
           "target": 0.45,
           "actual": 0.45,
-          "area": 21.0466
+          "area": 20.5232
         },
         "hall_timber": {
           "target": 0.3,
           "actual": 0.3,
-          "area": 27.0619
+          "area": 28.5861
         }
       }
     }

@@ -98,6 +98,24 @@ Deterministic; refitted in-process from `src/qa/critique-golden.json`, which com
 hashes and scores, never meshes. A plain marginal-isotonic + non-negative ridge combine was tried
 first: same Spearman, but it ranked 37 of 160 degraded copies at or above their originals.
 
+**Wear is saturated (As of 2026-11).** The golden panel's wear scores run 2 – 6.5 (mean 4.4), so
+the wear model's ceiling with every metric at its best knot is 6.2 and its predictions on the
+golden set span 3.7 – 5.2: no asset can be predicted an 8, whatever it paints. Its levers
+(silhouette roughness ± 0.6, texel density ± 0.6, curvature share ± 0.45, triangles ± 0.4,
+high-frequency energy ± 0.35) are mesh density and speckle; none answers to a mud band or a
+soot fan. The honest fix is a measurement and panel scores, never a hand-set coefficient.
+
+**Broad wear** (`wearMetrics`, `wearOf`; `src/qa/critique-wear.ts`) is that measurement, on LOD0
+vertex colour. `wearBroad`: RMS sRGB distance between each patch of a surface (1/40 of the
+asset's diagonal) and that surface's own mean, so design colours on separate parts count nothing
+and chips average out. `wearPlaced`: the share of that variation explained by height above the
+ground and sky-facing. Measured: a clean 3 m box 0 / 0; `weather({ climate: 'wet' })` on it
+0.015 / 0.03; the same with `read: 'hero'` 0.032 / 0.41. It is reported, not yet a calibration
+column: joining `METRICS` waits for golden rows that carry it (clean and weathered copies of the
+same assets, scored blind by the panel, re-measured vectors), after which the usual fit and the
+leave-one-asset-out floor decide whether it stays. Limits: a surface tinted evenly all over and
+textured (`TextureSet`) parts read as clean.
+
 **Golden set** (2026-11-15). `bun scripts/golden.ts fetch|measure|panel|check|baseline`. 40 CC0
 assets from Poly Haven (busts, animal heads, statues, rock, fruit, furniture, tools, appliances; URL,
 author, licence and packed-GLB sha256 per asset in `sources`), each with four degraded copies

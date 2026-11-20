@@ -3,24 +3,31 @@
 // (`extrudeSvg`, even-odd holes), a turned amphora from a half profile (`latheSvg`), a creature
 // head blocked out from front + side + top silhouettes (`visualHull`) and refined with ordinary
 // sculpt edits on a turned oak stand, and a bevelled star emblem on the plinth front. Each sits on a
-// real material strip (galvanised steel gear, clay amphora with throw rings, pored skin) and wears
-// its story through `weather()`: oil run down from the gear teeth, dust on the amphora shoulder and
-// a chipped lip. Curves flatten coarser per LOD (`lod: ctx.lod`), the sculpt cell grows.
+// real material strip (machined steel gear with face-weighted normals, a thrown-clay amphora strip
+// with throw rings, pored skin, a lacquered walnut plinth) and wears its story: oil on the gear
+// teeth, dust on the amphora shoulder and a chipped lip, dust settled along the plinth's back and
+// ends and its front arris rubbed through. Curves flatten coarser per LOD (`lod: ctx.lod`), the sculpt cell grows.
 // Dossier: recipes/svg_showcase/README.md.
 
 import {
   box,
   defineAsset,
+  dmath,
   extrudeSvg,
   hex,
   lathe,
   latheSvg,
   type Mesh,
+  merge,
   sculpt,
+  tiled,
   type Vec3,
   visualHull,
   weather,
+  weightedNormals,
 } from '@developerz.ai/ts23d';
+import { mix } from '../_lib/finish/wear.ts';
+import { CLAY_STRIP } from './clay.ts';
 
 const PLINTH: Vec3 = [0.5, 1.8, 0.12];
 const TOP = PLINTH[2];
@@ -30,7 +37,11 @@ const BASE = TOP + STAND;
 const STEEL = hex('#c4c8cc');
 const OAK = hex('#c9a27a');
 const CLAY = hex('#b5643c');
-const SLATE = hex('#3b4048');
+const WALNUT = hex('#5a3d2a');
+const DUST = hex('#9a958a');
+const SCUFF = hex('#a07a55');
+/** Pale maple stringing inlaid round the plinth top. */
+const MAPLE = hex('#d8c29a');
 const SKIN = hex('#6f8f4a');
 const GOLD = hex('#d8b24a');
 
@@ -39,22 +50,22 @@ const TEETH = 12;
 const tooth = (i: number): string => {
   const a = Math.PI / 2 + (i / TEETH) * Math.PI * 2;
   const p = (r: number, da: number): string =>
-    `${(r * Math.cos(a + da)).toFixed(3)} ${(r * Math.sin(a + da)).toFixed(3)}`;
+    `${(r * dmath.cos(a + da)).toFixed(3)} ${(r * dmath.sin(a + da)).toFixed(3)}`;
   return `${i === 0 ? 'M' : 'L'}${p(40, -0.15)} L${p(48, -0.09)} L${p(48, 0.09)} L${p(40, 0.15)}`;
 };
 const holes = [0, 1, 2, 3]
   .map((i) => {
     const a = Math.PI / 4 + (i * Math.PI) / 2;
-    return `<circle cx="${(26 * Math.cos(a)).toFixed(3)}" cy="${(26 * Math.sin(a)).toFixed(3)}" r="7"/>`;
+    return `<circle cx="${(26 * dmath.cos(a)).toFixed(3)}" cy="${(26 * dmath.sin(a)).toFixed(3)}" r="7"/>`;
   })
   .join('');
 const GEAR = `<svg viewBox="-50 -50 100 100">
   <path d="${Array.from({ length: TEETH }, (_, i) => tooth(i)).join(' ')} Z"/>
-  <path d="M-3 -11.62 L-3 -15.5 L3 -15.5 L3 -11.62 A12 12 0 1 1 -3 -11.62 Z"/>${holes}
+  <path d="M-4 -11.31 L-4 -16.5 L4 -16.5 L4 -11.31 A12 12 0 1 1 -4 -11.31 Z"/>${holes}
 </svg>`;
 const GEAR_SCALE = 0.005;
 /** The bottom tooth's flat tip, below the gear centre. */
-const GEAR_DROP = 48 * Math.cos(0.09) * GEAR_SCALE;
+const GEAR_DROP = 48 * dmath.cos(0.09) * GEAR_SCALE;
 
 /** Amphora half profile: axis on the left edge, foot at the bottom, open mouth with a lip. */
 const AMPHORA = `<svg viewBox="0 0 30 100">
@@ -83,16 +94,110 @@ const STAR = `<svg viewBox="-50 -50 100 100"><polygon points="${Array.from(
   (_, i) => {
     const a = -Math.PI / 2 + (i * Math.PI) / 5;
     const r = i % 2 === 0 ? 48 : 20;
-    return `${(r * Math.cos(a)).toFixed(3)},${(r * Math.sin(a)).toFixed(3)}`;
+    return `${(r * dmath.cos(a)).toFixed(3)},${(r * dmath.sin(a)).toFixed(3)}`;
   },
 ).join(' ')}"/></svg>`;
+
+/**
+ * A lacquered walnut plinth that has stood in a workshop: a maple stringing inlay round its top,
+ * dust settled in a soft band along the back edge and the two ends (each a quad whose inner edge
+ * fades to the lacquer: vertex colours interpolate), and the front arris rubbed through to pale
+ * wood where hands and tools catch it.
+ */
+function plinth(lod: number): Mesh {
+  const [L, W, H] = PLINTH;
+  const out: Mesh[] = [
+    box({ size: PLINTH, color: WALNUT, strip: 'oak', bevel: lod < 2 ? 0.006 : 0 }),
+  ];
+  const m = 0.012; // stay inside the 6 mm bevel
+  // The top's own veneer, 0.5 mm over the box's top face: that face stretched the whole oak band
+  // across the plinth, and the band's pale edge rows drew a light stripe along the back and one
+  // end only (an L). Here U starts a metre into the strip and V keeps to the band's middle half.
+  out.push(
+    tiled({
+      origin: [-L / 2 + m, -W / 2 + m, H + 0.0005],
+      u: [L - 2 * m, 0, 0],
+      v: [0, W - 2 * m, 0],
+      color: WALNUT,
+      strip: 'oak',
+      uOffset: 1,
+      vMetres: 2 * (W - 2 * m),
+      vOffset: (W - 2 * m) / 2,
+    }),
+  );
+  // Maple stringing 8 mm wide, 3 cm in from every edge: a closed inlay border on all four sides.
+  const s = 0.03;
+  for (const [cx, cy, sx, sy] of [
+    [L / 2 - s, 0, 0.008, W - 2 * s + 0.008],
+    [-L / 2 + s, 0, 0.008, W - 2 * s + 0.008],
+    [0, W / 2 - s, L - 2 * s - 0.008, 0.008],
+    [0, -W / 2 + s, L - 2 * s - 0.008, 0.008],
+  ] as const)
+    out.push(
+      box({
+        size: [sx, sy, 0.001],
+        at: [cx, cy, H + 0.002],
+        color: MAPLE,
+        strip: 'oak',
+        omit: ['bottom'],
+      }),
+    );
+  // Dust over the rectangle x0..x1 × y0..y1 (1–2 mm over the top, under the stringing), heaviest
+  // at its `dusty` edge and fading to the lacquer in four steps of uniform colour. (A two-colour
+  // quad left the fade to vertex interpolation, which the sheet's flat raster does not do: each
+  // triangle took its first vertex's colour, so one end band drew solid dust, the other none.)
+  const band = (x0: number, x1: number, y0: number, y1: number, dustyX: boolean, at0: boolean) =>
+    merge(
+      [0, 1, 2, 3].map((k) => {
+        // Step k from the dusty edge: its span along the fade axis, and its share of dust.
+        const [a, b] = dustyX ? [x0, x1] : [y0, y1];
+        const t0 = at0 ? a + ((b - a) * k) / 4 : b - ((b - a) * (k + 1)) / 4;
+        const t1 = t0 + (b - a) / 4;
+        const [sx0, sx1, sy0, sy1] = dustyX ? [t0, t1, y0, y1] : [x0, x1, t0, t1];
+        return box({
+          size: [sx1 - sx0, sy1 - sy0, 0.001],
+          at: [(sx0 + sx1) / 2, (sy0 + sy1) / 2, H + 0.001],
+          color: mix(DUST, WALNUT, (k + 0.5) / 4),
+          strip: 'oak',
+          omit: ['front', 'back', 'left', 'right', 'bottom'],
+        });
+      }),
+    );
+  // Far, the stepped dust reads as a painted border: LOD0/1 only.
+  if (lod < 2)
+    out.push(
+      band(-L / 2 + m, -L / 2 + 0.14, -W / 2 + m, W / 2 - m, true, true),
+      band(-L / 2 + 0.14, L / 2 - m, -W / 2 + m, -W / 2 + 0.12, false, true),
+      band(-L / 2 + 0.14, L / 2 - m, W / 2 - 0.12, W / 2 - m, false, false),
+    );
+  if (lod === 0)
+    // Rubbed-through lacquer along the front top arris, in three worn stretches.
+    for (const [y, w, h] of [
+      [-0.66, 0.09, 0.01],
+      [-0.52, 0.05, 0.007],
+      [-0.26, 0.07, 0.009],
+      [0.3, 0.11, 0.01],
+      [0.47, 0.04, 0.006],
+      [0.7, 0.08, 0.008],
+    ] as const)
+      out.push(
+        box({
+          size: [0.001, w, h],
+          at: [L / 2 + 0.0005, y, H - 0.006 - h],
+          color: SCUFF,
+          strip: 'oak',
+          omit: ['back', 'left', 'right', 'top', 'bottom'],
+        }),
+      );
+  return merge(out);
+}
 
 /** Throw rings: the potter's fingers leave faint horizontal bands; tone the clay by height. */
 function throwRings(m: Mesh, z0: number): Mesh {
   const colors = new Float32Array(m.colors);
   for (let v = 0; v < colors.length / 3; v++) {
     const z = (m.positions[v * 3 + 2] ?? 0) - z0;
-    const k = 0.93 + 0.07 * Math.sin(z * 2 * Math.PI * 55) + (z > 0.42 ? 0.04 : 0);
+    const k = 0.93 + 0.07 * dmath.sin(z * 2 * Math.PI * 55) + (z > 0.42 ? 0.04 : 0);
     for (let c = 0; c < 3; c++) colors[v * 3 + c] = (colors[v * 3 + c] ?? 0) * k;
   }
   return { ...m, colors };
@@ -111,7 +216,7 @@ export const svg_showcase = defineAsset({
   budget: { triangles: [22000, 7000, 2000] },
   build(ctx) {
     const lod = ctx.lod;
-    ctx.part('plinth', box({ size: PLINTH, at: [0, 0, 0], color: SLATE, bevel: 0.006 }));
+    ctx.part('plinth', plinth(lod));
 
     const gear = extrudeSvg(GEAR, {
       scale: GEAR_SCALE,
@@ -123,7 +228,7 @@ export const svg_showcase = defineAsset({
       lod,
       at: [0, -0.55, TOP + GEAR_DROP],
       color: STEEL,
-      strip: 'steel_galvanised',
+      strip: 'aluminium',
     });
     const amphora = throwRings(
       latheSvg(AMPHORA, {
@@ -132,7 +237,7 @@ export const svg_showcase = defineAsset({
         lod,
         at: [0, 0, TOP],
         color: CLAY,
-        strip: 'concrete',
+        strip: CLAY_STRIP,
         uv: 'metres',
       }),
       TOP,
@@ -170,7 +275,9 @@ export const svg_showcase = defineAsset({
         },
       },
     );
-    ctx.part('gear', oiled.gear);
+    // Face-weighted normals: the big flat faces stay dead flat (the extrude's chamfer normals bled
+    // into the triangulated faces as shading streaks) while the chamfers catch the light.
+    ctx.part('gear', weightedNormals(oiled.gear, { hardAngle: 30 }));
     ctx.part('amphora', shelved.amphora);
 
     ctx.part(
@@ -205,6 +312,9 @@ export const svg_showcase = defineAsset({
     });
     const z = (y: number): number => BASE + (105 - y) * s;
     const at = (x: number, y: number, zz: number): Vec3 => [x * s, y * s, z(zz)];
+    // Features smaller than the LOD2 cell (3.4 cm) only scatter stray colour over its coarse
+    // facets: the far head keeps its planes, ears and eyes and leaves these out.
+    const fine = <T>(...e: T[]): T[] => (lod < 2 ? e : []);
     ctx.part(
       'head',
       sculpt({
@@ -241,63 +351,86 @@ export const svg_showcase = defineAsset({
           { shape: 'capsule', at: at(30, -14, 34), to: at(30, 14, 34), size: 5 * s, blend: 0.02 },
           { shape: 'ellipsoid', at: at(22, -24, 66), size: [12 * s, 10 * s, 10 * s], blend: 0.03 },
           { shape: 'ellipsoid', at: at(22, 24, 66), size: [12 * s, 10 * s, 10 * s], blend: 0.03 },
-          // Forehead wrinkles: three shallow grooves above the brow.
-          ...[22, 15, 8].map((zz) => ({
-            shape: 'capsule' as const,
-            at: at(30 - (34 - zz) * 0.4, -12, zz),
-            to: at(30 - (34 - zz) * 0.4, 12, zz),
-            size: 1.4 * s,
-            op: 'subtract' as const,
-            blend: 0.006,
-          })),
+          // Forehead wrinkles: three grooves above the brow, deep enough to catch the key light
+          // (LOD0: at LOD1's 1.6 cm cell they would only blur the brow).
+          ...(lod === 0
+            ? [22, 15, 8].map((zz) => ({
+                shape: 'capsule' as const,
+                at: at(30 - (34 - zz) * 0.4, -13, zz),
+                to: at(30 - (34 - zz) * 0.4, 13, zz),
+                size: 2 * s,
+                op: 'subtract' as const,
+                blend: 0.006,
+              }))
+            : []),
           // A notch bitten out of each ear's trailing edge.
-          { shape: 'sphere', at: at(-6, 52, 44), size: 5 * s, op: 'subtract', blend: 0.004 },
+          ...fine({
+            shape: 'sphere' as const,
+            at: at(-6, 52, 44),
+            size: 6.5 * s,
+            op: 'subtract' as const,
+            blend: 0.004,
+          }),
           // Eye sockets, eyeballs, pupils.
           { shape: 'sphere', at: at(33, -14, 45), size: 9 * s, op: 'subtract', blend: 0.01 },
           { shape: 'sphere', at: at(33, 14, 45), size: 9 * s, op: 'subtract', blend: 0.01 },
           { shape: 'sphere', at: at(28, -14, 45), size: 8 * s, color: hex('#e8d890') },
           { shape: 'sphere', at: at(28, 14, 45), size: 8 * s, color: hex('#e8d890') },
-          {
-            shape: 'sphere',
-            at: at(36, -14, 45),
-            size: 3 * s,
-            op: 'paint',
-            blend: 0.004,
-            color: hex('#1a1408'),
-          },
-          {
-            shape: 'sphere',
-            at: at(36, 14, 45),
-            size: 3 * s,
-            op: 'paint',
-            blend: 0.004,
-            color: hex('#1a1408'),
-          },
-          // Nostrils and a wide mouth groove.
-          { shape: 'sphere', at: at(46, -5, 60), size: 3 * s, op: 'subtract', blend: 0.006 },
-          { shape: 'sphere', at: at(46, 5, 60), size: 3 * s, op: 'subtract', blend: 0.006 },
-          {
-            shape: 'capsule',
-            at: at(36, -18, 72),
-            to: at(36, 18, 72),
-            size: 2.5 * s,
-            op: 'subtract',
-            blend: 0.008,
-            color: hex('#3a2418'),
-          },
-          // Tusks up from the lower lip.
-          {
-            shape: 'cone',
-            at: at(34, -12, 76),
-            size: [3 * s, 0.5 * s, 14 * s],
-            color: hex('#efe6cf'),
-          },
-          {
-            shape: 'cone',
-            at: at(34, 12, 76),
-            size: [3 * s, 0.5 * s, 14 * s],
-            color: hex('#efe6cf'),
-          },
+          ...fine(
+            {
+              shape: 'sphere' as const,
+              at: at(36, -14, 45),
+              size: 3 * s,
+              op: 'paint' as const,
+              blend: 0.004,
+              color: hex('#1a1408'),
+            },
+            {
+              shape: 'sphere' as const,
+              at: at(36, 14, 45),
+              size: 3 * s,
+              op: 'paint' as const,
+              blend: 0.004,
+              color: hex('#1a1408'),
+            },
+            // Nostrils and a wide mouth groove.
+            {
+              shape: 'sphere' as const,
+              at: at(46, -5, 60),
+              size: 3 * s,
+              op: 'subtract' as const,
+              blend: 0.006,
+            },
+            {
+              shape: 'sphere' as const,
+              at: at(46, 5, 60),
+              size: 3 * s,
+              op: 'subtract' as const,
+              blend: 0.006,
+            },
+            {
+              shape: 'capsule' as const,
+              at: at(36, -18, 72),
+              to: at(36, 18, 72),
+              size: 2.5 * s,
+              op: 'subtract' as const,
+              blend: 0.008,
+              color: hex('#3a2418'),
+            },
+            // Tusks up from the lower lip.
+            {
+              shape: 'cone' as const,
+              at: at(34, -12, 76),
+              size: [3 * s, 0.5 * s, 14 * s] as Vec3,
+              color: hex('#efe6cf'),
+            },
+            {
+              shape: 'cone' as const,
+              at: at(34, 12, 76),
+              size: [3 * s, 0.5 * s, 14 * s] as Vec3,
+              color: hex('#efe6cf'),
+            },
+          ),
           // Darker crown, warm ear insides.
           {
             shape: 'sphere',
@@ -308,7 +441,7 @@ export const svg_showcase = defineAsset({
             color: hex('#4f6a34'),
           },
         ],
-        resolution: ctx.pick([0.009, 0.016, 0.034]),
+        resolution: ctx.pick([0.0095, 0.016, 0.034]),
         color: SKIN,
         mirror: 'y',
         strip: 'concrete',

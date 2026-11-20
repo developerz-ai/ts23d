@@ -1,28 +1,28 @@
 {
   "asset": "water_tower",
   "reviewer": "agent",
-  "overall": 7.1,
+  "overall": 7.4,
   "scores": {
     "silhouette": {
       "score": 8,
-      "reason": "Railroad water tank: eight-sided roof with finial, stave tank with hoops, X-braced trestle on footings, swinging spout, float-gauge board: reads from every view.",
+      "reason": "Railroad water tank: six-sided roof with finial, stave tank with hoops, X-braced trestle on footings, spout with chain, float-gauge board: reads from every view.",
       "fixes": [
         "pulley and cable on the float gauge"
       ]
     },
     "proportions": {
       "score": 7,
-      "reason": "11.3 x 7.5 x 10.6 m including the spout; tank-to-trestle ratio matches the dossier, roof now eight-sided; the central outlet core under the tank is still very thick (reads as a second tank).",
+      "reason": "11.3 x 7.5 x 10.6 m including the spout; tank-to-trestle ratio matches the dossier; the central outlet core under the tank is still very thick (reads as a second tank in FRONT).",
       "fixes": [
         "slim the centre outlet core ~30%"
       ]
     },
     "materials": {
-      "score": 6,
-      "reason": "Tank wood and iron hoops read, but the many hoops at ~0.3 m spacing make the tank read as horizontal boards; the roof shows green-khaki camouflage blotches rather than moss in shade.",
+      "score": 7,
+      "reason": "Fewer hoops now, so the vertical staves read in hero.png; the roof is a weathered grey-brown with no camouflage blotches. The staves are one even brown with little per-stave value.",
       "fixes": [
-        "fewer, heavier hoops (6-8) so the vertical staves dominate",
-        "moss only on the shaded/north roof facets, soft-edged"
+        "per-stave value and width jitter",
+        "moss only on the shaded roof facets, soft-edged"
       ]
     },
     "detail": {
@@ -42,80 +42,22 @@
       ]
     },
     "lod": {
-      "score": 7,
-      "reason": "lods.png: LOD2 (568 tris) keeps tank, roof, trestle with X braces and spout; the tank switches from hooped boards to vertical planks and loses the gauge.",
+      "score": 8,
+      "reason": "FAR LOD2 keeps tank, roof, trestle with X braces, spout, the hoops as dark bands and the float-gauge board.",
       "fixes": [
-        "keep 2-3 hoops as dark bands at LOD2",
-        "keep the float-gauge board as one quad"
+        "keep the spout chain at LOD2"
       ]
     },
     "technical": {
       "score": 8,
-      "reason": "QA PASS: 7.6k / 3.2k / 568 tris, 2 / 2 / 2 draws: lean for a scene prop.",
+      "reason": "QA PASS: 6.9k / 3.1k / 586 tris, 2 / 2 / 2 draws: lean for a scene prop.",
       "fixes": [
         "spend LOD0 triangles on stave edges rather than roof facets"
       ]
     }
   },
   "renders": {
-    "hero.png": "93a2a446812c7a13f6ebe925897fff0691b4853a7a2ae02ef4067bb97afead1a",
-    "sheet.png": "48c55b34e4a8cd371365564adc72102f6eb60b745fbff1ef8b9d3d91bf8bd704",
-    "raking.png": "a4a58be8f0d2c6efaa83038c3463f59f65b7d68402af7c139895898027f59c44",
-    "raking_detail.png": "8fe4cddbfe93eb1e6fdcc00625f90b9c47032676af1d4ebc3236e1c4214aa06a",
-    "lods.png": "0d898baba7771482396ed093ff608d518c73d80bcd728c4f312dd11bdee95b1c",
-    "silhouette.png": "ad991fe5d49bf9b5626e508834a754c7b5c5e37ceedcba49e831d655d7a48d29",
-    "value.png": "1f0e09d8ae869a97f29a47c49f4a442f09ae99d889a79a86e75967794f17d90a",
-    "detail.png": "8fa9d32952b701f7a8fd5dca5cb8e38dba07ce3c7b2a763ade1d74ef99a160dc"
-  },
-  "metrics": {
-    "silhouette": [
-      {
-        "view": "front",
-        "iou": 0.989
-      },
-      {
-        "view": "side",
-        "iou": 0.97
-      },
-      {
-        "view": "3/4",
-        "iou": 0.983
-      }
-    ],
-    "focal": {
-      "peakPart": "float_gauge",
-      "peak": [
-        371,
-        250
-      ],
-      "focalShare": 0,
-      "focalArea": 0,
-      "top": [
-        {
-          "part": "float_gauge",
-          "share": 0.361
-        },
-        {
-          "part": "trestle",
-          "share": 0.245
-        },
-        {
-          "part": "tank",
-          "share": 0.206
-        }
-      ],
-      "declared": []
-    },
-    "rest": {
-      "share": 0.408,
-      "spread": 0.67,
-      "min": 0.25
-    },
-    "shape": {
-      "acuteShare": 0.178,
-      "straightShare": 0.726,
-      "taper": -0.051,
-      "shape": "stable"
-    }
+    "hero.png": "b11377c776a1a678b8d75f219f5e9bb46250e5635e6e75b102d0de27f5afb148",
+    "sheet.png": "db38132f2a34fa98db54d6d88189d36d49ac76798bdba810014d305527cdc764"
   }
 }

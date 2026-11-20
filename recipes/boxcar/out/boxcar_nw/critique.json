@@ -1,7 +1,7 @@
 {
   "asset": "boxcar_nw",
   "reviewer": "agent",
-  "overall": 7.3,
+  "overall": 7.7,
   "scores": {
     "silhouette": {
       "score": 8,
@@ -18,33 +18,34 @@
       ]
     },
     "materials": {
-      "score": 7,
-      "reason": "Painted boards, a weathered grey running board and dark iron separate well; but the road-name lettering is chopped into pieces by the diagonal braces at 3/4 (it reads as broken text in hero.png).",
+      "score": 8,
+      "reason": "The NORFOLK & WESTERN lettering now runs across the braces and reads at 3/4 in hero.png (only a hairline gap where a brace crosses), the chalk tally reads, and painted boards, a weathered grey running board and dark iron separate well.",
       "fixes": [
-        "paint the lettering onto the brace faces too (or flush-mount it) so the road name reads unbroken at 3/4"
+        "close the remaining hairline gap in the lettering where the braces cross it",
+        "slight roughness lift on the worn running-board walk path"
       ]
     },
     "detail": {
-      "score": 7,
-      "reason": "Board seams, braces, door track, grab irons and trucks are there; the end wall's scattered dark slots are now regular rows of grab irons, but there is no door hasp/seal, no journal-box lids and no roof seam caps.",
+      "score": 8,
+      "reason": "Board seams, braces, door track, a door hasp with seal placard, roof seam caps, grab irons and arch-bar trucks all hold in the closer hero.png.",
       "fixes": [
-        "door hasp, seal pin and door stops; journal-box lids",
-        "roof seam caps over the board joints"
+        "journal-box lids with hinge pins on the trucks",
+        "door stops at both ends of the track"
       ]
     },
     "wear": {
-      "score": 6,
-      "reason": "Faded paint and light grime at the sill only; no rust streaks, no replaced boards, no chalk marks.",
+      "score": 7,
+      "reason": "Chalk car-card marks (X17 and a tally) by the door, one fresher replaced board, grime rising from the sill and faint streaks under the door track tell a working car; rust streaks under bolts are faint at hero distance.",
       "fixes": [
-        "road grime rising from the sill (double strength below 1 m) and rust streaks under the door track and bolts",
-        "a few replaced boards in fresher paint and chalk car-card marks by the door"
+        "stronger rust streaks under each bolt row and the door track",
+        "scuffed paint along the sill where loaders hit it"
       ]
     },
     "lod": {
       "score": 7,
-      "reason": "FAR LOD2 keeps the box and brace pattern; the lettering is now a dull pink stencil block instead of a bright white bar, but it still reads as one smeared stripe across the braces, and the roof boards vanish.",
+      "reason": "FAR LOD2 keeps the box and brace pattern, but the lettering becomes a row of pale blocks along the top board that still reads as a stripe, and the roof board seams vanish.",
       "fixes": [
-        "darken the LOD2 stencil block toward the lettering's average over the red so it stops reading as a stripe",
+        "merge the LOD2 letter blocks into one mid-tone patch close to the lettered area average",
         "keep the roof board seams as darker per-face stripes at LOD2"
       ]
     },
@@ -57,7 +58,7 @@
     }
   },
   "renders": {
-    "hero.png": "4174bfeedc6ec4d449a78e21c7a4856b92d293a9dd1a5e46ba22f3ab27741125",
-    "sheet.png": "38e11e47210539743d3edcc927d17677decfef3ad36dd352973903a7d7d6d993"
+    "hero.png": "2772a909ca5322ae6f0bbbcbc3c6bf6fcac8636571db86db09ba154107cd068b",
+    "sheet.png": "9bf8e2812511218db50de252a79e107934e4ad4acd733de1ac5afa7c7acbea6a"
   }
 }

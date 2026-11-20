@@ -3,6 +3,7 @@
 
 import { describe, expect, test } from 'bun:test';
 import type { Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import { at, field, R, run, zone } from './hair-fixtures.ts';
 
 describe('hairCards shape', () => {
@@ -12,7 +13,7 @@ describe('hairCards shape', () => {
     // Folded: 3 vertices per row (4 tris per segment), so twice the triangles of a flat card.
     expect(v.indices.length).toBe(flat.indices.length * 2);
     // Row 1 of the first card: left, right, centre. The centre sits further from the axis.
-    const r = (i: number): number => Math.hypot(at(v, i)[1], at(v, i)[2]);
+    const r = (i: number): number => dmath.hypot(at(v, i)[1], at(v, i)[2]);
     const lift = r(5) - (r(3) + r(4)) / 2;
     expect(lift).toBeGreaterThan(0.012 * 0.5 * 0.6 * 0.5);
     // Roots still straddled by vertices 0 and 1: their midpoint is buried.
@@ -36,9 +37,9 @@ describe('hairCards shape', () => {
 
   test('fails if long cards kink: over a rippled skin and a lumpy solid they turn < 40° a segment', () => {
     const rippled = (p: Vec3): number =>
-      Math.hypot(p[1], p[2]) - R + 0.03 * Math.sin(p[0] * 60) * Math.sin(p[2] * 60);
+      dmath.hypot(p[1], p[2]) - R + 0.03 * dmath.sin(p[0] * 60) * dmath.sin(p[2] * 60);
     const collide = (p: Vec3): number =>
-      Math.hypot(p[1], p[2]) - R - 0.02 - 0.02 * Math.max(0, Math.sin(p[0] * 21));
+      dmath.hypot(p[1], p[2]) - R - 0.02 - 0.02 * Math.max(0, dmath.sin(p[0] * 21));
     const m = run({
       zones: [zone({ length: 0.3, droop: 0.6, lift: 0.1, roll: 0, clump: 4, density: () => 60 })],
       segments: 8,
@@ -62,8 +63,8 @@ describe('hairCards shape', () => {
         const v: Vec3 = [r[0] - q[0], r[1] - q[1], r[2] - q[2]];
         const cos =
           (u[0] * v[0] + u[1] * v[1] + u[2] * v[2]) /
-          (Math.hypot(u[0], u[1], u[2]) * Math.hypot(v[0], v[1], v[2]) || 1);
-        worst = Math.max(worst, (Math.acos(Math.min(1, Math.max(-1, cos))) * 180) / Math.PI);
+          (dmath.hypot(u[0], u[1], u[2]) * dmath.hypot(v[0], v[1], v[2]) || 1);
+        worst = Math.max(worst, (dmath.acos(Math.min(1, Math.max(-1, cos))) * 180) / Math.PI);
       }
     }
     expect(cards).toBeGreaterThan(5);
@@ -96,7 +97,7 @@ describe('hairCards shape', () => {
   test('fails if a card flips edge-on along its length: its width turns < 120° row to row', () => {
     // Long cards over a rippled solid: the field's normal swings from row to row along them.
     const rippled = (p: Vec3): number =>
-      Math.hypot(p[1], p[2]) - R + 0.03 * Math.sin(p[0] * 60) * Math.sin(p[2] * 60);
+      dmath.hypot(p[1], p[2]) - R + 0.03 * dmath.sin(p[0] * 60) * dmath.sin(p[2] * 60);
     const m = run({
       zones: [zone({ length: 0.4, lift: 0.5, bend: 0, droop: 0.9, roll: 0 })],
       segments: 8,
@@ -110,13 +111,13 @@ describe('hairCards shape', () => {
           const a = at(m, c * rows * 2 + r * 2);
           const b = at(m, c * rows * 2 + r * 2 + 1);
           const d: Vec3 = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
-          const l = Math.hypot(d[0], d[1], d[2]) || 1;
+          const l = dmath.hypot(d[0], d[1], d[2]) || 1;
           return [d[0] / l, d[1] / l, d[2] / l];
         };
         const u = w(k - 1);
         const v = w(k);
         const cos = Math.min(1, u[0] * v[0] + u[1] * v[1] + u[2] * v[2]);
-        worst = Math.max(worst, (Math.acos(cos) * 180) / Math.PI);
+        worst = Math.max(worst, (dmath.acos(cos) * 180) / Math.PI);
       }
     // Re-deriving the width from each row's skin normal flips the ribbon (180°) here.
     expect(worst).toBeLessThan(120);
@@ -124,7 +125,7 @@ describe('hairCards shape', () => {
 
   test('fails if shading normals oppose the faces (QA normals-winding): rolled cards hanging off', () => {
     const rippled = (p: Vec3): number =>
-      Math.hypot(p[1], p[2]) - R + 0.03 * Math.sin(p[0] * 60) * Math.sin(p[2] * 60);
+      dmath.hypot(p[1], p[2]) - R + 0.03 * dmath.sin(p[0] * 60) * dmath.sin(p[2] * 60);
     const m = run({
       zones: [zone({ length: 0.3, lift: 0.5, droop: 0.9, roll: 1.5, width: 0.05 })],
       segments: 4,
@@ -149,8 +150,8 @@ describe('hairCards shape', () => {
       const n: Vec3 = [nm(0), nm(1), nm(2)];
       const cos =
         (n[0] * f[0] + n[1] * f[1] + n[2] * f[2]) /
-        (Math.hypot(f[0], f[1], f[2]) * Math.hypot(n[0], n[1], n[2]) || 1);
-      const area = Math.hypot(f[0], f[1], f[2]);
+        (dmath.hypot(f[0], f[1], f[2]) * dmath.hypot(n[0], n[1], n[2]) || 1);
+      const area = dmath.hypot(f[0], f[1], f[2]);
       all += area;
       if (cos < -0.1) bad += area;
     }

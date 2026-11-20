@@ -4,7 +4,7 @@
 // Majority of the three rays (short-circuited), so grazing an edge cannot flip the answer.
 // Open sheets (planar decals) are never "solid"; penetration only means something vs closed parts.
 
-import { boundsOf, type Mesh, type Vec3 } from '../core/index.ts';
+import { boundsOf, dmath, type Mesh, type Vec3 } from '../core/index.ts';
 
 /** Column size: 20 cm for props and vehicles, growing with the mesh so a 330 m tower's long
  *  members don't land in thousands of columns each (answers never depend on the cell size). */
@@ -12,7 +12,7 @@ const cellFor = (m: Mesh): number => {
   const b = boundsOf(m);
   return Math.max(
     0.2,
-    Math.hypot(b.max[0] - b.min[0], b.max[1] - b.min[1], b.max[2] - b.min[2]) / 256,
+    dmath.hypot(b.max[0] - b.min[0], b.max[1] - b.min[1], b.max[2] - b.min[2]) / 256,
   );
 };
 // A tiny fixed offset keeps the query point off shared edges/vertices of axis-aligned geometry.

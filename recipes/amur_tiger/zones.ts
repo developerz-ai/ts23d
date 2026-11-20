@@ -3,6 +3,7 @@
 // throat, inner legs) and the dorsal weight. Pure lookups, no randomness.
 
 import type { Vec3 } from '@developerz.ai/ts23d';
+import { dmath } from '@developerz.ai/ts23d';
 import { smoothstep } from '../_lib/creature/curve.ts';
 import { SK } from './skeleton.ts';
 
@@ -63,13 +64,13 @@ export function legFrame(chain: readonly Vec3[], p: Vec3): LegFrame {
     const b = chain[i + 1];
     if (!a || !b) continue;
     const ab: Vec3 = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
-    const l2 = ab[0] ** 2 + ab[1] ** 2 + ab[2] ** 2 || 1;
+    const l2 = ab[0] * ab[0] + ab[1] * ab[1] + ab[2] * ab[2] || 1;
     const t = Math.min(
       1,
       Math.max(0, ((p[0] - a[0]) * ab[0] + (p[1] - a[1]) * ab[1] + (p[2] - a[2]) * ab[2]) / l2),
     );
     const v: Vec3 = [p[0] - a[0] - ab[0] * t, p[1] - a[1] - ab[1] * t, p[2] - a[2] - ab[2] * t];
-    const d = Math.hypot(v[0], v[1], v[2]);
+    const d = dmath.hypot(v[0], v[1], v[2]);
     if (d < best.d) best = { rx: v[0] / (d || 1), ry: v[1] / (d || 1), d };
   }
   return best;
@@ -102,7 +103,7 @@ export function whiteOf(p: Vec3): number {
   const y = Math.abs(y0);
   const edge = lerpTable(WHITE_LINE, x);
   // The edge wanders a little (fur, not paint).
-  const wob = 0.018 * Math.sin(x * 23 + 1.3) + 0.01 * Math.sin(x * 61);
+  const wob = 0.018 * dmath.sin(x * 23 + 1.3) + 0.01 * dmath.sin(x * 61);
   const trunk = smoothstep(edge + 0.03 + wob, edge - 0.03 + wob, z);
   const lw = legWhite(p);
   const w = trunk * (1 - lw.leg) + lw.w * lw.leg;

@@ -53,15 +53,17 @@ const GRIME: Vec3 = [0.07, 0.065, 0.06];
 
 /**
  * Weathering factor for one vertex of painted iron (multiplies onto its height shade). Below
- * ~120 m: rust runs (noise stretched 25× along z, so a stain runs down a member) and blotchy
- * chalking on up-facing faces; the upper shaft stays clean and a touch brighter (fresh coat).
+ * ~120 m: rust runs (noise stretched 15× along z, so a stain runs down a member), blotchy
+ * chalking on up-facing faces and road grime on the feet; the upper shaft stays clean and a touch brighter (fresh coat).
  */
 export function ironWear(p: Vec3, n: Vec3, c: Vec3): Vec3 {
-  const age = 1 - smooth(70, 130, p[2]);
-  const runs = noise(p, [0.9, 0.9, 22]);
+  const age = 1 - smooth(80, 150, p[2]);
+  const runs = noise(p, [1.2, 1.2, 18]);
   const spots = noise(p, [3.5, 3.5, 3.5]);
-  let out = mix(c, RUST, 0.55 * age * smooth(0.55, 0.85, runs) * (0.5 + 0.5 * spots));
-  out = mix(out, CHALK, 0.35 * age * smooth(0.3, 0.9, n[2]) * smooth(0.4, 0.8, spots));
+  let out = mix(c, RUST, 0.85 * age * smooth(0.45, 0.75, runs) * (0.55 + 0.45 * spots));
+  out = mix(out, CHALK, 0.4 * age * smooth(0.3, 0.9, n[2]) * smooth(0.4, 0.8, spots));
+  // Soot and road grime on the feet: the lowest 12 m of every leg is a shade darker.
+  out = mix(out, GRIME, 0.45 * (1 - smooth(2, 14, p[2])));
   // Fresh paint aloft: a little brighter and more even than the shade alone.
   const fresh = smooth(150, 230, p[2]);
   return [out[0] * (1 + 0.12 * fresh), out[1] * (1 + 0.12 * fresh), out[2] * (1 + 0.1 * fresh)];
@@ -71,5 +73,5 @@ export function ironWear(p: Vec3, n: Vec3, c: Vec3): Vec3 {
 export function deckWear(p: Vec3, n: Vec3, c: Vec3): Vec3 {
   if (n[2] < 0.5) return c;
   const b = noise(p, [4, 4, 4]);
-  return mix(c, GRIME, 0.25 + 0.4 * smooth(0.3, 0.8, b));
+  return mix(c, GRIME, 0.35 + 0.45 * smooth(0.3, 0.8, b));
 }

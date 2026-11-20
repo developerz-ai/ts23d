@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { type Mesh, MeshBuilder, type Vec3 } from '../core/index.ts';
+import { dmath, type Mesh, MeshBuilder, type Vec3 } from '../core/index.ts';
 import { chainSeed, flowAt, flowDivergence, hairFlow, tangentOf } from './hair-flow.ts';
 
 /** Open cylinder along +X, radius r, length len (shared vertices). */
@@ -8,7 +8,7 @@ export function cylinder(r = 0.1, len = 1, rings = 24, around = 24): Mesh {
   for (let i = 0; i <= rings; i++)
     for (let j = 0; j < around; j++) {
       const a = (j / around) * Math.PI * 2;
-      const n: Vec3 = [0, Math.cos(a), Math.sin(a)];
+      const n: Vec3 = [0, dmath.cos(a), dmath.sin(a)];
       b.vertex({ p: [(i / rings) * len, r * n[1], r * n[2]], n, uv: [0, 0], color: [1, 1, 1] });
     }
   for (let i = 0; i < rings; i++)
@@ -49,7 +49,7 @@ describe('hairFlow', () => {
     for (let i = 0; i < f.length / 3; i++) {
       const d: Vec3 = [f[i * 3] ?? 0, f[i * 3 + 1] ?? 0, f[i * 3 + 2] ?? 0];
       const n: Vec3 = [m.normals[i * 3] ?? 0, m.normals[i * 3 + 1] ?? 0, m.normals[i * 3 + 2] ?? 0];
-      expect(Math.hypot(...d)).toBeCloseTo(1, 4);
+      expect(dmath.norm(d)).toBeCloseTo(1, 4);
       expect(Math.abs(d[0] * n[0] + d[1] * n[1] + d[2] * n[2])).toBeLessThan(1e-4);
     }
   });
@@ -134,7 +134,7 @@ describe('chainSeed', () => {
 
   test('tangentOf falls back deterministically when v ∥ n', () => {
     const t = tangentOf([0, 0, 2], [0, 0, 1]);
-    expect(Math.hypot(...t)).toBeCloseTo(1, 6);
+    expect(dmath.norm(t)).toBeCloseTo(1, 6);
     expect(t[2]).toBeCloseTo(0, 6);
   });
 });

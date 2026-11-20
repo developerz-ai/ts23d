@@ -117,10 +117,13 @@ function stand(ctx: BuildContext, top: number): void {
           ctx.lod < 2
             ? {
                 ...effects,
-                rust: { ...effects.rust, where: 'below-fasteners | fasteners' },
+                rust: { ...effects.rust, where: 'fasteners', streaks: false },
                 // An even film over the whole top: a coverage edge on a 10 cm grid is a
-                // checker of dusty and black triangles.
-                dust: { where: 'up-facing', amount: 0.95, strength: 0.3 },
+                // checker of dusty and black triangles (so is rust or a scratch that lands on
+                // one grid vertex in three: the plate's top keeps neither).
+                dust: { where: 'up-facing', amount: 1, strength: 0.3 },
+                // (Nor chips: a chipped grid vertex bares a whole 10 cm triangle of the top.)
+                chips: { where: 'convex-edges', amount: 0 },
               }
             : effects,
       },
@@ -193,6 +196,9 @@ export const jointDemo = (handScale = 1, name = 'joint_demo') =>
     },
     tags: ['demo', 'joints'],
     art: { focal: 'hand_fingers' },
+    // From the arm's side, close: the default orbit frames the sword's whole height from the
+    // front-left and leaves the hand a few pixels across.
+    hero: { eye: [2.03, -3.25, 1.32], target: [0.3, 0, 0.93], fovDeg: 30 },
     // The generic prop band (5k / 1.5k / 300). LOD0: the sword 1.5k, the arm and the fingered
     // hand 2.6k, the stand 0.8k (its plate is tessellated on a 10 cm grid so the rust and dust
     // have vertices to live on).

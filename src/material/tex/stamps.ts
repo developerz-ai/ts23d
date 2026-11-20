@@ -4,6 +4,7 @@
 // colour and height variation) and `mask` (1 on a piece, 0 in the gaps). Piece counts snap to
 // whole numbers per tile along U, so stamps are tileable by construction.
 
+import { dmath } from '../../core/index.ts';
 import { hash2 } from '../paint/noise.ts';
 import { type TexContext, TexField } from './field.ts';
 import { eachTexel, lattice } from './generators.ts';
@@ -143,8 +144,8 @@ export function scatter(o: ScatterOptions): Stamp {
           const py = gy + j + 0.5 + jit * (hash2(lx, gy + j, seed + 1) - 0.5);
           const r = rad * (0.7 + 0.6 * hash2(lx, gy + j, seed + 5));
           const a = o.rotate ? Math.PI * hash2(lx, gy + j, seed + 6) : 0;
-          const ca = Math.cos(a);
-          const sa = Math.sin(a);
+          const ca = dmath.cos(a);
+          const sa = dmath.sin(a);
           const du = u - px;
           const dv = v - py;
           const along = (du * ca + dv * sa) / ax;
@@ -197,7 +198,7 @@ export function strata(o: StrataOptions): Stamp {
       while ((bounds[k + 1] ?? Number.POSITIVE_INFINITY) <= ym) k++;
       const y0 = bounds[k] ?? 0;
       const t = (ym - y0) / Math.max(1e-6, (bounds[k + 1] ?? y0 + 1) - y0);
-      const face = Math.sin(Math.PI * t) ** 0.35;
+      const face = dmath.pow(dmath.sin(Math.PI * t), 0.35);
       l.h[i] = (1 - ledge) * ramp(Math.min(t, 1 - t), 0.02, 0.1) + ledge * face * (1 - 0.35 * t);
       l.m[i] = 1;
       l.id[i] = hash2(k, 13, seed);

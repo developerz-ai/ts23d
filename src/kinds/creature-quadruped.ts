@@ -9,6 +9,7 @@
 // Wings: a raised bat/dragon wing, planar, from the withers.
 
 import type { Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import { type Bones, feet, type HeadFrame, headToWorld, type Wing } from './creature-bones.ts';
 import { v3 } from './creature-curve.ts';
 import { footPlan } from './creature-family.ts';
@@ -29,7 +30,7 @@ export function quadrupedBones(s: CreatureSpec): Bones {
   const a = (s.pose?.neck ?? 40) * deg;
   // Neck base in front of the withers, low between the shoulders (C7 sits deep in the chest).
   const neckBase: Vec3 = [0.08 * H, 0, zc + 0.08 * D];
-  const atlas0 = v3.add(neckBase, [Math.cos(a) * z.neckLen, 0, Math.sin(a) * z.neckLen]);
+  const atlas0 = v3.add(neckBase, [dmath.cos(a) * z.neckLen, 0, dmath.sin(a) * z.neckLen]);
   const head0: HeadFrame = {
     atlas: atlas0,
     pitch: z.pitch,
@@ -41,7 +42,7 @@ export function quadrupedBones(s: CreatureSpec): Bones {
   const nose0 = headToWorld(head0, [z.headLen * 0.97, 0, -0.08 * z.headLen]);
   // Tail set a little under the croup line (the root does not stand above the rump).
   const tailZ = H - 0.16 * D;
-  const run = Math.sqrt(Math.max(0, L * L - (nose0[2] - tailZ) ** 2));
+  const run = Math.sqrt(Math.max(0, L * L - dmath.pow(nose0[2] - tailZ, 2)));
   const T = Math.max(0.3 * L, run - nose0[0]);
   // Withers at +0.48 T, tail root at −0.52 T: the trunk is centred on x = 0.
   const xw = 0.48 * T;
@@ -156,7 +157,7 @@ function wingOf(s: CreatureSpec, xw: number, T: number, W: number, H: number, lr
   const half = (s.wingspan ?? 2.2 * s.length) / 2;
   const root: Vec3 = [xw - 0.05 * T, W * 0.3, H - 0.02 * H];
   const lift = 50 * deg;
-  const e2: Vec3 = [0, Math.cos(lift), Math.sin(lift)];
+  const e2: Vec3 = [0, dmath.cos(lift), dmath.sin(lift)];
   const at = (u: number, w: number): Vec3 => v3.add(root, v3.add([-u, 0, 0], v3.mul(e2, w)));
   const elbow = at(0.3 * T, 0.32 * half);
   const wrist = at(-0.08 * T, 0.6 * half);

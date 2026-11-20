@@ -6,6 +6,7 @@
 // 10-sided drum.
 
 import {
+  dmath,
   type Lod,
   lathe,
   type Mesh,
@@ -125,7 +126,7 @@ function treadBand(t: TyreSize, pitches: number): Mesh {
       const th = ((p + f) / pitches) * Math.PI * 2 + Math.abs(w) * 0.09;
       const d = depth(w, f, hw);
       const r = R - d;
-      row.push([r * Math.cos(th), w * hw, r * Math.sin(th)]);
+      row.push([r * dmath.cos(th), w * hw, r * dmath.sin(th)]);
     }
     P.push(row);
   }
@@ -143,7 +144,7 @@ function treadBand(t: TyreSize, pitches: number): Mesh {
       const radial = unit([p[0], 0, p[2]]);
       if (nrm[0] * radial[0] + nrm[2] * radial[2] < 0) nrm = [-nrm[0], -nrm[1], -nrm[2]];
       // Groove floors and walls darker (dust, no wear polish).
-      const dark = Math.hypot(p[0], p[2]) < R - 0.001 ? 0.62 : 1;
+      const dark = dmath.hypot(p[0], p[2]) < R - 0.001 ? 0.62 : 1;
       row.push(
         b.vertex({
           p,

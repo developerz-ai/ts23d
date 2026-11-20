@@ -1,5 +1,5 @@
 import { expect, it } from 'bun:test';
-import { quatFromAxisAngle } from '../core/index.ts';
+import { dmath, quatFromAxisAngle } from '../core/index.ts';
 import { BinWriter, type Json } from './bin-writer.ts';
 import { cyclesOf, keysPerCycle, LOOP_SECONDS, motionChannels } from './motion.ts';
 
@@ -68,7 +68,7 @@ it('bakes an orbit densely enough that LINEAR keys stay within 1 mm of the circl
   const a = key(bin, orbit.sampler, 3, 10);
   const b = key(bin, orbit.sampler, 3, 11);
   const mid = [0, 1, 2].map((k) => ((a[k] ?? 0) + (b[k] ?? 0)) / 2);
-  const off = Math.hypot(mid[0] ?? 0, (mid[2] ?? 0) + r);
+  const off = dmath.hypot(mid[0] ?? 0, (mid[2] ?? 0) + r);
   expect(r - off).toBeLessThan(0.001);
   expect(r - off).toBeGreaterThan(0);
 });

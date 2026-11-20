@@ -1,7 +1,7 @@
 // Test fixtures for the hair-card passes: an open cylinder along +X (shared vertices, outward
 // normals), its SDF, a one-cell zone and a seeded `hairCards` run over it. Not exported publicly.
 
-import { createRng, type Mesh, MeshBuilder, type Vec3 } from '../core/index.ts';
+import { createRng, dmath, type Mesh, MeshBuilder, type Vec3 } from '../core/index.ts';
 import type { UvRect } from '../material/index.ts';
 import { type CardZone, hairCards } from './hair-cards.ts';
 import { hairFlow } from './hair-flow.ts';
@@ -14,7 +14,7 @@ export function cylinder(rings = 30, around = 24): Mesh {
   for (let i = 0; i <= rings; i++)
     for (let j = 0; j < around; j++) {
       const a = (j / around) * Math.PI * 2;
-      const n: Vec3 = [0, Math.cos(a), Math.sin(a)];
+      const n: Vec3 = [0, dmath.cos(a), dmath.sin(a)];
       b.vertex({
         p: [(i / rings) * LEN, R * n[1], R * n[2]],
         n,
@@ -30,7 +30,7 @@ export function cylinder(rings = 30, around = 24): Mesh {
   return b.build();
 }
 /** Infinite-cylinder SDF (the mesh is a polygon inside it; close enough for 24 sides). */
-export const field = (p: Vec3): number => Math.hypot(p[1], p[2]) - R;
+export const field = (p: Vec3): number => dmath.hypot(p[1], p[2]) - R;
 
 export const CELL: UvRect = { u0: 0.1, u1: 0.2, v0: 0.5, v1: 0.51, metres: 1 };
 export const zone = (o: Partial<CardZone> = {}): CardZone => ({

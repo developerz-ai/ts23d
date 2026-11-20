@@ -4,7 +4,7 @@
 // fore-share QA check fails a rear-heavy quadruped.
 
 import { describe, expect, it } from 'bun:test';
-import { compile, Ts23dError } from '../core/index.ts';
+import { compile, dmath, Ts23dError } from '../core/index.ts';
 import { runQa } from '../qa/index.ts';
 import { defineCreature } from './creature.ts';
 import { foreShareCheck } from './creature-biology.ts';
@@ -59,7 +59,7 @@ const legOf = (s: CreatureSpec, name: 'fore' | 'hind'): Limb => {
 const gazeYaw = (s: CreatureSpec): number => {
   const e = headLayout(bonesOf(s), s).eye;
   const g = e.gaze ?? [0, 0, 0];
-  return (Math.atan2(g[1] - e.centre[1], g[0] - e.centre[0]) * 180) / Math.PI;
+  return (dmath.atan2(g[1] - e.centre[1], g[0] - e.centre[0]) * 180) / Math.PI;
 };
 
 describe('family spec: refuses nonsense first', () => {

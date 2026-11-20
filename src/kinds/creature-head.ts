@@ -13,6 +13,7 @@
 // Sizes are ratios of head length/width/height, so one recipe line moves a wolf to a big cat.
 
 import type { Mesh, Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import { type SculptEdit, sculptField } from '../primitives/index.ts';
 import type { Bones } from './creature-bones.ts';
 import { eyeRadius } from './creature-bones.ts';
@@ -112,7 +113,7 @@ function seatEye(l: Block, guess: Vec3, r: number, n: Vec3): Vec3 {
 /** Unit normal of the left lid opening: (90° − orbit convergence) off +X toward +Y (Heesy 2004). */
 export function apertureNormal(s: CreatureSpec): Vec3 {
   const a = ((90 - orbitOf(s)) * Math.PI) / 180;
-  return [Math.cos(a), Math.sin(a), 0];
+  return [dmath.cos(a), dmath.sin(a), 0];
 }
 
 export function headLayout(b: Bones, s: CreatureSpec): HeadLayout {
@@ -262,6 +263,7 @@ export function headEdits(
   s: CreatureSpec,
   lod: number,
   res: number,
+  extra?: (l: HeadLayout) => readonly SculptEdit[],
 ): { layout: HeadLayout; edits: SculptEdit[]; jaw: SculptEdit[]; teeth: Mesh | null } {
   const l = headLayout(b, s);
   const coarse = lod === 2;
@@ -271,6 +273,7 @@ export function headEdits(
       ...blockOut(l, coarse),
       ...(coarse || b.head.beak ? [] : skullForms(l)),
       ...(b.neck.length > 1 ? neckStub(b, l) : []),
+      ...(extra?.(l) ?? []),
       ...features(l, s, b, res, lod),
     ],
     jaw: jawEdits(l),

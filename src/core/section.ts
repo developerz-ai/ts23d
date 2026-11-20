@@ -6,6 +6,7 @@
 // cut segments clipped to a disc round the plane point, so a small part (an eye) is compared
 // with the nearby cut of a big one (its orbit), not the big part's whole outline.
 
+import * as dmath from './dmath.ts';
 import type { Mesh } from './mesh.ts';
 import { cross, normalize, type Vec3 } from './vec.ts';
 
@@ -235,7 +236,7 @@ export function innerRadius(s: Section, pu: number, pv: number): number {
     const by = (g[i + 3] ?? 0) - ay;
     const len = bx * bx + by * by;
     const k = len > 0 ? Math.max(0, Math.min(1, ((pu - ax) * bx + (pv - ay) * by) / len)) : 0;
-    best = Math.min(best, Math.hypot(ax + bx * k - pu, ay + by * k - pv));
+    best = Math.min(best, dmath.hypot(ax + bx * k - pu, ay + by * k - pv));
   }
   return best;
 }
@@ -246,8 +247,8 @@ export function wrap(s: Section, pu: number, pv: number, rays = 36): number {
   const g = s.segments;
   for (let r = 0; r < rays; r++) {
     const a = (r / rays) * Math.PI * 2;
-    const dx = Math.cos(a);
-    const dy = Math.sin(a);
+    const dx = dmath.cos(a);
+    const dy = dmath.sin(a);
     for (let i = 0; i < g.length; i += 4) {
       const ax = (g[i] ?? 0) - pu;
       const ay = (g[i + 1] ?? 0) - pv;

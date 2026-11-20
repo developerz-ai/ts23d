@@ -6,6 +6,7 @@ import {
   type BodyPlanSpec,
   bodyPlan,
   defineAsset,
+  dmath,
   type Mesh,
   merge,
   swimClips,
@@ -36,7 +37,7 @@ const LINKS = 16;
 const BIAS = 1.3;
 const linkAt = (t: number): number => {
   const u = t / T_TAIL;
-  for (let i = LINKS - 1; i >= 0; i--) if (1 - (1 - i / LINKS) ** BIAS <= u) return i;
+  for (let i = LINKS - 1; i >= 0; i--) if (1 - dmath.pow(1 - i / LINKS, BIAS) <= u) return i;
   return 0;
 };
 const lerp3 = (a: Vec3, b: Vec3, k: number): Vec3 => [
@@ -148,6 +149,8 @@ export const bluefin_tuna = defineAsset({
   // LOD1 ~8 k softens the switch from LOD0; LOD2 ~700 keeps the body round and the finlet strips.
   budget: { triangles: [42000, 9500, 800], bones: PLAN.bones.length },
   art: { grounded: false },
+  // Nearer side-on than the default 3/4: the worn -Y flank, its fins and keel face the lens.
+  hero: { azDeg: -62, elDeg: 14 },
   clips: CLIPS,
   build(ctx) {
     const lod = ctx.lod;

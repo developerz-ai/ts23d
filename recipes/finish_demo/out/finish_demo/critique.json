@@ -1,13 +1,13 @@
 {
   "asset": "finish_demo",
   "reviewer": "agent",
-  "overall": 7.1,
+  "overall": 7.7,
   "scores": {
     "silhouette": {
       "score": 8,
-      "reason": "Round barrel with bulge and hoops, braced crate and a block pallet read clearly.",
+      "reason": "Round barrel with bulge, hoops and a chime lip, a braced crate and a block pallet read clearly.",
       "fixes": [
-        "a chime lip at the barrel heads"
+        "a slight lean or offset on the crate lid so the stack is less boxy"
       ]
     },
     "proportions": {
@@ -18,10 +18,10 @@
       ]
     },
     "materials": {
-      "score": 7,
-      "reason": "Wood reads as wood (grain, stave tones), iron hoops are dark with rust; the barrel wood is uniform orange-brown and slightly plastic in sheen.",
+      "score": 8,
+      "reason": "The barrel wood is now rougher, less saturated and varies stave to stave; rusty iron hoops and crate/pallet wood grain read.",
       "fixes": [
-        "rougher, less saturated barrel wood with per-stave value variation"
+        "wet darker wood at the barrel bilge where it was handled"
       ]
     },
     "detail": {
@@ -32,17 +32,18 @@
       ]
     },
     "wear": {
-      "score": 6,
-      "reason": "Rusty hoops and some grime; the pallet and crate are fairly clean.",
+      "score": 7,
+      "reason": "Rusty hoops, a grimy crate base band and dark stains on the pallet deck tell use; the pallet stains are footprint-shaped blobs that look odd.",
       "fixes": [
-        "scuffs and dirt on the pallet deck and block faces; dented crate corner"
+        "spill stains with irregular edges instead of footprint shapes",
+        "a dented crate corner"
       ]
     },
     "lod": {
-      "score": 6,
-      "reason": "FAR LOD2 keeps the pallet blocks but the crate turns into a light flat tan box without its dark frame, and the barrel becomes an octagon: a visible value pop.",
+      "score": 8,
+      "reason": "FAR LOD2 now keeps the dark crate frame and a 12-sided barrel, so the value pop is gone; the crate panels read slightly lighter.",
       "fixes": [
-        "keep the crate frame colour at LOD2 (dark edge quads) and 12 sides on the barrel"
+        "darken the LOD2 crate panels a touch toward the LOD0 average"
       ]
     },
     "technical": {
@@ -54,7 +55,7 @@
     }
   },
   "renders": {
-    "hero.png": "b8fff8b5169b5754ed09d63c405e65d0cc92c5c336b6407da12802e6679e4b48",
-    "sheet.png": "5b1eec9ef8be677e19e5d3949cf5aba63b6d59d82f5b59e0ba7b4547fdd8e51f"
+    "hero.png": "fb242ff5f505f29748a272348c05ccb22da989cdcbeb653dd555b05ceb1a6d40",
+    "sheet.png": "4baf5bc2cbc076e73f0a436f2f2c0b8aa1d457db1b940ffb238cc76d01563b1d"
   }
 }

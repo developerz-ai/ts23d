@@ -12,7 +12,7 @@ import {
   type Vec2,
   type Vec3,
 } from '../core/index.ts';
-import { type StripId, stripRect } from '../material/index.ts';
+import { mappedOnto, type StripId, stripRect } from '../material/index.ts';
 import { colorOf, invalid, profileOf } from './check.ts';
 import { faceBand } from './strip-uv.ts';
 import { triangulate } from './triangulate.ts';
@@ -95,5 +95,5 @@ export function planar(o: PlanarOptions): Mesh {
       else mb.tri(i0, i2, i1);
     }
   }
-  return mb.build();
+  return mappedOnto(mb.build(), o.strip ?? 'plain');
 }

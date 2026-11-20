@@ -8,6 +8,7 @@ import {
   checkClip,
   compile,
   defineAsset,
+  dmath,
   quatRotate,
   type Vec3,
 } from '../core/index.ts';
@@ -45,7 +46,7 @@ function tipAt(p: BodyPlan, c: Clip, bone: string, t: number): Vec3 {
 }
 
 const headTip = (i: number): string => `head_${i}_1`;
-const dist = (a: Vec3, b: Vec3): number => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+const dist = (a: Vec3, b: Vec3): number => dmath.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
 
 function correlation(a: readonly number[], b: readonly number[]): number {
   const mean = (v: readonly number[]): number => v.reduce((x, y) => x + y, 0) / v.length;
@@ -54,8 +55,8 @@ function correlation(a: readonly number[], b: readonly number[]): number {
   a.forEach((x, i) => {
     const y = b[i] ?? 0;
     ab += (x - ma) * (y - mb);
-    aa += (x - ma) ** 2;
-    bb += (y - mb) ** 2;
+    aa += dmath.pow(x - ma, 2);
+    bb += dmath.pow(y - mb, 2);
   });
   return ab / Math.sqrt(aa * bb);
 }
@@ -131,7 +132,9 @@ describe('hydraClips', () => {
       for (let i = 0; i < t.times.length; i++) {
         const v = t.values.subarray(i * 4, i * 4 + 4);
         const deg =
-          (2 * Math.atan2(Math.hypot(v[0] ?? 0, v[1] ?? 0, v[2] ?? 0), Math.abs(v[3] ?? 1)) * 180) /
+          (2 *
+            dmath.atan2(dmath.hypot(v[0] ?? 0, v[1] ?? 0, v[2] ?? 0), Math.abs(v[3] ?? 1)) *
+            180) /
           Math.PI;
         expect(deg).toBeLessThanOrEqual(25.6);
       }
@@ -159,7 +162,7 @@ describe('hydraClips', () => {
       if (!a || !b || !d) continue;
       peak = Math.max(
         peak,
-        Math.hypot(a[0] - 2 * b[0] + d[0], a[1] - 2 * b[1] + d[1], a[2] - 2 * b[2] + d[2]) /
+        dmath.hypot(a[0] - 2 * b[0] + d[0], a[1] - 2 * b[1] + d[1], a[2] - 2 * b[2] + d[2]) /
           (dt * dt),
       );
       travel = Math.max(travel, dist(b, path[0] ?? b));
@@ -179,7 +182,7 @@ describe('hydraClips', () => {
     const bone = 'head_2_0';
     const turn = (c: Clip, t: number) => clipPose(c, t).rotation?.get(bone) ?? [0, 0, 0, 1];
     const gape = (q: readonly number[]): number =>
-      2 * Math.atan2(Math.hypot(q[0] ?? 0, q[1] ?? 0, q[2] ?? 0), Math.abs(q[3] ?? 1));
+      2 * dmath.atan2(dmath.hypot(q[0] ?? 0, q[1] ?? 0, q[2] ?? 0), Math.abs(q[3] ?? 1));
     // It does open wide on the way.
     const steps = Array.from({ length: 40 }, (_, i) => (i / 40) * strike.seconds);
     expect(Math.max(...steps.map((t) => gape(turn(strike, t))))).toBeGreaterThan(0.3);
@@ -264,7 +267,7 @@ describe('snakeClips', () => {
         now.forEach((p, i) => {
           const q = prev?.[i];
           if (!q || p[2] > lo + 0.1 * (hi - lo)) return;
-          slide += Math.hypot(p[0] - q[0], p[1] - q[1]);
+          slide += dmath.hypot(p[0] - q[0], p[1] - q[1]);
           samples++;
         });
       prev = now;
@@ -274,7 +277,7 @@ describe('snakeClips', () => {
     // Compare with how far the body itself goes per frame.
     const root = c.tracks[0];
     const n = root?.times.length ?? 1;
-    const travel = Math.hypot(
+    const travel = dmath.hypot(
       (root?.values[(n - 1) * 3] ?? 0) - (root?.values[0] ?? 0),
       (root?.values[(n - 1) * 3 + 1] ?? 0) - (root?.values[1] ?? 0),
     );

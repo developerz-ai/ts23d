@@ -7,6 +7,7 @@
 // and clear of its walls crosses nothing: it still floats.
 
 import type { Bounds, Mesh, Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import { TriangleBvh } from './contact-bvh.ts';
 import { meshBounds } from './geometry-cache.ts';
 import { nearestOnSegment, pieceFor, type TrianglesIn } from './segment-contact.ts';
@@ -37,7 +38,7 @@ function soupOf(m: Mesh): Soup {
   const made: Soup = {
     T,
     trianglesIn: (lo, hi) => bvh.within(lo, hi),
-    piece: pieceFor(Math.hypot(b.max[0] - b.min[0], b.max[1] - b.min[1], b.max[2] - b.min[2])),
+    piece: pieceFor(dmath.hypot(b.max[0] - b.min[0], b.max[1] - b.min[1], b.max[2] - b.min[2])),
   };
   soups.set(m, made);
   return made;

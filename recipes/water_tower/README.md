@@ -20,7 +20,7 @@ period type Berg describes).
 | capacity | 50,000 US gal | same (6.706² π/4 × 4.267 m = 150.7 m³ ≈ 39,800 gal of staves at the inside; the quoted figure is nominal) |
 | roof | six-sided, wooden shingles | same |
 | spout | goose-neck delivery spout projecting over the track | Berg, *Buildings and Structures of American Railroads* (1893) p. 116, quoted in the nomination |
-| roof rise, finial, hoop count | ≈ 1.05 m rise, 14 hoops | ESTIMATE, scaled from the photo (tank height as ruler) |
+| roof rise, finial, hoop count | ≈ 1.05 m rise, 8 heavy hoops | ESTIMATE, scaled from the photo (tank height as ruler); the photo's hoop count is not legible, 8 keeps the staves the dominant read |
 | spout length / rest angle | 3.4 m, 25° up | ESTIMATE (D&RGW tank practice, railroads procgen recipe station_prop_water_tank_wood) |
 
 ## Photos (by view)
@@ -34,19 +34,27 @@ period type Berg describes).
 `spout` (pivot at the tank outlet, `sway` about Y: lowered over a tender) · `socket` `water_fill`
 (interact) at the spout mouth · `tank`, `trestle`, `core`, `roof`.
 
-## Modelling notes (2026-11 quality pass)
+## Modelling notes (2026-11 quality passes)
 - Staves are modelled one by one (120 at LOD0, 60 at LOD1, 16 far), grain running up the stave,
   each its own board of the pine strip and its own tone; the strip is stretched 3× along the
   stave so a 14 ft stave mostly reads as one piece (the strip's butt joints show on a few).
 - The roof stays **six-sided** and the core stays **10 ft**: both are what NRHP 93000843 §7
   records ("six-sided" roof, 10 ft × 14 ft core). A reviewer asked for an eight-sided roof and a
-  slimmer core; that would contradict the nomination, so the sourced numbers win.
+  slimmer core; that would contradict the nomination, so the sourced numbers win. The core is
+  silvered board-and-batten (the trestle's weathered fir, battens in their own part
+  `housing_battens` so the measured 10 ft is the boarding), so it reads as the timber housing
+  round the outlet pipe rather than a second tub.
+- Hoops: eight heavy half-round hoops (five at LOD1, three flat iron bands at LOD2), spaced closer
+  toward the bottom; staves vary −14…+12 % in tone, so the vertical staves lead.
 - Wear tells the water story: the chime course soaked dark and green, weeps down single staves,
   a heavy run under the outlet, drips staining the joists, cap ring and post heads, moss on the
-  shaded faces of the footings, lichen and engine soot on the shingles.
+  shaded faces of the footings, spout spill soaking the track-side posts, soft moss on the shaded
+  roof slopes only (heaviest toward the eave) and engine soot on the shingles.
 - Detail added: float gauge (painted board, tick bars, target, pulley and cable), iron strap
   plates with square nuts at every post head, square-nut brace bolts, a wall plate under the
-  rafters. LOD2 keeps the X bracing as one board quad per brace.
+  rafters. LOD1 keeps the gauge board, target and pulley; LOD2 keeps the X bracing as one board
+  quad per brace and the gauge board as one quad.
+- Triangles: 6.93k / 3.05k / 586 (budget 7.9k / 3.35k / 590).
 
 ## Open questions
 - The current Beaumont trestle (heavy timbers, concrete footings) is a 20th-century replacement; the

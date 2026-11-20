@@ -5,7 +5,7 @@
 // their stops.
 
 import type { BuildContext, Mesh, Motion, Vec3 } from '@developerz.ai/ts23d';
-import { merge } from '@developerz.ai/ts23d';
+import { dmath, merge } from '@developerz.ai/ts23d';
 import { X_DOOR_FRONT } from '../dims.ts';
 import { PIPE_TIP } from '../engine/exhaust.ts';
 import { C } from '../lib/colors.ts';
@@ -75,7 +75,7 @@ export function body(ctx: BuildContext, S: Surface, o: BodyOptions): Hinges {
     const tip: Vec3 = [PIPE_TIP[0], Math.abs(at[1]) < 0.01 ? 0 : PIPE_TIP[1], PIPE_TIP[2]];
     const back = (tip[0] - at[0]) / 0.55;
     if (back < -0.2 || back > 1) return c;
-    const d = Math.hypot((Math.abs(at[1]) - tip[1]) / 0.2, (at[2] - tip[2] - 0.1 * back) / 0.2);
+    const d = dmath.hypot((Math.abs(at[1]) - tip[1]) / 0.2, (at[2] - tip[2] - 0.1 * back) / 0.2);
     const k = 1 - 0.8 * (1 - smooth(0.25, 1, d)) * (1 - smooth(0.35, 1, back));
     return [c[0] * k, c[1] * k, c[2] * k];
   });

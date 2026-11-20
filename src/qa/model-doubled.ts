@@ -11,6 +11,7 @@
 // Outlines shorter than SPECK of the skeleton's height are ignored.
 
 import type { Armature, CompiledAsset, Mesh, Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import { MID_SUFFIX } from './deform.ts';
 import { feetOf } from './gait.ts';
 
@@ -22,7 +23,7 @@ export const HEAD_CUTS: readonly number[] = [0.7];
  *  two-headed mirrored wolf: 3.2; a head bone lying in the neck (the first bear): 4.6. */
 export const GIRTH = 2;
 /** A head bone within 30° of vertical is an upright head… */
-export const UPRIGHT = Math.cos(Math.PI / 6);
+export const UPRIGHT = dmath.cos(Math.PI / 6);
 /** …whose outline may be this share of the skeleton's height round (a 0.57 m human head on a
  *  1.8 m body: 0.32; two heads side by side would pass 0.5). */
 export const GIRTH_UPRIGHT = 0.36;
@@ -42,7 +43,7 @@ function toSegment(p: Vec3, a: Vec3, b: Vec3): number {
           Math.min(1, ((p[0] - a[0]) * d[0] + (p[1] - a[1]) * d[1] + (p[2] - a[2]) * d[2]) / l),
         )
       : 0;
-  return Math.hypot(p[0] - a[0] - d[0] * t, p[1] - a[1] - d[1] * t, p[2] - a[2] - d[2] * t);
+  return dmath.hypot(p[0] - a[0] - d[0] * t, p[1] - a[1] - d[1] * t, p[2] - a[2] - d[2] * t);
 }
 
 const welded = new WeakMap<Float32Array, Int32Array>();
@@ -124,7 +125,7 @@ export function outlines(
     if (!x || !y) continue;
     for (const c of [x, y]) if (!parent.has(c.key)) parent.set(c.key, c.key);
     const [rx, ry] = [find(x.key), find(y.key)];
-    const seg = Math.hypot(x.p[0] - y.p[0], x.p[1] - y.p[1], x.p[2] - y.p[2]);
+    const seg = dmath.hypot(x.p[0] - y.p[0], x.p[1] - y.p[1], x.p[2] - y.p[2]);
     if (rx !== ry) {
       parent.set(ry, rx);
       length.set(rx, (length.get(rx) ?? 0) + (length.get(ry) ?? 0));
@@ -171,7 +172,7 @@ export function doubledFeatures(
       head.tail[1] - head.head[1],
       head.tail[2] - head.head[2],
     ];
-    const len = Math.hypot(axis[0], axis[1], axis[2]);
+    const len = dmath.hypot(axis[0], axis[1], axis[2]);
     for (const t of HEAD_CUTS) {
       const c = local([
         head.head[0] + axis[0] * t,
@@ -180,7 +181,7 @@ export function doubledFeatures(
       ]);
       // Whole outlines whose middle lies near the bone (the plane also crosses legs or a tail).
       const cut = outlines(mesh, c, axis).filter(
-        (o) => Math.hypot(o.centre[0] - c[0], o.centre[1] - c[1], o.centre[2] - c[2]) < len * 0.6,
+        (o) => dmath.hypot(o.centre[0] - c[0], o.centre[1] - c[1], o.centre[2] - c[2]) < len * 0.6,
       );
       const big = cut.filter((o) => o.length > Math.max(speck, (cut[0]?.length ?? 0) * 0.4));
       // A muzzle is measured against its bone; an upright head (a biped's: a short vertical bone

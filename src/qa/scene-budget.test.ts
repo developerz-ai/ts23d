@@ -43,7 +43,9 @@ describe('sceneBudgetFindings', () => {
 
   it('counts the shared trim sheet once, unique meshes and instances against their lines', () => {
     const p: ScenePlacement[] = [...forest(true), { asset: 'house', at: [0, 0, 0] }];
-    expect(sceneBudgetFindings([TREE, HOUSE], p, { textureBytes: 64 * 2 ** 20 })).toEqual([]);
+    expect(
+      sceneBudgetFindings([TREE, HOUSE], p, { textureBytes: 64 * 1048576 /* 2^20 */ }),
+    ).toEqual([]);
     const f = sceneBudgetFindings([TREE, HOUSE], p, { uniqueMeshes: 1, instances: 100 });
     expect(f.map((x) => x.part).sort()).toEqual(['instances', 'uniqueMeshes']);
     expect(

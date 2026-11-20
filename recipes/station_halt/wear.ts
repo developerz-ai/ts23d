@@ -3,6 +3,7 @@
 // its track edge; the platform's coping and edge flags grow lichen and carry a dark trodden band.
 
 import { type Mesh, type Rng, type Vec3, valueNoise } from '@developerz.ai/ts23d';
+import { mix } from '../_lib/finish/wear.ts';
 
 export type Shade = (p: Vec3, n: Vec3, c: Vec3) => Vec3;
 
@@ -17,11 +18,6 @@ export function shade(m: Mesh, f: Shade): Mesh {
   }
   return { ...m, colors };
 }
-
-const mix = (c: Vec3, to: Vec3, w: number): Vec3 => {
-  const k = Math.min(1, Math.max(0, w));
-  return [c[0] + (to[0] - c[0]) * k, c[1] + (to[1] - c[1]) * k, c[2] + (to[2] - c[2]) * k];
-};
 
 const smooth = (a: number, b: number, x: number): number => {
   const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
@@ -55,7 +51,7 @@ export function canopyWear(rng: Rng, o: { wallX: number; edgeX: number }): Shade
   const blot = valueNoise(rng.fork('canopy'), { scale: 1.5, octaves: 3 });
   return (p, n, c) => {
     const t = smooth(o.wallX, o.edgeX, p[0]);
-    const under = n[2] < -0.3 ? 1 : 0.45;
+    const under = n[2] < -0.3 ? 1 : 0.6;
     return mix(c, SOOT, (0.3 + 0.5 * t) * under * (0.7 + 0.3 * blot(p)));
   };
 }

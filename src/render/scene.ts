@@ -4,7 +4,7 @@
 // own texture set (ADR 016) add a set index per triangle, the decoded sets and per-vertex tangents.
 // Parts under a `glow` rule carry that rule's index per triangle and its emitted radiance.
 
-import { type CompiledAsset, type Surface, worldMeshes } from '../core/index.ts';
+import { type CompiledAsset, dmath, type Surface, worldMeshes } from '../core/index.ts';
 import { uvTangents } from '../passes/index.ts';
 import { glowTable } from './glow.ts';
 import { type Look, lookTable } from './looks.ts';
@@ -151,8 +151,8 @@ function tangentsOf(p: Float32Array, uv: Float32Array, idx: Uint32Array): Float3
     const bx = (e2x * du1 - e1x * du2) / det;
     const by = (e2y * du1 - e1y * du2) / det;
     const bz = (e2z * du1 - e1z * du2) / det;
-    const lt = Math.hypot(tx, ty, tz) || 1;
-    const lb = -(Math.hypot(bx, by, bz) || 1);
+    const lt = dmath.hypot(tx, ty, tz) || 1;
+    const lb = -(dmath.hypot(bx, by, bz) || 1);
     const o = t * 2;
     out[o] = tx / lt;
     out[o + 1] = ty / lt;

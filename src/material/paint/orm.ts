@@ -5,6 +5,7 @@
 // strip, stamp, foliage) is multiplied by the tone in linear light instead (weathering and paint
 // layers reach it; tone 1 keeps its bytes); its own pixels already carry their cavities.
 
+import { dmath } from '../../core/index.ts';
 import type { Canvas } from './canvas.ts';
 import { linearToSrgbByte, SRGB_TO_LINEAR } from './srgb.ts';
 
@@ -64,7 +65,7 @@ export function cavityOcclusion(c: Canvas): Float32Array {
 
 export const SRGB = new Uint8Array(4096).map((_, i) => {
   const l = i / 4095;
-  const s = l <= 0.0031308 ? l * 12.92 : 1.055 * l ** (1 / 2.4) - 0.055;
+  const s = l <= 0.0031308 ? l * 12.92 : 1.055 * dmath.pow(l, 1 / 2.4) - 0.055;
   return Math.round(s * 255);
 });
 

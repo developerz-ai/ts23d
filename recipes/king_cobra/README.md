@@ -15,7 +15,7 @@ the best-preserved large type available (see below).
 |---|---|---|---|
 | total length | adults 3.18 to 4 m | 3.50 m along the body | [Wikipedia](https://en.wikipedia.org/wiki/King_cobra) |
 | tail share | neotype SVL 2085, tail 462 mm: 18.1 % of total | 0.635 m | [Das et al. 2024](https://doi.org/10.5852/ejt.2024.961.2681) |
-| head length, width, depth | 72, 52.5, 30 mm at 3005 mm total (*O. kaalinga* holotype) | scaled ×1.165: 84, 61, 35 mm | same |
+| head length, width, depth | 72, 52.5, 30 mm at 3005 mm total (*O. kaalinga* holotype) | scaled ×1.165: 84, 61, 35 mm; the skin is 10 % wider (`LIVE_HEAD`: a fixed specimen reads narrow against the live hood in the front photos, an estimate) | same |
 | midbody width, preserved | 43.2 mm at 3005 mm: 50 mm at this length | not used directly | same |
 | midbody width, live | **estimate**: about 0.9 head widths in front photos | 55 mm | [photo](https://commons.wikimedia.org/wiki/File:King-Cobra.jpg) |
 | section | triangular, vertebral row enlarged | modelled | same |
@@ -33,10 +33,14 @@ The hood's length (about 0.35 m) and profile come from the same photos. No publi
 and every colour value are read from photos.
 
 **Staging (design):** the rest pose is a showcase stance. The hood faces 35° to the side, square to the 3/4
-camera, and the rear two thirds lie in a pile: a spiral widening toward the tail, each turn about 4 cm
-inside the next. The pile's heights are settled, not drawn (`settleHeights` in `shape.ts`): every section
-rests on the ground or on the turn under it, so no turn hovers. The overall box (0.56 × 0.55 × 0.78 m) is
-that pose; the 3.5 m is held by the recipe's test along the body.
+camera, and the rear two thirds lie in a pile of two turns: a tight spiral widening toward the tail, each
+turn 2.4 cm inside the next, so the smaller top turn rides on the inner shoulder of the ground ring under
+the raised forebody. The pile's heights are settled, not drawn (`settleHeights` in `shape.ts`): every
+section rests on the ground or on the turn under it, so no turn hovers. The overall box (0.45 × 0.45 ×
+0.78 m) is that pose; the 3.5 m is held by the recipe's test along the body. The hero camera sits at 24°
+elevation (`hero` in the recipe) so the top turn and its wear face the lens. `rear` lays the front out
+with three links of curl over the pile (a fourth would drape the neck over the top turn), and the rising
+front keeps the laid track's drape where it still runs flat.
 
 ## Motion
 | Clip | How | Source |
@@ -84,10 +88,12 @@ One skinned part `body`, one draw. Bones `spine_0..31` (0 at the head), `hood_ri
 ## Surface and wear
 | Feature | How | Why |
 |---|---|---|
-| glossy dorsal scales | one strip (`material.ts`): each scale samples a rim-to-crown ramp, roughness 0.52 at the rim to 0.14 on the crown | live snake scales are polished keratin; a single roughness read as paint |
-| pale crossbands | chevrons pointing at the head, one straight arm per side, widening down the flank | photos above; the old W-shaped zigzag read as a viper |
-| pre-shed patch | a ragged patch on the top turn of the pile: milky blue-grey, dull row of the strip, scales a hair proud | the old skin clouds over before a shed |
-| healed scar | two parallel diagonal grooves across the back of the pile, flat pale scale tissue | a prey snake's bite; king cobras eat snakes |
+| glossy dorsal scales | one strip (`material.ts`): each scale samples a rim-to-crown ramp, roughness 0.38 at the rim to 0.12 on the crown | live snake scales are polished keratin; a single roughness read as paint |
+| pale crossbands | chevrons pointing at the head, one straight arm per side swept back 0.45 of a pitch, widening down the flank; each scale's corners carry the pattern at their own point, so band edges run clean across the scales | photos above; the old W-shaped zigzag read as a viper, one colour per scale read serrated |
+| pre-shed patch | a ragged patch on the near side of the top turn: milky, papery grey with the pattern ghosting through, a dark torn rim round it, dull row of the strip, scales a hair proud | the old skin clouds over before a shed |
+| healed scar | two parallel diagonal bands across the top turn in the hero's view, flat pale scale tissue | a prey snake's bite; king cobras eat snakes |
+| dust | dry loam on the turns lying on the ground (`dustAt`): the bottom turn's flanks and belly coated, its back lightly, patchy; on every LOD; the belly greys under the pile | it lies on dirt; the cream belly showed as a pale sliver under the coil |
+| eyes | 12.8 mm eyeball under a glossy brille | the eye read as a dot |
 | scuffed tail scutes | greyed, rougher free edges from 2.6 m to the tip | dragged over rock |
-| far LOD | LOD2 takes the pattern's average over a band pitch (and the collar's over 12 cm), darkened to the LOD0 read | sampling single bands on six-sided rings made black and cream blocks |
+| far LOD | LOD2 takes the pattern's average over a band pitch (and the collar's over 12 cm), darkened to the LOD0 read; the dark throat collar stays as a band on the neck; only the broad dust survives of the story marks | sampling single bands on six-sided rings made black and cream blocks; the shed patch turned whole segments blue-grey |
 | girth | swells to 1.1 body widths at 1.5 to 1.9 m, tapers steadily to the vent and tail | heavy mid-body in side photos |

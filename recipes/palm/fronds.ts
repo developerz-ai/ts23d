@@ -8,6 +8,7 @@
 
 import {
   cellRect,
+  dmath,
   type Mesh,
   MeshBuilder,
   merge,
@@ -24,7 +25,7 @@ const sub = (a: Vec3, b: Vec3): Vec3 => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
 const add = (a: Vec3, b: Vec3): Vec3 => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
 const scale = (a: Vec3, s: number): Vec3 => [a[0] * s, a[1] * s, a[2] * s];
 const mid = (a: Vec3, b: Vec3): Vec3 => scale(add(a, b), 0.5);
-const len = (a: Vec3): number => Math.hypot(a[0], a[1], a[2]);
+const len = (a: Vec3): number => dmath.hypot(a[0], a[1], a[2]);
 
 /** Leaflets below `zDry` (mesh frame) blend toward dry brown, fully by `zDry − depth`. */
 export function dryLowFronds(leaves: Mesh, zDry: number, depth: number): Mesh {
@@ -55,10 +56,10 @@ export function deadFrond(
   pairs: number,
 ): { rachis: Mesh; leaflets: Mesh } {
   const a = (yawDeg * Math.PI) / 180;
-  const out: Vec3 = [Math.cos(a), Math.sin(a), 0];
+  const out: Vec3 = [dmath.cos(a), dmath.sin(a), 0];
   const path: Vec3[] = [0, 0.25, 0.5, 0.75, 1].map((t) => [
-    root[0] + out[0] * reach * Math.sin((t * Math.PI) / 2),
-    root[1] + out[1] * reach * Math.sin((t * Math.PI) / 2),
+    root[0] + out[0] * reach * dmath.sin((t * Math.PI) / 2),
+    root[1] + out[1] * reach * dmath.sin((t * Math.PI) / 2),
     root[2] + 0.15 - drop * t * t,
   ]);
   const rachis = sweep({
@@ -78,7 +79,7 @@ export function deadFrond(
     const p1 = path[k + 1] ?? p0;
     const f = t * 4 - k;
     const c = add(p0, scale(sub(p1, p0), f));
-    const l = 1.1 * Math.sin(Math.PI * (0.15 + 0.85 * t));
+    const l = 1.1 * dmath.sin(Math.PI * (0.15 + 0.85 * t));
     const shade = 0.85 + (0.15 * ((i * 7) % 5)) / 4;
     for (const s of [1, -1]) {
       // Collapsed leaflets: hang almost straight down, splayed a little to either side.
@@ -134,13 +135,15 @@ export function frondsOf(leaves: Mesh, pairs: number): Frond[] {
 }
 
 /** Spine stations of a far frond card (fractions of its leaflet pairs). */
-const STATIONS = [0.3, 0.6, 0.85] as const;
+const STATIONS = [0.35, 0.75] as const;
 
 /**
- * One bent cutout card per frond (6 triangles): from `root` (the stem top) through stations along
- * its own rachis, each as wide as its leaflet tips (× `wide` about the rachis, following their
- * droop), to the frond's tip. The cell is painted green already, so the tint is the frond's mean
- * leaflet colour over the species `leaf` colour (its shade and browning), × `value`.
+ * One bent, folded cutout card per frond (8 triangles): from `root` (the stem top) through
+ * stations along its own rachis, each a V from the left leaflet tips up to the rachis and down to
+ * the right tips (× `wide` about the rachis, following their droop), to the frond's tip. The fold
+ * keeps the leaflet mass from the side and from above, where a flat strip between the drooping
+ * tips shows edge-on as a bare midrib. The cell is painted green already, so the tint is the
+ * frond's mean leaflet colour over the species `leaf` colour (its shade and browning), × `value`.
  * Single-sided: a cutout surface is double-sided.
  */
 export function frondCards(
@@ -180,7 +183,7 @@ export function frondCards(
       const L = add(s, scale(sub(lft, s), wide));
       const R = add(s, scale(sub(rgt, s), wide));
       const across = sub(R, L);
-      return [vert(L, across, 0, f), vert(R, across, 1, f)] as const;
+      return [vert(L, across, 0, f), vert(s, across, 0.5, f), vert(R, across, 1, f)] as const;
     });
     const first = rows[0];
     const last = rows[rows.length - 1];
@@ -189,13 +192,65 @@ export function frondCards(
     const r0 = vert(root, across0, 0.5, 0);
     const t1 = vert(tip, across0, 0.5, 1);
     mb.tri(r0, first[1], first[0]);
+    mb.tri(r0, first[2], first[1]);
     for (let k = 0; k + 1 < rows.length; k++) {
-      const [a, b] = rows[k] ?? first;
-      const [c, d] = rows[k + 1] ?? last;
-      mb.tri(a, b, d);
-      mb.tri(a, d, c);
+      const [a, b, c] = rows[k] ?? first;
+      const [d, e, f] = rows[k + 1] ?? last;
+      mb.tri(a, b, e);
+      mb.tri(a, e, d);
+      mb.tri(b, c, f);
+      mb.tri(b, f, e);
     }
     mb.tri(last[0], last[1], t1);
+    mb.tri(last[1], last[2], t1);
   }
-  return mb.build();
+  return foldNormals(mb.build());
+}
+
+/**
+ * Normals from the folded triangles, angle-weighted (so the split of a quad into two triangles
+ * does not tilt them): the rachis vertex (shared by both halves) averages the halves, each outer
+ * edge keeps its own half's slope, so the V shades as two planes. Each keeps the side of the
+ * card's laid normal (across × along), so the card faces the same way.
+ */
+export function foldNormals(m: Mesh): Mesh {
+  const normals = new Float32Array(m.normals.length);
+  const p = (i: number): Vec3 => [
+    m.positions[i * 3] ?? 0,
+    m.positions[i * 3 + 1] ?? 0,
+    m.positions[i * 3 + 2] ?? 0,
+  ];
+  const unit = (a: Vec3): Vec3 => scale(a, 1 / (len(a) || 1));
+  for (let t = 0; t < m.indices.length; t += 3) {
+    const ids = [m.indices[t] ?? 0, m.indices[t + 1] ?? 0, m.indices[t + 2] ?? 0];
+    const ps = ids.map(p);
+    const [a, b, c] = ps as [Vec3, Vec3, Vec3];
+    const [u, v] = [sub(b, a), sub(c, a)];
+    const f = unit([
+      u[1] * v[2] - u[2] * v[1],
+      u[2] * v[0] - u[0] * v[2],
+      u[0] * v[1] - u[1] * v[0],
+    ]);
+    ids.forEach((id, k) => {
+      const o = ps[k] ?? a;
+      const [e1, e2] = [unit(sub(ps[(k + 1) % 3] ?? a, o)), unit(sub(ps[(k + 2) % 3] ?? a, o))];
+      const dot = Math.max(-1, Math.min(1, e1[0] * e2[0] + e1[1] * e2[1] + e1[2] * e2[2]));
+      const w = dmath.acos(dot);
+      for (let j = 0; j < 3; j++)
+        normals[id * 3 + j] = (normals[id * 3 + j] ?? 0) + (f[j] ?? 0) * w;
+    });
+  }
+  for (let i = 0; i < normals.length / 3; i++) {
+    const n: Vec3 = [normals[i * 3] ?? 0, normals[i * 3 + 1] ?? 0, normals[i * 3 + 2] ?? 0];
+    const laid: Vec3 = [
+      m.normals[i * 3] ?? 0,
+      m.normals[i * 3 + 1] ?? 0,
+      m.normals[i * 3 + 2] ?? 0,
+    ];
+    const l = len(n);
+    const flip = n[0] * laid[0] + n[1] * laid[1] + n[2] * laid[2] < 0 ? -1 : 1;
+    const out = l > 1e-12 ? scale(n, flip / l) : laid;
+    normals.set(out, i * 3);
+  }
+  return { ...m, normals };
 }

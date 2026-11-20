@@ -1,13 +1,13 @@
 {
   "asset": "svg_showcase",
   "reviewer": "agent",
-  "overall": 7.1,
+  "overall": 7.6,
   "scores": {
     "silhouette": {
       "score": 8,
-      "reason": "Gear, amphora and goblin head on a short neck pedestal, on a plinth with a bigger star: each reads from front and 3/4.",
+      "reason": "Gear (now with a keyway in the bore), amphora and goblin head on a short pedestal, on a plinth with a star: each reads from front and 3/4.",
       "fixes": [
-        "a keyway in the gear bore so it reads as a machine part in FRONT"
+        "a hub boss on the gear so it reads thicker in SIDE"
       ]
     },
     "proportions": {
@@ -18,27 +18,24 @@
       ]
     },
     "materials": {
-      "score": 7,
-      "reason": "Gear reads as steel (metal response, machined streaks), amphora as terracotta with slip variation, head as green skin, pedestal as wood; the gear streaks are smeared along the tooth sides (stretched UVs) and the plinth is flat painted grey.",
+      "score": 8,
+      "reason": "The plinth is dark lacquered wood with grain and a pale inlay band, now carried round all four sides (TOP, hero.png front and end faces); the gear is clean satin steel, terracotta with slip, green skin, turned-wood pedestal.",
       "fixes": [
-        "planar UVs on the gear tooth flanks so the machining marks do not smear",
-        "a stone or lacquered-wood finish on the plinth"
+        "a touch of machining anisotropy on the gear faces"
       ]
     },
     "detail": {
-      "score": 6,
-      "reason": "Raking.png: chamfered gear teeth, lightening holes, amphora rim and foot, sculpted face, tusks, ears; no keyway, no throw rings, no skin wrinkles.",
+      "score": 7,
+      "reason": "Chamfered teeth, lightening holes and a keyway on the gear, amphora rim and faint throw rings, sculpted face with eyes, tusks and ears, plinth inlay; no skin wrinkles or ear notches.",
       "fixes": [
-        "bevelled bore with a keyway",
-        "throw rings on the amphora",
         "wrinkles and ear notches on the head"
       ]
     },
     "wear": {
-      "score": 6,
-      "reason": "Oil grime on the gear and dust on the amphora shoulder now show; the head and plinth are pristine.",
+      "score": 7,
+      "reason": "Pale scuffs along the plinth edges and corners, oil grime on the gear, dust on the amphora shoulder; the head is pristine.",
       "fixes": [
-        "dust in the plinth corners and scuffs on its front edge"
+        "dust in the plinth corners and a little grime in the head creases"
       ]
     },
     "lod": {
@@ -50,71 +47,14 @@
     },
     "technical": {
       "score": 8,
-      "reason": "QA PASS: 20.8k / 6.6k / 1.73k tris (half of last round), 1 draw.",
+      "reason": "QA PASS: 19.1k / 6.5k / 1.7k tris, 1 / 1 / 1 draws.",
       "fixes": [
         "LOD2 at 1.7k is high for three desk props: coarser head cell at LOD2"
       ]
     }
   },
   "renders": {
-    "hero.png": "abe37b9084ce09610d367df40e5e3883f1bea7552b670a51a927561c6cb42509",
-    "sheet.png": "97dc69322074f37e5c538b24568f9772eeb8e4b757c9283603c41fa0ac6d9d25",
-    "raking.png": "a34c41bc92b7dfdb3cb4ff30d6bd06e9e7b271d5b9062a3e81a2bddcdabe0576",
-    "raking_detail.png": "22caf188e898989a87f477640530cf8d0ae3794db35afb624a6538f3b7ba13e3",
-    "lods.png": "17ee5f4fa45645a3bb835f789dc9662ab158dcd49cce0eb4fd8beb11b572497c",
-    "silhouette.png": "4c9bf7ec599e30e5ffefd4e8e1a6a7f43e3d77cfda37a6432d1d2484a9ebaf9b",
-    "value.png": "946b34457bb186ea857ccd7bc52bee2fe6ba638cedb2943b3645f2ad18d4857a",
-    "detail.png": "d365e59207e54db48e885e19021821681b3d63aebe733b2b50ff03d96654535d"
-  },
-  "metrics": {
-    "silhouette": [
-      {
-        "view": "front",
-        "iou": 0.976
-      },
-      {
-        "view": "side",
-        "iou": 0.957
-      },
-      {
-        "view": "3/4",
-        "iou": 0.982
-      }
-    ],
-    "focal": {
-      "peakPart": "head",
-      "peak": [
-        621,
-        113
-      ],
-      "focalShare": 0,
-      "focalArea": 0,
-      "top": [
-        {
-          "part": "gear",
-          "share": 0.557
-        },
-        {
-          "part": "head",
-          "share": 0.186
-        },
-        {
-          "part": "amphora",
-          "share": 0.13
-        }
-      ],
-      "declared": []
-    },
-    "rest": {
-      "share": 0.772,
-      "spread": 0.661,
-      "min": 0.25
-    },
-    "shape": {
-      "acuteShare": 0.139,
-      "straightShare": 0.575,
-      "taper": 0.589,
-      "shape": "stable"
-    }
+    "hero.png": "41cbf72e4920a0577cc57cf0e45506c71a0e91894322fc81ce4836465357b2ff",
+    "sheet.png": "3eb8d0bb64f67028cc1c055cd9d9a3af88c98878b1aa2398b69802eba066afdb"
   }
 }

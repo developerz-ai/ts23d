@@ -4,6 +4,7 @@
 // (brdf.envBrdf) is made for pre-filtered probes and misses by up to 25% here; this table is what
 // keeps the white furnace within 1% (Kulla–Conty multiple-scatter compensation needs the truth).
 
+import { dmath } from '../../core/index.ts';
 import { ggxD, smithV } from '../brdf.ts';
 
 const N = 24;
@@ -25,20 +26,20 @@ function integrate(ndv: number, rough: number): [number, number] {
       // Visible-normal sample (Heitz 2018) with v in the xz plane.
       let hx = a * vx;
       let hz = vz;
-      const hl = Math.hypot(hx, hz);
+      const hl = dmath.hypot(hx, hz);
       hx /= hl;
       hz /= hl;
       const r = Math.sqrt((i + 0.5) / SPP);
       const phi = (2 * Math.PI * (j + 0.5)) / SPP;
-      const p1 = r * Math.cos(phi);
+      const p1 = r * dmath.cos(phi);
       const s = 0.5 * (1 + hz);
-      const p2 = (1 - s) * Math.sqrt(1 - p1 * p1) + s * r * Math.sin(phi);
+      const p2 = (1 - s) * Math.sqrt(1 - p1 * p1) + s * r * dmath.sin(phi);
       const p3 = Math.sqrt(Math.max(0, 1 - p1 * p1 - p2 * p2));
       // T1 = (0, 1, 0), T2 = Vh × T1 = (−hz, 0, hx).
       const mx = a * (-p2 * hz + p3 * hx);
       const my = a * p1;
       const mz = Math.max(1e-6, p2 * hx + p3 * hz);
-      const ml = Math.hypot(mx, my, mz);
+      const ml = dmath.hypot(mx, my, mz);
       const vdh = (vx * mx + vz * mz) / ml;
       const lz = (2 * vdh * mz) / ml - vz;
       if (lz <= 0 || vdh <= 0) continue;
@@ -47,7 +48,8 @@ function integrate(ndv: number, rough: number): [number, number] {
       const f = D * smithV(lz, ndv, a) * lz;
       const g1 = (2 * ndv) / (ndv + Math.sqrt(a * a + (1 - a * a) * ndv * ndv));
       const w = f / ((D * g1) / (4 * ndv));
-      const fc = (1 - vdh) ** 5;
+      const m2 = (1 - vdh) * (1 - vdh);
+      const fc = m2 * m2 * (1 - vdh);
       A += w * (1 - fc);
       B += w * fc;
     }

@@ -18,9 +18,9 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    57221,
+    56920,
     12288,
-    1448
+    1416
   ],
   "drawCalls": [
     19,
@@ -171,27 +171,27 @@
     {
       "label": "road wheel diameter",
       "spec": 0.83,
-      "measured": 0.8299999758601189
+      "measured": 0.83
     },
     {
       "label": "track width",
       "spec": 0.55,
-      "measured": 0.550000011920929
+      "measured": 0.55
     },
     {
       "label": "track centres",
       "spec": 2.45,
-      "measured": 2.449999988079071
+      "measured": 2.45
     },
     {
       "label": "hull length",
       "spec": 5.92,
-      "measured": 5.920000076293945
+      "measured": 5.92
     },
     {
       "label": "F-34 barrel length (L/41.5)",
       "spec": 3.162,
-      "measured": 3.162000000476837
+      "measured": 3.162
     }
   ],
   "sources": [
@@ -202,29 +202,29 @@
   ],
   "weather": {
     "chips": {
-      "target": 0.3754,
-      "actual": 0.3754,
+      "target": 0.0935,
+      "actual": 0.0935,
       "eligible": "convex-edges",
-      "area": 39.9062,
+      "area": 41.7298,
       "by": {
         "t34_fittings": {
-          "target": 0.3,
-          "actual": 0.3,
-          "area": 12.3
+          "target": 0.12,
+          "actual": 0.12,
+          "area": 14.1255
         },
         "t34_hull": {
-          "target": 0.4,
-          "actual": 0.4,
+          "target": 0.08,
+          "actual": 0.08,
           "area": 20.4101
         },
         "t34_turret": {
-          "target": 0.45,
-          "actual": 0.45,
-          "area": 4.9604
+          "target": 0.08,
+          "actual": 0.08,
+          "area": 4.9585
         },
         "t34_gun": {
-          "target": 0.4,
-          "actual": 0.4,
+          "target": 0.08,
+          "actual": 0.08,
           "area": 2.2357
         }
       }
@@ -246,12 +246,6 @@
           "area": 0.0672
         }
       }
-    },
-    "mud": {
-      "target": 0.5,
-      "actual": 0.5,
-      "eligible": "ground-near",
-      "area": 66.347
     }
   },
   "qa": {

@@ -9,7 +9,7 @@
 // surface), so a coat reads as combed strands rather than velvet mottling. ~30 field and noise
 // samples per vertex, deterministic.
 
-import { createRng, type Vec3 } from '../core/index.ts';
+import { createRng, dmath, type Vec3 } from '../core/index.ts';
 import { fieldProbe, tangentOf } from '../passes/index.ts';
 import { type Field, valueNoise } from '../primitives/index.ts';
 
@@ -54,7 +54,7 @@ export function streak(p: Vec3, dir: Vec3): number {
   let sum = 0;
   let wsum = 0;
   for (let i = -4; i <= 4; i++) {
-    const w = 0.5 + 0.5 * Math.cos((Math.PI * i) / 5);
+    const w = 0.5 + 0.5 * dmath.cos((Math.PI * i) / 5);
     const t = (i / 4) * STRAND_LENGTH;
     sum += w * strandNoise([p[0] + dir[0] * t, p[1] + dir[1] * t, p[2] + dir[2] * t]);
     wsum += w;
@@ -102,7 +102,7 @@ export function painted(
       field([x, y + f, z]) - field([x, y - f, z]),
       field([x, y, z + f]) - field([x, y, z - f]),
     ];
-    const l = Math.hypot(v[0], v[1], v[2]) || 1;
+    const l = dmath.hypot(v[0], v[1], v[2]) || 1;
     return [v[0] / l, v[1] / l, v[2] / l];
   };
   return (q) => {
@@ -111,7 +111,7 @@ export function painted(
     const gx = field([x + e, y, z]) - field([x - e, y, z]);
     const gy = field([x, y + e, z]) - field([x, y - e, z]);
     const gz = field([x, y, z + e]) - field([x, y, z - e]);
-    const gl = Math.hypot(gx, gy, gz) || 1;
+    const gl = dmath.hypot(gx, gy, gz) || 1;
     const n: Vec3 = [gx / gl, gy / gl, gz / gl];
     let occ = 0;
     for (let i = 1; i <= 3; i++) {
@@ -128,7 +128,7 @@ export function painted(
     const pigment = 0.1 + 0.9 * clamp(((c0[0] + c0[1] + c0[2]) / 3 - 0.003) / 0.037);
     const glow = thin > 0 ? clamp((thin - depth) / (thin * 0.6)) * glowK * pigment * k : 0;
     // Dirt: pooled low near the ground (more in folds), matted under the belly.
-    const low = g > 0 ? clamp(1 - z / (g * 0.45)) ** 2 * (0.6 + 0.8 * cav) : 0;
+    const low = g > 0 ? dmath.pow(clamp(1 - z / (g * 0.45)), 2) * (0.6 + 0.8 * cav) : 0;
     const belly = g > 0 ? clamp(-n[2] - 0.3) * clamp(1 - z / (g * 2.2)) * 0.5 : 0;
     const c = mix(mix(c0, mixLum(c0, DIRT), clamp(low + belly) * dirtK * k), BLOOD, glow * 0.5);
     const up = n[2] * k;

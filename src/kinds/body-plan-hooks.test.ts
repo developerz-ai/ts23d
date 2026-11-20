@@ -2,7 +2,7 @@
 // at the LOD asked for, and `antiFold` keeps the inside of a bend from folding, shaded as it is.
 
 import { describe, expect, it } from 'bun:test';
-import { compile, type Mesh, type Vec3 } from '../core/index.ts';
+import { compile, dmath, type Mesh, type Vec3 } from '../core/index.ts';
 import { bodyPlan } from './body-plan.ts';
 import { defineBodyPlan } from './body-plan-asset.ts';
 import { chainCurve } from './body-plan-curve.ts';
@@ -176,7 +176,7 @@ describe('body-plan antiFold', () => {
     const ringVerts = 17;
     for (let v = ringVerts; v < m.positions.length / 3 - 2 - ringVerts; v++) {
       const f = sum.get(key(v)) ?? [0, 0, 1];
-      const l = Math.hypot(f[0], f[1], f[2]) || 1;
+      const l = dmath.hypot(f[0], f[1], f[2]) || 1;
       const n = point(m, v, m.normals);
       worst = Math.min(worst, (n[0] * f[0] + n[1] * f[1] + n[2] * f[2]) / l);
     }

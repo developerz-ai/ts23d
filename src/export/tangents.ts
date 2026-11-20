@@ -6,6 +6,7 @@
 // MikkTSpace (Blender / Cycles bakes, Substance, the glTF reference) builds it; see its comment.
 
 import type { Mesh } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 
 export function tangentsOf(m: Mesh): Float32Array {
   const n = m.positions.length / 3;
@@ -57,11 +58,11 @@ export function tangentsOf(m: Mesh): Float32Array {
     tx -= nx * d;
     ty -= ny * d;
     tz -= nz * d;
-    let len = Math.hypot(tx, ty, tz);
+    let len = dmath.hypot(tx, ty, tz);
     if (len < 1e-8) {
       // No usable UV gradient: any unit vector perpendicular to the normal.
       [tx, ty, tz] = Math.abs(nx) < 0.9 ? [0, -nz, ny] : [nz, 0, -nx];
-      len = Math.hypot(tx, ty, tz) || 1;
+      len = dmath.hypot(tx, ty, tz) || 1;
     }
     tx /= len;
     ty /= len;
@@ -82,7 +83,7 @@ const dot = (a: V3, b: V3): number => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
 function inPlane(a: V3, n: V3): V3 {
   const d = dot(a, n);
   const p: V3 = [a[0] - n[0] * d, a[1] - n[1] * d, a[2] - n[2] * d];
-  const len = Math.hypot(p[0], p[1], p[2]);
+  const len = dmath.hypot(p[0], p[1], p[2]);
   return len < 1e-20 ? [0, 0, 0] : [p[0] / len, p[1] / len, p[2] / len];
 }
 
@@ -135,7 +136,7 @@ export function mikkTangents(m: Mesh): Float32Array {
       const nv = N(v);
       const to1 = inPlane(sub(P(tri[(k + 1) % 3] ?? 0), P(v)), nv);
       const to2 = inPlane(sub(P(tri[(k + 2) % 3] ?? 0), P(v)), nv);
-      const angle = Math.acos(Math.min(1, Math.max(-1, dot(to1, to2))));
+      const angle = dmath.acos(Math.min(1, Math.max(-1, dot(to1, to2))));
       const dir = inPlane(dPdu, nv);
       for (let j = 0; j < 3; j++) sum[v * 3 + j] = (sum[v * 3 + j] ?? 0) + (dir[j] ?? 0) * angle;
       side[v] = (side[v] ?? 0) + s * angle;

@@ -5,7 +5,7 @@
 // seeded by the op's `seed` and the guide's index. Stage 'guide' skips the strand ops (pinch,
 // clump, curl, frizz) that Blender applies to the dense children instead.
 
-import { createRng, cross, dot, normalize, sub, type Vec3 } from '../core/index.ts';
+import { createRng, cross, dmath, dot, normalize, sub, type Vec3 } from '../core/index.ts';
 import {
   checkGroomOps,
   type GroomField,
@@ -30,7 +30,7 @@ const mad = (a: Vec3, b: Vec3, s: number): Vec3 => [
   a[2] + b[2] * s,
 ];
 const lerp = (a: Vec3, b: Vec3, t: number): Vec3 => mad(a, sub(b, a), t);
-const dist = (a: Vec3, b: Vec3): number => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+const dist = (a: Vec3, b: Vec3): number => dmath.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
 const at = (p: P, i: number): Vec3 => p[Math.max(0, Math.min(p.length - 1, i))] ?? [0, 0, 0];
 
 /** Arc length of a polyline. */
@@ -74,7 +74,7 @@ function steer(p: P, turn: (d: Vec3, s: number) => Vec3): P {
   const out: P = [at(p, 0)];
   for (let k = 1; k < p.length; k++) {
     const d = sub(at(p, k), at(p, k - 1));
-    const l = Math.hypot(...d);
+    const l = dmath.norm(d);
     out.push(mad(at(out, k - 1), normalize(turn(normalize(d), (k - 1) / (p.length - 1))), l));
   }
   return out;
@@ -126,7 +126,7 @@ function gather(
     );
   });
   // Clump pulls the whole length (root free), pinch the tips hardest: a pointed lock.
-  const ramp = (s: number): number => (op.op === 'clump' ? s ** 0.7 : s * s);
+  const ramp = (s: number): number => (op.op === 'clump' ? dmath.pow(s, 0.7) : s * s);
   return gs.map((g, i) => {
     const c = curves[i] ?? [];
     const m = mean.get(lock[i] ?? 0) ?? c;
@@ -138,7 +138,7 @@ function gather(
 /** Unit frame across a curve at each point, parallel-transported from the root normal. */
 function frames(p: P, n: Vec3): Vec3[] {
   let e = normalize(cross(n, sub(at(p, 1), at(p, 0))));
-  if (Math.hypot(...e) < 0.5) e = [0, 1, 0];
+  if (dmath.norm(e) < 0.5) e = [0, 1, 0];
   return p.map((_, k) => {
     const t = normalize(sub(at(p, k + 1), at(p, k - 1)));
     e = normalize(mad(e, t, -dot(e, t)));
@@ -163,7 +163,7 @@ function one(gs: GroomGuide[], op: GroomOp, o: ApplyGroomOptions): GroomGuide[] 
     }
     case 'puff':
       return map((g, a) =>
-        steer([...g.points], (d, s) => lerp(d, g.normal, op.amount * a * (1 - s) ** 2)),
+        steer([...g.points], (d, s) => lerp(d, g.normal, op.amount * a * dmath.pow(1 - s, 2))),
       );
     case 'cut':
       return gs.flatMap((g, i) => {
@@ -212,7 +212,7 @@ function one(gs: GroomGuide[], op: GroomOp, o: ApplyGroomOptions): GroomGuide[] 
           const e = at(e1, k);
           const th = Math.PI * 2 * op.turns * s + phase;
           const r = op.radius * a * Math.min(1, s * 4);
-          return mad(mad(q, e, r * Math.cos(th)), cross(t, e), r * Math.sin(th));
+          return mad(mad(q, e, r * dmath.cos(th)), cross(t, e), r * dmath.sin(th));
         });
       });
     case 'frizz':

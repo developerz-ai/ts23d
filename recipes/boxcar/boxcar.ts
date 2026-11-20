@@ -12,6 +12,7 @@ import {
   cylinder,
   defineFamily,
   defineMaterial,
+  dmath,
   hex,
   type Lod,
   lathe,
@@ -21,7 +22,6 @@ import {
   noOverlap,
   place,
   planar,
-  prism,
   type StripId,
   symmetric,
   text,
@@ -52,6 +52,16 @@ const COUPLER_Z = 0.876; // 34½ in
 const DOOR_W = 1.83;
 const DOOR_Z0 = 1.15;
 const DOOR_Z1 = 3.64;
+/** The door's one-way slide toward −X (m). */
+export const DOOR_SLIDE = DOOR_W + 0.05;
+/**
+ * Door stops [x0, x1]: a 6 cm block at each end of the bottom track, 4 cm clear of the door's
+ * travel (closed: its +X edge at DOOR_W / 2; open: its −X edge at −(DOOR_W / 2 + DOOR_SLIDE)).
+ */
+export const DOOR_STOPS: readonly (readonly [number, number])[] = [
+  [DOOR_W / 2 + 0.04, DOOR_W / 2 + 0.1],
+  [-(DOOR_W / 2 + DOOR_SLIDE + 0.1), -(DOOR_W / 2 + DOOR_SLIDE + 0.04)],
+];
 const JOURNAL_Y = 0.925; // axle end = journal box inner face
 const BRACE = 0.03; // diagonal brace relief over the boards
 const CARD: Vec3 = [0.72, 0.68, 0.55]; // a sun-yellowed car card
@@ -59,6 +69,8 @@ const CARD: Vec3 = [0.72, 0.68, 0.55]; // a sun-yellowed car card
 const steel = hex('#a59f97'); // tints iron_cast: dark, sand-cast trucks and gear
 const iron = hex('#a8a29c'); // tints iron_rust: weathered hardware
 const wheelC = hex('#948f8a');
+const LID = hex('#d8b9a0'); // journal-box lids: bare pressed steel gone to light rust
+const CHALK: Vec3 = [0.8, 0.79, 0.74];
 // Running-board planks: wood_weathered's silver-grey, pulled down to the grey-brown of boards
 // that have had thirty years of soot and boots.
 const walk: Vec3 = [0.62, 0.56, 0.5];
@@ -125,31 +137,44 @@ const rod = (from: Vec3, to: Vec3, w: number, color: Vec3 = iron, segments = 0):
   beam({ from, to, width: w, color, strip: 'iron_rust', ...(segments ? { segments } : {}) });
 
 /**
- * LOD2 lettering: a word's glyphs (100+ triangles a word) as one painted bar on the sheathing,
- * two triangles, 60% of the letter height so it keeps the stencil's weight at distance.
+ * LOD2 lettering: a word's glyphs (100+ triangles a word) as one painted block per letter on the
+ * sheathing, two triangles each, 60% of the letter height so it keeps the stencil's weight at
+ * distance. Letters are the runs of the word's triangles along the car that no gap splits; one
+ * bar for the whole word read as a smeared stripe.
  */
 function greeked(word: Mesh, s: number, color: Vec3): Mesh {
-  let x0 = Infinity;
-  let x1 = -Infinity;
+  const spans: [number, number][] = [];
   let z0 = Infinity;
   let z1 = -Infinity;
-  for (let i = 0; i < word.positions.length; i += 3) {
-    const x = word.positions[i] ?? 0;
-    const z = word.positions[i + 2] ?? 0;
-    x0 = Math.min(x0, x);
-    x1 = Math.max(x1, x);
-    z0 = Math.min(z0, z);
-    z1 = Math.max(z1, z);
+  for (let t = 0; t < word.indices.length; t += 3) {
+    const xs = [0, 1, 2].map((k) => word.positions[(word.indices[t + k] ?? 0) * 3] ?? 0);
+    spans.push([Math.min(...xs), Math.max(...xs)]);
+    for (let k = 0; k < 3; k++) {
+      const z = word.positions[(word.indices[t + k] ?? 0) * 3 + 2] ?? 0;
+      z0 = Math.min(z0, z);
+      z1 = Math.max(z1, z);
+    }
+  }
+  spans.sort((p, q) => p[0] - q[0]);
+  const letters: [number, number][] = [];
+  for (const [lo, hi] of spans) {
+    const last = letters[letters.length - 1];
+    if (last && lo <= last[1] + 0.01) last[1] = Math.max(last[1], hi);
+    else letters.push([lo, hi]);
   }
   const h = (z1 - z0) * 0.6;
   const faces = ['top', 'bottom', 'front', 'back', 'left', 'right'] as const;
   const keep = s > 0 ? 'left' : 'right';
-  return box({
-    size: [x1 - x0, 0.004, h],
-    at: [(x0 + x1) / 2, s * (SHEATH_Y + 0.002), (z0 + z1 - h) / 2],
-    color,
-    omit: faces.filter((f) => f !== keep),
-  });
+  return merge(
+    letters.map(([x0, x1]) =>
+      box({
+        size: [x1 - x0, 0.004, h],
+        at: [(x0 + x1) / 2, s * (SHEATH_Y + 0.002), (z0 + z1 - h) / 2],
+        color,
+        omit: faces.filter((f) => f !== keep),
+      }),
+    ),
+  );
 }
 
 // ---------------------------------------------------------------- running gear
@@ -189,7 +214,7 @@ function wheelset(lod: Lod): Mesh {
       cylinder({
         radius: 0.12,
         length: 0.05,
-        segments: 6,
+        segments: 3,
         axis: 'y',
         at: [0, s * (WHEEL_Y + TREAD_W / 2 + 0.025), 0],
         color: wheelC,
@@ -251,8 +276,8 @@ function wheelset(lod: Lod): Mesh {
         const a = (k / 6) * Math.PI * 2;
         parts.push(
           rod(
-            [Math.cos(a) * 0.13, yi - s * 0.015, Math.sin(a) * 0.13],
-            [Math.cos(a) * (WHEEL_R - 0.05), yi - s * 0.015, Math.sin(a) * (WHEEL_R - 0.05)],
+            [dmath.cos(a) * 0.13, yi - s * 0.015, dmath.sin(a) * 0.13],
+            [dmath.cos(a) * (WHEEL_R - 0.05), yi - s * 0.015, dmath.sin(a) * (WHEEL_R - 0.05)],
             0.03,
             wheelC,
           ),
@@ -280,7 +305,7 @@ function truckFrame(lod: Lod, bevel: number): Mesh {
           steel,
         ),
       );
-    far.push(cylinder({ radius: 0.2, length: 0.04, segments: 6, at: [0, 0, 0.62], color: steel }));
+    far.push(bx(-0.18, 0.18, -0.18, 0.18, 0.62, 0.66, steel)); // centre plate
     return merge(far);
   }
   const r = WHEEL_R;
@@ -305,17 +330,31 @@ function truckFrame(lod: Lod, bevel: number): Mesh {
         ),
       );
       if (lod === 0)
+        // Journal-box lid: a pressed cover 3 cm proud, rust-bright against the oily casting,
+        // hung from a hinge bar across the top of the box.
         out.push(
           bx(
             a - 0.1,
             a + 0.1,
-            s * (JOURNAL_Y + 0.17),
-            s * (JOURNAL_Y + 0.18),
-            r - 0.06,
-            r + 0.09,
-            steel,
+            s * (JOURNAL_Y + 0.165),
+            s * (JOURNAL_Y + 0.2),
+            r - 0.07,
+            r + 0.08,
+            LID,
+            'iron_rust',
+            0.008,
           ),
-        ); // lid
+          bx(
+            a - 0.12,
+            a + 0.12,
+            s * (JOURNAL_Y + 0.165),
+            s * (JOURNAL_Y + 0.215),
+            r + 0.08,
+            r + 0.11,
+            LID,
+            'iron_rust',
+          ),
+        );
     }
     out.push(
       bx(
@@ -344,7 +383,7 @@ function truckFrame(lod: Lod, bevel: number): Mesh {
       }
       for (const d of [-1, 1])
         out.push(rod([d * 0.34, y, zb], [d * 0.62, y, zt + 0.02], 0.06, steel)); // cast window struts
-      const coilSegs = lod === 0 ? 10 : 6;
+      const coilSegs = lod === 0 ? 10 : 5;
       for (const d of [-0.11, 0, 0.11]) {
         out.push(
           cylinder({
@@ -357,13 +396,13 @@ function truckFrame(lod: Lod, bevel: number): Mesh {
           }),
         );
         if (lod === 0)
-          for (let k = 0; k < 4; k++)
+          for (let k = 0; k < 2; k++)
             out.push(
               cylinder({
                 radius: 0.056,
                 length: 0.012,
                 segments: coilSegs,
-                at: [d, y, zb + 0.06 + k * 0.042],
+                at: [d, y, zb + 0.08 + k * 0.084],
                 color: iron,
                 strip: 'iron_rust',
               }),
@@ -508,9 +547,9 @@ const usra = defineFamily({
       },
     ],
   },
-  // Measured 19.3k / 7.7k / 1.11k (boxcar_nw, the longer road name). LOD0 spends on brake rigging,
-  // the outer boards split for the grime gradient and the rust runs; LOD2 keeps the road name (as
-  // a greeked bar), the Howe-truss bracing and the door frame as flat strips.
+  // Measured 19.1k / 7.7k / 1.08k (boxcar_nw, the longer road name). LOD0 spends on brake rigging,
+  // the outer boards split for the grime gradient and the rust runs; LOD2 keeps the road name (a
+  // block per letter), the roof sheets, the Howe-truss bracing and the door frame as flat strips.
   budget: { triangles: [21000, 8400, 1500] },
   // Truck bolster clears the body bolster: they bear only at the centre plate and side bearings.
   gaps: [
@@ -524,6 +563,9 @@ const usra = defineFamily({
     clear('axle_*', 'underframe', 0.01),
     symmetric('_wheel_l', '_wheel_r', 'y'),
   ],
+  // Lower and more side-on than the default 3/4: the weathered side fills the frame (road name,
+  // rain wash, rust runs, chalk), with the end still in view.
+  hero: { azDeg: -58, elDeg: 13 },
   defaults: {
     road: 'CLINCHFIELD',
     marks: 'C.C.& O.',
@@ -674,7 +716,7 @@ const usra = defineFamily({
       s: number,
       color: Vec3,
     ): Mesh => {
-      const l = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1;
+      const l = dmath.hypot(b[0] - a[0], b[1] - a[1]) || 1;
       const px = (-(b[1] - a[1]) / l) * (w / 2);
       const pz = ((b[0] - a[0]) / l) * (w / 2);
       const lo = s * (SHEATH_Y - 0.002);
@@ -805,22 +847,86 @@ const usra = defineFamily({
 
     // Roof: low steel gable with seam caps; running board on saddles; laterals at the corners.
     const roofOv = 0.04;
-    const roofProfile: [number, number][] = [
-      [-(FRAME_Y + roofOv), EAVE_Z - 0.03],
-      [FRAME_Y + roofOv, EAVE_Z - 0.03],
-      [FRAME_Y + roofOv, EAVE_Z],
-      [0, RIDGE_Z],
-      [-(FRAME_Y + roofOv), EAVE_Z],
-    ];
-    const roofM: Mesh[] = [
-      prism({
-        profile: roofProfile,
-        depth: BODY_L + 0.1,
-        plane: 'yz',
-        color: paintDark,
+    // The roof as its sheets: one pair of slope quads per sheet between seams, each sheet its
+    // own tone (they rust and take soot differently), so the seams still read at LOD2 as darker
+    // and lighter stripes when the caps are gone. Eave fascias, gables and the underside close it.
+    const sheets = lod === 0 ? 20 : 10;
+    const ry = FRAME_Y + roofOv;
+    const sheetRng = ctx.rng.fork('roof_sheets');
+    const quad = (points: Vec3[], k: number): Mesh =>
+      planar({
+        points,
+        color: [paintDark[0] * k, paintDark[1] * k, paintDark[2] * k],
         strip: 'steel_painted',
-      }),
-    ];
+      });
+    const roofM: Mesh[] = [];
+    for (let i = 0; i < sheets; i++) {
+      const x0 = i === 0 ? -XB - 0.05 : -XB + (BODY_L * i) / sheets;
+      const x1 = i === sheets - 1 ? XB + 0.05 : -XB + (BODY_L * (i + 1)) / sheets;
+      const k =
+        lod === 2 ? (i % 2 ? 0.66 : 1) : sheetRng.range(0.6, 1) * (lod === 1 && i % 2 ? 0.8 : 1);
+      roofM.push(
+        quad(
+          [
+            [x0, ry, EAVE_Z],
+            [x0, 0, RIDGE_Z],
+            [x1, 0, RIDGE_Z],
+            [x1, ry, EAVE_Z],
+          ],
+          k,
+        ),
+        quad(
+          [
+            [x0, -ry, EAVE_Z],
+            [x1, -ry, EAVE_Z],
+            [x1, 0, RIDGE_Z],
+            [x0, 0, RIDGE_Z],
+          ],
+          k,
+        ),
+      );
+    }
+    const [xa, xb, zf] = [-XB - 0.05, XB + 0.05, EAVE_Z - 0.03];
+    roofM.push(
+      quad(
+        [
+          [xa, ry, zf],
+          [xa, ry, EAVE_Z],
+          [xb, ry, EAVE_Z],
+          [xb, ry, zf],
+        ],
+        0.8,
+      ),
+      quad(
+        [
+          [xa, -ry, zf],
+          [xb, -ry, zf],
+          [xb, -ry, EAVE_Z],
+          [xa, -ry, EAVE_Z],
+        ],
+        0.8,
+      ),
+      quad(
+        [
+          [xa, -ry, zf],
+          [xa, ry, zf],
+          [xb, ry, zf],
+          [xb, -ry, zf],
+        ],
+        0.8,
+      ),
+    );
+    for (const d of [-1, 1]) {
+      const x = d * (XB + 0.05);
+      const gable: Vec3[] = [
+        [x, -ry, zf],
+        [x, ry, zf],
+        [x, ry, EAVE_Z],
+        [x, 0, RIDGE_Z],
+        [x, -ry, EAVE_Z],
+      ];
+      roofM.push(quad(d > 0 ? gable : gable.reverse(), 0.8));
+    }
     if (lod === 0) {
       const seams = 20;
       for (let i = 1; i < seams; i++) {
@@ -828,9 +934,9 @@ const usra = defineFamily({
         for (const s of [-1, 1])
           roofM.push(
             rod(
-              [x, s * (FRAME_Y + roofOv), EAVE_Z + 0.012],
-              [x, 0, RIDGE_Z + 0.012],
-              0.035,
+              [x, s * (FRAME_Y + roofOv), EAVE_Z + 0.014],
+              [x, 0, RIDGE_Z + 0.014],
+              0.055,
               paintDark,
             ),
           );
@@ -947,7 +1053,7 @@ const usra = defineFamily({
         );
       }
       ctx.part(`door_${side}`, dirt(merge(dm)), {
-        motion: { kind: 'slide', offset: [-(DOOR_W + 0.05), 0, 0], hz: 0.25, oneWay: true },
+        motion: { kind: 'slide', offset: [-DOOR_SLIDE, 0, 0], hz: 0.25, oneWay: true },
         paint: 'body',
       });
       // Bare-iron handle / latch: its own part, so it stays out of the paint slot.
@@ -994,7 +1100,7 @@ const usra = defineFamily({
       // Track below the door, guide above, long enough for its one-way travel toward −X.
       doorTrack.push(
         bx(
-          -(DOOR_W * 1.5 + 0.1), // the door opens toward −X
+          -(DOOR_W / 2 + DOOR_SLIDE + 0.1), // the door opens toward −X; its end carries the stop
           DOOR_W / 2 + 0.1,
           s * FRAME_Y,
           s * (FRAME_Y + 0.07),
@@ -1015,7 +1121,51 @@ const usra = defineFamily({
         ),
       );
     }
+    // Door stops: a block at each end of the bottom track, clear of the door's travel.
+    if (lod === 0)
+      for (const s of [-1, 1])
+        for (const [x0, x1] of DOOR_STOPS)
+          doorTrack.push(
+            bx(x0, x1, s * FRAME_Y, s * (FRAME_Y + 0.09), DOOR_Z0 - 0.025, DOOR_Z0 + 0.08, iron),
+          );
     if (lod < 2) ctx.part('door_track', merge(doorTrack), { shell: 0.01 });
+    // Chalk: the yard clerk's marks on the boards beside the door (a crossed-out routing, a track
+    // number, tally strokes), 1.4–2 m up where an arm reaches. Strokes 2.4 cm wide, 1 mm into
+    // the boards and 2 mm proud; not paint, so they stay chalk-white on every livery.
+    if (lod === 0) {
+      const strokes: readonly (readonly [number, number, number, number])[] = [
+        [0, 0.3, 0.2, 0.52],
+        [0, 0.52, 0.2, 0.3],
+        [0.3, 0.3, 0.3, 0.54],
+        [0.38, 0.53, 0.53, 0.53],
+        [0.53, 0.53, 0.43, 0.3],
+        [0, 0.22, 0.54, 0.2],
+        [0.04, 0, 0.04, 0.15],
+        [0.11, 0, 0.11, 0.15],
+        [0.18, 0, 0.18, 0.15],
+        [0.25, 0, 0.25, 0.15],
+        [0, 0.03, 0.3, 0.13],
+      ];
+      const chalk: Mesh[] = [];
+      for (const s of [-1, 1]) {
+        const dirX = s < 0 ? 1 : -1;
+        const x0 = dirX > 0 ? 1.15 : 1.7;
+        const y = s * (SHEATH_Y + 0.0005);
+        for (const [u0, v0, u1, v1] of strokes)
+          chalk.push(
+            beam({
+              from: [x0 + dirX * u0, y, 1.45 + v0],
+              to: [x0 + dirX * u1, y, 1.45 + v1],
+              width: 0.024,
+              height: 0.003,
+              up: [0, s, 0],
+              color: CHALK,
+              strip: 'plain',
+            }),
+          );
+      }
+      ctx.part('chalk_marks', merge(chalk));
+    }
     // Rust bleeding down the sides: from the door posts' track ends, under the top door guide
     // (long runs, the car's dirtiest two metres), under the side plate, off the bottom track onto
     // the sill, and from the rivets. LOD1 keeps the long runs; LOD2 keeps the grime in the paint.
@@ -1188,7 +1338,7 @@ const usra = defineFamily({
         bm.push(
           rod(
             [-(XB + 0.13), -0.85, WALK_TOP - 0.05],
-            [-(XB + 0.13) + Math.cos(a) * 0.18, -0.85 + Math.sin(a) * 0.18, WALK_TOP - 0.05],
+            [-(XB + 0.13) + dmath.cos(a) * 0.18, -0.85 + dmath.sin(a) * 0.18, WALK_TOP - 0.05],
             0.025,
           ),
         );
@@ -1252,17 +1402,18 @@ const usra = defineFamily({
             const xa = (posts[i] ?? 0) - postW / 2;
             const xb = (posts[i + 1] ?? DOOR_W / 2) + postW / 2;
             const xc = xa + (xb - xa) * t;
-            const hw = (0.0375 * Math.hypot(xb - xa, braceZ1 - braceZ0)) / (braceZ1 - braceZ0);
+            const hw = (0.0375 * dmath.hypot(xb - xa, braceZ1 - braceZ0)) / (braceZ1 - braceZ0);
             if (Math.abs(ax - xc) <= hw - graze) return SHEATH_Y + 0.004 + BRACE;
           }
         return SHEATH_Y;
       };
-      // Far: the road name as a dull stencil block, the letter colour 70 % into the body's (a
-      // full-white bar was the brightest thing on the far car and read as a smear).
+      // Far: each letter of the road name as a dull stencil block, the letter colour 60 % into
+      // the body's: about what a stencil letter's strokes average to over the red around them
+      // (a full-white bar was the brightest thing on the far car and read as a smear).
       const faint: Vec3 = [
-        p.letter[0] + (paint[0] - p.letter[0]) * 0.7,
-        p.letter[1] + (paint[1] - p.letter[1]) * 0.7,
-        p.letter[2] + (paint[2] - p.letter[2]) * 0.7,
+        p.letter[0] + (paint[0] - p.letter[0]) * 0.6,
+        p.letter[1] + (paint[1] - p.letter[1]) * 0.6,
+        p.letter[2] + (paint[2] - p.letter[2]) * 0.6,
       ];
       for (const s of [-1, 1]) {
         const dirX = s < 0 ? 1 : -1; // read left → right for a viewer on that side

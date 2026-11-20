@@ -5,7 +5,7 @@
 // loft, and the coat costs no more triangles than before.
 
 import { describe, expect, test } from 'bun:test';
-import { createRng, type Mesh, type Vec3 } from '../core/index.ts';
+import { createRng, dmath, type Mesh, type Vec3 } from '../core/index.ts';
 import { bodyRes, creaturePlan } from './creature.ts';
 import { bodyEdits } from './creature-body.ts';
 import { creatureFur } from './creature-fur.ts';
@@ -90,8 +90,8 @@ function survey(lod: 0 | 1) {
     const [a, b] = [at(m, vs[0] ?? 0), at(m, vs[1] ?? 0)];
     const root: Vec3 = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2];
     const tip = at(m, vs[vs.length - 1] ?? 0);
-    const len = Math.hypot(tip[0] - root[0], tip[1] - root[1], tip[2] - root[2]);
-    aspect.push(Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]) / len);
+    const len = dmath.hypot(tip[0] - root[0], tip[1] - root[1], tip[2] - root[2]);
+    aspect.push(dmath.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]) / len);
     let v = 0;
     for (const i of vs) v += lum(m.colors, i * stride);
     value.push(v / vs.length / Math.max(1e-4, lum(piece.color(root))));
@@ -101,11 +101,11 @@ function survey(lod: 0 | 1) {
       piece.field([root[0], root[1] + h, root[2]]) - piece.field([root[0], root[1] - h, root[2]]),
       piece.field([root[0], root[1], root[2] + h]) - piece.field([root[0], root[1], root[2] - h]),
     ];
-    const gl = Math.hypot(...g) || 1;
+    const gl = dmath.norm(g) || 1;
     const up =
       ((tip[0] - root[0]) * g[0] + (tip[1] - root[1]) * g[1] + (tip[2] - root[2]) * g[2]) /
       (gl * len);
-    lie.push((Math.asin(Math.max(-1, Math.min(1, up))) * 180) / Math.PI);
+    lie.push((dmath.asin(Math.max(-1, Math.min(1, up))) * 180) / Math.PI);
   }
   return { aspect, value, lie, tris: m.indices.length / 3 };
 }

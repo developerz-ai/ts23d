@@ -3,6 +3,7 @@
 // own chord, whatever way its bones happen to be framed, so a coil or lunge stays in its sector.
 
 import type { Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import { chainCurve } from './body-plan-curve.ts';
 import type { BodyPlan, PlanChain } from './body-plan-types.ts';
 import { TAU } from './chain-drivers.ts';
@@ -68,7 +69,7 @@ export function swingRoom(
         const r = me.radius[a] ?? 0;
         other.at.forEach((q, b) => {
           const sum = r + (other.radius[b] ?? 0);
-          const d = Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2]);
+          const d = dmath.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2]);
           if (d >= sum * NEIGHBOUR_RADII) room = Math.min(room, (GAP_SHARE * (d - sum)) / arc);
         });
       });
@@ -83,7 +84,7 @@ function planeAxis(c: PlanChain): Vec3 {
   if (!a || !b) return [0, 1, 0];
   const d: Vec3 = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
   const axis: Vec3 = [d[1], -d[0], 0];
-  const l = Math.hypot(axis[0], axis[1]);
+  const l = dmath.hypot(axis[0], axis[1]);
   return l > 1e-9 ? [axis[0] / l, axis[1] / l, 0] : [0, 1, 0];
 }
 
@@ -107,7 +108,7 @@ function planeShares(c: PlanChain, axis: Vec3) {
 /** The drawn-back S in the neck's own plane: zero net turn, so the head keeps its direction. */
 export function coilOf(c: PlanChain, amount = 1): ChainField {
   const k = planeShares(c, planeAxis(c));
-  const f = (s: number): number => amount * Math.PI * COIL * Math.sin(TAU * s);
+  const f = (s: number): number => amount * Math.PI * COIL * dmath.sin(TAU * s);
   return { kn: (s) => f(s) * k.bend(s), kb: (s) => f(s) * k.pitch(s) };
 }
 
@@ -146,9 +147,9 @@ export function strikeSize(
           const sum = q.r + (other.radius[b] ?? 0);
           // Pairs already touching at rest are neighbours by design, as in QA.
           const rest = me.at[a * SAMPLES_PER_LINK + SAMPLES_PER_LINK - 1] ?? q.p;
-          if (Math.hypot(rest[0] - o[0], rest[1] - o[1], rest[2] - o[2]) < sum * NEIGHBOUR_RADII)
+          if (dmath.hypot(rest[0] - o[0], rest[1] - o[1], rest[2] - o[2]) < sum * NEIGHBOUR_RADII)
             return true;
-          return Math.hypot(q.p[0] - o[0], q.p[1] - o[1], q.p[2] - o[2]) >= sum * STRIKE_MARGIN;
+          return dmath.hypot(q.p[0] - o[0], q.p[1] - o[1], q.p[2] - o[2]) >= sum * STRIKE_MARGIN;
         }),
       );
     });

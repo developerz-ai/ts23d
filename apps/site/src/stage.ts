@@ -1,6 +1,7 @@
 // The shared three.js stage: the look's lights (a shadow-casting key, image-based ambient), a metre
 // grid, a shadow-catching floor plus a baked soft contact shadow under the asset, and camera framing.
 
+import { dmath } from '@developerz.ai/ts23d/core';
 import {
   Box3,
   DirectionalLight,
@@ -125,7 +126,7 @@ export class Stage {
     // Wide enough that its edge stays off-screen at any orbit distance.
     this.catcher.scale.setScalar(sphere.radius * 40);
     if (reframe) {
-      const dist = (sphere.radius / Math.sin(((this.camera.fov / 2) * Math.PI) / 180)) * 0.85;
+      const dist = (sphere.radius / dmath.sin(((this.camera.fov / 2) * Math.PI) / 180)) * 0.85;
       // Three-quarter view from the front-left, slightly above: the contact-sheet "iso" angle.
       const dir = new Vector3(1, 0.55, 1.1).normalize();
       this.camera.position.copy(sphere.center).addScaledVector(dir, dist);

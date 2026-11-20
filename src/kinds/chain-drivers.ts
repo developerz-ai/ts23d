@@ -2,7 +2,7 @@
 // published motion parameters to chain fields (chain-field.ts). Every length is in chain lengths and
 // s runs from the chain's root (a trunk's head, an arm's base) to its tip.
 
-import { Ts23dError } from '../core/index.ts';
+import { dmath, Ts23dError } from '../core/index.ts';
 import type { ChainField, FieldFn } from './chain-field.ts';
 
 export const TAU = Math.PI * 2;
@@ -43,9 +43,9 @@ export const ds21Envelope = (gain = 1, head = 0.05): Envelope => ({
 
 /** A(s) = tail · exp(α(s − 1)): eels, α from 3.90 slow to 2.25 fast [T04]. */
 export const expEnvelope = (tail: number, alpha: number): Envelope => ({
-  at: (s) => tail * Math.exp(alpha * (s - 1)),
-  d1: (s) => tail * alpha * Math.exp(alpha * (s - 1)),
-  d2: (s) => tail * alpha * alpha * Math.exp(alpha * (s - 1)),
+  at: (s) => tail * dmath.exp(alpha * (s - 1)),
+  d1: (s) => tail * alpha * dmath.exp(alpha * (s - 1)),
+  d2: (s) => tail * alpha * alpha * dmath.exp(alpha * (s - 1)),
 });
 
 export interface WaveSpec {
@@ -67,16 +67,16 @@ export function travellingWave(w: WaveSpec): ChainField {
   const phi = (s: number, t: number): number => TAU * (s / w.lambda - w.f * t + (w.phase ?? 0));
   const slope = (s: number, t: number): number => {
     const p = phi(s, t);
-    return A.d1(s) * Math.sin(p) + A.at(s) * k * Math.cos(p);
+    return A.d1(s) * dmath.sin(p) + A.at(s) * k * dmath.cos(p);
   };
   return {
     kn: (s, t) => {
       const p = phi(s, t);
-      const y2 = (A.d2(s) - A.at(s) * k * k) * Math.sin(p) + 2 * A.d1(s) * k * Math.cos(p);
+      const y2 = (A.d2(s) - A.at(s) * k * k) * dmath.sin(p) + 2 * A.d1(s) * k * dmath.cos(p);
       const y1 = slope(s, t);
       return y2 / (1 + y1 * y1);
     },
-    base: (t) => ({ bend: Math.atan(slope(0, t)) }),
+    base: (t) => ({ bend: dmath.atan(slope(0, t)) }),
   };
 }
 
@@ -94,8 +94,8 @@ const serpenoidAngles = (w: SerpenoidSpec) => {
   positive('wavelength', w.lambda);
   const phase = (s: number, t: number): number => TAU * (s / w.lambda - w.f * t + (w.phase ?? 0));
   return {
-    kn: ((s, t) => w.alpha * Math.cos(phase(s, t))) as FieldFn,
-    start: (t: number): number => ((w.alpha * w.lambda) / TAU) * Math.sin(phase(0, t)),
+    kn: ((s, t) => w.alpha * dmath.cos(phase(s, t))) as FieldFn,
+    start: (t: number): number => ((w.alpha * w.lambda) / TAU) * dmath.sin(phase(0, t)),
   };
 };
 
@@ -148,7 +148,7 @@ export function bendPulse(p: BendPulseSpec): ChainField {
   const field: ChainField = {
     kn: (s, t) => {
       const u = (s - p.centre(t)) / p.width;
-      return p.peak * Math.exp(-0.5 * u * u) + (curl ? curl(s, t) * ahead(s, t) : 0);
+      return p.peak * dmath.exp(-0.5 * u * u) + (curl ? curl(s, t) * ahead(s, t) : 0);
     },
   };
   return strain ? { ...field, e: (s, t) => strain.peak * strain.at(t) * (1 - ahead(s, t)) } : field;
@@ -209,7 +209,7 @@ const hingeField =
       const u = (s - h.s) / h.width + 0.5;
       if (u <= 0 || u >= 1) continue;
       // Raised cosine with unit integral: the turn lands whole on the joints inside it.
-      sum += (h.angle(t) * 2 * Math.sin(Math.PI * u) ** 2) / h.width;
+      sum += (h.angle(t) * 2 * dmath.pow(dmath.sin(Math.PI * u), 2)) / h.width;
     }
     return sum;
   };

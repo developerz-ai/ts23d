@@ -5,6 +5,7 @@
 // the face can be sculpted on clean planes; `headToWorld` carries any head point into the asset.
 
 import type { Vec3 } from '@developerz.ai/ts23d';
+import { dmath } from '@developerz.ai/ts23d';
 
 const deg = Math.PI / 180;
 
@@ -15,12 +16,12 @@ export const HEAD_PIVOT: Vec3 = [0.775, 0, 0.73];
 
 /** The head frame is authored at skull scale; the Amur's winter fur (ruff, nape, crown: Geptner &
  *  Sludskij 70–110 mm) makes the furred head bigger than the skull: scale it into the world. */
-export const HEAD_SCALE = 1.08;
+export const HEAD_SCALE = 1.13;
 
 /** Head-local point → world (scale, pitch about Y, then move to the pivot). */
 export function headToWorld(p: Vec3): Vec3 {
-  const c = Math.cos(HEAD_PITCH) * HEAD_SCALE;
-  const s = Math.sin(HEAD_PITCH) * HEAD_SCALE;
+  const c = dmath.cos(HEAD_PITCH) * HEAD_SCALE;
+  const s = dmath.sin(HEAD_PITCH) * HEAD_SCALE;
   return [
     HEAD_PIVOT[0] + c * p[0] + s * p[2],
     HEAD_PIVOT[1] + p[1] * HEAD_SCALE,
@@ -30,8 +31,8 @@ export function headToWorld(p: Vec3): Vec3 {
 
 /** Head-local direction → world. */
 export function headDirToWorld(d: Vec3): Vec3 {
-  const c = Math.cos(HEAD_PITCH);
-  const s = Math.sin(HEAD_PITCH);
+  const c = dmath.cos(HEAD_PITCH);
+  const s = dmath.sin(HEAD_PITCH);
   return [c * d[0] + s * d[2], d[1], -s * d[0] + c * d[2]];
 }
 

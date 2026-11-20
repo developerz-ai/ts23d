@@ -20,9 +20,9 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    19114,
-    3830,
-    574
+    12332,
+    3246,
+    700
   ],
   "drawCalls": [
     2,
@@ -107,10 +107,10 @@
   ],
   "weather": {
     "chips": {
-      "target": 0.1249,
-      "actual": 0.1249,
+      "target": 0.12,
+      "actual": 0.12,
       "eligible": "convex-edges",
-      "area": 556.774,
+      "area": 539.669,
       "by": {
         "hall_masonry": {
           "target": 0.1,
@@ -120,25 +120,25 @@
         "hall_plinth": {
           "target": 0.12,
           "actual": 0.12,
-          "area": 72.1043
+          "area": 118.0064
         },
         "hall_render": {
           "target": 0.1,
           "actual": 0.1,
-          "area": 110.7426
+          "area": 114.3053
         },
         "hall_rubble": {
           "target": 0.16,
           "actual": 0.16,
-          "area": 207.1966
+          "area": 140.6268
         }
       }
     },
     "moss": {
-      "target": 0.4392,
-      "actual": 0.4392,
+      "target": 0.4393,
+      "actual": 0.4393,
       "eligible": "ground-near & !down-facing ; ground-near & side-facing",
-      "area": 146.1351,
+      "area": 147.0191,
       "by": {
         "hall_masonry": {
           "target": 0.45,
@@ -153,7 +153,7 @@
         "hall_render": {
           "target": 0.45,
           "actual": 0.45,
-          "area": 36.7539
+          "area": 37.6379
         }
       }
     },
@@ -176,10 +176,10 @@
       }
     },
     "dust": {
-      "target": 0.5013,
-      "actual": 0.5013,
+      "target": 0.5043,
+      "actual": 0.5043,
       "eligible": "up-facing",
-      "area": 274.2418,
+      "area": 259.2007,
       "by": {
         "hall_masonry": {
           "target": 0.55,
@@ -194,12 +194,12 @@
         "hall_render": {
           "target": 0.55,
           "actual": 0.55,
-          "area": 32.0409
+          "area": 31.9544
         },
         "hall_rubble": {
           "target": 0.45,
           "actual": 0.45,
-          "area": 48.1632
+          "area": 33.2086
         }
       }
     }

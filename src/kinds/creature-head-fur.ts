@@ -4,6 +4,7 @@
 // strip as the body coat (creature-fur.ts); its own `head_fur` part so it turns with the head.
 
 import type { Mesh, Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import { CREATURE_MATERIALS, defineMaterial } from '../material/index.ts';
 import { hairCards, hairFlow } from '../passes/index.ts';
 import { type FurOptions, layers, smooth } from './creature-fur.ts';
@@ -33,7 +34,7 @@ export function creatureHeadFur(
   defineMaterial(CREATURE_MATERIALS.fur_clumps);
   const scale = Math.max(0.3, (spec.coat ?? 0.02) / 0.03);
   const dist = (p: Vec3, q: Vec3): number =>
-    Math.hypot(p[0] - q[0], Math.abs(p[1]) - Math.abs(q[1]), p[2] - q[2]);
+    dmath.hypot(p[0] - q[0], Math.abs(p[1]) - Math.abs(q[1]), p[2] - q[2]);
   const isBare = (p: Vec3): boolean =>
     p[2] > (bare.ears ?? Infinity) ||
     dist(p, bare.nose) < bare.noseR * 1.4 ||

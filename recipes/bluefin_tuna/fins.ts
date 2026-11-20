@@ -2,6 +2,7 @@
 // pectorals, finlet rows and the crescent tail on two lobe chains.
 
 import type { Mesh, Vec3 } from '@developerz.ai/ts23d';
+import { dmath } from '@developerz.ai/ts23d';
 import {
   add,
   curve3,
@@ -49,7 +50,7 @@ const median = (
   const fray = (u: number): number =>
     lod === 2
       ? 0
-      : 0.045 * smooth(0.15, 0.4, u) * Math.max(0, noise(u * 34, seed, 31) - 0.45) ** 1.4;
+      : 0.09 * smooth(0.15, 0.4, u) * dmath.pow(Math.max(0, noise(u * 34, seed, 31) - 0.42), 1.2);
   const us = lod === 0 ? even(0, 0.99, 28) : span(lod, 1);
   const sides = lod === 0 && rays > 0 ? 30 : chord[lod];
   const m = plate({
@@ -60,23 +61,34 @@ const median = (
       const k = fray(u);
       return [b[0] + (a[0] - b[0]) * k, b[1] + (a[1] - b[1]) * k, b[2] + (a[2] - b[2]) * k];
     },
-    thick: (u) => thick * (1 - u) ** 0.9 + 0.0012,
+    thick: (u) => thick * dmath.pow(1 - u, 0.9) + 0.0012,
     us,
     sides,
     normal: [0, 1, 0],
     strip: FIN,
-    color: (p, n, u, c) =>
-      mixRgb(
+    color: (p, n, u, c) => {
+      // Rays read as fine dark lines fanning root to tip, membrane lighter between them.
+      const ray =
+        lod < 2 && rays > 0 ? dmath.pow(Math.max(0, dmath.cos(c * Math.PI * rays)), 6) : 0;
+      const lined = mixRgb(
         color(p, n, u, c),
+        COLOUR.groove,
+        0.45 * ray * (1 - smooth(0.6, 0.9, u)),
+      );
+      // The thin trailing margin lets light through: paler, and torn back to pale where frayed.
+      const margin = mixRgb(lined, COLOUR.steel, 0.35 * smooth(0.82, 0.97, c));
+      return mixRgb(
+        margin,
         COLOUR.scratch,
-        0.5 * smooth(0.8, 0.98, c) * smooth(0, 0.02, fray(u)),
-      ),
+        0.7 * smooth(0.75, 0.98, c) * smooth(0, 0.015, fray(u)),
+      );
+    },
   });
   const ridged = lod === 0 && rays > 0 ? rayRidges(m, us, sides, rays) : m;
   return toBand(ridged, (i) => {
     const ring = sides + 1;
     const r = Math.min(us.length - 1, Math.floor(i / ring));
-    const c = 0.5 + 0.5 * Math.cos(((i % ring) / sides) * Math.PI * 2);
+    const c = 0.5 + 0.5 * dmath.cos(((i % ring) / sides) * Math.PI * 2);
     return [
       'fin',
       'edge',
@@ -96,12 +108,12 @@ function rayRidges(m: Mesh, us: readonly number[], sides: number, rays: number):
     const a = ((i % ring) / sides) * Math.PI * 2;
     // Near the tip the chord is too short to hold a ridge without folding: they fade out.
     const fade = 1 - smooth(0.55, 0.85, us[Math.floor(i / ring)] ?? 1);
-    const c = 0.5 + 0.5 * Math.cos(a);
+    const c = 0.5 + 0.5 * dmath.cos(a);
     // Rays fan from the root: each face swells by a share of its own thickness over a ray and
     // dips between rays, so the ridges fade with the lens toward both edges and the tip.
     const y = positions[i * 3 + 1] ?? 0;
     positions[i * 3 + 1] =
-      y * (1 + 0.28 * fade * Math.cos(c * Math.PI * rays) * Math.sin(Math.PI * c));
+      y * (1 + 0.28 * fade * dmath.cos(c * Math.PI * rays) * dmath.sin(Math.PI * c));
   }
   return { ...m, positions, normals: lensNormals(positions, m.indices, us.length, sides) };
 }
@@ -142,9 +154,9 @@ function lensNormals(
   const out = new Float32Array(P.length);
   for (let w = 0; w < P.length / 3; w++) {
     const j = w % ring;
-    const edge = w < rows * ring && Math.abs(Math.sin((j / sides) * Math.PI * 2)) <= 1e-6;
+    const edge = w < rows * ring && Math.abs(dmath.sin((j / sides) * Math.PI * 2)) <= 1e-6;
     const n = [acc[w * 3] ?? 0, edge ? 0 : (acc[w * 3 + 1] ?? 0), acc[w * 3 + 2] ?? 0];
-    const l = Math.hypot(n[0] ?? 0, n[1] ?? 0, n[2] ?? 0) || 1;
+    const l = dmath.hypot(n[0] ?? 0, n[1] ?? 0, n[2] ?? 0) || 1;
     for (let k = 0; k < 3; k++) out[w * 3 + k] = (n[k] ?? 0) / l;
   }
   return out;
@@ -309,7 +321,7 @@ export function dorsalSpines(lod: Lod): Mesh[] {
     const k = i / (n - 1);
     const x = x0 - 0.03 - k * 0.285;
     const z = topZ(tOfX(x)) - SINK;
-    const h = (HEIGHT.dorsal1 + SINK) * (1 - k) ** 1.25 * 0.84 + 0.012;
+    const h = (HEIGHT.dorsal1 + SINK) * dmath.pow(1 - k, 1.25) * 0.84 + 0.012;
     const tip: Vec3 = [x - 0.03 - 0.03 * k, 0, z + h];
     return finPlate({
       lead: curve3([[x + 0.005, 0, z], [x - 0.012, 0, z + h * 0.55], tip]),

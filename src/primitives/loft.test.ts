@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { boundsOf, type Mesh, Ts23dError, triangleCount, type Vec3 } from '../core/index.ts';
+import { boundsOf, dmath, type Mesh, Ts23dError, triangleCount, type Vec3 } from '../core/index.ts';
 import { zeroArea } from './closed.ts';
 import { loft, ringXY } from './loft.ts';
 
@@ -21,7 +21,7 @@ const outward = (m: Mesh): boolean => {
     const x = m.positions[i * 3] ?? 0;
     const y = m.positions[i * 3 + 1] ?? 0;
     const d = x * (m.normals[i * 3] ?? 0) + y * (m.normals[i * 3 + 1] ?? 0);
-    if (Math.hypot(x, y) > 1e-6 && d <= 0) return false;
+    if (dmath.hypot(x, y) > 1e-6 && d <= 0) return false;
   }
   return true;
 };
@@ -92,9 +92,9 @@ describe('loft', () => {
   });
 
   it('wobble scales the radius per angle; colour callback runs per vertex; deterministic', () => {
-    const lobes = (a: number): number => 1 + 0.5 * Math.max(0, Math.cos(4 * a));
+    const lobes = (a: number): number => 1 + 0.5 * Math.max(0, dmath.cos(4 * a));
     const ring = ringXY([0, 0, 0], 1, 1, 16, lobes);
-    expect(Math.hypot(ring[0]?.[0] ?? 0, ring[0]?.[1] ?? 0)).toBeCloseTo(1.5, 5);
+    expect(dmath.hypot(ring[0]?.[0] ?? 0, ring[0]?.[1] ?? 0)).toBeCloseTo(1.5, 5);
     const o = {
       rings: [ring, ringXY([0, 0, 1], 1, 1, 16)],
       color: (_r: readonly Vec3[], i: number): Vec3 => (i === 0 ? [1, 0, 0] : [0, 0, 1]),

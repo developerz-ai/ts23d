@@ -4,6 +4,7 @@
 // scalp, flat ribbons falling to the shoulders, beard locks and a moustache. One `hair` part.
 
 import {
+  dmath,
   type Field,
   type Mesh,
   type SculptEdit,
@@ -20,29 +21,11 @@ import { LEFT, MIDLINE } from './landmarks.ts';
 import { keepLarge } from './lod2.ts';
 import { meshField } from './mesh-field.ts';
 import { quadToMesh, stripUv } from './quad.ts';
+import { segDist } from './relief.ts';
 
 export type { HairStyle } from './hair-lines.ts';
 
 const lerp = (a: number, b: number, t: number): number => a + (b - a) * Math.min(1, Math.max(0, t));
-
-/** Distance from p to the segment ab. */
-function segDist(p: Vec3, a: Vec3, b: Vec3): number {
-  const ab = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
-  const l2 = (ab[0] ?? 0) ** 2 + (ab[1] ?? 0) ** 2 + (ab[2] ?? 0) ** 2 || 1;
-  const t = Math.min(
-    1,
-    Math.max(
-      0,
-      ((p[0] - a[0]) * (ab[0] ?? 0) + (p[1] - a[1]) * (ab[1] ?? 0) + (p[2] - a[2]) * (ab[2] ?? 0)) /
-        l2,
-    ),
-  );
-  return Math.hypot(
-    p[0] - a[0] - (ab[0] ?? 0) * t,
-    p[1] - a[1] - (ab[1] ?? 0) * t,
-    p[2] - a[2] - (ab[2] ?? 0) * t,
-  );
-}
 
 /** The head and neck (not the shoulders) as a distance field, and its box. */
 export function scalpOf(head: FaceHead): { field: Field; box: [Vec3, Vec3] } {
@@ -82,8 +65,10 @@ export function hairlineOf(head: FaceHead, cut: HairStyle['cut']): Field {
     // Not a ruled line: the temples recede (an M), and the edge wanders a few millimetres.
     const out = Math.min(1, Math.abs(p[1]) / (Math.abs(earTop[1]) || 1));
     const temple = 0.014 * s * out * out * Math.max(0, 1 - t * 2.5) * (cut === 'crest' ? 0 : 1);
-    const wander = (Math.sin(p[1] * 140 + 1.3) + Math.sin(p[1] * 310)) * 0.0022 * s;
-    const line = lerp(fh[2] - 0.042 * s, nape[2] + 0.03 * s, t * t) + temple + wander;
+    const wander = (dmath.sin(p[1] * 140 + 1.3) + dmath.sin(p[1] * 310)) * 0.0022 * s;
+    // (The front line a brow's height above the brows: 4 cm lower it sat ON them, the fringe
+    // hid the forehead and the eyebrows, and the face read as a mask under a bowl.)
+    const line = lerp(fh[2] - 0.01 * s, nape[2] + 0.03 * s, t * t) + temple + wander;
     // Above the ear only behind its front edge: the temples follow the front line.
     const side =
       Math.abs(p[1]) > Math.abs(earTop[1]) * 0.78 &&
@@ -112,7 +97,7 @@ export function beardlineOf(head: FaceHead): Field {
   const sub = head.map(MIDLINE.subnasale);
   return (p) => {
     const cheekZ = cheek[2] - 0.006 * s - (p[0] - cheek[0]) * 0.25;
-    const hole = Math.hypot((p[0] - mouth[0]) * 1.3, p[1], (p[2] - mouth[2]) * 2) - 0.022 * s;
+    const hole = dmath.hypot((p[0] - mouth[0]) * 1.3, p[1], (p[2] - mouth[2]) * 2) - 0.022 * s;
     const front = tragion[0] - 0.006 * s - p[0];
     const throat = menton[2] - 0.035 * s - p[2];
     // Never inside the mouth cavity (the skin's field is positive in there too).

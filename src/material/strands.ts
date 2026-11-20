@@ -9,7 +9,7 @@
 // wisp (a few stray strands: flyaways, silhouette), beard (wiry). Cards map with
 // `strandCells(strip, kind)`: the cell rects in sheet UV.
 
-import { createRng, Ts23dError } from '../core/index.ts';
+import { createRng, dmath, Ts23dError } from '../core/index.ts';
 import type { MaterialPainter } from './paint/types.ts';
 import { STRIP_H, type StripId, stripRect, type UvRect } from './trim-sheet.ts';
 
@@ -181,7 +181,7 @@ export function strandCells(strip: StrandStrip, kind: StrandKind): UvRect[] {
 
 const gauss = (r: () => number): number => {
   const u = Math.max(1e-9, r());
-  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * r());
+  return Math.sqrt(-2 * dmath.log(u)) * dmath.cos(2 * Math.PI * r());
 };
 
 /** A painter for a strand strip: clumps per `layout`, deterministic from the sheet seed. */
@@ -224,10 +224,10 @@ export function strandPainter(layout: readonly StrandKind[]): MaterialPainter {
           const t = i / steps;
           // Taper to a texel-wide core: a thinner strand would fall under the alpha cut and the
           // lock would stop short. The point of a lock comes from its staggered lengths.
-          const rad = Math.max(0.6, rw * (1 - t) ** 0.7);
+          const rad = Math.max(0.6, rw * dmath.pow(1 - t, 0.7));
           const fade = t > 0.97 ? 0.6 : 1;
           const yv =
-            root + (tip - root) * t * t + c.wave * Math.sin(phase + t * c.waves * Math.PI * 2) * t;
+            root + (tip - root) * t * t + c.wave * dmath.sin(phase + t * c.waves * Math.PI * 2) * t;
           const px = x0 + len * t0 + L * t;
           const py = y0 + band * Math.max(0.03, Math.min(0.97, yv));
           const tn = ramp(c.tone, t) * shade;
@@ -235,7 +235,7 @@ export function strandPainter(layout: readonly StrandKind[]): MaterialPainter {
             if (y < 0 || y >= h) continue;
             for (let x = Math.floor(px - rad - 1); x <= Math.ceil(px + rad + 1); x++) {
               if (x < 0 || x >= w) continue;
-              const d = Math.hypot(x + 0.5 - px, y + 0.5 - py);
+              const d = dmath.hypot(x + 0.5 - px, y + 0.5 - py);
               const a = Math.min(1, Math.max(0, rad + 0.5 - d)) * fade;
               const j = y * w + x;
               if (a >= (cov[j] ?? 0)) tone[j] = tn;
@@ -248,7 +248,7 @@ export function strandPainter(layout: readonly StrandKind[]): MaterialPainter {
     const rgba = new Uint8Array(w * h * 4);
     for (let j = 0; j < w * h; j++) {
       const a = cov[j] ?? 0;
-      const g = Math.round(255 * Math.min(1, tone[j] ?? 0.8) ** (1 / 2.2));
+      const g = Math.round(255 * dmath.pow(Math.min(1, tone[j] ?? 0.8), 1 / 2.2));
       rgba.set([g, g, g, Math.round(a * 255)], j * 4);
       s.height[j] = a * 0.0004;
       s.rough[j] = 0.5;

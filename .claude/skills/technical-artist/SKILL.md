@@ -27,7 +27,7 @@ determinism or hash failures, slow builds, writing a test or a gate for an asset
 | 6 | Physics | `physics: { body, shell, density }`, part `collider`, `real.mass`; `t3d build --physics` | QA `mass` PASS; colliders fitted |
 | 7 | Validate | `t3d build` (QA per LOD, exit 1 on a finding), glTF validator in tests, `assertQaPass`, `assertBudget` | zero findings |
 | 8 | LOD quality | `assertLodSilhouette(asset, 0.85)`, `t3d review` (LOD strip, popping warnings), critique `lod` | no visible pop at game distance |
-| 9 | Determinism | `ctx.rng` / `ctx.rng.fork(name)` only; `assertDeterministic`, `snapshotHash`; `bun run determinism` | same bytes twice |
+| 9 | Determinism | `ctx.rng` / `ctx.rng.fork(name)` only; `dmath.sin` etc., never the `Math.sin` family or `**`; `assertDeterministic`, `snapshotHash`; `bun run determinism` | same bytes twice, on any CPU and C library |
 | 10 | Performance of the build | `bun run bench`; `optimize` pass; cache meshes via `definePart` | gate < 5 min in CI |
 | 11 | Automate | test beside the recipe, failure case first; new rule → script in `bun run verify` | the rule fails a broken asset |
 

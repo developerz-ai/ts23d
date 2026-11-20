@@ -20,9 +20,9 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    17994,
-    4902,
-    570
+    16820,
+    4394,
+    610
   ],
   "drawCalls": [
     2,
@@ -102,10 +102,10 @@
   ],
   "weather": {
     "chips": {
-      "target": 0.1027,
-      "actual": 0.1027,
+      "target": 0.104,
+      "actual": 0.104,
       "eligible": "convex-edges",
-      "area": 533.9231,
+      "area": 584.6943,
       "by": {
         "hall_masonry": {
           "target": 0.1,
@@ -115,12 +115,12 @@
         "hall_plinth": {
           "target": 0.12,
           "actual": 0.12,
-          "area": 72.1043
+          "area": 118.0064
         },
         "hall_render": {
           "target": 0.1,
           "actual": 0.1,
-          "area": 143.9992
+          "area": 148.8683
         }
       }
     },
@@ -131,10 +131,10 @@
       "area": 10.566
     },
     "moss": {
-      "target": 0.4409,
-      "actual": 0.4409,
+      "target": 0.441,
+      "actual": 0.441,
       "eligible": "ground-near & !down-facing ; ground-near & side-facing",
-      "area": 172.6051,
+      "area": 174.3732,
       "by": {
         "hall_masonry": {
           "target": 0.45,
@@ -149,7 +149,7 @@
         "hall_render": {
           "target": 0.45,
           "actual": 0.45,
-          "area": 31.4092
+          "area": 33.1773
         }
       }
     },
@@ -157,7 +157,7 @@
       "target": 0.5397,
       "actual": 0.5397,
       "eligible": "ground-near & !up-facing ; ground-near & side-facing ; ground-near",
-      "area": 152.1614,
+      "area": 152.5339,
       "by": {
         "hall_masonry": {
           "target": 0.55,
@@ -172,15 +172,15 @@
         "hall_timber": {
           "target": 0.55,
           "actual": 0.55,
-          "area": 5.0787
+          "area": 5.4512
         }
       }
     },
     "dust": {
-      "target": 0.4866,
-      "actual": 0.4866,
+      "target": 0.4856,
+      "actual": 0.4856,
       "eligible": "up-facing",
-      "area": 270.4527,
+      "area": 272.0716,
       "by": {
         "hall_masonry": {
           "target": 0.55,
@@ -195,12 +195,12 @@
         "hall_render": {
           "target": 0.55,
           "actual": 0.55,
-          "area": 33.0419
+          "area": 33.2087
         },
         "hall_timber": {
           "target": 0.3,
           "actual": 0.3,
-          "area": 34.4421
+          "area": 35.8942
         }
       }
     }

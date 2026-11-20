@@ -32,7 +32,7 @@ anything is sent (`T3D_NEURAL_INPUT`; override only with `--allow-bad-input`):
 | Rule | Why |
 |---|---|
 | Quadruped: exact side profile, head straight (no turn, no 3/4), legs apart, tail clear of the legs | Image-to-3D invents the far side; mirrored halves and a turned head gave a two-headed wolf |
-| Flat, even light, plain light-grey background, no shadows or rim light | Baked lighting ends up in the albedo (de-lighting is not shipped) |
+| Flat, even light, plain light-grey background, no shadows or rim light | Baked lighting ends up in the albedo; the paint kit in `recipes/_lib/creature/texture-paint.ts` can de-light it in a Blender step (a band filter, not an inverse render), so start with flat light anyway |
 | One animal, fills >= 60 % of the frame, not cut by the frame, >= 512 px, sharp | Input-image rules `background`, `subjects`, `fill`, `cropped`, `resolution`, `sharpness` |
 | Bind only the `image` task first, run, READ the PNG, re-roll the seed | Mesh and rig calls are slow or paid; every key after the image changes with it |
 

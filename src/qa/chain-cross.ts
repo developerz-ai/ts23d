@@ -10,6 +10,7 @@ import {
   type Armature,
   type Clip,
   type CompiledAsset,
+  dmath,
   SKIN_INFLUENCES,
   type Vec3,
 } from '../core/index.ts';
@@ -61,7 +62,7 @@ export function segmentDistance([p1, q1]: Segment, [p2, q2]: Segment): number {
     [p1[0] + d1[0] * s, p1[1] + d1[1] * s, p1[2] + d1[2] * s],
     [p2[0] + d2[0] * t, p2[1] + d2[1] * t, p2[2] + d2[2] * t],
   );
-  return Math.hypot(x[0], x[1], x[2]);
+  return dmath.hypot(x[0], x[1], x[2]);
 }
 
 /** Capsule radius per bone name: median skin distance, or the unskinned estimate. */
@@ -109,7 +110,7 @@ interface Posed {
 }
 
 function capsule(p: Vec3, q: Vec3, radius: number): Posed {
-  const half = Math.hypot(q[0] - p[0], q[1] - p[1], q[2] - p[2]) / 2;
+  const half = dmath.hypot(q[0] - p[0], q[1] - p[1], q[2] - p[2]) / 2;
   const mid: Vec3 = [(p[0] + q[0]) / 2, (p[1] + q[1]) / 2, (p[2] + q[2]) / 2];
   return { segment: [p, q], radius, mid, bound: half + radius };
 }

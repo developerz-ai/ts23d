@@ -121,12 +121,12 @@ flat base, hanging locks, wiry strays) over a hair-painted chin, coarse brow car
 shelf (both root on the finished head, not the stage-2 skin); pores are `poreField` stamps on the
 nose, cheeks and forehead (LOD0); the tusks are rigid parts, so the `talk` clip's jaw morph opens
 the lips round them without moving them; the plates' dents are smooth radial pushes (no hammer
-facets); the skin is one roughness (the shared skin mesher puts it on the `plain` strip); the
+facets); the skin is the shared tiling pore strip (matte cheeks, a glossier brow, nose and chin: `../_lib/face/skin-strip.ts`) under one `skin` finish (sheen plus a thin oily coat, clearcoat 0.3 at roughness 0.28), not a per-face texture; the
 tail's locks are sculpted, not strand cards. Rig: `head` and `bust` carry the blink / talk / breathe morphs under the `face` node
 (`headClips('face')`).
 
 ## Triangle budget (As of 2026-11-19)
-About 112k / 30k / 4.1k against the bust band of 60k / 12k / 1.5k (it was 129k / 37k / 4.7k, and 180k / 46k / 4.8k at the baseline). The head is meshed at a 7.6 mm cell (6.4 mm before). Not reduced further this round: the plate pauldrons (15k), the fur mantle (10k), the strap (7k) and the card beard (17k) were not re-measured at lower densities, so about 20k of LOD0 is still open to cutting.
+About 114k / 29k / 4.0k (two lames a pauldron, not three: they end where the arm stub does, 1.2 cm outside its axis) against the bust band of 60k / 12k / 1.5k (it was 129k / 37k / 4.7k, and 180k / 46k / 4.8k at the baseline). The head is meshed at a 7.6 mm cell (6.4 mm before). Not reduced further this round: the plate pauldrons (15k), the fur mantle (10k), the strap (7k) and the card beard (17k) were not re-measured at lower densities, so about 20k of LOD0 is still open to cutting.
 
 Budget why: a bust twice the others' volume (0.30 m skull, trapezius to the ears) in full gear: plate pauldrons with bone spikes, fur mantle, strap, necklace, knot and a card beard, each a closed sculpt.
 

@@ -2,7 +2,7 @@
 // its rest point at every key, the foot keeps its orientation, and jaws driven by hydraClips open.
 
 import { describe, expect, it } from 'bun:test';
-import { type Clip, quatRotate, type Vec3 } from '../core/index.ts';
+import { type Clip, dmath, quatRotate, type Vec3 } from '../core/index.ts';
 import { clipPose, jointWorlds } from '../qa/clip-pose.ts';
 import { bodyPlan } from './body-plan.ts';
 import { HYDRA } from './body-plan-fixtures.ts';
@@ -38,7 +38,7 @@ const worstSlide = (c: Clip, bone: string): number => {
   let worst = 0;
   for (let i = 0; i <= 40; i++) {
     const p = endOf(c, bone, (i / 40) * c.seconds);
-    worst = Math.max(worst, Math.hypot(p[0] - rest[0], p[1] - rest[1], p[2] - rest[2]));
+    worst = Math.max(worst, dmath.hypot(p[0] - rest[0], p[1] - rest[1], p[2] - rest[2]));
   }
   return worst;
 };
@@ -61,7 +61,7 @@ describe('foot lock', () => {
     const values = new Float32Array(n * 3);
     for (let k = 0; k < n; k++) {
       const a = (k / (n - 1)) * 2 * Math.PI;
-      values.set([0, Math.sin(a), 1 - Math.cos(a)], k * 3);
+      values.set([0, dmath.sin(a), 1 - dmath.cos(a)], k * 3);
     }
     const circling: Clip = {
       name: 'circle',

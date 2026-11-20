@@ -5,6 +5,7 @@
 // shadow-catcher ratio with the shares of samples that saw floor and backdrop. compose() puts
 // them together: asset + backdrop × (floor share × shadow + backdrop share).
 
+import { dmath } from '../../core/index.ts';
 import type { PerspectiveCamera } from '../camera.ts';
 import { fromSrgb } from '../lighting.ts';
 import { type Accum, type TraceParams, traceSample } from './integrator.ts';
@@ -123,7 +124,7 @@ function renderPixel(
     const sy = -(y + (jit[1] ?? 0.5) - cam.cy) / cam.focal;
     for (let k = 0; k < 3; k++)
       dir[k] = (cam.f[k] ?? 0) + (cam.r[k] ?? 0) * sx + (cam.u[k] ?? 0) * sy;
-    const l = Math.hypot(dir[0] ?? 0, dir[1] ?? 0, dir[2] ?? 0);
+    const l = dmath.hypot(dir[0] ?? 0, dir[1] ?? 0, dir[2] ?? 0);
     for (let k = 0; k < 3; k++) dir[k] = (dir[k] ?? 0) / l;
     traceSample(w, cam.eye, dir, seed, i, p, bg, acc);
   }

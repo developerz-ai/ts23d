@@ -7,6 +7,7 @@
 // the sampling check that catches an under-declared one (the test uses it).
 
 import type { Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import { invalid } from './check.ts';
 import type { Field } from './sdf-ops.ts';
 
@@ -49,10 +50,10 @@ interface Profile {
   readonly sign: number;
 }
 
-const bump = (s: number): number => (1 - s * s) ** 3;
+const bump = (s: number): number => dmath.pow(1 - s * s, 3);
 const PROFILES: Record<StrokeBrush, Profile> = {
-  crease: { phi: (s) => (1 - s) ** 2, slope: 2, sign: 1 },
-  pinch: { phi: (s) => (1 - s) ** 3, slope: 3, sign: -1 },
+  crease: { phi: (s) => dmath.pow(1 - s, 2), slope: 2, sign: 1 },
+  pinch: { phi: (s) => dmath.pow(1 - s, 3), slope: 3, sign: -1 },
   // max |φ'| of (1 − s²)³ is 6 · 5^-½ · (4/5)² ≈ 1.7173 at s = 5^-½.
   inflate: { phi: bump, slope: 1.72, sign: -1 },
   // Plateau to s = ½, then smootherstep (C2) to 0: max |φ'| = 1.875 / ½.
@@ -98,7 +99,7 @@ export function compileStroke(e: SculptStroke, where: string, mirror: boolean): 
   for (let i = 0; i < n; i++) {
     const a = pts[i] ?? [0, 0, 0];
     const b = pts[i + 1] ?? a;
-    const len = Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]);
+    const len = dmath.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]);
     if (!(len > 0))
       invalid(`${where}: path points ${i} and ${i + 1} coincide`, 'drop the repeated point');
     lens.push(len);
@@ -160,7 +161,7 @@ export function compileStroke(e: SculptStroke, where: string, mirror: boolean): 
     ((lo[2] ?? 0) + (hi[2] ?? 0)) / 2,
   ];
   const r =
-    Math.hypot((hi[0] ?? 0) - c[0], (hi[1] ?? 0) - c[1], (hi[2] ?? 0) - c[2]) + Math.max(r0, r1);
+    dmath.hypot((hi[0] ?? 0) - c[0], (hi[1] ?? 0) - c[1], (hi[2] ?? 0) - c[2]) + Math.max(r0, r1);
   const depth = e.depth;
   const extra = depth * prof.slope * worst;
   if (e.stroke !== 'flatten') {
@@ -176,7 +177,7 @@ export function compileStroke(e: SculptStroke, where: string, mirror: boolean): 
     };
   }
   const nv = e.normal;
-  const nl = nv ? Math.hypot(nv[0], nv[1], nv[2]) : 0;
+  const nl = nv ? dmath.hypot(nv[0], nv[1], nv[2]) : 0;
   if (!nv || !(nl > 0) || !Number.isFinite(nl))
     invalid(
       `${where}: flatten needs a non-zero normal`,
@@ -239,7 +240,7 @@ export function probeLipschitz(
         p[2] = z;
         const v = f(p);
         for (const d of dirs) {
-          const l = Math.hypot(d[0], d[1], d[2]);
+          const l = dmath.hypot(d[0], d[1], d[2]);
           p[0] = x + (eps * d[0]) / l;
           p[1] = y + (eps * d[1]) / l;
           p[2] = z + (eps * d[2]) / l;

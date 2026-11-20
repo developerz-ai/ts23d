@@ -3,9 +3,14 @@
 // functions instead of re-implementing them.
 
 import { describe, expect, it } from 'bun:test';
-import { compile, createRng, type Mesh, place, Ts23dError } from '../core/index.ts';
+import { compile, createRng, dmath, type Mesh, place, Ts23dError } from '../core/index.ts';
+import { sculptField } from '../primitives/index.ts';
 import { type CreatureInfo, defineCreature } from './creature.ts';
+import { v3 } from './creature-curve.ts';
+import { headLayout } from './creature-head.ts';
 import { creatureHeadFur } from './creature-head-fur.ts';
+import { EAR_UP, earEdits } from './creature-head-parts.ts';
+import { bonesOf } from './creature-skeleton.ts';
 import { type CreatureSpec, checkCreature } from './creature-spec.ts';
 
 const WOLF: CreatureSpec = {
@@ -83,7 +88,7 @@ describe('grooming with the kind’s rig', () => {
     expect([...j.slice(0, 4)]).toEqual([...j.slice(4, 8)]);
     // No card on the nose leather.
     for (let i = 0; i < cards.positions.length; i += 3) {
-      const d = Math.hypot(
+      const d = dmath.hypot(
         (cards.positions[i] ?? 0) - info.bare.nose[0],
         Math.abs(cards.positions[i + 1] ?? 0) - Math.abs(info.bare.nose[1]),
         (cards.positions[i + 2] ?? 0) - info.bare.nose[2],
@@ -91,4 +96,73 @@ describe('grooming with the kind’s rig', () => {
       expect(d).toBeGreaterThan(info.bare.noseR * 0.5);
     }
   }, 120_000);
+});
+
+describe('face.earWidth', () => {
+  /** Width of the left ear blade at half its height, metres (sampled across the blade). */
+  const earSpan = (earWidth?: number): number => {
+    const spec: CreatureSpec = {
+      ...WOLF,
+      face: { ears: 'erect', ...(earWidth ? { earWidth } : {}) },
+    };
+    const l = headLayout(bonesOf(spec), spec);
+    const f = sculptField(earEdits(l, spec, 0.004, false), { color: [1, 1, 1] }).field;
+    const mid = v3.add(l.ear ?? [0, 0, 0], v3.mul(EAR_UP, 0.5 * l.earHeight));
+    // The blade faces forward-out; its width runs along up × face.
+    const face = v3.norm([1, 0.45, 0]);
+    const side = v3.norm(v3.cross(EAR_UP, face));
+    let inside = 0;
+    for (let i = -400; i <= 400; i++) if (f(v3.add(mid, v3.mul(side, i * 0.0005))) < 0) inside++;
+    return inside * 0.0005;
+  };
+
+  it('refuses a width outside 0.5..2, naming the field', () => {
+    expect(() => checkCreature({ ...WOLF, face: { earWidth: 3 } })).toThrow('face.earWidth');
+  });
+
+  it('1.4 makes the blade about 1.4× as wide at mid height; 1 is the default blade', () => {
+    const base = earSpan();
+    expect(base).toBeGreaterThan(0.01);
+    expect(earSpan(1)).toBe(base);
+    const wide = earSpan(1.4) / base;
+    expect(wide).toBeGreaterThan(1.25);
+    expect(wide).toBeLessThan(1.55);
+  });
+});
+
+describe('options.head: a recipe sculpts its own forms on the head', () => {
+  /** Top of the head part's mesh in its own frame, metres, and the head length. */
+  const crown = (dome: boolean): number => {
+    let info: CreatureInfo | undefined;
+    const asset = defineCreature({
+      name: 'domed',
+      spec: { ...WOLF, cards: false, face: { ears: 'none' } },
+      options: dome
+        ? {
+            head: (l) => [
+              {
+                shape: 'ellipsoid',
+                at: [0.4 * l.lc, 0, 0.5 * l.H],
+                size: [0.3 * l.lc, 0.3 * l.W, 0.5 * l.H],
+                blend: 0.1 * l.L,
+              },
+            ],
+          }
+        : {},
+      extra: (_ctx, i) => {
+        info = i;
+      },
+    });
+    const head = compile(asset, { lod: 1 }).parts.find((p) => p.name === 'head')?.mesh;
+    expect(info).toBeDefined();
+    let top = -Infinity;
+    for (let i = 2; i < (head?.positions.length ?? 0); i += 3)
+      top = Math.max(top, head?.positions[i] ?? 0);
+    return top / (info?.head.H ?? 1);
+  };
+
+  it('a dome over the braincase raises the crown; without the hook the head is the kind’s', () => {
+    const plain = crown(false);
+    expect(crown(true)).toBeGreaterThan(plain + 0.3);
+  });
 });

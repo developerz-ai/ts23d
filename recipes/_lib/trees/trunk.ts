@@ -4,13 +4,13 @@
 // flared at the foot where LOD0 has its root buttresses, and run up to a point at `apex` (the
 // crown's leader pad peaks there, so the crown provably holds on).
 
-import { type Mesh, sweep, type Vec3 } from '@developerz.ai/ts23d';
+import { dmath, type Mesh, sweep, type Vec3 } from '@developerz.ai/ts23d';
 
 /** LOD0 trunk: 8 radial segments (+1 seam vertex) per ring, see the tree kind's RADIAL table. */
 const S0 = 8;
 const SIDES = 5;
 /** A pentagon inscribed in r is on average 1.871 r wide; a circle 2 r. */
-const WIDEN = 2 / ((10 * Math.sin(Math.PI / 5)) / Math.PI);
+const WIDEN = 2 / ((10 * dmath.sin(Math.PI / 5)) / Math.PI);
 /** Root buttresses: LOD0's flare is ~1.7× the trunk radius at the ground. */
 const FLARE = 1.45;
 
@@ -37,7 +37,7 @@ function rings(m: Mesh): Ring[] {
     let r = 0;
     for (let j = 0; j < S0; j++) {
       const v = (i * per + j) * 3;
-      r += Math.hypot((m.positions[v] ?? 0) - c[0], (m.positions[v + 1] ?? 0) - c[1]) / S0;
+      r += dmath.hypot((m.positions[v] ?? 0) - c[0], (m.positions[v + 1] ?? 0) - c[1]) / S0;
     }
     out.push({ c, r, col });
   }

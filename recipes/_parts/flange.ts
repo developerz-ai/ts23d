@@ -2,7 +2,7 @@
 // (towards the pipe). Composes hex_nut for the bolts. Real DN100 PN16: Ø 220 mm, 8 × M16 on a
 // 180 mm PCD, 20 mm thick (EN 1092-1).
 
-import { definePart, lathe, type Mesh, merge, place } from '@developerz.ai/ts23d';
+import { definePart, dmath, lathe, type Mesh, merge, place } from '@developerz.ai/ts23d';
 import { hex_nut } from './hex_nut.ts';
 import { METRIC_SIZES, type MetricSize } from './metric.ts';
 import { PAINT_GREEN } from './shape.ts';
@@ -50,7 +50,7 @@ export const flange = definePart({
     const pcd = (rn + ro) / 2;
     for (let i = 0; i < p.bolts; i++) {
       const a = ((i + 0.5) / p.bolts) * Math.PI * 2;
-      meshes.push(place(nut, { at: [pcd * Math.cos(a), pcd * Math.sin(a), t - 0.0005] }));
+      meshes.push(place(nut, { at: [pcd * dmath.cos(a), pcd * dmath.sin(a), t - 0.0005] }));
     }
     return merge(meshes);
   },

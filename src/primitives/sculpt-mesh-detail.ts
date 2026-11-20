@@ -6,6 +6,7 @@
 // owns the anatomy). A relief is an outward offset at a surface point: d' = d − at(p).
 
 import type { Mesh, Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import { invalid } from './check.ts';
 import { type MeshBrick, trilinear } from './sculpt-mesh-field.ts';
 
@@ -40,7 +41,7 @@ function blurred(b: MeshBrick, sigma: number): Float32Array {
   let src = Float32Array.from(b.samples, (v) => v * k);
   const r = Math.max(1, Math.ceil((2.5 * sigma) / b.cell));
   const w = Array.from({ length: 2 * r + 1 }, (_, i) =>
-    Math.exp(-(((i - r) * b.cell) ** 2) / (2 * sigma * sigma)),
+    dmath.exp(-dmath.pow((i - r) * b.cell, 2) / (2 * sigma * sigma)),
   );
   const sum = w.reduce((s, x) => s + x, 0);
   const wn = w.map((x) => x / sum);
@@ -82,7 +83,7 @@ export function meshDetail(b: MeshBrick, o: MeshDetailOptions): MeshDetail {
       const fade = 1 - Math.min(1, Math.max(0, (Math.abs(d) - reach) / reach));
       if (fade <= 0) return 0;
       const hp = (low(p) - d) * gain;
-      return amp * Math.tanh(hp / amp) * fade * fade * (3 - 2 * fade);
+      return amp * dmath.tanh(hp / amp) * fade * fade * (3 - 2 * fade);
     },
   };
 }
@@ -116,11 +117,11 @@ export function meshOffset(b: MeshBrick, o: MeshOffsetOptions): (p: Vec3) => Vec
     const gx = f([p[0] + h, p[1], p[2]]) - f([p[0] - h, p[1], p[2]]);
     const gy = f([p[0], p[1] + h, p[2]]) - f([p[0], p[1] - h, p[2]]);
     const gz = f([p[0], p[1], p[2] + h]) - f([p[0], p[1], p[2] - h]);
-    const l = Math.hypot(gx, gy, gz);
+    const l = dmath.hypot(gx, gy, gz);
     if (!(l > 0)) return [0, 0, 0];
     const t = a <= o.reach ? 1 : 2 - a / o.reach;
     const fade = t * t * (3 - 2 * t);
-    const m = -o.amp * Math.tanh(d / o.amp) * fade;
+    const m = -o.amp * dmath.tanh(d / o.amp) * fade;
     return [(gx / l) * m, (gy / l) * m, (gz / l) * m];
   };
 }
@@ -140,7 +141,7 @@ export function displaceMesh(
     (p, v) => {
       const i = v * 3;
       const n: Vec3 = [N[i] ?? 0, N[i + 1] ?? 0, N[i + 2] ?? 0];
-      const l = Math.hypot(...n) || 1;
+      const l = dmath.norm(n) || 1;
       const d = at(p);
       return [(n[0] / l) * d, (n[1] / l) * d, (n[2] / l) * d];
     },
@@ -200,7 +201,7 @@ export function warpMesh(
   const normals = new Float32Array(P.length);
   for (let v = 0; v < P.length / 3; v++) {
     const b = (of[v] ?? 0) * 3;
-    const l = Math.hypot(acc[b] ?? 0, acc[b + 1] ?? 0, acc[b + 2] ?? 0);
+    const l = dmath.hypot(acc[b] ?? 0, acc[b + 1] ?? 0, acc[b + 2] ?? 0);
     for (let k = 0; k < 3; k++)
       normals[v * 3 + k] = l > 0 ? (acc[b + k] ?? 0) / l : (N[v * 3 + k] ?? 0);
   }

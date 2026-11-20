@@ -8,8 +8,8 @@
 // Reads along `along`, upright along `up`, facing along × up; `origin` is the baseline point at the
 // `align` anchor. This file validates options, builds the frame and dispatches.
 
-import { type Mesh, normalize, type Vec3 } from '../core/index.ts';
-import { type StripId, stripRect } from '../material/index.ts';
+import { dmath, type Mesh, normalize, type Vec3 } from '../core/index.ts';
+import { mappedOnto, type StripId, stripRect } from '../material/index.ts';
 import { count, invalid } from './check.ts';
 import { isVectorFont } from './glyph-hershey.ts';
 import { measureText, type TextFont } from './text-layout.ts';
@@ -42,6 +42,10 @@ export interface TextOptions {
   /** Offset (m, along the facing normal) of the surface under a letter piece. `u` = metres along
    *  `along` from `origin` (negative left of a centre/right anchor), `v` = metres up from it. */
   readonly surface?: (u: number, v: number) => number;
+  /** Pixel fonts with `surface`: also paint the step between letter pieces that sit at different
+   *  offsets, so lettering wraps a proud post or brace instead of showing its bare side at 3/4
+   *  (2 triangles per step). Default false. Vector fonts ignore it. */
+  readonly wrap?: boolean;
   readonly strip?: StripId;
   /** Vector fonts: stroke width as a fraction of the cap height, (0, 0.4]. Default per face:
    *  sans 0.12, serif 0.07, script 0.06, gothic 0.055. */
@@ -92,7 +96,7 @@ export function text(str: string, o: TextOptions): Mesh {
   const up0 = o.up ?? [0, 0, 1];
   const k = up0[0] * along[0] + up0[1] * along[1] + up0[2] * along[2];
   const upR: Vec3 = [up0[0] - along[0] * k, up0[1] - along[1] * k, up0[2] - along[2] * k];
-  if (Math.hypot(upR[0], upR[1], upR[2]) < 1e-9)
+  if (dmath.hypot(upR[0], upR[1], upR[2]) < 1e-9)
     invalid('text: up is parallel to along', 'pass an `up` perpendicular to the reading direction');
   const up = normalize(upR);
   const n: Vec3 = [
@@ -109,12 +113,13 @@ export function text(str: string, o: TextOptions): Mesh {
       align: o.align,
       surface: o.surface,
       strip: o.strip,
+      wrap: o.wrap,
     });
   }
   const cap = o.cap ?? 'round';
   if (cap !== 'round' && cap !== 'square')
     invalid(`text cap is ${JSON.stringify(cap)}`, "use 'round' or 'square'");
-  return vectorText(str, {
+  const mesh = vectorText(str, {
     ...frame,
     rect: stripRect(o.strip ?? 'plain'),
     font,
@@ -126,4 +131,5 @@ export function text(str: string, o: TextOptions): Mesh {
     align: o.align,
     surface: o.surface,
   });
+  return mappedOnto(mesh, o.strip ?? 'plain');
 }

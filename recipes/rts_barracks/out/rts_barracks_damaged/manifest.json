@@ -20,8 +20,8 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    35810,
-    8056,
+    33716,
+    8040,
     852
   ],
   "drawCalls": [
@@ -57,6 +57,26 @@
     },
     {
       "name": "smoke_2",
+      "kind": "smoke",
+      "when": "always"
+    },
+    {
+      "name": "smoke_3",
+      "kind": "smoke",
+      "when": "always"
+    },
+    {
+      "name": "smoke_4",
+      "kind": "smoke",
+      "when": "always"
+    },
+    {
+      "name": "smoke_5",
+      "kind": "smoke",
+      "when": "always"
+    },
+    {
+      "name": "smoke_6",
       "kind": "smoke",
       "when": "always"
     },
@@ -119,7 +139,7 @@
     {
       "label": "gate height",
       "spec": 3.5,
-      "measured": 3.4999998807907104,
+      "measured": 3.5,
       "source": "recipes/rts_faction/README.md"
     }
   ],
@@ -129,15 +149,15 @@
   ],
   "weather": {
     "chips": {
-      "target": 0.1055,
-      "actual": 0.1055,
+      "target": 0.1053,
+      "actual": 0.1053,
       "eligible": "convex-edges",
-      "area": 1264.0445,
+      "area": 1319.1031,
       "by": {
         "hall_masonry": {
           "target": 0.1,
           "actual": 0.1,
-          "area": 689.3688
+          "area": 735.3978
         },
         "hall_plinth": {
           "target": 0.12,
@@ -147,12 +167,12 @@
         "hall_render": {
           "target": 0.1,
           "actual": 0.1,
-          "area": 317.3403
+          "area": 325.6385
         },
         "hall_rubble": {
           "target": 0.16,
           "actual": 0.16,
-          "area": 46.3768
+          "area": 47.1082
         }
       }
     },
@@ -160,18 +180,18 @@
       "target": 0.7,
       "actual": 0.7,
       "eligible": "fasteners | below-fasteners",
-      "area": 22.0803
+      "area": 30.0567
     },
     "moss": {
       "target": 0.4428,
       "actual": 0.4428,
       "eligible": "ground-near & !down-facing ; ground-near & side-facing",
-      "area": 218.1576,
+      "area": 219.4338,
       "by": {
         "hall_masonry": {
           "target": 0.45,
           "actual": 0.45,
-          "area": 145.2801
+          "area": 144.7882
         },
         "hall_plinth": {
           "target": 0.4,
@@ -181,20 +201,20 @@
         "hall_render": {
           "target": 0.45,
           "actual": 0.45,
-          "area": 41.414
+          "area": 43.1821
         }
       }
     },
     "mud": {
-      "target": 0.3375,
-      "actual": 0.3375,
+      "target": 0.3374,
+      "actual": 0.3374,
       "eligible": "ground-near & !up-facing ; ground-near & side-facing ; ground-near",
-      "area": 185.3897,
+      "area": 185.5314,
       "by": {
         "hall_masonry": {
           "target": 0.3,
           "actual": 0.3,
-          "area": 151.3158
+          "area": 151.4575
         },
         "hall_plinth": {
           "target": 0.5,
@@ -209,15 +229,15 @@
       }
     },
     "dust": {
-      "target": 0.4971,
-      "actual": 0.4971,
+      "target": 0.4993,
+      "actual": 0.4993,
       "eligible": "up-facing",
-      "area": 323.8425,
+      "area": 338.4781,
       "by": {
         "hall_masonry": {
           "target": 0.55,
           "actual": 0.55,
-          "area": 54.128
+          "area": 68.4424
         },
         "hall_plinth": {
           "target": 0.5,
@@ -227,12 +247,12 @@
         "hall_render": {
           "target": 0.55,
           "actual": 0.55,
-          "area": 57.9942
+          "area": 57.9077
         },
         "hall_rubble": {
           "target": 0.45,
           "actual": 0.45,
-          "area": 11.0276
+          "area": 11.4353
         },
         "hall_timber": {
           "target": 0.3,

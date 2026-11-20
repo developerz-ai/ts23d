@@ -5,6 +5,7 @@
 // The weight per channel is R ÷ (mixture pdf · |n·n_exit|): light enters at one point and leaves
 // a few millimetres away, red farthest — ears and nostrils glow, terminators go warm.
 
+import { dmath } from '../../core/index.ts';
 import type { V3 } from '../lighting.ts';
 import { type Hit, newHit } from './bvh.ts';
 import { CLS } from './classes.ts';
@@ -21,20 +22,23 @@ export const SKIN_MFP: V3 = [0.0022, 0.00082, 0.00041];
 const REACH = 12;
 
 /** Burley's albedo → shape scale for diffuse mean free path (searchlight fit). */
-export const shapeScale = (a: number): number => 1.85 - a + 7 * Math.abs(a - 0.8) ** 3;
+export const shapeScale = (a: number): number => {
+  const t = Math.abs(a - 0.8);
+  return 1.85 - a + 7 * (t * t * t);
+};
 
 /** The normalised profile (∫ 2πr R dr = 1) at radius r for shape length d. */
 export const burley = (r: number, d: number): number =>
-  (Math.exp(-r / d) + Math.exp(-r / (3 * d))) / (8 * Math.PI * d * Math.max(r, 1e-9));
+  (dmath.exp(-r / d) + dmath.exp(-r / (3 * d))) / (8 * Math.PI * d * Math.max(r, 1e-9));
 
 /** Pdf over r of the profile's radial distribution (2πr · burley). */
 export const radiusPdf = (r: number, d: number): number =>
-  (0.25 * Math.exp(-r / d)) / d + (0.75 * Math.exp(-r / (3 * d))) / (3 * d);
+  (0.25 * dmath.exp(-r / d)) / d + (0.75 * dmath.exp(-r / (3 * d))) / (3 * d);
 
 /** Invert the radial CDF by mixture choice: exact for the two exponentials. */
 export function sampleRadius(u: number, d: number): number {
-  if (u < 0.25) return -d * Math.log(Math.max(1e-12, 1 - u / 0.25));
-  return -3 * d * Math.log(Math.max(1e-12, 1 - (u - 0.25) / 0.75));
+  if (u < 0.25) return -d * dmath.log(Math.max(1e-12, 1 - u / 0.25));
+  return -3 * d * dmath.log(Math.max(1e-12, 1 - (u - 0.25) / 0.75));
 }
 
 const tx = new Float64Array(3);
@@ -72,8 +76,8 @@ export function probeExit(
   basis(s.n);
   axes(tx, bx);
   const hh = Math.sqrt(rmax * rmax - r * r);
-  const ca = Math.cos(2 * Math.PI * ua) * r;
-  const sa = Math.sin(2 * Math.PI * ua) * r;
+  const ca = dmath.cos(2 * Math.PI * ua) * r;
+  const sa = dmath.sin(2 * Math.PI * ua) * r;
   for (let k = 0; k < 3; k++) {
     o[k] = (s.p[k] ?? 0) + (tx[k] ?? 0) * ca + (bx[k] ?? 0) * sa + (s.n[k] ?? 0) * hh;
     dir[k] = -(s.n[k] ?? 0);
@@ -97,7 +101,7 @@ export function probeExit(
   const nx = (e1[1] ?? 0) * (e2[2] ?? 0) - (e1[2] ?? 0) * (e2[1] ?? 0);
   const ny = (e1[2] ?? 0) * (e2[0] ?? 0) - (e1[0] ?? 0) * (e2[2] ?? 0);
   const nz = (e1[0] ?? 0) * (e2[1] ?? 0) - (e1[1] ?? 0) * (e2[0] ?? 0);
-  const cosE = Math.max(0.3, Math.abs(dot3([nx, ny, nz], s.n)) / (Math.hypot(nx, ny, nz) || 1));
+  const cosE = Math.max(0.3, Math.abs(dot3([nx, ny, nz], s.n)) / (dmath.hypot(nx, ny, nz) || 1));
   let dist = 0;
   for (let k = 0; k < 3; k++) {
     const x = (o[k] ?? 0) + (dir[k] ?? 0) * exit.t - (s.p[k] ?? 0);

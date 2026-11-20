@@ -6,7 +6,7 @@
 // surface and fades to 0 where faces meet at more than `creaseAngle` (keep: 'creases'); open
 // boundaries never move. w also scales the first Laplacian, so a pinned crease adds no curvature. Normals are recomputed (area-weighted) where vertices moved.
 
-import { type Mesh, Ts23dError } from '../core/index.ts';
+import { dmath, type Mesh, Ts23dError } from '../core/index.ts';
 
 export interface FairOptions {
   /** Smoothing steps (fixed: deterministic). 0 returns the mesh unchanged. */
@@ -75,8 +75,8 @@ export function fair(m: Mesh, o: FairOptions): Mesh {
   const fn = faceNormals(P, tris, tri);
   // Weight per vertex: 0 on boundaries (and creases when kept), fading in below the crease angle.
   const w = new Float64Array(n).fill(1);
-  const cosFull = Math.cos((crease * Math.PI) / 180);
-  const cosHalf = Math.cos((crease * Math.PI) / 360);
+  const cosFull = dmath.cos((crease * Math.PI) / 180);
+  const cosHalf = dmath.cos((crease * Math.PI) / 360);
   for (const [key, faces] of edgeFaces) {
     const a = Math.floor(key / n);
     const b = key % n;
@@ -86,7 +86,7 @@ export function fair(m: Mesh, o: FairOptions): Mesh {
       const [f, g] = faces as [number, number];
       const dot = [0, 1, 2].reduce((d, k) => d + (fn[f * 3 + k] ?? 0) * (fn[g * 3 + k] ?? 0), 0);
       const len = (t: number): number =>
-        Math.hypot(fn[t * 3] ?? 0, fn[t * 3 + 1] ?? 0, fn[t * 3 + 2] ?? 0) || 1;
+        dmath.hypot(fn[t * 3] ?? 0, fn[t * 3 + 1] ?? 0, fn[t * 3 + 2] ?? 0) || 1;
       const c = dot / (len(f) * len(g));
       s = c >= cosHalf ? 1 : c <= cosFull ? 0 : (c - cosFull) / (cosHalf - cosFull);
     }
@@ -164,7 +164,7 @@ function rebuild(
     const v = weld[i] ?? 0;
     for (let k = 0; k < 3; k++) positions[i * 3 + k] = x[v * 3 + k] ?? 0;
     if ((w[v] ?? 0) === 0) continue;
-    const l = Math.hypot(acc[v * 3] ?? 0, acc[v * 3 + 1] ?? 0, acc[v * 3 + 2] ?? 0);
+    const l = dmath.hypot(acc[v * 3] ?? 0, acc[v * 3 + 1] ?? 0, acc[v * 3 + 2] ?? 0);
     if (l > 0) for (let k = 0; k < 3; k++) normals[i * 3 + k] = (acc[v * 3 + k] ?? 0) / l;
   }
   return { ...m, positions, normals };

@@ -2,7 +2,7 @@
 // keels, the mouth pocket and the countershading with its ragged, sharp boundary; plus eyes, nostrils
 // and the small median and pelvic fins, which ride the spine.
 
-import { type BodyPlan, type Mesh, merge, type Rng, type Vec3 } from '@developerz.ai/ts23d';
+import { type BodyPlan, dmath, type Mesh, merge, type Rng, type Vec3 } from '@developerz.ai/ts23d';
 import {
   add,
   cross,
@@ -72,7 +72,7 @@ function trunkPoint(t: number, raw: number, lod: Lod): Vec3 {
   const p = plainPoint(t, a);
   const c = axisZ(t);
   let [y, z] = [p[1], p[2] - c];
-  const r = Math.hypot(y, z) || 1;
+  const r = dmath.hypot(y, z) || 1;
   let push = 0;
   if (lod < 2) {
     const g = gillField(t, a);
@@ -83,7 +83,7 @@ function trunkPoint(t: number, raw: number, lod: Lod): Vec3 {
   z += (z / r) * push;
   // The caudal keel: a low horizontal blade along each side of the peduncle.
   const keel = keelAt(t);
-  y += Math.sign(y) * 0.058 * keel * gauss(z, 0.024);
+  y += Math.sign(y) * 0.085 * keel * gauss(z, 0.026);
   const pocket = z < 0 ? MOUTH.pocket * pocketMask(p[0], y) : 0;
   return [p[0], y, c + z + pocket];
 }
@@ -101,7 +101,7 @@ export const eyeCentre = (side: 1 | -1): Vec3 => {
 
 function eyeDent(p: Vec3): number {
   const e = eyeCentre(p[1] >= 0 ? 1 : -1);
-  return gauss(Math.hypot(p[0] - e[0], p[1] - e[1], p[2] - e[2]), 0.05);
+  return gauss(dmath.hypot(p[0] - e[0], p[1] - e[1], p[2] - e[2]), 0.05);
 }
 
 /** Skin colour: grey back with a bronze cast, sharp ragged line, white belly, dark slits. */
@@ -124,10 +124,10 @@ function trunkColour(p: Vec3, t: number, raw: number, sides: number): Vec3 {
   // The lateral line, a faint pale thread of pores; the keel's ridge dark from the side.
   if (sides > 20) {
     const line =
-      gauss(h - lateralShare(t), 0.07) * smooth(0.27, 0.32, t) * (1 - smooth(0.8, 0.86, t));
-    back = mixRgb(back, COLOUR.belly, 0.16 * line);
+      gauss(h - lateralShare(t), 0.035) * smooth(0.27, 0.32, t) * (1 - smooth(0.8, 0.86, t));
+    back = mixRgb(back, COLOUR.belly, 0.34 * line);
   }
-  back = mixRgb(back, COLOUR.tip, 0.45 * keelAt(t) * gauss(h, 0.3));
+  back = mixRgb(back, COLOUR.tip, 0.7 * keelAt(t) * gauss(h, 0.3));
   let out = mixRgb(back, COLOUR.belly, white);
   if (sides > 20 && white > 0.5 && noise(t * 260, a * 30, seed + 7) > 0.86)
     out = mixRgb(out, COLOUR.back, 0.16);
@@ -181,16 +181,21 @@ export function eyeMesh(side: 1 | -1, lod: Lod): Mesh {
   // Ball poles along the outward axis, so the iris and pupil are rings about it.
   const u0 = norm(Math.abs(out[2]) > 0.9 ? [1, 0, 0] : cross(out, [0, 0, 1]));
   const v0 = cross(out, u0);
+  // Up close, two rings inside the pale band round the pupil (u 0.16–0.2): the even rings skip it.
+  const us =
+    lod === 0 ? stations([...even(0.06, 0.94, rings), 0.165, 0.195]) : even(0.06, 0.94, rings);
   const ball = loft({
-    us: even(0.06, 0.94, rings),
+    us,
     sides,
     strip: 'plastic',
     point: (u, a) => {
       const th = u * Math.PI;
-      const ring = add(scale(u0, Math.cos(a)), scale(v0, Math.sin(a)));
-      return add(centre, add(scale(out, R * Math.cos(th)), scale(ring, R * Math.sin(th))));
+      const ring = add(scale(u0, dmath.cos(a)), scale(v0, dmath.sin(a)));
+      return add(centre, add(scale(out, R * dmath.cos(th)), scale(ring, R * dmath.sin(th))));
     },
-    color: (_p, _n, u) => (u < 0.18 ? COLOUR.eye : u < 0.3 ? COLOUR.iris : COLOUR.eye),
+    // Pupil, a thin pale ring round it, the blue-grey iris, then the dark sclera under the lid.
+    color: (_p, _n, u) =>
+      u < 0.16 ? COLOUR.eye : u < 0.2 ? COLOUR.pupilRing : u < 0.34 ? COLOUR.iris : COLOUR.eye,
   });
   if (lod === 2) return ball;
   // The lid: a soft ring of skin hugging the visible rim of the ball.
@@ -200,10 +205,10 @@ export function eyeMesh(side: 1 | -1, lod: Lod): Mesh {
     strip: SKIN,
     point: (u, a) => {
       const th = u * TAU;
-      const rim = add(scale(u0, Math.cos(th)), scale(v0, Math.sin(th)));
+      const rim = add(scale(u0, dmath.cos(th)), scale(v0, dmath.sin(th)));
       const at = add(centre, add(scale(out, R * 0.62), scale(rim, R * 0.84)));
       const r = 0.0075;
-      return add(at, add(scale(rim, r * Math.cos(a)), scale(out, r * 0.8 * Math.sin(a))));
+      return add(at, add(scale(rim, r * dmath.cos(a)), scale(out, r * 0.8 * dmath.sin(a))));
     },
     color: () => COLOUR.lid,
   });

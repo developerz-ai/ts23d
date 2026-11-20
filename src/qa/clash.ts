@@ -9,6 +9,7 @@
 
 import {
   type CompiledAsset,
+  dmath,
   type Mesh,
   merge,
   type Part,
@@ -76,8 +77,8 @@ export const clashes: Gate = (asset: CompiledAsset): Finding[] => {
     const body = merge([...moving].flatMap((n) => meshes.get(n) ?? []));
     const t = xf.get(root.name);
     if (!t || body.indices.length === 0 || !root.motion || root.motion.kind === 'tread') continue;
-    const c = Math.cos(t.yaw);
-    const s = Math.sin(t.yaw);
+    const c = dmath.cos(t.yaw);
+    const s = dmath.sin(t.yaw);
     const rot = (v: Vec3): Vec3 => [v[0] * c - v[1] * s, v[0] * s + v[1] * c, v[2]];
     const m = root.motion;
     const peak = m.kind === 'sway' ? (m.degrees * Math.PI) / 180 : 0;

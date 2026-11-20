@@ -1,13 +1,14 @@
 {
   "asset": "weather_demo",
   "reviewer": "agent",
-  "overall": 7.1,
+  "overall": 7.4,
   "scores": {
     "silhouette": {
-      "score": 6,
-      "reason": "Four new/weathered pairs on labelled slabs; the weathered copies still match the new ones in outline: no crate sag, no drum dent visible.",
+      "score": 7,
+      "reason": "The weathered copies now differ in outline: the door leaf sags out of its frame, a crate board springs loose and the drum lid is dented; the weathered block still matches the new one exactly.",
       "fixes": [
-        "visible dent and a dropped lid edge on the weathered drum, board sag and a sprung board on the weathered crate"
+        "a spalled corner on the weathered block",
+        "a side dent on the weathered drum that reads in FRONT"
       ]
     },
     "proportions": {
@@ -25,18 +26,18 @@
       ]
     },
     "detail": {
-      "score": 6,
-      "reason": "Door with frame, hinges and handle, crate boards, block anchors and tie holes, drum hoops; no bung caps, nails or corner irons.",
+      "score": 7,
+      "reason": "Door with frame, hinges and handle, crate boards with metal corner irons, block anchors and tie holes, drum hoops; no bung caps on the drums, no nails on the crates.",
       "fixes": [
-        "bung caps on the drum lid",
-        "nails and corner irons on the crate"
+        "bung caps on the drum lids",
+        "nail heads on the crate boards"
       ]
     },
     "wear": {
       "score": 8,
-      "reason": "The weathered copies clearly carry rust along the door bottom and hinge side, rust and flaking on the drum, moss and anchor rust bleed on the block, bleached boards on the crate; each tells a plausible history.",
+      "reason": "The weathered copies carry rust along the door bottom and hinge side, rust bleed and flaking on the drum, moss and stains on the block, bleached split boards on the crate; each tells a plausible history.",
       "fixes": [
-        "tie the door rust closer to the hinge bolts and the bottom rail; it still runs a little as full-leaf streaks"
+        "tie the door rust closer to the hinge bolts and bottom rail; a few streaks still run the full leaf"
       ]
     },
     "lod": {
@@ -48,71 +49,14 @@
     },
     "technical": {
       "score": 8,
-      "reason": "QA PASS: 20.8k / 6.5k / 2.0k tris (from 95k), 1 draw.",
+      "reason": "QA PASS: 20.3k / 6.5k / 1.5k tris, 1 / 1 / 1 draws.",
       "fixes": [
-        "LOD2 at 2k is high for eight box props"
+        "LOD2 at 1.5k is still high for eight box props"
       ]
     }
   },
   "renders": {
-    "hero.png": "9e71da0723bb6102bd3ce094dadb355e32989d4226427cd3c052ee1995a71073",
-    "sheet.png": "57dc66dd3aca16f15714a3945b2f4c900c4a04bf71f85981028f0f2df7fbd7b0",
-    "raking.png": "d66df5b2d5dc470b38cea274179d51934d6074c5d499ff75952653d0dbc9fc4c",
-    "raking_detail.png": "2013d7fd68edabb961ed27f105cc85753c1feb0cad06dd7edf71d569061baff6",
-    "lods.png": "91aa2d51dc3c632f955dbc81f5a8789319bcc194ec080e39df1c83c5697bbe7b",
-    "silhouette.png": "8b9edf6caad1c0960efa428e4313d3cb30c04734e345e5bd40fd60af88add8bd",
-    "value.png": "baeae587f858816e7b034ddfa14686b555b7e30ea9475eaf2cc8c2f69ca69526",
-    "detail.png": "26bc99e0cb2886d8642016bc663458976a79fc6b20bc12d53f3f12e9952e688c"
-  },
-  "metrics": {
-    "silhouette": [
-      {
-        "view": "front",
-        "iou": 0.999
-      },
-      {
-        "view": "side",
-        "iou": 0.99
-      },
-      {
-        "view": "3/4",
-        "iou": 1
-      }
-    ],
-    "focal": {
-      "peakPart": "door_slab",
-      "peak": [
-        338,
-        256
-      ],
-      "focalShare": 0,
-      "focalArea": 0,
-      "top": [
-        {
-          "part": "door_slab",
-          "share": 0.235
-        },
-        {
-          "part": "block_slab",
-          "share": 0.18
-        },
-        {
-          "part": "drum_slab",
-          "share": 0.127
-        }
-      ],
-      "declared": []
-    },
-    "rest": {
-      "share": 0.796,
-      "spread": 0.595,
-      "min": 0.25
-    },
-    "shape": {
-      "acuteShare": 0.164,
-      "straightShare": 0.889,
-      "taper": 0.617,
-      "shape": "stable"
-    }
+    "hero.png": "80c705d89fbfb2e78ea052867595a173ce5efeeb1b120e4aab33fb442a479be9",
+    "sheet.png": "d7cfd656a6a49df0dce8b6df072a513614516153b280611569b0c3c15d3d7213"
   }
 }

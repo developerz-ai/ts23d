@@ -6,7 +6,7 @@
 // own rachis, rooted in the trunk top (palms). Everything is clamped into LOD0's crown box, so the
 // tree's fit (height, spread) is the same at both ends of the switch.
 
-import { type Mesh, MeshBuilder, merge, type Vec3 } from '../core/index.ts';
+import { dmath, type Mesh, MeshBuilder, merge, type Vec3 } from '../core/index.ts';
 import { sweep } from '../primitives/index.ts';
 import { type Clump, cluster, samples } from './vegetation-clumps.ts';
 import { LEAFLET_VERTS } from './vegetation-fronds.ts';
@@ -35,7 +35,7 @@ function normal(a: Vec3, b: Vec3, c: Vec3): V3 {
     e1[2] * e2[0] - e1[0] * e2[2],
     e1[0] * e2[1] - e1[1] * e2[0],
   ];
-  const l = Math.hypot(n[0], n[1], n[2]) || 1;
+  const l = dmath.hypot(n[0], n[1], n[2]) || 1;
   return [n[0] / l, n[1] / l, n[2] / l];
 }
 
@@ -143,7 +143,7 @@ function crossed(clumps: readonly Clump[]): Mesh {
     for (let j = 0; j < 3; j++) {
       const a = (j / 3) * Math.PI + (c[0] * 0.7 + c[1] * 1.3);
       const flip = j === 1 ? -1 : 1;
-      const across: Vec3 = [Math.cos(a), Math.sin(a), 0];
+      const across: Vec3 = [dmath.cos(a), dmath.sin(a), 0];
       const [x0, x1] = span(across);
       // Flat pads (pine) still need a body from the side: at least a quarter of their width.
       const h0 = Math.max(z1 - z0, (x1 - x0) / 4);
@@ -153,7 +153,7 @@ function crossed(clumps: readonly Clump[]): Mesh {
       const [w, h] = [(x1 - x0) * k, h0 * k];
       const mid = (x0 + x1) / 2;
       // Cards lean back from vertical, so the crown is also covered from above.
-      const dir: Vec3 = [-Math.sin(a) * 0.45 * h, Math.cos(a) * 0.45 * h, h];
+      const dir: Vec3 = [-dmath.sin(a) * 0.45 * h, dmath.cos(a) * 0.45 * h, h];
       const foot: Vec3 = [
         c[0] + across[0] * mid - dir[0] / 2,
         c[1] + across[1] * mid - dir[1] / 2,

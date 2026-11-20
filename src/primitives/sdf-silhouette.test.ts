@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { boundsOf, Ts23dError } from '../core/index.ts';
+import { boundsOf, dmath, Ts23dError } from '../core/index.ts';
 import { openEdges } from './closed.ts';
 import { sculpt } from './sculpt.ts';
 import { sd } from './sdf-ops.ts';
@@ -106,7 +106,7 @@ describe('visualHull', () => {
           ((i * 71) % 83) / 60 - 0.2,
         ];
         const q: [number, number, number] = [p[0] + 0.013, p[1] - 0.007, p[2] + 0.011];
-        const step = Math.hypot(0.013, 0.007, 0.011);
+        const step = dmath.hypot(0.013, 0.007, 0.011);
         expect(Math.abs(field(p) - field(q))).toBeLessThanOrEqual(step + 1e-9);
         expect(field(p)).toBeGreaterThanOrEqual(hard(p));
       }

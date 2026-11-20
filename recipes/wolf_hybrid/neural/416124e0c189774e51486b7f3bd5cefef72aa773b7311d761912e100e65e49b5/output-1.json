@@ -1,0 +1,376 @@
+{
+  "bbox": {
+    "frame": "gltf",
+    "max": [
+      0.159895,
+      0.946559,
+      0.735788
+    ],
+    "min": [
+      -0.170597,
+      -0.000381,
+      -0.502275
+    ]
+  },
+  "bind": {
+    "bones": 29,
+    "filled": 0,
+    "heatUnweighted": 0.0,
+    "maxInfluences": 4,
+    "method": "bone-heat",
+    "unusedBones": [],
+    "weightSum": [
+      1.0,
+      1.0
+    ]
+  },
+  "blender": "5.3.0",
+  "contract": "t3d-blender-report/1",
+  "glb": {
+    "animations": [],
+    "images": [
+      {
+        "channels": 3,
+        "mime": "image/png",
+        "name": "tex-normal"
+      },
+      {
+        "channels": 3,
+        "mime": "image/png",
+        "name": "tex-orm"
+      },
+      {
+        "channels": 3,
+        "mime": "image/png",
+        "name": "tex-albedo"
+      }
+    ],
+    "joints": [
+      "spine_0",
+      "hind_l_0",
+      "hind_l_1",
+      "hind_l_2",
+      "hind_l_3",
+      "hind_r_0",
+      "hind_r_1",
+      "hind_r_2",
+      "hind_r_3",
+      "spine_1",
+      "spine_2",
+      "neck_0",
+      "neck_1",
+      "head",
+      "scapula_l",
+      "fore_l_0",
+      "fore_l_1",
+      "fore_l_2",
+      "fore_l_3",
+      "scapula_r",
+      "fore_r_0",
+      "fore_r_1",
+      "fore_r_2",
+      "fore_r_3",
+      "tail_0",
+      "tail_1",
+      "tail_2",
+      "tail_3",
+      "tail_4"
+    ],
+    "materials": [
+      {
+        "name": "body",
+        "textures": [
+          "baseColorTexture",
+          "metallicRoughnessTexture",
+          "normalTexture",
+          "occlusionTexture"
+        ]
+      }
+    ],
+    "meshNodes": [
+      "lod0",
+      "lod1",
+      "lod2"
+    ],
+    "skins": 1,
+    "uvOrigin": "top-left (glTF)"
+  },
+  "lods": [
+    29998,
+    9998,
+    4998
+  ],
+  "seconds": 140.67,
+  "source": {
+    "materials": 1,
+    "textures": 2,
+    "triangles": 906084,
+    "uvLayers": 1,
+    "vertexColours": 0
+  },
+  "steps": [
+    {
+      "determinant": 2.018792,
+      "op": "transform",
+      "seconds": 0.05,
+      "triangles": 906084
+    },
+    {
+      "holeFaces": 0,
+      "nonManifoldEdges": 228,
+      "op": "clean",
+      "seconds": 6.32,
+      "shells": 27,
+      "shellsDropped": 26,
+      "triangles": 904626,
+      "welded": 180727
+    },
+    {
+      "capFaces": 731,
+      "clearance": 0.01934,
+      "gap": 0.02,
+      "limbVertices": [
+        17443,
+        18565,
+        19617,
+        20057,
+        87406
+      ],
+      "moved": 5239,
+      "op": "unweb",
+      "pairs": {
+        "0 + 1": 58,
+        "2 + 4": 313,
+        "3 + 4": 376
+      },
+      "seconds": 21.57,
+      "triangles": 904610,
+      "webFaces": 747
+    },
+    {
+      "moved": 0.045503,
+      "op": "script",
+      "seconds": 20.29,
+      "sha256": "3e84071eb3cf4c2dd38ddf4d48bb506e2340961054fc92922bda5b8ec1e82c3a",
+      "stdout": [
+        "haunches 124474 vertices, largest move 0.0455"
+      ],
+      "triangles": 904610,
+      "vertices": [
+        452190,
+        452190
+      ],
+      "why": "rib-like ridges across both thighs read as a starved animal, and a row of pits behind the ruff (wolf_hybrid critique: flank ridges): smoothed out of the source there"
+    },
+    {
+      "moved": 0.039454,
+      "op": "script",
+      "seconds": 0.6,
+      "sha256": "e0032e7b9db114b064fdcaf90d2d3e22672efcec5866bcf2519d82894791fb52",
+      "stdout": [
+        "tufts up vertices 8443 highest 0.023",
+        "tufts down vertices 13020 highest 0.0256",
+        "tufts up vertices 43203 highest 0.016",
+        "tufts down vertices 109399 highest 0.0224",
+        "tufts back vertices 24201 highest 0.016",
+        "tufts back vertices 24869 highest 0.016",
+        "tufts back vertices 11942 highest 0.0208"
+      ],
+      "triangles": 904610,
+      "vertices": [
+        452190,
+        452190
+      ],
+      "why": "the outline was one smooth hull (wolf_hybrid critique: tufted ruff, strand pass on ruff, back and tail): locks of coat raised on the source, so the shell and the bake carry them"
+    },
+    {
+      "boundaryEdges": 0,
+      "focusVertexShare": 0.621,
+      "from": 904610,
+      "op": "retopo",
+      "reduce": "decimate",
+      "seconds": 25.55,
+      "shell": {
+        "bboxDrift": 0.00443,
+        "bboxSide": "+z (top)",
+        "close": 1,
+        "components": 1,
+        "handles": 0,
+        "largestShare": 1.0,
+        "lost": {
+          "share": 0.0,
+          "tolerance": 0.010289
+        },
+        "skin": 0.0,
+        "tried": [
+          [
+            0,
+            0.0,
+            0.9674,
+            4
+          ],
+          [
+            1,
+            0.0,
+            0.0,
+            0
+          ]
+        ],
+        "volume": 0.091171,
+        "volumeRef": 0.095691
+      },
+      "shellTriangles": 109196,
+      "strategy": "shell",
+      "triangles": 29998,
+      "voxel": 0.00686
+    },
+    {
+      "islands": 199,
+      "kind": "smart",
+      "op": "uv",
+      "seconds": 8.61,
+      "triangles": 29998,
+      "uvDegenerate": 0.0
+    },
+    {
+      "albedoFrom": "texture",
+      "albedoMean": 0.472,
+      "albedoUnfilled": 0.0002,
+      "cage": 0.031597,
+      "device": "OPTIX: NVIDIA GeForce RTX 3090",
+      "hitRate": 0.9965,
+      "maps": [
+        "albedo",
+        "normal",
+        "ao"
+      ],
+      "op": "bake",
+      "seconds": 24.42,
+      "size": 2048,
+      "triangles": 29998,
+      "uvCoverage": 0.6253
+    },
+    {
+      "bones": 29,
+      "filled": 0,
+      "heatUnweighted": 0.0,
+      "maxInfluences": 4,
+      "method": "bone-heat",
+      "op": "bind",
+      "seconds": 0.74,
+      "triangles": 29998,
+      "unusedBones": [],
+      "weightSum": [
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "bodyRefilled": 601,
+      "bones": [
+        "tail_1",
+        "tail_2",
+        "tail_3",
+        "tail_4"
+      ],
+      "changed": 918,
+      "contact": {
+        "edges": 84,
+        "vertices": 374
+      },
+      "foreignBefore": 0.1223,
+      "inside": 740,
+      "op": "isolate",
+      "reassigned": [
+        0,
+        0
+      ],
+      "seconds": 0.27,
+      "triangles": 29998
+    },
+    {
+      "at": "head",
+      "bones": 29,
+      "largestTurn": 27.84,
+      "offTarget": 1e-07,
+      "op": "repose",
+      "seconds": 0.03,
+      "triangles": 29998
+    },
+    {
+      "moved": 0.0,
+      "op": "script",
+      "seconds": 30.61,
+      "sha256": "0fbb48f563af57a4c34b041eb81d8dcb6aa85f2afe19aa3be5a29fc0cc1fae19",
+      "stdout": [
+        "delight 0.0847232519166766",
+        "cast 0.06865869533573002",
+        "healed 0.00169246178362994",
+        "mud 0.13688385718099502",
+        "splashes 0.10322022223476031",
+        "wet 0.07110938761308466",
+        "rake 0.0009569862483767692",
+        "rake 0.0008310261659034343",
+        "rake 0.0006780325001024799",
+        "muzzle 0.0007908813368170616"
+      ],
+      "triangles": 29998,
+      "vertices": [
+        15001,
+        15001
+      ],
+      "why": "the generator's baked light, orange cast, bake holes and haunch stripes leave the albedo; roughness, mud and scars go into the maps (a textured part takes no grime pass)"
+    },
+    {
+      "lod0": {
+        "boundaryEdges": 0,
+        "handles": 0,
+        "maxFaceShare": 0.0006,
+        "uvDegenerate": 0.0
+      },
+      "lods": [
+        {
+          "bboxDrift": 0.00081,
+          "bboxSide": "+y (left)",
+          "boundaryEdges": 0,
+          "handles": 0,
+          "lost": {
+            "share": 0.0,
+            "tolerance": 0.015933
+          },
+          "maxFaceShare": 0.0011,
+          "triangles": 9998,
+          "uvDegenerate": 0.0002
+        },
+        {
+          "bboxDrift": 0.00094,
+          "bboxSide": "-x (back)",
+          "boundaryEdges": 0,
+          "handles": 0,
+          "lost": {
+            "share": 0.0,
+            "tolerance": 0.0239
+          },
+          "maxFaceShare": 0.0017,
+          "triangles": 4998,
+          "uvDegenerate": 0.0002
+        }
+      ],
+      "op": "lods",
+      "seconds": 0.76,
+      "triangles": 29998
+    },
+    {
+      "bytes": 10366156,
+      "images": {
+        "albedo": 2048,
+        "normal": 1024,
+        "orm": 1024
+      },
+      "op": "export",
+      "seconds": 0.83,
+      "triangles": 29998
+    }
+  ],
+  "threads": 1
+}

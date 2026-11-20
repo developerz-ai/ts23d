@@ -6,7 +6,7 @@
 // Digits per foot come from the family (creature-family.ts); everything here is LOD0/1 only
 // (LOD2 legs are tubes with a sole, creature-limbs.ts).
 
-import { type Mesh, merge, place, type Vec3 } from '../core/index.ts';
+import { dmath, type Mesh, merge, place, type Vec3 } from '../core/index.ts';
 import type { SculptEdit } from '../primitives/index.ts';
 import type { Bones, Limb } from './creature-bones.ts';
 import { v3 } from './creature-curve.ts';
@@ -35,7 +35,7 @@ export function toes(b: Bones, l: Limb): Vec3[] {
     return [-25, 0, 25, 180].map((a) => {
       const r = (a * Math.PI) / 180;
       const len = a === 180 ? sx * 0.55 : sx;
-      return [f[0] + Math.cos(r) * len, f[1] + Math.sin(r) * len, sz * 0.5];
+      return [f[0] + dmath.cos(r) * len, f[1] + dmath.sin(r) * len, sz * 0.5];
     });
   return knuckles(l).map((k) => [k[0] + sx * 0.16, k[1], sz * 0.36]);
 }
@@ -195,9 +195,12 @@ export function clawRoot(
   const inside = (c: Vec3): boolean => {
     for (let j = 0; j < 8; j++) {
       const a = (j / 8) * Math.PI * 2;
-      const p = v3.add(c, v3.add(v3.mul(u, radius * Math.cos(a)), v3.mul(w, radius * Math.sin(a))));
+      const p = v3.add(
+        c,
+        v3.add(v3.mul(u, radius * dmath.cos(a)), v3.mul(w, radius * dmath.sin(a))),
+      );
       const q = [0, 1, 2].map((i) => ((p[i] ?? 0) - (k[i] ?? 0)) / ((semi[i] ?? 1) - bury));
-      if (Math.hypot(...q) > 1) return false;
+      if (dmath.norm(q) > 1) return false;
     }
     return true;
   };

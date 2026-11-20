@@ -6,6 +6,7 @@ import {
   type BodyPlanSpec,
   bodyPlan,
   type ChainSpec,
+  dmath,
   type IntendedCrease,
   type Vec3,
 } from '@developerz.ai/ts23d';
@@ -32,7 +33,7 @@ export const DESIGN = {
 } as const;
 
 const unit = (v: Vec3): Vec3 => {
-  const l = Math.hypot(v[0], v[1], v[2]) || 1;
+  const l = dmath.hypot(v[0], v[1], v[2]) || 1;
   return [v[0] / l, v[1] / l, v[2] / l];
 };
 const cross = (a: Vec3, b: Vec3): Vec3 => [
@@ -56,7 +57,7 @@ function facing(c: ChainSpec, ref: Vec3): (u: number) => number {
   const { parent: _parent, repeat: _repeat, relief: _r, tint: _t, ...free } = c;
   const rough = c.path.reduce((sum, q, i) => {
     const a = c.path[i - 1] ?? q;
-    return sum + Math.hypot(q[0] - a[0], q[1] - a[1], q[2] - a[2]);
+    return sum + dmath.hypot(q[0] - a[0], q[1] - a[1], q[2] - a[2]);
   }, 0);
   const links = bodyPlan({ name: 'probe', length: rough, chains: [free] }).chains[0]?.links ?? [];
   const angles: number[] = [];
@@ -67,7 +68,7 @@ function facing(c: ChainSpec, ref: Vec3): (u: number) => number {
       ref[1] - l.twist[1] * along,
       ref[2] - l.twist[2] * along,
     ];
-    let a = Math.atan2(dot(d, l.pitch), dot(d, l.bend));
+    let a = dmath.atan2(dot(d, l.pitch), dot(d, l.bend));
     const before = angles.at(-1);
     if (before !== undefined) a += Math.round((before - a) / (Math.PI * 2)) * Math.PI * 2;
     angles.push(a);
@@ -138,11 +139,11 @@ const trunk: ChainSpec = {
     [-1.05, 0, 0.95],
     [-1.48, 0, 0.87],
   ],
-  radius: [0.12, 0.5, 0.6, 0.58, 0.5, 0.3],
+  radius: [0.12, 0.47, 0.57, 0.55, 0.44, 0.28],
   links: 6,
   flatten: 0.92,
   // Scales are in the strip's normal map now, not the mesh: the rings only carry muscle and plates.
-  detail: { rings: [14, 5, 2], sides: [88, 22, 12] },
+  detail: { rings: [10, 5, 2], sides: [72, 22, 12] },
   uvBands: 10,
   relief: bodyRelief,
   tint: bodyTint,
@@ -164,7 +165,7 @@ const tail: ChainSpec = {
   bias: 1.15,
   flatten: 1.25,
   blend: 0.14,
-  detail: { rings: [8, 3, 1], sides: [40, 12, 7] },
+  detail: { rings: [8, 3, 1], sides: [32, 12, 7] },
   uvBands: 5,
   relief: tailRelief,
   tint: tailTint,
@@ -187,7 +188,7 @@ const fore: ChainSpec = aimed(
     links: 3,
     antiFold: true,
     blend: 0.16,
-    detail: { rings: [12, 5, 2], sides: [40, 12, 7] },
+    detail: { rings: [11, 5, 2], sides: [34, 12, 7] },
     uvBands: 5,
     relief: legRelief,
     tint: legTint,
@@ -212,7 +213,7 @@ const hind: ChainSpec = aimed(
     links: 3,
     antiFold: true,
     blend: 0.18,
-    detail: { rings: [12, 5, 2], sides: [40, 12, 7] },
+    detail: { rings: [11, 5, 2], sides: [34, 12, 7] },
     uvBands: 5,
     relief: legRelief,
     tint: legTint,
@@ -256,9 +257,9 @@ function neckPath(k: number): Vec3[] {
   return [0, 0.17, 0.36, 0.56, 0.76, 0.9, 1].map((t) => {
     // Leaves the shoulder forward and up, then an S: back over the shoulder, out to the head.
     // The S eases in: a thick neck cannot start it right at the shoulder.
-    const ease = Math.min(1, t / 0.3) ** 2 * (3 - 2 * Math.min(1, t / 0.3));
-    const s = Math.sin(t * Math.PI * 2) * (1 - t * 0.25) * ease;
-    const rise = Math.sin(t * Math.PI) * 0.16;
+    const ease = dmath.pow(Math.min(1, t / 0.3), 2) * (3 - 2 * Math.min(1, t / 0.3));
+    const s = dmath.sin(t * Math.PI * 2) * (1 - t * 0.25) * ease;
+    const rise = dmath.sin(t * Math.PI) * 0.16;
     const out = along(r, d, t * (0.55 + 0.45 * t));
     return along(
       along(out, up, pose.bulge * s + rise),
@@ -285,7 +286,7 @@ function neckSpec(k: number, pose: NeckPose): ChainSpec {
     antiFold: true,
     blend: 0.15,
     blendWith: NECK_POSES.map((_, j) => `neck_${j}`).filter((_, j) => j !== k),
-    detail: { rings: [5, 3, 1], sides: [40, 12, 7] },
+    detail: { rings: [4, 3, 1], sides: [32, 12, 7] },
     uvBands: 4,
     relief: neckRelief(k),
     tint: neckTint(pose.tone, k),
@@ -334,7 +335,7 @@ const headChain = (k: number): ChainSpec => {
 /** Jaw tip in the skull frame, opened by `a` about the hinge. */
 export function jawTip(a: number): Vec3 {
   const L = DESIGN.head * 0.78;
-  return [JAW_HINGE[0] + Math.cos(a) * L, 0, JAW_HINGE[2] - Math.sin(a) * L];
+  return [JAW_HINGE[0] + dmath.cos(a) * L, 0, JAW_HINGE[2] - dmath.sin(a) * L];
 }
 
 const jawChain = (k: number): ChainSpec => {

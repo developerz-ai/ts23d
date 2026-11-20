@@ -5,7 +5,7 @@
 // along × up, walls along their 2D outline normal. With `surface`, a stroke is cut wherever the
 // surface under it steps and each piece sits on the highest surface under any of its points.
 
-import { type Mesh, MeshBuilder, type Vec3 } from '../core/index.ts';
+import { dmath, type Mesh, MeshBuilder, type Vec3 } from '../core/index.ts';
 import type { UvRect } from '../material/index.ts';
 import { CAP_UNITS, type VectorFont } from './glyph-hershey.ts';
 import { stripU, stripV } from './strip-uv.ts';
@@ -125,7 +125,7 @@ export function vectorText(str: string, o: VectorTextInput): Mesh {
         ];
         const ex = qu - pu;
         const ey = qv - pv;
-        const len = Math.hypot(ex, ey);
+        const len = dmath.hypot(ex, ey);
         if (len < 1e-9) continue;
         const ox = ey / len;
         const oy = -ex / len;

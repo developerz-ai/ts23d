@@ -2,7 +2,7 @@
 // varied by seed (same seed, same blip). blip = menu tick, pickup = coin, laser = pew, hit =
 // damage thump, powerup = rising arpeggio.
 
-import { createRng, type SoundClip, Ts23dError } from '../core/index.ts';
+import { createRng, dmath, type SoundClip, Ts23dError } from '../core/index.ts';
 import { makeClip, normalize, SAMPLE_RATE } from './clip.ts';
 import { adsrAt, biquad, noise, oscillator, shape, type Wave } from './dsp.ts';
 
@@ -47,8 +47,8 @@ export function ui(o: UiOptions): SoundClip {
     const len = rng.range(0.18, 0.32);
     const f0 = rng.range(1200, 2400);
     const f1 = rng.range(120, 300);
-    out = oscillator(sec(len), wave, (i) => f0 * (f1 / f0) ** (t(i) / len));
-    shape(out, (u) => (1 - u / len) ** 1.5);
+    out = oscillator(sec(len), wave, (i) => f0 * dmath.pow(f1 / f0, t(i) / len));
+    shape(out, (u) => dmath.pow(1 - u / len, 1.5));
     out = biquad(out, 'lowpass', 6000, 0.7);
   } else if (o.kind === 'hit') {
     const len = rng.range(0.15, 0.25);
@@ -57,7 +57,7 @@ export function ui(o: UiOptions): SoundClip {
     const crack = biquad(noise(sec(len), o.seed), 'lowpass', rng.range(2000, 5000), 0.7);
     out = new Float32Array(tone.length);
     for (let i = 0; i < out.length; i++) out[i] = 0.5 * (tone[i] ?? 0) + (crack[i] ?? 0);
-    shape(out, (u) => Math.exp(-u / (len / 4)));
+    shape(out, (u) => dmath.exp(-u / (len / 4)));
   } else {
     const len = rng.range(0.45, 0.7);
     const f = rng.range(250, 450);
@@ -65,7 +65,7 @@ export function ui(o: UiOptions): SoundClip {
     const vib = rng.range(5, 9);
     out = oscillator(sec(len), wave, (i) => {
       const k = Math.floor((t(i) / len) * steps);
-      return f * 2 ** (k / 4) * (1 + 0.02 * Math.sin(2 * Math.PI * vib * t(i)));
+      return f * dmath.pow(2, k / 4) * (1 + 0.02 * dmath.sin(2 * Math.PI * vib * t(i)));
     });
     shape(out, (u) =>
       adsrAt({ attack: 0.005, decay: 0.1, sustain: 0.7, release: 0.15 }, u, len - 0.15),

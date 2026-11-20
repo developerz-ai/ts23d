@@ -3,6 +3,8 @@
 // residual rows), pinned unknowns held fixed. Zero dependencies; deterministic (fixed order).
 
 /** y = AᵀA x restricted to the masked unknowns (pinned columns read as zero when `mask`). */
+import { dmath } from '../core/index.ts';
+
 function normalApply(
   x: Float64Array,
   ids: Int32Array,
@@ -46,7 +48,7 @@ export function cg(
   for (let i = 0; i < nt; i++)
     for (let k = 0; k < 3; k++) {
       const s = ids[i * 3 + k] ?? 0;
-      const d = (coef[i * 6 + k * 2] ?? 0) ** 2 + (coef[i * 6 + k * 2 + 1] ?? 0) ** 2;
+      const d = dmath.pow(coef[i * 6 + k * 2] ?? 0, 2) + dmath.pow(coef[i * 6 + k * 2 + 1] ?? 0, 2);
       diag[2 * s] = (diag[2 * s] ?? 0) + d;
       diag[2 * s + 1] = (diag[2 * s + 1] ?? 0) + d;
     }
@@ -62,7 +64,7 @@ export function cg(
     z[i] = (r[i] ?? 0) / ((diag[i] ?? 0) || 1);
     p[i] = z[i] ?? 0;
     rz += (r[i] ?? 0) * (z[i] ?? 0);
-    r0 += (r[i] ?? 0) ** 2;
+    r0 += dmath.pow(r[i] ?? 0, 2);
   }
   const tol = r0 * 1e-12;
   for (let it = 0; it < 2000 && rz > 0; it++) {
@@ -80,7 +82,7 @@ export function cg(
       x[i] = (x[i] ?? 0) + alpha * (p[i] ?? 0);
       r[i] = (r[i] ?? 0) - alpha * (q[i] ?? 0);
       z[i] = (r[i] ?? 0) / ((diag[i] ?? 0) || 1);
-      rr += (r[i] ?? 0) ** 2;
+      rr += dmath.pow(r[i] ?? 0, 2);
       rzNext += (r[i] ?? 0) * (z[i] ?? 0);
     }
     if (rr <= tol) break;

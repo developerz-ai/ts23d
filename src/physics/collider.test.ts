@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test';
 import type { Mesh, Vec3 } from '../core/index.ts';
-import { merge } from '../core/index.ts';
+import { dmath, merge } from '../core/index.ts';
 import { fitCollider } from './collider.ts';
 import { fitBox, fitSphere, MIN_SIZE } from './fit.ts';
 import { boxMesh, cylinderMesh } from './fixtures.ts';
@@ -50,7 +50,7 @@ describe('fitCollider', () => {
     expect(height).toBeCloseTo(2, 6);
     const inCapsule = (p: Vec3): boolean => {
       const z = Math.max(-height / 2, Math.min(height / 2, p[2]));
-      return Math.hypot(p[0], p[1], p[2] - z) <= radius + 1e-6;
+      return dmath.hypot(p[0], p[1], p[2] - z) <= radius + 1e-6;
     };
     expect(contains(cyl, inCapsule)).toBe(true);
   });
@@ -72,7 +72,7 @@ describe('fitCollider', () => {
 
   it('a rotated box gets an oriented (PCA) box, not the loose axis-aligned one', () => {
     const m = boxMesh([4, 0.5, 0.5]);
-    const c = Math.cos(Math.PI / 4);
+    const c = dmath.cos(Math.PI / 4);
     const positions = new Float32Array(m.positions);
     for (let i = 0; i < positions.length; i += 3) {
       const [x, y] = [positions[i] ?? 0, positions[i + 1] ?? 0];

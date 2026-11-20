@@ -157,5 +157,17 @@ export function legsLowpoly(paint: (p: Vec3, c: Vec3) => Vec3): Mesh {
     pawBlob([f.paw[0] + 0.02, f.paw[1], 0], [0.085, 0.075, 0.05]),
     pawBlob([h.paw[0] + 0.02, h.paw[1], 0], [0.08, 0.065, 0.048]),
   ]);
-  return merge([left, place(left, { scale: [1, -1, 1] })]);
+  // One colour per ring painted the leg's white inner face orange (and the far legs, seen
+  // from inside, dark): every vertex takes the coat at its own point instead.
+  const both = merge([left, place(left, { scale: [1, -1, 1] })]);
+  const colors = new Float32Array(both.colors.length);
+  for (let i = 0; i < colors.length; i += 3)
+    colors.set(
+      paint(
+        [both.positions[i] ?? 0, both.positions[i + 1] ?? 0, both.positions[i + 2] ?? 0],
+        C.orange,
+      ),
+      i,
+    );
+  return { ...both, colors };
 }

@@ -13,8 +13,7 @@ The pattern is [wolf_hybrid](../wolf_hybrid/README.md)'s.
 | `concept.ts` | The concept image request: model, prompt, seed, size |
 | `surface.ts` | The five-request chain, the mesh request, the clips dropped |
 | `steps.ts` | The Blender program, built from the fitted rig; every step with its reason |
-| `paint.ts` | The texture kit run as a `script` step: per-texel positions, masks, seeded noise, de-light, repaint (shared with dragon_hybrid and ranger) |
-| `wear.ts` | What this bear's maps get: light out, ears, roughness, mud, scars, rubbed coat |
+| `wear.ts` | What this bear's maps get: light out, ears, the coat's locks in the normal map, roughness, mud, scars, rubbed coat (run by [_lib/creature/texture-paint.ts](../_lib/creature/texture-paint.ts): per-texel positions, masks, seeded noise, de-light, repaint, relief; shared with wolf_hybrid, dragon_hybrid and ranger) |
 | `claws.ts` | Code-built claws grown from the model's toe ends, bound to the paw bones |
 | `bear_hybrid.ts` | `defineModelCreature`: real box, budget, the sourced-measures check, the claws |
 | `neural/<key>/` | Model and Blender outputs + `record.json`; the raw mesh is `local-0.glb` (git-ignored) |
@@ -51,9 +50,9 @@ and run `t3d neural run` on the copy (GPU and Blender, below).
 | 2 | `mesh` | Pixal3D (MIT), 1536 cascade, 25 steps | 941 691-triangle GLB, 76 MB | no (`keep: 'local'`) | 7 min 18 s |
 | 3 | `blender` proxy | Blender 5.3.0: clean → 5 998-triangle shell | GLB, 0.11 MB | yes | 26 s |
 | 4 | `rig` | UniRig (MIT) on the proxy | its joints, 0.18 MB | yes | 60 s |
-| 5 | `blender` final | Blender 5.3.0: `steps.ts` | 3 LODs + maps + skin, 9.1 MB | yes | about 4 min (the paint step rasterises 2048² texels on one thread) |
+| 5 | `blender` final | Blender 5.3.0: `steps.ts` | 3 LODs + maps + skin, 10.7 MB | yes | about 3 min (the paint step, 66 s, rasterises 2048² texels on one thread) |
 
-Committed: 10.4 MB of the 12 MB cap (delete the superseded final key before a re-run: two finals do not fit).
+Committed: 11.97 MB (11.42 MiB of the 12 MiB cap; move the superseded final key out before a re-run: two finals do not fit, and the run fails only at its end).
 
 ## The Blender steps (`steps.ts`)
 
@@ -63,14 +62,15 @@ Committed: 10.4 MB of the 12 MB cap (delete the superseded final key before a re
 | `clean` | 941 691 → 892 702 triangles | generator output |
 | `script` (ears) | both ears scaled to 85 % about their roots (3 427 and 5 937 source vertices, largest move 1.4 cm) | the generator drew a cub's ears, about 15 % large for the head |
 | `unweb` | cut 674 web faces between the tail and the two hind legs; 1.9 cm clearance measured | the stub tail lies on the legs |
-| `retopo` | closed shell → 28 798 triangles (the budget less the code claws); density ×3 on head and hips, ×2 on paws | at ×2 the hips stretched ×4.3–5.0 at their limits |
-| `uv` · `bake` | 159 islands; albedo 2048², normal and ORM 1024²; hit rate 0.989, 0 unfilled | |
+| `script` (tufts) | locks of coat 10 cm across raised out of the outline, each lock's tip drooping down and back by as much again: hump and back 4.5 cm, throat 4.5 cm, the belly's fringe 6 cm, rump and the backs of the upper legs 3.5 cm (a brown bear's guard hair is 8–12 cm there); never on the flanks (the box's width holds), the head (a lock under the jaw was a second outline to QA `model`) or the stub tail | the outline was a smooth hull; on the source, so the shell and the bake carry them |
+| `retopo` | closed shell → 28 798 triangles (the budget less the code claws); density ×3 on head and hips, ×2 on paws, ×4 in a 9 cm ball on the stub tail | at ×2 the hips stretched ×4.3–5.0 at their limits; the tail's four bones span 6 cm, and one (`tail_2`, 1.3 cm) was left without a vertex (QA `skin`) |
+| `uv` · `bake` | 146 islands; albedo 2048², normal and ORM 1024²; hit rate 0.987, 0 unfilled | |
 | `bind` | bone heat, no fallback needed | |
-| `isolate` | 1 283 vertices: the tail's skin takes only tail bones | |
+| `isolate` | 1 390 vertices changed: the tail's skin takes only tail bones, the rump none of them | |
 | `weights` | paw weights smoothed round each wrist, 50 passes in a 24 cm ball | the walk folds the wrist 84°; unsmoothed, 6.6–10 % of the triangles round it passed through each other (limit 6 %); with 30 passes in 20 cm the 28.8 k shell's LOD 2 still crossed 36 of 542 at the left wrist |
 | `repose` | largest turn 40.9° | straight, symmetric rest; nothing is mirrored |
 | `script` (paint) | `wear.ts`, below | a textured part takes no `paint`, `finish` or grime pass (ADR 016): wear has to be in its maps |
-| `lods` | 9 498 and 4 998 triangles | LOD 2 stays at 5 000: coarser, the haunch stretches past ×4 at the hip's limits (QA `deform`) |
+| `lods` | 9 498 and 4 998 triangles; ×6 the density in a 6 cm ball on the ground under each fore toe joint (a flat sole costs a collapse nothing: at 5 000 the left fore paw kept no vertex on the ground within the toe bone's 4.5 cm, and QA `model` read its skin 5.1 cm up) | LOD 2 stays at 5 000: coarser, the haunch stretches past ×4 at the hip's limits (QA `deform`) |
 | `export` | one GLB | |
 
 Two things this bear needed that the wolf did not, both in the library now:
@@ -80,7 +80,7 @@ Two things this bear needed that the wolf did not, both in the library now:
 | The head bone | UniRig ends this bear's trunk at the snout, and the plan's 0.40 m head from there ran 0.30 m past the nose. `modelChain({ nose: true })` starts the head at the last trunk joint half a head behind the traced nose tip and ends it at the nose |
 | The fit gate | QA `model` read "not registered" (14.8 % of the skeleton's height from a bone; the limit, 12.5 %, was calibrated on a lean wolf). It now asks that no copy of the skeleton turned a quarter or half a turn fits clearly better: wolf 0.75, bear 0.67 registered; 1.34 and 1.49 half a turn off |
 
-## Paint and wear (`wear.ts`, run by `paint.ts`)
+## Paint and wear (`wear.ts`)
 
 One `script` step after `repose`. The shell's triangles are rasterised in UV space, so every texel
 knows where it lies on the body; masks are functions of position (a height band, a ball at a bone,
@@ -89,13 +89,14 @@ same maps, so LOD 2 keeps all of it. The story: a bear that fishes a muddy river
 
 | Pass | What | Measured on the run |
 |---|---|---|
-| De-light | brightness varying over 16 cm pulled towards the coat's value over 55 cm (85 % of a lit blotch, 70 % of a shaded one) | mean gain ×1.29 either way |
-| Bake holes | black texels off the soles, nose, eyes and ears take their neighbourhood's colour | 1 % of the coat |
-| Ears | the white caps repainted body brown, grain kept | 0.9 % of the coat each |
-| Roughness | fur 0.70–0.97 (paler tips drier), nose 0.28, claws 0.34, dried mud 0.97, wet mud 0.58, scars 0.5 | was one flat 0.8 |
-| Mud | wet and dark to the wrists and hocks, a paler cracked crust above, splashes to the belly | 20 % of the coat dried, 10 % wet |
-| Scars | three claw rakes across the right shoulder (the hero's side), one older cut on the left flank, a nick over the muzzle | |
-| Rubbed coat | right hip and rump, thin and a little greasy | 2.7 % of the coat |
+| De-light | brightness varying over 16 cm pulled towards the coat's value over 55 cm (92 % of a lit blotch, 75 % of a shaded one); then the top light that is left, over 40 cm towards 1.3 m (55 % / 30 %) | mean gain ×1.32, then ×1.03, either way |
+| Bake holes | black texels off the soles, nose, eyes and ears take their neighbourhood's colour | 0.9 % of the coat |
+| Ears | the white caps repainted body brown, grain kept | 0.5–0.6 % of the coat each |
+| Coat | the bake's own grain sharpened (value × grain^0.8: hair against the gap between hairs); strands 8 mm across in hanks 4 cm long, a fifth lighter and darker; grizzle: hanks 2 cm across with silver tips (value × 1.5), thickest over the hump and back, shadow between them (× 0.72); locks 5 cm across raised 6 mm in the normal map and darkened between; all off the face and the paws | a low light rakes across clumps, not a smooth hide |
+| Roughness | fur 0.70–0.97 (paler tips drier), nose 0.28, claws 0.34, dried mud 0.97, wet mud 0.5, soaked fringe 0.45, scars 0.45 | was one flat 0.8 |
+| Mud | wet and near black to the wrists and hocks with a ragged edge, relief planed to 45 %; above it a pale cracked crust in patches to the elbows and stifles, with its own grain in the normal map; the belly's fringe soaked dark in pointed locks; splashes up the flanks | 13 % of the coat wet, 5 % soaked |
+| Scars | three claw rakes across the right shoulder (the hero's side; to 27 cm long, 3 cm wide, a groove 6 mm deep in the normal map, a dark lip each side), one older cut on the left flank, a nick over the muzzle | |
+| Rubbed coat | right hip and rump thin and a little greasy; a patch on the right flank rubbed towards the grey skin, ragged-edged, its relief planed | 2.7 % and 0.9 % of the coat |
 
 ## Claws (`claws.ts`)
 
@@ -121,11 +122,12 @@ What the renders show (read after the build):
 
 | View | Seen |
 |---|---|
-| `hero.png` (¾) | reads as a brown bear: heavy forequarter, hump, dished face; brown ears; curved claws stand off the toes; dark wet paws under paler caked legs |
-| `sheet.png` side, rear | level stand, all four paws flat on the ground, LOD 2 holds the outline, the mud and the colour blocks |
+| `hero.png` (¾) | reads as a brown bear: heavy forequarter, hump, dished face; brown ears; curved claws stand off the toes; the back, hump and throat break into locks on the outline; legs black with wet mud to the wrists and hocks, a pale crust in patches above; three pink-grey claw scars across the shoulder; a thin grey patch on the flank |
+| `sheet.png` side, rear | level stand, all four paws flat on the ground; the belly's fringe hangs ragged and dark; LOD 2 holds the outline, the mud, the scars and the colour blocks |
 | `sheet.png` front, top | the head is carried cocked a little to its left, not square |
 
-Honest limits: the coat is a painted surface, not fur cards (no clumps on the outline); the head
+Honest limits: the coat is a painted surface, not fur cards (the locks on the outline are 3–6 cm of
+geometry on a 28.8 k shell: lumps, not strands, and LOD 2 keeps only the largest); the head
 tilt above; de-lighting is a band filter, not an inverse render: the forequarter is still paler
 than the rump, and a dark saddle over the shoulder blades stays; two short black slits on the hind
 thighs and one on the neck are in the generator's geometry, not its colour; the shoulder hump is

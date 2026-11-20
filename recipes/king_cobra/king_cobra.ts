@@ -109,10 +109,12 @@ export const king_cobra = defineAsset({
     'https://en.wikipedia.org/wiki/King_cobra',
     'https://commons.wikimedia.org/wiki/File:King-Cobra.jpg',
   ],
-  real: { length: 0.56, width: 0.55, height: 0.78 },
+  real: { length: 0.45, width: 0.45, height: 0.78 },
   // LOD1 holds ~9 k: enough rings that the bands still resolve and the switch from 62 k is no pop.
   budget: { triangles: [72000, 11000, 640], bones: PLAN.bones.length },
   art: { grounded: false, focal: 'body' },
+  // A little higher than the default 18°: the top turn and the pile's wear face the lens.
+  hero: { elDeg: 24 },
   creases: [
     // Local on purpose: the mouth line each side, and the shield sutures over the crown.
     ...[0.012, 0.036, 0.06].flatMap((at) =>

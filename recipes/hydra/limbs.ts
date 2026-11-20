@@ -5,6 +5,7 @@
 import {
   type BodyPlanDefinition,
   type BuildContext,
+  dmath,
   lathe,
   type Mesh,
   merge,
@@ -40,16 +41,16 @@ const FEET: readonly FootDef[] = [
 const TOES = [-0.72, -0.34, 0.02, 0.36, 0.78];
 
 function footMesh(f: FootDef, lod: number): { foot: Mesh; claws: Mesh } {
-  const res = [0.018, 0.036, 0.08][lod] ?? 0.08;
+  const res = [0.024, 0.036, 0.08][lod] ?? 0.08;
   const skin = lerp(C.back, C.ochre, 0.45);
   const k = f.size;
-  const dir = (a: number): Vec3 => [Math.cos(f.yaw + a), Math.sin(f.yaw + a), 0];
+  const dir = (a: number): Vec3 => [dmath.cos(f.yaw + a), dmath.sin(f.yaw + a), 0];
   const add = (a: Vec3, d: Vec3, l: number, z: number): Vec3 => [
     a[0] + d[0] * l,
     a[1] + d[1] * l,
     z,
   ];
-  const palm: Vec3 = [f.at[0] - 0.05 * Math.cos(f.yaw), f.at[1] - 0.05 * Math.sin(f.yaw), 0];
+  const palm: Vec3 = [f.at[0] - 0.05 * dmath.cos(f.yaw), f.at[1] - 0.05 * dmath.sin(f.yaw), 0];
   const edits: SculptEdit[] = [
     {
       shape: 'ellipsoid',
@@ -74,7 +75,8 @@ function footMesh(f: FootDef, lod: number): { foot: Mesh; claws: Mesh } {
         to: knuckle,
         size: [0.058 * k, 0.046 * k],
         color: skin,
-        blend: 0.1,
+        // Webbed toe roots: a soft cleft between neighbours, not a fold.
+        blend: 0.14,
       },
       {
         shape: 'roundCone',
@@ -82,7 +84,7 @@ function footMesh(f: FootDef, lod: number): { foot: Mesh; claws: Mesh } {
         to: tip,
         size: [0.046 * k, 0.032 * k],
         color: skin,
-        blend: 0.07,
+        blend: 0.1,
       },
     );
     const base: Vec3 = [tip[0] - d[0] * 0.03 * k, tip[1] - d[1] * 0.03 * k, 0.044 * k];
@@ -116,7 +118,8 @@ function footMesh(f: FootDef, lod: number): { foot: Mesh; claws: Mesh } {
     size: [2, 2, 0.5],
     round: 0.005,
     op: 'subtract',
-    blend: 0.03,
+    // Wide enough that the toes roll onto the sole, not fold into it, at the 2.4 cm cell.
+    blend: 0.055,
   });
   return {
     foot: recolour(sculpt({ edits, resolution: res, color: skin }), (c, p) => muddy(c, p, 0)),
@@ -197,8 +200,8 @@ function sagUnderRim(kit: Kit, chain: string, q: SurfacePoint, rim: number): num
   let sag = 0;
   for (let k = 0; k < 8; k++) {
     const a = (k / 8) * Math.PI * 2;
-    const u = Math.min(1, Math.max(0, q.u + du * Math.cos(a)));
-    const p = kit.surface(chain, u, q.angle + da * Math.sin(a)).p;
+    const u = Math.min(1, Math.max(0, q.u + du * dmath.cos(a)));
+    const p = kit.surface(chain, u, q.angle + da * dmath.sin(a)).p;
     const drop = q.n[0] * (q.p[0] - p[0]) + q.n[1] * (q.p[1] - p[1]) + q.n[2] * (q.p[2] - p[2]);
     sag = Math.max(sag, drop);
   }
@@ -243,12 +246,12 @@ function rowOn(
 
 export function hydraArmour(ctx: BuildContext, kit: Kit): void {
   const lod = ctx.lod;
-  const spike = spikeUnit([8, 5, 3][lod] ?? 3);
-  const scute = scuteUnit([6, 5, 3][lod] ?? 3);
+  const spike = spikeUnit([6, 5, 3][lod] ?? 3);
+  const scute = scuteUnit([4, 4, 3][lod] ?? 3);
   const pieces: (Mesh | null)[] = [];
-  // Big dorsal spines: they carry the back's silhouette from the 3/4 view.
-  const spikeSize = (r: number, u: number): number => (0.065 + r * 0.2) * (1 - 0.35 * u);
-  const dorsal = lod === 2 ? 0.26 : lod === 1 ? 0.09 : 0.048;
+  // Big dorsal spines, spaced so each one reads on its own in SIDE.
+  const spikeSize = (r: number, u: number): number => (0.08 + r * 0.27) * (1 - 0.35 * u);
+  const dorsal = lod === 2 ? 0.26 : lod === 1 ? 0.1 : 0.07;
   pieces.push(
     rowOn(kit, 'body', spike, {
       from: 0.3,
@@ -289,7 +292,7 @@ export function hydraArmour(ctx: BuildContext, kit: Kit): void {
           rowOn(kit, 'body', scute, {
             from: 0.06,
             to: 0.97,
-            step: 0.024,
+            step: 0.032,
             angle: a,
             size: scuteSize,
             sink: 0.26,
@@ -299,7 +302,7 @@ export function hydraArmour(ctx: BuildContext, kit: Kit): void {
           rowOn(kit, 'tail', scute, {
             from: 0.03,
             to: 0.72,
-            step: 0.03,
+            step: 0.04,
             angle: a * 0.9,
             size: scuteSize,
             sink: 0.26,

@@ -4,7 +4,7 @@
 // as in skin-weights.ts. Distance runs through flesh, never through air, so a leg never bleeds
 // onto the leg beside it across the gap. Deterministic: fixed grid, fixed neighbour order.
 
-import { type Mesh, SKIN_INFLUENCES, Ts23dError, type Vec3 } from '../core/index.ts';
+import { dmath, type Mesh, SKIN_INFLUENCES, Ts23dError, type Vec3 } from '../core/index.ts';
 import {
   capsuleDistance,
   checkBones,
@@ -36,13 +36,13 @@ const NEIGHBOURS: readonly (readonly [number, number, number, number])[] = (() =
   const out: [number, number, number, number][] = [];
   for (let z = -1; z <= 1; z++)
     for (let y = -1; y <= 1; y++)
-      for (let x = -1; x <= 1; x++) if (x || y || z) out.push([x, y, z, Math.hypot(x, y, z)]);
+      for (let x = -1; x <= 1; x++) if (x || y || z) out.push([x, y, z, dmath.hypot(x, y, z)]);
   return out;
 })();
 
 /** A cell of 0 or NaN never coarsens under the cap (an endless loop); a negative one sizes NaN. */
 function checkGrid(o: HeatOptions): void {
-  const cap = o.maxVoxels ?? 2 ** 21;
+  const cap = o.maxVoxels ?? 2097152 /* 2^21 */;
   if (!(Number.isFinite(o.cell) && o.cell > 0))
     throw new Ts23dError('T3D_SKIN_INVALID', {
       cause: `heat voxel cell ${o.cell} m is not a finite length > 0`,
@@ -65,7 +65,7 @@ function voxelise(mesh: Mesh, o: HeatOptions): Grid {
     hi[k] = Math.max(hi[k] ?? 0, p[i] ?? 0);
   }
   const span = (k: number): number => (hi[k] ?? 0) - (lo[k] ?? 0);
-  const cap = o.maxVoxels ?? 2 ** 21;
+  const cap = o.maxVoxels ?? 2097152 /* 2^21 */;
   let cell = o.cell;
   const dims = (c: number): [number, number, number] =>
     v3((k) => Math.ceil(span(k) / c) + 3) as [number, number, number];
@@ -98,7 +98,7 @@ function voxelise(mesh: Mesh, o: HeatOptions): Grid {
         [a, b],
         [b, c],
         [c, a],
-      ].map(([u, v]) => Math.hypot(...[0, 1, 2].map((k) => at(u ?? 0, k) - at(v ?? 0, k)))),
+      ].map(([u, v]) => dmath.norm([0, 1, 2].map((k) => at(u ?? 0, k) - at(v ?? 0, k)))),
     );
     const steps = Math.max(1, Math.ceil(edge / (cell * 0.5)));
     for (let i = 0; i <= steps; i++)
@@ -188,7 +188,7 @@ function geodesic(g: Grid, bone: WeightBone): Float64Array {
     }
     return top;
   };
-  const len = Math.hypot(...[0, 1, 2].map((k) => (bone.b[k] ?? 0) - (bone.a[k] ?? 0)));
+  const len = dmath.norm([0, 1, 2].map((k) => (bone.b[k] ?? 0) - (bone.a[k] ?? 0)));
   const steps = Math.max(1, Math.ceil(len / (g.cell * 0.5)));
   for (let s = 0; s <= steps; s++) {
     const q = v3((k) => (bone.a[k] ?? 0) + ((bone.b[k] ?? 0) - (bone.a[k] ?? 0)) * (s / steps));

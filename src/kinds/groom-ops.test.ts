@@ -1,18 +1,18 @@
 import { describe, expect, test } from 'bun:test';
-import { dot, normalize, sub, type Vec3 } from '../core/index.ts';
+import { dmath, dot, normalize, sub, type Vec3 } from '../core/index.ts';
 import { checkGroomOps, childrenFor, type GroomGuide, type GroomOp, opMask } from './groom-ops.ts';
 import { applyGroomOps, curveLength, lockOf } from './groom-ops-apply.ts';
 
 // A 10 cm ball scalp; guides from its top cap, each leaving the skin at 30° and lying back (-X).
 const R = 0.1;
-const ball = (p: Vec3): number => Math.hypot(...p) - R;
+const ball = (p: Vec3): number => dmath.norm(p) - R;
 function guides(n = 6, len = 0.08, pts = 9): GroomGuide[] {
   const out: GroomGuide[] = [];
   for (let i = 0; i < n; i++)
     for (let j = 0; j < n; j++) {
       const a = ((i - (n - 1) / 2) / n) * 1.2;
       const b = ((j - (n - 1) / 2) / n) * 1.2;
-      const nrm = normalize([Math.sin(a), Math.sin(b), 1]);
+      const nrm = normalize([dmath.sin(a), dmath.sin(b), 1]);
       const root: Vec3 = [nrm[0] * (R - 0.002), nrm[1] * (R - 0.002), nrm[2] * (R - 0.002)];
       const back = normalize([-1, 0, 0.6]);
       const points: Vec3[] = [];
@@ -29,7 +29,7 @@ function guides(n = 6, len = 0.08, pts = 9): GroomGuide[] {
   return out;
 }
 const rootAngle = (g: GroomGuide): number =>
-  Math.acos(dot(normalize(sub(g.points[1] ?? [0, 0, 0], g.points[0] ?? [0, 0, 0])), g.normal));
+  dmath.acos(dot(normalize(sub(g.points[1] ?? [0, 0, 0], g.points[0] ?? [0, 0, 0])), g.normal));
 const mean = (xs: number[]): number => xs.reduce((s, x) => s + x, 0) / xs.length;
 /** Mean distance of each guide's tip from its lock's mean tip. */
 function spread(gs: readonly GroomGuide[], locks: number): number {
@@ -42,7 +42,7 @@ function spread(gs: readonly GroomGuide[], locks: number): number {
         (s, q) => [s[0] + q[0] / m.length, s[1] + q[1] / m.length, s[2] + q[2] / m.length],
         [0, 0, 0],
       );
-      return Math.hypot(t[0] - c[0], t[1] - c[1], t[2] - c[2]);
+      return dmath.hypot(t[0] - c[0], t[1] - c[1], t[2] - c[2]);
     }),
   );
 }
@@ -148,9 +148,7 @@ describe('groom ops: each op does what it says', () => {
     ] as GroomOp[]) {
       const g1 = apply([op], g0);
       const moved = mean(
-        g1.map((g, i) =>
-          Math.hypot(...sub(g.points[5] ?? [0, 0, 0], g0[i]?.points[5] ?? [0, 0, 0])),
-        ),
+        g1.map((g, i) => dmath.norm(sub(g.points[5] ?? [0, 0, 0], g0[i]?.points[5] ?? [0, 0, 0]))),
       );
       expect(moved).toBeGreaterThan(0.001);
       expect(g1[0]?.points[0]).toEqual(g0[0]?.points[0] as Vec3);

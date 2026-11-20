@@ -6,6 +6,7 @@
 import {
   type BuildContext,
   beam,
+  dmath,
   type Mesh,
   merge,
   planar,
@@ -229,7 +230,7 @@ export function buildBoards(ctx: BuildContext, L: Layout): void {
     if (lod === 0)
       for (let i = 0; i < 5; i++) {
         const x = cabFront + 0.3 + ((smokeFront - 0.25 - cabFront - 0.3) * i) / 4;
-        const foot = Math.sqrt(jacketRadius(L, x) ** 2 - 0.27 ** 2) - 0.01;
+        const foot = Math.sqrt(dmath.pow(jacketRadius(L, x), 2) - 0.27 * 0.27) - 0.01;
         const t = (x - (cabFront - 0.02)) / (smokeFront - 0.2 - (cabFront - 0.02));
         const rail = BOILER_R + 0.1 + (SMOKEBOX_R - BOILER_R) * t;
         m.push(

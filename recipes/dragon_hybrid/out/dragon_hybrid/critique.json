@@ -1,7 +1,7 @@
 {
   "asset": "dragon_hybrid",
   "reviewer": "agent",
-  "overall": 7.4,
+  "overall": 7.9,
   "scores": {
     "silhouette": {
       "score": 8,
@@ -11,17 +11,17 @@
       ]
     },
     "proportions": {
-      "score": 7,
-      "reason": "Body, neck and legs are plausible, but the 3.3 m span is small for a 4.9 m body: the wings read decorative.",
+      "score": 8,
+      "reason": "The wings are now scaled to a 5.0 m span for the 4.9 m body and read as flying surfaces in FRONT and hero.png.",
       "fixes": [
-        "scale the wings ~25% in wings.ts so the span is plausible for the body"
+        "thicken the wing arm at the wrist so it carries the bigger membrane"
       ]
     },
     "materials": {
-      "score": 7,
-      "reason": "Scaled red hide, pale belly plates and keratin-gradient horns read; the wing membranes carry light dappled patches that read as baked highlights.",
+      "score": 8,
+      "reason": "Scaled red hide, pale belly plates and horn gradient read, the membranes are an even red, and no normal-map seams show along the UV rims in hero.png or the sheet; the membrane veins are drawn as pale cream strokes that look like scratches.",
       "fixes": [
-        "de-light the membrane albedo (divide out the baked dapple) before import"
+        "membrane veins as darker raised ridges, not pale strokes"
       ]
     },
     "detail": {
@@ -32,10 +32,11 @@
       ]
     },
     "wear": {
-      "score": 6,
-      "reason": "Scuffed scales only; no torn membrane notch or scars are visible in the renders.",
+      "score": 7,
+      "reason": "A torn notch now bites into the near wing membrane and pale scars cross the flank and neck in hero.png.",
       "fixes": [
-        "a visible torn notch in one wing membrane and two flank scars (wear.ts)"
+        "scars as raised, slightly darker scar tissue instead of pale paint lines",
+        "chipped horn tips"
       ]
     },
     "lod": {
@@ -54,7 +55,7 @@
     }
   },
   "renders": {
-    "hero.png": "dfcdf74573d7ca68ffb5c548242db86d2f99d9e531cdb863490efddd9a9fb263",
-    "sheet.png": "e61aec2c2b64f5f69dda92e7480582444b29660c95e9ff398b7cc2424b28eb67"
+    "hero.png": "144eff035e63d1add8211e08c98ff2e39090e7305bd6b57a7c397788db829ed4",
+    "sheet.png": "894ef51d0bb86a2a6f63ff017b24806c9adef926fe78c42c00e60dd7615821a5"
   }
 }

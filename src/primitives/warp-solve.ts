@@ -5,7 +5,7 @@
 // elimination with partial pivoting; a singular system fails with T3D_WARP_INVALID. Pure function
 // of its inputs, so the warp is deterministic.
 
-import { Ts23dError, type Vec3 } from '../core/index.ts';
+import { dmath, Ts23dError, type Vec3 } from '../core/index.ts';
 
 export interface TpsOptions {
   /** Regularisation λ ≥ 0 in normalised units: 0 interpolates every landmark exactly; ~0.01–0.1
@@ -91,7 +91,11 @@ export function tpsWarp(from: readonly Vec3[], to: readonly Vec3[], o: TpsOption
   for (const p of from) for (let k = 0; k < 3; k++) c[k] = (c[k] ?? 0) + (p[k] ?? 0) / n;
   let rms = 0;
   for (const p of from)
-    rms += ((p[0] - (c[0] ?? 0)) ** 2 + (p[1] - (c[1] ?? 0)) ** 2 + (p[2] - (c[2] ?? 0)) ** 2) / n;
+    rms +=
+      (dmath.pow(p[0] - (c[0] ?? 0), 2) +
+        dmath.pow(p[1] - (c[1] ?? 0), 2) +
+        dmath.pow(p[2] - (c[2] ?? 0), 2)) /
+      n;
   const s = Math.sqrt(rms) || 1;
   const u = new Float64Array(n * 3);
   for (let i = 0; i < n; i++)
@@ -101,7 +105,7 @@ export function tpsWarp(from: readonly Vec3[], to: readonly Vec3[], o: TpsOption
   const B = new Float64Array(m * 3);
   for (let i = 0; i < n; i++) {
     for (let j = 0; j < n; j++) {
-      const r = Math.hypot(
+      const r = dmath.hypot(
         (u[i * 3] ?? 0) - (u[j * 3] ?? 0),
         (u[i * 3 + 1] ?? 0) - (u[j * 3 + 1] ?? 0),
         (u[i * 3 + 2] ?? 0) - (u[j * 3 + 2] ?? 0),
@@ -126,7 +130,7 @@ export function tpsWarp(from: readonly Vec3[], to: readonly Vec3[], o: TpsOption
     const q = [(p[0] - (c[0] ?? 0)) / s, (p[1] - (c[1] ?? 0)) / s, (p[2] - (c[2] ?? 0)) / s];
     const d = [0, 0, 0];
     for (let i = 0; i < n; i++) {
-      const r = Math.hypot(
+      const r = dmath.hypot(
         (q[0] ?? 0) - (u[i * 3] ?? 0),
         (q[1] ?? 0) - (u[i * 3 + 1] ?? 0),
         (q[2] ?? 0) - (u[i * 3 + 2] ?? 0),
@@ -155,7 +159,7 @@ export function tpsWarp(from: readonly Vec3[], to: readonly Vec3[], o: TpsOption
         (q[1] ?? 0) - (u[i * 3 + 1] ?? 0),
         (q[2] ?? 0) - (u[i * 3 + 2] ?? 0),
       ];
-      const r = Math.hypot(dv[0] ?? 0, dv[1] ?? 0, dv[2] ?? 0);
+      const r = dmath.hypot(dv[0] ?? 0, dv[1] ?? 0, dv[2] ?? 0);
       if (r < 1e-12) continue;
       for (let k = 0; k < 3; k++)
         for (let j = 0; j < 3; j++)

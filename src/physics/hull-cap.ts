@@ -3,6 +3,7 @@
 // Every hull vertex is a real mesh vertex, so the hull never pokes outside the true hull.
 
 import type { Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import { convexHull, type Hull } from './hull.ts';
 
 /** `n` unit directions spread evenly over the sphere (golden-angle spiral), deterministic. */
@@ -12,7 +13,7 @@ export function sphereDirections(n: number): Vec3[] {
   for (let i = 0; i < n; i++) {
     const z = 1 - (2 * (i + 0.5)) / n;
     const r = Math.sqrt(1 - z * z);
-    out.push([Math.cos(golden * i) * r, Math.sin(golden * i) * r, z]);
+    out.push([dmath.cos(golden * i) * r, dmath.sin(golden * i) * r, z]);
   }
   // The six axis directions first: boxes keep their exact corners.
   return [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1], ...out];

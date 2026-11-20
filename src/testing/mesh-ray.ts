@@ -3,6 +3,7 @@
 // wall-thickness probes cost a neighbourhood, not the whole mesh. Deterministic, allocation-light.
 
 import type { Mesh, Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 
 const key = (x: number, y: number, z: number): number =>
   ((x * 73856093) ^ (y * 19349663) ^ (z * 83492791)) | 0;
@@ -36,9 +37,9 @@ export class RayGrid {
       }
     this.lo = lo;
     this.hi = hi;
-    const diag = Math.hypot(hi[0] - lo[0], hi[1] - lo[1], hi[2] - lo[2]);
+    const diag = dmath.hypot(hi[0] - lo[0], hi[1] - lo[1], hi[2] - lo[2]);
     // About two cells per axis per cube-root triangle: small meshes walk a few cells, big ones 64.
-    this.cell = Math.max(diag / Math.min(64, Math.max(2, 2 * Math.cbrt(n))), 1e-3);
+    this.cell = Math.max(diag / Math.min(64, Math.max(2, 2 * dmath.cbrt(n))), 1e-3);
     for (let t = 0; t < n; t++) {
       for (let v = 0; v < 3; v++) {
         const i = mesh.indices[t * 3 + v] ?? 0;

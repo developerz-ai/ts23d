@@ -6,6 +6,7 @@
 // `inside: 'parity'` hands over to mesh-exact.ts (vote signs, filled voids, propagated distances).
 
 import type { Field, Mesh, Vec3 } from '@developerz.ai/ts23d';
+import { dmath } from '@developerz.ai/ts23d';
 import { closest, W } from './mesh-distance.ts';
 import { type ExactOptions, exactField } from './mesh-exact.ts';
 
@@ -151,7 +152,7 @@ export function meshField(
       const ox2 = Math.max(0, -fx, fx - (nx - 1));
       const oy2 = Math.max(0, -fy, fy - (ny - 1));
       const oz2 = Math.max(0, -fz, fz - (nz - 1));
-      return reach + (band + 2) * cell * 0.7 + Math.hypot(ox2, oy2, oz2) * cell;
+      return reach + (band + 2) * cell * 0.7 + dmath.hypot(ox2, oy2, oz2) * cell;
     }
     const i = Math.floor(fx);
     const j = Math.floor(fy);

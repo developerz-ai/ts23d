@@ -4,6 +4,7 @@
 // recipes declare their grooves as intended creases from the same lines.
 
 import type { Vec3 } from '@developerz.ai/ts23d';
+import { dmath } from '@developerz.ai/ts23d';
 import { spline } from '../bust/kit.ts';
 import type { FaceHead } from './head.ts';
 import { LEFT, MIDLINE } from './landmarks.ts';
@@ -31,9 +32,9 @@ export function scalpLines(head: FaceHead, degs: readonly number[], from = 34, t
       const e = ((from + ((to - from) * i) / n) * Math.PI) / 180;
       pts.push(
         skinPoint(head.mesh, c, [
-          Math.cos(e),
-          Math.sin(e) * Math.sin(phi),
-          Math.sin(e) * Math.cos(phi),
+          dmath.cos(e),
+          dmath.sin(e) * dmath.sin(phi),
+          dmath.sin(e) * dmath.cos(phi),
         ]),
       );
     }
@@ -80,9 +81,9 @@ export function beardLines(head: FaceHead): Vec3[][] {
   for (let i = -3; i <= 3; i++) {
     const ang = (i / 3) * 1.25;
     const a: Vec3 = [
-      pog[0] - 0.006 * s - 0.05 * s * (1 - Math.cos(ang)),
-      0.05 * s * Math.sin(ang),
-      (pog[2] + menton[2]) / 2 + 0.01 * s * Math.abs(Math.sin(ang)),
+      pog[0] - 0.006 * s - 0.05 * s * (1 - dmath.cos(ang)),
+      0.05 * s * dmath.sin(ang),
+      (pog[2] + menton[2]) / 2 + 0.01 * s * Math.abs(dmath.sin(ang)),
     ];
     const len = (0.13 - 0.03 * Math.abs(i / 3)) * s;
     out.push(

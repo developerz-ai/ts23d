@@ -14,6 +14,7 @@ import {
   box,
   cylinder,
   defineFamily,
+  dmath,
   type Field,
   hex,
   type Lod,
@@ -37,6 +38,7 @@ import { DUST, MUD } from '../_lib/rts/finish.ts';
 import {
   BRASS,
   chevronPlan,
+  dome,
   IRON,
   SEG,
   SUNSTONE,
@@ -54,6 +56,10 @@ const SALT = hex('#e4e0d6');
 const ROOT = hex('#c2600c');
 const TIP = hex('#ffd36e');
 const FRACTURE = hex('#fff1cf');
+/** Share of the near salt the far rock keeps: its mean value then matches the near rock's. */
+const FAR_SALT = 0.25;
+/** Fresh rock under the weathered skin, where a pick bit. */
+const CHIPPED = hex('#8a847b');
 
 const mix = (a: Vec3, b: Vec3, t: number): Vec3 => [
   a[0] + (b[0] - a[0]) * t,
@@ -65,7 +71,7 @@ const smooth = (e0: number, e1: number, x: number): number => {
   return t * t * (3 - 2 * t);
 };
 const unit = (d: Vec3): Vec3 => {
-  const l = Math.hypot(d[0], d[1], d[2]) || 1;
+  const l = dmath.hypot(d[0], d[1], d[2]) || 1;
   return [d[0] / l, d[1] / l, d[2] / l];
 };
 
@@ -92,9 +98,9 @@ export function crystal(lod: Lod, r: number, h: number, state: CrystalState): Me
       ? [
           [r * 0.8, root],
           [r, 0],
-          [r * 0.95, h * 0.22],
-          [r * 0.55, h * 0.27],
-          [0.001, h * 0.25],
+          [r * 0.98, h * 0.22],
+          [r * 0.96, h * 0.38],
+          [0.001, h * 0.4],
         ]
       : state === 'broken'
         ? [
@@ -111,41 +117,55 @@ export function crystal(lod: Lod, r: number, h: number, state: CrystalState): Me
             [0.001, h],
           ];
   const n = SEG(lod, 12, 6, 4);
-  const m = lathe({ profile, segments: n, color: SUNSTONE, strip: 'plastic', creaseDeg: 20 });
-  const top = state === 'whole' ? h : state === 'broken' ? h * 0.6 : h * 0.27;
+  // LOD2 drops the shoulder at the seat: the root still reaches down into the pocket (one band
+  // fewer), so the crystal stays seated whatever the far rock's cells do.
+  const m = lathe({
+    profile: lod === 2 ? [profile[0] ?? [r, root], ...profile.slice(2)] : profile,
+    segments: n,
+    color: SUNSTONE,
+    strip: 'plastic',
+    creaseDeg: 20,
+  });
+  const top = state === 'whole' ? h : state === 'broken' ? h * 0.6 : h * 0.33;
+  // A stub is sheared clean: one flat cut plane across the prism, rising across its width.
+  const cut = (x: number): number => h * (0.28 + 0.05 * (x / r));
   const colors = new Float32Array(m.colors.length);
   const positions = new Float32Array(m.positions);
   for (let i = 0; i < colors.length; i += 3) {
-    const x = m.positions[i] ?? 0;
-    const y = m.positions[i + 1] ?? 0;
-    const z = m.positions[i + 2] ?? 0;
-    const t = Math.max(0, Math.min(1, (z - root) / (top - root)));
-    const k = Math.round(Math.atan2(y, x) / (Math.PI / 6));
+    const k = Math.round(dmath.atan2(m.positions[i + 1] ?? 0, m.positions[i] ?? 0) / (Math.PI / 6));
     // Mid-face vertices pulled onto the flat face (a true hexagon), and darker: the face glows
-    // deep inside, its edges catch the light.
+    // deep inside, its edges catch the light. Pulled in before the cut, so a sheared vertex lands
+    // on the cut plane at its final x.
     const mid = lod === 0 && k % 2 !== 0;
-    if (mid) {
-      const c = Math.cos(Math.PI / 6);
-      positions[i] = x * c;
-      positions[i + 1] = y * c;
-    }
+    const pull = mid ? dmath.cos(Math.PI / 6) : 1;
+    const x = (m.positions[i] ?? 0) * pull;
+    const y = (m.positions[i + 1] ?? 0) * pull;
+    positions[i] = x;
+    positions[i + 1] = y;
+    const sheared = state === 'stub' && (m.positions[i + 2] ?? 0) > cut(x) - 1e-6;
+    const z = sheared ? cut(x) : (m.positions[i + 2] ?? 0);
+    positions[i + 2] = z;
+    const t = Math.max(0, Math.min(1, (z - root) / (top - root)));
     let c = mix(ROOT, TIP, t * t);
-    if (lod === 0) c = mid ? mix(c, ROOT, 0.35) : mix(c, TIP, 0.25);
+    // Facets: a deep amber core mid-face, bright edges where the light catches (LOD0).
+    if (lod === 0) c = mid ? mix(c, ROOT, 0.55) : mix(c, TIP, 0.4);
     // A sheared or snapped face is fresh, pale fracture.
-    if (state !== 'whole' && z > top * 0.85 && Math.hypot(x, y) < r * 0.7) c = FRACTURE;
+    if (sheared || (state === 'broken' && z > top * 0.85 && dmath.hypot(x, y) < r * 0.7))
+      c = FRACTURE;
     colors.set(c, i);
   }
   // LOD0's reshaped hexagon keeps the lathe's twelve radial normals; re-derive them from the
   // faces, hard at the six corners (60°) and at the profile creases the lathe split (20°).
-  return lod === 0
+  // The sheared stub's cut needs its own flat normal at every LOD.
+  return lod === 0 || state === 'stub'
     ? weightedNormals({ ...m, positions, colors }, { hardAngle: 20 })
     : { ...m, positions, colors };
 }
 
 /** Yaw / pitch that tilt +Z onto direction d. */
 function aim(d: Vec3): { yaw: number; pitch: number } {
-  const l = Math.hypot(d[0], d[1], d[2]) || 1;
-  return { yaw: Math.atan2(d[1], d[0]), pitch: Math.acos(d[2] / l) };
+  const l = dmath.hypot(d[0], d[1], d[2]) || 1;
+  return { yaw: dmath.atan2(d[1], d[0]), pitch: dmath.acos(d[2] / l) };
 }
 
 /** The outcrop's field: two masses and a block, cut by fracture planes, stepped by two ledges,
@@ -158,16 +178,19 @@ function rockField(rng: Rng, depleted: boolean): Field {
   );
   f = sd.smoothUnion(0.3, f, sd.box([-0.8, 0.5, 0.4], [1.6, 1.3, 1.0], 0.3));
   // Fracture planes: split faces make it read as rock, not a pebble.
+  // Cut deep enough that each plane leaves a flat face a metre or more across: the outline turns
+  // angular (a broken block), not a dome.
   for (const [n, d] of [
-    [[0.85, -0.3, 0.45], 1.55],
-    [[-0.6, -0.75, 0.3], 1.45],
-    [[-0.3, 0.8, 0.55], 1.5],
-    [[0.2, 0.9, 0.2], 1.85],
-    [[-0.95, 0.1, 0.25], 1.9],
-    // Top facets: the outcrop is a broken block, not a dome.
-    [[0.25, -0.35, 1], 1.3],
-    [[-0.4, 0.3, 1], 1.15],
-    [[0.7, 0.45, 0.6], 1.45],
+    [[0.85, -0.3, 0.45], 1.25],
+    [[-0.6, -0.75, 0.3], 1.18],
+    [[-0.3, 0.8, 0.55], 1.22],
+    [[0.2, 0.9, 0.2], 1.6],
+    [[-0.95, 0.1, 0.25], 1.65],
+    // Top facets.
+    [[0.25, -0.35, 1], 1.12],
+    [[-0.4, 0.3, 1], 1.02],
+    [[0.7, 0.45, 0.6], 1.2],
+    [[-0.5, -0.5, 0.7], 1.25],
   ] as [Vec3, number][]) {
     const u = unit(n);
     f = sd.intersect(f, (p) => p[0] * u[0] + p[1] * u[1] + (p[2] - 0.6) * u[2] - d);
@@ -180,9 +203,9 @@ function rockField(rng: Rng, depleted: boolean): Field {
     f = sd.smoothSubtract(0.12, f, sd.ellipsoid(c.at, [0.42, 0.42, 0.3]));
   if (depleted)
     // The quarry scoop where the main cluster was cut out: a metre deep below its rim.
-    f = sd.smoothSubtract(0.2, f, sd.ellipsoid([0.5, -0.45, 2.0], [1.05, 0.95, 1.05]));
+    f = sd.smoothSubtract(0.12, f, sd.ellipsoid([0.5, -0.45, 1.85], [1.05, 0.95, 1.1]));
   const pits = valueNoise(rng.fork('pits'), { scale: 0.6, octaves: 3 });
-  const rough = sd.displace(f, pits, 0.05);
+  const rough = sd.displace(f, pits, 0.025);
   return (p) => Math.max(rough(p), -p[2]);
 }
 
@@ -224,7 +247,7 @@ function surfaceAt(field: Field, from: Vec3, dir: Vec3): Vec3 | null {
   for (let i = 0; i < 200; i++) {
     const v = field(p);
     if (v < 0.005) return p;
-    if (Math.hypot(p[0] - from[0], p[1] - from[1], p[2] - from[2]) > 3) return null;
+    if (dmath.hypot(p[0] - from[0], p[1] - from[1], p[2] - from[2]) > 3) return null;
     const step = Math.max(0.01, v * 0.6);
     p = [p[0] + d[0] * step, p[1] + d[1] * step, p[2] + d[2] * step];
   }
@@ -236,32 +259,72 @@ function outcrop(ctx: BuildContext, depleted: boolean): Field {
   const rng = ctx.rng.fork('rock');
   const field = rockField(rng, depleted);
   const tone = valueNoise(rng.fork('tone'), { scale: 0.9, octaves: 2 });
-  // Salt is crust packed into crevices and pockets: where the rock closes back over a point.
-  const saltK = lod === 2 ? 0.45 : 0.9;
+  // The near colour at a point of the rock surface with normal n.
+  const near = (p: Vec3, n: Vec3, saltK = 1): Vec3 => {
+    const h = Math.min(1, p[2] / 2);
+    // Strata: lava flows laid in beds dipping gently to −X, their thickness wandering 15–45 cm
+    // and their partings wavy, so they follow the rock's own layering instead of drawing straight
+    // stitched rings round it; every other bed a lighter flow.
+    const bed = (p[2] + p[0] * 0.12 + tone(p) * 0.22) / (0.3 + 0.15 * tone([p[1], p[0], p[2]]));
+    const layer = Math.floor(bed) % 2 === 0 ? 0.45 : 0;
+    const parting = smooth(0.08, 0.0, Math.abs(bed - Math.round(bed)));
+    const base = mix(
+      mix(mix(BASALT_DEEP, BASALT, 0.5 + h * 0.5), BASALT_LIGHT, layer),
+      BASALT_DEEP,
+      parting * 0.8,
+    );
+    const e = 0.4;
+    // Measured from the point's own field value: a coarse far vertex sits off the true surface
+    // (inside it on a convex face), and probing from there read every face as a salt crevice.
+    const open = (field([p[0] + n[0] * e, p[1] + n[1] * e, p[2] + n[2] * e]) - field(p)) / e;
+    const crevice = smooth(0.5, 0.25, open);
+    // Salt: packed in crevices and dusted on near-level tops (where brine pools and dries),
+    // never on the flanks; the scoop rim of a worked node is pale with spoil dust.
+    const top = smooth(0.88, 0.97, n[2]) * smooth(1.0, 1.5, p[2]);
+    const rim = depleted
+      ? smooth(1.4, 0.7, dmath.hypot(p[0] - 0.5, p[1] + 0.45)) * smooth(1.3, 1.8, p[2])
+      : 0;
+    const salt = Math.max(crevice * 0.9, top * 0.55) * saltK;
+    return mix(mix(mix(base, BASALT_DEEP, crevice * 0.4), SALT, salt), DUST, rim * 0.7);
+  };
+  // Far: each vertex the mean of the near colour over the patch of surface it stands for (5 × 5
+  // points across ±half a cell in its tangent plane), so the beds average out. Its salt is cut to
+  // `FAR_SALT`: the 88-triangle far rock is a few big faces whose smoothed normals count as
+  // level tops and whose probes count as crevices, so at full salt it came out twice as light as
+  // the near rock (a value pop at the switch; `rts_resource.test.ts` holds the two within 15 %).
+  const cell = ctx.pick([0.11, 0.27, depleted ? 0.74 : 0.78]);
+  const far = (p: Vec3, n: Vec3): Vec3 => {
+    const a = unit(Math.abs(n[2]) < 0.9 ? [-n[1], n[0], 0] : [1, 0, 0]);
+    const b: Vec3 = [
+      n[1] * a[2] - n[2] * a[1],
+      n[2] * a[0] - n[0] * a[2],
+      n[0] * a[1] - n[1] * a[0],
+    ];
+    const sum = [0, 0, 0] as [number, number, number];
+    for (let i = -2; i <= 2; i++)
+      for (let j = -2; j <= 2; j++) {
+        const [u, v] = [(i * cell) / 4, (j * cell) / 4];
+        const c = near(
+          [p[0] + a[0] * u + b[0] * v, p[1] + a[1] * u + b[1] * v, p[2] + a[2] * u + b[2] * v],
+          n,
+          FAR_SALT,
+        );
+        sum[0] += c[0] / 25;
+        sum[1] += c[1] / 25;
+        sum[2] += c[2] / 25;
+      }
+    return [sum[0], sum[1], sum[2]];
+  };
   const raw = sdf({
     field,
     bounds: [
       [-2.6, -2.2, 0],
       [2.6, 2.2, 2.4],
     ],
-    resolution: ctx.pick([0.11, 0.27, depleted ? 0.74 : 0.7]),
+    resolution: cell,
     strip: 'concrete',
     lipschitz: 1.6,
-    color: (p, n) => {
-      const h = Math.min(1, p[2] / 2);
-      const base = mix(
-        mix(BASALT_DEEP, BASALT, 0.5 + h * 0.5),
-        BASALT_LIGHT,
-        Math.max(0, tone(p)) * 0.7,
-      );
-      const e = 0.4;
-      const open = field([p[0] + n[0] * e, p[1] + n[1] * e, p[2] + n[2] * e]) / e;
-      const crevice = smooth(0.72, 0.35, open);
-      // Pockets and crevices: darker rock with salt packed in; the ground line: a brine rim.
-      const rim = smooth(0.25, 0.05, p[2]) * 0.6;
-      const salt = Math.max(crevice * 0.85, rim) * saltK;
-      return mix(mix(base, BASALT_DEEP, crevice * 0.4), SALT, salt);
-    },
+    color: lod === 2 ? far : near,
   });
   const rock = boxUv(raw);
   const worn = weather(
@@ -274,8 +337,9 @@ function outcrop(ctx: BuildContext, depleted: boolean): Field {
       resolution: [0, 0, 0],
       groundBand: 0.45,
       effects: {
-        dust: { where: 'up-facing', amount: 0.18, color: DUST, strength: lod === 2 ? 0.2 : 0.3 },
-        mud: { where: 'ground-near', amount: 0.5, color: MUD, strength: 0.6 },
+        // No dust: per-vertex dust spots on dark rock read as camouflage blotches. Mud only,
+        // up the foot where boots and rain put it.
+        mud: { where: 'ground-near', amount: 0.6, color: MUD, strength: 0.7 },
       },
     },
   );
@@ -304,8 +368,9 @@ function crystals(ctx: BuildContext, depleted: boolean): void {
   const rng = ctx.rng.fork('crystals');
   const out: Mesh[] = [];
   CLUSTERS.forEach((c, ci) => {
-    // LOD2: the lead cluster keeps two crystals, the side clusters one each (the amber read).
-    const n = lod === 2 ? Math.min(ci === 0 ? 2 : 1, c.n) : c.n;
+    // LOD2: every cluster keeps two crystals (a cluster, not a lone prism, at crowd distance);
+    // a harvested node's side clusters, one stub each.
+    const n = lod === 2 ? Math.min(depleted && ci > 0 ? 1 : 2, c.n) : c.n;
     for (let i = 0; i < n; i++) {
       const lean: Vec3 = [
         c.lean[0] + rng.range(-0.3, 0.3),
@@ -354,7 +419,14 @@ function crystals(ctx: BuildContext, depleted: boolean): void {
  *  and chips on the scoop floor, drill holes in its walls, a spoil fan on the worked side. */
 function workings(ctx: BuildContext, field: Field, depleted: boolean): void {
   const lod = ctx.lod;
-  if (lod === 2) return;
+  if (lod === 2) {
+    // Far: the spoil heap as one low mound, so the node still reads as worked.
+    const at: Vec3 = depleted ? [1.8, -1.9, -0.02] : [2.35, 0.9, -0.02];
+    ctx.part('spoil', dome(2, at, [0.6, 0.5, 0.28], BASALT_LIGHT), {
+      connect: { as: 'rest', why: 'loose spoil lies where it was thrown' },
+    });
+    return;
+  }
   const rng = ctx.rng.fork('spoil');
   const spoil: Mesh[] = [];
   const marks: Mesh[] = [];
@@ -373,31 +445,51 @@ function workings(ctx: BuildContext, field: Field, depleted: boolean): void {
   };
   heap(2.35, 0.9, lod === 0 ? 14 : 5, 0.45);
   if (depleted) heap(1.8, -1.9, lod === 0 ? 18 : 6, 0.7);
-  // Pick marks: dark gouges chipped into the rock face beside the side cluster.
+  // Pick marks: rows of pale fresh-chipped gouges (new rock under the weathered skin) round the
+  // worked pocket, big enough to read from the hero camera.
   const side = CLUSTERS[1];
   if (side && lod === 0)
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 10; i++) {
       const from: Vec3 = [
         side.at[0] + 1.2,
-        side.at[1] + rng.range(-0.6, 0.4),
-        side.at[2] - 0.5 + rng.range(-0.2, 0.3),
+        side.at[1] + rng.range(-0.8, 0.5),
+        side.at[2] - 0.6 + rng.range(-0.25, 0.4),
       ];
       const p = surfaceAt(field, from, [-1, -0.2, 0.05]);
       if (!p) continue;
       marks.push(
-        place(box({ size: [0.1, 0.05, 0.16], at: [0, 0, -0.08], color: hex('#18171a') }), {
+        place(box({ size: [0.16, 0.07, 0.26], at: [0, 0, -0.13], color: CHIPPED }), {
           at: p,
           yaw: rng.range(-0.4, 0.4),
-          roll: rng.range(-0.5, 0.5),
+          roll: rng.range(-0.6, 0.6),
         }),
       );
     }
+  // Trampled brine mud on the side the crew works from: a dark flat patch round the spoil.
+  const mud: Vec2[] = [];
+  const [mx, my] = depleted ? [1.7, -1.6] : [2.2, 0.6];
+  for (let i = 0; i < (lod === 0 ? 12 : 7); i++) {
+    const a = (i / (lod === 0 ? 12 : 7)) * Math.PI * 2;
+    const k = rng.range(0.7, 1.1);
+    mud.push([mx + dmath.cos(a) * 0.95 * k, my + dmath.sin(a) * 0.75 * k]);
+  }
+  ctx.part(
+    'trampled',
+    prism({
+      profile: mud,
+      depth: 0.01,
+      plane: 'xy',
+      centred: false,
+      color: MUD,
+      strip: ROCK_STRIP,
+    }),
+  );
   if (depleted && lod === 0) {
     // Drill holes round the scoop wall, and spoil on its floor with a few amber chips.
     for (let i = 0; i < 6; i++) {
       const a = (i / 6) * Math.PI * 2 + 0.3;
       // From the scoop's open middle out to its wall.
-      const p = surfaceAt(field, [0.5, -0.45, 1.6], [Math.cos(a), Math.sin(a), 0.1]);
+      const p = surfaceAt(field, [0.5, -0.45, 1.6], [dmath.cos(a), dmath.sin(a), 0.1]);
       if (!p) continue;
       marks.push(
         cylinder({
@@ -482,7 +574,8 @@ function claim(ctx: BuildContext): void {
     }),
   ]);
   // A flat claim plaque at the stake's foot: the top-visible team mark on a neutral rock.
-  const plaque = chevronPlan([at[0] + 0.1, at[1] + 0.25, 0], 1.6, 1.4, 0.5, 0.06, TEAM);
+  // Out on open ground in front of the stake, clear of the rock's foot.
+  const plaque = chevronPlan([at[0] + 0.3, at[1] + 0.1, 0], 1.25, 1.1, 0.4, 0.06, TEAM);
   ctx.part('claim_pennant', merge([pennant, plaque]), { paint: 'team' });
 }
 
@@ -530,7 +623,10 @@ export const rts_resource = deposit.variant({
   // Side clusters 20% smaller than the lead cluster, all seated a quarter deep in their pockets.
   real: { length: 4.93, width: 3.78, height: 3.9 },
   // Saltmarch glow strength 1.2 across the RTS set: amber facets lit, not blown to white.
-  glow: [{ parts: ['crystals'], color: SUNSTONE, strength: 1.2 }],
+  // Crystals glow from within at 0.5, not the lamps' 1.2: lit, but their facets still shade.
+  glow: [{ parts: ['crystals'], color: SUNSTONE, strength: 0.5 }],
+  // Front-right 3/4: the claim stake at the side, the worked face and spoil toward the lens.
+  hero: { azDeg: 30, elDeg: 24 },
 });
 export const rts_resource_depleted = deposit.variant({
   name: 'rts_resource_depleted',
@@ -540,5 +636,8 @@ export const rts_resource_depleted = deposit.variant({
   // Spoil thrown out on the worked (−Y) side widens the footprint.
   real: { length: 4.93, width: 4.34, height: 2.8 },
   // Mined out: the sheared stubs smoulder dimmer than a whole cluster.
-  glow: [{ parts: ['crystal_stubs'], color: SUNSTONE, strength: 0.8 }],
+  glow: [{ parts: ['crystal_stubs'], color: SUNSTONE, strength: 0.35 }],
+  // From the north-east and higher, so the lens looks into the quarried scoop with the rock
+  // centred; the claim stake stands behind it at the left instead of in the foreground.
+  hero: { azDeg: 100, elDeg: 38 },
 });

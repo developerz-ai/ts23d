@@ -20,7 +20,7 @@ test('what is wrong carries its fix: bad queue.json, a stale ticket, a folder th
   await writeFile(join(env['TS23D_HOME'] ?? '', 'queue.json'), 'nope');
   await acquire('cpu', 2, {
     env: { ...env },
-    self: { pid: 2 ** 22 + 9, start: 'gone' },
+    self: { pid: 4194304 /* 2^22 */ + 9, start: 'gone' },
     alive: async () => true,
   });
   const c = await byId(env);

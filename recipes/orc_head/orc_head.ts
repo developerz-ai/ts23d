@@ -8,6 +8,7 @@
 
 import { defineAsset, headClips, hex } from '@developerz.ai/ts23d';
 import { bustEdits } from '../_lib/bust/bust.ts';
+import { portrait } from '../_lib/bust/hero.ts';
 import { proportionCheck } from '../_lib/face/proportions.ts';
 import { scalpCoverCheck } from '../_lib/face/scalp-check.ts';
 import { buildOrc, ORC_BUST } from './build.ts';
@@ -67,9 +68,15 @@ export const orc_head = defineAsset({
   ],
   // The eyeballs' cornea: a clear lacquer over the painted iris (KHR_materials_clearcoat).
   // The cornea's lacquer, and the hide: the pore strip's roughness under a dull green sheen.
+  // A portrait: the bust fills the frame (the default orbit leaves the face a thumbnail).
+  hero: portrait(0.62, { at: 0.47, fill: 0.84, ahead: 0.03 }),
   finishes: {
     cornea: { clearcoat: 1, clearcoatRoughness: 0.04 },
-    skin: { sheen: { colour: '#5c6a3c', roughness: 0.5 } },
+    skin: {
+      sheen: { colour: '#5c6a3c', roughness: 0.5 },
+      clearcoat: 0.3,
+      clearcoatRoughness: 0.28,
+    },
   },
   art: { focal: 'head' },
   // Intended creases (QA `connections` skips them): one small region per sculpted fold, from the

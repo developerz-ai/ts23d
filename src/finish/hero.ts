@@ -9,7 +9,7 @@
 // keep the trim sheet. Deterministic: fixed part and texel order.
 
 import type { CompiledAsset, Part } from '../core/index.ts';
-import { encodePng, Ts23dError } from '../core/index.ts';
+import { dmath, encodePng, Ts23dError } from '../core/index.ts';
 import {
   exportLodGlb,
   type GlbOptions,
@@ -67,7 +67,7 @@ const area = (p: Float32Array, idx: Uint32Array): number => {
     const [a, b, c] = [(idx[t] ?? 0) * 3, (idx[t + 1] ?? 0) * 3, (idx[t + 2] ?? 0) * 3];
     const e = [0, 1, 2].map((k) => (p[b + k] ?? 0) - (p[a + k] ?? 0));
     const f = [0, 1, 2].map((k) => (p[c + k] ?? 0) - (p[a + k] ?? 0));
-    s += Math.hypot(
+    s += dmath.hypot(
       (e[1] ?? 0) * (f[2] ?? 0) - (e[2] ?? 0) * (f[1] ?? 0),
       (e[2] ?? 0) * (f[0] ?? 0) - (e[0] ?? 0) * (f[2] ?? 0),
       (e[0] ?? 0) * (f[1] ?? 0) - (e[1] ?? 0) * (f[0] ?? 0),

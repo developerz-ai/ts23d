@@ -4,6 +4,7 @@
 // nuchal furrow and the armpits; the bust cut's rim.
 
 import type { Field, IntendedCrease } from '@developerz.ai/ts23d';
+import { dmath } from '@developerz.ai/ts23d';
 import { creaseAt, creaseCurve, edgeCreases, MAX_CREASE } from './creases.ts';
 import { type EarSpec, earFrame } from './ear.ts';
 import { type HeadSpec, HUMAN, type Landmarks } from './head.ts';
@@ -112,7 +113,7 @@ export function anatomyCreases(
         `ear_${k}`,
         part,
         [0, 0.25, 0.5, 0.75, 1].map((t) =>
-          at(f, reach * t, v * (0.6 + 0.4 * Math.sin(Math.PI * Math.min(1, t * 1.3))), 0),
+          at(f, reach * t, v * (0.6 + 0.4 * dmath.sin(Math.PI * Math.min(1, t * 1.3))), 0),
         ),
         earR,
         'helix rim, antihelix and concha folds, and the root where the ear grows from the head',

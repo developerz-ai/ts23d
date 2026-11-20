@@ -20,9 +20,9 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    54678,
-    14016,
-    2594
+    54608,
+    13986,
+    2582
   ],
   "drawCalls": [
     5,
@@ -110,7 +110,7 @@
     {
       "label": "eye spacing (pupil to pupil)",
       "spec": 0.063,
-      "measured": 0.06297360081225634,
+      "measured": 0.062974,
       "source": "interpupil 0.331 H (human 0.265 × 1.25) × 0.19 m"
     }
   ],

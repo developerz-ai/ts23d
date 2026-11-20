@@ -1,7 +1,7 @@
 // Exact-enough geometry for QA: point↔triangle distance, a triangle spatial hash, and surface
 // samples. Bounding boxes lie (a diagonal strut's box touches everything); surfaces don't.
 
-import { boundsOf, type Mesh, type Vec3 } from '../core/index.ts';
+import { boundsOf, dmath, type Mesh, type Vec3 } from '../core/index.ts';
 import { pointTriDist } from './point-triangle.ts';
 
 export { pointTriangleDistance, pointTriDist } from './point-triangle.ts';
@@ -47,7 +47,7 @@ export class TriangleGrid {
     this.boxes = new Float64Array(n * 6);
     this.stamp = new Int32Array(n);
     const b = boundsOf(mesh);
-    const diag = Math.hypot(b.max[0] - b.min[0], b.max[1] - b.min[1], b.max[2] - b.min[2]);
+    const diag = dmath.hypot(b.max[0] - b.min[0], b.max[1] - b.min[1], b.max[2] - b.min[2]);
     this.cell = Math.max(0.25, diag / 256);
     const CELL = this.cell;
     const P = mesh.positions;
@@ -161,7 +161,7 @@ export function surfaceSamples(m: Mesh, step = 0.05, maxPerEdge = 16, maxInterio
   return out;
 }
 
-const dist = (a: Vec3, b: Vec3): number => Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]);
+const dist = (a: Vec3, b: Vec3): number => dmath.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]);
 
 /** Lattice divisions n with (n-1)(n-2)/2 interior points ≤ cap. */
 const latticeCap = (cap: number): number => Math.floor((3 + Math.sqrt(1 + 8 * cap)) / 2);

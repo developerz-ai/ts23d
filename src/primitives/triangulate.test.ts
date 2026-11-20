@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { createRng, type Vec2 } from '../core/index.ts';
+import { createRng, dmath, type Vec2 } from '../core/index.ts';
 import { earClip, triangulate } from './triangulate.ts';
 
 const area = (p: readonly Vec2[]): number =>
@@ -80,7 +80,7 @@ describe('triangulate', () => {
       const p = Array.from({ length: n }, (_, i): Vec2 => {
         const a = (i / n) * Math.PI * 2;
         const rad = 0.2 + r.next();
-        return [1e3 + Math.cos(a) * rad, 1e3 + Math.sin(a) * rad];
+        return [1e3 + dmath.cos(a) * rad, 1e3 + dmath.sin(a) * rad];
       });
       const t = triangulate(p);
       expect(t).toHaveLength(n - 2);

@@ -2,6 +2,7 @@
 // with extension lines and a boxed label, filled polygons and discs, and the 1.8 m human figure.
 // Everything draws straight into an RGBA canvas (no depth test): overlays on the rendered views.
 
+import { dmath } from '../core/index.ts';
 import { drawText, textWidth } from './font.ts';
 
 export type Rgb = readonly [number, number, number];
@@ -62,13 +63,13 @@ export function arrow(
   rgb: Rgb,
   size = 7,
 ): void {
-  const l = Math.hypot(dx, dy) || 1;
+  const l = dmath.hypot(dx, dy) || 1;
   const ux = dx / l;
   const uy = dy / l;
   for (const s of [-1, 1]) {
     const a = 0.42 * s;
-    const bx = -(ux * Math.cos(a) - uy * Math.sin(a)) * size;
-    const by = -(ux * Math.sin(a) + uy * Math.cos(a)) * size;
+    const bx = -(ux * dmath.cos(a) - uy * dmath.sin(a)) * size;
+    const by = -(ux * dmath.sin(a) + uy * dmath.cos(a)) * size;
     seg(c, x, y, x + bx, y + by, rgb, 1.6);
   }
 }
@@ -155,8 +156,8 @@ export function disc(
   fillPoly(
     c,
     Array.from({ length: n }, (_, i): [number, number] => [
-      cx + rx * Math.cos((i / n) * Math.PI * 2),
-      cy + ry * Math.sin((i / n) * Math.PI * 2),
+      cx + rx * dmath.cos((i / n) * Math.PI * 2),
+      cy + ry * dmath.sin((i / n) * Math.PI * 2),
     ]),
     rgb,
     alpha,
@@ -170,10 +171,10 @@ export function ring(c: Canvas, cx: number, cy: number, r: number, rgb: Rgb, thi
     const b = ((i + 1) / n) * Math.PI * 2;
     seg(
       c,
-      cx + r * Math.cos(a),
-      cy + r * Math.sin(a),
-      cx + r * Math.cos(b),
-      cy + r * Math.sin(b),
+      cx + r * dmath.cos(a),
+      cy + r * dmath.sin(a),
+      cx + r * dmath.cos(b),
+      cy + r * dmath.sin(b),
       rgb,
       thick,
     );
@@ -194,7 +195,7 @@ export function dimension(
 ): void {
   const [ax, ay] = [a[0] + off[0], a[1] + off[1]];
   const [bx, by] = [b[0] + off[0], b[1] + off[1]];
-  const ol = Math.hypot(off[0], off[1]) || 1;
+  const ol = dmath.hypot(off[0], off[1]) || 1;
   const [ex, ey] = [(off[0] / ol) * 5, (off[1] / ol) * 5];
   seg(c, a[0], a[1], ax + ex, ay + ey, rgb, 1, [3, 2]);
   seg(c, b[0], b[1], bx + ex, by + ey, rgb, 1, [3, 2]);

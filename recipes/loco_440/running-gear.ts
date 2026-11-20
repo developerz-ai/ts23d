@@ -7,6 +7,7 @@ import {
   type BuildContext,
   beam,
   cylinder,
+  dmath,
   grime,
   hex,
   type Mesh,
@@ -95,7 +96,7 @@ export function gearOf(ctx: BuildContext): Gear {
           pins.get(side)?.push({
             wheelset: name,
             centre: [x, 0, z],
-            pin: [x + Math.cos(ca) * CRANK, 0, z + Math.sin(ca) * CRANK],
+            pin: [x + dmath.cos(ca) * CRANK, 0, z + dmath.sin(ca) * CRANK],
             rps,
           });
         const w = wheelMesh(lod, r, 0, spokes, lod < 2 ? ca : null);
@@ -114,8 +115,8 @@ export function gearOf(ctx: BuildContext): Gear {
         if (ca !== null && lod < 2) {
           const c = `${name}_crank_${side}`;
           cranks.push(c);
-          const cx = Math.cos(ca) * CRANK;
-          const cz = Math.sin(ca) * CRANK;
+          const cx = dmath.cos(ca) * CRANK;
+          const cz = dmath.sin(ca) * CRANK;
           ctx.part(
             c,
             merge([
@@ -364,11 +365,11 @@ export function buildSplashers(ctx: BuildContext, L: Layout): void {
     const out: Vec2[] = [];
     for (let i = 0; i <= arc; i++) {
       const a = a0 + ((a1 - a0) * i) / arc;
-      out.push([Math.cos(a) * r1, Math.sin(a) * r1]);
+      out.push([dmath.cos(a) * r1, dmath.sin(a) * r1]);
     }
     for (let i = arc; i >= 0; i--) {
       const a = a0 + ((a1 - a0) * i) / arc;
-      out.push([Math.cos(a) * r0, Math.sin(a) * r0]);
+      out.push([dmath.cos(a) * r0, dmath.sin(a) * r0]);
     }
     return out;
   };

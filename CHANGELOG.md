@@ -4,6 +4,34 @@ All notable changes to `@developerz.ai/ts23d`. Format: [Keep a Changelog](https:
 
 ## [Unreleased]
 
+Meshes carry which project materials they were mapped with, so a mesh built outside an asset's build can no longer be painted as the wrong material. A third pass over every asset, re-judged independently: criteria below the pass mark of 8 fell from 352 to 296, and three assets now pass on all seven.
+
+### Added
+- `mappedOnto(mesh, ...strips)` and `Mesh.mapped`: a mesh records the project materials its UVs map onto. Every primitive sets it; passes and `merge` carry it.
+
+- `dmath` (`import { dmath } from '@developerz.ai/ts23d'`): `sin`, `cos`, `tan`, `asin`, `acos`, `atan`, `atan2`, `exp`, `expm1`, `log`, `log1p`, `log2`, `log10`, `pow`, `cbrt`, `sinh`, `cosh`, `tanh`, `hypot` (2 to 4 components) and `norm(v)` that give the same bits on every CPU, C library and engine. Accuracy has input ranges, so they are not full-domain `Math` replacements: within 1–2 ulp of the true value; `sin`, `cos` and `tan` to under 1 ulp for |x| < 1.6e6 radians, beyond that an absolute error growing as |x|·1.2e-16; `hypot` and `norm` square without rescaling, so components above about 1e150 overflow to Infinity and below about 1e-150 lose precision; a whole exponent up to ±1000 in `pow` is repeated multiplication, so `pow(10, n)` is exact for |n| ≤ 22. Use them in recipes instead of the `Math.sin` family and `**`: `bun run determinism` now refuses those under `src/`, `recipes/`, `apps/site/src/` and `examples/`.
+- `roundNumber`, `roundJson`, `gltfText`, `GLTF_ROUNDING`, `MANIFEST_ROUNDING`: the one rounding for numbers written into shipped text.
+- `weather({ read: 'hero' })`: stains sized to read with the whole asset in frame (patches at least 6 % of its longest side, a taller splash band, longer streaks, a graded wash). Default `'close'` unchanged.
+- `weather({ tessellation: 'exact' })`: vertices `resolution` apart instead of halved until they fit; about a quarter of the triangles on flat panels. Default unchanged.
+- `text(..., { surface, wrap: true })`: pixel lettering painted across relief also covers the steps between pieces at different depths. Default off.
+- Creature kind: `face.earWidth` and `options.head`, a hook for a recipe's own sculpt edits on the head.
+- `wearMetrics` / `wearOf`: `wearBroad` and `wearPlaced` measure hand-wide, exposure-placed colour variation on LOD0. Reported only: the calibrated wear score is saturated (ceiling 6.2) until panel-scored rows carry the new metric.
+
+### Changed
+- Recipes: a third quality pass over all 76 committed assets, worked from the independent critiques: hero cameras that fill the frame, wear sized to read at hero distance, far LODs that keep identity (an alpha-cut lattice for `eiffel_tower`, lettering on `station_halt`'s board, colour blocks on tanks and creatures), a resting coil and stacked pile for `king_cobra`, flap-capable wings 40 % larger on `dragon_hybrid`, de-lit coats on the model-built creatures. `cargo_container_scifi`'s far LOD is 170 triangles (was 736), `hydra` 161k (was 210k), `city_block`'s mid LOD 13k (was 29k).
+- `tune_demo`'s tune files are regenerated from the current recipe and reproduce byte for byte again.
+
+### Fixed
+- Review of this release's changes: 61 of 74 findings fixed and 13 shown not to be defects (D404–D444). Among them: a hair card that could be turned under the skin, a determinism rule that a line break could bypass, false slopes along UV island rims in the model-built creatures' normal maps, a Tiger barrel sleeve placed past the muzzle, road spray that never reached the roadster's nose, city trees that changed size between LODs, and ten tests that could not fail.
+- A mesh built at module level and added in `build()` registers its material in the asset that uses it. On a row the asset holds for another material it is `T3D_MATERIAL_CONFLICT` naming both and the part, where it used to be painted as the other material without an error (D354).
+- The same source now gives the same bytes on any CPU and C library, for geometry, textures, sounds, manifests and renders. A path-traced hero could differ between machines (1,432 pixels on `loco_440` between the dev box and CI), and a C library one last bit different changed GLBs at every LOD (normals, tangents, a vertex count on `t34`): the platform's sine, cosine, exponent, power and hypot differ in the last bit by CPU and version. Every module, recipe, the gallery and the examples now compute with `dmath`. Committed GLB, PNG and manifest bytes change once (D403).
+- Numbers in a GLB's JSON chunk are written at 9 significant digits (a float32 exactly) and in `manifest.json` at 6 decimals, instead of all seventeen digits of a float64: `measured: 5.920000076293945` is now `5.92`.
+- Path-traced hero: clear glass and other see-through surfaces no longer speckle at 16 samples, and light reaching a surface through glass is no longer counted twice (a white furnace behind glass is 1.000, was 1.021). Opaque assets render the same bytes.
+- `fox`: a face override was dropping the sourced 11 cm ear to the kind's 6 cm default.
+- Hair cards no longer leave the skin by more than their lift: a card that runs off a shelf edge (lip, brow ridge) hangs from it instead of pointing out of the face.
+- A `stripRect` rectangle kept in a module-level constant records its material when a build reads it.
+- `sheetFor` and `materialsOf` throw `T3D_MATERIAL_UNKNOWN` (with a fix) for a part whose UVs sample a row the asset holds for one material while a mesh built outside every `build()` was mapped onto another material of that row: the part may be that mesh with its record lost, and it used to be painted as the held material. `paintTrimSheet(recipe, ids?)` is unchanged: `ids` stays optional, and without it every defined material is painted.
+
 ## [0.15.0] - 2026-11-19
 
 Contact sheets show the hero's base colour, triangle budgets are checked against the playbook bands, custom materials are per asset, and every committed asset was reworked and independently re-judged: criteria below the pass mark of 8 fell from 416 to 352, and two assets now pass on all seven.

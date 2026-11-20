@@ -7,9 +7,12 @@ import {
   type Clip,
   type CompiledAsset,
   compile,
+  DEFAULT_SHEET,
+  dmath,
   quatRotate,
   runQa,
   type StripId,
+  sheetFor,
   stripRect,
   type Vec3,
 } from '@developerz.ai/ts23d';
@@ -50,7 +53,7 @@ function tip(c: Clip, bone: string, t: number): Vec3 {
   ]);
   return [w.head[0] + o[0], w.head[1] + o[1], w.head[2] + o[2]];
 }
-const gap = (a: Vec3, b: Vec3): number => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+const gap = (a: Vec3, b: Vec3): number => dmath.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
 const headTip = (k: number): string => `head_${k}_0`;
 
 function correlation(a: readonly number[], b: readonly number[]): number {
@@ -60,8 +63,8 @@ function correlation(a: readonly number[], b: readonly number[]): number {
   a.forEach((x, i) => {
     const y = b[i] ?? 0;
     ab += (x - ma) * (y - mb);
-    aa += (x - ma) ** 2;
-    bb += (y - mb) ** 2;
+    aa += dmath.pow(x - ma, 2);
+    bb += dmath.pow(y - mb, 2);
   });
   return ab / Math.sqrt(aa * bb);
 }
@@ -168,7 +171,7 @@ describe('strikes', () => {
         const [a, b, d] = [path[i - 1] as Vec3, path[i] as Vec3, path[i + 1] as Vec3];
         peak = Math.max(
           peak,
-          Math.hypot(a[0] - 2 * b[0] + d[0], a[1] - 2 * b[1] + d[1], a[2] - 2 * b[2] + d[2]) /
+          dmath.hypot(a[0] - 2 * b[0] + d[0], a[1] - 2 * b[1] + d[1], a[2] - 2 * b[2] + d[2]) /
             (dt * dt),
         );
       }
@@ -183,7 +186,7 @@ describe('strikes', () => {
       if (!root) throw new Error('no root track');
       const n = root.times.length;
       const shift = Array.from({ length: n }, (_, i) =>
-        Math.hypot(root.values[i * 3] ?? 0, root.values[i * 3 + 1] ?? 0),
+        dmath.hypot(root.values[i * 3] ?? 0, root.values[i * 3 + 1] ?? 0),
       );
       expect(Math.max(...shift)).toBeGreaterThan(0.01);
       for (const leg of LEG_FEET) {
@@ -250,15 +253,55 @@ describe('surface and wear', () => {
     for (const name of ['horns', 'claws', 'teeth', 'spines'])
       expect(onStrip(name, KERATIN)).toBeGreaterThan(0.95);
   });
-  it('cakes mud on the feet and leaves the back clean', () => {
+  it('rounds the trunk into a barrel: widest mid-trunk, not a box between the legs', () => {
+    // Half-width of the compiled skin at u along the trunk, in a band 0.15–0.25 m above its axis
+    // (above the leg roots, so a limb is not measured as trunk).
+    const trunk = chain('body');
+    const body = part('body');
+    const halfWidth = (u: number): number => {
+      const link = trunk.links.findLast((l) => l.s <= u) ?? trunk.links[0];
+      if (!link) throw new Error('no trunk links');
+      const k = ((u - link.s) * trunk.length) / link.length;
+      const [h, t] = [link.bone.head, link.bone.tail];
+      const [x, z] = [h[0] + (t[0] - h[0]) * k, h[2] + (t[2] - h[2]) * k];
+      let w = 0;
+      const P = body.positions;
+      for (let i = 0; i < P.length; i += 3) {
+        const dz = (P[i + 2] ?? 0) - z;
+        if (Math.abs((P[i] ?? 0) - x) < 0.04 && dz > 0.15 && dz < 0.25)
+          w = Math.max(w, Math.abs(P[i + 1] ?? 0));
+      }
+      return w;
+    };
+    // About 0.2 m wider across mid-trunk than behind the shoulders and in front of the hips.
+    expect(halfWidth(0.5) - halfWidth(0.3)).toBeGreaterThan(0.1);
+    expect(halfWidth(0.5) - halfWidth(0.7)).toBeGreaterThan(0.1);
+  });
+  it('runs one root-to-tip keratin ramp over a piece, not one per 0.3 m tile', () => {
+    // pinKeratin spreads a piece over 0.9 of the row; the graph's tile is the strip's whole span.
+    const sheet = sheetFor([lod0], { ...DEFAULT_SHEET, size: 512 });
+    const r = stripRect(KERATIN);
+    const y = Math.floor(((r.v0 + r.v1) / 2) * sheet.size);
+    const rough = Array.from({ length: 46 }, (_, i) => {
+      const u = r.u0 + 0.9 * (i / 45);
+      const x = Math.min(sheet.size - 1, Math.floor((((u % 1) + 1) % 1) * sheet.size));
+      return sheet.orm[(y * sheet.size + x) * 4 + 1] ?? 0;
+    });
+    // Rough at the root, polished at the tip, never rough again on the way.
+    expect(rough[0] ?? 0).toBeGreaterThan((rough[45] ?? 0) + 60);
+    for (let i = 1; i < rough.length; i++)
+      expect(rough[i] ?? 0).toBeLessThanOrEqual((rough[i - 1] ?? 0) + 6);
+  });
+  it('cakes mud on the feet and up the shins, broad enough to read from the hero camera', () => {
     expect(mudAt([1.2, 0.9, 0.05])).toBeGreaterThan(0.6);
+    expect(mudAt([1.0, 0.9, 0.35])).toBeGreaterThan(0.5);
     expect(mudAt([0, 0, 1.6], 0)).toBe(0);
   });
   it('spends LOD0 on heads, not on rings: the body is under a third of the triangles', () => {
     const tris = (name: string): number => part(name).indices.length / 3;
     const all = lod0.parts.reduce((t, p) => t + (p.mesh?.indices.length ?? 0) / 3, 0);
     expect(tris('body') / all).toBeLessThan(1 / 3);
-    expect(all).toBeLessThan(215_000);
+    expect(all).toBeLessThan(165_000);
   });
 });
 

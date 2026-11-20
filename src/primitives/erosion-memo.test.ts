@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { createRng } from '../core/index.ts';
+import { createRng, dmath } from '../core/index.ts';
 import { hydraulicErosion } from './erosion.ts';
 import { arrayMemo } from './erosion-memo.ts';
 import { terrainGrid } from './terrain-grid.ts';
@@ -8,7 +8,7 @@ const grid = (lift = 0) =>
   terrainGrid({
     rect: [0, 0, 320, 320],
     cells: 32,
-    height: (x, y) => lift + Math.max(0, 200 - Math.hypot(x - 160, y - 160) * 0.9),
+    height: (x, y) => lift + Math.max(0, 200 - dmath.hypot(x - 160, y - 160) * 0.9),
   });
 const hashOf = (a: Float64Array): string => Array.from(a, (v) => v.toFixed(9)).join(',');
 

@@ -6,7 +6,7 @@
 // neck to measured ratios (width vs head width, length visible above the collar) with declared
 // stylisation. `garment()` turns any body field into cloth: the body pushed out inside a region.
 
-import { type Field, type SculptEdit, Ts23dError } from '@developerz.ai/ts23d';
+import { dmath, type Field, type SculptEdit, Ts23dError } from '@developerz.ai/ts23d';
 import type { Landmarks } from './head.ts';
 import { ball, chain, cone2, ell, scrape, spline, taper, type V } from './kit.ts';
 
@@ -41,7 +41,7 @@ export function armCut(l: Landmarks, t: TorsoSpec): Field {
   const y0 = t.shoulders + (t.armCut ?? 0.012);
   const z0 = l.mz - 0.5 * l.H;
   const lean = 0.1;
-  const k = Math.hypot(1, lean);
+  const k = dmath.hypot(1, lean);
   return (p) => (Math.abs(p[1]) - y0 - lean * (p[2] - z0)) / k;
 }
 
@@ -231,7 +231,7 @@ export function checkNeck(
 export function neckSeam(l: Landmarks): { field: Field; at: V; n: V } {
   const at: V = [l.back + 0.45 * l.H, 0, l.mz - 0.3 * l.H];
   const n: V = [0.3, 0, 1];
-  const k = Math.hypot(n[0], n[1], n[2]);
+  const k = dmath.hypot(n[0], n[1], n[2]);
   return {
     at,
     n,
@@ -243,8 +243,8 @@ export function neckSeam(l: Landmarks): { field: Field; at: V; n: V } {
 export function bustCut(cutZ: number, halfY: number, halfX: number): Field {
   return (p) => {
     const h = p[2] - cutZ;
-    const side = (Math.abs(p[1]) - (halfY + h * 1.6)) / Math.hypot(1, 1.6);
-    const front = (Math.abs(p[0] - 0) - (halfX + h * 0.8)) / Math.hypot(1, 0.8);
+    const side = (Math.abs(p[1]) - (halfY + h * 1.6)) / dmath.hypot(1, 1.6);
+    const front = (Math.abs(p[0] - 0) - (halfX + h * 0.8)) / dmath.hypot(1, 0.8);
     return Math.max(-h, side, front);
   };
 }

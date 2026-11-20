@@ -6,7 +6,7 @@
 // layers (dark base clumps flat on the cap, swept mid locks from a left side parting round a crown
 // whorl, a few long top locks for volume, flyaways), then the beard and moustache.
 
-import { type Field, type SculptEdit, sculptField, type Vec3 } from '@developerz.ai/ts23d';
+import { dmath, type Field, type SculptEdit, sculptField, type Vec3 } from '@developerz.ai/ts23d';
 import type { BustRecipe } from '../_lib/bust/bust.ts';
 import { flowLocks, hairMass, lock, mix } from '../_lib/bust/hair.ts';
 import { C, H, L, SK, TORSO } from '../_lib/bust/human/spec.ts';
@@ -37,7 +37,7 @@ const capline: Field = (p) => hairline(p) + 0.008;
 export const beardline: Field = (p) => {
   // The beard: below the cheek line, in front of the ears, outside a mouth hole.
   const cheek = L.mz + 0.3 * H - (p[0] - L.gx) * 0.3;
-  const mouth = Math.hypot((p[0] - L.mouth[0]) * 1.2, p[1], (p[2] - L.mouth[2]) * 2.2) - 0.11 * H;
+  const mouth = dmath.hypot((p[0] - L.mouth[0]) * 1.2, p[1], (p[2] - L.mouth[2]) * 2.2) - 0.11 * H;
   // Under the jaw the beard thins out 12 mm short of the neck, so it never folds into the throat.
   // The sideburn stops 1.5 cm in front of the ear root, so the beard never runs into the ear.
   return Math.max(p[2] - cheek, L.back + 0.54 * H - p[0], -mouth, 0.012 - neck(p));
@@ -91,8 +91,8 @@ export function beardLines(): V[][] {
     const a = (i / 4) * 70;
     const t = (a * Math.PI) / 180;
     const c: V = [
-      L.mouth[0] - 0.12 * H * (1 - Math.cos(t)),
-      0.12 * H * Math.sin(t) + 0.004,
+      L.mouth[0] - 0.12 * H * (1 - dmath.cos(t)),
+      0.12 * H * dmath.sin(t) + 0.004,
       L.mouth[2] - 0.06 * H,
     ];
     lines.push(
@@ -124,7 +124,7 @@ const clamp01 = (v: number): number => Math.min(1, Math.max(0, v));
 /** Distance to the moustache line (both sides) minus its half-width: negative on the lip. */
 const MOUSTACHE = moustache();
 const moustacheline: Field = (p) =>
-  Math.min(...MOUSTACHE.map((q) => Math.hypot(p[0] - q[0], Math.abs(p[1]) - q[1], p[2] - q[2]))) -
+  Math.min(...MOUSTACHE.map((q) => dmath.hypot(p[0] - q[0], Math.abs(p[1]) - q[1], p[2] - q[2]))) -
   0.009;
 
 /** The parting's y (the man's left) and the crown whorl the back hair turns round. */
@@ -148,13 +148,13 @@ const comb = (p: Vec3, n: Vec3): Vec3 => {
   ];
   // Crown whorl: a clockwise swirl about the normal within ~4 cm of it.
   const r: Vec3 = [p[0] - WHORL[0], p[1] - WHORL[1], p[2] - WHORL[2]];
-  const w = Math.max(0, 1 - Math.hypot(r[0], r[1], r[2]) / 0.04) ** 2;
+  const w = dmath.pow(Math.max(0, 1 - dmath.hypot(r[0], r[1], r[2]) / 0.04), 2);
   const swirl: Vec3 = [
     n[1] * r[2] - n[2] * r[1],
     n[2] * r[0] - n[0] * r[2],
     n[0] * r[1] - n[1] * r[0],
   ];
-  const sl = Math.hypot(swirl[0], swirl[1], swirl[2]) || 1;
+  const sl = dmath.hypot(swirl[0], swirl[1], swirl[2]) || 1;
   const k = (w * 1.5) / sl;
   return [
     base[0] * (1 - w) + swirl[0] * k,

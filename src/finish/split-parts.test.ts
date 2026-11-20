@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { compile, defineAsset, type NeuralReader, type Vec3 } from '../core/index.ts';
+import { compile, defineAsset, dmath, type NeuralReader, type Vec3 } from '../core/index.ts';
 import { writeMeshGlb } from '../neural/index.ts';
 import { box, sdf } from '../primitives/index.ts';
 import { orthoCamera, partMasks } from '../render/index.ts';
@@ -33,7 +33,7 @@ const concept = {
   }),
 };
 const sphere = sdf({
-  field: (p) => Math.hypot(...p) - 1,
+  field: (p) => dmath.norm(p) - 1,
   bounds: [
     [-1.1, -1.1, -1.1],
     [1.1, 1.1, 1.1],

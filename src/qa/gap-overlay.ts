@@ -2,7 +2,7 @@
 // outlines, every undeclared slit painted red and ringed, declared/exempt ones blue. `gapOverlay`
 // is the whole asset from six sides; `gapZoom` is one slit up close. PNGs an agent Reads.
 
-import { encodePng } from '../core/index.ts';
+import { dmath, encodePng } from '../core/index.ts';
 import type { DepthView } from './depth-views.ts';
 import type { Gap, GapScan } from './gaps.ts';
 
@@ -71,7 +71,7 @@ function paint(v: DepthView, f: Frame, gaps: readonly Gap[], set: Set, ring: num
       // Relief from the depth gradient (light from upper left) plus a gentle near→far fade.
       const gx = (depthAt(col + 1, row, d) - depthAt(col - 1, row, d)) / (2 * v.px);
       const gy = (depthAt(col, row + 1, d) - depthAt(col, row - 1, d)) / (2 * v.px);
-      const lit = Math.max(0, Math.min(1, 0.6 + (0.25 * (gx - gy)) / Math.hypot(1, gx, gy)));
+      const lit = Math.max(0, Math.min(1, 0.6 + (0.25 * (gx - gy)) / dmath.hypot(1, gx, gy)));
       const g = Math.round(70 + lit * 170 - ((d - near) / range) * 60);
       const edge =
         (col > 0 && v.part[k - 1] !== v.part[k]) || (row > 0 && v.part[k - v.width] !== v.part[k]);
@@ -96,7 +96,7 @@ function paint(v: DepthView, f: Frame, gaps: readonly Gap[], set: Set, ring: num
     for (let a = 0; a < 128; a++) {
       const t = (a / 128) * Math.PI * 2;
       for (const rr of [ring, ring + 1])
-        set(Math.round(cx + Math.cos(t) * rr), Math.round(cy + Math.sin(t) * rr), RED);
+        set(Math.round(cx + dmath.cos(t) * rr), Math.round(cy + dmath.sin(t) * rr), RED);
     }
   }
 }

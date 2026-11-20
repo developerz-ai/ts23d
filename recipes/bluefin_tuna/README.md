@@ -71,11 +71,13 @@ skinned, one draw. Bones `spine_0..15`, `caudal_upper_*`, `caudal_lower_*`, `pec
 ## Surface, wear and LOD (2026-11 quality pass)
 | Feature | How | Why |
 |---|---|---|
-| one strip, four bands | `tuna_skin` (`material.ts`): corselet (metal, 0.34), flank (metal, 0.2), fin membrane (0.42), frayed margin (0.68); replaces `tuna_metal` and `tuna_fin`, freeing a custom sheet row | the flank read as flat grey paint |
-| colour | an iridescent violet-blue band between back and silver, stronger pale bars and dots on the lower flank, a faint lateral line, a dark caudal keel | photos above |
-| corselet | the thick-scaled band round the pectoral base, duller than the polished flank | a signature of *Thunnus* |
-| fin rays | second dorsal, anal and caudal carry 12 to 16 low ray ridges up close (each face swells by a share of its own thickness, fading toward the tip) | flat plates |
-| wear | frayed nicks along the median fins' trailing edges (pale, on the rough band), five seeded net scratches on the blue flank | pristine |
+| one strip, four bands | `tuna_skin` (`material.ts`): corselet (metal, 0.34), flank (metal, 0.12, mirror silver), fin membrane (0.42), frayed margin (0.68); replaces `tuna_metal` and `tuna_fin`, freeing a custom sheet row | the flank read as flat grey paint |
+| colour | an iridescent violet-blue band between back and silver, stronger pale bars and dots on the lower flank, a darker lateral line, a dark caudal keel | photos above |
+| corselet | the thick-scaled band round the pectoral base, duller and a grey-blue tint against the polished flank | a signature of *Thunnus* |
+| fin rays | second dorsal, anal and caudal carry 12 to 16 low ray ridges up close (each face swells by a share of its own thickness, fading toward the tip), drawn as fine dark lines too; the thin trailing margin paler | flat plates |
+| wear | deeper frayed nicks along the median fins' trailing edges (pale, on the rough band), five wider net scratches on the flank, two rubbed patches of lost scales on the hero (-Y) side (grey, on the dull band) | pristine |
+| snout | the top profile a little fuller over the first 13 % of the length | read pointed |
+| hero | camera at -62°, 14° (`hero` in the recipe): nearer side-on, so the worn flank, fins and keel face the lens | the default 3/4 looked nose-on |
 | gill cover | the operculum groove twice as deep | shallow line |
 | pectoral | 33 cm (16.5 % FL), inside the FAO 16 to 19 % and shorter than before | read long against photos |
-| LOD | LOD1 7 k (was 4 k): softer switch from 39 k; LOD2 9 sides and one flat yellow finlet strip a side | finlets vanished, body faceted |
+| LOD | LOD1 9 k (was 7 k): softer switch from 39 k; LOD2 12 sides with an extra head ring (768 triangles) and one flat yellow finlet strip a side | finlets vanished, body faceted |

@@ -75,8 +75,8 @@ the cloth strips' near-white ground is `CLOTH_ALBEDO`).
 | wear: linen grime / sweat-dark leather / patch / dust / faded scarf / scarf mud / horn | `#7d7052` / `#2e1c10` / `#8a5a34` / `#a8987a` / `#b4553c` / `#4a2a1c` / `#cdbf9a` |
 
 ## Known gaps
-The skin's detail is the shared tiling pore strip (`pores: true`) under one dull olive `skin`
-sheen finish, not a per-face texture; the vest's cut edges are ragged at the cell's scale even after fairing; stitches are a
+The skin's detail is the shared tiling pore strip (`pores: true`) under one olive `skin`
+finish (a soft sheen plus a thin oily coat, clearcoat 0.3 at roughness 0.28), not a per-face texture; the hero is a portrait camera (`../_lib/bust/hero.ts`); the vest's cut edges are ragged at the cell's scale even after fairing; stitches are a
 groove and a paler line, not thread (a 2 mm stitch is under the layer's cell); the neck is the
 base mesh's and stays straight (the stoop is carried by the raised shoulders and the hump); the
 mouth's grin is the base's parted lips widened ×1.6, not a re-sculpted smile.

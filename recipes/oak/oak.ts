@@ -13,36 +13,46 @@ import {
   type BuildContext,
   boundsOf,
   defineAsset,
+  dmath,
   hex,
   type Mesh,
   materialVariant,
   merge,
   oak as oakPreset,
   type PartOptions,
-  planar,
   sweep,
   type TreeParams,
+  translate,
   tree,
   treeReal,
   type Vec3,
   valueNoise,
 } from '@developerz.ai/ts23d';
-import { reproject, tessellate } from '../_lib/finish/finish.ts';
 import { pineBark } from '../_lib/trees/bark.ts';
+import { type Floor, floorPatch } from '../_lib/trees/floor.ts';
 import { type CutoutOptions, clumpCards, STRAND, toCutout } from '../_lib/trees/leaf-cards.ts';
+import { sunShade, type Tone } from '../_lib/trees/tone.ts';
 import { lowTrunk } from '../_lib/trees/trunk.ts';
-import { deadLimb, fallenLimb, lichen } from '../_lib/trees/wear.ts';
+import { brokenLimb, deadLimb, fallenLimb, lichen, trunkAt } from '../_lib/trees/wear.ts';
 
-const size = { height: 22, spread: 22, dbh: 1.3 };
-const FLOOR_R = 8;
+const size = { height: 20, spread: 24, dbh: 1.3 };
+/** Field grass under the crown, worn to bare soil and brown litter in patches near the bole. */
+const FLOOR: Floor = {
+  radius: 8,
+  sides: [18, 12, 8],
+  strip: materialVariant('grass', 3),
+  mix: [hex('#7c5e40'), hex('#a8885e'), hex('#d8d2a0'), hex('#f2f6e0')],
+  rim: hex('#ffffff'),
+  wobble: 0.12,
+};
 /** Skeleton seed: the most even crown of seeds 0–29 (centroid 0.1 m off the bole, spread within
  * ±1 m of centred both ways) with its lowest leaves 2 m up, so the dome is not lopsided. */
 const SEED = 14;
 const MOSS = 0.7;
 /** Lichen on the sky-facing bark, 0..1. */
-const LICHEN = 0.75;
+const LICHEN = 1;
 /** LOD2: crown clumps (12 triangles each) and the limbs that carry them. */
-export const FAR = { clumps: 15, limbs: 4, value: 0.82, spread: 2.4 } as const;
+export const FAR = { clumps: 15, limbs: 4, value: 0.72, spread: 2.6 } as const;
 
 /**
  * The open-grown oak on top of the kind's preset: a lower crown base, more and longer first-order
@@ -52,7 +62,7 @@ export const FAR = { clumps: 15, limbs: 4, value: 0.82, spread: 2.4 } as const;
 export const OAK: TreeParams = {
   ...oakPreset,
   shape: 'hemispherical',
-  baseSize: 0.2,
+  baseSize: 0.15,
   ratioPower: 0.95,
   taper: 0.34,
   levels: [
@@ -61,8 +71,8 @@ export const OAK: TreeParams = {
       branches: 11,
       length: 1.05,
       lengthVar: 0.12,
-      downAngle: 70,
-      downAngleV: -30,
+      downAngle: 78,
+      downAngleV: -34,
       curve: 6,
       curveBack: 22,
       curveVar: 16,
@@ -80,6 +90,9 @@ export const OAK: TreeParams = {
     from: 0.15,
   },
 };
+
+/** Sun and shade: warm yellow-green on the sunny shoulder, cool dark green in the crown's cave. */
+const TONE: Tone = { sunny: [1.18, 1.12, 0.72], shady: [0.62, 0.74, 0.86], sun: [0.5, -0.4, 0.8] };
 
 const CARDS: CutoutOptions = {
   cell: 'foliage_broadleaf',
@@ -122,10 +135,11 @@ function grow(
     if (out && name === 'leaves') {
       // Keep every card 1.2 m over the ground: the crown's 2° sway dips its outer cards.
       const pivot = cap.crown.at ?? [0, 0, 0];
-      out = toCutout(out, { ...CARDS, floor: 1.2 - pivot[2] });
+      out = sunShade(toCutout(out, { ...CARDS, floor: 1.2 - pivot[2] }), TONE);
       cap.leaves = out;
       cap.leavesOpts = { ...opts, surface: 'cutout' };
     }
+    if (name === 'branches' && out && cap.trunk) out = merge([out, crownSnag(cap, lod)]);
     if (name === 'trunk' && out) {
       cap.trunk = out;
       // The snag merges into the bole it grows from (one static body, no seam to judge).
@@ -139,6 +153,20 @@ function grow(
   };
   tree(wrapped, { species: OAK, ...size, seed: SEED });
   return cap;
+}
+
+/**
+ * A dead limb up in the crown (crown frame): from the fork out over the hero side and up, bark
+ * gone, silver-grey, broken off past the leaves so its bare end shows against the sky.
+ */
+function crownSnag(cap: Captured, lod: number): Mesh {
+  const at = cap.crown.at ?? [0, 0, 0];
+  const trunk = cap.trunk;
+  if (!trunk) return merge([]);
+  const { c } = trunkAt(trunk, at[2] - 0.3);
+  const d = dmath.hypot(0.75, -0.55, 0.32);
+  const limb = brokenLimb(c, [0.75 / d, -0.55 / d, 0.32 / d], 8, 0.22, lod === 0 ? 7 : 5);
+  return translate(limb, [-at[0], -at[1], -at[2]]);
 }
 
 /** LOD2 limbs: from the bole top out to the lowest, widest clumps (3-sided, tapered). */
@@ -173,7 +201,7 @@ function far(
   const crown = clumpCards(leaves, FAR.clumps, CARDS.cell, FAR.value, FAR.spread);
   // Clump centres in world space, the outermost low ones carried by limbs from the bole top.
   const centres = crown.centres.map((c): Vec3 => [c[0] + at[0], c[1] + at[1], c[2] + at[2]]);
-  const reach = (c: Vec3): number => Math.hypot(c[0] - at[0], c[1] - at[1]) - 0.35 * c[2];
+  const reach = (c: Vec3): number => dmath.hypot(c[0] - at[0], c[1] - at[1]) - 0.35 * c[2];
   const ends = [...centres].sort((a, b) => reach(b) - reach(a)).slice(0, FAR.limbs);
   const wood = merge([low, farLimbs([at[0], at[1], bole], ends, 0.32)]);
   ctx.part('trunk', pineBark(wood, 'bark_oak', MOSS, noise.moss));
@@ -192,6 +220,8 @@ export const oak = defineAsset({
     'https://www.woodlandtrust.org.uk/trees-woods-and-wildlife/british-trees/a-z-of-british-trees/english-oak/ (mature height 20–40 m, broad spreading crown)',
   ],
   real: treeReal({ ...size, source: 'recipes/oak/README.md' }),
+  // Low, so the dome reads wider than tall and the snag under the crown faces the lens.
+  hero: { elDeg: 10 },
   // The kind's tree budget plus the ground patch and dead wood (≤ 1000 / 300 / 16 triangles).
   budget: {
     triangles: [
@@ -211,17 +241,7 @@ export const oak = defineAsset({
       grow(ctx, lod, true, noise);
       ctx.part('fallen_limb', fallenLimb([3.2, 2.6, 0], 205, lod));
     }
-    const n = ctx.pick([18, 12, 8]);
-    // Same area at every LOD (a coarser polygon is pushed out), so the far silhouette keeps it.
-    const r = FLOOR_R * Math.sqrt((Math.PI * 2) / (n * Math.sin((Math.PI * 2) / n)));
-    const disc = planar({
-      points: Array.from({ length: n }, (_, k): Vec3 => {
-        const a = (k / n) * Math.PI * 2;
-        return [Math.cos(a) * r, Math.sin(a) * r, 0.005];
-      }),
-      color: hex('#a89884'),
-      strip: materialVariant('leaf_litter', 5),
-    });
-    ctx.part('ground', lod === 2 ? disc : reproject(tessellate(disc, FLOOR_R / 3)));
+    const ground = valueNoise(ctx.rng.fork('ground'), { scale: 2.2, octaves: 2 });
+    ctx.part('ground', floorPatch(FLOOR, lod, ground));
   },
 });

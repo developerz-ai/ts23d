@@ -7,6 +7,7 @@ import {
   bodyPlan,
   type Check,
   defineBodyPlan,
+  dmath,
   octopusClips,
   type Vec3,
 } from '@developerz.ai/ts23d';
@@ -46,7 +47,7 @@ function arcCheck(label: string, ids: readonly string[], want: number): Check {
         .filter((b) => b.name.startsWith(`${id}_`) && /_\d+$/.test(b.name.slice(id.length)))
         .reduce(
           (t, b) =>
-            t + Math.hypot(b.tail[0] - b.head[0], b.tail[1] - b.head[1], b.tail[2] - b.head[2]),
+            t + dmath.hypot(b.tail[0] - b.head[0], b.tail[1] - b.head[1], b.tail[2] - b.head[2]),
           0,
         );
       return Math.abs(got - want) / want <= 0.02
@@ -79,7 +80,6 @@ export const common_octopus = defineBodyPlan({
   // along the bones, because `measures` only reads straight extents.
   real: { length: 1.43, width: 1.28, height: 0.46 },
   plan: OCTOPUS_PLAN,
-  parts: { mantle: ['mantle'] },
   colours: { back: '#8f5238', belly: '#d9a593', line: -0.2, soft: 0.3 },
   // Wet skin: the satin built-in strip (roughness 0.35, neutral albedo) under the vertex colour.
   strip: 'plastic',

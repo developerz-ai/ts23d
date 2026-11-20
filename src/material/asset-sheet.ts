@@ -1,85 +1,19 @@
 // One trim sheet per asset: the built-in strips and cells plus the project materials THAT asset
 // maps onto (D299). The custom rows used to belong to the process, so two recipes with a material
 // on the same row could not be loaded together and fourteen rows served every recipe at once.
-// `materialsOf` reads what a compile recorded (`CompiledAsset.materials`, core/material-use.ts);
-// `sheetFor` paints it. The built-in rows are painted once per recipe and size and copied; only an
-// asset's own rows are painted for it, and a row's texels do not depend on its neighbours, so the
-// bytes equal a whole `paintTrimSheet(recipe, ids)`.
-// A mesh built outside any compile (a module-level constant) records nothing: its custom rows are
-// then read from its UVs, which names the material only while one defined material holds the row.
-// Known gap (open): such a mesh on a row the compile DID record for another material is read as
-// the recorded one, silently; meshes carry no material provenance to tell them apart. Build every
-// mesh that maps onto a project material inside build() or a definePart.
+// `materialsOf` (asset-materials.ts) says which materials an asset maps onto; `sheetFor` paints
+// them. The built-in rows are painted once per recipe and size and copied; only an asset's own
+// rows are painted for it, and a row's texels do not depend on its neighbours, so the bytes equal
+// a whole `paintTrimSheet(recipe, ids)`.
 
-import { type CompiledAsset, type MaterialUse, Ts23dError } from '../core/index.ts';
-import { materialGeneration } from './define.ts';
+import { Ts23dError } from '../core/index.ts';
+import { type Compiled, listOf, materialsOf } from './asset-materials.ts';
 import { paintStrips, paintTrimSheet, sheetMaterials } from './generator.ts';
 import { DEFAULT_SHEET } from './paint/default-sheet.ts';
 import type { PaintedSheet, SheetRecipe } from './paint/types.ts';
-import { rowsSampled } from './rows-sampled.ts';
-import { customIds, idsOnRow } from './slots.ts';
-import { CELLS, STRIP_ROWS, STRIPS, type StripId } from './trim-sheet.ts';
+import { CELLS, STRIPS, type StripId } from './trim-sheet.ts';
 
-type Compiled = CompiledAsset | readonly CompiledAsset[];
-const listOf = (a: Compiled): readonly CompiledAsset[] => ('parts' in a ? [a] : a);
-
-/** Custom rows (0-based among the custom rows) the asset's sheet-mapped triangles sample. */
-function customRowsSampled(asset: CompiledAsset): Set<number> {
-  const out = new Set<number>();
-  for (const p of asset.parts) {
-    // A textured part's UVs address its own set (ADR 016), not the sheet.
-    if (!p.mesh || p.textures) continue;
-    const uv = p.mesh.uvs;
-    const vs = new Float32Array(uv.length >> 1);
-    for (let i = 0; i < vs.length; i++) vs[i] = uv[i * 2 + 1] ?? 0;
-    for (const row of rowsSampled(vs, p.mesh.indices))
-      if (row >= STRIPS.length && row < STRIP_ROWS) out.add(row - STRIPS.length);
-  }
-  return out;
-}
-
-const memo = new WeakMap<CompiledAsset, { at: number; uses: readonly MaterialUse[] }>();
-
-function usesOf(asset: CompiledAsset): readonly MaterialUse[] {
-  const at = materialGeneration();
-  const hit = memo.get(asset);
-  if (hit?.at === at) return hit.uses;
-  const byRow = new Map((asset.materials ?? []).map((u) => [u.row, u.id]));
-  // Nothing defined beyond what the compile recorded: no row can name another material.
-  if (customIds().length > byRow.size)
-    for (const row of customRowsSampled(asset)) {
-      if (byRow.has(row)) continue;
-      const [only, ...more] = idsOnRow(row);
-      if (only !== undefined && more.length === 0) byRow.set(row, only);
-      else if (only !== undefined)
-        throw new Ts23dError('T3D_MATERIAL_UNKNOWN', {
-          cause: `asset '${asset.name}' maps into custom strip row ${row} with a mesh built outside its build(), and ${[only, ...more].map((id) => `'${id}'`).join(', ')} all hold that row: which one it meant is not recorded`,
-          fix: 'build the mesh inside build() or a definePart (the compile then records the material it maps onto), not in a module-level constant',
-        });
-    }
-  const uses = [...byRow].sort((a, b) => a[0] - b[0]).map(([row, id]) => ({ id, row }));
-  memo.set(asset, { at, uses });
-  return uses;
-}
-
-/**
- * The project materials an asset maps onto, in row order. Pass every LOD you export together:
- * they share one sheet, so two LODs with different materials on one row are a conflict.
- */
-export function materialsOf(assets: Compiled): readonly string[] {
-  const byRow = new Map<number, string>();
-  for (const a of listOf(assets))
-    for (const u of usesOf(a)) {
-      const held = byRow.get(u.row);
-      if (held !== undefined && held !== u.id)
-        throw new Ts23dError('T3D_MATERIAL_CONFLICT', {
-          cause: `asset '${a.name}' maps onto '${held}' at one LOD and '${u.id}' at another, and both hold custom strip row ${u.row}: its LODs share one trim sheet`,
-          fix: `give one of them a row the asset leaves free: defineMaterial({ id: '${u.id}', row: … })`,
-        });
-      byRow.set(u.row, u.id);
-    }
-  return [...byRow].sort((a, b) => a[0] - b[0]).map(([, id]) => id);
-}
+export { materialsOf } from './asset-materials.ts';
 
 interface Base {
   /** The resolved built-in strip and cell recipes it was painted from, by identity. */

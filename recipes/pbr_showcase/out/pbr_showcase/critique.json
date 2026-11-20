@@ -19,9 +19,10 @@
     },
     "materials": {
       "score": 8,
-      "reason": "Flake paints, white gloss, brushed metal, glass, ice, water and velvet each read as themselves with highlights.",
+      "reason": "Flake paints, white gloss, brushed metal, glass, ice, water and velvet each read as themselves with highlights in hero.png; in sheet.png the glass sphere renders as an opaque grey ball.",
       "fixes": [
-        "an HDR environment band so the brushed metal shows anisotropy and the glass refracts"
+        "an HDR environment band so the brushed metal shows anisotropy and the glass refracts",
+        "transparent glass in the sheet renderer too"
       ]
     },
     "detail": {
@@ -54,7 +55,7 @@
     }
   },
   "renders": {
-    "hero.png": "b84901e71c908b40e94b8730a38b236a268444dedf6e3661c65fb7265c93331d",
+    "hero.png": "ff19e69263c183fda360d6f89221b59ec7f4a78c50746f6a2a7d371c65a3d542",
     "sheet.png": "95a88f62982855108fa9ad89fbc03db8409fcaa09ea9cbc30e82d4a80e7285ff"
   }
 }

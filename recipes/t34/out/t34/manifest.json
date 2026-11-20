@@ -18,9 +18,9 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    58071,
+    57768,
     12648,
-    1488
+    1456
   ],
   "drawCalls": [
     19,
@@ -171,28 +171,28 @@
     {
       "label": "road wheel diameter",
       "spec": 0.83,
-      "measured": 0.8299999758601189
+      "measured": 0.83
     },
     {
       "label": "track width",
       "spec": 0.55,
-      "measured": 0.550000011920929
+      "measured": 0.55
     },
     {
       "label": "track centres",
       "spec": 2.45,
-      "measured": 2.449999988079071,
+      "measured": 2.45,
       "source": "3.00 m overall − 0.55 m track"
     },
     {
       "label": "hull length",
       "spec": 5.92,
-      "measured": 5.920000076293945
+      "measured": 5.92
     },
     {
       "label": "F-34 barrel length (L/41.5)",
       "spec": 3.162,
-      "measured": 3.1619998812675476,
+      "measured": 3.162,
       "source": "https://en.wikipedia.org/wiki/76_mm_tank_gun_M1940_F-34"
     }
   ],
@@ -204,29 +204,29 @@
   ],
   "weather": {
     "chips": {
-      "target": 0.3653,
-      "actual": 0.3653,
+      "target": 0.097,
+      "actual": 0.097,
       "eligible": "convex-edges",
-      "area": 46.1268,
+      "area": 47.9522,
       "by": {
         "t34_fittings": {
-          "target": 0.3,
-          "actual": 0.3,
-          "area": 18.5102
+          "target": 0.12,
+          "actual": 0.12,
+          "area": 20.3356
         },
         "t34_hull": {
-          "target": 0.4,
-          "actual": 0.4,
+          "target": 0.08,
+          "actual": 0.08,
           "area": 20.4101
         },
         "t34_turret": {
-          "target": 0.45,
-          "actual": 0.45,
+          "target": 0.08,
+          "actual": 0.08,
           "area": 4.9708
         },
         "t34_gun": {
-          "target": 0.4,
-          "actual": 0.4,
+          "target": 0.08,
+          "actual": 0.08,
           "area": 2.2357
         }
       }
@@ -248,12 +248,6 @@
           "area": 0.0956
         }
       }
-    },
-    "mud": {
-      "target": 0.5,
-      "actual": 0.5,
-      "eligible": "ground-near",
-      "area": 66.347
     }
   },
   "qa": {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { compile, type Mesh } from '../core/index.ts';
+import { compile, dmath, type Mesh } from '../core/index.ts';
 import { cylinder } from '../primitives/index.ts';
 import { buildAtlas } from './atlas.ts';
 import { cart } from './fixtures.ts';
@@ -13,7 +13,7 @@ function tube(r: number, len: number, seg: number, rows: number): Mesh {
   for (let j = 0; j <= rows; j++)
     for (let i = 0; i <= seg; i++) {
       const a = (i / seg) * Math.PI * 1.4;
-      P.push(Math.cos(a) * r, Math.sin(a) * r, (j / rows) * len);
+      P.push(dmath.cos(a) * r, dmath.sin(a) * r, (j / rows) * len);
     }
   for (let j = 0; j < rows; j++)
     for (let i = 0; i < seg; i++) {

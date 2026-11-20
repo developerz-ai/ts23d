@@ -1,27 +1,28 @@
 {
   "asset": "fox",
   "reviewer": "agent",
-  "overall": 6.3,
+  "overall": 7.1,
   "scores": {
     "silhouette": {
-      "score": 7,
-      "reason": "Pointed ears, long snout, black stockings and a fuller brush read as a red fox.",
+      "score": 8,
+      "reason": "Pointed ears, long snout, black stockings, a full brush and shorter legs read unmistakably as a red fox in hero.png and SIDE.",
       "fixes": [
-        "shorten the legs ~8% so it stops reading as a coyote"
+        "thinner ear shells with a sharper tip"
       ]
     },
     "proportions": {
-      "score": 6,
-      "reason": "Legs long and the chest narrow; body reads lanky for Vulpes vulpes.",
+      "score": 7,
+      "reason": "Legs are shorter and the chest deeper now; the trunk reads slightly heavy and barrel-deep for Vulpes vulpes.",
       "fixes": [
-        "shorten the legs ~8% and deepen the chest"
+        "slim the belly line ~5% behind the ribcage"
       ]
     },
     "materials": {
-      "score": 6,
-      "reason": "Orange coat, cream chest and black legs separate, the brush has fur; the body coat is smooth with stray strands and the snow reads as white paint blobs.",
+      "score": 7,
+      "reason": "Orange coat, cream chest, black stockings and a furred brush separate, and the snow is now fine flecks; a pale streak crosses the shoulder like a seam and the face is smooth.",
       "fixes": [
-        "denser, shorter fur cards on the body; snow as fine scattered flecks with sparkle, not blobs"
+        "remove the pale diagonal streak on the shoulder",
+        "short fur cards on the face and ears"
       ]
     },
     "detail": {
@@ -32,29 +33,30 @@
       ]
     },
     "wear": {
-      "score": 5,
-      "reason": "Snow dusting on the back (as asked) but it reads as white blotches; muddy paws.",
+      "score": 6,
+      "reason": "Snow now lies as fine flecks along the topline and the paws are muddy; no damp fur on the legs.",
       "fixes": [
-        "snow as fine flecks concentrated on the topline; damp fur on the legs"
+        "damp clumped fur on the lower legs",
+        "snow caught in the brush and ear tips"
       ]
     },
     "lod": {
-      "score": 7,
-      "reason": "FAR LOD2 legs are black now and the outline holds; the coat is faceted.",
+      "score": 8,
+      "reason": "FAR LOD2 holds the outline, black legs and a smooth even coat colour; the switch is quiet.",
       "fixes": [
-        "smooth the LOD2 coat colour per face"
+        "keep a hint of the white tail tip at LOD2"
       ]
     },
     "technical": {
-      "score": 7,
-      "reason": "QA clean; 96k / 28k / 3k triangles over 4 draws; LOD0 heavy for a 1 m animal.",
+      "score": 8,
+      "reason": "QA clean; 84k / 28k / 4k triangles over 4 draws: LOD0 trimmed to the fur-card budget.",
       "fixes": [
-        "cap LOD0 near 80k by coarsening the fur-card density"
+        "drop LOD1 toward 20k by thinning fur cards on the belly"
       ]
     }
   },
   "renders": {
-    "hero.png": "635baf5eb94860d5c495476b1c0fe958bcd79ac19f4902753c5d16684e833c0a",
-    "sheet.png": "384f3b5edf730c30fc691e6f6d1679787b3fd46b44ca869927f1addddd72371d"
+    "hero.png": "49a7e3fde9a1c147fd62d080a0cef6507701109d449a6e337fc9c1cb55c163a1",
+    "sheet.png": "6211e5c12481e4df4b460f92731677447c3079e49848ef54ba03ea009044d962"
   }
 }

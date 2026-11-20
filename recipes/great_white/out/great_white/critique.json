@@ -20,18 +20,18 @@
     },
     "materials": {
       "score": 7,
-      "reason": "Countershaded grey over white with a ragged boundary, speckled skin and pores read as shark skin; the eye is a plain black ball and the skin is one uniform satin.",
+      "reason": "Countershaded grey over white with a ragged boundary, speckled mottled skin and pores read as shark skin in the closer hero.png, and the eye now has a dark iris and highlight; the skin is still one uniform satin and the white flank shows between the gill slits as pale bars.",
       "fixes": [
-        "an eyelid rim and pupil ring on the eye",
-        "slight roughness variation over the flank (denticle micro-normal)"
+        "slight roughness variation over the flank (denticle micro-normal)",
+        "keep the gill-slit region grey down to the slit ends so the white does not read as ribs"
       ]
     },
     "detail": {
       "score": 7,
-      "reason": "Gill slits, tooth row, snout pores, scars, second dorsal and pelvic fins at hero distance; fin edges are not darkened and there are no caudal keels.",
+      "reason": "Gill slits, tooth row, snout pores, scratch scars and a pale lateral line now show in hero.png; fin edges are not darkened and there are no caudal keels.",
       "fixes": [
         "dark pectoral tips and trailing edges",
-        "caudal keels and a lateral line"
+        "caudal keels at the tail root"
       ]
     },
     "wear": {
@@ -57,7 +57,7 @@
     }
   },
   "renders": {
-    "hero.png": "8ffbe56ab68ee60ecb0b65ae5dbd8d209a70865a56567bd32f2453e36aac0365",
-    "sheet.png": "77ad5ab03d75e299fac3fa26577117c255c7fa67f2c3d992c2c3a498ae11d67c"
+    "hero.png": "7f27cb384b64774d5445a8d28f112d780e254e2498809d59b9e7144a14cdf4f3",
+    "sheet.png": "cd469fd9d0e599c481ca313256e2d5f564d030e3322763d42a435675be02b741"
   }
 }

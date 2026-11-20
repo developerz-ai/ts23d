@@ -6,6 +6,7 @@
 // hooves, beak, lips) keep it.
 
 import type { Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import { type Bones, headToWorld } from './creature-bones.ts';
 import { arcT, mixRgb, smoothstep, v3 } from './creature-curve.ts';
 import { type BodyCoord, marks } from './creature-pattern.ts';
@@ -108,7 +109,7 @@ export function locator(b: Bones): (p: Vec3) => BodyCoord & { tail: number } {
     for (const m of b.trunk) {
       // In the mass's own pitch (a ribcage tilted sternum-down), then back to world heights.
       const a = ((m.rotate?.[1] ?? 0) * Math.PI) / 180;
-      const [c, sn] = [Math.cos(a), Math.sin(a)];
+      const [c, sn] = [dmath.cos(a), dmath.sin(a)];
       const lx = c * (p[0] - m.at[0]) - sn * (p[2] - m.at[2]);
       const u = lx / m.r[0];
       if (Math.abs(u) >= 1) continue;
@@ -212,7 +213,7 @@ export function headPaint(b: Bones, s: CreatureSpec): Paint {
     // Cheeks and throat pale (countershading continues under the jaw).
     col = mixRgb(col, c.belly, smoothstep(-0.35, -0.8, v));
     // Brow marks over each eye: the face reads from across a room.
-    const brow = Math.hypot(
+    const brow = dmath.hypot(
       p[0] - lc * 0.8,
       (Math.abs(p[1]) - h.width * 0.26) * 1.4,
       p[2] - h.height * 0.36,

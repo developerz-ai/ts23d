@@ -4,7 +4,7 @@
 // A neck swings sideways only as far as the measured gap to its neighbours allows, and coils and
 // lunges in its own vertical plane, so necks never pass through each other (QA `chain-cross`).
 
-import { type Clip, createRng, type Rng, Ts23dError } from '../core/index.ts';
+import { type Clip, createRng, dmath, type Rng, Ts23dError } from '../core/index.ts';
 import { lockFeet } from './body-plan-footlock.ts';
 import { coilOf, leanOf, limbRadii, strikeSize, swingRoom } from './body-plan-neck.ts';
 import type { BodyPlan, PlanChain } from './body-plan-types.ts';
@@ -84,16 +84,16 @@ function neckPaths(necks: readonly PlanChain[], room: readonly number[], seed: n
     const attention = (t: number): number => {
       const u = t / T - slot;
       const x = (u - Math.floor(u)) / ATTENTION_WIDTH;
-      return x < 1 ? Math.sin(Math.PI * x) ** 2 : 0;
+      return x < 1 ? dmath.pow(dmath.sin(Math.PI * x), 2) : 0;
     };
     const A = room[i] ?? 0;
     return {
       yaw: (t) =>
         A *
-        (0.45 * Math.sin((TAU * m * t) / T + p1) +
-          0.25 * Math.sin((TAU * (2 * m + 1) * t) / T + p2) +
+        (0.45 * dmath.sin((TAU * m * t) / T + p1) +
+          0.25 * dmath.sin((TAU * (2 * m + 1) * t) / T + p2) +
           0.3 * side * attention(t)),
-      pitch: (t) => PITCH_SWING * Math.sin((TAU * (m + 1) * t) / T + p3),
+      pitch: (t) => PITCH_SWING * dmath.sin((TAU * (m + 1) * t) / T + p3),
     };
   });
 }
@@ -119,7 +119,7 @@ function jawDrives(
   return (o.jaws ?? []).map((id, i) => {
     const chain = chainById(plan, id);
     const phase = 1 + i * 1.7;
-    const idle = (t: number): number => JAW_IDLE * Math.sin((TAU * t) / IDLE_SECONDS + phase);
+    const idle = (t: number): number => JAW_IDLE * dmath.sin((TAU * t) / IDLE_SECONDS + phase);
     if (i !== k || !strike) return { chain, field: jawField(idle) };
     return {
       chain,
@@ -178,7 +178,7 @@ function strikeClip(
   );
   const coil = coilOf(neck, size);
   const [a, b] = [tipOf(plan, drawnPose(size), tip), tipOf(plan, lungePose(size), tip)];
-  const reach = Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+  const reach = dmath.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
   // Peak acceleration equals the mean [P16] measured, below its 279 m/s² peak; larger animals are
   // probably slower still, which no opened source quantifies (doc section 3).
   const stroke = Math.sqrt((MIN_JERK_ACCEL * reach) / STRIKE_ACCEL);

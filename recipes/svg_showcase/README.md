@@ -8,11 +8,19 @@ two lightening holes: even-odd holes + chamfer), a turned **amphora** (half prof
 cubic/quadratic curves, spun by `latheSvg`), a **creature head** blocked out from a front and a side
 and a top silhouette (`visualHull`) and refined with ordinary sculpt edits (eyes, brow, forehead
 wrinkles, notched ears, nostrils, mouth, tusks) on a neck stump and a turned oak stand, and a
-bevelled **star emblem** (polygon) on the plinth front. The gear's bore has a keyway.
+bevelled **star emblem** (polygon) on the plinth front. The gear's bore has a keyway 4 cm wide and
+2.5 cm deep.
 
-Materials and wear: the gear is galvanised steel (metal, machined roughness) with oil darkening its
-tooth flanks and bore; the amphora is matte clay (concrete strip, true-scale UVs) with throw rings
-toned into it, dust on the shoulder, a chipped lip and grime at the foot; the head is pored skin.
+Materials and wear: the gear is machined steel (`aluminium` strip, bright and cool, face-weighted
+normals so its flat faces stay flat) with oil darkening its tooth edges; the amphora is thrown clay
+(`clay.ts`: a recipe strip with 1.4 cm throw-ring relief and grit, true-scale UVs) with dust on the
+shoulder, a chipped lip and grime at the foot; the head is pored skin; the plinth is lacquered
+walnut (a veneer quad keeping the oak strip's grain off its pale band edges) with a maple stringing
+inlay round all four sides of its top, dust settled along its back edge and ends in four fading
+steps (LOD0/1) and the front arris rubbed through
+to pale wood in six worn stretches (LOD0). At LOD2 the head leaves out the features smaller than
+its 3.4 cm cell (wrinkles, ear notches, pupils, nostrils, mouth, tusks), which only scattered stray
+colour over its coarse facets.
 
 ## Specs
 Design spec, not a real object: sizes chosen to read as one display piece, roughly desk-diorama scale.
@@ -40,6 +48,6 @@ to see the input next to `out/svg_showcase/sheet.png`.
 - Silhouette hulls are intersections of extruded views, so they read boxy from 3/4 until sculpt
   edits round them. The recipe smooth-intersects a skull ellipsoid (trimming the ears), then adds
   the ears back from the same hull clipped to an ear box: the sculptor's "block out, then refine".
-- Most triangles go to the sculpted head (0.009 / 0.016 / 0.034 m cells: ≈ 16k / 4.9k / 1k).
+- Most triangles go to the sculpted head (0.0095 / 0.016 / 0.034 m cells: ≈ 14.4k / 4.8k / 1k).
 
-Budget why: a showcase board of four drawn objects, one of them a sculpted creature head; ≈ 21k / 6.6k / 1.7k (was 39k / 10k / 1.9k).
+Budget why: a showcase board of four drawn objects, one of them a sculpted creature head; ≈ 19.1k / 6.5k / 1.7k (was 39k / 10k / 1.9k).

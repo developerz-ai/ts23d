@@ -223,7 +223,7 @@ export function laplacianVariance(
       sum += l;
       sq += l * l;
     }
-  return n > 0 ? sq / n - (sum / n) ** 2 : 0;
+  return n > 0 ? sq / n - (sum / n) * (sum / n) : 0;
 }
 
 export function checkInputImage(

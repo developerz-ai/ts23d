@@ -8,7 +8,7 @@
 // Each wing is a group pivoted at the shoulder joint (sway = a slow flap) holding `_arm` (bones)
 // and `_membrane`; the right wing mirrors the left.
 
-import { type Mesh, merge, place, type SculptEdit, type Vec3 } from '@developerz.ai/ts23d';
+import { dmath, type Mesh, merge, place, type SculptEdit, type Vec3 } from '@developerz.ai/ts23d';
 import { mixRgb, resample, smoothstep, spline, v3 } from '../_lib/creature/curve.ts';
 import { clawHorn, type HornOptions, horn, hornTube } from '../_lib/creature/horn.ts';
 import { blob, skinTube } from '../_lib/creature/lowpoly.ts';
@@ -89,7 +89,9 @@ function fingerMesh(k: number, lod: 0 | 1 | 2): Mesh {
   const r0 = 0.062 - k * 0.006;
   const knuckle = 0.45;
   const r = (t: number): number =>
-    r0 * (1 - 0.62 * t) + 0.012 + (lod < 2 ? 0.018 * Math.exp(-(((t - knuckle) / 0.05) ** 2)) : 0);
+    r0 * (1 - 0.62 * t) +
+    0.012 +
+    (lod < 2 ? 0.018 * dmath.exp(-dmath.pow((t - knuckle) / 0.05, 2)) : 0);
   const sides = [8, 6, 3][lod] ?? 3;
   const out: Mesh[] = [skinTube(tube(path, r), { sides, color: C.back })];
   if (k === 0 && lod < 2) {
@@ -120,7 +122,7 @@ function fingerMesh(k: number, lod: 0 | 1 | 2): Mesh {
 
 /** Membrane colour: hot orange where it is thin (mid-panel), darker at bones and rim, veins. */
 function skinColour(u: number, v: number, veins: boolean): Vec3 {
-  const centre = Math.sin(Math.PI * u) * Math.sin(Math.PI * Math.min(1, v));
+  const centre = dmath.sin(Math.PI * u) * dmath.sin(Math.PI * Math.min(1, v));
   let c = mixRgb(C.membraneEdge, C.membrane, smoothstep(0.05, 0.6, centre));
   c = mixRgb(c, C.membraneEdge, smoothstep(0.9, 1, v) * 0.8);
   if (veins) {
@@ -176,7 +178,7 @@ function membranes(lod: 0 | 1 | 2): Mesh[] {
   return out;
 }
 
-export const WING_RES = [0.038] as const;
+export const WING_RES = [0.042] as const;
 
 /** The arm: sculpted near (muscle, knuckles, thumb claw), a tube + knuckle blobs far. */
 function armMesh(lod: 0 | 1 | 2): Mesh {

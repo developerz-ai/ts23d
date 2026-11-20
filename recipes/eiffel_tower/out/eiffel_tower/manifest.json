@@ -22,17 +22,17 @@
   "triangles": [
     143696,
     19580,
-    764
+    792
   ],
   "trianglesCompiled": [
     143776,
     19628,
-    764
+    792
   ],
   "drawCalls": [
     1,
     1,
-    1
+    2
   ],
   "pivots": [
     {
@@ -54,37 +54,37 @@
     {
       "label": "1st floor deck height",
       "spec": 57.63,
-      "measured": 57.630001068115234,
+      "measured": 57.630001,
       "source": "structurae / plate PL. I"
     },
     {
       "label": "2nd floor deck height",
       "spec": 115.73,
-      "measured": 115.7300033569336,
+      "measured": 115.730003,
       "source": "structurae / plate PL. I"
     },
     {
       "label": "3rd floor deck height",
       "spec": 276.13,
-      "measured": 276.1300048828125,
+      "measured": 276.130005,
       "source": "structurae"
     },
     {
       "label": "base square, outside of the legs",
       "spec": 124.9,
-      "measured": 124.79923248291016,
+      "measured": 124.799232,
       "source": "fr.wikipedia (124,90 m)"
     },
     {
       "label": "leg centres at the ground",
       "spec": 99.57,
-      "measured": 99.56500244140625,
+      "measured": 99.565002,
       "source": "plate PL. I: (124.90 + 74.24) / 2"
     },
     {
       "label": "1st floor outer side",
       "spec": 70.69,
-      "measured": 70.69000244140625,
+      "measured": 70.690002,
       "source": "fr.wikipedia"
     }
   ],

@@ -1,12 +1,20 @@
 // Thirty years on the road, in vertex colour and a few thin decals. The car paint is a paint slot
 // (a vertex stores colour ÷ slot colour), so paint only ever loses value, never gains it: the
-// whole car is faded a step below the chip, and what reads as "fresh" (a replaced group of
-// boards) is simply back at the chip. Road grime rises from the rails (heaviest on the sill and
+// whole car is faded well below the chip (two thirds of it), and what reads as "fresh" (a
+// replaced group of boards) is simply back at the chip. Road grime rises from the rails (heaviest on the sill and
 // the lowest metre of the boards), board groups differ (one sun-bleached, one renewed), the steel
 // rusts where water sits (sill, post feet, roof seams), running gear carries brown rail dust, and
 // rust runs down from the door guide, the side plate and the rivets as thin slivers.
 
-import { box, type Mesh, merge, type Rng, type Vec3, valueNoise } from '@developerz.ai/ts23d';
+import {
+  box,
+  dmath,
+  type Mesh,
+  merge,
+  type Rng,
+  type Vec3,
+  valueNoise,
+} from '@developerz.ai/ts23d';
 
 const GRIME: Vec3 = [0.05, 0.04, 0.03];
 const RUST: Vec3 = [0.15, 0.052, 0.022];
@@ -53,7 +61,8 @@ export function wearOf(rng: Rng, paint: Vec3, half: number): Wear {
     let t = tones.get(key);
     if (t === undefined) {
       const roll = pick.next();
-      t = roll < 0.1 ? 1.16 : roll < 0.22 ? 0.82 : pick.range(0.94, 1.04);
+      // Renewed boards come back to the chip, a bleached group sits between, a soaked one under.
+      t = roll < 0.14 ? 1.5 : roll < 0.32 ? 0.72 : pick.range(0.86, 1.12);
       tones.set(key, t);
     }
     return t;
@@ -91,20 +100,20 @@ export function wearOf(rng: Rng, paint: Vec3, half: number): Wear {
       each(m, [0, 0, 0], (p, c, n, tri) => {
         const b = n01(blotch, p);
         // Faded a step under the chip everywhere; board groups step up or down from there.
-        let k = 0.76 + 0.1 * b;
+        let k = 0.64 + 0.12 * b;
         if (o.bands && Math.abs(n[1]) > 0.7)
           k *= toneOf(Math.floor((tri[0] + half) / BAND), Math.sign(tri[1]));
         let out: Vec3 = [c[0] * Math.min(1, k), c[1] * Math.min(1, k), c[2] * Math.min(1, k)];
         // Grime from the rails: nearly opaque on the sill, ragged edge about a metre up the boards.
         const z0 = o.ground ?? 1.0;
-        const g = 1 - smooth(z0, z0 + 0.9 + 0.7 * b, p[2]);
-        out = mix(out, grime, 0.88 * g ** 1.15 * (0.75 + 0.25 * n01(fine, p)));
+        const g = 1 - smooth(z0, z0 + 1.15 + 0.9 * b, p[2]);
+        out = mix(out, grime, 0.92 * dmath.pow(g, 0.9) * (0.75 + 0.25 * n01(fine, p)));
         // Rust where water sits on the steel: post feet and the sill line.
         const wet = 1 - smooth(z0 + 0.05, z0 + 0.45, p[2]);
         out = mix(out, rust, 0.45 * wet * smooth(0.45, 0.7, n01(fine, [p[0], p[1], p[2] * 0.3])));
-        // Rain wash under the side plate: faint dark runs down the top half-metre.
-        const run = smooth(0.62, 0.85, n01(fine, [p[0] * 1.3, 0, 0]));
-        out = mix(out, grime, 0.3 * run * smooth(3.0, 3.75, p[2]));
+        // Rain wash under the side plate: dark runs half a metre wide, down to door-handle height.
+        const run = smooth(0.48, 0.72, n01(fine, [p[0] * 0.4, 0, 0]));
+        out = mix(out, grime, 0.6 * run * smooth(2.1, 3.75, p[2]));
         return under(out, c);
       }),
     roof: (m) =>
@@ -133,7 +142,7 @@ export interface Run {
   readonly floor: number;
   /** Longest run, metres. */
   readonly reach: number;
-  /** Widest the stain may be (the face it runs down: a 9 cm post); default 10 cm. */
+  /** Widest the stain may be (the face it runs down: a 9 cm post); default 16 cm. */
   readonly width?: number;
 }
 
@@ -142,7 +151,7 @@ export function rustRuns(rng: Rng, from: readonly Run[], tint: Vec3, drip: boole
   const out: Mesh[] = [];
   for (const src of from) {
     const len = Math.min(rng.range(0.45, 1) * src.reach, src.at[2] - src.floor);
-    const w = Math.min(rng.range(0.045, 0.1), src.width ?? 0.1);
+    const w = Math.min(rng.range(0.07, 0.16), src.width ?? 0.16);
     const shift = rng.range(-0.01, 0.01);
     if (len < 0.08) continue;
     const [x, y, z] = src.at;

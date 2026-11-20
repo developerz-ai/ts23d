@@ -1,13 +1,14 @@
-// The GLB container written back (header + space-padded JSON + zero-padded BIN), and a tiny
+// The GLB container written back (header + space-padded JSON at core's one rounding, `gltfText`,
+// + zero-padded BIN), and a tiny
 // plain-mesh GLB writer for import fixtures and tests: one node per mesh with optional TRS, a
 // baseColor image, and nothing else. The asset exporter lives in /export; this is the import
 // side's own round-trip tool, so /neural (tier 2) needs nothing above it.
 
-import type { Mesh } from '../core/index.ts';
+import { gltfText, type Mesh } from '../core/index.ts';
 import type { GltfJson } from './glb-read.ts';
 
 export function packGlb(json: GltfJson, bin: Uint8Array): Uint8Array {
-  let j = new TextEncoder().encode(JSON.stringify(json));
+  let j = new TextEncoder().encode(gltfText(json));
   const pad = (4 - (j.byteLength % 4)) % 4;
   if (pad) {
     const p = new Uint8Array(j.byteLength + pad).fill(0x20);

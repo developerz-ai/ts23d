@@ -6,7 +6,7 @@
 // boot and the handbrake.
 
 import type { Lod, Mesh, Vec3 } from '@developerz.ai/ts23d';
-import { lathe, loft, merge, sweep } from '@developerz.ai/ts23d';
+import { dmath, lathe, loft, merge, sweep } from '@developerz.ai/ts23d';
 import { emblem } from '../body/details.ts';
 import { X_COWL, X_FIREWALL } from '../dims.ts';
 import { C } from '../lib/colors.ts';
@@ -109,7 +109,7 @@ function gauge(lod: Lod, r: number): { body: Mesh; face: Mesh } {
       ? [
           beamBetween(
             [0.004, 0, 0],
-            [0.004, r * 0.75 * Math.cos(2.2), r * 0.75 * Math.sin(2.2)],
+            [0.004, r * 0.75 * dmath.cos(2.2), r * 0.75 * dmath.sin(2.2)],
             0.003,
             0.002,
             C.lensRed,
@@ -234,7 +234,7 @@ export function dashboard(lod: Lod): DashMeshes {
     }),
   );
   const spoke = (a: number): void => {
-    const end = add(WHEEL_C, add(mul(e1, r * Math.cos(a)), mul(e2, r * Math.sin(a))));
+    const end = add(WHEEL_C, add(mul(e1, r * dmath.cos(a)), mul(e2, r * dmath.sin(a))));
     wheel.push(
       beamBetween(add(WHEEL_C, mul(WHEEL_AXIS, -0.02)), end, 0.04, 0.012, C.natural, 'aluminium'),
     );

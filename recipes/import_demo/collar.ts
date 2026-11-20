@@ -5,7 +5,7 @@
 // the top of the roll rubbed pale, the underside and the groove against the neck dark.
 // Built directly (rings × sides quads, closed), segment counts per LOD.
 
-import { type Mesh, MeshBuilder, type Vec3 } from '@developerz.ai/ts23d';
+import { dmath, type Mesh, MeshBuilder, type Vec3 } from '@developerz.ai/ts23d';
 
 export interface CollarSpec {
   readonly centre: Vec3;
@@ -31,8 +31,8 @@ export function collarMesh(c: CollarSpec, rings: number, sides: number): Mesh {
     const ring = (t: number): [number, number] => {
       const r = c.outline ? c.outline(t) + c.tube : 0;
       return c.outline
-        ? [r * Math.cos(t), r * Math.sin(t)]
-        : [(c.rx + c.tube) * Math.cos(t), (c.ry + c.tube) * Math.sin(t)];
+        ? [r * dmath.cos(t), r * dmath.sin(t)]
+        : [(c.rx + c.tube) * dmath.cos(t), (c.ry + c.tube) * dmath.sin(t)];
     };
     const [ex, ey] = ring(a);
     const x = c.centre[0] + ex;
@@ -43,7 +43,7 @@ export function collarMesh(c: CollarSpec, rings: number, sides: number): Mesh {
     const [bx, by] = ring(a + 0.02);
     let ox = by - ay;
     let oy = -(bx - ax);
-    const l = Math.hypot(ox, oy) || 1;
+    const l = dmath.hypot(ox, oy) || 1;
     ox /= l;
     oy /= l;
     const up: Vec3 = [0.287, 0, 0.958];
@@ -51,13 +51,13 @@ export function collarMesh(c: CollarSpec, rings: number, sides: number): Mesh {
     for (let j = 0; j < sides; j++) {
       const t = (j / sides) * Math.PI * 2;
       const n: Vec3 = [
-        out[0] * Math.cos(t) + up[0] * Math.sin(t),
-        out[1] * Math.cos(t) + up[1] * Math.sin(t),
-        out[2] * Math.cos(t) + up[2] * Math.sin(t),
+        out[0] * dmath.cos(t) + up[0] * dmath.sin(t),
+        out[1] * dmath.cos(t) + up[1] * dmath.sin(t),
+        out[2] * dmath.cos(t) + up[2] * dmath.sin(t),
       ];
       const p: Vec3 = [x + n[0] * c.tube, y + n[1] * c.tube, z + n[2] * c.tube];
       // Rubbed pale where hands and cloth reach it (top, outside), dark where they do not.
-      const open = Math.max(0, Math.sin(t)) * 0.6 + Math.max(0, Math.cos(t)) * 0.4;
+      const open = Math.max(0, dmath.sin(t)) * 0.6 + Math.max(0, dmath.cos(t)) * 0.4;
       const k = 0.62 + 0.5 * open + 0.3 * (c.scuff ? c.scuff(p) : 0);
       id.push(
         b.vertex({

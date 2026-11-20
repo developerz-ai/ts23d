@@ -5,6 +5,7 @@
 // (../bust/skin.ts) adds cavity darkening, warm tops and the mottle on top of these colours.
 
 import type { SculptEdit, Vec3 } from '@developerz.ai/ts23d';
+import { dmath } from '@developerz.ai/ts23d';
 import type { SkullLandmarks } from './skull.ts';
 
 export interface Zones {
@@ -115,7 +116,12 @@ export function zoneEdits(k: SkullLandmarks, H: number, z: Zones): SculptEdit[] 
     const R = k.eyeR * 1.1;
     for (let i = 0; i <= 6; i++) {
       const a = (-0.55 + (1.1 * i) / 6) * 1.2;
-      const at: Vec3 = add(k.eye, R * Math.cos(a) * 0.86, R * Math.sin(a), R * 0.48 * Math.cos(a));
+      const at: Vec3 = add(
+        k.eye,
+        R * dmath.cos(a) * 0.86,
+        R * dmath.sin(a),
+        R * 0.48 * dmath.cos(a),
+      );
       out.push(paint(at, [k.eyeR * 0.12, k.eyeR * 0.22, k.eyeR * 0.08], z.lashes, k.eyeR * 0.06));
     }
   }
@@ -128,7 +134,7 @@ export function zoneEdits(k: SkullLandmarks, H: number, z: Zones): SculptEdit[] 
       const at: Vec3 = [
         head[0] + (tail[0] - head[0]) * t,
         head[1] + (tail[1] - head[1]) * t,
-        head[2] + (tail[2] - head[2]) * t + Math.sin(t * Math.PI * 0.8) * 0.012 * H,
+        head[2] + (tail[2] - head[2]) * t + dmath.sin(t * Math.PI * 0.8) * 0.012 * H,
       ];
       out.push(paint(at, [0.05 * H, 0.016 * H, (0.014 - 0.007 * t) * H], z.brows, 0.01 * H));
     }

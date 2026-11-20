@@ -7,6 +7,7 @@ import {
   beam,
   box,
   type Check,
+  dmath,
   hex,
   inspect,
   type LatheOptions,
@@ -50,8 +51,8 @@ export const BLUE = hex('#2a44b8');
 export const RED = hex('#c92a22');
 /** Black engine enamel: frames, saddle, firebox, lead truck. */
 export const BLACK = hex('#2b2b2e');
-/** Russia iron jacket: planished blue-grey sheet iron, a dark metal with a soft sheen. */
-export const RUSSIA = hex('#6a717c');
+/** Russia iron jacket: planished blue-grey sheet iron under lacquer (the `enamel` clear coat). */
+export const RUSSIA = hex('#5d6a7c');
 /** Smokebox and stack: graphite-black cast/sheet iron. */
 export const GRAPHITE = hex('#5a5a5c');
 export const GREEN = hex('#1f6a3a');
@@ -72,7 +73,7 @@ export const F = {
   redWood: { color: RED, strip: 'wood_painted' },
   black: { color: BLACK, strip: 'steel_painted' },
   greenWood: { color: GREEN, strip: 'wood_painted' },
-  russia: { color: RUSSIA, strip: 'chrome' },
+  russia: { color: RUSSIA, strip: 'steel_painted' },
   smokebox: { color: GRAPHITE, strip: 'iron_cast' },
   castIron: { color: NATURAL, strip: 'iron_cast' },
   rust: { color: NATURAL, strip: 'iron_rust' },
@@ -184,9 +185,9 @@ export function jacketRadius(L: Layout, x: number): number {
 export function facetDepth(r: number, segments: number, u: number): number {
   const step = (Math.PI * 2) / segments;
   const a = Math.abs(u);
-  const k = Math.min(Math.floor(Math.asin(Math.min(1, a / r)) / step), segments / 4 - 1);
-  const [x0, y0] = [r * Math.sin(k * step), r * Math.cos(k * step)];
-  const [x1, y1] = [r * Math.sin((k + 1) * step), r * Math.cos((k + 1) * step)];
+  const k = Math.min(Math.floor(dmath.asin(Math.min(1, a / r)) / step), segments / 4 - 1);
+  const [x0, y0] = [r * dmath.sin(k * step), r * dmath.cos(k * step)];
+  const [x1, y1] = [r * dmath.sin((k + 1) * step), r * dmath.cos((k + 1) * step)];
   return y0 + ((y1 - y0) * (a - x0)) / (x1 - x0);
 }
 
@@ -194,7 +195,7 @@ export function facetDepth(r: number, segments: number, u: number): number {
 export function facetRadius(r: number, segments: number, a: number): number {
   const step = (Math.PI * 2) / segments;
   const off = (((a % step) + step) % step) - step / 2;
-  return (r * Math.cos(step / 2)) / Math.cos(off);
+  return (r * dmath.cos(step / 2)) / dmath.cos(off);
 }
 
 // ---------------------------------------------------------------- builders

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'bun:test';
 import type { Bone } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import { creaturePlan } from './creature.ts';
 import { rigBones } from './creature-limits.ts';
 import { FIXTURE_WOLF, riggerBones } from './model-fixtures.ts';
@@ -134,7 +135,7 @@ describe('mapJoints', () => {
   it('with `nose`, a rig whose trunk ends at the snout gets its head bone from the skull base to the nose', () => {
     const was = plan.find((b) => b.name === 'head');
     const tip = was?.tail ?? [0, 0, 0];
-    const long = Math.hypot(...[0, 1, 2].map((k) => (was?.tail[k] ?? 0) - (was?.head[k] ?? 0)));
+    const long = dmath.norm([0, 1, 2].map((k) => (was?.tail[k] ?? 0) - (was?.head[k] ?? 0)));
     // The rigger's head joint moved onto the traced nose tip: its trunk now ends at the snout.
     const rig = riggerBones().map((b) => (b.name === 'bone_6' ? { ...b, head: tip } : b));
     const at = (bones: readonly Bone[], n: string): Bone | undefined =>
@@ -150,7 +151,7 @@ describe('mapJoints', () => {
       mapJoints(plan, rig, () => true, '', undefined, true),
       'head',
     );
-    const back = Math.hypot(...[0, 1, 2].map((k) => (tip[k] ?? 0) - (head?.head[k] ?? 0)));
+    const back = dmath.norm([0, 1, 2].map((k) => (tip[k] ?? 0) - (head?.head[k] ?? 0)));
     expect(back).toBeGreaterThanOrEqual(long * 0.5);
     expect(head?.tail).toEqual(tip);
     // And where the mesh ends before the traced tip, the bone ends at the skin.

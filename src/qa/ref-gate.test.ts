@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { compile, defineAsset, encodePng, Ts23dError } from '../core/index.ts';
+import { compile, defineAsset, dmath, encodePng, Ts23dError } from '../core/index.ts';
 import { box } from '../primitives/index.ts';
 import { type Fingerprint, fingerprint } from './ref-fingerprint.ts';
 import {
@@ -29,7 +29,8 @@ const hash = (x: number, y: number): number => {
   const h = Math.imul(((x * 374761393 + y * 668265263) >>> 0) ^ 0x5bd1e995, 1274126177) >>> 0;
   return (h ^ (h >>> 15)) & 255;
 };
-const ellipse = (x: number, y: number): boolean => ((x - 64) / 60) ** 2 + ((y - 64) / 30) ** 2 <= 1;
+const ellipse = (x: number, y: number): boolean =>
+  dmath.pow((x - 64) / 60, 2) + dmath.pow((y - 64) / 30, 2) <= 1;
 
 const viewOf = (f: Fingerprint): RefView => ({
   mask: encodeRefMask(f.mask128),

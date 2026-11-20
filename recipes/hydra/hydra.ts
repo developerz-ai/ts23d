@@ -36,7 +36,7 @@ export const hydra = defineBodyPlan({
   strip: SCALES,
   paint: { skin: [1, 1, 1] },
   // LOD0 spends its triangles on heads and feet; the scales live in the strip, not the rings.
-  budget: { triangles: [215000, 46000, 7500] },
+  budget: { triangles: [165000, 46000, 7500] },
   creases: [...BODY_CREASES, ...Array.from({ length: NECKS }, (_, k) => headCreases(k)).flat()],
   clips: hydraClips(HYDRA_PLAN, {
     necks: NECK_IDS,

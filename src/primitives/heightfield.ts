@@ -4,8 +4,8 @@
 // the edges to a base height: a solid map tile / diorama block that stands on z = 0.
 //   triangles = 2 · cx · cy + (skirt ? 4 · (cx + cy) : 0)
 
-import { type Mesh, MeshBuilder, normalize, type Vec3 } from '../core/index.ts';
-import { type StripId, stripRect } from '../material/index.ts';
+import { dmath, type Mesh, MeshBuilder, normalize, type Vec3 } from '../core/index.ts';
+import { mappedOnto, type StripId, stripRect } from '../material/index.ts';
 import { count, invalid } from './check.ts';
 import { mirroredV, stripVMetres } from './strip-uv.ts';
 
@@ -68,7 +68,7 @@ export function heightfield(o: HeightfieldOptions): Mesh {
   for (let j = 0; j < ny; j++)
     for (let i = 0; i < nx; i++) b.quad(at(i, j), at(i + 1, j), at(i + 1, j + 1), at(i, j + 1));
   if (o.skirt !== undefined) skirt(b, o, rect);
-  return b.build();
+  return mappedOnto(b.build(), o.strip ?? 'plain');
 }
 
 /** Four walls from the edge vertices down to `o.skirt`, each quad CCW seen from outside. */
@@ -97,7 +97,7 @@ function skirt(b: MeshBuilder, o: HeightfieldOptions, rect: ReturnType<typeof st
     });
   let run = 0;
   for (const [sx, sy, dx, dy, n, nrm] of edges) {
-    const step = Math.hypot(dx, dy);
+    const step = dmath.hypot(dx, dy);
     for (let k = 0; k < n; k++) {
       const [ax, ay, bx, by] = [sx + dx * k, sy + dy * k, sx + dx * (k + 1), sy + dy * (k + 1)];
       const az = o.height(ax, ay);

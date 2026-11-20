@@ -8,6 +8,7 @@
 // lowering, blur or pinning, the mesh's edge is the eroded field itself.
 
 import {
+  dmath,
   fbm,
   gradientNoise2,
   hydraulicErosion,
@@ -62,7 +63,7 @@ export function fieldHeight(rng: Rng, p: Readonly<FieldParams>): (x: number, y: 
     const y = ty + oy;
     const along = x * vx + y * vy;
     const across = -x * vy + y * vx - 300 * wx(along * 0.7, 0);
-    const d = Math.min(1, (across / 450) ** 2);
+    const d = Math.min(1, dmath.pow(across / 450, 2));
     const alt = p.floor + p.relief * range(x, y) * (0.2 + 0.8 * d) + 60 * hills(x, y) + 120 * d;
     return alt - DATUM;
   };

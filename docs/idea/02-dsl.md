@@ -30,7 +30,7 @@
 | `tiled` | `origin`, `u`, `v`, `strip`, `segments?` | `origin` = one corner; the face spans `u` and `v` from it | Walls, roofs, decks at true texture scale |
 | `cell` | `origin`, `u`, `v`, `cell`, `inset?` | `origin` = bottom-left corner seen from the front; `u` across, `v` up | Windows, doors, clocks, signs; `inset` adds reveals |
 | `lattice` | `from`, `to`, `depth`, `pattern: warren\|pratt\|howe\|x`, `bays`, `chord`, `web`, `section` | `from` → `to` is the base chord, `depth` rises along `up`; `centred: true` makes it the centreline | Bridges, towers, cranes, gantries |
-| `text` | `str`, `origin`, `along`, `up`, `height`, `font`, `depth?`, `align?`, `maxWidth?`, `surface?`; vector fonts also `weight?`, `segments?` (LOD), `cap?`, `kerning?` | `origin` = the baseline under the first letter (`align: 'centre'` / `'right'`: under the middle / end of the line); letters rise along `up` | Name boards, wagon lettering, hull markings, plaques. Fonts: `'5x7'` / `'block'` pixel (Latin + Cyrillic) or smooth Hershey strokes `'sans'`, `'serif'`, `'script'`, `'gothic'` (ASCII); see `recipes/type_specimen` |
+| `text` | `str`, `origin`, `along`, `up`, `height`, `font`, `depth?`, `align?`, `maxWidth?`, `surface?`, `wrap?` (pixel fonts: paint the steps between letter pieces at different `surface` offsets, so lettering wraps a proud post); vector fonts also `weight?`, `segments?` (LOD), `cap?`, `kerning?` | `origin` = the baseline under the first letter (`align: 'centre'` / `'right'`: under the middle / end of the line); letters rise along `up` | Name boards, wagon lettering, hull markings, plaques. Fonts: `'5x7'` / `'block'` pixel (Latin + Cyrillic) or smooth Hershey strokes `'sans'`, `'serif'`, `'script'`, `'gothic'` (ASCII); see `recipes/type_specimen` |
 | `sdf` | `field(p)`, `bounds`, `resolution`, `mesher?`, `symmetry?` | No `at`: `field` and `bounds` are in the part's space | Any signed-distance shape; `sd.*` combinators, `valueNoise` |
 | `sculpt` | `edits` (shape, op, blend, color, groups, `{ field, bounds }`), `resolution`, `mirror?` | No `at`: each edit's shape sits where its own options put it | Busts, rocks, asteroids: Dreams-style edit lists |
 | `extrudeSvg` / `latheSvg` | SVG string, `scale` or `size`, `depth`, `bevel?`, `view`, `tolerance?`, `lod?` | The SVG `origin` (default `'bottom'`, `latheSvg` `'bottom-left'` = the axis) lands on `at`; `extrudeSvg` straddles the drawing plane for `front`/`side`, rises from it for `top` | Emblems, gears, brackets, vases from a drawing ([Drawing with SVG](#drawing-with-svg)) |
@@ -415,13 +415,43 @@ Result: six different houses (2–4 floors each) as `house_0` … `house_5`, wit
 
 **Same source + seed + LOD → same bytes.** Breaking any rule below breaks that.
 
-**Scope (as of 2026-11): one runtime.** The guarantee holds on a given runtime and version: the pinned
-Bun (`.bun-version`) is what the gate, the committed `recipes/*/out/` and the releases are built with.
-PNG bytes are the same under Bun, Node and the browser (the library carries its own deflate encoder).
-Geometry is not bit-identical across engines: `Math.sin`, `cos`, `atan2`, `hypot` and friends are
-allowed to differ in the last bit between JavaScriptCore (Bun) and V8 (Node, Chrome), so a GLB built
-under Node has the same shape within float rounding but a different hash. Pin snapshot hashes
-(`snapshotHash`) on the runtime you build with.
+**Scope (as of 2026-11): geometry, painting and renders are free of the platform's maths
+library, so the same source gives the same bytes on any CPU and C library.** `Math.sin`, `cos`,
+`exp`, `pow`, `hypot` and friends come from the C library under the engine. glibc loads an FMA or
+an SSE2 routine depending on the CPU, and newer glibc versions round some results differently, so
+the last bit of `Math.sin(x)` is not fixed even on one Bun version. One last bit moves a float32
+normal, flips a crease or weld test that sits on a threshold (a vertex count), and a path tracer
+turns it into a different pixel (defect D403).
+
+- **`dmath`, never `Math.sin`.** Everything that feeds an asset computes with `dmath`
+  (`import { dmath } from '@developerz.ai/ts23d'`; inside the library `src/core/dmath.ts`): `sin`,
+  `cos`, `tan`, `asin`, `acos`, `atan`, `atan2`, `exp`, `expm1`, `log`, `log1p`, `log2`, `log10`,
+  `pow`, `cbrt`, `sinh`, `cosh`, `tanh`, `hypot` (2 to 4 components) and `norm(v)` (any length),
+  built only from `+ - * /`, `Math.sqrt` and typed-array word access, which IEEE-754 and ECMAScript
+  define exactly. Within 1 ulp of the true value (`log2`, `sinh`, `cosh`, `tanh` 2; `hypot` 1.5); trig is
+  exact to that bound for |x| < 2^20·π/2 and folds larger arguments with `%` (same bits, lower
+  accuracy). `dmath.pow` with a whole exponent up to ±1000 is repeated multiplication (so
+  `pow(x, 3)` is `x * x * x` to the bit and `pow(10, n)` is exact), within 1 ulp otherwise. Write
+  `x * x` for a small whole power and `Math.sqrt(x)` for a square root; `**` is the engine's pow
+  and is refused. `Math.sqrt`, `abs`, `floor`, `round`, `min`, `max`, `sign`, `trunc`, `fround`,
+  `imul` and `Math.PI` are exact everywhere and stay.
+- **What is covered.** Recipes, every library module (`core` … `cli`), the gallery and the
+  examples: GLB bytes (geometry, skins, clips, physics), trim-sheet and texture-set PNGs, WAVs,
+  `manifest.json`, and every render (path-traced and raster hero, contact sheet, icon, thumbnail,
+  blueprint). PNG bytes are the same under Bun, Node and the browser (the library carries its own
+  deflate encoder). Proven by building assets under glibc's FMA routines, its SSE2 routines and a
+  libm whose results are one ulp off: every output file has the same hash
+  (`src/export/libm.test.ts`, `src/render/libm.test.ts`: a build and a render make zero libm calls).
+- **Numbers in text.** Every number in a GLB's JSON chunk is written at 9 significant digits
+  (which carry a float32 exactly), every number in `manifest.json` at 6 decimals: one rounding,
+  `src/core/json-round.ts`, so no file prints the seventeen digits of a float64.
+- **Not recomputed, so not covered.** Model outputs (image-to-3D meshes, Blender steps, generated
+  images under `recipes/*/neural/`) come from a GPU or from Blender, which are not reproducible;
+  the committed, content-hashed file is the input, and everything computed from it is covered.
+- **Across engines.** `dmath` gives the same bits under Bun (JavaScriptCore) and Node (V8); its
+  fingerprints are pinned in `src/core/dmath.test.ts`. The committed `recipes/*/out/` are checked
+  on the pinned Bun (`.bun-version`); pin your own snapshot hashes (`snapshotHash`) on the runtime
+  you build with.
 
 | Rule | Why | Enforced by (in this repo) |
 |---|---|---|
@@ -430,6 +460,8 @@ under Node has the same shape within float rounding but a different hash. Pin sn
 | No `toLocale*String()` | Locale changes bytes; format with `toFixed` | `scripts/determinism.ts` |
 | No `localeCompare`, `Intl.*`, crypto randomness or `process.hrtime` | Locale and entropy | `scripts/determinism.ts` |
 | No `deflateSync` / `gzipSync` from the runtime | The runtime's zlib differs between Bun and Node | `scripts/determinism.ts` |
+| No `Math.sin/cos/tan/asin/acos/atan/atan2/exp/expm1/log/log1p/log2/log10/pow/cbrt/hypot` (nor the hyperbolic ones) and no `**`, in `src/`, `recipes/`, `apps/site/src/` and `examples/`, tests included. Use `dmath`; multiply for a small whole power | libm's last bit differs between CPUs and versions; `**` is the engine's pow | `scripts/determinism.ts` (allowlist `LIBM_ALLOWED`: the tests that measure dmath against `Math.*` or count libm calls); `src/export/libm.test.ts` and `src/render/libm.test.ts` (zero libm calls; same bits with FMA masked); `src/core/dmath.test.ts` (fingerprints) |
+| Numbers written into a GLB's JSON or `manifest.json` go through `roundNumber` | A float64 printed in full is seventeen digits of last-bit noise | `gltfText` in `src/core/json-round.ts` (every GLB writer uses it); `manifestOf`; `src/core/json-round.test.ts` |
 | `ctx.rng.fork('name')` per independent feature | Adding a draw in one part must not shift another | Convention |
 | No env vars, file or network reads in `build` | Ambient state | Convention |
 | `build` is synchronous | No ordering races | The type signature |

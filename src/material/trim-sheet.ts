@@ -6,12 +6,13 @@
 // 18 nature, then 14 rows for project materials (`defineMaterial`; the row comes from the
 // definition, slots.ts). Those 14 rows are per ASSET: each asset's sheet holds the materials that
 // asset maps onto (`sheetFor`), so `stripRect` tells the running compile which custom strip it
-// was asked for (core/material-use.ts). V 0.875–1: 1/16 cells, decals then foliage. Each strip spans its own world metres
+// was asked for (core/material-use.ts; a rectangle kept in a module-level constant tells the
+// build that reads it, D354). V 0.875–1: 1/16 cells, decals then foliage. Each strip spans its own world metres
 // along U (`spanOf`): 4 m for the classic and library strips (≈1 mm texels at 4096², as v2 had at
 // 2048²), longer for isotropic nature strips so their texels are near square. `id~n` is a
 // U-shifted variant of a strip.
 
-import { materialsInUse, noteMaterial, Ts23dError } from '../core/index.ts';
+import { materialOnRow, materialsInUse, noteMaterial, Ts23dError } from '../core/index.ts';
 import { customIndex, customSpan } from './slots.ts';
 import {
   type BuiltinStripId,
@@ -111,7 +112,8 @@ export function spanOf(id: string): number {
 /** Tell the running compile it maps onto custom strip `base` (one material per row per asset). */
 function claim(base: string, row: number): void {
   const held = materialsInUse();
-  if (held && held.length >= CUSTOM_STRIP_SLOTS && !held.some((u) => u.id === base))
+  if (!held) return;
+  if (held.length >= CUSTOM_STRIP_SLOTS && !held.some((u) => u.id === base))
     throw new Ts23dError('T3D_SHEET_FULL', {
       cause: `this asset already maps onto ${CUSTOM_STRIP_SLOTS} project materials (${held.map((u) => u.id).join(', ')}), one per custom strip row of its trim sheet; '${base}' would be one more`,
       fix: 'reuse a built-in strip with a vertex colour, share one material between parts, or split the scene into assets (each asset has its own 14 rows)',
@@ -120,12 +122,34 @@ function claim(base: string, row: number): void {
 }
 
 /**
+ * A rectangle handed out while no compile runs (a module-level constant, D354): reading one of
+ * its coordinates inside a build asks for the strip then, so UVs written by hand from a constant
+ * are recorded by the asset that uses them. Read outside every compile it is plain numbers.
+ */
+function askedWhenRead(rect: UvRect, base: string, row: number): UvRect {
+  const out = {};
+  for (const [key, value] of Object.entries(rect))
+    Object.defineProperty(out, key, {
+      enumerable: true,
+      get: (): number => {
+        if (materialOnRow(row) !== base) claim(base, row);
+        return value;
+      },
+    });
+  return out as UvRect;
+}
+
+/**
  * The UV rectangle of a strip. Inside `build()` this also records that the asset uses the strip
- * (`CompiledAsset.materials`); `rectOf` is the same rectangle without the record.
+ * (`CompiledAsset.materials`); kept in a module-level constant, it records when a build reads
+ * it. `rectOf` is the same rectangle without the record.
  */
 export function stripRect(id: StripId): UvRect {
   const row = stripRow(id);
-  if (row >= STRIPS.length) claim(variantOf(id).base, row - STRIPS.length);
+  if (row < STRIPS.length) return rectOf(id);
+  const [base, custom] = [variantOf(id).base, row - STRIPS.length];
+  if (materialsInUse() === undefined) return askedWhenRead(rectOf(id), base, custom);
+  claim(base, custom);
   return rectOf(id);
 }
 

@@ -4,7 +4,7 @@
 // quantised to 1/255 so they sum to exactly 1 in every engine. `skinPieces` binds each connected
 // piece rigidly with the weights at its root (fur cards, claws): a card rides the skin under it.
 
-import { type Mesh, SKIN_INFLUENCES, Ts23dError, type Vec3 } from '../core/index.ts';
+import { dmath, type Mesh, SKIN_INFLUENCES, Ts23dError, type Vec3 } from '../core/index.ts';
 
 /** The flesh a bone carries, asset frame: a capsule from `a` (radius r1) to `b` (radius r2). */
 export interface WeightBone {
@@ -39,7 +39,7 @@ export function capsuleDistance(p: Vec3, s: WeightBone): number {
   const pz = p[2] - s.a[2];
   const t = l2 > 0 ? Math.min(1, Math.max(0, (px * ux + py * uy + pz * uz) / l2)) : 0;
   const r = (s.r1 ?? 0) + ((s.r2 ?? s.r1 ?? 0) - (s.r1 ?? 0)) * t;
-  return Math.hypot(px - ux * t, py - uy * t, pz - uz * t) - r;
+  return dmath.hypot(px - ux * t, py - uy * t, pz - uz * t) - r;
 }
 
 /**
@@ -93,7 +93,7 @@ export function influencesFrom(
   const pairs: [number, number][] = [];
   only.forEach((j, n) => {
     const x = ((d[n] ?? Infinity) - min) / k;
-    if (x <= 6) pairs.push([j, Math.exp(-x)]);
+    if (x <= 6) pairs.push([j, dmath.exp(-x)]);
   });
   return quantise(pairs);
 }

@@ -94,7 +94,7 @@ describe('glTF-Validator', () => {
   });
 
   it('reports 0 errors and 0 warnings with the trim sheet embedded', async () => {
-    const sheet = paintTrimSheet({ ...DEFAULT_SHEET, size: 512 });
+    const sheet = paintTrimSheet({ ...DEFAULT_SHEET, size: 512 }, []);
     const report = await validate(toGlb(compile(sample), { sheet }));
     const bad = report.issues.messages.filter((m: { severity: number }) => m.severity <= 1);
     expect(bad).toEqual([]);

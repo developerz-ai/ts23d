@@ -3,6 +3,7 @@
 // assets whose manifest lists `variants` (repaints the `ts23d_paint_<slot>` materials, the same
 // colours KHR_materials_variants switches in an engine). Studio mode only.
 
+import { dmath } from '@developerz.ai/ts23d/core';
 import {
   Box3,
   type Camera,
@@ -82,7 +83,7 @@ export class MeasureTools {
     });
     canvas.addEventListener('pointerup', (e) => {
       // A click, not an orbit drag.
-      if (down && Math.hypot(e.clientX - down[0], e.clientY - down[1]) < 5) this.pick(e);
+      if (down && dmath.hypot(e.clientX - down[0], e.clientY - down[1]) < 5) this.pick(e);
       down = null;
     });
   }

@@ -5,6 +5,7 @@
 // boxes (face, paws) mesh finer.
 
 import type { Mesh, Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import type { StripId } from '../material/index.ts';
 import {
   type DetailRegion,
@@ -76,7 +77,7 @@ export function sculptPiece(o: PieceOptions): Piece {
   ];
   // The sdf grid caps at 2^24 points: a big outline (spread wings) coarsens the cell to fit.
   const vol = (box[1][0] - box[0][0]) * (box[1][1] - box[0][1]) * (box[1][2] - box[0][2]);
-  const res = Math.max(o.res, (vol / 14e6) ** (1 / 3));
+  const res = Math.max(o.res, dmath.pow(vol / 14e6, 1 / 3));
   const mesh = sdf({
     field,
     bounds: box,

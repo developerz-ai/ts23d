@@ -3,6 +3,7 @@
 // any 1-Lipschitz field, and mirrored across y = 0 when the edit mirrors.
 
 import type { Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import { invalid } from './check.ts';
 import type { Field } from './sdf-ops.ts';
 
@@ -40,5 +41,5 @@ export function fieldShape(
   const shape: Field = mirror
     ? (p) => Math.min(one(p[0], p[1], p[2]), one(p[0], -p[1], p[2]))
     : (p) => one(p[0], p[1], p[2]);
-  return { shape, c, r: Math.hypot(h[0], h[1], h[2]) };
+  return { shape, c, r: dmath.hypot(h[0], h[1], h[2]) };
 }

@@ -1,0 +1,373 @@
+{
+  "bbox": {
+    "frame": "gltf",
+    "max": [
+      2.526086,
+      3.183744,
+      1.963558
+    ],
+    "min": [
+      -2.468121,
+      -0.0155,
+      -2.982925
+    ]
+  },
+  "bind": {
+    "bones": 35,
+    "filled": 0,
+    "heatUnweighted": 0.0,
+    "maxInfluences": 4,
+    "method": "bone-heat",
+    "unusedBones": [],
+    "weightSum": [
+      1.0,
+      1.0
+    ]
+  },
+  "blender": "5.3.0",
+  "contract": "t3d-blender-report/1",
+  "glb": {
+    "animations": [],
+    "images": [
+      {
+        "channels": 3,
+        "mime": "image/png",
+        "name": "tex-normal"
+      },
+      {
+        "channels": 3,
+        "mime": "image/png",
+        "name": "tex-orm"
+      },
+      {
+        "channels": 3,
+        "mime": "image/png",
+        "name": "tex-albedo"
+      }
+    ],
+    "joints": [
+      "spine_0",
+      "hind_l_0",
+      "hind_l_1",
+      "hind_l_2",
+      "hind_l_3",
+      "hind_r_0",
+      "hind_r_1",
+      "hind_r_2",
+      "hind_r_3",
+      "spine_1",
+      "spine_2",
+      "neck_0",
+      "neck_1",
+      "head",
+      "scapula_l",
+      "fore_l_0",
+      "fore_l_1",
+      "fore_l_2",
+      "fore_l_3",
+      "scapula_r",
+      "fore_r_0",
+      "fore_r_1",
+      "fore_r_2",
+      "fore_r_3",
+      "wing_l_0",
+      "wing_l_1",
+      "wing_l_2",
+      "wing_r_0",
+      "wing_r_1",
+      "wing_r_2",
+      "tail_0",
+      "tail_1",
+      "tail_2",
+      "tail_3",
+      "tail_4"
+    ],
+    "materials": [
+      {
+        "name": "body",
+        "textures": [
+          "baseColorTexture",
+          "metallicRoughnessTexture",
+          "normalTexture",
+          "occlusionTexture"
+        ]
+      }
+    ],
+    "meshNodes": [
+      "lod0",
+      "lod1",
+      "lod2"
+    ],
+    "skins": 1,
+    "uvOrigin": "top-left (glTF)"
+  },
+  "lods": [
+    29998,
+    9998,
+    4998
+  ],
+  "seconds": 187.01,
+  "source": {
+    "materials": 1,
+    "textures": 2,
+    "triangles": 934645,
+    "uvLayers": 1,
+    "vertexColours": 0
+  },
+  "steps": [
+    {
+      "determinant": 124.951584,
+      "op": "transform",
+      "seconds": 0.06,
+      "triangles": 934645
+    },
+    {
+      "holeFaces": 0,
+      "nonManifoldEdges": 1668,
+      "op": "clean",
+      "seconds": 8.06,
+      "shells": 56,
+      "shellsDropped": 55,
+      "triangles": 929049,
+      "welded": 244721
+    },
+    {
+      "op": "script",
+      "seconds": 2.66,
+      "sha256": "9bcf9789e42eaf168274b42d6246abe3b009f54624274122cec498a0b5cb51c0",
+      "stdout": [
+        "knuckle [0.865 0.219 0.077] skin at 0.0127 joint above it 0.0122 raised 0.0322",
+        "knuckle [ 0.755 -0.359  0.074] skin at 0.0136 joint above it 0.0119 raised 0.0319",
+        "wing 1 root [0.084 0.325 1.645] vertices 70431",
+        "wing -1 root [ 0.102 -0.371  1.693] vertices 77176",
+        "tear -1 at [-0.498 -0.59   1.653] vertices 1925",
+        "tear 1 at [-0.554  0.687  1.677] vertices 532",
+        "torn faces 4480"
+      ],
+      "triangles": 924569,
+      "vertices": [
+        463207,
+        461171
+      ],
+      "why": "wings \u00d71.4 about their roots and lowered 22\u00b0, legs \u00d71.1 thick, a torn notch in each wing (dragon_hybrid critique: span small for the body, legs thin, no torn membrane visible)"
+    },
+    {
+      "capFaces": 410,
+      "clearance": 0.029166,
+      "gap": 0.032,
+      "limbVertices": [
+        20854,
+        19292,
+        24237,
+        24581,
+        1493
+      ],
+      "moved": 1368,
+      "op": "unweb",
+      "pairs": {
+        "0 + 3": 72,
+        "2 + 4": 348
+      },
+      "seconds": 21.48,
+      "triangles": 924559,
+      "webFaces": 420
+    },
+    {
+      "boundaryEdges": 0,
+      "focusVertexShare": 0.168,
+      "from": 924559,
+      "op": "retopo",
+      "reduce": "decimate",
+      "seconds": 70.17,
+      "shell": {
+        "bboxDrift": 0.00674,
+        "bboxSide": "+x (front)",
+        "close": 1,
+        "components": 1,
+        "handles": 4,
+        "largestShare": 1.0,
+        "lost": {
+          "share": 0.0,
+          "tolerance": 0.0315
+        },
+        "skin": 0.75,
+        "tried": [
+          [
+            0,
+            0.0,
+            0.4109,
+            1515
+          ],
+          [
+            1,
+            0.0,
+            0.0048,
+            629
+          ],
+          [
+            1,
+            0.75,
+            0.0,
+            4
+          ]
+        ],
+        "volume": 1.419167,
+        "volumeRef": 1.417017
+      },
+      "shellTriangles": 440176,
+      "strategy": "shell",
+      "triangles": 29998,
+      "voxel": 0.014
+    },
+    {
+      "islands": 499,
+      "kind": "smart",
+      "op": "uv",
+      "seconds": 14.81,
+      "triangles": 29998,
+      "uvDegenerate": 0.0015
+    },
+    {
+      "albedoFrom": "texture",
+      "albedoMean": 0.3218,
+      "albedoUnfilled": 0.0,
+      "cage": 0.154371,
+      "device": "OPTIX: NVIDIA GeForce RTX 3090",
+      "hitRate": 0.9979,
+      "maps": [
+        "albedo",
+        "normal",
+        "ao"
+      ],
+      "op": "bake",
+      "seconds": 25.35,
+      "size": 2048,
+      "triangles": 29998,
+      "uvCoverage": 0.4758
+    },
+    {
+      "bones": 35,
+      "filled": 0,
+      "heatUnweighted": 0.0,
+      "maxInfluences": 4,
+      "method": "bone-heat",
+      "op": "bind",
+      "seconds": 0.6,
+      "triangles": 29998,
+      "unusedBones": [],
+      "weightSum": [
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "bone": "fore_l_2",
+      "changed": 526,
+      "kind": "smooth",
+      "masked": 874,
+      "meanAfter": 0.189,
+      "meanBefore": 0.1888,
+      "op": "weights",
+      "seconds": 0.08,
+      "triangles": 29998
+    },
+    {
+      "bone": "fore_r_2",
+      "changed": 483,
+      "kind": "smooth",
+      "masked": 818,
+      "meanAfter": 0.1805,
+      "meanBefore": 0.181,
+      "op": "weights",
+      "seconds": 0.08,
+      "triangles": 29998
+    },
+    {
+      "at": "tail_4",
+      "bones": 35,
+      "largestTurn": 24.37,
+      "offTarget": 5e-07,
+      "op": "repose",
+      "seconds": 0.03,
+      "triangles": 29998
+    },
+    {
+      "moved": 0.0,
+      "op": "script",
+      "seconds": 42.03,
+      "sha256": "0186aa339a071105b41b4e9570b73401d0cba4873cea8b431e6233d1b297e807",
+      "stdout": [
+        "delight 0.11517921766390575",
+        "horn 0.016286233922896815 root to tip 0.272 0.443",
+        "soot (1.8677808804219693, 0.0, 2.0981150530192942) 0.033108133739064086",
+        "dust 0.0878470290695536",
+        "rake 0.0009098451903948667",
+        "rake 0.0007688504247266469",
+        "rake 0.0013709777493034496",
+        "haunch 0.00048123861810609267",
+        "haunch 0.0004112145639066945",
+        "neck 0.0006470814683211868",
+        "slash 0.0019150282562459694",
+        "slash 0.002238427980788051",
+        "slash 0.001489128730824014"
+      ],
+      "triangles": 29998,
+      "vertices": [
+        14993,
+        14993
+      ],
+      "why": "the generator's baked light, the wings' dapple and chalk-grey horns leave the albedo; roughness, soot, dust and scars on hide and membrane go into the maps (a textured part takes no grime pass)"
+    },
+    {
+      "lod0": {
+        "boundaryEdges": 0,
+        "handles": 4,
+        "maxFaceShare": 0.0004,
+        "uvDegenerate": 0.0016
+      },
+      "lods": [
+        {
+          "bboxDrift": 0.00193,
+          "bboxSide": "+x (front)",
+          "boundaryEdges": 0,
+          "handles": 4,
+          "lost": {
+            "share": 0.0,
+            "tolerance": 0.07723
+          },
+          "maxFaceShare": 0.0008,
+          "triangles": 9998,
+          "uvDegenerate": 0.0033
+        },
+        {
+          "bboxDrift": 0.00397,
+          "bboxSide": "+x (front)",
+          "boundaryEdges": 0,
+          "handles": 4,
+          "lost": {
+            "share": 0.0,
+            "tolerance": 0.115845
+          },
+          "maxFaceShare": 0.0025,
+          "triangles": 4998,
+          "uvDegenerate": 0.005
+        }
+      ],
+      "op": "lods",
+      "seconds": 0.77,
+      "triangles": 29998
+    },
+    {
+      "bytes": 9778780,
+      "images": {
+        "albedo": 2048,
+        "normal": 1024,
+        "orm": 1024
+      },
+      "op": "export",
+      "seconds": 0.82,
+      "triangles": 29998
+    }
+  ],
+  "threads": 1
+}

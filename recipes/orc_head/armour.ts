@@ -1,5 +1,5 @@
 // Orc armour: plate pauldrons and their harness. Each pauldron is a domed cap plate over the
-// deltoid, hammer-peened, and three overlapping lames down the arm, each flaring wider than the
+// deltoid, hammer-peened, and two overlapping lames down the arm, each flaring wider than the
 // one above — forged plates with real thickness, a rolled bead along every lower edge, the cap's
 // lip included (plates.ts), rivets and a boss
 // — three bone spikes rooted in the boss and in iron collars; a leather baldric crosses the chest
@@ -10,6 +10,7 @@
 import {
   type BuildContext,
   createRng,
+  dmath,
   type Mesh,
   merge,
   type Rng,
@@ -50,7 +51,9 @@ const LAME_R = 0.068;
  */
 function lameAxis(s: number): { at: V; axis: V } {
   const [dx, dy] = L.deltoid;
-  return { at: [dx - 0.012, (dy + 0.023) * s, 0], axis: norm([0.06, -0.07 * s, 1]) };
+  // (1.2 cm outside the stub's axis, no more: at 2.3 the bands stood off the flank as a tube
+  // beside the body.)
+  return { at: [dx - 0.012, (dy + 0.012) * s, 0], axis: norm([0.06, -0.07 * s, 1]) };
 }
 
 /** One pauldron (s = +1 left, −1 right): plate meshes, rivet + collar edits, spike edits. */
@@ -72,7 +75,7 @@ function pauldron(
   const nm = [12, 6, 5][lod] ?? 5;
   for (let i = 0; i <= nm; i++) {
     const phi = ((8 + (84 * i) / nm) * Math.PI) / 180;
-    meridian.push([R * Math.sin(phi), H * Math.cos(phi)]);
+    meridian.push([R * dmath.sin(phi), H * dmath.cos(phi)]);
   }
   meridian.push([R * 1.07, -0.016]);
   const arc = lod < 2 ? 5 : 2;
@@ -132,16 +135,17 @@ function pauldron(
       wear: wear(
         meridian.length - 1,
         meridian.length + arc,
-        capRivets.map((theta) => ({ theta, h: H * Math.cos((80 * Math.PI) / 180) })),
+        capRivets.map((theta) => ({ theta, h: H * dmath.cos((80 * Math.PI) / 180) })),
       ),
     }),
   );
   const onCap = (phi: number, theta: number, lift = 0): V => capPoint(s, phi, theta, lift);
   // Boss over the crown of the dome, where the central spike roots.
   iron.push({ shape: 'sphere', at: onCap(12, 90 * s, -0.004), size: 0.022, color: C.plateRim });
-  // Lames: three overlapping bands down the outer arm, each flaring wider than the one above.
+  // Lames: two overlapping bands down the outer arm, the lower flaring wider. They end where the
+  // arm stub does (z 0.15): a third hung below the bust's cut like a stump beside the body.
   const { at: armAt, axis: armAxis } = lameAxis(s);
-  for (let i = 0; i < (lod === 2 ? 2 : 3); i++) {
+  for (let i = 0; i < 2; i++) {
     const top = 0.232 - i * 0.037;
     const r0 = LAME_R + i * 0.007;
     const outer: Array<readonly [number, number]> = [
@@ -177,7 +181,7 @@ function pauldron(
         const zz = norm(armAxis);
         const xr = norm(sub([0, s, 0], mul(zz, zz[1] * s)));
         const yr = cross(zz, xr);
-        const dir = add(mul(xr, Math.cos(t)), mul(yr, Math.sin(t)));
+        const dir = add(mul(xr, dmath.cos(t)), mul(yr, dmath.sin(t)));
         const zc = top - 0.013;
         iron.push({
           shape: 'sphere',

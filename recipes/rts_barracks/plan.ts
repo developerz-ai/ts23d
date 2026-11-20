@@ -3,7 +3,8 @@
 // while building), damage knocks holes and tops off, rubble leaves stubs. One seeded rng per
 // feature (ctx.rng.fork), so a hole never moves when another feature changes.
 
-import type { Rng, Vec3 } from '@developerz.ai/ts23d';
+import type { Rng, Vec2, Vec3 } from '@developerz.ai/ts23d';
+import { dmath } from '@developerz.ai/ts23d';
 
 export type Stage = 'foundation' | 'scaffold' | 'complete';
 export type Damage = 'intact' | 'damaged' | 'rubble';
@@ -25,6 +26,61 @@ export const GATE_HALF = 2;
 /** Bays that take a shell hole when damaged: on the faces a 3/4 front-right camera sees. */
 export const HOLES = ['front_1', 'right_1', 'right_3'] as const;
 export const TOWER = { x: -HALF_X, y: HALF_Y, r: 1.8, height: 7.2 } as const;
+
+const PX = HALF_X + PLINTH_OUT;
+const PY = HALF_Y + PLINTH_OUT;
+/** Plan outline of the plinth with its front-right corner blown off (a raided site), CCW. */
+export const BROKEN_PLINTH: readonly Vec2[] = [
+  [-PX, -PY],
+  [PX - 2.6, -PY],
+  [PX - 2.2, -PY + 0.5],
+  [PX - 1.5, -PY + 0.35],
+  [PX - 1.1, -PY + 1.1],
+  [PX - 0.45, -PY + 1.35],
+  [PX - 0.25, -PY + 2.2],
+  [PX, -PY + 2.5],
+  [PX, PY],
+  [-PX, PY],
+];
+
+/** Distance from (x, y) to segment a–b. */
+function segDist(x: number, y: number, a: Vec2, b: Vec2): number {
+  const [dx, dy] = [b[0] - a[0], b[1] - a[1]];
+  const t = Math.max(0, Math.min(1, ((x - a[0]) * dx + (y - a[1]) * dy) / (dx * dx + dy * dy)));
+  return dmath.hypot(x - a[0] - dx * t, y - a[1] - dy * t);
+}
+
+/**
+ * The plan rect x0..x1 × y0..y1 lies inside `poly` with at least `margin` to spare: its corners
+ * are inside and that far from every edge, and no outline corner pokes into the rect grown by it.
+ */
+export function rectInside(
+  poly: readonly Vec2[],
+  r: { x0: number; x1: number; y0: number; y1: number },
+  margin: number,
+): boolean {
+  const inside = (x: number, y: number): boolean => {
+    let odd = false;
+    for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+      const [a, b] = [poly[i] ?? [0, 0], poly[j] ?? [0, 0]];
+      if (a[1] > y !== b[1] > y && x < ((b[0] - a[0]) * (y - a[1])) / (b[1] - a[1]) + a[0])
+        odd = !odd;
+    }
+    return odd;
+  };
+  const corners: Vec2[] = [
+    [r.x0, r.y0],
+    [r.x1, r.y0],
+    [r.x1, r.y1],
+    [r.x0, r.y1],
+  ];
+  const clear = (x: number, y: number): boolean =>
+    poly.every((a, i) => segDist(x, y, a, poly[(i + 1) % poly.length] ?? a) >= margin - 1e-9);
+  if (!corners.every(([x, y]) => inside(x, y) && clear(x, y))) return false;
+  return !poly.some(
+    ([x, y]) => x > r.x0 - margin && x < r.x1 + margin && y > r.y0 - margin && y < r.y1 + margin,
+  );
+}
 
 export interface Bay {
   readonly id: string;
@@ -96,7 +152,7 @@ function cap(list: Bay[], rows: (b: Bay, i: number) => number): void {
 function hole(b: Bay, row: number, col: number, size: number, rng: Rng): void {
   for (let r = 0; r < ROWS; r++)
     for (let c = 0; c < COLS; c++) {
-      const d = Math.hypot(r - row, (c - col) * 1.6);
+      const d = dmath.hypot(r - row, (c - col) * 1.6);
       const cells = b.cells[r];
       if (cells && d < size + rng.range(-0.4, 0.4)) cells[c] = false;
     }

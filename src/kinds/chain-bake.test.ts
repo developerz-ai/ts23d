@@ -2,7 +2,7 @@
 // follows the wave, quaternions stay in one hemisphere, and the same input gives the same bytes.
 
 import { describe, expect, it } from 'bun:test';
-import { type Clip, checkClip, type Track } from '../core/index.ts';
+import { type Clip, checkClip, dmath, type Track } from '../core/index.ts';
 import { clipPose, jointWorlds } from '../qa/clip-pose.ts';
 import { bakeChainClip, type ChainClipSpec, KEYS_PER_CYCLE, loopLength } from './chain-bake.ts';
 import { ds21Envelope, travellingWave } from './chain-drivers.ts';
@@ -92,8 +92,8 @@ describe('bakeChainClip', () => {
 
   describe('a slide on the root chain', () => {
     const slide = (t: number): [number, number, number] => [
-      0.1 * Math.sin(t),
-      0.2 * Math.sin(t),
+      0.1 * dmath.sin(t),
+      0.2 * dmath.sin(t),
       0,
     ];
     const slid: ChainClipSpec = {
@@ -113,14 +113,14 @@ describe('bakeChainClip', () => {
       const [track, extra] = rootTracks(c);
       expect(extra).toBeUndefined();
       const n = (track?.times.length ?? 0) - 1;
-      expect(track?.values[n * 3]).toBeCloseTo(1.4 + 0.1 * Math.sin(1), 5);
-      expect(track?.values[n * 3 + 1]).toBeCloseTo(0.2 * Math.sin(1), 5);
+      expect(track?.values[n * 3]).toBeCloseTo(1.4 + 0.1 * dmath.sin(1), 5);
+      expect(track?.values[n * 3 + 1]).toBeCloseTo(0.2 * dmath.sin(1), 5);
     });
 
     it('lets recoil cancel the slide on the axes it holds, and only there', () => {
       const [track] = rootTracks(bakeChainClip(slid));
       const n = (track?.times.length ?? 0) - 1;
-      expect(track?.values[n * 3]).toBeCloseTo(1.4 + 0.1 * Math.sin(1), 5);
+      expect(track?.values[n * 3]).toBeCloseTo(1.4 + 0.1 * dmath.sin(1), 5);
       expect(track?.values[n * 3 + 1]).toBeCloseTo(0, 5);
     });
 

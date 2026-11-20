@@ -109,21 +109,23 @@ Static landmark: no motion. Named parts: `pedestal_0..3` (stone footings), `leg_
   centre 1.74 m above ground.
 - **Floor areas** disagree (official ft² vs fr.wikipedia m²); not used.
 
-## Wear and LOD notes (2026-11 quality pass)
-- Wear (`wear.ts`) follows the seven-year repaint cycle, top down: below ~120 m rust runs weep down
-  the members (noise stretched 25× along z) and up-facing flanges chalk; the upper shaft is a
-  fresher, slightly brighter coat; deck tops carry blotchy city grime. Hash noise, no generator
-  state, so every LOD and rebuild agrees.
+## Wear and LOD notes (2026-11 quality passes)
+- Paint: three graduated shades of Eiffel Tower Brown (`SHADES`: #4c3826 → #6e563c → #987f5a),
+  darkest at the base, blended at the 1st and 2nd floors.
+- Wear (`wear.ts`) follows the seven-year repaint cycle, top down: below ~150 m rust runs weep down
+  the members (noise stretched 15× along z) and up-facing flanges chalk; the lowest 12 m of every
+  leg carries road grime; the upper shaft is a fresher, slightly brighter coat; deck tops carry
+  blotchy city grime. Hash noise, no generator state, so every LOD and rebuild agrees.
 - Deck railings: square posts (faces on the rail axes) and a mid rail at LOD0.
-- Triangles (2026-11-19 integration pass): 144k / 19.6k / 764, down from 191k / 22.7k / 1.05k.
-  Lattice web bars and LOD1 member bars end inside their chords and uprights, so they ship
-  without end caps (a third of each bar); the far legs' stacked frustums drop the caps buried at
-  their joins; the far arch is 7 uncapped bars. LOD2 fits the building band (800).
+- Far LOD (`far.ts`): the legs and shaft are open frustum shells on `eiffel_far_lattice`, a
+  project material whose painter writes the panel pattern (corner posts, joint horizontals, a St
+  Andrew's cross) into the strip's alpha; the four `leg_*` parts are `surface: 'cutout'`, so the
+  tower stays see-through at distance (one extra draw at LOD2). Decks, belt, arches, summit and
+  antenna stay opaque (`summit` carries the 2nd/3rd decks, spire, cabin and antenna).
+- Hero: a fixed view from the Champ de Mars looking up (`hero.eye`/`target`), so the legs,
+  arches and rusty lower lattice fill the frame.
+- Triangles: 144k / 19.6k / 792. Lattice web bars and LOD1 member bars end inside their chords
+  and uprights, so they ship without end caps (a third of each bar); the far arch is 7 uncapped
+  bars; the far lattice has one cross per 18 m band, which keeps LOD2 in the building band (800).
 
 Budget why: a 330 m wrought-iron lattice landmark, not a 20k-triangle house; each of its four legs is ~30k triangles of lattice girders with zig-zag webs at LOD0, and LOD0/LOD1 must draw that open lattice or the tower reads as a solid pylon.
-
-- **Gap:** the far LOD (764 triangles) still draws the legs and shaft as solid frustums. A
-  see-through far lattice needs an alpha-cutout lattice decal cell on the house trim sheet
-  (`src/material/trim-sheet.ts` DECAL_CELLS + a painter in `src/material/paint/`), so LOD2 can
-  wrap the frustum faces in `surface: 'cutout'` cards for 2 triangles a face; a geometric open
-  frame costs 1.5–2k triangles at LOD2, over the 1.25k budget.

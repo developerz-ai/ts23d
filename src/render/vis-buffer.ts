@@ -4,6 +4,7 @@
 // Mip per triangle: texel÷pixel area for opaque surfaces; cutouts use the minor axis of the
 // footprint (anisotropy-aware, ≤ MAX_ANISO) so long thin cards keep their alpha detail.
 
+import { dmath } from '../core/index.ts';
 import type { PerspectiveCamera } from './camera.ts';
 import type { Scene } from './scene.ts';
 
@@ -44,7 +45,7 @@ export function footprintMip(
 ): number {
   const area = sx1 * sy2 - sy1 * sx2;
   const uvArea = Math.abs(du1 * dv2 - dv1 * du2);
-  let lod = 0.5 * Math.log2((uvArea * texSize * texSize) / Math.abs(area) + 1e-12);
+  let lod = 0.5 * dmath.log2((uvArea * texSize * texSize) / Math.abs(area) + 1e-12);
   if (aniso) {
     // Jacobian d(u, v)/d(x, y) = F · E⁻¹, then its singular values.
     const p = (du1 * sy2 - du2 * sy1) / area;
@@ -56,7 +57,7 @@ export function footprintMip(
     const det = T * T * Math.abs(p * t - q * r);
     const major = Math.sqrt((e + Math.sqrt(Math.max(0, e * e - 4 * det * det))) / 2);
     const minor = major > 0 ? det / major : 0;
-    lod = Math.log2(Math.max(minor, major / MAX_ANISO) + 1e-12);
+    lod = dmath.log2(Math.max(minor, major / MAX_ANISO) + 1e-12);
   }
   return Math.max(0, Math.min(10, Math.floor(lod + 0.25)));
 }

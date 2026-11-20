@@ -5,6 +5,7 @@
 // t × bend. Also the copy transforms of a repeated chain: a mirror across y = 0, a radial turn.
 
 import type { Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import type { ChainRepeat, ChainSpec } from './body-plan-types.ts';
 import { rotate, spline, v3 } from './creature-curve.ts';
 
@@ -99,7 +100,7 @@ export function chainCurve(c: ChainSpec): ChainCurve {
 /** Arc fractions of the link joints, root to tip (`links + 1` values): `bias` > 1 packs the tip. */
 export function linkStops(links: number, bias = 1): number[] {
   return Array.from({ length: links + 1 }, (_, i) =>
-    i === links ? 1 : 1 - (1 - i / links) ** bias,
+    i === links ? 1 : 1 - dmath.pow(1 - i / links, bias),
   );
 }
 

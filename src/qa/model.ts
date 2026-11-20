@@ -12,7 +12,7 @@
 // Thresholds were measured on the Pixal3D wolf (model.test.ts has the numbers).
 
 import type { Armature, Bone, CompiledAsset, Mesh, Part, Vec3 } from '../core/index.ts';
-import { worldMeshes } from '../core/index.ts';
+import { dmath, worldMeshes } from '../core/index.ts';
 import { decodePng } from '../material/index.ts';
 import { triBvh } from '../primitives/index.ts';
 import { MID_SUFFIX } from './deform.ts';
@@ -61,7 +61,7 @@ export function albedoSpread(albedo: Uint8Array, mesh: Mesh): number {
       0.0722 * (img.data[at + 2] ?? 0);
     [n, sum, sq] = [n + 1, sum + l, sq + l * l];
   }
-  const std = n ? Math.sqrt(Math.max(0, sq / n - (sum / n) ** 2)) : 0;
+  const std = n ? Math.sqrt(Math.max(0, sq / n - dmath.pow(sum / n, 2))) : 0;
   const per = stds.get(albedo) ?? new WeakMap<Float32Array, number>();
   per.set(mesh.uvs, std);
   stds.set(albedo, per);
@@ -77,7 +77,7 @@ export function lowestSkin(
   bone: Bone,
   others: readonly Bone[] = [],
 ): number | null {
-  const reach = Math.hypot(
+  const reach = dmath.hypot(
     bone.tail[0] - bone.head[0],
     bone.tail[1] - bone.head[1],
     bone.tail[2] - bone.head[2],

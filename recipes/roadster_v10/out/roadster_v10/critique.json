@@ -1,7 +1,7 @@
 {
   "asset": "roadster_v10",
   "reviewer": "agent",
-  "overall": 7.1,
+  "overall": 7.6,
   "scores": {
     "silhouette": {
       "score": 8,
@@ -18,11 +18,10 @@
       ]
     },
     "materials": {
-      "score": 7,
-      "reason": "Clearcoat red with reflections, glass, chrome side pipes, rubber and brake discs read; the headlamp glow is thinner than before but still draws a white rim round the top and outer edge of each lamp in hero.png.",
+      "score": 8,
+      "reason": "Clearcoat red with reflections, glass, chrome side pipes, rubber and brake discs read; the headlamp glow is now a thin DRL strip inside each lamp.",
       "fixes": [
-        "soften the DRL glow into a thin strip inside the lamp instead of an outline",
-        "consistent transparent glass in both renderers"
+        "orange-peel roughness variation in the clearcoat"
       ]
     },
     "detail": {
@@ -33,30 +32,30 @@
       ]
     },
     "wear": {
-      "score": 6,
-      "reason": "Stone chips and grime along the sills and lower doors; the chips are white specks scattered over the whole lower body and read as noise.",
+      "score": 7,
+      "reason": "Stone chips cluster on the sill behind the front wheel and now also fleck the lower nose round the grille and under the near headlamp (hero.png); the flecks are pale sand blobs rather than primer-grey chips, and there is still no brake dust.",
       "fixes": [
         "brake dust on the wheels",
-        "concentrate chips behind the wheels and on the nose"
+        "smaller, darker primer-grey chips on the nose instead of pale sand blobs"
       ]
     },
     "lod": {
-      "score": 7,
-      "reason": "FAR LOD2 keeps outline and colour; the wheels become grey discs with little tyre/rim contrast and the lamps cream blobs.",
+      "score": 8,
+      "reason": "FAR LOD2 keeps outline and colour, and the tyres now read as a dark ring round a grey rim; the lamps are cream blobs.",
       "fixes": [
-        "keep a black tyre ring separate from the rim at LOD2"
+        "keep a dark lens tone on the LOD2 lamps"
       ]
     },
     "technical": {
       "score": 7,
-      "reason": "155k / 23k / 3k triangles (from 909k) but 30 draws at LOD0.",
+      "reason": "154k / 22.7k / 3.1k triangles, 24 draws at LOD0 (from 30).",
       "fixes": [
         "merge static body draws (keep pivots on wheels, doors, bonnet)"
       ]
     }
   },
   "renders": {
-    "hero.png": "9d1eee5dfe3fa842ff97374106a7eb34c1b7ea3184fc051f102fa32d027cdda8",
-    "sheet.png": "1d72b99e9328f0b355eb316b2407309a7414784601d12532c722382a022dc470"
+    "hero.png": "25df15e02a223d400b2fc24763e751dfbc1a12669bc206cad6a917768869f76e",
+    "sheet.png": "34c22a8c13499eeed864a0bd5ed922c7553b9c2950f9b7633e1544adcfabb3e1"
   }
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { createRng, triangleCount } from '../core/index.ts';
+import { createRng, dmath, triangleCount } from '../core/index.ts';
 import { crownShade } from './vegetation-leaves.ts';
 import { needleTufts } from './vegetation-needles.ts';
 import { pine } from './vegetation-presets.ts';
@@ -52,10 +52,8 @@ describe('needleTufts', () => {
       const ab = [0, 1, 2].map((k) => (b[k] ?? 0) - (a[k] ?? 0));
       const t =
         [0, 1, 2].reduce((s, k) => s + ((anchor[k] ?? 0) - (a[k] ?? 0)) * (ab[k] ?? 0), 0) /
-        [0, 1, 2].reduce((s, k) => s + (ab[k] ?? 0) ** 2, 0);
-      const d = Math.hypot(
-        ...[0, 1, 2].map((k) => (a[k] ?? 0) + (ab[k] ?? 0) * t - (anchor[k] ?? 0)),
-      );
+        [0, 1, 2].reduce((s, k) => s + dmath.pow(ab[k] ?? 0, 2), 0);
+      const d = dmath.norm([0, 1, 2].map((k) => (a[k] ?? 0) + (ab[k] ?? 0) * t - (anchor[k] ?? 0)));
       expect(d).toBeLessThan(0.012);
       expect(t).toBeGreaterThan(0.2);
       expect(t).toBeLessThan(0.5);

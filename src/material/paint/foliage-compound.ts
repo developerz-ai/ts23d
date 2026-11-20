@@ -3,7 +3,7 @@
 // leaflets both sides, some dry brown tips), willow curtain (long fine strands of narrow leaves;
 // hang it by mapping the card with V down). A dimmed back layer goes down first.
 
-import { createRng } from '../../core/index.ts';
+import { createRng, dmath } from '../../core/index.ts';
 import type { Canvas } from './canvas.ts';
 import { at, curve, dim, drawStem, LEAF, vary } from './foliage-common.ts';
 import { Foliage } from './foliage-raster.ts';
@@ -27,10 +27,10 @@ export function paintAcacia(c: Canvas, seed: number): void {
         const pinna = curve(
           bx,
           by,
-          bx + Math.sin(a) * len * 0.5,
-          by + Math.cos(a) * len * 0.5 + 0.02,
-          bx + Math.sin(a) * len,
-          by + Math.cos(a) * len,
+          bx + dmath.sin(a) * len * 0.5,
+          by + dmath.cos(a) * len * 0.5 + 0.02,
+          bx + dmath.sin(a) * len,
+          by + dmath.cos(a) * len,
           6,
         );
         drawStem(f, pinna, 0.003, 0.0015, dim(LEAF.twig, k));
@@ -70,12 +70,12 @@ export function paintPalm(c: Canvas, seed: number): void {
       const by = rachis.y[i] ?? 0.5;
       for (const side of [-1, 1]) {
         const a = (rachis.a[i] ?? 0) + side * rng.range(0.75, 1.0);
-        const len = 0.3 * Math.sin(Math.PI * (0.2 + 0.75 * t)) * rng.range(0.85, 1.05);
+        const len = 0.3 * dmath.sin(Math.PI * (0.2 + 0.75 * t)) * rng.range(0.85, 1.05);
         const wid = 0.03;
         f.leaf('lance', bx, by, a, len, wid, dim(vary(rng, LEAF.palm, 0.15), k), 0, layer * 0.002);
         if (rng.next() < 0.3) {
-          const tx = bx + Math.sin(a) * len * 0.72;
-          const ty = by + Math.cos(a) * len * 0.72;
+          const tx = bx + dmath.sin(a) * len * 0.72;
+          const ty = by + dmath.cos(a) * len * 0.72;
           f.leaf(
             'blade',
             tx,

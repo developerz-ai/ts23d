@@ -193,7 +193,7 @@ describe('textured parts: materials', () => {
   });
 
   it('keeps the sheet on texture 0..2 and puts the sets after it', () => {
-    const sheet = paintTrimSheet({ ...DEFAULT_SHEET, size: 512 });
+    const sheet = paintTrimSheet({ ...DEFAULT_SHEET, size: 512 }, []);
     const s = json(toGlb(compile(beast()), { sheet }));
     expect(s.images?.map((i) => i.name).slice(3)).toEqual([
       'hide_albedo',
@@ -268,7 +268,7 @@ describe('textured parts: skin and LODs', () => {
   });
 
   it('is Khronos-valid, split and single file, with and without the sheet', async () => {
-    const sheet = paintTrimSheet({ ...DEFAULT_SHEET, size: 512 });
+    const sheet = paintTrimSheet({ ...DEFAULT_SHEET, size: 512 }, []);
     expect(await problems(exportLodGlb(lods(), { animations: true }).glb)).toEqual([]);
     expect(await problems(exportLodGlb(lods(), { sheet }).glb)).toEqual([]);
     for (const lod of lods()) expect(await problems(toGlb(lod))).toEqual([]);

@@ -1,10 +1,13 @@
 // The GLB container: 12-byte header, JSON chunk (space-padded), BIN chunk (zero-padded), every
-// length a multiple of 4 [glTF 2.0 §glb-file-format-specification].
+// length a multiple of 4 [glTF 2.0 §glb-file-format-specification]. Every number in the JSON chunk
+// (node transforms, accessor bounds, material factors, extras) is written at GLTF_ROUNDING: nine
+// significant digits, which carry a float32 exactly and drop the float64 noise digits (`gltfText`).
 
+import { gltfText } from '../core/index.ts';
 import type { Json } from './bin-writer.ts';
 
 export function packGlb(gltf: Json, body: Uint8Array): Uint8Array {
-  let json = new TextEncoder().encode(JSON.stringify(gltf));
+  let json = new TextEncoder().encode(gltfText(gltf));
   const jsonPad = (4 - (json.byteLength % 4)) % 4;
   if (jsonPad) {
     const padded = new Uint8Array(json.byteLength + jsonPad).fill(0x20);

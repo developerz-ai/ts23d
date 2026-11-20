@@ -5,6 +5,7 @@
 // Z up, +X front; glTF (x, y, z) = ts23d (y, z, x), a rotation, so winding is kept.
 
 import type { Mesh, Rng, Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import { writeMeshGlb } from '../neural/index.ts';
 import { type FlowSeed, hairCards, hairFlow } from '../passes/index.ts';
 import { sdf } from '../primitives/index.ts';
@@ -104,7 +105,7 @@ function normalAt(f: GroomField, p: Vec3): Vec3 {
     f([p[0], p[1] + h, p[2]]) - f([p[0], p[1] - h, p[2]]),
     f([p[0], p[1], p[2] + h]) - f([p[0], p[1], p[2] - h]),
   ];
-  const l = Math.hypot(...g) || 1;
+  const l = dmath.norm(g) || 1;
   return [g[0] / l, g[1] / l, g[2] / l];
 }
 
@@ -127,7 +128,7 @@ function regionArea(m: Mesh, region: GroomField): number {
     const e1: Vec3 = [c[0] - a[0], c[1] - a[1], c[2] - a[2]];
     const e2: Vec3 = [d[0] - a[0], d[1] - a[1], d[2] - a[2]];
     area +=
-      Math.hypot(
+      dmath.hypot(
         e1[1] * e2[2] - e1[2] * e2[1],
         e1[2] * e2[0] - e1[0] * e2[2],
         e1[0] * e2[1] - e1[1] * e2[0],

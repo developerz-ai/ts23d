@@ -29,6 +29,7 @@ export {
 } from './generator.ts';
 export { MATERIAL_LIBRARY } from './library.ts';
 export { type LiveSheet, liveSheet } from './live-sheet.ts';
+export { mappedOnto } from './mapped.ts';
 export type { MaterialDef } from './material-def.ts';
 export { NATURE_LIBRARY } from './nature.ts';
 export { decodePng, type PngFailure, type Rgba } from './paint/decode-png.ts';

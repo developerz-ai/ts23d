@@ -12,6 +12,7 @@
 import {
   type BuildContext,
   bakeAo,
+  dmath,
   type Field,
   hex,
   type Mesh,
@@ -59,13 +60,13 @@ const TORSO_I = { ...TORSO, neck: 0.05, mass: 0.22, shoulders: 0.16, armCut: 0.0
 /** Where the shoulders are sawn off: the shared arm cut (torso.ts), a flat oval each side. */
 const sawn: Field = armCut(L, TORSO_I);
 const THREAD = hex('#8f7155');
-const seamField: Field = (p) => (p[2] + 0.3 * p[0] - SEAM_Z) / Math.hypot(1, 0.3);
+const seamField: Field = (p) => (p[2] + 0.3 * p[0] - SEAM_Z) / dmath.hypot(1, 0.3);
 
 /** The mantle's hem height round the bust (a = angle from the back): lower behind, in loose
  *  scallops. */
 const hemZ = (p: Vec3): number => {
-  const a = Math.atan2(p[1], -p[0]);
-  return L.mz - 0.62 * H - 0.005 * Math.cos(a * 7) - (0.05 * Math.max(0, -p[0])) / 0.1;
+  const a = dmath.atan2(p[1], -p[0]);
+  return L.mz - 0.62 * H - 0.005 * dmath.cos(a * 7) - (0.05 * Math.max(0, -p[0])) / 0.1;
 };
 /** Where the mantle closes at the throat (it falls open below, in a V). */
 const CLOSE_Z = L.mz - 0.4 * H;
@@ -115,7 +116,7 @@ function outfit(body: Field, lod: number, fray: Field): SculptEdit[] {
     {
       field: (p) =>
         Math.max(
-          Math.min(seamField(p) + 0.012, 0.072 - Math.hypot(p[0] - seam.at[0], p[1])),
+          Math.min(seamField(p) + 0.012, 0.072 - dmath.hypot(p[0] - seam.at[0], p[1])),
           p[2] - (L.mz - 0.12 * H),
         ),
       bounds: box,
@@ -191,9 +192,9 @@ export function neckAtSeam(m: Mesh): {
   const N = 48;
   const r = new Float64Array(N);
   for (const p of pts) {
-    const a = Math.atan2(p[1] - cy, p[0] - cx);
+    const a = dmath.atan2(p[1] - cy, p[0] - cx);
     const k = ((Math.round((a / (Math.PI * 2)) * N) % N) + N) % N;
-    r[k] = Math.max(r[k] ?? 0, Math.hypot(p[0] - cx, p[1] - cy));
+    r[k] = Math.max(r[k] ?? 0, dmath.hypot(p[0] - cx, p[1] - cy));
   }
   for (let pass = 0; pass < N; pass++)
     for (let k = 0; k < N; k++)

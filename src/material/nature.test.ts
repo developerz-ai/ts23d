@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test';
+import { dmath } from '../core/index.ts';
 import { NATURE_LIBRARY } from './nature.ts';
 import { createCanvas } from './paint/canvas.ts';
 import { HOUSE_STRIPS } from './paint/default-sheet.ts';
@@ -23,8 +24,8 @@ describe('nature library', () => {
       const n = sobelNormals(paint(id));
       let s = 0;
       for (let i = 0; i < n.length; i += 4)
-        s += Math.hypot(((n[i] ?? 0) - 127.5) / 127.5, ((n[i + 1] ?? 0) - 127.5) / 127.5);
-      const deg = (Math.asin(s / (n.length / 4)) * 180) / Math.PI;
+        s += dmath.hypot(((n[i] ?? 0) - 127.5) / 127.5, ((n[i + 1] ?? 0) - 127.5) / 127.5);
+      const deg = (dmath.asin(s / (n.length / 4)) * 180) / Math.PI;
       if (deg < 1) throw new Error(`${id} is flat: ${deg.toFixed(2)}°`);
     }
   });

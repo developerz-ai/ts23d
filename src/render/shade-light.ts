@@ -4,6 +4,7 @@
 // KHR_materials_* layers: specular, iridescence (thin film), sheen (Charlie), clearcoat (second
 // GGX lobe on the geometric normal) and transmission (tint + Beer–Lambert + refraction offset).
 
+import { dmath } from '../core/index.ts';
 import {
   charlieD,
   envBrdf,
@@ -69,7 +70,7 @@ export function lightSurf(
   let hx = L[0] + (v[0] ?? 0);
   let hy = L[1] + (v[1] ?? 0);
   let hz = L[2] + (v[2] ?? 0);
-  const hl = Math.hypot(hx, hy, hz) || 1;
+  const hl = dmath.hypot(hx, hy, hz) || 1;
   hx /= hl;
   hy /= hl;
   hz /= hl;
@@ -83,12 +84,12 @@ export function lightSurf(
   let D: number;
   let bent = n;
   if (aniso) {
-    const c = Math.cos(look.anisotropyRotation);
-    const sn = Math.sin(look.anisotropyRotation);
+    const c = dmath.cos(look.anisotropyRotation);
+    const sn = dmath.sin(look.anisotropyRotation);
     const td = [0, 1, 2].map((k) => c * (s.t[k] ?? 0) + sn * (s.b[k] ?? 0));
     const tn = dot(td, n);
     const tt = td.map((x, k) => x - tn * (n[k] ?? 0));
-    const tl = Math.hypot(tt[0] ?? 0, tt[1] ?? 0, tt[2] ?? 0) || 1;
+    const tl = dmath.hypot(tt[0] ?? 0, tt[1] ?? 0, tt[2] ?? 0) || 1;
     const T = tt.map((x) => x / tl);
     const B = [
       (n[1] ?? 0) * (T[2] ?? 0) - (n[2] ?? 0) * (T[1] ?? 0),
@@ -110,7 +111,7 @@ export function lightSurf(
     ];
     const w = look.anisotropy * (1 - rough * 0.5);
     const mixed = n.map((x, k) => x + ((an[k] ?? 0) - x) * w);
-    const ml = Math.hypot(mixed[0] ?? 0, mixed[1] ?? 0, mixed[2] ?? 0) || 1;
+    const ml = dmath.hypot(mixed[0] ?? 0, mixed[1] ?? 0, mixed[2] ?? 0) || 1;
     bent = mixed.map((x) => x / ml);
   } else D = ggxD(ndh, a);
   const V = smithV(ndl, ndv, a);
@@ -121,7 +122,8 @@ export function lightSurf(
   const Bb = ab[1] ?? 0;
   const metal = s.metal;
   const trans = look.transmission * (1 - metal);
-  const f0i = ((look.ior - 1) / (look.ior + 1)) ** 2;
+  const rIor = (look.ior - 1) / (look.ior + 1);
+  const f0i = rIor * rIor;
   const f90 = look.specular + (1 - look.specular) * metal;
   const hemi = 0.5 + 0.5 * (n[2] ?? 0);
   const amb = s.open * (0.35 + 0.65 * s.occ);
@@ -165,7 +167,8 @@ export function lightSurf(
     const coat = cc > 0 ? cc * 0.04 * ccSun * sun + ccEnvW * envRadiance(grz, ccr, k) : 0;
     out[k] = (base * (1 - fc) + coat) * r.exposure;
     // Transmitted share: base colour tint × Beer–Lambert over the volume, minus what reflects.
-    tr[k] = trans * (1 - eSpec) * (1 - fc) * al * Math.exp(-(look.absorb[k] ?? 0) * look.thickness);
+    tr[k] =
+      trans * (1 - eSpec) * (1 - fc) * al * dmath.exp(-(look.absorb[k] ?? 0) * look.thickness);
   }
   if (!through) return;
   through[0] = tr[0] ?? 0;

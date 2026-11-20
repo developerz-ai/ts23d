@@ -4,19 +4,83 @@
 
 import {
   type BuildContext,
+  dmath,
   type Mesh,
+  MeshBuilder,
   merge,
   place,
-  prism,
+  stripRect,
   text,
-  translate,
-  type Vec2,
+  type Vec3,
 } from '@developerz.ai/ts23d';
 import type { Gear } from './running-gear.ts';
-import { bx, F, type Layout, lath, RAIL_TOP, support, TENDER_R } from './shared.ts';
+import { bx, F, type Finish, type Layout, lath, RAIL_TOP, support, TENDER_R } from './shared.ts';
 
 const BODY_W = 2.4;
 const BODY_H = 1.15;
+/** The coping flares 20 cm outward over its 32 cm height (the collar that keeps the wood in). */
+const FLARE_OUT = 0.2;
+const FLARE_H = 0.32;
+const FLARE_LEN = dmath.hypot(FLARE_OUT, FLARE_H);
+/** Sheet thickness of the coping, seen as its top edge. */
+const SHEET = 0.035;
+
+/** A flat quad a → b → c → d (counter-clockwise seen from outside) in one finish. */
+function quad(b: MeshBuilder, pts: readonly [Vec3, Vec3, Vec3, Vec3], f: Finish): void {
+  const [p0, p1, , p3] = pts;
+  const u: Vec3 = [p1[0] - p0[0], p1[1] - p0[1], p1[2] - p0[2]];
+  const v: Vec3 = [p3[0] - p0[0], p3[1] - p0[1], p3[2] - p0[2]];
+  const c: Vec3 = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
+  const l = dmath.hypot(c[0], c[1], c[2]) || 1;
+  const n: Vec3 = [c[0] / l, c[1] / l, c[2] / l];
+  const r = stripRect(f.strip);
+  const uv: [number, number] = [(r.u0 + r.u1) / 2, (r.v0 + r.v1) / 2];
+  const ids = pts.map((p) => b.vertex({ p, n, uv, color: f.color }));
+  b.quad(ids[0] ?? 0, ids[1] ?? 0, ids[2] ?? 0, ids[3] ?? 0);
+}
+
+/**
+ * The flared coping as one mitred collar round the tank top: the rear and both sides lean
+ * outward, the front board stands upright behind the cab. Outer skin, inner skin and the sheet's
+ * top edge; `bands` adds the red band on each side's outer face (3 mm proud).
+ */
+function coping(x0: number, x1: number, z: number, bands: boolean): Mesh {
+  const hw = BODY_W / 2;
+  const b = new MeshBuilder();
+  /** Ring at height fraction t, inset by `inset` metres (the inner skin). Rear-left first. */
+  const ring = (t: number, inset: number): [Vec3, Vec3, Vec3, Vec3] => {
+    const o = FLARE_OUT * t - inset;
+    return [
+      [x0 - o, hw + o, z + FLARE_H * t],
+      [x0 - o, -hw - o, z + FLARE_H * t],
+      [x1 - inset, -hw - o, z + FLARE_H * t],
+      [x1 - inset, hw + o, z + FLARE_H * t],
+    ];
+  };
+  const [lo, hi, loIn, hiIn] = [ring(0, 0), ring(1, 0), ring(0, SHEET), ring(1, SHEET)];
+  for (let i = 0; i < 4; i++) {
+    const j = (i + 1) % 4;
+    const at = (r: readonly Vec3[], k: number): Vec3 => r[k] ?? [0, 0, 0];
+    quad(b, [at(lo, i), at(lo, j), at(hi, j), at(hi, i)], F.blueSteel);
+    quad(b, [at(loIn, j), at(loIn, i), at(hiIn, i), at(hiIn, j)], F.blueSteel);
+    quad(b, [at(hi, i), at(hi, j), at(hiIn, j), at(hiIn, i)], F.blueSteel);
+  }
+  if (bands)
+    for (const s of [1, -1]) {
+      // Red band on the flare's outer face, from 14 % to 86 % of its height.
+      const on = (x: number, t: number): Vec3 => {
+        const lift = 0.003;
+        return [
+          x,
+          s * (hw + FLARE_OUT * t + (lift * FLARE_H) / FLARE_LEN),
+          z + FLARE_H * t - (lift * FLARE_OUT) / FLARE_LEN,
+        ];
+      };
+      const [xa, xb] = s > 0 ? [x0 + 0.25, x1 - 0.3] : [x1 - 0.3, x0 + 0.25];
+      quad(b, [on(xb, 0.14), on(xa, 0.14), on(xa, 0.86), on(xb, 0.86)], F.redSteel);
+    }
+  return b.build();
+}
 
 export function buildTender(ctx: BuildContext, L: Layout, gear: Gear, name: string): void {
   const { lod, tenderFront: xf, tenderRear: xr } = L;
@@ -40,38 +104,12 @@ export function buildTender(ctx: BuildContext, L: Layout, gear: Gear, name: stri
         [1, -1].map((s) => support(lod, x + dx, RAIL_TOP + TENDER_R, s, 0.45)),
       ),
     );
+  // The flared collar is the tender's outline: every LOD carries it (the band from the mid LOD).
+  m.push(coping(xr + 0.05, xf - 0.1, zt, lod < 2));
   if (lod < 2) {
     for (const s of [1, -1]) {
       const face = s * (BODY_W / 2);
-      // Flared coping: outward-leaning sheet round the top, red band on it.
-      const flare: Vec2[] = [
-        [s * (BODY_W / 2 - 0.04), 0],
-        [s * (BODY_W / 2), 0],
-        [s * (BODY_W / 2 + 0.12), 0.3],
-        [s * (BODY_W / 2 + 0.08), 0.3],
-      ];
       m.push(
-        translate(prism({ profile: flare, depth: len - 0.35, plane: 'yz', ...F.blueSteel }), [
-          cx - 0.02,
-          0,
-          zt,
-        ]),
-      );
-      m.push(
-        translate(
-          prism({
-            profile: [
-              [s * (BODY_W / 2 + 0.012), 0.04],
-              [s * (BODY_W / 2 + 0.105), 0.27],
-              [s * (BODY_W / 2 + 0.115), 0.27],
-              [s * (BODY_W / 2 + 0.022), 0.04],
-            ],
-            depth: len - 0.9,
-            plane: 'yz',
-            ...F.redSteel,
-          }),
-          [cx + 0.05, 0, zt],
-        ),
         // Red sill stripes along the frame.
         ...[0, 1, 2, 3].map((i) =>
           bx(
@@ -109,11 +147,15 @@ export function buildTender(ctx: BuildContext, L: Layout, gear: Gear, name: stri
             ...F.brass,
           }),
           text('C.P.R.R.', {
-            // On the red coping band's outer face at this height (it stood 1.6 mm out from it,
-            // plus the 2 mm decal lift).
-            origin: [cx + 0.05, s * (BODY_W / 2 + 0.046), zt + 0.1],
+            // On the red coping band's outer face (3 mm proud of the flare) a third of the way
+            // up it; the decal's own 2 mm lift is all the gap there is.
+            origin: [
+              cx + 0.05,
+              s * (BODY_W / 2 + FLARE_OUT * 0.3 + (0.003 * FLARE_H) / FLARE_LEN),
+              zt + FLARE_H * 0.3 - (0.003 * FLARE_OUT) / FLARE_LEN,
+            ],
             along: [-s, 0, 0],
-            up: [0, s * 0.37, 0.93],
+            up: [0, (s * FLARE_OUT) / FLARE_LEN, FLARE_H / FLARE_LEN],
             height: 0.13,
             align: 'centre',
             ...F.brass,
@@ -123,14 +165,20 @@ export function buildTender(ctx: BuildContext, L: Layout, gear: Gear, name: stri
           bx(xr + 0.3, xf - 0.3, face, face + s * 0.008, zb + 0.16, zb + 0.175, F.brass),
         );
         // Rivet rows: along the top seam, the bottom seam and the vertical end seams.
+        // Snap heads 36 mm across, their paint rubbed a shade lighter than the sheet.
         const head = lath({
           profile: [
-            [0.012, 0],
-            [0.009, 0.006],
-            [0, 0.009],
+            [0.018, 0],
+            [0.014, 0.009],
+            [0, 0.013],
           ],
           segments: 5,
           ...F.blueSteel,
+          color: [
+            F.blueSteel.color[0] * 1.7,
+            F.blueSteel.color[1] * 1.7,
+            F.blueSteel.color[2] * 1.5,
+          ],
         });
         const onSide = (x: number, zz: number): Mesh =>
           place(head, { at: [x, face, zz], roll: s > 0 ? -Math.PI / 2 : Math.PI / 2 });
@@ -142,9 +190,8 @@ export function buildTender(ctx: BuildContext, L: Layout, gear: Gear, name: stri
           for (let k = 0; k < 9; k++) m.push(onSide(x, zb + 0.12 + k * 0.11));
       }
     }
-    // Rear coping and the rear end sill (oak) with a coupler pocket.
+    // The rear end sill (oak) with a coupler pocket.
     m.push(
-      bx(xr + 0.05, xr + 0.12, -BODY_W / 2 - 0.08, BODY_W / 2 + 0.08, zt, zt + 0.3, F.blueSteel),
       bx(xr - 0.08, xr, -1.2, 1.2, tz - 0.15, tz + 0.2, F.oak),
       bx(xr - 0.3, xr - 0.08, -0.12, 0.12, tz - 0.05, tz + 0.1, F.castIron),
     );

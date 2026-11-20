@@ -20,9 +20,9 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    11174,
-    2336,
-    360
+    11238,
+    2424,
+    368
   ],
   "drawCalls": [
     3,
@@ -61,8 +61,8 @@
       "kind": "grip",
       "at": [
         0.3,
-        -0.265,
-        1.06
+        -0.22,
+        1
       ]
     }
   ],
@@ -99,36 +99,43 @@
     }
   },
   "real": {
-    "length": 1.06,
+    "length": 0.83,
     "width": 0.75,
     "height": 1.83
   },
-  "measures": [],
+  "measures": [
+    {
+      "label": "standing height, boot sole to cap crown (design brief)",
+      "spec": 1.83,
+      "measured": 1.843,
+      "source": "recipes/rts_faction/README.md (original design brief)"
+    }
+  ],
   "sources": [
     "recipes/rts_faction/README.md (original design brief: proportions, shape language, palette)"
   ],
   "weather": {
     "chips": {
-      "target": 0.2,
-      "actual": 0.2,
+      "target": 0.28,
+      "actual": 0.28,
       "eligible": "convex-edges",
-      "area": 2.4087
+      "area": 2.2077
     },
     "mud": {
       "target": 0.75,
       "actual": 0.75,
       "eligible": "ground-near",
-      "area": 1.6363,
+      "area": 1.9162,
       "by": {
         "delver": {
           "target": 0.75,
           "actual": 0.75,
-          "area": 0.8824
+          "area": 0.8286
         },
         "delver_kit": {
           "target": 0.75,
           "actual": 0.75,
-          "area": 0.7539
+          "area": 1.0876
         }
       }
     },
@@ -136,17 +143,17 @@
       "target": 0.3,
       "actual": 0.3,
       "eligible": "up-facing",
-      "area": 1.3869,
+      "area": 1.5868,
       "by": {
         "delver": {
           "target": 0.3,
           "actual": 0.3,
-          "area": 0.5299
+          "area": 0.4811
         },
         "delver_kit": {
           "target": 0.3,
           "actual": 0.3,
-          "area": 0.857
+          "area": 1.1057
         }
       }
     },
@@ -154,7 +161,7 @@
       "target": 0.6,
       "actual": 0.6,
       "eligible": "touched",
-      "area": 0.1248
+      "area": 0.1243
     }
   },
   "qa": {

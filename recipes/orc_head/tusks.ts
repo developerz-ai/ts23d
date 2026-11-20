@@ -4,7 +4,7 @@
 // gum line, cleaner toward the tip. The right tusk is broken off short (a flat fracture). One
 // part, swept tapered tubes, placed from the skull's landmarks.
 
-import { type Mesh, merge, sweep } from '@developerz.ai/ts23d';
+import { dmath, type Mesh, merge, sweep } from '@developerz.ai/ts23d';
 import type { V } from '../_lib/bust/kit.ts';
 import { C } from './palette.ts';
 import { H, SK } from './spec.ts';
@@ -46,7 +46,7 @@ export function tusks(lod: number): Mesh {
   const n = [14, 8, 4][lod] ?? 4;
   const make = (side: 1 | -1, keep: number): Mesh => {
     const path = tuskPath(keep, n).map((p): V => [p[0], p[1] * side, p[2]]);
-    const scale = path.map((_, i) => Math.max(0.12, 1 - ((i / n) * keep) ** 1.5));
+    const scale = path.map((_, i) => Math.max(0.12, 1 - dmath.pow((i / n) * keep, 1.5)));
     const m = sweep({
       section: { radius: 0.037 * H, segments: seg },
       path,
@@ -88,13 +88,13 @@ function nick(m: Mesh, path: readonly V[]): void {
   for (const [t, depth, radius] of NICKS) {
     const c = path[Math.min(path.length - 1, Math.round(t * (path.length - 1)))];
     if (!c) continue;
-    const at: V = [c[0] + 0.03 * H * (1 - t ** 1.5), c[1], c[2]];
+    const at: V = [c[0] + 0.03 * H * (1 - dmath.pow(t, 1.5)), c[1], c[2]];
     for (let v = 0; v < positions.length; v += 3) {
       const p: V = [positions[v] ?? 0, positions[v + 1] ?? 0, positions[v + 2] ?? 0];
-      const d = Math.hypot(p[0] - at[0], p[1] - at[1], p[2] - at[2]);
+      const d = dmath.hypot(p[0] - at[0], p[1] - at[1], p[2] - at[2]);
       if (d >= radius) continue;
-      const k = (1 - d / radius) ** 2;
-      const axis = Math.hypot(p[0] - c[0], p[1] - c[1], p[2] - c[2]) || 1;
+      const k = dmath.pow(1 - d / radius, 2);
+      const axis = dmath.hypot(p[0] - c[0], p[1] - c[1], p[2] - c[2]) || 1;
       for (let a = 0; a < 3; a++) {
         positions[v + a] = (p[a] ?? 0) - (((p[a] ?? 0) - (c[a] ?? 0)) / axis) * depth * k;
         colors[v + a] =

@@ -5,6 +5,7 @@
 
 import {
   cross,
+  dmath,
   type Mesh,
   type Rng,
   sub,
@@ -75,7 +76,7 @@ export function poissonRoots(
       Vec3,
     ];
     const e = cross(sub(b, a), sub(c, a));
-    const area = Math.hypot(e[0], e[1], e[2]) / 2;
+    const area = dmath.hypot(e[0], e[1], e[2]) / 2;
     if (area <= 0) continue;
     const mid = sample(m, t, 1 / 3, 1 / 3);
     const want = area * Math.max(0, density(mid.p, mid.n)) * 2;
@@ -113,7 +114,7 @@ export function poissonRoots(
         for (let w = -1; w <= 1 && free; w++)
           for (const o of grid.get(key((g[0] ?? 0) + x, (g[1] ?? 0) + y, (g[2] ?? 0) + w)) ?? [])
             if (
-              Math.hypot(o.p[0] - d.p[0], o.p[1] - d.p[1], o.p[2] - d.p[2]) < Math.min(o.r, d.r)
+              dmath.hypot(o.p[0] - d.p[0], o.p[1] - d.p[1], o.p[2] - d.p[2]) < Math.min(o.r, d.r)
             ) {
               free = false;
               break;
@@ -138,10 +139,11 @@ export function clumpOf(list: readonly Root[], k: number, reach = Infinity): Int
   const heads = list.map((_, i) => i).filter((i) => i % k === 0);
   list.forEach((r, i) => {
     if (i % k === 0) return;
-    let best = Math.min(2.5 * r.r, reach) ** 2;
+    let best = dmath.pow(Math.min(2.5 * r.r, reach), 2);
     for (const h of heads) {
       const q = list[h]?.p ?? r.p;
-      const d = (q[0] - r.p[0]) ** 2 + (q[1] - r.p[1]) ** 2 + (q[2] - r.p[2]) ** 2;
+      const d =
+        dmath.pow(q[0] - r.p[0], 2) + dmath.pow(q[1] - r.p[1], 2) + dmath.pow(q[2] - r.p[2], 2);
       if (d < best) {
         best = d;
         out[i] = h;
@@ -163,7 +165,7 @@ export function bury(f: (p: Vec3) => number, p: Vec3, sink: number, h: number): 
   let q = p;
   for (let i = 0; i < 4; i++) q = mad(q, gradient(f, q, h), -(f(q) + (i < 2 ? 0 : sink)));
   // Thin features (toes, ear rims) can throw Newton far: then trust the mesh normal instead.
-  const moved = Math.hypot(q[0] - p[0], q[1] - p[1], q[2] - p[2]);
+  const moved = dmath.hypot(q[0] - p[0], q[1] - p[1], q[2] - p[2]);
   return moved > 3 * sink + 2 * h ? mad(p, gradient(f, p, h), -sink) : q;
 }
 

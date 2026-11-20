@@ -1,7 +1,7 @@
 {
   "asset": "rts_barracks_scaffold",
   "reviewer": "agent",
-  "overall": 7.3,
+  "overall": 7.9,
   "scores": {
     "silhouette": {
       "score": 8,
@@ -18,98 +18,44 @@
       ]
     },
     "materials": {
-      "score": 7,
-      "reason": "Poles and decks read as weathered timber, walls as stone, banner as cloth; the floor slab is the blotchy camouflage pattern and the stone is uniform beige.",
+      "score": 8,
+      "reason": "The floor is now a flagstone strip with readable joints and per-flag value (sheet TOP), no longer the camouflage slab. Walls carry per-block value jitter, poles and decks read as weathered timber, banners as cloth.",
       "fixes": [
-        "floor strip with readable joints",
-        "per-block value jitter on the walls"
+        "pale fresh mortar in the joints of the top, newly laid course"
       ]
     },
     "detail": {
-      "score": 7,
-      "reason": "Lashed nodes, plank decks, ladder, gin-pole with rope and counterweight, a block on the deck, banners on the scaffold.",
+      "score": 8,
+      "reason": "Lashed standards and ledgers, diagonal braces on the scaffold face, plank decks, a ladder, a gin-pole with rope and counterweight, banners on the scaffold, mortar runs under the top course.",
       "fixes": [
-        "a mortar bucket and stacked blocks on the decks",
-        "brace diagonals on the scaffold face"
+        "a mortar bucket and a stack of blocks on the decks"
       ]
     },
     "wear": {
-      "score": 6,
-      "reason": "Some damp at the wall foot; no mortar drips below the top courses, no mud at pole feet, planks unstained.",
+      "score": 7,
+      "reason": "Pale mortar drips now run down under the laid courses (hero.png); no mud at the pole feet and the deck planks are unstained.",
       "fixes": [
-        "mortar drips below the laid courses and splash on the plinth",
-        "mud at the pole feet"
+        "mud at the pole feet",
+        "mortar splash on the deck planks"
       ]
     },
     "lod": {
-      "score": 7,
-      "reason": "lods.png: LOD2 (528 tris) keeps walls, poles, decks and banners, but drops the ladder and gin-pole and the walls darken to a grey texture against the beige LOD0.",
+      "score": 8,
+      "reason": "FAR LOD2 keeps walls (now the same beige as LOD0), poles, decks, banners and the gin-pole; only the ladder and lashings go.",
       "fixes": [
-        "keep the gin-pole as two quads at LOD2",
-        "match the LOD2 wall value to LOD0"
+        "keep the ladder as one quad at LOD2"
       ]
     },
     "technical": {
       "score": 8,
-      "reason": "QA PASS, tris 18.0k / 4.9k / 528, draws 2/2/2; one trim material + team slot, LOD2 well under 1k. Triangles mostly sit in the running-bond blocks and slates, where they show.",
+      "reason": "QA PASS: 16.8k / 4.4k / 610 tris, 2 / 2 / 2 draws; one trim material + team slot, LOD2 well under 1k. LOD0 down ~1k.",
       "fixes": [
-        "merge the per-block wall boxes into one course mesh per bay at LOD0 (shared inner faces removed) so the coursing costs fewer triangles"
+        "spend some of the LOD0 savings on the fixes above (quoins, string course, gravel) instead of more blocks"
       ]
     }
   },
   "renders": {
-    "hero.png": "70f7033e9432a52fc53fb8c8e6a02fb3979a4a701c4eb2168248cd35967aec81",
-    "sheet.png": "90f4a9d547322c4a46c0a37c0a7016a6648844ff6fb85394d835143483fb3776"
-  },
-  "metrics": {
-    "silhouette": [
-      {
-        "view": "front",
-        "iou": 0.816
-      },
-      {
-        "view": "side",
-        "iou": 0.821
-      },
-      {
-        "view": "3/4",
-        "iou": 0.949
-      }
-    ],
-    "focal": {
-      "peakPart": "scaffold_decks",
-      "peak": [
-        437,
-        205
-      ],
-      "focalShare": 0,
-      "focalArea": 0,
-      "top": [
-        {
-          "part": "scaffold_decks",
-          "share": 0.581
-        },
-        {
-          "part": "scaffold",
-          "share": 0.182
-        },
-        {
-          "part": "walls",
-          "share": 0.091
-        }
-      ],
-      "declared": []
-    },
-    "rest": {
-      "share": 0.442,
-      "spread": 0.807,
-      "min": 0.25
-    },
-    "shape": {
-      "acuteShare": 0.533,
-      "straightShare": 0.777,
-      "taper": 0.71,
-      "shape": "aggressive"
-    }
+    "hero.png": "10bbc230a55f8b9488f83ab3e2ab61cfb1e98894e2fe9e275a9b09e3d669244b",
+    "sheet.png": "cdfcb48deafb3bec5207ab39b91d3b5a6adb92ac780f79ff40cc8b8a164bae21"
   }
 }

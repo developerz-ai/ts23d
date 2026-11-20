@@ -2,10 +2,11 @@
 // straight trunk with fins, a fan of necks on a body, and a ring of arms. No mesh, no builder.
 
 import type { Bone, Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import type { BodyPlan, PlanChain, PlanLink } from './body-plan-types.ts';
 
 const unit = (v: Vec3): Vec3 => {
-  const l = Math.hypot(v[0], v[1], v[2]) || 1;
+  const l = dmath.hypot(v[0], v[1], v[2]) || 1;
   return [v[0] / l, v[1] / l, v[2] / l];
 };
 const cross = (a: Vec3, b: Vec3): Vec3 => [
@@ -100,8 +101,8 @@ export function hydraPlan(necks = 5, links = 12, spread = 1.6): BodyPlan {
   const from = body.links[0]?.bone.name;
   const out = Array.from({ length: necks }, (_, i) => {
     const a = necks > 1 ? (i / (necks - 1) - 0.5) * spread : 0;
-    const start: Vec3 = [0.1 * Math.cos(a), 0.1 * Math.sin(a), 1.05];
-    return straightChain(`neck_${i}`, start, [Math.cos(a), Math.sin(a), 0.5], 1.8, links, from);
+    const start: Vec3 = [0.1 * dmath.cos(a), 0.1 * dmath.sin(a), 1.05];
+    return straightChain(`neck_${i}`, start, [dmath.cos(a), dmath.sin(a), 0.5], 1.8, links, from);
   });
   return planOf('hydra', 2, [body, ...out]);
 }
@@ -114,8 +115,8 @@ export function octopusPlan(arms = 8, links = 16): BodyPlan {
     const a = ((i + 0.5) * Math.PI * 2) / arms;
     return straightChain(
       `arm_${i}`,
-      [0.08 * Math.cos(a), 0.08 * Math.sin(a), 0.25],
-      [Math.cos(a), Math.sin(a), -0.15],
+      [0.08 * dmath.cos(a), 0.08 * dmath.sin(a), 0.25],
+      [dmath.cos(a), dmath.sin(a), -0.15],
       1,
       links,
       from,

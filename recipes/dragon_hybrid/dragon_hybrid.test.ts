@@ -12,6 +12,7 @@ import {
   clearNeuralSources,
   compile,
   decodePng,
+  dmath,
   inverseBind,
   neuralCache,
   poseJoints,
@@ -25,7 +26,7 @@ import {
 import { compileLods } from '@developerz.ai/ts23d/testing';
 import { provideRecipeNeural } from '../../src/cli/neural-store.ts';
 import { BOX, dragon_hybrid, measured, SOURCED } from './dragon_hybrid.ts';
-import { TRIANGLES, WING_SCALE } from './steps.ts';
+import { TRIANGLES, WING_SCALE, WING_TILT } from './steps.ts';
 import { DROPPED } from './surface.ts';
 import { FLAP } from './wings.ts';
 
@@ -116,20 +117,24 @@ describe('dragon_hybrid, model tier (committed cache)', () => {
   );
 
   it(
-    "the wings are the generator's × 1.25: a 3.4 m V where 2.8 m was drawn",
+    "the wings are the generator's × 1.4, lowered 22°: 5.0 m across where a 2.8 m V was drawn",
     async () => {
       await cached();
       const P = textured(0)[0]?.mesh?.positions ?? new Float32Array();
-      let [left, right, top] = [0, 0, 0];
+      let [front, back, left, right, top] = [0, 0, 0, 0, 0];
       for (let i = 0; i < P.length; i += 3) {
+        front = Math.max(front, P[i] ?? 0);
+        back = Math.min(back, P[i] ?? 0);
         left = Math.max(left, P[i + 1] ?? 0);
         right = Math.min(right, P[i + 1] ?? 0);
         top = Math.max(top, P[i + 2] ?? 0);
       }
-      // The generator's V was 2.8 m wide and 3.3 m high: neither fits the scaled box's ± 5 %.
-      expect(2.8).toBeLessThan(BOX.width * 0.95);
-      expect(3.3).toBeLessThan(BOX.height * 0.95);
-      expect(WING_SCALE).toBe(1.25);
+      // The generator's V was 2.8 m wide, and × 1.25, still raised, it was 3.35 m wide and 3.6 m
+      // high: neither fits this box's ± 5 %. The span is now the animal's length.
+      expect(3.35).toBeLessThan(BOX.width * 0.95);
+      expect(3.6).toBeGreaterThan(BOX.height * 1.05);
+      expect([WING_SCALE, WING_TILT]).toEqual([1.4, 22]);
+      expect(Math.abs(front - back - BOX.length) / BOX.length).toBeLessThan(0.05);
       expect(Math.abs(left - right - BOX.width) / BOX.width).toBeLessThan(0.05);
       expect(Math.abs(top - BOX.height) / BOX.height).toBeLessThan(0.05);
     },
@@ -172,8 +177,8 @@ describe('dragon_hybrid, model tier (committed cache)', () => {
       // One flat roughness (the bake's 0.8 = 204) has no spread; scales, plates, horn and dust do.
       const rough = sample(set.orm, () => true).map((c) => c[1] ?? 0);
       const avg = mean(rough);
-      const spread = Math.sqrt(mean(rough.map((r) => (r - avg) ** 2)));
-      expect(Math.sqrt(mean([204, 204].map((r) => (r - 204) ** 2)))).toBe(0);
+      const spread = Math.sqrt(mean(rough.map((r) => dmath.pow(r - avg, 2))));
+      expect(Math.sqrt(mean([204, 204].map((r) => dmath.pow(r - 204, 2))))).toBe(0);
       expect(spread).toBeGreaterThan(12);
     },
     SLOW,
@@ -246,7 +251,7 @@ describe('dragon_hybrid, model tier (committed cache)', () => {
       const ibm = inverseBind(sk);
       const keys = flap.tracks[0]?.times.length ?? 0;
       const dist = (P: ArrayLike<number>, p: number, Q: ArrayLike<number>, q: number): number =>
-        Math.hypot(
+        dmath.hypot(
           (P[p * 3] ?? 0) - (Q[q * 3] ?? 0),
           (P[p * 3 + 1] ?? 0) - (Q[q * 3 + 1] ?? 0),
           (P[p * 3 + 2] ?? 0) - (Q[q * 3 + 2] ?? 0),
@@ -263,13 +268,13 @@ describe('dragon_hybrid, model tier (committed cache)', () => {
       // Travel: the widest two places a tip is in over the beat.
       const travel = (v: number): number =>
         Math.max(...poses.flatMap((P) => poses.map((Q) => dist(P, v, Q, v))));
-      // Measured 1.95 m and 1.90 m on wings 2.9 m long; half the length is the least a flap is.
+      // Measured 2.25 m and 2.18 m on wings 3.2 m long; half the length is the least a flap is.
       expect(travel(left)).toBeGreaterThan(1.5);
       expect(travel(right)).toBeGreaterThan(1.5);
       // The beat is symmetric (the two wings' own surfaces are not: nothing is mirrored).
       expect(Math.abs(travel(left) / travel(right) - 1)).toBeLessThan(0.1);
       // The membrane: every edge of a triangle the wing bones move, posed ÷ rest, over the whole
-      // beat. QA `deform` allows ×4 at the 99th percentile; the worst edge here is ×1.26.
+      // beat. QA `deform` allows ×4 at the 99th percentile; the worst edge here is ×1.51.
       let worst = 1;
       for (let t = 0; t < T.length; t += 3) {
         const tri = [T[t] ?? 0, T[t + 1] ?? 0, T[t + 2] ?? 0] as const;

@@ -20,10 +20,11 @@
     },
     "materials": {
       "score": 6,
-      "reason": "Skin, hair, red wool, blue tunic, linen and a metallic brass collar separate by hue; mantle and tunic share one matte roughness and the skin is waxy.",
+      "reason": "Skin, hair, red wool, blue tunic, linen and a metallic brass collar separate by hue; mantle and tunic share one matte roughness, the skin is waxy, and the hair cards show white fringe specks at the crown in hero.png.",
       "fixes": [
         "wool strip with fibre noise on the mantle and a linen strip on the tunic",
-        "skin roughness variation (oily T-zone, matte cheeks)"
+        "skin roughness variation (oily T-zone, matte cheeks)",
+        "premultiply / darken the hair card alpha fringe so no white specks show"
       ]
     },
     "detail": {
@@ -60,7 +61,7 @@
     }
   },
   "renders": {
-    "hero.png": "9250a476964d08dcf7658833ed28c184b8c11529efd86712ce5123192d0d5881",
-    "sheet.png": "164ec6d3e5193221f0d7863ef4ea4647a7d6680c29b2ee9c3da8165cfd9e5466"
+    "hero.png": "8490eb94a689c3b29d3b966260ed89b608c32d40ae03d1a55d4f7348d93ebab9",
+    "sheet.png": "375e6e21f741fbd18dff962578276008a44d11b6187850940961c987012fe5bd"
   }
 }

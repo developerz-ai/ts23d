@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { compile, type Mesh, Ts23dError } from '../core/index.ts';
+import { compile, dmath, type Mesh, Ts23dError } from '../core/index.ts';
 import { applySimilarity, triBvh, yawSimilarity } from '../primitives/index.ts';
 import { creaturePlan } from './creature.ts';
 import { meshVolume } from './model-body.ts';
@@ -31,7 +31,7 @@ describe('modelBody / defineModelCreature', () => {
   it('refuses a model that is not the planned animal (a ball)', () => {
     const P = Float32Array.from(turned.positions);
     for (let i = 0; i < P.length; i += 3) {
-      const l = Math.hypot(P[i] ?? 0, P[i + 1] ?? 0, P[i + 2] ?? 0) || 1;
+      const l = dmath.hypot(P[i] ?? 0, P[i + 1] ?? 0, P[i + 2] ?? 0) || 1;
       for (let k = 0; k < 3; k++) P[i + k] = (P[i + k] ?? 0) / l;
     }
     const a = asset(fixtureModel({ ...turned, positions: P }), 'model_ball');

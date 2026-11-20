@@ -4,6 +4,7 @@
 // (`BeautyOptions`, the CLI's --az / --el / --fov), so a hint is just a recorded default: `t3d
 // hero`, the committed hero, the review and critique packs honour it, and a flag still wins.
 
+import * as dmath from './dmath.ts';
 import { Ts23dError } from './errors.ts';
 import type { Vec3 } from './vec.ts';
 
@@ -60,9 +61,9 @@ export function heroViewFault(h: HeroView): readonly [string, string] | null {
       'keep the fixed viewpoint (eye, target, fovDeg) or the orbit (azDeg, elDeg, fovDeg)',
     ];
   const d = [h.eye[0] - h.target[0], h.eye[1] - h.target[1], h.eye[2] - h.target[2]];
-  const flat = Math.hypot(d[0] ?? 0, d[1] ?? 0);
+  const flat = dmath.hypot(d[0] ?? 0, d[1] ?? 0);
   // The same 89° ceiling as the orbit: straight up or down has no "up" to level the horizon.
-  if (flat < 1e-9 || Math.abs(d[2] ?? 0) / flat > Math.tan((e1 * Math.PI) / 180))
+  if (flat < 1e-9 || Math.abs(d[2] ?? 0) / flat > dmath.tan((e1 * Math.PI) / 180))
     return [
       'eye and target coincide or are stacked vertically (steeper than 89°)',
       'move the eye sideways from the target',

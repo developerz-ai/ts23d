@@ -4,7 +4,7 @@
 // its own part pivoted at the ball centre, pitched with the head. Far LOD: a low-poly ball.
 
 import type { Mesh, Vec3 } from '@developerz.ai/ts23d';
-import { place } from '@developerz.ai/ts23d';
+import { dmath, place } from '@developerz.ai/ts23d';
 import { eyeball } from '../_lib/bust/eye.ts';
 import { mixRgb, smoothstep } from '../_lib/creature/curve.ts';
 import { blob } from '../_lib/creature/lowpoly.ts';
@@ -16,7 +16,7 @@ import { HEAD_PITCH, HEAD_SCALE } from './skeleton.ts';
 export function gazeYaw(side: 1 | -1): number {
   const c = EYE.centre;
   const g: Vec3 = EYE.gaze ?? [c[0] + 1.5, 0, c[2]];
-  return Math.atan2(g[1] - c[1] * side, g[0] - c[0]);
+  return dmath.atan2(g[1] - c[1] * side, g[0] - c[0]);
 }
 
 /** The eyeball about its centre, gazing at the gaze point, pitched with the head. */

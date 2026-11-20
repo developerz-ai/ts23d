@@ -36,10 +36,11 @@ export function earEdits(l: HeadLayout, s: CreatureSpec, res: number, fine: bool
   const at = (k: number): Vec3 => v3.add(base, v3.mul(up, k * eh));
   const round = shape === 'round';
   const pale = palette(s.colours).belly;
+  const wide = s.face?.earWidth ?? 1;
   const nodes = [
-    { at: at(-0.15), r: eh * (round ? 0.42 : 0.36) },
-    { at: at(0.45), r: eh * (round ? 0.38 : 0.2) },
-    { at: at(round ? 0.82 : 1), r: Math.max(res * 0.5, eh * (round ? 0.2 : 0.06)) },
+    { at: at(-0.15), r: eh * (round ? 0.42 : 0.36) * wide },
+    { at: at(0.45), r: eh * (round ? 0.38 : 0.2) * wide },
+    { at: at(round ? 0.82 : 1), r: Math.max(res * 0.5, eh * (round ? 0.2 : 0.06) * wide) },
   ];
   const thick = Math.max(eh * 0.09, res * 0.75);
   const cup = nodes

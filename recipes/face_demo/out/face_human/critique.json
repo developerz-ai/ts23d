@@ -1,13 +1,13 @@
 {
   "asset": "face_human",
   "reviewer": "agent",
-  "overall": 6,
+  "overall": 6.3,
   "scores": {
     "silhouette": {
       "score": 7,
-      "reason": "Hair cards now give crown volume and a natural outline; reads as a young man bust.",
+      "reason": "Hair cards give crown volume and the TOP crown is filled; reads as a young man bust.",
       "fixes": [
-        "fill the bare patch on the crown seen in TOP"
+        "a few loose strands at the hairline so the outline is less of a cap"
       ]
     },
     "proportions": {
@@ -18,11 +18,11 @@
       ]
     },
     "materials": {
-      "score": 5,
-      "reason": "Skin reads as matte plastic with a uniform pink-beige and dark spot decals; no subsurface warmth at ears/nose, no wet eyes or lips. The hair cards read as brown hair with value variation.",
+      "score": 6,
+      "reason": "Blemish decals are gone; the skin has sheen, warmth at the nose and lips; but the chest and shoulders are shiny plastic.",
       "fixes": [
-        "skin strip with sheen/lower roughness on the T-zone, red warmth at ears, nose and lips; glossy eyes and wet lip line",
-        "hair strip with anisotropic sheen and darker roots, per-card value variation"
+        "rougher skin away from the T-zone",
+        "hair strip with anisotropic sheen and darker roots"
       ]
     },
     "detail": {
@@ -33,15 +33,16 @@
       ]
     },
     "wear": {
-      "score": 5,
-      "reason": "Blemish dots across the face read as a rash rather than character; no scar or stubble.",
+      "score": 6,
+      "reason": "Stubble shadow now darkens the jaw; it reads as grainy grey noise rather than hair stubble.",
       "fixes": [
-        "fewer seeded marks plus stubble shadow on the jaw"
+        "stubble as fine dark dots in a soft-edged beard zone, not a grey noise wash",
+        "one small seeded scar"
       ]
     },
     "lod": {
       "score": 5,
-      "reason": "FAR LOD2 is a distance-field re-mesh: the face breaks into flat patches of different tone and the features smear. The hair holds.",
+      "reason": "FAR LOD2 is still a distance-field re-mesh: the face breaks into flat patches of different tone and the features smear.",
       "fixes": [
         "LOD2 from an authored coarse topology (decimated quad base mesh) instead of the distance-field re-mesh, keeping vertex colour smooth"
       ]
@@ -55,7 +56,7 @@
     }
   },
   "renders": {
-    "hero.png": "750004ee77816562d0ab1b9f4f711b30bb4bcd450181815c0203569c38dd77ed",
-    "sheet.png": "db162967840c528476f8a5da3c23ad1726863e91b81557ff1ba50b335be5ad8e"
+    "hero.png": "20d926cbb2f8947a6b1a562d7dcb6804977359474daad14e975b003103f2e16f",
+    "sheet.png": "7b4f8299c2a426ed7d4e324d0e16c4f4dbee873528a6b12713b79d2d578d1bb2"
   }
 }

@@ -43,15 +43,24 @@ and all lettering merged: one static part, one draw call). No moving parts.
 
 ## Wear
 `weather()` on the timber: damp and mud at the post feet, moss low on the shaded side, chipped and
-sun-bleached frame and hood edges. The top three planks are painted progressively toward a faded grey
-green (the band the sun reaches under the short hood).
+sun-bleached frame and hood edges. The paint fades continuously up the top half of the board toward
+a chalky grey green (the band the sun reaches under the short hood; each plank's upper edge paler
+than its lower), and damp darkens the bottom plank. Close up (LOD0/1), six rain streaks run down
+from the capping, darkest under it and gone into the paint at their foot, and the frame's front
+arrises are chipped through to grey timber in six places.
+
+## Materials
+Raised letters and the divider are polished sign brass (`brass.ts`: roughness 0.16, a trace of
+tarnish), so the letter faces catch a highlight; the hood is bitumen roofing felt (`asphalt` strip)
+with wooden fascia boards along both eaves (LOD0); carriage bolts with 60 mm square washers fix the
+board to the posts (LOD0/1).
 
 ## LOD
 | LOD | Lettering | Triangles |
 |---|---|---|
-| 0 | raised brass at 12 mm, `segments: 2` | ≈ 30k |
+| 0 | raised brass at 12 mm, `segments: 2`; flush rows at `segments: 1` | ≈ 27.6k |
 | 1 | every row flush, `segments: 1` | ≈ 8.5k |
-| 2 | greeked: one flat bar per word in its colour (cream left, brass right, title brass), so both columns, the title and their rhythm survive | ≈ 280 |
+| 2 | greeked: one flat bar per word in its colour (cream left, brass right, title brass), each 90 % of its word so the word breaks stay open; both columns, the title and their rhythm survive | ≈ 280 |
 
 Budget why: a type specimen; twelve rows of real lettering in six faces are the content, and LOD2 (greeked word bars) fits the prop band.
 

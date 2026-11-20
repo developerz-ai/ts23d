@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import type { Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import { pointTriangleDistance } from './point-triangle.ts';
 
 const a: Vec3 = [0, 0, 0];
@@ -19,7 +20,10 @@ const brute = (p: Vec3): number => {
         a[1] + (b[1] - a[1]) * u + (c[1] - a[1]) * v,
         0,
       ];
-      best = Math.min(best, Math.hypot(p[0] - (q[0] ?? 0), p[1] - (q[1] ?? 0), p[2] - (q[2] ?? 0)));
+      best = Math.min(
+        best,
+        dmath.hypot(p[0] - (q[0] ?? 0), p[1] - (q[1] ?? 0), p[2] - (q[2] ?? 0)),
+      );
     }
   return best;
 };

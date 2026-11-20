@@ -1,7 +1,7 @@
 // Colour lives in vertex colour (linear RGB), multiplied over the greyscale trim sheet: a palette
 // swap is a recipe edit, never a new texture.
 
-import { Ts23dError, type Vec3 } from '../core/index.ts';
+import { dmath, Ts23dError, type Vec3 } from '../core/index.ts';
 
 export type Palette = Readonly<Record<string, Vec3>>;
 
@@ -22,7 +22,7 @@ export function hex(value: string): Vec3 {
   const n = Number.parseInt(digits, 16);
   const lin = (c: number): number => {
     const s = c / 255;
-    return s <= 0.04045 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+    return s <= 0.04045 ? s / 12.92 : dmath.pow((s + 0.055) / 1.055, 2.4);
   };
   return [lin((n >> 16) & 255), lin((n >> 8) & 255), lin(n & 255)];
 }

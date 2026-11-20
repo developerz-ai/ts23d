@@ -51,13 +51,13 @@ Moving: `hood` (sway about −Y at the cowl pivots, `oneWay` 50°; gooseneck arm
 `door_l`, `door_r` (sway about ∓Z at the A-pillar hinge line, `oneWay` 65°; cards, mirrors and hinge
 leaves in `door_*_trim`) · `trunk_lid` (sway about +Y, `oneWay` 50°) · `fuel_door` (sway, `oneWay`
 85°) · `steer_fl`, `steer_fr` (sway about Z at the kingpin, ±8°) carrying `upright_*` and
-`wheel_fl/fr` · `wheel_rl/rr` · every `wheel_*` spins about Y and carries its `rim_*` (brushed
-finish).
+`wheel_fl/fr` · `wheel_rl/rr` · every `wheel_*` spins about Y and carries its `rim_*` (merged
+into the wheel's draw).
 
 Static, named for damage models and decals: `fender_l/r`, `sill_l/r`, `quarter_l/r`, `cowl`,
 `rear_deck`, `nose_fascia`, `tail_fascia`, `door_jambs`, `engine_bay` (all paint slot `body`),
 `body_stripes` / `hood_stripes` / `trunk_lid_stripes` (paint slot `stripe`), `road_film` (dried
-spatter on the lower body, LOD0–1), `windscreen`
+spatter behind each wheel and on the nose, LOD0–1), `windscreen`
 (glass), `windscreen_frame`, `wipers`, `body_trim`, `headlamps`, `headlamp_lenses`, lamps
 `headlamp_l/r_drl` and `taillight_l/r_led` (emissive), `engine_block`, `engine_heads`,
 `engine_intake`, `exhaust`, `cooling`, `bay_ancillaries`, `driveline`, `suspension_fl/fr/rl/rr`,
@@ -81,7 +81,17 @@ Liveries (paint slots `body` + `stripe`, clearcoat + metallic flake kept by ever
   `clearOf` lists only the shut-line neighbours (fenders, cowl) and the true contacts under the skin.
 - `roadster_v10_open` bakes the panels open and its clips swing them shut (the same sector,
   reversed), so no clip drives a panel past its stop.
-- Triangles (LOD0/1/2): 155k / 23k / 3.0k closed, 155k / 29k / 4.5k open, against the sports-car
+- Draws: 24 / 24 / 18 (closed), 24 / 24 / 20 (open), down from 30: the rims, roll hoops and
+  carpet use the trim sheet's own strips instead of a `finishes` layer each, so a wheel is one
+  draw. What remains is one draw per pivot and paint slot: static body (opaque, glass, paint
+  `body`, paint `stripe`, emissive layers), hood, trunk lid, two doors, fuel door, two steering
+  knuckles, four wheels.
+- The nose droops 3 cm at the centre-line tip (4.5 cm at the corners), all of it ahead of the
+  hood's shut line, so the clamshell and its swing are untouched.
+- Headlamps: one thin lit guide a third of the way down each pocket on two dark posts; no halo
+  round the lens (it drew a white rim in the beauty render). At LOD2 the lamp is a smoked lens
+  with the lit strip across it and the tyre is baked near black round a lightly dusted rim.
+- Triangles (LOD0/1/2): 154k / 23k / 3.1k closed, 154k / 28k / 4.5k open, against the sports-car
   playbook's 40–100k / 8–20k / 800–1,500. The excess is deliberate and bounded by `budget`: a
   dressed V10 bay, cockpit, suspension, vented discs and two-skin opening panels (about 60k at
   LOD0) that the playbook's car does not carry. The skin is meshed at 5 / 10 / 24 cm chords with
@@ -90,10 +100,12 @@ Liveries (paint slots `body` + `stripe`, clearcoat + metallic flake kept by ever
 
 Budget why: an opening-panel hero car: a dressed V10 bay, cockpit, suspension, vented discs and two-skin doors, clamshell hood and trunk lid (about 60k at LOD0) on top of a 95k body inside the sports-car band; the open variant shows that interior at every LOD.
 
-- Wear is use, not age: road film (darkened lacquer + dried spatter shards) rising from the sills
-  and behind each wheel, brake dust on the rims (front heavier), heat tint on the side pipes
-  (blue at the collector, straw mid-length, soot in the tips), brown scale on the headers, oily
-  dust low in the bay. All vertex colour, so every LOD and livery keeps it.
+- Wear is use, not age: road film (darkened lacquer) rising from the sills, dried mud flecks
+  only in the fan behind each wheel and on the nose (bigger clots where the spray is thick),
+  brake dust on the rims (front heavier), heat tint on the side pipes (blue at the collector,
+  straw mid-length, soot in the tips), brown scale on the headers, tan dust on the valve covers
+  and runners with oil weep below the gaskets, oily dust up the bay aprons. The open variant's
+  hero camera stands at 30° elevation to look into the bay. All vertex colour, so every LOD and livery keeps it.
 - The door's swing axis stands 8–18 mm outside the skin (so the front edge clears the fender as it
   opens), which makes the door hinges external: each has a pin on that axis that both leaves wrap,
   and the door hangs on it at every angle (`connect: hinge` to `hinges`).

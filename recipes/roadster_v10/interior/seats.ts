@@ -4,7 +4,7 @@
 // (H-point area, X forward), placed per seat by the caller.
 
 import type { Lod, Mesh, Vec3 } from '@developerz.ai/ts23d';
-import { loft, merge } from '@developerz.ai/ts23d';
+import { dmath, loft, merge } from '@developerz.ai/ts23d';
 import { C } from '../lib/colors.ts';
 import { bx, rod, rotateAbout, shift, tube } from '../lib/geo.ts';
 
@@ -28,7 +28,7 @@ function rrect(
   for (const [ky, kz, a0] of corners)
     for (let k = 0; k < per; k++) {
       const a = a0 + (k / Math.max(1, per - 1)) * (Math.PI / 2);
-      out.push([x, cy + ky + r * Math.cos(a), cz + kz + r * Math.sin(a)]);
+      out.push([x, cy + ky + r * dmath.cos(a), cz + kz + r * dmath.sin(a)]);
     }
   return out;
 }
@@ -103,9 +103,9 @@ function backrest(lod: Lod): Mesh {
     const z = 0.1 + 0.72 * t;
     // Lumbar bulge, shoulder taper, headrest neck at t ≈ 0.72.
     const hy = t < 0.65 ? 0.23 - 0.02 * t : t < 0.75 ? 0.16 : 0.13;
-    const hx = 0.07 + 0.02 * Math.sin(t * Math.PI) - (t > 0.7 ? 0.015 : 0);
+    const hx = 0.07 + 0.02 * dmath.sin(t * Math.PI) - (t > 0.7 ? 0.015 : 0);
     const ring = rrect(0, 0, 0, hy, hx, 0.035, per).map(
-      ([, y, x2]): Vec3 => [x2 - 0.02 * Math.sin(t * Math.PI * 1.2), y, z],
+      ([, y, x2]): Vec3 => [x2 - 0.02 * dmath.sin(t * Math.PI * 1.2), y, z],
     );
     rings.push(ring);
   }
@@ -134,7 +134,7 @@ function backrest(lod: Lod): Mesh {
       const t = i / 6;
       ins.push(
         rrect(0, 0, 0, 0.12, 0.006, 0.005, 3).map(
-          ([, y, x2]): Vec3 => [x2 + 0.083 + 0.01 * Math.sin(t * Math.PI), y, 0.16 + 0.38 * t],
+          ([, y, x2]): Vec3 => [x2 + 0.083 + 0.01 * dmath.sin(t * Math.PI), y, 0.16 + 0.38 * t],
         ),
       );
     }

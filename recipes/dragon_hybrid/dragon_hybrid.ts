@@ -14,6 +14,7 @@ import {
   CREATURE_MATERIALS,
   defineMaterial,
   defineModelCreature,
+  dmath,
 } from '@developerz.ai/ts23d';
 import { DESIGN, DRAKE } from './spec.ts';
 import { TRIANGLES } from './steps.ts';
@@ -23,11 +24,11 @@ export { CONCEPT } from './concept.ts';
 
 const SCALES = defineMaterial(CREATURE_MATERIALS.fur_neutral);
 
-/** The box of THIS pose, from the design spec (README.md, "Scale"): nose to tail tip, the wings
- *  raised in a V, the wing tips. The wings are the generator's × 1.25 (steps.ts WING_SCALE): the
- *  V was 2.8 m wide and 3.3 m high, and is 3.4 m and 3.7 m (3.35 m and 3.60 m once `repose` has
- *  made the two wings' bones mirror images). */
-export const BOX = { length: 5.0, width: 3.4, height: 3.7 } as const;
+/** The box of THIS pose, from the design spec (README.md, "Scale"): nose to tail tip, wing tip
+ *  to wing tip, the wing tips' height. The wings are the generator's × 1.4, lowered 22° about
+ *  their roots (wings.ts WING_SCALE, WING_TILT): its V was 2.8 m wide and 3.3 m high; they now
+ *  spread 5.0 m, as wide as the animal is long, and stand 3.2 m. */
+export const BOX = { length: 5.0, width: 5.0, height: 3.2 } as const;
 
 /** The design spec read on the model body (README.md table), metres. */
 export const SOURCED = {
@@ -66,7 +67,8 @@ export function measured(a: Parameters<Check>[0]): {
   const tail = bones
     .filter((b) => /^tail_[1-9]\d*$/.test(b.name))
     .reduce(
-      (s, b) => s + Math.hypot(b.tail[0] - b.head[0], b.tail[1] - b.head[1], b.tail[2] - b.head[2]),
+      (s, b) =>
+        s + dmath.hypot(b.tail[0] - b.head[0], b.tail[1] - b.head[1], b.tail[2] - b.head[2]),
       0,
     );
   return { withers, headBody: nose - rump, tail };
@@ -95,7 +97,7 @@ const sourced: Check = (a) => {
 export const dragon_hybrid = defineModelCreature({
   name: 'dragon_hybrid',
   description:
-    'Emberwing, an original fantasy drake standing on all fours, wings raised: 3.2 m nose to rump, 1.6 m at the shoulder, 5.0 m with the tail, 600 kg. Model tier: an image-to-3D surface (Pixal3D, MIT) with its own textures on three LODs, skinned to a quadruped skeleton (joints from UniRig) and three bones a wing, with idle, look, walk and flap clips. Without the neural cache: a code-built wingless quadruped at the same scale',
+    'Emberwing, an original fantasy drake standing on all fours, wings half spread: 3.2 m nose to rump, 1.6 m at the shoulder, 5.0 m with the tail, 5.0 m across the wings, 600 kg. Model tier: an image-to-3D surface (Pixal3D, MIT) with its own textures on three LODs, skinned to a quadruped skeleton (joints from UniRig) and three bones a wing, with idle, look, walk and flap clips. Without the neural cache: a code-built wingless quadruped at the same scale',
   tags: ['creature', 'fantasy', 'dragon', 'skinned', 'neural', 'model-first'],
   license: 'CC0-1.0',
   sources: [
@@ -112,6 +114,8 @@ export const dragon_hybrid = defineModelCreature({
   },
   checks: [sourced],
   art: { focal: 'head', shape: 'aggressive', grounded: true },
+  // The right side carries the scars, the slashed membrane and the deep tear (wear.ts).
+  hero: { azDeg: -60, elDeg: 12 },
   body: { name: 'body_scales' },
   model: dragonModel,
 });

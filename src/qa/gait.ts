@@ -10,7 +10,7 @@
 // water asset (`medium: 'water'`) has no feet at all; its loops are still checked.
 
 import type { Armature, Bone, Clip, CompiledAsset, Track, Vec3 } from '../core/index.ts';
-import { quatRotate } from '../core/index.ts';
+import { dmath, quatRotate } from '../core/index.ts';
 import { isLimb, LOW_SHARE, leafChains, MID_SUFFIX, skeletonTop } from './chain-bones.ts';
 import { clipPose, jointWorlds } from './clip-pose.ts';
 import { SKIN_SINK_LIMIT, type SoleSink, soleSinks } from './gait-skin.ts';
@@ -130,7 +130,7 @@ function footFindings(sk: Armature, c: Clip, feet: readonly Bone[]): Finding[] {
       const q = path[f - 1] ?? [0, 0, 0];
       if (p[2] > low + band || q[2] > low + band) continue;
       planted++;
-      const d = Math.hypot(p[0] - q[0], p[1] - q[1]);
+      const d = dmath.hypot(p[0] - q[0], p[1] - q[1]);
       if (d > worst) [worst, at] = [d, f];
     }
     if (planted === 0)
@@ -180,7 +180,7 @@ function travels(c: Clip, roots: ReadonlySet<string>): boolean {
     if (!('bone' in t) || !roots.has(t.bone) || t.path !== 'translation') return false;
     const n = t.times.length;
     return (
-      Math.hypot(
+      dmath.hypot(
         (t.values[(n - 1) * 3] ?? 0) - (t.values[0] ?? 0),
         (t.values[(n - 1) * 3 + 1] ?? 0) - (t.values[1] ?? 0),
       ) > 1e-6

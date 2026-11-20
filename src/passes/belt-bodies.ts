@@ -4,6 +4,8 @@
 // loop. Also the spatial hash the twin search of belt-run.ts looks vertices up in.
 
 /** What a belt binder reads of a mesh. */
+import { dmath } from '../core/index.ts';
+
 export interface BeltMesh {
   readonly positions: ArrayLike<number>;
   readonly normals: ArrayLike<number>;
@@ -70,9 +72,9 @@ export class VertexGrid {
           if (!cell) continue;
           for (const v of cell) {
             const d2 =
-              ((p[v * 3] ?? 0) - x) ** 2 +
-              ((p[v * 3 + 1] ?? 0) - y) ** 2 +
-              ((p[v * 3 + 2] ?? 0) - z) ** 2;
+              dmath.pow((p[v * 3] ?? 0) - x, 2) +
+              dmath.pow((p[v * 3 + 1] ?? 0) - y, 2) +
+              dmath.pow((p[v * 3 + 2] ?? 0) - z, 2);
             if (d2 <= reach * reach) visit(v, d2);
           }
         }
@@ -138,7 +140,7 @@ export function beltBodies(
     for (const v of verts) {
       const r = [0, 1, 2].map((k) => (p[v * 3 + k] ?? 0) - (centre[k] ?? 0));
       const w = (r[0] ?? 0) * normal[0] + (r[1] ?? 0) * normal[1] + (r[2] ?? 0) * normal[2];
-      reach = Math.max(reach, Math.sqrt(Math.max(0, Math.hypot(...r) ** 2 - w * w)));
+      reach = Math.max(reach, Math.sqrt(Math.max(0, dmath.pow(dmath.norm(r), 2) - w * w)));
     }
     if (reach <= pitch) out.push({ verts, centre, rigid: true });
     else

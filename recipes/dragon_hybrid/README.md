@@ -14,7 +14,7 @@ The pattern is [wolf_hybrid](../wolf_hybrid/README.md)'s and [bear_hybrid](../be
 | `surface.ts` | The five-request chain, the mesh request, the clips dropped |
 | `steps.ts` | The Blender program, built from the fitted rig; every step with its reason |
 | `wings.ts` | The wing bones, found on the proxy mesh (shoulder, wrist, finger, tip), their limits and the `flap` design values |
-| `wear.ts` | What the maps get after the bake: light out, keratin horns, roughness, soot, dust, scars, scuffed wing leather (run by [_lib/creature/texture-paint.ts](../_lib/creature/texture-paint.ts)) |
+| `wear.ts` | What the maps get after the bake: light and the wings' dapple out, keratin horns, roughness, soot, dust, scars on hide and membrane, their grooves in the normal map (run by [_lib/creature/texture-paint.ts](../_lib/creature/texture-paint.ts)) |
 | `dragon_hybrid.ts` | `defineModelCreature`: box, budget, the design-measures check |
 | `neural/<key>/` | Model and Blender outputs + `record.json`; the raw mesh is `local-0.glb` (git-ignored) |
 
@@ -39,8 +39,8 @@ monitor lizard and carries its wings folded up off the ground.
 | Shoulder | **1.6 m**, − 6 % … + 10 % (the dorsal crest rides above the joint) | `checks`, test |
 | Tail | **2.6 m**; its bones span 85 % of it (the thin tip carries no joint), so 75–100 % | `checks`, test |
 | Mass | **600 kg** ± 25 % | QA `mass` |
-| Wings | the generator's × **1.25** about their roots (`WING_SCALE`): the raised V is 3.4 m tip to tip | test |
-| Box L × W × H | 5.0 × 3.4 × 3.7 m (nose to tail tip, wing tip to wing tip, ground to wing tips) ± 5 % | QA `proportions` |
+| Wings | the generator's × **1.4** about their roots (`WING_SCALE`), lowered **22°** (`WING_TILT`): 5.0 m tip to tip, the animal's own length | test |
+| Box L × W × H | 5.0 × 5.0 × 3.2 m (nose to tail tip, wing tip to wing tip, ground to wing tips) ± 5 % | QA `proportions` |
 
 Measured on the build: shoulder 1.71 m, head and body 3.24 m, tail bones 2.20 m. The rump is read on
 the midline at the height of the first free tail joint: the wings' trailing membranes reach
@@ -64,9 +64,9 @@ and run `t3d neural run` on the copy (GPU and Blender, below).
 | 2 | `mesh` | Pixal3D (MIT), 1536 cascade, 25 steps | 934 645-triangle GLB, 70 MB | no (`keep: 'local'`) |
 | 3 | `blender` proxy | Blender 5.3.0: clean → 6 000-triangle shell | GLB, 0.11 MB | yes |
 | 4 | `rig` | UniRig (MIT) on the proxy | its joints, 0.18 MB | yes |
-| 5 | `blender` final | Blender 5.3.0: `steps.ts`, 168 s on an RTX 3090 | 3 LODs + maps + skin, 9.5 MB | yes |
+| 5 | `blender` final | Blender 5.3.0: `steps.ts`, 238 s on an RTX 3090 (the bake) and one CPU thread | 3 LODs + maps + skin, 9.8 MB | yes |
 
-Committed: 10.4 MB of the 12 MB cap (delete the superseded final key before a re-run: two finals do not fit).
+Committed: 10.8 MB of the 12 MB cap (delete the superseded final key before a re-run: two finals do not fit).
 
 ## The Blender steps (`steps.ts`)
 
@@ -74,12 +74,12 @@ Committed: 10.4 MB of the 12 MB cap (delete the superseded final key before a re
 |---|---|---|
 | `transform` | the fit's matrix | everything after is in the asset frame, metres |
 | `clean` | 934 645 → 929 049 triangles; 55 loose shells dropped | generator output |
-| `script` (build) | wings × 1.25 about their roots (70 431 and 77 176 source vertices: what stands over 0.3 h off every trunk bone, above the back); upper and lower legs 10 % thicker about their bones; 1 364 faces cut out of the left wing's trailing edge, a notch 54 cm deep; the skin over each fore toe joint raised until the joint lies 2 cm inside | the generator's wings were small for a 600 kg body and its legs thin; no torn membrane; the toe joints lay 1–2 cm outside the thin paws (QA `model`) |
+| `script` (build) | wings × 1.4 about their roots and lowered 22° about the body's long axis through them (70 431 and 77 176 source vertices: what stands over 0.3 h off every trunk bone, above the back); upper and lower legs 10 % thicker about their bones; 4 480 faces cut out of the wings' trailing edges: a ragged notch 1.0 m deep and 32 cm wide at the hem in the right wing (the hero's side), one 58 cm deep in the left; the skin over each fore toe joint raised until the joint lies 2 cm inside | the generator's wings were small for a 600 kg body and raised in a narrow V (at × 1.25 the V still measured 3.3 m across a 4.9 m animal and read as decorative), its legs thin; a 54 cm notch 12 cm wide did not show in any render; the toe joints lay 1–2 cm outside the thin paws (QA `model`) |
 | `unweb` | cut 420 web faces between limbs that touch, pushed 3.2 cm apart; 2.9 cm clearance measured | the fore feet stand toe to toe |
 | `retopo` | closed shell at a 1.4 cm voxel → 29 998 triangles; density ×3 on head and hips, ×2 on feet | the wing membranes come through as closed slabs. The voxel is pinned (D72): the automatic one (2.03 cm) and its 4-voxel closing pass welded the cut fore toes back together, so the paws shared weights and dragged each other in the walk. 1.8 cm does not close, 2.0 cm fuses the paws, 1.5–1.6 cm sinks a hind claw 2.7 cm at LOD 1–2, 1.2 cm leaves the toe joints outside the paws |
-| `uv` · `bake` | 536 islands; albedo 2048², normal and ORM 1024²; hit rate 0.999, nothing unfilled | |
+| `uv` · `bake` | 499 islands; albedo 2048², normal and ORM 1024²; hit rate 0.998, nothing unfilled | |
 | `bind` | bone heat, 35 bones (the plan's 29 and three a wing from `wings.ts`), no fallback needed, no bone unused | each wing follows its own shoulder, wrist and finger; where the two wings meet the back the skin shares both |
-| `weights` | paw weights smoothed round each wrist (538 and 498 vertices) | the walk folds the wrist 146°; unsmoothed, the joint kept 27–52 % of its volume (limit 60 %) |
+| `weights` | paw weights smoothed round each wrist (526 and 483 vertices) | the walk folds the wrist 146°; unsmoothed, the joint kept 27–52 % of its volume (limit 60 %) |
 | `repose` | largest turn 24.4° | straight, symmetric rest; nothing is mirrored |
 | `script` (paint) | `wear.ts`, below | a textured part takes no `paint`, `finish` or grime pass (ADR 016): wear has to be in its maps |
 | `lods` | 9 998 and 4 998 triangles | |
@@ -111,10 +111,11 @@ the membrane to pleat.
 
 ## Wings
 
-Scaled, not sourced: an invented animal. At 600 kg no wing this size flies (a 3.4 m span carries
+Scaled, not sourced: an invented animal. At 600 kg no wing this size flies (a 5 m span carries
 a few tens of kilograms in any real flyer); like every heavy fantasy drake it is a display and
 gliding surface. The scale answers the picture: the generator's 2.8 m V read as a hatchling's on
-this body.
+this body, and × 1.25, still raised 52° above the horizon, as decoration (3.3 m across a 4.9 m
+animal). × 1.4 and lowered to 30°, the wings spread as wide as the animal is long.
 
 ### Wing bones (`wings.ts`)
 
@@ -125,15 +126,14 @@ same mesh the skeleton is fitted into (kinds `modelChain({ extra })`):
 |---|---|
 | tip | the wing's point farthest from its root: the end of the leading finger |
 | line | the cheapest path through the solid from the tip to the withers (kinds `tracePath`, 2.5 cm cells): deep flesh is cheap and thin membrane dear, so it runs down the finger spar, through the wrist and down the arm |
-| shoulder | where that line leaves the wing (0.3 h off the trunk's bones): the fixed end of the × 1.25 |
+| shoulder | where that line leaves the wing (0.3 h off the trunk's bones): the fixed end of the × 1.4 and of the 22° turn |
 | wrist | the line's corner: its point farthest from the shoulder–tip chord, where the fingers meet |
 | finger | half way along the line from the wrist to the tip |
 
-Three bones a side, `wing_l_0..2` and `wing_r_0..2`, hung from `spine_2`, 0.9–1.2 m each. The
-joints go to Blender scaled about the same root the build step scales the wing about, so they sit
-in the spars of the mesh it binds: 7 cm, 1.3–3.9 cm and 1.7–2.4 cm under the skin at LOD 0 (QA
-`model` wants every joint inside). `repose` makes the pair symmetric: the raised V measures
-3.35 m across and 3.60 m high.
+Three bones a side, `wing_l_0..2` and `wing_r_0..2`, hung from `spine_2`, 1.0–1.3 m each. The
+joints go to Blender scaled and turned about the same root as the build step moves the wing, so
+they sit in the spars of the mesh it binds (QA `model` wants every joint inside). `repose` makes
+the pair symmetric: the wings measure 4.99 m across and stand 3.20 m high.
 
 ### The beat (`FLAP` in `wings.ts`)
 
@@ -143,14 +143,14 @@ is a display beat on the ground, slow enough to read as heavy.
 | Value | | |
 |---|---|---|
 | Rate | 0.9 beats a second (1.11 s loop) | |
-| Stroke, degrees about the body's long axis from the raised rest | shoulder + 8 … − 30, wrist + 5 … − 16, finger + 4 … − 10 | the tips come down from the V to level with the back |
+| Stroke, degrees about the body's long axis from the rest | shoulder + 30 … − 8, wrist + 5 … − 16, finger + 4 … − 10 | the same arc in space as before the wings were lowered 22° (then + 8 … − 30): up into the V the generator drew, down to level with the back |
 | Downstroke | 42 % of the beat | quicker down than up |
 | Lag | each joint 7 % of the beat behind the one before | the tip follows the arm |
-| Joint limits | shoulder − 32 … + 10, wrist − 18 … + 7, finger − 12 … + 6 | the stroke and 2° to spare; QA `deform` poses the skin at each |
+| Joint limits | shoulder − 10 … + 32, wrist − 18 … + 7, finger − 12 … + 6 | the stroke and 2° to spare; QA `deform` poses the skin at each |
 
-Measured (`bun test recipes/dragon_hybrid`): each tip travels 1.95 m and 1.90 m over the beat; no
-edge of the membrane stretches more than × 1.26 at any key. QA `deform` at the limits, all three
-LODs: stretch × 1.02–1.15 (limit × 4), volume 93–102 % (limit ≥ 60 %), no triangle crossing.
+Measured (`bun test recipes/dragon_hybrid`): each tip travels 2.25 m and 2.18 m over the beat; no
+edge of the membrane stretches more than × 1.51 at any key. QA `deform` passes at the limits on
+all three LODs (stretch limit × 4, volume ≥ 60 %, no triangle crossing).
 
 ## Paint and wear (`wear.ts`)
 
@@ -159,13 +159,15 @@ they never cross a UV seam, and all three LODs sample the same maps.
 
 | Pass | What |
 |---|---|
-| De-light | brightness varying over 26 cm pulled towards the hide's value over 88 cm |
+| De-light | brightness varying over 26 cm pulled towards the hide's value over 88 cm; on the wings a second pass (16 cm towards 1.1 m, 95 % of a lit blotch): the membranes kept a pale dapple that read as baked highlights |
 | Horns | chalk grey → keratin: dark root, bone-pale tip, growth rings 4 cm apart |
-| Roughness | scales 0.38–0.8 (pale crowns smoother), belly plates 0.5, wing leather 0.78, horn 0.3–0.42, claws 0.3, dust 0.93, soot 0.9; was one flat 0.8 |
-| Soot | round the mouth and nostrils, fading down the throat |
-| Dust | feet and shanks, the belly's underside, the tail that drags |
-| Scars | three claw rakes across the right flank, pale and smooth with a dark lip |
-| Wing leather | scuffed pale in streaks along the span |
+| Roughness | scales 0.38–0.8 (pale crowns smoother), belly plates 0.5, wing leather 0.78, horn 0.3–0.42, claws 0.3, dust 0.95, soot 0.92, scars 0.38; was one flat 0.8 |
+| Soot | black over the muzzle and jaw (to 24 % of the hide's value), fading down the throat to the chest and up to the horn roots; the scales' relief planed to 60 % under it |
+| Dust | caked pale to the hocks and wrists, under the belly, along the tail that drags; 8.8 % of the surface, with its own grain in the normal map |
+| Scars | on the right side, the hero's: three claw rakes across the flank (up to 48 cm long, 4.5 cm wide), two across the haunch, one across the neck; pale smooth skin in a groove 1 cm deep in the normal map, a dark lip each side |
+| Wing | three slashes healed pale across the right wing's membrane (up to 83 cm), through the leather: they show on both faces; the hems darker in patches |
+
+The hero camera stands on that side: `hero: { azDeg: -60, elDeg: 12 }` (`dragon_hybrid.ts`).
 
 ## Result (2026-11-19)
 
@@ -177,10 +179,10 @@ What the renders show (read after the build):
 
 | View | Seen |
 |---|---|
-| `hero.png` (¾) | reads as a dragon: horned head, pale belly plates, clawed feet, two membrane wings with spars and thumb claws, now a body length across; dusty feet and tail |
-| `sheet.png` side | level stand, four feet on the ground, the tail resting low; the notch in the left wing's hem; the flank scars |
-| `sheet.png` front, top | symmetric; the wings open in a V, 3.35 m tip to tip |
-| pose strip of `flap` (side, front, rear ¾) | both wings beat together from the V down to level with the back and up again; the membrane stays on the back and the arm, no tear, no fold through the body |
+| `hero.png` (right ¾) | reads as a dragon: horned head sooted dark, pale belly plates, clawed feet, two membrane wings with spars and thumb claws spread a body length across; the deep ragged tear in the near wing's hem and three pale slashes across its membrane; pale scars on the neck, flank and haunch; dusty feet and tail |
+| `sheet.png` side | level stand, four feet on the ground, the tail resting low; the tear, the slashes and the flank scars |
+| `sheet.png` front, top | symmetric; the wings half spread, 5.0 m tip to tip |
+| limit poses (`t3d review`, `poses.png`) | at the shoulder's + 32° a wing stands in the V the generator drew, at − 10° a little under the rest; the membrane stays on the back and the arm, no fold through the body |
 
 Honest limits: the wings beat but do not fold, and the beat is a design value; each wing is
 three bones, so the three fingers of a wing move as one fan; no trot, gallop, jaw or blink; the horns and claws

@@ -5,6 +5,7 @@
 // body ∪ head, and the neck is as wide as the back of the skull where it meets it — no collar).
 
 import type { Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import { type Field, sculptField } from '../primitives/index.ts';
 import { blockOut } from './creature-body.ts';
 import type { Bones } from './creature-bones.ts';
@@ -68,8 +69,8 @@ export function chestSection(b: Bones, f: Field = trunkField(b)): ChestSection {
 /** World → head-local (inverse of headToWorld). */
 function toHead(b: Bones, p: Vec3): Vec3 {
   const h = b.head;
-  const c = Math.cos(h.pitch);
-  const s = Math.sin(h.pitch);
+  const c = dmath.cos(h.pitch);
+  const s = dmath.sin(h.pitch);
   const d: Vec3 = [p[0] - h.atlas[0], p[1] - h.atlas[1], p[2] - h.atlas[2]];
   return [c * d[0] - s * d[2], d[1], s * d[0] + c * d[2]];
 }

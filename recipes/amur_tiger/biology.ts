@@ -6,6 +6,7 @@
 // Sources: Campione & Evans, BMC Biology 10:60 (2012), https://doi.org/10.1186/1741-7007-10-60
 
 import type { Field, Vec3 } from '@developerz.ai/ts23d';
+import { dmath } from '@developerz.ai/ts23d';
 import { v3 } from '../_lib/creature/curve.ts';
 import { hit } from '../_lib/creature/probe.ts';
 import { HEAD, headToWorld, SK } from './skeleton.ts';
@@ -32,7 +33,7 @@ export const EFFECTIVE_DENSITY = Math.round(
 
 /** Campione & Evans 2012: quadruped body mass (kg) from humerus + femur circumference (mm). */
 export const massFromLimbs = (circumferenceMm: number): number =>
-  10 ** (2.749 * Math.log10(circumferenceMm) - 1.104) / 1000;
+  dmath.pow(10, 2.749 * dmath.log10(circumferenceMm) - 1.104) / 1000;
 
 /** Straight line nose tip → tail root (the "head and body length" of Kerley et al. 2005). */
 export function headBodyLength(): number {
@@ -47,7 +48,7 @@ export function fieldVolume(f: Field, lo: Vec3, hi: Vec3, h: number): number {
   for (let x = lo[0] + h / 2; x < hi[0]; x += h)
     for (let y = lo[1] + h / 2; y < hi[1]; y += h)
       for (let z = lo[2] + h / 2; z < hi[2]; z += h) if (f([x, y, z]) < 0) n++;
-  return n * h ** 3;
+  return n * (h * h * h);
 }
 
 export interface Allometry {

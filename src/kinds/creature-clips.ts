@@ -6,6 +6,7 @@
 // under the moving body (creature-plant.ts). Every loop's last key repeats its first.
 
 import type { Bone, Clip, Quat, Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import type { Bones } from './creature-bones.ts';
 import { headLayout } from './creature-head.ts';
 import { withMidTracks } from './creature-helpers.ts';
@@ -83,7 +84,7 @@ function loopClip(
 }
 
 const pulse = (x: number, at: number, width: number): number =>
-  Math.abs(x - at) < width ? 0.5 * (1 + Math.cos((Math.PI * (x - at)) / width)) : 0;
+  Math.abs(x - at) < width ? 0.5 * (1 + dmath.cos((Math.PI * (x - at)) / width)) : 0;
 
 /** Every default clip for the creature, its bones named with `prefix`. */
 export function creatureClips(b: Bones, spec: CreatureSpec, prefix = ''): Clip[] {
@@ -107,10 +108,10 @@ export function boneClips(bones: readonly Bone[], prefix = ''): Clip[] {
     clips.push(
       loopClip('idle', 4, bones, legs, springs, (phi) => {
         const m = new Map<string, Quat>();
-        set(m, 'tail_0', [0, 0, 8 * deg * Math.sin(TAU * phi)]);
+        set(m, 'tail_0', [0, 0, 8 * deg * dmath.sin(TAU * phi)]);
         // Two breaths: the withers rise and fall with the ribs, over planted paws.
-        set(m, 'neck_0', [0, 2 * deg * 0.5 * (1 - Math.cos(TAU * 2 * phi)), 0]);
-        set(m, 'spine_1', [0, -0.6 * deg * Math.sin(TAU * 2 * phi), 0]);
+        set(m, 'neck_0', [0, 2 * deg * 0.5 * (1 - dmath.cos(TAU * 2 * phi)), 0]);
+        set(m, 'spine_1', [0, -0.6 * deg * dmath.sin(TAU * 2 * phi), 0]);
         set(m, 'ear_l', [-14 * deg * pulse(phi, 0.62, 0.05), 0, 0]);
         return m;
       }),
@@ -119,7 +120,7 @@ export function boneClips(bones: readonly Bone[], prefix = ''): Clip[] {
     clips.push(
       loopClip('look', 4, bones, legs, springs, (phi) => {
         const m = new Map<string, Quat>();
-        const turn = Math.sin(TAU * phi);
+        const turn = dmath.sin(TAU * phi);
         set(m, 'neck_1', [0, 0, 30 * deg * turn]);
         set(m, 'head', [0, -6 * deg * Math.abs(turn), 8 * deg * turn]);
         return m;
@@ -167,13 +168,13 @@ export function clipEnvelope(clips: readonly Clip[], bones: readonly Bone[]): En
     for (const t of c.tracks) {
       const a = 'bone' in t && t.path === 'rotation' ? axis.get(t.bone) : undefined;
       if (!a || !('bone' in t)) continue;
-      const l = Math.hypot(...a);
+      const l = dmath.norm(a);
       const e = out.get(t.bone) ?? [0, 0];
       for (let i = 0; i < t.values.length; i += 4) {
         const [x = 0, y = 0, z = 0, w = 1] = t.values.subarray(i, i + 4);
         const s = w < 0 ? -1 : 1;
         const d =
-          (2 * Math.atan2((s * (x * a[0] + y * a[1] + z * a[2])) / l, s * w) * 180) / Math.PI;
+          (2 * dmath.atan2((s * (x * a[0] + y * a[1] + z * a[2])) / l, s * w) * 180) / Math.PI;
         e[0] = Math.min(e[0], d);
         e[1] = Math.max(e[1], d);
       }

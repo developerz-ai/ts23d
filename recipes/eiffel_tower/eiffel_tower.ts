@@ -18,6 +18,7 @@ import {
   box,
   cross,
   defineAsset,
+  dmath,
   dot,
   frame,
   grime,
@@ -25,7 +26,6 @@ import {
   type Lod,
   lathe,
   type Mesh,
-  MeshBuilder,
   merge,
   normalize,
   place,
@@ -37,10 +37,11 @@ import {
   type Vec3,
 } from '@developerz.ai/ts23d';
 import { tessellate } from '../_lib/finish/finish.ts';
+import { latticeFrustum } from './far.ts';
 import { deckWear, ironWear } from './wear.ts';
 
 // ── Colour: three graduated shades of Eiffel Tower Brown, darkest at the bottom ──────────────────
-const SHADES = [hex('#5e4834'), hex('#715a40'), hex('#87704f')] as const;
+const SHADES = [hex('#4c3826'), hex('#6e563c'), hex('#987f5a')] as const;
 const IRON: Vec3 = [1, 1, 1]; // tint; `paint` multiplies by the shade at the vertex height
 const IRON_DARK: Vec3 = [0.75, 0.75, 0.75];
 const STONE = hex('#a3967e');
@@ -131,7 +132,7 @@ const QUAD: readonly Vec2[] = [
 ];
 
 // ── Members ─────────────────────────────────────────────────────────────────────────────────────
-const dist = (a: Vec3, b: Vec3): number => Math.hypot(...sub(b, a));
+const dist = (a: Vec3, b: Vec3): number => dmath.norm(sub(b, a));
 const clamp = (v: number, lo: number, hi: number): number => Math.min(hi, Math.max(lo, v));
 
 function rod(out: Mesh[], a: Vec3, b: Vec3, width: number, color: Vec3 = IRON, caps = true): void {
@@ -321,21 +322,21 @@ function leg(q: number, lod: Lod): Mesh {
 const ARCH_SEGS: readonly number[] = [41, 25, 7];
 function archTop(lod: Lod): number {
   const n = ARCH_SEGS[lod] ?? 7;
-  const th0 = Math.asin(ARCH.cz / ARCH.r);
+  const th0 = dmath.asin(ARCH.cz / ARCH.r);
   const step = (Math.PI + 2 * th0) / n;
   const ro = ARCH.r + (lod === 2 ? 0 : ARCH.depth);
   const w = lod === 2 ? 2.0 : ARCH.w;
-  return ARCH.cz + ro * Math.cos(step / 2) + w / 2;
+  return ARCH.cz + ro * dmath.cos(step / 2) + w / 2;
 }
 function arch(lod: Lod): Mesh {
   const out: Mesh[] = [];
   const n = ARCH_SEGS[lod] ?? 7;
-  const th0 = Math.asin(ARCH.cz / ARCH.r);
+  const th0 = dmath.asin(ARCH.cz / ARCH.r);
   const ang = (i: number): number => -th0 + (i * (Math.PI + 2 * th0)) / n;
   const pt = (r: number, i: number): Vec3 => [
     BELT1,
-    r * Math.cos(ang(i)),
-    ARCH.cz + r * Math.sin(ang(i)),
+    r * dmath.cos(ang(i)),
+    ARCH.cz + r * dmath.sin(ang(i)),
   ];
   const ri = ARCH.r;
   const ro = ARCH.r + (lod === 2 ? 0 : ARCH.depth);
@@ -355,9 +356,9 @@ function arch(lod: Lod): Mesh {
     const top = archTop(0) + 0.35;
     for (let i = 1; i < n; i++) {
       const a = ang(i);
-      const r = (top - ARCH.cz) / Math.sin(a);
-      if (Math.abs(r * Math.cos(a)) > 33 || r - ro < 1) continue;
-      rod(out, pt(ro, i), [BELT1, r * Math.cos(a), top], 0.3);
+      const r = (top - ARCH.cz) / dmath.sin(a);
+      if (Math.abs(r * dmath.cos(a)) > 33 || r - ro < 1) continue;
+      rod(out, pt(ro, i), [BELT1, r * dmath.cos(a), top], 0.3);
     }
   }
   return iron(out, true);
@@ -515,7 +516,7 @@ function campanile(lod: Lod): Mesh {
       const [t0, t1] = [i / n, (i + 1) / n];
       const p = (t: number): Vec3 => {
         const rr = r(t);
-        return [rr * Math.cos(yaw), rr * Math.sin(yaw), h(t)];
+        return [rr * dmath.cos(yaw), rr * dmath.sin(yaw), h(t)];
       };
       rod(out, p(t0), p(t1), 0.45);
     }
@@ -523,8 +524,8 @@ function campanile(lod: Lod): Mesh {
   for (let k = 0; k < 4; k++) {
     const yaw = Math.PI / 4 + (k * Math.PI) / 2;
     rib(
-      (t) => 2.4 + 6.4 * Math.cos((t * Math.PI) / 2),
-      (t) => z0 + 0.5 + (zr - z0 - 0.5) * Math.sin((t * Math.PI) / 2),
+      (t) => 2.4 + 6.4 * dmath.cos((t * Math.PI) / 2),
+      (t) => z0 + 0.5 + (zr - z0 - 0.5) * dmath.sin((t * Math.PI) / 2),
       yaw,
     );
   }
@@ -535,7 +536,7 @@ function campanile(lod: Lod): Mesh {
     for (let i = 0; i < 12; i++) {
       const p = (j: number): Vec3 => {
         const t = (j / 12) * Math.PI;
-        return [a, a * Math.cos(t), z0 + 0.5 + 5.2 * Math.sin(t)];
+        return [a, a * dmath.cos(t), z0 + 0.5 + 5.2 * dmath.sin(t)];
       };
       rod(arc, p(i), p(i + 1), 0.35);
     }
@@ -614,34 +615,7 @@ function cabin(lod: Lod): Mesh {
   return merge(out);
 }
 
-// ── LOD2: silhouette shell ──────────────────────────────────────────────────────────────────────
-function frustum(lo: readonly Vec3[], hi: readonly Vec3[], capLo = true, capHi = true): Mesh {
-  const b = new MeshBuilder();
-  const all = [...lo, ...hi];
-  const c = scale(
-    all.reduce((s, p) => add(s, p), [0, 0, 0] as Vec3),
-    1 / all.length,
-  );
-  const quad = (p: readonly Vec3[]): void => {
-    const [a, bb, cc, d] = [p[0] ?? c, p[1] ?? c, p[2] ?? c, p[3] ?? c];
-    let n = normalize(cross(sub(bb, a), sub(cc, a)));
-    const mid = scale(add(add(a, bb), add(cc, d)), 0.25);
-    const flip = dot(n, sub(mid, c)) < 0;
-    if (flip) n = scale(n, -1);
-    const ids = [a, bb, cc, d].map((q) => b.vertex({ p: q, n, uv: [0.5, 0.5], color: IRON }));
-    const [i0 = 0, i1 = 0, i2 = 0, i3 = 0] = ids;
-    if (flip) b.quad(i0, i3, i2, i1);
-    else b.quad(i0, i1, i2, i3);
-  };
-  for (let i = 0; i < 4; i++) {
-    const j = (i + 1) % 4;
-    quad([lo[i] ?? c, lo[j] ?? c, hi[j] ?? c, hi[i] ?? c]);
-  }
-  if (capHi) quad(hi);
-  if (capLo && (lo[0]?.[2] ?? 0) > 0.01) quad(lo);
-  return b.build();
-}
-
+// ── LOD2: lattice shells ──────────────────────────────────────────────────────────────────────
 const square = (x0: number, x1: number, y0: number, y1: number, z: number): Vec3[] => [
   [x0, y0, z],
   [x1, y0, z],
@@ -649,6 +623,11 @@ const square = (x0: number, x1: number, y0: number, y1: number, z: number): Vec3
   [x0, y1, z],
 ];
 
+/** Panel height of the far lattice, metres: one cross for two real panels (5–11 m), which keeps
+ *  LOD2 inside the building band (800 triangles). */
+const FAR_PANEL = 18;
+
+/** A far leg (and, for leg 0, the shaft above the 2nd floor) as open lattice-cutout shells. */
 function farLeg(q: number): Mesh {
   const [sx, sy] = QUAD[q] ?? [1, 1];
   const sq = (z: number): Vec3[] => {
@@ -660,23 +639,25 @@ function farLeg(q: number): Mesh {
     [DECK1, 84, Z11, DECK2 - SLAB],
   ];
   const out: Mesh[] = [];
-  // Stacked: only the band's own ends are capped, the joins between frustums are inside.
   for (const zs of bands)
     for (let k = 0; k + 1 < zs.length; k++)
-      out.push(frustum(sq(zs[k] ?? 0), sq(zs[k + 1] ?? 0), k === 0, k + 2 === zs.length));
+      out.push(latticeFrustum(sq(zs[k] ?? 0), sq(zs[k + 1] ?? 0), FAR_PANEL, IRON));
   if (q === 0) {
     const zs = [DECK2, Z17, 215, 245, Z29, DECK3 - SLAB];
     const full = (z: number): Vec3[] => square(-halfW(z), halfW(z), -halfW(z), halfW(z), z);
     for (let k = 0; k + 1 < zs.length; k++)
-      out.push(frustum(full(zs[k] ?? 0), full(zs[k + 1] ?? 0), k === 0, k + 2 === zs.length));
+      out.push(latticeFrustum(full(zs[k] ?? 0), full(zs[k + 1] ?? 0), FAR_PANEL * 0.8, IRON));
   }
   return iron(out, true);
 }
 
 /**
- * LOD2 is one silhouette shell. Every far part reaches the ground: `leg_0` also carries the shaft,
- * the 2nd/3rd decks and the spire, `arch_0` the 1st-floor belt and deck. Tested against each
- * other, the shell's 40 m faces would cost the contact gate ~15 s of triangle-grid cells.
+ * LOD2: the legs and shaft are open shells on the alpha-cutout lattice strip (`far.ts`), so the
+ * tower stays see-through at distance; the decks, belt, arches, summit and antenna are opaque.
+ * Every far part reaches the ground or bears on a part that does: `summit` (2nd/3rd decks,
+ * spire, cabin, antenna) on the shaft of `leg_0`, `arch_0` carries the 1st-floor belt and deck.
+ * Tested against each other, the shell's 40 m faces would cost the contact gate ~15 s of
+ * triangle-grid cells.
  */
 function buildFar(ctx: BuildContext): void {
   const spire = lathe({
@@ -691,11 +672,15 @@ function buildFar(ctx: BuildContext): void {
     at: [0, 0, TERRACE - 0.3],
     color: IRON,
   });
-  const top = [deckRing(SIDE2, 0, DECK2), deckRing(SIDE3, 0, DECK3), spire];
-  for (let q = 0; q < 4; q++) {
-    const extra = q === 0 ? [iron(top), cabin(2), antenna(2, TERRACE + 21.4)] : [];
-    ctx.part(`leg_${q}`, merge([farLeg(q), ...extra]));
-  }
+  for (let q = 0; q < 4; q++) ctx.part(`leg_${q}`, farLeg(q), { surface: 'cutout' });
+  ctx.part(
+    'summit',
+    merge([
+      iron([deckRing(SIDE2, 0, DECK2), deckRing(SIDE3, 0, DECK3), spire]),
+      cabin(2),
+      antenna(2, TERRACE + 21.4),
+    ]),
+  );
   const a = arch(2);
   const floor1 = [belt1(2), iron([deckRing(SIDE1, 15, DECK1)])];
   for (let q = 0; q < 4; q++) {
@@ -770,7 +755,10 @@ export const eiffel_tower = defineAsset({
       },
     ],
   },
-  budget: { triangles: [210000, 25000, 1250] }, // measured 187.9k / 21.9k / 1.06k
+  budget: { triangles: [210000, 25000, 1250] }, // measured 144k / 19.6k / 792
+  // From the Champ de Mars, looking up: the legs, arches and rusty lower lattice fill the frame
+  // (an orbit that fits 330 m of tower in a 16:9 frame leaves it a thin spike in the middle).
+  hero: { eye: [190, -140, 4], target: [0, 0, 112], fovDeg: 64 },
   build(ctx) {
     const lod = ctx.lod;
     if (lod === 2) return buildFar(ctx);

@@ -2,10 +2,12 @@
 // a painted steel door in its frame (rust streaks under the hinge bolts and along the bottom rail,
 // chipped edges, polish on the handle, dents), a wooden crate (sun-bleached, sagging lid boards,
 // moss low on the shaded side), a precast concrete block (rust bleeding from its lifting anchors,
-// moss, mud splash) and a 55-gallon steel drum (rusty chimes and hoops, deep dents, dusty lid).
-// Same geometry both sides: only `weather(ctx, …)` differs, and its measured coverage lands in the
-// manifest and QA `weather`. Tessellation is set per object and per LOD so flat faces stay cheap,
-// and LOD2 keeps a coarse weathered grid so the new / weathered difference survives at distance.
+// moss, mud splash) and a 55-gallon steel drum (rusty chimes and hoops, a deep dent, dusty lid).
+// Same paint both sides: only `weather(ctx, …)` differs, and its measured coverage lands in the
+// manifest and QA `weather`; the weathered copies also change shape (door hanging open, a sprung
+// crate board and an askew lid board, a dented, leaning drum). Tessellation is set per object and
+// per LOD so flat faces stay cheap, and LOD2 keeps a coarse weathered grid, or (door, block) clean
+// painted colour blocks, so the new / weathered difference survives at distance.
 // Numbers: ./README.md.
 
 import {
@@ -13,15 +15,19 @@ import {
   box,
   cylinder,
   defineAsset,
+  dmath,
   hex,
   lathe,
   type Mesh,
   merge,
+  place,
   text,
   type Vec3,
   type WeatherEffects,
   weather,
+  weightedNormals,
 } from '@developerz.ai/ts23d';
+import { ENAMEL } from './enamel.ts';
 
 const SLAB_H = 0.12;
 const SLAB = hex('#8e8a83');
@@ -33,6 +39,9 @@ const CORE = hex('#3a2a1a');
 const CONCRETE = hex('#a29e95');
 const TIE = hex('#3b3935');
 const DRUM_PAINT = hex('#2f4d7a');
+const RUST_FAR = hex('#7a3f1f');
+const RUST_DARK = hex('#4a2a18');
+const DAMP = hex('#5a5a3a');
 
 type Triple = readonly [number, number, number];
 
@@ -47,6 +56,12 @@ interface Obj {
   readonly seed: number;
   /** Longest edge after tessellation per LOD (m): fine where streaks run, coarse on flat faces. */
   readonly resolution: Triple;
+  /** What the years did to the shape, applied to the weathered copy after its paint: a door
+   *  dropped open on a worn hinge, a dented drum settled onto its crushed chime. */
+  readonly settle?: (m: Readonly<Record<string, Mesh>>) => Record<string, Mesh>;
+  /** LOD2 weathered copy painted as clean colour blocks (no per-vertex weathering on a coarse
+   *  grid, which reads as hard triangles at distance). */
+  readonly far?: Readonly<Record<string, Mesh>>;
   /** A second, coarser weathering pass for surrounding structure (the door frame). */
   readonly rest?: {
     readonly meshes: Readonly<Record<string, Mesh>>;
@@ -55,8 +70,25 @@ interface Obj {
   };
 }
 
+/** Hinge heights on the door leaf (m, bottom of each hinge plate). */
+const HINGE_Z = [0.25, 1.0, 1.75] as const;
+
+/**
+ * The far door's rust blocks, `decal(y, z, w, h, colour)` each: a dark strip on the bottom rail
+ * (0–7 cm), the rust band over it (7–22 cm), and a run under each hinge down from it to 42 cm
+ * below or to the band, whichever is higher. They never overlap and never leave the leaf.
+ */
+export function farRust<T>(decal: (y: number, z: number, w: number, h: number, c: Vec3) => T): T[] {
+  const [dark, band] = [0.07, 0.22];
+  const runs = HINGE_Z.flatMap((z) => {
+    const z0 = Math.max(band, z - 0.42);
+    return z - z0 > 0.005 ? [decal(-0.39, z0, 0.07, z - z0, RUST_FAR)] : [];
+  });
+  return [decal(0, 0, 0.91, dark, RUST_DARK), decal(0, dark, 0.91, band - dark, RUST_FAR), ...runs];
+}
+
 /** Steel door 0.91 × 2.03 m (36 × 80 in) in a 0.1 m frame, three hinges with two bolts each. */
-function door(lod: number): Obj {
+function door(lod: number, aged: boolean): Obj {
   const leaf = box({ size: [0.045, 0.91, 2.03], at: [0, 0, 0], color: DOOR_PAINT, strip: 'iron' });
   const jamb = (y: number): Mesh =>
     box({ size: [0.12, 0.08, 2.11], at: [0, y, 0], color: STEEL, strip: 'iron' });
@@ -67,7 +99,7 @@ function door(lod: number): Obj {
   ]);
   const fasteners: { at: Vec3; radius: number }[] = [];
   const hinges: Mesh[] = [];
-  for (const z of [0.25, 1.0, 1.75]) {
+  for (const z of HINGE_Z) {
     hinges.push(
       box({ size: [0.006, 0.09, 0.12], at: [0.0255, -0.41, z], color: STEEL, strip: 'iron' }),
     );
@@ -85,8 +117,32 @@ function door(lod: number): Obj {
     box({ size: [0.05, 0.14, 0.022], at: [0.065, 0.33, 1.02], color: STEEL, strip: 'iron' }),
     box({ size: [0.03, 0.022, 0.022], at: [0.0475, 0.39, 1.02], color: STEEL, strip: 'iron' }),
   ]);
+  // The seized latch never shuts: the leaf hangs 24° open on its hinge line (front face, hinge
+  // edge), as a disused yard door stands.
+  const pivot: Vec3 = [0.0225, -0.455, 0];
+  const swing = (m: Mesh): Mesh =>
+    place(place(m, { at: [-pivot[0], -pivot[1], 0] }), { yaw: -0.42, at: pivot });
+  // Far: the same story as flat blocks: a rust band along the bottom rail and a run under each
+  // hinge, 1 mm proud of the front face. The blocks tile the face without overlapping (one plane,
+  // so an overlap would z-fight): the dark rail strip, the band above it, each run from the band
+  // (or 42 cm under its hinge, if higher) up to the hinge.
+  const decal = (y: number, z: number, w: number, h: number, color: Vec3): Mesh =>
+    box({
+      size: [0.001, w, h],
+      at: [0.0228, y, z],
+      color,
+      strip: 'iron',
+      omit: ['back', 'left', 'right', 'top', 'bottom'],
+    });
+  const farLeaf = merge([leaf, ...farRust(decal)]);
   return {
     meshes: { leaf, hinges: merge(hinges), handle },
+    ...(aged
+      ? {
+          settle: (m) => Object.fromEntries(Object.entries(m).map(([k, v]) => [k, swing(v)])),
+          far: { leaf: farLeaf, hinges: merge(hinges), handle },
+        }
+      : {}),
     fasteners,
     touched: ['handle'],
     under: hex('#8d8c88'),
@@ -123,7 +179,7 @@ function door(lod: number): Obj {
 }
 
 /** Shipping crate 0.8 × 0.8 × 0.62 m: corner posts, three boards a side, four on the lid. */
-function crate(lod: number): Obj {
+function crate(lod: number, aged: boolean): Obj {
   const parts: Mesh[] = [];
   for (const [x, y] of [
     [-1, -1],
@@ -146,9 +202,15 @@ function crate(lod: number): Obj {
           }),
         );
   }
+  // Weathered: the top board of the +X face has sprung its nails at one end and swings 8° out
+  // from the post it still hangs on; one lid board has lifted and lies askew across its
+  // neighbours, showing the dark inside.
+  const sprung = (m: Mesh): Mesh =>
+    aged ? place(place(m, { at: [-0.39, -0.34, 0] }), { yaw: 0.14, at: [0.39, 0.34, 0] }) : m;
   for (let i = 0; i < 3; i++) {
     const z = 0.01 + i * 0.2;
-    parts.push(box({ size: [0.02, 0.68, 0.18], at: [0.39, 0, z], color: WOOD, strip: 'wood' }));
+    const side = box({ size: [0.02, 0.68, 0.18], at: [0.39, 0, z], color: WOOD, strip: 'wood' });
+    parts.push(i === 2 ? sprung(side) : side);
     parts.push(box({ size: [0.02, 0.68, 0.18], at: [-0.39, 0, z], color: WOOD, strip: 'wood' }));
     parts.push(box({ size: [0.68, 0.02, 0.18], at: [0, 0.39, z], color: WOOD, strip: 'wood' }));
     parts.push(box({ size: [0.68, 0.02, 0.18], at: [0, -0.39, z], color: WOOD, strip: 'wood' }));
@@ -158,16 +220,27 @@ function crate(lod: number): Obj {
         for (const dz of [0.05, 0.13]) {
           const nail = (at: Vec3, axis: 'x' | 'y'): Mesh =>
             cylinder({ radius: 0.006, length: 0.003, segments: 6, color: STEEL, at, axis });
-          parts.push(nail([0.4, s * 0.31, z + dz], 'x'));
+          const n = nail([0.4, s * 0.31, z + dz], 'x');
+          // The sprung board's nails: still in at the hinge end, pulled out with it at the other.
+          if (!(aged && i === 2 && s < 0)) parts.push(i === 2 ? sprung(n) : n);
           parts.push(nail([-0.4 - 0.003, s * 0.31, z + dz], 'x'));
           parts.push(nail([s * 0.31, 0.4, z + dz], 'y'));
           parts.push(nail([s * 0.31, -0.4 - 0.003, z + dz], 'y'));
         }
   }
-  for (let i = 0; i < 4; i++)
+  for (let i = 0; i < 4; i++) {
+    const board = box({
+      size: [0.8, 0.18, 0.022],
+      at: [0, -0.3 + i * 0.2, 0.6],
+      color: WOOD,
+      strip: 'wood',
+    });
     parts.push(
-      box({ size: [0.8, 0.18, 0.022], at: [0, -0.3 + i * 0.2, 0.6], color: WOOD, strip: 'wood' }),
+      aged && i === 1
+        ? place(place(board, { at: [0, 0.1, 0] }), { yaw: 0.16, at: [0.05, -0.1, 0.022] })
+        : board,
     );
+  }
   // Inner core rises 2 mm past the post tops (0.6) so every lid board rests on it. It is hidden by
   // the boards, so it stays out of the weathering (no tessellation spent where nobody looks).
   const core = box({ size: [0.72, 0.72, 0.592], at: [0, 0, 0.01], color: CORE, strip: 'wood' });
@@ -196,7 +269,7 @@ function crate(lod: number): Obj {
 }
 
 /** Precast concrete block 0.8 × 0.6 × 0.6 m with two cast-in lifting anchors on its face. */
-function block(lod: number): Obj {
+function block(lod: number, aged: boolean): Obj {
   const body = box({ size: [0.6, 0.8, 0.6], color: CONCRETE, strip: 'concrete', bevel: 0.015 });
   const anchors: Mesh[] = [];
   const fasteners: { at: Vec3; radius: number }[] = [];
@@ -221,8 +294,29 @@ function block(lod: number): Obj {
               axis: 'y',
             }),
           );
+  // Far: rust bled from each anchor and the green-brown damp band round the foot as flat blocks
+  // 1 mm proud (LOD2 of the weathered block only).
+  const flat = (size: Vec3, at: Vec3, keep: 'front' | 'back' | 'left' | 'right', color: Vec3) =>
+    box({
+      size,
+      at,
+      color,
+      strip: 'concrete',
+      omit: (['front', 'back', 'left', 'right', 'top', 'bottom'] as const).filter(
+        (f) => f !== keep,
+      ),
+    });
+  const farBlock = merge([
+    body,
+    ...[-0.22, 0.22].map((y) => flat([0.001, 0.06, 0.34], [0.3005, y, 0.14], 'front', RUST_FAR)),
+    flat([0.001, 0.8, 0.12], [0.3005, 0, 0], 'front', DAMP),
+    flat([0.001, 0.8, 0.12], [-0.3005, 0, 0], 'back', DAMP),
+    flat([0.6, 0.001, 0.12], [0, 0.4005, 0], 'left', DAMP),
+    flat([0.6, 0.001, 0.12], [0, -0.4005, 0], 'right', DAMP),
+  ]);
   return {
     meshes: { block: body, anchors: merge(anchors) },
+    ...(aged ? { far: { block: farBlock, anchors: merge(anchors) } } : {}),
     fasteners,
     under: hex('#c4bfb4'),
     seed: 37,
@@ -238,7 +332,7 @@ function block(lod: number): Obj {
 }
 
 /** 55 US gal drum: 0.572 m × 0.851 m, rolled chimes and two rolling hoops, two bungs on the lid. */
-function drum(lod: number): Obj {
+function drum(lod: number, aged: boolean): Obj {
   const r = 0.286;
   const hoop = (z: number): [number, number][] => [
     [r, z - 0.012],
@@ -259,20 +353,27 @@ function drum(lod: number): Obj {
     [r + 0.004, 0.845],
     [r - 0.004, 0.851],
   ];
+  // The weathered LOD0 shell carries its own grid (a station every 4 cm, 40 gores) for the dent,
+  // so the weather pass need not tessellate it.
+  const dense = aged && lod === 0;
   const shell = lathe({
-    profile: lod < 2 ? near : far,
-    segments: [32, 20, 14][lod] ?? 14,
+    profile: lod < 2 ? (dense ? densify(near, 0.04) : near) : far,
+    segments: dense ? 40 : ([32, 20, 12][lod] ?? 12),
     color: DRUM_PAINT,
-    strip: 'iron',
+    strip: ENAMEL,
     caps: true,
     creaseDeg: 40,
   });
   const bungs: Mesh[] = [];
   const fasteners: { at: Vec3; radius: number }[] = [];
-  for (const [x, y, rr] of [
-    [0.17, 0.08, 0.03],
-    [-0.17, 0.08, 0.016],
-  ] as const) {
+  // Far: only the 2" bung; the ¾" one is under a pixel.
+  const caps = (
+    [
+      [0.17, 0.08, 0.03],
+      [-0.17, 0.08, 0.016],
+    ] as const
+  ).slice(0, lod < 2 ? 2 : 1);
+  for (const [x, y, rr] of caps) {
     const seg = [12, 8, 6][lod] ?? 6;
     bungs.push(
       cylinder({ radius: rr, length: 0.012, segments: seg, color: STEEL, at: [x, y, 0.857] }),
@@ -292,26 +393,78 @@ function drum(lod: number): Obj {
   }
   return {
     meshes: { shell, bungs: merge(bungs) },
+    ...(aged ? { settle: (m: Readonly<Record<string, Mesh>>) => crush(m, lod) } : {}),
     fasteners,
     under: hex('#8d8c88'),
     seed: 41,
-    resolution: [0.1, 0.2, 0.4],
+    resolution: [0, 0.2, 0.4],
     effects: {
       rust: { where: 'convex-edges | fasteners', amount: 0.15, streaks: true, streakLength: 0.25 },
       chips: { where: 'convex-edges', amount: 0.3 },
       dust: { where: 'up-facing', amount: 0.5 },
       mud: { where: 'ground-near & side-facing', amount: 0.35 },
       bleach: { where: 'sunlit', amount: 0.3 },
-      dents: { where: 'exposed-panels & side-facing', count: [2, 3], depth: 0.03, radius: 0.08 },
     },
   };
+}
+
+/** Extra profile stations so no step along the profile is longer than `step` (m). */
+function densify(profile: readonly [number, number][], step: number): [number, number][] {
+  const out: [number, number][] = [];
+  profile.forEach((p, i) => {
+    const q = profile[i - 1];
+    if (q) {
+      const n = Math.ceil(dmath.hypot(p[0] - q[0], p[1] - q[1]) / step);
+      for (let k = 1; k < n; k++)
+        out.push([q[0] + ((p[0] - q[0]) * k) / n, q[1] + ((p[1] - q[1]) * k) / n]);
+    }
+    out.push(p);
+  });
+  return out;
+}
+
+/**
+ * The weathered drum's history in its shape: a forklift tine's dent 9 cm deep in the side the
+ * camera sees, between the rolling hoops (LOD0/1; LOD2 keeps the lean), and the crushed chime it
+ * then sat on, so it leans 3° toward that side, its low rim on the slab.
+ */
+function crush(m: Readonly<Record<string, Mesh>>, lod: number): Record<string, Mesh> {
+  const at = -1.65; // dent bearing about Z, radians: near the left limb the hero lens sees
+  const dent = (mesh: Mesh): Mesh => {
+    const positions = new Float32Array(mesh.positions);
+    for (let v = 0; v < positions.length / 3; v++) {
+      const x = positions[v * 3] ?? 0;
+      const y = positions[v * 3 + 1] ?? 0;
+      const z = positions[v * 3 + 2] ?? 0;
+      const r = dmath.hypot(x, y);
+      let da = dmath.atan2(y, x) - at;
+      da = dmath.atan2(dmath.sin(da), dmath.cos(da));
+      const d = dmath.hypot(da * 0.286, (z - 0.43) * 0.75) / 0.17;
+      if (d >= 1 || r < 0.2) continue;
+      const k = 1 - (0.09 * dmath.pow(dmath.cos((d * Math.PI) / 2), 2)) / r;
+      positions[v * 3] = x * k;
+      positions[v * 3 + 1] = y * k;
+    }
+    return weightedNormals({ ...mesh, positions }, { hardAngle: 40 });
+  };
+  // Lean: tip about the low rim point (bearing `at`, radius 0.29) so it stays on the slab.
+  const rim: Vec3 = [0.29 * dmath.cos(at), 0.29 * dmath.sin(at), 0];
+  const tilt = 0.05;
+  // Rim point to the origin with the bearing on +X, pitch about Y (the far rim lifts), and back.
+  const tip = (mesh: Mesh): Mesh => {
+    const local = place(place(mesh, { at: [-rim[0], -rim[1], 0] }), { yaw: -at });
+    return place(place(local, { pitch: tilt }), { yaw: at, at: rim });
+  };
+  return Object.fromEntries(
+    Object.entries(m).map(([k, v]) => [k, tip(k === 'shell' && lod < 2 ? dent(v) : v)]),
+  );
 }
 
 /** One labelled slab with the pristine object on the left (−Y) and the weathered one on the right. */
 function pair(
   ctx: BuildContext,
   name: string,
-  make: (lod: number) => Obj,
+  make: (lod: number, aged: boolean) => Obj,
   at: Vec3,
   gap: number,
 ): void {
@@ -327,20 +480,24 @@ function pair(
   const top: Vec3 = [at[0], at[1], at[2] + SLAB_H];
   const newAt: Vec3 = [top[0], top[1] - gap / 2 - 0.3, top[2]];
   const oldAt: Vec3 = [top[0], top[1] + gap / 2 + 0.3, top[2]];
-  const fresh = make(ctx.lod);
+  const fresh = make(ctx.lod, false);
   for (const [k, m] of Object.entries({ ...fresh.plain, ...fresh.meshes, ...fresh.rest?.meshes }))
     ctx.part(`${name}_new_${k}`, m, { at: newAt });
-  const old = make(ctx.lod);
-  const aged = weather(ctx, old.meshes, {
-    name: `${name}_old`,
-    seed: old.seed,
-    age: 0.8,
-    resolution: old.resolution,
-    fasteners: old.fasteners,
-    ...(old.touched ? { touched: old.touched } : {}),
-    under: old.under,
-    effects: old.effects,
-  });
+  const old = make(ctx.lod, true);
+  const painted =
+    ctx.lod === 2 && old.far
+      ? old.far
+      : weather(ctx, old.meshes, {
+          name: `${name}_old`,
+          seed: old.seed,
+          age: 0.8,
+          resolution: old.resolution,
+          fasteners: old.fasteners,
+          ...(old.touched ? { touched: old.touched } : {}),
+          under: old.under,
+          effects: old.effects,
+        });
+  const aged = old.settle ? old.settle(painted) : painted;
   const rest = old.rest
     ? weather(ctx, old.rest.meshes, {
         name: `${name}_old_rest`,

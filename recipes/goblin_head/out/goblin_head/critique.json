@@ -12,18 +12,18 @@
     },
     "proportions": {
       "score": 7,
-      "reason": "Shoulders are narrower and the grin shows a teeth row; the neck is still long and straight in SIDE, and the scarf sits as a thick ring high on the neck.",
+      "reason": "Shoulders fit and the scarf now drapes down onto the collarbone with a knot; the neck is still long and straight in SIDE.",
       "fixes": [
-        "shorten the neck ~1.5 cm and tilt it forward 10°",
-        "drop the scarf knot onto the collarbone"
+        "shorten the neck ~1.5 cm and tilt it forward 10°"
       ]
     },
     "materials": {
       "score": 6,
-      "reason": "Green skin, leather vest, linen shirt and red scarf separate by hue and the vest has grey patches; every surface shares one matte sheen and the scarf still reads as a red rubber tube.",
+      "reason": "Green skin, leather vest, linen shirt and red scarf separate by hue, and the scarf is now a flattened folded band instead of a rubber tube; but the skin renders as wet, evenly glossy plastic over the whole head in hero.png and the vest patches are flat grey squares.",
       "fixes": [
+        "raise skin roughness (~0.55) and keep sheen only on nose, brow and lips",
         "a leather strip with lower roughness and darkened edges on the vest",
-        "a knit/wool strip and a flattened folded band section for the scarf"
+        "give the vest patches a cloth texture and stitched border instead of flat grey"
       ]
     },
     "detail": {
@@ -44,7 +44,7 @@
     },
     "lod": {
       "score": 6,
-      "reason": "FAR LOD2 keeps the ears and hair; the vest's cream/brown checker is now coarser blotches, but cream shirt patches still scatter over the brown vest face by face, the scarf breaks into red flecks and the torso rounds into a ball.",
+      "reason": "FAR LOD2 keeps the ears and hair, but cream shirt patches still scatter over the brown vest face by face, the scarf breaks into red flecks and the torso is a rounded block.",
       "fixes": [
         "average vertex colour per LOD2 face (or bake LOD2 from the LOD0 texture) so the vest stays one brown block over one cream shirt panel",
         "keep the vest's lapel edge at LOD2 so the torso is not a ball"
@@ -60,7 +60,7 @@
     }
   },
   "renders": {
-    "hero.png": "046599b07c921b13a4cb782ea576fe22559f0810ab503207932045a9a348581f",
-    "sheet.png": "83a56495651f8e0ad1ee0cec3c74a46ea827810f0b87d23a402cc6113eb2b603"
+    "hero.png": "26265ef1683997a638d9d3d6973e2a2b35939b91f3fcb55c66cd194b463d74ff",
+    "sheet.png": "7c8306e9b3ec938971f5609cc5d1c6031f230b9cee2e7500c5a2bbdc7b81509f"
   }
 }

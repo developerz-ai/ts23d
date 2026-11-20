@@ -3,7 +3,7 @@
 // Plus the ground rule for foliage: cards that would hang into the soil are shortened about their
 // root.
 
-import { boundsOf, type Mesh, type Vec3 } from '../core/index.ts';
+import { boundsOf, dmath, type Mesh, type Vec3 } from '../core/index.ts';
 import { axisAt } from './vegetation-mesh.ts';
 import type { Stem } from './vegetation-skeleton.ts';
 
@@ -58,7 +58,7 @@ export function fitMesh(m: Mesh, s: Vec3, z0: number): Mesh {
     const nx = (m.normals[i] ?? 0) / s[0];
     const ny = (m.normals[i + 1] ?? 0) / s[1];
     const nz = (m.normals[i + 2] ?? 0) / s[2];
-    const l = Math.hypot(nx, ny, nz) || 1;
+    const l = dmath.hypot(nx, ny, nz) || 1;
     normals[i] = nx / l;
     normals[i + 1] = ny / l;
     normals[i + 2] = nz / l;

@@ -1,13 +1,13 @@
 {
   "asset": "king_cobra",
   "reviewer": "agent",
-  "overall": 6.6,
+  "overall": 6.7,
   "scores": {
     "silhouette": {
       "score": 7,
-      "reason": "Raised forebody with a narrow hood and ventral scutes reads as a cobra, and the rest coil now lies on the ground instead of floating; but it is one flat, even ring (a hose loop in hero.png), not a pile of turns supporting the raised body, and a pale sliver shows under its near side.",
+      "reason": "Raised forebody with a narrow hood reads as a cobra; the rest coil is now two stacked turns in SIDE and FRONT, but in hero.png it is still an even hollow ring (a hose loop), not a pile supporting the raised body.",
       "fixes": [
-        "stack one more, smaller turn on the ground ring under the raised forebody so the rest reads as a pile",
+        "tighten the coil into an off-centre pile with the forebody rising from the top turn",
         "widen the hood ribs a little at the neck"
       ]
     },
@@ -43,11 +43,10 @@
       ]
     },
     "lod": {
-      "score": 6,
-      "reason": "FAR LOD2 now averages the pattern into an olive-dark coil, but two coil segments still turn blue-grey and the neck goes flat cream, so the colour still shifts at distance.",
+      "score": 7,
+      "reason": "FAR LOD2 now averages the coil into one olive-brown with the blue-grey patches gone; the neck front is still a flat cream band with faceted shading.",
       "fixes": [
-        "average the blue-grey patch into the dorsal tone at LOD2",
-        "keep a darker dorsal band on the LOD2 neck"
+        "keep a darker dorsal band on the LOD2 neck sides"
       ]
     },
     "technical": {
@@ -59,7 +58,7 @@
     }
   },
   "renders": {
-    "hero.png": "edf52b9752ec3085240f8e56bffafe5c99ff36fad079d2a5dec565fb65ad9b8b",
-    "sheet.png": "7ee0f88b11e67ccd4026a7635a78b74d715f0c128f41ad06d38f913dae17d88a"
+    "hero.png": "57013602f6c35dcb8d1cefeba0fba41029649c1dd6886c5ed3cc7052ea1d6bed",
+    "sheet.png": "815d72f96c72d9156cc9d95f3907a43b61d3525d96858800b716c01f0c8be1e8"
   }
 }

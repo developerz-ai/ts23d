@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test';
+import { dmath } from '../core/index.ts';
 import { type TerrainGrid, terrainGrid, thermalErosion } from './terrain-grid.ts';
 
 const maxChange = (a: TerrainGrid, b: TerrainGrid): number =>
@@ -63,7 +64,7 @@ describe('thermalErosion on a non-square rect', () => {
     const g = terrainGrid({
       rect: [-1000, -1000, 1000, 1000],
       cells: 48,
-      height: (x, y) => Math.max(0, 900 - Math.hypot(x, y) * 1.3) + 40 * Math.sin(x / 90),
+      height: (x, y) => Math.max(0, 900 - dmath.hypot(x, y) * 1.3) + 40 * dmath.sin(x / 90),
     });
     const out = thermalErosion(g, { talus: 0.7, iterations: 25 });
     expect(maxChange(g, out)).toBeGreaterThan(1);

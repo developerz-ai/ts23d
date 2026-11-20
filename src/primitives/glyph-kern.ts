@@ -5,6 +5,7 @@
 // (To, LT, AT, Ty, P.), but never so far that its narrowest gap drops under 70 % of n+n's.
 // Profiles and pair results are memoised per font.
 
+import { dmath } from '../core/index.ts';
 import { glyph, type VectorFont } from './glyph-hershey.ts';
 
 const BANDS = 48;
@@ -41,7 +42,7 @@ function profile(font: VectorFont, ch: string): Profile {
   for (const s of glyph(font, ch).strokes)
     for (let i = 0; i + 3 < s.length; i += 2) {
       const [x0 = 0, y0 = 0, x1 = 0, y1 = 0] = [s[i], s[i + 1], s[i + 2], s[i + 3]];
-      const steps = Math.max(1, Math.ceil(Math.hypot(x1 - x0, y1 - y0) * 4));
+      const steps = Math.max(1, Math.ceil(dmath.hypot(x1 - x0, y1 - y0) * 4));
       for (let t = 0; t <= steps; t++)
         mark(x0 + ((x1 - x0) * t) / steps, y0 + ((y1 - y0) * t) / steps);
     }

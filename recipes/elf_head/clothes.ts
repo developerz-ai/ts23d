@@ -13,6 +13,7 @@
 
 import {
   createRng,
+  dmath,
   type Field,
   hex,
   type IntendedCrease,
@@ -334,7 +335,7 @@ function wrapRegion(tunic: Field): Field {
   const b: V = [0.09, -0.07, L.mz - 0.85 * H];
   const dy = b[1] - a[1];
   const dz = b[2] - a[2];
-  const l = Math.hypot(dy, dz);
+  const l = dmath.hypot(dy, dz);
   return (p) => {
     const side = ((p[1] - a[1]) * -dz + (p[2] - a[2]) * dy) / l;
     return Math.max(tunic(p), side, 0.01 - p[0]);
@@ -350,8 +351,8 @@ const HEM = L.mz - 1.0 * H;
 export const cloakRegion: Field = (p) => {
   const drop = CLASP[2] - p[2];
   const w = drop <= 0 ? -0.01 : 0.012 + drop * 1.1;
-  const a = Math.atan2(p[1], -p[0]);
-  const hem = HEM + 0.005 * Math.cos(a * 9) + 0.004 * SPECK([p[0], p[1], 0]);
+  const a = dmath.atan2(p[1], -p[0]);
+  const hem = HEM + 0.005 * dmath.cos(a * 9) + 0.004 * SPECK([p[0], p[1], 0]);
   return Math.max(hem - p[2], Math.min(p[0] - 0.02, w - Math.abs(p[1])));
 };
 
@@ -368,11 +369,11 @@ export function capeRegion(neck: NeckSection): Field {
   const cx = neck.c[0];
   const cloak = cloakOf(neck);
   return (p) => {
-    const a = Math.atan2(p[1], p[0] - cx);
+    const a = dmath.atan2(p[1], p[0] - cx);
     // A leaf point: a rounded lobe with a tip (|cos| sharpened).
-    const lobe = 1 - Math.abs(Math.cos(a * 5.5)) ** 0.7;
+    const lobe = 1 - dmath.pow(Math.abs(dmath.cos(a * 5.5)), 0.7);
     const reach = 0.145 + 0.045 * lobe;
-    const plan = (Math.hypot(p[0] - cx, p[1]) - reach) * 0.7;
+    const plan = (dmath.hypot(p[0] - cx, p[1]) - reach) * 0.7;
     return Math.max(cloak(p), plan, SEAM.at[2] - 0.14 - p[2]);
   };
 }

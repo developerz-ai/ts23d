@@ -11,6 +11,7 @@
 // twice the plan's; beyond that the find is the rump, and the plan's length is kept).
 
 import type { Bone, Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import { capsuleDistance } from '../passes/index.ts';
 import type { TriBvh } from '../primitives/index.ts';
 import type { Bones } from './creature-bones.ts';
@@ -88,7 +89,7 @@ export function fitEnds(e: EndsInput): { headYaw: number; tailRadius: number } {
         Math.abs(l[0] - p[2]) < Math.abs(best[0] - p[2]) ? l : best,
       );
       const low = p[2] < (t.line[2]?.[0] ?? 0);
-      return Math.hypot(p[0] - s[1], p[1] - s[2]) < (low ? t.paw * 1.4 : s[3] * 2.6) + H * 0.03;
+      return dmath.hypot(p[0] - s[1], p[1] - s[2]) < (low ? t.paw * 1.4 : s[3] * 2.6) + H * 0.03;
     });
   /** The point that is farthest from `from` (plus `ahead` × how far in front of it, along +X). */
   const farthest = (from: Vec3, ok: (p: Vec3) => boolean, ahead = 0): Vec3 | null => {
@@ -137,7 +138,7 @@ export function fitEnds(e: EndsInput): { headYaw: number; tailRadius: number } {
     const reach = v3.len(v3.sub(head.tail, head.head));
     const atlas = medial(bvh, v3.sub(tail, v3.mul(u, reach)), u, L * 0.3).at;
     pos.set(head.name, { head: atlas, tail });
-    yaw = (Math.atan2(tail[1] - atlas[1], tail[0] - atlas[0]) * 180) / Math.PI;
+    yaw = (dmath.atan2(tail[1] - atlas[1], tail[0] - atlas[0]) * 180) / Math.PI;
     if (neck.length)
       writeChain(
         pos,

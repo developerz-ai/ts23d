@@ -40,17 +40,18 @@ function spadeSpecs(segments: number): HornOptions[] {
     blade({
       base: v3.sub(tip, v3.mul(dir, 0.05)),
       dir,
-      length: 0.6,
-      radius: 0.2,
+      length: 0.95,
+      radius: 0.31,
       axis: [0, 0, 1],
       bend: 10,
     }),
     ...[1, -1].map((s) =>
       blade({
         base: v3.add(tip, v3.mul(dir, 0.06)),
-        dir: v3.norm(v3.add(v3.mul(side, s * 0.85), v3.mul(dir, -0.5))),
-        length: 0.5,
-        radius: 0.14,
+        // Swept back only a little: a longer fluke lying along the tail left a groove there.
+        dir: v3.norm(v3.add(v3.mul(side, s), v3.mul(dir, -0.22))),
+        length: 0.8,
+        radius: 0.22,
         axis: [0, 0, s],
         bend: -40 * s,
       }),
@@ -64,10 +65,18 @@ function spade(lod: number): SculptEdit[] {
   return spadeSpecs([8, 5, 3][lod] ?? 3).map((o) => ({
     group: [
       horn(o),
-      { shape: 'roundBox', at: tip, size: [1.4, 1.4, 0.055], op: 'intersect', round: 0.022 },
+      // A slab as thick as the coarse cell holds (7 cm at LOD0, 12 at LOD1).
+      {
+        shape: 'roundBox',
+        at: tip,
+        size: [2.4, 2.4, lod === 0 ? 0.07 : 0.12],
+        op: 'intersect',
+        round: 0.028,
+      },
     ],
-    // Fillet where the blades leave the tail tip (0.035 left a hard valley: QA connections).
-    blend: 0.07,
+    // Fillet where the blades leave the tail tip (0.07 left a hard valley under the wider
+    // flukes: QA connections).
+    blend: 0.1,
   }));
 }
 

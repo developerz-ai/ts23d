@@ -5,6 +5,7 @@
 // `withBrowComb` wraps a recipe's hair comb; `browLayers` are appended to its card layers.
 
 import type { CardLayer, FlowSeed, Vec3 } from '@developerz.ai/ts23d';
+import { dmath } from '@developerz.ai/ts23d';
 import type { SkullLandmarks } from './skull.ts';
 
 export interface BrowStyle {
@@ -39,7 +40,7 @@ export function browPath(k: SkullLandmarks, H: number): Vec3[] {
     return [
       head[0] + (tail[0] - head[0]) * t,
       head[1] + (tail[1] - head[1]) * t,
-      head[2] + (tail[2] - head[2]) * t + Math.sin(t * Math.PI * 0.8) * 0.012 * H,
+      head[2] + (tail[2] - head[2]) * t + dmath.sin(t * Math.PI * 0.8) * 0.012 * H,
     ];
   });
 }
@@ -51,12 +52,16 @@ function nearest(path: readonly Vec3[], p: Vec3): { t: number; d: number } {
     const a = path[i] as Vec3;
     const b = path[i + 1] as Vec3;
     const ab: Vec3 = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
-    const l2 = ab[0] ** 2 + ab[1] ** 2 + ab[2] ** 2 || 1;
+    const l2 = ab[0] * ab[0] + ab[1] * ab[1] + ab[2] * ab[2] || 1;
     const u = Math.min(
       1,
       Math.max(0, ((p[0] - a[0]) * ab[0] + (p[1] - a[1]) * ab[1] + (p[2] - a[2]) * ab[2]) / l2),
     );
-    const d = Math.hypot(p[0] - a[0] - ab[0] * u, p[1] - a[1] - ab[1] * u, p[2] - a[2] - ab[2] * u);
+    const d = dmath.hypot(
+      p[0] - a[0] - ab[0] * u,
+      p[1] - a[1] - ab[1] * u,
+      p[2] - a[2] - ab[2] * u,
+    );
     if (d < best.d) best = { t: (i + u) / (path.length - 1), d };
   }
   return best;
@@ -91,7 +96,7 @@ export function lashLine(eye: { centre: Vec3; r: number }): (p: Vec3) => number 
     const q = mirror(p);
     const dx = q[0] - cx;
     const dz = q[2] - cz;
-    const d = Math.hypot(dx, q[1] - cy, dz);
+    const d = dmath.hypot(dx, q[1] - cy, dz);
     return Math.max(Math.abs(d - 1.12 * r) - 0.002, 0.5 * r - dx, 0.2 * r - dz, dz - 0.8 * r);
   };
 }

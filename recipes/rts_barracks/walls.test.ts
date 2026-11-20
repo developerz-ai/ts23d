@@ -3,9 +3,9 @@
 // where the front or back wall it butts against had been knocked down.
 
 import { describe, expect, it } from 'bun:test';
-import { createRng, type Mesh, type Vec3 } from '@developerz.ai/ts23d';
-import { bays, EAVES, HALF_X, HALF_Y, WALL_T, wallCells } from './plan.ts';
-import { walls } from './walls.ts';
+import { createRng, dmath, type Mesh, type Vec3 } from '@developerz.ai/ts23d';
+import { bays, EAVES, HALF_X, HALF_Y, ROWS, WALL_T, wallCells } from './plan.ts';
+import { CORNERS, quoinRows, walls } from './walls.ts';
 
 /** Triangle centroids of `m` whose unit normal is within ~8° of `dir`. */
 function facing(m: Mesh | null, dir: Vec3): Vec3[] {
@@ -25,7 +25,7 @@ function facing(m: Mesh | null, dir: Vec3): Vec3[] {
       u[2] * v[0] - u[0] * v[2],
       u[0] * v[1] - u[1] * v[0],
     ];
-    const l = Math.hypot(...n) || 1;
+    const l = dmath.norm(n) || 1;
     if ((n[0] * dir[0] + n[1] * dir[1] + n[2] * dir[2]) / l > 0.99)
       out.push([(a[0] + b[0] + c[0]) / 3, (a[1] + b[1] + c[1]) / 3, (a[2] + b[2] + c[2]) / 3]);
   }
@@ -68,5 +68,38 @@ describe('walls LOD2 culling', () => {
       (c) => Math.abs(c[0] - (HALF_X - WALL_T / 2)) < 1e-3,
     );
     expect(end).toEqual([]);
+  });
+});
+
+describe('quoin stacks', () => {
+  const origin: Vec3 = [0, 0, 0];
+  const [a, b] = [CORNERS[0] ?? origin, CORNERS[1] ?? origin];
+  it('stand full height on an intact hall', () => {
+    expect(quoinRows(bays(), a)).toBe(ROWS);
+    expect(quoinRows(bays(), b)).toBe(ROWS);
+  });
+  it('a corner knocked down to 3 courses truncates its own stack only', () => {
+    // Failure first: both stacks took the minimum over every bay meeting either corner.
+    const list = bays();
+    for (const bay of list.filter((x) => x.id === 'front_0'))
+      for (let r = 3; r < bay.cells.length; r++) bay.cells[r]?.fill(false);
+    const lowered = [quoinRows(list, a), quoinRows(list, b)].sort((x, y) => x - y);
+    expect(lowered).toEqual([3, ROWS]);
+  });
+});
+
+describe('sill drips', () => {
+  it('hang only under a window sill (none on the gate bay or a bay whose window is knocked out)', () => {
+    const list = wallCells('complete', 'damaged', createRng(3));
+    const w = walls(0, list, createRng(1), true, true);
+    const m = w.stains;
+    expect(m).not.toBeNull();
+    expect(w.sills.length).toBeLessThan(list.length);
+    const pos = m?.positions ?? new Float32Array();
+    for (let i = 0; i < pos.length / 3; i++) {
+      const [x, y] = [pos[i * 3] ?? 0, pos[i * 3 + 1] ?? 0];
+      const under = w.sills.some((s) => dmath.hypot(x - s[0], y - s[1]) < 0.6);
+      expect({ i, under }).toEqual({ i, under: true });
+    }
   });
 });

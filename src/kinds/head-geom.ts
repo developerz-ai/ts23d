@@ -2,25 +2,26 @@
 // a direction, and point/vector helpers.
 
 import type { Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 
 const DEG = 180 / Math.PI;
 
 /** `rotate` (deg, X→Y→Z) taking local +X onto `d`, then rolling `roll` deg about it. */
 export function alongX(d: Vec3, roll = 0): Vec3 {
-  const yaw = Math.atan2(d[1], d[0]);
-  const pitch = -Math.atan2(d[2], Math.hypot(d[0], d[1]));
+  const yaw = dmath.atan2(d[1], d[0]);
+  const pitch = -dmath.atan2(d[2], dmath.hypot(d[0], d[1]));
   return [roll, pitch * DEG, yaw * DEG];
 }
 
 /** `rotate` taking local +Z (a cone's axis) onto `d`. */
 export function alongZ(d: Vec3): Vec3 {
-  const len = Math.hypot(d[0], d[1], d[2]) || 1;
-  const tilt = Math.acos(Math.max(-1, Math.min(1, d[2] / len)));
-  return [0, tilt * DEG, Math.atan2(d[1], d[0]) * DEG];
+  const len = dmath.hypot(d[0], d[1], d[2]) || 1;
+  const tilt = dmath.acos(Math.max(-1, Math.min(1, d[2] / len)));
+  return [0, tilt * DEG, dmath.atan2(d[1], d[0]) * DEG];
 }
 
 export const unit = (d: Vec3): Vec3 => {
-  const l = Math.hypot(d[0], d[1], d[2]) || 1;
+  const l = dmath.hypot(d[0], d[1], d[2]) || 1;
   return [d[0] / l, d[1] / l, d[2] / l];
 };
 

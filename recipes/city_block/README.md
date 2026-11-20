@@ -35,24 +35,39 @@ lots with rear yards (the light wells in the footprints), party walls without wi
 | aerial | https://www.openstreetmap.org/#map=19/40.7340/-74.0038 | footprints, rear yards |
 
 ## Parts the engine needs
-`b<osm id>` (walls, true-scale brick / brownstone / stucco per face), `b<id>_cornice` (LOD0/1),
-`b<id>_roof` (tar roof band and patches), `b<id>_windows` (framed sashes LOD0, decals LOD1,
-window-row bands LOD2), `b<id>_street` (shopfronts, stoops, fire escapes), `rooftop_<id>` (stair
-bulkheads, water tanks: not part of the tagged height), `trees`, `streets`, `ground`. `scene()`
-exports the plan's windows as one mesh × N with EXT_mesh_gpu_instancing.
+`b<osm id>` (walls, true-scale brick / brownstone / stucco per face, soot runs), `b<id>_cornice`
+(LOD0/1), `b<id>_roof` (roof band and membrane patches), `b<id>_windows` (framed sashes LOD0;
+decals on street faces and window-row bands elsewhere at LOD1; bands on every open face LOD2),
+`b<id>_street` (shopfronts with doors and awnings, stoops, fire escapes), `rooftop_<id>` (stair
+bulkheads, water tanks, vents: not part of the tagged height), `trees`, `streets` (asphalt,
+kerbs, lane paint), `ground`. `scene()` exports the plan's windows as one mesh × N with
+EXT_mesh_gpu_instancing.
 
 ## How the block is built (`block.ts`, `facade.ts`, `edges.ts`, `wear.ts`)
 The city kind's `cityPlan` gives heights, floors, seeds, neighbour-aware wall colours and window
 slots; the recipe builds the facades itself so it can LOD-gate them. A face counts as a street
 front when 3 m in front of it is open ground near a mapped carriageway or near the slab's rim
 (the other streets of the block run just outside the bbox). Street fronts get true-scale walls,
-framed sash windows with sills, a projecting cornice with frieze and brackets, and by seed a
-shopfront (glazing, mullions, sign band, canvas awning), a brownstone stoop up to a panelled door
-(row houses) or a fire escape (walk-ups of 4+ storeys). Rear-yard faces get framed windows only.
-Water tanks stand on two in three of the buildings over 14 m; `real.height` includes the tallest
-tank. Wear: street grime up the first storey, soot under the roof line, per-building age, tar
-roofs in varied greys with patches. LOD0 ≈ 60k, LOD1 ≈ 29k (decal windows, no stoops, platforms
-only on the fire escapes), LOD2 ≈ 6k (massing, window rows as bands, trees as cones).
+framed sash windows with stone sills and lintels, a projecting cornice (0.45–0.8 m) with frieze
+and brackets, and by seed a shopfront (glazing, mullions, a panelled shop door, sign band, canvas
+awning on three in four), a brownstone stoop up to a panelled door (row houses) or a fire escape
+(walk-ups of 4+ storeys). Rear-yard faces get framed windows only. Water tanks stand on two in
+three of the buildings over 14 m; `real.height` includes the tallest tank. Streets: asphalt,
+granite kerbs on both edges and a dashed centre line plus parking lines, all cut at the
+crossings; the slab is 5 ft concrete flags (`materials.ts`). Street trees are 8–11 m, a dome
+and a seeded side lobe. Wear (`wear.ts`): street grime blackening the first storey to ~3.5 m,
+a broad soot band under the roof line and soot runs 0.5–1.3 m wide down the street faces, per-
+building age, membrane patches (fresh tar or silver coat) and vents on every roof. Side and
+rear walls (and LOD1) use the same bonds painted over 2.7 m bands (`city_brick_far`,
+`city_stone_far`), so they take a third of the bands without stretched courses. A face of one
+band (every face at LOD2, side and rear walls at LOD1) has vertex rows only at its foot and top,
+so it takes the wall's mean wear rather than the black of its grime and soot bands: far, each
+building keeps its brick, brownstone or stucco colour (tested).
+Budget 60k / 15k / 6k: LOD0 ≈ 59.6k, LOD1 ≈ 13.3k (street faces in 2.7 m bands, other faces one
+band with window rows as bands, decal windows, no stoops or fire escapes, single-dome trees),
+LOD2 ≈ 5.6k (massing, window rows as bands on every open face, trees as cones). The hero is a
+fixed street view down West 10th Street (`hero.eye`/`target`), so the storefronts, kerbs, lane
+paint and wear fill the frame.
 
 ## Open questions and known gaps
 - The city kind's own `cityBlock` (true-scale brick walls, glazed window boxes at LOD0, flat panes

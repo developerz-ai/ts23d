@@ -5,6 +5,7 @@
 // params: width 1.0 · height 0.5 · lap 0.003 · rivet 0.014 (radius) · pitch 0.09 · inset 0.05
 //         rust 0.4 · chips 0.3
 
+import { dmath } from '../../core/index.ts';
 import { type Canvas, noiseAt, param, smooth } from './canvas.ts';
 import { Courses } from './courses.ts';
 import { rustStreaks } from './masks.ts';
@@ -53,10 +54,10 @@ export function paintPlates(c: Canvas, r: StripRecipe, seed: number): void {
       // Rivet rows: `inset` from each vertical seam and from each course edge, every `pitch`.
       const ry = Math.abs(dy - inset);
       const rx = Math.abs(dx - inset);
-      const d1 = Math.sqrt(rx * rx + along(ym - plates.y0, pitch) ** 2);
-      const d2 = Math.sqrt(ry * ry + along(xm, pitchU) ** 2);
+      const d1 = Math.sqrt(rx * rx + dmath.pow(along(ym - plates.y0, pitch), 2));
+      const d2 = Math.sqrt(ry * ry + dmath.pow(along(xm, pitchU), 2));
       const d = Math.min(dx > inset * 2 ? 1 : d1, dy > inset * 2 ? 1 : d2);
-      const dome = d < rivet ? Math.sqrt(1 - (d / rivet) ** 2) : 0;
+      const dome = d < rivet ? Math.sqrt(1 - dmath.pow(d / rivet, 2)) : 0;
       h += dome * rivet * 0.5;
       const chip = smooth(
         0.35,

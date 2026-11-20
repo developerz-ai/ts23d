@@ -3,7 +3,7 @@
 // → reorder vertices for fetch locality. Same geometry, fewer vertices, fewer cache misses.
 // Zero dependencies, byte-deterministic. Reports ACMR/ATVR before and after.
 
-import { type Mesh, Ts23dError } from '../core/index.ts';
+import { type Mesh, mappedOf, Ts23dError } from '../core/index.ts';
 import { cacheStats, fetchOrder, forsyth } from './optimize-cache.ts';
 import { DEFAULT_WELD, type WeldTolerance, weld } from './optimize-weld.ts';
 
@@ -49,6 +49,7 @@ function reorderVertices(m: Mesh, order: Uint32Array, indices: Uint32Array): Mes
     uvs: pick(m.uvs, 2),
     colors: pick(m.colors, 3),
     indices,
+    ...mappedOf(m),
     // Skin and morph attributes ride the same vertex order.
     ...(m.joints && m.weights ? { joints: pick(m.joints, 4), weights: pick(m.weights, 4) } : {}),
     ...(m.morphs

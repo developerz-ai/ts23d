@@ -4,6 +4,7 @@
 
 import { describe, expect, it } from 'bun:test';
 import type { Mesh, Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import { bodyPlan } from './body-plan.ts';
 import { chainCopies, chainCurve } from './body-plan-curve.ts';
 import { HYDRA, OCTOPUS, SHARK } from './body-plan-fixtures.ts';
@@ -142,7 +143,7 @@ describe('body-plan blend', () => {
         let best = Number.POSITIVE_INFINITY;
         for (let v = 0; v < mesh.positions.length / 3; v++) {
           const m = point(mesh, v);
-          best = Math.min(best, Math.hypot(q.p[0] - m[0], q.p[1] - m[1], q.p[2] - m[2]));
+          best = Math.min(best, dmath.hypot(q.p[0] - m[0], q.p[1] - m[1], q.p[2] - m[2]));
         }
         worst = Math.max(worst, best);
         seats++;
@@ -152,7 +153,7 @@ describe('body-plan blend', () => {
 
   it('seats on the welded vertices of a chain with varying relief', () => {
     const relief = (q: { angle: number; u: number }): number =>
-      0.03 * Math.sin(5 * q.angle) * Math.cos(30 * q.u);
+      0.03 * dmath.sin(5 * q.angle) * dmath.cos(30 * q.u);
     const { worst, seats } = seatError({ ...limb, blend: 0.12, relief });
     expect(seats).toBeGreaterThan(20);
     expect(worst).toBeLessThan(1e-4);
@@ -181,7 +182,7 @@ describe('body-plan blend', () => {
       let best = Number.POSITIVE_INFINITY;
       for (let v = 0; v < mesh.positions.length / 3; v++) {
         const q = point(mesh, v);
-        best = Math.min(best, Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2]));
+        best = Math.min(best, dmath.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2]));
       }
       return best;
     };

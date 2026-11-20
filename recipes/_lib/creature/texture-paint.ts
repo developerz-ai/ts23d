@@ -8,8 +8,15 @@
 // body (asset frame: metres, Z up, +X front, +Y left). Masks are then functions of position
 // (a height band, a ball round a bone, a thin slab cutting the surface, seeded value noise), not
 // of UV islands, and never cross a seam. No randomness outside the seeded hash: same program,
-// same bytes. Shared by bear_hybrid, dragon_hybrid and ranger (each writes its own body below
-// KIT); positions come from the fitted rig, numbers are in the cache key like any step.
+// same bytes. Shared by bear_hybrid, dragon_hybrid, wolf_hybrid and ranger (each writes its own
+// body below KIT); positions come from the fitted rig, numbers are in the cache key like any step.
+//
+// RELIEF (after KIT, `reliefStep`) adds the normal map: a height field in metres over the body
+// becomes tangent-space relief (a scar's groove, caked mud, locks of fur), and worn places can be
+// planed flat. `tuftStep` is the same idea as geometry, on the SOURCE before `retopo`: locks of
+// coat pushed out of the outline (hump, belly fringe, ruff), so the silhouette is not a smooth
+// hull and the bake carries their shading. KIT's text is frozen: it is in every committed
+// program's cache key (ranger's too), so new brushes go in RELIEF.
 
 import type { BlenderStep, Vec3 } from '@developerz.ai/ts23d';
 
@@ -249,6 +256,113 @@ def save():
     _orm.pixels.foreach_set(o.astype(np.float32).ravel()); _orm.update()
 `;
 
+/** The second kit: the normal map as slopes (metres of height per metre along +U and +V), the
+ *  brushes that need it, and colour brushes KIT lacks. `save_relief()` writes the normal back. */
+export const RELIEF = `
+_nrm = _up(_bsdf.inputs['Normal'])
+_sn = _nrm.size[0]; _fn = S // _sn
+_n = np.empty(_sn * _sn * 4, np.float32); _nrm.pixels.foreach_get(_n); _n = _n.reshape(_sn, _sn, 4)
+_nz = np.maximum(_n[..., 2].astype(np.float64) * 2 - 1, 0.05)
+SU = np.kron(-(_n[..., 0] * 2.0 - 1) / _nz, np.ones((_fn, _fn)))
+SV = np.kron(-(_n[..., 1] * 2.0 - 1) / _nz, np.ones((_fn, _fn)))
+
+def _metres(axis):
+    """Metres one texel spans along U (axis 1) or V (axis 0), from the position maps."""
+    d = np.zeros((S, S))
+    for c in (X, Y, Z):
+        g = (np.roll(c, -1, axis) - np.roll(c, 1, axis)) * 0.5
+        d += np.where(np.abs(g) < 1.0, g, 0.0) ** 2
+    d = np.sqrt(d)
+    mid = float(np.median(d[OK & (d > 0)]))
+    return np.clip(d, 0.35 * mid, 3.0 * mid)
+MU, MV = _metres(1), _metres(0)
+
+def _on(axis, k, m):
+    """Texels whose neighbour k along 'axis' is the same patch of body: on an island, and within
+    three texels in metres (across a UV seam the next texel lies elsewhere on the animal)."""
+    d = sum((np.roll(c, k, axis) - c) ** 2 for c in (X, Y, Z))
+    return np.roll(OK, k, axis) & (d < (3 * m) ** 2)
+
+def _slope(hm, axis, m):
+    """Metres of height per metre along 'axis': central where both neighbours are on the patch,
+    one-sided where one is, 0 where neither (a texel off the islands is no height at all)."""
+    up, dn = _on(axis, -1, m), _on(axis, 1, m)
+    a, b = np.roll(hm, -1, axis), np.roll(hm, 1, axis)
+    d = np.where(up & dn, (a - b) * 0.5, np.where(up, a - hm, np.where(dn, hm - b, 0.0)))
+    return np.where(OK, d / m, 0.0)
+
+def emboss(height, gain=1.0):
+    """Add a height field (metres, per texel; a function of position, so it crosses seams) to the
+    normal map as relief; a constant height leaves it flat, island rims too."""
+    hm = np.where(OK, height, 0.0)
+    SU[:] += gain * _slope(hm, 1, MU)
+    SV[:] += gain * _slope(hm, 0, MV)
+
+def plane(mask, keep=0.0):
+    """Plane the baked relief flat under 'mask' (bare skin, wet mud), keeping 'keep' of it."""
+    m = 1 - (1 - keep) * np.clip(np.where(OK, mask, 0.0), 0, 1)
+    SU[:] *= m; SV[:] *= m
+
+def locks(scale, seed, stretch=(1.6, 1, 5), sharp=1.6):
+    """Locks of coat, 0..1: ridges 'scale' metres across, long along 'stretch'."""
+    n = 0.65 * vnoise(scale, seed, stretch) + 0.35 * vnoise(scale * 0.45, seed + 7, stretch)
+    return np.clip(1 - np.abs(2 * n - 1) * 1.6, 0, 1) ** sharp
+
+def desat(mask, amount):
+    """Pull colour towards its own grey under 'mask' ('amount' 1: all the way)."""
+    m = (amount * np.clip(np.where(OK, mask, 0.0), 0, 1))[..., None]
+    RGB[:] = RGB * (1 - m) + lum()[..., None] * m
+
+def grain(amount, mask=1.0):
+    """Sharpen the coat's own grain ('detail' first): value contrast between hair and gap."""
+    g = np.power(DETAIL, amount * np.clip(np.where(OK, mask, 0.0), 0, 1))
+    RGB[:] = RGB * g[..., None]
+
+def lowpass3(V, cells):
+    """As lowpass, with one cell size per axis (metres): (0.02, 0.02, 0.08) averages up and down
+    the body four times as far as along or across it."""
+    q = [(c - c[OK].min()) / k + 3.5 for c, k in zip((X, Y, Z), cells)]
+    dims = [int(c[OK].max()) + 5 for c in q]
+    i = [np.clip(c.astype(np.int64), 0, d - 1) for c, d in zip(q, dims)]
+    flat = ((i[0] * dims[1] + i[1]) * dims[2] + i[2])[OK]
+    size = dims[0] * dims[1] * dims[2]
+    s = np.bincount(flat, weights=V[OK], minlength=size).reshape(dims)
+    n = np.bincount(flat, minlength=size).astype(np.float64).reshape(dims)
+    for _ in range(2):
+        for ax in range(3):
+            s = s + 0.5 * (np.roll(s, 1, ax) + np.roll(s, -1, ax))
+            n = n + 0.5 * (np.roll(n, 1, ax) + np.roll(n, -1, ax))
+    g = np.where(n > 1e-6, s / np.maximum(n, 1e-6), float(V[OK].mean()))
+    f = [np.clip(c - 0.5, 0, d - 1.001) for c, d in zip(q, dims)]
+    i0 = [c.astype(np.int64) for c in f]
+    t = [c - k for c, k in zip(f, i0)]
+    out = np.zeros((S, S))
+    for dx in (0, 1):
+        for dy in (0, 1):
+            for dz in (0, 1):
+                w = (t[0] if dx else 1 - t[0]) * (t[1] if dy else 1 - t[1]) * (t[2] if dz else 1 - t[2])
+                out += w * g[i0[0] + dx, i0[1] + dy, i0[2] + dz]
+    return out
+
+def calm(mask, cells, seed, keep=0.25):
+    """Replace colour under 'mask' by the body's colour over 'cells' metres (one size per axis)
+    with fresh fine grain: a baked stripe narrower than the cell across it goes, the coat's
+    pattern along it stays."""
+    m = np.clip(np.where(OK, mask, 0.0), 0, 1)
+    fine = 1 + keep * (vnoise(min(cells) / 3, seed, (1, 1, 3)) - 0.5) * 2
+    for k in range(3):
+        c = RGB[..., k]
+        RGB[..., k] = c * (1 - m) + lowpass3(c, cells) * fine * m
+
+def save_relief():
+    small = lambda c: c.reshape(_sn, _fn, _sn, _fn).mean(axis=(1, 3)) if _fn > 1 else c
+    su, sv = small(SU), small(SV)
+    inv = 1.0 / np.sqrt(su * su + sv * sv + 1.0)
+    out = _n.copy()
+    out[..., 0], out[..., 1], out[..., 2] = (-su * inv + 1) / 2, (-sv * inv + 1) / 2, (inv + 1) / 2
+    _nrm.pixels.foreach_set(out.astype(np.float32).ravel()); _nrm.update()
+`;
+
 /** The `script` step: the kit, the recipe's own painting, then the maps written back. */
 export const paintStep = (body: string, why: string): BlenderStep => ({
   op: 'script',
@@ -258,3 +372,96 @@ export const paintStep = (body: string, why: string): BlenderStep => ({
 
 /** A point moved by an offset: masks sit relative to a bone, not at numbers read off a render. */
 export const offset = (p: Vec3, d: Vec3): Vec3 => [p[0] + d[0], p[1] + d[1], p[2] + d[2]];
+
+/** As `paintStep`, with RELIEF: the body may also `emboss`, `plane`, `desat`, `grain`, `calm`. */
+export const reliefStep = (body: string, why: string): BlenderStep => ({
+  op: 'script',
+  python: `${KIT}\n${RELIEF}\n${body}\nsave()\nsave_relief()\n`,
+  why,
+});
+
+/** Where `tuftStep` raises locks: the skin within `r` of the segment a → b (asset frame, the
+ *  pose of the source), pushed away from that axis. */
+export interface TuftRegion {
+  readonly a: Vec3;
+  readonly b: Vec3;
+  readonly r: number;
+  /** Height of a lock, metres. */
+  readonly amp: number;
+  /** Which skin: facing up, down, back (−X), or all round the axis. */
+  readonly face: 'up' | 'down' | 'back' | 'all';
+}
+
+/** Locks of coat as geometry, on the source before `retopo` (a `script` step): each region's skin
+ *  moves out from its axis by a seeded ridge field `cell` metres across, and each lock's tip
+ *  `droop` times that along `flow` (hanging, swept back). Sides are left alone by `face`, so
+ *  the asset's width holds; `avoid` balls stay untouched (the head: a lock hanging off a jaw is
+ *  a second outline to QA `model`). */
+export const tuftStep = (
+  regions: readonly TuftRegion[],
+  o: {
+    cell: number;
+    seed: number;
+    droop: number;
+    flow: Vec3;
+    avoid?: readonly { at: Vec3; r: number }[];
+    why: string;
+  },
+): BlenderStep => ({
+  op: 'script',
+  why: o.why,
+  python: `
+me = obj.data
+co = np.empty(len(me.vertices) * 3, np.float32); me.vertices.foreach_get('co', co)
+co = co.reshape(-1, 3).astype(np.float64)
+world = np.array(obj.matrix_world)
+inv = np.linalg.inv(world)
+w = co @ world[:3, :3].T + world[:3, 3]
+P = np.stack([-w[:, 1], w[:, 0], w[:, 2]], axis=1)
+def ramp(a, b, x):
+    t = np.clip((x - a) / (b - a), 0, 1)
+    return t * t * (3 - 2 * t)
+def hash3(i, seed):
+    n = (i[:, 0] * 374761393 + i[:, 1] * 668265263 + i[:, 2] * 2147483629 + seed * 1274126177) & 0xFFFFFFFF
+    n = ((n ^ (n >> 13)) * 1274126177) & 0xFFFFFFFF
+    n = ((n ^ (n >> 16)) * 2246822519) & 0xFFFFFFFF
+    return ((n ^ (n >> 15)) & 0xFFFF) / 65535.0
+def noise(scale, seed, stretch):
+    q = P / (scale * np.array(stretch, float)) + 1000.0
+    i = np.floor(q).astype(np.int64); f = q - i; f = f * f * (3 - 2 * f)
+    out = np.zeros(len(P))
+    for dx in (0, 1):
+        for dy in (0, 1):
+            for dz in (0, 1):
+                k = (f[:, 0] if dx else 1 - f[:, 0]) * (f[:, 1] if dy else 1 - f[:, 1]) * (f[:, 2] if dz else 1 - f[:, 2])
+                out += k * hash3(i + np.array([dx, dy, dz]), seed)
+    return out
+cell, seed = ${o.cell}, ${o.seed}
+n = 0.65 * noise(cell, seed, (1.6, 1, 2.4)) + 0.35 * noise(cell * 0.45, seed + 7, (1.6, 1, 2.4))
+lock = np.clip(1 - np.abs(2 * n - 1) * 1.7, 0, 1) ** 1.4
+flow = np.array(${py(o.flow)}); flow = flow / np.linalg.norm(flow)
+move = np.zeros_like(P)
+free = np.ones(len(P))
+for at, r in [${(o.avoid ?? []).map((b) => `(${py(b.at)}, ${b.r})`).join(', ')}]:
+    free = free * ramp(r, 1.3 * r, np.linalg.norm(P - np.array(at), axis=1))
+for a, b, r, amp, face in [${regions
+    .map((t) => `(${py(t.a)}, ${py(t.b)}, ${t.r}, ${t.amp}, '${t.face}')`)
+    .join(', ')}]:
+    a, b = np.array(a), np.array(b); ab = b - a
+    t = np.clip(((P - a) @ ab) / float(ab @ ab), 0, 1)
+    foot = a + t[:, None] * ab
+    d = np.linalg.norm(P - foot, axis=1)
+    out = (P - foot) / np.maximum(d, 1e-6)[:, None]
+    side = {'up': out[:, 2], 'down': -out[:, 2], 'back': -out[:, 0], 'all': np.ones(len(P))}[face]
+    k = (1 - ramp(0.8 * r, r, d)) * ramp(0.35, 0.8, side) * amp * lock * free
+    step = k[:, None] * (out + ${o.droop} * lock[:, None] * flow)
+    far = np.linalg.norm(step, axis=1) > np.linalg.norm(move, axis=1)
+    move[far] = step[far]
+    print('tufts', face, 'vertices', int((k > 0.25 * amp).sum()), 'highest', round(float(k.max()), 4))
+P = P + move
+w = np.stack([P[:, 1], -P[:, 0], P[:, 2]], axis=1)
+co = (w - world[:3, 3]) @ inv[:3, :3].T
+me.vertices.foreach_set('co', co.astype(np.float32).ravel())
+me.update()
+`,
+});

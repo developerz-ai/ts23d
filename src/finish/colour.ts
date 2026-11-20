@@ -1,11 +1,12 @@
 // Colour plumbing for the finish layer: sRGB ↔ linear, bilinear sheet sampling (U repeats, V
 // clamps, as the trim sheet's sampler), and CIE Lab for palette drift. Pure functions.
 
+import { dmath } from '../core/index.ts';
 import type { PaintedSheet } from '../material/index.ts';
 
 const TO_LIN = new Float32Array(256).map((_, i) => {
   const c = i / 255;
-  return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  return c <= 0.04045 ? c / 12.92 : dmath.pow((c + 0.055) / 1.055, 2.4);
 });
 
 export const srgbToLin = (b: number): number =>
@@ -13,7 +14,7 @@ export const srgbToLin = (b: number): number =>
 
 export function linToSrgb(c: number): number {
   const v = Math.max(0, Math.min(1, c));
-  return Math.round(255 * (v <= 0.0031308 ? v * 12.92 : 1.055 * v ** (1 / 2.4) - 0.055));
+  return Math.round(255 * (v <= 0.0031308 ? v * 12.92 : 1.055 * dmath.pow(v, 1 / 2.4) - 0.055));
 }
 
 /** Bilinear RGBA sample (0..255 floats) of a square RGBA8 map: U wraps, V clamps. */
@@ -63,7 +64,7 @@ export function lab(r: number, g: number, b: number): [number, number, number] {
   const R = srgbToLin(r);
   const G = srgbToLin(g);
   const B = srgbToLin(b);
-  const f = (t: number): number => (t > 0.008856 ? Math.cbrt(t) : 7.787 * t + 16 / 116);
+  const f = (t: number): number => (t > 0.008856 ? dmath.cbrt(t) : 7.787 * t + 16 / 116);
   const x = f((0.4124 * R + 0.3576 * G + 0.1805 * B) / 0.95047);
   const y = f(0.2126 * R + 0.7152 * G + 0.0722 * B);
   const z = f((0.0193 * R + 0.1192 * G + 0.9505 * B) / 1.08883);
@@ -71,4 +72,4 @@ export function lab(r: number, g: number, b: number): [number, number, number] {
 }
 
 export const deltaE = (a: readonly number[], b: readonly number[]): number =>
-  Math.hypot((a[0] ?? 0) - (b[0] ?? 0), (a[1] ?? 0) - (b[1] ?? 0), (a[2] ?? 0) - (b[2] ?? 0));
+  dmath.hypot((a[0] ?? 0) - (b[0] ?? 0), (a[1] ?? 0) - (b[1] ?? 0), (a[2] ?? 0) - (b[2] ?? 0));

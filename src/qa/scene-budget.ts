@@ -7,6 +7,7 @@
 // committed manifests (triangles, drawCalls per LOD) are enough; nothing compiles here.
 
 import type { Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import type { Finding } from './types.ts';
 
 export interface SceneAssetStats {
@@ -47,7 +48,7 @@ export interface SceneBudget {
 export const LOD_SWITCH: readonly [number, number] = [0.25, 0.06];
 
 const sub = (a: Vec3, b: Vec3): Vec3 => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
-const len = (a: Vec3): number => Math.hypot(a[0], a[1], a[2]);
+const len = (a: Vec3): number => dmath.hypot(a[0], a[1], a[2]);
 
 /** Street level, aerial three-quarter, overview: framed on the placements' bounds. */
 export function referenceCameras(placements: readonly ScenePlacement[]): SceneCamera[] {
@@ -60,7 +61,7 @@ export function referenceCameras(placements: readonly ScenePlacement[]): SceneCa
   ];
   const r = Math.max(
     10,
-    Math.hypot(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys)) / 2,
+    dmath.hypot(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys)) / 2,
   );
   return [
     {
@@ -93,7 +94,7 @@ export function cameraLoad(
   const fwd = sub(cam.look, cam.at);
   const f = len(fwd) || 1;
   const half = ((cam.fov / 2) * Math.PI) / 180;
-  const cone = Math.atan(Math.tan(half) * Math.hypot(1, cam.aspect));
+  const cone = dmath.atan(dmath.tan(half) * dmath.hypot(1, cam.aspect));
   let [triangles, draws, visible] = [0, 0, 0];
   const shared = new Set<string>();
   const per = new Map<string, number>();
@@ -103,10 +104,10 @@ export function cameraLoad(
     const d = sub(p.at, cam.at);
     const dist = Math.max(len(d), 1e-6);
     const cos = (d[0] * fwd[0] + d[1] * fwd[1] + d[2] * fwd[2]) / (dist * f);
-    const ang = Math.acos(Math.max(-1, Math.min(1, cos)));
-    if (dist > s.radius && ang - Math.asin(Math.min(1, s.radius / dist)) > cone) continue;
+    const ang = dmath.acos(Math.max(-1, Math.min(1, cos)));
+    if (dist > s.radius && ang - dmath.asin(Math.min(1, s.radius / dist)) > cone) continue;
     visible++;
-    const screen = s.radius / (dist * Math.tan(half));
+    const screen = s.radius / (dist * dmath.tan(half));
     const lod = screen > LOD_SWITCH[0] ? 0 : screen > LOD_SWITCH[1] ? 1 : 2;
     triangles += s.triangles[lod];
     per.set(p.asset, (per.get(p.asset) ?? 0) + s.triangles[lod]);
@@ -175,7 +176,7 @@ export function sceneBudgetFindings(
     out.push(
       finding(
         'textureBytes',
-        `${(bytes / 2 ** 20).toFixed(1)} MiB of textures > ${(budget.textureBytes / 2 ** 20).toFixed(1)} MiB`,
+        `${(bytes / 1048576 /* 2^20 */).toFixed(1)} MiB of textures > ${(budget.textureBytes / 1048576 /* 2^20 */).toFixed(1)} MiB`,
         'share the trim sheet; drop per-asset texture sets',
       ),
     );

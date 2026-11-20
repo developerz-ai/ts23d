@@ -3,6 +3,8 @@
 // subtends at a point over 4π (Van Oosterom & Strackee 1983), the winding number's exact term.
 // Triangles are 9 floats (a, b, c) at offset `o` of a flat array.
 
+import { dmath } from '../core/index.ts';
+
 const FOUR_PI = 4 * Math.PI;
 
 /** Squared distance from p to triangle abc; writes the closest point (Ericson, RTCD 5.1.5). */
@@ -63,7 +65,7 @@ export function pointTriangle(
     out[1] = qy;
     out[2] = qz;
   }
-  return (px - qx) ** 2 + (py - qy) ** 2 + (pz - qz) ** 2;
+  return dmath.pow(px - qx, 2) + dmath.pow(py - qy, 2) + dmath.pow(pz - qz, 2);
 }
 
 /** Signed solid angle of triangle (a, b, c) seen from p, over 4π. */
@@ -77,14 +79,14 @@ export function solidAngle(px: number, py: number, pz: number, t: Float64Array, 
   const cx = (t[o + 6] ?? 0) - px;
   const cy = (t[o + 7] ?? 0) - py;
   const cz = (t[o + 8] ?? 0) - pz;
-  const la = Math.hypot(ax, ay, az);
-  const lb = Math.hypot(bx, by, bz);
-  const lc = Math.hypot(cx, cy, cz);
+  const la = dmath.hypot(ax, ay, az);
+  const lb = dmath.hypot(bx, by, bz);
+  const lc = dmath.hypot(cx, cy, cz);
   const det = ax * (by * cz - bz * cy) - ay * (bx * cz - bz * cx) + az * (bx * cy - by * cx);
   const den =
     la * lb * lc +
     (ax * bx + ay * by + az * bz) * lc +
     (ax * cx + ay * cy + az * cz) * lb +
     (bx * cx + by * cy + bz * cz) * la;
-  return (2 * Math.atan2(det, den)) / FOUR_PI;
+  return (2 * dmath.atan2(det, den)) / FOUR_PI;
 }

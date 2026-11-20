@@ -2,7 +2,7 @@
 // only the chest; every mesh gets the same three targets; the clips key all three and loop.
 
 import { describe, expect, it } from 'bun:test';
-import { type Mesh, Ts23dError, type Vec3 } from '../core/index.ts';
+import { dmath, type Mesh, Ts23dError, type Vec3 } from '../core/index.ts';
 import { type FaceRig, faceMorphs, HEAD_MORPHS, headClips } from './head-clips.ts';
 
 /** A UV ball: 10 cm radius at z = 0.4 (a head), outward normals. */
@@ -14,7 +14,7 @@ function ball(r: number, z: number, rings = 32, seg = 48): Mesh {
     for (let j = 0; j < seg; j++) {
       const t = (i / rings) * Math.PI;
       const p = (j / seg) * Math.PI * 2;
-      const n = [Math.sin(t) * Math.cos(p), Math.sin(t) * Math.sin(p), Math.cos(t)];
+      const n = [dmath.sin(t) * dmath.cos(p), dmath.sin(t) * dmath.sin(p), dmath.cos(t)];
       nor.push(...n);
       pos.push((n[0] ?? 0) * r, (n[1] ?? 0) * r, (n[2] ?? 0) * r + z);
     }
@@ -45,7 +45,7 @@ const moved = (m: Mesh, name: string): Vec3[] => {
   const out: Vec3[] = [];
   for (let v = 0; v < m.positions.length / 3; v++)
     if (
-      Math.hypot(
+      dmath.hypot(
         t?.positions[v * 3] ?? 0,
         t?.positions[v * 3 + 1] ?? 0,
         t?.positions[v * 3 + 2] ?? 0,
@@ -80,7 +80,7 @@ describe('head morphs', () => {
     const lids = moved(m, 'blink');
     expect(lids.length).toBeGreaterThan(0);
     for (const p of lids)
-      expect(Math.hypot(p[0] - 0.085, Math.abs(p[1]) - 0.035, p[2] - 0.43)).toBeLessThan(0.03);
+      expect(dmath.hypot(p[0] - 0.085, Math.abs(p[1]) - 0.035, p[2] - 0.43)).toBeLessThan(0.03);
     const jaw = moved(m, 'talk');
     expect(jaw.length).toBeGreaterThan(0);
     for (const p of jaw) expect(p[2]).toBeLessThan(0.36 + 0.004);

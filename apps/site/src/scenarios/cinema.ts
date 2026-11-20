@@ -1,5 +1,6 @@
 // Small camera and timing helpers shared by the scenarios.
 
+import { dmath } from '@developerz.ai/ts23d/core';
 import { MathUtils, type PerspectiveCamera, Vector3 } from 'three';
 
 /** 0..1 progress of `t` through [a, b], clamped. */
@@ -25,7 +26,7 @@ export class Dolly {
   aim(t: number, dt: number, position: Vector3, target: Vector3, reduced: boolean): void {
     const jumped = !(Math.abs(t - this.last) < 0.5);
     this.last = t;
-    const k = jumped || reduced ? 1 : dt > 0 ? 1 - Math.exp(-this.lag * dt) : 0;
+    const k = jumped || reduced ? 1 : dt > 0 ? 1 - dmath.exp(-this.lag * dt) : 0;
     this.camera.position.lerp(position, k);
     this.look.lerp(target, k);
     this.camera.lookAt(this.look);
@@ -35,7 +36,7 @@ export class Dolly {
 /** A point on a horizontal circle around `center`. */
 export const around = (center: Vector3, radius: number, height: number, angle: number): Vector3 =>
   new Vector3(
-    center.x + Math.sin(angle) * radius,
+    center.x + dmath.sin(angle) * radius,
     center.y + height,
-    center.z + Math.cos(angle) * radius,
+    center.z + dmath.cos(angle) * radius,
   );

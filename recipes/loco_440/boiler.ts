@@ -5,6 +5,7 @@
 import {
   type BuildContext,
   beam,
+  dmath,
   grime,
   hex,
   type Mesh,
@@ -36,14 +37,16 @@ const TOP = BOILER_Z + BOILER_R * 0.95;
  *  head sits on the flat under it, 1.5 mm in (QA connections: heads between two vertices stood
  *  up to 4 mm off the chord). */
 function rivetRing(x: number, r: number, n: number, segs: number, f = F.smokebox): Mesh[] {
+  // Snap heads 40 mm across; the graphite is rubbed off their crowns, so they catch the light.
   const head = lath({
     profile: [
-      [0.014, 0],
-      [0.011, 0.008],
-      [0, 0.011],
+      [0.02, 0],
+      [0.016, 0.011],
+      [0, 0.015],
     ],
     segments: 5,
     ...f,
+    color: [f.color[0] * 2.2, f.color[1] * 2.2, f.color[2] * 2.2],
   });
   return Array.from({ length: n }, (_, i) => {
     const a = (i / n) * Math.PI * 2;
@@ -51,8 +54,8 @@ function rivetRing(x: number, r: number, n: number, segs: number, f = F.smokebox
     return place(head, {
       at: [
         x,
-        Math.cos(a) * (facetRadius(r, segs, a) - 0.0015),
-        BOILER_Z + Math.sin(a) * (facetRadius(r, segs, a) - 0.0015),
+        dmath.cos(a) * (facetRadius(r, segs, a) - 0.0015),
+        BOILER_Z + dmath.sin(a) * (facetRadius(r, segs, a) - 0.0015),
       ],
       roll: -(Math.PI / 2 - a),
     });
@@ -150,7 +153,9 @@ export function buildBoiler(ctx: BuildContext, L: Layout, number: string): void 
           ...F.brass,
         }),
         ...rivetRing(barrelFront + 0.04, SMOKEBOX_R, 40, segs),
+        ...rivetRing(barrelFront + 0.11, SMOKEBOX_R, 40, segs),
         ...rivetRing(smokeFront - 0.1, SMOKEBOX_R, 40, segs),
+        ...rivetRing(smokeFront - 0.17, SMOKEBOX_R, 40, segs),
       );
       // Door dogs round the rim.
       for (let i = 0; i < 8; i++) {
@@ -159,10 +164,10 @@ export function buildBoiler(ctx: BuildContext, L: Layout, number: string): void 
           bx(
             smokeFront,
             smokeFront + 0.05,
-            Math.cos(a) * 0.52 - 0.02,
-            Math.cos(a) * 0.52 + 0.02,
-            BOILER_Z + Math.sin(a) * 0.52 - 0.02,
-            BOILER_Z + Math.sin(a) * 0.52 + 0.02,
+            dmath.cos(a) * 0.52 - 0.02,
+            dmath.cos(a) * 0.52 + 0.02,
+            BOILER_Z + dmath.sin(a) * 0.52 - 0.02,
+            BOILER_Z + dmath.sin(a) * 0.52 + 0.02,
             F.smokebox,
           ),
         );

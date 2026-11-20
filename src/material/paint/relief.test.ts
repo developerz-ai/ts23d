@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test';
+import { dmath } from '../../core/index.ts';
 import { createCanvas } from './canvas.ts';
 import { curvature, fineNoise, finishRelief, isoNoise, rowNoise, worley } from './relief.ts';
 
@@ -9,8 +10,8 @@ function pitAndBump() {
   const c = strip();
   for (let y = 0; y < c.h; y++)
     for (let x = 0; x < c.w; x++) {
-      const d1 = Math.hypot((x - 64) / 6, (y - 8) / 2);
-      const d2 = Math.hypot((x - 192) / 6, (y - 8) / 2);
+      const d1 = dmath.hypot((x - 64) / 6, (y - 8) / 2);
+      const d2 = dmath.hypot((x - 192) / 6, (y - 8) / 2);
       c.height[y * c.w + x] = 0.001 * (Math.max(0, 1 - d2) - Math.max(0, 1 - d1));
     }
   return c;

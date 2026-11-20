@@ -8,6 +8,7 @@ import {
   type CompiledAsset,
   compile,
   defineAsset,
+  dmath,
   type Mesh,
   quatFromAxisAngle,
 } from '../core/index.ts';
@@ -22,7 +23,7 @@ export function tube(length: number, r: number, rings = 41): Mesh {
   for (let i = 0; i < rings; i++)
     for (let s = 0; s < seg; s++) {
       const a = (s / seg) * Math.PI * 2;
-      pos.push((i / (rings - 1)) * length, Math.cos(a) * r, Math.sin(a) * r);
+      pos.push((i / (rings - 1)) * length, dmath.cos(a) * r, dmath.sin(a) * r);
     }
   for (let i = 0; i + 1 < rings; i++)
     for (let s = 0; s < seg; s++) {
@@ -86,7 +87,7 @@ export function walk(slip: number, seam = 0): Clip {
   for (let i = 0; i <= n; i++) {
     // Foot x relative to the hip: −(travel − slip)·u, so the foot stays (nearly) put in the world.
     const dx = -(1 - slip) * (i / n) + 0.5;
-    const a = Math.asin(Math.max(-1, Math.min(1, dx / 0.48)));
+    const a = dmath.asin(Math.max(-1, Math.min(1, dx / 0.48)));
     values.set(quatFromAxisAngle([0, 1, 0], -a + (i === n ? seam : 0)), i * 4);
   }
   return {

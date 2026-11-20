@@ -6,6 +6,7 @@
 // sparse wiry brows (../_lib/face/brows.ts).
 
 import type { Field, SculptEdit, Vec3 } from '@developerz.ai/ts23d';
+import { dmath } from '@developerz.ai/ts23d';
 import type { BustRecipe } from '../_lib/bust/bust.ts';
 import { lock, mix } from '../_lib/bust/hair.ts';
 import { type Surface, spline, surface, type V } from '../_lib/bust/kit.ts';
@@ -66,10 +67,10 @@ export function goblinCardHair(b: BustRecipe, lod: number): CardHairStyle {
   const { skin } = bustHairFields(b, lod);
   const crown: Vec3 = [SK.crown[0] - 0.02 * H, 0, SK.crown[2]];
   const patch: Field = (p) =>
-    Math.hypot((p[0] - crown[0]) * 0.8, p[1], Math.min(0, p[2] - crown[2] + 0.12 * H)) - 0.3 * H;
+    dmath.hypot((p[0] - crown[0]) * 0.8, p[1], Math.min(0, p[2] - crown[2] + 0.12 * H)) - 0.3 * H;
   // Behind each ear, a hand's width above the mastoid.
   const tuft: Field = (p) =>
-    Math.hypot(
+    dmath.hypot(
       p[0] - (SK.earBack[0] - 0.035),
       Math.abs(p[1]) - Math.abs(SK.earBack[1]) * 0.8,
       p[2] - (SK.earTop[2] + 0.01),

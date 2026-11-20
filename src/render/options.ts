@@ -2,7 +2,7 @@
 // fix instead of a blank or giant image. The CLI's --size/--az/--el/--fov flags land here too.
 // Also where an asset's own `hero` view (core HeroView) slides in under the caller's options.
 
-import { type HeroView, heroViewFault, Ts23dError, type Vec3 } from '../core/index.ts';
+import { dmath, type HeroView, heroViewFault, Ts23dError, type Vec3 } from '../core/index.ts';
 
 export interface CheckedBeauty {
   readonly width: number;
@@ -69,8 +69,8 @@ export function checkBeautyOptions(o: Raw): CheckedBeauty {
   const v = {
     width: o.width ?? 1600,
     height: o.height ?? 900,
-    azDeg: fixed ? deg(Math.atan2(dy ?? 0, dx ?? 0)) : (o.azDeg ?? -35),
-    elDeg: fixed ? deg(Math.atan2(dz ?? 0, Math.hypot(dx ?? 0, dy ?? 0))) : (o.elDeg ?? 18),
+    azDeg: fixed ? deg(dmath.atan2(dy ?? 0, dx ?? 0)) : (o.azDeg ?? -35),
+    elDeg: fixed ? deg(dmath.atan2(dz ?? 0, dmath.hypot(dx ?? 0, dy ?? 0))) : (o.elDeg ?? 18),
     fovDeg: o.fovDeg ?? 30,
     supersample: o.supersample ?? 2,
   };

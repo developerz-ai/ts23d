@@ -20,7 +20,7 @@
 // Clayton & Hobbs via docs/research/animal-anatomy.md §4 (horse 57–60 % fore).
 
 import type { Check, CheckFinding, CompiledAsset, Vec3 } from '../core/index.ts';
-import { worldMeshes } from '../core/index.ts';
+import { dmath, worldMeshes } from '../core/index.ts';
 import { massProperties } from '../physics/index.ts';
 import { BONE_FRACTION, type Bones, massFromBones } from './creature-bones.ts';
 import { familyOf, MAMMAL_FORE_SHARE } from './creature-family.ts';
@@ -57,7 +57,7 @@ export function effectiveDensity(s: CreatureSpec): number {
   // animal shape A ≈ 9.05 · V^(2/3) (measured on the tiger: 14.5 m⁻¹ at 0.23 m³). Fixed point.
   const vf = s.mass / flesh;
   let vc = vf;
-  for (let i = 0; i < 12; i++) vc = vf + 9.05 * vc ** (2 / 3) * coat;
+  for (let i = 0; i < 12; i++) vc = vf + 9.05 * dmath.pow(vc, 2 / 3) * coat;
   return Math.round((s.mass + (vc - vf) * 100) / vc);
 }
 
@@ -71,8 +71,8 @@ export function biology(s: CreatureSpec, b: Bones): Biology {
         message: `allometry: the limbs carry ${lm.toFixed(1)} kg but the creature weighs ${s.mass} kg (×${k.toFixed(2)}, allowed ×${ALLOMETRY_BAND[0]}–×${ALLOMETRY_BAND[1]})`,
         fix:
           k < 1
-            ? `thicken the limbs: build.limbs ×${(1 / k ** (1 / 2.749)).toFixed(2)} (limb width grows with mass^0.36), or lower the mass`
-            : `thin the limbs: build.limbs ×${(1 / k ** (1 / 2.749)).toFixed(2)}, or raise the mass`,
+            ? `thicken the limbs: build.limbs ×${(1 / dmath.pow(k, 1 / 2.749)).toFixed(2)} (limb width grows with mass^0.36), or lower the mass`
+            : `thin the limbs: build.limbs ×${(1 / dmath.pow(k, 1 / 2.749)).toFixed(2)}, or raise the mass`,
       });
   }
   const area = b.wings.reduce((a, w) => a + w.area, 0) * 2;
@@ -138,7 +138,7 @@ export function insideBy(poly: readonly [number, number][], x: number, y: number
   for (let i = 0; i < poly.length; i++) {
     const [ax, ay] = poly[i] ?? [0, 0];
     const [bx, by] = poly[(i + 1) % poly.length] ?? [0, 0];
-    const l = Math.hypot(bx - ax, by - ay) || 1;
+    const l = dmath.hypot(bx - ax, by - ay) || 1;
     d = Math.min(d, ((bx - ax) * (y - ay) - (by - ay) * (x - ax)) / l);
   }
   return d;

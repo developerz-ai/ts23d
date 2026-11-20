@@ -3,7 +3,7 @@
 // edge (a segment of one crossing the other's interior). Coplanar overlaps are not counted.
 //   it('hull does not fold through itself', () => assertNoSelfIntersection(tank, { parts: 'hull' }));
 
-import { boundsOf, type Mesh, type Vec3 } from '../core/index.ts';
+import { boundsOf, dmath, type Mesh, type Vec3 } from '../core/index.ts';
 import { failOn } from './compiled.ts';
 import {
   corners,
@@ -53,8 +53,8 @@ export function selfIntersections(m: Mesh, limit = 1000): { pairs: number; at?: 
   const n = m.indices.length / 3;
   const ids = weldIds(m);
   const b = boundsOf(m);
-  const diag = Math.hypot(b.max[0] - b.min[0], b.max[1] - b.min[1], b.max[2] - b.min[2]);
-  const C = Math.max(diag / Math.max(8, Math.cbrt(n) * 2), 1e-4);
+  const diag = dmath.hypot(b.max[0] - b.min[0], b.max[1] - b.min[1], b.max[2] - b.min[2]);
+  const C = Math.max(diag / Math.max(8, dmath.cbrt(n) * 2), 1e-4);
   const cells = new Map<string, number[]>();
   const tris = Array.from({ length: n }, (_, t) => corners(m, t));
   tris.forEach((tri, t) => {

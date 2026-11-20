@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { createRng, type Mesh, merge } from '../core/index.ts';
+import { createRng, dmath, type Mesh, merge } from '../core/index.ts';
 import { box, cylinder } from '../primitives/index.ts';
 import { RayGrid } from './ray-grid.ts';
 
@@ -52,7 +52,7 @@ describe('RayGrid', () => {
     for (let i = 0; i < 4000; i++) {
       const o = [rng.range(-2, 2), rng.range(-1.5, 1.5), rng.range(-0.5, 2.5)];
       const d0 = [rng.range(-1, 1), rng.range(-1, 1), rng.range(-1, 1)];
-      const l = Math.hypot(...d0) || 1;
+      const l = dmath.norm(d0) || 1;
       const d = d0.map((x) => x / l);
       const tMax = rng.range(0.1, 3);
       const want = bruteHit(scene, o, d, tMax);

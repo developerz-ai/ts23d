@@ -7,6 +7,7 @@
 
 import {
   type BuildContext,
+  dmath,
   hex,
   type Mesh,
   type PartOptions,
@@ -188,6 +189,8 @@ interface Pending {
   readonly name: string;
   readonly mesh: Mesh | null;
   readonly opts: PartOptions | undefined;
+  /** Applied after weathering (soot, scorch, caked mud that dust must not cover). */
+  after: ((m: Mesh) => Mesh) | undefined;
 }
 
 /**
@@ -196,12 +199,21 @@ interface Pending {
  */
 export class Kit {
   private readonly list: Pending[] = [];
-  add(name: string, mesh: Mesh | null, opts?: PartOptions): void {
-    this.list.push({ name, mesh, opts });
+  add(name: string, mesh: Mesh | null, opts?: PartOptions, after?: (m: Mesh) => Mesh): void {
+    this.list.push({ name, mesh, opts, after });
+  }
+  /** Add an after-weathering step to every part already added whose name matches `pick`. */
+  post(pick: (name: string) => boolean, fn: (m: Mesh) => Mesh): void {
+    for (const p of this.list)
+      if (pick(p.name)) {
+        const before = p.after;
+        p.after = before ? (m) => fn(before(m)) : fn;
+      }
   }
   /**
    * Weather each group's parts in one `weather()` call (`pick` chooses them; parts in one group
-   * must share a space), then `ctx.part` everything. Team-painted parts are never weathered.
+   * must share a space), apply each part's `after` (wear that weathering must not paint over),
+   * then `ctx.part` everything. Team-painted parts are never weathered.
    */
   commit(
     ctx: BuildContext,
@@ -220,6 +232,93 @@ export class Kit {
       const out = weather(ctx, set, g.wear);
       for (const [k, m] of Object.entries(out)) done.set(k, m);
     }
-    for (const p of this.list) ctx.part(p.name, done.get(p.name) ?? p.mesh, p.opts);
+    for (const p of this.list) {
+      const m = done.get(p.name) ?? p.mesh;
+      ctx.part(p.name, m && p.after ? p.after(m) : m, p.opts);
+    }
   }
+}
+
+/** A ragged-edge value in 0..1 from a position (no rng: the same vertex always gets the same). */
+const hash = (x: number, y: number, z: number): number => {
+  const s = dmath.sin(x * 12.9898 + y * 78.233 + z * 37.719) * 43758.5453;
+  return s - Math.floor(s);
+};
+
+/** Dried brine mud: pale grey-tan, so it reads on dark boots and olive canvas alike. */
+export const CAKED: Vec3 = hex('#b0a184');
+
+/**
+ * Caked mud (or ash, or sun-fade) as a height band: every vertex below `top` moves toward `color`,
+ * fully at `full` and below, by up to `k`, its upper edge ragged by ±`ragged` m. Applied after
+ * weathering (Kit `after`), so dust cannot paint over it; reads at hero distance where vertices
+ * exist across the band.
+ */
+export function band(
+  m: Mesh,
+  o: { readonly top: number; readonly full: number; readonly color: Vec3; readonly k: number },
+  ragged = 0.05,
+): Mesh {
+  const colors = new Float32Array(m.colors);
+  for (let i = 0; i < m.positions.length / 3; i++) {
+    const x = m.positions[i * 3] ?? 0;
+    const y = m.positions[i * 3 + 1] ?? 0;
+    const z = (m.positions[i * 3 + 2] ?? 0) + (hash(x, y, 0) - 0.5) * 2 * ragged;
+    const t = Math.max(0, Math.min(1, (o.top - z) / Math.max(1e-6, o.top - o.full)));
+    if (t <= 0) continue;
+    const w = t * o.k;
+    for (let c = 0; c < 3; c++)
+      colors[i * 3 + c] = (colors[i * 3 + c] ?? 0) * (1 - w) + (o.color[c] ?? 0) * w;
+  }
+  return { ...m, colors };
+}
+
+/** Soot of a burnt-out fire: near black, a touch warm. */
+export const SOOT_BLACK: Vec3 = hex('#0b0a09');
+
+/**
+ * Soot fans and scorch: each zone pulls vertex colours toward `SOOT_BLACK` by up to `strength`
+ * at its centre, a fat falloff (1 − d³) so the burn reads as a solid patch with a soft rim rather
+ * than a faint gradient. Applied after weathering (Kit `after`).
+ */
+export function soot(
+  m: Mesh,
+  zones: readonly { readonly at: Vec3; readonly radius: number; readonly strength: number }[],
+): Mesh {
+  const colors = new Float32Array(m.colors);
+  for (let i = 0; i < m.positions.length / 3; i++) {
+    const p: Vec3 = [
+      m.positions[i * 3] ?? 0,
+      m.positions[i * 3 + 1] ?? 0,
+      m.positions[i * 3 + 2] ?? 0,
+    ];
+    let keep = 1;
+    for (const z of zones) {
+      const d = dmath.hypot(p[0] - z.at[0], p[1] - z.at[1], p[2] - z.at[2]) / z.radius;
+      if (d < 1) keep *= 1 - z.strength * (1 - d * d * d);
+    }
+    if (keep >= 1) continue;
+    for (let c = 0; c < 3; c++)
+      colors[i * 3 + c] = (colors[i * 3 + c] ?? 0) * keep + (SOOT_BLACK[c] ?? 0) * (1 - keep);
+  }
+  return { ...m, colors };
+}
+
+/**
+ * Dust settled on the tops: vertices facing up (normal z > 0.35) above `z0` move toward `color`
+ * by up to `k` (full on a level face), applied after weathering: shoulders, pack lids, hat brims.
+ */
+export function topDust(m: Mesh, z0: number, color: Vec3, k: number): Mesh {
+  const colors = new Float32Array(m.colors);
+  for (let i = 0; i < m.positions.length / 3; i++) {
+    const nz = m.normals[i * 3 + 2] ?? 0;
+    if (nz < 0.35 || (m.positions[i * 3 + 2] ?? 0) < z0) continue;
+    const w =
+      k *
+      Math.min(1, (nz - 0.35) / 0.5) *
+      (0.6 + 0.4 * hash(m.positions[i * 3] ?? 0, m.positions[i * 3 + 1] ?? 0, 1));
+    for (let c = 0; c < 3; c++)
+      colors[i * 3 + c] = (colors[i * 3 + c] ?? 0) * (1 - w) + (color[c] ?? 0) * w;
+  }
+  return { ...m, colors };
 }

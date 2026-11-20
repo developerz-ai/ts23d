@@ -5,6 +5,7 @@ import {
   type Affine,
   applyAffine,
   cross,
+  dmath,
   hex,
   type Mesh,
   NATURAL,
@@ -51,7 +52,7 @@ export function ringProfile(ri: number, ro: number, z0: number, z1: number, c = 
 export function torusProfile(R: number, r: number, n: number): Vec2[] {
   return Array.from({ length: n + 1 }, (_, i): Vec2 => {
     const t = (i / n) * Math.PI * 2 - Math.PI / 2;
-    return [R + r * Math.cos(t), r * Math.sin(t)];
+    return [R + r * dmath.cos(t), r * dmath.sin(t)];
   });
 }
 

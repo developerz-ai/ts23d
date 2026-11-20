@@ -5,6 +5,7 @@
 // outline, up to the shoulders' tops) and a standing collar's band.
 
 import type { Field } from '@developerz.ai/ts23d';
+import { dmath } from '@developerz.ai/ts23d';
 import type { V } from './kit.ts';
 
 export interface NeckSection {
@@ -29,8 +30,8 @@ export function neckSection(skin: Field, seam: Seam, r0: number): NeckSection {
   const k = seam.n[0] / seam.n[2];
   const z = (x: number): number => seam.at[2] - k * (x - seam.at[0]);
   const at = (a: number, r: number): V => {
-    const x = seam.at[0] + r * Math.cos(a);
-    return [x, r * Math.sin(a), z(x)];
+    const x = seam.at[0] + r * dmath.cos(a);
+    return [x, r * dmath.sin(a), z(x)];
   };
   const ring = Array.from({ length: 32 }, (_, i): V => {
     const a = (i / 32) * Math.PI * 2;
@@ -61,7 +62,7 @@ export function neckSection(skin: Field, seam: Seam, r0: number): NeckSection {
 function section(ring: V[], z: (x: number) => number, seam: Field, r0: number): NeckSection {
   const cx = ring.reduce((s, p) => s + p[0], 0) / ring.length;
   const raw = ring
-    .map((p) => ({ a: Math.atan2(p[1], p[0] - cx), r: Math.hypot(p[0] - cx, p[1]) }))
+    .map((p) => ({ a: dmath.atan2(p[1], p[0] - cx), r: dmath.hypot(p[0] - cx, p[1]) }))
     .sort((u, v) => u.a - v.a);
   // Two [1 2 1] passes round the loop: a notch found in the trapezius never kinks the outline.
   let polar = raw;
@@ -102,7 +103,7 @@ function section(ring: V[], z: (x: number) => number, seam: Field, r0: number): 
 export function outsideNeck(n: NeckSection, grow: number): Field {
   return (p) => {
     const dx = p[0] - n.c[0];
-    return (Math.hypot(dx, p[1]) - n.radius(Math.atan2(p[1], dx)) - grow) * 0.8;
+    return (dmath.hypot(dx, p[1]) - n.radius(dmath.atan2(p[1], dx)) - grow) * 0.8;
   };
 }
 

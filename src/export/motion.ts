@@ -10,7 +10,15 @@
 // yaw ∘ motion, translation offsets turn by yaw, because axes and vectors are in the part's own frame.
 
 import type { BakedMotion, Quat, Tread } from '../core/index.ts';
-import { cyclesOf, LOOP_SECONDS, motionPaths, motionPose, rateOf, rotateZ } from '../core/index.ts';
+import {
+  cyclesOf,
+  dmath,
+  LOOP_SECONDS,
+  motionPaths,
+  motionPose,
+  rateOf,
+  rotateZ,
+} from '../core/index.ts';
 import type { BinWriter, Json } from './bin-writer.ts';
 
 export { cyclesOf, LOOP_SECONDS };
@@ -37,8 +45,8 @@ export const treadExtras = (t: Tread): Json => ({
 /** Rest yaw (about Z) applied after `q`: the Hamilton product yaw ⊗ q. */
 function withYaw(q: Quat, yaw: number): Quat {
   if (yaw === 0) return q;
-  const s = Math.sin(yaw / 2);
-  const c = Math.cos(yaw / 2);
+  const s = dmath.sin(yaw / 2);
+  const c = dmath.cos(yaw / 2);
   const [x, y, z, w] = q;
   return [c * x - s * y, c * y + s * x, c * z + s * w, c * w - s * z];
 }

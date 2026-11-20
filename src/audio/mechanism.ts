@@ -4,7 +4,7 @@
 // strikes (chain, loose plates); hiss = band-passed noise (hydraulic / pneumatic); clunk = latch
 // click then a heavy thud. Looping kinds (whine, rattle, hiss) crossfade into seamless loops.
 
-import { createRng, type SoundClip, Ts23dError } from '../core/index.ts';
+import { createRng, dmath, type SoundClip, Ts23dError } from '../core/index.ts';
 import { acousticOf } from './acoustics.ts';
 import { checkRange, makeClip, normalize, SAMPLE_RATE, variant } from './clip.ts';
 import { adsrAt, biquad, loopify, noise, oscillator, shape } from './dsp.ts';
@@ -62,7 +62,7 @@ export function mechanism(o: MechanismOptions): SoundClip {
   const t = (i: number): number => i / SAMPLE_RATE;
   // A swell over the clip for one-shots (a door opening speeds up, then slows to a stop).
   const swell = (u: number): number =>
-    loop ? 1 : Math.sin(Math.PI * Math.min(1, u / seconds)) ** 0.6;
+    loop ? 1 : dmath.pow(dmath.sin(Math.PI * Math.min(1, u / seconds)), 0.6);
   let out: Float32Array = new Float32Array(n);
   if (o.kind === 'creak') {
     // Each slip rings a panel of the material: a 0.4 m plate (door, crate lid, floorboard).
@@ -80,7 +80,7 @@ export function mechanism(o: MechanismOptions): SoundClip {
     out = oscillator(
       n,
       'saw',
-      (i) => f * (1 + 0.04 * Math.sin(2 * Math.PI * wobble * t(i))) * (0.85 + 0.3 * swell(t(i))),
+      (i) => f * (1 + 0.04 * dmath.sin(2 * Math.PI * wobble * t(i))) * (0.85 + 0.3 * swell(t(i))),
     );
     out = biquad(biquad(out, 'bandpass', f * 2, 1.2), 'peak', f * 3.1, 3, 6);
     shape(out, swell);
@@ -111,7 +111,7 @@ export function mechanism(o: MechanismOptions): SoundClip {
         rng,
       );
       renderStrike(out, st, at, rng.range(0.3, 1), seed + at);
-      at += Math.max(1, Math.round((-Math.log(1 - rng.next()) / rate) * SAMPLE_RATE));
+      at += Math.max(1, Math.round((-dmath.log(1 - rng.next()) / rate) * SAMPLE_RATE));
     }
   } else if (o.kind === 'hiss') {
     const centre = 1800 + 5000 * speed;
@@ -131,7 +131,7 @@ export function mechanism(o: MechanismOptions): SoundClip {
     const thud = strike(a, 'plate', 0.35, 0.02, 4, 0.5 + 0.5 * speed, rng);
     renderStrike(out, click, 0, 0.5, seed);
     renderStrike(out, thud, Math.round(rng.range(0.03, 0.05) * SAMPLE_RATE), 1, seed + 3);
-    shape(out, (u) => Math.max(0, 1 - u / seconds) ** 0.5);
+    shape(out, (u) => Math.sqrt(Math.max(0, 1 - u / seconds)));
   }
   if (loop) out = loopify(out, Math.round(FADE * SAMPLE_RATE));
   normalize(out, 0.8);

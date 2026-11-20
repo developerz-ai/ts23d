@@ -3,6 +3,7 @@
 // colour step stays small (Lab ΔE) and the colour stays near one of the corner backgrounds, then
 // specks (< 5% of the largest object) dropped and holes filled. A GPU segmenter can replace it later (plan 101, 13).
 
+import { dmath } from '../core/index.ts';
 export interface Photo {
   readonly width: number;
   readonly height: number;
@@ -19,10 +20,10 @@ export interface SegmentOptions {
 
 const lin = (c: number): number => {
   const v = c / 255;
-  return v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+  return v <= 0.04045 ? v / 12.92 : dmath.pow((v + 0.055) / 1.055, 2.4);
 };
 const labF = (t: number): number =>
-  t > 216 / 24389 ? Math.cbrt(t) : (24389 / 27 / 116) * t + 4 / 29;
+  t > 216 / 24389 ? dmath.cbrt(t) : (24389 / 27 / 116) * t + 4 / 29;
 
 function labOf(p: Photo): Float64Array {
   const out = new Float64Array(p.width * p.height * 3);
@@ -144,7 +145,7 @@ export function segmentPhoto(p: Photo, o: SegmentOptions = {}): Uint8Array {
     return m;
   });
   const dE = (i: number, ref: readonly number[]): number =>
-    Math.hypot(
+    dmath.hypot(
       (lab[i * 3] ?? 0) - (ref[0] ?? 0),
       (lab[i * 3 + 1] ?? 0) - (ref[1] ?? 0),
       (lab[i * 3 + 2] ?? 0) - (ref[2] ?? 0),

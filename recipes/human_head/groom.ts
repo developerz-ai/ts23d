@@ -6,6 +6,7 @@
 // neural/ (`t3d neural run recipes/human_head/human_head.ts`); a miss builds the card hair.
 
 import type { GroomOp, Vec3 } from '@developerz.ai/ts23d';
+import { dmath } from '@developerz.ai/ts23d';
 import { SK } from '../_lib/bust/human/spec.ts';
 import type { GroomStyle } from '../_lib/face/hair-groom.ts';
 
@@ -13,11 +14,11 @@ import type { GroomStyle } from '../_lib/face/hair-groom.ts';
 const PART = 0.03;
 
 const zones = {
-  crown: (p: Vec3) => Math.hypot(p[0] - (SK.occiput[0] + 0.05), p[1], p[2] - SK.crown[2]) - 0.05,
+  crown: (p: Vec3) => dmath.hypot(p[0] - (SK.occiput[0] + 0.05), p[1], p[2] - SK.crown[2]) - 0.05,
   nape: (p: Vec3) => Math.max(p[0] - (SK.occiput[0] + 0.035), p[2] - (SK.euryon[2] - 0.005)),
   part: (p: Vec3) => Math.abs(p[1] - PART) - 0.012 + Math.max(0, SK.euryon[2] + 0.02 - p[2]),
   // The front lock: the first 4 cm behind the hairline over the forehead.
-  front: (p: Vec3) => Math.hypot(p[0] - (SK.glabella[0] - 0.03), p[1] * 0.7) - 0.045,
+  front: (p: Vec3) => dmath.hypot(p[0] - (SK.glabella[0] - 0.03), p[1] * 0.7) - 0.045,
 };
 
 const ops: GroomOp[] = [

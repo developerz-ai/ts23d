@@ -7,7 +7,7 @@
 // (syllables in 2.4 s), `breathe` (one breath in 4 s); every loop's last key = its first.
 // Procedural shapes from landmarks; MakeHuman (MPFB2, CC0) expression targets are planned.
 
-import { type Clip, type Mesh, type Morph, Ts23dError, type Vec3 } from '../core/index.ts';
+import { type Clip, dmath, type Mesh, type Morph, Ts23dError, type Vec3 } from '../core/index.ts';
 import { hingeMorph, sumMorphs } from '../passes/index.ts';
 
 export const HEAD_MORPHS = ['blink', 'talk', 'breathe'] as const;
@@ -42,7 +42,7 @@ function blink(mesh: Mesh, e: FaceRig['eye']): Morph {
       degrees: LID_CLOSE,
       weight: (p) => {
         const d: Vec3 = [p[0] - c[0], p[1] - c[1], p[2] - c[2]];
-        const r = Math.hypot(...d);
+        const r = dmath.norm(d);
         // The lid shell over the front of the ball, above its equator.
         const shell =
           smooth(e.r + e.lid * 6, e.r + e.lid * 2, r) * smooth(e.r * 0.6, e.r * 0.95, r);
@@ -77,7 +77,7 @@ function breathe(mesh: Mesh, c: FaceRig['chest']): Morph {
     const w = smooth(
       c.r,
       c.r * 0.4,
-      Math.hypot(p[0] - c.centre[0], p[1] - c.centre[1], p[2] - c.centre[2]),
+      dmath.hypot(p[0] - c.centre[0], p[1] - c.centre[1], p[2] - c.centre[2]),
     );
     if (w === 0) continue;
     out.set(
@@ -133,7 +133,7 @@ function weightsClip(
 }
 
 const pulse = (u: number, at: number, w: number): number =>
-  Math.abs(u - at) < w ? 0.5 * (1 + Math.cos((Math.PI * (u - at)) / w)) : 0;
+  Math.abs(u - at) < w ? 0.5 * (1 + dmath.cos((Math.PI * (u - at)) / w)) : 0;
 
 /** `blink`, `talk` and `breathe` on the part carrying `faceMorphs` (a pivot node in the GLB).
  *  `morphs`: that part's target names in order (default the three head morphs alone); each clip
@@ -163,6 +163,6 @@ export function headClips(part: string, morphs: readonly string[] = HEAD_MORPHS)
       Math.max(0, ...syllables.map(([at, h]) => h * pulse(u, at, 0.055))),
       0,
     ]),
-    clip('breathe', 4, 32, (u) => [0, 0, 0.5 * (1 - Math.cos(2 * Math.PI * u))]),
+    clip('breathe', 4, 32, (u) => [0, 0, 0.5 * (1 - dmath.cos(2 * Math.PI * u))]),
   ];
 }

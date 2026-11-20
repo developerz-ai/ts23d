@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test';
+import { dmath } from '../core/index.ts';
 import { BeltLoop, box, compile, defineAsset, type Mesh, merge, place, tread } from '../index.ts';
 import { treads } from './treads.ts';
 
@@ -8,12 +9,12 @@ const line: [number, number][] = [
   ...Array.from({ length: 40 }, (_, i): [number, number] => [-1 + i / 20, 0]),
   ...Array.from({ length: 60 }, (_, i): [number, number] => {
     const a = -Math.PI / 2 + (Math.PI * i) / 60;
-    return [1 + 0.25 * Math.cos(a), 0.25 + 0.25 * Math.sin(a)];
+    return [1 + 0.25 * dmath.cos(a), 0.25 + 0.25 * dmath.sin(a)];
   }),
   ...Array.from({ length: 40 }, (_, i): [number, number] => [1 - i / 20, 0.5]),
   ...Array.from({ length: 60 }, (_, i): [number, number] => {
     const a = Math.PI / 2 + (Math.PI * i) / 60;
-    return [-1 + 0.25 * Math.cos(a), 0.25 + 0.25 * Math.sin(a)];
+    return [-1 + 0.25 * dmath.cos(a), 0.25 + 0.25 * dmath.sin(a)];
   }),
 ];
 const loop = new BeltLoop(line.map(([x, z]) => [x, 1, z]));
@@ -31,7 +32,7 @@ function links(skip = -1): Mesh {
         loop.frame(k * PITCH, f);
         return place(plate, {
           at: [f[0] ?? 0, 1, f[2] ?? 0],
-          pitch: Math.atan2(-(f[5] ?? 0), f[3] ?? 1),
+          pitch: dmath.atan2(-(f[5] ?? 0), f[3] ?? 1),
         });
       }),
   );

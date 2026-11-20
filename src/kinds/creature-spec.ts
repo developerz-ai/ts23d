@@ -106,6 +106,8 @@ export interface CreatureSpec {
     readonly ears?: EarShape;
     /** Ear height ÷ head length (default 0.38 erect, 0.2 round). */
     readonly earLength?: number;
+    /** Ear blade width × the shape's default (default 1; a wolf's short broad-based ear ≈ 1.3). */
+    readonly earWidth?: number;
     /** Orbit convergence, degrees from the midline (cat 65.4, dog 50.4, horse 24.4: Heesy 2004).
      *  The lid aperture and the resting gaze face 90° − this off +X. Default per family. */
     readonly orbit?: number;
@@ -218,6 +220,7 @@ export function checkCreature(s: CreatureSpec): CreatureSpec {
   ratio(s.face?.muzzle, 0.1, 0.75, 'face.muzzle');
   ratio(s.face?.width, 0.25, 1.2, 'face.width');
   ratio(s.face?.earLength, 0.05, 1, 'face.earLength');
+  ratio(s.face?.earWidth, 0.5, 2, 'face.earWidth');
   ratio(s.face?.forward, 0, 1, 'face.forward');
   ratio(s.face?.orbit, 0, 90, 'face.orbit');
   if (s.family !== undefined && !FAMILY_NAMES.includes(s.family))

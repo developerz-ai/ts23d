@@ -3,15 +3,16 @@
 // tripping core `merge`'s T3D_SKIN_INVALID. That refusal is right where a skin must survive the
 // merge (export binds the rigid pieces first); here the union is never exported.
 
-import { type Mesh, merge } from '../core/index.ts';
+import { type Mesh, mappedOf, merge } from '../core/index.ts';
 
 /** `m` without joints, weights and morphs (the arrays are shared, not copied). */
-export const geometryOf = ({ positions, normals, uvs, colors, indices }: Mesh): Mesh => ({
-  positions,
-  normals,
-  uvs,
-  colors,
-  indices,
+export const geometryOf = (m: Mesh): Mesh => ({
+  positions: m.positions,
+  normals: m.normals,
+  uvs: m.uvs,
+  colors: m.colors,
+  indices: m.indices,
+  ...mappedOf(m),
 });
 
 /** One mesh of every input's positions, normals, UVs, colours and triangles; no skin, no morphs. */

@@ -4,11 +4,16 @@
 // edges split. The split decision depends only on edge length, so co-located hard edges of two
 // faces split identically: no cracks, no T-junctions. Attributes interpolate linearly; skin
 // weights of a midpoint are the mean of its two ends, back on the 1/255 grid (top 4, sum 1).
+// Halving overshoots: an edge ends at L / 2ⁿ (down to half the limit) and a quad's diagonal is
+// split again, so a flat panel gets about 4 × the triangles the limit asks for. `exact` (opt-in,
+// weather-subdivide-exact.ts) lays vertices `maxEdge` apart instead.
 
-import { type Mesh, SKIN_INFLUENCES } from '../core/index.ts';
+import { dmath, type Mesh, mappedOf, SKIN_INFLUENCES } from '../core/index.ts';
 import { quantise, WEIGHT_STEP } from './skin-weights.ts';
+import { exactIndices } from './weather-subdivide-exact.ts';
 
-class Grow {
+/** A mesh's attribute arrays, growing as edges are cut. */
+export class Grow {
   p: number[];
   n: number[];
   uv: number[];
@@ -45,21 +50,43 @@ class Grow {
     const nx = ((this.n[a * 3] ?? 0) + (this.n[b * 3] ?? 0)) / 2;
     const ny = ((this.n[a * 3 + 1] ?? 0) + (this.n[b * 3 + 1] ?? 0)) / 2;
     const nz = ((this.n[a * 3 + 2] ?? 0) + (this.n[b * 3 + 2] ?? 0)) / 2;
-    const l = Math.hypot(nx, ny, nz) || 1;
+    const l = dmath.hypot(nx, ny, nz) || 1;
     this.n.push(nx / l, ny / l, nz / l);
     for (const d of this.morphs) lerp(d, 3);
-    if (this.skin) this.blend(this.skin, a, b);
+    if (this.skin) this.blend(this.skin, [a, b]);
     return this.count - 1;
   }
-  /** The mean of two vertices' influences: merged per bone, top 4, re-quantised to sum 1. */
-  private blend(skin: { readonly j: number[]; readonly w: number[] }, a: number, b: number): void {
+  /** A new vertex at Σ w·v over `ids` (weights sum to 1); terms add in the order given. */
+  mix(ids: readonly number[], w: readonly number[]): number {
+    const lerp = (arr: number[], k: number): void => {
+      for (let i = 0; i < k; i++)
+        arr.push(ids.reduce((s, v, j) => s + (arr[v * k + i] ?? 0) * (w[j] ?? 0), 0));
+    };
+    lerp(this.p, 3);
+    lerp(this.uv, 2);
+    lerp(this.c, 3);
+    lerp(this.n, 3);
+    const i = this.n.length - 3;
+    const l = dmath.hypot(this.n[i] ?? 0, this.n[i + 1] ?? 0, this.n[i + 2] ?? 0) || 1;
+    for (let k = 0; k < 3; k++) this.n[i + k] = (this.n[i + k] ?? 0) / l;
+    for (const d of this.morphs) lerp(d, 3);
+    if (this.skin) this.blend(this.skin, ids, w);
+    return this.count - 1;
+  }
+  /** The weighted mean of vertices' influences: merged per bone, top 4, re-quantised to sum 1. */
+  private blend(
+    skin: { readonly j: number[]; readonly w: number[] },
+    ids: readonly number[],
+    share: readonly number[] = [1, 1],
+  ): void {
     const sum = new Map<number, number>();
-    for (const v of [a, b])
+    ids.forEach((v, k) => {
       for (let s = 0; s < SKIN_INFLUENCES; s++) {
-        const w = skin.w[v * SKIN_INFLUENCES + s] ?? 0;
+        const w = (skin.w[v * SKIN_INFLUENCES + s] ?? 0) * (share[k] ?? 0);
         const bone = skin.j[v * SKIN_INFLUENCES + s] ?? 0;
         if (w > 0) sum.set(bone, (sum.get(bone) ?? 0) + w);
       }
+    });
     const q = quantise([...sum]);
     for (let s = 0; s < SKIN_INFLUENCES; s++) {
       skin.j.push(q[s]?.[0] ?? 0);
@@ -127,23 +154,32 @@ function round(g: Grow, idx: readonly number[], max2: number): number[] | null {
   return any ? out : null;
 }
 
-/** `mesh` with every edge ≤ `maxEdge` metres (at most `rounds` refinement rounds). */
-export function subdivideTo(mesh: Mesh, maxEdge: number, rounds = 10): Mesh {
+/**
+ * `mesh` tessellated to `maxEdge` metres. Default: halving, at most `rounds` rounds, every edge
+ * ≤ `maxEdge` (edges end between half the limit and the limit, diagonals split again). `exact`:
+ * vertices `maxEdge` apart along every input edge and across every face, cell diagonals up to
+ * √2 × and zip edges up to 2.3 × `maxEdge` (weather-subdivide-exact.ts); about a quarter of the
+ * triangles on flat panels.
+ */
+export function subdivideTo(mesh: Mesh, maxEdge: number, rounds = 10, exact = false): Mesh {
   if (!(maxEdge > 0)) return mesh;
   const g = new Grow(mesh);
   let idx: number[] = Array.from(mesh.indices);
   const max2 = maxEdge * maxEdge;
-  for (let r = 0; r < rounds; r++) {
-    const next = round(g, idx, max2);
-    if (!next) break;
-    idx = next;
-  }
+  if (exact) idx = exactIndices(g, idx, maxEdge);
+  else
+    for (let r = 0; r < rounds; r++) {
+      const next = round(g, idx, max2);
+      if (!next) break;
+      idx = next;
+    }
   return {
     positions: new Float32Array(g.p),
     normals: new Float32Array(g.n),
     uvs: new Float32Array(g.uv),
     colors: new Float32Array(g.c),
     indices: new Uint32Array(idx),
+    ...mappedOf(mesh),
     ...(g.skin ? { joints: new Uint16Array(g.skin.j), weights: new Float32Array(g.skin.w) } : {}),
     ...(mesh.morphs
       ? {

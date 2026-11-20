@@ -6,6 +6,7 @@
 // body gives the travelling wave.
 
 import type { Armature, Bone, Clip, Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import { bodyPath, boneEnd, boneLength, childMap, reach } from './chain-bones.ts';
 import { harmonicPowers } from './chain-fft.ts';
 import { clipPose, type JointWorld, jointWorlds } from './clip-pose.ts';
@@ -55,7 +56,7 @@ export function bodyChain(sk: Armature): BodyChain | null {
   for (let i = 1; i < stations.length; i++) {
     const a = stations[i - 1] ?? [0, 0, 0];
     const b = stations[i] ?? [0, 0, 0];
-    arcs.push((arcs[i - 1] ?? 0) + Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]));
+    arcs.push((arcs[i - 1] ?? 0) + dmath.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]));
   }
   const length = arcs.at(-1) ?? 0;
   if (bones.length < 2 || length <= 0) return null;
@@ -69,7 +70,7 @@ export function bodyChain(sk: Armature): BodyChain | null {
 }
 
 const unit = (v: Vec3): Vec3 => {
-  const l = Math.hypot(v[0], v[1], v[2]) || 1;
+  const l = dmath.hypot(v[0], v[1], v[2]) || 1;
   return [v[0] / l, v[1] / l, v[2] / l];
 };
 const cross = (a: Vec3, b: Vec3): Vec3 => [
@@ -103,8 +104,8 @@ function beatAxis(d: Vec3, plane: readonly Vec3[]): Vec3 {
     yy += y * y;
     xy += x * y;
   }
-  const a = Math.atan2(2 * xy, xx - yy) / 2;
-  const [c, s] = [Math.cos(a), Math.sin(a)];
+  const a = dmath.atan2(2 * xy, xx - yy) / 2;
+  const [c, s] = [dmath.cos(a), dmath.sin(a)];
   return [c * e1[0] + s * e2[0], c * e1[1] + s * e2[1], c * e1[2] + s * e2[2]];
 }
 
@@ -114,8 +115,8 @@ function harmonic(y: readonly number[], m: number): readonly [number, number] {
   let im = 0;
   y.forEach((v, k) => {
     const a = (-2 * Math.PI * m * k) / y.length;
-    re += v * Math.cos(a);
-    im += v * Math.sin(a);
+    re += v * dmath.cos(a);
+    im += v * dmath.sin(a);
   });
   return [(2 * re) / y.length, (2 * im) / y.length];
 }
@@ -152,14 +153,14 @@ function phaseWave(
       s: ((body.s[i + 1] ?? 0) + (body.s[i] ?? 0)) / 2,
     };
   });
-  const size = slopes.map((d) => Math.hypot(d.re, d.im));
+  const size = slopes.map((d) => dmath.hypot(d.re, d.im));
   const floor = PHASE_SHARE * Math.max(...size);
   // A wave crest heading tailward: phase falls with s. Unwrapped link to link.
   const pts: { s: number; phase: number; w: number }[] = [];
   slopes.forEach((d, i) => {
     const amp = size[i] ?? 0;
     if (amp < floor || amp === 0) return;
-    let phase = Math.atan2(d.im, d.re);
+    let phase = dmath.atan2(d.im, d.re);
     const before = pts.at(-1);
     if (before) phase += 2 * Math.PI * Math.round((before.phase - phase) / (2 * Math.PI));
     pts.push({ s: d.s * body.length, phase, w: amp * amp });
@@ -168,7 +169,7 @@ function phaseWave(
   const W = pts.reduce((t, p) => t + p.w, 0);
   const ms = pts.reduce((t, p) => t + p.w * p.s, 0) / W;
   const mp = pts.reduce((t, p) => t + p.w * p.phase, 0) / W;
-  const den = pts.reduce((t, p) => t + p.w * (p.s - ms) ** 2, 0);
+  const den = pts.reduce((t, p) => t + p.w * dmath.pow(p.s - ms, 2), 0);
   const slope = den > 0 ? pts.reduce((t, p) => t + p.w * (p.s - ms) * (p.phase - mp), 0) / den : 0;
   const waves = (Math.abs(slope) * body.length) / (2 * Math.PI);
   const wavelength = slope === 0 ? Infinity : (2 * Math.PI) / Math.abs(slope);
@@ -193,7 +194,7 @@ export function measureWave(sk: Armature, body: BodyChain, clip: Clip): ClipWave
   const start = stationsAt(sk, body, clip, 0)[0] ?? [0, 0, 0];
   const end = stationsAt(sk, body, clip, clip.seconds)[0] ?? [0, 0, 0];
   const D: Vec3 = [end[0] - start[0], end[1] - start[1], end[2] - start[2]];
-  const travel = Math.hypot(D[0], D[1], D[2]);
+  const travel = dmath.hypot(D[0], D[1], D[2]);
   if (!(travel > 1e-6)) return null;
   const d = unit(D);
   const frames = sampleCount(body, clip);

@@ -1,7 +1,7 @@
 {
   "asset": "boulders",
   "reviewer": "agent",
-  "overall": 7.3,
+  "overall": 7.4,
   "scores": {
     "silhouette": {
       "score": 8,
@@ -18,19 +18,20 @@
       ]
     },
     "materials": {
-      "score": 6,
-      "reason": "Granite with lichen blotches reads as stone at a distance, but in hero.png the albedo is soft and blurry, the soil patches are flat dark mats with hard polygon edges, and the pebbles are smooth white pills that read as plastic.",
+      "score": 7,
+      "reason": "The soil skirts sit flush with smooth rounded outlines and the dark rim along their long sides is gone (hero.png, front edge); but the edge is still a hard line with no fade into the ground, the soil is one pale tan, and the granite albedo stays soft and blurry.",
       "fixes": [
-        "feather the soil patch edges (alpha or vertex fade into the ground) instead of a hard polygon mat",
-        "pebbles in varied grey/brown values with a rough surface, not uniform white",
+        "fade the soil patch edges (alpha or vertex fade) so they bleed into the ground instead of ending on a line",
+        "darker, damper soil tone instead of pale tan",
         "sharper granite grain (feldspar/quartz flecks) in granite.ts"
       ]
     },
     "detail": {
       "score": 7,
-      "reason": "Fracture planes on the angular boulder and the slab hold, but edges are rounded and soft in the hero and there is no crack or fissure detail.",
+      "reason": "Fissures now cut through the big boulder and the slab and the fracture planes hold, but edges stay rounded and soft in the hero.",
       "fixes": [
-        "sharper fracture edges (less smoothing on the cuts) and a few cracks/fissures"
+        "sharper fracture edges (less smoothing on the cuts)",
+        "small spalls and chips along the fracture edges"
       ]
     },
     "wear": {
@@ -42,9 +43,9 @@
     },
     "lod": {
       "score": 7,
-      "reason": "FAR LOD2 keeps the shapes, but the soil patches become hard octagons and the big boulder's colour shifts darker.",
+      "reason": "FAR LOD2 soil patches are smooth-edged like LOD0, but the big boulder still turns a plain light faceted grey without its moss and lichen, so the colour shifts at the switch.",
       "fixes": [
-        "keep the LOD0 albedo average on LOD2 faces and round the soil patches with more sides"
+        "keep the LOD0 albedo average (moss and lichen tint) on the LOD2 faces"
       ]
     },
     "technical": {
@@ -56,7 +57,7 @@
     }
   },
   "renders": {
-    "hero.png": "ef8f89d8e922d1d676bea02bb9e7c75e4d158cdeebc116a7dd736de427149dcd",
-    "sheet.png": "599d0d31372b9ebbf8d17650ccc0c77bb403802098fe8441fbddae11f69d8195"
+    "hero.png": "e8e12437893d204f7b5358cac88b093c47b9f9f088e390a191e0c6a2cccc0461",
+    "sheet.png": "b6524867ce0df11032b8369b3919b70f59a0ef1418e1771e434ab81c4a679257"
   }
 }

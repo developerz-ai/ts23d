@@ -20,9 +20,9 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    19098,
-    7500,
-    1112
+    18878,
+    7488,
+    1068
   ],
   "drawCalls": [
     13,
@@ -124,31 +124,31 @@
     {
       "label": "body length (41 ft 3 in)",
       "spec": 12.573,
-      "measured": 12.663000106811523,
+      "measured": 12.663,
       "source": "B&M ORER table"
     },
     {
       "label": "wheel diameter (33 in)",
       "spec": 0.838,
-      "measured": 0.8379999992847442,
+      "measured": 0.838,
       "source": "Kadee Andrews 33 in"
     },
     {
       "label": "truck wheelbase (5 ft 6 in)",
       "spec": 1.676,
-      "measured": 1.6760001182556152,
+      "measured": 1.676,
       "source": "NASG Andrews"
     },
     {
       "label": "door width (≈ 6 ft)",
       "spec": 1.83,
-      "measured": 1.8300000429153442,
+      "measured": 1.83,
       "source": "NARA photo, scaled"
     },
     {
       "label": "gauge-side wheel spacing",
-      "spec": 1.5070000000000001,
-      "measured": 1.5069999694824219,
+      "spec": 1.507,
+      "measured": 1.507,
       "source": "standard gauge 1.435 m + rail head"
     }
   ],

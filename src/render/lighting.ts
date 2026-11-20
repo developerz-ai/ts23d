@@ -2,6 +2,7 @@
 // sky hemisphere fill with a warm ground bounce, sky directions for ambient occlusion, PCF tap
 // patterns, and the filmic tone curve. Constants live here so every shot is lit the same way.
 
+import { dmath } from '../core/index.ts';
 export type V3 = [number, number, number];
 
 export interface Rig {
@@ -18,7 +19,7 @@ export interface Rig {
 const unit = (az: number, el: number): V3 => {
   const a = (az * Math.PI) / 180;
   const e = (el * Math.PI) / 180;
-  return [Math.cos(e) * Math.cos(a), Math.cos(e) * Math.sin(a), Math.sin(e)];
+  return [dmath.cos(e) * dmath.cos(a), dmath.cos(e) * dmath.sin(a), dmath.sin(e)];
 };
 
 /** Rings of sky directions: elevations and how many azimuths each ring holds (12 total). */
@@ -65,7 +66,7 @@ export function envRadiance(rz: number, rough: number, k: number): number {
     rz >= 0
       ? h + ((ZENITH[k] ?? 0) - h) * Math.sqrt(rz)
       : rz > -0.3
-        ? h * BAND + ((FLOOR[k] ?? 0) - h * BAND) * Math.min(1, -rz / 0.3) ** 0.5
+        ? h * BAND + ((FLOOR[k] ?? 0) - h * BAND) * Math.sqrt(Math.min(1, -rz / 0.3))
         : (FLOOR[k] ?? 0);
   const blurred = 0.5 * h + 0.25 * (ZENITH[k] ?? 0) + 0.25 * (FLOOR[k] ?? 0);
   // Above the horizon the blur keeps a little of the up/down split so rough metal still shades.
@@ -93,8 +94,8 @@ const DISC: readonly (readonly [number, number])[] = [
 export function pcfTaps(radius: number): Float32Array[] {
   return [0, 1, 2, 3].map((k) => {
     const a = (k * Math.PI) / 8;
-    const c = Math.cos(a) * radius;
-    const s = Math.sin(a) * radius;
+    const c = dmath.cos(a) * radius;
+    const s = dmath.sin(a) * radius;
     const out = new Float32Array(DISC.length * 2);
     DISC.forEach(([x, y], i) => {
       out[i * 2] = x * c - y * s;
@@ -111,11 +112,13 @@ export function pcfTaps(radius: number): Float32Array[] {
 export function tone(x: number): number {
   if (x <= 0) return 0;
   if (x <= 0.6) return x;
-  return 0.6 + 0.4 * (1 - Math.exp(-(x - 0.6) / 0.4));
+  return 0.6 + 0.4 * (1 - dmath.exp(-(x - 0.6) / 0.4));
 }
 
 export const toSrgb8 = (v: number): number =>
-  Math.round(255 * (v <= 0.0031308 ? v * 12.92 : 1.055 * Math.min(1, v) ** (1 / 2.4) - 0.055));
+  Math.round(
+    255 * (v <= 0.0031308 ? v * 12.92 : 1.055 * dmath.pow(Math.min(1, v), 1 / 2.4) - 0.055),
+  );
 
 export const fromSrgb = (v: number): number =>
-  v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+  v <= 0.04045 ? v / 12.92 : dmath.pow((v + 0.055) / 1.055, 2.4);

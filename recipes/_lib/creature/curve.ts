@@ -2,6 +2,7 @@
 // Rodrigues rotation and bent arcs (horns, claws, fingers). Pure functions on Vec3 tuples.
 
 import type { Vec3 } from '@developerz.ai/ts23d';
+import { dmath } from '@developerz.ai/ts23d';
 
 export const v3 = {
   add: (a: Vec3, b: Vec3): Vec3 => [a[0] + b[0], a[1] + b[1], a[2] + b[2]],
@@ -13,9 +14,9 @@ export const v3 = {
     a[2] * b[0] - a[0] * b[2],
     a[0] * b[1] - a[1] * b[0],
   ],
-  len: (a: Vec3): number => Math.hypot(a[0], a[1], a[2]),
+  len: (a: Vec3): number => dmath.hypot(a[0], a[1], a[2]),
   norm(a: Vec3): Vec3 {
-    const l = Math.hypot(a[0], a[1], a[2]) || 1;
+    const l = dmath.hypot(a[0], a[1], a[2]) || 1;
     return [a[0] / l, a[1] / l, a[2] / l];
   },
   lerp: (a: Vec3, b: Vec3, t: number): Vec3 => [
@@ -30,8 +31,8 @@ export const v3 = {
 /** Rotate `v` about unit `axis` by `rad` (Rodrigues). */
 export function rotate(v: Vec3, axis: Vec3, rad: number): Vec3 {
   const k = v3.norm(axis);
-  const c = Math.cos(rad);
-  const s = Math.sin(rad);
+  const c = dmath.cos(rad);
+  const s = dmath.sin(rad);
   const kv = v3.cross(k, v);
   const kd = v3.dot(k, v) * (1 - c);
   return [
@@ -121,7 +122,7 @@ export function arc(
   let ax = v3.norm(axis);
   let p = base;
   const step = length / n;
-  const w = Array.from({ length: n }, (_, i) => Math.exp((spiral * (i + 0.5)) / n));
+  const w = Array.from({ length: n }, (_, i) => dmath.exp((spiral * (i + 0.5)) / n));
   const wsum = w.reduce((a, b) => a + b, 0);
   const dt = ((twist / n) * Math.PI) / 180;
   for (let i = 0; i < n; i++) {

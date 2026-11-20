@@ -6,6 +6,7 @@
 // closed (or fully open) panel is clearance, not a clash, however long the panel.
 
 import type { Mesh, Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import { axisBasis, axisFrame, dot, shave, type Volume } from './clash-sweep.ts';
 import { CLASH_EPS } from './types.ts';
 
@@ -34,7 +35,7 @@ function rasterTriangle(
   q2: Vec3,
   visit: (a: number, x: number, y: number) => void,
 ): void {
-  const d = (p: Vec3, q: Vec3): number => Math.hypot(q[0] - p[0], q[1] - p[1], q[2] - p[2]);
+  const d = (p: Vec3, q: Vec3): number => dmath.hypot(q[0] - p[0], q[1] - p[1], q[2] - p[2]);
   const l0 = d(q1, q2);
   const l1 = d(q2, q0);
   const l2 = d(q0, q1);
@@ -95,7 +96,7 @@ export function sectorVolume(
     vy[i] = y;
     if (a < lo) lo = a;
     if (a > hi) hi = a;
-    rMax = Math.max(rMax, Math.hypot(x, y));
+    rMax = Math.max(rMax, dmath.hypot(x, y));
   }
   const span = Math.max(hi - lo, 1e-6);
   const SLICES = Math.max(1, Math.min(MAX_SLICES, Math.ceil(span / SLAB)));
@@ -117,7 +118,7 @@ export function sectorVolume(
       bits = new Uint32Array(WORDS);
       cells[key] = bits;
     }
-    const phi = Math.atan2(y, x);
+    const phi = dmath.atan2(y, x);
     const b = Math.floor((phi < 0 ? phi + TAU : phi) / W) % BINS;
     bits[b >>> 5] = (bits[b >>> 5] ?? 0) | (1 << (b & 31));
   };

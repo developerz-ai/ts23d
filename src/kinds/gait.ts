@@ -8,6 +8,7 @@
 // gait-bake.ts solves the legs per key (gait-ik.ts) and writes the clip.
 
 import type { Bone, Quat, Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import type { LegBones } from './gait-ik.ts';
 import { qexp } from './pose.ts';
 
@@ -99,7 +100,7 @@ export interface GaitTiming {
 /** Speed, stride and cycle length at the gait's Froude number for a hip height `hip` (m). */
 export function gaitTiming(g: GaitSpec, hip: number): GaitTiming {
   const speed = Math.sqrt(g.froude * G * hip);
-  const stride = 2.3 * g.froude ** 0.3 * hip;
+  const stride = 2.3 * dmath.pow(g.froude, 0.3) * hip;
   return { speed, stride, seconds: stride / speed };
 }
 
@@ -165,7 +166,7 @@ export function swingAlong(
   to: number,
 ): number {
   const away = t.speed * (1 - g.duty) * t.seconds * GROUND_LOCK;
-  const c = s - Math.sin(TAU * s) / TAU;
+  const c = s - dmath.sin(TAU * s) / TAU;
   return from + (to + away - from) * c - away * s;
 }
 
@@ -180,16 +181,17 @@ export function bodyPose(
   rot: Map<string, Quat>;
 } {
   const bounces = g.duty >= 0.5 || g.phase.lh === g.phase.rf ? 2 : 1;
-  const z = -g.crouch * hip - g.bob * hip * Math.cos(TAU * bounces * (phi - g.duty / 2));
+  const z = -g.crouch * hip - g.bob * hip * dmath.cos(TAU * bounces * (phi - g.duty / 2));
   const rot = new Map<string, Quat>();
   // Rocking: nose down at the fore pair's mid-stance; the spine gathers (flexes) a quarter stride
   // later, after the fore feet leave. Symmetrical gaits, whose fore feet alternate, do not rock.
-  const sx = Math.cos(TAU * g.phase.lf) + Math.cos(TAU * g.phase.rf);
-  const sy = Math.sin(TAU * g.phase.lf) + Math.sin(TAU * g.phase.rf);
-  const rock = Math.hypot(sx, sy) > 0.2;
-  const mid = Math.atan2(sy, sx) / TAU + g.duty / 2;
-  const pitch = rock ? g.pitch * deg * Math.cos(TAU * (phi - mid)) : 0;
-  const flex = g.flex * deg * (rock ? Math.cos(TAU * (phi - mid - 0.25)) : Math.cos(TAU * 2 * phi));
+  const sx = dmath.cos(TAU * g.phase.lf) + dmath.cos(TAU * g.phase.rf);
+  const sy = dmath.sin(TAU * g.phase.lf) + dmath.sin(TAU * g.phase.rf);
+  const rock = dmath.hypot(sx, sy) > 0.2;
+  const mid = dmath.atan2(sy, sx) / TAU + g.duty / 2;
+  const pitch = rock ? g.pitch * deg * dmath.cos(TAU * (phi - mid)) : 0;
+  const flex =
+    g.flex * deg * (rock ? dmath.cos(TAU * (phi - mid - 0.25)) : dmath.cos(TAU * 2 * phi));
   rig.spine.forEach((name, i) => {
     rot.set(name, qexp([0, i === 0 ? pitch : flex / Math.max(1, rig.spine.length - 1), 0]));
   });
@@ -197,6 +199,6 @@ export function bodyPose(
   const neck = rig.neck[0];
   if (neck) rot.set(neck, qexp([0, -(pitch + flex) * 0.8, 0]));
   const tail = rig.tail[0];
-  if (tail) rot.set(tail, qexp([0, 0, -g.sway * deg * Math.sin(TAU * (phi - 0.15))]));
+  if (tail) rot.set(tail, qexp([0, 0, -g.sway * deg * dmath.sin(TAU * (phi - 0.15))]));
   return { root: [0, 0, z], rot };
 }

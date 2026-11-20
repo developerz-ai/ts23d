@@ -68,14 +68,17 @@ The neck folds are the least satisfying of these: they are geometry that could s
 | Feature | How | Why |
 |---|---|---|
 | scales | `hydra_scales` strip (`material.ts`): overlapping 6 × 4.5 cm scales in true metres, crowns glossy (0.36), grooves rough (0.78); `uvBands` per chain keep them square round thick and thin sections | the old per-vertex scale relief cost 176 k triangles and still read as one smooth olive |
-| keratin | horns, claws, teeth and spines on the built-in satin `plastic` strip, UVs along each piece | horn separated from skin only by hue |
+| keratin | horns, claws, teeth and spines on their own `hydra_keratin` strip: U a root-to-tip ramp, rough fibrous roots (0.62) to polished tips (0.2), fine growth ridges | horn shared the skin's roughness |
 | dorsal saddles | dark crossbands at a 0.62 m pitch, broken by noise, as on a monitor | uniform olive back |
-| mud | `mudAt`: caked on the feet and shins, splashed up the legs, dusting the belly; dried pale at its upper edge | it lives in a river marsh |
+| mud | `mudAt`: wet dark mud on the feet, caked up the shins to the knee and drying to a pale crust at its ragged top edge, a broad band under the belly and chest | it lives in a river marsh; the old thin dusting did not read at hero distance |
+| trunk | a barrel: the ribcage swells about 0.2 m wider mid-trunk than behind the shoulders and in front of the hips; shoulder and hip masses softened | read as a box in TOP and FRONT |
+| scale relief | the scale strip's height 9 mm deep (was 4) | scales read as colour only |
+| dorsal spines | one every 0.07 of the trunk's arc (0.20 m on its 2.9 m; was 0.048 of it), 0.0665 of the tail's (0.22 m on 3.3 m) and 0.10 of each neck's (0.28 to 0.31 m), a third larger | the spine line did not read in SIDE |
 | scars | claw rakes across neck 1, a healed bite ring on the right flank (both on the hero camera's side), the tip of head 0's swept horn broken off | it fights |
 | mouths | a forked tongue in every open jaw | empty mouths |
 | proportions | thigh roots +24 %, upper arms +25 %, fore feet 16 cm further under the body; lowest necks raised 0.3 to 0.45 m so all five heads clear the shoulders; tail curls to one side | thin splayed legs, a head hanging in front of the chest |
-| triangles | LOD0 348 k to 210 k: neck, tail, leg and trunk rings cut (scales moved to the strip), jaws at a 1.35 cm cell, eyes 18 × 12; heads keep their 1.15 cm cell | 9× drop to LOD1 |
+| triangles | LOD0 348 k to 210 k to 161 k: neck, tail, leg and trunk rings cut (scales moved to the strip), jaws at a 1.65 cm cell, feet at 2.4 cm (toes webbed so they still roll onto the sole), eyes 14 × 10, spines and osteoderms sparser; heads keep their 1.15 cm cell (1.2 cm folds the horn roots) | 9× drop to LOD1 |
 | far LOD | horn pairs keep 4 segments and 5 sides; the saddle pattern averages into the back colour | wedge heads far away |
 | LOD1 (2026-11-19) | 40.2 k to 38.5 k: horns 6 segments × 5 sides, a tooth every 8 cm, eyes 8 × 6 | stay at or under the 38.8 k recorded before the wave |
 
-Budget why: five complete sculpted heads (skull, open jaw, tongue, teeth, eyes, horns) on five necks plus a monitor-lizard body; each head is a creature head's worth of surface, so LOD0 (210k) and LOD1 (38.5k) sit over the one-body 150k/30k creature band and LOD2 keeps five head wedges at 7.1k.
+Budget why: five complete sculpted heads (skull, open jaw, tongue, teeth, eyes, horns) on five necks plus a monitor-lizard body; each head is a creature head's worth of surface, so LOD0 (161k) and LOD1 (38.6k) sit over the one-body 150k/30k creature band and LOD2 keeps five head wedges at 7.1k.

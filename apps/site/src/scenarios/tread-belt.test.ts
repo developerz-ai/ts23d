@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test';
+import { dmath } from '@developerz.ai/ts23d/core';
 import { TreadBelt } from './tread-belt.ts';
 
 // A stadium belt 4 m long round two 0.5 m wheels in the XZ plane at y = 1, CCW seen from +Y.
@@ -7,12 +8,12 @@ function stadium(): number[][] {
   for (let i = 0; i <= 40; i++) pts.push([-2 + (4 * i) / 40, 1, 0]);
   for (let i = 1; i < 40; i++) {
     const a = -Math.PI / 2 + (Math.PI * i) / 40;
-    pts.push([2 + 0.5 * Math.cos(a), 1, 0.5 + 0.5 * Math.sin(a)]);
+    pts.push([2 + 0.5 * dmath.cos(a), 1, 0.5 + 0.5 * dmath.sin(a)]);
   }
   for (let i = 0; i <= 40; i++) pts.push([2 - (4 * i) / 40, 1, 1]);
   for (let i = 1; i < 40; i++) {
     const a = Math.PI / 2 + (Math.PI * i) / 40;
-    pts.push([-2 + 0.5 * Math.cos(a), 1, 0.5 + 0.5 * Math.sin(a)]);
+    pts.push([-2 + 0.5 * dmath.cos(a), 1, 0.5 + 0.5 * dmath.sin(a)]);
   }
   return pts;
 }

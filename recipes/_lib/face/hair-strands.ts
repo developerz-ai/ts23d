@@ -5,7 +5,7 @@
 // along the hairline (they cover the cap's edge, so no bare band shows under it), flyaways; long
 // hair adds falls over the shoulders, a crest stands, a beard hangs.
 
-import { type CardLayer, type Field, sculptField, type Vec3 } from '@developerz.ai/ts23d';
+import { type CardLayer, dmath, type Field, sculptField, type Vec3 } from '@developerz.ai/ts23d';
 import { beardlineOf, type HairSculpt, hairlineOf } from './hair.ts';
 import { beardBody } from './hair-beard.ts';
 import type { CardHairStyle } from './hair-cards.ts';
@@ -64,12 +64,12 @@ export function faceCardStyle(
     // Long hair above and in front of an ear's root is drawn back hard, not down: it passes
     // behind the ear, which stays in view (an elf's must at every LOD).
     const ear = long
-      ? clamp01(1 - Math.hypot(p[0] - earTop[0], p[2] - earTop[2] - 0.03 * s) / (0.065 * s))
+      ? clamp01(1 - dmath.hypot(p[0] - earTop[0], p[2] - earTop[2] - 0.03 * s) / (0.065 * s))
       : 0;
     return [
-      -(long ? 1.25 : 0.95 - 0.35 * t) * (1 - 0.6 * top) - 0.7 * ear,
-      // Long hair is combed straight back off the parting; a short cut is pushed to the side.
-      Math.sign(away) * (0.12 * (1 - t) + (long ? 0.3 : 0.9) * top),
+      -(long ? 1.1 - 0.35 * t : 0.95 - 0.35 * t) * (1 - 0.6 * top) - 0.7 * ear,
+      // Long hair is combed back off the parting; a short cut is pushed to the side.
+      Math.sign(away) * (0.12 * (1 - t) + (long ? 0.6 : 0.9) * top),
       // Up off the forehead first (the cap's front edge faces forward: a comb with no rise
       // there would lay the fringe down over the eyes), then back and down.
       0.6 * clamp01(1 - 3.5 * t) - 0.1 - 0.8 * t - (long ? 0.55 : 0.35) * side * (1 - 0.5 * ear),
@@ -78,13 +78,12 @@ export function faceCardStyle(
   const warm: Vec3 = [1.1, 1.02, 0.88];
   const layers: CardLayer[] = [];
   if (st.cut === 'short' || st.cut === 'long') {
-    // Top locks long, sides and back short (short cut); long hair is long everywhere.
+    // Top locks longer than the sides and back. A long cut's scalp cards are shingles like a
+    // short cut's, not planks (a card longer than the skull's curve can follow stands off it and
+    // the crown reads as thatch): its length is the fall's.
     const length = (p: Vec3): number => {
       const up = clamp01((p[2] - (earTop[2] + 0.01 * s)) / (0.05 * s));
-      // Long hair: short at the brow (it is drawn back, not left to hang over the eyes).
-      const t = clamp01((fh[0] - p[0]) / (fh[0] - occ[0]));
-      // (Long enough to run from the brow over the crown: short cards there read as thatch.)
-      return (long ? (0.12 + 0.05 * up) * (0.55 + 0.45 * clamp01(t * 3)) : 0.045 + 0.055 * up) * s;
+      return (long ? 0.055 + 0.05 * up : 0.045 + 0.055 * up) * s;
     };
     // A long cut is drawn back clear of the ears (an elf's must show): no long card roots within
     // 4 cm of an ear, root to tip; only the short base clumps grow there.
@@ -94,13 +93,13 @@ export function faceCardStyle(
       const a: Vec3 = [tragion[0], side * Math.abs(tragion[1]), tragion[2]];
       const b = head.earTips[side > 0 ? 0 : 1];
       const ab: Vec3 = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
-      const l2 = ab[0] ** 2 + ab[1] ** 2 + ab[2] ** 2 || 1;
+      const l2 = ab[0] * ab[0] + ab[1] * ab[1] + ab[2] * ab[2] || 1;
       const k = clamp01(
         ((p[0] - a[0]) * ab[0] + (p[1] - a[1]) * ab[1] + (p[2] - a[2]) * ab[2]) / l2,
       );
       return (
         0.04 * s -
-        Math.hypot(p[0] - a[0] - ab[0] * k, p[1] - a[1] - ab[1] * k, p[2] - a[2] - ab[2] * k)
+        dmath.hypot(p[0] - a[0] - ab[0] * k, p[1] - a[1] - ab[1] * k, p[2] - a[2] - ab[2] * k)
       );
     };
     const grown: Field = long ? (p) => Math.max(hairline(p), nearEar(p)) : hairline;
@@ -110,50 +109,51 @@ export function faceCardStyle(
         name: 'hair_base',
         kind: 'hair',
         region: hairline,
-        density: long ? 3600 : 5200,
+        density: long ? 3700 : 5200,
         length: (p) => length(p) * 0.75,
         width: 0.026 * s,
-        lift: 0.04,
+        lift: long ? 0.03 : 0.04,
         bend: 0.9,
         droop: 0.08,
-        roll: long ? 0.08 : 0.2,
+        roll: long ? 0.08 : 0.12,
         fold: 0,
-        tone: [0.5, 0.78],
+        // (Tones close together: a wide spread between neighbouring cards reads as straw.)
+        tone: [0.68, 0.88],
         hug: 1,
       },
       {
         name: 'hair_mid',
         kind: 'hair',
         region: grown,
-        density: long ? 3400 : 5000,
+        density: long ? 3700 : 5000,
         length,
-        width: 0.018 * s,
-        lift: long ? 0.06 : 0.09,
+        width: (long ? 0.02 : 0.018) * s,
+        lift: long ? 0.05 : 0.08,
         bend: 0.85,
         droop: 0.1,
-        roll: long ? 0.15 : 0.35,
+        roll: long ? 0.14 : 0.3,
         fold: 0.55,
         clump: 3,
-        tone: [0.72, 1.08],
+        tone: [0.8, 1.04],
         tint: warm,
-        hug: 0.85,
+        hug: long ? 1 : 0.85,
       },
       {
         name: 'hair_top',
         kind: 'hair',
         region: crown,
-        density: long ? 1000 : 1500,
+        density: long ? 900 : 1500,
         length: (p) => length(p) * 1.15,
-        width: 0.013 * s,
-        lift: long ? 0.09 : 0.15,
+        width: (long ? 0.015 : 0.013) * s,
+        lift: long ? 0.07 : 0.13,
         bend: 0.8,
         droop: 0.12,
-        roll: long ? 0.2 : 0.4,
+        roll: long ? 0.16 : 0.34,
         fold: 0.6,
         clump: 2,
-        tone: [0.88, 1.2],
+        tone: [0.9, 1.12],
         tint: warm,
-        hug: 0.6,
+        hug: long ? 1 : 0.6,
       },
       // Short fine strands on the edge band: the hair grows out of the skin, no cap edge.
       {
@@ -168,23 +168,23 @@ export function faceCardStyle(
         lift: 0.025,
         bend: 0.8,
         droop: 0.05,
-        roll: 0.3,
+        roll: 0.2,
         fold: 0,
-        tone: [0.6, 0.92],
+        tone: [0.7, 0.95],
         hug: 1,
       },
       {
         name: 'hair_fly',
         kind: 'wisp',
         region: hairline,
-        density: long ? 0 : 240,
-        length: 0.06 * s,
+        density: long ? 0 : 120,
+        length: 0.05 * s,
         width: 0.01 * s,
-        lift: 0.16,
-        bend: 0.45,
-        roll: 0.6,
+        lift: 0.12,
+        bend: 0.6,
+        roll: 0.4,
         fold: 0,
-        tone: [0.9, 1.25],
+        tone: [0.9, 1.12],
         tint: warm,
         hug: 0.3,
       },
@@ -201,15 +201,16 @@ export function faceCardStyle(
         region: low,
         density: 2400,
         length: (p) => (0.2 + 0.07 * clamp01((p[2] - earTop[2]) / (0.05 * s))) * s,
-        width: 0.02 * s,
-        lift: 0.05,
+        width: 0.026 * s,
+        lift: 0.04,
         bend: 0.9,
         droop: 0.55,
-        roll: 0.3,
-        fold: 0.5,
+        roll: 0.1,
+        fold: 0.4,
         clump: 3,
-        tone: [0.7, 1.15],
+        tone: [0.78, 1.08],
         tint: warm,
+        // (Not pressed harder: a fall hugging the neck slid forward along the jaw to the mouth.)
         hug: 0.7,
       });
     }

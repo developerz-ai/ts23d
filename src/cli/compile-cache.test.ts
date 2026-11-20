@@ -163,7 +163,7 @@ it('shot, hero, blueprint and icon share one compile per LOD and leave it untouc
   try {
     stop = shareCompiles();
     const a = drum('shared');
-    const sheet = paintTrimSheet({ ...DEFAULT_SHEET, size: 512 });
+    const sheet = paintTrimSheet({ ...DEFAULT_SHEET, size: 512 }, []);
     const lod0 = compileOnce(a, { lod: 0 });
     const lod2 = compileOnce(a, { lod: 2 });
     const before = [fingerprint(lod0), fingerprint(lod2)];

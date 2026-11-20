@@ -4,7 +4,7 @@
 // strut-tower brace clearing the throttle body, main wiring looms and the hard brake lines.
 
 import type { Lod, Mesh, Vec3 } from '@developerz.ai/ts23d';
-import { lathe, merge, text } from '@developerz.ai/ts23d';
+import { dmath, lathe, merge, text } from '@developerz.ai/ts23d';
 import { corner } from '../chassis/points.ts';
 import { X_FIREWALL } from '../dims.ts';
 import { C } from '../lib/colors.ts';
@@ -366,8 +366,8 @@ function strutBrace(lod: Lod): Mesh {
         const a = (k / 3) * Math.PI * 2 + 0.5;
         parts.push(
           rod(
-            [p[0] + 0.045 * Math.cos(a), p[1] + 0.045 * Math.sin(a), z + 0.006],
-            [p[0] + 0.045 * Math.cos(a), p[1] + 0.045 * Math.sin(a), z + 0.016],
+            [p[0] + 0.045 * dmath.cos(a), p[1] + 0.045 * dmath.sin(a), z + 0.006],
+            [p[0] + 0.045 * dmath.cos(a), p[1] + 0.045 * dmath.sin(a), z + 0.016],
             0.016,
             C.natural,
             'chrome',

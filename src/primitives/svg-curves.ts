@@ -4,6 +4,7 @@
 // appends the points AFTER the start point (the end point included) to `out`.
 
 import type { Vec2 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 
 /** More segments than this per curve is a degenerate input (huge curve, microscopic tolerance). */
 const MAX_STEPS = 256;
@@ -20,8 +21,8 @@ export function flattenCubic(
   out: Vec2[],
 ): void {
   const m = Math.max(
-    Math.hypot(p0[0] - 2 * p1[0] + p2[0], p0[1] - 2 * p1[1] + p2[1]),
-    Math.hypot(p1[0] - 2 * p2[0] + p3[0], p1[1] - 2 * p2[1] + p3[1]),
+    dmath.hypot(p0[0] - 2 * p1[0] + p2[0], p0[1] - 2 * p1[1] + p2[1]),
+    dmath.hypot(p1[0] - 2 * p2[0] + p3[0], p1[1] - 2 * p2[1] + p3[1]),
   );
   // |B''| ≤ 6 m, so the error is ≤ 3 m / (4 n²).
   const n = steps(Math.sqrt((3 * m) / (4 * tol)));
@@ -45,7 +46,7 @@ export function flattenCubic(
 
 /** Quadratic Bézier p0 → p2 with control p1. */
 export function flattenQuad(p0: Vec2, p1: Vec2, p2: Vec2, tol: number, out: Vec2[]): void {
-  const m = Math.hypot(p0[0] - 2 * p1[0] + p2[0], p0[1] - 2 * p1[1] + p2[1]);
+  const m = dmath.hypot(p0[0] - 2 * p1[0] + p2[0], p0[1] - 2 * p1[1] + p2[1]);
   // |B''| = 2 m, so the error is ≤ m / (4 n²).
   const n = steps(Math.sqrt(m / (4 * tol)));
   for (let i = 1; i <= n; i++) {
@@ -83,8 +84,8 @@ export function flattenArc(
     return;
   }
   const phi = (rotDeg * Math.PI) / 180;
-  const cp = Math.cos(phi);
-  const sp = Math.sin(phi);
+  const cp = dmath.cos(phi);
+  const sp = dmath.sin(phi);
   const hx = (p0[0] - p1[0]) / 2;
   const hy = (p0[1] - p1[1]) / 2;
   const x1 = cp * hx + sp * hy;
@@ -103,7 +104,7 @@ export function flattenArc(
   const cx = cp * cx1 - sp * cy1 + (p0[0] + p1[0]) / 2;
   const cy = sp * cx1 + cp * cy1 + (p0[1] + p1[1]) / 2;
   const ang = (ux: number, uy: number, vx: number, vy: number): number =>
-    Math.atan2(ux * vy - uy * vx, ux * vx + uy * vy);
+    dmath.atan2(ux * vy - uy * vx, ux * vx + uy * vy);
   const ux = (x1 - cx1) / rx;
   const uy = (y1 - cy1) / ry;
   const t0 = ang(1, 0, ux, uy);
@@ -112,7 +113,7 @@ export function flattenArc(
   if (sweep && dt < 0) dt += 2 * Math.PI;
   // Sagitta of one step on the larger radius ≤ tol.
   const r = Math.max(rx, ry);
-  const step = tol >= r ? Math.PI / 2 : 2 * Math.acos(1 - tol / r);
+  const step = tol >= r ? Math.PI / 2 : 2 * dmath.acos(1 - tol / r);
   const n = steps(Math.abs(dt) / step);
   for (let i = 1; i <= n; i++) {
     if (i === n) {
@@ -120,8 +121,8 @@ export function flattenArc(
       break;
     }
     const t = t0 + (dt * i) / n;
-    const ex = rx * Math.cos(t);
-    const ey = ry * Math.sin(t);
+    const ex = rx * dmath.cos(t);
+    const ey = ry * dmath.sin(t);
     out.push([cp * ex - sp * ey + cx, sp * ex + cp * ey + cy]);
   }
 }

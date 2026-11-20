@@ -9,14 +9,18 @@ params until the model's front silhouette matches the drawing, and commits the n
 `tune.json`, which the recipe imports — every build (CLI, gallery, gate) reads the same values.
 Signature: high shoulders, a narrow stem foot, a tall neck with a flared, rolled lip, two loop
 handles from neck to shoulder seated on thumb-pressed attachment pads, a potter's stamp (`LCF`
-cartouche) on the shoulder.
+in relief, in the jar's own clay, bent to the wall) on the shoulder.
 
-Surface and wear: matte terracotta (concrete strip, true-scale UVs) with throw rings toned in by
-height and a darker, sooted foot; `weather()` chips the lip bead and foot ring, runs a dark residue
-down from the lip on the pouring side and settles dust on the shoulder.
+Surface and wear: a recipe material (`terracotta.ts`: 1.6 cm throw-ring relief, sandy grit, firing
+mottle, matte) tinted by vertex colour: a darker foot, grey-buff burial soil caked up to a ragged
+tide line 8–18 cm high, a wine-dark residue ring under the lip with seven runs down the neck and
+shoulder on the side the hero camera sees, a red-ochre titulus pictus (`VIN XII`) beside the
+potter's stamp; `weather()` chips the lip bead and foot ring and settles dust on the shoulder.
 
-LOD: 40 / 20 / 6 profile stations and 36 / 18 / 14 sides; LOD2 closes the mouth, drops the rolled
-lip, pads and stamp (≈ 4.3k / 1.3k / 276 triangles, inside the prop band).
+LOD: 40 / 20 profile stations at LOD0 / LOD1 and 36 / 18 sides; LOD2 has one station per feature
+(foot rim, stem, lower body, belly, shoulder, neck, lip roll) at 14 sides, closes the mouth, drops
+the pads, stamp, titulus, runs and chips, and keeps the soil, foot and lip colour as bands by
+height (≈ 4.75k / 1.34k / 288 triangles, inside the prop band).
 
 ## Specs
 | Dimension | Value (m) | Source |

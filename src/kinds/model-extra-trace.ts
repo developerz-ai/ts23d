@@ -8,7 +8,7 @@
 // is split and its midpoints tested, so a gap narrower than a cell between two solids is not
 // crossed. Deterministic: fixed grid, fixed neighbour order, ties broken by cell index.
 
-import { type Mesh, Ts23dError, type Vec3 } from '../core/index.ts';
+import { dmath, type Mesh, Ts23dError, type Vec3 } from '../core/index.ts';
 import { triBvh } from '../primitives/index.ts';
 
 export interface TraceOptions {
@@ -19,7 +19,7 @@ export interface TraceOptions {
 }
 
 /** Grid cells one trace may hold: 16 bytes each (depth, cost, back), about 256 MiB (D343). */
-const MAX_CELLS = 2 ** 24;
+const MAX_CELLS = 16777216 /* 2^24 */;
 /** Segment pieces shorter than this many cells are not split further (gaps under it go unseen). */
 const FINEST = 1 / 32;
 
@@ -90,7 +90,7 @@ export function tracePath(mesh: Mesh, from: Vec3, to: Vec3, o: TraceOptions): Ve
   if (!(nx * ny * nz <= MAX_CELLS))
     throw new Ts23dError('T3D_MODEL_SKELETON', {
       cause: `tracePath: a ${nx}×${ny}×${nz} grid is ${(nx * ny * nz).toExponential(2)} cells, over the ${MAX_CELLS} one trace may allocate`,
-      fix: `use a coarser cell (about ${(o.cell * Math.cbrt((nx * ny * nz) / MAX_CELLS)).toPrecision(2)} m or more), a smaller pad, or trace the limb in pieces between closer points`,
+      fix: `use a coarser cell (about ${(o.cell * dmath.cbrt((nx * ny * nz) / MAX_CELLS)).toPrecision(2)} m or more), a smaller pad, or trace the limb in pieces between closer points`,
     });
   const bvh = triBvh(mesh);
   const at = (i: number): Vec3 => [
@@ -159,7 +159,7 @@ export function tracePath(mesh: Mesh, from: Vec3, to: Vec3, o: TraceOptions): Ve
       const j = u + nx * (v + ny * w);
       const d = depthOf(j);
       if (d < 0) continue;
-      const len = Math.hypot(dx, dy, dz) * o.cell;
+      const len = dmath.hypot(dx, dy, dz) * o.cell;
       const di = depth[i] ?? 0;
       if (!through(at(i), di, at(j), d, len)) continue;
       const deep = Math.max(d, o.cell * 0.05);

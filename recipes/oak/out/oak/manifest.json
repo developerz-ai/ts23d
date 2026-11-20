@@ -18,8 +18,8 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    16240,
-    2666,
+    16658,
+    2858,
     306
   ],
   "drawCalls": [
@@ -57,21 +57,21 @@
     }
   ],
   "real": {
-    "length": 22,
-    "width": 22,
-    "height": 22
+    "length": 24,
+    "width": 24,
+    "height": 20
   },
   "measures": [
     {
       "label": "trunk diameter at breast height",
       "spec": 1.3,
-      "measured": 1.3000000715255737,
+      "measured": 1.3,
       "source": "recipes/oak/README.md"
     },
     {
       "label": "total height",
-      "spec": 22,
-      "measured": 21.8824520111084,
+      "spec": 20,
+      "measured": 19.924742,
       "source": "recipes/oak/README.md"
     }
   ],

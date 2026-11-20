@@ -2,6 +2,7 @@
 // limits. Validates `ctx.bone` one bone at a time and whole skeletons from any source (kinds,
 // imported rigs, neural `rig` output); re-frames a child's bones under `ctx.use` (ADR 013).
 
+import * as dmath from './dmath.ts';
 import { Ts23dError } from './errors.ts';
 import { checkStretch } from './limit-tolerance.ts';
 import type { Vec3 } from './vec.ts';
@@ -61,7 +62,7 @@ export function boneOf(asset: string, name: string, o: BoneOptions): Bone {
     invalid(where, 'name is not snake_case', 'rename it, e.g. spine_0, thigh_l');
   if (!finite(o.head) || !finite(o.tail))
     invalid(where, 'head or tail is not a finite point', 'pass metres, e.g. head: [0, 0, 1]');
-  const len = Math.hypot(o.tail[0] - o.head[0], o.tail[1] - o.head[1], o.tail[2] - o.head[2]);
+  const len = dmath.hypot(o.tail[0] - o.head[0], o.tail[1] - o.head[1], o.tail[2] - o.head[2]);
   if (len < 1e-6)
     invalid(where, 'head and tail coincide', 'give the bone a length: tail at the next joint');
   if (o.parent === name) invalid(where, 'parents to itself', 'parent it to the bone above it');
@@ -76,7 +77,7 @@ export function boneOf(asset: string, name: string, o: BoneOptions): Bone {
 }
 
 function checkLimit(where: string, l: JointLimit): void {
-  if (!finite(l.axis) || Math.hypot(...l.axis) < 1e-9)
+  if (!finite(l.axis) || dmath.norm(l.axis) < 1e-9)
     invalid(where, 'limit axis is zero or not finite', 'pass the hinge axis, e.g. [0, 1, 0]');
   const ok = (d: number): boolean => Number.isFinite(d) && Math.abs(d) <= 180;
   if (!ok(l.min) || !ok(l.max) || l.min > 0 || l.max < 0)

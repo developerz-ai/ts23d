@@ -20,19 +20,19 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    19272,
-    6614,
+    19188,
+    6704,
     2090
   ],
   "trianglesCompiled": [
-    19488,
-    6614,
+    19404,
+    6704,
     2090
   ],
   "drawCalls": [
     15,
     15,
-    13
+    12
   ],
   "pivots": [
     {
@@ -169,37 +169,37 @@
     {
       "label": "fuselage width",
       "spec": 3.7,
-      "measured": 3.700000047683716,
+      "measured": 3.7,
       "source": "design spec (CH-47 fuselage 3.78 m)"
     },
     {
       "label": "fuselage depth",
       "spec": 3,
-      "measured": 3.000000238418579,
+      "measured": 3,
       "source": "design spec (CH-47 cabin 1.98 m + floor and roof structure)"
     },
     {
       "label": "nacelle centres",
       "spec": 11.1,
-      "measured": 11.099999904632568,
+      "measured": 11.1,
       "source": "design spec (V-22 rotor centres ≈ 14.2 m, ducted fans sit closer)"
     },
     {
       "label": "main gear track",
       "spec": 4.1,
-      "measured": 4.099999964237213,
+      "measured": 4.1,
       "source": "design spec"
     },
     {
       "label": "nacelle length",
       "spec": 4.2,
-      "measured": 4.199999809265137,
+      "measured": 4.2,
       "source": "design spec"
     },
     {
       "label": "ramp width",
       "spec": 2.8,
-      "measured": 2.799999952316284,
+      "measured": 2.8,
       "source": "design spec"
     }
   ],

@@ -1,130 +1,67 @@
 {
   "asset": "wolf",
   "reviewer": "agent",
-  "overall": 6,
+  "overall": 6.4,
   "scores": {
     "silhouette": {
       "score": 7,
-      "reason": "Long legs, tucked waist, neck forward, upright ears, brush tail and fur cards on back and chest: reads as a wild canid; the narrow long muzzle and slim chest still read coyote rather than grey wolf (unchanged since last round).",
+      "reason": "Fur cards now cover the back, flanks, chest and tail, so the outline is shaggy and wild; but the back slopes steeply from high shoulders to low hips and the long narrow muzzle stays, so 3/4 REAR and SIDE read hyena/coyote more than grey wolf.",
       "fixes": [
-        "broaden the muzzle and skull and deepen the chest"
+        "level the topline (raise the hips or lower the withers ~5 cm)",
+        "broaden the muzzle and skull"
       ]
     },
     "proportions": {
       "score": 6,
-      "reason": "1.3 x 0.3 x 0.9 m fits the sourced box; by eye the head is still small with a long thin snout, ears large, and the forelegs thin and long for a wolf.",
+      "reason": "1.3 x 0.3 x 0.9 m fits the sourced box; chest deeper and ears smaller now, but the head is still small with a long thin snout and the forelegs thin under the heavy fur.",
       "fixes": [
         "skull width ~0.55 of skull length with a shorter, deeper muzzle",
-        "ears ~15% smaller",
         "thicker forearms"
       ]
     },
     "materials": {
-      "score": 6,
-      "reason": "Agouti saddle darker now, buff flanks, cream chest no longer lilac, glossy nose; fur cards break the outline on the back, but the flanks and legs still read as smooth painted velvet.",
+      "score": 7,
+      "reason": "Fur cards over flanks and shoulders now give a real coat read, agouti saddle over buff flanks and cream chest; pinkish-lilac streaks on the shoulder read as paint, not fur.",
       "fixes": [
-        "fur cards or shells over flanks and shoulders, not only the fringe"
+        "remove the pink tint from the shoulder streaks (grey-brown matting instead)"
       ]
     },
     "detail": {
-      "score": 6,
-      "reason": "Eyes with lids, nose, lip line, toes with claws, ear interiors, chest ruff; no hair-flow relief on the flanks, no cheek ruff.",
+      "score": 7,
+      "reason": "Hair-flow fur cards, chest ruff and cheek fringe, eyes with lids, nose, lip line, toes with claws.",
       "fixes": [
-        "guard-hair relief following the hair flow",
-        "cheek ruff and brow tufts"
+        "brow tufts and a darker lip margin",
+        "guard-hair tips along the spine"
       ]
     },
     "wear": {
-      "score": 5,
-      "reason": "Darker lower legs suggest a little dirt; no matted fur, no mud on paws or belly, no scars.",
+      "score": 6,
+      "reason": "Lower legs and paws are now dark with mud and the flank shows streaks; but the mud is an even dark sock with a hard line, and the streaks read as pink paint rather than matted fur or scars.",
       "fixes": [
-        "mud on paws and lower legs (grime ground mask)",
-        "matted streaks on the flank and a nick in one ear"
+        "mud splashes graded up from the paws, heaviest at the toes",
+        "matted grey-brown flank streaks and a nick in one ear"
       ]
     },
     "lod": {
       "score": 5,
-      "reason": "lods.png: LOD2 (2.6k) keeps pose and outline, but every fur card goes, the agouti saddle washes to one tan-grey, the head turns blocky, legs become plain tubes with bun-shaped paws, and a dark sliver shows on the back: an obvious pop.",
+      "reason": "FAR LOD2 (3.6k) keeps pose and a few back cards, but the coat turns a pale tan with no saddle, the legs are blocky tubes and the paws buns: a strong pop against the dark shaggy LOD0.",
       "fixes": [
-        "paint the agouti saddle and pale chest into LOD2 vertex colour",
-        "8-sided legs and shaped paws at LOD2 within budget",
-        "a few silhouette fur cards on the back and tail at LOD2"
+        "paint the agouti saddle and dark legs into LOD2 vertex colour",
+        "fur cards on flanks and tail at LOD2",
+        "8-sided legs and shaped paws at LOD2"
       ]
     },
     "technical": {
       "score": 7,
-      "reason": "QA PASS: 121k / 27.9k / 2.6k tris, 4 / 4 / 1 draws; most LOD0 triangles still go to smooth flanks.",
+      "reason": "QA PASS: 106.9k / 29.4k / 3.6k tris, 4 / 4 / 2 draws; LOD2 grew to 3.6k triangles while still popping.",
       "fixes": [
-        "adaptive cell size: finer on head and paws, coarser on flanks"
+        "adaptive cell size: finer on head and paws, coarser on flanks",
+        "spend LOD2 triangles on fur cards instead of flank tessellation"
       ]
     }
   },
   "renders": {
-    "hero.png": "d6dee2b1750d86c0fe5b88f51d3d6336d73eb241a3468b6768065d234f4471aa",
-    "sheet.png": "64db3239441d5b2ea3aa0119e77ebd90218e7b30bda44e8b91bc08d74b73136d"
-  },
-  "metrics": {
-    "silhouette": [
-      {
-        "view": "front",
-        "iou": 0.894
-      },
-      {
-        "view": "side",
-        "iou": 0.869
-      },
-      {
-        "view": "3/4",
-        "iou": 0.895
-      }
-    ],
-    "focal": {
-      "peakPart": "head",
-      "peak": [
-        488,
-        152
-      ],
-      "focalShare": 0.213,
-      "focalArea": 0.175,
-      "top": [
-        {
-          "part": "fur",
-          "share": 0.469
-        },
-        {
-          "part": "body",
-          "share": 0.296
-        },
-        {
-          "part": "head",
-          "share": 0.209
-        }
-      ],
-      "declared": [
-        "head"
-      ]
-    },
-    "rest": {
-      "share": 0.093,
-      "spread": 0.383,
-      "min": 0.25
-    },
-    "grounded": {
-      "rise": 0.163,
-      "bands": [
-        0.257,
-        0.331,
-        0.416,
-        0.375,
-        0.398
-      ]
-    },
-    "shape": {
-      "acuteShare": 0.283,
-      "straightShare": 0.486,
-      "taper": -0.603,
-      "shape": "friendly",
-      "declared": "friendly"
-    }
+    "hero.png": "fe7bca44e79167309b1acbb5a82694ae14dd2f0d9cd238b77ee3669fc9bce38a",
+    "sheet.png": "8f6015080abb213e2de394f4e1d6aaec4c466e74c58b4e94f8b1003bc3545e43"
   }
 }

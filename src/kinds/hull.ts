@@ -5,6 +5,7 @@
 
 import {
   type BuildContext,
+  dmath,
   type Lod,
   type Mesh,
   MeshBuilder,
@@ -34,7 +35,7 @@ function deckMesh(o: HullOptions, ln: HullLines, xs: readonly number[], inset: n
     const at = (x: number, y: number): Vec3 => {
       const h = yd(x);
       const c = Math.max(-h, Math.min(h, y));
-      return [x, c, ln.deck(x) + (h > 0 ? camber * (1 - (c / h) ** 2) : 0)];
+      return [x, c, ln.deck(x) + (h > 0 ? camber * (1 - dmath.pow(c / h, 2)) : 0)];
     };
     for (let i = 0; i + 1 < xs.length; i++) {
       const x0 = xs[i] ?? 0;
@@ -76,7 +77,7 @@ export function hullMesh(o: HullOptions, lod: Lod = 0): HullMesh {
   // Cosine spacing: stations crowd the bow and stern where the shape turns.
   const xs = Array.from(
     { length: stations + 1 },
-    (_, i) => -half + (o.length * (1 - Math.cos((Math.PI * i) / stations))) / 2,
+    (_, i) => -half + (o.length * (1 - dmath.cos((Math.PI * i) / stations))) / 2,
   );
   const boot = bootTop(o);
   const hb = o.bulwark ?? 0;
@@ -100,7 +101,7 @@ export function hullMesh(o: HullOptions, lod: Lod = 0): HullMesh {
   for (const row of nrm) {
     const n = row[0];
     if (n) {
-      const l = Math.hypot(n[0], n[2]) || 1;
+      const l = dmath.hypot(n[0], n[2]) || 1;
       row[0] = [n[0] / l, 0, n[2] / l];
     }
   }
@@ -123,7 +124,7 @@ export function hullMesh(o: HullOptions, lod: Lod = 0): HullMesh {
     const w = deckBand(o, lod);
     for (let y = Math.ceil(o.beam / 2 / w) * w; y > -o.beam / 2; y -= w) {
       if (hb === 0 && Math.abs(y) < yd - 1e-9)
-        arc.push([x, y, ln.deck(x) + (o.camber ?? o.beam / 50) * (1 - (y / yd) ** 2)]);
+        arc.push([x, y, ln.deck(x) + (o.camber ?? o.beam / 50) * (1 - dmath.pow(y / yd, 2))]);
     }
     parts.push(transom(dedupe([...port.slice(0, -1), ...star, ...arc]), c.topsides));
   }

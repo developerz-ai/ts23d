@@ -1,10 +1,11 @@
 // Type specimen: a free-standing notice board that shows every `text()` face, each row set twice,
 // as flush painted decals (left column, cream) and as raised cast letters (right column, brass).
 // Faces: the built-in 5 × 7 pixel font ('5x7', 'block') and the Hershey stroke fonts ('sans',
-// 'serif', 'script', 'gothic'). The board is eight tongue-and-groove planks under a gabled hood on
-// two bracketed posts, bolted through back battens; the top planks are sun-faded, the frame chipped,
-// the post feet damp. LOD policy: LOD0 raised brass at 2 curve steps; LOD1 every row flush at 1
-// step; LOD2 sets each word as a greeked bar in its colour, so both columns still read at distance.
+// 'serif', 'script', 'gothic'). The board is eight tongue-and-groove planks under a felted, gabled
+// hood on two bracketed posts, bolted through back battens; the paint fades up the board, rain
+// streaks run from the capping, the frame is chipped, the post feet damp. LOD policy: LOD0 raised
+// polished brass at 2 curve steps (flush rows 1); LOD1 every row flush at 1 step; LOD2 sets each
+// word as a greeked bar in its colour, so both columns still read at distance.
 // Board faces +X, reads along +Y.
 
 import {
@@ -23,15 +24,19 @@ import {
   type Vec3,
   weather,
 } from '@developerz.ai/ts23d';
+import { POLISHED_BRASS } from './brass.ts';
 
 const GREEN = hex('#1d3a2f');
-const FADED = hex('#4f6a5c');
+const FADED = hex('#7d9488');
 const FRAME = hex('#6b4c30');
 const POST = hex('#5e4430');
-const HOOD = hex('#3a3f3c');
+const HOOD = hex('#d8d8d8');
 const CREAM = hex('#ece4cc');
 const BRASS = hex('#b8913f');
 const IRON = hex('#3c3a37');
+const STREAK = hex('#0d1813');
+const CHIP = hex('#8a8272');
+const FASCIA = hex('#4a3524');
 
 const FACE_X = 0.1; // board front face
 const BOTTOM = 0.8;
@@ -84,10 +89,11 @@ function greek(str: string, l: Line): Mesh[] {
     const w = measureText(word, m) * scale;
     out.push(
       box({
-        size: [0.002, w, l.height * 0.6],
+        // 90 % of the word, centred: the word break stays open at distance.
+        size: [0.002, w * 0.9, l.height * 0.6],
         at: [FACE_X + 0.001, start + at * scale + w / 2, l.z + l.height * 0.2],
         color: l.color,
-        strip: l.depth > 0 ? 'brass' : 'plain',
+        strip: l.depth > 0 ? POLISHED_BRASS : 'plain',
         omit: ['back', 'left', 'right', 'top', 'bottom'],
       }),
     );
@@ -109,30 +115,98 @@ function line(str: string, l: Line, lod: Lod): Mesh[] {
       depth: lod === 0 ? l.depth : 0,
       align: l.align ?? 'left',
       maxWidth: l.maxWidth ?? 1.36,
-      segments: SEGMENTS[lod],
-      strip: l.depth > 0 ? 'brass' : 'plain',
+      // Flush rows are paint: one curve step is enough for a decal's outline.
+      segments: l.depth > 0 ? SEGMENTS[lod] : 1,
+      strip: l.depth > 0 ? POLISHED_BRASS : 'plain',
       ...(l.weight === undefined ? {} : { weight: l.weight }),
     }),
   ];
 }
 
-/** Eight horizontal planks, the top ones sun-faded toward a grey green; seams by tone. */
+/**
+ * Eight horizontal planks. The sun reaches the upper board under the short hood: paint fades
+ * toward a chalky grey green up the top four planks, continuously (each plank's upper corners
+ * paler than its lower); damp darkens the bottom plank. Seams by tone.
+ */
+/** Sun-faded paint at height z: green below mid-board, 90 % toward the faded tone at the top. */
+function paintAt(z: number): Vec3 {
+  const f = 0.9 * Math.min(1, Math.max(0, (z - BOTTOM - 0.45 * HEIGHT) / (0.5 * HEIGHT)));
+  return [0, 1, 2].map((k) => (GREEN[k] ?? 0) * (1 - f) + (FADED[k] ?? 0) * f) as unknown as Vec3;
+}
+
 function planks(): Mesh[] {
   const h = HEIGHT / PLANKS;
   return Array.from({ length: PLANKS }, (_, i) => {
-    // Fade grows over the top three planks (sun on the upper board under a short hood).
-    const fade = Math.max(0, (i - (PLANKS - 4)) / 3) * 0.75;
     const tone = i % 2 === 0 ? 1 : 0.92;
-    const c: Vec3 = [0, 1, 2].map(
-      (k) => ((GREEN[k] ?? 0) * (1 - fade) + (FADED[k] ?? 0) * fade) * tone,
-    ) as unknown as Vec3;
-    return box({
+    const plank = box({
       size: [0.05, WIDTH, h],
       at: [0.075, 0, BOTTOM + i * h],
-      color: c,
+      color: GREEN,
       strip: 'wood_painted',
     });
+    const colors = new Float32Array(plank.colors);
+    for (let v = 0; v < colors.length / 3; v++) {
+      const c = paintAt(plank.positions[v * 3 + 2] ?? 0);
+      const damp = i === 0 ? 0.72 : 1;
+      for (let k = 0; k < 3; k++) colors[v * 3 + k] = (c[k] ?? 0) * tone * damp;
+    }
+    return { ...plank, colors };
   });
+}
+
+/**
+ * Close-up wear on the face (LOD0/1), as 1 mm-proud quads: rain run down from the capping in dark
+ * streaks (each fading out downward, vertex colours interpolate), and the frame's arrises chipped
+ * through to grey timber.
+ */
+function faceWear(): Mesh[] {
+  const quad = (
+    y: number,
+    z: number,
+    w: number,
+    hh: number,
+    top: Vec3,
+    bottom: Vec3,
+    x = FACE_X,
+  ) => {
+    const q = box({
+      size: [0.001, w, hh],
+      at: [x + 0.0005, y, z],
+      color: top,
+      strip: 'wood_painted',
+      omit: ['back', 'left', 'right', 'top', 'bottom'],
+    });
+    const colors = new Float32Array(q.colors);
+    for (let v = 0; v < colors.length / 3; v++)
+      if ((q.positions[v * 3 + 2] ?? 0) < z + hh / 2) colors.set(bottom, v * 3);
+    return { ...q, colors };
+  };
+  const out: Mesh[] = [];
+  // Rain streaks under the capping, between the letter columns' ends.
+  for (const [y, w, len] of [
+    [-1.5, 0.07, 0.75],
+    [-1.1, 0.045, 0.32],
+    [-0.62, 0.06, 0.4],
+    [0.02, 0.07, 0.55],
+    [0.95, 0.05, 0.45],
+    [1.47, 0.08, 0.8],
+  ] as const) {
+    // Darkest where the water leaves the capping, gone into the paint at its foot.
+    const z0 = TOP - 0.06 - len;
+    out.push(quad(y, z0, w, len, STREAK, paintAt(z0)));
+  }
+  // Chips on the frame's front arrises: bare grey timber.
+  const fx = FACE_X + 0.03;
+  for (const [y, z, w, hh] of [
+    [-1.2, BOTTOM + 0.045, 0.09, 0.012],
+    [0.4, BOTTOM + 0.04, 0.05, 0.015],
+    [1.05, TOP - 0.02, 0.08, 0.012],
+    [-0.5, TOP - 0.018, 0.12, 0.01],
+    [-1.585, BOTTOM + 0.6, 0.012, 0.1],
+    [1.585, BOTTOM + 1.2, 0.012, 0.07],
+  ] as const)
+    out.push(quad(y, z, w, hh, CHIP, CHIP, fx));
+  return out;
 }
 
 /** Frame moulding, capping, gabled hood, brackets: the wood that weathers. */
@@ -166,9 +240,21 @@ function joinery(lod: Lod): Mesh[] {
         [-0.13, z0 + 0.03],
       ],
       color: HOOD,
-      strip: 'slate',
+      // Bitumen roofing felt: a dark granular finish.
+      strip: 'asphalt',
     }),
   );
+  // Fascia boards along both eaves, capping the felt's edge (LOD0).
+  if (lod === 0)
+    for (const x of [0.265, -0.125])
+      out.push(
+        box({
+          size: [0.02, WIDTH + 0.32, 0.05],
+          at: [x, 0, z0 - 0.015],
+          color: FASCIA,
+          strip: 'wood',
+        }),
+      );
   // Brackets under the front eave, over each post (LOD0/1: the hood reads on its own at LOD2).
   if (lod < 2)
     for (const s of [-1, 1])
@@ -245,13 +331,13 @@ export const type_specimen = defineAsset({
       },
     );
     ctx.part('posts', worn.posts);
-    const parts: Mesh[] = [worn.joinery, ...planks()];
+    const parts: Mesh[] = [worn.joinery, ...planks(), ...(lod < 2 ? faceWear() : [])];
     parts.push(
       box({
         size: [0.006, 0.02, 1.36],
         at: [FACE_X + 0.003, 0, BOTTOM + 0.12],
         color: BRASS,
-        strip: 'brass',
+        strip: POLISHED_BRASS,
       }),
     );
     if (lod < 2)
@@ -259,14 +345,14 @@ export const type_specimen = defineAsset({
       for (const y of [-POST_Y, POST_Y])
         for (const z of [BOTTOM + 0.3, TOP - 0.3]) {
           parts.push(
-            box({ size: [0.004, 0.04, 0.04], at: [FACE_X + 0.002, y, z - 0.02], color: IRON }),
+            box({ size: [0.005, 0.06, 0.06], at: [FACE_X + 0.0025, y, z - 0.03], color: IRON }),
             cylinder({
-              radius: 0.012,
-              length: 0.008,
-              segments: lod === 0 ? 8 : 6,
+              radius: 0.018,
+              length: 0.012,
+              segments: lod === 0 ? 8 : 4,
               color: IRON,
               strip: 'iron',
-              at: [FACE_X + 0.006, y, z],
+              at: [FACE_X + 0.009, y, z],
               axis: 'x',
             }),
           );

@@ -32,16 +32,18 @@ track with a guide horn on every other link; the turret set well forward.
 Markings modelled: «LIDICE» in white block capitals on both rear-side turret faces (1943 only).
 The 1941 variant is unmarked, since no dated photo of a marked 1941 turret was found.
 
-## Finish and wear (`field.ts`, shared with `tiger_1`)
+## Finish and wear (`../_lib/finish/field.ts` and `afv.ts`, shared with `tiger_1`)
 | What | How | Where it is measured |
 |---|---|---|
 | 4BO green | project material `armour_paint` (matte film, 8 % flakes) at true scale; vertex colour = the paint | — |
-| plate-edge chipping | `chipFlecks`: 420 (hull) + 170 (turret) ragged flecks 1.5 mm proud, crowded against plate edges; weld beads laid in 12 cm runs (painted, rubbed to steel, rusted) | geometry (LOD0) |
-| edge rub, mud, rust runs | `weather()` through `fieldWear`: chips on convex edges 40 %, dried mud over 50 % of the 2 m splash band, rust streaking down from the rail stanchions and exhaust flanges | manifest `weather`, QA `weather` |
-| road dust | a soft haze on up-facing plates (0.24; half at LOD2) | — |
-| wheels | radial mud (`wheelMud`): packed on tyre and rim, ragged toward the hub, turns with the wheel | — |
+| plate-edge chipping | `chipFlecks`: 300 (hull) + 170 (turret) ragged flecks 1.5 mm proud, crowded against plate edges; weld beads 3.6 cm wide laid in 12 cm runs (dark painted, rubbed to steel, rusted) | geometry (LOD0) |
+| edge rub, rust runs | `weather()` through `fieldWear`: chips on 8 % of the convex edges (12 % on fittings; more smeared into an all-over mottle that read as camouflage), rust streaking down from the rail stanchions and exhaust flanges | manifest `weather`, QA `weather` |
+| mud | `fieldGrade` (`afv.ts`): dried earth opaque at the ground and gone at 1.75 m (a third higher at the tail), wet mud under it; a smooth field of height, so LOD2's plate corners carry the same grade | — |
+| road dust | an even haze (0.45) only on plates that face the sky (deck, turret roof, part of the 60° glacis; none on the 40° sides) | — |
+| wheels | `wheelDirt`: dark rubber tyre under a thin dusting, mud packed in the outer dish, hub, ribs and bolts in paint; turns with the wheel. LOD2: an 8-sided wheel of 28 triangles (tread wall, tyre face, disc polygon with the near dish's mean mud), so tyre and disc keep their colours at the switch | — |
 | track | dark manganese steel plate, road-polished grouser bars, mud packed between them; one link finished and laid round the belt (the `treads` gate needs every link alike) | QA `treads` |
-| exhaust | soot plumes up the rear plate from both pipes; muzzle blackened | — |
+| exhaust | a soft soot fan (1.25 m, 0.75 strength: grey-black, edge fading over half a metre) on the rear plate round each pipe, reaching the deck's tail; muzzle blackened | — |
+| stowage | sheet-steel box on the right side plate with a dark lid lip, two strap bands and steel hasps; rusted tow cables (4.2 cm) along both side plates | geometry (LOD0) |
 
 The turret is a casting: plan corners filleted, wall rolled into the roof over a 7.5 cm radius
 (`castShell`; LOD1 one chamfer, LOD2 sharp).
@@ -69,6 +71,6 @@ dimensioned drawing in the sources above gives the ring station).
   option (glyph set) is left for a follow-up.
 - The fuel drums push the width to 3.13 m (still inside the 5% box). On the real tanks they sit
   just as proud of the side plates.
-- Triangles 58.1k / 12.6k / 1.49k (1941: 57.2k / 12.3k / 1.45k): LOD2 is now inside the AFV
+- Triangles 57.8k / 12.6k / 1.46k (1941: 56.9k / 12.3k / 1.42k): LOD2 is now inside the AFV
   playbook band (≤ 1.5k), so the `t34` / `t34_1941` rows in `scripts/lib/budget-baseline.ts` can go.
 - 19 draws: one per spinning wheel pivot, track, turret and gun; the static hull is one.

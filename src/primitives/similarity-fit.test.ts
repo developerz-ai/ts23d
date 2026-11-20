@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'bun:test';
 import type { Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import {
   applySimilarity,
   composeSimilarity,
@@ -13,7 +14,7 @@ const box =
   (h: Vec3) =>
   (p: Vec3): number => {
     const q = [Math.abs(p[0]) - h[0], Math.abs(p[1]) - h[1], Math.abs(p[2]) - h[2]];
-    const out = Math.hypot(Math.max(q[0] ?? 0, 0), Math.max(q[1] ?? 0, 0), Math.max(q[2] ?? 0, 0));
+    const out = dmath.hypot(Math.max(q[0] ?? 0, 0), Math.max(q[1] ?? 0, 0), Math.max(q[2] ?? 0, 0));
     return out + Math.min(Math.max(q[0] ?? 0, q[1] ?? 0, q[2] ?? 0), 0);
   };
 
@@ -42,7 +43,7 @@ describe('similarityFit', () => {
     for (const p of src) {
       const a = applySimilarity(fit, p);
       const b = applySimilarity(truth, p);
-      expect(Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2])).toBeLessThan(1e-9);
+      expect(dmath.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2])).toBeLessThan(1e-9);
     }
   });
 

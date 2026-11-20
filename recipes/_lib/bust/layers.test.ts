@@ -3,7 +3,7 @@
 // tint on what faces up only. Failure first: a mixed triangle and a buried-shell pick.
 
 import { describe, expect, it } from 'bun:test';
-import { box, type Mesh, sculpt, type Vec3 } from '@developerz.ai/ts23d';
+import { box, dmath, type Mesh, sculpt, type Vec3 } from '@developerz.ai/ts23d';
 import { faceBlocks, type GarmentLayer, outermostColours, settled } from './layers.ts';
 
 const colourAt = (m: Mesh, i: number): Vec3 => [
@@ -63,7 +63,7 @@ describe('outermostColours', () => {
     part: 'clothes',
     edits: [
       {
-        field: (p) => Math.abs(Math.hypot(p[0], p[1], p[2]) - r) - 0.002,
+        field: (p) => Math.abs(dmath.hypot(p[0], p[1], p[2]) - r) - 0.002,
         bounds: [
           [-0.2, -0.2, -0.2],
           [0.2, 0.2, 0.2],

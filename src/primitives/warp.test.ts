@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { Ts23dError, type Vec3 } from '../core/index.ts';
+import { dmath, Ts23dError, type Vec3 } from '../core/index.ts';
 import { box } from './box.ts';
 import { warpTPS } from './warp.ts';
 import { tpsWarp } from './warp-solve.ts';
@@ -169,8 +169,8 @@ describe('tpsWarp / warpTPS', () => {
     // The front face (normal +X) of a box sheared in x by z turns to (1, 0, −0.5)/|·|.
     for (let v = 0; v < m.normals.length; v += 3)
       if ((m.normals[v] ?? 0) > 0.99) {
-        expect(out.normals[v] ?? 0).toBeCloseTo(1 / Math.hypot(0.5, 1), 5);
-        expect(out.normals[v + 2] ?? 0).toBeCloseTo(-0.5 / Math.hypot(0.5, 1), 5);
+        expect(out.normals[v] ?? 0).toBeCloseTo(1 / dmath.hypot(0.5, 1), 5);
+        expect(out.normals[v + 2] ?? 0).toBeCloseTo(-0.5 / dmath.hypot(0.5, 1), 5);
       }
     const again = warpTPS(m, CUBE, CUBE.map(shear));
     expect(again.positions).toEqual(out.positions);

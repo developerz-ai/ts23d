@@ -17,6 +17,7 @@ import {
   type CheckFinding,
   cylinder,
   defineAsset,
+  dmath,
   grime,
   hex,
   insideSolid,
@@ -57,6 +58,11 @@ const BLACK = hex('#17181a');
 const GLASS = hex('#3f7598');
 const GLOW = hex('#6fd2ff');
 const INTERIOR = hex('#4a5157');
+/** Canopy glazing: smoked blue, darker than the lit portholes. */
+const CANOPY = hex('#1c3649');
+const CANOPY_FAR = hex('#101d28');
+/** What shows behind the canopy glass: the unlit cockpit, matt and near black. */
+const COCKPIT = hex('#0d0f12');
 const STENCIL = hex('#d6d3c8');
 
 /** Authoring colour → material: painted hull plates (chips to bare metal), machined aluminium
@@ -199,13 +205,27 @@ function quad(a: Vec3, b: Vec3, c: Vec3, d: Vec3, color: Vec3, off = DECAL): Mes
   const u: Vec3 = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
   const v: Vec3 = [d[0] - a[0], d[1] - a[1], d[2] - a[2]];
   const n: Vec3 = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
-  const l = Math.hypot(...n) || 1;
+  const l = dmath.norm(n) || 1;
   const lift = (p: Vec3): Vec3 => [
     p[0] + (n[0] / l) * off,
     p[1] + (n[1] / l) * off,
     p[2] + (n[2] / l) * off,
   ];
   return planar({ points: [lift(a), lift(b), lift(c), lift(d)], color });
+}
+
+/** A flat triangle lifted `off` metres along its normal (CCW seen from the side it faces). */
+function tri(a: Vec3, b: Vec3, c: Vec3, color: Vec3, off = DECAL): Mesh {
+  const u: Vec3 = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
+  const v: Vec3 = [c[0] - a[0], c[1] - a[1], c[2] - a[2]];
+  const n: Vec3 = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
+  const l = dmath.norm(n) || 1;
+  const lift = (p: Vec3): Vec3 => [
+    p[0] + (n[0] / l) * off,
+    p[1] + (n[1] / l) * off,
+    p[2] + (n[2] / l) * off,
+  ];
+  return planar({ points: [lift(a), lift(b), lift(c)], color });
 }
 
 /** `quad`, wound so its normal points away from `centre` (seams around a ring). */
@@ -260,20 +280,16 @@ const toward = (c: Vec3, to: Vec3, k: number): Vec3 => {
 };
 
 /**
- * Exhaust scorch on a nacelle (its own frame: thrust leaves at z −2.1): soot black in the bore
- * and on the nozzle lip, burnt paint up the lowest metre of the cowl, a heat-browned band above.
+ * Exhaust scorch on a nacelle (its own frame: thrust leaves at z −2.1): soot black in the bore,
+ * on the nozzle lip and up the cowl to the lower armour ring, burnt brown paint above it,
+ * clean again a metre and a half up. The cowl has rings at −1.25, −0.85 and −0.1 to carry it.
  */
 const scorched = (m: Mesh): Mesh =>
   tint(m, (p, c) => {
-    const rho = Math.hypot(p[0], p[1]);
-    const low = 1 - smooth(-2.1, -0.95, p[2]);
+    const rho = dmath.hypot(p[0], p[1]);
     const bore = rho < 0.9 && p[2] < -1.2 ? 1 : 0;
-    const burnt = toward(
-      c,
-      [0.2, 0.15, 0.12],
-      0.5 * smooth(-1.4, -0.9, p[2]) * (1 - smooth(-0.9, -0.3, p[2])),
-    );
-    return toward(burnt, SOOT, Math.max(0.92 * bore, 0.85 * low ** 1.2));
+    const burnt = toward(c, [0.17, 0.11, 0.075], 0.75 * (1 - smooth(-1.0, -0.1, p[2])));
+    return toward(burnt, SOOT, Math.max(0.92 * bore, 0.94 * (1 - smooth(-1.5, -0.5, p[2]))));
   });
 
 /** Soot round the tail thrusters: the last metre of the boom and the fin roots beside them. */
@@ -314,8 +330,8 @@ const rampArc: Check = (asset) => {
     for (const y of [-RAMP_HW + 0.05, 0, RAMP_HW - 0.05])
       for (const z of [-0.11, 0.13]) corners.push([-0.05 - t * (RAMP_LEN - 0.05), y, z]);
   for (let a = RAMP_OPEN; a <= RAMP_CLOSED + 1e-9; a += 6) {
-    const c = Math.cos(a * DEG);
-    const sn = Math.sin(a * DEG);
+    const c = dmath.cos(a * DEG);
+    const sn = dmath.sin(a * DEG);
     for (const [x, y, z] of corners) {
       const p: Vec3 = [HINGE[0] + x * c + z * sn, y, HINGE[2] - x * sn + z * c];
       if (p[2] < -0.02)
@@ -395,10 +411,16 @@ export const dropship = defineAsset({
       { label: 'ramp width', axis: 'y', value: 2.8, parts: ['ramp'], source: 'design spec' },
     ],
   },
-  // Measured 19.3k / 6.6k / 2.09k (faired nose, hazard rings and hull number at every LOD).
+  // Measured 19.4k / 6.8k / 2.09k by the QA gate (faired nose, hazard rings and hull number at every LOD).
   // LOD0/1 include the per-triangle UV split that keeps hull textures at true scale.
   budget: { triangles: [19500, 6800, 2100] },
   checks: [symmetric('_l', '_r', 'y'), noOverlap('nacelle_*'), rampArc],
+  // Tinted armour glazing: a third of the light passes, the rest is the pane's own blue. Clear
+  // glass (transmission 1) reflects 4 % face-on, which the 16-sample beauty render returns as
+  // white speckle on whichever pane mirrors the key light.
+  optics: { glass: { transmission: 0.3, roughness: 0.1 } },
+  // Lower than the default 18°: the lens sees the scorched cowls, the sponson flank and the gear.
+  hero: { azDeg: -38, elDeg: 11 },
   // Thrusters burn brightest, nav lights read red / green / white at their own hue: lit, not
   // blown out (8 and 6 clipped them to white).
   glow: [
@@ -431,7 +453,9 @@ export const dropship = defineAsset({
     // ── fuselage: lofted nose + thick-walled cabin plates (a real hollow behind the ramp) ────
     const noseSub = ctx.pick([3, 2, 1]);
     const nose = noseStations(noseSub);
-    const fus: Mesh[] = [shell(nose.map(ringOf), hullColor)];
+    // Hard angle 42° on the nose: the section's chamfers (45° and more) stay creased, the few
+    // degrees between one station and the next shade as one curved panel instead of facets.
+    const fus: Mesh[] = [shell(nose.map(ringOf), hullColor, 42)];
     const outer = section(CABIN);
     const inner = section(CABIN, WALL);
     for (let i = 0; i < outer.length; i++) {
@@ -522,7 +546,7 @@ export const dropship = defineAsset({
           const bolt = cylinder({
             radius: 0.025,
             length: 0.02,
-            segments: 6,
+            segments: 4,
             axis: 'y',
             color: METAL,
           });
@@ -532,8 +556,8 @@ export const dropship = defineAsset({
           // round the main gear, drawn aft by the slipstream, stopping above the hazard band.
           for (const i of [7, 12, 13, 14, 15]) {
             const x = 2.8 - i * 0.33;
-            const len = rng.range(0.16, 0.34);
-            const w = rng.range(0.035, 0.07);
+            const len = rng.range(0.24, 0.36);
+            const w = rng.range(0.09, 0.17);
             const y = s * (sp.y1 + 0.045);
             const lean = rng.range(0.03, 0.09);
             bits.push(
@@ -721,6 +745,7 @@ export const dropship = defineAsset({
 
     // ── hull detail: canopy frames, portholes, crew door, nose sensor, greebles ──────────────
     const glass: Mesh[] = [];
+    const backing: Mesh[] = [];
     const detail: Mesh[] = [];
     const rings = nose.map(ringOf);
     // Panes follow the faired nose section by section; a hoop frames each design station.
@@ -732,7 +757,20 @@ export const dropship = defineAsset({
         if ((k === 2 || k === 6) && front) continue;
         const [a0, a1, b0, b1] = [r0[k], r0[k + 1], r1[k], r1[k + 1]];
         if (!a0 || !a1 || !b0 || !b1) continue;
-        glass.push(quad(a0, a1, b1, b0, GLASS, 0.02));
+        glass.push(quad(a0, a1, b1, b0, lod === 2 ? CANOPY_FAR : CANOPY, 0.02));
+        // The nose loft runs on under the panes: chipped, dusted hull paint 2 cm behind glass,
+        // which the key light reached through the pane and the path tracer returned as white
+        // speckle. A matt cockpit-shadow sheet seated on the skin covers it (never weathered).
+        // A nose panel is a twisted quad and the loft may split it on either diagonal, so the
+        // sheet is laid on both: whichever the skin uses, one pair lies 2 mm over it.
+        if (lod < 2)
+          for (const [p, q, r] of [
+            [a0, a1, b1],
+            [a0, b1, b0],
+            [a0, a1, b0],
+            [a1, b1, b0],
+          ] as const)
+            backing.push(tri(p, q, r, COCKPIT));
         if (lod === 0) {
           detail.push(beam({ from: a0, to: b0, width: 0.07, color: DARK }));
           detail.push(beam({ from: a1, to: b1, width: 0.07, color: DARK }));
@@ -741,7 +779,11 @@ export const dropship = defineAsset({
         }
       }
     }
-    part('canopy', merge(glass), { surface: 'glass' });
+    // Far, the canopy is its colour: opaque panes in the tone the smoked glass shows over the
+    // cockpit shade (no glass draw, no shade sheet under it).
+    if (lod === 2) ctx.part('canopy', merge(glass));
+    else part('canopy', merge(glass), { surface: 'glass' });
+    if (backing.length) ctx.part('canopy_shade', merge(backing));
     if (lod === 0) {
       // Panel seams (small): dark 3 cm lines around the skin at frame stations.
       const seam = (x: number, faces: readonly number[]): void => {
@@ -772,6 +814,30 @@ export const dropship = defineAsset({
         }
     }
     if (lod < 2) {
+      // Plates that are not the paint they left the yard in: two replaced roof panels in fresher
+      // grey, two older ones and the nose access hatches a tone darker. Each lies on one skin
+      // face between two frame stations, 3 cm clear of the seams.
+      const plate = (x0: number, x1: number, k: number, color: Vec3): void => {
+        const r0 = ringOf({ ...CABIN, x: x0 - 0.03 });
+        const r1 = ringOf({ ...CABIN, x: x1 + 0.03 });
+        const [a, b, c, d] = [r0[k], r0[(k + 1) % 10], r1[(k + 1) % 10], r1[k]];
+        if (a && b && c && d)
+          detail.push(quadOut(a, b, c, d, color, [(x0 + x1) / 2, 0, 2.8], DECAL));
+      };
+      plate(2.95, 0.95, 5, HULL_LIGHT);
+      plate(-0.95, -2.95, 5, PANEL);
+      plate(5.0, 2.95, 3, PANEL);
+      plate(0.95, -0.95, 3, HULL_LIGHT);
+      plate(-0.95, -2.95, 4, HULL);
+      // Ahead of the first porthole the tumblehome plates are older, darker stock.
+      plate(5.0, 3.45, 6, PANEL);
+      plate(5.0, 3.45, 2, PANEL);
+      for (let j = 3 * noseSub; j < 4 * noseSub; j++)
+        for (const k of [1, 7]) {
+          const [r0, r1] = [rings[j] ?? [], rings[j + 1] ?? []];
+          const [a, b, c, d] = [r0[k], r0[k + 1], r1[k + 1], r1[k]];
+          if (a && b && c && d) detail.push(quadOut(a, b, c, d, PANEL, [6.3, 0, 2.2], DECAL));
+        }
       // Portholes on the tumblehome (scale cue: a 2 m tall cabin, 0.32 m windows).
       const z0 = 3.15;
       const z1 = 3.47;
@@ -907,6 +973,13 @@ export const dropship = defineAsset({
           [0.88, -2.1],
           [0.98, -1.7],
           [POD_R, -1.25],
+          // Two more rings up the cowl (near and mid LOD) carry the scorch gradient.
+          ...(lod < 2
+            ? ([
+                [POD_R, -0.85],
+                [POD_R, -0.1],
+              ] as Vec2[])
+            : []),
           [POD_R, 1.6],
           [1.03, 1.98],
           [0.94, 2.1],
@@ -990,8 +1063,8 @@ export const dropship = defineAsset({
         const vent = merge([
           bevelled([0.07, 0.55, 1.1], PANEL, bv / 2),
           ...(lod === 0
-            ? Array.from({ length: 7 }, (_, i) =>
-                bevelled([0.04, 0.44, 0.03], DARK, 0, [0.04, 0, 0.14 + i * 0.13]),
+            ? Array.from({ length: 5 }, (_, i) =>
+                bevelled([0.04, 0.44, 0.04], DARK, 0, [0.04, 0, 0.15 + i * 0.19]),
               )
             : []),
         ]);
@@ -999,7 +1072,7 @@ export const dropship = defineAsset({
           pod.push(
             place(vent, {
               yaw: s * a,
-              at: [POD_R * Math.cos(s * a), POD_R * Math.sin(s * a), -0.55],
+              at: [POD_R * dmath.cos(s * a), POD_R * dmath.sin(s * a), -0.55],
             }),
           );
         if (lod === 0) {
@@ -1007,7 +1080,7 @@ export const dropship = defineAsset({
           // Each vane spans the nozzle bore (r ≈ 0.76 m there) chord to chord, ends sunk 3 cm.
           for (let i = 0; i < 4; i++) {
             const x = -0.45 + i * 0.3;
-            const span = 2 * Math.sqrt(0.76 ** 2 - x * x) + 0.06;
+            const span = 2 * Math.sqrt(0.76 * 0.76 - x * x) + 0.06;
             pod.push(bevelled([0.05, span, 0.22], DARK, 0, [x, 0, -2.0]));
           }
         }
@@ -1022,10 +1095,10 @@ export const dropship = defineAsset({
           const R = POD_R;
           pod.push(
             quad(
-              [R * Math.cos(a0), R * Math.sin(a0), 1.38],
-              [R * Math.cos(a1), R * Math.sin(a1), 1.38],
-              [R * Math.cos(a1), R * Math.sin(a1), 1.52],
-              [R * Math.cos(a0), R * Math.sin(a0), 1.52],
+              [R * dmath.cos(a0), R * dmath.sin(a0), 1.38],
+              [R * dmath.cos(a1), R * dmath.sin(a1), 1.38],
+              [R * dmath.cos(a1), R * dmath.sin(a1), 1.52],
+              [R * dmath.cos(a0), R * dmath.sin(a0), 1.52],
               k % 2 ? BLACK : HAZARD,
             ),
           );

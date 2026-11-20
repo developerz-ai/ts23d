@@ -5,6 +5,7 @@
 // the root and light at the tip, seeded so no two clumps match.
 
 import type { BuildContext, Field, Mesh, SculptEdit } from '@developerz.ai/ts23d';
+import { dmath } from '@developerz.ai/ts23d';
 import {
   add,
   chain,
@@ -31,7 +32,7 @@ const mix = (a: V, b: V, t: number): V => [
 /** The seam plane as a field: ≥ 0 on the head side. */
 export function seamField(): Field {
   const n = norm(L.seamN);
-  const off = L.seamZ / Math.hypot(L.seamN[0], L.seamN[1], L.seamN[2]);
+  const off = L.seamZ / dmath.hypot(L.seamN[0], L.seamN[1], L.seamN[2]);
   return (p) => p[0] * n[0] + p[1] * n[1] + p[2] * n[2] - off;
 }
 
@@ -40,8 +41,8 @@ export function seamRing(body: Surface, n: number, a0 = 0, a1 = 360): V[] {
   const seam = seamField();
   const seeds = Array.from({ length: n }, (_, i): V => {
     const a = ((a0 + ((a1 - a0) * i) / (n - 1)) * Math.PI) / 180;
-    const x = -0.03 + 0.2 * Math.cos(a);
-    return [x, 0.2 * Math.sin(a), L.seamZ - 0.35 * x];
+    const x = -0.03 + 0.2 * dmath.cos(a);
+    return [x, 0.2 * dmath.sin(a), L.seamZ - 0.35 * x];
   });
   return onCurve(body.field, seam, seeds);
 }

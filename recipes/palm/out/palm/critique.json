@@ -1,7 +1,7 @@
 {
   "asset": "palm",
   "reviewer": "agent",
-  "overall": 7.1,
+  "overall": 7.4,
   "scores": {
     "silhouette": {
       "score": 8,
@@ -25,11 +25,11 @@
       ]
     },
     "detail": {
-      "score": 6,
-      "reason": "Leaflets and dead fronds hold up; no coconut cluster or frond boots visible under the crown.",
+      "score": 7,
+      "reason": "Leaflets, dead hanging fronds and a small green coconut cluster at the crown now show in hero.png; no frond boots or fibre.",
       "fixes": [
-        "a coconut cluster large enough to read under the frond bases",
-        "frond boots and fibre at the crown"
+        "frond boots and fibre at the crown",
+        "enlarge the coconut cluster slightly"
       ]
     },
     "wear": {
@@ -40,22 +40,22 @@
       ]
     },
     "lod": {
-      "score": 6,
-      "reason": "FAR LOD2 thins the crown to a star of bare midribs: the leaflet mass vanishes and the crown pops lighter.",
+      "score": 7,
+      "reason": "FAR LOD2 now keeps leafy frond cards instead of bare midribs; the cards are darker and more solid than the LOD0 crown.",
       "fixes": [
-        "LOD2 frond cards with the alpha leaflet texture instead of thin strips"
+        "colour-match the LOD2 frond cards to the LOD0 mean and thin their alpha"
       ]
     },
     "technical": {
       "score": 8,
-      "reason": "8.9k / 3.4k / 196 triangles, 2 draws.",
+      "reason": "10.7k / 4k / 240 triangles, 2 draws.",
       "fixes": [
         "trim stem segments on the straight lower stem"
       ]
     }
   },
   "renders": {
-    "hero.png": "90bc112f2cadd93f7835264c9866165e0bf569c58d9e66bc4d8d15669c1f2d89",
-    "sheet.png": "7d1041c4fca0f80f67a0b3a575c9748d9d0f6f5e2e16eb0255058fa1877d8031"
+    "hero.png": "685f9b60188d4e73518de15bfb3288f15eeccc3cb4c49e6048499d13f9fe029d",
+    "sheet.png": "555c61901369aa466b648f3d2063118d76d9aa40d0124ce21578e37c255fd640"
   }
 }

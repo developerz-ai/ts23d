@@ -80,15 +80,26 @@ sheathing is timber at 600 kg/m³.
 ## Wear (`wear.ts`)
 Thirty years on the road, all of it in vertex colour plus a few thin decals, so every LOD and
 livery keeps it. The paint slot stores a tone (colour ÷ chip), so paint only loses value: the car
-is faded a step under the chip and a renewed board group (or single plank) is simply back at it.
-- Road grime rising from the rails: nearly opaque on the sill, ragged edge about a metre up.
-- Board groups (0.6 m bands) step lighter or darker; three renewed planks a side at the chip.
+is faded to about two thirds of the chip and a renewed board group (or single plank) is simply back at it.
+- Road grime rising from the rails: nearly opaque on the sill, ragged edge 1.2–2 m up; rain wash
+  in dark runs half a metre wide from the side plate down to handle height.
+- Board groups (0.6 m bands) step lighter or darker (one in seven renewed, back at the chip; one
+  in six soaked dark); three renewed planks a side at the chip.
 - Rust at the post feet and along the sill; soot and seam rust on the roof; brown rail dust on
   the trucks, underframe and brake gear.
-- Rust runs (LOD0/1): long ones down the door posts and under the top door guide, short ones
-  under the side plate, the bottom door track and the rivets.
+- Rust runs (LOD0/1), 7–16 cm wide: long ones down the door posts and under the top door guide,
+  short ones under the side plate, the bottom door track and the rivets.
+- Roof: one pair of slope quads per sheet (20 at LOD0, 10 at LOD1 and LOD2), each sheet its own
+  tone, seam caps 5.5 cm wide at LOD0. At LOD2 the sheets alternate dark and light, so the roof
+  keeps its seams as stripes.
+- Chalk (`chalk_marks`, LOD0): a crossed-out routing, a track number and tally strokes on the
+  boards beside the door, chalk-white on every livery.
 - LOD2 keeps the grime in the paint and carries the Howe-truss posts, diagonals and the door
-  frame as shadow-toned flat strips seated in the boards.
+  frame as shadow-toned flat strips seated in the boards; the road name is one dull block per
+  letter (letter colour 60 % into the body colour), not one bar.
 The diagonal braces stand 30 mm proud of the boards (they were 65 mm): the road name stencilled
 across them broke up at three-quarter views. The posts keep their 70 mm, as on the car.
-Door hardware: handle, hasp with staple and seal pin, placard board with a car card.
+Door hardware: handle, hasp with staple and seal pin, placard board with a car card, a stop block
+at each end of the bottom track. Trucks: journal-box lids in light rust, 3 cm proud under a hinge bar.
+Triangles (LOD0/1/2): 18,878 / 7,488 / 1,068 (`boxcar`), 19,054 / 7,668 / 1,084 (`boxcar_nw`); 13 / 11 / 11 draws.
+Hero camera: `hero: { azDeg: -58, elDeg: 13 }`, the weathered side to the lens.

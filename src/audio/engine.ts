@@ -5,7 +5,7 @@
 // The loop is rendered twice from a periodic event list and the second period kept, so the last
 // sample flows into the first (filters already in steady state).
 
-import { createRng, type SoundClip, Ts23dError } from '../core/index.ts';
+import { createRng, dmath, type SoundClip, Ts23dError } from '../core/index.ts';
 import { checkRange, makeClip, normalize, SAMPLE_RATE, token, variant } from './clip.ts';
 import { biquad, noise } from './dsp.ts';
 
@@ -77,7 +77,7 @@ export function engine(o: EngineOptions): SoundClip {
       for (let i = 0; i < width; i++) {
         // A first pulse jittered early starts before sample 0: its head wraps to the loop's end.
         const t = (((at + i) % pulses.length) + pulses.length) % pulses.length;
-        pulses[t] = (pulses[t] ?? 0) + a * 0.5 * (1 - Math.cos((2 * Math.PI * i) / width));
+        pulses[t] = (pulses[t] ?? 0) + a * 0.5 * (1 - dmath.cos((2 * Math.PI * i) / width));
       }
     }
   // Mechanical clatter: noise gated by the firing pulses (periodic noise: two copies of one).

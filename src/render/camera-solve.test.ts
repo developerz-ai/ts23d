@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'bun:test';
 import type { Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import { project } from './camera.ts';
 import { solveLinear } from './camera-linalg.ts';
 import {
@@ -35,12 +36,12 @@ function marksOf(points: readonly Vec3[], cam: PhotoCamera, noisePx = 0): Mark[]
 
 const dir = (c: PhotoCamera): Vec3 => {
   const d = [0, 1, 2].map((k) => (c.target[k] ?? 0) - (c.eye[k] ?? 0));
-  const l = Math.hypot(...d);
+  const l = dmath.norm(d);
   return [(d[0] ?? 0) / l, (d[1] ?? 0) / l, (d[2] ?? 0) / l];
 };
 const angleDeg = (a: PhotoCamera, b: PhotoCamera): number => {
   const [p, q] = [dir(a), dir(b)];
-  return (Math.acos(Math.min(1, p[0] * q[0] + p[1] * q[1] + p[2] * q[2])) * 180) / Math.PI;
+  return (dmath.acos(Math.min(1, p[0] * q[0] + p[1] * q[1] + p[2] * q[2])) * 180) / Math.PI;
 };
 
 describe('solveCamera', () => {
@@ -55,7 +56,7 @@ describe('solveCamera', () => {
     expect(rmsPx).toBeLessThan(0.01);
     expect(angleDeg(camera, TRUE)).toBeLessThan(1);
     expect(Math.abs(camera.fovDeg - TRUE.fovDeg)).toBeLessThan(1);
-    expect(Math.hypot(...camera.eye.map((v, k) => v - (TRUE.eye[k] ?? 0)))).toBeLessThan(0.05);
+    expect(dmath.norm(camera.eye.map((v, k) => v - (TRUE.eye[k] ?? 0)))).toBeLessThan(0.05);
   });
 
   it('stays within 1° with half-pixel noise', () => {
@@ -80,9 +81,7 @@ describe('dltCentre / solveLinear', () => {
   it('finds the eye from exact marks', () => {
     const c = dltCentre(marksOf(POINTS, TRUE));
     expect(c).not.toBeNull();
-    expect(Math.hypot(...(c ?? [9, 9, 9]).map((v, k) => v - (TRUE.eye[k] ?? 0)))).toBeLessThan(
-      1e-3,
-    );
+    expect(dmath.norm((c ?? [9, 9, 9]).map((v, k) => v - (TRUE.eye[k] ?? 0)))).toBeLessThan(1e-3);
   });
 
   it('returns null for a singular system', () => {

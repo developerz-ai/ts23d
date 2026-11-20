@@ -57,7 +57,7 @@ export function checkHero(q: HeroQaInput): HeroFinding[] {
         message: `${((1 - p.hitRate) * 100).toFixed(2)}% of rays missed the field within a ${(q.cage * 1000).toFixed(1)} mm cage (max ${HERO_MISS_MAX * 100}%)`,
         fix: 'widen the cage (hero cage), or fix the LOD0 surface where it drifts from the field (a coarser cell than the field supports)',
       });
-    if (p.area * q.texelsPerMetre ** 2 < MIN_TEXELS) continue;
+    if (p.area * (q.texelsPerMetre * q.texelsPerMetre) < MIN_TEXELS) continue;
     const r = densityRatio(p, q.texelsPerMetre);
     if (Math.abs(r - 1) > HERO_DENSITY_TOL)
       out.push({

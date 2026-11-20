@@ -8,6 +8,7 @@ import {
   type Armature,
   type Clip,
   checkClip,
+  dmath,
   type Mesh,
   type Quat,
   quatRotate,
@@ -152,7 +153,7 @@ function poseError(
   let worst = 0;
   for (let v = 0; v < 8; v++) {
     const w = toAsset(want, v).map((x, k) => x + (offset[k] ?? 0));
-    worst = Math.max(worst, Math.hypot(...w.map((x, k) => x - (got[v * 3 + k] ?? 0))));
+    worst = Math.max(worst, dmath.norm(w.map((x, k) => x - (got[v * 3 + k] ?? 0))));
   }
   return worst;
 }
@@ -194,10 +195,10 @@ describe('importClips: keys against the ts23d rest pose', () => {
   test('a key equal to the rest rotation is the identity', () => {
     const v = walk.tracks[0]?.values as Float32Array;
     for (const k of [0, 8]) {
-      expect(Math.hypot(v[k] ?? 1, v[k + 1] ?? 1, v[k + 2] ?? 1)).toBeLessThan(1e-6);
+      expect(dmath.hypot(v[k] ?? 1, v[k + 1] ?? 1, v[k + 2] ?? 1)).toBeLessThan(1e-6);
       expect(v[k + 3]).toBeCloseTo(1, 6);
     }
-    expect(Math.hypot(v[4] ?? 0, v[5] ?? 0, v[6] ?? 0)).toBeGreaterThan(0.1);
+    expect(dmath.hypot(v[4] ?? 0, v[5] ?? 0, v[6] ?? 0)).toBeGreaterThan(0.1);
   });
   test('a STEP hold far from 0 stays strictly between its neighbours (float32 cannot subtract 1e-4 at 4096 s)', () => {
     const k = keys(Float32Array.of(0, 4096), Float32Array.of(1, 2), 1, 0, true);

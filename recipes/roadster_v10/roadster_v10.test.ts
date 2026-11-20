@@ -2,7 +2,7 @@
 // Failure first: the fuel door was baked open 85° and still swung another 85° the same way.
 
 import { describe, expect, it } from 'bun:test';
-import { compile } from '@developerz.ai/ts23d';
+import { compile, dmath } from '@developerz.ai/ts23d';
 import { roadster_v10, roadster_v10_open } from './roadster_v10.ts';
 
 describe('roadster_v10_open clips', () => {
@@ -19,7 +19,7 @@ describe('roadster_v10_open clips', () => {
       const b = hinge(open.parts.find((p) => p.name === s.name));
       const [u, v] = [a?.axis ?? [0, 0, 0], b?.axis ?? [0, 0, 0]];
       // Same sector, travelled the other way: the axis flips...
-      const sum = Math.hypot(u[0] + v[0], u[1] + v[1], u[2] + v[2]);
+      const sum = dmath.hypot(u[0] + v[0], u[1] + v[1], u[2] + v[2]);
       expect({ part: s.name, sum }).toEqual({ part: s.name, sum: expect.closeTo(0, 9) });
       // ...and no further than the sector it was baked open by.
       expect(b?.degrees ?? Infinity).toBeLessThanOrEqual(a?.degrees ?? 0);

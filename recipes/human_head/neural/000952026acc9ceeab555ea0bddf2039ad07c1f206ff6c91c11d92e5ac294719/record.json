@@ -1,0 +1,53 @@
+{
+  "adapter": "blender:blender",
+  "contract": "t3d-neural/1",
+  "key": "000952026acc9ceeab555ea0bddf2039ad07c1f206ff6c91c11d92e5ac294719",
+  "model": {
+    "id": "blender-groom",
+    "licence": "own",
+    "task": "groom",
+    "tool": {
+      "licence": "GPL-2.0-or-later",
+      "name": "blender",
+      "scriptSha256": "28480fba700022016e02550f8ca518d60fbaa4307b12bd2f31b033e684ef36e8",
+      "version": "5.3.0"
+    },
+    "weightsSha256": "399e2b4ad06143f36296e7fedfa303348869cb707fc6b49c9ffb0aeeb105ce4e"
+  },
+  "outputs": [
+    {
+      "bytes": 223952,
+      "file": "output-0.glb",
+      "mime": "model/gltf-binary",
+      "sha256": "3d31dd4cf27874c034958c219e0566aaec20973612fc32d6f71a954e0b81bb17"
+    },
+    {
+      "bytes": 363,
+      "file": "output-1.json",
+      "mime": "application/json",
+      "sha256": "8f7b695c7e464e943f4f7513acce24741df0b87ef9d579e81e8e8c284326a1f4"
+    }
+  ],
+  "request": {
+    "body": {
+      "mime": "model/gltf-binary",
+      "sha256": "52aef5c0a1d62b5c424c548332258bf6466583684bca874559523ead700423f0"
+    },
+    "cards": 300,
+    "children": 14,
+    "guides": {
+      "mime": "application/json",
+      "sha256": "e73d8d1fea3edbf2002f799d69c27daff546e522a784c9db77feeb47265df3c8"
+    },
+    "maxTriangles": 7500,
+    "mesh": {
+      "mime": "model/gltf-binary",
+      "sha256": "43c47b812101072ffca0704d6146f95c7edcfcd8701f90aef1c16785d34af062"
+    },
+    "points": 6,
+    "seed": 7
+  },
+  "requestKey": "29c1c24c5579653a333057837baf0feea6227cccad77afe2f1483fc23c9c0086",
+  "server": "blender 5.3.0",
+  "task": "groom"
+}

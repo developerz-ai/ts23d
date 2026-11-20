@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'bun:test';
 import type { Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import type { Field } from '../primitives/index.ts';
 import { painted, streak } from './creature-tone.ts';
 
@@ -10,7 +11,7 @@ const slab =
   (h: Vec3, c: Vec3 = [0, 0, 0]): Field =>
   (p) => {
     const q = [0, 1, 2].map((k) => Math.abs((p[k] ?? 0) - (c[k] ?? 0)) - (h[k] ?? 0));
-    const o = Math.hypot(...q.map((v) => Math.max(v, 0)));
+    const o = dmath.norm(q.map((v) => Math.max(v, 0)));
     return o + Math.min(Math.max(q[0] ?? 0, q[1] ?? 0, q[2] ?? 0), 0);
   };
 const warmth = (c: Vec3): number => c[0] / Math.max(1e-6, c[2]);

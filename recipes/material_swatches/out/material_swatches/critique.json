@@ -1,7 +1,7 @@
 {
   "asset": "material_swatches",
   "reviewer": "agent",
-  "overall": 8,
+  "overall": 8.1,
   "scores": {
     "silhouette": {
       "score": 8,
@@ -25,10 +25,10 @@
       ]
     },
     "detail": {
-      "score": 7,
-      "reason": "Strips and spheres read; the labels are a few pixels high and unreadable in hero.png.",
+      "score": 8,
+      "reason": "Strips and spheres read, and the taller front plinth now carries the front-row labels (PLAIN, BRICK, OAK, STONE, SLATE, WOOD PAINTED, IRON RUST) at the same size as the rows behind, crisper than before in hero.png; framing is unchanged. The back-row labels are still a few pixels high.",
       "fixes": [
-        "scale label size with the row panel width"
+        "scale label size with distance so back-row labels read in hero.png"
       ]
     },
     "wear": {
@@ -54,7 +54,7 @@
     }
   },
   "renders": {
-    "hero.png": "c6c9d9e72ba3d5b3c5751835b8720c3e5d4566a1cff84375060640b7140b6850",
-    "sheet.png": "d487f459509468b36fe01c1752540416ff312a5f10c7c2725259c4067d81df6c"
+    "hero.png": "eaf54e94ed90310cdb386aef6211284ec03a2e3042ab703e2fc8f0ce7ecddf2c",
+    "sheet.png": "0a3d9db7ee021101937079981a2cdb85c626d22922dfdf64640309515de268e9"
   }
 }

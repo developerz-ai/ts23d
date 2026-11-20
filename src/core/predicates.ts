@@ -3,11 +3,11 @@
 // cannot decide the sign. Only the SIGN of the result is meaningful; it is always correct.
 // Deterministic and dependency-free. Used by the ear clipper and the convex hull.
 
-const EPS = 2 ** -53;
+const EPS = 1.1102230246251565e-16 /* 2^-53 */;
 const CCW_BOUND = (3 + 16 * EPS) * EPS;
 const O3D_BOUND = (7 + 56 * EPS) * EPS;
 /** Below this the error bounds no longer hold (products may underflow): decide exactly. */
-const TINY = 2 ** -900;
+const TINY = 1.1830521861667747e-271 /* 2^-900 */;
 
 const view = new DataView(new ArrayBuffer(8));
 /** The exact value of a finite double times 2^1074, as an integer. */

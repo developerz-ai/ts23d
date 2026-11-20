@@ -17,6 +17,7 @@ import {
   DECAL_CELLS,
   DEFAULT_SHEET,
   defineAsset,
+  dmath,
   FOLIAGE_CELLS,
   hex,
   type Lod,
@@ -48,8 +49,12 @@ const TINT: Readonly<Partial<Record<StripId, Vec3>>> = {
   concrete: hex('#a7a39b'),
 };
 
-/** The label cap height for a panel w wide on a plinth face `face` tall: big enough to read. */
-const capOf = (w: number, face: number): number => Math.min(0.6 * face, 0.035 * w, 0.45);
+/**
+ * The label cap height for a panel w wide on a plinth face `face` tall: 8 % of the panel width (a
+ * 4 m panel gets 0.32 m letters, readable across the whole 30 m stand in the hero), at most 60 % of
+ * the face and 0.5 m. Long names still shrink to fit 90 % of the panel (`maxWidth`).
+ */
+export const capOf = (w: number, face: number): number => Math.min(0.6 * face, 0.08 * w, 0.5);
 
 /**
  * Label on a +X-facing plinth face at x = `faceX`, centred on `y`, vertically centred on a face
@@ -107,7 +112,7 @@ function occlude(m: Mesh, z0: number, reach: number, k = 0.55): Mesh {
 const ball = (r: number, n: number): Vec2[] =>
   Array.from({ length: n + 1 }, (_, i) => {
     const a = (Math.PI * i) / n;
-    return [r * Math.sin(a), r - r * Math.cos(a)] as Vec2;
+    return [r * dmath.sin(a), r - r * dmath.cos(a)] as Vec2;
   });
 
 /** A 1.8 m standing figure for scale (feet at the origin, facing +X), plain grey. */
@@ -143,7 +148,9 @@ function cellQuad(id: CellId, x: number, y: number, z: number, size: number, col
 
 const GAP = 0.4;
 /** Row k of strip panels: x of the panel face line, plinth top. Rows step back and up. */
-const row = (k: number) => ({ x: -k * 2.2, top: 0.2 + k * 0.7 });
+// The front row's plinth face is 0.54 m tall so its labels can be set as large as the rows behind
+// (a 4 m panel's 0.32 m cap fits in 60 % of it).
+export const row = (k: number) => ({ x: -k * 2.2, top: 0.54 + k * 0.7 });
 const REAR = { depth: 1.2, gap: 0.15 };
 
 const widthOf = (id: StripId): number => stripRect(id).metres;

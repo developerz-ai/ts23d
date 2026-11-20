@@ -5,6 +5,7 @@ import { describe, expect, it } from 'bun:test';
 import {
   compile,
   creaturePlan,
+  dmath,
   gaitFindings,
   massProperties,
   type Vec3,
@@ -14,7 +15,7 @@ import { WOLF } from '../wolf/wolf.ts';
 import { FOX, FOX_DATA, fox, REAL } from './fox.ts';
 
 const SLOW = 120_000;
-const dist = (a: Vec3, b: Vec3): number => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+const dist = (a: Vec3, b: Vec3): number => dmath.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
 
 describe('red fox from the wolf family (Wikipedia: Red fox; Wikidata Q8332)', () => {
   const { bones } = creaturePlan(FOX);
@@ -23,11 +24,23 @@ describe('red fox from the wolf family (Wikipedia: Red fox; Wikidata Q8332)', ()
     expect(() => creaturePlan({ ...FOX, mass: 6000 })).toThrow();
   });
 
-  it('shoulder is the pinned Wikidata height; head + body 0.68 m (±2 %)', () => {
+  it('shoulder is the pinned Wikidata height; head + body 0.74 m (±2 %)', () => {
     expect(REAL.shoulder).toBe(0.425);
     expect(FOX_DATA.qid).toBe('Q8332');
     const hb = dist(bones.nose, bones.tailRoot);
     expect(Math.abs(hb - REAL.headBody) / REAL.headBody).toBeLessThan(0.02);
+  });
+
+  it('carries the sourced 11 cm ear (the face override used to drop it to the kind’s 6 cm)', () => {
+    // Measured on the built rig (ear bone: base → tip), not read back from the spec's ratio.
+    const ears = (compile(fox, { lod: 2 }).skeleton?.bones ?? []).filter((b) =>
+      /^ear_[lr]$/.test(b.name),
+    );
+    expect(ears.length).toBe(2);
+    for (const e of ears)
+      expect(Math.abs(dist(e.head, e.tail) - REAL.ear) / REAL.ear).toBeLessThan(0.02);
+    expect(REAL.ear).toBeGreaterThanOrEqual(0.077);
+    expect(REAL.ear).toBeLessThanOrEqual(0.125);
   });
 
   it('is the wolf skeleton: same bones and legs, canid digits 5 fore / 4 hind', () => {
@@ -38,7 +51,7 @@ describe('red fox from the wolf family (Wikipedia: Red fox; Wikidata Q8332)', ()
   });
 
   it(
-    'weighs within ±30 % of 6 kg (volume × furred density), stands, and its gaits do not slide',
+    'weighs within ±30 % of 7.5 kg (volume × furred density), stands, and its gaits do not slide',
     () => {
       const c = compile(fox, { lod: 2 });
       const m = massProperties(compile(fox, { lod: 1 })).mass;

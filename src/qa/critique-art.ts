@@ -2,6 +2,7 @@
 // contrast peaks (focal point) and whether luminance rises from base to top (grounded). Rest areas
 // live in critique-rest.ts. Pure functions of pixels; deterministic.
 
+import { dmath } from '../core/index.ts';
 import type { PartBuffer } from './critique-raster.ts';
 
 /** Relative luminance 0–1 of sRGB-encoded RGBA (Rec. 709 weights), NaN off the asset. */
@@ -80,7 +81,7 @@ export function focalStats(
   const at = windowStats(lum, W, H, r);
   const contrast = new Float32Array(W * H).fill(Number.NaN);
   const vals: number[] = [];
-  const need = 0.5 * (2 * r + 1) ** 2;
+  const need = 0.5 * dmath.pow(2 * r + 1, 2);
   for (let y = 0; y < H; y++)
     for (let x = 0; x < W; x++) {
       if (!Number.isFinite(lum[y * W + x] ?? Number.NaN)) continue;
@@ -183,6 +184,6 @@ export function groundedStats(lum: Float32Array, buf: PartBuffer, nBands = 5): G
   const mx = pts.reduce((s, p) => s + p[0], 0) / Math.max(1, pts.length);
   const my = pts.reduce((s, p) => s + p[1], 0) / Math.max(1, pts.length);
   const sxy = pts.reduce((s, p) => s + (p[0] - mx) * (p[1] - my), 0);
-  const sxx = pts.reduce((s, p) => s + (p[0] - mx) ** 2, 0);
+  const sxx = pts.reduce((s, p) => s + dmath.pow(p[0] - mx, 2), 0);
   return { rise: sxx > 0 ? sxy / sxx : 0, bands };
 }

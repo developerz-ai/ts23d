@@ -4,6 +4,7 @@
 // report their pdfs so BSDF-sampled rays can be MIS-weighted. Calibrated to the raster studio rig:
 // an open, sun-facing surface receives ≈ the same irradiance (lighting.ts), so palettes stay true.
 
+import { dmath } from '../../core/index.ts';
 import type { V3 } from '../lighting.ts';
 
 export interface Sky {
@@ -43,7 +44,7 @@ export function skyAt(s: Sky, z: number, k: number): number {
   if (z < 0) {
     const g = s.ground[k] ?? 0;
     const h = s.horizon[k] ?? 0;
-    return g + (h - g) * Math.exp(z * 12);
+    return g + (h - g) * dmath.exp(z * 12);
   }
   const h = s.horizon[k] ?? 0;
   return h + ((s.zenith[k] ?? 0) - h) * Math.sqrt(z);
@@ -53,7 +54,7 @@ const lum = (s: Sky, z: number): number =>
   0.2126 * skyAt(s, z, 0) + 0.7152 * skyAt(s, z, 1) + 0.0722 * skyAt(s, z, 2);
 
 export function makeSky(o: SkyOptions): Sky {
-  const cosDisc = Math.cos(((o.discDeg ?? 2.5) * Math.PI) / 180);
+  const cosDisc = dmath.cos(((o.discDeg ?? 2.5) * Math.PI) / 180);
   const omega = 2 * Math.PI * (1 - cosDisc);
   const base = {
     sun: o.sun,
@@ -112,8 +113,8 @@ export function sampleSky(s: Sky, u: number, v: number, d: Float64Array): number
   const z = Math.min(1, -1 + (lo + (u - c0) / Math.max(p, 1e-12)) * DZ);
   const r = Math.sqrt(Math.max(0, 1 - z * z));
   const phi = 2 * Math.PI * v;
-  d[0] = r * Math.cos(phi);
-  d[1] = r * Math.sin(phi);
+  d[0] = r * dmath.cos(phi);
+  d[1] = r * dmath.sin(phi);
   d[2] = z;
   return p / (2 * Math.PI * DZ);
 }
@@ -134,8 +135,8 @@ export function sampleSun(s: Sky, u: number, v: number, d: Float64Array): number
   const bx = b;
   const by = sign + ay * ay * a;
   const bz = -ay;
-  const x = r * Math.cos(phi);
-  const y = r * Math.sin(phi);
+  const x = r * dmath.cos(phi);
+  const y = r * dmath.sin(phi);
   d[0] = tx * x + bx * y + ax * z;
   d[1] = ty * x + by * y + ay * z;
   d[2] = tz * x + bz * y + az * z;

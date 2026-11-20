@@ -5,7 +5,7 @@
 // Every large bend stays in the arm's own plane through the body axis, its sector, so arms do not
 // pass through each other (QA `chain-cross`); only a small share of the idle wave leaves it.
 
-import { type Clip, createRng, Ts23dError } from '../core/index.ts';
+import { type Clip, createRng, dmath, Ts23dError } from '../core/index.ts';
 import type { BodyPlan, PlanChain } from './body-plan-types.ts';
 import { bakeChainClip } from './chain-bake.ts';
 import { bendPulse, hingeGroups, ramp, TAU } from './chain-drivers.ts';
@@ -125,9 +125,9 @@ function idleField(c: PlanChain, front: boolean, seed: number): ChainField {
   // Twist runs both ways about equally often [K20].
   const sign = rng.next() < 0.5 ? -1 : 1;
   return {
-    kb: (s, t) => IDLE_BEND * proximal(s) * Math.sin(TAU * (0.8 * s - f * t) + p1),
-    kn: (s, t) => IDLE_SIDEWAYS * IDLE_BEND * proximal(s) * Math.sin(TAU * (0.6 * s - f * t) + p2),
-    tw: (s, t) => sign * IDLE_TWIST * Math.sin(TAU * (0.5 * s - f * t) + p3),
+    kb: (s, t) => IDLE_BEND * proximal(s) * dmath.sin(TAU * (0.8 * s - f * t) + p1),
+    kn: (s, t) => IDLE_SIDEWAYS * IDLE_BEND * proximal(s) * dmath.sin(TAU * (0.6 * s - f * t) + p2),
+    tw: (s, t) => sign * IDLE_TWIST * dmath.sin(TAU * (0.5 * s - f * t) + p3),
   };
 }
 
@@ -189,7 +189,7 @@ export function recruitAt(events: readonly Recruitment[], u: number): number {
   for (const e of events) {
     const d = u - e.start;
     const x = (d - Math.floor(d)) / e.width;
-    if (x < 1) h = Math.max(h, Math.sin(Math.PI * x) ** 2);
+    if (x < 1) h = Math.max(h, dmath.pow(dmath.sin(Math.PI * x), 2));
   }
   return h;
 }
@@ -199,7 +199,7 @@ function crawlField(events: readonly Recruitment[]): ChainField {
   return {
     // Length change belongs to the proximal arm [K20]; thrust is pushing by elongation [L15].
     e: (s, t) => CRAWL_STRAIN * level(t) * (1 - s),
-    kb: (s, t) => CRAWL_CURL * level(t) * Math.sin(Math.PI * s),
+    kb: (s, t) => CRAWL_CURL * level(t) * dmath.sin(Math.PI * s),
   };
 }
 

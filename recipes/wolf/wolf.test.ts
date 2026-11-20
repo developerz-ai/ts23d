@@ -6,6 +6,7 @@ import { describe, expect, it } from 'bun:test';
 import {
   compile,
   creaturePlan,
+  dmath,
   massProperties,
   type Vec3,
   worldMeshes,
@@ -18,7 +19,7 @@ import {
 import { REAL, WOLF, wolf } from './wolf.ts';
 
 const SLOW = 120_000;
-const dist = (a: Vec3, b: Vec3): number => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+const dist = (a: Vec3, b: Vec3): number => dmath.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
 const within = (v: number, real: number, tol: number): void => {
   expect(v).toBeGreaterThan(real * (1 - tol));
   expect(v).toBeLessThan(real * (1 + tol));
@@ -92,6 +93,28 @@ describe('canid biology (docs/research/animal-anatomy.md)', () => {
       const share = (com[0] - xh) / (xf - xh);
       expect(share).toBeGreaterThan(0.55);
       expect(share).toBeLessThan(0.66);
+    },
+    SLOW,
+  );
+});
+
+describe('coat (WOLF_WILD)', () => {
+  /** Widest |y| of a part's world mesh, metres, and its triangle count. */
+  const fur = (lod: 0 | 1 | 2): { y: number; tris: number } => {
+    const m = worldMeshes(compile(wolf, { lod }).parts).get('fur');
+    let y = 0;
+    for (let i = 1; i < (m?.positions.length ?? 0); i += 3)
+      y = Math.max(y, Math.abs(m?.positions[i] ?? 0));
+    return { y, tris: (m?.indices.length ?? 0) / 3 };
+  };
+
+  it(
+    'the far mesh keeps a fringe of locks, and no card at any LOD leaves the 0.29 m coated width',
+    () => {
+      const far = fur(2);
+      expect(far.tris).toBeGreaterThan(60);
+      expect(far.tris).toBeLessThan(400);
+      for (const lod of [0, 1, 2] as const) expect(fur(lod).y).toBeLessThanOrEqual(0.148);
     },
     SLOW,
   );

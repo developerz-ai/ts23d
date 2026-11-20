@@ -8,7 +8,7 @@
 // is read in ITS OWN frame (Z up, any yaw), so nothing here assumes which way it faces: the fore
 // pair is the one whose end of the body rises higher (a head) than the other's (a tail).
 
-import { type Bone, type Mesh, Ts23dError, type Vec3 } from '../core/index.ts';
+import { type Bone, dmath, type Mesh, Ts23dError, type Vec3 } from '../core/index.ts';
 import { applySimilarity, type Similarity } from '../primitives/index.ts';
 import type { Bones } from './creature-bones.ts';
 import { rigBones } from './creature-limits.ts';
@@ -52,7 +52,8 @@ export function jointsFit(mesh: Mesh, b: Bones, joints: readonly Bone[], prefix 
     .filter((c) => c.length >= 4 && end(c) <= floor0 + (top - floor0) * 0.15);
   const reach = (c: readonly Bone[]): number =>
     c.reduce(
-      (t, j) => t + Math.hypot(j.tail[0] - j.head[0], j.tail[1] - j.head[1], j.tail[2] - j.head[2]),
+      (t, j) =>
+        t + dmath.hypot(j.tail[0] - j.head[0], j.tail[1] - j.head[1], j.tail[2] - j.head[2]),
       0,
     );
   const groups = new Map<string, Bone[][]>();
@@ -99,8 +100,8 @@ export function jointsFit(mesh: Mesh, b: Bones, joints: readonly Bone[], prefix 
   const up = (x: Vec3): Vec3 => applySimilarity({ s: 1, r: tilt, t: [0, 0, 0] }, x);
   const [hips, shoulders] = (cIsFore ? [a, c] : [c, a]).map(up) as [Vec3, Vec3];
   const floor = Math.min(...joints.flatMap((j) => [up(j.head)[2], up(j.tail)[2]]));
-  const yaw = -Math.atan2(shoulders[1] - hips[1], shoulders[0] - hips[0]);
-  const [cs, sn] = [Math.cos(yaw), Math.sin(yaw)];
+  const yaw = -dmath.atan2(shoulders[1] - hips[1], shoulders[0] - hips[0]);
+  const [cs, sn] = [dmath.cos(yaw), dmath.sin(yaw)];
   const z = [cs, -sn, 0, sn, cs, 0, 0, 0, 1];
   // r = yaw about Z ∘ level.
   const r = [0, 1, 2].flatMap((i) =>
@@ -125,7 +126,7 @@ export function jointsFit(mesh: Mesh, b: Bones, joints: readonly Bone[], prefix 
   const feet = legs.map((l) => {
     const last = l[l.length - 1];
     const reach = last
-      ? Math.hypot(
+      ? dmath.hypot(
           last.tail[0] - last.head[0],
           last.tail[1] - last.head[1],
           last.tail[2] - last.head[2],
@@ -143,7 +144,11 @@ export function jointsFit(mesh: Mesh, b: Bones, joints: readonly Bone[], prefix 
       const v = applySimilarity(sim, [P[i] ?? 0, P[i + 1] ?? 0, P[i + 2] ?? 0]);
       centres.forEach((c, k) => {
         const best = low[k];
-        if (best && v[2] < best[2] && Math.hypot(v[0] - c[0], v[1] - c[1]) <= (feet[k]?.reach ?? 0))
+        if (
+          best &&
+          v[2] < best[2] &&
+          dmath.hypot(v[0] - c[0], v[1] - c[1]) <= (feet[k]?.reach ?? 0)
+        )
           low[k] = v;
       });
     }
@@ -192,15 +197,15 @@ function levelOf(feet: readonly Vec3[]): number[] {
   if (Math.abs(det) < 1e-12) return [1, 0, 0, 0, 1, 0, 0, 0, 1];
   // z = a·x + b·y: the plane's normal is (−a, −b, 1).
   const [a, b] = [(sxz * syy - syz * sxy) / det, (syz * sxx - sxz * sxy) / det];
-  const l = Math.hypot(a, b, 1);
+  const l = dmath.hypot(a, b, 1);
   const nrm: Vec3 = [-a / l, -b / l, 1 / l];
-  const angle = Math.acos(Math.min(1, nrm[2]));
+  const angle = dmath.acos(Math.min(1, nrm[2]));
   if (angle < 1e-9) return [1, 0, 0, 0, 1, 0, 0, 0, 1];
   if (angle > (LEVEL * Math.PI) / 180)
     fail(`the four feet lie ${((angle * 180) / Math.PI).toFixed(1)}° off level (most ${LEVEL}°)`);
   // Rodrigues: turn `nrm` onto +Z about the axis nrm × Z.
-  const k: Vec3 = [nrm[1] / Math.sin(angle), -nrm[0] / Math.sin(angle), 0];
-  const [c, sn] = [Math.cos(angle), Math.sin(angle)];
+  const k: Vec3 = [nrm[1] / dmath.sin(angle), -nrm[0] / dmath.sin(angle), 0];
+  const [c, sn] = [dmath.cos(angle), dmath.sin(angle)];
   const [x, y] = [k[0], k[1]];
   return [
     c + x * x * (1 - c),

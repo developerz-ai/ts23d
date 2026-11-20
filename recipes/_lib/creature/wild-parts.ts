@@ -10,6 +10,7 @@ import {
   type CreatureInfo,
   chainSeed,
   defineMaterial,
+  dmath,
   furChains,
   hairCards,
   hairFlow,
@@ -27,15 +28,15 @@ type Frame = CreatureInfo['bones']['head'];
 
 /** Head-local point (+X to the nose, origin at the atlas) → the pitched head part's frame. */
 export function pitched(h: Frame, p: Vec3): Vec3 {
-  const c = Math.cos(h.pitch);
-  const s = Math.sin(h.pitch);
+  const c = dmath.cos(h.pitch);
+  const s = dmath.sin(h.pitch);
   return [c * p[0] + s * p[2], p[1], -s * p[0] + c * p[2]];
 }
 
 /** The pitched head part's frame → head-local. */
 export function unpitched(h: Frame, p: Vec3): Vec3 {
-  const c = Math.cos(h.pitch);
-  const s = Math.sin(h.pitch);
+  const c = dmath.cos(h.pitch);
+  const s = dmath.sin(h.pitch);
   return [c * p[0] - s * p[2], p[1], s * p[0] + c * p[2]];
 }
 
@@ -103,6 +104,19 @@ export interface CoatOptions {
   readonly where: (p: Vec3, n: Vec3) => number;
   /** Root → tip tone (default [0.9, 1.22]: shadowed roots, lit tips). */
   readonly tone?: readonly [number, number];
+  /** A card's colour from its root point and the skin colour there (frost on the topline's
+   *  hair, a pale saddle); default the skin's colour. Short cards and guard locks both. */
+  readonly color?: (p: Vec3, skin: Vec3) => Vec3;
+  /**
+   * Clumped guard locks over the same region (LOD0/1): longer cards sharing a tip, curved across
+   * their width, lit at the tip. They are what breaks the light between the short cards.
+   */
+  readonly guard?: {
+    readonly density: number;
+    readonly length: number | ((p: Vec3, n: Vec3) => number);
+    readonly width: number;
+    readonly tone?: readonly [number, number];
+  };
   /**
    * LOD2: a few big locks where the outline needs its fringe (mane, back, breeches). The far mesh
    * has no other cards; without this the animal's edge goes smooth at the switch.
@@ -143,22 +157,51 @@ export function coatCards(
     cells: strandCells('fur_clumps', far ? 'guard' : 'fur'),
     tone: o.tone ?? [0.9, 1.22],
     sink: 0.002,
+    ...(o.color && !far ? { color: o.color } : {}),
   };
-  const out = hairCards({
-    surface: body,
-    flow: hairFlow(body, chainSeed(furChains(info.bones), { gravity: 0.35 })),
-    zones: [zone],
-    rng: rng.fork('coat'),
-    segments: far ? 1 : 2,
-    maxCards: 20000,
-  });
-  return out.roots.length > 0 ? info.rig.pieces(out.mesh, 'body', [0, 0, 0]) : null;
+  const flow = hairFlow(body, chainSeed(furChains(info.bones), { gravity: 0.35 }));
+  const grow = (z: CardZone, segments: number): Mesh | null => {
+    const out = hairCards({
+      surface: body,
+      flow,
+      zones: [z],
+      rng: rng.fork(z.name),
+      segments,
+      maxCards: 20000,
+    });
+    return out.roots.length > 0 ? out.mesh : null;
+  };
+  const g = far ? undefined : o.guard;
+  const guard = g
+    ? grow(
+        {
+          name: 'coat-guard',
+          density: (p, n) => g.density * k * o.where(p, n),
+          length: g.length,
+          width: g.width * (lod === 0 ? 1 : 1.5),
+          lift: 0.3,
+          bend: 0.6,
+          droop: 0.12,
+          roll: 0.7,
+          clump: 4,
+          fold: lod === 0 ? 0.6 : 0,
+          cells: strandCells('fur_clumps', 'guard'),
+          tone: g.tone ?? [0.8, 1.4],
+          sink: 0.003,
+          ...(o.color ? { color: o.color } : {}),
+        },
+        lod === 0 ? 3 : 2,
+      )
+    : null;
+  const short = grow(zone, far ? 1 : 2);
+  const all = short && guard ? joinSkinned(short, guard) : (short ?? guard);
+  return all ? info.rig.pieces(all, 'body', [0, 0, 0]) : null;
 }
 
 /**
  * Drop every card (connected piece) with a vertex outside the box |y| ≤ `y`, z ≤ `z`: the coat
  * may not grow the animal past its sourced width and height, whatever a stray lock does.
- * Unskinned cards only (the caller binds what is left).
+ * A skinned mesh keeps its joints and weights.
  */
 export function withinBox(cards: Mesh, box: { readonly y?: number; readonly z?: number }): Mesh {
   const ids = pieces(cards);
@@ -192,12 +235,18 @@ export function withinBox(cards: Mesh, box: { readonly y?: number; readonly z?: 
     if (a < 0) continue;
     indices.push(a, remap[cards.indices[t + 1] ?? 0] ?? 0, remap[cards.indices[t + 2] ?? 0] ?? 0);
   }
+  const joints = new Uint16Array(cards.joints ? keep.length * 4 : 0);
+  if (cards.joints)
+    keep.forEach((v, i) => {
+      for (let c = 0; c < 4; c++) joints[i * 4 + c] = cards.joints?.[v * 4 + c] ?? 0;
+    });
   return {
     positions: take(cards.positions, 3),
     normals: take(cards.normals, 3),
     uvs: take(cards.uvs, 2),
     colors: take(cards.colors, 3),
     indices: new Uint32Array(indices),
+    ...(cards.joints && cards.weights ? { joints, weights: take(cards.weights, 4) } : {}),
   };
 }
 
@@ -259,7 +308,7 @@ function strand(b: MeshBuilder, pts: readonly Vec3[], r: number, colour: Vec3): 
     const q = pts[Math.min(n, i + 1)] ?? p;
     const o = pts[Math.max(0, i - 1)] ?? p;
     const t: Vec3 = [q[0] - o[0], q[1] - o[1], q[2] - o[2]];
-    const tl = Math.hypot(t[0], t[1], t[2]) || 1;
+    const tl = dmath.hypot(t[0], t[1], t[2]) || 1;
     // Any axis not along the strand gives a stable frame for a hair this thin.
     const ref: Vec3 = Math.abs(t[2] / tl) < 0.9 ? [0, 0, 1] : [1, 0, 0];
     const u: Vec3 = [
@@ -267,7 +316,7 @@ function strand(b: MeshBuilder, pts: readonly Vec3[], r: number, colour: Vec3): 
       t[2] * ref[0] - t[0] * ref[2],
       t[0] * ref[1] - t[1] * ref[0],
     ];
-    const ul = Math.hypot(u[0], u[1], u[2]) || 1;
+    const ul = dmath.hypot(u[0], u[1], u[2]) || 1;
     const w: Vec3 = [
       (t[1] * u[2] - t[2] * u[1]) / (tl * ul),
       (t[2] * u[0] - t[0] * u[2]) / (tl * ul),
@@ -278,9 +327,9 @@ function strand(b: MeshBuilder, pts: readonly Vec3[], r: number, colour: Vec3): 
     for (let j = 0; j < 3; j++) {
       const a = (j / 3) * Math.PI * 2;
       const d: Vec3 = [
-        (u[0] / ul) * Math.cos(a) + w[0] * Math.sin(a),
-        (u[1] / ul) * Math.cos(a) + w[1] * Math.sin(a),
-        (u[2] / ul) * Math.cos(a) + w[2] * Math.sin(a),
+        (u[0] / ul) * dmath.cos(a) + w[0] * dmath.sin(a),
+        (u[1] / ul) * dmath.cos(a) + w[1] * dmath.sin(a),
+        (u[2] / ul) * dmath.cos(a) + w[2] * dmath.sin(a),
       ];
       ring.push(
         b.vertex({
@@ -323,7 +372,7 @@ export function whiskers(l: Head, h: Frame, lod: Lod, rng: Rng, o: WhiskerOption
   const r = o.radius * (lod === 0 ? 1 : 2);
   const steps = lod === 0 ? 5 : 3;
   const grow = (root: Vec3, dir: Vec3, len: number, side: number, droop: number): void => {
-    const dl = Math.hypot(dir[0], dir[1], dir[2]) || 1;
+    const dl = dmath.hypot(dir[0], dir[1], dir[2]) || 1;
     const pts: Vec3[] = [];
     for (let i = 0; i <= steps; i++) {
       const t = i / steps;
@@ -392,9 +441,9 @@ export function earNick(head: Mesh, l: Head, h: Frame, side: 1 | -1, depth = 0.2
   const positions = new Float32Array(head.positions);
   for (let v = 0; v < n; v++) {
     const p = at(v);
-    const d = Math.hypot(p[0] - rim[0], p[2] - rim[2]);
+    const d = dmath.hypot(p[0] - rim[0], p[2] - rim[2]);
     if (p[1] * side <= 0 || d >= radius || Math.abs(p[1] - rim[1]) > radius * 2) continue;
-    const push = l.earHeight * depth * (1 - d / radius) ** 2;
+    const push = l.earHeight * depth * dmath.pow(1 - d / radius, 2);
     positions.set(pitched(h, [p[0] + push, p[1], p[2]]), v * 3);
   }
   return { ...head, positions };

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { createRng, type Field, type Mesh, type Vec3 } from '@developerz.ai/ts23d';
+import { createRng, dmath, type Field, type Mesh, type Vec3 } from '@developerz.ai/ts23d';
 import { skinMesh } from './skin.ts';
 
 const TONE = {
@@ -17,7 +17,7 @@ const DIRS: Vec3[] = Array.from({ length: 600 }, (_, i) => {
   const z = 1 - (2 * (i + 0.5)) / 600;
   const r = Math.sqrt(1 - z * z);
   const a = i * Math.PI * (3 - Math.sqrt(5));
-  return [r * Math.cos(a), r * Math.sin(a), z];
+  return [r * dmath.cos(a), r * dmath.sin(a), z];
 });
 const facets = (x: number, y: number, z: number): number => {
   let d = -1;

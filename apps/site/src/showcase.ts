@@ -6,7 +6,7 @@
 // A compile that fails moves on to the next asset after a pause, until a whole cycle has failed
 // (`retry.ts`): the poster, or the last asset that worked, stays.
 
-import { formatCount } from '@developerz.ai/ts23d/core';
+import { dmath, formatCount } from '@developerz.ai/ts23d/core';
 import { type AnimationClip, AnimationMixer, type Object3D, Vector3 } from 'three';
 import { loadBuilt, type NeuralRef, recipe } from './compile.ts';
 import type { Item } from './items.ts';
@@ -145,9 +145,9 @@ export class Showcase {
     // Narrow screens frame the subject alone, so pull back to keep it whole.
     const d = this.distance * (this.root.clientWidth < 900 ? 1.3 : 1);
     c.position.set(
-      this.center.x + Math.sin(this.angle) * d * Math.cos(elev),
-      this.center.y + d * Math.sin(elev),
-      this.center.z + Math.cos(this.angle) * d * Math.cos(elev),
+      this.center.x + dmath.sin(this.angle) * d * dmath.cos(elev),
+      this.center.y + d * dmath.sin(elev),
+      this.center.z + dmath.cos(this.angle) * d * dmath.cos(elev),
     );
     c.lookAt(this.center);
     const due = this.model && this.failures === 0 && t - this.shown > HOLD;

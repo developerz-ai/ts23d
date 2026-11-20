@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test';
+import { dmath } from '../core/index.ts';
 import { clawRoot } from './creature-feet.ts';
 
 describe('clawRoot', () => {
@@ -8,7 +9,7 @@ describe('clawRoot', () => {
     expect(root.radius).toBeGreaterThan(0);
     // The root centre sits within the knuckle's ellipsoid.
     const q = root.base.map((c, i) => c / (semi[i] ?? 1));
-    expect(Math.hypot(...q)).toBeLessThan(1);
+    expect(dmath.norm(q)).toBeLessThan(1);
   });
 
   it('keeps the 3 mm burial and the knuckle-limited radius on a toe that has room', () => {

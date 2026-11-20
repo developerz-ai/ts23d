@@ -3,6 +3,7 @@
 // (principal direction of its surface samples) the grown and poke checks measure along.
 
 import type { Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import type { Shell } from './connections-shells.ts';
 import { boxGap, epsOf, type Patch, patch, type Samples, stepOf } from './contact.ts';
 import { glob } from './inspect.ts';
@@ -54,7 +55,7 @@ export function principalAxis(S: Samples): { centre: Vec3; axis: Vec3 } {
         (C[r * 3 + 1] ?? 0) * (v[1] ?? 0) +
         (C[r * 3 + 2] ?? 0) * (v[2] ?? 0),
     );
-    const len = Math.hypot(n[0] ?? 0, n[1] ?? 0, n[2] ?? 0);
+    const len = dmath.hypot(n[0] ?? 0, n[1] ?? 0, n[2] ?? 0);
     if (len < 1e-18) break;
     v = n.map((x) => x / len);
   }
@@ -64,7 +65,7 @@ export function principalAxis(S: Samples): { centre: Vec3; axis: Vec3 } {
 export const dot = (a: Vec3, b: Vec3): number => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
 export const sub = (a: Vec3, b: Vec3): Vec3 => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
 export const norm = (a: Vec3): Vec3 => {
-  const l = Math.hypot(a[0], a[1], a[2]);
+  const l = dmath.hypot(a[0], a[1], a[2]);
   return l > 1e-12 ? [a[0] / l, a[1] / l, a[2] / l] : [0, 0, 1];
 };
 export const cross = (a: Vec3, b: Vec3): Vec3 => [

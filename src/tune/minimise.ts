@@ -1,6 +1,8 @@
 // Shared shapes of the black-box minimisers (CMA-ES, coordinate search): a function on the unit
 // box [0, 1]^n, a start point, an evaluation budget, a seed — and what they hand back.
 
+import { dmath } from '../core/index.ts';
+
 export type Objective = (x: readonly number[]) => number;
 
 export interface MinimiseOptions {
@@ -67,7 +69,7 @@ export class Tracker {
       this.bestX = c;
     }
     let out = 0;
-    for (let i = 0; i < x.length; i++) out += ((x[i] ?? 0) - (c[i] ?? 0)) ** 2;
+    for (let i = 0; i < x.length; i++) out += dmath.pow((x[i] ?? 0) - (c[i] ?? 0), 2);
     return v + 10 * out;
   }
 }

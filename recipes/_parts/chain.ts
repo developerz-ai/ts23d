@@ -1,7 +1,7 @@
 // Short-link chain along +X: each link a round bar swept round a stadium, alternate links turned
 // 90°. Origin = first link's centre. Real short-link chain: pitch ≈ 3 d, inside width ≈ 1.4 d.
 
-import { definePart, merge, place, sweep, type Vec3 } from '@developerz.ai/ts23d';
+import { definePart, dmath, merge, place, sweep, type Vec3 } from '@developerz.ai/ts23d';
 import { DARK_STEEL } from './shape.ts';
 
 export const chain = definePart({
@@ -26,7 +26,7 @@ export const chain = definePart({
     ] as const)
       for (let k = 0; k <= n; k++) {
         const a = a0 + (k / n) * Math.PI;
-        path.push([cx + rr * Math.cos(a), rr * Math.sin(a), 0]);
+        path.push([cx + rr * dmath.cos(a), rr * dmath.sin(a), 0]);
       }
     path.push([0, -rr, 0]);
     const link = sweep({

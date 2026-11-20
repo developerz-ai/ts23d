@@ -1,16 +1,17 @@
 import { describe, expect, it } from 'bun:test';
+import { dmath } from '../core/index.ts';
 import { cmaes } from './cmaes.ts';
 import { coordinateSearch } from './coordinate.ts';
 import { symmetricEigen } from './eigen.ts';
 
 const centre = [0.3, 0.7, 0.55, 0.2, 0.8];
 const sphere = (x: readonly number[]): number =>
-  x.reduce((s, v, i) => s + (v - (centre[i] ?? 0)) ** 2, 0);
+  x.reduce((s, v, i) => s + dmath.pow(v - (centre[i] ?? 0), 2), 0);
 /** Rosenbrock on [-2, 2]² mapped to the unit box: minimum 0 at (0.75, 0.75). */
 const rosen = (x: readonly number[]): number => {
   const a = (x[0] ?? 0) * 4 - 2;
   const b = (x[1] ?? 0) * 4 - 2;
-  return (1 - a) ** 2 + 100 * (b - a * a) ** 2;
+  return dmath.pow(1 - a, 2) + 100 * dmath.pow(b - a * a, 2);
 };
 
 describe('cmaes', () => {
@@ -34,7 +35,7 @@ describe('cmaes', () => {
   });
 
   it('respects the box: a minimum outside it lands on the edge', () => {
-    const r = cmaes((x) => ((x[0] ?? 0) - 1.5) ** 2 + ((x[1] ?? 0) + 0.5) ** 2, {
+    const r = cmaes((x) => dmath.pow((x[0] ?? 0) - 1.5, 2) + dmath.pow((x[1] ?? 0) + 0.5, 2), {
       x0: [0.5, 0.5],
       evals: 600,
       seed: 2,

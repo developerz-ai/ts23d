@@ -5,6 +5,7 @@
 
 import type { Vec3 } from '../core/index.ts';
 import { cover, fbm, measured } from './weather-mask.ts';
+import type { Read } from './weather-read.ts';
 import { type Scene, select } from './weather-select.ts';
 import { traceStreaks } from './weather-streaks.ts';
 import type { CoverEffect, CoverName, RustEffect } from './weather-types.ts';
@@ -52,6 +53,7 @@ export function paintEffect(
   amount: number,
   seed: number,
   under: Vec3,
+  read: Read | null = null,
 ): PaintResult {
   const s = sc.s;
   const m = s.mesh;
@@ -59,6 +61,7 @@ export function paintEffect(
   const target = eff.color ?? (name === 'chips' || name === 'scratches' ? under : look.color);
   const strength = eff.strength ?? look.strength;
   const weight = select(sc, where);
+  const cell = Math.max(look.cell, read?.cell ?? 0);
   const score = new Float32Array(s.vertices);
   const jitter = new Float32Array(s.vertices);
   for (let v = 0; v < s.vertices; v++) {
@@ -68,7 +71,7 @@ export function paintEffect(
       s.gp[g * 3 + 1] ?? 0,
       s.gp[g * 3 + 2] ?? 0,
     ];
-    const n = fbm(seed, p, look.cell, look.stretch);
+    const n = fbm(seed, p, cell, look.stretch);
     const bias =
       name === 'chips'
         ? 1.5 * -(s.convex[g] ?? 0)
@@ -80,7 +83,7 @@ export function paintEffect(
               ? 0.3 * (m.normals[v * 3 + 2] ?? 0)
               : 0.3 * (weight[v] ?? 0);
     score[v] = n + bias;
-    jitter[v] = fbm(seed + 101, p, look.cell * 0.5);
+    jitter[v] = fbm(seed + 101, p, cell * 0.5);
   }
   const cov = cover(weight, score, s.area, amount);
   const mix = (v: number, to: Vec3, k: number): void => {
@@ -90,7 +93,13 @@ export function paintEffect(
     }
   };
   for (let v = 0; v < s.vertices; v++) {
-    const k = (cov.mask[v] ?? 0) * strength * (0.75 + 0.5 * ((jitter[v] ?? 0.5) - 0.5));
+    const k =
+      (cov.mask[v] ?? 0) * strength * (0.75 + 0.5 * ((jitter[v] ?? 0.5) - 0.5)) +
+      (read
+        ? washOf(sc, name, v, weight[v] ?? 0, cov.mask[v] ?? 0, jitter[v] ?? 0.5) *
+          read.wash *
+          strength
+        : 0);
     if (k <= 0) continue;
     if (name === 'bleach') {
       const c: Vec3 = [colors[v * 3] ?? 0, colors[v * 3 + 1] ?? 0, colors[v * 3 + 2] ?? 0];
@@ -113,12 +122,38 @@ export function paintEffect(
   for (let v = 0; v < s.vertices; v++) if ((cov.mask[v] ?? 0) >= 0.5) sources[s.group[v] ?? 0] = 1;
   const meander = (g: number): number =>
     fbm(seed + 7, [s.gp[g * 3] ?? 0, s.gp[g * 3 + 1] ?? 0, s.gp[g * 3 + 2] ?? 0], 0.05);
-  const st = traceStreaks(s, sources, rust.streakLength ?? 0.35, meander);
+  const st = traceStreaks(s, sources, rust.streakLength ?? read?.streak ?? 0.35, meander);
   for (let v = 0; v < s.vertices; v++) {
     const lv = st.level[s.group[v] ?? 0] ?? 0;
     if (lv > 0) mix(v, STREAK, lv * 0.95 * (0.75 + 0.5 * ((jitter[v] ?? 0.5) - 0.5)));
   }
   return { ...res, streaks: st.segments, upward: st.upward };
+}
+
+/**
+ * The graded wash of `read: 'hero'` at vertex v, 0..1, outside the covered patches: deposits and
+ * fading thin out the way they build up (mud and moss up from the ground, dust and bleach by how
+ * squarely the surface faces the sky, at under half the depth so their patches still show);
+ * wear-through (chips, scratches, rust) has no wash.
+ */
+function washOf(
+  sc: Scene,
+  name: CoverName,
+  v: number,
+  weight: number,
+  mask: number,
+  grain: number,
+): number {
+  if (weight < 0.5 || name === 'chips' || name === 'scratches' || name === 'rust') return 0;
+  const s = sc.s;
+  const h = (s.gp[(s.group[v] ?? 0) * 3 + 2] ?? 0) - sc.ground;
+  const up = Math.max(0, s.mesh.normals[v * 3 + 2] ?? 0);
+  const fall =
+    name === 'mud' || name === 'moss'
+      ? // Ragged, not a ruled tide line: the noise moves the top of the band by ± a third of it.
+        Math.min(1, Math.max(0, 1 - h / Math.max(1e-3, sc.band) + (grain - 0.5) * 0.7))
+      : 0.45 * (0.4 + 0.6 * up);
+  return (1 - mask) * fall;
 }
 
 /** Covered area fraction sitting where the effect cannot physically be. */

@@ -7,7 +7,7 @@
 // line half a link further out. So every LOD of one asset runs its belt at one ground speed.
 
 import type { Mesh, Part, Vec3 } from '../core/index.ts';
-import { cyclesOf, LOOP_SECONDS, rotateZ, worldTransforms } from '../core/index.ts';
+import { cyclesOf, dmath, LOOP_SECONDS, rotateZ, worldTransforms } from '../core/index.ts';
 import type { BeltLoop } from '../passes/index.ts';
 
 /** A belt with no wheel to follow runs at this speed along its path's winding (m/s). */
@@ -45,7 +45,7 @@ function rimRadius(part: Part, axis: Vec3): number {
   let r2 = 0;
   for (let i = 0; p && i + 2 < p.length; i += 3) {
     const v: Vec3 = [p[i] ?? 0, p[i + 1] ?? 0, p[i + 2] ?? 0];
-    r2 = Math.max(r2, dot(v, v) - dot(v, axis) ** 2);
+    r2 = Math.max(r2, dot(v, v) - dmath.pow(dot(v, axis), 2));
   }
   return Math.sqrt(r2);
 }
@@ -83,7 +83,9 @@ function beltReach(belt: Mesh, pivot: Vec3, axis: Vec3): number {
       const l2 = dot(ab, ab);
       const u = l2 > 0 ? Math.min(1, Math.max(0, -dot(from, ab) / l2)) : 0;
       const d2 =
-        (from[0] + u * ab[0]) ** 2 + (from[1] + u * ab[1]) ** 2 + (from[2] + u * ab[2]) ** 2;
+        dmath.pow(from[0] + u * ab[0], 2) +
+        dmath.pow(from[1] + u * ab[1], 2) +
+        dmath.pow(from[2] + u * ab[2], 2);
       if (d2 < best) best = d2;
     }
   return Math.sqrt(best);
@@ -108,7 +110,7 @@ export function beltSpeed(parts: readonly Part[], belt: Part, loop: BeltLoop): n
   for (const part of parts) {
     const t = world.get(part.name);
     if (part.motion?.kind !== 'spin' || !t) continue;
-    const l = Math.hypot(...part.motion.axis);
+    const l = dmath.norm(part.motion.axis);
     const own: Vec3 = [part.motion.axis[0] / l, part.motion.axis[1] / l, part.motion.axis[2] / l];
     const side = dot(rotateZ(own, t.yaw - home.yaw), b);
     if (Math.abs(side) < 0.99) continue;
@@ -132,7 +134,7 @@ function bareRadius(belt: Part, loop: BeltLoop, pivot: Vec3): number {
   const reach = belt.mesh ? beltReach(belt.mesh, pivot, loop.normal) : Infinity;
   if (Number.isFinite(reach) && reach > 0) return reach;
   const k = Math.round(loop.nearest(pivot) / loop.step) % loop.n;
-  return Math.hypot(
+  return dmath.hypot(
     (loop.p[k * 3] ?? 0) - pivot[0],
     (loop.p[k * 3 + 1] ?? 0) - pivot[1],
     (loop.p[k * 3 + 2] ?? 0) - pivot[2],

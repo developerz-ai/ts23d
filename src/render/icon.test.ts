@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { type CompiledAsset, compile, defineAsset, Ts23dError } from '../core/index.ts';
+import { type CompiledAsset, compile, defineAsset, dmath, Ts23dError } from '../core/index.ts';
 import { DEFAULT_SHEET, hex, paintTrimSheet } from '../material/index.ts';
 import { box, lathe } from '../primitives/index.ts';
 import { renderBeauty } from './beauty.ts';
@@ -24,7 +24,7 @@ const unit = (hidden: boolean) =>
     },
   });
 /** A small sheet: the default 2048² one costs seconds to paint. */
-const sheet = paintTrimSheet({ ...DEFAULT_SHEET, size: 512 });
+const sheet = paintTrimSheet({ ...DEFAULT_SHEET, size: 512 }, []);
 const red = compile(unit(false), { variant: 'red' });
 const blue = compile(unit(false), { variant: 'blue' });
 
@@ -132,7 +132,7 @@ describe('icon', () => {
     // (`medium: 'water'` drops it) the studio icons differ, the cut-outs must not.
     const ring = Array.from({ length: 9 }, (_, k): [number, number] => {
       const a = (k / 8) * Math.PI;
-      return [Math.sin(a) * 0.5, 0.5 - Math.cos(a) * 0.5];
+      return [dmath.sin(a) * 0.5, 0.5 - dmath.cos(a) * 0.5];
     });
     const ball = compile(
       defineAsset({

@@ -9,6 +9,7 @@
 // creature-clips.ts.
 
 import type { Bone, Mesh, Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import {
   bindRigid,
   hingeMorph,
@@ -39,7 +40,7 @@ const nearest = (nodes: readonly Node[], p: Vec3, fallback: number): number => {
   let best = fallback;
   let d = Infinity;
   for (const n of nodes) {
-    const e = Math.hypot(n.at[0] - p[0], n.at[1] - p[1], n.at[2] - p[2]);
+    const e = dmath.hypot(n.at[0] - p[0], n.at[1] - p[1], n.at[2] - p[2]);
     if (e < d) [d, best] = [e, n.r];
   }
   return best;
@@ -76,7 +77,7 @@ function fleshOf(b: Bones, bone: Bone, name: string): WeightBone {
   if (name.startsWith('scapula_'))
     return { a: bone.head, b: bone.tail, r1: b.limbR * 1.2, r2: b.limbR * 1.2 };
   if (name.startsWith('ear_')) {
-    const len = Math.hypot(...bone.tail.map((t, k) => t - (bone.head[k] ?? 0)));
+    const len = dmath.norm(bone.tail.map((t, k) => t - (bone.head[k] ?? 0)));
     return { a: bone.head, b: bone.tail, r1: len * 0.3, r2: len * 0.08 };
   }
   if (name.startsWith('neck')) return ends(b.neck, h * 0.3);
@@ -96,23 +97,23 @@ function fleshOf(b: Bones, bone: Bone, name: string): WeightBone {
 
 /** Both upper lids turned down over the balls (head-local eye → the pitched head frame). */
 function blink(mesh: Mesh, e: EyeSpec, h: HeadFrame): Mesh {
-  const c = Math.cos(h.pitch);
-  const s = Math.sin(h.pitch);
+  const c = dmath.cos(h.pitch);
+  const s = dmath.sin(h.pitch);
   const pitch = (p: Vec3): Vec3 => [c * p[0] + s * p[2], p[1], -s * p[0] + c * p[2]];
   const unpitch = (p: Vec3): Vec3 => [c * p[0] - s * p[2], p[1], s * p[0] + c * p[2]];
   const R = e.r + e.lid;
-  const ih = e.r * Math.sin(Math.asin(Math.min(0.95, e.iris / e.r)));
+  const ih = e.r * dmath.sin(dmath.asin(Math.min(0.95, e.iris / e.r)));
   const upper = ih * (1 - 2 * e.upper);
   const lower = -ih * (1 - 2 * e.lower);
   const degrees =
-    (Math.asin(Math.max(-1, Math.min(1, upper / R))) -
-      Math.asin(Math.max(-1, Math.min(1, lower / R))) +
-      Math.asin(Math.min(1, e.lid / R))) /
+    (dmath.asin(Math.max(-1, Math.min(1, upper / R))) -
+      dmath.asin(Math.max(-1, Math.min(1, lower / R))) +
+      dmath.asin(Math.min(1, e.lid / R))) /
     deg;
   const a = (e.aperture ?? 0) * deg;
   const morph = (side: 1 | -1) => {
     const centre: Vec3 = [e.centre[0], e.centre[1] * side, e.centre[2]];
-    const axis: Vec3 = [-Math.sin(a) * side, Math.cos(a), 0];
+    const axis: Vec3 = [-dmath.sin(a) * side, dmath.cos(a), 0];
     return hingeMorph(mesh, 'blink', {
       at: pitch(centre),
       axis: pitch(axis),
@@ -120,8 +121,8 @@ function blink(mesh: Mesh, e: EyeSpec, h: HeadFrame): Mesh {
       weight: (q) => {
         const p = unpitch(q);
         const d: Vec3 = [p[0] - centre[0], p[1] - centre[1], p[2] - centre[2]];
-        const front = d[0] * Math.cos(a) + d[1] * Math.sin(a) * side;
-        const r = Math.hypot(...d);
+        const front = d[0] * dmath.cos(a) + d[1] * dmath.sin(a) * side;
+        const r = dmath.norm(d);
         if (front < -e.r * 0.8 || r > R + e.lid * 4) return 0;
         const near = Math.min(1, Math.max(0, (R + e.lid * 4 - r) / (e.lid * 2.5)));
         const above = Math.min(1, Math.max(0, (d[2] - (upper + lower) / 2) / e.lid));

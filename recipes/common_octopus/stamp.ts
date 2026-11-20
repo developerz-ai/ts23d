@@ -2,9 +2,10 @@
 // instead of `place`'s Euler angles, because every sucker and papilla stands on its own normal.
 
 import type { Mesh, Vec3 } from '@developerz.ai/ts23d';
+import { dmath } from '@developerz.ai/ts23d';
 
 const norm = (a: Vec3): Vec3 => {
-  const l = Math.hypot(a[0], a[1], a[2]) || 1;
+  const l = dmath.hypot(a[0], a[1], a[2]) || 1;
   return [a[0] / l, a[1] / l, a[2] / l];
 };
 
@@ -19,7 +20,7 @@ export function stamp(unit: Mesh, at: Vec3, axis: Vec3, scale: number, spin = 0)
   const ref: Vec3 = Math.abs(z[2]) > 0.9 ? [1, 0, 0] : [0, 0, 1];
   const x0 = norm(cross(ref, z));
   const y0 = cross(z, x0);
-  const [c, s] = [Math.cos(spin), Math.sin(spin)];
+  const [c, s] = [dmath.cos(spin), dmath.sin(spin)];
   const x: Vec3 = [x0[0] * c + y0[0] * s, x0[1] * c + y0[1] * s, x0[2] * c + y0[2] * s];
   const y = cross(z, x);
   const positions = new Float32Array(unit.positions.length);

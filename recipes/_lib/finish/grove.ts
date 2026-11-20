@@ -7,6 +7,7 @@ import {
   BUDGETS,
   type BuildContext,
   defineAsset,
+  dmath,
   hex,
   type Mesh,
   materialVariant,
@@ -108,7 +109,7 @@ export function grove(o: GroveSpec) {
       const disc = planar({
         points: Array.from({ length: n }, (_, k): Vec3 => {
           const a = (k / n) * Math.PI * 2;
-          return [Math.cos(a) * o.floorRadius, Math.sin(a) * o.floorRadius, 0.005];
+          return [dmath.cos(a) * o.floorRadius, dmath.sin(a) * o.floorRadius, 0.005];
         }),
         color: o.floorTint ?? hex('#ffffff'),
         strip: materialVariant(o.floor, 5),

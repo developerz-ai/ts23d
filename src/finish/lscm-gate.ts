@@ -2,6 +2,8 @@
 // UV → surface Jacobian's singular values, normalised so any uniform scale of an isometry reads 1)
 // and a raster self-overlap test (two triangles covering one sample = the chart folds onto itself).
 
+import { dmath } from '../core/index.ts';
+
 export type V3 = [number, number, number];
 export const sub = (a: V3, b: V3): V3 => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
 export const dot = (a: V3, b: V3): number => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
@@ -28,7 +30,7 @@ export function stretchL2(tri3: readonly V3[][], tri2: readonly [number, number]
     const [q1, q2, q3] = q;
     if (!p1 || !p2 || !p3 || !q1 || !q2 || !q3) return;
     const a2 = ((p2[0] - p1[0]) * (p3[1] - p1[1]) - (p3[0] - p1[0]) * (p2[1] - p1[1])) / 2;
-    const a3 = Math.hypot(...cross(sub(q2, q1), sub(q3, q1))) / 2;
+    const a3 = dmath.norm(cross(sub(q2, q1), sub(q3, q1))) / 2;
     if (a3 < 1e-14) return;
     if (Math.abs(a2) < 1e-14) {
       acc += 1e6 * a3;

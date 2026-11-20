@@ -4,7 +4,7 @@
 // faces, a per-part tint — all noise in WORLD space, so every view agrees and the bake is clean.
 // Keywords in the prompt pick the effects: rust, soot/grime/dirt, moss, worn/chipped, clean.
 
-import { encodePng } from '../core/index.ts';
+import { dmath, encodePng } from '../core/index.ts';
 import type { ControlView, FinishModel, FinishRequest } from './types.ts';
 
 function hash3(x: number, y: number, z: number, seed: number): number {
@@ -94,7 +94,7 @@ function paintView(
       if (Math.abs((v.depth[j] ?? 0) - (v.depth[i] ?? 0)) > 0.02 * (v.depth[i] ?? 1)) continue;
       const d = [0, 1, 2].map((k) => (v.position[j * 3 + k] ?? 0) - (v.position[i * 3 + k] ?? 0));
       const nd = [0, 1, 2].reduce((s, k) => s + (v.normal[i * 3 + k] ?? 0) * (d[k] ?? 0), 0);
-      const len = Math.hypot(d[0] ?? 0, d[1] ?? 0, d[2] ?? 0) || 1;
+      const len = dmath.hypot(d[0] ?? 0, d[1] ?? 0, d[2] ?? 0) || 1;
       const c = nd / len;
       if (c < -0.25) convex = Math.max(convex, Math.min(1, -c));
       if (c > 0.25) concave = Math.max(concave, Math.min(1, c));

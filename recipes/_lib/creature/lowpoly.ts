@@ -3,6 +3,7 @@
 // same nodes the sculpt uses, so the silhouette matches; a different emitter, never a decimation.
 
 import {
+  dmath,
   type Mesh,
   MeshBuilder,
   stripRect,
@@ -27,7 +28,7 @@ export function tubeMesh(
     const c = isList(o.colors) ? (o.colors[i] ?? [1, 1, 1]) : o.colors;
     if (
       !last ||
-      Math.hypot(n.at[0] - last.n.at[0], n.at[1] - last.n.at[1], n.at[2] - last.n.at[2]) > 1e-4
+      dmath.hypot(n.at[0] - last.n.at[0], n.at[1] - last.n.at[1], n.at[2] - last.n.at[2]) > 1e-4
     )
       kept.push({ n, c });
   });
@@ -42,26 +43,26 @@ export function tubeMesh(
     if (!f) return;
     if (i > 0) {
       const p = path[i - 1] ?? k.n.at;
-      s += Math.hypot(k.n.at[0] - p[0], k.n.at[1] - p[1], k.n.at[2] - p[2]);
+      s += dmath.hypot(k.n.at[0] - p[0], k.n.at[1] - p[1], k.n.at[2] - p[2]);
     }
     // Taper tilts the surface normal toward the narrowing end.
     const prev = kept[Math.max(0, i - 1)]?.n ?? k.n;
     const next = kept[Math.min(kept.length - 1, i + 1)]?.n ?? k.n;
     const ds =
-      Math.hypot(next.at[0] - prev.at[0], next.at[1] - prev.at[1], next.at[2] - prev.at[2]) || 1;
+      dmath.hypot(next.at[0] - prev.at[0], next.at[1] - prev.at[1], next.at[2] - prev.at[2]) || 1;
     const slope = (prev.r - next.r) / ds;
     const row: number[] = [];
     for (let j = 0; j <= o.sides; j++) {
       const a = (j / o.sides) * Math.PI * 2;
-      const ca = Math.cos(a);
-      const sa = Math.sin(a);
+      const ca = dmath.cos(a);
+      const sa = dmath.sin(a);
       const rad: Vec3 = [
         f.n[0] * ca + f.b[0] * sa,
         f.n[1] * ca + f.b[1] * sa,
         f.n[2] * ca + f.b[2] * sa,
       ];
       const nn: Vec3 = [rad[0] + f.t[0] * slope, rad[1] + f.t[1] * slope, rad[2] + f.t[2] * slope];
-      const l = Math.hypot(nn[0], nn[1], nn[2]) || 1;
+      const l = dmath.hypot(nn[0], nn[1], nn[2]) || 1;
       row.push(
         b.vertex({
           p: [k.n.at[0] + rad[0] * k.n.r, k.n.at[1] + rad[1] * k.n.r, k.n.at[2] + rad[2] * k.n.r],
@@ -96,9 +97,9 @@ export function tubeMesh(
     for (let j = 0; j < o.sides; j++) {
       const a = (j / o.sides) * Math.PI * 2;
       const rad: Vec3 = [
-        f.n[0] * Math.cos(a) + f.b[0] * Math.sin(a),
-        f.n[1] * Math.cos(a) + f.b[1] * Math.sin(a),
-        f.n[2] * Math.cos(a) + f.b[2] * Math.sin(a),
+        f.n[0] * dmath.cos(a) + f.b[0] * dmath.sin(a),
+        f.n[1] * dmath.cos(a) + f.b[1] * dmath.sin(a),
+        f.n[2] * dmath.cos(a) + f.b[2] * dmath.sin(a),
       ];
       ids.push(
         b.vertex({
@@ -157,16 +158,16 @@ export function blob(
     // R = Rz · Ry · Rx
     let [x, y, z] = v;
     [y, z] = [
-      y * Math.cos(ax ?? 0) - z * Math.sin(ax ?? 0),
-      y * Math.sin(ax ?? 0) + z * Math.cos(ax ?? 0),
+      y * dmath.cos(ax ?? 0) - z * dmath.sin(ax ?? 0),
+      y * dmath.sin(ax ?? 0) + z * dmath.cos(ax ?? 0),
     ];
     [x, z] = [
-      x * Math.cos(ay ?? 0) + z * Math.sin(ay ?? 0),
-      -x * Math.sin(ay ?? 0) + z * Math.cos(ay ?? 0),
+      x * dmath.cos(ay ?? 0) + z * dmath.sin(ay ?? 0),
+      -x * dmath.sin(ay ?? 0) + z * dmath.cos(ay ?? 0),
     ];
     [x, y] = [
-      x * Math.cos(az ?? 0) - y * Math.sin(az ?? 0),
-      x * Math.sin(az ?? 0) + y * Math.cos(az ?? 0),
+      x * dmath.cos(az ?? 0) - y * dmath.sin(az ?? 0),
+      x * dmath.sin(az ?? 0) + y * dmath.cos(az ?? 0),
     ];
     return [x, y, z];
   };
@@ -177,10 +178,10 @@ export function blob(
     const row: number[] = [];
     for (let j = 0; j <= o.sides; j++) {
       const ph = (j / o.sides) * Math.PI * 2;
-      const u: Vec3 = [Math.sin(th) * Math.cos(ph), Math.sin(th) * Math.sin(ph), Math.cos(th)];
+      const u: Vec3 = [dmath.sin(th) * dmath.cos(ph), dmath.sin(th) * dmath.sin(ph), dmath.cos(th)];
       const p = rot([u[0] * r[0], u[1] * r[1], u[2] * r[2]]);
       const nl = [u[0] / r[0], u[1] / r[1], u[2] / r[2]] as const;
-      const l = Math.hypot(nl[0], nl[1], nl[2]) || 1;
+      const l = dmath.hypot(nl[0], nl[1], nl[2]) || 1;
       const n = rot([nl[0] / l, nl[1] / l, nl[2] / l]);
       row.push(
         b.vertex({

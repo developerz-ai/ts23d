@@ -22,8 +22,8 @@
   },
   "triangles": [
     38564,
-    7088,
-    618
+    9016,
+    768
   ],
   "drawCalls": [
     1,
@@ -142,43 +142,43 @@
   "clips": [
     {
       "name": "cruise",
-      "seconds": 2.1805198698801993,
+      "seconds": 2.18052,
       "loop": true,
       "speed": 1.4
     },
     {
       "name": "burst",
-      "seconds": 1.2113999277112217,
+      "seconds": 1.2114,
       "loop": true,
       "speed": 6.3
     },
     {
       "name": "turn_l",
-      "seconds": 11.992859284341096,
+      "seconds": 11.992859,
       "loop": true,
       "speed": 0
     },
     {
       "name": "turn_r",
-      "seconds": 11.992859284341096,
+      "seconds": 11.992859,
       "loop": true,
       "speed": 0
     },
     {
       "name": "cstart_l",
-      "seconds": 1.0346324502596003,
+      "seconds": 1.034632,
       "loop": false,
       "speed": 3.7071
     },
     {
       "name": "cstart_r",
-      "seconds": 1.0346324502596003,
+      "seconds": 1.034632,
       "loop": false,
       "speed": 3.7148
     },
     {
       "name": "idle",
-      "seconds": 3.115028385543142,
+      "seconds": 3.115028,
       "loop": true,
       "speed": 0.98
     }
@@ -186,13 +186,13 @@
   "hitboxes": [
     {
       "bone": "spine_0",
-      "radius": 0.077863,
-      "height": 0.048137,
-      "coverage": 0.9509
+      "radius": 0.084309,
+      "height": 0.041691,
+      "coverage": 0.9714
     },
     {
       "bone": "spine_1",
-      "radius": 0.102283,
+      "radius": 0.102306,
       "height": 0,
       "coverage": 1
     },
@@ -210,26 +210,26 @@
     },
     {
       "bone": "caudal_upper_0",
-      "radius": 0.053323,
-      "height": 0.057374,
+      "radius": 0.053331,
+      "height": 0.057366,
       "coverage": 0.9691
     },
     {
       "bone": "caudal_upper_1",
-      "radius": 0.106331,
-      "height": 0.11856,
+      "radius": 0.106368,
+      "height": 0.118648,
       "coverage": 0.9588
     },
     {
       "bone": "caudal_lower_0",
-      "radius": 0.050669,
-      "height": 0.06023,
+      "radius": 0.050687,
+      "height": 0.060212,
       "coverage": 0.9529
     },
     {
       "bone": "caudal_lower_1",
-      "radius": 0.10521,
-      "height": 0.113087,
+      "radius": 0.104793,
+      "height": 0.114269,
       "coverage": 0.9588
     },
     {
@@ -266,19 +266,19 @@
     {
       "label": "body depth, 26 % FL (24 to 28)",
       "spec": 0.52,
-      "measured": 0.5199992954730988,
+      "measured": 0.519999,
       "source": "https://www.fao.org/4/ap889e/ap889e.pdf"
     },
     {
       "label": "second dorsal height, 15.5 % FL (14 to 17), root sunk 2 cm",
       "spec": 0.328,
-      "measured": 0.3268187642097473,
+      "measured": 0.326819,
       "source": "https://www.fao.org/4/ap889e/ap889e.pdf"
     },
     {
       "label": "anal height, 14.5 % FL (13 to 16), root sunk 2 cm",
       "spec": 0.308,
-      "measured": 0.30689071863889694,
+      "measured": 0.306891,
       "source": "https://www.fao.org/4/ap889e/ap889e.pdf"
     }
   ],

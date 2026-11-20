@@ -4,7 +4,7 @@
 // one of the same colour.
 
 import { describe, expect, it } from 'bun:test';
-import { type CompiledAsset, compile, defineAsset, type Mesh } from '../core/index.ts';
+import { type CompiledAsset, compile, defineAsset, dmath, type Mesh } from '../core/index.ts';
 import { decodePng } from '../material/index.ts';
 import { box, lathe } from '../primitives/index.ts';
 import { cameraFor, renderBeauty } from './beauty.ts';
@@ -20,7 +20,7 @@ function ground(): Mesh {
   const tiles: Mesh[] = [];
   for (let x = -15; x < 15; x++)
     for (let y = -12; y < 12; y++) {
-      const c = Math.hypot(x + 0.5 - 6, y + 0.5 + 4) < 3 ? WORN : PALE;
+      const c = dmath.hypot(x + 0.5 - 6, y + 0.5 + 4) < 3 ? WORN : PALE;
       tiles.push(box({ size: [1, 1, 0.1], at: [x + 0.5, y + 0.5, -0.1], color: [c, c, c] }));
     }
   const positions: number[] = [];
@@ -91,7 +91,7 @@ describe('contact sheet FAR panel brightness (rts_resource report)', () => {
   const dome = (segments: number): CompiledAsset => {
     const profile = Array.from({ length: segments / 2 + 1 }, (_, k): [number, number] => {
       const a = (k / (segments / 2)) * (Math.PI / 2);
-      return [Math.cos(a), Math.sin(a)];
+      return [dmath.cos(a), dmath.sin(a)];
     });
     return compile(
       defineAsset({

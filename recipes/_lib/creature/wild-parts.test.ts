@@ -75,4 +75,27 @@ describe('withinBox', () => {
     );
     expect(withinBox(cards, { z: 1 }).indices.length).toBe(0);
   });
+  it('keeps the skin of the cards it keeps (joints and weights, four per vertex)', () => {
+    // Card 1 (vertices 0..2, bone 3) leaves the box; card 2 (vertices 3..5, bone 7) stays.
+    const cards: Mesh = {
+      ...mesh(
+        [
+          [0, 0, 0],
+          [0, 1, 0],
+          [1, 0, 0],
+          [0, 0, 0.1],
+          [0, 0.1, 0.1],
+          [0.1, 0, 0.1],
+        ],
+        [0, 1, 2, 3, 4, 5],
+      ),
+      joints: new Uint16Array([
+        3, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 0, 7, 0, 0, 0, 7, 0, 0, 0, 7, 0, 0, 0,
+      ]),
+      weights: new Float32Array(Array.from({ length: 6 }, () => [1, 0, 0, 0]).flat()),
+    };
+    const kept = withinBox(cards, { y: 0.5 });
+    expect([...(kept.joints ?? [])]).toEqual([7, 0, 0, 0, 7, 0, 0, 0, 7, 0, 0, 0]);
+    expect(kept.weights?.length).toBe(12);
+  });
 });

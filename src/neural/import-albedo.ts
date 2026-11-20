@@ -4,8 +4,10 @@
 // the ONE shared material and draw call (the default path; ADR 011).
 
 import type { Mesh } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import {
   DEFAULT_SHEET,
+  mappedOnto,
   type Rgba,
   type StripId,
   stripRect,
@@ -14,7 +16,7 @@ import {
 
 /** sRGB-encoded 0..1 → linear 0..1. */
 export const toLinear = (s: number): number =>
-  s <= 0.04045 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+  s <= 0.04045 ? s / 12.92 : dmath.pow((s + 0.055) / 1.055, 2.4);
 
 /** Bilinear RGBA8 sample at (u, v), wrapping (glTF REPEAT; v = 0 is the top row). 0..1 sRGB. */
 export function sampleRgba(img: Rgba, u: number, v: number, out: number[]): void {
@@ -49,9 +51,11 @@ export function projectAlbedo(m: Mesh, img: Rgba): Mesh {
 
 /**
  * Replace UVs with true-scale triplanar UVs on `strip` (U tiles, V mirrored inside the band):
- * the sheet's micro-detail at real size, colour from the vertices. The file's UVs are dropped.
+ * the sheet's micro-detail at real size, colour from the vertices. The file's UVs are dropped,
+ * and with them the materials they were mapped onto: the mesh maps onto `strip` alone (D409).
  */
-export function onSheet(m: Mesh, strip: StripId = 'plain'): Mesh {
+export function onSheet(input: Mesh, strip: StripId = 'plain'): Mesh {
+  const { mapped: _replaced, ...m } = input;
   const r = stripRect(strip);
   const vm = DEFAULT_SHEET.strips[strip]?.scaleMetres ?? 1;
   const half = 0.5 / TRIM_SHEET_SIZE;
@@ -71,5 +75,5 @@ export function onSheet(m: Mesh, strip: StripId = 'plain'): Mesh {
     uvs[i * 2] = r.u0 + (s / r.metres) * (r.u1 - r.u0);
     uvs[i * 2 + 1] = r.v0 + half + band * (r.v1 - r.v0 - 2 * half);
   }
-  return { ...m, uvs };
+  return mappedOnto({ ...m, uvs }, strip);
 }

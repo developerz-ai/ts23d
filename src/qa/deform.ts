@@ -17,6 +17,7 @@
 import {
   type Armature,
   type CompiledAsset,
+  dmath,
   type Mesh,
   type Quat,
   quatFromAxisAngle,
@@ -123,7 +124,7 @@ const tet = (P: ArrayLike<number>, a: number, b: number, c: number, o: Vec3): nu
 };
 
 const dist = (P: ArrayLike<number>, a: number, b: number): number =>
-  Math.hypot(
+  dmath.hypot(
     (P[a * 3] ?? 0) - (P[b * 3] ?? 0),
     (P[a * 3 + 1] ?? 0) - (P[b * 3 + 1] ?? 0),
     (P[a * 3 + 2] ?? 0) - (P[b * 3 + 2] ?? 0),
@@ -174,7 +175,7 @@ export function poseDeform(
       if (r0 > 1e-6) ratios.push(dist(posed, p, q) / r0);
       reach = Math.max(
         reach,
-        Math.hypot(...[0, 1, 2].map((k) => (R[p * 3 + k] ?? 0) - (centre[k] ?? 0))),
+        dmath.norm([0, 1, 2].map((k) => (R[p * 3 + k] ?? 0) - (centre[k] ?? 0))),
       );
     }
   }
@@ -188,7 +189,7 @@ export function poseDeform(
   const zone: number[] = [];
   for (let t = 0; t < T.length / 3; t++) {
     const v = T[t * 3] ?? 0;
-    if (Math.hypot(...[0, 1, 2].map((k) => (R[v * 3 + k] ?? 0) - (centre[k] ?? 0))) < reach * 1.5)
+    if (dmath.norm([0, 1, 2].map((k) => (R[v * 3 + k] ?? 0) - (centre[k] ?? 0))) < reach * 1.5)
       zone.push(t);
   }
   const crossings = Math.max(
