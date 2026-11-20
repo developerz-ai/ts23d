@@ -18,6 +18,7 @@ import {
 } from '../render/index.ts';
 import type { Args } from './args.ts';
 import { compileOnce } from './compile-cache.ts';
+import { grantedCpu } from './queue/index.ts';
 import { type SheetSource, sheetOf } from './run-sheets.ts';
 
 export interface RenderResult {
@@ -49,6 +50,8 @@ export async function heroOne(asset: Asset, args: Args, look: SheetSource): Prom
   const path = join(dir, variant ? `hero_${variant}.png` : 'hero.png');
   const lod0 = compileOnce(asset, { lod: 0, ...(variant ? { variant } : {}) });
   const sheet = sheetOf(look, lod0);
+  // Under the queue the tracer uses the CPU tokens it was granted (same bytes at any count).
+  const threads = grantedCpu();
   await Bun.write(
     path,
     args.quality === 'path'
@@ -56,9 +59,7 @@ export async function heroOne(asset: Asset, args: Args, look: SheetSource): Prom
           ...args.render,
           sheet,
           ...(args.spp !== undefined ? { spp: args.spp } : {}),
-          // Hero PNGs are committed: always use the canonical worker count rather than ambient
-          // host concurrency. Direct render API callers can still choose their own count.
-          threads: 1,
+          ...(threads !== undefined ? { threads } : {}),
         })
       : beauty(lod0, { ...args.render, sheet }),
   );
