@@ -68,6 +68,14 @@ describe('lockLayers (D461)', () => {
     expect(lockLayers([{ ...hair, under: 0, fly: 0 }], {}, 0).map((l) => l.name)).toEqual(['hair']);
   });
 
+  it('keeps a tinted layer tinted in all three: no differently coloured roots through the gaps', () => {
+    const tint: Vec3 = [0.9, 0.3, 0.1];
+    const out = lockLayers([{ ...hair, tint }], {}, 0);
+    expect(out.map((l) => l.name)).toEqual(['hair_under', 'hair', 'hair_fly']);
+    for (const l of out) expect(l.tint).toEqual(tint);
+    expect(lockLayers([hair], {}, 0).some((l) => 'tint' in l)).toBe(false);
+  });
+
   it('never narrows a card under 4 mm: brows and lashes keep their width', () => {
     const lash: CardLayer = { ...hair, name: 'lashes', kind: 'beard', width: 0.0026 };
     const beard: CardLayer = { ...hair, name: 'beard', kind: 'beard', width: 0.012 };

@@ -63,6 +63,7 @@ export function lockLayers(layers: readonly CardLayer[], o: HairLocks, lod: numb
         fold: 0,
         tone: [t0 * 0.8, t1 * 0.85],
         hug: 1,
+        ...(l.tint ? { tint: l.tint } : {}),
       });
     out.push({
       ...l,

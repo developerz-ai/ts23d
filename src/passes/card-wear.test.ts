@@ -78,15 +78,31 @@ describe('cardWear', () => {
     });
   });
 
-  it('is the identity without paint or keep, and carries skin weights through', () => {
-    const joints = new Uint16Array((cards.positions.length / 3) * 4).fill(2);
-    const weights = new Float32Array((cards.positions.length / 3) * 4).fill(0.25);
-    const skinned = { ...cards, joints, weights };
-    const out = cardWear(skinned, {});
+  it('is the identity without paint or keep', () => {
+    const out = cardWear(cards, {});
     expect(out.positions).toEqual(cards.positions);
     expect(out.colors).toEqual(cards.colors);
-    expect(out.joints).toBe(joints);
-    expect(out.weights).toBe(weights);
+  });
+
+  it('keeps every vertex its own skin while it paints and shortens the cards', () => {
+    // Different joints and weights per vertex: a dropped, shared or reordered skin shows.
+    const verts = cards.positions.length / 3;
+    const joints = Uint16Array.from(
+      { length: verts * 4 },
+      (_, i) => (Math.floor(i / 4) % 7) + (i % 4),
+    );
+    const weights = Float32Array.from({ length: verts * 4 }, (_, i) =>
+      i % 4 === 0 ? 0.4 + (Math.floor(i / 4) % 5) * 0.1 : (0.6 - (Math.floor(i / 4) % 5) * 0.1) / 3,
+    );
+    const skinned = { ...cards, joints, weights };
+    const out = cardWear(skinned, {
+      paint: (p, _n, c) => [p[0], c[1], c[2]],
+      keep: (p) => (p[0] < 0.5 ? 0.3 : 1),
+    });
+    expect(out.positions).not.toEqual(cards.positions);
+    expect(out.colors).not.toEqual(cards.colors);
+    expect(out.joints).toEqual(Uint16Array.from(joints));
+    expect(out.weights).toEqual(Float32Array.from(weights));
   });
 
   it('refuses a keep outside 0..1 with a fix', () => {

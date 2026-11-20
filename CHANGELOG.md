@@ -18,6 +18,8 @@ All notable changes to `@developerz.ai/ts23d`. Format: [Keep a Changelog](https:
 - A fourth pass over the weakest assets: busts (skin finish, eyes, garments, hair), code-built creatures (head planes, mud, leg landmarks, fur that carries wear), asteroids, terrain, city block, pine and the RTS set.
 
 ### Fixed
+- Review of this release's changes: chip cuts on skinned parts blend the skin weights of both ends; the lock style's under-layer keeps the layer's tint; `colourDetail` no longer reads zero for a strip repeated in step with its samples; a one-sample hero is denoised from a spatial noise estimate; the fox's far tail tip and the cobra's near belly dust are back; tests that could not fail now can.
+- The defect catalogue matches the numbers the code cites again (one row per number), and the conventions step fails when code cites a defect number with no row.
 - Path tracer: hair and fur cards cast soft, strand-tinted shadows as drawn instead of solid card-sized ones, and strand shading conserves energy, so furred coats lose the dark specks and cards no longer read darker than the skin. Opaque shadows are byte-identical.
 - Wear slots cut each chip's edge through triangles at ragged points, so chips are irregular instead of a lattice sawtooth.
 - Fixes from an independent re-judge of every asset: bust cheeks, collars, beards and scalps; the cobra's, tiger's and wolf's far LODs; RTS chips, far rubble and roof slates; the station's far brick; board, barrel-head, drum-lid and far-ground texture mappings; asteroid ejecta and rim slivers; clean snowfields.

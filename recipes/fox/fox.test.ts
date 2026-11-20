@@ -3,6 +3,7 @@
 
 import { describe, expect, it } from 'bun:test';
 import {
+  type CreatureInfo,
   compile,
   creaturePlan,
   dmath,
@@ -11,8 +12,9 @@ import {
   type Vec3,
 } from '@developerz.ai/ts23d';
 import { assertUprightOnGround } from '@developerz.ai/ts23d/testing';
+import { defineWildCreature } from '../_lib/creature/wild.ts';
 import { WOLF } from '../_lib/creature/wolf-spec.ts';
-import { FOX, FOX_DATA, fox, REAL } from './fox.ts';
+import { FOX, FOX_DATA, FOX_WILD, fox, REAL } from './fox.ts';
 
 const SLOW = 120_000;
 const dist = (a: Vec3, b: Vec3): number => dmath.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
@@ -59,6 +61,44 @@ describe('red fox from the wolf family (Wikipedia: Red fox; Wikidata Q8332)', ()
       expect(m).toBeLessThan(REAL.mass * 1.3);
       expect(gaitFindings(c)).toEqual([]);
       assertUprightOnGround(fox);
+    },
+    SLOW,
+  );
+
+  it(
+    'paints the white brush tip on the far body (the LOD2 colour blocks once overwrote it)',
+    () => {
+      const seen: CreatureInfo[] = [];
+      const spy = defineWildCreature(
+        { name: 'fox_tip', spec: FOX },
+        {
+          ...FOX_WILD,
+          base: (i) => {
+            seen.push(i);
+            const own = FOX_WILD.base?.(i);
+            if (!own) throw new Error('FOX_WILD has no base paint');
+            return own;
+          },
+        },
+      );
+      compile(spy, { lod: 2 });
+      const got = seen[0];
+      if (!got) throw new Error('base paint never built');
+      const paint = FOX_WILD.base?.(got);
+      if (!paint) throw new Error('FOX_WILD has no base paint');
+      const end = got.bones.tail[got.bones.tail.length - 1]?.at;
+      if (!end) throw new Error('no tail');
+      const coat = FOX.colours.coat;
+      const tip = FOX.colours.tailTip ?? coat;
+      const off = (c: Vec3): number => dmath.hypot(c[0] - tip[0], c[1] - tip[1], c[2] - tip[2]);
+      for (const n of [
+        [0, 0, 1],
+        [0, 1, 0],
+        [0, 0, -1],
+      ] as Vec3[]) {
+        const c = paint({ p: end, n, c: coat, lod: 2, part: 'body' });
+        expect(off(c)).toBeLessThan(0.05);
+      }
     },
     SLOW,
   );

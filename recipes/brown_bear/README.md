@@ -75,9 +75,10 @@ fore claws, a short tail lost in the fur, coat from yellowish-brown to dark brow
   the skull. No lock may leave the dossier's box (0.36 m off the midline, 1.335 m high).
   Every LOD0/1 layer maps the strand atlas's `fur` cells, pale toward the tip (the grizzle); the
   agouti `guard` cells end dark and left a near-black dash at every lock tip, so only the far locks
-  use them. `cardLift: 1.8` raises every card's value: the path-traced hero shades a card with the
-  strand lobes at about 0.6 of the skin under it, so the coat read as a hide stippled with dark
-  dashes (D481).
+  use them. `cardLift: 1.45` raises every card's value back to the coat's: the strand texture
+  averages about 0.9 and the guard hairs are painted darker than the skin, so unlifted the coat
+  read as a hide stippled with dark dashes (D481; the renderer's own share, strand shading at 0.7
+  of a matte surface, is fixed in D476).
   Cards are bound with the kind's own skinning (`info.rig.pieces`) and kept off the kind's own
   bare-skin map (`info.bare`). Under the cards the skin carries painted locks 6 cm across along
   the coat's lie (`locks`).

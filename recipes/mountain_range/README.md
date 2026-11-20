@@ -84,7 +84,9 @@ and `stream` (the valley's water ribbon): all static, one draw call. LOD by grid
   ±0.12) and a fine ragged jitter on the threshold, so white couloirs and ledges sit between bare
   rock ribs instead of a white blanket holed by soft blobs; and bare holes up to ~80 m across
   inside a snowfield are filled (`fill: 40`, a morphological closing of the final cover), so the
-  left snowfield is clean snow with a broken outer edge, not a field of soft dark blobs.
+  left snowfield is clean snow, not a field of soft dark blobs. The closing also fills bare bays
+  narrower than ~80 m that open onto the field's edge, so the outer line keeps its broken shape
+  only at larger scales: its jitter and ragged threshold, not its narrow notches.
 - Rock wear (`../_lib/terrain/cliff.ts`): fading in from ~27° to ~44°, dark water streaks (a plan
   noise ~20 m across barely changes down a steep face, so its bands run down the fall line),
   ±22 % bedding bands 30 m thick, wobbled in plan, and pale/dark exfoliation patches ~150 m

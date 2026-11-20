@@ -18,7 +18,18 @@ import { mixRgb, norm } from '../_lib/body-plan-kit.ts';
 import { REAR, rearHinge } from './clips.ts';
 import { IDLE_GROUND, jointArcs } from './ground.ts';
 import { CLIPS, king_cobra, PLAN, RIG } from './king_cobra.ts';
-import { DUST, dustAt, FAR_DUST, marked, SCAR_AT, SHED_AT, scarAt, shedAt } from './material.ts';
+import {
+  DUST,
+  dustAt,
+  dusted,
+  FAR_DUST,
+  marked,
+  NEAR_DUST,
+  SCAR_AT,
+  SHED_AT,
+  scarAt,
+  shedAt,
+} from './material.ts';
 import {
   bellyHalf,
   COIL_TOP,
@@ -144,6 +155,24 @@ describe('ventral scutes', () => {
   it('continue past the 241 body plates onto the tail', () => {
     const plateTriangles = 8 * 2;
     expect(triangleCount(scutes()) / plateTriangles).toBeGreaterThan(241);
+  });
+
+  it("carry the near coil's dust on the ground, not the far tube's hint of it", () => {
+    // LOD0 plates (no story marks): at FAR_DUST the ground plates came out 0.50 from the loam on
+    // average, at NEAR_DUST 0.28 (the dark rear edges of each plate keep the average off 0).
+    const m = scutes();
+    let [n, d] = [0, 0];
+    for (let v = 0; v < m.positions.length / 3; v++) {
+      if ((m.positions[v * 3 + 2] ?? 1) > 0.02) continue;
+      n++;
+      d += dmath.hypot(
+        (m.colors[v * 3] ?? 0) - (DUST[0] ?? 0),
+        (m.colors[v * 3 + 1] ?? 0) - (DUST[1] ?? 0),
+        (m.colors[v * 3 + 2] ?? 0) - (DUST[2] ?? 0),
+      );
+    }
+    expect(n).toBeGreaterThan(1000);
+    expect(d / n).toBeLessThan(0.35);
   });
 });
 
@@ -285,6 +314,7 @@ describe('story marks by LOD', () => {
     ] as const) {
       expect(marked(c, s, a)).not.toEqual(marked(c, s, a, true));
       expect(marked(c, s, a, true)).toEqual(mixRgb(c, DUST, dustAt(s, a) * FAR_DUST));
+      expect(dusted(c, s, a, NEAR_DUST)).toEqual(mixRgb(c, DUST, dustAt(s, a) * NEAR_DUST));
     }
   });
 });

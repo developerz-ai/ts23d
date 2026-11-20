@@ -29,8 +29,10 @@ M-type metal. The glowing crystals (`#3fe0d0`) are a game convention, not scienc
 4. Nine craters. Each is a ring rim bump (0.2 r high, 0.22 r wide, at 0.85 r from the strike
    axis, faded out 0.5–1.5 r along it) that lifts the surface like a heightfield (a bump on the
    distance from the bowl's sphere centre was a shell hovering over the slope: sliver flaps), then
-   a smooth-subtracted bowl sphere (k = 0.14 r: a steep inner wall under a sharp lip). All shape draws come from `ctx.rng.fork('shape')`, so the shape is identical at
-   every LOD.
+   a smooth-subtracted bowl sphere (k = 0.14 r: a steep inner wall under a sharp lip). All shape draws come from `ctx.rng.fork('shape')`, so the seeded layout (lobes,
+   fractures, crater sites and sizes, boulders) is the same at every LOD. The field built on it is
+   not: the 0.3 m grain octave is added at LOD0 only, and at LOD2 each crater over 1.2 m radius
+   becomes a wider dish (1.7 × its radius, no raised rim) that the 1.5 m cells can still catch.
    Boulders (ejecta that fell back) settle in the floors of the larger craters.
 5. Mining workings at each crystal site: three drill bores cut into the field, each with a scorched
    ring painted round it (drill scars), and heaps of tailings chips at LOD0 (squat lumps, blunt

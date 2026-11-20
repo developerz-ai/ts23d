@@ -135,7 +135,7 @@ function headChain(): ChainSpec {
     ],
     // From the mantle's neck, swelling less where the eyes sit (a 0.07 bulge was the collar),
     // then flaring a little at the crown into the arm roots instead of running straight down as
-    // a cylinder under the eyes (the band, D483).
+    // a cylinder under the eyes (the band, D487).
     radius: [0.051, 0.064, 0.066, 0.045],
     links: 1,
     blend: 0.05,

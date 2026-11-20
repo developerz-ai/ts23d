@@ -58,4 +58,17 @@ describe('denoised hero', () => {
     expect(eRaw).toBeGreaterThan(0.5);
     expect(eDen).toBeLessThan(eRaw * 0.5);
   });
+
+  it('denoises a 1-sample render too (no per-pixel spread: a spatial estimate stands in)', () => {
+    // One sample has no variance to measure: read as zero, every difference above 1 % passed
+    // as detail and the noise stayed.
+    const o = { width: 48, height: 48, sheet: ridged };
+    const ref = renderPath(asset, { ...o, spp: 256, denoise: false });
+    const raw = renderPath(asset, { ...o, spp: 1, denoise: false });
+    const den = renderPath(asset, { ...o, spp: 1 });
+    const eRaw = lumaError(raw.rgba, ref.rgba, ref.mask);
+    const eDen = lumaError(den.rgba, ref.rgba, ref.mask);
+    expect(eRaw).toBeGreaterThan(2);
+    expect(eDen).toBeLessThan(eRaw * 0.5);
+  });
 });

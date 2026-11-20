@@ -20,7 +20,9 @@ import {
 } from '../_lib/body-plan-kit.ts';
 import {
   dustAt,
+  dusted,
   marked,
+  NEAR_DUST,
   pinLoftUv,
   SCALE_STRIP,
   scaleUv,
@@ -321,11 +323,12 @@ export function scutes(): Mesh {
       // Tail scutes dragged over rock are scuffed matte and greyed at the free edge.
       const scuff = scuffAt(s0, k);
       const a = Math.PI + ((k + 0.5) / segs - 0.5) * 2 * reach;
-      const color = marked(
+      // Dust without the story marks (a mark would paint a whole plate), at the near coil's share.
+      const color = dusted(
         mixRgb(scale(ventralColour(s0, across), tone), [0.3, 0.29, 0.26], scuff * 0.5),
         s0,
         a,
-        true,
+        NEAR_DUST,
       );
       const ids = q.map((p, v) =>
         b.vertex({

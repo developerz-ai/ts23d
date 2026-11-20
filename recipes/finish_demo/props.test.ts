@@ -2,7 +2,8 @@
 // a hoop sized from the smooth bilge curve floats off a coarse three-row LOD2 body.
 
 import { describe, expect, it } from 'bun:test';
-import { createRng, dmath, hex, type Mesh } from '@developerz.ai/ts23d';
+import { createRng, dmath, hex, type Mesh, stripRect } from '@developerz.ai/ts23d';
+import { STRIP_INSET } from '../_lib/terrain/strip-inset.ts';
 import { caskMesh } from './props.ts';
 
 const R = 0.24; // head radius
@@ -83,7 +84,7 @@ describe('caskMesh heads', () => {
       }
       expect(seen.length).toBeGreaterThan(20);
       const lin = (a: number[], b: number[]) => {
-        // Least squares b = k a + c; the worst residual.
+        // Least squares b = k a + c: the slope and the worst residual.
         const n = a.length;
         const ma = a.reduce((s, x) => s + x, 0) / n;
         const mb = b.reduce((s, x) => s + x, 0) / n;
@@ -94,19 +95,28 @@ describe('caskMesh heads', () => {
           saa += ((a[i] ?? 0) - ma) * ((a[i] ?? 0) - ma);
         }
         const k = saa === 0 ? 0 : sab / saa;
-        return Math.max(...a.map((x, i) => Math.abs((b[i] ?? 0) - (mb + k * (x - ma)))));
+        return {
+          k,
+          worst: Math.max(...a.map((x, i) => Math.abs((b[i] ?? 0) - (mb + k * (x - ma))))),
+        };
       };
-      expect(
-        lin(
-          seen.map((s) => s.y),
-          seen.map((s) => s.u),
-        ),
-      ).toBeLessThan(1e-5);
-      expect(
-        lin(
-          seen.map((s) => s.x),
-          seen.map((s) => s.v),
-        ),
-      ).toBeLessThan(1e-5);
+      const u = lin(
+        seen.map((s) => s.y),
+        seen.map((s) => s.u),
+      );
+      const v = lin(
+        seen.map((s) => s.x),
+        seen.map((s) => s.v),
+      );
+      expect(u.worst).toBeLessThan(1e-5);
+      expect(v.worst).toBeLessThan(1e-5);
+      // At the intended scale, not collapsed to one texel (a constant UV has zero residuals too):
+      // U at the oak strip's true metres along the boards, V across the strip's painted interior
+      // over the cask's full width (between the head's and a hoop-wide bilge's diameter).
+      const oak = stripRect('oak');
+      expect(u.k).toBeCloseTo((oak.u1 - oak.u0) / oak.metres, 6);
+      const across = Math.abs(oak.v1 - oak.v0) * (1 - 2 * STRIP_INSET);
+      expect(v.k).toBeGreaterThan(across / (2 * 0.32));
+      expect(v.k).toBeLessThan(across / (2 * R));
     });
 });

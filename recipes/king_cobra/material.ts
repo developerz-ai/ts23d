@@ -95,6 +95,8 @@ export const DUST: Vec3 = hex('#b4a27c');
  * the dark olive pile (D480). The far coil keeps the olive and a hint of the loam.
  */
 export const FAR_DUST = 0.2;
+/** Share of the dust the near (LOD0/1) coil and its ventral scutes take. */
+export const NEAR_DUST = 0.75;
 
 /**
  * Pre-shed patch on the outer flank of the top turn of the pile, where the hero camera looks: 0..1.
@@ -148,11 +150,16 @@ export function dustAt(s: number, a: number): number {
   return Math.min(1, onGround * (0.45 * low + flank * (0.5 + 0.5 * low)) * patchy * 1.6);
 }
 
+/** Colour under the ground's dust alone, at a share of `dustAt` (NEAR_DUST or FAR_DUST). */
+export const dusted = (c: Vec3, s: number, a: number, share: number): Vec3 =>
+  mixRgb(c, DUST, dustAt(s, a) * share);
+
 /** Colour after the story marks: pre-shed clouding with its torn rim, the scar, then dust. `far`
- *  (LOD2) keeps only the dust: a small mark sampled on a coarse ring paints a whole segment. */
+ *  (LOD2) keeps only the dust, at the far share: a small mark sampled on a coarse ring paints a
+ *  whole segment. Dust without marks at the near share (the LOD0 scutes) is `dusted`. */
 export function marked(c: Vec3, s: number, a: number, far = false): Vec3 {
-  if (far) return mixRgb(c, DUST, dustAt(s, a) * FAR_DUST);
-  const dusty = (v: Vec3): Vec3 => mixRgb(v, DUST, dustAt(s, a) * 0.75);
+  if (far) return dusted(c, s, a, FAR_DUST);
+  const dusty = (v: Vec3): Vec3 => dusted(v, s, a, NEAR_DUST);
   const f = shedField(s, a);
   // The bands ghost through the milky old skin (at 0.18 the patch hid the near turn's bands).
   const clouded = mixRgb(c, mixRgb(SHED_TINT, c, 0.45), shedOf(f) * 0.92);

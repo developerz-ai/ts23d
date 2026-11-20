@@ -78,7 +78,9 @@ export interface SnowOptions {
   /**
    * Fill bare holes up to twice this radius (m) inside a snowfield (a morphological closing of
    * the cover): a knob too steep to hold snow inside a field otherwise reads as a soft dark blob.
-   * The field's outer edge keeps its line (default 0: no filling).
+   * A closing cannot tell a hole from a bay: a bare notch narrower than about twice the radius
+   * cut into the field from its edge fills too, so the outer line straightens across such bays.
+   * Default 0: no filling.
    */
   readonly fill?: number;
 }

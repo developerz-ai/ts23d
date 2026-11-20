@@ -72,9 +72,9 @@ upper limbs over **black paws**; vertical slit pupils.
   tip) and 1 700 clumped pale-tipped guard locks per m²; locks 1.9 cm across painted along the
   hair's lie under them (`locks`); the brush's fullness is 6 cm card fur standing
   off the tail (a thicker tail chain weighs as flesh and pulls the fore share under 55 %).
-  `cardLift: 1.4` raises every card's value: the path-traced hero shades a card with the strand
-  lobes at about 0.6 of the orange skin under it, and the coat read as peppered with dark dashes
-  (D481).
+  `cardLift: 1.1` raises every card's value back to the coat's: the strand texture averages
+  about 0.9 of it, so unlifted the coat read as peppered with dark dashes (D481; the renderer's
+  own share, strand shading at 0.7 of a matte surface, is fixed in D476).
 - LOD2: the coat painted as blocks (russet back, red flank, cream underside and chest) instead
   of the sculpt's per-vertex tone, the brush's white tip painted back on its last fifth, a fringe
   of locks along the back and the brush, and only the broad wear layers.

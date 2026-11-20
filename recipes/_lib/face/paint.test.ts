@@ -50,7 +50,7 @@ const paint = (t: SkinTone, wear?: SkinWear) =>
   });
 
 describe('face skin paint', () => {
-  it('fails on rouge circles (D476): the cheek flush is faint and follows the cheekbone to the nose', () => {
+  it('fails on rouge circles (D486): the cheek flush is faint and follows the cheekbone to the nose', () => {
     // The flush's weight per vertex: the paint with a pure red flush against one with none.
     const red = paint({ ...tone, flush: [1, 0, 0] });
     const none = paint({ ...tone, flush: tone.base });

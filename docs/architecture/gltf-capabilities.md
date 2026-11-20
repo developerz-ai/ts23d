@@ -211,20 +211,29 @@ defineAsset({
   its slot (`COLOR_0 ≤ 1` times the factor), and glTF has no per-vertex blend between a switchable
   factor and a fixed colour, so on a plain slot chips to steel or primer, rust, mud and pale dust
   are flattened onto the slot's hue and every livery recolours them. Declare the slot
-  `paint: { team: { colour: '#b3261e', wear: true } }` and its parts split **by triangle**: a vertex
-  whose hue is more than 10° from the slot's, or that has under half its saturation (`isBare` in
-  `src/core/paint-wear.ts`: steel, primer, rust, mud, soot, dust), is bare; a triangle with two or
-  more bare vertices is **bare**. Shading, grime and a light fade keep the slot hue and stay paint.
-  - *Compile* (`settleWear`) splits the vertices on the border and snaps the paint side to what the
-    slot material shows (tone × slot), so renders, `--variant` previews and the GLB agree.
+  `paint: { team: { colour: '#b3261e', wear: true } }` and its parts split into paint and bare
+  pieces: a vertex whose hue is more than 10° from the slot's, or that has under half its
+  saturation (`isBare` in `src/core/paint-wear.ts`: steel, primer, rust, mud, soot, dust), is bare.
+  Shading, grime and a light fade keep the slot hue and stay paint; paint brighter than the slot is
+  clamped to the slot colour.
+  - *Compile* (`settleWear`) cuts every triangle that mixes bare and paint vertices along the
+    chip's border: each mixed edge is cut at a point hashed from its midpoint (25–75 % along it, the
+    same from both triangles that share the edge), so even a lone bare vertex keeps a small,
+    irregular chip and chips do not follow the lattice. Each cut point is written twice, a bare
+    twin in the wear colour and a paint twin; position, normal, UV and morphs are interpolated and
+    the skin is blended per joint and renormalised. The paint side snaps to what the slot material
+    shows (tone × slot), so renders, `--variant` previews and the GLB agree. After settling no
+    triangle mixes the two (a triangle is bare when two or more of its vertices are).
   - *GLB*: paint triangles stay in `<pivot>_paint_<slot>` (slot material, `COLOR_0` = tone,
     KHR_materials_variants mappings as above). Bare triangles go to the pivot's own trim-sheet mesh
     (`ts23d_trim`, `COLOR_0` = the wear's own colour, **no variant mapping**), so a livery swap in any
     engine recolours the paint and leaves the wear. With `keepParts` they are a child node
     `<part>_bare` of the part. No draw call of its own when the pivot already has unpainted geometry
     (the RTS tank: 23 / 9 / 7 draws either way).
-  - *Limits*: wear is opaque per triangle (its edge is the tessellation: run `weather()` with a
-    `resolution` on those parts); wear under ~50 % strength over the paint keeps the slot hue and is
+  - *Limits*: wear is opaque (no soft blend into the paint); its mask is only sampled at the
+    vertices, so a chip reaches 25–75 % of the way along each edge out of its bare vertices and its border is a
+    straight cut inside each triangle (for finer chips run `weather()` with a `resolution` on those
+    parts); wear under ~50 % strength over the paint keeps the slot hue and is
     shown as the darkening it can be; a bare patch keeps any paint tint mixed into it in every livery
     (use strong wear, `strength ≥ 0.8`). Refused with a fix: a near-grey wear slot (saturation under
     0.35: wear could not be told from paint; make the saturated livery the default) and wear plus a

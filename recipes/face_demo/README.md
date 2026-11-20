@@ -60,10 +60,12 @@ all under the shared `skin` finish (`skinFinish`: a soft grazing sheen and a die
 reflectance of 0.8, no clear coat: one coat over the whole part lit head and shoulders alike as wet
 latex; the path-traced hero adds subsurface diffusion to any `skin` finish); corneas a clearcoat.
 The hair takes no finish: the cutout strand cards carry the strand read, and the sculpted cap
-under them is on the `plain` strip at 0.8 of the hair's mid tone, so the hair reads as one mass
-with locks over it. Tone is vertex colour (`paint.ts`), in the portrait painter's bands: the
+under them is on the `plain` strip in two tones by LOD. At LOD0/1, under the lock cards, it is
+0.55 of the root colour (`DEEP` in `_lib/face/hair.ts`): the gaps between locks read as depth (at
+0.8 of the mid tone it showed through them as pale flat chips). At LOD2, where the cap is the whole
+hair, it is 0.8 of the mid tone (`SHADE`), close to the cards' own, so the hair reads as one mass. Tone is vertex colour (`paint.ts`), in the portrait painter's bands: the
 forehead lightest, a faint, broad flush along the cheekbone to the nose's wing (a path, not a
-round blob: discs read as rouge, D476), the nose and ears warm, the jaw and chin cooler, the sockets cool and
+round blob: discs read as rouge, D486), the nose and ears warm, the jaw and chin cooler, the sockets cool and
 dark; lips, brows, hair-coloured scalp under the hairline, the lid's fold in shadow above a dark
 lash line 3 mm wide on each upper lid, cavity darkening. Skin tones are linear albedo in skin's
 measured range. The eyeballs carry the upper lid's shadow (`lidShadow`), so the white and the iris

@@ -13,7 +13,7 @@ import { studioRig, tone, toSrgb8 } from '../lighting.ts';
 import { checkBeautyOptions, withHeroView } from '../options.ts';
 import { sheetTextures } from '../texture.ts';
 import { denoise, denoiseShadow } from './denoise.ts';
-import { compose, type Film, newFilm } from './film.ts';
+import { compose, type Film, newFilm, spatialVariance } from './film.ts';
 import { renderThreads, runJob, shareFilm, shareWorld } from './parallel.ts';
 import { makeSky, type Sky } from './sky.ts';
 import { worldData } from './world.ts';
@@ -88,10 +88,12 @@ function setup(asset: CompiledAsset, opts: PathOptions) {
   return job;
 }
 
-/** Denoise, tone-map and encode the traced film. */
-function develop(film: Film, o: PathOptions): PathRender {
+/** Denoise, tone-map and encode the traced film (`spp` samples per pixel). */
+function develop(film: Film, o: PathOptions, spp: number): PathRender {
   const on = o.denoise !== false;
-  const color = on ? denoise(film) : film.color;
+  // One sample per pixel measures no variance of its own: a spatial estimate stands in.
+  const guide = spp > 1 ? film : { ...film, variance: spatialVariance(film) };
+  const color = on ? denoise(guide) : film.color;
   const shadow = on ? denoiseShadow(film.width, film.height, film.shadow, film.floor) : film.shadow;
   const linear = compose(film, color, shadow);
   const n = film.width * film.height;
@@ -109,7 +111,7 @@ function develop(film: Film, o: PathOptions): PathRender {
 export function renderPath(asset: CompiledAsset, o: PathOptions = {}): PathRender {
   const job = setup(asset, o);
   runJob({ ...job, counter: new Int32Array(1) });
-  return develop(job.film, o);
+  return develop(job.film, o, job.spp);
 }
 
 /** Path trace on `threads` workers (default: the machine's cores, at most 8); same bytes. */
@@ -124,7 +126,7 @@ export async function renderPathThreaded(
     { ...job, data: shareWorld(job.data), film },
     o.threads ?? Math.min(8, cores),
   );
-  return develop(film, o);
+  return develop(film, o, job.spp);
 }
 
 /** The path-traced hero as PNG bytes. */

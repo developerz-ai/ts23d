@@ -76,9 +76,24 @@ export function sampleAlbedo(a: Albedo, u: number, v: number, out: number[]): vo
   }
 }
 
-/** Samples along an edge at most (one per texel it crosses, ends included). */
+/** Sample spans along an edge at most (one per texel it crosses). */
 const EDGE_SAMPLES = 32;
+/** 1 ÷ golden ratio: offsets i × this (mod 1) never fall in step with a repeating strip. */
+const GOLDEN = 0.6180339887498949;
 const drawn = [0, 0, 0];
+
+/**
+ * Where sample `i` of an edge cut in `steps` spans lies (0..1): both ends, then one point inside
+ * each span at a golden-ratio offset. Evenly spaced points would land on the same texel column
+ * whenever the edge repeats the strip a whole number of times per span (U 0..32 in 32 steps).
+ */
+const sampleAt = (i: number, steps: number): number => {
+  if (i === 0) return 0;
+  if (i === 1) return 1;
+  const s = i - 2;
+  const g = (s + 1) * GOLDEN;
+  return (s + g - Math.floor(g)) / steps;
+};
 
 /**
  * Contrast drawn along edge p–q, mean over RGB: without albedo |Δ vertex colour|; with it the
@@ -102,8 +117,8 @@ export function edgeContrast(m: Mesh, p: number, q: number, albedo: Albedo | und
   const steps = Math.min(EDGE_SAMPLES, Math.max(1, Math.ceil(texels)));
   const lo = [Infinity, Infinity, Infinity];
   const hi = [-Infinity, -Infinity, -Infinity];
-  for (let i = 0; i <= steps; i++) {
-    const t = i / steps;
+  for (let i = 0; i < steps + 2; i++) {
+    const t = sampleAt(i, steps);
     sampleAlbedo(albedo, u0 + (u1 - u0) * t, v0 + (v1 - v0) * t, drawn);
     for (let k = 0; k < 3; k++) {
       const cp = m.colors[p * 3 + k] ?? 1;

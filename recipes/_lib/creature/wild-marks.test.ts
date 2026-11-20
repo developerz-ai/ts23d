@@ -14,7 +14,7 @@ import {
   type Vec3,
 } from '@developerz.ai/ts23d';
 import { defineWildCreature, type Wild } from './wild.ts';
-import { wearKeep } from './wild-marks.ts';
+import { type Scar, scarAt, wearKeep } from './wild-marks.ts';
 
 const SCAR = { a: [0.2, 0.5, 1] as Vec3, b: [-0.2, 0.5, 1] as Vec3, width: 0.02, axis: 1 as const };
 
@@ -78,8 +78,10 @@ describe('defineWildCreature cardWear', () => {
     axis: 1 as const,
     reach: 1,
   };
-  const wild = (cardWear?: Wild['cardWear']): Wild => ({
-    wear: { scars: [scar], scarColour: [0.9, 0.1, 0.1] },
+  // A hairline scar, narrower than a card is long: cards rooted on its core hang their tips off it.
+  const thin: Scar = { ...scar, width: 0.01 };
+  const wild = (cardWear?: Wild['cardWear'], s: Scar = scar): Wild => ({
+    wear: { scars: [s], scarColour: [0.9, 0.1, 0.1] },
     ...(cardWear ? { cardWear } : {}),
   });
   const fur = (c: CompiledAsset): Mesh => {
@@ -140,5 +142,63 @@ describe('defineWildCreature cardWear', () => {
     expect(worn.reach).toBeLessThan(plain.reach * 0.4);
     // Painted from the skin under the root: the scar's red core, at least as red as before.
     expect(worn.red).toBeGreaterThan(plain.red - 0.05);
+  }, 240_000);
+
+  /** Redness at the root and at the tip of each card rooted on the thin scar's core whose tip
+   *  hangs off it (the wear spec has no seed: salt 1). */
+  const tipsOff = (m: Mesh): { root: number; tip: number; cards: number } => {
+    const P = m.positions;
+    const n = P.length / 3;
+    const parent = Array.from({ length: n }, (_, i) => i);
+    const find = (v: number): number => {
+      while ((parent[v] ?? v) !== v) v = parent[v] ?? v;
+      return v;
+    };
+    for (let t = 0; t < m.indices.length; t += 3)
+      for (const k of [1, 2]) {
+        const a = find(m.indices[t] ?? 0);
+        const b = find(m.indices[t + k] ?? 0);
+        if (a !== b) parent[Math.max(a, b)] = Math.min(a, b);
+      }
+    const at = (v: number): Vec3 => [P[v * 3] ?? 0, P[v * 3 + 1] ?? 0, P[v * 3 + 2] ?? 0];
+    const red = (v: number): number => (m.colors[v * 3] ?? 0) - (m.colors[v * 3 + 1] ?? 0);
+    const tip = new Map<number, { v: number; d: number }>();
+    for (let v = 0; v < n; v++) {
+      const id = find(v);
+      const [a, b] = [at(id), at(id + 1)];
+      const r: Vec3 = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2];
+      if ((scarAt(thin, r, 1)?.core ?? 0) < 0.5) continue;
+      const p = at(v);
+      const d = dmath.hypot(p[0] - r[0], p[1] - r[1], p[2] - r[2]);
+      if (d > (tip.get(id)?.d ?? -1)) tip.set(id, { v, d });
+    }
+    let [root, tipRed, cards] = [0, 0, 0];
+    for (const [id, { v }] of tip) {
+      if ((scarAt(thin, at(v), 1)?.core ?? 0) > 0.2) continue;
+      root += red(id);
+      tipRed += red(v);
+      cards++;
+    }
+    return { root: root / Math.max(1, cards), tip: tipRed / Math.max(1, cards), cards };
+  };
+
+  it('paints a card rooted on the scar with the scar out to its tip, off the scar', () => {
+    // A share of 1: nothing shortens, so only painting from the root can redden the tips.
+    const plain = tipsOff(
+      fur(
+        compile(defineWildCreature({ name: 'w', spec: SPEC }, wild(undefined, thin)), { lod: 1 }),
+      ),
+    );
+    const worn = tipsOff(
+      fur(
+        compile(defineWildCreature({ name: 'w', spec: SPEC }, wild({ scar: 1 }, thin)), { lod: 1 }),
+      ),
+    );
+    expect(plain.cards).toBeGreaterThan(0);
+    expect(worn.cards).toBe(plain.cards);
+    // Per vertex, the tip off the scar keeps the coat; from the root, it carries the scar's red.
+    expect(plain.tip).toBeLessThan(plain.root - 0.3);
+    expect(worn.tip).toBeCloseTo(worn.root, 1);
+    expect(worn.tip).toBeGreaterThan(plain.tip + 0.3);
   }, 240_000);
 });

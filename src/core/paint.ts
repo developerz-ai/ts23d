@@ -19,9 +19,12 @@ export type PaintColor = string | Vec3;
 export interface PaintFinish {
   readonly colour: PaintColor;
   /**
-   * Wear that is not paint (opt-in): triangles whose colour is no darkening of the slot (bare
-   * steel, primer, rust, pale dust, sun-fade) keep that colour in every livery and export in the
-   * plain trim material; the rest stays paint. Default false: every vertex is a tone of the slot.
+   * Wear that is not paint (opt-in). A vertex is bare when its hue is more than `WEAR_HUE` (10°)
+   * from the slot's or its saturation is under half the slot's (`isBare`: bare steel, primer, rust,
+   * mud, pale dust); bare pieces keep their colour in every livery and export in the plain trim
+   * material. Every other vertex stays paint, whatever its brightness: shading, grime and a light
+   * sun-fade that keeps the hue follow the livery, and paint brighter than the slot is clamped to
+   * the slot colour (tone ≤ 1). Default false: every vertex is a tone of the slot.
    */
   readonly wear?: boolean;
   /** Clear lacquer 0..1 (KHR_materials_clearcoat). */

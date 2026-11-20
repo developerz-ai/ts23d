@@ -20,9 +20,9 @@
     },
     "materials": {
       "score": 7,
-      "reason": "The V-neck trim is now a crisp gold band with a hem edge in FRONT and hero.png, and the cheek warmth follows the cheekbone instead of round circles; the tunic is a flat ribbed green and the hair still reads as matte straw.",
+      "reason": "The V-neck trim is a crisp gold band with a hem edge in FRONT and hero.png, and the cheek warmth follows the cheekbone; the hair's under-layer now carries the same golden tint, so the shoulder locks in FRONT and SIDE no longer show olive-dark strands through the gaps, but the hair still reads as matte straw with no sheen and the tunic is a flat ribbed green.",
       "fixes": [
-        "hair strip with anisotropic sheen, darker roots and a golden value range",
+        "hair strip with anisotropic sheen and a golden value range from root to tip",
         "a wool or silk strip on the tunic instead of the flat rib"
       ]
     },
@@ -60,7 +60,7 @@
     }
   },
   "renders": {
-    "hero.png": "9b5b4f8b67d305eb698fef7342df437f752ad800956aaed147d2e8ac2870b07a",
-    "sheet.png": "01e2e5b0b7818e2b839765d833e86a2a3fa500ab7f3d7e44984dad5abd87512f"
+    "hero.png": "2190402f3e94028d98f54149274f5a6433a14ed14fbdeda2f35c84836b15dcd7",
+    "sheet.png": "8b4dee904ea8ebdb72b4819c1802c0e28732d379c389316024e312cba2a0ea55"
   }
 }

@@ -184,6 +184,38 @@ describe('wear on a paint slot', () => {
     expect(again.paint?.indices.length).toBe(paint?.indices.length);
   });
 
+  it('blends the skin of a cut point by joint at its fraction (no kink along a chip border)', () => {
+    // Left column on joint 1, right on joint 2, the middle split 50/50; a steel chip in the middle.
+    const plate = grid(3, (x, y) => (x === 1 && y === 1 ? STEEL : RED));
+    const joints = new Uint16Array(9 * 4);
+    const weights = new Float32Array(9 * 4);
+    for (let v = 0; v < 9; v++) {
+      const x = v % 3;
+      joints.set(x === 2 ? [2, 0, 0, 0] : [1, 2, 0, 0], v * 4);
+      weights.set(x === 0 ? [1, 0, 0, 0] : x === 1 ? [0.5, 0.5, 0, 0] : [1, 0, 0, 0], v * 4);
+    }
+    const s = settleWear({ ...plate, joints, weights }, RED);
+    expect(s.positions.length / 3).toBeGreaterThan(9);
+    for (let v = 9; v < s.positions.length / 3; v++) {
+      const x = s.positions[v * 3] ?? 0;
+      // The blend a linear skin gives along the edge: joint 2's share grows with x.
+      const want2 = x <= 1 ? 0.5 * x : 0.5 + 0.5 * (x - 1);
+      let w1 = 0;
+      let w2 = 0;
+      let sum = 0;
+      for (let k = 0; k < 4; k++) {
+        const w = s.weights?.[v * 4 + k] ?? 0;
+        const j = s.joints?.[v * 4 + k] ?? 0;
+        sum += w;
+        if (w > 0 && j === 1) w1 += w;
+        if (w > 0 && j === 2) w2 += w;
+      }
+      expect(sum).toBeCloseTo(1, 5);
+      expect(w2).toBeCloseTo(want2, 5);
+      expect(w1).toBeCloseTo(1 - want2, 5);
+    }
+  });
+
   it('a slot without wear compiles to the same colours as before', () => {
     const dark = (): AssetDefinition => ({
       ...def({ team: RED }),

@@ -115,7 +115,7 @@ export const FOX_WILD: Wild = {
         k = mix(k, belly, smooth(-0.2, -0.7, n[2]) * smooth(H * 0.4, H * 0.55, p[2]));
         const chest = smooth(0.35, 0.8, n[0]) * smooth(H * 0.5, H * 0.62, p[2]);
         k = mix(k, belly, chest * smooth(H * 1.0, H * 0.85, p[2]) * 0.85);
-        c = mix(k, given, 0.2 + 0.8 * smooth(rump + 0.01, rump - 0.03, p[0]));
+        c = mix(k, c, 0.2 + 0.8 * smooth(rump + 0.01, rump - 0.03, p[0]));
       }
       // Outward-facing skin of the upper limb: red like the flank, not the belly's cream.
       const out = smooth(-0.1, 0.35, n[1] * Math.sign(p[1]));

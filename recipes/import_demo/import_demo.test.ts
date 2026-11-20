@@ -65,7 +65,8 @@ describe('import_demo', () => {
     const h = lum(hair?.mesh ?? { colors: new Float32Array() });
     expect(mean(h)).toBeLessThan(mean(lum(head?.mesh ?? { colors: new Float32Array() })) * 0.5);
     // Streaks: the hair's values spread, not one flat wash.
-    const sd = Math.sqrt(mean(h.map((x) => (x - mean(h)) * (x - mean(h)))));
+    const average = mean(h);
+    const sd = Math.sqrt(mean(h.map((x) => (x - average) * (x - average))));
     expect(sd).toBeGreaterThan(0.015);
   });
 });

@@ -135,6 +135,14 @@ describe('colourDetail measures what is drawn (D457)', () => {
     expect(meshStats([quad], [albedo(true)]).colourDetail).toBeGreaterThan(0.1);
   });
 
+  it('a strip repeated many times along an edge still counts (no sampling in step with it)', () => {
+    // U 0..32: 33 evenly spaced samples would all land on integer U, the same texel column.
+    const tiled = { ...quad, uvs: new Float32Array([0, 0, 32, 0, 32, 1, 0, 1]) };
+    const once = meshStats([quad], [albedo(true)]).colourDetail;
+    expect(meshStats([tiled], [albedo(true)]).colourDetail).toBeGreaterThan(0.5 * once);
+    expect(meshStats([tiled], [albedo(false)]).colourDetail).toBe(0);
+  });
+
   it('a flat-coloured quad on a flat strip stays at zero', () => {
     expect(meshStats([quad], [albedo(false)]).colourDetail).toBe(0);
   });

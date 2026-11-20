@@ -79,6 +79,29 @@ function bareTriangles(m: Mesh, slot: Vec3): Uint8Array {
   return tris;
 }
 
+/**
+ * The skin of the point at fraction `t` from vertex `a` to `b`: each joint's weight blended
+ * linearly (a joint only one end has counts 0 at the other), the strongest four kept (ties: lower
+ * joint first) and renormalised, so a cut point deforms as the edge it sits on does.
+ */
+function mixSkin(joints: Uint16Array, weights: Float32Array, a: number, b: number, t: number) {
+  const by = new Map<number, number>();
+  for (const [v, f] of [
+    [a, 1 - t],
+    [b, t],
+  ] as const)
+    for (let k = 0; k < 4; k++) {
+      const w = (weights[v * 4 + k] ?? 0) * f;
+      if (w > 0) by.set(joints[v * 4 + k] ?? 0, (by.get(joints[v * 4 + k] ?? 0) ?? 0) + w);
+    }
+  const top = [...by].sort((p, q) => q[1] - p[1] || p[0] - q[0]).slice(0, 4);
+  const sum = top.reduce((s, [, w]) => s + w, 0) || 1;
+  return {
+    joints: [0, 1, 2, 3].map((k) => top[k]?.[0] ?? 0),
+    weights: [0, 1, 2, 3].map((k) => (top[k]?.[1] ?? 0) / sum),
+  };
+}
+
 /** Copy vertex `from` of `m` into slot `to` of the output arrays (colour set by the caller). */
 function copier(m: Mesh, count: number) {
   const out = {
@@ -101,7 +124,7 @@ function copier(m: Mesh, count: number) {
     for (const [i, t] of (m.morphs ?? []).entries())
       morphs?.[i]?.positions.set(t.positions.subarray(from * 3, from * 3 + 3), to * 3);
   };
-  /** Vertex `to` at fraction `t` from `a` to `b` (normal renormalised; skin from the nearer). */
+  /** Vertex `to` at fraction `t` from `a` to `b` (normal renormalised; skin blended by joint). */
   const mix = (a: number, b: number, t: number, to: number): void => {
     const blend = (src: Float32Array, dst: Float32Array, k: number): void => {
       for (let i = 0; i < k; i++)
@@ -115,10 +138,11 @@ function copier(m: Mesh, count: number) {
     const nz = out.normals[to * 3 + 2] ?? 0;
     const len = Math.sqrt(nx * nx + ny * ny + nz * nz) || 1;
     out.normals.set([nx / len, ny / len, nz / len], to * 3);
-    const near = t < 0.5 ? a : b;
-    if (m.joints && out.joints) out.joints.set(m.joints.subarray(near * 4, near * 4 + 4), to * 4);
-    if (m.weights && out.weights)
-      out.weights.set(m.weights.subarray(near * 4, near * 4 + 4), to * 4);
+    if (m.joints && m.weights && out.joints && out.weights) {
+      const s = mixSkin(m.joints, m.weights, a, b, t);
+      out.joints.set(s.joints, to * 4);
+      out.weights.set(s.weights, to * 4);
+    }
     for (const [i, g] of (m.morphs ?? []).entries()) {
       const dst = morphs?.[i]?.positions;
       if (dst) blend(g.positions, dst, 3);

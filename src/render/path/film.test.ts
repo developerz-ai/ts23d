@@ -11,7 +11,7 @@ import { box } from '../../primitives/index.ts';
 import { cameraFor } from '../beauty.ts';
 import { studioRig } from '../lighting.ts';
 import { sheetTextures } from '../texture.ts';
-import { type Film, newFilm, renderTile, tileCount } from './film.ts';
+import { type Film, newFilm, renderTile, spatialVariance, tileCount } from './film.ts';
 import { makeSky } from './sky.ts';
 import { buildWorld } from './world.ts';
 
@@ -90,5 +90,20 @@ describe('film variance', () => {
     const ratio = sum(render(4, 0)) / sum(render(16, 0));
     expect(ratio).toBeGreaterThan(2.5);
     expect(ratio).toBeLessThan(6);
+  });
+
+  it('measures nothing at 1 sample; the spatial estimate sees the noise, 0 off the asset', () => {
+    const one = render(1, 0);
+    expect(one.variance.every((v) => v === 0)).toBe(true);
+    const est = spatialVariance(one);
+    let inside = 0;
+    for (let i = 0; i < size.width * size.height; i++) {
+      if (one.mask[i] === 0) expect(est[i]).toBe(0);
+      else if ((est[i] ?? 0) > 0) inside++;
+    }
+    expect(inside).toBeGreaterThan(50);
+    // A flat film (no spread anywhere) has none.
+    const flatFilm = { ...one, color: new Float32Array(one.color.length).fill(0.5) };
+    expect(spatialVariance(flatFilm).every((v) => v === 0)).toBe(true);
   });
 });

@@ -84,7 +84,9 @@ describe('team colour from the RTS camera', () => {
       const near = teamShare(a, 0);
       const far = teamShare(a);
       expect(near).toBeGreaterThan(0);
-      expect(far).toBeGreaterThanOrEqual(near - 0.01);
+      // Never below the near share (the README's rule): with a point of slack a 1 % near ruin
+      // could lose its mark entirely at LOD2 and still pass.
+      expect(far).toBeGreaterThanOrEqual(near);
       expect(far - near).toBeLessThanOrEqual(RUIN_POP);
     }, 60000);
 });

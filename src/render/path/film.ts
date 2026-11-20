@@ -26,6 +26,7 @@ export interface Film {
    * Variance of the pixel's mean asset luminance (sample variance ÷ samples): how much of what
    * the pixel shows is noise. The denoiser smooths differences below it and keeps those above.
    * An upper bound: the Owen-scrambled Sobol mean moves less than this i.i.d. estimate says.
+   * 0 at 1 sample per pixel (one sample has no spread): `spatialVariance` stands in there.
    */
   readonly variance: Float32Array;
   /** Floor shadow-catcher ratio (1 = unshadowed), and the floor / backdrop sample shares. */
@@ -68,6 +69,39 @@ export function compose(f: Film, color: Float32Array, shadow: Float32Array): Flo
       backdrop(x / f.width, y / f.height, bg);
       const off = (f.floor[i] ?? 0) * (shadow[i] ?? 1) + (f.back[i] ?? 0);
       for (let k = 0; k < 3; k++) out[i * 3 + k] = (color[i * 3 + k] ?? 0) + (bg[k] ?? 0) * off;
+    }
+  return out;
+}
+
+/**
+ * Per-pixel variance for a 1-sample film, where no pixel can measure its own: the luminance
+ * spread over its 3 × 3 neighbourhood of asset pixels (each one an independent sample of nearly
+ * the same surface; SVGF's spatial estimate). Real detail in the window counts as noise too, so it
+ * errs toward smoothing, as one sample must. 0 where the asset is absent or alone.
+ */
+export function spatialVariance(f: Film): Float32Array {
+  const { width: W, height: Hh } = f;
+  const out = new Float32Array(W * Hh);
+  const l = (q: number): number =>
+    0.2126 * (f.color[q * 3] ?? 0) +
+    0.7152 * (f.color[q * 3 + 1] ?? 0) +
+    0.0722 * (f.color[q * 3 + 2] ?? 0);
+  for (let y = 0; y < Hh; y++)
+    for (let x = 0; x < W; x++) {
+      if (!f.mask[y * W + x]) continue;
+      let n = 0;
+      let s = 0;
+      let s2 = 0;
+      for (let j = Math.max(0, y - 1); j <= Math.min(Hh - 1, y + 1); j++)
+        for (let k = Math.max(0, x - 1); k <= Math.min(W - 1, x + 1); k++) {
+          const q = j * W + k;
+          if (!f.mask[q]) continue;
+          const v = l(q);
+          n++;
+          s += v;
+          s2 += v * v;
+        }
+      if (n > 1) out[y * W + x] = Math.max(0, (s2 - (s * s) / n) / (n - 1));
     }
   return out;
 }
