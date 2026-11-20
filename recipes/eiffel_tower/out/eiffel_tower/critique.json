@@ -40,7 +40,7 @@
     },
     "lod": {
       "score": 7,
-      "reason": "FAR LOD2 is now see-through (open strut strips instead of solid frustums), but it reads lighter and sparser than the dense dark LOD0 lattice, so a value change shows at the switch.",
+      "reason": "FAR LOD2 is see-through (open strut strips), but it reads lighter brown and sparser than the dense dark LOD0 lattice in the re-rendered sheet, so a value change still shows at the switch.",
       "fixes": [
         "darken and thicken the LOD2 strut strips (or add an alpha-cutout cross-brace strip) to match the LOD0 lattice density"
       ]
@@ -54,7 +54,7 @@
     }
   },
   "renders": {
-    "hero.png": "9b0cd4344e6dfb125fa34fea946ed8c676dd3038b99900f27a961db378f3442d",
-    "sheet.png": "7bbb75b3bc9105af97c974429a8705e90fe654663d188b528e6722b5fb49d3ea"
+    "hero.png": "3697ddbaddac3eb59600e09a3a2e0fc65295730150f081f9110cff8056399a03",
+    "sheet.png": "21f7fe13b2f35891ee74d15cfe268a45d6214e6ca183299e924f1f5c4bc202ff"
   }
 }

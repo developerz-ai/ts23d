@@ -20,9 +20,10 @@
     },
     "materials": {
       "score": 7,
-      "reason": "Steel with rivets, brown leather baldric, fur collar, bone spikes and green skin separate; the skin renders as evenly wet and glossy over the whole head in the closer hero.png.",
+      "reason": "The wet gloss on the skin is gone: the green skin is matte with mottling in the portrait hero.png; steel with rivets, brown leather baldric, fur collar and bone spikes separate, but the pauldron steel is a flat grey with a soft plastic highlight and no metal reflection.",
       "fixes": [
-        "roughness variation on the skin (oily forehead, matte cheeks), overall rougher"
+        "lower pauldron roughness and add a sharp specular streak and edge highlights so the steel reads as metal",
+        "roughness variation on the skin (slightly oily forehead)"
       ]
     },
     "detail": {
@@ -35,7 +36,7 @@
     },
     "wear": {
       "score": 7,
-      "reason": "Face scars, and the pauldrons now carry rust blotches and a worn rim; the domes show no clear dents at hero distance and the fur and strap are clean.",
+      "reason": "Face scars are now tan and read as healed scars, not near-white paint, and the pauldrons carry rust blotches and a worn rim; the domes show no clear dents at hero distance and the fur and strap are clean.",
       "fixes": [
         "visible dents (height/normal) on the pauldron domes and rust streaks running down from the rivets",
         "dirt on the fur and strap"
@@ -50,14 +51,14 @@
     },
     "technical": {
       "score": 7,
-      "reason": "112k / 30k / 4.1k triangles and 4 draws: down from 180k, still heavy for a bust.",
+      "reason": "113.9k / 30.3k / 4.0k tris, 4 / 4 / 4 draws: still heavy for a bust.",
       "fixes": [
         "halve pauldron lame and fur segment counts at LOD0 (target ~70k)"
       ]
     }
   },
   "renders": {
-    "hero.png": "536d526beda9fb64947929994aa1ae7ba24c631145fe3e8b0e69b97f480caacc",
-    "sheet.png": "885d9edc2bf4c054a8a485aef59bad370493e71333c12f46bd5c7b188e1cad42"
+    "hero.png": "a62469bd631b586afbcb5147c513a5f69d852046c18c0269b2092d6265315a33",
+    "sheet.png": "5cbb25e7360e2e1e290cdc58dedf67dfe88cb9994b03dfbc84577d827a092428"
   }
 }

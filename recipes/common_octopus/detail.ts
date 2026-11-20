@@ -280,7 +280,8 @@ function papillae(kit: Kit, ctx: BuildContext): Mesh | null {
     if (here.length > 0) out.push(kit.bindPieces(merge(here), [id]));
   };
   scatter('mantle', 300, 0.08, 0.9, 0.0042);
-  scatter('head', 40, 0.1, 0.9, 0.0032);
+  // The head as studded as the mantle round it (40 left it a bare band under the eyes).
+  scatter('head', 110, 0.1, 0.9, 0.0034);
   // Papillae ride the aboral face of the arms, thinning out toward the tips.
   for (const id of ARM_IDS) scatter(id, 44, 0.02, 0.62, 0.0024, 0.9);
   return merge(out);

@@ -20,9 +20,9 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    7508,
-    2046,
-    452
+    8880,
+    2594,
+    472
   ],
   "drawCalls": [
     2,
@@ -107,10 +107,10 @@
   ],
   "weather": {
     "chips": {
-      "target": 0.1203,
-      "actual": 0.1203,
+      "target": 0.1554,
+      "actual": 0.1554,
       "eligible": "convex-edges",
-      "area": 266.2601,
+      "area": 296.204,
       "by": {
         "hall_masonry": {
           "target": 0.1,
@@ -128,9 +128,19 @@
           "area": 73.4331
         },
         "hall_rubble": {
-          "target": 0.16,
-          "actual": 0.16,
+          "target": 0.32,
+          "actual": 0.32,
           "area": 50.9233
+        },
+        "hall_team_fallen": {
+          "target": 0.35,
+          "actual": 0.35,
+          "area": 11.3372
+        },
+        "hall_team_floor": {
+          "target": 0.1,
+          "actual": 0.1,
+          "area": 18.6067
         }
       }
     },
@@ -181,10 +191,10 @@
       }
     },
     "dust": {
-      "target": 0.5028,
-      "actual": 0.5028,
+      "target": 0.5035,
+      "actual": 0.5035,
       "eligible": "up-facing",
-      "area": 220.5106,
+      "area": 236.4034,
       "by": {
         "hall_masonry": {
           "target": 0.55,
@@ -210,6 +220,16 @@
           "target": 0.3,
           "actual": 0.3,
           "area": 2.8603
+        },
+        "hall_team_fallen": {
+          "target": 0.6,
+          "actual": 0.6,
+          "area": 6.7442
+        },
+        "hall_team_floor": {
+          "target": 0.45,
+          "actual": 0.45,
+          "area": 9.1486
         }
       }
     }

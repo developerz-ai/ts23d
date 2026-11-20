@@ -1,7 +1,7 @@
 {
   "asset": "rts_barracks_foundation_damaged",
   "reviewer": "agent",
-  "overall": 7.3,
+  "overall": 7.4,
   "scores": {
     "silhouette": {
       "score": 7,
@@ -12,17 +12,16 @@
     },
     "proportions": {
       "score": 8,
-      "reason": "17.1 x 19.0 x 3.6 m; debris pieces at plank and block scale.",
+      "reason": "17.2 x 19.4 x 3.7 m; debris pieces at plank and block scale, with more fallen timbers round the crushed corner than before.",
       "fixes": [
         "a few smaller chunks round the crushed corner so the debris is not all one size"
       ]
     },
     "materials": {
-      "score": 7,
-      "reason": "The floor is a flagstone strip with readable joints and per-flag value (sheet TOP), and the flags now stop short of the blown corner instead of hanging over the void; the bare slab rim there shows a smeared, stretched grey (hero.png). The torn tarp is still a flat saturated red board on the ground.",
+      "score": 8,
+      "reason": "The slab rim at the blown corner now shows a fractured-stone face with dark crack lines instead of the stretched grey smear (hero.png), and the torn tarp on the ground is dusted down to a pale earth-brown with a few red flecks, so it no longer reads as fresh paint. Flagstone floor joints and per-flag value hold in sheet TOP.",
       "fixes": [
-        "torn tarp as a draped sheet with folds, frayed edge and dust, value down",
-        "broken concrete texture with a jagged edge on the slab rim at the blown corner instead of the stretched grey"
+        "torn tarp as a draped sheet with folds and a frayed edge rather than a rigid flat board"
       ]
     },
     "detail": {
@@ -35,7 +34,7 @@
     },
     "wear": {
       "score": 7,
-      "reason": "A black scorch fan spreads from the impact corner in sheet TOP and the yard is knocked over; in hero.png the scorch is lost in the debris shadow and nothing is dusty.",
+      "reason": "A black scorch fan spreads from the impact corner in sheet TOP and the tarp is now dust-coated; in hero.png the toppled blocks and flags round the impact are still clean.",
       "fixes": [
         "pale dust coat on the toppled blocks and the flags round the impact so it reads in hero.png"
       ]
@@ -49,14 +48,14 @@
     },
     "technical": {
       "score": 8,
-      "reason": "QA PASS: 10.4k / 3.2k / 784 tris, 2 / 2 / 2 draws; one trim material + team slot, LOD2 well under 1k. LOD0 down ~3.6k.",
+      "reason": "QA PASS: 15.5k / 4.6k / 782 tris, 2 / 2 / 2 draws; one trim material + team slot, LOD2 well under 1k. LOD0 grew ~5k for more debris pieces.",
       "fixes": [
-        "spend some of the LOD0 savings on the fixes above (quoins, string course, gravel) instead of more blocks"
+        "spend some of the LOD0 budget on the fixes above (chipped arrises, gravel, splintered ends) instead of more blocks"
       ]
     }
   },
   "renders": {
-    "hero.png": "902fdb86d53dbf7f8d065b6b8649f150fb4f411abc3373b31ec7164723c2de3e",
-    "sheet.png": "6f8c21ea7b68a13673985361ac2fab3aa07117030462bf232e7f6bf887443a4e"
+    "hero.png": "1296d94d96ea60eaa90c04f0c02954ad517bd15bc996dfa5c4fa1014464c86c1",
+    "sheet.png": "b9a6a3a3703d0535f5d9fa52806f36cf70a78f563e07c1d9ec3921beb8317136"
   }
 }

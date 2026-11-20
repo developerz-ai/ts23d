@@ -1,14 +1,14 @@
 {
   "asset": "face_elf",
   "reviewer": "agent",
-  "overall": 5.9,
+  "overall": 6.4,
   "scores": {
     "silhouette": {
       "score": 6,
-      "reason": "Pointed ears show, and there are fewer stray cards, but the hair is still straw-like: a solid flat hair slab hangs behind the ear in hero.png and stray strands stick out sideways in FRONT.",
+      "reason": "Pointed ears show and the flat hair slab behind the ear is gone (now a tied tail of locks), but the hair still reads as straw: stray strands stick out sideways at the temples in FRONT and hero.png, and the tail is a solid tube in hero.png.",
       "fixes": [
-        "replace the flat hair slab behind the ear with layered cards",
-        "denser, aligned cards that fall with gravity; no sideways strays"
+        "clip flyaways so none stick out sideways at the temples",
+        "split the tail into several locks so it is not a solid tube"
       ]
     },
     "proportions": {
@@ -19,43 +19,48 @@
       ]
     },
     "materials": {
-      "score": 5,
-      "reason": "The skin is now clean with a soft sheen (no blemish rash); the hair still reads as matte yellow straw.",
+      "score": 7,
+      "reason": "The V-neck trim is now a crisp gold band with a hem edge in FRONT and hero.png, and the cheek warmth follows the cheekbone instead of round circles; the tunic is a flat ribbed green and the hair still reads as matte straw.",
       "fixes": [
-        "hair strip with anisotropic sheen, darker roots and a golden value range"
+        "hair strip with anisotropic sheen, darker roots and a golden value range",
+        "a wool or silk strip on the tunic instead of the flat rib"
       ]
     },
     "detail": {
       "score": 6,
-      "reason": "Hair cards and ears present; the face has no lid or lip definition at the hero distance.",
+      "reason": "Hair locks, ears, tunic trim; the eyes now sit under a shadowed upper lid with a lash line in hero.png; no lip line or parting.",
       "fixes": [
-        "defined lids, lip line and brow; a parting in the hair"
+        "a defined lip line and brow",
+        "a parting in the hair",
+        "seams on the tunic"
       ]
     },
     "wear": {
-      "score": 5,
-      "reason": "The blemish rash is gone; the face is now clean with no character marks at all.",
+      "score": 6,
+      "reason": "A pale cheekbone scar shows in FRONT and collar grime and sun-faded shoulders now show on the tunic; the freckles are too faint to read at FRONT or hero.png distance, and the scar is a soft pale blotch rather than a line.",
       "fixes": [
-        "one small scar or a few seeded freckles"
+        "raise freckle contrast so they read in FRONT",
+        "shape the cheekbone scar as a thin line with a slightly raised edge"
       ]
     },
     "lod": {
-      "score": 5,
-      "reason": "FAR LOD2 is still a distance-field re-mesh: the face breaks into flat patches of different tone and the features smear.",
+      "score": 6,
+      "reason": "FAR LOD2 face is now smooth with even vertex colour, the eyes and nose hold, and the faceted patchwork is gone; the ears and the tied tail read, but the hair is a plain smooth cap.",
       "fixes": [
-        "LOD2 from an authored coarse topology (decimated quad base mesh) instead of the distance-field re-mesh, keeping vertex colour smooth"
+        "keep a few locks on the LOD2 hair cap",
+        "average the trim colour so it does not smear across the tunic"
       ]
     },
     "technical": {
       "score": 7,
-      "reason": "QA clean; 68k / 14k / 3.4k triangles over 4 draws; many stray hair cards.",
+      "reason": "QA clean; 64.1k / 13.6k / 3.4k tris, 4 / 4 / 3 draws; many stray hair cards.",
       "fixes": [
         "fewer, wider hair cards at LOD0"
       ]
     }
   },
   "renders": {
-    "hero.png": "b017496528ae3699a18552fc8959c993b09aaf0655b102d40998f137102cee9d",
-    "sheet.png": "62eac5cbb9c46a4420ee42a93216fdd7d75555d1326c0c372ff9fe3d05b4d80d"
+    "hero.png": "9b5b4f8b67d305eb698fef7342df437f752ad800956aaed147d2e8ac2870b07a",
+    "sheet.png": "01e2e5b0b7818e2b839765d833e86a2a3fa500ab7f3d7e44984dad5abd87512f"
   }
 }

@@ -5,7 +5,7 @@
 // the model shows. Every number is inside the ranges of recipes/brown_bear/README.md.
 
 import { type CreatureSpec, FAMILY_PRESETS, familyMember, hex } from '@developerz.ai/ts23d';
-import { WOLF } from '../wolf/wolf.ts';
+import { WOLF } from '../_lib/creature/wolf-spec.ts';
 
 /** The real numbers (README.md table; ranges from recipes/brown_bear/README.md). */
 export const REAL = {

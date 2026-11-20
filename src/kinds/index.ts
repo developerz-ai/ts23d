@@ -144,7 +144,13 @@ export {
   headParams,
 } from './head.ts';
 export { type FaceRig, faceMorphs, HEAD_MORPHS, headClips } from './head-clips.ts';
-export { type CardLayer, hairEdits, type ScalpCardOptions, scalpCards } from './head-hair.ts';
+export {
+  type CardLayer,
+  type HairLocks,
+  hairEdits,
+  type ScalpCardOptions,
+  scalpCards,
+} from './head-hair.ts';
 export {
   type BeardStyle,
   type BustStyle,

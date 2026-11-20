@@ -1,7 +1,7 @@
 {
   "asset": "oak",
   "reviewer": "agent",
-  "overall": 7.3,
+  "overall": 7.4,
   "scores": {
     "silhouette": {
       "score": 8,
@@ -18,11 +18,11 @@
       ]
     },
     "materials": {
-      "score": 7,
-      "reason": "Leaf cards sample the foliage texture with alpha and bark reads; the ground disc is now grass with soil patches but carries straight brown stripes in hero.png, and the leaves are one green.",
+      "score": 8,
+      "reason": "Leaf cards sample the foliage texture with alpha and bark reads; the ground disc in hero.png is now moss with darker damp patches and no stripes. The leaves are still one green.",
       "fixes": [
-        "remove the stripe pattern on the ground disc (soil/leaf-litter noise instead)",
-        "two-tone leaf colour (sun / shade)"
+        "two-tone leaf colour (sun / shade)",
+        "a few fallen leaves and twigs on the moss"
       ]
     },
     "detail": {
@@ -35,17 +35,19 @@
     },
     "wear": {
       "score": 6,
-      "reason": "A fallen limb on the ground; no dead limb, lichen or bark scars in the crown.",
+      "reason": "A fallen limb on the ground, though a grey limb stands upright against the trunk foot in hero.png; no dead limb, lichen or bark scars in the crown.",
       "fixes": [
+        "lay the grey limb at the trunk foot flat on the ground",
         "a dead limb in the crown",
         "lichen patches on the north side of the limbs"
       ]
     },
     "lod": {
       "score": 7,
-      "reason": "FAR LOD2 now has a dense card crown fitted to the LOD0 outline instead of sparse streaks; its cards are blocky and lighter than LOD0.",
+      "reason": "FAR LOD2 ground is now a flat moss colour without the zig-zag stripe, but the card crown is still blocky, darker and flatter than the LOD0 crown, so the crown value shifts at the switch.",
       "fixes": [
-        "colour-match the LOD2 crown cards to the LOD0 mean"
+        "colour-match the LOD2 crown cards to the LOD0 mean",
+        "smaller, more numerous LOD2 crown cards so the outline is less blocky"
       ]
     },
     "technical": {
@@ -57,7 +59,7 @@
     }
   },
   "renders": {
-    "hero.png": "c334b428872eeac65f3f2cead6dfdf4a3b569d776d2987f7bd350e883cd45205",
-    "sheet.png": "1e427f9a2df8456e1e902c3ab44740fc7cb3471530d1b8cb92eb7da8c3a48a2f"
+    "hero.png": "c8e6427e7cc0ab79a6255f4492f42ea560c43f264d4aa5b9af256bf47cfcaf57",
+    "sheet.png": "46a71d523c660bb4ef6bbbb41ef21379b574da8170fbdeae28ec20565c8a01b1"
   }
 }

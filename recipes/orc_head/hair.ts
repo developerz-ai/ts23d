@@ -198,10 +198,12 @@ export function orcCardHair(skull: Surface): CardHairStyle {
     cell: 0.004,
     comb: withBrowComb(comb, SK, H, BROWS),
     color: mix(C.hairRoot, C.hairTip, 0.3),
+    // The lock style (D461): the scalp lock and the beard on its coarse cells, narrower and denser.
+    locks: {},
     layers: [
       {
         name: 'scalp_lock',
-        kind: 'hair',
+        kind: 'beard',
         region: scalpLock,
         density: 7000,
         length: 0.06,

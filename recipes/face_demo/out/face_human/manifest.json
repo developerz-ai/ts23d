@@ -21,14 +21,19 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    54208,
-    11000,
-    2428
+    55976,
+    12344,
+    3196
+  ],
+  "trianglesCompiled": [
+    55984,
+    12344,
+    3196
   ],
   "drawCalls": [
     4,
     4,
-    4
+    3
   ],
   "pivots": [
     {

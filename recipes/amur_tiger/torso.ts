@@ -58,8 +58,9 @@ export function features(lod: number): SculptEdit[] {
       size: [0.1, 0.06, 0.055],
       blend: 0.06,
     },
-    // Brisket: the deep keel of the chest running down between the forelegs.
-    { shape: 'ellipsoid', at: [0.46, 0, 0.487], size: [0.225, 0.108, 0.113], blend: 0.15 },
+    // Brisket: the deep keel of the chest running down between the forelegs (deep enough that the
+    // side outline drops behind the elbow and climbs to the waist: not a tube).
+    { shape: 'ellipsoid', at: [0.44, 0, 0.472], size: [0.235, 0.11, 0.124], blend: 0.15 },
     // Pectorals: forward of the forelegs, the chest's front plane.
     {
       shape: 'ellipsoid',

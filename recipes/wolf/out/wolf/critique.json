@@ -1,7 +1,7 @@
 {
   "asset": "wolf",
   "reviewer": "agent",
-  "overall": 6.4,
+  "overall": 7,
   "scores": {
     "silhouette": {
       "score": 7,
@@ -21,47 +21,47 @@
     },
     "materials": {
       "score": 7,
-      "reason": "Fur cards over flanks and shoulders now give a real coat read, agouti saddle over buff flanks and cream chest; pinkish-lilac streaks on the shoulder read as paint, not fur.",
+      "reason": "Fur cards now shade as strands with no dark specks: grizzled dark saddle over buff flanks and a cream chest read as a grey wolf coat (hero.png). The shoulder scars are no longer white strokes but a soft grey smudge; a few pale grey blotches on the chest and shoulder read as smears, and the face is smooth.",
       "fixes": [
-        "remove the pink tint from the shoulder streaks (grey-brown matting instead)"
+        "remove the pale grey blotches on the chest and shoulder or break them into lighter guard-hair tips",
+        "short fur cards on the face and cheeks"
       ]
     },
     "detail": {
       "score": 7,
-      "reason": "Hair-flow fur cards, chest ruff and cheek fringe, eyes with lids, nose, lip line, toes with claws.",
+      "reason": "Hair-flow fur cards, chest ruff and cheek fringe, eyes with lids, nose, lip line; the paws now split into toes with claws and a brow plane catches light over the eye, but the muzzle side is still one smooth plane.",
       "fixes": [
         "brow tufts and a darker lip margin",
-        "guard-hair tips along the spine"
+        "cheekbone and muzzle-side planes so the head stops reading as one smooth wedge"
       ]
     },
     "wear": {
-      "score": 6,
-      "reason": "Lower legs and paws are now dark with mud and the flank shows streaks; but the mud is an even dark sock with a hard line, and the streaks read as pink paint rather than matted fur or scars.",
+      "score": 7,
+      "reason": "Mud is graded, darkest at the toes and fading up the cannon (hero.png, legs); the scars are now paler grey regrowth but at hero distance read as a soft smudge rather than a parted line, and the ear shows only a pale crescent, not a clear nick.",
       "fixes": [
-        "mud splashes graded up from the paws, heaviest at the toes",
-        "matted grey-brown flank streaks and a nick in one ear"
+        "make the scar parting visible: a thin dark skin line with fur lying away from it",
+        "a clear notch cut into one ear rim"
       ]
     },
     "lod": {
-      "score": 5,
-      "reason": "FAR LOD2 (3.6k) keeps pose and a few back cards, but the coat turns a pale tan with no saddle, the legs are blocky tubes and the paws buns: a strong pop against the dark shaggy LOD0.",
+      "score": 7,
+      "reason": "FAR LOD2 now carries the dark saddle and a coat value close to LOD0, with no pale slabs, and keeps the back fur cards; the paws are still round buns, a lighter flat facet shows on the hip and the face mask is paler than LOD0.",
       "fixes": [
-        "paint the agouti saddle and dark legs into LOD2 vertex colour",
-        "fur cards on flanks and tail at LOD2",
-        "8-sided legs and shaped paws at LOD2"
+        "shaped paws at LOD2",
+        "darken the LOD2 hip facet and face mask to match LOD0",
+        "a few flank cards at LOD2"
       ]
     },
     "technical": {
-      "score": 7,
-      "reason": "QA PASS: 106.9k / 29.4k / 3.6k tris, 4 / 4 / 2 draws; LOD2 grew to 3.6k triangles while still popping.",
+      "score": 8,
+      "reason": "QA PASS: 107.2k / 28.9k / 3.9k tris, 4 / 4 / 2 draws; LOD0 trimmed to ~107k and LOD2 no longer pops in colour.",
       "fixes": [
-        "adaptive cell size: finer on head and paws, coarser on flanks",
-        "spend LOD2 triangles on fur cards instead of flank tessellation"
+        "adaptive cell size: finer on head and paws, coarser on flanks"
       ]
     }
   },
   "renders": {
-    "hero.png": "fe7bca44e79167309b1acbb5a82694ae14dd2f0d9cd238b77ee3669fc9bce38a",
-    "sheet.png": "8f6015080abb213e2de394f4e1d6aaec4c466e74c58b4e94f8b1003bc3545e43"
+    "hero.png": "8ddb21ea7298a4b557a1e5faa2ab360d8ab66712c4a866e3fa1b059cd3377ae4",
+    "sheet.png": "b2d84ca991ea66a9dd9592b670f06b1581233d52eaff082be89d624db6ff59ae"
   }
 }

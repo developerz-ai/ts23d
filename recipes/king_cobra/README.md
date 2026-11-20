@@ -34,10 +34,11 @@ and every colour value are read from photos.
 
 **Staging (design):** the rest pose is a showcase stance. The hood faces 35° to the side, square to the 3/4
 camera, and the rear two thirds lie in a pile of two turns: a tight spiral widening toward the tail, each
-turn 2.4 cm inside the next, so the smaller top turn rides on the inner shoulder of the ground ring under
-the raised forebody. The pile's heights are settled, not drawn (`settleHeights` in `shape.ts`): every
+turn 3 cm inside the next and its centre drifting up to 4 cm back from the lens as it climbs, so the
+smaller top turn rides on the far shoulder of the ground ring under the raised forebody and the pile reads
+as a heap, not a hose ring. The pile's heights are settled, not drawn (`settleHeights` in `shape.ts`): every
 section rests on the ground or on the turn under it, so no turn hovers. The overall box (0.45 × 0.45 ×
-0.78 m) is that pose; the 3.5 m is held by the recipe's test along the body. The hero camera sits at 24°
+0.78 m) is that pose; the 3.5 m is held by the recipe's test along the body. The hero camera sits at 32°
 elevation (`hero` in the recipe) so the top turn and its wear face the lens. `rear` lays the front out
 with three links of curl over the pile (a fourth would drape the neck over the top turn), and the rising
 front keeps the laid track's drape where it still runs flat.
@@ -89,11 +90,11 @@ One skinned part `body`, one draw. Bones `spine_0..31` (0 at the head), `hood_ri
 | Feature | How | Why |
 |---|---|---|
 | glossy dorsal scales | one strip (`material.ts`): each scale samples a rim-to-crown ramp, roughness 0.38 at the rim to 0.12 on the crown | live snake scales are polished keratin; a single roughness read as paint |
-| pale crossbands | chevrons pointing at the head, one straight arm per side swept back 0.45 of a pitch, widening down the flank; each scale's corners carry the pattern at their own point, so band edges run clean across the scales | photos above; the old W-shaped zigzag read as a viper, one colour per scale read serrated |
-| pre-shed patch | a ragged patch on the near side of the top turn: milky, papery grey with the pattern ghosting through, a dark torn rim round it, dull row of the strip, scales a hair proud | the old skin clouds over before a shed |
-| healed scar | two parallel diagonal bands across the top turn in the hero's view, flat pale scale tissue | a prey snake's bite; king cobras eat snakes |
+| pale crossbands | chevrons pointing at the head, one straight arm per side swept back 0.45 of a pitch (at 0.6 the near turn's bands smeared into its speckle), fading by 55 % toward the tail, 1.8 cm wide on the ridge widening to 3.2 cm down the flank; each scale's corners carry the pattern at their own point, so band edges run clean across the scales | photos above; the old W-shaped zigzag read as a viper, one colour per scale read serrated |
+| pre-shed patch | a ragged patch on the near side of the top turn, about 0.2 m along the body and down both flanks: milky, papery grey with the pattern ghosting through (45 % of it: at 0.3 m and 18 % the patch hid the near turn's bands), a dark torn rim round it, dull row of the strip, scales a hair proud | the old skin clouds over before a shed |
+| healed scar | two diagonal bands 5 cm wide crossing the top turn at a slant in the hero's view, flat pale scale tissue | a prey snake's bite; king cobras eat snakes |
 | dust | dry loam on the turns lying on the ground (`dustAt`): the bottom turn's flanks and belly coated, its back lightly, patchy; on every LOD; the belly greys under the pile | it lies on dirt; the cream belly showed as a pale sliver under the coil |
-| eyes | 12.8 mm eyeball under a glossy brille | the eye read as a dot |
+| eyes | 13.6 mm eyeball under a glossy brille | the eye read as a dot (12.8 mm still read small against the hood) |
 | scuffed tail scutes | greyed, rougher free edges from 2.6 m to the tip | dragged over rock |
-| far LOD | LOD2 takes the pattern's average over a band pitch (and the collar's over 12 cm), darkened to the LOD0 read; the dark throat collar stays as a band on the neck; only the broad dust survives of the story marks | sampling single bands on six-sided rings made black and cream blocks; the shed patch turned whole segments blue-grey |
+| far LOD | LOD2 takes the pattern's average over a band pitch (and the collar's over 12 cm), at 0.3 of it to match the LOD0 coil's value (its scales' shadowed sides and dark skin); every third link ring from the neck to the tail's last tenth is painted pale, a few broad crossbands (rings sit 11 cm apart, too coarse for the 7 cm pitch); on the pile the belly vertex takes the dorsal colour (lit across the ring, it washed the coil's lower half tan); the far coil takes 0.2 of the dust (`FAR_DUST`; at 0.9 the whole far coil went pale tan, D480); the dark throat collar stays as a band on the neck, and on the raised neck the one belly vertex is pulled a third toward the dorsal colour (pure cream there washed the whole neck pale); only the broad dust survives of the story marks | sampling single bands on six-sided rings made black and cream blocks; the shed patch turned whole segments blue-grey |
 | girth | swells to 1.1 body widths at 1.5 to 1.9 m, tapers steadily to the vent and tail | heavy mid-body in side photos |

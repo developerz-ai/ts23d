@@ -616,7 +616,8 @@ export function banner(lod: Lod, at: Vec3, h: number, torn = false): { pole: Mes
 
 /**
  * A banner cloth `w` wide hanging `len` from its top centre `top`, 5 cm thick: the hem frayed
- * into tongues (deeper when `torn`), the lower third darkened by rain splash and road dirt.
+ * into tongues a hand to half a metre deep (deeper when `torn`), the lower half darkened by rain
+ * splash and road dirt.
  */
 function hangingCloth(top: Vec3, w: number, len: number, torn: boolean): Mesh {
   const n = 7;
@@ -626,7 +627,7 @@ function hangingCloth(top: Vec3, w: number, len: number, torn: boolean): Mesh {
   ];
   for (let i = 0; i <= n * 2; i++) {
     const y = w / 2 - (i / (n * 2)) * w;
-    const deep = i % 2 === 0 ? 0 : torn ? 0.32 : 0.16;
+    const deep = i % 2 === 0 ? 0 : torn ? 0.5 : 0.3;
     // Irregular tongues: every third one hangs a little lower.
     prof.push([y, -len + deep - (i % 6 === 2 ? 0.08 : 0)]);
   }
@@ -634,8 +635,8 @@ function hangingCloth(top: Vec3, w: number, len: number, torn: boolean): Mesh {
   const colors = new Float32Array(cloth.colors.length);
   for (let i = 0; i < colors.length; i += 3) {
     const z = cloth.positions[i + 2] ?? 0;
-    const t = Math.max(0, Math.min(1, (-z - len * 0.6) / (len * 0.4)));
-    colors.set(teamShade(1 - 0.45 * t), i);
+    const t = Math.max(0, Math.min(1, (-z - len * 0.45) / (len * 0.55)));
+    colors.set(teamShade(1 - 0.6 * t), i);
   }
   return translate({ ...cloth, colors }, top);
 }
@@ -786,6 +787,15 @@ export function rubble(
   return merge(out);
 }
 
+/** The near pieces' weathered mean: dark red under 60 % salt-ash dust and bare chips. */
+const ASH_SLAB: Vec3 = [0.36, 0.31, 0.24];
+
+const recolour = (m: Mesh, c: Vec3): Mesh => {
+  const colors = new Float32Array(m.colors.length);
+  for (let i = 0; i < colors.length; i += 3) colors.set(c, i);
+  return { ...m, colors };
+};
+
 /** Recolour a box by its faces: tops `k`, sides and undersides darker (dirt, soot, shadow). */
 function undersides(m: Mesh, top: number, under: number): Mesh {
   const colors = new Float32Array(m.colors.length);
@@ -796,9 +806,10 @@ function undersides(m: Mesh, top: number, under: number): Mesh {
 
 /**
  * Fallen team roof: broken pieces (deck with its slates still on), tilted where they slid off
- * the heap, darker on every face but the top, LOD2 keeps four tilted pieces. Near, every other
- * piece is burnt black, ash lies on the rest and grit drifts at their foot: all of that goes in
- * `grit` (not team-painted).
+ * the heap, darker on every face but the top. Every other piece is burnt black; near, ash lies on
+ * the rest and grit drifts at their foot: all of that goes in `grit` (not team-painted). Far
+ * (LOD2) keeps four tilted pieces with the value the near ones show once weathered: two burnt,
+ * two ash-grey with a red fleck each as a colour block, so nothing pops at the switch.
  */
 export function fallenSlabs(
   lod: Lod,
@@ -814,16 +825,21 @@ export function fallenSlabs(
   for (let i = 0; i < n; i++) {
     const w = rng.range(1.0, 1.9);
     const d = rng.range(1.2, 2.4);
-    // Near: every other roof piece burnt through to black (not team any more); the rest charred
-    // and dust-coated so the red reads buried, not painted (top 35-50%, edges 22%).
-    const burnt = lod < 2 && i % 2 === 1;
+    // Every other roof piece burnt through to black (not team any more); near, the rest are
+    // charred and dust-coated so the red reads buried, not painted (top 35-50%, edges 22%).
+    const burnt = i % 2 === 1;
     const piece = box({
       size: tarp ? [w * 0.9, d * 0.8, 0.04] : [w, d, 0.16],
       at: [0, 0, tarp ? -0.02 : -0.08],
       color: burnt ? CHAR_SLATE : TEAM,
       strip: tarp ? 'canvas' : 'slate',
     });
-    const slab = burnt ? piece : undersides(piece, rng.range(0.3, 0.45), 0.2);
+    const ashen = lod === 2 && !burnt;
+    const slab = burnt
+      ? piece
+      : ashen
+        ? recolour(piece, ASH_SLAB)
+        : undersides(piece, rng.range(0.3, 0.45), 0.2);
     const pose = {
       at: [rng.range(-3, 3), rng.range(-4.5, 4.5), 0] as Vec3,
       yaw: rng.range(0, Math.PI),
@@ -833,7 +849,19 @@ export function fallenSlabs(
     const turned = place(slab, pose);
     const dz = floor - 0.05 - boundsOf(turned).min[2];
     const placed = translate(turned, [0, 0, dz]);
-    (burnt ? grit : out).push(placed);
+    (burnt || ashen ? grit : out).push(placed);
+    if (ashen)
+      // The red still showing through the ash: a fleck proud of the piece's top.
+      for (const [fx, fy] of [[-0.18, 0.15]] as const) {
+        const fleck = box({
+          size: [w * 0.3, d * 0.25, 0.02],
+          at: [w * fx, d * fy, (tarp ? 0.02 : 0.08) - 0.005],
+          color: teamShade(0.5),
+          strip: tarp ? 'canvas' : 'slate',
+          omit: ['bottom'],
+        });
+        out.push(translate(place(fleck, pose), [0, 0, dz]));
+      }
     if (lod === 0) {
       // Ash lying on a roof piece itself (its upper half), and a drift of grit at its low edge.
       const top = 0.08;

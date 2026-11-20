@@ -22,8 +22,8 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    108316,
-    26428,
+    109426,
+    26628,
     2808
   ],
   "drawCalls": [
@@ -320,27 +320,27 @@
     },
     {
       "bone": "fore_l_1",
-      "radius": 0.122199,
-      "height": 0.018277,
-      "coverage": 0.9695
+      "radius": 0.121603,
+      "height": 0.01823,
+      "coverage": 0.9612
     },
     {
       "bone": "fore_l_3",
-      "radius": 0.077392,
-      "height": 0.043176,
-      "coverage": 0.9947
+      "radius": 0.077708,
+      "height": 0.042952,
+      "coverage": 0.9966
     },
     {
       "bone": "fore_r_1",
-      "radius": 0.11919,
-      "height": 0.024936,
-      "coverage": 0.975
+      "radius": 0.118755,
+      "height": 0.02399,
+      "coverage": 0.9755
     },
     {
       "bone": "fore_r_3",
-      "radius": 0.077382,
-      "height": 0.043314,
-      "coverage": 0.9947
+      "radius": 0.077606,
+      "height": 0.042856,
+      "coverage": 0.9967
     },
     {
       "bone": "hind_l_0",
@@ -356,9 +356,9 @@
     },
     {
       "bone": "hind_l_3",
-      "radius": 0.077699,
-      "height": 0.040347,
-      "coverage": 0.9827
+      "radius": 0.077613,
+      "height": 0.040219,
+      "coverage": 0.9818
     },
     {
       "bone": "hind_r_0",
@@ -374,8 +374,8 @@
     },
     {
       "bone": "hind_r_3",
-      "radius": 0.0778,
-      "height": 0.043244,
+      "radius": 0.077768,
+      "height": 0.044068,
       "coverage": 0.9983
     },
     {
@@ -387,14 +387,14 @@
     {
       "bone": "fore_l_1_mid",
       "radius": 0.175834,
-      "height": 0.066385,
+      "height": 0.066387,
       "coverage": 0.9795
     },
     {
       "bone": "fore_l_2_mid",
-      "radius": 0.090868,
-      "height": 0.089086,
-      "coverage": 0.9711
+      "radius": 0.090314,
+      "height": 0.089641,
+      "coverage": 0.9689
     },
     {
       "bone": "fore_r_0_mid",
@@ -404,15 +404,15 @@
     },
     {
       "bone": "fore_r_1_mid",
-      "radius": 0.171814,
-      "height": 0.071896,
+      "radius": 0.171812,
+      "height": 0.071898,
       "coverage": 0.9722
     },
     {
       "bone": "fore_r_2_mid",
-      "radius": 0.093171,
-      "height": 0.085957,
-      "coverage": 0.9725
+      "radius": 0.088836,
+      "height": 0.09029,
+      "coverage": 0.9501
     },
     {
       "bone": "hind_l_0_mid",
@@ -428,9 +428,9 @@
     },
     {
       "bone": "hind_l_2_mid",
-      "radius": 0.093826,
-      "height": 0.091065,
-      "coverage": 0.9725
+      "radius": 0.093763,
+      "height": 0.091729,
+      "coverage": 0.9723
     },
     {
       "bone": "hind_r_0_mid",
@@ -446,9 +446,9 @@
     },
     {
       "bone": "hind_r_2_mid",
-      "radius": 0.090839,
-      "height": 0.082524,
-      "coverage": 0.9741
+      "radius": 0.090647,
+      "height": 0.083559,
+      "coverage": 0.9727
     }
   ],
   "real": {

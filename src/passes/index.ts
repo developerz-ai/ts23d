@@ -23,6 +23,7 @@ export { dilateTexels, type TexelFrame, walkTexels } from './bake-texels.ts';
 export type { BeltMesh } from './belt-bodies.ts';
 export { BeltLoop } from './belt-loop.ts';
 export { type BeltRun, beltRun } from './belt-run.ts';
+export { type CardWearOptions, cardWear } from './card-wear.ts';
 export { type FairOptions, fair } from './fair.ts';
 export { type GrimeOptions, type GrimeZone, grime } from './grime.ts';
 export {

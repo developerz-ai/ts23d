@@ -20,7 +20,7 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    33716,
+    33436,
     8040,
     852
   ],
@@ -149,8 +149,8 @@
   ],
   "weather": {
     "chips": {
-      "target": 0.1053,
-      "actual": 0.1053,
+      "target": 0.1111,
+      "actual": 0.1111,
       "eligible": "convex-edges",
       "area": 1319.1031,
       "by": {
@@ -170,8 +170,8 @@
           "area": 325.6385
         },
         "hall_rubble": {
-          "target": 0.16,
-          "actual": 0.16,
+          "target": 0.32,
+          "actual": 0.32,
           "area": 47.1082
         }
       }

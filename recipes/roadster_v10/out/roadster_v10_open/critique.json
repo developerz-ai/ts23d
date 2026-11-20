@@ -33,7 +33,7 @@
     },
     "wear": {
       "score": 6,
-      "reason": "Chips cluster behind the front wheel and now fleck the lower nose; the engine bay has only a few dark specks on the intake plenum and is otherwise clean in hero.png.",
+      "reason": "Chips cluster behind the front wheel and fleck the lower nose (crisper in hero.png now); the engine bay has only a few dark specks on the intake plenum and a dark smear on the bonnet underside, otherwise clean.",
       "fixes": [
         "grime and oil in the engine bay",
         "brake dust on the wheels"
@@ -55,7 +55,7 @@
     }
   },
   "renders": {
-    "hero.png": "3151a1a2f119b16ea723e2dee9711387a70ecc450a3c40bbdd46babca7a4c720",
-    "sheet.png": "bab01fd75fbcfa0977766690697ef98dfe1ffb4ac5ac4ddca4ca2dc3c1cac103"
+    "hero.png": "745b8bc2ba3c1fb3cea4c1f996bc4c1808c1d1b0325cdc701a1eeae1b019d69c",
+    "sheet.png": "fe473a509d9cf081d452efd9024d37a3678ef96b7560fc5794d7822409fb272a"
   }
 }

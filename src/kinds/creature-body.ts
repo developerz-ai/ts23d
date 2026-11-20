@@ -202,7 +202,8 @@ function polygon2(pts: readonly (readonly [number, number])[]): (x: number, y: n
   };
 }
 
-/** Every edit of the body sculpt at this LOD (left side when mirrored). */
+/** Every edit of the body sculpt at this LOD (left side when mirrored); `extra` = the recipe's own
+ *  forms (`options.body`), laid over the finished masses and separations, before the sole cut. */
 export function bodyEdits(
   b: Bones,
   s: CreatureSpec,
@@ -210,6 +211,7 @@ export function bodyEdits(
   res: number,
   hoof: Vec3,
   wing: Vec3,
+  extra?: readonly SculptEdit[],
 ): SculptEdit[] {
   const masses = blockOut(b);
   const legs = legEdits(b, lod, hoof);
@@ -231,6 +233,7 @@ export function bodyEdits(
     const r = f.nodes[0]?.r ?? 0.02;
     out.push(blade(f.nodes, f.side, Math.max(r * 0.12, res * 0.65), { blend: r * 0.25 }));
   }
+  if (extra) out.push(...extra);
   // Flat soles: everything under the ground plane is cut away (LOD0: ⅓ cell above it — where the
   // fine toes graze the cut, mesh vertices land up to that far below the plane).
   out.push({

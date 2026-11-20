@@ -20,7 +20,7 @@ import {
 } from '@developerz.ai/ts23d';
 import { featureStrokes } from '../face/features.ts';
 import { type Forms, HERO_FORMS, muscleStrokes, planeStrokes } from '../face/planes.ts';
-import { tZone } from '../face/skin-strip.ts';
+import { scalpZone, tZone } from '../face/skin-strip.ts';
 import { skullEdit, skullLandmarks, skullOf } from '../face/skull.ts';
 import type { Character } from '../face/spec.ts';
 import { type Zones, zoneEdits } from '../face/zones.ts';
@@ -111,19 +111,34 @@ function sectionPaint(b: BustRecipe): SculptEdit[] {
   ];
 }
 
-/** The T-zone of a skull-stage head as the pore strip's oil mask. */
+/** The T-zone of a skull-stage head as the pore strip's oil mask: the forehead's centre band up
+ *  to a tenth of the head's height over the glabella (higher, it took the whole dome, and a bald
+ *  crown lit up with wet hot spots), the nose and the chin. */
 export function oilOf(b: BustRecipe): Field | undefined {
   if (!b.skull) return undefined;
   const k = skullLandmarks(skullOf(b.skull, b.spec));
   return tZone(
     {
-      forehead: [k.glabella[0], 0, k.glabella[2] + 0.3 * b.spec.H],
+      forehead: [k.glabella[0], 0, k.glabella[2] + SCALP_FROM * b.spec.H],
       glabella: k.glabella,
       noseTip: k.pronasale,
       chin: k.pogonion,
     },
     Math.abs(k.alare[1]),
   );
+}
+
+/** Where the scalp starts over the glabella, in head heights: above it the skin is matte. */
+const SCALP_FROM = 0.1;
+
+/** The scalp of a skull-stage head as the pore strip's matte mask (../face/skin-strip.ts). */
+export function scalpOf(b: BustRecipe): Field | undefined {
+  if (!b.skull) return undefined;
+  const k = skullLandmarks(skullOf(b.skull, b.spec));
+  return scalpZone({
+    forehead: [k.glabella[0], 0, k.glabella[2] + SCALP_FROM * b.spec.H],
+    tragion: k.tragion,
+  });
 }
 
 /** The skull field's sample spacing per LOD, metres (and the face box's, LOD0). */
@@ -308,11 +323,12 @@ export function buildBust(
   const rng = ctx.rng.fork('skin');
   const { l } = b;
   const oil = b.pores ? oilOf(b) : undefined;
+  const matte = b.pores ? scalpOf(b) : undefined;
   const look = {
     tone: b.tone,
     ...b.paint,
     ...(b.scalp ? { scalp: b.scalp } : {}),
-    ...(b.pores ? { strip: oil ? { oil } : {} } : {}),
+    ...(b.pores ? { strip: { ...(oil ? { oil } : {}), ...(matte ? { matte } : {}) } } : {}),
   };
   const meshes: Record<string, Mesh> =
     lod === 2
@@ -365,6 +381,7 @@ export function buildBust(
     cell: ctx.pick([0.002, 0.0036, 0.01]),
     finish: 'cornea',
     proud: lod === 0 ? 0 : cell * 0.3,
+    lidShadow: 0.55,
     // The orbit's seat resolves at LOD0 only (coarser cells close a 1 cm-radius hollow).
     ...(lod === 0 ? { socketIn: 'head' } : {}),
   });

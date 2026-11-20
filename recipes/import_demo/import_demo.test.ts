@@ -47,4 +47,25 @@ describe('import_demo', () => {
     const c = compile(import_demo, { lod: 1 });
     expect((c.joints ?? []).flatMap((j) => jointFit(c, j).findings)).toEqual([]);
   });
+
+  it('fails if the hair renders as a plain scalp: a dark hair part, unsheened, with streaks', () => {
+    const c = compile(import_demo, { lod: 0 });
+    const part = (n: string) => c.parts.find((p) => p.name === n);
+    const hair = part('hair');
+    const head = part('head');
+    expect(hair).toBeDefined();
+    expect(hair?.finish).toBeUndefined();
+    const lum = (m: { colors: Float32Array }): number[] => {
+      const out: number[] = [];
+      for (let i = 0; i < m.colors.length; i += 3)
+        out.push(((m.colors[i] ?? 0) + (m.colors[i + 1] ?? 0) + (m.colors[i + 2] ?? 0)) / 3);
+      return out;
+    };
+    const mean = (a: number[]): number => a.reduce((t, x) => t + x, 0) / (a.length || 1);
+    const h = lum(hair?.mesh ?? { colors: new Float32Array() });
+    expect(mean(h)).toBeLessThan(mean(lum(head?.mesh ?? { colors: new Float32Array() })) * 0.5);
+    // Streaks: the hair's values spread, not one flat wash.
+    const sd = Math.sqrt(mean(h.map((x) => (x - mean(h)) * (x - mean(h)))));
+    expect(sd).toBeGreaterThan(0.015);
+  });
 });

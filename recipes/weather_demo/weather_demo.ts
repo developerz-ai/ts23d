@@ -21,12 +21,16 @@ import {
   type Mesh,
   merge,
   place,
+  planar,
+  stripRect,
   text,
   type Vec3,
   type WeatherEffects,
   weather,
   weightedNormals,
 } from '@developerz.ai/ts23d';
+import { tessellate } from '../_lib/finish/finish.ts';
+import { projectStripUV } from '../_lib/terrain/strip-inset.ts';
 import { ENAMEL } from './enamel.ts';
 
 const SLAB_H = 0.12;
@@ -356,14 +360,36 @@ function drum(lod: number, aged: boolean): Obj {
   // The weathered LOD0 shell carries its own grid (a station every 4 cm, 40 gores) for the dent,
   // so the weather pass need not tessellate it.
   const dense = aged && lod === 0;
-  const shell = lathe({
-    profile: lod < 2 ? (dense ? densify(near, 0.04) : near) : far,
-    segments: dense ? 40 : ([32, 20, 12][lod] ?? 12),
+  const profile = lod < 2 ? (dense ? densify(near, 0.04) : near) : far;
+  const segments = dense ? 40 : ([32, 20, 12][lod] ?? 12);
+  const side = lathe({
+    profile,
+    segments,
     color: DRUM_PAINT,
     strip: ENAMEL,
-    caps: true,
     creaseDeg: 40,
   });
+  // The heads: flat discs on the side's own rim points (no T-junction), the lid tessellated and
+  // mapped planar at true scale (the weathered lid tessellated). The lathe's cap was a fan from the centre: vertex-colour wear on
+  // its rim drew a radial star; on a fine grid it lies in patches round the rim and the bungs.
+  const disc = (end: [number, number] | undefined, up: boolean): Mesh => {
+    const [rr = r, z = 0] = end ?? [];
+    const pts = Array.from({ length: segments }, (_, k): Vec3 => {
+      const t = (k / segments) * Math.PI * 2 - Math.PI / 2;
+      return [rr * dmath.cos(t), rr * dmath.sin(t), z];
+    });
+    const face = planar({ points: up ? pts : pts.reverse(), color: DRUM_PAINT, strip: ENAMEL });
+    // Only the weathered lid carries wear to paint: the new one stays one clean face.
+    if (!up || !aged || lod === 2) return face;
+    return projectStripUV(
+      tessellate(face, lod === 0 ? 0.07 : 0.15),
+      ENAMEL,
+      // A band twice the 7 cm triangles' height (square texels, strip magnified 2×).
+      (stripRect(ENAMEL).metres / 64) * 2,
+      2,
+    );
+  };
+  const shell = merge([side, disc(profile[profile.length - 1], true), disc(profile[0], false)]);
   const bungs: Mesh[] = [];
   const fasteners: { at: Vec3; radius: number }[] = [];
   // Far: only the 2" bung; the ¾" one is under a pixel.

@@ -87,7 +87,7 @@ describe('pathHero', () => {
     const hash = new Bun.CryptoHasher('sha256').update(renderPath(scene, o).rgba).digest('hex');
     // Fixed order per pixel, integer sampler, no clocks: stable across runs and thread counts (the
     // transcendental Math.* calls are the same engine-dependence the raster hero already has).
-    expect(hash).toBe('8c5f1914f7a293707edbbaa4976588f0f1ce8b3c5aef1aa27d9a8452dca03538');
+    expect(hash).toBe('9be545816087afb79e8f687ea70626e6882ad4a57fee7fd38dc86a6211ade3ba');
   });
 
   it("lets a cutout card's transparent texels show the floor behind", () => {

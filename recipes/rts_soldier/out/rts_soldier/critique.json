@@ -1,7 +1,7 @@
 {
   "asset": "rts_soldier",
   "reviewer": "agent",
-  "overall": 7.3,
+  "overall": 7.4,
   "scores": {
     "silhouette": {
       "score": 8,
@@ -33,30 +33,30 @@
       ]
     },
     "wear": {
-      "score": 6,
-      "reason": "Pale caked mud now climbs the boots and shins and the knee guards are scuffed (hero.png, sheet FRONT); pauldron chips are too small to read at hero distance and the torso and pack are clean.",
+      "score": 7,
+      "reason": "The pauldron rims are chipped to pale metal in bites that read in hero.png and sheet 3/4 FRONT, on top of caked mud on boots and shins and scuffed knee guards; the chest plate, helmet and radio pack are still clean.",
       "fixes": [
-        "larger pauldron rim chips that read at hero distance",
-        "dust and scuffs on the pack and chest plate"
+        "dust and scuffs on the chest plate and radio pack",
+        "a few scratches on the helmet shell"
       ]
     },
     "lod": {
       "score": 8,
-      "reason": "FAR LOD2 (380 tris) keeps crest, pauldrons, carbine, pack, boot colour and team red; the switch is invisible at RTS zoom.",
+      "reason": "FAR LOD2 (380 tris) keeps crest, pauldrons, carbine, pack, boot colour and team red; the pauldron chips are now LOD0 only, so at distance the pauldrons are clean solid red with no speckle. The switch is invisible at RTS zoom.",
       "fixes": [
         "keep the antenna at LOD2"
       ]
     },
     "technical": {
       "score": 8,
-      "reason": "QA PASS: 10.6k / 2.9k / 380 tris, 3 / 3 / 3 draws.",
+      "reason": "QA PASS: 11.4k / 3.0k / 380 tris, 3 / 3 / 3 draws.",
       "fixes": [
         "spend LOD0 triangles on limb cross-sections instead of carbine barrel rings"
       ]
     }
   },
   "renders": {
-    "hero.png": "98b53dcf7264df7e364965c97b00e2c79ddc4711e90dff8cef936be378e9aab3",
-    "sheet.png": "db8e47aea4e0cc665af4bf17000525507637c45942352889a46b22e083a4c102"
+    "hero.png": "7f766fb98ba3402e839c2f31e29ac6f237e32b8e324d9dfae72e848e615eb381",
+    "sheet.png": "f3419b39bb28596371c2043c6e6cb3be240d3e9b7a48239bf42a6a1ac32cf9ac"
   }
 }

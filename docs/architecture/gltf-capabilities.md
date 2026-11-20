@@ -199,7 +199,7 @@ defineAsset({
   `src/core/paint.ts`), so the default looks exactly as authored and a variant keeps every grime,
   wear and shading tone. Channels the slot barely has (blue of a pure red) borrow the mean ratio of
   the others. A painted part brighter than its slot (bare iron, chrome) would clamp, so `compile`
-  refuses it: give those bits their own part.
+  refuses it: give those bits their own part, or declare the slot with `wear` (below).
 - **Variants.** Root `extensions.KHR_materials_variants.variants` lists them in declaration order;
   each painted primitive carries `mappings` from variant indices to that slot's material (one
   material per distinct repaint, shared by every LOD and pivot). No variant selected = `paint`.
@@ -207,6 +207,29 @@ defineAsset({
 - **Cost.** Merging puts painted geometry in `<pivot>_paint_<slot>` children: **one extra draw call
   per slot per pivot** that has painted geometry (boxcar: 9 → 13 draws at LOD0, 2 slots, 3 painted
   pivots). Paint only what a livery changes. Glow beats paint; glass/cutout can't be painted.
+- **Wear on a paint slot (opt-in, `wear: true`).** A painted vertex can only be a *darkening* of
+  its slot (`COLOR_0 ≤ 1` times the factor), and glTF has no per-vertex blend between a switchable
+  factor and a fixed colour, so on a plain slot chips to steel or primer, rust, mud and pale dust
+  are flattened onto the slot's hue and every livery recolours them. Declare the slot
+  `paint: { team: { colour: '#b3261e', wear: true } }` and its parts split **by triangle**: a vertex
+  whose hue is more than 10° from the slot's, or that has under half its saturation (`isBare` in
+  `src/core/paint-wear.ts`: steel, primer, rust, mud, soot, dust), is bare; a triangle with two or
+  more bare vertices is **bare**. Shading, grime and a light fade keep the slot hue and stay paint.
+  - *Compile* (`settleWear`) splits the vertices on the border and snaps the paint side to what the
+    slot material shows (tone × slot), so renders, `--variant` previews and the GLB agree.
+  - *GLB*: paint triangles stay in `<pivot>_paint_<slot>` (slot material, `COLOR_0` = tone,
+    KHR_materials_variants mappings as above). Bare triangles go to the pivot's own trim-sheet mesh
+    (`ts23d_trim`, `COLOR_0` = the wear's own colour, **no variant mapping**), so a livery swap in any
+    engine recolours the paint and leaves the wear. With `keepParts` they are a child node
+    `<part>_bare` of the part. No draw call of its own when the pivot already has unpainted geometry
+    (the RTS tank: 23 / 9 / 7 draws either way).
+  - *Limits*: wear is opaque per triangle (its edge is the tessellation: run `weather()` with a
+    `resolution` on those parts); wear under ~50 % strength over the paint keeps the slot hue and is
+    shown as the darkening it can be; a bare patch keeps any paint tint mixed into it in every livery
+    (use strong wear, `strength ≥ 0.8`). Refused with a fix: a near-grey wear slot (saturation under
+    0.35: wear could not be told from paint; make the saturated livery the default) and wear plus a
+    lacquer on one slot. Assets without `wear` are byte-identical (`src/export/paint-wear.test.ts`).
+    `manifest.json` lists the slot's default colour in `paint` as before.
 - **Looking at one.** `t3d hero|shot|build --variant <name>` renders `hero_<name>.png` /
   `sheet_<name>.png` (`compile(asset, { variant })` multiplies the painted tones by the variant
   colours, exactly what an engine shows). The GLBs are the same either way. `manifest.json` lists

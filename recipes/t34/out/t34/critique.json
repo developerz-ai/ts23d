@@ -36,15 +36,15 @@
     },
     "wear": {
       "score": 7,
-      "reason": "Dust and mud heaviest on the lower hull and track run, lighter up the sides; the rear soot is now a soft fan round the exhausts with no blocky noise (3/4 REAR, TOP), but it is so faint it barely reads, and the dust fade on the rear deck shows triangle-faceted steps in TOP.",
+      "reason": "Dust and mud heaviest on the lower hull and track run, lighter up the sides; with smooth per-pixel shading the rear-deck dust fade no longer steps in triangles (TOP) and the rear soot reads as a soft dark smudge at the rear plate, but it is still faint and there are no chips or scratches on the upper plates.",
       "fixes": [
         "darken the rear soot fan one or two steps so it reads at the sheet scale",
-        "smooth the dust mask on the rear deck (finer vertex density or texture mask) so it does not step in triangles"
+        "paint chips and scratches on the hatch edges and fender tops"
       ]
     },
     "lod": {
       "score": 7,
-      "reason": "FAR LOD2 keeps outline, turret and running gear, and the hull colour now matches LOD0 (no mottle to lose); the road wheels go uniformly dark olive, losing the pale dusty rims.",
+      "reason": "FAR LOD2 keeps outline, turret and running gear; it is now smoothly shaded with the hull texture, so the faceted tone steps are gone, but the road wheels are still uniformly dark olive, losing the pale dusty rims.",
       "fixes": [
         "keep the dust-pale rim colour on the LOD2 road wheels"
       ]
@@ -58,7 +58,7 @@
     }
   },
   "renders": {
-    "hero.png": "381fcaee663f1043ae3ee46c13e25c2ee511fac9db1d7f419a49ccc984e8519c",
-    "sheet.png": "2dd9111a28648ef72e7f1c698ce8c5089941fe2b57938c283a17a9d5aa914677"
+    "hero.png": "7af5182ecfb9e24c5f26a896d8afe290a18f5d1059497752556ee054ea97fb51",
+    "sheet.png": "afce474a305f0a1c32a2b7486480da64b3a2309b96db7d9ff57726d236fe064a"
   }
 }

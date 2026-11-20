@@ -1,11 +1,15 @@
 // The ground patch under a tree: an irregular disc (radius wobbled by noise, same mean area at
-// every LOD so the far silhouette keeps it) split into small triangles and box-projected so its
+// every LOD so the far silhouette keeps it) split into small triangles and projected so its
 // strip keeps true scale, then mottled in vertex colour at metre scale: patches of the `mix`
 // colours by noise, and a rim band blending to `rim` so the patch fades into the grass round it
-// instead of ending as a hard coloured mat. LOD2 is the bare polygon in the mean colour.
+// instead of ending as a hard coloured mat. V is kept off the strip's padded edge rows (their
+// texels are constant along V and drew straight streaks). LOD2 is the bare polygon in the mean
+// colour; with `far` it is flat colour on the `plain` row (a fan of long triangles cannot carry
+// a strip at true scale: V squeezed into each drew zig-zag stripes).
 
-import { dmath, type Mesh, planar, type StripId, type Vec3 } from '@developerz.ai/ts23d';
-import { reproject, tessellate } from '../finish/finish.ts';
+import { dmath, type Mesh, planar, type StripId, stripRect, type Vec3 } from '@developerz.ai/ts23d';
+import { tessellate } from '../finish/finish.ts';
+import { projectStripUV } from '../terrain/strip-inset.ts';
 
 export interface Floor {
   readonly radius: number;
@@ -18,6 +22,8 @@ export interface Floor {
   readonly rim: Vec3;
   /** Outline wobble, ± fraction of the radius. */
   readonly wobble: number;
+  /** LOD2 colour on the plain row: LOD0's mean with the strip's own albedo multiplied in. */
+  readonly far?: Vec3;
 }
 
 const lerp3 = (a: Vec3, b: Vec3, t: number): Vec3 => [
@@ -53,9 +59,18 @@ export function floorPatch(f: Floor, lod: 0 | 1 | 2, noise: Noise): Mesh {
     return [unit[0] * R * w, unit[1] * R * w, 0.005];
   });
   const mean = lerp3(f.mix[Math.floor(f.mix.length / 2)] ?? f.rim, f.rim, 0.35);
+  if (lod === 2 && f.far) return planar({ points, color: f.far, strip: 'plain' });
   const disc = planar({ points, color: mean, strip: f.strip });
   if (lod === 2) return disc;
-  const m = reproject(tessellate(disc, lod === 0 ? f.radius / 7 : f.radius / 4));
+  // Planar, V mirrored band to band (continuous: no seam line every band, as a per-triangle
+  // restart drew) and off the padded rows. A row is 64 texels of a 4096-wide strip; the ~1 m
+  // triangles need a band as tall, so the strip is magnified 6× with square texels.
+  const m = projectStripUV(
+    tessellate(disc, lod === 0 ? f.radius / 7 : f.radius / 4),
+    f.strip,
+    (stripRect(f.strip).metres / 64) * 6,
+    6,
+  );
   const colors = new Float32Array(m.colors);
   for (let i = 0; i < m.positions.length / 3; i++) {
     const p: Vec3 = [m.positions[i * 3] ?? 0, m.positions[i * 3 + 1] ?? 0, 0];

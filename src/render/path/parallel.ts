@@ -83,6 +83,7 @@ export function shareFilm(f: Film): Film {
     color: f32(f.color),
     albedo: f32(f.albedo),
     normal: f32(f.normal),
+    variance: f32(f.variance),
     shadow: f32(f.shadow),
     floor: f32(f.floor),
     back: f32(f.back),

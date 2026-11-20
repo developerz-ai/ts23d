@@ -36,6 +36,7 @@ const TONE = {
 /** hm08 frame → bust frame: a translation, menton onto the bust's menton. */
 export const OFFSET: Vec3 = [L.menton[0] - HM08.menton[0], 0, L.menton[2] - HM08.menton[2]];
 export const toBust = (p: Vec3): Vec3 => [p[0] + OFFSET[0], p[1] + OFFSET[1], p[2] + OFFSET[2]];
+export const fromBust = (p: Vec3): Vec3 => [p[0] - OFFSET[0], p[1] - OFFSET[1], p[2] - OFFSET[2]];
 
 /** The collar plane z + 0.3 x = SEAM_Z (bust frame, higher at the back like the bust seam). */
 export const SEAM_Z = 0.28;
@@ -68,6 +69,14 @@ function grain(p: Vec3): number {
   return (((h ^ (h >>> 16)) >>> 0) / 4294967295) * 2 - 1;
 }
 
+/** The scan's hairline height (hm08 z) at an hm08 point: above it the scanner saw cropped hair —
+ *  high on the forehead, over the ears, low at the nape. */
+export function hairlineZ(p: Vec3): number {
+  const t = Math.max(0, Math.min(1, (p[0] + 0.04) / 0.17));
+  const ear = near(p, [0.045, 0.08, 0.72], 0.035);
+  return 0.655 + 0.135 * t * t * (3 - 2 * t) + 0.05 * ear;
+}
+
 /** Skin colour at an hm08 point: flush on cheeks, nose and ears, lips, brows, shaved scalp. */
 export function skinColour(p: Vec3): Vec3 {
   let c = mix(
@@ -86,11 +95,7 @@ export function skinColour(p: Vec3): Vec3 {
   const onBrow =
     Math.abs(p[2] - bz) < 0.0035 && Math.abs(p[1]) > 0.011 && Math.abs(p[1]) < 0.056 && p[0] > 0.11;
   c = mix(c, TONE.brow, onBrow ? 0.75 : 0);
-  // Above the hairline the scan saw cropped hair: high on the forehead, over the ears, low at the
-  // nape (the code-built hair covers the same ground at LOD0/1; LOD2 shows only this).
-  const t = Math.max(0, Math.min(1, (p[0] + 0.04) / 0.17));
-  const ear = near(p, [0.045, 0.08, 0.72], 0.035);
-  const line = 0.655 + 0.135 * t * t * (3 - 2 * t) + 0.05 * ear;
+  const line = hairlineZ(p);
   // Hair: dark roots, lighter tips in fine strands (a hash of the position at 1.5 mm).
   const g = grain(p);
   const hairC = mix(TONE.scalp, [0.11, 0.075, 0.048], 0.5 + 0.5 * g);

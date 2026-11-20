@@ -5,16 +5,16 @@
 // strands start spread (dense, near-opaque root) and converge on their sub-clump's tip, the
 // outer strands shorter, so a card ends in pointed locks with alpha gaps, never a cut edge. Alpha =
 // coverage, a root → tip tone ramp (vertex colour carries the hue), a per-strand height ridge for
-// the normal map. Variants: fur (dense short), guard (sparse, dark-tipped), hair (long, fine),
-// wisp (a few stray strands: flyaways, silhouette), beard (wiry). Cards map with
-// `strandCells(strip, kind)`: the cell rects in sheet UV.
+// the normal map. The clump kinds are strand-clumps.ts. Cards map with `strandCells(strip, kind)`:
+// the cell rects in sheet UV. Transparent texels carry their strands' tone (`bleed`, D460).
 
 import { createRng, dmath, Ts23dError } from '../core/index.ts';
 import type { MaterialPainter } from './paint/types.ts';
+import { CLUMPS, type Clump, type StrandKind } from './strand-clumps.ts';
 import { STRIP_H, type StripId, stripRect, type UvRect } from './trim-sheet.ts';
 
-export type StrandKind = 'fur' | 'guard' | 'hair' | 'wisp' | 'beard';
-export type StrandStrip = 'fur_clumps' | 'hair_clumps';
+export type { StrandKind } from './strand-clumps.ts';
+export type StrandStrip = 'fur_clumps' | 'hair_clumps' | 'hair_locks';
 
 /** Cells per strand row (512 px each at the 4096² house size). */
 export const STRAND_CELLS = 8;
@@ -26,123 +26,8 @@ const BAND_U = 0.02;
 export const STRAND_LAYOUT: Readonly<Record<StrandStrip, readonly StrandKind[]>> = {
   fur_clumps: ['fur', 'fur', 'fur', 'fur', 'guard', 'guard', 'guard', 'guard'],
   hair_clumps: ['hair', 'hair', 'hair', 'wisp', 'wisp', 'beard', 'beard', 'beard'],
-};
-
-interface Clump {
-  /** Strands per cell (a card shows a clump, not one hair). */
-  readonly count: number;
-  /** Root radius as a share of the band (≥ 0.03: thinner strands vanish in the alpha mips). */
-  readonly width: number;
-  /** Roots spread over this share of the band; pull toward the sub-clump tip (0..1). */
-  readonly spread: number;
-  readonly clump: number;
-  /** Sub-clumps per cell (each converges on its own tip) and how much shorter their edges are. */
-  readonly subs: number;
-  readonly point: number;
-  /** Where a strand starts (share of the cell, staggered) and its length range. */
-  readonly start: number;
-  readonly length: readonly [number, number];
-  /** Sideways wave amplitude (share of the band) and waves per cell. */
-  readonly wave: number;
-  readonly waves: number;
-  /** Tone along the strand, [t, linear grey] stops (vertex colour multiplies it). */
-  readonly tone: readonly (readonly [number, number])[];
-}
-
-const CLUMPS: Readonly<Record<StrandKind, Clump>> = {
-  // Undercoat: soft, pale, short locks. Few strands, each ≥ 2 texels at a 2048² sheet, in three
-  // locks with gaps between them: a dense cell fills to an opaque lozenge (a chip, D-row).
-  fur: {
-    count: 9,
-    width: 0.06,
-    spread: 0.86,
-    clump: 0.75,
-    subs: 3,
-    point: 0.5,
-    start: 0.08,
-    length: [0.6, 0.9],
-    wave: 0.03,
-    waves: 1.5,
-    tone: [
-      [0, 0.72],
-      [0.5, 0.95],
-      [1, 1.05],
-    ],
-  },
-  // Agouti guard hair (wolf, many canids and rodents): grey base, pale band, darker tip. Two or
-  // three pointed locks per cell, separated.
-  guard: {
-    count: 8,
-    width: 0.06,
-    spread: 0.8,
-    clump: 0.8,
-    subs: 3,
-    point: 0.5,
-    start: 0.06,
-    length: [0.8, 1],
-    wave: 0.015,
-    waves: 1,
-    tone: [
-      [0, 0.72],
-      [0.3, 0.85],
-      [0.42, 1.08],
-      [0.55, 1.02],
-      [0.66, 0.55],
-      [1, 0.45],
-    ],
-  },
-  // Head hair: 2–3 locks per card, long, pointed, separated strands.
-  hair: {
-    count: 16,
-    width: 0.034,
-    spread: 0.86,
-    clump: 0.5,
-    subs: 3,
-    point: 0.3,
-    start: 0.05,
-    length: [0.88, 1],
-    wave: 0.025,
-    waves: 1.2,
-    tone: [
-      [0, 0.58],
-      [0.45, 0.9],
-      [1, 1.05],
-    ],
-  },
-  // Flyaways and outline: a few stray strands, long, barely clumped.
-  wisp: {
-    count: 6,
-    width: 0.032,
-    spread: 0.7,
-    clump: 0.6,
-    subs: 2,
-    point: 0.5,
-    start: 0.15,
-    length: [0.6, 0.95],
-    wave: 0.08,
-    waves: 1.5,
-    tone: [
-      [0, 0.7],
-      [1, 1.1],
-    ],
-  },
-  beard: {
-    count: 18,
-    width: 0.038,
-    spread: 0.85,
-    clump: 0.4,
-    subs: 2,
-    point: 0.4,
-    start: 0.15,
-    length: [0.5, 0.85],
-    wave: 0.08,
-    waves: 3,
-    tone: [
-      [0, 0.55],
-      [0.6, 0.85],
-      [1, 0.95],
-    ],
-  },
+  // The opt-in lock style (kinds/head-cards.ts `locks`): under-layer mass, locks, strays, coarse.
+  hair_locks: ['mass', 'mass', 'lock', 'lock', 'lock', 'fly', 'coarse', 'coarse'],
 };
 
 const ramp = (stops: Clump['tone'], t: number): number => {
@@ -184,6 +69,67 @@ const gauss = (r: () => number): number => {
   return Math.sqrt(-2 * dmath.log(u)) * dmath.cos(2 * Math.PI * r());
 };
 
+/**
+ * Give every transparent texel the coverage-weighted mean tone of its column within its cell
+ * (the same point along the strands; an empty column takes its nearest painted one), so filtering
+ * across an alpha edge — our bilinear, any engine's — mixes like with like (D460: a light fill
+ * there outlined every strand in pale specks).
+ */
+function bleed(cov: Float32Array, tone: Float32Array, w: number, h: number, cells: number): void {
+  for (let cell = 0; cell < cells; cell++) {
+    const x0 = Math.floor((w * cell) / cells);
+    const x1 = Math.floor((w * (cell + 1)) / cells);
+    const mean = new Float32Array(x1 - x0).fill(-1);
+    for (let x = x0; x < x1; x++) {
+      let s = 0;
+      let n = 0;
+      for (let y = 0; y < h; y++) {
+        const a = cov[y * w + x] ?? 0;
+        s += a * (tone[y * w + x] ?? 0);
+        n += a;
+      }
+      if (n > 0) mean[x - x0] = s / n;
+    }
+    const near = (i: number): number => {
+      for (let d = 1; d < mean.length; d++) {
+        const l = mean[i - d] ?? -1;
+        if (l >= 0) return l;
+        const r = mean[i + d] ?? -1;
+        if (r >= 0) return r;
+      }
+      return 0.8;
+    };
+    for (let x = x0; x < x1; x++) {
+      const m = mean[x - x0] ?? -1;
+      const t = m >= 0 ? m : near(x - x0);
+      for (let y = 0; y < h; y++) if ((cov[y * w + x] ?? 0) <= 0) tone[y * w + x] = t;
+    }
+  }
+  // Then the texels right beside a strand take its own tone (two rings of dilation), so the
+  // filter footprint at the edge sees that strand, not its column's mean.
+  let src = Uint8Array.from(cov, (a) => (a > 0 ? 1 : 0));
+  for (let ring = 0; ring < 2; ring++) {
+    const next = src.slice();
+    for (let y = 0; y < h; y++)
+      for (let x = 0; x < w; x++) {
+        const j = y * w + x;
+        if (src[j]) continue;
+        let s = 0;
+        let n = 0;
+        for (const k of [x > 0 ? j - 1 : -1, x < w - 1 ? j + 1 : -1, j - w, j + w])
+          if (k >= 0 && k < w * h && src[k]) {
+            s += tone[k] ?? 0;
+            n++;
+          }
+        if (n > 0) {
+          tone[j] = s / n;
+          next[j] = 1;
+        }
+      }
+    src = next;
+  }
+}
+
 /** A painter for a strand strip: clumps per `layout`, deterministic from the sheet seed. */
 export function strandPainter(layout: readonly StrandKind[]): MaterialPainter {
   return (s, kit) => {
@@ -218,7 +164,8 @@ export function strandPainter(layout: readonly StrandKind[]): MaterialPainter {
         const L = len * Math.min(1 - t0, reach * (1 - c.point * e * e));
         const phase = r() * Math.PI * 2;
         const rw = band * c.width * (0.75 + 0.5 * r());
-        const shade = 0.72 + 0.5 * r();
+        const [s0, s1] = c.shade ?? [0.72, 0.5];
+        const shade = s0 + s1 * r();
         const steps = Math.ceil(L / 0.5);
         for (let i = 0; i <= steps; i++) {
           const t = i / steps;
@@ -245,6 +192,7 @@ export function strandPainter(layout: readonly StrandKind[]): MaterialPainter {
         }
       }
     });
+    bleed(cov, tone, w, h, layout.length);
     const rgba = new Uint8Array(w * h * 4);
     for (let j = 0; j < w * h; j++) {
       const a = cov[j] ?? 0;

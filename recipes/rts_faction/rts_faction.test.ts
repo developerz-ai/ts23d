@@ -25,29 +25,34 @@ import { rts_soldier } from '../rts_soldier/rts_soldier.ts';
 import { rts_tank } from '../rts_tank/rts_tank.ts';
 import { rts_worker } from '../rts_worker/rts_worker.ts';
 
-/** Team share of the LOD2 silhouette from the RTS camera (red vs blue livery). */
-const teamShare = (a: Asset): number =>
-  teamCoverage(compile(a, { lod: 2, variant: 'red' }), compile(a, { lod: 2, variant: 'blue' }))
-    .share;
+/** Team share of the silhouette from the RTS camera (red vs blue livery), LOD2 unless given. */
+const teamShare = (a: Asset, lod: 0 | 2 = 2): number =>
+  teamCoverage(compile(a, { lod, variant: 'red' }), compile(a, { lod, variant: 'blue' })).share;
 
 /** House rule: at least this much of a unit's 64-px silhouette is team colour. */
 const MIN_SHARE = 0.08;
+/**
+ * Ruins are the exception, measured differently: a burnt-out hall's paint is under ash and
+ * rubble (its near LOD0 shows 1-3 % team colour, the floor chevron and a few flecks), so the far
+ * view must show what the near one does: no more than this many points of extra team colour
+ * at the LOD switch (D485: fallen slates popped from ash-grey to clean red at LOD2), and never
+ * less than the near view shows, so the owner's mark stays.
+ */
+const RUIN_POP = 0.04;
 
 const UNITS = [rts_worker, rts_soldier, rts_tank];
 const ALL = [
   ...UNITS,
   rts_barracks,
   rts_barracks_damaged,
-  rts_barracks_rubble,
   rts_barracks_scaffold,
   rts_barracks_scaffold_damaged,
-  rts_barracks_scaffold_rubble,
   rts_barracks_foundation,
   rts_barracks_foundation_damaged,
-  rts_barracks_foundation_rubble,
   rts_resource,
   rts_resource_depleted,
 ];
+const RUINS = [rts_barracks_rubble, rts_barracks_scaffold_rubble, rts_barracks_foundation_rubble];
 
 describe('team colour from the RTS camera', () => {
   it('fails a unit whose team part is buried', () => {
@@ -72,6 +77,16 @@ describe('team colour from the RTS camera', () => {
       expect(Object.keys(a.variants ?? {})).toEqual(Object.keys(TEAMS));
       expect(teamShare(a)).toBeGreaterThanOrEqual(MIN_SHARE);
     }, 30000);
+
+  for (const a of RUINS)
+    it(`${a.name}: the far ruin shows the team colour the near one does (no pop at LOD2)`, () => {
+      expect(Object.keys(a.variants ?? {})).toEqual(Object.keys(TEAMS));
+      const near = teamShare(a, 0);
+      const far = teamShare(a);
+      expect(near).toBeGreaterThan(0);
+      expect(far).toBeGreaterThanOrEqual(near - 0.01);
+      expect(far - near).toBeLessThanOrEqual(RUIN_POP);
+    }, 60000);
 });
 
 describe('readability', () => {

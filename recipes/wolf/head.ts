@@ -6,6 +6,7 @@
 
 import type { CreatureInfo, SculptEdit, Vec3 } from '@developerz.ai/ts23d';
 import { dmath } from '@developerz.ai/ts23d';
+import { facePlanes } from '../_lib/creature/wild-head.ts';
 
 type Head = CreatureInfo['head'];
 
@@ -43,5 +44,7 @@ export function wolfHead(l: Head): SculptEdit[] {
       blend: 0.035 * L,
     });
   }
+  // Brow shelf, cheekbone and the hollow under the eye; the dark lid rim of a wolf's eye.
+  out.push(...facePlanes(l, { rim: [0.035, 0.03, 0.027] }));
   return out;
 }

@@ -1,7 +1,7 @@
 {
   "asset": "face_goblin",
   "reviewer": "agent",
-  "overall": 6.3,
+  "overall": 6.9,
   "scores": {
     "silhouette": {
       "score": 7,
@@ -18,43 +18,45 @@
       ]
     },
     "materials": {
-      "score": 6,
-      "reason": "Skin now has sheen and the eyes are glossy, but the sheen is uniform over head and shoulders, so it reads as wet latex.",
+      "score": 8,
+      "reason": "The scalp is matte now with a broad sheen in hero.png, the orange cheek patch is gone, and the green skin, ribbed shirt and clean brown collar band separate; a couple of small sharp highlights remain on the brow ridge and nose tip.",
       "fixes": [
-        "vary roughness: rougher on the scalp and shoulders, sheen only on nose, brow and lips"
+        "skin roughness variation so the brow ridge does not catch pinpoint highlights"
       ]
     },
     "detail": {
       "score": 5,
-      "reason": "Teeth and ears present, but the face is smooth: no wrinkles, pores or warts.",
+      "reason": "Teeth, ears, a collared shirt and eyes shadowed under the upper lid; the face is still smooth: no wrinkles, pores or warts.",
       "fixes": [
         "LOD0 wrinkle/wart displacement on forehead, nose and cheeks"
       ]
     },
     "wear": {
-      "score": 5,
-      "reason": "Brown blotches and a pale scar on the cheek; reads as mottled skin rather than history.",
+      "score": 6,
+      "reason": "The cheek scars are now darker than the skin and read as scars, not white paint, and collar grime and sun-faded shoulders now show on the tunic; the ears are whole and the face carries no other history.",
       "fixes": [
-        "a torn ear notch and two clearer scars"
+        "a torn ear notch",
+        "a clearer second scar with a raised edge"
       ]
     },
     "lod": {
-      "score": 6,
-      "reason": "FAR LOD2 keeps the ears and the nose; the face is faceted into flat patches.",
+      "score": 7,
+      "reason": "FAR LOD2 face is now smooth with even vertex colour, the eyes and nose hold, and the faceted patchwork is gone; the ears, hooked nose and shirt collar hold.",
       "fixes": [
-        "authored LOD2 topology with smoothed colour"
+        "keep the teeth line as a dark stroke at LOD2",
+        "authored LOD2 topology for the ear rims"
       ]
     },
     "technical": {
       "score": 8,
-      "reason": "QA clean; 35k / 8k / 1.2k triangles over 3 draws.",
+      "reason": "QA clean; 34.5k / 8.0k / 1.8k tris, 3 / 3 / 3 draws.",
       "fixes": [
         "drop the teeth at LOD1"
       ]
     }
   },
   "renders": {
-    "hero.png": "7c170d7060eec55cef7b1afad192e875b7699d48026efb97a856671ef9e2b775",
-    "sheet.png": "4f2b13a044748da8564116a6ca451429dcd15ee72a99d8c3b3d30d84ec6ec7c0"
+    "hero.png": "622758a162b335d5629acf860629d62f72437fd39d6b488db6550cc7b5f7a895",
+    "sheet.png": "12c5144b3cec7d31840b075c00926bc139c74175446b483e5bff42f2a77579e5"
   }
 }

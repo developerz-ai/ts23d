@@ -70,3 +70,24 @@ describe('macroUV cut sides', () => {
     expect(along / up).toBeLessThan(1.25);
   });
 });
+
+describe('macroUV surface', () => {
+  it('maps the ground at the same material scale along X and Y (no streaks along +Y)', () => {
+    // A flat 100 m square of ground near the tile's south-west corner, normal +Z.
+    const flat: Mesh = {
+      positions: new Float32Array([-1000, -1000, 5, -900, -1000, 5, -900, -900, 5, -1000, -900, 5]),
+      normals: new Float32Array([0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1]),
+      uvs: new Float32Array(8),
+      colors: new Float32Array(12),
+      indices: new Uint32Array([0, 1, 2, 0, 2, 3]),
+    };
+    const m = macroUV(flat, [-1000, -1000, 1000, 1000], 1200);
+    const r = stripRect('concrete');
+    // Strip metres per ground metre along X (U) and Y (V, one row = 1 m of concrete). The pre-fix
+    // mapping (one row over the whole tile, U × 3) gives ~12 here and fails.
+    const alongX = (((m.uvs[2] ?? 0) - (m.uvs[0] ?? 0)) / (r.u1 - r.u0)) * r.metres;
+    const alongY = ((m.uvs[7] ?? 0) - (m.uvs[1] ?? 0)) / (r.v1 - r.v0);
+    expect(alongX / alongY).toBeGreaterThan(0.8);
+    expect(alongX / alongY).toBeLessThan(1.25);
+  });
+});

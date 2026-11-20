@@ -86,6 +86,9 @@ export function goblinCardHair(b: BustRecipe, lod: number): CardHairStyle {
     collide: skin,
     segments: 5,
     color: mix(C.hairRoot, C.hairTip, 0.4),
+    // The lock style (D461): the wisps and tufts on its fine stray cells (on its coarse cells,
+    // narrowed and doubled, they read as quills), sparse and wiry.
+    locks: {},
     layers: [
       {
         name: 'wisps',

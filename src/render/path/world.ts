@@ -1,8 +1,8 @@
 // Everything the path tracer reads, built once per render: the packed scene, its BVH, the trim
 // sheet's mip chains, each triangle's class (classes.ts) and texture mip (its footprint in the
 // camera, as the raster's visibility buffer picks it), the analytic studio floor, ray epsilons,
-// and the alpha-test filters: cutout cards drop out where their texel is under the cut (the
-// coverage-preserving mips keep thin strands), see-through surfaces let shadow rays pass.
+// the camera's alpha test (cutout cards drop out where their texel is under the cut; the
+// coverage-preserving mips keep thin strands) and the shadow-ray query (shadow.ts).
 
 import type { CompiledAsset } from '../../core/index.ts';
 import { ALPHA_CUT } from '../alpha-mips.ts';
@@ -13,6 +13,7 @@ import { setAlpha } from '../texture-sets.ts';
 import { footprintMip } from '../vis-buffer.ts';
 import { type HitFilter, PathBvh } from './bvh.ts';
 import { CLS, triangleClasses } from './classes.ts';
+import { type ShadowPass, shadowPass } from './shadow.ts';
 import type { Sky } from './sky.ts';
 
 /** The plain (cloneable, shareable) part of a world: no BVH, no closures. */
@@ -39,7 +40,8 @@ export interface WorldData {
 export interface World extends WorldData {
   readonly bvh: PathBvh;
   readonly camHit: HitFilter;
-  readonly shadowHit: HitFilter;
+  /** Light reaching a point along a direction: blocked, or a per-channel transmittance. */
+  readonly pass: ShadowPass;
 }
 
 export interface WorldOptions {
@@ -102,7 +104,7 @@ export function worldData(
   };
 }
 
-/** The world from its data: the BVH and the alpha-test filters. */
+/** The world from its data: the BVH, the camera's alpha test and the shadow-ray query. */
 export function assemble(d: WorldData): World {
   const { scene, cls, mip, tex } = d;
   const texel = new Float32Array(4);
@@ -122,12 +124,8 @@ export function assemble(d: WorldData): World {
     sample(tex.albedo, mip[t] ?? 0, u, w, texel);
     return (texel[3] ?? 1) >= ALPHA_CUT;
   };
-  return {
-    ...d,
-    bvh: new PathBvh(scene.positions, scene.indices),
-    camHit: opaqueAt,
-    shadowHit: (t, b1, b2) => cls[t] !== CLS.thin && opaqueAt(t, b1, b2),
-  };
+  const bvh = new PathBvh(scene.positions, scene.indices);
+  return { ...d, bvh, camHit: opaqueAt, pass: shadowPass(bvh, scene, tex, cls, opaqueAt) };
 }
 
 export const buildWorld = (

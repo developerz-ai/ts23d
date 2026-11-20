@@ -12,6 +12,7 @@
 import {
   defineMaterial,
   dmath,
+  type Finish,
   type Mesh,
   merge,
   type StripId,
@@ -22,7 +23,8 @@ import {
 
 /** World metres the strip's row is painted for (V), and the share of the row at each edge the
  *  mapping stays out of (the sheet pads a row's edges with copies of its outer texels). */
-const ROW = 0.032;
+export const SKIN_ROW = 0.032;
+const ROW = SKIN_ROW;
 const INSET = 0.2;
 /** How far past its cell a triangle may reach (in cells) before it is squeezed to fit. */
 const SLACK = 0.25;
@@ -38,7 +40,7 @@ export const SKIN_STRIP = defineMaterial({
   row: 13,
   scaleMetres: ROW,
   spanMetres: 2,
-  roughness: 0.5,
+  roughness: 0.6,
   graph: tex.material({
     height,
     depth: 0.0004,
@@ -46,7 +48,7 @@ export const SKIN_STRIP = defineMaterial({
       [0, '#ebe4df'],
       [1, '#f8f5f2'],
     ]),
-    roughness: height.remap(0.58, 0.38),
+    roughness: height.remap(0.68, 0.5),
   }),
   description: 'Skin micro relief: pores, glossier crowns (vertex colour carries the tone).',
   sources: ['https://physicallybased.info'],
@@ -59,7 +61,7 @@ export const SKIN_OILY = defineMaterial({
   row: 12,
   scaleMetres: ROW,
   spanMetres: 2,
-  roughness: 0.3,
+  roughness: 0.42,
   graph: tex.material({
     height,
     depth: 0.0003,
@@ -67,9 +69,33 @@ export const SKIN_OILY = defineMaterial({
       [0, '#ebe4df'],
       [1, '#f8f5f2'],
     ]),
-    roughness: height.remap(0.42, 0.2),
+    // (Satin, not wet: at 0.2 the forehead and a bald crown lit up like glazed latex.)
+    roughness: height.remap(0.5, 0.34),
   }),
   description: 'Oily skin (T-zone): the pore relief of face_skin, glossier between the pores.',
+  sources: ['https://physicallybased.info'],
+});
+
+/** Matte skin: a scalp, shaven or bald (dry, no oil glands to speak of), and any skin a recipe
+ *  wants without a highlight. The same pores, rougher between them: a broad soft sheen on a dome
+ *  instead of the hot spots the face strip's crowns throw under the hero's sun. */
+export const SKIN_MATTE = defineMaterial({
+  id: 'face_skin_matte',
+  // Row 8: free on every bust (the cloth strips hold 7, 10, 11; the skin 9, 12, 13).
+  row: 8,
+  scaleMetres: ROW,
+  spanMetres: 2,
+  roughness: 0.82,
+  graph: tex.material({
+    height,
+    depth: 0.0004,
+    albedo: height.ramp([
+      [0, '#ebe4df'],
+      [1, '#f8f5f2'],
+    ]),
+    roughness: height.remap(0.9, 0.76),
+  }),
+  description: 'Matte skin (scalp): the pore relief of face_skin, dry and rough between the pores.',
   sources: ['https://physicallybased.info'],
 });
 
@@ -94,16 +120,44 @@ export const SKIN_WET = defineMaterial({
   sources: ['https://physicallybased.info'],
 });
 
+/**
+ * The `skin` finish every bust declares: a soft grazing sheen (the down and the oil a cheek
+ * catches) in the race's own `sheen` colour and a dielectric reflectance a little under plastic's,
+ * and NO clearcoat. A clear coat is one roughness over the whole part, so it lit the shoulders,
+ * scalp and cheeks with the same tight wet highlight (latex); without it the highlight comes from
+ * the strips' own roughness: matte cheeks and shoulders, the oily T-zone, the wet lips.
+ */
+export function skinFinish(sheen: string): Finish {
+  return { sheen: { colour: sheen, roughness: 0.55 }, specular: { factor: 0.8 } };
+}
+
+/** Clothing painted over the skin (a bust's tunic, ./garment.ts): the triangles whose centre
+ *  `mask` puts above ½ go onto `strip` at its true scale (`metres`, its `scaleMetres`). */
+export interface ClothZone {
+  readonly mask: (p: Vec3) => number;
+  readonly strip: StripId;
+  readonly metres: number;
+}
+
 /** The same mesh on the skin strip: UVs re-projected per triangle (see the header), positions,
  *  normals and colours kept. `oil` (0 matte … 1 oily, in the mesh's space) sends the triangles
- *  whose centre it puts above ½ to the oily strip, `moist` (same scale) to the wet one:
- *  roughness zones without a second draw. */
-export function onSkin(m: Mesh, oil?: (p: Vec3) => number, moist?: (p: Vec3) => number): Mesh {
-  if (!oil && !moist) return onFineStrip(m, SKIN_STRIP, ROW);
+ *  whose centre it puts above ½ to the oily strip, `moist` (same scale) to the wet one,
+ *  `cloth` to its own strip, `matte` (a scalp) to the matte one: roughness zones without a
+ *  second draw. */
+export function onSkin(
+  m: Mesh,
+  oil?: (p: Vec3) => number,
+  moist?: (p: Vec3) => number,
+  cloth?: ClothZone,
+  matte?: (p: Vec3) => number,
+): Mesh {
+  if (!oil && !moist && !cloth && !matte) return onFineStrip(m, SKIN_STRIP, ROW);
   const P = m.positions;
   const dry: number[] = [];
   const wet: number[] = [];
   const lips: number[] = [];
+  const wool: number[] = [];
+  const dull: number[] = [];
   for (let t = 0; t < m.indices.length; t += 3) {
     const [a = 0, b = 0, c = 0] = [m.indices[t], m.indices[t + 1], m.indices[t + 2]];
     const centre: Vec3 = [
@@ -111,12 +165,28 @@ export function onSkin(m: Mesh, oil?: (p: Vec3) => number, moist?: (p: Vec3) => 
       ((P[a * 3 + 1] ?? 0) + (P[b * 3 + 1] ?? 0) + (P[c * 3 + 1] ?? 0)) / 3,
       ((P[a * 3 + 2] ?? 0) + (P[b * 3 + 2] ?? 0) + (P[c * 3 + 2] ?? 0)) / 3,
     ];
-    const to = moist && moist(centre) > 0.5 ? lips : oil && oil(centre) > 0.5 ? wet : dry;
+    const to =
+      cloth && cloth.mask(centre) > 0.5
+        ? wool
+        : moist && moist(centre) > 0.5
+          ? lips
+          : matte && matte(centre) > 0.5
+            ? dull
+            : oil && oil(centre) > 0.5
+              ? wet
+              : dry;
     to.push(a, b, c);
   }
   const on = (idx: number[], strip: StripId): Mesh[] =>
     idx.length ? [onFineStrip({ ...m, indices: new Uint32Array(idx) }, strip, ROW)] : [];
-  const parts = [...on(dry, SKIN_STRIP), ...on(wet, SKIN_OILY), ...on(lips, SKIN_WET)];
+  const parts = [
+    ...on(dry, SKIN_STRIP),
+    ...on(wet, SKIN_OILY),
+    ...on(lips, SKIN_WET),
+    ...on(dull, SKIN_MATTE),
+  ];
+  if (cloth && wool.length)
+    parts.push(onFineStrip({ ...m, indices: new Uint32Array(wool) }, cloth.strip, cloth.metres));
   return parts.length === 1 && parts[0] ? parts[0] : merge(parts);
 }
 
@@ -135,6 +205,17 @@ export function lipZone(k: {
     const e = dmath.pow(p[1] / hy, 2) + dmath.pow((p[2] - cz) / hz, 2);
     return e < 1 && p[0] > back ? 1 : 0;
   };
+}
+
+/** The scalp as a matte mask (1 on it): the dome above the forehead's middle (`forehead`, the
+ *  T-zone's top), and the back and sides of the head behind the ear's front (`tragion`) above
+ *  its height. The face keeps its own strips; a bald crown loses the hot spots. */
+export function scalpZone(k: {
+  readonly forehead: Vec3;
+  readonly tragion: Vec3;
+}): (p: Vec3) => number {
+  return (p) =>
+    p[2] > k.forehead[2] || (p[0] < k.tragion[0] - 0.01 && p[2] > k.tragion[2]) ? 1 : 0;
 }
 
 /** The T-zone as an oil mask (1 on it, 0 a `soft` away): the forehead's centre band down the

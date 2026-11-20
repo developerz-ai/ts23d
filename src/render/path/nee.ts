@@ -1,7 +1,7 @@
 // Next-event estimation: one light sample per vertex from the sun + sky pair treated as a single
 // light with mixture pdf (pSun · disc + (1 − pSun) · sky table), a shadow ray through the BVH (the
-// floor plane blocks everything below the horizon), and the power-heuristic MIS weight against the
-// BSDF's own pdf. `escaped` is the other half: radiance a BSDF-sampled ray finds in the sky.
+// floor plane blocks everything below the horizon; hair and fur cards on the way tint and dim it,
+// shadow.ts), and the power-heuristic MIS weight against the BSDF's own pdf. `escaped` is the other half: radiance a BSDF-sampled ray finds in the sky.
 
 import { evalBsdf, type Lobes } from './bsdf.ts';
 import { evalHair } from './hair.ts';
@@ -12,6 +12,14 @@ import { floorT, type World } from './world.ts';
 const wi = new Float64Array(3);
 const f = new Float64Array(3);
 const org = new Float64Array(3);
+/** Shadow-ray transmittance per channel. */
+const tr = new Float64Array(3);
+
+/** Whether light from `dir` reaches `o`; its transmittance is then in `tr`. */
+function lit(w: World, o: ArrayLike<number>, dir: ArrayLike<number>): boolean {
+  tr.fill(1);
+  return !(floorT(w, o, dir) < Infinity) && w.pass(o, dir, tr);
+}
 
 /** Pdf of the light mixture toward unit `d`. */
 export const lightPdf = (s: Sky, d: ArrayLike<number>): number =>
@@ -65,17 +73,22 @@ export function directLight(
   let un = 0;
   for (let k = 0; k < 3; k++) un += (f[k] ?? 0) * lightLe(sky, wi, k) * weight;
   if (vis) vis[0] = (vis[0] ?? 0) + un;
-  const blocked = floorT(w, org, wi) < Infinity || w.bvh.occluded(org, wi, Infinity, w.shadowHit);
-  if (blocked) return;
-  if (vis) vis[1] = (vis[1] ?? 0) + un;
+  if (!lit(w, org, wi)) return;
+  if (vis) {
+    let seen = 0;
+    for (let k = 0; k < 3; k++) seen += (f[k] ?? 0) * lightLe(sky, wi, k) * weight * (tr[k] ?? 1);
+    vis[1] = (vis[1] ?? 0) + seen;
+  }
   for (let k = 0; k < 3; k++)
-    acc[k] = (acc[k] ?? 0) + (tp[k] ?? 0) * (f[k] ?? 0) * lightLe(sky, wi, k) * weight;
+    acc[k] =
+      (acc[k] ?? 0) + (tp[k] ?? 0) * (f[k] ?? 0) * lightLe(sky, wi, k) * weight * (tr[k] ?? 1);
 }
 
 /**
  * The other half of a split direct estimate: the sun and sky a lobe-sampled direction `dir`
  * (weight `wt` = f·cos ÷ pdf) reaches when nothing opaque is in its way, MIS-weighted against the
- * light's pdf. For a vertex whose own path does not always go that way (thin surfaces).
+ * light's pdf, through the hair and fur cards on the way. For a vertex whose own path does not
+ * always go that way (thin surfaces).
  */
 export function escapedLight(
   w: World,
@@ -87,8 +100,9 @@ export function escapedLight(
   acc: Float64Array,
 ): void {
   origin(w, s, dir, org);
-  if (floorT(w, org, dir) < Infinity || w.bvh.occluded(org, dir, Infinity, w.shadowHit)) return;
+  if (!lit(w, org, dir)) return;
   const weight = mis(pdf, lightPdf(w.sky, dir));
   for (let k = 0; k < 3; k++)
-    acc[k] = (acc[k] ?? 0) + (tp[k] ?? 0) * (wt[k] ?? 0) * lightLe(w.sky, dir, k) * weight;
+    acc[k] =
+      (acc[k] ?? 0) + (tp[k] ?? 0) * (wt[k] ?? 0) * lightLe(w.sky, dir, k) * weight * (tr[k] ?? 1);
 }

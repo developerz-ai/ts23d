@@ -61,13 +61,16 @@ function bandAt(s: number, a: number): number {
   // 0 on the dorsal ridge to 1 low on the flank: one straight arm of the chevron per side, its
   // point on the ridge toward the head, the band widening as it runs down the flank. The arm
   // sweeps back 0.45 of a pitch, so each band stays a crossband of its own; swept a whole
-  // pitch (as before) the arms lined up with the next band into a viper's zigzag.
+  // pitch the arms lined up with the next band into a viper's zigzag, and at 0.6 they ran so far
+  // along the body that the near turn's bands smeared into its speckle (D480).
   const w = Math.min(1, sideOf(a) / 1.9);
   const k = (s - 0.45 * BAND_PITCH * w) / BAND_PITCH;
   const d = Math.abs(k - Math.round(k)) * BAND_PITCH;
-  const fade = 1 - smooth(TOTAL * 0.62, TOTAL * 0.8, s) * 0.85;
+  // Fading toward the tail, but the pile's lowest turn (the hero's near side) keeps its bands:
+  // faded by 0.85 the near coil read as plain scales.
+  const fade = 1 - smooth(TOTAL * 0.62, TOTAL * 0.8, s) * 0.55;
   // Narrow pale bands (one or two scale rows) on a wide olive ground, a thin dark rim only.
-  const half = 0.0075 + 0.005 * w;
+  const half = 0.009 + 0.007 * w;
   if (d < half) return fade;
   return d < half + 0.0035 ? -0.5 * fade : 0;
 }
@@ -79,7 +82,7 @@ export function dorsalColour(s: number, a: number, seed: number): Vec3 {
   const b = bandAt(s, a);
   const c =
     b > 0
-      ? mixRgb(base, COLOUR.band, b * (0.7 + 0.3 * noise(seed, 2.5, 5)))
+      ? mixRgb(base, COLOUR.band, b * (0.85 + 0.15 * noise(seed, 2.5, 5)))
       : b < 0
         ? mixRgb(base, COLOUR.bandEdge, -b)
         : base;
@@ -121,6 +124,25 @@ export function ventralColour(s: number, across = 0): Vec3 {
 /** Stations of the hood ribs: even the farthest LOD keeps flesh on each of them. */
 export const HOOD_RINGS: readonly number[] = [0.125, 0.17, 0.225, 0.3];
 
+/** The far tube's dorsal value against the pattern's average (matched to the LOD0 coil). */
+const FAR_SHADE = 0.3;
+
+/** LOD2 ring spacing along the body (the skin's links, king_cobra.ts `jointS`). */
+const FAR_LINK = TOTAL / 32;
+
+/**
+ * The far tube's crossbands: its rings sit one link (11 cm) apart, too coarse for the 7 cm band
+ * pitch, so every third link ring from the neck to the tail's last tenth is painted pale and the
+ * colour grades between them (every second one lit half the coil: it read mid-tan again): a few broad crossbands over the dark olive, so the coil keeps its
+ * banded read at the switch (D480). Rings off a link (hood stations) stay the average.
+ */
+export function farBand(c: Vec3, s: number): Vec3 {
+  const k = Math.round(s / FAR_LINK);
+  if (Math.abs(s - k * FAR_LINK) > 0.004 || k % 3 !== 0) return c;
+  const on = smooth(0.75, 0.95, s) * (1 - smooth(TOTAL * 0.8, TOTAL * 0.95, s));
+  return mixRgb(c, scale(COLOUR.band, 0.28), 0.85 * on);
+}
+
 /** The tube under the scales: dark interscale skin at LOD0, painted bands at LOD1, averaged at LOD2. */
 export function trunkMesh(lod: Lod, joints: readonly number[]): Mesh {
   const start = HEAD.length * 0.9;
@@ -147,15 +169,26 @@ export function trunkMesh(lod: Lod, joints: readonly number[]): Mesh {
       if (lod === 2) {
         // Six sides: only the bottom vertex is belly; averaged so no band lands whole, but the
         // dark throat collar stays as a band across the raised neck.
+        // On the raised neck the one belly vertex is pulled a third toward the dorsal colour:
+        // shaded across the ring to its dark neighbours, a pure cream there washed the whole
+        // neck pale and lost the dark sides the LOD0 neck shows.
         if (sideOf(a) > 2.5)
           return marked(
-            mixRgb(ventralAverage(s), COLOUR.hoodSpot, 0.7 * gauss(s - 0.5, 0.07)),
+            mixRgb(
+              mixRgb(ventralAverage(s), COLOUR.hoodSpot, 0.7 * gauss(s - 0.5, 0.07)),
+              scale(dorsalAverage(s, a), FAR_SHADE),
+              // On the pile the belly lies on the ground or the turn below: shaded across the
+              // ring, its pale vertex lit the coil's lower half a pale tan (D480).
+              0.35 * (1 - smooth(0.8, 0.95, s)) + 0.8 * smooth(0.95, 1.15, s),
+            ),
             s,
             a,
             true,
           );
         // Small story marks would paint a whole segment of a 20 cm ring: only the broad dust stays.
-        return marked(dorsalAverage(s, a), s, a, true);
+        // A third of the average: the LOD0 scales' shadowed sides and the dark skin between
+        // them pull the flanks down further than the crown-lit average (the far coil read pale).
+        return marked(farBand(scale(dorsalAverage(s, a), FAR_SHADE), s), s, a, true);
       }
       if (sideOf(a) > 2.04) return ventralColour(s, (Math.PI - sideOf(a)) / 1.1);
       const c = dorsalColour(s, a, 1);

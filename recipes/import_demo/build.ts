@@ -34,8 +34,9 @@ import { faceBlocks, settled } from '../_lib/bust/layers.ts';
 import { plinth } from '../_lib/bust/plinth.ts';
 import { skinMesh } from '../_lib/bust/skin.ts';
 import { armCut, baseZ, garment, neckSeam, torsoEdits } from '../_lib/bust/torso.ts';
-import { onFineStrip, onSkin } from '../_lib/face/skin-strip.ts';
+import { onFineStrip, onSkin, SKIN_MATTE, SKIN_ROW } from '../_lib/face/skin-strip.ts';
 import { collarMesh } from './collar.ts';
+import { paintHair, splitHair } from './hair.ts';
 import { HM08, SEAM_Z, toBust } from './scan-head.ts';
 import { headLod } from './source.ts';
 
@@ -319,8 +320,12 @@ export function buildImportDemo(ctx: BuildContext, mode: 'sheet' | 'own'): void 
   for (const [name, m] of Object.entries(meshes)) ctx.part(name, ao(m));
   ctx.part('plinth', stone.plinth);
   // The scan's skin on the shared pore strip (micro relief, its own roughness) under a sheen.
-  if (mode === 'sheet') ctx.part('head', onSkin(ao(head)), { finish: 'skin' });
-  else ctx.part('head', head);
+  // The scan's cropped hair repainted as a hair mass, on the matte strip (./hair.ts).
+  if (mode === 'sheet') {
+    const split = splitHair(ao(paintHair(head, ctx.rng.fork('hair'))));
+    ctx.part('head', onSkin(split.skin), { finish: 'skin' });
+    ctx.part('hair', onFineStrip(split.hair, SKIN_MATTE, SKIN_ROW));
+  } else ctx.part('head', head);
   const eye: EyeSpec = {
     centre: toBust(HM08.eye),
     r: 0.0128,
@@ -336,7 +341,11 @@ export function buildImportDemo(ctx: BuildContext, mode: 'sheet' | 'own'): void 
       caruncle: [0.8, 0.5, 0.5],
     },
   };
-  eyes(ctx, eye, { cell: ctx.pick([0.0017, 0.0034, 0.012]), finish: 'cornea' });
+  eyes(ctx, eye, {
+    cell: ctx.pick([0.0017, 0.0034, 0.012]),
+    finish: 'cornea',
+    lidShadow: 0.55,
+  });
   // The scan's neck plugs into the collar on the seam plane (and on into the torso's neck).
   ctx.joint('neck', {
     from: 'head',

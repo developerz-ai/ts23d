@@ -1,6 +1,6 @@
-// Scots pine (Pinus sylvestris), mature: 25 m tall, 9 m flat-topped crown in the top ~35%, 0.6 m
-// DBH. Long clean bole turning orange-red up high, studded with the dead stubs of self-pruned
-// whorls; near-level branches turning up at the tips, carrying clumped pads of dark blue-green
+// Scots pine (Pinus sylvestris), old open-grown: 22 m tall, 11.5 m flat-topped crown in the top
+// ~40%, 0.9 m DBH. Long clean bole turning orange-red up high, studded with the dead stubs of self-pruned
+// whorls; near-level branches turning up at the tips, carrying clumped pads of greyish blue-green
 // needle sprays (alpha-cut cards on the `foliage_needles` cell) with sky between them; cones under
 // the outer shoots, one dead branch in the lower crown.
 // The `tree` kind grows the botany (species preset `pine`, overridden here for the old tree's
@@ -39,7 +39,9 @@ import { trunkAt } from '../_lib/trees/wear.ts';
 import { thinTufts } from './lod1.ts';
 import { boleStubs, cones, deadBranch, resinScar } from './wear.ts';
 
-const size = { height: 25, spread: 10.5, dbh: 0.6 };
+/** An old open-grown tree: 22 m, a 0.9 m bole (DBH; up to 1 m) and an 11.5 m flat crown. A
+ * 25 m tree on a 0.72 m bole framed whole read as a pencil pole in the hero (ratio 35 → 24). */
+const size = { height: 22, spread: 11.5, dbh: 0.9 };
 /** Crown depth kept by `squash`: the kind's ball crown → an old tree's shallow flat top. */
 const CROWN_SQUASH = 0.6;
 /** Needle-litter floor radius around the stem foot, m (inside the 9 m crown: `proportions`). */
@@ -48,6 +50,11 @@ const FLOOR_R = 3;
 export const FAR = { clumps: 20, value: 0.78, spread: 2.7 } as const;
 /** LOD1: one LOD0 tuft per twig (of perStem = 6), grown to keep the crown's coverage. */
 export const LOD1_TUFTS = { every: 6, scale: 2.1 };
+const LITTER = hex('#a08670');
+const LITTER_MEAN = hex('#8e6028');
+const LITTER_FAR: Vec3 = [0, 1, 2].map(
+  (k) => (LITTER[k] ?? 0) * (LITTER_MEAN[k] ?? 0),
+) as unknown as Vec3;
 /** Moss on the north side of the lower trunk, 0..1. */
 const MOSS = 0.35;
 /** Thick grey-brown plates on the low bole, orange flakes from ~13 m (Wikipedia: upper bark). */
@@ -65,8 +72,10 @@ const SEED = 5;
 export const PINE: TreeParams = {
   ...pinePreset,
   shape: 'cylindrical',
-  baseSize: 0.72,
+  baseSize: 0.6,
   ratioPower: 0.95,
+  // An old bole keeps its girth: ~0.7 of DBH at two-thirds height (0.12 drew a pencil pole).
+  taper: 0.55,
   levels: [
     pinePreset.levels[0] ?? { branches: 0, length: 0.95, downAngle: 0, segments: 10 },
     {
@@ -81,14 +90,16 @@ export const PINE: TreeParams = {
     },
     { branches: 7, length: 0.45, downAngle: 62, curve: 10, curveVar: 12, start: 0.35, segments: 2 },
   ],
-  leaves: { ...pinePreset.leaves, perStem: 6, size: 1.7 },
+  // Scots pine needles are a greyish blue-green, lighter than the preset's near-black green
+  // (which read as dark broadleaf clumps in the hero).
+  leaves: { ...pinePreset.leaves, perStem: 6, size: 1.9, color: hex('#5b7f78') },
 };
 
 const CARDS: CutoutOptions = {
   cell: 'foliage_needles',
   layout: NEEDLE,
   leaf: PINE.leaves.color,
-  tint: [0.95, 1.1, 1.12],
+  tint: [1.1, 1.28, 1.45],
   grow: 1.05,
   aspect: 0.9,
 };
@@ -271,7 +282,7 @@ export const pine = defineAsset({
         const r = ctx.rng.fork('stubs');
         ctx.part(
           'stubs',
-          boleStubs(near.trunk, 3, 13.5, 7, lod, () => r.next()),
+          boleStubs(near.trunk, 3, size.height * 0.55, 7, lod, () => r.next()),
         );
       }
     }
@@ -285,8 +296,10 @@ export const pine = defineAsset({
         const a = (k / n) * Math.PI * 2;
         return [dmath.cos(a) * r, dmath.sin(a) * r, 0.005];
       }),
-      color: hex('#a08670'),
-      strip: materialVariant('leaf_litter', 5),
+      // LOD2: flat colour on the plain row, the litter tint times the strip's mean albedo
+      // (#8e6028): one fan of long triangles cannot carry the strip without streaks.
+      color: lod === 2 ? LITTER_FAR : LITTER,
+      strip: lod === 2 ? 'plain' : materialVariant('leaf_litter', 5),
     });
     ctx.part('ground', lod === 2 ? disc : reproject(tessellate(disc, FLOOR_R / 3)));
   },

@@ -134,14 +134,22 @@ function deckMarks(): Mesh {
     for (const x of BLOCK_X)
       for (const s of [-1, 1])
         out.push(quad([0.012, 0.012, 0.001], [x + s * 0.04, y + s * (w / 4), TOP], NAIL));
-  // Grease dripped off a forklift and trodden along the −Y deck board, beside the cask: soft
-  // ellipses, each a flat fan.
-  for (const [x, r, k] of [
-    [0.05, 0.045, 1.5],
-    [0.13, 0.025, 1.1],
-    [0.42, 0.04, 1.7],
-    [0.5, 0.02, 1],
-  ] as const)
+  // Grease dripped off a forklift beside the cask, on the −Y deck board: two spills, each lobes
+  // of overlapping ellipses turned every which way (an irregular edge, not a pair of soles), with
+  // a trail of drips; each lobe a flat fan a tenth of a millimetre above the last.
+  const lobes: readonly (readonly [number, number, number, number, number])[] = [
+    // x, y offset, radius, stretch, yaw
+    [0.06, 0, 0.042, 1.6, 0.35],
+    [0.1, 0.012, 0.03, 1.4, -0.7],
+    [0.03, -0.01, 0.024, 1.2, 1.2],
+    [0.15, 0.004, 0.012, 1, 0],
+    [0.19, -0.006, 0.008, 1, 0],
+    [0.44, 0.006, 0.036, 1.5, -0.3],
+    [0.48, -0.01, 0.026, 1.7, 0.9],
+    [0.41, -0.012, 0.016, 1.2, 2],
+    [0.53, 0.008, 0.01, 1, 0],
+  ];
+  lobes.forEach(([x, dy, r, k, yaw], i) => {
     out.push(
       place(
         lathe({
@@ -153,9 +161,14 @@ function deckMarks(): Mesh {
           color: GREASE,
           strip: 'plain',
         }),
-        { at: [x, -(W - 0.145) / 2 + 0.012, TOP + 0.0006], scale: [k, 0.8, 1] },
+        {
+          at: [x, -(W - 0.145) / 2 + 0.012 + dy, TOP + 0.0006 + i * 0.0001],
+          yaw,
+          scale: [k, 0.8, 1],
+        },
       ),
     );
+  });
   return merge(out);
 }
 

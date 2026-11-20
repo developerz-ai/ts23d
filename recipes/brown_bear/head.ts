@@ -6,6 +6,7 @@
 
 import type { CreatureInfo, SculptEdit, Vec3 } from '@developerz.ai/ts23d';
 import { dmath } from '@developerz.ai/ts23d';
+import { facePlanes } from '../_lib/creature/wild-head.ts';
 
 type Head = CreatureInfo['head'];
 
@@ -29,6 +30,9 @@ export function bearHead(l: Head): SculptEdit[] {
     ear.at[2] + ear.r * 0.08,
   ];
   return [
+    // The dark lid rim: a bear's eye is small and deep-set, the rim is what reads (the shared
+    // brow and cheek forms fold into creases against this head's dome at its 11 mm cells).
+    ...facePlanes(l, { forms: false, rim: [0.02, 0.014, 0.01], rimSize: 1.7 }),
     // Frontal dome: between and above the eyes, ending steeply at the stop.
     {
       shape: 'ellipsoid',

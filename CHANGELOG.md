@@ -4,6 +4,27 @@ All notable changes to `@developerz.ai/ts23d`. Format: [Keep a Changelog](https:
 
 ## [Unreleased]
 
+### Added
+- Paint slots can carry wear: `paint: { team: { colour, wear: true } }` keeps bare steel, primer, rust, mud and dust on team-painted parts in their own colour in every livery (in the GLB, bare triangles sit in the trim material with no `KHR_materials_variants` mapping). Assets without `wear` are byte-identical. Used across the RTS set.
+- `cardWear(cards, { paint, keep }, at)`: hair and fur cards painted from the skin under their root and shortened over caked mud and scars, so wear shows through a coat.
+- Creature kind `options.body(bones, lod)`: a sculpt hook for the body, mirroring `options.head` (leg landmarks, split toes).
+- Scalp cards take an opt-in lock style, `locks: { narrow, under, fly }`: a dark under-layer, narrow clumped locks and flyaways on a new `hair_locks` strip, and no far cards at LOD2.
+
+### Changed
+- The contact sheet, thumbnail and blueprint shade per pixel like an engine (vertex colour, smooth normals, trim-sheet albedo per pixel) and show glass as see-through; they render about 30 % faster. Every committed sheet changes.
+- Beauty renders keep fur, hair-card gaps, groove grime and small highlights: the path tracer's film records per-pixel variance and the denoiser smooths only differences within the noise. Every committed hero changes.
+- `text(..., { surface, wrap: true })` costs about 1.2x the triangles of flat lettering (was 1.5–1.6x).
+- The critique's `colourDetail` measures what is drawn: trim-sheet or texture-set albedo x vertex colour.
+- A fourth pass over the weakest assets: busts (skin finish, eyes, garments, hair), code-built creatures (head planes, mud, leg landmarks, fur that carries wear), asteroids, terrain, city block, pine and the RTS set.
+
+### Fixed
+- Path tracer: hair and fur cards cast soft, strand-tinted shadows as drawn instead of solid card-sized ones, and strand shading conserves energy, so furred coats lose the dark specks and cards no longer read darker than the skin. Opaque shadows are byte-identical.
+- Wear slots cut each chip's edge through triangles at ragged points, so chips are irregular instead of a lattice sawtooth.
+- Fixes from an independent re-judge of every asset: bust cheeks, collars, beards and scalps; the cobra's, tiger's and wolf's far LODs; RTS chips, far rubble and roof slates; the station's far brick; board, barrel-head, drum-lid and far-ground texture mappings; asteroid ejecta and rim slivers; clean snowfields.
+- Asteroid contour rings, terrain contour lines and the barracks' smeared slab rim: texture projection chosen per face, not per vertex.
+- Hair and fur cards no longer show pale specks along their edges.
+- `heightfield` skirt walls share the surface's rim vertices exactly.
+
 ## [0.16.0] - 2026-11-20
 
 Meshes carry which project materials they were mapped with, so a mesh built outside an asset's build can no longer be painted as the wrong material. A third pass over every asset, re-judged independently: criteria below the pass mark of 8 fell from 352 to 296, and three assets now pass on all seven.

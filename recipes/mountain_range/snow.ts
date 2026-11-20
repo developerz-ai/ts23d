@@ -28,6 +28,26 @@ export function boxBlur(map: Float64Array, nx: number, ny: number, r: number): F
   return pass(pass(map, 1, 0), 0, 1);
 }
 
+/** Separable square max (`sign` 1) or min (`sign` -1) filter, radius `r` points. */
+function rank(map: Float64Array, nx: number, ny: number, r: number, sign: 1 | -1): Float64Array {
+  const pass = (src: Float64Array, di: number, dj: number): Float64Array => {
+    const out = new Float64Array(src.length);
+    for (let j = 0; j < ny; j++)
+      for (let i = 0; i < nx; i++) {
+        let m = sign * -Infinity;
+        for (let k = -r; k <= r; k++) {
+          const a = Math.min(nx - 1, Math.max(0, i + k * di));
+          const b = Math.min(ny - 1, Math.max(0, j + k * dj));
+          const v = src[b * nx + a] ?? 0;
+          m = sign > 0 ? Math.max(m, v) : Math.min(m, v);
+        }
+        out[j * nx + i] = m;
+      }
+    return out;
+  };
+  return pass(pass(map, 1, 0), 0, 1);
+}
+
 /** Metres the snowline drops in a gully or couloir. */
 const HOLLOW = 120;
 
@@ -46,6 +66,21 @@ export interface SnowOptions {
   readonly northShift: number;
   /** Altitude jitter (m) at (x, y): breaks the line up. */
   readonly jitter: (x: number, y: number) => number;
+  /**
+   * Rise over run where snow starts to slough and where none holds (default 0.7–1.35, 35–53°),
+   * and how much higher the limit climbs on summit caps (default 0.5: by half).
+   */
+  readonly slope?: { readonly from: number; readonly to: number; readonly caps: number };
+  /** Half-width of the final edge ramp on the blurred cover (default 0.12; smaller = crisper). */
+  readonly edge?: number;
+  /** Fine jitter (± cover units) on the edge threshold: a ragged, broken line (default 0). */
+  readonly ragged?: number;
+  /**
+   * Fill bare holes up to twice this radius (m) inside a snowfield (a morphological closing of
+   * the cover): a knob too steep to hold snow inside a field otherwise reads as a soft dark blob.
+   * The field's outer edge keeps its line (default 0: no filling).
+   */
+  readonly fill?: number;
 }
 
 /** Snow cover 0..1 at every grid point (row-major, like `g.z`). */
@@ -58,7 +93,9 @@ export function snowCover(g: TerrainGrid, o: SnowOptions): Float64Array {
   const at = (i: number, j: number): number =>
     ground[Math.min(ny - 1, Math.max(0, j)) * nx + Math.min(nx - 1, Math.max(0, i))] ?? 0;
   // High flanks hold snow steeper than low ones (summit caps; the crest itself stays scoured).
-  const steepAt = (alt: number): number => 1 + 0.5 * ramp(o.snowline + 150, o.snowline + 450, alt);
+  const lim = o.slope ?? { from: 0.7, to: 1.35, caps: 0.5 };
+  const steepAt = (alt: number): number =>
+    1 + lim.caps * ramp(o.snowline + 150, o.snowline + 450, alt);
   const cover = new Float64Array(nx * ny);
   const scour = new Float64Array(nx * ny);
   for (let j = 0; j < ny; j++)
@@ -87,7 +124,7 @@ export function snowCover(g: TerrainGrid, o: SnowOptions): Float64Array {
         ramp(o.snowline - 60, o.snowline + 140, alt) *
         // High up, wind-packed snow and ice hold on steeper ground (summit caps): the slope
         // limit rises by half from 150 to 450 m above the line.
-        (1 - ramp(0.7 * steepAt(alt), 1.35 * steepAt(alt), slope)) *
+        (1 - ramp(lim.from * steepAt(alt), lim.to * steepAt(alt), slope)) *
         (1 - ramp(6, 16, crest));
       scour[j * nx + i] = ramp(6, 16, crest);
     }
@@ -99,11 +136,19 @@ export function snowCover(g: TerrainGrid, o: SnowOptions): Float64Array {
   // moves (±0.12), so patches read with outlines in TOP instead of cloudy blurs, and the line
   // wanders instead of tracing the altitude contours.
   const soft = boxBlur(kept, nx, ny, 1);
-  return soft.map((c, k) => {
+  const edged = soft.map((c, k) => {
     const x = x0 + (k % nx) * sx;
     const y = y0 + Math.floor(k / nx) * sy;
-    const t = 0.38 + o.jitter(x * 1.7 + 311, y * 1.7 - 97) / 900;
+    const t =
+      0.38 +
+      o.jitter(x * 1.7 + 311, y * 1.7 - 97) / 900 +
+      (o.ragged ?? 0) * (o.jitter(x * 5.3 - 71, y * 5.3 + 133) / 115);
+    const e = o.edge ?? 0.12;
     // The wind keeps scoured crests bare through the blur (a knife ridge between snowfields).
-    return ramp(t - 0.12, t + 0.12, c) * (1 - (scour[k] ?? 0));
+    return ramp(t - e, t + e, c) * (1 - (scour[k] ?? 0));
   });
+  const r = Math.round((o.fill ?? 0) / Math.min(sx, sy));
+  if (r === 0) return edged;
+  const closed = rank(rank(edged, nx, ny, r, 1), nx, ny, r, -1);
+  return edged.map((c, k) => Math.max(c, closed[k] ?? 0));
 }

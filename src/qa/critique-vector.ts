@@ -1,11 +1,13 @@
 // The critique metric vector: a dozen measured numbers per asset that the calibrated score is
 // fitted on (critique-calibrate.ts). Mesh stats (shading continuity, curvature histogram, colour
-// detail, colour samples per metre) come from LOD0; image stats (chroma, value key and range,
+// detail as drawn: albedo through the UVs × vertex colour, colour samples per metre) come from LOD0; image stats (chroma, value key and range,
 // high-frequency energy, rest share, silhouette roughness) from one fixed-size beauty render the
 // caller makes (render sits beside qa). Same asset + same render → same numbers.
 
 import type { CompiledAsset, Mesh } from '../core/index.ts';
 import { dmath } from '../core/index.ts';
+import type { PaintedSheet } from '../material/index.ts';
+import { type Albedo, edgeContrast, partAlbedos } from './critique-albedo.ts';
 
 /** The render every vector is measured on (golden set, CLI and gate alike). */
 export const VECTOR_RENDER = { width: 640, height: 360, supersample: 1 } as const;
@@ -40,10 +42,18 @@ export interface VectorImage {
 
 const r4 = (v: number): number => Math.round(v * 1e4) / 1e4;
 
-/** The metric vector of one compiled LOD0 and its VECTOR_RENDER beauty image. */
-export function metricVector(lod0: CompiledAsset, image: VectorImage): MetricVector {
-  const meshes = lod0.parts.flatMap((p) => (p.mesh?.indices.length ? [p.mesh] : []));
-  const m = meshStats(meshes);
+/**
+ * The metric vector of one compiled LOD0 and its VECTOR_RENDER beauty image. `sheet`: the trim
+ * sheet the image was rendered with (default: the asset's own at 1024², as the vector render).
+ */
+export function metricVector(
+  lod0: CompiledAsset,
+  image: VectorImage,
+  sheet?: PaintedSheet,
+): MetricVector {
+  const parts = lod0.parts.filter((p) => p.mesh?.indices.length);
+  const meshes = parts.flatMap((p) => (p.mesh ? [p.mesh] : []));
+  const m = meshStats(meshes, partAlbedos(lod0, parts, sheet));
   const i = imageStats(image);
   const out: Record<Metric, number> = { ...m, ...i };
   for (const k of METRICS) out[k] = r4(Number.isFinite(out[k]) ? out[k] : 0);
@@ -56,7 +66,14 @@ type MeshStats = Record<MeshMetric | 'colourDetail' | 'texelDensity', number>;
 /** Dihedral-angle bin edges, degrees (the curvature histogram). */
 const BINS = [2, 5, 10, 20, 40, 70, 110, 181];
 
-export function meshStats(meshes: readonly Mesh[]): MeshStats {
+/**
+ * Mesh statistics. `albedos[i]` is what meshes[i] samples through its UVs; without one, colour
+ * detail reads vertex colour alone (as on a white albedo).
+ */
+export function meshStats(
+  meshes: readonly Mesh[],
+  albedos: readonly (Albedo | undefined)[] = [],
+): MeshStats {
   let tris = 0;
   let welded = 0;
   let area = 0;
@@ -64,7 +81,8 @@ export function meshStats(meshes: readonly Mesh[]): MeshStats {
   let edgeLen = 0;
   let colour = 0;
   const hist = new Float64Array(BINS.length);
-  for (const m of meshes) {
+  meshes.forEach((m, mi) => {
+    const albedo = albedos[mi];
     const w = weld(m);
     tris += m.indices.length / 3;
     welded += w.count;
@@ -88,10 +106,7 @@ export function meshStats(meshes: readonly Mesh[]): MeshStats {
         const seen = faces.get(key);
         if (!seen) {
           faces.set(key, [n[0], n[1], n[2], len]);
-          let d = 0;
-          for (let k = 0; k < 3; k++)
-            d += Math.abs((m.colors[p * 3 + k] ?? 1) - (m.colors[q * 3 + k] ?? 1));
-          colour += (d / 3) * len;
+          colour += edgeContrast(m, p, q, albedo) * len;
           edgeLen += len;
         } else if (seen.length === 4) {
           const cos = n[0] * (seen[0] ?? 0) + n[1] * (seen[1] ?? 0) + n[2] * (seen[2] ?? 0);
@@ -102,7 +117,7 @@ export function meshStats(meshes: readonly Mesh[]): MeshStats {
         }
       }
     }
-  }
+  });
   const total = hist.reduce((s, h) => s + h, 0) || 1;
   let entropy = 0;
   for (const h of hist) if (h > 0) entropy -= (h / total) * dmath.log(h / total);

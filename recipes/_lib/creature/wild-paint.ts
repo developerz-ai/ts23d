@@ -6,27 +6,25 @@
 
 import type { Vec3 } from '@developerz.ai/ts23d';
 import { dmath } from '@developerz.ai/ts23d';
+import {
+  type Matted,
+  type Mud,
+  mattedAt,
+  mudAt,
+  noise3,
+  type Scar,
+  scarAt,
+  smooth,
+  toSegment,
+} from './wild-marks.ts';
 
-export interface Scar {
-  /** World ends of the healed cut (on the skin; the stroke reaches `width` × 3 into the coat). */
-  readonly a: Vec3;
-  readonly b: Vec3;
-  /** Half-width of the bare line, metres. */
-  readonly width: number;
-  /**
-   * Project along this axis (0 = X, 1 = Y, 2 = Z) instead of measuring in 3D: the stroke lands on
-   * whatever skin faces that way within `reach` of the ends (a flank scar: 1; down a muzzle: 2).
-   */
-  readonly axis?: 0 | 1 | 2;
-  /** How far along `axis` from the ends the stroke still marks, metres (default 0.05). */
-  readonly reach?: number;
-}
+export { noise3, type Scar, smooth } from './wild-marks.ts';
 
 export interface WearSpec {
   readonly seed?: number;
   /** Mud: caked to a ragged edge about `top` × ⅔ (metres above ground), splashed in flecks to
    *  2 × `top`. `colour` is the dried crust; where it lies thick it is wet, half as bright. */
-  readonly mud?: { readonly top: number; readonly colour: Vec3; readonly strength?: number };
+  readonly mud?: Mud;
   /** Wet fur: darker below `top` and on the underside below `belly` (metres). */
   readonly damp?: { readonly top: number; readonly belly?: number; readonly strength?: number };
   /** Dust, pollen or snow lying on up-facing fur above `above` metres. */
@@ -40,76 +38,31 @@ export interface WearSpec {
     readonly mask?: (p: Vec3) => number;
   };
   /** Matted, clumped fur: darker streaks along gravity inside the spheres (|y| mirrored). */
-  readonly matted?: {
-    readonly zones: readonly { readonly at: Vec3; readonly radius: number }[];
-    readonly strength: number;
-    /** Streak width, metres (default 0.012). */
-    readonly width?: number;
-  };
+  readonly matted?: Matted;
   /** Worn or stained patches (a rubbed shoulder, a singed flank): a tint with a ragged edge. */
   readonly patches?: readonly {
     readonly at: Vec3;
     readonly radius: number;
     readonly colour: Vec3;
     readonly strength: number;
+    /** false: near meshes only (a pale patch on the far mesh's flat cells reads as a slab). */
+    readonly far?: boolean;
   }[];
   readonly scars?: readonly Scar[];
-  /** Healed scar tissue (default a pale grey-pink). */
-  readonly scarColour?: Vec3;
+  /**
+   * Healed scar tissue: a colour (default a pale grey-pink), or a function of the coat under it
+   * (regrowth: the coat a shade paler and greyer, so the line reads healed, not painted).
+   */
+  readonly scarColour?: Vec3 | ((coat: Vec3) => Vec3);
 }
 
 export type WearPaint = (p: Vec3, n: Vec3, c: Vec3) => Vec3;
-
-const hash = (n: number, salt: number): number => {
-  let h = (n ^ (salt * 374761393)) | 0;
-  h = Math.imul(h ^ (h >>> 15), 2246822519);
-  h = Math.imul(h ^ (h >>> 13), 3266489917);
-  return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
-};
-
-/** Trilinear value noise, 0..1. */
-export function noise3(x: number, y: number, z: number, salt: number): number {
-  const ix = Math.floor(x);
-  const iy = Math.floor(y);
-  const iz = Math.floor(z);
-  const s = (t: number): number => t * t * (3 - 2 * t);
-  const fx = s(x - ix);
-  const fy = s(y - iy);
-  const fz = s(z - iz);
-  const h = (i: number, j: number, k: number): number =>
-    hash(((ix + i) * 73856093) ^ ((iy + j) * 19349663) ^ ((iz + k) * 83492791), salt);
-  const l = (a: number, b: number, t: number): number => a + (b - a) * t;
-  return l(
-    l(l(h(0, 0, 0), h(1, 0, 0), fx), l(h(0, 1, 0), h(1, 1, 0), fx), fy),
-    l(l(h(0, 0, 1), h(1, 0, 1), fx), l(h(0, 1, 1), h(1, 1, 1), fx), fy),
-    fz,
-  );
-}
-
-export const smooth = (e0: number, e1: number, v: number): number => {
-  const t = Math.min(1, Math.max(0, (v - e0) / (e1 - e0)));
-  return t * t * (3 - 2 * t);
-};
 
 export const mix = (a: Vec3, b: Vec3, t: number): Vec3 => [
   a[0] + (b[0] - a[0]) * t,
   a[1] + (b[1] - a[1]) * t,
   a[2] + (b[2] - a[2]) * t,
 ];
-
-/** Distance from p to segment a–b and the fraction along it. */
-function toSegment(p: Vec3, a: Vec3, b: Vec3): { d: number; t: number } {
-  const ab: Vec3 = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
-  const ll = ab[0] * ab[0] + ab[1] * ab[1] + ab[2] * ab[2] || 1;
-  const t = Math.min(
-    1,
-    Math.max(0, ((p[0] - a[0]) * ab[0] + (p[1] - a[1]) * ab[1] + (p[2] - a[2]) * ab[2]) / ll),
-  );
-  return {
-    d: dmath.hypot(p[0] - a[0] - ab[0] * t, p[1] - a[1] - ab[1] * t, p[2] - a[2] - ab[2] * t),
-    t,
-  };
-}
 
 /**
  * 0..1 inside the flesh of a limb chain: 1 within `radius` of the polyline (|y| mirrored), fading
@@ -138,7 +91,8 @@ export function nearChain(points: readonly Vec3[], radius: number): (p: Vec3) =>
  */
 export function wearPaint(w: WearSpec, coarse = false): WearPaint {
   const salt = w.seed ?? 1;
-  const scarColour = w.scarColour ?? [0.36, 0.27, 0.25];
+  const scar = w.scarColour ?? [0.36, 0.27, 0.25];
+  const scarColour = typeof scar === 'function' ? scar : (): Vec3 => scar;
   return (p, n, c0) => {
     let c = c0;
     const [x, y, z] = p;
@@ -150,18 +104,8 @@ export function wearPaint(w: WearSpec, coarse = false): WearPaint {
       c = mix(c, w.settle.colour, k * w.settle.strength * (w.settle.mask?.(p) ?? 1));
     }
     if (w.matted && !coarse) {
-      const width = w.matted.width ?? 0.012;
-      let inside = 0;
-      for (const zone of w.matted.zones) {
-        const d = dmath.hypot(x - zone.at[0], Math.abs(y) - Math.abs(zone.at[1]), z - zone.at[2]);
-        inside = Math.max(inside, 1 - dmath.pow(d / zone.radius, 2));
-      }
-      if (inside > 0) {
-        // Clumps hang with gravity: narrow across (x), long down (z).
-        const streak = noise3(x / width, y / (width * 4), z / (width * 7), salt + 21);
-        const k = smooth(0.52, 0.78, streak) * Math.min(1, inside * 1.6);
-        c = mix(c, [c[0] * 0.42, c[1] * 0.4, c[2] * 0.38], k * w.matted.strength);
-      }
+      const k = mattedAt(w.matted, p, salt);
+      if (k > 0) c = mix(c, [c[0] * 0.42, c[1] * 0.4, c[2] * 0.38], k * w.matted.strength);
     }
     if (w.damp) {
       const edge = (noise3(x / 0.03, y / 0.03, z / 0.05, salt + 31) - 0.5) * w.damp.top * 0.5;
@@ -180,49 +124,28 @@ export function wearPaint(w: WearSpec, coarse = false): WearPaint {
       ];
     }
     if (w.mud && z < w.mud.top * 2.2) {
-      const top = w.mud.top;
-      // A ragged hard edge, not a gradient: blots as wide as a paw carry the line up and down,
-      // a finer octave frays it, so the band reads as caked mud and not as a darker sock.
-      const blot = noise3(x / (top * 0.34), y / (top * 0.34), z / (top * 0.5), salt + 41);
-      const fray = noise3(x / (top * 0.09), y / (top * 0.09), z / (top * 0.09), salt + 43);
-      const level = coarse ? z / top : z / top + (blot - 0.5) * 1.1 + (fray - 0.5) * 0.3;
-      const caked = smooth(0.66, coarse ? 0.4 : 0.52, level);
-      // Splashes thrown up the leg: blobs a toe wide, thinning with height.
-      const fleck = noise3(x / (top * 0.12), y / (top * 0.12), z / (top * 0.12), salt + 42);
-      const splash = coarse
-        ? 0
-        : smooth(0.7, 0.76, fleck - 0.16 * (z / top)) * smooth(top * 2.2, top, z);
-      // Wet and dark where it is thick, drying to a paler crust at its edge and in the flecks.
-      const wet: Vec3 = [w.mud.colour[0] * 0.5, w.mud.colour[1] * 0.48, w.mud.colour[2] * 0.46];
-      const dry = smooth(0.3, 0.62, level);
-      const k = Math.max(caked, splash * 0.9) * (w.mud.strength ?? 0.85);
-      c = mix(c, mix(wet, w.mud.colour, Math.max(dry, splash)), k);
+      const { level, caked, splash } = mudAt(w.mud, p, salt, coarse);
+      // Wet and near-black on the toes, the crust drying to the clay's colour up the leg; a
+      // splash is half dry. Never paler than the clay: a chalky fleck reads as a texture hole.
+      const wet: Vec3 = [w.mud.colour[0] * 0.42, w.mud.colour[1] * 0.4, w.mud.colour[2] * 0.38];
+      const dry = smooth(0.15, 0.85, level);
+      const k = Math.max(caked, splash * 0.8) * (w.mud.strength ?? 0.85);
+      c = mix(c, mix(wet, w.mud.colour, Math.max(dry, splash * 0.5)), k);
     }
     for (const patch of w.patches ?? []) {
+      if (coarse && patch.far === false) continue;
       const d = dmath.hypot(x - patch.at[0], y - patch.at[1], z - patch.at[2]) / patch.radius;
       if (d >= 1.3) continue;
       const ragged = noise3(x / 0.02, y / 0.02, z / 0.02, salt + 61) * 0.5;
       c = mix(c, patch.colour, smooth(1, 0.45, d + ragged - 0.25) * patch.strength);
     }
     for (const s of coarse ? [] : (w.scars ?? [])) {
-      const k = s.axis;
-      const flat = (q: Vec3): Vec3 =>
-        k === undefined ? q : [k === 0 ? 0 : q[0], k === 1 ? 0 : q[1], k === 2 ? 0 : q[2]];
-      if (k !== undefined) {
-        const mid = ((s.a[k] ?? 0) + (s.b[k] ?? 0)) / 2;
-        if (Math.abs((p[k] ?? 0) - mid) > (s.reach ?? 0.05)) continue;
-      }
-      const { d, t } = toSegment(flat(p), flat(s.a), flat(s.b));
-      if (d > s.width * 3) continue;
+      const at = scarAt(s, p, salt);
+      if (!at) continue;
       // Tapered ends; a bare pale core with the parted fur darker either side of it.
-      // At (and past) an end the stroke has tapered to nothing (and smooth(0, 0, d) is undefined).
-      if (t <= 0 || t >= 1) continue;
-      const taper = Math.sqrt(dmath.sin(Math.PI * t));
-      const wobble = 0.75 + 0.5 * noise3(x / 0.01, y / 0.01, z / 0.01, salt + 51);
-      const core = smooth(s.width * taper * wobble, s.width * 0.35 * taper, d);
-      const rim = smooth(s.width * 3, s.width, d) * (1 - core) * taper;
-      c = mix(c, [c[0] * 0.55, c[1] * 0.52, c[2] * 0.5], rim * 0.6);
-      c = mix(c, scarColour, core * 0.9);
+      const coat = c;
+      c = mix(c, [c[0] * 0.55, c[1] * 0.52, c[2] * 0.5], at.rim * 0.6);
+      c = mix(c, scarColour(coat), at.core * 0.9);
     }
     return c;
   };

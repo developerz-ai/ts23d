@@ -8,6 +8,7 @@ import { type Asset, defineAsset } from '@developerz.ai/ts23d';
 import { portrait } from '../_lib/bust/hero.ts';
 import { buildFaceBust, type FaceBust } from '../_lib/face/bust.ts';
 import { faceCreases } from '../_lib/face/creases.ts';
+import { skinFinish } from '../_lib/face/skin-strip.ts';
 import { CHARACTERS } from './characters.ts';
 
 /** Overall size as built (L × W × H, metres): an invented character's design spec. */
@@ -55,17 +56,12 @@ function faceBust(name: string, race: string, b: FaceBust, eyeSpacing: number): 
       // Skin: the strip's own roughness (pores, oily crowns) under a soft grazing sheen, the
       // way light catches the down and the oil on a cheek. (No finish on the hair: the cutout
       // cards take none, and the mass under them is in their shade.)
-      // A thin oily coat over it: the second, tighter highlight of living skin (nose, brow,
-      // cheekbone, shoulder), without which the diffusion alone reads as wax.
-      skin: {
-        sheen: { colour: '#8c7b72', roughness: 0.45 },
-        clearcoat: 0.3,
-        clearcoatRoughness: 0.28,
-      },
+      // (No clear coat: one roughness over the whole part read as wet latex; skinFinish.)
+      skin: skinFinish('#8c7b72'),
     },
     art: { focal: 'skin' },
-    // A portrait: the bust fills the frame (the default orbit leaves the face a thumbnail).
-    hero: portrait(height, { at: 0.47, fill: 0.86 }),
+    // A portrait: head and shoulders fill the frame (the default orbit leaves the face a thumbnail).
+    hero: portrait(height),
     // Intended folds (lids, lips, ears, hair locks) from the same warped landmarks and lines.
     creases: faceCreases(b),
     build(ctx) {

@@ -1,13 +1,14 @@
 {
   "asset": "elf_head",
   "reviewer": "agent",
-  "overall": 5.9,
+  "overall": 6,
   "scores": {
     "silhouette": {
       "score": 7,
-      "reason": "The pointed ear tips now break the outline in FRONT, SIDE and hero.png, so it reads as an elf; the hair is still thin stringy strands over a slicked crown.",
+      "reason": "Pointed ear tips break the outline in FRONT, SIDE and hero.png, so it reads as an elf; the crown is fuller and the pale scalp is gone, but a smooth dark-brown whorl patch still shows through the strands at the crown in hero.png and FRONT, and the hair is still thin straight strands hanging off a slicked crown.",
       "fixes": [
-        "more hair volume over the crown and denser, wider locks (hair.ts) so the hair reads as a mass"
+        "close the crown whorl with cards radiating over it so no smooth brown patch shows (hair.ts)",
+        "denser, wider locks so the hair reads as a mass, not single strands"
       ]
     },
     "proportions": {
@@ -20,43 +21,47 @@
     },
     "materials": {
       "score": 5,
-      "reason": "Skin is a more even pink without rouge circles, and the gold trim reads as metal; the tunic is still blotchy green with grey smears that read as paint, not cloth.",
+      "reason": "Skin is a soft sheen with a faint flush on the cheekbone and the gold trim reads as metal; the tunic is still blotchy green with grey smears that read as paint, and the hair still reads as dry straw in hero.png even with the brighter strand shading.",
       "fixes": [
-        "a silk/wool strip for tunic and cloak with even colour and soft sheen, no grey blotches"
+        "a silk/wool strip for tunic and cloak with even colour and soft sheen, no grey blotches",
+        "hair strip with darker roots and anisotropic sheen so the strands read as hair, not straw"
       ]
     },
     "detail": {
       "score": 6,
-      "reason": "Clasp, gold trim and collar exist, but the face lacks lid/lip definition and the hair has no strand grooves over the crown.",
+      "reason": "Clasp, gold trim and collar exist; the eyes now sit in shadow under the upper lid and a brow line is drawn, but the lips have no defined line and the hair has no strand grooves over the crown.",
       "fixes": [
-        "strand grooves over the crown; defined lids and lip line",
+        "strand grooves over the crown",
+        "a defined lip line and philtrum",
         "embroidery on the trim"
       ]
     },
     "wear": {
-      "score": 4,
-      "reason": "Grey smears on the tunic could be dust, but they read as texture noise; no fray, no soiled hems.",
+      "score": 5,
+      "reason": "The grey on the tunic now sits on the shoulder tops and sleeves, so it reads as sun fading in FRONT and SIDE; it is still blotchy enough to pass for texture noise, and there is no fray or soiled hem.",
       "fixes": [
-        "dust on the cloak shoulders and fray at the hems as authored, not noise"
+        "a softer, directional fade (top-down) instead of grey blotches",
+        "fray and dirt along the cloak hems"
       ]
     },
     "lod": {
       "score": 6,
-      "reason": "FAR LOD2 hair becomes blocky slabs, the face is faceted with dark eye holes, and the tunic smears into green-grey camouflage.",
+      "reason": "FAR LOD2 face is smooth now with readable eyes instead of dark holes, but the hair is still a few blocky slabs and the tunic smears into green-grey camouflage.",
       "fixes": [
-        "thinner, more numerous LOD2 hair cards and smoothed face colour"
+        "thinner, more numerous LOD2 hair cards",
+        "average tunic colour per LOD2 face so it stays one green"
       ]
     },
     "technical": {
       "score": 7,
-      "reason": "QA clean; 71k / 19k / 3k triangles over 5 draws; many strand cards spent where they read as noise.",
+      "reason": "QA clean; 68.4k / 19.3k / 3.0k tris, 5 / 5 / 5 draws; many strand cards spent where they read as noise.",
       "fixes": [
         "fewer, wider hair cards at LOD0 and drop hidden scalp under the hair"
       ]
     }
   },
   "renders": {
-    "hero.png": "e051a04e0a134464e86ddfd85076be2bf62d510f19416ea544ff3ed018bc348d",
-    "sheet.png": "78a52ec7cd3d65575283060f303da3d9033fa824d659f9f95cd4cff06a3a8b53"
+    "hero.png": "ff866d3eae4ab9def4cf1cac2f7f055a2be0673184364f1f3575b6bd364281ff",
+    "sheet.png": "50742727ca65385772e0fdfd5b27f4b3f7bc8fdad48a429b4083d3caba01515d"
   }
 }

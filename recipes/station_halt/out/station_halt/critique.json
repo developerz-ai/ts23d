@@ -1,7 +1,7 @@
 {
   "asset": "station_halt",
   "reviewer": "agent",
-  "overall": 7.3,
+  "overall": 7.4,
   "scores": {
     "silhouette": {
       "score": 8,
@@ -19,10 +19,10 @@
     },
     "materials": {
       "score": 7,
-      "reason": "Slates with per-slate value and moss, brick now with per-course value variation and a dark plinth, platform coping as a pale edge; the canopy is still a flat grey sheet and the platform surface a plain grey.",
+      "reason": "Slates with per-slate value and moss, brick with per-course variation and a dark plinth, pale coping; the per-pixel sheet now shows a soft flag pattern on the platform in TOP and crisper brick in hero.png, but the flags have no joint lines, the canopy is still a flat grey sheet, and the hero shows a fine speckle in the shadow under the canopy.",
       "fixes": [
         "canopy as ridged corrugated/boarded sheet with lighter ridges",
-        "platform flags with joints and per-flag value"
+        "dark joint lines between the platform flags"
       ]
     },
     "detail": {
@@ -42,23 +42,23 @@
       ]
     },
     "lod": {
-      "score": 7,
-      "reason": "lods.png: LOD2 (462 tris) keeps building, roof, chimneys, canopy, columns and board; the flagstone platform turns into streaky planks and the name board loses its letters (blank white).",
+      "score": 8,
+      "reason": "FAR LOD2 walls are now true-scale brick with visible courses on the gable and front (no more vertical timber-plank streaks); building, roof, chimneys, canopy, columns and name board hold. The roof slopes and chimneys still streak down-slope and the platform loses its flag pattern.",
       "fixes": [
-        "keep the platform flag pattern at LOD2",
-        "keep the name-board lettering as one quad strip"
+        "map the LOD2 roof slopes and chimney stacks at true scale (no down-slope streaks)",
+        "keep the platform flag pattern at LOD2"
       ]
     },
     "technical": {
       "score": 8,
-      "reason": "QA PASS: 10.0k / 5.5k / 528 tris, 2 / 2 / 2 draws: lean for a building this size.",
+      "reason": "QA PASS: 10.0k / 5.5k / 436 tris, 2 / 2 / 2 draws: lean for a building this size.",
       "fixes": [
         "spend a few hundred more LOD0 triangles on the canopy valance fret"
       ]
     }
   },
   "renders": {
-    "hero.png": "a107f370d5155a1201a7bc6eadc0b52b7c449c66060748297d42c738e74db3ca",
-    "sheet.png": "cf4d7cce3b77de44fa9968d187d757f303c676eb17a73a65a1d24407a9dfb7ed"
+    "hero.png": "3e1dd89431552811831c1019593d941158ca1011270eff990e71370d58618a17",
+    "sheet.png": "5afdcba7eef65fbda2046e80fd186b92cd29b5e1e46b64501c584d680f038648"
   }
 }

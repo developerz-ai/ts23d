@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'bun:test';
 import type { Mesh } from '../core/index.ts';
-import { dmath } from '../core/index.ts';
+import { dmath, encodePng } from '../core/index.ts';
+import type { Albedo } from './critique-albedo.ts';
 import {
   imageStats,
   METRICS,
@@ -105,6 +106,61 @@ describe('meshStats', () => {
     const banded = meshStats([sphere(12, false, (z) => (z > 0 ? [1, 0, 0] : [0, 0, 1]))]);
     expect(plain.colourDetail).toBe(0);
     expect(banded.colourDetail).toBeGreaterThan(0);
+  });
+});
+
+/** A 1 m quad in one flat vertex colour, its UVs spanning the whole texture. */
+const quad: Mesh = {
+  positions: new Float32Array([0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0]),
+  normals: new Float32Array([0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1]),
+  uvs: new Float32Array([0, 0, 1, 0, 1, 1, 0, 1]),
+  colors: new Float32Array(12).fill(0.6),
+  indices: new Uint32Array([0, 1, 2, 0, 2, 3]),
+};
+/** 16² RGBA8: black and white stripes four texels wide, or one flat grey. */
+const texture = (striped: boolean): Uint8Array =>
+  Uint8Array.from({ length: 16 * 16 * 4 }, (_, i) =>
+    i % 4 === 3 ? 255 : striped ? (Math.floor(((i >> 2) % 16) / 4) % 2 ? 255 : 0) : 160,
+  );
+const albedo = (striped: boolean): Albedo => ({
+  width: 16,
+  height: 16,
+  data: texture(striped),
+  wrapU: true,
+});
+
+describe('colourDetail measures what is drawn (D457)', () => {
+  it('fails before D457: a flat-coloured quad on a high-contrast strip has colour detail', () => {
+    expect(meshStats([quad]).colourDetail).toBe(0);
+    expect(meshStats([quad], [albedo(true)]).colourDetail).toBeGreaterThan(0.1);
+  });
+
+  it('a flat-coloured quad on a flat strip stays at zero', () => {
+    expect(meshStats([quad], [albedo(false)]).colourDetail).toBe(0);
+  });
+
+  it('a flat albedo scales vertex-colour detail, nothing else', () => {
+    const banded = sphere(12, false, (z) => (z > 0 ? [1, 0, 0] : [0, 0, 1]));
+    const white = { ...albedo(false), data: texture(false).fill(255) };
+    expect(meshStats([banded], [white]).colourDetail).toBeCloseTo(
+      meshStats([banded]).colourDetail,
+      6,
+    );
+  });
+
+  it("a model-built part's own texture set counts, through metricVector", () => {
+    const part = (striped: boolean) => ({
+      name: 'body',
+      mesh: quad,
+      textures: { name: 'skin', albedo: encodePng(16, 16, texture(striped)) },
+    });
+    const v = (striped: boolean): number =>
+      metricVector(
+        { name: 'q', parts: [part(striped)] } as unknown as Parameters<typeof metricVector>[0],
+        disc(() => [100, 90, 80]),
+      ).colourDetail;
+    expect(v(true)).toBeGreaterThan(0.1);
+    expect(v(false)).toBe(0);
   });
 });
 

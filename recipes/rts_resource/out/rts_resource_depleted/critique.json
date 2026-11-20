@@ -27,16 +27,16 @@
     },
     "detail": {
       "score": 6,
-      "reason": "Snapped crystals, stubs, spoil heaps, drill holes, shards; the scoop walls are smooth.",
+      "reason": "The hero camera now looks down into the scoop: its pale scoured interior with a few thin dark gouge lines, snapped crystals with pale fracture tops standing in it, stubs, drill holes, spoil and shards all read (hero.png). The pick gouges are still faint hairlines rather than readable grooves.",
       "fixes": [
-        "pick and drill marks on the scoop walls"
+        "deeper, darker pick and drill gouges on the scoop walls so they read as grooves at hero distance"
       ]
     },
     "wear": {
       "score": 6,
-      "reason": "Spoil fans on the worked side and shards tell a harvest story; the rock surface itself is unmarked.",
+      "reason": "Spoil fans on the worked side, shards, and a pale dusty scoop interior tell a harvest story; the outer rock is unmarked and the pale strata streaks on the flanks (sheet FRONT, SIDE) read as banding, not dust.",
       "fixes": [
-        "dust on the rock round the scoop rim"
+        "dust on the rock round the scoop rim, fading outwards"
       ]
     },
     "lod": {
@@ -48,14 +48,14 @@
     },
     "technical": {
       "score": 8,
-      "reason": "QA PASS: 8.7k / 2.0k / 286 tris, 3 / 3 / 3 draws.",
+      "reason": "QA PASS: 8.2k / 1.9k / 266 tris, 3 / 3 / 3 draws.",
       "fixes": [
         "coarser SDF cell on the rock body"
       ]
     }
   },
   "renders": {
-    "hero.png": "b9080841816685b94604b3e19bf52ddc7cf735bbebb3e23b80de4f483dd5c3b5",
-    "sheet.png": "f2e0e35b68e54d6331c07544d58483dd407d5218d660c26213b72755af66530a"
+    "hero.png": "3f244fd371f6c895edc3e144d2daf54a5042c309e1b983af81cafe9df8672342",
+    "sheet.png": "d39065c3bae755929fb065ad9ddaba370547caf075178694c085b4a6d7fbd9b7"
   }
 }

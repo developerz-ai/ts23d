@@ -3,6 +3,7 @@
 // biology, part names, and the rig and bare-skin map a recipe needs to groom its own cards with
 // the kind's skinning and the kind's head fur).
 
+import type { Lod } from '../core/index.ts';
 import type { StripId } from '../material/index.ts';
 import type { SculptEdit } from '../primitives/index.ts';
 import type { Biology } from './creature-biology.ts';
@@ -28,6 +29,14 @@ export interface CreatureOptions {
    * through them. Default none.
    */
   readonly head?: (l: HeadLayout) => readonly SculptEdit[];
+  /**
+   * A recipe's own forms on the body, in the asset frame, left side (the sculpt mirrors them):
+   * bony landmarks and hollows at the stifle, hock, carpus and elbow point, split toes. Laid over
+   * the kind's masses, muscles and separations, before the soles are cut flat. Called per LOD: at
+   * LOD2 the lower legs are tubes outside the sculpt, so edits on them would float; return none
+   * there. Default none.
+   */
+  readonly body?: (b: Bones, lod: Lod) => readonly SculptEdit[];
 }
 
 export interface CreatureInfo {

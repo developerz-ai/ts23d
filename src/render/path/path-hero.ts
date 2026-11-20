@@ -1,7 +1,7 @@
 // `pathHero(asset, o)`: the physically based hero shot. Same camera, framing and studio as the
 // raster beauty render (beauty.ts: cameraFor, studioRig; backdrop + floor shadow catcher), lit by
 // a path tracer instead: sun + sky importance sampled, multiple bounces, skin diffusion, strand
-// lobes on fur cards. Then the à-trous denoise, the shared tone curve and sRGB. Deterministic:
+// lobes on fur cards. Then the variance-guided à-trous denoise, the shared tone curve and sRGB. Deterministic:
 // same asset + options → same bytes on one thread or many (sampler seeded per pixel, film slots
 // owned per pixel, no clocks).
 

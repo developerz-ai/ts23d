@@ -1,7 +1,7 @@
 {
   "asset": "boulders",
   "reviewer": "agent",
-  "overall": 7.4,
+  "overall": 7.6,
   "scores": {
     "silhouette": {
       "score": 8,
@@ -42,10 +42,10 @@
       ]
     },
     "lod": {
-      "score": 7,
-      "reason": "FAR LOD2 soil patches are smooth-edged like LOD0, but the big boulder still turns a plain light faceted grey without its moss and lichen, so the colour shifts at the switch.",
+      "score": 8,
+      "reason": "FAR LOD2 soil patches are now one flat soil colour without the plank-like streaks, and the boulders carry the moss-green grey average of LOD0, so colour holds at the switch; the big boulder loses its fissure and shows a few hard flat facets.",
       "fixes": [
-        "keep the LOD0 albedo average (moss and lichen tint) on the LOD2 faces"
+        "keep the big boulder fissure as a dark band in the LOD2 vertex colour"
       ]
     },
     "technical": {
@@ -57,7 +57,7 @@
     }
   },
   "renders": {
-    "hero.png": "e8e12437893d204f7b5358cac88b093c47b9f9f088e390a191e0c6a2cccc0461",
-    "sheet.png": "b6524867ce0df11032b8369b3919b70f59a0ef1418e1771e434ab81c4a679257"
+    "hero.png": "5da69be3df9bfaf4ca575289edfb84eb8600dad1bc559da1861e0752e6331351",
+    "sheet.png": "01dd79db9ae5aedecc70b64e4b6a64da8def947fd004f5721eddcda31af3abac"
   }
 }

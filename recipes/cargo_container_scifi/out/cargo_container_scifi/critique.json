@@ -1,7 +1,7 @@
 {
   "asset": "cargo_container_scifi",
   "reviewer": "agent",
-  "overall": 7.6,
+  "overall": 7.9,
   "scores": {
     "silhouette": {
       "score": 8,
@@ -18,11 +18,11 @@
       ]
     },
     "materials": {
-      "score": 7,
-      "reason": "Teal paint, steel frame and orange stripe separate and the glow strip is clean. The sawtooth triangle stains are gone from hero.png (soft rust streaks now) and the roof is an even weathered grey instead of triangle camo, but faint triangle tints remain at the panel feet in the sheet SIDE view and the TOP roof mottle is blocky.",
+      "score": 8,
+      "reason": "Teal paint, steel frame, orange stripe and clean glow strip separate. With smooth per-pixel shading the triangle tints are gone from the sheet: SIDE shows soft rust and grime gradients at the panel feet and corners, TOP a smooth weathered-grey roof mottle, and hero.png keeps the soft rust streaks.",
       "fixes": [
-        "finish moving the weathering off the triangulation: the SIDE view still shows triangle tints along the lower panel edges",
-        "roughness variation where hands touch (handles, keypad)"
+        "roughness variation where hands touch (handles, keypad)",
+        "break the roof mottle with a few distinct water-stain rings or pooled-dirt lines along the roof ribs"
       ]
     },
     "detail": {
@@ -43,21 +43,21 @@
     },
     "lod": {
       "score": 7,
-      "reason": "FAR LOD2 now keeps the louvres as dark quads and the orange stripe, but the roof is a flat clean grey and the sides lose the rust weathering, so the value shift remains.",
+      "reason": "FAR LOD2 keeps the louvres as dark quads and the orange stripe, but next to the now smoothly weathered LOD0 sheet views the LOD2 roof is a flat clean grey and the sides lose the rust gradients, so the value shift remains.",
       "fixes": [
         "carry the average weathering tone onto the LOD2 roof and side faces"
       ]
     },
     "technical": {
-      "score": 7,
-      "reason": "QA clean; 16k / 7k / 0.2k triangles over 5 draws; the TOP view still shows triangle-shaped tint on the roof plates, so weathering still follows the triangulation.",
+      "score": 8,
+      "reason": "QA clean; 16.2k / 7.0k / 170 tris, 5 / 5 / 4 draws. The weathering no longer shows triangle-shaped tint in any sheet view; the refined side/roof plates still spend most of the LOD0 budget on a box.",
       "fixes": [
-        "weather only the side/roof plates on a regular grid to halve refinement cost"
+        "weather the side/roof plates on a regular grid so the LOD0 refinement cost drops"
       ]
     }
   },
   "renders": {
-    "hero.png": "a548cc5a926c9539c81bd112b7117db76a418c8c344dfce6fc8002994bfa3f96",
-    "sheet.png": "4022bb63bd5f502fb453b1a95ec785c6d7f926c9fbdd827089573fff2556e7d9"
+    "hero.png": "358864b611b724ed550ce5cf3c319c430b4da8d71abab4343683e9eb250313e0",
+    "sheet.png": "1fe83a064f87db11b428c882cfdb7cb778bdd9fe3c983f390978fd80f8458967"
   }
 }

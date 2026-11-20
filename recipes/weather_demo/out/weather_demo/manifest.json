@@ -18,9 +18,9 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    20328,
-    6544,
-    1526
+    21190,
+    6654,
+    1546
   ],
   "drawCalls": [
     1,
@@ -52,10 +52,10 @@
       "count": 2
     },
     "bleach": {
-      "target": 0.5402,
-      "actual": 0.5402,
+      "target": 0.5403,
+      "actual": 0.5403,
       "eligible": "side-facing | up-facing ; up-facing | side-facing ; sunlit",
-      "area": 11.2993,
+      "area": 11.2955,
       "by": {
         "door_old": {
           "target": 0.45,
@@ -75,15 +75,15 @@
         "drum_old": {
           "target": 0.3,
           "actual": 0.3,
-          "area": 0.4706
+          "area": 0.4668
         }
       }
     },
     "chips": {
-      "target": 0.315,
-      "actual": 0.315,
+      "target": 0.3153,
+      "actual": 0.3153,
       "eligible": "convex-edges",
-      "area": 11.026,
+      "area": 10.8082,
       "by": {
         "door_old": {
           "target": 0.35,
@@ -108,7 +108,7 @@
         "drum_old": {
           "target": 0.3,
           "actual": 0.3,
-          "area": 0.9257
+          "area": 0.7079
         }
       }
     },
@@ -119,10 +119,10 @@
       "area": 0.0804
     },
     "rust": {
-      "target": 0.2661,
-      "actual": 0.2661,
+      "target": 0.2806,
+      "actual": 0.2806,
       "eligible": "below-fasteners | fasteners | ground-near ; ground-near ; below-fasteners | fasteners ; convex-edges | fasteners",
-      "area": 1.9242,
+      "area": 1.7106,
       "by": {
         "door_old": {
           "target": 0.4,
@@ -142,7 +142,7 @@
         "drum_old": {
           "target": 0.15,
           "actual": 0.15,
-          "area": 0.9257
+          "area": 0.7121
         }
       }
     },

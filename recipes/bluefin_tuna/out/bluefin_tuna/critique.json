@@ -1,7 +1,7 @@
 {
   "asset": "bluefin_tuna",
   "reviewer": "agent",
-  "overall": 7.1,
+  "overall": 7.3,
   "scores": {
     "silhouette": {
       "score": 8,
@@ -41,10 +41,10 @@
       ]
     },
     "lod": {
-      "score": 7,
-      "reason": "FAR LOD2 keeps the outline and the finlets as a yellow strip, but the body is faceted with flat light/dark triangle patches on the flank.",
+      "score": 8,
+      "reason": "FAR LOD2 now shades smoothly (no flat light/dark triangle patches) and keeps the outline, fins and countershading; the finlets become one flat yellow slab.",
       "fixes": [
-        "a few more rings on the LOD2 body (~700 triangles) and smoothed normals so the flank stops faceting"
+        "finlets at LOD2 as a notched strip instead of one flat slab"
       ]
     },
     "technical": {
@@ -56,7 +56,7 @@
     }
   },
   "renders": {
-    "hero.png": "660b254f26f953a176f6ef129132d1424497d2b58458548a2cf3adfc3ecae33f",
-    "sheet.png": "3f5494000d634023ab7ecb491dfdb9ee0dcb7b2c19319f3dcc92c65316120f00"
+    "hero.png": "79e4461f9b2a7e95988a735aae761c837827f021c55ac6a93dc27f325dd1cd95",
+    "sheet.png": "04ed6d60faf50fce31922aa9b385d80da5527a9dd3ea42bed9dbb7d2aa3b2e0c"
   }
 }

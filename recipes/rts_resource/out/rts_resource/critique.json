@@ -1,7 +1,7 @@
 {
   "asset": "rts_resource",
   "reviewer": "agent",
-  "overall": 7.3,
+  "overall": 7.1,
   "scores": {
     "silhouette": {
       "score": 7,
@@ -18,26 +18,26 @@
       ]
     },
     "materials": {
-      "score": 8,
-      "reason": "The stitch-line veins are gone: the rock carries irregular horizontal grey strata (sheet FRONT, SIDE) and a mottled dark-grey surface in hero.png; crystals shade by facet in warm orange.",
+      "score": 7,
+      "reason": "Crystals shade by facet in warm orange; the rock strata are now crisp wavy grey bands. But the new salt-filled cracks are 0.3-0.5 m wide soft white bands, a big white V on the front face in hero.png and diagonal stripes in sheet FRONT / SIDE, so the rock reads striped (zebra) rather than cracked; the white is the brightest value on the node after the crystals.",
       "fixes": [
-        "let the strata follow fracture planes once the outcrop has them",
-        "salt only in crevices"
+        "narrow the salt to thin (2-5 cm) crack lines with a dark core and pale lip, not wide bands",
+        "drop the salt value a step so the crystals stay the focal point"
       ]
     },
     "detail": {
       "score": 6,
-      "reason": "Crystal pockets, shards, spoil heap with blocks, flag; the outcrop has pale banding but no cracks, ledges or pick marks.",
+      "reason": "Crystal pockets, shards, spoil heap with blocks, flag; cracks now exist as pale bands and the rock top shows a few flat facets, but the bands read as paint stripes and the pick gouges near the worked pocket are not readable in hero.png or the sheet.",
       "fixes": [
-        "a crack or two and a ledge on the outcrop",
-        "pick marks round the worked pocket"
+        "real recessed crack grooves and a ledge on the outcrop",
+        "deeper, darker pick gouges round the worked pocket"
       ]
     },
     "wear": {
       "score": 6,
-      "reason": "A spoil heap and scattered shards give some working story; salt and mud are random patches, not where water and boots would put them.",
+      "reason": "A spoil heap and scattered shards give some working story; the salt now follows the crack lines but as wide bands, and there is no trampled mud on the worked side.",
       "fixes": [
-        "salt dust concentrated in crevices",
+        "salt dust as fine lines and pooled in the bottom of crevices",
         "trampled mud on the worked side"
       ]
     },
@@ -50,14 +50,14 @@
     },
     "technical": {
       "score": 8,
-      "reason": "QA PASS: 8.2k / 1.9k / 282 tris, 3 / 3 / 3 draws; lighter again for the same read.",
+      "reason": "QA PASS: 7.6k / 1.8k / 262 tris, 3 / 3 / 3 draws.",
       "fixes": [
         "coarser SDF cell on the smooth rock flanks"
       ]
     }
   },
   "renders": {
-    "hero.png": "7d89d3acbdf5011b2dffd6e65f699b5698c995368ee0694cdf5d39fa004d7770",
-    "sheet.png": "6fca6c12ec061fa889d2c4723df85a4e5d95835d137bdd0110d50969d3bd97bc"
+    "hero.png": "4ed6c6f024d6f336ee33008ac632d661e103e326e18f21c3767ac110cde6d57b",
+    "sheet.png": "6cee6aa044de1b0176c3bca4e54cc1796a1a73b7411b34c97fc259157695e1f9"
   }
 }

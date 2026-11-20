@@ -1,7 +1,7 @@
 {
   "asset": "king_cobra",
   "reviewer": "agent",
-  "overall": 6.7,
+  "overall": 6.9,
   "scores": {
     "silhouette": {
       "score": 7,
@@ -20,7 +20,7 @@
     },
     "materials": {
       "score": 7,
-      "reason": "Ventral cream scutes and a dark dorsum; the dorsal pattern is now pale crossbands instead of rattlesnake zigzags, though their edges are serrated rather than clean chevrons pointing to the head, and the dorsum is matte apart from a blue-grey patch on the coil.",
+      "reason": "Ventral cream scutes, a crisp dark scale net on the coil and pale crossbands; in hero.png the coil crossbands are a little clearer as pale chevrons on the top turn, and the hood edge and throat carry dark bands. The dorsum is still matte and the bands fade on the lower turn.",
       "fixes": [
         "sharpen the crossbands into chevrons that point toward the head",
         "low roughness on the dorsal scales"
@@ -35,30 +35,32 @@
       ]
     },
     "wear": {
-      "score": 5,
-      "reason": "Nothing says this snake has lived anywhere: no shed patch, scar or dust.",
+      "score": 6,
+      "reason": "A dull, paler shed patch shows on the inner coil and the lowest coil is dusted brown (hero.png, coil); no scar.",
       "fixes": [
-        "a dull pre-shed patch or a healed scar",
-        "dust on the lowest coil"
+        "a healed scar on the forebody",
+        "make the shed patch read: milky, slightly lifted scales at its edge"
       ]
     },
     "lod": {
       "score": 7,
-      "reason": "FAR LOD2 now averages the coil into one olive-brown with the blue-grey patches gone; the neck front is still a flat cream band with faceted shading.",
+      "reason": "FAR LOD2 coil is back to a dark olive matching the LOD0 average, so the value pop is gone; but no crossbands are visible on it at sheet size, the coil is visibly octagonal, and the neck is a uniform pale tan.",
       "fixes": [
-        "keep a darker dorsal band on the LOD2 neck sides"
+        "LOD2 crossbands with enough contrast to show at FAR size",
+        "more segments around the LOD2 coil so it stops reading as an octagon",
+        "a darker dorsal band on the LOD2 neck sides"
       ]
     },
     "technical": {
       "score": 7,
-      "reason": "61.9k / 9.2k / 584 triangles, one draw; LOD1 now holds, LOD0 spends uniform rings along the straight neck.",
+      "reason": "58.9k / 9.2k / 584 tris, 1 / 1 / 1 draws; LOD1 holds, LOD0 spends uniform rings along the straight neck.",
       "fixes": [
         "lower LOD0 ring density on the straight neck and tail"
       ]
     }
   },
   "renders": {
-    "hero.png": "57013602f6c35dcb8d1cefeba0fba41029649c1dd6886c5ed3cc7052ea1d6bed",
-    "sheet.png": "815d72f96c72d9156cc9d95f3907a43b61d3525d96858800b716c01f0c8be1e8"
+    "hero.png": "dd85bf32da8f7a8cc098a9a98ed904d98f37a0f22738e7d1e7800a5b88e8b44f",
+    "sheet.png": "f1b9a293505a0ad84a6e9b851ebd3b01340cfb05ec5fb3f788e428e6c2334016"
   }
 }

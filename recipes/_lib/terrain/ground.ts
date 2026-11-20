@@ -9,6 +9,7 @@
 // border points), and conifer impostors scattered over the forest belt.
 
 import {
+  DEFAULT_SHEET,
   dmath,
   type Mesh,
   MeshBuilder,
@@ -18,6 +19,7 @@ import {
   type TerrainGrid,
   type Vec3,
 } from '@developerz.ai/ts23d';
+import { STRIP_INSET } from './strip-inset.ts';
 
 const HALF = 0.5 / 4096;
 
@@ -37,6 +39,12 @@ export function macroUV(
   const top = stripRect('concrete');
   const side = stripRect('rock_strata');
   const span = Math.max(rect[2] - rect[0], rect[3] - rect[1]);
+  // Eight mirrored bands across the tile (~250 m each on a 2 km tile), and U at the same
+  // material metres per ground metre (the strip's features stay round, not drawn into streaks).
+  const band = span / 8;
+  const uSpan =
+    (top.metres * band) /
+    ((1 - 2 * STRIP_INSET) * (DEFAULT_SHEET.strips.concrete?.scaleMetres ?? 1));
   for (let i = 0; i < m.positions.length / 3; i++) {
     const x = m.positions[i * 3] ?? 0;
     const y = m.positions[i * 3 + 1] ?? 0;
@@ -51,8 +59,14 @@ export function macroUV(
       uvs[i * 2 + 1] =
         side.v0 + HALF + Math.min(1, Math.max(0, z / wall)) * (side.v1 - side.v0 - 2 * HALF);
     } else {
-      uvs[i * 2] = top.u0 + ((x - rect[0]) / span) * (top.u1 - top.u0) * 3;
-      uvs[i * 2 + 1] = top.v0 + HALF + ((y - rect[1]) / span) * (top.v1 - top.v0 - 2 * HALF);
+      // V mirrored every `band` metres inside the strip's unpadded rows, U at the same scale. One
+      // band over the whole tile with U × 3 stretched the pattern ~50× along +Y: thin streaks
+      // that read as contour lines on every cone.
+      const t = (y - rect[1]) / band;
+      const f = t - 2 * Math.floor(t / 2);
+      uvs[i * 2] = top.u0 + ((x - rect[0]) / uSpan) * (top.u1 - top.u0);
+      uvs[i * 2 + 1] =
+        top.v0 + (top.v1 - top.v0) * (STRIP_INSET + (f <= 1 ? f : 2 - f) * (1 - 2 * STRIP_INSET));
     }
   }
   return { ...m, uvs };

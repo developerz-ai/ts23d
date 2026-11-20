@@ -237,6 +237,75 @@ function quadOut(a: Vec3, b: Vec3, c: Vec3, d: Vec3, color: Vec3, centre: Vec3, 
   return out >= 0 ? quad(a, b, c, d, color, off) : quad(a, d, c, b, color, off);
 }
 
+/** Cockpit fittings behind the canopy: seat cushions, headrests, the console and its screens. */
+const SEAT = hex('#5d574c');
+const HEADREST = hex('#34322e');
+const CONSOLE = hex('#2a2d31');
+const SCREEN = hex('#3d9fc4');
+
+/**
+ * The cockpit seen through the canopy (LOD0/1). The canopy glass lies 2 cm over the nose skin, so
+ * there is no room for a seat in the round: the two crew seats (cushion and headrest), the centre
+ * pedestal and the instrument console with two screens are laid as shapes 2 mm over the cockpit
+ * shade, on the same panels as the panes. (u, v) runs across the ring faces (4.5 = centreline)
+ * and from the windscreen's front (0) to the canopy's rear (1); each shape is cut on the panel
+ * edges so it follows the skin.
+ */
+function cockpit(rings: readonly (readonly Vec3[])[], sub: number): Mesh[] {
+  const at = (u: number, v: number): Vec3 => {
+    const jv = sub + v * 2 * sub;
+    const j = Math.min(Math.floor(jv), 3 * sub - 1);
+    const k = Math.min(Math.floor(u), 8);
+    const [fu, fv] = [u - k, jv - j];
+    const r0 = rings[j] ?? [];
+    const r1 = rings[j + 1] ?? [];
+    const mix = (a: Vec3, b: Vec3, t: number): Vec3 => [
+      a[0] + (b[0] - a[0]) * t,
+      a[1] + (b[1] - a[1]) * t,
+      a[2] + (b[2] - a[2]) * t,
+    ];
+    const o: Vec3 = [0, 0, 0];
+    return mix(mix(r0[k] ?? o, r0[k + 1] ?? o, fu), mix(r1[k] ?? o, r1[k + 1] ?? o, fu), fv);
+  };
+  const cuts = (a: number, b: number, step: number): number[] => {
+    const out = [a];
+    for (let c = Math.floor(a / step + 1) * step; c < b - 1e-6; c += step) out.push(c);
+    return [...out, b];
+  };
+  const rect = (
+    u0: number,
+    u1: number,
+    v0: number,
+    v1: number,
+    color: Vec3,
+    off = 0.004,
+  ): Mesh[] => {
+    const us = cuts(u0, u1, 1);
+    const vs = cuts(v0, v1, 1 / (2 * sub));
+    const out: Mesh[] = [];
+    for (let i = 0; i + 1 < us.length; i++)
+      for (let j = 0; j + 1 < vs.length; j++) {
+        const [ua, ub, va, vb] = [us[i] ?? 0, us[i + 1] ?? 0, vs[j] ?? 0, vs[j + 1] ?? 0];
+        const a = at(ua, va);
+        out.push(quadOut(a, at(ub, va), at(ub, vb), at(ua, vb), color, [a[0], 0, 2.6], off));
+      }
+    return out;
+  };
+  return [
+    // Console under the windscreen, two screens on it.
+    ...rect(3.7, 5.3, 0.18, 0.42, CONSOLE),
+    ...rect(3.95, 4.4, 0.24, 0.36, SCREEN, 0.007),
+    ...rect(4.6, 5.05, 0.24, 0.36, SCREEN, 0.007),
+    // Centre pedestal between the seats.
+    ...rect(4.4, 4.6, 0.42, 0.78, CONSOLE),
+    // Crew seats: cushion and back, headrest behind.
+    ...[4.1, 4.9].flatMap((c) => [
+      ...rect(c - 0.24, c + 0.24, 0.56, 0.84, SEAT),
+      ...rect(c - 0.16, c + 0.16, 0.84, 0.92, HEADREST),
+    ]),
+  ];
+}
+
 /** Yellow/black stripe band: `stripes` cells from a→b, each `up` tall (CCW: (b−a) × up = out). */
 function hazard(a: Vec3, b: Vec3, up: Vec3, stripes: number, off = DECAL): Mesh {
   const step = [0, 1, 2].map((k) => ((b[k] ?? 0) - (a[k] ?? 0)) / stripes);
@@ -779,6 +848,7 @@ export const dropship = defineAsset({
         }
       }
     }
+    if (lod < 2) backing.push(...cockpit(rings, noseSub));
     // Far, the canopy is its colour: opaque panes in the tone the smoked glass shows over the
     // cockpit shade (no glass draw, no shade sheet under it).
     if (lod === 2) ctx.part('canopy', merge(glass));

@@ -98,8 +98,11 @@ const PILE_ENTRY = 0.095;
 const coil = (i: number): Vec3 => {
   const u = (i * COIL_STEP) / (Math.PI * 2);
   const a = (100 * Math.PI) / 180 + i * COIL_STEP;
-  const r = 0.165 + 0.024 * u;
-  return faced(r * dmath.cos(a), r * dmath.sin(a), PILE_ENTRY);
+  const r = 0.15 + 0.03 * u;
+  // Off-centre: each turn's centre drifts back from the lens as it climbs, so the top turn sits
+  // on the far shoulder of the one under it and the pile reads as a heap, not a hose ring.
+  const back = -0.04 * (1 - u / COIL_TURNS);
+  return faced(back + r * dmath.cos(a), r * dmath.sin(a), PILE_ENTRY);
 };
 
 /** Head level, the hood square to the viewer, an S down onto the top of the pile, then the pile. */

@@ -1,7 +1,7 @@
 {
   "asset": "goblin_head",
   "reviewer": "agent",
-  "overall": 6.7,
+  "overall": 6.9,
   "scores": {
     "silhouette": {
       "score": 8,
@@ -18,12 +18,11 @@
       ]
     },
     "materials": {
-      "score": 6,
-      "reason": "Green skin, leather vest, linen shirt and red scarf separate by hue, and the scarf is now a flattened folded band instead of a rubber tube; but the skin renders as wet, evenly glossy plastic over the whole head in hero.png and the vest patches are flat grey squares.",
+      "score": 7,
+      "reason": "The scalp is matte now with a broad sheen in hero.png, and green skin, leather vest, linen shirt and red scarf separate by hue; the vest patches are still flat grey squares on the cream panel in FRONT and SIDE.",
       "fixes": [
-        "raise skin roughness (~0.55) and keep sheen only on nose, brow and lips",
-        "a leather strip with lower roughness and darkened edges on the vest",
-        "give the vest patches a cloth texture and stitched border instead of flat grey"
+        "give the vest patches a cloth texture and stitched border instead of flat grey",
+        "a leather strip with darkened edges on the vest"
       ]
     },
     "detail": {
@@ -44,7 +43,7 @@
     },
     "lod": {
       "score": 6,
-      "reason": "FAR LOD2 keeps the ears and hair, but cream shirt patches still scatter over the brown vest face by face, the scarf breaks into red flecks and the torso is a rounded block.",
+      "reason": "FAR LOD2 keeps the ears, hair and a smoother head; cream shirt patches still scatter over the brown vest with jagged edges and the scarf breaks into red flecks.",
       "fixes": [
         "average vertex colour per LOD2 face (or bake LOD2 from the LOD0 texture) so the vest stays one brown block over one cream shirt panel",
         "keep the vest's lapel edge at LOD2 so the torso is not a ball"
@@ -60,7 +59,7 @@
     }
   },
   "renders": {
-    "hero.png": "26265ef1683997a638d9d3d6973e2a2b35939b91f3fcb55c66cd194b463d74ff",
-    "sheet.png": "7c8306e9b3ec938971f5609cc5d1c6031f230b9cee2e7500c5a2bbdc7b81509f"
+    "hero.png": "e280c9cc48ccab86f0863406e004e88d4cd0f2d856650190d2cd7016ff0f207a",
+    "sheet.png": "c4d0b69b76a527177f7481f6003a64b7750a84043d228dde3f7c3594c6e6ab48"
   }
 }

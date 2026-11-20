@@ -19,7 +19,7 @@
     },
     "materials": {
       "score": 8,
-      "reason": "The CLINCHFIELD lettering now runs across the braces and reads at 3/4 in hero.png (only a hairline gap where a brace crosses), the chalk tally reads, and painted boards, a weathered grey running board and dark iron separate well.",
+      "reason": "The CLINCHFIELD lettering runs across the braces and reads at 3/4 in hero.png (a hairline gap where a brace crosses); with per-pixel shading the sheet now shows board seams, nail rows and wood grain on the sides and a grained grey running board in TOP, and painted boards, weathered running board and dark iron separate well.",
       "fixes": [
         "close the remaining hairline gap in the lettering where the braces cross it",
         "slight roughness lift on the worn running-board walk path"
@@ -35,7 +35,7 @@
     },
     "wear": {
       "score": 7,
-      "reason": "Chalk car-card marks (X17 and a tally) by the door, one fresher replaced board, grime rising from the sill and faint streaks under the door track tell a working car; rust streaks under bolts are faint at hero distance.",
+      "reason": "Chalk car-card marks (X17 and a tally) by the door, one fresher replaced board, grime rising from the sill; the sheet SIDE view now shows the pale drip streaks under the roof line and door track that were lost before, but in hero.png the rust streaks under the bolt rows are still faint.",
       "fixes": [
         "stronger rust streaks under each bolt row and the door track",
         "scuffed paint along the sill where loaders hit it"
@@ -43,7 +43,7 @@
     },
     "lod": {
       "score": 7,
-      "reason": "FAR LOD2 keeps the box and brace pattern, but the lettering becomes a row of pale blocks along the top board that still reads as a stripe, and the roof board seams vanish.",
+      "reason": "FAR LOD2 keeps the box, brace pattern and board texture, but the lettering is still a row of pale blocks along the top board that reads as a stripe, and the roof seams vanish.",
       "fixes": [
         "merge the LOD2 letter blocks into one mid-tone patch close to the lettered area average",
         "keep the roof board seams as darker per-face stripes at LOD2"
@@ -58,7 +58,7 @@
     }
   },
   "renders": {
-    "hero.png": "ca1e96f85062c2537ca4a2aeb426fe6a7a256e2b13750c3f6eaf7c96df156b61",
-    "sheet.png": "b438df5bcc2b061f5ff0e9bd9a53e19c69fe0ba78ff05323fb5f068cdc1906d7"
+    "hero.png": "5413ec9d26d3b1e089550c2d0b2726c71ef395943e10cc81e7efd063b609ff7c",
+    "sheet.png": "a98bba76f56cb5d0383f905d99cba4bf165f7edafb38fac1fd098254fb43d2c1"
   }
 }

@@ -1,7 +1,7 @@
 {
   "asset": "mountain_range_c",
   "reviewer": "agent",
-  "overall": 7.4,
+  "overall": 7.6,
   "scores": {
     "silhouette": {
       "score": 8,
@@ -18,10 +18,10 @@
       ]
     },
     "materials": {
-      "score": 7,
-      "reason": "Snow sits on both summits and the north faces with sharp edges; TOP no longer shows dark holes in the left snowfield, but hero.png still shows two soft dark blobs in it and 3/4 REAR one more, still reading as smudges, not rock. Rock faces are smooth grey.",
+      "score": 8,
+      "reason": "The left snowfield in hero.png is now clean white with fine rock specks and a broken lower edge instead of soft dark smudges; rock faces carry a mottled grey break-up. In TOP the snow patch edges are soft and slightly blocky, and the rock has no strata.",
       "fixes": [
-        "turn the remaining soft dark blobs into crisp-edged pale-grey outcrops (or remove them)",
+        "sharper, wind-scalloped snow patch edges in TOP",
         "strata or crack texture on the rock faces"
       ]
     },
@@ -55,7 +55,7 @@
     }
   },
   "renders": {
-    "hero.png": "c2a8d51d57bb3c4cfdd60b7940a1b0639dec7524deac9b563b6088dd9bdb6d7f",
-    "sheet.png": "e4b7c12cddcbab1f94e159caa789d940b085972d2b7386438708458450268aa8"
+    "hero.png": "6465dabde8efa147ac9c382569594151a2452db33ac639e35342a9fa4c334802",
+    "sheet.png": "2e14a2d9bddded442e6c728376fd5a23b1c33b74fe87903c7c115670f25605d7"
   }
 }

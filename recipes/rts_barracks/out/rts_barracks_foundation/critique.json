@@ -19,7 +19,7 @@
     },
     "materials": {
       "score": 7,
-      "reason": "The floor is now a flagstone strip with readable joints and per-flag value (sheet TOP), no longer the camouflage slab. The chevron is broken up flag by flag. Tarps are still flat saturated red boxes with a white stripe, not cloth.",
+      "reason": "Flagstone floor with readable joints and per-flag value (sheet TOP), the chevron broken up flag by flag. Tarps are a touch dustier and darker than before and the banner hem is frayed, but they are still saturated red boxes with a white stripe, not cloth.",
       "fixes": [
         "tarp cloth with value folds and lower saturation where it is sun-bleached",
         "a rougher, dusty face on the footing blocks"
@@ -56,7 +56,7 @@
     }
   },
   "renders": {
-    "hero.png": "90bd6c4ea3263e2f784afe007a26cef98479a8407ede35d4b65d31c92285298c",
-    "sheet.png": "4deb37b9181faa8fcde5c4a8183271eb381251903020b3753d07dd5426ac1e17"
+    "hero.png": "5f59190f6e8884e96029fe71adad647662aaabbeee517ed7c0e725aae6e736c4",
+    "sheet.png": "7c803ada8e2a7d0ba1aa1f3c16d7a761a486c721cd697b485b580ac99e416f92"
   }
 }

@@ -1,14 +1,14 @@
 {
   "asset": "asteroid",
   "reviewer": "agent",
-  "overall": 6.7,
+  "overall": 7.1,
   "scores": {
     "silhouette": {
       "score": 7,
-      "reason": "Lumpy body with craters and protruding glowing crystals reads as a mineable asteroid; the FRONT view still has a flat vertical cut face on its right side and the hero is a smooth potato.",
+      "reason": "Lumpy body with protruding glowing crystals; the flat vertical cut face in FRONT is gone and a rimmed crater notches the top outline in hero.png, but the outline is still mostly a smooth ovoid.",
       "fixes": [
-        "replace the large flat fracture plane with 2–3 smaller angled facets so no side reads as a cut wall",
-        "deeper craters and one or two boulder-scale lumps to break the potato outline"
+        "2–3 angled facets or one boulder-scale lump so the hero outline is not an egg",
+        "deepen the top crater so its lip breaks the SIDE outline too"
       ]
     },
     "proportions": {
@@ -19,35 +19,34 @@
       ]
     },
     "materials": {
-      "score": 6,
-      "reason": "Crystals are crisp cyan and the ore veins are now broad orange bands, but the bands read as painted stripes (a tennis-ball seam in hero.png) rather than veins, the hero regolith shows contour-line rings (iso-line banding) across the grey, and every sheet.png view still stair-steps the colour edges in square blocks.",
+      "score": 7,
+      "reason": "The pale-white paint swirls are gone: the regolith is now a mid-grey range with soft lighter patches (hero.png), and the sheet shows thin branching orange veins. In hero.png the veins are still broad soft orange bands rather than crisp cracks, and the rock surface is a smooth low-frequency wash with no grain.",
       "fixes": [
-        "break the orange bands into branching veins of varying width that follow fractures, not great circles",
-        "remove the contour-line banding in the regolith (smooth the quantised colour/height field that draws iso-rings in hero.png)",
-        "carry the per-pixel colour into the vertex colour (or sample per pixel in every renderer) so the sheet views stop stair-stepping"
+        "keep the vein lines crisp at hero distance (they blur into broad bands in hero.png)",
+        "a fine regolith grain / speckle in the albedo so the grey is not a smooth wash"
       ]
     },
     "detail": {
-      "score": 6,
-      "reason": "Crater pits read in the sheet, but at hero distance the body is a smooth blob with soft dents; no rubble shows in hero.png and the crater rims are soft.",
+      "score": 7,
+      "reason": "The sliver triangles at the crater rim are gone; the chips beside the crystal cluster now read as loose rock fragments. Craters have raised rims and steep walls, but the surface between craters is still smooth with soft dents.",
       "fixes": [
-        "a finer secondary noise octave at LOD0 for rock grain and sharper crater rims (raised lip, steeper inner wall)",
-        "rubble as irregular chips (random-plane cut cells) instead of cube-like blocks"
+        "a finer secondary noise octave at LOD0 for rock grain between craters"
       ]
     },
     "wear": {
-      "score": 5,
-      "reason": "A cyan stain round the crystal site; no ejecta rays, drill scars or tailings, and the crater ages are indistinguishable.",
+      "score": 6,
+      "reason": "The bright rim of the main crater stands out against darker surroundings as a fresher impact and the cyan stain marks the crystal site; still no drill scars or tailings at the mining site.",
       "fixes": [
-        "bright fresh ejecta rays around the youngest crater, darker space-weathered older surfaces",
-        "drill scars and tailings piles at the crystal mining sites"
+        "drill scars and tailings piles at the crystal mining sites",
+        "darker space-weathered tone on the older, rimless craters"
       ]
     },
     "lod": {
       "score": 7,
-      "reason": "FAR LOD2 now keeps the orange vein colour as per-face patches and the crystals, so the colour read survives the switch; but the faces are large and flat-shaded, giving a harsher light/dark patchwork than LOD0.",
+      "reason": "FAR LOD2 now marks the two big craters as dark colour blocks, but they render as pinched four-point dark stars (sheet FAR LOD2) rather than dents with rims; the veins are gone and the body turns browner than LOD0, so the switch still shows a plain potato.",
       "fixes": [
-        "smooth the LOD2 normals and add ~30% more faces so the patchwork softens at the switch"
+        "shape the LOD2 crater marks as round dark bowls with a pale rim (more vertices round each, or a shallow dent) instead of X-shaped stars",
+        "bake the vein lines into the LOD2 vertex colour as orange streaks and keep the LOD0 grey average instead of brown"
       ]
     },
     "technical": {
@@ -59,7 +58,7 @@
     }
   },
   "renders": {
-    "hero.png": "b3d909f733bfebe6d018b6f329177e2777c68c0c985ecece9399bb5bbd60dbe9",
-    "sheet.png": "032cc414ebaf311fd7c9cd520cf9bc130a0e99c56bb0262679c21341c24b8460"
+    "hero.png": "0612b336596b0fd26b9a244a97ae66297510981ae052d09afcf69ffb7fc9e5d4",
+    "sheet.png": "5fbc1631947e1605a34b49828c0a49603a4e497ac6cdfe31fb935ab457f8e646"
   }
 }

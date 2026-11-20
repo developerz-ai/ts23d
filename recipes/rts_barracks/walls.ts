@@ -8,6 +8,7 @@
 
 import {
   box,
+  DEFAULT_SHEET,
   dmath,
   type Lod,
   type Mesh,
@@ -18,10 +19,11 @@ import {
   type Rng,
   type StripId,
   stripRect,
-  type Vec2,
   type Vec3,
 } from '@developerz.ai/ts23d';
+import { tessellate } from '../_lib/finish/finish.ts';
 import { BONE, BONE_DARK, GLOW, IRON, pebble, SLATE, SOOT } from '../_lib/rts/style.ts';
+import { projectStripUV } from '../_lib/terrain/strip-inset.ts';
 import {
   type Bay,
   BROKEN_PLINTH,
@@ -648,8 +650,24 @@ function cracks(): Mesh {
 /** The slate plinth the hall stands on (every stage); `broken` knocks its front corner off. */
 export function plinth(lod: Lod, broken = false): Mesh {
   const size: Vec3 = [(HALF_X + PLINTH_OUT) * 2, (HALF_Y + PLINTH_OUT) * 2, PLINTH];
+  // The broken plinth: its prism fan ran 10 m triangles from the torn corner, so the stone
+  // strip (squeezed onto one band) and the wear's vertex colour smeared into a stretched grey
+  // along the bare rim. Split into ~1.4 m triangles (LOD0) and projected per face at true
+  // scale, on the rough `cliff` strip, the rim reads as fractured stone with its own dust.
+  const torn = prism({
+    profile: BROKEN_PLINTH,
+    depth: PLINTH,
+    plane: 'xy',
+    centred: false,
+    color: SLATE,
+    strip: 'cliff',
+  });
   const slab = broken
-    ? prismPlan(BROKEN_PLINTH, PLINTH)
+    ? projectStripUV(
+        lod === 0 ? tessellate(torn, 1.4) : torn,
+        'cliff',
+        DEFAULT_SHEET.strips.cliff?.scaleMetres ?? 1,
+      )
     : box({
         size,
         at: [0, 0, 0],
@@ -680,7 +698,3 @@ export function plinth(lod: Lod, broken = false): Mesh {
 }
 
 const placeYaw = (m: Mesh, p: Vec3, yaw: number): Mesh => place(m, { at: p, yaw });
-
-/** A plan polygon extruded up `h` from z 0 (slate, stone strip). */
-const prismPlan = (profile: readonly Vec2[], h: number): Mesh =>
-  prism({ profile, depth: h, plane: 'xy', centred: false, color: SLATE, strip: 'stone' });

@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'bun:test';
-import type { Mesh } from '../core/index.ts';
+import { dmath, type Mesh } from '../core/index.ts';
 import { type TextOptions, text } from './text.ts';
-import { risers } from './text-pixel-wrap.ts';
+import { mergeRisers, risers } from './text-pixel-wrap.ts';
+import { boxcarSideLettering } from './text-wrap-fixtures.ts';
 
 const sign = (s: string, o: Partial<TextOptions> = {}): Mesh =>
   text(s, { origin: [0, 0, 0], height: 0.7, color: [1, 1, 1], ...o });
@@ -42,33 +43,59 @@ describe('text wrap', () => {
     expect(s.count).toBeGreaterThanOrEqual(4);
     expect(s.agree).toBe(true);
     // Risers stand 2 mm clear of the pixel column edges that bound the post, never inside it.
-    for (const y of s.ys) expect(y < 0.2 || y > 0.3).toBe(true);
+    for (const y of s.ys) expect(y <= 0.2 + 1e-9 || y >= 0.3 - 1e-9).toBe(true);
     // From the lower decal (2 mm) to the higher one (72 mm): no gap left to see through.
     const xs = Array.from(m.positions).filter((_, i) => i % 3 === 0);
     expect(Math.min(...xs)).toBeCloseTo(0.002, 6);
     expect(Math.max(...xs)).toBeCloseTo(0.072, 6);
   });
 
-  it('fails before D407: the riser and the higher paint share an edge, no slit between them', () => {
+  it('fails before D407: each riser meets the higher paint along its edge and stands on the lower', () => {
     const m = sign('HHH', { surface: post, wrap: true });
     const P = (i: number): number[] => [0, 1, 2].map((k) => m.positions[i * 3 + k] ?? 0);
-    // Corners at the higher paint's height (x = 72 mm) on each face lying in that plane.
-    const top = new Set<string>();
-    for (let t = 0; t < m.indices.length; t += 3) {
-      const c = [0, 1, 2].map((k) => P(m.indices[t + k] ?? 0));
-      if (c.every((p) => Math.abs((p[0] ?? 0) - 0.072) < 1e-6))
-        for (const p of c) top.add(`${(p[1] ?? 0).toFixed(5)},${(p[2] ?? 0).toFixed(5)}`);
-    }
-    // Every riser's top edge (a vertex at 72 mm off a stencil column edge) is a corner of
-    // painted surface in that plane: the riser joins the paint it rises to.
-    let riserTops = 0;
-    for (let i = 0; i < m.positions.length / 3; i++) {
-      const [x = 0, y = 0, z = 0] = P(i);
-      if (Math.abs(x - 0.072) > 1e-6 || Math.abs(y - 0.198) > 1e-6) continue;
-      riserTops++;
-      expect(top.has(`${y.toFixed(5)},${z.toFixed(5)}`)).toBe(true);
-    }
-    expect(riserTops).toBeGreaterThan(0);
+    const tris = Array.from({ length: m.indices.length / 3 }, (_, t) =>
+      [0, 1, 2].map((k) => P(m.indices[t * 3 + k] ?? 0)),
+    );
+    const inPlane = (x: number) =>
+      tris.filter((c) => c.every((p) => Math.abs((p[0] ?? 0) - x) < 1e-6));
+    // (y, z) of q on the segment a–b, or inside triangle c, within a micron (float32 positions).
+    const onSeg = (q: number[], a: number[], b: number[]): boolean => {
+      const [ay = 0, az = 0] = [a[1], a[2]];
+      const [dy, dz] = [(b[1] ?? 0) - ay, (b[2] ?? 0) - az];
+      const t = (((q[1] ?? 0) - ay) * dy + ((q[2] ?? 0) - az) * dz) / (dy * dy + dz * dz);
+      return (
+        t >= -1e-6 &&
+        t <= 1 + 1e-6 &&
+        dmath.hypot(ay + dy * t - (q[1] ?? 0), az + dz * t - (q[2] ?? 0)) < 1e-6
+      );
+    };
+    const inside = (q: number[], c: number[][]): boolean => {
+      const s = [0, 1, 2].map((k) => {
+        const a = c[k] ?? [];
+        const b = c[(k + 1) % 3] ?? [];
+        return (
+          ((b[1] ?? 0) - (a[1] ?? 0)) * ((q[2] ?? 0) - (a[2] ?? 0)) -
+          ((b[2] ?? 0) - (a[2] ?? 0)) * ((q[1] ?? 0) - (a[1] ?? 0))
+        );
+      });
+      return s.every((v) => v >= -1e-9) || s.every((v) => v <= 1e-9);
+    };
+    const high = inPlane(0.072);
+    const low = inPlane(0.002);
+    const risersSeen = tris.filter((c) => {
+      const xs = c.map((p) => p[0] ?? 0);
+      return Math.max(...xs) - Math.min(...xs) > 0.03;
+    });
+    expect(risersSeen.length).toBeGreaterThan(0);
+    for (const c of risersSeen)
+      for (const q of c)
+        if ((q[0] ?? 0) > 0.037)
+          // Top: on an edge of the higher paint (shared line, no slit).
+          expect(
+            high.some((h) => [0, 1, 2].some((k) => onSeg(q, h[k] ?? [], h[(k + 1) % 3] ?? []))),
+          ).toBe(true);
+        // Foot: on the lower paint, so nothing shows between them either.
+        else expect(low.some((l) => inside(q, l))).toBe(true);
   });
 
   it('keeps the default bytes: wrap off, or on with no surface or no step', () => {
@@ -98,5 +125,30 @@ describe('text wrap', () => {
     // Pieces that only meet at a corner, or do not touch, share no step.
     expect(risers([a, { ...b, v0: 1 }], 0.002, 0.002)).toEqual([]);
     expect(risers([a, { ...b, u0: 1.5 }], 0.002, 0.002)).toEqual([]);
+  });
+
+  it('fails before D456: wrapping a boxcar side costs ≤ 1.3× the flat stencils, nothing at LOD2', () => {
+    const tris = (lod: 0 | 1 | 2, wrap: boolean): number =>
+      boxcarSideLettering(lod, wrap).indices.length / 3;
+    for (const lod of [0, 1] as const)
+      expect(tris(lod, true)).toBeLessThanOrEqual(tris(lod, false) * 1.3);
+    expect(tris(2, true)).toBe(tris(2, false));
+  });
+
+  it('merges risers that continue one another along the same step into one', () => {
+    const r = { axis: 'u', at: 1, w0: 0.002, w1: 0.072, out: -1 } as const;
+    expect(
+      mergeRisers([
+        { ...r, a0: 0.2, a1: 0.3 },
+        { ...r, a0: 0, a1: 0.1 },
+        { ...r, a0: 0.1, a1: 0.2 },
+        { ...r, a0: 0.5, a1: 0.6 },
+        { ...r, a0: 0.6, a1: 0.7, w1: 0.036 },
+      ]),
+    ).toEqual([
+      { ...r, a0: 0, a1: 0.3 },
+      { ...r, a0: 0.5, a1: 0.6 },
+      { ...r, a0: 0.6, a1: 0.7, w1: 0.036 },
+    ]);
   });
 });

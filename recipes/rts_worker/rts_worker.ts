@@ -29,6 +29,7 @@ import {
   type Rule,
   restrip,
   role,
+  teamWearOf,
   topDust,
   wearOf,
 } from '../_lib/rts/finish.ts';
@@ -48,7 +49,7 @@ import {
   SLATE,
   SUNSTONE,
   TEAM,
-  TEAM_PAINT,
+  TEAM_PAINT_WORN,
   TEAM_VARIANTS,
   teamShade,
   tube,
@@ -390,7 +391,7 @@ export const rts_worker = defineAsset({
   ],
   // LOD0 measured 10.1k: weather() splits edges past 16 cm so the wear has vertices.
   budget: { triangles: [11500, 3000, 380] },
-  paint: TEAM_PAINT,
+  paint: TEAM_PAINT_WORN,
   variants: TEAM_VARIANTS,
   // Saltmarch lamps glow at 1.2 across the RTS set: lit amber, not blown to white.
   glow: [{ parts: ['goggles', 'tool_gem'], color: GLOW, strength: 1.2 }],
@@ -479,6 +480,19 @@ export const rts_worker = defineAsset({
     const unit = wearOf('unit', 'delver', 23);
     const cloth = wearOf('cloth', 'delver_kit', 24);
     kit.commit(ctx, [
+      {
+        // The team hard hat and pack lid (wear slot): a scuffed rim and visor and fine scratches
+        // to the bare shell, sized for the part (not the hero framing, which made the chips
+        // blotches a third of the dome); they keep their colour in every livery.
+        painted: true,
+        wear: teamWearOf('delver_team', 25, [0, 0, 0], {
+          chips: 0.16,
+          dust: 0,
+          scratches: 0.08,
+          read: 'close',
+        }),
+        pick: (n) => lod < 2 && /^(cap|pack_lid)$/.test(n),
+      },
       {
         wear: {
           ...unit,

@@ -54,6 +54,7 @@ glowing exhausts; an upswept tail boom with a V-tail and twin thrusters; a chin 
 | portholes | `#3f7598` |
 | canopy glazing | `#1c3649` smoked (surface `glass`, `optics.glass`: transmission 0.3, roughness 0.1); `#101d28` opaque at LOD2 |
 | cockpit shade behind the canopy | `#0d0f12` (`canopy_shade`, LOD0–1) |
+| cockpit fittings on the shade | seats `#5d574c`, headrests `#34322e`, console and pedestal `#2a2d31`, screens `#3d9fc4` (LOD0–1) |
 | thruster glow | `#6fd2ff` (glow strength 3; nav lights 2, tail and cabin lamps 1.5) |
 
 ## Parts the engine needs
@@ -65,7 +66,7 @@ glowing exhausts; an upswept tail boom with a V-tail and twin thrusters; a chin 
 | `ramp` | rear loading ramp, pivot on the hinge line | rests closed (40°); one-way sway 62.5° about −Y down to the ground (−22.5°) |
 | `turret` › `gun` | chin turret, twin guns | turret sway ±50° about Z, gun ±12° about Y |
 | `canopy` | windscreen + side glass | surface `glass` at LOD0–1, opaque colour at LOD2 |
-| `canopy_shade` | matt cockpit shadow on the nose skin under the panes (LOD0–1) | static |
+| `canopy_shade` | matt cockpit shadow on the nose skin under the panes, with the two crew seats, centre pedestal and the console with two screens laid on it (the glass is 2 cm over the skin: no room in the round) (LOD0–1) | static |
 | sockets | `nav_l` red (port = +Y), `nav_r` green, `nav_tail` white strobe, `landing_light` spot, `cabin_light`, `muzzle_gun` mount | KHR_lights_punctual |
 | emitters | `thrust_l/_r` (always), `thrust_tail_l/_r` (moving), `downwash_l/_r` dust (moving), `muzzle` (event) | |
 

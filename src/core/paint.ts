@@ -2,20 +2,28 @@
 // variants })`, normalised to linear RGB, validated with a fix, and applied to a compiled asset's
 // vertex colours when a preview asks for one variant. The GLB writes them as KHR_materials_variants.
 // A slot may carry a lacquer (`{ colour, clearcoat, clearcoatRoughness, metallicFlake }`): car paint
-// → KHR_materials_clearcoat on the slot's material, kept by every livery.
+// → KHR_materials_clearcoat on the slot's material, kept by every livery. A slot with `wear: true`
+// lets its parts carry wear that is not paint (bare steel, primer, rust, dust): see paint-wear.ts.
 
 import * as dmath from './dmath.ts';
 import { Ts23dError } from './errors.ts';
 import { type ResolvedFinish, resolveFinish } from './finish.ts';
+import { bareVertices, hueSat, settleWear, tone, WEAR_MIN_SATURATION } from './paint-wear.ts';
 import type { Part } from './part.ts';
 import type { Vec3 } from './vec.ts';
 
 /** '#rrggbb' (sRGB, as on a paint chip) or linear RGB 0..1 (what `hex()` returns). */
 export type PaintColor = string | Vec3;
 
-/** A lacquered slot: car paint. Liveries change the colour and keep the lacquer. */
+/** A slot with options: a lacquer (car paint; liveries change the colour and keep it) or wear. */
 export interface PaintFinish {
   readonly colour: PaintColor;
+  /**
+   * Wear that is not paint (opt-in): triangles whose colour is no darkening of the slot (bare
+   * steel, primer, rust, pale dust, sun-fade) keep that colour in every livery and export in the
+   * plain trim material; the rest stays paint. Default false: every vertex is a tone of the slot.
+   */
+  readonly wear?: boolean;
   /** Clear lacquer 0..1 (KHR_materials_clearcoat). */
   readonly clearcoat?: number;
   /** Lacquer roughness 0..1, default 0.03. */
@@ -36,6 +44,8 @@ export interface PaintSet {
   readonly variants: Readonly<Record<string, Readonly<Record<string, Vec3>>>>;
   /** Lacquered slots only (absent when no slot declares a finish). */
   readonly finish?: Readonly<Record<string, ResolvedFinish>>;
+  /** Slots declared `wear: true`, in declaration order (absent when none). */
+  readonly wear?: readonly string[];
 }
 
 const isFinish = (v: PaintColor | PaintFinish | undefined): v is PaintFinish =>
@@ -113,6 +123,7 @@ export function paintSetOf(
   }
   const out: Record<string, Vec3> = {};
   const finish: Record<string, ResolvedFinish> = {};
+  const wear: string[] = [];
   for (const s of slots) {
     if (!NAME.test(s))
       throw invalid(
@@ -123,6 +134,25 @@ export function paintSetOf(
     out[s] = linear(`paint.${s} in '${asset}'`, isFinish(given) ? given.colour : given);
     const f = isFinish(given) ? slotFinish(`'${asset}' paint.${s}`, given) : null;
     if (f) finish[s] = f;
+    if (isFinish(given) && given.wear !== undefined && typeof given.wear !== 'boolean')
+      throw invalid(
+        `'${asset}' paint.${s}.wear is ${JSON.stringify(given.wear)}`,
+        'use wear: true',
+      );
+    if (isFinish(given) && given.wear) {
+      if (f)
+        throw invalid(
+          `'${asset}' paint.${s} has both wear and a lacquer: its bare triangles leave the lacquered slot material in the GLB, but renders would still lacquer them`,
+          'drop the lacquer (clearcoat, metallicFlake) or the wear on this slot',
+        );
+      const sat = hueSat(out[s] as Vec3).sat;
+      if (sat < WEAR_MIN_SATURATION)
+        throw invalid(
+          `'${asset}' paint.${s} is a wear slot but its colour is near-grey (saturation ${sat.toFixed(2)} < ${WEAR_MIN_SATURATION}): steel, primer and dust could not be told from the paint`,
+          'make the saturated livery the default colour and the neutral one a variant, or drop wear',
+        );
+      wear.push(s);
+    }
   }
   const vs: Record<string, Readonly<Record<string, Vec3>>> = {};
   for (const [v, over] of Object.entries(variants ?? {})) {
@@ -139,7 +169,12 @@ export function paintSetOf(
     }
     vs[v] = repaint;
   }
-  return { paint: out, variants: vs, ...(Object.keys(finish).length ? { finish } : {}) };
+  return {
+    paint: out,
+    variants: vs,
+    ...(Object.keys(finish).length ? { finish } : {}),
+    ...(wear.length ? { wear } : {}),
+  };
 }
 
 /** Every painted part must name a declared slot and be opaque (glass tint stays vertex colour). */
@@ -157,11 +192,12 @@ export function checkPaintedParts(asset: string, parts: readonly Part[], l: Pain
         'paint slots are opaque only: drop `paint` (tint glass with its vertex colour)',
       );
     const slot = l.paint[p.paint];
-    const over = slot && p.mesh ? brightest(p.mesh.colors, slot) : 0;
+    // A wear slot's bright vertices are bare wear, not clamped paint (settleWear).
+    const over = slot && p.mesh && !l.wear?.includes(p.paint) ? brightest(p.mesh.colors, slot) : 0;
     if (over > 1.01)
       throw invalid(
         `part '${p.name}' in '${asset}' has colours ${over.toFixed(2)}× brighter than paint slot '${p.paint}' (they would clamp)`,
-        'move the unpainted bits (bare iron, chrome, lettering) into their own part, or raise the slot colour',
+        `move the unpainted bits (bare iron, chrome, lettering) into their own part, raise the slot colour, or declare the slot with wear: paint: { ${p.paint}: { colour, wear: true } }`,
       );
   }
 }
@@ -175,22 +211,6 @@ function brightest(colors: Float32Array, slot: Vec3): number {
     if (s >= 0.1 * top) max = Math.max(max, (colors[i] ?? 0) / s);
   }
   return max;
-}
-
-/**
- * What a painted vertex stores in COLOR_0: its colour ÷ the slot colour, per channel, so the
- * material's baseColorFactor (= slot colour) restores it exactly and a variant's factor keeps the
- * grime, wear and shading tones. Channels the slot barely has (< 10 % of its strongest, e.g. the
- * blue of a pure red) take the mean ratio of the others instead of dividing by ~0. Clamped to 0..1:
- * a vertex brighter than its slot (lettering, chrome) belongs in another slot or none.
- */
-export function tone(c: Vec3, slot: Vec3): Vec3 {
-  const top = Math.max(...slot);
-  const sure = [0, 1, 2].filter((i) => (slot[i] ?? 0) >= 0.1 * top);
-  const mean = sure.reduce((t, i) => t + (c[i] ?? 0) / (slot[i] ?? 1), 0) / sure.length;
-  const ch = (i: number): number =>
-    Math.min(1, Math.max(0, sure.includes(i) ? (c[i] ?? 0) / (slot[i] ?? 1) : mean));
-  return [ch(0), ch(1), ch(2)];
 }
 
 /** The asset as variant `name` looks: each painted vertex's `tone` × the variant colour. */
@@ -212,9 +232,15 @@ export function repaint(
     const to = p.paint ? over[p.paint] : undefined;
     const from = p.paint ? l.paint[p.paint] : undefined;
     if (!p.mesh || !to || !from) return p;
+    // A wear slot's bare triangles are written in the trim material: no livery reaches them.
+    const keep = p.paint && l.wear?.includes(p.paint) ? bareVertices(p.mesh, from) : null;
     // Exactly what an engine shows: the stored tone × the variant's baseColorFactor.
     const colors = new Float32Array(p.mesh.colors.length);
     for (let i = 0; i < colors.length; i += 3) {
+      if (keep?.[i / 3]) {
+        colors.set(p.mesh.colors.subarray(i, i + 3), i);
+        continue;
+      }
       const t = tone(
         [p.mesh.colors[i] ?? 0, p.mesh.colors[i + 1] ?? 0, p.mesh.colors[i + 2] ?? 0],
         from,
@@ -224,3 +250,23 @@ export function repaint(
     return { ...p, mesh: { ...p.mesh, colors } };
   });
 }
+
+/** Settle every part painted with a wear slot (paint-wear.ts); other parts pass through. */
+export function settlePaintWear(parts: readonly Part[], l: PaintSet | null): Part[] {
+  const wear = l?.wear;
+  return parts.map((p) => {
+    const slot = p.paint !== undefined && wear?.includes(p.paint) ? l?.paint[p.paint] : undefined;
+    return p.mesh && slot ? { ...p, mesh: settleWear(p.mesh, slot) } : p;
+  });
+}
+
+export {
+  bareVertices,
+  hueSat,
+  isBare,
+  settleWear,
+  splitWear,
+  tone,
+  WEAR_HUE,
+  WEAR_MIN_SATURATION,
+} from './paint-wear.ts';

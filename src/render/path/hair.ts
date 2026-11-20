@@ -10,12 +10,20 @@ import { dot3 } from './frame.ts';
 
 /** Scale-tilt of the cuticles, radians (Marschner: −5…−10°; R shifts by α, TT −α/2, TRT −3α/2). */
 const ALPHA = -0.07;
-/** Share of the diffuse (multiple-scattering) term. */
-const DIFFUSE = 0.8;
+/**
+ * Share of the diffuse (multiple-scattering) term: what the lobes leave of a white fibre's energy,
+ * so white fibres absorb nothing (hair.test.ts). 0.8 lost a tenth of it (D476).
+ */
+const DIFFUSE = 0.87;
 /** Scale of the R / TT / TRT lobes (white fibres stay under unit albedo, hair.test.ts). */
 const LOBES = 0.12;
-/** Share of the diffuse term scattered back to the side the light came from. */
-const BACK = 0.85;
+/**
+ * Share of the diffuse term scattered back to the side the light came from. A card stands for the
+ * top of a coat: what it scatters inward meets more fur and comes back out, so it returns nearly
+ * all of it, as matte skin of its colour would (0.85 shaded cards at 0.7 of that skin, D476). TT
+ * still carries a backlit card's glow.
+ */
+const BACK = 0.97;
 const PDF = 1 / (4 * Math.PI);
 
 const gauss = (b: number, x: number): number =>

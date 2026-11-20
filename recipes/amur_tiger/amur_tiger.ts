@@ -164,8 +164,9 @@ export const amur_tiger = defineAsset({
   // Shape language as measured: rounded masses dominate a relaxed big cat's outline (claws and teeth
   // sheathed; the threat reads in the face, not the silhouette).
   art: { focal: 'head', shape: 'friendly', grounded: true },
-  // The raked right shoulder and the muddy legs to the lens, from a crouching height.
-  hero: { azDeg: -50, elDeg: 11 },
+  // The raked right shoulder, the notched right ear and the muddy legs to the lens, from a little
+  // above the head (lower, the lens looked up under the white chin and read it as a plate).
+  hero: { azDeg: -48, elDeg: 15 },
   build(ctx) {
     const lod = ctx.lod;
     const far = lod === 2;
@@ -204,17 +205,21 @@ export const amur_tiger = defineAsset({
       ctx.part('eye_r', eyeMesh(lod, -1), { at: flip(eye), finish: 'cornea' });
     }
     // Ears: authored about their base in the head frame, pitched with the head.
-    // The left ear carries a healed notch (field.ts tells the rest of that story).
+    // The right ear, the side the hero shows, carries a healed notch (field.ts tells the rest of
+    // that story).
     const base = EAR.base;
     const about = (m: Mesh): Mesh => place(m, { at: [-base[0], -base[1], -base[2]] });
-    const local = about(earMesh(lod));
-    ctx.part('ear_l', place(about(earMesh(lod, true)), { pitch: HEAD_PITCH, scale: HEAD_SCALE }), {
+    ctx.part('ear_l', place(about(earMesh(lod)), { pitch: HEAD_PITCH, scale: HEAD_SCALE }), {
       at: headToWorld(base),
       connect: { as: 'grown', to: 'head' },
     });
-    ctx.part('ear_r', place(flipY(local), { pitch: HEAD_PITCH, scale: HEAD_SCALE }), {
-      at: flip(headToWorld(base)),
-      connect: { as: 'grown', to: 'head' },
-    });
+    ctx.part(
+      'ear_r',
+      place(flipY(about(earMesh(lod, true))), { pitch: HEAD_PITCH, scale: HEAD_SCALE }),
+      {
+        at: flip(headToWorld(base)),
+        connect: { as: 'grown', to: 'head' },
+      },
+    );
   },
 });

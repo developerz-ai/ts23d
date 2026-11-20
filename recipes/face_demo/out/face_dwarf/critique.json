@@ -1,13 +1,14 @@
 {
   "asset": "face_dwarf",
   "reviewer": "agent",
-  "overall": 6.3,
+  "overall": 6.6,
   "scores": {
     "silhouette": {
       "score": 7,
-      "reason": "The tapered beard reads and the moustache no longer pokes out in SIDE; the hair is a flat slicked cap that reads as a helmet in hero.png.",
+      "reason": "Hair locks break the cap outline, the moustache sits on the lip and the beard reads in every view; the temple flyaway is gone, but in hero.png the beard still hangs as two separate clumps (jaw and chin) with a gap between them.",
       "fixes": [
-        "add volume and a few loose locks to the hair cap so it reads as hair at 3/4"
+        "fill the beard between the cheek and chin clumps so it reads as one mass",
+        "clip the few strands that stick out at the nape in SIDE"
       ]
     },
     "proportions": {
@@ -18,44 +19,46 @@
       ]
     },
     "materials": {
-      "score": 6,
-      "reason": "The face now has T-zone sheen, a red lip line and warmth at the nose; but the shoulders and chest are shiny plastic and the hair cards are flat orange strips.",
+      "score": 7,
+      "reason": "The collar is now a real olive band with a clean hem edge in hero.png and FRONT, and the nose and cheeks read wind-reddened rather than rouged; the cheek warmth still sits as two soft round patches low on the cheeks in FRONT, and the tunic is a flat ribbed red with an airbrushed pale wash over the shoulders.",
       "fixes": [
-        "rougher skin on the shoulders and chest (sheen only on the T-zone)",
-        "hair strip with anisotropic sheen and darker roots"
+        "move the cheek warmth up onto the cheekbone and break it with mottling so no round patches show",
+        "a wool strip with fibre noise on the tunic instead of the flat rib"
       ]
     },
     "detail": {
       "score": 6,
-      "reason": "Beard and hair cards with varied locks; the face has no pores or wrinkles at the hero distance.",
+      "reason": "Moustache, beard and new hair locks hold; the tunic has a collar but no seams, folds or hem, and the face has no wrinkles at the portrait distance.",
       "fixes": [
-        "LOD0 wrinkle/pore displacement on the face driven by age"
+        "LOD0 wrinkle/pore displacement on the face driven by age",
+        "seams and a few folds on the tunic"
       ]
     },
     "wear": {
-      "score": 6,
-      "reason": "A seeded scar now crosses the brow in FRONT; no wind-reddened weathering.",
+      "score": 7,
+      "reason": "Wind-reddened nose and cheeks, pale scar marks on the brow and nose bridge in FRONT, and collar grime and sun-faded shoulders now show on the tunic; the beard and hair are clean and unkempt only by card noise.",
       "fixes": [
-        "wind-reddened, weathered skin on the cheeks and nose"
+        "dirt at the tunic hem and a few grey hairs in the beard"
       ]
     },
     "lod": {
       "score": 5,
-      "reason": "FAR LOD2 is still a distance-field re-mesh: the face breaks into flat patches of different tone and the features smear.",
+      "reason": "FAR LOD2 face is smooth and the eyes and nose hold; the far beard is now notched with a moustache, but it is far shorter than the chest-length LOD0 beard and a lighter tan, so it reads as a fist held at the mouth; the hair is still a plain cap.",
       "fixes": [
-        "LOD2 from an authored coarse topology (decimated quad base mesh) instead of the distance-field re-mesh, keeping vertex colour smooth"
+        "lengthen the LOD2 beard to match the LOD0 silhouette (to the chest) and match its brown",
+        "keep a few locks on the LOD2 hair cap"
       ]
     },
     "technical": {
       "score": 7,
-      "reason": "QA clean; 77k / 15k / 4k triangles over 4 draws; heavy for a bust.",
+      "reason": "QA clean; 76.5k / 15.5k / 3.4k tris, 4 / 4 / 3 draws; heavy for a bust.",
       "fixes": [
         "coarser beard cell at LOD1 and fewer beard cards at LOD0"
       ]
     }
   },
   "renders": {
-    "hero.png": "3fb007891474d7039307df1e59355405b89fb811c45cc0ff47412b29b9a9fc7c",
-    "sheet.png": "7a58bff922171bd1e652aefce6d8f97dd10b475ea033ced0bca8fc788e29907b"
+    "hero.png": "4bcc5a9a41a089cf32b173ca9a612e7260719a46b7a27b2e37171b42d555d9bb",
+    "sheet.png": "f81267bab92cb90313661f3e704ad3fd31c939c4b45a3f2c6368de9b1634dff9"
   }
 }

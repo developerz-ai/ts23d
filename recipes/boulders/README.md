@@ -34,12 +34,15 @@ the core-stone 55 cm. Material: `granite.ts`, a project strip with isotropic fea
 texels), so the SDF's box-projected UVs never show; the library `cliff` strip drew joint networks
 that read as painted outlines. Age in vertex colour: soil splash at the foot, moss on north faces,
 in hollows and in damp cushions, lichen rosettes on sunny tops, a dark damp band over the bottom
-25 cm; LOD2 thins the moss to keep LOD0's mean value. Cells scale with each rock's largest side
+25 cm; LOD2's 0.3 m cells miss most moss and lichen, so a broad green-grey film (18 % moss)
+keeps LOD0's mean tint. Cells scale with each rock's largest side
 (× 0.8–1.45 of 1.5 m). Skirts: grus (decomposed granite) on the `sand` strip reaching ~0.32 m past
 each rock in a lobed outline (three soft waves, no saw-tooth rim), 1 mm over the ground, damp and
 dark at the foot, drying to a grey-washed dust over the outer half so they fade into the ground
 instead of ending as a hard mat; six pebbles each (three at LOD1) in mixed greys and browns,
-resting on the soil. Nothing goes below z = 0, so the studio floor (the asset's lowest point)
+resting on the soil. LOD2's skirt is one fan of long triangles, which cannot carry the strip at
+true scale (V squeezed into each drew plank-like streaks): it is flat colour on the `plain` row,
+the mid soil tone times the sand strip's mean albedo. Nothing goes below z = 0, so the studio floor (the asset's lowest point)
 is the skirts' own plane and they cast no drop shadow.
 
 ## Parts the engine needs

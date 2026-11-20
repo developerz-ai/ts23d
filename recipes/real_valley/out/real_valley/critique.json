@@ -19,7 +19,7 @@
     },
     "materials": {
       "score": 8,
-      "reason": "Granite now carries vertical streaking and tone variation (TOP, 3/4 REAR); forest, meadow and grass separate.",
+      "reason": "Granite carries tone variation and streaking with green patches in hero.png; forest, meadow (dappled yellow-green) and grass separate, and the skirt now shows strata in the sheet.",
       "fixes": [
         "exfoliation sheets (lighter curved bands) on the domes"
       ]
@@ -42,9 +42,9 @@
     },
     "lod": {
       "score": 8,
-      "reason": "FAR LOD2 no longer breaks the land cover into blocky checker squares: forest, meadow and granite stay soft blocks; the faces still show faceted shading.",
+      "reason": "FAR LOD2 is now smooth-shaded (no faceting) and forest, meadow and granite stay soft blocks; the Merced thins to a broken dark line and the forest loses its tree specks.",
       "fixes": [
-        "smooth the LOD2 normals so the faceting does not show at the switch"
+        "keep the river as a continuous strip at LOD2"
       ]
     },
     "technical": {
@@ -56,7 +56,7 @@
     }
   },
   "renders": {
-    "hero.png": "9c608656ab8ef53014238908b88f971e836d6c00a2a70fd79b0a06951f8264f4",
-    "sheet.png": "aa63643923beab0e6b27b40c10cbd5566adf1415dd1021d2d76eba9aa5b5491d"
+    "hero.png": "fec5b243fd8bb6303823774cbf8146a5c59f3804dda5719758d69ce597c50879",
+    "sheet.png": "f34ce4db63d45ba285cc76db89c8440017cf2aa6cd2d959b9d399eb83491729d"
   }
 }

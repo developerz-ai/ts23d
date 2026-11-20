@@ -37,10 +37,16 @@ import { brokenLimb, deadLimb, fallenLimb, lichen, trunkAt } from '../_lib/trees
 
 const size = { height: 20, spread: 24, dbh: 1.3 };
 /** Field grass under the crown, worn to bare soil and brown litter in patches near the bole. */
+/** The moss strip's mean albedo (#4e6625, read off the sheet; grass has the same mean). */
+const MOSS_MEAN = hex('#4e6625');
+const FLOOR_MEAN = hex('#e5e2c6');
 const FLOOR: Floor = {
   radius: 8,
   sides: [18, 12, 8],
-  strip: materialVariant('grass', 3),
+  // Short turf seen from above: the isotropic `moss` strip. `grass` is painted side-on (blades
+  // and dry tufts along V), which a ground plane showed as straight brown stripes.
+  strip: materialVariant('moss', 3),
+  far: [0, 1, 2].map((k) => (FLOOR_MEAN[k] ?? 0) * (MOSS_MEAN[k] ?? 0)) as unknown as Vec3,
   mix: [hex('#7c5e40'), hex('#a8885e'), hex('#d8d2a0'), hex('#f2f6e0')],
   rim: hex('#ffffff'),
   wobble: 0.12,

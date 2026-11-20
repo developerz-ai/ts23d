@@ -82,6 +82,35 @@ describe('lockPaint', () => {
   });
 });
 
+describe('wearPaint mud', () => {
+  const top = 0.3;
+  const paint = wearPaint({ seed: 5, mud: { top, colour: [0.4, 0.35, 0.3] } });
+  /** Mean departure from the coat at height z over a strip of points round the leg. */
+  const stain = (z: number): number => {
+    let sum = 0;
+    for (let i = 0; i < 300; i++) {
+      const c = paint([0.011 * i, 0.017 * i, z], [1, 0, 0], BASE);
+      sum += Math.abs(c[0] - BASE[0]) + Math.abs(c[1] - BASE[1]) + Math.abs(c[2] - BASE[2]);
+    }
+    return sum / 300;
+  };
+
+  it('is graded from the toes: heaviest on the paw, then thinning up the leg (no sock line)', () => {
+    // Failure first: the old band was solid to 0.52 × top, so the paw and mid-band matched.
+    expect(stain(0.02)).toBeGreaterThan(stain(top * 0.5) * 1.25);
+    expect(stain(top * 0.5)).toBeGreaterThan(stain(top * 0.95) * 1.25);
+  });
+
+  it('is darker than the clay on the toes, never paler than the clay anywhere', () => {
+    for (const z of [0.01, top * 0.4, top * 0.8, top * 1.4])
+      for (let i = 0; i < 200; i++) {
+        const c = paint([0.013 * i, 0.007 * i, z], [1, 0, 0], BASE);
+        expect(c[0]).toBeLessThanOrEqual(Math.max(BASE[0], 0.4) + 1e-6);
+      }
+    expect(paint([0, 0, 0.005], [1, 0, 0], BASE)[0]).toBeLessThan(0.34);
+  });
+});
+
 describe('wearPaint on a far mesh (coarse)', () => {
   const spec = {
     seed: 3,
@@ -107,5 +136,34 @@ describe('wearPaint on a far mesh (coarse)', () => {
     expect(farSplashed).toBe(0);
     // On the ground the far mesh is still muddy.
     expect(far([0.1, 0, 0.01], UP, BASE)).not.toEqual(BASE);
+  });
+});
+
+// D482: a pale dried-clay patch on the far mesh's flat cells read as a slab; a fixed pale scar
+// core read as a bright paint stroke on a grey coat.
+describe('wearPaint far patches and regrowth scars', () => {
+  const patch = {
+    at: [0, 0, 1] as Vec3,
+    radius: 0.1,
+    colour: [0.9, 0.9, 0.9] as Vec3,
+    strength: 1,
+  };
+  it('skips a `far: false` patch on the far mesh only', () => {
+    const near = wearPaint({ patches: [{ ...patch, far: false }] });
+    const far = wearPaint({ patches: [{ ...patch, far: false }] }, true);
+    expect(near([0, 0, 1], UP, BASE)).not.toEqual(BASE);
+    expect(far([0, 0, 1], UP, BASE)).toEqual(BASE);
+    expect(wearPaint({ patches: [patch] }, true)([0, 0, 1], UP, BASE)).not.toEqual(BASE);
+  });
+  it('paints a scar core from the coat under it when scarColour is a function', () => {
+    const scar = { a: [0, 0, 1] as Vec3, b: [0.2, 0, 1] as Vec3, width: 0.01 };
+    const regrowth = wearPaint({
+      scars: [scar],
+      scarColour: (c) => [c[0] * 1.2, c[1] * 1.2, c[2] * 1.2],
+    });
+    const mid = regrowth([0.1, 0, 1], UP, BASE);
+    // Paler than the coat, the coat's own hue: not the default grey-pink.
+    expect(mid[0]).toBeGreaterThan(BASE[0]);
+    expect(mid[0] / mid[2]).toBeCloseTo(BASE[0] / BASE[2], 1);
   });
 });

@@ -18,7 +18,7 @@ import { mixRgb, norm } from '../_lib/body-plan-kit.ts';
 import { REAR, rearHinge } from './clips.ts';
 import { IDLE_GROUND, jointArcs } from './ground.ts';
 import { CLIPS, king_cobra, PLAN, RIG } from './king_cobra.ts';
-import { DUST, dustAt, marked, SCAR_AT, SHED_AT, scarAt, shedAt } from './material.ts';
+import { DUST, dustAt, FAR_DUST, marked, SCAR_AT, SHED_AT, scarAt, shedAt } from './material.ts';
 import {
   bellyHalf,
   COIL_TOP,
@@ -33,7 +33,7 @@ import {
   TOTAL,
 } from './shape.ts';
 import { bodyArc } from './skin.ts';
-import { dorsalAverage, dorsalColour, scaleSheet, scutes } from './surface.ts';
+import { dorsalAverage, dorsalColour, farBand, scaleSheet, scutes, trunkMesh } from './surface.ts';
 
 const sk = { bones: PLAN.bones };
 const clip = (name: string) => {
@@ -284,8 +284,42 @@ describe('story marks by LOD', () => {
       [SCAR_AT, 0],
     ] as const) {
       expect(marked(c, s, a)).not.toEqual(marked(c, s, a, true));
-      expect(marked(c, s, a, true)).toEqual(mixRgb(c, DUST, dustAt(s, a) * 0.9));
+      expect(marked(c, s, a, true)).toEqual(mixRgb(c, DUST, dustAt(s, a) * FAR_DUST));
     }
+  });
+});
+
+describe('LOD2 coil (D480)', () => {
+  const luma = (c: readonly number[]): number =>
+    0.2126 * (c[0] ?? 0) + 0.7152 * (c[1] ?? 0) + 0.0722 * (c[2] ?? 0);
+  // Dorsal vertices of the far tube on the pile (sides 0, 1, 5 of 6: up and the upper flanks).
+  const coil = (): number[][] => {
+    const m = trunkMesh(
+      2,
+      Array.from({ length: 32 }, (_, i) => (i / 32) * 3.5),
+    );
+    const rings: number[][] = [];
+    for (let i = 0; i < m.positions.length / 3; i++) {
+      const z = m.positions[i * 3 + 2] ?? 0;
+      if (z > 0.12 || (m.normals[i * 3 + 2] ?? 0) < 0.3) continue;
+      rings.push([m.colors[i * 3] ?? 0, m.colors[i * 3 + 1] ?? 0, m.colors[i * 3 + 2] ?? 0]);
+    }
+    return rings;
+  };
+  it('keeps the dark olive pile at LOD2: the switch does not pop pale', () => {
+    const v = coil()
+      .map(luma)
+      .sort((a, b) => a - b);
+    // The pattern's own far average is ≈ 0.1 linear; dusted at 0.9 the far coil's median was 0.21.
+    expect(v[Math.floor(v.length / 2)] ?? 1).toBeLessThan(0.15);
+  });
+  it('paints a few crossbands on every third far ring', () => {
+    // The far coil's dark olive (≈ 0.03 linear): a band ring must stand well clear of it.
+    const base: Vec3 = [0.03, 0.028, 0.015];
+    const s = 3.5 / 32;
+    const odd = farBand(base, 12 * s);
+    expect(farBand(base, 13 * s)).toEqual(base);
+    expect(luma(odd)).toBeGreaterThan(luma(base) * 3);
   });
 });
 

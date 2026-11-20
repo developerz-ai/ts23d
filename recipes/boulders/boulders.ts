@@ -207,9 +207,10 @@ function rock(ctx: BuildContext, i: number, spec: (typeof ROCKS)[number], y: num
       const moss =
         Math.min(1, north * 1.7 * (1 - 0.5 * t) + hollow * 0.8 + cushion + (t < 0.2 ? 0.35 : 0)) *
         (nrm[2] > -0.35 ? 1 : 0);
-      // Far LOD: big cells sample moss as solid patches, so it is thinned to keep the mean value.
-      const far = ctx.lod === 2 ? 0.55 : 1;
-      col = mix(col, MOSS, Math.min(0.92, moss * (0.35 + 0.75 * d)) * far);
+      col = mix(col, MOSS, Math.min(0.92, moss * (0.35 + 0.75 * d)));
+      // Far LOD: 0.3 m cells miss most moss and lichen cushions and the stone read plain pale
+      // grey at the switch; a broad green-grey film keeps LOD0's mean tint.
+      if (ctx.lod === 2) col = mix(col, MOSS, 0.18);
       // Fissures: dark and damp inside, moss in their lips.
       const c = inCrack([p[0], p[1], p[2] + sink]);
       if (c > 0) col = mix(mix(col, MOSS, 0.4 * c), CRACK_DARK, Math.min(1, c * 1.4));
@@ -219,6 +220,13 @@ function rock(ctx: BuildContext, i: number, spec: (typeof ROCKS)[number], y: num
     },
   });
 }
+
+/** LOD2's soil on the plain row: the mid soil tone times the sand strip's mean albedo (#aaa07e,
+ * read off the sheet), so the far skirt keeps LOD0's colour without the texture. */
+const SAND_MEAN = hex('#aaa07e');
+const FAR_SOIL: Vec3 = [0, 1, 2].map(
+  (k) => (mix(SOIL_DAMP, SOIL_DRY, 0.55)[k] ?? 0) * (SAND_MEAN[k] ?? 1),
+) as unknown as Vec3;
 
 /** Soil colour at `r` (0 at the rock, 1 at the skirt's edge): damp → dry, mottled, feathered. */
 function soilAt(r: number, n: number): Vec3 {
@@ -287,7 +295,9 @@ function footing(
       return [dmath.cos(a) * (l / 2 + r), y + dmath.sin(a) * (w / 2 + r), 0.001];
     }),
     color: SOIL_DRY,
-    strip: materialVariant('sand', i + 1),
+    // LOD2: flat colour (below). One fan of long triangles cannot carry the strip at true scale:
+    // V is squeezed into each, which drew straight plank-like streaks across the far soil.
+    strip: ctx.lod === 2 ? 'plain' : materialVariant('sand', i + 1),
   });
   // Split and box-projected so the strip keeps true scale (planar UVs wrap V inside a triangle).
   const tess =
@@ -298,10 +308,7 @@ function footing(
     const x = tess.positions[v * 3] ?? 0;
     const yy = (tess.positions[v * 3 + 1] ?? 0) - y;
     const r = skirtFraction(x, yy, l, w, reach);
-    colors.set(
-      ctx.lod === 2 ? mix(SOIL_DAMP, SOIL_DRY, 0.55) : soilAt(r, mottle([x, yy, 0])),
-      v * 3,
-    );
+    colors.set(ctx.lod === 2 ? FAR_SOIL : soilAt(r, mottle([x, yy, 0])), v * 3);
   }
   const soil = { ...tess, colors };
   const pebbles: Mesh[] = [];

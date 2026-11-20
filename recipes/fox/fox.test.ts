@@ -11,7 +11,7 @@ import {
   type Vec3,
 } from '@developerz.ai/ts23d';
 import { assertUprightOnGround } from '@developerz.ai/ts23d/testing';
-import { WOLF } from '../wolf/wolf.ts';
+import { WOLF } from '../_lib/creature/wolf-spec.ts';
 import { FOX, FOX_DATA, fox, REAL } from './fox.ts';
 
 const SLOW = 120_000;

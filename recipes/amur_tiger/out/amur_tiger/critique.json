@@ -1,7 +1,7 @@
 {
   "asset": "amur_tiger",
   "reviewer": "agent",
-  "overall": 6.9,
+  "overall": 7.1,
   "scores": {
     "silhouette": {
       "score": 7,
@@ -21,47 +21,47 @@
     },
     "materials": {
       "score": 7,
-      "reason": "Stripes are now painted on the coat and read as stripes (no floating card strokes), and the ruff is cleaner white; but the face is still smooth matte plastic, the lower legs are a flat grey sock, and the jaw is a uniform pale plastic.",
+      "reason": "Stripes are painted on the coat and read as stripes, the ruff is clean white, and the lower legs stay orange and darken toward the paws. The fur cards now shade as orange-brown strands over the coat (hero.png, shoulder) with no dark specks; the face is still smooth matte and the open jaw a uniform pale plate.",
       "fixes": [
         "short fur cards or a shell over the face so it stops reading as plastic",
-        "keep the damp lower legs in a darkened orange, not desaturated grey",
         "gum, lip and tooth colour separation in the open mouth"
       ]
     },
     "detail": {
       "score": 7,
-      "reason": "Whiskers, teeth, toe pads, claws, a nose scar and fur locks are present now and hold at the portrait distance; the face planes (brow, cheekbone) are still soft and the ear interior is a flat disc.",
+      "reason": "Whiskers, teeth, toe pads, claws, nose scar and fur locks hold at portrait distance, and a brow plane now catches light over the eye; the cheekbone is still soft and the ear interior a flat glossy disc.",
       "fixes": [
-        "sharper cheekbone and brow planes in face.ts",
+        "sharper cheekbone plane in face.ts",
         "ear interior hair tufts and the white ocellus spot on the ear back"
       ]
     },
     "wear": {
-      "score": 6,
-      "reason": "White healed claw scars now show on the shoulder in hero.png and the lower legs are darkened; but the dark legs read as grey socks rather than damp fur, and no ear notch is visible.",
+      "score": 7,
+      "reason": "White healed claw scars on the shoulder, and the lower legs now read as damp, darker orange fur graded to muddy paws rather than grey socks; no ear notch is visible.",
       "fixes": [
         "a notch in one ear",
-        "damp, clumped fur on the lower legs and belly fringe in a darker orange, not grey"
+        "scars a little narrower and greyer so they read healed, not chalk"
       ]
     },
     "lod": {
-      "score": 6,
-      "reason": "FAR LOD2 (3k tris) keeps the outline but is heavily faceted; the stripes still become random dark triangles and the white belly breaks into patches, so the switch shifts the pattern.",
+      "score": 7,
+      "reason": "FAR LOD2 bands are now near-black and the pale shoulder/hip slabs are gone, so the value pop is small; but LOD2 shows six broad even hoops where LOD0 has many thin broken stripes, a ragged pale patch remains at the throat/near shoulder join, and the ears are pale bulbs.",
       "fixes": [
-        "paint LOD2 stripes as 6–8 broad authored bands instead of sampling the LOD0 pattern per triangle",
-        "build LOD2 legs from the sculpt with a gentle inflate instead of tubes"
+        "more, narrower and broken LOD2 bands (8-10, tapering on the flank) so the pattern matches LOD0",
+        "smooth the white chest boundary at LOD2 so it stops showing a jagged pale patch at the shoulder",
+        "LOD2 ears in orange with a dark back, not pale bulbs"
       ]
     },
     "technical": {
       "score": 8,
-      "reason": "QA clean; 143k / 29k / 3k triangles over 6 draws, with fur cards and whiskers where they show.",
+      "reason": "QA clean; 144.7k / 29.7k / 3.0k tris, 6 / 6 / 4 draws, with fur cards and whiskers where they show.",
       "fixes": [
         "trim LOD0 fur-card count on the hidden belly and inner legs and spend it on the face"
       ]
     }
   },
   "renders": {
-    "hero.png": "c191a745a837318960f3e2f44e566b471017b69c330d2b34190f6270a0faa9da",
-    "sheet.png": "b93050a4947bed0a05cbf91ed2e3c2699ab3f5cc323cb9e26623c95d052d97ed"
+    "hero.png": "a9abfc860920cb4ba00196af19b3c4efd9a0e635554640d103979b7467a7e45b",
+    "sheet.png": "14bb08e031b781b78ff848dc6145aaf5db5891afdaddd66b684fe451eb7fb64f"
   }
 }

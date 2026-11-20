@@ -1,7 +1,7 @@
 {
   "asset": "asteroid_b",
   "reviewer": "agent",
-  "overall": 6.9,
+  "overall": 7.1,
   "scores": {
     "silhouette": {
       "score": 7,
@@ -19,35 +19,34 @@
       ]
     },
     "materials": {
-      "score": 6,
-      "reason": "Crystals are crisp cyan and the ore veins are now broad orange bands, but the bands read as painted stripes (a tennis-ball seam in hero.png) rather than veins, the hero regolith shows contour-line rings (iso-line banding) across the grey, and every sheet.png view still stair-steps the colour edges in square blocks.",
+      "score": 7,
+      "reason": "Thin branching orange veins in the sheet, and the flanks in hero.png now carry a faceted grey break-up instead of one smooth wash; but the veins on the hero face are still short isolated orange streaks, and the teal cast round the crystals is a soft smear.",
       "fixes": [
-        "break the orange bands into branching veins of varying width that follow fractures, not great circles",
-        "remove the contour-line banding in the regolith (smooth the quantised colour/height field that draws iso-rings in hero.png)",
-        "carry the per-pixel colour into the vertex colour (or sample per pixel in every renderer) so the sheet views stop stair-stepping"
+        "more vein continuity across the hero face (they read as isolated streaks in hero.png)",
+        "confine the teal stain to the crystal bases with a crisper edge"
       ]
     },
     "detail": {
-      "score": 6,
-      "reason": "The rubble is now irregular angular chips and dark bore holes pit the crystal field in hero.png; the body itself is still a smooth blob with soft crater rims.",
+      "score": 7,
+      "reason": "Rimmed craters now show on top and in 3/4 REAR with steep walls; bore holes and angular chips pit the crystal field in hero.png. The flanks are still smooth.",
       "fixes": [
-        "a finer secondary noise octave at LOD0 for rock grain",
-        "sharper crater rims (raised lip, steeper inner wall)"
+        "a finer secondary noise octave at LOD0 for rock grain on the flanks"
       ]
     },
     "wear": {
       "score": 6,
-      "reason": "Bore holes and loose chips round the crystal cluster plus the cyan stain read as a mining site; no ejecta rays and no darker space-weathered old surfaces.",
+      "reason": "Bore holes and loose chips round the crystal cluster plus the cyan stain read as a mining site; the craters all share one tone, so fresh and old impacts do not separate.",
       "fixes": [
-        "bright fresh ejecta rays round the youngest crater, darker space-weathered older surfaces",
+        "bright fresh ejecta round the youngest crater, darker space-weathered older surfaces",
         "a tailings pile beside the bore holes"
       ]
     },
     "lod": {
       "score": 7,
-      "reason": "FAR LOD2 now keeps the orange vein colour as per-face patches and the crystals, so the colour read survives the switch; but the faces are large and flat-shaded, giving a harsher light/dark patchwork than LOD0.",
+      "reason": "FAR LOD2 is smooth-shaded and keeps the crystals, but the two big craters seen in TOP and the veins do not survive: the body is a plain potato with soft teal and orange blotches, and the crystals shrink to stubs.",
       "fixes": [
-        "smooth the LOD2 normals and add ~30% more faces so the patchwork softens at the switch"
+        "keep the two largest craters as dark bowls with pale rims in the LOD2 vertex colour",
+        "bake the vein lines into the LOD2 vertex colour as orange streaks rather than blotches"
       ]
     },
     "technical": {
@@ -59,7 +58,7 @@
     }
   },
   "renders": {
-    "hero.png": "983d08aeb5c56fc57c393340edda0de75693179801ef75e9989900ace5402012",
-    "sheet.png": "bbb6e8b66bee04eb3ab2677a95ea79b7f3be0369ec683c3696f6a4754d4e1686"
+    "hero.png": "161064e8b2702c455c35c9a0b690310d83dcbb8226adb7e026ce3682e085041f",
+    "sheet.png": "d0f99d375e92f9e492ded6398d012be3bc2742e9f6753bfd7a1236fb2abe0001"
   }
 }

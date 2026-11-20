@@ -4,6 +4,7 @@
 
 import { describe, expect, it } from 'bun:test';
 import type { Mesh } from '@developerz.ai/ts23d';
+import { lifted } from './wild.ts';
 import { withinBox } from './wild-parts.ts';
 
 /** Triangles over the given points (unit normals, flat UVs and colours). */
@@ -98,4 +99,21 @@ describe('withinBox', () => {
     expect([...(kept.joints ?? [])]).toEqual([7, 0, 0, 0, 7, 0, 0, 0, 7, 0, 0, 0]);
     expect(kept.weights?.length).toBe(12);
   });
+});
+
+// D481: `Wild.cardLift` raises the cards' value, clamped to linear 1; 1 leaves the mesh as is.
+describe('lifted', () => {
+  const m: Mesh = {
+    positions: new Float32Array(6),
+    normals: new Float32Array(6),
+    uvs: new Float32Array(4),
+    colors: new Float32Array([0.2, 0.4, 0.8, 0.5, 0.5, 0.5]),
+    indices: new Uint32Array(0),
+  };
+  it('multiplies every colour and clamps at 1', () => {
+    expect(Array.from(lifted(m, 1.5).colors).map((c) => Number(c.toFixed(3)))).toEqual([
+      0.3, 0.6, 1, 0.75, 0.75, 0.75,
+    ]);
+  });
+  it('returns the same mesh at 1', () => expect(lifted(m, 1)).toBe(m));
 });

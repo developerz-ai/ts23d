@@ -18,10 +18,12 @@ import {
   type Vec3,
   weather,
 } from '@developerz.ai/ts23d';
+import { WOOL } from '../bust/cloth-strips.ts';
 import { type EyeSpec, eyes } from '../bust/eye.ts';
 import { plinth } from '../bust/plinth.ts';
 import { baseLod } from './base-lod.ts';
 import { clipCap } from './clip.ts';
+import { clothMask, collarOf, type Garment, garmentPaint } from './garment.ts';
 import { beardlineOf, type HairStyle, hairlineOf, hairSculpt } from './hair.ts';
 import { cardHair } from './hair-cards.ts';
 import { faceCardStyle } from './hair-strands.ts';
@@ -31,7 +33,7 @@ import { meshField } from './mesh-field.ts';
 import { paintSkin, type SkinWear } from './paint.ts';
 import { quadToMesh, stripUv, subdivide } from './quad.ts';
 import { characterStrokes, molesOf, relieve, wartsOf } from './relief.ts';
-import { lipZone, onSkin, tZone } from './skin-strip.ts';
+import { lipZone, onFineStrip, onSkin, scalpZone, tZone } from './skin-strip.ts';
 import type { Character } from './spec.ts';
 import { teethRows, tusks } from './teeth.ts';
 
@@ -39,6 +41,8 @@ export interface FaceBust {
   readonly character: Character;
   readonly hair: HairStyle;
   readonly plinth: Vec3;
+  /** The tunic below a neckline, with a collar band (./garment.ts); omit for bare shoulders. */
+  readonly garment?: Garment;
 }
 
 /** Height of the plinth top (the chest cut sits on it). */
@@ -60,6 +64,7 @@ function wearOf(head: FaceHead, c: Character, hair: HairStyle): SkinWear | undef
     sun: w.sun,
     freckles: w.freckles,
     grime: w.grime,
+    ...(w.wind ? { wind: w.wind } : {}),
     scars,
     // Under a full beard the skin is hair-dark from the cheek line down (a soft, gritty edge):
     // the cards grow out of it, with no slab of sculpted mass between them.
@@ -78,7 +83,7 @@ function wearOf(head: FaceHead, c: Character, hair: HairStyle): SkinWear | undef
 }
 
 /** The skin, cut and capped, in bust space (chest cut at z = CUT_Z). */
-function skin(ctx: BuildContext, head: FaceHead, c: Character, hair: HairStyle): Mesh {
+function skin(ctx: BuildContext, head: FaceHead, c: Character, hair: HairStyle, g?: Garment): Mesh {
   // Folds, brow shelf, warts: every stroke at LOD0, those the base's own quads can hold below.
   const strokes = characterStrokes(head, c, ctx.rng.fork('warts'));
   const s = head.scale;
@@ -109,7 +114,12 @@ function skin(ctx: BuildContext, head: FaceHead, c: Character, hair: HairStyle):
     ...(ctx.lod < 2 ? { marks } : { far: true }),
     rng: ctx.rng.fork('paint'),
   });
-  const raw = quadToMesh(qm, (v) => paint(v), stripUv('plain'));
+  const dress = g ? garmentPaint(head, g, ctx.rng.fork('garment')) : undefined;
+  const raw = quadToMesh(
+    qm,
+    (v, p, n) => (dress ? dress(p, n, paint(v)) : paint(v)),
+    stripUv('plain'),
+  );
   const y = 0.168 * head.scale * c.race.body.shoulders;
   return clipCap(
     raw,
@@ -118,7 +128,7 @@ function skin(ctx: BuildContext, head: FaceHead, c: Character, hair: HairStyle):
       { at: [0, y, 0], normal: [0, 1, -0.12] },
       { at: [0, -y, 0], normal: [0, -1, -0.12] },
     ],
-    c.tone.cavity,
+    g ? [g.cloth[0] * 0.35, g.cloth[1] * 0.35, g.cloth[2] * 0.35] : c.tone.cavity,
   );
 }
 
@@ -128,8 +138,12 @@ export function buildFaceBust(ctx: BuildContext, b: FaceBust): void {
   const s = head.scale;
   const lift: Vec3 = [0, 0, PLINTH_TOP - CUT_Z];
   const up = (m: Mesh): Mesh => translate(m, lift);
-  const body = skin(ctx, head, c, b.hair);
+  const body = skin(ctx, head, c, b.hair, b.garment);
   const parts: Record<string, Mesh> = { skin: body };
+  // The collar as geometry along the tunic's neckline: a clean hem line the paint can't draw.
+  const collar = b.garment ? collarOf(head, b.garment, body, ctx.lod) : undefined;
+  if (collar) parts['collar'] = collar;
+
   // Teeth only where the lips part enough to show them (a closed mouth hides them).
   const shows = (c.mouth ?? 1) > 0.2 || (c.tusks ?? 0) > 0;
   if (ctx.lod < 2 && shows) parts['teeth'] = teethRows(head, ctx.lod);
@@ -150,10 +164,15 @@ export function buildFaceBust(ctx: BuildContext, b: FaceBust): void {
       all,
     );
   // Roughness zones on the one skin draw: the oily T-zone, the wet lips.
+  // The T-zone's forehead band stops halfway up the forehead; the scalp above is matte (the
+  // band up to the forehead's top lit a bald dome with a wet hot spot).
+  const fh = head.map(MIDLINE.forehead);
+  const gl = head.map(MIDLINE.glabella);
+  const brow: Vec3 = [(fh[0] + gl[0]) / 2, 0, (fh[2] + gl[2]) / 2];
   const oil = tZone(
     {
-      forehead: head.map(MIDLINE.forehead),
-      glabella: head.map(MIDLINE.glabella),
+      forehead: brow,
+      glabella: gl,
       noseTip: head.map(MIDLINE.pronasale),
       chin: head.map(MIDLINE.pogonion),
     },
@@ -168,7 +187,15 @@ export function buildFaceBust(ctx: BuildContext, b: FaceBust): void {
     let mesh = ao(m);
     // The painted, shaded base at its LOD's triangle count, then onto the pore strip.
     if (name === 'skin')
-      mesh = onSkin(baseLod(mesh, ctx.lod), oil, ctx.lod < 2 ? moist : undefined);
+      mesh = onSkin(
+        baseLod(mesh, ctx.lod),
+        oil,
+        ctx.lod < 2 ? moist : undefined,
+        b.garment ? { mask: clothMask(head, b.garment), strip: WOOL, metres: 1 } : undefined,
+        // The scalp matte (a bald or shaven dome caught wet hot spots on the face's strip).
+        scalpZone({ forehead: brow, tragion: head.map(LEFT.tragion) }),
+      );
+    if (name === 'collar') mesh = onFineStrip(mesh, WOOL, 1);
     ctx.part(name, up(mesh), {
       ...(name === 'teeth' ? { connect: { as: 'rest' as const, to: 'skin' } } : {}),
       ...(name === 'skin' ? { finish: name } : {}),
@@ -218,5 +245,10 @@ export function buildFaceBust(ctx: BuildContext, b: FaceBust): void {
     },
     ...(c.eyes.pupil ? { pupil: c.eyes.pupil } : {}),
   };
-  eyes(ctx, eye, { cell: ctx.pick([0.0017, 0.0034, 0.009]), finish: 'cornea', host: 'skin' });
+  eyes(ctx, eye, {
+    cell: ctx.pick([0.0017, 0.0034, 0.009]),
+    finish: 'cornea',
+    host: 'skin',
+    lidShadow: 0.55,
+  });
 }

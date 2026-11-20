@@ -11,6 +11,7 @@
 
 import {
   type BuildContext,
+  boundsOf,
   box,
   cylinder,
   defineFamily,
@@ -26,8 +27,8 @@ import {
   type Rng,
   sd,
   sdf,
-  spanOf,
-  stripRect,
+  Ts23dError,
+  translate,
   type Vec2,
   type Vec3,
   valueNoise,
@@ -47,9 +48,12 @@ import {
   TEAM_VARIANTS,
   tube,
 } from '../_lib/rts/style.ts';
+import { projectStripUV } from '../_lib/terrain/strip-inset.ts';
 
 const BASALT = hex('#3b3a3d');
 const BASALT_LIGHT = hex('#5e5a55');
+/** Freshly cut basalt in a pick gouge: darker than the weathered face. */
+const GOUGE: Vec3 = [0.012, 0.012, 0.014];
 const BASALT_DEEP = hex('#1f1f24');
 const SALT = hex('#e4e0d6');
 /** Crystal colour from root (deep amber) to tip (pale gold), and the fracture's pale face. */
@@ -168,9 +172,44 @@ function aim(d: Vec3): { yaw: number; pitch: number } {
   return { yaw: dmath.atan2(d[1], d[0]), pitch: dmath.acos(d[2] / l) };
 }
 
+/** Distance from `p` to the segment a–b. */
+function segmentDistance(p: Vec3, a: Vec3, b: Vec3): number {
+  const ab: Vec3 = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
+  const l2 = ab[0] * ab[0] + ab[1] * ab[1] + ab[2] * ab[2] || 1;
+  const t = Math.max(
+    0,
+    Math.min(1, ((p[0] - a[0]) * ab[0] + (p[1] - a[1]) * ab[1] + (p[2] - a[2]) * ab[2]) / l2),
+  );
+  return dmath.hypot(p[0] - a[0] - ab[0] * t, p[1] - a[1] - ab[1] * t, p[2] - a[2] - ab[2] * t);
+}
+
+/** Pick gouges round the scoop wall of a worked node. */
+const GOUGES: readonly Vec3[] = Array.from({ length: 7 }, (_, k): Vec3 => {
+  const a = (k / 7) * Math.PI * 2 + 0.3;
+  return [0.5 + dmath.cos(a) * 1.0, -0.45 + dmath.sin(a) * 0.9, 1.5];
+});
+/** Crack runs on the outcrop: plan direction (x, y) and height of each end. */
+const CRACKS: readonly (readonly [Vec3, Vec3])[] = [
+  [
+    [1, -0.35, 1.1],
+    [1, 0.2, 0.35],
+  ],
+  [
+    [0.25, -1, 1.25],
+    [-0.35, -1, 0.3],
+  ],
+  [
+    [0.6, 0.8, 1.3],
+    [0.95, 0.4, 0.3],
+  ],
+];
+
 /** The outcrop's field: two masses and a block, cut by fracture planes, stepped by two ledges,
  *  pocketed where crystals grow; `depleted` scoops the main cluster out. */
-function rockField(rng: Rng, depleted: boolean): Field {
+function rockField(
+  rng: Rng,
+  depleted: boolean,
+): { readonly field: Field; readonly cracks: readonly (readonly [Vec3, Vec3])[] } {
   let f: Field = sd.smoothUnion(
     0.35,
     sd.ellipsoid([0, 0, 0.6], [2.1, 1.7, 1.25]),
@@ -181,16 +220,17 @@ function rockField(rng: Rng, depleted: boolean): Field {
   // Cut deep enough that each plane leaves a flat face a metre or more across: the outline turns
   // angular (a broken block), not a dome.
   for (const [n, d] of [
-    [[0.85, -0.3, 0.45], 1.25],
-    [[-0.6, -0.75, 0.3], 1.18],
-    [[-0.3, 0.8, 0.55], 1.22],
-    [[0.2, 0.9, 0.2], 1.6],
-    [[-0.95, 0.1, 0.25], 1.65],
+    [[0.85, -0.3, 0.45], 1.12],
+    [[-0.6, -0.75, 0.3], 1.06],
+    [[-0.3, 0.8, 0.55], 1.1],
+    [[0.2, 0.9, 0.2], 1.42],
+    [[-0.95, 0.1, 0.25], 1.45],
+    [[0.75, 0.55, 0.1], 1.55],
     // Top facets.
-    [[0.25, -0.35, 1], 1.12],
-    [[-0.4, 0.3, 1], 1.02],
-    [[0.7, 0.45, 0.6], 1.2],
-    [[-0.5, -0.5, 0.7], 1.25],
+    [[0.25, -0.35, 1], 1.05],
+    [[-0.4, 0.3, 1], 0.95],
+    [[0.7, 0.45, 0.6], 1.08],
+    [[-0.5, -0.5, 0.7], 1.12],
   ] as [Vec3, number][]) {
     const u = unit(n);
     f = sd.intersect(f, (p) => p[0] * u[0] + p[1] * u[1] + (p[2] - 0.6) * u[2] - d);
@@ -201,44 +241,39 @@ function rockField(rng: Rng, depleted: boolean): Field {
   // Fracture pockets the crystals grow from.
   for (const c of CLUSTERS.slice(depleted ? 1 : 0))
     f = sd.smoothSubtract(0.12, f, sd.ellipsoid(c.at, [0.42, 0.42, 0.3]));
-  if (depleted)
-    // The quarry scoop where the main cluster was cut out: a metre deep below its rim.
-    f = sd.smoothSubtract(0.12, f, sd.ellipsoid([0.5, -0.45, 1.85], [1.05, 0.95, 1.1]));
+  if (depleted) {
+    // The quarry scoop where the main cluster was cut out: a metre deep below a sharp rim.
+    f = sd.smoothSubtract(0.04, f, sd.ellipsoid([0.5, -0.45, 1.85], [1.05, 0.95, 1.1]));
+    // Pick marks: gouges hacked into the scoop wall all round, wide and deep enough to show
+    // at hero distance (a 9 cm gouge vanished between the 11 cm cells).
+    for (const at of GOUGES) f = sd.subtract(f, sd.ellipsoid(at, [0.16, 0.16, 0.34]));
+  }
+  // Two cracks split the front faces: grooves wider than two cells, deepest mid-run; the
+  // crevice term packs them with salt, so each reads as a pale line on the dark rock.
+  // Each end: marched in level from 2.8 m out (inside surfaceAt's 3 m reach) to the face.
+  const end = (e: Vec3): Vec3 | null => {
+    const l = dmath.hypot(e[0], e[1]) || 1;
+    return surfaceAt(f, [(e[0] / l) * 2.8, (e[1] / l) * 2.8, e[2]], [-e[0], -e[1], 0]);
+  };
+  const cracks: [Vec3, Vec3][] = [];
+  for (const [a, b] of CRACKS) {
+    const pa = end(a);
+    const pb = end(b);
+    if (!pa || !pb)
+      throw new Ts23dError('T3D_RECIPE_INVALID', {
+        cause: `a crack end of the outcrop (${a.join(', ')} → ${b.join(', ')}) misses the rock`,
+        fix: 'move the crack ends in CRACKS onto the outcrop (heights under its shoulder)',
+      });
+    f = sd.subtract(f, sd.capsule(pa, pb, 0.11));
+    cracks.push([pa, pb]);
+  }
   const pits = valueNoise(rng.fork('pits'), { scale: 0.6, octaves: 3 });
   const rough = sd.displace(f, pits, 0.025);
-  return (p) => Math.max(rough(p), -p[2]);
+  return { field: (p) => Math.max(rough(p), -p[2]), cracks };
 }
 
 /** The rock's strip: greyscale fine grain (vertex colour is the basalt), no jointing to fold. */
 const ROCK_STRIP = 'concrete';
-
-/**
- * Box-projected UVs, re-done per vertex so no band ever folds horizontally: the vertical (or the
- * second plan axis on tops) runs along U, which tiles through the sampler, and the horizontal
- * runs along V, mirrored every half metre. The SDF's own UVs folded along height: contour lines.
- */
-function boxUv(m: Mesh): Mesh {
-  const rect = stripRect(ROCK_STRIP);
-  const span = spanOf(ROCK_STRIP);
-  const vm = 0.5;
-  const half = 0.5 / 4096;
-  const uvs = new Float32Array(m.uvs.length);
-  for (let i = 0; i < uvs.length / 2; i++) {
-    const x = m.positions[i * 3] ?? 0;
-    const y = m.positions[i * 3 + 1] ?? 0;
-    const z = m.positions[i * 3 + 2] ?? 0;
-    const ax = Math.abs(m.normals[i * 3] ?? 0);
-    const ay = Math.abs(m.normals[i * 3 + 1] ?? 0);
-    const az = Math.abs(m.normals[i * 3 + 2] ?? 0);
-    const [s, t] = az >= ax && az >= ay ? [y, x] : ax >= ay ? [z, y] : [z, x];
-    const q = t / vm;
-    const fold = q - 2 * Math.floor(q / 2);
-    const frac = fold <= 1 ? fold : 2 - fold;
-    uvs[i * 2] = rect.u0 + (s / span) * (rect.u1 - rect.u0);
-    uvs[i * 2 + 1] = rect.v0 + half + frac * (rect.v1 - rect.v0 - 2 * half);
-  }
-  return { ...m, uvs };
-}
 
 /** March from `from` along `dir` to the rock surface (first point inside). */
 function surfaceAt(field: Field, from: Vec3, dir: Vec3): Vec3 | null {
@@ -257,7 +292,7 @@ function surfaceAt(field: Field, from: Vec3, dir: Vec3): Vec3 | null {
 function outcrop(ctx: BuildContext, depleted: boolean): Field {
   const lod = ctx.lod;
   const rng = ctx.rng.fork('rock');
-  const field = rockField(rng, depleted);
+  const { field, cracks } = rockField(rng, depleted);
   const tone = valueNoise(rng.fork('tone'), { scale: 0.9, octaves: 2 });
   // The near colour at a point of the rock surface with normal n.
   const near = (p: Vec3, n: Vec3, saltK = 1): Vec3 => {
@@ -266,12 +301,14 @@ function outcrop(ctx: BuildContext, depleted: boolean): Field {
     // and their partings wavy, so they follow the rock's own layering instead of drawing straight
     // stitched rings round it; every other bed a lighter flow.
     const bed = (p[2] + p[0] * 0.12 + tone(p) * 0.22) / (0.3 + 0.15 * tone([p[1], p[0], p[2]]));
-    const layer = Math.floor(bed) % 2 === 0 ? 0.45 : 0;
-    const parting = smooth(0.08, 0.0, Math.abs(bed - Math.round(bed)));
+    // Crisp: every other bed fully the light flow, partings near black (the per-face texture's
+    // grain softens what the vertex colours draw, so they carry the full contrast).
+    const layer = Math.floor(bed) % 2 === 0 ? 0.85 : 0;
+    const parting = smooth(0.1, 0.02, Math.abs(bed - Math.round(bed)));
     const base = mix(
       mix(mix(BASALT_DEEP, BASALT, 0.5 + h * 0.5), BASALT_LIGHT, layer),
       BASALT_DEEP,
-      parting * 0.8,
+      parting,
     );
     const e = 0.4;
     // Measured from the point's own field value: a coarse far vertex sits off the true surface
@@ -282,10 +319,28 @@ function outcrop(ctx: BuildContext, depleted: boolean): Field {
     // never on the flanks; the scoop rim of a worked node is pale with spoil dust.
     const top = smooth(0.88, 0.97, n[2]) * smooth(1.0, 1.5, p[2]);
     const rim = depleted
-      ? smooth(1.4, 0.7, dmath.hypot(p[0] - 0.5, p[1] + 0.45)) * smooth(1.3, 1.8, p[2])
+      ? smooth(1.75, 0.8, dmath.hypot(p[0] - 0.5, p[1] + 0.45)) * smooth(1.15, 1.7, p[2])
       : 0;
-    const salt = Math.max(crevice * 0.9, top * 0.55) * saltK;
-    return mix(mix(mix(base, BASALT_DEEP, crevice * 0.4), SALT, salt), DUST, rim * 0.7);
+    // Fresh pick gouges: dark, clean-cut basalt, no salt or dust in them yet.
+    const gouge = depleted
+      ? Math.max(
+          0,
+          ...GOUGES.map((g) =>
+            smooth(0.3, 0.17, dmath.hypot(p[0] - g[0], p[1] - g[1], (p[2] - g[2]) * 0.5)),
+          ),
+        )
+      : 0;
+    // The cracks' salt is placed by where they run, not by the crevice probe, so the far rock's
+    // patch mean carries it in full (its probes, cut to `FAR_SALT`, would lose it).
+    const crack = Math.max(
+      0,
+      ...cracks.map(([a, b]) => smooth(0.2, 0.1, segmentDistance(p, a, b))),
+    );
+    const salt = Math.max(crevice * 0.9 * saltK, top * 0.55 * saltK, crack * 0.9) * (1 - gouge);
+    // Far, the rim dust is cut like the salt: averaged over 0.7 m cells it lightened the rock.
+    const dust = rim * (saltK < 1 ? 0.45 : 0.9) * (1 - gouge);
+    const c = mix(mix(mix(base, BASALT_DEEP, crevice * 0.4), SALT, salt), DUST, dust);
+    return mix(c, GOUGE, gouge * 0.9);
   };
   // Far: each vertex the mean of the near colour over the patch of surface it stands for (5 × 5
   // points across ±half a cell in its tangent plane), so the beds average out. Its salt is cut to
@@ -326,7 +381,9 @@ function outcrop(ctx: BuildContext, depleted: boolean): Field {
     lipschitz: 1.6,
     color: lod === 2 ? far : near,
   });
-  const rock = boxUv(raw);
+  // The far rock's coarse cells can leave its foot a little over z = 0: seat it on the ground.
+  const lift = Math.min(0, -boundsOf(raw).min[2]);
+  const rock = projectStripUV(lift < 0 ? translate(raw, [0, 0, lift]) : raw, ROCK_STRIP, 1);
   const worn = weather(
     ctx,
     { rock },
@@ -637,7 +694,7 @@ export const rts_resource_depleted = deposit.variant({
   real: { length: 4.93, width: 4.34, height: 2.8 },
   // Mined out: the sheared stubs smoulder dimmer than a whole cluster.
   glow: [{ parts: ['crystal_stubs'], color: SUNSTONE, strength: 0.35 }],
-  // From the north-east and higher, so the lens looks into the quarried scoop with the rock
-  // centred; the claim stake stands behind it at the left instead of in the foreground.
-  hero: { azDeg: 100, elDeg: 38 },
+  // From the worked (−Y) side and high, so the lens looks down into the quarried scoop: its
+  // dark pick gouges against the pale spoil dust on the rim; the claim stake stands to the right.
+  hero: { azDeg: -120, elDeg: 50 },
 });

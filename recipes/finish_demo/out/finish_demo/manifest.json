@@ -18,8 +18,8 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    4572,
-    1440,
+    4623,
+    1446,
     296
   ],
   "drawCalls": [
@@ -59,7 +59,7 @@
     {
       "label": "pallet height",
       "spec": 0.144,
-      "measured": 0.145,
+      "measured": 0.1454,
       "source": "EN 13698-1"
     }
   ],
@@ -110,10 +110,10 @@
       }
     },
     "dust": {
-      "target": 0.3424,
-      "actual": 0.3424,
+      "target": 0.3425,
+      "actual": 0.3425,
       "eligible": "up-facing",
-      "area": 3.0925,
+      "area": 3.0987,
       "by": {
         "pallet_wear": {
           "target": 0.3,
@@ -128,7 +128,7 @@
         "cask_wear": {
           "target": 0.4,
           "actual": 0.4,
-          "area": 0.2336
+          "area": 0.2398
         }
       }
     },

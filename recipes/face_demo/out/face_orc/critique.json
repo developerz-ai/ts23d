@@ -1,7 +1,7 @@
 {
   "asset": "face_orc",
   "reviewer": "agent",
-  "overall": 6.3,
+  "overall": 6.7,
   "scores": {
     "silhouette": {
       "score": 7,
@@ -18,11 +18,12 @@
       ]
     },
     "materials": {
-      "score": 6,
-      "reason": "The mohawk now has loose tips and reads as hair in SIDE; the skin has sheen but it is uniform over head and shoulders, so it reads as plastic.",
+      "score": 7,
+      "reason": "The stair-stepped collar is gone: a smooth grey band with a clean edge runs over the shoulders in FRONT and hero.png, and the scalp is matte with sheen only on the brow; the green skin still washes over the tunic shoulders outside the collar in hero.png, and the tunic is a flat ribbed brown.",
       "fixes": [
-        "vary roughness: rougher on scalp and shoulders, sheen on nose and brow",
-        "pores or mottling in the green skin"
+        "end the skin colour at the collar so no green bleeds onto the tunic shoulders",
+        "pores or mottling in the green skin",
+        "a leather or wool strip on the tunic instead of the flat rib"
       ]
     },
     "detail": {
@@ -33,29 +34,29 @@
       ]
     },
     "wear": {
-      "score": 6,
-      "reason": "A clear cheek scar and blotchy skin tell some history.",
+      "score": 7,
+      "reason": "Cheek scar now reads as a dark-edged grey scar, not near-white, the skin is blotchy, and collar grime and sun-faded shoulders now show on the tunic.",
       "fixes": [
         "chipped tusk tip and a second scar"
       ]
     },
     "lod": {
-      "score": 5,
-      "reason": "FAR LOD2 is still a distance-field re-mesh: the face breaks into flat patches of different tone and the features smear.",
+      "score": 6,
+      "reason": "FAR LOD2 face is now smooth with even vertex colour, the eyes and nose hold, and the faceted patchwork is gone; tusks, mohawk and the tunic hold.",
       "fixes": [
-        "LOD2 from an authored coarse topology (decimated quad base mesh) instead of the distance-field re-mesh, keeping vertex colour smooth"
+        "keep the mohawk as a few spikes at LOD2 instead of a smooth fin"
       ]
     },
     "technical": {
       "score": 7,
-      "reason": "QA clean; 57k / 11k / 2.5k triangles over 4 draws.",
+      "reason": "QA clean; 54.3k / 11.5k / 2.6k tris, 4 / 4 / 3 draws.",
       "fixes": [
         "cheaper crest at LOD1"
       ]
     }
   },
   "renders": {
-    "hero.png": "49b90c83254d731ddc3f7dd73cced94a9e866bd13c6245a291fa70b5c6a7ac23",
-    "sheet.png": "767cbc3910fd560dce25fca6a4d650a07a2b2b11f35b6acfb209ce0090e8d4aa"
+    "hero.png": "0b8c15c0d3095250116dda8c2e18e757be5669fbb32ac0be119ccb69e93f12f6",
+    "sheet.png": "6eceacad0aa255e5ae5eb54491d46ca26e60ccb1de51a8bea23698b3a525de69"
   }
 }

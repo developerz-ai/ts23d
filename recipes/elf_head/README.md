@@ -34,7 +34,7 @@ slender neck 0.5–0.75 × head breadth). The table above records the earlier pr
 `spec.ts` (2026-11: the mid-face 3 % shorter, a thinner upper lid, ears held 13° out so the tips
 break the hair's outline, shoulders ×0.78 of the base's and 0.15 m half-span), `torso.ts` (the
 shared torso, its arms cut a finger outside the shoulder point as a classical bust's are),
-`hair.ts` (card hair: parted cap, long locks, crown and outline layers; `farHair` for LOD2),
+`hair.ts` (card hair: parted cap in the hair's root colour in shade (at the mid gold it showed through the crown as a pale scalp whorl), long locks, a dense crown layer (5.6k/m², darker toward the root), a whorl layer over the cap lines' pole above the forehead and outline layers; `farHair` for LOD2),
 `clothes.ts` (the outfit as layers) and `creases.ts` (the intended folds as ≤ 3 cm regions from
 the same geometry) on the shared bust library `../_lib/bust/`. Eye `socket` joints as on every bust.
 
@@ -69,11 +69,10 @@ with the chest. The skin under them is cut away (`hiddenBody`).
 | wear: frayed wool / mud | `#8aa39a` / `#4a4a3a` |
 
 ## Known gaps
-The face is softer than a hero elf from a pro sculptor; the hair is strand cards (LOD0 ≈ 13k
-triangles: wide clumped locks 3.6 cm across in tones 0.8–1.04 of the hair colour, so the fall
-reads as a mass; the longest lock is 24.5 cm, to the shoulders); the skin's detail is the shared tiling pore strip
-(`pores: true`: matte cheeks, a glossier T-zone) under one `skin` finish (a soft sheen plus a thin
-oily coat, clearcoat 0.3 at roughness 0.28), not a
+The face is softer than a hero elf from a pro sculptor; the hair is strand cards in the lock style (`locks`, D461; LOD0 ≈ 13k
+triangles: dark mass cards under narrow clumped locks 1.8 cm across in tones 0.8–1.04 of the hair
+colour, so the fall reads as a mass of straight strands; the longest lock is 24.5 cm, to the shoulders); the skin's detail is the shared tiling pore strip
+(`pores: true`: matte cheeks, a glossier T-zone) under one `skin` finish (the shared `skinFinish`: a soft grazing sheen, no clear coat, so cheeks and shoulders stay matte and only the oily strip's T-zone (up to a tenth of the head over the glabella) shines; the scalp above it and behind the ears is on the matte strip, `face_skin_matte`, so a bald or shaven dome has no wet hot spots), not a
 per-face texture; the braid is a 4 mm-cell cord, lumpy up close; the cloak's hem lies below the bust's cut, so its fraying shows only as the ragged, muddy
 band at the base; the cut arms give the bust square shoulders under the cloak.
 

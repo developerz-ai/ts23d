@@ -33,6 +33,13 @@ export const TEAMS = {
   white: '#e8e8e2',
 } as const;
 export const TEAM_PAINT = { team: TEAMS.red } as const;
+/**
+ * The same slot with wear (`paint-wear`): chips to primer, dust and mud weathered onto team parts
+ * stay their own colour in every livery while the paint recolours. Opt in per asset with a
+ * `painted: true` wear group in `Kit.commit` (finish.ts); wear is per triangle, so give it a
+ * `resolution` or enough tessellation.
+ */
+export const TEAM_PAINT_WORN = { team: { colour: TEAMS.red, wear: true } } as const;
 export const TEAM_VARIANTS: PaintVariants = Object.fromEntries(
   Object.entries(TEAMS).map(([k, v]) => [k, { team: v }]),
 );

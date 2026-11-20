@@ -47,8 +47,11 @@ dense dark-green foliage in lobed clusters; a buttressed root flare.
   dead limb with a jagged break on the bole (merged into `trunk`, inside its Y extent so the DBH
   measure holds), a long bare dead limb out of the fork under the crown towards the hero camera
   (in `branches`, so it sways with the crown), and a fallen forked limb in the grass.
-- **Ground** (`../_lib/trees/floor.ts`): an irregular 8 m patch on the `grass` strip, mottled at metre
-  scale with bare soil and brown litter near the bole, full grass at the rim.
+- **Ground** (`../_lib/trees/floor.ts`): an irregular 8 m patch of short turf on the isotropic `moss`
+  strip (the `grass` strip is painted side-on, blades and dry tufts along V, which a ground plane
+  showed as straight brown stripes), planar at true scale with V mirrored band to band, mottled at
+  metre scale with bare soil and brown litter near the bole, full turf at the rim. LOD2: flat
+  colour on the `plain` row, LOD0's mean times the strip's mean albedo (no zig-zag stripes).
 - **Hero**: `hero: { elDeg: 10 }`, low, so the dome reads wider than tall.
 
 ## Open questions

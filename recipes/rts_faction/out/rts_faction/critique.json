@@ -19,9 +19,9 @@
     },
     "materials": {
       "score": 7,
-      "reason": "Paving reads as stone flags, gravel paths contrast in value and roughness, the sub-assets keep their materials. The paving is flat with little tone variation and the wall caps are the same beige as the paving.",
+      "reason": "Gravel paths contrast in value and roughness and the sub-assets keep their materials. The compound paving reads as long parallel boards rather than stone flags (hero.png, plate left of the barracks), with little tone variation, and the wall caps are the same beige as the paving.",
       "fixes": [
-        "per-flag value jitter on the paving",
+        "map the paving onto a flagstone strip (square joints, per-flag value) instead of long parallel boards",
         "darker coping stone on the perimeter wall"
       ]
     },
@@ -35,7 +35,7 @@
     },
     "wear": {
       "score": 7,
-      "reason": "Track ruts on the tank lane, trampled darker gravel at the gate, the sub-assets weathered; the paving itself is clean.",
+      "reason": "Track ruts on the tank lane, trampled darker gravel at the gate, and the sub-assets carry their worn team parts (whole-slate roof wear on the barracks, ragged chips on the tank roof); the paving itself is clean.",
       "fixes": [
         "grime() dirt along the wall foot and oil stains under the tank"
       ]
@@ -49,14 +49,14 @@
     },
     "technical": {
       "score": 7,
-      "reason": "QA PASS: 143.8k / 35.0k / 3.9k tris, 36 / 22 / 22 draws. LOD1 dropped from 36 to 22 draws, but LOD0 is still 36 draws for one placed asset.",
+      "reason": "QA PASS: 147.9k / 35.4k / 3.9k tris, 36 / 22 / 22 draws. LOD1 is 22 draws, but LOD0 is still 36 draws for one placed asset.",
       "fixes": [
         "merge static parts across the composed assets into one body per material so LOD0 drops well below 36 draws"
       ]
     }
   },
   "renders": {
-    "hero.png": "81127b4f0a57295f68f2d5c1832423f34f6dab175864412ec69f8d0ab33fe856",
-    "sheet.png": "645aa622b67f05b11439ba1ae87fe108135df1f470c5b9c9d5b092750b5e27d7"
+    "hero.png": "5b343b4ca3eb6a005f2cdbfd66f785c56aa692982c96739ca476b5e76fd988bd",
+    "sheet.png": "0f09278e16abb91789a6e356805ace42fda97f678f3095bb5e487b20c25f835f"
   }
 }

@@ -20,9 +20,9 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    8238,
-    1910,
-    282
+    7554,
+    1762,
+    262
   ],
   "drawCalls": [
     3,
@@ -115,7 +115,7 @@
       "target": 0.6,
       "actual": 0.6,
       "eligible": "ground-near",
-      "area": 11.9527
+      "area": 10.8845
     }
   },
   "qa": {

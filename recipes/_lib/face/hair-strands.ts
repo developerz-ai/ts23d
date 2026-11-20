@@ -7,7 +7,7 @@
 
 import { type CardLayer, dmath, type Field, sculptField, type Vec3 } from '@developerz.ai/ts23d';
 import { beardlineOf, type HairSculpt, hairlineOf } from './hair.ts';
-import { beardBody } from './hair-beard.ts';
+import { beardBody, beardLayers, moustacheOf } from './hair-beard.ts';
 import type { CardHairStyle } from './hair-cards.ts';
 import type { HairStyle } from './hair-lines.ts';
 import type { FaceHead } from './head.ts';
@@ -38,6 +38,7 @@ export function faceCardStyle(
   const mouth = head.map(MIDLINE.stomionSup);
   const hairline = st.cut === 'none' ? (): number => 1 : hairlineOf(head, st.cut);
   const beardline = beard ? beardlineOf(head) : (): number => 1;
+  const tache = beard ? moustacheOf(head) : (): number => 1;
   const cheek = head.map(LEFT.cheek);
   // Beard cards root just below the cheek line (none may stray up over the lower lid) and all
   // over the beard's hanging body, down to its tip: no bare sculpt shows under them.
@@ -50,10 +51,10 @@ export function faceCardStyle(
   const part = 0.022 * s;
   const long = st.cut === 'long';
   const comb = (p: Vec3, n: Vec3): Vec3 => {
-    if (beardline(p) < 0.004 * s || body(p) < 0.006 * s) {
+    if (beardline(p) < 0.004 * s || body(p) < 0.006 * s || tache(p) < 0.004 * s) {
       // Moustache out and down from under the nose; the beard straight down, a little forward.
       const lip = p[2] > mouth[2] && p[2] < sub[2] + 0.004 * s;
-      return lip ? [0.2, Math.sign(p[1]) * 0.8, -0.6] : [0.22, Math.sign(p[1]) * 0.12, -1];
+      return lip ? [0.25, Math.sign(p[1]) * 0.45, -0.85] : [0.22, Math.sign(p[1]) * 0.12, -1];
     }
     // A crest lies back along its ridge, rising a little: bristles, not a fan.
     if (st.cut === 'crest') return [-0.85, 0, 0.45];
@@ -88,7 +89,7 @@ export function faceCardStyle(
     // A long cut is drawn back clear of the ears (an elf's must show): no long card roots within
     // 4 cm of an ear, root to tip; only the short base clumps grow there.
     const tragion = head.map(LEFT.tragion);
-    const nearEar = (p: Vec3): number => {
+    const nearEar = (p: Vec3, r = 0.04): number => {
       const side = p[1] >= 0 ? 1 : -1;
       const a: Vec3 = [tragion[0], side * Math.abs(tragion[1]), tragion[2]];
       const b = head.earTips[side > 0 ? 0 : 1];
@@ -98,27 +99,31 @@ export function faceCardStyle(
         ((p[0] - a[0]) * ab[0] + (p[1] - a[1]) * ab[1] + (p[2] - a[2]) * ab[2]) / l2,
       );
       return (
-        0.04 * s -
+        r * s -
         dmath.hypot(p[0] - a[0] - ab[0] * k, p[1] - a[1] - ab[1] * k, p[2] - a[2] - ab[2] * k)
       );
     };
     const grown: Field = long ? (p) => Math.max(hairline(p), nearEar(p)) : hairline;
-    const crown: Field = (p) => Math.max(grown(p), earTop[2] + 0.035 * s - p[2]);
+    // (The long top locks keep 7 cm off an ear: combed down onto it, one was pushed out by the
+    // collision and stood straight out of the temple past the silhouette.)
+    const crown: Field = (p) => Math.max(grown(p), earTop[2] + 0.035 * s - p[2], nearEar(p, 0.07));
     layers.push(
       {
         name: 'hair_base',
-        kind: 'hair',
+        // The under layer itself: the lock style's dark mass cells, no under-layer of its own.
+        kind: 'mass',
         region: hairline,
         density: long ? 3700 : 5200,
         length: (p) => length(p) * 0.75,
         width: 0.026 * s,
-        lift: long ? 0.03 : 0.04,
+        lift: long ? 0.02 : 0.025,
         bend: 0.9,
         droop: 0.08,
-        roll: long ? 0.08 : 0.12,
+        roll: 0.05,
         fold: 0,
-        // (Tones close together: a wide spread between neighbouring cards reads as straw.)
-        tone: [0.68, 0.88],
+        // The under layer: dark at the root, so the mass has depth under the locks. (Root to tip
+        // within a card, not card against card: a spread between neighbours reads as straw.)
+        tone: [0.6, 0.85],
         hug: 1,
       },
       {
@@ -128,15 +133,19 @@ export function faceCardStyle(
         density: long ? 3700 : 5000,
         length,
         width: (long ? 0.02 : 0.018) * s,
-        lift: long ? 0.05 : 0.08,
+        // (Laid along the comb, little roll: cards turned every which way off the cap read as
+        // chopped straw at portrait distance; lying in one flow they read as combed hair.)
+        lift: long ? 0.035 : 0.045,
         bend: 0.85,
         droop: 0.1,
-        roll: long ? 0.14 : 0.3,
+        roll: 0.1,
         fold: 0.55,
         clump: 3,
-        tone: [0.8, 1.04],
+        tone: [0.62, 1],
         tint: warm,
-        hug: long ? 1 : 0.85,
+        hug: 1,
+        under: 0,
+        fly: 0,
       },
       {
         name: 'hair_top',
@@ -145,15 +154,21 @@ export function faceCardStyle(
         density: long ? 900 : 1500,
         length: (p) => length(p) * 1.15,
         width: (long ? 0.015 : 0.013) * s,
-        lift: long ? 0.07 : 0.13,
+        lift: 0.05,
         bend: 0.8,
         droop: 0.12,
-        roll: long ? 0.16 : 0.34,
+        roll: 0.14,
         fold: 0.6,
         clump: 2,
-        tone: [0.9, 1.12],
+        tone: [0.7, 1.08],
         tint: warm,
-        hug: long ? 1 : 0.6,
+        // (Hugging the cap: at 0.85 a long top lock rooted where the crown turns down ran on
+        // straight and stood out of the temple past the silhouette.)
+        hug: 1,
+        under: 0,
+        // (No lifted flyaways: a top lock's own length, lifted, stood straight out of the temple
+        // past the silhouette. The short `hair_fly` strands break the outline instead.)
+        fly: 0,
       },
       // Short fine strands on the edge band: the hair grows out of the skin, no cap edge.
       {
@@ -177,16 +192,17 @@ export function faceCardStyle(
         name: 'hair_fly',
         kind: 'wisp',
         region: hairline,
-        density: long ? 0 : 120,
-        length: 0.05 * s,
+        density: long ? 0 : 50,
+        // (Short and close: at 5 cm, lifted, they read as whiskers out of the temples.)
+        length: 0.026 * s,
         width: 0.01 * s,
-        lift: 0.12,
+        lift: 0.06,
         bend: 0.6,
         roll: 0.4,
         fold: 0,
         tone: [0.9, 1.12],
         tint: warm,
-        hug: 0.3,
+        hug: 0.7,
       },
     );
     if (long) {
@@ -212,6 +228,34 @@ export function faceCardStyle(
         tint: warm,
         // (Not pressed harder: a fall hugging the neck slid forward along the jaw to the mouth.)
         hug: 0.7,
+        fly: 0,
+      });
+      // Locks lying down the curtain mass itself (fallMass): rooted on its surface below the
+      // nape, so the slab under the fall reads as hair, not as a smooth plate behind the ear.
+      const occ0 = head.map(MIDLINE.occiput);
+      const nape = head.map(MIDLINE.nape);
+      const c: Vec3 = [occ0[0] + 0.014 * s, 0, nape[2] - 0.045 * s];
+      const curtain: Field = (p) =>
+        Math.max(
+          dmath.hypot((p[0] - c[0]) / 0.034, p[1] / 0.093, (p[2] - c[2]) / 0.128) / s - 1,
+          p[2] - nape[2],
+        );
+      layers.push({
+        name: 'hair_curtain',
+        kind: 'hair',
+        region: curtain,
+        density: 2600,
+        length: 0.1 * s,
+        width: 0.022 * s,
+        lift: 0.03,
+        bend: 0.9,
+        droop: 0.6,
+        roll: 0.1,
+        clump: 3,
+        tone: [0.72, 1.05],
+        tint: warm,
+        hug: 1,
+        fly: 0,
       });
     }
   }
@@ -248,42 +292,7 @@ export function faceCardStyle(
         hug: 0.2,
       },
     );
-  if (beard)
-    layers.push(
-      {
-        name: 'beard',
-        kind: 'beard',
-        region: beardRoots,
-        density: 9000,
-        length: 0.06 * s,
-        width: 0.012 * s,
-        lift: 0.3,
-        bend: 0.6,
-        droop: 0.45,
-        clump: 3,
-        fold: 0,
-        tone: [0.6, 1.15],
-        tint: warm,
-      },
-      // Short hair lying on the cheeks and the jaw: the beard's upper edge grows out of the
-      // skin, with no bare band of the mass between the cheek line and the hanging locks.
-      {
-        name: 'beard_cheek',
-        kind: 'beard',
-        // (Lifted off the mass: cards hugging it at their 3 mm root sink lay buried in it.)
-        region: beardline,
-        density: 20000,
-        length: 0.034 * s,
-        width: 0.013 * s,
-        lift: 0.22,
-        bend: 0.7,
-        droop: 0.4,
-        fold: 0,
-        tone: [0.6, 1.05],
-        tint: warm,
-        hug: 0.5,
-      },
-    );
+  if (beard) layers.push(...beardLayers(head, beardRoots, beardline, warm));
   return {
     field: h.field,
     bounds: h.box,
@@ -292,6 +301,8 @@ export function faceCardStyle(
     collide,
     color: mix(st.root, st.tip, 0.35),
     layers,
+    // The lock style (D461): narrow clumped locks over the base layer's dark mass cards.
+    locks: {},
     ...(long ? { segments: 6 } : {}),
   };
 }

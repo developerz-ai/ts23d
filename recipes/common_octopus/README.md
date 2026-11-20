@@ -72,12 +72,12 @@ act along X, Y and Z), `head_0`,
 |---|---|---|
 | wet skin | body on the built-in satin `plastic` strip (roughness 0.35) | matte |
 | arms | taper linearly from the web to the tip; suckers shrink with them; transverse skin folds and papillae along the aboral face, clear of the crown fillets | uniformly thick, smooth tubes |
-| tips | pale, rosy, translucent-looking over the last 28 % of every arm | |
+| tips | a little paler and rosier over the last 20 % of every arm (at 28 % and full strength every tip looked regrown, and the one real regrowth was lost among them) | |
 | poses | arms 2 and 4 coil their tips flat on the seabed, arm 3 reaches out nearly straight | the TOP view was a symmetric star |
 | regenerating arm | arm 6 is 0.74 m (design value): its old taper to a dark healed ring at 80 %, then a thinner, pale regrowth bud; the recipe's arc check holds it to its own length | octopuses regrow lost arm tips (widely reported; no paper opened for this recipe, so the lengths are design values) |
-| scars | two healed slashes on the mantle's camera-side flank, pale bands across arms 1 and 4, all wider than before | pristine |
-| head and mantle | the mantle is in the `body` part with the head, and its base tapers (6.8 to 4.6 cm) into the head instead of overhanging it | a cylindrical neck collar with a seam |
-| papillae | each takes the skin colour under it, a shade lighter; sizes 0.4 to 1.9 × with a few big cirri; mantle warts tint only slightly | pale uniform dots read as studs |
+| scars | two healed slashes 2 cm wide across the mantle's camera-side flank, paler (`#ead2c4`) and reaching further round, pale bands across arms 1 and 4 | pristine; then too thin to read at hero size |
+| head and mantle | the mantle is in the `body` part with the head; its base tapers (6.2 to 4.9 cm: from 7 cm the mantle's lower edge stood over the head as a ridge) into a head that starts at 5.1 cm, swells only to 6.4 cm round the eyes (it bulged to 7 cm from a 4.6 cm neck: a band under the eyes), flares to 6.6 cm at the crown into the arm roots (straight down from the eyes it read as a cylindrical band) and runs on 5 cm past the crown, narrowing to 4.5 cm inside the arm roots (ended at the crown, its 5.8 cm end cap stood proud over the dorsal arms as a ledge under the eyes: the collar band); 110 papillae on the head as on the mantle round it (40 left it a bare glossy band); wider at the neck, or the roots raised, QA `connections` finds seams against the arm roots | a cylindrical neck collar with a seam |
+| papillae | each takes the skin colour under it, a touch darker (the wet crown already catches the light; a lighter shade still read as pale studs); sizes 0.4 to 1.9 × with a few big cirri; mantle warts tint only slightly | pale uniform dots read as studs |
 | folds | aboral arm folds twice as deep; concentric folds round each eye turret | smooth arm tops |
 | far colour | LOD2 takes only the broad mottle | blocky patches far away |
 | LOD | LOD2 3.6 k: two rings a link on the arms, rounder mantle and head; LOD0 sucker cups 8 segments (they face the seabed), the mantle got the rings | blocky mantle, segmented tips far away |

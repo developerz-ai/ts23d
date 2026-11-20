@@ -2,15 +2,16 @@
 // merged pixel rectangles (text-layout.ts) become flush decals lifted 2 mm (depth 0, 2 triangles
 // each) or raised boxes (face + 4 sides, 10 each). Flat normals. With `surface`, rectangles split
 // into column groups wherever the offset under them changes and each sits on the highest surface
-// under it; `wrap` also paints the steps between pieces at different depths (text-pixel-wrap.ts),
-// joined to the higher paint by a strip LIFT wide.
+// under it; `wrap` instead sits each pixel on its own surface, merges cells at one offset back
+// into rectangles and paints the steps between pieces at different depths, one quad per run of
+// step from the lower paint up to the higher paint's edge (text-pixel-wrap.ts).
 // Without `wrap` the output is byte-identical to text() before vector fonts existed.
 
-import { type Mesh, MeshBuilder, type Vec3 } from '../core/index.ts';
+import { dmath, type Mesh, MeshBuilder, type Vec3 } from '../core/index.ts';
 import { mappedOnto, stripRect } from '../material/index.ts';
 import { stripU, stripV } from './strip-uv.ts';
 import { layout, type PixelFont, type PixelRect } from './text-layout.ts';
-import { type Piece, risers } from './text-pixel-wrap.ts';
+import { cellPieces, mergeRisers, type Piece, risers } from './text-pixel-wrap.ts';
 
 export interface PixelTextInput {
   readonly origin: Vec3;
@@ -76,7 +77,9 @@ export function pixelText(str: string, o: PixelTextInput): Mesh {
     else b.quad(i0, i3, i2, i1);
   };
   const neg = (v: Vec3): Vec3 => [-v[0], -v[1], -v[2]];
-  const all = pieces(rects, px, start, o.surface);
+  const all =
+    (o.wrap && o.surface && cellPieces(rects, px, start, o.surface)) ||
+    pieces(rects, px, start, o.surface);
   for (const piece of all) {
     const { u0, u1, v0, v1, s } = piece;
     const lo = depth > 0 ? s : s + LIFT;
@@ -115,27 +118,24 @@ export function pixelText(str: string, o: PixelTextInput): Mesh {
     );
   }
   if (o.wrap && o.surface)
-    // The riser stands LIFT clear of the step, on the lower piece's side, so it never lies in the
-    // plane of the proud member's own side face. A strip at its top, in the higher paint's plane,
-    // spans those LIFT back to the higher piece's edge: no slit between the two (D407).
-    for (const r of risers(all, depth > 0 ? depth : LIFT, depth > 0 ? 0 : LIFT)) {
+    // Each step's risers, merged along it, one quad each: the foot stands LIFT out on the lower
+    // paint (so the quad never lies in the plane of the proud member's own side face) and the
+    // top is the higher paint's edge itself, so the two share that line: no slit (D407), and no
+    // joining strip to pay for (D456).
+    for (const r of mergeRisers(risers(all, depth > 0 ? depth : LIFT, depth > 0 ? 0 : LIFT))) {
       const e = r.at + r.out * LIFT;
       const p = (x: number, a: number, w: number): Vec3 =>
         r.axis === 'u' ? at(x, a, w) : at(a, x, w);
       const axis = r.axis === 'u' ? along : up;
+      const h = r.w1 - r.w0;
+      const len = dmath.hypot(h, LIFT);
+      const ka = (r.out * h) / len;
+      const kn = LIFT / len;
       quad(
-        [p(e, r.a0, r.w0), p(e, r.a1, r.w0), p(e, r.a1, r.w1), p(e, r.a0, r.w1)],
-        r.out > 0 ? axis : neg(axis),
+        [p(e, r.a0, r.w0), p(e, r.a1, r.w0), p(r.at, r.a1, r.w1), p(r.at, r.a0, r.w1)],
+        [axis[0] * ka + n[0] * kn, axis[1] * ka + n[1] * kn, axis[2] * ka + n[2] * kn],
         [r.a0, r.a1, r.a1, r.a0],
-        [0, 0, r.w1 - r.w0, r.w1 - r.w0],
-      );
-      const across = [e, e, r.at, r.at];
-      const span = [r.a0, r.a1, r.a1, r.a0];
-      quad(
-        [p(e, r.a0, r.w1), p(e, r.a1, r.w1), p(r.at, r.a1, r.w1), p(r.at, r.a0, r.w1)],
-        n,
-        r.axis === 'u' ? across : span,
-        r.axis === 'u' ? span : across,
+        [0, 0, h, h],
       );
     }
   return mappedOnto(b.build(), o.strip ?? 'plain');

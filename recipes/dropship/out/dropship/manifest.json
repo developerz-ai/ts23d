@@ -20,13 +20,13 @@
     "thumb": "thumb.png"
   },
   "triangles": [
-    19188,
-    6704,
+    19254,
+    6762,
     2090
   ],
   "trianglesCompiled": [
-    19404,
-    6704,
+    19470,
+    6762,
     2090
   ],
   "drawCalls": [

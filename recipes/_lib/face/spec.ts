@@ -79,6 +79,9 @@ export interface Wear {
   readonly freckles: number;
   /** Dirt in the hollows and on the neck. */
   readonly grime: number;
+  /** Wind- or forge-reddened skin: a broad raw redness over the cheekbones and the nose
+   *  (default 0). */
+  readonly wind?: number;
   /** Shaven-beard shadow over the beardline. */
   readonly stubble?: { readonly colour: Vec3; readonly amount: number };
   /** Healed cuts as polylines of BASE points (landmarks ± a few mm), warped with the face. */

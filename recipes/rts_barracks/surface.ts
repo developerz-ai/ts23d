@@ -39,7 +39,9 @@ export interface Stain {
 /** Soot black, wood ash grey, trodden mud, lime mortar splash. */
 export const STAIN = {
   scorch: hex('#1e1b18'),
-  ash: hex('#9a948a'),
+  ash: hex('#b4ada1'),
+  /** Pale masonry dust blown out of a collapse across the flags. */
+  dust: hex('#d6cfbf'),
   mud: hex('#4a3f31'),
   mortar: hex('#c9c4b6'),
 } as const;

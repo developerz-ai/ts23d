@@ -1,12 +1,11 @@
-// The trim sheet as the contact sheet reads it: ONE mean linear albedo per strip row and per cell
-// (88 colours), looked up per triangle by its UV centroid. The contact sheet is flat-shaded, one
-// colour per triangle, so a triangle wants its material's average, not a texel: a point sample of
-// a plank or brick strip would land on a board or a joint at random and sparkle between
-// neighbouring triangles, and a mip coarse enough to hide that bleeds across the 1/64 strip rows.
-// The row mean is exact, noise-free, independent of U (strips tile along U) and what the hero's
-// texture converges to at a distance. Means are alpha-weighted, so a cutout strip or leaf cell
-// gives the colour of its visible texels. The silhouette of a cutout card is NOT a mean: `cutAt`
-// is the per-pixel alpha test against the sheet's own texels (D300).
+// The trim sheet as the contact sheet reads it, per pixel (D452): `albedoAt` samples the albedo
+// mip the triangle's footprint picks, bilinearly, at the pixel's own UV, with the sample clamped
+// inside the strip row (or cell) the UV is in, so a 1/64 strip row never bleeds into its
+// neighbour. When that mip is too coarse to hold two texel rows of the strip, the sample is the
+// row's (or cell's) MEAN linear albedo instead: exact, noise-free, independent of U (strips tile
+// along U) and what the texture converges to at a distance. Means and mips are alpha-weighted, so
+// a cutout strip or leaf cell gives the colour of its visible texels. The silhouette of a cutout
+// card is the per-pixel alpha test `cutAt` against the sheet's own texels (D300).
 
 import type { CompiledAsset } from '../core/index.ts';
 import {
@@ -17,7 +16,7 @@ import {
   STRIP_ROWS,
   sheetFor,
 } from '../material/index.ts';
-import { SRGB } from './texture.ts';
+import { chain, type Mip, SRGB, sample } from './texture.ts';
 
 /** Cells per sheet row (1/16 of the sheet each), in the rows above the strips. */
 const CELLS = 16;
@@ -30,6 +29,8 @@ export interface SheetTones {
   readonly cells: Float32Array;
   /** The sheet the means came from: its albedo alpha is the cutout mask. */
   readonly sheet: PaintedSheet;
+  /** Linear albedo (alpha-weighted, coverage-keeping) mip chain of `sheet`. */
+  readonly albedo: readonly Mip[];
 }
 
 /** Alpha-weighted mean linear colour of texels [x0, x1) × [y0, y1) into out[o..o+2]; white when empty. */
@@ -77,7 +78,8 @@ export function sheetTones(sheet: PaintedSheet): SheetTones {
     const cy = STRIP_ROWS * STRIP_H + Math.floor(c / CELLS) / CELLS;
     mean(sheet, at(cx), at(cx + 1 / CELLS), at(cy), at(cy + 1 / CELLS), cells, c * 3);
   }
-  const t = { strips, cells, sheet };
+  const albedo = chain(sheet.albedo, n, (c, v) => (c === 3 ? v / 255 : (SRGB[v] ?? 0)), true);
+  const t = { strips, cells, sheet, albedo };
   cache.set(sheet, t);
   return t;
 }
@@ -95,6 +97,44 @@ export function toneAt(t: SheetTones, u: number, v: number, out: Float32Array): 
   out[0] = from[o] ?? 1;
   out[1] = from[o + 1] ?? 1;
   out[2] = from[o + 2] ?? 1;
+}
+
+const TAP = new Float32Array(4);
+
+/**
+ * Linear albedo at (u, v) from mip `level` into out[0..2]: bilinear, clamped half a texel inside
+ * the strip row (U wraps) or the cell (U wraps to the sheet, then clamps to the cell) holding
+ * (u, v); the row's or cell's mean when that mip has fewer than two texel rows of it.
+ */
+export function albedoAt(
+  t: SheetTones,
+  level: number,
+  u: number,
+  v: number,
+  out: Float32Array,
+): void {
+  const L = Math.max(0, Math.min(t.albedo.length - 1, level));
+  const s = t.albedo[L]?.size ?? t.sheet.size;
+  const r = Math.max(0, Math.floor(v / STRIP_H));
+  const strip = r < STRIP_ROWS;
+  const cr = Math.min(CELL_ROWS - 1, Math.floor((v - STRIP_ROWS * STRIP_H) * CELLS));
+  const v0 = strip ? r * STRIP_H : STRIP_ROWS * STRIP_H + cr / CELLS;
+  const tall = strip ? STRIP_H : 1 / CELLS;
+  if (tall * s < 2) {
+    toneAt(t, u, v, out);
+    return;
+  }
+  const half = 0.5 / s;
+  let su = u;
+  if (!strip) {
+    const uu = u - Math.floor(u);
+    const u0 = Math.floor(uu * CELLS) / CELLS;
+    su = Math.min(u0 + 1 / CELLS - half, Math.max(u0 + half, uu));
+  }
+  sample(t.albedo, L, su, Math.min(v0 + tall - half, Math.max(v0 + half, v)), TAP);
+  out[0] = TAP[0] ?? 1;
+  out[1] = TAP[1] ?? 1;
+  out[2] = TAP[2] ?? 1;
 }
 
 /** Alpha byte under which a cutout texel is dropped (glTF `alphaCutoff` 0.5). */

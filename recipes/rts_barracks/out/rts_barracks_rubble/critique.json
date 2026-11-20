@@ -1,7 +1,7 @@
 {
   "asset": "rts_barracks_rubble",
   "reviewer": "agent",
-  "overall": 7.3,
+  "overall": 7.7,
   "scores": {
     "silhouette": {
       "score": 8,
@@ -18,11 +18,10 @@
       ]
     },
     "materials": {
-      "score": 7,
-      "reason": "The floor is now a flagstone strip with readable joints and per-flag value (sheet TOP), no longer the camouflage slab. Wall stubs read as stone with damp; the fallen slates are partly greyed but still clean red in places.",
+      "score": 8,
+      "reason": "Flagstone floor with readable joints; wall stubs read as stone with damp; the fallen slates in the heap are now ash-grey with only small red flecks in hero.png and soot patches spread over the flags (sheet TOP), so nothing reads as fresh paint at hero distance.",
       "fixes": [
-        "char/dust on every fallen team slate",
-        "ash patches on the flags"
+        "a little more value variation between ash-buried and half-exposed slates in the heap"
       ]
     },
     "detail": {
@@ -34,31 +33,30 @@
       ]
     },
     "wear": {
-      "score": 6,
-      "reason": "Scorched, darker blocks now cap the broken wall tops and dark flags patch the floor round the heap (sheet TOP, darker crown blocks in hero.png); but the rubble blocks are still crisp bevelled cubes with no chipped arrises, there is no ash or dust fan, and some fallen slates stay bright team red.",
+      "score": 7,
+      "reason": "Slates buried in ash, scorched wall tops and dark soot fans on the floor (sheet TOP) tell a fire story; the rubble blocks are still crisp bevelled cubes with no chipped arrises.",
       "fixes": [
-        "dust/char coat on every fallen team slate (value down ~40%) so none read as fresh paint",
         "chip one or two arrises per rubble block",
-        "a pale dust fan spreading from the heap across the flags"
+        "a pale dust fan with gravel spreading from the heap across the flags"
       ]
     },
     "lod": {
-      "score": 7,
-      "reason": "FAR LOD2 now keeps the standing corner, a stepped tower crown, the door frame and a few red heap pieces; the heap is still thinner than LOD0.",
+      "score": 8,
+      "reason": "FAR LOD2 keeps the standing corner, a stepped tower crown and the door frame, and the heap slates are now ash-grey with a small red fleck like LOD0, so the switch is quiet; the heap is still thinner than LOD0.",
       "fixes": [
         "keep 3-4 tilted heap blocks at LOD2"
       ]
     },
     "technical": {
       "score": 8,
-      "reason": "QA PASS: 12.3k / 3.2k / 700 tris, 2 / 2 / 2 draws; one trim material + team slot, LOD2 well under 1k. LOD0 down from 19k to 12k.",
+      "reason": "QA PASS: 14.2k / 3.7k / 720 tris, 2 / 2 / 2 draws; one trim material + team slot, LOD2 well under 1k.",
       "fixes": [
-        "spend some of the LOD0 savings on the fixes above (quoins, string course, gravel) instead of more blocks"
+        "spend some of the LOD0 budget on the fixes above (chipped arrises, gravel, splintered ends) instead of more blocks"
       ]
     }
   },
   "renders": {
-    "hero.png": "31e626b49d825b94057cc061863713429164e36c4cda507e07d6178b510a1493",
-    "sheet.png": "05a19630d0515aae1e357a2b3a6bd72f196c38ccab7e54f29b70731a29c32af7"
+    "hero.png": "529817b373f2fe49e677e19d1be51d580b7f0c1674a42c29a93500b3595e56ab",
+    "sheet.png": "4a96d7377f72f419a70568dcdb4b377755707347e7f2825ab44f11a9c7c779e4"
   }
 }

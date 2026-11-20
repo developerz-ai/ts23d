@@ -1,7 +1,7 @@
 {
   "asset": "tune_demo",
   "reviewer": "agent",
-  "overall": 7.6,
+  "overall": 7.7,
   "scores": {
     "silhouette": {
       "score": 8,
@@ -18,10 +18,9 @@
       ]
     },
     "materials": {
-      "score": 7,
-      "reason": "Terracotta shows throw-ring relief, darker residue below the lip and a soil/salt band on the foot that now fades softly in hero.png; in the sheet (FRONT, SIDE) the band edge and the residue streaks still step in square vertex-colour blocks, and the body is one smooth satin.",
+      "score": 8,
+      "reason": "Terracotta with throw-ring relief, darker residue below the lip and a soil/salt band on the foot that now fades softly in hero.png and, rendered per pixel, in the sheet too (no more square stepping); the body is still one smooth satin response.",
       "fixes": [
-        "finer colour resolution on the body (more stations or a texture mask) so the band and streaks do not step in the sheet",
         "rougher, matte clay response"
       ]
     },
@@ -34,7 +33,7 @@
     },
     "wear": {
       "score": 8,
-      "reason": "Dark residue streaks run down from the lip and the soil band climbs from the foot with a soft, graded upper edge in hero.png; in the sheet that edge still steps.",
+      "reason": "Dark residue streaks run down from the lip and the soil band climbs from the foot with a soft, graded upper edge in hero.png and the sheet.",
       "fixes": [
         "ragged, uneven height on the soil band edge round the circumference"
       ]
@@ -57,7 +56,7 @@
     }
   },
   "renders": {
-    "hero.png": "63d3dfb58e8fa2f1ab81822b73887c44d58d20784188e51d712b58509a9032a9",
-    "sheet.png": "1de8b093440ff4fa38781a24e5f23c4bd7c90ed1db961c7a35525bdca840ed73"
+    "hero.png": "24e2dd3bd4a639a9bf76b4921d303f47e28fd1b9957077f945859de536c0c0a5",
+    "sheet.png": "0366d7ec9720e7a3ffa58ef92543d7b381b7608530557eb9d8cb9ed5e9fd2bfc"
   }
 }

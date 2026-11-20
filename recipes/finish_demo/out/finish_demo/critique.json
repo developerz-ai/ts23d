@@ -1,7 +1,7 @@
 {
   "asset": "finish_demo",
   "reviewer": "agent",
-  "overall": 7.7,
+  "overall": 8,
   "scores": {
     "silhouette": {
       "score": 8,
@@ -19,23 +19,25 @@
     },
     "materials": {
       "score": 8,
-      "reason": "The barrel wood is now rougher, less saturated and varies stave to stave; rusty iron hoops and crate/pallet wood grain read.",
+      "reason": "The barrel heads now show straight boards with dark joints (sheet TOP, 3/4 FRONT, 3/4 REAR) instead of the swirl; stave-to-stave wood variation, rusty iron hoops and crate/pallet grain read in hero.png and the sheet.",
       "fixes": [
-        "wet darker wood at the barrel bilge where it was handled"
+        "wet darker wood at the barrel bilge where it was handled",
+        "a faint gloss on the oil spills so they read wet"
       ]
     },
     "detail": {
-      "score": 7,
-      "reason": "Stave seams, bung, hoops, crate slats and corner nails, pallet blocks hold in the hero.",
+      "score": 8,
+      "reason": "Stave seams, bung, hoops with rivets, crate slats, corner nails, a FRAGILE stencil, pallet blocks and nail heads on the deck boards all hold in hero.png.",
       "fixes": [
-        "nail heads on the pallet deck boards; hoop rivets"
+        "chamfered board edges on the pallet deck",
+        "a croze groove line visible at the barrel chime"
       ]
     },
     "wear": {
-      "score": 7,
-      "reason": "Rusty hoops, a grimy crate base band and dark stains on the pallet deck tell use; the pallet stains are footprint-shaped blobs that look odd.",
+      "score": 8,
+      "reason": "Rusty hoops, a grime gradient at the crate base, and the pallet spills are now irregular puddles with satellite drips (hero.png, deck) instead of footprint shapes; the spills are opaque and crisp-edged like decals.",
       "fixes": [
-        "spill stains with irregular edges instead of footprint shapes",
+        "feather the spill edges and soak them into the board grain",
         "a dented crate corner"
       ]
     },
@@ -55,7 +57,7 @@
     }
   },
   "renders": {
-    "hero.png": "fb242ff5f505f29748a272348c05ccb22da989cdcbeb653dd555b05ceb1a6d40",
-    "sheet.png": "4baf5bc2cbc076e73f0a436f2f2c0b8aa1d457db1b940ffb238cc76d01563b1d"
+    "hero.png": "1ea505b8820f56bf3163c32cac317b5c10c362f2a98533b8b808a0cc7a9cedcf",
+    "sheet.png": "ae4bfb6326c66fc141fcc05642fe5e825e2ea1ea8e1ac854970227acd4523727"
   }
 }

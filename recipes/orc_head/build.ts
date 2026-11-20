@@ -15,11 +15,11 @@ import {
   sculptField,
   weather,
 } from '@developerz.ai/ts23d';
-import { type BustRecipe, bustEdits, faceDetail, oilOf } from '../_lib/bust/bust.ts';
+import { type BustRecipe, bustEdits, faceDetail, oilOf, scalpOf } from '../_lib/bust/bust.ts';
 import { eyes } from '../_lib/bust/eye.ts';
 import { faceRigOf, withFace } from '../_lib/bust/face-rig.ts';
 import { type Surface, surface } from '../_lib/bust/kit.ts';
-import { cardHair } from '../_lib/face/hair-cards.ts';
+import { cardHair, farStyle } from '../_lib/face/hair-cards.ts';
 import { armour } from './armour.ts';
 import { featureEdits, toneEdits } from './features.ts';
 import { furMantle, necklace, seamField } from './fur.ts';
@@ -77,7 +77,8 @@ export function buildOrc(ctx: BuildContext): void {
   ];
   // The hide on the shared pore strip: matte, cratered cheeks, a glossier brow, nose and chin.
   const oil = oilOf(ORC_BUST);
-  const strip = oil ? { oil } : {};
+  const matte = scalpOf(ORC_BUST);
+  const strip = { ...(oil ? { oil } : {}), ...(matte ? { matte } : {}) };
   const meshes: Record<string, Mesh> =
     lod === 2
       ? // (No pore speckle and a wider stencil at the far cell: per-vertex specks 3 cm apart read
@@ -155,12 +156,14 @@ export function buildOrc(ctx: BuildContext): void {
   }
   // The cards root on the finished head (brow shelf, jaw and all), not the stage-2 skin: the
   // brow and beard roots would sit buried under the stage-3 strokes.
-  // (The far LOD keeps the beard and the brows as a handful of wide cards.)
-  cardHair(ctx, orcCardHair(surface(sculptField(edits, FIELD).field)));
+  // (The far LOD keeps the beard and the brows as a handful of wide cards: the beard has no
+  // sculpted mass, so the lock style's far rule, the mass alone, would shave it off.)
+  cardHair(ctx, orcCardHair(surface(sculptField(edits, FIELD).field)), 'hair', { far: farStyle });
   eyes(ctx, EYE, {
     cell: ctx.pick([0.002, 0.0036, 0.01]),
     finish: 'cornea',
     proud: lod === 0 ? 0 : cell * 0.3,
+    lidShadow: 0.55,
     // The orbit's seat resolves at LOD0 only (coarser cells close the hollow).
     ...(lod === 0 ? { socketIn: 'head' } : {}),
   });

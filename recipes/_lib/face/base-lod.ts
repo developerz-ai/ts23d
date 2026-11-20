@@ -20,7 +20,9 @@ export const BASE_CREDIT: ImportCredit = {
 };
 
 /** Skin triangles per LOD: LOD0 from the subdivided base, LOD1 and LOD2 from the base itself. */
-export const SKIN_TRIS = [25300, 5360, 920] as const;
+// (LOD2 at 1 500: the far face is shaded per facet, and at 920 the cheek, brow and jaw broke into
+// a handful of flat plates of different tone.)
+export const SKIN_TRIS = [25300, 5360, 1500] as const;
 
 /** The painted, shaded skin at `lod`: QEM-simplified to SKIN_TRIS (vertex colour weighs in the
  *  error, so the lips, brows and lid lines keep their edges). */

@@ -1,7 +1,7 @@
 {
   "asset": "common_octopus",
   "reviewer": "agent",
-  "overall": 7.1,
+  "overall": 7.3,
   "scores": {
     "silhouette": {
       "score": 8,
@@ -11,18 +11,19 @@
       ]
     },
     "proportions": {
-      "score": 7,
-      "reason": "Arms taper and the web is visible, but a cylindrical collar band still separates the head from the arm crown under the eyes in hero.png.",
+      "score": 8,
+      "reason": "Arms taper and the web is visible; the mantle now flows into the eye region and arm crown with only a faint crease (hero.png, below the eyes), no cylindrical band; the inter-arm web is still shallow at the base.",
       "fixes": [
-        "blend the head into the arm crown (remove the collar ring) in anatomy.ts",
-        "enlarge the inter-arm web toward the base"
+        "enlarge the inter-arm web toward the base",
+        "soften the last faint crease under the eyes"
       ]
     },
     "materials": {
       "score": 7,
-      "reason": "Wet sheen, pale sucker rims and pale mottling along the arms read; the papillae on the mantle are still uniform pale dots that read like studs.",
+      "reason": "Wet sheen, pale sucker rims and mottling read; the papillae are now skin-brown bumps rather than pale dots, but they are evenly sized and spaced over the mantle like studs, and the pale mantle streaks read as a smear.",
       "fixes": [
-        "papillae in skin colour with only a slight value lift, varied size"
+        "papillae varied in size and clustered, larger over the eyes",
+        "mantle mottling as soft irregular patches, not streaks"
       ]
     },
     "detail": {
@@ -48,14 +49,14 @@
     },
     "technical": {
       "score": 8,
-      "reason": "QA clean; 138k / 14k / 3.6k triangles, 2 draws.",
+      "reason": "QA clean; 140.2k / 14.0k / 3.6k tris, 2 / 2 / 2 draws.",
       "fixes": [
         "move LOD0 triangles from sucker rims on the hidden underside to the mantle"
       ]
     }
   },
   "renders": {
-    "hero.png": "b3d92606e6241cff150a0ca4d6e76283d6cf612536831bec7e74533fd139f79f",
-    "sheet.png": "084b3b27a0bcd0e428bc467bdb274e17c52ad8b6f1aa27c8ab80493e36264bfa"
+    "hero.png": "730f6be794040bea6fd8f9acea3a1cacf4aa55297eb93ae6ed7bfd9df0ada524",
+    "sheet.png": "f986b16b9e1db7ec8616f62dce9f39480c61e7c3d2e9468f4d53e3fa1a89f632"
   }
 }
