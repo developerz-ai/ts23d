@@ -230,6 +230,36 @@ function soilAt(r: number, n: number): Vec3 {
   return mix(base, SOIL_EDGE, e * e * (3 - 2 * e));
 }
 
+/**
+ * Where (x, y) lies across a skirt whose edge at bearing a is (cos a · (l/2 + R), sin a · (w/2 +
+ * R)), R = `reach(a)`: 0 on the rock's own outline (the l × w ellipse), 1 on the skirt's edge,
+ * negative inside the rock. Solves for the offset ellipse (semi-axes l/2 + s, w/2 + s) through
+ * the point, then divides s by the reach at that ellipse's bearing.
+ */
+export function skirtFraction(
+  x: number,
+  y: number,
+  l: number,
+  w: number,
+  reach: (a: number) => number,
+): number {
+  const f = (s: number): number => {
+    const [u, v] = [x / (l / 2 + s), y / (w / 2 + s)];
+    return u * u + v * v - 1;
+  };
+  let lo = -Math.min(l, w) / 2 + 1e-6;
+  let hi = Math.max(l, w);
+  if (f(lo) <= 0) return lo / Math.max(1e-6, reach(0));
+  while (f(hi) > 0) hi *= 2;
+  for (let k = 0; k < 48; k++) {
+    const m = (lo + hi) / 2;
+    if (f(m) > 0) lo = m;
+    else hi = m;
+  }
+  const s = (lo + hi) / 2;
+  return s / reach(dmath.atan2(y / (w / 2 + s), x / (l / 2 + s)));
+}
+
 /** The soil skirt (an irregular polygon) and half-buried pebbles around a rock's foot. */
 function footing(
   ctx: BuildContext,
@@ -267,10 +297,7 @@ function footing(
   for (let v = 0; v < tess.positions.length / 3; v++) {
     const x = tess.positions[v * 3] ?? 0;
     const yy = (tess.positions[v * 3 + 1] ?? 0) - y;
-    // 0 at the rock's own outline (an ellipse l × w), 1 at the skirt's edge (metres out over the
-    // outline's reach at that bearing).
-    const e = dmath.hypot(x / (l / 2), yy / (w / 2));
-    const r = ((e - 1) * Math.min(l, w)) / 2 / reach(dmath.atan2(yy / (w / 2), x / (l / 2)));
+    const r = skirtFraction(x, yy, l, w, reach);
     colors.set(
       ctx.lod === 2 ? mix(SOIL_DAMP, SOIL_DRY, 0.55) : soilAt(r, mottle([x, yy, 0])),
       v * 3,

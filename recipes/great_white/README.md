@@ -85,7 +85,7 @@ draw. Bones: `spine_0..15` (0 at the snout), `caudal_upper_*`, `caudal_lower_*`,
 | skin | `shark_skin` is a texture graph now: a head-to-tail denticle grain (micro-normal) and a broad roughness drift 0.5 to 0.68 for the patchy wet sheen | one uniform satin |
 | eye | the black pupil, a thin pale ring round it, a blue-grey iris, and a skin-grey lid rim | a glossy black ball |
 | snout | about 10 % blunter: wider and higher over the first 9 % of the length (a second pass on top of the first) | still read a touch pointed |
-| pectorals | root thickness 8 cm tapering fast to a thin edge; the upper face darkens strongly at the tip and along the trailing edge | paper-thin, no dark edges |
+| pectorals | root half-thickness 8.4 cm (about 17 cm through the root) tapering fast to a thin edge; the upper face darkens strongly at the tip and along the trailing edge | paper-thin, no dark edges |
 | caudal | lower lobe 0.9 m (was 0.82), nearly as long as the upper: a lunate tail (design value) | |
 | keel, lateral line | keel 8.5 cm proud and dark; a pale lateral line from the gills to the keel | missing |
 | fin edges | dorsal and caudal trailing margins dark over their last third | grey to the edge |

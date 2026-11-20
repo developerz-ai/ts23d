@@ -51,9 +51,11 @@ export function projectAlbedo(m: Mesh, img: Rgba): Mesh {
 
 /**
  * Replace UVs with true-scale triplanar UVs on `strip` (U tiles, V mirrored inside the band):
- * the sheet's micro-detail at real size, colour from the vertices. The file's UVs are dropped.
+ * the sheet's micro-detail at real size, colour from the vertices. The file's UVs are dropped,
+ * and with them the materials they were mapped onto: the mesh maps onto `strip` alone (D409).
  */
-export function onSheet(m: Mesh, strip: StripId = 'plain'): Mesh {
+export function onSheet(input: Mesh, strip: StripId = 'plain'): Mesh {
+  const { mapped: _replaced, ...m } = input;
   const r = stripRect(strip);
   const vm = DEFAULT_SHEET.strips[strip]?.scaleMetres ?? 1;
   const half = 0.5 / TRIM_SHEET_SIZE;

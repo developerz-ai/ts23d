@@ -76,7 +76,9 @@ function run(
   seed: number,
 ): { meshes: Mesh[]; coverage: WeatherCoverage[] } {
   check(given);
-  const read = readOf(given, mergeGeometry(meshes.map(([, m]) => m)));
+  // Only a hero read measures the target: the union is not copied for the default.
+  const read =
+    given.read === 'hero' ? readOf(given, mergeGeometry(meshes.map(([, m]) => m))) : null;
   const o = read && given.groundBand === undefined ? { ...given, groundBand: read.band } : given;
   const name = o.name ?? 'weather';
   const res = resolutionOf(o, lod);

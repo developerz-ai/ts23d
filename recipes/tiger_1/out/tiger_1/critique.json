@@ -19,7 +19,7 @@
     },
     "materials": {
       "score": 7,
-      "reason": "Camo is now soft-edged sprayed bands of green and red-brown following the plates over Dunkelgelb, Zimmerit corrugation reads; a scatter of small red-brown chip spots remains on turret and hull, and the road wheels are still pale paint with only a faint darker rim.",
+      "reason": "Camo is soft-edged sprayed bands of green and red-brown over Dunkelgelb, now carried down the barrel as olive and red-brown sleeves sitting on the tube (hero.png, sheet SIDE); Zimmerit corrugation reads; a scatter of small red-brown chip spots remains on turret and hull, and the road wheels are still pale paint with only a faint darker rim.",
       "fixes": [
         "dark rubber rims on the road wheels that read in SIDE",
         "drop the small red-brown spot scatter (it fights the bands)"
@@ -56,7 +56,7 @@
     }
   },
   "renders": {
-    "hero.png": "80b62c8b21eea87a915c31fb2924e617f736f8a419cfe1928788ef855715e51d",
-    "sheet.png": "44a1897c87bdda5248b4153491c618f58329815d01789418f2ee76cadfcf54ae"
+    "hero.png": "edd8e82c766f4e6f4a15abac129988b990da8e9067099ebea1db8a2268138b99",
+    "sheet.png": "f6626240f108aff950771ca56914b6b9d785c91dbb8ab2472241effef84590b2"
   }
 }

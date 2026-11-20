@@ -106,7 +106,7 @@
     9998,
     4998
   ],
-  "seconds": 238.09,
+  "seconds": 187.01,
   "source": {
     "materials": 1,
     "textures": 2,
@@ -118,14 +118,14 @@
     {
       "determinant": 124.951584,
       "op": "transform",
-      "seconds": 0.08,
+      "seconds": 0.06,
       "triangles": 934645
     },
     {
       "holeFaces": 0,
       "nonManifoldEdges": 1668,
       "op": "clean",
-      "seconds": 12.43,
+      "seconds": 8.06,
       "shells": 56,
       "shellsDropped": 55,
       "triangles": 929049,
@@ -133,7 +133,7 @@
     },
     {
       "op": "script",
-      "seconds": 5.06,
+      "seconds": 2.66,
       "sha256": "9bcf9789e42eaf168274b42d6246abe3b009f54624274122cec498a0b5cb51c0",
       "stdout": [
         "knuckle [0.865 0.219 0.077] skin at 0.0127 joint above it 0.0122 raised 0.0322",
@@ -168,7 +168,7 @@
         "0 + 3": 72,
         "2 + 4": 348
       },
-      "seconds": 32.31,
+      "seconds": 21.48,
       "triangles": 924559,
       "webFaces": 420
     },
@@ -178,7 +178,7 @@
       "from": 924559,
       "op": "retopo",
       "reduce": "decimate",
-      "seconds": 91.86,
+      "seconds": 70.17,
       "shell": {
         "bboxDrift": 0.00674,
         "bboxSide": "+x (front)",
@@ -201,7 +201,7 @@
           [
             1,
             0.0,
-            0.0047,
+            0.0048,
             629
           ],
           [
@@ -223,13 +223,13 @@
       "islands": 499,
       "kind": "smart",
       "op": "uv",
-      "seconds": 16.63,
+      "seconds": 14.81,
       "triangles": 29998,
       "uvDegenerate": 0.0015
     },
     {
       "albedoFrom": "texture",
-      "albedoMean": 0.3227,
+      "albedoMean": 0.3218,
       "albedoUnfilled": 0.0,
       "cage": 0.154371,
       "device": "OPTIX: NVIDIA GeForce RTX 3090",
@@ -240,10 +240,10 @@
         "ao"
       ],
       "op": "bake",
-      "seconds": 31.19,
+      "seconds": 25.35,
       "size": 2048,
       "triangles": 29998,
-      "uvCoverage": 0.4759
+      "uvCoverage": 0.4758
     },
     {
       "bones": 35,
@@ -252,7 +252,7 @@
       "maxInfluences": 4,
       "method": "bone-heat",
       "op": "bind",
-      "seconds": 0.97,
+      "seconds": 0.6,
       "triangles": 29998,
       "unusedBones": [],
       "weightSum": [
@@ -268,7 +268,7 @@
       "meanAfter": 0.189,
       "meanBefore": 0.1888,
       "op": "weights",
-      "seconds": 0.1,
+      "seconds": 0.08,
       "triangles": 29998
     },
     {
@@ -294,22 +294,22 @@
     {
       "moved": 0.0,
       "op": "script",
-      "seconds": 45.43,
-      "sha256": "7f7189b2a5f81c325e14c44a0f550f1c6b40acf5d025acb3e5610d0cae829b8f",
+      "seconds": 42.03,
+      "sha256": "0186aa339a071105b41b4e9570b73401d0cba4873cea8b431e6233d1b297e807",
       "stdout": [
-        "delight 0.11527419077965587",
-        "horn 0.016328372023418105 root to tip 0.271 0.442",
-        "soot (1.8677985361666491, 0.0, 2.098143841063342) 0.03302165179634601",
-        "dust 0.0878157030591684",
-        "rake 0.000935149975594721",
-        "rake 0.0007638031475257094",
-        "rake 0.0013981778596477055",
-        "haunch 0.00048124688178306937",
-        "haunch 0.0004020638713930619",
-        "neck 0.0006449146008002946",
-        "slash 0.0019166253605143976",
-        "slash 0.0022384321641217763",
-        "slash 0.0014852316780722924"
+        "delight 0.11517921766390575",
+        "horn 0.016286233922896815 root to tip 0.272 0.443",
+        "soot (1.8677808804219693, 0.0, 2.0981150530192942) 0.033108133739064086",
+        "dust 0.0878470290695536",
+        "rake 0.0009098451903948667",
+        "rake 0.0007688504247266469",
+        "rake 0.0013709777493034496",
+        "haunch 0.00048123861810609267",
+        "haunch 0.0004112145639066945",
+        "neck 0.0006470814683211868",
+        "slash 0.0019150282562459694",
+        "slash 0.002238427980788051",
+        "slash 0.001489128730824014"
       ],
       "triangles": 29998,
       "vertices": [
@@ -354,18 +354,18 @@
         }
       ],
       "op": "lods",
-      "seconds": 0.91,
+      "seconds": 0.77,
       "triangles": 29998
     },
     {
-      "bytes": 9791188,
+      "bytes": 9778780,
       "images": {
         "albedo": 2048,
         "normal": 1024,
         "orm": 1024
       },
       "op": "export",
-      "seconds": 1.0,
+      "seconds": 0.82,
       "triangles": 29998
     }
   ],

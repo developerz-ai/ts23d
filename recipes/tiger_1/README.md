@@ -176,8 +176,9 @@ enough for the column seam). The coating is cut into columns so V never wraps in
 At hero distance (≈ 1 cm/px) the ridges sit near the pixel pitch and read as fine striping, which is
 also how the 1944 photographs look; close views resolve them fully.
 
-**LODs.** LOD0 carries the slab and the flake cuts (11.1k triangles before the flakes were cut back, fewer now: hull 7.6k, turret 2.5k, mantlet 1.0k then;
-the ridge boxes were 14.4k on hull and turret alone).
+**LODs.** LOD0 carries the slab and the flake cuts: 7.4k triangles (hull 4.9k, turret 1.9k,
+mantlet 0.65k). History: 11.1k before the flakes were cut back (hull 7.6k, turret 2.5k, mantlet
+1.0k), and the ridge boxes they replaced were 14.4k on hull and turret alone.
 LOD1 and LOD2 add no geometry: the plate faces themselves take the strip (U at the same pitch, V on a
 column middle), so the ridged tone, camo and markings carry to the far LODs; only the small flakes
 and the column seams drop out.

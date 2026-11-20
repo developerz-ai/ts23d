@@ -20,7 +20,7 @@
     },
     "materials": {
       "score": 8,
-      "reason": "The stitch-line veins are replaced by irregular grey strata (sheet FRONT, SIDE); the re-framed hero shows the dark mottled rock, cleanly sheared prism stubs with pale fracture tops and facet-shaded crystals.",
+      "reason": "Irregular grey strata replace the stitch-line veins (sheet FRONT, SIDE); the hero shows the dark mottled rock, sheared prism stubs with flat pale fracture tops (no longer domed) and facet-shaded crystals.",
       "fixes": [
         "salt and dust only in crevices and round the scoop rim"
       ]
@@ -55,7 +55,7 @@
     }
   },
   "renders": {
-    "hero.png": "a644478bc585e68101aa3e9e9a13dcd2b26e5e481322f2ae58829ecf63ca7e9b",
-    "sheet.png": "95ce8686baf86029ddd4a6052c05c8432596e8017472d04a0acaeab21ce5401d"
+    "hero.png": "b9080841816685b94604b3e19bf52ddc7cf735bbebb3e23b80de4f483dd5c3b5",
+    "sheet.png": "f2e0e35b68e54d6331c07544d58483dd407d5218d660c26213b72755af66530a"
   }
 }

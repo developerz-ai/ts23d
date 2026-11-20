@@ -20,7 +20,7 @@
     },
     "materials": {
       "score": 8,
-      "reason": "Brick tones vary per building, windows read as framed grids, the asphalt now has centre dashes and edge lines, and the sidewalk is laid in slabs; the roofs remain one flat colour each and the tree crowns are flat green.",
+      "reason": "Brick tones vary per building, windows read as framed grids, the asphalt has centre dashes and edge lines, and the sidewalk is laid in slabs; the tree crowns now carry faint lighter leaf streaks but stay faceted single masses, and the roofs remain one flat colour each.",
       "fixes": [
         "patches, gravel and vents on each roof membrane",
         "leaf-clump variation in the tree crowns"
@@ -58,7 +58,7 @@
     }
   },
   "renders": {
-    "hero.png": "0f2a4ab3f6f85aaf183984edc03826a04f5b81bde2b704cc33575186357880f8",
-    "sheet.png": "fb5e5756205ba22d242d868a297bb6888300a1bad4927e5e5e8f00483994f2af"
+    "hero.png": "e12d7faa28cffe354f7a0f3456118a049f4c07fa0c7670aa07937c8ad6f03693",
+    "sheet.png": "961151d81bc3b663408c4d4729cecdc2f5dc617da4101b2c79dbada9858e77ad"
   }
 }

@@ -4,6 +4,10 @@
 // with physics makes no call to Math.sin, Math.hypot, Math.pow or any sibling. Before the move to
 // dmath the same build made tens of thousands of them, and their last bit, which differs between
 // CPUs and C library versions, reached vertex normals, tangents and a triangle count.
+// This counts calls at run time, so it cannot see `**` (an operator, not a call) nor a libm call a
+// module makes once at import, before the counters go in. Both are refused statically in every
+// file under src/ and recipes/ (tests included) by `bun run determinism` (scripts/determinism.ts,
+// with tests for `**` and for spellings split across lines); this test is the run-time half.
 
 import { expect, it } from 'bun:test';
 import { type Asset, compile, defineAsset, dmath, type Lod, type Vec2 } from '../core/index.ts';

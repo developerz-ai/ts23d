@@ -158,7 +158,8 @@ function round(g: Grow, idx: readonly number[], max2: number): number[] | null {
  * `mesh` tessellated to `maxEdge` metres. Default: halving, at most `rounds` rounds, every edge
  * ≤ `maxEdge` (edges end between half the limit and the limit, diagonals split again). `exact`:
  * vertices `maxEdge` apart along every input edge and across every face, cell diagonals up to
- * √2 × `maxEdge` (weather-subdivide-exact.ts); about a quarter of the triangles on flat panels.
+ * √2 × and zip edges up to 2.3 × `maxEdge` (weather-subdivide-exact.ts); about a quarter of the
+ * triangles on flat panels.
  */
 export function subdivideTo(mesh: Mesh, maxEdge: number, rounds = 10, exact = false): Mesh {
   if (!(maxEdge > 0)) return mesh;

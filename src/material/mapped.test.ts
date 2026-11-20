@@ -117,6 +117,22 @@ describe('a mesh built outside build() (D354)', () => {
     expect(materialsOf(scene)).toEqual(['map_granite']);
   });
 
+  it('a stale record (UVs re-pointed by hand since) claims no row', () => {
+    resetMaterials();
+    scales();
+    // Mapped onto granite, then every UV moved onto the built-in iron strip, record kept.
+    const moved: Mesh = { ...quad(granite()), uvs: bare('iron').uvs };
+    expect(moved.mapped?.map((u) => u.id)).toEqual(['map_granite']);
+    const both = compile(
+      prop('map_stale', (ctx) => {
+        ctx.part('snake', quad(scales()));
+        ctx.part('rock', moved);
+      }),
+    );
+    expect(both.materials).toEqual([{ id: 'map_scales', row: 4 }]);
+    expect(materialsOf(both)).toEqual(['map_scales']);
+  });
+
   it('module-level stripRect constants are no error, and record when a build reads them', () => {
     resetMaterials();
     scales();

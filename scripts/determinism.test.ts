@@ -103,6 +103,25 @@ it('refuses the platform libm and ** in everything that feeds an asset, and name
   }
 });
 
+it('refuses a libm spelling split across lines, on the line it starts', () => {
+  const split = [
+    ['const s = Math\n  .sin(x);', 1],
+    ['const a = 1;\nconst s = Math.\n  sin(x);', 2],
+    ['const {\n  floor,\n  sin,\n} = Math;', 1],
+    ['const a = 1;\nconst {\n  hypot: len,\n} =\n  Math;', 2],
+    ["const s = Math[\n  'sin'\n](x);", 1],
+  ] as const;
+  for (const [source, line] of split) {
+    const found = checkSource('src/passes/weld.ts', source);
+    expect([source, found.map((v) => v.line)]).toEqual([source, [line]]);
+  }
+  // Two rules on one line, and the same rule on two lines, are each reported.
+  expect(
+    checkSource('src/a.ts', 'const s = Math.sin(a) ** 2;\nconst c = Math.cos(b);'),
+  ).toHaveLength(3);
+  expect(checkSource('src/a.ts', 'const {\n  floor,\n  sqrt,\n} = Math;')).toEqual([]);
+});
+
 it('leaves exact maths, dmath, strings and comments alone', () => {
   for (const line of [
     'const l = Math.sqrt(x * x + y * y) + Math.abs(z) + Math.fround(w);',

@@ -196,24 +196,35 @@ function floatGauge(r0: number, full: boolean): Mesh {
   return merge(g.map((m) => place(m, { yaw: GAUGE_A })));
 }
 
-/** The far gauge: the board as one quad on the far hoop bands' face (radius `TANK_R` + 12 mm). */
-function farGauge(): Mesh {
+/**
+ * The far gauge: the board as one quad 4 mm off the far hoop bands' face (radius `TANK_R` + 12 mm),
+ * laid flat on the band facet under the gauge's bearing, so both its edges clear the band (squared
+ * to the bearing instead, one edge sank 1 cm into it), its centre on that bearing as near.
+ */
+export function farGauge(): Mesh {
   const step = (Math.PI * 2) / STAVES[2];
+  // The far hoops' facets are centred half a step off the lathe's vertices (multiples of a step).
   const off = (((GAUGE_A % step) + step) % step) - step / 2;
-  const r = ((TANK_R + 0.012) * dmath.cos(step / 2)) / dmath.cos(off) + 0.004;
+  const facet = GAUGE_A - off;
+  const apothem = (TANK_R + 0.012) * dmath.cos(step / 2);
+  // Where the bearing meets the facet, measured along the facet from its centre.
+  const along = (apothem * dmath.sin(off)) / dmath.cos(off);
   const z0 = FLOOR_Z + 0.15;
   return place(
     tiled({
-      origin: [r, -0.13, z0],
+      origin: [apothem + 0.004, along - 0.13, z0],
       u: [0, 0.26, 0],
       v: [0, 0, TANK_H - 0.35],
       color: gaugePaint,
       strip: 'wood_painted',
       vMetres: TANK_H,
     }),
-    { yaw: GAUGE_A },
+    { yaw: facet },
   );
 }
+
+/** The far hoop facet a far gauge lies on: its centre bearing and its distance from the axis. */
+export const FAR_HOOP = { segments: STAVES[2], radius: TANK_R + 0.012, gauge: GAUGE_A } as const;
 
 /** Axis-aligned box from two corners. */
 const bx = (

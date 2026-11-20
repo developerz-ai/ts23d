@@ -73,7 +73,7 @@ The neck folds are the least satisfying of these: they are geometry that could s
 | mud | `mudAt`: wet dark mud on the feet, caked up the shins to the knee and drying to a pale crust at its ragged top edge, a broad band under the belly and chest | it lives in a river marsh; the old thin dusting did not read at hero distance |
 | trunk | a barrel: the ribcage swells about 0.2 m wider mid-trunk than behind the shoulders and in front of the hips; shoulder and hip masses softened | read as a box in TOP and FRONT |
 | scale relief | the scale strip's height 9 mm deep (was 4) | scales read as colour only |
-| dorsal spines | 0.07 m apart (was 0.048) and a third larger | the spine line did not read in SIDE |
+| dorsal spines | one every 0.07 of the trunk's arc (0.20 m on its 2.9 m; was 0.048 of it), 0.0665 of the tail's (0.22 m on 3.3 m) and 0.10 of each neck's (0.28 to 0.31 m), a third larger | the spine line did not read in SIDE |
 | scars | claw rakes across neck 1, a healed bite ring on the right flank (both on the hero camera's side), the tip of head 0's swept horn broken off | it fights |
 | mouths | a forked tongue in every open jaw | empty mouths |
 | proportions | thigh roots +24 %, upper arms +25 %, fore feet 16 cm further under the body; lowest necks raised 0.3 to 0.45 m so all five heads clear the shoulders; tail curls to one side | thin splayed legs, a head hanging in front of the chest |

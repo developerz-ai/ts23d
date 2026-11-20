@@ -70,6 +70,23 @@ interface Obj {
   };
 }
 
+/** Hinge heights on the door leaf (m, bottom of each hinge plate). */
+const HINGE_Z = [0.25, 1.0, 1.75] as const;
+
+/**
+ * The far door's rust blocks, `decal(y, z, w, h, colour)` each: a dark strip on the bottom rail
+ * (0–7 cm), the rust band over it (7–22 cm), and a run under each hinge down from it to 42 cm
+ * below or to the band, whichever is higher. They never overlap and never leave the leaf.
+ */
+export function farRust<T>(decal: (y: number, z: number, w: number, h: number, c: Vec3) => T): T[] {
+  const [dark, band] = [0.07, 0.22];
+  const runs = HINGE_Z.flatMap((z) => {
+    const z0 = Math.max(band, z - 0.42);
+    return z - z0 > 0.005 ? [decal(-0.39, z0, 0.07, z - z0, RUST_FAR)] : [];
+  });
+  return [decal(0, 0, 0.91, dark, RUST_DARK), decal(0, dark, 0.91, band - dark, RUST_FAR), ...runs];
+}
+
 /** Steel door 0.91 × 2.03 m (36 × 80 in) in a 0.1 m frame, three hinges with two bolts each. */
 function door(lod: number, aged: boolean): Obj {
   const leaf = box({ size: [0.045, 0.91, 2.03], at: [0, 0, 0], color: DOOR_PAINT, strip: 'iron' });
@@ -82,7 +99,7 @@ function door(lod: number, aged: boolean): Obj {
   ]);
   const fasteners: { at: Vec3; radius: number }[] = [];
   const hinges: Mesh[] = [];
-  for (const z of [0.25, 1.0, 1.75]) {
+  for (const z of HINGE_Z) {
     hinges.push(
       box({ size: [0.006, 0.09, 0.12], at: [0.0255, -0.41, z], color: STEEL, strip: 'iron' }),
     );
@@ -106,7 +123,9 @@ function door(lod: number, aged: boolean): Obj {
   const swing = (m: Mesh): Mesh =>
     place(place(m, { at: [-pivot[0], -pivot[1], 0] }), { yaw: -0.42, at: pivot });
   // Far: the same story as flat blocks: a rust band along the bottom rail and a run under each
-  // hinge, 1 mm proud of the front face.
+  // hinge, 1 mm proud of the front face. The blocks tile the face without overlapping (one plane,
+  // so an overlap would z-fight): the dark rail strip, the band above it, each run from the band
+  // (or 42 cm under its hinge, if higher) up to the hinge.
   const decal = (y: number, z: number, w: number, h: number, color: Vec3): Mesh =>
     box({
       size: [0.001, w, h],
@@ -115,12 +134,7 @@ function door(lod: number, aged: boolean): Obj {
       strip: 'iron',
       omit: ['back', 'left', 'right', 'top', 'bottom'],
     });
-  const farLeaf = merge([
-    leaf,
-    decal(0, 0, 0.91, 0.22, RUST_FAR),
-    decal(0, 0, 0.91, 0.07, RUST_DARK),
-    ...[0.25, 1.0, 1.75].map((z) => decal(-0.39, z - 0.42, 0.07, 0.42, RUST_FAR)),
-  ]);
+  const farLeaf = merge([leaf, ...farRust(decal)]);
   return {
     meshes: { leaf, hinges: merge(hinges), handle },
     ...(aged

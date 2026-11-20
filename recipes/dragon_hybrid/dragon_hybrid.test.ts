@@ -121,8 +121,10 @@ describe('dragon_hybrid, model tier (committed cache)', () => {
     async () => {
       await cached();
       const P = textured(0)[0]?.mesh?.positions ?? new Float32Array();
-      let [left, right, top] = [0, 0, 0];
+      let [front, back, left, right, top] = [0, 0, 0, 0, 0];
       for (let i = 0; i < P.length; i += 3) {
+        front = Math.max(front, P[i] ?? 0);
+        back = Math.min(back, P[i] ?? 0);
         left = Math.max(left, P[i + 1] ?? 0);
         right = Math.min(right, P[i + 1] ?? 0);
         top = Math.max(top, P[i + 2] ?? 0);
@@ -132,7 +134,7 @@ describe('dragon_hybrid, model tier (committed cache)', () => {
       expect(3.35).toBeLessThan(BOX.width * 0.95);
       expect(3.6).toBeGreaterThan(BOX.height * 1.05);
       expect([WING_SCALE, WING_TILT]).toEqual([1.4, 22]);
-      expect(Math.abs(left - right - BOX.length) / BOX.length).toBeLessThan(0.05);
+      expect(Math.abs(front - back - BOX.length) / BOX.length).toBeLessThan(0.05);
       expect(Math.abs(left - right - BOX.width) / BOX.width).toBeLessThan(0.05);
       expect(Math.abs(top - BOX.height) / BOX.height).toBeLessThan(0.05);
     },

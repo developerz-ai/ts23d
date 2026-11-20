@@ -204,5 +204,53 @@ export function frondCards(
     mb.tri(last[0], last[1], t1);
     mb.tri(last[1], last[2], t1);
   }
-  return mb.build();
+  return foldNormals(mb.build());
+}
+
+/**
+ * Normals from the folded triangles, angle-weighted (so the split of a quad into two triangles
+ * does not tilt them): the rachis vertex (shared by both halves) averages the halves, each outer
+ * edge keeps its own half's slope, so the V shades as two planes. Each keeps the side of the
+ * card's laid normal (across × along), so the card faces the same way.
+ */
+export function foldNormals(m: Mesh): Mesh {
+  const normals = new Float32Array(m.normals.length);
+  const p = (i: number): Vec3 => [
+    m.positions[i * 3] ?? 0,
+    m.positions[i * 3 + 1] ?? 0,
+    m.positions[i * 3 + 2] ?? 0,
+  ];
+  const unit = (a: Vec3): Vec3 => scale(a, 1 / (len(a) || 1));
+  for (let t = 0; t < m.indices.length; t += 3) {
+    const ids = [m.indices[t] ?? 0, m.indices[t + 1] ?? 0, m.indices[t + 2] ?? 0];
+    const ps = ids.map(p);
+    const [a, b, c] = ps as [Vec3, Vec3, Vec3];
+    const [u, v] = [sub(b, a), sub(c, a)];
+    const f = unit([
+      u[1] * v[2] - u[2] * v[1],
+      u[2] * v[0] - u[0] * v[2],
+      u[0] * v[1] - u[1] * v[0],
+    ]);
+    ids.forEach((id, k) => {
+      const o = ps[k] ?? a;
+      const [e1, e2] = [unit(sub(ps[(k + 1) % 3] ?? a, o)), unit(sub(ps[(k + 2) % 3] ?? a, o))];
+      const dot = Math.max(-1, Math.min(1, e1[0] * e2[0] + e1[1] * e2[1] + e1[2] * e2[2]));
+      const w = dmath.acos(dot);
+      for (let j = 0; j < 3; j++)
+        normals[id * 3 + j] = (normals[id * 3 + j] ?? 0) + (f[j] ?? 0) * w;
+    });
+  }
+  for (let i = 0; i < normals.length / 3; i++) {
+    const n: Vec3 = [normals[i * 3] ?? 0, normals[i * 3 + 1] ?? 0, normals[i * 3 + 2] ?? 0];
+    const laid: Vec3 = [
+      m.normals[i * 3] ?? 0,
+      m.normals[i * 3 + 1] ?? 0,
+      m.normals[i * 3 + 2] ?? 0,
+    ];
+    const l = len(n);
+    const flip = n[0] * laid[0] + n[1] * laid[1] + n[2] * laid[2] < 0 ? -1 : 1;
+    const out = l > 1e-12 ? scale(n, flip / l) : laid;
+    normals.set(out, i * 3);
+  }
+  return { ...m, normals };
 }

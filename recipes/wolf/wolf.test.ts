@@ -114,7 +114,7 @@ describe('coat (WOLF_WILD)', () => {
       const far = fur(2);
       expect(far.tris).toBeGreaterThan(60);
       expect(far.tris).toBeLessThan(400);
-      for (const lod of [1, 2] as const) expect(fur(lod).y).toBeLessThanOrEqual(0.148);
+      for (const lod of [0, 1, 2] as const) expect(fur(lod).y).toBeLessThanOrEqual(0.148);
     },
     SLOW,
   );

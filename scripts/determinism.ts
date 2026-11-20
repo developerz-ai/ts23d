@@ -204,16 +204,43 @@ export function checkEntropy(file: string, source: string): Violation[] {
   return out;
 }
 
-/** The platform's libm and `**`: refused wherever `underLibmRule` holds, tests included. */
+/**
+ * The platform's libm and `**`: refused wherever `underLibmRule` holds, tests included. The rules
+ * run over the whole code (lines joined), so a spelling split across lines (`Math\n.sin(x)`, a
+ * destructuring of `sin` over several lines) is refused too; each finding names the line it starts
+ * on, once per rule and line.
+ */
 export function checkLibm(file: string, source: string): Violation[] {
   const out: Violation[] = [];
   if (!underLibmRule(file)) return out;
-  codeLines(source).forEach((code, i) => {
-    for (const b of LIBM_BANNED)
-      if (b.re.test(code))
-        out.push({ file, line: i + 1, message: `${b.what} breaks determinism`, fix: b.fix });
-  });
-  return out;
+  const lines = codeLines(source);
+  const code = lines.join('\n');
+  const starts: number[] = [];
+  let at = 0;
+  for (const l of lines) {
+    starts.push(at);
+    at += l.length + 1;
+  }
+  const lineOf = (index: number): number => {
+    let lo = 0;
+    let hi = starts.length - 1;
+    while (lo < hi) {
+      const mid = (lo + hi + 1) >> 1;
+      if ((starts[mid] ?? 0) <= index) lo = mid;
+      else hi = mid - 1;
+    }
+    return lo + 1;
+  };
+  for (const b of LIBM_BANNED) {
+    const seen = new Set<number>();
+    for (const m of code.matchAll(new RegExp(b.re.source, 'g'))) {
+      const line = lineOf(m.index);
+      if (seen.has(line)) continue;
+      seen.add(line);
+      out.push({ file, line, message: `${b.what} breaks determinism`, fix: b.fix });
+    }
+  }
+  return out.sort((a, b) => a.line - b.line);
 }
 
 export const checkSource = (file: string, source: string): Violation[] =>

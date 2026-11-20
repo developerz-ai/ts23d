@@ -26,6 +26,7 @@ import {
   weather,
   weightedNormals,
 } from '@developerz.ai/ts23d';
+import { mix } from '../_lib/finish/wear.ts';
 import { CLAY_STRIP } from './clay.ts';
 
 const PLINTH: Vec3 = [0.5, 1.8, 0.12];
@@ -39,11 +40,6 @@ const CLAY = hex('#b5643c');
 const WALNUT = hex('#5a3d2a');
 const DUST = hex('#9a958a');
 const SCUFF = hex('#a07a55');
-const mixC = (a: Vec3, b: Vec3, t: number): Vec3 => [
-  a[0] + (b[0] - a[0]) * t,
-  a[1] + (b[1] - a[1]) * t,
-  a[2] + (b[2] - a[2]) * t,
-];
 /** Pale maple stringing inlaid round the plinth top. */
 const MAPLE = hex('#d8c29a');
 const SKIN = hex('#6f8f4a');
@@ -161,7 +157,7 @@ function plinth(lod: number): Mesh {
         return box({
           size: [sx1 - sx0, sy1 - sy0, 0.001],
           at: [(sx0 + sx1) / 2, (sy0 + sy1) / 2, H + 0.001],
-          color: mixC(DUST, WALNUT, (k + 0.5) / 4),
+          color: mix(DUST, WALNUT, (k + 0.5) / 4),
           strip: 'oak',
           omit: ['front', 'back', 'left', 'right', 'bottom'],
         });

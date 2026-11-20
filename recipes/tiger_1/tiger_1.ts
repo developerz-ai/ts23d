@@ -521,6 +521,15 @@ const idler = (lod: Lod): Mesh =>
 
 // ---------------------------------------------------------------- finish passes
 
+/** The gun's trunnion point (world): the barrel runs +X from it to its muzzle at x + 4.14 m. */
+export const GUN_AT: Vec3 = [TURRET_AT[0] + 1.0, 0, TURRET_AT[2] + 0.42];
+
+/** The barrel's two sleeves: olive mid-barrel, red-brown out to the muzzle brake. */
+export const BARREL_SLEEVES: readonly Blob[] = [
+  { c: [GUN_AT[0] + 2.55, 0, GUN_AT[2]], r: [0.55, 0.6, 0.6], color: olivgruen },
+  { c: [GUN_AT[0] + 4.05, 0, GUN_AT[2]], r: [0.7, 0.6, 0.6], color: rotbraun },
+];
+
 /**
  * Three-tone camouflage as the crews sprayed it: a dozen broad soft-edged bands of red-brown and
  * olive green, each taller than the plate it crosses (so it reads as a band across hull and
@@ -540,9 +549,7 @@ function camoBlobs(rng: Rng): Blob[] {
       color: i % 3 === 1 ? olivgruen : rotbraun,
     });
   }
-  // The barrel: two sleeves.
-  out.push({ c: [5.2, 0, 2.3], r: [0.7, 0.6, 0.6], color: rotbraun });
-  out.push({ c: [7.0, 0, 2.3], r: [0.55, 0.6, 0.6], color: olivgruen });
+  out.push(...BARREL_SLEEVES);
   return out;
 }
 
@@ -1758,7 +1765,7 @@ export const tiger_1 = defineAsset({
         mParts.push(place(bolt, { at: [0.43, dmath.cos(a) * 0.19, dmath.sin(a) * 0.19 - 0.0175] }));
       }
     }
-    const gunAt: Vec3 = [TURRET_AT[0] + 1.0, 0, TURRET_AT[2] + 0.42];
+    const gunAt = GUN_AT;
     const mantlet = paintJob(merge(mParts), gunAt, { mud: 0 });
     ctx.part('gun_mantlet', lod > 0 ? coatFaces(mantlet, onMantletFace, TURRET_PITCH) : mantlet, {
       parent: 'gun',

@@ -74,9 +74,12 @@ export interface WeatheringOptions {
   readonly resolution?: number | readonly [number, number, number];
   /** How `resolution` is reached. 'halving' (default): edges are halved until they fit, so they
    *  end between half the limit and the limit and diagonals are split again (2–8 × the triangles
-   *  the limit asks for). 'exact': every edge is cut into ⌈L / resolution⌉ equal parts: no edge
-   *  longer than `resolution`, 3–6 × fewer triangles on flat panels. Changes the mesh, so every
-   *  coverage and streak; pick it when authoring, not on a tuned asset. */
+   *  the limit asks for). 'exact': every input edge is cut into ⌈L / resolution⌉ equal parts and
+   *  each triangle filled with a lattice of them, 3–6 × fewer triangles on flat panels. Edges along
+   *  input edges and lattice rows are at most `resolution`; cell diagonals reach √2 × it and the
+   *  zip edges to a triangle's longest side up to 2.3 × (1.6 × on rectangles); the mean edge is
+   *  within 15 % (docs/idea/18-weathering.md). Changes the mesh, so every coverage and streak; pick
+   *  it when authoring, not on a tuned asset. */
   readonly tessellation?: 'halving' | 'exact';
   /** Reading distance the stains are sized for. 'close' (default): looks as authored, 3–7 cm
    *  patches that read from a metre or two. 'hero': sized to the target so they read when it is

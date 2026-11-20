@@ -15,6 +15,7 @@ import { bodyChain, measureWave } from '../../src/qa/chain-wave.ts';
 import { clipPose, jointWorlds } from '../../src/qa/clip-pose.ts';
 import {
   arcX,
+  COLOUR,
   GILLS,
   gillField,
   L,
@@ -40,7 +41,7 @@ import {
 import { CLIPS, CRUISE_HZ, great_white, PLAN } from './great_white.ts';
 import { REST_GAPE } from './jaws.ts';
 import { PORE_COUNT, SCAR_COUNT, scars } from './skin-detail.ts';
-import { faceDetail } from './trunk.ts';
+import { eyeMesh, faceDetail } from './trunk.ts';
 
 const lod0 = compile(great_white, { lod: 0 });
 const mesh = (name: string): Mesh => {
@@ -173,6 +174,20 @@ describe('close-up detail', () => {
     const c = merge(faceDetail(0, rng()));
     const d = merge(faceDetail(0, rng()));
     expect([...c.positions]).toEqual([...d.positions]);
+  });
+
+  it('rings the pupil with its pale band at LOD0 (no ring of the eye fell inside it)', () => {
+    const c = eyeMesh(1, 0).colors;
+    const [r, g, b] = COLOUR.pupilRing;
+    let ring = 0;
+    for (let i = 0; i < c.length; i += 3)
+      if (
+        Math.abs((c[i] ?? 0) - r) < 1e-6 &&
+        Math.abs((c[i + 1] ?? 0) - g) < 1e-6 &&
+        Math.abs((c[i + 2] ?? 0) - b) < 1e-6
+      )
+        ring++;
+    expect(ring).toBeGreaterThan(0);
   });
 
   it('shows the upper teeth below the lip with the mouth at rest', () => {

@@ -4,6 +4,10 @@
 // sibling. (2) A child process where glibc is told this CPU has no FMA,
 // so it loads its other set of routines, gets the same film and the same float64 results from the
 // samplers, the sky, the skin profile and the tone curve.
+// The counters see calls only: `**` and a call a module makes once at import (raster's light, the
+// optimizer's score table) are refused statically by `bun run determinism` (scripts/determinism.ts)
+// in every file under src/, tests included. The asset is compiled inside the counted job, so a
+// primitive or pass that went back to libm fails here too.
 
 import { expect, it } from 'bun:test';
 import { createHash } from 'node:crypto';
@@ -186,8 +190,10 @@ const CHILD = 'T3D_LIBM_CHILD';
 const child = process.env[CHILD] !== undefined;
 
 it.skipIf(child)('a render never calls the platform libm', () => {
-  const asset = scene();
   expect(libmCalls(() => Math.hypot(Math.sin(1), Math.exp(1)))).toBe(3); // the count is live
+  let built: CompiledAsset | undefined;
+  expect(libmCalls(() => (built = scene()))).toBe(0);
+  const asset = built ?? scene();
   expect(libmCalls(() => film(asset))).toBe(0);
   expect(libmCalls(() => maths())).toBe(0);
   expect(libmCalls(() => beauty(asset, { width: 96, height: 54, sheet }))).toBe(0);

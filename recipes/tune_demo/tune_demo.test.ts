@@ -30,4 +30,21 @@ describe('tune_demo', () => {
     // …and differently without them: the file is what changes the model.
     expect(toGlb(compile(without))).not.toEqual(toGlb(compile(tune_demo)));
   });
+
+  it('LOD2 profile climbs monotonically at the lowest allowed belly (no folded wall)', () => {
+    // Failure first: bellyZ 0.25 put the belly station (0.15 m) after the 0.18 m one.
+    const body = compile(tune_demo, { lod: 2, tuned: { ...values, bellyZ: 0.25 } }).parts.find(
+      (p) => p.name === 'body',
+    )?.mesh;
+    expect(body).toBeDefined();
+    // Lathe rings in profile order: the outer wall's ring heights, first vertex of each ring.
+    const P = body?.positions ?? new Float32Array();
+    const zs: number[] = [];
+    for (let i = 0; i < P.length / 3; i++) {
+      const z = P[i * 3 + 2] ?? 0;
+      if (zs.length === 0 || Math.abs(z - (zs[zs.length - 1] ?? 0)) > 1e-6) zs.push(z);
+    }
+    for (let k = 1; k < zs.length; k++)
+      expect(zs[k] ?? 0).toBeGreaterThanOrEqual((zs[k - 1] ?? 0) - 1e-6);
+  });
 });

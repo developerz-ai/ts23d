@@ -26,6 +26,7 @@ import {
   type Vec3,
   weather,
 } from '@developerz.ai/ts23d';
+import { mix } from '../_lib/finish/wear.ts';
 import { TERRACOTTA } from './terracotta.ts';
 import saved from './tune.json';
 
@@ -96,11 +97,6 @@ const RUNS: readonly Run[] = [
   { a: -1.45, w: 0.009, len: 0.19 },
 ];
 
-const mix = (a: Vec3, b: Vec3, t: number): Vec3 => [
-  a[0] + (b[0] - a[0]) * t,
-  a[1] + (b[1] - a[1]) * t,
-  a[2] + (b[2] - a[2]) * t,
-];
 const band = (x: number, lo: number, hi: number): number =>
   Math.min(1, Math.max(0, (x - lo) / (hi - lo)));
 
@@ -206,7 +202,12 @@ export const tune_demo = defineAsset({
       // LOD2: one station per feature, so the foot flare, belly, shoulder and the lip roll
       // survive at 14 sides inside the 300-triangle prop band; the mouth closes (the opening is a
       // pixel at that range).
-      for (const z of [0, 0.03, 0.3 * H, zB, (zB + zN) / 2, zN]) profile.push([r(z), z]);
+      // Sorted and deduplicated: a low belly (bellyZ 0.25 puts it at 0.15 m) would otherwise come
+      // after the 0.18 m lower-body station and fold the wall back on itself.
+      const stations = [...new Set([0, 0.03, 0.3 * H, zB, (zB + zN) / 2, zN])].sort(
+        (a, b) => a - b,
+      );
+      for (const z of stations) profile.push([r(z), z]);
       profile.push([lip, H - 0.012], [lip + 0.005, H - 0.004], [0, H]);
     }
     const body = clayTone(

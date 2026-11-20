@@ -418,7 +418,7 @@
       "target": 0.1017,
       "actual": 0.1017,
       "eligible": "convex-edges",
-      "area": 1463.0592,
+      "area": 1463.076,
       "by": {
         "hall_hall_masonry": {
           "target": 0.1,
@@ -453,17 +453,17 @@
         "warden_0_warden": {
           "target": 0.15,
           "actual": 0.15,
-          "area": 3.4251
+          "area": 3.4307
         },
         "warden_1_warden": {
           "target": 0.15,
           "actual": 0.15,
-          "area": 3.4251
+          "area": 3.4307
         },
         "warden_2_warden": {
           "target": 0.15,
           "actual": 0.15,
-          "area": 3.4251
+          "area": 3.4307
         },
         "delver_0_delver": {
           "target": 0.28,
@@ -600,7 +600,7 @@
       "target": 0.3206,
       "actual": 0.3206,
       "eligible": "up-facing",
-      "area": 317.34,
+      "area": 317.3669,
       "by": {
         "hall_hall_masonry": {
           "target": 0.35,
@@ -625,32 +625,32 @@
         "warden_0_warden": {
           "target": 0.3,
           "actual": 0.3,
-          "area": 0.9301
+          "area": 0.9318
         },
         "warden_0_warden_kit": {
           "target": 0.3,
           "actual": 0.3,
-          "area": 0.7141
+          "area": 0.7213
         },
         "warden_1_warden": {
           "target": 0.3,
           "actual": 0.3,
-          "area": 0.9301
+          "area": 0.9318
         },
         "warden_1_warden_kit": {
           "target": 0.3,
           "actual": 0.3,
-          "area": 0.7112
+          "area": 0.7185
         },
         "warden_2_warden": {
           "target": 0.3,
           "actual": 0.3,
-          "area": 0.9301
+          "area": 0.9318
         },
         "warden_2_warden_kit": {
           "target": 0.3,
           "actual": 0.3,
-          "area": 0.708
+          "area": 0.7153
         },
         "delver_0_delver": {
           "target": 0.3,
@@ -675,25 +675,25 @@
       }
     },
     "scratches": {
-      "target": 0.3415,
-      "actual": 0.3415,
+      "target": 0.3411,
+      "actual": 0.3411,
       "eligible": "touched",
-      "area": 1.7987,
+      "area": 1.8158,
       "by": {
         "warden_0_warden": {
           "target": 0.3,
           "actual": 0.3,
-          "area": 0.5167
+          "area": 0.5224
         },
         "warden_1_warden": {
           "target": 0.3,
           "actual": 0.3,
-          "area": 0.5167
+          "area": 0.5224
         },
         "warden_2_warden": {
           "target": 0.3,
           "actual": 0.3,
-          "area": 0.5167
+          "area": 0.5224
         },
         "delver_0_delver_kit": {
           "target": 0.6,

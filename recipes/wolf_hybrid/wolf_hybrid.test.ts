@@ -102,9 +102,10 @@ describe('wolf_hybrid, model tier (committed cache)', () => {
       const [mesh, set] = [body?.mesh, body?.textures];
       expect(mesh && set?.orm).toBeTruthy();
       if (!mesh || !set?.orm) return;
+      // Each map decoded once (the albedo is 2048²), then sampled per band.
+      const [albedo, orm] = [decodePng(set.albedo), decodePng(set.orm)];
       /** A map's texels under the vertices between two heights (metres): RGB 0..255. */
-      const texels = (png: Uint8Array, z0: number, z1: number): number[][] => {
-        const image = decodePng(png);
+      const texels = (image: typeof albedo, z0: number, z1: number): number[][] => {
         const out: number[][] = [];
         for (let v = 0; v < mesh.positions.length / 3; v++) {
           const z = mesh.positions[v * 3 + 2] ?? 0;
@@ -121,7 +122,7 @@ describe('wolf_hybrid, model tier (committed cache)', () => {
       };
       const mean = (values: readonly number[]): number =>
         values.reduce((s, v) => s + v, 0) / Math.max(values.length, 1);
-      const all = texels(set.albedo, -1, 9);
+      const all = texels(albedo, -1, 9);
       expect(all.length).toBeGreaterThan(10_000);
       // The generator's orange (flank, ears, tail root): texels whose chroma passes 0.45 were
       // 8.2 % of the unpainted bake (18.6 % on the flank band), and are 0.4 % painted.
@@ -131,11 +132,18 @@ describe('wolf_hybrid, model tier (committed cache)', () => {
       // Wet mud: the paws were as light as the flank (value 387 against 401 of 765); they are
       // a quarter of it, and the pasterns under half.
       const value = (c: readonly number[]): number => (c[0] ?? 0) + (c[1] ?? 0) + (c[2] ?? 0);
-      const flank = mean(texels(set.albedo, 0.38, 0.57).map(value));
-      expect(mean(texels(set.albedo, 0, 0.04).map(value))).toBeLessThan(flank * 0.5);
-      expect(mean(texels(set.albedo, 0.04, 0.11).map(value))).toBeLessThan(flank * 0.7);
+      const [flankBand, paws, pasterns] = [
+        texels(albedo, 0.38, 0.57),
+        texels(albedo, 0, 0.04),
+        texels(albedo, 0.04, 0.11),
+      ];
+      // An empty band means 0 and would pass the mud checks unread.
+      for (const band of [flankBand, paws, pasterns]) expect(band.length).toBeGreaterThan(50);
+      const flank = mean(flankBand.map(value));
+      expect(mean(paws.map(value))).toBeLessThan(flank * 0.5);
+      expect(mean(pasterns.map(value))).toBeLessThan(flank * 0.7);
       // One flat roughness (the bake's 0.8 = 204) has no spread; coat, mud, nose and scars do.
-      const rough = texels(set.orm, -1, 9).map((c) => c[1] ?? 0);
+      const rough = texels(orm, -1, 9).map((c) => c[1] ?? 0);
       const avg = mean(rough);
       expect(Math.sqrt(mean(rough.map((r) => dmath.pow(r - avg, 2))))).toBeGreaterThan(12);
     },

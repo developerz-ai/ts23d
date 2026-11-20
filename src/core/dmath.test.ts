@@ -3,29 +3,10 @@
 
 import { expect, it } from 'bun:test';
 import * as dmath from './dmath.ts';
+import { type Fn, inputs, magnitudes } from './dmath-fixtures.ts';
 
 const F = new Float64Array(1);
 const U32 = new Uint32Array(F.buffer);
-/** xorshift32: the test's own inputs, the same on every machine. */
-function inputs(seed: number): () => number {
-  let s = seed;
-  const next = (): number => {
-    s ^= s << 13;
-    s ^= s >>> 17;
-    s ^= s << 5;
-    return (s >>> 0) / 4294967296;
-  };
-  return () => next() + next() / 4294967296;
-}
-/** ±2^[lo, hi], built from exact doublings so the inputs do not depend on libm either. */
-const magnitudes = (r: () => number, lo: number, hi: number) => (): number => {
-  const e = Math.floor(lo + (hi - lo) * r());
-  let v = (r() < 0.5 ? -1 : 1) * (1 + r());
-  for (let i = 0; i < Math.abs(e); i++) v *= e < 0 ? 0.5 : 2;
-  return v;
-};
-
-type Fn = (x: number) => number;
 
 it('is monotonic where the function is, step by step', () => {
   const rising: readonly [Fn, number, number][] = [

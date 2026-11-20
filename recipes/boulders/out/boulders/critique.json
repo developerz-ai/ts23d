@@ -19,7 +19,7 @@
     },
     "materials": {
       "score": 7,
-      "reason": "The soil patches now sit flush with smooth rounded outlines and no drop shadow (hero.png, TOP), so the plywood cut-out read is gone; but their edge is still a hard line with no fade into the ground, the soil is one pale tan, and the granite albedo stays soft and blurry.",
+      "reason": "The soil skirts sit flush with smooth rounded outlines and the dark rim along their long sides is gone (hero.png, front edge); but the edge is still a hard line with no fade into the ground, the soil is one pale tan, and the granite albedo stays soft and blurry.",
       "fixes": [
         "fade the soil patch edges (alpha or vertex fade) so they bleed into the ground instead of ending on a line",
         "darker, damper soil tone instead of pale tan",
@@ -57,7 +57,7 @@
     }
   },
   "renders": {
-    "hero.png": "92593c633d6c08401399ea12bcb4a7efe01b5cd967433c611c823784c12335db",
-    "sheet.png": "7367a81298f7491cc58117486f5fe9cbc4ef5478f2f34509ba2718cc859e6c00"
+    "hero.png": "e8e12437893d204f7b5358cac88b093c47b9f9f088e390a191e0c6a2cccc0461",
+    "sheet.png": "b6524867ce0df11032b8369b3919b70f59a0ef1418e1771e434ab81c4a679257"
   }
 }

@@ -29,12 +29,11 @@ import {
   uAtY,
   uPlus,
 } from './regions.ts';
-import { S_MAX, S_MIN, sAtX, U, U_MAX } from './shape.ts';
+import { S_MAX, S_MIN, sAtX, U, U_MAX, X_HOOD_FRONT } from './shape.ts';
 
 export const X_HOOD_REAR = 0.43;
 export const X_TRUNK_FRONT = -1.32;
-/** Hood front edge (centre line x). */
-export const X_HOOD_FRONT = 1.72;
+export { X_HOOD_FRONT };
 /** Tail fascia / trunk shut line (centre line x). */
 export const X_TAIL_SHUT = -2.0;
 

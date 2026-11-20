@@ -19,7 +19,7 @@ import {
   type Vec3,
 } from '@developerz.ai/ts23d';
 import { teamShade } from '../_lib/rts/style.ts';
-import { HALF_X, HALF_Y, PLINTH, PLINTH_OUT } from './plan.ts';
+import { HALF_X, HALF_Y, PLINTH, PLINTH_OUT, rectInside } from './plan.ts';
 
 /** Warm grey sandstone flags, a step lighter than the slate plinth rim. */
 export const FLAG: Vec3 = hex('#857c6c');
@@ -101,18 +101,25 @@ function layout(lod: Lod, rng: Rng): Cell[] {
 /**
  * The flagstone floor over the plinth top: LOD0 ~1 m flags with 4 cm joints (the darker slate
  * shows through), each flag its own tone; LOD1 2 m slabs; LOD2 a 3 × 3 field of tones, tops only.
- * `stains` scorch, ash or muddy them per vertex. Returns the layout too, for the painted emblem.
+ * `stains` scorch, ash or muddy them per vertex. `outline` is a broken plinth's plan: only flags
+ * lying wholly on it (the same 25 cm in from its edge) are laid. Returns the laid cells too, for the
+ * painted emblem.
  */
 export function floor(
   lod: Lod,
   rng: Rng,
   stains: readonly Stain[],
+  outline?: readonly Vec2[],
 ): { mesh: Mesh; cells: readonly Cell[] } {
-  const cells = layout(lod, rng);
+  const all = layout(lod, rng);
+  const laid = all.map((c) => !outline || rectInside(outline, c, 0.25));
+  const cells = all.filter((_, i) => laid[i]);
   const joint = lod === 2 ? 0 : 0.04;
-  const flags = cells.map((c) => {
+  const flags = all.flatMap((c, i) => {
+    // Every flag draws its tone, laid or not, so the rest keep theirs when a corner goes.
     const k = rng.range(0.82, 1.1);
     const warm = rng.range(-0.05, 0.05);
+    if (!laid[i]) return [];
     const tone: Vec3 = [FLAG[0] * k * (1 + warm), FLAG[1] * k, FLAG[2] * k * (1 - warm)];
     return box({
       size: [c.x1 - c.x0 - joint, c.y1 - c.y0 - joint, FLAG_T],

@@ -132,21 +132,20 @@ export function crystal(lod: Lod, r: number, h: number, state: CrystalState): Me
   const colors = new Float32Array(m.colors.length);
   const positions = new Float32Array(m.positions);
   for (let i = 0; i < colors.length; i += 3) {
-    const x = m.positions[i] ?? 0;
-    const y = m.positions[i + 1] ?? 0;
+    const k = Math.round(dmath.atan2(m.positions[i + 1] ?? 0, m.positions[i] ?? 0) / (Math.PI / 6));
+    // Mid-face vertices pulled onto the flat face (a true hexagon), and darker: the face glows
+    // deep inside, its edges catch the light. Pulled in before the cut, so a sheared vertex lands
+    // on the cut plane at its final x.
+    const mid = lod === 0 && k % 2 !== 0;
+    const pull = mid ? dmath.cos(Math.PI / 6) : 1;
+    const x = (m.positions[i] ?? 0) * pull;
+    const y = (m.positions[i + 1] ?? 0) * pull;
+    positions[i] = x;
+    positions[i + 1] = y;
     const sheared = state === 'stub' && (m.positions[i + 2] ?? 0) > cut(x) - 1e-6;
     const z = sheared ? cut(x) : (m.positions[i + 2] ?? 0);
     positions[i + 2] = z;
     const t = Math.max(0, Math.min(1, (z - root) / (top - root)));
-    const k = Math.round(dmath.atan2(y, x) / (Math.PI / 6));
-    // Mid-face vertices pulled onto the flat face (a true hexagon), and darker: the face glows
-    // deep inside, its edges catch the light.
-    const mid = lod === 0 && k % 2 !== 0;
-    if (mid) {
-      const c = dmath.cos(Math.PI / 6);
-      positions[i] = x * c;
-      positions[i + 1] = y * c;
-    }
     let c = mix(ROOT, TIP, t * t);
     // Facets: a deep amber core mid-face, bright edges where the light catches (LOD0).
     if (lod === 0) c = mid ? mix(c, ROOT, 0.55) : mix(c, TIP, 0.4);

@@ -35,6 +35,10 @@ const mix = (a: Vec3, b: Vec3, k: number): Vec3 => [
   a[2] + (b[2] - a[2]) * k,
 ];
 
+/** A blanket's tone at `depth` (0 edge … 1 middle): the paint at its edge, soot from 0.45 in. */
+export const sootTone = (paint: Vec3, depth: number): Vec3 =>
+  mix(paint, SOOT, Math.min(1, depth * 2.2));
+
 interface Column {
   readonly p: Vec3;
   readonly n: Vec3;
@@ -54,7 +58,7 @@ function sheet(rows: readonly (readonly Column[])[], paint: Vec3): Mesh {
         p: c.p,
         n: c.n,
         uv,
-        color: mix(mix(paint, SOOT, 0.35), SOOT, Math.min(1, c.depth * 2.2)),
+        color: sootTone(paint, c.depth),
       }),
     })),
   );

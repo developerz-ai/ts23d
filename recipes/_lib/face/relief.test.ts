@@ -46,8 +46,14 @@ describe('relieve', () => {
       if (d >= 0.012) expect(dz).toBe(0);
       else expect(dz).toBeGreaterThan(0);
     }
-    // Full height at the axis, along the normal.
-    expect(Math.abs(out.p[12 * 3 + 2] ?? 0)).toBeCloseTo(0.002, 9);
+    // Full height at the axis, along the normal: + out (+Z on this grid).
+    expect(out.p[12 * 3 + 2] ?? 0).toBeCloseTo(0.002, 9);
+  });
+
+  it('pushes a negative height in, against the normal', () => {
+    const out = relieve(grid(), [{ a: [0.02, 0.02, 0], b: [0.02, 0.02, 0], r: 0.012, h: -0.002 }]);
+    expect(out.p[12 * 3 + 2] ?? 0).toBeCloseTo(-0.002, 9);
+    expect(out.p[11 * 3 + 2] ?? 0).toBeLessThan(0);
   });
 
   it('drops strokes finer than `min` and then returns the mesh untouched', () => {

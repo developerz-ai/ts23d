@@ -36,7 +36,8 @@ export const SCALES = defineMaterial({
 
 /** Share of the keratin strip a piece's root-to-tip ramp runs over. */
 const RAMP = 0.9;
-/** Position along one tile of U, 0..1: the graph must repeat every tile. */
+/** Position along one tile of U, 0..1: the graph must repeat every tile. A strip's tile is its
+ *  whole U span (`spanMetres`, not `scaleMetres`), so a pinned piece runs the ramp once. */
 const along = (xm: number, tile: number): number => (((xm % tile) + tile) % tile) / tile;
 const sm = (a: number, b: number, x: number): number => {
   const t = Math.max(0, Math.min(1, (x - a) / (b - a)));

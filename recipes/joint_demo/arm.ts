@@ -196,6 +196,9 @@ export function arm(ctx: BuildContext, o: ArmOptions): Arm {
   // rounded cap that swells over the stand's cup and narrows onto the upper arm, its cut face in
   // the section's dark red.
   const cut = sx - 0.05;
+  // The first ring twice: ring 0 carries the section's colour into the cut face, ring 1 the skin's,
+  // so the colour turns at the edge instead of fading down the cap (loft drops the zero-area band
+  // between them, and ring 1's normal takes the next ring along).
   const cap: readonly (readonly [number, number, number])[] = [
     [cut, 0.047, 0.05],
     [cut, 0.047, 0.05],
@@ -207,10 +210,11 @@ export function arm(ctx: BuildContext, o: ArmOptions): Arm {
     'shoulder',
     onSkin(
       loft({
-        // (Leaner rings below LOD0: far, the cap is the cut and its swell over the arm's end.)
-        rings: ([cap, [cap[0], cap[1], cap[3], cap[4]], [cap[0], cap[3]]][ctx.lod] ?? cap).map(
-          (c) => ringYZ(c?.[0] ?? cut, c?.[1] ?? 0.05, c?.[2] ?? 0.05, sz, n),
-        ),
+        // (Leaner rings below LOD0: far, the cap is the cut, its swell and the ring the upper arm
+        // starts on, so the two parts still meet.)
+        rings: (
+          [cap, [cap[0], cap[1], cap[3], cap[4]], [cap[0], cap[3], cap[4]]][ctx.lod] ?? cap
+        ).map((c) => ringYZ(c?.[0] ?? cut, c?.[1] ?? 0.05, c?.[2] ?? 0.05, sz, n)),
         color: (_r, i, p) => (i === 0 && ctx.lod < 2 ? SECTION : tone(p)),
         capStart: true,
         capEnd: true,

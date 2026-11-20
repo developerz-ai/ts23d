@@ -181,8 +181,11 @@ export function eyeMesh(side: 1 | -1, lod: Lod): Mesh {
   // Ball poles along the outward axis, so the iris and pupil are rings about it.
   const u0 = norm(Math.abs(out[2]) > 0.9 ? [1, 0, 0] : cross(out, [0, 0, 1]));
   const v0 = cross(out, u0);
+  // Up close, two rings inside the pale band round the pupil (u 0.16–0.2): the even rings skip it.
+  const us =
+    lod === 0 ? stations([...even(0.06, 0.94, rings), 0.165, 0.195]) : even(0.06, 0.94, rings);
   const ball = loft({
-    us: even(0.06, 0.94, rings),
+    us,
     sides,
     strip: 'plastic',
     point: (u, a) => {

@@ -19,7 +19,7 @@
     },
     "materials": {
       "score": 8,
-      "reason": "Scaled red hide, pale belly plates and horn gradient read, and the membranes are an even red without baked dapples; the membrane veins are drawn as pale cream strokes that look like scratches.",
+      "reason": "Scaled red hide, pale belly plates and horn gradient read, the membranes are an even red, and no normal-map seams show along the UV rims in hero.png or the sheet; the membrane veins are drawn as pale cream strokes that look like scratches.",
       "fixes": [
         "membrane veins as darker raised ridges, not pale strokes"
       ]
@@ -55,7 +55,7 @@
     }
   },
   "renders": {
-    "hero.png": "9cab38076c098702ab766644d9af5fdd5ee8dc6d3475251ae9cfa48f929a336b",
-    "sheet.png": "3247b0e1bd53efae473bbb4de732ca595ada57ae40b8ddf965f5e8e7e38dc815"
+    "hero.png": "144eff035e63d1add8211e08c98ff2e39090e7305bd6b57a7c397788db829ed4",
+    "sheet.png": "894ef51d0bb86a2a6f63ff017b24806c9adef926fe78c42c00e60dd7615821a5"
   }
 }

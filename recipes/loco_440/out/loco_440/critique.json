@@ -34,7 +34,7 @@
     },
     "wear": {
       "score": 6,
-      "reason": "The closer hero.png shows streaked boiler jacketing, a grimy cab roof and rusty rails; no soot down the stack or smokebox and no oil on the motion.",
+      "reason": "Streaked boiler jacketing, a sooted cab roof whose dark band now fades into the red paint instead of ending on a drawn line, and rusty rails; no soot down the stack or smokebox and no oil on the motion.",
       "fixes": [
         "soot down the stack and smokebox front",
         "oil and grime on the motion and wheels"
@@ -56,7 +56,7 @@
     }
   },
   "renders": {
-    "hero.png": "eca7617e09d4bcefd79b169340dc0ef671aff087f375f78e1c0cb9ac84e0bf12",
-    "sheet.png": "328c3e36d5ad27235f99151cc0c335d3b746082cf32cf42a83359918b56a1d4f"
+    "hero.png": "6cfa08f037789a1f3abab8e38e7f39996aa662e01e747fa293a0f4075d4d339b",
+    "sheet.png": "0fb74289faf51c81fd89b5b3840e64aece96cb9afe2e08a6da1bbee77f639325"
   }
 }

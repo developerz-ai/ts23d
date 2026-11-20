@@ -52,6 +52,16 @@ const COUPLER_Z = 0.876; // 34½ in
 const DOOR_W = 1.83;
 const DOOR_Z0 = 1.15;
 const DOOR_Z1 = 3.64;
+/** The door's one-way slide toward −X (m). */
+export const DOOR_SLIDE = DOOR_W + 0.05;
+/**
+ * Door stops [x0, x1]: a 6 cm block at each end of the bottom track, 4 cm clear of the door's
+ * travel (closed: its +X edge at DOOR_W / 2; open: its −X edge at −(DOOR_W / 2 + DOOR_SLIDE)).
+ */
+export const DOOR_STOPS: readonly (readonly [number, number])[] = [
+  [DOOR_W / 2 + 0.04, DOOR_W / 2 + 0.1],
+  [-(DOOR_W / 2 + DOOR_SLIDE + 0.1), -(DOOR_W / 2 + DOOR_SLIDE + 0.04)],
+];
 const JOURNAL_Y = 0.925; // axle end = journal box inner face
 const BRACE = 0.03; // diagonal brace relief over the boards
 const CARD: Vec3 = [0.72, 0.68, 0.55]; // a sun-yellowed car card
@@ -1043,7 +1053,7 @@ const usra = defineFamily({
         );
       }
       ctx.part(`door_${side}`, dirt(merge(dm)), {
-        motion: { kind: 'slide', offset: [-(DOOR_W + 0.05), 0, 0], hz: 0.25, oneWay: true },
+        motion: { kind: 'slide', offset: [-DOOR_SLIDE, 0, 0], hz: 0.25, oneWay: true },
         paint: 'body',
       });
       // Bare-iron handle / latch: its own part, so it stays out of the paint slot.
@@ -1090,7 +1100,7 @@ const usra = defineFamily({
       // Track below the door, guide above, long enough for its one-way travel toward −X.
       doorTrack.push(
         bx(
-          -(DOOR_W * 1.5 + 0.1), // the door opens toward −X
+          -(DOOR_W / 2 + DOOR_SLIDE + 0.1), // the door opens toward −X; its end carries the stop
           DOOR_W / 2 + 0.1,
           s * FRAME_Y,
           s * (FRAME_Y + 0.07),
@@ -1111,13 +1121,10 @@ const usra = defineFamily({
         ),
       );
     }
-    // Door stops: a block at each end of the bottom track, 4 cm clear of the door's travel.
+    // Door stops: a block at each end of the bottom track, clear of the door's travel.
     if (lod === 0)
       for (const s of [-1, 1])
-        for (const [x0, x1] of [
-          [DOOR_W / 2 + 0.04, DOOR_W / 2 + 0.1],
-          [-(DOOR_W * 1.5 + 0.1), -(DOOR_W * 1.5 + 0.09)],
-        ] as const)
+        for (const [x0, x1] of DOOR_STOPS)
           doorTrack.push(
             bx(x0, x1, s * FRAME_Y, s * (FRAME_Y + 0.09), DOOR_Z0 - 0.025, DOOR_Z0 + 0.08, iron),
           );

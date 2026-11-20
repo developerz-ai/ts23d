@@ -24,6 +24,7 @@ import {
 import { BONE, BONE_DARK, GLOW, IRON, pebble, SLATE, SOOT } from '../_lib/rts/style.ts';
 import {
   type Bay,
+  BROKEN_PLINTH,
   bayTop,
   COLS,
   COURSE,
@@ -323,7 +324,11 @@ export interface WallMeshes {
   readonly trim: Mesh | null;
   readonly frames: Mesh | null;
   readonly windows: Mesh | null;
-  /** Rain streaks fading down the face under each sill (LOD0), never weathered over. */
+  /**
+   * Rain streaks fading down the face under each sill (LOD0). `weather()` leaves them alone (they
+   * are already its streaks); the burn zones scorch them with the wall they hang on, so a burnt
+   * wall never shows pale streaks over its soot.
+   */
   readonly stains: Mesh | null;
   /** Window sill centres: where rain streaks start (weather fasteners). */
   readonly sills: readonly Vec3[];
@@ -407,14 +412,35 @@ const MORTAR_WET: Vec3 = [0.86, 0.85, 0.8];
 const STREAK: Vec3 = [0.26, 0.24, 0.2];
 
 /** The two front corners of the hall, where quoins replace the pilasters. */
-const CORNERS: readonly Vec3[] = [
+export const CORNERS: readonly Vec3[] = [
   [HALF_X + WALL_T / 2, -(HALF_Y + WALL_T / 2), PLINTH],
   [HALF_X + WALL_T / 2, HALF_Y + WALL_T / 2, PLINTH],
 ];
 
+const near = (p: Vec3, c: Vec3): boolean => dmath.hypot(p[0] - c[0], p[1] - c[1]) < 0.7;
+
 /** Near a front corner (plan distance), where a quoin stack stands. */
-const atCorner = (p: Vec3): boolean =>
-  CORNERS.some((c) => dmath.hypot(p[0] - c[0], p[1] - c[1]) < 0.7);
+const atCorner = (p: Vec3): boolean => CORNERS.some((c) => near(p, c));
+
+/** Courses standing unbroken from the plinth in column `c` of bay b. */
+function columnRows(b: Bay, c: number): number {
+  let r = 0;
+  while (has(b, r, c)) r++;
+  return r;
+}
+
+/**
+ * How many courses a quoin stack at `corner` takes: as tall as the shorter of the two walls meeting
+ * there, measured on each wall's column at that corner, so damage at the other corner (or mid-bay)
+ * never truncates it. 0 when no wall reaches the corner.
+ */
+export function quoinRows(list: readonly Bay[], corner: Vec3): number {
+  const ends = list.flatMap((b) => [
+    ...(near(onBay(b, 0, WALL_T / 2, 0), corner) ? [columnRows(b, 0)] : []),
+    ...(near(onBay(b, b.len, WALL_T / 2, 0), corner) ? [columnRows(b, COLS - 1)] : []),
+  ]);
+  return ends.length ? Math.min(...ends) : 0;
+}
 
 /**
  * Quoins on a front corner, `rows` courses: dressed blocks alternately long on the front face and
@@ -503,11 +529,7 @@ export function walls(
   if (quoined) {
     const qr = rng.fork('quoins');
     for (const c of CORNERS) {
-      // As tall as the shorter of the two walls meeting there.
-      const meet = list.filter(
-        (b) => atCorner(onBay(b, 0, WALL_T / 2, 0)) || atCorner(onBay(b, b.len, WALL_T / 2, 0)),
-      );
-      const rows = Math.min(...meet.map((b) => bayTop(b)));
+      const rows = quoinRows(list, c);
       if (rows > 0) trim.push(...quoins(c, rows, qr));
     }
     for (const b of list) trim.push(...stringCourse(b));
@@ -588,27 +610,6 @@ export function walls(
   };
 }
 
-/** Plan outline of the plinth with its front-right corner blown off (a raided site). */
-function brokenSlab(): Mesh {
-  const x = HALF_X + PLINTH_OUT;
-  const y = HALF_Y + PLINTH_OUT;
-  return prismPlan(
-    [
-      [-x, -y],
-      [x - 2.6, -y],
-      [x - 2.2, -y + 0.5],
-      [x - 1.5, -y + 0.35],
-      [x - 1.1, -y + 1.1],
-      [x - 0.45, -y + 1.35],
-      [x - 0.25, -y + 2.2],
-      [x, -y + 2.5],
-      [x, y],
-      [-x, y],
-    ],
-    PLINTH,
-  );
-}
-
 /** Hairline cracks running in from the broken corner: dark strips 3 mm proud of the slab top. */
 function cracks(): Mesh {
   const x = HALF_X + PLINTH_OUT;
@@ -648,7 +649,7 @@ function cracks(): Mesh {
 export function plinth(lod: Lod, broken = false): Mesh {
   const size: Vec3 = [(HALF_X + PLINTH_OUT) * 2, (HALF_Y + PLINTH_OUT) * 2, PLINTH];
   const slab = broken
-    ? brokenSlab()
+    ? prismPlan(BROKEN_PLINTH, PLINTH)
     : box({
         size,
         at: [0, 0, 0],

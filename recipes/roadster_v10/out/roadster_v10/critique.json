@@ -33,10 +33,10 @@
     },
     "wear": {
       "score": 7,
-      "reason": "Stone chips now cluster on the sill behind the front wheel instead of speckling the whole body; no brake dust.",
+      "reason": "Stone chips cluster on the sill behind the front wheel and now also fleck the lower nose round the grille and under the near headlamp (hero.png); the flecks are pale sand blobs rather than primer-grey chips, and there is still no brake dust.",
       "fixes": [
         "brake dust on the wheels",
-        "a few chips on the nose"
+        "smaller, darker primer-grey chips on the nose instead of pale sand blobs"
       ]
     },
     "lod": {
@@ -55,7 +55,7 @@
     }
   },
   "renders": {
-    "hero.png": "ee2693fcfefe622d5631e6b8b03272767b28f9a08515451ef391a0deb0bdb768",
-    "sheet.png": "7c92cdb42eaa9c2201d6231011d890282f9f14d0ff04ef8aa59c1458fb2b25a7"
+    "hero.png": "25df15e02a223d400b2fc24763e751dfbc1a12669bc206cad6a917768869f76e",
+    "sheet.png": "34c22a8c13499eeed864a0bd5ed922c7553b9c2950f9b7633e1544adcfabb3e1"
   }
 }

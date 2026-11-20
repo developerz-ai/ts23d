@@ -51,6 +51,24 @@ describe('crystal LOD0 facets', () => {
     });
 });
 
+describe('stub crystal cut', () => {
+  // Failure first: LOD0's mid-face vertices were pulled in after their cut height was taken from
+  // the unpulled x, so the "flat" fracture rippled off its plane by up to 7 mm on a 10 cm crystal.
+  for (const lod of [0, 1, 2] as const)
+    it(`LOD${lod}: every sheared vertex lies on the one cut plane`, () => {
+      const [r, h] = [0.1, 0.6];
+      const m = crystal(lod, r, h, 'stub');
+      let n = 0;
+      for (let i = 0; i < m.positions.length / 3; i++) {
+        const [x, z] = [m.positions[i * 3] ?? 0, m.positions[i * 3 + 2] ?? 0];
+        if (z < h * 0.225) continue;
+        n++;
+        expect(Math.abs(z - h * (0.28 + 0.05 * (x / r)))).toBeLessThan(1e-6);
+      }
+      expect(n).toBeGreaterThanOrEqual(6);
+    });
+});
+
 /** Area-weighted mean luminance of a mesh's vertex colour. */
 function meanLuma(m: Mesh): number {
   let [sum, area] = [0, 0];

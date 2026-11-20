@@ -8,7 +8,8 @@ import { dmath } from '../core/index.ts';
 
 export type Lab = readonly [number, number, number];
 
-const toSrgb = (c: number): number => {
+/** Linear 0..1 → sRGB-encoded 0..1 (the exact IEC 61966-2-1 curve), clamped. */
+export const toSrgb = (c: number): number => {
   const v = Math.min(1, Math.max(0, c));
   return v <= 0.0031308 ? v * 12.92 : 1.055 * dmath.pow(v, 1 / 2.4) - 0.055;
 };

@@ -1,7 +1,7 @@
 // Terrain colour helpers. Failure first: a one-cell colour line must come out softened.
 
 import { describe, expect, it } from 'bun:test';
-import { type Mesh, stripRect, type Vec3 } from '@developerz.ai/ts23d';
+import { type Mesh, NATURE_LIBRARY, stripRect, type Vec3 } from '@developerz.ai/ts23d';
 import { footprint, macroUV, ribbon } from './ground.ts';
 
 describe('footprint', () => {
@@ -60,9 +60,12 @@ describe('macroUV cut sides', () => {
     };
     const m = macroUV(wall, [-1000, -1000, 1000, 1000], 1200);
     const r = stripRect('rock_strata');
-    // Texture metres per wall metre, along (U over the strip's metres) and up (V over one band).
+    // Rock metres per wall metre, both ways: U's strip spans `r.metres` of rock, one strip row
+    // (V) spans the material's `scaleMetres`. Equal means square texels on the wall. The pre-fix
+    // mapping (`along * 0.15` strips) gives 0.15 × 32 = 4.8 here and fails.
+    const band = NATURE_LIBRARY.rock_strata?.scaleMetres ?? Number.NaN;
     const along = ((((m.uvs[2] ?? 0) - (m.uvs[0] ?? 0)) / (r.u1 - r.u0)) * r.metres) / 2000;
-    const up = ((m.uvs[5] ?? 0) - (m.uvs[1] ?? 0)) / (r.v1 - r.v0) / 1200;
+    const up = ((((m.uvs[5] ?? 0) - (m.uvs[1] ?? 0)) / (r.v1 - r.v0)) * band) / 1200;
     expect(along / up).toBeGreaterThan(0.8);
     expect(along / up).toBeLessThan(1.25);
   });

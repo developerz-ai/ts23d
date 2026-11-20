@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'bun:test';
-import { dmath, type Mesh, merge } from '../core/index.ts';
+import { compile, defineAsset, dmath, type Mesh, merge, translate } from '../core/index.ts';
 import { weather } from '../passes/index.ts';
 import { box } from '../primitives/index.ts';
-import { wearMetrics } from './critique-wear.ts';
+import { wearMetrics, wearOf } from './critique-wear.ts';
 
 const BLUE = [0.05, 0.11, 0.24] as const;
 const steel = (): Mesh => box({ size: [3, 2, 2], color: BLUE });
@@ -82,5 +82,29 @@ describe('wearMetrics', () => {
     expect(hero.wearBroad).toBeGreaterThan(close.wearBroad * 1.5);
     expect(hero.wearPlaced).toBeGreaterThan(close.wearPlaced);
     expect(run('hero')).toEqual(hero);
+  });
+});
+
+describe('wearOf', () => {
+  it('fails before D408: placed parts are measured where they stand, as one assembled mesh', () => {
+    // A mud-low hull, and a second hull 4 m up and 6 m along: assembled, the upper one is high.
+    const hull = (): Mesh =>
+      paint(fine(steel()), (p, _nz, c) => toward(c, MUD, Math.max(0, 1 - (p[2] ?? 0) / 0.8)));
+    const placed = compile(
+      defineAsset({
+        name: 'wear_placed',
+        kind: 'prop',
+        budget: { triangles: [100000, 100000, 100000] },
+        build: (ctx) => {
+          ctx.part('low', hull());
+          ctx.part('high', hull(), { at: [6, 0, 4] });
+        },
+      }),
+    );
+    const high = placed.parts.find((p) => p.name === 'high');
+    expect(high?.at).toEqual([6, 0, 4]); // the mesh itself is part-local
+    const world = [hull(), translate(hull(), [6, 0, 4])];
+    expect(wearOf(placed)).toEqual(wearMetrics(world));
+    expect(wearOf(placed)).not.toEqual(wearMetrics([hull(), hull()]));
   });
 });

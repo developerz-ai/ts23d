@@ -48,8 +48,11 @@ export function settle(
   return pts;
 }
 
-/** Pull a step toward the skin where the skin holds it up (support 1 facing up, 0.6 sideways,
- *  0 facing 35° below the horizon), keeping the step's length. */
+/** How far skin of normal `n` holds hair up: 1 facing up, 0.6 sideways, 0 from 35° under. The one
+ *  curve `lie` here and `hold`/`hang` (hair-hold.ts) read, so they agree on what is a shelf. */
+export const support = (n: Vec3): number => Math.min(1, Math.max(0, 0.6 + n[2]));
+
+/** Pull a step toward the skin where the skin holds it up (`support`), keeping its length. */
 export function lie(
   f: Field,
   p: Vec3,
@@ -60,10 +63,10 @@ export function lie(
   h: number,
 ): Vec3 {
   const n = gradient(f, q, h);
-  const support = Math.min(1, Math.max(0, 0.6 + n[2]));
+  const s = support(n);
   const over = f(q) - floor;
-  if (over <= 0 || support <= 0) return q;
-  return mad(p, unit(sub(mad(q, n, -over * hug * support), p)), step);
+  if (over <= 0 || s <= 0) return q;
+  return mad(p, unit(sub(mad(q, n, -over * hug * s), p)), step);
 }
 
 /** Bend a clump member's free length toward its leader's tip (s² falloff from the root). */

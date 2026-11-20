@@ -3,7 +3,7 @@
 // Skinned bodies add 4 joint/weight influences per vertex and morph targets (ADR 013).
 
 import { Ts23dError } from './errors.ts';
-import { type MappedMaterial, mappedOf } from './material-use.ts';
+import { type MappedMaterial, mappedOfAll } from './material-use.ts';
 import type { Vec2, Vec3 } from './vec.ts';
 
 export interface Bounds {
@@ -187,7 +187,7 @@ export function merge(meshes: readonly Mesh[]): Mesh {
     indices,
     ...mergeSkin(meshes),
     ...mergeMorphs(meshes),
-    ...mappedOf(...meshes),
+    ...mappedOfAll(meshes),
   };
 }
 

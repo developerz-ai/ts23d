@@ -64,33 +64,73 @@ export function cliffWear(
   return [Math.min(1, out[0]), Math.min(1, out[1]), Math.min(1, out[2])];
 }
 
-/** Plan distance from (x, y) to a polyline, m (∞ for an empty path). */
-export function pathDistance(path: readonly [number, number][]): (x: number, y: number) => number {
-  let x0 = Infinity;
-  let y0 = Infinity;
-  let x1 = -Infinity;
-  let y1 = -Infinity;
-  for (const [x, y] of path) {
+/** Distance from (x, y) to segment a–q. */
+function segmentDistance(x: number, y: number, a: [number, number], q: [number, number]): number {
+  const dx = q[0] - a[0];
+  const dy = q[1] - a[1];
+  const l2 = dx * dx + dy * dy || 1;
+  const t = Math.max(0, Math.min(1, ((x - a[0]) * dx + (y - a[1]) * dy) / l2));
+  return dmath.hypot(x - a[0] - dx * t, y - a[1] - dy * t);
+}
+
+/** A run of consecutive path segments [lo, hi) and its plan box; children split it in two. */
+interface Run {
+  readonly lo: number;
+  readonly hi: number;
+  readonly box: readonly [number, number, number, number];
+  readonly kids?: readonly [Run, Run];
+}
+
+/** The path's segments as a tree of runs: a polyline's consecutive segments lie together. */
+function runs(path: readonly [number, number][], lo: number, hi: number): Run {
+  let [x0, y0, x1, y1] = [Infinity, Infinity, -Infinity, -Infinity];
+  for (let i = lo; i <= hi; i++) {
+    const [x, y] = path[i] ?? [0, 0];
     x0 = Math.min(x0, x);
     y0 = Math.min(y0, y);
     x1 = Math.max(x1, x);
     y1 = Math.max(y1, y);
   }
+  const box = [x0, y0, x1, y1] as const;
+  if (hi - lo <= 4) return { lo, hi, box };
+  const mid = (lo + hi) >> 1;
+  return { lo, hi, box, kids: [runs(path, lo, mid), runs(path, mid, hi)] };
+}
+
+/** Plan distance from (x, y) to a box (0 inside). */
+const boxDistance = (x: number, y: number, b: Run['box']): number =>
+  dmath.hypot(Math.max(b[0] - x, 0, x - b[2]), Math.max(b[1] - y, 0, y - b[3]));
+
+/**
+ * Plan distance from (x, y) to a polyline, m (∞ for an empty path). Built once per path, asked
+ * once per ground vertex: the segments are held as a tree of runs and a query skips every run
+ * whose box lies further than the nearest segment found so far, so it reads a few runs, not the
+ * whole path. Exact: the same nearest segment and the same arithmetic as a scan of every segment.
+ */
+export function pathDistance(path: readonly [number, number][]): (x: number, y: number) => number {
+  if (path.length === 0) return () => Infinity;
+  const root = runs(path, 0, path.length - 1);
+  const [x0, y0, x1, y1] = root.box;
   return (x, y) => {
     // Far outside the path's box: the box distance is a lower bound, good enough past the banks.
     const bx = Math.max(x0 - x, 0, x - x1);
     const by = Math.max(y0 - y, 0, y - y1);
     if (bx > 200 || by > 200) return dmath.hypot(bx, by);
     let best = Infinity;
-    for (let i = 0; i + 1 < path.length; i++) {
-      const [ax, ay] = path[i] ?? [0, 0];
-      const [qx, qy] = path[i + 1] ?? [0, 0];
-      const dx = qx - ax;
-      const dy = qy - ay;
-      const l2 = dx * dx + dy * dy || 1;
-      const t = Math.max(0, Math.min(1, ((x - ax) * dx + (y - ay) * dy) / l2));
-      best = Math.min(best, dmath.hypot(x - ax - dx * t, y - ay - dy * t));
-    }
+    const visit = (r: Run): void => {
+      if (!r.kids) {
+        for (let i = r.lo; i < r.hi; i++)
+          best = Math.min(best, segmentDistance(x, y, path[i] ?? [0, 0], path[i + 1] ?? [0, 0]));
+        return;
+      }
+      // Nearer run first: its segments shrink `best`, so the other is often skipped.
+      const [a, b] = r.kids;
+      const [da, db] = [boxDistance(x, y, a.box), boxDistance(x, y, b.box)];
+      const [n, f, df] = da <= db ? [a, b, db] : [b, a, da];
+      if (Math.min(da, db) < best) visit(n);
+      if (df < best) visit(f);
+    };
+    visit(root);
     return best;
   };
 }

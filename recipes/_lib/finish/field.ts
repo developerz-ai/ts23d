@@ -1,8 +1,9 @@
 // Field finish for the WW2 tanks (T-34 here, Tiger I imports it): the matte armour paint as a
 // project material (sparse chips instead of the library strip's even spatter), true-scale UVs for
 // it, measured wear through `weather()` (chips on plate edges, road dust on top plates, dried mud
-// up from the ground, rust running down from fittings), radial mud for spinning wheels and the
-// worn-steel track link. Pure UV / vertex-colour work on finished meshes: shape stays in the recipe.
+// up from the ground, rust running down from fittings) and the worn-steel track link. The smooth
+// graded dirt fields and wheel dirt live in `afv.ts`. Pure UV / vertex-colour work on finished
+// meshes: shape stays in the recipe.
 
 import {
   type BuildContext,
@@ -183,41 +184,6 @@ export function fieldWear<K extends string>(
   return out;
 }
 
-/**
- * Mud on a spinning wheel (axis Y through its own origin): packed round the rim and thrown into
- * the dish, the same all the way round, so it turns with the wheel instead of sliding over it
- * (height-based mud would stay put while the wheel spins through it).
- */
-export function wheelMud(
-  m: Mesh,
-  r: number,
-  noise: (p: Vec3) => number,
-  strength = 0.85,
-  earth: Vec3 = EARTH,
-): Mesh {
-  const colors = new Float32Array(m.colors);
-  for (let i = 0; i < m.positions.length / 3; i++) {
-    const p: Vec3 = [
-      m.positions[i * 3] ?? 0,
-      m.positions[i * 3 + 1] ?? 0,
-      m.positions[i * 3 + 2] ?? 0,
-    ];
-    const rad = dmath.hypot(p[0], p[2]) / r;
-    const n = noise(p);
-    // Opaque where it is packed (rim, tyre, the outer dish), ragged toward the clean hub.
-    const dry = strength * smooth(0.34, 0.56, rad + 0.5 * (n - 0.5));
-    const wet =
-      0.6 * strength * smooth(0.82, 1.0, rad) * smooth(0.4, 0.7, noise([p[2], p[1], p[0]]));
-    for (let k = 0; k < 3; k++) {
-      let c = colors[i * 3 + k] ?? 0;
-      c += ((earth[k] ?? 0) - c) * dry;
-      c += ((WET_MUD[k] ?? 0) - c) * wet;
-      colors[i * 3 + k] = c;
-    }
-  }
-  return { ...m, colors };
-}
-
 /** Move every vertex toward `to` by `w(p)` (0..1): soot, stains, a wash. */
 export function tint(
   m: Mesh,
@@ -378,88 +344,8 @@ export function chipFlecks(
   return merge(out);
 }
 
-/** Soot from an exhaust mouth at `at`: densest there, rising a little and trailing back (−X). */
-export const sootPlume =
-  (at: Vec3, radius: number, strength: number, noise: (p: Vec3) => number) =>
-  (p: Vec3): number => {
-    const dx = (p[0] - at[0]) * (p[0] < at[0] ? 0.6 : 1.3);
-    const dz = (p[2] - at[2]) * (p[2] > at[2] ? 0.5 : 1.2);
-    const d = dmath.hypot(dx, p[1] - at[1], dz) / radius;
-    return d < 1 ? strength * (1 - smooth(0.15, 1, d + 0.25 * (noise(p) - 0.5))) : 0;
-  };
-
 export const SOOT: Vec3 = hex('#1c1a18');
 
-export interface Coat {
-  /** World offset of a part authored round its own pivot. */
-  readonly at?: Vec3;
-  /** Road dust on what faces the sky (0..1). */
-  readonly dust?: number;
-  /** Dried mud climbs to about this height (m), ragged, a third higher toward the rear. */
-  readonly mud?: number;
-  readonly mudStrength?: number;
-  readonly soot?: readonly { at: Vec3; radius: number; strength: number }[];
-}
-
-/**
- * Height-based field dirt for meshes that already carry the vertices (camouflaged plates, a
- * Zimmerit slab): a dust haze on top faces, dried earth from the ground up with a ragged edge
- * (higher behind the tracks), wet mud along the lowest third of it, soot round the exhausts.
- * `grain` is the ~0.3 m breakup, `fine` the ~0.1 m one.
- */
-export function fieldCoat(
-  grain: (p: Vec3) => number,
-  fine: (p: Vec3) => number,
-  /** Dried mud and dust colours: pick them against the paint (dark earth on a sand-yellow tank). */
-  earth: Vec3 = EARTH,
-  dustColor: Vec3 = EARTH,
-): (m: Mesh, o: Coat) => Mesh {
-  return (m, o) => {
-    const at = o.at ?? [0, 0, 0];
-    let out = m;
-    const dust = o.dust ?? 0;
-    if (dust > 0)
-      out = tint(
-        out,
-        dustColor,
-        (p, n) => dust * smooth(0.35, 0.95, n[2]) * (0.45 + 0.55 * grain(p)),
-        at,
-      );
-    const mud = o.mud ?? 0;
-    if (mud > 0) {
-      const k = o.mudStrength ?? 0.85;
-      const rear = (p: Vec3): number => (p[0] < 0 ? 1 + Math.min(0.35, -p[0] * 0.09) : 1);
-      out = tint(
-        out,
-        earth,
-        (p) =>
-          k *
-          smooth(0, 0.32, mud * rear(p) * (0.7 + 0.6 * grain(p)) - p[2]) *
-          (0.65 + 0.35 * fine(p)),
-        at,
-      );
-      out = tint(
-        out,
-        WET_MUD,
-        (p) => 0.75 * k * smooth(0, 0.22, mud * 0.45 * rear(p) * (0.6 + 0.8 * fine(p)) - p[2]),
-        at,
-      );
-    }
-    for (const s of o.soot ?? [])
-      out = tint(
-        out,
-        SOOT,
-        (p) => {
-          const dx = (p[0] - s.at[0]) * (p[0] < s.at[0] ? 0.7 : 1);
-          const dz = (p[2] - s.at[2]) * (p[2] > s.at[2] ? 0.6 : 0.85);
-          const d = dmath.hypot(dx, p[1] - s.at[1], dz) / s.radius;
-          return d < 1 ? s.strength * (1 - smooth(0.15, 1, d + 0.25 * (grain(p) - 0.5))) : 0;
-        },
-        at,
-      );
-    return out;
-  };
-}
 /** `valueNoise` is −1..1; the passes here take 0..1 fields. */
 export const unitNoise =
   (noise: (p: Vec3) => number) =>

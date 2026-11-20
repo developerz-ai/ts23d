@@ -54,18 +54,18 @@
       "maps": {
         "albedo": {
           "size": 2048,
-          "bytes": 5696128
+          "bytes": 5696124
         },
         "normal": {
           "size": 1024,
-          "bytes": 1857310
+          "bytes": 1829086
         },
         "orm": {
           "size": 1024,
-          "bytes": 1477809
+          "bytes": 1477813
         }
       },
-      "bytes": 9031247,
+      "bytes": 9003023,
       "credit": "ts23d bear_hybrid recipe (Z-Image concept, Pixal3D mesh, UniRig joints, Blender steps) — MIT — neural cache (blender final on mesh e71dc19fbf62)"
     }
   ],

@@ -19,9 +19,10 @@
     },
     "materials": {
       "score": 7,
-      "reason": "The floor is now a flagstone strip with readable joints and per-flag value (sheet TOP), no longer the camouflage slab. The torn tarp is still a flat saturated red board on the ground.",
+      "reason": "The floor is a flagstone strip with readable joints and per-flag value (sheet TOP), and the flags now stop short of the blown corner instead of hanging over the void; the bare slab rim there shows a smeared, stretched grey (hero.png). The torn tarp is still a flat saturated red board on the ground.",
       "fixes": [
-        "torn tarp as a draped sheet with folds, frayed edge and dust, value down"
+        "torn tarp as a draped sheet with folds, frayed edge and dust, value down",
+        "broken concrete texture with a jagged edge on the slab rim at the blown corner instead of the stretched grey"
       ]
     },
     "detail": {
@@ -55,7 +56,7 @@
     }
   },
   "renders": {
-    "hero.png": "3a0bbbc4f312b22869907a043356bc1c5b9173792772db7f4521198930020728",
-    "sheet.png": "f305224966bf71500ee185c81c35603364cbdb494e0f2002d0b3464f005bb628"
+    "hero.png": "902fdb86d53dbf7f8d065b6b8649f150fb4f411abc3373b31ec7164723c2de3e",
+    "sheet.png": "6f8c21ea7b68a13673985361ac2fab3aa07117030462bf232e7f6bf887443a4e"
   }
 }

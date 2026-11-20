@@ -54,14 +54,14 @@
         },
         "normal": {
           "size": 1024,
-          "bytes": 1662618
+          "bytes": 1640371
         },
         "orm": {
           "size": 1024,
           "bytes": 1380949
         }
       },
-      "bytes": 8666248,
+      "bytes": 8644001,
       "credit": "ts23d wolf_hybrid recipe (Z-Image concept, Pixal3D mesh, UniRig joints, Blender steps) — MIT — neural cache (blender final on mesh 3be220b6a801)"
     }
   ],

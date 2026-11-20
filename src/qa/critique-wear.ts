@@ -16,7 +16,8 @@
 // clean here.
 
 import type { CompiledAsset, Mesh } from '../core/index.ts';
-import { dmath } from '../core/index.ts';
+import { dmath, worldMeshes } from '../core/index.ts';
+import { toSrgb as srgb } from './coherence-colour.ts';
 
 export interface WearMetrics {
   readonly wearBroad: number;
@@ -25,8 +26,6 @@ export interface WearMetrics {
 
 /** Patches per bounding diagonal: what still reads with the asset filling a hero frame. */
 export const WEAR_PATCHES = 40;
-
-const srgb = (v: number): number => dmath.pow(Math.min(1, Math.max(0, v)), 1 / 2.2);
 
 interface Patch {
   area: number;
@@ -149,6 +148,6 @@ export function wearMetrics(meshes: readonly Mesh[]): WearMetrics {
   };
 }
 
-/** Broad wear of a compiled LOD0. */
+/** Broad wear of a compiled LOD0, its parts placed where they stand (one shared frame). */
 export const wearOf = (lod0: CompiledAsset): WearMetrics =>
-  wearMetrics(lod0.parts.flatMap((p) => (p.mesh?.indices.length ? [p.mesh] : [])));
+  wearMetrics([...worldMeshes(lod0.parts).values()]);

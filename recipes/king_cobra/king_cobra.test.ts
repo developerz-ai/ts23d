@@ -14,11 +14,11 @@ import {
 } from '@developerz.ai/ts23d';
 import { clipPose, jointWorlds } from '../../src/qa/clip-pose.ts';
 import { posedMesh } from '../../src/render/pose-strip.ts';
-import { norm } from '../_lib/body-plan-kit.ts';
+import { mixRgb, norm } from '../_lib/body-plan-kit.ts';
 import { REAR, rearHinge } from './clips.ts';
 import { IDLE_GROUND, jointArcs } from './ground.ts';
 import { CLIPS, king_cobra, PLAN, RIG } from './king_cobra.ts';
-import { dustAt, scarAt, shedAt } from './material.ts';
+import { DUST, dustAt, marked, SCAR_AT, SHED_AT, scarAt, shedAt } from './material.ts';
 import {
   bellyHalf,
   COIL_TOP,
@@ -273,6 +273,19 @@ describe('surface', () => {
     // front stays clean.
     expect(dustAt(2.9, Math.PI * 0.7)).toBeGreaterThan(0.5);
     expect(dustAt(0.5, Math.PI * 0.7)).toBe(0);
+  });
+});
+
+describe('story marks by LOD', () => {
+  const c: Vec3 = [0.3, 0.32, 0.22];
+  it('drops the shed patch and the scar at LOD2: dust only (a coarse ring painted a segment)', () => {
+    for (const [s, a] of [
+      [SHED_AT, 0.3],
+      [SCAR_AT, 0],
+    ] as const) {
+      expect(marked(c, s, a)).not.toEqual(marked(c, s, a, true));
+      expect(marked(c, s, a, true)).toEqual(mixRgb(c, DUST, dustAt(s, a) * 0.9));
+    }
   });
 });
 

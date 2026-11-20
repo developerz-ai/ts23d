@@ -26,7 +26,7 @@ export interface Stroke {
 
 const clamp = (v: number): number => Math.min(1, Math.max(0, v));
 
-/** Distance from p to the segment ab. */
+/** Distance from p to the segment ab (the one copy: paint, hair and hair-cards use it too). */
 export function segDist(p: Vec3, a: Vec3, b: Vec3): number {
   const ab: Vec3 = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
   const l2 = ab[0] * ab[0] + ab[1] * ab[1] + ab[2] * ab[2] || 1;

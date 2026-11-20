@@ -4,7 +4,9 @@
 // exhaust mouth. Every mask is a smooth field of height and normal, never coverage patches: a
 // patchy all-over layer reads as sprayed camouflage, and a smooth field survives a far LOD's
 // corners. Wheels get radial dirt (dark tyre, mud in the outer dish, clean hub) that turns with
-// them. Pure vertex-colour work on finished meshes.
+// them. Pure vertex-colour work on finished meshes. Kept apart from `field.ts` on purpose: that file
+// holds the paint, its UVs and the coverage wear `weather()` measures for the manifest; this one
+// holds the unmeasured smooth dirt fields over it, and neither repeats the other's rules.
 
 import type { Mesh, Vec3 } from '@developerz.ai/ts23d';
 import { dmath } from '@developerz.ai/ts23d';

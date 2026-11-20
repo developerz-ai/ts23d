@@ -49,6 +49,28 @@ describe('text wrap', () => {
     expect(Math.max(...xs)).toBeCloseTo(0.072, 6);
   });
 
+  it('fails before D407: the riser and the higher paint share an edge, no slit between them', () => {
+    const m = sign('HHH', { surface: post, wrap: true });
+    const P = (i: number): number[] => [0, 1, 2].map((k) => m.positions[i * 3 + k] ?? 0);
+    // Corners at the higher paint's height (x = 72 mm) on each face lying in that plane.
+    const top = new Set<string>();
+    for (let t = 0; t < m.indices.length; t += 3) {
+      const c = [0, 1, 2].map((k) => P(m.indices[t + k] ?? 0));
+      if (c.every((p) => Math.abs((p[0] ?? 0) - 0.072) < 1e-6))
+        for (const p of c) top.add(`${(p[1] ?? 0).toFixed(5)},${(p[2] ?? 0).toFixed(5)}`);
+    }
+    // Every riser's top edge (a vertex at 72 mm off a stencil column edge) is a corner of
+    // painted surface in that plane: the riser joins the paint it rises to.
+    let riserTops = 0;
+    for (let i = 0; i < m.positions.length / 3; i++) {
+      const [x = 0, y = 0, z = 0] = P(i);
+      if (Math.abs(x - 0.072) > 1e-6 || Math.abs(y - 0.198) > 1e-6) continue;
+      riserTops++;
+      expect(top.has(`${y.toFixed(5)},${z.toFixed(5)}`)).toBe(true);
+    }
+    expect(riserTops).toBeGreaterThan(0);
+  });
+
   it('keeps the default bytes: wrap off, or on with no surface or no step', () => {
     expect(sign('HHH', { surface: post, wrap: false })).toEqual(sign('HHH', { surface: post }));
     expect(sign('HHH', { wrap: true })).toEqual(sign('HHH'));

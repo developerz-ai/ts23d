@@ -21,29 +21,11 @@ import { LEFT, MIDLINE } from './landmarks.ts';
 import { keepLarge } from './lod2.ts';
 import { meshField } from './mesh-field.ts';
 import { quadToMesh, stripUv } from './quad.ts';
+import { segDist } from './relief.ts';
 
 export type { HairStyle } from './hair-lines.ts';
 
 const lerp = (a: number, b: number, t: number): number => a + (b - a) * Math.min(1, Math.max(0, t));
-
-/** Distance from p to the segment ab. */
-function segDist(p: Vec3, a: Vec3, b: Vec3): number {
-  const ab = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
-  const l2 = dmath.pow(ab[0] ?? 0, 2) + dmath.pow(ab[1] ?? 0, 2) + dmath.pow(ab[2] ?? 0, 2) || 1;
-  const t = Math.min(
-    1,
-    Math.max(
-      0,
-      ((p[0] - a[0]) * (ab[0] ?? 0) + (p[1] - a[1]) * (ab[1] ?? 0) + (p[2] - a[2]) * (ab[2] ?? 0)) /
-        l2,
-    ),
-  );
-  return dmath.hypot(
-    p[0] - a[0] - (ab[0] ?? 0) * t,
-    p[1] - a[1] - (ab[1] ?? 0) * t,
-    p[2] - a[2] - (ab[2] ?? 0) * t,
-  );
-}
 
 /** The head and neck (not the shoulders) as a distance field, and its box. */
 export function scalpOf(head: FaceHead): { field: Field; box: [Vec3, Vec3] } {

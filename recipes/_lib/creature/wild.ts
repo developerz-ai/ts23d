@@ -21,7 +21,7 @@ import {
   type PartOptions,
   type Vec3,
 } from '@developerz.ai/ts23d';
-import { type Locks, lockShade, lockTone, mix, type WearSpec, wearPaint } from './wild-paint.ts';
+import { type Locks, lockPaint, mix, type WearSpec, wearPaint } from './wild-paint.ts';
 import {
   type CoatOptions,
   coatCards,
@@ -65,7 +65,10 @@ export interface Wild {
     readonly body?: readonly GroomLayer[];
     readonly head?: readonly GroomLayer[];
     readonly comb?: (p: Vec3) => Vec3;
-    /** No body card may pass |y| ≤ `y`, z ≤ `z` (metres): the sourced width and height hold. */
+    /**
+     * The `groom` body layers only, applied as they are grown (|y| ≤ `y`, z ≤ `z`, metres). The
+     * groom's head layers are not boxed; the top-level `box` still holds the body's whole `fur`.
+     */
     readonly box?: { readonly y?: number; readonly z?: number };
   };
   /**
@@ -74,8 +77,10 @@ export interface Wild {
    */
   readonly locks?: Locks;
   /**
-   * No fur card (the kind's own or the `coat` layer) may pass |y| ≤ `y`, z ≤ `z` (metres, asset
-   * frame): a stray lock does not grow the animal past its sourced width or height.
+   * No card of the `fur` part may pass |y| ≤ `y`, z ≤ `z` (metres, asset frame): the kind's own
+   * body cards, the `coat` layer and the `groom` body layers alike. The kind's own head cards
+   * (`head_fur`) are held to `y` only; the `groom` head layers are not boxed. A stray lock does not
+   * grow the animal past its sourced width or height.
    */
   readonly box?: { readonly y?: number; readonly z?: number };
   readonly whiskers?: WhiskerOptions;
@@ -138,14 +143,13 @@ function finish(run: Run, info: CreatureInfo, prefix: string, wild: Wild): void 
   const wear = wearPaint(typeof wild.wear === 'function' ? wild.wear(info) : wild.wear, lod === 2);
   const base = wild.base?.(info);
   const lie = chainSeed(furChains(info.bones), { gravity: 0.35, blend: 0.1 });
-  const lock = wild.locks && lod < 2 ? lockTone((p) => lie(p, [0, 0, 1]), wild.locks) : null;
-  const strength = wild.locks?.strength ?? 0;
+  const lock = wild.locks && lod < 2 ? lockPaint((p) => lie(p, [0, 0, 1]), wild.locks) : null;
   // Coat colour, then the locks in it, then what the season left on top.
   const paint = (p: Vec3, n: Vec3, c: Vec3, part: string): Vec3 => {
     const coat = base ? base({ p, n, c, lod, part }) : c;
     // Claws stay keratin under a film of dirt: caked whole they vanish into the paw.
     if (part === 'claws') return mix(coat, wear(p, n, coat), 0.3);
-    return wear(p, n, lock ? lockShade(coat, lock(p), strength) : coat);
+    return wear(p, n, lock ? lock(p, coat) : coat);
   };
   const band = info.bones.height * (wild.ground?.band ?? 0.3);
   const groundStrength = wild.ground?.strength ?? 0.25;

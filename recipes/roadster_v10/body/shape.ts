@@ -332,15 +332,27 @@ const superY = (t: number, p: number): number => dmath.pow(dmath.cos(t), 2 / p);
 const superX = (t: number, p: number): number => dmath.pow(dmath.sin(t), 2 / p);
 
 /**
- * The nose droops: ahead of the hood's front shut line (x 1.72 m) every line from the centre
- * crown down to the side character falls a further 4.5 cm by x 2.15 m (3 cm at the centre-line
- * tip), so the leading edge sits low over the mouth instead of standing blunt in side view. The
- * hood itself does not move: its front edge swings forward within 1 cm of the fascia as it lifts.
+ * The nose droops: ahead of the hood's front shut line every line from the centre crown down to
+ * the side character falls a further 4.5 cm by x 2.15 m (3 cm at the centre-line tip), so the
+ * leading edge sits low over the mouth instead of standing blunt in side view. The shut line is a
+ * body station (s where the centre line reaches x 1.72 m), and in the nose cap the outer lines
+ * reach further forward at one s (the shoulder's x is 1.82 m there), so each line starts its drop
+ * at its own x on that station. Nothing behind the station moves: the hood keeps its shape and
+ * its front edge swings forward within 1 cm of the fascia as it lifts.
  */
 const NOSE_DROP = 0.045;
+/** Hood front edge (centre line x): the shut line the nose drops ahead of. */
+export const X_HOOD_FRONT = 1.72;
 const UPPER_LINES = new Set(['centre', 'dome', 'valley', 'crown', 'shoulder', 'side']);
-const lineZ = (l: Line, x: number): number =>
-  curve(l.z, x) - (UPPER_LINES.has(l.name) ? NOSE_DROP * smooth(1.72, 2.15, x) : 0);
+/** Fraction of the cap's x run at the shut-line station: the same for every line at one s. */
+const dropFrom = (l: Line): number => {
+  const centre = LINES[0]?.noseX ?? l.noseX;
+  return X_NR + ((l.noseX - X_NR) * (X_HOOD_FRONT - X_NR)) / (centre - X_NR);
+};
+/** How far line `l` drops at x (m): 0 on and behind the hood's front station. */
+const noseDrop = (l: Line, x: number): number =>
+  UPPER_LINES.has(l.name) ? NOSE_DROP * smooth(dropFrom(l), 2.15, x) : 0;
+const lineZ = (l: Line, x: number): number => curve(l.z, x) - noseDrop(l, x);
 
 /** The line's 3D point at body parameter s. */
 function linePoint(l: Line, s: number): Vec3 {
@@ -356,6 +368,10 @@ function linePoint(l: Line, s: number): Vec3 {
   }
   return [s, curve(l.y, s), lineZ(l, s)];
 }
+
+/** Each line's nose drop (m) in the section at body parameter s. */
+export const noseDropAt = (s: number): number[] =>
+  LINES.map((l) => noseDrop(l, linePoint(l, s)[0]));
 
 /** The section's knots at s (C, dome, valley, crown, crease-, shoulder, crease+, side…). */
 export function knots(s: number): Vec3[] {

@@ -119,6 +119,19 @@ describe('hair lift bound', () => {
     expect(dmath.hypot(held[0], held[2] - 0.001)).toBeCloseTo(dmath.hypot(0.01, 0.01), 9);
   });
 
+  test('fails before D404: a step straight off the skin is laid over, never turned into it', () => {
+    // Exactly opposed to the target (straight up from up-facing skin): no side to blend by.
+    const p: Vec3 = [0, 0, 0.001];
+    const held = hold(floor, undefined, [0, 0, 0], p, [0, 0, 0.011], 0.005, 1e-4);
+    expect(held[2]).toBeGreaterThanOrEqual(0); // not buried
+    expect(held[2]).toBeCloseTo(0.005, 4); // turned only until within its allowance
+    expect(dmath.hypot(held[0] - p[0], held[1] - p[1], held[2] - p[2])).toBeCloseTo(0.01, 9);
+    // Along a finished line, every point stays out of the skin.
+    const line: Vec3[] = [0, 1, 2, 3, 4].map((k): Vec3 => [0, 0, 0.001 + 0.01 * k]);
+    for (const q of holdLine(line, floor, undefined, [0, 0.002, 0.004, 0.006, 0.008], 0, 1e-4))
+      expect(q[2]).toBeGreaterThanOrEqual(0);
+  });
+
   test('hold: hanging is not proud — a point below its root may be that far off a wall', () => {
     const root: Vec3 = [0, 0, 0.05];
     const q: Vec3 = [0.02, 0, 0.02];

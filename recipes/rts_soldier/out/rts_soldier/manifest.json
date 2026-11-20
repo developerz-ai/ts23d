@@ -119,13 +119,13 @@
       "target": 0.15,
       "actual": 0.15,
       "eligible": "convex-edges",
-      "area": 3.4251
+      "area": 3.4307
     },
     "scratches": {
       "target": 0.3,
       "actual": 0.3,
       "eligible": "touched",
-      "area": 0.5167
+      "area": 0.5224
     },
     "mud": {
       "target": 0.7,
@@ -149,17 +149,17 @@
       "target": 0.3,
       "actual": 0.3,
       "eligible": "up-facing",
-      "area": 1.638,
+      "area": 1.647,
       "by": {
         "warden": {
           "target": 0.3,
           "actual": 0.3,
-          "area": 0.9301
+          "area": 0.9318
         },
         "warden_kit": {
           "target": 0.3,
           "actual": 0.3,
-          "area": 0.7079
+          "area": 0.7152
         }
       }
     }

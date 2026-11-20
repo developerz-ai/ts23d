@@ -3,7 +3,7 @@
 
 import { describe, expect, it } from 'bun:test';
 import type { Vec3 } from '@developerz.ai/ts23d';
-import { lockShade, lockTone, wearPaint } from './wild-paint.ts';
+import { lockPaint, lockShade, lockTone, wearPaint } from './wild-paint.ts';
 
 const BASE: Vec3 = [0.5, 0.4, 0.3];
 const UP: Vec3 = [0, 0, 1];
@@ -61,6 +61,24 @@ describe('lockShade', () => {
     expect(lockShade(BASE, 0, 0.3)).toEqual(BASE);
     expect(lockShade(BASE, -1, 0.3)[0]).toBeLessThan(BASE[0] * 0.75);
     expect(lockShade(BASE, 1, 0.3)[0]).toBeCloseTo(BASE[0] * 1.15, 5);
+  });
+});
+
+describe('lockPaint', () => {
+  it('shades at the strength its Locks carry (lockTone alone never read it)', () => {
+    const dir = (): Vec3 => [1, 0, 0];
+    const soft = lockPaint(dir, { size: 0.02, strength: 0.1, seed: 4 });
+    const hard = lockPaint(dir, { size: 0.02, strength: 0.6, seed: 4 });
+    const tone = lockTone(dir, { size: 0.02, strength: 0.6, seed: 4 });
+    const swing = (f: (p: Vec3, c: Vec3) => Vec3): number => {
+      let sum = 0;
+      for (let i = 0; i < 200; i++)
+        sum += Math.abs(f([0.01 * i, 0.013 * i, 0.4], BASE)[0] - BASE[0]);
+      return sum;
+    };
+    expect(swing(hard)).toBeGreaterThan(swing(soft) * 3);
+    const p: Vec3 = [0.05, 0.07, 0.4];
+    expect(hard(p, BASE)).toEqual(lockShade(BASE, tone(p), 0.6));
   });
 });
 

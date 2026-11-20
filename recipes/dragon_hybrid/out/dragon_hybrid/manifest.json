@@ -48,18 +48,18 @@
       "maps": {
         "albedo": {
           "size": 2048,
-          "bytes": 5185169
+          "bytes": 5187850
         },
         "normal": {
           "size": 1024,
-          "bytes": 1385544
+          "bytes": 1369367
         },
         "orm": {
           "size": 1024,
-          "bytes": 1257577
+          "bytes": 1258616
         }
       },
-      "bytes": 7828290,
+      "bytes": 7815833,
       "credit": "ts23d dragon_hybrid recipe (Z-Image concept, Pixal3D mesh, UniRig joints, Blender steps) — MIT — neural cache (blender final on mesh bf86212bfe38)"
     }
   ],

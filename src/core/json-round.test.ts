@@ -1,5 +1,11 @@
 import { expect, it } from 'bun:test';
-import { GLTF_ROUNDING, MANIFEST_ROUNDING, roundJson, roundNumber } from './json-round.ts';
+import {
+  GLTF_ROUNDING,
+  gltfText,
+  MANIFEST_ROUNDING,
+  roundJson,
+  roundNumber,
+} from './json-round.ts';
 
 it('drops the float64 noise digits: a last-bit difference prints the same', () => {
   const a = 0.1 + 0.2; // 0.30000000000000004
@@ -36,4 +42,24 @@ it('leaves whole numbers, non-numbers and non-finite values alone', () => {
     list: [1.234568, { deep: 0.666667, keep: null, on: true }],
   });
   expect(doc.list[0]).toBe(1.23456789012); // a copy: the input is not edited
+});
+
+it('gltfText writes every number of a glTF document at 9 significant digits, whole ones as they are', () => {
+  const doc = {
+    asset: { version: '2.0' },
+    accessors: [
+      { count: 4294967296, min: [1 / 3, -2 / 3, 0.1 + 0.2], max: [7, 1e-7 / 3, 12345.678901234] },
+    ],
+    nodes: [{ name: 'hull', translation: [0, -0, 1.5] }],
+  };
+  const text = gltfText(doc);
+  expect(text).not.toBe(JSON.stringify(doc)); // unrounded, the float64 noise digits are written
+  // Every fraction written (whole numbers aside) has at most 9 significant digits.
+  for (const m of text.match(/-?\d+\.\d+(?:e-?\d+)?/g) ?? [])
+    expect([m, m.replace(/^-|e.*$|\./g, '').replace(/^0+/, '').length <= 9]).toEqual([m, true]);
+  const back = JSON.parse(text);
+  expect(back.accessors[0].min).toEqual([0.333333333, -0.666666667, 0.3]);
+  expect(back.accessors[0].max).toEqual([7, 3.33333333e-8, 12345.6789]);
+  expect(back.accessors[0].count).toBe(4294967296);
+  expect(back.nodes[0]).toEqual({ name: 'hull', translation: [0, 0, 1.5] });
 });

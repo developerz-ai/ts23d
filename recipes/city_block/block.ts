@@ -172,6 +172,26 @@ function inside(a: Vec2, b: Vec2, ext: Site['extent'], pad: number): [number, nu
   return t1 - t0 > 0.5 ? [t0, t1] : null;
 }
 
+type Box = readonly [number, number, number, number];
+
+/** Plan bounds of a polyline. */
+function boxOf(line: readonly Vec2[]): Box {
+  let [x0, y0, x1, y1] = [Infinity, Infinity, -Infinity, -Infinity];
+  for (const [x, y] of line) {
+    x0 = Math.min(x0, x);
+    y0 = Math.min(y0, y);
+    x1 = Math.max(x1, x);
+    y1 = Math.max(y1, y);
+  }
+  return [x0, y0, x1, y1];
+}
+
+const grow = (b: Box, d: number): Box => [b[0] - d, b[1] - d, b[2] + d, b[3] + d];
+
+/** The smallest plan distance between two boxes (0 when they overlap). */
+const boxGap = (a: Box, b: Box): number =>
+  dmath.hypot(Math.max(0, a[0] - b[2], b[0] - a[2]), Math.max(0, a[1] - b[3], b[1] - a[3]));
+
 /** Runs of a line (offset `off` from a→b) that stay out of every other carriageway. */
 function runs(
   a: Vec2,
@@ -248,18 +268,24 @@ function streets(ctx: BuildContext, s: Site, style: BlockStyle): void {
   );
   const roads: Mesh[] = [];
   const marks: Mesh[] = [];
+  const carriageways = s.roads
+    .filter((o) => ROAD_WIDTH[o.highway])
+    .map((o) => ({ road: o, box: boxOf(o.line), keep: (ROAD_WIDTH[o.highway] ?? 0) / 2 + 1 }));
   for (const r of s.roads) {
     const width = ROAD_WIDTH[r.highway];
     if (!width) continue;
     // Clear of every OTHER carriageway (plus a 1 m kerb return): kerbs and paint stop there.
-    const others = s.roads.filter((o) => o !== r && ROAD_WIDTH[o.highway]);
-    const clear = (p: Vec2): boolean =>
-      others.every((o) => distToLine(p, o.line) > (ROAD_WIDTH[o.highway] ?? 0) / 2 + 1);
+    const others = carriageways.filter((o) => o.road !== r);
     for (let i = 0; i + 1 < r.line.length; i++) {
       const a = r.line[i] ?? [0, 0];
       const b = r.line[i + 1] ?? a;
       const len = dmath.hypot(b[0] - a[0], b[1] - a[1]);
       if (len < 0.05) continue;
+      // Only carriageways whose box comes within reach of this segment's samples (they lie in its
+      // box grown by the kerb offset and a sample step) can stop a run: the rest are clear by box.
+      const reach = grow(boxOf([a, b]), width / 2 + 0.6);
+      const near = others.filter((o) => boxGap(o.box, reach) <= o.keep);
+      const clear = (p: Vec2): boolean => near.every((o) => distToLine(p, o.road.line) > o.keep);
       const [nx, ny] = [(-(b[1] - a[1]) / len) * (width / 2), ((b[0] - a[0]) / len) * (width / 2)];
       let poly: Vec2[] = [
         [a[0] - nx, a[1] - ny],
@@ -379,10 +405,20 @@ function trees(ctx: BuildContext, s: Site): void {
   }
   for (let t = x0 + 6; t < x1 - 4; t += 13) spots.push([t, y0 + 1.6], [t, y1 - 1.6]);
   for (let t = y0 + 6; t < y1 - 4; t += 13) spots.push([x0 + 1.6, t], [x1 - 1.6, t]);
+  const closed = rings.map((g) => (g[0] ? [...g, g[0]] : g));
+  /** Nearest wall to p, or any distance under `stop` as soon as one is found (p is skipped then). */
+  const wallFrom = (p: Vec2, stop: number): number => {
+    let best = Infinity;
+    for (const g of closed) {
+      best = Math.min(best, distToLine(p, g));
+      if (best < stop) break;
+    }
+    return best;
+  };
   for (const p of spots) {
     if (p[0] < x0 + 1.5 || p[0] > x1 - 1.5 || p[1] < y0 + 1.5 || p[1] > y1 - 1.5) continue;
     if (rings.some((g) => inPoly(p, g))) continue;
-    const wall = Math.min(...rings.map((g) => distToLine(p, [...g, g[0] ?? p])));
+    const wall = wallFrom(p, 2.6);
     if (wall < 2.6) continue;
     if (s.roads.some((o) => distToLine(p, o.line) < (ROAD_WIDTH[o.highway] ?? 0) / 2 + 0.6))
       continue;
@@ -394,10 +430,12 @@ function trees(ctx: BuildContext, s: Site): void {
     const green: Vec3 = [0.2 * g, 0.3 * g, 0.12 * g];
     const lobe = rng.range(0, 6.28);
     const yaw = rng.range(0, 6.28);
+    // Every LOD draws the lobe's dice, so the next tree is the same tree at every LOD.
+    const lobed = rng.next() < 0.6;
+    const d = rr * rng.range(0.3, 0.5);
     const parts = [trunk, crown(rr, hh, 3.0, green)];
-    if (lod === 0 && rng.next() < 0.6) {
+    if (lod === 0 && lobed) {
       // Side lobe: a smaller dome pushed out and up, so no two crowns share an outline.
-      const d = rr * rng.range(0.3, 0.5);
       parts.push(
         place(crown(rr * 0.65, hh * 0.6, 3.0 + hh * 0.3, green), {
           at: [dmath.cos(lobe) * d, dmath.sin(lobe) * d, 0],
@@ -757,8 +795,8 @@ function building(
   // and the rows as dark bands on the others. Far, every open face keeps its rows as bands.
   const fh = p.floorHeight;
   const wins: Mesh[] = [];
-  /** One face's window rows as dark glass bands (the grid still reads): up close a 12 mm slab
-   *  bedded 2 mm in the wall, so it seats on a face; past LOD0 one quad 1 cm proud. */
+  /** One face's window rows as dark glass bands, one quad 1 cm proud (the grid still reads).
+   *  Only past LOD0: up close every face has its framed sashes (see `banded`). */
   const rows = (e: Edge): void => {
     for (let f = 0; f < p.floors; f++) {
       const z = f * fh + fh * 0.26;
@@ -766,26 +804,14 @@ function building(
       if (h <= 0.2) continue;
       const o = along(e, 0.4, 0.01);
       wins.push(
-        lod === 0
-          ? place(
-              box({
-                size: [0.012, e.len - 0.8, h],
-                at: [0.004, e.len / 2, z],
-                color: [0.05, 0.06, 0.07],
-                strip: 'glass',
-                // Its ends tie the face to the bedded back: one closed-enough piece.
-                omit: ['top', 'bottom'],
-              }),
-              { at: [e.a[0], e.a[1], 0], yaw: e.yaw },
-            )
-          : tiled({
-              origin: [o[0], o[1], z],
-              u: [e.u[0] * (e.len - 0.8), e.u[1] * (e.len - 0.8), 0],
-              v: [0, 0, h],
-              color: [0.05, 0.06, 0.07],
-              strip: 'glass',
-              vMetres: 100,
-            }),
+        tiled({
+          origin: [o[0], o[1], z],
+          u: [e.u[0] * (e.len - 0.8), e.u[1] * (e.len - 0.8), 0],
+          v: [0, 0, h],
+          color: [0.05, 0.06, 0.07],
+          strip: 'glass',
+          vMetres: 100,
+        }),
       );
     }
   };

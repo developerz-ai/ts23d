@@ -12,6 +12,7 @@
 
 import { dmath, sub, normalize as unit, type Vec3 } from '../core/index.ts';
 import { gradient, mad } from './hair-roots.ts';
+import { support } from './hair-strand.ts';
 
 type Field = (p: Vec3) => number;
 
@@ -31,9 +32,6 @@ export function riseOf(
     flat.push((flat[k - 1] ?? 0) + (len / segs) * dmath.sin(lift * (1 - (bend * (k - 1)) / segs)));
   return flat.map((r, k) => r + (slack * k) / segs);
 }
-
-/** The same support as `lie` (hair-strand.ts): 1 facing up, 0.6 sideways, 0 from 35° under. */
-const support = (n: Vec3): number => Math.min(1, Math.max(0, 0.6 + n[2]));
 
 /**
  * A strand rooted on skin that holds it up (`n0`) and now `near` (0..1) skin that has turned
@@ -76,13 +74,21 @@ export function hold(
   const n = gradient(collide && collide(q) < f(q) ? collide : f, q, h);
   const s = support(n);
   const to = unit([-n[0] * s, -n[1] * s, -n[2] * s - (1 - s)]);
+  const blend = (a: Vec3, b: Vec3, t: number): Vec3 => [
+    a[0] * (1 - t) + b[0] * t,
+    a[1] * (1 - t) + b[1] * t,
+    a[2] * (1 - t) + b[2] * t,
+  ];
+  // Exactly opposed (a strand straight off the skin): the straight blend passes through zero and
+  // would jump to the target, under the skin (D404). Turn through a side of the target instead,
+  // so the sweep stays continuous and stops where the step first comes within its allowance.
+  const side = dmath.norm([d[0] + to[0], d[1] + to[1], d[2] + to[2]]) < 2e-6 ? sideOf(to) : null;
   const turned = (t: number): Vec3 => {
-    const w: Vec3 = [
-      d[0] * (1 - t) + to[0] * t,
-      d[1] * (1 - t) + to[1] * t,
-      d[2] * (1 - t) + to[2] * t,
-    ];
-    // Exactly opposed (a strand straight off the skin): no side to turn by, keep the target.
+    const w = side
+      ? t < 0.5
+        ? blend(d, side, 2 * t)
+        : blend(side, to, 2 * t - 1)
+      : blend(d, to, t);
     return mad(p, dmath.hypot(w[0], w[1], w[2]) < 1e-6 ? to : unit(w), step);
   };
   let lo = 0;
@@ -93,6 +99,17 @@ export function hold(
     else lo = mid;
   }
   return turned(hi);
+}
+
+/** A unit direction square to `v` (unit), the same for the same `v`: across the axis it leans
+ *  on least. */
+function sideOf(v: Vec3): Vec3 {
+  const ax = Math.abs(v[0]);
+  const ay = Math.abs(v[1]);
+  const az = Math.abs(v[2]);
+  const e: Vec3 = ax <= ay && ax <= az ? [1, 0, 0] : ay <= az ? [0, 1, 0] : [0, 0, 1];
+  const k = e[0] * v[0] + e[1] * v[1] + e[2] * v[2];
+  return unit([e[0] - k * v[0], e[1] - k * v[1], e[2] - k * v[2]]);
 }
 
 /** `hold` along a finished line, root first: point k at most `rise[k]` + its floor proud. */

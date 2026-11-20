@@ -88,26 +88,23 @@ const SHED_RIM: Vec3 = hex('#1a1813');
 /** Healed scar tissue: pale, pinkish grey, no pattern. */
 const SCAR_TINT: Vec3 = hex('#d4c0a8');
 /** Dry loam the lowest turn has lain in. */
-const DUST: Vec3 = hex('#a08f6e');
+export const DUST: Vec3 = hex('#a08f6e');
 
 /**
  * Pre-shed patch on the outer flank of the top turn of the pile, where the hero camera looks: 0..1.
  * A ragged oval: the old skin has started to cloud from the edges in.
  */
-export function shedAt(s: number, a: number): number {
+export const shedAt = (s: number, a: number): number => shedOf(shedField(s, a));
+/** The patch's raw field (0 off it); `shedOf` and `rimOf` read it, so `marked` derives it once. */
+const shedField = (s: number, a: number): number => {
   const fromRidge = Math.abs(dmath.atan2(dmath.sin(a), dmath.cos(a)));
-  return smooth(0.35, 0.6, shedField(s, a, fromRidge));
-}
-const shedField = (s: number, a: number, fromRidge: number): number => {
   const along = gauss(s - SHED_AT, 0.11);
   const ragged = 0.75 + 0.25 * dmath.sin(s * 61 + a * 7) * dmath.sin(s * 23 - a * 5);
   return along * ragged * (1 - smooth(1.5, 2.0, fromRidge));
 };
+const shedOf = (f: number): number => smooth(0.35, 0.6, f);
 /** The torn rim of the lifted skin, just outside the patch: 0..1. */
-const shedRim = (s: number, a: number): number => {
-  const f = shedField(s, a, Math.abs(dmath.atan2(dmath.sin(a), dmath.cos(a))));
-  return gauss(f - 0.31, 0.035) * smooth(0.15, 0.25, f);
-};
+const rimOf = (f: number): number => gauss(f - 0.31, 0.035) * smooth(0.15, 0.25, f);
 /** Centre of the pre-shed patch along the body, metres from the snout: the top turn's near side. */
 export const SHED_AT = 1.5;
 
@@ -148,8 +145,8 @@ export function dustAt(s: number, a: number): number {
 export function marked(c: Vec3, s: number, a: number, far = false): Vec3 {
   const dusty = (v: Vec3): Vec3 => mixRgb(v, DUST, dustAt(s, a) * 0.9);
   if (far) return dusty(c);
-  const shed = shedAt(s, a);
-  const clouded = mixRgb(c, mixRgb(SHED_TINT, c, 0.18), shed * 0.92);
-  const rimmed = mixRgb(clouded, SHED_RIM, shedRim(s, a) * 0.8);
+  const f = shedField(s, a);
+  const clouded = mixRgb(c, mixRgb(SHED_TINT, c, 0.18), shedOf(f) * 0.92);
+  const rimmed = mixRgb(clouded, SHED_RIM, rimOf(f) * 0.8);
   return dusty(mixRgb(rimmed, SCAR_TINT, scarAt(s, a) * 0.9));
 }

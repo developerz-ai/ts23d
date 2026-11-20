@@ -73,7 +73,21 @@ describe('mountain_range far snow', () => {
     it(`${asset.name}: neighbouring LOD2 surface vertices differ by < 0.25 luminance (p99)`, () => {
       const m = compile(asset, { lod: 2 }).parts.find((p) => p.name === 'terrain')?.mesh;
       if (!m) throw new Error('no terrain part');
-      const n = 39;
+      // The surface grid leads the mesh (the skirt follows it): its side is its first row's length,
+      // read from the mesh, and every (i, j) is checked to sit on that grid, so the neighbours
+      // compared below are neighbours on the ground whatever the far LOD's cell count.
+      const P = m.positions;
+      let n = 1;
+      while (P[n * 3 + 1] === P[1] && (P[n * 3] ?? 0) > (P[(n - 1) * 3] ?? 0)) n++;
+      expect(n).toBeGreaterThan(8);
+      expect(n * n).toBeLessThanOrEqual(P.length / 3);
+      const [dx, dy] = [(P[3] ?? 0) - (P[0] ?? 0), (P[n * 3 + 1] ?? 0) - (P[1] ?? 0)];
+      for (let j = 0; j < n; j++)
+        for (let i = 0; i < n; i++) {
+          const k = j * n + i;
+          expect(Math.abs((P[k * 3] ?? 0) - (P[0] ?? 0) - i * dx)).toBeLessThan(1e-2);
+          expect(Math.abs((P[k * 3 + 1] ?? 0) - (P[1] ?? 0) - j * dy)).toBeLessThan(1e-2);
+        }
       const luma = (k: number): number =>
         0.2126 * (m.colors[k * 3] ?? 0) +
         0.7152 * (m.colors[k * 3 + 1] ?? 0) +

@@ -11,7 +11,7 @@ import { ARCH_F, ARCH_R, X_DOOR_FRONT, X_DOOR_REAR, X_FA, X_RA } from '../dims.t
 import { add, bothSides, cross, mul, sub, unit } from '../lib/geo.ts';
 import { normalAt, type Surface } from '../lib/grid.ts';
 import { roadFilm } from '../lib/wear.ts';
-import { GILLS, holeG, holeUc, X_TAIL_SHUT } from './panels.ts';
+import { GILLS, HEADLAMP, holeG, holeUc, MOUTH, X_HOOD_FRONT, X_TAIL_SHUT } from './panels.ts';
 import { archU, cockpitU, GAP, uMetres } from './regions.ts';
 import { sAtX, U } from './shape.ts';
 
@@ -70,7 +70,11 @@ export function roadSpatter(S: Surface, lod: Lod, rng: Rng): Film {
   const shell = new MeshBuilder();
   const door = new MeshBuilder();
   const s0 = sAtX(-2.05, 7);
-  const s1 = sAtX(1.75, 7);
+  // Out over the nose cap to its front face (x ≈ 2.2 m on the side line), where `roadFilm` puts the
+  // head-on grit; past s 2.0 the cap's rows bunch at the tip and a shard has no tangent to lie on.
+  const s1 = 2.0;
+  const sNose = sAtX(X_HOOD_FRONT, 0);
+  const holes = [...GILLS, HEADLAMP, MOUTH];
   let onDoor = 0;
   let onShell = 0;
   for (let i = 0; i < tries; i++) {
@@ -95,15 +99,16 @@ export function roadSpatter(S: Surface, lod: Lod, rng: Rng): Film {
     const inDoor = s > X_DOOR_REAR && s < X_DOOR_FRONT && u < U.lower;
     if (inDoor && u < cockpitU(S, s, s) + edge) continue;
     const span = size * 1.2 + GAP;
-    if ([X_DOOR_REAR, X_DOOR_FRONT, X_TAIL_SHUT].some((x) => Math.abs(s - x) < span)) continue;
+    if ([X_DOOR_REAR, X_DOOR_FRONT, X_TAIL_SHUT, sNose].some((x) => Math.abs(s - x) < span))
+      continue;
     if (
       [X_FA - ARCH_F, X_FA + ARCH_F, X_RA - ARCH_R, X_RA + ARCH_R].some(
         (x) => Math.abs(s - x) < span,
       )
     )
       continue;
-    // The gills are holes in the fender: nothing there for a fleck to sit on.
-    if (GILLS.some((h) => Math.abs(u - holeUc(h, s)) < h.hu * holeG(h, s) + edge)) continue;
+    // The gills, the lamp pockets and the mouth are holes: nothing there for a fleck to sit on.
+    if (holes.some((h) => Math.abs(u - holeUc(h, s)) < h.hu * holeG(h, s) + edge)) continue;
     if (keep > density) continue;
     fleck(inDoor ? door : shell, S, [s, u], size, streak, turn, tone);
     if (inDoor) onDoor++;

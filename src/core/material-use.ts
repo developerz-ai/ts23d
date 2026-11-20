@@ -96,8 +96,12 @@ function union(lists: readonly (readonly MappedMaterial[])[]): MappedMaterial[] 
 /**
  * The `mapped` field of a mesh made from `meshes`: every material any of them says it maps onto.
  * Spread it into a mesh literal that does not spread its input: `{ positions, …, ...mappedOf(m) }`.
+ * For a list of any length use `mappedOfAll` (spreading a million meshes overflows the call).
  */
-export function mappedOf(...meshes: readonly Mesh[]): Pick<Mesh, 'mapped'> {
+export const mappedOf = (...meshes: readonly Mesh[]): Pick<Mesh, 'mapped'> => mappedOfAll(meshes);
+
+/** `mappedOf` for an array of meshes, however long. */
+export function mappedOfAll(meshes: readonly Mesh[]): Pick<Mesh, 'mapped'> {
   const lists = meshes.flatMap((m) => (m.mapped?.length ? [m.mapped] : []));
   const [first] = lists;
   if (!first) return {};

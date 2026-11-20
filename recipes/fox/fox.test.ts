@@ -32,7 +32,13 @@ describe('red fox from the wolf family (Wikipedia: Red fox; Wikidata Q8332)', ()
   });
 
   it('carries the sourced 11 cm ear (the face override used to drop it to the kind’s 6 cm)', () => {
-    expect((FOX.face?.earLength ?? 0) * REAL.head).toBeCloseTo(REAL.ear, 6);
+    // Measured on the built rig (ear bone: base → tip), not read back from the spec's ratio.
+    const ears = (compile(fox, { lod: 2 }).skeleton?.bones ?? []).filter((b) =>
+      /^ear_[lr]$/.test(b.name),
+    );
+    expect(ears.length).toBe(2);
+    for (const e of ears)
+      expect(Math.abs(dist(e.head, e.tail) - REAL.ear) / REAL.ear).toBeLessThan(0.02);
     expect(REAL.ear).toBeGreaterThanOrEqual(0.077);
     expect(REAL.ear).toBeLessThanOrEqual(0.125);
   });

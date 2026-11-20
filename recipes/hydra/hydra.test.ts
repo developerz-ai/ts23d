@@ -7,10 +7,12 @@ import {
   type Clip,
   type CompiledAsset,
   compile,
+  DEFAULT_SHEET,
   dmath,
   quatRotate,
   runQa,
   type StripId,
+  sheetFor,
   stripRect,
   type Vec3,
 } from '@developerz.ai/ts23d';
@@ -22,7 +24,7 @@ import { DESIGN, HEAD_IDS, JAW_IDS, LEG_FEET, NECK_IDS, NECKS } from './anatomy.
 import { HEAD_STYLES } from './head.ts';
 import { HYDRA_PLAN, hydra } from './hydra.ts';
 import { KERATIN, SCALES } from './material.ts';
-import { bodyRelief, mudAt } from './skin.ts';
+import { mudAt } from './skin.ts';
 
 const SLOW = 240_000;
 const lod0: CompiledAsset = compile(hydra, { lod: 0 });
@@ -252,19 +254,43 @@ describe('surface and wear', () => {
       expect(onStrip(name, KERATIN)).toBeGreaterThan(0.95);
   });
   it('rounds the trunk into a barrel: widest mid-trunk, not a box between the legs', () => {
-    const flankAt = (u: number): number =>
-      bodyRelief({
-        u,
-        angle: Math.PI / 2,
-        s: u * 2.9,
-        radius: 0.55,
-        chain: 'body',
-        lod: 0,
-        p: [0, 0.6, 1],
-        n: [0, 1, 0],
-      });
-    expect(flankAt(0.5) - flankAt(0.25)).toBeGreaterThan(0.08);
-    expect(flankAt(0.5) - flankAt(0.75)).toBeGreaterThan(0.08);
+    // Half-width of the compiled skin at u along the trunk, in a band 0.15–0.25 m above its axis
+    // (above the leg roots, so a limb is not measured as trunk).
+    const trunk = chain('body');
+    const body = part('body');
+    const halfWidth = (u: number): number => {
+      const link = trunk.links.findLast((l) => l.s <= u) ?? trunk.links[0];
+      if (!link) throw new Error('no trunk links');
+      const k = ((u - link.s) * trunk.length) / link.length;
+      const [h, t] = [link.bone.head, link.bone.tail];
+      const [x, z] = [h[0] + (t[0] - h[0]) * k, h[2] + (t[2] - h[2]) * k];
+      let w = 0;
+      const P = body.positions;
+      for (let i = 0; i < P.length; i += 3) {
+        const dz = (P[i + 2] ?? 0) - z;
+        if (Math.abs((P[i] ?? 0) - x) < 0.04 && dz > 0.15 && dz < 0.25)
+          w = Math.max(w, Math.abs(P[i + 1] ?? 0));
+      }
+      return w;
+    };
+    // About 0.2 m wider across mid-trunk than behind the shoulders and in front of the hips.
+    expect(halfWidth(0.5) - halfWidth(0.3)).toBeGreaterThan(0.1);
+    expect(halfWidth(0.5) - halfWidth(0.7)).toBeGreaterThan(0.1);
+  });
+  it('runs one root-to-tip keratin ramp over a piece, not one per 0.3 m tile', () => {
+    // pinKeratin spreads a piece over 0.9 of the row; the graph's tile is the strip's whole span.
+    const sheet = sheetFor([lod0], { ...DEFAULT_SHEET, size: 512 });
+    const r = stripRect(KERATIN);
+    const y = Math.floor(((r.v0 + r.v1) / 2) * sheet.size);
+    const rough = Array.from({ length: 46 }, (_, i) => {
+      const u = r.u0 + 0.9 * (i / 45);
+      const x = Math.min(sheet.size - 1, Math.floor((((u % 1) + 1) % 1) * sheet.size));
+      return sheet.orm[(y * sheet.size + x) * 4 + 1] ?? 0;
+    });
+    // Rough at the root, polished at the tip, never rough again on the way.
+    expect(rough[0] ?? 0).toBeGreaterThan((rough[45] ?? 0) + 60);
+    for (let i = 1; i < rough.length; i++)
+      expect(rough[i] ?? 0).toBeLessThanOrEqual((rough[i - 1] ?? 0) + 6);
   });
   it('cakes mud on the feet and up the shins, broad enough to read from the hero camera', () => {
     expect(mudAt([1.2, 0.9, 0.05])).toBeGreaterThan(0.6);

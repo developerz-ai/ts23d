@@ -152,3 +152,31 @@ describe('city_block from the pinned West Village extract', () => {
     expect(msgs.filter((x) => x.severity <= 1).map((x) => x.code)).toEqual([]);
   });
 });
+
+describe('street trees across LODs', () => {
+  // Failure first: LOD0 drew a side lobe's dice from the shared tree stream and LOD1 did not, so
+  // every tree after the first lobed one changed height and crown between LOD0 and LOD1.
+  /** Each tree's crown apex height, keyed by its axis: the trunk's top (z 3.4) and the crown's
+   *  apex both lie exactly on it. */
+  const apexes = (lod: 0 | 1): string[] => {
+    const m = compile(city_block, { lod }).parts.find((p) => p.name === 'trees')?.mesh;
+    const P = m?.positions ?? new Float32Array();
+    const n = P.length / 3;
+    const out = new Map<string, number>();
+    for (let i = 0; i < n; i++) {
+      if (Math.abs((P[i * 3 + 2] ?? 0) - 3.4) > 1e-5) continue;
+      const [x, y] = [P[i * 3] ?? 0, P[i * 3 + 1] ?? 0];
+      let top = 0;
+      for (let j = 0; j < n; j++)
+        if (Math.abs((P[j * 3] ?? 0) - x) < 1e-4 && Math.abs((P[j * 3 + 1] ?? 0) - y) < 1e-4)
+          top = Math.max(top, P[j * 3 + 2] ?? 0);
+      if (top > 3.5) out.set(`${x.toFixed(3)},${y.toFixed(3)}`, top);
+    }
+    return [...out].map(([k, z]) => `${k}:${z.toFixed(3)}`).sort();
+  };
+  it('every tree keeps its place and height from LOD0 to LOD1', () => {
+    const a = apexes(0);
+    expect(a.length).toBeGreaterThan(3);
+    expect(apexes(1)).toEqual(a);
+  });
+});

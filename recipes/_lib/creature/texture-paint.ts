@@ -277,12 +277,26 @@ def _metres(axis):
     return np.clip(d, 0.35 * mid, 3.0 * mid)
 MU, MV = _metres(1), _metres(0)
 
+def _on(axis, k, m):
+    """Texels whose neighbour k along 'axis' is the same patch of body: on an island, and within
+    three texels in metres (across a UV seam the next texel lies elsewhere on the animal)."""
+    d = sum((np.roll(c, k, axis) - c) ** 2 for c in (X, Y, Z))
+    return np.roll(OK, k, axis) & (d < (3 * m) ** 2)
+
+def _slope(hm, axis, m):
+    """Metres of height per metre along 'axis': central where both neighbours are on the patch,
+    one-sided where one is, 0 where neither (a texel off the islands is no height at all)."""
+    up, dn = _on(axis, -1, m), _on(axis, 1, m)
+    a, b = np.roll(hm, -1, axis), np.roll(hm, 1, axis)
+    d = np.where(up & dn, (a - b) * 0.5, np.where(up, a - hm, np.where(dn, hm - b, 0.0)))
+    return np.where(OK, d / m, 0.0)
+
 def emboss(height, gain=1.0):
     """Add a height field (metres, per texel; a function of position, so it crosses seams) to the
-    normal map as relief."""
+    normal map as relief; a constant height leaves it flat, island rims too."""
     hm = np.where(OK, height, 0.0)
-    SU[:] += gain * np.where(OK, (np.roll(hm, -1, 1) - np.roll(hm, 1, 1)) * 0.5 / MU, 0.0)
-    SV[:] += gain * np.where(OK, (np.roll(hm, -1, 0) - np.roll(hm, 1, 0)) * 0.5 / MV, 0.0)
+    SU[:] += gain * _slope(hm, 1, MU)
+    SV[:] += gain * _slope(hm, 0, MV)
 
 def plane(mask, keep=0.0):
     """Plane the baked relief flat under 'mask' (bare skin, wet mud), keeping 'keep' of it."""

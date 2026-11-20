@@ -5,7 +5,8 @@
 // lattice of those two sides' parts (cells split along their shorter diagonal), and the strip
 // left between the lattice and the third side is zipped to that side's own points.
 // Tolerance: edges along input edges and lattice rows are ≤ maxEdge and > maxEdge / 2 (unless
-// the input edge was shorter); cell diagonals and zip edges are ≤ √2 × maxEdge.
+// the input edge was shorter); cell diagonals are ≤ √2 × maxEdge; zip edges ≤ 2.3 × (a random
+// sliver's worst; ≤ 1.6 × on rectangles), as weather-subdivide-exact.test.ts checks.
 
 import type { Grow } from './weather-subdivide.ts';
 

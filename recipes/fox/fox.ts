@@ -260,9 +260,9 @@ export const fox = defineWildCreature(
       'recipes/fox/README.md (dossier, photos per view)',
     ],
     spec: FOX,
-    // The kind's default body cell follows the limb radius: 4.4 mm on a 6 kg fox, 94 k body
-    // triangles for an animal 68 cm long. 5.9 mm on the body and 3.1 mm on the head hold the
-    // toes, the lids and the ear cups.
+    // The kind's default cells follow the limb radius: 4.7 mm on this fox's body and 2.9 mm on
+    // its head, finer than a 74 cm, 7.5 kg animal needs. × 1.6 (7.5 mm) and × 1.5 (4.3 mm) still
+    // hold the toes, the lids and the ear cups: 84 k triangles at LOD0, 34 k of them the body.
     options: { strip: FUR, cells: { body: [1.6, 1.1, 0.9], head: [1.5, 1, 0.8] } },
     real: {
       length: 1.2,

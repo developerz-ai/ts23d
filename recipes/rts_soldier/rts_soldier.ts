@@ -80,6 +80,12 @@ const adder =
   (name, m, opts) =>
     kit.add(name, restrip(m, RULES), opts);
 
+/** The carbine's barrel shroud (local frame): x0..x1 along the barrel at height z, tapering. */
+export const SHROUD = { x0: 0.28, x1: 0.62, z: 0.12, r0: 0.032, r1: 0.028 } as const;
+/** Shroud radius at carbine-local x. */
+export const shroudR = (x: number): number =>
+  SHROUD.r0 + ((SHROUD.r1 - SHROUD.r0) * (x - SHROUD.x0)) / (SHROUD.x1 - SHROUD.x0);
+
 /** The sunlance carbine, local frame: grip axis +Z through the origin, muzzle toward +X. */
 export function carbine(lod: Lod): {
   body: Mesh;
@@ -91,7 +97,7 @@ export function carbine(lod: Lod): {
   const body: Mesh[] = [
     // Receiver above the grip, barrel shroud forward.
     pebble(lod, [0.42, 0.07, 0.1], [0.08, 0, 0.07], IRON),
-    tube(lod, [0.28, 0, 0.12], [0.62, 0, 0.12], 0.032, 0.028, SLATE),
+    tube(lod, [SHROUD.x0, 0, SHROUD.z], [SHROUD.x1, 0, SHROUD.z], SHROUD.r0, SHROUD.r1, SLATE),
   ];
   // The stock at every LOD: the side silhouette keeps the whole weapon.
   body.push(pebble(lod, [0.2, 0.055, 0.12], [-0.2, 0, 0.03], SLATE));
@@ -259,15 +265,23 @@ function armour(add: Add, lod: Lod, pts: FigurePoints): void {
 const GRIP: Vec3 = [0.31, -0.24, 1.0];
 const D: Vec3 = [0, 0.75, 0.66].map((v, _, a) => v / dmath.norm(a)) as unknown as Vec3;
 const U: Vec3 = [0, -D[2], D[1]];
-/** The fore-end under the shroud, where the left glove holds it. */
-const SUPPORT: Vec3 = [GRIP[0], GRIP[1] + D[1] * 0.42 - U[1] * 0.0, GRIP[2] + D[2] * 0.42 + 0.04];
-/** The carbine's local frame onto the port pose: x → D, y → forward-facing side, z → U. */
-const PORT_FRAME = frame(
-  D,
-  [U[1] * D[2] - U[2] * D[1], U[2] * D[0] - U[0] * D[2], U[0] * D[1] - U[1] * D[0]],
-  U,
-  GRIP,
-);
+/** The forward-facing side: completes the right-handed port frame (D × side = U). */
+const SIDE: Vec3 = [
+  U[1] * D[2] - U[2] * D[1],
+  U[2] * D[0] - U[0] * D[2],
+  U[0] * D[1] - U[1] * D[0],
+];
+/** The carbine's local frame onto the port pose at `grip`: x → D, y → SIDE, z → U. */
+const portFrame = (grip: Vec3) => frame(D, SIDE, U, grip);
+/** A carbine-local point at port arms with the grip at `grip`. */
+export const onPort = (grip: Vec3, p: Vec3): Vec3 => {
+  const f = (k: 0 | 1 | 2): number => grip[k] + D[k] * p[0] + SIDE[k] * p[1] + U[k] * p[2];
+  return [f(0), f(1), f(2)];
+};
+/** Where along the shroud (carbine-local x) the left glove holds it. */
+const HOLD_X = 0.42;
+/** The fore-end where the left glove holds it: the shroud's underside at HOLD_X. */
+export const SUPPORT: Vec3 = onPort(GRIP, [HOLD_X, 0, SHROUD.z - shroudR(HOLD_X)]);
 
 /**
  * Load-bearing kit over the armour: webbing straps from the shoulders over the chest plates to
@@ -425,10 +439,12 @@ export const rts_soldier = defineAsset({
       data: { weapon: 'sunlance' },
     });
     const gun = carbine(lod);
+    // One grip drives the weapon's pose, its grip joint and its muzzle: the figure's fist.
     const at = pts.grip;
     // At port arms across the chest (the grip's own axis tilted onto U, so the fist still closes
     // round it): the front view reads the whole weapon, not a muzzle pointing at the lens.
-    const pose = (m: Mesh): Mesh => applyAffine(m, PORT_FRAME);
+    const port = portFrame(at);
+    const pose = (m: Mesh): Mesh => applyAffine(m, port);
     add('rifle_grip', pose(gun.grip));
     add('rifle', pose(gun.body));
     if (gun.cell) add('rifle_cell', pose(gun.cell));
@@ -437,11 +453,7 @@ export const rts_soldier = defineAsset({
     const m = gun.muzzle;
     ctx.emitter('muzzle', {
       kind: 'muzzle',
-      at: [
-        at[0] + D[0] * m[0] + U[0] * m[2],
-        at[1] + D[1] * m[0] + U[1] * m[2],
-        at[2] + D[2] * m[0] + U[2] * m[2],
-      ],
+      at: onPort(at, m),
       dir: D,
       rate: 120,
       life: 0.08,

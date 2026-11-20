@@ -4,6 +4,7 @@
 
 import { describe, expect, it } from 'bun:test';
 import { createRng, type Mesh } from '@developerz.ai/ts23d';
+import { BROKEN_PLINTH, rectInside } from './plan.ts';
 import { emblem, floor } from './surface.ts';
 
 /** Connected pieces of a mesh (by shared vertex positions), as plan bounds. */
@@ -54,4 +55,23 @@ describe('painted floor emblem', () => {
     expect(pieces(m).length).toBeGreaterThan(10);
     expect(onOneFlag(m)).toBe(true);
   });
+});
+
+describe('floor on a raided plinth', () => {
+  for (const lod of [0, 1, 2] as const) {
+    it(`LOD${lod}: the full layout overhangs the blown-off corner (failure case)`, () => {
+      const full = floor(lod, createRng(1), []).cells;
+      expect(full.every((c) => rectInside(BROKEN_PLINTH, c, 0.25))).toBe(false);
+    });
+
+    it(`LOD${lod}: every laid flag lies on the broken slab`, () => {
+      const f = floor(lod, createRng(1), [], BROKEN_PLINTH);
+      expect(f.cells.length).toBeGreaterThan(0);
+      expect(f.cells.every((c) => rectInside(BROKEN_PLINTH, c, 0.25))).toBe(true);
+      const xs = f.mesh.positions.filter((_, i) => i % 3 === 0);
+      const ys = f.mesh.positions.filter((_, i) => i % 3 === 1);
+      // Nothing over the corner the raid took (x > 2.9 m, y < -5 m of the 5.5 × 7.5 m half-plan).
+      expect(xs.some((x, i) => x > 3.0 && (ys[i] ?? 0) < -6.9)).toBe(false);
+    });
+  }
 });

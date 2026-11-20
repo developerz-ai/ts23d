@@ -231,7 +231,7 @@ export function wearPaint(w: WearSpec, coarse = false): WearPaint {
 export interface Locks {
   /** Width of one lock across the coat's lie, metres (≥ 2.5 sculpt cells, or it aliases). */
   readonly size: number;
-  /** Tone swing 0..1: lit locks × (1 + ½ s), the partings between them × (1 − s). */
+  /** Tone swing 0..1 `lockPaint` shades with: lit locks × (1 + ½ s), the partings × (1 − s). */
   readonly strength: number;
   /** Lock length ÷ width (default 6). */
   readonly stretch?: number;
@@ -242,7 +242,8 @@ export interface Locks {
  * Clumped locks as tone, −1 (the shadowed parting between two locks) … +1 (a lit lock): value
  * noise stretched along the coat's lie `dir`, a coarse octave for the clumps and a finer one for
  * the strands in them. Painted on the skin under the cards, so the coat between the cards reads
- * as fur lying along the body and not as a smooth painted shell.
+ * as fur lying along the body and not as a smooth painted shell. The tone only: `lockPaint` applies
+ * it at `o.strength`.
  */
 export function lockTone(dir: (p: Vec3) => Vec3, o: Locks): (p: Vec3) => number {
   const salt = (o.seed ?? 1) + 71;
@@ -261,6 +262,12 @@ export function lockTone(dir: (p: Vec3) => Vec3, o: Locks): (p: Vec3) => number 
     const strand = noise3(q[0] * 2.3, q[1] * 2.3, q[2] * 2.3, salt + 1);
     return smooth(0.3, 0.7, clump * 0.65 + strand * 0.35) * 2 - 1;
   };
+}
+
+/** The locks painted: a colour shaded by `lockTone` at the swing its `Locks` carry (`strength`). */
+export function lockPaint(dir: (p: Vec3) => Vec3, o: Locks): (p: Vec3, c: Vec3) => Vec3 {
+  const tone = lockTone(dir, o);
+  return (p, c) => lockShade(c, tone(p), o.strength);
 }
 
 /** A colour under the lock tone `t` (−1..1): partings darker and a touch richer, locks paler. */

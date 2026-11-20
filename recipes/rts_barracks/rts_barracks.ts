@@ -42,6 +42,7 @@ import {
 } from '../_lib/rts/style.ts';
 import {
   type Bay,
+  BROKEN_PLINTH,
   COLS,
   COURSE,
   type Damage,
@@ -341,7 +342,8 @@ const hall = defineFamily({
       ...scorchZones(stage, damage),
       ...(damage === 'intact' ? [] : burntTops(list, ctx.rng.fork('soot'), ruined)),
     ];
-    add('plinth', plinth(lod, stage === 'foundation' && damage === 'damaged'), {}, zones);
+    const raidedSite = stage === 'foundation' && damage === 'damaged';
+    add('plinth', plinth(lod, raidedSite), {}, zones);
     // The roof stands on complete, unruined halls only (built below).
     const finished = stage === 'complete' && !ruined;
     const w = walls(
@@ -470,7 +472,8 @@ const hall = defineFamily({
     const floored = stage !== 'complete' || ruined;
     if (floored) {
       const stains = floorStains(stage, damage);
-      const f = floor(lod, ctx.rng.fork('floor'), stains);
+      // A raided site's flags stop at its blown-off corner, not over the rubble below it.
+      const f = floor(lod, ctx.rng.fork('floor'), stains, raidedSite ? BROKEN_PLINTH : undefined);
       kit.add('floor', f.mesh);
       // Soot dims the paint where the floor burnt.
       const dim = (x: number, y: number): number =>

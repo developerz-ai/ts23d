@@ -230,10 +230,11 @@ export function fireEscape(w: number, floors: number, fh: number, lod: Lod): Mes
   for (let f = 1; f < floors; f++) {
     const z = f * fh;
     iron([0.852, w, 0.05], [0.424, 0, z - 0.05], ['back']); // grating, its back 2 mm behind the wall face
-    iron([0.03, w, 0.03], [0.835, 0, z + 0.87], ['bottom']); // top rail
+    // Rails keep their undersides: the street looks up at them between the posts.
+    iron([0.03, w, 0.03], [0.835, 0, z + 0.87]); // top rail
     for (const s of [-1, 1]) {
       iron([0.03, 0.03, 0.9], [0.835, s * (w / 2 - 0.015), z], ['top', 'bottom']); // corner posts (ends buried)
-      iron([0.852, 0.03, 0.03], [0.424, s * (w / 2 - 0.015), z + 0.87], ['bottom']); // side rails, bearing on the wall
+      iron([0.852, 0.03, 0.03], [0.424, s * (w / 2 - 0.015), z + 0.87]); // side rails, bearing on the wall
     }
     if (lod > 0) continue;
     if (f + 1 < floors)

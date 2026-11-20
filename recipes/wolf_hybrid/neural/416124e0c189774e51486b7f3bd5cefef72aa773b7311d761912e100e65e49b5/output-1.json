@@ -100,7 +100,7 @@
     9998,
     4998
   ],
-  "seconds": 171.96,
+  "seconds": 140.67,
   "source": {
     "materials": 1,
     "textures": 2,
@@ -112,14 +112,14 @@
     {
       "determinant": 2.018792,
       "op": "transform",
-      "seconds": 0.08,
+      "seconds": 0.05,
       "triangles": 906084
     },
     {
       "holeFaces": 0,
       "nonManifoldEdges": 228,
       "op": "clean",
-      "seconds": 13.57,
+      "seconds": 6.32,
       "shells": 27,
       "shellsDropped": 26,
       "triangles": 904626,
@@ -143,14 +143,14 @@
         "2 + 4": 313,
         "3 + 4": 376
       },
-      "seconds": 29.17,
+      "seconds": 21.57,
       "triangles": 904610,
       "webFaces": 747
     },
     {
       "moved": 0.045503,
       "op": "script",
-      "seconds": 27.03,
+      "seconds": 20.29,
       "sha256": "3e84071eb3cf4c2dd38ddf4d48bb506e2340961054fc92922bda5b8ec1e82c3a",
       "stdout": [
         "haunches 124474 vertices, largest move 0.0455"
@@ -165,7 +165,7 @@
     {
       "moved": 0.039454,
       "op": "script",
-      "seconds": 0.72,
+      "seconds": 0.6,
       "sha256": "e0032e7b9db114b064fdcaf90d2d3e22672efcec5866bcf2519d82894791fb52",
       "stdout": [
         "tufts up vertices 8443 highest 0.023",
@@ -189,7 +189,7 @@
       "from": 904610,
       "op": "retopo",
       "reduce": "decimate",
-      "seconds": 29.42,
+      "seconds": 25.55,
       "shell": {
         "bboxDrift": 0.00443,
         "bboxSide": "+z (top)",
@@ -228,7 +228,7 @@
       "islands": 199,
       "kind": "smart",
       "op": "uv",
-      "seconds": 8.98,
+      "seconds": 8.61,
       "triangles": 29998,
       "uvDegenerate": 0.0
     },
@@ -245,7 +245,7 @@
         "ao"
       ],
       "op": "bake",
-      "seconds": 31.17,
+      "seconds": 24.42,
       "size": 2048,
       "triangles": 29998,
       "uvCoverage": 0.6253
@@ -257,7 +257,7 @@
       "maxInfluences": 4,
       "method": "bone-heat",
       "op": "bind",
-      "seconds": 0.82,
+      "seconds": 0.74,
       "triangles": 29998,
       "unusedBones": [],
       "weightSum": [
@@ -285,7 +285,7 @@
         0,
         0
       ],
-      "seconds": 0.3,
+      "seconds": 0.27,
       "triangles": 29998
     },
     {
@@ -300,8 +300,8 @@
     {
       "moved": 0.0,
       "op": "script",
-      "seconds": 29.04,
-      "sha256": "f404a9b7abb8438a9b03bcb218067749ee0410a460b3c7e6f0a3520d4d68c613",
+      "seconds": 30.61,
+      "sha256": "0fbb48f563af57a4c34b041eb81d8dcb6aa85f2afe19aa3be5a29fc0cc1fae19",
       "stdout": [
         "delight 0.0847232519166766",
         "cast 0.06865869533573002",
@@ -357,18 +357,18 @@
         }
       ],
       "op": "lods",
-      "seconds": 0.74,
+      "seconds": 0.76,
       "triangles": 29998
     },
     {
-      "bytes": 10388404,
+      "bytes": 10366156,
       "images": {
         "albedo": 2048,
         "normal": 1024,
         "orm": 1024
       },
       "op": "export",
-      "seconds": 0.87,
+      "seconds": 0.83,
       "triangles": 29998
     }
   ],

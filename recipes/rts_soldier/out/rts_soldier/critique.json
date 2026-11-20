@@ -5,7 +5,7 @@
   "scores": {
     "silhouette": {
       "score": 8,
-      "reason": "Carbine now at port arms across the chest: FRONT reads the whole weapon, plus red crest, red pauldrons and radio pack with antenna; reads \"infantry\" from every view.",
+      "reason": "Carbine at port arms across the chest with the left glove now gripping the shroud instead of floating beside it (hero.png); FRONT reads the whole weapon, plus red crest, red pauldrons and radio pack with antenna; reads \"infantry\" from every view.",
       "fixes": [
         "angle the antenna back a little so it separates from the crest in SIDE"
       ]
@@ -56,7 +56,7 @@
     }
   },
   "renders": {
-    "hero.png": "7dbfba50b53838783fa499127829b02c39516eac29fe09eb72aac439a804afb4",
-    "sheet.png": "0262b217b18179483e7d8115a64e2a8330e8f97bb22d7af3cdca9fc7ba87c7f3"
+    "hero.png": "98b53dcf7264df7e364965c97b00e2c79ddc4711e90dff8cef936be378e9aab3",
+    "sheet.png": "db8e47aea4e0cc665af4bf17000525507637c45942352889a46b22e083a4c102"
   }
 }

@@ -25,14 +25,7 @@ import {
   type Vec3,
 } from '@developerz.ai/ts23d';
 import { recolour } from '../_lib/creature/wild.ts';
-import {
-  lockShade,
-  lockTone,
-  mix,
-  smooth,
-  type WearSpec,
-  wearPaint,
-} from '../_lib/creature/wild-paint.ts';
+import { lockPaint, mix, smooth, type WearSpec, wearPaint } from '../_lib/creature/wild-paint.ts';
 import { type GroomLayer, groom, strands } from '../_lib/creature/wild-parts.ts';
 import { bodyPaint } from './coat.ts';
 import { whiskerSpots } from './face.ts';
@@ -116,8 +109,8 @@ const LIE = chainSeed(
 );
 /** Locks painted under the cards: 3.3 cm across on the body (2.5 cells), 1.6 cm on the head
  *  (back from the nose along the pitched skull), so the coat between the cards reads as fur. */
-const bodyLocks = lockTone((p) => LIE(p, [0, 0, 1]), { size: 0.033, strength: 0.3, seed: 1931 });
-const headLocks = lockTone(() => [-dmath.cos(HEAD_PITCH), 0, dmath.sin(HEAD_PITCH) - 0.15], {
+const bodyLocks = lockPaint((p) => LIE(p, [0, 0, 1]), { size: 0.033, strength: 0.3, seed: 1931 });
+const headLocks = lockPaint(() => [-dmath.cos(HEAD_PITCH), 0, dmath.sin(HEAD_PITCH) - 0.15], {
   size: 0.016,
   strength: 0.3,
   seed: 1932,
@@ -127,9 +120,9 @@ const headLocks = lockTone(() => [-dmath.cos(HEAD_PITCH), 0, dmath.sin(HEAD_PITC
  *  in (`at` = the part's world offset) and, for parts in the world frame, the ground grade.
  *  `far`: the far LOD's coarse mesh. */
 export function worn(mesh: Mesh, at: Vec3 = [0, 0, 0], far = false, locks?: 'body' | 'head'): Mesh {
-  const tone = far || !locks ? null : locks === 'body' ? bodyLocks : headLocks;
+  const locked = far || !locks ? null : locks === 'body' ? bodyLocks : headLocks;
   const paint = far ? wearFar : wear;
-  const m = recolour(mesh, at, (p, n, c) => paint(p, n, tone ? lockShade(c, tone(p), 0.3) : c));
+  const m = recolour(mesh, at, (p, n, c) => paint(p, n, locked ? locked(p, c) : c));
   return at[0] === 0 && at[1] === 0 && at[2] === 0
     ? grime(m, { ground: 0.3, groundStrength: 0.22 })
     : m;

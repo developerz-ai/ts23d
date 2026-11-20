@@ -2,7 +2,8 @@
 // merged pixel rectangles (text-layout.ts) become flush decals lifted 2 mm (depth 0, 2 triangles
 // each) or raised boxes (face + 4 sides, 10 each). Flat normals. With `surface`, rectangles split
 // into column groups wherever the offset under them changes and each sits on the highest surface
-// under it; `wrap` also paints the steps between pieces at different depths (text-pixel-wrap.ts).
+// under it; `wrap` also paints the steps between pieces at different depths (text-pixel-wrap.ts),
+// joined to the higher paint by a strip LIFT wide.
 // Without `wrap` the output is byte-identical to text() before vector fonts existed.
 
 import { type Mesh, MeshBuilder, type Vec3 } from '../core/index.ts';
@@ -115,16 +116,26 @@ export function pixelText(str: string, o: PixelTextInput): Mesh {
   }
   if (o.wrap && o.surface)
     // The riser stands LIFT clear of the step, on the lower piece's side, so it never lies in the
-    // plane of the proud member's own side face.
+    // plane of the proud member's own side face. A strip at its top, in the higher paint's plane,
+    // spans those LIFT back to the higher piece's edge: no slit between the two (D407).
     for (const r of risers(all, depth > 0 ? depth : LIFT, depth > 0 ? 0 : LIFT)) {
       const e = r.at + r.out * LIFT;
-      const p = (a: number, w: number): Vec3 => (r.axis === 'u' ? at(e, a, w) : at(a, e, w));
+      const p = (x: number, a: number, w: number): Vec3 =>
+        r.axis === 'u' ? at(x, a, w) : at(a, x, w);
       const axis = r.axis === 'u' ? along : up;
       quad(
-        [p(r.a0, r.w0), p(r.a1, r.w0), p(r.a1, r.w1), p(r.a0, r.w1)],
+        [p(e, r.a0, r.w0), p(e, r.a1, r.w0), p(e, r.a1, r.w1), p(e, r.a0, r.w1)],
         r.out > 0 ? axis : neg(axis),
         [r.a0, r.a1, r.a1, r.a0],
         [0, 0, r.w1 - r.w0, r.w1 - r.w0],
+      );
+      const across = [e, e, r.at, r.at];
+      const span = [r.a0, r.a1, r.a1, r.a0];
+      quad(
+        [p(e, r.a0, r.w1), p(e, r.a1, r.w1), p(r.at, r.a1, r.w1), p(r.at, r.a0, r.w1)],
+        n,
+        r.axis === 'u' ? across : span,
+        r.axis === 'u' ? span : across,
       );
     }
   return mappedOnto(b.build(), o.strip ?? 'plain');

@@ -309,12 +309,11 @@ function asteroidVariant(
         return { m, o: vr.range(-0.35, 0.35) * Math.min(size[0], size[1], size[2]) };
       });
       const veinDist = (p: Vec3): number => {
+        // One bend for every sheet at this point: the noise is the costly part.
+        const bend = 0.55 * veins(p);
         let d = 99;
         for (const v of sheets)
-          d = Math.min(
-            d,
-            Math.abs(p[0] * v.m[0] + p[1] * v.m[1] + p[2] * v.m[2] - v.o + 0.55 * veins(p)),
-          );
+          d = Math.min(d, Math.abs(p[0] * v.m[0] + p[1] * v.m[1] + p[2] * v.m[2] - v.o + bend));
         return d;
       };
       const tone = valueNoise(ctx.rng.fork('tone'), { scale: 1.2, octaves: 3 });
