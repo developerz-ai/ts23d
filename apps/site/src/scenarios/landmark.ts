@@ -2,6 +2,7 @@
 // hour, dusk); tall things get a camera that rises from street level to the top.
 // Hooks: none needed; the kind and the size decide.
 
+import { dmath } from '@developerz.ai/ts23d/core';
 import { Color, Vector3 } from 'three';
 import { around, Dolly, ease } from './cinema.ts';
 import { footprint, type Hooks } from './hooks.ts';
@@ -55,12 +56,12 @@ class Day implements Scenario {
     this.ctx.mixer?.update(dt);
     // The sun crosses the sky: up from the east, over, down in the west.
     const span = Math.max(h.size.x, h.size.y, h.size.z) * 3;
-    const elev = Math.sin(Math.PI * Math.min(1, p * 1.05)) * 1.0 + 0.08;
+    const elev = dmath.sin(Math.PI * Math.min(1, p * 1.05)) * 1.0 + 0.08;
     const az = Math.PI * (0.5 + p);
     stage.sun.position.set(
-      h.center.x + Math.cos(az) * Math.cos(elev) * span,
-      Math.sin(elev) * span,
-      h.center.z + Math.sin(az) * Math.cos(elev) * span,
+      h.center.x + dmath.cos(az) * dmath.cos(elev) * span,
+      dmath.sin(elev) * span,
+      h.center.z + dmath.sin(az) * dmath.cos(elev) * span,
     );
     stage.sun.target.position.copy(h.center);
     const k = sky(p);

@@ -3,7 +3,7 @@
 // by index, so the same seed walks the same path. Bounds: evaluate the clamped point, pull back
 // with a quadratic penalty. Stops on the evaluation budget, a collapsed radius, a stall or a target.
 
-import { createRng } from '../core/index.ts';
+import { createRng, dmath } from '../core/index.ts';
 import { symmetricEigen } from './eigen.ts';
 import {
   type MinimiseOptions,
@@ -21,19 +21,19 @@ export function cmaes(f: Objective, o: MinimiseOptions): Minimum {
   const rng = createRng(o.seed);
   const gauss = (): number => {
     const u = Math.max(rng.next(), 1e-12);
-    return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * rng.next());
+    return Math.sqrt(-2 * dmath.log(u)) * dmath.cos(2 * Math.PI * rng.next());
   };
-  const lambda = 4 + Math.floor(3 * Math.log(n));
+  const lambda = 4 + Math.floor(3 * dmath.log(n));
   const mu = Math.floor(lambda / 2);
-  const raw = Array.from({ length: mu }, (_, i) => Math.log(mu + 0.5) - Math.log(i + 1));
+  const raw = Array.from({ length: mu }, (_, i) => dmath.log(mu + 0.5) - dmath.log(i + 1));
   const wsum = raw.reduce((s, v) => s + v, 0);
   const w = raw.map((v) => v / wsum);
   const mueff = 1 / w.reduce((s, v) => s + v * v, 0);
   const cs = (mueff + 2) / (n + mueff + 5);
   const ds = 1 + 2 * Math.max(0, Math.sqrt((mueff - 1) / (n + 1)) - 1) + cs;
   const cc = (4 + mueff / n) / (n + 4 + (2 * mueff) / n);
-  const c1 = 2 / ((n + 1.3) ** 2 + mueff);
-  const cmu = Math.min(1 - c1, (2 * (mueff - 2 + 1 / mueff)) / ((n + 2) ** 2 + mueff));
+  const c1 = 2 / (dmath.pow(n + 1.3, 2) + mueff);
+  const cmu = Math.min(1 - c1, (2 * (mueff - 2 + 1 / mueff)) / (dmath.pow(n + 2, 2) + mueff));
   const chiN = Math.sqrt(n) * (1 - 1 / (4 * n) + 1 / (21 * n * n));
   const tolX = o.tolX ?? 1e-4;
   const patience = o.patience ?? 12 + Math.ceil((30 * n) / lambda);
@@ -85,7 +85,7 @@ export function cmaes(f: Objective, o: MinimiseOptions): Minimum {
     const kps = Math.sqrt(cs * (2 - cs) * mueff);
     ps = ps.map((v, i) => (1 - cs) * v + kps * (inv[i] ?? 0));
     const psn = Math.sqrt(dot(ps, ps));
-    const hs = psn / Math.sqrt(1 - (1 - cs) ** (2 * gen)) < (1.4 + 2 / (n + 1)) * chiN ? 1 : 0;
+    const hs = psn / Math.sqrt(1 - dmath.pow(1 - cs, 2 * gen)) < (1.4 + 2 / (n + 1)) * chiN ? 1 : 0;
     const kpc = hs * Math.sqrt(cc * (2 - cc) * mueff);
     pc = pc.map((v, i) => (1 - cc) * v + kpc * (yw[i] ?? 0));
     const keep = 1 - c1 - cmu + (1 - hs) * c1 * cc * (2 - cc);
@@ -99,7 +99,7 @@ export function cmaes(f: Objective, o: MinimiseOptions): Minimum {
         return keep * v + c1 * (pc[i] ?? 0) * (pc[j] ?? 0) + cmu * rmu;
       }),
     );
-    sigma *= Math.exp((cs / ds) * (psn / chiN - 1));
+    sigma *= dmath.exp((cs / ds) * (psn / chiN - 1));
     sigma = Math.min(sigma, 1);
     history.push({ gen, evals: t.evals, best: t.best, current: pop[0]?.f ?? t.best, sigma });
     bests.push(t.best);

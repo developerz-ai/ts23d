@@ -11,6 +11,7 @@ import {
   CREATURE_MATERIALS,
   type CreatureInfo,
   defineMaterial,
+  dmath,
   type Lod,
   strandCells,
   type Vec3,
@@ -27,7 +28,7 @@ defineMaterial(CREATURE_MATERIALS.fur_clumps);
 export const HUMP = { at: 0.88, rise: 0.07 } as const;
 
 const dist = (p: Vec3, q: Vec3): number =>
-  Math.hypot(p[0] - q[0], Math.abs(p[1]) - Math.abs(q[1]), p[2] - q[2]);
+  dmath.hypot(p[0] - q[0], Math.abs(p[1]) - Math.abs(q[1]), p[2] - q[2]);
 
 export function bearGroom(
   info: CreatureInfo,
@@ -54,12 +55,12 @@ export function bearGroom(
     0,
     withers[2] + (HUMP.rise - 0.03) * H,
   ];
-  const onHump = (p: Vec3): number => Math.max(0, 1 - (dist(p, hump) / (H * 0.3)) ** 2);
+  const onHump = (p: Vec3): number => Math.max(0, 1 - dmath.pow(dist(p, hump) / (H * 0.3), 2));
   const breeches = (p: Vec3): number =>
-    Math.max(0, 1 - (dist(p, [hip[0] - 0.2, hip[1], hip[2] - 0.25]) / (H * 0.3)) ** 2);
+    Math.max(0, 1 - dmath.pow(dist(p, [hip[0] - 0.2, hip[1], hip[2] - 0.25]) / (H * 0.3), 2));
   // Behind the forearm, elbow → wrist: the feathering a bear's foreleg carries.
   const feather = (p: Vec3): number =>
-    Math.max(0, 1 - (dist(p, [elbow[0] - 0.1, elbow[1], elbow[2] - 0.12]) / (H * 0.2)) ** 2);
+    Math.max(0, 1 - dmath.pow(dist(p, [elbow[0] - 0.1, elbow[1], elbow[2] - 0.12]) / (H * 0.2), 2));
   // Short tight fur from the wrists and heels down; none on the soles.
   const leg = (p: Vec3): number => smooth(H * 0.1, H * 0.36, p[2]);
   const sole = (p: Vec3): number => smooth(H * 0.035, H * 0.07, p[2]);

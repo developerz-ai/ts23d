@@ -10,6 +10,7 @@ import {
   box,
   cylinder,
   defineAsset,
+  dmath,
   frame,
   type Lod,
   type Mesh,
@@ -256,7 +257,7 @@ function armour(add: Add, lod: Lod, pts: FigurePoints): void {
  * barrel along D, grip axis (the gun's "up") along U, both in the frontal plane.
  */
 const GRIP: Vec3 = [0.31, -0.24, 1.0];
-const D: Vec3 = [0, 0.75, 0.66].map((v, _, a) => v / Math.hypot(...a)) as unknown as Vec3;
+const D: Vec3 = [0, 0.75, 0.66].map((v, _, a) => v / dmath.norm(a)) as unknown as Vec3;
 const U: Vec3 = [0, -D[2], D[1]];
 /** The fore-end under the shroud, where the left glove holds it. */
 const SUPPORT: Vec3 = [GRIP[0], GRIP[1] + D[1] * 0.42 - U[1] * 0.0, GRIP[2] + D[2] * 0.42 + 0.04];
@@ -332,13 +333,13 @@ function pauldronChips(shoulder: Vec3, rng: Rng): Mesh {
     for (let i = 0; i < 7; i++) {
       const az = rng.range(-1.9, 1.9);
       const el = rng.range(0.12, 0.5);
-      const d: Vec3 = [Math.cos(el) * Math.cos(az), Math.cos(el) * Math.sin(az), Math.sin(el)];
+      const d: Vec3 = [dmath.cos(el) * dmath.cos(az), dmath.cos(el) * dmath.sin(az), dmath.sin(el)];
       const p: Vec3 = [c[0] + r[0] * d[0], side * (c[1] + r[1] * d[1]), c[2] + r[2] * d[2]];
       const n0: Vec3 = [d[0] / r[0], (side * d[1]) / r[1], d[2] / r[2]];
-      const nl = Math.hypot(...n0);
+      const nl = dmath.norm(n0);
       const n: Vec3 = [n0[0] / nl, n0[1] / nl, n0[2] / nl];
       const t0: Vec3 = [-n[1], n[0], 0];
-      const tl = Math.hypot(...t0) || 1;
+      const tl = dmath.norm(t0) || 1;
       const t: Vec3 = [t0[0] / tl, t0[1] / tl, 0];
       const b: Vec3 = [
         n[1] * t[2] - n[2] * t[1],

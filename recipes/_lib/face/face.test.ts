@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { createRng, Ts23dError, type Vec3 } from '@developerz.ai/ts23d';
+import { createRng, dmath, Ts23dError, type Vec3 } from '@developerz.ai/ts23d';
 import { faceBase } from './base.ts';
 import { faceHead } from './head.ts';
 import { BASE_H, baseLandmarks, LEFT, MIDLINE } from './landmarks.ts';
@@ -63,7 +63,7 @@ describe('face base + landmark warp', () => {
       for (let v = 0; v < p.length; v += 3)
         best = Math.min(
           best,
-          Math.hypot((p[v] ?? 0) - at[0], (p[v + 1] ?? 0) - at[1], (p[v + 2] ?? 0) - at[2]),
+          dmath.hypot((p[v] ?? 0) - at[0], (p[v + 1] ?? 0) - at[1], (p[v + 2] ?? 0) - at[2]),
         );
       expect(best).toBeLessThan(5e-4);
     }

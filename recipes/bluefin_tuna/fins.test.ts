@@ -4,6 +4,7 @@
 
 import { describe, expect, it } from 'bun:test';
 import type { Mesh } from '@developerz.ai/ts23d';
+import { dmath } from '@developerz.ai/ts23d';
 import { anal, dorsal2, upperLobe } from './fins.ts';
 
 /** The worst agreement (dot) between a vertex normal and the mean of its faces' normals,
@@ -30,7 +31,7 @@ function worstAgreement(m: Mesh): number {
     // Faces only: the fin's sharp edges carry an in-plane normal (|n.y| ~ 0) by design.
     if (Math.abs(n[1] ?? 0) < 0.5) continue;
     const g = [acc[w * 3] ?? 0, acc[w * 3 + 1] ?? 0, acc[w * 3 + 2] ?? 0];
-    const l = Math.hypot(g[0] ?? 0, g[1] ?? 0, g[2] ?? 0);
+    const l = dmath.hypot(g[0] ?? 0, g[1] ?? 0, g[2] ?? 0);
     if (l === 0) continue;
     worst = Math.min(
       worst,

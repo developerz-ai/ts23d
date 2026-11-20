@@ -5,6 +5,7 @@
 // Head units, mirrored across Y; `torsoForms(f, g)` grows every form by g for clothing shells.
 
 import type { Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import { type Field, type SculptEdit, sd } from '../primitives/index.ts';
 import { alongX } from './head-geom.ts';
 import type { HeadLayout } from './head-layout.ts';
@@ -31,7 +32,7 @@ export interface BustFrame {
 
 const sub = (a: Vec3, b: Vec3): Vec3 => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
 const mid = (a: Vec3, b: Vec3): Vec3 => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2];
-const dist = (a: Vec3, b: Vec3): number => Math.hypot(...sub(a, b));
+const dist = (a: Vec3, b: Vec3): number => dmath.norm(sub(a, b));
 
 /** Plinth height, head units. */
 const PLINTH = 0.17;

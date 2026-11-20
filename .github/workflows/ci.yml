@@ -6,7 +6,9 @@ name: ci
 # differ from a fresh render (run `bun run shots <name>`), so reviewers SEE what a PR changed.
 # `site` builds the gallery. `verify` is the one required status check: it passes only when every
 # other job succeeded, so branch protection names one check instead of one per shard.
-# Free GitHub-hosted runners only. Target: push → green in under 5 minutes.
+# Free GitHub-hosted runners only, pinned to ubuntu-24.04: `ubuntu-latest` moved to a newer glibc
+# whose maths library differs in the last bit, which changed a render (D403). Outputs no longer
+# depend on it, but the image is pinned like every action, so a platform move is a reviewed change. Target: push → green in under 5 minutes.
 # Before this layout (run 44460876935, 2026-11-19): 9 minutes wall, 26 jobs, 87.5 runner-minutes;
 # gate shard 1 took 8 minutes (all 474 test files plus a recipe slice) and shots shards up to
 # 8.3 minutes (four `t3d` processes per folder, each re-importing and recompiling the recipe).
@@ -54,7 +56,7 @@ concurrency:
 
 jobs:
   gate:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     strategy:
       fail-fast: false
@@ -114,7 +116,7 @@ jobs:
           retention-days: 1
 
   site:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -126,7 +128,7 @@ jobs:
   verify:
     needs: [gate, site]
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
       - name: every job succeeded

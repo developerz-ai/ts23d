@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'bun:test';
 import { createHash } from 'node:crypto';
+import { dmath } from '../../core/index.ts';
 import { hash2 } from '../paint/noise.ts';
 import type { TexContext } from './field.ts';
 import { scales } from './stamps-organic.ts';
@@ -29,7 +30,7 @@ function topmost(xm: number, ym: number, overlap: number): number {
     const u = xm / cell + (r % 2 ? 0.5 : 0);
     const col = Math.floor(u);
     const s = Math.abs(u - col - 0.5) * 2;
-    const half = Math.sqrt(Math.max(0, 1 - t ** (2 + 4 * point))) * (1 - 0.35 * point * t);
+    const half = Math.sqrt(Math.max(0, 1 - dmath.pow(t, 2 + 4 * point))) * (1 - 0.35 * point * t);
     if (s <= half) return hash2(((col % n) + n) % n, r, ctx.seed);
   }
   return 0;

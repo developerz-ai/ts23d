@@ -4,7 +4,7 @@
 
 import { describe, expect, it } from 'bun:test';
 import { validateBytes } from 'gltf-validator';
-import { compile, defineAsset, encodePng, type Lod, MeshBuilder } from '../core/index.ts';
+import { compile, defineAsset, dmath, encodePng, type Lod, MeshBuilder } from '../core/index.ts';
 import { readAccessor, readGlb } from '../neural/index.ts';
 import { uvTangents } from '../passes/index.ts';
 import { box } from '../primitives/index.ts';
@@ -22,8 +22,8 @@ function strip(): ReturnType<MeshBuilder['build']> {
       const a = (i / n) * (Math.PI / 2);
       id.push(
         b.vertex({
-          p: [0.3 * Math.cos(a), 0.3 * Math.sin(a), j * 0.4 + 0.2],
-          n: [Math.cos(a), Math.sin(a), 0],
+          p: [0.3 * dmath.cos(a), 0.3 * dmath.sin(a), j * 0.4 + 0.2],
+          n: [dmath.cos(a), dmath.sin(a), 0],
           uv: [i / n, 1 - j],
           color: [1, 1, 1],
         }),

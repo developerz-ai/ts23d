@@ -9,6 +9,7 @@ import {
   type CreatureInfo,
   type CreatureSpec,
   defineMaterial,
+  dmath,
   hex,
   type Vec3,
 } from '@developerz.ai/ts23d';
@@ -119,7 +120,7 @@ export const WOLF: CreatureSpec = {
 /** Head-local point (+X to the nose, origin at the atlas) → world. */
 const onHead = (info: CreatureInfo, p: Vec3): Vec3 => {
   const h = info.bones.head;
-  const [c, s] = [Math.cos(h.pitch), Math.sin(h.pitch)];
+  const [c, s] = [dmath.cos(h.pitch), dmath.sin(h.pitch)];
   return [h.atlas[0] + c * p[0] + s * p[2], h.atlas[1] + p[1], h.atlas[2] - s * p[0] + c * p[2]];
 };
 

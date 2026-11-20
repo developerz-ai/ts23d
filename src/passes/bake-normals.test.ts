@@ -1,11 +1,11 @@
 import { describe, expect, test } from 'bun:test';
-import { type Mesh, MeshBuilder } from '../core/index.ts';
+import { dmath, type Mesh, MeshBuilder } from '../core/index.ts';
 import { bakeNormals } from './bake-normals.ts';
 
 const H = 0.1;
 const SIGMA = 0.15;
 const height = (x: number, y: number): number =>
-  H * Math.exp(-((x - 0.5) ** 2 + (y - 0.5) ** 2) / (SIGMA * SIGMA));
+  H * dmath.exp(-(dmath.pow(x - 0.5, 2) + dmath.pow(y - 0.5, 2)) / (SIGMA * SIGMA));
 
 /** A dense grid over the unit square carrying a Gaussian bump; analytic normals; red on the bump. */
 function bumpy(n: number): Mesh {
@@ -18,7 +18,7 @@ function bumpy(n: number): Mesh {
       const h = height(x, y);
       const k = (-2 / (SIGMA * SIGMA)) * h;
       const g = [k * (x - 0.5), k * (y - 0.5)];
-      const l = Math.hypot(g[0] ?? 0, g[1] ?? 0, 1);
+      const l = dmath.hypot(g[0] ?? 0, g[1] ?? 0, 1);
       id.push(
         b.vertex({
           p: [x, y, h],
@@ -71,7 +71,7 @@ describe('bakeNormals', () => {
       const cy = Math.floor(y * S) / S + 0.5 / S;
       const k = (-2 / (SIGMA * SIGMA)) * height(cx, cy);
       const g = [k * (cx - 0.5), k * (cy - 0.5)];
-      const l = Math.hypot(g[0] ?? 0, g[1] ?? 0, 1);
+      const l = dmath.hypot(g[0] ?? 0, g[1] ?? 0, 1);
       const want = -(g[axis] ?? 0) / l;
       expect(want).toBeGreaterThan(0.3);
       expect(Math.abs((n[axis] ?? 0) - sign * want)).toBeLessThan(0.04);

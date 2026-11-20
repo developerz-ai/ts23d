@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { Ts23dError } from '../../core/index.ts';
+import { dmath, Ts23dError } from '../../core/index.ts';
 import { createCanvas } from '../paint/canvas.ts';
 import { paintGraph, probeGraph } from './graph.ts';
 import { type MaterialGraph, type TexField, tex } from './index.ts';
@@ -55,7 +55,7 @@ describe('tex graphs: output', () => {
     warped: tex.noise({ size: 0.1 }).warp(tex.noise({ size: 0.4, seed: 2 }), 0.05),
     blurred: tex.cells({ size: 0.1 }).blur(0.01),
     wear: tex.edgeWear(tex.bricks({ width: 0.2, height: 0.1 }).height),
-    tileableFn: tex.fn((xm, _ym, ctx) => 0.5 + 0.5 * Math.sin((2 * Math.PI * xm) / ctx.tileU)),
+    tileableFn: tex.fn((xm, _ym, ctx) => 0.5 + 0.5 * dmath.sin((2 * Math.PI * xm) / ctx.tileU)),
   };
 
   it('every generator, stamp and filter tiles along U and stays in range', () => {

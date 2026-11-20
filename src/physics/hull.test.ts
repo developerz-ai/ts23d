@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { createRng, type Vec3 } from '../core/index.ts';
+import { createRng, dmath, type Vec3 } from '../core/index.ts';
 import { boxMesh } from './fixtures.ts';
 import { convexHull, hullVolume } from './hull.ts';
 import { cappedHull, pointsOf } from './hull-cap.ts';
@@ -38,9 +38,9 @@ describe('convexHull', () => {
 
   it('is deterministic', () => {
     const pts: Vec3[] = Array.from({ length: 200 }, (_, i) => [
-      Math.sin(i * 12.9898) * 3,
-      Math.sin(i * 78.233) * 2,
-      Math.sin(i * 37.719),
+      dmath.sin(i * 12.9898) * 3,
+      dmath.sin(i * 78.233) * 2,
+      dmath.sin(i * 37.719),
     ]);
     expect(JSON.stringify(convexHull(pts))).toBe(JSON.stringify(convexHull(pts)));
   });
@@ -53,7 +53,7 @@ describe('cappedHull', () => {
       for (let j = 0; j < 20; j++) {
         const t = (Math.PI * (j + 0.5)) / 20;
         const p = (2 * Math.PI * i) / 40;
-        pts.push([Math.sin(t) * Math.cos(p), Math.sin(t) * Math.sin(p), Math.cos(t)]);
+        pts.push([dmath.sin(t) * dmath.cos(p), dmath.sin(t) * dmath.sin(p), dmath.cos(t)]);
       }
     const full = convexHull(pts);
     const capped = cappedHull(pts, 64);

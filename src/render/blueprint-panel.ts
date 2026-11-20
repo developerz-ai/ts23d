@@ -3,11 +3,11 @@
 // lines, the spec measures that read in this view (green within tolerance, red outside) and the
 // declared joints. All views of one sheet share one scale, so they compare side by side.
 
-import { type CompiledAsset, cross, normalize, type Vec3 } from '../core/index.ts';
+import { type CompiledAsset, cross, type Vec3 } from '../core/index.ts';
 import { type Canvas, dimension, fillRect, label, type Rgb, ring, seg } from './blueprint-draw.ts';
 import { type FigureView, HUMAN_HALF, HUMAN_HEIGHT, human } from './blueprint-human.ts';
 import { drawText } from './font.ts';
-import { drawAsset, type Target } from './raster.ts';
+import { drawAsset, type Target, unit } from './raster.ts';
 
 export interface OrthoView {
   readonly label: string;
@@ -49,8 +49,8 @@ export const MARGIN = [24, 120, 44, 64] as const;
 const dot3 = (a: Vec3, b: Vec3): number => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
 
 export function axesOf(v: OrthoView): { r: Vec3; u: Vec3; f: Vec3 } {
-  const f = normalize(v.dir);
-  const r = normalize(cross(f, v.up));
+  const f = unit(v.dir);
+  const r = unit(cross(f, v.up));
   return { r, u: cross(r, f), f };
 }
 

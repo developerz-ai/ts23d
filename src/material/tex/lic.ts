@@ -5,7 +5,7 @@
 // anisotropic highlight (KHR_materials_anisotropy) runs. Tileable along U: the noise lattice and
 // the flow field both wrap every tile. Deterministic: fixed steps, integer-hash noise.
 
-import { Ts23dError } from '../../core/index.ts';
+import { dmath, Ts23dError } from '../../core/index.ts';
 import { valueNoise } from '../paint/noise.ts';
 import { type Input, sample, type TexContext, TexField } from './field.ts';
 import { eachTexel, lattice } from './generators.ts';
@@ -61,9 +61,9 @@ export function lic(o: LicOptions): TexField {
         let y = ym;
         for (let k = 1; k <= n; k++) {
           const t = angleAt(ctx, a, x / pu - 0.5, y / pv - 0.5);
-          x += Math.cos(t) * ds * dir;
-          y += Math.sin(t) * ds * dir;
-          const w = 0.5 + 0.5 * Math.cos((Math.PI * k) / (n + 1));
+          x += dmath.cos(t) * ds * dir;
+          y += dmath.sin(t) * ds * dir;
+          const w = 0.5 + 0.5 * dmath.cos((Math.PI * k) / (n + 1));
           sum += noiseAt(x, y) * w;
           wsum += w;
         }

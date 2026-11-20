@@ -3,6 +3,7 @@
 // inner ends), warts seeded over nose, cheeks and dome, and flush on the nose and ears.
 
 import type { Rng, SculptEdit } from '@developerz.ai/ts23d';
+import { dmath } from '@developerz.ai/ts23d';
 import { ball, cone2, creaseOn, type Surface, type V } from '../_lib/bust/kit.ts';
 import { C, H, SK } from './spec.ts';
 
@@ -46,7 +47,7 @@ export function featureEdits(stage: number, s: Surface, _lod: number, _rng: Rng)
   // a film there, and the rim reads as an edge, not a paper cut-out).
   const tip: V = [SK.earTip[0], Math.abs(SK.earTip[1]), SK.earTip[2]];
   const top: V = [SK.earTop[0], Math.abs(SK.earTop[1]), SK.earTop[2]];
-  const d = Math.hypot(tip[0] - top[0], tip[1] - top[1], tip[2] - top[2]) || 1;
+  const d = dmath.hypot(tip[0] - top[0], tip[1] - top[1], tip[2] - top[2]) || 1;
   const at = (back: number): V => [
     tip[0] - ((tip[0] - top[0]) / d) * back,
     tip[1] - ((tip[1] - top[1]) / d) * back,
@@ -98,7 +99,7 @@ export function grinLine(): V[] {
   const b = SK.stomion;
   return [0.06, 0.2, 0.34, 0.48, 0.62, 0.76, 0.9, 1].map(
     (t): V => [
-      a[0] + (b[0] - a[0]) * t + Math.sin(t * Math.PI) * 0.004 * H,
+      a[0] + (b[0] - a[0]) * t + dmath.sin(t * Math.PI) * 0.004 * H,
       a[1] * (1 - t),
       a[2] + (b[2] - a[2]) * t,
     ],

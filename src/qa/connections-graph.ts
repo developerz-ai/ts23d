@@ -10,6 +10,7 @@
 // between stiles) — one corner is a hinge, two ends are a span.
 
 import type { ConnectAs, Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import { edgeContact } from './connections-crossing.ts';
 import { type ConnectIssue, cm } from './connections-declare.ts';
 import {
@@ -119,14 +120,14 @@ function bridge(
     }
     for (const [r, ks] of byCluster) {
       const group = live.filter((_, i) => strong.find(i) === r);
-      const need = STRONG_SHARE * Math.min(...group.map(thickness)) ** 2;
+      const need = STRONG_SHARE * dmath.pow(Math.min(...group.map(thickness)), 2);
       const { size } = span(group);
       let spread = 0;
       for (const a of ks)
         for (const b of ks)
           spread = Math.max(
             spread,
-            Math.hypot(a.at[0] - b.at[0], a.at[1] - b.at[1], a.at[2] - b.at[2]),
+            dmath.hypot(a.at[0] - b.at[0], a.at[1] - b.at[1], a.at[2] - b.at[2]),
           );
       if (ks.reduce((m, k) => m + k.area, 0) >= need || spread >= size / 2) {
         strong.join(r, ROOT);
@@ -172,7 +173,7 @@ export function connectivity(
     const b = live[j];
     if (!a || !b) continue;
     const [small, big] = a.area <= b.area ? [a, b] : [b, a];
-    const need = STRONG_SHARE * thickness(small) ** 2;
+    const need = STRONG_SHARE * dmath.pow(thickness(small), 2);
     const eps = epsOf(small);
     const one = patch(small, big, eps, stepOf(small), need);
     const loose = LOOSE.has(kindOf(a.part)) || LOOSE.has(kindOf(b.part));

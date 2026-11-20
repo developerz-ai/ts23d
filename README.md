@@ -364,6 +364,7 @@ Runnable copy: [`examples/build-with-bun.ts`](examples/build-with-bun.ts) — ex
 | `contactSheet(compiled, { far, cell, sheet })` | six-view PNG bytes; with `sheet` in the hero's base colours, without it vertex colour only |
 | `sheetFor(compiled, recipe)` + `sheetPngs(sheet)` | the asset's own texture set (albedo / normal / ORM) as RGBA or PNG |
 | `threeMaterialSource(hints)` / `godotShaderSource(hints)` | shader source strings for your engine |
+| `dmath.sin` / `cos` / `atan2` / `exp` / `log` / `pow` / `hypot` / `norm` … | the maths every recipe uses instead of `Math.sin` and `**`: the same bits on every CPU, C library and engine, so the same source gives the same GLB anywhere (`Math.sqrt`, `abs`, `floor`, `PI` are exact and stay) |
 | `manifest` data | build it from `compiled.parts` (pivots, emitters, sockets) — see `src/cli/manifest.ts` |
 
 ## Use it with any agent

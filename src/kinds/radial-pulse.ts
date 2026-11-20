@@ -3,7 +3,7 @@
 // opened sources give ranges and cycle rates but NOT how a cycle splits between contraction and
 // refill (doc section 2, "unverified"), so every `timing` share below is a design value.
 
-import { type Bone, type Clip, type Track, Ts23dError, type Vec3 } from '../core/index.ts';
+import { type Bone, type Clip, dmath, type Track, Ts23dError, type Vec3 } from '../core/index.ts';
 import { minJerk } from './chain-drivers.ts';
 import { FPS } from './gait-bake.ts';
 
@@ -75,7 +75,7 @@ function checkPulse(p: PulseSpec): void {
 
 /** Which coordinate axis the ring turns about; a tilted axis has no scale-key form. */
 function ringAxis(axis: Vec3): 0 | 1 | 2 {
-  const l = Math.hypot(...axis);
+  const l = dmath.norm(axis);
   if (!(l > 0)) invalid('pulse ring axis is zero', 'give the axis the ring turns about');
   for (const k of [0, 1, 2] as const) if (Math.abs(axis[k]) >= l * (1 - 1e-9)) return k;
   return invalid(

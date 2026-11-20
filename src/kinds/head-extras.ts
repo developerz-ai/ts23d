@@ -3,6 +3,7 @@
 // beards: head-hair.ts. Head units, mirrored across Y unless an edit opts out.
 
 import type { Rng, Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import type { SculptEdit } from '../primitives/index.ts';
 import { along, alongX, alongZ, unit } from './head-geom.ts';
 import type { HeadLayout } from './head-layout.ts';
@@ -16,10 +17,10 @@ export function earEdits(p: HeadParams, l: HeadLayout, minThick = 0): SculptEdit
   const cx = l.cranium.at[0];
   const ry = l.cranium.r[1];
   const root: Vec3 = [cx + 0.02, ry * 0.9, l.eye[2] - 0.05];
-  const d = unit([-Math.sin(sweep * RAD), Math.cos(sweep * RAD), Math.tan(lift * RAD)]);
+  const d = unit([-dmath.sin(sweep * RAD), dmath.cos(sweep * RAD), dmath.tan(lift * RAD)]);
   const rot = alongX(d, shape === 'pointed' ? -10 : 0);
   const thick = Math.max(0.022 + width * 0.06, minThick);
-  const front: Vec3 = [Math.cos(sweep * RAD), Math.sin(sweep * RAD), 0];
+  const front: Vec3 = [dmath.cos(sweep * RAD), dmath.sin(sweep * RAD), 0];
   const shade = p.colors.shade;
   if (shape === 'round') {
     // A human/dwarf ear: upright oval, the long axis vertical, set just behind the jaw hinge.
@@ -134,9 +135,9 @@ export function wartEdits(p: HeadParams, l: HeadLayout, rng: Rng): SculptEdit[] 
     const yaw = rng.range(-1.2, 1.2);
     const el = rng.range(-0.1, 0.9);
     const at: Vec3 = [
-      cx + rx * Math.cos(el) * Math.cos(yaw),
-      ry * Math.cos(el) * Math.sin(yaw),
-      l.cranium.at[2] + rz * Math.sin(el),
+      cx + rx * dmath.cos(el) * dmath.cos(yaw),
+      ry * dmath.cos(el) * dmath.sin(yaw),
+      l.cranium.at[2] + rz * dmath.sin(el),
     ];
     return {
       shape: 'sphere',

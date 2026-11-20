@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'bun:test';
-import { compile, createRng, defineAsset, type Mesh, translate, type Vec3 } from '../core/index.ts';
+import {
+  compile,
+  createRng,
+  defineAsset,
+  dmath,
+  type Mesh,
+  translate,
+  type Vec3,
+} from '../core/index.ts';
 import type { UvRect } from '../material/index.ts';
 import { hairCards } from '../passes/hair-cards.ts';
 import { hairFlow } from '../passes/hair-flow.ts';
@@ -13,7 +21,7 @@ import {
 
 const R = 0.3;
 const C: Vec3 = [0, 0, 0.5];
-const field = (p: Vec3): number => Math.hypot(p[0] - C[0], p[1] - C[1], p[2] - C[2]) - R;
+const field = (p: Vec3): number => dmath.hypot(p[0] - C[0], p[1] - C[1], p[2] - C[2]) - R;
 const ball = sdf({
   field,
   bounds: [

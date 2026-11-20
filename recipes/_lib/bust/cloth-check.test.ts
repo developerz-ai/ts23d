@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { hex, sculptField } from '@developerz.ai/ts23d';
+import { dmath, hex, sculptField } from '@developerz.ai/ts23d';
 import { ELF_BUST } from '../../elf_head/build.ts';
 import { coveredArea as elfCovered } from '../../elf_head/clothes.ts';
 import { GOBLIN_BUST } from '../../goblin_head/build.ts';
@@ -12,7 +12,7 @@ import { coveredArea as humanCovered } from './human/clothes.ts';
 import { surface, type V } from './kit.ts';
 
 const SKIN = hex('#d4986f');
-const ball = (p: V): number => Math.hypot(p[0], p[1], p[2]) - 0.1;
+const ball = (p: V): number => dmath.hypot(p[0], p[1], p[2]) - 0.1;
 const box: [V, V] = [
   [-0.12, -0.12, -0.12],
   [0.12, 0.12, 0.12],

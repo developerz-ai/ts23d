@@ -8,7 +8,7 @@
 // no crossing inside the cage are misses (`hit` = 0): the low normal, height 0, AO 1.
 // Deterministic: fixed texel order, fixed stencils, no randomness.
 
-import { type Mesh, Ts23dError, type Vec3 } from '../core/index.ts';
+import { dmath, type Mesh, Ts23dError, type Vec3 } from '../core/index.ts';
 import type { DistanceField } from './bake-field.ts';
 import { uvTangents } from './bake-tangents.ts';
 import { walkTexels } from './bake-texels.ts';
@@ -127,7 +127,7 @@ export function fieldHit(
 
 export function bakeHeight(field: DistanceField, low: Mesh, o: HeightBakeOptions): HeightBake {
   const S = o.size;
-  if (!(Number.isInteger(Math.log2(S)) && S >= 16 && S <= 4096))
+  if (!(Number.isInteger(dmath.log2(S)) && S >= 16 && S <= 4096))
     throw new Ts23dError('T3D_BAKE_INVALID', {
       cause: `bake size ${S} is not a power of two in 16…4096`,
       fix: 'use 1024, 2048 or 4096',
@@ -185,7 +185,7 @@ export function bakeHeight(field: DistanceField, low: Mesh, o: HeightBakeOptions
     }
     // Σ f(c + h·k) − 4 f(c) = 2h²∇²f; mean curvature H = ½∇²f.
     curvature[fr.i] = sum / (4 * h * h);
-    const gl = Math.hypot(g[0] ?? 0, g[1] ?? 0, g[2] ?? 0);
+    const gl = dmath.hypot(g[0] ?? 0, g[1] ?? 0, g[2] ?? 0);
     const m: Vec3 = gl > 1e-12 ? [(g[0] ?? 0) / gl, (g[1] ?? 0) / gl, (g[2] ?? 0) / gl] : n;
     const dot = (v: Float64Array): number =>
       (v[0] ?? 0) * m[0] + (v[1] ?? 0) * m[1] + (v[2] ?? 0) * m[2];
@@ -198,7 +198,7 @@ export function bakeHeight(field: DistanceField, low: Mesh, o: HeightBakeOptions
         q[0] = c[0] + m[0] * d;
         q[1] = c[1] + m[1] * d;
         q[2] = c[2] + m[2] * d;
-        occ += Math.max(0, d - field(q)) / d / 2 ** j;
+        occ += Math.max(0, d - field(q)) / d / dmath.pow(2, j);
       }
       ao[fr.i] = Math.max(0, Math.min(1, 1 - 1.6 * occ));
     }

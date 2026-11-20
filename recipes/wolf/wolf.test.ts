@@ -6,6 +6,7 @@ import { describe, expect, it } from 'bun:test';
 import {
   compile,
   creaturePlan,
+  dmath,
   massProperties,
   type Vec3,
   worldMeshes,
@@ -18,7 +19,7 @@ import {
 import { REAL, WOLF, wolf } from './wolf.ts';
 
 const SLOW = 120_000;
-const dist = (a: Vec3, b: Vec3): number => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+const dist = (a: Vec3, b: Vec3): number => dmath.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
 const within = (v: number, real: number, tol: number): void => {
   expect(v).toBeGreaterThan(real * (1 - tol));
   expect(v).toBeLessThan(real * (1 + tol));

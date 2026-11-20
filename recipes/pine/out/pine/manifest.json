@@ -65,13 +65,13 @@
     {
       "label": "trunk diameter at breast height",
       "spec": 0.6,
-      "measured": 0.5999999642372131,
+      "measured": 0.6,
       "source": "recipes/pine/README.md"
     },
     {
       "label": "total height",
       "spec": 25,
-      "measured": 24.971416473388672,
+      "measured": 24.971416,
       "source": "recipes/pine/README.md"
     }
   ],

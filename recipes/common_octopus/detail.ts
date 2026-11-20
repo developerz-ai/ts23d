@@ -6,6 +6,7 @@
 import {
   type BodyPlanDefinition,
   type BuildContext,
+  dmath,
   hex,
   lathe,
   type Mesh,
@@ -31,7 +32,7 @@ const v = {
   mul: (a: Vec3, k: number): Vec3 => [a[0] * k, a[1] * k, a[2] * k],
   dot: (a: Vec3, b: Vec3): number => a[0] * b[0] + a[1] * b[1] + a[2] * b[2],
   norm(a: Vec3): Vec3 {
-    const l = Math.hypot(a[0], a[1], a[2]) || 1;
+    const l = dmath.hypot(a[0], a[1], a[2]) || 1;
     return [a[0] / l, a[1] / l, a[2] / l];
   },
   cross: (a: Vec3, b: Vec3): Vec3 => [
@@ -67,7 +68,7 @@ const suckerUnit = (segments: number): Mesh =>
 function tintCup(m: Mesh): Mesh {
   const colors = m.colors.slice();
   for (let i = 0; i < m.positions.length / 3; i++) {
-    const r = Math.hypot(m.positions[i * 3] ?? 0, m.positions[i * 3 + 1] ?? 0);
+    const r = dmath.hypot(m.positions[i * 3] ?? 0, m.positions[i * 3 + 1] ?? 0);
     const c = r < 0.62 ? SUCKER_CUP : SUCKER_RIM;
     colors.set(c, i * 3);
   }
@@ -121,7 +122,7 @@ function webSector(
     return v.dot(plus, toOther) > 0 ? Math.PI / 2 + 0.55 : (3 * Math.PI) / 2 - 0.55;
   };
   const point = (w: number, t: number): Vec3 => {
-    const edge = WEB_REACH * (1 - 0.34 * Math.sin(Math.PI * t) ** 0.8);
+    const edge = WEB_REACH * (1 - 0.34 * dmath.pow(dmath.sin(Math.PI * t), 0.8));
     const dist = 0.018 + w * (edge * reachOf(a) - 0.018);
     const [ua, ub] = [dist / reachOf(a), dist / reachOf(b)];
     // Anchored on the swept arms: their fillets would fold the membrane, and bury its root anyway.
@@ -130,7 +131,7 @@ function webSector(
     const [pa, pb] = [qa.swept ?? qa.p, qb.swept ?? qb.p];
     const m = v.lerp(pa, pb, t);
     // The membrane hangs a little between the arms.
-    return [m[0], m[1], m[2] - 0.012 * w * Math.sin(Math.PI * t)];
+    return [m[0], m[1], m[2] - 0.012 * w * dmath.sin(Math.PI * t)];
   };
   const grid: Vec3[][] = [];
   for (let i = 0; i <= rows; i++) {
@@ -270,7 +271,7 @@ function papillae(kit: Kit, ctx: BuildContext): Mesh | null {
   ): void => {
     const here: Mesh[] = [];
     for (let i = 0; i < n; i++) {
-      const u = umin + (umax - umin) * rng.range(0, 1) ** 1.6;
+      const u = umin + (umax - umin) * dmath.pow(rng.range(0, 1), 1.6);
       const q = kit.surface(id, u, rng.range(-aboral, aboral));
       // Sizes vary a lot, as on the animal: a few big cirri among many small bumps.
       const s = size * rng.range(0.4, 1.1) * (rng.next() < 0.12 ? 1.7 : 1);
@@ -294,9 +295,13 @@ function eyeball(segments: number, rings: number, iris: Vec3): Mesh {
     const row: number[] = [];
     for (let j = 0; j <= segments; j++) {
       const t = (j / segments) * Math.PI * 2;
-      const n: Vec3 = [Math.sin(a) * Math.cos(t), Math.sin(a) * Math.sin(t), Math.cos(a)];
+      const n: Vec3 = [dmath.sin(a) * dmath.cos(t), dmath.sin(a) * dmath.sin(t), dmath.cos(a)];
       const iriss = Math.min(1, a / 0.95);
-      const c = v.lerp(v.lerp(iris, hex('#7a5c2a'), iriss ** 2), hex('#1c120e'), iriss ** 4);
+      const c = v.lerp(
+        v.lerp(iris, hex('#7a5c2a'), iriss * iriss),
+        hex('#1c120e'),
+        iriss * iriss * (iriss * iriss),
+      );
       row.push(b.vertex({ p: n, n, uv: [0, 0], color: c }));
     }
     rim.push(row);
@@ -326,8 +331,8 @@ function slitPupil(segments: number): Mesh {
     Array.from({ length: segments + 1 }, (_, i) => {
       const t = (i / segments) * Math.PI * 2;
       // A rounded bar: wide along X, narrow along Y.
-      const x = 0.7 * k * Math.sign(Math.cos(t)) * Math.abs(Math.cos(t)) ** 0.6;
-      const y = 0.2 * k * Math.sign(Math.sin(t)) * Math.abs(Math.sin(t)) ** 0.75;
+      const x = 0.7 * k * Math.sign(dmath.cos(t)) * dmath.pow(Math.abs(dmath.cos(t)), 0.6);
+      const y = 0.2 * k * Math.sign(dmath.sin(t)) * dmath.pow(Math.abs(dmath.sin(t)), 0.75);
       return b.vertex({ p: onCornea(x, y), n, uv: [0, 0], color: black });
     }),
   );
@@ -386,7 +391,7 @@ function eyes(kit: Kit, lod: number): Mesh {
     const ref: Vec3 = Math.abs(look[2]) > 0.9 ? [1, 0, 0] : [0, 0, 1];
     const x0 = v.norm(v.cross(ref, look));
     const y0 = v.cross(look, x0);
-    const spin = Math.atan2(v.dot(level, y0), v.dot(level, x0));
+    const spin = dmath.atan2(v.dot(level, y0), v.dot(level, x0));
     parts.push(stamp(ball, at, look, EYE_RADIUS));
     parts.push(stamp(pupil, at, look, EYE_RADIUS, spin));
     parts.push(stamp(lid, at, look, EYE_RADIUS));

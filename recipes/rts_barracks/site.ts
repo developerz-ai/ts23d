@@ -12,6 +12,7 @@ import {
   boundsOf,
   box,
   cylinder,
+  dmath,
   frame,
   type Lod,
   type Mesh,
@@ -59,7 +60,7 @@ export const CHAR_SLATE: Vec3 = [0.07, 0.065, 0.06];
 const OFF = 1.25; // scaffold line outside the wall face
 const sub = (a: Vec3, b: Vec3): Vec3 => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
 const unit = (a: Vec3): Vec3 => {
-  const l = Math.hypot(a[0], a[1], a[2]) || 1;
+  const l = dmath.hypot(a[0], a[1], a[2]) || 1;
   return [a[0] / l, a[1] / l, a[2] / l];
 };
 const cross = (a: Vec3, b: Vec3): Vec3 => [
@@ -74,7 +75,7 @@ const settle = (m: Mesh, floor: number): Mesh => translate(m, [0, 0, floor - bou
 /** A square-section bar (board, beam, rail) from a to b, `w` wide and `h` deep, faces kept level. */
 export function bar(a: Vec3, b: Vec3, w: number, h: number, color: Vec3, extra = 0): Mesh {
   const d = sub(b, a);
-  const len = Math.hypot(d[0], d[1], d[2]);
+  const len = dmath.hypot(d[0], d[1], d[2]);
   const x = unit(d);
   const up: Vec3 = Math.abs(x[2]) > 0.95 ? [1, 0, 0] : [0, 0, 1];
   const y = unit(cross(up, x));
@@ -95,7 +96,7 @@ function pole(lod: Lod, a: Vec3, b: Vec3, r: number, color: Vec3): Mesh {
     a[1] + (b[1] - a[1]) * t,
     a[2] + (b[2] - a[2]) * t,
   ];
-  const len = Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]);
+  const len = dmath.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]);
   const feet = lod === 0 && len > 1.5 ? [0.25, 0.6, 1.0].map((m) => m / len) : [];
   return sweep({
     section: { radius: r, segments: lod === 0 ? 10 : 6 },
@@ -324,7 +325,7 @@ function tarp(lod: Lod, at: Vec3, w: number, d: number, z: number, rng: Rng): Me
     const prof: Vec2[] = [[-len / 2, 0.02]];
     for (let i = 0; i <= n; i++) {
       const t = i / n;
-      const sag = Math.sin(t * Math.PI) * 0.15 + (i % 2 === 0 ? 0 : rng.range(0.06, 0.16));
+      const sag = dmath.sin(t * Math.PI) * 0.15 + (i % 2 === 0 ? 0 : rng.range(0.06, 0.16));
       prof.push([-len / 2 + t * len, -drop - sag]);
     }
     prof.push([len / 2, 0.02]);
@@ -339,7 +340,7 @@ function tarp(lod: Lod, at: Vec3, w: number, d: number, z: number, rng: Rng): Me
     const off = (side % 2 === 0 ? d : w) / 2 + 0.06;
     out.push(
       place(place(skirt, { roll: -0.12 }), {
-        at: [at[0] - Math.sin(yaw) * off, at[1] + Math.cos(yaw) * off, z + 0.02],
+        at: [at[0] - dmath.sin(yaw) * off, at[1] + dmath.cos(yaw) * off, z + 0.02],
         yaw,
       }),
     );
@@ -690,7 +691,7 @@ export function rubble(
     // LOD2 keeps only the big pieces: a far heap reads by its largest blocks.
     // Near, every third piece is a half or quarter block: a heap is not one block size.
     const small = lod < 2 && i % 3 === 2 ? rng.range(0.25, 0.5) : 1;
-    const s = 1.1 * rng.range(lod === 2 ? 0.65 : 0.3, 1.0) ** 0.8 * small;
+    const s = 1.1 * dmath.pow(rng.range(lod === 2 ? 0.65 : 0.3, 1.0), 0.8) * small;
     const k = rng.range(0.6, 1.0);
     const h = s * rng.range(0.4, 0.8);
     const chunk = shard(lod, rng, s, s * rng.range(0.6, 1.1), h, [
@@ -736,8 +737,8 @@ export function rubble(
             }),
             {
               at: [
-                lim(centre[0] + Math.cos(a) * spread[0] * r, HALF_X + PLINTH_OUT - 0.3),
-                lim(centre[1] + Math.sin(a) * spread[1] * r, HALF_Y + PLINTH_OUT - 0.3),
+                lim(centre[0] + dmath.cos(a) * spread[0] * r, HALF_X + PLINTH_OUT - 0.3),
+                lim(centre[1] + dmath.sin(a) * spread[1] * r, HALF_Y + PLINTH_OUT - 0.3),
                 0,
               ],
               yaw: rng.range(0, Math.PI),
@@ -876,7 +877,7 @@ export function scaffoldWreck(lod: Lod, rng: Rng, cornerTop: number): Mesh {
     const a: Vec3 = [rng.range(-4, 4), -(HALF_Y + PLINTH_OUT + rng.range(0.5, 2.4)), 0];
     const yaw = rng.range(-0.5, 0.5);
     const len = rng.range(2.5, 4.5);
-    const b: Vec3 = [a[0] + Math.cos(yaw) * len, a[1] + Math.sin(yaw) * len * 0.3, 0];
+    const b: Vec3 = [a[0] + dmath.cos(yaw) * len, a[1] + dmath.sin(yaw) * len * 0.3, 0];
     const charred = i % 2 === 1;
     out.push(
       settle(

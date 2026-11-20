@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'bun:test';
 import type { Mesh } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import {
   imageStats,
   METRICS,
@@ -15,9 +16,9 @@ function sphere(seg: number, faceted: boolean, colour = (_z: number): number[] =
     for (let j = 0; j <= seg * 2; j++) {
       const [t, p] = [(Math.PI * i) / seg, (Math.PI * j) / seg];
       pts.push([
-        0.5 * Math.sin(t) * Math.cos(p),
-        0.5 * Math.sin(t) * Math.sin(p),
-        0.5 * Math.cos(t),
+        0.5 * dmath.sin(t) * dmath.cos(p),
+        0.5 * dmath.sin(t) * dmath.sin(p),
+        0.5 * dmath.cos(t),
       ]);
     }
   const tris: number[] = [];
@@ -48,7 +49,7 @@ function sphere(seg: number, faceted: boolean, colour = (_z: number): number[] =
       const [u0 = 0, u1 = 0, u2 = 0] = u;
       const [v0 = 0, v1 = 0, v2 = 0] = v;
       const n = [u1 * v2 - u2 * v1, u2 * v0 - u0 * v2, u0 * v1 - u1 * v0];
-      const l = Math.hypot(...n) || 1;
+      const l = dmath.norm(n) || 1;
       for (const p of [a, b, c]) {
         idx.push(P.length / 3);
         P.push(...p);
@@ -73,7 +74,7 @@ function disc(px: (x: number, y: number) => [number, number, number]): VectorIma
   for (let y = 0; y < H; y++)
     for (let x = 0; x < W; x++) {
       const i = y * W + x;
-      const inside = Math.hypot(x - 32, y - 32) < 26;
+      const inside = dmath.hypot(x - 32, y - 32) < 26;
       const [r, g, b] = inside ? px(x, y) : [240, 240, 240];
       rgba.set([r, g, b, 255], i * 4);
       mask[i] = inside ? 255 : 0;

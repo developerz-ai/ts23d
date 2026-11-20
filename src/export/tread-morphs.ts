@@ -11,7 +11,7 @@
 // per loop, so the clip closes.
 
 import type { Mesh, Part } from '../core/index.ts';
-import { LOOP_SECONDS } from '../core/index.ts';
+import { dmath, LOOP_SECONDS } from '../core/index.ts';
 import { BeltLoop, beltRun } from '../passes/index.ts';
 import { beltSpeed } from './tread-speed.ts';
 
@@ -104,9 +104,9 @@ function build(
       const mid = pose((2 * j + 1) / (2 * k)).p;
       for (let i = 0; i < size; i += 3) {
         const d =
-          (((a[i] ?? 0) + (b[i] ?? 0)) / 2 - (mid[i] ?? 0)) ** 2 +
-          (((a[i + 1] ?? 0) + (b[i + 1] ?? 0)) / 2 - (mid[i + 1] ?? 0)) ** 2 +
-          (((a[i + 2] ?? 0) + (b[i + 2] ?? 0)) / 2 - (mid[i + 2] ?? 0)) ** 2;
+          dmath.pow(((a[i] ?? 0) + (b[i] ?? 0)) / 2 - (mid[i] ?? 0), 2) +
+          dmath.pow(((a[i + 1] ?? 0) + (b[i + 1] ?? 0)) / 2 - (mid[i + 1] ?? 0), 2) +
+          dmath.pow(((a[i + 2] ?? 0) + (b[i + 2] ?? 0)) / 2 - (mid[i + 2] ?? 0), 2);
         if (d > worst) worst = d;
       }
     }

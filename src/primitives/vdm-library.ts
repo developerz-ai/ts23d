@@ -10,7 +10,7 @@
 //   scarWelt    raised ragged welt along v with puckered sides
 //   furrow      a groove along v with low lips
 
-import { createRng, type Rng } from '../core/index.ts';
+import { createRng, dmath, type Rng } from '../core/index.ts';
 import { invalid } from './check.ts';
 import { type VdmStamp, vdmStamp } from './vdm.ts';
 
@@ -29,7 +29,7 @@ const smooth = (x: number): number => {
   return t * t * (3 - 2 * t);
 };
 /** (1 − x²)², 1 at 0, 0 at |x| ≥ 1 with zero slope: the bump every round feature uses. */
-const bump = (x: number): number => (x * x >= 1 ? 0 : (1 - x * x) ** 2);
+const bump = (x: number): number => (x * x >= 1 ? 0 : dmath.pow(1 - x * x, 2));
 
 function build(o: StampOptions, def: number, fn: Texel): VdmStamp {
   const n = o.res ?? def;
@@ -80,7 +80,7 @@ export function scalePatch(
       const t = (v - s.v) / s.l;
       // Teardrop outline, wider at the free tip (+t), domed, rising root → tip (shingle).
       const half = 0.75 + 0.25 * t;
-      const e = (a / half) ** 2 + t * t;
+      const e = dmath.pow(a / half, 2) + t * t;
       if (e >= 1) continue;
       // Crisp rim, then a domed crown: the edge reads even a few cells across.
       const dome = smooth((1 - e) / 0.5);
@@ -100,13 +100,14 @@ export function wart(o: StampOptions & { readonly lobes?: number } = {}): VdmSta
   const ph = [rng.range(0, 6.3), rng.range(0, 6.3)];
   const lumps = [0, 1, 2, 3].map(() => ({ a: rng.range(0, 6.3), r: rng.range(0.15, 0.25) }));
   return build(o, 33, (u, v) => {
-    const th = Math.atan2(v, u);
+    const th = dmath.atan2(v, u);
     const k =
-      1 + lobes * (0.6 * Math.sin(3 * th + (ph[0] ?? 0)) + 0.4 * Math.sin(5 * th + (ph[1] ?? 0)));
-    const r = Math.hypot(u, v) / (0.4 * k);
+      1 + lobes * (0.6 * dmath.sin(3 * th + (ph[0] ?? 0)) + 0.4 * dmath.sin(5 * th + (ph[1] ?? 0)));
+    const r = dmath.hypot(u, v) / (0.4 * k);
     let z = bump(r);
     for (const l of lumps)
-      z += 0.08 * bump(Math.hypot(u - l.r * Math.cos(l.a), v - l.r * Math.sin(l.a)) / 0.09) * r * r;
+      z +=
+        0.08 * bump(dmath.hypot(u - l.r * dmath.cos(l.a), v - l.r * dmath.sin(l.a)) / 0.09) * r * r;
     return [0.06 * u * z, 0.06 * v * z, z];
   });
 }
@@ -117,11 +118,11 @@ export function hornBase(o: StampOptions & { readonly rings?: number } = {}): Vd
   const rings = o.rings ?? 3;
   const ph = rng.range(0, 6.3);
   return build(o, 33, (u, v) => {
-    const rr = Math.hypot(u, v);
-    const th = Math.atan2(v, u);
-    const r = rr / (0.46 + 0.015 * Math.sin(4 * th + ph));
+    const rr = dmath.hypot(u, v);
+    const th = dmath.atan2(v, u);
+    const r = rr / (0.46 + 0.015 * dmath.sin(4 * th + ph));
     const hump = smooth((1 - r) / 0.6);
-    const ring = 0.7 + 0.3 * Math.cos(2 * Math.PI * rings * r + 0.3 * Math.sin(3 * th + ph));
+    const ring = 0.7 + 0.3 * dmath.cos(2 * Math.PI * rings * r + 0.3 * dmath.sin(3 * th + ph));
     const z = hump * ring;
     // Collar bulges outward (radial push), the vector part a height map cannot give.
     const s = rr > 1e-9 ? (0.12 * z) / rr : 0;
@@ -134,8 +135,8 @@ export function toothSocket(o: StampOptions = {}): VdmStamp {
   const rng = rngOf(o);
   const ph = rng.range(0, 6.3);
   return build(o, 33, (u, v) => {
-    const th = Math.atan2(v, u);
-    const r = Math.hypot(u, v) / (0.44 + 0.02 * Math.sin(3 * th + ph));
+    const th = dmath.atan2(v, u);
+    const r = dmath.hypot(u, v) / (0.44 + 0.02 * dmath.sin(3 * th + ph));
     const rim = 0.45 * bump((r - 0.62) / 0.3);
     const pit = -bump(r / 0.48);
     return [0, 0, rim + pit];
@@ -149,11 +150,11 @@ export function poreField(o: StampOptions & { readonly count?: number } = {}): V
   const pores: { u: number; v: number; r: number }[] = [];
   for (let tries = 0; pores.length < want && tries < want * 40; tries++) {
     const p = { u: rng.range(-0.42, 0.42), v: rng.range(-0.42, 0.42), r: rng.range(0.03, 0.05) };
-    if (pores.every((q) => Math.hypot(q.u - p.u, q.v - p.v) > q.r + p.r + 0.01)) pores.push(p);
+    if (pores.every((q) => dmath.hypot(q.u - p.u, q.v - p.v) > q.r + p.r + 0.01)) pores.push(p);
   }
   return build(o, 49, (u, v) => {
     let z = 0;
-    for (const p of pores) z = Math.min(z, -bump(Math.hypot(u - p.u, v - p.v) / p.r));
+    for (const p of pores) z = Math.min(z, -bump(dmath.hypot(u - p.u, v - p.v) / p.r));
     return [0, 0, z];
   });
 }
@@ -167,7 +168,7 @@ export function scarWelt(o: StampOptions = {}): VdmStamp {
     a: rng.range(0.008, 0.02),
   }));
   return build(o, 33, (u, v) => {
-    const c = wob.reduce((s, w) => s + w.a * Math.sin(w.f * v + w.p), 0);
+    const c = wob.reduce((s, w) => s + w.a * dmath.sin(w.f * v + w.p), 0);
     const along = bump(v / 0.42);
     const width = 0.06 * (0.7 + 0.3 * along);
     const x = (u - c) / width;
@@ -184,7 +185,7 @@ export function furrow(o: StampOptions & { readonly width?: number } = {}): VdmS
   const w = o.width ?? 0.08;
   return build(o, 33, (u, v) => {
     const along = bump(v / 0.44);
-    const x = (u - bend * (1 - (v / 0.44) ** 2)) / w;
+    const x = (u - bend * (1 - dmath.pow(v / 0.44, 2))) / w;
     return [0, 0, (-bump(x) + 0.25 * bump((Math.abs(x) - 1.3) / 0.7)) * along];
   });
 }

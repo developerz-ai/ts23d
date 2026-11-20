@@ -7,6 +7,7 @@
 // and the fit is re-solved; tried from four yaw starts so a model facing any way lands front-on.
 
 import type { Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import { invalid } from './check.ts';
 import type { Field } from './sdf-ops.ts';
 
@@ -43,7 +44,7 @@ export function composeSimilarity(b: Similarity, a: Similarity): Similarity {
 /** Rotation about +Z by `deg`. */
 export const yawSimilarity = (deg: number): Similarity => {
   const a = (deg * Math.PI) / 180;
-  const [c, s] = [Math.cos(a), Math.sin(a)];
+  const [c, s] = [dmath.cos(a), dmath.sin(a)];
   return { s: 1, r: [c, -s, 0, s, c, 0, 0, 0, 1], t: [0, 0, 0] };
 };
 
@@ -53,7 +54,8 @@ function topEigen(m: number[]): number[] {
   const v = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
   for (let sweep = 0; sweep < 50; sweep++) {
     let off = 0;
-    for (let p = 0; p < 4; p++) for (let q = p + 1; q < 4; q++) off += (a[p * 4 + q] ?? 0) ** 2;
+    for (let p = 0; p < 4; p++)
+      for (let q = p + 1; q < 4; q++) off += dmath.pow(a[p * 4 + q] ?? 0, 2);
     if (off < 1e-30) break;
     for (let p = 0; p < 4; p++)
       for (let q = p + 1; q < 4; q++) {
@@ -122,7 +124,7 @@ export function similarityFit(
     const x = [0, 1, 2].map((a) => (p[a] ?? 0) - (cs[a] ?? 0));
     const y = [0, 1, 2].map((a) => (dst[i]?.[a] ?? 0) - (cd[a] ?? 0));
     for (let a = 0; a < 3; a++) {
-      ss += w * (x[a] ?? 0) ** 2;
+      ss += w * dmath.pow(x[a] ?? 0, 2);
       for (let b = 0; b < 3; b++)
         S[a * 3 + b] = (S[a * 3 + b] ?? 0) + w * (x[a] ?? 0) * (y[b] ?? 0);
     }
@@ -193,7 +195,7 @@ export function fieldProjector(field: Field, h = 1e-3): Projector {
     const gx = field([p[0] + h, p[1], p[2]]) - field([p[0] - h, p[1], p[2]]);
     const gy = field([p[0], p[1] + h, p[2]]) - field([p[0], p[1] - h, p[2]]);
     const gz = field([p[0], p[1], p[2] + h]) - field([p[0], p[1], p[2] - h]);
-    const l = Math.hypot(gx, gy, gz) || 1;
+    const l = dmath.hypot(gx, gy, gz) || 1;
     return { q: [p[0] - (d * gx) / l, p[1] - (d * gy) / l, p[2] - (d * gz) / l], e: Math.abs(d) };
   };
 }

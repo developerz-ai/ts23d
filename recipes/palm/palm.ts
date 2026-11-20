@@ -10,6 +10,7 @@ import {
   BUDGETS,
   type BuildContext,
   defineAsset,
+  dmath,
   type Mesh,
   materialVariant,
   merge,
@@ -205,7 +206,7 @@ export const palm = defineAsset({
     const disc = planar({
       points: Array.from({ length: n }, (_, k): Vec3 => {
         const a = (k / n) * Math.PI * 2;
-        return [Math.cos(a) * FLOOR_R, Math.sin(a) * FLOOR_R, 0.005];
+        return [dmath.cos(a) * FLOOR_R, dmath.sin(a) * FLOOR_R, 0.005];
       }),
       color: [1, 1, 1],
       strip: materialVariant('sand', 5),

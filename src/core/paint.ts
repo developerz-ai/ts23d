@@ -4,6 +4,7 @@
 // A slot may carry a lacquer (`{ colour, clearcoat, clearcoatRoughness, metallicFlake }`): car paint
 // → KHR_materials_clearcoat on the slot's material, kept by every livery.
 
+import * as dmath from './dmath.ts';
 import { Ts23dError } from './errors.ts';
 import { type ResolvedFinish, resolveFinish } from './finish.ts';
 import type { Part } from './part.ts';
@@ -65,7 +66,7 @@ export function srgbToLinear(value: string): Vec3 {
   const n = Number.parseInt(value.slice(1), 16);
   const lin = (c: number): number => {
     const s = c / 255;
-    return s <= 0.04045 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+    return s <= 0.04045 ? s / 12.92 : dmath.pow((s + 0.055) / 1.055, 2.4);
   };
   return [lin((n >> 16) & 255), lin((n >> 8) & 255), lin(n & 255)];
 }
@@ -74,7 +75,7 @@ export function srgbToLinear(value: string): Vec3 {
 export function linearToHex(c: Vec3): string {
   const s = (v: number): string => {
     const x = Math.min(1, Math.max(0, v));
-    const g = x <= 0.0031308 ? x * 12.92 : 1.055 * x ** (1 / 2.4) - 0.055;
+    const g = x <= 0.0031308 ? x * 12.92 : 1.055 * dmath.pow(x, 1 / 2.4) - 0.055;
     return Math.round(g * 255)
       .toString(16)
       .padStart(2, '0');

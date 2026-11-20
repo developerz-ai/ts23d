@@ -2,7 +2,15 @@
 // iron hoops). Origin = base centre. Real: ISO 15750 steel drum Ø 585 × 880 mm; 225 L barrique
 // Ø ~0.70 m at the bilge, 0.95 m tall.
 
-import { cylinder, definePart, lathe, type Mesh, merge, type Vec2 } from '@developerz.ai/ts23d';
+import {
+  cylinder,
+  definePart,
+  dmath,
+  lathe,
+  type Mesh,
+  merge,
+  type Vec2,
+} from '@developerz.ai/ts23d';
 import { NAT, PAINT_RED, ringProfile } from './shape.ts';
 
 export const barrel = definePart({
@@ -66,9 +74,9 @@ export const barrel = definePart({
     const n = b.pick([10, 6, 4]);
     const prof: Vec2[] = Array.from({ length: n + 1 }, (_, i): Vec2 => {
       const z = (i / n) * h;
-      return [r + (bilge - r) * Math.sin((Math.PI * z) / h), z];
+      return [r + (bilge - r) * dmath.sin((Math.PI * z) / h), z];
     });
-    const rAt = (z: number): number => r + (bilge - r) * Math.sin((Math.PI * z) / h);
+    const rAt = (z: number): number => r + (bilge - r) * dmath.sin((Math.PI * z) / h);
     const meshes: Mesh[] = [
       lathe({ profile: prof, segments: seg, caps: true, color: NAT, strip: 'oak', uv: 'metres' }),
     ];

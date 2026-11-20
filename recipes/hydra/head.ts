@@ -6,6 +6,7 @@
 import {
   type BodyPlanDefinition,
   type BuildContext,
+  dmath,
   type Field,
   type IntendedCrease,
   lathe,
@@ -248,7 +249,7 @@ function teeth(
   const step = lod === 0 ? 0.036 : 0.08;
   const [up, low]: [Mesh[], Mesh[]] = [[], []];
   // Teeth shorten toward the hinge, where the open mouth leaves them less room.
-  const room = (x: number): number => (0.3 * (x - JAW_HINGE[0]) * Math.sin(open) + 0.012) / 3;
+  const room = (x: number): number => (0.3 * (x - JAW_HINGE[0]) * dmath.sin(open) + 0.012) / 3;
   for (const side of [1, -1]) {
     let i = 0;
     for (let x = 0.2; x < 0.14 + s.snout - 0.03; x += step, i++) {
@@ -283,8 +284,8 @@ function tongue(s: HeadStyle, lod: number): Mesh {
         const h = 0.011 * (1 - 0.5 * u);
         return [
           x,
-          side * split * 0.016 + Math.cos(a) * w * (1 - 0.5 * split),
-          -0.083 - 0.014 * u + Math.sin(a) * h,
+          side * split * 0.016 + dmath.cos(a) * w * (1 - 0.5 * split),
+          -0.083 - 0.014 * u + dmath.sin(a) * h,
         ];
       },
       color: (_p, _n, u) => lerp(C.tongue, C.mouth, 0.25 * (1 - u)),
@@ -301,10 +302,12 @@ function eyeUnit(segments: number, rings: number): Mesh {
     const row: number[] = [];
     for (let j = 0; j <= segments; j++) {
       const t = (j / segments) * Math.PI * 2;
-      const n: Vec3 = [Math.sin(a) * Math.cos(t), Math.sin(a) * Math.sin(t), Math.cos(a)];
-      const slit = Math.abs(n[0]) < 0.14 * (1 - Math.abs(n[1]) ** 2) && n[2] > 0.62;
+      const n: Vec3 = [dmath.sin(a) * dmath.cos(t), dmath.sin(a) * dmath.sin(t), dmath.cos(a)];
+      const slit = Math.abs(n[0]) < 0.14 * (1 - dmath.pow(Math.abs(n[1]), 2)) && n[2] > 0.62;
       const rim = Math.max(0, a / 1.2);
-      const c: Vec3 = slit ? [0.01, 0.008, 0.008] : lerp(C.iris, [0.05, 0.03, 0.02], rim ** 3);
+      const c: Vec3 = slit
+        ? [0.01, 0.008, 0.008]
+        : lerp(C.iris, [0.05, 0.03, 0.02], rim * rim * rim);
       row.push(b.vertex({ p: n, n, uv: [0, 0], color: c }));
     }
     rows.push(row);
@@ -319,7 +322,7 @@ function eyeUnit(segments: number, rings: number): Mesh {
 }
 
 const rotateAboutY = (m: Mesh, at: Vec3, a: number): Mesh => {
-  const [c, s] = [Math.cos(a), Math.sin(a)];
+  const [c, s] = [dmath.cos(a), dmath.sin(a)];
   const turn = (x: number, z: number): [number, number] => [c * x + s * z, -s * x + c * z];
   const positions = m.positions.slice();
   const normals = m.normals.slice();
@@ -353,7 +356,7 @@ function neckComesFrom(k: number): readonly [number, number] {
     d[0] * f.x[0] + d[1] * f.x[1] + d[2] * f.x[2],
     d[0] * f.z[0] + d[1] * f.z[1] + d[2] * f.z[2],
   ];
-  const l = Math.hypot(x, z) || 1;
+  const l = dmath.hypot(x, z) || 1;
   return [x / l, z / l];
 }
 

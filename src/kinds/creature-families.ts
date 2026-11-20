@@ -7,7 +7,7 @@
 // an estimate, unverified, checked by each member's sourced head length when given); coat
 // thickness ∝ mass^(1/6) (estimate); neck ∝ head-body.
 
-import { Ts23dError } from '../core/index.ts';
+import { dmath, Ts23dError } from '../core/index.ts';
 import type { CreatureColours, CreaturePattern, CreatureSpec } from './creature-spec.ts';
 
 export type FamilyPresetName = 'canid' | 'felid' | 'ursid';
@@ -82,7 +82,7 @@ const bad = (cause: string, fix: string): never => {
 export function memberHead(base: CreatureSpec, m: FamilyMember): number {
   if (m.head !== undefined) return m.head;
   const same = base.family === m.family;
-  if (same && base.head !== undefined) return base.head * (m.length / base.length) ** 0.8;
+  if (same && base.head !== undefined) return base.head * dmath.pow(m.length / base.length, 0.8);
   return FAMILY_PRESETS[m.family].head * m.length;
 }
 
@@ -117,7 +117,7 @@ export function familyMember(base: CreatureSpec, m: FamilyMember): CreatureSpec 
   const p = FAMILY_PRESETS[m.family];
   const scale = m.length / base.length;
   const head = memberHead(base, m);
-  const coat = (base.coat ?? 0.02) * (m.mass / base.mass) ** (1 / 6);
+  const coat = (base.coat ?? 0.02) * dmath.pow(m.mass / base.mass, 1 / 6);
   const face = same ? { ...base.face } : { ...p.face };
   const build = same ? { ...base.build } : { ...p.build };
   // Base fields that belong to the base species, not the member: dropped, then re-derived.
@@ -138,7 +138,9 @@ export function familyMember(base: CreatureSpec, m: FamilyMember): CreatureSpec 
     ...(m.tail !== undefined ? { tail: m.tail } : {}),
     build: {
       ...build,
-      ...(build.ruff !== undefined ? { ruff: build.ruff * (m.mass / base.mass) ** (1 / 6) } : {}),
+      ...(build.ruff !== undefined
+        ? { ruff: build.ruff * dmath.pow(m.mass / base.mass, 1 / 6) }
+        : {}),
     },
     face: { ...face, ...(m.ear !== undefined ? { earLength: m.ear / head } : {}) },
     coat,

@@ -107,7 +107,7 @@
     {
       "label": "pauldron span (infantry shoulders 0.75–0.82 m, design brief)",
       "spec": 0.82,
-      "measured": 0.8199999928474426,
+      "measured": 0.82,
       "source": "recipes/rts_faction/README.md (original design brief)"
     }
   ],

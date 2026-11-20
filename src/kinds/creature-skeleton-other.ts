@@ -3,6 +3,7 @@
 // spindle resting on its pelvic and anal fins) and serpent (one round chain in an S on the ground).
 
 import type { Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import type { Bones, HeadFrame, Limb } from './creature-bones.ts';
 import { feet, headToWorld } from './creature-bones.ts';
 import { pathLength, pointAt, v3 } from './creature-curve.ts';
@@ -109,7 +110,7 @@ export function fishBones(s: CreatureSpec): Bones {
   for (let i = 0; i < n; i++) {
     const t = (i + 0.5) / n;
     const x = nose - z.headLen * 0.6 - t * (nose - z.headLen * 0.6 - ped);
-    const k = Math.sin(Math.PI * Math.min(1, 0.25 + t * 0.8)) * 0.8 + 0.2;
+    const k = dmath.sin(Math.PI * Math.min(1, 0.25 + t * 0.8)) * 0.8 + 0.2;
     const seg = (nose - ped) / n;
     trunk.push({ at: [x, 0, (H * k) / 2], r: [seg * 1.3, (0.42 * H * k) / 2, (H * k) / 2] });
   }
@@ -222,7 +223,7 @@ export function serpentBones(s: CreatureSpec): Bones {
   const raw: Vec3[] = [];
   for (let i = 0; i <= 48; i++) {
     const t = i / 48;
-    raw.push([-t, amp * (Math.cos(2 * Math.PI * 1.25 * t) - 1), 0]);
+    raw.push([-t, amp * (dmath.cos(2 * Math.PI * 1.25 * t) - 1), 0]);
   }
   // Scale x so the curve's arc length is the body length.
   let k = body;

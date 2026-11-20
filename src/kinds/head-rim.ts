@@ -9,6 +9,7 @@ import type { Mesh, Vec3 } from '../core/index.ts';
 /** A mutable point/vector (core's Vec3 is readonly). */
 type P3 = [number, number, number];
 
+import { dmath } from '../core/index.ts';
 import type { Field } from '../primitives/index.ts';
 
 function grad(f: Field, p: Vec3, e: number, out: P3): number {
@@ -53,8 +54,8 @@ export function sharpenRim(m: Mesh, skull: Field, side: Field, part: Field, res:
     // Skip where an extra (ear, tusk) owns the surface.
     if (part(p) < Math.max(s, c) - res * 0.5) continue;
     const n: Vec3 = [normals[i] ?? 0, normals[i + 1] ?? 0, normals[i + 2] ?? 0];
-    const ls = Math.hypot(...gs) || 1;
-    const lc = Math.hypot(...gc) || 1;
+    const ls = dmath.norm(gs) || 1;
+    const lc = dmath.norm(gc) || 1;
     const onSkin =
       (n[0] * gs[0] + n[1] * gs[1] + n[2] * gs[2]) / ls >=
       (n[0] * gc[0] + n[1] * gc[1] + n[2] * gc[2]) / lc;
@@ -80,7 +81,7 @@ export function sharpenRim(m: Mesh, skull: Field, side: Field, part: Field, res:
     positions[i + 2] = p[2];
     if (onSkin) {
       grad(skull, p, e, gs);
-      const l = Math.hypot(...gs) || 1;
+      const l = dmath.norm(gs) || 1;
       normals[i] = gs[0] / l;
       normals[i + 1] = gs[1] / l;
       normals[i + 2] = gs[2] / l;
@@ -112,7 +113,7 @@ export function creaseNormals(m: Mesh, minDot = 0.2): Mesh {
   }
   const normals = new Float32Array(m.normals);
   for (let i = 0; i < normals.length; i += 3) {
-    const l = Math.hypot(acc[i] ?? 0, acc[i + 1] ?? 0, acc[i + 2] ?? 0);
+    const l = dmath.hypot(acc[i] ?? 0, acc[i + 1] ?? 0, acc[i + 2] ?? 0);
     if (l < 1e-20) continue;
     const f = [(acc[i] ?? 0) / l, (acc[i + 1] ?? 0) / l, (acc[i + 2] ?? 0) / l];
     const d =

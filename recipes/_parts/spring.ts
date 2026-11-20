@@ -1,7 +1,7 @@
 // Compression spring: round wire swept along a helix with closed (zero-pitch) end coils. Origin =
 // bottom centre, axis +Z. Real valve spring: Ø 30 mm, 4 mm wire, 6 active coils, 45 mm free length.
 
-import { definePart, sweep, type Vec3 } from '@developerz.ai/ts23d';
+import { definePart, dmath, sweep, type Vec3 } from '@developerz.ai/ts23d';
 import { DARK_STEEL } from './shape.ts';
 
 export const spring = definePart({
@@ -31,7 +31,7 @@ export const spring = definePart({
       const u = (i / total) * turns;
       const z = u < ends ? 0 : u > turns - ends ? active : ((u - ends) / p.coils) * active;
       const a = u * Math.PI * 2;
-      path.push([R * Math.cos(a), R * Math.sin(a), p.wire / 2 + z]);
+      path.push([R * dmath.cos(a), R * dmath.sin(a), p.wire / 2 + z]);
     }
     return sweep({
       section: { radius: p.wire / 2, segments: b.pick([8, 6, 4]) },

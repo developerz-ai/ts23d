@@ -15,6 +15,7 @@ import {
   type BuildContext,
   boundsOf,
   defineAsset,
+  dmath,
   hex,
   type Mesh,
   materialVariant,
@@ -208,7 +209,7 @@ export function leaderClump(centres: readonly Vec3[], tip: Vec3): Vec3 {
   let top: Vec3 = tip;
   let best = Infinity;
   for (const c of centres) {
-    const d = Math.hypot(c[0] - tip[0], c[1] - tip[1]) - 0.5 * c[2];
+    const d = dmath.hypot(c[0] - tip[0], c[1] - tip[1]) - 0.5 * c[2];
     if (d < best) {
       best = d;
       top = c;
@@ -278,11 +279,11 @@ export const pine = defineAsset({
     // true scale (a cylinder cap or planar UV would wrap V inside a triangle).
     const n = ctx.pick([16, 10, 8]);
     // Same area at every LOD (a coarser polygon is pushed out), so the far silhouette keeps it.
-    const r = FLOOR_R * Math.sqrt((Math.PI * 2) / (n * Math.sin((Math.PI * 2) / n)));
+    const r = FLOOR_R * Math.sqrt((Math.PI * 2) / (n * dmath.sin((Math.PI * 2) / n)));
     const disc = planar({
       points: Array.from({ length: n }, (_, k): Vec3 => {
         const a = (k / n) * Math.PI * 2;
-        return [Math.cos(a) * r, Math.sin(a) * r, 0.005];
+        return [dmath.cos(a) * r, dmath.sin(a) * r, 0.005];
       }),
       color: hex('#a08670'),
       strip: materialVariant('leaf_litter', 5),

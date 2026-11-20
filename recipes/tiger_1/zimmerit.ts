@@ -7,6 +7,7 @@
 
 import {
   defineMaterial,
+  dmath,
   type Mesh,
   MeshBuilder,
   type Rng,
@@ -42,7 +43,7 @@ const smooth = (a: number, b: number, x: number): number => {
 const ridges = tex
   .fn((xm, _ym, ctx) => {
     const n = Math.max(1, Math.round(ctx.tileU / HULL_PITCH));
-    return 0.5 + 0.5 * Math.cos((2 * Math.PI * n * xm) / ctx.tileU);
+    return 0.5 + 0.5 * dmath.cos((2 * Math.PI * n * xm) / ctx.tileU);
   }, 'ridges(22mm)')
   // Hand-combed: each ridge waves a few millimetres across the column.
   .warp(tex.noise({ size: 0.12, sizeV: 0.05, seed: 1 }), 0.006);
@@ -127,13 +128,13 @@ type Frame = {
 /** Plate frame: (s along the path, t up the slant, h out of the face) → part space. */
 function frameOf(w: CoatWall): Frame & { readonly len: number; readonly knots: number[] } {
   const lean = w.lean ?? 0;
-  const k = Math.hypot(1, lean);
+  const k = dmath.hypot(1, lean);
   const segN: Vec2[] = [];
   const knots = [0];
   for (let i = 0; i + 1 < w.path.length; i++) {
     const a = w.path[i] as Vec2;
     const b = w.path[i + 1] as Vec2;
-    const l = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1;
+    const l = dmath.hypot(b[0] - a[0], b[1] - a[1]) || 1;
     segN.push([(b[1] - a[1]) / l, -(b[0] - a[0]) / l]);
     knots.push((knots[i] ?? 0) + l);
   }
@@ -173,7 +174,7 @@ function frameOf(w: CoatWall): Frame & { readonly len: number; readonly knots: n
   };
   const n = (s: number): Vec3 => {
     const o = offset(s);
-    const l = Math.hypot(o[0], o[1], lean) || 1;
+    const l = dmath.hypot(o[0], o[1], lean) || 1;
     return [o[0] / l, o[1] / l, lean / l];
   };
   return { at, n, len: knots[knots.length - 1] ?? 0, knots };
@@ -208,7 +209,7 @@ export function coating(walls: readonly CoatWall[], o: CoatOptions): Coating {
     zr.v0 + half + Math.min(1, Math.max(0, f)) * (zr.v1 - zr.v0 - 2 * half);
   for (const w of walls) {
     const fr = frameOf(w);
-    const H = (w.z1 - w.z0) * Math.hypot(1, w.lean ?? 0);
+    const H = (w.z1 - w.z0) * dmath.hypot(1, w.lean ?? 0);
     const cols = Math.max(1, Math.round(fr.len / COLUMN));
     const colW = fr.len / cols;
     const seams = Array.from({ length: cols - 1 }, (_, i) => (i + 1) * colW);
@@ -260,7 +261,7 @@ export function coating(walls: readonly CoatWall[], o: CoatOptions): Coating {
         t[2] * up[0] - t[0] * up[2],
         t[0] * up[1] - t[1] * up[0],
       ];
-      const l = Math.hypot(nx[0], nx[1], nx[2]) || 1;
+      const l = dmath.hypot(nx[0], nx[1], nx[2]) || 1;
       const n: Vec3 = [nx[0] / l, nx[1] / l, nx[2] / l];
       const c = raw ? o.paste : o.paint;
       const ids = [
@@ -457,14 +458,14 @@ export function coatFaces(
     const nx = e1[1] * e2[2] - e1[2] * e2[1];
     const ny = e1[2] * e2[0] - e1[0] * e2[2];
     const nz = e1[0] * e2[1] - e1[1] * e2[0];
-    const l = Math.hypot(nx, ny, nz) || 1;
+    const l = dmath.hypot(nx, ny, nz) || 1;
     const centre: Vec3 = [
       (a[0] + b[0] + c[0]) / 3,
       (a[1] + b[1] + c[1]) / 3,
       (a[2] + b[2] + c[2]) / 3,
     ];
     if (!on(centre, [nx / l, ny / l, nz / l])) continue;
-    const slant = 1 / Math.max(0.3, Math.hypot(nx / l, ny / l));
+    const slant = 1 / Math.max(0.3, dmath.hypot(nx / l, ny / l));
     for (const i of ids) {
       uvs[i * 2] = zr.u0 + ((at(i)[2] * slant * HULL_PITCH) / pitch / zr.metres) * (zr.u1 - zr.u0);
       uvs[i * 2 + 1] = (zr.v0 + zr.v1) / 2;

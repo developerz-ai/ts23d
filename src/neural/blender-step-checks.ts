@@ -2,7 +2,7 @@
 // blender-step-stroke.ts): numbers in range, names, lists, masks, and `shape`, which refuses unknown
 // fields and fills defaults. Every refusal is T3D_RECIPE_INVALID naming the step and field.
 
-import { Ts23dError } from '../core/index.ts';
+import { dmath, Ts23dError } from '../core/index.ts';
 
 /** `at` names the step and field, e.g. "step 3 (bake).size". */
 export type Check = (v: unknown, at: string) => unknown;
@@ -101,7 +101,7 @@ export const weightMask: Check = (v, at) => {
       v,
       at,
     ) as { normal: number[] };
-    if (Math.hypot(...p.normal) < 1e-9)
+    if (dmath.norm(p.normal) < 1e-9)
       invalidStep(`${at}.normal`, 'has no length', 'pass the direction the kept side faces');
     return p;
   }

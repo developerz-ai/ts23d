@@ -108,13 +108,13 @@
     {
       "label": "bell mouth diameter",
       "spec": 0.3,
-      "measured": 0.30000001192092896,
+      "measured": 0.3,
       "source": "README"
     },
     {
       "label": "crate length",
       "spec": 0.8,
-      "measured": 0.8059999942779541,
+      "measured": 0.806,
       "source": "README"
     }
   ],

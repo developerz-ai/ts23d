@@ -5,14 +5,15 @@
 // identity, w = 1 the transform itself. Rotations near 180° have no unique axis: refused.
 
 import type { Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import { invalid } from './check.ts';
 import { applySimilarity, IDENTITY, type Similarity } from './similarity-fit.ts';
 
 /** Rotation by `angle` (radians) about the unit `axis` (Rodrigues), row-major 3×3. */
 function rotation(axis: Vec3, angle: number): number[] {
   const [x, y, z] = axis;
-  const c = Math.cos(angle);
-  const s = Math.sin(angle);
+  const c = dmath.cos(angle);
+  const s = dmath.sin(angle);
   const k = 1 - c;
   return [
     c + x * x * k,
@@ -37,13 +38,13 @@ export function similarityToward(m: Similarity, w: number, pivot: Vec3): Similar
   if (w === 0) return IDENTITY;
   const r = m.r;
   const g = (i: number): number => r[i] ?? 0;
-  const angle = Math.acos(Math.max(-1, Math.min(1, (g(0) + g(4) + g(8) - 1) / 2)));
+  const angle = dmath.acos(Math.max(-1, Math.min(1, (g(0) + g(4) + g(8) - 1) / 2)));
   if (angle > Math.PI - 1e-3)
     invalid(
       `similarityToward: a ${((angle * 180) / Math.PI).toFixed(1)}° turn has no unique axis`,
       'compose the turn in two steps (start the fit from a yaw near the answer)',
     );
-  const sin = Math.sin(angle);
+  const sin = dmath.sin(angle);
   const rw =
     sin < 1e-9
       ? IDENTITY.r
@@ -51,7 +52,7 @@ export function similarityToward(m: Similarity, w: number, pivot: Vec3): Similar
           [(g(7) - g(5)) / (2 * sin), (g(2) - g(6)) / (2 * sin), (g(3) - g(1)) / (2 * sin)],
           angle * w,
         );
-  const s = m.s ** w;
+  const s = dmath.pow(m.s, w);
   const end = applySimilarity(m, pivot);
   const at: Vec3 = [
     pivot[0] + (end[0] - pivot[0]) * w,

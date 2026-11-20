@@ -7,6 +7,7 @@
 // scales bellies.
 
 import type { Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import { type Field, type SculptEdit, sculptField } from '../primitives/index.ts';
 import type { Bones } from './creature-bones.ts';
 import { v3 } from './creature-curve.ts';
@@ -47,8 +48,8 @@ export function muscleDefinition(s: CreatureSpec): number {
 
 /** Euler angles (degrees, R = Rz·Ry·Rx as in sculpt edits) of the frame X, Y, Z (columns). */
 export function eulerOf(x: Vec3, y: Vec3, z: Vec3): Vec3 {
-  const beta = Math.asin(Math.max(-1, Math.min(1, -x[2])));
-  return [Math.atan2(y[2], z[2]) * DEG, beta * DEG, Math.atan2(x[1], x[0]) * DEG];
+  const beta = dmath.asin(Math.max(-1, Math.min(1, -x[2])));
+  return [dmath.atan2(y[2], z[2]) * DEG, beta * DEG, dmath.atan2(x[1], x[0]) * DEG];
 }
 
 /** Semi-axes [across, out, along] of a muscle's belly. Flat ellipsoids are kept ≥ 0.35 × as

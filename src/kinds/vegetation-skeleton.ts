@@ -4,6 +4,7 @@
 // parent's wood and it physically grows out of the bark (QA `connections`: a face, not a kiss).
 
 import type { Rng, Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import { arcLengths, transportFrames } from '../primitives/index.ts';
 import { type BranchLevel, shapeRatio, type TreeParams } from './vegetation-params.ts';
 
@@ -22,14 +23,14 @@ export interface Stem {
 
 const deg = Math.PI / 180;
 const unit = (a: Vec3): Vec3 => {
-  const l = Math.hypot(a[0], a[1], a[2]) || 1;
+  const l = dmath.hypot(a[0], a[1], a[2]) || 1;
   return [a[0] / l, a[1] / l, a[2] / l];
 };
 
 /** Rodrigues rotation of v about unit axis k by angle a (radians). */
 export function rotate(v: Vec3, k: Vec3, a: number): Vec3 {
-  const c = Math.cos(a);
-  const s = Math.sin(a);
+  const c = dmath.cos(a);
+  const s = dmath.sin(a);
   const d = (k[0] * v[0] + k[1] * v[1] + k[2] * v[2]) * (1 - c);
   return [
     v[0] * c + (k[1] * v[2] - k[2] * v[1]) * s + k[0] * d,
@@ -41,7 +42,7 @@ export function rotate(v: Vec3, k: Vec3, a: number): Vec3 {
 /** Axis that turns `dir` towards +Z when rotated by a positive angle. */
 function upAxis(dir: Vec3): Vec3 {
   const k: Vec3 = [dir[1], -dir[0], 0]; // dir × Z
-  return Math.hypot(k[0], k[1]) < 1e-4 ? [0, 1, 0] : unit(k);
+  return dmath.hypot(k[0], k[1]) < 1e-4 ? [0, 1, 0] : unit(k);
 }
 
 /** A stem's polyline: `res` segments, bending by curve/curveBack plus seeded wobble. */
@@ -77,7 +78,7 @@ export function grow(p: TreeParams, size: { height: number; dbh: number }, rng: 
   const L0 = size.height * t0.length;
   const r0 = size.dbh / 2;
   const lean = (p.lean ?? 0) * deg;
-  const trunkPts = path([0, 0, -0.05], [Math.sin(lean), 0, Math.cos(lean)], L0, t0, true, rng);
+  const trunkPts = path([0, 0, -0.05], [dmath.sin(lean), 0, dmath.cos(lean)], L0, t0, true, rng);
   const arc0 = arcLengths(trunkPts);
   const bh = 1.3; // breast height, metres (forestry DBH convention)
   const trunkR = arc0.map((s) => {
@@ -122,8 +123,8 @@ export function grow(p: TreeParams, size: { height: number; dbh: number }, rng: 
       const T = unit([b[0] - a[0], b[1] - a[1], b[2] - a[2]]);
       const fr = frames[j] ?? { n: [1, 0, 0], b: [0, 1, 0] };
       phi += (lv.rotate ?? 137.5) + rng.range(-10, 10);
-      const cp = Math.cos(phi * deg);
-      const sp = Math.sin(phi * deg);
+      const cp = dmath.cos(phi * deg);
+      const sp = dmath.sin(phi * deg);
       const raw: Vec3 = [
         cp * fr.n[0] + sp * fr.b[0],
         cp * fr.n[1] + sp * fr.b[1],
@@ -134,9 +135,9 @@ export function grow(p: TreeParams, size: { height: number; dbh: number }, rng: 
       const zone = (s - s0) / Math.max(1e-6, s1 - s0);
       const down = (lv.downAngle + (lv.downAngleV ?? 0) * zone + rng.range(-5, 5)) * deg;
       const dir = unit([
-        T[0] * Math.cos(down) + np[0] * Math.sin(down),
-        T[1] * Math.cos(down) + np[1] * Math.sin(down),
-        T[2] * Math.cos(down) + np[2] * Math.sin(down),
+        T[0] * dmath.cos(down) + np[0] * dmath.sin(down),
+        T[1] * dmath.cos(down) + np[1] * dmath.sin(down),
+        T[2] * dmath.cos(down) + np[2] * dmath.sin(down),
       ]);
       const vary = 1 + rng.range(-(lv.lengthVar ?? 0.15), lv.lengthVar ?? 0.15);
       const maxLength = lv.length * par.length;
@@ -146,7 +147,10 @@ export function grow(p: TreeParams, size: { height: number; dbh: number }, rng: 
           : lv.length * (par.length - 0.6 * s);
       const len = Math.max(0.15, base * vary);
       const r0c = par.radii[0] ?? rp;
-      const rc = Math.max(0.006, Math.min(0.8 * rp, r0c * (len / par.length) ** p.ratioPower));
+      const rc = Math.max(
+        0.006,
+        Math.min(0.8 * rp, r0c * dmath.pow(len / par.length, p.ratioPower)),
+      );
       const pts = path(c, dir, len, lv, false, rng);
       stems.push({
         level: par.level + 1,

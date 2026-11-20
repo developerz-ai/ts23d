@@ -5,7 +5,7 @@
 // That removes the mesh's bind space, armature transforms and inverse bind matrices from the
 // problem: afterwards a joint only needs its head position (import-rig.ts).
 
-import { type Mesh, Ts23dError } from '../core/index.ts';
+import { dmath, type Mesh, Ts23dError } from '../core/index.ts';
 import { at, type GlbDoc, indices, readAccessor } from './glb-read.ts';
 import { type M4, mul, type SceneGraph, type ScenePrimitive } from './glb-scene.ts';
 
@@ -144,7 +144,7 @@ export function skinPrimitive(doc: GlbDoc, p: ScenePrimitive, graph: SceneGraph)
         nrm[r] = (nrm[r] ?? 0) + (w / total) * (row[0] * a + row[1] * b + row[2] * c);
       }
     }
-    const l = Math.hypot(nrm[0] ?? 0, nrm[1] ?? 0, nrm[2] ?? 0) || 1;
+    const l = dmath.hypot(nrm[0] ?? 0, nrm[1] ?? 0, nrm[2] ?? 0) || 1;
     positions.set(pos, v * 3);
     normals.set(
       nrm.map((k) => k / l),

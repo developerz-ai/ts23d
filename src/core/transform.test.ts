@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'bun:test';
+import * as dmath from './dmath.ts';
 import { type Mesh, MeshBuilder } from './mesh.ts';
 import { applyAffine, frame, place } from './transform.ts';
 
@@ -57,7 +58,7 @@ describe('applyAffine normals', () => {
     const f = [g(1, 2), g(2, 0), g(0, 1)];
     const l = Math.sqrt(f.reduce((s, x) => s + x * x, 0));
     const cos = f.reduce((s, x, q) => s + (x / l) * (m.normals[q] ?? 0), 0);
-    return (Math.acos(Math.max(-1, Math.min(1, cos))) * 180) / Math.PI;
+    return (dmath.acos(Math.max(-1, Math.min(1, cos))) * 180) / Math.PI;
   };
   test('non-uniform scale keeps normals perpendicular to the surface (was 62° off)', () => {
     expect(errorDeg(place(slanted(), { scale: [1, 1, 4] }))).toBeLessThan(0.05);

@@ -1,6 +1,7 @@
 // Tree: a wind gust on the baked crown sway (weight and speed ramp up and down), a few falling
 // leaves, and a slow orbit under a soft sun. Hooks: `crown`, the `run` clip.
 
+import { dmath } from '@developerz.ai/ts23d/core';
 import { type AnimationAction, Box3, Object3D, Vector3 } from 'three';
 import { around, Dolly } from './cinema.ts';
 import { emitterSummary, footprint, type Hooks } from './hooks.ts';
@@ -53,7 +54,7 @@ class Gust implements Scenario {
   update(t: number, dt: number): void {
     const h = this.ctx.hooks;
     // One gust per loop: calm, build, peak, die away.
-    this.gust = 0.2 + 0.8 * Math.sin((Math.PI * t) / DURATION) ** 2;
+    this.gust = 0.2 + 0.8 * dmath.pow(dmath.sin((Math.PI * t) / DURATION), 2);
     this.action?.setEffectiveWeight(0.35 + 0.65 * this.gust);
     this.action?.setEffectiveTimeScale(0.6 + 1.4 * this.gust);
     this.ctx.mixer?.update(dt);

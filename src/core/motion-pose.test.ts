@@ -1,12 +1,13 @@
 import { describe, expect, it } from 'bun:test';
 import { compile, defineAsset } from './asset.ts';
 import { placePiece } from './define-part-place.ts';
+import * as dmath from './dmath.ts';
 import type { Crank } from './motion.ts';
 import { LOOP_SECONDS, linkageAt, motionPose, rotateAbout } from './motion-pose.ts';
 import { quatRotate, type Vec3 } from './vec.ts';
 
 const near = (a: Vec3, b: Vec3, eps = 1e-9): void => {
-  expect(Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2])).toBeLessThan(eps);
+  expect(dmath.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2])).toBeLessThan(eps);
 };
 
 // A crank 0.3 m, axle 2 m behind the crosshead and 0.3 m below its line (an offset linkage).
@@ -33,7 +34,7 @@ describe('motionPose', () => {
   });
 
   it('a crank keeps the rod length and its big end on the crank pin at every time', () => {
-    const length = Math.hypot(...rod.pin);
+    const length = dmath.norm(rod.pin);
     for (let i = 0; i < 37; i++) {
       const t = (i / 37) * LOOP_SECONDS;
       const pose = motionPose(rod, t);
@@ -41,7 +42,7 @@ describe('motionPose', () => {
       const end: Vec3 = [big[0] + pose.offset[0], big[1] + pose.offset[1], big[2] + pose.offset[2]];
       const crankPin = rotateAbout([0.3, 0, 0], [0, 1, 0], 2 * Math.PI * t);
       near(end, [rod.centre[0] + crankPin[0], 0, rod.centre[2] + crankPin[2]], 1e-9);
-      expect(Math.hypot(...big)).toBeCloseTo(length, 9);
+      expect(dmath.norm(big)).toBeCloseTo(length, 9);
       // The small end stays on its line.
       expect(Math.abs(pose.offset[1])).toBe(0);
       expect(Math.abs(pose.offset[2])).toBe(0);
@@ -49,7 +50,7 @@ describe('motionPose', () => {
   });
 
   it('a piston follows the exact slider-crank law, not a sinusoid', () => {
-    const L = Math.hypot(...rod.pin);
+    const L = dmath.norm(rod.pin);
     // θ = half a turn: pin at centre − r on X → x = −2 − 0.3 + √(L² − 0.3²) − (−1.7 + …).
     const { x } = linkageAt(rod, Math.PI);
     const x0 = -1.7 + Math.sqrt(L * L - 0.09);

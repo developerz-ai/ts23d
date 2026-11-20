@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'bun:test';
 import type { Mesh, Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import { sdf } from '../primitives/index.ts';
 import {
   closestColour,
@@ -18,18 +19,18 @@ function deltaE(a: Vec3, b: Vec3): number {
     const x = (0.4124 * r + 0.3576 * g + 0.1805 * bl) / 0.95047;
     const y = 0.2126 * r + 0.7152 * g + 0.0722 * bl;
     const z = (0.0193 * r + 0.1192 * g + 0.9505 * bl) / 1.08883;
-    const f = (t: number): number => (t > 0.008856 ? Math.cbrt(t) : 7.787 * t + 16 / 116);
+    const f = (t: number): number => (t > 0.008856 ? dmath.cbrt(t) : 7.787 * t + 16 / 116);
     return [116 * f(y) - 16, 500 * (f(x) - f(y)), 200 * (f(y) - f(z))];
   };
   const [p, q] = [lab(a), lab(b)];
-  return Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2]);
+  return dmath.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2]);
 }
 
 const cubeField =
   (h: number) =>
   (p: Vec3): number => {
     const q = p.map((x) => Math.abs(x) - h);
-    return Math.hypot(...q.map((x) => Math.max(x, 0))) + Math.min(Math.max(...q), 0);
+    return dmath.norm(q.map((x) => Math.max(x, 0))) + Math.min(Math.max(...q), 0);
   };
 /** The source's albedo: smooth gradients over the cube. */
 const albedo = (p: Vec3): Vec3 => [
@@ -110,7 +111,7 @@ describe('multi-view projection (12 views round the turnaround)', () => {
     let best = 0;
     let d = Infinity;
     for (let i = 0; i < target.positions.length; i += 3) {
-      const e = Math.hypot(
+      const e = dmath.hypot(
         (target.positions[i] ?? 0) - p[0],
         (target.positions[i + 1] ?? 0) - p[1],
         (target.positions[i + 2] ?? 0) - p[2],

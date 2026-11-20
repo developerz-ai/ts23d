@@ -2,6 +2,7 @@
 // heat-tinted titanium, clearcoat, specular), validated with a fix and normalised to linear RGB.
 // The GLB writes them as KHR_materials_* extensions; the beauty render shades them.
 
+import * as dmath from './dmath.ts';
 import { Ts23dError } from './errors.ts';
 import type { Part } from './part.ts';
 import type { Vec3 } from './vec.ts';
@@ -64,7 +65,7 @@ export function lin(where: string, c: Colour): Vec3 {
       throw fail(`${where} is '${c}', not a #rrggbb colour`, "write it as '#c8c8d0'");
     const n = Number.parseInt(c.slice(1), 16);
     const f = (v: number): number =>
-      v / 255 <= 0.04045 ? v / 255 / 12.92 : ((v / 255 + 0.055) / 1.055) ** 2.4;
+      v / 255 <= 0.04045 ? v / 255 / 12.92 : dmath.pow((v / 255 + 0.055) / 1.055, 2.4);
     return [f((n >> 16) & 255), f((n >> 8) & 255), f(n & 255)];
   }
   if (!(Array.isArray(c) && c.length === 3))

@@ -7,6 +7,7 @@
 import {
   applyAffine,
   box,
+  dmath,
   frame,
   type Lod,
   loft,
@@ -190,8 +191,8 @@ function mudLeg(lod: Lod, top: number): Mesh {
   const colors = new Float32Array(shell.colors);
   for (let i = 0; i < positions.length; i += 3) {
     const z = positions[i + 2] ?? 0;
-    const a = Math.atan2((positions[i + 1] ?? 0) - y, positions[i] ?? 0);
-    if (z > top - 1e-4) positions[i + 2] = z - 0.05 * (0.5 + 0.5 * Math.sin(a * 5 + 1.3));
+    const a = dmath.atan2((positions[i + 1] ?? 0) - y, positions[i] ?? 0);
+    if (z > top - 1e-4) positions[i + 2] = z - 0.05 * (0.5 + 0.5 * dmath.sin(a * 5 + 1.3));
     const t = Math.min(1, Math.max(0, (z - 0.1) / (top - 0.1)));
     for (let c = 0; c < 3; c++)
       colors[i + c] = (WET_MUD[c] ?? 0) * (1 - t) * 0.5 + (CAKED_MUD[c] ?? 0) * (0.5 + 0.5 * t);
@@ -324,7 +325,7 @@ export function figure(kit: Kit, lod: Lod, o: FigureOptions): FigurePoints {
     const grip: Vec3 = [0.2, -0.27, 1.36];
     const rest: Vec3 = [SHOULDER[0], grip[1], SHOULDER[2] + 0.072 + handleR];
     const d: Vec3 = [rest[0] - grip[0], 0, rest[2] - grip[2]];
-    const len = Math.hypot(d[0], d[2]);
+    const len = dmath.hypot(d[0], d[2]);
     const axis: Vec3 = [d[0] / len, 0, d[2] / len];
     // The upper arm swings forward to the raised elbow (replaces the hanging mirror).
     body.part('arm_r_upper', tube(lod, [sh[0], -sh[1], sh[2]], elbow, 0.072, 0.062, o.suit));
@@ -333,7 +334,7 @@ export function figure(kit: Kit, lod: Lod, o: FigureOptions): FigurePoints {
       withCuff(lod, tube(lod, elbow, wristR, 0.056, 0.048, o.suit), elbow, wristR, o.hands),
     );
     const turned = place(fist(lod, handleR, o.hands), { yaw: Math.PI / 2 });
-    body.part('hand_r', place(turned, { at: grip, pitch: Math.atan2(axis[0], axis[2]) }));
+    body.part('hand_r', place(turned, { at: grip, pitch: dmath.atan2(axis[0], axis[2]) }));
     return pt(grip, axis, elbow, wristR);
   }
   if (o.right === 'port' && o.port) {

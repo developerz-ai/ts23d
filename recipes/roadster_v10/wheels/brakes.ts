@@ -6,6 +6,7 @@
 
 import {
   cylinder,
+  dmath,
   type Lod,
   lathe,
   loft,
@@ -76,12 +77,12 @@ export function disc(lod: Lod, d: DiscSize): Mesh {
       const n = 4;
       for (let i = 0; i <= n; i++) {
         const rr = d.inner + 0.004 + ((d.r - d.inner - 0.008) * i) / n;
-        const a = a0 + 0.35 * (i / n) ** 1.2;
-        pts.push([rr * Math.cos(a), d.y, rr * Math.sin(a)]);
+        const a = a0 + 0.35 * dmath.pow(i / n, 1.2);
+        pts.push([rr * dmath.cos(a), d.y, rr * dmath.sin(a)]);
       }
       const rings = pts.map((p): Vec3[] => {
         const t: Vec3 = [-p[2], 0, p[0]];
-        const l = Math.hypot(t[0], t[2]) || 1;
+        const l = dmath.hypot(t[0], t[2]) || 1;
         const w = 0.0028;
         const tx = (t[0] / l) * w;
         const tz = (t[2] / l) * w;
@@ -118,7 +119,9 @@ export function disc(lod: Lod, d: DiscSize): Mesh {
         rows.forEach((f, j) => {
           const a = ((k + j / rows.length) / per) * Math.PI * 2;
           const rr = d.inner + (d.r - d.inner) * f;
-          parts.push(shift(hole, [rr * Math.cos(a), d.y - d.thick / 2 - 0.0004, rr * Math.sin(a)]));
+          parts.push(
+            shift(hole, [rr * dmath.cos(a), d.y - d.thick / 2 - 0.0004, rr * dmath.sin(a)]),
+          );
         });
       // Machined face rings (subtle darker bands where the pads run).
       for (const yy of [d.y - d.thick / 2 - 0.0002, d.y + d.thick / 2 + 0.0002]) {
@@ -172,7 +175,11 @@ export function disc(lod: Lod, d: DiscSize): Mesh {
     for (let k = 0; k < 10; k++) {
       const a = (k / 10) * Math.PI * 2;
       parts.push(
-        shift(bob, [(d.inner - 0.004) * Math.cos(a), d.y - 0.004, (d.inner - 0.004) * Math.sin(a)]),
+        shift(bob, [
+          (d.inner - 0.004) * dmath.cos(a),
+          d.y - 0.004,
+          (d.inner - 0.004) * dmath.sin(a),
+        ]),
       );
     }
   }
@@ -227,11 +234,11 @@ export function caliper(lod: Lod, o: CaliperOptions): Mesh {
     const t = i / steps;
     const a = o.at - span / 2 + span * t;
     // Ends taper (rounded caliper ends).
-    const k = 1 - 0.12 * (2 * t - 1) ** 6;
+    const k = 1 - 0.12 * dmath.pow(2 * t - 1, 6);
     rings.push(
       sec.map(([r, y]): Vec3 => {
         const rr = d.r + (r - d.r) * k;
-        return [rr * Math.cos(a), d.y + y * k, rr * Math.sin(a)];
+        return [rr * dmath.cos(a), d.y + y * k, rr * dmath.sin(a)];
       }),
     );
   }
@@ -253,9 +260,9 @@ export function caliper(lod: Lod, o: CaliperOptions): Mesh {
       const a = o.at + span * f;
       parts.push(
         shift(bolt, [
-          (outR - 0.004) * Math.cos(a),
+          (outR - 0.004) * dmath.cos(a),
           d.y - halfW - 0.003,
-          (outR - 0.004) * Math.sin(a),
+          (outR - 0.004) * dmath.sin(a),
         ]),
       );
     }
@@ -269,15 +276,15 @@ export function caliper(lod: Lod, o: CaliperOptions): Mesh {
     });
     const an = o.at + span * 0.42;
     parts.push(
-      shift(nip, [(outR - 0.01) * Math.cos(an), d.y + halfW, (outR - 0.01) * Math.sin(an)]),
+      shift(nip, [(outR - 0.01) * dmath.cos(an), d.y + halfW, (outR - 0.01) * dmath.sin(an)]),
     );
     const per = o.pistons / 2;
     for (let p = 0; p < per; p++) {
       const a = o.at - span * 0.3 + (span * 0.6 * p) / Math.max(1, per - 1);
       const c: Vec3 = [
-        (d.r - 0.022) * Math.cos(a),
+        (d.r - 0.022) * dmath.cos(a),
         d.y + halfW + 0.0004,
-        (d.r - 0.022) * Math.sin(a),
+        (d.r - 0.022) * dmath.sin(a),
       ];
       const disk = lathe({
         profile: [
@@ -307,7 +314,7 @@ export function caliper(lod: Lod, o: CaliperOptions): Mesh {
       caps: false,
     });
     parts.push(
-      shift(plate, [outR * 0.93 * Math.cos(o.at), d.y + halfW, outR * 0.93 * Math.sin(o.at)]),
+      shift(plate, [outR * 0.93 * dmath.cos(o.at), d.y + halfW, outR * 0.93 * dmath.sin(o.at)]),
     );
   }
   return merge(parts);
@@ -320,8 +327,8 @@ export function caliperBracket(o: CaliperOptions): Mesh {
   const r0 = d.r - 0.05;
   const pts: Vec3[][] = [];
   for (const rr of [0.09, r0]) {
-    const c: Vec3 = [rr * Math.cos(a), d.y - d.thick / 2 - 0.03, rr * Math.sin(a)];
-    const t: Vec3 = [-Math.sin(a), 0, Math.cos(a)];
+    const c: Vec3 = [rr * dmath.cos(a), d.y - d.thick / 2 - 0.03, rr * dmath.sin(a)];
+    const t: Vec3 = [-dmath.sin(a), 0, dmath.cos(a)];
     const w = 0.04;
     pts.push([
       [c[0] - t[0] * w, c[1] - 0.006, c[2] - t[2] * w],

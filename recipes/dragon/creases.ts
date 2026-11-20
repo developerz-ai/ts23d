@@ -7,6 +7,7 @@
 // join next to a declared fold still fails. Accidental joins were fixed in the geometry instead.
 
 import type { IntendedCrease, Vec3 } from '@developerz.ai/ts23d';
+import { dmath } from '@developerz.ai/ts23d';
 import { GROOVES } from './body.ts';
 import { lipWidth, MOUTH_Z } from './head.ts';
 import { SK } from './skeleton.ts';
@@ -21,7 +22,7 @@ const lerp = (a: Vec3, b: Vec3, t: number): Vec3 => [
 
 /** Points every ≤ `step` metres from a to b, both ends included. */
 function along(a: Vec3, b: Vec3, step: number): Vec3[] {
-  const n = Math.max(1, Math.ceil(Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]) / step));
+  const n = Math.max(1, Math.ceil(dmath.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]) / step));
   return Array.from({ length: n + 1 }, (_, i) => lerp(a, b, i / n));
 }
 
@@ -102,8 +103,8 @@ function head(): IntendedCrease[] {
 /** Jaw hinge frame → world: the jaw is sculpted at the hinge, then opened by the rest angle. */
 function jawWorld(x: number, y: number, z: number): Vec3 {
   const a = (H.open * Math.PI) / 180;
-  const c = Math.cos(a);
-  const s = Math.sin(a);
+  const c = dmath.cos(a);
+  const s = dmath.sin(a);
   return [H.hinge[0] + x * c + z * s, H.hinge[1] + y, H.hinge[2] - x * s + z * c];
 }
 

@@ -3,7 +3,14 @@
 // area-weighted vertex normals, and the conversion to the core Mesh (each quad split along its
 // shorter diagonal, UVs projected onto the trim sheet's `plain` strip like the SDF skins).
 
-import { type Mesh, MeshBuilder, type StripId, stripRect, type Vec3 } from '@developerz.ai/ts23d';
+import {
+  dmath,
+  type Mesh,
+  MeshBuilder,
+  type StripId,
+  stripRect,
+  type Vec3,
+} from '@developerz.ai/ts23d';
 import type { QuadMesh } from './base.ts';
 
 const ek = (a: number, b: number): number => (a < b ? a * 1048576 + b : b * 1048576 + a);
@@ -110,7 +117,7 @@ export function quadNormals(m: QuadMesh): Float64Array {
     }
   }
   for (let v = 0; v < n.length; v += 3) {
-    const l = Math.hypot(n[v] ?? 0, n[v + 1] ?? 0, n[v + 2] ?? 1) || 1;
+    const l = dmath.hypot(n[v] ?? 0, n[v + 1] ?? 0, n[v + 2] ?? 1) || 1;
     n[v] = (n[v] ?? 0) / l;
     n[v + 1] = (n[v + 1] ?? 0) / l;
     n[v + 2] = (n[v + 2] ?? 0) / l;
@@ -151,9 +158,9 @@ export function quadToMesh(
     b.vertex({ p, n: nn, uv: uv(p, nn), color: color(v, p, nn) });
   }
   const d2 = (a: number, c: number): number =>
-    ((m.p[a * 3] ?? 0) - (m.p[c * 3] ?? 0)) ** 2 +
-    ((m.p[a * 3 + 1] ?? 0) - (m.p[c * 3 + 1] ?? 0)) ** 2 +
-    ((m.p[a * 3 + 2] ?? 0) - (m.p[c * 3 + 2] ?? 0)) ** 2;
+    dmath.pow((m.p[a * 3] ?? 0) - (m.p[c * 3] ?? 0), 2) +
+    dmath.pow((m.p[a * 3 + 1] ?? 0) - (m.p[c * 3 + 1] ?? 0), 2) +
+    dmath.pow((m.p[a * 3 + 2] ?? 0) - (m.p[c * 3 + 2] ?? 0), 2);
   for (let f = 0; f < m.q.length; f += 4) {
     const [a = 0, bb = 0, c = 0, d = 0] = m.q.subarray(f, f + 4);
     if (d2(a, c) <= d2(bb, d)) b.tri(a, bb, c).tri(a, c, d);

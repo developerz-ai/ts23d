@@ -6,7 +6,7 @@
 // sculpt cell so the relief reads without breaking the silhouette.
 
 import type { Vec3 } from '../core/index.ts';
-import { createRng } from '../core/index.ts';
+import { createRng, dmath } from '../core/index.ts';
 import { valueNoise } from '../primitives/index.ts';
 import { smoothstep } from './creature-curve.ts';
 import type { Relief } from './creature-mesh.ts';
@@ -28,7 +28,7 @@ export function furRelief(res: number, size: number, seed: number, lie: FurLie):
     amp,
     at: (p) => {
       const d0 = lie.dir(p);
-      const l = Math.hypot(d0[0], d0[1], d0[2]) || 1;
+      const l = dmath.hypot(d0[0], d0[1], d0[2]) || 1;
       const d: Vec3 = [d0[0] / l, d0[1] / l, d0[2] / l];
       // Shrink the along-flow coordinate: features become locks 3× longer than wide.
       const a = (p[0] * d[0] + p[1] * d[1] + p[2] * d[2]) * (1 - 1 / 3);

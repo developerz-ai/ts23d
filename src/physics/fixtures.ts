@@ -2,7 +2,7 @@
 // built with the core MeshBuilder so the module's tests need no sideways import of /primitives.
 
 import type { Mesh, Vec3 } from '../core/index.ts';
-import { MeshBuilder } from '../core/index.ts';
+import { dmath, MeshBuilder } from '../core/index.ts';
 import { type StripId, stripRect } from '../material/index.ts';
 
 const vOf = (strip: string): number => {
@@ -57,8 +57,8 @@ export function cylinderMesh(radius: number, length: number, segments = 32, stri
   const ring = (z: number): number[] =>
     Array.from({ length: segments }, (_, i) => {
       const a = (2 * Math.PI * i) / segments;
-      const p: Vec3 = [Math.cos(a) * radius, Math.sin(a) * radius, z];
-      return b.vertex({ p, n: [Math.cos(a), Math.sin(a), 0], uv: [0.5, v], color: [1, 1, 1] });
+      const p: Vec3 = [dmath.cos(a) * radius, dmath.sin(a) * radius, z];
+      return b.vertex({ p, n: [dmath.cos(a), dmath.sin(a), 0], uv: [0.5, v], color: [1, 1, 1] });
     });
   const lo = ring(-length / 2);
   const hi = ring(length / 2);

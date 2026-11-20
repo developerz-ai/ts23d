@@ -3,6 +3,8 @@
 // measures both. All integer bookkeeping and fixed tie-breaks (lowest triangle index wins), so
 // the output is byte-deterministic.
 
+import { dmath } from '../core/index.ts';
+
 const CACHE = 32;
 const DECAY = 1.5;
 const LAST_TRI = 0.75;
@@ -11,10 +13,10 @@ const VALENCE_POWER = 0.5;
 const MAX_VALENCE = 64;
 
 const CACHE_SCORE = Float64Array.from({ length: CACHE }, (_, i) =>
-  i < 3 ? LAST_TRI : (1 - (i - 3) / (CACHE - 3)) ** DECAY,
+  i < 3 ? LAST_TRI : dmath.pow(1 - (i - 3) / (CACHE - 3), DECAY),
 );
 const VALENCE_SCORE = Float64Array.from({ length: MAX_VALENCE + 1 }, (_, n) =>
-  n === 0 ? 0 : VALENCE_SCALE * n ** -VALENCE_POWER,
+  n === 0 ? 0 : VALENCE_SCALE * dmath.pow(n, -VALENCE_POWER),
 );
 
 const vertexScore = (pos: number, live: number): number =>

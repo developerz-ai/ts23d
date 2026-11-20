@@ -8,6 +8,7 @@
 // the cost and never the answer.
 
 import type { Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import { pointTriDist } from './point-triangle.ts';
 
 export interface SegmentHit {
@@ -77,7 +78,7 @@ function segmentSegment(
     }
   }
   along = s;
-  return Math.hypot(rx + d1x * s - d2x * t, ry + d1y * s - d2y * t, rz + d1z * s - d2z * t);
+  return dmath.hypot(rx + d1x * s - d2x * t, ry + d1y * s - d2y * t, rz + d1z * s - d2z * t);
 }
 
 /** Distance from segment p → q to the triangle at `T[o..o+9)`: 0 when it passes through. Sets

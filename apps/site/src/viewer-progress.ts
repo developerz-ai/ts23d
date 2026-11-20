@@ -3,6 +3,7 @@
 // towards 95 % of the estimate, never claims done), and says "est." when it shows a guess. Also
 // the "Load LOD0" button heavy assets get. A failed compile ends the bar in a visible message.
 
+import { dmath } from '@developerz.ai/ts23d/core';
 import { estimateSeconds, isHeavy } from './lod-policy.ts';
 import { clearMessage, endInMessage, type LoadingParts, loadingParts } from './viewer-fallback.ts';
 import type { Subject } from './viewer-load.ts';
@@ -39,7 +40,7 @@ export class Progress {
     const step = (): void => {
       const s = (performance.now() - t0) / 1000;
       // 1 − e^(−t/τ) with τ = estimate/2 reaches ~86 % at the estimate and creeps after it.
-      const f = estimate ? Math.min(0.95, 1 - Math.exp((-2 * s) / estimate)) : null;
+      const f = estimate ? Math.min(0.95, 1 - dmath.exp((-2 * s) / estimate)) : null;
       if (this.bar) {
         this.bar.style.width = f === null ? '' : `${(f * 100).toFixed(1)}%`;
         this.bar.classList.toggle('indeterminate', f === null);

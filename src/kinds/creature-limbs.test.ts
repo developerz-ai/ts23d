@@ -3,6 +3,7 @@
 
 import { describe, expect, it } from 'bun:test';
 import type { Mesh, Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import { LEG_SIDES, legTubes } from './creature-limbs.ts';
 import { bonesOf } from './creature-skeleton.ts';
 import type { CreatureSpec } from './creature-spec.ts';
@@ -67,7 +68,7 @@ describe('legTubes: the far legs keep their colour blocks', () => {
     const r = (fore?.radii[1] ?? 0) * 1.12;
     const ring = new Set<string>();
     for (let i = 0; i < m.positions.length; i += 3) {
-      const d = Math.hypot(
+      const d = dmath.hypot(
         (m.positions[i] ?? 0) - elbow[0],
         (m.positions[i + 1] ?? 0) - elbow[1],
         (m.positions[i + 2] ?? 0) - elbow[2],

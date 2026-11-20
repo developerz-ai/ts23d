@@ -2,6 +2,7 @@
 // sits off the mirror direction (cuticle tilt), and forward scatter is brighter than sideways.
 
 import { describe, expect, it } from 'bun:test';
+import { dmath } from '../../core/index.ts';
 import { evalHair, sampleSphere } from './hair.ts';
 
 const T = [0, 0, 1];
@@ -44,7 +45,7 @@ describe('hair lobes', () => {
     const wo = [1, 0, 0];
     const at = (deg: number): number => {
       const a = (deg * Math.PI) / 180;
-      evalHair(T, wo, [0, 0, 0], 0.2, wo, [Math.cos(a), 0, Math.sin(a)], f);
+      evalHair(T, wo, [0, 0, 0], 0.2, wo, [dmath.cos(a), 0, dmath.sin(a)], f);
       return f[0] ?? 0;
     };
     // Mirror about the strand normal is θi = −θo = 0; the tilt moves the peak to θi ≈ 2α ≠ 0.

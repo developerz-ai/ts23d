@@ -3,7 +3,7 @@
 // marks stay few.
 
 import { describe, expect, it } from 'bun:test';
-import { createRng } from '@developerz.ai/ts23d';
+import { createRng, dmath } from '@developerz.ai/ts23d';
 import type { QuadMesh } from './base.ts';
 import { faceHead } from './head.ts';
 import { GOBLIN, ORC } from './races.ts';
@@ -41,7 +41,7 @@ describe('relieve', () => {
     const m = grid();
     const out = relieve(m, [{ a: [0.02, 0.02, 0], b: [0.02, 0.02, 0], r: 0.012, h: 0.002 }]);
     for (let v = 0; v < 25; v++) {
-      const d = Math.hypot((m.p[v * 3] ?? 0) - 0.02, (m.p[v * 3 + 1] ?? 0) - 0.02);
+      const d = dmath.hypot((m.p[v * 3] ?? 0) - 0.02, (m.p[v * 3 + 1] ?? 0) - 0.02);
       const dz = Math.abs(out.p[v * 3 + 2] ?? 0);
       if (d >= 0.012) expect(dz).toBe(0);
       else expect(dz).toBeGreaterThan(0);
@@ -58,7 +58,7 @@ describe('relieve', () => {
   });
 
   it('measures the distance to a segment, not to its line', () => {
-    expect(segDist([3, 4, 0], [0, 0, 0], [1, 0, 0])).toBeCloseTo(Math.hypot(2, 4), 12);
+    expect(segDist([3, 4, 0], [0, 0, 0], [1, 0, 0])).toBeCloseTo(dmath.hypot(2, 4), 12);
     expect(segDist([0.5, 2, 0], [0, 0, 0], [1, 0, 0])).toBeCloseTo(2, 12);
   });
 });

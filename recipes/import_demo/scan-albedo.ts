@@ -4,6 +4,8 @@
 // periodic in u (no seam line), deterministic.
 
 /** Smooth value noise on a lattice periodic in u (cells × cells/2). */
+import { dmath } from '@developerz.ai/ts23d';
+
 function noise(u: number, v: number, cells: number, seed: number): number {
   const h = (i: number, j: number): number => {
     let x = (((i % cells) + cells) % cells) * 73856093 + j * 19349663 + seed * 83492791;
@@ -33,7 +35,7 @@ export function poreTexture(
       const u = (x + 0.5) / width;
       const v = (y + 0.5) / height;
       const mottle = noise(u, v, 18, 1) * 0.5 + noise(u, v, 48, 2) * 0.3;
-      const pore = Math.max(0, noise(u, v, 160, 3)) ** 3;
+      const pore = dmath.pow(Math.max(0, noise(u, v, 160, 3)), 3);
       const k = 243 + 9 * mottle - 40 * pore;
       const o = (y * width + x) * 4;
       data[o] = Math.round(Math.min(255, k + 4));

@@ -3,6 +3,7 @@
 // placement that lands exactly on the arch edges. Everything a panel's lo/hi needs.
 
 import type { Vec3 } from '@developerz.ai/ts23d';
+import { dmath } from '@developerz.ai/ts23d';
 import { ARCH_F, ARCH_R, X_COCKPIT_REAR, X_COWL, X_FA, X_RA, Z_FA, Z_RA } from '../dims.ts';
 import { clamp, len, sub } from '../lib/geo.ts';
 import type { Surface } from '../lib/grid.ts';
@@ -101,7 +102,7 @@ export function archU(S: Surface, s: number): number | null {
   }
   const a = archAt(x);
   if (!a) return null;
-  const z = a.z + Math.sqrt(Math.max(0, a.r * a.r - (x - a.x) ** 2));
+  const z = a.z + Math.sqrt(Math.max(0, a.r * a.r - dmath.pow(x - a.x, 2)));
   return uAtZ(S, s, z);
 }
 
@@ -114,7 +115,7 @@ export function cockpitY(x: number): number {
   const rc = 0.16;
   if (x < rear + rc) {
     const t = (x - rear) / rc;
-    return w * Math.sqrt(Math.max(0, 1 - (1 - t) ** 2));
+    return w * Math.sqrt(Math.max(0, 1 - dmath.pow(1 - t, 2)));
   }
   return w;
 }
@@ -159,7 +160,7 @@ export const archEdges = (pad = 0.0015, inner = 12): number[] =>
     ...[a.x - a.r - pad, a.x - a.r + pad, a.x + a.r - pad, a.x + a.r + pad].map((x) => sAtX(x, 5)),
     // Rows across the arch so even the far LOD keeps a round opening.
     ...Array.from({ length: inner - 1 }, (_, k) =>
-      sAtX(a.x - a.r * Math.cos(((k + 1) / inner) * Math.PI), 5),
+      sAtX(a.x - a.r * dmath.cos(((k + 1) / inner) * Math.PI), 5),
     ),
   ]);
 

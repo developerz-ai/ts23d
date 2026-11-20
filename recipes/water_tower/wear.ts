@@ -3,7 +3,7 @@
 // cap ring and the post heads; the shaded north faces of the footings grow moss; sun bleaches what
 // faces up. Pure colour work on finished meshes (shape stays in water_tower.ts), seeded noise only.
 
-import { type Mesh, type Rng, type Vec3, valueNoise } from '@developerz.ai/ts23d';
+import { dmath, type Mesh, type Rng, type Vec3, valueNoise } from '@developerz.ai/ts23d';
 
 /** One vertex as the shader sees it: world position, normal and current colour. */
 export type Shade = (p: Vec3, n: Vec3, c: Vec3) => Vec3;
@@ -54,12 +54,12 @@ export function tankWear(rng: Rng, w: TankWear): Shade {
   const h = w.topZ - w.floorZ;
   return (p, _n, c) => {
     const up = (p[2] - w.floorZ) / h;
-    const a = Math.atan2(p[1], p[0]);
+    const a = dmath.atan2(p[1], p[0]);
     let out = mix(c, SILVER, 0.35 * smooth(0.82, 1, up) * (0.6 + 0.4 * blot(p)));
     out = mix(out, ALGAE, 0.7 * (1 - smooth(0.0, 0.22, up)) * (0.7 + 0.3 * blot(p)));
     const s = streak([p[0] * 1.6, p[1] * 1.6, p[2] * 0.08]);
     out = mix(out, WET, 0.75 * smooth(0.1, 0.55, s) * (1 - smooth(0.35, 1, up)));
-    const da = Math.abs(Math.atan2(Math.sin(a - w.outletAngle), Math.cos(a - w.outletAngle)));
+    const da = Math.abs(dmath.atan2(dmath.sin(a - w.outletAngle), dmath.cos(a - w.outletAngle)));
     const under = (1 - smooth(0.04, 0.12, da)) * (1 - smooth(w.outletZ - 0.2, w.outletZ, p[2]));
     return mix(out, WET, 0.7 * under);
   };

@@ -7,6 +7,7 @@
 // brooches joined by a leather cord. Each layer exists only where it can show.
 
 import {
+  dmath,
   type Field,
   hex,
   type IntendedCrease,
@@ -173,8 +174,8 @@ function tunicRegion(neck: NeckSection): Field {
 export const mantleRegion: Field = (p) => {
   const z0 = L.mz - 0.3 * H;
   const w = 0.118 + Math.max(0, z0 - p[2]) * 0.25;
-  const a = Math.atan2(p[1], -p[0]);
-  const hem = L.mz - 0.97 * H + 0.004 * Math.cos(a * 11);
+  const a = dmath.atan2(p[1], -p[0]);
+  const hem = L.mz - 0.97 * H + 0.004 * dmath.cos(a * 11);
   return Math.max(hem - p[2], Math.min(p[0] - (L.gx - 0.36 * H), w - Math.abs(p[1])));
 };
 

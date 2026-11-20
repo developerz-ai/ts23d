@@ -7,6 +7,7 @@ import {
   type Clip,
   type CompiledAsset,
   compile,
+  dmath,
   quatRotate,
   runQa,
   type StripId,
@@ -50,7 +51,7 @@ function tip(c: Clip, bone: string, t: number): Vec3 {
   ]);
   return [w.head[0] + o[0], w.head[1] + o[1], w.head[2] + o[2]];
 }
-const gap = (a: Vec3, b: Vec3): number => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+const gap = (a: Vec3, b: Vec3): number => dmath.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
 const headTip = (k: number): string => `head_${k}_0`;
 
 function correlation(a: readonly number[], b: readonly number[]): number {
@@ -60,8 +61,8 @@ function correlation(a: readonly number[], b: readonly number[]): number {
   a.forEach((x, i) => {
     const y = b[i] ?? 0;
     ab += (x - ma) * (y - mb);
-    aa += (x - ma) ** 2;
-    bb += (y - mb) ** 2;
+    aa += dmath.pow(x - ma, 2);
+    bb += dmath.pow(y - mb, 2);
   });
   return ab / Math.sqrt(aa * bb);
 }
@@ -168,7 +169,7 @@ describe('strikes', () => {
         const [a, b, d] = [path[i - 1] as Vec3, path[i] as Vec3, path[i + 1] as Vec3];
         peak = Math.max(
           peak,
-          Math.hypot(a[0] - 2 * b[0] + d[0], a[1] - 2 * b[1] + d[1], a[2] - 2 * b[2] + d[2]) /
+          dmath.hypot(a[0] - 2 * b[0] + d[0], a[1] - 2 * b[1] + d[1], a[2] - 2 * b[2] + d[2]) /
             (dt * dt),
         );
       }
@@ -183,7 +184,7 @@ describe('strikes', () => {
       if (!root) throw new Error('no root track');
       const n = root.times.length;
       const shift = Array.from({ length: n }, (_, i) =>
-        Math.hypot(root.values[i * 3] ?? 0, root.values[i * 3 + 1] ?? 0),
+        dmath.hypot(root.values[i * 3] ?? 0, root.values[i * 3 + 1] ?? 0),
       );
       expect(Math.max(...shift)).toBeGreaterThan(0.01);
       for (const leg of LEG_FEET) {

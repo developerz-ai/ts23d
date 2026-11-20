@@ -8,6 +8,7 @@
 // eyeball's dominant colour, whatever it is (white, yellow, black).
 
 import type { Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import { type ConnectIssue, cm } from './connections-declare.ts';
 import { cross, dot, norm, sub } from './connections-partner.ts';
 import type { Shell } from './connections-shells.ts';
@@ -42,7 +43,7 @@ function trianglesOf(eye: readonly Shell[]): Tri[] {
       const v = (k: number): Vec3 => [P[o + k] ?? 0, P[o + k + 1] ?? 0, P[o + k + 2] ?? 0];
       const [a, b, c] = [v(0), v(3), v(6)];
       const x = cross(sub(b, a), sub(c, a));
-      const w = Math.hypot(...x) / 2;
+      const w = dmath.norm(x) / 2;
       if (w <= 0) continue;
       const lum = [0, 3, 6].reduce(
         (m, k) =>
@@ -78,7 +79,7 @@ export function eyeIssues(
 ): { eye: Eye; issues: ConnectIssue[] } {
   const tris = trianglesOf(eye);
   const centre = weighted(tris);
-  const radius = tris.reduce((m, t) => Math.max(m, Math.hypot(...sub(t.p, centre))), 0);
+  const radius = tris.reduce((m, t) => Math.max(m, dmath.norm(sub(t.p, centre))), 0);
   const lums = tris.map((t) => t.lum).sort((a, b) => a - b);
   const min = lums[0] ?? 0;
   const max = lums[lums.length - 1] ?? 0;
@@ -114,7 +115,7 @@ export function eyeIssues(
     const dom = lums[lums.length >> 1] ?? 0;
     const sclera = (t: Tri): boolean => Math.abs(t.lum - dom) <= 0.08;
     const angle = (t: Tri): number =>
-      Math.acos(Math.max(-1, Math.min(1, dot(norm(sub(t.p, centre)), gaze))));
+      dmath.acos(Math.max(-1, Math.min(1, dot(norm(sub(t.p, centre)), gaze))));
     const iris = tris
       .filter((t) => !sclera(t) && angle(t) < Math.PI / 2)
       .map(angle)
@@ -128,9 +129,9 @@ export function eyeIssues(
       const d = norm(sub(t.p, centre));
       if (dot(d, gaze) <= 0 || hq.inside(t.p) || hit(t.p, gaze, radius * 2)) continue;
       if (angle(t) <= irisAngle) shown += t.w;
-      else if (sclera(t) && dot(d, up) > Math.sin(irisAngle)) {
+      else if (sclera(t) && dot(d, up) > dmath.sin(irisAngle)) {
         above += t.w;
-        top = Math.max(top, (dot(d, up) - Math.sin(irisAngle)) * radius);
+        top = Math.max(top, (dot(d, up) - dmath.sin(irisAngle)) * radius);
       }
     }
     if (shown > 0 && above / shown > STARE)
@@ -156,9 +157,9 @@ export function gazeIssues(eyes: readonly Eye[], humanoid: boolean): ConnectIssu
     const m = norm(sub(l.centre, r.centre));
     const k = 2 * dot(l.gaze, m);
     const mirror: Vec3 = [l.gaze[0] - k * m[0], l.gaze[1] - k * m[1], l.gaze[2] - k * m[2]];
-    const off = (Math.acos(Math.max(-1, Math.min(1, dot(mirror, r.gaze)))) * 180) / Math.PI;
+    const off = (dmath.acos(Math.max(-1, Math.min(1, dot(mirror, r.gaze)))) * 180) / Math.PI;
     const diverge = dot(sub(l.gaze, r.gaze), m);
-    const wall = (Math.asin(Math.max(-1, Math.min(1, diverge / 2))) * 180) / Math.PI;
+    const wall = (dmath.asin(Math.max(-1, Math.min(1, diverge / 2))) * 180) / Math.PI;
     const at: Vec3 = [
       (l.centre[0] + r.centre[0]) / 2,
       (l.centre[1] + r.centre[1]) / 2,
@@ -170,7 +171,7 @@ export function gazeIssues(eyes: readonly Eye[], humanoid: boolean): ConnectIssu
         severity: 'error',
         part: l.part,
         at,
-        radius: Math.hypot(...sub(l.centre, r.centre)) / 2 + l.radius,
+        radius: dmath.norm(sub(l.centre, r.centre)) / 2 + l.radius,
         message: `'${l.part}' and '${r.part}' look different ways: ${off.toFixed(0)}° off mirror-symmetric${humanoid && wall > 2 ? `, diverging ${wall.toFixed(0)}° (wall-eyed)` : ''}`,
         fix: 'aim both pupils at one point in front of the face (mirror the eye rotation across the centre plane)',
       });

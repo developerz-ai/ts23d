@@ -2,7 +2,7 @@
 // spins (so `run` still exports), a socket riding the `lower` bone, and a `wave` clip keying a
 // bone and the morph weight. Not exported publicly.
 
-import { type Asset, type Bone, type Clip, defineAsset, merge } from '../core/index.ts';
+import { type Asset, type Bone, type Clip, defineAsset, dmath, merge } from '../core/index.ts';
 import { hingeMorph, skinWeights, weightBonesOf } from '../passes/index.ts';
 import { box, cylinder } from '../primitives/index.ts';
 
@@ -22,7 +22,7 @@ const wave: Clip = {
       bone: 'lower',
       path: 'rotation',
       times: new Float32Array([0, 0.5, 1]),
-      values: new Float32Array([0, 0, 0, 1, 0, 0, Math.sin(0.4), Math.cos(0.4), 0, 0, 0, 1]),
+      values: new Float32Array([0, 0, 0, 1, 0, 0, dmath.sin(0.4), dmath.cos(0.4), 0, 0, 0, 1]),
     },
     {
       part: 'body',

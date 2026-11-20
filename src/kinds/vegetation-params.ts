@@ -3,6 +3,7 @@
 // spreads and overrides.
 
 import type { Vec2, Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 
 /** Crown envelope: how level-1 branch length varies up the trunk (Weber–Penn `Shape`). */
 export type CrownShape =
@@ -155,9 +156,9 @@ export function shapeRatio(shape: CrownShape, r: number): number {
     case 'conical':
       return 0.2 + 0.8 * x;
     case 'spherical':
-      return 0.2 + 0.8 * Math.sin(Math.PI * x);
+      return 0.2 + 0.8 * dmath.sin(Math.PI * x);
     case 'hemispherical':
-      return 0.2 + 0.8 * Math.sin((Math.PI / 2) * x);
+      return 0.2 + 0.8 * dmath.sin((Math.PI / 2) * x);
     case 'cylindrical':
       return 1;
     case 'tapered':

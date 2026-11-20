@@ -10,6 +10,7 @@ import {
   type CompiledAsset,
   compile,
   defineAsset,
+  dmath,
   type Lod,
   worldTransforms,
 } from '../core/index.ts';
@@ -33,15 +34,15 @@ function nodeWorld(g: Gltf): Map<string, { origin: number[]; yaw: number }> {
     const n = g.nodes[i];
     if (!n) return;
     const [x, y, z] = n.translation ?? [0, 0, 0];
-    const c = Math.cos(yaw);
-    const s = Math.sin(yaw);
+    const c = dmath.cos(yaw);
+    const s = dmath.sin(yaw);
     const o = [
       (origin[0] ?? 0) + (x ?? 0) * c - (y ?? 0) * s,
       (origin[1] ?? 0) + (x ?? 0) * s + (y ?? 0) * c,
       (origin[2] ?? 0) + (z ?? 0),
     ];
     const q = n.rotation ?? [0, 0, 0, 1];
-    const w = yaw + 2 * Math.atan2(q[2] ?? 0, q[3] ?? 1);
+    const w = yaw + 2 * dmath.atan2(q[2] ?? 0, q[3] ?? 1);
     out.set(n.name, { origin: o, yaw: w });
     for (const k of n.children ?? []) walk(k, o, w);
   };
@@ -50,7 +51,7 @@ function nodeWorld(g: Gltf): Map<string, { origin: number[]; yaw: number }> {
   return out;
 }
 
-const angle = (a: number): number => Math.atan2(Math.sin(a), Math.cos(a));
+const angle = (a: number): number => dmath.atan2(dmath.sin(a), dmath.cos(a));
 
 /** Each part of `asset` that became a GLB node matches its QA world transform. */
 function expectPlaced(asset: CompiledAsset): number {

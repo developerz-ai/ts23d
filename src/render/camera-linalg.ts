@@ -35,7 +35,7 @@ export function smallestEigenvector(S: number[][]): number[] {
   };
   for (let sweep = 0; sweep < 60; sweep++) {
     let off = 0;
-    for (let p = 0; p < n; p++) for (let q = p + 1; q < n; q++) off += at(a, p, q) ** 2;
+    for (let p = 0; p < n; p++) for (let q = p + 1; q < n; q++) off += at(a, p, q) * at(a, p, q);
     if (off < 1e-24) break;
     for (let p = 0; p < n; p++)
       for (let q = p + 1; q < n; q++) {

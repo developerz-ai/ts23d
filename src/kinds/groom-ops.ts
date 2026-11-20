@@ -6,7 +6,7 @@
 // the guides here (children inherit them), `strand` ops (pinch, clump, curl, frizz) act on the
 // dense child strands in Blender's groom task and on the guides only for the CPU tier.
 
-import { Ts23dError, type Vec3 } from '../core/index.ts';
+import { dmath, Ts23dError, type Vec3 } from '../core/index.ts';
 
 /** Negative where an op acts: a scalp zone (crown, nape, fringe…) or a landmark mask. */
 export type GroomField = (p: Vec3) => number;
@@ -79,7 +79,7 @@ export function checkGroomOps(
       no(`seed ${o.seed}`, 'use an integer seed');
     switch (o.op) {
       case 'comb':
-        if (!finite(o.toward) || Math.hypot(...o.toward) < 1e-9 || !inRange(o.strength, 0, 1))
+        if (!finite(o.toward) || dmath.norm(o.toward) < 1e-9 || !inRange(o.strength, 0, 1))
           no(`toward [${o.toward}], strength ${o.strength}`, 'a non-zero direction, strength 0..1');
         return;
       case 'puff':
@@ -92,7 +92,7 @@ export function checkGroomOps(
           no(`length ${o.length}`, 'length is 1 mm..2 m');
         if (
           o.plane &&
-          (!finite(o.plane.at) || !finite(o.plane.normal) || Math.hypot(...o.plane.normal) < 1e-9)
+          (!finite(o.plane.at) || !finite(o.plane.normal) || dmath.norm(o.plane.normal) < 1e-9)
         )
           no(
             `plane at [${o.plane.at}], normal [${o.plane.normal}]`,
@@ -128,7 +128,7 @@ export function checkGroomOps(
         if (!inRange(o.perCm2, 0.01, 2000)) no(`perCm2 ${o.perCm2}`, 'strands per cm² 0.01..2000');
         return;
       case 'slide':
-        if (!finite(o.by) || Math.hypot(...o.by) > 0.1) no(`by [${o.by}]`, 'slide ≤ 10 cm');
+        if (!finite(o.by) || dmath.norm(o.by) > 0.1) no(`by [${o.by}]`, 'slide ≤ 10 cm');
         return;
       case 'add':
         if (!(Number.isInteger(o.count) && o.count >= 1 && o.count <= 10000))

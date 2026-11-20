@@ -4,6 +4,7 @@
 // along the body, so arc length is exact; joints are then walked on at the skeleton's bone lengths.
 
 import type { Vec3 } from '@developerz.ai/ts23d';
+import { dmath } from '@developerz.ai/ts23d';
 import { add, norm, scale, smooth, sub, TAU } from '../_lib/body-plan-kit.ts';
 import { seatHeight, settleHeights, TOTAL } from './shape.ts';
 import type { SpinePose } from './solve.ts';
@@ -19,9 +20,7 @@ export const jointArcs = (rest: SpinePose): number[] => {
   for (let i = 1; i < rest.at.length; i++)
     s.push(
       (s[i - 1] ?? 0) +
-        Math.hypot(
-          ...(sub(rest.at[i] as Vec3, rest.at[i - 1] as Vec3) as [number, number, number]),
-        ),
+        dmath.norm(sub(rest.at[i] as Vec3, rest.at[i - 1] as Vec3) as [number, number, number]),
     );
   return s;
 };
@@ -37,8 +36,8 @@ function integrate(
   let [x, y, h] = [start[0], start[1], heading];
   for (let u = 0; u < length; u += STEP) {
     h += k(u + STEP / 2) * STEP;
-    x += Math.cos(h) * STEP;
-    y += Math.sin(h) * STEP;
+    x += dmath.cos(h) * STEP;
+    y += dmath.sin(h) * STEP;
     pts.push([x, y]);
   }
   return pts;
@@ -70,16 +69,16 @@ export const IDLE_GROUND = {
 
 export function restingPose(arcs: readonly number[], breathe: number, shift: number): SpinePose {
   const g = IDLE_GROUND;
-  const kw = (g.swing * (1 + 0.06 * breathe)) / (g.lambda / TAU) ** 2;
+  const kw = (g.swing * (1 + 0.06 * breathe)) / dmath.pow(g.lambda / TAU, 2);
   // u runs from the tail (0) to the snout (TOTAL).
   const curvature = (u: number): number => {
     const s = TOTAL - u;
-    const coil = 1 / Math.sqrt(g.inner ** 2 + (g.spacing * u) / Math.PI);
+    const coil = 1 / Math.sqrt(g.inner * g.inner + (g.spacing * u) / Math.PI);
     const wave = smooth(g.front, g.front - 0.3, s) * smooth(0.05, 0.25, s);
     // The head shift turns the snout about 9 degrees over the neck's 0.26 m.
     const turn = ((0.15 * shift) / 0.26) * smooth(0.12, 0.2, s) * smooth(0.42, 0.34, s);
     const open = 1 - 0.55 * smooth(g.front + 0.2, g.front - 0.2, s);
-    return coil * open + kw * wave * Math.sin((TAU * (g.front - s)) / g.lambda) + turn;
+    return coil * open + kw * wave * dmath.sin((TAU * (g.front - s)) / g.lambda) + turn;
   };
   const path = integrate([g.inner, 0], Math.PI / 2, TOTAL + 0.05, curvature);
   // The spiral's centre sits a little off its start: centre the coil on the rest pile.
@@ -108,7 +107,7 @@ export interface LaidFront {
   readonly heading: (s: number) => number;
 }
 
-const headingOf = (v: Vec3): number => Math.atan2(v[1], v[0]);
+const headingOf = (v: Vec3): number => dmath.atan2(v[1], v[0]);
 const wrap = (a: number): number => a - TAU * Math.round(a / TAU);
 
 /**
@@ -133,7 +132,7 @@ export function laidFront(
     const lo = (H - (arcs[hinge - 1] ?? 0)) / 2;
     if (u < lo) return 0;
     if (u < lo + span) return turn / span;
-    return -1.6 * smooth(curlEnd, curlEnd + 0.25, u) * Math.sin((TAU * (u - curlEnd)) / 1.1);
+    return -1.6 * smooth(curlEnd, curlEnd + 0.25, u) * dmath.sin((TAU * (u - curlEnd)) / 1.1);
   });
   const front = arcs.slice(0, hinge).map((s) => at(path, H - s));
   // Heights: on the ground, or draped over the pile turns beneath (the pile itself stays put).
@@ -158,7 +157,7 @@ export function laidFront(
     ],
     heading: (s) => {
       const [p, q] = [at(path, H - s - 0.005), at(path, H - s + 0.005)];
-      return Math.atan2(q[1] - p[1], q[0] - p[0]);
+      return dmath.atan2(q[1] - p[1], q[0] - p[0]);
     },
   };
 }
@@ -171,7 +170,7 @@ function blendDir(a: Vec3, b: Vec3, k: number): Vec3 {
   const z = a[2] + (b[2] - a[2]) * k;
   const hx = a[0] + (b[0] - a[0]) * k;
   const hy = a[1] + (b[1] - a[1]) * k;
-  const l = Math.hypot(hx, hy);
+  const l = dmath.hypot(hx, hy);
   const r = Math.sqrt(Math.max(0, 1 - z * z));
   return l < 1e-6 ? [0, 0, Math.sign(z) || 1] : [(r * hx) / l, (r * hy) / l, z];
 }
@@ -212,15 +211,15 @@ export function rearing(
   // The raised part keeps the laid body's track in plan, pitched up by `pitchAt`.
   const h = (from: number): Vec3 => {
     const a = front.heading(L - from);
-    return [Math.cos(a), Math.sin(a), 0];
+    return [dmath.cos(a), dmath.sin(a), 0];
   };
   const along = (from: number): Vec3 => {
     const [phi, d] = [pitchAt(from, L), h(from)];
-    return [d[0] * Math.cos(phi), d[1] * Math.cos(phi), Math.sin(phi)];
+    return [d[0] * dmath.cos(phi), d[1] * dmath.cos(phi), dmath.sin(phi)];
   };
   const back = (from: number): Vec3 => {
     const [phi, d] = [pitchAt(from, L), h(from)];
-    return [-d[0] * Math.sin(phi), -d[1] * Math.sin(phi), Math.cos(phi)];
+    return [-d[0] * dmath.sin(phi), -d[1] * dmath.sin(phi), dmath.cos(phi)];
   };
   // The rising profile, integrated a millimetre at a time from the base.
   const dz = 0.001;

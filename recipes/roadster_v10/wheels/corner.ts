@@ -4,7 +4,7 @@
 // outer face +Y) and mirrored for the right side so the outer face always points outboard.
 
 import type { BuildContext, Lod, Mesh, Rng, Vec3 } from '@developerz.ai/ts23d';
-import { merge } from '@developerz.ai/ts23d';
+import { dmath, merge } from '@developerz.ai/ts23d';
 import type { Corner } from '../chassis/points.ts';
 import { C } from '../lib/colors.ts';
 import { mirrorY, rod, shift, sub, tube } from '../lib/geo.ts';
@@ -118,9 +118,9 @@ export function uprightMesh(lod: Lod, c: Corner): Mesh {
     // Brake hose from the caliper up the knuckle.
     const a = c.caliperAt;
     const cp: Vec3 = [
-      (c.disc.r - 0.03) * Math.cos(a),
+      (c.disc.r - 0.03) * dmath.cos(a),
       c.disc.y - c.disc.thick / 2 - 0.03,
-      (c.disc.r - 0.03) * Math.sin(a),
+      (c.disc.r - 0.03) * dmath.sin(a),
     ];
     parts.push(
       tube(

@@ -4,7 +4,7 @@
 // a cap facing along the plane normal, in its own colour. Planes apply in order, so a later plane
 // also trims the earlier caps and its loops close.
 
-import { type Mesh, MeshBuilder, triangulate, type Vec3 } from '@developerz.ai/ts23d';
+import { dmath, type Mesh, MeshBuilder, triangulate, type Vec3 } from '@developerz.ai/ts23d';
 
 export interface Cut {
   readonly at: Vec3;
@@ -29,7 +29,7 @@ const soup = (m: Mesh): Soup => ({
 });
 
 function clipOnce(s: Soup, cut: Cut, cap: Vec3): Soup {
-  const len = Math.hypot(...cut.normal) || 1;
+  const len = dmath.norm(cut.normal) || 1;
   const N: Vec3 = [cut.normal[0] / len, cut.normal[1] / len, cut.normal[2] / len];
   const d = (i: number): number =>
     ((s.p[i * 3] ?? 0) - cut.at[0]) * N[0] +
@@ -109,7 +109,7 @@ function capLoops(out: Soup, segs: [number, number][], N: Vec3, cap: Vec3): void
   const u: Vec3 = Math.abs(N[2]) < 0.9 ? [0, 0, 1] : [1, 0, 0];
   // Frame (U, W) on the plane with U × W = N, so CCW triangles face N.
   const W: Vec3 = [N[1] * u[2] - N[2] * u[1], N[2] * u[0] - N[0] * u[2], N[0] * u[1] - N[1] * u[0]];
-  const wl = Math.hypot(...W) || 1;
+  const wl = dmath.norm(W) || 1;
   const Wn: Vec3 = [W[0] / wl, W[1] / wl, W[2] / wl];
   const U: Vec3 = [
     Wn[1] * N[2] - Wn[2] * N[1],

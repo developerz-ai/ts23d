@@ -4,7 +4,7 @@
 // the flat under-tray, the front splitter and the rear diffuser. All static; LOD-gated detail.
 
 import type { Lod, Mesh, Vec3 } from '@developerz.ai/ts23d';
-import { lathe, merge, planar, prism } from '@developerz.ai/ts23d';
+import { dmath, lathe, merge, planar, prism } from '@developerz.ai/ts23d';
 import { ARCH_F, ARCH_R, X_FA, X_FIREWALL, X_RA, Y_WF, Y_WR, Z_FA, Z_RA } from '../dims.ts';
 import { C } from '../lib/colors.ts';
 import { bar, bothSides, bx, rod, shift } from '../lib/geo.ts';
@@ -27,8 +27,8 @@ function liner(lod: Lod, x: number, z: number, r: number, yIn: number, yOut: num
   const pts: Vec3[][] = [];
   for (let i = 0; i <= n; i++) {
     const a = a0 + ((a1 - a0) * i) / n;
-    const c = Math.cos(a);
-    const s = Math.sin(a);
+    const c = dmath.cos(a);
+    const s = dmath.sin(a);
     pts.push([
       [x + r * c, yIn, z + r * s],
       [x + r * c, yOut, z + r * s],
@@ -63,7 +63,7 @@ function tri2(a: Vec3, b: Vec3, c: Vec3, d: Vec3, color: Vec3): Mesh {
   const u: Vec3 = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
   const v: Vec3 = [d[0] - a[0], d[1] - a[1], d[2] - a[2]];
   const n: Vec3 = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
-  const l = Math.hypot(...n) || 1;
+  const l = dmath.norm(n) || 1;
   const nn: Vec3 = [n[0] / l, n[1] / l, n[2] / l];
   const positions = new Float32Array([...a, ...b, ...c, ...d]);
   const normals = new Float32Array([...nn, ...nn, ...nn, ...nn]);

@@ -9,6 +9,7 @@
 // palette QA reads) stays the recipe's and the model adds grain, streaks and mottling.
 
 import type { Mesh, Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import type { Rgba } from '../material/index.ts';
 import { sampleRgba, toLinear } from '../neural/index.ts';
 import { triBvh } from '../primitives/index.ts';
@@ -29,7 +30,7 @@ function closestOn(source: Mesh): (p: Vec3) => { readonly v: readonly number[]; 
     const e = (a: number, b: number): number => {
       const u = [0, 1, 2].map((x) => at(a, x) - (q[x] ?? 0));
       const w = [0, 1, 2].map((x) => at(b, x) - (q[x] ?? 0));
-      return Math.hypot(
+      return dmath.hypot(
         (u[1] ?? 0) * (w[2] ?? 0) - (u[2] ?? 0) * (w[1] ?? 0),
         (u[2] ?? 0) * (w[0] ?? 0) - (u[0] ?? 0) * (w[2] ?? 0),
         (u[0] ?? 0) * (w[1] ?? 0) - (u[1] ?? 0) * (w[0] ?? 0),
@@ -93,7 +94,7 @@ export interface View {
 
 const linear = (v: number): number => {
   const c = v / 255;
-  return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  return c <= 0.04045 ? c / 12.92 : dmath.pow((c + 0.055) / 1.055, 2.4);
 };
 
 /** Multi-view projection onto the target's vertices: visibility-tested, facing-weighted blend.
@@ -269,7 +270,7 @@ export function turnaroundCameras(
     const az = (360 * i) / n;
     const a = (az * Math.PI) / 180;
     // Looking toward the centre from direction (cos a, sin a, 0).
-    const f: Vec3 = [-Math.cos(a), -Math.sin(a), 0];
+    const f: Vec3 = [-dmath.cos(a), -dmath.sin(a), 0];
     const r: Vec3 = [f[1], -f[0], 0];
     const k = size / (extent * 1.15);
     return {

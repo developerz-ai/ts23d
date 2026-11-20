@@ -6,7 +6,7 @@
 // change, so the skin never stretches along a bone. A standing leg (`solvePlanted`) keeps paw and
 // metapodial where they rest and lets the upper pair alone follow the body.
 
-import { type Bone, type Quat, quatRotate, type Vec3 } from '../core/index.ts';
+import { type Bone, dmath, type Quat, quatRotate, type Vec3 } from '../core/index.ts';
 import { IDENTITY, qbetween, qconj, qexp, qmul } from './pose.ts';
 
 export type LegBones = readonly [Bone, Bone, Bone, Bone];
@@ -33,7 +33,7 @@ const addS = (a: Vec3, b: Vec3, s: number): Vec3 => [
   a[2] + b[2] * s,
 ];
 const dot = (a: Vec3, b: Vec3): number => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
-const len = (a: Vec3): number => Math.hypot(a[0], a[1], a[2]);
+const len = (a: Vec3): number => dmath.hypot(a[0], a[1], a[2]);
 const unit = (a: Vec3): Vec3 => {
   const l = len(a);
   return l > 0 ? [a[0] / l, a[1] / l, a[2] / l] : [0, 0, 1];
@@ -50,8 +50,8 @@ const STRAIGHTEST = (172 * Math.PI) / 180;
 /** The paw's rest vector tip → MCP pitched by `roll` (radians, + lifts the MCP) about +Y. */
 export function pawVector(paw: Bone, roll: number): Vec3 {
   const v = sub(paw.head, paw.tail);
-  const c = Math.cos(roll);
-  const s = Math.sin(roll);
+  const c = dmath.cos(roll);
+  const s = dmath.sin(roll);
   return [c * v[0] + s * v[2], v[1], -s * v[0] + c * v[2]];
 }
 
@@ -85,7 +85,7 @@ function chain(
   const ec = clamp(
     len(sub(W, A)),
     Math.abs(l0 - l1) + 1e-6,
-    Math.sqrt(l0 * l0 + l1 * l1 - 2 * l0 * l1 * Math.cos(STRAIGHTEST)),
+    Math.sqrt(l0 * l0 + l1 * l1 - 2 * l0 * l1 * dmath.cos(STRAIGHTEST)),
   );
   const ua = unit(sub(W, A));
   const ua0 = unit(sub(b2.head, b0.head));
@@ -111,7 +111,7 @@ function chain(
   };
 }
 
-const pawAngle = (local: Quat): number => 2 * Math.atan2(local[1], local[3]);
+const pawAngle = (local: Quat): number => 2 * dmath.atan2(local[1], local[3]);
 
 /**
  * Stance: the toe tip locked at `tip`, the paw pitched by `roll` (radians, + lifts the MCP) in the
@@ -135,8 +135,8 @@ export function solveStance(
     (l0 + l1) * 0.999,
   );
   const cb = clamp((l2 * l2 + d * d - D * D) / (2 * l2 * Math.max(d, 1e-9)), -1, 1);
-  const beta = Math.acos(cb);
-  const W = addS(addS(M, u, l2 * cb), q, l2 * Math.sin(beta));
+  const beta = dmath.acos(cb);
+  const W = addS(addS(M, u, l2 * cb), q, l2 * dmath.sin(beta));
   const pawRest = sub(leg[3].tail, leg[3].head);
   const c = chain(leg, root, W, M, parentRot, () => qbetween(pawRest, sub(tip, M)));
   const toe = addS(c.Mr, quatRotate(c.world[3], pawRest), 1);
@@ -155,7 +155,7 @@ export function solveSwing(
 ): LegSolve {
   const [, , l2] = lengths(leg);
   const { u, q } = frame(leg, root, M);
-  const W = addS(addS(M, u, l2 * Math.cos(beta)), q, l2 * Math.sin(beta));
+  const W = addS(addS(M, u, l2 * dmath.cos(beta)), q, l2 * dmath.sin(beta));
   const c = chain(leg, root, W, M, parentRot, (r2) => qmul(r2, qexp([0, paw, 0])));
   const toe = addS(c.Mr, quatRotate(c.world[3], sub(leg[3].tail, leg[3].head)), 1);
   return { ...c, miss: len(sub(c.Mr, M)), beta, paw, toe };

@@ -3,6 +3,8 @@
 // Schlick Fresnel, Karis' analytic split-sum environment fit (no LUT), the Charlie sheen lobe
 // with Neubelt visibility, and a two-beam thin-film reflectance for iridescence. Pure maths.
 
+import { dmath } from '../core/index.ts';
+
 const PI = Math.PI;
 
 /** GGX normal distribution, α = roughness². */
@@ -30,8 +32,11 @@ export function smithV(ndl: number, ndv: number, a: number): number {
 }
 
 /** Schlick Fresnel from F0 to F90 at cosine `c`. */
-export const schlick = (f0: number, f90: number, c: number): number =>
-  f0 + (f90 - f0) * (1 - Math.max(0, Math.min(1, c))) ** 5;
+export const schlick = (f0: number, f90: number, c: number): number => {
+  const m = 1 - Math.max(0, Math.min(1, c));
+  const m2 = m * m;
+  return f0 + (f90 - f0) * (m2 * m2 * m);
+};
 
 /**
  * Karis' EnvBRDFApprox: the split-sum scale A and bias B for (roughness, n·v), so pre-filtered
@@ -42,7 +47,7 @@ export function envBrdf(rough: number, ndv: number, out: Float64Array): void {
   const ry = rough * -0.0275 + 0.0425;
   const rz = rough * -0.572 + 1.04;
   const rw = rough * 0.022 - 0.04;
-  const a004 = Math.min(rx * rx, 2 ** (-9.28 * ndv)) * rx + ry;
+  const a004 = Math.min(rx * rx, dmath.pow(2, -9.28 * ndv)) * rx + ry;
   out[0] = a004 * -1.04 + rz;
   out[1] = a004 * 1.04 + rw;
 }
@@ -51,7 +56,7 @@ export function envBrdf(rough: number, ndv: number, out: Float64Array): void {
 export function charlieD(ndh: number, a: number): number {
   const inv = 1 / Math.max(a, 1e-3);
   const sin2 = Math.max(0, 1 - ndh * ndh);
-  return ((2 + inv) * sin2 ** (0.5 * inv)) / (2 * PI);
+  return ((2 + inv) * dmath.pow(sin2, 0.5 * inv)) / (2 * PI);
 }
 
 /** Neubelt-Pettineo sheen visibility. */
@@ -59,8 +64,10 @@ export const sheenV = (ndl: number, ndv: number): number =>
   1 / Math.max(1e-4, 4 * (ndl + ndv - ndl * ndv));
 
 /** Directional albedo of the sheen lobe (fit): how much light the fuzz takes from the base. */
-export const sheenAlbedo = (ndv: number, rough: number): number =>
-  Math.min(1, 0.06 + 0.5 * rough * (1 - ndv) ** 2 + 0.12 * (1 - ndv) ** 4);
+export const sheenAlbedo = (ndv: number, rough: number): number => {
+  const m2 = (1 - ndv) * (1 - ndv);
+  return Math.min(1, 0.06 + 0.5 * rough * m2 + 0.12 * (m2 * m2));
+};
 
 /** Wavelengths (nm) the preview evaluates thin films at: R, G, B. */
 const LAMBDA = [650, 532, 450];
@@ -71,12 +78,12 @@ const LAMBDA = [650, 532, 450];
  * top-surface and base reflections gives the heat-tint / oil-slick colour shift.
  */
 export function thinFilm(k: number, n: number, thickness: number, r2: number, c: number): number {
-  const r1 = ((n - 1) / (n + 1)) ** 2;
+  const r1 = ((n - 1) / (n + 1)) * ((n - 1) / (n + 1));
   const sin2 = (1 - c * c) / (n * n);
   const ct = Math.sqrt(Math.max(0, 1 - sin2));
   const phase = (4 * PI * n * thickness * ct) / (LAMBDA[k] ?? 550) + PI;
   const t = 1 - r1;
-  const amp = r1 + r2 * t * t + 2 * Math.sqrt(r1 * r2) * t * Math.cos(phase);
+  const amp = r1 + r2 * t * t + 2 * Math.sqrt(r1 * r2) * t * dmath.cos(phase);
   return Math.max(0, Math.min(1, amp));
 }
 

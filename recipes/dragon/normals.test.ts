@@ -5,6 +5,7 @@
 
 import { describe, expect, it } from 'bun:test';
 import type { Mesh, Vec3 } from '@developerz.ai/ts23d';
+import { dmath } from '@developerz.ai/ts23d';
 import { brokenTip, tornEdge } from './field.ts';
 import { poseMesh } from './pose.ts';
 import { JOINT } from './shoulder.ts';
@@ -19,7 +20,7 @@ function sphere(c: Vec3, r: number, rings = 48, segs = 96): Mesh {
     const th = (i / rings) * Math.PI;
     for (let j = 0; j < segs; j++) {
       const ph = (j / segs) * Math.PI * 2;
-      const n: Vec3 = [Math.sin(th) * Math.cos(ph), Math.sin(th) * Math.sin(ph), Math.cos(th)];
+      const n: Vec3 = [dmath.sin(th) * dmath.cos(ph), dmath.sin(th) * dmath.sin(ph), dmath.cos(th)];
       N.push(...n);
       P.push(c[0] + n[0] * r, c[1] + n[1] * r, c[2] + n[2] * r);
     }
@@ -73,7 +74,7 @@ function worst(m: Mesh, pick: (v: number) => boolean): number {
   for (let v = 0; v < m.positions.length / 3; v++) {
     if (!pick(v)) continue;
     const g: Vec3 = [acc[v * 3] ?? 0, acc[v * 3 + 1] ?? 0, acc[v * 3 + 2] ?? 0];
-    const l = Math.hypot(...g);
+    const l = dmath.norm(g);
     if (l === 0) continue;
     const n = at(m.normals, v);
     w = Math.min(w, (n[0] * g[0] + n[1] * g[1] + n[2] * g[2]) / l);
@@ -81,7 +82,7 @@ function worst(m: Mesh, pick: (v: number) => boolean): number {
   return w;
 }
 
-const TWO_DEG = Math.cos((2 * Math.PI) / 180);
+const TWO_DEG = dmath.cos((2 * Math.PI) / 180);
 const POLE = (m: Mesh) => (v: number) => Math.abs(at(m.normals, v)[2]) < 0.9;
 
 describe('poseMesh normals follow the stretch', () => {
@@ -132,14 +133,14 @@ describe('field.ts deformations carry their normals', () => {
     let most = 0;
     for (let v = 0; v < ball.positions.length / 3; v++) {
       const [p, q] = [at(ball.positions, v), at(torn.positions, v)];
-      const d = Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2]);
+      const d = dmath.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2]);
       if (d > most) [most, apex] = [d, v];
     }
     const apexAt = at(ball.positions, apex);
     const pick = (v: number) => {
       const p = at(ball.positions, v);
       return (
-        POLE(ball)(v) && Math.hypot(p[0] - apexAt[0], p[1] - apexAt[1], p[2] - apexAt[2]) > 0.06
+        POLE(ball)(v) && dmath.hypot(p[0] - apexAt[0], p[1] - apexAt[1], p[2] - apexAt[2]) > 0.06
       );
     };
     expect(worst(torn, pick)).toBeGreaterThan(TWO_DEG);

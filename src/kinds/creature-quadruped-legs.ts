@@ -9,6 +9,7 @@
 // stands behind the hip (0: a bear's heel under its hip).
 
 import type { Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import type { Limb, Muscle } from './creature-bones.ts';
 import { v3 } from './creature-curve.ts';
 import type { FootPlan } from './creature-family.ts';
@@ -22,7 +23,7 @@ export function along(a: Vec3, b: Vec3, t: number, off: Vec3, r: Vec3, fine = fa
   return {
     at: v3.add(v3.lerp(a, b, t), off),
     r,
-    rotate: [0, Math.atan2(u[0], u[2]) * DEG, 0],
+    rotate: [0, dmath.atan2(u[0], u[2]) * DEG, 0],
     ...(fine ? { fine } : {}),
   };
 }

@@ -2,7 +2,7 @@
 // with Amanatides–Woo DDA, tested with Möller–Trumbore. Answers "does this ray hit anything
 // within `tMax`?" — all an occlusion bake needs. Allocation-free per ray, deterministic.
 
-import { boundsOf, type Mesh, type Vec3 } from '../core/index.ts';
+import { boundsOf, dmath, type Mesh, type Vec3 } from '../core/index.ts';
 
 const CELL_SCALE = 0.3;
 
@@ -60,9 +60,9 @@ export class RayGrid {
     // ~4M cells overall. Any cell size gives the same answers; only the speed changes.
     const vol = (span[0] ?? 1) * (span[1] ?? 1) * (span[2] ?? 1);
     this.cell = Math.max(
-      CELL_SCALE * Math.cbrt(vol / Math.max(1, n / 2)),
+      CELL_SCALE * dmath.cbrt(vol / Math.max(1, n / 2)),
       Math.max(...span) / 256,
-      Math.cbrt(vol / 4e6),
+      dmath.cbrt(vol / 4e6),
       1e-4,
     );
     this.min = [b.min[0] - 1e-6, b.min[1] - 1e-6, b.min[2] - 1e-6];

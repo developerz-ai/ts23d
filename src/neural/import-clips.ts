@@ -12,6 +12,7 @@
 
 import {
   type Clip,
+  dmath,
   type Quat,
   quatRotate,
   RUN_CLIP,
@@ -47,7 +48,7 @@ const qmul = (a: Quat, b: Quat): Quat => [
 /** Rotation (unit quaternion) and per-axis scale of a matrix's upper 3×3 (no shear assumed). */
 export function rotationOf(m: M4): { q: Quat; scale: Vec3 } {
   const col = (c: number): Vec3 => [m[c * 4] ?? 0, m[c * 4 + 1] ?? 0, m[c * 4 + 2] ?? 0];
-  const s = [0, 1, 2].map((c) => Math.hypot(...col(c)) || 1) as [number, number, number];
+  const s = [0, 1, 2].map((c) => dmath.norm(col(c)) || 1) as [number, number, number];
   const r = (row: number, c: number): number => (m[c * 4 + row] ?? 0) / (s[c] ?? 1);
   const tr = r(0, 0) + r(1, 1) + r(2, 2);
   let q: [number, number, number, number];
@@ -63,7 +64,7 @@ export function rotationOf(m: M4): { q: Quat; scale: Vec3 } {
     q[j] = (r(j, i) + r(i, j)) / k;
     q[l] = (r(l, i) + r(i, l)) / k;
   }
-  const n = Math.hypot(...q) || 1;
+  const n = dmath.norm(q) || 1;
   return { q: [q[0] / n, q[1] / n, q[2] / n, q[3] / n], scale: s };
 }
 
@@ -86,7 +87,7 @@ function convert(
     if (path === 'rotation') {
       const d = qmul(v, [-rest.q[0], -rest.q[1], -rest.q[2], rest.q[3]]);
       const axis = frameDir(frame, quatRotate(up.q, [d[0], d[1], d[2]]));
-      const n = Math.hypot(...axis, d[3]) || 1;
+      const n = dmath.hypot(...axis, d[3]) || 1;
       // Keys stay on one side of the double cover (first key w ≥ 0), so lerps take the short way.
       const flip =
         (prev ? axis[0] * prev[0] + axis[1] * prev[1] + axis[2] * prev[2] + d[3] * prev[3] : d[3]) <

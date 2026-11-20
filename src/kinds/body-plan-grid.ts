@@ -3,6 +3,7 @@
 // detail lands where the skin really is.
 
 import type { Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import type { ChainCopy, ChainCurve } from './body-plan-curve.ts';
 import type { BodyPlanLook, Lod } from './body-plan-mesh.ts';
 import type { ChainSpec, SurfacePoint } from './body-plan-types.ts';
@@ -36,7 +37,7 @@ export interface SkinGrid {
 }
 
 export const flareOf = (s: Sweep, u: number): number =>
-  s.flareU > 0 && u < s.flareU ? 1 + FLARE * (1 - u / s.flareU) ** 2 : 1;
+  s.flareU > 0 && u < s.flareU ? 1 + FLARE * dmath.pow(1 - u / s.flareU, 2) : 1;
 
 /** The section offset, shortened on the inside of a bend tighter than it can follow. */
 function keptOutside(curve: ChainCurve, u: number, offset: Vec3): Vec3 {
@@ -47,7 +48,7 @@ function keptOutside(curve: ChainCurve, u: number, offset: Vec3): Vec3 {
   const reach = v3.dot(turn, offset);
   if (reach <= 1e-6) return offset;
   // A soft limit: a hard one would leave a kink along the line where it starts to bite.
-  return v3.mul(offset, (INSIDE_REACH * (1 - Math.exp(-reach / INSIDE_REACH))) / reach);
+  return v3.mul(offset, (INSIDE_REACH * (1 - dmath.exp(-reach / INSIDE_REACH))) / reach);
 }
 
 /** The skin point at (u, angle) before relief, with its shading normal. */
@@ -58,7 +59,7 @@ export function skinPoint(s: Sweep, u: number, angle: number, eps: number): Surf
   const q = curve.at(u);
   const r = Math.max(MIN_RING, radius(u));
   const slope = (radius(u + eps) - radius(u - eps)) / (2 * eps * curve.length);
-  const [cos, sin] = [Math.cos(angle), Math.sin(angle)];
+  const [cos, sin] = [dmath.cos(angle), dmath.sin(angle)];
   const round = v3.add(v3.mul(q.bend, cos * r * flatten), v3.mul(q.pitch, sin * r));
   const out = c.antiFold ? keptOutside(curve, u, round) : round;
   const shade = v3.add(v3.mul(q.bend, cos / flatten), v3.mul(q.pitch, sin));

@@ -5,6 +5,7 @@ import { describe, expect, it } from 'bun:test';
 import {
   compile,
   createRng,
+  dmath,
   type Mesh,
   merge,
   swimFindings,
@@ -86,7 +87,7 @@ describe('sourced dimensions', () => {
 
   it('gives the pectoral its leading-edge length', () => {
     const [a, b] = [pectoralRoot(1, T_PECTORAL), pectoralTip(1)];
-    near(Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]), PECTORAL.margin, 0.05);
+    near(dmath.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]), PECTORAL.margin, 0.05);
   });
 
   it('cuts exactly five gill slits into the flank', () => {
@@ -145,7 +146,7 @@ describe('sourced dimensions', () => {
       const lead = at(i, 9);
       const c: [number, number] = [lead[0] - t[0], lead[1] - t[1]];
       const p = at(i, 0);
-      return ((p[0] - t[0]) * c[0] + (p[1] - t[1]) * c[1]) / (c[0] ** 2 + c[1] ** 2);
+      return ((p[0] - t[0]) * c[0] + (p[1] - t[1]) * c[1]) / (c[0] * c[0] + c[1] * c[1]);
     };
     // dorsalNotch(0.572) ≈ 0.37 of the chord; the profile's own bend is a few hundredths.
     expect(pull(15, 12, 18)).toBeGreaterThan(0.25);
@@ -229,7 +230,7 @@ describe('bite', () => {
     const [jaw, head] = [w.get('jaw_lower_0'), w.get('spine_0')];
     if (!jaw || !head) throw new Error('missing joints');
     const q = jaw.rot;
-    return 2 * Math.atan2(Math.hypot(q[0], q[1], q[2]), Math.abs(q[3]));
+    return 2 * dmath.atan2(dmath.hypot(q[0], q[1], q[2]), Math.abs(q[3]));
   };
   const slide = (t: number): number => clipPose(c, t).translation.get('jaw_upper_0')?.[0] ?? 0;
 

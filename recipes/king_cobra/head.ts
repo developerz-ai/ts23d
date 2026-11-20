@@ -2,6 +2,7 @@
 // mouth line and eye socket, plus the eye and forked tongue. Layout from the scalation plate (README).
 
 import type { Mesh, Vec3 } from '@developerz.ai/ts23d';
+import { dmath } from '@developerz.ai/ts23d';
 import {
   add,
   curve3,
@@ -56,7 +57,7 @@ function suture(u: number, v: number): number {
   );
   let [d1, d2] = [9, 9];
   for (const [a, b] of seeds) {
-    const d = Math.hypot(u - (a ?? 0), (v - (b ?? 0)) * 0.46);
+    const d = dmath.hypot(u - (a ?? 0), (v - (b ?? 0)) * 0.46);
     if (d < d1) [d1, d2] = [d, d1];
     else if (d < d2) d2 = d;
   }
@@ -71,15 +72,15 @@ function headPoint(s: number, a: number, lod: Lod): Vec3 {
     const line = sideOf(a);
     const mouth = gauss(line - mouthAngle(s), 0.05) * (1 - smooth(0.058, 0.072, s));
     const u = s / HEAD.length;
-    const v = (Math.sin(a) * halfW(s)) / (HEAD.width / 2);
+    const v = (dmath.sin(a) * halfW(s)) / (HEAD.width / 2);
     const top = 1 - smooth(1.55, 1.85, line);
     const seam =
       lod === 0 ? (1 - smooth(0.006, 0.02, suture(u, v))) * top * smooth(0.002, 0.012, s) : 0;
-    const eye = eyePoint(Math.sin(a) >= 0 ? 1 : -1);
+    const eye = eyePoint(dmath.sin(a) >= 0 ? 1 : -1);
     const p = surfacePoint(s, a);
-    const dent = gauss(Math.hypot(p[0] - eye[0], p[1] - eye[1], p[2] - eye[2]), 0.012);
+    const dent = gauss(dmath.hypot(p[0] - eye[0], p[1] - eye[1], p[2] - eye[2]), 0.012);
     const brow =
-      0.5 * gauss(Math.hypot(p[0] - eye[0], p[1] - eye[1], p[2] - eye[2]) - 0.0105, 0.003);
+      0.5 * gauss(dmath.hypot(p[0] - eye[0], p[1] - eye[1], p[2] - eye[2]) - 0.0105, 0.003);
     lift = -0.0011 * mouth - 0.00028 * seam - 0.0016 * dent + 0.0009 * brow;
   }
   return surfacePoint(s, a, lift);
@@ -90,7 +91,7 @@ const mouthAngle = (s: number): number => 1.9 + 0.24 * smooth(0.0, 0.04, s);
 function headColour(s: number, a: number): Vec3 {
   const line = sideOf(a);
   const u = s / HEAD.length;
-  const v = (Math.sin(a) * halfW(s)) / (HEAD.width / 2);
+  const v = (dmath.sin(a) * halfW(s)) / (HEAD.width / 2);
   let c = mixRgb(COLOUR.head, COLOUR.olive, 0.25 + 0.5 * fbm(s * 90, a * 3, 2));
   c = mixRgb(c, COLOUR.lip, smooth(1.72, 2.05, line));
   c = mixRgb(c, COLOUR.throat, smooth(2.1, 2.3, line));
@@ -120,7 +121,7 @@ export function headMesh(lod: Lod): Mesh {
   // The big head shields are polished keratin; their sutures and the lips are matte.
   return pinLoftUv(mesh, us, sides, (s, a) => {
     const u = s / HEAD.length;
-    const v = (Math.sin(a) * halfW(s)) / (HEAD.width / 2);
+    const v = (dmath.sin(a) * halfW(s)) / (HEAD.width / 2);
     return [0.25 + 0.7 * smooth(0.004, 0.02, suture(u, v)) * (1 - smooth(1.7, 2.1, sideOf(a))), 0];
   });
 }
@@ -146,7 +147,7 @@ export function tongueMesh(path: readonly Vec3[], lod: Lod): Mesh[] {
 
 function tongueBlade(path: readonly Vec3[], fork: number, lod: Lod): Mesh {
   const c = curve3(path);
-  const y = (u: number): number => fork * 0.0085 * smooth(0.62, 1, u) ** 1.4;
+  const y = (u: number): number => fork * 0.0085 * dmath.pow(smooth(0.62, 1, u), 1.4);
   const blade = loft({
     us: even(0, 0.985, lod === 0 ? 12 : 4),
     sides: lod === 0 ? 6 : 4,
@@ -154,7 +155,7 @@ function tongueBlade(path: readonly Vec3[], fork: number, lod: Lod): Mesh {
     point: (u, a) => {
       const q = c(u);
       const r = mix(0.0024, 0.0005, u);
-      return [q[0], q[1] + y(u) + r * Math.cos(a), q[2] + r * 0.7 * Math.sin(a)];
+      return [q[0], q[1] + y(u) + r * dmath.cos(a), q[2] + r * 0.7 * dmath.sin(a)];
     },
     color: () => COLOUR.tongue,
   });

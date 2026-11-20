@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { boundsOf, type Mesh, Ts23dError } from '../core/index.ts';
+import { boundsOf, dmath, type Mesh, Ts23dError } from '../core/index.ts';
 import { nonManifoldEdges, openEdges, windingFlips } from './closed.ts';
 import { extrudeSvg } from './svg-extrude.ts';
 import { latheSvg } from './svg-lathe.ts';
@@ -12,7 +12,7 @@ const FRAME =
 const GEAR = `<svg viewBox="-50 -50 100 100"><path d="${Array.from({ length: 12 }, (_, i) => {
   const a = (i / 12) * Math.PI * 2;
   const p = (r: number, da: number): string =>
-    `${(r * Math.cos(a + da)).toFixed(3)} ${(r * Math.sin(a + da)).toFixed(3)}`;
+    `${(r * dmath.cos(a + da)).toFixed(3)} ${(r * dmath.sin(a + da)).toFixed(3)}`;
   return `${i === 0 ? 'M' : 'L'}${p(40, -0.12)} L${p(48, -0.08)} L${p(48, 0.08)} L${p(40, 0.12)}`;
 }).join(' ')} Z"/><circle r="14"/><circle cx="25" r="5"/><circle cx="-25" r="5"/></svg>`;
 

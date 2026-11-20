@@ -4,6 +4,7 @@
 // along the body's longest side: a wrong scale).
 
 import type { Armature, Mesh, Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 
 /** Largest `hugTurn`: how closely the skeleton hugs the surface as it stands ÷ its best copy
  *  turned a quarter or half a turn about its own vertical axis. Over this a turned copy fits
@@ -24,7 +25,7 @@ export const segment = (p: Vec3, a: Vec3, b: Vec3): number => {
           Math.max(0, ((p[0] - a[0]) * u[0] + (p[1] - a[1]) * u[1] + (p[2] - a[2]) * u[2]) / l2),
         )
       : 0;
-  return Math.hypot(p[0] - a[0] - u[0] * t, p[1] - a[1] - u[1] * t, p[2] - a[2] - u[2] * t);
+  return dmath.hypot(p[0] - a[0] - u[0] * t, p[1] - a[1] - u[1] * t, p[2] - a[2] - u[2] * t);
 };
 
 /** Most triangles sampled for the hug (every n-th beyond that). */
@@ -52,7 +53,7 @@ export function skeletonHug(mesh: Mesh, at: Vec3, sk: Armature): number {
       number[],
     ];
     const area =
-      Math.hypot(
+      dmath.hypot(
         (e[1] ?? 0) * (f[2] ?? 0) - (e[2] ?? 0) * (f[1] ?? 0),
         (e[2] ?? 0) * (f[0] ?? 0) - (e[0] ?? 0) * (f[2] ?? 0),
         (e[0] ?? 0) * (f[1] ?? 0) - (e[1] ?? 0) * (f[0] ?? 0),
@@ -112,8 +113,8 @@ export function hugTurn(mesh: Mesh, at: Vec3, sk: Armature): number {
   const cy = sk.bones.reduce((s, b) => s + (b.head[1] + b.tail[1]) / 2, 0) / n;
   const turned = (quarters: number): Armature => {
     const [c, s] = [
-      Math.round(Math.cos((quarters * Math.PI) / 2)),
-      Math.round(Math.sin((quarters * Math.PI) / 2)),
+      Math.round(dmath.cos((quarters * Math.PI) / 2)),
+      Math.round(dmath.sin((quarters * Math.PI) / 2)),
     ];
     const turn = (p: Vec3): Vec3 => [
       cx + (p[0] - cx) * c - (p[1] - cy) * s,

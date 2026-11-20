@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { createRng, type Vec3 } from '../core/index.ts';
+import { createRng, dmath, type Vec3 } from '../core/index.ts';
 import { bodyRes, creaturePlan } from './creature.ts';
 import { bodyEdits } from './creature-body.ts';
 import { creatureFur, furChains, furLie, furZones } from './creature-fur.ts';
@@ -62,7 +62,7 @@ describe('creatureFur', () => {
     expect((b?.roots.length ?? 0) * 4).toBeLessThanOrEqual((a?.roots.length ?? 0) * 1.1);
     const width = (m: NonNullable<ReturnType<typeof fur>>['mesh']): number => {
       const p = m.positions;
-      return Math.hypot(
+      return dmath.hypot(
         (p[0] ?? 0) - (p[3] ?? 0),
         (p[1] ?? 0) - (p[4] ?? 0),
         (p[2] ?? 0) - (p[5] ?? 0),
@@ -173,7 +173,7 @@ describe('creatureHeadFur', () => {
         ((P[i + 1] ?? 0) + (P[i + 4] ?? 0)) / 2,
         ((P[i + 2] ?? 0) + (P[i + 5] ?? 0)) / 2,
       ];
-      expect(Math.hypot(r[0] - 0.25, r[1], r[2])).toBeGreaterThan(0.02);
+      expect(dmath.hypot(r[0] - 0.25, r[1], r[2])).toBeGreaterThan(0.02);
       expect(r[2]).toBeLessThan(0.05);
     }
   });

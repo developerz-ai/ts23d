@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { type Mesh, merge } from '../core/index.ts';
+import { dmath, type Mesh, merge } from '../core/index.ts';
 import { weather } from '../passes/index.ts';
 import { box } from '../primitives/index.ts';
 import { wearMetrics } from './critique-wear.ts';
@@ -60,7 +60,7 @@ describe('wearMetrics', () => {
   it('speckle finer than a patch barely counts; blotches not tied to exposure are not placed', () => {
     const hash = (p: number[], s: number): number => {
       const k = p.map((x) => Math.floor(x / s));
-      const h = Math.sin((k[0] ?? 0) * 12.9898 + (k[1] ?? 0) * 78.233 + (k[2] ?? 0) * 37.719);
+      const h = dmath.sin((k[0] ?? 0) * 12.9898 + (k[1] ?? 0) * 78.233 + (k[2] ?? 0) * 37.719);
       return h * 43758.5453 - Math.floor(h * 43758.5453);
     };
     const mesh = weather(steel(), { resolution: 0.03, tessellation: 'exact' }).mesh;

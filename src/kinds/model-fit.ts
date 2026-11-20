@@ -7,7 +7,7 @@
 // inside its own chest). The lowest vertex lands on z = 0. Returns the similarity, the row-major
 // 4×4 for the Blender `transform` step and the residual QA reads. Memoised per positions array.
 
-import { type Mesh, Ts23dError, type Vec3 } from '../core/index.ts';
+import { dmath, type Mesh, Ts23dError, type Vec3 } from '../core/index.ts';
 import {
   applySimilarity,
   composeSimilarity,
@@ -76,8 +76,8 @@ function solveUpright(pairs: readonly Pair[], scale?: number): Similarity {
     zz += az * qz;
     aa += ax * ax + ay * ay + az * az;
   }
-  const yaw = Math.atan2(crs, dot);
-  const s = scale ?? (aa > 0 ? (Math.hypot(dot, crs) + zz) / aa : 1);
+  const yaw = dmath.atan2(crs, dot);
+  const s = scale ?? (aa > 0 ? (dmath.hypot(dot, crs) + zz) / aa : 1);
   const m: Similarity = { ...yawSimilarity((yaw * 180) / Math.PI), s };
   const r = applySimilarity(m, ca);
   return { ...m, t: [cq[0] - r[0], cq[1] - r[1], cq[2] - r[2]] };
@@ -99,7 +99,7 @@ function round(
   const back = flesh.map((f) => {
     let [best, at] = [Infinity, 0];
     moved.forEach((p, i) => {
-      const d = (p[0] - f[0]) ** 2 + (p[1] - f[1]) ** 2 + (p[2] - f[2]) ** 2;
+      const d = dmath.pow(p[0] - f[0], 2) + dmath.pow(p[1] - f[1], 2) + dmath.pow(p[2] - f[2], 2);
       if (d < best) [best, at] = [d, i];
     });
     return { pair: [points[at] ?? f, f] as Pair, e: Math.sqrt(best) };
@@ -173,7 +173,7 @@ export function modelFit(
   const project = capsuleProjector(caps);
   const flesh = fleshSamples(caps, b.height / 14);
   const target = box(flesh);
-  const yawOf = (m: Similarity): number => (Math.atan2(m.r[3] ?? 0, m.r[0] ?? 1) * 180) / Math.PI;
+  const yawOf = (m: Similarity): number => (dmath.atan2(m.r[3] ?? 0, m.r[0] ?? 1) * 180) / Math.PI;
   const apart = (a: number, c: number): number => Math.abs(((a - c + 540) % 360) - 180);
   const found: { m: Similarity; residual: number }[] = [];
   for (let i = 0; i < 12; i++) {
@@ -227,9 +227,9 @@ export function modelFit(
         const end = ends[p[k] > mid ? 1 : 0];
         if (p[2] < end[1]) [end[0], end[1]] = [p[k], p[2]];
       }
-      const lean = Math.atan2(ends[1][1] - ends[0][1], ends[1][0] - ends[0][0]);
+      const lean = dmath.atan2(ends[1][1] - ends[0][1], ends[1][0] - ends[0][0]);
       if (!Number.isFinite(lean) || Math.abs(lean) > (LEVEL * Math.PI) / 180) continue;
-      const [c, sn] = [Math.cos(lean), Math.sin(lean)];
+      const [c, sn] = [dmath.cos(lean), dmath.sin(lean)];
       // Turn about Y (front and rear) or X (left and right) so the higher end comes down.
       const r = k === 0 ? [c, 0, sn, 0, 1, 0, -sn, 0, c] : [1, 0, 0, 0, c, sn, 0, -sn, c];
       won = composeSimilarity({ s: 1, r, t: [0, 0, 0] }, won);
@@ -243,7 +243,7 @@ export function modelFit(
     matrix: matrixOf(similarity),
     residual,
     relative: residual / b.height,
-    yaw: (Math.atan2(similarity.r[3] ?? 0, similarity.r[0] ?? 1) * 180) / Math.PI,
+    yaw: (dmath.atan2(similarity.r[3] ?? 0, similarity.r[0] ?? 1) * 180) / Math.PI,
     scale: similarity.s,
   };
   const per = memo.get(mesh.positions) ?? new Map<Bones, Map<string, ModelFit>>();

@@ -2,6 +2,7 @@
 // rasteriser and any back end that flattens a scene read world positions from here.
 
 import type { Part } from './asset.ts';
+import { cos, sin } from './dmath.ts';
 import type { Mesh } from './mesh.ts';
 import type { Vec3 } from './vec.ts';
 
@@ -11,8 +12,8 @@ export interface WorldTransform {
 }
 
 const rotZ = (p: Vec3, yaw: number): Vec3 => {
-  const c = Math.cos(yaw);
-  const s = Math.sin(yaw);
+  const c = cos(yaw); // dmath: every render and QA gate reads these positions (defect D403)
+  const s = sin(yaw);
   return [p[0] * c - p[1] * s, p[0] * s + p[1] * c, p[2]];
 };
 

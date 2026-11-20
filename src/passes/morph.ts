@@ -4,6 +4,7 @@
 // down over the ball about the eye's lateral axis). The result is a per-vertex delta (glTF target).
 
 import {
+  dmath,
   type Mesh,
   type Morph,
   quatFromAxisAngle,
@@ -78,7 +79,7 @@ export function fieldMorph(
     const w = clamp01(o.weight ? o.weight(p) : 1);
     if (w === 0) continue;
     const g = gradient(rest, p, h);
-    const gl = Math.hypot(...g);
+    const gl = dmath.norm(g);
     if (!(gl > 1e-9)) continue;
     const n: Vec3 = [g[0] / gl, g[1] / gl, g[2] / gl];
     // Newton along the line p + t n on the changed field.
@@ -100,7 +101,7 @@ export function fieldMorph(
 /** Turn each rest vertex about the hinge by `degrees × weight(p)`. */
 export function hingeMorph(mesh: Mesh, name: string, o: HingeMorphOptions): Morph {
   checkName(name);
-  if (!(Math.hypot(...o.axis) > 1e-9) || !Number.isFinite(o.degrees))
+  if (!(dmath.norm(o.axis) > 1e-9) || !Number.isFinite(o.degrees))
     throw new Ts23dError('T3D_RECIPE_INVALID', {
       cause: `morph '${name}': hinge axis is zero or degrees ${o.degrees} not finite`,
       fix: 'give the hinge a direction, e.g. axis: [0, 1, 0], and finite degrees',

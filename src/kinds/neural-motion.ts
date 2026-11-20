@@ -9,6 +9,7 @@
 import {
   type Bone,
   type Clip,
+  dmath,
   type Quat,
   type Track,
   Ts23dError,
@@ -42,7 +43,7 @@ function unitKey(bone: string, frame: number, q: unknown): Quat {
       'bake rotations as quaternions [x, y, z, w], not Euler angles',
     );
   const [x, y, z, w] = q as Quat;
-  const l = Math.hypot(x, y, z, w);
+  const l = dmath.hypot(x, y, z, w);
   if (!(Math.abs(l - 1) <= UNIT_SLACK))
     bad(
       `bone '${bone}' frame ${frame} has length ${l.toFixed(4)}, not a unit quaternion`,
@@ -103,7 +104,7 @@ function nlerp(a: Quat, b: Quat, t: number): Quat {
   const q: Quat = [0, 1, 2, 3].map(
     (k) => (a[k] ?? 0) * (1 - t) + (b[k] ?? 0) * s * t,
   ) as unknown as Quat;
-  const l = Math.hypot(...q) || 1;
+  const l = dmath.norm(q) || 1;
   return [q[0] / l, q[1] / l, q[2] / l, q[3] / l];
 }
 
@@ -170,7 +171,7 @@ export function plantedSlide(
       if (!(on(f, k) && on(f - 1, k))) return;
       const a = t[f]?.[k] ?? [0, 0, 0];
       const b = t[f - 1]?.[k] ?? [0, 0, 0];
-      slide = Math.max(slide, Math.hypot(a[0] - b[0], a[1] - b[1]));
+      slide = Math.max(slide, dmath.hypot(a[0] - b[0], a[1] - b[1]));
     });
   return slide;
 }

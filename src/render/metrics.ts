@@ -2,7 +2,7 @@
 // view, coverage and bounding-box fill, silhouette IoU (LOD0 ↔ LOD2 = LOD popping; model ↔ photo
 // mask = photo match), and the hero's exposure — mean, contrast, crushed blacks, blown whites.
 
-import { type CompiledAsset, Ts23dError } from '../core/index.ts';
+import { type CompiledAsset, dmath, Ts23dError } from '../core/index.ts';
 import { depthMap, fitFrame, type MapFrame } from './depth-map.ts';
 import type { View } from './raster.ts';
 import { sceneOf } from './scene.ts';
@@ -21,7 +21,7 @@ export interface MaskStats {
 }
 
 const towardCamera = (v: View): [number, number, number] => {
-  const l = Math.hypot(v.dir[0], v.dir[1], v.dir[2]) || 1;
+  const l = dmath.hypot(v.dir[0], v.dir[1], v.dir[2]) || 1;
   return [-v.dir[0] / l, -v.dir[1] / l, -v.dir[2] / l];
 };
 

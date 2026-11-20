@@ -4,6 +4,7 @@
 
 import {
   type BuildContext,
+  dmath,
   type Mesh,
   MeshBuilder,
   merge,
@@ -20,7 +21,7 @@ const BODY_H = 1.15;
 /** The coping flares 20 cm outward over its 32 cm height (the collar that keeps the wood in). */
 const FLARE_OUT = 0.2;
 const FLARE_H = 0.32;
-const FLARE_LEN = Math.hypot(FLARE_OUT, FLARE_H);
+const FLARE_LEN = dmath.hypot(FLARE_OUT, FLARE_H);
 /** Sheet thickness of the coping, seen as its top edge. */
 const SHEET = 0.035;
 
@@ -30,7 +31,7 @@ function quad(b: MeshBuilder, pts: readonly [Vec3, Vec3, Vec3, Vec3], f: Finish)
   const u: Vec3 = [p1[0] - p0[0], p1[1] - p0[1], p1[2] - p0[2]];
   const v: Vec3 = [p3[0] - p0[0], p3[1] - p0[1], p3[2] - p0[2]];
   const c: Vec3 = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
-  const l = Math.hypot(c[0], c[1], c[2]) || 1;
+  const l = dmath.hypot(c[0], c[1], c[2]) || 1;
   const n: Vec3 = [c[0] / l, c[1] / l, c[2] / l];
   const r = stripRect(f.strip);
   const uv: [number, number] = [(r.u0 + r.u1) / 2, (r.v0 + r.v1) / 2];

@@ -13,6 +13,7 @@ import {
   type CheckFinding,
   cylinder,
   defineFamily,
+  dmath,
   grime,
   hex,
   type Lod,
@@ -156,7 +157,7 @@ const kneesLand =
     const gap = (p: Vec3, b: Bounds | undefined): number => {
       if (!b) return Infinity;
       const out = (k: 0 | 1 | 2): number => Math.max(b.min[k] - p[k], 0, p[k] - b.max[k]);
-      return Math.hypot(out(0), out(1), out(2));
+      return dmath.hypot(out(0), out(1), out(2));
     };
     for (const [side, s] of [
       ['l', 1],
@@ -268,8 +269,8 @@ function arm(kind: 'home' | 'distant', lod: Lod): { blade: Mesh; spectacle: Mesh
     const red0: Vec2 = [-0.25, -0.25];
     const a = Math.PI / 3; // green comes in front of the lamp when the blade drops 60°
     const green0: Vec2 = [
-      red0[0] * Math.cos(a) - red0[1] * Math.sin(a),
-      red0[0] * Math.sin(a) + red0[1] * Math.cos(a),
+      red0[0] * dmath.cos(a) - red0[1] * dmath.sin(a),
+      red0[0] * dmath.sin(a) + red0[1] * dmath.cos(a),
     ];
     for (const [[y, z], c] of [
       [red0, hex('#c4231b')],

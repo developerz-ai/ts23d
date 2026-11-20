@@ -1,7 +1,7 @@
 {
   "adapter": "blender:blender",
   "contract": "t3d-neural/1",
-  "key": "164549ed4b132a48d652ed316591df9f967095a414f4dee455d2025b23731221",
+  "key": "000952026acc9ceeab555ea0bddf2039ad07c1f206ff6c91c11d92e5ac294719",
   "model": {
     "id": "blender-groom",
     "licence": "own",
@@ -31,7 +31,7 @@
   "request": {
     "body": {
       "mime": "model/gltf-binary",
-      "sha256": "764f6c3ef9513e345be95d499a0f3370840820d95a7b5590883fde4cccf4fd9b"
+      "sha256": "52aef5c0a1d62b5c424c548332258bf6466583684bca874559523ead700423f0"
     },
     "cards": 300,
     "children": 14,
@@ -42,12 +42,12 @@
     "maxTriangles": 7500,
     "mesh": {
       "mime": "model/gltf-binary",
-      "sha256": "f83d1468d9d5f463300b633088618e4bfdd0c27f72c1dd6d2092a18542e3084a"
+      "sha256": "43c47b812101072ffca0704d6146f95c7edcfcd8701f90aef1c16785d34af062"
     },
     "points": 6,
     "seed": 7
   },
-  "requestKey": "07d124f9c6da5b97d6daea8386d9e81fee3431890dfea9d3fd0780860d67cb66",
+  "requestKey": "29c1c24c5579653a333057837baf0feea6227cccad77afe2f1483fc23c9c0086",
   "server": "blender 5.3.0",
   "task": "groom"
 }

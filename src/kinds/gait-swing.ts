@@ -4,7 +4,14 @@
 // the toe kept off the ground from the first frame: where it would drag, the MCP rises, and where
 // the leg cannot reach that high, the carpus / hock folds further.
 
-import { type Bone, type JointLimit, type Quat, quatRotate, type Vec3 } from '../core/index.ts';
+import {
+  type Bone,
+  dmath,
+  type JointLimit,
+  type Quat,
+  quatRotate,
+  type Vec3,
+} from '../core/index.ts';
 import { type LegBones, type LegSolve, solveSwing } from './gait-ik.ts';
 import { qexp, qmul } from './pose.ts';
 
@@ -20,7 +27,7 @@ const CLEAR = 0.6;
 /** A local rotation turned back about its limit axis (+Y hinges) into the limit's range. */
 export function withinLimit(q: Quat, limit: JointLimit | undefined): Quat {
   if (!limit || Math.abs(limit.axis[1]) < 0.99) return q;
-  const a = (2 * Math.atan2(q[1], q[3]) * 180) / Math.PI;
+  const a = (2 * dmath.atan2(q[1], q[3]) * 180) / Math.PI;
   const s = Math.sign(limit.axis[1]);
   const lo = s > 0 ? limit.min : -limit.max;
   const hi = s > 0 ? limit.max : -limit.min;
@@ -62,7 +69,7 @@ export interface SwingPath {
   readonly fore: boolean;
 }
 
-const length = (b: Bone): number => Math.hypot(...sub(b.tail, b.head));
+const length = (b: Bone): number => dmath.norm(sub(b.tail, b.head));
 
 /** A plantigrade foot: the paw (the whole sole, wrist / heel to toe) is over twice the short
  *  metapodial segment. Its carpus does not fold through straight like a dog's: folding the long
@@ -71,7 +78,7 @@ const isSole = (leg: LegBones): boolean => length(leg[3]) > 2 * length(leg[2]);
 
 /** Local rotations of a swing leg at progress s. */
 export function swingLeg(leg: LegBones, A: Vec3, parent: Quat, s: number, p: SwingPath): Quat[] {
-  const bump = Math.sin(Math.PI * s);
+  const bump = dmath.sin(Math.PI * s);
   // Next to lift-off and touch-down the leg is its stance pose (loaded joints may sit past their
   // passive range); only the free middle of the swing is held to the limits.
   const ends = s < 0.15 || s > 0.85;

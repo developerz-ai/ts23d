@@ -2,6 +2,8 @@
 // radial FFT band (own radix-2 FFT, rows then columns) and Sobel edge density per cell of an 8 × 8
 // grid over the interior (silhouette border excluded). Inputs: object mask + Lab per pixel.
 
+import { dmath } from '../core/index.ts';
+
 export const FP_SIZE = 128;
 export const GRID = 8;
 /** Sobel magnitude (L / 100 units) above which an interior pixel counts as an edge (~5 L). */
@@ -25,7 +27,7 @@ function fft(re: Float64Array, im: Float64Array): void {
     const ang = (-2 * Math.PI) / len;
     for (let i = 0; i < n; i += len)
       for (let k = 0; k < len / 2; k++) {
-        const [wr, wi] = [Math.cos(ang * k), Math.sin(ang * k)];
+        const [wr, wi] = [dmath.cos(ang * k), dmath.sin(ang * k)];
         const a = i + k;
         const b = a + len / 2;
         const xr = (re[b] ?? 0) * wr - (im[b] ?? 0) * wi;
@@ -62,9 +64,9 @@ export function spectrum(mask: Uint8Array, lab: Float64Array): number[] {
   let total = 0;
   for (let y = 0; y < N; y++)
     for (let x = 0; x < N; x++) {
-      const f = Math.hypot(x < N / 2 ? x : x - N, y < N / 2 ? y : y - N);
+      const f = dmath.hypot(x < N / 2 ? x : x - N, y < N / 2 ? y : y - N);
       if (f < 1) continue;
-      const p = (re[y * N + x] ?? 0) ** 2 + (im[y * N + x] ?? 0) ** 2;
+      const p = dmath.pow(re[y * N + x] ?? 0, 2) + dmath.pow(im[y * N + x] ?? 0, 2);
       const band = BANDS.findIndex((e, k) => f >= e && f < (BANDS[k + 1] ?? Infinity));
       out[band] = (out[band] ?? 0) + p;
       total += p;
@@ -100,7 +102,7 @@ export function edges(mask: Uint8Array, lab: Float64Array): number[] {
         L(x + 1, y - 1);
       const c = Math.floor(y / cell) * GRID + Math.floor(x / cell);
       count[c] = (count[c] ?? 0) + 1;
-      if (Math.hypot(gx, gy) > EDGE) hits[c] = (hits[c] ?? 0) + 1;
+      if (dmath.hypot(gx, gy) > EDGE) hits[c] = (hits[c] ?? 0) + 1;
     }
   return hits.map((h, c) => (count[c] ? h / (count[c] ?? 1) : 0));
 }

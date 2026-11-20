@@ -10,6 +10,7 @@
 // unless a weighted joint hangs below it.
 
 import type { Armature, Bone, Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import { at, type GlbDoc, indices } from './glb-read.ts';
 import type { SceneGraph } from './glb-scene.ts';
 import { framePoint, type ImportFrame } from './import-frame.ts';
@@ -28,7 +29,7 @@ export interface ImportedRig {
 
 const MIN_LENGTH = 1e-3;
 const sub = (a: Vec3, b: Vec3): Vec3 => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
-const len = (a: Vec3): number => Math.hypot(a[0], a[1], a[2]);
+const len = (a: Vec3): number => dmath.hypot(a[0], a[1], a[2]);
 
 function tailOf(
   head: Vec3,

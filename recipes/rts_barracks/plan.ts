@@ -4,6 +4,7 @@
 // feature (ctx.rng.fork), so a hole never moves when another feature changes.
 
 import type { Rng, Vec3 } from '@developerz.ai/ts23d';
+import { dmath } from '@developerz.ai/ts23d';
 
 export type Stage = 'foundation' | 'scaffold' | 'complete';
 export type Damage = 'intact' | 'damaged' | 'rubble';
@@ -96,7 +97,7 @@ function cap(list: Bay[], rows: (b: Bay, i: number) => number): void {
 function hole(b: Bay, row: number, col: number, size: number, rng: Rng): void {
   for (let r = 0; r < ROWS; r++)
     for (let c = 0; c < COLS; c++) {
-      const d = Math.hypot(r - row, (c - col) * 1.6);
+      const d = dmath.hypot(r - row, (c - col) * 1.6);
       const cells = b.cells[r];
       if (cells && d < size + rng.range(-0.4, 0.4)) cells[c] = false;
     }

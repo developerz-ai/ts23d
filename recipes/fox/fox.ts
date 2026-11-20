@@ -8,6 +8,7 @@ import {
   CREATURE_MATERIALS,
   type CreatureSpec,
   defineMaterial,
+  dmath,
   familyMember,
   hex,
   type Vec3,
@@ -105,7 +106,7 @@ export const FOX_WILD: Wild = {
     const muzzle = l.L - l.lc;
     const h = info.bones.head;
     const tailRoot = info.bones.tailRoot;
-    const [c, s] = [Math.cos(h.pitch), Math.sin(h.pitch)];
+    const [c, s] = [dmath.cos(h.pitch), dmath.sin(h.pitch)];
     const onHead = (p: readonly [number, number, number]): [number, number, number] => [
       h.atlas[0] + c * p[0] + s * p[2],
       h.atlas[1] + p[1],

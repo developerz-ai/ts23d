@@ -4,7 +4,7 @@
 // segment lengths from the root → out of the skin and the collision solid) so push-outs and
 // clump pulls leave no kink and nothing penetrates.
 
-import { sub, normalize as unit, type Vec3 } from '../core/index.ts';
+import { dmath, sub, normalize as unit, type Vec3 } from '../core/index.ts';
 import { clear, gradient, mad } from './hair-roots.ts';
 
 type Field = (p: Vec3) => number;
@@ -19,7 +19,7 @@ export function settle(
   h: number,
 ): Vec3[] {
   const n = line.length - 1;
-  const lens = line.map((p, k) => (k === 0 ? 0 : Math.hypot(...sub(p, line[k - 1] ?? p))));
+  const lens = line.map((p, k) => (k === 0 ? 0 : dmath.norm(sub(p, line[k - 1] ?? p))));
   const pts = line.map((p): Vec3 => [p[0], p[1], p[2]]);
   for (let it = 0; it < 4; it++) {
     for (let k = 2; k < n; k++) {
@@ -38,7 +38,7 @@ export function settle(
       const len = lens[k] ?? 0;
       // A point that collapsed onto its parent keeps the parent segment's direction.
       const v = sub(p, a);
-      const dir = Math.hypot(v[0], v[1], v[2]) > len * 0.05 ? v : sub(a, pts[k - 2] ?? a);
+      const dir = dmath.hypot(v[0], v[1], v[2]) > len * 0.05 ? v : sub(a, pts[k - 2] ?? a);
       let q = mad(a, unit(dir), len);
       const d = f ? f(q) : floor;
       if (f && d < floor) q = mad(q, gradient(f, q, h), floor - d);
@@ -71,5 +71,5 @@ export function gather(line: readonly Vec3[], lead: readonly Vec3[], pull: numbe
   const n = line.length - 1;
   const a = line[n] ?? [0, 0, 0];
   const b = lead[n] ?? a;
-  return line.map((p, k) => (k === 0 ? p : mad(p, sub(b, a), pull * (k / n) ** 2)));
+  return line.map((p, k) => (k === 0 ? p : mad(p, sub(b, a), pull * dmath.pow(k / n, 2))));
 }

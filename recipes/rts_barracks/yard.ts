@@ -6,6 +6,7 @@
 
 import {
   box,
+  dmath,
   hex,
   type Lod,
   type Mesh,
@@ -54,7 +55,7 @@ export function sheerLegs(lod: Lod, fallen: boolean): Mesh {
     const foot: Vec3 = [cx + 0.3, cy - 3.0, 0];
     const rim: Vec3 = [cx + 0.2, cy - 1.98, 0.98];
     const d: Vec3 = [rim[0] - foot[0], rim[1] - foot[1], rim[2] - foot[2]];
-    const l = Math.hypot(d[0], d[1], d[2]);
+    const l = dmath.hypot(d[0], d[1], d[2]);
     const len = 2.6;
     out.push(
       pole(
@@ -118,7 +119,7 @@ function patch(rng: Rng, at: readonly [number, number], r: number, color: Vec3, 
   for (let i = 0; i < n; i++) {
     const a = (i / n) * Math.PI * 2;
     const k = rng.range(0.65, 1.15);
-    prof.push([at[0] + Math.cos(a) * r * k, at[1] + Math.sin(a) * r * k * rng.range(0.7, 1)]);
+    prof.push([at[0] + dmath.cos(a) * r * k, at[1] + dmath.sin(a) * r * k * rng.range(0.7, 1)]);
   }
   return prism({
     profile: prof,

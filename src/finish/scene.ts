@@ -4,7 +4,7 @@
 // texel bake, so both read the asset identically.
 
 import type { CompiledAsset, Mesh } from '../core/index.ts';
-import { worldMesh, worldTransforms } from '../core/index.ts';
+import { dmath, worldMesh, worldTransforms } from '../core/index.ts';
 import type { PaintedSheet } from '../material/index.ts';
 import { type Atlas, buildAtlas } from './atlas.ts';
 import { baseColour, sampleMap } from './colour.ts';
@@ -98,7 +98,7 @@ export function surfaceAt(
     out.p[i] = lerp(m.positions, 3, i);
     out.n[i] = lerp(m.normals, 3, i);
   }
-  const nl = Math.hypot(out.n[0] ?? 0, out.n[1] ?? 0, out.n[2] ?? 1) || 1;
+  const nl = dmath.hypot(out.n[0] ?? 0, out.n[1] ?? 0, out.n[2] ?? 1) || 1;
   for (let i = 0; i < 3; i++) out.n[i] = (out.n[i] ?? 0) / nl;
   const fin = s.finishable[part] === true;
   out.uv[0] = fin ? lerp(m.uvs, 2, 0) : -1;

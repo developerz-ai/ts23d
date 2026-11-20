@@ -3,7 +3,7 @@
 // action made visible). Each is a banded horn trimmed to a slab, so it reads as a plate edge-on and
 // a spike from the side. Meshed finer than the body and merged into `body` / `tail`.
 
-import { type Mesh, merge, type SculptEdit, type Vec3 } from '@developerz.ai/ts23d';
+import { dmath, type Mesh, merge, type SculptEdit, type Vec3 } from '@developerz.ai/ts23d';
 import { pointAt, spline, tangentAt, v3 } from '../_lib/creature/curve.ts';
 import { horn, hornNodes } from '../_lib/creature/horn.ts';
 import { skinTube } from '../_lib/creature/lowpoly.ts';
@@ -34,7 +34,7 @@ function spine(s: Spine, segs: number, thick: number): SculptEdit {
   const side = v3.norm(v3.cross(s.up, s.back));
   const centre = v3.add(s.base, v3.mul(s.up, s.h * 0.5));
   // Slab about the spine's plane: a thin box aligned with the world when the spine is upright.
-  const yaw = (Math.atan2(side[1], side[0]) * 180) / Math.PI - 90;
+  const yaw = (dmath.atan2(side[1], side[0]) * 180) / Math.PI - 90;
   return {
     group: [
       horn({
@@ -78,7 +78,10 @@ function bodySpines(): Spine[] {
     const hump =
       0.55 +
       0.45 *
-        Math.max(Math.exp(-(((t - 0.12) / 0.2) ** 2)), 0.8 * Math.exp(-(((t - 0.78) / 0.16) ** 2)));
+        Math.max(
+          dmath.exp(-dmath.pow((t - 0.12) / 0.2, 2)),
+          0.8 * dmath.exp(-dmath.pow((t - 0.78) / 0.16, 2)),
+        );
     out.push(along(back, t, 0.06, 0.5 * hump, 0.14 * (0.7 + 0.3 * hump)));
   }
   // The tail row's first spines stand on the stump, which is body (see tailSpines).

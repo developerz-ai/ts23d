@@ -3,6 +3,7 @@
 // is shared only where the neighbour stands, so windows can fill the rest.
 
 import type { Vec2 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 
 export type Span = readonly [number, number];
 
@@ -17,7 +18,7 @@ const MIN_SHARED = 0.5;
 export function sharedSpans(ring: readonly Vec2[], i: number, other: readonly Vec2[]): Span[] {
   const a = ring[i] ?? [0, 0];
   const b = ring[(i + 1) % ring.length] ?? a;
-  const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+  const len = dmath.hypot(b[0] - a[0], b[1] - a[1]);
   if (len < 1e-9) return [];
   const [ux, uy] = [(b[0] - a[0]) / len, (b[1] - a[1]) / len];
   const along = (p: Vec2): number => (p[0] - a[0]) * ux + (p[1] - a[1]) * uy;
@@ -25,7 +26,7 @@ export function sharedSpans(ring: readonly Vec2[], i: number, other: readonly Ve
   const out: Span[] = [];
   other.forEach((c, j) => {
     const d = other[(j + 1) % other.length] ?? c;
-    const l = Math.hypot(d[0] - c[0], d[1] - c[1]);
+    const l = dmath.hypot(d[0] - c[0], d[1] - c[1]);
     if (l < 1e-9 || Math.abs((d[0] - c[0]) * ux + (d[1] - c[1]) * uy) / l < PARALLEL) return;
     // Clip c→d to the strip |offset| < EPS around this edge's line, then project it onto the edge.
     const [oc, od] = [off(c), off(d)];
@@ -60,5 +61,5 @@ export function mergeSpans(spans: readonly Span[]): Span[] {
 export const edgeLength = (ring: readonly Vec2[], i: number): number => {
   const a = ring[i] ?? [0, 0];
   const b = ring[(i + 1) % ring.length] ?? a;
-  return Math.hypot(b[0] - a[0], b[1] - a[1]);
+  return dmath.hypot(b[0] - a[0], b[1] - a[1]);
 };

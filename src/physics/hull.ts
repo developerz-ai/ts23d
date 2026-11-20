@@ -3,7 +3,7 @@
 // broken by index. A point within `eps` of every face is treated as inside; one that clears a
 // face is merged against the faces it sees by the exact orient3d predicate (core/predicates).
 
-import { orient3d, type Vec3 } from '../core/index.ts';
+import { dmath, orient3d, type Vec3 } from '../core/index.ts';
 
 export interface Hull {
   /** Hull vertices (a subset of the input, in first-seen order). */
@@ -42,15 +42,15 @@ function seed(p: readonly Vec3[], eps: number): Face[] | null {
   }
   const d01 = sub(at(p, i1), at(p, i0));
   let i2 = -1;
-  let best = eps * Math.hypot(...d01);
+  let best = eps * dmath.norm(d01);
   p.forEach((q, i) => {
-    const d = Math.hypot(...crs(d01, sub(q, at(p, i0))));
+    const d = dmath.norm(crs(d01, sub(q, at(p, i0))));
     if (d > best) [best, i2] = [d, i];
   });
   if (i2 < 0) return null;
   const n = crs(d01, sub(at(p, i2), at(p, i0)));
   let i3 = -1;
-  best = eps * Math.hypot(...n);
+  best = eps * dmath.norm(n);
   p.forEach((q, i) => {
     const d = Math.abs(dt(n, sub(q, at(p, i0))));
     if (d > best) [best, i3] = [d, i];
@@ -79,7 +79,7 @@ export function convexHull(points: readonly Vec3[], eps = 1e-6): Hull | null {
         sub(at(points, f[1]), at(points, f[0])),
         sub(at(points, f[2]), at(points, f[0])),
       );
-      return above(points, f, q) > eps * Math.hypot(...n);
+      return above(points, f, q) > eps * dmath.norm(n);
     });
     if (!clears) return;
     // ...then take EXACTLY the faces it sees: an exact visible set is one connected patch, so the

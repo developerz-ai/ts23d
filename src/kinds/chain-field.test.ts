@@ -3,6 +3,7 @@
 
 import { describe, expect, it } from 'bun:test';
 import type { Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import { bodyPlan } from './body-plan.ts';
 import type { BodyPlan, PlanChain } from './body-plan-types.ts';
 import {
@@ -49,8 +50,8 @@ describe('poseChain', () => {
     const k = 1.2;
     const end = tip(plan, chain, { kn: () => k });
     // Chord of an arc: 2 (L / κL) sin(κL / 2), with the first half-link's heading included.
-    const chord = Math.hypot(end[0], end[1]);
-    const exact = (2 * 2 * Math.sin(k / 2)) / k;
+    const chord = dmath.hypot(end[0], end[1]);
+    const exact = (2 * 2 * dmath.sin(k / 2)) / k;
     expect(Math.abs(chord - exact) / exact).toBeLessThan(0.002);
   });
 

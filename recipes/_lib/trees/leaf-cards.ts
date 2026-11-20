@@ -11,6 +11,7 @@
 import {
   boundsOf,
   cellRect,
+  dmath,
   type FoliageCellId,
   type Mesh,
   MeshBuilder,
@@ -41,7 +42,7 @@ const HEX: readonly Vec2[] = [
 ];
 
 const sub = (a: Vec3, b: Vec3): Vec3 => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
-const len = (a: Vec3): number => Math.hypot(a[0], a[1], a[2]);
+const len = (a: Vec3): number => dmath.hypot(a[0], a[1], a[2]);
 const scale = (a: Vec3, s: number): Vec3 => [a[0] * s, a[1] * s, a[2] * s];
 const add = (a: Vec3, b: Vec3): Vec3 => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
 const cross = (a: Vec3, b: Vec3): Vec3 => [
@@ -186,9 +187,9 @@ export function clumpCards(
     let [sx, sy, sz] = [0, 0, 0];
     const c: [number, number, number] = [0, 0, 0];
     for (const q of cl.members) {
-      sx += q.w * (q.p[0] - cx) ** 2;
-      sy += q.w * (q.p[1] - cy) ** 2;
-      sz += q.w * (q.p[2] - cz) ** 2;
+      sx += q.w * dmath.pow(q.p[0] - cx, 2);
+      sy += q.w * dmath.pow(q.p[1] - cy, 2);
+      sz += q.w * dmath.pow(q.p[2] - cz, 2);
       for (let k = 0; k < 3; k++) c[k] = (c[k] ?? 0) + q.w * (q.c[k] ?? 0);
     }
     const w = cl.w;
@@ -199,9 +200,9 @@ export function clumpCards(
     const low: Vec3 = [color[0] * 0.8, color[1] * 0.8, color[2] * 0.8];
     for (let j = 0; j < 3; j++) {
       const a = (j / 3) * Math.PI + (cx * 0.7 + cy * 1.3);
-      const side: Vec3 = [Math.cos(a) * 2 * r, Math.sin(a) * 2 * r, 0];
+      const side: Vec3 = [dmath.cos(a) * 2 * r, dmath.sin(a) * 2 * r, 0];
       // Cards lean back from vertical, so the top view still covers the crown.
-      const dir: Vec3 = [-Math.sin(a) * 0.9 * h, Math.cos(a) * 0.9 * h, 2 * h];
+      const dir: Vec3 = [-dmath.sin(a) * 0.9 * h, dmath.cos(a) * 0.9 * h, 2 * h];
       const root: Vec3 = [cx - dir[0] / 2, cy - dir[1] / 2, cz - dir[2] / 2];
       twigCard(mb, cellId, root, side, dir, low, color);
     }

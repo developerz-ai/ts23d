@@ -5,6 +5,7 @@
 // back plates, tail fins) and `tube` (sample radii along any path).
 
 import type { Field, SculptEdit, Vec3 } from '@developerz.ai/ts23d';
+import { dmath } from '@developerz.ai/ts23d';
 import { arcT, v3 } from './curve.ts';
 
 export interface SkinNode {
@@ -32,7 +33,7 @@ export function roundCone(a: Vec3, b: Vec3, r1: number, r2: number): Field {
   // One sphere swallows the other: the bigger sphere is the shape.
   if (a2 <= 0) {
     const [c, r] = r1 >= r2 ? [a, r1] : [b, r2];
-    return (p) => Math.hypot(p[0] - c[0], p[1] - c[1], p[2] - c[2]) - r;
+    return (p) => dmath.hypot(p[0] - c[0], p[1] - c[1], p[2] - c[2]) - r;
   }
   return (p) => {
     const pax = p[0] - a[0];

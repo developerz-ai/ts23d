@@ -4,6 +4,7 @@
 // sampling at the surface point, so it is deterministic and costs ~9 field evaluations per vertex.
 
 import type { Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import type { Field } from '../primitives/index.ts';
 
 export interface ToneOptions {
@@ -24,7 +25,7 @@ export function toned(field: Field, colorAt: (q: Vec3) => Vec3, o: ToneOptions):
     const gx = field([x + e, y, z]) - field([x - e, y, z]);
     const gy = field([x, y + e, z]) - field([x, y - e, z]);
     const gz = field([x, y, z + e]) - field([x, y, z - e]);
-    const gl = Math.hypot(gx, gy, gz) || 1;
+    const gl = dmath.hypot(gx, gy, gz) || 1;
     const n: Vec3 = [gx / gl, gy / gl, gz / gl];
     // Cavity: walk out along the normal; a crevice brings other surface closer than the walk.
     let occ = 0;

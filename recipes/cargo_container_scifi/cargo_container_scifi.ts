@@ -14,6 +14,7 @@ import {
   type CheckFinding,
   cylinder,
   defineAsset,
+  dmath,
   hex,
   type Mesh,
   merge,
@@ -80,8 +81,8 @@ const MUD: Vec3 = [0.05, 0.036, 0.022];
  * square grid they are free to be stains.
  */
 function sheet(origin: Vec3, u: Vec3, v: Vec3, cell: number, color: Vec3): Mesh {
-  const nu = Math.max(1, Math.round(Math.hypot(...u) / cell));
-  const nv = Math.max(1, Math.round(Math.hypot(...v) / cell));
+  const nu = Math.max(1, Math.round(dmath.norm(u) / cell));
+  const nv = Math.max(1, Math.round(dmath.norm(v) / cell));
   const at = (i: number, j: number): Vec3 => [
     origin[0] + (u[0] * i) / nu + (v[0] * j) / nv,
     origin[1] + (u[1] * i) / nu + (v[1] * j) / nv,
@@ -120,7 +121,7 @@ const doorArc: Check = () => {
         [LEAF_X + DOOR_T / 2, -s * LEAF],
         [LEAF_X - DOOR_T / 2, -s * LEAF],
       ] as const) {
-        const wx = DOOR_X + x * Math.cos(t) - y * Math.sin(t);
+        const wx = DOOR_X + x * dmath.cos(t) - y * dmath.sin(t);
         if (wx > -HL + 0.075)
           out.push({
             message: `door ${s > 0 ? 'r' : 'l'} at ${a}° reaches x ${wx.toFixed(3)} inside the box`,

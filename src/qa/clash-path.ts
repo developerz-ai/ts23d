@@ -6,6 +6,7 @@
 import {
   type BakedMotion,
   cyclesOf,
+  dmath,
   LOOP_SECONDS,
   type Mesh,
   motionPose,
@@ -23,8 +24,8 @@ const PATH_STEPS = 48;
  * `yaw` about Z. One cycle is enough: every cycle retraces it.
  */
 export function pathVolume(mesh: Mesh, origin: Vec3, yaw: number, motion: BakedMotion): Volume {
-  const c = Math.cos(yaw);
-  const s = Math.sin(yaw);
+  const c = dmath.cos(yaw);
+  const s = dmath.sin(yaw);
   const toLocal = (p: Vec3): Vec3 => {
     const d: Vec3 = [p[0] - origin[0], p[1] - origin[1], p[2] - origin[2]];
     return [d[0] * c + d[1] * s, -d[0] * s + d[1] * c, d[2]];

@@ -4,6 +4,7 @@
 // carved clear — plus a two-segment moustache and optional braid. Head units, mirrored across Y.
 
 import type { Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import type { SculptEdit } from '../primitives/index.ts';
 import { along, unit } from './head-geom.ts';
 import type { HeadLayout } from './head-layout.ts';
@@ -43,7 +44,7 @@ export function browEdits(p: HeadParams, l: HeadLayout): SculptEdit[] {
 
 /** Box whose top face is the plane through `p` tilted `deg` about Y (positive: higher at back). */
 const below = (p: Vec3, deg: number): SculptEdit => {
-  const n: Vec3 = [-Math.sin(deg * RAD), 0, Math.cos(deg * RAD)];
+  const n: Vec3 = [-dmath.sin(deg * RAD), 0, dmath.cos(deg * RAD)];
   return {
     shape: 'roundBox',
     at: [p[0] - n[0], p[1], p[2] - n[2]],

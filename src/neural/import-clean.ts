@@ -5,6 +5,7 @@
 // occurrence wins, everything iterates in index order.
 
 import type { Mesh } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import { fillHoles } from './import-holes.ts';
 import { pointsOf, shellsOf } from './import-topology.ts';
 
@@ -144,7 +145,7 @@ export function smoothNormals(m: Mesh, weld = 1e-6): Mesh {
   const normals = new Float32Array(m.normals.length);
   for (let v = 0; v < normals.length / 3; v++) {
     const q = (pt[v] ?? 0) * 3;
-    const l = Math.hypot(acc[q] ?? 0, acc[q + 1] ?? 0, acc[q + 2] ?? 0) || 1;
+    const l = dmath.hypot(acc[q] ?? 0, acc[q + 1] ?? 0, acc[q + 2] ?? 0) || 1;
     for (let k = 0; k < 3; k++) normals[v * 3 + k] = (acc[q + k] ?? 0) / l;
   }
   return { ...m, normals };

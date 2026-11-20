@@ -2,7 +2,7 @@
 // contact sheet, two detail close-ups (where the triangles are), the LOD strip, review.md (the
 // checklist prompt) and review.json (model-free image metrics with threshold warnings).
 
-import { type Asset, compile, encodePng, type Lod } from '../core/index.ts';
+import { type Asset, compile, dmath, encodePng, type Lod } from '../core/index.ts';
 import { type PaintedSheet, type SheetRecipe, sheetFor } from '../material/index.ts';
 import { type BeautyOptions, renderBeauty } from './beauty.ts';
 import { exportedTriangles, lodStrip } from './lod-strip.ts';
@@ -39,7 +39,7 @@ export function detailWindows(detail: Uint32Array): { x: number; y: number }[] {
     if ((detail[c] ?? 0) === 0 || picked.length === 2) break;
     if (
       picked.every(
-        (p) => Math.hypot((p % 16) - (c % 16), Math.floor(p / 16) - Math.floor(c / 16)) >= 4,
+        (p) => dmath.hypot((p % 16) - (c % 16), Math.floor(p / 16) - Math.floor(c / 16)) >= 4,
       )
     )
       picked.push(c);

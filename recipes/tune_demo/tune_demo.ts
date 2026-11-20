@@ -14,6 +14,7 @@
 import {
   cylinder,
   defineAsset,
+  dmath,
   hex,
   lathe,
   type Mesh,
@@ -115,17 +116,17 @@ function clayTone(m: Mesh, runs: boolean): Mesh {
     const x = m.positions[v * 3] ?? 0;
     const y = m.positions[v * 3 + 1] ?? 0;
     const z = m.positions[v * 3 + 2] ?? 0;
-    const ang = Math.atan2(y, x);
-    const rad = Math.hypot(x, y);
+    const ang = dmath.atan2(y, x);
+    const rad = dmath.hypot(x, y);
     let c = mix(FOOT, CLAY, band(z, 0.012, 0.045));
     // Burial soil caked on the foot and lower body: grey-buff against the orange clay, up to a
     // ragged tide line 8–18 cm high, thinning over its top 6 cm (four body stations) into the
     // clay: a graded dirt edge, not a staircase cut at one station.
     const tide =
       0.13 +
-      0.035 * Math.sin(ang * 3 + 0.7) +
-      0.015 * Math.sin(ang * 7 + 2) +
-      0.008 * Math.sin(ang * 13 + 4.1);
+      0.035 * dmath.sin(ang * 3 + 0.7) +
+      0.015 * dmath.sin(ang * 7 + 2) +
+      0.008 * dmath.sin(ang * 13 + 4.1);
     const caked = 1 - band(z, tide - 0.045, tide + 0.015);
     c = mix(c, SOIL, 0.8 * caked * caked * (3 - 2 * caked));
     // Residue ring: the lip and the first 3 cm of neck, darkest at the rim.
@@ -133,12 +134,12 @@ function clayTone(m: Mesh, runs: boolean): Mesh {
     if (runs)
       for (const run of RUNS) {
         let d = ang - run.a;
-        d = Math.atan2(Math.sin(d), Math.cos(d));
+        d = dmath.atan2(dmath.sin(d), dmath.cos(d));
         const across = Math.abs(d) * rad;
         const down = H - z;
         if (across > run.w || down > run.len) continue;
         const fade = 1 - down / run.len;
-        c = mix(c, RESIDUE, 0.92 * (1 - (across / run.w) ** 4) * (0.6 + 0.4 * fade));
+        c = mix(c, RESIDUE, 0.92 * (1 - dmath.pow(across / run.w, 4)) * (0.6 + 0.4 * fade));
       }
     colors.set(c, v * 3);
   }
@@ -251,7 +252,7 @@ export const tune_demo = defineAsset({
             align: 'centre',
             color: STAMP,
             strip: TERRACOTTA,
-            surface: (u, w) => Math.sqrt(Math.max(0, r(zS + w) ** 2 - u * u)) - rS,
+            surface: (u, w) => Math.sqrt(Math.max(0, dmath.pow(r(zS + w), 2) - u * u)) - rS,
           }),
           { at: [0, 0, zS] },
         ),
@@ -268,7 +269,7 @@ export const tune_demo = defineAsset({
             depth: 0.0006,
             align: 'centre',
             color: OCHRE,
-            surface: (u, w) => Math.sqrt(Math.max(0, r(zT + w) ** 2 - u * u)) - rT,
+            surface: (u, w) => Math.sqrt(Math.max(0, dmath.pow(r(zT + w), 2) - u * u)) - rT,
           }),
           { at: [0, 0, zT], yaw: -0.3 },
         ),

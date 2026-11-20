@@ -9,7 +9,7 @@
 // Every joint must end inside the mesh, and no leg bone may stretch past STRETCH: else
 // T3D_MODEL_SKELETON. Memoised per positions array.
 
-import { type Bone, type Mesh, Ts23dError, type Vec3 } from '../core/index.ts';
+import { type Bone, dmath, type Mesh, Ts23dError, type Vec3 } from '../core/index.ts';
 import { triBvh } from '../primitives/index.ts';
 import type { Bones } from './creature-bones.ts';
 import { v3 } from './creature-curve.ts';
@@ -141,7 +141,7 @@ export function fitSkeleton(mesh: Mesh, b: Bones, prefix = '', strict = true): F
     }
     const ankle = fitted[fitted.length - 2] ?? [0, 0, 0];
     const tip = poly[poly.length - 1] ?? ankle;
-    const paw = Math.hypot(tip[0] - (feet[i]?.[0] ?? 0), tip[1] - (feet[i]?.[1] ?? 0));
+    const paw = dmath.hypot(tip[0] - (feet[i]?.[0] ?? 0), tip[1] - (feet[i]?.[1] ?? 0));
     fitted[fitted.length - 1] = [ankle[0] + t.toe[0] * paw, ankle[1] + t.toe[1] * paw, tip[2]];
     writeChain(pos, chain, fitted);
     shift[stem.startsWith('fore') ? 'fore' : 'hind'].push(

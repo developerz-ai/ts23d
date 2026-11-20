@@ -14,6 +14,7 @@ import {
   CREATURE_MATERIALS,
   defineMaterial,
   defineModelCreature,
+  dmath,
 } from '@developerz.ai/ts23d';
 import { DESIGN, DRAKE } from './spec.ts';
 import { TRIANGLES } from './steps.ts';
@@ -66,7 +67,8 @@ export function measured(a: Parameters<Check>[0]): {
   const tail = bones
     .filter((b) => /^tail_[1-9]\d*$/.test(b.name))
     .reduce(
-      (s, b) => s + Math.hypot(b.tail[0] - b.head[0], b.tail[1] - b.head[1], b.tail[2] - b.head[2]),
+      (s, b) =>
+        s + dmath.hypot(b.tail[0] - b.head[0], b.tail[1] - b.head[1], b.tail[2] - b.head[2]),
       0,
     );
   return { withers, headBody: nose - rump, tail };

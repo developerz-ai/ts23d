@@ -11,6 +11,7 @@
 // using your prompts, subject to third-party rights" (Kubeez terms) → licence 'own' + terms URL.
 
 import type { NeuralOutput } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import {
   fieldsOf,
   inputsOf,
@@ -55,10 +56,10 @@ const RATIOS = ['1:1', '4:3', '3:4', '16:9', '9:16', '21:9'];
 
 /** The listed aspect ratio closest to width / height. */
 export function aspectOf(width: number, height: number): string {
-  const r = Math.log(width / height);
+  const r = dmath.log(width / height);
   const d = (s: string): number => {
     const [a, b] = s.split(':').map(Number);
-    return Math.abs(Math.log((a ?? 1) / (b ?? 1)) - r);
+    return Math.abs(dmath.log((a ?? 1) / (b ?? 1)) - r);
   };
   return RATIOS.reduce((best, s) => (d(s) < d(best) ? s : best));
 }

@@ -6,6 +6,7 @@
 // in the scan's colour (as a scanner records short hair), not geometry.
 
 import type { Mesh, Vec3 } from '@developerz.ai/ts23d';
+import { dmath } from '@developerz.ai/ts23d';
 import { L } from '../_lib/bust/human/spec.ts';
 import { faceBase } from '../_lib/face/base.ts';
 import { quadToMesh, subdivide } from '../_lib/face/quad.ts';
@@ -44,13 +45,13 @@ function keep(p: Vec3): boolean {
   // 2 cm below the collar plane (hidden in the torso), and off the trapezius.
   const belowSeam = q[2] + 0.3 * q[0] < SEAM_Z - 0.02;
   // Trapezius flare trimmed only under the collar (never where it can be seen).
-  const shoulder = Math.hypot(p[0] - 0.03, p[1]) > 0.062 && q[2] + 0.3 * q[0] < SEAM_Z - 0.006;
+  const shoulder = dmath.hypot(p[0] - 0.03, p[1]) > 0.062 && q[2] + 0.3 * q[0] < SEAM_Z - 0.006;
   return !belowSeam && !shoulder;
 }
 
 const near = (p: Vec3, c: readonly number[], r: number): number => {
-  const d = Math.hypot(p[0] - (c[0] ?? 0), Math.abs(p[1]) - (c[1] ?? 0), p[2] - (c[2] ?? 0));
-  return Math.max(0, 1 - d / r) ** 2;
+  const d = dmath.hypot(p[0] - (c[0] ?? 0), Math.abs(p[1]) - (c[1] ?? 0), p[2] - (c[2] ?? 0));
+  return dmath.pow(Math.max(0, 1 - d / r), 2);
 };
 const mix = (a: readonly number[], b: readonly number[], t: number): Vec3 => [
   (a[0] ?? 0) + ((b[0] ?? 0) - (a[0] ?? 0)) * t,

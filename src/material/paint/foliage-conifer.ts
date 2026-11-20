@@ -3,7 +3,7 @@
 // snow lumps riding the upper side of each shoot), conifer needle spray (pine bundles fanning from
 // twig tips) and reeds/grass (tapering blades, some dry).
 
-import { createRng, type Rng } from '../../core/index.ts';
+import { createRng, dmath, type Rng } from '../../core/index.ts';
 import type { Canvas } from './canvas.ts';
 import { at, type Curve, curve, dim, drawStem, LEAF, vary } from './foliage-common.ts';
 import { Foliage } from './foliage-raster.ts';
@@ -47,10 +47,10 @@ function spruce(c: Canvas, seed: number, snow: boolean): void {
       curve(
         bx,
         by,
-        bx + Math.sin(a) * len * 0.5,
-        by + Math.cos(a) * len * 0.5,
-        bx + Math.sin(a) * len,
-        by + Math.cos(a) * len + 0.03,
+        bx + dmath.sin(a) * len * 0.5,
+        by + dmath.cos(a) * len * 0.5,
+        bx + dmath.sin(a) * len,
+        by + dmath.cos(a) * len + 0.03,
         24,
       ),
     );

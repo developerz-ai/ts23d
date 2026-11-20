@@ -162,34 +162,34 @@
     {
       "label": "driver diameter (5 ft 4 in)",
       "spec": 1.626,
-      "measured": 1.6260000467300415,
+      "measured": 1.626,
       "source": "https://en.wikipedia.org/wiki/Jupiter_(locomotive)"
     },
     {
       "label": "lead truck wheel diameter (30 in, typical; not in the Jupiter infobox)",
       "spec": 0.762,
-      "measured": 0.7599999606609344
+      "measured": 0.76
     },
     {
       "label": "rail centres (1435 mm gauge + 72 mm head)",
-      "spec": 1.5070000000000001,
-      "measured": 1.5069999694824219,
+      "spec": 1.507,
+      "measured": 1.507,
       "source": "https://en.wikipedia.org/wiki/Standard-gauge_railway"
     },
     {
       "label": "driver wheelbase (8 ft, estimated from the reference photo)",
       "spec": 2.44,
-      "measured": 2.439999997615814
+      "measured": 2.44
     },
     {
       "label": "boiler barrel diameter (49 in, typical)",
       "spec": 1.24,
-      "measured": 1.2400000095367432
+      "measured": 1.24
     },
     {
       "label": "funnel stack height (estimated from the reference photo)",
       "spec": 1.6,
-      "measured": 1.5999999046325684
+      "measured": 1.6
     }
   ],
   "sources": [

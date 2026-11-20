@@ -2,7 +2,7 @@
 // fins, wings in plan. The profile lives in a named plane and extrudes along the remaining axis.
 //   plane 'xz' (side profile, extrude along Y) · 'xy' (plan, extrude up Z) · 'yz' (front, along X)
 
-import { type Mesh, MeshBuilder, normalize, type Vec2, type Vec3 } from '../core/index.ts';
+import { dmath, type Mesh, MeshBuilder, normalize, type Vec2, type Vec3 } from '../core/index.ts';
 import { mappedOnto, type StripId, stripRect } from '../material/index.ts';
 import { colorOf, positive, profileOf } from './check.ts';
 import { faceBand } from './strip-uv.ts';
@@ -63,7 +63,7 @@ export function prism(o: PrismOptions): Mesh {
     const a = o.profile[i] ?? [0, 0];
     const c = o.profile[(i + 1) % n] ?? a;
     const e: Vec2 = [c[0] - a[0], c[1] - a[1]];
-    const len = Math.hypot(e[0], e[1]);
+    const len = dmath.hypot(e[0], e[1]);
     if (len < 1e-9) continue;
     const n2: Vec2 = [(e[1] / len) * sign, (-e[0] / len) * sign];
     const nrm = normalize(lift(plane, n2, 0));

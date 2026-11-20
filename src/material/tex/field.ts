@@ -4,6 +4,7 @@
 // context (grid + seed), so a graph is deterministic. Spatial filters wrap along U and clamp
 // along V, so anything built from tileable generators stays tileable by construction.
 
+import { dmath } from '../../core/index.ts';
 import type { Grid } from '../paint/canvas.ts';
 import { boxBlur } from '../paint/orm.ts';
 import { type ColourField, ramp, type Stop } from './colour.ts';
@@ -115,7 +116,7 @@ export class TexField {
     return this.map((a) => 1 - a, 'invert');
   }
   pow(k: number): TexField {
-    return this.map((a) => Math.max(0, a) ** k, `pow(${k})`);
+    return this.map((a) => dmath.pow(Math.max(0, a), k), `pow(${k})`);
   }
   clamp(lo = 0, hi = 1): TexField {
     return this.map((a) => Math.min(hi, Math.max(lo, a)), 'clamp');

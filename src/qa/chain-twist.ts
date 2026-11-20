@@ -5,13 +5,14 @@
 // parent joint: its twist is the part about the bone.
 
 import type { Bone, CompiledAsset, Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import { boneLength, longChains } from './chain-bones.ts';
 import type { Finding } from './types.ts';
 
 /** Least share of the section area a twisted joint keeps at a 50/50 blend. */
 export const AREA_KEPT = 0.85;
 /** The twist per joint that keeps exactly AREA_KEPT, degrees (about 45.6). */
-export const TWIST_LIMIT = (2 * Math.acos(Math.sqrt(AREA_KEPT)) * 180) / Math.PI;
+export const TWIST_LIMIT = (2 * dmath.acos(Math.sqrt(AREA_KEPT)) * 180) / Math.PI;
 
 const axisOf = (b: Bone): Vec3 => {
   const l = boneLength(b) || 1;
@@ -21,7 +22,7 @@ const axisOf = (b: Bone): Vec3 => {
 /** Twist about unit `axis` held by the rotation (x, y, z, w), degrees in 0..180. */
 export function twistDegrees(axis: Vec3, x: number, y: number, z: number, w: number): number {
   const along = Math.abs(x * axis[0] + y * axis[1] + z * axis[2]);
-  return (2 * Math.atan2(along, Math.abs(w)) * 180) / Math.PI;
+  return (2 * dmath.atan2(along, Math.abs(w)) * 180) / Math.PI;
 }
 
 const finding = (message: string, fix: string): Finding => ({
@@ -32,7 +33,7 @@ const finding = (message: string, fix: string): Finding => ({
 });
 
 const area = (deg: number): string =>
-  `${(Math.cos((deg * Math.PI) / 360) ** 2 * 100).toFixed(0)} %`;
+  `${(dmath.pow(dmath.cos((deg * Math.PI) / 360), 2) * 100).toFixed(0)} %`;
 
 export function chainTwistFindings(asset: CompiledAsset): Finding[] {
   const sk = asset.skeleton;

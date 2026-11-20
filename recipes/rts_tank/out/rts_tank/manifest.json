@@ -216,7 +216,7 @@
     {
       "label": "road wheel diameter",
       "spec": 0.6,
-      "measured": 0.6000000163912773,
+      "measured": 0.6,
       "source": "recipes/rts_faction/README.md"
     }
   ],

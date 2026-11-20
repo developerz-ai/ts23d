@@ -2,6 +2,7 @@
 // placed for the front tyre's half-width missed every groove of the wider rear tyre.
 
 import { describe, expect, it } from 'bun:test';
+import { dmath } from '@developerz.ai/ts23d';
 import { TYRE_F, TYRE_R } from '../dims.ts';
 import { tyre, tyreRadius } from './tyre.ts';
 
@@ -18,7 +19,7 @@ describe('tyre LOD0 tread', () => {
         let floor = 0;
         for (let i = 0; i < m.positions.length; i += 3) {
           const [x, y, z] = [m.positions[i] ?? 0, m.positions[i + 1] ?? 0, m.positions[i + 2] ?? 0];
-          if (Math.abs(y - g * hw) < 0.0055 && Math.abs(Math.hypot(x, z) - (R - 0.007)) < 1e-4)
+          if (Math.abs(y - g * hw) < 0.0055 && Math.abs(dmath.hypot(x, z) - (R - 0.007)) < 1e-4)
             floor++;
         }
         expect({ g, floor: floor > 0 }).toEqual({ g, floor: true });

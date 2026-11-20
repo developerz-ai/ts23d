@@ -3,6 +3,7 @@
 // QA can't import /render (same tier), and the overlay only needs to be legible, not pretty.
 
 import type { Bounds, Mesh, Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 
 export interface View {
   readonly yaw: number;
@@ -22,10 +23,10 @@ export interface Frame {
 
 /** View axes for camera yaw (around Z, 0 = looking from +X) and pitch (down from horizontal). */
 function axes(v: View): { right: Vec3; up: Vec3; fwd: Vec3 } {
-  const cy = Math.cos(v.yaw);
-  const sy = Math.sin(v.yaw);
-  const cp = Math.cos(v.pitch);
-  const sp = Math.sin(v.pitch);
+  const cy = dmath.cos(v.yaw);
+  const sy = dmath.sin(v.yaw);
+  const cp = dmath.cos(v.pitch);
+  const sp = dmath.sin(v.pitch);
   // Camera sits at direction (cy·cp, sy·cp, sp) from the centre, looking back at it.
   const back: Vec3 = [cy * cp, sy * cp, sp];
   const right: Vec3 = [-sy, cy, 0];
@@ -47,7 +48,7 @@ export function rasterise(
   ];
   const r = Math.max(
     1e-6,
-    Math.hypot(bounds.max[0] - c[0], bounds.max[1] - c[1], bounds.max[2] - c[2]),
+    dmath.hypot(bounds.max[0] - c[0], bounds.max[1] - c[1], bounds.max[2] - c[2]),
   );
   const scale = (size * 0.47) / r;
   const project = (p: Vec3): [number, number, number] => {
@@ -66,7 +67,7 @@ export function rasterise(
     0.35 * right[1] + 0.6 * up[1] - 0.7 * fwd[1],
     0.35 * right[2] + 0.6 * up[2] - 0.7 * fwd[2],
   ];
-  const ll = Math.hypot(...light);
+  const ll = dmath.norm(light);
   for (const m of meshes) {
     const P = m.positions;
     const C = m.colors;
@@ -84,7 +85,7 @@ export function rasterise(
         u[2] * v[0] - u[0] * v[2],
         u[0] * v[1] - u[1] * v[0],
       ];
-      const nl = Math.hypot(...n) || 1;
+      const nl = dmath.norm(n) || 1;
       const lit = Math.abs(n[0] * light[0] + n[1] * light[1] + n[2] * light[2]) / (nl * ll);
       const shade = 0.35 + 0.65 * lit;
       const col = [0, 1, 2].map((k) =>
@@ -157,8 +158,8 @@ export function ring(
   for (let i = 0; i < steps; i++) {
     const t = (i / steps) * Math.PI * 2;
     for (let w = 0; w < width; w++) {
-      const x = Math.round(cx + Math.cos(t) * (r + w));
-      const y = Math.round(cy + Math.sin(t) * (r + w));
+      const x = Math.round(cx + dmath.cos(t) * (r + w));
+      const y = Math.round(cy + dmath.sin(t) * (r + w));
       if (x < 0 || y < 0 || x >= f.size || y >= f.size) continue;
       f.rgba.set([rgb[0] ?? 0, rgb[1] ?? 0, rgb[2] ?? 0, 255], (y * f.size + x) * 4);
     }

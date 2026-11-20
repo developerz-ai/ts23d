@@ -18,6 +18,7 @@ import {
   box,
   cross,
   defineAsset,
+  dmath,
   dot,
   frame,
   grime,
@@ -131,7 +132,7 @@ const QUAD: readonly Vec2[] = [
 ];
 
 // ── Members ─────────────────────────────────────────────────────────────────────────────────────
-const dist = (a: Vec3, b: Vec3): number => Math.hypot(...sub(b, a));
+const dist = (a: Vec3, b: Vec3): number => dmath.norm(sub(b, a));
 const clamp = (v: number, lo: number, hi: number): number => Math.min(hi, Math.max(lo, v));
 
 function rod(out: Mesh[], a: Vec3, b: Vec3, width: number, color: Vec3 = IRON, caps = true): void {
@@ -321,21 +322,21 @@ function leg(q: number, lod: Lod): Mesh {
 const ARCH_SEGS: readonly number[] = [41, 25, 7];
 function archTop(lod: Lod): number {
   const n = ARCH_SEGS[lod] ?? 7;
-  const th0 = Math.asin(ARCH.cz / ARCH.r);
+  const th0 = dmath.asin(ARCH.cz / ARCH.r);
   const step = (Math.PI + 2 * th0) / n;
   const ro = ARCH.r + (lod === 2 ? 0 : ARCH.depth);
   const w = lod === 2 ? 2.0 : ARCH.w;
-  return ARCH.cz + ro * Math.cos(step / 2) + w / 2;
+  return ARCH.cz + ro * dmath.cos(step / 2) + w / 2;
 }
 function arch(lod: Lod): Mesh {
   const out: Mesh[] = [];
   const n = ARCH_SEGS[lod] ?? 7;
-  const th0 = Math.asin(ARCH.cz / ARCH.r);
+  const th0 = dmath.asin(ARCH.cz / ARCH.r);
   const ang = (i: number): number => -th0 + (i * (Math.PI + 2 * th0)) / n;
   const pt = (r: number, i: number): Vec3 => [
     BELT1,
-    r * Math.cos(ang(i)),
-    ARCH.cz + r * Math.sin(ang(i)),
+    r * dmath.cos(ang(i)),
+    ARCH.cz + r * dmath.sin(ang(i)),
   ];
   const ri = ARCH.r;
   const ro = ARCH.r + (lod === 2 ? 0 : ARCH.depth);
@@ -355,9 +356,9 @@ function arch(lod: Lod): Mesh {
     const top = archTop(0) + 0.35;
     for (let i = 1; i < n; i++) {
       const a = ang(i);
-      const r = (top - ARCH.cz) / Math.sin(a);
-      if (Math.abs(r * Math.cos(a)) > 33 || r - ro < 1) continue;
-      rod(out, pt(ro, i), [BELT1, r * Math.cos(a), top], 0.3);
+      const r = (top - ARCH.cz) / dmath.sin(a);
+      if (Math.abs(r * dmath.cos(a)) > 33 || r - ro < 1) continue;
+      rod(out, pt(ro, i), [BELT1, r * dmath.cos(a), top], 0.3);
     }
   }
   return iron(out, true);
@@ -515,7 +516,7 @@ function campanile(lod: Lod): Mesh {
       const [t0, t1] = [i / n, (i + 1) / n];
       const p = (t: number): Vec3 => {
         const rr = r(t);
-        return [rr * Math.cos(yaw), rr * Math.sin(yaw), h(t)];
+        return [rr * dmath.cos(yaw), rr * dmath.sin(yaw), h(t)];
       };
       rod(out, p(t0), p(t1), 0.45);
     }
@@ -523,8 +524,8 @@ function campanile(lod: Lod): Mesh {
   for (let k = 0; k < 4; k++) {
     const yaw = Math.PI / 4 + (k * Math.PI) / 2;
     rib(
-      (t) => 2.4 + 6.4 * Math.cos((t * Math.PI) / 2),
-      (t) => z0 + 0.5 + (zr - z0 - 0.5) * Math.sin((t * Math.PI) / 2),
+      (t) => 2.4 + 6.4 * dmath.cos((t * Math.PI) / 2),
+      (t) => z0 + 0.5 + (zr - z0 - 0.5) * dmath.sin((t * Math.PI) / 2),
       yaw,
     );
   }
@@ -535,7 +536,7 @@ function campanile(lod: Lod): Mesh {
     for (let i = 0; i < 12; i++) {
       const p = (j: number): Vec3 => {
         const t = (j / 12) * Math.PI;
-        return [a, a * Math.cos(t), z0 + 0.5 + 5.2 * Math.sin(t)];
+        return [a, a * dmath.cos(t), z0 + 0.5 + 5.2 * dmath.sin(t)];
       };
       rod(arc, p(i), p(i + 1), 0.35);
     }

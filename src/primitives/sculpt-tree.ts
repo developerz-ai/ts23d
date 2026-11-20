@@ -7,6 +7,7 @@
 // skipped only outside their influence sphere, where they return the running value unchanged.
 
 import type { Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import { invalid } from './check.ts';
 import { isAdd, isPush, type SculptEdit, sculptShape, shapeSphere } from './sculpt-edit.ts';
 import { fieldShape } from './sculpt-field.ts';
@@ -173,7 +174,7 @@ function enclose(
     ((lo[2] ?? 0) + (hi[2] ?? 0)) / 2,
   ];
   const r = Math.max(
-    ...spheres.map((n) => Math.hypot(n.c[0] - c[0], n.c[1] - c[1], n.c[2] - c[2]) + n.r),
+    ...spheres.map((n) => dmath.hypot(n.c[0] - c[0], n.c[1] - c[1], n.c[2] - c[2]) + n.r),
   );
   return {
     c,

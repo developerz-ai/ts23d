@@ -6,6 +6,7 @@
 // `detail` boxes add finer grids inside (sdf-detail.ts), meshed by surface-nets-detail.ts.
 
 import type { Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import { invalid } from './check.ts';
 import { type DetailGrid, type DetailRegion, sampleDetail } from './sdf-detail.ts';
 import type { Field } from './sdf-ops.ts';
@@ -62,7 +63,7 @@ export function sampleGrid(
     const vol = [0, 1, 2].reduce((v, k) => v * ((hi[k] ?? 0) - (lo[k] ?? 0)), 1);
     invalid(
       `sdf grid ${nx}×${ny}×${nz} exceeds ${MAX_POINTS} points at ${h} m cells`,
-      `use cells ≥ ${Math.cbrt(vol / MAX_POINTS).toPrecision(2)} m, or tighten the bounds`,
+      `use cells ≥ ${dmath.cbrt(vol / MAX_POINTS).toPrecision(2)} m, or tighten the bounds`,
     );
   }
   const cx = (lo[0] + hi[0]) / 2;

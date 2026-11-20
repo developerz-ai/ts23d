@@ -9,6 +9,7 @@ import {
   box,
   cylinder,
   defineAsset,
+  dmath,
   frame,
   type Lod,
   type Mesh,
@@ -57,7 +58,7 @@ const HANDLE_R = 0.018;
 /** The pick at port: grip low by the right hip, shaft up across the chest to the left, the head
  *  out past the left shoulder. AXIS is the shaft (in the frontal plane). */
 const GRIP: Vec3 = [0.3, -0.22, 1.0];
-const AXIS: Vec3 = [0, 0.62 / Math.hypot(0.62, 0.78), 0.78 / Math.hypot(0.62, 0.78)];
+const AXIS: Vec3 = [0, 0.62 / dmath.hypot(0.62, 0.78), 0.78 / dmath.hypot(0.62, 0.78)];
 /** The left glove under the shaft, 0.42 m up it. */
 const SUPPORT: Vec3 = [GRIP[0], GRIP[1] + AXIS[1] * 0.42 + 0.03, GRIP[2] + AXIS[2] * 0.42 - 0.025];
 const SUIT = CLOTH;
@@ -90,7 +91,8 @@ type Add = (name: string, m: Mesh, opts?: PartOptions) => void;
 function headgear(add: Add, lod: Lod, head: Vec3, r: Vec3): void {
   const z = head[2] + 0.02;
   // The cap's front surface at goggle height: brim and lenses sit on it whatever the head size.
-  const capFront = head[0] - 0.01 + (r[0] + 0.02) * Math.sqrt(1 - (0.035 / (r[2] - 0.01)) ** 2);
+  const capFront =
+    head[0] - 0.01 + (r[0] + 0.02) * Math.sqrt(1 - dmath.pow(0.035 / (r[2] - 0.01), 2));
   // Round team cap: the worker's top-visible team mark, with a forward visor.
   add(
     'cap',
@@ -150,7 +152,11 @@ function backpack(add: Add, lod: Lod, back: Vec3): void {
     const n = SEG(lod, 36, 18, 8);
     for (let i = 0; i <= n; i++) {
       const a = (i / n) * Math.PI * 6;
-      coil.push([x - 0.02 + Math.cos(a) * 0.08, -0.18 - (i / n) * 0.03, 1.08 + Math.sin(a) * 0.08]);
+      coil.push([
+        x - 0.02 + dmath.cos(a) * 0.08,
+        -0.18 - (i / n) * 0.03,
+        1.08 + dmath.sin(a) * 0.08,
+      ]);
     }
     body.push(
       sweep({

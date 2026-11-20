@@ -4,6 +4,7 @@
 // the ONE shared material and draw call (the default path; ADR 011).
 
 import type { Mesh } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import {
   DEFAULT_SHEET,
   mappedOnto,
@@ -15,7 +16,7 @@ import {
 
 /** sRGB-encoded 0..1 → linear 0..1. */
 export const toLinear = (s: number): number =>
-  s <= 0.04045 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+  s <= 0.04045 ? s / 12.92 : dmath.pow((s + 0.055) / 1.055, 2.4);
 
 /** Bilinear RGBA8 sample at (u, v), wrapping (glTF REPEAT; v = 0 is the top row). 0..1 sRGB. */
 export function sampleRgba(img: Rgba, u: number, v: number, out: number[]): void {

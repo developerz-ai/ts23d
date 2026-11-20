@@ -5,6 +5,7 @@
 // fields must not keep the `p` they are given (the mesher reuses it).
 
 import type { Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import { type SilhouetteOptions, visualHull } from './sdf-silhouette.ts';
 
 export type Field = (p: Vec3) => number;
@@ -23,8 +24,10 @@ export const shapes = {
   sphere: (x: number, y: number, z: number, r: number): number =>
     Math.sqrt(x * x + y * y + z * z) - r,
   ellipsoid(x: number, y: number, z: number, rx: number, ry: number, rz: number): number {
-    const k0 = Math.sqrt((x / rx) ** 2 + (y / ry) ** 2 + (z / rz) ** 2);
-    const k1 = Math.sqrt((x / (rx * rx)) ** 2 + (y / (ry * ry)) ** 2 + (z / (rz * rz)) ** 2);
+    const k0 = Math.sqrt(dmath.pow(x / rx, 2) + dmath.pow(y / ry, 2) + dmath.pow(z / rz, 2));
+    const k1 = Math.sqrt(
+      dmath.pow(x / (rx * rx), 2) + dmath.pow(y / (ry * ry), 2) + dmath.pow(z / (rz * rz), 2),
+    );
     return k1 === 0 ? -Math.min(rx, ry, rz) : (k0 * (k0 - 1)) / k1;
   },
   /** Box of half extents (hx, hy, hz) with edges rounded by `r`. */
@@ -64,7 +67,7 @@ export const shapes = {
     // One sphere swallows the other: the bigger sphere is the shape.
     if (b * b >= 1) {
       const top = r2 > r1;
-      return Math.sqrt(qx * qx + (top ? z - h : z) ** 2) - (top ? r2 : r1);
+      return Math.sqrt(qx * qx + dmath.pow(top ? z - h : z, 2)) - (top ? r2 : r1);
     }
     const a = Math.sqrt(1 - b * b);
     const k = -b * qx + a * z;
@@ -77,7 +80,10 @@ export const shapes = {
    * min(a, b, c) · (‖(x/a, y/b, z/c)‖ₙ − 1): 1-Lipschitz for n ≥ 2, exact on the surface.
    */
   superellipsoid(x: number, y: number, z: number, a: number, b: number, c: number, n: number) {
-    const g = (Math.abs(x / a) ** n + Math.abs(y / b) ** n + Math.abs(z / c) ** n) ** (1 / n);
+    const g = dmath.pow(
+      dmath.pow(Math.abs(x / a), n) + dmath.pow(Math.abs(y / b), n) + dmath.pow(Math.abs(z / c), n),
+      1 / n,
+    );
     return Math.min(a, b, c) * (g - 1);
   },
   /** Ring in the XY plane: major radius R, tube radius r. */
@@ -151,7 +157,11 @@ export const sd = {
       const py = p[1] - a[1];
       const pz = p[2] - a[2];
       const h = bb > 0 ? clamp01((px * bx + py * by + pz * bz) / bb) : 0;
-      return Math.sqrt((px - bx * h) ** 2 + (py - by * h) ** 2 + (pz - bz * h) ** 2) - r;
+      return (
+        Math.sqrt(
+          dmath.pow(px - bx * h, 2) + dmath.pow(py - by * h, 2) + dmath.pow(pz - bz * h, 2),
+        ) - r
+      );
     };
   },
   cone:

@@ -17,6 +17,7 @@ import {
   type CheckFinding,
   cylinder,
   defineAsset,
+  dmath,
   grime,
   hex,
   insideSolid,
@@ -204,7 +205,7 @@ function quad(a: Vec3, b: Vec3, c: Vec3, d: Vec3, color: Vec3, off = DECAL): Mes
   const u: Vec3 = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
   const v: Vec3 = [d[0] - a[0], d[1] - a[1], d[2] - a[2]];
   const n: Vec3 = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
-  const l = Math.hypot(...n) || 1;
+  const l = dmath.norm(n) || 1;
   const lift = (p: Vec3): Vec3 => [
     p[0] + (n[0] / l) * off,
     p[1] + (n[1] / l) * off,
@@ -218,7 +219,7 @@ function tri(a: Vec3, b: Vec3, c: Vec3, color: Vec3, off = DECAL): Mesh {
   const u: Vec3 = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
   const v: Vec3 = [c[0] - a[0], c[1] - a[1], c[2] - a[2]];
   const n: Vec3 = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
-  const l = Math.hypot(...n) || 1;
+  const l = dmath.norm(n) || 1;
   const lift = (p: Vec3): Vec3 => [
     p[0] + (n[0] / l) * off,
     p[1] + (n[1] / l) * off,
@@ -285,7 +286,7 @@ const toward = (c: Vec3, to: Vec3, k: number): Vec3 => {
  */
 const scorched = (m: Mesh): Mesh =>
   tint(m, (p, c) => {
-    const rho = Math.hypot(p[0], p[1]);
+    const rho = dmath.hypot(p[0], p[1]);
     const bore = rho < 0.9 && p[2] < -1.2 ? 1 : 0;
     const burnt = toward(c, [0.17, 0.11, 0.075], 0.75 * (1 - smooth(-1.0, -0.1, p[2])));
     return toward(burnt, SOOT, Math.max(0.92 * bore, 0.94 * (1 - smooth(-1.5, -0.5, p[2]))));
@@ -329,8 +330,8 @@ const rampArc: Check = (asset) => {
     for (const y of [-RAMP_HW + 0.05, 0, RAMP_HW - 0.05])
       for (const z of [-0.11, 0.13]) corners.push([-0.05 - t * (RAMP_LEN - 0.05), y, z]);
   for (let a = RAMP_OPEN; a <= RAMP_CLOSED + 1e-9; a += 6) {
-    const c = Math.cos(a * DEG);
-    const sn = Math.sin(a * DEG);
+    const c = dmath.cos(a * DEG);
+    const sn = dmath.sin(a * DEG);
     for (const [x, y, z] of corners) {
       const p: Vec3 = [HINGE[0] + x * c + z * sn, y, HINGE[2] - x * sn + z * c];
       if (p[2] < -0.02)
@@ -1071,7 +1072,7 @@ export const dropship = defineAsset({
           pod.push(
             place(vent, {
               yaw: s * a,
-              at: [POD_R * Math.cos(s * a), POD_R * Math.sin(s * a), -0.55],
+              at: [POD_R * dmath.cos(s * a), POD_R * dmath.sin(s * a), -0.55],
             }),
           );
         if (lod === 0) {
@@ -1079,7 +1080,7 @@ export const dropship = defineAsset({
           // Each vane spans the nozzle bore (r ≈ 0.76 m there) chord to chord, ends sunk 3 cm.
           for (let i = 0; i < 4; i++) {
             const x = -0.45 + i * 0.3;
-            const span = 2 * Math.sqrt(0.76 ** 2 - x * x) + 0.06;
+            const span = 2 * Math.sqrt(0.76 * 0.76 - x * x) + 0.06;
             pod.push(bevelled([0.05, span, 0.22], DARK, 0, [x, 0, -2.0]));
           }
         }
@@ -1094,10 +1095,10 @@ export const dropship = defineAsset({
           const R = POD_R;
           pod.push(
             quad(
-              [R * Math.cos(a0), R * Math.sin(a0), 1.38],
-              [R * Math.cos(a1), R * Math.sin(a1), 1.38],
-              [R * Math.cos(a1), R * Math.sin(a1), 1.52],
-              [R * Math.cos(a0), R * Math.sin(a0), 1.52],
+              [R * dmath.cos(a0), R * dmath.sin(a0), 1.38],
+              [R * dmath.cos(a1), R * dmath.sin(a1), 1.38],
+              [R * dmath.cos(a1), R * dmath.sin(a1), 1.52],
+              [R * dmath.cos(a0), R * dmath.sin(a0), 1.52],
               k % 2 ? BLACK : HAZARD,
             ),
           );

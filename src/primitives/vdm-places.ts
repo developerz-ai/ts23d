@@ -4,6 +4,7 @@
 // binned into every cell its reach box overlaps; the query reads one cell). Deterministic.
 
 import type { Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import { invalid } from './check.ts';
 import type { SculptVdm } from './vdm.ts';
 
@@ -42,13 +43,13 @@ export function stampSlope(size: number, grid: Float32Array, ch: number): number
         Math.abs(at(i, j + 1) - at(i, j)),
         Math.abs(at(i + 1, j + 1) - at(i + 1, j)),
       );
-      worst = Math.max(worst, Math.hypot(gx, gy));
+      worst = Math.max(worst, dmath.hypot(gx, gy));
     }
   return worst * (size - 1);
 }
 
 const norm = (v: Vec3): Vec3 => {
-  const l = Math.hypot(v[0], v[1], v[2]);
+  const l = dmath.hypot(v[0], v[1], v[2]);
   return [v[0] / l, v[1] / l, v[2] / l];
 };
 const cross = (a: Vec3, b: Vec3): Vec3 => [
@@ -70,7 +71,7 @@ export function compilePlaces(e: SculptVdm, where: string, mirror: boolean): Pla
     if (z < 0) hasNeg = true;
   }
   if (!(peak > 0)) invalid(`${where}: the stamp has no normal displacement`, 'use vdmStamp()');
-  const warp = Math.hypot(stampSlope(s.size, s.grid, 0), stampSlope(s.size, s.grid, 1));
+  const warp = dmath.hypot(stampSlope(s.size, s.grid, 0), stampSlope(s.size, s.grid, 1));
   const all = mirror ? [...e.places, ...e.places.map((q) => ({ ...q, mirrored: true }))] : e.places;
   const n = all.length;
   const data = new Float64Array(n * 15);
@@ -80,7 +81,7 @@ export function compilePlaces(e: SculptVdm, where: string, mirror: boolean): Pla
     const ok =
       q.at.every(Number.isFinite) &&
       q.normal.every(Number.isFinite) &&
-      Math.hypot(...q.normal) > 0 &&
+      dmath.norm(q.normal) > 0 &&
       q.scale > 0 &&
       Number.isFinite(q.scale) &&
       (q.depth === undefined || (q.depth > 0 && Number.isFinite(q.depth)));
@@ -109,14 +110,14 @@ export function compilePlaces(e: SculptVdm, where: string, mirror: boolean): Pla
     const f = (v: Vec3): Vec3 => (flip ? [v[0], -v[1], v[2]] : v);
     const nn = norm(q.normal);
     const up0 =
-      q.up && Math.hypot(...q.up) > 0
+      q.up && dmath.norm(q.up) > 0
         ? norm(q.up)
         : Math.abs(nn[2]) < 0.9
           ? ([0, 0, 1] as Vec3)
           : ([1, 0, 0] as Vec3);
     const dot = up0[0] * nn[0] + up0[1] * nn[1] + up0[2] * nn[2];
     let tv: Vec3 = [up0[0] - nn[0] * dot, up0[1] - nn[1] * dot, up0[2] - nn[2] * dot];
-    if (Math.hypot(...tv) < 1e-6) tv = Math.abs(nn[2]) < 0.9 ? [0, 0, 1] : [1, 0, 0];
+    if (dmath.norm(tv) < 1e-6) tv = Math.abs(nn[2]) < 0.9 ? [0, 0, 1] : [1, 0, 0];
     tv = norm(tv);
     const tu = cross(tv, nn);
     const dep = q.depth ?? peak * q.scale;
@@ -124,7 +125,7 @@ export function compilePlaces(e: SculptVdm, where: string, mirror: boolean): Pla
     const k = dep / peak;
     data.set([...f(q.at), ...f(tu), ...f(tv), ...f(nn), 1 / q.scale, a, k], i * 15);
     slope = Math.max(slope, (k * s.lipschitz * (1 + a * warp)) / q.scale + (dep * 3.75) / reach);
-    const r = Math.hypot(q.scale * Math.SQRT1_2, reach);
+    const r = dmath.hypot(q.scale * Math.SQRT1_2, reach);
     rho[i] = r;
     const at = f(q.at);
     for (let j = 0; j < 3; j++) {
@@ -133,7 +134,7 @@ export function compilePlaces(e: SculptVdm, where: string, mirror: boolean): Pla
     }
   });
   const c: Vec3 = [(lo[0] + hi[0]) / 2, (lo[1] + hi[1]) / 2, (lo[2] + hi[2]) / 2];
-  const r = Math.hypot(hi[0] - c[0], hi[1] - c[1], hi[2] - c[2]) + depth;
+  const r = dmath.hypot(hi[0] - c[0], hi[1] - c[1], hi[2] - c[2]) + depth;
   return { data, count: n, shell, reach, depth, slope, hasPos, hasNeg, c, r, rho };
 }
 

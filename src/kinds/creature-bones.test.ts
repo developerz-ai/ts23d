@@ -3,6 +3,7 @@
 
 import { describe, expect, it } from 'bun:test';
 import type { Bone, Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import { armatureOf } from './creature-bones.ts';
 import { bonesOf } from './creature-skeleton.ts';
 import type { CreatureSpec } from './creature-spec.ts';
@@ -21,7 +22,7 @@ const wolf: CreatureSpec = {
 
 const named = (bones: readonly Bone[], name: string): Bone | undefined =>
   bones.find((x) => x.name === name);
-const gap = (a: Vec3, b: Vec3): number => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+const gap = (a: Vec3, b: Vec3): number => dmath.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
 
 describe('armatureOf head parent', () => {
   it('a serpent head hangs from the spine bone at the neck, not the tail tip', () => {

@@ -4,7 +4,9 @@
 // spline through its neighbours. Corners (turns ≥ 50°) and straight runs between two corners stay
 // exact, so stems keep their vertex count and only bowls gain points. segments = 1 = raw data.
 
-const CORNER_COS = Math.cos((50 * Math.PI) / 180);
+import { dmath } from '../core/index.ts';
+
+const CORNER_COS = dmath.cos((50 * Math.PI) / 180);
 const EPS = 1e-9;
 
 export interface SmoothStroke {
@@ -19,7 +21,7 @@ function corner(ax: number, ay: number, bx: number, by: number, cx: number, cy: 
   const uy = by - ay;
   const vx = cx - bx;
   const vy = cy - by;
-  const d = Math.hypot(ux, uy) * Math.hypot(vx, vy);
+  const d = dmath.hypot(ux, uy) * dmath.hypot(vx, vy);
   return d < EPS || (ux * vx + uy * vy) / d < CORNER_COS;
 }
 

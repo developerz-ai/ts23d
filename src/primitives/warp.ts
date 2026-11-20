@@ -5,6 +5,7 @@
 // tool for stylising a base mesh (a head into an orc, an elf) by moving named landmarks.
 
 import type { Mesh, Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import { type Tps, type TpsOptions, tpsWarp } from './warp-solve.ts';
 
 export type WarpOptions = TpsOptions;
@@ -21,7 +22,7 @@ function turn(J: readonly number[], n: Vec3): Vec3 {
   const x = ((C[0] ?? 0) * n[0] + (C[1] ?? 0) * n[1] + (C[2] ?? 0) * n[2]) * sg;
   const y = ((C1[0] ?? 0) * n[0] + (C1[1] ?? 0) * n[1] + (C1[2] ?? 0) * n[2]) * sg;
   const z = ((C2[0] ?? 0) * n[0] + (C2[1] ?? 0) * n[1] + (C2[2] ?? 0) * n[2]) * sg;
-  const l = Math.hypot(x, y, z) || 1;
+  const l = dmath.hypot(x, y, z) || 1;
   return [x / l, y / l, z / l];
 }
 

@@ -8,7 +8,7 @@
 //   wing    the right wing's trailing edge torn: a V notch pulled into the membrane between the
 //           second and third fingers (vertices move, no triangle is cut: the slab stays closed)
 
-import { grime, type Mesh, type Vec3 } from '@developerz.ai/ts23d';
+import { dmath, grime, type Mesh, type Vec3 } from '@developerz.ai/ts23d';
 import { recolour } from '../_lib/creature/wild.ts';
 import { mix, smooth, type WearSpec, wearPaint } from '../_lib/creature/wild-paint.ts';
 import { C } from './palette.ts';
@@ -116,7 +116,7 @@ export function brokenTip(horn: Mesh, root: Vec3, keep: number): Mesh {
   let tip: Vec3 = root;
   let far = 0;
   for (let i = 0; i < P.length; i += 3) {
-    const d = Math.hypot(
+    const d = dmath.hypot(
       (P[i] ?? 0) - root[0],
       (P[i + 1] ?? 0) - root[1],
       (P[i + 2] ?? 0) - root[2],
@@ -127,7 +127,7 @@ export function brokenTip(horn: Mesh, root: Vec3, keep: number): Mesh {
   const axis: Vec3 = [(tip[0] - root[0]) / far, (tip[1] - root[1]) / far, (tip[2] - root[2]) / far];
   // Slanted: the plane's normal leans 25° off the horn's axis, toward +Z.
   const lean: Vec3 = [axis[0], axis[1], axis[2] + 0.47];
-  const ll = Math.hypot(lean[0], lean[1], lean[2]);
+  const ll = dmath.hypot(lean[0], lean[1], lean[2]);
   const n: Vec3 = [lean[0] / ll, lean[1] / ll, lean[2] / ll];
   const at: Vec3 = [
     root[0] + axis[0] * far * keep,
@@ -154,7 +154,7 @@ export function brokenTip(horn: Mesh, root: Vec3, keep: number): Mesh {
   const faces = faceSums(positions, horn.indices);
   for (const v of moved) {
     const f: Vec3 = [faces[v * 3] ?? 0, faces[v * 3 + 1] ?? 0, faces[v * 3 + 2] ?? 0];
-    const l = Math.hypot(f[0], f[1], f[2]);
+    const l = dmath.hypot(f[0], f[1], f[2]);
     normals.set(l > 0 ? [f[0] / l, f[1] / l, f[2] / l] : n, v * 3);
   }
   return { ...horn, positions, normals, colors };
@@ -180,9 +180,9 @@ export function tornEdge(
   const w = local(W.wrist);
   const mid: Vec3 = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2];
   const out: Vec3 = [mid[0] - w[0], mid[1] - w[1], mid[2] - w[2]];
-  const ol = Math.hypot(out[0], out[1], out[2]) || 1;
+  const ol = dmath.hypot(out[0], out[1], out[2]) || 1;
   const e: Vec3 = [out[0] / ol, out[1] / ol, out[2] / ol];
-  const chord = Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+  const chord = dmath.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
   const P = membrane.positions;
   // The rim: the vertex farthest along `e` among those near the panel's mid line.
   let rim: Vec3 | null = null;
@@ -191,7 +191,7 @@ export function tornEdge(
     const p: Vec3 = [P[i] ?? 0, P[i + 1] ?? 0, P[i + 2] ?? 0];
     const d: Vec3 = [p[0] - mid[0], p[1] - mid[1], p[2] - mid[2]];
     const along = d[0] * e[0] + d[1] * e[1] + d[2] * e[2];
-    const off = Math.hypot(d[0] - e[0] * along, d[1] - e[1] * along, d[2] - e[2] * along);
+    const off = dmath.hypot(d[0] - e[0] * along, d[1] - e[1] * along, d[2] - e[2] * along);
     if (off < chord * 0.12 && along > best) [best, rim] = [along, p];
   }
   if (!rim) return membrane;
@@ -200,7 +200,7 @@ export function tornEdge(
   const colors = new Float32Array(membrane.colors);
   for (let i = 0; i < P.length; i += 3) {
     const r: Vec3 = [(P[i] ?? 0) - rim[0], (P[i + 1] ?? 0) - rim[1], (P[i + 2] ?? 0) - rim[2]];
-    const d = Math.hypot(r[0], r[1], r[2]);
+    const d = dmath.hypot(r[0], r[1], r[2]);
     if (d >= radius) continue;
     const t = 1 - d / radius;
     for (let c = 0; c < 3; c++) positions[i + c] = (P[i + c] ?? 0) - (e[c] ?? 0) * depth * t * t;
@@ -214,7 +214,7 @@ export function tornEdge(
       const en = e[0] * nv[0] + e[1] * nv[1] + e[2] * nv[2];
       const det = 1 + e[0] * g[0] + e[1] * g[1] + e[2] * g[2];
       const m: Vec3 = [nv[0] * det - g[0] * en, nv[1] * det - g[1] * en, nv[2] * det - g[2] * en];
-      const l = Math.hypot(m[0], m[1], m[2]) || 1;
+      const l = dmath.hypot(m[0], m[1], m[2]) || 1;
       normals.set([m[0] / l, m[1] / l, m[2] / l], i);
     }
     const dark = mix(

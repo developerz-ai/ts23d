@@ -8,7 +8,7 @@
 // neighbours so mip levels do not bleed. Pure and deterministic: texel order, nearest hit ties to
 // the lower triangle.
 
-import { type Mesh, Ts23dError, type Vec3 } from '../core/index.ts';
+import { dmath, type Mesh, Ts23dError, type Vec3 } from '../core/index.ts';
 import type { DistanceField } from './bake-field.ts';
 import { fieldHit } from './bake-height.ts';
 import { type Hit, HitGrid } from './bake-hit.ts';
@@ -40,12 +40,12 @@ export interface NormalBake {
 
 const toSrgb = (l: number): number => {
   const c = Math.min(1, Math.max(0, l));
-  return c <= 0.0031308 ? c * 12.92 : 1.055 * c ** (1 / 2.4) - 0.055;
+  return c <= 0.0031308 ? c * 12.92 : 1.055 * dmath.pow(c, 1 / 2.4) - 0.055;
 };
 
 export function bakeNormals(high: Mesh | DistanceField, low: Mesh, o: BakeOptions): NormalBake {
   const S = o.size;
-  if (!(Number.isInteger(Math.log2(S)) && S >= 16 && S <= 4096))
+  if (!(Number.isInteger(dmath.log2(S)) && S >= 16 && S <= 4096))
     throw new Ts23dError('T3D_BAKE_INVALID', {
       cause: `bake size ${S} is not a power of two in 16…4096`,
       fix: 'use 256, 512, 1024 or 2048',
@@ -127,7 +127,7 @@ export function bakeNormals(high: Mesh | DistanceField, low: Mesh, o: BakeOption
         rgb.set(col);
       } else for (let k = 0; k < 3; k++) rgb[k] = attr(hm.colors, 3, t, hb, k);
     }
-    const nl = Math.hypot(n[0] ?? 0, n[1] ?? 0, n[2] ?? 0) || 1;
+    const nl = dmath.hypot(n[0] ?? 0, n[1] ?? 0, n[2] ?? 0) || 1;
     const dot = (v: Float64Array): number =>
       ((v[0] ?? 0) * (n[0] ?? 0) + (v[1] ?? 0) * (n[1] ?? 0) + (v[2] ?? 0) * (n[2] ?? 0)) / nl;
     const ts = [dot(f.t), dot(f.b), dot(f.n)];

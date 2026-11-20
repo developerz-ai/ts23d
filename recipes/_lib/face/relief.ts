@@ -8,6 +8,7 @@
 // moles).
 
 import type { Rng, Vec3 } from '@developerz.ai/ts23d';
+import { dmath } from '@developerz.ai/ts23d';
 import type { QuadMesh } from './base.ts';
 import type { FaceHead } from './head.ts';
 import { LEFT, MIDLINE, mirrorY } from './landmarks.ts';
@@ -28,9 +29,9 @@ const clamp = (v: number): number => Math.min(1, Math.max(0, v));
 /** Distance from p to the segment ab. */
 export function segDist(p: Vec3, a: Vec3, b: Vec3): number {
   const ab: Vec3 = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
-  const l2 = ab[0] ** 2 + ab[1] ** 2 + ab[2] ** 2 || 1;
+  const l2 = ab[0] * ab[0] + ab[1] * ab[1] + ab[2] * ab[2] || 1;
   const t = clamp(((p[0] - a[0]) * ab[0] + (p[1] - a[1]) * ab[1] + (p[2] - a[2]) * ab[2]) / l2);
-  return Math.hypot(p[0] - a[0] - ab[0] * t, p[1] - a[1] - ab[1] * t, p[2] - a[2] - ab[2] * t);
+  return dmath.hypot(p[0] - a[0] - ab[0] * t, p[1] - a[1] - ab[1] * t, p[2] - a[2] - ab[2] * t);
 }
 
 /** `m` with every stroke of radius ≥ `min` applied (a new mesh; topology kept). */

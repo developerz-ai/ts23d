@@ -3,7 +3,7 @@
 // which of those runs are legs. Every leg of the kinds' six body plans and the fitted model rigs is
 // at most 5 bones and falls at least 0.72 of its length (wing tips, necks, a serpent's 0.02 do not).
 
-import { type Armature, type Bone, quatRotate, type Vec3 } from '../core/index.ts';
+import { type Armature, type Bone, dmath, quatRotate, type Vec3 } from '../core/index.ts';
 import type { JointWorld } from './clip-pose.ts';
 
 /** Half-angle helper suffix: a bone `<joint>_mid` turns half as far as `<joint>` (the
@@ -24,7 +24,7 @@ export const LONG_CHAIN_BONES = 4;
 const isHelper = (b: Bone): boolean => b.name.endsWith(MID_SUFFIX);
 
 export const boneLength = (b: Bone): number =>
-  Math.hypot(b.tail[0] - b.head[0], b.tail[1] - b.head[1], b.tail[2] - b.head[2]);
+  dmath.hypot(b.tail[0] - b.head[0], b.tail[1] - b.head[1], b.tail[2] - b.head[2]);
 
 /** Where a bone's tail is under a posed joint. */
 export function boneEnd(b: Bone, j: JointWorld): Vec3 {

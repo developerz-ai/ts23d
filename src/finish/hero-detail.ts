@@ -6,6 +6,7 @@
 // With a baked source colour, the texel's base becomes that colour × the strip's albedo (texel
 // resolution instead of the mesh's vertex colour). Deterministic: bake-texels' fixed walk.
 
+import { dmath } from '../core/index.ts';
 import { tangentsOf } from '../export/index.ts';
 import type { PaintedSheet } from '../material/index.ts';
 import { walkTexels } from '../passes/index.ts';
@@ -73,7 +74,7 @@ export function trimDetail(
     const n = f.n;
     const d = (t4[0] ?? 0) * (n[0] ?? 0) + (t4[1] ?? 0) * (n[1] ?? 0) + (t4[2] ?? 0) * (n[2] ?? 0);
     const T = [0, 1, 2].map((k) => (t4[k] ?? 0) - (n[k] ?? 0) * d);
-    const tl = Math.hypot(T[0] ?? 0, T[1] ?? 0, T[2] ?? 0) || 1;
+    const tl = dmath.hypot(T[0] ?? 0, T[1] ?? 0, T[2] ?? 0) || 1;
     for (let k = 0; k < 3; k++) T[k] = (T[k] ?? 0) / tl;
     const hand = (trim[(c[0] ?? 0) * 4 + 3] ?? 1) < 0 ? -1 : 1;
     const B = [
@@ -93,7 +94,7 @@ export function trimDetail(
     const fy = ((normal[at + 1] ?? 128) / 255) * 2 - 1;
     const fz = ((normal[at + 2] ?? 255) / 255) * 2 - 1;
     const r = [fx + ax, fy + ay, fz * az];
-    const l = Math.hypot(r[0] ?? 0, r[1] ?? 0, r[2] ?? 1) || 1;
+    const l = dmath.hypot(r[0] ?? 0, r[1] ?? 0, r[2] ?? 1) || 1;
     for (let k = 0; k < 3; k++) normal[at + k] = Math.round((((r[k] ?? 0) / l) * 0.5 + 0.5) * 255);
   });
 }

@@ -8,6 +8,7 @@ import {
   type BodyPlanSpec,
   bodyPlan,
   type Clip,
+  dmath,
   type Quat,
   quatRotate,
   snakeClips,
@@ -150,7 +151,7 @@ export function cobraClips(
     const count = rest.at.length;
     const pin = Math.ceil((RAISED * 1.05 * (count - 1)) / TOTAL);
     // sin(w - p) + sin(p) is zero at the first and last key whatever the phase p.
-    const wave = (w: number, p: number): number => Math.sin(w - p) + Math.sin(p);
+    const wave = (w: number, p: number): number => dmath.sin(w - p) + dmath.sin(p);
     return bake(rig, name, seconds, true, Math.round(seconds * 30), (_k, time) => {
       const w = (TAU * time) / seconds;
       const at = rest.at.map((p, i) => {
@@ -162,14 +163,14 @@ export function cobraClips(
           0.006 * reach * wave(w * 2, -0.7),
         ]);
       });
-      const swell = Math.sin(w) ** 2;
-      const burst = Math.max(0, Math.sin(w * 4)) ** 2;
+      const swell = dmath.pow(dmath.sin(w), 2);
+      const burst = dmath.pow(Math.max(0, dmath.sin(w * 4)), 2);
       const key = solveSpine(rig, rest, { at, dorsal: rest.dorsal }, pin);
       return addTongue(
         rig,
         addHood(rig, key, m.breathe * swell),
         0.35 * swell * (1 - burst),
-        m.flick * burst * Math.sin(time * 34),
+        m.flick * burst * dmath.sin(time * 34),
       );
     });
   };
@@ -182,13 +183,15 @@ export function cobraClips(
     const seconds = 8;
     return bake(rig, 'idle_ground', seconds, true, seconds * 30, (_k, time) => {
       const u = time / seconds;
-      const breathe = Math.sin((TAU * 2 * time) / seconds) ** 2;
+      const breathe = dmath.pow(dmath.sin((TAU * 2 * time) / seconds), 2);
       const window = Math.max(0, Math.min(1, (u - 0.55) / 0.3));
-      const shift = Math.sin(Math.PI * window) ** 2;
-      const burst =
-        Math.max(0, Math.sin(Math.PI * Math.max(0, Math.min(1, (u - 0.62) / 0.14)))) ** 2;
+      const shift = dmath.pow(dmath.sin(Math.PI * window), 2);
+      const burst = dmath.pow(
+        Math.max(0, dmath.sin(Math.PI * Math.max(0, Math.min(1, (u - 0.62) / 0.14)))),
+        2,
+      );
       const key = solveSpine(rig, rest, restingPose(arcs, breathe, shift));
-      return addTongue(rig, addHood(rig, key, 1), 1 - burst, 0.5 * burst * Math.sin(time * 34));
+      return addTongue(rig, addHood(rig, key, 1), 1 - burst, 0.5 * burst * dmath.sin(time * 34));
     });
   };
 

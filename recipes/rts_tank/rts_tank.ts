@@ -11,6 +11,7 @@ import {
   cylinder,
   defineAsset,
   defineMaterial,
+  dmath,
   type Lod,
   lathe,
   loft,
@@ -261,9 +262,9 @@ function hull(add: Add, lod: Lod): void {
               const a = (i / 6) * Math.PI * 2;
               const r = 0.09;
               return [
-                2.082 + up[0] * Math.sin(a) * r,
-                y + Math.cos(a) * r,
-                1.181 + up[2] * Math.sin(a) * r,
+                2.082 + up[0] * dmath.sin(a) * r,
+                y + dmath.cos(a) * r,
+                1.181 + up[2] * dmath.sin(a) * r,
               ];
             }),
             color: GLOW,

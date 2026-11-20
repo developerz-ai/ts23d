@@ -6,6 +6,7 @@
 // is 0.263 H long and ≈ 0.55 × its length wide.
 
 import type { SculptEdit } from '@developerz.ai/ts23d';
+import { dmath } from '@developerz.ai/ts23d';
 import { at, ball, chain, type Frame, frameOf, k, local, spline, type V } from './kit.ts';
 
 export interface EarSpec {
@@ -55,7 +56,9 @@ function blade(e: EarSpec): { mid: Array<[number, number]>; half: number[] } {
     // Human ear: an oval, widest a little above the middle. A tip draws the top out to a point.
     const u = L * (t * (1 + tip));
     const v = W * 0.1 + sweep * L * t * t;
-    const oval = Math.sin(Math.PI * Math.min(1, (t * (1 + tip)) / (1 + tip * 0.35)) ** 0.8);
+    const oval = dmath.sin(
+      Math.PI * dmath.pow(Math.min(1, (t * (1 + tip)) / (1 + tip * 0.35)), 0.8),
+    );
     const taper = tip > 0 ? Math.max(0.06, 1 - Math.max(0, t - 0.55) / 0.45) : 1;
     mid.push([u, v]);
     half.push(Math.max(e.thick * 0.6, (W / 2) * (0.55 + 0.45 * oval) * taper));

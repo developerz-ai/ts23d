@@ -5,6 +5,7 @@
 // same stain where they meet and every LOD keeps the read. Hash noise only: no randomness.
 
 import type { Vec3 } from '@developerz.ai/ts23d';
+import { dmath } from '@developerz.ai/ts23d';
 
 export interface Scar {
   /** World ends of the healed cut (on the skin; the stroke reaches `width` × 3 into the coat). */
@@ -105,7 +106,7 @@ function toSegment(p: Vec3, a: Vec3, b: Vec3): { d: number; t: number } {
     Math.max(0, ((p[0] - a[0]) * ab[0] + (p[1] - a[1]) * ab[1] + (p[2] - a[2]) * ab[2]) / ll),
   );
   return {
-    d: Math.hypot(p[0] - a[0] - ab[0] * t, p[1] - a[1] - ab[1] * t, p[2] - a[2] - ab[2] * t),
+    d: dmath.hypot(p[0] - a[0] - ab[0] * t, p[1] - a[1] - ab[1] * t, p[2] - a[2] - ab[2] * t),
     t,
   };
 }
@@ -152,8 +153,8 @@ export function wearPaint(w: WearSpec, coarse = false): WearPaint {
       const width = w.matted.width ?? 0.012;
       let inside = 0;
       for (const zone of w.matted.zones) {
-        const d = Math.hypot(x - zone.at[0], Math.abs(y) - Math.abs(zone.at[1]), z - zone.at[2]);
-        inside = Math.max(inside, 1 - (d / zone.radius) ** 2);
+        const d = dmath.hypot(x - zone.at[0], Math.abs(y) - Math.abs(zone.at[1]), z - zone.at[2]);
+        inside = Math.max(inside, 1 - dmath.pow(d / zone.radius, 2));
       }
       if (inside > 0) {
         // Clumps hang with gravity: narrow across (x), long down (z).
@@ -198,7 +199,7 @@ export function wearPaint(w: WearSpec, coarse = false): WearPaint {
       c = mix(c, mix(wet, w.mud.colour, Math.max(dry, splash)), k);
     }
     for (const patch of w.patches ?? []) {
-      const d = Math.hypot(x - patch.at[0], y - patch.at[1], z - patch.at[2]) / patch.radius;
+      const d = dmath.hypot(x - patch.at[0], y - patch.at[1], z - patch.at[2]) / patch.radius;
       if (d >= 1.3) continue;
       const ragged = noise3(x / 0.02, y / 0.02, z / 0.02, salt + 61) * 0.5;
       c = mix(c, patch.colour, smooth(1, 0.45, d + ragged - 0.25) * patch.strength);
@@ -216,7 +217,7 @@ export function wearPaint(w: WearSpec, coarse = false): WearPaint {
       // Tapered ends; a bare pale core with the parted fur darker either side of it.
       // At (and past) an end the stroke has tapered to nothing (and smooth(0, 0, d) is undefined).
       if (t <= 0 || t >= 1) continue;
-      const taper = Math.sin(Math.PI * t) ** 0.5;
+      const taper = Math.sqrt(dmath.sin(Math.PI * t));
       const wobble = 0.75 + 0.5 * noise3(x / 0.01, y / 0.01, z / 0.01, salt + 51);
       const core = smooth(s.width * taper * wobble, s.width * 0.35 * taper, d);
       const rim = smooth(s.width * 3, s.width, d) * (1 - core) * taper;

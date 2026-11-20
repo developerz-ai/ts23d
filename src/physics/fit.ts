@@ -100,7 +100,12 @@ export function fitSphere(points: readonly Vec3[], box: BoxFit): SphereFit {
     .map((c) => ({ c, r: reach(c) }))
     .reduce((a, b) => (b.r < a.r - 1e-12 ? b : a));
   const radius = Math.max(MIN_SIZE / 2, best.r);
-  return { kind: 'sphere', center: best.c, radius, volume: (4 / 3) * Math.PI * radius ** 3 };
+  return {
+    kind: 'sphere',
+    center: best.c,
+    radius,
+    volume: (4 / 3) * Math.PI * (radius * radius * radius),
+  };
 }
 
 const sub = (a: Vec3, b: Vec3): Vec3 => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
@@ -134,7 +139,8 @@ function roundAlong(
     height = Math.max(1e-4, 2 * half);
   }
   const volume =
-    Math.PI * radius * radius * height + (kind === 'capsule' ? (4 / 3) * Math.PI * radius ** 3 : 0);
+    Math.PI * radius * radius * height +
+    (kind === 'capsule' ? (4 / 3) * Math.PI * (radius * radius * radius) : 0);
   return { kind, center: c, rotation: quatFromAxes(...frameWithY(axis)), height, radius, volume };
 }
 

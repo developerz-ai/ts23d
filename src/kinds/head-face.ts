@@ -4,6 +4,7 @@
 // into the `head` and `jaw` parts, so their surfaces meet without a seam.
 
 import type { Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import type { SculptEdit } from '../primitives/index.ts';
 import { alongX, alongZ, unit } from './head-geom.ts';
 import type { HeadLayout } from './head-layout.ts';
@@ -79,7 +80,7 @@ export function skullEdits(p: HeadParams, l: HeadLayout, cell = 0): SculptEdit[]
       at: [(ax + chin[0]) / 2 + 0.01, 0, (az + chin[2]) / 2 + 0.03],
       size: [chin[0] - ax + 0.04, ay * 1.75, 0.16 + p.jaw.drop * 0.5],
       round: 0.07,
-      rotate: [0, Math.atan2(az - chin[2], chin[0] - ax) * (180 / Math.PI) * 0.6, 0],
+      rotate: [0, dmath.atan2(az - chin[2], chin[0] - ax) * (180 / Math.PI) * 0.6, 0],
       blend: 0.08,
     },
     {
@@ -118,7 +119,7 @@ export function skullEdits(p: HeadParams, l: HeadLayout, cell = 0): SculptEdit[]
       shape: 'ellipsoid',
       at: [(bIn[0] + bOut[0]) / 2, (bIn[1] + bOut[1]) / 2, (bIn[2] + bOut[2]) / 2],
       size: [
-        Math.hypot(bOut[0] - bIn[0], bOut[1] - bIn[1], bOut[2] - bIn[2]) / 2 + p.brow.ridge * 0.6,
+        dmath.hypot(bOut[0] - bIn[0], bOut[1] - bIn[1], bOut[2] - bIn[2]) / 2 + p.brow.ridge * 0.6,
         p.brow.ridge * 1.25,
         p.brow.ridge * 0.85,
       ],
@@ -137,7 +138,7 @@ export function skullEdits(p: HeadParams, l: HeadLayout, cell = 0): SculptEdit[]
   // centre tilted to the lid angle, so the lid edge crosses the cornea exactly at that angle.
   const lid = (deg: number, upper: boolean): SculptEdit => {
     const t = (deg * Math.PI) / 180;
-    const n: Vec3 = upper ? [-Math.sin(t), 0, Math.cos(t)] : [Math.sin(t), 0, Math.cos(t)];
+    const n: Vec3 = upper ? [-dmath.sin(t), 0, dmath.cos(t)] : [dmath.sin(t), 0, dmath.cos(t)];
     const k = upper ? 1 : -1;
     return {
       group: [
@@ -171,7 +172,7 @@ export function skullEdits(p: HeadParams, l: HeadLayout, cell = 0): SculptEdit[]
     {
       shape: 'cone',
       at: noseRoot,
-      size: [rootR, tipR * 0.85, Math.hypot(...noseDir)],
+      size: [rootR, tipR * 0.85, dmath.norm(noseDir)],
       rotate: alongZ(noseDir),
       blend: 0.045,
     },
@@ -227,7 +228,7 @@ export function skullEdits(p: HeadParams, l: HeadLayout, cell = 0): SculptEdit[]
   const [crx, , crz] = l.cranium.r;
   for (let i = 0; i < (p.wrinkles ?? 0); i++) {
     const z = l.browZ + 0.07 + i * 0.05;
-    const x = cx + crx * Math.sqrt(Math.max(0, 1 - ((z - cz) / crz) ** 2)) + 0.005;
+    const x = cx + crx * Math.sqrt(Math.max(0, 1 - dmath.pow((z - cz) / crz, 2))) + 0.005;
     e.push({
       shape: 'ellipsoid',
       at: [x, 0.06, z - 0.008],

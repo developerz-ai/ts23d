@@ -13,6 +13,7 @@ import {
   clearNeuralSources,
   compile,
   decodePng,
+  dmath,
   type Mesh,
   neuralCache,
   provideNeural,
@@ -201,8 +202,8 @@ describe('bear_hybrid, model tier (committed cache)', () => {
       // One flat roughness (the bake's 0.8 = 204) has no spread; fur, mud, nose and claws do.
       const rough = texels(set.orm, mesh, () => true).map((c) => c[1]);
       const avg = mean(rough);
-      const spread = Math.sqrt(mean(rough.map((r) => (r - avg) ** 2)));
-      expect(Math.sqrt(mean([204, 204, 204].map((r) => (r - 204) ** 2)))).toBe(0);
+      const spread = Math.sqrt(mean(rough.map((r) => dmath.pow(r - avg, 2))));
+      expect(Math.sqrt(mean([204, 204, 204].map((r) => dmath.pow(r - 204, 2))))).toBe(0);
       expect(spread).toBeGreaterThan(12);
       expect(mean(texels(set.orm, mesh, (_x, _y, z) => z < 0.04).map((c) => c[1]))).toBeLessThan(
         190,

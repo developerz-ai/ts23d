@@ -16,6 +16,7 @@
 // clean here.
 
 import type { CompiledAsset, Mesh } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 
 export interface WearMetrics {
   readonly wearBroad: number;
@@ -25,7 +26,7 @@ export interface WearMetrics {
 /** Patches per bounding diagonal: what still reads with the asset filling a hero frame. */
 export const WEAR_PATCHES = 40;
 
-const srgb = (v: number): number => Math.min(1, Math.max(0, v)) ** (1 / 2.2);
+const srgb = (v: number): number => dmath.pow(Math.min(1, Math.max(0, v)), 1 / 2.2);
 
 interface Patch {
   area: number;
@@ -64,7 +65,7 @@ export function wearMetrics(meshes: readonly Mesh[]): WearMetrics {
       lo[i % 3] = Math.min(lo[i % 3] ?? v, v);
       hi[i % 3] = Math.max(hi[i % 3] ?? v, v);
     }
-  const diag = Math.hypot(...[0, 1, 2].map((k) => (hi[k] ?? 0) - (lo[k] ?? 0)));
+  const diag = dmath.norm([0, 1, 2].map((k) => (hi[k] ?? 0) - (lo[k] ?? 0)));
   if (!(diag > 0)) return { wearBroad: 0, wearPlaced: 0 };
   const cell = diag / WEAR_PATCHES;
   const height = Math.max(1e-9, (hi[2] ?? 0) - (lo[2] ?? 0));
@@ -80,7 +81,7 @@ export function wearMetrics(meshes: readonly Mesh[]): WearMetrics {
         const [i, j] = [(k + 1) % 3, (k + 2) % 3];
         return (e[i] ?? 0) * (f[j] ?? 0) - (e[j] ?? 0) * (f[i] ?? 0);
       });
-      const twice = Math.hypot(n[0] ?? 0, n[1] ?? 0, n[2] ?? 0);
+      const twice = dmath.hypot(n[0] ?? 0, n[1] ?? 0, n[2] ?? 0);
       if (!(twice > 0)) continue;
       // A third of the triangle to each corner's patch.
       for (const v of ids) {

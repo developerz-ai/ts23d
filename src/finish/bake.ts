@@ -4,7 +4,7 @@
 // Views blend by (n·v)², so seams between views fade instead of cutting. Unseen texels are filled
 // by fill.ts. Mask leak is measured: weight that came from another part's pixels (0 when masked).
 
-import { Ts23dError } from '../core/index.ts';
+import { dmath, Ts23dError } from '../core/index.ts';
 import { decodePng } from '../material/index.ts';
 import { toScreen } from './raster.ts';
 import type { Texels } from './texels.ts';
@@ -73,7 +73,7 @@ export function project(
       const dx = ex - px;
       const dy = ey - py;
       const dz = ez - pz;
-      const dl = Math.hypot(dx, dy, dz) || 1;
+      const dl = dmath.hypot(dx, dy, dz) || 1;
       const cos =
         ((t.normal[i * 3] ?? 0) * dx +
           (t.normal[i * 3 + 1] ?? 0) * dy +

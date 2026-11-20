@@ -14,6 +14,7 @@ import {
   type BuildContext,
   box,
   cylinder,
+  dmath,
   hex,
   type Mesh,
   merge,
@@ -96,7 +97,7 @@ function toSegment(p: Vec3, a: Vec2, b: Vec2): number {
     1,
     Math.max(0, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / (dx * dx + dy * dy || 1)),
   );
-  return Math.hypot(p[0] - a[0] - dx * t, p[1] - a[1] - dy * t);
+  return dmath.hypot(p[0] - a[0] - dx * t, p[1] - a[1] - dy * t);
 }
 
 /** The tank's way from the hardstand back to the road (centre line, plan). */
@@ -114,7 +115,7 @@ function ribbon(path: readonly Vec2[], off: number, w: number, z: number, color:
   const side = (i: number, d: number): Vec3 => {
     const a = path[Math.max(0, i - 1)] as Vec2;
     const b = path[Math.min(path.length - 1, i + 1)] as Vec2;
-    const l = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1;
+    const l = dmath.hypot(b[0] - a[0], b[1] - a[1]) || 1;
     const p = path[i] as Vec2;
     return [p[0] - ((b[1] - a[1]) / l) * d, p[1] + ((b[0] - a[0]) / l) * d, z];
   };
@@ -147,7 +148,7 @@ function trodden(ctx: BuildContext, key: string, c: Vec2, rx: number, ry: number
   const ring = (k: number, z: number): Vec3[] =>
     wobble.map((w, i): Vec3 => {
       const a = (i / n) * Math.PI * 2;
-      return [c[0] + Math.cos(a) * rx * w * k, c[1] + Math.sin(a) * ry * w * k, z];
+      return [c[0] + dmath.cos(a) * rx * w * k, c[1] + dmath.sin(a) * ry * w * k, z];
     });
   return merge([
     planar({ points: ring(1, 0.0015), color: SCUFF, strip: 'concrete' }),
@@ -162,7 +163,7 @@ export function forecourt(ctx: BuildContext): void {
   // the Delvers' way to the deposit, the tank's way to the road.
   const worn = (p: Vec3): number => {
     const spot = (x: number, y: number, rx: number, ry: number): number =>
-      1 - smooth(0.55, 1, Math.hypot((p[0] - x) / rx, (p[1] - y) / ry));
+      1 - smooth(0.55, 1, dmath.hypot((p[0] - x) / rx, (p[1] - y) / ry));
     const way = Math.min(
       ...TRACK_WAY.slice(1).map((b, i) => toSegment(p, TRACK_WAY[i] as Vec2, b)),
     );
@@ -224,7 +225,7 @@ export function forecourt(ctx: BuildContext): void {
       tint(
         pad,
         OIL,
-        (p) => 0.75 * (1 - smooth(0.25, 1, Math.hypot(p[0] - PARK.x + 1.6, p[1] - PARK.y) / 1.1)),
+        (p) => 0.75 * (1 - smooth(0.25, 1, dmath.hypot(p[0] - PARK.x + 1.6, p[1] - PARK.y) / 1.1)),
       ),
       // Two ruts where it drives in and out: tracks 0.46 m wide at 2.45 m centres.
       ...(ctx.lod < 2
@@ -236,8 +237,8 @@ export function forecourt(ctx: BuildContext): void {
 
 /** A low wall from a to b (plan): dressed blocks 2.4 m long with a darker capstone course. */
 function wall(ctx: BuildContext, a: Vec2, b: Vec2): Mesh {
-  const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
-  const yaw = Math.atan2(b[1] - a[1], b[0] - a[0]);
+  const len = dmath.hypot(b[0] - a[0], b[1] - a[1]);
+  const yaw = dmath.atan2(b[1] - a[1], b[0] - a[0]);
   const n = Math.max(1, Math.round(len / 2.4));
   const piece = len / n;
   const out: Mesh[] = [];
@@ -282,7 +283,7 @@ function sandbags(ctx: BuildContext, centre: Vec2, facing: number): Mesh {
       );
       out.push(
         place(bag, {
-          at: [1.9 * (Math.cos(a) - 1), 1.9 * Math.sin(a), course * 0.18],
+          at: [1.9 * (dmath.cos(a) - 1), 1.9 * dmath.sin(a), course * 0.18],
           yaw: a + rng.range(-0.06, 0.06),
         }),
       );

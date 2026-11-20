@@ -2,7 +2,7 @@
 // each rachis, folded into a V and drooping, longest mid-frond. Plus coconuts tucked under the
 // crown. The rachis itself is a swept stem (in `branches`); leaflets root on its bark.
 
-import { type Mesh, MeshBuilder, merge, type Rng, type Vec3 } from '../core/index.ts';
+import { dmath, type Mesh, MeshBuilder, merge, type Rng, type Vec3 } from '../core/index.ts';
 import { arcLengths, lathe, transportFrames } from '../primitives/index.ts';
 import type { CrownShade } from './vegetation-leaves.ts';
 import type { LeafParams } from './vegetation-params.ts';
@@ -21,7 +21,7 @@ function tri(mb: MeshBuilder, a: Vec3, b: Vec3, c: Vec3, col: Vec3, tipCol: Vec3
     e1[2] * e2[0] - e1[0] * e2[2],
     e1[0] * e2[1] - e1[1] * e2[0],
   ];
-  const l = Math.hypot(n[0], n[1], n[2]) || 1;
+  const l = dmath.hypot(n[0], n[1], n[2]) || 1;
   for (const s of [1, -1]) {
     const nn: Vec3 = [(n[0] / l) * s, (n[1] / l) * s, (n[2] / l) * s];
     const i = mb.vertex({ p: a, n: nn, uv: [0, 0], color: col });
@@ -66,11 +66,11 @@ export function frondLeaflets(
         a[1] + (b[1] - a[1]) * f,
         a[2] + (b[2] - a[2]) * f,
       ];
-      const len = st.length * leaf.width * Math.sin(Math.PI * (0.12 + 0.88 * u)) ** 0.6;
+      const len = st.length * leaf.width * dmath.pow(dmath.sin(Math.PI * (0.12 + 0.88 * u)), 0.6);
       const ao =
         0.6 +
         0.4 *
-          Math.min(1, Math.hypot(c[0] - shade.centre[0], c[1] - shade.centre[1]) / shade.radius);
+          Math.min(1, dmath.hypot(c[0] - shade.centre[0], c[1] - shade.centre[1]) / shade.radius);
       const col: Vec3 = [
         leaf.color[0] * k * ao * 0.75,
         leaf.color[1] * k * ao * 0.75,
@@ -108,7 +108,7 @@ export function fruit(
   const rt = trunk.radii[j] ?? 0.2;
   const profile = [0, 1, 2, 3, 4].map((i): [number, number] => {
     const a = -Math.PI / 2 + (i / 4) * Math.PI;
-    return [Math.max(0.0001, Math.cos(a)) * o.radius, Math.sin(a) * o.radius];
+    return [Math.max(0.0001, dmath.cos(a)) * o.radius, dmath.sin(a) * o.radius];
   });
   const out: Mesh[] = [];
   for (let i = 0; i < o.count; i++) {
@@ -120,7 +120,7 @@ export function fruit(
         profile,
         segments: 6,
         caps: false,
-        at: [c[0] + Math.cos(a) * d, c[1] + Math.sin(a) * d, c[2] + dz],
+        at: [c[0] + dmath.cos(a) * d, c[1] + dmath.sin(a) * d, c[2] + dz],
         color: o.color,
       }),
     );

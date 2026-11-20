@@ -7,6 +7,7 @@
 // flanks' snowfields instead of carrying a thin white line.
 
 import type { TerrainGrid } from '@developerz.ai/ts23d';
+import { dmath } from '@developerz.ai/ts23d';
 
 /** Separable box blur of a per-point map, radius `r` points, clamped at the edges. */
 export function boxBlur(map: Float64Array, nx: number, ny: number, r: number): Float64Array {
@@ -64,7 +65,7 @@ export function snowCover(g: TerrainGrid, o: SnowOptions): Float64Array {
     for (let i = 0; i < nx; i++) {
       const gx = (at(i + 1, j) - at(i - 1, j)) / (2 * sx);
       const gy = (at(i, j + 1) - at(i, j - 1)) / (2 * sy);
-      const slope = Math.hypot(gx, gy);
+      const slope = dmath.hypot(gx, gy);
       // Convexity across X and across Y, 3 points (~23 m) out each side, m: a crest stands over
       // the ground on both its sides along one of them, a gully sinks under it.
       const cx = at(i, j) - (at(i - 3, j) + at(i + 3, j)) / 2;

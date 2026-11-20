@@ -3,7 +3,7 @@
 // where the front or back wall it butts against had been knocked down.
 
 import { describe, expect, it } from 'bun:test';
-import { createRng, type Mesh, type Vec3 } from '@developerz.ai/ts23d';
+import { createRng, dmath, type Mesh, type Vec3 } from '@developerz.ai/ts23d';
 import { bays, EAVES, HALF_X, HALF_Y, WALL_T, wallCells } from './plan.ts';
 import { walls } from './walls.ts';
 
@@ -25,7 +25,7 @@ function facing(m: Mesh | null, dir: Vec3): Vec3[] {
       u[2] * v[0] - u[0] * v[2],
       u[0] * v[1] - u[1] * v[0],
     ];
-    const l = Math.hypot(...n) || 1;
+    const l = dmath.norm(n) || 1;
     if ((n[0] * dir[0] + n[1] * dir[1] + n[2] * dir[2]) / l > 0.99)
       out.push([(a[0] + b[0] + c[0]) / 3, (a[1] + b[1] + c[1]) / 3, (a[2] + b[2] + c[2]) / 3]);
   }

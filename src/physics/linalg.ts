@@ -2,6 +2,7 @@
 // (deterministic: fixed sweep order, sorted output) and rotation matrix → quaternion.
 
 import type { Quat, Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 
 /** Row-major 3×3: m[r][c]. */
 export type Mat3 = readonly [Vec3, Vec3, Vec3];
@@ -106,7 +107,7 @@ export function quatFromAxes(x: Vec3, y: Vec3, z: Vec3): Quat {
     const s = Math.sqrt(1 + m22 - m00 - m11) * 2;
     q = [(m02 + m20) / s, (m12 + m21) / s, s / 4, (m10 - m01) / s];
   }
-  const n = Math.hypot(...q);
+  const n = dmath.norm(q);
   const sign = q[3] < 0 ? -1 : 1;
   return [(sign * q[0]) / n, (sign * q[1]) / n, (sign * q[2]) / n, (sign * q[3]) / n];
 }
@@ -116,7 +117,7 @@ export function frameWithY(axis: Vec3): readonly [Vec3, Vec3, Vec3] {
   const y = axis;
   const helper: Vec3 = Math.abs(y[2]) < 0.9 ? [0, 0, 1] : [1, 0, 0];
   const xr = cross3(y, helper);
-  const l = Math.hypot(...xr);
+  const l = dmath.norm(xr);
   const x: Vec3 = [xr[0] / l, xr[1] / l, xr[2] / l];
   return [x, y, cross3(x, y)];
 }

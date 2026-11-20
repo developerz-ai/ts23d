@@ -5,6 +5,7 @@
 
 import {
   applyAffine,
+  dmath,
   type Field,
   frame,
   type Mesh,
@@ -46,12 +47,12 @@ function earBlob(off: Vec3, r: Vec3, op: 'add' | 'subtract', blend: number): Scu
     const x = (q[0] - off[0]) / r[0];
     const y = (q[1] - off[1]) / r[1];
     const z = (q[2] - off[2]) / r[2];
-    const k0 = Math.hypot(x, y, z);
-    const k1 = Math.hypot(x / r[0], y / r[1], z / r[2]);
+    const k0 = dmath.hypot(x, y, z);
+    const k1 = dmath.hypot(x / r[0], y / r[1], z / r[2]);
     return k1 > 0 ? (k0 * (k0 - 1)) / k1 : -Math.min(r[0], r[1], r[2]);
   };
   const c = v3.add(EAR.base, v3.mul(EAR.up, EAR.height * 0.48));
-  const R = Math.max(...r) + Math.hypot(...off) + 0.01;
+  const R = Math.max(...r) + dmath.norm(off) + 0.01;
   return {
     field,
     bounds: [
@@ -95,10 +96,10 @@ export function earEdits(lod: number, notch = false): SculptEdit[] {
 export function earPaint(p: Vec3, _c: Vec3): Vec3 {
   const q = earLocal(p);
   const h = EAR.height / 2;
-  const rr = Math.hypot(q[1] / EAR.width, q[2] / h);
+  const rr = dmath.hypot(q[1] / EAR.width, q[2] / h);
   const back = smoothstep(0.004, -0.006, q[0]);
   // Ocellus: a white oval in the middle of the back, a little above centre.
-  const oc = smoothstep(1.05, 0.85, Math.hypot(q[1] / 0.015, (q[2] - 0.002) / 0.017));
+  const oc = smoothstep(1.05, 0.85, dmath.hypot(q[1] / 0.015, (q[2] - 0.002) / 0.017));
   const backCol = mixRgb(C.earBack, C.ocellus, oc);
   // Inside: pale fur, the deep cup pinkish, a dark rim at the edge.
   const rim = smoothstep(0.86, 0.99, rr);

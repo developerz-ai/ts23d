@@ -2,7 +2,7 @@
 // PNG tiles, height = R·256 + G + B/256 − 32768 metres) → a regular grid in a local metric frame.
 // Pure maths: the fetch script hands decoded tiles in; nothing here touches the network.
 
-import { Ts23dError } from '../core/index.ts';
+import { dmath, Ts23dError } from '../core/index.ts';
 
 /** Mean Earth radius (IUGG), metres. */
 export const EARTH_RADIUS = 6371008.8;
@@ -14,11 +14,11 @@ export const decodeTerrarium = (r: number, g: number, b: number): number =>
 
 /** WGS84 lon/lat (degrees) → global Web-Mercator pixel coordinates at zoom `z` (256 px tiles). */
 export function lonLatToPixel(lon: number, lat: number, z: number): [number, number] {
-  const n = TILE * 2 ** z;
+  const n = TILE * dmath.pow(2, z);
   const phi = (lat * Math.PI) / 180;
   return [
     ((lon + 180) / 360) * n,
-    ((1 - Math.log(Math.tan(phi) + 1 / Math.cos(phi)) / Math.PI) / 2) * n,
+    ((1 - dmath.log(dmath.tan(phi) + 1 / dmath.cos(phi)) / Math.PI) / 2) * n,
   ];
 }
 
@@ -33,14 +33,17 @@ export interface GeoCentre {
  */
 export function localToLonLat(c: GeoCentre, x: number, y: number): [number, number] {
   const lat = c.lat + (y / EARTH_RADIUS) * (180 / Math.PI);
-  const lon = c.lon + (x / (EARTH_RADIUS * Math.cos((c.lat * Math.PI) / 180))) * (180 / Math.PI);
+  const lon = c.lon + (x / (EARTH_RADIUS * dmath.cos((c.lat * Math.PI) / 180))) * (180 / Math.PI);
   return [lon, lat];
 }
 
 /** The inverse of `localToLonLat`. */
 export function lonLatToLocal(c: GeoCentre, lon: number, lat: number): [number, number] {
   const k = Math.PI / 180;
-  return [(lon - c.lon) * k * EARTH_RADIUS * Math.cos(c.lat * k), (lat - c.lat) * k * EARTH_RADIUS];
+  return [
+    (lon - c.lon) * k * EARTH_RADIUS * dmath.cos(c.lat * k),
+    (lat - c.lat) * k * EARTH_RADIUS,
+  ];
 }
 
 export interface DemBox {
@@ -77,7 +80,7 @@ export function tilesFor(b: DemBox): { x: number; y: number }[] {
   const [ax, ay] = lonLatToPixel(...localToLonLat(b.centre, -w / 2, h / 2), b.zoom);
   const [bx, by] = lonLatToPixel(...localToLonLat(b.centre, w / 2, -h / 2), b.zoom);
   // The world is 2^zoom tiles round: x wraps across ±180°, y stops at the Web-Mercator edge.
-  const n = 2 ** b.zoom;
+  const n = dmath.pow(2, b.zoom);
   const out: { x: number; y: number }[] = [];
   const seen = new Set<number>();
   const y1 = Math.min(n - 1, Math.floor((by + 1) / TILE));
@@ -109,7 +112,7 @@ export function resampleTerrarium(
   checkBox(b);
   const n = b.cells;
   const [w, h] = b.size;
-  const world = TILE * 2 ** b.zoom;
+  const world = TILE * dmath.pow(2, b.zoom);
   const at = (gx: number, gy: number): number => {
     // Same wrap and clamp as `tilesFor`: a pixel east of +180° is the first pixel west of −180°.
     const px = ((gx % world) + world) % world;

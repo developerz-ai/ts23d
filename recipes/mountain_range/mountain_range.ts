@@ -18,6 +18,7 @@
 import {
   type BuildContext,
   defineFamily,
+  dmath,
   fbm,
   gradientNoise2,
   heightfield,
@@ -191,7 +192,7 @@ function build(ctx: BuildContext, p: Readonly<Params>): void {
 /** Rise over run at (x, y) from central differences on the height. */
 function slopeAt(h: (x: number, y: number) => number, x: number, y: number): number {
   const e = 8;
-  return Math.hypot(h(x + e, y) - h(x - e, y), h(x, y + e) - h(x, y - e)) / (2 * e);
+  return dmath.hypot(h(x + e, y) - h(x - e, y), h(x, y + e) - h(x, y - e)) / (2 * e);
 }
 
 export const mountainRange = defineFamily<Params>({

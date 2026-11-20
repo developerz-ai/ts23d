@@ -4,6 +4,7 @@
 // that straps something on.
 
 import type { SculptEdit } from '@developerz.ai/ts23d';
+import { dmath } from '@developerz.ai/ts23d';
 import { add, cross, dot, k, local, mul, norm, type Surface, sub, type V } from './kit.ts';
 
 /** A flat strap `width` wide and `thick` thick lying on `sf` along `path`. */
@@ -16,7 +17,7 @@ export function strap(sf: Surface, path: readonly V[], width: number, thick: num
     if (!a || !b) continue;
     const mid = mul(add(a, b), 0.5);
     const d = sub(b, a);
-    const l = Math.hypot(d[0], d[1], d[2]);
+    const l = dmath.hypot(d[0], d[1], d[2]);
     const u = norm(d);
     const n0 = sf.normal(mid);
     const w = norm(sub(n0, mul(u, dot(n0, u))));
@@ -52,7 +53,7 @@ export function stitches(
     if (!a || !b) continue;
     const u = norm(sub(b, a));
     const side = norm(cross(sf.normal(a), u));
-    const l = Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]);
+    const l = dmath.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]);
     for (let d = 0.004; d < l; d += 0.008)
       for (const e of [-1, 1]) {
         const c = add(add(a, mul(u, d)), mul(side, e * (width / 2 - 0.004)));

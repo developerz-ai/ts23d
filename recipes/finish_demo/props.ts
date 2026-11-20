@@ -7,6 +7,7 @@ import {
   beam,
   box,
   cylinder,
+  dmath,
   hex,
   lathe,
   type Mesh,
@@ -244,7 +245,7 @@ export function crateMesh(lod: Lod, [X, Y, Z]: readonly [number, number, number]
 export function caskMesh(lod: Lod, h: number, r: number, rb: number, rng: Rng): Mesh {
   const staves = [28, 16, 12][lod] ?? 12;
   const rows = [12, 6, 3][lod] ?? 3;
-  const rAt = (z: number): number => r + (rb - r) * Math.sin((Math.PI * z) / h);
+  const rAt = (z: number): number => r + (rb - r) * dmath.sin((Math.PI * z) / h);
   const chime = 0.012; // stave wall at the chime
   const croze = 0.025; // head recessed this far below the stave ends
   const side: Vec2[] = Array.from({ length: rows + 1 }, (_, i): Vec2 => {
@@ -291,7 +292,7 @@ export function caskMesh(lod: Lod, h: number, r: number, rb: number, rng: Rng): 
     }
     // Flat in z: a head or a chime ring, not a stave.
     const head = z1 - z0 < 1e-6;
-    const a = (Math.atan2(cy, cx) + 2 * Math.PI) % (2 * Math.PI);
+    const a = (dmath.atan2(cy, cx) + 2 * Math.PI) % (2 * Math.PI);
     const k = head ? 1 : (tone[Math.floor((a / (2 * Math.PI)) * staves) % staves] ?? 1);
     const base = head ? HEAD : OAK;
     for (let c = 0; c < 3; c++) {

@@ -2,6 +2,7 @@
 // hits, shadow rays stop at the first kept hit.
 
 import { describe, expect, it } from 'bun:test';
+import { dmath } from '../../core/index.ts';
 import { newHit, PathBvh } from './bvh.ts';
 
 /** A deterministic soup of n small triangles in the unit cube (LCG, no Math.random). */
@@ -62,8 +63,8 @@ describe('PathBvh', () => {
     const h = newHit();
     for (let k = 0; k < 200; k++) {
       const o = [-1, (k % 20) / 20 + 0.02, Math.floor(k / 20) / 10 + 0.03];
-      const d = [1, 0.05 * Math.sin(k), 0.05 * Math.cos(k)];
-      const l = Math.hypot(d[0] ?? 0, d[1] ?? 0, d[2] ?? 0);
+      const d = [1, 0.05 * dmath.sin(k), 0.05 * dmath.cos(k)];
+      const l = dmath.hypot(d[0] ?? 0, d[1] ?? 0, d[2] ?? 0);
       const dn = d.map((x) => x / l);
       const want = brute(p, o, dn);
       const got = bvh.closest(o, dn, Infinity, h) ? h.t : Infinity;

@@ -4,7 +4,7 @@
 // (colour ÷ slot colour), so their marks only ever darken the lacquer.
 
 import type { Mesh, Rng, Vec3 } from '@developerz.ai/ts23d';
-import { valueNoise } from '@developerz.ai/ts23d';
+import { dmath, valueNoise } from '@developerz.ai/ts23d';
 import { R_F, R_R, RIDE, X_FA, X_RA, Y_WF, Y_WR, Z_FA, Z_RA } from '../dims.ts';
 import { clamp, smooth } from './geo.ts';
 
@@ -58,7 +58,7 @@ export function roadFilm(rng: Rng, only?: 'spray'): (p: Vec3) => number {
         f = Math.max(f, fan * 0.95);
       }
       // Arch lip: the last few centimetres round the opening catch what the tread throws.
-      const d = Math.hypot(p[0] - w.x, z - w.z) - w.r;
+      const d = dmath.hypot(p[0] - w.x, z - w.z) - w.r;
       if (!only && d < 0.1 && z > w.z - 0.1) f = Math.max(f, (1 - smooth(0.02, 0.1, d)) * 0.7);
     }
     // Spray only (where dried mud flecks sit): the fans behind the wheels and the nose, which
@@ -93,7 +93,7 @@ const SOOT: Vec3 = [0.035, 0.032, 0.03];
 export function brakeDust(rim: Mesh, r: number, load: number, rng: Rng): Mesh {
   const blotch = valueNoise(rng, { scale: 0.05, octaves: 2 });
   return tinted(rim, (p, c, n) => {
-    const rho = Math.hypot(p[0], p[2]);
+    const rho = dmath.hypot(p[0], p[2]);
     // Faces pointing at the axle or along the barrel hold dust; the outer face is wiped.
     const facing = 1 - smooth(0.2, 0.85, n[1]);
     const well = smooth(r * 0.55, r * 0.95, rho) * (1 - smooth(0.02, 0.07, p[1] + 0.02));
@@ -110,7 +110,7 @@ export function brakeDust(rim: Mesh, r: number, load: number, rng: Rng): Mesh {
 /** Dusty lower sidewall and a scrubbed, darker tread on a tyre (wheel frame). */
 export function tyreDust(tyre: Mesh, rim: number, r: number): Mesh {
   return tinted(tyre, (p, c) => {
-    const rho = Math.hypot(p[0], p[2]);
+    const rho = dmath.hypot(p[0], p[2]);
     const wall = smooth(rim, rim + (r - rim) * 0.5, rho) * (1 - smooth(r - 0.012, r - 0.002, rho));
     return mix(c, [c[0] * 0.78, c[1] * 0.7, c[2] * 0.6], wall * 0.8);
   });
@@ -183,7 +183,7 @@ export function sootAt(m: Mesh, at: Vec3, reach: number, strength = 0.85): Mesh 
   return tinted(m, (p, c) => {
     const dx = (at[0] - p[0]) / reach;
     if (dx < -0.25 || dx > 1) return c;
-    const d = Math.hypot((p[1] - at[1]) / (0.1 + 0.12 * Math.max(0, dx)), (p[2] - at[2]) / 0.14);
+    const d = dmath.hypot((p[1] - at[1]) / (0.1 + 0.12 * Math.max(0, dx)), (p[2] - at[2]) / 0.14);
     return mix(
       c,
       [c[0] * 0.12, c[1] * 0.12, c[2] * 0.12],

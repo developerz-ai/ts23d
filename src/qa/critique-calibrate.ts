@@ -9,6 +9,7 @@ import { CRITERIA, type Criterion } from './critique.ts';
 
 export { isotonic, knotValue, spearman } from './critique-stats.ts';
 
+import { dmath } from '../core/index.ts';
 import GOLDEN_JSON from './critique-golden.json' with { type: 'json' };
 import { REF_METRICS, type RefGaps } from './critique-ref.ts';
 import { isotonic, knotValue, spearman } from './critique-stats.ts';
@@ -158,7 +159,7 @@ export function fitCalibration(
         const raw = isotonic(col, r, up);
         const mean = col.reduce((s, x) => s + knotValue(raw, x), 0) / (n || 1);
         const k = raw.map(([x, y]): [number, number] => [x, (y - mean) * shrink]);
-        const sse = col.reduce((s, x, i) => s + ((r[i] ?? 0) - knotValue(k, x)) ** 2, 0);
+        const sse = col.reduce((s, x, i) => s + dmath.pow((r[i] ?? 0) - knotValue(k, x), 2), 0);
         if (sse < bestSse) [best, bestSse] = [k, sse];
       }
       knots[j] = best;

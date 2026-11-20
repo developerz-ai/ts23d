@@ -6,6 +6,7 @@
 import {
   type BodyPlan,
   capsuleDistance,
+  dmath,
   type Mesh,
   SKIN_INFLUENCES,
   type Vec3,
@@ -153,7 +154,7 @@ export function skinBody(mesh: Mesh, plan: BodyPlan, o: BodySkin): Mesh {
       });
     const min = Math.min(...all.map((x) => x[1]));
     const pairs = all
-      .map(([j, d]) => [j, Math.exp(-(d - min) / o.blend)] as const)
+      .map(([j, d]) => [j, dmath.exp(-(d - min) / o.blend)] as const)
       .filter((x) => x[1] > 0.0025);
     quantised(pairs).forEach(([j, w], s) => {
       joints[v * SKIN_INFLUENCES + s] = j;

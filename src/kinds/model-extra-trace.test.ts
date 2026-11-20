@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'bun:test';
 import type { Mesh, Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import { triBvh } from '../primitives/index.ts';
 import { tracePath } from './model-extra-trace.ts';
 import { withLimb } from './model-fixtures.ts';
@@ -22,10 +23,10 @@ describe('tracePath', () => {
     const bvh = triBvh(bent);
     expect(path.length).toBeGreaterThan(40);
     for (const p of path) expect(bvh.winding(p) > 0.5).toBe(true);
-    const near = Math.min(...path.map((p) => Math.hypot(p[0], p[1], p[2] - 0.5)));
+    const near = Math.min(...path.map((p) => dmath.hypot(p[0], p[1], p[2] - 0.5)));
     expect(near).toBeLessThan(0.05);
     // The straight line between the ends passes 0.35 m from the corner.
-    expect(Math.hypot(0.25, 0.25)).toBeGreaterThan(0.3);
+    expect(dmath.hypot(0.25, 0.25)).toBeGreaterThan(0.3);
   });
 
   it('refuses two points with no flesh between them', () => {

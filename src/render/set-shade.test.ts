@@ -8,6 +8,7 @@ import {
   type CompiledAsset,
   compile,
   defineAsset,
+  dmath,
   quatFromAxisAngle,
 } from '../core/index.ts';
 import type { PaintedSheet } from '../material/index.ts';
@@ -159,8 +160,8 @@ describe('textured parts through the other pipelines', () => {
     expect([...s.texSet]).toEqual([1, 1]);
     expect(s.uvs).toEqual(sceneOf(skinned).uvs);
     // The tangent frame turns with the pose: still unit, no longer +Y.
-    expect(s.vtan[1]).toBeCloseTo(Math.cos(0.4), 4);
-    expect(s.vtan[0]).toBeCloseTo(-Math.sin(0.4), 4);
+    expect(s.vtan[1]).toBeCloseTo(dmath.cos(0.4), 4);
+    expect(s.vtan[0]).toBeCloseTo(-dmath.sin(0.4), 4);
   });
 });
 

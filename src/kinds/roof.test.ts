@@ -3,6 +3,7 @@ import {
   boundsOf,
   compile,
   defineAsset,
+  dmath,
   type Lod,
   type Mesh,
   Ts23dError,
@@ -123,10 +124,10 @@ describe('roof', () => {
 
   it('puts the ridge exactly at half-span · tan(pitch) + slab, and LOD2 at the bare rafter line', () => {
     const t = 0.18;
-    const under = 5 + 3.25 * Math.tan(40 * RAD);
-    expect(ridgeHeight(base)).toBeCloseTo(under + t / Math.cos(40 * RAD), 9);
+    const under = 5 + 3.25 * dmath.tan(40 * RAD);
+    expect(ridgeHeight(base)).toBeCloseTo(under + t / dmath.cos(40 * RAD), 9);
     const lod0 = boundsOf(roofMesh({ ...base, caps: false }, 0));
-    expect(lod0.max[2]).toBeCloseTo(under + t / Math.cos(40 * RAD), 4);
+    expect(lod0.max[2]).toBeCloseTo(under + t / dmath.cos(40 * RAD), 4);
     expect(boundsOf(roofMesh(base, 2)).max[2]).toBeCloseTo(under, 4);
     // Ridge along the long side (X) by default: eaves overhang 0.35 on Y, rake 0.35 on X.
     expect(lod0.max[1]).toBeCloseTo(3.25 + 0.35, 4);
@@ -136,8 +137,8 @@ describe('roof', () => {
   it('rests on the wall plate: the underside meets the wall line at plate height', () => {
     const info = roofInfo(base);
     // The top at the wall line sits one vertical slab thickness above the plate.
-    expect(info.heightAt(0, 3.25)).toBeCloseTo(5 + 0.18 / Math.cos(40 * RAD), 6);
-    expect(info.eave).toBeCloseTo(5 - 0.35 * Math.tan(40 * RAD), 6);
+    expect(info.heightAt(0, 3.25)).toBeCloseTo(5 + 0.18 / dmath.cos(40 * RAD), 6);
+    expect(info.eave).toBeCloseTo(5 - 0.35 * dmath.tan(40 * RAD), 6);
     const walls = boundsOf(roofMesh({ ...base, caps: false, overhang: 0, rake: 0 }, 2));
     expect(walls.min[2]).toBeCloseTo(5, 6);
   });
@@ -151,7 +152,7 @@ describe('roof', () => {
   it('builds a closed slab: its volume is outline area × vertical thickness, from any origin', () => {
     const o: RoofMeshOptions = { ...base, type: 'hip', caps: false };
     const m = roofMesh(o, 0);
-    const T = 0.18 / Math.cos(40 * RAD);
+    const T = 0.18 / dmath.cos(40 * RAD);
     const area = (9 + 0.7) * (6.5 + 0.7);
     expect(volume(m)).toBeCloseTo(area * T, 3);
     expect(volume(translate(m, [13, -7, 4]))).toBeCloseTo(area * T, 3);
@@ -165,7 +166,7 @@ describe('roof', () => {
       // Vertices of the +Y slope's top surface.
       if ((m.normals[i * 3 + 1] ?? 0) < 0.3 || (m.normals[i * 3 + 2] ?? 0) < 0.5) continue;
       const f = ((m.uvs[i * 2 + 1] ?? 0) - r.v0) / (r.v1 - r.v0);
-      const slant = (3.25 + 0.35 - (m.positions[i * 3 + 1] ?? 0)) / Math.cos(40 * RAD);
+      const slant = (3.25 + 0.35 - (m.positions[i * 3 + 1] ?? 0)) / dmath.cos(40 * RAD);
       const inBand = slant / 0.66 - Math.floor(slant / 0.66 + 1e-6);
       expect(f).toBeGreaterThanOrEqual(-1e-6);
       expect(f).toBeLessThanOrEqual(1 + 1e-6);

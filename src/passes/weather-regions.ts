@@ -4,6 +4,7 @@
 // find the same panels and spans.
 
 import type { Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import { pieceBounds, type Surface } from './weather-surface.ts';
 
 export interface Panel {
@@ -24,7 +25,7 @@ const axesOf = (n: Vec3): [Vec3, Vec3] => {
     up[2] * n[0] - up[0] * n[2],
     up[0] * n[1] - up[1] * n[0],
   ];
-  const l = Math.hypot(...u) || 1;
+  const l = dmath.norm(u) || 1;
   const uu: Vec3 = [u[0] / l, u[1] / l, u[2] / l];
   return [
     uu,

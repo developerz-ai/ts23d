@@ -6,6 +6,7 @@
 // flipped to the sheet's +Y = −V; `arm` fills occlusion / roughness / metalness, else greyscale
 // `roughness` / `occlusion` maps (ambientCG) over the recipe's constants. Every byte is rounded.
 
+import { dmath } from '../../core/index.ts';
 import type { TextureFile, TextureSource } from '../texture-source.ts';
 import { textureBytes } from '../texture-source.ts';
 import type { Canvas } from './canvas.ts';
@@ -88,7 +89,7 @@ export function paintImageStrip(c: Canvas, r: StripRecipe, t: TextureSource, whe
       const x = unpackN(p[0] ?? 128);
       const y = -unpackN(p[1] ?? 128);
       const z = unpackN(p[2] ?? 255);
-      const l = Math.hypot(x, y, z) || 1;
+      const l = dmath.hypot(x, y, z) || 1;
       nrm.set([packN(x / l), packN(y / l), packN(z / l), 255], i * 4);
     });
     c.normalRgba = nrm;

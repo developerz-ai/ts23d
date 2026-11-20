@@ -5,6 +5,7 @@
 
 import {
   type Clip,
+  dmath,
   type Quat,
   quatRotate,
   type Track,
@@ -147,7 +148,7 @@ function loopTravel(spec: ChainClipSpec): Vec3 {
   const a = spec.root(0);
   const b = spec.root(spec.seconds);
   const d: Vec3 = [b.pos[0] - a.pos[0], b.pos[1] - a.pos[1], b.pos[2] - a.pos[2]];
-  if (Math.abs(d[2]) > 1e-9 || Math.abs(Math.sin((b.yaw - a.yaw) / 2)) > 1e-9)
+  if (Math.abs(d[2]) > 1e-9 || Math.abs(dmath.sin((b.yaw - a.yaw) / 2)) > 1e-9)
     invalid(
       `looping clip '${spec.name}' ends ${d[2]} m higher and ${b.yaw - a.yaw} rad round`,
       'close the loop: no net climb, and root yaw back at the start (whole turns only)',

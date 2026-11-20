@@ -9,6 +9,7 @@
 // kiss), and holds only by bridging.
 
 import type { Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import type { Shell } from './connections-shells.ts';
 import { probeOf } from './contact.ts';
 import { nearestOnSegment, pieceFor, type SegmentHit } from './segment-contact.ts';
@@ -51,7 +52,7 @@ export function edgeContact(a: Shell, b: Shell, eps: number, reach: number): Edg
   const T = b.mesh.positions;
   const q = probeOf(b);
   const near = (l: readonly number[], h: readonly number[]): number[] => q.trianglesIn(l, h);
-  const piece = pieceFor(Math.hypot(hi[0] - lo[0], hi[1] - lo[1], hi[2] - lo[2]));
+  const piece = pieceFor(dmath.hypot(hi[0] - lo[0], hi[1] - lo[1], hi[2] - lo[2]));
   let best: EdgeContact | null = null;
   for (const t of probeOf(a).trianglesIn(lo, hi)) {
     const corner = (v: number): Vec3 => [

@@ -1,6 +1,7 @@
 // harmonicPowers: the same numbers as the direct transform, at any length, and fast when long.
 
 import { describe, expect, it } from 'bun:test';
+import { dmath } from '../core/index.ts';
 import { harmonicPowers } from './chain-fft.ts';
 
 /** The direct transform: power of harmonic `m`, scaled to the half-swing. */
@@ -9,18 +10,18 @@ function direct(y: readonly number[], m: number): number {
   let im = 0;
   y.forEach((v, k) => {
     const a = (-2 * Math.PI * m * k) / y.length;
-    re += v * Math.cos(a);
-    im += v * Math.sin(a);
+    re += v * dmath.cos(a);
+    im += v * dmath.sin(a);
   });
-  return ((2 * re) / y.length) ** 2 + ((2 * im) / y.length) ** 2;
+  return dmath.pow((2 * re) / y.length, 2) + dmath.pow((2 * im) / y.length, 2);
 }
 
 const wobble = (n: number): number[] =>
   Array.from(
     { length: n },
     (_, k) =>
-      Math.sin((14 * Math.PI * k) / n + 0.4) +
-      0.3 * Math.cos(k * k * 0.7) +
+      dmath.sin((14 * Math.PI * k) / n + 0.4) +
+      0.3 * dmath.cos(k * k * 0.7) +
       (0.05 * k * (n - k)) / n / n,
   );
 
@@ -36,7 +37,7 @@ describe('harmonicPowers', () => {
 
   it('finds a pure tone and nothing else', () => {
     const p = harmonicPowers(
-      Array.from({ length: 90 }, (_, k) => 2 * Math.sin((22 * Math.PI * k) / 90)),
+      Array.from({ length: 90 }, (_, k) => 2 * dmath.sin((22 * Math.PI * k) / 90)),
     );
     expect(p[11] ?? 0).toBeCloseTo(4, 9);
     expect(p[10] ?? 1).toBeCloseTo(0, 9);

@@ -7,6 +7,7 @@
 
 import {
   type BuildContext,
+  dmath,
   type Mesh,
   MeshBuilder,
   stripRect,
@@ -59,7 +60,7 @@ function sheet(rows: readonly (readonly Column[])[], paint: Vec3): Mesh {
   );
   type Corner = (typeof ids)[number][number];
   const same = (u: Corner, v: Corner): boolean =>
-    Math.hypot(u.p[0] - v.p[0], u.p[1] - v.p[1], u.p[2] - v.p[2]) < 1e-9;
+    dmath.hypot(u.p[0] - v.p[0], u.p[1] - v.p[1], u.p[2] - v.p[2]) < 1e-9;
   // Columns pulled in to a ragged edge coincide there: those triangles have no area, skip them.
   const tri = (u: Corner | undefined, v: Corner | undefined, w: Corner | undefined): void => {
     if (u && v && w && !same(u, v) && !same(v, w) && !same(w, u)) b.tri(u.id, v.id, w.id);
@@ -94,7 +95,7 @@ function crown(L: Layout, ragged: (x: number) => number): Mesh {
     const r = jacketRadius(L, x);
     // Half-angle from the top: 32–58°, and 12° wider in the last metre before the stack.
     const half =
-      ((32 + 26 * ragged(x) + 12 * Math.exp(-(L.barrelFront - x) / 1.0)) * Math.PI) / 180;
+      ((32 + 26 * ragged(x) + 12 * dmath.exp(-(L.barrelFront - x) / 1.0)) * Math.PI) / 180;
     // Angles from +Y (the lathe's first vertex): the lathe's own vertices, pulled in to the edge.
     const top = Math.PI / 2;
     const first = Math.ceil((top - reach * step) / step - 1e-9);
@@ -109,8 +110,8 @@ function crown(L: Layout, ragged: (x: number) => number): Mesh {
       const a = Math.min(top + half, Math.max(top - half, a0));
       const rr = facetRadius(r, L.segs, a) + LIFT;
       return {
-        p: [x, Math.cos(a) * rr, BOILER_Z + Math.sin(a) * rr],
-        n: [0, Math.cos(a), Math.sin(a)],
+        p: [x, dmath.cos(a) * rr, BOILER_Z + dmath.sin(a) * rr],
+        n: [0, dmath.cos(a), dmath.sin(a)],
         depth: 1 - Math.abs(a - top) / half,
       };
     });
@@ -122,7 +123,7 @@ function crown(L: Layout, ragged: (x: number) => number): Mesh {
 function roof(L: Layout, ragged: (x: number) => number): Mesh {
   const section = Array.from({ length: 9 }, (_, i): [number, number] => {
     const a = Math.PI * (i / 8);
-    return [Math.cos(a) * ROOF.halfWidth, Math.sin(a) * ROOF.rise];
+    return [dmath.cos(a) * ROOF.halfWidth, dmath.sin(a) * ROOF.rise];
   });
   /** Roof height over y, on the section's chords. */
   const zAt = (y: number): number => {

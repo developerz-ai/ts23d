@@ -4,7 +4,7 @@
 // target and field of view). The strongest check an agent has: silhouette, proportions and colour
 // against reality at a glance. Deterministic: same asset + photo + marks → same bytes.
 
-import { type CompiledAsset, encodePng, Ts23dError } from '../core/index.ts';
+import { type CompiledAsset, dmath, encodePng, Ts23dError } from '../core/index.ts';
 import { decodePng } from '../material/index.ts';
 import { type Mark, type PhotoCamera, perspectiveOf, solveCamera } from './camera-solve.ts';
 import { type Photo, resizePhoto, segmentPhoto } from './photo-segment.ts';
@@ -38,7 +38,7 @@ export interface PhotoMatch {
 }
 
 const toSrgb = (v: number): number =>
-  Math.round(255 * Math.min(1, v <= 0.0031308 ? v * 12.92 : 1.055 * v ** (1 / 2.4) - 0.055));
+  Math.round(255 * Math.min(1, v <= 0.0031308 ? v * 12.92 : 1.055 * dmath.pow(v, 1 / 2.4) - 0.055));
 
 /** The asset from a photo camera: RGBA (alpha 0 = background) and its mask (1 = asset). */
 export function photoView(
@@ -53,7 +53,7 @@ export function photoView(
   const light = [0, 1, 2].map(
     (k) => -0.6 * (cam.f[k] ?? 0) + 0.5 * (cam.u[k] ?? 0) + 0.3 * (cam.r[k] ?? 0),
   );
-  const ll = Math.hypot(...light);
+  const ll = dmath.hypot(light[0] ?? 0, light[1] ?? 0, light[2] ?? 0);
   const rgba = new Uint8Array(width * height * 4);
   const mask = new Uint8Array(width * height);
   const P = s.positions;
@@ -68,7 +68,7 @@ export function photoView(
       (e1[2] ?? 0) * (e2[0] ?? 0) - (e1[0] ?? 0) * (e2[2] ?? 0),
       (e1[0] ?? 0) * (e2[1] ?? 0) - (e1[1] ?? 0) * (e2[0] ?? 0),
     ];
-    const nl = Math.hypot(...n) * ll || 1;
+    const nl = dmath.hypot(n[0] ?? 0, n[1] ?? 0, n[2] ?? 0) * ll || 1;
     const shade = 0.3 + 0.7 * Math.abs(n.reduce((sum, v, k) => sum + v * (light[k] ?? 0), 0) / nl);
     const rgb = [0, 1, 2].map((k) =>
       toSrgb(
@@ -101,7 +101,11 @@ function refineOnIoU(
 ): PhotoCamera {
   const score = (c: PhotoCamera): number =>
     iouOf(photoView(asset, c, photo.width, photo.height).mask, mask);
-  const dist = Math.hypot(...cam.eye.map((v, k) => v - (cam.target[k] ?? 0)));
+  const dist = dmath.hypot(
+    cam.eye[0] - cam.target[0],
+    cam.eye[1] - cam.target[1],
+    cam.eye[2] - cam.target[2],
+  );
   const vec = (c: PhotoCamera): number[] => [...c.eye, ...c.target, c.fovDeg];
   const cameraOf = (v: number[]): PhotoCamera => ({
     eye: [v[0] ?? 0, v[1] ?? 0, v[2] ?? 0],

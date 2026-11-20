@@ -9,6 +9,7 @@
 import {
   type Bone,
   type Clip,
+  dmath,
   type Mesh,
   type Quat,
   SKIN_INFLUENCES,
@@ -86,7 +87,7 @@ export function splitMid(mesh: Mesh, triples: readonly [number, number, number][
 export function halfTurn(q: Quat): Quat {
   const s = q[3] < 0 ? -1 : 1;
   const w = q[3] * s + 1;
-  const l = Math.hypot(q[0], q[1], q[2], w);
+  const l = dmath.hypot(q[0], q[1], q[2], w);
   return [(q[0] * s) / l, (q[1] * s) / l, (q[2] * s) / l, w / l];
 }
 

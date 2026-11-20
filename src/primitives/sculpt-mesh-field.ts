@@ -9,6 +9,7 @@
 // where the model's surface strays from the code's (code owns the anatomy, the model the skin).
 
 import type { Mesh, Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import { invalid } from './check.ts';
 import { triBvh } from './mesh-bvh.ts';
 import type { SculptFieldEdit } from './sculpt-edit.ts';
@@ -39,6 +40,8 @@ export interface MeshBrick {
 }
 
 const Q = 32767;
+/** Brick points allowed by default: 2^24. */
+const MAX_POINTS = 16777216;
 const memo = new WeakMap<Mesh, Map<string, MeshBrick>>();
 
 export function meshBrick(mesh: Mesh, o: MeshFieldOptions): MeshBrick {
@@ -81,7 +84,7 @@ function buildBrick(mesh: Mesh, o: MeshFieldOptions): MeshBrick {
   ) as [number, number, number];
   const [nx, ny, nz] = dims;
   const total = nx * ny * nz;
-  if (!(total <= (o.maxPoints ?? 2 ** 24)))
+  if (!(total <= (o.maxPoints ?? MAX_POINTS)))
     invalid(
       `mesh field: ${nx}×${ny}×${nz} = ${total} brick points`,
       'raise cell (coarser brick) or fit the mesh smaller',
@@ -143,7 +146,7 @@ export function trilinear(
     const ox = Math.max(0, -fx, fx - (nx - 1));
     const oy = Math.max(0, -fy, fy - (ny - 1));
     const oz = Math.max(0, -fz, fz - (nz - 1));
-    if (ox + oy + oz > 0) return scale + cell * Math.hypot(ox, oy, oz);
+    if (ox + oy + oz > 0) return scale + cell * dmath.hypot(ox, oy, oz);
     const i = Math.min(nx - 2, Math.floor(fx));
     const j = Math.min(ny - 2, Math.floor(fy));
     const l = Math.min(nz - 2, Math.floor(fz));

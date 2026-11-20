@@ -7,6 +7,7 @@
 
 import {
   defineFamily,
+  dmath,
   type GrimeZone,
   type Lod,
   type Mesh,
@@ -379,8 +380,8 @@ const hall = defineFamily({
         ruined || broken
           ? [-1.2, -0.4, 0.4, 1.2, 2.4].map((a) => ({
               at: [
-                TOWER.x + Math.cos(a) * TOWER.r,
-                s * TOWER.y + Math.sin(a) * TOWER.r * -s,
+                TOWER.x + dmath.cos(a) * TOWER.r,
+                s * TOWER.y + dmath.sin(a) * TOWER.r * -s,
                 h + 0.4,
               ] as Vec3,
               radius: 1.1,
@@ -476,7 +477,7 @@ const hall = defineFamily({
         stains
           .filter((st) => st.color === STAIN.scorch)
           .reduce((k, st) => {
-            const d = Math.hypot(x - st.at[0], y - st.at[1]) / st.radius;
+            const d = dmath.hypot(x - st.at[0], y - st.at[1]) / st.radius;
             return d < 1 ? k * (1 - st.k * 0.6 * (1 - d)) : k;
           }, 1);
       kit.add(

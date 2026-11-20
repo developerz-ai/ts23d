@@ -4,6 +4,8 @@
 // (the samples stay on the clip's keys) through power-of-two FFTs, in O(n log n).
 
 /** In-place radix-2 FFT; `re.length` must be a power of two. `sign` −1 forward, +1 inverse. */
+import { dmath } from '../core/index.ts';
+
 function fft(re: Float64Array, im: Float64Array, sign: 1 | -1): void {
   const n = re.length;
   for (let i = 1, j = 0; i < n; i++) {
@@ -20,8 +22,8 @@ function fft(re: Float64Array, im: Float64Array, sign: 1 | -1): void {
     const step = (sign * 2 * Math.PI) / size;
     for (let start = 0; start < n; start += size)
       for (let k = 0; k < half; k++) {
-        const c = Math.cos(step * k);
-        const s = Math.sin(step * k);
+        const c = dmath.cos(step * k);
+        const s = dmath.sin(step * k);
         const [a, b] = [start + k, start + k + half];
         const x = (re[b] ?? 0) * c - (im[b] ?? 0) * s;
         const y = (re[b] ?? 0) * s + (im[b] ?? 0) * c;
@@ -48,8 +50,8 @@ export function harmonicPowers(y: readonly number[]): Float64Array {
   const sin = new Float64Array(n);
   for (let k = 0; k < n; k++) {
     const a = (Math.PI * ((k * k) % (2 * n))) / n;
-    cos[k] = Math.cos(a);
-    sin[k] = -Math.sin(a);
+    cos[k] = dmath.cos(a);
+    sin[k] = -dmath.sin(a);
   }
   const are = new Float64Array(size);
   const aim = new Float64Array(size);
@@ -73,6 +75,6 @@ export function harmonicPowers(y: readonly number[]): Float64Array {
   // The chirp has unit size, so the power needs only the convolution's own magnitude.
   const scale = 2 / (n * size);
   for (let m = 0; m < out.length; m++)
-    out[m] = ((are[m] ?? 0) * scale) ** 2 + ((aim[m] ?? 0) * scale) ** 2;
+    out[m] = dmath.pow((are[m] ?? 0) * scale, 2) + dmath.pow((aim[m] ?? 0) * scale, 2);
   return out;
 }

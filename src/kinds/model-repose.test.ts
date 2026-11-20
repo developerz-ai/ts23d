@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'bun:test';
 import type { Bone, Mesh, Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import { creaturePlan } from './creature.ts';
 import { v3 } from './creature-curve.ts';
 import { rigBones } from './creature-limits.ts';
@@ -15,7 +16,7 @@ const len = (b: Bone): number => v3.len(v3.sub(b.tail, b.head));
 /** The plan with its head (and what hangs from it) yawed `deg` about the atlas. */
 function headTurned(deg: number): Bone[] {
   const atlas = plan.find((b) => b.name === 'head')?.head ?? [0, 0, 0];
-  const [c, s] = [Math.cos((deg * Math.PI) / 180), Math.sin((deg * Math.PI) / 180)];
+  const [c, s] = [dmath.cos((deg * Math.PI) / 180), dmath.sin((deg * Math.PI) / 180)];
   const turn = (p: Vec3): Vec3 => {
     const [x, y] = [p[0] - atlas[0], p[1] - atlas[1]];
     return [atlas[0] + c * x - s * y, atlas[1] + s * x + c * y, p[2]];

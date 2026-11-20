@@ -3,6 +3,7 @@
 
 import { describe, expect, test } from 'bun:test';
 import type { Clip, Track } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import { closeCycle } from './import-clips-loop.ts';
 
 const FPS = 30;
@@ -13,9 +14,9 @@ function clip(keys: number, phase: (i: number) => number): Clip {
   const rot = new Float32Array(keys * 4);
   const bob = new Float32Array(keys * 3);
   for (let i = 0; i < keys; i++) {
-    const a = 0.4 * Math.sin(2 * Math.PI * phase(i));
-    rot.set([0, Math.sin(a / 2), 0, Math.cos(a / 2)], i * 4);
-    bob.set([0, 0, 0.02 * Math.cos(4 * Math.PI * phase(i))], i * 3);
+    const a = 0.4 * dmath.sin(2 * Math.PI * phase(i));
+    rot.set([0, dmath.sin(a / 2), 0, dmath.cos(a / 2)], i * 4);
+    bob.set([0, 0, 0.02 * dmath.cos(4 * Math.PI * phase(i))], i * 3);
   }
   const tracks: Track[] = [
     { bone: 'thigh', path: 'rotation', times, values: rot },
@@ -32,7 +33,7 @@ describe('closeCycle', () => {
     // A quarter swing that stops at its extreme: the way back is 20 frames of motion.
     expect(closeCycle(clip(30, (i) => i / 120))).toBeNull();
     // Eases out to a pose next to (not at) the start: no velocity to continue into key 0.
-    expect(closeCycle(clip(30, (i) => 0.97 * (1 - (1 - i / 29) ** 3)))).toBeNull();
+    expect(closeCycle(clip(30, (i) => 0.97 * (1 - dmath.pow(1 - i / 29, 3))))).toBeNull();
     // Runs backwards into the seam: the jump opposes the motion on both sides.
     const tail = clip(30, (i) => (i < 15 ? i / 30 : (29 - i) / 30 + 1 / 60));
     expect(closeCycle(tail)).toBeNull();

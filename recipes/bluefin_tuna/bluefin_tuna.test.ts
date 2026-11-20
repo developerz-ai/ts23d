@@ -2,7 +2,14 @@
 // mesh, finlet rows, and the swim numbers read off the baked clips. `bun test recipes/bluefin_tuna`.
 
 import { describe, expect, it } from 'bun:test';
-import { compile, type Mesh, stripRect, swimFindings, triangleCount } from '@developerz.ai/ts23d';
+import {
+  compile,
+  dmath,
+  type Mesh,
+  stripRect,
+  swimFindings,
+  triangleCount,
+} from '@developerz.ai/ts23d';
 import { bodyChain, measureWave } from '../../src/qa/chain-wave.ts';
 import { bluefin_tuna, CLIPS, PLAN } from './bluefin_tuna.ts';
 import { finletStrips, finlets, pectoralTip } from './fins.ts';
@@ -124,7 +131,7 @@ describe('proportions, % of fork length (FAO synopsis 62)', () => {
   it('pectoral 16 to 19, short of the second dorsal', () => {
     const root = plainPoint(0.262, 1.62);
     const tip = pectoralTip(1);
-    const length = Math.hypot(root[0] - tip[0], root[1] - 0.02 - tip[1], root[2] - tip[2]);
+    const length = dmath.hypot(root[0] - tip[0], root[1] - 0.02 - tip[1], root[2] - tip[2]);
     inside(percent(length), 16, 19);
     expect(tip[0]).toBeGreaterThan(xOf(0.5));
   });

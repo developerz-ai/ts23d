@@ -2,6 +2,7 @@
 // lobes are separate pieces on their own bone chains. Dimensions come from anatomy and README.md.
 
 import type { Mesh, Vec3 } from '@developerz.ai/ts23d';
+import { dmath } from '@developerz.ai/ts23d';
 import {
   add,
   curve3,
@@ -62,7 +63,7 @@ export function dorsalFin(lod: Lod): Mesh {
       const [a, b, k] = [lead(u), back(u), notch(u)];
       return [b[0] + (a[0] - b[0]) * k, b[1], b[2] + (a[2] - b[2]) * k];
     },
-    thick: (u) => 0.036 * (1 - u) ** 0.8 + 0.0025,
+    thick: (u) => 0.036 * dmath.pow(1 - u, 0.8) + 0.0025,
     us: spanRings(lod, 2),
     sides: chordSides[lod],
     normal: [0, 1, 0],
@@ -88,9 +89,9 @@ export function copepods(lod: Lod, at: readonly Vec3[]): Mesh[] {
       sides: 6,
       strip: SKIN,
       point: (u, a) => {
-        const len = 0.034 + 0.008 * Math.sin(i * 2.3);
-        const r = 0.0085 * Math.sin(Math.PI * (0.08 + 0.84 * u)) ** 0.7;
-        return [p[0] - len * (u - 0.4), p[1] + r * Math.cos(a), p[2] + 0.6 * r * Math.sin(a)];
+        const len = 0.034 + 0.008 * dmath.sin(i * 2.3);
+        const r = 0.0085 * dmath.pow(dmath.sin(Math.PI * (0.08 + 0.84 * u)), 0.7);
+        return [p[0] - len * (u - 0.4), p[1] + r * dmath.cos(a), p[2] + 0.6 * r * dmath.sin(a)];
       },
       color: (_p, _n, u) => mixRgb(COLOUR.copepod, COLOUR.tip, 0.3 * u),
     }),
@@ -117,8 +118,8 @@ export const dorsalCopepods = (): Vec3[] =>
     const [a, b] = [lead(u), back(u)];
     const c = 0.72 + 0.06 * (i % 2);
     // Seated on the skin of one face: the plate's half-thickness there, most on the camera side.
-    const face = 0.036 * (1 - u) ** 0.8 + 0.0025;
-    const lens = Math.sqrt(1 - (2 * c - 1) ** 2) * (1 - 0.65 * c);
+    const face = 0.036 * dmath.pow(1 - u, 0.8) + 0.0025;
+    const lens = Math.sqrt(1 - dmath.pow(2 * c - 1, 2)) * (1 - 0.65 * c);
     const side = i % 3 === 2 ? 1 : -1;
     return [a[0] + (b[0] - a[0]) * c, side * face * lens, a[2] + (b[2] - a[2]) * c];
   });
@@ -136,9 +137,9 @@ export const pectoralTip = (side: 1 | -1): Vec3 => {
 /** A healed bite across a pectoral, 0..1 at (span u, chord c): an arc of tooth punctures, the
  *  bitten shark's jaw having closed over the fin's middle. */
 export function biteAt(u: number, c: number): number {
-  const d = Math.hypot((u - 0.42) * 1.1, (c - 0.15) * 0.7);
+  const d = dmath.hypot((u - 0.42) * 1.1, (c - 0.15) * 0.7);
   const arc = gauss((d - 0.2) / 0.014, 1) * smooth(0.25, 0.4, c);
-  const teeth = Math.max(0, Math.cos(Math.atan2(c - 0.15, u - 0.42) * 16)) ** 0.6;
+  const teeth = dmath.pow(Math.max(0, dmath.cos(dmath.atan2(c - 0.15, u - 0.42) * 16)), 0.6);
   return Math.min(1, arc * teeth * 1.3);
 }
 
@@ -152,7 +153,7 @@ export function pectoralFin(side: 1 | -1, lod: Lod): Mesh {
     lead: curve3([r, at(r, 0.34, 0.05, 0.012), at(r, 0.7, 0.045, 0.012), tip]),
     trail: curve3([back, at(back, 0.32, -0.05, 0.02), at(back, 0.68, -0.03, 0.014), tip]),
     // A thick, muscular root tapering fast to a thin, flexible trailing edge and tip.
-    thick: (u) => 0.08 * (1 - u) ** 1.5 + 0.004,
+    thick: (u) => 0.08 * dmath.pow(1 - u, 1.5) + 0.004,
     us: spanRings(lod, 2),
     sides: chordSides[lod],
     strip: SKIN,
@@ -193,7 +194,7 @@ export function upperLobe(lod: Lod): Mesh {
   return plate({
     lead: curve3([start, [R[0] - 0.13, 0, R[2] + 0.215], [R[0] - 0.42, 0, R[2] + 0.5], UPPER_TIP]),
     trail: curve3([FORK, [R[0] - 0.47, 0, R[2] + 0.2], [R[0] - 0.56, 0, R[2] + 0.48], UPPER_TIP]),
-    thick: (u) => 0.04 * (1 - u) ** 1.1 + 0.0025,
+    thick: (u) => 0.04 * dmath.pow(1 - u, 1.1) + 0.0025,
     us: spanRings(lod, 3),
     sides: chordSides[lod],
     normal: [0, 1, 0],
@@ -207,7 +208,7 @@ export function lowerLobe(lod: Lod): Mesh {
   return plate({
     lead: curve3([start, [R[0] - 0.09, 0, R[2] - 0.22], [R[0] - 0.27, 0, R[2] - 0.47], LOWER_TIP]),
     trail: curve3([FORK, [R[0] - 0.44, 0, R[2] - 0.2], [R[0] - 0.455, 0, R[2] - 0.45], LOWER_TIP]),
-    thick: (u) => 0.036 * (1 - u) ** 1.1 + 0.0025,
+    thick: (u) => 0.036 * dmath.pow(1 - u, 1.1) + 0.0025,
     us: spanRings(lod, 2),
     sides: chordSides[lod],
     normal: [0, 1, 0],

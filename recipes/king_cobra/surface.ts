@@ -3,7 +3,7 @@
 // scutes across the belly and up the hood's front. LOD1 paints the same bands on the tube; LOD2 is
 // too coarse to sample a band, so it takes the pattern's average per stretch of body instead.
 
-import { hex, type Mesh, MeshBuilder, type Vec3 } from '@developerz.ai/ts23d';
+import { dmath, hex, type Mesh, MeshBuilder, type Vec3 } from '@developerz.ai/ts23d';
 import {
   add,
   cross,
@@ -312,4 +312,4 @@ export function scutes(): Mesh {
 
 const dot3 = (a: Vec3, b: Vec3): number => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
 
-export const sideOf = (a: number): number => Math.abs(Math.atan2(Math.sin(a), Math.cos(a)));
+export const sideOf = (a: number): number => Math.abs(dmath.atan2(dmath.sin(a), dmath.cos(a)));

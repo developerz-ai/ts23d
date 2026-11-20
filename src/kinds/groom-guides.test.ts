@@ -1,11 +1,11 @@
 import { describe, expect, test } from 'bun:test';
-import { createRng, type Vec3 } from '../core/index.ts';
+import { createRng, dmath, type Vec3 } from '../core/index.ts';
 import { readGlb, scenePrimitives } from '../neural/index.ts';
 import { groomJson, scalpGlb, scalpGuides } from './groom-guides.ts';
 
 // A 10 cm ball head, hair on its upper half, combed back (-X).
 const R = 0.1;
-const ball = (p: Vec3): number => Math.hypot(...p) - R;
+const ball = (p: Vec3): number => dmath.norm(p) - R;
 const opts = () => ({
   field: ball,
   bounds: [

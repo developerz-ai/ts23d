@@ -6,6 +6,7 @@
 // crossing, and only the path's way on (through or off) is a coin toss. `glow` parts emit. Every
 // random number comes from sampler.ts: same pixel, same bytes.
 
+import { dmath } from '../../core/index.ts';
 import { lambertLobes, MODE, newLobes, prepare, sampleBsdf } from './bsdf.ts';
 import { type Hit, newHit } from './bvh.ts';
 import { CLS } from './classes.ts';
@@ -201,7 +202,8 @@ function thinVertex(w: World, rad: Float64Array, depth: number): number {
   const look = s.look;
   const trans = look.transmission * (1 - s.metal);
   prepare(s, wo, MODE.pbr, trans, lobes);
-  const f0 = ((look.ior - 1) / (look.ior + 1)) ** 2;
+  const rIor = (look.ior - 1) / (look.ior + 1);
+  const f0 = rIor * rIor;
   const c = Math.max(
     0,
     Math.min(
@@ -209,7 +211,8 @@ function thinVertex(w: World, rad: Float64Array, depth: number): number {
       (s.n[0] ?? 0) * (wo[0] ?? 0) + (s.n[1] ?? 0) * (wo[1] ?? 0) + (s.n[2] ?? 0) * (wo[2] ?? 0),
     ),
   );
-  const pT = trans * (1 - (f0 + (1 - f0) * (1 - c) ** 5));
+  const m2 = (1 - c) * (1 - c);
+  const pT = trans * (1 - (f0 + (1 - f0) * (m2 * m2 * (1 - c))));
   add.fill(0);
   directLight(w, s, lobes, false, wo, tp, u[0] ?? 0, u[1] ?? 0, u[2] ?? 0, add);
   const pdf = sampleBsdf(s, lobes, wo, v[0] ?? 0, v[1] ?? 0, v[2] ?? 0, rd, wt);
@@ -217,7 +220,8 @@ function thinVertex(w: World, rad: Float64Array, depth: number): number {
   addClamped(rad, add, depth);
   if ((q[0] ?? 0) < pT) {
     for (let k = 0; k < 3; k++) {
-      tp[k] = (tp[k] ?? 0) * (s.albedo[k] ?? 0) * Math.exp(-(look.absorb[k] ?? 0) * look.thickness);
+      tp[k] =
+        (tp[k] ?? 0) * (s.albedo[k] ?? 0) * dmath.exp(-(look.absorb[k] ?? 0) * look.thickness);
       o[k] = (s.p[k] ?? 0) - (s.ng[k] ?? 0) * w.eps;
     }
     return THROUGH;

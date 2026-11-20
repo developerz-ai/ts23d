@@ -12,6 +12,7 @@ import {
   box,
   cylinder,
   defineAsset,
+  dmath,
   hex,
   lathe,
   type Mesh,
@@ -146,7 +147,7 @@ function patina(m: Mesh): Mesh {
     const x = m.positions[v * 3] ?? 0;
     const y = m.positions[v * 3 + 1] ?? 0;
     const z = (m.positions[v * 3 + 2] ?? 0) + 0.275; // 0 at the lip, 0.25 at the crown
-    const run = Math.max(0, Math.cos(3 * Math.atan2(y, x) + 0.4)) ** 3;
+    const run = dmath.pow(Math.max(0, dmath.cos(3 * dmath.atan2(y, x) + 0.4)), 3);
     const shoulder = Math.min(1, Math.max(0, (z - 0.12) / 0.08));
     const lip = Math.max(0, 1 - z / 0.03);
     const t = Math.min(0.9, run * (0.35 + 0.55 * shoulder) + 0.35 * shoulder + 0.7 * lip);

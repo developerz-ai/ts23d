@@ -2,7 +2,7 @@
 // never twist-flips at inflections the way Frenet frames do. Shared by `sweep` and by kinds that
 // must place things exactly on a swept surface (leaves on twigs, children on branches).
 
-import { Ts23dError, type Vec3 } from '../core/index.ts';
+import { dmath, Ts23dError, type Vec3 } from '../core/index.ts';
 
 export interface SweepFrame {
   /** Unit tangent. */
@@ -16,7 +16,7 @@ export interface SweepFrame {
 const sub = (a: Vec3, b: Vec3): Vec3 => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
 const dot = (a: Vec3, b: Vec3): number => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
 const unit = (a: Vec3): Vec3 => {
-  const l = Math.hypot(a[0], a[1], a[2]) || 1;
+  const l = dmath.hypot(a[0], a[1], a[2]) || 1;
   return [a[0] / l, a[1] / l, a[2] / l];
 };
 const cross = (a: Vec3, b: Vec3): Vec3 => [
@@ -46,7 +46,7 @@ export function arcLengths(path: readonly Vec3[]): number[] {
   }
   const s = [0];
   for (let i = 1; i < path.length; i++) {
-    const d = Math.hypot(...sub(path[i] ?? [0, 0, 0], path[i - 1] ?? [0, 0, 0]));
+    const d = dmath.norm(sub(path[i] ?? [0, 0, 0], path[i - 1] ?? [0, 0, 0]));
     // Written so a NaN distance fails too.
     if (!(d >= 1e-9)) {
       throw new Ts23dError('T3D_RECIPE_INVALID', {

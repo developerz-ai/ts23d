@@ -7,6 +7,7 @@
 import {
   type Bounds,
   type CompiledAsset,
+  dmath,
   type Mesh,
   type Vec3,
   worldMeshes,
@@ -43,7 +44,7 @@ function faceSamples(m: Mesh, cap: number): Array<{ p: Vec3; n: Vec3 }> {
       u[2] * w[0] - u[0] * w[2],
       u[0] * w[1] - u[1] * w[0],
     ];
-    const len = Math.hypot(...g);
+    const len = dmath.norm(g);
     if (len < 1e-10) continue;
     out.push({
       p: [(a[0] + b[0] + c[0]) / 3, (a[1] + b[1] + c[1]) / 3, (a[2] + b[2] + c[2]) / 3],

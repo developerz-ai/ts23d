@@ -4,7 +4,7 @@
 // fall out as the creases between them. Local frame: `a` along the ridge, `b` across it, z up from
 // the wall plate; the roof UNDERSIDE passes through the top outer edge of every wall.
 
-import { Ts23dError, type Vec2, type Vec3 } from '../core/index.ts';
+import { dmath, Ts23dError, type Vec2, type Vec3 } from '../core/index.ts';
 import type { StripId } from '../material/index.ts';
 import { area2, clipPoly } from './faces.ts';
 import type { RoofChimney } from './roof-chimney.ts';
@@ -139,7 +139,7 @@ export function validateRoof(o: RoofOptions): void {
 
 /** Planes of the roof UNDERSIDE for a type, in the local frame. */
 function underPlanes(o: RoofOptions, L: number, D: number): Plane[] {
-  const tp = Math.tan(o.pitchDeg * RAD);
+  const tp = dmath.tan(o.pitchDeg * RAD);
   const side = (s: number, c = 0, k = s): Plane[] => [
     { c: c + D * k, ga: 0, gb: -s },
     { c: c + D * k, ga: 0, gb: s },
@@ -161,7 +161,7 @@ function underPlanes(o: RoofOptions, L: number, D: number): Plane[] {
     }
     case 'gambrel':
     case 'mansard': {
-      const t2 = Math.tan((o.upperPitchDeg ?? (o.type === 'mansard' ? 20 : 30)) * RAD);
+      const t2 = dmath.tan((o.upperPitchDeg ?? (o.type === 'mansard' ? 20 : 30)) * RAD);
       // Gambrel: the knee is a share of the half-span across the ridge, whichever way it runs.
       const r =
         (o.knee ?? (o.type === 'mansard' ? 0.3 : 0.45)) *
@@ -189,13 +189,13 @@ export function roofShape(o: RoofOptions): RoofShape {
   const ov = o.overhang ?? 0.35;
   const t = o.thickness ?? 0.18;
   const under = underPlanes(o, L, D);
-  const top = under.map((p) => ({ ...p, c: p.c + t * Math.hypot(1, p.ga, p.gb) }));
+  const top = under.map((p) => ({ ...p, c: p.c + t * dmath.hypot(1, p.ga, p.gb) }));
   const hipped = o.type === 'hip' || o.type === 'pyramid' || o.type === 'mansard';
   const A = hipped ? 4 * (L + D + ov) : L + (o.rake ?? ov);
   const B = D + ov;
   // Eave height: the steepest-falling b-plane at the eave line; every plane must stay above it.
   const g0 = under[0] ?? { c: 0, ga: 0, gb: 1 };
-  const zEave = -ov * Math.hypot(g0.ga, g0.gb);
+  const zEave = -ov * dmath.hypot(g0.ga, g0.gb);
   let outline: Vec2[] = [
     [-A, -B],
     [A, -B],

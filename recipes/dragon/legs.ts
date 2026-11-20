@@ -3,7 +3,7 @@
 // Left side only, mirrored by the body sculpt. Masses → muscle forms → knuckles and pads; claws are
 // returned separately so they mesh at a finer cell than the body.
 
-import { type Mesh, merge, place, type SculptEdit, type Vec3 } from '@developerz.ai/ts23d';
+import { dmath, type Mesh, merge, place, type SculptEdit, type Vec3 } from '@developerz.ai/ts23d';
 import { spline, v3 } from '../_lib/creature/curve.ts';
 import { clawHorn, type HornOptions, hornTube } from '../_lib/creature/horn.ts';
 import { blob, skinTube } from '../_lib/creature/lowpoly.ts';
@@ -41,7 +41,7 @@ function toes(
   spec: readonly { yaw: number; len: number; r: number; lift: number }[],
 ): Toe[] {
   return spec.map((s) => {
-    const dir: Vec3 = [Math.cos(s.yaw), Math.sin(s.yaw), 0];
+    const dir: Vec3 = [dmath.cos(s.yaw), dmath.sin(s.yaw), 0];
     const k0 = v3.add(palm, v3.mul(dir, 0.08));
     const k1: Vec3 = v3.add(palm, [dir[0] * (s.len * 0.55), dir[1] * (s.len * 0.55), s.lift]);
     const k2: Vec3 = v3.add(palm, [dir[0] * s.len, dir[1] * s.len, s.lift * 0.4 - 0.03]);

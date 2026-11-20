@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { createRng, type Mesh, MeshBuilder, type Vec3 } from '../core/index.ts';
+import { createRng, dmath, type Mesh, MeshBuilder, type Vec3 } from '../core/index.ts';
 import { hairCards } from './hair-cards.ts';
 import { CELL } from './hair-fixtures.ts';
 import { hairFlow } from './hair-flow.ts';
@@ -23,7 +23,7 @@ function meshOf(f: (p: Vec3) => number, rings = 40, around = 64): Mesh {
     for (let j = 0; j < around; j++) {
       const th = (i / rings) * Math.PI;
       const a = (j / around) * Math.PI * 2;
-      const d: Vec3 = [Math.sin(th) * Math.cos(a), Math.sin(th) * Math.sin(a), Math.cos(th)];
+      const d: Vec3 = [dmath.sin(th) * dmath.cos(a), dmath.sin(th) * dmath.sin(a), dmath.cos(th)];
       let lo = 0;
       let hi = 0.1;
       for (let it = 0; it < 40; it++) {
@@ -104,7 +104,7 @@ describe('hair lift bound', () => {
   test('riseOf: flat-skin height of the lift, bend taking it off, slack reached by the tip', () => {
     expect(riseOf(0.04, 4, 0, 0.5, 0)).toEqual([0, 0, 0, 0, 0]);
     const straight = riseOf(0.04, 4, 0.3, 0, 0);
-    expect(straight[4]).toBeCloseTo(0.04 * Math.sin(0.3), 9);
+    expect(straight[4]).toBeCloseTo(0.04 * dmath.sin(0.3), 9);
     expect(riseOf(0.04, 4, 0.3, 0.8, 0)[4] ?? 0).toBeLessThan(straight[4] ?? 0);
     expect((riseOf(0.04, 4, 0.3, 0, 0.006)[2] ?? 0) - (straight[2] ?? 0)).toBeCloseTo(0.003, 9);
   });
@@ -116,7 +116,7 @@ describe('hair lift bound', () => {
     expect(hold(floor, undefined, [0, 0, 0], [0, 0, 0.001], q, 0.005, 1e-4)).toBe(q);
     const held = hold(floor, undefined, [0, 0, 0], [0, 0, 0.001], [0.01, 0, 0.011], 0.005, 1e-4);
     expect(held[2]).toBeCloseTo(0.005, 4);
-    expect(Math.hypot(held[0], held[2] - 0.001)).toBeCloseTo(Math.hypot(0.01, 0.01), 9);
+    expect(dmath.hypot(held[0], held[2] - 0.001)).toBeCloseTo(dmath.hypot(0.01, 0.01), 9);
   });
 
   test('hold: hanging is not proud — a point below its root may be that far off a wall', () => {

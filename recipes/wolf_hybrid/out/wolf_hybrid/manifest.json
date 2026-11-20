@@ -246,13 +246,13 @@
     },
     {
       "name": "walk",
-      "seconds": 0.7897778018115879,
+      "seconds": 0.789778,
       "loop": true,
       "speed": 1.0919
     },
     {
       "name": "trot",
-      "seconds": 0.5846048582432123,
+      "seconds": 0.584605,
       "loop": true,
       "speed": 2.3162
     }

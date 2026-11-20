@@ -7,6 +7,7 @@ import {
   applyAffine,
   beam,
   box,
+  dmath,
   type Mesh,
   merge,
   place,
@@ -26,7 +27,7 @@ export const cross = (a: Vec3, b: Vec3): Vec3 => [
   a[2] * b[0] - a[0] * b[2],
   a[0] * b[1] - a[1] * b[0],
 ];
-export const len = (a: Vec3): number => Math.hypot(a[0], a[1], a[2]);
+export const len = (a: Vec3): number => dmath.hypot(a[0], a[1], a[2]);
 export const unit = (a: Vec3): Vec3 => {
   const l = len(a) || 1;
   return [a[0] / l, a[1] / l, a[2] / l];
@@ -145,8 +146,8 @@ export function curve(knots: readonly Vec2[], x: number): number {
 /** Rodrigues rotation of `angle` radians about the axis through `origin` along `axis`. */
 export function rotationAbout(origin: Vec3, axis: Vec3, angle: number): Affine {
   const [x, y, z] = unit(axis);
-  const c = Math.cos(angle);
-  const s = Math.sin(angle);
+  const c = dmath.cos(angle);
+  const s = dmath.sin(angle);
   const C = 1 - c;
   const m = [
     c + x * x * C,
@@ -296,7 +297,7 @@ export function circle(c: Vec3, e1: Vec3, e2: Vec3, r: number, n: number, phase 
   const out: Vec3[] = [];
   for (let i = 0; i < n; i++) {
     const a = phase + (i / n) * Math.PI * 2;
-    out.push(add(c, add(mul(e1, r * Math.cos(a)), mul(e2, r * Math.sin(a)))));
+    out.push(add(c, add(mul(e1, r * dmath.cos(a)), mul(e2, r * dmath.sin(a)))));
   }
   return out;
 }

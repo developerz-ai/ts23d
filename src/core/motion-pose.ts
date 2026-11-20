@@ -3,6 +3,7 @@
 // QA sweeps it, and `assertFollows` checks linkages against it. Rates are rounded to WHOLE cycles
 // over the clip (cyclesOf), so a crank and the wheel it rides on stay locked at every key.
 
+import * as dmath from './dmath.ts';
 import type { Motion, Piston, Tread } from './motion.ts';
 import {
   cross,
@@ -38,8 +39,8 @@ export const rateOf = (m: BakedMotion): number => (m.kind === 'spin' ? m.rps : m
 
 /** Rodrigues: `v` turned by `angle` right-handed about unit `u`. */
 export function rotateAbout(v: Vec3, u: Vec3, angle: number): Vec3 {
-  const c = Math.cos(angle);
-  const s = Math.sin(angle);
+  const c = dmath.cos(angle);
+  const s = dmath.sin(angle);
   const k = dot(u, v) * (1 - c);
   const x = cross(u, v);
   return [
@@ -67,7 +68,7 @@ export function linkageAt(m: Omit<Piston, 'kind'>, theta: number): { x: number; 
   const x = along - Math.sign(rest) * Math.sqrt(Math.max(0, disc));
   const r0 = across(m.pin, u);
   const r1 = across(sub(big, scale(l, x)), u);
-  return { x, psi: Math.atan2(dot(u, cross(r0, r1)), dot(r0, r1)) };
+  return { x, psi: dmath.atan2(dot(u, cross(r0, r1)), dot(r0, r1)) };
 }
 
 /** Angle travelled (radians) at `time` seconds: whole cycles over the clip. */
@@ -83,7 +84,7 @@ export function motionPose(m: BakedMotion, time: number): Pose {
     case 'slide':
     case 'sway': {
       // Two-sided: −1..1 around rest. One-way: 0..1, starting and ending at rest (seamless loop).
-      const wave = m.oneWay ? (1 - Math.cos(phase)) / 2 : Math.sin(phase);
+      const wave = m.oneWay ? (1 - dmath.cos(phase)) / 2 : dmath.sin(phase);
       if (m.kind === 'slide') return { offset: scale(m.offset, wave), rotation: IDENTITY };
       return {
         offset: ZERO,

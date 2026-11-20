@@ -2,7 +2,7 @@
 // of every bone for a pose — local rotations about each bone's head, an optional translation of
 // the root — the same evaluation glTF joint nodes get (rest = translation only, skin-bind.ts).
 
-import { type Bone, type Quat, quatRotate, type Vec3 } from '../core/index.ts';
+import { type Bone, dmath, type Quat, quatRotate, type Vec3 } from '../core/index.ts';
 
 export const IDENTITY: Quat = [0, 0, 0, 1];
 
@@ -17,7 +17,7 @@ export const qmul = (a: Quat, b: Quat): Quat => [
 export const qconj = (q: Quat): Quat => [-q[0], -q[1], -q[2], q[3]];
 
 const unit = (v: Vec3): Vec3 => {
-  const l = Math.hypot(v[0], v[1], v[2]);
+  const l = dmath.hypot(v[0], v[1], v[2]);
   return l > 0 ? [v[0] / l, v[1] / l, v[2] / l] : [0, 0, 0];
 };
 
@@ -32,16 +32,16 @@ export function qbetween(u: Vec3, v: Vec3): Quat {
   }
   const c: Vec3 = [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
   const w = 1 + d;
-  const l = Math.hypot(c[0], c[1], c[2], w);
+  const l = dmath.hypot(c[0], c[1], c[2], w);
   return [c[0] / l, c[1] / l, c[2] / l, w / l];
 }
 
 /** Rotation by the vector's length (radians) about its direction; tiny vectors → identity. */
 export function qexp(r: Vec3): Quat {
-  const a = Math.hypot(r[0], r[1], r[2]);
+  const a = dmath.hypot(r[0], r[1], r[2]);
   if (a < 1e-12) return IDENTITY;
-  const s = Math.sin(a / 2) / a;
-  return [r[0] * s, r[1] * s, r[2] * s, Math.cos(a / 2)];
+  const s = dmath.sin(a / 2) / a;
+  return [r[0] * s, r[1] * s, r[2] * s, dmath.cos(a / 2)];
 }
 
 /** A pose: local rotation per bone (about its head, parent frame), translation of the roots, and

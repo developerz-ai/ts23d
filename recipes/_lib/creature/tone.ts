@@ -5,6 +5,7 @@
 // done in code: deterministic, ~10 field samples per vertex.
 
 import type { Field, Vec3 } from '@developerz.ai/ts23d';
+import { dmath } from '@developerz.ai/ts23d';
 
 export interface ToneOptions {
   /** Cavity probe distance, metres (about one fold). */
@@ -42,7 +43,7 @@ export function painted(
     const gx = field([x + e, y, z]) - field([x - e, y, z]);
     const gy = field([x, y + e, z]) - field([x, y - e, z]);
     const gz = field([x, y, z + e]) - field([x, y, z - e]);
-    const gl = Math.hypot(gx, gy, gz) || 1;
+    const gl = dmath.hypot(gx, gy, gz) || 1;
     const n: Vec3 = [gx / gl, gy / gl, gz / gl];
     let occ = 0;
     for (let i = 1; i <= 3; i++) {

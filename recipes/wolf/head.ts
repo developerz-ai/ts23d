@@ -5,12 +5,13 @@
 // every side), and a deep blunt muzzle (the kind's tapers to the nose like a coyote's).
 
 import type { CreatureInfo, SculptEdit, Vec3 } from '@developerz.ai/ts23d';
+import { dmath } from '@developerz.ai/ts23d';
 
 type Head = CreatureInfo['head'];
 
 /** The ear's rising direction (left), head-local: the creature kind's own (`EAR_UP`). */
 const UP: Vec3 = (() => {
-  const l = Math.hypot(-0.25, 0.4, 1);
+  const l = dmath.hypot(-0.25, 0.4, 1);
   return [-0.25 / l, 0.4 / l, 1 / l];
 })();
 

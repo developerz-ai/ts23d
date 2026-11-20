@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'bun:test';
 import type { Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import { toned } from './head-tone.ts';
 
 // Two unit spheres overlapping along X: a crease runs round x = 0 where they meet.
-const sphere = (c: number) => (q: Vec3) => Math.hypot(q[0] - c, q[1], q[2]) - 1;
+const sphere = (c: number) => (q: Vec3) => dmath.hypot(q[0] - c, q[1], q[2]) - 1;
 const pair = (q: Vec3): number => Math.min(sphere(-0.7)(q), sphere(0.7)(q));
 const grey = (): Vec3 => [0.5, 0.5, 0.5];
 const lum = (c: Vec3): number => c[0] + c[1] + c[2];

@@ -10,7 +10,7 @@
 // by the tip is allowed on top: a polyline over a convex skin stands that far off by itself.
 // `holdLine` does the same for a finished line.
 
-import { sub, normalize as unit, type Vec3 } from '../core/index.ts';
+import { dmath, sub, normalize as unit, type Vec3 } from '../core/index.ts';
 import { gradient, mad } from './hair-roots.ts';
 
 type Field = (p: Vec3) => number;
@@ -28,7 +28,7 @@ export function riseOf(
 ): number[] {
   const flat = [0];
   for (let k = 1; k <= segs; k++)
-    flat.push((flat[k - 1] ?? 0) + (len / segs) * Math.sin(lift * (1 - (bend * (k - 1)) / segs)));
+    flat.push((flat[k - 1] ?? 0) + (len / segs) * dmath.sin(lift * (1 - (bend * (k - 1)) / segs)));
   return flat.map((r, k) => r + (slack * k) / segs);
 }
 
@@ -70,7 +70,7 @@ export function hold(
 ): Vec3 {
   if (proud(f, collide, root, q) <= allowed) return q;
   const v = sub(q, p);
-  const step = Math.hypot(v[0], v[1], v[2]);
+  const step = dmath.hypot(v[0], v[1], v[2]);
   if (step < 1e-9) return q;
   const d = unit(v);
   const n = gradient(collide && collide(q) < f(q) ? collide : f, q, h);
@@ -83,7 +83,7 @@ export function hold(
       d[2] * (1 - t) + to[2] * t,
     ];
     // Exactly opposed (a strand straight off the skin): no side to turn by, keep the target.
-    return mad(p, Math.hypot(w[0], w[1], w[2]) < 1e-6 ? to : unit(w), step);
+    return mad(p, dmath.hypot(w[0], w[1], w[2]) < 1e-6 ? to : unit(w), step);
   };
   let lo = 0;
   let hi = 1;

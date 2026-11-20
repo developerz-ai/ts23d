@@ -7,6 +7,7 @@
 // them. Pure vertex-colour work on finished meshes.
 
 import type { Mesh, Vec3 } from '@developerz.ai/ts23d';
+import { dmath } from '@developerz.ai/ts23d';
 import { smooth, tint } from './field.ts';
 
 const SOOT: Vec3 = [0.012, 0.011, 0.01];
@@ -87,7 +88,7 @@ export function fieldGrade(
           // Twice as far up as down, twice as far back as forward: a fan, not a disc.
           const dx = (p[0] - s.at[0]) * (p[0] < s.at[0] ? 0.7 : 1.6);
           const dz = (p[2] - s.at[2]) * (p[2] > s.at[2] ? 0.5 : 1.3);
-          const d = Math.hypot(dx, p[1] - s.at[1], dz) / s.radius;
+          const d = dmath.hypot(dx, p[1] - s.at[1], dz) / s.radius;
           return d < 1 ? s.strength * (1 - smooth(0.3, 1, d + 0.2 * (grain(p) - 0.5))) : 0;
         },
         at,
@@ -134,7 +135,7 @@ export function wheelDirt(m: Mesh, o: WheelDirt): Mesh {
     ];
     const w = near(m, i, o.tyre)
       ? 0.22
-      : (o.flat ?? k * dishMud(Math.hypot(p[0], p[2]) / o.r + 0.3 * (o.noise(p) - 0.5)));
+      : (o.flat ?? k * dishMud(dmath.hypot(p[0], p[2]) / o.r + 0.3 * (o.noise(p) - 0.5)));
     for (let c = 0; c < 3; c++)
       colors[i * 3 + c] =
         (colors[i * 3 + c] ?? 0) + ((o.earth[c] ?? 0) - (colors[i * 3 + c] ?? 0)) * w;

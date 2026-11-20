@@ -2,7 +2,7 @@
 // trunk with a bark gradient and marks, the buttressed root flare as a lobed `loft`. The fit onto
 // the real height, spread and DBH lives in vegetation-fit.ts.
 
-import { type Mesh, merge, type Rng, type Vec3 } from '../core/index.ts';
+import { dmath, type Mesh, merge, type Rng, type Vec3 } from '../core/index.ts';
 import { loft, ringXY, sweep } from '../primitives/index.ts';
 import type { TreeParams } from './vegetation-params.ts';
 import type { Stem } from './vegetation-skeleton.ts';
@@ -140,7 +140,8 @@ export function rootsMesh(
   const segs = lod === 0 ? 16 : 10;
   const rings = levels.map(({ z, k, amp }) => {
     const c = axisAt(trunk, z);
-    const lobe = (a: number): number => 1 + amp * Math.max(0, Math.cos(lobes * (a - phase))) ** 2;
+    const lobe = (a: number): number =>
+      1 + amp * dmath.pow(Math.max(0, dmath.cos(lobes * (a - phase))), 2);
     return ringXY(c, rr * k, rr * k, segs, lobe);
   });
   const m = loft({ rings, color: p.bark, strip: 'wood' });

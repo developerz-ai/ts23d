@@ -9,6 +9,7 @@
 // params (weave): pitch 0.004 · folds 0.6 · stains 0.3 · relief 0
 // params (leather): pebble 0.004 · creases 0.5 · wear 0.4 · relief 0
 
+import { dmath } from '../../core/index.ts';
 import { type Canvas, noiseAt, param, smooth } from './canvas.ts';
 import { type Cell, worley } from './relief.ts';
 import type { StripRecipe } from './types.ts';
@@ -32,15 +33,15 @@ export function paintWeave(c: Canvas, r: StripRecipe, seed: number): void {
   const rel = param(p, 'relief', 0);
   for (let y = 0; y < c.h; y++) {
     const ym = (y + 0.5) * pv;
-    const wy = Math.sin((ym / pitchV) * Math.PI * 2);
+    const wy = dmath.sin((ym / pitchV) * Math.PI * 2);
     for (let x = 0; x < c.w; x++) {
       const i = y * c.w + x;
       const xm = (x + 0.5) * pu;
-      const wx = Math.sin((xm / pitchU) * Math.PI * 2);
+      const wx = dmath.sin((xm / pitchU) * Math.PI * 2);
       const over = Math.floor(xm / pitchU) + Math.floor(ym / pitchV);
       const thread =
         rel > 0
-          ? Math.abs(Math.sin((xm / pitchU + 0.25 * y) * Math.PI))
+          ? Math.abs(dmath.sin((xm / pitchU + 0.25 * y) * Math.PI))
           : over % 2 === 0
             ? Math.abs(wy)
             : Math.abs(wx);

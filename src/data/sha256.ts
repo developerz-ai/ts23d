@@ -24,7 +24,7 @@ export function sha256(bytes: Uint8Array): string {
   padded.set(bytes);
   padded[bytes.length] = 0x80;
   const dv = new DataView(padded.buffer);
-  dv.setUint32(padded.length - 8, Math.floor(bitLen / 2 ** 32));
+  dv.setUint32(padded.length - 8, Math.floor(bitLen / 4294967296 /* 2^32 */));
   dv.setUint32(padded.length - 4, bitLen >>> 0);
   const h = new Uint32Array([
     0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19,

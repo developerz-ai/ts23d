@@ -11,6 +11,7 @@ import {
   clear,
   cylinder,
   defineAsset,
+  dmath,
   frame,
   hex,
   type Lod,
@@ -122,9 +123,9 @@ const SIDE_Y = 1.61;
 /** The turret sits on a ring collar above the deck, so deck stowage clears its traverse. */
 const RING = 0.08;
 /** Plate angles from vertical (Jentz armour table via armorsite; recipes/tiger_1/README.md). */
-const TAN9 = Math.tan((9 * Math.PI) / 180);
-const TAN25 = Math.tan((25 * Math.PI) / 180);
-const TAN81 = Math.tan((81 * Math.PI) / 180);
+const TAN9 = dmath.tan((9 * Math.PI) / 180);
+const TAN25 = dmath.tan((25 * Math.PI) / 180);
+const TAN81 = dmath.tan((81 * Math.PI) / 180);
 const BELLY = 0.47;
 const REAR_LOW = 0.95;
 /** Rear plate: 80 mm at 9°, foot at the hull's rearmost point, top leaning in toward the deck. */
@@ -156,7 +157,7 @@ const onTurretWall = (c: Vec3, n: Vec3): boolean =>
   Math.abs(n[2]) < 0.3 &&
   c[2] > 0.02 &&
   c[2] < 0.84 &&
-  Math.hypot(c[0] + 0.2, c[1]) > 1.1 &&
+  dmath.hypot(c[0] + 0.2, c[1]) > 1.1 &&
   !(c[0] < -1.53 && Math.abs(c[1]) < 0.8);
 
 type Circle = { readonly x: number; readonly z: number; readonly r: number };
@@ -185,7 +186,7 @@ function hullCw(pts: Vec2[]): Vec2[] {
 function resample(poly: readonly Vec2[], n: number): Station[] {
   const seg = poly.map((a, i) => {
     const b = poly[(i + 1) % poly.length] as Vec2;
-    return Math.hypot(b[0] - a[0], b[1] - a[1]);
+    return dmath.hypot(b[0] - a[0], b[1] - a[1]);
   });
   const total = seg.reduce((s, l) => s + l, 0);
   const out: Station[] = [];
@@ -199,7 +200,7 @@ function resample(poly: readonly Vec2[], n: number): Station[] {
     const t = (d - acc) / (seg[i] || 1);
     out.push({
       p: [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t],
-      pitch: Math.atan2(-(b[1] - a[1]), b[0] - a[0]),
+      pitch: dmath.atan2(-(b[1] - a[1]), b[0] - a[0]),
       len: total / n,
     });
   }
@@ -213,7 +214,7 @@ function beltLine(wheels: readonly Circle[], ends: readonly Circle[], sag: numbe
   for (const c of [...wheels, ...ends])
     for (let i = 0; i < 72; i++) {
       const t = (i / 72) * Math.PI * 2;
-      pts.push([c.x + (c.r + off) * Math.cos(t), c.z + (c.r + off) * Math.sin(t)]);
+      pts.push([c.x + (c.r + off) * dmath.cos(t), c.z + (c.r + off) * dmath.sin(t)]);
     }
   const dense = resample(hullCw(pts), 600);
   const x0 = Math.min(...ends.map((c) => c.x));
@@ -222,13 +223,15 @@ function beltLine(wheels: readonly Circle[], ends: readonly Circle[], sag: numbe
     Math.max(
       0,
       ...wheels.map((w) =>
-        Math.abs(x - w.x) < w.r + off ? w.z + Math.sqrt((w.r + off) ** 2 - (x - w.x) ** 2) : 0,
+        Math.abs(x - w.x) < w.r + off
+          ? w.z + Math.sqrt(dmath.pow(w.r + off, 2) - dmath.pow(x - w.x, 2))
+          : 0,
       ),
     );
   return dense.map(({ p, pitch }) => {
-    const topRun = Math.cos(pitch) > 0.8 && p[1] > WHEEL_Z;
+    const topRun = dmath.cos(pitch) > 0.8 && p[1] > WHEEL_Z;
     if (!topRun || p[0] <= x0 || p[0] >= x1) return p;
-    const drop = sag * Math.sin((Math.PI * (p[0] - x0)) / (x1 - x0));
+    const drop = sag * dmath.sin((Math.PI * (p[0] - x0)) / (x1 - x0));
     return [p[0], Math.max(env(p[0]), p[1] - drop)];
   });
 }
@@ -376,7 +379,7 @@ function disc(lod: Lod, r: number, w: number, y: number, bolts: boolean, inner =
     for (let i = 0; i < 8; i++) {
       const a = (i / 8) * Math.PI * 2;
       parts.push(
-        place(bolt, { at: [Math.cos(a) * r * 0.2, y + h + 0.004, Math.sin(a) * r * 0.2] }),
+        place(bolt, { at: [dmath.cos(a) * r * 0.2, y + h + 0.004, dmath.sin(a) * r * 0.2] }),
       );
     }
   }
@@ -454,13 +457,13 @@ function sprocket(lod: Lod, r: number): Mesh {
       for (let i = 0; i < 18; i++) {
         const a = (i / 18) * Math.PI * 2;
         parts.push(
-          place(tooth, { at: [Math.sin(a) * (r - 0.08), y, Math.cos(a) * (r - 0.08)], pitch: a }),
+          place(tooth, { at: [dmath.sin(a) * (r - 0.08), y, dmath.cos(a) * (r - 0.08)], pitch: a }),
         );
       }
     const bolt = box({ size: [0.03, 0.02, 0.03], at: [0, 0, -0.015], color: steel });
     for (let i = 0; i < 10; i++) {
       const a = (i / 10) * Math.PI * 2;
-      parts.push(place(bolt, { at: [Math.cos(a) * 0.15, 0.16, Math.sin(a) * 0.15] }));
+      parts.push(place(bolt, { at: [dmath.cos(a) * 0.15, 0.16, dmath.sin(a) * 0.15] }));
     }
   }
   return merge(parts);
@@ -478,7 +481,7 @@ export const farDisc = (r: number, y: number, hub = 0): Mesh => {
     planar({
       points: Array.from({ length: 8 }, (_, i): Vec3 => {
         const a = -Math.PI / 2 - (i / 8) * Math.PI * 2;
-        return [Math.cos(a) * rr, at, Math.sin(a) * rr];
+        return [dmath.cos(a) * rr, at, dmath.sin(a) * rr];
       }),
       color,
     });
@@ -585,7 +588,7 @@ const eye = (at: Vec3): Mesh =>
   lathe({
     profile: Array.from({ length: 7 }, (_, i): Vec2 => {
       const a = (i / 6) * Math.PI * 2;
-      return [0.05 + 0.014 * Math.cos(a), 0.014 * Math.sin(a)];
+      return [0.05 + 0.014 * dmath.cos(a), 0.014 * dmath.sin(a)];
     }),
     segments: 10,
     axis: 'y',
@@ -1391,7 +1394,7 @@ export const tiger_1 = defineAsset({
     ];
     for (let i = 0; i <= arc; i++) {
       const a = ((70 + (220 * i) / arc) * Math.PI) / 180;
-      plan.push([-0.2 + 1.33 * Math.cos(a), 1.33 * Math.sin(a)]);
+      plan.push([-0.2 + 1.33 * dmath.cos(a), 1.33 * dmath.sin(a)]);
     }
     const turret: Mesh[] = [
       // Turret ring collar (1.79 m ring) standing on the deck.
@@ -1466,7 +1469,7 @@ export const tiger_1 = defineAsset({
         const a = (i / 7) * Math.PI * 2 + 0.3;
         turret.push(
           place(box({ size: [0.06, 0.13, 0.09], color: black }), {
-            at: [-0.55 + Math.cos(a) * 0.37, 0.62 + Math.sin(a) * 0.37, 0.9],
+            at: [-0.55 + dmath.cos(a) * 0.37, 0.62 + dmath.sin(a) * 0.37, 0.9],
             yaw: a,
           }),
         );
@@ -1475,7 +1478,7 @@ export const tiger_1 = defineAsset({
         lathe({
           profile: Array.from({ length: 7 }, (_, i): Vec2 => {
             const a = (i / 6) * Math.PI * 2;
-            return [0.36 + 0.015 * Math.cos(a), 1.045 + 0.015 * Math.sin(a)];
+            return [0.36 + 0.015 * dmath.cos(a), 1.045 + 0.015 * dmath.sin(a)];
           }),
           segments: segs,
           at: [-0.55, 0.62, 0],
@@ -1485,8 +1488,8 @@ export const tiger_1 = defineAsset({
         ...Array.from({ length: 6 }, (_, i) =>
           place(box({ size: [0.09, 0.025, 0.025], color: steel }), {
             at: [
-              -0.55 + Math.cos((i / 6) * Math.PI * 2 + 0.25) * 0.33,
-              0.62 + Math.sin((i / 6) * Math.PI * 2 + 0.25) * 0.33,
+              -0.55 + dmath.cos((i / 6) * Math.PI * 2 + 0.25) * 0.33,
+              0.62 + dmath.sin((i / 6) * Math.PI * 2 + 0.25) * 0.33,
               1.0325,
             ],
             yaw: (i / 6) * Math.PI * 2 + 0.25,
@@ -1541,7 +1544,7 @@ export const tiger_1 = defineAsset({
             color: paintDark,
           }),
           {
-            at: [-0.2 + 1.305 * Math.cos(hatchA), 1.305 * Math.sin(hatchA), 0.42],
+            at: [-0.2 + 1.305 * dmath.cos(hatchA), 1.305 * dmath.sin(hatchA), 0.42],
             yaw: hatchA,
           },
         ),
@@ -1550,8 +1553,8 @@ export const tiger_1 = defineAsset({
       const link = trackLink(0.13, true);
       for (const s of [1, -1]) {
         const a: Vec2 = [1.0, s * 1.15];
-        const b: Vec2 = [-0.2 + 1.33 * Math.cos(1.22), s * 1.33 * Math.sin(1.22)];
-        const along = Math.hypot(b[0] - a[0], b[1] - a[1]);
+        const b: Vec2 = [-0.2 + 1.33 * dmath.cos(1.22), s * 1.33 * dmath.sin(1.22)];
+        const along = dmath.hypot(b[0] - a[0], b[1] - a[1]);
         const u: Vec3 = [(b[0] - a[0]) / along, (b[1] - a[1]) / along, 0];
         const n: Vec3 = [u[1], -u[0], 0];
         const out: Vec3 = n[1] * s < 0 ? [-n[0], -n[1], 0] : n;
@@ -1578,7 +1581,7 @@ export const tiger_1 = defineAsset({
       });
       const p = plan[k] as Vec2;
       const q = plan[(k + 1) % plan.length] as Vec2;
-      const l = Math.hypot(q[0] - p[0], q[1] - p[1]);
+      const l = dmath.hypot(q[0] - p[0], q[1] - p[1]);
       const t: Vec2 = [(q[0] - p[0]) / l, (q[1] - p[1]) / l];
       const f = (xc - p[0]) / (q[0] - p[0]);
       const w: Vec2 = [xc + t[1] * off, p[1] + (q[1] - p[1]) * f - t[0] * off];
@@ -1611,7 +1614,7 @@ export const tiger_1 = defineAsset({
       plan.forEach((p, i) => {
         const q = plan[(i + 1) % plan.length] as Vec2;
         if (i === 0) return; // the front plate sits behind the mantlet
-        const l = Math.hypot(q[0] - p[0], q[1] - p[1]);
+        const l = dmath.hypot(q[0] - p[0], q[1] - p[1]);
         let n: Vec2 = [(q[1] - p[1]) / l, -(q[0] - p[0]) / l];
         if (n[0] * (p[0] - cen[0]) + n[1] * (p[1] - cen[1]) < 0) n = [-n[0], -n[1]];
         const at = (r: Vec2, z: number): Vec3 => [r[0] + n[0] * 0.004, r[1] + n[1] * 0.004, z];
@@ -1703,7 +1706,7 @@ export const tiger_1 = defineAsset({
       const arc: Vec2[] = [];
       for (let i = 0; i <= endArc; i++) {
         const a = (Math.PI / 2) * (i / endArc);
-        arc.push([-0.03 + 0.25 * Math.cos(a), s * (0.7 + 0.25 * Math.sin(a))]);
+        arc.push([-0.03 + 0.25 * dmath.cos(a), s * (0.7 + 0.25 * dmath.sin(a))]);
       }
       plate.push(...(s < 0 ? arc.reverse() : arc));
     }
@@ -1745,14 +1748,14 @@ export const tiger_1 = defineAsset({
       // curve (turned to its normal) and every head sinks 5 mm.
       for (const y of [-0.85, -0.6, 0.6, 0.85]) {
         const u = Math.max(0, Math.abs(y) - 0.7) / 0.25;
-        const a = Math.asin(u) * Math.sign(y);
+        const a = dmath.asin(u) * Math.sign(y);
         const x = -0.03 + 0.25 * Math.sqrt(1 - u * u);
-        const at = (z: number): Vec3 => [x + 0.005 * Math.cos(a), y + 0.005 * Math.sin(a), z];
+        const at = (z: number): Vec3 => [x + 0.005 * dmath.cos(a), y + 0.005 * dmath.sin(a), z];
         for (const z of [-0.28, 0.24]) mParts.push(place(bolt, { at: at(z), yaw: a }));
       }
       for (let i = 0; i < 8; i++) {
         const a = (i / 8) * Math.PI * 2;
-        mParts.push(place(bolt, { at: [0.43, Math.cos(a) * 0.19, Math.sin(a) * 0.19 - 0.0175] }));
+        mParts.push(place(bolt, { at: [0.43, dmath.cos(a) * 0.19, dmath.sin(a) * 0.19 - 0.0175] }));
       }
     }
     const gunAt: Vec3 = [TURRET_AT[0] + 1.0, 0, TURRET_AT[2] + 0.42];

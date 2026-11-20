@@ -9,6 +9,7 @@
 
 import {
   type BuildContext,
+  dmath,
   type Field,
   type Mesh,
   type ScalpCardOptions,
@@ -89,12 +90,12 @@ export interface HairlineShape {
 
 const segDist = (p: Vec3, a: Vec3, b: Vec3): number => {
   const ab: Vec3 = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
-  const l2 = ab[0] ** 2 + ab[1] ** 2 + ab[2] ** 2 || 1;
+  const l2 = ab[0] * ab[0] + ab[1] * ab[1] + ab[2] * ab[2] || 1;
   const t = Math.min(
     1,
     Math.max(0, ((p[0] - a[0]) * ab[0] + (p[1] - a[1]) * ab[1] + (p[2] - a[2]) * ab[2]) / l2),
   );
-  return Math.hypot(p[0] - a[0] - ab[0] * t, p[1] - a[1] - ab[1] * t, p[2] - a[2] - ab[2] * t);
+  return dmath.hypot(p[0] - a[0] - ab[0] * t, p[1] - a[1] - ab[1] * t, p[2] - a[2] - ab[2] * t);
 };
 
 /** Hairline (≤ 0 where hair grows) from skull landmarks: forehead → crown → nape, temples

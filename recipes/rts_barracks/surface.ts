@@ -7,6 +7,7 @@
 import {
   applyAffine,
   box,
+  dmath,
   frame,
   hex,
   type Lod,
@@ -53,7 +54,7 @@ const mix = (a: Vec3, b: Vec3, t: number): Vec3 => [
 function stained(c: Vec3, x: number, y: number, stains: readonly Stain[]): Vec3 {
   let out = c;
   for (const s of stains) {
-    const d = Math.hypot(x - s.at[0], y - s.at[1]) / s.radius;
+    const d = dmath.hypot(x - s.at[0], y - s.at[1]) / s.radius;
     if (d < 1) out = mix(out, s.color, s.k * Math.min(1, (1 - d * d) * 1.4));
   }
   return out;
@@ -157,7 +158,7 @@ function clip(poly: readonly Vec2[], c: Cell): Vec2[] {
 const dedupe = (p: readonly Vec2[]): Vec2[] =>
   p.filter((a, i) => {
     const b = p[(i + 1) % p.length] ?? a;
-    return Math.hypot(a[0] - b[0], a[1] - b[1]) > 1e-4;
+    return dmath.hypot(a[0] - b[0], a[1] - b[1]) > 1e-4;
   });
 
 const area = (p: readonly Vec2[]): number =>
@@ -249,7 +250,7 @@ export function streak(
     [o.w0 / 2, 0],
   ];
   const slab = prism({ profile, depth: 0.004, plane: 'xz', color: o.from, strip: 'concrete' });
-  const shaded = recolourZ(slab, (z) => mix(o.from, o.to, Math.min(1, -z / o.len) ** 0.8));
+  const shaded = recolourZ(slab, (z) => mix(o.from, o.to, dmath.pow(Math.min(1, -z / o.len), 0.8)));
   // Local x along the wall, local y out of it, z up: keep the frame right-handed.
   const up: Vec3 = [0, 0, 1];
   const c: Vec3 = [

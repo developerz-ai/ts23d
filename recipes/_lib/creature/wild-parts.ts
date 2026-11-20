@@ -10,6 +10,7 @@ import {
   type CreatureInfo,
   chainSeed,
   defineMaterial,
+  dmath,
   furChains,
   hairCards,
   hairFlow,
@@ -27,15 +28,15 @@ type Frame = CreatureInfo['bones']['head'];
 
 /** Head-local point (+X to the nose, origin at the atlas) → the pitched head part's frame. */
 export function pitched(h: Frame, p: Vec3): Vec3 {
-  const c = Math.cos(h.pitch);
-  const s = Math.sin(h.pitch);
+  const c = dmath.cos(h.pitch);
+  const s = dmath.sin(h.pitch);
   return [c * p[0] + s * p[2], p[1], -s * p[0] + c * p[2]];
 }
 
 /** The pitched head part's frame → head-local. */
 export function unpitched(h: Frame, p: Vec3): Vec3 {
-  const c = Math.cos(h.pitch);
-  const s = Math.sin(h.pitch);
+  const c = dmath.cos(h.pitch);
+  const s = dmath.sin(h.pitch);
   return [c * p[0] - s * p[2], p[1], s * p[0] + c * p[2]];
 }
 
@@ -307,7 +308,7 @@ function strand(b: MeshBuilder, pts: readonly Vec3[], r: number, colour: Vec3): 
     const q = pts[Math.min(n, i + 1)] ?? p;
     const o = pts[Math.max(0, i - 1)] ?? p;
     const t: Vec3 = [q[0] - o[0], q[1] - o[1], q[2] - o[2]];
-    const tl = Math.hypot(t[0], t[1], t[2]) || 1;
+    const tl = dmath.hypot(t[0], t[1], t[2]) || 1;
     // Any axis not along the strand gives a stable frame for a hair this thin.
     const ref: Vec3 = Math.abs(t[2] / tl) < 0.9 ? [0, 0, 1] : [1, 0, 0];
     const u: Vec3 = [
@@ -315,7 +316,7 @@ function strand(b: MeshBuilder, pts: readonly Vec3[], r: number, colour: Vec3): 
       t[2] * ref[0] - t[0] * ref[2],
       t[0] * ref[1] - t[1] * ref[0],
     ];
-    const ul = Math.hypot(u[0], u[1], u[2]) || 1;
+    const ul = dmath.hypot(u[0], u[1], u[2]) || 1;
     const w: Vec3 = [
       (t[1] * u[2] - t[2] * u[1]) / (tl * ul),
       (t[2] * u[0] - t[0] * u[2]) / (tl * ul),
@@ -326,9 +327,9 @@ function strand(b: MeshBuilder, pts: readonly Vec3[], r: number, colour: Vec3): 
     for (let j = 0; j < 3; j++) {
       const a = (j / 3) * Math.PI * 2;
       const d: Vec3 = [
-        (u[0] / ul) * Math.cos(a) + w[0] * Math.sin(a),
-        (u[1] / ul) * Math.cos(a) + w[1] * Math.sin(a),
-        (u[2] / ul) * Math.cos(a) + w[2] * Math.sin(a),
+        (u[0] / ul) * dmath.cos(a) + w[0] * dmath.sin(a),
+        (u[1] / ul) * dmath.cos(a) + w[1] * dmath.sin(a),
+        (u[2] / ul) * dmath.cos(a) + w[2] * dmath.sin(a),
       ];
       ring.push(
         b.vertex({
@@ -371,7 +372,7 @@ export function whiskers(l: Head, h: Frame, lod: Lod, rng: Rng, o: WhiskerOption
   const r = o.radius * (lod === 0 ? 1 : 2);
   const steps = lod === 0 ? 5 : 3;
   const grow = (root: Vec3, dir: Vec3, len: number, side: number, droop: number): void => {
-    const dl = Math.hypot(dir[0], dir[1], dir[2]) || 1;
+    const dl = dmath.hypot(dir[0], dir[1], dir[2]) || 1;
     const pts: Vec3[] = [];
     for (let i = 0; i <= steps; i++) {
       const t = i / steps;
@@ -440,9 +441,9 @@ export function earNick(head: Mesh, l: Head, h: Frame, side: 1 | -1, depth = 0.2
   const positions = new Float32Array(head.positions);
   for (let v = 0; v < n; v++) {
     const p = at(v);
-    const d = Math.hypot(p[0] - rim[0], p[2] - rim[2]);
+    const d = dmath.hypot(p[0] - rim[0], p[2] - rim[2]);
     if (p[1] * side <= 0 || d >= radius || Math.abs(p[1] - rim[1]) > radius * 2) continue;
-    const push = l.earHeight * depth * (1 - d / radius) ** 2;
+    const push = l.earHeight * depth * dmath.pow(1 - d / radius, 2);
     positions.set(pitched(h, [p[0] + push, p[1], p[2]]), v * 3);
   }
   return { ...head, positions };

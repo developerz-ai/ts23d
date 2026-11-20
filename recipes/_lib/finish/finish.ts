@@ -6,6 +6,7 @@
 
 import {
   DEFAULT_SHEET,
+  dmath,
   type Mesh,
   MeshBuilder,
   materialOf,
@@ -181,7 +182,7 @@ export function tessellate(m: Mesh, max: number): Mesh {
     uv: [(x.uv[0] + y.uv[0]) / 2, (x.uv[1] + y.uv[1]) / 2],
     color: x.color,
   });
-  const d = (x: V, y: V): number => Math.hypot(x.p[0] - y.p[0], x.p[1] - y.p[1], x.p[2] - y.p[2]);
+  const d = (x: V, y: V): number => dmath.hypot(x.p[0] - y.p[0], x.p[1] - y.p[1], x.p[2] - y.p[2]);
   const split = (x: V, y: V, z: V): void => {
     const [e0, e1, e2] = [d(x, y), d(y, z), d(z, x)];
     const top = Math.max(e0, e1, e2);
@@ -236,7 +237,7 @@ export function camo(
     const n = wobble(p) * 0.22;
     for (const b of blobs) {
       const d =
-        Math.hypot((p[0] - b.c[0]) / b.r[0], (p[1] - b.c[1]) / b.r[1], (p[2] - b.c[2]) / b.r[2]) +
+        dmath.hypot((p[0] - b.c[0]) / b.r[0], (p[1] - b.c[1]) / b.r[1], (p[2] - b.c[2]) / b.r[2]) +
         n;
       if (d >= 1.05) continue;
       const w = 1 - smooth(0.55, 1.05, d);
@@ -308,7 +309,7 @@ export function weatherer(rng: Rng): (m: Mesh, o: WeatheringOptions) => Mesh {
       for (const s of o.soot ?? []) {
         const dx = (p[0] - s.at[0]) * (p[0] < s.at[0] ? 0.6 : 1.4);
         const dz = (p[2] - s.at[2]) * (p[2] > s.at[2] ? 0.7 : 1.6);
-        const d = Math.hypot(dx, p[1] - s.at[1], dz) / s.radius;
+        const d = dmath.hypot(dx, p[1] - s.at[1], dz) / s.radius;
         if (d < 1) mix(SOOT, s.strength * (1 - smooth(0.2, 1, d + 0.2 * nv)));
       }
       colors.set(c, i * 3);

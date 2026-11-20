@@ -254,19 +254,19 @@
     },
     {
       "name": "walk",
-      "seconds": 0.5902642101118772,
+      "seconds": 0.590264,
       "loop": true,
       "speed": 0.816
     },
     {
       "name": "trot",
-      "seconds": 0.4369220356497397,
+      "seconds": 0.436922,
       "loop": true,
       "speed": 1.7311
     },
     {
       "name": "gallop",
-      "seconds": 0.3329958655788246,
+      "seconds": 0.332996,
       "loop": true,
       "speed": 3.4137
     }

@@ -15,7 +15,7 @@ import { scanGlb } from './scan.ts';
 export const SCAN: ImportSource = {
   // Written by `bun scripts/import.ts fixture`; the build reads the same bytes from scanGlb().
   path: 'tmp/import/scan.glb',
-  sha256: 'bdb0c920bc70a4c41fa7c9fe1748c8b01a54a2c707553058985baeea12a5acee',
+  sha256: 'ded8faf4a1567b8e02e741eca51223a7e74f009be2d07aba6597164bd5c3dfcc',
   license: 'CC0-1.0',
   author: 'ts23d contributors (procedural stand-in scan, recipes/import_demo/scan.ts)',
   url: 'https://github.com/developerz-ai/ts23d/tree/main/recipes/import_demo',

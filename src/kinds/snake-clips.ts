@@ -2,7 +2,7 @@
 // published (the doc notes the two disagree: 0.71 L against 0.4 L along travel), sidewinding from two
 // orthogonal waves [A15] with the root speed that holds the contact patches still, and a small idle.
 
-import { type Clip, Ts23dError, type Vec3 } from '../core/index.ts';
+import { type Clip, dmath, Ts23dError, type Vec3 } from '../core/index.ts';
 import type { BodyPlan, PlanChain } from './body-plan-types.ts';
 import { bakeChainClip, chainSampler, type RootKey, tipOf } from './chain-bake.ts';
 import { orthogonalWaves, serpenoid, TAU } from './chain-drivers.ts';
@@ -32,9 +32,10 @@ const mean = (g: (u: number) => number): number => {
   for (let i = 0; i < 256; i++) sum += g(((i + 0.5) / 256) * TAU);
   return sum / 256;
 };
-const J0 = (th: number): number => mean((u) => Math.cos(th * Math.cos(u)));
+const J0 = (th: number): number => mean((u) => dmath.cos(th * dmath.cos(u)));
 /** ∫₀^π sin(θ sin u) du, from the mean of |sin(θ sin u)| over a full turn. */
-const lateral = (th: number): number => Math.PI * mean((u) => Math.abs(Math.sin(th * Math.sin(u))));
+const lateral = (th: number): number =>
+  Math.PI * mean((u) => Math.abs(dmath.sin(th * dmath.sin(u))));
 
 /** The serpenoid whose wave spans `lambda` along travel with half-swing `amplitude` (fractions of
  *  L). [H09]'s α = 7 curve spans 0.71 L, against the 0.4 L measured, so gates use this fit. */

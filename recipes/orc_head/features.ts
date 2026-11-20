@@ -7,6 +7,7 @@
 // grey-green jaw. Left side unless `mirror: false` (scars, warts: the battle-worn asymmetry).
 
 import {
+  dmath,
   poreField,
   type Rng,
   type SculptEdit,
@@ -83,7 +84,7 @@ function scarStamps(s: Surface, k: number): SculptVdm[] {
       const a = l[j] as V;
       const b = l[j + 1] as V;
       const mid = s.on([(a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2]);
-      const len = Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]);
+      const len = dmath.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]);
       const up: V = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
       places.push({ at: mid, normal: s.normal(mid), up, scale: len * 1.15, depth: 0.0022 * k });
     }

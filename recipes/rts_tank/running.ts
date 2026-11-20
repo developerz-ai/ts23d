@@ -10,6 +10,7 @@
 import {
   box,
   cylinder,
+  dmath,
   type Lod,
   lathe,
   type Mesh,
@@ -52,7 +53,7 @@ export function beltPath(grow = LINK_T / 2): Vec2[] {
   for (const c of CIRCLES)
     for (let k = 0; k < 120; k++) {
       const a = (k / 120) * Math.PI * 2;
-      pts.push([c.x + Math.cos(a) * (c.r + grow), c.z + Math.sin(a) * (c.r + grow)]);
+      pts.push([c.x + dmath.cos(a) * (c.r + grow), c.z + dmath.sin(a) * (c.r + grow)]);
     }
   pts.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
   const cross = (o: Vec2, a: Vec2, b: Vec2): number =>
@@ -85,7 +86,7 @@ export function perimeter(path: readonly Vec2[]): number {
   for (let i = 0; i < path.length; i++) {
     const a = path[i] ?? [0, 0];
     const b = path[(i + 1) % path.length] ?? a;
-    total += Math.hypot(b[0] - a[0], b[1] - a[1]);
+    total += dmath.hypot(b[0] - a[0], b[1] - a[1]);
   }
   return total;
 }
@@ -94,7 +95,7 @@ export function perimeter(path: readonly Vec2[]): number {
 export function resample(path: readonly Vec2[], n: number): { p: Vec2; angle: number }[] {
   const seg = path.map((a, i) => {
     const b = path[(i + 1) % path.length] ?? a;
-    return Math.hypot(b[0] - a[0], b[1] - a[1]);
+    return dmath.hypot(b[0] - a[0], b[1] - a[1]);
   });
   const total = perimeter(path);
   const out: { p: Vec2; angle: number }[] = [];
@@ -108,7 +109,7 @@ export function resample(path: readonly Vec2[], n: number): { p: Vec2; angle: nu
     const t = (want - walked) / Math.max(seg[i] ?? 1, 1e-9);
     out.push({
       p: [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t],
-      angle: Math.atan2(b[1] - a[1], b[0] - a[0]),
+      angle: dmath.atan2(b[1] - a[1], b[0] - a[0]),
     });
   }
   return out;
@@ -211,7 +212,7 @@ function wheel(lod: Lod, r: number, width: number): Mesh {
             length: 0.03,
             segments: 6,
             axis: 'y',
-            at: [Math.cos(a) * r * 0.45, s * w * 0.72, Math.sin(a) * r * 0.45],
+            at: [dmath.cos(a) * r * 0.45, s * w * 0.72, dmath.sin(a) * r * 0.45],
             color: IRON,
           }),
         );
@@ -226,7 +227,7 @@ function sprocket(lod: Lod, r: number): Mesh {
   for (let k = 0; k < teeth * 2; k++) {
     const a = (k / (teeth * 2)) * Math.PI * 2;
     const rr = k % 2 === 0 ? r : r * 0.86;
-    ring.push([Math.cos(a) * rr, Math.sin(a) * rr]);
+    ring.push([dmath.cos(a) * rr, dmath.sin(a) * rr]);
   }
   const plate = prism({ profile: ring, depth: 0.08, plane: 'xz', color: IRON });
   return merge([
@@ -259,7 +260,7 @@ function farWheel(r: number, toward: number, s: number): Mesh {
     planar({
       points: Array.from({ length: n }, (_, i): Vec3 => {
         const a = toward - s * (i / n) * Math.PI * 2;
-        return [Math.cos(a) * rr, s * y, Math.sin(a) * rr];
+        return [dmath.cos(a) * rr, s * y, dmath.sin(a) * rr];
       }),
       color,
     });

@@ -12,6 +12,7 @@ import {
   clearNeuralSources,
   compile,
   decodePng,
+  dmath,
   neuralCache,
   provideNeural,
   runQa,
@@ -136,7 +137,7 @@ describe('wolf_hybrid, model tier (committed cache)', () => {
       // One flat roughness (the bake's 0.8 = 204) has no spread; coat, mud, nose and scars do.
       const rough = texels(set.orm, -1, 9).map((c) => c[1] ?? 0);
       const avg = mean(rough);
-      expect(Math.sqrt(mean(rough.map((r) => (r - avg) ** 2)))).toBeGreaterThan(12);
+      expect(Math.sqrt(mean(rough.map((r) => dmath.pow(r - avg, 2))))).toBeGreaterThan(12);
     },
     SLOW,
   );

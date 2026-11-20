@@ -6,7 +6,13 @@
 // Witton & Habib, PLoS ONE 5(11) e13982 (2010), https://doi.org/10.1371/journal.pone.0013982
 // (giant pterosaur wing loadings).
 
-import { type CompiledAsset, type Mesh, massProperties, worldMeshes } from '@developerz.ai/ts23d';
+import {
+  type CompiledAsset,
+  dmath,
+  type Mesh,
+  massProperties,
+  worldMeshes,
+} from '@developerz.ai/ts23d';
 
 /** Bone diameter as a fraction of the limb's flesh diameter (stylised beast; stated assumption). */
 export const BONE_FRACTION = 0.4;
@@ -29,14 +35,14 @@ export function sheetArea(m: Mesh): number {
     const vx = (P[k] ?? 0) - (P[i] ?? 0);
     const vy = (P[k + 1] ?? 0) - (P[i + 1] ?? 0);
     const vz = (P[k + 2] ?? 0) - (P[i + 2] ?? 0);
-    a += 0.5 * Math.hypot(uy * vz - uz * vy, uz * vx - ux * vz, ux * vy - uy * vx);
+    a += 0.5 * dmath.hypot(uy * vz - uz * vy, uz * vx - ux * vz, ux * vy - uy * vx);
   }
   return a / 2;
 }
 
 /** Campione & Evans 2012: quadruped body mass (kg) from humerus + femur circumference (mm). */
 export const massFromLimbs = (circumferenceMm: number): number =>
-  10 ** (2.749 * Math.log10(circumferenceMm) - 1.104) / 1000;
+  dmath.pow(10, 2.749 * dmath.log10(circumferenceMm) - 1.104) / 1000;
 
 export interface Biology {
   /** kg, volume × density of the compiled asset. */

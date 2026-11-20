@@ -22,6 +22,7 @@
 import {
   cylinder,
   definePart,
+  dmath,
   lathe,
   loft,
   type Mesh,
@@ -98,15 +99,15 @@ export const wheel = definePart({
     const surf = (s: number): Surf => {
       if (s <= tc) {
         const k = (2 * drop * s) / (tc * tc);
-        const l = Math.hypot(k, 1);
-        return { y: s, r: R - drop * (s / tc) ** 2, ny: -k / l, nr: -1 / l };
+        const l = dmath.hypot(k, 1);
+        return { y: s, r: R - drop * dmath.pow(s / tc, 2), ny: -k / l, nr: -1 / l };
       }
       const th = Math.PI / 2 - (s - tc) / rs;
       return {
-        y: tc + rs * Math.cos(th),
-        r: Rc + rs * Math.sin(th),
-        ny: -Math.cos(th),
-        nr: -Math.sin(th),
+        y: tc + rs * dmath.cos(th),
+        r: Rc + rs * dmath.sin(th),
+        ny: -dmath.cos(th),
+        nr: -dmath.sin(th),
       };
     };
     const blockEnd = tc + rs * (Math.PI / 2 - 0.3); // shoulder blocks wrap to ~17° above the side
@@ -125,7 +126,10 @@ export const wheel = definePart({
       for (let j = 1; j <= arc; j++) crownAt(tc + ((rs * Math.PI) / 2) * (j / arc));
       for (let j = 1; j <= side; j++) {
         const u = j / side;
-        out.push([lerp(Rc, rLow, u), lerp(yTop, yLow, u) + bulge * Math.sin(Math.PI * u) ** 0.8]);
+        out.push([
+          lerp(Rc, rLow, u),
+          lerp(yTop, yLow, u) + bulge * dmath.pow(dmath.sin(Math.PI * u), 0.8),
+        ]);
       }
       if (lod < 2) {
         out.push([ri + fh * 0.8, rimHalf + flt * 0.35]);
@@ -304,8 +308,8 @@ export const wheel = definePart({
       const steps = lod === 0 ? [0, 0.15, 0.3, 0.45, 0.6, 0.72, 0.84, 0.93, 1] : [0, 0.5, 0.85, 1];
       const rings = steps.map((s): Vec3[] => {
         const z = lerp(z0, z1, s);
-        const a = lerp(aHub, aRim, s) + (aFlare - aRim) * smooth((s - 0.7) / 0.3) ** 2;
-        const yf = yFront + dish * (1 - s ** 1.8);
+        const a = lerp(aHub, aRim, s) + (aFlare - aRim) * dmath.pow(smooth((s - 0.7) / 0.3), 2);
+        const yf = yFront + dish * (1 - dmath.pow(s, 1.8));
         const d = lerp(hw * 0.5, hw * 0.3, s);
         const ab = a * 0.72; // draft: the back is narrower than the face
         const c = Math.min(a * 0.35, d * 0.25);

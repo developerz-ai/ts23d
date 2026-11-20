@@ -3,7 +3,7 @@
 // bow toward +X, x = 0 amidships. Sections are superellipse quarters (n = 2 round bilge, 4 hard
 // bilge), going V toward the ends; the stem is where the keel line rises to meet the sheer.
 
-import { Ts23dError, type Vec3 } from '../core/index.ts';
+import { dmath, Ts23dError, type Vec3 } from '../core/index.ts';
 
 export interface HullColors {
   /** Above the boot-top. */
@@ -100,7 +100,7 @@ export function validateHull(o: HullOptions): void {
     throw bad(`hull camber is ${camber}`, 'use 0 … beam / 4 metres (beam / 50 is typical)');
   const dead = o.deadriseDeg ?? 5;
   const depth = o.draft + o.freeboard;
-  if (!(dead >= 0 && dead <= 45) || Math.tan((dead * Math.PI) / 180) * (o.beam / 2) >= depth)
+  if (!(dead >= 0 && dead <= 45) || dmath.tan((dead * Math.PI) / 180) * (o.beam / 2) >= depth)
     throw bad(
       `hull deadriseDeg is ${dead} (beam ${o.beam}, depth ${depth})`,
       'use 0–45° (5 displacement, 15–25 planing), with tan(deadrise) × beam / 2 below draft + freeboard',
@@ -119,7 +119,7 @@ export function hullLines(o: HullOptions): HullLines {
   const pe = o.entrance ?? 2;
   const n = o.fullness ?? 3;
   const flare = o.flare ?? 0.06;
-  const dead = Math.tan(((o.deadriseDeg ?? 5) * Math.PI) / 180);
+  const dead = dmath.tan(((o.deadriseDeg ?? 5) * Math.PI) / 180);
   // Parallel middle body and where the keel starts to rise, as shares of L.
   const xf = 0.1 * L;
   const xa = -0.15 * L;
@@ -130,7 +130,7 @@ export function hullLines(o: HullOptions): HullLines {
     return o.freeboard + (u > 0 ? sb : ss) * u * u;
   };
   const plan = (x: number): number => {
-    if (x > xf) return 1 - ((x - xf) / (half - xf)) ** pe;
+    if (x > xf) return 1 - dmath.pow((x - xf) / (half - xf), pe);
     if (x < xa) {
       const v = Math.min(1, (xa - x) / (xa + half));
       return round ? Math.sqrt(Math.max(0, 1 - v * v)) : 1 - (1 - tw) * v * v;
@@ -142,11 +142,11 @@ export function hullLines(o: HullOptions): HullLines {
   const keel = (x: number): number => {
     if (x > kf) {
       const u = Math.min(1, (x - kf) / (half - kf));
-      return -o.draft + (deck(half) + o.draft) * u ** 2;
+      return -o.draft + (deck(half) + o.draft) * (u * u);
     }
     if (x < ka) {
       const v = Math.min(1, (ka - x) / (ka + half));
-      return -o.draft + (counter + o.draft) * v ** 1.6;
+      return -o.draft + (counter + o.draft) * dmath.pow(v, 1.6);
     }
     return -o.draft;
   };
@@ -154,8 +154,8 @@ export function hullLines(o: HullOptions): HullLines {
     const f = plan(x);
     // Fine ends go V-sectioned; the middle body keeps the full bilge.
     const ns = 1.2 + (n - 1.2) * smooth(f / 0.8);
-    const s = Math.sin(theta) ** (2 / ns);
-    const c = Math.cos(theta) ** (2 / ns);
+    const s = dmath.pow(dmath.sin(theta), 2 / ns);
+    const c = dmath.pow(dmath.cos(theta), 2 / ns);
     const zk = keel(x);
     const zd = deck(x);
     const zf = 1 - c;

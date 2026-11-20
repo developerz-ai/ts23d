@@ -39,7 +39,7 @@ describe('resolve asset-only output', () => {
   it('counts the samples behind the coverage mask and sums nothing where the asset is not', () => {
     const r = renderBeauty(block, shot);
     const a = sums(r);
-    const n = shot.supersample ** 2;
+    const n = shot.supersample * shot.supersample;
     let partial = 0;
     for (let i = 0; i < r.mask.length; i++) {
       const hits = a.hits[i] ?? -1;
@@ -70,7 +70,7 @@ describe('resolve asset-only output', () => {
     );
     const r = renderBeauty(jar, shot);
     const { hits } = sums(r);
-    const n = shot.supersample ** 2;
+    const n = shot.supersample * shot.supersample;
     const opacity = r.opacity ?? new Float32Array(0);
     const centre = (shot.height / 2) * shot.width + shot.width / 2;
     expect(hits[centre]).toBe(n);

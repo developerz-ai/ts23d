@@ -6,6 +6,7 @@
 
 import {
   box,
+  dmath,
   type Mesh,
   place,
   type Rng,
@@ -109,7 +110,7 @@ export function sootRuns(
     const colors = new Float32Array(q.colors);
     for (let i = 0; i < q.positions.length / 3; i++) {
       const f = Math.min(1, Math.max(0, ((q.positions[i * 3 + 2] ?? 0) - z0) / len));
-      colors.set(mix(o.wall, SOOT, 0.95 * f ** 1.2), i * 3);
+      colors.set(mix(o.wall, SOOT, 0.95 * dmath.pow(f, 1.2)), i * 3);
     }
     out.push({ ...q, colors });
   }

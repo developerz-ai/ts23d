@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'bun:test';
+import { dmath } from '../core/index.ts';
 import { checkInputImage, laplacianVariance, MIN_SHARPNESS } from './input-image.ts';
 
 /** Deterministic texture value 0–1 (a fur-like grain). */
 const grain = (x: number, y: number): number =>
-  (((Math.sin(x * 12.9898 + y * 78.233) * 43758.5453) % 1) + 1) % 1;
+  (((dmath.sin(x * 12.9898 + y * 78.233) * 43758.5453) % 1) + 1) % 1;
 
 interface Img {
   readonly px: Uint8Array;
@@ -22,7 +23,7 @@ function scene(
   for (let y = 0; y < h; y++)
     for (let x = 0; x < w; x++) {
       const inBlob = blobs.some(
-        ([cx, cy, rx, ry]) => ((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2 <= 1,
+        ([cx, cy, rx, ry]) => dmath.pow((x - cx) / rx, 2) + dmath.pow((y - cy) / ry, 2) <= 1,
       );
       const g = grain(x, y);
       // Snow-photo pattern: bright mottled snow, dark tree trunks every 70 px, shadows.

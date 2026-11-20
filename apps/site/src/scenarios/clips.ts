@@ -3,6 +3,7 @@
 // starts, so a player that repeats it snaps back once per loop; taking the straight-line drift out
 // of the root track closes the seam and leaves the body's own recoil in place.
 
+import { dmath } from '@developerz.ai/ts23d/core';
 import type { AnimationClip, KeyframeTrack } from 'three';
 
 /** Metres (and quaternion dot distance) below which two keys are the same pose. */
@@ -37,7 +38,7 @@ export function isLoop(clip: AnimationClip): boolean {
 /** Metres the root moves between the clip's first and last key. */
 export function travelOf(clip: AnimationClip): number {
   const root = rootTrack(clip);
-  return root ? Math.hypot(...seam(root)) : 0;
+  return root ? dmath.norm(seam(root)) : 0;
 }
 
 /**

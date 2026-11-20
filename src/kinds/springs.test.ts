@@ -3,12 +3,13 @@
 
 import { describe, expect, it } from 'bun:test';
 import type { Bone, Quat, Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import { qexp } from './pose.ts';
 import { bakeSprings, periodicResponse } from './springs.ts';
 
 const n = 48;
 const step = 1 / n;
-const forcing = Array.from({ length: n }, (_, i) => Math.sin((2 * Math.PI * i) / n) * 40);
+const forcing = Array.from({ length: n }, (_, i) => dmath.sin((2 * Math.PI * i) / n) * 40);
 
 /** Largest gap between a loop and the next one integrated on from it (0 when periodic). */
 function seam(hz: number, damping: number): number {
@@ -64,13 +65,14 @@ describe('springs', () => {
     const keys = Array.from(
       { length: n },
       (_, i) =>
-        new Map<string, Quat>([['root', qexp([0, 0, 0.2 * Math.sin((2 * Math.PI * i) / n)])]]),
+        new Map<string, Quat>([['root', qexp([0, 0, 0.2 * dmath.sin((2 * Math.PI * i) / n)])]]),
     );
     const roots = keys.map((): Vec3 => [0, 0, 0]);
     const out = bakeSprings(chain, keys, roots, step, [
       { bone: 'tail_0', hz: 3, damping: 0.3, max: 15 },
     ]);
-    const angle = (q: Quat): number => 2 * Math.atan2(Math.hypot(q[0], q[1], q[2]), Math.abs(q[3]));
+    const angle = (q: Quat): number =>
+      2 * dmath.atan2(dmath.hypot(q[0], q[1], q[2]), Math.abs(q[3]));
     const peak = Math.max(...out.map((k) => angle(k.get('tail_0') ?? [0, 0, 0, 1])));
     expect(peak).toBeGreaterThan(0.01);
     expect(peak).toBeLessThanOrEqual((15 * Math.PI) / 180 + 1e-9);

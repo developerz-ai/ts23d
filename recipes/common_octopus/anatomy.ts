@@ -3,7 +3,7 @@
 // the arc, which keeps its length exact whatever the curl. Everything here is rest pose.
 
 import type { BodyPlanSpec, ChainSpec, Vec3 } from '@developerz.ai/ts23d';
-import { bodyPlan, createRng } from '@developerz.ai/ts23d';
+import { bodyPlan, createRng, dmath } from '@developerz.ai/ts23d';
 import { armRelief, armTint, headRelief, mantleRelief, mantleTint, regenTint } from './skin.ts';
 
 export const REAL = {
@@ -35,7 +35,7 @@ const ARM_TIP_RADIUS = 0.0022;
 const SEED = 1797;
 
 const unit = (v: Vec3): Vec3 => {
-  const l = Math.hypot(v[0], v[1], v[2]) || 1;
+  const l = dmath.hypot(v[0], v[1], v[2]) || 1;
   return [v[0] / l, v[1] / l, v[2] / l];
 };
 const along = (o: Vec3, d: Vec3, k: number): Vec3 => [
@@ -58,7 +58,7 @@ function arcOf(c: ChainSpec): number {
   const { parent: _parent, ...free } = c;
   const rough = c.path.reduce((sum, q, i) => {
     const a = c.path[i - 1] ?? q;
-    return sum + Math.hypot(q[0] - a[0], q[1] - a[1], q[2] - a[2]);
+    return sum + dmath.hypot(q[0] - a[0], q[1] - a[1], q[2] - a[2]);
   }, 0);
   const p = bodyPlan({ name: 'probe', length: rough, chains: [free] });
   return p.chains[0]?.length ?? 0;
@@ -100,7 +100,7 @@ function mantleChain(): ChainSpec {
     along(
       along(NECK, AXIS, REAL.mantle * u),
       VENTRAL,
-      0.03 * u * u - 0.012 * Math.sin(Math.PI * u),
+      0.03 * u * u - 0.012 * dmath.sin(Math.PI * u),
     );
   const path = [1, 0.84, 0.62, 0.36, 0.14, 0].map(at);
   const fitted = fitArc(
@@ -166,14 +166,14 @@ export const armLength = (k: number): number =>
   k === REGEN_ARM ? REGEN_LENGTH : k === 0 || k === ARMS - 1 ? DORSAL_ARM : REAL.arm;
 /** Arm half-width at arc fraction u: tapering all the way from the web to the tip. */
 export const armRadius = (u: number): number =>
-  ARM_TIP_RADIUS + (ARM_BASE_RADIUS - ARM_TIP_RADIUS) * (1 - u) ** 1.0;
+  ARM_TIP_RADIUS + (ARM_BASE_RADIUS - ARM_TIP_RADIUS) * dmath.pow(1 - u, 1.0);
 /** The regenerating arm: the old arm's taper to the break, then a thinner regrowth bud. */
 const regenRadius = (u: number): number => {
   const old = armRadius((u * REGEN_LENGTH) / REAL.arm);
   if (u <= REGEN_FROM) return old;
   const k = (u - REGEN_FROM) / (1 - REGEN_FROM);
   const at = armRadius((REGEN_FROM * REGEN_LENGTH) / REAL.arm);
-  return ARM_TIP_RADIUS + (at * 0.62 - ARM_TIP_RADIUS) * (1 - k) ** 0.9;
+  return ARM_TIP_RADIUS + (at * 0.62 - ARM_TIP_RADIUS) * dmath.pow(1 - k, 0.9);
 };
 export const radiusOf = (k: number, u: number): number =>
   k === REGEN_ARM ? regenRadius(u) : armRadius(u);
@@ -184,8 +184,8 @@ function armPath(k: number): Vec3[] {
   const pose = POSES[k] ?? { rise: 0, sway: 0.15, waves: 1, curl: 3, from: 0.5 };
   const L = armLength(k);
   const a = armAngle(k);
-  const out: Vec3 = [Math.cos(a), Math.sin(a), 0];
-  const side: Vec3 = [-Math.sin(a), Math.cos(a), 0];
+  const out: Vec3 = [dmath.cos(a), dmath.sin(a), 0];
+  const side: Vec3 = [-dmath.sin(a), dmath.cos(a), 0];
   const phase = rng.range(0, Math.PI * 2);
   const flip = rng.next() < 0.5 ? -1 : 1;
   const start = along([CROWN[0], CROWN[1], CROWN[2] - 0.012], out, 0.042);
@@ -196,16 +196,19 @@ function armPath(k: number): Vec3[] {
   for (let i = 0; i < steps; i++) {
     const u = (i + 0.5) / steps;
     // Down off the crown onto the seabed, along it, then the tip curls up and over.
-    const leave = -0.95 * Math.exp(-u / 0.075) + pose.rise * Math.exp(-(((u - 0.2) / 0.16) ** 2));
+    const leave =
+      -0.95 * dmath.exp(-u / 0.075) + pose.rise * dmath.exp(-dmath.pow((u - 0.2) / 0.16, 2));
     const t = Math.max(0, (u - pose.from) / (1 - pose.from));
     const elevation = leave + pose.curl * t * t;
     const yaw =
-      flip * pose.sway * Math.sin(Math.PI * 2 * pose.waves * u + phase) * (0.4 + u) +
+      flip * pose.sway * dmath.sin(Math.PI * 2 * pose.waves * u + phase) * (0.4 + u) +
       (pose.twirl ?? 0) * t * t;
     const dir: Vec3 = unit([
-      Math.cos(elevation) * Math.cos(yaw) * out[0] + Math.cos(elevation) * Math.sin(yaw) * side[0],
-      Math.cos(elevation) * Math.cos(yaw) * out[1] + Math.cos(elevation) * Math.sin(yaw) * side[1],
-      Math.sin(elevation),
+      dmath.cos(elevation) * dmath.cos(yaw) * out[0] +
+        dmath.cos(elevation) * dmath.sin(yaw) * side[0],
+      dmath.cos(elevation) * dmath.cos(yaw) * out[1] +
+        dmath.cos(elevation) * dmath.sin(yaw) * side[1],
+      dmath.sin(elevation),
     ]);
     p = along(p, dir, ds);
     const floor = radiusOf(k, u) + 0.002;

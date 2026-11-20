@@ -4,7 +4,15 @@
 // one slot per toe), and bound rigidly to the paw's last bone, so it walks with the foot. One
 // extra skinned part on the trim sheet; none at LOD 2, where the painted claws carry the read.
 
-import { type Bone, bindRigid, type Mesh, merge, sweep, type Vec3 } from '@developerz.ai/ts23d';
+import {
+  type Bone,
+  bindRigid,
+  dmath,
+  type Mesh,
+  merge,
+  sweep,
+  type Vec3,
+} from '@developerz.ai/ts23d';
 
 export interface ClawOptions {
   /** Shoulder height of the plan, metres: every search distance scales with it. */
@@ -64,7 +72,7 @@ export function toeSeats(mesh: Mesh, paw: Vec3, o: ClawOptions): Vec3[] {
     for (let pass = 0; pass < 6; pass++) {
       let [near, gap] = [seat, Number.POSITIVE_INFINITY];
       for (const p of low) {
-        const d = Math.hypot(p[0] - seat[0], p[1] - seat[1], p[2] - seat[2]);
+        const d = dmath.hypot(p[0] - seat[0], p[1] - seat[1], p[2] - seat[2]);
         if (d < gap) [near, gap] = [p, d];
       }
       if (gap >= room || gap === 0) break;
@@ -91,9 +99,9 @@ function claw(seat: Vec3, length: number, lod: 0 | 1, o: ClawOptions): Mesh {
   let at = out;
   for (let i = 0; i < steps; i++) {
     // Level where it leaves the toe (a thin outer toe has no room under it), curling after.
-    const pitch = (o.curl * ((i + 0.5) / steps) ** 1.5 * Math.PI) / 180;
+    const pitch = (o.curl * dmath.pow((i + 0.5) / steps, 1.5) * Math.PI) / 180;
     const d = length / steps;
-    at = [at[0] + Math.cos(pitch) * d, at[1], at[2] - Math.sin(pitch) * d];
+    at = [at[0] + dmath.cos(pitch) * d, at[1], at[2] - dmath.sin(pitch) * d];
     path.push(at);
   }
   // Never under the floor: a claw that would dig in is lifted whole (the root stays in the toe).
@@ -101,7 +109,7 @@ function claw(seat: Vec3, length: number, lod: 0 | 1, o: ClawOptions): Mesh {
   return sweep({
     section: { radius: o.radius, segments: lod === 0 ? 5 : 3 },
     path: path.map((p): Vec3 => [p[0], p[1], p[2] + lift]),
-    scale: path.map((_, i) => (i === 0 ? 1 : 1 - 0.85 * ((i - 1) / steps) ** 0.8)),
+    scale: path.map((_, i) => (i === 0 ? 1 : 1 - 0.85 * dmath.pow((i - 1) / steps, 0.8))),
     color: o.color,
     caps: 'end',
   });

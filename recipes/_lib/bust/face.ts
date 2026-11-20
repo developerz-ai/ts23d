@@ -4,7 +4,7 @@
 // nostrils), lips round a teeth cylinder with the lip line, lids from eye.ts, and the expression
 // lines (nasolabial, lid fold) scaled by the race's `lines`.
 
-import { type SculptEdit, sculptField } from '@developerz.ai/ts23d';
+import { dmath, type SculptEdit, sculptField } from '@developerz.ai/ts23d';
 import { type EyeSpec, lidEdits } from './eye.ts';
 import { type HeadSpec, headBlock, kn, landmarks } from './head.ts';
 import {
@@ -31,7 +31,7 @@ export function orbitBore(l: { readonly eye: V; readonly eyeR: number }): Sculpt
   const front = ex - l.eyeR * 0.05;
   const back = ex - l.eyeR * 1.1;
   return {
-    field: (p) => Math.max(Math.hypot(p[1] - ey, p[2] - ez) - r, p[0] - front, back - p[0]),
+    field: (p) => Math.max(dmath.hypot(p[1] - ey, p[2] - ez) - r, p[0] - front, back - p[0]),
     bounds: [
       [back - 0.002, ey - r - 0.002, ez - r - 0.002],
       [front + 0.002, ey + r + 0.002, ez + r + 0.002],
@@ -81,7 +81,7 @@ export function faceEdits(s: HeadSpec, eye: EyeSpec, stage: number, sf?: Surface
   const hook = kn(s, 'noseHook');
   const tip: V = [l.noseTip[0], 0, l.noseTip[2] - hook * H];
   const bridge = frameOf(l.nasion, [tip[0] - l.nasion[0], 0, tip[2] - l.nasion[2]], [1, 0, 0.6]);
-  const bl = Math.hypot(tip[0] - l.nasion[0], tip[2] - l.nasion[2]);
+  const bl = dmath.hypot(tip[0] - l.nasion[0], tip[2] - l.nasion[2]);
   out.push(
     local(
       bridge,
@@ -133,11 +133,11 @@ export function faceEdits(s: HeadSpec, eye: EyeSpec, stage: number, sf?: Surface
   const lips = kn(s, 'lips');
   const arc = (rr: number, a: number, zz: number): V => {
     const t = (a * Math.PI) / 180;
-    return [l.teeth.x + rr * Math.cos(t), rr * Math.sin(t), zz];
+    return [l.teeth.x + rr * dmath.cos(t), rr * dmath.sin(t), zz];
   };
   const mz = l.mouth[2];
   // The lips end at the mouth corners: the arc angle whose half-width is the mouth's.
-  const corner = (Math.asin(Math.min(0.9, (kn(s, 'mouth') * H) / l.teeth.r)) * 180) / Math.PI;
+  const corner = (dmath.asin(Math.min(0.9, (kn(s, 'mouth') * H) / l.teeth.r)) * 180) / Math.PI;
   const up = Array.from({ length: 8 }, (_, i) =>
     arc(l.teeth.r + 0.006 * H, (i * corner) / 7, mz + 0.014 * H - i * i * 0.0004 * H),
   );

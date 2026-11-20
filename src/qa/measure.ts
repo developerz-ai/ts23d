@@ -11,6 +11,7 @@ import {
   type Bounds,
   boundsOf,
   type CompiledAsset,
+  dmath,
   type Mesh,
   merge,
   type Plane,
@@ -86,7 +87,7 @@ export function ruler(asset: CompiledAsset): Ruler {
       if (!ba || !bb) return null;
       if (mode === 'closest') return gap(a, b, Number.POSITIVE_INFINITY);
       const [p, q] = [centre(ba), centre(bb)];
-      return Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2]);
+      return dmath.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2]);
     },
     gap,
     section(sel, plane) {
@@ -100,8 +101,8 @@ export function ruler(asset: CompiledAsset): Ruler {
 /** Smallest surface-to-surface distance (sampled both ways), capped at `max`. */
 function surfaceDistance(ma: Mesh, mb: Mesh, max: number): number {
   const [ba, bb] = [boundsOf(ma), boundsOf(mb)];
-  const boxGap = Math.hypot(
-    ...[0, 1, 2].map((k) =>
+  const boxGap = dmath.norm(
+    [0, 1, 2].map((k) =>
       Math.max(0, (ba.min[k] ?? 0) - (bb.max[k] ?? 0), (bb.min[k] ?? 0) - (ba.max[k] ?? 0)),
     ),
   );
@@ -109,8 +110,8 @@ function surfaceDistance(ma: Mesh, mb: Mesh, max: number): number {
   // Box gap is a lower bound; the box corners' distance an upper one for the search radius.
   const reach = Math.min(
     max,
-    Math.hypot(
-      ...[0, 1, 2].map(
+    dmath.norm(
+      [0, 1, 2].map(
         (k) => Math.max(ba.max[k] ?? 0, bb.max[k] ?? 0) - Math.min(ba.min[k] ?? 0, bb.min[k] ?? 0),
       ),
     ),

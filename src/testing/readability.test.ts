@@ -3,6 +3,7 @@ import {
   type Asset,
   type BuildContext,
   defineAsset,
+  dmath,
   Ts23dError,
   type Vec2,
   type Vec3,
@@ -38,7 +39,7 @@ const ball = (r: number, at: Vec3, color: Vec3) =>
   lathe({
     profile: Array.from({ length: 17 }, (_, k): Vec2 => {
       const a = -Math.PI / 2 + (k * Math.PI) / 16;
-      return [Math.max(1e-4, r * Math.cos(a)), r + r * Math.sin(a)];
+      return [Math.max(1e-4, r * dmath.cos(a)), r + r * dmath.sin(a)];
     }),
     segments: 32,
     color,
@@ -67,7 +68,7 @@ describe('silhouetteReads — failure case first', () => {
 /** A blob covered in uniform bumps (noise everywhere) vs a plain block with one greeble cluster. */
 const noisyBlob = asset('noisy_blob', (ctx) => {
   const bump = ([x, y, z]: Vec3): number =>
-    Math.hypot(x, y, z - 1) - 1 + 0.04 * Math.sin(25 * x) * Math.sin(25 * y) * Math.sin(25 * z);
+    dmath.hypot(x, y, z - 1) - 1 + 0.04 * dmath.sin(25 * x) * dmath.sin(25 * y) * dmath.sin(25 * z);
   const bounds: [Vec3, Vec3] = [
     [-1.2, -1.2, -0.2],
     [1.2, 1.2, 2.2],
@@ -152,7 +153,7 @@ const star = (n: number, r0: number, r1: number): Vec2[] =>
   Array.from({ length: n * 2 }, (_, k) => {
     const a = (k * Math.PI) / n;
     const r = k % 2 ? r1 : r0;
-    return [r * Math.cos(a), 1.2 + r * Math.sin(a)];
+    return [r * dmath.cos(a), 1.2 + r * dmath.sin(a)];
   });
 const spiky = asset('spiky', (ctx) => {
   for (const plane of ['xz', 'yz'] as const)

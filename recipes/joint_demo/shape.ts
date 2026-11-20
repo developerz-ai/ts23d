@@ -2,14 +2,15 @@
 // (ellipse sections, so fingers can be flat and wide), an ellipsoid, and a per-vertex repaint for
 // wear (stains, rubbed zones) on meshes whose primitive takes one colour only.
 
-import { loft, type Mesh, type StripId, type Vec3 } from '@developerz.ai/ts23d';
+import { dmath, loft, type Mesh, type StripId, type Vec3 } from '@developerz.ai/ts23d';
 
 export const mix = (a: Vec3, b: Vec3, t: number): Vec3 => {
   const k = Math.min(1, Math.max(0, t));
   return [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k, a[2] + (b[2] - a[2]) * k];
 };
 
-export const dist = (a: Vec3, b: Vec3): number => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+export const dist = (a: Vec3, b: Vec3): number =>
+  dmath.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
 
 /** 1 at `c`, easing to 0 at distance `r`. */
 export const blob = (p: Vec3, c: Vec3, r: number): number => {
@@ -51,7 +52,7 @@ export function smooth(st: readonly Station[], steps: number): Station[] {
 }
 
 const norm = (v: Vec3): Vec3 => {
-  const l = Math.hypot(v[0], v[1], v[2]) || 1;
+  const l = dmath.hypot(v[0], v[1], v[2]) || 1;
   return [v[0] / l, v[1] / l, v[2] / l];
 };
 const cross = (a: Vec3, b: Vec3): Vec3 => [
@@ -79,7 +80,7 @@ export function tube(st: readonly Station[], o: TubeOptions): Mesh {
     const b = norm(cross(t, side));
     return Array.from({ length: o.segments }, (_, k): Vec3 => {
       const a = ((k + (o.phase ?? 0)) / o.segments) * Math.PI * 2;
-      const [cs, sn] = [Math.cos(a) * r, Math.sin(a) * h];
+      const [cs, sn] = [dmath.cos(a) * r, dmath.sin(a) * h];
       return [
         c[0] + side[0] * cs + b[0] * sn,
         c[1] + side[1] * cs + b[1] * sn,
@@ -99,13 +100,13 @@ export function tube(st: readonly Station[], o: TubeOptions): Mesh {
   const tip = o.tip ?? 0;
   for (let k = 1; k <= tip; k++) {
     const a = (k / (tip + 0.35)) * (Math.PI / 2);
-    const d = Math.sin(a) * end.r * 0.9;
+    const d = dmath.sin(a) * end.r * 0.9;
     rings.push(
       ring(
         [end.at[0] + last[0] * d, end.at[1] + last[1] * d, end.at[2] + last[2] * d],
         last,
-        end.r * Math.cos(a),
-        end.h * Math.cos(a),
+        end.r * dmath.cos(a),
+        end.h * dmath.cos(a),
       ),
     );
   }
@@ -131,9 +132,9 @@ export function ellipsoid(
   for (let i = 0; i <= stacks; i++) {
     const a = -Math.PI / 2 + ((i + 0.5) / (stacks + 1)) * Math.PI;
     st.push({
-      at: [c[0], c[1], c[2] + r[2] * Math.sin(a)],
-      r: r[0] * Math.cos(a),
-      h: r[1] * Math.cos(a),
+      at: [c[0], c[1], c[2] + r[2] * dmath.sin(a)],
+      r: r[0] * dmath.cos(a),
+      h: r[1] * dmath.cos(a),
     });
   }
   return tube(st, { segments, up: [0, 1, 0], color });

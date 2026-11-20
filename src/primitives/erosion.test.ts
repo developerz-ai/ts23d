@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'bun:test';
-import { createRng, Ts23dError } from '../core/index.ts';
+import { createRng, dmath, Ts23dError } from '../core/index.ts';
 import { type ErosionOptions, hydraulicErosion } from './erosion.ts';
 import { terrainGrid } from './terrain-grid.ts';
 
 const grid = terrainGrid({
   rect: [0, 0, 100, 100],
   cells: 24,
-  height: (x, y) => Math.sin(x / 10) * 10 + y * 0.3,
+  height: (x, y) => dmath.sin(x / 10) * 10 + y * 0.3,
 });
 const erode = (o: ErosionOptions) => hydraulicErosion(grid, createRng(1), { droplets: 400, ...o });
 

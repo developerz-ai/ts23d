@@ -4,7 +4,7 @@
 // colours by noise, and a rim band blending to `rim` so the patch fades into the grass round it
 // instead of ending as a hard coloured mat. LOD2 is the bare polygon in the mean colour.
 
-import { type Mesh, planar, type StripId, type Vec3 } from '@developerz.ai/ts23d';
+import { dmath, type Mesh, planar, type StripId, type Vec3 } from '@developerz.ai/ts23d';
 import { reproject, tessellate } from '../finish/finish.ts';
 
 export interface Floor {
@@ -37,7 +37,7 @@ function colourAt(f: Floor, noise: Noise, p: Vec3, R: number): Vec3 {
   const b = f.mix[i + 1] ?? a;
   const t = x - i;
   const c = lerp3(a, b, t * t * (3 - 2 * t));
-  const r = Math.hypot(p[0], p[1]) / R;
+  const r = dmath.hypot(p[0], p[1]) / R;
   const e = Math.min(1, Math.max(0, (r - 0.55) / 0.45));
   return lerp3(c, f.rim, e * e);
 }
@@ -45,10 +45,10 @@ function colourAt(f: Floor, noise: Noise, p: Vec3, R: number): Vec3 {
 export function floorPatch(f: Floor, lod: 0 | 1 | 2, noise: Noise): Mesh {
   const n = f.sides[lod];
   // Same area at every LOD (a coarser polygon is pushed out), so the far silhouette keeps it.
-  const R = f.radius * Math.sqrt((Math.PI * 2) / (n * Math.sin((Math.PI * 2) / n)));
+  const R = f.radius * Math.sqrt((Math.PI * 2) / (n * dmath.sin((Math.PI * 2) / n)));
   const points = Array.from({ length: n }, (_, k): Vec3 => {
     const a = (k / n) * Math.PI * 2;
-    const unit: Vec3 = [Math.cos(a), Math.sin(a), 0];
+    const unit: Vec3 = [dmath.cos(a), dmath.sin(a), 0];
     const w = lod === 2 ? 1 : 1 + f.wobble * noise([unit[0] * 9, unit[1] * 9, 3]);
     return [unit[0] * R * w, unit[1] * R * w, 0.005];
   });

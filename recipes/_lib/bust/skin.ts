@@ -8,6 +8,7 @@
 
 import {
   type DetailRegion,
+  dmath,
   type Field,
   type Mesh,
   type Rng,
@@ -160,7 +161,7 @@ export function skinMesh(edits: readonly SculptEdit[], cell: number, o: SkinOpti
     const gx = xp - xm;
     const gy = yp - ym;
     const gz = zp - zm;
-    const gl = Math.hypot(gx, gy, gz) || 1;
+    const gl = dmath.hypot(gx, gy, gz) || 1;
     const n: V = [gx / gl, gy / gl, gz / gl];
     // Mean curvature from the Laplacian of the smooth field (no pores) over a 2.5× wider stencil:
     // a mesh-field sculpt's trilinear grid puts kinks in a narrow Laplacian, painted as streaks.

@@ -1,16 +1,17 @@
 import { describe, expect, it } from 'bun:test';
 import type { Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import { box, sdf } from '../primitives/index.ts';
 import { bakeField, fieldProbe } from './bake-field.ts';
 
 const R = 0.5;
-const ball = (p: Vec3): number => Math.hypot(p[0], p[1], p[2]) - R;
+const ball = (p: Vec3): number => dmath.hypot(p[0], p[1], p[2]) - R;
 /** Axis-aligned box SDF with half-extents h. */
 const slab =
   (h: Vec3) =>
   (p: Vec3): number => {
     const q = [Math.abs(p[0]) - h[0], Math.abs(p[1]) - h[1], Math.abs(p[2]) - h[2]];
-    const o = Math.hypot(...q.map((v) => Math.max(v, 0)));
+    const o = dmath.norm(q.map((v) => Math.max(v, 0)));
     return o + Math.min(Math.max(q[0] ?? 0, q[1] ?? 0, q[2] ?? 0), 0);
   };
 const mean = (a: Float32Array | undefined): number =>

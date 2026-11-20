@@ -10,6 +10,7 @@ import {
   compile,
   creaturePlan,
   DEFAULT_SHEET,
+  dmath,
   sheetFor,
   type Vec3,
   worldMeshes,
@@ -25,7 +26,7 @@ function muzzleBanding(lod: 0 | 1): number {
   const { bones } = creaturePlan(WOLF);
   const A = bones.head.atlas;
   const N = bones.nose;
-  const len = Math.hypot(N[0] - A[0], N[1] - A[1], N[2] - A[2]);
+  const len = dmath.hypot(N[0] - A[0], N[1] - A[1], N[2] - A[2]);
   const ax: Vec3 = [(N[0] - A[0]) / len, (N[1] - A[1]) / len, (N[2] - A[2]) / len];
   const along = (p: Vec3): number =>
     (p[0] - A[0]) * ax[0] + (p[1] - A[1]) * ax[1] + (p[2] - A[2]) * ax[2];
@@ -33,13 +34,13 @@ function muzzleBanding(lod: 0 | 1): number {
   expect(m).toBeDefined();
   if (!m) return Infinity;
   const n = sheet.size;
-  const lin = (v: number): number => (v / 255) ** 2.2;
+  const lin = (v: number): number => dmath.pow(v / 255, 2.2);
   const bins = new Float64Array(400);
   const count = new Float64Array(400);
   let seed = 1;
   const rnd = (): number => {
     seed = (seed * 1664525 + 1013904223) >>> 0;
-    return seed / 2 ** 32;
+    return seed / 4294967296 /* 2^32 */;
   };
   const I = m.indices;
   for (let t = 0; t < I.length; t += 3) {
@@ -76,7 +77,7 @@ function muzzleBanding(lod: 0 | 1): number {
   for (let i = 0; i < xs.length; i++) {
     const win = xs.slice(Math.max(0, i - 10), i + 11);
     const mean = win.reduce((s, q) => s + q, 0) / win.length;
-    sum += ((xs[i] ?? 0) / mean - 1) ** 2;
+    sum += dmath.pow((xs[i] ?? 0) / mean - 1, 2);
   }
   expect(xs.length).toBeGreaterThan(60);
   return Math.sqrt(sum / xs.length);

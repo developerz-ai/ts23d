@@ -4,7 +4,7 @@
 // twig cards on the sunny shoulder turn yellow-green and the cave under the crown goes blue-dark:
 // a colour block that reads at hero distance, not per-vertex noise.
 
-import { boundsOf, type Mesh, type Vec3 } from '@developerz.ai/ts23d';
+import { boundsOf, dmath, type Mesh, type Vec3 } from '@developerz.ai/ts23d';
 
 export interface Tone {
   /** Multiplier at full sun (outer crown facing `sun`). */
@@ -23,7 +23,7 @@ export function sunShade(m: Mesh, t: Tone): Mesh {
     Math.max(1e-3, (b.max[1] - b.min[1]) / 2),
     Math.max(1e-3, (b.max[2] - b.min[2]) / 2),
   ];
-  const sl = Math.hypot(t.sun[0], t.sun[1], t.sun[2]) || 1;
+  const sl = dmath.hypot(t.sun[0], t.sun[1], t.sun[2]) || 1;
   const sun: Vec3 = [t.sun[0] / sl, t.sun[1] / sl, t.sun[2] / sl];
   const colors = new Float32Array(m.colors);
   for (let i = 0; i < m.positions.length / 3; i++) {
@@ -32,10 +32,10 @@ export function sunShade(m: Mesh, t: Tone): Mesh {
       ((m.positions[i * 3 + 1] ?? 0) - c[1]) / h[1],
       ((m.positions[i * 3 + 2] ?? 0) - c[2]) / h[2],
     ];
-    const r = Math.min(1, Math.hypot(o[0], o[1], o[2]));
+    const r = Math.min(1, dmath.hypot(o[0], o[1], o[2]));
     const facing = (o[0] * sun[0] + o[1] * sun[1] + o[2] * sun[2]) / Math.max(1e-3, r);
     // Outer shell facing the sun → 1; core and far side → 0.
-    const w = Math.min(1, Math.max(0, 0.5 + 0.5 * facing)) * r ** 0.7;
+    const w = Math.min(1, Math.max(0, 0.5 + 0.5 * facing)) * dmath.pow(r, 0.7);
     for (let k = 0; k < 3; k++) {
       const f = (t.shady[k] ?? 1) + ((t.sunny[k] ?? 1) - (t.shady[k] ?? 1)) * w;
       colors[i * 3 + k] = Math.min(1, (colors[i * 3 + k] ?? 0) * f);

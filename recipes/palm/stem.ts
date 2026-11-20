@@ -6,7 +6,7 @@
 // is unchanged), the groove darker, the band between paler and greyer low down where the stem has
 // weathered. `boots` is the crown shaft: the fibrous frond bases (boots) wrapping the stem top.
 
-import { type Mesh, merge, sweep, type Vec3 } from '@developerz.ai/ts23d';
+import { dmath, type Mesh, merge, sweep, type Vec3 } from '@developerz.ai/ts23d';
 
 /** The kind's trunk sweep: 8 radial segments (+1 seam vertex) per ring. */
 const S0 = 8;
@@ -34,7 +34,7 @@ export function rings(m: Mesh): Ring[] {
     let r = 0;
     for (let j = 0; j < S0; j++) {
       const v = (i * per + j) * 3;
-      r += Math.hypot((m.positions[v] ?? 0) - c[0], (m.positions[v + 1] ?? 0) - c[1]) / S0;
+      r += dmath.hypot((m.positions[v] ?? 0) - c[0], (m.positions[v + 1] ?? 0) - c[1]) / S0;
     }
     out.push({ c, r, col });
   }
@@ -85,7 +85,7 @@ export function ringedStem(kindTrunk: Mesh, o: RingedOptions): Mesh {
   for (let i = 1; i < rs.length; i++) {
     const a = rs[i - 1]?.c ?? [0, 0, 0];
     const b = rs[i]?.c ?? a;
-    arc.push((arc[i - 1] ?? 0) + Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]));
+    arc.push((arc[i - 1] ?? 0) + dmath.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]));
   }
   const total = arc[arc.length - 1] ?? 0;
   const half = o.spacing / 2;

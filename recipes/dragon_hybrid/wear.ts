@@ -9,6 +9,7 @@
 // steps.ts); pale dust caked on the feet and shanks, under the belly and along the dragging tail.
 
 import type { Vec3 } from '@developerz.ai/ts23d';
+import { dmath } from '@developerz.ai/ts23d';
 import { offset, py, rgb } from '../_lib/creature/texture-paint.ts';
 
 export interface RestBone {
@@ -20,7 +21,7 @@ export interface RestBone {
 const SEED = { scales: 5, soot: 17, dust: 29, scar: 43, wing: 59 } as const;
 
 const unit = (v: Vec3): Vec3 => {
-  const l = Math.hypot(v[0], v[1], v[2]) || 1;
+  const l = dmath.hypot(v[0], v[1], v[2]) || 1;
   return [v[0] / l, v[1] / l, v[2] / l];
 };
 

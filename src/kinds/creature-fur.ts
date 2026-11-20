@@ -8,7 +8,7 @@
 // LOD0 dense (wolf ≈ 3k cards, each ≤ ⅓ as wide as long, D59), LOD1 ¼ the cards ×1.5 wider, LOD2
 // none (the sculpt carries it).
 
-import { type Mesh, merge, type Rng, type Vec3 } from '../core/index.ts';
+import { dmath, type Mesh, merge, type Rng, type Vec3 } from '../core/index.ts';
 import { CREATURE_MATERIALS, defineMaterial, strandCells } from '../material/index.ts';
 import { type CardZone, chainSeed, type FlowChain, hairCards, hairFlow } from '../passes/index.ts';
 import type { Bones } from './creature-bones.ts';
@@ -94,7 +94,7 @@ export function furChains(b: Bones): FlowChain[] {
     const a = pts[0];
     const z = pts[pts.length - 1];
     const d = (p: Vec3 | undefined): number =>
-      p ? Math.hypot(p[0] - from[0], p[1] - from[1], p[2] - from[2]) : 0;
+      p ? dmath.hypot(p[0] - from[0], p[1] - from[1], p[2] - from[2]) : 0;
     return d(a) <= d(z) ? pts : [...pts].reverse();
   };
   const legs = b.legs.flatMap((l) => {
@@ -136,9 +136,11 @@ export function furLie(b: Bones, family: Family | undefined): FurLie {
         ...zones.map(
           (z) =>
             1 -
-            (Math.hypot(p[0] - z.at[0], Math.abs(p[1]) - Math.abs(z.at[1]), p[2] - z.at[2]) /
-              z.radius) **
+            dmath.pow(
+              dmath.hypot(p[0] - z.at[0], Math.abs(p[1]) - Math.abs(z.at[1]), p[2] - z.at[2]) /
+                z.radius,
               2,
+            ),
         ),
       ) *
         0.6,
@@ -236,8 +238,8 @@ export function creatureFur(
   const inZone = (p: Vec3): { w: number; len: number } => {
     let best = { w: 0, len: 0 };
     for (const z of zones) {
-      const d = Math.hypot(p[0] - z.at[0], Math.abs(p[1]) - Math.abs(z.at[1]), p[2] - z.at[2]);
-      const w = Math.max(0, 1 - (d / z.radius) ** 2);
+      const d = dmath.hypot(p[0] - z.at[0], Math.abs(p[1]) - Math.abs(z.at[1]), p[2] - z.at[2]);
+      const w = Math.max(0, 1 - dmath.pow(d / z.radius, 2));
       if (w > best.w) best = { w, len: z.length };
     }
     return best;

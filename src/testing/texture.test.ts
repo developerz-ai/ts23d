@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { Ts23dError } from '../core/index.ts';
+import { dmath, Ts23dError } from '../core/index.ts';
 import { STRIP_H, stripRow } from '../material/index.ts';
 import {
   assertNoBleed,
@@ -25,7 +25,7 @@ const strip = (wrap: boolean): Image => {
   const data = new Uint8Array(w * h * 4);
   for (let y = 0; y < h; y++)
     for (let x = 0; x < w; x++) {
-      const v = wrap ? 128 + 100 * Math.sin((2 * Math.PI * x) / w) : 20 + (x / w) * 200;
+      const v = wrap ? 128 + 100 * dmath.sin((2 * Math.PI * x) / w) : 20 + (x / w) * 200;
       data.set([v, v, v, 255], (y * w + x) * 4);
     }
   return { width: w, height: h, data };

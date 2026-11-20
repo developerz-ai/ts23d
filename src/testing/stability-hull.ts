@@ -1,6 +1,8 @@
 // 2D support-polygon math for the balance assertion: convex hull of ground contacts (monotone
 // chain, CCW) and the signed distance of a point to it (> 0 outside, ≤ 0 inside).
 
+import { dmath } from '../core/index.ts';
+
 export type P2 = readonly [number, number];
 
 const turn = (o: P2, a: P2, b: P2): number =>
@@ -32,7 +34,7 @@ function segmentDistance(p: P2, a: P2, b: P2): number {
   const dy = b[1] - a[1];
   const l2 = dx * dx + dy * dy;
   const t = l2 > 0 ? Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / l2)) : 0;
-  return Math.hypot(p[0] - a[0] - dx * t, p[1] - a[1] - dy * t);
+  return dmath.hypot(p[0] - a[0] - dx * t, p[1] - a[1] - dy * t);
 }
 
 /** Signed distance from p to a CCW convex polygon: > 0 outside, ≤ 0 inside. Empty → Infinity. */

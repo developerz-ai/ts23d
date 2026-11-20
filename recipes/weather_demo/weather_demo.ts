@@ -15,6 +15,7 @@ import {
   box,
   cylinder,
   defineAsset,
+  dmath,
   hex,
   lathe,
   type Mesh,
@@ -399,7 +400,7 @@ function densify(profile: readonly [number, number][], step: number): [number, n
   profile.forEach((p, i) => {
     const q = profile[i - 1];
     if (q) {
-      const n = Math.ceil(Math.hypot(p[0] - q[0], p[1] - q[1]) / step);
+      const n = Math.ceil(dmath.hypot(p[0] - q[0], p[1] - q[1]) / step);
       for (let k = 1; k < n; k++)
         out.push([q[0] + ((p[0] - q[0]) * k) / n, q[1] + ((p[1] - q[1]) * k) / n]);
     }
@@ -421,19 +422,19 @@ function crush(m: Readonly<Record<string, Mesh>>, lod: number): Record<string, M
       const x = positions[v * 3] ?? 0;
       const y = positions[v * 3 + 1] ?? 0;
       const z = positions[v * 3 + 2] ?? 0;
-      const r = Math.hypot(x, y);
-      let da = Math.atan2(y, x) - at;
-      da = Math.atan2(Math.sin(da), Math.cos(da));
-      const d = Math.hypot(da * 0.286, (z - 0.43) * 0.75) / 0.17;
+      const r = dmath.hypot(x, y);
+      let da = dmath.atan2(y, x) - at;
+      da = dmath.atan2(dmath.sin(da), dmath.cos(da));
+      const d = dmath.hypot(da * 0.286, (z - 0.43) * 0.75) / 0.17;
       if (d >= 1 || r < 0.2) continue;
-      const k = 1 - (0.09 * Math.cos((d * Math.PI) / 2) ** 2) / r;
+      const k = 1 - (0.09 * dmath.pow(dmath.cos((d * Math.PI) / 2), 2)) / r;
       positions[v * 3] = x * k;
       positions[v * 3 + 1] = y * k;
     }
     return weightedNormals({ ...mesh, positions }, { hardAngle: 40 });
   };
   // Lean: tip about the low rim point (bearing `at`, radius 0.29) so it stays on the slab.
-  const rim: Vec3 = [0.29 * Math.cos(at), 0.29 * Math.sin(at), 0];
+  const rim: Vec3 = [0.29 * dmath.cos(at), 0.29 * dmath.sin(at), 0];
   const tilt = 0.05;
   // Rim point to the origin with the bearing on +X, pitch about Y (the far rim lifts), and back.
   const tip = (mesh: Mesh): Mesh => {

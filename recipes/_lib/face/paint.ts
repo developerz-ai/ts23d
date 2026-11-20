@@ -4,7 +4,7 @@
 // painted eyebrows as streaked hair bands, a dark mouth interior, curvature (crevices darker,
 // ridges lifted) and a low-frequency mottle so the skin never reads as one flat colour.
 
-import { type Rng, type Vec3, valueNoise } from '@developerz.ai/ts23d';
+import { dmath, type Rng, type Vec3, valueNoise } from '@developerz.ai/ts23d';
 import type { QuadMesh } from './base.ts';
 import type { FaceHead } from './head.ts';
 import { LEFT, MIDLINE, mirrorY } from './landmarks.ts';
@@ -18,7 +18,7 @@ const mix = (a: Vec3, b: Vec3, t: number): Vec3 => [
   a[1] + (b[1] - a[1]) * t,
   a[2] + (b[2] - a[2]) * t,
 ];
-const d = (a: Vec3, b: Vec3): number => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+const d = (a: Vec3, b: Vec3): number => dmath.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
 /** Soft blob: 1 at the centre, 0 at radius r. */
 const blob = (p: Vec3, c: Vec3, r: number): number => {
   const t = clamp(1 - d(p, c) / r);
@@ -43,7 +43,7 @@ export function curvature(m: QuadMesh, n: Float64Array): Float64Array {
         cnt[u] = (cnt[u] ?? 0) + 1;
         el[u] =
           (el[u] ?? 0) +
-          Math.hypot(
+          dmath.hypot(
             (m.p[u * 3] ?? 0) - (m.p[v * 3] ?? 0),
             (m.p[u * 3 + 1] ?? 0) - (m.p[v * 3 + 1] ?? 0),
             (m.p[u * 3 + 2] ?? 0) - (m.p[v * 3 + 2] ?? 0),
@@ -165,7 +165,7 @@ export function paintSkin(m: QuadMesh, head: FaceHead, o: PaintOptions): (v: num
       const a = browIn[i] ?? nose;
       const b = browOut[i] ?? nose;
       const ab: Vec3 = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
-      const L2 = ab[0] ** 2 + ab[1] ** 2 + ab[2] ** 2 || 1;
+      const L2 = ab[0] * ab[0] + ab[1] * ab[1] + ab[2] * ab[2] || 1;
       const t = clamp(((p[0] - a[0]) * ab[0] + (p[1] - a[1]) * ab[1] + (p[2] - a[2]) * ab[2]) / L2);
       const q: Vec3 = [
         a[0] + ab[0] * t,
@@ -177,7 +177,7 @@ export function paintSkin(m: QuadMesh, head: FaceHead, o: PaintOptions): (v: num
       const w = (0.0068 - 0.003 * t) * s * (1 + 0.5 * age);
       // (Distance across the face only: the chord between the two landmarks runs up to a
       // centimetre under the brow's curve, so a 3D distance left the brow's middle bare.)
-      const across = Math.hypot(p[1] - q[1], p[2] - q[2]);
+      const across = dmath.hypot(p[1] - q[1], p[2] - q[2]);
       const band = clamp((1 - across / w) * 2.5) * clamp((p[0] - q[0] + 0.014 * s) / (0.004 * s));
       const hair = 0.8 + 0.2 * streak([p[0] * 0.3, p[1] * 3, p[2] * 0.3]);
       c = mix(c, o.brows, clamp(band * hair * 1.8));
@@ -201,7 +201,7 @@ export function paintSkin(m: QuadMesh, head: FaceHead, o: PaintOptions): (v: num
     if (age > 0.2) {
       const brow = browIn[0] ?? nose;
       for (const k of [0.3, 0.52, 0.74]) {
-        const z = brow[2] + (fh[2] - brow[2]) * k + Math.sin(p[1] * 60) * 0.0012 * s;
+        const z = brow[2] + (fh[2] - brow[2]) * k + dmath.sin(p[1] * 60) * 0.0012 * s;
         const line =
           clamp(1 - Math.abs(p[2] - z) / (0.0022 * s)) *
           clamp(1 - Math.abs(p[1]) / (0.05 * s)) *

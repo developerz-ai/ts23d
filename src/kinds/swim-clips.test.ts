@@ -6,6 +6,7 @@ import {
   type Clip,
   type CompiledAsset,
   checkClip,
+  dmath,
   type Quat,
   quatRotate,
   type Track,
@@ -51,7 +52,7 @@ const clipNamed = (clips: readonly Clip[], name: string): Clip => {
 const trackOf = (c: Clip, bone: string, path: Track['path']): Track | undefined =>
   c.tracks.find((t) => 'bone' in t && t.bone === bone && t.path === path);
 
-const angle = (q: Quat): number => 2 * Math.atan2(Math.hypot(q[0], q[1], q[2]), Math.abs(q[3]));
+const angle = (q: Quat): number => 2 * dmath.atan2(dmath.hypot(q[0], q[1], q[2]), Math.abs(q[3]));
 
 /** Peak-to-peak lateral swing of the last body station, 600 samples of the keyed clip. */
 function tailSwing(plan: BodyPlan, c: Clip): number {
@@ -250,7 +251,7 @@ describe('swimClips', () => {
     expect(end(l)[1] ?? 0).toBeGreaterThan(0.1);
     expect(end(r)[1] ?? 0).toBeLessThan(-0.1);
     const [lx, ly] = end(l);
-    const dir = (Math.atan2(ly ?? 0, lx ?? 1) * 180) / Math.PI;
+    const dir = (dmath.atan2(ly ?? 0, lx ?? 1) * 180) / Math.PI;
     expect(dir).toBeGreaterThan(55);
     expect(dir).toBeLessThan(85);
   });

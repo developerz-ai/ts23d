@@ -7,6 +7,7 @@
 // the right half is its mirror. s = x (m) in the middle; the end caps get [−1, 0] / [0, 1] extra.
 
 import type { Vec2, Vec3 } from '@developerz.ai/ts23d';
+import { dmath } from '@developerz.ai/ts23d';
 import { X_NOSE, X_TAIL } from '../dims.ts';
 import { curve, lerp3, smooth, splineAt } from '../lib/geo.ts';
 import type { Surface } from '../lib/grid.ts';
@@ -327,8 +328,8 @@ export const U = {
 } as const;
 export const U_MAX = 10;
 
-const superY = (t: number, p: number): number => Math.cos(t) ** (2 / p);
-const superX = (t: number, p: number): number => Math.sin(t) ** (2 / p);
+const superY = (t: number, p: number): number => dmath.pow(dmath.cos(t), 2 / p);
+const superX = (t: number, p: number): number => dmath.pow(dmath.sin(t), 2 / p);
 
 /**
  * The nose droops: ahead of the hood's front shut line (x 1.72 m) every line from the centre

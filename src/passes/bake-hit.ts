@@ -3,7 +3,7 @@
 // (RayGrid answers only "anything within tMax?", enough for occlusion, not for a normal bake).
 // Deterministic: ties go to the lower triangle index.
 
-import { boundsOf, type Mesh } from '../core/index.ts';
+import { boundsOf, dmath, type Mesh } from '../core/index.ts';
 
 export interface Hit {
   tri: number;
@@ -31,7 +31,7 @@ export class HitGrid {
     const b = boundsOf(mesh);
     const span = [0, 1, 2].map((k) => Math.max(1e-6, (b.max[k] ?? 0) - (b.min[k] ?? 0)));
     const vol = (span[0] ?? 1) * (span[1] ?? 1) * (span[2] ?? 1);
-    this.cell = Math.max(0.3 * Math.cbrt(vol / Math.max(1, n / 2)), Math.max(...span) / 200);
+    this.cell = Math.max(0.3 * dmath.cbrt(vol / Math.max(1, n / 2)), Math.max(...span) / 200);
     this.min = [b.min[0] - 1e-6, b.min[1] - 1e-6, b.min[2] - 1e-6];
     this.res = span.map((s) => Math.max(1, Math.ceil(s / this.cell) + 1)) as [
       number,

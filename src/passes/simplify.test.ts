@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { type Mesh, MeshBuilder, Ts23dError, triangleCount } from '../core/index.ts';
+import { dmath, type Mesh, MeshBuilder, Ts23dError, triangleCount } from '../core/index.ts';
 import { simplify } from './simplify.ts';
 
 /** A cube's faces subdivided n×n and pushed onto a bumpy sphere: closed, welded, no seams. */
@@ -7,12 +7,12 @@ function blob(n: number, r = 0.5): Mesh {
   const b = new MeshBuilder();
   const ids = new Map<string, number>();
   const at = (x: number, y: number, z: number): number => {
-    const l = Math.hypot(x, y, z);
+    const l = dmath.hypot(x, y, z);
     const [ux, uy, uz] = [x / l, y / l, z / l];
     const k = `${ux.toFixed(6)},${uy.toFixed(6)},${uz.toFixed(6)}`;
     const hit = ids.get(k);
     if (hit !== undefined) return hit;
-    const rr = r * (1 + 0.08 * Math.sin(5 * ux) * Math.cos(4 * uz));
+    const rr = r * (1 + 0.08 * dmath.sin(5 * ux) * dmath.cos(4 * uz));
     const id = b.vertex({
       p: [ux * rr, uy * rr, uz * rr],
       n: [ux, uy, uz],
@@ -117,7 +117,7 @@ describe('simplify', () => {
   test('keeps the shape: every simplified vertex stays on the original surface', () => {
     const s = simplify(blob(24), { targetTris: 500 }).mesh;
     for (let i = 0; i < s.positions.length; i += 3) {
-      const r = Math.hypot(s.positions[i] ?? 0, s.positions[i + 1] ?? 0, s.positions[i + 2] ?? 0);
+      const r = dmath.hypot(s.positions[i] ?? 0, s.positions[i + 1] ?? 0, s.positions[i + 2] ?? 0);
       expect(r).toBeGreaterThan(0.45);
       expect(r).toBeLessThan(0.55);
     }

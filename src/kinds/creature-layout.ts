@@ -3,6 +3,7 @@
 // head pitch), the posed tail chain, and the area of a wing membrane outline.
 
 import type { Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import { allometricLimbR, type Bones } from './creature-bones.ts';
 import { v3 } from './creature-curve.ts';
 import { familyOf } from './creature-family.ts';
@@ -51,7 +52,7 @@ export function tailChain(
           : (-55 - 30 * t + bushy * (10 * t - 11)) * deg;
     const prev = pts[i - 1] ?? root;
     pts.push(
-      i === 0 ? root : v3.add(prev, [(-Math.cos(ang) * len) / n, 0, (Math.sin(ang) * len) / n]),
+      i === 0 ? root : v3.add(prev, [(-dmath.cos(ang) * len) / n, 0, (dmath.sin(ang) * len) / n]),
     );
   }
   // A hanging tail must stay off the ground: lift the whole curve if the tip would dip under it.
@@ -60,8 +61,10 @@ export function tailChain(
   return tube(
     pts.map((p) => [p[0], p[1], p[2] + lift * (p === root ? 0 : 1)]),
     (t) => {
-      const bare = (1 - 0.65 * t ** 1.5) * (0.85 + 0.3 * Math.sin(Math.PI * Math.min(1, t * 1.4)));
-      const brush = (0.5 + 0.58 * Math.sin(Math.PI * t ** 0.8)) * (1 - 0.65 * t ** 5);
+      const bare =
+        (1 - 0.65 * dmath.pow(t, 1.5)) * (0.85 + 0.3 * dmath.sin(Math.PI * Math.min(1, t * 1.4)));
+      const brush =
+        (0.5 + 0.58 * dmath.sin(Math.PI * dmath.pow(t, 0.8))) * (1 - 0.65 * dmath.pow(t, 5));
       return r0 * (bare + (brush - bare) * bushy);
     },
   );

@@ -4,7 +4,7 @@
 // Heavy (LOD0 compiles): `bun test recipes/amur_tiger`.
 
 import { describe, expect, it } from 'bun:test';
-import { compile, massProperties, type Vec3, worldMeshes } from '@developerz.ai/ts23d';
+import { compile, dmath, massProperties, type Vec3, worldMeshes } from '@developerz.ai/ts23d';
 import {
   assertCentreOfMassInside,
   assertLodSilhouette,
@@ -156,9 +156,9 @@ describe('eyes sit in sockets', () => {
         const th = (b / 6) * Math.PI;
         const ph = (a / 12) * Math.PI * 2;
         const d: Vec3 = [
-          -Math.abs(Math.cos(th)) - 0.2,
-          Math.sin(th) * Math.cos(ph),
-          Math.sin(th) * Math.sin(ph),
+          -Math.abs(dmath.cos(th)) - 0.2,
+          dmath.sin(th) * dmath.cos(ph),
+          dmath.sin(th) * dmath.sin(ph),
         ];
         n++;
         if (blocked(v3.norm(d), r * 1.8)) k++;

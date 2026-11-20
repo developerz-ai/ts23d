@@ -4,6 +4,8 @@
 // (counter-clockwise seen from the front) and its wall chains (outline runs with the outside on
 // their right) so text-vector.ts can raise it into a solid without knowing its shape.
 
+import { dmath } from '../core/index.ts';
+
 export interface Piece {
   /** x0, y0, x1, y1, … */
   readonly xy: number[];
@@ -75,7 +77,7 @@ export function arc(
   const out: number[] = [];
   for (let k = 0; k <= steps; k++) {
     const a = a0 + ((a1 - a0) * k) / steps;
-    out.push(cx + rad * Math.cos(a), cy + rad * Math.sin(a));
+    out.push(cx + rad * dmath.cos(a), cy + rad * dmath.sin(a));
   }
   return out;
 }

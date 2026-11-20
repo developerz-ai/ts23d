@@ -13,6 +13,7 @@ import {
   type BuildContext,
   boundsOf,
   defineAsset,
+  dmath,
   hex,
   type Mesh,
   materialVariant,
@@ -163,7 +164,7 @@ function crownSnag(cap: Captured, lod: number): Mesh {
   const trunk = cap.trunk;
   if (!trunk) return merge([]);
   const { c } = trunkAt(trunk, at[2] - 0.3);
-  const d = Math.hypot(0.75, -0.55, 0.32);
+  const d = dmath.hypot(0.75, -0.55, 0.32);
   const limb = brokenLimb(c, [0.75 / d, -0.55 / d, 0.32 / d], 8, 0.22, lod === 0 ? 7 : 5);
   return translate(limb, [-at[0], -at[1], -at[2]]);
 }
@@ -200,7 +201,7 @@ function far(
   const crown = clumpCards(leaves, FAR.clumps, CARDS.cell, FAR.value, FAR.spread);
   // Clump centres in world space, the outermost low ones carried by limbs from the bole top.
   const centres = crown.centres.map((c): Vec3 => [c[0] + at[0], c[1] + at[1], c[2] + at[2]]);
-  const reach = (c: Vec3): number => Math.hypot(c[0] - at[0], c[1] - at[1]) - 0.35 * c[2];
+  const reach = (c: Vec3): number => dmath.hypot(c[0] - at[0], c[1] - at[1]) - 0.35 * c[2];
   const ends = [...centres].sort((a, b) => reach(b) - reach(a)).slice(0, FAR.limbs);
   const wood = merge([low, farLimbs([at[0], at[1], bole], ends, 0.32)]);
   ctx.part('trunk', pineBark(wood, 'bark_oak', MOSS, noise.moss));

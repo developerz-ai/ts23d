@@ -268,13 +268,13 @@
     },
     {
       "name": "walk",
-      "seconds": 0.8441640742163852,
+      "seconds": 0.844164,
       "loop": true,
       "speed": 1.167
     },
     {
       "name": "flap",
-      "seconds": 1.1111111111111112,
+      "seconds": 1.111111,
       "loop": true,
       "speed": 0
     }

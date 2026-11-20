@@ -5,6 +5,7 @@
 // params (window_sash): cols 2 · rows 2 (panes per sash) · frame 0.07 · bar 0.022
 // params (door_panel): stile 0.12
 
+import { dmath } from '../../core/index.ts';
 import { type Canvas, noiseAt, param, smooth } from './canvas.ts';
 import { dome, rect } from './shapes.ts';
 import type { StripRecipe } from './types.ts';
@@ -98,7 +99,8 @@ export function paintSign(c: Canvas, r: StripRecipe, _seed: number): void {
       const moulding = inner < 0 ? dome(Math.abs(-inner - border / 2), border / 2) : 0;
       let screw = 0;
       for (const sx of screws)
-        for (const sy of screws) screw = Math.max(screw, dome(Math.hypot(xm - sx, ym - sy), 0.012));
+        for (const sy of screws)
+          screw = Math.max(screw, dome(dmath.hypot(xm - sx, ym - sy), 0.012));
       c.height[i] = 0.006 * moulding + 0.002 * screw - 0.002 * (1 - smooth(0, 0.004, edge));
       c.tone[i] = inner > 0 ? 0.95 : 0.85 + 0.1 * moulding;
       if (screw > 0) {

@@ -3,6 +3,7 @@ import {
   boundsOf,
   compile,
   defineAsset,
+  dmath,
   rotateZ,
   type Vec3,
   worldTransforms,
@@ -102,8 +103,8 @@ it('re-parents to the nearest pivot ancestor and keeps moving-under-moving chain
   expect(hub?.parent).toBe('turret');
   expect(hub?.yaw).toBeCloseTo(0.2, 9);
   // Turret-local: the mount's 0.2 rad yaw turns the hub's [0, 0.5, 0] offset.
-  expect(hub?.at[0] ?? 9).toBeCloseTo(1 - 0.5 * Math.sin(0.2), 9);
-  expect(hub?.at[1] ?? 9).toBeCloseTo(0.5 * Math.cos(0.2), 9);
+  expect(hub?.at[0] ?? 9).toBeCloseTo(1 - 0.5 * dmath.sin(0.2), 9);
+  expect(hub?.at[1] ?? 9).toBeCloseTo(0.5 * dmath.cos(0.2), 9);
   expect(blade?.parent).toBe('hub');
   expect(blade?.at).toEqual([0, 0, 0.2]);
 });
@@ -213,7 +214,7 @@ it('bakes a skinned part under a still group into the root body, in world space'
   const corner: Vec3 = [0.1, 0.1, 1];
   const want = placed(corner);
   const near = (v: number, to: Vec3): number =>
-    Math.hypot(...to.map((x, k) => (positions[v * 3 + k] ?? 0) - x));
+    dmath.norm(to.map((x, k) => (positions[v * 3 + k] ?? 0) - x));
   const v = [...Array(positions.length / 3).keys()].find((i) => near(i, want) < 1e-5) ?? -1;
   expect(v).toBeGreaterThanOrEqual(0);
   const skin = (json['skins'] as { joints: number[]; inverseBindMatrices: number }[])[0];

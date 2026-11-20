@@ -5,6 +5,8 @@
 // nature: its own pass set, with a gentle absolute tolerance (a hard luminance stop leaves dark
 // rims along the penumbra). Deterministic.
 
+import { dmath } from '../../core/index.ts';
+
 const H = [1 / 16, 1 / 4, 3 / 8, 1 / 4, 1 / 16];
 const EPS = 0.02;
 
@@ -30,7 +32,7 @@ export interface DenoiseOptions {
 function unitNormals(n: Float32Array): Float32Array {
   const out = new Float32Array(n.length);
   for (let p = 0; p < n.length; p += 3) {
-    const l = Math.hypot(n[p] ?? 0, n[p + 1] ?? 0, n[p + 2] ?? 0);
+    const l = dmath.hypot(n[p] ?? 0, n[p + 1] ?? 0, n[p + 2] ?? 0);
     if (l < 1e-6) continue;
     out[p] = (n[p] ?? 0) / l;
     out[p + 1] = (n[p + 1] ?? 0) / l;
@@ -97,7 +99,7 @@ export function denoise(i: DenoiseInput, o: DenoiseOptions = {}): Float32Array {
               (H[j + 2] ?? 0) *
               (H[k + 2] ?? 0) *
               wn *
-              Math.exp(-(da0 * da0 + da1 * da1 + da2 * da2) / 0.004 - rel * rel);
+              dmath.exp(-(da0 * da0 + da1 * da1 + da2 * da2) / 0.004 - rel * rel);
             r += (cur[q] ?? 0) * w;
             g += (cur[q + 1] ?? 0) * w;
             b += (cur[q + 2] ?? 0) * w;
@@ -153,7 +155,7 @@ export function denoiseShadow(
             const sq = seen[q] ?? 0;
             if (sq <= 0) continue;
             const d = ((cur[q] ?? 1) - vp) / t;
-            const w = (H[j + 2] ?? 0) * (H[k + 2] ?? 0) * sq * Math.exp(-d * d);
+            const w = (H[j + 2] ?? 0) * (H[k + 2] ?? 0) * sq * dmath.exp(-d * d);
             s += (cur[q] ?? 1) * w;
             ws += w;
           }

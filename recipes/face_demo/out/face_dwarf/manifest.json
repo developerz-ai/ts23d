@@ -62,8 +62,8 @@
   "measures": [
     {
       "label": "eye spacing (pupil to pupil)",
-      "spec": 0.06534528,
-      "measured": 0.06452046614140272,
+      "spec": 0.065345,
+      "measured": 0.06452,
       "source": "base IPD 61.6 mm (MakeHuman hm08) × race eye spacing × head scale"
     }
   ],

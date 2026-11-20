@@ -4,7 +4,7 @@
 // GAP wide and return flanges, built at the LOD's resolution.
 
 import type { Lod, Mesh, Vec3 } from '@developerz.ai/ts23d';
-import { merge } from '@developerz.ai/ts23d';
+import { dmath, merge } from '@developerz.ai/ts23d';
 import {
   ARCH_F,
   ARCH_R,
@@ -86,7 +86,7 @@ export function holeG(h: Hole, s: number): number {
   const t = Math.abs((s - h.sc) / h.hs);
   if (t >= 1) return 0;
   const n = h.n ?? 4;
-  return (1 - t ** n) ** (1 / n);
+  return dmath.pow(1 - dmath.pow(t, n), 1 / n);
 }
 
 /** Hole u-centre at s. */
@@ -95,7 +95,7 @@ export const holeUc = (h: Hole, s: number): number => h.uc + (h.lean ?? 0) * (s 
 /** Rows that resolve a hole's rounded ends (sine spacing, dense at the tips). */
 export function holeRows(h: Hole, k = 24): number[] {
   const out: number[] = [];
-  for (let i = -k; i <= k; i++) out.push(h.sc + h.hs * Math.sin((i / k) * (Math.PI / 2)));
+  for (let i = -k; i <= k; i++) out.push(h.sc + h.hs * dmath.sin((i / k) * (Math.PI / 2)));
   return out;
 }
 

@@ -3,6 +3,7 @@
 // crescent cut (a wide smile, corners lifted) lined with small pointed teeth along the dental arch
 // when it is high. Head units, mirrored across Y.
 
+import { dmath } from '../core/index.ts';
 import type { SculptEdit } from '../primitives/index.ts';
 import { alongZ } from './head-geom.ts';
 import type { HeadLayout } from './head-layout.ts';
@@ -81,11 +82,11 @@ export function mouthEdits(p: HeadParams, l: HeadLayout, teeth = true): SculptEd
   const n = teeth ? 3 : 0;
   for (let i = 0; i < n; i++) {
     const a = (0.25 + i) * 0.36;
-    const y = Math.sin(a) * mw * 0.82;
-    const x = l.mouthX - 0.03 - (1 - Math.cos(a)) * back * 1.3;
+    const y = dmath.sin(a) * mw * 0.82;
+    const x = l.mouthX - 0.03 - (1 - dmath.cos(a)) * back * 1.3;
     // Follow the crescent: roots just inside its upper and lower edges, corners higher.
-    const lo = z0 - h * Math.sqrt(Math.max(0, 1 - (y / mw) ** 2));
-    const hi = z0 + h * 0.7 - h * 0.9 * Math.sqrt(Math.max(0, 1 - (y / (mw * 1.1)) ** 2));
+    const lo = z0 - h * Math.sqrt(Math.max(0, 1 - dmath.pow(y / mw, 2)));
+    const hi = z0 + h * 0.7 - h * 0.9 * Math.sqrt(Math.max(0, 1 - dmath.pow(y / (mw * 1.1), 2)));
     const len = 0.03 + g * 0.008 - i * 0.004;
     const r = 0.014 + g * 0.004 - i * 0.0015;
     out.push(

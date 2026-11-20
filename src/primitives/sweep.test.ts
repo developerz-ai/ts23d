@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { boundsOf, Ts23dError, triangleCount, type Vec3 } from '../core/index.ts';
+import { boundsOf, dmath, Ts23dError, triangleCount, type Vec3 } from '../core/index.ts';
 import { zeroArea } from './closed.ts';
 import { cylinder } from './lathe.ts';
 import { sweep } from './sweep.ts';
@@ -78,7 +78,7 @@ describe('sweep', () => {
     }
     // Same surface: every sweep vertex sits on the r = 0.5 cylinder or a cap.
     for (let i = 0; i < s.positions.length; i += 3) {
-      const r = Math.hypot(s.positions[i] ?? 0, s.positions[i + 1] ?? 0);
+      const r = dmath.hypot(s.positions[i] ?? 0, s.positions[i + 1] ?? 0);
       const z = s.positions[i + 2] ?? 0;
       expect(Math.abs(r - 0.5) < 1e-5 || r < 1e-6 || z < 1e-6 || z > 2 - 1e-6).toBe(true);
     }
@@ -103,8 +103,8 @@ describe('sweep', () => {
 
   it('parallel transport never flips the frame on a helix', () => {
     const path: Vec3[] = Array.from({ length: 40 }, (_, i) => [
-      Math.cos(i * 0.3),
-      Math.sin(i * 0.3),
+      dmath.cos(i * 0.3),
+      dmath.sin(i * 0.3),
       i * 0.1,
     ]);
     const f = transportFrames(path);

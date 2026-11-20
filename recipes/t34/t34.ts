@@ -11,6 +11,7 @@ import {
   cross,
   cylinder,
   defineFamily,
+  dmath,
   hex,
   type Lod,
   lathe,
@@ -80,10 +81,10 @@ const PANNIER_Z = 1.0;
 const DECK = 1.45;
 const HULL_HALF = 2.96;
 const NOSE: Vec2 = [HULL_HALF, 0.78];
-const TAN60 = Math.tan(Math.PI / 3);
+const TAN60 = dmath.tan(Math.PI / 3);
 /** x of the glacis at height z (60° from vertical). */
 const glacisX = (z: number): number => NOSE[0] - (z - NOSE[1]) * TAN60;
-const REAR_PITCH = Math.atan2(-0.66, 0.75);
+const REAR_PITCH = dmath.atan2(-0.66, 0.75);
 const TURRET_AT: Vec3 = [0.45, 0, DECK];
 
 type Circle = { readonly x: number; readonly z: number; readonly r: number };
@@ -112,7 +113,7 @@ function hullCw(pts: Vec2[]): Vec2[] {
 function resample(poly: readonly Vec2[], n: number): Station[] {
   const seg = poly.map((a, i) => {
     const b = poly[(i + 1) % poly.length] as Vec2;
-    return Math.hypot(b[0] - a[0], b[1] - a[1]);
+    return dmath.hypot(b[0] - a[0], b[1] - a[1]);
   });
   const total = seg.reduce((s, l) => s + l, 0);
   const out: Station[] = [];
@@ -126,7 +127,7 @@ function resample(poly: readonly Vec2[], n: number): Station[] {
     const t = (d - acc) / (seg[i] || 1);
     out.push({
       p: [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t],
-      pitch: Math.atan2(-(b[1] - a[1]), b[0] - a[0]),
+      pitch: dmath.atan2(-(b[1] - a[1]), b[0] - a[0]),
       len: total / n,
     });
   }
@@ -140,7 +141,7 @@ function beltLine(wheels: readonly Circle[], ends: readonly Circle[], sag: numbe
   for (const c of [...wheels, ...ends])
     for (let i = 0; i < 72; i++) {
       const t = (i / 72) * Math.PI * 2;
-      pts.push([c.x + (c.r + off) * Math.cos(t), c.z + (c.r + off) * Math.sin(t)]);
+      pts.push([c.x + (c.r + off) * dmath.cos(t), c.z + (c.r + off) * dmath.sin(t)]);
     }
   const dense = resample(hullCw(pts), 600);
   const x0 = Math.min(...ends.map((c) => c.x));
@@ -149,13 +150,15 @@ function beltLine(wheels: readonly Circle[], ends: readonly Circle[], sag: numbe
     Math.max(
       0,
       ...wheels.map((w) =>
-        Math.abs(x - w.x) < w.r + off ? w.z + Math.sqrt((w.r + off) ** 2 - (x - w.x) ** 2) : 0,
+        Math.abs(x - w.x) < w.r + off
+          ? w.z + Math.sqrt(dmath.pow(w.r + off, 2) - dmath.pow(x - w.x, 2))
+          : 0,
       ),
     );
   return dense.map(({ p, pitch }) => {
-    const topRun = Math.cos(pitch) > 0.8 && p[1] > WHEEL_Z;
+    const topRun = dmath.cos(pitch) > 0.8 && p[1] > WHEEL_Z;
     if (!topRun || p[0] <= x0 || p[0] >= x1) return p;
-    const drop = sag * Math.sin((Math.PI * (p[0] - x0)) / (x1 - x0));
+    const drop = sag * dmath.sin((Math.PI * (p[0] - x0)) / (x1 - x0));
     return [p[0], Math.max(env(p[0]), p[1] - drop)];
   });
 }
@@ -316,7 +319,9 @@ function wheelHalf(lod: Lod, r: number, w: number, ribs: number, paint: Vec3, in
       const a = (i / ribs) * Math.PI * 2;
       parts.push(place(rib, { at: [0, h - 0.035, 0], pitch: a }));
       const b = a + Math.PI / ribs;
-      parts.push(place(bolt, { at: [Math.sin(b) * r * 0.16, h + 0.045, Math.cos(b) * r * 0.16] }));
+      parts.push(
+        place(bolt, { at: [dmath.sin(b) * r * 0.16, h + 0.045, dmath.cos(b) * r * 0.16] }),
+      );
     }
   }
   return merge(parts);
@@ -369,7 +374,7 @@ function sprocket(lod: Lod, r: number, paint: Vec3): Mesh {
           length: 0.2,
           segments: 8,
           axis: 'y',
-          at: [Math.cos(a) * (r - 0.06), 0, Math.sin(a) * (r - 0.06)],
+          at: [dmath.cos(a) * (r - 0.06), 0, dmath.sin(a) * (r - 0.06)],
           color: steel,
         }),
       );
@@ -461,7 +466,7 @@ function lettering(text: string, h: number): Vec2[][] {
     for (const [x0, y0, x1, y1] of GLYPHS[ch] ?? []) {
       const a: Vec2 = [(x0 + i * 5.5) * k, y0 * k];
       const b: Vec2 = [(x1 + i * 5.5) * k, y1 * k];
-      const l = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1;
+      const l = dmath.hypot(b[0] - a[0], b[1] - a[1]) || 1;
       const d: Vec2 = [((b[0] - a[0]) / l) * (t / 2), ((b[1] - a[1]) / l) * (t / 2)];
       const n: Vec2 = [-d[1], d[0]];
       out.push([
@@ -566,8 +571,8 @@ function fillet(poly: readonly Vec3[], d: number, n: number): Vec3[] {
   poly.forEach((p, i) => {
     const a = sub(poly[(i + poly.length - 1) % poly.length] as Vec3, p);
     const b = sub(poly[(i + 1) % poly.length] as Vec3, p);
-    const la = Math.hypot(...a);
-    const lb = Math.hypot(...b);
+    const la = dmath.norm(a);
+    const lb = dmath.norm(b);
     const k = Math.min(d, 0.42 * la, 0.42 * lb);
     for (let j = 0; j <= n; j++) {
       const t = j / n;
@@ -603,7 +608,7 @@ function castShell(shell: Shell, lod: Lod, color: Vec3): Mesh {
     return [q[0] + (p[0] - q[0]) * f, q[1] + (p[1] - q[1]) * f, h - c];
   });
   const roof = t.map((q): Vec3 => {
-    const l = Math.hypot(q[0] - cen[0], q[1] - cen[1]) || 1;
+    const l = dmath.hypot(q[0] - cen[0], q[1] - cen[1]) || 1;
     return [q[0] + ((cen[0] - q[0]) * c) / l, q[1] + ((cen[1] - q[1]) * c) / l, h];
   });
   const arc = (u: number): Vec3[] =>
@@ -777,7 +782,7 @@ const t34Family = defineFamily<Params>({
           planar({
             points: Array.from({ length: 8 }, (_, i): Vec3 => {
               const a = -((i + 0.5) / 8) * Math.PI * 2;
-              return [Math.cos(a) * rr, y, Math.sin(a) * rr];
+              return [dmath.cos(a) * rr, y, dmath.sin(a) * rr];
             }),
             color,
           });
@@ -1029,7 +1034,7 @@ const t34Family = defineFamily<Params>({
       // so the plate edges carry the chipping (crisp, where vertex colour could only smudge).
       const beadRng = ctx.rng.fork('beads');
       const bead = (from: Vec3, to: Vec3): Mesh => {
-        const n = Math.max(1, Math.round(Math.hypot(...sub(to, from)) / 0.12));
+        const n = Math.max(1, Math.round(dmath.norm(sub(to, from)) / 0.12));
         const at = (k: number): Vec3 => [
           from[0] + ((to[0] - from[0]) * k) / n,
           from[1] + ((to[1] - from[1]) * k) / n,
@@ -1147,7 +1152,7 @@ const t34Family = defineFamily<Params>({
             lathe({
               profile: Array.from({ length: 7 }, (_, i): Vec2 => {
                 const a = (i / 6) * Math.PI * 2;
-                return [0.05 + 0.016 * Math.cos(a), 0.016 * Math.sin(a)];
+                return [0.05 + 0.016 * dmath.cos(a), 0.016 * dmath.sin(a)];
               }),
               segments: 10,
               axis: 'y',
@@ -1325,7 +1330,7 @@ const t34Family = defineFamily<Params>({
           turret.push(
             box({
               size: [0.09, 0.09, 0.07],
-              at: [-0.4 + Math.cos(a) * 0.33, 0.38 + Math.sin(a) * 0.33, roofZ + 0.12],
+              at: [-0.4 + dmath.cos(a) * 0.33, 0.38 + dmath.sin(a) * 0.33, roofZ + 0.12],
               color: black,
             }),
           );
@@ -1371,7 +1376,7 @@ const t34Family = defineFamily<Params>({
         const a = b[i0] as Vec3;
         const c = b[i1] as Vec3;
         const up = t[i0] as Vec3;
-        const len = Math.hypot(c[0] - a[0], c[1] - a[1]);
+        const len = dmath.hypot(c[0] - a[0], c[1] - a[1]);
         turret.push(plateDecal(text, armour, [a, c, up], [(len - width) / 2, 0.24], white));
       }
     }

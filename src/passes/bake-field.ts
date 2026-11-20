@@ -5,7 +5,7 @@
 // to the mesh itself: edge-normal curvature and RayGrid rays. Deterministic: fixed stencils,
 // fixed sweep order, no randomness.
 
-import { type Mesh, Ts23dError, type Vec3 } from '../core/index.ts';
+import { dmath, type Mesh, Ts23dError, type Vec3 } from '../core/index.ts';
 import { type AoOptions, bakeAo } from './bake-ao.ts';
 import { RayGrid } from './ray-grid.ts';
 
@@ -109,7 +109,7 @@ function neighbours(m: Mesh): { node: Int32Array; adj: number[][] } {
 }
 
 const unit = (v: Vec3): Vec3 => {
-  const l = Math.hypot(v[0], v[1], v[2]) || 1;
+  const l = dmath.hypot(v[0], v[1], v[2]) || 1;
   return [v[0] / l, v[1] / l, v[2] / l];
 };
 
@@ -134,7 +134,8 @@ function meshCurvature(m: Mesh, node: Int32Array, adj: number[][]): Float64Array
       const q = at3(pos, j);
       const d: Vec3 = [p[0] - q[0], p[1] - q[1], p[2] - q[2]];
       s +=
-        (2 * (n[0] * d[0] + n[1] * d[1] + n[2] * d[2])) / (d[0] ** 2 + d[1] ** 2 + d[2] ** 2 || 1);
+        (2 * (n[0] * d[0] + n[1] * d[1] + n[2] * d[2])) /
+        (d[0] * d[0] + d[1] * d[1] + d[2] * d[2] || 1);
     }
     out[g] = (adj[g]?.length ?? 0) > 0 ? s / (adj[g]?.length ?? 1) : 0;
   }

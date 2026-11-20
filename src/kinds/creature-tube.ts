@@ -3,7 +3,7 @@
 // gradient root → tip — finer than any sculpt cell could hold. The root sits inside the flesh it
 // grows from (toe, gum), so QA `connections` sees it rooted.
 
-import { type Mesh, MeshBuilder, type Vec3 } from '../core/index.ts';
+import { dmath, type Mesh, MeshBuilder, type Vec3 } from '../core/index.ts';
 import { stripRect } from '../material/index.ts';
 import { transportFrames } from '../primitives/index.ts';
 import { arc, mixRgb, smoothstep, v3 } from './creature-curve.ts';
@@ -23,7 +23,7 @@ export function tubeMesh(nodes: readonly SkinNode[], sides: number, colors: read
   const b = new MeshBuilder();
   const ringDir = (f: { n: Vec3; b: Vec3 }, j: number): Vec3 => {
     const a = (j / sides) * Math.PI * 2;
-    return v3.add(v3.mul(f.n, Math.cos(a)), v3.mul(f.b, Math.sin(a)));
+    return v3.add(v3.mul(f.n, dmath.cos(a)), v3.mul(f.b, dmath.sin(a)));
   };
   const rings: number[][] = [];
   kept.forEach((k, i) => {
@@ -89,7 +89,7 @@ export function keratin(o: KeratinOptions): Mesh {
   const tip = o.radius * 0.12;
   const nodes = path.map((at, i) => ({
     at,
-    r: tip + (o.radius - tip) * (1 - i / n) ** 0.7,
+    r: tip + (o.radius - tip) * dmath.pow(1 - i / n, 0.7),
   }));
   const colors = nodes.map((_, i) => {
     const t = i / n;

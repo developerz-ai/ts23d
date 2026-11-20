@@ -4,7 +4,7 @@
 // the edges to a base height: a solid map tile / diorama block that stands on z = 0.
 //   triangles = 2 · cx · cy + (skirt ? 4 · (cx + cy) : 0)
 
-import { type Mesh, MeshBuilder, normalize, type Vec3 } from '../core/index.ts';
+import { dmath, type Mesh, MeshBuilder, normalize, type Vec3 } from '../core/index.ts';
 import { mappedOnto, type StripId, stripRect } from '../material/index.ts';
 import { count, invalid } from './check.ts';
 import { mirroredV, stripVMetres } from './strip-uv.ts';
@@ -97,7 +97,7 @@ function skirt(b: MeshBuilder, o: HeightfieldOptions, rect: ReturnType<typeof st
     });
   let run = 0;
   for (const [sx, sy, dx, dy, n, nrm] of edges) {
-    const step = Math.hypot(dx, dy);
+    const step = dmath.hypot(dx, dy);
     for (let k = 0; k < n; k++) {
       const [ax, ay, bx, by] = [sx + dx * k, sy + dy * k, sx + dx * (k + 1), sy + dy * (k + 1)];
       const az = o.height(ax, ay);

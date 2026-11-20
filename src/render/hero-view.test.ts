@@ -3,6 +3,7 @@ import {
   type CompiledAsset,
   compile,
   defineAsset,
+  dmath,
   type HeroView,
   Ts23dError,
 } from '../core/index.ts';
@@ -59,7 +60,7 @@ describe('per-asset hero view', () => {
     const view = compile(def({ eye: [6, -4, 3], target: [0, 0, 0.5] }));
     const cam = cameraFor(view, small);
     expect(cam.eye).toEqual([6, -4, 3]);
-    const l = Math.hypot(6, 4, 2.5);
+    const l = dmath.hypot(6, 4, 2.5);
     expect(cam.f[0]).toBeCloseTo(-6 / l, 9);
     expect(cam.f[2]).toBeCloseTo(-2.5 / l, 9);
     // An orbit flag replaces the viewpoint; a size or fov flag keeps it.

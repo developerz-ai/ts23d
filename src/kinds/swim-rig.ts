@@ -3,7 +3,7 @@
 // amplitude (about 8 %, doc section 1), so the envelope is scaled until the MEASURED tail meets the
 // target; the shape does not depend on frequency, so one gain serves every clip of that envelope.
 
-import { Ts23dError } from '../core/index.ts';
+import { dmath, Ts23dError } from '../core/index.ts';
 import type { BodyPlan, PlanChain } from './body-plan-types.ts';
 import { type ChainClipSpec, type ChainDrive, chainSampler, tipOf } from './chain-bake.ts';
 import { ds21Envelope, expEnvelope, serpenoid, TAU, travellingWave } from './chain-drivers.ts';
@@ -75,7 +75,7 @@ export function checkTrunk(body: PlanChain): 1 | -1 {
   if (!first || !last) return invalid(`chain '${body.id}' has no links`, 'give it links');
   const [a, b] = [first.bone.head, last.bone.tail];
   const v = [b[0] - a[0], b[1] - a[1], b[2] - a[2]] as const;
-  if (!(v[0] < -0.9 * Math.hypot(v[0], v[1], v[2])))
+  if (!(v[0] < -0.9 * dmath.hypot(v[0], v[1], v[2])))
     invalid(
       `trunk '${body.id}' does not run head to tail along -X`,
       'author the trunk with its head at +X: the root travels along +X',
@@ -179,7 +179,7 @@ export function finDrives(
   const fins = rig.pectorals.map((chain) => ({
     chain,
     field: {
-      base: (t: number) => ({ pitch: pectoral * Math.sin(TAU * f * t) }),
+      base: (t: number) => ({ pitch: pectoral * dmath.sin(TAU * f * t) }),
     },
   }));
   return [...lobes, ...fins];

@@ -3,7 +3,7 @@
 // compiles): run with `bun test recipes/dragon`.
 
 import { describe, expect, it } from 'bun:test';
-import { compile, type SculptEdit, sculptField } from '@developerz.ai/ts23d';
+import { compile, dmath, type SculptEdit, sculptField } from '@developerz.ai/ts23d';
 import {
   assertConnected,
   assertLodSilhouette,
@@ -57,7 +57,7 @@ describe('proportions over the bind skeleton (pose.ts)', () => {
     // The neck is `neck` × as long, base to end.
     const base = SK.neck[0] ?? [0, 0, 0];
     const len = (a: readonly number[], b: readonly number[]): number =>
-      Math.hypot((a[0] ?? 0) - (b[0] ?? 0), (a[2] ?? 0) - (b[2] ?? 0));
+      dmath.hypot((a[0] ?? 0) - (b[0] ?? 0), (a[2] ?? 0) - (b[2] ?? 0));
     expect(len(end, posePoint(base, 'body')) / len(SK.head.joint, base)).toBeCloseTo(
       PROPORTIONS.neck,
       6,

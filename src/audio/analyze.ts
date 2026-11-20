@@ -2,12 +2,13 @@
 // frequency (Goertzel), the strongest frequency in a band, RMS level and the loop-seam jump.
 
 import type { SoundClip } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 
 /** Normalised magnitude of `freq` (Hz) in mono `clip` (Goertzel over the whole clip). */
 export function magnitudeAt(clip: SoundClip, freq: number): number {
   const x = clip.samples;
   const w = (2 * Math.PI * freq) / clip.sampleRate;
-  const c = 2 * Math.cos(w);
+  const c = 2 * dmath.cos(w);
   let s1 = 0;
   let s2 = 0;
   for (let i = 0; i < x.length; i++) {

@@ -5,6 +5,7 @@ import { describe, expect, it } from 'bun:test';
 import {
   compile,
   creaturePlan,
+  dmath,
   gaitFindings,
   massProperties,
   type Vec3,
@@ -14,7 +15,7 @@ import { WOLF } from '../wolf/wolf.ts';
 import { FOX, FOX_DATA, fox, REAL } from './fox.ts';
 
 const SLOW = 120_000;
-const dist = (a: Vec3, b: Vec3): number => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+const dist = (a: Vec3, b: Vec3): number => dmath.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
 
 describe('red fox from the wolf family (Wikipedia: Red fox; Wikidata Q8332)', () => {
   const { bones } = creaturePlan(FOX);

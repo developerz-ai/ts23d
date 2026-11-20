@@ -15,6 +15,7 @@
 
 import {
   createRng,
+  dmath,
   type Field,
   hex,
   type IntendedCrease,
@@ -108,8 +109,8 @@ export function hiddenBody(skin: Field): Field {
 export const mantleRegion: Field = (p) => {
   const z0 = L.mz - 0.3 * H;
   const w = 0.07 + Math.max(0, z0 - p[2]) * 0.5;
-  const a = Math.atan2(p[1], -p[0]);
-  const hem = L.mz - 0.97 * H + 0.004 * Math.cos(a * 11);
+  const a = dmath.atan2(p[1], -p[0]);
+  const hem = L.mz - 0.97 * H + 0.004 * dmath.cos(a * 11);
   return Math.max(hem - p[2], Math.min(p[0] - (L.gx - 0.36 * H), w - Math.abs(p[1])));
 };
 
@@ -204,7 +205,7 @@ export function outfitLayers(skin: Surface, lod: number): Layer[] {
       cloth(tunicCloth, { bounds: BOX, color: K.tunic, blend: 0 }),
       // An old spill down the front, and the cloth darkened where the cord rubs it.
       paint(
-        (p) => Math.hypot(p[1] + 0.03, (p[2] - (L.mz - 0.7 * H)) * 0.5) - 0.03 + 0.03 * BLOTCH(p),
+        (p) => dmath.hypot(p[1] + 0.03, (p[2] - (L.mz - 0.7 * H)) * 0.5) - 0.03 + 0.03 * BLOTCH(p),
         K.tunicStain,
         0.016,
       ),
@@ -355,7 +356,7 @@ function patchRegion(mantle: Field): Field {
   return (p) => {
     const u = Math.max(Math.abs((p[0] - at[0]) * 0.94 + (p[1] - at[1]) * 0.34) - 0.02, 0);
     const v = Math.max(Math.abs(-(p[0] - at[0]) * 0.34 + (p[1] - at[1]) * 0.94) - 0.016, 0);
-    return Math.max(Math.hypot(u, v) - 0.005, mantle(p) + 0.01, L.mz - 0.45 * H - p[2]);
+    return Math.max(dmath.hypot(u, v) - 0.005, mantle(p) + 0.01, L.mz - 0.45 * H - p[2]);
   };
 }
 

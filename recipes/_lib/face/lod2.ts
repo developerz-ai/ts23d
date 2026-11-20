@@ -3,7 +3,7 @@
 // them into holes) and crumbs from sub-cell features (ear rims) dropped — only shells holding
 // ≥ 3 % of the triangles are kept.
 
-import { type Mesh, MeshBuilder, sdf, type Vec3 } from '@developerz.ai/ts23d';
+import { dmath, type Mesh, MeshBuilder, sdf, type Vec3 } from '@developerz.ai/ts23d';
 import { meshField } from './mesh-field.ts';
 
 export interface Fill {
@@ -84,7 +84,7 @@ export function coarseSkin(
   const field = (p: Vec3): number => {
     let d = f.field(p);
     for (const e of fills) {
-      const q = Math.hypot(
+      const q = dmath.hypot(
         (p[0] - e.at[0]) / e.r[0],
         (p[1] - e.at[1]) / e.r[1],
         (p[2] - e.at[2]) / e.r[2],

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test';
+import { dmath } from '../core/index.ts';
 import { box } from '../primitives/index.ts';
 import { subdivideTo } from './weather-subdivide.ts';
 import { analyse } from './weather-surface.ts';
@@ -11,8 +12,8 @@ const longest = (m: ReturnType<typeof box>): number => {
       const b = m.indices[t + ((e + 1) % 3)] ?? 0;
       best = Math.max(
         best,
-        Math.hypot(
-          ...[0, 1, 2].map((k) => (m.positions[a * 3 + k] ?? 0) - (m.positions[b * 3 + k] ?? 0)),
+        dmath.norm(
+          [0, 1, 2].map((k) => (m.positions[a * 3 + k] ?? 0) - (m.positions[b * 3 + k] ?? 0)),
         ),
       );
     }

@@ -11,6 +11,7 @@
 // (skull, horns, jaw, eyes: rigid on the neck's end), `rigid` (wings, shoulders, tail: legs only).
 
 import type { Mesh, Vec3 } from '@developerz.ai/ts23d';
+import { dmath } from '@developerz.ai/ts23d';
 import { SK } from './skeleton.ts';
 
 /** Legs 13 % longer to the shoulder (the trunk 0.2 m higher), the neck 27 % longer (one more
@@ -49,10 +50,10 @@ function nearestOnNeck(p: Vec3): { at: Vec3; ab: Vec3 | null } {
     const ab: Vec3 = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
     const raw =
       ((p[0] - a[0]) * ab[0] + (p[1] - a[1]) * ab[1] + (p[2] - a[2]) * ab[2]) /
-      (ab[0] ** 2 + ab[1] ** 2 + ab[2] ** 2);
+      (ab[0] * ab[0] + ab[1] * ab[1] + ab[2] * ab[2]);
     const t = Math.max(0, Math.min(1, raw));
     const q: Vec3 = [a[0] + ab[0] * t, a[1] + ab[1] * t, a[2] + ab[2] * t];
-    const d = Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2]);
+    const d = dmath.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2]);
     if (d < best) [best, at, along] = [d, q, raw > 0 && raw < 1 ? ab : null];
   }
   return { at, ab: along };
@@ -73,7 +74,7 @@ function poseNormal(p: Vec3, n: Vec3, family: Family): Vec3 {
   const ab = family === 'body' ? nearestOnNeck(p).ab : null;
   if (!ab) return unit(m);
   const u = grow([BASE[0] + ab[0], BASE[1] + ab[1], BASE[2] + ab[2]]);
-  const ll = ab[0] ** 2 + ab[1] ** 2 + ab[2] ** 2;
+  const ll = ab[0] * ab[0] + ab[1] * ab[1] + ab[2] * ab[2];
   const v: Vec3 = [ab[0] / ll, ab[1] / ll, ab[2] / ll];
   const k =
     (u[0] * m[0] + u[1] * m[1] + u[2] * m[2]) /
@@ -82,7 +83,7 @@ function poseNormal(p: Vec3, n: Vec3, family: Family): Vec3 {
 }
 
 const unit = (m: Vec3): Vec3 => {
-  const l = Math.hypot(m[0], m[1], m[2]) || 1;
+  const l = dmath.hypot(m[0], m[1], m[2]) || 1;
   return [m[0] / l, m[1] / l, m[2] / l];
 };
 

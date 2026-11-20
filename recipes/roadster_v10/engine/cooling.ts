@@ -5,7 +5,7 @@
 // alternator, A/C compressor and power-steering pump on one serpentine belt.
 
 import type { Lod, Mesh, Vec2, Vec3 } from '@developerz.ai/ts23d';
-import { lathe, merge, planar } from '@developerz.ai/ts23d';
+import { dmath, lathe, merge, planar } from '@developerz.ai/ts23d';
 import { X_CRANK_FRONT, Z_CRANK } from '../dims.ts';
 import { C } from '../lib/colors.ts';
 import { bx, obox, rod, rotateAbout, shift, tube } from '../lib/geo.ts';
@@ -14,7 +14,7 @@ export const RAD = { x: 1.76, y0: -0.4, y1: 0.4, z0: 0.22, z1: 0.56, rake: 0.3 }
 
 /** A point on the radiator's front face at (y, z), following the rake (top leans back). */
 const radAt = (y: number, z: number, dx = 0): Vec3 => [
-  RAD.x - (z - RAD.z0) * Math.tan(RAD.rake) + dx,
+  RAD.x - (z - RAD.z0) * dmath.tan(RAD.rake) + dx,
   y,
   z,
 ];
@@ -107,7 +107,7 @@ function fanBlades(lod: Lod, r: number): Mesh {
       const pitch = 0.5 - 0.25 * t;
       for (const c of [-0.5, 0.5]) {
         const a = a0 + sweep + c * chord;
-        pts.push([c * Math.sin(pitch) * 0.04, rr * Math.cos(a), rr * Math.sin(a)]);
+        pts.push([c * dmath.sin(pitch) * 0.04, rr * dmath.cos(a), rr * dmath.sin(a)]);
       }
     }
     for (let i = 0; i < steps; i++) {
@@ -144,7 +144,7 @@ function fans(lod: Lod): Mesh {
     ),
   );
   for (const y of [-0.19, 0.19]) {
-    const c: Vec3 = [x - 0.06 - 0.12 * Math.tan(RAD.rake), y, (RAD.z0 + RAD.z1) / 2];
+    const c: Vec3 = [x - 0.06 - 0.12 * dmath.tan(RAD.rake), y, (RAD.z0 + RAD.z1) / 2];
     const segs = lod === 0 ? 16 : 8;
     parts.push(
       shift(
@@ -172,7 +172,7 @@ function fans(lod: Lod): Mesh {
         parts.push(
           rod(
             [c[0] - 0.045, c[1], c[2]],
-            [c[0] - 0.045, c[1] + (r + 0.01) * Math.cos(a), c[2] + (r + 0.01) * Math.sin(a)],
+            [c[0] - 0.045, c[1] + (r + 0.01) * dmath.cos(a), c[2] + (r + 0.01) * dmath.sin(a)],
             0.008,
             C.black,
             'plastic',
@@ -196,7 +196,7 @@ function beltPath(ps: readonly Pulley[]): Vec2[] {
   for (const p of ps)
     for (let k = 0; k < 48; k++) {
       const a = (k / 48) * Math.PI * 2;
-      pts.push([p.y + (p.r + 0.004) * Math.cos(a), p.z + (p.r + 0.004) * Math.sin(a)]);
+      pts.push([p.y + (p.r + 0.004) * dmath.cos(a), p.z + (p.r + 0.004) * dmath.sin(a)]);
     }
   const s = [...pts].sort((a, b) => a[0] - b[0] || a[1] - b[1]);
   const cross = (o: Vec2, a: Vec2, b: Vec2): number =>
@@ -302,7 +302,7 @@ function accessoryDrive(lod: Lod): Mesh {
       const a = (k / 8) * Math.PI * 2;
       parts.push(
         obox(
-          [x - 0.1, alt.y + 0.02 + 0.066 * Math.cos(a), alt.z + 0.066 * Math.sin(a)],
+          [x - 0.1, alt.y + 0.02 + 0.066 * dmath.cos(a), alt.z + 0.066 * dmath.sin(a)],
           [0.06, 0.004, 0.004],
           C.ironDark,
           'plastic',

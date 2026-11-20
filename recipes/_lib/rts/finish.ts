@@ -7,6 +7,7 @@
 
 import {
   type BuildContext,
+  dmath,
   hex,
   type Mesh,
   type PartOptions,
@@ -240,7 +241,7 @@ export class Kit {
 
 /** A ragged-edge value in 0..1 from a position (no rng: the same vertex always gets the same). */
 const hash = (x: number, y: number, z: number): number => {
-  const s = Math.sin(x * 12.9898 + y * 78.233 + z * 37.719) * 43758.5453;
+  const s = dmath.sin(x * 12.9898 + y * 78.233 + z * 37.719) * 43758.5453;
   return s - Math.floor(s);
 };
 
@@ -293,7 +294,7 @@ export function soot(
     ];
     let keep = 1;
     for (const z of zones) {
-      const d = Math.hypot(p[0] - z.at[0], p[1] - z.at[1], p[2] - z.at[2]) / z.radius;
+      const d = dmath.hypot(p[0] - z.at[0], p[1] - z.at[1], p[2] - z.at[2]) / z.radius;
       if (d < 1) keep *= 1 - z.strength * (1 - d * d * d);
     }
     if (keep >= 1) continue;

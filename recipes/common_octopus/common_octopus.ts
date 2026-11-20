@@ -7,6 +7,7 @@ import {
   bodyPlan,
   type Check,
   defineBodyPlan,
+  dmath,
   octopusClips,
   type Vec3,
 } from '@developerz.ai/ts23d';
@@ -46,7 +47,7 @@ function arcCheck(label: string, ids: readonly string[], want: number): Check {
         .filter((b) => b.name.startsWith(`${id}_`) && /_\d+$/.test(b.name.slice(id.length)))
         .reduce(
           (t, b) =>
-            t + Math.hypot(b.tail[0] - b.head[0], b.tail[1] - b.head[1], b.tail[2] - b.head[2]),
+            t + dmath.hypot(b.tail[0] - b.head[0], b.tail[1] - b.head[1], b.tail[2] - b.head[2]),
           0,
         );
       return Math.abs(got - want) / want <= 0.02

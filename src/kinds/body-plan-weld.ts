@@ -6,6 +6,7 @@
 // measured to its elliptical sections, relief included.
 
 import type { Mesh, Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import type { ChainCopy, ChainCurve } from './body-plan-curve.ts';
 import type { BodyPlan, ChainSpec, PlanChain, SurfacePoint } from './body-plan-types.ts';
 import { v3 } from './creature-curve.ts';
@@ -88,9 +89,9 @@ export function distanceTo(f: Field, p: Vec3): Hit {
   const h = v3.dot(rel, best.bend) / flatten;
   const w = v3.dot(rel, best.pitch);
   const along = v3.dot(rel, best.t);
-  const rho = Math.hypot(h, w, along);
+  const rho = dmath.hypot(h, w, along);
   const relief = f.item.spec.relief;
-  const angle = Math.atan2(w, h);
+  const angle = dmath.atan2(w, h);
   const lift = relief
     ? relief({
         u: best.u,

@@ -4,6 +4,7 @@
 // bank: (x, h = distance up the bore axis from the crank, w = across the bank, + = outboard).
 
 import type { Mesh, Vec3 } from '@developerz.ai/ts23d';
+import { dmath } from '@developerz.ai/ts23d';
 import { BANK, BORE_PITCH, X_CRANK_FRONT, Z_CRANK } from '../dims.ts';
 import { add, inFrame, mul } from '../lib/geo.ts';
 
@@ -18,8 +19,8 @@ export interface Bank {
 
 export const bank = (s: 1 | -1): Bank => ({
   s,
-  up: [0, s * Math.sin(BANK), Math.cos(BANK)],
-  out: [0, s * Math.cos(BANK), -Math.sin(BANK)],
+  up: [0, s * dmath.sin(BANK), dmath.cos(BANK)],
+  out: [0, s * dmath.cos(BANK), -dmath.sin(BANK)],
 });
 
 export const BANKS: readonly Bank[] = [bank(1), bank(-1)];

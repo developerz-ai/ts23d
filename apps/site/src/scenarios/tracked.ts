@@ -6,6 +6,7 @@
 // The GLB's `run` clip moves the same belts with morph targets at one fixed speed; this show
 // changes speed, so it never plays that clip and poses the belt vertices itself: one mover only.
 
+import { dmath } from '@developerz.ai/ts23d/core';
 import { Box3, type BufferAttribute, MathUtils, Mesh, type Object3D, Vector3 } from 'three';
 import { around, Dolly, ease, phase } from './cinema.ts';
 import { emitterSummary, footprint, type Hooks } from './hooks.ts';
@@ -112,9 +113,9 @@ class TrackedRun implements Scenario {
     const { carrier, hooks: h, particles, camera } = this.ctx;
     const s = this.s(t);
     this.speed = (s - this.s(Math.max(0, t - 0.05))) / 0.05;
-    const x = this.A * Math.sin((Math.PI * s) / this.D);
-    const slope = ((this.A * Math.PI) / this.D) * Math.cos((Math.PI * s) / this.D);
-    const heading = Math.atan2(slope, 1);
+    const x = this.A * dmath.sin((Math.PI * s) / this.D);
+    const slope = ((this.A * Math.PI) / this.D) * dmath.cos((Math.PI * s) / this.D);
+    const heading = dmath.atan2(slope, 1);
     carrier.position.set(x, 0, s);
     carrier.rotation.y = heading;
 
@@ -154,8 +155,8 @@ class TrackedRun implements Scenario {
     this.dolly.aim(t, dt, goal, look, this.ctx.reducedMotion);
     if (since >= 0 && since < 0.5 && !this.ctx.reducedMotion) {
       const a = (1 - since / 0.5) * L * 0.012;
-      camera.position.x += Math.sin(since * 90) * a;
-      camera.position.y += Math.cos(since * 70) * a;
+      camera.position.x += dmath.sin(since * 90) * a;
+      camera.position.y += dmath.cos(since * 70) * a;
     }
   }
 

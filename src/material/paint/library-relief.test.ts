@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test';
+import { dmath } from '../../core/index.ts';
 import { MATERIAL_STRIPS, type MaterialStripId } from '../trim-sheet.ts';
 import { type Canvas, createCanvas } from './canvas.ts';
 import { HOUSE_STRIPS } from './default-sheet.ts';
@@ -23,8 +24,8 @@ function paint(id: MaterialStripId, relief: boolean): { c: Canvas; n: Uint8Array
 function tilt(n: Uint8Array): number {
   let s = 0;
   for (let i = 0; i < n.length; i += 4)
-    s += Math.hypot(((n[i] ?? 0) - 127.5) / 127.5, ((n[i + 1] ?? 0) - 127.5) / 127.5);
-  return (Math.asin(s / (n.length / 4)) * 180) / Math.PI;
+    s += dmath.hypot(((n[i] ?? 0) - 127.5) / 127.5, ((n[i + 1] ?? 0) - 127.5) / 127.5);
+  return (dmath.asin(s / (n.length / 4)) * 180) / Math.PI;
 }
 
 /** Minimum mean tilt per strip: deep relief, fine relief, and near-flat finishes. */
@@ -72,7 +73,7 @@ describe('library strip relief (height-first)', () => {
       let bad = 0;
       for (let i = 0; i < n.length; i += 4) {
         const [x, y, z] = [n[i], n[i + 1], n[i + 2]].map((b) => ((b ?? 0) / 255) * 2 - 1);
-        const len = Math.hypot(x ?? 0, y ?? 0, z ?? 0);
+        const len = dmath.hypot(x ?? 0, y ?? 0, z ?? 0);
         if (Math.abs(len - 1) > 0.02 || (z ?? 0) <= 0) bad++;
       }
       expect({ id, bad }).toEqual({ id, bad: 0 });

@@ -5,6 +5,7 @@
 import {
   type BuildContext,
   beam,
+  dmath,
   grime,
   hex,
   type Mesh,
@@ -53,8 +54,8 @@ function rivetRing(x: number, r: number, n: number, segs: number, f = F.smokebox
     return place(head, {
       at: [
         x,
-        Math.cos(a) * (facetRadius(r, segs, a) - 0.0015),
-        BOILER_Z + Math.sin(a) * (facetRadius(r, segs, a) - 0.0015),
+        dmath.cos(a) * (facetRadius(r, segs, a) - 0.0015),
+        BOILER_Z + dmath.sin(a) * (facetRadius(r, segs, a) - 0.0015),
       ],
       roll: -(Math.PI / 2 - a),
     });
@@ -163,10 +164,10 @@ export function buildBoiler(ctx: BuildContext, L: Layout, number: string): void 
           bx(
             smokeFront,
             smokeFront + 0.05,
-            Math.cos(a) * 0.52 - 0.02,
-            Math.cos(a) * 0.52 + 0.02,
-            BOILER_Z + Math.sin(a) * 0.52 - 0.02,
-            BOILER_Z + Math.sin(a) * 0.52 + 0.02,
+            dmath.cos(a) * 0.52 - 0.02,
+            dmath.cos(a) * 0.52 + 0.02,
+            BOILER_Z + dmath.sin(a) * 0.52 - 0.02,
+            BOILER_Z + dmath.sin(a) * 0.52 + 0.02,
             F.smokebox,
           ),
         );

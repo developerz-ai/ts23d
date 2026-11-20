@@ -126,6 +126,11 @@ Debug with `inspect(compile(asset))` in a scratch script: `distance(a, b)`, `pen
 ## Conventions
 Metres, Z up, +X = front. Named parts are the engine contract. `ctx.rng` only. One asset per
 folder: `recipes/<name>/<name>.ts` + `README.md` + committed `out/`.
+Maths: `import { dmath } from '@developerz.ai/ts23d'` and use `dmath.sin`, `dmath.cos`,
+`dmath.atan2`, `dmath.exp`, `dmath.pow(x, y)`, `dmath.hypot(x, y, z)`, `dmath.norm(v)` in anything
+that feeds an asset; never `Math.sin`-family calls or `**` (the platform's last bit differs between
+machines, and one bit moves a vertex or a QA verdict). `x * x` for a square, `Math.sqrt`, `abs`,
+`floor`, `min`, `max`, `PI` are exact and stay. `bun run determinism` refuses the rest.
 Detail is built once in local space and `place`d N times — never hand-copied coordinates.
 
 ## Critique: score ≥ 8 on every criterion before done

@@ -93,37 +93,37 @@
     {
       "label": "body length",
       "spec": 6.058,
-      "measured": 6.058000087738037,
+      "measured": 6.058,
       "source": "ISO 668 1CC"
     },
     {
       "label": "body width",
       "spec": 2.438,
-      "measured": 2.4619998931884766,
+      "measured": 2.462,
       "source": "ISO 668 1CC"
     },
     {
       "label": "body height",
       "spec": 2.591,
-      "measured": 2.5690000895410776,
+      "measured": 2.569,
       "source": "ISO 668 8 ft 6 in"
     },
     {
       "label": "corner casting length",
       "spec": 0.178,
-      "measured": 0.1809999942779541,
+      "measured": 0.181,
       "source": "ISO 1161 (178 mm)"
     },
     {
       "label": "corner casting height",
       "spec": 0.118,
-      "measured": 0.11800000071525574,
+      "measured": 0.118,
       "source": "ISO 1161 (118 mm)"
     },
     {
       "label": "casting centres, width",
-      "spec": 2.2760000000000002,
-      "measured": 2.2790000438690186,
+      "spec": 2.276,
+      "measured": 2.279,
       "source": "ISO 1161 (2259 mm)"
     }
   ],

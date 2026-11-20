@@ -6,7 +6,7 @@
 // metres. Pure functions of position + seed: the same point always gets the same mark.
 
 import type { Vec3 } from '../core/index.ts';
-import { createRng } from '../core/index.ts';
+import { createRng, dmath } from '../core/index.ts';
 import { valueNoise } from '../primitives/index.ts';
 import { hash, smoothstep } from './creature-curve.ts';
 import type { CreaturePattern } from './creature-spec.ts';
@@ -43,12 +43,12 @@ export function worley(x: number, y: number, z: number, seed: number): Cell {
         const fx = cx + 0.15 + 0.7 * h;
         const fy = cy + 0.15 + 0.7 * hash(cy * 31 + cz, cx, seed + 1);
         const fz = cz + 0.15 + 0.7 * hash(cz * 17 + cx, cy, seed + 2);
-        const d = Math.hypot(x - fx, y - fy, z - fz);
+        const d = dmath.hypot(x - fx, y - fy, z - fz);
         if (d < f1) {
           f2 = f1;
           f1 = d;
           id = h;
-          ang = Math.atan2(z - fz, x - fx);
+          ang = dmath.atan2(z - fz, x - fx);
         } else if (d < f2) f2 = d;
       }
   return { f1, f2, id, ang };
@@ -63,7 +63,7 @@ function stripes(o: CreaturePattern, seed: number, aa: number): Marks {
     const side = p[1] >= 0 ? 0 : 1;
     // Slant and wobble per side; the stripe index from the phase along the body.
     const tilt = 0.25 * (hash(side, 1, seed) - 0.5);
-    const wob = 0.18 * o.scale * Math.sin(p[2] / (o.scale * 0.9) + 6 * hash(side, 2, seed));
+    const wob = 0.18 * o.scale * dmath.sin(p[2] / (o.scale * 0.9) + 6 * hash(side, 2, seed));
     const phase = (p[0] + tilt * p[2] + wob) / o.scale;
     const k = Math.floor(phase);
     const h = hash(k, side, seed);
@@ -98,7 +98,7 @@ function rosettes(o: CreaturePattern, seed: number, aa: number): Marks {
     const ring = band(Math.abs(c.f1 * o.scale - R), 0.5 * cov * 0.4 * o.scale, aa);
     // Three to five gaps in the ring.
     const gaps = 3 + Math.floor(c.id * 3);
-    const g = Math.cos(c.ang * gaps + c.id * 20) > 0.55 ? 0 : 1;
+    const g = dmath.cos(c.ang * gaps + c.id * 20) > 0.55 ? 0 : 1;
     const inner = c.f1 * o.scale < R * 0.8 ? 0.25 : 0;
     return Math.max(ring * g, inner);
   };

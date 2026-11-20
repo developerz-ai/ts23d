@@ -10,6 +10,7 @@
 // when one edge alone turns SEAM_SHARP_DEG (a junction line the mesh cannot resolve as a curve).
 
 import type { IntendedCrease, Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import { type ConnectIssue, cm, fmt } from './connections-declare.ts';
 import { type Shell, weld } from './connections-shells.ts';
 import { boxGap, probeOf } from './contact.ts';
@@ -68,7 +69,7 @@ export function seamsOf(
       (u[2] ?? 0) * (v[0] ?? 0) - (u[0] ?? 0) * (v[2] ?? 0),
       (u[0] ?? 0) * (v[1] ?? 0) - (u[1] ?? 0) * (v[0] ?? 0),
     ];
-    const l = Math.hypot(x[0] ?? 0, x[1] ?? 0, x[2] ?? 0) || 1;
+    const l = dmath.hypot(x[0] ?? 0, x[1] ?? 0, x[2] ?? 0) || 1;
     for (let k = 0; k < 3; k++) {
       normal[t * 3 + k] = (x[k] ?? 0) / l;
       centre[t * 3 + k] = ((P[o + k] ?? 0) + (P[o + 3 + k] ?? 0) + (P[o + 6 + k] ?? 0)) / 3;
@@ -89,7 +90,7 @@ export function seamsOf(
       (N[i * 3 + 2] ?? 0) * (N[j * 3 + 2] ?? 0);
     return d < 0.95;
   };
-  const cos = Math.cos((minDeg * Math.PI) / 180);
+  const cos = dmath.cos((minDeg * Math.PI) / 180);
   // Crease edges: [vertex a, vertex b, length, angle, midpoint xyz].
   const crease: number[][] = [];
   for (let t = 0; t < nt; t++)
@@ -114,8 +115,8 @@ export function seamsOf(
         rise += ((centre[t * 3 + k] ?? 0) - (centre[o * 3 + k] ?? 0)) * (normal[o * 3 + k] ?? 0);
       }
       if (c > cos || rise <= 0 || split(t, o, a)) continue;
-      const angle = Math.acos(Math.max(-1, Math.min(1, c)));
-      const gap = Math.hypot(
+      const angle = dmath.acos(Math.max(-1, Math.min(1, c)));
+      const gap = dmath.hypot(
         (centre[t * 3] ?? 0) - (centre[o * 3] ?? 0),
         (centre[t * 3 + 1] ?? 0) - (centre[o * 3 + 1] ?? 0),
         (centre[t * 3 + 2] ?? 0) - (centre[o * 3 + 2] ?? 0),
@@ -126,7 +127,7 @@ export function seamsOf(
       crease.push([
         a,
         b,
-        Math.hypot(
+        dmath.hypot(
           (pa[0] ?? 0) - (pb[0] ?? 0),
           (pa[1] ?? 0) - (pb[1] ?? 0),
           (pa[2] ?? 0) - (pb[2] ?? 0),
@@ -185,7 +186,7 @@ export function seamsOf(
     }
     const radius = edges.reduce(
       (m, e) =>
-        Math.max(m, Math.hypot((e[4] ?? 0) - at[0], (e[5] ?? 0) - at[1], (e[6] ?? 0) - at[2])),
+        Math.max(m, dmath.hypot((e[4] ?? 0) - at[0], (e[5] ?? 0) - at[1], (e[6] ?? 0) - at[2])),
       0,
     );
     const trace: Vec3[] = edges.map((e) => [e[4] ?? 0, e[5] ?? 0, e[6] ?? 0]);
@@ -203,7 +204,7 @@ export function seamsOf(
 }
 
 const inRegion = (p: Vec3, c: IntendedCrease): boolean =>
-  Math.hypot(p[0] - c.at[0], p[1] - c.at[1], p[2] - c.at[2]) <= c.radius;
+  dmath.hypot(p[0] - c.at[0], p[1] - c.at[1], p[2] - c.at[2]) <= c.radius;
 
 /** A seam is declared when a crease region holds its centre, or when declared regions strung along
  *  the fold hold ≥ 80 % of its trace (curved folds and rings, whose centre lies off the surface). */
@@ -227,7 +228,7 @@ export function seamIssues(
 ): ConnectIssue[] {
   if (s.mesh.positions.length / 9 < SCULPT_TRIS) return [];
   const b = s.bounds;
-  const diag = Math.hypot(b.max[0] - b.min[0], b.max[1] - b.min[1], b.max[2] - b.min[2]);
+  const diag = dmath.hypot(b.max[0] - b.min[0], b.max[1] - b.min[1], b.max[2] - b.min[2]);
   const covers = others.filter((o) => o !== s && o.solid && boxGap(o, s) <= 0);
   const hidden = (p: Vec3): boolean => covers.some((o) => probeOf(o).inside(p));
   return seamsOf(

@@ -5,6 +5,7 @@
 
 import {
   cylinder,
+  dmath,
   type Lod,
   lathe,
   loft,
@@ -79,7 +80,7 @@ const faceY = (s: RimSize, rho: number): number => {
   const hw = s.width / 2;
   const t = Math.min(1, Math.max(0, (rho - 0.075) / (s.r - 0.016 - 0.075)));
   // Hub sits 42 mm inboard of the lip; the spoke curves out to the lip.
-  return hw - 0.042 + 0.046 * (1 - (1 - t) ** 1.8);
+  return hw - 0.042 + 0.046 * (1 - dmath.pow(1 - t, 1.8));
 };
 
 /** One spoke arm: a loft of rounded-trapezoid sections from the hub to the lip at angle 0. */
@@ -93,7 +94,7 @@ function spokeArm(s: RimSize, lod: Lod, offset: number): Mesh {
     const t = i / stations;
     const rho = r0 + (r1 - r0) * t;
     // Twin spokes diverge from a shared root: lateral offset grows with radius.
-    const lat = offset * (0.006 + 0.032 * t ** 0.8);
+    const lat = offset * (0.006 + 0.032 * dmath.pow(t, 0.8));
     const w = 0.024 - 0.008 * t + (t > 0.85 ? (t - 0.85) * 0.06 : 0); // flare into the lip
     const depth = 0.03 - 0.012 * t;
     const yF = faceY(s, rho);
@@ -114,13 +115,13 @@ function spokeArm(s: RimSize, lod: Lod, offset: number): Mesh {
         const f = sec === 1 ? 0.5 : q / (sec - 1);
         const toPrev: Vec2 = [prev[0] - a[0], prev[1] - a[1]];
         const toNext: Vec2 = [next[0] - a[0], next[1] - a[1]];
-        const lp = Math.hypot(...toPrev) || 1;
-        const ln = Math.hypot(...toNext) || 1;
+        const lp = dmath.norm(toPrev) || 1;
+        const ln = dmath.norm(toNext) || 1;
         const pa: Vec2 = [a[0] + (toPrev[0] / lp) * rr, a[1] + (toPrev[1] / lp) * rr];
         const pb: Vec2 = [a[0] + (toNext[0] / ln) * rr, a[1] + (toNext[1] / ln) * rr];
         // Quadratic Bézier through the corner.
-        const x = (1 - f) ** 2 * pa[0] + 2 * (1 - f) * f * a[0] + f * f * pb[0];
-        const yy = (1 - f) ** 2 * pa[1] + 2 * (1 - f) * f * a[1] + f * f * pb[1];
+        const x = dmath.pow(1 - f, 2) * pa[0] + 2 * (1 - f) * f * a[0] + f * f * pb[0];
+        const yy = dmath.pow(1 - f, 2) * pa[1] + 2 * (1 - f) * f * a[1] + f * f * pb[1];
         // Section x = tangential (z here at angle 0), y = axial depth below the face.
         ring.push([rho, yF + yy, x + lat]);
       }
@@ -179,7 +180,7 @@ function hardware(s: RimSize, lod: Lod): Mesh {
     });
     for (let k = 0; k < 5; k++) {
       const a = (k / 5) * Math.PI * 2 + Math.PI / 5;
-      parts.push(shift(nut, [PCD * Math.cos(a), 0, PCD * Math.sin(a)]));
+      parts.push(shift(nut, [PCD * dmath.cos(a), 0, PCD * dmath.sin(a)]));
     }
   }
   parts.push(

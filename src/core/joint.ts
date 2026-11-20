@@ -1,6 +1,7 @@
 // Joint declarations: validate `ctx.joint(name, …)` and re-frame a child's joints when it is
 // instanced with `ctx.use` (prefixed names, the instance's offset and yaw).
 
+import * as dmath from './dmath.ts';
 import { Ts23dError } from './errors.ts';
 import type { Joint, JointOptions } from './part.ts';
 import { checkTolerance, TOLERANCE } from './validate-asset.ts';
@@ -23,7 +24,7 @@ export function jointOf(asset: string, name: string, o: JointOptions): Joint {
     );
   if (!finite(o.at))
     bad('`at` is not a finite point', 'pass the joint centre in metres, e.g. at: [0.3, 0, 1.1]');
-  const len = Math.hypot(...o.axis);
+  const len = dmath.norm(o.axis);
   if (!finite(o.axis) || len < 1e-9)
     bad(
       '`axis` is zero or not finite',

@@ -1,8 +1,8 @@
 // manifest.json per asset: what an engine pipeline or an agent needs without opening a GLB —
 // files, triangles per LOD, pivots (the names game code binds to), emitters, joints, surfaces, the
-// texture sets parts carry (ADR 016: maps, sizes, bytes), QA,
-// measures with their measured values, sources, paint slots and switchable variants, and for a
-// skinned asset the engine contract: skeleton (bones + parents), clips, per-bone hitboxes.
+// texture sets parts carry (ADR 016: maps, sizes, bytes), QA, measures with their measured values,
+// sources, paint slots and switchable variants, and for a skinned asset the engine contract:
+// skeleton (bones + parents), clips, per-bone hitboxes. Every number at MANIFEST_ROUNDING.
 // Location-independent: every path in `files` is relative to the manifest's own folder
 // (<out>/<asset>/), so two builds into two --out dirs write the same bytes. Per-LOD arrays
 // (triangles, drawCalls, lodCoverage) are indexed like `lods`, the levels actually built.
@@ -18,7 +18,9 @@ import {
   LOOP_SECONDS,
   type Lod,
   linearToHex,
+  MANIFEST_ROUNDING,
   pngHeader,
+  roundJson,
   STRETCH_TOLERANCE,
   TEXTURE_MAPS,
   textureSetsOf,
@@ -134,14 +136,13 @@ export { drawCallsOf } from '../export/index.ts';
 
 export interface ManifestOptions {
   /**
-   * The GLBs carry animations: pass what `toGlb` got (`GlbOptions.animations`). Default
-   * `GLB_ANIMATIONS_DEFAULT` (false), the writer's own, so defaults on both sides agree; the CLI
-   * passes its flag (`t3d build` bakes them unless `--no-animations`).
+   * The GLBs carry animations: pass what `toGlb` got (`GlbOptions.animations`; default, like the
+   * writer's, `GLB_ANIMATIONS_DEFAULT` = false). `t3d build` bakes them unless `--no-animations`.
    */
   readonly animations?: boolean;
 }
 
-export function manifestOf(
+function fields(
   asset: Asset,
   lods: readonly CompiledAsset[],
   files: AssetManifest['files'],
@@ -208,6 +209,8 @@ export function manifestOf(
     qa: { pass: findings.length === 0, findings },
   };
 }
+
+export const manifestOf: typeof fields = (...a) => roundJson(fields(...a), MANIFEST_ROUNDING);
 
 /** Sets by name across the LODs built, first use first (LOD0 leads). */
 function textureSetsIn(lods: readonly CompiledAsset[]): Pick<AssetManifest, 'textureSets'> {

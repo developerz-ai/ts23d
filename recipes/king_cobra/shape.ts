@@ -3,6 +3,7 @@
 // the distance from the snout along the body, metres. Numbers and sources: README.md.
 
 import type { Vec3 } from '@developerz.ai/ts23d';
+import { dmath } from '@developerz.ai/ts23d';
 import {
   add,
   cross,
@@ -80,8 +81,8 @@ export const seatHeight = (s: number): number => bellyHalf(Math.max(s, HEAD.leng
 /** The raised front faces the hero camera: the spread hood is seen square on. */
 const FACING = (-35 * Math.PI) / 180;
 const faced = (f: number, w: number, z: number): Vec3 => [
-  f * Math.cos(FACING) - w * Math.sin(FACING),
-  f * Math.sin(FACING) + w * Math.cos(FACING),
+  f * dmath.cos(FACING) - w * dmath.sin(FACING),
+  f * dmath.sin(FACING) + w * dmath.cos(FACING),
   z,
 ];
 
@@ -98,7 +99,7 @@ const coil = (i: number): Vec3 => {
   const u = (i * COIL_STEP) / (Math.PI * 2);
   const a = (100 * Math.PI) / 180 + i * COIL_STEP;
   const r = 0.165 + 0.024 * u;
-  return faced(r * Math.cos(a), r * Math.sin(a), PILE_ENTRY);
+  return faced(r * dmath.cos(a), r * dmath.sin(a), PILE_ENTRY);
 };
 
 /** Head level, the hood square to the viewer, an S down onto the top of the pile, then the pile. */
@@ -129,7 +130,7 @@ const TURN_GAP = 0.4;
  *  flat-bellied ovals (BELLY under, TOP over the half-width), lateral offset `dh`. */
 const restsOn = (hwUp: number, hwLow: number, dh: number): number => {
   const reach = hwUp + hwLow;
-  return dh >= reach ? 0 : (BELLY * hwUp + TOP * hwLow) * Math.sqrt(1 - (dh / reach) ** 2);
+  return dh >= reach ? 0 : (BELLY * hwUp + TOP * hwLow) * Math.sqrt(1 - dmath.pow(dh / reach, 2));
 };
 
 /**
@@ -152,7 +153,7 @@ export function settleHeights(
       for (let j = i + 1; j < n; j++) {
         if ((s[j] ?? 0) - (s[i] ?? 0) < TURN_GAP) continue;
         const [u, v] = xy[j] ?? [0, 0];
-        const r = restsOn(hw[i] ?? 0, hw[j] ?? 0, Math.hypot(u - x, v - y));
+        const r = restsOn(hw[i] ?? 0, hw[j] ?? 0, dmath.hypot(u - x, v - y));
         if (r > 0) z[i] = Math.max(z[i] ?? 0, (z[j] ?? 0) + r * CONTACT_PAD + 0.003);
       }
       need[i] = z[i] ?? 0;
@@ -185,7 +186,7 @@ const arcsOf = (pts: readonly Vec3[]): number[] => {
   const arcs = [0];
   for (let i = 1; i < pts.length; i++) {
     const [a, b] = [pts[i - 1] ?? [0, 0, 0], pts[i] ?? [0, 0, 0]];
-    arcs.push((arcs[i - 1] ?? 0) + Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]));
+    arcs.push((arcs[i - 1] ?? 0) + dmath.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]));
   }
   return arcs;
 };
@@ -254,7 +255,7 @@ export function frameAt(s: number): { p: Vec3; t: Vec3; d: Vec3; side: Vec3 } {
 
 /** Section at (s, a): a from the dorsal ridge toward +side. Triangular over a flat belly. */
 export function sectionAt(s: number, a: number): { lateral: number; up: number } {
-  const [sn, cs] = [Math.sin(a), Math.cos(a)];
+  const [sn, cs] = [dmath.sin(a), dmath.cos(a)];
   const hood = hoodShare(s);
   const w = halfW(s);
   const base = halfWidth(s);

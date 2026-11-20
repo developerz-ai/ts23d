@@ -421,31 +421,31 @@
     },
     {
       "name": "strike_0",
-      "seconds": 1.4267882628212434,
+      "seconds": 1.426788,
       "loop": false,
       "speed": 0.0128
     },
     {
       "name": "strike_1",
-      "seconds": 1.5122319623701845,
+      "seconds": 1.512232,
       "loop": false,
       "speed": 0.0101
     },
     {
       "name": "strike_2",
-      "seconds": 1.5145579406522391,
+      "seconds": 1.514558,
       "loop": false,
       "speed": 0.01
     },
     {
       "name": "strike_3",
-      "seconds": 1.470499880636714,
+      "seconds": 1.4705,
       "loop": false,
       "speed": 0.0114
     },
     {
       "name": "strike_4",
-      "seconds": 1.4006263439267217,
+      "seconds": 1.400626,
       "loop": false,
       "speed": 0.0138
     }

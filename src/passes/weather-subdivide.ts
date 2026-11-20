@@ -8,7 +8,7 @@
 // split again, so a flat panel gets about 4 × the triangles the limit asks for. `exact` (opt-in,
 // weather-subdivide-exact.ts) lays vertices `maxEdge` apart instead.
 
-import { type Mesh, mappedOf, SKIN_INFLUENCES } from '../core/index.ts';
+import { dmath, type Mesh, mappedOf, SKIN_INFLUENCES } from '../core/index.ts';
 import { quantise, WEIGHT_STEP } from './skin-weights.ts';
 import { exactIndices } from './weather-subdivide-exact.ts';
 
@@ -50,7 +50,7 @@ export class Grow {
     const nx = ((this.n[a * 3] ?? 0) + (this.n[b * 3] ?? 0)) / 2;
     const ny = ((this.n[a * 3 + 1] ?? 0) + (this.n[b * 3 + 1] ?? 0)) / 2;
     const nz = ((this.n[a * 3 + 2] ?? 0) + (this.n[b * 3 + 2] ?? 0)) / 2;
-    const l = Math.hypot(nx, ny, nz) || 1;
+    const l = dmath.hypot(nx, ny, nz) || 1;
     this.n.push(nx / l, ny / l, nz / l);
     for (const d of this.morphs) lerp(d, 3);
     if (this.skin) this.blend(this.skin, [a, b]);
@@ -67,7 +67,7 @@ export class Grow {
     lerp(this.c, 3);
     lerp(this.n, 3);
     const i = this.n.length - 3;
-    const l = Math.hypot(this.n[i] ?? 0, this.n[i + 1] ?? 0, this.n[i + 2] ?? 0) || 1;
+    const l = dmath.hypot(this.n[i] ?? 0, this.n[i + 1] ?? 0, this.n[i + 2] ?? 0) || 1;
     for (let k = 0; k < 3; k++) this.n[i + k] = (this.n[i + k] ?? 0) / l;
     for (const d of this.morphs) lerp(d, 3);
     if (this.skin) this.blend(this.skin, ids, w);

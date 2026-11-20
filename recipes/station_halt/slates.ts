@@ -6,6 +6,7 @@
 
 import {
   DEFAULT_SHEET,
+  dmath,
   type Mesh,
   MeshBuilder,
   merge,
@@ -53,7 +54,7 @@ function hexa(b: MeshBuilder, q: readonly Vec3[], color: Vec3, v0: number, v1: n
       e1[2] * e2[0] - e1[0] * e2[2],
       e1[0] * e2[1] - e1[1] * e2[0],
     ];
-    const l = Math.hypot(n[0], n[1], n[2]) || 1;
+    const l = dmath.hypot(n[0], n[1], n[2]) || 1;
     const nn: Vec3 = [n[0] / l, n[1] / l, n[2] / l];
     const ids = p.map((pt, k) =>
       b.vertex({
@@ -80,7 +81,7 @@ export function slateCourses(rng: Rng, o: SlateRoof): Mesh {
     const run = Math.abs(eave - o.ridgeX);
     const z0 = o.heightAt(eave - s * 0.01, 0);
     const z1 = o.heightAt(o.ridgeX + s * 0.01, 0);
-    const slope = Math.hypot(run, z1 - z0);
+    const slope = dmath.hypot(run, z1 - z0);
     const dx = (o.gauge * run) / slope; // horizontal step per course
     const courses = Math.floor((run - 0.18) / dx);
     for (let k = 0; k < courses; k++) {

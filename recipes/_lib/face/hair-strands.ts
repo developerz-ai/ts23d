@@ -5,7 +5,7 @@
 // along the hairline (they cover the cap's edge, so no bare band shows under it), flyaways; long
 // hair adds falls over the shoulders, a crest stands, a beard hangs.
 
-import { type CardLayer, type Field, sculptField, type Vec3 } from '@developerz.ai/ts23d';
+import { type CardLayer, dmath, type Field, sculptField, type Vec3 } from '@developerz.ai/ts23d';
 import { beardlineOf, type HairSculpt, hairlineOf } from './hair.ts';
 import { beardBody } from './hair-beard.ts';
 import type { CardHairStyle } from './hair-cards.ts';
@@ -64,7 +64,7 @@ export function faceCardStyle(
     // Long hair above and in front of an ear's root is drawn back hard, not down: it passes
     // behind the ear, which stays in view (an elf's must at every LOD).
     const ear = long
-      ? clamp01(1 - Math.hypot(p[0] - earTop[0], p[2] - earTop[2] - 0.03 * s) / (0.065 * s))
+      ? clamp01(1 - dmath.hypot(p[0] - earTop[0], p[2] - earTop[2] - 0.03 * s) / (0.065 * s))
       : 0;
     return [
       -(long ? 1.1 - 0.35 * t : 0.95 - 0.35 * t) * (1 - 0.6 * top) - 0.7 * ear,
@@ -93,13 +93,13 @@ export function faceCardStyle(
       const a: Vec3 = [tragion[0], side * Math.abs(tragion[1]), tragion[2]];
       const b = head.earTips[side > 0 ? 0 : 1];
       const ab: Vec3 = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
-      const l2 = ab[0] ** 2 + ab[1] ** 2 + ab[2] ** 2 || 1;
+      const l2 = ab[0] * ab[0] + ab[1] * ab[1] + ab[2] * ab[2] || 1;
       const k = clamp01(
         ((p[0] - a[0]) * ab[0] + (p[1] - a[1]) * ab[1] + (p[2] - a[2]) * ab[2]) / l2,
       );
       return (
         0.04 * s -
-        Math.hypot(p[0] - a[0] - ab[0] * k, p[1] - a[1] - ab[1] * k, p[2] - a[2] - ab[2] * k)
+        dmath.hypot(p[0] - a[0] - ab[0] * k, p[1] - a[1] - ab[1] * k, p[2] - a[2] - ab[2] * k)
       );
     };
     const grown: Field = long ? (p) => Math.max(hairline(p), nearEar(p)) : hairline;

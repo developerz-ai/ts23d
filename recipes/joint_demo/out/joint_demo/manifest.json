@@ -81,25 +81,25 @@
     {
       "label": "forearm length",
       "spec": 0.26,
-      "measured": 0.25999999046325684,
+      "measured": 0.26,
       "source": "NASA MSIS"
     },
     {
       "label": "grip length",
       "spec": 0.14,
-      "measured": 0.14000004529953003,
+      "measured": 0.14,
       "source": "arming sword"
     },
     {
       "label": "blade length",
       "spec": 0.76,
-      "measured": 0.7599999904632568,
+      "measured": 0.76,
       "source": "arming sword"
     },
     {
       "label": "guard span",
       "spec": 0.18,
-      "measured": 0.18000000715255737,
+      "measured": 0.18,
       "source": "arming sword"
     }
   ],

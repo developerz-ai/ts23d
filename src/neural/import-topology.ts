@@ -4,6 +4,7 @@
 // the other way) and measured: closed or not, signed volume. Index order throughout.
 
 import type { Mesh } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 
 /** Point id per vertex: positions equal on a grid of `rel` × the bounding-box diagonal. */
 export function pointsOf(m: Mesh, rel: number): Int32Array {
@@ -21,7 +22,7 @@ export function pointsOf(m: Mesh, rel: number): Int32Array {
     lo = [0, 0, 0];
     hi = [0, 0, 0];
   }
-  const diag = Math.hypot(
+  const diag = dmath.hypot(
     (hi[0] ?? 0) - (lo[0] ?? 0),
     (hi[1] ?? 0) - (lo[1] ?? 0),
     (hi[2] ?? 0) - (lo[2] ?? 0),

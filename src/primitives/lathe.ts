@@ -7,7 +7,7 @@
 // (arc length × profile length, staves and shingles at real size); default stretches one strip
 // width around and one strip height along the profile.
 
-import { type Mesh, MeshBuilder, type Vec2, type Vec3 } from '../core/index.ts';
+import { dmath, type Mesh, MeshBuilder, type Vec2, type Vec3 } from '../core/index.ts';
 import { mappedOnto, type StripId, stripRect } from '../material/index.ts';
 import { colorOf, count, invalid, positive, profileOf } from './check.ts';
 import { facets } from './lathe-facets.ts';
@@ -44,7 +44,7 @@ export const POLE_RADIUS = 1e-9;
 function distinct(profile: readonly Vec2[]): Vec2[] {
   return profile.filter((p, i) => {
     const q = profile[i - 1];
-    return !q || Math.hypot(p[0] - q[0], p[1] - q[1]) > POLE_RADIUS;
+    return !q || dmath.hypot(p[0] - q[0], p[1] - q[1]) > POLE_RADIUS;
   });
 }
 
@@ -105,7 +105,7 @@ export function lathe(opts: LatheOptions): Mesh {
   for (let i = 1; i < o.profile.length; i++) {
     const [r0 = 0, z0 = 0] = o.profile[i - 1] ?? [];
     const [r1 = 0, z1 = 0] = o.profile[i] ?? [];
-    run.push((run[i - 1] ?? 0) + Math.hypot(r1 - r0, z1 - z0));
+    run.push((run[i - 1] ?? 0) + dmath.hypot(r1 - r0, z1 - z0));
   }
   /** Side UV at segment s of profile point i (radius r). */
   const sideUv = (s: number, i: number, r: number): Vec2 =>
@@ -123,16 +123,16 @@ export function lathe(opts: LatheOptions): Mesh {
           rect.u0 + (0.5 + c / 2) * (rect.u1 - rect.u0),
           rect.v0 + (0.5 + sn / 2) * (rect.v1 - rect.v0),
         ];
-  const creaseCos = Math.cos(((o.creaseDeg ?? 50) * Math.PI) / 180);
+  const creaseCos = dmath.cos(((o.creaseDeg ?? 50) * Math.PI) / 180);
   /** One ring of segments + 1 vertices at profile point i with normal along chord (dr, dz). */
   const emitRing = (i: number, dr: number, dz: number): number[] => {
     const [r, z] = o.profile[i] ?? [0, 0];
-    const len = Math.hypot(dr, dz) || 1;
+    const len = dmath.hypot(dr, dz) || 1;
     const row: number[] = [];
     for (let s = 0; s <= o.segments; s++) {
       const t = (s / o.segments) * Math.PI * 2 - Math.PI / 2;
-      const c = Math.cos(t);
-      const sn = Math.sin(t);
+      const c = dmath.cos(t);
+      const sn = dmath.sin(t);
       row.push(
         put([r * c, r * sn, z], [(dz / len) * c, (dz / len) * sn, -dr / len], sideUv(s, i, r)),
       );
@@ -151,8 +151,8 @@ export function lathe(opts: LatheOptions): Mesh {
       const iz = z - prev[1];
       const or = next[0] - r;
       const oz = next[1] - z;
-      const li = Math.hypot(ir, iz);
-      const lo = Math.hypot(or, oz);
+      const li = dmath.hypot(ir, iz);
+      const lo = dmath.hypot(or, oz);
       if (li > 1e-12 && lo > 1e-12 && (ir * or + iz * oz) / (li * lo) < creaseCos) {
         top.push(emitRing(i, ir, iz));
         ring.push(emitRing(i, or, oz));
@@ -192,9 +192,9 @@ export function lathe(opts: LatheOptions): Mesh {
         const t = (s / o.segments) * Math.PI * 2 - Math.PI / 2;
         rim.push(
           put(
-            [pt[0] * Math.cos(t), pt[0] * Math.sin(t), pt[1]],
+            [pt[0] * dmath.cos(t), pt[0] * dmath.sin(t), pt[1]],
             [0, 0, n],
-            capUv(Math.cos(t), Math.sin(t), pt[0]),
+            capUv(dmath.cos(t), dmath.sin(t), pt[0]),
           ),
         );
       }

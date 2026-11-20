@@ -3,6 +3,7 @@
 // locks, the moustache, the beard rim, and the centroids QA judges long groove chains by.
 
 import type { IntendedCrease, Vec3 } from '@developerz.ai/ts23d';
+import { dmath } from '@developerz.ai/ts23d';
 import type { FaceBust } from './bust.ts';
 import { centroidRegion, regionsOf } from './crease-regions.ts';
 import { beardlineOf, hairlineOf, LOCK_DEGS } from './hair.ts';
@@ -39,7 +40,7 @@ export function hairCreases(b: FaceBust, c: CreaseCtx): IntendedCrease[] {
     const lift = (crest ? 0.026 : b.hair.cut === 'long' ? 0.016 : 0.015) * s;
     const onHair = (p: Vec3): Vec3 => {
       const d = [p[0] - c0[0], p[1] - c0[1], p[2] - c0[2]];
-      const l = Math.hypot(d[0] ?? 0, d[1] ?? 0, d[2] ?? 1) || 1;
+      const l = dmath.hypot(d[0] ?? 0, d[1] ?? 0, d[2] ?? 1) || 1;
       return up([
         p[0] + ((d[0] ?? 0) / l) * lift,
         p[1] + ((d[1] ?? 0) / l) * lift,

@@ -3,6 +3,7 @@
 // on the snout, nostrils with a skin flap, and the dark line and corner furrow of the mouth.
 
 import type { Mesh, Rng, Vec3 } from '@developerz.ai/ts23d';
+import { dmath } from '@developerz.ai/ts23d';
 import {
   add,
   cross,
@@ -65,8 +66,11 @@ function strip(
       const out = outward(t, p);
       const along = sub(onSkin(t2, s2, 0), onSkin(t1, s1, 0));
       const across = norm(cross(along, out));
-      const w = width * (0.15 + 0.85 * Math.sin(u * Math.PI));
-      return add(add(p, scale(across, w * Math.cos(a))), scale(out, 0.0006 + 0.0008 * Math.sin(a)));
+      const w = width * (0.15 + 0.85 * dmath.sin(u * Math.PI));
+      return add(
+        add(p, scale(across, w * dmath.cos(a))),
+        scale(out, 0.0006 + 0.0008 * dmath.sin(a)),
+      );
     },
     color: () => color,
   });
@@ -103,10 +107,10 @@ export function pores(rng: Rng): Mesh[] {
   const eye = plainPoint(T_EYE, 1.2);
   const out: Mesh[] = [];
   while (out.length < PORE_COUNT) {
-    const t = 0.006 + 0.09 * r.next() ** 1.5;
+    const t = 0.006 + 0.09 * dmath.pow(r.next(), 1.5);
     const a = r.range(0.2, 2.2) * (r.next() < 0.5 ? 1 : -1);
     const c = onSkin(t, a, 0);
-    const clear = Math.hypot(c[0] - eye[0], Math.abs(c[1]) - eye[1], c[2] - eye[2]);
+    const clear = dmath.hypot(c[0] - eye[0], Math.abs(c[1]) - eye[1], c[2] - eye[2]);
     if (clear < EYE_CLEAR) continue;
     const n = outward(t, c);
     const e1 = norm(cross(n, [1, 0, 0]));
@@ -120,7 +124,7 @@ export function pores(rng: Rng): Mesh[] {
         point: (u, q) => {
           const w = size * u;
           return add(
-            add(c, add(scale(e1, w * Math.cos(q)), scale(e2, w * Math.sin(q)))),
+            add(c, add(scale(e1, w * dmath.cos(q)), scale(e2, w * dmath.sin(q)))),
             scale(n, 0.0005 * (1.2 - u)),
           );
         },
@@ -142,8 +146,8 @@ function line(pts: readonly Vec3[], radius: number, color: Vec3, rings: number):
       const p = c(u);
       const along = norm(sub(c(Math.min(1, u + 0.02)), c(Math.max(0, u - 0.02))));
       const across = norm(cross(along, [0, 0, 1]));
-      const w = radius * (0.25 + 0.75 * Math.sin(u * Math.PI) ** 0.5);
-      return add(add(p, scale(across, w * Math.cos(a))), [0, 0, w * 0.55 * Math.sin(a)]);
+      const w = radius * (0.25 + 0.75 * Math.sqrt(dmath.sin(u * Math.PI)));
+      return add(add(p, scale(across, w * dmath.cos(a))), [0, 0, w * 0.55 * dmath.sin(a)]);
     },
     color: () => color,
   });

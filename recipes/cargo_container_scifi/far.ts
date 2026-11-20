@@ -9,6 +9,7 @@
 
 import {
   type BuildContext,
+  dmath,
   type Mesh,
   merge,
   planar,
@@ -61,7 +62,7 @@ function face(pts: readonly [Vec3, Vec3, Vec3, Vec3], dir: Vec3, color: Vec3, of
   const v: Vec3 = [d[0] - a[0], d[1] - a[1], d[2] - a[2]];
   const n: Vec3 = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
   const out = n[0] * dir[0] + n[1] * dir[1] + n[2] * dir[2] > 0;
-  const l = Math.hypot(...dir) || 1;
+  const l = dmath.norm(dir) || 1;
   const points = (out ? [...pts] : [...pts].reverse()).map(
     (p): Vec3 => [p[0] + (dir[0] / l) * off, p[1] + (dir[1] / l) * off, p[2] + (dir[2] / l) * off],
   );

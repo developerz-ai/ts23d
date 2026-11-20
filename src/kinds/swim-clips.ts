@@ -3,6 +3,7 @@
 // jaw chains are named. Root travel is along +X, the trunk's head leading.
 
 import type { Clip } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import type { BodyPlan } from './body-plan-types.ts';
 import { bakeChainClip, type ChainDrive, loopLength, type RootKey } from './chain-bake.ts';
 import { TAU } from './chain-drivers.ts';
@@ -71,7 +72,7 @@ function turnClip(rig: SwimRig, name: string, side: 1 | -1): Clip {
       ...finDrives(rig, f, wave),
     ],
     root: (t) => ({
-      pos: [R * Math.sin(w * t), side * R * (1 - Math.cos(w * t)), 0],
+      pos: [R * dmath.sin(w * t), side * R * (1 - dmath.cos(w * t)), 0],
       yaw: side * w * t,
     }),
     recoil: { chains: rig.path, axes: [1] },

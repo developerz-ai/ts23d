@@ -4,7 +4,7 @@
 // rim, lighter toward the centre. Glossy: the satin `plastic` strip (low roughness). Built gazing
 // along local +X, then turned forward-ish (a predator's mostly-forward gaze).
 
-import { type Mesh, place, sdf, type Vec3 } from '@developerz.ai/ts23d';
+import { dmath, type Mesh, place, sdf, type Vec3 } from '@developerz.ai/ts23d';
 import { mixRgb, smoothstep } from '../_lib/creature/curve.ts';
 import { blob } from '../_lib/creature/lowpoly.ts';
 import { C } from './palette.ts';
@@ -27,14 +27,14 @@ export function eyeMesh(lod: 0 | 1 | 2, yaw: number): Mesh {
     );
   const res = [r / 7, r / 3][lod] ?? r / 3;
   const ball = sdf({
-    field: (q) => Math.hypot(q[0], q[1], q[2]) - r,
+    field: (q) => dmath.hypot(q[0], q[1], q[2]) - r,
     bounds: [
       [-r * 1.3, -r * 1.3, -r * 1.3],
       [r * 1.3, r * 1.3, r * 1.3],
     ],
     resolution: res,
     color: (q): Vec3 => {
-      const l = Math.hypot(q[0], q[1], q[2]) || 1;
+      const l = dmath.hypot(q[0], q[1], q[2]) || 1;
       const cos = q[0] / l;
       // Slit: narrow in local Y, tall in Z.
       const slit = Math.abs(q[1] / l) < 0.09 * (1 - Math.abs(q[2] / l) * 0.8) && cos > 0.7;

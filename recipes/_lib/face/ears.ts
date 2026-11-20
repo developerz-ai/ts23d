@@ -5,6 +5,7 @@
 // length, and pull the helix top into a tip (elf, goblin, orc points).
 
 import type { Vec3 } from '@developerz.ai/ts23d';
+import { dmath } from '@developerz.ai/ts23d';
 import type { QuadMesh } from './base.ts';
 import { BASE_H } from './landmarks.ts';
 
@@ -65,7 +66,7 @@ export function shapeEars(
     const side = (p[v * 3 + 1] ?? 0) >= 0 ? 1 : -1;
     const f = side > 0 ? l : r;
     const u0: Vec3 = [f.top[0] - f.lobe[0], f.top[1] - f.lobe[1], f.top[2] - f.lobe[2]];
-    const len = Math.hypot(...u0) || 1;
+    const len = dmath.norm(u0) || 1;
     const u: Vec3 = [u0[0] / len, u0[1] / len, u0[2] / len];
     let q: [number, number, number] = [p[v * 3] ?? 0, p[v * 3 + 1] ?? 0, p[v * 3 + 2] ?? 0];
     // Swing about the root axis (through the tragion along u): the back edge moves outward.
@@ -79,8 +80,8 @@ export function shapeEars(
         u[2] * perp[0] - u[0] * perp[2],
         u[0] * perp[1] - u[1] * perp[0],
       ];
-      const cs = Math.cos(a);
-      const sn = Math.sin(a);
+      const cs = dmath.cos(a);
+      const sn = dmath.sin(a);
       q = [
         f.tragion[0] + u[0] * along + perp[0] * cs + c[0] * sn,
         f.tragion[1] + u[1] * along + perp[1] * cs + c[1] * sn,
@@ -92,12 +93,12 @@ export function shapeEars(
     const k = t * (s.length - 1) * w;
     q = [q[0] + u[0] * k, q[1] + u[1] * k, q[2] + u[2] * k];
     // Tip: pull the helix top, falling off over ~60 % of the ear.
-    const dist = Math.hypot(
+    const dist = dmath.hypot(
       q[0] - f.top[0] - u[0] * k,
       q[1] - f.top[1] - u[1] * k,
       q[2] - f.top[2] - u[2] * k,
     );
-    const g = Math.max(0, 1 - dist / (len * 0.75)) ** 2 * w;
+    const g = dmath.pow(Math.max(0, 1 - dist / (len * 0.75)), 2) * w;
     q = [
       q[0] - s.tip[0] * BASE_H * g,
       q[1] + side * s.tip[1] * BASE_H * g,

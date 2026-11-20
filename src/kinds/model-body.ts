@@ -8,7 +8,14 @@
 // `bite` and `blink` are dropped (`info.dropped`), and no sockets are emitted (the creature kind
 // has none either). `clips: 'model'` takes a rigged model as it is (its own skin, bones, clips).
 
-import { type Bone, type BuildContext, type Clip, type Mesh, Ts23dError } from '../core/index.ts';
+import {
+  type Bone,
+  type BuildContext,
+  type Clip,
+  dmath,
+  type Mesh,
+  Ts23dError,
+} from '../core/index.ts';
 import type { ImportedModel } from '../neural/index.ts';
 import { MID, midTriples, splitMid } from './creature-helpers.ts';
 import type { CreatureSpec } from './creature-spec.ts';
@@ -101,7 +108,7 @@ function ownsRig(mesh: Mesh, model: ImportedModel, rig: ModelRig): boolean {
     });
   for (const f of from) {
     const b = byName.get(f.name) ?? f;
-    const off = Math.hypot(f.head[0] - b.head[0], f.head[1] - b.head[1], f.head[2] - b.head[2]);
+    const off = dmath.hypot(f.head[0] - b.head[0], f.head[1] - b.head[1], f.head[2] - b.head[2]);
     if (off > RIG_TOLERANCE)
       throw new Ts23dError('T3D_MODEL_SKELETON', {
         cause: `modelBody: bone '${f.name}' of the Blender output is ${(off * 1000).toFixed(1)} mm from the skeleton fitted at build (≤ ${RIG_TOLERANCE * 1000} mm): the cached final pass was made for another fit`,

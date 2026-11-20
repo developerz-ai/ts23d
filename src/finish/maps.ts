@@ -8,7 +8,7 @@
 //               with +Y toward decreasing V (as the trim sheet); flat without a height
 // Gradients use only texels of the same part, over the true metres between their surface points.
 
-import { Ts23dError } from '../core/index.ts';
+import { dmath, Ts23dError } from '../core/index.ts';
 import type { MaterialGraph, TexContext } from '../material/index.ts';
 import type { Texels } from './texels.ts';
 
@@ -65,9 +65,9 @@ export function graphHeight(g: MaterialGraph, seed = 1, texels = 256): HeightAt 
     return h[y * N + x] ?? 0;
   };
   return (x, y, z, nx, ny, nz) => {
-    const wx = nx ** 4;
-    const wy = ny ** 4;
-    const wz = nz ** 4;
+    const wx = nx * nx * (nx * nx);
+    const wy = ny * ny * (ny * ny);
+    const wz = nz * nz * (nz * nz);
     const s = wx + wy + wz || 1;
     return ((wx * at(y, z) + wy * at(x, z) + wz * at(x, y)) / s) * depth;
   };
@@ -105,7 +105,7 @@ export function deriveMaps(t: Texels, albedo: Uint8Array, o: DeriveOptions = {})
   const same = (i: number, x: number, y: number): number =>
     x >= 0 && y >= 0 && x < N && y < N && t.part[y * N + x] === t.part[i] ? y * N + x : i;
   const dist = (a: number, b: number): number =>
-    Math.hypot(
+    dmath.hypot(
       (P[a * 3] ?? 0) - (P[b * 3] ?? 0),
       (P[a * 3 + 1] ?? 0) - (P[b * 3 + 1] ?? 0),
       (P[a * 3 + 2] ?? 0) - (P[b * 3 + 2] ?? 0),
@@ -140,7 +140,7 @@ export function deriveMaps(t: Texels, albedo: Uint8Array, o: DeriveOptions = {})
         [t.orm[i * 4] ?? 255, Math.min(255, Math.round(rough)), t.orm[i * 4 + 2] ?? 0, 255],
         i * 4,
       );
-      const len = Math.hypot(gx, gy, 1);
+      const len = dmath.hypot(gx, gy, 1);
       normal.set(
         [-gx / len, -gy / len, 1 / len].map((c) => Math.round((c * 0.5 + 0.5) * 255)).concat(255),
         i * 4,

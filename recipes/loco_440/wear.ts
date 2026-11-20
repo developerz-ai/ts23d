@@ -8,6 +8,7 @@
 
 import {
   type BuildContext,
+  dmath,
   type Mesh,
   MeshBuilder,
   type PartOptions,
@@ -81,7 +82,7 @@ function plated(m: Mesh, max: number): Mesh {
   const half = (a: number, b: number): number => (a + b) / 2;
   const mid = (x: V, y: V): V => {
     const n: Vec3 = [half(x.n[0], y.n[0]), half(x.n[1], y.n[1]), half(x.n[2], y.n[2])];
-    const l = Math.hypot(n[0], n[1], n[2]) || 1;
+    const l = dmath.hypot(n[0], n[1], n[2]) || 1;
     return {
       p: [half(x.p[0], y.p[0]), half(x.p[1], y.p[1]), half(x.p[2], y.p[2])],
       n: [n[0] / l, n[1] / l, n[2] / l],
@@ -94,14 +95,14 @@ function plated(m: Mesh, max: number): Mesh {
     };
   };
   const dist = (x: V, y: V): number =>
-    Math.hypot(x.p[0] - y.p[0], x.p[1] - y.p[1], x.p[2] - y.p[2]);
+    dmath.hypot(x.p[0] - y.p[0], x.p[1] - y.p[1], x.p[2] - y.p[2]);
   const b = new MeshBuilder();
   const split = (x: V, y: V, z: V, depth: number): void => {
     const e = [dist(x, y), dist(y, z), dist(z, x)];
     const top = Math.max(...e);
     const u = [y.p[0] - x.p[0], y.p[1] - x.p[1], y.p[2] - x.p[2]];
     const v = [z.p[0] - x.p[0], z.p[1] - x.p[1], z.p[2] - x.p[2]];
-    const area2 = Math.hypot(
+    const area2 = dmath.hypot(
       (u[1] ?? 0) * (v[2] ?? 0) - (u[2] ?? 0) * (v[1] ?? 0),
       (u[2] ?? 0) * (v[0] ?? 0) - (u[0] ?? 0) * (v[2] ?? 0),
       (u[0] ?? 0) * (v[1] ?? 0) - (u[1] ?? 0) * (v[0] ?? 0),
@@ -152,7 +153,7 @@ export const FINISHES = {
 /** Far LOD wheel: a red disc with a dark hub and a steel tyre (wheel frame), not a red block. */
 export function farWheel(m: Mesh, r: number): Mesh {
   return tinted(m, [0, 0, 0], (p, c) => {
-    const rho = Math.hypot(p[0], p[2]);
+    const rho = dmath.hypot(p[0], p[2]);
     if (rho < r * 0.1) return OIL;
     return rho > r - 0.03 ? STEEL : c;
   });
@@ -167,11 +168,11 @@ export function worn(ctx: BuildContext, L: Layout): BuildContext {
 
   /** Oil thrown outward from the hub and crank pin; brake and rail dust on the rim. */
   const wheel: Tint = (p, c) => {
-    const rho = Math.hypot(p[0], p[2]);
+    const rho = dmath.hypot(p[0], p[2]);
     const r = Math.max(rho, 0.3);
     const hub = 1 - smooth(0.1, 0.5, rho);
     // Spatter rays: oil leaves the hub along the spokes.
-    const ray = n01(fine, [Math.atan2(p[2], p[0]) * 0.4, 0, rho * 0.3]);
+    const ray = n01(fine, [dmath.atan2(p[2], p[0]) * 0.4, 0, rho * 0.3]);
     let out = mix(c, OIL, 0.85 * hub + 0.45 * ray * (1 - smooth(0.3, 0.75, rho)));
     out = mix(out, DUST, 0.6 * smooth(0.55, 0.85, rho / r) * (0.5 + 0.5 * ray));
     return out;
@@ -212,7 +213,7 @@ export function worn(ctx: BuildContext, L: Layout): BuildContext {
       if (name === 'frame' || name === 'lead_truck' || name === 'boiler_saddle')
         out = mix(out, OIL, 0.4 * (1 - smooth(0.9, 1.7, p[2])) * (0.4 + 0.6 * b));
       // Soot. 1: everything within a metre of the stack mouth.
-      const d = Math.hypot(p[0] - stackTop[0], p[1] - stackTop[1], p[2] - stackTop[2]);
+      const d = dmath.hypot(p[0] - stackTop[0], p[1] - stackTop[1], p[2] - stackTop[2]);
       let soot = 0.9 * (1 - smooth(0.3, 1.9, d));
       // 2: fallout on upward faces behind the stack, thinning down the train.
       const behind = stackTop[0] + 0.7 - p[0];
@@ -221,7 +222,10 @@ export function worn(ctx: BuildContext, L: Layout): BuildContext {
         // platform height can see it; flat tops take it on their upward faces only.
         const up = name === 'boiler_barrel' ? smooth(-0.15, 0.6, n[2]) : smooth(0.1, 0.75, n[2]);
         const high = smooth(1.7, 2.6, p[2]);
-        soot = Math.max(soot, up * high * (0.6 + 0.35 * Math.exp(-behind / 7)) * (0.55 + 0.45 * b));
+        soot = Math.max(
+          soot,
+          up * high * (0.6 + 0.35 * dmath.exp(-behind / 7)) * (0.55 + 0.45 * b),
+        );
         // The cab's front wall and the tender's front board face the blast.
         if (name === 'cab' || name === 'tender_body')
           soot = Math.max(soot, 0.6 * smooth(0.5, 0.9, n[0]) * smooth(1.9, 3.2, p[2]));

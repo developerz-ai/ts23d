@@ -4,7 +4,7 @@
 // the thin lower legs would break up at the coarse cell, so they are emitted as tubes instead:
 // 8-sided, with a ring wherever the coat's colour turns (a stocking edge), on rounded paws.
 
-import { type Mesh, MeshBuilder, merge, place, type Vec3 } from '../core/index.ts';
+import { dmath, type Mesh, MeshBuilder, merge, place, type Vec3 } from '../core/index.ts';
 import { stripRect } from '../material/index.ts';
 import type { SculptEdit } from '../primitives/index.ts';
 import type { Bones, Limb } from './creature-bones.ts';
@@ -97,18 +97,18 @@ function pawMesh(l: Limb, paint: (p: Vec3) => Vec3): Mesh {
   const rows: number[][] = [];
   for (let i = 0; i <= rings; i++) {
     const th = (i / rings) * Math.PI;
-    const x = c[0] - rx * Math.cos(th);
-    const color = v3.mul(paint([x, c[1] + ry * Math.sin(th), sz * 0.5]), 0.85);
+    const x = c[0] - rx * dmath.cos(th);
+    const color = v3.mul(paint([x, c[1] + ry * dmath.sin(th), sz * 0.5]), 0.85);
     const row: number[] = [];
     for (let j = 0; j <= sides; j++) {
       const ph = (j / sides) * Math.PI * 2;
       const n = v3.norm([
-        -Math.cos(th) / rx,
-        (Math.sin(th) * Math.cos(ph)) / ry,
-        (Math.sin(th) * Math.sin(ph)) / rz,
+        -dmath.cos(th) / rx,
+        (dmath.sin(th) * dmath.cos(ph)) / ry,
+        (dmath.sin(th) * dmath.sin(ph)) / rz,
       ]);
-      const z = c[2] + rz * Math.sin(th) * Math.sin(ph);
-      const p: Vec3 = [x, c[1] + ry * Math.sin(th) * Math.cos(ph), Math.max(0, z)];
+      const z = c[2] + rz * dmath.sin(th) * dmath.sin(ph);
+      const p: Vec3 = [x, c[1] + ry * dmath.sin(th) * dmath.cos(ph), Math.max(0, z)];
       row.push(b.vertex({ p, n: z < 0 ? [0, 0, -1] : n, uv, color }));
     }
     rows.push(row);

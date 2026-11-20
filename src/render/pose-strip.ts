@@ -5,6 +5,7 @@
 
 import {
   type CompiledAsset,
+  dmath,
   encodePng,
   type Mesh,
   type Part,
@@ -66,7 +67,7 @@ export function posedMesh(
         acc[k + 3] = (acc[k + 3] ?? 0) + w * (nr[k] ?? 0);
       }
     }
-    const l = Math.hypot(acc[3] ?? 0, acc[4] ?? 0, acc[5] ?? 1) || 1;
+    const l = dmath.hypot(acc[3] ?? 0, acc[4] ?? 0, acc[5] ?? 1) || 1;
     positions.set([acc[0] ?? 0, acc[1] ?? 0, acc[2] ?? 0], v * 3);
     normals.set([(acc[3] ?? 0) / l, (acc[4] ?? 0) / l, (acc[5] ?? 0) / l], v * 3);
   }

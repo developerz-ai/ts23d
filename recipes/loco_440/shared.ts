@@ -7,6 +7,7 @@ import {
   beam,
   box,
   type Check,
+  dmath,
   hex,
   inspect,
   type LatheOptions,
@@ -184,9 +185,9 @@ export function jacketRadius(L: Layout, x: number): number {
 export function facetDepth(r: number, segments: number, u: number): number {
   const step = (Math.PI * 2) / segments;
   const a = Math.abs(u);
-  const k = Math.min(Math.floor(Math.asin(Math.min(1, a / r)) / step), segments / 4 - 1);
-  const [x0, y0] = [r * Math.sin(k * step), r * Math.cos(k * step)];
-  const [x1, y1] = [r * Math.sin((k + 1) * step), r * Math.cos((k + 1) * step)];
+  const k = Math.min(Math.floor(dmath.asin(Math.min(1, a / r)) / step), segments / 4 - 1);
+  const [x0, y0] = [r * dmath.sin(k * step), r * dmath.cos(k * step)];
+  const [x1, y1] = [r * dmath.sin((k + 1) * step), r * dmath.cos((k + 1) * step)];
   return y0 + ((y1 - y0) * (a - x0)) / (x1 - x0);
 }
 
@@ -194,7 +195,7 @@ export function facetDepth(r: number, segments: number, u: number): number {
 export function facetRadius(r: number, segments: number, a: number): number {
   const step = (Math.PI * 2) / segments;
   const off = (((a % step) + step) % step) - step / 2;
-  return (r * Math.cos(step / 2)) / Math.cos(off);
+  return (r * dmath.cos(step / 2)) / dmath.cos(off);
 }
 
 // ---------------------------------------------------------------- builders

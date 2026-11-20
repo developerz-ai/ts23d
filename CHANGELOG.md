@@ -9,6 +9,8 @@ Meshes carry which project materials they were mapped with, so a mesh built outs
 ### Added
 - `mappedOnto(mesh, ...strips)` and `Mesh.mapped`: a mesh records the project materials its UVs map onto. Every primitive sets it; passes and `merge` carry it.
 
+- `dmath` (`import { dmath } from '@developerz.ai/ts23d'`): `sin`, `cos`, `tan`, `asin`, `acos`, `atan`, `atan2`, `exp`, `expm1`, `log`, `log1p`, `log2`, `log10`, `pow`, `cbrt`, `sinh`, `cosh`, `tanh`, `hypot` (2 to 4 components) and `norm(v)` that give the same bits on every CPU, C library and engine (within 1–2 ulp of the true value; a whole exponent in `pow` is repeated multiplication, so `pow(10, n)` is exact). Use them in recipes instead of the `Math.sin` family and `**`: `bun run determinism` now refuses those under `src/`, `recipes/`, `apps/site/src/` and `examples/`.
+- `roundNumber`, `roundJson`, `gltfText`, `GLTF_ROUNDING`, `MANIFEST_ROUNDING`: the one rounding for numbers written into shipped text.
 - `weather({ read: 'hero' })`: stains sized to read with the whole asset in frame (patches at least 6 % of its longest side, a taller splash band, longer streaks, a graded wash). Default `'close'` unchanged.
 - `weather({ tessellation: 'exact' })`: vertices `resolution` apart instead of halved until they fit; about a quarter of the triangles on flat panels. Default unchanged.
 - `text(..., { surface, wrap: true })`: pixel lettering painted across relief also covers the steps between pieces at different depths. Default off.
@@ -21,6 +23,8 @@ Meshes carry which project materials they were mapped with, so a mesh built outs
 
 ### Fixed
 - A mesh built at module level and added in `build()` registers its material in the asset that uses it. On a row the asset holds for another material it is `T3D_MATERIAL_CONFLICT` naming both and the part, where it used to be painted as the other material without an error (D354).
+- The same source now gives the same bytes on any CPU and C library, for geometry, textures, sounds, manifests and renders. A path-traced hero could differ between machines (1,432 pixels on `loco_440` between the dev box and CI), and a C library one last bit different changed GLBs at every LOD (normals, tangents, a vertex count on `t34`): the platform's sine, cosine, exponent, power and hypot differ in the last bit by CPU and version. Every module, recipe, the gallery and the examples now compute with `dmath`. Committed GLB, PNG and manifest bytes change once (D403).
+- Numbers in a GLB's JSON chunk are written at 9 significant digits (a float32 exactly) and in `manifest.json` at 6 decimals, instead of all seventeen digits of a float64: `measured: 5.920000076293945` is now `5.92`.
 - Path-traced hero: clear glass and other see-through surfaces no longer speckle at 16 samples, and light reaching a surface through glass is no longer counted twice (a white furnace behind glass is 1.000, was 1.021). Opaque assets render the same bytes.
 - `fox`: a face override was dropping the sourced 11 cm ear to the kind's 6 cm default.
 - Hair cards no longer leave the skin by more than their lift: a card that runs off a shelf edge (lip, brow ridge) hangs from it instead of pointing out of the face.

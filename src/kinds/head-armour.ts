@@ -5,6 +5,7 @@
 // and a fur mantle of clumped, tapering strands over the trapezius. Head units, mirrored across Y.
 
 import type { Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import type { SculptEdit } from '../primitives/index.ts';
 import { alongZ, unit } from './head-geom.ts';
 import type { HeadParams } from './head-params.ts';
@@ -15,7 +16,7 @@ const shade = (c: Vec3, k: number): Vec3 => [c[0] * k, c[1] * k, c[2] * k];
 
 /** Half-space kept above the plane through `p` whose normal is +Z rolled `deg` about X. */
 const above = (p: Vec3, deg: number): SculptEdit => {
-  const n: Vec3 = [0, -Math.sin(deg * RAD), Math.cos(deg * RAD)];
+  const n: Vec3 = [0, -dmath.sin(deg * RAD), dmath.cos(deg * RAD)];
   return {
     shape: 'roundBox',
     at: [p[0] + n[0], p[1] + n[1], p[2] + n[2]],
@@ -97,7 +98,7 @@ export function armour(p: HeadParams, f: BustFrame, cell = 0): SculptEdit[] {
       const x = at[0] + (j - 1.5) * 0.12;
       out.push({
         shape: 'sphere',
-        at: [x, at[1] + r[1] * 0.62, cut[2] + 0.02 - r[1] * 0.62 * Math.tan(-tilt * RAD) * 0.4],
+        at: [x, at[1] + r[1] * 0.62, cut[2] + 0.02 - r[1] * 0.62 * dmath.tan(-tilt * RAD) * 0.4],
         size: 0.017,
         color: shade(metal, 1.35),
         blend: 0.004,
@@ -163,11 +164,11 @@ export function armour(p: HeadParams, f: BustFrame, cell = 0): SculptEdit[] {
       const a = (-80 + i * 22 + row * 11) * RAD;
       const rr = R + row * 0.07;
       const root: Vec3 = [
-        cx - 0.1 - Math.abs(Math.cos(a)) * rr * 0.9,
-        Math.abs(Math.sin(a)) * rr + 0.02,
+        cx - 0.1 - Math.abs(dmath.cos(a)) * rr * 0.9,
+        Math.abs(dmath.sin(a)) * rr + 0.02,
         nz + 0.16 - row * 0.05,
       ];
-      const dir = unit([-0.7, Math.abs(Math.sin(a)) * 0.8, -0.55 - ((i + row) % 2) * 0.3]);
+      const dir = unit([-0.7, Math.abs(dmath.sin(a)) * 0.8, -0.55 - ((i + row) % 2) * 0.3]);
       out.push({
         shape: 'cone',
         at: root,

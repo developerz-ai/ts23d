@@ -11,6 +11,7 @@
 //   ground    flat soles: everything below z = 0 is cut away so feet rest on the ground plane.
 
 import type { Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import type { SculptEdit } from '../primitives/index.ts';
 import type { Bones, Wing } from './creature-bones.ts';
 import { v3 } from './creature-curve.ts';
@@ -41,7 +42,7 @@ function ovalNeck(nodes: readonly SkinNode[]): SculptEdit {
       // Wider toward the head: the cheek fur runs on into the neck (no collar at the skull).
       size: [r * (0.85 + 0.3 * (i / Math.max(1, nodes.length - 2))), r, v3.len(u) / 2 + r * 0.7],
       // Long axis (local Z) along the segment, pitched in the sagittal plane.
-      rotate: [0, (Math.atan2(u[0], u[2]) * 180) / Math.PI, 0],
+      rotate: [0, (dmath.atan2(u[0], u[2]) * 180) / Math.PI, 0],
       blend: r * 0.6,
       kernel: 'cubic',
     });
@@ -193,7 +194,7 @@ function polygon2(pts: readonly (readonly [number, number])[]): (x: number, y: n
         0,
         Math.min(1, ((x - ax) * ex + (y - ay) * ey) / (ex * ex + ey * ey || 1)),
       );
-      d = Math.min(d, Math.hypot(x - ax - ex * t, y - ay - ey * t));
+      d = Math.min(d, dmath.hypot(x - ax - ex * t, y - ay - ey * t));
       if (ay > y !== by > y && x < ((bx - ax) * (y - ay)) / (by - ay || 1e-12) + ax)
         inside = !inside;
     }

@@ -93,7 +93,7 @@
     {
       "label": "gate height",
       "spec": 3.5,
-      "measured": 3.4999998807907104,
+      "measured": 3.5,
       "source": "recipes/rts_faction/README.md"
     }
   ],

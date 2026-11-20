@@ -5,6 +5,7 @@
 // the inverse transpose of the scale (n.z / k), renormalised.
 
 import type { Mesh } from '@developerz.ai/ts23d';
+import { dmath } from '@developerz.ai/ts23d';
 
 export function squash(m: Mesh, top: number, k: number): Mesh {
   const positions = new Float32Array(m.positions);
@@ -14,7 +15,7 @@ export function squash(m: Mesh, top: number, k: number): Mesh {
     const nx = normals[i] ?? 0;
     const ny = normals[i + 1] ?? 0;
     const nz = (normals[i + 2] ?? 0) / k;
-    const l = Math.hypot(nx, ny, nz) || 1;
+    const l = dmath.hypot(nx, ny, nz) || 1;
     normals[i] = nx / l;
     normals[i + 1] = ny / l;
     normals[i + 2] = nz / l;

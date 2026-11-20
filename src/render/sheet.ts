@@ -6,18 +6,18 @@
 // albedo × vertex colour, see-through glass). Axis views share one scale (the largest span); a
 // 3/4 view widens to its projected bounds so a cube's corners are not cut off.
 
-import {
-  type CompiledAsset,
-  cross,
-  dot,
-  encodePng,
-  normalize,
-  sub,
-  type Vec3,
-} from '../core/index.ts';
+import { type CompiledAsset, cross, dot, encodePng, sub, type Vec3 } from '../core/index.ts';
 import { checkSheetFor, type PaintedSheet } from '../material/index.ts';
 import { drawText } from './font.ts';
-import { drawAsset, line, orthoCamera, type Target, type View, worldParts } from './raster.ts';
+import {
+  drawAsset,
+  line,
+  orthoCamera,
+  type Target,
+  unit,
+  type View,
+  worldParts,
+} from './raster.ts';
 import { sheetTones } from './sheet-tones.ts';
 
 export const VIEWS: readonly View[] = [
@@ -59,8 +59,8 @@ export function bounds(asset: CompiledAsset): {
 
 /** Extent for `view`: the shared largest span, or the projected bounds when that is wider. */
 function viewExtent(view: View, b: ReturnType<typeof bounds>): number {
-  const f = normalize(view.dir);
-  const r = normalize(cross(f, view.up));
+  const f = unit(view.dir);
+  const r = unit(cross(f, view.up));
   const u = cross(r, f);
   let span = 0;
   for (let i = 0; i < 8; i++) {

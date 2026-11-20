@@ -3,7 +3,7 @@
 // octopus stays small.
 
 import { describe, expect, it } from 'bun:test';
-import { type Clip, checkClip, compile, defineAsset, type Track } from '../core/index.ts';
+import { type Clip, checkClip, compile, defineAsset, dmath, type Track } from '../core/index.ts';
 import { chainCrossFindings } from '../qa/chain-cross.ts';
 import { chainTwistFindings } from '../qa/chain-twist.ts';
 import { bodyPlan } from './body-plan.ts';
@@ -29,7 +29,7 @@ const rot = (c: Clip, bone: string): Track | undefined =>
 const angleAt = (t: Track | undefined, i: number): number => {
   if (!t) return 0;
   const v = t.values.subarray(i * 4, i * 4 + 4);
-  return 2 * Math.atan2(Math.hypot(v[0] ?? 0, v[1] ?? 0, v[2] ?? 0), Math.abs(v[3] ?? 1));
+  return 2 * dmath.atan2(dmath.hypot(v[0] ?? 0, v[1] ?? 0, v[2] ?? 0), Math.abs(v[3] ?? 1));
 };
 
 /** Bytes as glTF stores them: float keys, one shared time accessor per clip. */
@@ -108,10 +108,10 @@ describe('octopusClips', () => {
     const t = c.tracks.find((x) => 'bone' in x && x.bone === 'arm_0_1' && x.path === 'translation');
     if (!t) throw new Error('no stretch track');
     const n = t.times.length;
-    const step = Math.hypot(...t.values.subarray((n - 1) * 3, n * 3));
+    const step = dmath.norm(t.values.subarray((n - 1) * 3, n * 3));
     // Link 0 is 1/16 of a 1 m arm; at the end the bump is at the tip, this link fully strained.
     expect(step / (1 / 16)).toBeCloseTo(REACH_STRAIN, 2);
-    expect(Math.hypot(...t.values.subarray(0, 3))).toBeCloseTo(0, 6);
+    expect(dmath.norm(t.values.subarray(0, 3))).toBeCloseTo(0, 6);
   });
 
   it('keeps every idle joint inside the twist limit and closes the loop', () => {

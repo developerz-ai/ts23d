@@ -5,7 +5,7 @@
 // street wall has up close: an oversailing cornice, a belt course over the ground floor and a
 // plinth, each mitred round the corners and stopped square at a party wall.
 
-import { type Lod, type Mesh, merge, place, type Vec2, type Vec3 } from '../core/index.ts';
+import { dmath, type Lod, type Mesh, merge, place, type Vec2, type Vec3 } from '../core/index.ts';
 import { split } from '../grammar/index.ts';
 import type { StripId } from '../material/index.ts';
 import { box, planar, prism, tiled } from '../primitives/index.ts';
@@ -67,7 +67,7 @@ function windowRows(p: CityBuildingPlan): WindowRow[] {
     const taken = p.shared[i] ?? [];
     const a = p.ring[i] ?? [0, 0];
     const b = p.ring[(i + 1) % n] ?? a;
-    const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+    const len = dmath.hypot(b[0] - a[0], b[1] - a[1]);
     if (len < p.bay + 0.6) continue;
     const u: Vec2 = [(b[0] - a[0]) / len, (b[1] - a[1]) / len];
     // A window needs open wall: not on a stretch a neighbour stands against.
@@ -80,7 +80,7 @@ function windowRows(p: CityBuildingPlan): WindowRow[] {
       const z = p.base + f * p.floorHeight + p.floorHeight * 0.26;
       const h = Math.min(p.floorHeight * 0.56, top - z);
       // Counter-clockwise ring: the outward normal is the edge turned clockwise.
-      out.push({ a, u, yaw: Math.atan2(-u[0], u[1]), z, h, slots });
+      out.push({ a, u, yaw: dmath.atan2(-u[0], u[1]), z, h, slots });
     }
   }
   return out;
@@ -144,7 +144,7 @@ function offsetRing(ring: readonly Vec2[], d: number): Vec2[] {
   const normal = (i: number): Vec2 => {
     const a = ring[(i + n) % n] ?? [0, 0];
     const b = ring[(i + 1) % n] ?? a;
-    const l = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1;
+    const l = dmath.hypot(b[0] - a[0], b[1] - a[1]) || 1;
     return [(b[1] - a[1]) / l, -(b[0] - a[0]) / l];
   };
   return ring.map((c, i) => {
@@ -164,7 +164,7 @@ export function cityWalls(p: CityBuildingPlan, height: number, strip: StripId, l
   let run = 0;
   p.ring.forEach((a, i) => {
     const b = p.ring[(i + 1) % p.ring.length] ?? a;
-    const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+    const len = dmath.hypot(b[0] - a[0], b[1] - a[1]);
     if (len < 1e-6) return;
     faces.push(
       tiled({
@@ -203,7 +203,7 @@ export function cityLedge(p: CityBuildingPlan, out: number, height: number, colo
     const j = (i + 1) % n;
     const a = p.ring[i] ?? [0, 0];
     const b = p.ring[j] ?? a;
-    const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+    const len = dmath.hypot(b[0] - a[0], b[1] - a[1]);
     if (len < 1e-6) continue;
     const nrm: Vec2 = [((b[1] - a[1]) / len) * out, (-(b[0] - a[0]) / len) * out];
     const square = (c: Vec2): Vec2 => [c[0] + nrm[0], c[1] + nrm[1]];

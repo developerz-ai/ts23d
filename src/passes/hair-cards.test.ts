@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { createRng, type Mesh, type Vec3 } from '../core/index.ts';
+import { createRng, dmath, type Mesh, type Vec3 } from '../core/index.ts';
 import { at, CELL, field, LEN, R, run, zone } from './hair-fixtures.ts';
 import { clumpOf } from './hair-roots.ts';
 
@@ -62,7 +62,7 @@ describe('hairCards', () => {
   });
 
   test('count follows density × area; Poisson spacing holds', () => {
-    const area = 2 * Math.PI * R * LEN * Math.cos(Math.PI / 24);
+    const area = 2 * Math.PI * R * LEN * dmath.cos(Math.PI / 24);
     const { roots, counts } = run();
     expect(counts['coat']).toBe(roots.length);
     expect(roots.length).toBeGreaterThan(area * 400 * 0.6);
@@ -72,7 +72,7 @@ describe('hairCards', () => {
       for (let j = i + 1; j < roots.length; j++) {
         const a = roots[i] ?? [0, 0, 0];
         const b = roots[j] ?? [0, 0, 0];
-        expect(Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2])).toBeGreaterThan(rmin);
+        expect(dmath.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2])).toBeGreaterThan(rmin);
       }
     expect(run({ zones: [zone({ density: () => 0 })] }).roots).toHaveLength(0);
   });
@@ -187,7 +187,7 @@ describe('hairCards', () => {
       for (const p of tips) {
         let best = Infinity;
         for (const q of tips)
-          if (q !== p) best = Math.min(best, Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2]));
+          if (q !== p) best = Math.min(best, dmath.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2]));
         sum += best;
       }
       return sum / tips.length;

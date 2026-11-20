@@ -3,6 +3,7 @@ import {
   boundsOf,
   compile,
   defineAsset,
+  dmath,
   type Lod,
   type Mesh,
   merge,
@@ -167,7 +168,7 @@ function zeroArea(m: Mesh): number {
     const v = [0, 1, 2].map((k) => (c[k] ?? 0) - (a[k] ?? 0));
     const [ux = 0, uy = 0, uz = 0] = u;
     const [vx = 0, vy = 0, vz = 0] = v;
-    if (Math.hypot(uy * vz - uz * vy, uz * vx - ux * vz, ux * vy - uy * vx) < 1e-12) n++;
+    if (dmath.hypot(uy * vz - uz * vy, uz * vx - ux * vz, ux * vy - uy * vx) < 1e-12) n++;
   }
   return n;
 }

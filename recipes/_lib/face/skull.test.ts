@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { MeshBuilder, type Vec3 } from '@developerz.ai/ts23d';
+import { dmath, MeshBuilder, type Vec3 } from '@developerz.ai/ts23d';
 import { exactField } from './mesh-exact.ts';
 import { HUMAN_PROPORTIONS, measureHead, proportionFindings } from './proportions.ts';
 import { type SkullLandmarks, skullEdit, skullLandmarks, skullOf } from './skull.ts';
@@ -85,7 +85,7 @@ describe('head proportions', () => {
   const k = skullLandmarks(skullOf(who, FRAME));
   // A skin with a 12 cm neck (radius 6 cm round the neck axis) and nothing else.
   const neck = (r: number) => (p: Vec3) =>
-    Math.hypot(p[0] - (k.throat[0] + k.nape[0]) / 2, p[1]) - r;
+    dmath.hypot(p[0] - (k.throat[0] + k.nape[0]) / 2, p[1]) - r;
   const shift = (o: Partial<SkullLandmarks>): SkullLandmarks => ({ ...k, ...o });
   it('fails an eyeball pushed forward out of the orbit (the old bust) and a giraffe neck', () => {
     const forward = shift({ eye: [k.glabella[0] - k.eyeR, k.eye[1], k.eye[2]] });

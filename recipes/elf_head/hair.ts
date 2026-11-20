@@ -7,7 +7,7 @@
 // ears, comb out from the centre parting, sweep back past the ears and fall behind them to the
 // shoulders, colliding with the whole bust so no lock crosses the face or an ear.
 
-import { type Field, type SculptEdit, sculptField, type Vec3 } from '@developerz.ai/ts23d';
+import { dmath, type Field, type SculptEdit, sculptField, type Vec3 } from '@developerz.ai/ts23d';
 import type { BustRecipe } from '../_lib/bust/bust.ts';
 import { flowLocks, hairMass, lock, mix, ribbon } from '../_lib/bust/hair.ts';
 import { type Surface, spline, surface, type V } from '../_lib/bust/kit.ts';
@@ -110,7 +110,7 @@ function capLines(hair: Surface): V[][] {
       const pts: V[] = [];
       for (let i = 0; i <= 9; i++) {
         const e = ((30 + (175 * i) / 9) * Math.PI) / 180;
-        const d: V = [Math.cos(e), Math.sin(e) * Math.sin(phi), Math.sin(e) * Math.cos(phi)];
+        const d: V = [dmath.cos(e), dmath.sin(e) * dmath.sin(phi), dmath.sin(e) * dmath.cos(phi)];
         pts.push(hair.on([c[0] + d[0] * 0.1, c[1] + d[1] * 0.1, c[2] + d[2] * 0.1]));
       }
       return pts.filter((p) => hairline(p) < -0.012);
@@ -154,7 +154,7 @@ const comb = (p: Vec3, n: Vec3): Vec3 => {
   // 0 at the forehead, 1 at the back of the skull.
   const t = clamp01((SK.glabella[0] - p[0]) / (SK.glabella[0] - SK.occiput[0]));
   // Near the ear (above and in front of its root): back, not down.
-  const ear = clamp01(1 - Math.hypot(p[0] - SK.earTop[0], p[2] - SK.earTop[2] - 0.03) / 0.06);
+  const ear = clamp01(1 - dmath.hypot(p[0] - SK.earTop[0], p[2] - SK.earTop[2] - 0.03) / 0.06);
   return [
     -(1.1 - 0.7 * t) - 1.2 * ear,
     // Off the parting: sideways only once past the crown's front, so the front stays covered.

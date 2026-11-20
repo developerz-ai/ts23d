@@ -3,6 +3,8 @@
 // position, so split normals and UV seams still count as neighbours). A uniform hash grid on the
 // triangles' bounds keeps it near-linear on the few thousand triangles round a joint.
 
+import { dmath } from '../core/index.ts';
+
 type V = readonly [number, number, number];
 
 const at = (P: ArrayLike<number>, i: number): V => [
@@ -76,7 +78,7 @@ export function crossingPairs(
       box[i * 6 + k] = Math.min(vs[0]?.[k] ?? 0, vs[1]?.[k] ?? 0, vs[2]?.[k] ?? 0);
       box[i * 6 + 3 + k] = Math.max(vs[0]?.[k] ?? 0, vs[1]?.[k] ?? 0, vs[2]?.[k] ?? 0);
     }
-    edge += Math.hypot(...sub(vs[0] ?? [0, 0, 0], vs[1] ?? [0, 0, 0]));
+    edge += dmath.norm(sub(vs[0] ?? [0, 0, 0], vs[1] ?? [0, 0, 0]));
   });
   const cell = Math.max(1e-6, (edge / n) * 2);
   const grid = new Map<number, number[]>();

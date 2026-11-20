@@ -8,6 +8,7 @@
 
 import {
   cellRect,
+  dmath,
   type Mesh,
   MeshBuilder,
   merge,
@@ -24,7 +25,7 @@ const sub = (a: Vec3, b: Vec3): Vec3 => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
 const add = (a: Vec3, b: Vec3): Vec3 => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
 const scale = (a: Vec3, s: number): Vec3 => [a[0] * s, a[1] * s, a[2] * s];
 const mid = (a: Vec3, b: Vec3): Vec3 => scale(add(a, b), 0.5);
-const len = (a: Vec3): number => Math.hypot(a[0], a[1], a[2]);
+const len = (a: Vec3): number => dmath.hypot(a[0], a[1], a[2]);
 
 /** Leaflets below `zDry` (mesh frame) blend toward dry brown, fully by `zDry − depth`. */
 export function dryLowFronds(leaves: Mesh, zDry: number, depth: number): Mesh {
@@ -55,10 +56,10 @@ export function deadFrond(
   pairs: number,
 ): { rachis: Mesh; leaflets: Mesh } {
   const a = (yawDeg * Math.PI) / 180;
-  const out: Vec3 = [Math.cos(a), Math.sin(a), 0];
+  const out: Vec3 = [dmath.cos(a), dmath.sin(a), 0];
   const path: Vec3[] = [0, 0.25, 0.5, 0.75, 1].map((t) => [
-    root[0] + out[0] * reach * Math.sin((t * Math.PI) / 2),
-    root[1] + out[1] * reach * Math.sin((t * Math.PI) / 2),
+    root[0] + out[0] * reach * dmath.sin((t * Math.PI) / 2),
+    root[1] + out[1] * reach * dmath.sin((t * Math.PI) / 2),
     root[2] + 0.15 - drop * t * t,
   ]);
   const rachis = sweep({
@@ -78,7 +79,7 @@ export function deadFrond(
     const p1 = path[k + 1] ?? p0;
     const f = t * 4 - k;
     const c = add(p0, scale(sub(p1, p0), f));
-    const l = 1.1 * Math.sin(Math.PI * (0.15 + 0.85 * t));
+    const l = 1.1 * dmath.sin(Math.PI * (0.15 + 0.85 * t));
     const shade = 0.85 + (0.15 * ((i * 7) % 5)) / 4;
     for (const s of [1, -1]) {
       // Collapsed leaflets: hang almost straight down, splayed a little to either side.

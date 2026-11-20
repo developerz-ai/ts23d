@@ -6,7 +6,15 @@
 // rusts where water sits (sill, post feet, roof seams), running gear carries brown rail dust, and
 // rust runs down from the door guide, the side plate and the rivets as thin slivers.
 
-import { box, type Mesh, merge, type Rng, type Vec3, valueNoise } from '@developerz.ai/ts23d';
+import {
+  box,
+  dmath,
+  type Mesh,
+  merge,
+  type Rng,
+  type Vec3,
+  valueNoise,
+} from '@developerz.ai/ts23d';
 
 const GRIME: Vec3 = [0.05, 0.04, 0.03];
 const RUST: Vec3 = [0.15, 0.052, 0.022];
@@ -99,7 +107,7 @@ export function wearOf(rng: Rng, paint: Vec3, half: number): Wear {
         // Grime from the rails: nearly opaque on the sill, ragged edge about a metre up the boards.
         const z0 = o.ground ?? 1.0;
         const g = 1 - smooth(z0, z0 + 1.15 + 0.9 * b, p[2]);
-        out = mix(out, grime, 0.92 * g ** 0.9 * (0.75 + 0.25 * n01(fine, p)));
+        out = mix(out, grime, 0.92 * dmath.pow(g, 0.9) * (0.75 + 0.25 * n01(fine, p)));
         // Rust where water sits on the steel: post feet and the sill line.
         const wet = 1 - smooth(z0 + 0.05, z0 + 0.45, p[2]);
         out = mix(out, rust, 0.45 * wet * smooth(0.45, 0.7, n01(fine, [p[0], p[1], p[2] * 0.3])));

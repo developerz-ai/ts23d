@@ -17,6 +17,7 @@ import {
   DECAL_CELLS,
   DEFAULT_SHEET,
   defineAsset,
+  dmath,
   FOLIAGE_CELLS,
   hex,
   type Lod,
@@ -111,7 +112,7 @@ function occlude(m: Mesh, z0: number, reach: number, k = 0.55): Mesh {
 const ball = (r: number, n: number): Vec2[] =>
   Array.from({ length: n + 1 }, (_, i) => {
     const a = (Math.PI * i) / n;
-    return [r * Math.sin(a), r - r * Math.cos(a)] as Vec2;
+    return [r * dmath.sin(a), r - r * dmath.cos(a)] as Vec2;
   });
 
 /** A 1.8 m standing figure for scale (feet at the origin, facing +X), plain grey. */

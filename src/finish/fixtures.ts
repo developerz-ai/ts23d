@@ -2,7 +2,7 @@
 // coplanar slabs of different colours (part-mask leaks), a cube (projection recovery), and a cart
 // with pivots, motion and a joint (identity of everything the code built). Not exported publicly.
 
-import { compile, defineAsset, encodePng } from '../core/index.ts';
+import { compile, defineAsset, dmath, encodePng } from '../core/index.ts';
 import { box, cylinder } from '../primitives/index.ts';
 import type { ControlView, FinishModel, FinishRequest } from './types.ts';
 
@@ -58,9 +58,9 @@ export const lod0 = (a: typeof cart) => compile(a, { lod: 0 });
 
 /** A "model" painting each pixel with f(world position): what a perfect bake must recover. */
 export const gradient = (p: readonly number[]): [number, number, number] => [
-  128 + 100 * Math.sin(2.1 * (p[0] ?? 0)),
-  128 + 100 * Math.sin(2.3 * (p[1] ?? 0)),
-  128 + 100 * Math.sin(1.9 * (p[2] ?? 0)),
+  128 + 100 * dmath.sin(2.1 * (p[0] ?? 0)),
+  128 + 100 * dmath.sin(2.3 * (p[1] ?? 0)),
+  128 + 100 * dmath.sin(1.9 * (p[2] ?? 0)),
 ];
 
 export function paintModel(

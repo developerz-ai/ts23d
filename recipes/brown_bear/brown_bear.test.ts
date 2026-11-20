@@ -3,12 +3,12 @@
 // and the plantigrade gait: before gait-swing knew a sole from a paw, the fore sole sank 17 cm.
 
 import { describe, expect, it } from 'bun:test';
-import { compile, creaturePlan, gaitFindings, type Vec3 } from '@developerz.ai/ts23d';
+import { compile, creaturePlan, dmath, gaitFindings, type Vec3 } from '@developerz.ai/ts23d';
 import { BEAR, brown_bear, MASS_CONFLICTS, REAL, WIKIDATA_MASS } from './brown_bear.ts';
 import { earDisc } from './head.ts';
 
 const SLOW = 120_000;
-const dist = (a: Vec3, b: Vec3): number => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+const dist = (a: Vec3, b: Vec3): number => dmath.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
 
 describe('Eurasian brown bear from the wolf family (Wikipedia: Brown bear; Wikidata Q36341)', () => {
   const { bones } = creaturePlan(BEAR);
@@ -50,7 +50,7 @@ describe('the bear’s own head forms (head.ts)', () => {
       let top = 0;
       let cheeks = 0;
       const P = head?.positions ?? new Float32Array();
-      const [c, s] = [Math.cos(h.pitch), Math.sin(h.pitch)];
+      const [c, s] = [dmath.cos(h.pitch), dmath.sin(h.pitch)];
       for (let i = 0; i < P.length; i += 3) {
         const z = s * (P[i] ?? 0) + c * (P[i + 2] ?? 0);
         const y = Math.abs(P[i + 1] ?? 0);

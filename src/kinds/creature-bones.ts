@@ -5,6 +5,7 @@
 // `armatureOf` exports the record as the core `Armature` (ADR 013) the kind declares via ctx.bone.
 
 import type { Bone, Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import type { Hoof } from './creature-family.ts';
 import type { SkinNode } from './creature-skin.ts';
 import type { Skeleton, Stance } from './creature-spec.ts';
@@ -97,10 +98,11 @@ export const BONE_FRACTION = 0.2;
 
 /** Campione & Evans 2012: humerus + femur circumference (mm) that carries `mass` kg. */
 export const boneCircumference = (mass: number): number =>
-  10 ** ((Math.log10(mass * 1000) + 1.104) / 2.749);
+  dmath.pow(10, (dmath.log10(mass * 1000) + 1.104) / 2.749);
 
 /** Inverse: body mass (kg) carried by humerus + femur circumference `c` mm. */
-export const massFromBones = (c: number): number => 10 ** (2.749 * Math.log10(c) - 1.104) / 1000;
+export const massFromBones = (c: number): number =>
+  dmath.pow(10, 2.749 * dmath.log10(c) - 1.104) / 1000;
 
 /** Upper-limb flesh radius (m) for a mass: each bone half the circumference, flesh = bone / BF. */
 export function allometricLimbR(mass: number): number {
@@ -110,12 +112,12 @@ export function allometricLimbR(mass: number): number {
 
 /** Eyeball radius from mass (wolf 40 kg → 11.5 mm, tiger → 16.5 mm). Howland et al. 2004 give
  *  log-linear scaling with mass; this 0.2 exponent and the 0.0055 factor are unsourced fits. */
-export const eyeRadius = (mass: number): number => 0.0055 * mass ** 0.2;
+export const eyeRadius = (mass: number): number => 0.0055 * dmath.pow(mass, 0.2);
 
 /** Head-local point → world (pitch about Y, then move to the atlas). */
 export function headToWorld(h: HeadFrame, p: Vec3): Vec3 {
-  const c = Math.cos(h.pitch);
-  const s = Math.sin(h.pitch);
+  const c = dmath.cos(h.pitch);
+  const s = dmath.sin(h.pitch);
   return [h.atlas[0] + c * p[0] + s * p[2], h.atlas[1] + p[1], h.atlas[2] - s * p[0] + c * p[2]];
 }
 

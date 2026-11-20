@@ -6,6 +6,7 @@
 // place joints with them.
 
 import type { Mesh, Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import type { TriBvh } from '../primitives/index.ts';
 
 const STRIDE = 8192;
@@ -29,7 +30,7 @@ export function surfaceCloud(mesh: Mesh, gap: number): Float32Array {
         [a, b],
         [b, c],
         [c, a],
-      ].map(([u, v]) => Math.hypot(...[0, 1, 2].map((k) => at(u ?? 0, k) - at(v ?? 0, k)))),
+      ].map(([u, v]) => dmath.norm([0, 1, 2].map((k) => at(u ?? 0, k) - at(v ?? 0, k)))),
     );
     const steps = Math.ceil(edge / gap);
     for (let i = 0; i <= steps; i++)
@@ -124,7 +125,7 @@ export interface Medial {
  * at another height: another section) the answer is `inside: false`, never a point elsewhere.
  */
 export function medial(bvh: TriBvh, p: Vec3, axis: Vec3, reach: number, planar = false): Medial {
-  const al = Math.hypot(axis[0], axis[1], axis[2]) || 1;
+  const al = dmath.hypot(axis[0], axis[1], axis[2]) || 1;
   const u: Vec3 = [axis[0] / al, axis[1] / al, axis[2] / al];
   const q: [number, number, number] = [0, 0, 0];
   const inside = (x: Vec3): boolean => bvh.winding(x) > 0.5;
@@ -134,7 +135,7 @@ export function medial(bvh: TriBvh, p: Vec3, axis: Vec3, reach: number, planar =
     const c: Vec3 = [q[0] - at[0], q[1] - at[1], q[2] - at[2]];
     const off = planar ? c[0] * u[0] + c[1] * u[1] + c[2] * u[2] : 0;
     const flat: Vec3 = [c[0] - u[0] * off, c[1] - u[1] * off, c[2] - u[2] * off];
-    const d = Math.hypot(flat[0], flat[1], flat[2]);
+    const d = dmath.hypot(flat[0], flat[1], flat[2]);
     const go = d + Math.min(reach, Math.max(d, 0.002)) * 0.25;
     if (d < 1e-9 || (planar && go > reach)) return { at: p, r: 0, inside: false };
     const stepped: Vec3 = [
@@ -151,14 +152,14 @@ export function medial(bvh: TriBvh, p: Vec3, axis: Vec3, reach: number, planar =
     const g: Vec3 = [at[0] - q[0], at[1] - q[1], at[2] - q[2]];
     const along = g[0] * u[0] + g[1] * u[1] + g[2] * u[2];
     const flat: Vec3 = [g[0] - u[0] * along, g[1] - u[1] * along, g[2] - u[2] * along];
-    const l = Math.hypot(flat[0], flat[1], flat[2]);
+    const l = dmath.hypot(flat[0], flat[1], flat[2]);
     if (l < 1e-9) break;
     const next: Vec3 = [
       at[0] + (flat[0] / l) * step,
       at[1] + (flat[1] / l) * step,
       at[2] + (flat[2] / l) * step,
     ];
-    const far = Math.hypot(next[0] - p[0], next[1] - p[1], next[2] - p[2]) > reach;
+    const far = dmath.hypot(next[0] - p[0], next[1] - p[1], next[2] - p[2]) > reach;
     const keep: [number, number, number] = [q[0], q[1], q[2]];
     const rn = far || !inside(next) ? -1 : bvh.closest(next, q);
     if (rn > r) [at, r] = [next, rn];

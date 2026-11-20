@@ -3,6 +3,7 @@
 // shot, used for detail close-ups). Z up, +X front; azimuth 0 looks at the front, −35° is a 3/4.
 // `lookAt` is the fixed viewpoint instead (an asset's `hero: { eye, target }`): no auto-framing.
 
+import { dmath } from '../core/index.ts';
 export interface PerspectiveCamera {
   readonly eye: readonly [number, number, number];
   /** Unit right, up, forward (view direction). */
@@ -29,7 +30,7 @@ type V3 = [number, number, number];
 
 /** Right and up for the unit view direction `f`, horizon level (Z up). */
 function frame(f: V3): { r: V3; u: V3 } {
-  const rl = Math.hypot(f[1], f[0]) || 1;
+  const rl = dmath.hypot(f[1], f[0]) || 1;
   const r: V3 = [f[1] / rl, -f[0] / rl, 0];
   const u: V3 = [r[1] * f[2] - r[2] * f[1], r[2] * f[0] - r[0] * f[2], r[0] * f[1] - r[1] * f[0]];
   return { r, u };
@@ -38,7 +39,7 @@ function frame(f: V3): { r: V3; u: V3 } {
 function basis(azDeg: number, elDeg: number): { dir: V3; r: V3; u: V3; f: V3 } {
   const az = (azDeg * Math.PI) / 180;
   const el = (elDeg * Math.PI) / 180;
-  const dir: V3 = [Math.cos(el) * Math.cos(az), Math.cos(el) * Math.sin(az), Math.sin(el)];
+  const dir: V3 = [dmath.cos(el) * dmath.cos(az), dmath.cos(el) * dmath.sin(az), dmath.sin(el)];
   const f: V3 = [-dir[0], -dir[1], -dir[2]];
   return { dir, f, ...frame(f) };
 }
@@ -52,13 +53,13 @@ export function lookAt(
   height: number,
 ): PerspectiveCamera {
   const d: V3 = [target[0] - eye[0], target[1] - eye[1], target[2] - eye[2]];
-  const l = Math.hypot(d[0], d[1], d[2]) || 1;
+  const l = dmath.hypot(d[0], d[1], d[2]) || 1;
   const f: V3 = [d[0] / l, d[1] / l, d[2] / l];
   return {
     eye: [eye[0], eye[1], eye[2]],
     ...frame(f),
     f,
-    focal: height / 2 / Math.tan((fovDeg * Math.PI) / 360),
+    focal: height / 2 / dmath.tan((fovDeg * Math.PI) / 360),
     cx: width / 2,
     cy: height / 2,
     width,
@@ -102,10 +103,10 @@ export function frameOrbit(
     hi = [0.5, 0.5, 0.5];
   }
   const target: V3 = [(lo[0] + hi[0]) / 2, (lo[1] + hi[1]) / 2, (lo[2] + hi[2]) / 2];
-  const radius = Math.max(Math.hypot(hi[0] - lo[0], hi[1] - lo[1], hi[2] - lo[2]) / 2, 0.05);
-  const tanY = Math.tan((o.fovDeg * Math.PI) / 360);
+  const radius = Math.max(dmath.hypot(hi[0] - lo[0], hi[1] - lo[1], hi[2] - lo[2]) / 2, 0.05);
+  const tanY = dmath.tan((o.fovDeg * Math.PI) / 360);
   const focal = height / 2 / tanY;
-  let dist = radius / Math.sin(Math.atan(tanY)) + radius;
+  let dist = radius / dmath.sin(dmath.atan(tanY)) + radius;
   const at = (d: number): PerspectiveCamera => ({
     eye: [target[0] + dir[0] * d, target[1] + dir[1] * d, target[2] + dir[2] * d],
     r,
@@ -138,7 +139,7 @@ export function frameOrbit(
     for (let a = 0; a < 3; a++) target[a] = (target[a] ?? 0) + (r[a] ?? 0) * ox + (u[a] ?? 0) * oy;
     const need = Math.max((x1 - x0) / (width * o.fill), (y1 - y0) / (height * o.fill));
     // Perspective: dolly on the part of the distance in front of the target, not through it.
-    dist = Math.max(dist * need ** 0.85, radius * 1.05);
+    dist = Math.max(dist * dmath.pow(need, 0.85), radius * 1.05);
   }
   return at(dist);
 }

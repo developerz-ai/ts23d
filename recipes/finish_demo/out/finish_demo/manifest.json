@@ -41,25 +41,25 @@
   "real": {
     "length": 1.2,
     "width": 0.8,
-    "height": 0.9440000000000001
+    "height": 0.944
   },
   "measures": [
     {
       "label": "pallet length",
       "spec": 1.2,
-      "measured": 1.2000000476837158,
+      "measured": 1.2,
       "source": "EN 13698-1"
     },
     {
       "label": "pallet width",
       "spec": 0.8,
-      "measured": 0.800000011920929,
+      "measured": 0.8,
       "source": "EN 13698-1"
     },
     {
       "label": "pallet height",
       "spec": 0.144,
-      "measured": 0.14499999582767487,
+      "measured": 0.145,
       "source": "EN 13698-1"
     }
   ],

@@ -9,6 +9,7 @@
 // antialiased with a band that widens at coarse LODs (vertex spacing).
 
 import type { Vec3 } from '@developerz.ai/ts23d';
+import { dmath } from '@developerz.ai/ts23d';
 import { arcT, smoothstep, spline } from '../_lib/creature/curve.ts';
 import { SK } from './skeleton.ts';
 import { FORE_CHAIN, HIND_CHAIN, legFrame, lerpTable, TOP_LINE, whiteEdge } from './zones.ts';
@@ -78,7 +79,7 @@ function sideOf(k: number, s: number, x: number): SideStripe {
     wobP: r(5) * 6.283,
     reach: (0.85 + 0.4 * r(6)) * (1 - 0.15 * shoulder),
     start: shoulder * (0.05 + 0.25 * r(7)) + (r(8) < 0.15 ? 0.2 + 0.3 * r(9) : 0),
-    w: (0.008 + 0.014 * r(10) ** 1.4) * (1 - 0.25 * shoulder),
+    w: (0.008 + 0.014 * dmath.pow(r(10), 1.4)) * (1 - 0.25 * shoulder),
     fork: r(11) < 0.38 ? 0.35 + 0.35 * r(12) : 2,
     gap: r(13) < 0.3 ? 0.45 + 0.35 * r(14) : 2,
     twin: r(15) < 0.18 ? 0.018 + 0.008 * r(16) : 0,
@@ -106,7 +107,7 @@ const cover = (d: number, w: number, aa: number): number =>
 /** One side-stripe's coverage at (x, descent). */
 function stripeAt(a: number, st: SideStripe, x: number, s: number, aa: number): number {
   if (s < st.start - 0.05 || s > st.reach + 0.05) return 0;
-  const centre = a + st.slant * s + st.bend * s * s + st.wobA * Math.sin(st.wobF * s + st.wobP);
+  const centre = a + st.slant * s + st.bend * s * s + st.wobA * dmath.sin(st.wobF * s + st.wobP);
   // Taper: full from the start, thinning over the last third of the reach; soft start.
   const taper =
     smoothstep(st.reach, st.reach - 0.3, s) * smoothstep(st.start - 0.05, st.start + 0.1, s);
@@ -225,7 +226,7 @@ export function legStripe(p: Vec3, lod: number): number {
     const r = (s: number): number => hash(spec.salt + k * 2 + side, s);
     const zc = spec.zLo + ((k + 0.3 + 0.4 * r(1)) / spec.bands) * (spec.zHi - spec.zLo);
     // Bands slope down toward the back and wobble round the leg.
-    const centre = zc + (0.05 + 0.06 * r(2)) * -f.rx * 0.5 + 0.006 * Math.sin(f.ry * 4 + r(3) * 6);
+    const centre = zc + (0.05 + 0.06 * r(2)) * -f.rx * 0.5 + 0.006 * dmath.sin(f.ry * 4 + r(3) * 6);
     const w = spec.w * (0.6 + 0.8 * r(4)) * smoothstep(spec.zLo - 0.02, spec.zLo + 0.06, zc);
     // Some bands only wrap part of the leg.
     const part = r(5) < 0.35 ? smoothstep(-0.2, 0.3, f.ry) : 1;
@@ -246,13 +247,13 @@ export function tailCoord(p: Vec3): { t: number; up: number } {
     const b = TAIL[i + 1];
     if (!a || !b) continue;
     const ab: Vec3 = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
-    const l2 = ab[0] ** 2 + ab[1] ** 2 + ab[2] ** 2 || 1;
+    const l2 = ab[0] * ab[0] + ab[1] * ab[1] + ab[2] * ab[2] || 1;
     const u = Math.min(
       1,
       Math.max(0, ((p[0] - a[0]) * ab[0] + (p[1] - a[1]) * ab[1] + (p[2] - a[2]) * ab[2]) / l2),
     );
     const q: Vec3 = [a[0] + ab[0] * u, a[1] + ab[1] * u, a[2] + ab[2] * u];
-    const d = Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2]);
+    const d = dmath.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2]);
     if (d < best.d) {
       const t0 = TAIL_T[i] ?? 0;
       const t1 = TAIL_T[i + 1] ?? 1;

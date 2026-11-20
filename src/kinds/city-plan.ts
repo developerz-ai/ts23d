@@ -64,7 +64,7 @@ export const CITY_BANDS = { roof: 0.3, cornice: 0.45, minBody: 1 } as const;
 
 /** 32-bit integer hash (splitmix-style finaliser): an OSM id → a stable seed. */
 export function hashId(id: number): number {
-  let h = (Math.floor(id) ^ (Math.floor(id / 2 ** 32) * 0x9e3779b1)) >>> 0;
+  let h = (Math.floor(id) ^ (Math.floor(id / 4294967296 /* 2^32 */) * 0x9e3779b1)) >>> 0;
   h = Math.imul(h ^ (h >>> 16), 0x85ebca6b) >>> 0;
   h = Math.imul(h ^ (h >>> 13), 0xc2b2ae35) >>> 0;
   return (h ^ (h >>> 16)) >>> 0;

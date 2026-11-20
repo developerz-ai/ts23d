@@ -8,7 +8,14 @@
 // a bone that is neither the plan's nor declared here is still refused (model-body.ts).
 // `motion` says how the creature's clips drive the chain (model-extra-clips.ts).
 
-import { type Bone, type JointLimit, type Mesh, Ts23dError, type Vec3 } from '../core/index.ts';
+import {
+  type Bone,
+  dmath,
+  type JointLimit,
+  type Mesh,
+  Ts23dError,
+  type Vec3,
+} from '../core/index.ts';
 import { MID } from './creature-helpers.ts';
 
 /** How the clips move an extra chain: one looping clip of its own, and small parts in others. */
@@ -129,7 +136,7 @@ export function resolveExtra(extra: ExtraChains | undefined, fit: ExtraFit): rea
       const q = c.joints[i + 1];
       if (
         !p.every(Number.isFinite) ||
-        (q && Math.hypot(q[0] - p[0], q[1] - p[1], q[2] - p[2]) < 1e-3)
+        (q && dmath.hypot(q[0] - p[0], q[1] - p[1], q[2] - p[2]) < 1e-3)
       )
         invalid(
           `'${c.name}': joint ${i} is not finite or sits on the next one`,

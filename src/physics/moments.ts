@@ -4,6 +4,7 @@
 // mass properties) of a 3D solid body represented by a triangle mesh" (2004).
 
 import type { Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import type { Mat3 } from './linalg.ts';
 
 export interface Moments {
@@ -50,7 +51,7 @@ export function addSheet(m: Moments, a: Vec3, b: Vec3, c: Vec3, sigma: number): 
   const u = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
   const v = [c[0] - a[0], c[1] - a[1], c[2] - a[2]];
   const area =
-    Math.hypot(
+    dmath.hypot(
       (u[1] ?? 0) * (v[2] ?? 0) - (u[2] ?? 0) * (v[1] ?? 0),
       (u[2] ?? 0) * (v[0] ?? 0) - (u[0] ?? 0) * (v[2] ?? 0),
       (u[0] ?? 0) * (v[1] ?? 0) - (u[1] ?? 0) * (v[0] ?? 0),

@@ -2,7 +2,7 @@
 // change of each bone's (tangent, dorsal) frame from rest, so a roll never creeps in on the coil.
 
 import type { BodyPlan, Clip, Quat, Track, Vec3 } from '@developerz.ai/ts23d';
-import { quatRotate } from '@developerz.ai/ts23d';
+import { dmath, quatRotate } from '@developerz.ai/ts23d';
 import { add, cross, dot, norm, scale, sub } from '../_lib/body-plan-kit.ts';
 
 export const qmul = (a: Quat, b: Quat): Quat => [
@@ -13,10 +13,10 @@ export const qmul = (a: Quat, b: Quat): Quat => [
 ];
 export const qconj = (q: Quat): Quat => [-q[0], -q[1], -q[2], q[3]];
 export const qaxis = (v: Vec3): Quat => {
-  const a = Math.hypot(v[0], v[1], v[2]);
+  const a = dmath.hypot(v[0], v[1], v[2]);
   if (a < 1e-9) return [0, 0, 0, 1];
-  const s = Math.sin(a / 2) / a;
-  return [v[0] * s, v[1] * s, v[2] * s, Math.cos(a / 2)];
+  const s = dmath.sin(a / 2) / a;
+  return [v[0] * s, v[1] * s, v[2] * s, dmath.cos(a / 2)];
 };
 
 /** Rotation whose columns are the orthonormal basis (x, y, z). */
@@ -47,7 +47,7 @@ function basisQuat(x: Vec3, y: Vec3, z: Vec3): Quat {
     const s = Math.sqrt(1 + m22 - m00 - m11) * 2;
     q = [(m02 + m20) / s, (m12 + m21) / s, s / 4, (m10 - m01) / s];
   }
-  const l = Math.hypot(q[0], q[1], q[2], q[3]);
+  const l = dmath.hypot(q[0], q[1], q[2], q[3]);
   return [q[0] / l, q[1] / l, q[2] / l, q[3] / l];
 }
 
@@ -160,17 +160,17 @@ export function qslerp(a: Quat, b: Quat, k: number): Quat {
   const d = a[0] * b[0] + a[1] * b[1] + a[2] * b[2] + a[3] * b[3];
   const s = d < 0 ? -1 : 1;
   const c = Math.min(1, Math.abs(d));
-  const th = Math.acos(c);
+  const th = dmath.acos(c);
   const [wa, wb] =
     th < 1e-5
       ? [1 - k, k * s]
-      : [Math.sin((1 - k) * th) / Math.sin(th), (s * Math.sin(k * th)) / Math.sin(th)];
+      : [dmath.sin((1 - k) * th) / dmath.sin(th), (s * dmath.sin(k * th)) / dmath.sin(th)];
   const q: Quat = [
     a[0] * wa + b[0] * wb,
     a[1] * wa + b[1] * wb,
     a[2] * wa + b[2] * wb,
     a[3] * wa + b[3] * wb,
   ];
-  const l = Math.hypot(q[0], q[1], q[2], q[3]);
+  const l = dmath.hypot(q[0], q[1], q[2], q[3]);
   return [q[0] / l, q[1] / l, q[2] / l, q[3] / l];
 }

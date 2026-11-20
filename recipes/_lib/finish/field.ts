@@ -7,6 +7,7 @@
 import {
   type BuildContext,
   defineMaterial,
+  dmath,
   hex,
   type Mesh,
   merge,
@@ -201,7 +202,7 @@ export function wheelMud(
       m.positions[i * 3 + 1] ?? 0,
       m.positions[i * 3 + 2] ?? 0,
     ];
-    const rad = Math.hypot(p[0], p[2]) / r;
+    const rad = dmath.hypot(p[0], p[2]) / r;
     const n = noise(p);
     // Opaque where it is packed (rim, tyre, the outer dish), ragged toward the clean hub.
     const dry = strength * smooth(0.34, 0.56, rad + 0.5 * (n - 0.5));
@@ -306,7 +307,7 @@ export function chipFlecks(
   const sub = sub3;
   const crs = cross3;
   const unit = (a: Vec3): Vec3 => {
-    const l = Math.hypot(a[0], a[1], a[2]) || 1;
+    const l = dmath.hypot(a[0], a[1], a[2]) || 1;
     return [a[0] / l, a[1] / l, a[2] / l];
   };
   const dot = (a: Vec3, b: Vec3): number => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
@@ -322,7 +323,7 @@ export function chipFlecks(
       const along = unit(sub(b, a));
       let inward = unit(crs(n, along));
       if (dot(inward, sub(cen, a)) < 0) inward = [-inward[0], -inward[1], -inward[2]];
-      return { a, len: Math.hypot(...sub(b, a)), along, inward, n };
+      return { a, len: dmath.norm(sub(b, a)), along, inward, n };
     });
   });
   const total = edges.reduce((l, e) => l + e.len, 0);
@@ -356,7 +357,7 @@ export function chipFlecks(
     const shape = Array.from({ length: sides }, (_, i): [number, number] => {
       const ang = flip * ((i / sides) * Math.PI * 2 + turn);
       const r = size * rng.range(0.55, 1);
-      return [Math.cos(ang) * r * stretch, Math.sin(ang) * r];
+      return [dmath.cos(ang) * r * stretch, dmath.sin(ang) * r];
     });
     const color = rng.pick(colors);
     const points: Vec3[] = [];
@@ -368,7 +369,7 @@ export function chipFlecks(
       ];
       const hit = rayHit(onto, from, back);
       // A ray that runs off the plate lands on whatever lies behind it: that is not this plate.
-      if (!hit || Math.hypot(...sub(hit, from)) > 0.16) continue;
+      if (!hit || dmath.norm(sub(hit, from)) > 0.16) continue;
       points.push([hit[0] + e.n[0] * 0.0015, hit[1] + e.n[1] * 0.0015, hit[2] + e.n[2] * 0.0015]);
     }
     if (points.length < sides) continue;
@@ -383,7 +384,7 @@ export const sootPlume =
   (p: Vec3): number => {
     const dx = (p[0] - at[0]) * (p[0] < at[0] ? 0.6 : 1.3);
     const dz = (p[2] - at[2]) * (p[2] > at[2] ? 0.5 : 1.2);
-    const d = Math.hypot(dx, p[1] - at[1], dz) / radius;
+    const d = dmath.hypot(dx, p[1] - at[1], dz) / radius;
     return d < 1 ? strength * (1 - smooth(0.15, 1, d + 0.25 * (noise(p) - 0.5))) : 0;
   };
 
@@ -451,7 +452,7 @@ export function fieldCoat(
         (p) => {
           const dx = (p[0] - s.at[0]) * (p[0] < s.at[0] ? 0.7 : 1);
           const dz = (p[2] - s.at[2]) * (p[2] > s.at[2] ? 0.6 : 0.85);
-          const d = Math.hypot(dx, p[1] - s.at[1], dz) / s.radius;
+          const d = dmath.hypot(dx, p[1] - s.at[1], dz) / s.radius;
           return d < 1 ? s.strength * (1 - smooth(0.15, 1, d + 0.25 * (grain(p) - 0.5))) : 0;
         },
         at,

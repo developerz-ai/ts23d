@@ -3,7 +3,7 @@
 // functions instead of re-implementing them.
 
 import { describe, expect, it } from 'bun:test';
-import { compile, createRng, type Mesh, place, Ts23dError } from '../core/index.ts';
+import { compile, createRng, dmath, type Mesh, place, Ts23dError } from '../core/index.ts';
 import { sculptField } from '../primitives/index.ts';
 import { type CreatureInfo, defineCreature } from './creature.ts';
 import { v3 } from './creature-curve.ts';
@@ -88,7 +88,7 @@ describe('grooming with the kind’s rig', () => {
     expect([...j.slice(0, 4)]).toEqual([...j.slice(4, 8)]);
     // No card on the nose leather.
     for (let i = 0; i < cards.positions.length; i += 3) {
-      const d = Math.hypot(
+      const d = dmath.hypot(
         (cards.positions[i] ?? 0) - info.bare.nose[0],
         Math.abs(cards.positions[i + 1] ?? 0) - Math.abs(info.bare.nose[1]),
         (cards.positions[i + 2] ?? 0) - info.bare.nose[2],

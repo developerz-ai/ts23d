@@ -7,6 +7,7 @@
 
 import {
   type CompiledAsset,
+  dmath,
   isTs23dError,
   pngHeader,
   TEXTURE_DEFAULTS,
@@ -107,7 +108,7 @@ export function setTextures(set: TextureSet, part: string): SetTextures {
   const normal = set.normal ? mapMips(set.normal, 'normal', where) : [];
   const orm = set.orm ? mapMips(set.orm, 'orm', where) : [];
   const size = albedo[0]?.size ?? 1;
-  const shift = (m: readonly Mip8[]): number => Math.round(Math.log2(size / (m[0]?.size ?? size)));
+  const shift = (m: readonly Mip8[]): number => Math.round(dmath.log2(size / (m[0]?.size ?? size)));
   return {
     name: set.name,
     size,

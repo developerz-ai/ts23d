@@ -11,6 +11,7 @@
 
 import {
   defineMaterial,
+  dmath,
   type Mesh,
   merge,
   type StripId,
@@ -131,7 +132,7 @@ export function lipZone(k: {
   const hy = Math.abs(k.corner[1]) * 0.98;
   const back = Math.min(k.sup[0], k.inf[0]) - 0.014;
   return (p) => {
-    const e = (p[1] / hy) ** 2 + ((p[2] - cz) / hz) ** 2;
+    const e = dmath.pow(p[1] / hy, 2) + dmath.pow((p[2] - cz) / hz, 2);
     return e < 1 && p[0] > back ? 1 : 0;
   };
 }
@@ -153,7 +154,7 @@ export function tZone(
     // Above the brow: a band three nose-widths across; below it: the nose and the chin's centre.
     const brow = p[2] > k.glabella[2] ? y - halfNose * 3 : Number.POSITIVE_INFINITY;
     const nose = p[2] <= k.glabella[2] && p[2] > k.noseTip[2] - halfNose ? y - halfNose : Infinity;
-    const chin = Math.hypot(y, p[2] - k.chin[2]) - halfNose * 1.2;
+    const chin = dmath.hypot(y, p[2] - k.chin[2]) - halfNose * 1.2;
     const front = k.chin[0] - 0.04 - p[0];
     const d = Math.max(Math.min(brow, nose, chin), front, p[2] - k.forehead[2]);
     return Math.min(1, Math.max(0, 0.5 - d / soft));

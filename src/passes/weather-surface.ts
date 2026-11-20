@@ -3,6 +3,7 @@
 // cavities), connected pieces, and the ground. Sky exposure is separate (weather-exposure.ts).
 
 import type { Mesh } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 
 export interface Surface {
   readonly mesh: Mesh;
@@ -84,7 +85,7 @@ function areas(m: Mesh): Float64Array {
     const cx = e(b, 1) * e(c, 2) - e(b, 2) * e(c, 1);
     const cy = e(b, 2) * e(c, 0) - e(b, 0) * e(c, 2);
     const cz = e(b, 0) * e(c, 1) - e(b, 1) * e(c, 0);
-    const third = Math.hypot(cx, cy, cz) / 6;
+    const third = dmath.hypot(cx, cy, cz) / 6;
     out[a] = (out[a] ?? 0) + third;
     out[b] = (out[b] ?? 0) + third;
     out[c] = (out[c] ?? 0) + third;
@@ -104,7 +105,7 @@ export function analyse(mesh: Mesh): Surface {
   }
   const convex = new Float32Array(groups);
   for (let g = 0; g < groups; g++) {
-    const l = Math.hypot(gn[g * 3] ?? 0, gn[g * 3 + 1] ?? 0, gn[g * 3 + 2] ?? 0) || 1;
+    const l = dmath.hypot(gn[g * 3] ?? 0, gn[g * 3 + 1] ?? 0, gn[g * 3 + 2] ?? 0) || 1;
     let sum = 0;
     const s = nbrStart[g] ?? 0;
     const e = nbrStart[g + 1] ?? 0;

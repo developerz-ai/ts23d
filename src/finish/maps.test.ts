@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test';
+import { dmath } from '../core/index.ts';
 import { tex } from '../material/index.ts';
 import { deriveMaps, graphHeight } from './maps.ts';
 import type { Texels } from './texels.ts';
@@ -52,9 +53,11 @@ describe('deriveMaps', () => {
   });
 
   it('concave height roughens; convex does not', () => {
-    const bowl = deriveMaps(patch(N), grey, { height: (x, y) => (x - 0.5) ** 2 + (y + 0.5) ** 2 });
+    const bowl = deriveMaps(patch(N), grey, {
+      height: (x, y) => dmath.pow(x - 0.5, 2) + dmath.pow(y + 0.5, 2),
+    });
     const dome = deriveMaps(patch(N), grey, {
-      height: (x, y) => -((x - 0.5) ** 2) - (y + 0.5) ** 2,
+      height: (x, y) => -dmath.pow(x - 0.5, 2) - dmath.pow(y + 0.5, 2),
     });
     const i = (N / 2) * N + N / 2;
     expect(bowl.orm[i * 4 + 1] ?? 0).toBeGreaterThan(150);

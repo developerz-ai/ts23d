@@ -3,6 +3,7 @@
 // transform and velocity, and simulates pooled billboard particles with seeded randomness.
 
 import type { Emitter } from '@developerz.ai/ts23d';
+import { dmath } from '@developerz.ai/ts23d/core';
 import { Group, MathUtils, type Object3D, Vector3 } from 'three';
 import { prng } from './noise.ts';
 import { capFor, KINDS, type KindStyle } from './particle-kinds.ts';
@@ -162,11 +163,11 @@ export class Particles {
     if (Math.abs(tmpDir.x) > 0.9) basisA.set(0, 1, 0);
     basisA.cross(tmpDir).normalize();
     basisB.crossVectors(tmpDir, basisA);
-    const sinS = Math.sin(spread);
+    const sinS = dmath.sin(spread);
     const dir = tmpDir
-      .multiplyScalar(Math.cos(spread))
-      .addScaledVector(basisA, sinS * Math.cos(phi))
-      .addScaledVector(basisB, sinS * Math.sin(phi));
+      .multiplyScalar(dmath.cos(spread))
+      .addScaledVector(basisA, sinS * dmath.cos(phi))
+      .addScaledVector(basisB, sinS * dmath.sin(phi));
     const speed = (s.spec.speed ?? 0.8) * (0.75 + 0.5 * r());
     const color = s.spec.color ?? s.style.color;
     const i = pool.count++ * FLOATS;
@@ -205,7 +206,7 @@ export class Particles {
         if (owner) owner.live--;
         continue;
       }
-      const drag = Math.exp(-(d[i + 15] ?? 1) * dt);
+      const drag = dmath.exp(-(d[i + 15] ?? 1) * dt);
       const buoyancy = d[i + 16] ?? 0;
       const j = n * FLOATS;
       // Compact in place: survivors move down over the dead.
@@ -228,7 +229,7 @@ export class Particles {
       tint[n * 4] = d[j + 11] ?? 1;
       tint[n * 4 + 1] = d[j + 12] ?? 1;
       tint[n * 4 + 2] = d[j + 13] ?? 1;
-      tint[n * 4 + 3] = (d[j + 10] ?? 1) * fadeIn * (1 - t) ** 1.5;
+      tint[n * 4 + 3] = (d[j + 10] ?? 1) * fadeIn * dmath.pow(1 - t, 1.5);
       n++;
     }
     pool.count = n;

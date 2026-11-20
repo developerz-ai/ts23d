@@ -5,7 +5,7 @@
 // steering pivot and spinning wheels are declared clear of (they meet at ball joints / splines).
 
 import type { Lod, Mesh, Vec3 } from '@developerz.ai/ts23d';
-import { lathe, merge, sweep } from '@developerz.ai/ts23d';
+import { dmath, lathe, merge, sweep } from '@developerz.ai/ts23d';
 import { X_RA, Z_RA } from '../dims.ts';
 import { C } from '../lib/colors.ts';
 import { add, along, lerp3, mul, rod, shift, sub, tube, unit } from '../lib/geo.ts';
@@ -43,7 +43,7 @@ function aArm(lod: Lod, a: Vec3, b: Vec3, bj: Vec3, d: number): Mesh {
 /** Coil-over: damper body, piston rod, helical spring between perches, top mount. */
 export function coilover(lod: Lod, low: Vec3, top: Vec3): Mesh {
   const ax = unit(sub(top, low));
-  const L = Math.hypot(...sub(top, low));
+  const L = dmath.norm(sub(top, low));
   const segs = lod === 0 ? 8 : 5;
   // Author along +X then orient.
   const parts: Mesh[] = [
@@ -87,7 +87,7 @@ export function coilover(lod: Lod, low: Vec3, top: Vec3): Mesh {
     for (let i = 0; i <= n; i++) {
       const t = i / n;
       const a = t * turns * Math.PI * 2;
-      path.push([L * (0.225 + 0.7 * t), 0.042 * Math.cos(a), 0.042 * Math.sin(a)]);
+      path.push([L * (0.225 + 0.7 * t), 0.042 * dmath.cos(a), 0.042 * dmath.sin(a)]);
     }
     parts.push(
       sweep({
@@ -246,8 +246,8 @@ export function suspension(lod: Lod): SuspensionMeshes {
       const a = (k / 10) * Math.PI * 2;
       rear.push(
         rod(
-          [X_RA - 0.157, 0.12 * Math.cos(a), diffAt[2] + 0.12 * Math.sin(a)],
-          [X_RA - 0.177, 0.12 * Math.cos(a), diffAt[2] + 0.12 * Math.sin(a)],
+          [X_RA - 0.157, 0.12 * dmath.cos(a), diffAt[2] + 0.12 * dmath.sin(a)],
+          [X_RA - 0.177, 0.12 * dmath.cos(a), diffAt[2] + 0.12 * dmath.sin(a)],
           0.012,
           C.ironDark,
           'chrome',
@@ -268,7 +268,7 @@ export function suspension(lod: Lod): SuspensionMeshes {
         const prof: [number, number][] = [];
         for (let k = 0; k <= 8; k++)
           prof.push([
-            0.022 + (k % 2 ? 0.012 : 0) + 0.012 * Math.sin((k / 8) * Math.PI),
+            0.022 + (k % 2 ? 0.012 : 0) + 0.012 * dmath.sin((k / 8) * Math.PI),
             -0.04 + k * 0.01,
           ]);
         rear.push(

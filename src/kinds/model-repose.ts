@@ -10,7 +10,7 @@
 // A bone (tail bones aside) may turn at most REPOSE_LIMIT degrees: more is not a correction but
 // another pose (a ¾ concept's head), and fails with T3D_MODEL_SKELETON naming the bone.
 
-import { type Bone, Ts23dError, type Vec3 } from '../core/index.ts';
+import { type Bone, dmath, Ts23dError, type Vec3 } from '../core/index.ts';
 import { v3 } from './creature-curve.ts';
 
 /** Most a bone may turn between the fitted rest and the target rest, degrees. The profile wolf's
@@ -29,10 +29,10 @@ const flip = (p: Vec3): Vec3 => [p[0], -p[1], p[2]];
 /** A vector laid into the sagittal plane at its own length: its sideways part is dropped and the
  *  rest stretched to make up (a vector pointing straight sideways turns forward instead). */
 const unroll = (d: Vec3): Vec3 => {
-  const [flat, full] = [Math.hypot(d[0], d[2]), Math.hypot(d[0], d[1], d[2])];
+  const [flat, full] = [dmath.hypot(d[0], d[2]), dmath.hypot(d[0], d[1], d[2])];
   return flat > full * 0.2
     ? [(d[0] * full) / flat, 0, (d[2] * full) / flat]
-    : [Math.hypot(d[0], d[1]), 0, d[2]];
+    : [dmath.hypot(d[0], d[1]), 0, d[2]];
 };
 
 /** The symmetric, straightened rest of fitted bones (helpers excluded; parents first). */
@@ -90,7 +90,7 @@ export function reposeTarget(fitted: readonly Bone[]): ReposeTarget {
       ];
       return {
         bone: b.name,
-        degrees: (Math.acos(Math.min(1, Math.max(-1, v3.dot(u, w)))) * 180) / Math.PI,
+        degrees: (dmath.acos(Math.min(1, Math.max(-1, v3.dot(u, w)))) * 180) / Math.PI,
       };
     })
     .sort((p, q) => q.degrees - p.degrees);

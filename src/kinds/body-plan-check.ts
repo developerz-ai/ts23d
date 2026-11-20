@@ -4,7 +4,7 @@
 // from parent copy k. `length` must fit the body: from about the root chain's arc up to the longest
 // root-to-tip run of chains. Every refusal is T3D_RECIPE_INVALID with a fix.
 
-import { Ts23dError, type Vec3 } from '../core/index.ts';
+import { dmath, Ts23dError, type Vec3 } from '../core/index.ts';
 import { chainCopies, chainCurve, linkStops } from './body-plan-curve.ts';
 import type { BodyPlanSpec, ChainRepeat, ChainSpec } from './body-plan-types.ts';
 
@@ -25,7 +25,7 @@ function checkRepeat(c: ChainSpec, r: ChainRepeat): void {
   if (r.kind === 'mirror') return;
   if (!(Number.isInteger(r.count) && r.count >= 2))
     fail(`chain '${c.name}' radial count is ${r.count}`, 'use a whole count of 2 or more');
-  if (!finite(r.axis) || Math.hypot(...r.axis) < 1e-9)
+  if (!finite(r.axis) || dmath.norm(r.axis) < 1e-9)
     fail(`chain '${c.name}' radial axis is zero or not finite`, 'pass a direction, e.g. [0, 0, 1]');
   if (!finite(r.about))
     fail(`chain '${c.name}' radial centre is not finite`, 'pass a point, e.g. [0, 0, 0.4]');
@@ -52,7 +52,7 @@ function checkChain(c: ChainSpec): void {
   c.path.forEach((p, i) => {
     if (!finite(p)) fail(`${at} station ${i} is not a finite point`, 'pass metres: [x, y, z]');
     const q = c.path[i - 1];
-    if (q && Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2]) < 1e-6)
+    if (q && dmath.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2]) < 1e-6)
       fail(`${at} stations ${i - 1} and ${i} coincide`, 'drop the repeated station');
   });
   if (c.radius.length !== c.path.length)

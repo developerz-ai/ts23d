@@ -2,6 +2,7 @@
 // colour jitter and the leaf palettes (linear RGB). Allocation is per leaf/stem, never per pixel.
 
 import type { Rng } from '../../core/index.ts';
+import { dmath } from '../../core/index.ts';
 import type { Foliage, Rgb } from './foliage-raster.ts';
 
 /** A quadratic Bézier from p0 via p1 to p2, metres in the cell (anchor usually 0.5, 0.02). */
@@ -31,7 +32,7 @@ export function curve(
     y.push(u * u * y0 + 2 * u * t * y1 + t * t * y2);
     const dx = 2 * u * (x1 - x0) + 2 * t * (x2 - x1);
     const dy = 2 * u * (y1 - y0) + 2 * t * (y2 - y1);
-    a.push(Math.atan2(dx, dy));
+    a.push(dmath.atan2(dx, dy));
   }
   return { x, y, a };
 }

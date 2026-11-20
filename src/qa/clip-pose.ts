@@ -5,6 +5,7 @@
 import {
   type Armature,
   type Clip,
+  dmath,
   type Quat,
   quatRotate,
   type Track,
@@ -49,7 +50,7 @@ function sample(tr: Track, time: number, stride: number): number[] {
   if (stride !== 4) return a.map((x, k) => x + ((b[k] ?? 0) - x) * u);
   const d = a.reduce((s, x, k) => s + x * (b[k] ?? 0), 0) < 0 ? -1 : 1;
   const q = a.map((x, k) => x + ((b[k] ?? 0) * d - x) * u);
-  const l = Math.hypot(...q);
+  const l = dmath.norm(q);
   return q.map((x) => x / l);
 }
 

@@ -15,6 +15,7 @@
 
 import {
   cross,
+  dmath,
   dot,
   type Mesh,
   MeshBuilder,
@@ -45,8 +46,7 @@ export interface CardZone {
   readonly name: string;
   /** Cards per m² of surface at p (≤ 0 = none). */
   readonly density: (p: Vec3, n: Vec3) => number;
-  /** Card length, metres (root to tip, above the skin), finite and ≥ 0. A root where it is under
-   *  a tenth of `width` grows no card. */
+  /** Card length in metres (root to tip, above the skin), ≥ 0; under a tenth of `width`: no card. */
   readonly length: number | ((p: Vec3, n: Vec3) => number);
   /** Card width at the root, metres. */
   readonly width: number;
@@ -150,9 +150,9 @@ function path(o: HairCardOptions, z: CardZone, r: Root, L0: number, rng: Rng): P
     const a = lift * (1 - bend * s) * near;
     const t = unit(mad(mad([0, 0, 0], d, 1 - near), tangentOf(d, n), near));
     d = unit([
-      t[0] * Math.cos(a) + n[0] * Math.sin(a),
-      t[1] * Math.cos(a) + n[1] * Math.sin(a),
-      t[2] * Math.cos(a) + n[2] * Math.sin(a) - droop * s,
+      t[0] * dmath.cos(a) + n[0] * dmath.sin(a),
+      t[1] * dmath.cos(a) + n[1] * dmath.sin(a),
+      t[2] * dmath.cos(a) + n[2] * dmath.sin(a) - droop * s,
     ]);
     if (f && k > 1) d = hang(d, n, n0, near);
     const step = len / segs + (k === 1 ? sink : 0);
@@ -198,7 +198,7 @@ function emit(b: MeshBuilder, z: CardZone, c: Path): Vec3 {
     const side0 = k === 0 ? unit(cross(n, dk)) : unit(mad(carry, dk, -dot(carry, dk)));
     carry = side0;
     const side = unit(
-      mad(mad([0, 0, 0], side0, Math.cos(c.roll)), cross(dk, side0), Math.sin(c.roll)),
+      mad(mad([0, 0, 0], side0, dmath.cos(c.roll)), cross(dk, side0), dmath.sin(c.roll)),
     );
     let nc = unit(cross(side, dk));
     if (k === 0) flip = dot(nc, n) < 0;

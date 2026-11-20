@@ -4,7 +4,7 @@
 // laid along the wrong axis must fail the same joint check.
 
 import { describe, expect, it } from 'bun:test';
-import { cylinder, defineAsset, type Lod, place, type Vec3 } from '@developerz.ai/ts23d';
+import { cylinder, defineAsset, dmath, type Lod, place, type Vec3 } from '@developerz.ai/ts23d';
 import { assertJointsFit } from '@developerz.ai/ts23d/testing';
 import { figure } from './figure.ts';
 import { Kit } from './finish.ts';
@@ -40,7 +40,7 @@ const carrier = (axisOf?: (a: Vec3) => Vec3) =>
         at: [0, 0, 0.3],
         color: LEATHER,
       });
-      kit.add('handle', place(handle, { at: pts.grip, pitch: Math.atan2(axis[0], axis[2]) }));
+      kit.add('handle', place(handle, { at: pts.grip, pitch: dmath.atan2(axis[0], axis[2]) }));
       kit.commit(ctx, []);
       ctx.joint('grip_r', {
         from: 'hand_r',
@@ -70,7 +70,7 @@ describe('figure right-arm poses', () => {
   it('shoulder: the handle rests on the shoulder top and clears the head', () => {
     const p = figure(new Kit(), 0, opts('shoulder'));
     const [ax, , az] = p.gripAxis;
-    expect(Math.hypot(ax, az)).toBeCloseTo(1, 9);
+    expect(dmath.hypot(ax, az)).toBeCloseTo(1, 9);
     // Up and back from a fist in front of the chest.
     expect(ax).toBeLessThan(-0.5);
     expect(az).toBeGreaterThan(0.3);

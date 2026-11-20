@@ -6,6 +6,7 @@
 import {
   type BodyPlan,
   type BuildContext,
+  dmath,
   type Mesh,
   MeshBuilder,
   type StripId,
@@ -21,7 +22,7 @@ export const smooth = (a: number, b: number, x: number): number => {
   const k = clamp((x - a) / (b - a));
   return k * k * (3 - 2 * k);
 };
-export const gauss = (x: number, s: number): number => Math.exp(-(x * x) / (s * s));
+export const gauss = (x: number, s: number): number => dmath.exp(-(x * x) / (s * s));
 export const mixRgb = (a: Vec3, b: Vec3, k: number): Vec3 => [
   mix(a[0], b[0], k),
   mix(a[1], b[1], k),
@@ -37,10 +38,10 @@ export const cross = (a: Vec3, b: Vec3): Vec3 => [
   a[0] * b[1] - a[1] * b[0],
 ];
 export const norm = (a: Vec3): Vec3 => {
-  const l = Math.hypot(a[0], a[1], a[2]);
+  const l = dmath.hypot(a[0], a[1], a[2]);
   return l > 1e-12 ? [a[0] / l, a[1] / l, a[2] / l] : [0, 0, 1];
 };
-export const spow = (v: number, p: number): number => Math.sign(v) * Math.abs(v) ** p;
+export const spow = (v: number, p: number): number => Math.sign(v) * dmath.pow(Math.abs(v), p);
 
 /** Monotone cubic through (x, y) pairs (Fritsch-Carlson): profiles never overshoot a station. */
 export function profile(table: readonly (readonly [number, number])[]): (x: number) => number {
@@ -92,7 +93,7 @@ export function curve3(pts: readonly Vec3[]): (u: number) => Vec3 {
 }
 
 const hash = (x: number, y: number, seed: number): number => {
-  const s = Math.sin(x * 127.1 + y * 311.7 + seed * 74.7) * 43758.5453;
+  const s = dmath.sin(x * 127.1 + y * 311.7 + seed * 74.7) * 43758.5453;
   return s - Math.floor(s);
 };
 
@@ -161,7 +162,7 @@ export function loft(s: LoftSpec): Mesh {
   const at = (v: number): Vec3 => P[v] ?? [0, 0, 0];
   const faces = tris.filter(([a, b, c]) => {
     const n = cross(sub(at(b), at(a)), sub(at(c), at(a)));
-    return Math.hypot(n[0], n[1], n[2]) > 1e-11;
+    return dmath.hypot(n[0], n[1], n[2]) > 1e-11;
   });
   const volume = faces.reduce((v, [a, b, c]) => v + dot(at(a), cross(at(b), at(c))), 0);
   const flip = volume < 0;
@@ -220,7 +221,7 @@ export interface PlateSpec {
 
 /** A fin: a thin lens section swept between two edge curves, thickest near the leading third. */
 export function plate(s: PlateSpec): Mesh {
-  const chordOf = (a: number): number => 0.5 + 0.5 * Math.cos(a);
+  const chordOf = (a: number): number => 0.5 + 0.5 * dmath.cos(a);
   const up = (u: number): Vec3 => {
     if (s.normal) return s.normal;
     const span = sub(s.lead(Math.min(1, u + 0.02)), s.lead(Math.max(0, u - 0.02)));
@@ -232,7 +233,7 @@ export function plate(s: PlateSpec): Mesh {
     ...(s.strip ? { strip: s.strip } : {}),
     // On the two sharp edges the faces disagree by 180°: the normal lies in the plate.
     shade: (n, u, a) => {
-      if (Math.abs(Math.sin(a)) > 1e-6) return n;
+      if (Math.abs(dmath.sin(a)) > 1e-6) return n;
       const t = up(u);
       return sub(n, scale(t, dot(n, t)));
     },
@@ -240,7 +241,7 @@ export function plate(s: PlateSpec): Mesh {
       const c = chordOf(a);
       const base = add(s.lead(u), scale(sub(s.trail(u), s.lead(u)), c));
       // Blunt round the leading edge, fine toward the trailing one.
-      const lens = Math.sin(a) * (1 - 0.65 * c);
+      const lens = dmath.sin(a) * (1 - 0.65 * c);
       return add(base, scale(up(u), s.thick(u) * lens));
     },
     color: (p, n, u, a) => s.color(p, n, u, chordOf(a)),
@@ -266,8 +267,8 @@ export function eyeball(
     strip,
     point: (u, a) => {
       const th = u * Math.PI;
-      const ring = add(scale(e1, Math.cos(a)), scale(e2, Math.sin(a)));
-      return add(c, scale(add(scale(w, Math.cos(th)), scale(ring, Math.sin(th))), R));
+      const ring = add(scale(e1, dmath.cos(a)), scale(e2, dmath.sin(a)));
+      return add(c, scale(add(scale(w, dmath.cos(th)), scale(ring, dmath.sin(th))), R));
     },
     color: (_p, _n, u) => color(u * Math.PI),
   });

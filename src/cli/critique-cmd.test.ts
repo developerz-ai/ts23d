@@ -2,7 +2,7 @@ import { expect, it } from 'bun:test';
 import { mkdtemp, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { compile, defineAsset } from '../core/index.ts';
+import { compile, defineAsset, dmath } from '../core/index.ts';
 import { box } from '../primitives/index.ts';
 import { METRICS } from '../qa/index.ts';
 import { contactSheet, previewSheet } from '../render/index.ts';
@@ -47,6 +47,6 @@ it('measures the calibration vector the same way twice (golden set, CLI and gate
   const lod0 = compile(crate);
   const v = measureVector(lod0);
   expect(Object.keys(v)).toEqual([...METRICS]);
-  expect(v.tris).toBeCloseTo(Math.log10(13), 3);
+  expect(v.tris).toBeCloseTo(dmath.log10(13), 3);
   expect(measureVector(lod0)).toEqual(v);
 });

@@ -6,6 +6,7 @@
 // `edgeBand` gives paint fields for trims, stitching and edge wear measured in from the edge.
 
 import type { Field, SculptEdit } from '@developerz.ai/ts23d';
+import { dmath } from '@developerz.ai/ts23d';
 import type { FoldField } from './cloth-folds.ts';
 import type { V } from './kit.ts';
 
@@ -43,7 +44,7 @@ export interface Cloth {
   };
 }
 
-const bump = (u: number): number => (u <= -1 || u >= 1 ? 0 : (1 - u * u) ** 2);
+const bump = (u: number): number => (u <= -1 || u >= 1 ? 0 : dmath.pow(1 - u * u, 2));
 const ease = (u: number): number => (u <= 0 ? 0 : u >= 1 ? 1 : u * u * (3 - 2 * u));
 
 /** Polynomial smooth min (1-Lipschitz). */
@@ -117,7 +118,7 @@ export function clothField(c: Cloth): Field {
   const fill: Field | null = d
     ? (p) => {
         // Slope of the sheet: ≤ hypot(1, lean, 2 · wrap · 0.25) inside a bust (|y| < 25 cm).
-        const k = Math.hypot(1, d.lean, 0.5 * d.wrap);
+        const k = dmath.hypot(1, d.lean, 0.5 * d.wrap);
         const sheet = d.x + d.wrap * p[1] * p[1] - d.lean * (d.top - p[2]);
         const box = Math.max((sheet - p[0]) / k, p[0], p[2] - d.top, Math.abs(p[1]) - d.halfY);
         return d.within ? Math.max(box, d.within(p)) : box;

@@ -101,25 +101,25 @@
   "real": {
     "length": 11.85,
     "width": 30,
-    "height": 9.057729690942503
+    "height": 9.05773
   },
   "measures": [
     {
       "label": "platform height over rail (3 ft)",
       "spec": 0.915,
-      "measured": 0.9190000295639038,
+      "measured": 0.919,
       "source": "Railway platform height (UK 915 mm)"
     },
     {
       "label": "building length (photo-scaled)",
       "spec": 20,
-      "measured": 20.079999923706055,
+      "measured": 20.08,
       "source": "Toddington photos"
     },
     {
       "label": "building depth (photo-scaled)",
       "spec": 6.4,
-      "measured": 6.480000019073486,
+      "measured": 6.48,
       "source": "Toddington photos"
     }
   ],

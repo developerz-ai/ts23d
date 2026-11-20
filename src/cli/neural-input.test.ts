@@ -2,7 +2,7 @@
 // (Meshy multi-image-to-3d) — passes the input-image rules before anything is sent.
 
 import { describe, expect, it } from 'bun:test';
-import { encodePng, type NeuralInput, Ts23dError } from '../core/index.ts';
+import { dmath, encodePng, type NeuralInput, Ts23dError } from '../core/index.ts';
 import { type NeuralJob, sha256Hex } from '../neural/index.ts';
 import { checkMeshInputs } from './neural-input.ts';
 
@@ -12,8 +12,8 @@ function view(clutter: boolean): Uint8Array {
   const px = new Uint8Array(w * w * 4);
   for (let y = 0; y < w; y++)
     for (let x = 0; x < w; x++) {
-      const g = (((Math.sin(x * 12.9898 + y * 78.233) * 43758.5453) % 1) + 1) % 1;
-      const blob = ((x - 300) / 200) ** 2 + ((y - 300) / 150) ** 2 <= 1;
+      const g = (((dmath.sin(x * 12.9898 + y * 78.233) * 43758.5453) % 1) + 1) % 1;
+      const blob = dmath.pow((x - 300) / 200, 2) + dmath.pow((y - 300) / 150, 2) <= 1;
       const bg = clutter ? (x % 70 < 9 ? 40 + 30 * g : 200 + 50 * g) : 250;
       const v = blob ? 70 + 90 * g : bg;
       px.set([v, v, v, 255], (y * w + x) * 4);

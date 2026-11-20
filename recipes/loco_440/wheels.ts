@@ -4,6 +4,7 @@
 
 import {
   beam,
+  dmath,
   type Lod,
   type Mesh,
   merge,
@@ -22,7 +23,7 @@ function star(r: number, y: number): Mesh {
   for (let i = 0; i < 10; i++) {
     const a = Math.PI / 2 + (i * Math.PI) / 5;
     const k = i % 2 ? r * 0.4 : r;
-    pts.push([Math.cos(a) * k, y, Math.sin(a) * k]);
+    pts.push([dmath.cos(a) * k, y, dmath.sin(a) * k]);
   }
   // planar wants CCW seen from its normal (+Y): reverse the X-Z order.
   return planar({ points: pts.reverse(), ...F.brass });
@@ -109,8 +110,8 @@ export function wheelMesh(
   if (spokes > 0) {
     for (let i = 0; i < spokes; i++) {
       const a = (i / spokes) * Math.PI * 2;
-      const c = Math.cos(a);
-      const s = Math.sin(a);
+      const c = dmath.cos(a);
+      const s = dmath.sin(a);
       // Tapered spoke: wide at the hub, slimmer at the rim (two beams at LOD0).
       parts.push(
         beam({
@@ -152,11 +153,11 @@ export function wheelMesh(
     const poly: Vec2[] = [];
     for (let i = 0; i <= arc; i++) {
       const a = c - 0.75 + (1.5 * i) / arc;
-      poly.push([Math.cos(a) * (r - 0.1), Math.sin(a) * (r - 0.1)]);
+      poly.push([dmath.cos(a) * (r - 0.1), dmath.sin(a) * (r - 0.1)]);
     }
     for (let i = arc; i >= 0; i--) {
       const a = c - 0.45 + (0.9 * i) / arc;
-      poly.push([Math.cos(a) * r * 0.42, Math.sin(a) * r * 0.42]);
+      poly.push([dmath.cos(a) * r * 0.42, dmath.sin(a) * r * 0.42]);
     }
     parts.push(
       translate(prism({ profile: poly, depth: 0.07, plane: 'xz', ...F.redSteel }), [0, y, 0]),

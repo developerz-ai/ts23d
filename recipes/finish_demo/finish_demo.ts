@@ -8,6 +8,7 @@
 import {
   box,
   defineAsset,
+  dmath,
   hex,
   lathe,
   type Mesh,
@@ -117,7 +118,7 @@ function palletDirt(m: Mesh): Mesh {
     let t = 0;
     if (Math.abs(nz) < 0.5) t = 0.75 * Math.max(0, 1 - z / (BOARD + BLOCK_H)) + 0.15;
     else if (nz > 0.5 && z > TOP - 0.001)
-      t = 0.2 + 0.4 * Math.max(0, Math.sin(x * 6.3 + y * 2.1) * Math.sin(y * 8.7 - x * 1.7));
+      t = 0.2 + 0.4 * Math.max(0, dmath.sin(x * 6.3 + y * 2.1) * dmath.sin(y * 8.7 - x * 1.7));
     // Sun and rain grey the exposed timber before the dirt goes on.
     colors.set(mix(mix(c, GREY, 0.35), MUD, t), v * 3);
   }

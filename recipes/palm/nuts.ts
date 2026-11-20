@@ -4,7 +4,7 @@
 // where nobody sees it; these hang out from the stem on their stalks, in warm husk colours that
 // separate from the green crown at hero distance. Crown frame (they sway with the crown).
 
-import { lathe, type Mesh, merge, sweep, type Vec3 } from '@developerz.ai/ts23d';
+import { dmath, lathe, type Mesh, merge, sweep, type Vec3 } from '@developerz.ai/ts23d';
 
 /** Husk colours, ripening: green-yellow, ochre, brown. */
 const HUSK: readonly Vec3[] = [
@@ -20,7 +20,7 @@ function nut(at: Vec3, r: number, color: Vec3, lod: number): Mesh {
   const profile = Array.from({ length: n + 1 }, (_, i): [number, number] => {
     const a = -Math.PI / 2 + (i / n) * Math.PI;
     const k = i < n / 2 ? 1 : 0.88;
-    return [Math.max(0.0001, Math.cos(a) * r * k), Math.sin(a) * r * 1.12];
+    return [Math.max(0.0001, dmath.cos(a) * r * k), dmath.sin(a) * r * 1.12];
   });
   return lathe({ profile, segments: lod === 0 ? 8 : 5, caps: false, at, color });
 }
@@ -33,7 +33,7 @@ export function coconuts(top: Vec3, r: number, bunches: number, nutR: number, lo
   const out: Mesh[] = [];
   for (let b = 0; b < bunches; b++) {
     const a = (b / bunches) * Math.PI * 2 + 0.4;
-    const dir: Vec3 = [Math.cos(a), Math.sin(a), 0];
+    const dir: Vec3 = [dmath.cos(a), dmath.sin(a), 0];
     const z = top[2] - 0.15 * (b % 2);
     const from: Vec3 = [top[0] + dir[0] * r * 0.5, top[1] + dir[1] * r * 0.5, z];
     const out1 = r + nutR * 2.6;
@@ -55,8 +55,8 @@ export function coconuts(top: Vec3, r: number, bunches: number, nutR: number, lo
       const ring = nutR * 0.7;
       const side: Vec3 = [-dir[1], dir[0], 0];
       const p: Vec3 = [
-        hand[0] + (side[0] * Math.cos(t) + dir[0] * Math.sin(t)) * ring,
-        hand[1] + (side[1] * Math.cos(t) + dir[1] * Math.sin(t)) * ring,
+        hand[0] + (side[0] * dmath.cos(t) + dir[0] * dmath.sin(t)) * ring,
+        hand[1] + (side[1] * dmath.cos(t) + dir[1] * dmath.sin(t)) * ring,
         hand[2] - nutR * 0.6,
       ];
       out.push(nut(p, nutR * (0.92 + 0.08 * (k % 3)), HUSK[(b + k) % HUSK.length] ?? STALK, lod));

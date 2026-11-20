@@ -14,6 +14,7 @@ import {
   box,
   cylinder,
   defineFamily,
+  dmath,
   type Field,
   hex,
   type Lod,
@@ -70,7 +71,7 @@ const smooth = (e0: number, e1: number, x: number): number => {
   return t * t * (3 - 2 * t);
 };
 const unit = (d: Vec3): Vec3 => {
-  const l = Math.hypot(d[0], d[1], d[2]) || 1;
+  const l = dmath.hypot(d[0], d[1], d[2]) || 1;
   return [d[0] / l, d[1] / l, d[2] / l];
 };
 
@@ -137,12 +138,12 @@ export function crystal(lod: Lod, r: number, h: number, state: CrystalState): Me
     const z = sheared ? cut(x) : (m.positions[i + 2] ?? 0);
     positions[i + 2] = z;
     const t = Math.max(0, Math.min(1, (z - root) / (top - root)));
-    const k = Math.round(Math.atan2(y, x) / (Math.PI / 6));
+    const k = Math.round(dmath.atan2(y, x) / (Math.PI / 6));
     // Mid-face vertices pulled onto the flat face (a true hexagon), and darker: the face glows
     // deep inside, its edges catch the light.
     const mid = lod === 0 && k % 2 !== 0;
     if (mid) {
-      const c = Math.cos(Math.PI / 6);
+      const c = dmath.cos(Math.PI / 6);
       positions[i] = x * c;
       positions[i + 1] = y * c;
     }
@@ -150,7 +151,7 @@ export function crystal(lod: Lod, r: number, h: number, state: CrystalState): Me
     // Facets: a deep amber core mid-face, bright edges where the light catches (LOD0).
     if (lod === 0) c = mid ? mix(c, ROOT, 0.55) : mix(c, TIP, 0.4);
     // A sheared or snapped face is fresh, pale fracture.
-    if (sheared || (state === 'broken' && z > top * 0.85 && Math.hypot(x, y) < r * 0.7))
+    if (sheared || (state === 'broken' && z > top * 0.85 && dmath.hypot(x, y) < r * 0.7))
       c = FRACTURE;
     colors.set(c, i);
   }
@@ -164,8 +165,8 @@ export function crystal(lod: Lod, r: number, h: number, state: CrystalState): Me
 
 /** Yaw / pitch that tilt +Z onto direction d. */
 function aim(d: Vec3): { yaw: number; pitch: number } {
-  const l = Math.hypot(d[0], d[1], d[2]) || 1;
-  return { yaw: Math.atan2(d[1], d[0]), pitch: Math.acos(d[2] / l) };
+  const l = dmath.hypot(d[0], d[1], d[2]) || 1;
+  return { yaw: dmath.atan2(d[1], d[0]), pitch: dmath.acos(d[2] / l) };
 }
 
 /** The outcrop's field: two masses and a block, cut by fracture planes, stepped by two ledges,
@@ -247,7 +248,7 @@ function surfaceAt(field: Field, from: Vec3, dir: Vec3): Vec3 | null {
   for (let i = 0; i < 200; i++) {
     const v = field(p);
     if (v < 0.005) return p;
-    if (Math.hypot(p[0] - from[0], p[1] - from[1], p[2] - from[2]) > 3) return null;
+    if (dmath.hypot(p[0] - from[0], p[1] - from[1], p[2] - from[2]) > 3) return null;
     const step = Math.max(0.01, v * 0.6);
     p = [p[0] + d[0] * step, p[1] + d[1] * step, p[2] + d[2] * step];
   }
@@ -282,7 +283,7 @@ function outcrop(ctx: BuildContext, depleted: boolean): Field {
     // never on the flanks; the scoop rim of a worked node is pale with spoil dust.
     const top = smooth(0.88, 0.97, n[2]) * smooth(1.0, 1.5, p[2]);
     const rim = depleted
-      ? smooth(1.4, 0.7, Math.hypot(p[0] - 0.5, p[1] + 0.45)) * smooth(1.3, 1.8, p[2])
+      ? smooth(1.4, 0.7, dmath.hypot(p[0] - 0.5, p[1] + 0.45)) * smooth(1.3, 1.8, p[2])
       : 0;
     const salt = Math.max(crevice * 0.9, top * 0.55) * saltK;
     return mix(mix(mix(base, BASALT_DEEP, crevice * 0.4), SALT, salt), DUST, rim * 0.7);
@@ -471,7 +472,7 @@ function workings(ctx: BuildContext, field: Field, depleted: boolean): void {
   for (let i = 0; i < (lod === 0 ? 12 : 7); i++) {
     const a = (i / (lod === 0 ? 12 : 7)) * Math.PI * 2;
     const k = rng.range(0.7, 1.1);
-    mud.push([mx + Math.cos(a) * 0.95 * k, my + Math.sin(a) * 0.75 * k]);
+    mud.push([mx + dmath.cos(a) * 0.95 * k, my + dmath.sin(a) * 0.75 * k]);
   }
   ctx.part(
     'trampled',
@@ -489,7 +490,7 @@ function workings(ctx: BuildContext, field: Field, depleted: boolean): void {
     for (let i = 0; i < 6; i++) {
       const a = (i / 6) * Math.PI * 2 + 0.3;
       // From the scoop's open middle out to its wall.
-      const p = surfaceAt(field, [0.5, -0.45, 1.6], [Math.cos(a), Math.sin(a), 0.1]);
+      const p = surfaceAt(field, [0.5, -0.45, 1.6], [dmath.cos(a), dmath.sin(a), 0.1]);
       if (!p) continue;
       marks.push(
         cylinder({

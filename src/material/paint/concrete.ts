@@ -3,6 +3,7 @@
 // params: pores 0.35 (fraction of 8 mm cells holding a void) · ties 0.6 (tie grid, m; 0 = none)
 //         lift 0.6 (pour lift spacing, m; 0 = none) · mottle 0.1
 
+import { dmath } from '../../core/index.ts';
 import { type Canvas, noiseAt, param, periodFor, smooth } from './canvas.ts';
 import { hash2 } from './noise.ts';
 import type { StripRecipe } from './types.ts';
@@ -39,14 +40,14 @@ export function paintConcrete(c: Canvas, r: StripRecipe, seed: number): void {
         const cx = (ix + 0.2 + 0.6 * hash2(ix, iy, seed + 6)) * pCell;
         const cy = (iy + 0.2 + 0.6 * hash2(ix, iy, seed + 7)) * pCell;
         const rad = pCell * (0.12 + 0.25 * hash2(ix, iy, seed + 8));
-        const d = Math.hypot(xm - cx, ym - cy);
+        const d = dmath.hypot(xm - cx, ym - cy);
         pit = d < rad ? 1 - d / rad : 0;
       }
       let tie = 0;
       if (ties > 0) {
         const tx = xm - (Math.floor(xm / tCell) + 0.5) * tCell;
         const ty = ym - (Math.floor(ym / ties) + 0.5) * ties;
-        const d = Math.hypot(tx, ty);
+        const d = dmath.hypot(tx, ty);
         tie = d < 0.012 ? 1 : 0;
       }
       c.height[i] =

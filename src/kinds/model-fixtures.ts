@@ -2,7 +2,7 @@
 // plan's flesh capsules (model-flesh.ts `planCapsules`) as closed ten-sided tubes with cone caps,
 // and that mesh as an ImportedModel with a small noisy albedo. No Blender, no files.
 
-import { type Bone, encodePng, type Mesh, merge, type Vec3 } from '../core/index.ts';
+import { type Bone, dmath, encodePng, type Mesh, merge, type Vec3 } from '../core/index.ts';
 import type { ImportedModel } from '../neural/index.ts';
 import type { WeightBone } from '../passes/index.ts';
 import type { Bones } from './creature-bones.ts';
@@ -41,7 +41,7 @@ function tube(c: WeightBone): Mesh {
   ] as const)
     for (let k = 0; k < SIDES; k++) {
       const a = (2 * Math.PI * k) / SIDES;
-      pts.push(v3.add(at, v3.add(v3.mul(e1, Math.cos(a) * r), v3.mul(e2, Math.sin(a) * r))));
+      pts.push(v3.add(at, v3.add(v3.mul(e1, dmath.cos(a) * r), v3.mul(e2, dmath.sin(a) * r))));
     }
   const tris: number[] = [];
   for (let k = 0; k < SIDES; k++) {

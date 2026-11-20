@@ -6,7 +6,7 @@
 // are refused. For IMPORTED meshes only (scans, base meshes): code-built assets are LOD-gated by
 // their recipes, never decimated (ADR 011). Deterministic: total-order heap, index-order passes.
 
-import { type Mesh, Ts23dError } from '../core/index.ts';
+import { dmath, type Mesh, Ts23dError } from '../core/index.ts';
 import { collapseValid, compact, neighbours } from './simplify-collapse.ts';
 import { addInto, addPlane, CollapseHeap, evalSum, QSIZE } from './simplify-quadric.ts';
 import {
@@ -169,7 +169,7 @@ function quadrics(T: Topology, borders: boolean): Float64Array {
       number,
     ];
     const n = normalOf(T, a, b, c);
-    const len = Math.hypot(n[0], n[1], n[2]);
+    const len = dmath.hypot(n[0], n[1], n[2]);
     if (len < 1e-20) continue;
     const [nx, ny, nz] = [n[0] / len, n[1] / len, n[2] / len];
     const d = -(
@@ -190,7 +190,7 @@ function quadrics(T: Topology, borders: boolean): Float64Array {
       const ey = (T.pos[v * 3 + 1] ?? 0) - (T.pos[u * 3 + 1] ?? 0);
       const ez = (T.pos[v * 3 + 2] ?? 0) - (T.pos[u * 3 + 2] ?? 0);
       let [px, py, pz] = [ey * nz - ez * ny, ez * nx - ex * nz, ex * ny - ey * nx];
-      const pl = Math.hypot(px, py, pz);
+      const pl = dmath.hypot(px, py, pz);
       if (pl < 1e-20) continue;
       [px, py, pz] = [px / pl, py / pl, pz / pl];
       const pd = -(
@@ -224,7 +224,7 @@ function faceArea(T: Topology, f: number): number {
     number,
   ];
   const n = normalOf(T, a, b, c);
-  return Math.hypot(n[0], n[1], n[2]) / 2;
+  return dmath.hypot(n[0], n[1], n[2]) / 2;
 }
 
 function meanEdge2(T: Topology): number {

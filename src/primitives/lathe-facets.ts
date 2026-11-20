@@ -2,6 +2,7 @@
 // and the exact normal of its facet plane, so an n-sided tank, tower or roof shades flat.
 
 import type { Vec2, Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 
 /** The profile and segment count lathe was given. */
 interface Facetable {
@@ -20,7 +21,7 @@ function facets(
   const half = Math.PI / o.segments;
   const corner = (s: number): [number, number] => {
     const t = (s / o.segments) * Math.PI * 2 - Math.PI / 2;
-    return [Math.cos(t), Math.sin(t)];
+    return [dmath.cos(t), dmath.sin(t)];
   };
   for (let i = 0; i + 1 < o.profile.length; i++) {
     const [r0 = 0, z0 = 0] = o.profile[i] ?? [];
@@ -28,10 +29,10 @@ function facets(
     for (let s = 0; s < o.segments; s++) {
       const tm = ((s + 0.5) / o.segments) * Math.PI * 2 - Math.PI / 2;
       // The facet's chord sits cos(half) inside the ring, which tilts its normal by that much.
-      const nx = (z1 - z0) * Math.cos(tm);
-      const ny = (z1 - z0) * Math.sin(tm);
-      const nz = -(r1 - r0) * Math.cos(half);
-      const l = Math.hypot(nx, ny, nz) || 1;
+      const nx = (z1 - z0) * dmath.cos(tm);
+      const ny = (z1 - z0) * dmath.sin(tm);
+      const nz = -(r1 - r0) * dmath.cos(half);
+      const l = dmath.hypot(nx, ny, nz) || 1;
       const n: Vec3 = [nx / l, ny / l, nz / l];
       const [c0, s0] = corner(s);
       const [c1, s1] = corner(s + 1);

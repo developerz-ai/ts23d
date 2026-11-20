@@ -11,6 +11,7 @@ import {
   box,
   cylinder,
   defineAsset,
+  dmath,
   hex,
   type Lod,
   lathe,
@@ -36,7 +37,7 @@ const PED = 0.12; // pedestal height
 const ball = (r: number, n: number): Vec2[] =>
   Array.from({ length: n + 1 }, (_, i) => {
     const a = (Math.PI * i) / n;
-    return [r * Math.sin(a), r - r * Math.cos(a)] as Vec2;
+    return [r * dmath.sin(a), r - r * dmath.cos(a)] as Vec2;
   });
 
 const SEG: Readonly<Record<Lod, number>> = { 0: 40, 1: 20, 2: 12 };
@@ -234,7 +235,7 @@ export const pbr_showcase = defineAsset({
     stand('velvet', back, by(0));
     const pouf: Vec2[] = Array.from({ length: rings + 1 }, (_, i) => {
       const a = (Math.PI * i) / rings;
-      return [0.19 * Math.sin(a) ** 0.6, 0.075 - 0.075 * Math.cos(a)] as Vec2;
+      return [0.19 * dmath.pow(dmath.sin(a), 0.6), 0.075 - 0.075 * dmath.cos(a)] as Vec2;
     });
     ctx.part(
       'velvet_pouf',
@@ -286,7 +287,7 @@ export const pbr_showcase = defineAsset({
     stand('jelly', back, by(3));
     const dome: Vec2[] = Array.from({ length: rings / 2 + 1 }, (_, i) => {
       const a = (Math.PI / 2) * (i / (rings / 2));
-      return [0.17 * Math.cos(a), 0.15 * Math.sin(a)] as Vec2;
+      return [0.17 * dmath.cos(a), 0.15 * dmath.sin(a)] as Vec2;
     });
     ctx.part(
       'jelly_dome',

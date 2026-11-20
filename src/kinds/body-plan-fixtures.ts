@@ -3,6 +3,7 @@
 // without a water medium. Shapes only; not sourced from a real animal's measurements.
 
 import type { Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import type { BodyPlanSpec, ChainSpec } from './body-plan-types.ts';
 
 const Z = 0.62;
@@ -125,8 +126,8 @@ function hydraNeck(k: number): ChainSpec[] {
   const height = 1.95 - Math.abs(f) * 0.55;
   const neck = `neck_${k}`;
   const at = (t: number): Vec3 => [
-    0.36 + 0.64 * t + 0.09 * Math.sin(t * Math.PI * 2),
-    base + (spread - base) * t ** 1.2,
+    0.36 + 0.64 * t + 0.09 * dmath.sin(t * Math.PI * 2),
+    base + (spread - base) * dmath.pow(t, 1.2),
     0.78 + (height - 0.78) * t,
   ];
   const top = at(1);

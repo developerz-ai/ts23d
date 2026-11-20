@@ -6,7 +6,7 @@
 // `{ skins: true }` keeps a skinned primitive in its mesh space (the skin poses it, not its
 // node), for import-model.
 
-import { type Mesh, Ts23dError } from '../core/index.ts';
+import { dmath, type Mesh, Ts23dError } from '../core/index.ts';
 import {
   at,
   type GlbDoc,
@@ -221,7 +221,7 @@ function primitive(doc: GlbDoc, p: GltfJson, world: M4, name: string): Baked | n
     const b = nrm.data[i * 3 + 1] ?? 0;
     const c = nrm.data[i * 3 + 2] ?? 0;
     const v = [0, 1, 2].map((r) => cof(r, 0) * a + cof(r, 1) * b + cof(r, 2) * c);
-    const l = Math.hypot(v[0] ?? 0, v[1] ?? 0, v[2] ?? 0) * Math.sign(det || 1) || 1;
+    const l = dmath.hypot(v[0] ?? 0, v[1] ?? 0, v[2] ?? 0) * Math.sign(det || 1) || 1;
     for (let r = 0; r < 3; r++) normals[i * 3 + r] = (v[r] ?? 0) / l;
   }
   const indices = new Uint32Array(tri);

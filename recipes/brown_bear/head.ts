@@ -5,6 +5,7 @@
 // muscles, and the ears are thick furred discs on the skull's upper corners (README: skull).
 
 import type { CreatureInfo, SculptEdit, Vec3 } from '@developerz.ai/ts23d';
+import { dmath } from '@developerz.ai/ts23d';
 
 type Head = CreatureInfo['head'];
 
@@ -21,7 +22,7 @@ export function bearHead(l: Head): SculptEdit[] {
   const { L, W, H, lc } = l;
   const ear = earDisc(l);
   // The disc faces forward and a little out; its hollow is on that face.
-  const face: Vec3 = [Math.cos(0.45), Math.sin(0.45), 0];
+  const face: Vec3 = [dmath.cos(0.45), dmath.sin(0.45), 0];
   const front = (k: number): Vec3 => [
     ear.at[0] + face[0] * ear.thick * k,
     ear.at[1] + face[1] * ear.thick * k,

@@ -5,6 +5,7 @@
 // of it) inside `bounds`, or from caller `seeds` (e.g. a coarse mesh's vertices) — deterministic.
 
 import type { Rng, Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import { invalid } from './check.ts';
 import type { Field } from './sdf-ops.ts';
 import type { VdmPlace } from './vdm.ts';
@@ -122,7 +123,12 @@ export function scatterStamps(o: StampScatterOptions): VdmPlace[] {
             const q = placed[i];
             if (!q) continue;
             const lim = Math.max(r, q.r);
-            if ((q.at[0] - p[0]) ** 2 + (q.at[1] - p[1]) ** 2 + (q.at[2] - p[2]) ** 2 < lim * lim) {
+            if (
+              dmath.pow(q.at[0] - p[0], 2) +
+                dmath.pow(q.at[1] - p[1], 2) +
+                dmath.pow(q.at[2] - p[2], 2) <
+              lim * lim
+            ) {
               free = false;
               break;
             }

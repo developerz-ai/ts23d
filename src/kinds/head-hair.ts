@@ -4,6 +4,7 @@
 // head-cards.ts and is re-exported here.
 
 import type { Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import type { SculptEdit } from '../primitives/index.ts';
 import { alongZ } from './head-geom.ts';
 import type { HeadLayout } from './head-layout.ts';
@@ -27,7 +28,7 @@ export function hairEdits(p: HeadParams, l: HeadLayout): SculptEdit[] {
       const seg = (a: Vec3, b: Vec3, r0: number, r1: number): SculptEdit => ({
         shape: 'cone',
         at: a,
-        size: [r0, r1, Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2])],
+        size: [r0, r1, dmath.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2])],
         rotate: alongZ([b[0] - a[0], b[1] - a[1], b[2] - a[2]]),
         blend: 0.03,
       });
@@ -58,7 +59,7 @@ export function hairEdits(p: HeadParams, l: HeadLayout): SculptEdit[] {
         const a = (-20 + i * 26) * RAD;
         return {
           shape: 'ellipsoid',
-          at: [cx + Math.sin(a) * rx * 0.95, 0, cz + Math.cos(a) * rz * 0.97],
+          at: [cx + dmath.sin(a) * rx * 0.95, 0, cz + dmath.cos(a) * rz * 0.97],
           size: [0.06, 0.035, 0.09],
           rotate: [0, (a * 180) / Math.PI - 15, 0],
           color: h,
@@ -71,16 +72,16 @@ export function hairEdits(p: HeadParams, l: HeadLayout): SculptEdit[] {
       const C: Vec3 = [cx - 0.04, 0, cz + 0.04];
       const R: Vec3 = [rx + 0.035, ry + 0.04, rz + 0.02];
       const on = (az: number, el: number, lift = 0): Vec3 => [
-        C[0] + (R[0] + lift) * Math.cos(el * RAD) * Math.cos(az * RAD),
-        C[1] + (R[1] + lift) * Math.cos(el * RAD) * Math.sin(az * RAD),
-        C[2] + (R[2] + lift) * Math.sin(el * RAD),
+        C[0] + (R[0] + lift) * dmath.cos(el * RAD) * dmath.cos(az * RAD),
+        C[1] + (R[1] + lift) * dmath.cos(el * RAD) * dmath.sin(az * RAD),
+        C[2] + (R[2] + lift) * dmath.sin(el * RAD),
       ];
       const light: Vec3 = [h[0] * 1.45, h[1] * 1.45, h[2] * 1.45];
       // A lock hugs the cap: two tapering cones root → mid → tip, mid on the surface.
       const cone = (a: Vec3, b: Vec3, r0: number, r1: number): SculptEdit => ({
         shape: 'cone',
         at: a,
-        size: [r0, r1, Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2])],
+        size: [r0, r1, dmath.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2])],
         rotate: alongZ([b[0] - a[0], b[1] - a[1], b[2] - a[2]]),
       });
       const lock = (az: number, el: number, len: number, r: number, i: number): SculptEdit => {
@@ -140,10 +141,10 @@ export function hairEdits(p: HeadParams, l: HeadLayout): SculptEdit[] {
       for (const [az, el, len] of spots) {
         const a = az * RAD;
         const e = el * RAD;
-        const n: Vec3 = [Math.cos(e) * Math.cos(a), Math.cos(e) * Math.sin(a), Math.sin(e)];
+        const n: Vec3 = [dmath.cos(e) * dmath.cos(a), dmath.cos(e) * dmath.sin(a), dmath.sin(e)];
         const root: Vec3 = [cx - 0.04 + rx * 0.97 * n[0], ry * 0.97 * n[1], cz + rz * 0.97 * n[2]];
         const d1: Vec3 = [n[0] - 0.6, n[1] * 1.3, n[2] * 0.6 + 0.25];
-        const l1 = Math.hypot(...d1);
+        const l1 = dmath.norm(d1);
         const mid: Vec3 = [
           root[0] + (d1[0] / l1) * len * 0.55,
           root[1] + (d1[1] / l1) * len * 0.55,

@@ -6,7 +6,7 @@
 // ride with the door; the rest is one static part. LOD2 keeps the darkened lacquer only.
 
 import type { Lod, Mesh, Rng, Vec3 } from '@developerz.ai/ts23d';
-import { MeshBuilder, merge, stripRect } from '@developerz.ai/ts23d';
+import { dmath, MeshBuilder, merge, stripRect } from '@developerz.ai/ts23d';
 import { ARCH_F, ARCH_R, X_DOOR_FRONT, X_DOOR_REAR, X_FA, X_RA } from '../dims.ts';
 import { add, bothSides, cross, mul, sub, unit } from '../lib/geo.ts';
 import { normalAt, type Surface } from '../lib/grid.ts';
@@ -54,8 +54,8 @@ function fleck(
   const ids = [0, 1, 2].map((k) => {
     const a = turn + (k * Math.PI * 2) / 3;
     const p = add(
-      add(c, mul(e1, (size / 2) * streak * Math.cos(a))),
-      add(mul(e2, (size / 2) * Math.sin(a)), mul(n, k === 0 ? 0.003 : -0.003)),
+      add(c, mul(e1, (size / 2) * streak * dmath.cos(a))),
+      add(mul(e2, (size / 2) * dmath.sin(a)), mul(n, k === 0 ? 0.003 : -0.003)),
     );
     return b.vertex({ p, n, uv, color });
   });

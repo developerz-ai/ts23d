@@ -3,6 +3,7 @@
 // leaf mask, transparent texels bled with leaf colour so mips don't halo), height, roughness and
 // an occlusion term that darkens toward the twig axis. Shapes iterate only their pixel bounds.
 
+import { dmath } from '../../core/index.ts';
 import { type Canvas, clamp01, smooth } from './canvas.ts';
 import { SRGB } from './orm.ts';
 import { segment } from './shapes.ts';
@@ -80,7 +81,7 @@ export class Foliage {
         const half = (w0 + (w1 - w0) * t) / 2;
         const d = segment(xm, ym, ax, ay, bx, by);
         const cov = clamp01(0.5 - (d - half) / this.px);
-        const round = half > 0 ? Math.sqrt(Math.max(0, 1 - (d / half) ** 2)) : 0;
+        const round = half > 0 ? Math.sqrt(Math.max(0, 1 - dmath.pow(d / half, 2))) : 0;
         this.put(y * this.c.w + x, cov, col, 1, 0.0015 + half * 0.4 * round, 0.85);
       }
     }
@@ -101,8 +102,8 @@ export class Foliage {
     serrate = 0,
     lift = 0,
   ): void {
-    const ux = Math.sin(angle);
-    const uy = Math.cos(angle);
+    const ux = dmath.sin(angle);
+    const uy = dmath.cos(angle);
     // Bounds: the base-to-tip segment padded by the half-width (palmate: the whole blade disc).
     const tx = bx + ux * len;
     const ty = by + uy * len;
@@ -123,14 +124,14 @@ export class Foliage {
         let rib: number;
         if (shape === 'palmate') {
           // Five pointed lobes around the petiole tip; notch at the stem side.
-          const rr = Math.hypot(along - len * 0.45, across);
-          const th = Math.atan2(across, along - len * 0.45);
-          const lobe = 1 - Math.abs(Math.sin(2.5 * th)) ** 0.6;
+          const rr = dmath.hypot(along - len * 0.45, across);
+          const th = dmath.atan2(across, along - len * 0.45);
+          const lobe = 1 - dmath.pow(Math.abs(dmath.sin(2.5 * th)), 0.6);
           const edge =
-            len * 0.5 * (0.35 + 0.65 * lobe) * (1 + serrate * Math.abs(Math.sin(18 * th)));
+            len * 0.5 * (0.35 + 0.65 * lobe) * (1 + serrate * Math.abs(dmath.sin(18 * th)));
           sd = rr - edge;
           const axis = Math.round(th / LOBE) * LOBE;
-          rib = rr * Math.abs(Math.sin(th - axis));
+          rib = rr * Math.abs(dmath.sin(th - axis));
         } else {
           const t = along / len;
           if (t < 0 || t > 1) {
@@ -138,13 +139,13 @@ export class Foliage {
           } else {
             const prof =
               shape === 'ovate'
-                ? Math.sin(Math.PI * t ** 0.8) ** 0.9
+                ? dmath.pow(dmath.sin(Math.PI * dmath.pow(t, 0.8)), 0.9)
                 : shape === 'lance'
-                  ? Math.sin(Math.PI * t ** 0.6)
+                  ? dmath.sin(Math.PI * dmath.pow(t, 0.6))
                   : shape === 'blade'
-                    ? (1 - t) ** 0.4
+                    ? dmath.pow(1 - t, 0.4)
                     : 1 - 0.6 * t;
-            const teeth = 1 - serrate * Math.abs(Math.sin(t * 40));
+            const teeth = 1 - serrate * Math.abs(dmath.sin(t * 40));
             sd = Math.abs(across) - (wid / 2) * prof * teeth;
           }
           rib = Math.abs(across);

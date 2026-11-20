@@ -10,6 +10,7 @@
 import {
   type BuildContext,
   createRng,
+  dmath,
   type Mesh,
   merge,
   type Rng,
@@ -74,7 +75,7 @@ function pauldron(
   const nm = [12, 6, 5][lod] ?? 5;
   for (let i = 0; i <= nm; i++) {
     const phi = ((8 + (84 * i) / nm) * Math.PI) / 180;
-    meridian.push([R * Math.sin(phi), H * Math.cos(phi)]);
+    meridian.push([R * dmath.sin(phi), H * dmath.cos(phi)]);
   }
   meridian.push([R * 1.07, -0.016]);
   const arc = lod < 2 ? 5 : 2;
@@ -134,7 +135,7 @@ function pauldron(
       wear: wear(
         meridian.length - 1,
         meridian.length + arc,
-        capRivets.map((theta) => ({ theta, h: H * Math.cos((80 * Math.PI) / 180) })),
+        capRivets.map((theta) => ({ theta, h: H * dmath.cos((80 * Math.PI) / 180) })),
       ),
     }),
   );
@@ -180,7 +181,7 @@ function pauldron(
         const zz = norm(armAxis);
         const xr = norm(sub([0, s, 0], mul(zz, zz[1] * s)));
         const yr = cross(zz, xr);
-        const dir = add(mul(xr, Math.cos(t)), mul(yr, Math.sin(t)));
+        const dir = add(mul(xr, dmath.cos(t)), mul(yr, dmath.sin(t)));
         const zc = top - 0.013;
         iron.push({
           shape: 'sphere',

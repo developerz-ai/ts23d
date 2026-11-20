@@ -5,6 +5,7 @@
 
 import {
   type BuildContext,
+  dmath,
   type Lod,
   type Mesh,
   MeshBuilder,
@@ -62,7 +63,7 @@ const onOutline = (outline: readonly Vec2[], q: Vec2): boolean =>
     const ey = b[1] - a[1];
     const l2 = ex * ex + ey * ey || 1;
     const t = Math.max(0, Math.min(1, ((q[0] - a[0]) * ex + (q[1] - a[1]) * ey) / l2));
-    return Math.hypot(a[0] + ex * t - q[0], a[1] + ey * t - q[1]) < 1e-6;
+    return dmath.hypot(a[0] + ex * t - q[0], a[1] + ey * t - q[1]) < 1e-6;
   });
 
 /** Slopes of one envelope: top (normal up) or underside (normal down). */
@@ -112,7 +113,7 @@ function fascia(b: MeshBuilder, s: RoofShape, o: RoofMeshOptions, trim: Vec3, ve
     for (let k = 0; k + 1 < ts.length; k++) {
       const q0: Vec2 = [a[0] + ex * (ts[k] ?? 0), a[1] + ey * (ts[k] ?? 0)];
       const q1: Vec2 = [a[0] + ex * (ts[k + 1] ?? 1), a[1] + ey * (ts[k + 1] ?? 1)];
-      if (Math.hypot(q1[0] - q0[0], q1[1] - q0[1]) < 1e-6) continue;
+      if (dmath.hypot(q1[0] - q0[0], q1[1] - q0[1]) < 1e-6) continue;
       emitFace(b, {
         points: [
           W(s, q0, envelope(s.under, q0), o.at),
@@ -181,7 +182,7 @@ function caps(s: RoofShape, o: RoofMeshOptions, cells: [Plane, Vec2[]][], trim: 
     cell.forEach((q0, i) => {
       const q1 = cell[(i + 1) % cell.length] ?? q0;
       const mid: Vec2 = [(q0[0] + q1[0]) / 2, (q0[1] + q1[1]) / 2];
-      if (onOutline(s.outline, mid) || Math.hypot(q1[0] - q0[0], q1[1] - q0[1]) < 1e-3) return;
+      if (onOutline(s.outline, mid) || dmath.hypot(q1[0] - q0[0], q1[1] - q0[1]) < 1e-3) return;
       const key = [q0, q1]
         .map((q) => `${q[0].toFixed(4)},${q[1].toFixed(4)}`)
         .sort()

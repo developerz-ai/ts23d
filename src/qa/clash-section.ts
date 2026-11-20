@@ -4,6 +4,7 @@
 // and each cut is sampled along its length, so whatever pierces the band lands samples in it.
 
 import type { Mesh, Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import { dot, type Volume } from './clash-sweep.ts';
 
 /** Bands thicker than this are covered by the ordinary STEP sampling. */
@@ -14,7 +15,7 @@ const ALONG = 0.02;
 
 type Band = NonNullable<Volume['band']>;
 
-const gap = (p: Vec3, q: Vec3): number => Math.hypot(q[0] - p[0], q[1] - p[1], q[2] - p[2]);
+const gap = (p: Vec3, q: Vec3): number => dmath.hypot(q[0] - p[0], q[1] - p[1], q[2] - p[2]);
 
 /** The two cut points farthest apart: a plane through a vertex reports that vertex twice. */
 function farthest(ends: readonly Vec3[]): readonly [Vec3?, Vec3?] {

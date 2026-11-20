@@ -3,6 +3,7 @@
 // down, then the upper jaw runs forward while the mouth closes [M97].
 
 import type { Clip, Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import type { PlanLink } from './body-plan-types.ts';
 import { bakeChainClip } from './chain-bake.ts';
 import { hingeGroups, ramp } from './chain-drivers.ts';
@@ -42,7 +43,7 @@ export function cstartClip(rig: SwimRig, name: string, side: 1 | -1): Clip {
     const v = U * ramp(t, t1, t1 + t2);
     const h = side * mean(t);
     const p = path[i - 1] ?? [0, 0, 0];
-    path.push([p[0] + (v * Math.cos(h) * T) / steps, p[1] + (v * Math.sin(h) * T) / steps, 0]);
+    path.push([p[0] + (v * dmath.cos(h) * T) / steps, p[1] + (v * dmath.sin(h) * T) / steps, 0]);
   }
   const alpha = rig.p.alpha?.burst ?? 0;
   const swim = fadeField(bodyWave(rig, f, alpha), (t) => ramp(t, t1 + t2, t1 + t2 + t3 / 2));

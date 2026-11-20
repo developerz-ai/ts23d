@@ -9,6 +9,7 @@
 import {
   type Asset,
   type CompiledAsset,
+  dmath,
   LOOP_SECONDS,
   motionPose,
   type Part,
@@ -71,7 +72,7 @@ export function followError(c: CompiledAsset, o: FollowOptions): number {
     const time = (i / n) * LOOP_SECONDS;
     const pa = pointAt(parts, o.part, a, time);
     const pb = pointAt(parts, o.follows, b, time);
-    worst = Math.max(worst, Math.hypot(pa[0] - pb[0], pa[1] - pb[1], pa[2] - pb[2]));
+    worst = Math.max(worst, dmath.hypot(pa[0] - pb[0], pa[1] - pb[1], pa[2] - pb[2]));
   }
   return worst;
 }

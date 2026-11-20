@@ -9,6 +9,7 @@
 // border points), and conifer impostors scattered over the forest belt.
 
 import {
+  dmath,
   type Mesh,
   MeshBuilder,
   merge,
@@ -106,7 +107,7 @@ export function d8Flow(g: TerrainGrid): Float64Array {
         const a = i + di;
         const b = j + dj;
         if ((di === 0 && dj === 0) || a < 0 || b < 0 || a >= g.nx || b >= g.ny) continue;
-        const d = ((g.z[k] ?? 0) - (g.z[b * g.nx + a] ?? 0)) / Math.hypot(di, dj);
+        const d = ((g.z[k] ?? 0) - (g.z[b * g.nx + a] ?? 0)) / dmath.hypot(di, dj);
         if (d > drop) {
           drop = d;
           best = b * g.nx + a;
@@ -114,8 +115,8 @@ export function d8Flow(g: TerrainGrid): Float64Array {
       }
     if (best >= 0) acc[best] = (acc[best] ?? 0) + (acc[k] ?? 0);
   }
-  const top = Math.log(n);
-  return acc.map((a) => Math.log(a) / top);
+  const top = dmath.log(n);
+  return acc.map((a) => dmath.log(a) / top);
 }
 
 /** Bilinear read of a per-point map at (x, y). */
@@ -158,7 +159,7 @@ export function valleyPath(g: TerrainGrid, apart: number): [number, number][] {
     qs.reduce((b, q) => ((g.z[q] ?? 0) < (g.z[b] ?? 0) ? q : b), qs[0] ?? 0);
   const mouth = low(border);
   const [mx, my] = xy(mouth);
-  const source = low(border.filter((q) => Math.hypot(xy(q)[0] - mx, xy(q)[1] - my) >= apart));
+  const source = low(border.filter((q) => dmath.hypot(xy(q)[0] - mx, xy(q)[1] - my) >= apart));
   let zMin = Infinity;
   for (const z of g.z) zMin = Math.min(zMin, z);
   // Dijkstra from the source with a binary heap.
@@ -212,7 +213,7 @@ export function valleyPath(g: TerrainGrid, apart: number): [number, number][] {
         if ((di === 0 && dj === 0) || a < 0 || b < 0 || a >= g.nx || b >= g.ny) continue;
         const q = b * g.nx + a;
         const h = (g.z[q] ?? 0) - zMin + 1;
-        const nd = d + Math.hypot(di * sx, dj * sy) * h * h;
+        const nd = d + dmath.hypot(di * sx, dj * sy) * h * h;
         if (nd < (dist[q] ?? 0)) {
           dist[q] = nd;
           prev[q] = k;
@@ -264,9 +265,9 @@ export function ribbon(
     const b = path[Math.min(path.length - 1, i + 1)] ?? p;
     const dx = b[0] - a[0];
     const dy = b[1] - a[1];
-    const l = Math.hypot(dx, dy) || 1;
+    const l = dmath.hypot(dx, dy) || 1;
     if (i > 0)
-      run += Math.hypot(p[0] - (path[i - 1]?.[0] ?? p[0]), p[1] - (path[i - 1]?.[1] ?? p[1]));
+      run += dmath.hypot(p[0] - (path[i - 1]?.[0] ?? p[0]), p[1] - (path[i - 1]?.[1] ?? p[1]));
     const t = i / Math.max(1, path.length - 1);
     const w = ((width[0] + (width[1] - width[0]) * t) / 2) * vary(p[0], p[1]);
     const side: [number, number] = [-dy / l, dx / l];
@@ -332,7 +333,7 @@ export function conifers(
     const top: Vec3 = [x, y, z + h];
     const base = [0, 1, 2].map((s): Vec3 => {
       const a = a0 + (s / 3) * Math.PI * 2;
-      return [x + Math.cos(a) * rad, y + Math.sin(a) * rad, z];
+      return [x + dmath.cos(a) * rad, y + dmath.sin(a) * rad, z];
     });
     for (let s = 0; s < 3; s++) {
       const p = base[s] ?? top;
@@ -342,7 +343,7 @@ export function conifers(
       const nx = e1[1] * e2[2] - e1[2] * e2[1];
       const ny = e1[2] * e2[0] - e1[0] * e2[2];
       const nz = e1[0] * e2[1] - e1[1] * e2[0];
-      const l = Math.hypot(nx, ny, nz) || 1;
+      const l = dmath.hypot(nx, ny, nz) || 1;
       const n: Vec3 = [nx / l, ny / l, nz / l];
       const dark: Vec3 = [tint[0] * 0.7, tint[1] * 0.7, tint[2] * 0.7];
       mb.tri(

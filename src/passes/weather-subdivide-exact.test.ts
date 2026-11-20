@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { createRng, type Mesh, MeshBuilder, Ts23dError } from '../core/index.ts';
+import { createRng, dmath, type Mesh, MeshBuilder, Ts23dError } from '../core/index.ts';
 import { box } from '../primitives/index.ts';
 import { weather } from './weather.ts';
 import { subdivideTo } from './weather-subdivide.ts';
@@ -20,8 +20,8 @@ function edges(m: Mesh): { min: number; max: number; mean: number } {
     for (let e = 0; e < 3; e++) {
       const a = (m.indices[t + e] ?? 0) * 3;
       const b = (m.indices[t + ((e + 1) % 3)] ?? 0) * 3;
-      const l = Math.hypot(
-        ...[0, 1, 2].map((k) => (m.positions[a + k] ?? 0) - (m.positions[b + k] ?? 0)),
+      const l = dmath.norm(
+        [0, 1, 2].map((k) => (m.positions[a + k] ?? 0) - (m.positions[b + k] ?? 0)),
       );
       [min, max, sum, n] = [Math.min(min, l), Math.max(max, l), sum + l, n + 1];
     }

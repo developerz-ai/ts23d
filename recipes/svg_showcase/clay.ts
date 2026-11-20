@@ -2,12 +2,12 @@
 // rings run around the pot along U at a 1.4 cm pitch over a fine sandy grit; the V span holds 12
 // whole rings, so the band mirrored along the turned profile never breaks one.
 
-import { defineMaterial, tex } from '@developerz.ai/ts23d';
+import { defineMaterial, dmath, tex } from '@developerz.ai/ts23d';
 
 const PITCH = 0.014;
 const rings = tex.fn((_x, y) => {
-  const s = Math.sin((2 * Math.PI * y) / PITCH);
-  return 0.5 + 0.5 * Math.sign(s) * Math.abs(s) ** 0.6;
+  const s = dmath.sin((2 * Math.PI * y) / PITCH);
+  return 0.5 + 0.5 * Math.sign(s) * dmath.pow(Math.abs(s), 0.6);
 }, 'throw_rings');
 const grit = tex.noise({ size: 0.004, octaves: 2, seed: 81 });
 

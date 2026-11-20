@@ -8,6 +8,7 @@ import {
   type CompiledAsset,
   compile,
   defineAsset,
+  dmath,
   translate,
   type Vec3,
 } from '../../core/index.ts';
@@ -34,16 +35,16 @@ const EL = 25;
 const unit = (az: number, el: number): Vec3 => {
   const a = (az * Math.PI) / 180;
   const e = (el * Math.PI) / 180;
-  return [Math.cos(e) * Math.cos(a), Math.cos(e) * Math.sin(a), Math.sin(e)];
+  return [dmath.cos(e) * dmath.cos(a), dmath.cos(e) * dmath.sin(a), dmath.sin(e)];
 };
 
 /** A 1.4 × 0.9 m pane whose normal bisects the key light (studioRig: az − 50°, el 55°) and the eye. */
 function mirrorPane(): ReturnType<typeof planar> {
   const sun = unit(AZ - 50, 55);
   const eye = unit(AZ, EL);
-  const hl = Math.hypot(sun[0] + eye[0], sun[1] + eye[1], sun[2] + eye[2]);
+  const hl = dmath.hypot(sun[0] + eye[0], sun[1] + eye[1], sun[2] + eye[2]);
   const h: Vec3 = [(sun[0] + eye[0]) / hl, (sun[1] + eye[1]) / hl, (sun[2] + eye[2]) / hl];
-  const ul = Math.hypot(h[0], h[1]);
+  const ul = dmath.hypot(h[0], h[1]);
   const u: Vec3 = [-h[1] / ul, h[0] / ul, 0];
   const v: Vec3 = [h[1] * u[2] - h[2] * u[1], h[2] * u[0] - h[0] * u[2], h[0] * u[1] - h[1] * u[0]];
   const at = (a: number, b: number): Vec3 => [

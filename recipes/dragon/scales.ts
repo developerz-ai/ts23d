@@ -6,6 +6,7 @@
 // Pure functions of position (hash, not rng: the same point always gets the same scale).
 
 import type { Vec3 } from '@developerz.ai/ts23d';
+import { dmath } from '@developerz.ai/ts23d';
 import { mixRgb, smoothstep, v3 } from '../_lib/creature/curve.ts';
 import type { Relief } from '../_lib/creature/sculpt-part.ts';
 import { neckPath, tailPath, tailRadius } from './lines.ts';
@@ -143,7 +144,7 @@ export function dorsalOf(p: Vec3): number {
 export function armourOf(p: Vec3): number {
   const y = Math.abs(p[1]);
   const near = (c: Vec3, r: number): number =>
-    smoothstep(r, r * 0.45, Math.hypot(p[0] - c[0], y - c[1], p[2] - c[2]));
+    smoothstep(r, r * 0.45, dmath.hypot(p[0] - c[0], y - c[1], p[2] - c[2]));
   return Math.max(near([0.96, 0.66, 1.58], 0.5), near([-1.12, 0.62, 1.32], 0.6));
 }
 

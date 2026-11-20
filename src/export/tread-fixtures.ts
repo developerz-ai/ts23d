@@ -2,7 +2,15 @@
 // stations round a stadium loop (two 0.3 m end wheels 2 m apart), with wheels that spin, and
 // readers that pull a belt's morph targets and `run` weights back out of a GLB. Not exported.
 
-import { type Asset, defineAsset, type Mesh, merge, place, type Vec2 } from '../core/index.ts';
+import {
+  type Asset,
+  defineAsset,
+  dmath,
+  type Mesh,
+  merge,
+  place,
+  type Vec2,
+} from '../core/index.ts';
 import { box, cylinder } from '../primitives/index.ts';
 import type { Json } from './bin-writer.ts';
 import { readGlbChunks } from './finish-glb.ts';
@@ -18,12 +26,12 @@ export function stadium(): Vec2[] {
   for (let i = 0; i < 40; i++) pts.push([-1 + (2 * i) / 40, 0]);
   for (let i = 0; i < 72; i++) {
     const a = -Math.PI / 2 + (Math.PI * i) / 72;
-    pts.push([1 + LINE_R * Math.cos(a), LINE_R + LINE_R * Math.sin(a)]);
+    pts.push([1 + LINE_R * dmath.cos(a), LINE_R + LINE_R * dmath.sin(a)]);
   }
   for (let i = 0; i < 40; i++) pts.push([1 - (2 * i) / 40, 2 * LINE_R]);
   for (let i = 0; i < 72; i++) {
     const a = Math.PI / 2 + (Math.PI * i) / 72;
-    pts.push([-1 + LINE_R * Math.cos(a), LINE_R + LINE_R * Math.sin(a)]);
+    pts.push([-1 + LINE_R * dmath.cos(a), LINE_R + LINE_R * dmath.sin(a)]);
   }
   return pts;
 }
@@ -32,7 +40,7 @@ export function stadium(): Vec2[] {
 function stations(line: readonly Vec2[], n: number): { p: Vec2; angle: number; len: number }[] {
   const seg = line.map((a, i) => {
     const b = line[(i + 1) % line.length] ?? a;
-    return Math.hypot(b[0] - a[0], b[1] - a[1]);
+    return dmath.hypot(b[0] - a[0], b[1] - a[1]);
   });
   const total = seg.reduce((s, l) => s + l, 0);
   let i = 0;
@@ -45,7 +53,7 @@ function stations(line: readonly Vec2[], n: number): { p: Vec2; angle: number; l
     const f = (d - acc) / (seg[i] || 1);
     return {
       p: [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f] as Vec2,
-      angle: Math.atan2(-(b[1] - a[1]), b[0] - a[0]),
+      angle: dmath.atan2(-(b[1] - a[1]), b[0] - a[0]),
       len: total / n,
     };
   });

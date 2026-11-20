@@ -4,7 +4,7 @@
 // reads the tessellation, so LOD0 and LOD1 dent the same spots. Welded vertices move together
 // (no cracks); moved vertices get fresh normals so the dent catches light.
 
-import { createRng, type Lod, type Mesh, type WeatherCoverage } from '../core/index.ts';
+import { createRng, dmath, type Lod, type Mesh, type WeatherCoverage } from '../core/index.ts';
 import { type Panel, panels, spans } from './weather-regions.ts';
 import { sceneOf } from './weather-scene.ts';
 import { type Scene, select } from './weather-select.ts';
@@ -78,7 +78,7 @@ export function deform(sc: Scene, o: ImperfectOptions): Imperfect {
     const depth = d.depth ?? 0.008;
     const range = d.count ?? [1, 3];
     const w = select(sc, where);
-    const { panels: all, of } = panels(s, (radius * 2) ** 2);
+    const { panels: all, of } = panels(s, dmath.pow(radius * 2, 2));
     const ok = all.map((p, i) => (share(w, sc, (v) => of[v] === i) >= 0.5 ? p : null));
     const area = ok.reduce((t, p) => t + (p?.area ?? 0), 0);
     const r = rng.fork(`${name}:dents`);
@@ -99,9 +99,9 @@ export function deform(sc: Scene, o: ImperfectOptions): Imperfect {
       for (let v = 0; v < s.vertices; v++) {
         if (of[v] !== pi) continue;
         const g = s.group[v] ?? 0;
-        const dist = Math.hypot(...[0, 1, 2].map((i) => (s.gp[g * 3 + i] ?? 0) - (c[i] ?? 0)));
+        const dist = dmath.norm([0, 1, 2].map((i) => (s.gp[g * 3 + i] ?? 0) - (c[i] ?? 0)));
         if (dist >= rad) continue;
-        const f = Math.cos((Math.PI / 2) * (dist / rad)) ** 2 * dd;
+        const f = dmath.pow(dmath.cos((Math.PI / 2) * (dist / rad)), 2) * dd;
         if (f <= (mag[g] ?? 0)) continue;
         mag[g] = f;
         for (let i = 0; i < 3; i++) disp[g * 3 + i] = -(p.normal[i] ?? 0) * f;
@@ -181,7 +181,7 @@ function moved(sc: Scene, disp: Float64Array): Mesh {
   const normals = new Float32Array(m.normals);
   for (let v = 0; v < s.vertices; v++) {
     if (!touched[v]) continue;
-    const l = Math.hypot(acc[v * 3] ?? 0, acc[v * 3 + 1] ?? 0, acc[v * 3 + 2] ?? 0);
+    const l = dmath.hypot(acc[v * 3] ?? 0, acc[v * 3 + 1] ?? 0, acc[v * 3 + 2] ?? 0);
     if (l > 0) for (let k = 0; k < 3; k++) normals[v * 3 + k] = (acc[v * 3 + k] ?? 0) / l;
   }
   return { ...m, positions, normals };

@@ -160,13 +160,13 @@
     },
     {
       "name": "walk",
-      "seconds": 4.1999998410542805,
+      "seconds": 4.2,
       "loop": true,
       "speed": 0
     },
     {
       "name": "jog",
-      "seconds": 0.7333333214124044,
+      "seconds": 0.733333,
       "loop": true,
       "speed": 0
     }
@@ -302,7 +302,7 @@
     {
       "label": "stature",
       "spec": 1.78,
-      "measured": 1.7799999681592453,
+      "measured": 1.78,
       "source": "design brief (README.md); ANSUR II male mean stature 1.756 m"
     }
   ],

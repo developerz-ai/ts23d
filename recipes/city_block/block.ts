@@ -13,6 +13,7 @@ import {
   type CityBuildingPlan,
   cityPlan,
   cityWindows,
+  dmath,
   hex,
   type Lod,
   lathe,
@@ -155,7 +156,7 @@ const PAINT: Vec3 = [0.78, 0.77, 0.72];
 
 /** The t-interval of a→b (metres from a) inside the rectangle shrunk by `pad`, or null. */
 function inside(a: Vec2, b: Vec2, ext: Site['extent'], pad: number): [number, number] | null {
-  const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+  const len = dmath.hypot(b[0] - a[0], b[1] - a[1]);
   let [t0, t1] = [0, len];
   for (const k of [0, 1] as const) {
     const d = ((b[k] ?? 0) - (a[k] ?? 0)) / len;
@@ -179,7 +180,7 @@ function runs(
   off: number,
   clear: (p: Vec2) => boolean,
 ): [number, number][] {
-  const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+  const len = dmath.hypot(b[0] - a[0], b[1] - a[1]);
   const [ux, uy] = [(b[0] - a[0]) / len, (b[1] - a[1]) / len];
   const out: [number, number][] = [];
   let start = -1;
@@ -201,7 +202,7 @@ function runStrip(
   [t0, t1]: readonly [number, number],
   o: { off: number; w: number; h: number; z: number; color: Vec3; strip?: StripId },
 ): Mesh {
-  const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+  const len = dmath.hypot(b[0] - a[0], b[1] - a[1]);
   const [ux, uy] = [(b[0] - a[0]) / len, (b[1] - a[1]) / len];
   const t = (t0 + t1) / 2;
   return place(
@@ -213,7 +214,7 @@ function runStrip(
     }),
     {
       at: [a[0] + ux * t - uy * o.off, a[1] + uy * t + ux * o.off, o.z],
-      yaw: Math.atan2(uy, ux),
+      yaw: dmath.atan2(uy, ux),
     },
   );
 }
@@ -257,7 +258,7 @@ function streets(ctx: BuildContext, s: Site, style: BlockStyle): void {
     for (let i = 0; i + 1 < r.line.length; i++) {
       const a = r.line[i] ?? [0, 0];
       const b = r.line[i + 1] ?? a;
-      const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+      const len = dmath.hypot(b[0] - a[0], b[1] - a[1]);
       if (len < 0.05) continue;
       const [nx, ny] = [(-(b[1] - a[1]) / len) * (width / 2), ((b[0] - a[0]) / len) * (width / 2)];
       let poly: Vec2[] = [
@@ -367,7 +368,7 @@ function trees(ctx: BuildContext, s: Site): void {
     for (let i = 0; i + 1 < r.line.length; i++) {
       const a = r.line[i] ?? [0, 0];
       const b = r.line[i + 1] ?? a;
-      const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+      const len = dmath.hypot(b[0] - a[0], b[1] - a[1]);
       const [ux, uy] = [(b[0] - a[0]) / (len || 1), (b[1] - a[1]) / (len || 1)];
       for (let t = 4; t < len; t += 8)
         for (const side of [-1, 1]) {
@@ -399,7 +400,7 @@ function trees(ctx: BuildContext, s: Site): void {
       const d = rr * rng.range(0.3, 0.5);
       parts.push(
         place(crown(rr * 0.65, hh * 0.6, 3.0 + hh * 0.3, green), {
-          at: [Math.cos(lobe) * d, Math.sin(lobe) * d, 0],
+          at: [dmath.cos(lobe) * d, dmath.sin(lobe) * d, 0],
         }),
       );
     }
@@ -430,7 +431,7 @@ function shrink(ring: readonly Vec2[], d: number): Vec2[] {
     ring.reduce((s, p) => s + p[1], 0) / ring.length,
   ];
   return ring.map((p) => {
-    const l = Math.hypot(p[0] - c[0], p[1] - c[1]) || 1;
+    const l = dmath.hypot(p[0] - c[0], p[1] - c[1]) || 1;
     return [p[0] - ((p[0] - c[0]) / l) * d, p[1] - ((p[1] - c[1]) / l) * d];
   });
 }

@@ -6,6 +6,7 @@
 // cat's forward). QA `connections` holds the result: the ball enclosed, the upper lid on the iris.
 
 import type { Mesh, Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import { type SculptEdit, sdf } from '../primitives/index.ts';
 import { v3 } from './creature-curve.ts';
 
@@ -56,8 +57,8 @@ const deg = Math.PI / 180;
 /** World → eye-local: undo the aperture yaw about the eye centre (lids are built facing +X). */
 function toLocal(e: EyeSpec): (p: V) => V {
   const a = -(e.aperture ?? 0) * deg;
-  const c = Math.cos(a);
-  const s = Math.sin(a);
+  const c = dmath.cos(a);
+  const s = dmath.sin(a);
   const [ex, ey] = e.centre;
   return (p) => {
     const x = p[0] - ex;
@@ -69,13 +70,17 @@ function toLocal(e: EyeSpec): (p: V) => V {
 /** Eye-local direction → world (apply the aperture yaw). */
 function toWorldDir(e: EyeSpec, d: V): V {
   const a = (e.aperture ?? 0) * deg;
-  return [Math.cos(a) * d[0] - Math.sin(a) * d[1], Math.sin(a) * d[0] + Math.cos(a) * d[1], d[2]];
+  return [
+    dmath.cos(a) * d[0] - dmath.sin(a) * d[1],
+    dmath.sin(a) * d[0] + dmath.cos(a) * d[1],
+    d[2],
+  ];
 }
 
 /** Half-height of the iris on the ball's front, and its angular radius. */
 function irisOf(e: EyeSpec): { h: number; a: number } {
-  const a = Math.asin(Math.min(0.95, e.iris / e.r));
-  return { h: e.r * Math.sin(a), a };
+  const a = dmath.asin(Math.min(0.95, e.iris / e.r));
+  return { h: e.r * dmath.sin(a), a };
 }
 
 /** A cap of the ball (grown by `t`) on one side of a tilted lid plane, front half only. */
@@ -87,17 +92,15 @@ function lidShell(e: EyeSpec, upper: boolean): SculptEdit {
   const scowl = (upper ? (e.scowl ?? 0) : 0) * deg;
   // Lid plane: through the lid edge, its normal tilted about the gaze (X) axis so the outer
   // corner (+Y) rises by `tilt` and a scowl drops the inner end.
-  const ny = Math.sin(-tilt + scowl);
-  const nz = Math.cos(-tilt + scowl);
+  const ny = dmath.sin(-tilt + scowl);
+  const nz = dmath.cos(-tilt + scowl);
   const n: V = upper ? [0, ny, -nz] : [0, -ny, nz];
   const at: V = [ex, ey, ez + edge];
   const r = e.r + e.lid;
   const local = toLocal(e);
   const plane = (q: V): number => {
     const p = local(q);
-    return (
-      ((p[0] - at[0]) * n[0] + (p[1] - at[1]) * n[1] + (p[2] - at[2]) * n[2]) / Math.hypot(...n)
-    );
+    return ((p[0] - at[0]) * n[0] + (p[1] - at[1]) * n[1] + (p[2] - at[2]) * n[2]) / dmath.norm(n);
   };
   const pad = r + 0.01;
   return {
@@ -142,9 +145,9 @@ export function lidEdits(e: EyeSpec): SculptEdit[] {
   out.push({
     field: (q) => {
       const p = local(q);
-      const d = Math.hypot(p[0] - ex, p[1] - ey, p[2] - ez) - R;
+      const d = dmath.hypot(p[0] - ex, p[1] - ey, p[2] - ez) - R;
       const front = Math.max(0, ex + e.r * 0.2 - p[0]);
-      return Math.hypot(d, p[2] - z) - e.lid * 0.45 + front;
+      return dmath.hypot(d, p[2] - z) - e.lid * 0.45 + front;
     },
     bounds: [
       [ex - pad, ey - pad, ez - pad],
@@ -155,7 +158,7 @@ export function lidEdits(e: EyeSpec): SculptEdit[] {
     color: e.colours.wet,
   });
   // Caruncle: the pink knot at the inner corner, tucked against the ball.
-  const inner = toWorldDir(e, norm([Math.cos(58 * deg), -Math.sin(58 * deg), -0.08]));
+  const inner = toWorldDir(e, norm([dmath.cos(58 * deg), -dmath.sin(58 * deg), -0.08]));
   out.push({
     shape: 'ellipsoid',
     at: add(e.centre, mul(inner, e.r * 0.93)),
@@ -173,23 +176,23 @@ export function eyeball(e: EyeSpec, cell: number): Mesh {
   const { a } = irisOf(e);
   const c = e.colours;
   const limbus = c.limbus ?? [c.iris[0] * 0.35, c.iris[1] * 0.35, c.iris[2] * 0.35];
-  const cosIris = Math.cos(a);
-  const cosLimb = Math.cos(a * 1.12);
-  const cosPupil = Math.cos(a * 0.42);
+  const cosIris = dmath.cos(a);
+  const cosLimb = dmath.cos(a * 1.12);
+  const cosPupil = dmath.cos(a * 0.42);
   // Cornea: a slightly smaller-radius cap over the iris, standing a little proud of the ball.
   const cr = r * 0.78;
   const cx = r - cr + r * 0.06;
   return sdf({
     field: (q) =>
-      Math.min(Math.hypot(q[0], q[1], q[2]) - r, Math.hypot(q[0] - cx, q[1], q[2]) - cr),
+      Math.min(dmath.hypot(q[0], q[1], q[2]) - r, dmath.hypot(q[0] - cx, q[1], q[2]) - cr),
     bounds: [
       [-r * 1.3, -r * 1.3, -r * 1.3],
       [r * 1.3, r * 1.3, r * 1.3],
     ],
     resolution: cell,
     color: (q) => {
-      const cos = q[0] / (Math.hypot(q[0], q[1], q[2]) || 1);
-      const slit = e.pupil === 'slit' && Math.abs(q[1]) < r * 0.09 && cos > Math.cos(a * 0.85);
+      const cos = q[0] / (dmath.hypot(q[0], q[1], q[2]) || 1);
+      const slit = e.pupil === 'slit' && Math.abs(q[1]) < r * 0.09 && cos > dmath.cos(a * 0.85);
       if (slit || (e.pupil !== 'slit' && cos > cosPupil)) return c.pupil;
       if (cos > cosIris) {
         // Iris: darker toward its rim, lighter round the pupil.

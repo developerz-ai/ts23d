@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'bun:test';
+import { dmath } from '../core/index.ts';
 import {
   type DemBox,
   decodeTerrarium,
@@ -54,7 +55,7 @@ describe('terrarium', () => {
 
   test('a box across the antimeridian wraps tile x instead of asking for x = 2^z', () => {
     const box: DemBox = { ...BOX, centre: { lat: 0, lon: 179.999 } };
-    const n = 2 ** box.zoom;
+    const n = dmath.pow(2, box.zoom);
     const tiles = tilesFor(box);
     expect(tiles.every((t) => t.x >= 0 && t.x < n)).toBe(true);
     expect(new Set(tiles.map((t) => t.x))).toEqual(new Set([n - 1, 0]));

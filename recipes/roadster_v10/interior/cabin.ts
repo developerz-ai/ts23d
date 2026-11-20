@@ -4,7 +4,7 @@
 // hoops rising out of the head fairings with their rear braces.
 
 import type { Lod, Mesh, Vec3 } from '@developerz.ai/ts23d';
-import { lathe, merge } from '@developerz.ai/ts23d';
+import { dmath, lathe, merge } from '@developerz.ai/ts23d';
 import { cockpitU, GAP, PANEL_STEP, rows, uPlus } from '../body/regions.ts';
 import { U } from '../body/shape.ts';
 import { BULKHEAD_X, FLOOR_Z, TUNNEL_TOP, TUNNEL_W } from '../chassis/structure.ts';
@@ -109,7 +109,7 @@ function cardFaceY(S: Surface, s: number, z: number): number {
   const e = S.row(s)(cockpitU(S, s, s));
   const zTop = e[2] - 0.035;
   const f = Math.min(1, Math.max(0, (z - 0.34) / (zTop - 0.34)));
-  return e[1] - 0.014 - 0.018 * Math.sin(f * Math.PI) - 0.01 * (1 - f);
+  return e[1] - 0.014 - 0.018 * dmath.sin(f * Math.PI) - 0.01 * (1 - f);
 }
 
 /** Crown of the card's top roll at station s: midway between the card and the skin's inner edge. */
@@ -153,7 +153,7 @@ export function doorCard(S: Surface, lod: Lod): Mesh {
       const f = j / nu;
       row.push([
         e[0],
-        yC - 0.018 * Math.sin(f * Math.PI) - 0.01 * (1 - f),
+        yC - 0.018 * dmath.sin(f * Math.PI) - 0.01 * (1 - f),
         zBot + (zTop - zBot) * f,
       ]);
       nrow.push([0, -1, 0]);
@@ -228,7 +228,7 @@ export function doorCard(S: Surface, lod: Lod): Mesh {
         -1,
         (cardFaceY(S, ss, sz + e) - cardFaceY(S, ss, sz - e)) / (2 * e),
       ];
-      const faceN = mul(lean, 1 / Math.hypot(lean[0], lean[1], lean[2]));
+      const faceN = mul(lean, 1 / dmath.hypot(lean[0], lean[1], lean[2]));
       const sp = sub([ss, cardFaceY(S, ss, sz), sz], mul(faceN, 0.0015));
       parts.push(
         along(

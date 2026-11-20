@@ -8,7 +8,7 @@
 // Rotations are about the limit axis from the rest pose, as QA `deform` poses them.
 
 import type { Bone, Clip, Quat, Track } from '../core/index.ts';
-import { Ts23dError } from '../core/index.ts';
+import { dmath, Ts23dError } from '../core/index.ts';
 import { CREATURE_GAITS } from './creature-clips.ts';
 import { bakeKeys, rotationTracks } from './gait-bake.ts';
 import type { ExtraChain, ExtraMotion } from './model-extra.ts';
@@ -22,14 +22,14 @@ const LAG = 0.08;
 export function strokeWave(phi: number, down = 0.5): number {
   const p = phi - Math.floor(phi);
   return p < down
-    ? 0.5 * (1 - Math.cos((Math.PI * p) / down))
-    : 0.5 * (1 + Math.cos((Math.PI * (p - down)) / (1 - down)));
+    ? 0.5 * (1 - dmath.cos((Math.PI * p) / down))
+    : 0.5 * (1 + dmath.cos((Math.PI * (p - down)) / (1 - down)));
 }
 
 /** A rotation of `degrees` about the bone's limit axis. */
 function turn(bone: Bone, degrees: number): Quat {
   const a = bone.limit?.axis ?? [0, 1, 0];
-  const l = Math.hypot(a[0], a[1], a[2]) || 1;
+  const l = dmath.hypot(a[0], a[1], a[2]) || 1;
   const r = (degrees * DEG) / l;
   return qexp([a[0] * r, a[1] * r, a[2] * r]);
 }
@@ -80,7 +80,7 @@ export function extraClips(
     const more = tracks(
       c.seconds,
       driven,
-      (d, phi) => (d.motion[pick]?.[d.index] ?? 0) * Math.sin(TAU * (2 * phi - lag(d))),
+      (d, phi) => (d.motion[pick]?.[d.index] ?? 0) * dmath.sin(TAU * (2 * phi - lag(d))),
     );
     return { ...c, tracks: [...c.tracks, ...more] };
   });

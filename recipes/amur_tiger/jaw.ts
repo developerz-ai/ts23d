@@ -4,7 +4,7 @@
 // (temporomandibular joint) so an engine can open it; at rest it hangs a few degrees open.
 
 import type { Mesh, SculptEdit } from '@developerz.ai/ts23d';
-import { merge, place } from '@developerz.ai/ts23d';
+import { dmath, merge, place } from '@developerz.ai/ts23d';
 import { mixRgb, smoothstep } from '../_lib/creature/curve.ts';
 import { sculptPart } from '../_lib/creature/sculpt-part.ts';
 import { skin } from '../_lib/creature/skin.ts';
@@ -74,7 +74,7 @@ function jawPaint(p: readonly [number, number, number], c: readonly [number, num
   const lipish = Math.abs(c[0] - C.orange[0]) + Math.abs(c[1] - C.orange[1]) > 0.05;
   // A dark spot behind the lower lip on each side (photos), the rest white.
   const spot =
-    smoothstep(0.012, 0.006, Math.hypot(p[0] - 0.262, p[2] - (M - 0.024))) *
+    smoothstep(0.012, 0.006, dmath.hypot(p[0] - 0.262, p[2] - (M - 0.024))) *
     smoothstep(0.03, 0.04, Math.abs(p[1]));
   const fur = mixRgb(C.white, C.stripe, spot * 0.9);
   return lipish

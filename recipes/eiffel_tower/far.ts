@@ -8,6 +8,7 @@ import {
   add,
   cross,
   defineMaterial,
+  dmath,
   dot,
   type MaterialPainter,
   type Mesh,
@@ -51,7 +52,7 @@ const paintLattice: MaterialPainter = (s) => {
       const cu = (((x + 0.5) / s.w) * PANELS) % 1;
       const a = lattice(cu, cv, eu, ev);
       const i = y * s.w + x;
-      const g = Math.round(255 * (0.72 + 0.1 * a) ** (1 / 2.2));
+      const g = Math.round(255 * dmath.pow(0.72 + 0.1 * a, 1 / 2.2));
       rgba.set([g, g, g, Math.round(a * 255)], i * 4);
       s.height[i] = a * 0.02;
       s.rough[i] = 0.55;
@@ -106,7 +107,7 @@ export function latticeFrustum(
     ];
     const h = Math.abs((b0[2] ?? 0) - (a0[2] ?? 0));
     const bands = Math.max(1, Math.round(h / panel));
-    const width = (Math.hypot(...sub(a1, a0)) + Math.hypot(...sub(b1, b0))) / 2;
+    const width = (dmath.norm(sub(a1, a0)) + dmath.norm(sub(b1, b0))) / 2;
     const across = Math.max(1, Math.round(width / (h / bands)));
     let n = normalize(cross(sub(a1, a0), sub(b0, a0)));
     const mid = scale(add(add(a0, a1), add(b0, b1)), 0.25);

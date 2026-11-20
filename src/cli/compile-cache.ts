@@ -17,7 +17,7 @@
 import { type Asset, type CompiledAsset, type CompileOptions, compile } from '../core/index.ts';
 
 /** Vertex-array bytes held before the oldest compile is dropped (roadster_v10's six: 77 MiB). */
-export const SHARED_COMPILE_BYTES = 1024 ** 3;
+export const SHARED_COMPILE_BYTES = 1073741824 /* 1024^3 */;
 
 interface Held {
   readonly asset: Asset;

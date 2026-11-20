@@ -5,6 +5,7 @@
 // caller makes (render sits beside qa). Same asset + same render → same numbers.
 
 import type { CompiledAsset, Mesh } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 
 /** The render every vector is measured on (golden set, CLI and gate alike). */
 export const VECTOR_RENDER = { width: 640, height: 360, supersample: 1 } as const;
@@ -94,7 +95,7 @@ export function meshStats(meshes: readonly Mesh[]): MeshStats {
           edgeLen += len;
         } else if (seen.length === 4) {
           const cos = n[0] * (seen[0] ?? 0) + n[1] * (seen[1] ?? 0) + n[2] * (seen[2] ?? 0);
-          const deg = (Math.acos(Math.max(-1, Math.min(1, cos))) * 180) / Math.PI;
+          const deg = (dmath.acos(Math.max(-1, Math.min(1, cos))) * 180) / Math.PI;
           const bin = BINS.findIndex((e) => deg < e);
           hist[bin] = (hist[bin] ?? 0) + len;
           seen.push(0);
@@ -104,14 +105,14 @@ export function meshStats(meshes: readonly Mesh[]): MeshStats {
   }
   const total = hist.reduce((s, h) => s + h, 0) || 1;
   let entropy = 0;
-  for (const h of hist) if (h > 0) entropy -= (h / total) * Math.log(h / total);
+  for (const h of hist) if (h > 0) entropy -= (h / total) * dmath.log(h / total);
   return {
-    tris: Math.log10(1 + tris),
+    tris: dmath.log10(1 + tris),
     smoothShading: welded ? smooth / welded : 0,
     curvSmooth: ((hist[0] ?? 0) + (hist[1] ?? 0) + (hist[2] ?? 0)) / total,
-    curvEntropy: entropy / Math.log(BINS.length),
+    curvEntropy: entropy / dmath.log(BINS.length),
     colourDetail: edgeLen ? colour / edgeLen : 0,
-    texelDensity: area > 0 ? Math.log10(Math.sqrt(welded / area)) : 0,
+    texelDensity: area > 0 ? dmath.log10(Math.sqrt(welded / area)) : 0,
   };
 }
 
@@ -159,12 +160,12 @@ function faceNormal(m: Mesh, a: number, b: number, c: number): [number, number, 
   const [u0 = 0, u1 = 0, u2 = 0] = u;
   const [v0 = 0, v1 = 0, v2 = 0] = v;
   const n = [u1 * v2 - u2 * v1, u2 * v0 - u0 * v2, u0 * v1 - u1 * v0];
-  const l = Math.hypot(n[0] ?? 0, n[1] ?? 0, n[2] ?? 0) || 1;
+  const l = dmath.hypot(n[0] ?? 0, n[1] ?? 0, n[2] ?? 0) || 1;
   return [(n[0] ?? 0) / l, (n[1] ?? 0) / l, (n[2] ?? 0) / l, l / 2];
 }
 
 const dist = (m: Mesh, p: number, q: number): number =>
-  Math.hypot(
+  dmath.hypot(
     (m.positions[p * 3] ?? 0) - (m.positions[q * 3] ?? 0),
     (m.positions[p * 3 + 1] ?? 0) - (m.positions[q * 3 + 1] ?? 0),
     (m.positions[p * 3 + 2] ?? 0) - (m.positions[q * 3 + 2] ?? 0),
@@ -217,9 +218,9 @@ export function imageStats(img: VectorImage): ImageStats {
       for (let dy = -2; dy <= 2; dy++)
         for (let dx = -2; dx <= 2; dx++) {
           s += at(dx, dy);
-          s2 += at(dx, dy) ** 2;
+          s2 += dmath.pow(at(dx, dy), 2);
         }
-      if (Math.sqrt(Math.max(0, s2 / 25 - (s / 25) ** 2)) < 0.02) calm++;
+      if (Math.sqrt(Math.max(0, s2 / 25 - dmath.pow(s / 25, 2))) < 0.02) calm++;
     }
   return {
     chroma: chroma / covered,

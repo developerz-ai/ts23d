@@ -4,6 +4,7 @@
 // disc ('round') or a bevel ('square'). Open ends get round or square caps; a closed loop smaller
 // than the pen (Hershey's dots) becomes one filled disc. Never folds, so every face stays CCW.
 
+import { dmath } from '../core/index.ts';
 import { arc, fan, type Piece, ribbon } from './text-pieces.ts';
 import type { SmoothStroke } from './text-smooth.ts';
 
@@ -15,7 +16,7 @@ export interface StrokeStyle {
   readonly capSteps: number;
 }
 
-const MITER_COS = Math.cos((50 * Math.PI) / 180);
+const MITER_COS = dmath.cos((50 * Math.PI) / 180);
 
 function dot(x: number, y: number, rad: number, st: StrokeStyle, out: Piece[]): void {
   if (st.cap === 'square') {
@@ -36,7 +37,7 @@ function cap(x: number, y: number, ox: number, oy: number, st: StrokeStyle, out:
     out.push(fan(x, y, ring, false));
     return;
   }
-  const a = Math.atan2(oy, ox);
+  const a = dmath.atan2(oy, ox);
   out.push(fan(x, y, arc(x, y, h, a - Math.PI / 2, a + Math.PI / 2, st.capSteps), false));
 }
 
@@ -59,7 +60,7 @@ export function strokePieces(s: SmoothStroke, st: StrokeStyle, out: Piece[]): vo
       cy += py(i) / n;
     }
     let rad = 0;
-    for (let i = 0; i < n; i++) rad = Math.max(rad, Math.hypot(px(i) - cx, py(i) - cy));
+    for (let i = 0; i < n; i++) rad = Math.max(rad, dmath.hypot(px(i) - cx, py(i) - cy));
     if (rad <= 1.5 * h) {
       dot(cx, cy, rad + h, st, out);
       return;
@@ -73,7 +74,7 @@ export function strokePieces(s: SmoothStroke, st: StrokeStyle, out: Piece[]): vo
   for (let i = 0; i < m; i++) {
     const ex = px(i + 1) - px(i);
     const ey = py(i + 1) - py(i);
-    len[i] = Math.hypot(ex, ey);
+    len[i] = dmath.hypot(ex, ey);
     dx[i] = ex / (len[i] || 1);
     dy[i] = ey / (len[i] || 1);
   }
@@ -102,7 +103,7 @@ export function strokePieces(s: SmoothStroke, st: StrokeStyle, out: Piece[]): vo
       const b = seg(i);
       const mx = -(dy[a] ?? 0) - (dy[b] ?? 0);
       const my = (dx[a] ?? 0) + (dx[b] ?? 0);
-      const ml = Math.hypot(mx, my) || 1;
+      const ml = dmath.hypot(mx, my) || 1;
       const k = h / ((mx / ml) * -(dy[a] ?? 0) + (my / ml) * (dx[a] ?? 0));
       nx = (mx / ml) * k;
       ny = (my / ml) * k;

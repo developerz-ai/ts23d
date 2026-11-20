@@ -3,6 +3,7 @@
 // straps, centre dart with handle), porthole (bolted brass ring, dark glass). Row y grows with
 // world up, so 12 o'clock is +y.
 
+import { dmath } from '../../core/index.ts';
 import { type Canvas, noiseAt, smooth } from './canvas.ts';
 import { PANE_TONE } from './cells.ts';
 import { boltRing, dome, segment } from './shapes.ts';
@@ -13,7 +14,7 @@ const TAU = Math.PI * 2;
 /** Hand from the centre at clock position `hours` (0..12), length `len`. */
 function hand(px: number, py: number, hours: number, len: number): number {
   const a = (hours / 12) * TAU;
-  return segment(px, py, 0, 0, Math.sin(a) * len, Math.cos(a) * len);
+  return segment(px, py, 0, 0, dmath.sin(a) * len, dmath.cos(a) * len);
 }
 
 export function paintClock(c: Canvas, r: StripRecipe, _seed: number): void {
@@ -24,7 +25,7 @@ export function paintClock(c: Canvas, r: StripRecipe, _seed: number): void {
     for (let x = 0; x < c.w; x++) {
       const px = (x + 0.5) * pu - 0.5;
       const i = y * c.w + x;
-      const d = Math.hypot(px, py);
+      const d = dmath.hypot(px, py);
       if (d > 0.48) continue;
       const i0 = i;
       if (d > 0.42) {
@@ -34,7 +35,7 @@ export function paintClock(c: Canvas, r: StripRecipe, _seed: number): void {
         c.rough[i0] = 0.35;
         continue;
       }
-      const a = Math.atan2(px, py);
+      const a = dmath.atan2(px, py);
       const minute = Math.abs((((a / TAU) * 60 + 60.5) % 1) - 0.5) * (TAU / 60) * d;
       const hour = Math.abs((((a / TAU) * 12 + 12.5) % 1) - 0.5) * (TAU / 12) * d;
       const tickM = d > 0.38 && d < 0.41 && minute < 0.003 ? 1 : 0;
@@ -61,11 +62,11 @@ export function paintSmokebox(c: Canvas, r: StripRecipe, seed: number): void {
     for (let x = 0; x < c.w; x++) {
       const px = (x + 0.5) * pu - 0.5;
       const i = y * c.w + x;
-      const d = Math.hypot(px, py);
+      const d = dmath.hypot(px, py);
       if (d > 0.47) continue;
       const pit = noiseAt(c, px + 0.5, py + 0.5, 0.03, 0.03, seed, 3);
       // Slightly dished door, a raised flange, a bolt ring just inside it.
-      let h = 0.01 * (1 - (d / 0.47) ** 2) + 0.0004 * pit;
+      let h = 0.01 * (1 - dmath.pow(d / 0.47, 2)) + 0.0004 * pit;
       const flange = dome(Math.abs(d - 0.45), 0.02);
       h += 0.006 * flange;
       const bolt = dome(boltRing(px, py, 0.415, 28), 0.011);
@@ -97,7 +98,7 @@ export function paintPorthole(c: Canvas, r: StripRecipe, seed: number): void {
     for (let x = 0; x < c.w; x++) {
       const px = (x + 0.5) * pu - 0.5;
       const i = y * c.w + x;
-      const d = Math.hypot(px, py);
+      const d = dmath.hypot(px, py);
       if (d > 0.44) continue;
       if (d < 0.29) {
         const sky = noiseAt(c, px + 0.5, py + 0.5, 0.5, 0.5, seed, 2);

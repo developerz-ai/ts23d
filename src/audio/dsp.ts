@@ -2,7 +2,7 @@
 // envelopes, RBJ-cookbook biquads, a decaying mode bank (modal synthesis) and a crossfade that
 // turns any render into a seamless loop. Pure functions over Float32Array; no ambient state.
 
-import { createRng } from '../core/index.ts';
+import { createRng, dmath } from '../core/index.ts';
 import { SAMPLE_RATE } from './clip.ts';
 
 /** `n` samples of white noise in −1..1 from `seed` (same seed, same samples). */
@@ -18,7 +18,7 @@ export type Wave = 'sine' | 'square' | 'saw' | 'triangle';
 /** One cycle of `wave` at phase 0..1. */
 export function waveAt(wave: Wave, phase: number): number {
   const p = phase - Math.floor(phase);
-  if (wave === 'sine') return Math.sin(2 * Math.PI * p);
+  if (wave === 'sine') return dmath.sin(2 * Math.PI * p);
   if (wave === 'square') return p < 0.5 ? 1 : -1;
   if (wave === 'saw') return 2 * p - 1;
   return 1 - 4 * Math.abs(p - 0.5);
@@ -73,9 +73,9 @@ export function biquad(
   gainDb = 0,
 ): Float32Array {
   const w = (2 * Math.PI * Math.min(freq, SAMPLE_RATE * 0.49)) / SAMPLE_RATE;
-  const cos = Math.cos(w);
-  const alpha = Math.sin(w) / (2 * q);
-  const a = 10 ** (gainDb / 40);
+  const cos = dmath.cos(w);
+  const alpha = dmath.sin(w) / (2 * q);
+  const a = dmath.pow(10, gainDb / 40);
   let b0: number;
   let b1: number;
   let b2: number;
@@ -126,11 +126,11 @@ export function addModes(
     if (m.freq >= SAMPLE_RATE / 2 || m.amp === 0) continue;
     // Rotate a phasor instead of calling sin/exp per sample: exact, fast and deterministic.
     const w = (2 * Math.PI * m.freq) / SAMPLE_RATE;
-    const r = Math.exp(-1 / (m.decay * SAMPLE_RATE));
-    const c = r * Math.cos(w);
-    const s = r * Math.sin(w);
-    let re = Math.cos(m.phase ?? 0) * m.amp * gain;
-    let im = Math.sin(m.phase ?? 0) * m.amp * gain;
+    const r = dmath.exp(-1 / (m.decay * SAMPLE_RATE));
+    const c = r * dmath.cos(w);
+    const s = r * dmath.sin(w);
+    let re = dmath.cos(m.phase ?? 0) * m.amp * gain;
+    let im = dmath.sin(m.phase ?? 0) * m.amp * gain;
     for (let i = at; i < out.length; i++) {
       out[i] = (out[i] ?? 0) + im;
       const nr = re * c - im * s;
@@ -152,7 +152,7 @@ export function loopify(x: Float32Array, fade: number): Float32Array {
   for (let i = 0; i < fade; i++) {
     const w = (i + 0.5) / fade;
     out[i] =
-      (x[i] ?? 0) * Math.sin((w * Math.PI) / 2) + (x[len + i] ?? 0) * Math.cos((w * Math.PI) / 2);
+      (x[i] ?? 0) * dmath.sin((w * Math.PI) / 2) + (x[len + i] ?? 0) * dmath.cos((w * Math.PI) / 2);
   }
   return out;
 }

@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'bun:test';
-import { createRng, type Mesh, Ts23dError, triangleCount, type Vec3 } from '../core/index.ts';
+import {
+  createRng,
+  dmath,
+  type Mesh,
+  Ts23dError,
+  triangleCount,
+  type Vec3,
+} from '../core/index.ts';
 import { nonManifoldEdges, openEdges, zeroArea } from './closed.ts';
 import { sculpt } from './sculpt.ts';
 import { sdf } from './sdf.ts';
@@ -45,8 +52,8 @@ function flippedArea(m: Mesh): number {
         (e[(k + 2) % 3] ?? 0) * (f[(k + 1) % 3] ?? 0),
     );
     const n = [0, 1, 2].map((k) => (N[a + k] ?? 0) + (N[b + k] ?? 0) + (N[c + k] ?? 0));
-    const gl = Math.hypot(g[0] ?? 0, g[1] ?? 0, g[2] ?? 0);
-    const nl = Math.hypot(n[0] ?? 0, n[1] ?? 0, n[2] ?? 0);
+    const gl = dmath.hypot(g[0] ?? 0, g[1] ?? 0, g[2] ?? 0);
+    const nl = dmath.hypot(n[0] ?? 0, n[1] ?? 0, n[2] ?? 0);
     total += gl;
     const cos = [0, 1, 2].reduce((s, k) => s + (g[k] ?? 0) * (n[k] ?? 0), 0) / (gl * nl || 1);
     if (cos < -0.1) flipped += gl;

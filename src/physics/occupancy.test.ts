@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test';
 import type { CompiledAsset, Mesh, Part, Vec3 } from '../core/index.ts';
-import { merge } from '../core/index.ts';
+import { dmath, merge } from '../core/index.ts';
 import { boxMesh } from './fixtures.ts';
 import { massProperties } from './mass.ts';
 import { unionCorrection } from './occupancy.ts';
@@ -29,8 +29,8 @@ const yawed = (m: Mesh, a: number): Mesh => {
   const p = Float32Array.from(m.positions);
   for (let i = 0; i < p.length; i += 3) {
     const [x, y] = [p[i] ?? 0, p[i + 1] ?? 0];
-    p[i] = x * Math.cos(a) - y * Math.sin(a);
-    p[i + 1] = x * Math.sin(a) + y * Math.cos(a);
+    p[i] = x * dmath.cos(a) - y * dmath.sin(a);
+    p[i + 1] = x * dmath.sin(a) + y * dmath.cos(a);
   }
   return { ...m, positions: p };
 };
@@ -43,7 +43,7 @@ describe('union occupancy (D22: overlapping solids in one part count once)', () 
     expect(p.mass).toBeCloseTo(1.5 * 7850, 2);
     expect(p.centerOfMass[0]).toBeCloseTo(0.25, 6);
     // Union is a 1.5 × 1 × 1 box: Izz = m/12 · (1.5² + 1²).
-    expect(p.inertia[2][2]).toBeCloseTo(((1.5 * 7850) / 12) * (1.5 ** 2 + 1), 1);
+    expect(p.inertia[2][2]).toBeCloseTo(((1.5 * 7850) / 12) * (1.5 * 1.5 + 1), 1);
     expect(p.inertia[0][0]).toBeCloseTo(((1.5 * 7850) / 12) * 2, 1);
   });
 

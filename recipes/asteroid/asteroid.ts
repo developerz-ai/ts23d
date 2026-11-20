@@ -17,6 +17,7 @@ import {
   bakeAo,
   boundsOf,
   defineAsset,
+  dmath,
   type Field,
   hex,
   lathe,
@@ -130,8 +131,8 @@ function shape(ctx: BuildContext, size: V): Shape {
     const a = rng.range(0, Math.PI * 2);
     const up = rng.range(-0.2, 0.9);
     const m = norm([
-      Math.cos(a) * Math.sqrt(1 - up * up),
-      Math.sin(a) * Math.sqrt(1 - up * up),
+      dmath.cos(a) * Math.sqrt(1 - up * up),
+      dmath.sin(a) * Math.sqrt(1 - up * up),
       up,
     ]);
     const reach = Math.abs(m[0]) * size[0] + Math.abs(m[1]) * size[1] + Math.abs(m[2]) * size[2];
@@ -177,8 +178,8 @@ function shape(ctx: BuildContext, size: V): Shape {
     const a = rng.range(0, Math.PI * 2);
     const up = i < 3 ? rng.range(0.55, 0.95) : rng.range(-0.1, 0.7);
     const s = bodySurface([
-      Math.cos(a) * Math.sqrt(1 - up * up),
-      Math.sin(a) * Math.sqrt(1 - up * up),
+      dmath.cos(a) * Math.sqrt(1 - up * up),
+      dmath.sin(a) * Math.sqrt(1 - up * up),
       up,
     ]);
     const n = bodyGrad(s);
@@ -203,9 +204,9 @@ function shape(ctx: BuildContext, size: V): Shape {
       const a = rng.range(0, Math.PI * 2);
       const u = rng.range(0, 0.55) * cr.r;
       const q: V = [
-        cr.centre[0] - cr.n[0] * cr.r + (t1[0] * Math.cos(a) + t2[0] * Math.sin(a)) * u,
-        cr.centre[1] - cr.n[1] * cr.r + (t1[1] * Math.cos(a) + t2[1] * Math.sin(a)) * u,
-        cr.centre[2] - cr.n[2] * cr.r + (t1[2] * Math.cos(a) + t2[2] * Math.sin(a)) * u,
+        cr.centre[0] - cr.n[0] * cr.r + (t1[0] * dmath.cos(a) + t2[0] * dmath.sin(a)) * u,
+        cr.centre[1] - cr.n[1] * cr.r + (t1[1] * dmath.cos(a) + t2[1] * dmath.sin(a)) * u,
+        cr.centre[2] - cr.n[2] * cr.r + (t1[2] * dmath.cos(a) + t2[2] * dmath.sin(a)) * u,
       ];
       // Onto the bowl (the crater sphere), then half its radius out into the crater.
       const o = norm([q[0] - cr.centre[0], q[1] - cr.centre[1], q[2] - cr.centre[2]]);
@@ -227,7 +228,7 @@ function shape(ctx: BuildContext, size: V): Shape {
       // plane floats off convex slopes), then the bowl: a smooth-subtracted sphere.
       const ds = len(p[0] - c.centre[0], p[1] - c.centre[1], p[2] - c.centre[2]);
       const u = (ds - c.r * 1.05) / (c.r * 0.28);
-      if (u > -3 && u < 3) d -= c.r * 0.16 * Math.exp(-u * u);
+      if (u > -3 && u < 3) d -= c.r * 0.16 * dmath.exp(-u * u);
       d = smax(d, -(ds - c.r), c.r * 0.3);
     }
     for (const b of settled) {
@@ -296,13 +297,13 @@ function asteroidVariant(
         const m: V =
           i === 0
             ? norm([
-                e1[0] * Math.cos(a) + e2[0] * Math.sin(a),
-                e1[1] * Math.cos(a) + e2[1] * Math.sin(a),
-                e1[2] * Math.cos(a) + e2[2] * Math.sin(a),
+                e1[0] * dmath.cos(a) + e2[0] * dmath.sin(a),
+                e1[1] * dmath.cos(a) + e2[1] * dmath.sin(a),
+                e1[2] * dmath.cos(a) + e2[2] * dmath.sin(a),
               ])
             : norm([
-                Math.cos(a) * Math.sqrt(1 - up * up),
-                Math.sin(a) * Math.sqrt(1 - up * up),
+                dmath.cos(a) * Math.sqrt(1 - up * up),
+                dmath.sin(a) * Math.sqrt(1 - up * up),
                 up,
               ]);
         return { m, o: vr.range(-0.35, 0.35) * Math.min(size[0], size[1], size[2]) };
@@ -324,8 +325,8 @@ function asteroidVariant(
         const a = pick.range(0, Math.PI * 2);
         const up = pick.range(0.05, 0.75);
         const p = s.surface([
-          Math.cos(a) * Math.sqrt(1 - up * up),
-          Math.sin(a) * Math.sqrt(1 - up * up),
+          dmath.cos(a) * Math.sqrt(1 - up * up),
+          dmath.sin(a) * Math.sqrt(1 - up * up),
           up,
         ]);
         return { p, n: s.gradient(p) };
@@ -429,8 +430,8 @@ function asteroidVariant(
           out.push(
             place(crystal(r, h, seg), {
               at: up(base),
-              yaw: Math.atan2(n[1], n[0]),
-              pitch: Math.acos(Math.max(-1, Math.min(1, n[2]))),
+              yaw: dmath.atan2(n[1], n[0]),
+              pitch: dmath.acos(Math.max(-1, Math.min(1, n[2]))),
             }),
           );
         }
@@ -469,11 +470,14 @@ function ejecta(p: Vec3, cr: Crater, rays: (p: Vec3) => number, far: boolean): n
     cr.n[2] * t1[0] - cr.n[0] * t1[2],
     cr.n[0] * t1[1] - cr.n[1] * t1[0],
   ];
-  const ang = Math.atan2(
+  const ang = dmath.atan2(
     v[0] * t2[0] + v[1] * t2[1] + v[2] * t2[2],
     v[0] * t1[0] + v[1] * t1[1] + v[2] * t1[2],
   );
-  const ray = Math.max(0, Math.cos(7 * ang + 1.6 * Math.sin(3 * ang) + 0.8 * rays(p))) ** 2;
+  const ray = dmath.pow(
+    Math.max(0, dmath.cos(7 * ang + 1.6 * dmath.sin(3 * ang) + 0.8 * rays(p))),
+    2,
+  );
   const bowl = 1 - step(cr.r * 0.9, cr.r * 1.5, d);
   // A bright blanket out to ~2 r, then rays fading out to ~6 r.
   const blanket = 1 - step(cr.r * 1.2, cr.r * 1.9, d);
@@ -504,9 +508,9 @@ function workings(
       ];
       const off = rng.range(0.75, 1.1);
       const q = s.surface([
-        site.p[0] + (t1[0] * Math.cos(a) + t2[0] * Math.sin(a)) * off - CORE[0],
-        site.p[1] + (t1[1] * Math.cos(a) + t2[1] * Math.sin(a)) * off - CORE[1],
-        site.p[2] + (t1[2] * Math.cos(a) + t2[2] * Math.sin(a)) * off - CORE[2],
+        site.p[0] + (t1[0] * dmath.cos(a) + t2[0] * dmath.sin(a)) * off - CORE[0],
+        site.p[1] + (t1[1] * dmath.cos(a) + t2[1] * dmath.sin(a)) * off - CORE[1],
+        site.p[2] + (t1[2] * dmath.cos(a) + t2[2] * dmath.sin(a)) * off - CORE[2],
       ]);
       const n = s.gradient(q);
       bores.push({
@@ -516,14 +520,15 @@ function workings(
       // Tailings: lumps of spoil heaped on the surface just past each bore.
       for (let j = 0; j < 3; j++) {
         const g = s.surface([
-          q[0] + (t1[0] * Math.cos(a) + t2[0] * Math.sin(a)) * (0.5 + 0.25 * j) - CORE[0],
-          q[1] + (t1[1] * Math.cos(a) + t2[1] * Math.sin(a)) * (0.5 + 0.25 * j) - CORE[1],
-          q[2] + (t1[2] * Math.cos(a) + t2[2] * Math.sin(a)) * (0.5 + 0.25 * j) - CORE[2],
+          q[0] + (t1[0] * dmath.cos(a) + t2[0] * dmath.sin(a)) * (0.5 + 0.25 * j) - CORE[0],
+          q[1] + (t1[1] * dmath.cos(a) + t2[1] * dmath.sin(a)) * (0.5 + 0.25 * j) - CORE[1],
+          q[2] + (t1[2] * dmath.cos(a) + t2[2] * dmath.sin(a)) * (0.5 + 0.25 * j) - CORE[2],
         ]);
         // Orientation and stretch hashed from the position, not drawn: extra draws here would
         // move every later bore (and the rock's triangle count with it).
         const h = (k: number): number => {
-          const x = Math.sin(g[0] * 12.9898 + g[1] * 78.233 + g[2] * 37.719 + k * 4.1) * 43758.5453;
+          const x =
+            dmath.sin(g[0] * 12.9898 + g[1] * 78.233 + g[2] * 37.719 + k * 4.1) * 43758.5453;
           return x - Math.floor(x);
         };
         lumps.push({
@@ -542,7 +547,8 @@ function workings(
       0,
       Math.min(
         1,
-        (ap[0] * ab[0] + ap[1] * ab[1] + ap[2] * ab[2]) / (ab[0] ** 2 + ab[1] ** 2 + ab[2] ** 2),
+        (ap[0] * ab[0] + ap[1] * ab[1] + ap[2] * ab[2]) /
+          (ab[0] * ab[0] + ab[1] * ab[1] + ab[2] * ab[2]),
       ),
     );
     return len(ap[0] - ab[0] * t, ap[1] - ab[1] * t, ap[2] - ab[2] * t);

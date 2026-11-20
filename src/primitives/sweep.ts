@@ -5,7 +5,7 @@
 // around the section inside the strip's band. Triangles = 2·S·(P−1) + S per cap (S section
 // points, P path points).
 
-import { type Mesh, MeshBuilder, type Vec2, type Vec3 } from '../core/index.ts';
+import { dmath, type Mesh, MeshBuilder, type Vec2, type Vec3 } from '../core/index.ts';
 import { mappedOnto, type StripId, stripRect } from '../material/index.ts';
 import { count, invalid, positive, profileOf } from './check.ts';
 import { arcLengths, transportFrames } from './transport.ts';
@@ -38,7 +38,7 @@ function section(s: SweepOptions['section']): Section {
     const nrm: Vec2[] = [];
     for (let k = 0; k < c.segments; k++) {
       const a = (k / c.segments) * Math.PI * 2;
-      nrm.push([Math.cos(a), Math.sin(a)]);
+      nrm.push([dmath.cos(a), dmath.sin(a)]);
     }
     return { pts: nrm.map(([x, y]) => [x * c.radius, y * c.radius]), nrm };
   }
@@ -51,11 +51,11 @@ function section(s: SweepOptions['section']): Section {
   const nrm = pts.map((p, i): Vec2 => {
     const a = pts[(i + pts.length - 1) % pts.length] ?? p;
     const b = pts[(i + 1) % pts.length] ?? p;
-    const e1 = Math.hypot(p[0] - a[0], p[1] - a[1]) || 1;
-    const e2 = Math.hypot(b[0] - p[0], b[1] - p[1]) || 1;
+    const e1 = dmath.hypot(p[0] - a[0], p[1] - a[1]) || 1;
+    const e2 = dmath.hypot(b[0] - p[0], b[1] - p[1]) || 1;
     const x = (p[1] - a[1]) / e1 + (b[1] - p[1]) / e2;
     const y = -(p[0] - a[0]) / e1 - (b[0] - p[0]) / e2;
-    const l = Math.hypot(x, y) || 1;
+    const l = dmath.hypot(x, y) || 1;
     return [x / l, y / l];
   });
   return { pts, nrm };
@@ -67,7 +67,7 @@ function fanArea2(c: Vec3, rim: Float64Array, a: number, b: number): number {
   const v = [0, 1, 2].map((k) => (rim[b * 3 + k] ?? 0) - (c[k] ?? 0));
   const [ux = 0, uy = 0, uz = 0] = u;
   const [vx = 0, vy = 0, vz = 0] = v;
-  return Math.hypot(uy * vz - uz * vy, uz * vx - ux * vz, ux * vy - uy * vx);
+  return dmath.hypot(uy * vz - uz * vy, uz * vx - ux * vz, ux * vy - uy * vx);
 }
 
 /** Rings narrower than a nanometre are points. */
@@ -109,8 +109,8 @@ export function sweep(o: SweepOptions): Mesh {
     const slope =
       ((o.scale?.[i1] ?? 1) - (o.scale?.[i0] ?? 1)) / ((arc[i1] ?? 0) - (arc[i0] ?? 0) || 1);
     const rot = (twist * (arc[i] ?? 0)) / total;
-    const cr = Math.cos(rot);
-    const sr = Math.sin(rot);
+    const cr = dmath.cos(rot);
+    const sr = dmath.sin(rot);
     const u = rect.u0 + (arc[i] ?? 0) * du;
     for (let j = 0; j <= S; j++) {
       const [px, py] = sec.pts[j % S] ?? [0, 0];
@@ -123,7 +123,7 @@ export function sweep(o: SweepOptions): Mesh {
       const qx = mx * n[0] + my * bn[0] + back * t[0];
       const qy = mx * n[1] + my * bn[1] + back * t[1];
       const qz = mx * n[2] + my * bn[2] + back * t[2];
-      const ql = Math.hypot(qx, qy, qz) || 1;
+      const ql = dmath.hypot(qx, qy, qz) || 1;
       const p: Vec3 = [
         c[0] + x * n[0] + y * bn[0],
         c[1] + x * n[1] + y * bn[1],
@@ -140,7 +140,7 @@ export function sweep(o: SweepOptions): Mesh {
   }
   // A ring scaled to 0 is a pole (a tapered tip): its band keeps only the triangle reaching the
   // other ring, so no zero-area slivers (arcLengths already refuses repeated path points).
-  const reach = Math.max(...sec.pts.map(([x, y]) => Math.hypot(x, y)));
+  const reach = Math.max(...sec.pts.map(([x, y]) => dmath.hypot(x, y)));
   const pole = (i: number): boolean => Math.abs((o.scale?.[i] ?? 1) * reach) <= POLE;
   for (let i = 0; i + 1 < P; i++) {
     if (pole(i) && pole(i + 1)) continue;

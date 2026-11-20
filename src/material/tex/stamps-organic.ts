@@ -4,6 +4,7 @@
 // root to a proud free edge — the sawtooth that makes scales read. Strands run along V (down the
 // surface), clump and wave by noise, and carry one tone id per strand. Tileable along U.
 
+import { dmath } from '../../core/index.ts';
 import { fbm, hash2 } from '../paint/noise.ts';
 import { type TexContext, TexField } from './field.ts';
 import { eachTexel, lattice } from './generators.ts';
@@ -61,7 +62,8 @@ export function scales(o: ScalesOptions): Stamp {
         const col = Math.floor(u);
         const s = Math.abs(u - col - 0.5) * 2; // 0 centre … 1 side
         // Outline: full width near the root, closing to a round/pointed tip at t = 1.
-        const half = Math.sqrt(Math.max(0, 1 - t ** (2 + 4 * point))) * (1 - 0.35 * point * t);
+        const half =
+          Math.sqrt(Math.max(0, 1 - dmath.pow(t, 2 + 4 * point))) * (1 - 0.35 * point * t);
         if (s > half) continue;
         const edge = Math.min(1, (half - s) * 6, (1 - t) * 8);
         l.h[i] = (0.35 + 0.65 * t) * edge + 0.2 * (1 - s * s) * (1 - t);
@@ -102,7 +104,7 @@ export function strands(o: StrandsOptions): Stamp {
       const u = x / cell;
       const ridge = 1 - Math.abs(fbm(u, ym / o.length, n, seed, 2));
       const lockShape = 1 - Math.abs(lk);
-      l.h[i] = ridge ** 2 * (1 - clump + clump * lockShape);
+      l.h[i] = ridge * ridge * (1 - clump + clump * lockShape);
       l.id[i] = hash2(((Math.floor(u) % n) + n) % n, 17, seed + 7);
       l.m[i] = 1;
     });

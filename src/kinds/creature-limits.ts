@@ -5,6 +5,7 @@
 // deformation QA poses the skin at (qa/deform.ts): what the asset moves through, never wider.
 
 import type { Bone, JointLimit, Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import { armatureOf, type Bones, headToWorld } from './creature-bones.ts';
 import type { HeadLayout } from './creature-head.ts';
 import { EAR_UP } from './creature-head-parts.ts';
@@ -60,7 +61,7 @@ function working(
 /** Toes at the MCP / MTP joint: 60° curl, 60° lift [P]. */
 const TOES: JointLimit = { axis: [0, 1, 0], min: -60, max: 60 };
 
-const planar = (v: Vec3): number => Math.atan2(v[0], v[2]);
+const planar = (v: Vec3): number => dmath.atan2(v[0], v[2]);
 
 /** Inside angle at a joint (degrees) between the proximal and distal directions in the XZ plane. */
 function inside(p: Vec3, d: Vec3): number {

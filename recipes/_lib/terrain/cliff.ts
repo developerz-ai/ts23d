@@ -9,6 +9,7 @@
 // - banks: a pale gravel strip either side of the river, so the channel reads from far away.
 
 import type { Vec3 } from '@developerz.ai/ts23d';
+import { dmath } from '@developerz.ai/ts23d';
 
 const ramp = (a: number, b: number, x: number): number => {
   const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
@@ -52,7 +53,7 @@ export function cliffWear(
   }
   if (o.strata) {
     const wobble = 2.5 * o.noise(x / 500 + 9, y / 500 - 4);
-    const b = Math.sin((z / o.strata.thickness) * Math.PI * 2 + wobble);
+    const b = dmath.sin((z / o.strata.thickness) * Math.PI * 2 + wobble);
     const v = 1 + o.strata.amount * b * k;
     out = [out[0] * v, out[1] * v, out[2] * v];
   }
@@ -79,7 +80,7 @@ export function pathDistance(path: readonly [number, number][]): (x: number, y: 
     // Far outside the path's box: the box distance is a lower bound, good enough past the banks.
     const bx = Math.max(x0 - x, 0, x - x1);
     const by = Math.max(y0 - y, 0, y - y1);
-    if (bx > 200 || by > 200) return Math.hypot(bx, by);
+    if (bx > 200 || by > 200) return dmath.hypot(bx, by);
     let best = Infinity;
     for (let i = 0; i + 1 < path.length; i++) {
       const [ax, ay] = path[i] ?? [0, 0];
@@ -88,7 +89,7 @@ export function pathDistance(path: readonly [number, number][]): (x: number, y: 
       const dy = qy - ay;
       const l2 = dx * dx + dy * dy || 1;
       const t = Math.max(0, Math.min(1, ((x - ax) * dx + (y - ay) * dy) / l2));
-      best = Math.min(best, Math.hypot(x - ax - dx * t, y - ay - dy * t));
+      best = Math.min(best, dmath.hypot(x - ax - dx * t, y - ay - dy * t));
     }
     return best;
   };

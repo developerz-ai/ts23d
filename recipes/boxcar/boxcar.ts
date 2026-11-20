@@ -12,6 +12,7 @@ import {
   cylinder,
   defineFamily,
   defineMaterial,
+  dmath,
   hex,
   type Lod,
   lathe,
@@ -265,8 +266,8 @@ function wheelset(lod: Lod): Mesh {
         const a = (k / 6) * Math.PI * 2;
         parts.push(
           rod(
-            [Math.cos(a) * 0.13, yi - s * 0.015, Math.sin(a) * 0.13],
-            [Math.cos(a) * (WHEEL_R - 0.05), yi - s * 0.015, Math.sin(a) * (WHEEL_R - 0.05)],
+            [dmath.cos(a) * 0.13, yi - s * 0.015, dmath.sin(a) * 0.13],
+            [dmath.cos(a) * (WHEEL_R - 0.05), yi - s * 0.015, dmath.sin(a) * (WHEEL_R - 0.05)],
             0.03,
             wheelC,
           ),
@@ -705,7 +706,7 @@ const usra = defineFamily({
       s: number,
       color: Vec3,
     ): Mesh => {
-      const l = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1;
+      const l = dmath.hypot(b[0] - a[0], b[1] - a[1]) || 1;
       const px = (-(b[1] - a[1]) / l) * (w / 2);
       const pz = ((b[0] - a[0]) / l) * (w / 2);
       const lo = s * (SHEATH_Y - 0.002);
@@ -1330,7 +1331,7 @@ const usra = defineFamily({
         bm.push(
           rod(
             [-(XB + 0.13), -0.85, WALK_TOP - 0.05],
-            [-(XB + 0.13) + Math.cos(a) * 0.18, -0.85 + Math.sin(a) * 0.18, WALK_TOP - 0.05],
+            [-(XB + 0.13) + dmath.cos(a) * 0.18, -0.85 + dmath.sin(a) * 0.18, WALK_TOP - 0.05],
             0.025,
           ),
         );
@@ -1394,7 +1395,7 @@ const usra = defineFamily({
             const xa = (posts[i] ?? 0) - postW / 2;
             const xb = (posts[i + 1] ?? DOOR_W / 2) + postW / 2;
             const xc = xa + (xb - xa) * t;
-            const hw = (0.0375 * Math.hypot(xb - xa, braceZ1 - braceZ0)) / (braceZ1 - braceZ0);
+            const hw = (0.0375 * dmath.hypot(xb - xa, braceZ1 - braceZ0)) / (braceZ1 - braceZ0);
             if (Math.abs(ax - xc) <= hw - graze) return SHEATH_Y + 0.004 + BRACE;
           }
         return SHEATH_Y;

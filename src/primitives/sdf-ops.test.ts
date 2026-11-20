@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'bun:test';
 import type { Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import { probeLipschitz } from './sculpt-stroke.ts';
 import { type BlendKernel, sd, shapes, smoothMin, smoothWeight } from './sdf-ops.ts';
 
@@ -57,7 +58,7 @@ describe('new shapes', () => {
       let d = Number.POSITIVE_INFINITY;
       for (let i = 0; i <= 20000; i++) {
         const t = i / 20000;
-        d = Math.min(d, Math.hypot(x, y, z - t * h) - (r1 + (r2 - r1) * t));
+        d = Math.min(d, dmath.hypot(x, y, z - t * h) - (r1 + (r2 - r1) * t));
       }
       return d;
     };

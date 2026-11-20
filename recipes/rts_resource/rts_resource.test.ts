@@ -3,7 +3,7 @@
 // radial normals, so a flat face shaded as if curved (corners 30° off the face).
 
 import { describe, expect, it } from 'bun:test';
-import { compile, type Mesh, type Vec3 } from '@developerz.ai/ts23d';
+import { compile, dmath, type Mesh, type Vec3 } from '@developerz.ai/ts23d';
 import { type CrystalState, crystal, rts_resource, rts_resource_depleted } from './rts_resource.ts';
 
 /** Largest angle (degrees) between a shaft triangle's face normal and its vertex normals, and how
@@ -27,13 +27,13 @@ function worstSideNormal(m: Mesh, z0: number, z1: number): { worst: number; n: n
       u[2] * v[0] - u[0] * v[2],
       u[0] * v[1] - u[1] * v[0],
     ];
-    const fl = Math.hypot(...f);
+    const fl = dmath.norm(f);
     if (fl < 1e-12) continue;
     count++;
     for (const i of ids) {
       const n: Vec3 = [m.normals[i * 3] ?? 0, m.normals[i * 3 + 1] ?? 0, m.normals[i * 3 + 2] ?? 0];
-      const d = (n[0] * f[0] + n[1] * f[1] + n[2] * f[2]) / (fl * (Math.hypot(...n) || 1));
-      worst = Math.max(worst, (Math.acos(Math.max(-1, Math.min(1, d))) * 180) / Math.PI);
+      const d = (n[0] * f[0] + n[1] * f[1] + n[2] * f[2]) / (fl * (dmath.norm(n) || 1));
+      worst = Math.max(worst, (dmath.acos(Math.max(-1, Math.min(1, d))) * 180) / Math.PI);
     }
   }
   return { worst, n: count };
@@ -69,7 +69,7 @@ function meanLuma(m: Mesh): number {
     const u: Vec3 = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
     const v: Vec3 = [c[0] - a[0], c[1] - a[1], c[2] - a[2]];
     const w =
-      Math.hypot(u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]) /
+      dmath.hypot(u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]) /
       2;
     area += w;
     sum += (w * ids.reduce((s, i) => s + luma(i), 0)) / 3;

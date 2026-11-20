@@ -9,7 +9,7 @@
 //   triangles = chords·(S + C) + faces·web·S    S = 8 square | 12 angle, C = 4 | 8 (end caps)
 //   chords = 2 | 4, faces = 1 | 4, web = warren k · pratt/howe 2k + 1 + (k odd) · x 3k + 1
 
-import { type Mesh, MeshBuilder, normalize, type Vec3 } from '../core/index.ts';
+import { dmath, type Mesh, MeshBuilder, normalize, type Vec3 } from '../core/index.ts';
 import { mappedOnto, type StripId, stripRect } from '../material/index.ts';
 import { count, invalid, positive } from './check.ts';
 import { emitMember, type SectionKind, section } from './member.ts';
@@ -44,7 +44,7 @@ type Line = (t: number) => Vec3;
 
 export function lattice(o: LatticeOptions): Mesh {
   const d: Vec3 = [o.to[0] - o.from[0], o.to[1] - o.from[1], o.to[2] - o.from[2]];
-  const len = Math.hypot(d[0], d[1], d[2]);
+  const len = dmath.hypot(d[0], d[1], d[2]);
   if (!(len > 1e-6))
     invalid('lattice: from and to coincide', 'give the truss two distinct end points in metres');
   const depth = positive('lattice depth', o.depth, 'e.g. 2 for a 2 m deep girder');
@@ -60,7 +60,7 @@ export function lattice(o: LatticeOptions): Mesh {
   const upHint: Vec3 = o.up ?? (Math.abs(w[2]) > 0.95 ? [1, 0, 0] : [0, 0, 1]);
   const dotU = upHint[0] * w[0] + upHint[1] * w[1] + upHint[2] * w[2];
   const upR: Vec3 = [upHint[0] - w[0] * dotU, upHint[1] - w[1] * dotU, upHint[2] - w[2] * dotU];
-  if (Math.hypot(upR[0], upR[1], upR[2]) < 1e-6)
+  if (dmath.hypot(upR[0], upR[1], upR[2]) < 1e-6)
     invalid('lattice: up is parallel to from → to', 'pass an `up` perpendicular to the truss axis');
   const up = normalize(upR);
   const side: Vec3 = [

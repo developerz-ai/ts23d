@@ -8,6 +8,7 @@
 
 import {
   box,
+  dmath,
   type Lod,
   type Mesh,
   MeshBuilder,
@@ -138,7 +139,7 @@ function dressed(
     const u: Vec3 = [p1[0] - p0[0], p1[1] - p0[1], p1[2] - p0[2]];
     const v: Vec3 = [p2[0] - p0[0], p2[1] - p0[1], p2[2] - p0[2]];
     let n: Vec3 = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
-    const l = Math.hypot(n[0], n[1], n[2]) || 1;
+    const l = dmath.hypot(n[0], n[1], n[2]) || 1;
     n = [n[0] / l, n[1] / l, n[2] / l];
     // Every face of the frustum looks out of the wall: flip the winding if this one does not.
     const flip = n[0] * o[0] + n[1] * o[1] < 0;
@@ -413,7 +414,7 @@ const CORNERS: readonly Vec3[] = [
 
 /** Near a front corner (plan distance), where a quoin stack stands. */
 const atCorner = (p: Vec3): boolean =>
-  CORNERS.some((c) => Math.hypot(p[0] - c[0], p[1] - c[1]) < 0.7);
+  CORNERS.some((c) => dmath.hypot(p[0] - c[0], p[1] - c[1]) < 0.7);
 
 /**
  * Quoins on a front corner, `rows` courses: dressed blocks alternately long on the front face and
@@ -630,8 +631,8 @@ function cracks(): Mesh {
     for (let i = 0; i + 1 < run.length; i++) {
       const a = run[i] ?? [0, 0];
       const c = run[i + 1] ?? [0, 0];
-      const len = Math.hypot(c[0] - a[0], c[1] - a[1]);
-      const yaw = Math.atan2(c[1] - a[1], c[0] - a[0]);
+      const len = dmath.hypot(c[0] - a[0], c[1] - a[1]);
+      const yaw = dmath.atan2(c[1] - a[1], c[0] - a[0]);
       out.push(
         placeYaw(
           box({ size: [len + 0.05, 0.05, 0.008], at: [0, 0, -0.005], color: SOOT }),

@@ -6,7 +6,7 @@
 // every root on the scalp, nothing past the root inside the head (no lock through the face).
 // Bytes from a tool are untrusted: every refusal is T3D_NEURAL_OUTPUT_INVALID with a fix.
 
-import { type Mesh, MeshBuilder, type Rng, Ts23dError, type Vec3 } from '../core/index.ts';
+import { dmath, type Mesh, MeshBuilder, type Rng, Ts23dError, type Vec3 } from '../core/index.ts';
 import { CREATURE_MATERIALS, defineMaterial, strandCells, type UvRect } from '../material/index.ts';
 import { readGlb, scenePrimitives } from '../neural/index.ts';
 import { reframe } from './groom-guides.ts';
@@ -77,7 +77,7 @@ function facing(m: Mesh, a: number, b: number, c: number): boolean {
 }
 
 const unit = (v: Vec3): Vec3 => {
-  const l = Math.hypot(...v) || 1;
+  const l = dmath.norm(v) || 1;
   return [v[0] / l, v[1] / l, v[2] / l];
 };
 

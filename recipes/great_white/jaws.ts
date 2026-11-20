@@ -2,7 +2,7 @@
 // (gum arc and teeth) hidden behind the lip until the bite throws it forward. Teeth are built once
 // and placed along the mouth arc, large in front, smaller toward the corners.
 
-import { type Mesh, MeshBuilder, merge, stripRect, type Vec3 } from '@developerz.ai/ts23d';
+import { dmath, type Mesh, MeshBuilder, merge, stripRect, type Vec3 } from '@developerz.ai/ts23d';
 import {
   clamp,
   cross,
@@ -37,7 +37,7 @@ const HINGE_Z = undersideZ(X_HINGE, 0) + 0.05;
 /** A lower-jaw point turned down about the jaw hinge by the resting gape. */
 function dropped(p: Vec3): Vec3 {
   const [dx, dz] = [p[0] - X_HINGE, p[2] - HINGE_Z];
-  const [c, s] = [Math.cos(REST_GAPE), Math.sin(REST_GAPE)];
+  const [c, s] = [dmath.cos(REST_GAPE), dmath.sin(REST_GAPE)];
   return [X_HINGE + dx * c + dz * s, p[1], HINGE_Z - dx * s + dz * c];
 }
 
@@ -54,11 +54,11 @@ export function lowerJaw(lod: Lod): Mesh {
     point: (u, a) => {
       const x = xAt(u);
       // The rear closes on a rounded end inside the throat, not a flat cap.
-      const close = Math.sqrt(Math.max(0.0025, 1 - smooth(0.8, 1, u) ** 2));
-      const y = jawHalf(x) * close * spow(Math.cos(a), lod === 0 ? 0.8 : 1);
+      const close = Math.sqrt(Math.max(0.0025, 1 - dmath.pow(smooth(0.8, 1, u), 2)));
+      const y = jawHalf(x) * close * spow(dmath.cos(a), lod === 0 ? 0.8 : 1);
       const low = undersideZ(x, y) - 0.005;
       const depth = JAW_DEPTH * (1 - smooth(0.72, 1, u) * 0.85);
-      return dropped([x, y, low + depth * (0.5 + 0.5 * spow(Math.sin(a), lod === 0 ? 0.75 : 1))]);
+      return dropped([x, y, low + depth * (0.5 + 0.5 * spow(dmath.sin(a), lod === 0 ? 0.75 : 1))]);
     },
     color: (_p, n) => mixRgb(COLOUR.belly, COLOUR.mouth, smooth(-0.2, 0.3, n[2])),
   });
@@ -103,10 +103,10 @@ function tooth(root: Vec3, tip: Vec3, face: Vec3, width: number): Mesh {
   return b.build();
 }
 
-const toothSize = (k: number): number => mix(0.052, 0.024, Math.abs(k) ** 1.3);
+const toothSize = (k: number): number => mix(0.052, 0.024, dmath.pow(Math.abs(k), 1.3));
 
 function arcNormal(y: number): Vec3 {
-  return norm([1, (2 * MOUTH.depth * y) / MOUTH.half ** 2, 0]);
+  return norm([1, (2 * MOUTH.depth * y) / (MOUTH.half * MOUTH.half), 0]);
 }
 
 function row(count: number, make: (k: number) => Mesh): Mesh[] {
@@ -153,14 +153,14 @@ export function upperGum(lod: Lod): Mesh {
       const y = u * span;
       const x = arcX(y) - 0.03;
       const z = undersideZ(x, y) + MOUTH.pocket * 0.68;
-      const taper = (1 - 0.42 * u * u) * Math.sqrt(Math.max(0.01, 1 - u ** 10));
+      const taper = (1 - 0.42 * u * u) * Math.sqrt(Math.max(0.01, 1 - dmath.pow(u, 10)));
       const [rx, rz] = [0.036 * taper, 0.027 * taper];
-      return [x + rx * Math.cos(a), y, z + rz * Math.sin(a)];
+      return [x + rx * dmath.cos(a), y, z + rz * dmath.sin(a)];
     },
     color: (p, _n, u, a) => {
       // Paler over each tooth, darker in the sockets between them.
-      const over = lod === 0 ? 0.55 + 0.45 * Math.cos(u * teeth * Math.PI) ** 2 : 1;
-      const low = smooth(0.1, -0.7, Math.sin(a)) * over;
+      const over = lod === 0 ? 0.55 + 0.45 * dmath.pow(dmath.cos(u * teeth * Math.PI), 2) : 1;
+      const low = smooth(0.1, -0.7, dmath.sin(a)) * over;
       const vein = 0.92 + 0.14 * noise(p[1] * 60, u * 9, 4);
       return scale(mixRgb(COLOUR.gumDeep, COLOUR.gum, low), vein);
     },
@@ -181,9 +181,11 @@ export function palate(lod: Lod): Mesh {
       const x = front - u * 0.26;
       const half = MOUTH.half * 0.86 * Math.sqrt(clamp((X_MOUTH - x) / MOUTH.depth, 0.04, 1));
       const nose = 1 - smooth(0, 0.16, u);
-      const close = Math.sqrt(Math.max(0.01, (1 - smooth(0.7, 1, u) ** 2) * (1 - nose * nose)));
-      const y = half * close * Math.cos(a);
-      return [x, y, undersideZ(x, y) + MOUTH.pocket * 0.82 + 0.014 * close * Math.sin(a)];
+      const close = Math.sqrt(
+        Math.max(0.01, (1 - dmath.pow(smooth(0.7, 1, u), 2)) * (1 - nose * nose)),
+      );
+      const y = half * close * dmath.cos(a);
+      return [x, y, undersideZ(x, y) + MOUTH.pocket * 0.82 + 0.014 * close * dmath.sin(a)];
     },
     color: (_p, _n, u) => mixRgb(COLOUR.gumDeep, COLOUR.palate, smooth(0, 0.5, u)),
   });

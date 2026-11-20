@@ -1,7 +1,7 @@
 // Atlantic bluefin proportions and trunk surface. t is the fraction of fork length from the snout.
 // Fin and depth numbers are percentages of fork length: README.md.
 
-import { hex, type Mesh, type Vec3 } from '@developerz.ai/ts23d';
+import { dmath, hex, type Mesh, type Vec3 } from '@developerz.ai/ts23d';
 import {
   add,
   clamp,
@@ -112,7 +112,7 @@ const halfBelow = profile([
 const EXP = 2 / 2.1;
 
 export function plainPoint(t: number, a: number): Vec3 {
-  const [s, c] = [Math.sin(a), Math.cos(a)];
+  const [s, c] = [dmath.sin(a), dmath.cos(a)];
   return [
     xOf(t),
     halfWidth(t) * spow(s, EXP),
@@ -133,8 +133,8 @@ const mouthLine = profile([
 
 /** Rear edge of the gill cover at this section angle: it bulges back at mid-height. */
 const coverT = (a: number, base: number): number => {
-  const side = Math.abs(Math.atan2(Math.sin(a), Math.cos(a)));
-  return base - 0.03 * (side - 1.5) ** 2;
+  const side = Math.abs(dmath.atan2(dmath.sin(a), dmath.cos(a)));
+  return base - 0.03 * dmath.pow(side - 1.5, 2);
 };
 
 interface Marks {
@@ -143,7 +143,7 @@ interface Marks {
 }
 
 function marks(t: number, a: number, h: number): Marks {
-  const side = Math.abs(Math.atan2(Math.sin(a), Math.cos(a)));
+  const side = Math.abs(dmath.atan2(dmath.sin(a), dmath.cos(a)));
   const lateral = smooth(0.35, 0.7, side);
   const mouth =
     t < 0.125 ? gauss(h - mouthLine(t), 0.05) * (1 - smooth(0.112, 0.125, t)) * lateral : 0;
@@ -162,11 +162,11 @@ const share = (p: Vec3, t: number): number => (p[2] - Z0) / Math.max(0.01, halfT
 function trunkPoint(t: number, a: number, lod: Lod): Vec3 {
   const p = plainPoint(t, a);
   let [y, z] = [p[1], p[2] - Z0];
-  const r = Math.hypot(y, z) || 1;
+  const r = dmath.hypot(y, z) || 1;
   if (lod < 2) {
     const m = marks(t, a, share(p, t));
     const e = eyeCentre(y >= 0 ? 1 : -1);
-    const dent = gauss(Math.hypot(p[0] - e[0], p[1] - e[1], p[2] - e[2]), 0.05);
+    const dent = gauss(dmath.hypot(p[0] - e[0], p[1] - e[1], p[2] - e[2]), 0.05);
     const push = -0.009 * m.mouth - 0.009 * m.cover - 0.006 * dent;
     y += (y / r) * push;
     z += (z / r) * push;
@@ -184,7 +184,7 @@ export const keelAt = (t: number): number =>
 
 /** Height share of the lateral line: high behind the head, dipping down over the corselet. */
 const lateralLine = (t: number): number =>
-  0.42 - 0.3 * smooth(0.22, 0.6, t) + 0.04 * Math.sin(t * 9);
+  0.42 - 0.3 * smooth(0.22, 0.6, t) + 0.04 * dmath.sin(t * 9);
 
 /** The corselet: thick, larger scales round the pectoral base, tapering back along the line. */
 export function corseletAt(t: number, h: number): number {
@@ -207,8 +207,8 @@ function scratchAt(t: number, h: number, side: number): number {
     if ((i < 4 ? -1 : 1) !== side && i !== 2) return;
     const [dt, dh] = [t1 - t0, h1 - h0];
     const k = Math.max(0, Math.min(1, ((t - t0) * dt + (h - h0) * dh) / (dt * dt + dh * dh)));
-    const d = Math.hypot((t - t0 - k * dt) * FL, (h - h0 - k * dh) * 0.45);
-    best = Math.max(best, gauss(d, 0.018) * (0.7 + 0.3 * Math.sin(k * 9 + i)));
+    const d = dmath.hypot((t - t0 - k * dt) * FL, (h - h0 - k * dh) * 0.45);
+    best = Math.max(best, gauss(d, 0.018) * (0.7 + 0.3 * dmath.sin(k * 9 + i)));
   });
   return best;
 }
@@ -224,7 +224,7 @@ export function scaleLossAt(t: number, h: number, side: number): number {
   let best = 0;
   for (const [t0, h0, dt, dh] of LOSS) {
     const ragged = 0.8 + 0.35 * noise(t * 90, h * 12, 41);
-    const d = Math.hypot((t - t0) / dt, (h - h0) / dh) / ragged;
+    const d = dmath.hypot((t - t0) / dt, (h - h0) / dh) / ragged;
     best = Math.max(best, 1 - smooth(0.7, 1, d));
   }
   return best;
@@ -243,7 +243,7 @@ function trunkColour(p: Vec3, t: number, a: number, lod: Lod): Vec3 {
   // The iridescent violet-blue band between the blue back and the silver, strongest over the body.
   c = mixRgb(c, COLOUR.iridescent, 0.3 * gauss(h + wave - 0.16, 0.15) * smooth(0.22, 0.32, t));
   // Pale broken bars and dots on the lower flank behind the pectoral.
-  const bar = Math.sin(t * 150 + fbm(t * 12, a * 3, 8) * 5);
+  const bar = dmath.sin(t * 150 + fbm(t * 12, a * 3, 8) * 5);
   const barBand = smooth(-0.66, -0.42, h) * (1 - smooth(0.0, 0.18, h)) * smooth(0.3, 0.38, t);
   if (lod < 2 && bar > 0.45 && fine > 0.3) c = mixRgb(c, COLOUR.belly, 0.9 * barBand);
   if (lod < 2) {

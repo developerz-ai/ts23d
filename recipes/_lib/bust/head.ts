@@ -7,7 +7,7 @@
 // chin) and the planes scraped in (side, jaw fading out under the cheekbones, under-jaw, forehead,
 // cheek, back of skull) with the brow folded in. Sockets, features and lines: face.ts.
 
-import { type SculptEdit, Ts23dError } from '@developerz.ai/ts23d';
+import { dmath, type SculptEdit, Ts23dError } from '@developerz.ai/ts23d';
 import { ball, ell, frameOf, k, local, rbox, scrape, type V } from './kit.ts';
 
 /** Landmarks as shares of H: heights from the menton (chin bottom) up; widths full (both sides);
@@ -236,7 +236,7 @@ export function headBlock(s: HeadSpec, stage: number): SculptEdit {
     };
     for (const side of [1, -1]) {
       const n: V = [0.25, side, -0.15];
-      const k = Math.hypot(...n);
+      const k = dmath.norm(n);
       const at: V = [0, side * l.gonion[1], l.gonion[2]];
       g.push({
         field: (p) =>

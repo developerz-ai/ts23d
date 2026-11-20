@@ -1,7 +1,7 @@
 // swim: each kinematic error a clip can make fails with its own code; the published wave passes.
 
 import { describe, expect, it } from 'bun:test';
-import { type CompiledAsset, quatFromAxisAngle } from '../core/index.ts';
+import { type CompiledAsset, dmath, quatFromAxisAngle } from '../core/index.ts';
 import { radial, rigged, spine, swimClip, swimmer, swing } from './chain-fixtures.ts';
 import { bodyChain, measureWave } from './chain-wave.ts';
 import { swimFindings } from './swim.ts';
@@ -83,7 +83,7 @@ describe('swim', () => {
       lambda: 0.6,
       stride: 0.43,
       tail: 0.14,
-      envelope: (s: number) => Math.exp(3 * (s - 1)),
+      envelope: (s: number) => dmath.exp(3 * (s - 1)),
     };
     expect(swimFindings(swimmer(eel)).map((f) => f.message)).toEqual([]);
   });
@@ -115,7 +115,7 @@ describe('swim', () => {
         }
         const values = Float32Array.from(t.values);
         for (let k = 0; k < values.length; k += 4) {
-          const a = 2 * Math.atan2(values[k + 2] ?? 0, values[k + 3] ?? 1);
+          const a = 2 * dmath.atan2(values[k + 2] ?? 0, values[k + 3] ?? 1);
           values.set(quatFromAxisAngle([0, 1, 0], -a), k);
         }
         return { ...t, values };

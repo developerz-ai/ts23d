@@ -12,6 +12,7 @@
 import {
   box,
   defineAsset,
+  dmath,
   extrudeSvg,
   hex,
   lathe,
@@ -53,13 +54,13 @@ const TEETH = 12;
 const tooth = (i: number): string => {
   const a = Math.PI / 2 + (i / TEETH) * Math.PI * 2;
   const p = (r: number, da: number): string =>
-    `${(r * Math.cos(a + da)).toFixed(3)} ${(r * Math.sin(a + da)).toFixed(3)}`;
+    `${(r * dmath.cos(a + da)).toFixed(3)} ${(r * dmath.sin(a + da)).toFixed(3)}`;
   return `${i === 0 ? 'M' : 'L'}${p(40, -0.15)} L${p(48, -0.09)} L${p(48, 0.09)} L${p(40, 0.15)}`;
 };
 const holes = [0, 1, 2, 3]
   .map((i) => {
     const a = Math.PI / 4 + (i * Math.PI) / 2;
-    return `<circle cx="${(26 * Math.cos(a)).toFixed(3)}" cy="${(26 * Math.sin(a)).toFixed(3)}" r="7"/>`;
+    return `<circle cx="${(26 * dmath.cos(a)).toFixed(3)}" cy="${(26 * dmath.sin(a)).toFixed(3)}" r="7"/>`;
   })
   .join('');
 const GEAR = `<svg viewBox="-50 -50 100 100">
@@ -68,7 +69,7 @@ const GEAR = `<svg viewBox="-50 -50 100 100">
 </svg>`;
 const GEAR_SCALE = 0.005;
 /** The bottom tooth's flat tip, below the gear centre. */
-const GEAR_DROP = 48 * Math.cos(0.09) * GEAR_SCALE;
+const GEAR_DROP = 48 * dmath.cos(0.09) * GEAR_SCALE;
 
 /** Amphora half profile: axis on the left edge, foot at the bottom, open mouth with a lip. */
 const AMPHORA = `<svg viewBox="0 0 30 100">
@@ -97,7 +98,7 @@ const STAR = `<svg viewBox="-50 -50 100 100"><polygon points="${Array.from(
   (_, i) => {
     const a = -Math.PI / 2 + (i * Math.PI) / 5;
     const r = i % 2 === 0 ? 48 : 20;
-    return `${(r * Math.cos(a)).toFixed(3)},${(r * Math.sin(a)).toFixed(3)}`;
+    return `${(r * dmath.cos(a)).toFixed(3)},${(r * dmath.sin(a)).toFixed(3)}`;
   },
 ).join(' ')}"/></svg>`;
 
@@ -200,7 +201,7 @@ function throwRings(m: Mesh, z0: number): Mesh {
   const colors = new Float32Array(m.colors);
   for (let v = 0; v < colors.length / 3; v++) {
     const z = (m.positions[v * 3 + 2] ?? 0) - z0;
-    const k = 0.93 + 0.07 * Math.sin(z * 2 * Math.PI * 55) + (z > 0.42 ? 0.04 : 0);
+    const k = 0.93 + 0.07 * dmath.sin(z * 2 * Math.PI * 55) + (z > 0.42 ? 0.04 : 0);
     for (let c = 0; c < 3; c++) colors[v * 3 + c] = (colors[v * 3 + c] ?? 0) * k;
   }
   return { ...m, colors };

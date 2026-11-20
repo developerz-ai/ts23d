@@ -5,6 +5,7 @@
 import {
   type BodyPlanDefinition,
   type BuildContext,
+  dmath,
   lathe,
   type Mesh,
   merge,
@@ -43,13 +44,13 @@ function footMesh(f: FootDef, lod: number): { foot: Mesh; claws: Mesh } {
   const res = [0.024, 0.036, 0.08][lod] ?? 0.08;
   const skin = lerp(C.back, C.ochre, 0.45);
   const k = f.size;
-  const dir = (a: number): Vec3 => [Math.cos(f.yaw + a), Math.sin(f.yaw + a), 0];
+  const dir = (a: number): Vec3 => [dmath.cos(f.yaw + a), dmath.sin(f.yaw + a), 0];
   const add = (a: Vec3, d: Vec3, l: number, z: number): Vec3 => [
     a[0] + d[0] * l,
     a[1] + d[1] * l,
     z,
   ];
-  const palm: Vec3 = [f.at[0] - 0.05 * Math.cos(f.yaw), f.at[1] - 0.05 * Math.sin(f.yaw), 0];
+  const palm: Vec3 = [f.at[0] - 0.05 * dmath.cos(f.yaw), f.at[1] - 0.05 * dmath.sin(f.yaw), 0];
   const edits: SculptEdit[] = [
     {
       shape: 'ellipsoid',
@@ -199,8 +200,8 @@ function sagUnderRim(kit: Kit, chain: string, q: SurfacePoint, rim: number): num
   let sag = 0;
   for (let k = 0; k < 8; k++) {
     const a = (k / 8) * Math.PI * 2;
-    const u = Math.min(1, Math.max(0, q.u + du * Math.cos(a)));
-    const p = kit.surface(chain, u, q.angle + da * Math.sin(a)).p;
+    const u = Math.min(1, Math.max(0, q.u + du * dmath.cos(a)));
+    const p = kit.surface(chain, u, q.angle + da * dmath.sin(a)).p;
     const drop = q.n[0] * (q.p[0] - p[0]) + q.n[1] * (q.p[1] - p[1]) + q.n[2] * (q.p[2] - p[2]);
     sag = Math.max(sag, drop);
   }

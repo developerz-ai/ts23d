@@ -5,7 +5,15 @@
 // marks (a pre-shed patch, a healed bite scar, scuffed tail scutes, dust on the lowest turn) live here too, so the scale
 // geometry, the tube's vertex colour and the LOD2 average all agree on them.
 
-import { defineMaterial, hex, type Mesh, stripRect, tex, type Vec3 } from '@developerz.ai/ts23d';
+import {
+  defineMaterial,
+  dmath,
+  hex,
+  type Mesh,
+  stripRect,
+  tex,
+  type Vec3,
+} from '@developerz.ai/ts23d';
 import { fbm, gauss, mix, mixRgb, smooth } from '../_lib/body-plan-kit.ts';
 import { frameAt } from './shape.ts';
 
@@ -87,17 +95,17 @@ const DUST: Vec3 = hex('#a08f6e');
  * A ragged oval: the old skin has started to cloud from the edges in.
  */
 export function shedAt(s: number, a: number): number {
-  const fromRidge = Math.abs(Math.atan2(Math.sin(a), Math.cos(a)));
+  const fromRidge = Math.abs(dmath.atan2(dmath.sin(a), dmath.cos(a)));
   return smooth(0.35, 0.6, shedField(s, a, fromRidge));
 }
 const shedField = (s: number, a: number, fromRidge: number): number => {
   const along = gauss(s - SHED_AT, 0.11);
-  const ragged = 0.75 + 0.25 * Math.sin(s * 61 + a * 7) * Math.sin(s * 23 - a * 5);
+  const ragged = 0.75 + 0.25 * dmath.sin(s * 61 + a * 7) * dmath.sin(s * 23 - a * 5);
   return along * ragged * (1 - smooth(1.5, 2.0, fromRidge));
 };
 /** The torn rim of the lifted skin, just outside the patch: 0..1. */
 const shedRim = (s: number, a: number): number => {
-  const f = shedField(s, a, Math.abs(Math.atan2(Math.sin(a), Math.cos(a))));
+  const f = shedField(s, a, Math.abs(dmath.atan2(dmath.sin(a), dmath.cos(a))));
   return gauss(f - 0.31, 0.035) * smooth(0.15, 0.25, f);
 };
 /** Centre of the pre-shed patch along the body, metres from the snout: the top turn's near side. */
@@ -108,7 +116,7 @@ export const SHED_AT = 1.5;
  * (a prey snake's or a mongoose's teeth), 0..1 along each groove.
  */
 export function scarAt(s: number, a: number): number {
-  const across = Math.atan2(Math.sin(a), Math.cos(a));
+  const across = dmath.atan2(dmath.sin(a), dmath.cos(a));
   const line = (k: number): number => gauss(s - SCAR_AT - k - across * 0.05, 0.015);
   const reach = 1 - smooth(1.1, 1.7, Math.abs(across));
   return Math.min(1, Math.max(line(0), 0.85 * line(0.038))) * reach;
@@ -118,7 +126,7 @@ export const SCAR_AT = 1.84;
 
 /** Scuffs on the tail's ventral scutes, worn by dragging over rock: 0..1. */
 export const scuffAt = (s: number, k: number): number =>
-  smooth(TAIL_WEAR, TAIL_WEAR + 0.4, s) * (0.5 + 0.5 * Math.sin(s * 173 + k * 2.1)) ** 3;
+  smooth(TAIL_WEAR, TAIL_WEAR + 0.4, s) * dmath.pow(0.5 + 0.5 * dmath.sin(s * 173 + k * 2.1), 3);
 const TAIL_WEAR = 2.6;
 
 /**
@@ -130,7 +138,7 @@ export function dustAt(s: number, a: number): number {
   const onGround = smooth(0.9, 1.25, s);
   if (onGround === 0) return 0;
   const low = 1 - smooth(0.024, 0.05, frameAt(s).p[2]);
-  const flank = smooth(1.05, 1.95, Math.abs(Math.atan2(Math.sin(a), Math.cos(a))));
+  const flank = smooth(1.05, 1.95, Math.abs(dmath.atan2(dmath.sin(a), dmath.cos(a))));
   const patchy = 0.45 + 0.55 * fbm(s * 13, a * 2.3, 3);
   return Math.min(1, onGround * (0.45 * low + flank * (0.5 + 0.5 * low)) * patchy * 1.6);
 }

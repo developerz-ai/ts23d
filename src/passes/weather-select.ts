@@ -2,7 +2,7 @@
 // Names read normals, convexity, height above ground, exposure, fasteners, touched spots, panels
 // and spans; `&` = min, `|` = max, `!` = 1 − x, parentheses group: 'shaded & wet', '!up-facing'.
 
-import { Ts23dError } from '../core/index.ts';
+import { dmath, Ts23dError } from '../core/index.ts';
 import { panels, spans } from './weather-regions.ts';
 import type { Surface } from './weather-surface.ts';
 import type { Spot } from './weather-types.ts';
@@ -103,9 +103,9 @@ const spotWeight = (
     const r = sp.radius ?? 0.02;
     const dz = sp.at[2] - z;
     if (below) {
-      const h = Math.hypot(x - sp.at[0], y - sp.at[1]);
+      const h = dmath.hypot(x - sp.at[0], y - sp.at[1]);
       if (dz > 0 && dz < r + 0.05 && h < r * 1.3) w = 1;
-    } else if (Math.hypot(x - sp.at[0], y - sp.at[1], z - sp.at[2]) <= r * 1.15) w = 1;
+    } else if (dmath.hypot(x - sp.at[0], y - sp.at[1], z - sp.at[2]) <= r * 1.15) w = 1;
   }
   return w;
 };

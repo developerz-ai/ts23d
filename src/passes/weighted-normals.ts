@@ -3,7 +3,7 @@
 // over faces within `hardAngle` of its own face. Big flat faces dominate, so a bevelled box keeps
 // dead-flat sides while its bevels bend the light into soft highlights — no normal map needed.
 
-import { type Mesh, mappedOf, type Vec3 } from '../core/index.ts';
+import { dmath, type Mesh, mappedOf, type Vec3 } from '../core/index.ts';
 import { carrySkin } from './skin-carry.ts';
 
 export interface WeightedNormalsOptions {
@@ -28,13 +28,13 @@ function faceData(m: Mesh, t: number): { n: Vec3; area: number; angles: Vec3 } {
   const u = e(v[0], v[1]);
   const w = e(v[0], v[2]);
   const g: Vec3 = [u[1] * w[2] - u[2] * w[1], u[2] * w[0] - u[0] * w[2], u[0] * w[1] - u[1] * w[0]];
-  const len = Math.hypot(...g);
+  const len = dmath.norm(g);
   const angle = (k: number): number => {
     const a = e(v[k] ?? v[0], v[(k + 1) % 3] ?? v[0]);
     const b = e(v[k] ?? v[0], v[(k + 2) % 3] ?? v[0]);
-    const d = Math.hypot(...a) * Math.hypot(...b);
+    const d = dmath.norm(a) * dmath.norm(b);
     return d
-      ? Math.acos(Math.max(-1, Math.min(1, (a[0] * b[0] + a[1] * b[1] + a[2] * b[2]) / d)))
+      ? dmath.acos(Math.max(-1, Math.min(1, (a[0] * b[0] + a[1] * b[1] + a[2] * b[2]) / d)))
       : 0;
   };
   return {
@@ -45,7 +45,7 @@ function faceData(m: Mesh, t: number): { n: Vec3; area: number; angles: Vec3 } {
 }
 
 export function weightedNormals(m: Mesh, o: WeightedNormalsOptions = {}): Mesh {
-  const cosHard = Math.cos(((o.hardAngle ?? 40) * Math.PI) / 180);
+  const cosHard = dmath.cos(((o.hardAngle ?? 40) * Math.PI) / 180);
   const eps = o.epsilon ?? 1e-5;
   const tris = m.indices.length / 3;
   const corners: Corner[] = [];
@@ -78,7 +78,7 @@ export function weightedNormals(m: Mesh, o: WeightedNormalsOptions = {}): Mesh {
         y += o2.n[1] * o2.w;
         z += o2.n[2] * o2.w;
       }
-      const len = Math.hypot(x, y, z);
+      const len = dmath.hypot(x, y, z);
       // A degenerate face keeps its original normal.
       const src = (m.indices[c] ?? 0) * 3;
       normal.set(

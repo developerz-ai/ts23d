@@ -65,13 +65,13 @@
     {
       "label": "trunk diameter at breast height",
       "spec": 1.3,
-      "measured": 1.3000000715255737,
+      "measured": 1.3,
       "source": "recipes/oak/README.md"
     },
     {
       "label": "total height",
       "spec": 20,
-      "measured": 19.924741744995117,
+      "measured": 19.924742,
       "source": "recipes/oak/README.md"
     }
   ],

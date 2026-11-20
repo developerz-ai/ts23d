@@ -3,7 +3,16 @@
 // all-over layer (the same weight at every height) is refused by the same check.
 
 import { describe, expect, it } from 'bun:test';
-import { box, cylinder, hex, lathe, type Mesh, merge, type Vec3 } from '@developerz.ai/ts23d';
+import {
+  box,
+  cylinder,
+  dmath,
+  hex,
+  lathe,
+  type Mesh,
+  merge,
+  type Vec3,
+} from '@developerz.ai/ts23d';
 import { dishMud, dustAt, fieldGrade, meanDishMud, mudAt, wheelDirt } from './afv.ts';
 
 const PAINT: Vec3 = hex('#4e5a2c');
@@ -17,7 +26,7 @@ const off = (m: Mesh, c: Vec3, pick: (p: Vec3, n: Vec3) => boolean): number => {
   for (let i = 0; i < m.positions.length / 3; i++) {
     const at = (a: Float32Array): Vec3 => [a[i * 3] ?? 0, a[i * 3 + 1] ?? 0, a[i * 3 + 2] ?? 0];
     if (!pick(at(m.positions), at(m.normals))) continue;
-    sum += Math.hypot(...at(m.colors).map((v, k) => v - (c[k] ?? 0)));
+    sum += dmath.norm(at(m.colors).map((v, k) => v - (c[k] ?? 0)));
     n++;
   }
   return n ? sum / n : Number.NaN;
@@ -76,7 +85,7 @@ describe('wheelDirt', () => {
     expect(dishMud(0.2)).toBe(0);
     expect(dishMud(0.8)).toBe(1);
     const out = wheelDirt(wheel, o);
-    expect(off(out, PAINT, (p) => Math.hypot(p[0], p[2]) < 0.05)).toBeLessThan(1e-6);
+    expect(off(out, PAINT, (p) => dmath.hypot(p[0], p[2]) < 0.05)).toBeLessThan(1e-6);
   });
 
   it('leaves the tyre darker than the muddy dish beside it', () => {
@@ -93,7 +102,7 @@ describe('wheelDirt', () => {
       }
       return sum / n;
     };
-    const rim = (p: Vec3): number => Math.hypot(p[0], p[2]);
+    const rim = (p: Vec3): number => dmath.hypot(p[0], p[2]);
     expect(lum((p) => rim(p) > 0.39)).toBeLessThan(0.6 * lum((p) => rim(p) > 0.3 && rim(p) < 0.35));
   });
 

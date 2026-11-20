@@ -4,7 +4,7 @@
 // ratios; each mode decays as e^(−π f η t). The striker's mass and force set the contact time,
 // which low-passes the excitation (Hertz contact): a heavy soft hit is dark, a light hard one bright.
 
-import { createRng, type Rng, type SoundClip } from '../core/index.ts';
+import { createRng, dmath, type Rng, type SoundClip } from '../core/index.ts';
 import { type Acoustic, acousticOf, waveSpeed } from './acoustics.ts';
 import { checkRange, makeClip, normalize, SAMPLE_RATE, token, variant } from './clip.ts';
 import { addModes, biquad, type Mode, mixInto, noise } from './dsp.ts';
@@ -69,7 +69,7 @@ export function strike(
     if (freq < 20 || freq > SAMPLE_RATE * 0.45) return;
     // Damping grows with frequency (air + thermoelastic): the attack is bright, the tail pure.
     const decay = Math.min(8, 1 / (Math.PI * freq * a.eta * (1 + freq / 8000)));
-    const amp = rng.range(0.7, 1.3) / Math.sqrt(n + 1) / (1 + (freq / contact) ** 2);
+    const amp = rng.range(0.7, 1.3) / Math.sqrt(n + 1) / (1 + dmath.pow(freq / contact, 2));
     modes.push({ freq, amp, decay, phase: rng.range(0, Math.PI * 2) });
     ring = Math.max(ring, amp > 0.05 ? decay : 0);
   });

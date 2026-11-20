@@ -5,6 +5,7 @@
 // paint mask gone wrong). Returns those points so a test can fail on them and name where.
 
 import type { Field } from '@developerz.ai/ts23d';
+import { dmath } from '@developerz.ai/ts23d';
 import type { Surface, V } from './kit.ts';
 
 export interface SkinCheck {
@@ -52,7 +53,7 @@ export function skinShowing(c: SkinCheck): V[] {
         // The walk never left the sculpt (the normal ran into a fold of the body): no verdict.
         if (!q) continue;
         const col = c.colorAt(q);
-        const d = Math.hypot(col[0] - c.tone[0], col[1] - c.tone[1], col[2] - c.tone[2]);
+        const d = dmath.hypot(col[0] - c.tone[0], col[1] - c.tone[1], col[2] - c.tone[2]);
         if (d < 0.06) out.push(q);
       }
   return out;

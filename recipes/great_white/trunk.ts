@@ -2,7 +2,7 @@
 // keels, the mouth pocket and the countershading with its ragged, sharp boundary; plus eyes, nostrils
 // and the small median and pelvic fins, which ride the spine.
 
-import { type BodyPlan, type Mesh, merge, type Rng, type Vec3 } from '@developerz.ai/ts23d';
+import { type BodyPlan, dmath, type Mesh, merge, type Rng, type Vec3 } from '@developerz.ai/ts23d';
 import {
   add,
   cross,
@@ -72,7 +72,7 @@ function trunkPoint(t: number, raw: number, lod: Lod): Vec3 {
   const p = plainPoint(t, a);
   const c = axisZ(t);
   let [y, z] = [p[1], p[2] - c];
-  const r = Math.hypot(y, z) || 1;
+  const r = dmath.hypot(y, z) || 1;
   let push = 0;
   if (lod < 2) {
     const g = gillField(t, a);
@@ -101,7 +101,7 @@ export const eyeCentre = (side: 1 | -1): Vec3 => {
 
 function eyeDent(p: Vec3): number {
   const e = eyeCentre(p[1] >= 0 ? 1 : -1);
-  return gauss(Math.hypot(p[0] - e[0], p[1] - e[1], p[2] - e[2]), 0.05);
+  return gauss(dmath.hypot(p[0] - e[0], p[1] - e[1], p[2] - e[2]), 0.05);
 }
 
 /** Skin colour: grey back with a bronze cast, sharp ragged line, white belly, dark slits. */
@@ -187,8 +187,8 @@ export function eyeMesh(side: 1 | -1, lod: Lod): Mesh {
     strip: 'plastic',
     point: (u, a) => {
       const th = u * Math.PI;
-      const ring = add(scale(u0, Math.cos(a)), scale(v0, Math.sin(a)));
-      return add(centre, add(scale(out, R * Math.cos(th)), scale(ring, R * Math.sin(th))));
+      const ring = add(scale(u0, dmath.cos(a)), scale(v0, dmath.sin(a)));
+      return add(centre, add(scale(out, R * dmath.cos(th)), scale(ring, R * dmath.sin(th))));
     },
     // Pupil, a thin pale ring round it, the blue-grey iris, then the dark sclera under the lid.
     color: (_p, _n, u) =>
@@ -202,10 +202,10 @@ export function eyeMesh(side: 1 | -1, lod: Lod): Mesh {
     strip: SKIN,
     point: (u, a) => {
       const th = u * TAU;
-      const rim = add(scale(u0, Math.cos(th)), scale(v0, Math.sin(th)));
+      const rim = add(scale(u0, dmath.cos(th)), scale(v0, dmath.sin(th)));
       const at = add(centre, add(scale(out, R * 0.62), scale(rim, R * 0.84)));
       const r = 0.0075;
-      return add(at, add(scale(rim, r * Math.cos(a)), scale(out, r * 0.8 * Math.sin(a))));
+      return add(at, add(scale(rim, r * dmath.cos(a)), scale(out, r * 0.8 * dmath.sin(a))));
     },
     color: () => COLOUR.lid,
   });

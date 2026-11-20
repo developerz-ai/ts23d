@@ -8,6 +8,7 @@
 //   concavity that counts as fully occluded) · cavityRadius 0.006 (m) · cavityRough 0 (added in
 //   cavities; raised spots get 0.6× that much smoother)
 
+import { dmath } from '../../core/index.ts';
 import { type Canvas, type Grid, param } from './canvas.ts';
 import { fbm, hash2 } from './noise.ts';
 import { boxBlur } from './orm.ts';
@@ -17,7 +18,7 @@ const cellsU = (c: Grid, size: number): number =>
   c.wrapU ? Math.max(1, Math.round(c.metresU / size)) : 1 << 20;
 
 /** Finest feature (m) an fBm's top octave may reach on an axis of `texel` metres. */
-const floor = (texel: number, octaves: number): number => 1.5 * texel * 2 ** (octaves - 1);
+const floor = (texel: number, octaves: number): number => 1.5 * texel * dmath.pow(2, octaves - 1);
 
 /**
  * Tileable fBm in [−1, 1]; each axis is clamped on its own so the finest octave still spans

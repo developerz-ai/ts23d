@@ -3,7 +3,7 @@
 // for depth. Variants: beech/oak cluster (ovate, fine teeth), palmate maple, autumn maple
 // (red/orange/yellow per leaf), birch (small serrated leaves on thin drooping twigs).
 
-import { createRng, type Rng } from '../../core/index.ts';
+import { createRng, dmath, type Rng } from '../../core/index.ts';
 import type { Canvas } from './canvas.ts';
 import { AUTUMN, at, curve, dim, drawStem, LEAF, vary } from './foliage-common.ts';
 import { Foliage, type LeafShape, type Rgb } from './foliage-raster.ts';
@@ -53,8 +53,8 @@ function cluster(c: Canvas, seed: number, s: ClusterSpec): void {
     const by = main.y[i] ?? 0.5;
     const a = (main.a[i] ?? 0) + side * rng.range(0.7, 1.1);
     const len = 0.3 * (1 - t * 0.45);
-    const ex = bx + Math.sin(a) * len;
-    const ey = by + Math.cos(a) * len - s.droop * len * 0.4;
+    const ex = bx + dmath.sin(a) * len;
+    const ey = by + dmath.cos(a) * len - s.droop * len * 0.4;
     const twig = curve(bx, by, (bx + ex) / 2, (by + ey) / 2 + len * 0.15, ex, ey, 8);
     drawStem(f, twig, 0.007, 0.002, LEAF.twig);
     for (let q = 1; q <= s.perTwig; q++) {

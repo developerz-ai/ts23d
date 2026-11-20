@@ -6,7 +6,7 @@
 // asset (`medium: 'water'`) has no ground: its largest connected body, by surface area, holds the
 // rest, and nothing is ever "sunk". Text and order of the findings: floating-findings.ts.
 
-import { type Bounds, type CompiledAsset, type Mesh, worldMeshes } from '../core/index.ts';
+import { type Bounds, type CompiledAsset, dmath, type Mesh, worldMeshes } from '../core/index.ts';
 import { edgeGap, edgesTouch } from './floating-contact.ts';
 import { floatingFindings } from './floating-findings.ts';
 import { surfaceSamples, type TriangleGrid } from './geometry.ts';
@@ -22,8 +22,8 @@ const near = (a: Bounds, b: Bounds, eps: number): boolean =>
   );
 
 const boxGap = (a: Bounds, b: Bounds): number =>
-  Math.hypot(
-    ...[0, 1, 2].map((k) =>
+  dmath.norm(
+    [0, 1, 2].map((k) =>
       Math.max(0, (a.min[k] ?? 0) - (b.max[k] ?? 0), (b.min[k] ?? 0) - (a.max[k] ?? 0)),
     ),
   );
@@ -73,7 +73,7 @@ function gapBetween(a: Mesh, b: Mesh): number {
   const bb = meshBounds(b);
   const span = (k: 0 | 1 | 2): number =>
     Math.max(ab.max[k], bb.max[k]) - Math.min(ab.min[k], bb.min[k]);
-  best = Math.hypot(span(0), span(1), span(2));
+  best = dmath.hypot(span(0), span(1), span(2));
   for (const p of surfaceSamples(a, 0.1, 4)) best = Math.min(best, grid.nearest(p, best));
   return Math.max(box, best);
 }
@@ -134,7 +134,7 @@ function surfaceArea(m: Mesh): number {
     const v = [0, 1, 2].map((k) => (P[c + k] ?? 0) - (P[a + k] ?? 0));
     const [ux = 0, uy = 0, uz = 0] = u;
     const [vx = 0, vy = 0, vz = 0] = v;
-    sum += Math.hypot(uy * vz - uz * vy, uz * vx - ux * vz, ux * vy - uy * vx) / 2;
+    sum += dmath.hypot(uy * vz - uz * vy, uz * vx - ux * vz, ux * vy - uy * vx) / 2;
   }
   return sum;
 }

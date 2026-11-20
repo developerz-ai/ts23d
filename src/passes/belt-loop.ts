@@ -3,9 +3,11 @@
 // The winding is the path's own: +s runs the way the points were given. Pure maths, shared by the
 // exporter (tread morph targets), the `treads` gate and the gallery's runtime belt.
 
+import { dmath } from '../core/index.ts';
+
 type V3 = readonly [number, number, number];
 
-const dist = (a: V3, b: V3): number => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+const dist = (a: V3, b: V3): number => dmath.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
 
 export class BeltLoop {
   /** Samples round the loop. */
@@ -48,7 +50,7 @@ export class BeltLoop {
         (this.p[a + 1] ?? 0) - (this.p[c + 1] ?? 0),
         (this.p[a + 2] ?? 0) - (this.p[c + 2] ?? 0),
       ];
-      const l = Math.hypot(...d) || 1;
+      const l = dmath.norm(d) || 1;
       this.t.set([d[0] / l, d[1] / l, d[2] / l], k * 3);
     }
     // Newell's normal of the loop: the plane's normal whatever its orientation.
@@ -60,7 +62,7 @@ export class BeltLoop {
       nn[1] += (a[2] - c[2]) * (a[0] + c[0]);
       nn[2] += (a[0] - c[0]) * (a[1] + c[1]);
     }
-    const l = Math.hypot(...nn);
+    const l = dmath.norm(nn);
     this.normal = l > 0 ? [nn[0] / l, nn[1] / l, nn[2] / l] : [0, 0, 1];
   }
 
@@ -74,7 +76,7 @@ export class BeltLoop {
       out[k] = (this.p[i * 3 + k] ?? 0) * (1 - a) + (this.p[j * 3 + k] ?? 0) * a;
       out[3 + k] = (this.t[i * 3 + k] ?? 0) * (1 - a) + (this.t[j * 3 + k] ?? 0) * a;
     }
-    const l = Math.hypot(out[3] ?? 0, out[4] ?? 0, out[5] ?? 0) || 1;
+    const l = dmath.hypot(out[3] ?? 0, out[4] ?? 0, out[5] ?? 0) || 1;
     for (let k = 3; k < 6; k++) out[k] = (out[k] ?? 0) / l;
   }
 
@@ -83,9 +85,9 @@ export class BeltLoop {
     const d2 = (k: number): number => {
       const m = (((k % this.n) + this.n) % this.n) * 3;
       return (
-        (q[0] - (this.p[m] ?? 0)) ** 2 +
-        (q[1] - (this.p[m + 1] ?? 0)) ** 2 +
-        (q[2] - (this.p[m + 2] ?? 0)) ** 2
+        dmath.pow(q[0] - (this.p[m] ?? 0), 2) +
+        dmath.pow(q[1] - (this.p[m + 1] ?? 0), 2) +
+        dmath.pow(q[2] - (this.p[m + 2] ?? 0), 2)
       );
     };
     const coarse = 16;

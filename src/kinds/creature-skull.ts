@@ -5,6 +5,7 @@
 // lower jaw as its own part pivoting at the temporomandibular hinge.
 
 import type { Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import type { SculptEdit } from '../primitives/index.ts';
 import type { Bones } from './creature-bones.ts';
 import { v3 } from './creature-curve.ts';
@@ -59,8 +60,8 @@ export function neckStub(b: Bones, l: Block): SculptEdit[] {
   const prev = b.neck[b.neck.length - 2];
   const last = b.neck[b.neck.length - 1];
   if (!prev || !last) return [];
-  const c = Math.cos(h.pitch);
-  const s = Math.sin(h.pitch);
+  const c = dmath.cos(h.pitch);
+  const s = dmath.sin(h.pitch);
   const dx = prev.at[0] - h.atlas[0];
   const dz = prev.at[2] - h.atlas[2];
   // World → head-local (inverse of headToWorld's pitch).
@@ -76,7 +77,7 @@ export function neckStub(b: Bones, l: Block): SculptEdit[] {
       at: v3.lerp(front, end, 0.5),
       size: [r * 0.9, r, v3.len(u) / 2 + r * 0.4],
       // Long axis (local Z) along the neck, pitched in the head's sagittal plane.
-      rotate: [0, (Math.atan2(u[0], u[2]) * 180) / Math.PI, 0],
+      rotate: [0, (dmath.atan2(u[0], u[2]) * 180) / Math.PI, 0],
       blend: r * 0.5,
       kernel: 'cubic',
     },

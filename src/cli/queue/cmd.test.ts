@@ -131,7 +131,7 @@ describe('t3d queue', () => {
 
   test('status --json: classes with capacity, use and ordered tickets; clear drops by kind', async () => {
     const running = await other('blender', 1);
-    const dead = await other('cpu', 2, 2 ** 22 + 7);
+    const dead = await other('cpu', 2, 4194304 /* 2^22 */ + 7);
     const s = await status();
     expect(s.mode).toBe('wait');
     expect(s.dir).toBe(join(home, 'queue'));

@@ -5,6 +5,7 @@
 // qa sits above primitives) are counted too. Internal; tests use them.
 
 import type { Mesh } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 
 /** Undirected edges walked a different number of times a→b than b→a (0 = closed, oriented). */
 export function openEdges(m: Mesh): number {
@@ -68,7 +69,7 @@ export function windingFlips(m: Mesh): number {
       s += (g[k] ?? 0) * m;
       nn += m * m;
     }
-    const gl = Math.hypot(g[0] ?? 0, g[1] ?? 0, g[2] ?? 0);
+    const gl = dmath.hypot(g[0] ?? 0, g[1] ?? 0, g[2] ?? 0);
     if (gl > 0 && nn > 0 && s / (gl * Math.sqrt(nn)) < -0.1) bad++;
   }
   return bad;
@@ -88,7 +89,7 @@ export function zeroArea(m: Mesh): number {
     const vx = (P[c] ?? 0) - (P[a] ?? 0);
     const vy = (P[c + 1] ?? 0) - (P[a + 1] ?? 0);
     const vz = (P[c + 2] ?? 0) - (P[a + 2] ?? 0);
-    if (Math.hypot(uy * vz - uz * vy, uz * vx - ux * vz, ux * vy - uy * vx) < 1e-12) n++;
+    if (dmath.hypot(uy * vz - uz * vy, uz * vx - ux * vz, ux * vy - uy * vx) < 1e-12) n++;
   }
   return n;
 }

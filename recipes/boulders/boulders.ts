@@ -11,6 +11,7 @@
 import {
   type BuildContext,
   defineAsset,
+  dmath,
   type Field,
   hex,
   type Mesh,
@@ -72,7 +73,7 @@ const plane =
     (p[0] - at[0]) * n[0] + (p[1] - at[1]) * n[1] + (p[2] - at[2]) * n[2];
 
 const unit = (v: Vec3): Vec3 => {
-  const l = Math.hypot(v[0], v[1], v[2]) || 1;
+  const l = dmath.hypot(v[0], v[1], v[2]) || 1;
   return [v[0] / l, v[1] / l, v[2] / l];
 };
 const mix = (a: Vec3, b: Vec3, k: number): Vec3 => [
@@ -246,14 +247,14 @@ function footing(
   const reach = (a: number): number =>
     SKIRT *
     (1 +
-      0.18 * Math.sin(2 * a + (phase[0] ?? 0)) +
-      0.1 * Math.sin(3 * a + (phase[1] ?? 0)) +
-      0.05 * Math.sin(5 * a + (phase[2] ?? 0)));
+      0.18 * dmath.sin(2 * a + (phase[0] ?? 0)) +
+      0.1 * dmath.sin(3 * a + (phase[1] ?? 0)) +
+      0.05 * dmath.sin(5 * a + (phase[2] ?? 0)));
   const disc = planar({
     points: Array.from({ length: n }, (_, k): Vec3 => {
       const a = (k / n) * Math.PI * 2;
       const r = reach(a);
-      return [Math.cos(a) * (l / 2 + r), y + Math.sin(a) * (w / 2 + r), 0.001];
+      return [dmath.cos(a) * (l / 2 + r), y + dmath.sin(a) * (w / 2 + r), 0.001];
     }),
     color: SOIL_DRY,
     strip: materialVariant('sand', i + 1),
@@ -268,8 +269,8 @@ function footing(
     const yy = (tess.positions[v * 3 + 1] ?? 0) - y;
     // 0 at the rock's own outline (an ellipse l × w), 1 at the skirt's edge (metres out over the
     // outline's reach at that bearing).
-    const e = Math.hypot(x / (l / 2), yy / (w / 2));
-    const r = ((e - 1) * Math.min(l, w)) / 2 / reach(Math.atan2(yy / (w / 2), x / (l / 2)));
+    const e = dmath.hypot(x / (l / 2), yy / (w / 2));
+    const r = ((e - 1) * Math.min(l, w)) / 2 / reach(dmath.atan2(yy / (w / 2), x / (l / 2)));
     colors.set(
       ctx.lod === 2 ? mix(SOIL_DAMP, SOIL_DRY, 0.55) : soilAt(r, mottle([x, yy, 0])),
       v * 3,
@@ -284,8 +285,8 @@ function footing(
       const r = rng.range(0.025, 0.065) * Math.max(1, l);
       const far = rng.range(0.6, 0.78);
       const at: Vec3 = [
-        Math.cos(a) * (l / 2 + 0.1) * far * 1.6,
-        y + Math.sin(a) * (w / 2 + 0.1) * far * 1.6,
+        dmath.cos(a) * (l / 2 + 0.1) * far * 1.6,
+        y + dmath.sin(a) * (w / 2 + 0.1) * far * 1.6,
         0,
       ];
       const bump = valueNoise(rng.fork(`pebble-${k}`), { scale: r * 0.8, octaves: 2 });

@@ -9,7 +9,7 @@
 // The drawing's origin (svg-doc.ts, default paper bottom centre) lands on `at`.
 // UVs: true metres on the strip; walls run U along the outline, V across the depth.
 
-import { type Mesh, MeshBuilder, type Vec2, type Vec3 } from '../core/index.ts';
+import { dmath, type Mesh, MeshBuilder, type Vec2, type Vec3 } from '../core/index.ts';
 import { mappedOnto, type StripId, stripRect } from '../material/index.ts';
 import { invalid } from './check.ts';
 import { mirroredV, stripU, stripVMetres } from './strip-uv.ts';
@@ -41,8 +41,8 @@ export function inset(loop: readonly Vec2[], d: number): Vec2[] {
   return loop.map((p, i) => {
     const a = loop[(i + n - 1) % n] ?? p;
     const b = loop[(i + 1) % n] ?? p;
-    const l0 = Math.hypot(p[0] - a[0], p[1] - a[1]) || 1;
-    const l1 = Math.hypot(b[0] - p[0], b[1] - p[1]) || 1;
+    const l0 = dmath.hypot(p[0] - a[0], p[1] - a[1]) || 1;
+    const l1 = dmath.hypot(b[0] - p[0], b[1] - p[1]) || 1;
     const n0: Vec2 = [-(p[1] - a[1]) / l0, (p[0] - a[0]) / l0];
     const n1: Vec2 = [-(b[1] - p[1]) / l1, (b[0] - p[0]) / l1];
     const k = Math.min(3, 1 / Math.max(1e-6, (1 + n0[0] * n1[0] + n0[1] * n1[1]) / 2));
@@ -69,7 +69,7 @@ export function extrudeSvg(svg: string, o: ExtrudeSvgOptions): Mesh {
   const strip = o.strip ?? 'plain';
   const rect = stripRect(strip);
   const vm = stripVMetres(strip);
-  const crease = Math.cos(((o.creaseDeg ?? 35) * Math.PI) / 180);
+  const crease = dmath.cos(((o.creaseDeg ?? 35) * Math.PI) / 180);
   const b = new MeshBuilder();
   const put = (u: number, v: number, w: number, n: Vec3, uv: Vec2): number => {
     const p = toWorld(view, u, v, w);
@@ -112,7 +112,7 @@ export function extrudeSvg(svg: string, o: ExtrudeSvgOptions): Mesh {
         e[2] * f[0] - e[0] * f[2],
         e[0] * f[1] - e[1] * f[0],
       ];
-      const l = Math.hypot(c[0], c[1], c[2]) || 1;
+      const l = dmath.hypot(c[0], c[1], c[2]) || 1;
       fn.push([c[0] / l, c[1] / l, c[2] / l]);
     }
     const smooth = (i: number): boolean => {
@@ -124,10 +124,10 @@ export function extrudeSvg(svg: string, o: ExtrudeSvgOptions): Mesh {
       const p = fn[(i + n - 1) % n] ?? [0, 0, 1];
       const q = fn[i] ?? p;
       const s: Vec3 = [p[0] + q[0], p[1] + q[1], p[2] + q[2]];
-      const l = Math.hypot(s[0], s[1], s[2]) || 1;
+      const l = dmath.hypot(s[0], s[1], s[2]) || 1;
       return [s[0] / l, s[1] / l, s[2] / l];
     };
-    const vSpan = Math.hypot(
+    const vSpan = dmath.hypot(
       wb - wa,
       (B[0]?.[0] ?? 0) - (A[0]?.[0] ?? 0),
       (B[0]?.[1] ?? 0) - (A[0]?.[1] ?? 0),
@@ -137,7 +137,7 @@ export function extrudeSvg(svg: string, o: ExtrudeSvgOptions): Mesh {
       const j = (i + 1) % n;
       const a0 = A[i] ?? [0, 0];
       const a1 = A[j] ?? a0;
-      const len = Math.hypot(a1[0] - a0[0], a1[1] - a0[1]);
+      const len = dmath.hypot(a1[0] - a0[0], a1[1] - a0[1]);
       const own = fn[i] ?? [0, 0, 1];
       const n0 = smooth(i) ? avg(i) : own;
       const n1 = smooth(j) ? avg(j) : own;

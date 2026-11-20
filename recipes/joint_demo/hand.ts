@@ -5,7 +5,15 @@
 // what the `grip` joint measures. `scale` exists for the failure demo: a hand ×2 must fail the
 // wrist joint (the opening round the handle stays the handle's, so only the wrist complains).
 
-import { type BuildContext, bakeAo, loft, type Mesh, merge, type Vec3 } from '@developerz.ai/ts23d';
+import {
+  type BuildContext,
+  bakeAo,
+  dmath,
+  loft,
+  type Mesh,
+  merge,
+  type Vec3,
+} from '@developerz.ai/ts23d';
 import { onSkin } from '../_lib/face/skin-strip.ts';
 import type { Tone } from './arm.ts';
 import { ellipsoid, mix, type Station, smooth, tube } from './shape.ts';
@@ -30,8 +38,12 @@ const CREASE: Vec3 = [0.3, 0.17, 0.12];
 const ringSuper = (x: number, ry: number, rz: number, z: number, n: number, e: number): Vec3[] =>
   Array.from({ length: n }, (_, k): Vec3 => {
     const a = (k / n) * Math.PI * 2;
-    const [c, s] = [Math.cos(a), Math.sin(a)];
-    return [x, ry * Math.sign(c) * Math.abs(c) ** e, z + rz * Math.sign(s) * Math.abs(s) ** e];
+    const [c, s] = [dmath.cos(a), dmath.sin(a)];
+    return [
+      x,
+      ry * Math.sign(c) * dmath.pow(Math.abs(c), e),
+      z + rz * Math.sign(s) * dmath.pow(Math.abs(s), e),
+    ];
   });
 
 /** Where the fist sits for a wrist at `wrist`: the handle centre and the palm's knuckle line. */
@@ -65,7 +77,7 @@ export function hand(ctx: BuildContext, o: HandOptions): Vec3 {
   const [cx, cy] = c;
   // Outward as on the forearm (round the arm's axis), so the tone runs unbroken over the wrist.
   const out = (p: Vec3): Vec3 => {
-    const l = Math.hypot(p[1], p[2] - wz) || 1;
+    const l = dmath.hypot(p[1], p[2] - wz) || 1;
     return [0, p[1] / l, (p[2] - wz) / l];
   };
   const tone = (p: Vec3): Vec3 => o.tone(p, out(p));

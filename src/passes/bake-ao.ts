@@ -5,6 +5,7 @@
 
 import {
   type CompiledAsset,
+  dmath,
   type Mesh,
   Ts23dError,
   type Vec3,
@@ -47,7 +48,7 @@ function hemisphere(n: number): Vec3[] {
   return Array.from({ length: n }, (_, i) => {
     const r = Math.sqrt((i + 0.5) / n);
     const phi = i * GOLDEN;
-    return [r * Math.cos(phi), r * Math.sin(phi), Math.sqrt(Math.max(0, 1 - r * r))] as Vec3;
+    return [r * dmath.cos(phi), r * dmath.sin(phi), Math.sqrt(Math.max(0, 1 - r * r))] as Vec3;
   });
 }
 
@@ -127,7 +128,7 @@ function visibility(mesh: Mesh, grid: RayGrid, o: AoOptions): Float32Array {
     const rx = N[v * 3] ?? 0;
     const ry = N[v * 3 + 1] ?? 0;
     const rz = N[v * 3 + 2] ?? 1;
-    const len = Math.hypot(rx, ry, rz) || 1;
+    const len = dmath.hypot(rx, ry, rz) || 1;
     const n: Vec3 = [rx / len, ry / len, rz / len];
     key[0] = Math.round(px * 1e4);
     key[1] = Math.round(py * 1e4);

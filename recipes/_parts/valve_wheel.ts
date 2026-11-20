@@ -1,7 +1,7 @@
 // Valve handwheel: a round rim on spokes, hub and stem. Origin = stem base, wheel up (+Z), turns
 // about Z. Real gate-valve handwheels: Ø 100–400 mm, 3–6 spokes, painted cast iron.
 
-import { beam, cylinder, definePart, lathe, type Mesh, merge } from '@developerz.ai/ts23d';
+import { beam, cylinder, definePart, dmath, lathe, type Mesh, merge } from '@developerz.ai/ts23d';
 import { DARK_STEEL, PAINT_RED, torusProfile } from './shape.ts';
 
 export const valve_wheel = definePart({
@@ -47,7 +47,7 @@ export const valve_wheel = definePart({
     ];
     for (let i = 0; i < p.spokes; i++) {
       const a = (i / p.spokes) * Math.PI * 2 + Math.PI / 4;
-      const dir = [Math.cos(a), Math.sin(a)] as const;
+      const dir = [dmath.cos(a), dmath.sin(a)] as const;
       meshes.push(
         beam({
           from: [dir[0] * hubR * 0.8, dir[1] * hubR * 0.8, z],

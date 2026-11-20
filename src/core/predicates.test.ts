@@ -8,8 +8,8 @@ describe('orient2d', () => {
     let wrong = 0;
     for (let i = 0; i < 64; i++)
       for (let j = 0; j < 64; j++) {
-        const px = 0.5 + i * 2 ** -53;
-        const py = 0.5 + j * 2 ** -53;
+        const px = 0.5 + i * 1.1102230246251565e-16 /* 2^-53 */;
+        const py = 0.5 + j * 1.1102230246251565e-16 /* 2^-53 */;
         const truth = Math.sign(py - px); // exact for these doubles (same exponent)
         expect(Math.sign(orient2d(12, 12, 24, 24, px, py))).toBe(truth);
         if (Math.sign(naive(px, py)) !== truth) wrong++;
@@ -38,8 +38,10 @@ describe('orient3d', () => {
     const b = [1003.7, 2000.9, 0.7] as const;
     const c = [1000.4, 2004.2, 0.7] as const;
     expect(orient3d(a, b, c, [1001.3, 2001.1, 0.7])).toBe(0);
-    const up = 0.7 + 2 ** -52;
+    const up = 0.7 + 2.220446049250313e-16 /* 2^-52 */;
     expect(orient3d(a, b, c, [1001.3, 2001.1, up])).toBeGreaterThan(0);
-    expect(orient3d(a, b, c, [1001.3, 2001.1, 0.7 - 2 ** -53])).toBeLessThan(0);
+    expect(
+      orient3d(a, b, c, [1001.3, 2001.1, 0.7 - 1.1102230246251565e-16 /* 2^-53 */]),
+    ).toBeLessThan(0);
   });
 });

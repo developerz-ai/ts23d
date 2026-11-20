@@ -9,7 +9,7 @@
 // Parts with their own texture set (ADR 016) are drawn per pixel by raster-textured.ts.
 
 import type { CompiledAsset, Vec3 } from '../core/index.ts';
-import { cross, dot, normalize, sub } from '../core/index.ts';
+import { cross, dmath, dot, scale, sub } from '../core/index.ts';
 import { drawTextured } from './raster-textured.ts';
 import { cutAt, type SheetTones, toneAt } from './sheet-tones.ts';
 import { setTextures } from './texture-sets.ts';
@@ -35,9 +35,15 @@ export interface Camera {
   project(p: Vec3): Vec3;
 }
 
+/** `v` at unit length (zero stays zero), by dmath: the same bits on every CPU. */
+export const unit = (v: Vec3): Vec3 => {
+  const l = dmath.hypot(v[0], v[1], v[2]);
+  return l === 0 ? [0, 0, 0] : scale(v, 1 / l);
+};
+
 export function orthoCamera(view: View, centre: Vec3, extent: number, size: number): Camera {
-  const f = normalize(view.dir);
-  const r = normalize(cross(f, view.up));
+  const f = unit(view.dir);
+  const r = unit(cross(f, view.up));
   const u = cross(r, f);
   const k = size / (extent * 1.15);
   return {
@@ -48,7 +54,7 @@ export function orthoCamera(view: View, centre: Vec3, extent: number, size: numb
   };
 }
 
-const LIGHT = normalize([0.4, -0.6, 0.8]);
+const LIGHT = unit([0.4, -0.6, 0.8]);
 
 /** UVs of the triangle being drawn, read by `tri` when it alpha-tests: ua, va, ub, vb, uc, vc. */
 const UV = new Float32Array(6);
@@ -100,7 +106,7 @@ function tri(
 }
 
 const toSrgb = (v: number): number =>
-  Math.round(255 * Math.min(1, v <= 0.0031308 ? v * 12.92 : 1.055 * v ** (1 / 2.4) - 0.055));
+  Math.round(255 * Math.min(1, v <= 0.0031308 ? v * 12.92 : 1.055 * dmath.pow(v, 1 / 2.4) - 0.055));
 
 type WorldPart = ReturnType<typeof worldParts>[number];
 const WHITE = new Float32Array([1, 1, 1]);

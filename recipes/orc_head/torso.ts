@@ -4,6 +4,7 @@
 // 2 = planes (cut, chest plane), 3 = muscle borders, 4 = veins.
 
 import type { Field, SculptEdit } from '@developerz.ai/ts23d';
+import { dmath } from '@developerz.ai/ts23d';
 import {
   ball,
   chain,
@@ -26,8 +27,8 @@ export const bustCut: Field = (p) => {
   const h = p[2] - L.cutZ;
   const ky = 1.7;
   const kx = 0.75;
-  const side = (Math.abs(p[1]) - (0.085 + h * ky)) / Math.hypot(1, ky);
-  const front = (Math.abs(p[0] + 0.005) - (0.085 + h * kx)) / Math.hypot(1, kx);
+  const side = (Math.abs(p[1]) - (0.085 + h * ky)) / dmath.hypot(1, ky);
+  const front = (Math.abs(p[0] + 0.005) - (0.085 + h * kx)) / dmath.hypot(1, kx);
   return Math.max(-h, side, front);
 };
 

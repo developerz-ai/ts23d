@@ -4,6 +4,7 @@
 
 import {
   type BuildContext,
+  dmath,
   type Mesh,
   merge,
   prism,
@@ -67,7 +68,7 @@ export function buildCab(ctx: BuildContext, L: Layout, name: string): void {
       upper.push([ar0, SILL]);
       for (let i = 0; i <= segs; i++) {
         const a = Math.PI - (Math.PI * i) / segs;
-        upper.push([ar0 + arcR + Math.cos(a) * arcR, LINTEL - arcR * 0.6 + Math.sin(a) * arcR]);
+        upper.push([ar0 + arcR + dmath.cos(a) * arcR, LINTEL - arcR * 0.6 + dmath.sin(a) * arcR]);
       }
       upper.push(
         [ar1, SILL],
@@ -92,9 +93,9 @@ export function buildCab(ctx: BuildContext, L: Layout, name: string): void {
       for (let i = 0; i <= segs; i++) {
         const a = Math.PI - (Math.PI * i) / segs;
         arch.push([
-          ar0 + arcR + Math.cos(a) * arcR,
+          ar0 + arcR + dmath.cos(a) * arcR,
           s * (W / 2 + 0.01),
-          z + LINTEL - arcR * 0.6 + Math.sin(a) * arcR,
+          z + LINTEL - arcR * 0.6 + dmath.sin(a) * arcR,
         ]);
       }
       arch.push([ar1, s * (W / 2 + 0.01), z + SILL]);
@@ -218,7 +219,7 @@ export function buildCab(ctx: BuildContext, L: Layout, name: string): void {
   // Roof: a shallow arch, vermilion, a gold-lined eave board each side.
   const roof: Vec2[] = Array.from({ length: 9 }, (_, i): Vec2 => {
     const a = Math.PI * (i / 8);
-    return [Math.cos(a) * ROOF.halfWidth, Math.sin(a) * ROOF.rise];
+    return [dmath.cos(a) * ROOF.halfWidth, dmath.sin(a) * ROOF.rise];
   });
   m.push(
     translate(

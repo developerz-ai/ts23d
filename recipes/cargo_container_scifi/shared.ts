@@ -2,7 +2,15 @@
 // palette and its strip rules, the ISO 668 / ISO 1161 numbers, the door geometry and mount, and
 // the two small mesh helpers both use.
 
-import { box, hex, type Mesh, type PartOptions, planar, type Vec3 } from '@developerz.ai/ts23d';
+import {
+  box,
+  dmath,
+  hex,
+  type Mesh,
+  type PartOptions,
+  planar,
+  type Vec3,
+} from '@developerz.ai/ts23d';
 import type { StripRule } from '../_lib/finish/finish.ts';
 
 // Authoring colour → material: painted steel shell and frame (chips show steel), cast corner
@@ -68,7 +76,7 @@ export function quad(a: Vec3, b: Vec3, c: Vec3, d: Vec3, color: Vec3, off = 0.00
   const u: Vec3 = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
   const v: Vec3 = [d[0] - a[0], d[1] - a[1], d[2] - a[2]];
   const n: Vec3 = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
-  const l = Math.hypot(...n) || 1;
+  const l = dmath.norm(n) || 1;
   const lift = (p: Vec3): Vec3 => [
     p[0] + (n[0] / l) * off,
     p[1] + (n[1] / l) * off,

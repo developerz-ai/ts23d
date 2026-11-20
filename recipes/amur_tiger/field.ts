@@ -14,6 +14,7 @@ import {
   CREATURE_MATERIALS,
   chainSeed,
   defineMaterial,
+  dmath,
   grime,
   hairFlow,
   type Lod,
@@ -116,7 +117,7 @@ const LIE = chainSeed(
 /** Locks painted under the cards: 3.3 cm across on the body (2.5 cells), 1.6 cm on the head
  *  (back from the nose along the pitched skull), so the coat between the cards reads as fur. */
 const bodyLocks = lockTone((p) => LIE(p, [0, 0, 1]), { size: 0.033, strength: 0.3, seed: 1931 });
-const headLocks = lockTone(() => [-Math.cos(HEAD_PITCH), 0, Math.sin(HEAD_PITCH) - 0.15], {
+const headLocks = lockTone(() => [-dmath.cos(HEAD_PITCH), 0, dmath.sin(HEAD_PITCH) - 0.15], {
   size: 0.016,
   strength: 0.3,
   seed: 1932,
@@ -135,8 +136,9 @@ export function worn(mesh: Mesh, at: Vec3 = [0, 0, 0], far = false, locks?: 'bod
 }
 
 const dist = (p: Vec3, q: Vec3): number =>
-  Math.hypot(p[0] - q[0], Math.abs(p[1]) - Math.abs(q[1]), p[2] - q[2]);
-const ball = (p: Vec3, at: Vec3, r: number): number => Math.max(0, 1 - (dist(p, at) / r) ** 2);
+  dmath.hypot(p[0] - q[0], Math.abs(p[1]) - Math.abs(q[1]), p[2] - q[2]);
+const ball = (p: Vec3, at: Vec3, r: number): number =>
+  Math.max(0, 1 - dmath.pow(dist(p, at) / r, 2));
 
 /** The body's coat cards (LOD0 and LOD1; the far mesh carries none). */
 export function coat(body: Mesh, lod: Lod, rng: Rng): Mesh | null {
@@ -210,8 +212,8 @@ export function coat(body: Mesh, lod: Lod, rng: Rng): Mesh | null {
 
 /** Head part frame (pitched, scaled, about the atlas) → head-local. */
 function headLocal(p: Vec3): Vec3 {
-  const c = Math.cos(HEAD_PITCH);
-  const s = Math.sin(HEAD_PITCH);
+  const c = dmath.cos(HEAD_PITCH);
+  const s = dmath.sin(HEAD_PITCH);
   return [
     (c * p[0] - s * p[2]) / HEAD_SCALE,
     p[1] / HEAD_SCALE,
@@ -235,7 +237,7 @@ export function ruffCards(head: Mesh, lod: Lod, rng: Rng): Mesh | null {
     (1 - behind(q)) *
     smooth(HEAD.nose[0] - 0.045, HEAD.nose[0] - 0.075, q[0]) *
     smooth(HEAD.mouthZ + 0.03, HEAD.mouthZ + 0.055, q[2]) *
-    smooth(0.03, 0.042, Math.hypot(q[0] - E[0], Math.abs(q[1]) - E[1], q[2] - E[2]));
+    smooth(0.03, 0.042, dmath.hypot(q[0] - E[0], Math.abs(q[1]) - E[1], q[2] - E[2]));
   const layers: GroomLayer[] = [
     {
       name: 'crown',
@@ -293,8 +295,8 @@ export function ruffCards(head: Mesh, lod: Lod, rng: Rng): Mesh | null {
     },
   ];
   // Back from the face, flaring out and down over the cheeks (head-local → the part's frame).
-  const c = Math.cos(HEAD_PITCH);
-  const s = Math.sin(HEAD_PITCH);
+  const c = dmath.cos(HEAD_PITCH);
+  const s = dmath.sin(HEAD_PITCH);
   const flow = hairFlow(head, (p) => {
     const q = headLocal(p);
     const f = cheek(q);
@@ -312,7 +314,7 @@ export function whiskerMesh(lod: Lod, rng: Rng): Mesh | null {
   const paths: Vec3[][] = [];
   const steps = lod === 0 ? 6 : 3;
   const grow = (root: Vec3, dir: Vec3, len: number, droop: number): void => {
-    const dl = Math.hypot(dir[0], dir[1], dir[2]) || 1;
+    const dl = dmath.hypot(dir[0], dir[1], dir[2]) || 1;
     const pts: Vec3[] = [];
     for (let i = 0; i <= steps; i++) {
       const t = i / steps;

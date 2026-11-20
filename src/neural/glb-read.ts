@@ -142,7 +142,7 @@ function base64(text: string, what: string): Uint8Array {
 }
 
 /** Elements an accessor without a bufferView may declare (all zeros): 2^24, ~200 MB of VEC3. */
-export const MAX_EMPTY_ACCESSOR = 2 ** 24;
+export const MAX_EMPTY_ACCESSOR = 16777216 /* 2^24 */;
 
 const WIDTH: Record<string, number> = { SCALAR: 1, VEC2: 2, VEC3: 3, VEC4: 4, MAT4: 16 };
 const SIZE: Record<number, number> = { 5120: 1, 5121: 1, 5122: 2, 5123: 2, 5125: 4, 5126: 4 };

@@ -12,6 +12,7 @@ import {
   clearNeuralSources,
   compile,
   decodePng,
+  dmath,
   inverseBind,
   neuralCache,
   poseJoints,
@@ -174,8 +175,8 @@ describe('dragon_hybrid, model tier (committed cache)', () => {
       // One flat roughness (the bake's 0.8 = 204) has no spread; scales, plates, horn and dust do.
       const rough = sample(set.orm, () => true).map((c) => c[1] ?? 0);
       const avg = mean(rough);
-      const spread = Math.sqrt(mean(rough.map((r) => (r - avg) ** 2)));
-      expect(Math.sqrt(mean([204, 204].map((r) => (r - 204) ** 2)))).toBe(0);
+      const spread = Math.sqrt(mean(rough.map((r) => dmath.pow(r - avg, 2))));
+      expect(Math.sqrt(mean([204, 204].map((r) => dmath.pow(r - 204, 2))))).toBe(0);
       expect(spread).toBeGreaterThan(12);
     },
     SLOW,
@@ -248,7 +249,7 @@ describe('dragon_hybrid, model tier (committed cache)', () => {
       const ibm = inverseBind(sk);
       const keys = flap.tracks[0]?.times.length ?? 0;
       const dist = (P: ArrayLike<number>, p: number, Q: ArrayLike<number>, q: number): number =>
-        Math.hypot(
+        dmath.hypot(
           (P[p * 3] ?? 0) - (Q[q * 3] ?? 0),
           (P[p * 3 + 1] ?? 0) - (Q[q * 3 + 1] ?? 0),
           (P[p * 3 + 2] ?? 0) - (Q[q * 3 + 2] ?? 0),

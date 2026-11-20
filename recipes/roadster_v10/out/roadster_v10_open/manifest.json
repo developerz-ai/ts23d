@@ -249,43 +249,43 @@
     {
       "label": "wheelbase",
       "spec": 2.51,
-      "measured": 2.5100000500679016,
+      "measured": 2.51,
       "source": "README: class envelope 2.44–2.69 m"
     },
     {
       "label": "front track",
       "spec": 1.55,
-      "measured": 1.5507477521896362,
+      "measured": 1.550748,
       "source": "README"
     },
     {
       "label": "rear track",
       "spec": 1.56,
-      "measured": 1.5605947375297546,
+      "measured": 1.560595,
       "source": "README"
     },
     {
       "label": "front tyre 295/30 ZR18 diameter",
       "spec": 0.6342,
-      "measured": 0.634199955035001,
+      "measured": 0.6342,
       "source": "https://en.wikipedia.org/wiki/Tire_code"
     },
     {
       "label": "rear tyre 355/30 ZR19 diameter",
       "spec": 0.6956,
-      "measured": 0.6955999438650906,
+      "measured": 0.6956,
       "source": "https://en.wikipedia.org/wiki/Tire_code"
     },
     {
       "label": "body width (no mirrors)",
       "spec": 1.94,
-      "measured": 1.943323016166687,
+      "measured": 1.943323,
       "source": "README: class envelope 1.85–1.95 m"
     },
     {
       "label": "overall length",
       "spec": 4.46,
-      "measured": 4.4523351192474365,
+      "measured": 4.452335,
       "source": "README"
     }
   ],

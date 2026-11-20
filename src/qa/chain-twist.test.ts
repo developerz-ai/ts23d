@@ -2,6 +2,7 @@
 
 import { describe, expect, it } from 'bun:test';
 import type { Bone, Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import { radial, rigged, spine, swing } from './chain-fixtures.ts';
 import { AREA_KEPT, chainTwistFindings, TWIST_LIMIT, twistDegrees } from './chain-twist.ts';
 import { deformFindings, poseDeform, romPoses } from './deform.ts';
@@ -32,7 +33,7 @@ describe('chain twist', () => {
 
   it('sets the limit where the section keeps 85 % of its area', () => {
     expect(TWIST_LIMIT).toBeCloseTo(45.57, 1);
-    expect(Math.cos((TWIST_LIMIT * Math.PI) / 360) ** 2).toBeCloseTo(AREA_KEPT, 9);
+    expect(dmath.pow(dmath.cos((TWIST_LIMIT * Math.PI) / 360), 2)).toBeCloseTo(AREA_KEPT, 9);
   });
 
   it('passes a twist inside the limit and any amount of plain bending', () => {
@@ -49,7 +50,7 @@ describe('chain twist', () => {
   it('reads only the part of a rotation about the bone', () => {
     const q = (axis: Vec3, deg: number): readonly [number, number, number, number] => {
       const h = (deg * Math.PI) / 360;
-      return [axis[0] * Math.sin(h), axis[1] * Math.sin(h), axis[2] * Math.sin(h), Math.cos(h)];
+      return [axis[0] * dmath.sin(h), axis[1] * dmath.sin(h), axis[2] * dmath.sin(h), dmath.cos(h)];
     };
     expect(twistDegrees([1, 0, 0], ...q([1, 0, 0], 30))).toBeCloseTo(30, 6);
     expect(twistDegrees([1, 0, 0], ...q([0, 1, 0], 30))).toBeCloseTo(0, 6);

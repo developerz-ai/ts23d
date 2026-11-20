@@ -3,6 +3,7 @@
 // ray (every surface is two-sided, as in the raster), strand tangent, albedo = sheet × vertex
 // colour, roughness / metalness from the ORM unless the part's look overrides them.
 
+import { dmath } from '../../core/index.ts';
 import type { Look } from '../looks.ts';
 import { OPAQUE } from '../looks.ts';
 import { SET_OUT, setSurface } from '../set-shade.ts';
@@ -71,7 +72,7 @@ export function surfAt(w: World, h: Hit, o: ArrayLike<number>, d: ArrayLike<numb
   let gx = e1y * e2z - e1z * e2y;
   let gy = e1z * e2x - e1x * e2z;
   let gz = e1x * e2y - e1y * e2x;
-  let gl = Math.hypot(gx, gy, gz) || 1;
+  let gl = dmath.hypot(gx, gy, gz) || 1;
   if (gx * (d[0] ?? 0) + gy * (d[1] ?? 0) + gz * (d[2] ?? 0) > 0) gl = -gl;
   gx /= gl;
   gy /= gl;
@@ -79,7 +80,7 @@ export function surfAt(w: World, h: Hit, o: ArrayLike<number>, d: ArrayLike<numb
   s.ng[0] = gx;
   s.ng[1] = gy;
   s.ng[2] = gz;
-  let nl = Math.hypot(s.n[0] ?? 0, s.n[1] ?? 0, s.n[2] ?? 0);
+  let nl = dmath.hypot(s.n[0] ?? 0, s.n[1] ?? 0, s.n[2] ?? 0);
   if (!(nl > 0)) {
     s.n.set(s.ng);
     nl = 1;
@@ -119,7 +120,7 @@ export function surfAt(w: World, h: Hit, o: ArrayLike<number>, d: ArrayLike<numb
     const px = (T[to] ?? 0) * mx + (T[to + 3] ?? 0) * my + (s.n[0] ?? 0) * mz;
     const py = (T[to + 1] ?? 0) * mx + (T[to + 4] ?? 0) * my + (s.n[1] ?? 0) * mz;
     const pz = (T[to + 2] ?? 0) * mx + (T[to + 5] ?? 0) * my + (s.n[2] ?? 0) * mz;
-    const pl = Math.hypot(px, py, pz) || 1;
+    const pl = dmath.hypot(px, py, pz) || 1;
     s.n[0] = px / pl;
     s.n[1] = py / pl;
     s.n[2] = pz / pl;
@@ -132,7 +133,7 @@ export function surfAt(w: World, h: Hit, o: ArrayLike<number>, d: ArrayLike<numb
   );
   if (ndo < 0.02) {
     for (let k = 0; k < 3; k++) s.n[k] = (s.n[k] ?? 0) + (s.ng[k] ?? 0) * (0.02 - ndo + 0.05);
-    const l = Math.hypot(s.n[0] ?? 0, s.n[1] ?? 0, s.n[2] ?? 0) || 1;
+    const l = dmath.hypot(s.n[0] ?? 0, s.n[1] ?? 0, s.n[2] ?? 0) || 1;
     for (let k = 0; k < 3; k++) s.n[k] = (s.n[k] ?? 0) / l;
   }
   if (!set) sample(w.tex.albedo, mip, u, v, texel);

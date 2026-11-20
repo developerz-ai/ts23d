@@ -6,7 +6,7 @@
 // loop starts on the periodic orbit and its seam closes to float precision. Bones are solved
 // parent first: a child feels its parent's spring motion.
 
-import { type Bone, type Quat, quatRotate, type Vec3 } from '../core/index.ts';
+import { type Bone, dmath, type Quat, quatRotate, type Vec3 } from '../core/index.ts';
 import { forward, IDENTITY, qconj, qexp, qmul } from './pose.ts';
 
 export interface SpringBone {
@@ -74,7 +74,7 @@ const cross = (a: Vec3, b: Vec3): Vec3 => [
   a[0] * b[1] - a[1] * b[0],
 ];
 const unit = (a: Vec3): Vec3 => {
-  const l = Math.hypot(a[0], a[1], a[2]);
+  const l = dmath.hypot(a[0], a[1], a[2]);
   return l > 0 ? [a[0] / l, a[1] / l, a[2] / l] : [0, 0, 0];
 };
 const dot = (a: Vec3, b: Vec3): number => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
@@ -120,7 +120,7 @@ export function bakeSprings(
       return [h[0] + travel[0] * k, h[1] + travel[1] * k, h[2] + travel[2] * k];
     };
     const rest = sub(bone.tail, bone.head);
-    const L = Math.hypot(...rest);
+    const L = dmath.norm(rest);
     const [e1, e2] = across(unit(rest));
     const f1: number[] = [];
     const f2: number[] = [];
@@ -140,7 +140,7 @@ export function bakeSprings(
     }
     const t1 = periodicResponse(f1, step, s.hz, s.damping);
     const t2 = periodicResponse(f2, step, s.hz, s.damping);
-    const peak = Math.max(...t1.map((x, i) => Math.hypot(x, t2[i] ?? 0)));
+    const peak = Math.max(...t1.map((x, i) => dmath.hypot(x, t2[i] ?? 0)));
     const cap = ((s.max ?? 25) * Math.PI) / 180;
     const k = peak > cap ? cap / peak : 1;
     out.forEach((m, i) => {

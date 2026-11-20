@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { encodePng } from '../../core/index.ts';
+import { dmath, encodePng } from '../../core/index.ts';
 import type { TextureSource } from '../texture-source.ts';
 import { provideTextures } from '../texture-source.ts';
 import { createCanvas } from './canvas.ts';
@@ -58,7 +58,7 @@ describe('paintImageStrip: resampling', () => {
     paintImageStrip(t, recipe, source(solid, tilted), 'test');
     const [r = 0, g = 0, b = 0] = texel(t.normalRgba);
     const n = [(200 - 128) / 127, -(90 - 128) / 128, (220 - 128) / 127];
-    const l = Math.hypot(...n);
+    const l = dmath.norm(n);
     const want = n.map((v) => 128 + (v / l) * (v < 0 ? 128 : 127));
     [r, g, b].forEach((v, k) => {
       expect(Math.abs(v - (want[k] ?? 0))).toBeLessThanOrEqual(1);

@@ -7,6 +7,7 @@
 // withers, ischial tuberosity, manubrium. Sizes × the allometric limb radius `r`.
 
 import type { Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import { type Bones, headToWorld } from './creature-bones.ts';
 import { v3 } from './creature-curve.ts';
 import type { FibreMuscle } from './creature-muscles.ts';
@@ -16,8 +17,11 @@ export function envelope(b: Bones, x: number, z: number): number {
   let y = 0;
   for (const m of b.trunk) {
     const n = m.power ?? 2;
-    const s = 1 - Math.abs((x - m.at[0]) / m.r[0]) ** n - Math.abs((z - m.at[2]) / m.r[2]) ** n;
-    if (s > 0) y = Math.max(y, m.r[1] * s ** (1 / n));
+    const s =
+      1 -
+      dmath.pow(Math.abs((x - m.at[0]) / m.r[0]), n) -
+      dmath.pow(Math.abs((z - m.at[2]) / m.r[2]), n);
+    if (s > 0) y = Math.max(y, m.r[1] * dmath.pow(s, 1 / n));
   }
   return y;
 }

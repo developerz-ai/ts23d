@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { type Bone, compile, type Mesh, type Quat, type Vec3 } from '../core/index.ts';
+import { type Bone, compile, dmath, type Mesh, type Quat, type Vec3 } from '../core/index.ts';
 import { inverseBind, poseJoints, skinPositions } from '../passes/index.ts';
 import { deformFindings, romPoses } from '../qa/index.ts';
 import { creaturePlan } from './creature.ts';
@@ -142,7 +142,7 @@ describe('extra chains: rig and clips', () => {
       // About +x for the left wing: the signed angle is 2·atan2(x, w).
       return Array.from(
         { length: t.times.length },
-        (_, k) => (2 * Math.atan2(t.values[k * 4] ?? 0, t.values[k * 4 + 3] ?? 1) * 180) / Math.PI,
+        (_, k) => (2 * dmath.atan2(t.values[k * 4] ?? 0, t.values[k * 4 + 3] ?? 1) * 180) / Math.PI,
       );
     };
     const [root, tip] = [angle('wing_l_0'), angle('wing_l_1')];
@@ -190,7 +190,7 @@ describe('extra chains: the skin', () => {
     // The vertex nearest the left tip.
     let [v, d] = [0, Infinity];
     for (let i = 0; i < mesh.positions.length / 3; i++) {
-      const e = Math.hypot(
+      const e = dmath.hypot(
         (mesh.positions[i * 3] ?? 0) - tip[0],
         (mesh.positions[i * 3 + 1] ?? 0) - tip[1],
         (mesh.positions[i * 3 + 2] ?? 0) - tip[2],
@@ -210,7 +210,7 @@ describe('extra chains: the skin', () => {
       const P = skinPositions(mesh, poseJoints(sk, keyOf(flap.tracks, k)), ibm);
       reach = Math.max(
         reach,
-        Math.hypot(
+        dmath.hypot(
           (P[v * 3] ?? 0) - (mesh.positions[v * 3] ?? 0),
           (P[v * 3 + 1] ?? 0) - (mesh.positions[v * 3 + 1] ?? 0),
           (P[v * 3 + 2] ?? 0) - (mesh.positions[v * 3 + 2] ?? 0),

@@ -4,7 +4,7 @@
 // the twin stripes for the stripe paint slot. Left-half helpers are mirrored by `bothSides`.
 
 import type { Lod, Mesh, Vec3 } from '@developerz.ai/ts23d';
-import { lathe, loft, merge, prism, text } from '@developerz.ai/ts23d';
+import { dmath, lathe, loft, merge, prism, text } from '@developerz.ai/ts23d';
 import { X_COWL, X_DOOR_FRONT, X_DOOR_REAR, X_SCREEN_TOP, Z_SCREEN_TOP } from '../dims.ts';
 import { C } from '../lib/colors.ts';
 import {
@@ -101,7 +101,7 @@ function screenGrid(S: Surface, lod: Lod): { P: Vec3[][]; N: Vec3[][] } {
     const s = X_COWL + 0.006;
     const u = uAtY(S, s, Math.abs(y));
     const p = S.row(s)(u);
-    return [p[0] - 0.012 * (y / SCREEN_W) ** 2, y, p[2] + 0.004];
+    return [p[0] - 0.012 * dmath.pow(y / SCREEN_W, 2), y, p[2] + 0.004];
   };
   for (let i = 0; i <= ns; i++) {
     const t = i / ns;
@@ -117,7 +117,7 @@ function screenGrid(S: Surface, lod: Lod): { P: Vec3[][]; N: Vec3[][] } {
       ];
       const p = lerp3(b, top, t);
       // Bow: the glass bulges forward a little mid-height.
-      row.push([p[0] + 0.02 * Math.sin(Math.PI * t) * (1 - 0.5 * f * f), p[1], p[2]]);
+      row.push([p[0] + 0.02 * dmath.sin(Math.PI * t) * (1 - 0.5 * f * f), p[1], p[2]]);
     }
     P.push(row);
   }
@@ -293,7 +293,7 @@ export function mouth(S: Surface, lod: Lod): Mesh {
   for (let i = 0; i < gt.length; i++) {
     const a = gt[i] ?? [0, 0, 0];
     const b = gb[i] ?? a;
-    if (Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]) < 0.04) continue;
+    if (dmath.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]) < 0.04) continue;
     bl.push(add(lerp3(a, b, 0.55), [0.005, 0, 0]));
   }
   if (bl.length > 1) parts.push(tube(bl, 0.012, C.carbon, 'plastic', 6, 1, true));
@@ -314,11 +314,11 @@ export function mirror(S: Surface, lod: Lod): { paint: Mesh; trim: Mesh } {
     const out: Vec3[] = [];
     for (let i = 0; i < segs; i++) {
       const a = (i / segs) * Math.PI * 2;
-      const cx = Math.cos(a);
-      const sz = Math.sin(a);
+      const cx = dmath.cos(a);
+      const sz = dmath.sin(a);
       // Rounded nose forward, nearly flat back where the glass sits.
-      const x = cx >= 0 ? 0.058 * cx ** 0.85 : -0.028 * Math.abs(cx) ** 0.22;
-      const z = 0.047 * Math.sign(sz) * Math.abs(sz) ** 0.75;
+      const x = cx >= 0 ? 0.058 * dmath.pow(cx, 0.85) : -0.028 * dmath.pow(Math.abs(cx), 0.22);
+      const z = 0.047 * Math.sign(sz) * dmath.pow(Math.abs(sz), 0.75);
       out.push([H[0] + x * k, H[1] + y, H[2] + z * k - 0.004 * (y / half)]);
     }
     return out;
@@ -326,7 +326,7 @@ export function mirror(S: Surface, lod: Lod): { paint: Mesh; trim: Mesh } {
   const rings: Vec3[][] = [];
   for (let i = 0; i <= nr; i++) {
     const t = -1 + (2 * i) / nr;
-    rings.push(ring(t * half, Math.max(0.12, (1 - Math.abs(t) ** 4) ** 0.25)));
+    rings.push(ring(t * half, Math.max(0.12, dmath.pow(1 - dmath.pow(Math.abs(t), 4), 0.25))));
   }
   const paint = loft({ rings, color: C.paint, strip: 'plastic', capStart: true, capEnd: true });
   // Glass: a rounded rectangle on the back face.
@@ -334,12 +334,12 @@ export function mirror(S: Surface, lod: Lod): { paint: Mesh; trim: Mesh } {
     const out: Vec3[] = [];
     for (let i = 0; i < segs; i++) {
       const a = (i / segs) * Math.PI * 2;
-      const cy = Math.cos(a);
-      const sz = Math.sin(a);
+      const cy = dmath.cos(a);
+      const sz = dmath.sin(a);
       out.push([
         H[0] - 0.029 + dx,
-        H[1] + 0.088 * k * Math.sign(cy) * Math.abs(cy) ** 0.4,
-        H[2] + 0.034 * k * Math.sign(sz) * Math.abs(sz) ** 0.4,
+        H[1] + 0.088 * k * Math.sign(cy) * dmath.pow(Math.abs(cy), 0.4),
+        H[2] + 0.034 * k * Math.sign(sz) * dmath.pow(Math.abs(sz), 0.4),
       ]);
     }
     return out;

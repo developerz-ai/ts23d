@@ -9,6 +9,7 @@ import {
   applyAffine,
   box,
   cylinder,
+  dmath,
   frame,
   type Lod,
   lathe,
@@ -48,8 +49,8 @@ import {
 
 export const PITCH = (26 * Math.PI) / 180;
 export const OVERHANG = 0.6;
-const SLOPE_W = (HALF_Y + OVERHANG) / Math.cos(PITCH);
-export const RIDGE = EAVES + HALF_Y * Math.tan(PITCH);
+const SLOPE_W = (HALF_Y + OVERHANG) / dmath.cos(PITCH);
+export const RIDGE = EAVES + HALF_Y * dmath.tan(PITCH);
 const STRIPS = 5;
 /** Sarking deck under the slates; slate courses (exposed length, slate size, thickness). */
 const DECK = 0.1;
@@ -79,8 +80,8 @@ interface Plane {
 const plane = (o: Vec3, s: 1 | -1, p: number, ul: number, vl: number): Plane => ({
   o,
   u: [1, 0, 0],
-  d: [0, s * Math.cos(p), -Math.sin(p)],
-  n: [0, s * Math.sin(p), Math.cos(p)],
+  d: [0, s * dmath.cos(p), -dmath.sin(p)],
+  n: [0, s * dmath.sin(p), dmath.cos(p)],
   ul,
   vl,
 });
@@ -88,8 +89,8 @@ const plane = (o: Vec3, s: 1 | -1, p: number, ul: number, vl: number): Plane => 
 /** A local box (`size`, centred on the origin) carried to (u, v, w) on plane `pl`, tilted `tilt`
  *  about the u axis (its down-slope end rises). */
 function onPlane(pl: Plane, m: Mesh, u: number, v: number, w: number, tilt = 0): Mesh {
-  const c = Math.cos(tilt);
-  const s = Math.sin(tilt);
+  const c = dmath.cos(tilt);
+  const s = dmath.sin(tilt);
   const d = add(scale(pl.d, c), pl.n, s);
   const n = add(scale(pl.n, c), pl.d, -s);
   const at = add(add(add(pl.o, pl.u, u), pl.d, v), pl.n, w);
@@ -160,7 +161,7 @@ function slates(lod: Lod, pl: Plane, rng: Rng, o: SlateOptions = {}): Mesh[] {
     const v1 = pl.vl - k * SLATE.exposed;
     const v0 = Math.max(0, v1 - L);
     const len = v1 - v0;
-    const tl = Math.asin(Math.min(0.2, (SLATE.t + 0.006) / Math.max(len, 0.2)));
+    const tl = dmath.asin(Math.min(0.2, (SLATE.t + 0.006) / Math.max(len, 0.2)));
     const w = SLATE.t / 2 - 0.003 + DECK;
     if (lod === 1) {
       const kk = slateTone(rng, v1, pl.vl, k === 0);
@@ -292,7 +293,7 @@ export function roofSlopes(
 /** The ridge roll capping both slopes (team, a shade darker). */
 export function ridgeRoll(lod: Lod): Mesh {
   const x = HALF_X + OVERHANG + 0.05;
-  const z = RIDGE + DECK / Math.cos(PITCH) + 0.02;
+  const z = RIDGE + DECK / dmath.cos(PITCH) + 0.02;
   return tube(lod, [-x, 0, z], [x, 0, z], 0.15, 0.15, teamShade(0.66));
 }
 
@@ -354,8 +355,8 @@ export function gables(lod: Lod): { walls: Mesh; frame: Mesh | null; oculus: Mes
     const beams: Mesh[] = [];
     // Beams stand 6 cm proud of the plaster and sink 6 cm into it: face contact.
     const beam = (x: number, a: Vec3, b: Vec3): Mesh => {
-      const len = Math.hypot(b[1] - a[1], b[2] - a[2]);
-      const roll = Math.atan2(b[2] - a[2], b[1] - a[1]);
+      const len = dmath.hypot(b[1] - a[1], b[2] - a[2]);
+      const roll = dmath.atan2(b[2] - a[2], b[1] - a[1]);
       const m = box({
         size: [0.12, len, 0.26],
         at: [0, 0, -0.13],
@@ -421,7 +422,7 @@ function crown(lod: Lod, at: Vec3, r: number, height: number, kind: Crown, rng: 
     const a = (i / n) * Math.PI * 2;
     // Broken: sheared on a slant, tallest on one side and stepping down to nothing on the other,
     // a block or two missing from each step; laying: one course part-way round.
-    const slant = 0.5 + 0.5 * Math.cos(a - phase);
+    const slant = 0.5 + 0.5 * dmath.cos(a - phase);
     const rows =
       kind === 'laying'
         ? i < n * 0.6
@@ -449,7 +450,11 @@ function crown(lod: Lod, at: Vec3, r: number, height: number, kind: Crown, rng: 
       );
       out.push(
         place(b, {
-          at: [at[0] + Math.cos(ak) * mid, at[1] + Math.sin(ak) * mid, height + k * COURSE - 0.01],
+          at: [
+            at[0] + dmath.cos(ak) * mid,
+            at[1] + dmath.sin(ak) * mid,
+            height + k * COURSE - 0.01,
+          ],
           yaw: ak + (loose ? rng.range(-0.25, 0.25) : 0),
           roll: loose ? rng.range(-0.04, 0.04) : 0,
         }),
@@ -473,14 +478,14 @@ function farCrown(at: Vec3, r: number, height: number, rng: Rng): Mesh[] {
         strip: 'concrete',
         omit: ['bottom'],
       }),
-      { at: [at[0] + Math.cos(a) * mid, at[1] + Math.sin(a) * mid, height - 0.01], yaw: a },
+      { at: [at[0] + dmath.cos(a) * mid, at[1] + dmath.sin(a) * mid, height - 0.01], yaw: a },
     );
   });
 }
 
 /** An outward-facing feature on the drum at angle `a`: a local box (x out of the wall). */
 const onDrum = (m: Mesh, at: Vec3, r: number, a: number, z: number): Mesh =>
-  place(m, { at: [at[0] + Math.cos(a) * r, at[1] + Math.sin(a) * r, z], yaw: a });
+  place(m, { at: [at[0] + dmath.cos(a) * r, at[1] + dmath.sin(a) * r, z], yaw: a });
 
 /** Arrow slits and the door (up two steps) on a finished drum, facing outward. */
 function drumDetail(lod: Lod, at: Vec3, s: 1 | -1, height: number): Mesh[] {
@@ -653,7 +658,7 @@ const PORCH = {
   eave: PLINTH + DOOR_ROWS * COURSE,
   pitch: (30 * Math.PI) / 180,
 } as const;
-const PORCH_RIDGE = PORCH.eave + PORCH.post * Math.tan(PORCH.pitch);
+const PORCH_RIDGE = PORCH.eave + PORCH.post * dmath.tan(PORCH.pitch);
 
 /** The porch's oak posts, tie beam and plastered pediment (complete stage). */
 export function porch(lod: Lod): Mesh {
@@ -711,7 +716,7 @@ export function porch(lod: Lod): Mesh {
 /** The porch roof (team): two slate slopes, a ridge roll, the chevron on the pediment. */
 export function porchRoof(lod: Lod, damaged: boolean, rng: Rng): Mesh {
   const ul = PORCH.front - PORCH.back + 0.25;
-  const vl = (PORCH.post + 0.45) / Math.cos(PORCH.pitch);
+  const vl = (PORCH.post + 0.45) / dmath.cos(PORCH.pitch);
   const out: Mesh[] = [];
   for (const s of [1, -1] as const) {
     const pl = plane([PORCH.back, 0, PORCH_RIDGE], s, PORCH.pitch, ul, vl);
@@ -721,7 +726,7 @@ export function porchRoof(lod: Lod, damaged: boolean, rng: Rng): Mesh {
       out.push(...slates(lod, pl, rng, { loss: damaged && s === 1 ? 0.3 : 0 }));
     }
   }
-  const z = PORCH_RIDGE + DECK / Math.cos(PORCH.pitch) + 0.02;
+  const z = PORCH_RIDGE + DECK / dmath.cos(PORCH.pitch) + 0.02;
   out.push(tube(lod, [PORCH.back, 0, z], [PORCH.front + 0.25, 0, z], 0.1, 0.1, teamShade(0.66)));
   out.push(
     place(chevronPlan([0, 0, 0], 0.7, 1.2, 0.3, 0.04, TEAM), {

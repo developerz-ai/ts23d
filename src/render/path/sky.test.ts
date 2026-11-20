@@ -2,6 +2,7 @@
 // sun disc carries the requested irradiance, and the sky is brighter at the horizon than overhead.
 
 import { describe, expect, it } from 'bun:test';
+import { dmath } from '../../core/index.ts';
 import { inDisc, makeSky, sampleSky, sampleSun, skyAt, skyPdf, sunPdf } from './sky.ts';
 
 const sky = makeSky({ sun: [0.5, -0.3, Math.sqrt(1 - 0.34)], sunColor: [3, 2.8, 2.6] });
@@ -25,7 +26,7 @@ describe('studio sky', () => {
   it('sky samples carry the pdf of where they land, on the unit sphere', () => {
     for (let i = 0; i < 200; i++) {
       const p = sampleSky(sky, (i + 0.5) / 200, (i * 0.618) % 1, d);
-      expect(Math.hypot(d[0] ?? 0, d[1] ?? 0, d[2] ?? 0)).toBeCloseTo(1, 9);
+      expect(dmath.hypot(d[0] ?? 0, d[1] ?? 0, d[2] ?? 0)).toBeCloseTo(1, 9);
       expect(p).toBeCloseTo(skyPdf(sky, d[2] ?? 0), 9);
     }
   });

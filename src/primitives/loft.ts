@@ -5,7 +5,7 @@
 // metres around each ring, V along; 'swap' one unscaled wrap (U around 0–1, V along 0–1).
 // Triangles = 2·N·(R−1) + N per cap (N vertices per ring, R rings).
 
-import { type Mesh, MeshBuilder, Ts23dError, type Vec3 } from '../core/index.ts';
+import { dmath, type Mesh, MeshBuilder, Ts23dError, type Vec3 } from '../core/index.ts';
 import { mappedOnto, type StripId, stripRect } from '../material/index.ts';
 
 export type LoftColor = Vec3 | ((ring: readonly Vec3[], i: number, p: Vec3) => Vec3);
@@ -33,7 +33,7 @@ export function ringXY(
   for (let k = 0; k < segments; k++) {
     const a = phase + (k / segments) * Math.PI * 2;
     const w = wobble ? wobble(a) : 1;
-    out.push([centre[0] + rx * Math.cos(a) * w, centre[1] + ry * Math.sin(a) * w, centre[2]]);
+    out.push([centre[0] + rx * dmath.cos(a) * w, centre[1] + ry * dmath.sin(a) * w, centre[2]]);
   }
   return out;
 }
@@ -57,7 +57,7 @@ const centroid = (r: readonly Vec3[]): Vec3 => {
 const area2 = (a: Vec3, b: Vec3, c: Vec3): number => {
   const u = [b[0] - a[0], b[1] - a[1], b[2] - a[2]] as const;
   const v = [c[0] - a[0], c[1] - a[1], c[2] - a[2]] as const;
-  return Math.hypot(
+  return dmath.hypot(
     u[1] * v[2] - u[2] * v[1],
     u[2] * v[0] - u[0] * v[2],
     u[0] * v[1] - u[1] * v[0],
@@ -83,7 +83,7 @@ export function loft(o: LoftOptions): Mesh {
   for (let i = 1; i < R; i++) {
     const a = cents[i - 1] ?? [0, 0, 0];
     const b = cents[i] ?? a;
-    along.push((along[i - 1] ?? 0) + Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]));
+    along.push((along[i - 1] ?? 0) + dmath.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]));
   }
   const total = along[R - 1] || 1;
   // Raw normals (around × along); the sign of their sum against "outward from the centroid"
@@ -108,7 +108,8 @@ export function loft(o: LoftOptions): Mesh {
         tu[2] * tv[0] - tu[0] * tv[2],
         tu[0] * tv[1] - tu[1] * tv[0],
       ];
-      if (Math.hypot(n[0], n[1], n[2]) < 1e-12) n = i === 0 ? [-axis[0], -axis[1], -axis[2]] : axis;
+      if (dmath.hypot(n[0], n[1], n[2]) < 1e-12)
+        n = i === 0 ? [-axis[0], -axis[1], -axis[2]] : axis;
       facing += n[0] * (p[0] - c[0]) + n[1] * (p[1] - c[1]) + n[2] * (p[2] - c[2]);
       raw.push(n);
     }
@@ -127,10 +128,10 @@ export function loft(o: LoftOptions): Mesh {
       const p = at(i, k);
       if (k > 0) {
         const q = at(i, k - 1);
-        around += Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2]);
+        around += dmath.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2]);
       }
       const n = raw[i * N + (k % N)] ?? [0, 0, 1];
-      const l = (Math.hypot(n[0], n[1], n[2]) || 1) * flip;
+      const l = (dmath.hypot(n[0], n[1], n[2]) || 1) * flip;
       const s = (along[i] ?? 0) / rect.metres;
       const uv: [number, number] =
         mode === 'row'
@@ -169,7 +170,7 @@ export function loft(o: LoftOptions): Mesh {
     const c = cents[i] ?? [0, 0, 0];
     const other = cents[i === 0 ? 1 : R - 2] ?? c;
     const d: Vec3 = [c[0] - other[0], c[1] - other[1], c[2] - other[2]];
-    const l = Math.hypot(d[0], d[1], d[2]) || 1;
+    const l = dmath.hypot(d[0], d[1], d[2]) || 1;
     const nn: Vec3 = [d[0] / l, d[1] / l, d[2] / l];
     const mid = b.vertex({ p: c, n: nn, uv: [rect.u0, rect.v0], color: color(i, c) });
     for (let k = 0; k < N; k++) {

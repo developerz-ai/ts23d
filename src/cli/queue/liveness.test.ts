@@ -39,7 +39,7 @@ test('a zombie, a dead pid and a reused pid are not alive; the very process is',
 
 test('without /proc only the pid can be asked: this process is alive, a free pid is not', async () => {
   const none = join(tmpdir(), 't3d-no-such-proc');
-  expect(await procAlive({ pid: 2 ** 22 + 1 }, none)).toBe(false);
+  expect(await procAlive({ pid: 4194304 /* 2^22 */ + 1 }, none)).toBe(false);
   expect(await procAlive({ pid: process.pid }, none)).toBe(true);
   expect(await procOf(process.pid, none)).toEqual({ pid: process.pid });
 });

@@ -6,6 +6,7 @@
 // its wall plus the way out, so the field stays continuous for smooth unions. Deterministic.
 
 import type { Field, Mesh, Vec3 } from '@developerz.ai/ts23d';
+import { dmath } from '@developerz.ai/ts23d';
 import { band, propagate } from './mesh-distance.ts';
 import { fillVoids, insideVotes } from './mesh-inside.ts';
 
@@ -54,7 +55,8 @@ export function exactField(
       const x = origin[0] + (at % nx) * cell - p.at[0];
       const y = origin[1] + (Math.floor(at / nx) % ny) * cell - p.at[1];
       const z = origin[2] + Math.floor(at / (nx * ny)) * cell - p.at[2];
-      if ((x / p.r[0]) ** 2 + (y / p.r[1]) ** 2 + (z / p.r[2]) ** 2 <= 1) votes[at] = 1;
+      if (dmath.pow(x / p.r[0], 2) + dmath.pow(y / p.r[1], 2) + dmath.pow(z / p.r[2], 2) <= 1)
+        votes[at] = 1;
     }
   let tris = all;
   if (o.fillVoids && !o.box) {
@@ -62,7 +64,7 @@ export function exactField(
     tris = all.filter((t) => separates(P, T, t, votes, g));
   }
   const { val, tri } = band(P, T, tris, g, reach);
-  propagate(val, tri, g, P, T, Math.hypot(nx, ny, nz) * cell);
+  propagate(val, tri, g, P, T, dmath.hypot(nx, ny, nz) * cell);
   for (let at = 0; at < val.length; at++) val[at] = votes[at] ? -(val[at] ?? 0) : (val[at] ?? 0);
   // One [1 2 1] pass per axis: trilinear kinks between nodes read as curvature noise in the
   // skin painter's cavity and ridge tones; the blur moves the surface by a fraction of a cell.
@@ -89,7 +91,7 @@ export function exactField(
     const fx = (p[0] - origin[0]) / cell;
     const fy = (p[1] - origin[1]) / cell;
     const fz = (p[2] - origin[2]) / cell;
-    const out = Math.hypot(
+    const out = dmath.hypot(
       Math.max(0, -fx, fx - (nx - 1)),
       Math.max(0, -fy, fy - (ny - 1)),
       Math.max(0, -fz, fz - (nz - 1)),
@@ -128,7 +130,7 @@ function separates(
     (e1[2] ?? 0) * (e2[0] ?? 0) - (e1[0] ?? 0) * (e2[2] ?? 0),
     (e1[0] ?? 0) * (e2[1] ?? 0) - (e1[1] ?? 0) * (e2[0] ?? 0),
   ];
-  const len = Math.hypot(nrm[0] ?? 0, nrm[1] ?? 0, nrm[2] ?? 0) || 1;
+  const len = dmath.hypot(nrm[0] ?? 0, nrm[1] ?? 0, nrm[2] ?? 0) || 1;
   const side = (s: number): number => {
     const ijk = [0, 1, 2].map((k) =>
       Math.round(

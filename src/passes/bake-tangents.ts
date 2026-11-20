@@ -5,6 +5,7 @@
 // this frame and the exporter writes these tangents, so the map and the mesh always agree.
 
 import type { Mesh } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 
 /** VEC4 per vertex (xyz unit tangent, w = ±1). */
 export function uvTangents(m: Mesh): Float32Array {
@@ -39,11 +40,11 @@ export function uvTangents(m: Mesh): Float32Array {
     let T = [t[i * 3] ?? 0, t[i * 3 + 1] ?? 0, t[i * 3 + 2] ?? 0];
     const d = (N[0] ?? 0) * (T[0] ?? 0) + (N[1] ?? 0) * (T[1] ?? 0) + (N[2] ?? 0) * (T[2] ?? 0);
     T = T.map((v, k) => v - (N[k] ?? 0) * d);
-    let l = Math.hypot(T[0] ?? 0, T[1] ?? 0, T[2] ?? 0);
+    let l = dmath.hypot(T[0] ?? 0, T[1] ?? 0, T[2] ?? 0);
     if (l < 1e-12) {
       // No usable UV gradient: any vector perpendicular to N.
       T = Math.abs(N[0] ?? 0) < 0.9 ? [0, -(N[2] ?? 0), N[1] ?? 0] : [N[2] ?? 0, 0, -(N[0] ?? 0)];
-      l = Math.hypot(T[0] ?? 0, T[1] ?? 0, T[2] ?? 0) || 1;
+      l = dmath.hypot(T[0] ?? 0, T[1] ?? 0, T[2] ?? 0) || 1;
     }
     T = T.map((v) => v / l);
     const c: [number, number, number] = [

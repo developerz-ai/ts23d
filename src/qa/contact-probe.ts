@@ -5,6 +5,7 @@
 // fewer triangles per ray. Built lazily, cached per shell mesh.
 
 import type { Mesh, Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import type { Shell } from './connections-shells.ts';
 import { TriangleBvh } from './contact-bvh.ts';
 import { SolidIndex } from './inside.ts';
@@ -101,7 +102,7 @@ export class Probe {
     const b = s.bounds;
     const f = scaleFor(
       s.mesh,
-      Math.hypot(b.max[0] - b.min[0], b.max[1] - b.min[1], b.max[2] - b.min[2]),
+      dmath.hypot(b.max[0] - b.min[0], b.max[1] - b.min[1], b.max[2] - b.min[2]),
     );
     const m: Mesh = f === 1 ? s.mesh : { ...s.mesh, positions: s.mesh.positions.map((v) => v * f) };
     this.solidCache = { f, index: new SolidIndex(m) };
@@ -154,7 +155,7 @@ export class Probe {
       return this.dist(a, r) - this.dist(b, r);
     });
     const [x, y, z] = [g[0] ?? 0, g[1] ?? 0, g[2] ?? 0];
-    const len = Math.hypot(x, y, z);
+    const len = dmath.hypot(x, y, z);
     return Number.isFinite(len) && len > 1e-9 ? [x / len, y / len, z / len] : null;
   }
 }

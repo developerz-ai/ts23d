@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { type Mesh, triangleCount, type Vec2 } from '../core/index.ts';
+import { dmath, type Mesh, triangleCount, type Vec2 } from '../core/index.ts';
 import { stripRect } from '../material/index.ts';
 import { openEdges, windingFlips, zeroArea } from './closed.ts';
 import { lathe } from './lathe.ts';
@@ -145,7 +145,7 @@ describe('lathe degenerate profiles', () => {
   it('a radius that is 0 up to rounding (sin π) is a pole, not a ring of slivers', () => {
     const pouf: Vec2[] = Array.from({ length: 7 }, (_, i) => {
       const a = (Math.PI * i) / 6;
-      return [0.19 * Math.sin(a) ** 0.6, 0.075 - 0.075 * Math.cos(a)] as Vec2;
+      return [0.19 * dmath.pow(dmath.sin(a), 0.6), 0.075 - 0.075 * dmath.cos(a)] as Vec2;
     });
     for (const faceted of [false, true]) {
       const m = lathe({ profile: pouf, segments: 12, color: [1, 1, 1], faceted });

@@ -17,6 +17,7 @@
 
 import {
   type Bone,
+  dmath,
   type ExtraChain,
   type ExtraFit,
   type JointLimit,
@@ -86,7 +87,7 @@ export interface Wing {
 }
 
 const sub = (a: Vec3, b: Vec3): Vec3 => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
-const len = (a: Vec3): number => Math.hypot(a[0], a[1], a[2]);
+const len = (a: Vec3): number => dmath.hypot(a[0], a[1], a[2]);
 const ramp = (a: number, b: number, x: number): number => {
   const t = Math.max(0, Math.min(1, (x - a) / (b - a)));
   return t * t * (3 - 2 * t);
@@ -97,7 +98,8 @@ const toSegment = (p: Vec3, a: Vec3, b: Vec3): number => {
     0,
     Math.min(
       1,
-      ((p[0] - a[0]) * ab[0] + (p[1] - a[1]) * ab[1] + (p[2] - a[2]) * ab[2]) / (len(ab) ** 2 || 1),
+      ((p[0] - a[0]) * ab[0] + (p[1] - a[1]) * ab[1] + (p[2] - a[2]) * ab[2]) /
+        (dmath.pow(len(ab), 2) || 1),
     ),
   );
   return len(sub(p, [a[0] + ab[0] * t, a[1] + ab[1] * t, a[2] + ab[2] * t]));
@@ -168,8 +170,8 @@ export function findWings(fit: ExtraFit): readonly Wing[] {
       const [y, z] = [(p[1] - root[1]) * k, (p[2] - root[2]) * k];
       return [
         root[0] + (p[0] - root[0]) * k,
-        root[1] + y * Math.cos(turn) - z * Math.sin(turn),
-        root[2] + y * Math.sin(turn) + z * Math.cos(turn),
+        root[1] + y * dmath.cos(turn) - z * dmath.sin(turn),
+        root[2] + y * dmath.sin(turn) + z * dmath.cos(turn),
       ];
     };
     return { side, root, joints: [scaled(shoulder), scaled(wrist), scaled(finger), scaled(tip)] };

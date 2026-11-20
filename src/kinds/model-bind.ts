@@ -8,7 +8,7 @@
 // The weights are then relaxed over the surface (vertices welded by position, so a UV seam never
 // opens) and cut back to 4 influences in 255ths.
 
-import { type Bone, type Mesh, SKIN_INFLUENCES, type Vec3 } from '../core/index.ts';
+import { type Bone, dmath, type Mesh, SKIN_INFLUENCES, type Vec3 } from '../core/index.ts';
 import { capsuleDistance, heatWeights, weightBonesOf } from '../passes/index.ts';
 import { MID, midTriples, splitMid } from './creature-helpers.ts';
 import type { LegTrace } from './model-legs.ts';
@@ -38,7 +38,7 @@ function separateLimbs(
     for (const [stem, t] of Object.entries(legs)) {
       if (p[2] >= t.top) continue;
       const s = t.line.reduce((q, l) => (Math.abs(l[0] - p[2]) < Math.abs(q[0] - p[2]) ? l : q));
-      const e = Math.hypot(p[0] - s[1], p[1] - s[2]);
+      const e = dmath.hypot(p[0] - s[1], p[1] - s[2]);
       if (e < d) [best, d] = [stem, e];
     }
     return best;

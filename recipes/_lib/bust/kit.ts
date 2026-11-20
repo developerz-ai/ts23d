@@ -5,6 +5,7 @@
 // Z up, +X front. Pure functions of their arguments, so the sculpt stays deterministic.
 
 import type { Field, SculptEdit, Vec3 } from '@developerz.ai/ts23d';
+import { dmath } from '@developerz.ai/ts23d';
 
 export type V = Vec3;
 
@@ -16,7 +17,7 @@ export const lerp = (a: V, b: V, t: number): V => [
   a[1] + (b[1] - a[1]) * t,
   a[2] + (b[2] - a[2]) * t,
 ];
-export const len = (a: V): number => Math.hypot(a[0], a[1], a[2]);
+export const len = (a: V): number => dmath.hypot(a[0], a[1], a[2]);
 export const norm = (a: V): V => mul(a, 1 / (len(a) || 1));
 export const dot = (a: V, b: V): number => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
 export const cross = (a: V, b: V): V => [
@@ -111,7 +112,7 @@ export function chain(
     const big = ra >= rb ? a : b;
     const rr = Math.max(ra, rb);
     const f: Field = degenerate
-      ? (p) => Math.hypot(p[0] - big[0], p[1] - big[1], p[2] - big[2]) - rr
+      ? (p) => dmath.hypot(p[0] - big[0], p[1] - big[1], p[2] - big[2]) - rr
       : roundConeField(a, b, ra, rb);
     const c = mul(add(a, b), 0.5);
     segs.push({ f, c, R: len(sub(b, a)) / 2 + rr });
@@ -136,9 +137,9 @@ export function chain(
   const field: Field = (p) => {
     let best = Number.POSITIVE_INFINITY;
     for (const ch of chunks) {
-      if (Math.hypot(p[0] - ch.c[0], p[1] - ch.c[1], p[2] - ch.c[2]) - ch.R >= best) continue;
+      if (dmath.hypot(p[0] - ch.c[0], p[1] - ch.c[1], p[2] - ch.c[2]) - ch.R >= best) continue;
       for (const s of ch.s) {
-        const dc = Math.hypot(p[0] - s.c[0], p[1] - s.c[1], p[2] - s.c[2]) - s.R;
+        const dc = dmath.hypot(p[0] - s.c[0], p[1] - s.c[1], p[2] - s.c[2]) - s.R;
         if (dc >= best) continue;
         const d = s.f(p);
         if (d < best) best = d;
@@ -163,7 +164,7 @@ export function pathLength(pts: readonly V[]): number {
   for (let i = 1; i < pts.length; i++) {
     const a = pts[i - 1];
     const b = pts[i];
-    if (a && b) s += Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]);
+    if (a && b) s += dmath.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]);
   }
   return s;
 }
@@ -195,7 +196,7 @@ export function spline(ctrl: readonly V[], n: number): V[] {
 export function taper(n: number, r0: number, r1: number, belly = 0): number[] {
   return Array.from({ length: n }, (_, i) => {
     const t = i / Math.max(n - 1, 1);
-    return r0 + (r1 - r0) * t + belly * Math.sin(Math.PI * t);
+    return r0 + (r1 - r0) * t + belly * dmath.sin(Math.PI * t);
   });
 }
 
@@ -209,7 +210,7 @@ export function crease(
   const tip = o.tips ?? 0.35;
   const radii = Array.from({ length: n }, (_, i) => {
     const t = i / (n - 1);
-    return r * (tip + (1 - tip) * Math.sin(Math.PI * t));
+    return r * (tip + (1 - tip) * dmath.sin(Math.PI * t));
   });
   const { n: _n, tips: _t, ...brush } = o;
   return chain(spline(ctrl, n), radii, { op: 'subtract', blend: r * 0.8, ...brush });
@@ -225,7 +226,7 @@ export function clay(
   const tip = o.tips ?? 0.3;
   const radii = Array.from({ length: n }, (_, i) => {
     const t = i / (n - 1);
-    return r * (tip + (1 - tip) * Math.sin(Math.PI * t));
+    return r * (tip + (1 - tip) * dmath.sin(Math.PI * t));
   });
   const { n: _n, tips: _t, ...brush } = o;
   return chain(spline(ctrl, n), radii, { blend: r * 1.2, ...brush });
@@ -280,8 +281,8 @@ export const rbox = (
 /** `rotate` (deg, X→Y→Z) taking local +Z (a cone's axis) onto direction `d`. */
 export function alongZ(d: V): V {
   const u = norm(d);
-  const tilt = Math.acos(Math.max(-1, Math.min(1, u[2])));
-  return [0, (tilt * 180) / Math.PI, (Math.atan2(u[1], u[0]) * 180) / Math.PI];
+  const tilt = dmath.acos(Math.max(-1, Math.min(1, u[2])));
+  return [0, (tilt * 180) / Math.PI, (dmath.atan2(u[1], u[0]) * 180) / Math.PI];
 }
 
 /** A local frame: origin + orthonormal axes (u, v, w), built from a main axis and a hint. */
@@ -357,8 +358,10 @@ export const k = {
       const x = u - cu;
       const y = v - cv;
       const z = w - cw;
-      const k0 = Math.sqrt((x / ru) ** 2 + (y / rv) ** 2 + (z / rw) ** 2);
-      const k1 = Math.sqrt((x / (ru * ru)) ** 2 + (y / (rv * rv)) ** 2 + (z / (rw * rw)) ** 2);
+      const k0 = Math.sqrt(dmath.pow(x / ru, 2) + dmath.pow(y / rv, 2) + dmath.pow(z / rw, 2));
+      const k1 = Math.sqrt(
+        dmath.pow(x / (ru * ru), 2) + dmath.pow(y / (rv * rv), 2) + dmath.pow(z / (rw * rw), 2),
+      );
       return k1 === 0 ? -Math.min(ru, rv, rw) : (k0 * (k0 - 1)) / k1;
     },
   roundCone(a: V, b: V, ra: number, rb: number) {

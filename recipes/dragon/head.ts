@@ -11,6 +11,7 @@
 // Horns, teeth and eyes are their own modules (finer meshes).
 
 import {
+  dmath,
   type Field,
   type Mesh,
   merge,
@@ -302,7 +303,7 @@ export const SOCKET_AXIS: Vec3 = v3.norm([0.35, 0.92, 0.12]);
 const socketRegion = (grow: number, side: 1 | -1): Field => {
   const c: Vec3 = [E[0], E[1] * side, E[2]];
   const r = 0.088 + grow;
-  return (p) => Math.hypot(p[0] - c[0], p[1] - c[1], p[2] - c[2]) - r;
+  return (p) => dmath.hypot(p[0] - c[0], p[1] - c[1], p[2] - c[2]) - r;
 };
 const socketBox = (side: 1 | -1): [Vec3, Vec3] => [
   [E[0] - 0.16, E[1] * side - 0.16, E[2] - 0.16],

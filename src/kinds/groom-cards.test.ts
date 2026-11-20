@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { createRng, type Mesh, MeshBuilder, type Vec3 } from '../core/index.ts';
+import { createRng, dmath, type Mesh, MeshBuilder, type Vec3 } from '../core/index.ts';
 import { strandCells } from '../material/index.ts';
 import { writeMeshGlb } from '../neural/index.ts';
 import { groomCards } from './groom-cards.ts';
@@ -7,7 +7,7 @@ import { reframe } from './groom-guides.ts';
 
 // A 10 cm ball head; cards are 2-column strips from a buried root going up and back (ts23d frame).
 const R = 0.1;
-const ball = (p: Vec3): number => Math.hypot(...p) - R;
+const ball = (p: Vec3): number => dmath.norm(p) - R;
 
 function card(b: MeshBuilder, root: Vec3, dir: Vec3, len: number, rows = 5): void {
   const side: Vec3 = [0, 0.005, 0];

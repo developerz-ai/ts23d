@@ -9,6 +9,7 @@ import {
   type CreatureSpec,
   creaturePlan,
   defineMaterial,
+  dmath,
   FAMILY_PRESETS,
   familyMember,
   hex,
@@ -141,7 +142,7 @@ export const BEAR_WILD: Wild = {
     const l = info.head;
     const muzzle = l.L - l.lc;
     const h = info.bones.head;
-    const [c, s] = [Math.cos(h.pitch), Math.sin(h.pitch)];
+    const [c, s] = [dmath.cos(h.pitch), dmath.sin(h.pitch)];
     const onHead = (p: readonly [number, number, number]): [number, number, number] => [
       h.atlas[0] + c * p[0] + s * p[2],
       h.atlas[1] + p[1],
@@ -210,7 +211,7 @@ export const BEAR_WILD: Wild = {
     const col = BEAR.colours;
     const [back, belly, legs] = [col.back ?? col.coat, col.belly ?? col.coat, col.legs ?? col.coat];
     const h = info.bones.head;
-    const [cs, sn] = [Math.cos(h.pitch), Math.sin(h.pitch)];
+    const [cs, sn] = [dmath.cos(h.pitch), dmath.sin(h.pitch)];
     const lc = info.head.lc;
     return ({ p, n, c, lod, part }) => {
       if (part === 'head' || part === 'jaw' || part === 'head_fur') {

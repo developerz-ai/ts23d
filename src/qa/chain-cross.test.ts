@@ -6,6 +6,7 @@ import {
   type Clip,
   compile,
   defineAsset,
+  dmath,
   type Mesh,
   translate,
   type Vec3,
@@ -63,7 +64,7 @@ function heavySkin(n: number) {
   const joints = new Uint16Array(n * 4);
   const weights = new Float32Array(n * 4);
   for (let v = 0; v < n; v++) {
-    positions.set([0.4 + (0.2 * v) / n, 0.03 * Math.cos(v), 1 + 0.03 * Math.sin(v)], v * 3);
+    positions.set([0.4 + (0.2 * v) / n, 0.03 * dmath.cos(v), 1 + 0.03 * dmath.sin(v)], v * 3);
     joints[v * 4] = bone;
     weights[v * 4] = 1;
   }
@@ -159,6 +160,6 @@ describe('chain-cross', () => {
       [3, 0, 0.4],
       [5, 0, 0.4],
     ];
-    expect(segmentDistance(a, c)).toBeCloseTo(Math.hypot(2, 0.4), 9);
+    expect(segmentDistance(a, c)).toBeCloseTo(dmath.hypot(2, 0.4), 9);
   });
 });

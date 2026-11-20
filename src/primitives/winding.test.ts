@@ -2,7 +2,14 @@
 // engines cull by winding, so a reflected transform (lathe axis 'x'/'y' once) renders inside-out.
 
 import { describe, expect, it } from 'bun:test';
-import { type Mesh, MeshBuilder, triangleCount, type Vec2, type Vec3 } from '../core/index.ts';
+import {
+  dmath,
+  type Mesh,
+  MeshBuilder,
+  triangleCount,
+  type Vec2,
+  type Vec3,
+} from '../core/index.ts';
 import { beam } from './beam.ts';
 import { box } from './box.ts';
 import { cell } from './cell.ts';
@@ -44,7 +51,7 @@ function inwardAboutAxis(m: Mesh, axis: 0 | 1 | 2): number {
       k === axis ? 0 : ((a[k] ?? 0) + (b[k] ?? 0) + (c[k] ?? 0)) / 3,
     );
     const s = r.reduce((sum, x, k) => sum + x * (g[k] ?? 0), 0);
-    if (Math.hypot(...r) > 1e-6 && s <= 0) bad++;
+    if (dmath.norm(r) > 1e-6 && s <= 0) bad++;
   }
   return bad;
 }
@@ -158,7 +165,7 @@ describe('winding', () => {
         heightfield({
           rect: [0, 0, 4, 4],
           cells: [4, 4],
-          height: (x, y) => Math.sin(x) * y * 0.1,
+          height: (x, y) => dmath.sin(x) * y * 0.1,
           color: C,
         }),
       ],

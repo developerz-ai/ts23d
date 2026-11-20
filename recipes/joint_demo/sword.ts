@@ -7,6 +7,7 @@
 
 import {
   type BuildContext,
+  dmath,
   lathe,
   loft,
   type Mesh,
@@ -93,7 +94,7 @@ function facets(
       let nx = e[1] * l[2] - e[2] * l[1];
       let ny = e[2] * l[0] - e[0] * l[2];
       let nz = e[0] * l[1] - e[1] * l[0];
-      const len = Math.hypot(nx, ny, nz) || 1;
+      const len = dmath.hypot(nx, ny, nz) || 1;
       [nx, ny, nz] = [nx / len, ny / len, nz / len];
       tipN = [nx, ny, nz];
       const pair = [a, c].map((p, j) =>
@@ -146,7 +147,7 @@ function blade(ctx: BuildContext, base: Vec3, length: number, rng: Rng): Mesh {
       : [];
   const count = ctx.pick([8, 3, 3]);
   const ts = new Set<number>();
-  for (let i = 0; i <= count; i++) ts.add(Math.round((i / count) ** 0.9 * 1e4) / 1e4);
+  for (let i = 0; i <= count; i++) ts.add(Math.round(dmath.pow(i / count, 0.9) * 1e4) / 1e4);
   // The point's curve wants more stations than the straight taper.
   if (ctx.lod < 2) for (const t of [0.87, 0.91, 0.945, 0.97, 0.988]) ts.add(t);
   for (const n of nicks)
@@ -218,8 +219,8 @@ function blade(ctx: BuildContext, base: Vec3, length: number, rng: Rng): Mesh {
 const bar = (x: number, y: number, ry: number, rz: number, z: number, n: number): Vec3[] =>
   Array.from({ length: n }, (_, k): Vec3 => {
     const a = ((k + 0.5) / n) * Math.PI * 2;
-    const sq = (v: number): number => Math.sign(v) * Math.abs(v) ** 0.6;
-    return [x, y + ry * sq(Math.cos(a)), z + rz * sq(Math.sin(a))];
+    const sq = (v: number): number => Math.sign(v) * dmath.pow(Math.abs(v), 0.6);
+    return [x, y + ry * sq(dmath.cos(a)), z + rz * sq(dmath.sin(a))];
   });
 
 export function sword(ctx: BuildContext, o: SwordOptions): void {
@@ -233,7 +234,7 @@ export function sword(ctx: BuildContext, o: SwordOptions): void {
   // barrel so the middle fills the palm. The hand's sweat darkens it; the ends are rubbed pale.
   const turns = ctx.pick([5, 0, 0]);
   const profile: [number, number][] = [[R * 0.6, -half]];
-  const barrel = (t: number): number => R * (0.9 + 0.1 * Math.sin(Math.PI * t));
+  const barrel = (t: number): number => R * (0.9 + 0.1 * dmath.sin(Math.PI * t));
   // (The far grip is the bare barrel: its end risers are a millimetre and a half.)
   const riser = ctx.lod === 2 ? 0 : 0.0016;
   if (riser) profile.push([barrel(0) + riser, -half], [barrel(0) + riser, -half + 0.006]);
@@ -258,7 +259,7 @@ export function sword(ctx: BuildContext, o: SwordOptions): void {
       (p) => {
         const d = Math.abs(p[2] - z) / half;
         // Sweat-dark where the fist holds it; the cord binding's turns stand paler, rubbed.
-        const cord = Math.max(0, Math.hypot(p[0] - x, p[1] - y) - barrel(0.5) - 0.0002) / 0.0016;
+        const cord = Math.max(0, dmath.hypot(p[0] - x, p[1] - y) - barrel(0.5) - 0.0002) / 0.0016;
         const held = mix(SWEAT, LEATHER, Math.min(1, d * d * 0.8));
         return mix(
           mix(held, RUBBED, Math.min(1, cord) * 0.45),

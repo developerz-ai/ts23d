@@ -15,6 +15,7 @@
 import {
   type BuildContext,
   defineAsset,
+  dmath,
   fbm,
   gradientNoise2,
   hex,
@@ -99,7 +100,10 @@ function build(ctx: BuildContext): void {
   const slope = (x: number, y: number): number => {
     const e = 12;
     return (
-      Math.hypot(t.height(x + e, y) - t.height(x - e, y), t.height(x, y + e) - t.height(x, y - e)) /
+      dmath.hypot(
+        t.height(x + e, y) - t.height(x - e, y),
+        t.height(x, y + e) - t.height(x, y - e),
+      ) /
       (2 * e)
     );
   };

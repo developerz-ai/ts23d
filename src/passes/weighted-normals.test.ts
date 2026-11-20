@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { type Mesh, MeshBuilder, type Vec3 } from '../core/index.ts';
+import { dmath, type Mesh, MeshBuilder, type Vec3 } from '../core/index.ts';
 import { weightedNormals } from './weighted-normals.ts';
 
 /** A cube with 8 shared vertices and (wrong) diagonal normals: the input a naive builder emits. */
@@ -28,8 +28,8 @@ function bevel(): Mesh {
   const b = new MeshBuilder();
   const n: Vec3 = [0, 0, 1];
   const v = (p: Vec3) => b.vertex({ p, n, uv: [0, 0], color: [1, 1, 1] });
-  const s = Math.sin(Math.PI / 6) * 0.05;
-  const c = Math.cos(Math.PI / 6) * 0.05;
+  const s = dmath.sin(Math.PI / 6) * 0.05;
+  const c = dmath.cos(Math.PI / 6) * 0.05;
   const [a0, a1, a2, a3] = [v([-1, 0, 0]), v([0, 0, 0]), v([0, 1, 0]), v([-1, 1, 0])];
   const [b2, b3] = [v([c, 1, -s]), v([c, 0, -s])];
   b.quad(a0, a1, a2, a3).quad(a1, b3, b2, a2);
@@ -59,7 +59,7 @@ describe('weightedNormals', () => {
     const m = weightedNormals(bevel());
     // Vertex at the shared edge (0,0,0): first output vertex created for corner a1.
     const n = at(m, 1);
-    expect(n[2]).toBeGreaterThan(Math.cos((3 * Math.PI) / 180));
+    expect(n[2]).toBeGreaterThan(dmath.cos((3 * Math.PI) / 180));
     expect(m.indices.length).toBe(12);
   });
 });

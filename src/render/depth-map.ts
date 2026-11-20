@@ -2,6 +2,7 @@
 // give ambient occlusion (and the soft contact shadow on the ground), and the silhouette masks the
 // review metrics compare. Stores, per texel, the highest dot(p, dir) — the surface nearest the light.
 
+import { dmath } from '../core/index.ts';
 import type { Scene } from './scene.ts';
 
 export interface DepthMap {
@@ -36,7 +37,7 @@ export function mapAxes(dir: readonly [number, number, number]): {
     up[2] * dir[0] - up[0] * dir[2],
     up[0] * dir[1] - up[1] * dir[0],
   ];
-  const l = Math.hypot(r[0], r[1], r[2]) || 1;
+  const l = dmath.hypot(r[0], r[1], r[2]) || 1;
   r = [r[0] / l, r[1] / l, r[2] / l];
   const u: [number, number, number] = [
     dir[1] * r[2] - dir[2] * r[1],

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { Ts23dError, type Vec2 } from '../core/index.ts';
+import { dmath, Ts23dError, type Vec2 } from '../core/index.ts';
 import { svgShape } from './svg-doc.ts';
 import { parsePath } from './svg-path.ts';
 
@@ -24,7 +24,7 @@ const toPolyline = (p: Vec2, pts: readonly Vec2[]): number => {
       0,
       Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / (dx * dx + dy * dy || 1)),
     );
-    best = Math.min(best, Math.hypot(p[0] - a[0] - dx * t, p[1] - a[1] - dy * t));
+    best = Math.min(best, dmath.hypot(p[0] - a[0] - dx * t, p[1] - a[1] - dy * t));
   }
   return best;
 };
@@ -98,14 +98,14 @@ describe('parsePath', () => {
     ] as const) {
       const pts = parsePath(`M0 50 A50 50 0 ${flags} 100 50`, 0.05)[0]?.points ?? [];
       for (const p of pts)
-        expect(Math.abs(Math.hypot(p[0] - 50, p[1] - 50) - 50)).toBeLessThan(1e-9);
+        expect(Math.abs(dmath.hypot(p[0] - 50, p[1] - 50) - 50)).toBeLessThan(1e-9);
       const mid = pts[Math.floor(pts.length / 2)] ?? [0, 0];
       expect(Math.sign(mid[1] - 50)).toBe(side);
       // Chord sagitta ≤ tol: consecutive points no further apart than 2 √(2 r tol).
       for (let i = 1; i < pts.length; i++) {
         const a = pts[i - 1] ?? [0, 0];
         const b = pts[i] ?? [0, 0];
-        expect(Math.hypot(b[0] - a[0], b[1] - a[1])).toBeLessThanOrEqual(
+        expect(dmath.hypot(b[0] - a[0], b[1] - a[1])).toBeLessThanOrEqual(
           2 * Math.sqrt(2 * 50 * 0.05) + 1e-9,
         );
       }

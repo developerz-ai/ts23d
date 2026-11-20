@@ -107,7 +107,7 @@
     {
       "label": "standing height, boot sole to cap crown (design brief)",
       "spec": 1.83,
-      "measured": 1.843000054359436,
+      "measured": 1.843,
       "source": "recipes/rts_faction/README.md (original design brief)"
     }
   ],

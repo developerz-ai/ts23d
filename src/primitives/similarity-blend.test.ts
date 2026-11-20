@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'bun:test';
 import type { Vec3 } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import { similarityToward } from './similarity-blend.ts';
 import {
   applySimilarity,
@@ -8,10 +9,10 @@ import {
   yawSimilarity,
 } from './similarity-fit.ts';
 
-const near = (a: Vec3, b: Vec3): number => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+const near = (a: Vec3, b: Vec3): number => dmath.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
 const tilt: Similarity = {
   s: 1,
-  r: [1, 0, 0, 0, Math.cos(0.4), -Math.sin(0.4), 0, Math.sin(0.4), Math.cos(0.4)],
+  r: [1, 0, 0, 0, dmath.cos(0.4), -dmath.sin(0.4), 0, dmath.sin(0.4), dmath.cos(0.4)],
   t: [0, 0, 0],
 };
 const m: Similarity = {

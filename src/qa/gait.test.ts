@@ -7,6 +7,7 @@ import {
   type CompiledAsset,
   compile,
   defineAsset,
+  dmath,
   translate,
 } from '../core/index.ts';
 import { box } from '../primitives/index.ts';
@@ -72,7 +73,7 @@ describe('gait', () => {
     const values = new Float32Array((n + 1) * 3);
     for (let i = 0; i <= n; i++) {
       values[i * 3] = i / n;
-      values[i * 3 + 2] = amp * (1 - Math.cos((2 * Math.PI * cycles * i) / n));
+      values[i * 3 + 2] = amp * (1 - dmath.cos((2 * Math.PI * cycles * i) / n));
     }
     const times = Float32Array.from({ length: n + 1 }, (_, i) => i / n);
     return {

@@ -3,6 +3,7 @@
 // `spikeRow` are presets of it. Shared by any creature (dragon, demon, ram, beetle…).
 
 import type { Mesh, SculptEdit, Vec3 } from '@developerz.ai/ts23d';
+import { dmath } from '@developerz.ai/ts23d';
 import { arc, mixRgb, smoothstep, v3 } from './curve.ts';
 import { tubeMesh } from './lowpoly.ts';
 import { type SkinNode, skin } from './skin.ts';
@@ -45,12 +46,12 @@ export interface HornOptions {
 /** Radius at arc fraction t. */
 export function hornRadius(o: HornOptions, t: number): number {
   const tip = o.tip ?? o.radius * 0.08;
-  const shape = (1 - t) ** (o.taper ?? 0.85);
+  const shape = dmath.pow(1 - t, o.taper ?? 0.85);
   const r = tip + (o.radius - tip) * shape;
   const rings = o.rings ?? 0;
   if (rings <= 0) return r;
   // Rings fade out toward the smooth tip, like real horn growth.
-  const ripple = Math.max(0, Math.sin(t * rings * Math.PI * 2)) ** 2;
+  const ripple = dmath.pow(Math.max(0, dmath.sin(t * rings * Math.PI * 2)), 2);
   return r * (1 - (o.ringDepth ?? 0.06) * ripple * (1 - smoothstep(0.6, 0.95, t)));
 }
 

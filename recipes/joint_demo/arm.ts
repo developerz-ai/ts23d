@@ -8,6 +8,7 @@
 
 import {
   type BuildContext,
+  dmath,
   hex,
   loft,
   type Rng,
@@ -29,7 +30,7 @@ const SECTION = hex('#5c2a26');
 export const ringYZ = (x: number, ry: number, rz: number, z: number, n: number): Vec3[] =>
   Array.from({ length: n }, (_, k): Vec3 => {
     const a = (k / n) * Math.PI * 2;
-    return [x, ry * Math.cos(a), z + rz * Math.sin(a)];
+    return [x, ry * dmath.cos(a), z + rz * dmath.sin(a)];
   });
 
 /** A muscle or bone landmark on a ring: where round the limb (degrees, 0 = +Y the palm side,
@@ -55,9 +56,9 @@ const section = (x: number, s: Section, z: number, n: number): Vec3[] =>
     for (const b of s.bumps ?? []) {
       let d = Math.abs(a - (b.deg * Math.PI) / 180);
       d = Math.min(d, Math.PI * 2 - d) / b.width;
-      w += b.amount * Math.exp(-d * d);
+      w += b.amount * dmath.exp(-d * d);
     }
-    return [x, s.ry * Math.cos(a) * w, z + s.rz * Math.sin(a) * w];
+    return [x, s.ry * dmath.cos(a) * w, z + s.rz * dmath.sin(a) * w];
   });
 
 /** Sections between the listed ones (Catmull–Rom on the radii would overshoot the taper: the
@@ -186,7 +187,7 @@ export function arm(ctx: BuildContext, o: ArmOptions): Arm {
   const n = ctx.pick([18, 8, 5]);
   const [sx, , sz] = o.shoulder;
   const radial = (p: Vec3): Vec3 => {
-    const l = Math.hypot(p[1], p[2] - sz) || 1;
+    const l = dmath.hypot(p[1], p[2] - sz) || 1;
     return [0, p[1] / l, (p[2] - sz) / l];
   };
   const tone = (p: Vec3): Vec3 => o.tone(p, radial(p));

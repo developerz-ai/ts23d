@@ -2,7 +2,7 @@
 // half their joint, weights split onto them on the 1/255 grid, paws planted in the in-place clips.
 
 import { describe, expect, it } from 'bun:test';
-import { RUN_CLIP } from '../core/index.ts';
+import { dmath, RUN_CLIP } from '../core/index.ts';
 import { creaturePlan } from './creature.ts';
 import { clipEnvelope, creatureArmature, creatureClips, quadrupedRig } from './creature-clips.ts';
 import { halfTurn, MID, midBones, splitMid } from './creature-helpers.ts';
@@ -194,7 +194,7 @@ describe('in-place clips keep the paws planted', () => {
           expect(Math.abs(w.rot[3])).toBeGreaterThan(1 - 2e-7);
           expect(Math.abs(meta?.rot[3] ?? 0)).toBeGreaterThan(1 - 2e-7);
           const at = tailOf(toe, w);
-          worst = Math.max(worst, Math.hypot(...at.map((v, i) => v - (toe.tail[i] ?? 0))));
+          worst = Math.max(worst, dmath.norm(at.map((v, i) => v - (toe.tail[i] ?? 0))));
         }
       }
     }

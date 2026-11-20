@@ -9,6 +9,7 @@
 // paint), and coarse brows, on top of the sculpted knot.
 
 import type { BuildContext, Field, Mesh, SculptEdit, Vec3 } from '@developerz.ai/ts23d';
+import { dmath } from '@developerz.ai/ts23d';
 import { add, chain, crease, type Surface, spline, taper, type V } from '../_lib/bust/kit.ts';
 import { browLayers, withBrowComb } from '../_lib/face/brows.ts';
 import type { CardHairStyle } from '../_lib/face/hair-cards.ts';
@@ -159,7 +160,7 @@ export function tailPath(skull: Surface, dy: number, dz: number, drop = 0.01): V
 
 /** Scalp lock: the crown patch the knot gathers (the rest of the head is shaved). */
 export const scalpLock: Field = (p) =>
-  Math.hypot((p[0] + 0.045) / 1.25, p[1] / 0.95, Math.min(0, p[2] - 0.555)) - 0.05;
+  dmath.hypot((p[0] + 0.045) / 1.25, p[1] / 0.95, Math.min(0, p[2] - 0.555)) - 0.05;
 
 /** Beard: chin and jaw from under the lower lip to the jaw angle and a little under the jaw,
  *  in front of the ears (never on the lips or round the tusks). */

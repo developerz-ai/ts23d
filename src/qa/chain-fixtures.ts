@@ -9,6 +9,7 @@ import {
   type CompiledAsset,
   compile,
   defineAsset,
+  dmath,
   quatFromAxisAngle,
   type Track,
   type Vec3,
@@ -67,19 +68,19 @@ export function swimClip(o: SwimSpec = {}): Clip {
   // A length-keeping chain lands under the nominal amplitude: 1.09 brings it back (research §1).
   const half = ((o.tail ?? 0.18) * L * 1.09) / 2;
   const y = (s: number, t: number): number =>
-    half * shape(s) * Math.sin(2 * Math.PI * (s / lambda - f * t));
+    half * shape(s) * dmath.sin(2 * Math.PI * (s / lambda - f * t));
   const rootT = new Float32Array((frames + 1) * 3);
   const rots = Array.from({ length: n }, () => new Float32Array((frames + 1) * 4));
   for (let k = 0; k <= frames; k++) {
     const t = times[k] ?? 0;
     const beta = Array.from({ length: n }, (_, i) => {
       const dy = y((i + 1) / n, t) - y(i / n, t);
-      return Math.asin(Math.max(-1, Math.min(1, dy / (L / n))));
+      return dmath.asin(Math.max(-1, Math.min(1, dy / (L / n))));
     });
     // Station offsets from the head, then the head placed so the mean is on the travel line.
     const ys = [0];
     beta.forEach((b, i) => {
-      ys.push((ys[i] ?? 0) + (L / n) * Math.sin(b));
+      ys.push((ys[i] ?? 0) + (L / n) * dmath.sin(b));
     });
     const mean = ys.reduce((a, v, i) => a + v * (i === 0 || i === n ? 0.5 : 1), 0) / n;
     rootT.set([U * t, o.recoil === false ? y(0, t) : -mean, 0], k * 3);
@@ -128,7 +129,7 @@ export function radial(count: number, links: number, reach = 1, z = 1): Armature
     const th = (a / count) * 2 * Math.PI;
     const at = (k: number): Vec3 => {
       const r = 0.1 + (reach * k) / links;
-      return [r * Math.cos(th), r * Math.sin(th), z];
+      return [r * dmath.cos(th), r * dmath.sin(th), z];
     };
     for (let i = 0; i < links; i++)
       bones.push({

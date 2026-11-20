@@ -5,7 +5,7 @@
 // (Y up, +Z front) by our plain-mesh writer, so `importGlb` has a real file to read. CC0.
 // Deterministic; built once per process. Swap in a real file: see ./README.md.
 
-import { type Mesh, type Vec3, writeMeshGlb } from '@developerz.ai/ts23d';
+import { dmath, type Mesh, type Vec3, writeMeshGlb } from '@developerz.ai/ts23d';
 import { storedPng } from './png-stored.ts';
 import { poreTexture } from './scan-albedo.ts';
 import { headCentre, sitterSkin } from './scan-head.ts';
@@ -23,10 +23,10 @@ function layout(m: Mesh): Mesh {
   const c = headCentre();
   const uvOf = (i: number): [number, number] => {
     const d = [0, 1, 2].map((k) => (m.positions[i * 3 + k] ?? 0) - (c[k] ?? 0));
-    const l = Math.hypot(d[0] ?? 0, d[1] ?? 0, d[2] ?? 0) || 1;
+    const l = dmath.hypot(d[0] ?? 0, d[1] ?? 0, d[2] ?? 0) || 1;
     return [
-      Math.atan2(d[1] ?? 0, d[0] ?? 0) / (2 * Math.PI) + 0.5,
-      Math.acos(Math.max(-1, Math.min(1, (d[2] ?? 0) / l))) / Math.PI,
+      dmath.atan2(d[1] ?? 0, d[0] ?? 0) / (2 * Math.PI) + 0.5,
+      dmath.acos(Math.max(-1, Math.min(1, (d[2] ?? 0) / l))) / Math.PI,
     ];
   };
   const P: number[] = [];

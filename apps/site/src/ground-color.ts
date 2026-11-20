@@ -1,6 +1,7 @@
 // Ground colouring for the viewer's diorama base: grass, drier grass up high, bare earth on steep slopes, darker dirt where vehicles run.
 
 import { hex, type Vec3 } from '@developerz.ai/ts23d';
+import { dmath } from '@developerz.ai/ts23d/core';
 import { mix3, smoothstep, valueNoise } from './noise.ts';
 
 const GRASS = hex('#566f33');
@@ -12,7 +13,7 @@ export type Height = (x: number, y: number) => number;
 
 /** Rise per metre at (x, y), by central differences. */
 export function slopeAt(h: Height, x: number, y: number, d = 1): number {
-  return Math.hypot(h(x + d, y) - h(x - d, y), h(x, y + d) - h(x, y - d)) / (2 * d);
+  return dmath.hypot(h(x + d, y) - h(x - d, y), h(x, y + d) - h(x, y - d)) / (2 * d);
 }
 
 /** Colour for a ground point. `dirt` is 0..1 track wear; `dryAt` the height where grass browns. */

@@ -162,49 +162,49 @@
   "clips": [
     {
       "name": "cruise",
-      "seconds": 2.3255813953488373,
+      "seconds": 2.325581,
       "loop": true,
       "speed": 1.4698
     },
     {
       "name": "burst",
-      "seconds": 2.1701780052894604,
+      "seconds": 2.170178,
       "loop": true,
       "speed": 6.3
     },
     {
       "name": "turn_l",
-      "seconds": 25.58139534883721,
+      "seconds": 25.581395,
       "loop": true,
       "speed": 0
     },
     {
       "name": "turn_r",
-      "seconds": 25.58139534883721,
+      "seconds": 25.581395,
       "loop": true,
       "speed": 0
     },
     {
       "name": "cstart_l",
-      "seconds": 2.9327785563481767,
+      "seconds": 2.932779,
       "loop": false,
       "speed": 3.2201
     },
     {
       "name": "cstart_r",
-      "seconds": 2.9327785563481767,
+      "seconds": 2.932779,
       "loop": false,
       "speed": 3.2281
     },
     {
       "name": "idle",
-      "seconds": 3.3222591362126246,
+      "seconds": 3.322259,
       "loop": true,
       "speed": 1.0288
     },
     {
       "name": "bite",
-      "seconds": 1.381163287652078,
+      "seconds": 1.381163,
       "loop": false,
       "speed": 0
     }
@@ -316,13 +316,13 @@
     {
       "label": "body width at 4.5 m, 0.197 TL - 4.84 cm (drone frontal span)",
       "spec": 0.838,
-      "measured": 0.8412647247314453,
+      "measured": 0.841265,
       "source": "https://doi.org/10.1371/journal.pone.0348174"
     },
     {
       "label": "first dorsal length, origin to free rear tip (10.9 % of natural TL)",
       "spec": 0.492,
-      "measured": 0.4920000066049397,
+      "measured": 0.492,
       "source": "recipes/great_white/README.md, Lausanne specimen (unverified search excerpt)"
     }
   ],

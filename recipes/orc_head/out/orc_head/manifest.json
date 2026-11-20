@@ -90,7 +90,7 @@
     {
       "label": "eye spacing (pupil to pupil)",
       "spec": 0.076,
-      "measured": 0.07548320014029741,
+      "measured": 0.075483,
       "source": "spec.ts: the base IPD (0.26 H) at eyes.spacing 1.0 on the 0.30 m head"
     }
   ],

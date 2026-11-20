@@ -8,7 +8,7 @@
 // Reads along `along`, upright along `up`, facing along × up; `origin` is the baseline point at the
 // `align` anchor. This file validates options, builds the frame and dispatches.
 
-import { type Mesh, normalize, type Vec3 } from '../core/index.ts';
+import { dmath, type Mesh, normalize, type Vec3 } from '../core/index.ts';
 import { mappedOnto, type StripId, stripRect } from '../material/index.ts';
 import { count, invalid } from './check.ts';
 import { isVectorFont } from './glyph-hershey.ts';
@@ -96,7 +96,7 @@ export function text(str: string, o: TextOptions): Mesh {
   const up0 = o.up ?? [0, 0, 1];
   const k = up0[0] * along[0] + up0[1] * along[1] + up0[2] * along[2];
   const upR: Vec3 = [up0[0] - along[0] * k, up0[1] - along[1] * k, up0[2] - along[2] * k];
-  if (Math.hypot(upR[0], upR[1], upR[2]) < 1e-9)
+  if (dmath.hypot(upR[0], upR[1], upR[2]) < 1e-9)
     invalid('text: up is parallel to along', 'pass an `up` perpendicular to the reading direction');
   const up = normalize(upR);
   const n: Vec3 = [

@@ -2,6 +2,7 @@
 // integrating what it claims to be, bad parameters first.
 
 import { describe, expect, it } from 'bun:test';
+import { dmath } from '../core/index.ts';
 import {
   bendPulse,
   ds21Envelope,
@@ -38,21 +39,21 @@ describe('chain drivers', () => {
     expect(2 * a.at(0)).toBeCloseTo(0.05, 9);
     expect(2 * a.at(1)).toBeCloseTo(0.2, 9);
     const e = expEnvelope(0.07, 3.9);
-    expect(e.at(0) / e.at(1)).toBeCloseTo(Math.exp(-3.9), 9);
+    expect(e.at(0) / e.at(1)).toBeCloseTo(dmath.exp(-3.9), 9);
   });
 
   it('turns y = A sin(2π(s/λ − ft)) into heading = atan(dy/ds)', () => {
     const envelope = ds21Envelope();
     const w = travellingWave({ f: 1.3, lambda: 0.9, envelope });
     const y = (s: number, t: number): number =>
-      envelope.at(s) * Math.sin(TAU * (s / 0.9 - 1.3 * t));
+      envelope.at(s) * dmath.sin(TAU * (s / 0.9 - 1.3 * t));
     for (const [s, t] of [
       [0.3, 0.1],
       [0.8, 0.42],
       [1, 0.77],
     ] as const) {
       const slope = (y(s + 1e-5, t) - y(s - 1e-5, t)) / 2e-5;
-      expect(heading(w, s, t)).toBeCloseTo(Math.atan(slope), 5);
+      expect(heading(w, s, t)).toBeCloseTo(dmath.atan(slope), 5);
     }
   });
 
@@ -88,7 +89,7 @@ describe('chain drivers', () => {
 
   for (const lead of ['start', 'end'] as const)
     it(`follows the path from the ${lead}`, () => {
-      const H = (t: number): number => 0.7 * Math.sin(1.4 * t);
+      const H = (t: number): number => 0.7 * dmath.sin(1.4 * t);
       const f = followPath({ heading: H, delay: 0.5, lead });
       for (const s of [0.25, 0.6, 1]) {
         const lag = 0.5 * (lead === 'start' ? s : 1 - s);

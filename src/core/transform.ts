@@ -1,6 +1,7 @@
 // Affine transforms on meshes (normals by the inverse transpose): place a sub-mesh anywhere at any orientation, then merge. This is
 // how detail is authored — build a rivet/hatch/bracket once in local space, place it N times.
 
+import * as dmath from './dmath.ts';
 import type { Mesh } from './mesh.ts';
 import type { Vec3 } from './vec.ts';
 
@@ -20,9 +21,9 @@ export interface Placement {
 }
 
 export function affine(p: Placement): Affine {
-  const [cy, sy] = [Math.cos(p.yaw ?? 0), Math.sin(p.yaw ?? 0)];
-  const [cp, sp] = [Math.cos(p.pitch ?? 0), Math.sin(p.pitch ?? 0)];
-  const [cr, sr] = [Math.cos(p.roll ?? 0), Math.sin(p.roll ?? 0)];
+  const [cy, sy] = [dmath.cos(p.yaw ?? 0), dmath.sin(p.yaw ?? 0)];
+  const [cp, sp] = [dmath.cos(p.pitch ?? 0), dmath.sin(p.pitch ?? 0)];
+  const [cr, sr] = [dmath.cos(p.roll ?? 0), dmath.sin(p.roll ?? 0)];
   const [kx, ky, kz]: Vec3 =
     typeof p.scale === 'number' ? [p.scale, p.scale, p.scale] : (p.scale ?? [1, 1, 1]);
   // R = Rz(yaw) · Ry(pitch) · Rx(roll), columns scaled by (kx, ky, kz).

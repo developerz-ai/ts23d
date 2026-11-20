@@ -4,6 +4,7 @@
 // point against the face winding (black or inside-out lighting), and wasted zero-area triangles.
 
 import type { CompiledAsset, Mesh, Part } from '../core/index.ts';
+import { dmath } from '../core/index.ts';
 import type { Finding, Gate } from './types.ts';
 
 const parts = (asset: CompiledAsset): Array<[Part, Mesh]> =>
@@ -127,7 +128,7 @@ function windingStats(m: Mesh): {
     const gx = uy * vz - uz * vy;
     const gy = uz * vx - ux * vz;
     const gz = ux * vy - uy * vx;
-    const len = Math.hypot(gx, gy, gz);
+    const len = dmath.hypot(gx, gy, gz);
     if (len < 1e-12) continue;
     counted++;
     const nx = (N[a] ?? 0) + (N[b] ?? 0) + (N[c] ?? 0);
@@ -135,7 +136,7 @@ function windingStats(m: Mesh): {
     const nz = (N[a + 2] ?? 0) + (N[b + 2] ?? 0) + (N[c + 2] ?? 0);
     area += len;
     // Against the face by more than ~95°: the lighting is inside out, not just smoothed.
-    if ((gx * nx + gy * ny + gz * nz) / (len * (Math.hypot(nx, ny, nz) || 1)) < -0.1) {
+    if ((gx * nx + gy * ny + gz * nz) / (len * (dmath.hypot(nx, ny, nz) || 1)) < -0.1) {
       flipped++;
       flippedArea += len;
     }

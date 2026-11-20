@@ -3,7 +3,7 @@
 // near-white so the vertex colour carries the pattern. `hydra_keratin` (horns, claws, teeth, spines):
 // its own roughness ramp, rough roots to polished tips; pieces take their UVs from `pinKeratin`.
 
-import { defineMaterial, type Mesh, stripRect, tex, type Vec3 } from '@developerz.ai/ts23d';
+import { defineMaterial, dmath, type Mesh, stripRect, tex, type Vec3 } from '@developerz.ai/ts23d';
 
 /** Height of a scale strip's row, metres: the body plan's `uvBands` fit one row round this much skin. */
 export const SCALE_ROW = 0.3;
@@ -56,7 +56,7 @@ export const KERATIN = defineMaterial({
   graph: tex.material({
     height: tex.fn((xm, _ym, c) => {
       const n = Math.max(1, Math.round(c.tileU / 0.018));
-      return 0.5 + 0.5 * Math.sin((2 * Math.PI * n * xm) / c.tileU);
+      return 0.5 + 0.5 * dmath.sin((2 * Math.PI * n * xm) / c.tileU);
     }, 'growth_ridges'),
     depth: 0.0006,
     roughness: tex.fn(
@@ -73,7 +73,7 @@ const K = stripRect(KERATIN);
 /** Keratin UVs for a piece: U the root-to-tip ramp down `axis`, V across the row. */
 export function pinKeratin(mesh: Mesh, root: Vec3, axis: Vec3, length: number): Mesh {
   const uvs = new Float32Array(mesh.uvs.length);
-  const l = Math.hypot(axis[0], axis[1], axis[2]) || 1;
+  const l = dmath.hypot(axis[0], axis[1], axis[2]) || 1;
   for (let i = 0; i < mesh.positions.length / 3; i++) {
     const d =
       ((mesh.positions[i * 3] ?? 0) - root[0]) * axis[0] +

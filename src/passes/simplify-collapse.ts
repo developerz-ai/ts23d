@@ -4,7 +4,7 @@
 // turns by more than ~78° when a moves onto b), and the final compaction to a Mesh (skin and
 // morph targets ride along: a surviving vertex keeps its exact attributes).
 
-import { type Mesh, mappedOf } from '../core/index.ts';
+import { dmath, type Mesh, mappedOf } from '../core/index.ts';
 import type { Topology } from './simplify-topology.ts';
 import { carrySkin } from './skin-carry.ts';
 
@@ -67,8 +67,8 @@ export function collapseValid(
       P,
       v.map((q) => (q === a ? b : q)),
     );
-    const lb = Math.hypot(...before);
-    const la = Math.hypot(...after);
+    const lb = dmath.norm(before);
+    const la = dmath.norm(after);
     if (la < 1e-14 * Math.max(lb, 1e-30)) return null;
     const dot = before[0] * after[0] + before[1] * after[1] + before[2] * after[2];
     if (dot < FOLD * lb * la) return null;

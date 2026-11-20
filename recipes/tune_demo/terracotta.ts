@@ -3,14 +3,14 @@
 // them on a wheel-thrown jar), over a fine sandy grit and soft firing mottle. The strip's V span is
 // 12 whole rings, so the band mirrored along the profile never breaks a ring.
 
-import { defineMaterial, tex } from '@developerz.ai/ts23d';
+import { defineMaterial, dmath, tex } from '@developerz.ai/ts23d';
 
 /** Ring pitch, metres: finger ridges on a thrown storage jar are 1–2 cm apart. */
 const PITCH = 0.016;
 const rings = tex.fn((_x, y) => {
-  const s = Math.sin((2 * Math.PI * y) / PITCH);
+  const s = dmath.sin((2 * Math.PI * y) / PITCH);
   // Sharpened crests: a ridge, then a broad shallow groove, as fingers drag the clay.
-  return 0.5 + 0.5 * Math.sign(s) * Math.abs(s) ** 0.6;
+  return 0.5 + 0.5 * Math.sign(s) * dmath.pow(Math.abs(s), 0.6);
 }, 'throw_rings');
 const grit = tex.noise({ size: 0.004, octaves: 2, seed: 71 });
 const mottle = tex.noise({ size: 0.12, octaves: 3, seed: 72 });

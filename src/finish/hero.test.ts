@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { type Budget, compile, defineAsset, type Vec3 } from '../core/index.ts';
+import { type Budget, compile, defineAsset, dmath, type Vec3 } from '../core/index.ts';
 import { readGlbChunks } from '../export/index.ts';
 import { withBakeSource } from '../passes/index.ts';
 import { box, sdf } from '../primitives/index.ts';
@@ -8,7 +8,7 @@ import { heroGlb, heroTier } from './hero.ts';
 const R = 0.12;
 /** A ball with 1.5 mm ridges: the coarse mesh cannot hold them, the bake must. */
 const ridged = (p: Vec3): number =>
-  Math.hypot(p[0], p[1], p[2] - 0.2) - R - 0.0015 * Math.sin(p[2] * 180) * Math.cos(p[0] * 90);
+  dmath.hypot(p[0], p[1], p[2] - 0.2) - R - 0.0015 * dmath.sin(p[2] * 180) * dmath.cos(p[0] * 90);
 
 function ballAsset(budget: Budget) {
   return defineAsset({
@@ -17,7 +17,7 @@ function ballAsset(budget: Budget) {
     budget,
     build(ctx) {
       const mesh = sdf({
-        field: (p) => Math.hypot(p[0], p[1], p[2] - 0.2) - R,
+        field: (p) => dmath.hypot(p[0], p[1], p[2] - 0.2) - R,
         bounds: [
           [-0.15, -0.15, 0.05],
           [0.15, 0.15, 0.35],
@@ -66,7 +66,7 @@ describe('heroTier', () => {
     // Ridges: the tangent-space normal leaves straight-up on a good share of the ball's texels.
     let tilted = 0;
     let n = 0;
-    for (let i = 0; i < r.maps.size ** 2; i++) {
+    for (let i = 0; i < r.maps.size * r.maps.size; i++) {
       const z = (r.maps.normal[i * 4 + 2] ?? 255) / 127.5 - 1;
       if (z < 0.9999) n++;
       if (z < 0.995) tilted++;

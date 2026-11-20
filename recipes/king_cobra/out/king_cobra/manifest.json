@@ -254,13 +254,13 @@
   "hitboxes": [
     {
       "bone": "spine_0",
-      "radius": 0.035639,
-      "height": 0.075932,
-      "coverage": 0.9711
+      "radius": 0.035659,
+      "height": 0.075745,
+      "coverage": 0.97
     },
     {
       "bone": "spine_1",
-      "radius": 0.049736,
+      "radius": 0.049467,
       "height": 0,
       "coverage": 0.9869
     },

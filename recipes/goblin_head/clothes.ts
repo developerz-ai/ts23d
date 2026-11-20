@@ -12,6 +12,7 @@
 
 import {
   createRng,
+  dmath,
   type Field,
   hex,
   type IntendedCrease,
@@ -302,12 +303,12 @@ const armhole: Field = (p) => {
   const [a, b] = ARM;
   const q: V = [p[0], Math.abs(p[1]), p[2]];
   const ab: V = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
-  const l2 = ab[0] ** 2 + ab[1] ** 2 + ab[2] ** 2;
+  const l2 = ab[0] * ab[0] + ab[1] * ab[1] + ab[2] * ab[2];
   const t = Math.min(
     1,
     Math.max(0, ((q[0] - a[0]) * ab[0] + (q[1] - a[1]) * ab[1] + (q[2] - a[2]) * ab[2]) / l2),
   );
-  const d = Math.hypot(q[0] - a[0] - ab[0] * t, q[1] - a[1] - ab[1] * t, q[2] - a[2] - ab[2] * t);
+  const d = dmath.hypot(q[0] - a[0] - ab[0] * t, q[1] - a[1] - ab[1] * t, q[2] - a[2] - ab[2] * t);
   return (0.046 + 0.034 * t - d) * 0.95;
 };
 
@@ -323,15 +324,15 @@ export const vestRegion: Field = (p) => {
 /** A patch: a rounded rectangle `half` (y, z) about `at`, turned `deg` about X, on the side of
  *  the body `at` lies on (≤ 0 inside). */
 function patchRegion(at: V, half: readonly [number, number], deg: number): Field {
-  const c = Math.cos((deg * Math.PI) / 180);
-  const s = Math.sin((deg * Math.PI) / 180);
+  const c = dmath.cos((deg * Math.PI) / 180);
+  const s = dmath.sin((deg * Math.PI) / 180);
   const side = Math.sign(at[0]) || 1;
   return (p) => {
     const y = p[1] - at[1];
     const z = p[2] - at[2];
     const u = Math.max(Math.abs(y * c + z * s) - half[0], 0);
     const v = Math.max(Math.abs(-y * s + z * c) - half[1], 0);
-    return Math.max(Math.hypot(u, v) - 0.004, -(p[0] - at[0]) * side - 0.03);
+    return Math.max(dmath.hypot(u, v) - 0.004, -(p[0] - at[0]) * side - 0.03);
   };
 }
 const PATCHES: readonly Field[] = [
@@ -407,7 +408,7 @@ export const hoodRegion: Field = (p) =>
     p[0] - (SEAM.at[0] - 0.02),
     SEAM.field(p) - 0.03,
     -SEAM.field(p) - 0.015,
-    Math.hypot(p[0] - SEAM.at[0], p[1]) - 0.09,
+    dmath.hypot(p[0] - SEAM.at[0], p[1]) - 0.09,
   );
 
 /** The zigzag folds' axis down the vest's opening: top and bottom. */
@@ -460,8 +461,8 @@ export function scarfRing(skin: Field): V[] {
   const pts = Array.from({ length: 24 }, (_, i): V => {
     const a = (i / 24) * Math.PI * 2;
     const r = n.radius(a);
-    const x = n.c[0] + r * Math.cos(a);
-    const y = r * Math.sin(a);
+    const x = n.c[0] + r * dmath.cos(a);
+    const y = r * dmath.sin(a);
     let z = n.c[2] - 0.3 * (x - n.c[0]);
     const z0 = z;
     while (skin([x, y, z]) < 0 && z < z0 + 0.05) z += 0.001;
@@ -482,7 +483,7 @@ function scarfEdits(skin: Surface, fine: boolean, K: Tints): SculptEdit[] {
   const cx = ring.reduce((s, p) => s + p[0], 0) / ring.length;
   const wrap = (out: number, dz: number): V[] => {
     const pts = ring.map((p): V => {
-      const r = Math.hypot(p[0] - cx, p[1]) || 1;
+      const r = dmath.hypot(p[0] - cx, p[1]) || 1;
       return [p[0] + ((p[0] - cx) / r) * out, p[1] + (p[1] / r) * out, p[2] + dz];
     });
     return [...pts, pts[0] ?? SEAM.at];
