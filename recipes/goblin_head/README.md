@@ -32,8 +32,10 @@ above records the earlier primitive head.
 
 ## Built by
 `spec.ts`, `torso.ts` (the shared torso with the goblin's stoop: a hump behind the neck's root, a
-flat bony chest, the body sat 2.2 cm higher under the head, `LT`), `features.ts` (grin teeth
-along the parted lips, worried brow creases, six warts each its own size, the ear tips' cartilage
+flat bony chest, the body sat 2.2 cm higher under the head, `LT`), `features.ts` (the `teeth` part,
+LOD0/1: small pointed upper teeth each its own length, lean and stain hanging over the lower lip,
+and two short lower fangs — small curved tusks, the lower lip swollen round their bases — rising
+in front of the upper lip: the underbite; sculpted cones finer than the head cell had vanished, worried brow creases, six warts each its own size, the ear tips' cartilage
 edge, the far LOD's ear blades), `hair.ts` (wisps), `clothes.ts` (the outfit as layers) and
 `creases.ts` (the intended folds as ≤ 3 cm regions from the same geometry) on the shared bust
 library `../_lib/bust/`. Eye `socket` joints as on every bust.
@@ -69,13 +71,13 @@ the cloth strips' near-white ground is `CLOTH_ALBEDO`).
 |---|---|
 | skin / warm / cool / crevice / warts | `#9cb84a` / `#b8c860` / `#6a8a4a` / `#3a4a1a` / `#7a8a3a` |
 | eyes: sclera / iris | `#f0e6a0` / `#e0a020` |
-| teeth | `#e8dcae` |
+| teeth (yellowed enamel) / stained necks | `#d6c48e` / `#8a6a3a` |
 | hair root → tip | `#b0a890` → `#f0ece0` |
 | shirt / vest / hood / scarf | `#d8ccaa` / `#6a4428` / `#4a5a34` / `#9a3020` |
 | wear: linen grime / sweat-dark leather / patch / dust / faded scarf / scarf mud / horn | `#7d7052` / `#2e1c10` / `#8a5a34` / `#a8987a` / `#b4553c` / `#4a2a1c` / `#cdbf9a` |
 
 ## Known gaps
-The skin's detail is the shared tiling pore strip (`pores: true`) under one olive `skin`
+The skin's detail is the shared tiling pore strips (`pores: true`: true-scale pores and micro-relief, clear skin off the nose and cheeks (D520); matte cheeks, a glossier T-zone, fine thin skin and lines round the eyes, wet lips) under one olive `skin`
 finish (the shared `skinFinish`: a soft grazing sheen, no clear coat, so cheeks and shoulders stay matte and only the oily strip's T-zone (up to a tenth of the head over the glabella) shines; the scalp above it and behind the ears is on the matte strip, `face_skin_matte`, so a bald or shaven dome has no wet hot spots), not a per-face texture; the hero is a portrait camera (`../_lib/bust/hero.ts`); the vest's cut edges are ragged at the cell's scale even after fairing; stitches are a
 groove and a paler line, not thread (a 2 mm stitch is under the layer's cell); the neck is the
 base mesh's and stays straight (the stoop is carried by the raised shoulders and the hump); the

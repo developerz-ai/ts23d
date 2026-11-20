@@ -20,17 +20,17 @@
     },
     "materials": {
       "score": 7,
-      "reason": "The collar is now a real olive band with a clean hem edge in hero.png and FRONT, and the nose and cheeks read wind-reddened rather than rouged; the cheek warmth still sits as two soft round patches low on the cheeks in FRONT, and the tunic is a flat ribbed red with an airbrushed pale wash over the shoulders.",
+      "reason": "The collar is a real olive band with a clean hem edge, the skin now carries pores and broken rose mottling so the cheek warmth no longer sits as two round patches in FRONT, and stubble dots fade the beard edge into the cheek in hero.png; the tunic is still a flat ribbed red with an airbrushed pale wash over the shoulders.",
       "fixes": [
-        "move the cheek warmth up onto the cheekbone and break it with mottling so no round patches show",
-        "a wool strip with fibre noise on the tunic instead of the flat rib"
+        "a wool strip with fibre noise on the tunic instead of the flat rib",
+        "lower the airbrushed shoulder fade so the red reads as dyed wool"
       ]
     },
     "detail": {
       "score": 6,
-      "reason": "Moustache, beard and new hair locks hold; the tunic has a collar but no seams, folds or hem, and the face has no wrinkles at the portrait distance.",
+      "reason": "Moustache, beard, hair locks and now pores and stubble dots at the beard edge hold in hero.png; the face still has no age wrinkles (crow's feet, forehead lines) at the portrait distance and the tunic has no seams, folds or hem.",
       "fixes": [
-        "LOD0 wrinkle/pore displacement on the face driven by age",
+        "LOD0 wrinkle displacement (forehead lines, crow's feet) driven by age",
         "seams and a few folds on the tunic"
       ]
     },
@@ -58,7 +58,7 @@
     }
   },
   "renders": {
-    "hero.png": "4bcc5a9a41a089cf32b173ca9a612e7260719a46b7a27b2e37171b42d555d9bb",
-    "sheet.png": "f81267bab92cb90313661f3e704ad3fd31c939c4b45a3f2c6368de9b1634dff9"
+    "hero.png": "c3542001a4165274946a239d449b8116d75264ae87e71de0f31699c104577061",
+    "sheet.png": "65d0dcfeade9396f63f75f95342466b650fa01e0afcee8d4149d45eea2a47e0a"
   }
 }

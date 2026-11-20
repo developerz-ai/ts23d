@@ -1,135 +1,56 @@
-// The skin strip every face, bust and bare limb shares: near-white albedo (the vertex colour
-// carries the tone and its zones), a pore micro relief for the normal map, and a roughness that
-// follows it (oily crowns between the pores, matte pits), so skin stops reading as one flat
-// painted surface. Isotropic on purpose: a box projection crosses any direction (D60), so nothing
-// here has a grain. `onSkin` maps a mesh onto it at true scale.
+// How skin is mapped onto its strips (the strips themselves: ./skin-texture.ts). `onSkin` maps
+// a mesh at true scale and sends each triangle to its zone's strip by masks: matte cheeks, the
+// oily T-zone, the wet lips, the thin skin round the eyes, the dry scalp, clothing painted over
+// the skin; the masks for a face's zones live here too.
 //
-// A strip row is 1/64 of the sheet tall, so true-scale pores need a band only ~2 cm of world
+// A strip row is 1/64 of the sheet tall, so true-scale pores need a band only ~1 cm of world
 // high. UVs live on vertices and are interpolated across a triangle, so the band cannot simply
 // wrap: `onSkin` gives every triangle its own band cell (and its own projection plane) and splits
-// only the vertices whose triangles disagree — most stay shared.
+// only the vertices whose triangles disagree — most stay shared. Each cell reads its own stretch
+// of the row along U, so no slice repeats cell after cell up a cheek (D513). The masks live in
+// ./skin-zones.ts; the soft ones (freckles, clear skin, stubble) are dithered per triangle, so a
+// zone's edge is a fading density of its texture, never a line across a cheek (D520, D523).
 
+import { type Mesh, merge, type StripId, stripRect, type Vec3 } from '@developerz.ai/ts23d';
 import {
-  defineMaterial,
-  dmath,
-  type Finish,
-  type Mesh,
-  merge,
-  type StripId,
-  stripRect,
-  tex,
-  type Vec3,
-} from '@developerz.ai/ts23d';
+  SKIN_CLEAR,
+  SKIN_FINE,
+  SKIN_FRECKLED,
+  SKIN_MATTE,
+  SKIN_OILY,
+  SKIN_ROW,
+  SKIN_STRIP,
+  SKIN_STUBBLE,
+  SKIN_WET,
+} from './skin-texture.ts';
 
-/** World metres the strip's row is painted for (V), and the share of the row at each edge the
- *  mapping stays out of (the sheet pads a row's edges with copies of its outer texels). */
-export const SKIN_ROW = 0.032;
+export {
+  SKIN_CLEAR,
+  SKIN_FINE,
+  SKIN_FRECKLED,
+  SKIN_MATTE,
+  SKIN_OILY,
+  SKIN_ROW,
+  SKIN_STRIP,
+  SKIN_STUBBLE,
+  SKIN_WET,
+  skinFinish,
+} from './skin-texture.ts';
+export {
+  clearZone,
+  eyeZone,
+  freckleZone,
+  lipZone,
+  scalpZone,
+  tZone,
+} from './skin-zones.ts';
+
 const ROW = SKIN_ROW;
+/** The share of the row at each edge the mapping stays out of (the sheet pads a row's edges
+ *  with copies of its outer texels). */
 const INSET = 0.2;
 /** How far past its cell a triangle may reach (in cells) before it is squeezed to fit. */
 const SLACK = 0.25;
-
-// Only features far smaller than the band: anything coarser repeats from cell to cell.
-const pores = tex.cells({ size: 0.0026, out: 'f1', seed: 11 });
-const fuzz = tex.noise({ size: 0.004, octaves: 2, seed: 13 });
-const height = pores.mul(0.75).add(fuzz.mul(0.25));
-
-export const SKIN_STRIP = defineMaterial({
-  id: 'face_skin',
-  // Its hash row (11) is the hydra's scales; 13 is free of every material the repo defines.
-  row: 13,
-  scaleMetres: ROW,
-  spanMetres: 2,
-  roughness: 0.6,
-  graph: tex.material({
-    height,
-    depth: 0.0004,
-    albedo: height.ramp([
-      [0, '#ebe4df'],
-      [1, '#f8f5f2'],
-    ]),
-    roughness: height.remap(0.68, 0.5),
-  }),
-  description: 'Skin micro relief: pores, glossier crowns (vertex colour carries the tone).',
-  sources: ['https://physicallybased.info'],
-});
-
-/** The oily skin of the T-zone (forehead centre, nose, chin): the same pores, smoother between
- *  them, so a highlight runs down the nose and across the brow while the cheeks stay matte. */
-export const SKIN_OILY = defineMaterial({
-  id: 'face_skin_oily',
-  row: 12,
-  scaleMetres: ROW,
-  spanMetres: 2,
-  roughness: 0.42,
-  graph: tex.material({
-    height,
-    depth: 0.0003,
-    albedo: height.ramp([
-      [0, '#ebe4df'],
-      [1, '#f8f5f2'],
-    ]),
-    // (Satin, not wet: at 0.2 the forehead and a bald crown lit up like glazed latex.)
-    roughness: height.remap(0.5, 0.34),
-  }),
-  description: 'Oily skin (T-zone): the pore relief of face_skin, glossier between the pores.',
-  sources: ['https://physicallybased.info'],
-});
-
-/** Matte skin: a scalp, shaven or bald (dry, no oil glands to speak of), and any skin a recipe
- *  wants without a highlight. The same pores, rougher between them: a broad soft sheen on a dome
- *  instead of the hot spots the face strip's crowns throw under the hero's sun. */
-export const SKIN_MATTE = defineMaterial({
-  id: 'face_skin_matte',
-  // Row 8: free on every bust (the cloth strips hold 7, 10, 11; the skin 9, 12, 13).
-  row: 8,
-  scaleMetres: ROW,
-  spanMetres: 2,
-  roughness: 0.82,
-  graph: tex.material({
-    height,
-    depth: 0.0004,
-    albedo: height.ramp([
-      [0, '#ebe4df'],
-      [1, '#f8f5f2'],
-    ]),
-    roughness: height.remap(0.9, 0.76),
-  }),
-  description: 'Matte skin (scalp): the pore relief of face_skin, dry and rough between the pores.',
-  sources: ['https://physicallybased.info'],
-});
-
-/** Wet skin: the lips' vermilion and the lid margins. Smooth (no pores), a tight highlight. */
-export const SKIN_WET = defineMaterial({
-  id: 'face_skin_wet',
-  // Row 9 is the reptile scales' hash row: no bust maps onto them.
-  row: 9,
-  scaleMetres: ROW,
-  spanMetres: 2,
-  roughness: 0.16,
-  graph: tex.material({
-    height: fuzz,
-    depth: 0.00012,
-    albedo: fuzz.ramp([
-      [0, '#efe6e2'],
-      [1, '#f8f5f2'],
-    ]),
-    roughness: fuzz.remap(0.2, 0.12),
-  }),
-  description: 'Wet skin (lips, lid margins): smooth, glossy; vertex colour carries the tone.',
-  sources: ['https://physicallybased.info'],
-});
-
-/**
- * The `skin` finish every bust declares: a soft grazing sheen (the down and the oil a cheek
- * catches) in the race's own `sheen` colour and a dielectric reflectance a little under plastic's,
- * and NO clearcoat. A clear coat is one roughness over the whole part, so it lit the shoulders,
- * scalp and cheeks with the same tight wet highlight (latex); without it the highlight comes from
- * the strips' own roughness: matte cheeks and shoulders, the oily T-zone, the wet lips.
- */
-export function skinFinish(sheen: string): Finish {
-  return { sheen: { colour: sheen, roughness: 0.55 }, specular: { factor: 0.8 } };
-}
 
 /** Clothing painted over the skin (a bust's tunic, ./garment.ts): the triangles whose centre
  *  `mask` puts above ½ go onto `strip` at its true scale (`metres`, its `scaleMetres`). */
@@ -139,25 +60,56 @@ export interface ClothZone {
   readonly metres: number;
 }
 
-/** The same mesh on the skin strip: UVs re-projected per triangle (see the header), positions,
- *  normals and colours kept. `oil` (0 matte … 1 oily, in the mesh's space) sends the triangles
- *  whose centre it puts above ½ to the oily strip, `moist` (same scale) to the wet one,
- *  `cloth` to its own strip, `matte` (a scalp) to the matte one: roughness zones without a
- *  second draw. */
-export function onSkin(
-  m: Mesh,
-  oil?: (p: Vec3) => number,
-  moist?: (p: Vec3) => number,
-  cloth?: ClothZone,
-  matte?: (p: Vec3) => number,
-): Mesh {
-  if (!oil && !moist && !cloth && !matte) return onFineStrip(m, SKIN_STRIP, ROW);
+/** Where each skin zone is (masks in the mesh's space, 0 … 1; a triangle whose centre a mask
+ *  puts above ½ goes onto that zone's strip, the first that claims it in this order; a soft
+ *  zone's mask is the share of its triangles it claims there instead, dithered). */
+export interface SkinZones {
+  /** Clothing painted over the skin, on its own strip. */
+  readonly cloth?: ClothZone;
+  /** The lips: the wet strip. */
+  readonly moist?: (p: Vec3) => number;
+  /** A scalp: the matte strip. */
+  readonly matte?: (p: Vec3) => number;
+  /** The lids and the crow's-feet corners (`eyeZone`): the thin skin's strip. */
+  readonly fine?: (p: Vec3) => number;
+  /** A shaven beard: the stubble strip (soft: feather its edge over a centimetre). */
+  readonly stubble?: (p: Vec3) => number;
+  /** Freckles' cluster (`freckleZone`, soft): the freckled strip. */
+  readonly freckle?: (p: Vec3) => number;
+  /** The T-zone (`tZone`): the oily strip. */
+  readonly oil?: (p: Vec3) => number;
+  /** Clear skin (`clearZone`, soft): the finest pores' strip. */
+  readonly clear?: (p: Vec3) => number;
+}
+
+/** A triangle's own threshold for a soft zone, 0 … 1: a hash of its centre (the mesh's own
+ *  positions, so it is the same bytes on any machine). */
+function dither(c: Vec3): number {
+  let h = 0x9e3779b9;
+  for (const x of c) h = Math.imul(h ^ Math.round(x * 50000), 0x85ebca6b) ^ (h >>> 13);
+  h = Math.imul(h ^ (h >>> 16), 0xc2b2ae35);
+  return ((h ^ (h >>> 15)) >>> 0) / 4294967296;
+}
+
+/** The same mesh on the skin strips: UVs re-projected per triangle (see the header), positions,
+ *  normals and colours kept; each triangle on its zone's strip (`SkinZones`), the rest on the
+ *  cheek's: zones without a second draw. */
+export function onSkin(m: Mesh, z: SkinZones = {}): Mesh {
+  // [mask, strip, soft]
+  const masks: readonly [((p: Vec3) => number) | undefined, StripId, boolean][] = [
+    [z.cloth?.mask, z.cloth?.strip ?? SKIN_STRIP, false],
+    [z.moist, SKIN_WET, false],
+    [z.matte, SKIN_MATTE, false],
+    [z.fine, SKIN_FINE, false],
+    [z.stubble, SKIN_STUBBLE, true],
+    [z.freckle, SKIN_FRECKLED, true],
+    [z.oil, SKIN_OILY, false],
+    [z.clear, SKIN_CLEAR, true],
+  ];
+  if (masks.every(([f]) => !f)) return onFineStrip(m, SKIN_STRIP, ROW);
   const P = m.positions;
+  const groups: number[][] = masks.map(() => []);
   const dry: number[] = [];
-  const wet: number[] = [];
-  const lips: number[] = [];
-  const wool: number[] = [];
-  const dull: number[] = [];
   for (let t = 0; t < m.indices.length; t += 3) {
     const [a = 0, b = 0, c = 0] = [m.indices[t], m.indices[t + 1], m.indices[t + 2]];
     const centre: Vec3 = [
@@ -165,81 +117,19 @@ export function onSkin(
       ((P[a * 3 + 1] ?? 0) + (P[b * 3 + 1] ?? 0) + (P[c * 3 + 1] ?? 0)) / 3,
       ((P[a * 3 + 2] ?? 0) + (P[b * 3 + 2] ?? 0) + (P[c * 3 + 2] ?? 0)) / 3,
     ];
-    const to =
-      cloth && cloth.mask(centre) > 0.5
-        ? wool
-        : moist && moist(centre) > 0.5
-          ? lips
-          : matte && matte(centre) > 0.5
-            ? dull
-            : oil && oil(centre) > 0.5
-              ? wet
-              : dry;
-    to.push(a, b, c);
+    const h = dither(centre);
+    const k = masks.findIndex(([f, , soft]) => f !== undefined && f(centre) > (soft ? h : 0.5));
+    (k < 0 ? dry : (groups[k] ?? dry)).push(a, b, c);
   }
-  const on = (idx: number[], strip: StripId): Mesh[] =>
-    idx.length ? [onFineStrip({ ...m, indices: new Uint32Array(idx) }, strip, ROW)] : [];
+  const on = (idx: number[], strip: StripId, metres: number): Mesh[] =>
+    idx.length ? [onFineStrip({ ...m, indices: new Uint32Array(idx) }, strip, metres)] : [];
   const parts = [
-    ...on(dry, SKIN_STRIP),
-    ...on(wet, SKIN_OILY),
-    ...on(lips, SKIN_WET),
-    ...on(dull, SKIN_MATTE),
+    ...on(dry, SKIN_STRIP, ROW),
+    ...masks.flatMap(([, strip], i) =>
+      on(groups[i] ?? [], strip, i === 0 ? (z.cloth?.metres ?? ROW) : ROW),
+    ),
   ];
-  if (cloth && wool.length)
-    parts.push(onFineStrip({ ...m, indices: new Uint32Array(wool) }, cloth.strip, cloth.metres));
   return parts.length === 1 && parts[0] ? parts[0] : merge(parts);
-}
-
-/** The lips' vermilion as a wet mask (1 on it): an ellipse about the mouth line between the
- *  corners, from the upper lip's top to the lower lip's bottom, in front of the teeth. */
-export function lipZone(k: {
-  readonly sup: Vec3;
-  readonly inf: Vec3;
-  readonly corner: Vec3;
-}): (p: Vec3) => number {
-  const cz = (k.sup[2] + k.inf[2]) / 2;
-  const hz = Math.abs(k.sup[2] - k.inf[2]) * 0.56 + 0.0015;
-  const hy = Math.abs(k.corner[1]) * 0.98;
-  const back = Math.min(k.sup[0], k.inf[0]) - 0.014;
-  return (p) => {
-    const e = dmath.pow(p[1] / hy, 2) + dmath.pow((p[2] - cz) / hz, 2);
-    return e < 1 && p[0] > back ? 1 : 0;
-  };
-}
-
-/** The scalp as a matte mask (1 on it): the dome above the forehead's middle (`forehead`, the
- *  T-zone's top), and the back and sides of the head behind the ear's front (`tragion`) above
- *  its height. The face keeps its own strips; a bald crown loses the hot spots. */
-export function scalpZone(k: {
-  readonly forehead: Vec3;
-  readonly tragion: Vec3;
-}): (p: Vec3) => number {
-  return (p) =>
-    p[2] > k.forehead[2] || (p[0] < k.tragion[0] - 0.01 && p[2] > k.tragion[2]) ? 1 : 0;
-}
-
-/** The T-zone as an oil mask (1 on it, 0 a `soft` away): the forehead's centre band down the
- *  nose to the chin, from four midline points and the nose's half-width. */
-export function tZone(
-  k: {
-    readonly forehead: Vec3;
-    readonly glabella: Vec3;
-    readonly noseTip: Vec3;
-    readonly chin: Vec3;
-  },
-  halfNose: number,
-): (p: Vec3) => number {
-  const soft = halfNose * 0.6;
-  return (p) => {
-    const y = Math.abs(p[1]);
-    // Above the brow: a band three nose-widths across; below it: the nose and the chin's centre.
-    const brow = p[2] > k.glabella[2] ? y - halfNose * 3 : Number.POSITIVE_INFINITY;
-    const nose = p[2] <= k.glabella[2] && p[2] > k.noseTip[2] - halfNose ? y - halfNose : Infinity;
-    const chin = dmath.hypot(y, p[2] - k.chin[2]) - halfNose * 1.2;
-    const front = k.chin[0] - 0.04 - p[0];
-    const d = Math.max(Math.min(brow, nose, chin), front, p[2] - k.forehead[2]);
-    return Math.min(1, Math.max(0, 0.5 - d / soft));
-  };
 }
 
 /** `m` mapped at true scale onto a fine-grained strip whose row is painted for `row` metres of
@@ -272,11 +162,15 @@ export function onFineStrip(m: Mesh, strip: StripId, row: number): Mesh {
     const hi = Math.max(...ts);
     const cell = Math.floor((lo + hi) / 2 / BAND);
     const fits = hi <= (cell + 1 + SLACK) * BAND && lo >= (cell - SLACK) * BAND;
+    // Each band cell reads its own stretch of the row (a golden-ratio step along U): the same
+    // slice mirrored cell after cell repeated every feature up a cheek in columns (D513).
+    const step = (fits ? cell : t) * 0.6180339887;
+    const shift = (step - Math.floor(step)) * r.metres;
     for (const [i, v] of [a, b, c].entries()) {
       const tv = ts[i] ?? 0;
-      // In its cell (alternate cells mirrored, so neighbours meet), or squeezed to fill one.
-      let f = fits ? tv / BAND - cell : (tv - lo) / (hi - lo || 1);
-      if (fits && cell % 2 !== 0) f = 1 - f;
+      // In its cell, or squeezed to fill one. (Cells meet at a UV seam either way: each reads
+      // its own stretch of the row, so mirroring them no longer joined their texels.)
+      const f = fits ? tv / BAND - cell : (tv - lo) / (hi - lo || 1);
       const k = `${v}|${axis}|${fits ? cell : `t${t}`}`;
       let id = key.get(k);
       if (id === undefined) {
@@ -284,7 +178,7 @@ export function onFineStrip(m: Mesh, strip: StripId, row: number): Mesh {
         key.set(k, id);
         from.push(v);
         uv.push(
-          r.u0 + (at(v, si) / r.metres) * (r.u1 - r.u0),
+          r.u0 + ((at(v, si) + shift) / r.metres) * (r.u1 - r.u0),
           r.v0 + (INSET + f * (1 - 2 * INSET)) * (r.v1 - r.v0),
         );
       }

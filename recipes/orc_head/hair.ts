@@ -16,6 +16,10 @@ import type { CardHairStyle } from '../_lib/face/hair-cards.ts';
 import { C } from './palette.ts';
 import { skinMesh } from './skin.ts';
 import { H, SK } from './spec.ts';
+import { tuskExit } from './tusks.ts';
+
+/** Where the left tusk leaves the lower lip (the beard parts round it). */
+const TUSK_EXIT = tuskExit();
 
 const mix = (a: V, b: V, t: number): V => [
   a[0] + (b[0] - a[0]) * t,
@@ -163,12 +167,14 @@ export const scalpLock: Field = (p) =>
   dmath.hypot((p[0] + 0.045) / 1.25, p[1] / 0.95, Math.min(0, p[2] - 0.555)) - 0.05;
 
 /** Beard: chin and jaw from under the lower lip to the jaw angle and a little under the jaw,
- *  in front of the ears (never on the lips or round the tusks). */
+ *  in front of the ears, parted round the tusks' bases (a 2.4 cm clearing round where each
+ *  leaves the lip) — never on the lips or swallowing the tusk roots. */
 export const beardRegion: Field = (p) =>
   Math.max(
     p[2] - (SK.cheilion[2] - 0.018) - Math.max(0, SK.cheilion[0] - 0.02 - p[0]) * 0.9,
     SK.tragion[0] + 0.045 - p[0],
     SK.menton[2] - 0.025 - p[2],
+    0.024 - dmath.hypot(p[0] - TUSK_EXIT[0], Math.abs(p[1]) - TUSK_EXIT[1], p[2] - TUSK_EXIT[2]),
   );
 
 /** Coarse brows on the brow shelf (it stands 3 cm proud of the base's brow line). */

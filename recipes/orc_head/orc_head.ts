@@ -1,7 +1,7 @@
 // Stylised orc warrior bust — an original game-character design: the CC0 anatomical base warped
 // to the orc (low sloped vault, brow shelf, small deep-set eyes, broad flat nose, jaw ×1.85 with
 // an underbite) and sculpted by the shared skull pipeline (skull → planes → muscles → features →
-// skin zones, ../_lib/bust/bust.ts); lower tusks rooted in the jaw (the right one broken), scars
+// skin zones, ../_lib/bust/bust.ts); lower tusks rooted in the jaw (the left one broken), scars
 // and warts as strokes, a scowl; a thick neck into huge trapezius; plate pauldrons with bone
 // spikes, a leather baldric, a fur mantle, a bead necklace, a warrior's knot and card hair; a
 // turned plinth. Design dossier, declared race deltas and proportion bands: README.md.

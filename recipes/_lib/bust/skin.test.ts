@@ -92,4 +92,46 @@ describe('bust skin painter', () => {
       if (z < 0.02) expect(lum(m, i)).toBeGreaterThan(0.1);
     }
   });
+
+  it('fails on bruised crevices (D512): a crease and an underside stay skin, a shade darker at most', () => {
+    // The elf's palette: pale skin, a mauve `cool`, a red-brown cavity. Two overlapping balls
+    // meet in a deep crease (an eye socket's lid fold, the under-eye), their undersides face down.
+    const elf = {
+      skin: [0.81, 0.55, 0.37] as Vec3,
+      warm: [0.89, 0.63, 0.43] as Vec3,
+      cool: [0.48, 0.35, 0.37] as Vec3,
+      cavity: [0.19, 0.07, 0.06] as Vec3,
+    };
+    const ball =
+      (c: Vec3, r: number): Field =>
+      (p) =>
+        dmath.hypot(p[0] - c[0], p[1] - c[1], p[2] - c[2]) - r;
+    const a = ball([0, 0, 0.03], 0.05);
+    const b = ball([0, 0, -0.03], 0.05);
+    const m = skinMesh(
+      [
+        {
+          field: (p) => Math.min(a(p), b(p)),
+          bounds: [
+            [-0.06, -0.06, -0.09],
+            [0.06, 0.06, 0.09],
+          ],
+        },
+      ],
+      0.004,
+      { rng: createRng(5), tone: elf },
+    );
+    const L = 0.2126 * elf.skin[0] + 0.7152 * elf.skin[1] + 0.0722 * elf.skin[2];
+    const violet = elf.skin[2] / elf.skin[0];
+    let darkest = 1;
+    let bluest = 0;
+    for (let i = 0; i * 3 < m.positions.length; i++) {
+      darkest = Math.min(darkest, lum(m, i) / L);
+      bluest = Math.max(bluest, (m.colors[i * 3 + 2] ?? 0) / (m.colors[i * 3] ?? 1) / violet);
+    }
+    // The renderer shades the crease; the paint only deepens it (crevice colour a third of the
+    // way at most). A bruise is darker than that, and bluer.
+    expect(darkest).toBeGreaterThan(0.7);
+    expect(bluest).toBeLessThan(1.12);
+  });
 });

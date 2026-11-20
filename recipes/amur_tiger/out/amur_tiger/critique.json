@@ -29,7 +29,7 @@
     },
     "detail": {
       "score": 7,
-      "reason": "Whiskers, teeth, toe pads, claws, nose scar and fur locks hold at portrait distance, and a brow plane now catches light over the eye; the cheekbone is still soft and the ear interior a flat glossy disc.",
+      "reason": "Whiskers, teeth, toe pads, claws, nose scar and fur locks hold at portrait distance, and a brow plane catches light over the eye; the whiskers now shade paler and less sky-blue (hero.png, muzzle), but the cheekbone is still soft and the ear interior a flat glossy disc.",
       "fixes": [
         "sharper cheekbone plane in face.ts",
         "ear interior hair tufts and the white ocellus spot on the ear back"
@@ -61,7 +61,7 @@
     }
   },
   "renders": {
-    "hero.png": "a9abfc860920cb4ba00196af19b3c4efd9a0e635554640d103979b7467a7e45b",
+    "hero.png": "9ae02a44e541fb3341d9cafa0e539ebf216b7c5b9fe25fb5a1982f0a158962e9",
     "sheet.png": "14bb08e031b781b78ff848dc6145aaf5db5891afdaddd66b684fe451eb7fb64f"
   }
 }

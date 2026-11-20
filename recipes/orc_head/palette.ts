@@ -21,8 +21,11 @@ export const C = {
   scar: hex('#b49e80'),
   vein: hex('#4b6a44'),
   bone: hex('#e4d8b4'),
-  /** Tusk root stain where it leaves the gum. */
-  tuskRoot: hex('#7a5a2e'),
+  /** Tusk ivory: old, yellowed (not the spikes' bleached bone), paler at the worn tip. */
+  tusk: hex('#c9ab6c'),
+  tuskTip: hex('#ddc99a'),
+  /** Tusk stain at the gum line: brown-black where it leaves the lip. */
+  tuskRoot: hex('#3e2810'),
   wart: hex('#5e6a40'),
   /** Eye sockets: cooler, darker round the lids. */
   socket: hex('#4a5038'),

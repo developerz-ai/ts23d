@@ -50,12 +50,12 @@ export const HUMAN_BUST: BustRecipe = {
   // The lid fold and the nasolabial fold a fifth deeper than the shared hero's (they read flat).
   forms: { ...HERO_FORMS, lines: 1.2 },
   // Skin zones that read at arm's length: a man who lives outdoors, sun on the nose, cheekbones
-  // and ears, a paler forehead under the hair, grey-blue beard shadow, shaded sockets.
+  // and ears, a paler forehead under the hair, shaded sockets. (No shaven-beard shadow zone: under
+  // the full beard it showed above it as a grey band along the cheek, D523.)
   zones: {
     lips: C.lips,
     flush: hex('#c97a5c'),
     socket: hex('#b07c66'),
-    shadow: hex('#93766c'),
     // The painted brow is the skin under the brow cards: a soft brown, not a strip.
     brows: hex('#8a5a40'),
     forehead: hex('#dcaa80'),
@@ -70,14 +70,18 @@ export const HUMAN_BUST: BustRecipe = {
   // An 7 mm curvature stencil: the skull's mesh field rings in 4 mm (blotchy painted crevices).
   paint: { stencil: 0.007, speckle: 0.16 },
   // Hair-coloured scalp and chin under the cards (D57): a shaded mid-brown, so a gap between
-  // locks reads as hair in shadow, not a hole; the beard's cheek line fades over 1.8 cm.
+  // locks reads as hair in shadow, not a hole; the beard's cheek line fades over 1 cm into the
+  // stubble strip's cut hairs (a 1.8 cm paint fade was a muddy grey band, D523).
   scalp: [
     { line: hairline, color: SCALP },
-    { line: beardline, color: SCALP, soft: 0.018 },
+    { line: beardline, color: SCALP, soft: 0.01 },
   ],
+  stubble: beardline,
   plinth: { radius: 0.13, color: C.plinth },
   // (The head a little coarser than the bare-headed busts': hair and beard cover half of it.)
   cells: { head: [0.0066, 0.011, 0.026], bust: [0.012, 0.013, 0.03] },
+  // Sun freckles over the bridge and cheekbones above the beard (D520).
+  complexion: { freckles: 0.35 },
   pores: true,
   finish: 'skin',
   body: () => bodyEdits(),

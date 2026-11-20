@@ -4,8 +4,8 @@
 A scarred orc warrior in the chunky fantasy-game idiom (inspiration only: no character, logo or
 likeness copied), read from the 3/4 view by: a **low sloped vault over a massive face**, a **heavy
 brow shelf** over **small deep-set ember eyes**, a **broad flat nose**, a **muzzle with an
-underbite on a jaw wider than the temples**, **lower tusks rooted in the jaw** (the right one broken
-off), **pointed ears swept back**, a **thick neck into trapezius that rise to the ears**, **scars and
+underbite on a jaw wider than the temples**, **lower tusks rooted in the jaw** rising in front of the upper
+lip (the left one broken off), **pointed ears swept back**, a **thick neck into trapezius that rise to the ears**, **scars and
 warts**; **forged plate pauldrons** with bone spikes, a **leather baldric**, a **fur mantle**, a
 **bead necklace**, a **warrior's knot** and card hair; a turned plinth.
 
@@ -18,7 +18,29 @@ warts**; **forged plate pauldrons** with bone spikes, a **leather baldric**, a *
 | features | lid fold, nasolabial, mentolabial, vermilion; the orc's forehead furrows, under-eye bags, flared nose wings, the sealed mouth and its line, scars, warts and pores as placed VDM stamps (`scarWelt`, `wart`, `poreField`; plan 19) | `../_lib/face/features.ts`, `features.ts` |
 | skin | zones: lips, warm flush on the nose and ears, dark sockets, a darker brow band, a grey-green jaw; the painter's curvature + cavity bake (8 mm stencil), mottle and pore-scale speckle | `../_lib/face/zones.ts`, `features.ts`, `skin.ts` |
 | body | the orc's own torso (neck leaning into the trapezius hunch, deltoids, pecs, barrel chest) in place of the shared parametric one (`BustRecipe.body`) | `torso.ts` |
-| tusks | swept tapered tubes rooted ≈ 3 cm in the mandible behind the lower lip, out through the lip, rising in front of the upper lip; ivory stained brown at the gum line; the right one snapped at 60 % | `tusks.ts` |
+| tusks | the lower canines (see "Tusk anatomy"): swept tapered tubes rooted ≈ 4 cm in the mandible behind the lower lip, leaving the mouth at the lower lip's top (the lip rolled round the base: `features.ts` `tuskLips`), rising in front of the upper lip and a little outward, the tip curling back at nose-wing height; yellowed ivory: a narrow grime line where the lip lets go, graded over ≈ 6 mm into a darker yellowed root, paling to a chipped tip (D526); the left one snapped at 60 % in a jagged break; the beard parts round both bases (`hair.ts` `beardRegion`); between them six uneven, stained lower teeth stand over the lower lip in front of the upper (`lowerTeeth`, D526) | `tusks.ts`, `../_lib/face/tusks.ts`, `../_lib/face/tusk-breaks.ts` |
+
+## Tusk anatomy (tested: `tusks.test.ts`)
+An orc's tusks are its **lower canines** grown long — the game-art convention for orcs, borrowed from the wild boar, whose
+lower canines are the long tusks, leaving the lower jaw, rising outside the upper lip and curving
+up and back. Rules
+the build keeps, each checked against the mouth's own landmarks on the finished head:
+root ≥ 1 cm inside the jaw below the mouth line, inside the corners; leaves the face at the lower
+lip's top (above halfway from labrale inferius to stomion); ≥ 1.2 cm in front of the upper lip at
+labrale superius height; tip at the nose wing's height (alare), 3 mm – 3 cm in front of the face
+(not standing off it); the lower lip rolls round the base; the beard keeps a 2.4 cm clearing round
+each base. Old ivory, not paper-white: a narrow grime line at the gum graded into a darker
+yellowed root, paler toward a chipped tip (a stain over half the tusk read as two-tone pegs in a
+brown socket, D526). Six lower incisors between the tusks: blunt, uneven pegs rooted in the lower
+lip, crowns ≥ 2 mm proud of the face above the mouth line, clear of the tusks (tested). (Before 2026-11-20 the tusks left the face through the chin inside the beard
+and their tips stood 4 cm off the cheek: the hero read one tusk hanging down out of the beard and
+one standing beside the face.)
+
+| Reference | Link | Used for |
+|---|---|---|
+| Warthog: two pairs of tusks protrude from the mouth curving upwards; the far shorter lower pair is honed razor-sharp against the uppers; a tusk curves 90° or more from the root, somewhat backwards | https://en.wikipedia.org/wiki/Common_warthog | the up-and-back curve, a lower canine riding outside the upper lip |
+| Wild boar: the canines protrude from adult males' mouths; the lower canines are much sharper and longer (10–12 cm exposed), the uppers short, curving up | https://en.wikipedia.org/wiki/Wild_boar | the LOWER canine as the long tusk, rooted in the lower jaw |
+| Orc in fantasy art: lower tusks projecting from an underbite | https://en.wikipedia.org/wiki/Orc | the convention, not a likeness |
 
 ## Race deltas vs the human (declared; no orc anthropometry exists)
 The orc archetype's shape language is the square and the wedge: brute mass low in the face and
@@ -56,7 +78,7 @@ Measured on the built head against `ORC_PROPORTIONS` (the human bands, each orc 
 |---|---|---|
 | scars (`scarWelt` VDM stamps, one per segment, 2.2 mm proud; painted pale) | crown → left brow; across the nose bridge; down the right cheek to the jaw | 3 strokes, not mirrored |
 | warts | left cheek, right cheekbone, crown | 3 lobed `wart` stamps, radius 6–8 mm × seeded 0.75–1.25 |
-| broken tusk | right tusk | snapped at 60 % of its length, a flat fracture |
+| broken tusk | left tusk (the whole right one faces the hero camera) | snapped at 60 % of its length, a jagged stepped fracture: four sharp teeth round a cratered break of fresh pale dentine, dirt in the notches (D524) |
 | asymmetry | the whole face | `asym` 0.3: seeded per-landmark offsets ≤ 0.36 % H |
 
 ## Palette (sRGB)
@@ -66,7 +88,7 @@ Measured on the built head against `ORC_PROPORTIONS` (the human bands, each orc 
 | skin / warm / cool | `#5a6c44` / `#7a8049` / `#3f4b40` (weathered olive-grey) |
 | flush (nose) / ear cartilage / lips / sockets / brow band / warts | `#86784a` / `#8a8650` / `#5a4e36` / `#4a5038` / `#3e4630` / `#5e6a40` |
 | eyes: sclera / iris / pupil (+ glow `#ff7a1a` × 2.5, cornea clearcoat) | `#6a3a12` / `#ffb428` / `#1a0c04` |
-| tusk ivory / root stain / scars | `#e4d8b4` / `#7a5a2e` / `#b49e80` |
+| tusk ivory / worn tip / gum-line stain / spike bone / scars | `#c9ab6c` / `#ddc99a` / `#3e2810` / `#e4d8b4` / `#b49e80` |
 | plates on `steel_painted` (gunmetal) / lips / rivets / bare / rust | `#4a4842` / `#6a665e` / `#b0a898` / `#d8d4cc` / `#7a4422` |
 | strap tint on `leather` / thread / necklace cord / fur | `#e6d2b8` / `#c8b48a` / `#3a2618` / `#5c4632` → `#8c7556` |
 | hair root → tip / wraps | `#2a2018` → `#6e5842` / `#5b3a22` |
@@ -76,7 +98,7 @@ Measured on the built head against `ORC_PROPORTIONS` (the human bands, each orc 
 |---|---|---|
 | `head` | origin | skin above the neck seam (fine cell; eyes, ears, mouth meshed finer at LOD0) |
 | `bust` | origin | torso below the seam (coarser cell); LOD2 has no split (all in `head`) |
-| `tusks` | origin | both tusks, roots buried in the jaw |
+| `tusks` | origin | both tusks, roots buried in the jaw, and the lower teeth between them (LOD0–1) |
 | `eye_l`, `eye_r` | eyeball centres, yawed to converge 1.5 m ahead | finish `cornea` + glow; `socket` joints into `head` (LOD0) |
 | `pauldrons`, `spikes`, `harness`, `mantle`, `necklace`, `hair_knot`, `hair`, `plinth` | origin | static; `hair` is the card hair (cutout) |
 
@@ -102,7 +124,8 @@ speckle. `t3d build` ≈ 40 s.
 Plates: hammer peening, dents, paint chipped to bare iron on the lips, rust under the rivets
 (`plates.ts`). Fur and strap: `weather` in `build.ts` (mud dried into the fur's low clumps and
 the strap's low end, dust on what faces up), the strap blotched near-black with sweat and grease.
-Tusks: root stain, three nicks on the front edge (`tusks.ts`), the right one broken. Face: scars,
+Tusks: gum-line stain, a chipped tip and three nicks on the front edge (`tusks.ts`), the left one
+broken. Face: scars,
 war paint.
 
 ## References (stylised anatomy, not likeness)
@@ -116,7 +139,7 @@ war paint.
 | Stylised orc busts (method, not likeness) | https://www.zbrushcentral.com/t/orc-bust/371776 · https://80.lv/articles/sculpting-texturing-a-broken-orc-bust-in-zbrush-3ds-max-substance-3d-painter/ | primary → secondary → tertiary, hand-painted tone |
 
 ## Known gaps
-The closed lips still alias a little at the tusks' exits; the beard is three card layers (dense
+The closed lip line is a crease drawn a cell wide in the skin's crevice olive (near-black it read as a ragged seam; the lower teeth now cover it between the tusks, D526); the beard is three card layers (dense
 flat base, hanging locks, wiry strays) over a hair-painted chin, coarse brow cards sit on the
 shelf (both root on the finished head, not the stage-2 skin); pores are `poreField` stamps on the
 nose, cheeks and forehead (LOD0); the tusks are rigid parts, so the `talk` clip's jaw morph opens

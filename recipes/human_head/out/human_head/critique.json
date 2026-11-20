@@ -1,7 +1,7 @@
 {
   "asset": "human_head",
   "reviewer": "agent",
-  "overall": 6.4,
+  "overall": 6.6,
   "scores": {
     "silhouette": {
       "score": 7,
@@ -19,12 +19,11 @@
       ]
     },
     "materials": {
-      "score": 6,
-      "reason": "Skin, hair, red wool, blue tunic, linen and brass collar separate by hue, and the brighter strand shading reads as hair in hero.png; mantle and tunic share one matte roughness, the cheeks carry a pink smudge under the eyes, and a grey-violet wash under the beard on the neck reads as a bruise in hero.png.",
+      "score": 7,
+      "reason": "Skin, hair, red wool, blue tunic, linen and brass collar separate; the grey band along the top of the beard is mostly gone, with stubble dots now fading the beard into the cheek in hero.png, and the skin carries pores and freckles on nose and cheeks; a pale grey-beige wash still sits over the moustache zone between nose and lip, and mantle and tunic share one matte roughness.",
       "fixes": [
-        "wool strip with fibre noise on the mantle and a linen strip on the tunic",
-        "fade the beard edge into skin tone, not a grey-violet wash on the neck",
-        "skin roughness variation (oily T-zone, matte cheeks)"
+        "drop the pale wash over the moustache zone so the upper lip reads as skin plus hair",
+        "wool strip with fibre noise on the mantle and a linen strip on the tunic"
       ]
     },
     "detail": {
@@ -61,7 +60,7 @@
     }
   },
   "renders": {
-    "hero.png": "3b80c71045ea46ecaa27263223a8b7c183e4b17280dd24075963ceacd7bf0642",
-    "sheet.png": "65300041d2a76a46054ed436c6d1fc8438e75f9ef5a333348fec5f68ae50df2d"
+    "hero.png": "01a01beff4a838e37a37e1ef2c23ec3f94489990361cd770a202ae122cba9aba",
+    "sheet.png": "92adbf09d7cfcac4c64817030da7cd19bfb15fa3203f7c6f64c25f83b9935f01"
   }
 }

@@ -4,6 +4,22 @@ All notable changes to `@developerz.ai/ts23d`. Format: [Keep a Changelog](https:
 
 ## [Unreleased]
 
+Skin reads as skin: true-scale pores, grain, freckles and stubble, soft tone zones instead of bruise rings, and light that passes through thin ears; orc tusks rise from the lower jaw as they should.
+
+### Changed
+- Bust skin is painted at true scale: about 1 mm pores, micro-relief, a rose and gold mottle and freckles in albedo, normal and roughness, with zone textures for the T-zone, the thin skin round the eyes (fine lines), the lips (vertical lines) and a shaven jaw (cut-hair dots). Tone zones are soft gradients; the painter no longer paints bruise-dark sockets or grey blotches.
+- The path tracer's skin diffusion passes through thin parts: an ear lit from behind glows.
+- Orc tusks are lower canines: they rise from the lower lip in front of the upper lip, yellowed with a stained gum line, and the beard parts round them. Teeth have per-race styles (crooked, sharp, human) with a dark mouth; goblins show small sharp teeth and lower fangs.
+
+### Fixed
+- `t3d critique` and the blind panel brief paint the far-LOD images a sheet that holds the far LOD's materials, so an asset whose far LOD maps a material LOD0 does not no longer fails.
+- A test of textured parts no longer depends on which recipes ran before it in the same process.
+- Orc mouths: tusks are ivory with a narrow grime line graded into a darker yellowed root (no two-tone band), face_orc's lower lip takes the skin's green, and orc_head shows uneven yellowed lower teeth between its tusks.
+- Path tracer: light passing through skin leaves only where skin meets air, facing out by the mesh winding, so layered skin (snake scales over the body, a worker's face) has no colour grain while thin ears still glow when backlit.
+- Bust skin: freckles gather over the bridge and cheekbones and pores are coarse only on the nose and cheeks (elves finer-skinned); no eye-shadow band on the elf's lid; stubble and beard edges feather into the skin; thin ear rims glow warm.
+- Head hair gets a visible sheen in path-traced heroes, and elf hair is golden; the orc's snapped tusk shows a jagged break and both orcs' tusks a stained root band.
+- Skin texture bands no longer repeat in vertical columns; stubble no longer reads as grime.
+
 ## [0.17.0] - 2026-11-20
 
 Team-painted parts can carry wear that survives livery swaps, contact sheets shade per pixel like an engine, and beauty renders keep fur, hair and grime detail. A fourth pass over the weakest assets, re-judged independently: criteria below the pass mark of 8 fell from 296 to 272, and four assets now pass on all seven.

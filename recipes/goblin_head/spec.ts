@@ -33,7 +33,9 @@ export const C = {
   pupil: hex('#140a02'),
   wet: hex('#d8d890'),
   caruncle: hex('#c0805a'),
-  teeth: hex('#e8dcae'),
+  /** Yellowed enamel (not paper-white) and the brown its necks and the worst teeth are stained. */
+  teeth: hex('#d6c48e'),
+  teethStain: hex('#8a6a3a'),
   mouth: hex('#3a1010'),
   hairRoot: hex('#b0a890'),
   hairTip: hex('#f0ece0'),

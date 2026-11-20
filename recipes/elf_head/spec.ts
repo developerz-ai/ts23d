@@ -21,7 +21,7 @@ export const CUT_Z = 0.1;
 export const C = {
   skin: hex('#e8c4a4'),
   warm: hex('#f2d0ae'),
-  cool: hex('#b8a0a4'),
+  cool: hex('#c4a296'),
   cavity: hex('#7a4a44'),
   lips: hex('#c47a76'),
   sclera: hex('#f0ece6'),
@@ -29,8 +29,10 @@ export const C = {
   pupil: hex('#06100c'),
   wet: hex('#f6cfc4'),
   caruncle: hex('#d88a84'),
-  hairRoot: hex('#9a7038'),
-  hairTip: hex('#f0d890'),
+  // Golden: a deep honey root to a saturated pale-gold tip (#9a7038 → #f0d890, a greyed khaki
+  // range, read as straw in the hero, D525).
+  hairRoot: hex('#8a5620'),
+  hairTip: hex('#f6d27e'),
   tunic: hex('#2f5a3a'),
   tunicDark: hex('#1a3420'),
   cloak: hex('#2a4a5a'),

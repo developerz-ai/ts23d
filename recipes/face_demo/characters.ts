@@ -32,13 +32,15 @@ export const CHARACTERS: Record<'human' | 'orc' | 'elf' | 'dwarf' | 'goblin', Fa
       },
       eyes: { iris: [0.3, 0.42, 0.55] },
       mouth: 0,
+      // Sun freckles over the bridge and cheekbones, fading out toward brow and jaw (D520).
+      complexion: { freckles: 0.5 },
       // A man who works outdoors: sun and freckles, a day's stubble, a nick through one brow.
       wear: {
         sun: 0.55,
         freckles: 0.5,
         grime: 0.25,
         wind: 0.35,
-        stubble: { colour: [0.15, 0.12, 0.12], amount: 0.8 },
+        stubble: { colour: [0.15, 0.11, 0.08], amount: 0.8 },
         scars: [
           [off(LEFT.brow, [0.003, 0.012, 0.014]), off(LEFT.brow, [0.004, 0.017, -0.004])],
           // A split healed white on the chin, off the midline.
@@ -72,15 +74,16 @@ export const CHARACTERS: Record<'human' | 'orc' | 'elf' | 'dwarf' | 'goblin', Fa
       tone: {
         base: [0.27, 0.37, 0.17],
         flush: [0.38, 0.34, 0.16],
-        lips: [0.24, 0.22, 0.14],
+        lips: [0.235, 0.35, 0.15],
         cool: [0.2, 0.28, 0.22],
         cavity: [0.09, 0.12, 0.06],
       },
       eyes: { iris: [0.62, 0.4, 0.08], sclera: [0.82, 0.78, 0.6] },
       tusks: 0.16,
+      teeth: 'crooked',
       mouth: 0,
       // A fighter: an old cut from the forehead through the brow to the cheek, another along
-      // the jaw, a split in the lower lip; camp dirt in every hollow.
+      // the jaw, a slash from the lower lip across the chin; camp dirt in every hollow.
       wear: {
         sun: 0.45,
         freckles: 0.35,
@@ -93,7 +96,12 @@ export const CHARACTERS: Record<'human' | 'orc' | 'elf' | 'dwarf' | 'goblin', Fa
             mirrorY(off(LEFT.cheek, [0.004, 0.004, -0.012])),
           ],
           [off(LEFT.jawline, [0.004, 0, 0.012]), off(LEFT.gonion, [0.02, 0.002, 0.014])],
-          [off(MIDLINE.labraleInf, [0, 0.008, 0.003]), off(MIDLINE.pogonion, [0, 0.012, 0.012])],
+          // (Across the chin at 45°, not straight down it: straight below the teeth the pale
+          // line read as a drip in the front view.)
+          [
+            off(MIDLINE.labraleInf, [0, 0.017, -0.002]),
+            off(MIDLINE.pogonion, [0.004, -0.003, 0.01]),
+          ],
         ],
       },
     },
@@ -121,6 +129,9 @@ export const CHARACTERS: Record<'human' | 'orc' | 'elf' | 'dwarf' | 'goblin', Fa
       },
       eyes: { iris: [0.22, 0.52, 0.42] },
       mouth: 0,
+      // Fine skin: a butterfly of freckles over the bridge and cheekbones, coarse pores only on
+      // the nose and the cheeks' centres, near-invisible elsewhere (D520).
+      complexion: { freckles: 0.9, fine: true },
       // Ageless but not porcelain: freckles, a little sun and wind, and a ranger's thin old cut
       // along the cheekbone.
       wear: {
@@ -133,7 +144,9 @@ export const CHARACTERS: Record<'human' | 'orc' | 'elf' | 'dwarf' | 'goblin', Fa
         ],
       },
     },
-    hair: { cut: 'long', root: [0.52, 0.36, 0.15], tip: [0.84, 0.66, 0.34] },
+    // Golden: a honey root to a saturated pale-gold tip ([0.52, 0.36, 0.15] → [0.84, 0.66,
+    // 0.34] was a greyed khaki range that read as straw, D525).
+    hair: { cut: 'long', root: [0.42, 0.23, 0.06], tip: [0.92, 0.68, 0.28] },
     plinth: STONE,
     // Forest-green wool, a gold braid at the collar, a deeper V; barely travel-dusted.
     garment: { cloth: [0.06, 0.2, 0.12], trim: [0.62, 0.46, 0.16], dust: 0.35, vee: 0.035 },
@@ -158,6 +171,7 @@ export const CHARACTERS: Record<'human' | 'orc' | 'elf' | 'dwarf' | 'goblin', Fa
       },
       eyes: { iris: [0.36, 0.26, 0.14] },
       mouth: 0,
+      complexion: { freckles: 0.35 },
       // A smith: forge-reddened, weathered skin, an old burn line over the nose and a cut on
       // the forehead, soot in the creases.
       wear: {
@@ -185,6 +199,7 @@ export const CHARACTERS: Record<'human' | 'orc' | 'elf' | 'dwarf' | 'goblin', Fa
         brow: { forward: 0.035, height: -0.004 },
       },
       warts: 7,
+      teeth: 'sharp',
       age: 0.3,
       weight: -0.3,
       asym: 1,

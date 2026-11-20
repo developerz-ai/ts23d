@@ -1,12 +1,16 @@
-import { expect, it } from 'bun:test';
+import { afterAll, expect, it } from 'bun:test';
 import { mkdtemp, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { compile, defineAsset, dmath } from '../core/index.ts';
+import { DEFAULT_SHEET, defineMaterial, materialSnapshot } from '../material/index.ts';
 import { box } from '../primitives/index.ts';
 import { METRICS } from '../qa/index.ts';
 import { contactSheet, previewSheet } from '../render/index.ts';
 import { committedHashes, critiqueImages, measureVector, RAKING, sha256 } from './critique-cmd.ts';
+
+// Put back the material registry as it was before this file defined one (D334/D527).
+afterAll(materialSnapshot());
 
 const crate = defineAsset({
   name: 'crate',
@@ -41,6 +45,28 @@ it('renders the pack; sheet.png is byte-identical to the committed contact sheet
   expect(sha256(images.get('raking.png') ?? new Uint8Array())).not.toBe(
     sha256(images.get('hero.png') ?? new Uint8Array()),
   );
+});
+
+it('D528: paints the far-LOD images a sheet that holds the material only LOD2 maps', () => {
+  // A bust's far hair cards in miniature: LOD0 on a built-in strip, LOD2 on a material of its own.
+  const far = defineMaterial({ id: 'critique_far_cards', roughness: 0.8 });
+  const bust = defineAsset({
+    name: 'critique_far_bust',
+    kind: 'prop',
+    budget: { triangles: [12, 12, 12] },
+    build: (ctx) =>
+      ctx.part(
+        'body',
+        box({ size: [1, 1, 1], color: [1, 1, 1], strip: ctx.lod === 2 ? far : 'oak' }),
+      ),
+  });
+  const { images } = critiqueImages(
+    bust,
+    { width: 96, height: 54 },
+    { ...DEFAULT_SHEET, size: 512 },
+  );
+  for (const f of ['hero.png', 'lods.png', 'silhouette.png', 'value.png', 'detail.png'])
+    expect(images.has(f)).toBe(true);
 });
 
 it('measures the calibration vector the same way twice (golden set, CLI and gate share it)', () => {

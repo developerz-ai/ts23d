@@ -16,9 +16,10 @@ import {
   type VdmPlace,
   wart,
 } from '@developerz.ai/ts23d';
-import { creaseOn, ell, type Surface, spline, type V } from '../_lib/bust/kit.ts';
+import { cone2, creaseOn, ell, type Surface, spline, type V } from '../_lib/bust/kit.ts';
 import { C } from './palette.ts';
 import { H, SK } from './spec.ts';
+import { TUSK_R, tuskExit, tuskPath } from './tusks.ts';
 
 const at = (a: V, x: number, y: number, z: number): V => [a[0] + x * H, a[1] + y * H, a[2] + z * H];
 
@@ -33,6 +34,7 @@ export function featureEdits(stage: number, s: Surface, lod: number, rng: Rng): 
       color: C.lips,
     }),
   );
+  out.push(tuskLips());
   // Nose wings flared: heavy alae either side of the flat tip.
   out.push(
     ell(at(SK.alare, -0.006, 0.004, 0.002), [0.03 * H, 0.026 * H, 0.026 * H], {
@@ -41,7 +43,8 @@ export function featureEdits(stage: number, s: Surface, lod: number, rng: Rng): 
     }),
   );
   if (stage < 4) return out;
-  out.push(creaseOn(s, lipLine(), 0.02 * H, 0.006 * H, { color: C.mouth, tips: 0.4 }));
+  // (In the crevice olive, not the mouth's near-black: that read as a ragged seam, D526.)
+  out.push(creaseOn(s, lipLine(), 0.02 * H, 0.006 * H, { color: C.cavity, tips: 0.4 }));
   // Forehead furrows across the low brow.
   for (const l of foreheadLines()) out.push(creaseOn(s, l, 0.014 * H, 0.004 * H, { tips: 0.5 }));
   // Under-eye bags.
@@ -191,3 +194,15 @@ export const WARTS: ReadonlyArray<readonly [V, number]> = [
   [at([SK.zygion[0], -SK.zygion[1], SK.zygion[2]], 0.03, 0.02, 0.05), 0.02],
   [at(SK.crown, 0.1, -0.12, -0.08), 0.026],
 ];
+
+/** The lower lip rolled round each tusk's base: a lip-coloured sleeve along the tusk's last
+ *  1.6 cm in the jaw up to just below where it leaves the lip, 1.2 × its radius, so the lip swells round the
+ *  base and the tusk's flank never shows below the mouth line (mirrored to the right tusk). */
+export function tuskLips(): SculptEdit {
+  const exit = tuskExit();
+  const path = tuskPath(1, 48);
+  const i = path.findIndex((p) => p[2] >= exit[2] - 0.016);
+  const from = path[Math.max(0, i)] ?? exit;
+  const end: V = [exit[0], exit[1], exit[2] - 0.3 * TUSK_R];
+  return cone2(from, end, TUSK_R * 1.05, TUSK_R * 1.18, { blend: 0.3 * TUSK_R, color: C.lips });
+}

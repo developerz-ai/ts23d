@@ -14,7 +14,7 @@ const wi = new Float64Array(3);
  * Directional albedo of a strand (card facing wo) by stratified uniform-sphere quadrature; `lit`
  * counts only the light leaving on the card's front (the side wo is on).
  */
-function energy(albedo: number, wo: number[], lit = false): number {
+function energy(albedo: number, wo: number[], lit = false, rough = 0.5): number {
   let s = 0;
   const n = 300;
   for (let a = 0; a < n; a++)
@@ -23,7 +23,7 @@ function energy(albedo: number, wo: number[], lit = false): number {
       const front =
         (wo[0] ?? 0) * (wi[0] ?? 0) + (wo[1] ?? 0) * (wi[1] ?? 0) + (wo[2] ?? 0) * (wi[2] ?? 0);
       if (lit && front < 0) continue;
-      evalHair(T, wo, [albedo, albedo, albedo], 0.5, wo, wi, f);
+      evalHair(T, wo, [albedo, albedo, albedo], rough, wo, wi, f);
       s += (f[0] ?? 0) / p;
     }
   return s / (n * n);
@@ -73,5 +73,37 @@ describe('hair lobes', () => {
     const forward = f[0] ?? 0;
     evalHair(T, [0, 0, 0], [0.8, 0.8, 0.8], 0.3, wo, [0, 1, 0], f);
     expect(forward).toBeGreaterThan(f[0] ?? 0);
+  });
+
+  it('smooth white fibres conserve energy too', () => {
+    for (const wo of VIEWS) {
+      const e = energy(1, wo, false, 0.4);
+      expect(e).toBeLessThan(1);
+      expect(e).toBeGreaterThan(0.9);
+    }
+  });
+
+  // D525: the lobes carried a hundredth of the light, so head hair showed no sheen band at all
+  // and read as straw. A smooth fibre's band must stand well above its diffuse shoulder.
+  it('a smooth fibre shows a sheen band along the strand, a rough one stays matte', () => {
+    const n = [1, 0, 0];
+    const at = (rough: number, deg: number): number => {
+      const a = (deg * Math.PI) / 180;
+      evalHair(T, n, [0.6, 0.5, 0.3], rough, n, [dmath.cos(a), 0, dmath.sin(a)], f);
+      return (f[0] ?? 0) / dmath.cos(a);
+    };
+    // Lit from the camera's side, the highlight sits near the mirror (θi ≈ 2α) and falls off
+    // within a few tens of degrees; the cosine is divided out so only the lobes remain.
+    expect(at(0.4, -8) / at(0.4, -40)).toBeGreaterThan(at(0.5, -8) / at(0.5, -40) + 0.06);
+    expect(at(0.5, -8) / at(0.5, -40)).toBeLessThan(1.12);
+  });
+
+  it('keeps a rough fibre (fur) exactly as it was before D525', () => {
+    const wo = [0.6, 0, 0.8];
+    evalHair(T, wo, [0.5, 0.4, 0.3], 0.5, wo, [0.8, 0.6, 0], f);
+    expect(f[0]).toBeCloseTo(0.06657639203803263, 12);
+    const a = -0.14;
+    evalHair(T, [1, 0, 0], [0.5, 0.4, 0.3], 0.5, [1, 0, 0], [dmath.cos(a), 0, dmath.sin(a)], f);
+    expect(f[2]).toBeCloseTo(0.08305250970328862, 12);
   });
 });

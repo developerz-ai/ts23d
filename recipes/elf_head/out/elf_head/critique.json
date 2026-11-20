@@ -1,7 +1,7 @@
 {
   "asset": "elf_head",
   "reviewer": "agent",
-  "overall": 6,
+  "overall": 6.3,
   "scores": {
     "silhouette": {
       "score": 7,
@@ -20,16 +20,18 @@
       ]
     },
     "materials": {
-      "score": 5,
-      "reason": "Skin is a soft sheen with a faint flush on the cheekbone and the gold trim reads as metal; the tunic is still blotchy green with grey smears that read as paint, and the hair still reads as dry straw in hero.png even with the brighter strand shading.",
+      "score": 7,
+      "reason": "The skin grain is gone: freckles now sit on the nose bridge and upper cheeks and fade out on forehead and jaw, so the face reads as fair, smooth skin with a light freckle dusting in hero.png and FRONT; the ear tips carry only a faint warm tint, a few orange specks fringe the nostril and lip edges, the hair is golden but still reads as dry straw with no visible sheen, and the tunic is still blotchy green with grey smears.",
       "fixes": [
         "a silk/wool strip for tunic and cloak with even colour and soft sheen, no grey blotches",
-        "hair strip with darker roots and anisotropic sheen so the strands read as hair, not straw"
+        "hair strip with darker roots and a clear anisotropic sheen band so the strands read as hair, not straw",
+        "stronger red-orange transmission on the thin ear tips so they glow against the key light",
+        "keep freckle dots off the nostril and lip silhouette edges"
       ]
     },
     "detail": {
       "score": 6,
-      "reason": "Clasp, gold trim and collar exist; the eyes now sit in shadow under the upper lid and a brow line is drawn, but the lips have no defined line and the hair has no strand grooves over the crown.",
+      "reason": "Clasp, gold trim and collar exist; pores and freckles now give the skin tertiary detail in hero.png, the eyes sit in shadow under the upper lid and a brow line is drawn, but the lips still have no defined line and the hair has no strand grooves over the crown.",
       "fixes": [
         "strand grooves over the crown",
         "a defined lip line and philtrum",
@@ -61,7 +63,7 @@
     }
   },
   "renders": {
-    "hero.png": "ff866d3eae4ab9def4cf1cac2f7f055a2be0673184364f1f3575b6bd364281ff",
-    "sheet.png": "50742727ca65385772e0fdfd5b27f4b3f7bc8fdad48a429b4083d3caba01515d"
+    "hero.png": "d7487298a5bcda3d77e693250da997f16f677529a7d31e0354a051287c7258ae",
+    "sheet.png": "7fc60afb53c7d47325ccb5e6701f6c012146589ff240eea6b32a2e2b18bf9468"
   }
 }

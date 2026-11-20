@@ -1,7 +1,7 @@
 {
   "asset": "face_orc",
   "reviewer": "agent",
-  "overall": 6.7,
+  "overall": 6.9,
   "scores": {
     "silhouette": {
       "score": 7,
@@ -12,32 +12,34 @@
     },
     "proportions": {
       "score": 7,
-      "reason": "A heavier brow shelf and a flatter, wider nose now read as an orc face rather than a tinted human.",
+      "reason": "A heavier brow shelf and a flatter, wider nose read as an orc face, and the tusks now rise from the lower jaw in front of the upper lip in FRONT and hero.png instead of hanging from the upper jaw; the eyes still sit high under the brow shelf.",
       "fixes": [
         "lower the eyes under the brow shelf and widen the jaw"
       ]
     },
     "materials": {
       "score": 7,
-      "reason": "The stair-stepped collar is gone: a smooth grey band with a clean edge runs over the shoulders in FRONT and hero.png, and the scalp is matte with sheen only on the brow; the green skin still washes over the tunic shoulders outside the collar in hero.png, and the tunic is a flat ribbed brown.",
+      "reason": "Smooth grey collar band, matte scalp, green skin with pores and mottling; the tusks now grade from a darker tan root at a thin gum line to a pale tip in FRONT and hero.png (no two-tone pegs), and the lower lip is green, a little darker and warmer than the chin instead of a taupe patch; green still washes onto the tunic shoulders above the collar in hero.png, and the tunic is a flat ribbed brown.",
       "fixes": [
         "end the skin colour at the collar so no green bleeds onto the tunic shoulders",
-        "pores or mottling in the green skin",
         "a leather or wool strip on the tunic instead of the flat rib"
       ]
     },
     "detail": {
-      "score": 6,
-      "reason": "Tusks, teeth, scar and crest; no skin wrinkles or pores.",
+      "score": 7,
+      "reason": "Upward lower tusks, a crooked gappy row of small stained teeth over a dark mouth slit, cheek scar, crest and pores in FRONT and hero.png; at 4x the teeth are tiny pegs and the mouth corners carry a few green and red speckles; the chin scar is faint and soft-edged; no skin wrinkles.",
       "fixes": [
-        "LOD0 wrinkle/pore displacement and a gum strip"
+        "clean the green/red speckles at the mouth corners and make the lower teeth a little larger so they read at hero size",
+        "LOD0 wrinkle displacement on brow and cheeks",
+        "give the chin scar a raised pale edge so it reads at FRONT size"
       ]
     },
     "wear": {
       "score": 7,
-      "reason": "Cheek scar now reads as a dark-edged grey scar, not near-white, the skin is blotchy, and collar grime and sun-faded shoulders now show on the tunic.",
+      "reason": "Cheek scar reads as a dark-edged grey scar, a second diagonal scar now crosses the chin, tusk roots are stained, the skin is blotchy, and collar grime and sun-faded shoulders show on the tunic; both tusk tips are whole.",
       "fixes": [
-        "chipped tusk tip and a second scar"
+        "a chipped tusk tip",
+        "dirt in the tunic folds"
       ]
     },
     "lod": {
@@ -49,14 +51,14 @@
     },
     "technical": {
       "score": 7,
-      "reason": "QA clean; 54.3k / 11.5k / 2.6k tris, 4 / 4 / 3 draws.",
+      "reason": "QA clean; 56.4k / 12.5k / 3.2k tris, 4 / 4 / 3 draws.",
       "fixes": [
         "cheaper crest at LOD1"
       ]
     }
   },
   "renders": {
-    "hero.png": "0b8c15c0d3095250116dda8c2e18e757be5669fbb32ac0be119ccb69e93f12f6",
-    "sheet.png": "6eceacad0aa255e5ae5eb54491d46ca26e60ccb1de51a8bea23698b3a525de69"
+    "hero.png": "dd74cee9d9cbc661094bd3a88fcbdefc2ef6d3ebed2d4d73257618df33866ee0",
+    "sheet.png": "aa6edf63b03c817b207ed56559515fc38d4aeda6e024a189ad836eab0b955a94"
   }
 }

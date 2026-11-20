@@ -107,6 +107,9 @@ export function critiqueImages(
   const lod0 = lods[0] ?? compileOnce(asset);
   const lod2 = lods[2] ?? lod0;
   const o = look ? { ...options, sheet: sheetOf(look, lod0) } : options;
+  // Images that draw the far LOD need a sheet painted for it too: a far LOD may map a material
+  // LOD0 does not (a bust's far hair cards), which a LOD0-only sheet refuses (D528).
+  const both = look ? { ...options, sheet: sheetOf(look, [lod0, lod2]) } : options;
   const images = new Map<string, Uint8Array>();
   const hero = renderBeauty(lod0, o);
   images.set('hero.png', encodePng(hero.width, hero.height, hero.rgba));
@@ -123,12 +126,12 @@ export function critiqueImages(
   images.set(
     'lods.png',
     lodStrip([lod0, lod2], {
-      ...o,
+      ...both,
       width: Math.max(16, Math.round(800 * k)),
       height: Math.max(16, Math.round(600 * k)),
     }),
   );
-  const art = artImages(asset, lod0, lod2, o);
+  const art = artImages(asset, lod0, lod2, both);
   for (const [n, b] of art.images) images.set(n, b);
   return { images, lods, metrics: art.metrics };
 }

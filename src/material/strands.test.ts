@@ -238,4 +238,35 @@ describe('strandPainter', () => {
     const lock = STRAND_LAYOUT.hair_locks.indexOf('lock');
     expect(grey(mass, 0.3, 0.8)).toBeLessThan(grey(lock, 0.3, 0.8));
   });
+
+  // D525: head hair at the coat's 0.5 roughness had no sheen band in the path-traced hero (the
+  // strand lobes widen with roughness) and its locks streaked 0.65–1.35 strand to strand: straw.
+  it('fails if head-hair cells are as rough as fur, or fur cells changed roughness', () => {
+    const rough = (id: 'fur_clumps' | 'hair_clumps' | 'hair_locks'): number[] => {
+      const c = createCanvas(2048, 32, 4, 0.05, true);
+      strandPainter(STRAND_LAYOUT[id])(c, paintKit(c, 9));
+      return STRAND_LAYOUT[id].map((_, cell) => c.rough[16 * 2048 + cell * 256 + 128] ?? 0);
+    };
+    for (const r of rough('fur_clumps')) expect(r).toBe(0.5);
+    for (const id of ['hair_clumps', 'hair_locks'] as const)
+      rough(id).forEach((r, cell) => {
+        const kind = STRAND_LAYOUT[id][cell];
+        expect(r).toBeLessThan(kind === 'beard' || kind === 'coarse' ? 0.51 : 0.45);
+      });
+  });
+
+  it('fails if neighbouring strands of a lock differ by more than a fifth in value (straw)', () => {
+    const c = createCanvas(4096, 64, 4, 0.05, true);
+    strandPainter(STRAND_LAYOUT.hair_locks)(c, paintKit(c, 9));
+    const rgba = c.rgba ?? new Uint8Array(0);
+    const lock = STRAND_LAYOUT.hair_locks.indexOf('lock');
+    // Down one column across the band mid-lock: the opaque texels' grey, spread as max / min.
+    const x = lock * 512 + 256;
+    const greys: number[] = [];
+    for (let y = 9; y < 55; y++)
+      if (alphaAt(rgba, 4096, x, y) >= 0.9) greys.push(rgba[(y * 4096 + x) * 4] ?? 0);
+    expect(greys.length).toBeGreaterThan(4);
+    // sRGB-encoded grey: a 1.2× linear spread is ~1.09× encoded.
+    expect(Math.max(...greys) / Math.min(...greys)).toBeLessThan(1.2);
+  });
 });

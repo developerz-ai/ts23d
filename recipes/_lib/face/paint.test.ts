@@ -74,6 +74,46 @@ describe('face skin paint', () => {
     expect(down).toBeLessThan(along * 0.7);
   });
 
+  it('fails on a wormy stubble wash (D514): near, the jaw takes an even shadow; the strip draws the hairs', () => {
+    // Vertex dots 2 mm across on a 3 mm mesh read as a grey-violet worm pattern (grime), not as
+    // stubble: the cut hairs are the stubble strip's dots (./skin-texture.ts), the vertex colour
+    // only the even shadow under them.
+    const region = (p: Vec3): number =>
+      p[2] < head.map(MIDLINE.subnasale)[2] - 0.01 * s ? -0.01 : 0.01;
+    const c = paintSkin(head.mesh, head, {
+      tone,
+      brows: [0.2, 0.12, 0.08],
+      rng: createRng(3),
+      wear: {
+        sun: 0,
+        freckles: 0,
+        grime: 0,
+        stubble: { region, colour: [0.15, 0.11, 0.08], amount: 0.8 },
+      },
+    });
+    const bare = paintSkin(head.mesh, head, {
+      tone,
+      brows: [0.2, 0.12, 0.08],
+      rng: createRng(3),
+      wear: { sun: 0, freckles: 0, grime: 0 },
+    });
+    const lum = (k: Vec3): number => (k[0] + k[1] + k[2]) / 3;
+    // How much the stubble darkens each jaw vertex, relative to its bare colour.
+    const ks: number[] = [];
+    const jaw = head.map(LEFT.jawline);
+    for (let v = 0; v < P.length / 3; v++) {
+      const q: Vec3 = [P[v * 3] ?? 0, P[v * 3 + 1] ?? 0, P[v * 3 + 2] ?? 0];
+      if (dmath.hypot(q[0] - jaw[0], q[1] - jaw[1], q[2] - jaw[2]) > 0.025 * s) continue;
+      ks.push(lum(c(v)) / lum(bare(v)));
+    }
+    const mean = ks.reduce((a, b) => a + b, 0) / ks.length;
+    const sd = Math.sqrt(ks.reduce((a, b) => a + (b - mean) * (b - mean), 0) / ks.length);
+    expect(ks.length).toBeGreaterThan(10);
+    expect(mean).toBeLessThan(0.85);
+    // (The vertex dots measured 0.09; mottle and curvature on an even shadow ≈ 0.03.)
+    expect(sd).toBeLessThan(0.045);
+  });
+
   it('fails if a shaven jaw reads clean: stubble darkens the jaw, never the forehead', () => {
     const lum = (c: Vec3): number => (c[0] + c[1] + c[2]) / 3;
     const bare = paint(tone, { sun: 0, freckles: 0, grime: 0 });
@@ -139,7 +179,7 @@ describe('collar and scalp', () => {
     expect(zone(head.map(MIDLINE.glabella))).toBe(0);
     expect(zone(head.map(LEFT.cheek))).toBe(0);
     const skin = quadToMesh(head.mesh, () => tone.base, stripUv('plain'));
-    const uv = onSkin(skin, undefined, undefined, undefined, zone).uvs;
+    const uv = onSkin(skin, { matte: zone }).uvs;
     const on = (strip: typeof SKIN_MATTE): number => {
       const r = stripRect(strip);
       let n = 0;
@@ -148,5 +188,57 @@ describe('collar and scalp', () => {
     };
     expect(on(SKIN_MATTE)).toBeGreaterThan(100);
     expect(on(SKIN_STRIP)).toBeGreaterThan(100);
+  });
+});
+
+describe('stubble and lids (D521, D523)', () => {
+  const lum = (k: Vec3): number => (k[0] + k[1] + k[2]) / 3;
+  const region = (p: Vec3): number => p[2] - (head.map(MIDLINE.subnasale)[2] - 0.01 * s);
+  const near = (wear: SkinWear) =>
+    paintSkin(head.mesh, head, { tone, brows: [0.2, 0.12, 0.08], rng: createRng(3), wear });
+
+  it('fails on a tan under-wash (D523): a shaven beard is a faint shade, its hairs the strip dots', () => {
+    const bare = near({ sun: 0, freckles: 0, grime: 0 });
+    const shaven = near({
+      sun: 0,
+      freckles: 0,
+      grime: 0,
+      stubble: { region, colour: [0.15, 0.11, 0.08], amount: 0.8, wash: 0.22, feather: 0.02 },
+    });
+    const jaw = vertexAt([LEFT.jawline[0] + 0.02, LEFT.jawline[1], LEFT.jawline[2]]);
+    const k = lum(shaven(jaw)) / lum(bare(jaw));
+    expect(k).toBeGreaterThan(0.85);
+    expect(k).toBeLessThan(0.98);
+  });
+
+  it('fails on brown eye shadow (D521): no brow paint on the upper lid', () => {
+    const elf: SkinTone = {
+      base: [0.76, 0.58, 0.47],
+      flush: [0.8, 0.47, 0.43],
+      lips: [0.66, 0.34, 0.35],
+      cool: [0.6, 0.52, 0.57],
+      cavity: [0.38, 0.25, 0.23],
+    };
+    const opts = { tone: elf, rng: createRng(3) };
+    // The same paint with golden brows and with brows the skin's own colour: the difference is
+    // where the brow paint went.
+    const gold = paintSkin(head.mesh, head, { ...opts, brows: [0.52, 0.36, 0.15] });
+    const none = paintSkin(head.mesh, head, { ...opts, brows: elf.base });
+    const eye = head.map(LEFT.eye);
+    // The upper lid just above its margin (the lashes are their own colour now).
+    const lid = head.map(LEFT.upperLid)[2];
+    let under = 0;
+    let worst = 0;
+    for (let v = 0; v < P.length / 3; v++) {
+      const q: Vec3 = [P[v * 3] ?? 0, P[v * 3 + 1] ?? 0, P[v * 3 + 2] ?? 0];
+      if (q[0] < eye[0] + 0.01 * s || Math.abs(q[1] - eye[1]) > 0.016 * s) continue;
+      if (q[2] < lid + 0.001 * s || q[2] > lid + 0.003 * s) continue;
+      under++;
+      const a = gold(v);
+      const b = none(v);
+      worst = Math.max(worst, Math.abs(a[2] - b[2]) / b[2]);
+    }
+    expect(under).toBeGreaterThan(1);
+    expect(worst).toBeLessThan(0.15);
   });
 });
