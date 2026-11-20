@@ -4,6 +4,10 @@ All notable changes to `@developerz.ai/ts23d`. Format: [Keep a Changelog](https:
 
 ## [Unreleased]
 
+## [0.17.0] - 2026-11-20
+
+Team-painted parts can carry wear that survives livery swaps, contact sheets shade per pixel like an engine, and beauty renders keep fur, hair and grime detail. A fourth pass over the weakest assets, re-judged independently: criteria below the pass mark of 8 fell from 296 to 272, and four assets now pass on all seven.
+
 ### Added
 - Paint slots can carry wear: `paint: { team: { colour, wear: true } }` keeps bare steel, primer, rust, mud and dust on team-painted parts in their own colour in every livery (in the GLB, bare triangles sit in the trim material with no `KHR_materials_variants` mapping). Assets without `wear` are byte-identical. Used across the RTS set.
 - `cardWear(cards, { paint, keep }, at)`: hair and fur cards painted from the skin under their root and shortened over caked mud and scars, so wear shows through a coat.
@@ -583,7 +587,8 @@ The first published version: the asset DSL with primitives, organic sculpting, t
 - Animations: `toGlb()` exports none unless `{ animations: true }` (glTF has no autoplay flag; engines drive named pivots from code). `t3d build` bakes the `run` clip by default so viewers show play controls; `--no-animations` skips it.
 - CLI output is one folder per asset: `out/<asset>/{lod0,lod1,lod2}.glb`, `sheet.png`, `manifest.json`, plus `out/index.json`. `t3d build` renders the sheet too (`--no-shot` to skip); `t3d shot` writes sheet + manifest only.
 
-[Unreleased]: https://github.com/developerz-ai/ts23d/compare/v0.16.0...HEAD
+[Unreleased]: https://github.com/developerz-ai/ts23d/compare/v0.17.0...HEAD
+[0.17.0]: https://github.com/developerz-ai/ts23d/compare/v0.16.0...v0.17.0
 [0.16.0]: https://github.com/developerz-ai/ts23d/compare/v0.15.0...v0.16.0
 [0.15.0]: https://github.com/developerz-ai/ts23d/compare/v0.14.0...v0.15.0
 [0.14.0]: https://github.com/developerz-ai/ts23d/compare/v0.13.0...v0.14.0
