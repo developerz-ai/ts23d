@@ -209,8 +209,9 @@ describe('bust garments', () => {
   });
 });
 
-/** A far head's triangles by what the bust's ink names at their centre: [inked as named, all]. */
-function inked(m: Mesh, b: BustRecipe, want: Vec3): [number, number, number[]] {
+/** A far head's triangles by what the bust's ink names at their centre:
+ *  [inked as named, all, their y, their corners]. */
+function inked(m: Mesh, b: BustRecipe, want: Vec3): [number, number, number[], number[][]] {
   if (!b.skull) throw new Error('the fixture bust has no skull stage');
   const k = skullLandmarks(skullOf(b.skull, b.spec));
   // (Marker colours: this only asks the ink where each shape lies.)
@@ -218,6 +219,7 @@ function inked(m: Mesh, b: BustRecipe, want: Vec3): [number, number, number[]] {
   let hit = 0;
   let all = 0;
   const ys: number[] = [];
+  const corners: number[][] = [];
   for (let t = 0; t < m.indices.length; t += 3) {
     const v = [m.indices[t] ?? 0, m.indices[t + 1] ?? 0, m.indices[t + 2] ?? 0];
     const c: Vec3 = [0, 1, 2].map(
@@ -227,9 +229,30 @@ function inked(m: Mesh, b: BustRecipe, want: Vec3): [number, number, number[]] {
     if (!named || named[0] !== want[0] || named[1] !== want[1]) continue;
     all++;
     ys.push(c[1]);
+    corners.push(v);
     if (v.every((i) => lum(m, i) === lum(m, v[0] ?? 0))) hit++;
   }
-  return [hit, all, ys];
+  return [hit, all, ys, corners];
+}
+
+/** Every corner of these triangles carries `colour` (vertex colours are 32-bit floats). */
+const wears = (m: Mesh, triangles: readonly number[][], colour: Vec3): boolean =>
+  triangles.every((v) =>
+    v.every((i) =>
+      colour.every((x, e) => Math.abs((m.colors[i * 3 + e] ?? Number.NaN) - x) < 1e-4),
+    ),
+  );
+
+/** The colours a bust's far ink should paint: the lips part-way from skin, the brows its own. */
+function inkColours(b: BustRecipe): { lips: Vec3; brows: Vec3 } {
+  const lips = b.zones?.lips ?? b.spec.lips;
+  const brows = b.zones?.brows;
+  if (!brows) throw new Error('the fixture bust has no brow colour');
+  const mixed = [0, 1, 2].map((c) => {
+    const skin = b.spec.skin[c as 0 | 1 | 2];
+    return skin + (lips[c as 0 | 1 | 2] - skin) * 0.7;
+  }) as [number, number, number];
+  return { lips: mixed, brows };
 }
 
 // (The human and the elf: the goblin gives no far forms and keeps its plain far face.)
@@ -250,8 +273,17 @@ describe('bust far faces (D614, D615)', () => {
       expect(Math.max(...ys) - Math.min(...ys)).toBeGreaterThan(
         1.6 * 0.8 * Math.abs(k.cheilion[1]),
       );
-      expect(inked(head, b, [1, 0, 0])[1]).toBeGreaterThanOrEqual(6);
-      expect(inked(head, b, [0, 1, 0])[1]).toBeGreaterThanOrEqual(6);
+      const [, lipCount, , lipTris] = inked(head, b, [1, 0, 0]);
+      const [, browCount, , browTris] = inked(head, b, [0, 1, 0]);
+      expect(lipCount).toBeGreaterThanOrEqual(6);
+      expect(browCount).toBeGreaterThanOrEqual(6);
+      const colours = inkColours(b);
+      expect({ name, lips: wears(head, lipTris, colours.lips) }).toEqual({ name, lips: true });
+      expect({ name, brows: wears(head, browTris, colours.brows) }).toEqual({ name, brows: true });
+      // The same triangles without their tint fail: position alone proves nothing.
+      const bare = { ...head, colors: new Float32Array(head.colors.length).fill(0.5) };
+      expect(wears(bare, lipTris, colours.lips)).toBe(false);
+      expect(wears(bare, browTris, colours.brows)).toBe(false);
     }
   }, 120_000);
   it('the ink is the bust’s own colours, not the skin’s', () => {
